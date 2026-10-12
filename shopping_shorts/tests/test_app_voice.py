@@ -20,6 +20,9 @@ def test_voice_presets_endpoint_lists_kr_and_hides_source_ref():
         for grp in d["groups"]:
             if grp["one_liner"] is None:
                 continue
+            if grp.get("engine") == "fish":       # Fish는 감정축이 없어 기본 1톤(2026-10-05, 관제 123)
+                assert set(grp["variants"]) == {"stable"}
+                continue
             assert set(grp["variants"]) == {"stable", "natural", "expressive"} | (
                 {"whisper"} if grp["best"] else set()
             )

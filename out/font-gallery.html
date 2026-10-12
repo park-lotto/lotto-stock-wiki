@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>폰트 모음</title>
+<style>
+:root{--bg:#07131a;--card:#0d1f28;--line:#24404d;--ink:#e8f3f0;--mute:#8fa3ad;--mint:#43e2b4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,'Malgun Gothic',sans-serif}
+header{position:sticky;top:0;z-index:5;background:#07131af2;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+h1{font-size:18px;margin:0 14px 0 0}header small{color:var(--mute)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{border:1px solid var(--line);background:#0b1a22;color:var(--mute);border-radius:999px;padding:6px 12px;font-weight:800;cursor:pointer}
+.chips button.on{border-color:var(--mint);color:var(--mint);background:#10362f}
+header input{background:#0b1a22;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;min-width:220px}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;padding:16px 20px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.meta{display:flex;justify-content:space-between;gap:8px;padding:9px 12px;font-size:12px;color:var(--mute);border-bottom:1px solid var(--line)}
+.meta b{color:var(--ink);font-size:13px}.tag{color:var(--mint);font-weight:800}.warn{color:#ff8a8a;font-weight:800}
+.frame{background:#1b1b1b;padding:10px 12px 12px}
+.ch{display:inline-block;background:#000;color:#fff;border-radius:4px;padding:3px 10px;font-size:18px}
+.t1,.t2{font-size:34px;line-height:1.12;margin-top:8px;-webkit-text-stroke:0}
+.t1{color:#fff}.t2{color:#ffe500}
+.cap{display:inline-block;margin-top:10px;background:#fff;color:#111;padding:4px 12px;font-size:22px;border-radius:3px}
+.card.dim{opacity:.45}
+</style></head><body>
+<header><h1>폰트 모음 <small id="count"></small></h1>
+<div class="chips" id="chips"></div>
+<input id="sample" value="제조사도 몰랐던 기차 케이크의 반전법" aria-label="미리볼 문구">
+<small>채널명 · 제목(2줄) · 자막을 실제 크기 비율로 보여줍니다. 한글이 없는 폰트는 빨간 표시.</small></header>
+<main id="grid"></main>
+<script>
+const F='../shopping_shorts/static/fonts/',X='../.tmp/fonts-extra/';
+// [파일, 이름, 분류, 출처]
+const FONTS=[
+['SBAggroB.ttf','어그로체 B','굵은 제목','볼케이노(뇌전구)'],['yg-jalnan.ttf','여기어때 잘난체','굵은 제목','볼케이노(뇌전구)'],
+[X+'S-CoreDream-7ExtraBold.ttf','에스코어드림 7','굵은 제목','볼케이노(뇌전구) · 라이선스 미확정'],[X+'S-CoreDream-6Bold.ttf','에스코어드림 6','굵은 제목','볼케이노(뇌전구) · 라이선스 미확정'],
+['BMDOHYEON.ttf','배민 도현','굵은 제목','제작소 보유'],['BMJUA.ttf','배민 주아','굵은 제목','제작소 보유'],['BlackHanSans.ttf','검은고딕','굵은 제목','제작소 보유'],
+['GmarketSansBold.otf','G마켓 산스 Bold','굵은 제목','제작소 보유'],['Jalnan2.ttf','잘난체2','굵은 제목','제작소 보유'],['JalnanGothic.ttf','잘난고딕','굵은 제목','제작소 보유'],
+['Cafe24Ohsquare.ttf','카페24 아네모네','굵은 제목','제작소 보유'],['Binggrae-Bold.otf','빙그레 Bold','굵은 제목','제작소 보유'],['TmonMonsori.ttf','티몬 몬소리','굵은 제목','제작소 보유'],
+['KCCGanpan.otf','KCC 간판체','굵은 제목','제작소 보유'],['GasoekOne-Regular.ttf','가석원','굵은 제목','제작소 보유'],['BagelFatOne-Regular.ttf','베이글 팻원','굵은 제목','제작소 보유'],
+['GothicA1-Black.ttf','고딕 A1 Black','굵은 제목','제작소 보유'],['Pretendard-ExtraBold.otf','프리텐다드 ExtraBold','굵은 제목','제작소 보유'],['Dongle-Bold.ttf','동글 Bold','굵은 제목','제작소 보유'],
+['Kkubulim.ttf','꾸불림','굵은 제목','제작소 보유'],['Cafe24Danjunghae.ttf','카페24 단정해','굵은 제목','제작소 보유'],
+['NotoSansKR-Bold.otf','본고딕 Bold','고딕(자막용)','제작소 보유'],['Pretendard-Bold.otf','프리텐다드 Bold','고딕(자막용)','제작소 보유'],['Pretendard-SemiBold.otf','프리텐다드 SemiBold','고딕(자막용)','제작소 보유'],
+['Pretendard-Regular.otf','프리텐다드 Regular','고딕(자막용)','제작소 보유'],['SUIT-Bold.otf','SUIT Bold','고딕(자막용)','제작소 보유'],['SUIT-Regular.otf','SUIT Regular','고딕(자막용)','제작소 보유'],
+['SpoqaHanSansNeo-Bold.otf','스포카 한 산스 Bold','고딕(자막용)','제작소 보유'],['SpoqaHanSansNeo-Regular.otf','스포카 한 산스','고딕(자막용)','제작소 보유'],
+['IBMPlexSansKR-Bold.otf','IBM Plex KR Bold','고딕(자막용)','제작소 보유'],['IBMPlexSansKR-Regular.otf','IBM Plex KR','고딕(자막용)','제작소 보유'],
+['NanumGothic-Bold.ttf','나눔고딕 Bold','고딕(자막용)','제작소 보유'],['NanumGothicCoding-Bold.ttf','나눔고딕코딩 Bold','고딕(자막용)','제작소 보유'],
+['GowunDodum-Regular.ttf','고운돋움','고딕(자막용)','제작소 보유'],['Sunflower-Medium.ttf','해바라기','고딕(자막용)','제작소 보유'],['Orbit-Regular.ttf','오르빗','고딕(자막용)','제작소 보유'],
+['Gugi-Regular.ttf','구기','고딕(자막용)','제작소 보유'],['Stylish-Regular.ttf','스타일리시','고딕(자막용)','제작소 보유'],
+['NanumMyeongjo-ExtraBold.ttf','나눔명조 ExtraBold','명조','제작소 보유'],['RIDIBatang.otf','리디바탕','명조','제작소 보유'],['GowunBatang.ttf','고운바탕','명조','제작소 보유'],
+['GBatang.otf','G바탕','명조','제작소 보유'],['Hahmlet-Variable.ttf','함렛','명조','제작소 보유'],['SongMyung-Regular.ttf','송명','명조','제작소 보유'],
+['HakgyoansimBunpil.ttf','학교안심 분필','손글씨·장식','제작소 보유'],['NanumBrushScript.ttf','나눔손글씨 붓','손글씨·장식','제작소 보유'],['NanumPenScript.ttf','나눔손글씨 펜','손글씨·장식','제작소 보유'],
+['BlackAndWhitePicture.ttf','흑백사진','손글씨·장식','제작소 보유'],['CuteFont.ttf','귀여운폰트','손글씨·장식','제작소 보유'],['Dokdo-Regular.ttf','독도','손글씨·장식','제작소 보유'],
+['EastSeaDokdo.ttf','동해독도','손글씨·장식','제작소 보유'],['Gaegu-Bold.ttf','개구 Bold','손글씨·장식','제작소 보유'],['GamjaFlower.ttf','감자꽃','손글씨·장식','제작소 보유'],
+['GrandifloraOne-Regular.ttf','그랜디플로라','손글씨·장식','제작소 보유'],['HiMelody.ttf','하이멜로디','손글씨·장식','제작소 보유'],['KirangHaerang.ttf','기랑해랑','손글씨·장식','제작소 보유'],
+['MoiraiOne-Regular.ttf','모이라이','손글씨·장식','제작소 보유'],['PoorStory.ttf','푸어스토리','손글씨·장식','제작소 보유'],['SingleDay.ttf','싱글데이','손글씨·장식','제작소 보유'],
+['YeonSung-Regular.ttf','연성','손글씨·장식','제작소 보유'],['OkMallangW.ttf','옥말랑','손글씨·장식','제작소 보유'],
+];
+const CATS=['전체','굵은 제목','고딕(자막용)','명조','손글씨·장식','볼케이노(뇌전구)'];
+let cat='전체';
+const grid=document.getElementById('grid'),chips=document.getElementById('chips'),sample=document.getElementById('sample');
+chips.innerHTML=CATS.map(c=>`<button data-c="${c}" class="${c===cat?'on':''}">${c}</button>`).join('');
+chips.onclick=e=>{const b=e.target.closest('button');if(!b)return;cat=b.dataset.c;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));draw();};
+const split=t=>{const w=t.split(' ');const h=Math.ceil(w.length/2);return [w.slice(0,h).join(' '),w.slice(h).join(' ')]};
+FONTS.forEach(([file],i)=>{const url=file.includes('/')?file:F+file;const ff=new FontFace('g'+i,`url("${encodeURI(url)}")`);document.fonts.add(ff);ff.load().catch(()=>{FONTS[i].failed=true;draw();});});
+// 한글 글리프가 없는 폰트 판정: 대체 글꼴 두 개와 폭이 둘 다 같으면 그 폰트가 한글을 안 그리는 것
+function noHangul(i){const c=document.createElement('canvas').getContext('2d'),t='한글자막테스트';
+  c.font=`40px g${i}, serif`;const a=c.measureText(t).width;c.font=`40px g${i}, monospace`;const b=c.measureText(t).width;return a!==b;}
+function draw(){
+  const [l1,l2]=split(sample.value||'제목을 입력하세요');
+  const rows=FONTS.map((f,i)=>({f,i})).filter(({f})=>cat==='전체'||f[2]===cat||(cat==='볼케이노(뇌전구)'&&f[3].startsWith('볼케이노')));
+  document.getElementById('count').textContent=`${rows.length}종 / 전체 ${FONTS.length}종`;
+  grid.innerHTML=rows.map(({f,i})=>{const bad=f.failed?'파일 못 읽음':(document.fonts.check(`20px g${i}`)&&noHangul(i)?'한글 없음':'');
+    return `<div class="card ${bad?'dim':''}"><div class="meta"><span><b>${f[1]}</b> · ${f[2]}</span><span class="${bad?'warn':'tag'}">${bad||f[3]}</span></div>
+    <div class="frame" style="font-family:g${i},sans-serif"><span class="ch">숏템메이커</span><div class="t1">${l1}</div><div class="t2">${l2}</div><span class="cap">사실 이거 모르면</span></div></div>`}).join('');
+}
+sample.oninput=draw;draw();document.fonts.ready.then(()=>setTimeout(draw,300));
+</script></body></html>

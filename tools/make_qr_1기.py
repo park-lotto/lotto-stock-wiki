@@ -6,7 +6,7 @@ from qrcode.constants import ERROR_CORRECT_H
 
 TARGETS = {
     "숏템메이커_1기_신청폼_QR": "https://docs.google.com/forms/d/e/1FAIpQLScd2daWqtFnea1e_5y5ZKq6OkDPOeuw3qLg3tBinv6G2P4eCQ/viewform",
-    "숏템메이커_1기_카드결제_QR": "https://stmaker.kr/surl/O/3068",
+    "숏템메이커_1기_카드결제_QR": "https://smartstore.naver.com/makerslab7/products/13765673887",
 }
 
 OUT_DIRS = [

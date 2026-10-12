@@ -1,0 +1,54 @@
+[
+  {
+    "story_person": "탈모와 두피 관리가 필요한 사용자",
+    "story_event": "주입형 빗에 헤어 토닉을 넣고 직접 두피 마사지하며 도포함",
+    "story_resolution": "손에 묻히지 않고 정수리까지 깔끔하게 토닉 도포 완료",
+    "cta_line": "",
+    "cta_keyword": "",
+    "applied": "미친 활용법 문장틀을 적용하고 반말체로 작성, CTA 없이 사용법 중심 완시청 유도",
+    "beats": [
+      {
+        "role": "title",
+        "text": "두피 전문가도 전혀 예상 못한 미친 활용법",
+        "src_seg": "",
+        "needs_scene": false
+      },
+      {
+        "role": "bait",
+        "text": "최근 미친 아이디어 하나로 SNS 뒤집어 놓은 아이템이 하나 있는데",
+        "src_seg": "grab_instagram_93846c9ca07d-0",
+        "needs_scene": true
+      },
+      {
+        "role": "origin",
+        "text": "원래는 머리카락이나 빗는 평범한 빗이었음",
+        "src_seg": "BKvG_uPxsY0-3",
+        "needs_scene": true
+      },
+      {
+        "role": "notice",
+        "text": "근데 사람들이 빗 내부의 액체 저장 탱크에 주목하면서 미친 활용법들이 쏟아지기 시작함",
+        "src_seg": "grab_instagram_40c875d8ac6b-1",
+        "needs_scene": true
+      },
+      {
+        "role": "cases",
+        "text": "초보들은 기껏해야 헤어 에센스 묻혀서 빗어주는 정도였는데",
+        "src_seg": "grab_instagram_7f80070dc52a-2",
+        "needs_scene": true
+      },
+      {
+        "role": "escalation",
+        "text": "근데 고수들은 아예 헤어 토닉을 채워 넣어서 두피 롤링 마사지기로 만들어 버림",
+        "src_seg": "grab_instagram_e7ba48e8f982-10",
+        "needs_scene": true
+      },
+      {
+        "role": "twist",
+        "text": "근데 진짜 미친 포인트는 손에 끈적하게 묻어남 없이 두피 구석구석 고르게 도포한다는 거임",
+        "src_seg": "grab_instagram_93846c9ca07d-8",
+        "needs_scene": true
+      }
+    ]
+  }
+]

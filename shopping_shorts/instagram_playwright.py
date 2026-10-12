@@ -574,6 +574,19 @@ def fetch_profiles(usernames, _fetch_all=None):
     return fetch_all(names)
 
 
+def profile_link(u):
+    """프로필 user 객체에서 외부 링크 하나 — external_url, 없으면 bio_links[0].url. 판단은 여기 한 곳."""
+    if not isinstance(u, dict):
+        return ""
+    link = (u.get("external_url") or "").strip()
+    if not link:
+        for b in (u.get("bio_links") or []):
+            if isinstance(b, dict) and (b.get("url") or "").strip():
+                link = b["url"].strip()
+                break
+    return link[:500]
+
+
 def _fetch_profiles_playwright(usernames):
     from playwright.sync_api import sync_playwright
     from playwright_stealth import Stealth
@@ -641,7 +654,10 @@ def _fetch_profiles_playwright(usernames):
                                           # 카테고리 판정의 **약한 보조 신호**로만 쓴다:
                                           # 여러 분야를 함께 다루는 채널이 많다는 사장님 지적
                                           # (2026-07-30) → 해시태그·캡션이 없을 때만 참고.
-                                          "biography": u.get("biography") or ""}
+                                          "biography": u.get("biography") or "",
+                                          # 프로필 외부 링크(인포크 등) — 같은 응답에 있어 추가 호출 0
+                                          # (2026-09-26 사장님 "발굴 채널에도 판매채널"). 판매채널 칸이 된다.
+                                          "link": profile_link(u)}
             ctx.close()
             browser.close()
     except Exception:      # noqa: BLE001 — 브라우저 자체가 안 뜨는 등 전체 실패면 빈 dict

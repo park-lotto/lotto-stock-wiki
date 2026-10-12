@@ -281,6 +281,35 @@ def test_route_pinterest_image_pin_raises_clear_error(monkeypatch, tmp_path):
         assert "이미지 핀" in str(e)
 
 
+def test_pinterest_server_block_falls_back_to_pc_relay(monkeypatch, tmp_path):
+    """데이터센터 IP에서 JSON-LD가 없으면 이미지 핀으로 오판하지 않고 PC에 맡긴다."""
+    import shopping_shorts.pinterest_crawl as pc
+    from shopping_shorts import config
+    monkeypatch.setattr(pc, "pin_video_info", lambda url, timeout=8: None)
+    monkeypatch.setattr(config, "YT_RELAY_ENABLED", True)
+    monkeypatch.setattr(config, "YTDLP_PROXY", "")
+    monkeypatch.setattr(md, "_download_via_relay",
+                        lambda url, dest: (str(tmp_path / "from-pc.mp4"), ""))
+
+    path, caption = md.download_any(
+        "https://kr.pinterest.com/pin/18295942229438860/", str(tmp_path))
+    assert path.endswith("from-pc.mp4")
+    assert caption == ""
+
+
+def test_pinterest_http_block_falls_back_to_pc_relay(monkeypatch, tmp_path):
+    import shopping_shorts.pinterest_crawl as pc
+    from shopping_shorts import config
+    monkeypatch.setattr(pc, "pin_video_info",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("HTTP 403")))
+    monkeypatch.setattr(config, "YT_RELAY_ENABLED", True)
+    monkeypatch.setattr(config, "YTDLP_PROXY", "")
+    monkeypatch.setattr(md, "_download_via_relay",
+                        lambda url, dest: (str(tmp_path / "from-pc.mp4"), ""))
+    path, _ = md.download_any("https://www.pinterest.com/pin/456/", str(tmp_path))
+    assert path.endswith("from-pc.mp4")
+
+
 def test_pinimg_direct_mp4_skips_page_fetch(monkeypatch, tmp_path):
     """핀터레스트 탭이 저장한 video_url(v1.pinimg …mp4)이 그대로 오면 페이지 재조회 없이
     직접 다운로드(.mp4 → _is_direct_video 경로)여야 한다."""
@@ -305,3 +334,30 @@ def test_probe_grab_meta_threads_forwards_timeout(monkeypatch):
     monkeypatch.setattr(md, "_probe_threads_meta", fake_probe)
     md.probe_grab_meta("https://www.threads.com/@u/post/Abc", timeout=40)
     assert captured["timeout"] == 40
+
+
+# 2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트 → yt-dlp "not a Netscape format" 즉사.
+def test_cookies_arg_ignores_empty_cookie_file(tmp_path, monkeypatch):
+    from shopping_shorts import media_download as md
+    empty = tmp_path / "youtube_cookies.txt"
+    empty.write_bytes(b"")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_BROWSER_YOUTUBE", "")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_YOUTUBE", str(empty))
+    args = md._cookies_arg("https://www.youtube.com/watch?v=abc")
+    assert "--cookies" not in args
+
+
+def test_cookies_arg_uses_nonempty_cookie_file(tmp_path, monkeypatch):
+    from shopping_shorts import media_download as md
+    f = tmp_path / "youtube_cookies.txt"
+    f.write_text("# Netscape HTTP Cookie File\n", encoding="utf-8")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_BROWSER_YOUTUBE", "")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_YOUTUBE", str(f))
+    args = md._cookies_arg("https://www.youtube.com/watch?v=abc")
+    assert args[0] == "--cookies"
+    # yt-dlp가 종료 시 다시 쓰므로 원본이 아닌 사본을 넘긴다(2026-09-16 0바이트 사고)
+    assert args[1] != str(f)
+    assert open(args[1], encoding="utf-8").read() == "# Netscape HTTP Cookie File\n"
+    # 사본을 비워도 원본은 그대로
+    open(args[1], "w").close()
+    assert f.stat().st_size > 0

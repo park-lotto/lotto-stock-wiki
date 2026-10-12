@@ -14,8 +14,8 @@ client = TestClient(app_mod.app)
 def spy(monkeypatch):
     calls = []
 
-    def fake(script, want=4):
-        calls.append(script)
+    def fake(script, want=4, family="generic"):
+        calls.append((script, family))
         return [{"label": "짧은 훅형", "text": "이거 모르면 손해"}]
 
     monkeypatch.setattr(app_mod.headcopy_gen, "suggest", fake)
@@ -64,7 +64,33 @@ def test_changed_script_regenerates(spy):
 
 def test_ai_empty_is_200_with_empty_list(monkeypatch):
     """못 뽑아도 500이 아니다 — 화면이 '못 뽑았어요'를 그릴 수 있어야 한다."""
-    monkeypatch.setattr(app_mod.headcopy_gen, "suggest", lambda s, want=4: [])
+    monkeypatch.setattr(app_mod.headcopy_gen, "suggest", lambda s, want=4, family="generic": [])
     r = client.post("/api/produce/headcopy/suggest", json={"script": "실패용 대본 xyz"})
     assert r.status_code == 200
     assert r.json() == {"ok": True, "cached": False, "copies": []}
+
+
+def test_copy_family_is_forwarded_to_generator(spy):
+    client.post("/api/produce/headcopy/suggest", json={
+        "script": "첫 후킹 전달 확인용 대본", "copy_family": "youtube_reveal"})
+    assert spy[-1][1] == "youtube_reveal"
+
+
+def test_same_script_different_family_does_not_share_cache(spy):
+    script = "계열별 캐시 분리 확인용 대본"
+    before = len(spy)
+    for family in ("youtube_reveal", "instagram_story", "demo_direct"):
+        client.post("/api/produce/headcopy/suggest", json={
+            "script": script, "copy_family": family})
+    assert len(spy) == before + 3
+    assert [family for _, family in spy[-3:]] == [
+        "youtube_reveal", "instagram_story", "demo_direct"]
+
+
+def test_non_admin_customer_stays_on_existing_generic_copy(monkeypatch, spy):
+    """세 카피 계열은 사장님 시험용이며 일반 고객의 기존 제목 생성은 바꾸지 않는다."""
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 17)
+    r = client.post("/api/produce/headcopy/suggest", json={
+        "script": "일반 고객 격리 확인 대본", "copy_family": "instagram_story"})
+    assert r.status_code == 200
+    assert spy[-1][1] == "generic"

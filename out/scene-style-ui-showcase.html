@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>장면꾸미기 UI 방향 4종</title>
+  <style>
+    @font-face{font-family:"BagelFatOne";src:url("../shopping_shorts/static/fonts/w2/BagelFatOne-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"DongleBold";src:url("../shopping_shorts/static/fonts/w2/Dongle-Bold.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"Kkubulim";src:url("../shopping_shorts/static/fonts/w2/Kkubulim.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"NanumMyeongjoEB";src:url("../shopping_shorts/static/fonts/w2/NanumMyeongjo-ExtraBold.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"RIDIBatang";src:url("../shopping_shorts/static/fonts/w2/RIDIBatang.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"HakgyoansimBunpil";src:url("../shopping_shorts/static/fonts/w2/HakgyoansimBunpil.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"NanumBrushScript";src:url("../shopping_shorts/static/fonts/w2/NanumBrushScript.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"GaeguBold";src:url("../shopping_shorts/static/fonts/w2/Gaegu-Bold.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"Cafe24Danjunghae";src:url("../shopping_shorts/static/fonts/w2/Cafe24Danjunghae.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"SUITBold";src:url("../shopping_shorts/static/fonts/w2/SUIT-Bold.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"NotoSansKRBold";src:url("../shopping_shorts/static/fonts/w2/NotoSansKR-Bold.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"SBAggroB";src:url("../shopping_shorts/static/fonts/w2/SBAggroB.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"YgJalnan";src:url("../shopping_shorts/static/fonts/w2/yg-jalnan.woff2") format("woff2");font-weight:400;font-display:swap}
+    @font-face{font-family:"TmonMonsori";src:url("../shopping_shorts/static/fonts/w2/TmonMonsori.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"BlackHanSans";src:url("../shopping_shorts/static/fonts/w2/BlackHanSans.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"GothicA1Black";src:url("../shopping_shorts/static/fonts/w2/GothicA1-Black.woff2") format("woff2");font-weight:900;font-display:swap}
+    @font-face{font-family:"GmarketSansBold";src:url("../shopping_shorts/static/fonts/w2/GmarketSansBold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"BMDOHYEON";src:url("../shopping_shorts/static/fonts/w2/BMDOHYEON.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"BMJUA";src:url("../shopping_shorts/static/fonts/w2/BMJUA.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Pretendard";src:url("../shopping_shorts/static/fonts/w2/Pretendard-ExtraBold.woff2") format("woff2");font-weight:800;font-display:swap}
+    @font-face{font-family:"PretendardXBold";src:url("../shopping_shorts/static/fonts/w2/Pretendard-ExtraBold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Jalnan2";src:url("../shopping_shorts/static/fonts/w2/Jalnan2.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"JalnanGothic";src:url("../shopping_shorts/static/fonts/w2/JalnanGothic.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"GasoekOne";src:url("../shopping_shorts/static/fonts/w2/GasoekOne-Regular.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Stylish";src:url("../shopping_shorts/static/fonts/w2/Stylish-Regular.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Cafe24Ohsquare";src:url("../shopping_shorts/static/fonts/w2/Cafe24Ohsquare.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"KCCGanpan";src:url("../shopping_shorts/static/fonts/w2/KCCGanpan.woff2") format("woff2");font-display:swap}
+    /* 장면폰트:시작 — tools/scene_font_research/install_scene_fonts.py 가 쓴다. 손으로 고치지 마라 */
+    @font-face{font-family:"Scene330";src:url("../shopping_shorts/static/fonts/w2/330_yangjin.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene364";src:url("../shopping_shorts/static/fonts/w2/364_CookieRunOTF-Black00.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene676";src:url("../shopping_shorts/static/fonts/w2/676_ONE-Mobile-POP.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene223";src:url("../shopping_shorts/static/fonts/w2/223_S-CoreDream-9Black.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1456";src:url("../shopping_shorts/static/fonts/w2/1456_Paperlogy-9Black.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1369";src:url("../shopping_shorts/static/fonts/w2/1369_Freesentation-9Black.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene427";src:url("../shopping_shorts/static/fonts/w2/427_MaplestoryOTFBold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene82";src:url("../shopping_shorts/static/fonts/w2/82_OTEnjoystoriesBA.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene463";src:url("../shopping_shorts/static/fonts/w2/463_GongGothicBold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1146";src:url("../shopping_shorts/static/fonts/w2/1146_KBO-Dia-Gothic_bold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene669";src:url("../shopping_shorts/static/fonts/w2/669_Cafe24Ssurround.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1381";src:url("../shopping_shorts/static/fonts/w2/1381_HSSanTokki20-Regular.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene461";src:url("../shopping_shorts/static/fonts/w2/461_BinggraeSamanco-Bold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1042";src:url("../shopping_shorts/static/fonts/w2/1042_Tenada.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene731";src:url("../shopping_shorts/static/fonts/w2/731_CWDangamAsac-Bold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene321";src:url("../shopping_shorts/static/fonts/w2/321_BMEULJIRO.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene321";src:url("../shopping_shorts/static/fonts/w2/499_BMEuljiro10yearslater.woff2") format("woff2");font-display:swap;unicode-range:U+21-2F,U+3A-40,U+5B-60,U+7B-7E,U+B7,U+2018-201D,U+2026}
+    @font-face{font-family:"Scene499";src:url("../shopping_shorts/static/fonts/w2/499_BMEuljiro10yearslater.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene805";src:url("../shopping_shorts/static/fonts/w2/805_GangwonEduPowerExtraBoldA.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1710";src:url("../shopping_shorts/static/fonts/w2/1710_HakgyoansimPosterB.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene458";src:url("../shopping_shorts/static/fonts/w2/458_TmoneyRoundWindExtraBold.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene876";src:url("../shopping_shorts/static/fonts/w2/876_Yeongdo-Hv.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1186";src:url("../shopping_shorts/static/fonts/w2/1186_PartialSansKR-Regular.woff2") format("woff2");font-display:swap}
+    @font-face{font-family:"Scene1405";src:url("../shopping_shorts/static/fonts/w2/1405_MangoDdobak-B.woff2") format("woff2");font-display:swap}
+    /* 장면폰트:끝 */
+    @font-face{font-family:"BinggraeBold";src:url("../shopping_shorts/static/fonts/w2/Binggrae-Bold.woff2") format("woff2");font-display:swap}
+    :root{
+      --bg:#071018;--panel:#0d1822;--panel-2:#111e29;--panel-3:#152430;
+      --line:#20313d;--line-strong:#35505f;--text:#f4f8fa;--muted:#8fa3ae;
+      --mint:#43e2b4;--mint-ink:#04251d;--amber:#ffb547;--danger:#ff6d7a;
+      --r-sm:8px;--r-md:12px;--r-lg:16px;--shadow:0 18px 50px rgba(0,0,0,.28);
+      font-family:Pretendard,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color-scheme:dark;
+    }
+    *{box-sizing:border-box} body{margin:0;background:#050b11;color:var(--text)} button,input{font:inherit}
+    button{color:inherit}.shell{min-width:1120px;min-height:100vh;background:radial-gradient(circle at 55% -20%,#173242 0,transparent 34%),var(--bg)}
+    .appbar{height:62px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(5,13,20,.94)}
+    .logo{font-size:19px;font-weight:900;letter-spacing:-.5px}.logo b{color:var(--mint)}.beta{margin-left:9px;padding:3px 7px;border:1px solid var(--line-strong);border-radius:999px;color:var(--muted);font-size:11px}
+    .app-actions{margin-left:auto;display:flex;gap:8px}.quiet{height:36px;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:#b8c7ce;font-weight:700;cursor:pointer}
+    .direction-bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);background:#08121a}
+    .direction-bar strong{margin-right:6px;font-size:13px;color:#b8c8d0}.direction{height:38px;padding:0 16px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:#aebec6;font-weight:800;cursor:pointer}
+    .direction.active{border-color:var(--mint);background:var(--mint);color:var(--mint-ink);box-shadow:0 0 0 4px rgba(67,226,180,.09)}
+    .direction-note{margin-left:auto;color:var(--muted);font-size:12px}.view{display:none}.view.active{display:block}
+    .page-title{height:64px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--line)}
+    .page-title h1{margin:0;font-size:18px}.page-title p{margin:5px 0 0;color:var(--muted);font-size:12px}.analysis{margin-left:auto;padding:7px 10px;border-radius:999px;background:#0e2c25;color:#75e7c8;font-size:12px;font-weight:800}
+    .workspace{display:grid;min-height:704px}.layout-a{grid-template-columns:300px minmax(430px,1fr) 360px}.layout-b{grid-template-columns:minmax(660px,1fr) 390px}.layout-c{grid-template-columns:246px minmax(470px,1fr) 330px}.layout-d{grid-template-columns:minmax(720px,1fr) 330px}
+    .pane{padding:16px;border-right:1px solid var(--line);background:rgba(13,24,34,.72)}.pane:last-child{border-right:0}.pane h2{font-size:14px;margin:0 0 13px}.pane-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.pane-head h2{margin:0}.count{font-size:11px;color:var(--muted)}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px}.chip{height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--panel-3);color:#9eb0ba;font-size:12px;font-weight:700;cursor:pointer}.chip.active{background:var(--mint);color:var(--mint-ink)}
+    .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.preset-list{display:grid;gap:10px}.preset-card{position:relative;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);padding:8px;cursor:pointer;text-align:left;transition:.16s}.preset-card:hover{transform:translateY(-2px);border-color:#597180}.preset-card.selected{border:2px solid var(--mint);padding:7px;box-shadow:0 0 0 3px rgba(67,226,180,.1)}
+    .preset-card .check{display:none;position:absolute;z-index:3;right:5px;top:5px;width:20px;height:20px;border-radius:50%;background:var(--mint);color:var(--mint-ink);text-align:center;line-height:20px;font-size:11px;font-weight:900}.preset-card.selected .check{display:block}
+    .thumb-pair{display:grid;grid-template-columns:1fr 1fr;gap:4px}.thumb-pair img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#27333c}.preset-card > b{display:block;margin-top:7px;font-size:12px}.preset-card > small{display:block;margin-top:2px;color:var(--muted);font-size:10px}.preset-card.wide{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center}.preset-card.wide .thumb-pair{height:112px}.preset-card.wide .thumb-pair img{height:112px;width:44px}.preset-card.wide>span{display:block;min-width:0}.preset-card.wide b{margin:0 0 4px;font-size:13px;overflow-wrap:anywhere}.preset-card.wide small{font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+    .preview-pane{display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0a151e,#081119)}.preview-toolbar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.seg{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:#08121a}.seg button{height:31px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:800;cursor:pointer}.seg button.active{background:var(--panel-3);color:var(--text)}
+    .phone-wrap{position:relative;width:100%;height:545px;display:flex;align-items:center;justify-content:center}.phone{height:525px;aspect-ratio:9/16;object-fit:cover;border-radius:9px;background:#212e37;box-shadow:0 22px 55px rgba(0,0,0,.45);border:1px solid #32434e}.pair-preview{display:flex;gap:18px;align-items:flex-start}.pair-preview figure{margin:0;text-align:center}.pair-preview img{height:430px;aspect-ratio:9/16;object-fit:cover;border-radius:8px;box-shadow:var(--shadow)}.pair-preview figcaption{margin-top:7px;color:var(--muted);font-size:11px}
+    .dynamic-phone{--template-accent:#ffe600;--template-top:#211f19;--template-body:#ffe7a1;position:relative;height:525px;aspect-ratio:9/16;overflow:hidden;border-radius:9px;background:#151515;box-shadow:0 22px 55px rgba(0,0,0,.45);border:1px solid #40515c}.dynamic-phone .media-window{position:absolute;z-index:1;left:0;right:0;top:38.4%;bottom:0;background-image:var(--template-media);background-size:100% auto;background-position:center bottom;background-repeat:no-repeat}.dynamic-phone .brand-row{position:absolute;z-index:4;left:0;right:0;top:0;height:9.4%;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:linear-gradient(180deg,color-mix(in srgb,var(--template-top),#fff 5%),var(--template-top));border-bottom:1px solid rgba(255,255,255,.45);font-weight:900}.dynamic-phone .brand-row b{font-size:20px;letter-spacing:5px}.dynamic-phone .brand-icon{font-size:19px;color:#fff;opacity:.9}.dynamic-phone .hook-copy{position:absolute;z-index:4;left:0;right:0;top:9.4%;height:20.9%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--template-top);font-weight:900;letter-spacing:-1.2px;line-height:1}.dynamic-phone .hook-copy strong{font-size:27px;color:#fff;text-shadow:none}.dynamic-phone .hook-copy em{font-size:27px;color:var(--template-accent);font-style:normal;text-shadow:none}.dynamic-phone .hook-band{position:absolute;z-index:4;left:0;right:0;top:30.3%;height:8.1%;display:flex;align-items:center;justify-content:center;padding:0 8px;background:linear-gradient(180deg,#fefefe 0%,#f5f5f5 72%,#a4a4a4 100%);color:#060606;font-size:15px;font-weight:900;letter-spacing:-.6px;box-shadow:0 0 7px rgba(0,0,0,.45)}
+    .dynamic-phone .body-title-area{display:none;position:absolute;z-index:4;left:0;right:0;top:9.4%;height:11.7%;padding:9px 10px 0;background:#414141;color:#fff;text-align:left}.dynamic-phone .body-title-area b{display:block;font-size:17px;line-height:1.2;letter-spacing:-.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dynamic-phone .body-title-area small{display:block;margin-top:4px;color:#c3c3c3;font-size:9px}.dynamic-phone .body-band{display:none;position:absolute;z-index:4;left:0;right:0;top:21.1%;height:9.7%;align-items:center;justify-content:center;padding:0 8px;background:linear-gradient(180deg,#fff,#fdfdfd 78%,#eff6fa);color:#050505;font-size:17px;font-weight:900;letter-spacing:-.7px}.dynamic-phone.is-body .hook-copy,.dynamic-phone.is-body .hook-band{display:none}.dynamic-phone.is-body .body-title-area{display:block}.dynamic-phone.is-body .body-band{display:flex}.dynamic-phone.is-body .brand-row{background:linear-gradient(180deg,color-mix(in srgb,var(--template-body),#fff 5%),var(--template-body));color:#0a0a0a}.dynamic-phone.is-body .brand-icon{color:#111}.dynamic-phone.is-body .media-window{top:30.8%}.dynamic-phone .safe-lines{position:absolute;z-index:5;inset:4%;border:1px dashed rgba(67,226,180,.34);pointer-events:none;opacity:0}.dynamic-phone:hover .safe-lines{opacity:1}
+    /* 숏템 기본형: 360x640 원본을 픽셀 측정한 전용 구성. */
+    .dynamic-phone.template-shortem{background-image:var(--template-media);background-size:100% 100%;background-position:0 0;background-repeat:no-repeat}
+    .dynamic-phone.template-shortem .brand-row,.dynamic-phone.template-shortem .media-window,.dynamic-phone.template-shortem .shortem-body-channel{display:none}
+    .dynamic-phone.template-shortem .hook-copy{top:10%;height:20.625%;padding:3% 0 0;background:rgb(43,39,29);justify-content:flex-start;gap:0;font-family:"TmonMonsori","Black Han Sans",sans-serif;line-height:.95;letter-spacing:-2.7px}
+    .dynamic-phone.template-shortem .hook-copy strong,.dynamic-phone.template-shortem .hook-copy em{display:block;width:100%;text-align:center;white-space:nowrap;font-weight:400;-webkit-text-stroke:0;paint-order:stroke fill;text-shadow:none}
+    .dynamic-phone.template-shortem .hook-copy strong{font-size:52px;color:rgb(255,255,255)}
+    .dynamic-phone.template-shortem .hook-copy em{margin-top:3.5px;font-size:43.5px;color:rgb(255,229,0);font-style:normal}
+    .dynamic-phone.template-shortem .hook-band{top:30.625%;height:8.125%;padding:1.2% 6px 0;background:linear-gradient(180deg,rgb(158,158,156) 0%,rgb(214,214,213) 13%,rgb(255,255,255) 27%,rgb(253,253,253) 77%,rgb(218,218,215) 89%,rgb(98,98,96) 100%);box-shadow:none;color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif;font-size:21.8px;font-weight:400;letter-spacing:-1.35px;line-height:1;white-space:nowrap}
+    .dynamic-phone.template-shortem.is-body{background-image:var(--template-media)}
+    .dynamic-phone.template-shortem.is-body .body-title-area{display:block;top:23.75%;height:6.4%;padding:1.25% 5px 0;background:linear-gradient(180deg,rgb(253,253,253) 0%,rgb(253,253,253) 78%,rgb(207,207,207) 94%,rgb(255,255,255) 100%);text-align:center;color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif}
+    .dynamic-phone.template-shortem.is-body .body-title-area b{font-size:18.5px;font-weight:400;line-height:1.2;letter-spacing:-1.05px;overflow:visible;text-overflow:clip}
+    .dynamic-phone.template-shortem.is-body .body-title-area small{display:none}
+    .dynamic-phone.template-shortem.is-body .body-band{display:flex;top:30.15625%;height:8.90625%;padding:1% 6px 0;background:linear-gradient(180deg,rgb(255,255,255) 0%,rgb(253,253,253) 12%,rgb(253,253,253) 84%,rgb(255,255,255) 100%);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif;font-size:19px;font-weight:400;letter-spacing:-1px;line-height:1;white-space:nowrap;box-shadow:none}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row{display:flex;height:10%;padding:1.5% 0 0;justify-content:center;border:0;background:rgb(43,39,29);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row .brand-icon{display:none}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row b{font-size:21px;font-weight:400;letter-spacing:-1px}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .brand-row{height:13.59375%;padding:1.5% 0 0;background:rgb(255,233,168)}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .brand-row b{font-size:22px}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .shortem-body-channel{display:flex;position:absolute;z-index:5;left:22.5%;top:14.3%;width:24%;height:6.7%;align-items:flex-start;padding-top:1.8%;background:rgb(253,253,253);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif;font-size:16px;line-height:1;letter-spacing:-.8px}
+    /* 값이 바뀌기 전에는 원본 캡처 자체가 미리보기이므로 서브픽셀 렌더링까지 1:1이다. */
+    .dynamic-phone.template-shortem.is-pristine:not(.is-body) .hook-copy,.dynamic-phone.template-shortem.is-pristine:not(.is-body) .hook-band{display:none}
+    .dynamic-phone.template-shortem.is-pristine.is-body .body-title-area,.dynamic-phone.template-shortem.is-pristine.is-body .body-band{display:none}
+    .stage-note{position:absolute;top:50%;width:136px;transform:translateY(-50%);padding:11px;border:1px solid var(--line);border-radius:11px;background:rgba(13,24,34,.9);box-shadow:var(--shadow);font-size:10px;color:var(--muted);line-height:1.5}.stage-note b{display:block;margin-bottom:5px;color:#dce7eb;font-size:11px}.stage-note.left{left:14px}.stage-note.right{right:14px}.stage-note i{display:block;height:4px;margin-top:7px;border-radius:99px;background:#273b46}.stage-note i span{display:block;height:100%;border-radius:inherit;background:var(--mint)}
+    .transport{width:min(420px,100%);display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px}.play{width:34px;height:34px;border:0;border-radius:50%;background:var(--text);color:#071018;cursor:pointer}.track{height:5px;flex:1;border-radius:99px;background:#33434d;overflow:hidden}.track i{display:block;width:31%;height:100%;background:var(--mint)}
+    .scene-strip{width:100%;display:flex;gap:5px;margin-top:14px}.scene-strip button{flex:1;height:42px;border:1px solid var(--line);border-radius:7px;background:#14212b;color:#758994;font-size:10px;cursor:pointer}.scene-strip button.active{border-color:var(--mint);color:var(--mint);background:#0d2a23}
+    .edit-pane{background:#0a151e}.tool-tabs{display:flex;border-bottom:1px solid var(--line);margin:-2px 0 14px}.tool-tabs button{flex:1;height:42px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:12px;font-weight:800}.tool-tabs button.active{border-color:var(--mint);color:var(--mint)}
+    .field{margin-bottom:13px}.field label{display:flex;justify-content:space-between;margin-bottom:6px;color:#bdc9cf;font-size:11px;font-weight:700}.field label span{color:#667b87}.field input{width:100%;height:39px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#071119;color:var(--text);font-size:12px}.field input:focus{outline:2px solid rgba(67,226,180,.35);border-color:var(--mint)}.field input.contract-invalid,.field textarea.contract-invalid{border-color:#ff6d7a;box-shadow:0 0 0 2px rgba(255,109,122,.18)}
+    .ai-card{padding:11px;border:1px solid #245244;border-radius:10px;background:#0c2821;color:#a8d8ca;font-size:11px;line-height:1.5;margin-bottom:13px}.ai-card b{color:var(--mint)}
+    .color-row{display:flex;gap:12px;margin:8px 0 17px}.swatch{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px}.swatch i{width:19px;height:19px;border-radius:50%;border:1px solid #61727b}
+    .primary{width:100%;height:43px;border:0;border-radius:9px;background:var(--mint);color:var(--mint-ink);font-weight:900;cursor:pointer}.secondary{width:100%;height:39px;margin-top:8px;border:1px solid var(--line-strong);border-radius:9px;background:transparent;color:#bac8cf;font-weight:800;cursor:pointer}
+    details{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#09131b;padding:11px}summary{cursor:pointer;color:#a7b8c0;font-size:12px;font-weight:800}
+    .gallery{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px}.gallery .preset-card{padding:9px}.gallery .thumb-pair{gap:6px}.gallery .preset-card > b{font-size:13px}.gallery-wrap{padding:16px;overflow:hidden}.selection-dock{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:#0a151e}.dock-info{display:flex;align-items:center;gap:12px}.dock-info .mini-pair{display:flex;gap:3px}.dock-info img{height:94px;aspect-ratio:9/16;object-fit:cover;border-radius:5px}.dock-info h3{margin:0 0 4px;font-size:15px}.dock-info p{margin:0;color:var(--muted);font-size:11px}.dock-preview{display:flex;align-items:center;justify-content:flex-end;gap:10px}.dock-preview button{width:auto;padding:0 20px}.layout-b .pair-preview{gap:10px}.layout-b .pair-preview img{height:300px}.layout-d .pair-preview{gap:8px}.layout-d .pair-preview img{height:250px}
+    .verify-box{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:#0a151e}.metric span{display:block;color:var(--muted);font-size:10px}.metric b{display:block;margin-top:3px;font-size:15px}.metric.good b{color:var(--mint)}
+    .stepper{display:flex;gap:8px;margin:0 0 14px}.step{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0b1620;color:#718792;font-size:12px;font-weight:800}.step.active{border-color:var(--mint);color:var(--mint);background:#0d2923}.step b{display:inline-grid;width:22px;height:22px;margin-right:6px;place-items:center;border-radius:50%;background:#1e303c}.step.active b{background:var(--mint);color:var(--mint-ink)}
+    .simple-list{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.simple-list .preset-card > small{min-height:29px}.recommend{position:absolute;left:7px;top:7px;z-index:2;padding:4px 7px;border-radius:999px;background:var(--amber);color:#241604;font-size:9px;font-weight:900}
+    .fineprint{margin-top:10px;color:#6f838e;font-size:10px;line-height:1.5}
+    @media(max-width:1280px){.layout-a{grid-template-columns:270px minmax(390px,1fr) 330px}.gallery{grid-template-columns:repeat(3,1fr)}.pair-preview img{height:380px}}
+  </style>
+</head>
+<body>
+<script>
+// ★제작소 안(iframe)에서 열렸으면 **그리기 전에** 표식을 단다(2026-10-01 사장님 "6단계 누르면 잠깐 구버전이 보인다").
+//   종전엔 scene-style-connect.js가 다 읽힌 뒤에야 .scene-embedded를 달아 샘플 데이터가 한 번 그려졌다. 시안 머리띠(A·B·C·D)·시안 B·C·D 화면은 10-01 삭제.
+//   html 요소에 미리 달고(아래 <style>이 받는다), 실제 작업 데이터(scene-style-context)가 들어오면 connect.js가 scene-ready를 단다.
+if(window.parent!==window){document.documentElement.classList.add('scene-embedded','scene-waiting');}
+</script>
+<style>
+html.scene-embedded.scene-waiting .layout-a{visibility:hidden}
+html.scene-embedded.scene-waiting body::before{content:"영상 정보를 불러오는 중…";position:fixed;left:50%;top:40%;transform:translateX(-50%);color:#c7d3da;font:800 15px system-ui,sans-serif}
+</style>
+<main class="shell">
+
+  <section class="view active" data-page="a">
+    <div class="page-title"><div><h1>6 · 장면꾸미기</h1><p>완성된 훅+본문 프리셋을 고르고 문구만 확인하세요.</p></div><span class="analysis">대본 분석 완료 · 12장면 자동 배치</span></div>
+    <div class="workspace layout-a">
+      <aside class="pane"><div class="pane-head"><h2>템플릿 선택</h2><span class="count">102개</span></div><div class="chips"><button class="chip active">추천</button><button class="chip">쇼핑</button><button class="chip">리뷰</button><button class="chip">정보</button></div><div class="preset-grid">
+        <button class="preset-card selected" data-live-preset data-template="shortem" data-channel="숏템" data-hook-fields="channel,hook1,hook2,bodyTitle" data-body-fields="channel,bodyTitle,caption" data-accent="#ffe500" data-top="#2b271d" data-body="#ffe9a8" data-media="장면꾸미기_작업대/원본프레임/숏템_훅.png" data-body-media="장면꾸미기_작업대/원본프레임/숏템_본문.png"><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>훅+본문 2장</small></button>
+        <button class="preset-card" data-live-preset data-channel="신비아이템" data-accent="#ffd400" data-top="#0b2638" data-body="#2589c8" data-media="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><b>신비아이템</b><small>정보형</small></button>
+        <button class="preset-card" data-live-preset data-channel="부시리" data-accent="#ffd22e" data-top="#19120a" data-body="#f2cc58" data-media="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><b>부시리</b><small>강조형</small></button>
+        <button class="preset-card" data-live-preset data-channel="지식배송" data-accent="#ff6b32" data-top="#171717" data-body="#ef8431" data-media="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_본문.png"></div><b>지식배송</b><small>설명형</small></button>
+        <button class="preset-card" data-live-preset data-channel="사길잘했다" data-accent="#bfff2f" data-top="#151515" data-body="#f3cad5" data-media="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_본문.png"></div><b>사길잘했다</b><small>후기형</small></button>
+        <button class="preset-card" data-live-preset data-channel="헤븐쇼핑" data-accent="#ffd927" data-top="#17120d" data-body="#f4cf4f" data-media="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"></div><b>헤븐쇼핑</b><small>판매형</small></button>
+      </div></aside>
+      <section class="pane preview-pane"><div class="preview-toolbar"><h2>실시간 미리보기</h2><div class="seg"><button class="active" data-frame="hook">훅</button><button data-frame="body">본문</button></div></div><div class="phone-wrap"><div class="dynamic-phone template-shortem is-pristine" id="a-live-preview" data-template="shortem" style="--template-media:url('장면꾸미기_작업대/원본프레임/숏템_훅.png')"><div class="brand-row"><span class="brand-icon">☰</span><b data-preview-channel>숏템</b><span class="brand-icon">⌕</span></div><div class="shortem-body-channel" data-preview-channel>숏템</div><div class="hook-copy"><strong data-preview-hook-1>이케아도 놀랄</strong><em data-preview-hook-2>한국 천재 발명품</em></div><div class="hook-band" data-preview-body-title>이케아도 놀랄 한국 천재 발명품</div><div class="body-title-area"><b data-preview-body-title>이케아도 놀랄 한국 천재 발명품</b><small>조회수 235만 | 댓글 697개</small></div><div class="body-band" data-preview-caption>무슨 식탁 하나로</div><div class="media-window"></div><div class="safe-lines"></div></div><div class="stage-note right"><b>자동 배치</b>훅 1장 · 본문 11장<i><span style="width:92%"></span></i>문구 길이 안전</div></div><div class="transport"><button class="play">▶</button><span>00:00</span><div class="track"><i></i></div><span>00:28</span></div><div class="scene-strip"><button class="active">훅</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button></div></section>
+      <aside class="pane edit-pane"><div class="tool-tabs"><button class="active">문구/텍스트</button><button>미디어</button><button>스타일</button></div><div class="ai-card"><b>AI 자동 배치 완료</b><br>현재 프레임에 실제로 있는 문구만 표시합니다. 없는 요소는 빈칸으로 둡니다.</div><div class="field" data-field-key="channel"><label><span data-field-label>채널명</span> <span data-count>2/12</span></label><input data-bind="channel" data-max="12" value="숏템"></div><div class="field" data-field-key="hook1"><label><span data-field-label>훅 제목 1</span> <span data-count>7/18</span></label><input data-bind="hook1" data-max="18" value="이케아도 놀랄"></div><div class="field" data-field-key="hook2"><label><span data-field-label>훅 제목 2</span> <span data-count>9/18</span></label><input data-bind="hook2" data-max="18" value="한국 천재 발명품"></div><div class="field" data-field-key="bodyTitle"><label><span data-field-label data-hook-label="보조 제목" data-body-label="본문 제목">보조 제목</span> <span data-count>16/22</span></label><input data-bind="bodyTitle" data-max="22" value="이케아도 놀랄 한국 천재 발명품"></div><div class="field" data-field-key="caption"><label><span data-field-label>현재 장면 자막</span> <span data-count>8/24</span></label><input data-bind="caption" data-max="24" value="무슨 식탁 하나로"></div><div class="color-row"><span class="swatch"><i style="background:#fff"></i>흰색</span><span class="swatch"><i data-accent-swatch style="background:#ffe600"></i>강조</span><span class="swatch"><i data-top-swatch style="background:#211f19"></i>배경</span></div><button class="primary">이 스타일로 완성</button><button class="secondary">내 프리셋으로 저장</button><details><summary>고급 설정 · 위치, 폰트, 효과</summary></details></aside>
+    </div>
+  </section>
+
+</main>
+<script>
+  const root=document;
+  root.querySelectorAll('.preset-card').forEach(card=>card.addEventListener('click',()=>{
+    const group=card.closest('.preset-grid,.preset-list,.gallery,.simple-list');
+    if(group) group.querySelectorAll('.preset-card').forEach(x=>x.classList.toggle('selected',x===card));
+  }));
+  const livePreview=root.getElementById('a-live-preview');
+  const defaultFields={hook:['channel','hook1','hook2','bodyTitle'],body:['channel','bodyTitle','caption']};
+  const applyFrameFields=kind=>{
+    const preset=root.querySelector('[data-live-preset].selected');
+    const configured=preset?.dataset[kind+'Fields'];
+    const visible=new Set(configured?configured.split(',').filter(Boolean):defaultFields[kind]);
+    root.querySelectorAll('.layout-a [data-field-key]').forEach(field=>field.hidden=!visible.has(field.dataset.fieldKey));
+    root.querySelectorAll('.layout-a [data-hook-label][data-body-label]').forEach(label=>label.textContent=label.dataset[kind+'Label']);
+  };
+  const setFrame=kind=>{
+    livePreview.classList.toggle('is-body',kind==='body');
+    root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
+    applyFrameFields(kind);
+  };
+  root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>setFrame(button.dataset.frame)));
+  root.querySelectorAll('[data-live-preset]').forEach(card=>card.addEventListener('click',()=>{
+    const bodyMedia=card.dataset.bodyMedia||card.dataset.media.replace('_훅.png','_본문.png');
+    const activeFrame=livePreview.classList.contains('is-body')?'body':'hook';
+    livePreview.classList.toggle('template-shortem',card.dataset.template==='shortem');
+    livePreview.classList.toggle('is-pristine',card.dataset.template==='shortem'&&[...root.querySelectorAll('.layout-a [data-bind]')].every(input=>input.value===input.defaultValue));
+    livePreview.dataset.template=card.dataset.template||'generic';
+    livePreview.style.setProperty('--template-accent',card.dataset.accent);
+    livePreview.style.setProperty('--template-top',card.dataset.top);
+    livePreview.style.setProperty('--template-body',card.dataset.body);
+    livePreview.style.setProperty('--template-media',`url("${activeFrame==='body'?bodyMedia:card.dataset.media}")`);
+    livePreview.dataset.hookMedia=card.dataset.media;
+    livePreview.dataset.bodyMedia=bodyMedia;
+    root.querySelectorAll('[data-preview-channel]').forEach(target=>target.textContent=card.dataset.channel||' ');
+    const channelInput=root.querySelector('.layout-a [data-bind="channel"]');
+    if(channelInput) channelInput.value=card.dataset.channel||'';
+    root.querySelector('[data-stage-name]').textContent=card.querySelector('b').textContent;
+    root.querySelector('[data-accent-swatch]').style.background=card.dataset.accent;
+    root.querySelector('[data-top-swatch]').style.background=card.dataset.top;
+  }));
+  root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>{
+    const media=button.dataset.frame==='body'?livePreview.dataset.bodyMedia:livePreview.dataset.hookMedia;
+    if(media) livePreview.style.setProperty('--template-media',`url("${media}")`);
+  }));
+  const bindings={
+    channel:'[data-preview-channel]',
+    hook1:'[data-preview-hook-1]',
+    hook2:'[data-preview-hook-2]',
+    bodyTitle:'[data-preview-body-title]',
+    caption:'[data-preview-caption]'
+  };
+  root.querySelectorAll('.layout-a [data-bind]').forEach(input=>input.addEventListener('input',()=>{
+    livePreview.classList.remove('is-pristine');
+    const counter=input.closest('.field')?.querySelector('[data-count]');
+    if(counter) counter.textContent=`${[...input.value].length}/${input.dataset.max}`;
+    root.querySelectorAll(bindings[input.dataset.bind]).forEach(target=>target.textContent=input.value||' ');
+    window.requestShortemFit?.();
+  }));
+  root.querySelectorAll('.layout-a .scene-strip button').forEach((button,index)=>button.addEventListener('click',()=>{
+    button.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));
+    setFrame(index===0?'hook':'body');
+  }));
+  const initialPreset=root.querySelector('[data-live-preset].selected');
+  livePreview.dataset.hookMedia=initialPreset.dataset.media;
+  livePreview.dataset.bodyMedia=initialPreset.dataset.bodyMedia||initialPreset.dataset.media.replace('_훅.png','_본문.png');
+  applyFrameFields('hook');
+</script>
+<link rel="stylesheet" href="precision20-ui.css?v=77">
+<script src="scene-header-bands.js?v=1"></script>
+    <script src="precision20-data.js?v=62"></script>
+<script src="continuous20-data.js?v=53"></script>
+<script src="../shopping_shorts/static/text-look-contract.js?v=1"></script>
+<script src="../shopping_shorts/static/caption-motions.js?v=9"></script>
+<script src="precision20-ui.js?v=260"></script>
+<link rel="stylesheet" href="scene-style-connect.css?v=67">
+<script src="scene-style-connect.js?v=69"></script>
+<script src="../shopping_shorts/static/scene-decoration-catalog.js?v=3"></script>
+<script src="scene-style-decorations.js?v=79"></script>
+<script src="../shopping_shorts/static/caption-line-input.js?v=1"></script>
+<script src="scene-style-labels.js?v=8"></script>
+</body>
+</html>

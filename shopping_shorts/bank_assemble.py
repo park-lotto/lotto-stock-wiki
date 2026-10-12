@@ -302,6 +302,57 @@ def beat_descs(style):
     return out
 
 
+def title_len_rule():
+    """화면 제목의 글자 한도 안내 — 장면꾸미기 슬롯 계약(template_copy)에서 빌려 온다.
+
+    2026-09-18 실측: 제목형 대본이 27자 제목을 내놓아 이븐쇼핑(줄당 11자·자동 축소 금지)에서
+    좌우가 잘렸다. 한도를 여기 따로 적으면 슬롯 계약과 어긋난다(0순위-B).
+    """
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    total = c.hook_line_max + c.hook2_line_max
+    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 첫 줄 %d자·둘째 줄 %d자 안에서 끊기게 "
+            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max, c.hook2_line_max))
+
+
+def title_too_long(text):
+    """화면 제목이 슬롯 한도를 넘는지 — 프롬프트 안내와 같은 수를 본다."""
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c, split_hook
+    # 장면꾸미기가 실제로 나누는 방식(split_hook)으로 나눠 봐야 같은 판정이 된다 —
+    #   총 22자여도 어절 경계 때문에 한 줄이 12자가 될 수 있다.
+    h1, h2 = split_hook(text)
+    return len(h1) > c.hook_line_max or len(h2) > c.hook2_line_max
+
+
+def with_spoken_hook(style):
+    """제목형 스파인을 **이븐쇼핑 원본 구조**로 맞춘다(2026-09-18 사장님 "이븐쇼핑처럼 첫 후킹 읽어주고
+    본문으로 넘어가는 걸로").
+
+    실측(이븐쇼핑 1위 ABjQ0YCZoes, 433만): 훅 1.5초 동안 큰 제목 2줄 + 흰 띠에 같은 제목을 띄우고
+    **목소리 첫 문장이 그 제목을 그대로 읽는다.** 제목 문장이 끝나면 본문으로 넘어간다.
+    그래서 칸은 바꾸지 않는다 — title이 첫 TTS이자 화면 제목이다. 대신 제목이 화면 슬롯(줄당 11자)에
+    들어가도록 글자 한도를 붙이고, 확정 때 헤드카피로도 넘기라는 표시(title_visual_only)를 단다.
+    (09-17~18 오전의 '제목 무음 + 별도 후킹 칸'은 원본과 반대여서 걷어냈다.)
+    원본 dict는 바꾸지 않는다. 관리자 카나리 밖에서는 손대지 않는다.
+    """
+    if not isinstance(style, dict):
+        return style
+    from shopping_shorts import canary
+    if not canary.on():
+        return style
+    roles = list(style.get("beat_roles") or [])
+    if not roles or roles[0] != "title" or style.get("title_visual_only"):
+        return style
+    adapted = copy.deepcopy(style)
+    descs = beat_descs(style)
+    adapted["beat_descs"] = {role: descs.get(role, "") for role in roles}
+    adapted["beat_descs"]["title"] = (
+        (str(descs.get("title") or "").strip() + ". " if descs.get("title") else "")
+        + "★이 문장은 화면 큰 제목이면서 **목소리 첫 문장**이다(그대로 읽는다). " + title_len_rule()
+    )
+    adapted["title_visual_only"] = True
+    return adapted
+
+
 _FACT_STYLE_NEUTRAL = (
     "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
     "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"

@@ -12,6 +12,7 @@
 ⚠️ node는 이 PC에서 파일을 cp949로 읽는다 → 하네스는 utf-8-sig(BOM)로 쓴다.
 """
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -63,23 +64,11 @@ const HC_SET=__HCSET__;
 
 _TAIL = """
 const out={};
+// 옛 피팅룸 칸(hcText·hcColor)은 2026-10-01 삭제(관제 058 C1) — 그 칸에 쓰던 투톤·색 시험도 함께 뺐다
 out.highlightRuleList_exists=!!document.getElementById('highlightRuleList');
 out.hcPresets_exists=!!document.getElementById('hcPresets');
 try{ renderHighlightRules(); out.rhr='ok'; }catch(e){ out.rhr='THREW: '+e.message; }
 try{ renderPresets(); out.rp='ok'; }catch(e){ out.rp='THREW: '+e.message; }
-try{
-  STATE.deco=STATE.deco||{};
-  document.getElementById('hcText').value=TWO_LINE_TEXT;
-  applyHeadcopySet(HC_SET);
-  out.rules=(STATE.deco.highlight_rules||[]).map(x=>({k:x.keyword,c:x.color,f:!!x._fromFrame}));
-}catch(e){ out.twotone='THREW: '+e.message; }
-try{
-  document.getElementById('hcColor').value='#111111';
-  window._hcCopies=[{label:'x',text:TWO_LINE_TEXT,why:'w'}];
-  useHeadcopyColor(0,'#FF00AA');
-  out.color_after=document.getElementById('hcColor').value;
-  out.text_after=document.getElementById('hcText').value;
-}catch(e){ out.colorfn='THREW: '+e.message; }
 console.log('RESULT'+JSON.stringify(out));
 """
 
@@ -98,7 +87,7 @@ def _boot():
     stub = (_STUB.replace("__IDS__", json.dumps(ids))
                  .replace("__TWOLINE__", json.dumps(_TWO_LINE))
                  .replace("__HCSET__", json.dumps(_HC_SET)))
-    f = pathlib.Path(tempfile.gettempdir()) / "hc_removed_ui_test.js"
+    f = pathlib.Path(tempfile.gettempdir()) / f"hc_removed_ui_test_{os.getpid()}.js"
     f.write_text(stub + js + _TAIL, encoding="utf-8-sig")
     r = subprocess.run(["node", str(f)], capture_output=True)
     assert r.returncode == 0, r.stderr.decode("utf-8", "replace")[:900]
@@ -121,20 +110,4 @@ def test_removed_slot_renderers_do_not_throw():
     assert out["rp"] == "ok", out["rp"]
 
 
-def test_two_tone_still_works_after_ui_removal():
-    """★'흰→노랑' 투톤은 highlight_rules를 타고 산다 — UI를 뺐어도 살아야 한다.
 
-    틀이 2줄째(BBB)를 color2로 칠하는 규칙을 넣는다. 이게 죽으면 20종 틀의 투톤이
-    통째로 밋밋해진다.
-    """
-    out = _boot()
-    assert "twotone" not in out, out.get("twotone")
-    assert out["rules"] == [{"k": "BBB", "c": "#FFD400", "f": True}], out["rules"]
-
-
-def test_card_color_picker_sets_color_and_text():
-    """카드 색 고르개 = 글자색(hcColor) + 그 문구가 함께 들어간다."""
-    out = _boot()
-    assert "colorfn" not in out, out.get("colorfn")
-    assert out["color_after"] == "#FF00AA"
-    assert out["text_after"] == _TWO_LINE

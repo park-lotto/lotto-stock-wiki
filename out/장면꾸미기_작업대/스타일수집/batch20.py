@@ -8,24 +8,27 @@ import subprocess, sys, os, json, collections, io
 from PIL import Image
 
 sys.stdout.reconfigure(encoding='utf-8')
-YTDLP = r"C:\Users\CH\.local\bin\yt-dlp.exe"
+YTDLP = os.environ.get(
+    'SHOPPING_SHORTS_YTDLP',
+    r"C:\Users\TheRose\AppData\Local\Programs\Python\Python312\Scripts\yt-dlp.exe",
+)
 OUT = os.path.dirname(os.path.abspath(__file__))
-WORK = os.path.join(OUT, 'batch')
+WORK = os.path.join(OUT, 'top20_views')
 os.makedirs(WORK, exist_ok=True)
 
+# 레퍼런스 랭킹의 실제 조회수 상위 20개(2026-09-10 실측).
+# 디자인 취향으로 임의 선정하지 않고 시청자 반응을 1차 기준으로 고정한다.
 TARGETS = [
-    ('숏팡',        'N91EhsjJbnw'), ('오늘줍줍',   'RJekqep_nz8'),
-    ('쇼핑남자',     'U-3Y55r6nl8'), ('신비아이템',  '4dGIbDPJupI'),
-    ('코어장바구니',  '24Z1f_Nct6M'), ('만물상점',   'fFTUzjAeQFE'),
-    ('상상세계',     'FoqYIgMNDU4'), ('샤샤홈',     '1IK0qIOb1-Q'),
-    ('이븐쇼핑',     'XAMW1hwE7A0'), ('갓성비스토리', 'rDBmafx9wsE'),
-    ('지식배송',     '15nuQ-pktSc'), ('쇼핑천재',    'bQ7IDcJwAFE'),
-    ('K쇼츠',       'MBAsRXQvIEw'), ('달래샵',      'O0VHVgGc6fw'),
-    ('홈디렉터',     'J1wPdHXa4w4'), ('인싸픽',      'nEafrRkl16Q'),
-    ('형님여기',     'rDIfb_Jx1IM'), ('살림킹왕짱',   'Dz4WtwWRPKk'),
-    ('썰쇼템',      'P5B0OzP_IQ0'), ('봄집사',      '5txgoGybIRM'),
-    ('꿀템줍줍',     'Lfazx2bjkJA'), ('홈스케치',     'U8t7XX6wkD0'),
-    ('오늘꿀템',     'D9MCWZsHx2E'), ('유용하데이',   'DplIuRDTbZc'),
+    ('활용정점.',       'azDE6caCwjU'), ('살림킹왕짱',       '697OHq-VhkY'),
+    ('썰칩12',         'qbUbiRWfBq4'), ('방구석꿀템',       'U5ee0EsBfww'),
+    ('럭키박스',        'S3ouvyTeYPY'), ('쇼핑 치트키',      '7zJofUqMfN4'),
+    ('공가미',         've4g3XYjHLw'), ('코어장바구니',      'O1CO-k5z-2Q'),
+    ('살림장착',        '5tC_j4fsq4Y'), ('쇼핑천재',        'MJeY7r8wQiQ'),
+    ('이븐쇼핑',        'eDHoIXyXOq0'), ('이거였네',        '-ITG6ZF87pE'),
+    ('달래샵',         'iu3Yq04q2Ws'), ('꿀팁꿀템',        '4cFxGzTx6Pc'),
+    ('다있슈',         'z7oQFp8yZHQ'), ('인생갓템',        'neS2s8FIKpc'),
+    ('나만또모르고있었지', 'jcklt_Q2H6s'), ('요새난리',        '-PcSU1Frd_c'),
+    ('무슨템',         '4kzu6jdDkGo'), ('집돌이',          'C0lbKzY5geg'),
 ]
 
 def sh(cmd, timeout=240):

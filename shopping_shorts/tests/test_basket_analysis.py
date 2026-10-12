@@ -40,8 +40,9 @@ def _analyze(db_path, codes, cid=0):
 
 
 def test_결과가_있으면_분석완료로_보인다(db):
-    with patch.object(ap.Store, "get_script", lambda self, c: {"segments": []}):
-        out = _status(db, ["ABC"])
+    # 신호등은 내용을 안 읽고 있나 없나만 본다(관제 171) — 가짜 get_script 말고 실제 저장분으로 잰다.
+    Store(db).save_script("ABC", {"segments": [], "full_text": "말"})
+    out = _status(db, ["ABC"])
     assert out["items"]["ABC"]["state"] == "done"
 
 

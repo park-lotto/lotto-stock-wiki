@@ -264,6 +264,37 @@ def build_product(keyword="", url="", name="", partner_url="", memo=""):
     }
 
 
+# 쿠팡 이미지 호스트 — 파트너스 검색 API는 ads-partners.coupang.com/image1/…을 준다(2026-09-27 서버 실측),
+# 상품 페이지 쪽은 *.coupangcdn.com. 서버가 대신 받는 대상은 이 둘뿐(SSRF 방지).
+_IMAGE_HOST_RE = re.compile(r"^https://(([a-z0-9-]+\.)*coupangcdn\.com|ads-partners\.coupang\.com)/", re.I)
+
+
+def is_product_image_url(u):
+    """쿠팡 이미지 서버(coupangcdn.com·ads-partners.coupang.com) https 주소인가 — 서버가 대신 받아 줄 수 있는 유일한 대상(SSRF 방지)."""
+    return bool(u) and bool(_IMAGE_HOST_RE.match(str(u).strip()))
+
+
+def product_image(product_id, name="", given="", access_key="", secret_key="", customer_id=None):
+    """상품 이미지 주소 — **판단은 여기 한 곳**(2026-09-27 김형관님 "인포크에 올릴 이미지를 못 받는다").
+
+    ① 화면이 검색 카드에서 고른 이미지(given)가 쿠팡 이미지 서버 주소면 그대로.
+    ② 없으면 상품명으로 파트너스 검색 1회 → **같은 상품번호** 카드의 이미지(다른 상품 그림을 붙이지 않는다).
+    ③ 못 찾으면 "" — 화면은 이미지 칸을 숨긴다. 쿠팡 상품 페이지는 봇 차단(Akamai)이라 긁지 않는다."""
+    if is_product_image_url(given):
+        return given.strip()
+    pid = str(product_id or "").strip()
+    if not (pid and (name or "").strip() and access_key and secret_key):
+        return ""
+    try:
+        res = search_products(name, 10, access_key, secret_key, customer_id=customer_id)
+    except Exception:                                    # noqa: BLE001 — 이미지는 부가물
+        return ""
+    for it in (res or {}).get("items") or []:
+        if str(it.get("product_id")) == pid and is_product_image_url(it.get("image")):
+            return it["image"].strip()
+    return ""
+
+
 def final_link(product):
     """인포크링크에 넣을 최종 URL — 파트너스 링크가 있으면 그걸, 없으면 원본."""
     if not product:

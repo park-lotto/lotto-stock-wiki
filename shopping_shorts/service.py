@@ -510,6 +510,35 @@ def cached_instagram_discovery():
         return {"at": "", "items": []}
 
 
+def enrich_discovered_profile(username, store=None, fetch=None):
+    """발굴·등록 채널의 프로필을 **한 번** 열어 판매채널 링크(프로필 외부 링크)를 저장한다(2026-09-26).
+
+    팔로워·소개글을 받는 같은 응답에 링크가 있어 추가 요청은 0이다. 실패는 조용히 0(등록 자체를 막지 않는다).
+    돌려주는 값: 갱신된 행 수. 링크가 없으면 0."""
+    key = (username or "").strip().lstrip("@")
+    if not key:
+        return 0
+    try:
+        from shopping_shorts.instagram_playwright import fetch_profiles as _fp
+        prof = (fetch or _fp)([key]) or {}
+        link = ((prof.get(key.lower()) or {}).get("link") or "").strip()
+        if not link:
+            return 0
+        return (store or Store(DB_PATH)).set_discovered_inpock(key, link)
+    except Exception as e:      # noqa: BLE001 — 보강 실패는 무해
+        import sys as _sys
+        print(f"[discover:inpock] 프로필 링크 보강 실패(무해) who={key}: {e!r}", file=_sys.stderr)
+        return 0
+
+
+def enrich_discovered_profile_async(username):
+    """요청을 막지 않게 뒤에서 돈다(프로필 열기 = 브라우저 수 초)."""
+    import os, threading
+    if os.environ.get("PYTEST_CURRENT_TEST"):      # 테스트에서 브라우저를 띄우지 않는다
+        return
+    threading.Thread(target=enrich_discovered_profile, args=(username,), daemon=True).start()
+
+
 def adopt_instagram_discovery_account(username, full_name=""):
     """[담기] — discovered_channels(엑셀과 union되는 실제 추적 목록)에 등록.
     블랙리스트면 거부. 채널 릴스 자체(fetch_reels)는 다음 collect("instagram")부터 포함된다."""
@@ -517,6 +546,7 @@ def adopt_instagram_discovery_account(username, full_name=""):
     if username.lower() in store.ig_blacklist_list():
         return {"ok": False, "reason": "blacklisted"}
     store.add_discovered(username, name=full_name or username)
+    enrich_discovered_profile_async(username)      # 판매채널 링크(2026-09-26)
     return {"ok": True}
 
 
@@ -539,6 +569,7 @@ def auto_register_instagram(top_n=10, min_posts=2):
         if a.get("is_registered"):
             continue
         store.add_discovered(a["username"], name=a.get("full_name") or a["username"])
+        enrich_discovered_profile_async(a["username"])      # 판매채널 링크(2026-09-26)
         added.append(a["username"])
     return added
 

@@ -1,34 +1,27 @@
 {
- "brief": "캔바 이미지를 틀로 그대로 얹고 글자만 위에 올린다(코드 재현 금지 - 질감이 죽는다)",
- "created": "2026-08-31T01:16:51.767403+00:00",
+ "brief": "관제수리(카드069)",
+ "created": "2026-10-01T15:18:46.760153+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "배경레이어",
-   "objective": "deco_frame에 bg_image 레이어 추가. 경로탈출 차단, 캐시키에 반영",
+   "title": "검사종류",
+   "objective": "live_check에 카드 '검사' 칸(url/api/수동/영상). url·api는 서버 반영 확인 후 HTTP로 재서 완료/회귀, 수동은 목록만",
    "status": "complete",
-   "evidence": "pytest test_deco_bg_image.py 5 passed - 경로탈출 6종 차단, 투명유지, 캐시키 갈림, 깨진파일 fail-open, cover채움"
+   "evidence": "test_control_repair 9 passed; 실제 보드 --all --no-write: 수동 25장 목록·영상 4장 서버 비교 통과(2작업)·url/api 분기는 fake sh/fetch 테스트로 완료/회귀/서버미반영 3갈래 확인"
   },
   {
    "id": "G002",
-   "title": "업로드API",
-   "objective": "이미지 업로드/목록/삭제 엔드포인트, 고객별 저장소",
+   "title": "관문심볼판정",
+   "objective": "video_gate.app_touches_video가 모듈 수준 변경을 심볼 이름으로 판정(상수·템플릿은 제작 라인 밖)",
    "status": "complete",
-   "evidence": "pytest test_frame_image_api.py 5 passed - 투명유지·1080x1920 정규화·중복1건·삭제는 목록만·깨진파일 422·id위조 404"
+   "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True"
   },
   {
    "id": "G003",
-   "title": "글자세로위치",
-   "objective": "ch_y·title_y 추가, 0=안 정했음 규약 유지",
+   "title": "기존실패분류",
+   "objective": "track 게이트가 새로 깨진 테스트를 origin/main 코드로 재실행해 거기서도 깨지면 기존 실패로 분류",
    "status": "complete",
-   "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐"
-  },
-  {
-   "id": "G004",
-   "title": "제작소UI",
-   "objective": "이미지 틀 업로드·선택 카드 + 글자 위치 조절",
-   "status": "complete",
-   "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)"
+   "evidence": "단위 2갈래 + 실제 재실행"
   }
  ]
 }

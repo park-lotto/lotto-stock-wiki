@@ -108,9 +108,10 @@ def norm_chars_per_30s(style):
 #   _SYLLABLES_PER_SEC(5.7, 성우 14명 실합성 측정) × _speech_speed()(라이브 배속 1.44).
 #   여기에 8.19를 따로 적어두면 배속을 튜닝한 날 화면·판정·계획이 서로 다른 초를 말한다
 #   (같은 판단이 두 곳에 적히면 반드시 어긋난다 = 0순위-B). 값 하나만 빌려 쓴다.
-def _speech_cps():
+def _speech_cps(lang="ko"):
+    """자/초 — 정본은 edit_plan.speech_cps 하나(2026-09-29 언어별로 갈라짐)."""
     from shopping_shorts import edit_plan as _ep
-    return _ep._SYLLABLES_PER_SEC * _ep._speech_speed()
+    return _ep.speech_cps(lang=lang, norm=True)     # 게이트·화면은 norm 글자 기준
 
 
 def __getattr__(name):          # 모듈 속성 지연 평가 — import 순환을 피한다
@@ -164,6 +165,41 @@ def density_range(style, seconds=30):
     cap = int(_speech_cps() * sec)
     lo = max(int(tgt * DENSITY_LO), int(_LEN_FLOOR * cap))
     return min(lo, cap), min(int(tgt * DENSITY_HI), cap)
+
+
+# ★후킹은 무조건 한 문장(2026-09-29 사장님 "후킹은 무조건 한문장으로 들어가는거야").
+#   실측 job 06fab43a4922: 씨앗 자막에 마침표가 없어 모델이 "여러분 다이소 가면 이거 바로 사오세요 요리 진짜
+#   잘하는 친구 집에 갔는데 … 끝나는 거예요."를 훅 한 줄로 썼다 → 훅 비트 7.4초, 본문이 훅 디자인에 갇혔다.
+#   대본 생성기(이야기작가·script_generate)가 전부 이 함수 하나로 가른다 — 판단은 여기 한 곳(0순위-B).
+_HOOK_END = re.compile(r"[.!?…]+[\"'」』)]*(?=\s|$)|(?:요|다|죠)(?=\s)")
+
+
+def split_hook_sentence(text):
+    """훅 줄 → (첫 문장, 나머지). 문장이 하나뿐이면 (text, "").
+    끝맺음 = 문장부호, 또는 마침표 없이 '요·다·죠' 뒤 띄어쓰기(말자막엔 마침표가 없다)."""
+    t = (text or "").strip()
+    for m in _HOOK_END.finditer(t):
+        head, rest = t[:m.end()].strip(), t[m.end():].strip()
+        if len(norm(head)) >= 4 and len(norm(rest)) >= 4:
+            return head, rest
+        if len(norm(head)) >= 4:
+            break
+    return t, ""
+
+
+def enforce_one_sentence_hook(beats, text_key="text", rest_role="장면"):
+    """첫 줄이 훅이고 문장이 둘 이상이면 첫 문장만 훅에 남기고 나머지는 바로 다음 줄(rest_role)로 넣는다.
+    새 줄은 장면 출처를 비워 둔다(하류 매칭이 채운다). 원본 리스트를 바꾸지 않고 새 리스트를 돌려준다."""
+    if not beats or not isinstance(beats[0], dict) or beats[0].get("role") not in ("훅", "hook"):
+        return beats
+    head, rest = split_hook_sentence(beats[0].get(text_key))
+    if not rest:
+        return beats
+    first = dict(beats[0]); first[text_key] = head
+    extra = {"role": rest_role, text_key: rest}
+    if "group" in first:
+        extra["group"] = -1
+    return [first, extra] + list(beats[1:])
 
 
 def norm(s):
@@ -289,6 +325,46 @@ _POLITE_TAILS = ("거든요", "가요", "에요", "예요", "해요", "드릴게
 _ESCALATORS = ("심지어", "더대박", "더놀라운", "더좋은건", "미친포인트", "놀랍게도",
                "더군다나", "이럴수가있나싶게", "이걸왜몰랐는지", "진짜미쳐")
 
+# ★같은 어미가 몇 줄 연속이면 반려하나 (2026-09-18).
+#   3으로 잡은 근거: 실측 히트작 200편에서 어느 어미도 10%를 안 넘는다(최다 `~음` 9.3%).
+#   2로 잡으면 우연한 두 줄 반복까지 막아 멀쩡한 대본이 반려된다(오탐이 미탐보다 나쁘다 —
+#   바로 위 존댓말 목록에 적힌 것과 같은 판단). 우리 실패 사례는 3~5줄 연속이라 3이면 잡힌다.
+_SAME_TAIL_MAX = 3
+
+
+def _line_tails(lines):
+    """줄마다 **어미 한 덩어리**를 뽑는다 — '같은 어미 반복'을 세기 위한 단일 기준.
+
+    lines: 줄 목록(권장) 또는 대본 문자열. 문자열이면 줄바꿈·마침표로 쪼갠다.
+
+    어절 하나가 아니라 어미만 봐야 한다: '초슬림함 / 간편함 / 안정됨'은 낱말이 다 다르지만
+    어미는 전부 'ㅁ받침'으로 같다(실측 spine 67 `~함` 5줄). 그래서 이렇게 가른다:
+      · '다는 거 / 는 거 / 거임 / 버림 / 더라(고) / 다고 / 는데(요)' 같은 **정형 어미**는 그 이름으로
+      · 그 밖에는 마지막 글자의 **받침**으로(ㅁ받침=명사형 종결 `~음/~함/~됨/~씀`이 한 무리)
+    못 가르면 None — 세지 않는다(오탐 방지).
+    """
+    # ★norm()을 쓰면 안 된다 — 공백·마침표를 통째로 지워 줄이 하나로 붙는다(실측: 4줄이 1줄로
+    #   보여 검사가 늘 통과했다). 줄 경계가 판정의 근거라 **원문 그대로** 쪼갠다.
+    src = lines if isinstance(lines, (list, tuple)) else re.split(r"[\n.!?]+", lines or "")
+    out = []
+    for ln in src:
+        w = (ln or "").strip().rstrip(".!?").split()
+        if not w:
+            continue
+        tail = " ".join(w[-2:])
+        for name in ("다는 거", "는 거", "거임", "버림", "더라고", "더라", "다고", "는데요", "는데"):
+            if tail.endswith(name):
+                out.append(name)
+                break
+        else:
+            ch = tail[-1]
+            if "가" <= ch <= "힣":
+                jong = (ord(ch) - 0xAC00) % 28
+                out.append("받침%d" % jong if jong else "모음끝:" + ch)
+            else:
+                out.append(None)
+    return [t for t in out if t]
+
 # 숫자가 붙는 단위 — 대본에 수치가 나왔는데 재료에 없으면 지어낸 것이다(그라운딩 검사).
 _NUM_UNIT = re.compile(
     r"(\d[\d,.]*)\s*(mm|cm|m|kg|g|ml|l|초|분|시간|일|주|개월|년|개|장|자루|명|인|배|퍼센트|%|원)")
@@ -300,10 +376,20 @@ _ESC_HEADS = ("심지어", "게다가", "거기다", "그것도", "더 대박인
               "충격인 건", "근데 더 미친 건", "근데 진짜는 여기서부터인데", "놀랍게도")
 
 
+def _esc_heads():
+    """고조 연결어 목록 = 이 파일의 옛 목록 ∪ 대본 작가 신호어 목록(story_writer._ALL_SIGNAL_WORDS — 신호어의 주인).
+    ★10-05 사장님 "합치고": 신호어를 늘려도 이 검사가 모르고 지나가던 두 번째 사본을 주인 목록에 묶었다."""
+    try:
+        from shopping_shorts.story_writer import _ALL_SIGNAL_WORDS as _sw_words
+    except Exception:      # noqa: BLE001 — 대본 작가를 못 읽으면 옛 목록만(검사가 멈추면 안 된다)
+        _sw_words = ()
+    return tuple(set(_ESC_HEADS) | set(_sw_words))
+
+
 def _strip_esc_head(t):
     """고조 연결어를 떼고 알맹이만 남긴다 — 판정은 알맹이로 해야 한다."""
     t = (t or "").strip()
-    for h in sorted(_ESC_HEADS, key=len, reverse=True):
+    for h in sorted(_esc_heads(), key=len, reverse=True):
         if t.startswith(h):
             return t[len(h):].strip(" ,.")
     return t
@@ -339,7 +425,7 @@ def escalation_content(beats, facts_text):
     bad = []
     for b in (beats or []):
         t = (b.get("text") or "") if isinstance(b, dict) else str(b)
-        if not any(h in t for h in _ESC_HEADS):
+        if not any(h in t for h in _esc_heads()):
             continue
         n += 1
         core = _strip_esc_head(t)
@@ -594,7 +680,7 @@ def _uses_wow(full, hooks, min_hits=2):
 
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
-          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
+          speaker_judge=None, scene_ids=None, scene_secs=None, grounded=False, is_recipe=False,
           source_count=None, targets=None, person_required=False, materials_text="",
           topic_required=False, claim_evidence=None, claims_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
@@ -631,6 +717,15 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         got_cmp = got
     checks = [{"name": "구간 순서", "ok": got_cmp == want,
                "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
+    # ★화면 제목 길이(2026-09-18) — 제목형은 title이 장면꾸미기 슬롯에 그대로 박힌다.
+    #   실측: 27자 제목이 이븐쇼핑(줄당 11자·자동 축소 금지)에서 좌우로 잘렸다.
+    #   한도는 bank_assemble.title_too_long 한 곳(=template_copy)에서 본다. fatal 아님 —
+    #   재시도 때 gate_feedback으로 모델에 되돌려 줄이게 하는 용도다.
+    if style.get("title_visual_only"):
+        from shopping_shorts.bank_assemble import title_too_long, title_len_rule
+        _t = next((b.get("text", "") for b in beats if b.get("role") == "title"), "")
+        checks.append({"name": "화면 제목 길이", "ok": not title_too_long(_t),
+                       "detail": "%d자 「%s」 — %s" % (len(" ".join(str(_t).split())), _t, title_len_rule())})
 
     # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
     #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).
@@ -706,6 +801,28 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                        "detail": ("존댓말이 섞였다(%s) — 이 장르는 '~었음 / ~다는 거 / "
                                   "~하더라' 반말체다(실측 히트작 전부). 한 문장도 안 된다."
                                   % ", ".join(_po[:4])) if _po else "OK"})
+
+    # ★어미가 단조로운가 (2026-09-18 사장님 "어미가 계속 일정하고 부자연스러워").
+    #   실측 히트작 200편·문장 986개: 가장 흔한 어미도 **9.3%**(~음)뿐이고 어느 것도 10%를
+    #   안 넘는다 = 원본은 어미를 고르게 흩뿌린다. 우리 대본은 한 어미가 50~70%였다
+    #   (실측 spine 55 `~야/~야/~해/~해` · 68 `미쳤다는 거` 3줄 연속 · 67 `~함` 5줄).
+    #   ★문장틀에 어미를 박는 것만으론 안 됐다 — 모델이 한 틀의 어조를 나머지에 복제한다.
+    #     지시만 있고 판정이 없으면 안 지켜진다(메모리 `규칙은있는데_판정이없다`). 그래서 여기서 센다.
+    #   반말 검사와 **같은 조건**(유튜브 썰)에만 건다 — 인스타는 존댓말이라 어미 폭이 원래 좁다.
+    if style.get("hook_3s") and not style.get("polite"):
+        # ★full이 아니라 **beats**를 넘긴다 — full은 줄을 공백으로 이어 붙인 한 덩어리라
+        #   마침표가 없는 대본이면 통째로 1줄이 돼 검사가 늘 통과한다(실측으로 잡음).
+        #   칸 하나가 곧 한 줄이니 경계는 beats가 정본이다.
+        _tails = _line_tails([b.get("text", "") for b in beats])
+        _run, _worst, _prev = 1, 1, None
+        for _t in _tails:
+            _run = _run + 1 if (_prev is not None and _t == _prev) else 1
+            _worst = max(_worst, _run)
+            _prev = _t
+        checks.append({"name": "어미 다양성", "ok": _worst < _SAME_TAIL_MAX,
+                       "detail": ("같은 어미가 %d줄 연속이다 — 원본은 한 어미가 10%%를 안 넘는다"
+                                  "(히트작 200편 실측). '~다는 거 / ~더라 / ~해 버림 / ~다고 / "
+                                  "~음'처럼 줄마다 바꿔라." % _worst) if _worst >= _SAME_TAIL_MAX else "OK"})
 
     # ★사람이 나오나 (2026-09-09). 레퍼런스 원본 630편 중 **47%**에 구체적인 사람이
     #   나온다(언니·부모님·애들). 우리 대본은 "요즘 사람들"·"초보들은" 같은 익명 집단만
@@ -818,14 +935,17 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     ok_g, bad = (grounded_quantity_check(full, claim_evidence) if claims_required
                  else grounding_check(full, facts_text))
     if (facts_text or "").strip() or claims_required:
+        # ★fatal 아님(2026-09-16, 위 FATAL_CHECKS 주석과 같은 이유) — 같은 09-14 커밋에서
+        #   들어온 동적 치명이다. 수치 하나 때문에 안을 통째로 버리지 않는다.
         checks.append({"name": "수치 근거", "ok": ok_g,
-                       "fatal": bool(claims_required),
+                       # 스위치를 끄면 이것도 안을 죽이지 않는다(위 claim_fatal_enabled 주석).
+                       "fatal": bool(claims_required) and claim_fatal_enabled(),
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
 
     if grounded and scene_ids is not None:
         ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
-                                          source_count=source_count)
+                                          source_count=source_count, scene_secs=scene_secs)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
 
@@ -1043,7 +1163,15 @@ def parse_src_segs(raw):
     return out
 
 
-def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None):
+def _read_secs(text):
+    """그 줄을 소리 내 읽는 시간(초). **3단계 target_seconds와 같은 식**이어야 짝이 맞는다.
+    ★말속도는 이 파일이 이미 정한 `_speech_cps()`(= edit_plan 상수 × 라이브 배속)를 빌려 쓴다 —
+      새로 적으면 사본이 늘어 어긋난다(0순위-B, 메모리 `reference_말속도_상수_4벌`)."""
+    return max(1.5, len((text or "").strip()) / _speech_cps())
+
+
+def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None,
+                          scene_secs=None):
     """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
 
     · 지어낸 번호(목록에 없음) → 실패(레시피도)
@@ -1126,7 +1254,69 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
+#: ★'사실 근거'는 치명이 아니다(2026-09-16 사장님 "이전까지 잘되던데 며칠 전에 가끔씩
+#:   이상한 대본 나오는 것 때문에 꼬였다"). 이 검사는 2aab09821(09-14 21:25)에서 처음
+#:   들어왔고 **들어오자마자 치명**이었다 — 근거를 못 잡으면 재시도 3회 뒤 그 안을 통째로
+#:   버린다. 그래서 "2안을 골랐는데 1안만" + 느려짐이 상시로 났다(라이브 6시간 19건,
+#:   반려 1건당 ~20초). 가끔 나던 엉뚱한 대본을 막으려다 **정상 대본까지 못 나오게** 한
+#:   과잉 처방이었다. 검사 자체는 그대로 둔다 — 화면에 뜨고 재작성 루프도 그대로 돈다.
+#:   다만 안을 죽이지는 않는다. 진짜 엉뚱한 대본(소재가 남의 것)은 '소재 일치'·'주제
+#:   단일성'·'재료 밖 판매처'(09-09·09-11)가 계속 치명으로 잡는다.
+#:   ★단 **스위치로 뒀다**(기본은 지금까지와 똑같이 치명). 설정 `script_claim_fatal`을
+#:     "0"으로 두면 사실·수치 근거가 안을 죽이지 않는다. 이상하면 "1"로 즉시 되돌린다.
 FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
+
+#: 스위치를 끈 상태의 치명 목록(= 09-14 이전과 같은 결과).
+FATAL_CHECKS_LENIENT = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+
+
+def claim_fatal_enabled():
+    """'사실·수치 근거'가 안을 통째로 죽이는가. 기본 True(= 09-14 이후 현행).
+
+    끄는 법(둘 중 하나):
+      · 설정 `script_claim_fatal` = "0"   (화면/DB에서 바꾸면 재시작 없이 먹는다)
+      · 환경변수 SCRIPT_CLAIM_FATAL=0     (설정보다 우선 — 급할 때 쓰는 비상구)
+    ★fail-safe: 설정을 못 읽으면 True(현행 유지). 읽기 실패가 라이브 동작을 조용히
+      바꾸면 그게 더 위험하다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_FATAL")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_fatal", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def claim_check_enabled():
+    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
+
+    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
+      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
+      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
+      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
+
+    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
+    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_CHECK")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def active_fatal_checks():
+    """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
+    return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
 
 
 def fatal_content_checks(full, product="", materials_text=""):
@@ -1176,8 +1366,9 @@ def fatal_fail(checks):
       A안이 채칼·도마 대본으로 나왔고, 게이트는 `소재 일치 False`로 정확히 잡고도
       그대로 화면에 실렸다.
     """
+    _fatal_names = active_fatal_checks()
     for c in checks or []:
-        if not c.get("ok") and (c.get("name") in FATAL_CHECKS or c.get("fatal") is True):
+        if not c.get("ok") and (c.get("name") in _fatal_names or c.get("fatal") is True):
             return c.get("name") or ""
     return ""
 

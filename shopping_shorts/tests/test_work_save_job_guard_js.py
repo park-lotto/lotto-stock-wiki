@@ -26,7 +26,8 @@ def _push_work_src():
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     m = re.search(r"async function _pushWork\(\).*?\n}\n", html, re.S)
     assert m, "_pushWork를 produce.html에서 찾지 못함 — 이름이 바뀌었으면 테스트도 같이 옮길 것"
-    return m.group(0)
+    start = html.index("let _workPushTail = Promise.resolve();", 0, m.start())
+    return html[start:m.end()]
 
 
 def _run(mix_job_js):

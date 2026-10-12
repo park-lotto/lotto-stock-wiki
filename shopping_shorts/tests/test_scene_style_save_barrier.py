@@ -21,6 +21,7 @@ def test_debounced_scene_saves_capture_target_and_values_immediately():
     assert "seen=new Set()" in zoom  # flattened cuts send one request per real beat
 
 
+
 def test_final_render_waits_for_every_scene_style_save_and_fails_closed():
     render = HTML.split("async function renderFinal(){", 1)[1].split("async function pollFinal", 1)[0]
     assert "await flushSceneStyleSaves()" in render

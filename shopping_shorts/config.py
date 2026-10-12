@@ -334,6 +334,18 @@ TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 #   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
 TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
 
+# Fish Audio TTS(2026-10-05, 관제 123) — 세 번째 엔진. 프리셋 model_id가 `fish-*`면 이쪽.
+# 판정은 fish_tts.is_fish/enabled 한 곳(0순위-B). s2.1-pro-free 무료 모델(2026-11-30까지)이라
+# 회원 키가 없으면 사장님 키(FISH_API_KEY)로 기본 성우를 돌린다(사장님 "내꺼로").
+FISH_API_KEY = os.environ.get("FISH_API_KEY", "")
+FISH_ENABLED = os.environ.get("FISH_ENABLED", "1") not in ("0", "false", "False", "")
+
+# ── AI 장면 생성(Vertex Veo, 2026-09-23) ──────────────────────────────────
+# 인증은 google-genai가 GOOGLE_APPLICATION_CREDENTIALS(서비스 계정 키) 또는 gcloud ADC로 읽는다.
+# 서버: /etc/shopping-shorts.env 에 GOOGLE_APPLICATION_CREDENTIALS·GCP_PROJECT·GCP_LOCATION.
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "project-74eaf695-8229-44a1-876")
+GCP_LOCATION = os.environ.get("GCP_LOCATION", "us-central1")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -470,6 +482,18 @@ MIN_SHOT_SECONDS = 1.2       # 컷 하나 최소 길이 — 이보다 짧은 조
 # 한 컷을 이보다 오래 안 끈다 — 긴 정지(7초 홀드) 대신 distinct 앵글로 컷(벤치마크 ~1.1초).
 # 렌더가 이 상한으로 세그먼트를 번갈아 재생해 컷 밀도를 만든다(0=끄기·옛 동작).
 MAX_SHOT_SECONDS = 2.2
+# ★슬로우모션 상한 — **여기 한 곳**(관제 020, 2026-10-01). 컷이 대사보다 짧으면 이 배율까지 늦추고 남는 시간만 정지 프레임.
+#   렌더(video_assemble)·캡컷(렌더 계획 공유)·미리보기(scene_play.js, /api/mix/scene_lab 데이터로 주입)가 같은 값을 읽는다.
+#   1.15 → 1.2 (2026-10-01 사장님 "제일 심플하게"): 경쟁사 완성본 실측이 약 0.84배 감속(=1.19배 늦춤)·끝 멈춤 없음.
+#   2초 대사에 1.8초 컷이면 1.11배 늦춤으로 멈춤 없이 끝난다 — TTS 속도는 건드리지 않는다(말 속도는 채널 톤).
+MAX_SLOWMO = 1.2
+# ★3단계 컷 규칙(관제 084, 2026-10-02 사장님): 이 값이 계획(plan["cut_rule"])에 박힌 작업만 새 규칙 —
+#   컷 수 = 장면 수 · 시간은 장면에 고르게(짧은 장면은 가진 만큼, 옆 장면이 더) · 모자라면 칸 전체 같은 배속 · 전환은 가까운 자막 경계.
+#   표식 없는 옛 작업은 종전 규칙 그대로(이미 만든 청소본이 옛 컷 시간축이라 바꾸면 어긋난다).
+CUT_RULE = "scenes_v2"
+# ★이어 틀기는 원본의 다음 장면 전환 앞까지(관제 150, 2026-10-07) — 이 표식(plan["scene_stop"])이 박힌 **새 작업만**.
+#   옛 작업(특히 이미 청소한 작업)은 청소 당시 컷과 같아야 재생된다(관제 110·135) — 규칙을 바꾸면 재청소(과금)·원본 자막.
+SCENE_STOP = 1
 # ── 컷 전환(2026-08-23 사장님 "부자연스럽고 ... 캡컷을 대체하고 싶은 게 목적") ──────
 # 컷과 컷 사이를 딱 끊지 않고 짧게 겹쳐 넘긴다(xfade). 0이면 종전대로 하드컷.
 # ★비트(칸) 길이는 절대 안 바뀐다 — 겹치는 만큼 각 컷을 미리 늘려 받아

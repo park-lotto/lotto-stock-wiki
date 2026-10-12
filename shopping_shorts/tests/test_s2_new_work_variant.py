@@ -52,7 +52,8 @@ def test_지금_작업을_확정하지_않는다():
     """STATE.script을 건드리면 지금 작업까지 이 안으로 바뀐다 — 그러면 2편이 아니다."""
     body = _fn(PRODUCE.read_text(encoding="utf-8"), "s2ConfirmToNewWork")
     assert "STATE.script=" not in body.replace(" ", "")
-    assert "st.script=script" in body.replace(" ", ""), "복제본에만 대본을 넣는다"
+    assert "s2ApplyDraftContract(st,dr)" in body.replace(" ", ""), (
+        "복제본에만 화면 제목과 첫 TTS 대본 계약을 넣는다")
 
 
 def test_지금_작업을_먼저_저장한다():

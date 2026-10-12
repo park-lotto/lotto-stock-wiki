@@ -1,0 +1,356 @@
+(()=>{
+  let dialog,frame,jobId,packet,appliedOnServer=false;
+  let saveQueue=Promise.resolve();
+  const canaryKey='scene-style-canary-enabled';
+  const canaryParam=new URLSearchParams(location.search).get('scene_style_canary');
+  const canaryRequested=canaryParam==='1';
+  if(canaryRequested)localStorage.setItem(canaryKey,'1');
+  if(canaryParam==='0')localStorage.removeItem(canaryKey);
+  const canaryEnabled=canaryRequested||localStorage.getItem(canaryKey)==='1';
+  // 서버 카나리(canary.py)와 짝 — 관리자 + 이 쿠키일 때만 새 대본 동작. 켜고 끄는 자리는 여기 한 곳.
+  document.cookie='ss_canary='+(canaryEnabled?'1':'0')+'; path=/; max-age='+(canaryEnabled?31536000:0)+'; SameSite=Lax';
+  window.SS_CANARY=canaryEnabled;
+  let canaryRequest=0,canaryJobId='';
+  const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
+  const status=()=>(typeof inlineMode!=='undefined'&&inlineMode&&document.getElementById('sceneStyleInlineStatus'))||document.getElementById('sceneStyleStatus');
+  const draftKey=id=>'scene-style-draft:'+id;
+  // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
+  const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
+  // 화면 전용 값(보고 있던 장면·틀)은 빼고 견준다 — 서버 scene_style.render_view와 같은 목록(2026-09-28)
+  const renderView=s=>{if(!s||typeof s!=='object')return null;const {sceneIndex,frameKind,...rest}=s;if(rest.text&&typeof rest.text==='object'){const {caption,...t}=rest.text;rest.text=t;}return rest;};   // text.caption = 보고 있는 장면의 자막 글(장면별 편집은 captionTexts)
+  const sameSnapshot=(a,b)=>stable(renderView(a))===stable(renderView(b));
+  let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
+  // ★인라인 모드(2026-09-23 사장님: "구버전에서 신버전으로 바꾸는 작업, 라이브 방송 뒤 바로 교체되게 기본 세팅 먼저").
+  //   관리자 스위치 scene_style_inline_enabled(기본 끔)가 켜지면 6단계 패널 안에 새 편집기를 바로 띄우고 구버전 UI를 숨긴다.
+  //   팝업(dialog)과 **같은 iframe·같은 메시지 흐름**을 쓴다 — 갈라 두면 둘이 어긋난다(0순위-B). 끄면 종전 화면 그대로.
+  let inlineMode=false,inlineShell=null,inlineOpen=false,inlineFailed=false;
+  const editorOpen=()=>inlineMode?inlineOpen:!!dialog?.open;
+  const stepPanel=()=>document.querySelector('.panel[data-step="3"]');
+  function ensureInlineShell(){
+    const panel=stepPanel();if(!panel||inlineShell)return inlineShell;
+    if(!document.getElementById('sceneStyleInlineStyle')){const style=document.createElement('style');style.id='sceneStyleInlineStyle';
+      // ★되살리는 선택자는 **id**로 받는다 — 위 숨김 규칙의 `:not(#sceneStyleInline)`이 ID 점수를 가져가
+      //   클래스·속성만으로는 항상 진다(2026-09-24 실측: 규칙 둘 다 걸렸는데 숨김이 이겼다).
+      // ★원본 모드(plain)에서는 옛 헤드카피·자막 칸을 다시 보여 준다 — 그 모드는 새 편집기가 글자를 안 그리고
+      //   렌더가 옛 경로를 타서, 이 칸들이 실제로 결과물에 반영되는 자리다(2026-09-24).
+      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}';   // 옛 피팅룸 HTML은 10-01 삭제(관제 058 C1) — 이 규칙은 카나리 섹션·상태 span만 가린다
+      document.head.append(style);}
+    inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
+    const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
+    frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
+    inlineShell.append(note,frame);panel.append(inlineShell);return inlineShell;
+  }
+  let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
+  async function initInline(){
+    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
+    if(!allowed){const btn=document.querySelector('.panel[data-step="3"] button.btn[onclick="openSceneStyleEditor()"]');if(btn)btn.hidden=true;const st=status();if(st)st.textContent='';}
+    window.SCENE_STYLE_INLINE=inlineMode;   // produce.html initHeadcopy가 읽는다 — 새 편집기면 옛 피팅룸의 무거운 불러오기를 건너뛴다(2026-10-01)
+    if(!inlineMode)return;
+    // ★인라인 모드가 켜지면 관리자 시험 모드(canary)는 물러난다(2026-09-25 사고).
+    //   둘 다 '내 칸만 남기고 패널을 전부 숨김' 규칙이라 같이 켜지면 서로의 칸을 숨겨 6단계가 제목만 남았다
+    //   (canary가 켜진 사장님 브라우저에서만 — localStorage scene-style-canary-enabled). 인라인이 정식 화면이므로 이긴다.
+    canaryRequest++;canaryJobId='';
+    {const p=stepPanel(),cs=document.getElementById('sceneStyleCanary');p?.classList.remove('scene-style-canary-active');if(cs)cs.hidden=true;}
+    const panel=stepPanel();if(!panel)return;
+    ensureInlineShell();
+    // ★구버전은 **처음부터** 숨긴다(2026-09-26 사장님 "장면꾸미기를 누르면 구버전이 나오고 신버전 편집을 눌러야 넘어간다").
+    //   예전엔 새 편집기를 다 불러온 뒤에야 숨겨, 불러오는 동안·실패·작업번호(MIX_JOB)가 늦게 온 경우 구버전+회색 버튼이 남았다.
+    //   실측: 사장님 job 65358b12dd6e — 6단계가 떴는데 context 요청이 한 번도 안 나갔다(작업번호 전에 패널이 먼저 보임).
+    panel.classList.add('scene-style-inline-active');
+    // 6단계 패널이 보이면 자동으로 열고, 떠나면 임시저장(+적용한 job은 서버 저장) — 사용자가 누를 버튼이 없다
+    let opening=false;
+    const sync=async()=>{const visible=panel.classList.contains('show');
+      if(visible&&!MIX_JOB&&!inlineOpen){const n=document.getElementById('sceneStyleInlineStatus');if(n&&!n.textContent)n.textContent='영상 정보를 불러오는 중…';}
+      if(visible&&MIX_JOB&&!opening&&(!inlineOpen||jobId!==MIX_JOB)){opening=true;try{await openSceneStyleEditor();}finally{opening=false;}}
+      else if(!visible&&inlineOpen)leaveInline();};
+    new MutationObserver(sync).observe(panel,{attributes:true,attributeFilter:['class']});sync();
+    // 작업번호(MIX_JOB)는 패널 표시와 따로 온다 — 클래스 변화만 보면 늦게 온 작업번호를 놓친다. 6단계가 보이는 동안만 1초마다 확인.
+    setInterval(()=>{if(panel.classList.contains('show')&&MIX_JOB&&!inlineOpen&&!opening&&!inlineFailed)sync();},1000);
+  }
+  async function leaveInline(){
+    try{const api=frame?.contentWindow?.sceneStyle;if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());else stashDraft();}catch(error){status().textContent=error.message;}
+    inlineOpen=false;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initInline);else initInline();
+  const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
+  function showCanaryFallback(message){
+    const panel=document.querySelector('.panel[data-step="3"]');
+    const shell=document.getElementById('sceneStyleCanary');
+    const note=document.getElementById('sceneStyleCanaryStatus');
+    const lab=document.getElementById('sceneStyleCanaryFrame');
+    panel?.classList.remove('scene-style-canary-active');
+    if(shell)shell.hidden=!canaryEnabled;
+    if(note)note.textContent=message||'';
+    if(lab)lab.style.display='none';
+  }
+  window.syncSceneStyleCanary=async()=>{
+    if(!canaryEnabled||inlineMode)return false;   // 인라인 모드가 켜져 있으면 canary는 안 켠다(위 initInline 주석)
+    const panel=document.querySelector('.panel[data-step="3"]');
+    const shell=document.getElementById('sceneStyleCanary');
+    const note=document.getElementById('sceneStyleCanaryStatus');
+    const lab=document.getElementById('sceneStyleCanaryFrame');
+    if(!panel||!shell||!note||!lab)return false;
+    const requested=currentMixJob();
+    if(!requested){showCanaryFallback('현재 작업 번호가 아직 없습니다. 기존 장면꾸미기를 유지합니다.');return false;}
+    if(canaryJobId===requested&&panel.classList.contains('scene-style-canary-active'))return true;
+    const request=++canaryRequest;
+    showCanaryFallback('관리자 권한과 현재 작업을 확인하는 중…');
+    try{
+      const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok)throw Error(data.error||'관리자 LAB 권한을 확인하지 못했습니다.');
+      if(request!==canaryRequest||requested!==currentMixJob()||inlineMode)return false;
+      const exact=(data.jobs||[]).find(row=>String(row.job_id)===requested);
+      if(!exact)throw Error('현재 작업이 관리자 LAB 목록에 없습니다. 다른 작업으로 대신 열지 않습니다.');
+      canaryJobId=requested;
+      shell.hidden=false;note.textContent=`관리자 시험 모드 · 현재 작업 ${requested}의 복사본만 사용합니다.`;
+      const target='/scene_style_lab.html?embedded=tab&job='+encodeURIComponent(requested);
+      if(lab.dataset.jobId!==requested){lab.dataset.jobId=requested;lab.src=target;}
+      lab.style.display='block';panel.classList.add('scene-style-canary-active');
+      return true;
+    }catch(error){
+      if(request===canaryRequest)showCanaryFallback(`${error.message} 기존 장면꾸미기를 유지합니다.`);
+      return false;
+    }
+  };
+  if(canaryEnabled){
+    const style=document.createElement('style');
+    style.textContent='.panel[data-step="3"].scene-style-canary-active>:not(h3):not(#sceneStyleCanary){display:none!important}';
+    document.head.append(style);
+    setTimeout(()=>window.syncSceneStyleCanary(),0);
+  }
+  function stashDraft(){
+    const api=frame?.contentWindow?.sceneStyle;
+    if(!editorOpen()||api?.context()?.jobId!==jobId)return null;
+    const snapshot=api.snapshot();
+    // baseText = 이 편집기를 열 때 서버가 준 제목 글(임시저장 병합 전). 복원할 때 여기서 달라진 칸만 '사용자가 고친 것'으로 본다.
+    try{localStorage.setItem(draftKey(jobId),JSON.stringify({snapshot,timeline:timelineKey(packet.context),baseText:serverText||{}}));}catch(error){status().textContent='임시 저장 공간이 부족합니다. 저장하고 닫기를 눌러 주세요.';}
+    return snapshot;
+  }
+  // ★자동 저장은 **이미 [이 영상에 적용]을 누른 적 있는 job에서만** 한다(2026-09-16 사장님 제보).
+  //   스냅샷에는 '템플릿 없음'이라는 상태가 없다(scene_style.validate_snapshot이 presetId 필수) —
+  //   그래서 열었다 그냥 닫기만 해도 기본 t11이 저장됐고, 렌더(video_assemble)가 그걸 그대로
+  //   합성해 "템플릿 안 썼는데 들어가 있다"가 됐다(실측 job 53c0d41edc39: template=null인데
+  //   scene_style=t11, 편집 흔적 0). 임시저장(localStorage)은 그대로 둔다 — 그건 서버에 안 간다.
+  //   ★판정은 packet.snapshot이 아니라 이 깃발로 한다 — 임시저장 복원이 packet.snapshot을
+  //   덮어써서, 두 번째로 열었다 닫을 때 "적용한 적 있다"로 잘못 읽히는 구멍이 있다.
+  const applied=()=>appliedOnServer;
+  addEventListener('pagehide',()=>{
+    const snapshot=stashDraft();if(!snapshot||!applied()||sameSnapshot(snapshot,packet.snapshot))return;   // 서버 저장본과 같으면 안 올린다(올리면 완성본이 무효화되던 자리)
+    fetch('/api/produce/mix/settings',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,scene_style:snapshot})}).catch(()=>{});
+  });
+  function saveSnapshot(snapshot){
+    const id=jobId,copy=structuredClone(snapshot);
+    const task=saveQueue.catch(()=>{}).then(async()=>{
+      if(id!==MIX_JOB||id!==jobId)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');
+      const response=await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:id,scene_style:copy})});
+      const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'영상 설정을 저장하지 못했습니다.');
+      // ★설정이 바뀌어 **이미 만든 완성본이 버려졌으면** 그 자리에서 알린다(2026-09-24 고객 조율가님:
+      //   "템플릿 씌우고 썸네일 지정해 다음으로 넘어가면 전체영상 다 적용이 안 되었어요").
+      //   실제로는 다시 만들어야 하는 상태인데 화면이 아무 말이 없어 '적용 안 됨'으로 보였다.
+      if(result.render_invalidated&&id===MIX_JOB&&id===jobId){
+        setTimeout(()=>{status().textContent='설정이 바뀌어 기존 완성본은 지워졌습니다 — [완성본 만들기]를 한 번 더 눌러 주세요.';status().style.color='#ffd479';},60);
+      }
+      if(id===MIX_JOB&&id===jobId){STATE.deco={...(STATE.deco||{}),scene_style:copy};packet.snapshot=copy;appliedOnServer=true;saveWork();status().textContent=copy?'문구·효과 적용됨 · 최종 영상에 반영됩니다.':'템플릿 없음 · 원본 영상 그대로 나갑니다.';}
+      try{const draft=JSON.parse(localStorage.getItem(draftKey(id))||'null');if(draft&&JSON.stringify(draft.snapshot)===JSON.stringify(copy))localStorage.removeItem(draftKey(id));}catch(_){}
+    });
+    saveQueue=task;return task;
+  }
+  async function saveAndClose(){
+    try{
+      const api=frame?.contentWindow?.sceneStyle;
+      // 닫기·ESC는 **적용한 적 있는 job만** 저장한다(위 applied() 주석과 같은 이유).
+      // ★서버 저장본과 같으면(다른 장면을 구경만 했으면) 올리지 않는다 — 2026-09-28 사장님 job 8c63b0691924: 렌더 뒤 [닫기]만 눌렀는데 완성본이 사라졌다.
+      if(api?.context()?.jobId===jobId&&applied()){const s=stashDraft();if(!sameSnapshot(s,packet.snapshot))await saveSnapshot(s);}
+      else stashDraft();
+      if(dialog?.open)dialog.close();
+    }catch(error){status().textContent=error.message;frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}
+  }
+  // ── 6단계를 떠날 때 "이 템플릿으로 진행할까요?"(2026-09-26 사장님) ──────────────────
+  //   [이 영상에 적용]을 안 누르고 다음으로 가면 설정이 서버에 안 남아 **썸네일·영상에 템플릿이 안 들어갔다**
+  //   (고객 조율가님 job 7cfa8bd7a23e: 템플릿을 꾸며 두고 적용 없이 넘어가 scene_style=None, 썸네일 후보 17번 전부 원본).
+  //   그냥 자동 저장하면 09-16 사고(열어만 보고 닫았는데 기본 t11이 영상에 들어감)가 되살아나므로 **묻는다**.
+  //   묻는 조건: 이 작업을 이번에 편집기로 열었고 · 서버에 적용한 적 없고 · 지금 템플릿이 골라져 있다(null=템플릿 없음은 안 묻는다).
+  //   produce.html jump()가 부른다 — 다음 버튼·단계 칩·[썸네일 단계로 이동]이 전부 jump를 지나므로 한 곳에서 막힌다.
+  let leaveBypass=false;
+  function pendingTemplate(){
+    // '적용했나'는 applied() 하나로 본다 — 열 때 서버 저장본으로 정해지고 적용하면 켜진다. STATE.deco를 따로 보면
+    //   작업을 바꿨을 때 앞 작업 값이 남아 묻지 않고 지나갔다(검사 ⑥에서 실측).
+    const id=currentMixJob();if(!id||id!==jobId||applied())return null;
+    const api=frame?.contentWindow?.sceneStyle;
+    if(editorOpen()&&api?.context()?.jobId===id){try{return api.snapshot()||null;}catch(_){return null;}}
+    try{return JSON.parse(localStorage.getItem(draftKey(id))||'null')?.snapshot||null;}catch(_){return null;}
+  }
+  window.sceneStyleLeaveGate=proceed=>{
+    if(leaveBypass){leaveBypass=false;return true;}
+    const snap=pendingTemplate();if(!snap)return true;
+    if(document.getElementById('sceneStyleLeaveAsk'))return false;
+    const wrap=document.createElement('div');wrap.id='sceneStyleLeaveAsk';wrap.setAttribute('role','dialog');wrap.setAttribute('aria-modal','true');
+    wrap.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px';
+    wrap.innerHTML='<div style="background:#0f1c25;border:1px solid #35505b;border-radius:14px;max-width:420px;width:100%;padding:22px 20px;color:#e8f1f3;font-family:inherit;box-shadow:0 12px 40px rgba(0,0,0,.5)">'
+      +'<div style="font-size:17px;font-weight:800;margin-bottom:8px">이 템플릿으로 진행할까요?</div>'
+      +'<div style="font-size:13px;line-height:1.6;color:#bcd0d6;margin-bottom:16px">장면꾸미기에서 고른 템플릿이 아직 <b>영상에 적용되지 않았어요</b>.<br>진행하면 지금 화면 그대로 썸네일과 최종 영상에 들어갑니다.</div>'
+      +'<button type="button" data-leave="apply" style="width:100%;padding:12px;border:0;border-radius:10px;background:#3fe0b5;color:#04221a;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:8px">✔ 이 템플릿으로 진행</button>'
+      +'<div style="display:flex;gap:8px"><button type="button" data-leave="skip" style="flex:1;padding:10px;border:1px solid #35505b;border-radius:10px;background:transparent;color:#dce8ec;font-weight:700;cursor:pointer">템플릿 없이 진행</button>'
+      +'<button type="button" data-leave="stay" style="flex:1;padding:10px;border:1px solid #35505b;border-radius:10px;background:transparent;color:#dce8ec;font-weight:700;cursor:pointer">계속 꾸미기</button></div>'
+      +'<div data-leave-msg style="font-size:12px;color:#ffb4a8;margin-top:8px;min-height:16px"></div></div>';
+    document.body.append(wrap);
+    const close=()=>wrap.remove(),msg=wrap.querySelector('[data-leave-msg]');
+    wrap.addEventListener('click',async event=>{
+      const act=event.target?.closest?.('[data-leave]')?.dataset.leave;if(!act)return;
+      if(act==='stay'){close();return;}
+      if(act==='skip'){close();leaveBypass=true;proceed();return;}
+      wrap.querySelectorAll('button').forEach(b=>b.disabled=true);msg.style.color='#bcd0d6';msg.textContent='적용하는 중…';
+      try{await saveSnapshot(snap);close();proceed();}
+      catch(error){wrap.querySelectorAll('button').forEach(b=>b.disabled=false);msg.style.color='#ffb4a8';msg.textContent='✕ '+(error.message||'적용하지 못했어요')+' — 다시 눌러 주세요';}
+    });
+    return false;
+  };
+  function remapSnapshot(snapshot,previous,next,changedBeat){
+    const result=structuredClone(snapshot),sources=next.scenes.map(scene=>{
+      const choices=previous.scenes.map((s,i)=>({s,i})).filter(x=>x.s.beat_idx===scene.beat_idx);
+      return (choices.find(x=>x.s.caption===scene.caption&&x.s.start===scene.start)||choices.find(x=>x.s.start<=scene.start&&x.s.end>scene.start)||choices[0])?.i;
+    });
+    for(const name of ['captionTexts','captionLayouts','captionDrags','captionPositions','fontScales','textOffsets']){
+      const output={};for(const [key,value] of Object.entries(snapshot[name]||{})){
+        const m=key.match(/^(.*:(?:story|continuous):)(\d+)(:caption)$/)||key.match(/^(.*:caption:)(\d+)()$/);
+        if(!m){output[key]=value;continue;}
+        sources.forEach((source,i)=>{if(source===Number(m[2])&&!(name==='captionTexts'&&next.scenes[i].beat_idx===changedBeat))output[m[1]+i+m[3]]=value});
+      }result[name]=output;
+    }
+    result.effects={};sources.forEach((source,i)=>{if(snapshot.effects?.[source])result.effects[i]=snapshot.effects[source]});return result;
+  }
+  // ★'템플릿 없이 완성본'의 기본 자막·제목 스타일(관제 058 B단계, 2026-10-01).
+  //   옛 피팅룸 초기화(initHeadcopy→applyDefaultStyleOnEntry·applyErasedRegion)가 6단계에 들어올 때 넣어 주던 값이다.
+  //   옛 코드를 지우기 전에 같은 판단을 새 길 한 곳으로 옮긴다 — 값은 서버에 실제 저장된 원본(job ec038d16ee0f)을 그대로.
+  //   규칙(옛 코드와 같다): ① 자막·제목 설정이 비어 있을 때만 '심플 화이트'를 넣는다
+  //                        ② 그렇게 **새로 넣은 경우에만** 자막 지운 자리(clean_regions.primary)가 있으면 자막 위치를 그 자리로
+  //                           (옛 applyConfig는 저장값에 x_pct가 있으면 CAP_POS_TOUCHED=true라 다시 안 옮겼다 — 저장본 전부 x_pct를 가진다)
+  //   렌더가 읽는 값은 STATE.headcopy/captionStyle → saveHeadcopy(렌더 직전 POST) 그대로라 결과물은 전과 같다.
+  const SIMPLE_WHITE_CAP={font:'Pretendard-ExtraBold.otf',color:'#ffffff',size:50,y_pct:37,outline:false,outline_color:'#000000',outline_w:0,box:false,box_color:'#000000',box_pad:12,box_opacity:80,bar:false,effect:'fade',shadow:true,shadow_color:'#000000',shadow_d:3,x_pct:50};
+  const SIMPLE_WHITE_HC={text:'',font:'Pretendard-ExtraBold.otf',color:'#ffffff',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2,box:false,box_color:'#000000',box_pad:16,box_opacity:80};
+  async function ensureLegacyStyleDefaults(job){
+    if(typeof STATE==='undefined'||!STATE)return;
+    let fresh=false;
+    if(!STATE.captionStyle||!Object.keys(STATE.captionStyle).length){STATE.captionStyle={...SIMPLE_WHITE_CAP};fresh=true;}
+    if(!STATE.headcopy||!Object.keys(STATE.headcopy).length){STATE.headcopy={...SIMPLE_WHITE_HC};}
+    if(STATE.deco&&typeof STATE.deco==='object'&&!('watermark' in STATE.deco))STATE.deco.watermark=null;   // 옛 applyWatermark가 남기던 모양 그대로
+    if(!fresh)return;
+    try{
+      const d=await (await fetch('/api/mix/status/'+encodeURIComponent(job))).json();
+      const p=d&&d.clean_regions&&d.clean_regions.primary;
+      if(p&&p.x_pct!=null&&p.y_pct!=null){STATE.captionStyle.x_pct=Math.round(p.x_pct);STATE.captionStyle.y_pct=Math.round(p.y_pct);}
+    }catch(_){ /* 자리 정보를 못 읽으면 기본 자리(옛 코드도 같았다) */ }
+  }
+  window.openSceneStyleEditor=async()=>{
+    if(!allowed){status().textContent='';return;}   // 고객에겐 아직 안 연다(관리자·스위치만)
+    if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
+    jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
+    try{
+      await ensureLegacyStyleDefaults(jobId);   // 옛 피팅룸 초기화가 하던 '템플릿 없는 완성본' 기본값 — 이제 이 한 곳(관제 058 B단계)
+      // ★제목·소제목은 **누르지 않아도 들어가 있어야 한다**(2026-09-22 사장님:
+      //   "그냥 자동화가 되는 과정이야 눌러야 되는 거 없이 처음에 배치까지 잘 되야 하는 거야").
+      //   진입할 때 loadHeadcopySuggest가 후보를 자동으로 뽑아 window._hcCopies에 담아 둔다.
+      //   여기서 그 1번을 대비책으로 쓴다 — 옛 꾸미기(produce.html frPick)가 이미 쓰는
+      //   `hcText.value || _hcFirstCopy()`와 **같은 규칙**이다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
+      //   안 쓰면 서버가 첫 나레이션을 제목에 넣어 "아니 텀블러이 / 있다고?"가 나온다(실측).
+      // ★후보가 아직 안 왔으면 기다린다(2026-09-22 라이브 저널: 컨텍스트 17:15:28 제목 빈칸 → 후보 17:15:32 도착.
+      //   회색 버튼을 후보보다 먼저 누르면 서버가 대본 첫 문장을 제목에 넣어 12/10자·23/22자로 넘쳤다).
+      //   loadHeadcopySuggest는 진행 중이면 같은 약속을 돌려주므로 중복 호출이 아니다.
+      if(!(STATE.headcopy?.text)&&!((typeof _hcFirstCopy==='function'&&_hcFirstCopy()))&&typeof loadHeadcopySuggest==='function'){
+        status().textContent='대본으로 제목 후보를 뽑는 중…';
+        try{await loadHeadcopySuggest(false);}catch(e){}
+      }
+      const fallbackCopy=(typeof _hcFirstCopy==='function'&&_hcFirstCopy())||'';
+      const fallbackSubline=(typeof _hcPickedSubline==='function'&&_hcPickedSubline())
+                          ||(typeof _hcFirstSubline==='function'&&_hcFirstSubline())||'';
+      // ★2026-09-23 사장님 "대본에 있는 제목 훅이 안 들어온다": 사장님이 직접 정한 제목만
+      //   headcopy_text로 보내고, AI 후보는 ai_copy(대비책)로 보낸다. 서버가 **대본 첫 줄**을
+      //   먼저 쓰고, 그 줄이 두 줄에 안 담길 때만 AI 후보로 물러난다(hook_from_script 한 곳).
+      //   전엔 여기서 AI 후보를 제목 자리에 바로 넣어 대본 제목이 영영 안 들어왔다.
+      const params=new URLSearchParams({
+        headcopy_text:STATE.headcopy?.text||'',
+        ai_copy:fallbackCopy||'',
+        headcopy_subline:STATE.headcopy?.subline||fallbackSubline
+                        ||document.getElementById('frTitle')?.value||'',
+        copy_family:STATE.headcopy?.copy_family||STATE.script_copy_family||''
+      });
+      const response=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId)+'?'+params);
+      packet=await response.json();if(!response.ok)throw Error(packet.error||'장면을 불러오지 못했습니다.');
+      serverText={...(packet.context?.text||{})};
+      appliedOnServer=!!packet.snapshot;   // 서버에 이미 저장된 설정이 있는 job만 자동 저장 대상
+      try{
+        const draft=JSON.parse(localStorage.getItem(draftKey(jobId))||'null');
+        if(draft?.timeline===timelineKey(packet.context)){
+          // ★적용한 적 없는 job이면 임시저장본은 **편집기에만** 돌려놓고 서버엔 안 올린다.
+          //   여기서 올리면 열었다 닫기만 한 사람도 결국 템플릿이 박힌다(applied() 주석 참조).
+          // ★제목 글은 **사용자가 고친 칸만** 되살린다(2026-09-22 사장님: 같은 작업을 다시 열어도 첫 문장 제목이 그대로).
+          //   임시저장본 text는 모든 칸의 값이라, 그대로 덮으면 서버가 새로 준 제목(후보 1번)이 옛 값에 밀린다.
+          //   열 때의 서버 글(baseText)과 다른 칸만 사용자 편집으로 본다. baseText가 없는 옛 임시저장본은 글을 되살리지 않는다.
+          if(draft.snapshot){
+            const base=draft.baseText,all=draft.snapshot.text||{};
+            const edited=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            // ★서버에 올릴 땐 **완전한 글**(서버 저장본 글 + 고친 칸)로 만든다 — 고친 칸만 담긴 조각을 올리면 서버가
+            //   "설정이 바뀌었다"고 보고 완성본을 무효화한다(2026-09-22 21:05 실측: 열기만 했는데 렌더가 사라짐, 3단계 재다운로드).
+            draft.snapshot.text={...((packet.snapshot&&packet.snapshot.text)||serverText||{}),...edited};
+          }
+          const serverSnap=packet.snapshot;
+          packet.snapshot=draft.snapshot;if(draft.snapshot)packet.context.text={...packet.context.text,...draft.snapshot.text};
+          // ★서버 저장본과 실제로 다를 때만 올린다 — 같은데 올리면 저장 시각만 바뀌고 완성본이 무효화된다.
+          if(applied()&&!sameSnapshot(draft.snapshot,serverSnap))await saveSnapshot(draft.snapshot);
+        }
+      }catch(error){status().textContent='남겨둔 편집을 복원했습니다. 서버 저장은 다시 시도해 주세요.';}
+      if(inlineMode){
+        ensureInlineShell();const panel=stepPanel();panel.classList.add('scene-style-inline-active');
+        const note=document.getElementById('sceneStyleInlineStatus');if(note)note.textContent='';inlineFailed=false;
+        frame.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1';inlineOpen=true;status().textContent='';return;
+      }
+      if(!dialog){
+        dialog=document.createElement('dialog');Object.assign(dialog.style,{width:'98vw',maxWidth:'none',height:'96vh',maxHeight:'none',padding:'0',border:'1px solid #35505b',background:'#08151d',color:'white'});
+        const bar=document.createElement('div');bar.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 18px';
+        const title=document.createElement('b');title.textContent='장면꾸미기';
+        const close=document.createElement('button');close.textContent='저장하고 닫기';close.onclick=saveAndClose;bar.append(title,close);
+        dialog.addEventListener('cancel',event=>{event.preventDefault();saveAndClose();});
+        frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100% - 45px);border:0';dialog.append(bar,frame);document.body.append(dialog);
+      }
+      frame.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1';dialog.showModal();status().textContent='';
+    }catch(error){
+      if(inlineMode){
+        // 구버전으로 떨어뜨리지 않는다 — 이유와 [다시 시도]를 새 편집기 자리에.
+        inlineFailed=true;const n=document.getElementById('sceneStyleInlineStatus');
+        if(n){n.textContent=(error.message||'편집기를 불러오지 못했습니다.')+' ';const b=document.createElement('button');b.type='button';b.dataset.retry='1';b.className='btn';b.textContent='다시 시도';
+          b.onclick=()=>{inlineFailed=false;n.textContent='다시 불러오는 중…';openSceneStyleEditor();};n.append(b);}
+        return;
+      }
+      status().textContent=error.message;}
+  };
+  addEventListener('message',async event=>{
+    // scene-style-legacy(옛 칸 다리)는 2026-10-01 제거(관제 058 C1) — 옛 피팅룸 칸이 더는 없다
+    if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
+    if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
+    // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.
+    if(event.data?.type==='scene-style-thumb-pinned'){if(typeof THUMB_STATE!=='undefined'&&THUMB_STATE.job===MIX_JOB&&typeof loadThumbFrames==='function')loadThumbFrames();return;}
+    if(event.data?.type==='scene-style-goto-thumb'){await saveAndClose();if(!dialog?.open&&typeof stepGo==='function')stepGo('thumb');return;}
+    if(event.data?.type==='scene-style-lines'){
+      try{
+        if(event.data.jobId!==jobId||jobId!==MIX_JOB)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');
+        const response=await fetch('/api/produce/mix/'+encodeURIComponent(jobId)+'/caplines',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({beat_idx:event.data.beatIdx,lines:event.data.lines,reset:event.data.reset})});
+        const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'줄 저장 실패');
+        const refreshed=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId));const next=await refreshed.json();if(!refreshed.ok)throw Error(next.error||'새 자막을 불러오지 못했습니다.');
+        const snapshot=event.data.snapshot?remapSnapshot(event.data.snapshot,packet.context,next.context,event.data.beatIdx):null,deco={...(STATE.deco||{}),scene_style:snapshot};   // null = 템플릿 없음
+        if(snapshot)next.context.text={...next.context.text,...snapshot.text};
+        const saved=await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,deco})});const answer=await saved.json();if(!saved.ok||!answer.ok)throw Error(answer.error||'줄은 저장했지만 꾸미기 설정 저장에 실패했습니다.');
+        STATE.deco=deco;saveWork();packet={...next,snapshot};const index=Math.max(0,next.context.scenes.findIndex(s=>s.beat_idx===event.data.beatIdx));
+        frame.contentWindow.postMessage({type:'scene-style-context',...packet,sceneIndex:index},location.origin);
+        frame.contentWindow.postMessage({type:'scene-style-lines-result',ok:true},location.origin);
+      }catch(error){frame.contentWindow.postMessage({type:'scene-style-lines-result',ok:false,error:error.message},location.origin);}
+      return;
+    }
+    if(event.data?.type!=='scene-style-save')return;
+    if(event.data.jobId!==jobId||jobId!==MIX_JOB){frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:'편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.'},location.origin);return;}
+    try{
+      await saveSnapshot(event.data.snapshot);
+      frame.contentWindow.postMessage({type:'scene-style-saved',ok:true},location.origin);
+    }catch(error){frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}
+  });
+})();

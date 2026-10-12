@@ -104,8 +104,13 @@ def test_explicit_product_topic_still_runs_semantic_mixed_product_gate(monkeypat
     monkeypatch.setattr(sg, "generate_variations", lambda *_a, **_k: [
         {"hook": "h", "script": "화장실도 있지만 핵심은 컵홀더 트레이예요."}])
     monkeypatch.setattr(sg, "_speaker_judge", lambda *_a, **_k: {"topic_ok": False})
-    assert sg.generate_guarded_variations({}, srcs, {}, {}, mode="transplant",
-                                          my_topic=TOILET, n=1) == []
+    out = sg.generate_guarded_variations({}, srcs, {}, {}, mode="transplant",
+                                         my_topic=TOILET, n=1)
+    # ★2026-09-25 계약 변경: 이식 주제(변기)에 대한 **한국어 관측이 재료에 없으면** 0안이다.
+    #   종전엔 "이 영상에서 확인한 제품은 변기…입니다 / 댓글에 남겨주세요" 두 줄 껍데기를 1안으로
+    #   내보냈다 — 영상엔 컵홀더가 나오는데 변기를 확인했다고 말하는 지어낸 문장이다.
+    #   샌 제품(컵홀더)이 화면에 안 나오는 계약은 그대로다.
+    assert out == []
 
 
 def test_non_product_free_subject_does_not_require_product_semantic_judge():
@@ -312,8 +317,10 @@ def test_pickup_rejects_semantically_mixed_product(monkeypatch):
         "ok": True, "why": "", "topic_ok": False,
         "topic_why": "컵홀더가 중심", "foreign_products": ["컵홀더 트레이"]})
     reasons = []
-    assert sg.generate_guarded_variations({}, sources, {}, {}, n=1,
-                                          rejection_reasons=reasons) == []
+    out = sg.generate_guarded_variations({}, sources, {}, {}, n=1,
+                                         rejection_reasons=reasons)
+    assert len(out) == 1 and out[0]["made_by"] == "장면근거"
+    assert TOILET in out[0]["script"] and "컵홀더" not in out[0]["script"]
     assert reasons and all(r["detail"] == "주제 단일성" for r in reasons)
 
 

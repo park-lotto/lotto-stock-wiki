@@ -24,6 +24,7 @@ import sys
 import requests
 
 from shopping_shorts import config
+from shopping_shorts import voice_presets
 
 # 타임스탬프 전용 엔드포인트. voice_id는 **경로가 아니라 본문**으로 간다
 # (`/v1/text-to-speech/{voice_id}/with-timestamps`는 404 — 2026-08-19 실측).
@@ -93,10 +94,71 @@ FALLBACK_VOICE = {
 }
 
 
-def use_fallback(model_id):
-    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가**.
-    타입캐스트 프리셋인데 엔진이 꺼져 있으면 True."""
-    return is_typecast(model_id) and not enabled()
+# 일레븐랩스를 못 쓰고 **타입캐스트 키만 있는** 회원의 기본 성우 = 필재·안정(tc-piljae-stable).
+# (2026-09-30 사장님 "필재". 차순엽(610): 기억 없음 → 일레븐 미나 기본값 → 키 없음으로 3단계 5연속 실패)
+# 모양은 /api/mix/voice가 심는 스냅샷과 같다(라이브 tc-piljae-stable job에서 떼어 옴).
+TYPECAST_DEFAULT_VOICE = {
+    "preset_id": "tc-piljae-stable",
+    "voice_id": "tc_68257f68bc6e3c161ab5078d",
+    "model_id": "ssfm-v30",
+    "settings": {"emotion": "normal", "emotion_intensity": 1},
+    "speed": voice_presets.default_speed("tc_68257f68bc6e3c161ab5078d"),   # 2026-10-01 관제 049
+    "silence_trim": "mid",
+    "pace_mode": True,
+    "naturalize_profile": None,
+}
+
+
+def use_typecast_default(model_id, customer_id=None):
+    """이 회원의 (일레븐 또는 기억 없음) 성우를 **타입캐스트 기본 성우로** 갈아끼워야 하는가.
+
+    use_fallback(타입캐스트→일레븐)의 반대 방향이다. 판단은 여기 한 곳(0순위-B).
+    · 이미 타입캐스트 성우면 False(그대로).
+    · 타입캐스트가 꺼져 있으면 False.
+    · 회원이 일레븐을 쓸 수 있으면(keys_for가 키를 준다) False — 종전 동작.
+    · 일레븐은 못 쓰고 **자기 타입캐스트 키가 있으면** True.
+    cid 0(사장님)·None은 False(회귀 0)."""
+    if not customer_id or is_typecast(model_id) or not enabled():
+        return False
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    try:
+        st = Store(config.DB_PATH)
+        keys, _ = keyroute.keys_for(st, customer_id, keyroute.SVC_ELEVENLABS)
+        if keys:
+            return False
+        return keyroute.has_own_key(st, customer_id, keyroute.SVC_TYPECAST)
+    except Exception:                      # noqa: BLE001 — 조회 실패로 회원 성우를 바꾸지 않는다(종전 동작)
+        return False
+
+
+def use_fallback(model_id, customer_id=None):
+    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가** — 판단은 여기 한 곳(0순위-B).
+
+    · 타입캐스트 프리셋인데 엔진이 꺼져 있으면 True(종전).
+    · customer_id를 주면: 그 회원이 **타입캐스트 키를 못 쓰는** 상태(본인 키 없음·면제 아님 → keys_for가 빈 목록)면 True.
+      2026-09-29 사장님 "관리자 키에서 잘린 사람들도 유료(일레븐) 키가 있으면 일레븐으로 자동 지정해 3단계 넘어가게".
+      배승훈(580)·최소연(134) 등 기본 성우가 타입캐스트로 기억된 회원이 3단계에서 막혀 5단계(성우 바꾸기)에 못 갔다.
+    customer_id를 안 주면 종전과 같다(회귀 0).
+    """
+    if not is_typecast(model_id):
+        return False
+    if not enabled():
+        return True
+    if customer_id is None:
+        return False
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    try:
+        st = Store(config.DB_PATH)
+        keys, _ = keyroute.keys_for(st, customer_id, keyroute.SVC_TYPECAST)
+        if keys:
+            return False                   # 타입캐스트를 쓸 수 있다 — 그대로
+        # ★일레븐 **유료 키가 있는** 회원만 일레븐으로 넘긴다(사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고").
+        #   키가 없으면 그대로 둬서 관문(tts_block_reason)이 '키 등록' 안내로 막는다 — 사장님 키로 안 간다.
+        return keyroute.has_own_key(st, customer_id, keyroute.SVC_ELEVENLABS)
+    except Exception:                      # noqa: BLE001 — 조회 실패로 회원 성우를 바꾸지 않는다(종전 동작)
+        return False
 
 
 def api_key(customer_id=0):
@@ -116,6 +178,10 @@ def api_key(customer_id=0):
         keys = []
     if keys:
         return keys[0]
+    # ★env 폴백은 사장님·면제 명단만(2026-09-29). 회원에게 회사 키가 새는 마지막 구멍이었다 —
+    #   keys_for가 빈 목록을 줘도 여기서 config로 떨어지면 결국 사장님 키로 나간다.
+    if not keyroute.is_block_exempt(customer_id):
+        return ""
     return config.TYPECAST_API_KEY or ""
 
 

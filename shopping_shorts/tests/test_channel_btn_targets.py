@@ -21,7 +21,8 @@ LOADER = BASE / "userscript" / "grab.user.js"
 MANIFEST = BASE / "extension" / "manifest.json"
 
 _FUNCS = ["_chPlat", "_thProfile", "_ytTarget", "_chQuery",
-          "_igProfileName", "_ttProfile", "isSinglePost", "_igAuthor"]
+          "_igProfileName", "_ttProfile", "isSinglePost", "_igAuthor",
+          "_dyModal", "_qp"]   # isSinglePost 가 도우인 영상 팝업(?modal_id) 판단을 부른다(관제 177)
 
 # _igAuthor는 화면(DOM)을 읽는다 — 기본 스텁은 '아무것도 못 읽음'이라 종전과 답이 같다.
 _DOC_EMPTY = ("var document = { querySelectorAll: function () { return []; },"

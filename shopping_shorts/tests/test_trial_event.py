@@ -350,6 +350,7 @@ def test_existing_pending_backfilled_on_migration(tmp_path):
     c.execute("ALTER TABLE _c2 RENAME TO customers")
     c.commit()
     c.close()
+    Store.reset_schema_cache(db)                            # 같은 프로세스 안 '재기동' 흉내
     s2 = Store(db)                                          # 재기동 = 마이그레이션
     assert s2.get_customer(cid)["acked_at"] is not None     # 백필로 내려감
     assert s2.pending_customers() == []
@@ -371,6 +372,7 @@ def test_approved_customers_never_appear_in_waiting_room(tmp_path):
     c.execute("UPDATE customers SET acked_at=NULL WHERE id=?", (cid,))
     c.commit()
     c.close()
+    Store.reset_schema_cache(db)                # 같은 프로세스 안 '재기동' 흉내
     s2 = Store(db)                              # 재기동 = 보정이 돈다(컬럼은 이미 있다)
     assert s2.get_customer(cid)["acked_at"] is not None
     assert s2.pending_customers() == []         # 승인 고객은 대기실에 없다

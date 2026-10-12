@@ -52,7 +52,11 @@ _TAG_DEFAULTS = {"scene_desc": "", "shot_role": "기타", "is_key": False,
                  "action": None, "has_effect": False, "product_benefits": [],
                  # ★2026-09-04: 통째 업로드 추출과 같은 필드를 낸다 — 3단계 인벤토리가 쓰임(label)·활용(use_point)·
                  #   변화(change)를 읽는데 B1은 종전에 이 셋을 아예 안 줬다(빈칸 = 매칭 재료 손실).
-                 "label": "", "use_point": "", "change": ""}
+                 "label": "", "use_point": "", "change": "",
+                 # ★2026-10-01 태깅 지침 확장(카드 051): 소구 종류·훅 유형·뒷컷·긴 컷 구간·속도. 없으면 빈칸.
+                 "appeal_kind": "", "hook_type": "", "hook_why": "", "is_outro": False, "outro_why": "", "moments": "",
+                 "tempo": "", "speed_hint": None}
+
 
 
 def merge_frame_tags(segs, tags):
@@ -272,6 +276,7 @@ def normalize_tags(tags, n_segs):
     · seg_no(1부터)가 있으면 그 자리에, 없으면 순서대로 채운다(모델이 하나 빠뜨려도 뒤가 안 밀린다)
     · shot_role은 shot_roles.normalize(모르는 값 → '기타'), is_key는 bool, product_benefits는 list
     반환: 길이 n_segs, 빈 자리는 {}(merge_frame_tags가 기본값으로 채운다)."""
+    from shopping_shorts import script_extract as _se      # 정규화 규칙은 script_extract 한 곳(0순위-B)
     out = [{} for _ in range(max(0, int(n_segs)))]
     seq = 0
     for t in (tags or []):
@@ -302,6 +307,15 @@ def normalize_tags(tags, n_segs):
             "use_point": t.get("use_point"),
             "action": t.get("action"),
             "change": t.get("change"),
+            # 2026-10-01 확장 칸 — 모르는 값은 빈칸으로(폴백 없음, 조용히 버리지도 않음)
+            "appeal_kind": str(t.get("appeal_kind") or "").strip(),
+            "hook_type": _se._norm_hook_type(t.get("hook_type")),
+            "hook_why": str(t.get("hook_why") or "").strip()[:40],
+            "is_outro": _se._norm_bool(t.get("is_outro")),
+            "outro_why": str(t.get("outro_why") or "").strip()[:40],
+            "moments": str(t.get("moments") or "").strip()[:120],
+            "tempo": str(t.get("tempo") or "").strip(),
+            "speed_hint": _se._norm_speed_hint(t.get("speed_hint")),
         }
     return out
 
@@ -378,7 +392,11 @@ def _call_with_key_rotation(make_call, *, what=""):
       힌디어 영상의 text_ko가 통째로 비었고(429), 브리프도 같은 이유로 자주 비었다.
       _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키를 준다."""
     import sys as _sys
-    from shopping_shorts import comment_gen
+    from shopping_shorts import comment_gen, vertex_route
+    # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만) — 실패·빈 결과면 아래 종전 키 회전 그대로.
+    _ok, _got = vertex_route.try_call("frame_script", make_call, what=what or "call")
+    if _ok:
+        return _got
     for model in TAG_MODELS:
         for attempt in range(2):
             key, _ = comment_gen._current_key_and_idx()
@@ -561,45 +579,59 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
             + _guide + "\n\n"
             '출력은 JSON 객체 {"tags": [{"seg_no": 1, "scene_desc": "...", "label": "...", "use_point": "...", '
             '"action": "...", "change": "...", "has_effect": false, "is_key": false, "shot_role": "...", '
-            '"product_benefits": []}, ...]} 만. 구간을 빠짐없이, 구간 순서대로. JSON 뒤에 다른 글을 붙이지 마라.'
+            '"product_benefits": [], "appeal_kind": "...", "hook_type": "...", "hook_why": "...", "is_outro": false, '
+            '"outro_why": "", "moments": "", "tempo": "...", "speed_hint": 1.0}, ...]} 만. 구간을 빠짐없이, 구간 순서대로. '
+            'JSON 뒤에 다른 글을 붙이지 마라.'
             f"\n캡션(참고):{caption or '(없음)'}")
         parts = [prompt] + parts_img
         got = None
+
+        def _once(client, model, _b0=b0, _b1=b1, _parts=parts):
+            """한 묶음을 한 모델로 한 번 — 응답을 이번 묶음 기준 태그 목록으로. 쓸 태그가 없으면 None.
+            ★Vertex 경로와 키풀 경로가 **같은 해석**을 쓴다(0순위-B) — 여기 한 곳만 고친다."""
+            resp = client.models.generate_content(
+                model=model, contents=_parts,
+                config=types.GenerateContentConfig(response_mime_type="application/json"))
+            data = loads_lenient(resp.text)
+            raw = data.get("tags") if isinstance(data, dict) else data
+            # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+            # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
+            #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
+            nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
+            try:
+                nos_i = [int(x) for x in nos]
+            except (TypeError, ValueError):
+                nos_i = []
+            relative = bool(nos_i) and _b0 > 0 and all(1 <= x <= (_b1 - _b0) for x in nos_i)
+            if relative:
+                print(f"frame_script._gemini_tag_frames: 묶음 {_b0+1}~{_b1} 응답이 상대 번호 — 그대로 해석",
+                      file=__import__('sys').stderr)
+            fixed = []
+            for t in (raw or []):
+                if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
+                    try:
+                        t = dict(t, seg_no=int(t["seg_no"]) - _b0)
+                    except (TypeError, ValueError):
+                        pass
+                fixed.append(t)
+            tags = normalize_tags(fixed, _b1 - _b0)
+            return tags if any(tags) else None
+
+        # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만) — 실패·빈 결과면 아래 종전 키 회전 그대로.
+        from shopping_shorts import vertex_route
+        _ok, _got = vertex_route.try_call("frame_script", _once, what=f"tag_frames {b0+1}~{b1}")
+        if _ok:
+            got = _got
         # ★묶음마다 키를 새로 고른다(2026-09-05) — _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키.
         #   종전엔 함수 시작에 한 번만 골라 한 영상의 모든 묶음이 같은 키를 때렸다(분당 한도·503 스파이크에 취약,
         #   실측 s3 133~280초 흔들림). 503/429면 같은 모델을 다른 키로 한 번 더 시도한 뒤 다음 모델로.
-        for model in TAG_MODELS:
+        for model in (() if got else TAG_MODELS):
             for attempt in range(2):
                 _k2, _ = comment_gen._current_key_and_idx()
                 client = comment_gen._client_for_key(_k2 or key)
                 try:
-                    resp = client.models.generate_content(
-                        model=model, contents=parts,
-                        config=types.GenerateContentConfig(response_mime_type="application/json"))
-                    data = loads_lenient(resp.text)
-                    raw = data.get("tags") if isinstance(data, dict) else data
-                    # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
-                    # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
-                    #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
-                    nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
-                    try:
-                        nos_i = [int(x) for x in nos]
-                    except (TypeError, ValueError):
-                        nos_i = []
-                    relative = bool(nos_i) and b0 > 0 and all(1 <= x <= (b1 - b0) for x in nos_i)
-                    if relative:
-                        print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 응답이 상대 번호 — 그대로 해석",
-                              file=__import__('sys').stderr)
-                    fixed = []
-                    for t in (raw or []):
-                        if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
-                            try:
-                                t = dict(t, seg_no=int(t["seg_no"]) - b0)
-                            except (TypeError, ValueError):
-                                pass
-                        fixed.append(t)
-                    tags = normalize_tags(fixed, b1 - b0)
-                    if any(tags):
+                    tags = _once(client, model)
+                    if tags:
                         got = tags
                     else:
                         print(f"frame_script._gemini_tag_frames: {model} 응답에 쓸 태그 없음 → 다음 모델",
@@ -791,6 +823,7 @@ def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extr
         "full_text": full_text_of(segments),
         "product_benefits": script_extract._collect_benefits(segments),
         "source_brief": brief,       # 1차 브리프(product·role·core·summary·flow·confidence), 없으면 {}
+        "story": script_extract._story_for(brief, segments),   # 2026-10-01 스토리(대본 문장+컷) — 통째 업로드 경로와 같은 함수
         "tag_empty_ratio": round(_er, 3),   # 묘사 빈 비율 — 0이 정상. 실패를 숫자로 남긴다(2026-09-05)
         "transcript_status": transcript_status,   # ok | no_groq_key | audio_extract_failed | asr_none | asr_empty | exception: …
         # 외국 소스의 한국어 전사 전문(대본 재료용). 한국어 소스는 빈칸 → 호출부가 full_text로 폴백.

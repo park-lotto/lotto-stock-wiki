@@ -1,0 +1,723 @@
+{
+ "무슨템": {
+  "grade": "S",
+  "videos": 62,
+  "hit100k": 30,
+  "hit1m": 13,
+  "max": 20000000
+ },
+ "활용정점.": {
+  "grade": "S",
+  "videos": 30,
+  "hit100k": 18,
+  "hit1m": 9,
+  "max": 12000000
+ },
+ "살림킹왕짱": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 47,
+  "hit1m": 10,
+  "max": 10000000
+ },
+ "코어장바구니": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 9,
+  "hit1m": 2,
+  "max": 7200000
+ },
+ "살림장착": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 8,
+  "hit1m": 7,
+  "max": 6600000
+ },
+ "형님여기": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 13,
+  "hit1m": 3,
+  "max": 5000000
+ },
+ "땡스템": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 9,
+  "hit1m": 2,
+  "max": 4700000
+ },
+ "썰칩12": {
+  "grade": "A",
+  "videos": 25,
+  "hit100k": 2,
+  "hit1m": 1,
+  "max": 4300000
+ },
+ "럭키박스": {
+  "grade": "S",
+  "videos": 54,
+  "hit100k": 5,
+  "hit1m": 3,
+  "max": 4100000
+ },
+ "방구석꿀템": {
+  "grade": "S",
+  "videos": 49,
+  "hit100k": 19,
+  "hit1m": 8,
+  "max": 4000000
+ },
+ "쇼핑천재": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 14,
+  "hit1m": 4,
+  "max": 4000000
+ },
+ "쇼핑 치트키": {
+  "grade": "S",
+  "videos": 40,
+  "hit100k": 17,
+  "hit1m": 3,
+  "max": 3500000
+ },
+ "숏핑": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 14,
+  "hit1m": 3,
+  "max": 2800000
+ },
+ "아스토니쉬코리아": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 2,
+  "hit1m": 1,
+  "max": 2700000
+ },
+ "썰쇼템": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 4,
+  "hit1m": 1,
+  "max": 2100000
+ },
+ "인생갓템": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 23,
+  "hit1m": 3,
+  "max": 2000000
+ },
+ "홈꾸미": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 20,
+  "hit1m": 1,
+  "max": 1900000
+ },
+ "공가미": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 11,
+  "hit1m": 1,
+  "max": 1800000
+ },
+ "이븐쇼핑": {
+  "grade": "S",
+  "videos": 80,
+  "hit100k": 41,
+  "hit1m": 9,
+  "max": 1700000
+ },
+ "나만또모르고있었지": {
+  "grade": "S",
+  "videos": 37,
+  "hit100k": 4,
+  "hit1m": 2,
+  "max": 1600000
+ },
+ "쇼픽픽": {
+  "grade": "A",
+  "videos": 79,
+  "hit100k": 6,
+  "hit1m": 1,
+  "max": 1400000
+ },
+ "썰풀다": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 6,
+  "hit1m": 1,
+  "max": 1400000
+ },
+ "꿀꿀꿀팁": {
+  "grade": "A",
+  "videos": 54,
+  "hit100k": 2,
+  "hit1m": 1,
+  "max": 1200000
+ },
+ "살림템바이": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 1,
+  "max": 1100000
+ },
+ "생활용품 연구소": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 18,
+  "hit1m": 1,
+  "max": 1100000
+ },
+ "긍정템": {
+  "grade": "A",
+  "videos": 42,
+  "hit100k": 5,
+  "hit1m": 1,
+  "max": 1100000
+ },
+ "참좋은 도구들": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 5,
+  "hit1m": 1,
+  "max": 1000000
+ },
+ "낭만집": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 6,
+  "hit1m": 1,
+  "max": 1000000
+ },
+ "달래샵": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 6,
+  "hit1m": 0,
+  "max": 973000
+ },
+ "살림도사": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 9,
+  "hit1m": 0,
+  "max": 895000
+ },
+ "이거였네": {
+  "grade": "A",
+  "videos": 7,
+  "hit100k": 4,
+  "hit1m": 0,
+  "max": 852000
+ },
+ "선물마트": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 4,
+  "hit1m": 0,
+  "max": 783000
+ },
+ "왜 팔릴까": {
+  "grade": "B",
+  "videos": 76,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 767000
+ },
+ "홈라이트": {
+  "grade": "A",
+  "videos": 38,
+  "hit100k": 5,
+  "hit1m": 0,
+  "max": 739000
+ },
+ "꿀팁꿀템": {
+  "grade": "A",
+  "videos": 49,
+  "hit100k": 4,
+  "hit1m": 0,
+  "max": 646000
+ },
+ "다있슈": {
+  "grade": "A",
+  "videos": 36,
+  "hit100k": 2,
+  "hit1m": 0,
+  "max": 634000
+ },
+ "꿀템첵첵": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 618000
+ },
+ "이슈 리뷰어": {
+  "grade": "B",
+  "videos": 28,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 607000
+ },
+ "와우냥": {
+  "grade": "A",
+  "videos": 51,
+  "hit100k": 3,
+  "hit1m": 0,
+  "max": 478000
+ },
+ "홈피아": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 2,
+  "hit1m": 0,
+  "max": 455000
+ },
+ "우리살림": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 3,
+  "hit1m": 0,
+  "max": 455000
+ },
+ "뽀터언니": {
+  "grade": "A",
+  "videos": 40,
+  "hit100k": 5,
+  "hit1m": 0,
+  "max": 409000
+ },
+ "두더지쇼핑": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 3,
+  "hit1m": 0,
+  "max": 379000
+ },
+ "로디홈": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 19,
+  "hit1m": 0,
+  "max": 370000
+ },
+ "살림보고": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 2,
+  "hit1m": 0,
+  "max": 313000
+ },
+ "홈스터": {
+  "grade": "A",
+  "videos": 74,
+  "hit100k": 2,
+  "hit1m": 0,
+  "max": 302000
+ },
+ "루구나": {
+  "grade": "A",
+  "videos": 80,
+  "hit100k": 3,
+  "hit1m": 0,
+  "max": 287000
+ },
+ "오늘꿀템": {
+  "grade": "B",
+  "videos": 49,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 252000
+ },
+ "으니픽": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 157000
+ },
+ "@쿠템헌터3": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 150000
+ },
+ "아이템스토리": {
+  "grade": "B",
+  "videos": 25,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 142000
+ },
+ "바이템": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 133000
+ },
+ "가성비잇템": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 132000
+ },
+ "살림하는코큰남편": {
+  "grade": "B",
+  "videos": 10,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 126000
+ },
+ "리빙플립": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 123000
+ },
+ "딸기라떼": {
+  "grade": "B",
+  "videos": 80,
+  "hit100k": 1,
+  "hit1m": 0,
+  "max": 113000
+ },
+ "오늘의 집사ㅣ생활꿀템": {
+  "grade": "A",
+  "videos": 52,
+  "hit100k": 2,
+  "hit1m": 0,
+  "max": 109000
+ },
+ "내일 쇼핑": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 95000
+ },
+ "룰라템냥": {
+  "grade": "C",
+  "videos": 44,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 77000
+ },
+ "편한살림": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 70000
+ },
+ "포미픽": {
+  "grade": "C",
+  "videos": 5,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 69000
+ },
+ "정리백서": {
+  "grade": "C",
+  "videos": 57,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 59000
+ },
+ "살림치트키": {
+  "grade": "C",
+  "videos": 56,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 54000
+ },
+ "집템뒤집기": {
+  "grade": "C",
+  "videos": 12,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 45000
+ },
+ "이거다시바": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 44000
+ },
+ "살림꿀템": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 38000
+ },
+ "꿀템연구소": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 38000
+ },
+ "손엔라이프": {
+  "grade": "C",
+  "videos": 67,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 35000
+ },
+ "꿀발견": {
+  "grade": "C",
+  "videos": 36,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 32000
+ },
+ "먹바구니": {
+  "grade": "C",
+  "videos": 15,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 31000
+ },
+ "ব্যর্থ প্রেমিক": {
+  "grade": "C",
+  "videos": 17,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 30000
+ },
+ "실링홈": {
+  "grade": "C",
+  "videos": 60,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 30000
+ },
+ "ㅇㅇ야르": {
+  "grade": "C",
+  "videos": 23,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 29000
+ },
+ "쉿~비밀이야": {
+  "grade": "C",
+  "videos": 73,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 29000
+ },
+ "와이거뭐냐": {
+  "grade": "C",
+  "videos": 52,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 27000
+ },
+ "꿀템보글": {
+  "grade": "C",
+  "videos": 73,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 26000
+ },
+ "Enjoy Every Moment": {
+  "grade": "C",
+  "videos": 16,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 26000
+ },
+ "이왜템": {
+  "grade": "C",
+  "videos": 19,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 25000
+ },
+ "순간의픽": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 24000
+ },
+ "담아봄": {
+  "grade": "C",
+  "videos": 8,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 24000
+ },
+ "요즘꿀팁💡": {
+  "grade": "C",
+  "videos": 29,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 23000
+ },
+ "잡동사니": {
+  "grade": "C",
+  "videos": 38,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 23000
+ },
+ "홈노트": {
+  "grade": "C",
+  "videos": 35,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 23000
+ },
+ "낭만살림": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 23000
+ },
+ "유용하데이": {
+  "grade": "C",
+  "videos": 52,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 23000
+ },
+ "살림카트": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 22000
+ },
+ "살림톡": {
+  "grade": "C",
+  "videos": 6,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 21000
+ },
+ "날먹 살림 : 살림 쉽게 하자": {
+  "grade": "C",
+  "videos": 29,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 20000
+ },
+ "팝콘킥": {
+  "grade": "C",
+  "videos": 12,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 20000
+ },
+ "오늘꿀픽 ㅣ살림템ㅣ인테리어ㅣ생활용품": {
+  "grade": "C",
+  "videos": 30,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 19000
+ },
+ "꿀팁픽": {
+  "grade": "C",
+  "videos": 32,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 19000
+ },
+ "택배왔동": {
+  "grade": "C",
+  "videos": 16,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 17000
+ },
+ "꿀템통": {
+  "grade": "C",
+  "videos": 41,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 17000
+ },
+ "sl_pongdang": {
+  "grade": "C",
+  "videos": 26,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 12000
+ },
+ "템파라치": {
+  "grade": "C",
+  "videos": 85,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 10000
+ },
+ "꽈리 살림템": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 7400
+ },
+ "생활도구모음집": {
+  "grade": "C",
+  "videos": 19,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 7300
+ },
+ "써니네": {
+  "grade": "C",
+  "videos": 80,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 6600
+ },
+ "살림라디오": {
+  "grade": "C",
+  "videos": 16,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 6200
+ },
+ "꿀꿀데일리": {
+  "grade": "C",
+  "videos": 21,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 4200
+ },
+ "짤이야": {
+  "grade": "C",
+  "videos": 3,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 3900
+ },
+ "집돌이": {
+  "grade": "C",
+  "videos": 1,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 2400
+ },
+ "요새난리": {
+  "grade": "C",
+  "videos": 2,
+  "hit100k": 0,
+  "hit1m": 0,
+  "max": 1300
+ }
+}

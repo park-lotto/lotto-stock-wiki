@@ -76,7 +76,12 @@ fi
 exit 1
 """, encoding="utf-8")
 
-    for f in ("git", "sudo", "python3"):
+    (bin_dir / "npm").write_text(f"""#!/usr/bin/env bash
+echo "npm:$*" >>"{calls}"
+exit 0
+""", encoding="utf-8")
+
+    for f in ("git", "sudo", "python3", "npm"):
         os.chmod(bin_dir / f, 0o755)
 
     if pending is not None:
@@ -101,6 +106,7 @@ exit 1
     text = text.replace("DEPLOY_NOW_FLAG=/home/ubuntu/DEPLOY_NOW", f'DEPLOY_NOW_FLAG="{root}/DEPLOY_NOW"')
     text = text.replace("DEPLOY_WINDOW_CONF=/home/ubuntu/deploy_window.conf", f'DEPLOY_WINDOW_CONF="{conf}"')
     text = text.replace("HELD_MARK=/tmp/ss_deploy_held", f'HELD_MARK="{root}/held"')
+    text = text.replace("NODE_PENDING=/tmp/ss_pending_npm", f'NODE_PENDING="{root}/pending_npm"')
     if now_flag:
         (root / "DEPLOY_NOW").write_text("", encoding="utf-8")
     script.write_text(text, encoding="utf-8")
@@ -157,6 +163,12 @@ def test_nothing_happens_when_idle_and_no_pending(tmp_path):
     """새 커밋도 대기도 없으면 아무것도 하지 않는다(3분마다 헛일 금지)."""
     r = _harness(tmp_path, local="same", remote="same")
     assert r["calls"] == ""
+
+
+def test_package_lock_change_installs_node_dependencies(tmp_path):
+    """새 Node 의존성이 배포됐는데 node_modules가 비어 렌더가 죽는 일을 막는다."""
+    r = _harness(tmp_path, changed="package-lock.json")
+    assert "npm:ci --no-audit --no-fund" in r["calls"]
 
 
 def test_force_restart_after_max_defer(tmp_path):

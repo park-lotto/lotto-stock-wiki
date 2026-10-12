@@ -103,20 +103,22 @@ def test_synthesize_saves_alignment_sidecar(monkeypatch, tmp_path):
 
 
 # ── ③ 이중 가속 방지 ───────────────────────────────────────────────────────
+# ★2026-10-01 관제 049: 배속은 엔진 구분 없이 **API 1.0 + 뒤에서 atempo 한 번**(사장님이 고른 샘플 방식).
+#   이중 가속이 안 되는 이유는 API 쪽이 늘 1.0이라서다 — 두 엔진 모두 같은 한 규칙으로 확인한다.
 def test_typecast_speed_not_double_applied():
-    """타입캐스트는 API가 tempo를 직접 받으므로 후처리 atempo는 1.0이어야 한다."""
+    """타입캐스트: API tempo 1.0, 고른 속도는 atempo 로만."""
     _, _, speed, extra, *_ = mix_pipeline._voice_params(
-        {"voice_id": "v", "speed": 1.6, "model_id": "ssfm-v30"})
-    assert speed == 1.6
-    assert extra == 1.0
+        {"voice_id": "v", "speed": 1.25, "model_id": "ssfm-v30"})
+    assert speed == 1.0
+    assert extra == 1.25
 
 
-def test_eleven_speed_still_compensated():
-    """일레븐랩스는 1.2 상한이라 초과분을 후처리로 갚는 기존 동작 유지."""
+def test_eleven_speed_all_by_atempo():
+    """일레븐랩스: API speed 1.0, 고른 속도 전부 atempo(종전 1.2 초과분만 갚던 방식 폐기)."""
     _, _, speed, extra, *_ = mix_pipeline._voice_params(
-        {"voice_id": "v", "speed": 1.6, "model_id": "eleven_v3"})
-    assert speed == 1.6
-    assert abs(extra - 1.6 / 1.2) < 1e-9
+        {"voice_id": "v", "speed": 1.35, "model_id": "eleven_v3"})
+    assert speed == 1.0
+    assert abs(extra - 1.35) < 1e-9
 
 
 def test_build_payload_does_not_clamp_to_eleven_range():

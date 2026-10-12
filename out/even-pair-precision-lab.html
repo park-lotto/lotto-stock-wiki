@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>이븐쇼핑 훅·본문 정밀 복제</title>
+<style>
+@font-face{font-family:EvenDisplay;src:url('../shopping_shorts/static/fonts/TmonMonsori.ttf') format('truetype');font-weight:700;font-display:block}
+@font-face{font-family:EvenText;src:url('../shopping_shorts/static/fonts/SpoqaHanSansNeo-Bold.otf') format('opentype');font-weight:700;font-display:block}
+:root{font-family:Pretendard,"Noto Sans KR",sans-serif;color-scheme:dark;--bg:#071018;--panel:#0d1822;--line:#243744;--text:#f5f8fa;--muted:#93a7b1;--mint:#43e2b4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}button,input{font:inherit}
+.top{height:64px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);background:#08121a}.top h1{margin:0;font-size:18px}.state{margin-left:auto;color:var(--mint);font-size:12px;font-weight:800}
+.layout{display:grid;grid-template-columns:minmax(860px,1fr) 360px;min-height:calc(100vh - 64px)}.stage{padding:18px;border-right:1px solid var(--line)}.controls{padding:18px;background:#0a151e}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.toolbar h2{margin:0;font-size:14px}.tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:10px}.tabs button{height:32px;padding:0 14px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-weight:800}.tabs button.active{background:#172631;color:#fff}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}.frame-col{text-align:center}.frame-col h3{margin:0 0 9px;font-size:12px;color:var(--muted)}
+.frame-shell{position:relative;display:inline-block;line-height:0;border:1px solid #3b4c56;border-radius:5px;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,.35)}.reference{display:block;width:425px;height:748px;object-fit:fill}.reference.body{width:420px;height:746px}
+.clone{position:relative;width:425px;height:748px;overflow:hidden;background:#202020;line-height:normal;font-family:EvenDisplay,sans-serif}.clone.body{width:420px;height:746px}
+.clone .header{position:absolute;z-index:4;left:0;right:0;top:0;height:69px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:url('template_refs/even-hook-reference.png') 0 0/425px 748px no-repeat;color:#fff}.clone .header>*{visibility:hidden}.clone .hamb{width:44px;height:34px;position:relative}.clone .hamb:before,.clone .hamb:after,.clone .hamb i{content:"";position:absolute;left:0;width:42px;height:3px;border-radius:4px;background:#d9d9d9}.clone .hamb:before{top:1px}.clone .hamb i{top:15px}.clone .hamb:after{top:29px}.clone .brand{font-size:37px;letter-spacing:10px;transform:translateX(5px);white-space:nowrap}.clone .search{position:relative;width:45px;height:45px;border:4px solid #ddd;border-radius:50%}.clone .search:after{content:"";position:absolute;width:18px;height:4px;right:-13px;bottom:1px;background:#c93145;transform:rotate(48deg);border-radius:3px}
+.clone .hook-head{position:absolute;z-index:4;left:0;right:0;top:69px;height:149px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:43px;background:linear-gradient(180deg,#171a19,#222221 16%,#202020 78%,#767877 100%);font-weight:700;line-height:.96;letter-spacing:-1px}.clone .hook-head strong,.clone .hook-head em{font-size:46px;font-style:normal;white-space:nowrap;-webkit-text-stroke:2px #050505;text-shadow:2px 3px 2px rgba(0,0,0,.85)}.clone .hook-head strong{color:#fff}.clone .hook-head em{color:#25e7dd;transform:scaleX(1.1)}
+.clone .hook-band{position:absolute;z-index:4;left:0;right:0;top:218px;height:68px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#d9d9d9 0%,#fafafa 18%,#f8f8f8 75%,#808080 100%);color:#040404;font-family:EvenDisplay,sans-serif;font-size:25px;font-weight:700;letter-spacing:-1.5px;white-space:nowrap;box-shadow:0 0 8px rgba(0,0,0,.42);transform:scaleX(1.08)}
+.clone .media{position:absolute;z-index:1;left:0;right:0;top:286px;height:411px;overflow:hidden;background:#ddd}.clone .media-inner{position:absolute;left:0;top:-286px;width:425px;height:748px;background:url('template_refs/even-hook-reference.png') center/425px 748px no-repeat}.clone .bottom{position:absolute;z-index:5;left:0;right:0;bottom:0;height:51px;background:url('template_refs/even-hook-reference.png') center bottom/425px 748px no-repeat}
+.clone.body .header{height:69px;background-image:url('template_refs/even-body-reference.png');background-size:420px 746px}.clone.body .hook-head,.clone.body .hook-band{display:none}.clone.body .body-head{display:block}.clone.body .body-band{display:flex}.clone .body-head{display:none;position:absolute;z-index:4;left:0;right:0;top:69px;height:88px;padding:12px 14px 0;background:#414141;color:#fff;font-family:EvenDisplay,sans-serif}.clone .body-head b{display:block;text-align:center;font-size:28px;line-height:1.08;letter-spacing:-1px;white-space:nowrap;transform:scaleX(1.03)}.clone .body-head small{display:block;margin:8px 0 0 9px;color:#bdbdbd;font-size:14px;font-family:Pretendard,sans-serif}.clone .body-band{display:none;position:absolute;z-index:4;left:0;right:0;top:157px;height:72px;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff,#fdfdfd 83%,#f0f6fa);color:#050505;font-family:EvenDisplay,sans-serif;font-size:25px;font-weight:700;letter-spacing:-1.1px;white-space:nowrap;transform:scaleX(1.05)}.clone.body .media{top:229px;height:467px}.clone.body .media-inner{top:-229px;width:420px;height:746px;background-image:url('template_refs/even-body-reference.png');background-size:420px 746px}.clone.body .bottom{height:50px;background-image:url('template_refs/even-body-reference.png');background-size:420px 746px}
+.field{margin-bottom:13px}.field label{display:flex;justify-content:space-between;margin-bottom:6px;color:#bdcad0;font-size:11px;font-weight:700}.field span{color:#6f8490}.field input{width:100%;height:41px;padding:0 11px;border:1px solid var(--line);border-radius:9px;background:#071119;color:#fff}.field input:focus{outline:2px solid rgba(67,226,180,.3);border-color:var(--mint)}
+.notice{padding:11px;margin-bottom:15px;border:1px solid #275848;border-radius:10px;background:#0d2b23;color:#acd9cd;font-size:11px;line-height:1.5}.notice b{color:var(--mint)}.primary{width:100%;height:43px;border:0;border-radius:9px;background:var(--mint);color:#04251d;font-weight:900}.secondary{width:100%;height:40px;margin-top:8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:#c4d0d5;font-weight:800}.metric{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px}.metric span{color:var(--muted)}.metric b{color:#fff}.foot{margin-top:15px;color:#758a94;font-size:10px;line-height:1.55}
+@media(max-width:1300px){.layout{grid-template-columns:1fr}.controls{border-top:1px solid var(--line)}.compare{overflow-x:auto}}
+</style>
+</head>
+<body>
+<header class="top"><h1>이븐쇼핑 훅·본문 정밀 복제</h1><span class="state">편집 가능 · 원본 대조 모드</span></header>
+<main class="layout">
+  <section class="stage">
+    <div class="toolbar"><h2>원본과 편집 렌더를 같은 해상도로 비교</h2><div class="tabs"><button class="active" data-kind="hook">훅 425×748</button><button data-kind="body">본문 420×746</button></div></div>
+    <div class="compare">
+      <div class="frame-col"><h3>원본 캡처</h3><div class="frame-shell"><img class="reference" id="reference" src="template_refs/even-hook-reference.png" alt="원본 캡처"></div></div>
+      <div class="frame-col"><h3>분리 레이어 편집 렌더</h3><div class="frame-shell"><div class="clone" id="clone"><div class="header"><span class="hamb"><i></i></span><b class="brand">이븐쇼핑</b><span class="search"></span></div><div class="hook-head"><strong data-text="hook1">건망증 환자를 살려낸</strong><em data-text="hook2">일본 천재의 발명품</em></div><div class="hook-band" data-text="subtitle">건망증 환자를 살려낸 천재의 발명품?</div><div class="body-head"><b data-text="bodyTitle">건망증 환자를 살려낸 천재 발명품?</b><small>조회수 235만 | 댓글 697개</small></div><div class="body-band" data-text="caption">전 세계 건망증 환자들의</div><div class="media"><div class="media-inner"></div></div><div class="bottom"></div></div></div></div>
+    </div>
+  </section>
+  <aside class="controls">
+    <div class="notice"><b>실제 템플릿입니다.</b><br>글자를 바꾸어도 원본에서 측정한 폰트·위치·색·그라데이션·외곽선 규칙은 유지됩니다.</div>
+    <div class="field"><label>훅 제목 1 <span>한 줄</span></label><input data-input="hook1" value="건망증 환자를 살려낸"></div>
+    <div class="field"><label>훅 제목 2 <span>강조색</span></label><input data-input="hook2" value="일본 천재의 발명품"></div>
+    <div class="field"><label>훅 하단 질문 <span>한 줄</span></label><input data-input="subtitle" value="건망증 환자를 살려낸 천재의 발명품?"></div>
+    <div class="field"><label>본문 제목 <span>한 줄</span></label><input data-input="bodyTitle" value="건망증 환자를 살려낸 천재 발명품?"></div>
+    <div class="field"><label>본문 문장 <span>장면별 자동 교체</span></label><input data-input="caption" value="전 세계 건망증 환자들의"></div>
+    <div class="metric"><span>본문/훅 분리</span><b>완료</b></div><div class="metric"><span>폰트 후보</span><b>TmonMonsori</b></div><div class="metric"><span>색상 형식</span><b>RGBA 고정</b></div><div class="metric"><span>원본 해시</span><b>고정됨</b></div>
+    <button class="primary" id="reset">원본 문구로 되돌리기</button><button class="secondary">차이 비교 렌더 만들기</button>
+    <p class="foot">이 화면은 첫 번째 페어의 정밀 복제 작업판입니다. 폰트 모양과 픽셀 차이를 검수한 뒤에만 사용자 프리셋으로 게시합니다.</p>
+  </aside>
+</main>
+<script>
+const clone=document.getElementById('clone'),reference=document.getElementById('reference');
+const defaults={hook1:'건망증 환자를 살려낸',hook2:'일본 천재의 발명품',subtitle:'건망증 환자를 살려낸 천재의 발명품?',bodyTitle:'건망증 환자를 살려낸 천재 발명품?',caption:'전 세계 건망증 환자들의'};
+function bind(key,value){document.querySelectorAll(`[data-text="${key}"]`).forEach(x=>x.textContent=value||' ')}
+document.querySelectorAll('[data-input]').forEach(input=>input.addEventListener('input',()=>bind(input.dataset.input,input.value)));
+document.querySelectorAll('[data-kind]').forEach(button=>button.addEventListener('click',()=>{const body=button.dataset.kind==='body';document.querySelectorAll('[data-kind]').forEach(x=>x.classList.toggle('active',x===button));clone.classList.toggle('body',body);reference.classList.toggle('body',body);reference.src=body?'template_refs/even-body-reference.png':'template_refs/even-hook-reference.png'}));
+document.getElementById('reset').addEventListener('click',()=>{document.querySelectorAll('[data-input]').forEach(input=>{input.value=defaults[input.dataset.input];bind(input.dataset.input,input.value)})});
+</script>
+</body>
+</html>

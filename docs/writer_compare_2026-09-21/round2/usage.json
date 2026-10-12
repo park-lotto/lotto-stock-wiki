@@ -1,0 +1,218 @@
+[
+ {
+  "model": "gemini-3.6-flash",
+  "work": "7f7d2393eb0b",
+  "run": 1,
+  "sec": 9.7,
+  "in": 4620,
+  "out": 164,
+  "think": 1318
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "7f7d2393eb0b",
+  "run": 1,
+  "sec": 12.9,
+  "in": 4620,
+  "out": 158,
+  "think": 1230
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "work": "7f7d2393eb0b",
+  "run": 2,
+  "sec": 10.9,
+  "in": 4620,
+  "out": 159,
+  "think": 1878
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "7f7d2393eb0b",
+  "run": 1,
+  "sec": 20.7,
+  "in": 4620,
+  "out": 212,
+  "think": 3277
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "7f7d2393eb0b",
+  "run": 2,
+  "sec": 11.5,
+  "in": 4620,
+  "out": 189,
+  "think": 1027
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "7f7d2393eb0b",
+  "run": 2,
+  "sec": 10.1,
+  "in": 4620,
+  "out": 161,
+  "think": 1541
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "work": "667ffd60408e",
+  "run": 1,
+  "sec": 11.3,
+  "in": 3095,
+  "out": 209,
+  "think": 1991
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "667ffd60408e",
+  "run": 1,
+  "sec": 12.2,
+  "in": 3095,
+  "out": 187,
+  "think": 1292
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "work": "667ffd60408e",
+  "run": 2,
+  "sec": 14.4,
+  "in": 3095,
+  "out": 206,
+  "think": 2623
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "667ffd60408e",
+  "run": 1,
+  "sec": 18.8,
+  "in": 3095,
+  "out": 207,
+  "think": 4283
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "667ffd60408e",
+  "run": 2,
+  "sec": 19.4,
+  "in": 3095,
+  "out": 183,
+  "think": 1216
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "work": "dbddcce899bb",
+  "run": 1,
+  "sec": 10.0,
+  "in": 5348,
+  "out": 166,
+  "think": 1597
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "667ffd60408e",
+  "run": 2,
+  "sec": 16.0,
+  "in": 3095,
+  "out": 178,
+  "think": 3636
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "work": "dbddcce899bb",
+  "run": 2,
+  "sec": 9.7,
+  "in": 5348,
+  "out": 160,
+  "think": 1553
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "dbddcce899bb",
+  "run": 1,
+  "sec": 25.6,
+  "in": 5348,
+  "out": 190,
+  "think": 4431
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "work": "dbddcce899bb",
+  "run": 2,
+  "sec": 18.1,
+  "in": 5348,
+  "out": 187,
+  "think": 3489
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "dbddcce899bb",
+  "run": 1,
+  "sec": 136.9,
+  "in": 5348,
+  "out": 164,
+  "think": 880
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "work": "dbddcce899bb",
+  "run": 2,
+  "sec": 66.8,
+  "in": 5348,
+  "out": 173,
+  "think": 852
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "7f7d2393eb0b",
+  "run": 1,
+  "sec": 5.1,
+  "in": 4620,
+  "out": 202,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "7f7d2393eb0b",
+  "run": 2,
+  "sec": 2.5,
+  "in": 4620,
+  "out": 185,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "667ffd60408e",
+  "run": 1,
+  "sec": 1.6,
+  "in": 3095,
+  "out": 179,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "667ffd60408e",
+  "run": 2,
+  "sec": 1.6,
+  "in": 3095,
+  "out": 163,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "dbddcce899bb",
+  "run": 1,
+  "sec": 1.5,
+  "in": 5348,
+  "out": 158,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "work": "dbddcce899bb",
+  "run": 2,
+  "sec": 1.5,
+  "in": 5348,
+  "out": 158,
+  "think": 0
+ }
+]

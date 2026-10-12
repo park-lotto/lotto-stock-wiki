@@ -6,10 +6,13 @@ const SL = {
   src:   vid => SL.server ? `/api/mix/src/${SL.job}/${encodeURIComponent(vid)}` : `src/${vid}.mp4`,
   // ★버전을 URL에 붙인다(2026-08-18 사장님 "대본 고치고 다시 뽑아도 옛 음성이 나온다").
   //   mp3 경로가 늘 같아서 브라우저 캐시가 옛 파일을 계속 준다 — 재생성해도 소리가 안 바뀐다.
-  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${i}?v=${ver||0}` : `tts/beat_${i}.mp3`,
+  //   i = 화면 위치. 서버 주소는 번호로 찾으므로 beatKeyAt(i)로 바꿔 보낸다(로컬 파일명은 종전대로).
+  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${beatKeyAt(i)}?v=${ver||0}` : `tts/beat_${i}.mp3`,
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
+// 조각 끝을 이만큼 이하로 넘으면 다음 장면 대신 살짝 느리게 — 서버 video_assemble._REACH_MIN과 같은 값(짝)
+const REACH_MIN = 0.35;
 // ★수동(✋)으로 정할 수 있는 최소 컷 길이. 자동 배분의 MIN_CLIP(0.8초)과 **별개**다 —
 //   2026-09-06 사장님 "1초미만이 수동으로는 들어올수있게". 0.3초 아래는 10프레임 미만이라
 //   사람 눈에 안 잡히므로 그것만 막는다.
@@ -19,7 +22,13 @@ const MANUAL_MIN = 0.3;
 //   생긴다"가 된다(2026-09-06 실측: 칸 2.8초·재료 1.7초에서 미리보기 1.65배 vs 렌더
 //   1.15배+정지 0.85초). 이보다 더 필요한 시간은 렌더가 정지 프레임으로 떠안으므로
 //   미리보기도 마지막 컷을 그만큼 늘려 **정지가 생길 것을 미리 보여준다**.
-const MAX_SLOWMO = 1.15;
+// ★숫자는 서버(config.MAX_SLOWMO)가 /api/mix/scene_lab 데이터 max_slowmo 로 준다(관제 020, 2026-10-01).
+//   여기엔 숫자를 적지 않는다 — 두 곳에 적히면 미리보기와 완성본이 어긋난다. 서버 값이 없으면(옛 응답) 콘솔에 알리고 1.15.
+function maxSlowmo(){
+  const v = Number(DATA && DATA.max_slowmo);
+  if (!(v > 1)) { if (DATA && !maxSlowmo._warned) { maxSlowmo._warned = true; console.warn('[scene_play] max_slowmo 서버 값 없음 → 1.15'); } return 1.15; }
+  return v;
+}
 // ★손대지 않은 컷에게 **반드시 남겨줄** 최소 길이. MANUAL_MIN(수동 지정 하한)과 다르다 —
 //   둘을 같은 값으로 쓴 탓에 ✋를 2.5초 이상 잡으면 남의 컷이 0.3초로 눌려 화면에 0.0으로
 //   떴다(2026-09-06 사장님 "장면 하나가 없어진다"). 수동은 0.3초까지 짧게 정할 수 있지만,
@@ -169,7 +178,54 @@ function ttsEl(slot){
   }
   return audioEl._alt;
 }
-function audio(){ return curAud || ttsEl(0); }
+// ★합본이 붙은 칸에서는 **합본 자신이 음성**이다 — 시계가 하나가 되는 지점.
+//
+//   (2026-09-21 사장님 "이렇게 안 끝날 일이 아닌데")
+//   편집 화면은 시계가 둘이었다: 영상 한 벌(<video>), 음성 한 벌(<audio>). 되감을 때마다
+//   둘을 손으로 맞췄는데, mp3 는 요청한 자리에 못 앉고 뒤쪽 프레임 경계로만 앉는다 —
+//   실측 2026-09-21: 13개 컷 전부에서 음성이 화면보다 +0.14~0.19초 앞섰다.
+//   없앨 수 없는 오차를 맞추려 드니 같은 자리에서 여섯 번 터졌다
+//   (08-14 08-15 08-17 08-20 09-02 09-18). **맞추기를 포기하고 하나로 만든다.**
+//
+//   합본에는 이제 음성이 같이 구워져 있다(app.py _pvproxy_build). 그러니 그 칸의 음성을
+//   찾을 이유가 없다 — 합본의 소리가 곧 그 칸의 소리다. 아래 어댑터는 합본(전체 타임라인)을
+//   **그 칸만 있는 음성인 척** 보이게 해, 부르는 쪽(자막·진행바·전체재생)을 한 줄도 안 고친다.
+function pvxAudio(){
+  const v = PVX.vid, b = seqBeat;
+  if (!v || b == null || !PVX.offs || PVX.offs[b] == null) return null;
+  if (!(seq && seq[0] && seq[0]._px)) return null;        // 이 칸이 합본을 안 쓰면 해당 없음
+  const off = PVX.offs[b];
+  const end = (PVX.offs[b + 1] != null) ? PVX.offs[b + 1] : (PVX.dur || v.duration || 0);
+  const len = Math.max(0.01, end - off);
+  return {
+    _pvx: true, _el: v,
+    get currentTime(){ return Math.max(0, Math.min(len, v.currentTime - off)); },
+    set currentTime(t){ v.currentTime = off + Math.max(0, Math.min(len, +t || 0)); },
+    get duration(){ return len; },
+    get paused(){ return v.paused; },
+    get ended(){ return v.currentTime >= end - 0.03; },
+    get error(){ return v.error; },
+    get src(){ return v.src; },
+    get readyState(){ return v.readyState; },
+    play(){ return v.play(); },
+    pause(){ try { v.pause(); } catch(e){} },
+    load(){},
+    // 전체 재생은 '이 칸 음성이 끝났다'는 신호로 다음 칸에 넘어간다. 합본은 한 파일이라
+    // 칸이 끝나도 ended 가 안 온다 — 그 칸의 끝 시각을 지켜보다 같은 신호를 준다.
+    set onended(fn){
+      if (v._pxEndT){ clearInterval(v._pxEndT); v._pxEndT = 0; }
+      if (!fn) return;
+      v._pxEndT = setInterval(() => {
+        if (v.ended || v.currentTime >= end - 0.03){
+          clearInterval(v._pxEndT); v._pxEndT = 0;
+          try { fn(); } catch(e){}
+        }
+      }, 50);
+    },
+    get onended(){ return null; },
+  };
+}
+function audio(){ return pvxAudio() || curAud || ttsEl(0); }
 // ★음성을 '시계'로 쓸 수 있는가 — 판단은 여기 한 곳(0순위-B, 2026-08-20 사장님
 //   "미리보기에는 여러분까지만 나오고 다음이 안나온다").
 //   미리보기의 시계가 두 벌이었다: 화면(컷)은 seqTimer로 돌고, 자막·시간·전체재생은
@@ -180,14 +236,26 @@ function audioUsable(){
   const a = audio();
   return !!(a && a.src && !a.error && a.duration > 0);
 }
-function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
+// ★화면 위치 i → 진짜 칸 번호(beat_idx) 변환은 여기 한 곳(2026-09-27).
+//   화면(lists·STRETCH·planClips…)은 위치 i로 돈다. 그런데 서버가 주는 DATA.captions·DATA.tts_dur의
+//   키와 음성 주소(/api/mix/tts/{job}/{n})는 **번호**다(app.py _lab_captions·api_mix_tts).
+//   칸을 지운 작업(번호 0,1,3…)에서 위치로 읽으면 뒤 칸마다 옆 칸의 자막·길이·음성이 나왔다
+//   (라이브 30일 done 13 job·40칸 실측). 번호를 읽는 곳은 전부 이 함수를 탄다.
+//   번호 없는 옛/로컬 데이터만 위치로(scene_lab.html beatIdOf도 이 함수를 부른다).
+function beatKeyAt(i){
+  const b = ((DATA && DATA.beats) || [])[i];
+  return (b && b.beat_idx != null) ? b.beat_idx : i;
+}
+function capsOf(i){ return (DATA.captions || {})[String(beatKeyAt(i))] || []; }
 // 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
 function capsIn(i, a, b){
   return capsOf(i).filter(c => c.start < b - 1e-3 && c.end > a + 1e-3);
 }
+// 재생 자막 표시 — 행의 start/end 는 말 시각, off(cap_offset)는 렌더처럼 **표시할 때만** 더한다(2026-09-27).
+//   start/end 자체에 더하면 구절 맞춤 컷 경계(planClips)까지 움직인다 — 렌더도 컷엔 offset 을 안 쓴다.
 function capAt(i, t){
   const cs = capsOf(i);
-  return cs.find(c => t >= c.start - 1e-3 && t < c.end) || null;
+  return cs.find(c => { const o = +c.off || 0; return t >= c.start + o - 1e-3 && t < c.end + o; }) || null;
 }
 
 
@@ -389,11 +457,31 @@ function unTrim(sid){
 let onePerSeg = false;
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
+function beatSyncSpeed(i){
+  const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
+  const v = Number(b.sync_speed || 1);
+  return isFinite(v) && v >= 0.5 && v <= 2 ? v : 1;
+}
+
 // ★구절 맞춤(2026-08-29 사장님 "활성화는 자막 분할 개수대로 / 개수+길이까지 1:1") —
 //   컷 경계 = 자막 구절 경계. 컷1이 리드인(첫말 전 무음)을 얹고, 마지막 컷이 꼬리를
 //   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
 const PHRASE_SYNC = {};             // beat_idx → false(끔)일 때만 기록. 기본은 켬.
 function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
+// ★새 규칙 작업(cut_rule scenes_v2)의 두 모드(관제 106, 2026-10-03 사장님 "구절 맞춤은 좀 더 느리게 되더라도 / 지금 규칙은 하나 더").
+//   컷 리듬(기본) = 관제 084 배분 그대로(장면 수만큼 컷·고르게·전환은 가까운 자막 경계 0.4초·1.2배 안에서만).
+//   구절 맞춤     = 같은 배분에서 **장면 전환을 자막 경계에 정확히**(모자란 화면은 상한 없이 느리게). 컷 수는 여전히 장면 수.
+//   상태는 PHRASE_EXACT 한 곳(칸 표식 beat.phrase_exact) — 켠 칸만 기록한다. 옛 규칙 작업에는 쓰지 않는다.
+const PHRASE_EXACT = {};            // beat_idx → true(구절 맞춤 정확)일 때만 기록
+function cutRuleIsV2(){ return typeof DATA === 'object' && !!DATA && DATA.cut_rule === 'scenes_v2'; }
+function phraseExactOn(i){ return cutRuleIsV2() && PHRASE_EXACT[i] === true && phraseSyncOn(i); }
+// 화면의 [구절 맞춤] 체크 상태 — 새 규칙 작업은 '정확' 표식, 옛 작업은 종전 그대로
+function phraseBoxOn(i){ return cutRuleIsV2() ? phraseExactOn(i) : phraseSyncOn(i); }
+// 새 배분(scenesV2)이 도는 칸 = ✋ 손 길이를 계산에 안 쓴다(배지를 숨기는 판단 한 곳). planClips 의 분기 조건과 같다.
+function sceneRuleOn(i){
+  return cutRuleIsV2() && phraseSyncOn(i) && !(typeof STRETCH === 'object' && STRETCH && STRETCH[i])
+    && !(typeof SLOW === 'object' && SLOW && SLOW[i] > 1);
+}
 // ══ 구절 맞춤을 끈 칸 = "그 화면 그대로" 규칙(2026-09-14 사장님 확정) ══════════════
 //   규칙은 이것뿐이다 — 계산으로 길이를 다시 나누지 않는다.
 //   ① 끄는 순간 켜져 있던 컷(장면·시작·길이)을 CUTS[i]에 그대로 얼린다
@@ -406,30 +494,105 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 const CUTS = {};                    // beat_idx → [{seg_id, dur}] (끈 칸만)
 const SLOW = {};                    // beat_idx → 재생 배율(>1 = 느리게). 없으면 1
 const CUT_MIN = 0.3;
+
+// ── ★칸 편집 상태(화면이 컷을 짜는 입력 전부) — 만들고·얹고·떠 가는 **단 하나의 자리**(관제 148, 2026-10-06) ──
+//   상태 = lists · STRETCH(늘려 채우기) · PHRASE_SYNC/PHRASE_EXACT(구절 맞춤) · CUTS(손 컷+잠금) · SLOW · FIXLEN(손 길이)
+//          · TRIMS(✂ 구멍) · MERGES(합치기). planClips 는 이 전역들만 읽는다.
+//   왜: 서버 편성을 화면 상태로 되살리는 코드가 세 벌이었다 — 서버 컷 러너(screen_clips_runner.js → 완성본)·
+//     화면 restoreServer(scene_lab.html)·제작소 큰 화면 복사(produce.html _sceneLabPrep). 벌마다 되살린 칸이 달라
+//     러너·restoreServer 는 늘려 채우기·트림·합치기를, 제작소는 손 컷·느리게·손 길이·구절 맞춤을 빠뜨렸다
+//     → 화면에서 [전체 늘리기]를 켠 칸이 완성본엔 안 늘어난 채 나왔다(실측 2작업 4칸).
+//   규칙: 값이 없으면 **비운다**(캐리오버 방지) · 서버가 저장하는 모양(edit_plan.apply_scene_lab)과 짝.
+function screenStateFromServer(D){
+  D = D || DATA || {};
+  const beats = D.beats || [];
+  const st = {lists: [], stretch: {}, phrase_sync: {}, phrase_exact: {}, cuts: {}, slow: {}, fixlen: {},
+              trims: {}, merges: {}};
+  beats.forEach((b, i) => {
+    b = b || {};
+    const ov = b.scene_override, seen = [];
+    (ov || []).forEach(s => { const id = s && s.seg_id; if (id && !seen.includes(id)) seen.push(id); });  // ✂ 두 토막 = 한 번
+    st.lists.push(seen.length ? seen
+      : [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id).filter(Boolean));
+    // ★청소 당시 컷 기록이 있는 칸은 늘려 채우기를 되살리지 않는다(관제 148 보완, 2026-10-07 라이브 실측 b5ee8d89bedb 5번 칸 0.6초 밀림):
+    //   그 청소본은 늘리기를 안 읽던 러너의 컷으로 지워졌다 — 늘리기를 켜면 컷이 청소 당시와 달라져 화면≠완성본·재청소(과금).
+    //   청소 안 한 칸·새로 청소할 칸은 그대로 늘린다. (관제 110·135·150 과 같은 원칙: 청소한 칸은 청소 당시 컷)
+    if (b.stretch_fill && !((D.clean_cuts || {})[String(i)] || []).length) st.stretch[i] = true;
+    if (b.phrase_sync === false) st.phrase_sync[i] = false;
+    if (b.phrase_exact === true) st.phrase_exact[i] = true;
+    if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
+    if (+b.slow > 1) st.slow[i] = +b.slow;
+    for (const [sid, v] of Object.entries(b.fixed_lens || {})) st.fixlen[i + ':' + sid] = v;
+  });
+  const ed = D.scene_lab_edits || {};        // 서버 plan.scene_lab 의 트림·합치기(api_mix_scene_lab_data)
+  Object.assign(st.trims, ed.trims || {});
+  Object.assign(st.merges, ed.merges || {});
+  return st;
+}
+function screenState(){                      // 지금 화면 상태를 떠 간다(제작소 큰 화면이 받아 같은 컷을 짠다)
+  return {lists: lists.map(l => (l || []).slice()), stretch: {...STRETCH}, phrase_sync: {...PHRASE_SYNC},
+          phrase_exact: {...PHRASE_EXACT}, cuts: JSON.parse(JSON.stringify(CUTS)), slow: {...SLOW},
+          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES))};
+}
+function applyScreenState(st){
+  st = st || {};
+  const clr = o => Object.keys(o).forEach(k => delete o[k]);
+  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES].forEach(clr);
+  lists = (st.lists || []).map(l => (l || []).slice());
+  for (const [k, v] of Object.entries(st.stretch || {})) if (v) STRETCH[k] = true;
+  for (const [k, v] of Object.entries(st.phrase_sync || {})) if (v === false) PHRASE_SYNC[k] = false;
+  for (const [k, v] of Object.entries(st.phrase_exact || {})) if (v === true) PHRASE_EXACT[k] = true;
+  for (const [k, v] of Object.entries(st.cuts || {})){
+    // 🔒 잠금(lock)도 함께 — 빼먹으면 새로고침에 잠금이 사라진다
+    if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
+                                     .map(c => c.lock ? {seg_id: c.seg_id, dur: +c.dur, lock: 1} : {seg_id: c.seg_id, dur: +c.dur});
+  }
+  for (const [k, v] of Object.entries(st.slow || {})) if (+v > 1) SLOW[k] = +v;
+  for (const [k, v] of Object.entries(st.fixlen || {})){ const n = parseFloat(v); if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100; }
+  for (const [k, v] of Object.entries(st.trims || {})) if (Array.isArray(v) && v.length === 2) TRIMS[k] = [+v[0], +v[1]];
+  for (const [k, v] of Object.entries(st.merges || {})) if (Array.isArray(v) && v.length) MERGES[k] = v.slice();
+}
 function cutsSum(i){ return (CUTS[i] || []).reduce((a, c) => a + c.dur, 0); }
 function _r2(x){ return Math.round(x * 100) / 100; }
+// 🔒 잠근 컷(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
+//   ★잠금은 컷의 속성이다 — 따로 창고를 만들면 컷이 빠지거나 자리를 옮길 때 짝이
+//     어긋난다(0순위-B). 그래서 CUTS[i][k].lock 으로 컷 자신이 들고 다닌다.
+//   ★기본은 풀림(lock 없음). 끈 칸 전용 — 켠 칸은 FIXLEN(✋)이 따로 있다.
+function cutLocked(i, k){ const c = (CUTS[i] || [])[k]; return !!(c && c.lock); }
+// 잠긴 컷을 뺀 나머지가 쓸 수 있는 초 — 줄이기·나누기는 전부 이 몫 안에서만 움직인다.
+function freeCutIdx(i){ return (CUTS[i] || []).map((c, k) => k).filter(k => !cutLocked(i, k)); }
 // 목록(lists)과 얼린 컷을 맞춘다 — 빼기③·넣기④·음성 짧아짐⑤를 **여기 한 곳**에서 처리한다.
 function syncCuts(i, segIds, ttsDur){
   const cuts = CUTS[i]; if (!cuts) return null;
   const want = segIds.filter(id => DATA.segments && DATA.segments[id]);
   // ③ 목록에서 빠진 장면 → 앞 컷(없으면 뒤 컷)이 시간을 받는다
+  //   ★🔒 잠근 컷은 시간을 안 받는다(2026-09-16). 앞뒤가 다 잠겼으면 가장 가까운
+  //     풀린 컷에게 준다 — 줄 곳이 하나도 없으면 ⑤가 뒤에서 안내한다.
   for (let k = 0; k < cuts.length; ){
     if (want.includes(cuts[k].seg_id)) { k++; continue; }
     const d = cuts[k].dur; cuts.splice(k, 1);
-    const nb = cuts[k - 1] || cuts[k];
+    let nb = null;
+    for (let s = 0; s < cuts.length && !nb; s++){          // k에서 가까운 순으로 풀린 컷 찾기
+      const a = k - 1 - s, b = k + s;
+      if (a >= 0 && !cuts[a].lock) nb = cuts[a];
+      else if (b < cuts.length && !cuts[b].lock) nb = cuts[b];
+    }
     if (nb) nb.dur = _r2(nb.dur + d);
   }
   // ④ 새로 들어온 장면 — ★빈 시간이 있으면 **그 빈 시간을 꽉 채운다**(다른 컷 불변),
   //   빈 시간이 없을 때만 마지막 컷을 반으로 나눠 갖는다(2026-09-14 사장님 "남은 부분 꽉차게 /
   //   6번째 올리면 마지막 조각이 반씩"). 종전엔 빈 시간이 있어도 마지막 컷을 먼저 쪼개 맞춰둔 컷이 줄었다.
+  //   ★🔒 잠근 컷은 쪼개지 않는다(2026-09-16) — 반으로 나눌 대상은 **풀린** 마지막 컷이다.
   for (const id of want){
     if (cuts.some(c => c.seg_id === id)) continue;
     const gap = ttsDur - cuts.reduce((a, c) => a + c.dur, 0);
-    const last = cuts[cuts.length - 1];
+    const free = cuts.filter(c => !c.lock);
+    const last = free[free.length - 1];                    // 쪼갤 수 있는 마지막 컷
     let d;
-    if (!last) d = ttsDur;
+    if (!cuts.length) d = ttsDur;
     else if (gap >= CUT_MIN - 0.005) d = _r2(gap);
-    else { d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
+    else if (last && last.dur / 2 >= CUT_MIN) { d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
+    else d = _r2(Math.max(gap, CUT_MIN));                  // 전부 잠김 → 넘치면 ⑤가 안내한다
     cuts.push({seg_id: id, dur: d});
   }
   // 순서는 목록(카드) 순서를 따른다 — 같은 장면이 여러 컷이면 그 무리째로 옮긴다
@@ -437,8 +600,12 @@ function syncCuts(i, segIds, ttsDur){
   const sorted = cuts.slice().sort((a, b) => pos(a.seg_id) - pos(b.seg_id));
   if (sorted.some((c, k) => c !== cuts[k])){ cuts.length = 0; sorted.forEach(c => cuts.push(c)); }
   // ⑤ 음성보다 길면 뒤에서부터 줄인다(하한까지). 짧으면 그대로 둔다(안내만)
+  //   ★🔒 잠근 컷은 건너뛴다(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
+  //     풀린 컷만으로 다 못 줄이면 **억지로 줄이지 않고** 남겨 둔다 — cutsGap/화면이
+  //     "잠긴 컷 때문에 넘친다"고 안내한다(잠금이 거짓말하면 안 된다).
   let over = cutsSum(i) - ttsDur;
   for (let k = cuts.length - 1; k >= 0 && over > 0.005; k--){
+    if (cuts[k].lock) continue;
     const cut = Math.min(over, cuts[k].dur - CUT_MIN);
     if (cut > 0){ cuts[k].dur = _r2(cuts[k].dur - cut); over -= cut; }
   }
@@ -487,10 +654,23 @@ function cutMaxSec(i, k){
 }
 function dragCut(i, k, sec){
   const cuts = CUTS[i]; if (!cuts || !cuts[k]) return;
+  if (cuts[k].lock){                    // 🔒 잠근 컷은 끌어도 안 바뀐다(2026-09-16)
+    if (typeof nsay === 'function') nsay('🔒 잠긴 컷이에요 — 자물쇠를 풀고 조절하세요');
+    (typeof render === 'function' && render());
+    return;
+  }
   const slow = SLOW[i] > 1 ? SLOW[i] : 1;
   delete SLOW[i];                       // 손대면 느리게는 풀린다 — 다시 고르게 한다
   const d = Math.min(cutMaxSec(i, k), Math.max(CUT_MIN, sec / slow));
   cuts[k].dur = _r2(d);
+  (typeof render === 'function' && render());
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+}
+// 🔒 잠금 토글(2026-09-16 사장님). 기본은 풀림 — 누르면 지금 길이로 묶인다.
+//   ★길이를 여기서 바꾸지 않는다. "지금 값을 그대로 지킨다"는 표시만 세운다.
+function toggleCutLock(i, k){
+  const cuts = CUTS[i]; if (!cuts || !cuts[k]) return;
+  if (cuts[k].lock) delete cuts[k].lock; else cuts[k].lock = 1;
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
@@ -513,7 +693,23 @@ function slowUndo(i){
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
+// 컷 리듬 ↔ 구절 맞춤은 **정반대 한 쌍**이다(같은 것을 다르게 정하므로 둘 다 켤 수 없다).
+//   컷 리듬 켬 = 구절 맞춤 끔. 상태는 PHRASE_SYNC 한 곳에만 둔다 — 두 벌로 두면 어긋난다(0순위-B).
+function cutRhythmOn(i){
+  if (cutRuleIsV2()) return phraseSyncOn(i) && !phraseExactOn(i);   // 새 규칙 작업: 컷 리듬 = 084 배분(기본)
+  const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
+  return !!(b.cut_rhythm) && !phraseSyncOn(i);
+}
+function toggleCutRhythm(i, on){ togglePhraseSync(i, !on); }
 function togglePhraseSync(i, on){
+  if (cutRuleIsV2()){
+    // 새 규칙 작업: 두 체크는 한 쌍(하나를 끄면 다른 하나가 켜진다). 손 컷으로 얼려 둔 칸도 누르면 새 배분으로 돌아온다.
+    delete CUTS[i]; delete SLOW[i]; delete PHRASE_SYNC[i];
+    if (on) PHRASE_EXACT[i] = true; else delete PHRASE_EXACT[i];
+    if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+    (typeof render === 'function' && render());
+    return;
+  }
   if (on){ delete CUTS[i]; delete SLOW[i]; } else freezeCuts(i);
   if (on) delete PHRASE_SYNC[i]; else PHRASE_SYNC[i] = false;
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
@@ -522,6 +718,350 @@ function togglePhraseSync(i, on){
 // beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
 // 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
 function planClips(segIds, ttsDur, spread, beatIdx){
+  // ── 관제 084 장면 시간 배분(2026-10-02 사장님 규칙) ─────────────────────────────────────────────
+  //   ① 컷 수 = 장면 수(자막 줄 수가 아니다 — 같은 장면을 조각내 반복하지 않는다)
+  //   ② 시간은 장면에 고르게. 짧은 장면은 가진 만큼만, 남는 시간은 옆 장면이 더 보여 준다(태깅 길이 → 모자라면 원본에서 이어 틀기)
+  //   ③ 진짜 화면을 다 합쳐도 모자라면 칸 전체에 같은 배속(원본에서 이어지는 장면은 finish 채우기가 진짜 화면으로)
+  //   ④ 장면이 바뀌는 순간은 가까운 자막 줄 경계(0.4초 안)에 맞춘다
+  //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
+  function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
+  function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
+  // ★청소 뒤에도 같은 편성이면 컷이 그대로(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸).
+  //   청소본은 **청소 전 컷이 읽은 구간**을 지운 것이다. 그런데 지운 구간(DATA.clean_spans)이 생기면 아래 배분의 여유(room)가
+  //   달라져(구간이 장면보다 짧으면 cleanBound 가 null → room=len) 같은 편성의 컷이 바뀌었다(s5 2.53→2.13초, s1 1.49→1.90초)
+  //   → 새 컷이 지운 구간 밖 0.41초를 읽어 칸 전체가 원본으로 떨어지고 꾸미기에 원본 자막이 보였다.
+  //   그래서 먼저 **청소 구간을 안 보고**(=청소 전과 똑같이) 배분하고, 그 컷들이 전부 지운 구간 안이면 그대로 쓴다.
+  //   하나라도 밖이면(청소 뒤 편성·음성이 바뀜) 종전대로 청소 구간을 보고 배분한다. 판단은 여기 한 곳.
+  function scenesV2(segments, ttsDur, beatIdx, exact){
+    const D0 = (typeof DATA === 'object' && DATA) || {};
+    const spansAll = D0.clean_spans || {};
+    if (!spansAll.__error__ && Object.keys(spansAll).length){
+      const free = scenesV2Alloc(segments, ttsDur, beatIdx, exact, false);
+      const TOL = 0.05;                                      // 컷 길이 0.01초 반올림 + 1프레임 — 읽는 창은 뒤(finish)에서 다시 다듬는다
+      const inside = free.length && free.every(c => {
+        const sp = spansAll[c.video_id];
+        if (!Array.isArray(sp) || !sp.length) return true;   // 이 영상은 지운 적 없음(골라 지우기에서 안 고른 장면) — 청소 구간 제한 없음
+        const s = Number(c.start), e = s + Number(c.src_dur || c.dur || 0);
+        return sp.some(x => Number(x[0]) <= s + TOL && Number(x[1]) >= e - TOL);
+      });
+      if (inside) return free;
+    }
+    return scenesV2Alloc(segments, ttsDur, beatIdx, exact, true);
+  }
+  // ★맨 앞 감정짤(관제 139) — 짤 자리·길이는 서버 storyboard.meme_slots 가 정해 beat.cutaway 에 남긴다(match_type "meme"·head_sec·vid·scene_min).
+  //   여기는 읽기만 한다: 짤 컷을 칸 첫 컷(줄 시작 0초~head_sec)으로 두고, 남은 시간(칸 길이−짤)에 장면을 나눈다.
+  //   남은 시간이 장면 하나 하한(scene_min)보다 짧아졌으면(서버가 정한 뒤 음성이 바뀜) 짤을 빼고 경고 한 줄 — 조용히 넘기지 않는다.
+  //   head_sec 없는 옛 끼움 장면(AI 장면 등)은 여기서 안 다룬다(종전대로 렌더가 덮어씌운다).
+  function memeHeadOf(beatIdx, ttsDur){
+    const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {};
+    const cw = b.cutaway;
+    if (!cw || cw.match_type !== 'meme' || !cw.vid) return null;
+    const head = Number(cw.head_sec), smin = Number(cw.scene_min) || 1.0;
+    if (!(head > 0)) return null;
+    if (!(ttsDur - head >= smin - EPS)){
+      if (typeof console === 'object') console.warn('[meme] 칸', beatIdx, '짤 뒤 남은 시간', (ttsDur - head).toFixed(2), '< ', smin, '— 짤 뺌');
+      return null;
+    }
+    return {vid: String(cw.vid), head, smin, asset_id: cw.asset_id, emotion: cw.emotion || ''};
+  }
+  function scenesV2Alloc(segments, ttsDur, beatIdx, exact, useClean){
+    const meme = memeHeadOf(beatIdx, ttsDur);
+    const headSec = meme ? meme.head : 0;
+    if (meme) ttsDur = ttsDur - headSec;                       // 장면은 짤 뒤 남은 시간에 나눈다(자막 경계도 같은 만큼 당겨 본다)
+    const minScene = meme ? meme.smin : MIN_CLIP;              // 짤 칸은 장면 하나 1.0초 이상(사장님 확정) — 수를 줄인다
+    // 같은 장면이 목록에 두 번 들어와도(같은 id·같은 영상 같은 시작) 한 번만 — 한 칸에 같은 장면 반복 금지(사장님 "같은 것 많아")
+    const _seen = new Set();
+    let scenes = segments.filter(g => {
+      if (!(g.end - g.start > EPS)) return false;
+      const k1 = 'i' + g.seg_id, k2 = 'v' + g.video_id + '@' + Number(g.start).toFixed(2);
+      if (_seen.has(k1) || _seen.has(k2)) return false;
+      _seen.add(k1); _seen.add(k2); return true;
+    });
+    if (!scenes.length) return [];
+    while (scenes.length > 1 && ttsDur / scenes.length < minScene) scenes = scenes.slice(0, -1);
+    // 장면마다 ①태깅 길이 ②원본에서 이어 틀 수 있는 끝(같은 영상의 다른 칸·이 칸 다른 장면이 쓰는 곳 앞, 원본 끝, 청소 구간 안)
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const starts = {};
+    (typeof lists !== 'undefined' && Array.isArray(lists) ? lists : []).forEach(L => (L || []).forEach(id => {
+      const g = (D.segments || {})[id]; if (g) (starts[g.video_id] = starts[g.video_id] || []).push(Number(g.start));
+    }));
+    const av = scenes.map(g => {
+      const len = Math.max(0, g.end - g.start);
+      const reel = Number((D.src_duration || {})[g.video_id] || 0);
+      if (!(reel > 0) || String(g.seg_id || '').startsWith('film_') || (typeof TRIMS === 'object' && TRIMS && TRIMS[g.seg_id]))
+        return {st: g.start, len, room: len, far: len};        // 원본 길이 모름·사람이 자른 구간 = 그 구간만
+      const cb = useClean ? cleanBound(g.video_id, g.start, g.end) : {lo: 0, hi: Infinity};
+      if (!cb) return {st: g.start, len, room: len, far: len};
+      let far = Math.min(reel, cb.hi);                         // 원본 끝·청소 구간 끝
+      scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다
+      let hi = far;
+      (starts[g.video_id] || []).forEach(x => { if (x > g.start + EPS && x < hi) hi = x; });
+      // ★이어 틀기는 원본의 **다음 장면 전환 앞까지**(2026-10-07 관제 150) — 종전엔 다른 칸 장면 앞까지만 봐서, 짧은 장면을
+      //   1.2초로 늘리거나(①) 옆 장면이 더 보여 줄 때(②) 원본의 다음 장면(엉뚱한 화면)이 끼었다(실측 120작업 중 78작업·181컷,
+      //   끼인 길이 중앙 0.37초 — 사장님 09-27 "최선은 딴 장면이 잠깐 들어가는 걸 막는 것"). 모자란 시간은 ②가 이 칸 다른 장면에
+      //   나눈다. ③(멈춤 대신 겹쳐 틀기 — far)은 그대로 둔다. 전환 목록이 없는 소재는 종전과 같다(장면이 이어지는지 모른다).
+      //   ★표식(DATA.scene_stop) 있는 새 작업만 — 옛·청소한 작업은 청소 당시 컷과 같아야 한다(관제 110·135).
+      const _sc = !D.scene_stop ? [] : ((D.scenecuts || {})[g.video_id] || []).map(Number).filter(x => isFinite(x) && x > g.end - 0.05);
+      if (_sc.length){ const nx = Math.min(..._sc); if (nx < hi) hi = Math.max(g.end, nx); }
+      return {st: g.start, len, room: Math.max(len, hi - g.start), far: Math.max(len, far - g.start)};
+    });
+    const sum = a => a.reduce((x, y) => x + y, 0);
+    let real = scenes.map(() => 0);                       // 장면마다 보여 줄 진짜 화면 초
+    const pour = (cap, goal) => { for (let it = 0; it < 12; it++){
+      const rest = (goal == null ? ttsDur : goal) - sum(real);
+      const open = real.map((_, k) => k).filter(k => cap(k) - real[k] > EPS);
+      if (rest <= EPS || !open.length) break;
+      const share = rest / open.length;
+      open.forEach(k => { real[k] += Math.min(share, cap(k) - real[k]); });
+    } };
+    // ① 태깅된 장면 안에서 고르게 — 단 0.5초처럼 너무 짧은 장면은 원본에서 이어지는 화면으로 1.2초까지는 보여 준다
+    //   (09-17 고객 "컷이 1.2초 이상이면 좋겠다", edit_plan.MIN_GOOD_CUT_SECS 와 같은 값). 번쩍 지나가는 컷을 만들지 않는다.
+    const GOOD = 1.2;
+    pour(k => Math.max(av[k].len, Math.min(av[k].room, GOOD)));
+    pour(k => av[k].room);                                // ② 모자라면 원본에서 이어 틀기(옆 장면이 더 보여 준다) — 다른 칸 장면 앞까지
+    // ③ 1.2배까지 느리게 해도 모자라면 ④ 다른 칸 장면과 겹치더라도 원본을 더 튼다 — 멈춤이 가장 나쁘다(사장님 "화면 모자라 멈춤")
+    if (sum(real) * _maxS() < ttsDur - EPS) pour(k => av[k].far, ttsDur / _maxS());
+    let dur = real.slice();
+    const totalReal = sum(real);
+    if (ttsDur - totalReal > EPS && totalReal > EPS){
+      // ③ 그래도 모자라면 칸 전체에 같은 배속(재료가 정말 바닥 — 2단계 cover_short 대상)
+      const f = ttsDur / totalReal;
+      dur = real.map(r => r * f);
+    }
+    // ④ 전환 시점을 가까운 자막 경계에 — 양쪽 컷이 MIN_CLIP 이상이고 배속 상한을 안 넘을 때만
+    const caps = (typeof capsOf === 'function' ? (capsOf(beatIdx) || []) : []);
+    const SNAP_SEC = 0.4;
+    const capB = caps.slice(1).map(c => Number(c.start) - headSec).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
+    if (exact && dur.length > 1){
+      // ★구절 맞춤(관제 106): 전환을 자막 경계에 **정확히** — 0.4초·배속 상한을 보지 않는다.
+      //   고른 배분의 전환 자리(ideal)에서 가장 덜 움직이는 경계 조합을 고른다(순서 유지 · 맞춘 전환 수가 최대인 조합 중 이동이 최소).
+      //   컷 하한은 손 컷과 같은 MANUAL_MIN(0.3초) — 사람이 구절 맞춤을 골랐으니 자막 줄이 짧으면 컷도 그만큼 짧다.
+      //   장면이 자막 줄보다 많아 경계가 모자란 전환은 양옆 맞춘 전환 사이를 고르게 나눈다. 모자란 화면은 아래에서 컷마다 정확히 느리게(fit).
+      const n = dur.length, m = meme ? minScene : MANUAL_MIN, ideal = [];   // 짤 칸은 장면 1.0초 하한 유지
+      let run = 0;
+      for (let j = 0; j < n - 1; j++){ run += dur[j]; ideal.push(run); }
+      const B = capB.slice().sort((x, y) => x - y);
+      // pts: 맞출 수 있는 자리 = (전환 j, 경계 k). 앞 (-1, 0초)에서 뒤 (n-1, 끝)까지 가는 길 중 건너뛴 전환이 가장 적고 이동이 가장 작은 길.
+      const SKIP = 1000, best = {}, from = {};
+      const key = (j, k) => j + ':' + k;
+      const timeOf = (j, k) => j < 0 ? 0 : (j >= n - 1 ? ttsDur : B[k]);
+      const reach = (j0, k0, j1, k1) => timeOf(j1, k1) - timeOf(j0, k0) >= m * (j1 - j0) - EPS;
+      best[key(-1, -1)] = 0;
+      for (let j = 0; j <= n - 1; j++){
+        const ks = j === n - 1 ? [B.length] : B.map((_, k) => k);
+        ks.forEach(k => {
+          let bc = Infinity, bf = null;
+          for (let j0 = -1; j0 < j; j0++){
+            const k0s = j0 < 0 ? [-1] : B.map((_, q) => q).filter(q => q < k);
+            k0s.forEach(k0 => {
+              const c0 = best[key(j0, k0)];
+              if (c0 === undefined || !reach(j0, k0, j, k)) return;
+              const c = c0 + SKIP * (j - j0 - 1) + (j === n - 1 ? 0 : Math.abs(B[k] - ideal[j]));
+              if (c < bc){ bc = c; bf = [j0, k0]; }
+            });
+          }
+          if (bf){ best[key(j, k)] = bc; from[key(j, k)] = bf; }
+        });
+      }
+      const T = new Array(n).fill(null); T[n - 1] = ttsDur;
+      let cur = [n - 1, B.length];
+      while (from[key(cur[0], cur[1])]){
+        cur = from[key(cur[0], cur[1])];
+        if (cur[0] >= 0) T[cur[0]] = B[cur[1]];
+      }
+      for (let j = 0; j < n - 1; j++){                     // 못 맞춘 전환 = 양옆 정해진 전환 사이를 고르게
+        if (T[j] !== null) continue;
+        let j1 = j; while (T[j1] === null) j1++;
+        const t0 = j ? T[j - 1] : 0, cnt = j1 - j + 1;
+        for (let q = j; q < j1; q++) T[q] = t0 + (T[j1] - t0) * (q - j + 1) / cnt;
+      }
+      dur = T.map((t, j) => t - (j ? T[j - 1] : 0));
+    }
+    let acc = 0;
+    for (let j = 0; !exact && j < dur.length - 1; j++){
+      acc += dur[j];
+      let best = null;
+      capB.forEach(x => { if (Math.abs(x - acc) <= SNAP_SEC && (best === null || Math.abs(x - acc) < Math.abs(best - acc))) best = x; });
+      if (best === null) continue;
+      const delta = best - acc, a = dur[j] + delta, b = dur[j + 1] - delta;
+      const okA = a >= minScene && a <= Math.max(real[j], av[j].room) * _maxS() + EPS;
+      const okB = b >= minScene && b <= Math.max(real[j + 1], av[j + 1].room) * _maxS() + EPS;
+      if (okA && okB){ dur[j] = a; dur[j + 1] = b; acc = best; }
+    }
+    const memeCut = meme ? [{seg_id: 'meme:' + meme.vid, video_id: meme.vid, start: 0, dur: Math.round(headSec * 100) / 100,
+                             src_dur: Math.round(headSec * 100) / 100, meme: 1, emotion: meme.emotion}] : [];
+    return memeCut.concat(scenes.map((g, k) => {
+      const d = Math.round(dur[k] * 100) / 100;
+      const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
+      const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
+      if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
+      if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
+      return c;
+    }));
+  }
+
+  // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
+  // 않고, 각 컷이 읽는 원본 길이(src_dur)에만 통합 속도를 적용한다.
+  // 이 함수는 회귀 테스트와 진단 도구가 단독으로 떼어 실행하기도 한다. 외부 helper에
+  // 기대면 실제 브라우저에서는 되는데 배포 검사만 ReferenceError로 죽으므로 같은 저장값을
+  // 여기서 직접 읽는다(속도 판단식은 beatSyncSpeed와 동일).
+  const syncBeat = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {};
+  const syncRaw = Number(syncBeat.sync_speed || 1);
+  const syncSpeed = isFinite(syncRaw) && syncRaw >= 0.5 && syncRaw <= 2 ? syncRaw : 1;
+  // ★컷 읽는 창 가드(2026-09-27) — 창 [start, start+sdur] 의 머리·꼬리 0.1초(30fps 3프레임) 안에 원본 장면 전환이 있으면
+  //   창을 전환 안쪽으로 줄인다(머리: start 를 전환으로 / 꼬리: sdur 을 전환까지). 컷 가장자리 딴 장면 1~3프레임(서버 6 job 23프레임)의 뿌리.
+  //   전환 목록 = 서버 DATA.scenecuts[video_id](seg_snap 검출, 새 장면 첫 프레임 pts 의 0.001초 내림). 없으면 그대로(옛 데이터 안전).
+  //   ★planClips 의 finish(모든 경로가 지나는 곳) 한 곳에서만 부른다 — 서버 러너가 같은 JS 를 돌려 미리보기·완성본·캡컷이 같은 창을 받는다.
+  // 한도 = 3프레임 + 반 프레임(반올림 여유 1/60) — 초로 0.1 딱 자르면 끝−전환 0.1033초(3프레임 + 3ms)가 빠져
+  //   3프레임 딴 장면이 화면·완성본 둘 다에 번쩍였다(2026-09-28 6c1a2da94688 칸1 컷2: 읽기 12.700~14.170, 전환 14.0667).
+  const READ_GUARD = 3 / 30 + 1 / 60 + 1e-6;
+  function guardReadWindow(vid, start, sdur){
+    const s = Number(start), d = Number(sdur);
+    const cuts = ((((typeof DATA === 'object' && DATA) || {}).scenecuts) || {})[vid];
+    if (!Array.isArray(cuts) || !cuts.length || !(d > 0) || !isFinite(s)) return {start: s, sdur: d};
+    const e = s + d;
+    // ★연속 전환(짧은 번쩍임)은 끝까지 넘긴다(2026-10-02 관제 073). 실측 f65d5cc30072 s3: 첫머리 전환 0.1001·0.1335·0.1668 —
+    //   종전엔 머리 3프레임 안의 전환 하나(0.1001)로만 옮겨, 옮긴 자리가 2프레임짜리 딴 장면 안이었다(화면·완성본 둘 다 번쩍).
+    //   옮긴 새 경계에서 다시 3프레임 안에 전환이 있으면 거기로 또 옮긴다(최대 8번). 꼬리도 같다.
+    const cs = cuts.map(Number).filter(isFinite).sort((a, b) => a - b);
+    let ns = s, ne = e;
+    for (let k = 0; k < 8; k++){                                     // 머리: 앞 장면·번쩍 장면 프레임을 읽지 않는다
+      const nx = cs.find(c => c > ns + 1e-6 && c <= ns + READ_GUARD);
+      if (nx === undefined) break;
+      ns = nx;
+    }
+    for (let k = 0; k < 8; k++){                                     // 꼬리: 다음 장면·번쩍 장면 첫 프레임부터는 안 읽는다
+      let pv;
+      for (const c of cs) if (c < ne - 1e-6 && c >= ne - READ_GUARD) { pv = c; break; }
+      if (pv === undefined) break;
+      ne = pv;
+    }
+    if (ns === s && ne === e) return {start: s, sdur: d};
+    if (ne - ns < 0.1) return {start: s, sdur: d};                   // 창이 너무 짧아지면 안 건드린다
+    // 길이는 0.001초 **내림** — 올림하면 창 끝이 전환 프레임을 다시 넘을 수 있다
+    return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
+  }
+  // ★모자란 읽는 창 채우기(2026-09-27 사장님 "장면 끝에 소재가 살짝 모자라 멈추는 것 — 뒤를 더 보여주거나 창을 살짝
+  //   앞으로 옮겨도 장면이 안 바뀌면 그렇게. 최선은 딴 장면이 잠깐 들어가는 걸 막는 것").
+  //   창 [start, start+sdur] 이 필요 길이 need(컷 길이 × 칸 배속)보다 짧으면 ① 꼬리를 뒤로(다음 장면 전환·원본 끝·청소 구간 끝·
+  //   같은 소재 뒤 컷 시작 앞까지) ② 그래도 모자라면 머리를 앞으로(앞 장면 전환·청소 구간 시작·앞 컷 끝까지). 남는 몫만 종전
+  //   느리게(1.15배)→정지. 장면 전환 목록(DATA.scenecuts)이 없는 소재는 **안 늘린다**(장면이 이어지는지 모르면 딴 장면이 샐 수 있다).
+  //   청소본 칸: DATA.clean_spans[vid](지운 원본 구간)가 있으면 그 **안에서만** — 밖이면 원본 자막이 보이거나 증분 청소(과금)가 난다.
+  //   lo/hi = 같은 칸 같은 소재 다른 컷과 겹치지 않을 한계(같은 그림 반복 금지).
+  // 원본을 더 읽어도 되는 범위 — 청소본이 있으면 그 청소 구간 안만. null = 못 늘림(청소 구간을 못 읽었거나 창이 구간 밖).
+  //   판단 한 곳: fillShortWindow(장면 전환 앞까지 채우기)와 scenesV2(원본 이어 틀기)가 같이 쓴다.
+  function cleanBound(vid, s, e){
+    if (CLEAN_OFF) return {lo: 0, hi: Infinity};                    // 청소 전과 똑같이 짜 보는 중(아래 finish) — 청소 구간을 안 본다
+    const D = (typeof DATA === 'object' && DATA) || {};
+    if ((D.clean_spans || {}).__error__) return null;
+    const spans = (D.clean_spans || {})[vid];
+    if (!Array.isArray(spans) || !spans.length) return {lo: 0, hi: Infinity};
+    const sp = spans.find(x => Number(x[0]) <= s + 1e-3 && Number(x[1]) >= e - 1e-3);
+    return sp ? {lo: Number(sp[0]), hi: Number(sp[1])} : null;
+  }
+  function fillShortWindow(vid, start, sdur, need, lo, hi){
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const s = Number(start), d = Number(sdur), e = s + d;
+    const cuts = (D.scenecuts || {})[vid];
+    if (!Array.isArray(cuts) || !(need > d + EPS) || !isFinite(s)) return {start: s, sdur: d};
+    let lim0 = Math.max(0, Number(lo) || 0), lim1 = Number(hi);
+    if (!isFinite(lim1)) lim1 = Infinity;
+    const reel = Number((D.src_duration || {})[vid] || 0);
+    if (reel > 0) lim1 = Math.min(lim1, reel);
+    const cb = cleanBound(vid, s, e);
+    if (!cb) return {start: s, sdur: d};                            // 청소 구간을 못 읽었거나 그 밖 창 — 안 늘린다(과금 방지)
+    lim0 = Math.max(lim0, cb.lo); lim1 = Math.min(lim1, cb.hi);
+    for (const x of cuts){
+      const c = Number(x);
+      if (!isFinite(c)) continue;
+      if (c >= e - 1e-3 && c < lim1) lim1 = c;                        // 꼬리: 다음 장면 첫 프레임 앞까지
+      if (c <= s + 1e-3 && c > lim0) lim0 = c;                        // 머리: 이 장면 첫 프레임까지
+    }
+    let ne = Math.max(e, Math.min(s + need, lim1));
+    let ns = s;
+    const rest = need - (ne - s);
+    if (rest > EPS) ns = Math.min(s, Math.max(s - rest, lim0));
+    if (ne - e < 1e-3 && s - ns < 1e-3) return {start: s, sdur: d};
+    ns = Math.ceil(ns * 1000 - 1e-6) / 1000;                         // 0.001초 — 머리는 올림, 길이는 내림(전환 프레임을 안 넘게)
+    return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
+  }
+  // ★청소 뒤에도 **지운 그 컷 그대로**(관제 135, 2026-10-06 황선희님 d20c9f3d6a54 6번 칸 — 관제 110 의 재발).
+  //   청소본은 청소 전 컷이 읽은 구간을 지운 것이다. 지운 뒤 컷이 달라지면 새 컷이 안 지운 곳을 읽어 원본 자막이 보인다.
+  //   110 은 "청소 구간을 안 보고 짠 컷이 지운 구간 안인가"를 **다듬기 전 컷**으로 봤다 — 다듬기(전환 가드)가 머리를 0.1초
+  //   옮긴 컷은 '밖'으로 떨어져(허용 0.05초) 다시 배분됐고, 마지막 컷이 지운 끝을 0.22초 넘었다(7일 237작업 중 28작업 30칸).
+  //   이제 구간 포함을 어림하지 않는다: 서버가 정본에 **기록된 청소 당시 컷**(DATA.clean_cuts[칸] = [[영상, 시작, 읽은 길이]])을
+  //   주고, 청소 구간을 안 보고 끝까지(다듬기 포함) 짠 컷이 그 기록과 같으면 그 컷을 쓴다. 다르면(청소 뒤 편성·음성이 바뀜)
+  //   종전대로 청소 구간을 보고 짠다. 모든 경로가 지나는 이 finish 한 곳에서 정한다 — 서버 러너가 같은 JS 를 돈다.
+  let CLEAN_OFF = false;
+  const cleanRec = (() => {
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const spans = D.clean_spans || {};
+    if (beatIdx == null || spans.__error__ || !Object.keys(spans).length) return null;
+    const r = (D.clean_cuts || {})[beatIdx];
+    return Array.isArray(r) && r.length ? r : null;
+  })();
+  const CLEAN_SAME_TOL = 0.05;                                       // 기록은 0.0001초 반올림 — 한 프레임(0.033초) 넘게 다르면 다른 컷이다
+  const sameAsCleaned = cuts => !!cleanRec && cuts.length === cleanRec.length && cuts.every((c, k) => {
+    const r = cleanRec[k];
+    return String(c.video_id) === String(r[0]) && Math.abs(Number(c.start) - Number(r[1])) <= CLEAN_SAME_TOL
+      && Math.abs(Number(c.src_dur) - Number(r[2])) <= CLEAN_SAME_TOL;
+  });
+  // base = 청소 구간을 안 보고 짠 컷. bound = 청소 구간을 보고 짠 컷을 주는 함수(배분이 청소 구간을 보는 scenesV2 만 준다).
+  const finish = (base, bound) => {
+    if (!cleanRec) return finishCore(bound ? bound() : base);
+    let free;
+    CLEAN_OFF = true;
+    try { free = finishCore(base.map(c => ({...c}))); } finally { CLEAN_OFF = false; }
+    if (sameAsCleaned(free)) return free;
+    return finishCore(bound ? bound() : base);
+  };
+  const finishCore = base => {
+    if (!base.length) return base;
+    base.forEach(c => {
+      if (c.meme){ c.src_dur = Number(c.dur); return; }            // 짤 컷: 1배속·처음부터(칸 통합 속도·창 늘리기 대상 아님)
+      const natural = Number(c.src_dur || c.dur || 0);
+      let wanted = natural * syncSpeed;
+      const seg = ((typeof DATA === 'object' && DATA && DATA.segments) || {})[c.seg_id];
+      const sourceTotal = Number((((typeof DATA === 'object' && DATA) || {}).src_duration || {})[c.video_id] || 0);
+      let end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;
+      // ★계획이 이미 조각 끝을 넘어 읽기로 한 컷(구절 이어 틀기, 2026-09-26)이면 상한은 원본 끝 —
+      //   종전엔 늘 조각 끝으로 잘라 09-24 '릴 뒤 이어 쓰기'가 화면에선 한 번도 안 돌았다(멈춤의 뿌리).
+      //   서버 video_assemble._piece_end_limit와 같은 규칙.
+      if (sourceTotal > 0 && Number(c.start || 0) + natural > end + EPS) end = sourceTotal;
+      if (end > Number(c.start || 0)) wanted = Math.min(wanted, end - Number(c.start || 0));
+      c.src_dur = Math.max(EPS, wanted);
+    });
+    // ★순서 고정(2026-09-27): ① 모자란 창 채우기(fillShortWindow) → ② 잔상 가드(guardReadWindow)가 마지막에 한 번 더 본다.
+    //   채우기는 전환 앞까지만 늘리지만, 원래 창 안에 걸친 전환은 가드만 뺀다.
+    const noFill = !!spread || (beatIdx != null && typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1);
+    base.forEach((c, k) => {
+      if (noFill || c.fit || c.meme) return;                         // 사람이 고른 느리게·늘려 채우기·[속도 맞추기]·짤 컷은 그대로
+      if (typeof TRIMS === 'object' && TRIMS && TRIMS[c.seg_id]) return;   // 잘라 낸 구멍이 되살아나지 않게
+      if (String(c.seg_id || '').startsWith('film_')) return;       // 사람이 필름에서 정한 구간은 그 구간만(꼬다리 부활 금지)
+      const need = Number(c.dur || 0) * syncSpeed;
+      if (!(c.src_dur < need - EPS)) return;
+      // 같은 칸의 같은 소재 다른 컷과 겹치지 않게(같은 그림 반복 금지) — 앞 컷 끝·뒤 컷 시작이 한계
+      let lo = 0, hi = Infinity;
+      const s0 = Number(c.start || 0);
+      base.forEach((o, j) => {
+        if (j === k || o.video_id !== c.video_id) return;
+        const os = Number(o.start || 0), oe = os + Number(o.src_dur || 0);
+        if (os >= s0 + EPS) hi = Math.min(hi, os);
+        else if (oe <= s0 + c.src_dur + EPS) lo = Math.max(lo, oe);
+      });
+      const g = fillShortWindow(c.video_id, s0, c.src_dur, need, lo, hi);
+      c.start = g.start; c.src_dur = g.sdur;
+    });
+    base.forEach(c => {
+      // ★실제로 읽는 창의 머리·꼬리에 걸친 장면 전환을 뺀다(guardReadWindow — 컷을 확정하는 이 자리 한 곳에서만).
+      //   줄어든 몫은 컷 길이 dur 그대로 두고 기존 느리게·정지 규칙이 채운다.
+      const g = c.meme ? {start: Number(c.start || 0), sdur: c.src_dur} : guardReadWindow(c.video_id, Number(c.start || 0), c.src_dur);
+      c.start = g.start; c.src_dur = g.sdur;
+      c.speed = c.dur > EPS ? c.src_dur / c.dur : 1;
+    });
+    return base;
+  };
   // ✂ 트림된 장면은 '구멍 뺀 두 토막'으로 갈라서 넣는다 — 아래 분배 규칙은 그대로다.
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
@@ -532,8 +1072,17 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     delete CUTS[beatIdx]; delete SLOW[beatIdx];
   }
   if (!segments.length) return clips;
+  // ★컷 리듬 칸(서버가 cut_rhythm 표식을 단 칸)은 **서버 렌더와 같은 규칙**으로 그린다(2026-09-23 사장님
+  //   "미끼에 엄청 몰렸다": 화면은 자막 구절마다 컷을 그려 12조각인데 렌더는 3~4컷 — 화면이 거짓말을 했다).
+  //   홀드 칸 = 첫 조각 한 컷 · 나머지 = 조각 한 번씩 비례(아래 onePerSeg 경로). 서버 plan_beat_clips_for의 _cr 분기와 짝.
+  const crBeat = (syncBeat && syncBeat.cut_rhythm) || null;
+  //   ★구절 맞춤을 켠 칸은 컷 리듬을 비켜준다(2026-09-24 사장님 "켜면 구절맞춤이 이기게") — 서버 plan_beat_clips_for와 같은 규칙.
+  const rhythmOne = !!crBeat && beatIdx != null && !phraseSyncOn(beatIdx)
+                    && typeof lists !== 'undefined' && lists[beatIdx] === segIds;
+  // ★리듬 칸은 **얼린 컷보다 먼저** 본다(2026-09-24). 아래 얼리기가 먼저 돌면 장면마다 한 컷을 얼려
+  //   frozenClips가 그걸 돌려주고 리듬 규칙은 한 번도 안 쓰인다 — 화면만 옛 배치로 남는다.
   // ★구절 맞춤을 끈 칸은 얼린 컷 그대로(위 CUTS 규칙). 얼린 게 없으면(옛 저장본) 지금 떠서 얼린다.
-  if (beatIdx != null && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
+  if (beatIdx != null && !rhythmOne && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
     // 옛 저장본(끔인데 얼린 컷 없음) = **장면마다 한 컷, 자기 길이대로**. 구절 화면으로 뜨면
     //   구절 맞춤을 안 쓰는 고객 화면이 통째로 바뀐다(고객 제보 2026-09-14). 넘치면 syncCuts가
     //   뒤에서 줄이고, 모자라면 안내가 뜬다.
@@ -541,7 +1090,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       .map(id => ({seg_id: id, dur: _r2((typeof effLen === 'function' ? effLen(id) : 0)
                                         || (DATA.segments[id].end - DATA.segments[id].start))}));
     const fc = frozenClips(beatIdx, segIds, ttsDur);
-    if (fc) return fc;
+    if (fc) return finish(fc);
   }
   // ── 구절 맞춤 경로: 자막 시간표가 있고, 수동 길이가 없을 때만.
   //    (라이브 렌더의 같은 규칙은 video_assemble의 phrase_sync 분기 — 짝으로 움직인다)
@@ -549,7 +1098,19 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   (처음엔 ✋수동 우선으로 했더니, 실험하다 남은 ✋ 두 개가 구절맞춤을 조용히 꺼서
   //    "마지막 구절 카드가 활성이 안 된다"로 보였다. 이제 ✋를 새로 만지는 순간
   //    setFix가 그 칸의 구절맞춤을 눈에 보이게 끈다 — 숨은 상태가 없다.)
-  if (beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
+  if (rhythmOne && crBeat.hold && segments.length){
+    const seg = segments[0];
+    return finish([{seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(ttsDur * 100) / 100}]);
+  }
+  // ★관제 084 새 규칙(표식 있는 작업 · 구절 맞춤 켠 · 사람이 느리게/늘려 채우기/컷 리듬을 안 건 칸)
+  if (cutRuleV2() && !rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && !spread
+      && !(typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1)
+      && typeof lists !== 'undefined' && lists[beatIdx] === segIds) {
+    const _ex = phraseExactOn(beatIdx);
+    if (cleanRec) return finish(scenesV2Alloc(segments, ttsDur, beatIdx, _ex, false), () => scenesV2(segments, ttsDur, beatIdx, _ex));
+    return finish(scenesV2(segments, ttsDur, beatIdx, _ex));
+  }
+  if (!rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];
     if (caps.length >= 1 && ttsDur > 0.1) {
       // 경계: [0, caps[1].start, …, caps[n-1].start, ttsDur] — 리드인·꼬리는 양끝 컷 몫.
@@ -575,6 +1136,18 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const nPhrase = caps.length;   // ★어제 그대로 — 자막 줄 수가 컷 수다
       const pos = segments.map(s => s.start);
       let ri = 0;
+      // ★어느 조각이 어느 구절을 덮는지는 **서버가 정해 실어 보낸다**(2026-09-21 박세현님 job
+      //   fe21f8a5dc71: 마지막 줄을 나눴더니 2번째 줄의 장면이 바뀌었다). 판단처는 서버
+      //   video_assemble.phrase_owners 한 곳 — 여기서 같은 규칙을 다시 짜지 않는다(0순위-B).
+      //   caps[k].owner = 그 구절을 덮는 조각 번호, owner_n = 그 값이 맞는 조각 수.
+      //   화면에서 조각을 넣고 빼 수가 달라지면 그 값은 못 쓴다 → 아래 종전 식으로 그리고,
+      //   저장(autoApply) 응답이 새 값을 주면 다시 맞춘다. 수가 **되돌아와도** 옛 값을 되살리면
+      //   안 되므로(서버는 그 사이 종전 식으로 다시 얼렸다) 실제 편성에서 어긋난 순간 지운다.
+      const ownOk = caps.every(c => Number.isInteger(c.owner) && c.owner >= 0
+                                    && c.owner < segments.length && c.owner_n === segments.length);
+      if (!ownOk && typeof lists !== 'undefined' && lists[beatIdx] === segIds)
+        caps.forEach(c => { delete c.owner; delete c.owner_n; });
+      let prevIdx = -1;
       for (let k = 0; k < nPhrase; k++) {
         const isLast = k === nPhrase - 1;
         const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
@@ -590,15 +1163,47 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         //   같은 장면이 두 번(앞 것 0.57초) 나왔다. 이어붙이면 조각 k가 자기 몫의 구절을 연달아
         //   덮어 컷은 조각 수 그대로, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해진다.
         //   구절 ≤ 조각이면 종전처럼 1:1. ★서버(video_assemble._plan_phrase_clips)와 같은 식.
-        const idx = nPhrase <= segments.length ? k : Math.floor(k * segments.length / nPhrase);
+        const idx = ownOk ? caps[k].owner
+          : (nPhrase <= segments.length ? k : Math.floor(k * segments.length / nPhrase));
         const seg = segments[idx];
         // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
+        // ★단 같은 조각이 **바로 앞 구절에 이어** 덮는 중이면 되감지 않고 끝 프레임에서 버틴다
+        //   (2026-09-21 — 줄을 나누기 전의 '한 컷 슬로모→정지'와 같은 그림. 서버와 같은 규칙).
         let st = pos[idx];
-        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 });
-        pos[idx] = st + d;
+        // ★같은 조각에 구절이 이어 붙으면 **앞 컷이 끝난 곳부터 그대로 이어 튼다**(2026-09-26 사장님
+        //   "구절이 나눠져도 쭉 이어지게"). 담은 장면 끝을 넘으면 원본을 계속 읽는다. 종전엔 끝 0.1초 앞으로
+        //   되감아 0.1초를 늘려 틀어 멈춘 듯 보였다. 서버 _plan_phrase_clips와 **같은 규칙**(check_phrase_continue.py).
+        const reel = +(((typeof DATA === 'object' && DATA && DATA.src_duration) || {})[seg.video_id]) || 0;
+        const consec = k > 0 && idx === prevIdx && reel > 0;
+        if (!consec && seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS)
+          st = (k > 0 && idx === prevIdx) ? Math.max(seg.start, Math.min(st, seg.end - 0.1)) : seg.start;
+        prevIdx = idx;
+        // ★원본이 이미 끝났으면 영상 밖(검정)을 읽지 않고 마지막 프레임에서 버틴다(서버와 같은 규칙, 2026-09-26 "장면 빼니 검정")
+        if (reel > 0 && st > reel - 0.1) st = Math.max(seg.start, reel - 0.1);
+        const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
+        // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
+        //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다
+        //   (소스를 하나씩 누르면 그 조각만 틀어 멀쩡했다). src_dur을 남기면 applyRate가 그
+        //   비율만큼 느리게 틀어 조각 안에서 끝난다 — 서버 _plan_phrase_clips와 같은 규칙.
+        let src = d;
+        if (seg.end != null) {
+          const over = st + d - seg.end;
+          // typeof: planClips만 떼어 돌리는 테스트 하네스엔 이 상수가 없다(메모리 '슬라이스하네스')
+          const reachMin = (typeof REACH_MIN === 'number') ? REACH_MIN : 0.35;
+          if (st < seg.end && over > 0 && over <= reachMin) src = seg.end - st;   // 살짝 넘침 → 조각 안에서 살짝 느리게(09-17 '튐')
+          else if (over > 0 && !(reel > 0)) src = Math.max(0.1, Math.min(d, seg.end - st));   // 릴 길이 모름 = 종전
+          // 사람이 정한 구간(film_)은 그 구간만 — 잘라낸 꼬다리가 되살아나지 않게(서버 _plan_phrase_clips와 같은 규칙)
+          else if (over > 0 && !consec && String(seg.seg_id || '').startsWith('film_')) src = Math.max(0.1, Math.min(d, seg.end - st));
+        }
+        if (reel > 0 && st + src > reel) src = Math.max(0.1, reel - st);          // 원본 끝
+        if (src < d - EPS) clip.src_dur = +src.toFixed(3);
+        // [속도 맞추기] 누른 조각 — 1.15배 상한 없이 정확히 늘린다(서버 playback_speed와 짝)
+        const fitSegs = (((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {}).fit_segs || [];
+        if (src < d - EPS && fitSegs.includes(seg.seg_id)) clip.fit = true;
+        clips.push(clip);
+        pos[idx] = st + src;                                                      // 보여준 곳 다음부터 이어서
       }
-      return clips;
+      return finish(clips);
     }
   }
   // ★구절 맞춤을 **끈** 칸 = 담은 장면이 전부 한 번씩(2026-09-14 사장님 "구절맞춤을 끄면
@@ -606,7 +1211,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   종전엔 2.2초 쪼개기+0.8초 하한으로 뒤 장면이 '안 나옴'이 됐고, 경계를 끌면 컷이 다시
   //   짜여 먹혔다 안 먹혔다 했다. 서버 plan_beat_clips_for의 phrase_sync False 분기와 짝이다.
   const allIn = beatIdx != null && !phraseSyncOn(beatIdx);
-  if (onePerSeg || allIn){
+  if (onePerSeg || allIn || rhythmOne){
     // 1장=1컷 · 비례 배분(라이브 _plan_beat_clips one_per_seg와 같은 규칙).
     // 나레이션 시간을 담은 장면들에 **길이 비례**로 나눈다 — 남으면 줄이고 모자라면 늘린다.
     // 담은 게 전부·순서대로·한 번씩 나오고, 긴 장면은 길게 짧은 장면은 짧게 비율이 유지된다.
@@ -625,12 +1230,21 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         let take = (seg.end - seg.start) * scale;
         if (k === usable.length - 1) take = Math.max(0, ttsDur - filled);
         if (take <= EPS) return;
-        clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+        const clip = {seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take};
+        // ★조각보다 길게 틀어야 하면 **원본 뒤 실제 장면을 이어서** 읽는다 — 서버 _plan_beat_clips one_per_seg의
+        //   src_cap(원본 끝까지 1배속)과 같은 규칙(2026-09-26 강규봉님 8번 칸: 화면은 조각 끝에서 멈추고 렌더는
+        //   이어 읽어 미리보기≠완성본). 사장님 정책 "멈추지 말고 진짜 영상으로"(07-20)도 이쪽이다.
+        //   원본이 모자라면 거기까지만 읽고 나머지는 느리게·정지(finish가 원본 끝으로 자른다).
+        const reel = +(((typeof DATA === 'object' && DATA && DATA.src_duration) || {})[seg.video_id]) || 0;
+        const room = reel > 0 ? reel - seg.start : (seg.end - seg.start);
+        if (room > EPS && room < take - EPS) clip.src_dur = +room.toFixed(3);
+        clips.push(clip);
         filled += take;
       });
     }
-    return (typeof applyFixedLens === 'function')
-    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    const fixed = (typeof applyFixedLens === 'function')
+      ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    return finish(fixed);
   }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
@@ -667,7 +1281,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     if (spread && filled > EPS){
       // ★상한(1.15배)까지만 늘린다 — 렌더와 같은 규칙. 남는 시간은 마지막 컷이
       //   떠안아 **정지가 생길 것을 미리보기에서도 보이게** 한다(거짓 안심 금지).
-      const scale = Math.min(MAX_SLOWMO, ttsDur / filled);
+      const scale = Math.min(maxSlowmo(), ttsDur / filled);
       // ★실제 소스 길이를 남겨 둔다 — 재생기가 이 값으로 속도를 정한다(applyRate).
       //   이게 없으면 dur만 늘어나고 재생은 1배속이라 '느려짐'이 아니라 '멈춤'이 된다.
       clips.forEach(c => { c.src_dur = c.dur; c.dur *= scale; });
@@ -721,8 +1335,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (short > EPS) clips[clips.length - 1].dur += short;
     }
   }
-  return (typeof applyFixedLens === 'function')
+  const fixed = (typeof applyFixedLens === 'function')
     ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+  return finish(fixed);
 }
 
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
@@ -733,7 +1348,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
 //   음성보다 길었다. 서버는 이미 실제 길이(tts_dur)를 주고 있었는데 안 쓰고 있었다.
 //   라이브 렌더도 실제 음성 길이(_beat_effective_dur)를 쓰므로 이래야 렌더와 맞는다.
 function beatDur(i){
-  const d = ((DATA && DATA.tts_dur) || {})[String(i)];
+  const d = ((DATA && DATA.tts_dur) || {})[String(beatKeyAt(i))];   // 키 = 번호(beatKeyAt 주석)
   if (d && d > 0.05) return d;
   const b = (DATA && DATA.beats && DATA.beats[i]) || {};
   return b.target_seconds || 3;
@@ -757,7 +1372,8 @@ function ttsWarn(msg){
 function ttsVer(i){
   // 서버가 재생성할 때마다 올리는 값(mix_pipeline.resynth_one_beat). 이게 키와 URL에
   // 같이 들어가야 "고쳤는데 옛 소리"가 안 난다.
-  const b = ((DATA && DATA.beats) || []).find(x => (x.beat_idx != null ? x.beat_idx : -1) === i);
+  // i = 화면 위치(seatTts·playTts 호출자 전부 lists 위치를 넘긴다) → 그 자리의 칸을 그대로 본다.
+  const b = ((DATA && DATA.beats) || [])[i];
   return (b && b.tts_ver) || 0;
 }
 function seatTts(i, slot){
@@ -766,6 +1382,12 @@ function seatTts(i, slot){
   return a;
 }
 function playTts(i, slot){
+  // ★합본이 붙었으면 소리도 합본에서 난다 — 여기서 또 틀면 **같은 말이 두 번** 들린다.
+  const px = pvxAudio();
+  if (px){
+    if (curAud){ try { curAud.pause(); } catch(e){} }
+    return px;
+  }
   const a = seatTts(i, slot || 0);
   if (curAud && curAud !== a) curAud.pause();      // 앞 칸 음성은 여기서 확실히 끈다
   curAud = a;
@@ -872,12 +1494,25 @@ function wantFull(v){
   try{ v.preload = 'auto'; if (v.readyState < 2 && typeof v.load === 'function') v.load(); }catch(e){}
   return v;
 }
+// ★열 때는 원본을 한 바이트도 당기지 않는다(2026-10-01 관제 061, 사장님 "3단계가 왜 이렇게 무겁지").
+//   접근로그 실측: 고객이 3단계를 한 번 열 때 115MB를 받았고 그중 82MB가 /api/mix/src(원본 7개)였다.
+//   머리말(metadata)만 받는다던 재생기 28개가 소스마다 1.6MB씩 여섯 번 당기고, 첫 앉히기(seat→wantFull)가
+//   24MB짜리를 통째로 받았다. 재생을 누르기 전엔 쓸 일이 없는 바이트다.
+//   규칙: 재생기는 **재생을 누를 때까지 preload='none'**(src 는 둔다 — 요청은 안 나간다). startSeq 가
+//   armPlay() 를 부르는 순간부터 종전 규칙(머리말 metadata → 쓸 것만 wantFull 로 auto)으로 돌아간다.
+//   합본(PVX)은 여기 해당 없음 — 전체 재생을 끊기지 않게 하는 재료라 종전대로 미리 받는다.
+let PLAY_ARMED = false;
+function armPlay(){
+  if (PLAY_ARMED) return;
+  PLAY_ARMED = true;
+  Object.values(_vids).forEach(v => { try { if (v.preload === 'none') v.preload = 'metadata'; } catch(e){} });
+}
 function vidFor(videoId, slot){
   const key = videoId + ':' + (slot || 0);
   if (_vids[key]) return _vids[key];
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
-  v.muted = true; v.playsInline = true; v.preload = 'metadata';
+  v.muted = true; v.playsInline = true; v.preload = PLAY_ARMED ? 'metadata' : 'none';
   v._vid = videoId;
   v.src = _blobs[videoId] || SL.src(videoId);   // 이미 받아 둔 blob이 있으면 그것부터
   v.style.display = 'none';
@@ -896,8 +1531,9 @@ function applyRate(v, c){
   if (!v || !c) return 1;
   const src = +c.src_dur;
   let rate = 1;
-  if (src > 0 && c.dur > src + 1e-3){
-    rate = Math.max(1 / MAX_SLOWMO, src / c.dur);   // 느리게 = 1보다 작은 배속
+  if (src > 0 && c.dur > EPS){
+    rate = src / c.dur;
+    if (rate < 1 && !c.fit) rate = Math.max(1 / maxSlowmo(), rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
   }
   try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
   return rate;
@@ -908,16 +1544,29 @@ function applyRate(v, c){
 //   하나를 이어 튼다. 컷 계산은 planClips 한 곳 그대로이고, 칸마다 목록이 합본과 **글자
 //   그대로 같을 때만** 합본을 쓴다 — 하나라도 다르면 그 칸은 종전 방식(fail-open).
 const PVX = { key: '', beats: [], offs: [], vid: null, url: '', pending: '', lastKey: '', timer: 0 };
+// 합본에 보내는 컷 모양 — **여기 한 곳**(pvxCuts·pvxAttach가 같이 쓴다. 둘이 다르면 합본을 못 쓴다).
+//   fit([속도 맞추기])은 있을 때만 싣는다 — 없는 컷은 모양이 종전과 같아 이미 구운 합본을 그대로 쓴다.
+function pvxCut(c){
+  const o = {video_id: c.video_id, start: +(+c.start).toFixed(3), dur: +(+c.dur).toFixed(3),
+             src_dur: +(+(c.src_dur || 0)).toFixed(3)};
+  if (c.fit) o.fit = 1;
+  return o;
+}
 function pvxCuts(){
   const beats = [], cuts = [];
   (DATA && DATA.beats || []).forEach((b, i) => {
-    const cl = planClips(lists[i] || [], beatDur(i), STRETCH[i], i)
-      .map(c => ({video_id: c.video_id, start: +(+c.start).toFixed(3), dur: +(+c.dur).toFixed(3),
-                  src_dur: +(+(c.src_dur || 0)).toFixed(3)}));
+    const cl = planClips(lists[i] || [], beatDur(i), STRETCH[i], i).map(pvxCut);
     beats.push(JSON.stringify(cl));
     cuts.push(...cl);
   });
-  return {beats, cuts, key: beats.join('|')};
+  // ★key 에 칸 음성 버전(tts_ver)을 싣는다(2026-09-27) — 성우·톤만 바꾸면 컷은 그대로라 key 가 안 바뀌어
+  //   다시 묻지도 않고 옛 목소리 합본을 계속 틀었다. 서버 서명(app._pvproxy_sig)도 칸 음성 지문을 싣는다.
+  //   beats(칸별 컷 JSON)는 그대로 둔다 — pvxAttach 가 칸 목록을 글자 그대로 대조한다.
+  const vers = (DATA && DATA.beats || []).map(b => (b && b.tts_ver) || 0).join(',');
+  // ★끼움 장면(AI 장면 등)도 key 에 싣는다(관제 116) — 만들거나 빼면 컷은 그대로라 종전엔 다시 묻지 않아 미리보기에 안 나왔다.
+  //   서버 서명(app._pvproxy_beat_meta)도 끼움 장면 파일을 싣는다.
+  const cws = (DATA && DATA.beats || []).map(b => (b && b.cutaway && b.cutaway.asset_id) || '').join(',');
+  return {beats, cuts, key: beats.join('|') + '#tts:' + vers + (cws.replace(/,/g, '') ? '#cw:' + cws : '')};
 }
 function pvxClock(c){ return c && c._px; }
 // ★언제 만드나(2026-09-14 사장님 "처음 배치시 빠르게 / 장면 교체했을 땐 버튼을 눌러서").
@@ -951,22 +1600,37 @@ function pvxTick(){
   let p; try { p = pvxCuts(); } catch(e){ return; }
   if (!p.cuts.length || p.key === PVX.key) { PVX.lastKey = p.key; pvxBtns(PVX.ready ? 'building' : ''); return; }
   if (PVX.ready) { pvxBtns('building'); return; }
+  // ★장면을 바꾸면 **자동으로** 다시 굽는다 (2026-09-21 사장님 "1 2 를 어떻게 없애냐고").
+  //
+  //   예전엔 [🎞 바뀐 장면 렌더] 버튼을 눌러야 다시 구웠다. 통째로 다시 굽느라 8.9초가
+  //   들어서 자동으로 못 했던 것이다. 그런데 버튼을 안 누른 동안 합본이 낡은 채로 남고,
+  //   화면은 그때 **옛 경로(조각 재생)** 로 돈다 — 재생기를 나눠 쓰고 다음 컷을 미리
+  //   앉히는, 튐이 나던 바로 그 길이다. 즉 버튼은 구멍을 만들고 있었다.
+  //
+  //   이제 컷·칸을 곳간에 두고 바뀐 것만 다시 만든다 — 실측 2026-09-21: 장면 1개를
+  //   바꿔도 **1.8초**(종전 8.9초, 6.2배). 이 값이면 손을 떼는 사이에 끝난다.
+  //   그래서 버튼을 없애고 늘 최신 합본을 유지한다 → 합본이 낡아 있는 구간이 사라진다.
+  //
+  //   ※연달아 만질 때 매번 굽지 않도록, 편성이 한 번 이상 그대로일 때(stable) 굽는다.
+  //     3초마다 확인하므로 손을 멈추면 곧바로 굽기 시작한다.
   const stable = p.key === PVX.lastKey;
   PVX.lastKey = p.key;
-  if (!PVX.key && !PVX.want) PVX.want = p.key;                    // 첫 배치 — 기다리지 않고 바로 자동
-  if (PVX.want !== p.key){ pvxBtns(PVX.key ? 'stale' : ''); return; }   // 바뀜 — 버튼 누를 때까지 대기
+  if (stable) PVX.want = p.key;
+  if (PVX.want !== p.key){ pvxBtns(''); return; }   // 아직 만지는 중 — 멈추면 다음 틱에 굽는다
   pvxBtns('building');
   if (PVX.pending === p.key) return;
   PVX.pending = p.key;
   fetch(`/api/mix/preview_proxy/${SL.job}`, {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cuts: p.cuts})})
+        // 칸마다 컷이 몇 개인지 같이 보낸다 — 서버가 칸 끝을 그 칸 음성 길이에 맞춘다.
+        //   안 보내면 칸 경계가 조금씩 밀려 뒤로 갈수록 쌓인다(실측 6칸에 0.425초).
+        body: JSON.stringify({cuts: p.cuts, beat_lens: p.beats.map(b => JSON.parse(b).length)})})
     .then(r => r.ok ? r.json() : null)
     .then(j => {
       if (!j || j.state !== 'ready' || !j.url){ PVX.pending = ''; setTimeout(() => { try { pvxTick(); } catch(e){} }, 1000); return; }   // 만드는 중 — 1초 뒤 다시 묻는다
       return fetch(j.url).then(r => r.ok ? r.blob() : null).then(bl => {
         PVX.pending = '';
         if (!bl || !bl.size) return;
-        PVX.ready = {bl, p, sig: j.sig};
+        PVX.ready = {bl, p, sig: j.sig, j};   // j: 서버가 준 칸 위치(offs)까지 같이 들고 간다
         pvxSwap();
       });
     })
@@ -983,15 +1647,32 @@ function pvxSwap(){
         let v = PVX.vid;
         if (!v){
           v = document.createElement('video');
-          v.muted = true; v.playsInline = true; v.preload = 'auto'; v.style.display = 'none';
+          // ★합본은 **음소거하면 안 된다** — 이제 그 안에 성우 목소리가 들어 있다.
+          //   다른 재생기(조각)는 영상 원음을 끄려고 muted 로 둔다. 합본도 그대로 뒀더니
+          //   **미리보기 전체가 무음**이 됐다(실측 2026-09-21: 7칸 전부 소리 0, muted=true).
+          //   파일에는 소리가 있었고 싱크도 0.000초였다 — 그래서 파일만 보는 검사로는
+          //   못 잡았다. 소리는 **실제로 틀어서 재야** 한다.
+          v.muted = false; v.volume = 1;
+          v.playsInline = true; v.preload = 'auto'; v.style.display = 'none';
           box.appendChild(v); PVX.vid = v;
         }
+        // 이미 만들어져 있던 재생기도 풀어 준다(예전 판이 muted 로 만들어 뒀을 수 있다)
+        try { v.muted = false; v.volume = 1; } catch (e) {}
         if (PVX.url) { try { URL.revokeObjectURL(PVX.url); } catch(e){} }
         PVX.url = URL.createObjectURL(bl);
         v.src = PVX.url;
         let off = 0;
-        PVX.offs = p.beats.map(s => { const a = off; JSON.parse(s).forEach(c => off += c.dur); return a; });
-        PVX.beats = p.beats; PVX.key = p.key; pvxBtns("");
+        // ★칸 시작 위치는 **서버가 잰 값**을 쓴다(짐작 금지).
+        //   컷 길이를 더해 짐작하면 구워진 영상과 어긋난다 — 영상은 프레임 단위(1/30초)로만
+        //   끊기기 때문이다(실측 6칸에 0.147초). 그만큼 되감을 자리가 밀린다.
+        //   서버가 안 주면(옛 합본) 예전처럼 짐작한다 — 폴백.
+        PVX.offs = (r.j && Array.isArray(r.j.offs) && r.j.offs.length === p.beats.length)
+          ? r.j.offs.slice()
+          : p.beats.map(s => { const a = off; JSON.parse(s).forEach(c => off += c.dur); return a; });
+        PVX.beats = p.beats; PVX.key = p.key;
+        PVX.dur = (r.j && r.j.dur) || 0;   // 합본 전체 길이 — 마지막 칸의 끝을 아는 데 쓴다
+        PVX.cuts = (r.j && Array.isArray(r.j.cuts)) ? r.j.cuts : null;  // 칸 안 컷 경계(실측)
+        pvxBtns("");
         console.log('[pvx] 합본 준비', r.sig, p.cuts.length + '컷', (bl.size/1e6).toFixed(1) + 'MB');
   }
 }
@@ -1002,11 +1683,22 @@ if (typeof window !== 'undefined' && typeof setInterval === 'function' && !windo
 // 칸 i의 컷에 합본 좌표를 단다. 목록이 합본과 다르면 아무것도 안 달고 false.
 function pvxAttach(i, clips){
   if (!PVX.vid || !PVX.key || PVX.vid.readyState < 1) return false;
-  const mine = JSON.stringify(clips.map(c => ({video_id: c.video_id, start: +(+c.start).toFixed(3),
-               dur: +(+c.dur).toFixed(3), src_dur: +(+(c.src_dur || 0)).toFixed(3)})));
+  const mine = JSON.stringify(clips.map(pvxCut));
   if (PVX.beats[i] !== mine) return false;
-  let off = PVX.offs[i];
-  clips.forEach(c => { c._px = PVX.vid; c._pstart = off; off += +(+c.dur).toFixed(3); });
+  // ★컷이 합본 어디서 시작하는지 — **서버가 잰 값**을 쓴다(짐작 금지).
+  //   컷 길이를 더해 짐작하면 합본과 어긋난다(구워진 영상은 프레임 단위로만 끊긴다).
+  //   그 어긋남 때문에 화면이 합본보다 먼저 "칸 끝"이라며 멈춰 세웠고, 합본은 그 자리에서
+  //   영영 안 끝나 전체 재생이 칸0에 멈췄다(실측 2026-09-21: 화면 5.52 vs 합본 5.60).
+  const mo = PVX.cuts && PVX.cuts[i];
+  const base = PVX.offs[i];
+  if (mo && mo.length === clips.length){
+    clips.forEach((c, k) => { c._px = PVX.vid; c._pstart = base + mo[k];
+                              c._pdur = (mo[k + 1] != null ? mo[k + 1] : (PVX.offs[i + 1] != null
+                                          ? PVX.offs[i + 1] - base : c.dur + mo[k])) - mo[k]; });
+  } else {
+    let off = base;
+    clips.forEach(c => { c._px = PVX.vid; c._pstart = off; off += +(+c.dur).toFixed(3); });
+  }
   return true;
 }
 function pvxStep(c){
@@ -1014,11 +1706,15 @@ function pvxStep(c){
   const v = c._px;
   if (Math.abs(v.currentTime - c._pstart) > 0.25) v.currentTime = c._pstart;
   holdShot(null, false);
-  showVid(v);
+  showVid(v, v.currentTime);          // 방금 보낸 자리에 도착했는지 showVid 가 본다
   try { if (v.playbackRate !== 1) v.playbackRate = 1; } catch(e){}
   if (v.paused){ const pr = v.play(); if (pr && pr.catch) pr.catch(()=>{}); }   // 합본은 1배속(늘리기는 서버가 구워 둠)
   paintCut();
-  schedStep(c.dur * 1000);
+  // ★컷을 넘기는 시간도 **실측 길이**를 쓴다(짐작 금지).
+  //   짐작(c.dur)으로 넘기면 칸의 컷을 다 쓴 시각이 합본의 칸 끝보다 앞선다 —
+  //   화면이 거기서 "재생 끝"이라며 합본을 멈춰 세우고, 합본은 칸 끝에 못 닿아
+  //   전체 재생이 그 칸에 영영 멈춘다(실측 2026-09-21: 화면 5.52 vs 합본 5.60).
+  schedStep(((c._pdur > 0) ? c._pdur : c.dur) * 1000);
 }
 // 합본은 **음성 시계에 묶는다** — 컷 타이머(벽시계)만 따르면 음성이 늦게 뜬 만큼 화면이 앞선다
 //   (로컬 실측: 첫 칸 0.47초 앞섬). 음성이 흐르는 동안 0.12초 넘게 벌어지면 합본을 그 자리로 옮긴다.
@@ -1031,9 +1727,16 @@ function pvxSync(){
   if (Math.abs(v.currentTime - want) > 0.12) { try { v.currentTime = want; } catch(e){} }
 }
 function cutStart(c){ return c._px ? c._pstart : c.start; }
+function clipRate(c){
+  if (!c || c._px) return 1;
+  const src = Number(c.src_dur || 0), out = Number(c.dur || 0);
+  if (src > 0 && out > EPS) return src / out;
+  return Number(c.speed || 1);
+}
 function seat(c){
   if (c._px) return c._px;                            // 합본은 이어 트는 중 — 미리 앉히면 화면이 튄다
   const v = wantFull(vidFor(c.video_id, c._slot));   // 곧 쓸 재생기다 — 여기서만 본문을 당긴다
+  applyRate(v, c);
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
@@ -1061,25 +1764,103 @@ function previewTimeNow(){
 }
 
 let curVid = null;
-function showVid(v){
-  if (curVid === v) return;
+function showVid(v, want){
+  // ★화면을 켜는 **모든 길**이 여기를 지난다 — 그래서 보호도 여기 하나에만 둔다(0순위-B).
+  //   2026-09-20 코드 감사: showVid 호출처가 6곳인데 되감기 2곳만 막아두었다. 나머지 넷
+  //   (특히 재생 중 컷 갈아끼우기)은 `v.currentTime = …` 하고 **곧바로** 켜는 같은 모양이라
+  //   같은 증상이 난다. 한 곳씩 막으면 새 경로가 생길 때마다 또 샌다.
+  //
+  //   want = 그 재생기를 **보내려는 시각**. 주면 값으로 판정하고(정확), 안 주면 시크 중인지로
+  //   본다. 아직 안 왔으면 **가린 채** 켜고, 자리에 온 것을 확인하고 드러낸다.
+  if (curVid === v){
+    if (want != null && !_seekSettled(v, want) && v.style.visibility !== 'hidden'){
+      v.style.visibility = 'hidden';                  // 같은 재생기라도 딴 자리로 보냈으면 가린다
+      _pinHidden(v, want);
+    }
+    return;
+  }
   if (curVid){ curVid.pause(); curVid.style.display = 'none'; }
+  const settled = (want != null) ? _seekSettled(v, want) : !v.seeking;
   v.style.display = 'block';
   curVid = v;
+  if (settled){
+    _unhidePinned();
+    v.style.visibility = '';
+  } else {
+    v.style.visibility = 'hidden';
+    _pinHidden(v, (want != null) ? want : null);
+  }
+}
+
+// ★되감기 때 '다음다음 컷'이 스치는 것을 막는 두 조각(2026-09-20, seekTo가 쓴다).
+//   판정을 seeking 플래그가 아니라 **값**으로 한다 — 플래그는 브라우저마다 세우는 시점이
+//   다르지만, currentTime이 목표에 닿았는지는 어디서나 같은 사실이다.
+const _SEEK_EPS = 0.05;          // 이 안쪽이면 그 자리에 왔다고 본다(프레임 한두 장)
+let _hidePin = null;             // 가려둔 재생기 {v, go, timer} — 한 번에 하나뿐이다
+
+function _seekSettled(v, want){
+  // want 를 모르면 시크 중인지로만 본다(그래도 '곧바로 켜는' 것보다 훨씬 안전하다).
+  if (want == null) return !v.seeking;
+  return !v.seeking && Math.abs((v.currentTime || 0) - want) <= _SEEK_EPS;
+}
+
+function _unhidePinned(){
+  if (!_hidePin) return;
+  try { _hidePin.v.onseeked = null; clearTimeout(_hidePin.timer); _hidePin.v.style.visibility = ''; }
+  catch (e) { /* 재생기가 이미 사라졌으면 할 일이 없다 */ }
+  _hidePin = null;
+}
+
+//: 가린 화면을 드러낼 때까지 기다리는 한도. 이 안에 안 오면 그냥 드러낸다(영영 빈 화면 방지).
+const _PIN_MAX_MS = 3000;
+const _PIN_STEP_MS = 60;
+
+function _pinHidden(v, want){
+  // ★시크가 **정말 끝났는지 확인하고** 드러낸다(2026-09-20 실측으로 잡은 결함).
+  //   처음엔 seeked 이벤트 + 안전핀 1500ms로 두었는데, 진짜 크롬 검증에서
+  //   **안전핀이 터지는 순간 아직 시크 중이면 컷3이 그대로 드러났다**(프레임 1장 노출 실측).
+  //   안전핀이 고치려던 증상을 되살린 것이다 — 9/18판이 400ms로 그랬던 것과 같은 모양.
+  //   그래서 시간이 아니라 **자리에 왔는지**로 드러낸다. 못 오면 짧게 다시 본다.
+  // ★★앞서 가려둔 재생기가 있으면 **반드시 먼저 되돌린다**(2026-09-20 실측으로 잡은 결함).
+  //   안 그러면 그 재생기는 visibility:hidden 인 채로 버려져 **영영 안 드러난다**.
+  //   실측: 칸0(컷 9개)에서 연달아 전환하면 3초를 기다려도 화면이 안 그려지는 판이 나왔다
+  //   (3회 중 1회). 가리는 것을 도입했으면 **되돌리는 책임도 같은 자리**에 있어야 한다.
+  _unhidePinned();
+  let waited = 0;
+  const reveal = () => {
+    v.onseeked = null;
+    v.style.visibility = '';                         // 이 재생기는 무조건 되돌린다
+    if (_hidePin && _hidePin.v === v) _hidePin = null;
+  };
+  const tick = () => {
+    if (!_hidePin || _hidePin.v !== v) return;       // 그 사이 다른 전환이 맡았다
+    if (_seekSettled(v, want) || waited >= _PIN_MAX_MS) return reveal();
+    waited += _PIN_STEP_MS;
+    _hidePin.timer = setTimeout(tick, _PIN_STEP_MS);
+  };
+  v.onseeked = () => { if (_seekSettled(v, want)) reveal(); };   // 빨리 끝나면 곧바로
+  _hidePin = { v: v, go: reveal, timer: setTimeout(tick, _PIN_STEP_MS) };
 }
 const vid = () => curVid || document.getElementById('vid');
-// 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
-// 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
+// 페이지가 열리면 재생기 요소만 만들어 둔다 — **네트워크는 0**(preload none, 관제 061). 머리말은 재생을 누르면
+//   armPlay 가 받기 시작한다. (종전엔 열자마자 머리말을 받았는데 그게 소스당 1.6MB×슬롯 수였다.)
 // ★칸 넘김 슬롯(2·3)도 함께 만든다: 전체 재생은 칸마다 첫 컷을 handoffSlot(2·3)으로
 //   쓰는데 예전엔 0·1만 데워 둬서, 그 재생기가 **그 컷에 가서야 처음 만들어졌다**
 //   (readyState 0 → 열림 대기창 초과 → 그 컷은 정지 그림). 머리말만이라 값이 싸다.
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
   ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); vidFor(id, 2); vidFor(id, 3); });
+  // ★슬롯 11,12,…(같은 소스 두 번째 등장부터)는 **startSeq가 배정한 뒤 그 자리에서** 만든다.
+  //   여기서 DATA.beats 를 뒤져 미리 세려 했는데, 칸의 컷 목록이 manual_cuts 인지
+  //   scene_override 인지 내가 **짐작**해야 해서 그만뒀다. 짐작이 틀리면 조용히 안 데워지고,
+  //   그 컷은 정지 그림이 된다 — 확인할 수 없는 안전장치는 안전장치가 아니다.
 }
 
 function stopPlay(){
+  // 합본의 칸 끝 감시를 끈다 — 안 끄면 멈춘 뒤에도 다음 칸으로 넘어간다.
+  try { if (PVX.vid && PVX.vid._pxEndT){ clearInterval(PVX.vid._pxEndT); PVX.vid._pxEndT = 0; } } catch(e){}
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  _unhidePinned();      // 가려둔 재생기를 되돌린다 — 안 하면 멈춘 화면이 빈 채로 남는다
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
   if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
@@ -1154,9 +1935,32 @@ function playBeat(i, ev){
   playKey = 'beat:' + i;
   seqLabel = `칸 ${i+1} 전체`;
   seqBeat = i;
+  // ★칸별 재생도 합본으로 튼다(2026-09-21 사장님 "근본적으로 발생하게된 우리 구조적 문제를 뽑는건데").
+  //
+  //   화면을 트는 길이 둘이었다:
+  //     · 합본(_px)  — 미리 이어붙인 영상 한 개를 이어 튼다. 시크 없음. 재생기 한 개.
+  //     · 조각       — 컷마다 다른 <video>를 골라 그 자리로 시크한다.
+  //   역대 사고 여섯 건(08-14 08-15 08-17 08-20 09-02 09-18)이 **전부 조각 쪽**이다.
+  //   조각은 (ㄱ)재생기를 컷끼리 나눠 쓰고 (ㄴ)다음 컷을 미리 앉혀 두므로, 되감으면
+  //   미리 앉혀 둔 다음다음 장면이 스친다 — 이윤정님 "1번과 2번 사이에 3번이 살짝 나온다".
+  //   지금까지 그 프레임을 **안 보이게 하는 방법만** 바꿔 왔다(가리기). 길 자체는 그대로였다.
+  //
+  //   그런데 합본은 **이미 만들어져 있었다**(실측 2026-09-21: 3개 job 전 칸 캐시됨,
+  //   readyState 4). 쓰는 곳이 전체 재생 한 군데뿐이라 칸별 재생·되감기가 조각으로 갔을 뿐이다.
+  //   여기서 붙여 주면 seekTo 도 c._px 를 따라가(1740줄) 되감기까지 합본이 된다.
+  //   합본이 아직 없으면 pvxAttach 가 false 라 예전 조각 경로 그대로 — 폴백이 자연히 된다.
+  pvxAttach(i, clips);
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
-  playTts(i, 0);
+  const a = playTts(i, 0);
+  // ★합본은 **이 칸 끝에서 세워야 한다**(2026-09-21 이연정님 "그 칸만 재생됐는데 지금은 다음
+  //   칸까지 이어서 계속 재생된다"). 조각 시절엔 그 칸의 mp3가 끝나면 저절로 멎었다. 합본은
+  //   전 칸의 화면+음성이 한 파일이라 혼자 안 멈추고, step()도 합본은 일부러 안 세운다(전체
+  //   재생이 칸에 멈추던 사고 때문). '칸 끝' 신호를 거는 곳이 전체 재생(runAllFrom)뿐이었다.
+  //   라이브 실측(job 393e0ff51de0): 칸1 끝 3.267초인데 합본 시각이 11초까지 흘렀다.
+  //   칸 끝을 아는 곳은 pvxAudio의 onended 하나다 — 전체 재생과 같은 신호를 쓴다(0순위-B).
+  //   그 사이 주인이 바뀌었으면(전체 재생·다른 칸) 건드리지 않는다.
+  if (a && a._pvx) a.onended = () => { if (playKey === 'beat:' + i) a.pause(); };
   armSfx(i);                       // 효과음도 같은 시각 기준으로 예약
   tickSub();
 }
@@ -1228,7 +2032,12 @@ function runAllFrom(i){
   const nx = DATA.beats[i + 1];
   if (nx){
     const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1], i + 1);
-    if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
+    // ★합본이 다음 칸까지 덮으면 원본 재생기를 미리 앉히지 않는다(2026-10-01 관제 063).
+    //   종전엔 합본으로 돌면서도 여기 seat→wantFull 이 다음 칸 **원본을 통째로** 받았다
+    //   (하네스 실측: 전체 재생 8초에 /api/mix/src 35~40MB, 재생은 합본이 하는데 받기만 했다).
+    //   합본이 못 덮는 칸(편성이 합본과 다른 칸)만 종전대로 원본을 미리 앉힌다 — 폴백 그대로.
+    const nxPx = pvxAttach(i + 1, ncl);
+    if (ncl[0] && !nxPx){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
   const a = playTts(i, i % 2);
@@ -1245,16 +2054,37 @@ let preSeated = -1;
 // slot0을 주면 **첫 컷만** 그 재생기를 쓴다(전체 재생에서 미리 앉혀둔 것을 그대로 이어받는다).
 // 안 주면 예전 그대로 0·1 번갈아 — 칸별 재생·장면 미리보기는 동작이 안 바뀐다.
 function startSeq(clips, slot0){
+  armPlay();                       // 재생을 누른 순간부터 원본을 받는다(관제 061) — 모든 재생 길이 여기를 지난다
   clearTimeout(seqTimer);
   // 재생을 켜는 순간 꾸미기를 얹는다(자막이 뜨기 전에도 틀·헤드카피가 보이게).
   if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
   seq = clips; seqI = 0; seqPaused = false;
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
-  seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
-  // 이웃한 컷은 다른 재생기 → 미리 앉히기 가능. 첫 컷만 slot0이 주어지면 그것을 쓴다
-  // (2·3은 0·1과 다른 값이라 이웃 구분은 그대로 유지된다).
-  clips.forEach((c, k) => { c._slot = (k === 0 && slot0 != null) ? slot0 : k % 2; });
+  // 합본이 붙은 컷은 **실측 길이**(_pdur)를 쓴다 — 짐작(dur)으로 재면 칸 끝이 어긋난다.
+  seqBounds = clips.map(c => { const a = off; off += (c._px && c._pdur > 0) ? c._pdur : c.dur; return [a, off]; });
+  // ★뿌리를 없앤다(2026-09-20 사장님 "두더지금지"): **한 재생기가 두 컷을 담당하지 않게** 한다.
+  //
+  //   종전은 `k % 2` 라 컷0과 컷2가 같은 슬롯이었다. 그 둘이 **같은 소스**면 vidFor가 같은
+  //   <video>를 돌려주어 재생기 하나가 두 컷을 맡는다. 그러면 컷1을 보는 동안 seat()가 그
+  //   재생기를 컷2로 보내 두고, 컷0으로 되감으면 컷2 프레임이 스친다 — 이윤정님 제보의 정체다.
+  //   지금껏 그 프레임을 **안 보이게 하는 방법만 네 번** 바꿨다(seeked 대기 → 안전핀 400 →
+  //   1500 → 상태 확인). 전부 증상 가리기였고, 겹침 자체는 그대로였다.
+  //
+  //   이제 **같은 소스가 한 칸에서 다시 나오면 다른 재생기**를 준다. 겹침이 없으면 미리
+  //   앉히기와 되감기가 부딪힐 일이 없다 — 가릴 것도 없어진다.
+  //   실측(최근 14일 7,730칸): 같은 소스 최대 10번 · 90%는 3번 이하 → 재생기가 크게 안 는다.
+  //   ⚠️번호는 10부터 — 0·1(종전 재생용)과 2·3(handoffSlot, 칸 넘김)을 피한다.
+  const _seen = {};
+  clips.forEach((c, k) => {
+    const n = _seen[c.video_id] || 0;
+    _seen[c.video_id] = n + 1;
+    c._slot = (k === 0 && slot0 != null) ? slot0 : (n === 0 ? (k % 2) : 10 + n);
+    // ★배정한 자리에서 바로 만든다 — 그 컷에 가서야 처음 만들어지면 정지 그림이 된다
+    //   (코드에 같은 사고 기록이 있다). warmVideos 에서 미리 세려면 칸의 컷 목록 키를
+    //   짐작해야 하는데, 여기서는 **실제 배정된 것** 그대로라 짐작이 없다.
+    try { vidFor(c.video_id, c._slot); } catch (e) { /* 소스가 없으면 seat가 처리한다 */ }
+  });
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
@@ -1298,7 +2128,12 @@ function holdShot(c, on){
 function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
-    if (curVid) curVid.pause();
+    // ★합본은 여기서 멈추면 안 된다 — 한 파일이라 칸 끝까지 이어져야 한다.
+    //   컷 타이머(벽시계)는 합본의 칸 끝보다 조금 먼저 닿는다. 그때 멈춰 세우면 합본이
+    //   칸 끝에 못 닿아 '이 칸 끝났다' 신호가 영영 안 오고, 전체 재생이 그 칸에 선다
+    //   (실측 2026-09-21: 칸0 에서 60초 동안 멈춤). 끝을 정하는 건 **합본 시각 하나**다.
+    const _px0 = seq[0] && seq[0]._px;
+    if (curVid && !_px0) curVid.pause();
     // ★전체 재생의 칸 넘김은 원래 audio.onended 뿐이다 — 음성 없는 칸(합성 전 404 ·
     //   대본 바뀜 409)에선 ended가 영영 안 와 그 칸에서 멈췄다(2026-08-20 사장님
     //   "다음이 안나온다"). 음성이 시계 노릇을 못 하면 화면(컷)이 다 끝난 여기서 넘긴다.
@@ -1321,7 +2156,7 @@ function step(){
     //   있는데 컷만 넘어가 '재생이 안 된다'로 보였다(실측: 영상 시각 19.74에서 정지인데
     //   pinfo는 컷 3/3). 폴백도 200ms는 너무 짧아 첫 재생에서 늘 걸렸다.
     const show = () => {
-      showVid(v);
+      showVid(v, v.currentTime);   // 자리에 왔는지는 showVid 한 곳에서 본다
       applyRate(v, c);          // ★[전체 늘리기]면 그 비율만큼 느리게 튼다
       v.play().catch(()=>{});
       paintCut();
@@ -1423,7 +2258,7 @@ function step(){
       if (off >= (c.dur || 0) - 0.2) return;   // 거의 끝난 컷은 굳이 갈아끼우지 않는다
       try{
         v.currentTime = c.start + off;         // 흘러간 만큼 건너뛰어야 싱크가 안 밀린다
-        showVid(v); applyRate(v, c); v.play().catch(()=>{});
+        showVid(v, v.currentTime); applyRate(v, c); v.play().catch(()=>{});
         const late = () => { v.onseeked = null; v.oncanplay = null; holdShot(null, false); };
         if (v.readyState >= 2 && !v.seeking) late();
         else { v.onseeked = late; v.oncanplay = late; }
@@ -1518,11 +2353,12 @@ function curT(){
   if (seqI >= seq.length){
     const last = seq.length - 1, lc = seq[last];
     if (curVid && lc) return Math.min(seqTotal(),
-      seqBounds[last][0] + Math.max(0, curVid.currentTime - cutStart(lc)));
+      seqBounds[last][0] + Math.max(0, curVid.currentTime - cutStart(lc)) / clipRate(lc));
     return seqTotal();
   }
   const c = seq[seqI];
-  return seqBounds[seqI][0] + Math.max(0, (curVid ? curVid.currentTime : cutStart(c)) - cutStart(c));
+  return seqBounds[seqI][0]
+    + Math.max(0, (curVid ? curVid.currentTime : cutStart(c)) - cutStart(c)) / clipRate(c);
 }
 function seekInput(val){
   const tot = seqTotal(); if (!tot) return;
@@ -1535,33 +2371,53 @@ function seekTo(t){
   // ★음성이 죽었을 때(404·409) a.currentTime은 항상 0이다 — 그걸 '실제 안착점'으로
   //   되읽으면 어디로 끌든 0초로 튕긴다. 음성이 시계일 때만 음성을 맞춘다(2026-08-20).
   if (seqBeat != null && audioUsable()){
+    // ★★시계는 **타임라인 t 하나**다(2026-09-20 사장님 "구조적 문제를 뽑아라").
+    //
+    //   예전엔 음성을 t로 보낸 뒤 **음성이 앉은 자리를 되읽어 t를 덮어썼다**
+    //   (`t = a.currentTime`), 그리고 못 갔으면 `seekTo(a.currentTime)`으로 **다시**
+    //   타임라인을 끌고 갔다. 타임라인→음성→타임라인 되먹임 고리다.
+    //
+    //   그 고리에서 같은 사고가 네 번 났다(전부 이 파일 주석에 남아 있다):
+    //     08-17 "시간을 마우스로 이동시키는게 안된다"  → seeking 중엔 안 읽기로 땜
+    //     08-20 음성이 죽으면 0초로 튕김               → audioUsable() 조건으로 땜
+    //     09-18 되감으면 다음다음 컷이 낀다            → seeked 대기로 땜
+    //     09-20 음성 시크 불가로 화면이 되돌아감        → Range 지원으로 고침
+    //
+    //   ★뿌리: **mp3는 요청한 자리에 정확히 못 앉는다.** 프레임 단위로만 앉기 때문이다
+    //     (실측 2026-09-20, 48kHz VBR TTS: 9/9 컷에서 **일정하게 0.42초** 뒤에 안착).
+    //     이건 우리가 없앨 수 없는 오차다. 그런데 그 오차를 **화면을 끌고 가는 근거**로
+    //     썼으니, 음성이 밀릴 때마다 화면이 엉뚱한 컷으로 튀었다.
+    //
+    //   그래서 음성은 **따라오기만** 한다. 못 따라와도 타임라인을 건드리지 않는다.
+    //   소리가 조금 밀리는 것과 화면이 딴 데로 튀는 것 중, 후자가 훨씬 나쁘다.
     a.currentTime = t;
-    // ★브라우저가 아직 버퍼 안 된 구간 시크를 조용히 당겨 앉힌다(첫 재생 직후 실측:
-    //   6.5초 요청 → 5.7초 안착). 음성이 시계이므로 **실제 앉은 지점**을 다시 읽어
-    //   그 시각 기준으로 컷·영상을 맞춘다 — 안 그러면 화면과 음성·자막이 어긋난다.
-    // ★단 **시킹이 끝난 뒤에만** 읽는다(2026-08-17 사장님 "시간을 마우스로 이동시키는게
-    //   안된다"). currentTime을 넣은 **직후**엔 아직 seeking 중이라 브라우저가 옛 값을
-    //   그대로 돌려준다 — 그걸 t로 되받으면 방금 끈 위치가 통째로 버려지고 화면이
-    //   원래 자리로 돌아온다. 그래서 이동이 아예 안 먹는 것처럼 보였다.
-    if (!a.seeking && Math.abs(a.currentTime - t) > 0.05){
-      t = a.currentTime;
-    } else if (a.seeking){
-      // 시킹이 끝난 뒤 실제 안착점이 많이 다르면(버퍼 없음) 그때 한 번만 다시 맞춘다.
-      // 두 번째 호출은 seeking이 false라 여기로 다시 들어오지 않는다(무한루프 없음).
-      const want = t;
-      a.onseeked = () => {
-        a.onseeked = null;
-        if (!seekDrag && Math.abs(a.currentTime - want) > 0.25) seekTo(a.currentTime);
-      };
-    }
   }
   let k = seqBounds.findIndex(([x, y]) => t >= x && t < y);
   if (k < 0) k = seq.length - 1;
   seqI = k;
   const c = seq[k];
   const v = c._px || vidFor(c.video_id, c._slot);
-  v.currentTime = cutStart(c) + (t - seqBounds[k][0]);
-  showVid(v);
+  if (!c._px) applyRate(v, c);
+  v.currentTime = cutStart(c) + (t - seqBounds[k][0]) * clipRate(c);
+  // ★다른 재생기로 옮길 땐 **시크가 끝난 뒤에** 화면을 바꾼다(2026-09-18 이윤정님
+  //   "1번↔2번 왔다갔다하면 3번 장면이 낀다"). 컷2에 있을 때 컷1 재생기(슬롯0)는 seat()가
+  //   컷3 시작점에 미리 앉혀 둔 상태다. 여기서 바로 showVid하면 시크가 끝나기 전 그 재생기의
+  //   현재 프레임 = **컷3 장면**이 먼저 보인다(라이브 실측 job 1939bd7f3c50: s5:0이 17.16초
+  //   =컷3에 있다가 0.3초로 시크, seeking 동안 노출).
+  //
+  // ★2026-09-20 보강 — 9/18 수정에 구멍이 둘 있었다(전 회원 실측: 최근 14일 1,068건 중
+  //   872건(82%)·58명 중 56명에게 이 구조가 있다. 즉 놓치면 거의 모두가 겪는다).
+  //     ① `v.seeking`으로만 판정했다 — currentTime을 막 넣은 직후라도 브라우저가 아직
+  //        seeking을 세우지 않은 창이 있다. 그 틈에 else로 빠져 **옛 프레임이 그대로** 나갔다.
+  //        → 플래그 대신 **실제 시각이 목표에 닿았는지**로 판정한다(값이 사실이다).
+  //     ② 안전핀(400ms)이 터지면 그냥 showVid를 했다 — 느린 PC·큰 영상에서 시크가 400ms를
+  //        넘으면 **고치려던 그 프레임(컷N+2)을 그대로 보여준다.** 안전핀이 증상을 되살렸다.
+  //        → 못 기다릴 땐 **가린 채로** 넘긴다. 잠깐 빈 화면이 엉뚱한 장면보다 낫다.
+  //   같은 재생기면 프레임이 제자리에서 바뀌므로 종전과 같다.
+  //   ★2026-09-20 2차: 이 자리에만 두었던 보호를 **showVid 안으로 옮겼다**. 화면을 켜는
+  //     길이 6곳인데 여기 하나만 막으면 나머지에서 같은 증상이 난다. 이제 보낼 시각만
+  //     넘기면 showVid 가 알아서 가리고, 자리에 온 것을 확인하고 드러낸다.
+  showVid(v, v.currentTime);
   const remain = Math.max(50, (seqBounds[k][1] - t) * 1000);
   if (seqPaused){
     seqRemain = remain;                          // 멈춘 채로 자리만 옮김 — 재개하면 여기부터

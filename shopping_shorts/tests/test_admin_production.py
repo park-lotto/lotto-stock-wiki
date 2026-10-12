@@ -46,9 +46,12 @@ def store(tmp_path):
 
 
 def _since_today():
+    """조회 시작점 — 픽스처 행(1~50분 전)이 **언제 돌려도** 들어오게 '오늘 KST 자정'과 '2시간 전' 중 이른 쪽.
+    ★2026-09-30 자정 직후 병합 게이트가 이 두 테스트로 막혔다: KST 00:00~00:50엔 50분 전 행이 '어제'라 빠졌다.
+    자정 경계 자체는 test_오늘_경계는_KST다 가 따로 본다."""
     now_kst = datetime.now(KST)
-    return now_kst.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(
-        timezone.utc).isoformat()
+    midnight = now_kst.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+    return min(midnight, datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
 
 
 def test_피드는_최신먼저_주고_이름을_붙인다(store):

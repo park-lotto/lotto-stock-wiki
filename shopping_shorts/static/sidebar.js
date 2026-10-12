@@ -41,6 +41,8 @@
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
+      // 해외 레퍼런스 채널 수집(관제 162) — 관리자 전용. 카테고리는 화면 왼쪽 목록.
+      { icon: "🌐", text: "해외 레퍼런스 수집", href: "/overseas_ref", admin: true },
     ] },
     { label: "제작", items: [
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
@@ -55,10 +57,14 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
-      // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
+      // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
-      { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
+      { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
+      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
+      { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
+      // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
+      { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -211,8 +217,8 @@
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
-      var hide = it.admin ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
+      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -399,8 +405,8 @@
     var m = document.createElement("div");
     m.id = "ss-pw-modal";
     m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
-    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
-      '<div style="font-size:40px">🔒</div>' +
+    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;max-height:90vh;overflow-y:auto;box-sizing:border-box;margin:12px;text-align:center;color:#e8e8ea">' +
+      '<div style="font-size:40px">' + escHtml(opts.icon || "🔒") + '</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
         // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
@@ -485,6 +491,8 @@
     var admin = !!d.is_admin;
     // 관리자면 사이드바의 admin 전용 항목(레퍼런스 채널 관리 등)을 노출.
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
+    // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
+    if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;
@@ -570,7 +578,8 @@
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
       _payPrompt(d);     // 미결제 회원에게 결제 안내 팝업(하루 1회)
-    }).catch(function () {});
+      window.__ssMeDone = true;   // 제미니 키 안내가 이 뒤에 뜬다(결제 팝업과 서로 지우지 않게)
+    }).catch(function () { window.__ssMeDone = true; });
   }
 
   // ── 결제 안내 팝업 (2026-08-23, 사장님 요청) ──────────────────────
@@ -586,16 +595,108 @@
     var today = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
     try { if (localStorage.getItem(_PAY_SEEN_KEY) === today) return; } catch (e) {}
     try { localStorage.setItem(_PAY_SEEN_KEY, today); } catch (e) {}
-    setTimeout(function () {
-      _pwModal({
-        title: "가입 신청 감사합니다 🙏",
-        body: "숏템메이커 1기 · 1년 이용권 770,000원\n"
-            + "아래에서 결제 안내를 확인하실 수 있어요.\n"
-            + "입금 후 알려주시면 바로 열어드립니다.",
-        closeLabel: "나중에"
-      });
-    }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
+    // 기수·금액은 서버 /api/pricing 한 곳에서(2026-10-01 2기 전환) — 여기에 숫자를 적지 마라.
+    fetch("/api/pricing").then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (p) {
+      var line = (p && p.cohort) ? ("숏템메이커 " + p.cohort + " · 1년 이용권 " + (p.amount || 0).toLocaleString("ko-KR") + "원\n") : "";
+      setTimeout(function () {
+        _pwModal({
+          title: "가입 신청 감사합니다 🙏",
+          body: line
+              + "아래에서 결제 안내를 확인하실 수 있어요.\n"
+              + "입금 후 알려주시면 바로 열어드립니다.",
+          closeLabel: "나중에"
+        });
+      }, 900);
+    });   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
   }
+  // ── 제미니 키 안내 (2026-09-25, 사장님 "회원안내까지 / 몇 개 충분히 등록 당부") ──────
+  // 공용 풀에 선불 소진·월 한도·할당량 0·무효 키가 섞여 계속 불렸는데 회원 화면엔 '● 정상'이었다.
+  // ★판정·문구는 서버가 준다(/api/settings/gemini_health ← key_vault 판정 + gemini_keyhealth 문구).
+  //   화면이 이유를 스스로 정하면 두 벌이 된다(0순위-B).
+  //   - has_dead  → 교체·확인 안내 팝업, 하루 1회
+  //   - few_keys  → 예비 키 당부 팝업, 3일에 1회(키를 아예 안 낸 회원에겐 서버가 false를 준다)
+  //   - 설정 화면에선 안 띄운다 — 거기엔 키마다 이유·해결법이 이미 펼쳐져 있다.
+  // ★반박 검토(2026-09-25)로 고친 것:
+  //   ① 본문이 길어 휴대폰에서 [나중에]가 화면 밖으로 잘렸다 → 키별 제목 + 짧은 당부만, 해결법은 설정 화면
+  //   ② /api/me(결제 안내)보다 먼저 떠서 결제 팝업이 이걸 지우면 그날은 못 봤다 → 결제 쪽이 끝난 뒤에 띄운다
+  //   ③ 띄우기 전에 '오늘 봤음'을 적었다 → 실제로 띄운 뒤에만 적는다. 결제 팝업이 계속 떠 있으면 이번엔 건너뛴다
+  var _GKH_DEAD_KEY = "ss_gkh_dead_day", _GKH_FEW_KEY = "ss_gkh_few_ts";
+  function initGeminiKeyHealth() {
+    if (typeof window === "undefined" || !window.localStorage) return;
+    if (/^\/settings/.test(location.pathname || "")) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
+    var waited = 0;
+    (function afterMe() {                      // 결제 안내(_payPrompt, /api/me 뒤 0.9초)가 먼저
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 1400);
+    })();
+    function run() {
+      _f("/api/settings/gemini_health").then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var h = d && d.health;
+          if (!h || !h.keys) return;
+          var opts = null, mark = null;
+          if (h.has_dead) {
+            var today = new Date().toISOString().slice(0, 10);
+            try { if (localStorage.getItem(_GKH_DEAD_KEY) === today) return; } catch (e) {}
+            var dead = h.keys.filter(function (k) { return k.reason; });
+            var lines = dead.map(function (k) { return "• " + (k.label || "키") + " — " + (k.title || ""); }).join("\n");
+            opts = { icon: "⚠️", title: h.headline || ("등록하신 제미니 키 " + dead.length + "개가 멈췄어요"),
+                     body: lines + "\n\n해결 방법은 설정 화면에서 키마다 볼 수 있어요.\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 확인하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_DEAD_KEY, today); } catch (e) {} };
+          } else if (h.few_keys) {
+            var last = 0;
+            try { last = parseInt(localStorage.getItem(_GKH_FEW_KEY) || "0", 10) || 0; } catch (e) {}
+            if (Date.now() - last < 3 * 86400000) return;
+            opts = { icon: "🔑", title: "제미니 키, 예비로 2~3개 등록해 두세요",
+                     body: "지금 쓸 수 있는 키 " + (h.n_usable || 0) + "개\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 추가하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_FEW_KEY, String(Date.now())); } catch (e) {} };
+          }
+          if (!opts) return;
+          var tries = 0;
+          (function show() {
+            var ex = document.getElementById("ss-pw-modal");
+            if (ex && ex.style.display !== "none") {
+              if (tries++ < 60) { setTimeout(show, 2000); return; }
+              return;                           // 결제 팝업을 읽는 중이면 덮지 않는다 — 다음 방문에 다시
+            }
+            _pwModal(opts);
+            mark();
+          })();
+        }).catch(function () {});
+    }
+  }
+
+  // ── Vertex 미등록 안내 (2026-10-07 사장님) — 하루 1회. 판정·문구·주소·'오늘 봤음'은 서버(/api/settings/vertex_notice).
+  //   제미니 키 안내와 같은 팝업(_pwModal)을 쓰고, 결제 팝업이 떠 있으면 덮지 않는다. 설정 화면에선 안 띄운다(거기 등록 칸이 있다).
+  function initVertexNotice() {
+    if (/^\/settings/.test(location.pathname || "")) return;
+    // ★호출하는 순간의 fetch 를 쓴다(시험 하네스·결제 래퍼가 뒤에 갈아 끼운다). 동기 예외도 여기서 잡는다 — 안내가 사이드바를 깨면 안 된다
+    var _f = function (u, o) { try { return window.fetch(u, o); } catch (e) { return Promise.reject(e); } };
+    if (!window.fetch) return;
+    var waited = 0;
+    (function afterMe() {
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 2600);                      // 제미니 키 안내(1.4초) 뒤
+    })();
+    function run() {
+      _f("/api/settings/vertex_notice").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d || !d.show) return;
+        var tries = 0;
+        (function show() {
+          var ex = document.getElementById("ss-pw-modal");
+          if (ex && ex.style.display !== "none") { if (tries++ < 60) setTimeout(show, 2000); return; }
+          _pwModal({ icon: "🔑", title: d.text, body: d.body || "등록하면 대본·장면 맞추기·AI 장면 만들기를 내 구글 계정으로 써요.",
+                     hideContact: true, link: d.url, linkText: "→ " + (d.link_text || "등록하기"), closeLabel: "오늘은 그만" });
+          _f("/api/settings/vertex_notice/seen", { method: "POST" }).catch(function (e) { console.warn("[vertex] 봤음 저장 실패", e); });
+        })();
+      }).catch(function (e) { console.warn("[vertex] 안내 확인 실패", e); });
+    }
+  }
+
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
   //
   // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
@@ -652,13 +753,92 @@
   // 8초·30초로 도는 폴러는 이 창을 넘겨 자연히 배제된다(폴러 목록을 관리할 필요가 없다).
   var _GESTURE_MS = 3000;
   var _origFetch = window.fetch;
+
+  // ── 웹 재시작 자동 조치·안내 (관제 080, 2026-10-02) ─────────────────────────────
+  // 사장님: "재시작 때 고객이 가만있으면 불편 겪는 걸 해결해 주면서 조치 방법 안내를 하든지 조치까지 해 주든지".
+  // ① 재시작 중(연결 실패·502/503/504) **조회(GET)** 는 화면이 40초 동안 스스로 다시 묻는다 — 두 번 해도 안전하다.
+  // ② 저장·생성(POST 등)은 두 번 실행되면 위험하니 다시 보내지 않고 "한 번 더 눌러 주세요"만 띄운다.
+  // ③ 서버 버전 표식(X-SS-Boot)이 바뀌면 "새 버전 적용" 띠 + [새로고침]. 탭이 숨어 있었으면 돌아올 때 자동 새로고침.
+  var _SS_RETRY_MS = [1000, 2000, 3000, 4000, 5000, 5000, 10000, 10000];   // 합 40초(실서버 재시작 2~5초 실측 — 넉넉히)
+  var _ssBoot = null, _ssBootShown = false, _ssReloadOnShow = false;
+  function _ssBar(kind, text, withReload) {
+    try {
+      var id = "ss-restart-bar", el = document.getElementById(id);
+      if (!text) { if (el) el.remove(); return; }
+      if (!el) {
+        el = document.createElement("div"); el.id = id;
+        el.setAttribute("role", "status");
+        el.style.cssText = "position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483000;" +
+          "max-width:92vw;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
+          "box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center";
+        (document.body || document.documentElement).appendChild(el);
+      }
+      el.style.background = kind === "warn" ? "#fff4e5" : "#e8f1ff";
+      el.style.color = kind === "warn" ? "#7a4100" : "#0b3d91";
+      el.style.border = "1px solid " + (kind === "warn" ? "#f5b65b" : "#8bb4ff");
+      el.innerHTML = "";
+      var t = document.createElement("span"); t.textContent = text; el.appendChild(t);
+      if (withReload) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = "새로고침";
+        b.style.cssText = "border:0;border-radius:8px;padding:5px 12px;font:inherit;cursor:pointer;background:#0b5bd3;color:#fff";
+        b.onclick = function () { location.reload(); }; el.appendChild(b);
+      }
+      var x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.title = "닫기";
+      x.style.cssText = "border:0;background:transparent;font:inherit;cursor:pointer;color:inherit";
+      x.onclick = function () { el.remove(); }; el.appendChild(x);
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && _ssReloadOnShow) { try { location.reload(); } catch (e) {} }
+  });
+  function _ssSeeBoot(resp) {
+    try {
+      var h = resp && resp.headers && resp.headers.get("X-SS-Boot");
+      if (!h) return;
+      if (_ssBoot === null) { _ssBoot = h; return; }
+      if (h !== _ssBoot && !_ssBootShown) {
+        _ssBootShown = true;
+        if (document.hidden) { _ssReloadOnShow = true; return; }
+        _ssBar("info", "새 버전이 적용됐어요. 화면이 이상하면 새로고침을 한 번 눌러 주세요.", true);
+      }
+    } catch (e) {}
+  }
+  function _ssIsGet(args) {
+    var init = args[1], req = args[0];
+    var m = (init && init.method) || (req && typeof req === "object" && req.method) || "GET";
+    return String(m).toUpperCase() === "GET";
+  }
+  function _ssDown(resp) { return !resp || resp.status === 502 || resp.status === 503 || resp.status === 504; }
+  function _ssFetch(self, args) {
+    var isGet = _ssIsGet(args), tries = 0, barOn = false;
+    function attempt() {
+      return _origFetch.apply(self, args).then(function (resp) {
+        if (_ssDown(resp) && isGet && tries < _SS_RETRY_MS.length) return retry();
+        if (_ssDown(resp) && !isGet) _ssBar("warn", "업데이트로 잠깐 연결이 끊겼어요. 같은 버튼을 한 번 더 눌러 주세요.");
+        else if (barOn) _ssBar(null);
+        _ssSeeBoot(resp);
+        return resp;
+      }, function (err) {
+        if (isGet && tries < _SS_RETRY_MS.length) return retry();
+        if (!isGet) _ssBar("warn", "업데이트로 잠깐 연결이 끊겼어요. 같은 버튼을 한 번 더 눌러 주세요.");
+        throw err;
+      });
+    }
+    function retry() {
+      var wait = _SS_RETRY_MS[tries++];
+      if (!barOn) { barOn = true; _ssBar("info", "업데이트 적용 중이에요. 자동으로 다시 연결하고 있어요…"); }
+      return new Promise(function (r) { setTimeout(r, wait); }).then(attempt);
+    }
+    return attempt();
+  }
+
   window.fetch = function () {
     // ★판정 시각은 **응답이 아니라 요청**이다. 느린 API가 5초 뒤에 402를 줘도,
     //   누르고 나간 요청이면 사장님에겐 방금 누른 그 버튼의 결과다.
     var byUser = (Date.now() - _lastGesture) < _GESTURE_MS;
     // ★url은 여기서 붙잡는다 — 아래 then 안의 arguments는 (resp)라 호출 주소가 아니다.
     var _reqUrl = arguments[0];
-    return _origFetch.apply(this, arguments).then(function (resp) {
+    return _ssFetch(this, arguments).then(function (resp) {
       if (resp && resp.status === 402) {
         if (!byUser) {
           // 배경 호출의 402 — 정상 동작이다. 조용히 넘기되 흔적은 남긴다
@@ -871,12 +1051,15 @@
     document.addEventListener("DOMContentLoaded", mountWorks);
     document.addEventListener("DOMContentLoaded", initPaywall);
     document.addEventListener("DOMContentLoaded", initSignupAlert);
+    document.addEventListener("DOMContentLoaded", initGeminiKeyHealth);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
     initPaywall();
     initSignupAlert();
+    initGeminiKeyHealth();
+    initVertexNotice();
   }
 })();
 
@@ -1046,12 +1229,13 @@
       '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
       '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
       '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
-      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해 제품을 정확히 특정합니다(시간이 조금 걸립니다)" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 영상 보고 정확히</button>' : '') +
+      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해(20~60초, 한 번 하면 캐시) 대본·캡션 근거로 제품을 다시 특정합니다" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 대본으로 다시 찾기</button>' : '') +
       '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
     document.body.appendChild(wrap);
     if (keyword) _cfSearch(keyword);
+    else if (opts.deep && _cfState.sc) _cfDeep();     /* 🎬 쿠팡 대본검색(2026-09-26): 대본부터 뽑고 판독 */
     else if (opts.noProduct) {
       /* ★이미 "살 물건 없음"으로 판정된 카드(2026-09-05) — 같은 판독을 또 돌려
          기다리게 하지 않는다. 이유를 바로 보여주고 직접 칠 수 있게 둔다. */
@@ -1062,7 +1246,7 @@
     else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
   }
   /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
-  /* 🎬 영상 보고 정확히 — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
+  /* 🎬 대본으로 다시 찾기(옛 이름 '영상 보고 정확히') — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
   function _cfDeep() {
     if (!_cfState.sc) return;
     var b = _cfEl("cfDeep"); if (b) { b.disabled = true; b.textContent = "🎬 대본 추출 중…"; }
@@ -1070,11 +1254,11 @@
     fetch("/api/extract_script?shortcode=" + encodeURIComponent(_cfState.sc), { method: "POST" })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (d) {
-        if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; }
+        if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; }
         if (!d || !d.ok) { _cfRender("대본 추출 실패: " + ((d && d.error) || "") + " — 제품명을 직접 넣어 찾아보세요", "#ff8080"); return; }
         _cfIdentify();
       })
-      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; } _cfRender("네트워크 오류", "#ff8080"); });
+      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; } _cfRender("네트워크 오류", "#ff8080"); });
   }
   function _cfIdentify() {
     _cfRender("🔎 영상 근거(대본·캡션·썸네일)에서 제품을 알아내는 중… (3~8초)");
@@ -1206,14 +1390,9 @@
           if (!btn) return;
           var name = pm[sc];
           if (!name) {
-            /* ★살 물건이 없는 영상(맛집·장소·방법 알려주기 등) — 회색으로 내려
-               헛클릭을 막는다(2026-09-05 실측: 10건 중 4건이 이런 영상이었다).
-               ⚠️버튼을 없애지는 않는다 — 판독이 틀렸을 때 사장님이 직접 찾을 길은 남긴다. */
-            btn.textContent = "🛒 살 물건 없음";
-            btn.setAttribute("data-noproduct", "1");
-            btn.style.opacity = "0.45";
-            btn.style.filter = "grayscale(1)";
-            btn.title = "이 영상엔 팔 만한 물건이 안 보입니다(장소·방법 소개 등). 눌러서 직접 찾아볼 수는 있습니다.";
+            /* ★"살 물건 없음" 회색 처리는 뺐다(2026-09-26 사장님). 썸네일·캡션만 본 판정이라
+               말로만 소개하는 제품(소스·재료)을 자주 놓쳤다 — 버튼은 그대로 두고, 누르면
+               근거 판독을 다시 돌린다. 대본이 필요한 건 🎬 쿠팡 대본검색이 맡는다. */
             return;
           }
           btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지";
@@ -1226,6 +1405,8 @@
   window.ssCoupangFind.link = _cfLink;
   window.ssCoupangFind.close = _cfClose;
   window.ssCoupangFind.deep = _cfDeep;
+  /* 카드의 🎬 쿠팡 대본검색 — 같은 창을 열되 대본 추출을 먼저 돈다(판정 없이 바로) */
+  window.ssCoupangFind.script = function (opts) { _cfOpen('', Object.assign({}, opts || {}, { deep: true })); };
 
   window.ssOpenBugReport = function () {
     css();
@@ -1322,13 +1503,18 @@
       .then(function (d) {
         if (!d || !d.replies || !d.replies.length) return;
         var rep = d.replies[0];
+        // ★운영 안내도 같은 통로로 보낸다(2026-09-18, 죽은 회원 키 교체 요청). 신고한 적 없는 회원에게
+        //   "신고하신 건 답변드립니다"가 뜨면 이상하다 — message가 "[안내]"로 시작하면 안내 제목으로 띄운다.
+        var isNotice = (rep.message || "").indexOf("[안내]") === 0;
         css();
         var back = document.createElement("div");
         back.className = "ssbug-back";
         back.innerHTML =
           '<div class="ssbug">' +
-            "<h3>📩 신고하신 건 답변드립니다</h3>" +
-            '<p class="sub">' + esc((rep.message || "").slice(0, 80)) + "</p>" +
+            (isNotice ? "<h3>📢 숏템메이커에서 알려드립니다</h3>"
+                      : "<h3>📩 신고하신 건 답변드립니다</h3>") +
+            '<p class="sub">' + esc((isNotice ? (rep.message || "").slice(4).trim()
+                                              : (rep.message || "")).slice(0, 80)) + "</p>" +
             '<div class="info" style="color:#d7e3e3;font-size:14px;white-space:pre-wrap">' +
               esc(rep.reply) + "</div>" +
             '<div class="row"><button class="ok" id="ssRepOk">확인했어요</button></div>' +
@@ -1347,4 +1533,45 @@
   } else {
     showReplies();
   }
+})();
+
+// 카드 영상은 한 번에 하나만 재생한다(관제 175, 2026-10-10 고락규 님 화면).
+// 카드 ▶마다 썸네일 자리에 재생기가 생기는데 앞 카드 재생기는 그대로 남아 같이 돌았다.
+// 유튜브는 한 계정 동시 재생이 많으면 "너무 많은 기기가 스트리밍 중" 으로 앞 영상을 멈춘다.
+// 재생기를 만드는 곳이 화면마다 여럿(랭킹 6곳·수집 3곳)이라 각자 고치지 않고
+// 새 재생기가 화면에 붙는 순간을 여기 한 곳에서 보고 나머지를 세운다.
+(function playOnlyThis(){
+  // 카드 목록 화면만(랭킹·수집) — 제작 화면처럼 영상 여러 개를 같이 쓰는 곳은 건드리지 않는다
+  const me=document.currentScript;
+  if(!me || !me.hasAttribute('data-play-one')) return;
+  const EMBED=/youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|tiktok\.com\/embed\//;
+  const isPlayer=n=>n && n.nodeType===1 &&
+    ((n.tagName==='IFRAME' && EMBED.test(n.src||'')) || n.tagName==='VIDEO');
+  // 세운 재생기 자리에 [▶ 다시 재생] — 누르면 원래 재생기로 되돌린다(되돌린 것이 다시 '새 재생기'가 된다)
+  function park(p){
+    if(p.tagName==='VIDEO'){ try{ p.pause(); }catch(e){} return; }
+    const b=document.createElement('button');
+    b.type='button'; b.textContent='▶ 다시 재생';
+    b.title='다른 영상을 재생해서 멈췄어요';
+    b.style.cssText='width:100%;aspect-ratio:var(--shorts-ar,9/16);border:0;border-radius:8px;'
+      +'background:#000;color:#fff;font-size:14px;cursor:pointer;display:block';
+    if(p.style.position==='absolute') b.style.cssText+=';position:absolute;inset:0;height:100%';
+    b.onclick=e=>{ e.stopPropagation(); b.replaceWith(p); };
+    p.replaceWith(b);
+  }
+  function stopOthers(cur){
+    document.querySelectorAll('iframe,video').forEach(p=>{
+      if(p!==cur && isPlayer(p) && p.isConnected) park(p);
+    });
+  }
+  new MutationObserver(ms=>{
+    let cur=null;
+    for(const m of ms) for(const n of m.addedNodes){
+      if(isPlayer(n)) cur=n;
+      else if(n.nodeType===1 && n.querySelector){ const q=n.querySelector('iframe,video'); if(isPlayer(q)) cur=q; }
+    }
+    if(cur) stopOthers(cur);
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  // 이미 있던 영상(<video>)을 다시 재생해도 나머지를 세운다
+  document.addEventListener('play',e=>{ if(isPlayer(e.target)) stopOthers(e.target); },true);
 })();

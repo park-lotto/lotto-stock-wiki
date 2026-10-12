@@ -1,0 +1,373 @@
+# -*- coding: utf-8 -*-
+"""매일 영상 점검 — 어제 고객이 만든 작업으로 '편집 화면 미리보기 vs 완성본'을 영상으로 비교하고, 어긋나면 관리자 쪽지(2026-09-27).
+
+왜: 병합 관문(track.py finish)은 **배포 순간** 최근 작업 몇 개만 본다. 고객 작업은 매일 새 모양으로 들어온다
+    (청소본·정지 컷·구절 맞춤…). 관문이 못 본 모양에서 어긋나면 고객이 먼저 안다 → 매일 새벽 전날 작업으로 다시 잰다.
+    CLAUDE.md 0순위-C "결과물 점검은 매일 자동으로 돌고 어긋나면 관리자 화면에 경보".
+
+하는 일(서버, 저장소 폴더에서):
+  ① /tmp 여유 확인(min_free_gb 미만이면 못 돌린 것도 경보 — 조용히 넘기지 않는다)
+  ② 최근 hours 시간 안에 미리보기가 준비된(preview_status='ready') 작업 최신순 jobs 개
+  ③ tools/evf_run.py 로 비교(결과는 /tmp/video_audit_<날짜>/ 에 굽고) → report·사진을
+     /home/ubuntu/video_audit/<날짜>/ 로 옮기고 임시 폴더 삭제
+  ④ video_gate.judge(audit 기준) — 다른 장면 > max_scene · 오류 건너뜀 · 밀림(가운데) 칸 비율 > max_shift_ratio 면
+     ops_alert.raise_alert("video_audit", …), 깨끗하면 resolve_kind("video_audit")
+  --dry-run: ④에서 쪽지를 실제로 올리지 않고 무엇을 올릴지만 찍는다(시험 실행용)
+
+등록: deploy/shopping-shorts-video-audit.{service,timer} (매일 04:30 KST). 설치 명령은 timer 파일 머리말.
+수동: cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env && set +a && \
+      python3 tools/daily_video_audit.py [--jobs 2] [--dry-run] [--out-root /tmp/gatecheck/audit]
+종료코드: 0 깨끗 · 1 어긋남(경보) · 2 못 돌림(경보) · 3 대상 없음
+"""
+import argparse
+import json
+import os
+import shutil
+import sqlite3
+import subprocess
+import sys
+import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parent
+sys.path.insert(0, str(HERE))
+import video_gate  # noqa: E402
+
+KIND = "video_audit"
+KST = timezone(timedelta(hours=9))
+DB_REL = "shopping_shorts/data/reference.db"
+
+
+def pick_jobs(db_path, hours, limit):
+    """최근 hours 시간 안에 미리보기가 준비된 작업, 최신순.
+    ★updated_at 은 ISO('T' 포함, +00:00) 문자열 — datetime('now') 와 비교하면 공백/T 차이로 오늘치가 다 걸린다
+      (메모리 reference_apievents_ts_T비교함정). 같은 모양의 문자열로 만들어 비교한다."""
+    con = sqlite3.connect("file:%s?mode=ro" % db_path, uri=True)
+    try:
+        rows = con.execute(
+            "select job_id from mix_jobs where preview_status='ready' "
+            "and updated_at >= strftime('%Y-%m-%dT%H:%M:%S','now',?) order by updated_at desc limit ?",
+            ("-%d hours" % int(hours), int(limit))).fetchall()
+    finally:
+        con.close()
+    return [r[0] for r in rows]
+
+
+def _git_head(repo):
+    try:
+        return subprocess.run(["git", "rev-parse", "--short=10", "HEAD"], cwd=str(repo),
+                              capture_output=True, text=True).stdout.strip()
+    except OSError:
+        return ""
+
+
+def _issue_lines(report_text):
+    """작업 줄 중 다른 장면·밀림·건너뜀이 있는 줄만(쪽지 detail 용)."""
+    out = []
+    for line in report_text.splitlines():
+        if " 건너뜀" in line:
+            out.append(line[:200])
+        elif " 칸" in line and "| 다른장면 " in line:
+            if "| 다른장면 [] " not in line or "| 밀림0.15+ [] " not in line:
+                out.append(line.split(" | 최대거리")[0][:300])
+    return out
+
+
+class _Alerter:
+    """ops_alert 를 감싼다 — dry-run 이면 찍기만, pytest 안에서는 아무것도 안 한다(raise 는 ops_alert 자체 가드,
+    resolve 는 가드가 없어 여기서 막는다)."""
+
+    def __init__(self, dry_run, printer=print):
+        self.dry, self.p, self.calls = dry_run, printer, []
+
+    def _live(self):
+        return not self.dry and not os.environ.get("PYTEST_CURRENT_TEST")
+
+    def raise_(self, title, detail, *, grade, signature, cooldown_sec, todo):
+        self.calls.append(("raise", title, detail, grade, signature))
+        if not self._live():
+            self.p("[dry-run] raise_alert(%r, %r, grade=%r, signature=%r)\n  detail: %s" % (KIND, title, grade, signature, detail[:600]))
+            return False
+        from shopping_shorts import ops_alert
+        from shopping_shorts.store import Store
+        sent = ops_alert.raise_alert(KIND, title, detail, cooldown_sec=cooldown_sec, store=Store(str(REPO / DB_REL)),
+                                     signature=signature, grade=grade, todo=todo)
+        self.p("raise_alert → %s" % ("올림" if sent else "쿨다운·같은 서명이라 건너뜀"))
+        return sent
+
+    def resolve(self):
+        self.calls.append(("resolve",))
+        if not self._live():
+            self.p("[dry-run] resolve_kind(%r)" % KIND)
+            return 0
+        from shopping_shorts import ops_alert
+        from shopping_shorts.store import Store
+        n = ops_alert.resolve_kind(KIND, store=Store(str(REPO / DB_REL)))
+        self.p("resolve_kind → 닫은 쪽지 %d건" % n)
+        return n
+
+
+def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, runner=None, free_gb=None, db_path=None,
+              now=None, cc_runner=None, audio_runner=None, cl_runner=None):
+    """→ 종료코드. runner(ids, work_dir, timeout) 는 비교 실행기(기본 = evf_run.py 서브프로세스),
+    cc_runner(ids, work_dir, timeout) 는 캡컷·내보내기 대조 실행기(기본 = capcut_export_audit.py 서브프로세스 — 같은 작업)."""
+    a = cfg["audit"]
+    now = now or datetime.now(KST)
+    day = now.strftime("%Y-%m-%d")
+    stamp = now.strftime("%m-%d")
+    out = Path(out_root) / day
+    out.mkdir(parents=True, exist_ok=True)
+    todo = "report: %s/report.txt · 사진 eye_<job>.jpg(위=화면·아래=완성본, 빨강=다른 장면)" % out
+
+    free = free_gb if free_gb is not None else shutil.disk_usage(str(tmp_root)).free / 1e9
+    if free < float(a.get("min_free_gb", 20)):
+        msg = "/tmp 여유 %.0fGB < %sGB" % (free, a.get("min_free_gb", 20))
+        printer("❌ 못 돌림: " + msg)
+        alerter.raise_("[영상점검 %s] 못 돌림 — 디스크 부족" % stamp, msg, grade="운영주의",
+                       signature="%s:disk" % day, cooldown_sec=int(a.get("cooldown_sec", 3600)), todo="디스크 정리 후 수동 실행")
+        return 2
+
+    ids = pick_jobs(db_path or str(REPO / DB_REL), hours, jobs)
+    printer("대상: 최근 %d시간 미리보기 준비 작업 %d개 (상한 %d) %s" % (hours, len(ids), jobs, ids))
+    if not ids:
+        (out / "report.txt").write_text("대상 없음(최근 %d시간 preview_status=ready 0건)\n" % hours, encoding="utf-8")
+        return 3
+
+    head0 = _git_head(REPO)
+    work = Path(tmp_root) / ("video_audit_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    t0 = time.time()
+    try:
+        rc_run, log = (runner or _run_evf)(ids, work, int(a.get("timeout_sec", 3000)))
+        rep = (work / "report.txt").read_text(encoding="utf-8") if (work / "report.txt").exists() else ""
+        crash = (work / "crash.txt").read_text(encoding="utf-8") if (work / "crash.txt").exists() else ""
+        (out / "report.txt").write_text(rep, encoding="utf-8")
+        for f in work.glob("eye_*.jpg"):
+            shutil.copy2(f, out / f.name)
+        if (work / "samples.jsonl").exists():
+            shutil.copy2(work / "samples.jsonl", out / "samples.jsonl")
+        if log:
+            (out / "run.log").write_text(log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    # ⑤ 캡컷·내보내기 대조 — 같은 작업으로 캡컷 초안·ZIP 이 완성본과 같은 소스·청소·컷인가(2026-09-27)
+    work_cc = Path(tmp_root) / ("capcut_audit_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    try:
+        cc_rc, cc_log = (cc_runner or _run_cea)(ids, work_cc, int(a.get("capcut_timeout_sec", 1800)))
+        cc_rep = (work_cc / "report.txt").read_text(encoding="utf-8") if (work_cc / "report.txt").exists() else ""
+        cc_crash = (work_cc / "crash.txt").read_text(encoding="utf-8") if (work_cc / "crash.txt").exists() else ""
+        (out / "capcut_report.txt").write_text(cc_rep, encoding="utf-8")
+        if (work_cc / "cuts.jsonl").exists():
+            shutil.copy2(work_cc / "cuts.jsonl", out / "capcut_cuts.jsonl")
+        if cc_log:
+            (out / "capcut_run.log").write_text(cc_log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work_cc, ignore_errors=True)
+    # ⑥ 소리 대조 — 고객이 실제로 받은 완성본(효과음·BGM·인트로 포함, 최근 완료 audio_jobs 편)을 편성표와 대조(2026-09-27).
+    #   관문은 임시 완성본(효과음·인트로 없음)만 재므로 인트로·효과음 경로는 여기서만 잰다. 렌더 없음·읽기 전용.
+    work_au = Path(tmp_root) / ("audio_audit_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    try:
+        au_rc, au_log = (audio_runner or _run_faa)(int(a.get("audio_jobs", 10)), work_au, int(a.get("audio_timeout_sec", 1200)))
+        au_rep = (work_au / "report.txt").read_text(encoding="utf-8") if (work_au / "report.txt").exists() else ""
+        au_crash = (work_au / "crash.txt").read_text(encoding="utf-8") if (work_au / "crash.txt").exists() else ""
+        (out / "audio_report.txt").write_text(au_rep, encoding="utf-8")
+        if (work_au / "samples.jsonl").exists():
+            shutil.copy2(work_au / "samples.jsonl", out / "audio_samples.jsonl")
+        if au_log:
+            (out / "audio_run.log").write_text(au_log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work_au, ignore_errors=True)
+    # ⑦ 자막 남음(실물) — 고객이 받은 완성본에서 청소본이 있어야 할 칸인데 원본 재료(자막 있음)로 나간 칸(2026-09-28).
+    #   판정은 mix_pipeline.clean_left_beats 한 곳. 렌더 뒤 편집한 job 은 완성본이 지금 편성이 아니라 '재구성 불가'로 센다.
+    work_cl = Path(tmp_root) / ("clean_left_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    try:
+        cl_rc, cl_log = (cl_runner or _run_cla)(int(a.get("clean_left_jobs", 30)), work_cl,
+                                                int(a.get("clean_left_timeout_sec", 1200)))
+        cl_rep = (work_cl / "report.txt").read_text(encoding="utf-8") if (work_cl / "report.txt").exists() else ""
+        cl_crash = (work_cl / "crash.txt").read_text(encoding="utf-8") if (work_cl / "crash.txt").exists() else ""
+        (out / "clean_left_report.txt").write_text(cl_rep, encoding="utf-8")
+        if cl_log:
+            (out / "clean_left_run.log").write_text(cl_log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work_cl, ignore_errors=True)
+    head1 = _git_head(REPO)
+
+    parsed = video_gate.parse_report(rep)
+    ok, fails, notes = video_gate.judge(parsed, a, tuple(cfg.get("benign_skips", ["음성 없음"])))
+    if rc_run != 0 or crash.strip():
+        ok = False
+        fails.append("비교 실행 비정상(rc=%s)%s" % (rc_run, (" — " + crash.strip().splitlines()[-1][:200]) if crash.strip() else ""))
+    cc_ok, cc_fails, cc_notes = video_gate.judge_capcut(cc_rep, a, cc_crash if cc_rc == 0 else (cc_crash or "rc=%s" % cc_rc))
+    ok = ok and cc_ok
+    fails += cc_fails
+    notes += cc_notes
+    au_ok, au_fails, au_notes = video_gate.judge_audio(au_rep, a, au_crash if au_rc == 0 else (au_crash or "rc=%s" % au_rc))
+    ok = ok and au_ok
+    fails += au_fails
+    notes += au_notes
+    cl_ok, cl_fails, cl_notes = video_gate.judge_clean_left(
+        cl_rep, a, cl_crash if cl_rc == 0 else (cl_crash or "rc=%s" % cl_rc), label="자막 남음(실물)")
+    ok = ok and cl_ok
+    fails += cl_fails
+    notes += cl_notes
+    if head0 != head1:
+        notes.append("점검 중 배포됨(%s→%s) — 앞 작업과 뒤 작업이 다른 코드로 재였을 수 있다" % (head0, head1))
+
+    summary = {"day": day, "jobs": ids, "ok": ok, "fails": fails, "notes": notes, "summary": parsed.get("summary"),
+               "summary_line": parsed.get("summary_line"), "sec": round(time.time() - t0), "git": [head0, head1],
+               "capcut_summary": video_gate.capcut_summary(cc_rep),
+               "audio_summary": video_gate.audio_summary(au_rep),
+               "clean_left_summary": video_gate.clean_left_summary(cl_rep),
+               "ghost": parsed.get("ghost"), "ghost_line": parsed.get("ghost_line")}   # 잔상(컷 가장자리 딴 장면, 2026-09-27)
+    (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
+    printer("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
+    printer("잔상: %s" % (parsed.get("ghost_line") or "(잔상 줄 없음)"))
+    for f_ in fails:
+        printer("  ✗ " + f_)
+    for n_ in notes:
+        printer("  · " + n_)
+    printer("결과: %s/report.txt (%d초)" % (out, summary["sec"]))
+
+    if ok:
+        alerter.resolve()
+        return 0
+    s = parsed.get("summary") or {}
+    scene = int(s.get("scene") or 0)
+    ran = s.get("cells") is not None and rc_run == 0 and not crash.strip()
+    title = ("[영상점검 %s] 편집화면≠완성본 — 다른 장면 %d칸 · 밀림 %d칸 / %d칸 (%d작업)"
+             % (stamp, scene, int(s.get("shift_center") or 0), int(s.get("cells") or 0), len(parsed.get("jobs", [])))
+             if ran else "[영상점검 %s] 비교를 끝까지 못 돌림" % stamp)
+    _g = parsed.get("ghost") or {}
+    if _g.get("frames"):
+        title += " · 잔상 %d프레임(화면에만 %d)" % (int(_g["frames"]), int(_g.get("screen_only") or 0))
+    ccs = video_gate.capcut_summary(cc_rep) or {}
+    cc_bad = int(ccs.get("capcut") or 0) + int(ccs.get("export") or 0)
+    if cc_bad:
+        title += " · 캡컷≠완성본 %d컷 · ZIP≠완성본 %d컷" % (int(ccs.get("capcut") or 0), int(ccs.get("export") or 0))
+    elif not cc_ok:
+        title += " · 캡컷·ZIP 대조를 끝까지 못 돌림"
+        ran = False
+    aus = video_gate.audio_summary(au_rep) or {}
+    au_bad = int(aus.get("narr") or 0) + int(aus.get("surplus") or 0) + int(aus.get("delay") or 0)
+    if au_bad:
+        title += " · 소리≠화면(나레이션 %d칸 · 잉여 %d편 · 일정 지연 %d편)" % (
+            int(aus.get("narr") or 0), int(aus.get("surplus") or 0), int(aus.get("delay") or 0))
+    elif not au_ok:
+        title += " · 소리 대조를 끝까지 못 돌림"
+        ran = False
+    cls = video_gate.clean_left_summary(cl_rep) or {}
+    cl_bad = int(cls.get("left") or 0)
+    if cl_bad:
+        title += " · 자막 남은 완성본 %d칸" % cl_bad
+    elif not cl_ok:
+        title += " · 자막 남음 대조를 끝까지 못 돌림"
+        ran = False
+    detail = "\n".join(fails + notes + ["— 작업별 —"] + _issue_lines(rep) + _cc_issue_lines(cc_rep) + _cl_issue_lines(cl_rep))
+    alerter.raise_(title, detail,
+                   grade="고객영향" if (scene > 0 or cc_bad or au_bad or cl_bad or _g.get("screen_only")) else "운영주의",
+                   signature="%s:%s|cc%s" % (day, parsed.get("summary_line") or "|".join(fails)[:120],
+                                             [ccs.get(k) for k in ("cuts", "capcut", "export")]),
+                   cooldown_sec=int(a.get("cooldown_sec", 3600)), todo=todo)
+    return 1 if ran else 2
+
+
+def _cc_issue_lines(report_text):
+    """캡컷·내보내기 대조 report 에서 불일치·건너뜀이 있는 작업 줄만."""
+    out = []
+    for line in (report_text or "").splitlines():
+        if " 건너뜀" in line or ("| 캡컷 불일치 " in line and ("캡컷 불일치 0 " not in line or "내보내기 불일치 0 " not in line)):
+            out.append("[캡컷·ZIP] " + line[:300])
+    return out
+
+
+def _cl_issue_lines(report_text):
+    """자막 남음 대조 report 에서 자막 남은 칸·건너뜀이 있는 작업 줄만."""
+    return ["[자막 남음] " + l_[:300] for l_ in (report_text or "").splitlines()
+            if " 건너뜀 " in l_ or (" | 자막 남음 [" in l_ and " | 자막 남음 []" not in l_)]
+
+
+def _run_cla(n, work, timeout):
+    """자막 남음 대조(tools/clean_left_audit.py --delivered)를 **지금 라이브 코드**로, 최근 완료 n편 — 결과는 work/."""
+    env = dict(os.environ, CL_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))   # 고객 폴더에 안 쓴다
+    env.pop("PATCH_DIR", None)
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "clean_left_audit.py"), "--delivered", str(int(n))], cwd=str(REPO),
+                           env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과(%ds): %s" % (timeout, e)
+
+
+def _run_cea(ids, work, timeout):
+    """캡컷·내보내기 대조(tools/capcut_export_audit.py)를 **지금 라이브 코드**로 — 결과는 work/ (report.txt·done.txt·crash.txt)."""
+    env = dict(os.environ, CC_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))   # 점검은 고객 폴더에 안 쓴다
+    env.pop("PATCH_DIR", None)
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "capcut_export_audit.py"), *ids], cwd=str(REPO), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과 %ds: %s" % (timeout, (e.stdout or "")[-2000:] if isinstance(e.stdout, str) else "")
+
+
+def _run_faa(n, work, timeout):
+    """소리 대조(tools/final_audio_audit.py)를 **지금 라이브 코드**로, 최근 완료 n편 — 결과는 work/ (report.txt·done.txt·crash.txt).
+    읽기 전용(DB mode=ro, 임시 파일 없음)이라 고객 폴더에 안 쓴다."""
+    env = dict(os.environ, AUDIO_OUT=str(work))
+    env.pop("AUDIO_FINAL_DIR", None)            # 매일 점검은 고객이 받은 실제 완성본을 잰다
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "final_audio_audit.py"), str(int(n))], cwd=str(REPO), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과(%ds): %s" % (timeout, e)
+
+
+def _run_evf(ids, work, timeout):
+    env = dict(os.environ, EVF_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))  # 점검은 고객 폴더에 안 쓴다
+    env.pop("PATCH_DIR", None)                         # 매일 점검은 **지금 라이브 코드**를 잰다
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "evf_run.py"), *ids], cwd=str(REPO), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과 %ds: %s" % (timeout, (e.stdout or "")[-2000:] if isinstance(e.stdout, str) else "")
+
+
+def _set_repo(path):
+    """저장소 폴더를 정하고 **그 폴더를 import 경로에 넣는다**.
+    ★2026-09-27 실사고: systemd 가 `python3 tools/daily_video_audit.py` 로 띄우면 sys.path[0]은 tools/ 라
+      `from shopping_shorts import ops_alert` 가 ModuleNotFoundError — 쪽지(경보·해제)가 **조용히 안 나갔다**.
+      점검 27분이 돌고 마지막 줄에서 죽었다. 경보 통로가 안 열리면 점검은 없는 것과 같다."""
+    global REPO
+    REPO = Path(path).resolve()
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+
+
+def main(argv=None):
+    cfg = video_gate.load_config()
+    a = cfg["audit"]
+    ap = argparse.ArgumentParser(description="매일 영상 점검(편집 화면 vs 완성본)")
+    ap.add_argument("--jobs", type=int, default=int(a.get("jobs", 10)))
+    ap.add_argument("--hours", type=int, default=int(a.get("hours", 24)))
+    ap.add_argument("--out-root", default="/home/ubuntu/video_audit")
+    ap.add_argument("--tmp-root", default="/tmp")
+    ap.add_argument("--dry-run", action="store_true", help="쪽지를 올리지 않고 무엇을 올릴지만 찍는다")
+    ap.add_argument("--repo", default=str(REPO), help="저장소 폴더(시험 실행 때 도구를 /tmp 에 두고 라이브 저장소를 가리킬 때)")
+    ap.add_argument("--import-check", action="store_true",
+                    help="쪽지 통로(shopping_shorts.ops_alert)가 import 되는지만 확인하고 끝난다 — systemd 설치 뒤 1회")
+    args = ap.parse_args(argv)
+    _set_repo(args.repo)
+    if args.import_check:
+        from shopping_shorts import ops_alert                     # noqa: F401 — 실패하면 예외로 죽는다(조용히 통과 금지)
+        print("IMPORT_OK %s" % REPO)
+        return 0
+    os.chdir(str(REPO))                                  # 비교 도구는 저장소 상대경로(DB·mix_jobs)를 쓴다
+    return run_audit(jobs=args.jobs, hours=args.hours, out_root=args.out_root, tmp_root=args.tmp_root,
+                     alerter=_Alerter(args.dry_run), cfg=cfg)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

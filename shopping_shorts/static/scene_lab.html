@@ -189,6 +189,9 @@ h1{font-size:16px;margin:0;font-weight:700}
     color:#ff9d9d;border:1px solid var(--line);border-radius:5px;padding:0 5px;
     font-size:12px;line-height:16px;cursor:pointer}
 .tbcut .delx:hover{background:#a03434;color:#fff;border-color:transparent}
+/* 🔒 컷 잠금은 **위쪽 필름(타임라인)**에 있다(2026-09-16 사장님 "자물쇠는 카드가 아니라
+   위쪽 필름 위에 있어야 한다") — 길이를 끌어 조절하는 곳이 거기다. CSS는 scene_timeline.js
+   쪽 .tl-cut 규칙에 있다. 카드 아래줄은 이미 꽉 차 있어(체크박스·📦박스·✕) 넣을 자리도 없다. */
 
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
@@ -260,6 +263,10 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 .tbtools button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   border-radius:5px;padding:1px 6px;cursor:pointer;font-size:10.5px}
 .tbtools button:hover{border-color:var(--accent);color:var(--ink)}
+.speedpick{appearance:auto;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:5px;padding:2px 5px;font-size:10.5px;font-weight:700;cursor:pointer;max-width:92px}
+.speedpick.changed{border-color:var(--accent);color:#fff;background:#17304a}
+.speedpick:disabled{opacity:.65;cursor:wait}
 /* 빼는 버튼만 눈에 띄게 — 되돌릴 수 없는 조작이라 실수로 안 누르게 색을 가른다(2026-08-16) */
 .tbtools button.danger{border-color:var(--warn);color:var(--warn);font-weight:700}
 .tbtools button.danger:hover{background:var(--warn);color:#3a2a08}
@@ -608,7 +615,7 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
         flex:0 0 auto;width:auto;max-width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);
         margin:0 auto;cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
-#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
+#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:cover;position:absolute;inset:0}
 .phead{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px}
 .phead .x{cursor:pointer;color:var(--dim)}
 .phead .x:hover{color:var(--bad)}
@@ -647,14 +654,9 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 .captag{display:block;height:14px;line-height:14px;font-size:10.5px;font-weight:700;
   letter-spacing:.3px;margin-bottom:2px}
 .captag.sub{color:var(--good)}
-/* ★오른쪽(담긴) 썸네일을 왼쪽 팔레트로 끌어오면 빠진다(2026-08-15 사장님 "좌측으로
-   끌어다 버리면 빠지게"). 끄는 동안 왼쪽 패널이 휴지통임을 눈에 보이게 알린다. */
-.pane.left.bin{box-shadow:inset 0 0 0 3px var(--bad)}
-.pane.left.bin #palette{opacity:.4}
-#binmsg{display:none;position:sticky;top:0;z-index:5;background:var(--bad);color:#fff;
-  font-weight:800;text-align:center;padding:11px;border-radius:8px;font-size:15px;
-  margin-bottom:10px}
-.pane.left.bin #binmsg{display:block}
+/* ★휴지통(왼쪽 패널에 끌어다 놓아 빼기)은 2026-09-16 사장님 지시로 제거했다.
+   빼기는 썸네일 두 번 클릭 하나로만 한다 — 경로가 둘이면 상태(bin·dragFrom)가
+   어긋나 빨간 띠가 남고 화면이 먹통이 됐다(0순위-B: 같은 일을 두 군데서 정하지 마라). */
 /* ══ 촘촘히 보기(2026-08-26 사장님 "쓸데없는 텍스트 다 죽이고 영상이 한눈에") ══
    기능은 하나도 안 없앤다 — 글자를 썸네일 위로 올리거나 한 번 더 눌러야 나오게 접을 뿐이다.
    ★모든 규칙을 body.tight 아래 한 곳에 모은다. 여기저기 흩으면 켜고 끄는 판단이
@@ -695,10 +697,44 @@ body.tight #tbhint,                                  /* C. 안내문 3줄 */
 body.tight footer .hint{display:none}
 body.tight.hintson #tbhint,
 body.tight.hintson footer .hint{display:inline}
+/* ⋯ 메뉴(관제 086) */
+.tbmore{position:relative;display:inline-block}
+.tbmenu{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;flex-direction:column;gap:6px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.tbmore.open .tbmenu{display:flex}
+.tbmenu .act{text-align:left;width:100%}
+/* 효과음 | 배경음 패널(관제 086) */
+#sfxPanel{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel)}
+#sfxPanel .sfxtabs{display:flex;gap:4px;background:var(--panel2);border-radius:10px;padding:3px;margin-bottom:10px}
+#sfxPanel .sfxtab{flex:1;min-height:34px;border:0;border-radius:8px;background:transparent;color:var(--dim);font-size:13px;cursor:pointer}
+#sfxPanel .sfxtab.on{background:var(--accent);color:#fff;font-weight:700}
+#sfxPanel .soon{font-size:10.5px;padding:1px 6px;border-radius:6px;background:#3a2f12;color:#ffd08f;margin-left:4px}
+#sfxPanel .sfxbody{display:flex;flex-direction:column;gap:8px;font-size:13px}
+#sfxPanel .sfxon{display:flex;align-items:center;gap:8px;cursor:pointer}
+#sfxPanel .sfxon input{width:18px;height:18px;cursor:pointer}
+#sfxPanel #sfxOpts{display:flex;flex-direction:column;gap:8px}
+#sfxPanel .sfxrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#sfxPanel .k{min-width:34px;color:var(--dim)}
+#sfxPanel .sfxseg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+#sfxPanel .sfxseg button{min-height:32px;min-width:52px;padding:4px 10px;font-size:13px;border:0;background:var(--panel2);color:var(--txt,#ddd);cursor:pointer}
+#sfxPanel .sfxseg button+button{border-left:1px solid var(--line)}
+#sfxPanel .sfxseg button.on{background:var(--accent);color:#fff;font-weight:700}
+#sfxPanel select{min-height:32px;font-size:13px;padding:3px 6px;background:var(--panel2);color:var(--txt,#ddd);border:1px solid var(--line);border-radius:8px}
+#sfxPanel .hint0{font-size:12px;color:var(--dim)}
+#sfxPanel #bgmList{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto}
+#sfxPanel .bgmitem{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+#sfxPanel .bgmitem.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+#sfxPanel .bgmitem .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+#sfxPanel .bgmitem .nm small{color:var(--dim);margin-left:4px}
+#sfxPanel .bgmitem button{min-height:28px;padding:2px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--txt,#ddd);cursor:pointer}
+#sfxPanel .bgmitem.on .pick{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sfxmute{border:1px solid var(--line);background:transparent;border-radius:6px;padding:0 5px;font-size:12px;line-height:18px;cursor:pointer;margin-left:6px;opacity:.75}
+.sfxmute.off{border-color:#ffb9b9;color:#ffb9b9;opacity:1}
 #hintbtn{border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:50%;
   width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:auto}
 #hintbtn:hover{border-color:var(--accent);color:var(--accent)}
 body:not(.tight) #hintbtn{display:none}
+#hintbtn{display:none!important}   /* 관제 086: 조작 안내는 ⋯ 메뉴로 — 같은 toggleHints 를 부른다 */
 
 body.tight footer{padding:4px 14px;gap:8px}          /* D. 하단 KPI — 한 줄 배지 */
 body.tight footer .kpi{font-size:11.5px;padding:1px 7px}
@@ -865,7 +901,6 @@ body.tight .srcgroup{margin-bottom:8px}
 body.tight .pane{padding:4px 10px}
 body.tight .pane.left{padding-top:2px}
 body.tight .wrap{gap:6px}
-body.tight #binmsg:not(.on){display:none}
 
 /* 화면 한가운데 큰 재생 버튼 — 위 [▶️ 전체 재생] 줄을 대신한다 */
 #pvbigplay{width:74px;height:74px;border-radius:50%;border:2px solid var(--accent);
@@ -1047,6 +1082,17 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-repbtn:hover{background:#ffd24a;color:#3a2a08}
 .tl-repbtn.on{background:#ffd24a;color:#3a2a08}
 .tl-cut.rep{border-color:#ffd24a;box-shadow:0 0 8px rgba(255,210,74,.5)}
+/* 🔒 컷 잠금(2026-09-16 사장님 "자물쇠는 카드가 아니라 위쪽 필름 위에") — 길이를 끌어
+   조절하는 곳이 여기라 잠금도 여기 있어야 한다. 윗줄은 찼다(왼쪽 tl-len·오른쪽 tl-repbtn)
+   → 아래 왼쪽. 양옆 tl-edge(8px)와도 안 겹치게 left:11px.
+   ★풀림(🔓)도 늘 보이게 둔다 — 잠긴 것만 보이면 잠글 수 있다는 걸 아무도 모른다. */
+.tl-lockbtn{position:absolute;bottom:2px;left:11px;z-index:5;background:rgba(0,0,0,.66);
+    color:#9fb4d0;border:none;border-radius:3px;font-size:11px;cursor:pointer;
+    padding:1px 4px;opacity:.8;line-height:1.3}
+.tl-lockbtn:hover{opacity:1;background:rgba(0,0,0,.85)}
+.tl-lockbtn.on{background:#2d4a76;color:#fff;opacity:1}
+/* 잠긴 컷은 테두리로도 알린다 — 여러 컷 중 뭐가 묶였는지 한눈에 */
+.tl-cut.locked{border-color:#7aa2d0;box-shadow:0 0 6px rgba(122,162,208,.45)}
 /* 싱크 산출 단계 배지(⑦a) */
 .tl-src{border-radius:8px;padding:0 6px;font-size:9.5px;margin-right:4px}
 .tl-src.ok{background:#14321f;color:#7fe0a8;border:1px solid #2f5c42}
@@ -1064,6 +1110,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 /* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
 .tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
 .boxbtn{color:#ffd24a}
+.segthumb .usedin{position:absolute;right:3px;top:22px;line-height:1.35;background:rgba(255,160,40,.92);color:#111;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:6px;z-index:6;pointer-events:none}
 </style><style>
 /* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
 .errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
@@ -1102,9 +1149,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             onclick="playAllHere(event)" title="1번 칸부터 끝까지 이어서 봅니다">▶️ 전체 재생</button>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
+    <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★⋯ 메뉴(2026-10-03 관제 086 사장님 확정 목업): 자주 누르는 것(전체 재생·음성 만들기·촘촘히)만 줄에 두고
+         한 번씩 누르는 것은 여기로. 버튼 id·onclick 은 그대로라 다른 코드(undoBtnSync 등)가 그대로 찾는다.
+         ⋯ 자체는 어느 상태에서도 보인다(저장·불러오기가 숨으면 안 된다 — 2026-09-07 실측 이유 그대로). -->
+    <span class="tbmore" id="tbmore">
+      <button type="button" class="act" id="tbmorebtn" style="padding:3px 10px;font-size:13px;line-height:1"
+              title="되돌리기·지금 저장·서버에서 불러오기·이전 편성" onclick="tbMoreToggle(event)">⋯</button>
+      <span class="tbmenu" id="tbmenu" onclick="event.stopPropagation()">
     <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
             title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
-    <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
     <!-- ★저장·불러오기는 **여기**에 있어야 한다(2026-09-07 실측). 처음엔 아래 footer에
          뒀는데, 제작소 안(body.inside-studio.grow)에서는 그 줄이 통째로 높이 0으로 접혀
          버튼도 안내문도 안 보였다 — 사장님이 "작동 안 되는 것 같은데"라고 하신 이유다.
@@ -1115,10 +1169,14 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             onclick="loadFromServer()" title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
     <button type="button" class="act" id="histbtn" style="padding:3px 10px;font-size:11.5px"
             onclick="openHistory()" title="예전 편성으로 되돌립니다 — 최근 5벌까지 보관합니다">🕘 이전 편성</button>
+        <button type="button" class="act" style="padding:3px 10px;font-size:11.5px" onclick="toggleHints();tbMoreClose()"
+                title="조작 안내 줄을 보이거나 숨깁니다">？ 조작 안내</button>
+      </span>
+    </span>
     <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
          '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
     <span id="buildtag" title="이 화면의 코드 버전 — 새로고침해도 안 바뀌면 캐시입니다"
-          style="margin-left:8px;font-size:10.5px;color:var(--dim);opacity:.75">v?</span>
+          style="margin-left:auto;font-size:10.5px;color:var(--dim);opacity:.75">v?</span>
     <button type="button" id="hintbtn" title="조작 안내 보이기/숨기기" onclick="toggleHints()">?</button>
     <span class="tbhint" id="tbhint">조각을 누르면 그 조각만 · 아래 대본을 누르면 그 칸 전체가 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
     <!-- ✋ 컷 길이 직접 정하기(2026-08-24) — 초 배지를 누르면 열린다.
@@ -1156,7 +1214,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="자막과 음성까지 얹은 진짜 결과 — 누르면 만들어져요(20초쯤)">완성본 만들기</button>
   </div>
   <!-- ★줄 높이를 줄인다(2026-08-22) — 버튼 자체는 그대로고 위아래 여백만 뗀다. -->
-  <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button></div>
+  <div class="lbl" id="pballrow" style="display:none;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
   <div id="playerIdle">
@@ -1195,14 +1253,51 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <div id="confirmPane">
     <div id="confirmBody"></div>
   </div>
+  <!-- ★효과음 | 배경음 패널(2026-10-03 관제 086, 사장님 확정 목업 mock5). 종전엔 제작소 위쪽 가로 바(produce #sfxPackBar)였다.
+       값의 뜻·허용 범위는 서버 sfx_pack.settings_of 한 곳 — 여기는 보여주고 /api/produce/mix/settings 로 저장만 한다.
+       미리보기·완성본·캡컷은 종전처럼 같은 저장값을 읽는다. 칸별 끄기는 각 칸 머리의 🔇(sfxMuteBtn). -->
+  <div id="sfxPanel" style="display:none">
+    <div class="sfxtabs">
+      <button type="button" class="sfxtab on" data-t="sfx" onclick="sfxTab('sfx')">🔊 효과음</button>
+      <button type="button" class="sfxtab" data-t="bgm" onclick="sfxTab('bgm')">🎵 배경음</button>
+    </div>
+    <div class="sfxbody" id="sfxBodySfx">
+      <label class="sfxon"><input type="checkbox" id="sfxOn" onchange="sfxpSave({sfx_pack: this.checked ? 'auto' : 'off'})">
+        <b>효과음 자동 넣기</b></label>
+      <div id="sfxOpts">
+        <div class="sfxrow"><span class="k">횟수</span><span class="sfxseg" data-key="sfx_density">
+          <button type="button" data-v="low">적게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">많이</button></span></div>
+        <div class="sfxrow"><span class="k">크기</span><span class="sfxseg" data-key="sfx_level">
+          <button type="button" data-v="low">작게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">크게</button></span></div>
+        <div class="sfxrow"><span class="k">소리</span>
+          <select id="sfxSel" onchange="sfxpSave({sfx_pack: this.value})"></select>
+          <button type="button" class="act" id="sfxListen" onclick="sfxListen()">▶ 들어보기</button></div>
+      </div>
+      <div class="sfxrow"><button type="button" class="act" id="sfxUpBtn" onclick="document.getElementById('sfxFile').click()">＋ 내 효과음 등록</button>
+        <span class="hint0" id="sfxHint">칸별 끄기는 그 칸 머리의 🔈</span>
+        <input type="file" id="sfxFile" accept=".mp3,.wav,.m4a,.aac,audio/*" style="display:none" onchange="sfxUpload(this)"></div>
+      <div class="hint0" id="sfxGuide">설정을 바꾸면 <b>완성본 만들기</b>를 눌러야 반영돼요</div>
+      <div class="hint0" id="sfxMsg"></div>
+    </div>
+    <div class="sfxbody" id="sfxBodyBgm" style="display:none">
+      <!-- 관제 146: 목록·파일은 bgm_lib 한 곳. 고르면 /api/produce/mix/settings {bgm_lib} → deco.bgm.lib → 렌더·캡컷(resolve_deco_media). -->
+      <div class="sfxrow"><span class="k">음량</span>
+        <input type="range" id="bgmVol" min="0" max="60" step="1" value="15" style="flex:1;min-width:120px">
+        <b id="bgmVolV" style="min-width:42px;text-align:right">15%</b></div>
+      <div class="sfxrow"><span class="k">속도</span>
+        <input type="range" id="bgmSpeed" min="0.5" max="2" step="0.05" value="1" style="flex:1;min-width:120px">
+        <b id="bgmSpeedV" style="min-width:42px;text-align:right">1.00x</b>
+        <button type="button" class="act" id="bgmSpeedReset" title="원래 속도로">1x</button></div>
+      <div id="bgmList"></div>
+      <div class="hint0">쇼츠 전용 곡이에요 — 이 곡을 넣은 영상은 롱폼으로 만들 수 없어요</div>
+      <div class="hint0" id="bgmMsg"></div>
+    </div>
+  </div>
 </div>
 </div>
 
 <div class="wrap">
-  <div class="pane left"
-       ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
-       ondrop="paneDrop(event)">
-    <div id="binmsg">🗑 여기에 놓으면 이 장면이 빠집니다</div>
+  <div class="pane left">
     <div class="lbl" id="dropmsg"></div>
     <div id="palette"></div>
   </div>
@@ -1224,11 +1319,12 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <button class="act" onclick="revertServer()"
           title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
-  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: 왼쪽으로 끌기·두 번 클릭 = 빼기 · 클릭 = 재생</div>
+  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: ✕ 버튼·두 번 클릭 = 빼기 · 클릭 = 재생 · 끌기 = 순서 바꾸기</div>
 </footer>
 
 <script id="scene-lab-data" type="application/json">null</script>
 <script src="/scene_play.js"></script>
+<script src="/meme_pack.js"></script>
 <script src="/scene_timeline.js"></script>
 <script src="/filmroll.js"></script>
 <script>
@@ -1240,6 +1336,10 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 var RENDERED_SIG = '';
 // 렌더가 도는 중인 편성(출발 시점에 찍고, 영상이 걸릴 때 RENDERED_SIG로 확정).
 var PENDING_SIG = '';
+// 서버 편성 판본. 오래 열린 탭은 이 값이 달라져 저장이 거절된다.
+var SCENE_REV = '';
+// render()는 화면 그리기에도 쓰인다. 부팅·동일 상태 재그리기는 저장 동작이 아니어야 한다.
+var _booting = true, _lastPersistedWork = null;
 
 function pvTab(which){
   var host = document.getElementById('playerhost');
@@ -1290,7 +1390,13 @@ async function _askRender(){
   //   여기서 기다리면 저장이 반드시 앞선다. 실패해도 렌더는 진행한다 — 막으면 더 나쁘다.
   body.innerHTML = '<div class="cfLoad">⏳ 편집 내용 저장 중…</div>';
   try{ if (typeof flushApply === 'function') await flushApply(); }
-  catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
+  catch(e){
+    if (_sceneConflict){
+      body.innerHTML = '<div class="cfLoad">⚠️ 다른 화면의 최신 편성을 보호했습니다.<br>새로고침한 뒤 다시 만들어 주세요.</div>';
+      return;
+    }
+    console.warn('편집 반영 실패(렌더는 계속)', e);
+  }
   body.innerHTML = '';                               // startPreview가 자기 로더를 그린다
   // ★렌더에 들어가는 편성을 **출발 시점에** 찍는다(2026-09-03). 완료 시점에 찍으면,
   //   렌더가 도는 20초 사이에 편집한 것까지 "이 영상에 들어간 것"으로 잘못 기록돼
@@ -1689,7 +1795,11 @@ function useTags(sid){
 //   사실상 같은** 컷을 잡는다. 실측(job 409f894230c6): s3-2↔s3-20 거리0, s3-5↔s3-21 거리1,
 //   s3-1↔s3-18 거리4(사장님이 지목한 그 쌍).
 const DUP_MAX = 8;                 // 해밍거리 이 이하면 '비슷'
-let hideDup = true;                // 비슷한 것은 대표 1장만 보이기(기본 켬)
+// ★기본은 **끔**(2026-09-16 사장님 "아래 영상소스카드들이 몇 개만 보이는 건 전체 다
+//   조각별 순서대로 나오게 해줘"). 접기가 기본이면 4-4처럼 중간 번호가 통째로 사라져
+//   조각 번호가 뚝뚝 끊긴 채로 보인다 — 눈으로 순서를 훑는 게 이 화면의 본체인데
+//   그걸 막고 있었다. 필요하면 체크박스를 눌러 다시 접는다(기능은 그대로).
+let hideDup = false;               // 비슷한 것도 전부 보이기(기본 끔)
 function _hash(sid){ return (DATA.phash || {})[sid] || ''; }
 function _dist(a, b){
   if (!a || !b || a.length !== b.length) return 99;
@@ -1725,8 +1835,24 @@ const PAL_FOLD = (() => { try { return new Set(JSON.parse(localStorage.getItem('
 function _palFoldSave(){ try { localStorage.setItem('sceneLab:palFold', JSON.stringify([...PAL_FOLD])); } catch (e) {} }
 // 소스 목록 높이 = 사람이 실제로 보는 화면 높이 − 목록 위쪽 끝 위치. 제작소 안(iframe)이면
 //   부모 창 기준으로 잰다 — iframe 자체 높이는 내용에 맞춰 늘어나 기준이 될 수 없다.
+// ★영상소스 '다 보기'(2026-09-18 사장님 "원래 펼쳐져 있던 게 지금은 2개만 보인다 — 접기/펼치기 버튼으로 다 보이게").
+//   09-14에 목록 높이를 화면에 맞춰 묶고 안에서 스크롤하게 바꾸면서(위 미리보기·칸이 늘 보이게) 묶음이 두 개만
+//   보이게 됐다. 둘 다 필요한 쓰임이라 없애지 않고 **고르게** 한다 — 켜면 높이 제한을 풀어 전부 펼쳐 보인다.
+//   고른 값은 브라우저에 기억한다(다시 열어도 그대로).
+// var(let 아님): 화면 그리기가 이 줄보다 먼저 불려도 TDZ 오류로 목록 전체가 죽지 않게.
+var PAL_ALL = (() => { try { return localStorage.getItem('sceneLab:palAll') === '1'; } catch (e) { return false; } })();
+function togglePalAll(){
+  PAL_ALL = !PAL_ALL;
+  try { localStorage.setItem('sceneLab:palAll', PAL_ALL ? '1' : '0'); } catch (e) {}
+  fitPalette();
+  const b = document.getElementById('palAllBtn');
+  if (b){ b.textContent = PAL_ALL ? '⤒ 영상소스 줄여 보기' : '⤓ 영상소스 다 보기'; b.classList.toggle('on', PAL_ALL); }
+  // 제작소 안(iframe)이면 부모가 내용 높이에 맞춰 늘린다 — 크기 알림을 한 번 쏴 준다.
+  try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+}
 function fitPalette(){
   const pal = document.getElementById('palette'); if (!pal) return;
+  if (PAL_ALL){ document.documentElement.style.setProperty('--pal-h', 'none'); return; }
   // 기준: 장면편집 맨 위를 화면 맨 위에 맞췄을 때 목록이 화면 바닥까지 딱 차는 높이.
   //   (부모가 얼마나 내려가 있든 같은 값 — 스크롤할 때마다 높이가 출렁이지 않는다)
   const topInLab = pal.getBoundingClientRect().top + (window.scrollY || 0);
@@ -1891,14 +2017,10 @@ function hasServerEdit(){
 //   되살릴 게 없으면 false를 돌려주어 호출한 쪽이 다음 수단으로 넘어가게 한다(fail-open).
 function restoreServer(msg){
   if (!hasServerEdit()) return false;
-  lists = DATA.beats.map(b => serverList(b) || baseList(b));
-  hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
-  // 서버 편성의 구절 맞춤 끔 표식도 같이 — 안 가져오면 끈 칸이 켠 칸으로 열려 얼린 컷과 어긋난다
-  if (typeof PHRASE_SYNC !== "undefined"){
-    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-    (DATA.beats || []).forEach((b, i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false; });
-  }
-  if (typeof hydrateCuts === "function") hydrateCuts(...cutsFromBeats());   // 끈 칸의 얼린 컷도(2026-09-14)
+  // ★칸 편집 상태 전부(목록·늘려 채우기·구절 맞춤·손 컷·느리게·손 길이·트림·합치기)를 서버 컷 러너(완성본)와
+  //   **같은 함수**로 되살린다(관제 148, scene_play.js screenStateFromServer). 여기서 칸별로 따로 적으면
+  //   한쪽만 빠진다 — 늘려 채우기를 빠뜨려 화면≠완성본이 났다.
+  applyScreenState(screenStateFromServer(DATA));
   mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
@@ -2091,7 +2213,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F29';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
+const BUILD_TAG = 'F30';   // 멘트 칸 통합 속도 + 밴드 높이 고정은 촘촘히 전용
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -2549,7 +2671,7 @@ function playSegHere(sid){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySeg === 'function'){
-      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlaySeg(sid, {DATA, onePerSeg, state: screenState()});
       playKey = 'seg:' + sid; renderBand();
       return;
     }
@@ -2563,7 +2685,7 @@ function playSegsHere(sids, label, ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySegs === 'function'){
-      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlaySegs(sids, label, {DATA, onePerSeg, state: screenState()});
       playKey = 'segs:' + sids.join(','); renderBand();
       return;
     }
@@ -2581,7 +2703,7 @@ function playAllHere(ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlayAll === 'function'){
-      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlayAll({DATA, onePerSeg, state: screenState()});
       playKey = 'all'; renderBand();
       return;
     }
@@ -2601,7 +2723,7 @@ function playBeatHere(i, ev){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
-      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlay(i, {DATA, onePerSeg, state: screenState()});
       playKey = 'beat:' + i; renderBand();
       return;
     }
@@ -2619,7 +2741,65 @@ function bandDrop(i, segId, ev){
   if (k < 0) return;
   dragDrop(i, k, ev);           // 같은 칸 안에서 자리 바꾸기(기존 로직)
 }
+// ★구절 맞춤 칸의 카드를 **카드마다 독립 조각(film_)**으로 쪼갠다(2026-09-26 사장님 "1.4초 구간만 X를 눌러
+//   그 장면만 수정하려 하면 둘 다 없어진다"). 같은 조각이 카드 여러 장에 쓰이면 X·📦가 조각 단위라 전부 같이 움직였다.
+//   쪼갠 조각의 구간 = 지금 그 카드가 실제로 트는 구간(planClips 그대로) — 화면 흐름은 한 프레임도 안 바뀐다.
+//   쪼개면 조각 수 = 구절 수라 서버·화면 모두 1:1로 배정된다(phrase_owners R1). 바뀐 게 없으면 false.
+//   ⚠️ 짧은 구절 묶음(R4 phrase_min_cut) 칸은 쪼개지 않는다 — 저장 때 얼린 짝(ensure_clip_anchor)이 묶음을 몰라
+//   배정이 어긋날 수 있다. 2026-09-26 라이브 2,251칸 중 R4 칸 0개(설정 꺼짐). 켤 때 묶음 단위로 쪼개도록 고칠 것.
+function splitBeatCards(i){
+  if (!phraseSyncOn(i)) return false;
+  if (((DATA.beats || [])[i] || {}).phrase_min_cut) return false;
+  const ids = lists[i] || [];
+  const clips = planClips(ids, beatDur(i), STRETCH[i], i).filter(c => !c.meme);   // 짤 컷(관제 139)은 장면 목록에 넣지 않는다
+  const caps = capsOf(i) || [];
+  if (!clips.length || clips.length !== caps.length) return false;
+  const uses = {}; clips.forEach(c => { uses[c.seg_id] = (uses[c.seg_id] || 0) + 1; });
+  if (!clips.some(c => uses[c.seg_id] > 1)) return false;
+  const pieces = [];
+  clips.forEach(c => {
+    const a = +c.start, b = a + +(c.src_dur || c.dur);
+    pieces.push(uses[c.seg_id] <= 1 ? {id: c.seg_id} : {vid: c.video_id, a, b});
+  });
+  const owner = pieces.map((_, k) => k);
+  const used = new Set(clips.map(c => c.seg_id));
+  const next = pieces.map(p => p.id || _makeFilmSeg(p.vid, p.a, Math.min(p.b, ((DATA.src_duration || {})[p.vid] || p.b))));
+  ids.forEach(id => { if (!used.has(id) && !next.includes(id)) next.push(id); });   // 담겼지만 안 나오던 조각은 뒤에 그대로
+  lists[i] = next;
+  caps.forEach((c, k) => { c.owner = owner[k]; c.owner_n = next.length; });        // 서버가 다시 줄 때까지 화면 배정도 1:1
+  return true;
+}
+// 카드 썸네일 = 그 카드가 **실제로 트는 구간**의 그림(2026-09-26 사장님 "두 번째 카드는 이어지는 장면이 보여야").
+//   조각 하나가 카드 여러 장을 이어서 덮으면 조각 썸네일은 전부 같은 그림(첫 장면)이라 뒤 카드가 뭘 트는지 안 보였다.
+//   구간이 조각과 다르면 그 구간의 film_ 아이디로 요청한다 — 서버 seg_thumb가 아이디에서 구간을 풀어 그린다
+//   (_film_seg_from_id). 목록·저장은 안 건드린다.
+function cardThumbId(c){
+  const seg = (DATA.segments || {})[c.seg_id] || {};
+  const a = +c.start, b = a + +(c.src_dur || c.dur);
+  if (seg.start != null && Math.abs(a - +seg.start) < 0.05 && b <= +seg.end + 0.05) return c.seg_id;
+  return _extraId(c.video_id, a, b);
+}
+// [속도 맞추기] 켜고 끄기 — 칸 데이터(fit_segs)에 적고 다시 그린다. 저장은 _editPayload가 싣는다(다른 토글과 같은 길).
+function fitToggle(i, segId, on){
+  const b = DATA.beats[i]; if (!b) return;
+  const cur = (b.fit_segs || []).filter(x => x !== segId);
+  if (on) cur.push(segId);
+  if (cur.length) b.fit_segs = cur; else delete b.fit_segs;
+  render();
+}
+// 카드 한 장만 뺀다 — 같은 조각이 여러 카드면 먼저 쪼갠 뒤 그 카드의 조각만(위 splitBeatCards).
+function dropCardAt(i, ci, segId){
+  if (String(segId || '').startsWith('meme:')) return dropCutFromBand(i, segId);   // 짤 카드는 쪼개지 않는다
+  if (splitBeatCards(i)){
+    const c = planClips(lists[i] || [], beatDur(i), STRETCH[i], i)[ci];
+    if (c) segId = c.seg_id;
+  }
+  dropCutFromBand(i, segId);
+}
 function dropCutFromBand(i, segId){
+  // ★짤 컷(관제 139)은 장면 목록(lists)에 없고 칸의 cutaway 에서 온다 — 목록에서 지우면 아무 일도 안 일어났다(관제 165).
+  //   짤 빼기는 서버 /meme 한 곳(memeSet → meme_off, 자동 배치가 다시 넣지 않음)
+  if (String(segId || '').startsWith('meme:')) { memeSet(i, null); return; }
   const l = lists[i] || [];
   // ★같은 조각이 여러 컷으로 되풀이될 수 있다(늘려 채움 · 라운드로빈이 여러 바퀴).
   //   예전엔 indexOf로 **첫 항목 하나만** 지워, 화면엔 그 조각이 그대로 남고 배치만
@@ -2645,6 +2825,204 @@ function sayDropped(i, left){
   nsay(msg);
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = msg;
+}
+
+// ── ⋯ 메뉴(관제 086) ─────────────────────────────────────────────────────
+function tbMoreToggle(e){ if (e) e.stopPropagation(); const m = document.getElementById('tbmore'); if (m) m.classList.toggle('open'); }
+function tbMoreClose(){ const m = document.getElementById('tbmore'); if (m) m.classList.remove('open'); }
+document.addEventListener('click', tbMoreClose);
+
+// ── 효과음 | 배경음 패널(2026-10-03 관제 086) ─────────────────────────────────
+//   보일지·켜졌는지·값은 서버(/api/produce/mix/sfx_pack)가 렌더와 같은 판정으로 알려 준다(종전 제작소 바와 같은 API).
+//   저장은 sfxpSave 한 곳 → /api/produce/mix/settings. 제작소가 들고 있는 꾸미기 값(STATE.deco)도 맞춘다 —
+//   다른 저장이 STATE.deco 를 통째로 보내므로 안 맞추면 옛 값이 방금 누른 값을 덮는다(종전 sfxPackSave 와 같은 이유).
+let SFXP = null;
+async function sfxpRefresh(){
+  const box = document.getElementById('sfxPanel'); if (!box) return;
+  if (!SL.server || !SL.job){ box.style.display = 'none'; return; }
+  await bgmRefresh();
+  try{
+    const d = await (await fetch('/api/produce/mix/sfx_pack/' + SL.job, {cache:'no-store'})).json();
+    if (!d.ok || !d.eligible){ SFXP = null; sfxpShow(); renderBand(); return; }
+    SFXP = d;
+    sfxpPaint();
+    sfxpShow();
+    renderBand();
+  }catch(e){ SFXP = null; sfxpShow(); }
+}
+// 패널은 효과음(관리자 스위치에 달림)이나 배경음 목록 중 하나라도 있으면 보인다 — 효과음이 없으면 배경음 탭만.
+function sfxpShow(){
+  const box = document.getElementById('sfxPanel'); if (!box) return;
+  const hasBgm = !!(BGMP && (BGMP.tracks || []).length);
+  box.style.display = (SFXP || hasBgm) ? '' : 'none';
+  const st = document.querySelector('#sfxPanel .sfxtab[data-t="sfx"]');
+  if (st) st.style.display = SFXP ? '' : 'none';
+  const bt = document.querySelector('#sfxPanel .sfxtab[data-t="bgm"]');
+  if (bt) bt.style.display = hasBgm ? '' : 'none';        // 배경음 목록은 관리자 전용(기본) — 안 열린 작업엔 탭 자체가 없다
+  if (!SFXP && hasBgm) sfxTab('bgm');
+  else if (!hasBgm) sfxTab('sfx');
+}
+// ── 🎵 배경음 목록(2026-10-06 관제 146) — 곡·파일은 서버 bgm_lib 한 곳, 저장은 sfxpSave 와 같은 settings API ──
+let BGMP = null, _bgmAudio = null, _bgmPlaying = '';
+async function bgmRefresh(){
+  try{
+    const d = await (await fetch('/api/produce/mix/bgm_lib/' + SL.job, {cache:'no-store'})).json();
+    BGMP = d.ok ? d : null;
+  }catch(e){ BGMP = null; }
+  bgmPaint();
+}
+function bgmPaint(){
+  const box = document.getElementById('bgmList'); if (!box) return;
+  if (!BGMP || !(BGMP.tracks || []).length){ box.innerHTML = ''; return; }   // 안 열린 작업(관리자 전용 기본)
+  const cur = BGMP.current || '';
+  const none = `<div class="bgmitem ${cur ? '' : 'on'}"><span class="nm" onclick="bgmPick('')">배경음 없음${BGMP.upload && !cur ? ' <small>(꾸미기에서 올린 파일 사용 중)</small>' : ''}</span>
+    <button type="button" class="pick" onclick="bgmPick('')">${cur ? '고르기' : '✓ 선택됨'}</button></div>`;
+  box.innerHTML = none + (BGMP.tracks || []).map(t => `<div class="bgmitem ${t.id === cur ? 'on' : ''}" data-id="${esc(t.id)}">
+    <button type="button" onclick="bgmListen('${esc(t.id)}')">${_bgmPlaying === t.id ? '■' : '▶'}</button>
+    <span class="nm" onclick="bgmPick('${esc(t.id)}')">${esc(t.title)}<small>${esc(t.artist)}</small></span>
+    <button type="button" class="pick" onclick="bgmPick('${esc(t.id)}')">${t.id === cur ? '✓ 선택됨' : '고르기'}</button></div>`).join('');
+  // 음량·속도 — 끄는 동안은 숫자만 따라가고, 손을 떼면(change) 저장한다. 범위는 서버(bgm_lib)가 알려 준다.
+  const vol = document.getElementById('bgmVol'), vv = document.getElementById('bgmVolV');
+  const sp = document.getElementById('bgmSpeed'), sv = document.getElementById('bgmSpeedV');
+  vol.max = BGMP.volume_max || 60; vol.value = BGMP.volume; vv.textContent = BGMP.volume + '%';
+  sp.min = BGMP.speed_min || 0.5; sp.max = BGMP.speed_max || 2; sp.value = BGMP.speed || 1;
+  sv.textContent = Number(BGMP.speed || 1).toFixed(2) + 'x';
+  vol.oninput = () => { vv.textContent = vol.value + '%'; if (_bgmAudio) _bgmAudio.volume = _bgmPreviewVol(vol.value); };
+  vol.onchange = () => bgmSave({bgm_volume: Number(vol.value)});
+  sp.oninput = () => { sv.textContent = Number(sp.value).toFixed(2) + 'x'; if (_bgmAudio) _bgmAudio.playbackRate = Number(sp.value); };
+  sp.onchange = () => bgmSave({bgm_speed: Number(sp.value)});
+  document.getElementById('bgmSpeedReset').onclick = () => bgmSave({bgm_speed: 1});
+}
+// 미리듣기 크기 = 완성본에 섞이는 비율 그대로(렌더 volume=값/100). 슬라이더를 움직이면 재생 중에도 바로 따라간다.
+function _bgmPreviewVol(v){ return Math.max(0, Math.min(1, Number(v || 0) / 100)); }
+function bgmListen(id){
+  try{
+    if (_bgmAudio){ _bgmAudio.pause(); _bgmAudio = null; }
+    if (_bgmPlaying === id){ _bgmPlaying = ''; bgmPaint(); return; }
+    _bgmAudio = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(id));
+    _bgmAudio.playbackRate = Number((BGMP && BGMP.speed) || 1);   // 미리듣기도 고른 속도로(음 높이 유지 — 렌더 atempo 와 같다)
+    _bgmAudio.volume = _bgmPreviewVol(BGMP ? BGMP.volume : 15);    // 미리듣기도 고른 음량으로(사장님 "음량조절이 안먹힘")
+    _bgmAudio.onended = () => { _bgmPlaying = ''; bgmPaint(); };
+    _bgmAudio.play().catch(() => {});
+    _bgmPlaying = id;
+  }catch(e){ _bgmPlaying = ''; }
+  bgmPaint();
+}
+function bgmPick(id){ if (BGMP && (BGMP.current || '') === id) return; bgmSave({bgm_lib: id}); }
+async function bgmSave(patch){
+  if (!SL.server || !SL.job) return;
+  const m = document.getElementById('bgmMsg');
+  try{
+    const before = JSON.stringify([BGMP && BGMP.current, BGMP && BGMP.volume, BGMP && BGMP.speed]);
+    const r = await fetch('/api/produce/mix/settings', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({job_id: decodeURIComponent(SL.job)}, patch))});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    await bgmRefresh();
+    // 제작소 STATE.deco 도 맞춘다 — 다른 저장이 꾸미기를 통째로 보내면 옛 bgm 이 방금 고른 곡을 덮는다.
+    try{
+      const bg = BGMP.bgm || {};                                   // 서버 저장값 그대로(업로드 file 도 잃지 않게)
+      if (window.parent && window.parent !== window && typeof window.parent.sfxDecoSync === 'function') window.parent.sfxDecoSync({bgm: bg});
+    }catch(e){}
+    if (m) m.textContent = '저장했어요 — 완성본 만들기를 다시 누르면 바뀐 배경음으로 만들어져요';
+    if (JSON.stringify([BGMP.current, BGMP.volume, BGMP.speed]) !== before) sfxConfirmStale();
+  }catch(e){ if (m) m.textContent = '저장하지 못했어요 — 다시 눌러 주세요'; bgmPaint(); }
+}
+function sfxpPaint(){
+  const d = SFXP; if (!d) return;
+  const on = !!d.on;
+  document.getElementById('sfxOn').checked = on;
+  document.getElementById('sfxOpts').style.display = on ? '' : 'none';
+  document.getElementById('sfxHint').style.display = on ? '' : 'none';
+  document.querySelectorAll('#sfxPanel .sfxseg').forEach(seg => {
+    const key = seg.dataset.key, cur = key === 'sfx_density' ? d.density : d.level;
+    seg.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('on', b.dataset.v === cur);
+      b.onclick = () => { const o = {}; o[key] = b.dataset.v; sfxpSave(o); };
+    });
+  });
+  const sel = document.getElementById('sfxSel');
+  sel.innerHTML = '<option value="auto">기본</option>' +
+    (d.packs || []).filter(p => p.label !== '기본').map(p => `<option value="${p.no}">${esc(p.label)}</option>`).join('');
+  sel.value = (d.pack_choice && d.pack_choice !== 'auto') ? String(d.pack_choice) : 'auto';
+  if (!on && !document.getElementById('sfxMsg').textContent)
+    sfxSay(d.sul ? '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요' : '켜면 이 영상에도 효과음을 넣어 드려요');
+}
+function sfxSay(t){ const m = document.getElementById('sfxMsg'); if (m) m.textContent = t || ''; }
+function sfxTab(t){
+  document.querySelectorAll('#sfxPanel .sfxtab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.getElementById('sfxBodySfx').style.display = t === 'sfx' ? '' : 'none';
+  document.getElementById('sfxBodyBgm').style.display = t === 'bgm' ? '' : 'none';
+}
+let _sfxpAudio = null, _sfxpSlot = 0;
+function sfxListen(){
+  if (!SFXP) return;
+  const slots = ['opener', 'pop', 'dung', 'ding', 'whoosh', 'tick', 'click2'];
+  const slot = slots[_sfxpSlot++ % slots.length];
+  try{
+    if (_sfxpAudio) _sfxpAudio.pause();
+    _sfxpAudio = new Audio('/api/produce/sfx_pack/sound/' + (SFXP.pack_no || 1) + '/' + slot);
+    _sfxpAudio.play().catch(() => {});
+  }catch(e){}
+}
+// ★효과음이 바뀌면 **이미 만든 완성본은 낡았다** — 비워서 [완성본 만들기] 탭이 새로 만들게 한다(2026-10-04 관제 115).
+//   _askRender 는 #confirmBody 가 비었을 때만 렌더한다. 효과음 저장은 편성 저장(applyNow)과 다른 길이라
+//   아무도 안 비워, 안내("다시 누르면 바뀐 효과음으로")와 달리 탭을 눌러도 옛 영상만 나왔다(사장님 화면 제보).
+//   자동으로 다시 렌더하지는 않는다 — 만드는 건 탭을 누를 때다(applyNow 와 같은 규칙).
+function sfxConfirmStale(){
+  try{
+    if ((document.getElementById('confirmBody') || {}).innerHTML.trim() && typeof clearConfirm === 'function') clearConfirm();
+  }catch(e){}
+}
+function _sfxpSig(d){ return d ? JSON.stringify([!!d.on, d.pack_choice, d.density, d.level, d.mute_beats || []]) : ''; }
+async function sfxpSave(patch){
+  if (!SL.server || !SL.job) return;
+  try{
+    const before = _sfxpSig(SFXP);
+    const r = await fetch('/api/produce/mix/settings', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({job_id: decodeURIComponent(SL.job)}, patch))});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    try{ if (window.parent && window.parent !== window && typeof window.parent.sfxDecoSync === 'function') window.parent.sfxDecoSync(patch); }catch(e){}
+    sfxSay('저장했어요 — 완성본 만들기를 다시 누르면 바뀐 효과음으로 만들어져요');
+    await sfxpRefresh();
+    if (_sfxpSig(SFXP) !== before) sfxConfirmStale();      // 값이 실제로 달라졌을 때만(같은 단추를 또 눌러도 안 비운다)
+  }catch(e){
+    sfxSay('저장하지 못했어요 — 다시 눌러 주세요');
+    sfxpPaint();
+  }
+}
+// 칸 머리 🔈/🔇 — 이 칸만 자동 효과음 끄기/켜기(사람이 고른 효과음은 그대로). 값은 sfx_mute_beats.
+function sfxMuteBtn(i){
+  if (!SFXP || !SFXP.on) return '';
+  const bi = (DATA.beats[i] && DATA.beats[i].beat_idx != null) ? DATA.beats[i].beat_idx : i;
+  const muted = (SFXP.mute_beats || []).map(Number).includes(Number(bi));
+  return `<button type="button" class="sfxmute ${muted ? 'off' : ''}" data-mute="${bi}" title="${muted ? '이 칸 효과음이 꺼져 있어요 — 누르면 다시 켭니다' : '이 칸만 효과음을 끕니다'}"
+    onclick="event.stopPropagation();sfxMuteToggle(${bi})">${muted ? '🔇' : '🔈'}</button>`;
+}
+function sfxMuteToggle(bi){
+  if (!SFXP) return;
+  const cur = new Set((SFXP.mute_beats || []).map(Number));
+  if (cur.has(bi)) cur.delete(bi); else cur.add(bi);
+  sfxpSave({sfx_mute_beats: [...cur].sort((a, b) => a - b)});
+}
+// ＋ 내 효과음 등록 — 장면 라이브러리와 같은 업로드(/api/scene/upload, asset_type=sfx). 등록하면 칸의 효과음 고르기에 뜬다.
+async function sfxUpload(inp){
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if (!f) return;
+  if (!SL.server){ sfxSay('이 화면에서는 등록할 수 없어요'); return; }
+  sfxSay('등록하는 중…');
+  try{
+    const fd = new FormData();
+    fd.append('asset_type', 'sfx');
+    fd.append('title', (f.name || '내 효과음').replace(/\.[^.]+$/, '').slice(0, 40) || '내 효과음');
+    fd.append('file', f);
+    const r = await fetch('/api/scene/upload', {method:'POST', body: fd});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    SFX_LIST = null;
+    await loadSfxList();
+    renderBand();
+    sfxSay('등록했어요 — 칸마다 있는 효과음 고르기에서 쓸 수 있어요');
+  }catch(e){ sfxSay('등록하지 못했어요 — ' + (e.message || e)); }
 }
 
 // ── 🔊 효과음(2026-08-21 사장님 "장면처럼 빼거나 다른거 넣거나") ─────────────
@@ -2678,16 +3056,275 @@ function sfxControl(i){
               onchange="setSfxPos(${i}, this.value)">${posOpts}</select>` : '');
 }
 
+// ── AI 장면 만들기(Veo, 2026-09-23) — 스위치 DATA.ai_scene_enabled(관리자만 기본). 상태는 DATA.beats[i].ai_scene.
+//   produce.html 카드에도 같은 버튼이 있지만 3단계 화면은 이 실험실이 그리므로 여기가 사장님이 보는 자리다.
+const _AI_POLL = {};
+function aiSceneControl(i){
+  if (!SL.server || !DATA.ai_scene_enabled) return '';
+  const b = DATA.beats[i] || {};
+  const st = (b.ai_scene || {}).state;
+  if (st === 'queued' || st === 'running') return `<span class="hint" title="Veo가 만드는 중">⏳ AI 장면 만드는 중…</span>`;
+  const isHook = (b.role || '') === '훅';
+  const has = b.cutaway && b.cutaway.match_type === 'ai';
+  return `<button title="이 칸의 제품 프레임을 베이스로 자연스러운 동작만 넣은 4~8초 장면을 만들어 이 칸 위에 덮습니다(약 300원)"
+      onclick="startAiScene(${i},'natural')">✨ AI 장면</button>`
+    + (isHook ? `<button title="훅용 — 빠른 줌인과 한 가지 큰 동작" onclick="startAiScene(${i},'impact')">⚡ 임팩트</button>` : '')
+    + (has ? `<span class="hint" title="완성본·캡컷에서 이 칸은 AI 장면이 덮습니다">🎬 AI ${(b.ai_scene||{}).style==='impact'?'임팩트':'자연'} ${(b.ai_scene||{}).sec||''}초</span>`
+           + `<button class="danger" title="AI 장면을 떼고 담은 장면으로 돌립니다" onclick="removeAiScene(${i})">✕ AI 빼기</button>` : '')
+    + (st === 'failed' ? `<span class="hint" style="color:#f66">⚠ ${esc((b.ai_scene||{}).error || '실패')}</span>` : '');
+}
+// ── 감정짤 칸(관제 143) — 스위치 DATA.meme_enabled(서버 meme_enabled). 짤 자리·길이는 서버(storyboard.meme_head/meme_slots)가 정하고
+//   화면은 [바꾸기][빼기][＋짤]로 서버 /meme 에 부탁만 한다. 짤 컷 배분은 scene_play.js scenesV2Alloc(memeHeadOf)이 cutaway 를 읽어 그대로.
+//   서랍은 static/meme_pack.js 의 MemePack 한 벌(밈팩 페이지·2단계와 같은 것).
+function memeControl(i){
+  if (!SL.server || !DATA.meme_enabled || typeof MemePack === 'undefined') return '';
+  const cw = (DATA.beats[i] || {}).cutaway;
+  if (cw && cw.match_type === 'meme')
+    return `<span class="hint" title="이 줄 맨 앞 ${esc(cw.head_sec)}초에 들어가는 감정짤${cw.manual ? '(직접 고름)' : '(자동)'}">🎭 ${esc(cw.emotion || '')} 짤 ${esc(cw.head_sec)}초</span>`
+      + `<button title="다른 짤로 바꿉니다" onclick="memeOpen(${i})">바꾸기</button>`
+      + `<button class="danger" title="이 줄의 짤을 뺍니다(자동 배치가 다시 넣지 않아요)" onclick="memeSet(${i}, null)">짤 빼기</button>`;
+  if (cw) return '';           // AI 장면 등 다른 끼움 장면이 있는 칸엔 짤을 안 넣는다(서버도 같은 규칙)
+  return `<button title="이 줄 맨 앞에 감정짤을 넣어요" onclick="memeOpen(${i})">＋짤</button>`;
+}
+function memeOpen(i){
+  const cw = (DATA.beats[i] || {}).cutaway || {};
+  MemePack.openDrawer({title: (i + 1) + '번 칸 짤 고르기', emotion: cw.emotion || '', cur: cw.asset_id,
+                       onPick: id => memeSet(i, id)});
+}
+async function memeSet(i, assetId){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/meme', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: beatIdOf(i), asset_id: assetId})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    // 서버가 정한 값(길이 포함)으로 화면을 맞춘다 — 낙관적 갱신 금지
+    DATA.beats[i].cutaway = d.cutaway || null;
+    if (assetId == null) DATA.beats[i].meme_off = 1; else delete DATA.beats[i].meme_off;
+    renderBand();
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
+    alert('짤을 바꾸지 못했어요: ' + (e.message || e));
+  }
+}
+// ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면
+//   칸을 지운 작업(번호 빠짐)에서 뒤 칸의 AI 장면(~300원)·효과음이 엉뚱한 칸에 붙거나 422가 난다(2026-09-27).
+function beatIdOf(i){
+  return beatKeyAt(i);     // 위치→번호 규칙은 scene_play.js beatKeyAt 한 곳(번호 없는 로컬 데이터만 위치로)
+}
+// ★AI 장면은 **프롬프트를 확인한 뒤에만** 만든다(관제 117, 2026-10-04 사장님 "어떤 프롬프트로 하는지 한글과 영어를 같이
+//   보여주고 / 기존 영상 조각을 활용 / 출발 장면·초를 고르고 / 대본 흐름에 맞게 초안을 쓰고 방향을 바꿀 수 있게").
+//   누르면 서버가 그 칸 조각에서 출발 화면을 뜨고 프롬프트 초안을 준다(Veo 호출 없음). 출발 화면(조각·순간)·길이·방향을
+//   바꿔 [초안 다시 쓰기]를 누르면 그 조건으로 다시 쓴다. [이대로 만들기]를 눌러야 생성이 시작되고, 워커는 여기서 확인한
+//   영어 문장·출발 화면·길이 그대로 만든다(영어는 화면에서 못 고친다 — 한글 방향으로만 바꾼다). 규칙은 서버 ai_scene.draft_scene 한 곳.
+const AI_DRAFT = {i: -1, style: 'natural', base: null, sec: null, draft: '', busy: false};
+function aiDraftBox(){
+  let box = document.getElementById('aiDraftBox');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'aiDraftBox';
+  box.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px';
+  box.innerHTML = `<div style="background:#111722;border:1px solid #2b3a52;border-radius:12px;max-width:1040px;width:100%;max-height:94vh;overflow:auto;padding:16px;color:#e8eef8">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
+        <b id="aiDraftTitle">AI 장면 프롬프트 확인</b>
+        <button type="button" class="act" onclick="closeAiDraft()">닫기</button></div>
+      <div id="aiDraftFlow" class="hint" style="margin-bottom:8px;line-height:1.6"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="flex:0 0 220px">
+          <div class="hint" style="margin-bottom:4px">① 출발 화면 — 이 칸에 담은 장면에서 고릅니다</div>
+          <img id="aiDraftImg" alt="" style="width:220px;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000">
+          <div id="aiDraftSegs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+          <input id="aiDraftT" type="range" step="0.1" style="width:100%;margin-top:6px" oninput="aiDraftTLabel()" onchange="aiDraftFrame()">
+          <div id="aiDraftTLab" class="hint"></div>
+        </div>
+        <div style="flex:1 1 440px;min-width:300px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span class="hint">② 길이</span>
+            <select id="aiDraftSec" onchange="AI_DRAFT.sec = +this.value; aiDraftStale()">
+              <option value="4">4초</option><option value="6">6초</option><option value="8">8초</option></select>
+            <span id="aiDraftVis" class="hint"></span>
+          </div>
+          <div class="hint" style="margin-bottom:4px">③ 방향(선택) — 보강할 장면이나 바꿀 방향을 한글로 간단히 적으면, 그에 맞춰 최종 프롬프트를 다시 씁니다</div>
+          <textarea id="aiDraftDir" placeholder="예) 손가락에 끼운 채로 과자를 집어 올리는 모습을 천천히 보여줘" oninput="aiDraftStale()" style="width:100%;height:54px;background:#0a1018;color:#e8eef8;border:1px solid #24324a;border-radius:8px;padding:8px;font:13px/1.5 inherit"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin:8px 0 10px">
+            <button type="button" class="act" id="aiDraftRe" onclick="aiDraftWrite()">✍ 초안 다시 쓰기</button>
+            <span id="aiDraftMsg" class="hint"></span></div>
+          <div class="hint" style="margin-bottom:4px">④ 한글 번역본 — 사물·환경·카메라·움직임·효과</div>
+          <pre id="aiDraftKo" style="white-space:pre-wrap;background:#0a1018;border:1px solid #24324a;border-radius:8px;padding:10px;margin:0 0 10px;font:13px/1.55 inherit;min-height:60px"></pre>
+          <div class="hint" style="margin-bottom:4px">⑤ 최종 영어 프롬프트 — 실제로 Veo에 들어가는 문장(읽기 전용 · 바꾸려면 ③에 한글로 적고 다시 쓰기)</div>
+          <textarea id="aiDraftEn" readonly spellcheck="false" style="width:100%;height:230px;background:#0a1018;color:#e8eef8;border:1px solid #24324a;border-radius:8px;padding:10px;font:12px/1.5 ui-monospace,Consolas,monospace"></textarea>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+            <button type="button" class="act" onclick="closeAiDraft()">취소</button>
+            <button type="button" class="act" id="aiDraftGo" style="border-color:var(--good);color:var(--good)" onclick="confirmAiDraft()">이대로 만들기</button></div>
+        </div></div></div>`;
+  document.body.appendChild(box);
+  return box;
+}
+function closeAiDraft(){ const b = document.getElementById('aiDraftBox'); if (b) b.style.display = 'none'; AI_DRAFT.i = -1; }
+function aiDraftSay(t, bad){ const m = document.getElementById('aiDraftMsg'); if (m){ m.style.color = bad ? '#f66' : ''; m.textContent = t || ''; } }
+// 출발 화면·길이·방향을 바꿨는데 초안은 옛 조건 그대로일 때 — 만들기 전에 다시 쓰라고 알린다
+function aiDraftStale(){
+  AI_DRAFT.stale = true;
+  aiDraftSay('조건을 바꿨어요 — [초안 다시 쓰기]를 누르면 이 조건으로 다시 씁니다');
+}
+function aiDraftSegOf(){ return (DATA.segments || {})[AI_DRAFT.sid] || null; }
+function aiDraftTLabel(){
+  const g = aiDraftSegOf(), el = document.getElementById('aiDraftT'), lab = document.getElementById('aiDraftTLab');
+  if (!g || !el || !lab) return;
+  lab.textContent = `${segMark(AI_DRAFT.sid)} · 원본 ${(+el.value).toFixed(1)}초 지점 (이 장면 ${(+g.start).toFixed(1)}~${(+g.end).toFixed(1)}초)`;
+}
+function aiDraftPick(sid){
+  const g = (DATA.segments || {})[sid]; if (!g) return;
+  AI_DRAFT.sid = sid;
+  const el = document.getElementById('aiDraftT');
+  el.min = (+g.start).toFixed(1); el.max = Math.max(+g.start, +g.end - 0.1).toFixed(1);
+  el.value = Math.min(+el.max, +g.start + 0.2).toFixed(1);
+  document.querySelectorAll('#aiDraftSegs img').forEach(im => { im.style.outline = im.dataset.sid === sid ? '2px solid var(--good)' : 'none'; });
+  aiDraftTLabel();
+  aiDraftFrame();
+}
+async function aiDraftCall(extra){
+  const i = AI_DRAFT.i;
+  const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene/draft', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i), style: AI_DRAFT.style, base: AI_DRAFT.base, sec: AI_DRAFT.sec}, extra || {}))});
+  const d = await r.json().catch(()=>({ok:false}));
+  if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+  if (AI_DRAFT.i !== i) return null;                       // 그 사이 닫았거나 다른 칸을 눌렀다
+  return d;
+}
+function aiDraftShowFrame(d){
+  document.getElementById('aiDraftImg').src = d.base_url;
+  AI_DRAFT.base = d.base || AI_DRAFT.base;
+  AI_DRAFT.sec = d.sec;
+  document.getElementById('aiDraftSec').value = String(d.sec);
+  document.getElementById('aiDraftVis').textContent = `화면에는 앞 ${(+d.visible).toFixed(1)}초가 나옵니다(칸 길이)`;
+}
+// 출발 화면만 다시 뜬다(프롬프트는 안 쓴다 — 빠르다). 화면이 바뀌었으니 초안은 다시 써야 한다.
+async function aiDraftFrame(){
+  const g = aiDraftSegOf(); if (!g) return;
+  AI_DRAFT.base = {video_id: g.video_id, t: +document.getElementById('aiDraftT').value};
+  try{
+    const d = await aiDraftCall({only_frame: true});
+    if (d){ aiDraftShowFrame(d); aiDraftStale(); }
+  }catch(e){ aiDraftSay('⚠ 출발 화면을 못 떴어요: ' + (e.message || e), true); }
+}
+async function aiDraftWrite(){
+  if (AI_DRAFT.busy) return;
+  AI_DRAFT.busy = true;
+  aiDraftSay('⏳ 대본 흐름에 맞춰 프롬프트를 쓰는 중… (아직 영상은 만들지 않습니다)');
+  try{
+    const d = await aiDraftCall({direction: (document.getElementById('aiDraftDir').value || '').trim()});
+    if (d){
+      aiDraftShowFrame(d);
+      document.getElementById('aiDraftKo').textContent = d.prompt_ko || '';
+      document.getElementById('aiDraftEn').value = d.prompt_en || '';
+      AI_DRAFT.draft = d.draft || '';
+      AI_DRAFT.stale = false;
+      aiDraftSay('확인하고 [이대로 만들기]를 누르면 그때 영상을 만듭니다.');
+    }
+  }catch(e){ aiDraftSay('⚠ 프롬프트 초안을 못 만들었어요: ' + (e.message || e), true); }
+  AI_DRAFT.busy = false;
+}
+async function startAiScene(i, style){
+  const box = aiDraftBox();
+  Object.assign(AI_DRAFT, {i, style: style || 'natural', base: null, sec: null, draft: '', stale: false, sid: null});
+  document.getElementById('aiDraftTitle').textContent = `${i + 1}번 칸 · AI 장면 프롬프트 확인 (${style === 'impact' ? '임팩트' : '자연'})`;
+  const nb = k => (DATA.beats[k] && (DATA.beats[k].narration || '')) || '';
+  document.getElementById('aiDraftFlow').innerHTML = '대본 흐름 — '
+    + (i > 0 ? `<span style="opacity:.6">앞: ${esc(nb(i - 1))}</span> → ` : '')
+    + `<b>이 칸: ${esc(nb(i))}</b>`
+    + (i + 1 < DATA.beats.length ? ` → <span style="opacity:.6">뒤: ${esc(nb(i + 1))}</span>` : '');
+  // 이 칸에 담은 장면들 — 눌러서 출발 화면을 바꾼다
+  const ids = (lists[i] || []).filter(id => (DATA.segments || {})[id]);
+  document.getElementById('aiDraftSegs').innerHTML = ids.map(id =>
+    `<img data-sid="${esc(id)}" src="${SL.thumb(id)}" title="${esc(segMark(id))} — 이 장면에서 출발" onclick="aiDraftPick(this.dataset.sid)" style="width:48px;aspect-ratio:9/16;object-fit:cover;border-radius:4px;cursor:pointer;background:#000">`).join('');
+  document.getElementById('aiDraftImg').removeAttribute('src');
+  document.getElementById('aiDraftKo').textContent = '';
+  document.getElementById('aiDraftEn').value = '';
+  document.getElementById('aiDraftDir').value = '';
+  document.getElementById('aiDraftTLab').textContent = '';
+  box.style.display = 'flex';
+  if (ids.length){
+    // 첫 장면을 고른 상태로 시작(서버 기본과 같은 자리 — 첫 장면 시작 0.2초 뒤). 슬라이더만 맞추고 초안은 한 번에 쓴다.
+    const g = DATA.segments[ids[0]];
+    AI_DRAFT.sid = ids[0];
+    const el = document.getElementById('aiDraftT');
+    el.min = (+g.start).toFixed(1); el.max = Math.max(+g.start, +g.end - 0.1).toFixed(1);
+    el.value = Math.min(+el.max, +g.start + 0.2).toFixed(1);
+    AI_DRAFT.base = {video_id: g.video_id, t: +el.value};
+    document.querySelectorAll('#aiDraftSegs img').forEach(im => { im.style.outline = im.dataset.sid === ids[0] ? '2px solid var(--good)' : 'none'; });
+    aiDraftTLabel();
+  }
+  aiDraftWrite();
+}
+async function confirmAiDraft(){
+  const i = AI_DRAFT.i; if (i < 0) return;
+  if (AI_DRAFT.stale){ aiDraftSay('조건을 바꾼 뒤 초안을 다시 쓰지 않았어요 — [초안 다시 쓰기]를 먼저 눌러 주세요', true); return; }
+  if (!AI_DRAFT.draft){ aiDraftSay('프롬프트 초안이 아직 없어요 — [초안 다시 쓰기]를 눌러 주세요', true); return; }
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      // 서버가 방금 보여 준 그 초안(draft 번호)으로만 만든다 — 프롬프트 문장은 서버에 저장돼 있다
+      body: JSON.stringify({beat_idx: beatIdOf(i), style: AI_DRAFT.style, draft: AI_DRAFT.draft})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    DATA.beats[i].ai_scene = {state:'queued', style: d.style || AI_DRAFT.style};
+    closeAiDraft();
+    renderBand();
+    pollAiScene(i);
+  }catch(e){
+    aiDraftSay('⚠ AI 장면을 시작하지 못했어요: ' + (e.message || e), true);
+  }
+}
+function pollAiScene(i){
+  if (_AI_POLL[i]) clearInterval(_AI_POLL[i]);
+  let n = 0;
+  _AI_POLL[i] = setInterval(async () => {
+    n++;
+    let d = null;
+    try{ d = await (await fetch('/api/mix/result/' + SL.job + '?t=' + Date.now(), {cache:'no-store'})).json(); }catch(_){ }
+    const beats = (d && (d.edit_plan || d.plan || {}).beats) || (d && d.beats) || [];
+    const _id = beatIdOf(i);
+    const b = beats.find(x => x.beat_idx === _id);
+    if (b){
+      DATA.beats[i].ai_scene = b.ai_scene || null;
+      DATA.beats[i].cutaway = b.cutaway || null;
+      renderBand();
+    }
+    const st = (b && b.ai_scene || {}).state;
+    if (st === 'done' || st === 'failed' || n > 240){ clearInterval(_AI_POLL[i]); delete _AI_POLL[i]; }
+  }, 3000);
+}
+async function removeAiScene(i){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/cutaway', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: beatIdOf(i), asset_id: null})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    DATA.beats[i].cutaway = null;
+    if (DATA.beats[i].ai_scene) DATA.beats[i].ai_scene.state = 'removed';
+    renderBand();
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ AI 장면을 빼지 못했어요: ' + (e.message || e);
+  }
+}
+
 async function _sfxPost(i, body){
   if (!SL.server) return;
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/sfx', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(Object.assign({beat_idx: i}, body))});
+      body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i)}, body))});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     // 서버가 확정한 값으로 화면을 맞춘다 — 낙관적 갱신은 실패 시 화면과 서버가 어긋난다.
+    const _was = JSON.stringify(DATA.beats[i].sfx || null);
     DATA.beats[i].sfx = d.sfx || null;
+    if (JSON.stringify(DATA.beats[i].sfx) !== _was) sfxConfirmStale();   // 칸 효과음도 완성본에 구워진다 — 같은 규칙(관제 115)
     renderBand();
   }catch(e){
     const h = document.getElementById('tbhint');
@@ -2797,6 +3434,52 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ── 🎚 멘트 칸 통합 속도 ──────────────────────────────────────────────────
+// 기본 칸에는 아무것도 더 보이지 않는다. 고른 칸에만 작은 셀렉트가 열리고, 1.0이 아닌
+// 칸은 접혀도 배속을 남겨 "어디를 바꿨는지" 잊지 않게 한다.
+const SPEED_BUSY = {};
+function speedControl(i){
+  const cur = beatSyncSpeed(i);
+  if (sel !== i && Math.abs(cur - 1) < 0.01) return '';
+  const vals = [0.8,0.9,1.0,1.1,1.2,1.3,1.4];
+  return `<select class="speedpick ${Math.abs(cur-1)>0.01?'changed':''}"
+      title="이 멘트 칸의 음성과 장면을 함께 조절합니다"
+      ${SPEED_BUSY[i] ? 'disabled' : ''}
+      onclick="event.stopPropagation()" onchange="setBeatSpeed(${i},this.value,event)">
+    ${vals.map(v => `<option value="${v}" ${Math.abs(v-cur)<0.01?'selected':''}>${
+      SPEED_BUSY[i] && Math.abs(v-cur)<0.01 ? '변경 중…' : '속도 '+v.toFixed(1)+'×'}</option>`).join('')}
+  </select>`;
+}
+async function setBeatSpeed(i, raw, ev){
+  if (ev) ev.stopPropagation();
+  const wanted = Number(raw), beat = (DATA.beats || [])[i];
+  if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
+  const before = beatSyncSpeed(i);
+  if (Math.abs(before - wanted) < 0.01) return;
+  const beatId = beatKeyAt(i);
+  const ver0 = beat.tts_ver || 0;
+  beat.sync_speed = wanted; SPEED_BUSY[i] = true; renderBand();
+  nsay(`🎚 ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면을 함께 맞추는 중…`);
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${SL.job}/speed/${beatId}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({speed:wanted})});
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || '속도 저장 실패');
+    try{ if (typeof clearConfirm === 'function') clearConfirm(); }catch(e){}
+    const ready = j.unchanged ? true : await waitNarrRegen(i, ver0);
+    if (!ready){
+      nsay(`⚠ ${i+1}번 칸 속도는 저장됐어요. 음성 생성이 길어져 잠시 뒤 새로고침해 확인해주세요`);
+      return;
+    }
+    nsay(`✅ ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면·자막에 반영됐어요`);
+  }catch(e){
+    beat.sync_speed = before;
+    nsay('⚠ 속도 변경 실패: ' + (e.message || e));
+  }finally{
+    delete SPEED_BUSY[i]; renderBand();
+  }
+}
+
 // ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
 //   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
 //   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
@@ -2853,6 +3536,24 @@ function renderBand(){
       : (frozen && SLOW[i] > 1)
         ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ 전체를 살짝 느리게(${(1 / SLOW[i]).toFixed(2)}배속) 해서 빈 곳을 채웠어요 <button class="act" onclick="slowUndo(${i})">되돌리기</button>${
             SLOW[i] > MAX_SLOWMO ? ` <span class="slowwarn">너무 느려요 — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>` : '';
+    // ★[속도 맞추기](2026-09-26 사장님 "꼬다리를 잘라내면 남는 0.3초를 자동으로 속도 맞출까요? 이런 확인").
+    //   사람이 정한 구간(film_)이 구절보다 짧으면 종전엔 말없이 1.15배+정지였다. 카드마다 알리고, 누르면 그 조각만 정확히 늘린다.
+    const _fitSegs = (DATA.beats[i] || {}).fit_segs || [];
+    const fitHtml = !phraseSyncOn(i) ? '' : clips.map((c, ci) => {
+      const src = +(c.src_dur || c.dur), gap = +c.dur - src;
+      if (!String(c.seg_id || '').startsWith('film_') || gap < 0.05) return '';
+      const ratio = (+c.dur / src).toFixed(2);
+      return _fitSegs.includes(c.seg_id)
+        ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 속도 맞춤 ${ratio}배로 채웠어요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button>${
+            +ratio > 1.5 ? ` <span class="slowwarn">많이 느려요 — 다른 장면으로 바꾸는 걸 추천해요</span>` : ''}</div>`
+        : (+ratio > 1.5
+          // ★관제 084(2026-10-02 사장님): 1.5배 넘게 느려지는 '속도 맞추기'는 슬로모션이라 못 쓴다 — 버튼을 숨기고
+          //   장면을 더 붙이는 두 길을 준다. 시간은 컷 계산(planClips)이 붙인 장면들에 고르게 나눈다.
+          ? `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드가 짧아 ${gap.toFixed(1)}초가 비어요 — 장면을 하나 더 붙이면 시간을 나눠 보여 줘요
+               <button class="act" onclick="autoFill(${i})">✨ 같은 의미 장면 붙이기</button>
+               <button class="act" onclick="addNextScene(${i}, '${c.seg_id}')">➕ 원본 다음 장면 붙이기</button></div>`
+          : `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드: ${gap.toFixed(1)}초가 비어요(끝이 멈춰요) <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">속도 맞추기 ${ratio}배</button></div>`);
+    }).join('');
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              data-sid="${c.seg_id}"
@@ -2862,16 +3563,16 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
-             ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
+             ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초${c.more ? ` · 옆 장면이 짧아 원본에서 ${c.more.toFixed(1)}초 더 이어 보여 줘요` : ''} · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
+             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
              onclick="event.stopPropagation();clearTimeout(clickTimer);tlReplaceToggle(${i},${ci})">📦 박스</button
              ><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
-             onclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')">✕</button></div>`).join('')
+             onclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')">✕</button></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // ★담겼지만 화면엔 안 나오는 조각을 흐리게 이어 붙인다(2026-08-23).
     //   planClips는 자막 길이를 채우면 거기서 멈춘다 — 남은 id는 컷이 하나도 안 생겨
@@ -2935,9 +3636,14 @@ function renderBand(){
                //   2.7초 말하는데 9.2초를 담아 6.5초가 안 나왔다. 잡 전체로 45.1초 중
                //   11.8초가 버려졌다). 종전엔 '모자람'만 뜨고 '남음'은 툴팁에만 있어,
                //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
-               : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
+               : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}${sfxMuteBtn(i)}
           <span class="tbtools" onclick="event.stopPropagation()">
-            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
+            ${speedControl(i)}
+            ${cutRuleIsV2()
+              ? `<label title="담은 장면 수만큼 컷을 만들고 시간을 장면에 고르게 나눕니다. 짧은 장면은 가진 만큼만 쓰고 남는 시간은 옆 장면이 원본을 이어서 더 보여 줍니다. 장면이 바뀌는 순간은 가까운 자막 경계에 맞추되, 1.2배 넘게 느려져야 하면 맞추지 않습니다. 끄면 구절 맞춤이 켜집니다"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>
+            <label title="장면이 바뀌는 순간을 자막 줄 경계에 정확히 맞춥니다. 컷 수는 담은 장면 수 그대로이고, 화면이 모자란 장면은 그만큼 느리게 틉니다(1.2배를 넘을 수 있습니다). 장면이 자막 줄보다 많으면 남는 전환은 고르게 나눕니다. 끄면 컷 리듬이 켜집니다"><input type="checkbox" ${phraseBoxOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`
+              : `${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
+            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). 켜면 컷 리듬보다 우선합니다. ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`}
             ${frozen ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
@@ -2947,12 +3653,14 @@ function renderBand(){
             ${pickCount(i) ? `<button class="danger" title="체크한 장면만 이 칸에서 뺍니다"
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             ${sfxControl(i)}
+            ${aiSceneControl(i)}
+            ${memeControl(i)}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
             <button id="fill-${i}" title="${AUTOADD[i] ? '방금 담은 장면만 도로 뺍니다'
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${gapHtml}
+        ${gapHtml}${fitHtml}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
@@ -3030,6 +3738,8 @@ function render(){
                title="어느 소스 영상에서 온 장면인지로 묶습니다 — 여러 영상을 골고루 쓰는지 보입니다">소스별</button>
        <button type="button" class="gm" onclick="palFoldAll(true)" title="모든 영상의 조각을 접습니다">▸ 전체 접기</button>
        <button type="button" class="gm" onclick="palFoldAll(false)" title="모든 영상의 조각을 펼칩니다">▾ 전체 펼치기</button>
+       <button type="button" class="gm ${PAL_ALL?'on':''}" id="palAllBtn" onclick="togglePalAll()"
+               title="영상소스 목록을 화면 높이에 맞춰 줄여 볼지, 아래로 전부 펼쳐 볼지 고릅니다">${PAL_ALL ? '⤒ 영상소스 줄여 보기' : '⤓ 영상소스 다 보기'}</button>
        ${/* ★필름형 토글은 없앴다(2026-08-26 사장님 "필름형을 없애고 소스별에 영상1
              영상2 옆에 필름이라고 만들고"). 소스별 머리줄의 [🎞 필름] 버튼이 같은 일을
              하고, 그쪽은 조각 카드도 함께 보여 고를 게 더 많다 — 모드를 하나 줄인다. */''}
@@ -3100,7 +3810,7 @@ function render(){
             <span class="dur">${(mergeSpan(s.sid).end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}${MERGES[s.sid]?' 🔗':''}</span>
             ${/* 촘촘히 보기에서 카드 밑 글자가 접히면 이 한 줄이 대신 선다(번호·이름·경고).
                  설명은 카드 title에 이미 있다 — 마우스를 올리면 그대로 보인다. */''}
-            <span class="tiglab"><span class="no">${segMark(s.sid)}</span><span class="nm">${esc(s.label || s.scene_desc || '')}</span>${tooShort(s.sid)?'<span class="wr">⚠</span>':''}</span>
+            ${usedCells(s.sid).length ? `<span class="usedin" title="이미 ${usedCells(s.sid).join('·')}번 칸에 쓰인 장면">${usedCells(s.sid).join('·')}번 칸</span>` : ''}<span class="tiglab"><span class="no">${segMark(s.sid)}</span><span class="nm">${esc(s.label || s.scene_desc || '')}</span>${tooShort(s.sid)?'<span class="wr">⚠</span>':''}</span>
             ${/* ★2026-08-26 사장님: [고르기][자르기] 없애고 [필름 펼치기] 하나만.
                   자르기는 이제 필름에서 한다(오른쪽으로 펼쳐짐). 합치기는 아래 🔗로 남긴다. */''}
             <button class="cutbtn" title="이 영상을 필름으로 펼쳐 원하는 구간을 잘라 담습니다"
@@ -3139,7 +3849,8 @@ function render(){
                <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
-            <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
+            ${s.use_point?`<div class="d" style="color:var(--accent2);font-weight:600" title="대본화 소구점 — 이 장면 위에 읽힐 말(1단계 태깅)">🗣 ${esc(s.use_point)}${s.hook_type?` <span class="utag" style="margin-left:4px">훅:${esc(s.hook_type)}</span>`:''}</div>`:''}
+            <div class="d"${s.use_point?' style="opacity:.75"':''}>${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}${_folded ? '' : '</div></div>'}</div>`;
   }).join('');
@@ -3271,7 +3982,7 @@ function render(){
                  ondragover="event.preventDefault()" ondrop="dragDrop(${i},${k},event)"
                  onclick="clickPlay('${id}',event)"
                  ondblclick="event.stopPropagation();clearTimeout(clickTimer);delSeg(${i},${k})"
-                 title="끌어서 순서 바꾸기 · 왼쪽 팔레트로 끌면 빠짐 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
+                 title="끌어서 순서 바꾸기 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
               ${(() => {
                 // ★쓰인 초/가진 초(2026-08-15 사장님 "1번 1.6/1.6초 2번2.2/3.8초 이런식으로").
                 //   앞 > 뒤 = 억지로 늘어난 것 · 앞 < 뒤 = 아직 여유 있음. 뒤는 트림 반영(effLen).
@@ -3346,31 +4057,20 @@ let dragFrom = null;
 function dragStart(i, k, ev){
   dragFrom = {i, k};
   if (ev && ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
-  // 담긴 썸네일을 끄는 동안 왼쪽 팔레트 = 휴지통(2026-08-15 사장님 "좌측으로 끌어다 버리면").
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.add('bin');
 }
 function itemDragEnd(){                    // dragend는 drop 뒤에 온다 — 여기서 뒷정리만
   dragFrom = null;
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.remove('bin');
-}
-// 왼쪽 팔레트에 떨어뜨리면 그 장면을 칸에서 뺀다(빼기 로직은 기존 delSeg 그대로).
-function paneDrop(ev){
-  if (!dragFrom) return;
-  if (ev){ ev.preventDefault(); ev.stopPropagation(); }
-  const {i, k} = dragFrom;
-  itemDragEnd();
-  delSeg(i, k);
 }
 function dragDrop(i, k, ev){
   if (ev) ev.preventDefault();
-  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ dragFrom = null; return; }
+  // ★끝내는 길은 itemDragEnd() 하나뿐이다. 종전엔 여기서 dragFrom만 비우고
+  //   휴지통 표시(bin)는 안 걷어서, 제자리에 놓으면 빨간 띠가 남아 먹통이 됐다.
+  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ itemDragEnd(); return; }
   if (ev) ev.stopPropagation();      // 순서 변경이 칸 드롭(beatDrop)까지 번지지 않게
   const l = lists[i];
   const [moved] = l.splice(dragFrom.k, 1);
   l.splice(k, 0, moved);
-  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 휴지통 표시가 남는다
+  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 dragFrom이 남는다
   render();
 }
 // ★버튼 없이 마우스만으로(2026-08-14 사장님 "버튼 다 없애. 끌어당기고 움직이는 걸로 충분").
@@ -3449,6 +4149,7 @@ function snapWork(){
     stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
     fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
     phraseOff: PHRASE_SYNC,  // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
+    phraseExact: PHRASE_EXACT,   // 새 규칙 작업의 [구절 맞춤] 켠 칸(관제 106)
     cuts: CUTS, slow: SLOW   // 끈 칸의 얼린 컷·느리게(2026-09-14)
     // ★at(저장 시각)은 일부러 미포함 — 매번 달라져 "바뀜 것이 없으면 안 쌓는다"를
     //   통째로 무력화한다. 저장할 때만 saveWork가 붙인다.
@@ -3501,7 +4202,12 @@ function saveWork(){
   }
   if (cur) _undoCur = cur;
   undoBtnSync();
-  // 저장본에는 at을 붙인다 — serverEditIsNewer가 이 시각을 본다.
+  // ★읽기와 쓰기를 분리한다. 화면을 열 때의 복원·phash/자막 배경 갱신도 render()를
+  //   부르지만 사람의 편집은 아니다. 예전에는 이 자리에서 무조건 POST해, 재렌더 뒤
+  //   MIX에 돌아오기만 해도 브라우저의 옛 배치가 서버 최신본을 덮었다(박세현님 실측).
+  if (_booting || !cur || cur === _lastPersistedWork) return;
+  _lastPersistedWork = cur;
+  // 저장본에는 복구·진단용 시각을 붙인다(서버 충돌 판정은 내용 판본을 쓴다).
   try{ if (snap) localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, snap, {at: new Date().toISOString()}))); }catch(e){}
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
@@ -3514,8 +4220,9 @@ function saveWork(){
 //   '칼로 빵 조각내는 손'이었다. 사용자는 화면대로 나올 줄 알고 넘어간다 = 조용한 어긋남.
 //   편집이 멈춘 뒤 1.2초에 한 번만 보낸다(끌어놓는 중에 매번 SSH를 때리면 느려진다).
 let _autoApplyTimer = null, _autoApplyBusy = false, _autoApplyAgain = false;
+let _sceneConflict = false;
 function autoApply(){
-  if (!SL.server) return;                 // 로컬 실험실은 얹을 서버가 없다
+  if (!SL.server || _sceneConflict) return; // 충돌 뒤 자동 재시도는 최신본을 덮을 수 있다
   clearTimeout(_autoApplyTimer);
   _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
@@ -3527,70 +4234,25 @@ function autoApply(){
 //    그래서 없애지 않고 "지금 비운다"를 따로 만든다.)
 async function flushApply(){
   if (!SL.server) return;
+  if (_sceneConflict) throw new Error('scene_lab_revision_conflict');
   clearTimeout(_autoApplyTimer); _autoApplyTimer = null;
   await applyServer({auto: true});        // 보내는 중이면 applyServer가 알아서 한 번 더 보낸다
+  if (_sceneConflict) throw new Error('scene_lab_revision_conflict');
   // 보내는 중이었다면 _autoApplyAgain으로 재전송이 예약된다 — 그것까지 끝나길 짧게 기다린다.
   for (let i = 0; i < 40 && (_autoApplyBusy || _autoApplyAgain); i++){
     await new Promise(r => setTimeout(r, 100));
   }
 }
 window.flushApply = flushApply;
-// ★내 저장본 vs 서버 편성 — **새 쪽**을 쓴다(2026-08-21 버그리뷰 P1).
-//   종전엔 localStorage가 무조건 이겼다. 그래서 화면에 보이는 편성과 실제로 렌더되는
-//   편성이 다른 상태가 계속 유지됐다(실측 job 14e75ac6024a: 화면은 2번 칸 '장면 없음'인데
-//   서버엔 3.2초짜리가 남아 있었다 / 다른 잡은 화면 12.1초 vs 서버 7.0초).
-//   다른 PC·다른 브라우저에서 열면 편성이 다르게 보이던 것도 같은 뿌리다.
-//
-// ⚠️판정 기준을 mix_jobs.updated_at으로 하면 안 된다 — 음성 생성 같은 다른 이유로도
-//   움직여서 서버가 늘 새로워 보이고, 그러면 사장님이 방금 한 편집을 매번 버린다.
-//   그래서 서버가 **편성을 얹은 시각**(edit_plan.scene_lab.at)만 본다.
-// ⚠️여유 30초: 내 저장(saveWork) → 서버 반영(autoApply 1.2초 뒤)이라 서버 시각이 내
-//   저장본보다 늘 조금 늦다. 여유가 없으면 **내가 방금 한 편집을 내가 버린다.**
-//   다른 기기에서 고친 경우는 보통 몇 분 이상 벌어지므로 30초로 충분히 갈린다.
 // ✋ FIXLEN 복원은 이 함수 하나로(복원 경로가 loadWork·loadSaved·서버편성 셋이다 —
 //    ★저장가드 교훈: 하이드레이션 함수 하나, 값이 없으면 **비운다**(캐리오버 방지)).
 // 얼린 컷 복원 — 옛 저장본엔 없다 → 비운다(끈 칸은 planClips가 처음 볼 때 지금 화면을 얼린다)
-function hydrateCuts(cuts, slow){
-  Object.keys(CUTS).forEach(k => delete CUTS[k]);
-  Object.keys(SLOW).forEach(k => delete SLOW[k]);
-  for (const [k, v] of Object.entries(cuts || {})){
-    if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
-                                     .map(c => ({seg_id: c.seg_id, dur: +c.dur}));
-  }
-  for (const [k, v] of Object.entries(slow || {})) if (+v > 1) SLOW[k] = +v;
-}
-function cutsFromBeats(){
-  const c = {}, s = {};
-  (DATA.beats || []).forEach((b, i) => {
-    if (Array.isArray(b.manual_cuts)) c[i] = b.manual_cuts;
-    if (+b.slow > 1) s[i] = +b.slow;
-  });
-  return [c, s];
-}
-function hydrateFixlen(map){
-  Object.keys(FIXLEN).forEach(k => delete FIXLEN[k]);
-  for (const [k, v] of Object.entries(map || {})){
-    const n = parseFloat(v);
-    if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100;
-  }
-}
-// 서버 편성으로 열 때 — 서버는 칸마다 fixed_lens({조각id:초})로 갖고 있다(apply_scene_lab).
-function fixlenFromBeats(){
-  const out = {};
-  (DATA.beats || []).forEach((b, i) => {
-    for (const [sid, v] of Object.entries(b.fixed_lens || {})) out[i + ':' + sid] = v;
-  });
-  return out;
-}
-function serverEditIsNewer(){
-  const sAt = DATA && DATA.scene_lab_at;
-  if (!sAt) return false;                       // 서버에 얹힌 편성이 없다 → 내 것이 맞다
-  let lAt = null;
-  try{ lAt = (JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || {}).at; }catch(e){}
-  if (!lAt) return false;
-  const sv = Date.parse(sAt), lo = Date.parse(lAt);
-  if (!sv || !lo) return false;                 // 시각을 못 읽으면 종전대로(내 것 우선)
-  return (sv - lo) > 30000;
+// 저장본(snapWork 모양 — 로컬·다른 PC 조립) → 칸 편집 상태. 얹는 건 scene_play.js applyScreenState 한 곳(관제 148).
+//   옛 저장본엔 없는 키는 {} → 비워진다(캐리오버 방지).
+function stateOfWork(w){
+  return {lists: (w.lists || []).map(l => Array.isArray(l) ? [...new Set(l)] : []),
+          stretch: w.stretch || {}, phrase_sync: w.phraseOff || {}, phrase_exact: w.phraseExact || {},
+          cuts: w.cuts || {}, slow: w.slow || {}, fixlen: w.fixlen || {}, trims: w.trims || {}, merges: w.merges || {}};
 }
 function loadWork(){
   try{
@@ -3614,25 +4276,15 @@ function applyWork(w){
     //   담기 경로(add·칸간 이동·채우기)는 모두 중복을 막으므로, 옛 저장본에 남은 중복만
     //   여기서 걷어내면 그 병의 조건 자체가 사라진다 — 자리 계산을 새로 만들 필요가 없다
     //   (컷은 라운드로빈으로 되풀이돼서 컷 번호와 담긴 목록의 자리가 1:1이 아니다).
-    lists = w.lists.map(l => Array.isArray(l) ? [...new Set(l)] : []);
+    // ★칸 편집 상태는 공용 함수 하나로 얹는다(관제 148 — scene_play.js applyScreenState). 저장본 모양만 여기서 바꾼다.
+    //   ★같은 조각 중복은 stateOfWork 가 걷는다(2026-08-21 버그리뷰 P3-5 — 자리 찾기 indexOf 가 첫 번째만 집는 병).
+    applyScreenState(stateOfWork(w));
     chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
     Object.keys(NARR).forEach(k => delete NARR[k]);
     Object.assign(NARR, w.narr || {});
-    Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 옛 저장본엔 trims가 없다 → {} 그대로
-    Object.assign(TRIMS, w.trims || {});
-    // 🔗 합친 조각도 같이 — 옛 저장본엔 merges가 없다 → {} 그대로(옛 편집이 안 깨진다)
-    Object.keys(MERGES).forEach(k => delete MERGES[k]);
-    Object.assign(MERGES, w.merges || {});
-    // 늘려 채우기·자동 채우기도 저장본에서 — 옛 저장본엔 없다 → {} 그대로(깨지지 않는다)
-    Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-    Object.assign(STRETCH, w.stretch || {});
     Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
     Object.assign(AUTOADD, w.autoadd || {});
     hydrateExtra(w);
-    hydrateFixlen(w.fixlen);   // ✋ 옛 저장본엔 없다 → 비워진다(캐리오버 방지)
-    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-    Object.assign(PHRASE_SYNC, w.phraseOff || {});
-    if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
@@ -3646,23 +4298,13 @@ function loadSaved(){
   const w = DATA.saved;
   if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
   mode = w.mode || 'hand';
-  lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
+  applyScreenState(stateOfWork(w));            // 칸 편집 상태 = 공용 함수 하나(관제 148)
   chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
   Object.keys(NARR).forEach(k => delete NARR[k]);
   Object.assign(NARR, w.narr || {});
-  Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
-  Object.assign(TRIMS, w.trims || {});
-  Object.keys(MERGES).forEach(k => delete MERGES[k]);
-  Object.assign(MERGES, w.merges || {});
-  Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-  Object.assign(STRETCH, w.stretch || {});
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
   Object.assign(AUTOADD, w.autoadd || {});
   hydrateExtra(w);
-  hydrateFixlen(w.fixlen);     // ✋ 없으면 비운다
-  Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-  Object.assign(PHRASE_SYNC, w.phraseOff || {});
-  if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
     if (b) b.classList.toggle('on', x === mode);
@@ -3831,12 +4473,13 @@ async function saveNarr(i){
 // 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
 // (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
 async function waitNarrRegen(i, ver0){
+  const wantedId = beatKeyAt(i);
   for (let n = 0; n < 40; n++){                 // 최대 ~40초
     await new Promise(r => setTimeout(r, 1000));
     try{
       const d = await (await fetch(`/api/mix/scene_lab/${SL.job}`, {cache:'no-store'})).json();
       if (!d.ok) continue;
-      const b = (d.data.beats || []).find(x => x.beat_idx === i);
+      const b = (d.data.beats || []).find(x => x.beat_idx === wantedId);
       if (b && (b.tts_ver || 0) > ver0){
         // 새 자막·길이를 통째로 갈아끼운다(서버 계산 결과가 유일한 진실).
         DATA.beats = d.data.beats; DATA.captions = d.data.captions;
@@ -3859,6 +4502,22 @@ async function waitNarrRegen(i, ver0){
 //   컷 수 = 자막 구절 수, 조각이 모자라면 담은 순서대로 순환(1,2,1,2)은 사장님이 정한 규칙(09-02,
 //   2026-09-11 재확인 "1212 기존으로") — 규칙은 두지 않고 **보는 것 = 나오는 것**만 맞춘다.
 //   제작소(produce.html _labRefreshCaptions)가 같은 도메인 iframe의 이 함수를 직접 부른다.
+// 서버가 실어 보낸 짝(owner)만 옮겨 담는다. 바뀐 게 있으면 true(다시 그려야 한다).
+function adoptOwners(caps){
+  let changed = false;
+  Object.keys(caps || {}).forEach(i => {
+    const cur = (DATA.captions || {})[i] || [], nw = caps[i] || [];
+    if (cur.length !== nw.length) return;
+    nw.forEach((r, k) => {
+      const o = Number.isInteger(r.owner) ? r.owner : undefined;
+      const n = Number.isInteger(r.owner_n) ? r.owner_n : undefined;
+      if (cur[k].owner !== o || cur[k].owner_n !== n) changed = true;
+      if (o === undefined){ delete cur[k].owner; delete cur[k].owner_n; }
+      else { cur[k].owner = o; cur[k].owner_n = n; }
+    });
+  });
+  return changed;
+}
 window.refreshCaptions = async function(i){
   if (!SL.server || !SL.job) return false;
   try{
@@ -3893,13 +4552,15 @@ function estSec(t){
 // 대본을 고쳐(NARR) 아직 음성을 안 뽑았으면 옛 구절이라 시간이 안 맞는다 → 그때는 안 그린다.
 function capSegs(i){
   if (narrChanged(i)) return [];                       // 고친 대본 ≠ 서버 구절
-  const rows = (DATA.captions || {})[String(i)] || (DATA.captions || {})[i] || [];
+  const rows = capsOf(i);                              // 키=번호 — capsOf가 위치→번호로 바꿔 읽는다
   const out = [];
   for (const r of rows){
     const s = +r.start, e = +r.end;
     if (!(e > s)) continue;
+    // sec = 말 길이(서버 caption_rows 의 sec). end 는 렌더처럼 칸 끝까지 머물러 마지막 구절은 end-start 가 더 길다.
+    const sec = (r.sec != null) ? +r.sec : (e - s);
     out.push({text: String(r.text || '').trim(),
-              sec: Math.round((e - s) * 100) / 100, start: s, end: e});
+              sec: Math.round(sec * 100) / 100, start: s, end: e});
   }
   return out;
 }
@@ -3965,9 +4626,13 @@ function _editPayload(){
   return {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
+      fit: (b.fit_segs || []).filter(x => (lists[i] || []).includes(x)),   // [속도 맞추기] 누른 조각
       phrase: phraseSyncOn(i),      // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
+      exact: phraseExactOn(i),      // 새 규칙 작업의 [구절 맞춤] — 전환을 자막 경계에 정확히(관제 106)
       // 끈 칸 = 화면에 보이는 컷 그대로 렌더(2026-09-14). 켠 칸은 안 보낸다.
-      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => ({seg_id: c.seg_id, dur: c.dur})),
+      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => c.lock
+              ? ({seg_id: c.seg_id, dur: c.dur, lock: 1})     // 🔒 잠금도 저장(새로고침·다른 PC 유지)
+              : ({seg_id: c.seg_id, dur: c.dur})),
       slow: phraseSyncOn(i) ? 1 : (SLOW[i] || 1)})),
     trims: TRIMS,
     merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
@@ -3985,6 +4650,7 @@ function _editSig(){ return JSON.stringify(_editPayload()); }
 async function applyServer(opt){
   const auto = !!(opt && opt.auto);
   // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
+  if (_sceneConflict) return;
   if (_autoApplyBusy){ _autoApplyAgain = true; return; }
   _autoApplyBusy = true;
   const msg = document.getElementById('savedmsg');
@@ -3992,9 +4658,13 @@ async function applyServer(opt){
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
-                                     body: JSON.stringify({payload})});
+                                     body: JSON.stringify({payload, base_revision: SCENE_REV})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
+    if (j.revision) SCENE_REV = j.revision;
+    // ★서버가 방금 얼린 장면↔구절 짝(owner)을 받아 화면을 서버와 다시 맞춘다(2026-09-21).
+    //   자막 글자·시간은 안 건드린다 — 짝만. 줄 수가 다르면(그 사이 자막이 바뀜) 건너뛴다.
+    if (j.captions && adoptOwners(j.captions) && typeof repaint === 'function') repaint();
     // ★편성이 바뀌었으면 **이미 만든 완성본은 낡았다** — 비워서 다음 탭 클릭에 새로 만들게 한다
     //   (2026-08-25 고객 제보: "소재를 빼고 넣은 뒤 완성본 만들기를 눌렀는데 처음 것이 그대로").
     //   원인은 _askRender가 #confirmBody가 비었을 때만 렌더하는데, 편집 저장 경로에서
@@ -4019,7 +4689,10 @@ async function applyServer(opt){
   }catch(e){
     // ★자동이라고 조용히 넘기지 않는다 — 안 올라간 걸 모르면 화면과 렌더가 어긋난다.
     if (msg) msg.textContent = '⚠ 저장 실패: ' + (e.message || e) + ' — 잠시 뒤 다시 시도돼요';
-    if (auto) setTimeout(autoApply, 5000);      // 네트워크 일시장애면 곧 성공한다
+    if (/다른 화면에서 편성이 바뀌었습니다/.test(e.message || '')){
+      _sceneConflict = true;
+      saylo('⚠ 다른 화면의 최신 편성을 보호했습니다. 이 화면을 새로고침한 뒤 다시 고쳐주세요.');
+    } else if (auto) setTimeout(autoApply, 5000); // 네트워크 일시장애면 곧 성공한다
   }finally{
     _autoApplyBusy = false;
     if (_autoApplyAgain){ _autoApplyAgain = false; autoApply(); }
@@ -4031,9 +4704,10 @@ async function revertServer(){
   if (msg) msg.textContent = '↩ 반영 취소하는 중…';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
-                                     body: JSON.stringify({revert: true})});
+                                     body: JSON.stringify({revert: true, base_revision: SCENE_REV})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
+    if (j.revision) SCENE_REV = j.revision;
     if (msg) msg.textContent = '↩ 반영 취소됨 — 원래 편집안(AI 배치)으로 되돌렸습니다';
   }catch(e){
     if (msg) msg.textContent = '⚠ 취소 실패: ' + (e.message || e);
@@ -4093,7 +4767,12 @@ function add(sid){
     return;
   }
   l.push(sid); chosen.add(sid); render();
+  // ★다른 칸에도 쓰인 장면이면 알린다(2026-10-03 사장님 "같은 카드가 자주 쓰인다" — 막지는 않는다, 일부러 쓸 수도 있다)
+  const _also = lists.map((L, k) => (k !== sel && (L || []).includes(sid)) ? k + 1 : 0).filter(Boolean);
+  if (_also.length && typeof nsay === 'function') nsay(`담았어요 — 이 장면은 ${_also.join('·')}번 칸에도 쓰여 같은 화면이 두 번 나와요`);
 }
+// 이 장면이 담긴 칸 번호들(재료 목록 표시용 — 그리기만)
+function usedCells(sid){ return lists.map((L, k) => (L || []).includes(sid) ? k + 1 : 0).filter(Boolean); }
 // 편집목록에서 빼기(두 번 클릭 · 팔레트로 끌어놓기). 타임프레임의 dropCutFromBand와
 // **같은 약속**이다: 뺀 자리는 자동으로 안 채운다, 대신 무슨 일이 났는지 알린다.
 function delSeg(i, k){
@@ -4138,6 +4817,22 @@ async function aiPicks(i){
     }
     return ok.length ? ok.map(p => p.seg_id) : null;
   }catch(e){ return null; }
+}
+// [➕ 원본 다음 장면 붙이기](관제 084) — 그 카드가 쓰는 구간 바로 뒤, 같은 영상의 안 쓴 장면 하나를 이 칸에 담는다.
+//   같은 의미 장면은 [✨ 같은 의미 장면 붙이기](autoFill — 매칭 전문가)가 고른다. 시간 나누기는 planClips 한 곳.
+function addNextScene(i, sid){
+  let vid = null, end = null;
+  const m = /^film_(.+)_([\d.]+)_([\d.]+)$/.exec(String(sid || ''));
+  if (m){ vid = m[1]; end = +m[3]; }
+  else if (DATA.segments[sid]){ vid = DATA.segments[sid].video_id; end = +DATA.segments[sid].end; }
+  const used = new Set(lists.flat());
+  const cand = Object.keys(DATA.segments || {})
+    .filter(k => { const g = DATA.segments[k]; return g && g.video_id === vid && +g.start >= end - 0.05 && !used.has(k) && !tooShort(k); })
+    .sort((a, b) => DATA.segments[a].start - DATA.segments[b].start);
+  if (!vid || !cand.length){ nsay('이 영상에는 이어지는 장면이 없어요 — ✨ 같은 의미 장면 붙이기를 눌러 보세요'); return; }
+  lists[i].push(cand[0]); sel = i; render();
+  const el0 = document.getElementById('savedmsg');
+  if (el0) el0.textContent = '➕ 원본에서 이어지는 장면을 하나 붙였어요 — 시간은 두 장면에 나눠 보여 줘요';
 }
 async function autoFill(i){
   if (AUTOADD[i] && AUTOADD[i].length){                  // 두 번째 누름 = 되돌리기
@@ -4217,6 +4912,7 @@ async function autoFill(i){
   const fitsRole = id => want.length && useTags(id).some(t => want.includes(t));
   const cand = () => Object.keys(DATA.segments).filter(id =>
     !inAny.has(id) && !tooShort(id) && !outOfRange(id)
+    && DATA.segments[id].auto_ok !== false      // 씨앗·첫끝 컷은 자동으로 안 담는다 — 판단은 서버 edit_plan.non_edge_segs(관제 138)
     && !reps.has((dupMap()[id] || {}).rep || id));
   // ★남은 부족분이 MIN_CLIP(0.8초)보다 작으면 **더 담지 않는다**(2026-08-16 실측).
   //   0.8초 미만 토막은 planClips가 만들지 않고 앞 컷들에 나눠 흡수시킨다 — 그래서 한 장 더
@@ -4270,6 +4966,8 @@ function togglePick(i, sid, on){
 // 이 칸에서 체크한 장면만 뺀다. 자동으로 담아준 것(AUTOADD)에 섞여 있으면 그 기록에서도 지운다
 // — 안 지우면 '↩ 담은 N장 빼기'가 이미 없는 것을 빼려다 개수가 어긋난다.
 function dropPicked(i){
+  const memePk = [...PICKED].find(k => k.startsWith(i + ':meme:'));   // 체크한 짤 카드(관제 165)
+  if (memePk){ PICKED.delete(memePk); memeSet(i, null); }
   const gone = (lists[i] || []).filter(sid => isPicked(i, sid));
   if (!gone.length) return;
   const rm = new Set(gone);
@@ -4399,6 +5097,7 @@ async function boot(){
     if (!d || !d.ok) return bootFail((d && d.error) || '데이터를 불러오지 못했습니다');
     DATA = d.data;
   }
+  SCENE_REV = DATA.scene_lab_revision || '';
   normalizeData();
   SAVE_KEY = 'sceneLab:' + (DATA.job_id || 'job');
   if (DATA.picks && (DATA.picks.lists || []).length){
@@ -4408,10 +5107,11 @@ async function boot(){
   }
   // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
   warmVideos();
-  if (serverEditIsNewer()){
-    // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
+  if (hasServerEdit()){
+    // 서버 편성이 있으면 무조건 그것이 기준이다. 30초 시각 추정으로 로컬 저장본을
+    // 이기게 두면 렌더 직후 재진입처럼 간격이 짧을 때 옛 로컬이 최신 서버를 덮는다.
     clearWork();
-    restoreServer('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
+    restoreServer('🔄 서버에 저장된 최신 편성을 불러왔어요');
   }
   else if (loadWork()) render();
   else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
@@ -4426,8 +5126,12 @@ async function boot(){
   wireBandPan();
   // 효과음 목록을 받아오면 칸 도구줄에 선택칸이 생긴다(없으면 줄 자체가 안 난다).
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
+  sfxpRefresh();                   // 미리보기 아래 효과음 | 배경음 패널(관제 086)
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  // 여기까지는 읽기/복원이다. 이후 사람 조작으로 상태가 달라질 때만 저장한다.
+  _lastPersistedWork = JSON.stringify(snapWork());
+  _booting = false;
   undoMark();                      // ↩ 되돌리기 기준점 — 이걸 안 박으면 **첫 편집**이 되돌려지지 않는다
   stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }

@@ -225,6 +225,7 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
     """1이벤트 기록. 실패해도 예외를 올리지 않는다(관측이 본작업을 죽이면 안 된다)."""
     if not _enabled():
         return
+    _owner_cids = []                  # 죽은 키의 주인 회원(OUT_AUTH일 때만 채운다) — 경보 처방이 갈린다
     if os.environ.get("PYTEST_CURRENT_TEST") and str(_DB_PATH).endswith("reference.db"):
         # ★테스트가 라이브 DB를 오염시키지 않게(ops_alert 2026-08-14 실사고와 같은 이유).
         #   테스트는 set_db_path()로 임시 DB를 지정해서 검증한다.
@@ -258,6 +259,23 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                  #   근거를 되짚을 방법이 없다.
                  outcome, http, (str(detail)[:1200] if detail else None),
                  dur_ms, _proc_kind()))
+            # ★죽은 키가 **회원 등록 키**면 그 회원 화면에도 '죽음'으로 보이게 한다(2026-09-18).
+            #   실측: 회원 290·315의 키는 401/403으로 영구 제외됐는데 customer_keys.status는 'ok'라
+            #   회원은 자기 키가 죽은 줄 모르고, 사장님 경보만 "env에서 빼라"고 헛처방을 냈다.
+            #   정확한 키 지문(keycrypt.fingerprint = key_hash)으로만 맞춘다 — 꼬리 비교로 남의 키를 건드리지 않는다.
+            if outcome == OUT_AUTH and key:
+                try:
+                    from shopping_shorts import keycrypt
+                    # 누구 키인지 먼저 본다 — 경보 처방이 갈린다(회원 키에 'env에서 빼라'는 헛처방).
+                    _owner_cids = [r[0] for r in conn.execute(
+                        "SELECT DISTINCT customer_id FROM customer_keys WHERE key_hash=?",
+                        (keycrypt.fingerprint(key),)).fetchall()]
+                    conn.execute(
+                        "UPDATE customer_keys SET status='bad', checked_at=? "
+                        "WHERE key_hash=? AND COALESCE(status,'') <> 'bad'",
+                        (int(now.timestamp()), keycrypt.fingerprint(key)))
+                except Exception as e:    # noqa: BLE001 — 회원 키 표시 갱신 실패가 기록을 막으면 안 된다
+                    log.debug("api_health: 회원 키 상태 갱신 실패(무해) %r", e)
             conn.commit()
         finally:
             conn.close()
@@ -270,7 +288,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
             # 제미니·유튜브는 회사 풀 키, 나머지는 회원 등록(BYOK) 키가 대부분이다 —
             # 처방을 갈라 보낸다(리뷰 8: 회원 키에 ".env에서 제거"는 틀린 처방).
             # kind도 서비스별로 — 한 쿨다운에 서로 다른 서비스 사망이 묻히지 않게.
-            if service in ("gemini", "youtube"):
+            if _owner_cids:
+                # ★회원 등록 키(2026-09-25) — 제미니도 회원 키가 공용 풀에 섞인다. 실측: 09-23·24 경보
+                #   2건이 회원 57·315 키였는데 "env에서 빼라"가 붙어 있었다. 회원 화면엔 교체 안내가 자동으로 뜬다.
+                cure = f" — 회원 {', '.join(str(c) for c in _owner_cids)}의 등록 키"
+            elif service in ("gemini", "youtube"):
                 cure = " — /apiwatch에서 확인, env에서 제거 필요"
             else:
                 cure = " — 회원 등록 키(BYOK)일 수 있음: /apiwatch 피드에서 고객 확인"
@@ -283,7 +305,9 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure,
                 grade=ops_alert.GRADE_OPS,
                 auto="이 키는 자동 제외됐고 다른 키로 계속 돕니다 — 서비스 중단 아님",
-                todo=("env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
+                todo=(f"회원 {', '.join(str(c) for c in _owner_cids)} 화면에 교체 안내가 자동으로 뜬다(설정·사이드바)"
+                      if _owner_cids else
+                      "env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
                       else "회원 키면 회원에게 키 교체 안내"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
@@ -372,17 +396,24 @@ def _shorts_pool_snapshot():
         locked = comment_gen._live_exhausted()          # {idx: 만료ts} — 만료분 자동 제외
         state = comment_gen._load_state()
         burned = sorted(state.get("revived_once") or [])
+        # ★사망·사용불가 정지도 표시한다(2026-09-25) — 실제 로테이션(comment_gen._live_key_indices)은
+        #   이 지문들을 빼는데 화면은 'live'로 세서 live 수·예산이 부풀려졌다(반박 검토에서 발견).
+        #   같은 함수를 봐야 화면과 실제가 어긋나지 않는다(0순위-B).
+        dead_fps = comment_gen._dead_fingerprints(state)
+        dead_idx = {i for i, k in enumerate(keys)
+                    if dead_fps and comment_gen._key_fingerprint(k) in dead_fps}
         now = time.time()
         out.update({
             "total": len(keys), "owner": n_owner, "member": max(0, len(keys) - n_owner),
             "locked": [{"idx": i, "left_s": max(0, int(t - now)),
                         "tail": key_tail(keys[i]) if i < len(keys) else None}
                        for i, t in sorted(locked.items())],
-            "live": len(keys) - len([i for i in locked if i < len(keys)]),
+            "live": len([i for i in range(len(keys)) if i not in locked and i not in dead_idx]),
+            "stopped": len(dead_idx),
             "revived_once": burned,
             "keys": [{"idx": i, "tail": key_tail(k),
                       "owner": "owner" if i < n_owner else "member",
-                      "state": ("locked" if i in locked else "live")}
+                      "state": ("stopped" if i in dead_idx else "locked" if i in locked else "live")}
                      for i, k in enumerate(keys)],
         })
     except Exception as e:                # noqa: BLE001
@@ -508,6 +539,16 @@ def aggregates(hours=24):
                 f"COUNT(*) n FROM api_events "
                 f"WHERE ts >= ? GROUP BY service, outcome, customer_id", (since,))]
 
+            # ★고객에게 나간 무음만 따로 센다(2026-09-18). 무음 폴백은 '키 없는 환경에서 합성했다'이지
+            #   '고객이 무음 영상을 받았다'가 아니다 — 실측: 09-16·09-18 경보 21건이 전부
+            #   proc='bb_style'(다른 세션이 /tmp에서 키 환경 없이 돌린 시험 스크립트, 1분 뒤 키 싣고
+            #   재실행해 성공 23건). 경보 문구는 "고객이 무음 영상을 받았다"였고 사장님께 그대로 올라갔다.
+            #   고객 영상을 만드는 프로세스는 web(미리듣기·재합성)과 worker(렌더)뿐이다.
+            out["silent_customer"] = {r["service"]: r["n"] for r in conn.execute(
+                "SELECT service, COUNT(*) n FROM api_events "
+                "WHERE ts >= ? AND outcome = ? AND proc IN ('web','worker') "
+                "GROUP BY service", (since, OUT_SILENT))}
+
             out["by_op"] = [dict(r) for r in conn.execute(
                 "SELECT COALESCE(op,'(미상)') op, service, outcome, COUNT(*) n "
                 "FROM api_events WHERE ts >= ? GROUP BY op, service, outcome "
@@ -555,6 +596,24 @@ def aggregates(hours=24):
                 "FROM api_events WHERE outcome=? AND ts >= ? "
                 "GROUP BY service, pool, key_tail, customer_id ORDER BY hits DESC LIMIT 50",
                 (OUT_AUTH, since))]
+            # ★공용 풀에 합류한 **회원 키**의 주인을 찾아 붙인다(2026-09-18 실측). 풀은 '누구 것'을
+            #   안 따지므로(keypool) 호출 기록에 customer_id가 비어, 회원 키 사망이 **운영 키 사망**으로
+            #   잡혀 danger + "env에서 죽은 키를 빼라"가 사장님께 올라갔다. 실측: 경보의 …EARXNg(회원 57)·
+            #   …ZOEC5Q/…FiSBsw(회원 290)·…sJbmaQ(회원 315)는 env에 없는 회원 등록 키였다 = 할 수 없는 처방.
+            #   customer_keys.label은 keycrypt.mask(앞8·뒤5)라 꼬리 5자로 맞춘다(같은 DB, 복호 불필요).
+            for _d in out["dead_keys"]:
+                _t = str(_d.get("key_tail") or "")
+                if _d.get("customer_id") or len(_t) < 5:
+                    continue
+                try:
+                    _own = conn.execute(
+                        "SELECT customer_id FROM customer_keys WHERE service=? AND label LIKE ? "
+                        "ORDER BY id DESC LIMIT 1", (_d.get("service"), "%" + _t[-5:])).fetchone()
+                except sqlite3.OperationalError:     # customer_keys 없는 DB(테스트) — 종전대로
+                    _own = None
+                if _own and _own[0] is not None:
+                    _d["customer_id"] = str(_own[0])
+                    _d["pooled_member"] = True
 
             out["heartbeats"] = [dict(r) for r in conn.execute(
                 "SELECT proc, pid, ts, detail FROM api_heartbeats ORDER BY proc, pid")]
@@ -629,7 +688,13 @@ def verdict(snap=None, agg=None):
                 else:
                     fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
-                problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
+                # 고객 프로세스(web·worker)에서 난 것만 고객영향이다 — aggregates()의 silent_customer.
+                #   시험 스크립트·크론의 무음은 경보하지 않는다(09-18 bb_style 오경보 21건).
+                #   silent_customer가 없는 옛 집계(테스트가 손으로 만든 agg)는 종전대로 센다.
+                _sc = agg.get("silent_customer")
+                _n = (_sc or {}).get(svc, 0) if _sc is not None else row["n"]
+                if _n > 0 and f"{svc}: 무음 폴백" not in " ".join(problems):
+                    problems.append(f"{svc}: 무음 폴백 {_n}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
         # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
         #   ★회원이 직접 넣은 키(customer_id 있음)가 죽은 것은 **운영사고가 아니다**(2026-09-04

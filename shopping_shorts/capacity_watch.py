@@ -30,6 +30,7 @@ from __future__ import annotations
 import os
 import shutil
 import sqlite3
+import time
 from datetime import datetime, timezone
 
 
@@ -54,6 +55,82 @@ def ensure_schema(conn):
             net_rx_gb    REAL
         )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_capacity_at ON capacity_samples(at)")
+    # ★웹 체감 지표 두 칸(2026-09-18) — 이미 있는 표에는 ALTER로 붙인다(없으면 무시).
+    # run_customers = 동시에 돌고 있는 **서로 다른 고객** 수 / wait_customers = 자기 작업이 하나도 안 돌면서
+    # 기다리는 고객 수(=남 때문에 굶는 사람). 같은 고객의 두 번째 작업은 규칙(계정당 1개)상 대기라 안 센다.
+    # 2026-09-18 사장님 "100명 기준인데 4개밖에?" — 대기 100시간이 규칙 때문인지 서버 때문인지 가르는 칸.
+    for col in ("web_latency_ms REAL", "web_main_cpu REAL", "run_customers INTEGER", "wait_customers INTEGER"):
+        try:
+            conn.execute(f"ALTER TABLE capacity_samples ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
+
+
+def _web_latency_ms(url="http://127.0.0.1:8849/", n=3, timeout=5.0):
+    """웹 첫 페이지를 n번 불러 **가장 느린** 응답(ms). 서버 안에서 재므로 망 지연이 없다 —
+    정상 10~40ms, 이벤트 루프가 막히면 수백 ms(2026-09-18 실측: 막힘 460ms → 수리 후 20ms)."""
+    import urllib.request
+    worst = None
+    for _ in range(n):
+        t = time.time()
+        try:
+            urllib.request.urlopen(url, timeout=timeout).read(64)
+        except Exception:      # noqa: BLE001 — 응답 자체가 없으면 timeout 값으로 친다
+            ms = timeout * 1000
+        else:
+            ms = (time.time() - t) * 1000
+        worst = ms if worst is None else max(worst, ms)
+    return round(worst, 1) if worst is not None else None
+
+
+def _web_main_cpu(match="uvicorn shopping_shorts.app", interval=1.0):
+    """웹 프로세스 **메인 스레드**의 CPU %(리눅스 /proc). 비동기 서버는 이 스레드 하나가
+    모든 요청을 나르므로 이 값이 90%대면 고객 전원이 느려진다(2026-09-18: 요청마다 DB 스키마
+    초기화 116개가 여기서 돌아 99.9%였다). 못 재면 None(리눅스 아님·프로세스 없음)."""
+    try:
+        pid = None
+        for d in os.listdir("/proc"):
+            if not d.isdigit():
+                continue
+            try:
+                with open(f"/proc/{d}/cmdline", "rb") as f:
+                    if match.encode() in f.read().replace(b"\0", b" "):
+                        pid = int(d)
+                        break
+            except OSError:
+                continue
+        if pid is None:
+            return None
+
+        def ticks():
+            with open(f"/proc/{pid}/task/{pid}/stat") as f:
+                parts = f.read().rsplit(")", 1)[1].split()
+            return int(parts[11]) + int(parts[12])       # utime + stime
+        a = ticks()
+        time.sleep(interval)
+        b = ticks()
+        hz = os.sysconf("SC_CLK_TCK")
+        return round((b - a) / hz / interval * 100, 1)
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def server_verdict(data):
+    """방금 찍은 표본 한 줄로 **지금** 서버가 아픈지 판정한다 — 용량 verdict(7일 최대치, 화면용)와
+    달리 이건 즉시 경보용이다(2026-09-18 사장님 "누가 말해줘야 작동이 되면 안 되잖아").
+    실사고: 디스크 100%(09-16)와 메인 스레드 99.9%(09-18)를 고객이 말해줘서 알았다."""
+    lat, cpu, free = data.get("web_latency_ms"), data.get("web_main_cpu"), data.get("disk_free_gb")
+    if free is not None and free < 30:
+        return ("danger", f"디스크 여유 {free:.0f}GB — 지금 차고 있습니다. 큰 폴더(du -xh --max-depth=1 shopping_shorts/data · /tmp)부터 보세요 — 09-29엔 data/find_frames 169GB였다.")
+    if lat is not None and lat > 1000:
+        return ("danger", f"웹 첫 페이지 응답 {lat:.0f}ms(정상 40ms 이하) — 이벤트 루프 막힘 의심. "
+                          f"메인 스레드 CPU {cpu if cpu is not None else '?'}%. py-spy dump로 확인.")
+    if cpu is not None and cpu > 85:
+        return ("danger", f"웹 메인 스레드 CPU {cpu:.0f}% — 요청이 줄을 섭니다(응답 {lat}ms). "
+                          f"py-spy dump --pid <uvicorn> 로 무엇을 하는지 보세요.")
+    if (free is not None and free < 60) or (lat is not None and lat > 400):
+        return ("warn", f"디스크 여유 {free}GB / 응답 {lat}ms / 메인 CPU {cpu}%")
+    return ("ok", "")
 
 
 def _net_bytes():
@@ -89,6 +166,17 @@ def sample(db_path):
         #   권한도 필요하다. 알고 싶은 건 '상한'이 아니라 **실제 동시 처리량**이므로
         #   큐를 물고 있던 서로 다른 owner 수로 센다.
         running, queued, owners = (row[0] or 0), (row[1] or 0), (row[2] or 0)
+        # 서로 다른 고객 몇 명이 돌고 / 몇 명이 **남 때문에** 기다리나(2026-09-18).
+        #   기다리는 고객 = 대기 작업이 있는데 자기 작업이 하나도 안 도는 고객. 자기 작업이 돌고 있으면
+        #   '계정당 1개' 규칙으로 줄 선 것이라 서버 탓이 아니다 — 그건 안 센다.
+        cust = conn.execute(
+            "SELECT "
+            "  COUNT(DISTINCT CASE WHEN state='running' AND owner IS NOT NULL THEN owner END), "
+            "  COUNT(DISTINCT CASE WHEN state='queued' AND owner IS NOT NULL "
+            "        AND owner NOT IN (SELECT owner FROM job_queue WHERE state='running' AND owner IS NOT NULL) "
+            "        THEN owner END) "
+            "FROM job_queue").fetchone()
+        run_customers, wait_customers = (cust[0] or 0), (cust[1] or 0)
 
         try:
             # ★윈도우에는 getloadavg 자체가 없다(AttributeError). 서버는 리눅스라
@@ -108,12 +196,17 @@ def sample(db_path):
             "disk_used_gb": round(du.used / gb, 2),
             "disk_free_gb": round(du.free / gb, 2),
             "net_tx_gb": round(tx / gb, 3), "net_rx_gb": round(rx / gb, 3),
+            # 웹 체감(2026-09-18) — 둘 다 1~2초면 끝난다(요청 3번 + /proc 두 번 읽기)
+            "web_latency_ms": _web_latency_ms(), "web_main_cpu": _web_main_cpu(),
+            "run_customers": run_customers, "wait_customers": wait_customers,
         }
         conn.execute(
             "INSERT INTO capacity_samples (at,running,queued,workers,load1,cores,"
-            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb) "
+            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb,web_latency_ms,web_main_cpu,"
+            " run_customers,wait_customers) "
             "VALUES (:at,:running,:queued,:workers,:load1,:cores,"
-            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb)", data)
+            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb,:web_latency_ms,:web_main_cpu,"
+            " :run_customers,:wait_customers)", data)
         conn.commit()
         return data
     finally:
@@ -138,7 +231,9 @@ def daily(db_path, days=14):
         rows = conn.execute(
             "SELECT substr(at,1,10) d, "
             "       MAX(running), MAX(queued), MAX(workers), MAX(load1), "
-            "       MIN(disk_free_gb), MAX(disk_used_gb), COUNT(*) "
+            "       MIN(disk_free_gb), MAX(disk_used_gb), COUNT(*), "
+            "       MAX(run_customers), MAX(wait_customers), "
+            "       5*SUM(CASE WHEN COALESCE(wait_customers,0) > 0 THEN 1 ELSE 0 END) "
             "  FROM capacity_samples "
             " WHERE at >= date('now', ?) "
             " GROUP BY d ORDER BY d DESC", (f"-{int(days)} days",)).fetchall()
@@ -146,7 +241,14 @@ def daily(db_path, days=14):
         return [{"date": r[0], "max_running": r[1], "max_queued": r[2],
                  "max_workers": r[3], "max_load1": r[4],
                  "min_disk_free_gb": r[5], "max_disk_used_gb": r[6],
-                 "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7]} for r in rows]
+                 "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7],
+                 # 2026-09-18: 서버 탓인 대기만 따로 — 동시 고객 최대 / 남 때문에 기다린 고객 최대 / 그런 분(分)
+                 "max_run_customers": r[8], "max_wait_customers": r[9],
+                 # ⚠️wait_customers_min 은 5×(표본 수)라 **표본 간격이 5분일 때만** 맞다.
+                 #   화면을 열 때마다 표본이 더 찍혀 실제보다 2~5배 부푼다(2026-09-20 실측:
+                 #   09-19 표본 703개=간격 2.05분인데 65분으로 보고). 진짜 대기는
+                 #   wait_times()로 본다 — 큐의 created_at→claimed_at 을 직접 잰다.
+                 "wait_customers_min": r[10]} for r in rows]
     finally:
         conn.close()
 
@@ -268,6 +370,99 @@ def waiting(db_path, limit=40):
         conn.close()
 
 
+
+def _customer_tasks():
+    """고객이 화면 앞에서 기다리는 작업 이름들.
+
+    ★여기서 새로 정의하지 않는다(0순위-B). Store._TASK_JOB_FIELDS가 이미
+      "이 작업은 화면의 어느 칸을 물고 있나"를 정해둔 곳이고, 그 목록이 곧
+      '고객이 기다리는 작업'이다. 두 군데서 정하면 작업이 하나 늘었을 때
+      한쪽만 고쳐져 조용히 어긋난다.
+    """
+    from shopping_shorts.store import Store
+    return tuple(Store._TASK_JOB_FIELDS)
+
+
+def wait_times(db_path, days=7):
+    """**진짜** 대기 시간 — 큐에 선 시각(created_at)에서 시작된 시각(claimed_at)까지.
+
+    ★왜 따로 만들었나(2026-09-20 사장님 지적에서 나왔다).
+      daily()의 `wait_customers_min`은 `5 × (기다림이 잡힌 표본 수)`다. 표본이 정확히
+      5분마다 찍힌다는 가정인데 **실제로는 그렇지 않다** — 관리자가 capacity 화면을
+      열 때마다 표본이 한 점씩 더 붙는다(`_api_capacity`의 "열 때마다 한 점"). 실측:
+
+          09-18  표본 1399개 → 실제 간격 1.03분인데 5를 곱해 55분으로 보고됨
+          09-19  표본  703개 → 실제 간격 2.05분인데 5를 곱해 65분으로 보고됨
+
+      즉 **화면을 자주 열수록 대기가 길어 보인다.** 같은 날 큐 기록으로 직접 재면
+      렌더 대기는 평균 0.1분·최대 3.6분이었다 — 자리가 나면 곧바로 물어간다.
+      숫자가 관측 행위에 따라 변하면 그건 지표가 아니다. 그래서 큐를 직접 읽는다.
+
+    반환: 날짜·작업별 {건수, 평균분, 최대분, 3분초과건수}. 최대치와 함께 **평균**도
+    주는 이유는, 하루 한 건의 꼬리가 전체를 대표하는 것처럼 보이지 않게 하기 위함이다.
+    """
+    tasks = _customer_tasks()
+    marks = ",".join("?" for _ in tasks)
+    conn = sqlite3.connect(str(db_path), timeout=10)
+    try:
+        rows = conn.execute(
+            "SELECT substr(created_at,1,10) d, task, COUNT(*), "
+            "       AVG((julianday(claimed_at)-julianday(created_at))*1440), "
+            "       MAX((julianday(claimed_at)-julianday(created_at))*1440), "
+            "       SUM(CASE WHEN (julianday(claimed_at)-julianday(created_at))*1440 > 3 "
+            "                THEN 1 ELSE 0 END) "
+            "  FROM job_queue "
+            " WHERE claimed_at IS NOT NULL AND created_at >= date('now', ?) "
+            f"   AND task IN ({marks}) "
+            " GROUP BY d, task ORDER BY d DESC, 5 DESC",
+            (f"-{int(days)} days", *tasks)).fetchall()
+        return [{"date": r[0], "task": r[1], "n": r[2],
+                 "avg_min": round(r[3] or 0.0, 2), "max_min": round(r[4] or 0.0, 1),
+                 "over_3min": r[5] or 0} for r in rows]
+    finally:
+        conn.close()
+
+
+def deploy_victims(db_path, days=14):
+    """배포 재시작에 **고객 작업이 끊긴** 건 — 누가 언제 피해를 봤나(2026-09-20).
+
+    reap_stale()이 사유를 갈라 적어 둔 것을 그대로 읽는다(0순위-B: 여기서 다시
+    판정하지 않는다). 배경작업(durfill·prewarm·overseas)은 배포 때 일부러
+    희생시키는 것이라 '고장 아님'으로 적히고 — 그건 세지 않는다. 고객이 화면 앞에서
+    기다리다 끊긴 것만 센다. 실측(2026-09-20 기준 14일): 고객 4건 / 배경 25건.
+
+    ★배포 시각 로그를 따로 뒤지지 않는 이유: 그 흔적은 이미 큐에 남아 있다.
+      로그와 DB 두 군데서 같은 판단을 하면 언젠가 어긋난다.
+
+    lost_min = 시작된 뒤 끊기기까지 **버려진 시간**. 고객이 기다린 보람 없이
+    날아간 분(分)이라, 이 합이 곧 배포가 회원에게 끼친 손해다.
+    """
+    conn = sqlite3.connect(str(db_path), timeout=10)
+    try:
+        rows = conn.execute(
+            "SELECT id, task, owner, created_at, claimed_at, finished_at "
+            "  FROM job_queue "
+            " WHERE error LIKE '%워커가 중단%' AND finished_at >= date('now', ?) "
+            " ORDER BY finished_at DESC", (f"-{int(days)} days",)).fetchall()
+        out = []
+        for qid, task, owner, created, claimed, fin in rows:
+            lost = None
+            if claimed and fin:
+                try:
+                    lost = round((_parse(fin) - _parse(claimed)).total_seconds() / 60, 1)
+                except Exception:      # noqa: BLE001 — 시각이 깨져도 행은 보여준다
+                    lost = None
+            out.append({"qid": qid, "task": task, "owner": owner,
+                        "at": fin, "lost_min": lost})
+        return out
+    finally:
+        conn.close()
+
+
+def _parse(s):
+    """'YYYY-MM-DD HH:MM:SS' 또는 ISO 문자열 → datetime. 큐는 두 모양이 섞여 있다."""
+    return datetime.fromisoformat(str(s).replace("Z", "").strip())
+
 def verdict(db_path, cores=None, now_queued=None):
     """지금 서버를 늘려야 하나 — 숫자로 답한다. 화면 맨 위에 한 줄로 띄운다.
 
@@ -316,7 +511,25 @@ def verdict(db_path, cores=None, now_queued=None):
 if __name__ == "__main__":      # 크론: */5 * * * * python -m shopping_shorts.capacity_watch
     from shopping_shorts.config import DB_PATH
 
-    print(sample(DB_PATH))
+    _s = sample(DB_PATH)
+    print(_s)
+    # ── 서버 즉시 경보(2026-09-18) — 디스크·응답 지연·메인 스레드 CPU가 문턱을 넘으면
+    #    사람이 말해주기 전에 ops_alert(텔레그램+쪽지)로 나간다. 크론 본업을 죽이면 안 되므로 삼킨다.
+    try:
+        _lv, _msg = server_verdict(_s)
+        print(f"[serverwatch] {_lv}: {_msg[:120]}")
+        if _lv == "danger":
+            from datetime import datetime, timedelta, timezone
+            from shopping_shorts import ops_alert
+            _when = datetime.now(timezone(timedelta(hours=9))).strftime("%m-%d %H:%M")
+            _kind = "server_disk" if "디스크" in _msg else "server_slow"
+            ops_alert.raise_alert(
+                _kind, f"[서버 {_when}] {_msg[:60]}", f"[발생 {_when} KST] {_msg}",
+                grade=ops_alert.GRADE_OPS,
+                # 같은 수준의 같은 사고면 쿨다운 뒤에도 재도배하지 않는다(값이 바뀌면 다시)
+                signature=f"{_kind}:{int((_s.get('web_latency_ms') or 0) // 500)}:{int((_s.get('disk_free_gb') or 0) // 10)}")
+    except Exception as e:      # noqa: BLE001
+        print(f"[serverwatch] 판정 실패(무시): {e}")
     # ── API 관측판 무인 경보(2026-09-01) — 아무도 화면을 안 보고 있어도 5분마다
     #    판정이 돌아 danger면 ops_alert(텔레그램+쪽지, 30분 쿨다운)가 나간다.
     #    관측이 크론 본업(용량 표본)을 죽이면 안 되므로 전부 삼킨다.

@@ -379,7 +379,7 @@ DEFAULTS = {
     # ★VMake가 못 지운 자막·워터마크·스티커를 덮는다(반투명 대형 워터마크는 구조적으로
     #   못 지운다는 걸 08-27에 확정했다 — eraser_watermark는 이미지 전용, 두 번 태워도 무효).
     # 각 항목: {l,t,w,h}=% 좌표, shape=rect|round|pill|ellipse,
-    #          fx=solid|fade, color=#RRGGBB, op=0~100, soft=0~100(가장자리), rot=-45~45
+    #          fx=solid|fade, color=#RRGGBB, op=0~100, soft=0~100(가장자리), rot=-180~180
     # ★흐림 계열(blur/blurdark)은 여기서 못 그린다 — 배경을 흐리게 하는 건 영상 필터다.
     #   PNG는 '위에 얹는 그림'이라 뒤를 못 만진다. 흐림은 렌더 쪽에서 따로 붙인다(2차).
     "masks": [],
@@ -597,7 +597,10 @@ def _norm_masks(raw):
                 "kind": kind, "ch": ch, "text": text,
                 "shape": shape, "fx": fx, "color": col,
                 "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
-                "rot": _i("rot", 0, -45, 45)}
+                # ★회전은 한 바퀴(-180~180)까지 받는다(2026-10-03 관제 100, 왕해원님 제보 "화살표가 반대로").
+                #   종전 ±45는 옛 가림막 슬라이더 범위였는데, 장면꾸미기 편집기는 손잡이로 ±180까지 돌린다 →
+                #   아래(90°)·왼쪽 아래(135°)로 돌린 화살표가 렌더에서 전부 45°로 잘려 엉뚱한 곳을 가리켰다.
+                "rot": _i("rot", 0, -180, 180)}
         # 🎬 이 장면에만(2026-09-10 사장님 "장면에만 하는걸 만들고").
         #   beat = 자막 칸 번호(beat_idx) · cut = 그 칸의 몇 번째 컷(None이면 칸 전체).
         #   ★장면 지정이 **없으면 키를 아예 안 붙인다** — 붙이면 cache_key가 바뀌어
@@ -1457,7 +1460,7 @@ def render_blur_mask(spec):
         # 경계가 칼로 자른 듯하면 흐림 티가 난다 — 늘 조금 부드럽게(soft와 별개).
         w = max(1, int(W * m["w"] / 100.0))
         h = max(1, int(H * m["h"] / 100.0))
-        feather = max(4, int(min(w, h) * 0.06))
+        feather = max(4, int(min(w, h) * (0.20 if m.get("soft",0)>=80 else 0.06)))
         layer, x, y = _mask_shape_layer(m, (255, 255, 255), 255, feather=feather)
         im.alpha_composite(layer, (x, y))
     return im

@@ -23,6 +23,14 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.store import Store
 
 
+@pytest.fixture(autouse=True)
+def _fish_default_off(monkeypatch):
+    """이 파일은 '성우 기억' 자체를 잰다. 키 없는 회원의 Fish 기본 성우 정책(2026-10-05,
+    fish_tts.use_fish_default)은 test_fish_tts·test_voice_fallback_no_key가 따로 잰다."""
+    from shopping_shorts import config
+    monkeypatch.setattr(config, "FISH_ENABLED", False)
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     from shopping_shorts import keycrypt
@@ -70,7 +78,8 @@ def test_기억한_성우가_실제_합성_파라미터까지_닿는다(store):
     voice = store.get_mix_job("job_p")["voice"]
     got = mix_pipeline._voice_params(voice)
     assert got[0] == "VID_SENA"                     # voice_id
-    assert got[2] == 1.4                            # speed
+    assert got[2] == 1.0                            # API 속도는 항상 1.0(관제 049)
+    assert got[3] == 1.4                            # 고른 속도는 atempo 배율로 닿는다
     default = mix_pipeline._voice_params(None)
     assert default[0] == mix_pipeline._DEFAULT_VOICE["voice_id"]
     assert got[0] != default[0], "기억이 미나 폴백을 실제로 대체해야 한다"
@@ -116,10 +125,19 @@ def test_None이면_기억을_지운다(store):
     assert store.get_last_voice(cid) is None
 
 
-def test_비로그인_cid0은_기억하지_않는다(store):
-    """cid=0(레거시·비로그인)에 저장하면 전원이 한 성우를 공유하게 된다."""
+def test_사장님_cid0도_기억한다(store):
+    """2026-09-22: cid 0(사장님 관리자)은 customers 행이 없어 기억이 통째로 빠졌다
+    ("필재로 바꿨는데 다음 작업이 다시 미나"). customer_prefs에 둔다."""
     store.set_last_voice(0, VOICE)
+    assert store.get_last_voice(0) == VOICE
+    store.set_last_voice(0, None)
     assert store.get_last_voice(0) is None
+
+
+def test_cid0_기억이_새_작업에_심긴다(store):
+    store.set_last_voice(0, VOICE)
+    store.create_mix_job("j_cid0", ["u"], 30, "free", customer_id=0)
+    assert store.get_mix_job("j_cid0").get("voice") == VOICE
 
 
 # ── 엔드포인트 배선 (2026-09-02) ────────────────────────────────────────────

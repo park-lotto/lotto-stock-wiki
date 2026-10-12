@@ -1,5 +1,6 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import logging
 import os
 import re
 import subprocess
@@ -35,7 +36,7 @@ def _cookies_arg(url):
         # 조용히 죽는다(2026-08-31 실측: 09:32 추출본이 10:15에 봇확인 재발, 같은
         # 브라우저에서 새로 읽으면 즉시 성공). 설정돼 있으면 매번 최신 쿠키를 쓴다.
         if config.YTDLP_COOKIES_BROWSER_YOUTUBE:
-            return ["--cookies-from-browser", config.YTDLP_COOKIES_BROWSER_YOUTUBE] + extra
+            return ["--cookies-from-browser", _youtube_browser_cookie_source()] + extra
         path = config.YTDLP_COOKIES_YOUTUBE
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
@@ -49,8 +50,140 @@ def _cookies_arg(url):
         extra = []
     else:
         return []
-    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    cookies = ["--cookies", _cookie_scratch_copy(path)] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+_YT_BROWSER_LOCK = threading.Lock()
+_YT_BROWSER_SEQ = 0
+
+
+def _firefox_profile_paths(prefix):
+    """파이어폭스 profiles.ini에서 이름이 prefix로 시작하는 프로필의 절대경로(이름순)."""
+    root = Path(os.environ.get("APPDATA", "")) / "Mozilla" / "Firefox"
+    ini = root / "profiles.ini"
+    if not ini.exists():
+        return []
+    found, name = {}, None
+    for line in ini.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line.startswith("["):
+            name = None
+        elif line.startswith("Name="):
+            name = line[5:]
+        elif line.startswith("Path=") and name and name.startswith(prefix):
+            p = Path(line[5:])
+            found[name] = str(p if p.is_absolute() else root / p)
+    return [found[k] for k in sorted(found)]
+
+
+def _youtube_browser_cookie_source():
+    """--cookies-from-browser 값. `firefox:yt*`처럼 *로 끝나면 그 이름으로 시작하는
+    프로필(버릴 구글 계정 하나씩)을 호출마다 번갈아 고른다(2026-09-24 Webshare 해지 →
+    PC 중계 전환). 한 계정에 하루 100~180건이 몰리지 않게 나누고, _download_ytdlp가
+    시도마다 이 함수를 다시 부르므로 봇확인에 걸린 계정은 재시도 때 다음 계정으로 넘어간다.
+    *가 없으면 설정값 그대로(종전 동작)."""
+    global _YT_BROWSER_SEQ
+    spec = config.YTDLP_COOKIES_BROWSER_YOUTUBE
+    if not spec.endswith("*"):
+        return spec
+    browser, _, prefix = spec[:-1].partition(":")
+    profiles = _firefox_profile_paths(prefix) if browser == "firefox" else []
+    if not profiles:
+        return browser
+    with _YT_BROWSER_LOCK:
+        _YT_BROWSER_SEQ += 1
+        pick = profiles[_YT_BROWSER_SEQ % len(profiles)]
+    print(f"[media] 유튜브 쿠키 계정: {Path(pick).name}", file=sys.stderr)
+    return f"{browser}:{pick}"
+
+
+_COOKIE_SCRATCH_PREFIX = "ytdlp_cookies_"
+
+
+def _cookie_scratch_copy(path) -> str:
+    """yt-dlp에 원본 대신 **1회용 사본**을 넘긴다.
+
+    2026-09-16 실사고의 진짜 뿌리: yt-dlp는 `--cookies` 파일을 종료 시 다시 쓴다
+    (YoutubeDL.save_cookies → 열면서 먼저 비우고(truncate) 그 다음 쓴다). 타임아웃으로
+    죽이거나(subprocess timeout) 여러 yt-dlp가 겹치면 그 틈에 원본이 0바이트로 남아
+    이후 모든 호출이 "not a Netscape format"으로 즉사했다(유튜브 15:17·17:45, 틱톡 17:44).
+    사본을 넘기면 yt-dlp가 뭘 하든 원본은 그대로다. 사본 실패 시 원본 경로(종전 동작)."""
+    try:
+        import shutil
+        import tempfile
+        tmpdir = Path(tempfile.gettempdir())
+        _sweep_cookie_scratch(tmpdir)
+        fd, tmp = tempfile.mkstemp(prefix=_COOKIE_SCRATCH_PREFIX, suffix=".txt", dir=str(tmpdir))
+        os.close(fd)
+        shutil.copyfile(path, tmp)
+        return tmp
+    except Exception as e:  # noqa: BLE001
+        logging.getLogger(__name__).warning("쿠키 사본 실패, 원본 경로 사용: %s (%s)", path, e)
+        return str(path)
+
+
+def _sweep_cookie_scratch(tmpdir, max_age_sec=3600):
+    """한 시간 넘은 쿠키 사본 정리(호출마다 하나씩 생기므로 쌓이지 않게)."""
+    now = time.time()
+    try:
+        for f in tmpdir.glob(_COOKIE_SCRATCH_PREFIX + "*.txt"):
+            try:
+                if now - f.stat().st_mtime > max_age_sec:
+                    f.unlink()
+            except OSError as e:  # 다른 프로세스가 먼저 지웠거나 아직 쓰는 중 — 무해
+                logging.getLogger(__name__).debug("쿠키 사본 정리 건너뜀 %s: %s", f, e)
+    except OSError as e:  # tmp 폴더 나열 실패 — 정리만 못 할 뿐 본작업엔 무해
+        logging.getLogger(__name__).debug("쿠키 사본 정리 실패(무해): %s", e)
+
+
+def _cookie_file_usable(path) -> bool:
+    """쿠키 파일이 실제로 쓸 만한지 — 존재 + 비어있지 않음.
+
+    2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트로 비워진 채 `--cookies`로
+    넘어가 yt-dlp가 "does not look like a Netscape format cookies file"로 즉사 →
+    렌즈 유튜브 분석이 통째로 실패. 빈 파일이면 쿠키 없이(프록시·릴레이 경로) 가는
+    편이 낫다. 로그를 남겨 '조용한 폴백'이 되지 않게 한다."""
+    if not path:
+        return False
+    try:
+        st = Path(path).stat()
+    except OSError:
+        return False
+    if st.st_size == 0:
+        logging.getLogger(__name__).warning(
+            "쿠키 파일이 비어 있어 무시합니다(쿠키 없이 진행): %s", path)
+        return False
+    return True
+
+
+_IG_ALIVE_TTL = 600        # 10분. 세션 회수는 분 단위로 일어나지 않는다.
+_IG_ALIVE_CACHE = {}       # path -> (판정시각, 살아있나)
+_IG_ALIVE_LOCK = threading.Lock()
+
+
+def _ig_session_alive(path) -> bool:
+    """세션이 인스타에서 **아직 유효한가**(캐시 10분).
+
+    판정은 channel_archive.session_alive 한 곳에서만 한다(0순위-B) — 쿠키 존재로
+    판정하면 회수된 세션을 산 것으로 본다(그래서 2주간 몰랐던 전례가 있다).
+    담기 1건마다 인스타에 물으면 느리고 눈에 띄므로 경로별로 캐시한다.
+    판정 불가(네트워크 오류 등)는 True — 멀쩡한 계정을 우리 손으로 빼는 게 더 위험하다.
+    """
+    key = str(path)
+    now = time.time()
+    with _IG_ALIVE_LOCK:
+        hit = _IG_ALIVE_CACHE.get(key)
+        if hit and now - hit[0] < _IG_ALIVE_TTL:
+            return hit[1]
+    try:
+        from shopping_shorts.channel_archive import session_alive
+        ok = bool(session_alive(key))
+    except Exception:  # noqa: BLE001 — 판정 실패는 '살아있음'으로 본다
+        ok = True
+    with _IG_ALIVE_LOCK:
+        _IG_ALIVE_CACHE[key] = (now, ok)
+    return ok
 
 
 def _ig_cookies_file():
@@ -63,17 +196,45 @@ def _ig_cookies_file():
     # 전부 원본 새탭으로 튄다(사장님 제보). 아카이브 크롤이 실제로 쓰는 로테이션
     # 세션(INSTAGRAM_SESSION_DIR)이 매일 갱신되는 살아있는 계정이므로, 메인 포함
     # 후보 중 **가장 최근 갱신된** 세션을 쿠키 소스로 쓴다.
-    import os as _os
-    _d = _os.getenv("INSTAGRAM_SESSION_DIR", "")
-    _cands = [src] if (src and Path(src).exists()) else []
-    if _d and Path(_d).is_dir():
-        _cands += [str(p) for p in Path(_d).glob("*.json")]
+    #
+    # ★후보 목록은 수집기와 **같은 함수**로 뽑는다(2026-09-21 실사고, 0순위-B).
+    #   종전엔 여기서 `Path(_d).glob("*.json")`을 따로 적었는데, 그 glob은 최상위만 본다.
+    #   그런데 살아있는 계정은 08-09 풀 분리로 `ig_sessions/reference/`(하위 폴더)에
+    #   있었고 최상위엔 8/9자 낡은 세션 하나만 남아 있었다 → "가장 최근"이 6주 묵은
+    #   죽은 계정으로 뽑혀 인스타가 로그인 페이지로 리다이렉트, 담기 메타 수집이
+    #   통째로 실패했다(실측: 최상위 → rate-limit / reference 풀 4개 → 4개 전부 성공).
+    #   증상은 "제작소 씨앗 카드 썸네일이 안 뜸"이었지만, 진짜는 **담길 때 빈 값 저장**.
+    #   수집(channel_archive)은 하위 폴더를 제대로 봐서 멀쩡했다 — 같은 판단을 두 군데
+    #   다르게 적은 것이 사고의 형태였으므로, 그 한 곳을 빌려 쓴다.
+    _cands = []
+    try:
+        from shopping_shorts.channel_archive import session_slots as _slots
+        _cands = [p for p in (_slots(pool="reference") or []) if p and Path(p).exists()]
+    except Exception:  # noqa: BLE001 — 수집기 의존이 쿠키를 막으면 안 된다
+        _cands = []
+    if not _cands:
+        # 폴백: 종전 방식(최상위 glob) — 수집기를 못 불러도 무쿠키로 떨어지지 않는다.
+        import os as _os
+        _d = _os.getenv("INSTAGRAM_SESSION_DIR", "")
+        if _d and Path(_d).is_dir():
+            _cands = [str(p) for p in Path(_d).glob("*.json")]
+    if src and Path(src).exists():
+        _cands.append(src)
     if not _cands:
         return ""
-    src = max(_cands, key=lambda p: Path(p).stat().st_mtime)
+    # ★살아있는 것 중에서 고른다. 파일이 새것이어도 인스타가 세션을 회수했으면
+    #   쿠키는 있는데 로그인 페이지로 튄다(channel_archive.session_alive 주석 참조) —
+    #   mtime만 보면 이번처럼 죽은 것을 계속 집는다. 판정이 전부 실패(네트워크 등)하면
+    #   후보 전체로 되돌려 **무쿠키로 떨어지지 않게** 한다.
+    _live = [p for p in _cands if _ig_session_alive(p)]
+    src = max(_live or _cands, key=lambda p: Path(p).stat().st_mtime)
     out = Path(src).with_suffix(".ytdlp-cookies.txt")
     try:
-        if out.exists() and out.stat().st_mtime >= Path(src).stat().st_mtime:
+        # ★0바이트 캐시는 캐시가 아니다(2026-09-18 실측: 09-16 디스크 풀 때 비워진
+        #   41170560843.ytdlp-cookies.txt가 이틀째 '최신'으로 재사용돼 인스타 1080p 경로가
+        #   "cookies 필요"로 전부 실패). 비어 있으면 원본에서 다시 만든다.
+        if (out.exists() and out.stat().st_size > 0
+                and out.stat().st_mtime >= Path(src).stat().st_mtime):
             return str(out)
         state = json.loads(Path(src).read_text(encoding="utf-8"))
         lines = ["# Netscape HTTP Cookie File"]
@@ -315,6 +476,15 @@ def _download_instagram(url, dest_dir):
 
     m = _IG_CODE_RE.search(url or "")
     code = m.group(1) if m else ""
+    # ⓪ 1080p 경로(2026-09-18 실사고): 아래 ①·①-b는 **영상+음성이 합쳐진 단일 스트림**만
+    #   고르는데, 인스타는 그 단일 스트림이 720x1280까지다(서버 소스 88건 중 81건이 720p).
+    #   1080x1920·1440x2560은 DASH 영상전용 스트림이라 음성과 따로 받아 합쳐야 한다 —
+    #   _download_ytdlp가 그 일을 한다(로컬 실측 DdShJZpJqr5 → 1080x1920). 실패하면 종전
+    #   경로 그대로(회귀 0).
+    try:
+        return _download_ytdlp(url, dest_dir, max_attempts=1)
+    except Exception as e:     # noqa: BLE001 — 720p 경로로 물러선다
+        print(f"[media] 인스타 1080p 병합 경로 실패 → 단일 스트림: {str(e)[-160:]}", file=sys.stderr)
     # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
     if code:
         try:
@@ -426,6 +596,9 @@ def _download_douyin_inner(url, dest_dir, timeout):
 _YTDLP_CLIENTS = [None, "android", "ios"]
 
 
+_Q_CAP = "[width<=1920][height<=1920]"   # 1080p급 상한 — 세로(1080x1920)·가로(1920x1080) 둘 다 통과, 4K 차단
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -464,8 +637,13 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
                                        or "youtu.be" in (url or "").lower()) else [])
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
-             "-f", ("bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
-                    "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"),
+             # ★세로 숏폼의 1080p는 **높이가 1920**이다(2026-09-18 실사고). 종전 `height<=1080`은
+             #   1080x1920을 걸러내 그 아래 등급을 골랐다 — 서버 소스 350개 실측: 유튜브 33건 중
+             #   27건이 608x1080, 틱톡 130건 중 112건이 576x1024(둘 다 1080x1920이 있었는데도).
+             #   완성본은 1080x1920이라 540p급을 2배 키워 렌더한 셈 — 고객 "흐리다" 제보의 뿌리.
+             #   상한은 그대로 1080p급(4K 차단)이되, 가로·세로 **긴 변 1920**으로 잰다.
+             "-f", (f"bestvideo{_Q_CAP}[ext=mp4]+bestaudio[ext=m4a]/"
+                    f"bestvideo{_Q_CAP}+bestaudio/best{_Q_CAP}/best"),
              "--merge-output-format", "mp4",
              "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
              "-o", out, url],
@@ -510,10 +688,10 @@ def _download_via_relay(url, dest_dir):
                 shutil.copy2(src, dst)
             return str(dst), ""
         if rec and rec["status"] == "failed":
-            raise RuntimeError(f"유튜브 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
+            raise RuntimeError(f"PC 다운로드 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
         time.sleep(2)
     raise RuntimeError(
-        f"유튜브 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
+        f"PC 다운로드 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
 
 
 def _is_direct_video(u):
@@ -529,7 +707,15 @@ def _is_direct_video(u):
                                 "cdninstagram.com"))
 
 
-def _download_pinterest(url, dest_dir):
+def _is_pinterest_host(host):
+    """핀터레스트 주소인가 — 앱 공유 링크(pin.it)와 나라별 주소까지(2026-09-24 고객 "담기가 안 된다")."""
+    from shopping_shorts.app import _GRAB_DOMAINS   # 지연 import(순환 회피) — 목록은 한 곳에만 둔다
+    doms = next((d for n, d in _GRAB_DOMAINS if n == "pinterest"), ("pinterest.com",))
+    host = (host or "").lower()
+    return any(host == d or host.endswith("." + d) for d in doms)
+
+
+def _download_pinterest(url, dest_dir, *, allow_relay=True):
     """핀터레스트 핀 페이지 URL → mp4 다운로드 (2026-08-29, 렌즈 핀터레스트 노출과 짝).
 
     핀 페이지의 JSON-LD VideoObject에서 mp4 직링크를 뽑아(무료·무로그인,
@@ -539,8 +725,17 @@ def _download_pinterest(url, dest_dir):
     분기가 없어 '지원하지 않는 URL'로 떨어졌다."""
     from shopping_shorts import pinterest_crawl
     from shopping_shorts.frame_extract import download_video
-    info = pinterest_crawl.pin_video_info(url)
+    try:
+        info = pinterest_crawl.pin_video_info(url)
+    except Exception:
+        if allow_relay and config.YT_RELAY_ENABLED and not config.YTDLP_PROXY:
+            return _download_via_relay(url, dest_dir)
+        raise
     if info is None:
+        # 데이터센터 IP에서는 영상 핀도 JSON-LD가 빠져 이미지 핀처럼 보인다.
+        # 운영 서버라면 PC 주거용 IP의 에이전트가 실제 영상 여부를 다시 판정한다.
+        if allow_relay and config.YT_RELAY_ENABLED and not config.YTDLP_PROXY:
+            return _download_via_relay(url, dest_dir)
         raise RuntimeError(f"영상이 없는 핀이에요(이미지 핀): {url}")
     caption = info.get("title") or info.get("description") or ""
     return str(download_video(info["video_url"], Path(dest_dir))), caption
@@ -593,6 +788,26 @@ def uploaded_footage_poster_path(url):
     return f if f.exists() else None
 
 
+HOLE_MIN_SEC = 0.5      # 화면 패킷 사이가 이보다 벌어지면 '구멍'(그동안 화면 데이터가 없다)
+
+
+def video_holes(path, min_gap=HOLE_MIN_SEC):
+    """영상 화면 줄기의 **구멍**(패킷이 없는 구간) [(시작, 끝), ...]. 못 재면 [].
+
+    ★왜(관제 176, 2026-10-09 김성현님 2aa06a122f21): 받은 영상 가운데 4.13→9.20초에 화면 패킷이 없었다(20초에 449프레임).
+      재생기는 그동안 직전 화면을 세워 보여 주지만, 조립은 그 안의 컷(4.6초부터 1.98초)을 읽어 **0프레임**을 받았다 →
+      그 컷이 통째로 빠지고 컷 지도가 안 남아, 자막제거 뒤 완성본 6/9칸이 편집 화면과 다른 장면이 됐다."""
+    try:
+        o = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time",
+             "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+        ts = sorted(float(x.strip(",")) for x in (o.stdout or "").split() if x.strip(",") not in ("", "N/A"))
+    except Exception:  # noqa: BLE001 — 못 재면 구멍 없음으로(변환을 안 할 뿐, 받은 영상은 그대로 쓴다)
+        return []
+    return [(round(a, 3), round(b, 3)) for a, b in zip(ts, ts[1:]) if b - a > float(min_gap)]
+
+
 def normalize_playable(path):
     """받아 온 mp4를 **브라우저가 확실히 재생하는 모양**으로 맞춘다 (2026-09-02).
 
@@ -619,13 +834,17 @@ def normalize_playable(path):
         height = int(info[1]) if len(info) > 1 and info[1].isdigit() else 0
     except Exception:  # noqa: BLE001 — ffprobe가 없으면 손대지 않는다
         return str(path)
-    if codec == "h264" and height <= 1920:
+    # ★화면 구멍(관제 176): 구멍이 있으면 30fps 고정으로 다시 굽는다 — fps 필터가 구멍을 직전 화면으로 채운다(시각은 그대로).
+    #   판정은 video_holes 한 곳. 화면 줄기가 없는 파일(codec 빈값)은 종전처럼 손대지 않는다.
+    holes = video_holes(path) if codec else []
+    if (codec == "h264" and height <= 1920 and not holes) or not codec:
         return str(path)
     out = path.with_name(path.stem + "_h264.mp4")
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(path),
-             "-vf", "scale=-2:'min(1920,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+             "-vf", "scale=-2:'min(1920,ih)'" + (",fps=30" if holes else ""),
+             "-c:v", "libx264", "-preset", "veryfast",
              "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
              "-movflags", "+faststart", str(out)],
             capture_output=True, text=True, timeout=600, check=True)
@@ -635,8 +854,123 @@ def normalize_playable(path):
     if not out.exists() or out.stat().st_size < 10000:
         out.unlink(missing_ok=True)
         return str(path)
-    print(f"[media] {codec} {height}p → h264 변환: {out.name}", file=sys.stderr)
+    print(f"[media] {codec} {height}p → h264 변환: {out.name}" + (f" (화면 구멍 {holes} 메움)" if holes else ""), file=sys.stderr)
     path.unlink(missing_ok=True)
+    return str(out)
+
+
+# ── 샤오홍슈 원본 화질(2026-09-18 사장님 "다들 하는데 왜 우리만 안 되냐") ─────────────────
+#   yt-dlp·검색 API가 주는 스트림은 **720p 재인코딩본**뿐이다(노트 2건 -F 실측: 720x1280 단일).
+#   그런데 노트 페이지(로그인 세션)의 __INITIAL_STATE__에는 `originVideoKey`가 있고,
+#   그 키를 CDN 호스트에 그대로 대면 **업로드 원본**이 나온다(다른 다운로더들이 쓰는 경로).
+#   실측(서버): 6a975f43 → sns-video-bd/pre_post/… 1080x1920 hevc 11.5Mbps(70MB, 종전 720p 1.8Mbps)
+#              6a997ff0 → sns-video-qn/… 113MB. 키에 '/'가 있으면 bd, 없으면 qn·bak-v1이 받았다.
+#   원본이 hevc면 download_any의 normalize_playable이 h264로 바꾼다(종전 도우인과 같은 길).
+#   실패(세션 없음·키 없음·CDN 404·4K 초과)는 전부 종전 yt-dlp 720p 경로로 물러선다 — 회귀 0.
+#   원본이 4K(2160x3840)면 받아서 normalize가 1920p로 줄인다(실측 6a97fbd2 155MB).
+# 호스트마다 가진 원본이 다르다(실측 09-18: 최근 노트=bd/qn/bak-v1, 옛 노트 68ca10b6=bak-v8/hw/qc만 200).
+_XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+_XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+# 원본 파일 크기 상한 — 업로드 원본이 1.1GB인 노트가 있었다(68ca10b6). 그걸 받으면 담기 한 건에
+# 수십 초~분이 걸리고 디스크를 먹는다. 넘으면 720p 경로로 물러선다.
+_XHS_ORIGIN_MAX_BYTES = 350 * 1024 * 1024
+_XHS_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+           "(KHTML, like Gecko) Chrome/128 Safari/537.36")
+
+
+def _xhs_session_cookie_header():
+    """서버의 rednote 로그인 세션(Playwright storage_state) → Cookie 헤더. 없으면 ""."""
+    from shopping_shorts import config as _cfg
+    path = getattr(_cfg, "XIAOHONGSHU_SESSION_PATH", "") or ""
+    if not path or not Path(path).exists():
+        return ""
+    try:
+        st = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 세션 파일이 깨졌으면 원본 경로만 포기한다
+        print(f"[media] 샤오홍슈 세션 파일 읽기 실패: {e!r}", file=sys.stderr)
+        return ""
+    cookies = st.get("cookies", []) if isinstance(st, dict) else []
+    # 세션 파일의 쿠키 도메인은 .rednote.com 계열이다(실측) — 페이지도 rednote.com으로 연다.
+    return "; ".join(f"{c.get('name')}={c.get('value')}" for c in cookies
+                     if "rednote" in (c.get("domain") or ""))
+
+
+def _xhs_note_page_url(url):
+    """담긴 URL(xiaohongshu/rednote · explore/search_result/discovery) → rednote 노트 페이지 URL."""
+    u = re.sub(r"://(www\.)?xiaohongshu\.com", "://www.rednote.com", url, flags=re.I)
+    u = u.replace("/search_result/", "/discovery/item/").replace("/explore/", "/discovery/item/")
+    return u
+
+
+def xhs_origin_video_key(url, cookie_header=None):
+    """노트 페이지에서 originVideoKey를 뽑는다. 없으면 ""(비디오가 아니거나 세션 만료)."""
+    ck = _xhs_session_cookie_header() if cookie_header is None else cookie_header
+    if not ck:
+        return ""
+    import urllib.request
+    req = urllib.request.Request(_xhs_note_page_url(url), headers={
+        "User-Agent": _XHS_UA, "Cookie": ck, "Accept": "text/html"})
+    html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+    m = re.search(r'originVideoKey":"([^"]+)', html)
+    if not m:
+        return ""
+    # 페이지 원문은 슬래시를 / 로 이스케이프해 둔다(실측 'pre_post/1040g…') — 되돌린다.
+    return m.group(1).replace("\\u002F", "/").replace("\\/", "/")
+
+
+def xhs_origin_probe(key):
+    """키 → (재생 가능한 원본 URL, (w, h)). CDN 호스트를 차례로 HEAD해 200·video만 통과.
+    긴 변이 3840(4K)을 넘으면 받지 않는다 — 4K까지는 normalize가 1920p로 줄인다."""
+    import requests
+    hosts = _XHS_ORIGIN_HOSTS_SLASH if "/" in key else _XHS_ORIGIN_HOSTS_PLAIN
+    for host in hosts:
+        cand = f"https://{host}/{key}"
+        try:
+            r = requests.head(cand, headers={"User-Agent": _XHS_UA}, timeout=15, allow_redirects=True)
+        except Exception as e:  # noqa: BLE001 — 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 HEAD 실패 {host}: {e!r}", file=sys.stderr)
+            continue
+        if r.status_code != 200 or "video" not in (r.headers.get("Content-Type") or ""):
+            continue
+        try:
+            _size = int(r.headers.get("Content-Length") or 0)
+        except ValueError:
+            _size = 0
+        if _size > _XHS_ORIGIN_MAX_BYTES:
+            print(f"[media] 샤오홍슈 원본 {_size // (1024 * 1024)}MB — 상한 초과라 720p 경로로", file=sys.stderr)
+            return "", (0, 0)
+        try:
+            pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                                 "-show_entries", "stream=width,height", "-of", "csv=p=0", cand],
+                                capture_output=True, text=True, timeout=60)
+            w, h = [int(x) for x in pr.stdout.strip().split(",")[:2]]
+        except Exception as e:  # noqa: BLE001 — 해상도를 못 읽으면 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 ffprobe 실패 {host}: {e!r}", file=sys.stderr)
+            continue
+        # ★4K 원본도 받는다(2026-09-18 실측 6a97fbd2: 원본 2160x3840 hevc 155MB, yt-dlp는 720p뿐).
+        #   처음엔 1920 초과를 걸렀는데 그 결과가 **720p**라 오히려 손해다. download_any의
+        #   normalize_playable이 1920p h264로 줄여 준다(도우인 2160 hevc 실측 141초와 같은 비용).
+        #   CDN 직결이라 프록시 대역폭도 안 쓴다. 상한은 4K(3840)까지 — 그 위는 없다고 봐도 된다.
+        if max(w, h) > 3840:
+            print(f"[media] 샤오홍슈 원본 {w}x{h} — 3840 초과라 720p 경로로", file=sys.stderr)
+            return "", (w, h)
+        return cand, (w, h)
+    return "", (0, 0)
+
+
+def _download_xiaohongshu_origin(url, dest_dir):
+    """샤오홍슈 노트 → 업로드 원본 mp4 경로. 못 받으면 ""(호출부가 yt-dlp로 간다)."""
+    key = xhs_origin_video_key(url)
+    if not key:
+        return ""
+    cand, (w, h) = xhs_origin_probe(key)
+    if not cand:
+        return ""
+    from shopping_shorts.frame_extract import download_video
+    out = download_video(cand, Path(dest_dir))
+    print(f"[media] 샤오홍슈 원본 {w}x{h} 수신: {Path(out).name}", file=sys.stderr)
     return str(out)
 
 
@@ -690,7 +1024,9 @@ def _download_any_raw(url, dest_dir):
         return _download_instagram(url, dest_dir)
     # 핀터레스트 핀 페이지 — yt-dlp를 안 거치고 JSON-LD의 mp4 직링크로 받는다.
     # (pinimg CDN 직링크가 이미 넘어온 경우는 .mp4라 아래 _is_direct_video로 간다)
-    if host == "pinterest.com" or host.endswith(".pinterest.com"):
+    # ★담기와 **같은 주소 목록**을 본다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
+    #   종전엔 여기도 pinterest.com만 봐서, 담기를 고쳐도 내려받기에서 다시 막혔다.
+    if _is_pinterest_host(host):
         return _download_pinterest(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
@@ -722,6 +1058,14 @@ def _download_any_raw(url, dest_dir):
             raise
         except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
             pass
+    # ★샤오홍슈는 원본 키 경로를 먼저 — yt-dlp는 720p 재인코딩본만 준다(위 _download_xiaohongshu_origin).
+    if "xiaohongshu.com" in u or "rednote.com" in u:
+        try:
+            _orig = _download_xiaohongshu_origin(url, dest_dir)
+            if _orig:
+                return _orig, ""
+        except Exception as e:  # noqa: BLE001 — 폴백 사유일 뿐(세션·CDN·네트워크)
+            print(f"[media] 샤오홍슈 원본 경로 실패 → yt-dlp: {e}", file=sys.stderr)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):

@@ -1,0 +1,137 @@
+너는 한국 쇼핑 숏폼(20~30초) 나레이션 대본을 쓰는 작가다. 아래 자료를 **끝까지 다 읽고** 대본 한 편을 써라.
+
+[씨앗]은 바로 이 제품을 소개해 실제로 터진 영상의 대본이다. 이 대본의 **뼈대(칸 순서)·화자·말투**를 그대로 가져온다.
+[재료]는 우리가 화면으로 쓸 영상들의 컷별 장면 설명과, 그 컷에서 실제로 한 말이다. 화면은 이 재료에서만 나온다.
+
+쓰는 법
+- 첫 줄(훅)은 씨앗 첫 줄을 글자 그대로 쓴다.
+- 씨앗에서 칸을 여는 관용구("이건 바로", "이게 말도 안 되는 게", "근데 진짜 미친 포인트는" 같은 말)는 같은 자리에 그대로 둔다. 그 밖의 문장은 씨앗을 베끼지 말고 새로 쓴다.
+- 줄 수와 전체 길이는 씨앗과 비슷하게. 씨앗이 끝을 맺지 않고 끊으면 너도 끊는다(반복 재생). 씨앗에 없는 구매 권유로 끝내지 않는다.
+- 재료는 영상 여러 편이다. **씨앗 한 편만 보고 쓰지 마라.** 쓰기 전에 속으로 두 가지를 정리해라:
+  ① 씨앗이 이미 말한 기능·특징·장점  ② 재료 영상들에는 나오는데 **씨앗은 말하지 않은** 기능·특징·장점
+- 앞쪽 칸(계기·불편·작동)은 씨앗의 흐름을 따라가되 재료 화면에 있는 말로 쓴다.
+- **고조되는 칸**(씨앗의 '심지어', '근데 진짜 미친 포인트는', '진짜 충격적인 건' 같은 자리)에는 ②에서 **가장 센 것**을 넣는다. 씨앗이 그 자리에서 한 말을 되풀이하지 않는다. 고조 칸이 여러 개면 뒤로 갈수록 더 센 것을 둔다.
+- 재료에 없는 수치·효능·출처는 지어내지 않는다.
+- 훅이 부른 사람과 본문이 한 이야기로 이어져야 한다. 재료를 읽으면 왜 그 사람들이 이 물건을 찾는지 나온다.
+- 시청자가 "어 나도 저거 불편했는데"에서 "저건 사야겠다"로 넘어가게 써라. 기능 나열이 아니라 한 호흡의 이야기로.
+
+출력: 대본만. 한 줄에 한 칸. 설명·머리말·따옴표·번호 없이.
+
+[씨앗]
+[훅] 그리운 그 시절을 소환해 떼돈번 제품?
+[계기] 단돈 3만원으로 잃어버린 추억을 되살려내 해외에서 먼저 수천만 조회수가 터져버린 전설의 카메라라는데?
+[불편] 이게 말도 안되는게 똥손이 대충 셔터만 찰칵 눌러도 갤럭시 아이폰으로는 절대 연출할 수 없는 그 시절 영화 속 한 장면을 그대로 뽑아내버린다는거
+[심지어] 심지어 셔터를 누를 때마다 손끝에 전해지는 쾌감이 장난 아닌데
+[전환] 진짜 충격적인건 옛날 카메라 모양이면서 완벽한 디지털이라 필름값 0원으로 수천장 막 찍어도 된다고
+
+[이 제품] NORDECO 빈티지 미니 TLR 카메라
+  1. [0] 감성적인 디자인과 구성 — 빈티지한 이안반사식 디자인으로 소장 가치가 높고 완벽한 풀 패키지 구성을 갖췄습니다. (화면: 손이 제품을 감싸고 있던 비닐 포장을 벗겨내며 제품의 전체적인 형태를 드러냄. / 손으로 카메라의 옆면과 뒷면을 돌려가며 전반적인 마감 상태를 보여줌.)
+  2. [2] 실시간 뷰파인더 촬영 — 상단 접이식 뷰파인더를 열어 구도를 확인하고 빈티지한 감성의 사진과 영상을 기록합니다. (화면: 상단 뷰파인더 덮개를 손으로 열자 내부에 실시간 영상 화면이 나타남. / 뷰파인더에 비치는 화면을 통해 촬영 구도를 잡는 모습을 보여줌.)
+  3. [1] 직관적인 아날로그 조작 — 레버와 다이얼을 돌리는 손맛으로 누구나 쉽고 재미있게 촬영 모드를 제어할 수 있습니다. (화면: 레트로 카메라의 측면 레버를 손가락으로 돌려 작동시키는 근접 촬영 화면. / 카메라 조작 후 레버가 돌아오는 모습과 촬영 상태 유지 확인.)
+  4. [3] 감성적인 촬영 결과물 — 일상과 여행지의 풍경을 고유의 색감과 필터 효과를 통해 분위기 있게 담아냅니다. (화면: 복고 모드로 촬영된 거리 풍경의 영상 결과물이 화면에 나타남. / 차량들이 지나가는 거리 풍경이 복고 모드 영상으로 계속 이어짐.)
+
+[씨앗 영상 — 사장님이 고른 이 소재로 쓴다]
+  제품: 초소형 빈티지 디자인 디지털 카메라
+  핵심: 필름 카메라 감성을 가진 저렴하고 휴대가 간편한 디지털 카메라의 독특한 촬영 결과물
+  요약: 복고풍 디자인의 초소형 디지털 카메라를 소개하며, 누구나 쉽게 영화 같은 감성 사진을 촬영할 수 있다는 점을 보여준다. 제품의 외형과 셔터 조작감을 강조하며, 디지털 방식이라 필름 값 걱정 없이 마음껏 찍을 수 있다는 장점을 설명한다.
+  이 영상이 실제로 한 말: 그리운 그 시절을 소환해 떼돈번 제품? 단돈 3만원으로 잃어버린 추억을 되살려내 해외에서 먼저 수천만 조회수가 터져버린 전설의 카메라라는데? 이게 말도 안되는게 똥손이 대충 셔터만 찰칵 눌러도 갤럭시 아이폰으로는 절대 연출할 수 없는 그 시절 영화 속 한 장면을 그대로 뽑아내버린다는거 심지어 셔터를 누를 때마다 손끝에 전해지는 쾌감이 장난 아닌데 진짜 충격적인건 옛날 카메라 모양이면서 완벽한 디지털이라 필름값 0원으로 수천장 막 찍어도 된다고
+
+[재료 - 이 제품 영상들의 컷마다 길이·화면·그 컷에서 한 말]
+[재료 s0]
+  - lens_youtube_30b8q6-0 (4.6초) | 레트로 카메라의 측면 레버를 손가락으로 돌려 작동시키는 근접 촬영 화면.  <말: you>
+  - lens_youtube_30b8q6-1 (4.6초) | 카메라 조작 후 레버가 돌아오는 모습과 촬영 상태 유지 확인.
+  - lens_youtube_30b8q6-2 (7.0초) | 복고 모드로 촬영된 거리 풍경의 영상 결과물이 화면에 나타남.
+  - lens_youtube_30b8q6-3 (7.0초) | 차량들이 지나가는 거리 풍경이 복고 모드 영상으로 계속 이어짐.
+  - lens_youtube_30b8q6-4 (4.6초) | 카메라의 셔터 버튼을 길게 눌러 촬영 모드를 활성화하는 모습.
+  - lens_youtube_30b8q6-5 (4.6초) | 카메라 셔터 버튼을 계속 누르고 있는 상태를 클로즈업.  <말: Thanks>
+  - lens_youtube_30b8q6-6 (7.0초) | 촬영 모드로 담긴 거리 풍경이 화면에 출력됨.  <말: for>
+  - lens_youtube_30b8q6-7 (7.0초) | 거리 풍경 영상이 마무리되면서 영상 촬영이 종료됨.  <말: watching!>
+
+[재료 s1]
+  - lens_tiktok_hahhv5-0 (6.1초) | 손이 제품을 감싸고 있던 비닐 포장을 벗겨내며 제품의 전체적인 형태를 드러냄.
+  - lens_tiktok_hahhv5-1 (6.1초) | 손으로 카메라의 옆면과 뒷면을 돌려가며 전반적인 마감 상태를 보여줌.
+  - lens_tiktok_hahhv5-10 (4.8초) | 뷰파인더 화면에 녹화 타이머가 카운트다운 되며 기록이 진행됨.
+  - lens_tiktok_hahhv5-11 (5.3초) | 카메라 측면의 슬롯을 열어 내부의 부품이나 단자를 확인하는 모습.
+  - lens_tiktok_hahhv5-12 (2.0초) | 녹색 잎사귀 식물에 햇빛이 비치고 있는 장면이 보입니다.
+  - lens_tiktok_hahhv5-13 (2.0초) | 야외 정원에 핀 붉은 꽃과 푸른 하늘이 담긴 풍경이 보입니다.
+  - lens_tiktok_hahhv5-14 (2.0초) | 유모차에 앉아 있는 아이의 얼굴이 카메라를 정면으로 응시하고 있습니다.
+  - lens_tiktok_hahhv5-15 (5.7초) | 미키마우스 모양 벽 장식, 거리 풍경, 가로등 위 하늘 등 여러 촬영 결과물이 교차됩니다.
+  - lens_tiktok_hahhv5-2 (6.1초) | 손이 카메라를 잡고 정면과 측면의 렌즈 및 다이얼 배치를 보여줌.
+  - lens_tiktok_hahhv5-3 (6.1초) | 상단 뷰파인더 덮개를 손으로 열자 내부에 실시간 영상 화면이 나타남.
+  - lens_tiktok_hahhv5-4 (6.1초) | 뷰파인더에 비치는 화면을 통해 촬영 구도를 잡는 모습을 보여줌.
+  - lens_tiktok_hahhv5-5 (6.1초) | 뷰파인더 화면에 설정 메뉴가 나타나며 기능 전환이 이루어짐.
+  - lens_tiktok_hahhv5-6 (5.2초) | 화면 중앙에 사진 촬영 모드 아이콘이 표시됨.
+  - lens_tiktok_hahhv5-7 (5.2초) | 뷰파인더를 통해 사물을 비추며 초점을 맞추는 듯한 모습이 보임.
+  - lens_tiktok_hahhv5-8 (4.8초) | 뷰파인더 화면으로 작은 물체를 근접 촬영하는 과정을 보여줌.
+  - lens_tiktok_hahhv5-9 (4.8초) | 측면 다이얼을 돌리며 영상 촬영 모드를 실행함.
+
+[재료 s3]
+  - lens_instagram_1ksi1cx-0 (1.4초) | 카메라 제품 박스 상단을 손으로 잡고 들어 올리는 모습.  <말: I want to>
+  - lens_instagram_1ksi1cx-1 (1.2초) | 박스 뚜껑이 완전히 젖혀지며 박스 안에 담긴 카메라 본체가 드러남.  <말: check you today. You>
+  - lens_instagram_1ksi1cx-10 (4.8초) | 다이얼을 돌리는 행동과 촬영되는 해변 영상이 분할로 겹쳐 보임.  <말: will make it to the air of the air conditioner.>
+  - lens_instagram_1ksi1cx-11 (2.3초) | 상단 뷰파인더 덮개를 다시 접어 닫는 과정.  <말: Yes!>
+  - lens_instagram_1ksi1cx-12 (1.4초) | 손이 카메라 상단 뷰파인더 덮개를 닫고, 뒤로 물러나며 프레임에서 사라짐.
+  - lens_instagram_1ksi1cx-13 (1.8초) | 검은 배경에 브랜드 로고(NORDECO)가 나타나며 빛나는 애니메이션 효과가 재생됨.
+  - lens_instagram_1ksi1cx-2 (1.3초) | 손으로 박스 안에서 카메라 본체를 꺼내는 과정.  <말: have been here several times, you>
+  - lens_instagram_1ksi1cx-3 (3.2초) | 카메라 본체를 손으로 잡고 앞면, 옆면 다이얼 부위를 돌려가며 외관을 보여줌.  <말: must be tired and dry. You have not been here many times, yo>
+  - lens_instagram_1ksi1cx-4 (2.3초) | 카메라를 정면으로 잡고 상단 뷰파인더를 확인하며 살짝 만지는 모습.  <말: do not know.>
+  - lens_instagram_1ksi1cx-5 (1.4초) | 카메라 상단 뷰파인더 덮개를 손으로 열어 뷰파인더 화면이 완전히 세워짐.  <말: But ... It sounds good ...>
+  - lens_instagram_1ksi1cx-6 (1.3초) | 열린 상단 뷰파인더 안쪽 액정에 영상 촬영 화면이 비치고 있음.
+  - lens_instagram_1ksi1cx-7 (1.1초) | 상단 뷰파인더 화면이 노을이 진 풍경 촬영본으로 전환됨.
+  - lens_instagram_1ksi1cx-8 (1.0초) | 전체 화면으로 노을 풍경 영상이 송출됨.
+  - lens_instagram_1ksi1cx-9 (1.9초) | 카메라 측면에 있는 다이얼을 손가락으로 직접 돌리는 모습.  <말: I>
+
+[재료 s4]
+  - lens_instagram_11v1rgw-0 (3.2초) | 손으로 은색 카메라 패키지 상자를 들어 올리며 정면의 제품 로고와 디자인을 보여줌.
+  - lens_instagram_11v1rgw-1 (1.1초) | 상자 뚜껑을 열고 내부 포장지와 카메라 본체 일부가 드러나는 모습.
+  - lens_instagram_11v1rgw-10 (3.0초) | 뷰파인더를 다시 닫고 카메라 전면부와 상단의 구도를 안정적으로 보여줌.
+  - lens_instagram_11v1rgw-11 (2.5초) | 실제 해당 카메라로 촬영된 결과물 사진들을 화면에 표시.
+  - lens_instagram_11v1rgw-12 (5.3초) | 카메라로 촬영된 샘플 영상이 화면에 나타나며, 방 안에서 사람이 기타를 연주하는 모습이 이어짐.  <말: 🎵>
+  - lens_instagram_11v1rgw-2 (1.1초) | 상자 내부에서 작은 설명서나 보증서 같은 종이 패키지를 꺼내는 모습.
+  - lens_instagram_11v1rgw-3 (1.0초) | 또 다른 구성품 상자를 꺼내 들어 내부를 보여주는 과정.
+  - lens_instagram_11v1rgw-4 (0.7초) | 카메라 본체가 들어있는 포장재를 상자에서 완전히 꺼내는 모습.
+  - lens_instagram_11v1rgw-5 (2.7초) | 카메라 본체를 꺼내고 구성품인 스트랩, 충전 케이블, 그리고 포장된 카메라 본체를 손바닥 위에 올려 순서대로 보여줌.
+  - lens_instagram_11v1rgw-6 (0.7초) | 포장지를 벗기고 카메라 본체의 전체적인 디자인을 손 위에서 돌려가며 확인.
+  - lens_instagram_11v1rgw-7 (2.3초) | 카메라 정면과 측면, 조작부의 다이얼을 상세하게 손으로 보여줌.
+  - lens_instagram_11v1rgw-8 (1.3초) | 측면 다이얼을 손가락으로 돌리며 조작하는 모습을 근접 촬영.
+  - lens_instagram_11v1rgw-9 (2.7초) | 카메라 상단 뷰파인더 덮개를 손으로 들어 올려 펼치는 모습.
+
+[재료 s5]
+  - lens_instagram_ly1wtm-0 (6.9초) | 남성이 손에 레트로 카메라를 들고 제품의 전반적인 외관을 보여줌  <말: This camera is one of the most enjoyable cameras that I've u>
+  - lens_instagram_ly1wtm-1 (6.9초) | 남성이 카메라를 들고 제품의 구매처를 언급함  <말: from Shuzhao. This actually can be bought very easily at JG >
+  - lens_instagram_ly1wtm-10 (2.4초) | 사용자가 카페에서 카메라 결과물을 확인하는 모습  <말: this. And also some videos as well for you>
+  - lens_instagram_ly1wtm-11 (1.3초) | 선글라스를 쓴 남성이 카메라 관련 마무리를 하는 모습  <말: to enjoy. Again, available>
+  - lens_instagram_ly1wtm-12 (0.8초) | 선글라스를 쓴 남성이 여행지에서 카메라를 들고 걸으며 얼굴을 비춘다.  <말: na ito>
+  - lens_instagram_ly1wtm-13 (0.8초) | 에펠탑을 배경으로 남성이 카메라를 들고 여행을 즐기는 모습.  <말: sa JG Superstore.>
+  - lens_instagram_ly1wtm-14 (1.0초) | 에펠탑이 보이는 강변의 풍경이 카메라 시점으로 담겨 있다.
+  - lens_instagram_ly1wtm-15 (3.6초) | 강물과 멀리 보이는 건물이 담긴 평화로운 여행지 풍경.  <말: Choose out. Just go and check it out. I really love this.>
+  - lens_instagram_ly1wtm-16 (6.4초) | 남성이 카메라를 들고 데스크테리어 활용을 설명하며 카메라를 보여준다.  <말: Also, okay din siya sa mga desk setups ninyo if you want to >
+  - lens_instagram_ly1wtm-17 (6.4초) | 남성이 카메라를 손에 들고 제품명을 언급하며 카메라를 클로즈업한다.  <말: desk setups. Again, this has been Gian of Caddy Pilipinas an>
+  - lens_instagram_ly1wtm-18 (0.9초) | 화면이 파란색과 빨간색의 추상적인 그래픽으로 전환된다.
+  - lens_instagram_ly1wtm-19 (6.7초) | 브랜드 로고와 웹사이트 주소가 화면에 나타나며 마무리된다.
+  - lens_instagram_ly1wtm-2 (6.9초) | 카메라 측면의 다이얼(버튼 형태)을 손으로 조작하는 모습  <말: you can see right here, very, very nice looking camera. You >
+  - lens_instagram_ly1wtm-3 (6.9초) | 카메라 측면 조작 후 영상 녹화 상태로 변화되는 모습  <말: siyang ganyan, and it'll start recording videos, no? And it'>
+  - lens_instagram_ly1wtm-4 (6.9초) | 카메라 상단 뷰파인더를 통해 녹화 화면을 보여줌  <말: you stop rolling it. Now, you can of course see everything h>
+  - lens_instagram_ly1wtm-5 (6.9초) | 카메라 전면 버튼과 조작부로 사진 촬영 및 필터 변경 시연  <말: photos using this button. You can do playbacks here. You can>
+  - lens_instagram_ly1wtm-6 (2.2초) | 도심 거리 풍경이 지나가는 여행지 영상  <말: lot of really cool things. As I mentioned, I brought>
+  - lens_instagram_ly1wtm-7 (2.2초) | 에펠탑을 배경으로 한 실외 풍경 영상  <말: this with me during my previous travel. And>
+  - lens_instagram_ly1wtm-8 (2.2초) | 에펠탑 앞에서의 기념 촬영 모습  <말: I really enjoyed using it. Here>
+  - lens_instagram_ly1wtm-9 (2.2초) | 카메라로 촬영된 고양이 사진 결과물 공유  <말: are some sample photos that I took using>
+
+[재료 s6]
+  - lens_instagram_1snuqcc-0 (0.9초) | 두 손으로 빈티지 미니 카메라를 잡고 정면으로 보여줌.  <말: This vintage-style camera>
+  - lens_instagram_1snuqcc-1 (0.8초) | 카메라를 살짝 돌려 측면과 후면부를 상세히 보여줌.  <말: isn't just cute,>
+  - lens_instagram_1snuqcc-10 (0.7초) | 가을 분위기가 느껴지는 고풍스러운 건물 풍경 사진.  <말: like old-school>
+  - lens_instagram_1snuqcc-11 (0.7초) | 다시 카메라 본체를 손에 쥐고 크랭크를 만지는 모습.  <말: film.>
+  - lens_instagram_1snuqcc-12 (0.8초) | 카메라를 손에 들고 후면부를 조작하고 있다.  <말: No editing needed.>
+  - lens_instagram_1snuqcc-13 (6.3초) | 카메라로 촬영한 감성적인 자연 풍경 사진들이 연속으로 전환된다.  <말: It's seriously fun to use, and the design is just adorable. >
+  - lens_instagram_1snuqcc-14 (1.0초) | 손이 빈티지 스타일 미니 카메라를 패키지 박스 위에 올려놓는다.  <말: I've dropped the>
+  - lens_instagram_1snuqcc-15 (2.0초) | 패키지 박스 위에 놓인 카메라를 위쪽에서 클로즈업하여 보여준다.  <말: link in my bio if you want to check it out.>
+  - lens_instagram_1snuqcc-2 (0.6초) | 카메라를 정면으로 다시 위치시키고 상단 버튼 부근을 강조함.  <말: it's actually>
+  - lens_instagram_1snuqcc-3 (1.8초) | 카메라 패키지 박스를 열고 내부에서 카메라를 꺼냄.  <말: legit. The snap-open lens cap>
+  - lens_instagram_1snuqcc-4 (2.2초) | 카메라의 전면 렌즈 캡을 열고 본체를 이리저리 돌려 봄.  <말: and waist-level viewfinder are super well done.>
+  - lens_instagram_1snuqcc-5 (1.6초) | 뷰파인더 덮개를 위로 올리고 촬영 준비 상태를 보여줌.  <말: You can take photos and twist the>
+  - lens_instagram_1snuqcc-6 (1.9초) | 측면 크랭크를 돌려 영상 촬영 기능을 작동시키는 모습.  <말: side crank to shoot video too. It even has>
+  - lens_instagram_1snuqcc-7 (0.6초) | 카메라 화면 속으로 빈티지한 필터가 적용된 결과물이 보임.  <말: built-in retro>
+  - lens_instagram_1snuqcc-8 (0.6초) | 카메라로 촬영된 고전적인 느낌의 식물 풍경 사진.  <말: filters,>
+  - lens_instagram_1snuqcc-9 (1.3초) | 오래된 중국풍 거리의 골목길 풍경 사진이 보임.  <말: so your shots come out looking>

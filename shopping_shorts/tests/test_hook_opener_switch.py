@@ -142,5 +142,7 @@ def test_음성쪽_배선이_끊기지_않았다():
         "음성 쪽이 스위치를 안 본다"
     off = mix_pipeline.line_profile(None, None, hook_opener=False)
     assert off["fillers"]["on"] is False, "스위치를 꺼도 fillers가 안 꺼진다"
+    # ★2026-10-01(관제 049, 사장님 "음 빼고"): 음성 추임새는 스위치와 무관하게 **항상 끈다**.
+    #   대본의 부름말(①)은 스위치대로 글로 남고, 소리에만 붙던 ②가 없어져 자막 = 소리가 된다.
     on = mix_pipeline.line_profile(None, None, hook_opener=True)
-    assert on["fillers"]["on"] is True, "스위치를 켰는데 fillers가 꺼져 있다"
+    assert on["fillers"]["on"] is False, "스위치를 켜도 음성 추임새는 꺼져 있어야 한다(관제 049)"

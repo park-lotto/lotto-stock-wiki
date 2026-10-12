@@ -45,6 +45,13 @@ def owner_cid():
     return _cid.get()
 
 
+def owner_known():
+    """주인이 **명시적으로** 정해졌는가(미들웨어·워커·keyctx.pool). 안 정해져 기본값 0으로 떨어진 것과 가른다.
+    ★왜(2026-10-08, 관제 159): 기본값 0은 '사장님'과 구별이 안 된다 — 주인을 잃은 고객 작업(예열 워커·
+      일반 스레드풀)이 사장님으로 잡혀 사장님 유료 Vertex를 탔다. 돈이 걸린 판정은 이걸로 '모름'을 가른다."""
+    return _cid.get(None) is not None
+
+
 class owner:
     """with keyctx.owner(cid): — 블록을 벗어나면 원래대로 돌아간다."""
 

@@ -260,12 +260,14 @@ def test_finish_does_not_destroy_ignorable_edits_in_track_folder(repo):
     _preflight가 통과시키고 → reset --hard는 조용히 날리고 → ff는 보존한다.
     """
     wt = _make_track_commit(repo, "보이스")
-    raw = wt / "raw"
-    raw.mkdir()
+    # ★예시 경로는 wiki/log.d/ — raw/는 2026-09-27부터 트랙에 안 풀리므로(SPARSE_EXCLUDE) 트랙에서 못 올린다.
+    #   지키려는 성질(추적+무시대상 수정분을 ff가 보존)은 같다.
+    raw = wt / "wiki" / "log.d"
+    raw.mkdir(parents=True)
     (raw / "크롤.md").write_text("커밋된 크롤 데이터\n", encoding="utf-8")
-    _git(wt, "add", "raw/크롤.md")
+    _git(wt, "add", "wiki/log.d/크롤.md")
     _git(wt, "commit", "-m", "크롤 데이터 추가")
-    # 이제 추적되는 파일을 고친다 → " M raw/크롤.md" = _preflight가 무시대상으로 통과시킴
+    # 이제 추적되는 파일을 고친다 → " M wiki/log.d/크롤.md" = _preflight가 무시대상으로 통과시킴
     (raw / "크롤.md").write_text("작업 중인 수정분\n", encoding="utf-8")
 
     track.finish("보이스", repo=repo, gate=_Gate())
@@ -510,3 +512,159 @@ def test_finish_rejects_unknown_track(repo):
 def test_ahead_count_tracks_divergence(repo):
     _make_track_commit(repo, "보이스")
     assert track.ahead_count(repo, "track/보이스") == 1
+
+
+# ── 디스크 병목 막기(2026-09-27): 가벼운 트랙 · 주차 · 잔해 청소 · 디스크 거절 ────────────
+
+def _add_heavy_dirs(repo):
+    """실제 저장소처럼 raw/·productions/가 git에 있다."""
+    for rel, body in (("raw/a.md", "원본\n"), ("productions/b.txt", "제작물\n"), ("keep/c.txt", "코드쪽\n")):
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body, encoding="utf-8")
+    _git(repo, "add", "raw", "productions", "keep")
+    _git(repo, "commit", "-m", "heavy")
+    _git(repo, "push", "origin", "main")
+
+
+def test_start_is_light_and_main_folder_untouched(repo):
+    """트랙엔 raw/·productions/를 안 푼다. ★main 폴더는 그대로여야 한다(설정이 새면 main이 비워진다)."""
+    _add_heavy_dirs(repo)
+    track.start("가벼움", repo=repo)
+    wt = track.worktree_path("가벼움", repo)
+    assert (wt / "keep" / "c.txt").exists() and (wt / "app.py").exists()
+    assert not (wt / "raw").exists() and not (wt / "productions").exists(), "무거운 폴더가 풀렸다"
+    assert (repo / "raw" / "a.md").exists() and (repo / "productions" / "b.txt").exists(), "★main 폴더가 비워졌다"
+    _git(repo, "checkout", "--", ".")     # main에서 다시 체크아웃해도 그대로(설정이 main에 새지 않았나)
+    assert (repo / "raw" / "a.md").exists()
+
+
+def test_light_track_commit_and_finish_do_not_delete_heavy_files(repo):
+    """가벼운 트랙에서 커밋·병합해도 raw/·productions/가 git에서 지워지지 않는다(안 풀었을 뿐)."""
+    _add_heavy_dirs(repo)
+    wt = _make_track_commit(repo, "가벼움")
+    _git(wt, "add", "-A")                 # -A도 안전해야 한다(트랙 폴더 규칙상 -A를 쓴다)
+    track.finish("가벼움", repo=repo, gate=_Gate())
+    files = _git(repo, "ls-tree", "-r", "--name-only", "origin/main")
+    assert "raw/a.md" in files and "productions/b.txt" in files, "★병합이 무거운 파일을 지웠다"
+    assert (repo / "raw" / "a.md").exists()
+
+
+def test_start_full_keeps_everything(repo):
+    _add_heavy_dirs(repo)
+    track.start("전체", repo=repo, full=True)
+    assert (track.worktree_path("전체", repo) / "raw" / "a.md").exists()
+
+
+def test_park_keeps_branch_and_remote_and_refuses_dirty(repo):
+    wt = _make_track_commit(repo, "주차")
+    (wt / "app.py").write_text("VALUE = 99\n", encoding="utf-8")        # 미커밋
+    with pytest.raises(track.TrackError, match="미커밋"):
+        track.park("주차", repo=repo)
+    assert wt.exists(), "미커밋이 있는데 폴더를 치웠다"
+    _git(wt, "checkout", "--", "app.py")
+    head = _git(wt, "rev-parse", "HEAD").strip()
+    track.park("주차", repo=repo)
+    assert not wt.exists()
+    assert _git(repo, "rev-parse", "track/주차").strip() == head, "브랜치가 사라지거나 바뀌었다"
+    assert head in _git(repo, "ls-remote", "origin", "refs/heads/track/주차"), "원격 백업이 없다"
+    _git(repo, "worktree", "add", str(wt), "track/주차")                  # 되살리기
+    assert (wt / "app.py").read_text(encoding="utf-8") == "VALUE = 2\n"
+
+
+def test_park_idle_parks_only_old_tracks(repo, monkeypatch):
+    _make_track_commit(repo, "오래됨")
+    _make_track_commit(repo, "최근")
+    ages = {"오래됨": 30.0, "최근": 0.5}
+    monkeypatch.setattr(track, "_last_touch_days", lambda r, n: ages[n])
+    track.park_idle(repo=repo, days=7)
+    assert not track.worktree_path("오래됨", repo).exists()
+    assert track.worktree_path("최근", repo).exists()
+    assert track.branch_exists(repo, "track/오래됨")
+
+
+def test_finish_cleans_dead_merge_stages(repo):
+    """락을 쥔 finish가 남은 _merge-* 잔해(끊긴 finish)를 치운다 — 2026-09-27 실측 4개·개당 ~1.8GB."""
+    dead = track.tracks_dir(repo) / f"{track.STAGE_PREFIX}죽은것"
+    dead.parent.mkdir(parents=True, exist_ok=True)
+    _git(repo, "worktree", "add", "--detach", str(dead), "origin/main")
+    import os as _os, time as _t
+    _old = _t.time() - track.STAGE_YOUNG_SEC - 60           # 주인 없는 잔해는 30분 지나야 치운다(카드 093)
+    _os.utime(dead, (_old, _old))
+    _make_track_commit(repo, "보이스")
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert not dead.exists(), "잔해가 남았다"
+
+
+def test_finish_refuses_when_disk_nearly_full(repo, monkeypatch):
+    """임시 폴더를 만들다 끊기기 전에 멈춘다(끊기면 잔해 1.8GB가 남는다)."""
+    _make_track_commit(repo, "보이스")
+    monkeypatch.setattr(track, "disk_free_gb", lambda p=None: 1.0)
+    with pytest.raises(track.TrackError, match="디스크 여유"):
+        track.finish("보이스", repo=repo, gate=_Gate())
+    assert not (track.tracks_dir(repo) / f"{track.STAGE_PREFIX}보이스").exists()
+
+
+# ── 병합 구조 개선(2026-09-29): 비코드 커밋이 끼어들면 게이트를 다시 돌지 않는다 ──────────
+def _git(cwd, *a):
+    import subprocess
+    r = subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+    return r.stdout
+
+
+def _race_setup(tmp_path, other_path, other_body):
+    """origin(bare) · 내 stage(병합 커밋 완료, 아직 push 전) · 다른 세션이 먼저 main에 push."""
+    from pathlib import Path
+    origin = tmp_path / "origin.git"; _git(tmp_path, "init", "--bare", "-b", "main", str(origin))
+    seed = tmp_path / "seed"; _git(tmp_path, "clone", str(origin), str(seed))
+    for c in (seed,):
+        _git(c, "config", "user.email", "t@t"); _git(c, "config", "user.name", "t")
+    (seed / "app.py").write_text("x=1\n"); _git(seed, "add", "-A"); _git(seed, "commit", "-m", "base"); _git(seed, "push", "origin", "HEAD:main")
+    stage = tmp_path / "stage"; _git(tmp_path, "clone", str(origin), str(stage))
+    _git(stage, "config", "user.email", "t@t"); _git(stage, "config", "user.name", "t")
+    _git(stage, "checkout", "-b", "track"); (stage / "app.py").write_text("x=2\n"); _git(stage, "commit", "-am", "mine")
+    _git(stage, "checkout", "--detach", "origin/main"); _git(stage, "merge", "--no-ff", "--no-edit", "track")
+    p = seed / other_path; p.parent.mkdir(parents=True, exist_ok=True); p.write_text(other_body)
+    _git(seed, "add", "-A"); _git(seed, "commit", "-m", "other"); _git(seed, "push", "origin", "HEAD:main")
+    return stage
+
+
+def test_catch_up_non_code_merges_and_push_succeeds(tmp_path):
+    stage = _race_setup(tmp_path, "관제/cards/001.md", "card\n")
+    assert track._catch_up_non_code(stage) is True
+    _git(stage, "push", "origin", "HEAD:main")                       # 거절 없이 들어간다
+    assert (stage / "app.py").read_text() == "x=2\n"                 # 내 코드 그대로
+
+
+def test_catch_up_refuses_when_code_slipped_in(tmp_path):
+    stage = _race_setup(tmp_path, "shopping_shorts/other.py", "y=1\n")
+    assert track._catch_up_non_code(stage) is False                  # 코드가 끼면 종전대로 게이트 재실행
+
+
+def test_is_non_code_paths():
+    assert track._is_non_code("관제/BOARD.md") and track._is_non_code("handoff/x.md")
+    assert not track._is_non_code("shopping_shorts/app.py")
+    assert not track._is_non_code("shopping_shorts/static/produce.html")
+    assert not track._is_non_code("tools/track.py")
+
+
+def test_cached_baseline_reuses_same_main_commit(tmp_path):
+    """같은 origin/main 커밋이면 두 번째 finish는 기준선(pytest 20분)을 다시 재지 않는다."""
+    repo = tmp_path / "repo"; repo.mkdir(); _git(repo, "init", "-b", "main")
+    _git(repo, "config", "user.email", "t@t"); _git(repo, "config", "user.name", "t")
+    (repo / "a").write_text("1"); _git(repo, "add", "-A"); _git(repo, "commit", "-m", "c")
+    calls = []
+
+    class Gate:
+        def snapshot(self, cwd):
+            calls.append(cwd)
+            return {"failed": ["t::x"], "import_ok": True, "compile_ok": True, "pytest_rc": 1,
+                    "pytest_out": "", "import_out": "", "compile_out": ""}
+
+    b1 = track._cached_baseline(repo, repo, Gate())
+    b2 = track._cached_baseline(repo, repo, Gate())
+    assert len(calls) == 1 and b1 == b2
+    (repo / "a").write_text("2"); _git(repo, "commit", "-am", "c2")
+    track._cached_baseline(repo, repo, Gate())
+    assert len(calls) == 2                                            # main이 바뀌면 다시 잰다

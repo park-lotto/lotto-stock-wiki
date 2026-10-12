@@ -1,0 +1,247 @@
+<meta charset="utf-8">
+<title>뇌전구 대본 비교 — 블라인드 집값 논쟁</title>
+<style>
+:root { --bg:#0f1115; --panel:#171a21; --line:#262b36; --ink:#e8eaf0; --dim:#8b93a7;
+        --ours:#7aa2ff; --volc:#ff9f45; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+       font:15px/1.65 -apple-system,"Segoe UI","Malgun Gothic",sans-serif; padding:0 0 60px; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 20px; }
+header { padding:34px 0 18px; border-bottom:1px solid var(--line); margin-bottom:26px; }
+h1 { margin:0 0 8px; font-size:26px; letter-spacing:-.5px; }
+.sub { color:var(--dim); font-size:14px; }
+h2 { font-size:19px; margin:38px 0 14px; padding-left:10px; border-left:3px solid var(--ours); }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+@media(max-width:860px) { .grid2 { grid-template-columns:1fr; } }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.phead { padding:12px 16px; font-weight:700; font-size:15px; border-bottom:1px solid var(--line); }
+.phead.ours { color:var(--ours); } .phead.volc { color:var(--volc); }
+.phead small { display:block; font-weight:400; color:var(--dim); font-size:12px; margin-top:3px; }
+table { width:100%; border-collapse:collapse; }
+td,th { padding:7px 10px; border-bottom:1px solid #1e2230; vertical-align:top; text-align:left; }
+.n { width:34px; color:var(--dim); font-variant-numeric:tabular-nums; font-size:12px; }
+.role { width:62px; font-size:11px; color:var(--dim); letter-spacing:.4px; }
+.r-char .role { color:#ff7a7a; } .r-punch .role { color:#ff5b5b; font-weight:700; }
+.r-punch { background:#1d1418; }
+.cap { font-size:15px; }
+.dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px;
+       vertical-align:middle; }
+.meta { width:80px; font-size:11px; color:var(--dim); text-align:right; white-space:nowrap; }
+.titlebox { padding:14px 16px; border-bottom:1px solid var(--line); }
+.titlebox div { margin:4px 0; font-size:14px; }
+.titlebox .k { color:var(--dim); font-size:11px; display:inline-block; width:46px; }
+.t-h1 { color:#fff; font-weight:700; } .t-h2 { color:#ffe14d; font-weight:700; }
+.stat { background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+.stat th { color:var(--dim); font-weight:500; width:190px; }
+.stat td { font-variant-numeric:tabular-nums; }
+.stat tr td:nth-child(2) { color:var(--ours); } .stat tr td:nth-child(3) { color:var(--volc); }
+.stat thead th { color:var(--ink); }
+.tone { background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+.bad { color:#ff8f8f; } .good { color:#7ee0a0; }
+.arrow { color:var(--dim); width:34px; text-align:center; }
+.call { background:#141821; border:1px solid var(--line); border-left:3px solid var(--volc);
+        border-radius:8px; padding:16px 18px; margin:16px 0; }
+.call b { color:var(--volc); }
+.call.key { border-left-color:#ff5b5b; } .call.key b { color:#ff5b5b; }
+ol.fix { padding-left:20px; } ol.fix li { margin:10px 0; }
+code { background:#0b0d12; padding:1px 6px; border-radius:4px; font-size:13px; color:#a8b4d0; }
+.note { color:var(--dim); font-size:13px; }
+</style>
+
+<div class="wrap">
+<header>
+  <h1>뇌전구 대본 비교 &mdash; 같은 글, 두 파이프라인</h1>
+  <div class="sub">소재: 블라인드 부동산 「요즘 집값이 비싼게 아니라 2030세대 경제관념이 문제가 있는거임」
+  &middot; 원문 826자(공백 제외) + 추천순 댓글 12개 &middot; 두 대본 모두 <b>완전히 같은 재료</b>로 생성 &middot; 2026-09-13</div>
+</header>
+
+<div class="call key">
+<b>가장 중요한 발견</b> &mdash; 볼케이노에는 <b>대본을 생성하는 모델이 없다.</b>
+서버 응답 <code>script_input</code> 원문: <i>"서버는 규격만 검사하며 이 단계에서 유료 모델을 부르지 않습니다."</i><br>
+즉 볼케이노는 규칙을 내려주고 <b>붙어 있는 AI(=Claude)에게 쓰게 한 뒤 규격만 검사</b>한다.
+우리는 제미니가 쓰고 lint가 검사한다.
+<b>"뇌전구는 어떤 기사를 보내도 다 된다"의 정체는 더 좋은 프롬프트가 아니라, 대본을 쓰는 주체가 더 센 모델이라는 것이다.</b>
+</div>
+
+<h2>1. 제목</h2>
+<div class="grid2">
+  <div class="panel">
+    <div class="phead ours">우리 &middot; brainbulb<small>제미니가 작성 &middot; lint 21규칙 &middot; 2회 시도 &middot; 반려 0</small></div>
+    <div class="titlebox">
+      <div><span class="k">H1</span><span class="t-h1">블라인드 부동산</span></div>
+      <div><span class="k">H2</span><span class="t-h2">2030 세대 분노 3가지</span></div>
+      <div><span class="k">카드</span>집 쉽게 산 세대가 요즘 세대 탓하는 황당글</div>
+      <div><span class="k">유튜브</span><span class="note">블라인드 집값 논쟁 2030 노력부족 책임 전가 논란</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="phead volc">볼케이노 MCP<small>Claude가 작성 &middot; 서버 규격검사 &middot; 1회 반려 후 통과</small></div>
+    <div class="titlebox">
+      <div><span class="k">H1</span><span class="t-h1">집값 탓하지 말라던 글에</span></div>
+      <div><span class="k">H2</span><span class="t-h2">댓글 293개 달아준 직장인들</span></div>
+      <div><span class="k">카드</span>2030 노력 부족이라 쓴 글에 댓글 293개가 달림</div>
+      <div><span class="k">유튜브</span><span class="note">블라인드 집값 논쟁 2030 노력부족 댓글 293개 폭발</span></div>
+    </div>
+  </div>
+</div>
+<div class="call">
+<b>서버가 실제로 반려한 것</b> &mdash; 제 첫 h2는 「댓글 293개가 달린 <b>이유</b>」였다. 볼케이노 서버가 즉시 반려했다:
+<i>"노랑 줄이 '이유'로 끝난다 &mdash; 이 낱말은 무엇/누구인지 말해 주지 않는다."</i>
+&rarr; 「댓글 293개 <b>달아준 직장인들</b>」로 고쳐 통과. <b>우리 lint에는 이 판정이 없다.</b>
+</div>
+
+<h2>2. 컷 나란히 보기</h2>
+<div class="grid2">
+  <div class="panel">
+    <div class="phead ours">우리 &middot; brainbulb &middot; 27컷</div>
+    <table><tr class="r-narr"><td class="n">1</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">블라인드 앱에</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">2</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">부동산 관련 글이</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">3</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">하나 올라왔다</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">4</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">한 기업 직원이</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">5</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">2030 세대를 향해</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">6</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">쓴 글이었는데</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">7</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffa24d"></span><span class="txt" style="color:#ffa24d">노력도 없이</span></td><td class="meta">슬롯 3</td></tr>
+<tr class="r-narr"><td class="n">8</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">해외여행 다니고</span></td><td class="meta">슬롯 3</td></tr>
+<tr class="r-narr"><td class="n">9</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">비싼 거 사 먹으니</span></td><td class="meta">슬롯 4</td></tr>
+<tr class="r-narr"><td class="n">10</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">돈이 안 모이지 않냐</span></td><td class="meta">슬롯 4</td></tr>
+<tr class="r-narr"><td class="n">11</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">예전 세대는 아껴서</span></td><td class="meta">슬롯 5</td></tr>
+<tr class="r-narr"><td class="n">12</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">집 샀다는 내용</span></td><td class="meta">슬롯 5</td></tr>
+<tr class="r-narr"><td class="n">13</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">요즘 세대는 노력이</span></td><td class="meta">슬롯 6</td></tr>
+<tr class="r-narr"><td class="n">14</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ff8ed0"></span><span class="txt" style="color:#ff8ed0">부족하다는 지적이었다</span></td><td class="meta">슬롯 6</td></tr>
+<tr class="r-narr"><td class="n">15</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">이 글에 댓글 반응은</span></td><td class="meta">슬롯 7</td></tr>
+<tr class="r-narr"><td class="n">16</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">불같이 타올랐다</span></td><td class="meta">슬롯 7</td></tr>
+<tr class="r-char"><td class="n">17</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">해외여행 이미 집 삼</span></td><td class="meta">밈 비웃음/조롱</td></tr>
+<tr class="r-char"><td class="n">18</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">대출 펑펑 받은 건?</span></td><td class="meta">밈 의심/떨떠름</td></tr>
+<tr class="r-narr"><td class="n">19</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">비판은 끊이지 않았다</span></td><td class="meta">슬롯 9</td></tr>
+<tr class="r-char"><td class="n">20</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">여행값으로 집 산다고?</span></td><td class="meta">밈 경악/충격</td></tr>
+<tr class="r-narr"><td class="n">21</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">6년 모아 집 사던 때와</span></td><td class="meta">슬롯 9</td></tr>
+<tr class="r-narr"><td class="n">22</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">지금은 시대가 달라</span></td><td class="meta">슬롯 10</td></tr>
+<tr class="r-narr"><td class="n">23</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">30년 모아도 못 삼</span></td><td class="meta">슬롯 10</td></tr>
+<tr class="r-narr"><td class="n">24</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">1억 모으는 3년 동안</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-narr"><td class="n">25</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">집값 1억 넘게 올랐음</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-char"><td class="n">26</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">기성세대가 연금 건보 올렸음</span></td><td class="meta">밈 분노</td></tr>
+<tr class="r-punch"><td class="n">27</td><td class="role">PUNCH</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">노력은 통하지 않고 시대만 달랐다</span></td><td class="meta">밈 무표정/멍</td></tr></table>
+  </div>
+  <div class="panel">
+    <div class="phead volc">볼케이노 &middot; 27컷</div>
+    <table><tr class="r-narr"><td class="n">1</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">블라인드에 글 하나 올라옴</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">2</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">조회수 2만 댓글 293개</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">3</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">쓴 사람은 대기업 직원</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">4</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffa24d"></span><span class="txt" style="color:#ffa24d">요즘 2030이 문제라는 글</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">5</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">노력은 안 하고</span></td><td class="meta">슬롯 3</td></tr>
+<tr class="r-narr"><td class="n">6</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">해외여행 다니고</span></td><td class="meta">슬롯 3</td></tr>
+<tr class="r-narr"><td class="n">7</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">비싼 거 사 먹는데</span></td><td class="meta">슬롯 4</td></tr>
+<tr class="r-char"><td class="n">8</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">돈이 모이겠냐</span></td><td class="meta">슬롯 4</td></tr>
+<tr class="r-narr"><td class="n">9</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">예전 세대는 아껴서</span></td><td class="meta">슬롯 5</td></tr>
+<tr class="r-narr"><td class="n">10</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">종잣돈 만들고 발품 팔아</span></td><td class="meta">슬롯 5</td></tr>
+<tr class="r-narr"><td class="n">11</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">다 집 샀다는 거임</span></td><td class="meta">슬롯 6</td></tr>
+<tr class="r-narr"><td class="n">12</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ff8ed0"></span><span class="txt" style="color:#ff8ed0">요즘 애들은 남탓만 한다고</span></td><td class="meta">슬롯 6</td></tr>
+<tr class="r-narr"><td class="n">13</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">그런데 댓글이 터짐</span></td><td class="meta">슬롯 7</td></tr>
+<tr class="r-char"><td class="n">14</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">걔들 이미 집 삼</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">15</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">추천 209개 받은 댓글</span></td><td class="meta">슬롯 7</td></tr>
+<tr class="r-char"><td class="n">16</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">대출 펑펑 받았잖아</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">17</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">숫자가 나오기 시작함</span></td><td class="meta">슬롯 8</td></tr>
+<tr class="r-narr"><td class="n">18</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">예전엔 6년 모으면 집</span></td><td class="meta">슬롯 8</td></tr>
+<tr class="r-narr"><td class="n">19</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">지금은 30년 모아도 못 삼</span></td><td class="meta">슬롯 9</td></tr>
+<tr class="r-narr"><td class="n">20</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">1억 모으는 데 3년인데</span></td><td class="meta">슬롯 9</td></tr>
+<tr class="r-narr"><td class="n">21</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">집값은 1년에 1억 오름</span></td><td class="meta">슬롯 10</td></tr>
+<tr class="r-narr"><td class="n">22</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">글쓴이도 안 물러섬</span></td><td class="meta">슬롯 10</td></tr>
+<tr class="r-char"><td class="n">23</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">온실 속 화초 아니냐</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">24</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">그러자 마지막 댓글</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-char"><td class="n">25</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">깝치지 말고 니 집 봐라</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">26</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">노력이 모자란 게 아니었음</span></td><td class="meta">슬롯 12</td></tr>
+<tr class="r-punch"><td class="n">27</td><td class="role">PUNCH</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">시대가 달랐던 거임</span></td><td class="meta">슬롯 12</td></tr></table>
+  </div>
+</div>
+
+<h2>3. 말투 &mdash; 같은 내용을 어떻게 썼나</h2>
+<div class="call">
+볼케이노 브리프 <code>tone</code> 원문: <i>"이 채널은 <b>말하듯</b> 쓴다. 뉴스 문장을 줄이는 게 아니라 다시 쓴다 &mdash;
+'-습니다'로 끝나는 문장은 이 채널에 거의 없다. 실제로 쓰는 끝맺음: <b>~음/~함/~중임(음슴체)</b> &middot;
+~잖아/~는데/~니까/~인데(구어) &middot; ~다고?(되묻기)"</i><br>
+<b>우리 <code>prompt.py</code>에는 이 음슴체 규칙이 없다.</b> 그래서 뉴스 문어체가 그대로 나온다.
+</div>
+<table class="tone">
+<tr><th style="color:var(--ours)">우리 (뉴스 문어체)</th><th></th><th style="color:var(--volc)">볼케이노 (음슴체&middot;구어)</th></tr>
+<tr><td class="bad">하나 올라왔다</td><td class="arrow">&rarr;</td><td class="good">글 하나 올라옴</td></tr>
+<tr><td class="bad">쓴 글이었는데</td><td class="arrow">&rarr;</td><td class="good">요즘 2030이 문제라는 글</td></tr>
+<tr><td class="bad">부족하다는 지적이었다</td><td class="arrow">&rarr;</td><td class="good">요즘 애들은 남탓만 한다고</td></tr>
+<tr><td class="bad">불같이 타올랐다</td><td class="arrow">&rarr;</td><td class="good">그런데 댓글이 터짐</td></tr>
+<tr><td class="bad">비판은 끊이지 않았다</td><td class="arrow">&rarr;</td><td class="good">숫자가 나오기 시작함</td></tr>
+<tr><td class="bad">지금은 시대가 달라</td><td class="arrow">&rarr;</td><td class="good">지금은 30년 모아도 못 삼</td></tr>
+<tr><td class="bad">노력은 통하지 않고 시대만 달랐다</td><td class="arrow">&rarr;</td><td class="good">시대가 달랐던 거임</td></tr>
+</table>
+
+<h2>4. 구조 수치</h2>
+<table class="stat">
+<thead><tr><th></th><th style="color:var(--ours)">우리</th><th style="color:var(--volc)">볼케이노</th></tr></thead>
+<tr><th>컷 수</th><td>27</td><td>27</td></tr>
+<tr><th>NARR (나레이션)</th><td>22</td><td>21</td></tr>
+<tr><th>CHAR (인물 대사)</th><td>4</td><td>5</td></tr>
+<tr><th>PUNCH (마무리)</th><td>1</td><td>1</td></tr>
+<tr><th>밈 컷</th><td>5</td><td>4</td></tr>
+<tr><th>첫 밈이 나오는 컷</th><td>17</td><td>14</td></tr>
+<tr><th>이미지 슬롯 수</th><td>12</td><td>12</td></tr>
+</table>
+
+<h2>5. 도입부 &mdash; 후킹이 있나</h2>
+<div class="grid2">
+  <div class="panel"><div class="phead ours">우리 1~6컷 &middot; 전달한 정보 0</div>
+  <table><tr class="r-narr"><td class="n">1</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">블라인드 앱에</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">2</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">부동산 관련 글이</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">3</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">하나 올라왔다</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">4</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">한 기업 직원이</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">5</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">2030 세대를 향해</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">6</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">쓴 글이었는데</span></td><td class="meta">슬롯 2</td></tr></table></div>
+  <div class="panel"><div class="phead volc">볼케이노 1~6컷 &middot; 2컷에서 숫자</div>
+  <table><tr class="r-narr"><td class="n">1</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">블라인드에 글 하나 올라옴</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">2</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">조회수 2만 댓글 293개</span></td><td class="meta">슬롯 1</td></tr>
+<tr class="r-narr"><td class="n">3</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">쓴 사람은 대기업 직원</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">4</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffa24d"></span><span class="txt" style="color:#ffa24d">요즘 2030이 문제라는 글</span></td><td class="meta">슬롯 2</td></tr>
+<tr class="r-narr"><td class="n">5</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">노력은 안 하고</span></td><td class="meta">슬롯 3</td></tr>
+<tr class="r-narr"><td class="n">6</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">해외여행 다니고</span></td><td class="meta">슬롯 3</td></tr></table></div>
+</div>
+<div class="call">
+우리 쪽 1~6컷 「블라인드 앱에 / 부동산 관련 글이 / 하나 올라왔다 / 한 기업 직원이 / 2030 세대를 향해 / 쓴 글이었는데」
+&mdash; <b>6컷을 쓰고 전달한 정보가 없다.</b> 재료에 있던 <b>조회수 2만 &middot; 댓글 293개 &middot; 좋아요 143</b>을 하나도 쓰지 않았다.
+볼케이노 쪽은 2컷에서 바로 숫자를 던지고 4컷에서 갈등이 시작된다.
+</div>
+
+<h2>6. 끝맺음 &mdash; 싸움이 끝까지 가나</h2>
+<div class="grid2">
+  <div class="panel"><div class="phead ours">우리 마지막 5컷</div>
+  <table><tr class="r-narr"><td class="n">23</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">30년 모아도 못 삼</span></td><td class="meta">슬롯 10</td></tr>
+<tr class="r-narr"><td class="n">24</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffe14d"></span><span class="txt" style="color:#ffe14d">1억 모으는 3년 동안</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-narr"><td class="n">25</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">집값 1억 넘게 올랐음</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-char"><td class="n">26</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">기성세대가 연금 건보 올렸음</span></td><td class="meta">밈 분노</td></tr>
+<tr class="r-punch"><td class="n">27</td><td class="role">PUNCH</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">노력은 통하지 않고 시대만 달랐다</span></td><td class="meta">밈 무표정/멍</td></tr></table></div>
+  <div class="panel"><div class="phead volc">볼케이노 마지막 5컷</div>
+  <table><tr class="r-char"><td class="n">23</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">온실 속 화초 아니냐</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">24</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">그러자 마지막 댓글</span></td><td class="meta">슬롯 11</td></tr>
+<tr class="r-char"><td class="n">25</td><td class="role">CHAR</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">깝치지 말고 니 집 봐라</span></td><td class="meta">밈</td></tr>
+<tr class="r-narr"><td class="n">26</td><td class="role">NARR</td><td class="cap"><span class="dot" style="background:#ffffff"></span><span class="txt" style="color:#ffffff">노력이 모자란 게 아니었음</span></td><td class="meta">슬롯 12</td></tr>
+<tr class="r-punch"><td class="n">27</td><td class="role">PUNCH</td><td class="cap"><span class="dot" style="background:#ff5b5b"></span><span class="txt" style="color:#ff5b5b">시대가 달랐던 거임</span></td><td class="meta">슬롯 12</td></tr></table></div>
+</div>
+<div class="call">
+재료에 <b>글쓴이의 재반박</b>이 들어 있었다 &mdash; 「기본적인 종잣돈도 못 모으는 2030이 할 말은 아님」
+「온실속의 화초인 2030세대가 할 소리인가?」.
+<b>우리 대본은 이걸 하나도 쓰지 않았다.</b>
+볼케이노 쪽은 <b>글쓴이 재반박 &rarr; 최후 반격</b>으로 싸움을 끝까지 끌고 간다.
+</div>
+
+<h2>7. 우리가 고쳐야 할 것</h2>
+<ol class="fix">
+<li><b>음슴체 규칙을 <code>prompt.py</code>에 넣는다.</b> 볼케이노 <code>tone</code> 전문을 그대로 옮긴다 &mdash;
+「~였다 / ~이었다 / ~않았다」를 금지하고 「~음 / ~함 / ~잖아 / ~는데 / ~다고?」를 쓰게 한다. <b>효과가 가장 크다.</b></li>
+<li><b>도입 3컷 안에 숫자를 넣는 판정.</b> 조회수&middot;댓글 수&middot;좋아요 수가 재료에 있으면 반드시 쓰게 한다.</li>
+<li><b>CHAR 대사에 당사자 반박까지 포함.</b> 지금은 제3자 댓글만 쓰고 글쓴이 재반박을 버린다.</li>
+<li><b>h2 추상명사 금지 판정 추가.</b> 「…이유 / …사연 / …까닭」으로 끝나면 반려 &mdash; 볼케이노엔 있고 우리엔 없다.</li>
+<li><b>자막 등장 애니메이션 중 폭 검사.</b> 볼케이노는 자막이 나타나는 순간(확대 상태)의 잘림까지 잡는다
+(이번 대본에서 경고 2건). 우리는 최종 폭만 본다.</li>
+</ol>
+
+<p class="note">생성 경로 &mdash; 우리: <code>brainbulb/prompt.py</code> + 제미니(버텍스 gemini-2.5-flash), lint 21규칙 통과.
+볼케이노: MCP <code>start &rarr; assets &rarr; env &rarr; probed &rarr; transcript &rarr; script</code>,
+대본은 Claude가 작성하고 서버가 규격을 검사.
+두 대본 모두 실제 생성물이며 손으로 고치지 않았다(h2 반려 수정 1회 제외).</p>
+</div>

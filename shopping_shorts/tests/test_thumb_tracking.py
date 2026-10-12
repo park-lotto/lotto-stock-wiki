@@ -83,11 +83,11 @@ console.log(JSON.stringify({a:a.size, b:b.size}));
     assert abs(d["a"] - d["b"]) < 1e-9, f"tracking 0이 그림을 바꿨다: {d}"
 
 
-def test_자간을_벌리면_자동크기가_줄어든다():
-    """★①의 본체 — 자간이 재는 곳에 걸려야 넘치지 않는다.
+def test_자간을_벌려도_사용자가_정한_크기는_고정된다():
+    """자간도 글자 크기를 몰래 바꾸면 안 된다.
 
-    폭 92%를 채우는 게 목표이므로, 글자 사이를 벌리면 그만큼 글자는 작아져야 한다.
-    자간이 measureText에 안 걸리면 크기가 그대로다 = 캔버스를 넘치게 그린다.
+    넘치면 사용자가 크기나 자간을 직접 낮춘다. 자동 보정은 같은 85가 서로 다른
+    크기로 보이게 만든 원인이므로 다시 넣지 않는다.
     """
     d = _run("""
 const ctx = mkCtx();
@@ -95,7 +95,7 @@ const out = [0, 10, 30].map(t =>
   thumbFit(ctx, {text:'얼린고기 보관법', size:90, tracking:t}, THUMB_W, THUMB_H).size);
 console.log(JSON.stringify(out));
 """)
-    assert d[0] > d[1] > d[2], f"자간을 벌려도 크기가 안 줄었다(측정에 안 걸린다): {d}"
+    assert len(set(d)) == 1, f"자간에 따라 고정 글자 크기가 달라졌다: {d}"
 
 
 def test_자간은_캔버스_배율에_비례한다():

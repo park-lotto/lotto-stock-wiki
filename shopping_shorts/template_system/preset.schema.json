@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopping-shorts.local/schemas/preset-pair.schema.json",
+  "title": "훅·본문 정밀 프리셋",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "version", "status", "source", "render", "fonts", "hook", "body", "bindings", "validation"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+    "name": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "measured", "rendered", "verified", "published"]},
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "source": {"$ref": "#/$defs/source"},
+    "render": {"$ref": "#/$defs/render"},
+    "fonts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/font"}},
+    "hook": {"$ref": "#/$defs/frame"},
+    "body": {"$ref": "#/$defs/frame"},
+    "bindings": {"type": "object", "additionalProperties": {"type": "string"}},
+    "overflow": {"$ref": "#/$defs/overflow"},
+    "baseline_locked": {"const": true},
+    "overrides": {"$ref": "#/$defs/overrides"},
+    "validation": {"$ref": "#/$defs/validation"}
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "video_url", "video_id", "captures"],
+      "properties": {
+        "platform": {"enum": ["youtube", "instagram", "tiktok", "local"]},
+        "channel": {"type": "string"},
+        "video_url": {"type": "string"},
+        "video_id": {"type": "string"},
+        "captured_at": {"type": ["string", "null"], "format": "date-time"},
+        "captures": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hook", "body"],
+          "properties": {
+            "hook": {"$ref": "#/$defs/capture"},
+            "body": {"$ref": "#/$defs/capture"}
+          }
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time_ms", "path", "width", "height", "sha256"],
+      "properties": {
+        "time_ms": {"type": "integer", "minimum": 0},
+        "path": {"type": "string"},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps", "pixel_ratio", "color_space"],
+      "properties": {
+        "width": {"const": 1080},
+        "height": {"const": 1920},
+        "fps": {"type": "number", "minimum": 1},
+        "pixel_ratio": {"type": "number", "minimum": 1},
+        "color_space": {"enum": ["srgb"]}
+      }
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "family", "asset_path", "asset_sha256", "verification"],
+      "properties": {
+        "id": {"type": "string"},
+        "family": {"type": "string"},
+        "asset_path": {"type": ["string", "null"]},
+        "asset_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "verification": {"enum": ["unknown", "candidate", "matched"]},
+        "fallbacks": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_canvas", "background", "layers"],
+      "properties": {
+        "source_canvas": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {"width": {"type": "integer"}, "height": {"type": "integer"}}
+        },
+        "background": {"$ref": "#/$defs/paint"},
+        "layers": {"type": "array", "items": {"$ref": "#/$defs/layer"}}
+      }
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "x", "y", "width", "height", "z", "opacity", "visible"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"enum": ["text", "shape", "image", "video-mask", "icon"]},
+        "binding": {"type": ["string", "null"]},
+        "x": {"type": "number"}, "y": {"type": "number"},
+        "width": {"type": "number", "exclusiveMinimum": 0}, "height": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"enum": ["source-px", "percent"]},
+        "z": {"type": "integer"}, "opacity": {"type": "number", "minimum": 0, "maximum": 1},
+        "visible": {"type": "boolean"},
+        "paint": {"$ref": "#/$defs/paint"},
+        "text": {"$ref": "#/$defs/textStyle"},
+        "border": {"$ref": "#/$defs/border"},
+        "shadow": {"$ref": "#/$defs/shadow"},
+        "radius": {"type": "number", "minimum": 0}
+      }
+    },
+    "paint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["solid", "linear-gradient", "radial-gradient", "transparent"]},
+        "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"},
+        "angle_deg": {"type": "number"},
+        "stops": {"type": "array", "items": {"type": "object", "required": ["at", "color"], "properties": {"at": {"type": "number", "minimum": 0, "maximum": 1}, "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"}}, "additionalProperties": false}
+      }
+    }
+    },
+    "textStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["font_id", "weight", "size", "line_height", "letter_spacing", "align", "color", "stroke", "shadow", "wrap", "max_lines"],
+      "properties": {
+        "font_id": {"type": "string"}, "weight": {"type": "integer"},
+        "size": {"type": "number"}, "line_height": {"type": "number"}, "letter_spacing": {"type": "number"},
+        "align": {"enum": ["left", "center", "right"]}, "vertical_align": {"enum": ["top", "middle", "bottom"]},
+        "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"},
+        "stroke": {"$ref": "#/$defs/stroke"}, "shadow": {"$ref": "#/$defs/shadow"},
+        "wrap": {"enum": ["none", "word", "character", "balanced"]}, "max_lines": {"type": "integer", "minimum": 1},
+        "padding": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}},
+        "transform": {"enum": ["none", "uppercase", "lowercase"]}
+      }
+    },
+    "stroke": {"type": "object", "additionalProperties": false, "required": ["width", "color"], "properties": {"width": {"type": "number", "minimum": 0}, "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"}}},
+    "shadow": {"type": "object", "additionalProperties": false, "required": ["x", "y", "blur", "spread", "color"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "blur": {"type": "number", "minimum": 0}, "spread": {"type": "number"}, "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"}}},
+    "border": {"type": "object", "additionalProperties": false, "required": ["width", "color"], "properties": {"width": {"type": "number", "minimum": 0}, "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{8}$"}}},
+    "overflow": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "strategy": {"enum": ["reject", "shrink", "alternate-copy", "manual-review"]},
+        "min_font_scale": {"type": "number", "minimum": 0.5, "maximum": 1},
+        "on_failure": {"enum": ["block-publish", "warn", "use-fallback"]}
+      }
+    },
+    "overrides": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "allowed": {"type": "array", "items": {"enum": ["copy", "media", "font", "color", "position", "effect"]}},
+        "storage": {"const": "separate-layer"}
+      }
+    },
+    "validation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "pixel_diff", "ssim", "font_match", "bounds_pass", "verified_at", "verified_by"],
+      "properties": {
+        "state": {"enum": ["not-run", "failed", "passed"]},
+        "pixel_diff": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "ssim": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "font_match": {"enum": ["unknown", "candidate", "matched"]},
+        "bounds_pass": {"type": ["boolean", "null"]},
+        "verified_at": {"type": ["string", "null"], "format": "date-time"},
+        "verified_by": {"type": ["string", "null"]},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

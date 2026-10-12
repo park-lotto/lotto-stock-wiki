@@ -43,7 +43,12 @@ _GEN_GROUP = "general"
 #      5개도 8개도 두 웨이브다.
 #    · 대신 프롬프트가 길어진다 — 재료 1편당 ~2.8천자(본문 800 + 장면 20줄)라
 #      5편 ~14천자 → 8편 ~22천자. 대본 품질이 흐려지면 여기부터 의심하라.
-SOURCE_MAX = 8
+#
+#   ★8 → 15 (2026-10-06 사장님 "1단계 영상담는거 15개까지 늘려줘", 관제 145).
+#    · 추출은 동시 4개(_AUTOLOAD_MAX_WORKERS)·호출당 6개(_AUTOLOAD_MAX_PER_CALL)라
+#      15개면 화면이 자동적재를 세 번 부른다 — 과금은 편당 OP_SCRIPT 그대로(함수 무변경).
+#    · 프롬프트는 15편 ~42천자까지 길어진다. 대본 품질이 흐려지면 여기부터 의심하라.
+SOURCE_MAX = 15
 
 
 def _style_extra():
@@ -55,7 +60,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None):
+def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="script_generate"):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -65,6 +70,24 @@ def _call_json(prompt, schema, note=None):
       늘 "키 소진 또는 응답 오류"가 떴다(실측 2026-08-22: 키가 멀쩡한데도 그 문구).
       note를 안 주면 종전과 완전히 동일하다(회귀 0).
     """
+    # ★Vertex 먼저(2026-09-26 사장님 "대본작성과 장면매칭" — 스위치 켠 계정만). 이 함수는 이야기 작가·
+    #   백본·옛 생성기·판정이 전부 지나는 깔때기라 여기 한 번이면 대본생성 전체가 간다(0순위-B).
+    #   실패·빈 결과면 아래 종전 키풀 그대로. vertex=False = 호출부가 이미 자기 Vertex 시도를 한 경우(ai_match).
+    if vertex:
+        from shopping_shorts import vertex_route
+
+        def _vx(cl, m):
+            resp = cl.models.generate_content(
+                model=m, contents=prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json",
+                                                   response_schema=schema))
+            return json.loads(resp.text)
+        # vertex_op: 이 깔때기를 빌려 쓰는 다른 판단(예: 1단계 스토리="story")은 자기 op로 스위치를 본다(관제 159)
+        _ok, _got = vertex_route.try_call(vertex_op, _vx, what="대본생성" if vertex_op == "script_generate" else vertex_op)
+        if _ok:
+            if note is not None:
+                note["auth"] = "vertex"
+            return _got
     keys = keyroute.gemini_keys(_GEN_GROUP)
     if note is not None:
         note["keys"] = len(keys)
@@ -84,7 +107,7 @@ def _call_json(prompt, schema, note=None):
         pool.remove(key)      # 한 키는 한 번만 시도(종전 for문과 같은 계약)
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
-                model=_MODEL, contents=prompt,
+                model=(model or _MODEL), contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=schema),
             )
@@ -124,7 +147,7 @@ _BREATH_SCHEMA = {
 _BREATH_MIN_CHARS = 13
 
 
-def ai_breath_lines(narration):
+def ai_breath_lines(narration, max_chars=None):
     """자막 호흡 줄 — Gemini가 문장을 '숨 쉬는 자리'에서만 끊는다(글자 불변, 줄만 나눔).
 
     폴백 칸 전용(2026-08-29 사장님 "자연스러운 호흡으로 끊는 게 기본"): caption_lines가
@@ -149,7 +172,7 @@ def ai_breath_lines(narration):
         "규칙:\n"
         "- 사람이 말하다 숨을 쉬는 자연스러운 호흡 단위(의미 덩어리)로만 끊는다.\n"
         "- 글자를 추가·삭제·수정하지 마라. 원문 어절 그대로, 줄만 나눈다.\n"
-        "- 한 줄은 공백 제외 4~14자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
+        "- 한 줄은 공백 제외 4~" + str(int(max_chars or 14)) + "자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
         "  (좋은 예: '인테리어 고수들만 안다는' | '비밀 테이블이 있어요')\n"
         '- JSON {"lines": ["줄1", "줄2", ...]} 로만 답하라.\n'
         "원문: " + text
@@ -382,6 +405,16 @@ def _scene_line_full(x, include_interpretation=True):
     return " | ".join(parts)
 
 
+def _speech_sps():          # (2026-09-16 분량 규칙 철회로 현재 미사용 — 향후 재도입 시 재사용)
+    """말속도(초당 음절)의 **정본은 edit_plan** — 여기서 숫자를 다시 적지 않는다.
+    (메모리 `reference_말속도_상수_4벌`: 상수가 여러 벌이면 길이 버그가 재발한다)"""
+    try:
+        from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC
+        return float(_SYLLABLES_PER_SEC)
+    except Exception:
+        return 5.7
+
+
 _GROUNDED_RULE = (
     "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
     "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
@@ -405,6 +438,30 @@ def scene_ids_of(sources):
             if isinstance(x, dict) and x.get("seg_id"):
                 ids.add(str(x["seg_id"]))
     return ids
+
+
+def scene_secs_of(sources):
+    """장면 목록에 실린 seg_id -> 길이(초). 게이트의 '분량' 판정이 쓴다.
+
+    ★왜(2026-09-16 실측, job 26698eb0a362): 2단계는 줄마다 장면을 **1개씩만** 지목하는데
+      컷 하나는 평균 1.3초고 줄 하나는 평균 2.5초다 → **구조적으로 화면의 절반이 빈다**
+      (그 job은 대사 24.8초에 지목 화면 12.9초 = 52% 결손). 그 빈칸을 3단계
+      `_fill_beat_screen_time`이 대본을 안 보고 메우면서 중복·시간역행·CTA 7컷이 났다.
+      채우는 **방법**은 07-31부터 다섯 번 고쳤다(1차·2차·상한·같은그림·산만함) — 전부
+      두더지였다. 빈칸이 안 생기게 하는 곳은 **고르는 주체인 2단계 한 곳**이다(0순위-B).
+    ⚠️ids와 같은 목록·같은 상한을 봐야 짝이 맞는다(scene_ids_of와 나란히 고칠 것)."""
+    out = {}
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if not (isinstance(x, dict) and x.get("seg_id")):
+                continue
+            try:
+                secs = round(float(x.get("end") or 0) - float(x.get("start") or 0), 2)
+            except (TypeError, ValueError):
+                secs = 0.0
+            if secs > 0:
+                out[str(x["seg_id"])] = secs
+    return out
 
 
 def _mix_source_block(sources, full_scenes=False):
@@ -571,6 +628,12 @@ def _sources_product(sources):
 
 
 def _claims_required(sources):
+    # ★단일 진입점(0순위-B) — 사실 검사를 켤지 말지는 여기 한 곳에서만 정한다.
+    #   끄면 프롬프트 지시·문장별 판정 호출·게이트 검사가 **전부** 안 생긴다
+    #   = 09-14 이전 속도(사장님 "며칠 전엔 잘됐다"). script_gate 주석 참조.
+    from shopping_shorts import script_gate as _gate   # 지역 import(모듈 최상단은 순환)
+    if not _gate.claim_check_enabled():
+        return False
     return any(isinstance(s, dict) and (s.get("topic_product") or "").strip()
                and s.get("topic_semantic_required", True) for s in (sources or []))
 
@@ -684,6 +747,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     """
     from shopping_shorts import bank_assemble, script_gate
 
+    style = bank_assemble.with_spoken_hook(style)
+
     _claim_required = _claims_required(sources)
     _evidence = claim_evidence(sources, facts_block) if _claim_required else None
     seconds = max(5, min(int(target_seconds or 30), 90))
@@ -697,12 +762,23 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
-    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    # ★장면 길이 — 게이트 "화면 분량" 판정용. ids와 **같은 목록·같은 상한**을 본다(짝).
+    _scene_secs = scene_secs_of(sources) if grounded else None
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7).
+    #   ★2026-09-16 수정: 예전엔 여기서 grounded를 끄고 종전 모드로 강등했다. 그런데 강등된
+    #     대본은 근거 없이 쓰이므로 사실 근거 검사에 또 걸려, 3회를 다 태우고 버려졌다
+    #     (실측 work fb4d991d14e8 "영상에서 재료를 못 뽑았습니다" → 사실 근거 반려 → 1안만 생존).
+    #     될 리 없는 생성을 3회 돌리는 것이 느림의 큰 몫이었다. 그래서 **즉시 멈추고**
+    #     원인을 그대로 말한다 — 재료부터 다시 담는 것이 유일한 해법이기 때문이다.
     if grounded and not _scene_ids:
-        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        print("generate_one_style: 장면 목록 0개 — 생성 중단(재료부터 다시)", file=sys.stderr)
         if isinstance(note, dict):
+            note["reason"] = "장면없음"
+            note["detail"] = ("영상에서 장면을 뽑지 못했습니다 — 본 것만 쓰는 모드에서는 "
+                              "쓸 장면이 없으면 대본을 지어내게 되므로 여기서 멈춥니다. "
+                              "재료(영상)를 다시 담거나 장면 추출을 먼저 돌려주세요.")
             note["grounded_downgraded"] = "장면 목록 0개"
-        grounded, _scene_ids = False, None
+        return None
     # ★장면을 실제로 **가진** 소스가 몇 편인가(2026-09-05). 게이트 '장면 근거'가 이 값으로
     #   "여러 편을 넣었는데 한 편만 썼나"를 본다. 장면 없는 소스는 애초에 고를 수 없으니 세지 않는다.
     _source_count = sum(1 for s in (sources or [])[:SOURCE_MAX] if (s.get("segments") or [])) or None
@@ -751,7 +827,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
@@ -838,7 +914,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=(_speaker_judge if _claim_required
                                                         else script_gate.prior_verdict(checks)),
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
@@ -855,6 +931,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
     #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
     #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
+    # ★후킹은 무조건 한 문장(2026-09-29) — 판단은 script_gate 한 곳. 넘친 문장은 다음 줄로(장면은 하류가 채운다).
+    if res:
+        res = script_gate.enforce_one_sentence_hook(res)
+        full = " ".join(b.get("text", "") for b in res)   # script_gate.check와 같은 조립
     for _b in (res or []):
         _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
         # ★src_seg 정규화(2026-09-04): 모델이 "s3-10,s3-11"처럼 여럿을 적는다. 하류(store._apply_beat_sources·
@@ -1084,6 +1164,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     beats: 지금 대본 전체 — **앞뒤 문맥**으로 넣는다. 이게 없으면 새 문장이 앞뒤와 따로 논다.
     """
     from shopping_shorts import bank_assemble, script_gate
+
+    style = bank_assemble.with_spoken_hook(style)
 
     role = (role or "").strip()
     if not role:
@@ -1324,6 +1406,23 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             "matched": (not want) or script_gate.template_matches(out, want), "tries": tries}
 
 
+def _grounded_fallback(sources, facts_block="", product="", style=None, reasons=None):
+    """생성 출구들이 공유하는 마지막 한 안 — **리스트**로 돌려준다(0개 또는 1개).
+
+    실패한 AI 본문은 받지 않는다. ★쓸 수 있는 한국어 관측이 없으면 빈 리스트(2026-09-25):
+    외국어 전사·두 줄짜리 껍데기를 대본으로 내보내던 것을 막는다 — 호출부는 그대로 `return`하면
+    0개가 되고 API가 reasons로 이유(503 과부하 등)를 말한다.
+    """
+    from shopping_shorts import script_fallback
+    reason = next((r.get("detail") or r.get("kind") or r.get("reason")
+                   for r in (reasons or []) if isinstance(r, dict)
+                   and (r.get("detail") or r.get("kind") or r.get("reason"))), "")
+    draft = script_fallback.build_grounded_fallback(
+        _sources_product(sources) or product or "영상 속 제품",
+        claim_evidence(sources, facts_block), style or {}, reason)
+    return [draft] if draft else []
+
+
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
                        reasons=None, seed="", grounded=False, product=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
@@ -1337,7 +1436,8 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
       **주지 않으면 종전과 완전히 동일하게 동작한다**(기본값 None = 회귀 0).
     """
     out = []
-    for st in styles or []:
+    style_rows = list(styles or [])
+    for st in style_rows:
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
@@ -1357,7 +1457,15 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
                             "kind": (note or {}).get("reason") or "empty",
                             "keys": (note or {}).get("keys"),
                             "detail": (note or {}).get("detail") or ""})
-    return out
+    if out:
+        return out
+    # ★재료가 있는데 결과 0개는 금지한다(2026-09-16 박복래 제보). 생성기·판정기는
+    # 확률적이라 모두 실패할 수 있다. 그때 실패한 AI 문장을 내보내거나 502로 막지 않고,
+    # 원본 발화·장면 관측만 읽는 결정적 폴백 한 안을 반환한다.
+    if sources:
+        return _grounded_fallback(sources, facts_block, product,
+                                  style_rows[0] if style_rows else {}, reasons)
+    return []
 
 
 def _elem_lines(structure, elem_modes, category_lookup):
@@ -1464,6 +1572,10 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
         topic_line=topic_line, n=n, seconds=seconds, words=words,
         bank=("\n\n" + bank_context) if bank_context else "")
         + _style_extra() + claim_context)   # 사실 계약은 스타일 예시 뒤에 둔다.
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _SCHEMA, what="대본변주")
+    if _vok:
+        return _verify_and_fix(_vd.get("drafts", []))
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
@@ -1507,7 +1619,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     material_text = _materials_text(sources)
     full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
     if not full_text:
-        return []
+        return (_grounded_fallback(all_sources, facts_block, locked_product,
+                                   reasons=rejection_reasons) if all_sources else [])
 
     normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
     guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
@@ -1564,7 +1677,14 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
             return accepted
         if topic_locked:
             kwargs["claim_context"] = initial_claim_context + script_gate.gate_feedback(retry_checks)
-    return accepted
+    if accepted:
+        return accepted
+    fallback_style = {"name": "장면 근거 복구", "beat_roles": [
+        row.get("role") for row in ((structure or {}).get("beats") or [])
+        if isinstance(row, dict) and row.get("role")
+    ]}
+    return _grounded_fallback(all_sources, facts_block, guard_product,
+                              fallback_style, rejection_reasons)
 
 
 _REFINE_SCHEMA = {
@@ -1608,6 +1728,10 @@ _PARTIAL_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본
 def _refine(prompt, max_key_tries=3):
     if not comment_gen.SHORTS_GEMINI_KEYS:
         return ""
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159)
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _REFINE_SCHEMA, what="대본다듬기")
+    if _vok and _vd.get("script"):
+        return _vd.get("script", "")
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
@@ -1760,6 +1884,10 @@ def detect_subject(full_text, max_key_tries=3):
     if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
         return ""
     prompt = _SUBJECT_PROMPT.format(full_text=full_text[:3000])
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159)
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _SUBJECT_SCHEMA, what="소재감지")
+    if _vok and (_vd.get("subject") or "").strip():
+        return (_vd.get("subject") or "").strip()
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:

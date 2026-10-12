@@ -365,6 +365,16 @@ def _build_scene_blocks(seg_map, target_seconds):
 # 찾아 붙여서, 못 찾으면 어긋나고 모자라면 때웠다(며칠간의 두더지 잡기).
 REWRITE_MIX = os.getenv("REWRITE_MIX", "1") == "1"   # 0이면 옛 경로(덩어리/스파인)
 _MIN_LINE_SECS = 1.2      # 이보다 짧은 구간은 옆과 합친다(한 줄이 3자짜리가 되는 걸 막는다)
+
+# ★컷 한 개의 "짧지 않다" 기준 — **정하는 곳은 여기 하나**(0순위-B).
+#   2026-09-17 사장님: "컷당 장면이 너무 짧다는 사람이 많다, 1.2초 이상이면 좋겠다."
+#   종전엔 2단계 조립기(backbone_assemble.MIN_CUT_SECS=0.8)에만 있고 **3단계 채우기엔 아예
+#   없어서**(_fill_beat_screen_time은 시간거리·같은그림만 봤다) 채우기가 짧은 컷까지 긁어 썼다.
+#   실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 1.2로 걸러도 70.7%가 남는다.
+#   ⚠️짧은 컷이 '좋은 컷'은 아니다 — 사장님이 손으로 바꾼 2,773건에서 버린 컷의 1.2초 미만
+#     비율 25.2% vs 고른 컷 24.5%로 **차이가 없다**(길이는 매칭 품질과 무관). 즉 이 값은
+#     조각남만 고치고 매칭은 안 고친다. 두 문제를 섞지 마라.
+MIN_GOOD_CUT_SECS = float(os.environ.get("MIN_GOOD_CUT_SECS", "1.2") or 1.2)
 # 문장이 끝났다고 볼 종결(한국어 구어 자막은 마침표가 자주 없다 → 어미로 판정).
 _SENT_END = ("요", "다", "죠", "네", "까", "군", "걸", "야", "임", "함", "죠?", "래요", "거든요")
 
@@ -1597,11 +1607,59 @@ def _speech_speed():
       — 그러면 대본이 과하게 길어져 영상이 도로 늘어난다(내가 여기서 한 번 틀렸다).
       speed와 실측 자/초는 **비례하지 않는다**: 1.6→6.51 · 1.8→7.26 · 2.0→7.66 · 2.2→8.75.
     env `SCRIPT_SPEECH_SPEED`로 되돌릴 수 있다(1.44를 주면 종전 동작)."""
+    # ★2026-10-01 1.30 → **1.23** (관제 049: 배속 규칙이 "API 1.0 통째 합성 + atempo, 미나 1.35·그 외 1.25"로 바뀜).
+    #   같은 job(0875d89db254, 공백포함 211자)을 같은 자로 재서 비율만 옮겼다:
+    #     옛(1.6·문장별) 9.61자/초 → 새(미나 1.35·통째) 9.09자/초 = ×0.946 → 1.30 × 0.946 ≈ 1.23.
+    #   표본 1편(미나)이다. 1.25 성우(필재 등)는 이보다 빨라 25초 대본이 조금 짧게 끝난다.
     try:
-        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.30") or 1.30)
+        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.23") or 1.23)
     except (TypeError, ValueError):
-        v = 1.30
+        v = 1.23
     return min(2.0, max(1.0, v))
+
+
+# 영어 글자→초(자/초, 공백·문장부호 제외). 라이브 실측 2026-09-29(관제 029 영어모드, 일레븐 eleven_v3 speed 1.0,
+# 사장님 job 3건 25비트: norm 969자 / 65.2초 = 14.85, 비트별 13.3~17.7). 한국어 표시 계수(5.7×1.30=7.41)의
+# 정확히 2배라, 영어 대본을 한국어 계수로 나누면 "예상 초"가 두 배로 떴다(사장님 제보 "영어는 두 배가 되네").
+_EN_CHARS_PER_SEC = 14.9        # 공백·문장부호 **제외**(norm) — 화면 "몇 초"(s2SecOf가 norm 글자를 센다)용
+_EN_RAW_CHARS_PER_SEC = 18.0    # 공백 **포함**(raw) — narr_secs(len(text))용. 같은 실측 65.2초: raw 1176자 = 18.04
+#   ★두 값은 같은 실측의 두 기준이다(raw/norm = 1.21). 한국어는 계수 하나(7.41)를 raw 기준 narr_secs 와 norm 기준 화면이
+#   같이 써서 화면이 1.33배 후하게 나오는데(종전 동작, 여기서 안 건드린다), 영어는 사장님 제보가 "표시"라 정확히 가른다.
+
+
+def speech_cps(text=None, lang=None, norm=False):
+    """글자→초 환산계수(자/초)의 **단일 출처** — 화면 표시(script_gate·2단계 카드)와 계획(narr_secs)이 여기서 받는다.
+
+    lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로, norm 무시)
+    lang="en" → norm=True(공백·문장부호 제외 글자수로 나눌 때) _EN_CHARS_PER_SEC · norm=False(len(text)) _EN_RAW_CHARS_PER_SEC
+    lang이 없으면 text로 판정한다(script_translate.is_english_sentence: 영어 단어 3개 이상·한글 0)."""
+    if lang is None and text:
+        try:
+            from shopping_shorts.script_translate import is_english_sentence
+            lang = "en" if is_english_sentence(text) else "ko"
+        except Exception:      # noqa: BLE001 — 판정 실패는 종전(한국어) 동작
+            lang = "ko"
+    if lang == "en":
+        return float(_EN_CHARS_PER_SEC if norm else _EN_RAW_CHARS_PER_SEC)
+    return _SYLLABLES_PER_SEC * _speech_speed()
+
+
+def narr_secs(text):
+    """그 대사를 실제로 읽는 시간(초) = **모든 target_seconds의 단일 출처**(2026-09-16).
+
+    ★왜 함수로 뽑았나 — 같은 계산이 파일 안에 11벌이었고 **두 가지 식이 섞여 있었다**:
+      7곳은 `len/_SYLLABLES_PER_SEC`(배속 미적용), 4곳은 `len/(_SYLLABLES_PER_SEC*_speech_speed())`.
+      2026-08-09에 "보정 없이 두면 화면이 44% 과충전된다"며 4곳만 고치고 나머지를 빠뜨렸고,
+      2026-09-04에 새로 생긴 상속 경로(build_inherit_plan)는 그 수정을 아예 못 받았다.
+      결과: 상속 경로의 목표 초가 **1.7배** 부풀고, `_fill_beat_screen_time`이 그만큼
+      대본과 무관한 컷을 덧붙였다(실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷).
+      같은 판단은 한 곳에서만 정한다(0순위-B).
+    ⚠️라이브 실측(2026-09-16, 최근 60 job·비트 389개의 TTS 실길이): **9.69자/초**
+      (중앙 9.69·평균 9.71). 지금 식은 5.7 × _speech_speed()다 — 배속 기본값이 낮으면
+      여전히 과대추정이지만, 그 값은 **게이트의 대본 글자수 상한과 짝**이라(script_gate._speech_cps)
+      여기서 같이 올리면 대본 길이가 함께 바뀐다. 배속 조정은 별건으로 다룬다."""
+    # 2026-09-29: 영어 대본(영어모드)은 영어 계수 — 한국어 계수로 나누면 목표 초가 2배 부풀어 화면 채우기가 컷을 덧붙인다.
+    return round(max(1.5, len((text or "").strip()) / speech_cps(text)), 1)
 
 
 def _seg_benefits(seg):
@@ -1651,7 +1709,54 @@ def non_edge_segs(seg_map):
     → 그래서 사람이 고르는 경로는 seg_map 전체를, 자동 배치는 이 함수를 지나게 한다.
       거르는 규칙을 소비자 7곳에 각각 적으면 언젠가 한 곳이 빠진다(0순위-B).
     """
-    return {sid: s for sid, s in (seg_map or {}).items() if not _is_edge_seg(s)}
+    # auto_exclude(씨앗, 2026-09-30): 소스엔 있되 자동 배치 재고에서 뺀다 — 표식의 주인은 mix_pipeline.mark_auto_exclude
+    return {sid: s for sid, s in auto_segs(seg_map).items() if not _is_edge_seg(s)}
+
+
+# ★자동 배치 후보의 주인(관제 138, 2026-10-06 사장님 "뿌리근본수리해 이번에꼭") — "자동이 집어도 되는 컷·소스"는 아래 세 함수만 정한다.
+#   종전엔 non_edge_segs 를 부르는 자리와 `not _is_edge_seg(s)` 를 직접 적은 자리가 섞여 있어, 씨앗 조건(09-30)이
+#   부르는 쪽에만 들어갔다 → 라이브 6일 씨앗 표식 작업 82건 중 36건에서 씨앗 컷이 대표·대안 컷으로 샜다.
+#   자동으로 컷을 고르는 코드는 조건을 직접 적지 말고 이 함수들을 부른다(주인 밖에 적으면 finish 가 거절).
+def _auto_blocked(x):
+    """이 컷·소스는 자동 배치가 집으면 안 되나 — 표식(auto_exclude)만 읽는다. 다는 곳은 mix_pipeline.mark_auto_exclude."""
+    return bool(isinstance(x, dict) and x.get("auto_exclude"))
+
+
+def auto_segs(seg_map):
+    """자동 금지(씨앗) 컷만 뺀 사본 — 첫·끝 컷은 남는다. 첫·끝까지 빼려면 non_edge_segs."""
+    return {sid: s for sid, s in (seg_map or {}).items() if not _auto_blocked(s)}
+
+
+def auto_sources(sources):
+    """자동 금지(씨앗) 소스만 뺀 목록 — 소스 단위로 컷을 훑는 자동 배치(backbone·backbone_assemble)가 부른다."""
+    return [s for s in (sources or []) if not _auto_blocked(s)]
+
+
+def enforce_auto_exclude(beats, seg_map):
+    """새로 만든 계획의 출구 검사: 자동 금지(씨앗) 컷이 대표·대안에 있으면 빼고, 샌 조각 수를 돌려준다(정상 0).
+
+    어느 생성 경로가 새로 생겨도 여기를 지나면 씨앗 컷이 자동으로 붙은 채 저장되지 않는다. 사람이 스토리보드에서
+    직접 고른 줄(pinned)은 건드리지 않는다. 대표가 빠지면 남은 대안을 올리고, 하나도 안 남으면 안 쓴 후보 컷을 넣는다."""
+    from shopping_shorts.ai_match import is_pinned
+    pool = non_edge_segs(seg_map)
+    if not pool:
+        return 0          # 재료가 씨앗뿐 — 뺄 수 없다(mark_auto_exclude 가 애초에 표식을 안 단다)
+    used = {r.get("seg_id") for b in (beats or []) for r in [b.get("primary")] + list(b.get("alternates") or []) if r}
+    leaks = 0
+    for b in beats or []:
+        if is_pinned(b):
+            continue
+        refs = [r for r in [b.get("primary")] + list(b.get("alternates") or []) if r]
+        keep = [r for r in refs if not _auto_blocked(seg_map.get(r.get("seg_id")))]
+        if len(keep) == len(refs):
+            continue
+        leaks += len(refs) - len(keep)
+        if not keep:
+            sid = next((s for s in pool if s not in used), None) or next(iter(pool))
+            used.add(sid)
+            keep = [_ground_ref({"seg_id": sid}, seg_map)]
+        b["primary"], b["alternates"] = keep[0], keep[1:]
+    return leaks
 
 
 def _build_inventory(source_scripts):
@@ -1687,6 +1792,7 @@ def _build_inventory(source_scripts):
                 "start": seg["start"], "end": seg["end"],
                 # ⚠ 첫·끝 조각 표식(2026-08-26). 프롬프트에는 안 실리고 화면만 본다.
                 "edge": is_edge,
+                "auto_exclude": bool(script.get("auto_exclude")),   # 씨앗: 화면엔 보이고 자동 배치엔 안 잡힌다
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
                 # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
@@ -1707,7 +1813,7 @@ def _build_inventory(source_scripts):
             }
             # ★여기부터는 **프롬프트 줄 조립**이다 — 첫·끝 조각은 종전처럼 한 줄도 안 낸다.
             #   (seg_map에는 위에서 이미 실었다. 모델이 보는 인벤토리 = 종전과 완전 동일)
-            if is_edge:
+            if is_edge or script.get("auto_exclude"):   # 씨앗 소스도 모델 인벤토리엔 안 싣는다(2026-09-30)
                 continue
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
@@ -1863,6 +1969,131 @@ def _seg_key(s):
     return (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
 
 
+def _piece_id(seg_id, start, end):
+    """원본 조각을 잘라 만든 **새 구간**의 id — `<원본 id>#<시작>-<끝>`.
+
+    ★같은 id 로 구간만 바꾸지 마라(관제 141, 2026-10-06 영상점검 다른 장면 9칸):
+      화면(scene_play.js)은 id → 장면 표(scene_table) 구간을, 렌더·청소는 비트 사본의 start/end 를 읽는다.
+      id 가 같은데 구간이 다르면 둘이 갈리고, 표에 없는 id(옛 `#2`)는 화면이 컷 0개 → 완성본만 그 칸을 채워 뒤가 밀린다.
+      새 구간엔 새 id 를 주고, 그 id 는 scene_table ③이 비트 사본 구간으로 등록한다."""
+    root = str(seg_id or "").split("#", 1)[0]
+    return "%s#%.2f-%.2f" % (root, float(start), float(end))
+
+
+def film_seg_from_id(seg_id, extract):
+    """`film_<video_id>_<start>_<end>` → {video_id,start,end,seg_id}. 아니면 None.
+
+    ★화면(scene_lab commitRoll)이 만드는 id와 짝이다. 형식이 어긋나면 조용히 None —
+      경로 조작을 막기 위해 video_id가 이 잡의 소스 목록(extract)에 있을 때만 통과시킨다.
+    ★id의 video_id는 **씻긴 값**이다 — 화면(_extraId)이 `[^\\w.]+`를 `_`로 바꿔서 만든다.
+      그래서 `abc-1` 소스는 id에 `abc_1`로 박힌다. 날것끼리 비교하면 하이픈이 든 소스가 전부
+      "모르는 소스"로 떨어져 **썸네일 404 = 검은 칸**이 된다(2026-09-05 고객 다수 제보).
+      씻긴 형태로 맞춰 보되, 돌려주는 건 **원본 video_id**다 — 하류(_resolve_sources)는 원본 키로만 찾는다."""
+    if not isinstance(seg_id, str) or not seg_id.startswith("film_"):
+        return None
+    m = re.match(r"^film_(.+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
+    if not m:
+        return None
+    vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
+    if not (b > a >= 0):
+        return None
+
+    def _wash(s):
+        return re.sub(r"[^\w.]+", "_", str(s))
+
+    known = {}
+    for ex in (extract or {}).values():
+        v = (ex or {}).get("video_id")
+        if v:
+            known.setdefault(_wash(v), str(v))
+    real = known.get(vid)
+    if real is None:
+        return None
+    return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+def scene_table(extract, plan, *, seg_map=None, film=True):
+    """★장면 id → 구간 판단의 주인(관제 141). 편성이 가리키는 **모든** id 가 이 표에서 풀린다(불변식).
+
+    화면 데이터(api_mix_scene_lab_data → scene_play.js DATA.segments)·화면 컷 러너(screen_clips)·실험실 저장
+    (apply_scene_lab)·썸네일(seg_thumb)이 전부 이 표를 본다 — 표를 각자 만들면 한쪽만 아는 id 가 생긴다
+    (2026-09-05 필름 조각 검은 칸, 2026-10-06 자동 조각 `#2` 화면 컷 0개 → 완성본 0.6초 밀림 = 같은 뿌리).
+
+    채우는 순서(먼저 넣은 것이 이긴다 — 진짜 조각은 절대 덮지 않는다):
+      ① 추출 인벤토리(_build_inventory) — seg_map 을 주면 그것(사본)
+      ② 사람이 필름에서 오려낸 조각(film=True): plan.scene_lab.extra_segs 저장본 → scene_override 의 film_ id 파싱
+      ③ 편성(비트 primary·alternates·scene_override)이 들고 있는 나머지 id — 자동 편성이 원본을 잘라 만든 조각
+         (_piece_id, 옛 `…#2`). 인벤토리엔 없으니 **비트 사본 구간**으로 등록한다(이 잡의 소스일 때만).
+    film=False: 부르는 쪽이 필름 조각을 따로 병합할 때(apply_scene_lab 은 클라 편집이 저장본을 이기게 직접 합친다).
+    호출자의 seg_map 은 안 건드린다(사본 반환)."""
+    if seg_map is None:
+        seg_map, _ = _build_inventory(list((extract or {}).values()))
+    out = dict(seg_map or {})
+    vids = {str((ex or {}).get("video_id")) for ex in (extract or {}).values() if (ex or {}).get("video_id")}
+
+    def _put(sid, vid, a, b, base=None):
+        if not sid or sid in out:
+            return                      # 먼저 든 것(추출본)이 이긴다
+        base = base or {}
+        out[sid] = {
+            "video_id": vid, "seg_id": sid, "start": a, "end": b,
+            "scene_desc": str(base.get("scene_desc") or ""), "text": str(base.get("text") or "")[:300],
+            "label": str(base.get("label") or "")[:60],
+            "shot_role": base.get("shot_role") or "기타", "is_key": bool(base.get("is_key")),
+            "action": base.get("action") or "", "change": base.get("change") or "",
+            "product_benefits": list(base.get("product_benefits") or []),
+        }
+
+    def _span(s):
+        try:
+            a, b = float(s.get("start")), float(s.get("end"))
+        except (TypeError, ValueError):
+            return None
+        if not (math.isfinite(a) and math.isfinite(b) and b > a >= 0):
+            return None
+        return a, b
+
+    beats = (plan or {}).get("beats") or []
+    if film:
+        # ② 저장본 먼저 — 사람이 붙인 이름·자막이 살아 있다. 클라이언트가 만든 값이었으므로 같은 강도로 검증한다.
+        saved = ((plan or {}).get("scene_lab") or {}).get("extra_segs") or {}
+        for sid, s in (saved.items() if isinstance(saved, dict) else ()):
+            if not isinstance(s, dict):
+                continue
+            sp = _span(s)
+            vid = s.get("video_id")
+            vid = vid.strip() if isinstance(vid, str) else ""
+            if not sp or not vid:
+                continue
+            _put(sid, vid, sp[0], sp[1], {"label": s.get("label"), "text": s.get("text")})
+        # 옛 job — 저장본 없이 id 만 남은 필름 조각은 id 를 풀어 되살린다.
+        for b in beats:
+            for s in (b.get("scene_override") or []):
+                sid = s.get("seg_id") if isinstance(s, dict) else None
+                if not sid or sid in out:
+                    continue
+                got = film_seg_from_id(sid, extract)
+                if got:
+                    _put(sid, got["video_id"], got["start"], got["end"],
+                         {"label": "필름 %.1f~%.1f초" % (got["start"], got["end"])})
+    # ③ 편성이 들고 있는 나머지 id — 비트 사본 구간으로(필름 id 는 ②의 몫이라 여기서 만들지 않는다).
+    for b in beats:
+        refs = [b.get("primary")] + list(b.get("alternates") or []) + list(b.get("scene_override") or [])
+        for s in refs:
+            if not isinstance(s, dict):
+                continue
+            sid = s.get("seg_id")
+            if not sid or sid in out or str(sid).startswith("film_"):
+                continue
+            vid = str(s.get("video_id") or "")
+            sp = _span(s)
+            if not sp or vid not in vids:
+                continue
+            root = out.get(str(sid).split("#", 1)[0]) or {}
+            _put(sid, vid, sp[0], sp[1], {**root, **{k: v for k, v in s.items() if v}})
+    return out
+
+
 def _dedup_and_fill(flat, need, reserved=None):
     """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
     시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산.
@@ -1882,7 +2113,7 @@ def _dedup_and_fill(flat, need, reserved=None):
             # 뒤쪽 절반으로 잘라(앵커는 앞쪽) 씨앗으로 남긴다. 너무 짧으면(<1초) 못 쪼개니 스킵.
             if (s.get("end", 0.0) - s.get("start", 0.0)) >= 1.0:
                 mid = round((s["start"] + s["end"]) / 2, 2)
-                s = dict(s, seg_id=f"{s['seg_id']}#2", start=mid)
+                s = dict(s, seg_id=_piece_id(s["seg_id"], mid, s["end"]), start=mid)
                 seen.add(_seg_key(s))
             else:
                 continue
@@ -1894,9 +2125,11 @@ def _dedup_and_fill(flat, need, reserved=None):
             break  # 더 쪼갤 게 없음 — 있는 만큼만
         mid = round((longest["start"] + longest["end"]) / 2, 2)
         half = dict(longest)
-        half["seg_id"] = f"{longest['seg_id']}#2"
+        half["seg_id"] = _piece_id(longest["seg_id"], mid, longest["end"])
         half["start"] = mid
-        longest["end"] = mid  # 원본은 앞 절반으로 줄임(제자리 수정)
+        # 원본은 앞 절반으로 줄임(제자리 수정) — ★구간이 바뀌니 id 도 새로(관제 141: 같은 id·다른 구간 금지)
+        longest["seg_id"] = _piece_id(longest["seg_id"], longest["start"], mid)
+        longest["end"] = mid
         uniq.append(half)
     # need 미만으로 끝날 수 있다(잔여가 전부 1초 미만이면 위 break) — 호출부(_chronological_respine)가
     # 그 경우를 가드한다. 여기서 truncate는 불필요: while이 len(uniq)>=need에서 멈추므로 넘치지 않는다.
@@ -2303,6 +2536,10 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
         keys = keys[_o:] + keys[:_o]
     global _LAST_VAULT_ERR
     _LAST_VAULT_ERR = ""
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("edit_plan", prompt, schema, what="장면배치")
+    if _vok:
+        return _vd
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -2919,6 +3156,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             max_alts = 6
     if not beats:
         return beats
+    from shopping_shorts.ai_match import is_pinned as _is_pinned
     used = set()
     for b in beats:
         for s in [b.get("primary")] + list(b.get("alternates") or []):
@@ -2927,7 +3165,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     for b in beats:
         need = float(b.get("target_seconds") or 0)
         have = _beat_screen_secs(b)
-        if have >= need or not b.get("primary"):
+        if have >= need or not b.get("primary") or _is_pinned(b):   # 사람이 고른 줄은 더하지 않는다(관제 120)
             continue
         home = (b["primary"] or {}).get("video_id")
         # ★말이 통하는 장면부터 채운다(2026-07-31 2차).
@@ -2935,11 +3173,26 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #   (:445-471 = 릴의 안 쓴 뒷부분 아무 데나)을 edit_plan 단계로 앞당긴 것뿐이었다.
         #   실측: "요리할 때마다 닦는 게 진짜"에 스티커 정지컷, "스티커까지 붙이니까"에
         #   실리콘 도구 컷. → 나레이션과 '변화:'·'화면:' 문구가 겹치는 장면을 먼저 쓴다.
-        words = {w for w in _claim_key(b.get("narration") or "")}
+        # ★낱말 겹침(_rel)은 2026-09-16에 뺐다. 09-08 컷뱅크 실측: 사장님이 손으로 바꾼 1,027건에서
+        #   버린 컷의 낱말 겹침(0.82)이 고른 컷(0.73)보다 **높았다** — 낱말 겹침은 좋은 장면의 기준이 아니다.
+        #   같은 소스 안에서도 낱말 순으로 고르니 시간이 점프해 "반죽 섞기"가 CTA에 붙었다(job 26698eb0a362).
+        #   대신 **지목 컷과의 시간 거리**로 고른다(아래 _dist) — 대본이 고른 컷의 바로 다음 컷이 1순위.
+        #   원본 영상들이 실제로 그렇게 찍는다: 한 흐름을 이어가다 필요할 때만 앵글을 바꾼다(사장님 07-19).
+        _anchor = b.get("primary") or {}
+        try:
+            _anchor_end = float(_anchor.get("end") or 0)
+            _anchor_vid = _anchor.get("video_id")
+        except (TypeError, ValueError):
+            _anchor_end, _anchor_vid = 0.0, None
 
-        def _rel(s):
-            txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
-            return len(words & set(_claim_key(txt)))
+        def _dist(s):
+            """지목 컷 끝에서 얼마나 떨어졌나. 다른 소스면 큰 값(같은 소스 안에서만 거리가 뜻이 있다).
+            앞쪽(시간 역행)은 같은 거리라도 뒤로 민다 — 뒤 컷이 흐름을 잇는다."""
+            if s.get("video_id") != _anchor_vid:
+                return 1e9
+            st = float(s.get("start") or 0)
+            d = st - _anchor_end
+            return d if d >= 0 else (-d) * 2 + 0.01
 
         # ★이미 쓴 화면과 **같아 보이는** 것은 뒤로 민다(2026-08-16 사장님 "왜 같은데 2장이
         #   붙지"). 소스를 여러 개 올리면 같은 장면이 소스마다 있고 seg_id가 달라, 종전의
@@ -2975,10 +3228,17 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #     폴백(같은 컷 반복)으로 떨어지는데 그게 더 나쁘다(위 주석과 같은 판단).
         # ⚠ 첫·끝(CTA·썸네일) 조각은 자동으로 안 붙인다(2026-08-26) — edge 표식이
         #   생기면서 seg_map에 살아 들어오므로 여기서 걸러야 종전 동작이 유지된다.
-        pool = sorted((s for s in seg_map.values() if not _is_edge_seg(s)),
+        pool = sorted(non_edge_segs(seg_map).values(),
+                      # 기준 순서(2026-09-16): 같은 소스 → 짧은 컷 뒤로 → 같은 그림 뒤로 → **지목 컷에서 가까운 순**.
+                      #   '같은 그림'을 맨 앞에 두면 같은 소스가 통째로 뒤로 밀려 다른 소스의 0.9초 조각이
+                      #   먼저 온다(test_같은_영상에서_이어_붙인다) — 08-18 사장님 "짧은 거 여기저기서 붙이면
+                      #   눈 아프다"와 정면충돌. 그래서 같은 그림 회피는 **같은 소스 안에서만** 작동한다.
+                      #   오늘 "앞뒤 컷이면 지루해지나"(사장님)는 이 안에서 답한다: 바로 다음 컷이 같은
+                      #   그림이면 같은 소스의 다른 그림이 먼저, 그래도 없을 때만 다른 소스.
                       key=lambda s: (s.get("video_id") != home,
                                      _seg_secs(s) < _MIN_CUT_SECONDS,
-                                     _same_look(s), -_rel(s), s.get("start") or 0))
+                                     _same_look(s),
+                                     _dist(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
@@ -3030,7 +3290,10 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
 
 
 # CTA로 인식하는 role 표기(모델이 한글·영문을 섞어 쓴다).
-_CTA_ROLES = ("cta", "CTA", "씨티에이", "행동유도")
+# ★2026-09-30(관제 45): 라이브 7일 실측 — 'call_to_action'(3)·'call-to-action'(1)·'댓글유도'(5)가
+#   CTA인데 목록에 없어 유튜브용 CTA 잘라내기가 "CTA 칸이 없어요"로 막혔다(부분문자열 비교라 'cta'로 못 잡는다).
+_CTA_ROLES = ("cta", "CTA", "씨티에이", "행동유도", "call_to_action", "call-to-action",
+              "call to action", "calltoaction", "댓글유도")
 # 반말 종결 → 존댓말(2026-07-30 실측: CTA가 "댓글에 커피 남겨줘"로 나온 건이 있었다).
 _BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"), ("써줘", "써주세요"),
                ("해줘", "해주세요"), ("눌러줘", "눌러주세요"), ("봐줘", "봐주세요"),
@@ -3038,8 +3301,96 @@ _BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"
 
 
 def _is_cta(beat):
+    # ★칸에 박힌 CTA 표시(cta_mark)가 역할 이름보다 먼저다(2026-09-30 관제 45) — 2단계 [📢 CTA] 버튼·
+    #   자동 추정이 apply_cta_mark로 박는다. False = 고객이 "CTA 아님"으로 끈 것. 없으면 종전(역할 이름).
+    mark = beat.get("cta_mark")
+    if mark is True or mark is False:
+        return mark
     role = (beat.get("role") or "")
     return any(k.lower() in role.lower() for k in _CTA_ROLES)
+
+
+def _looks_cta_text(text):
+    """대사가 CTA(댓글·프로필 링크로 부르는 말)인가 — 자동 추정 전용.
+
+    _has_comment_cta(댓글 유도)에 **프로필 링크** 안내를 더한다. 썰 대본 '마무리' 칸 실측(7일 18건):
+    "궁금하면 프로필링크에~" / "댓글에 '손빨래' 남겨주시면 정보 보내드릴게요"."""
+    t = (text or "")
+    if _has_comment_cta(t):
+        return True
+    # 마지막 줄 전용이라 넓게 잡는다(guess_cta_index만 부른다) — 라이브 7일 실측 누락:
+    #   "궁금하면 프로필에" / "궁금하시면 나도 남겨주세요" / "아무 댓글 주세요" / "제품사진 눌러봐".
+    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러")):
+        return True
+    # "'주름'이라고 남겨주세요"처럼 '댓글' 없이 따옴표 키워드만 부르는 말(김성현님 3b4111969ac4 원문)
+    return bool(re.search(r"['‘’\"“”][^'‘’\"“”]{1,15}['‘’\"“”]\s*(?:이?라고)?\s*(?:댓글에?)?\s*"
+                          r"(?:남겨|적어|달아|써\s?주)", t))
+
+
+def guess_cta_index(lines, roles=None):
+    """줄 목록에서 CTA 줄 번호(없으면 None) — 2단계 [📢 CTA] 버튼의 처음 상태이자 서버 자동 추정. 판단은 여기 한 곳.
+
+    ① 역할 이름이 CTA인 줄(마지막 것) → ② 없으면 **마지막 글 있는 줄**이 CTA 문구면 그 줄.
+    중간 줄의 댓글 유도는 CTA로 치지 않는다(잘라내면 뒷이야기가 통째로 날아간다)."""
+    lines = [str(x or "") for x in (lines or [])]
+    roles = list(roles or [])
+    hit = [i for i, r in enumerate(roles) if i < len(lines) and lines[i].strip()
+           and _is_cta({"role": r or ""})]
+    if hit:
+        return hit[-1]
+    filled = [i for i, t in enumerate(lines) if t.strip()]
+    if len(filled) >= 2 and _looks_cta_text(lines[filled[-1]]):
+        return filled[-1]
+    return None
+
+
+def apply_cta_mark(beats, given_script, script_structure):
+    """어느 칸이 CTA인지 칸에 박는다(beat['cta_mark']). 3단계 계획 직후 한 번(mix_pipeline._plan_and_tts).
+
+    script_structure.cta_line = 2단계에서 고객이 정한 값(확정 대본 줄 번호, -1 = CTA 없음).
+    없으면(옛 화면·다른 진입로) guess_cta_index로 추정 — 역할 이름이 CTA면 결과는 종전과 같다.
+    줄 → 칸: 칸 수가 줄 수와 같으면 번호로(7일 34건 중 33건), 다르면 cta_text와 대사가 같은 칸,
+    그것도 없으면 마지막 줄 지정일 때만 마지막 칸. 못 찾으면 아무것도 안 박는다(종전 판정 유지)."""
+    if not beats:
+        return beats
+    ss = script_structure if isinstance(script_structure, dict) else {}
+    lines = [l.strip() for l in (given_script or "").split("\n") if l.strip()]
+    idx = ss.get("cta_line")
+    text = str(ss.get("cta_text") or "").strip()
+    if isinstance(idx, bool) or not isinstance(idx, int):
+        idx = None
+    if idx is not None and idx < 0:                  # 고객이 "CTA 없음"으로 끈 것
+        for b in beats:
+            b["cta_mark"] = False
+        return beats
+    if idx is None:
+        if len(beats) == len(lines) and lines:
+            idx = guess_cta_index(lines, [b.get("role") for b in beats])
+        else:
+            idx = guess_cta_index([b.get("narration") or "" for b in beats],
+                                  [b.get("role") for b in beats])
+            if idx is not None:
+                for j, b in enumerate(beats):
+                    b["cta_mark"] = (j == idx)
+            return beats
+        if idx is None:
+            return beats
+        text = lines[idx] if idx < len(lines) else ""
+    target = None
+    if len(beats) == len(lines) and idx < len(beats):
+        target = idx
+    else:
+        _n = lambda s: re.sub(r"\s+", "", str(s or ""))
+        same = [j for j, b in enumerate(beats) if text and _n(b.get("narration")) == _n(text)]
+        if same:
+            target = same[-1]
+        elif lines and idx == len(lines) - 1:
+            target = len(beats) - 1
+    if target is None:
+        return beats
+    for j, b in enumerate(beats):
+        b["cta_mark"] = (j == target)
+    return beats
 
 
 def _has_comment_cta(text):
@@ -3591,6 +3942,10 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
         return _DEFAULT_TYPE
     type_desc = "\n".join(f"- {k}: {v['label']} — {v['strategy']}" for k, v in VIDEO_TYPES.items())
     prompt = _TYPE_PROMPT.format(type_desc=type_desc, scripts="\n---\n".join(full_texts))
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("edit_plan", prompt, _TYPE_SCHEMA, what="영상유형")
+    if _vok and _vd.get("video_type"):
+        return _normalize_video_type(_vd.get("video_type"))
 
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()
@@ -4007,8 +4362,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
     #   edge 표식만 달고 버리지 않으므로, 안 거르면 자동 재픽이 CTA를 집는다.
     #   ★seg_map 자체는 안 줄인다 — 사람이 손으로 꽂아둔 edge primary를 아래에서
     #     조회해야 한다(줄이면 그 비트가 조용히 사라진다).
-    pool = [sid for sid, _s in seg_map.items()
-            if sid not in (taken - weak_own) and not _is_edge_seg(_s)]
+    pool = [sid for sid in non_edge_segs(seg_map) if sid not in (taken - weak_own)]
     if not pool:
         return beats
     # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
@@ -4214,6 +4568,30 @@ def scene_swap_rows(plan_before, plan_after, job=None):
     return rows
 
 
+# _extend_refs_to_narration(09-17) 은 관제 084(2026-10-02)에 ai_match.ensure_cover 로 합쳤다 — 줄마다 장면 보장 판단은 그 한 곳.
+#   옮긴 정책: 한 컷 기여 MAX_SHOT_SECONDS(2.2초)까지·1.2초 이상 컷 먼저·뒷컷 제외. 바뀐 점: 바로 다음 컷이 쓰였으면 멈추던 것 → 더 뒤/앞·같은 의미 컷.
+
+def match_seg_key(key, seg_map, tol=0.05):
+    """번호가 바뀐 같은 장면 찾기(관제 120) — 2단계(캐시 번호 <영상코드>-n)와 3단계 작업(s0-n)이 같은 장면에 번호를 달리 붙인다.
+    실측(10-05 라이브 job 4cd80576b70e): 3단계가 장면 **설명은 새로 달지만 경계(시작·끝 초)는 같았다** → 설명이 아니라 경계로 잇는다.
+    ① 어느 영상인가: key.vsig(그 영상 장면들의 시작 초)가 전부 들어 있는 영상 ② 그 영상에서 시작·끝 초가 tol 안에서 같은 장면 하나.
+    애매하면(영상이 둘 이상 맞거나 장면이 둘 이상) None — 엉뚱한 장면을 붙이지 않는다."""
+    try:
+        a, b = float(key.get("start")), float(key.get("end"))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    by_vid = {}
+    for sid, g in (seg_map or {}).items():
+        by_vid.setdefault(g.get("video_id"), []).append((sid, float(g.get("start") or 0), float(g.get("end") or 0)))
+    sig = [float(x) for x in (key.get("vsig") or [])]
+    vids = [v for v, segs in by_vid.items()
+            if sig and all(any(abs(st - x) <= tol for _, st, _e in segs) for x in sig)]
+    if len(vids) != 1:
+        return None
+    hit = [sid for sid, st, en in by_vid[vids[0]] if abs(st - a) <= tol and abs(en - b) <= tol]
+    return hit[0] if len(hit) == 1 else None
+
+
 def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
 
@@ -4239,6 +4617,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         return None
 
     def _ids_of(x):
+        keys = {k.get("id"): k for k in (x.get("seg_keys") or []) if isinstance(k, dict)}
         """2단계가 **명시한** 출처는 첫·끝 컷(edge)이라도 그대로 잇는다(2026-09-05 리뷰 H2) — 2단계 장면 목록은
         전부를 보여주므로 훅=첫 컷이 가장 흔한데, usable(non_edge)로 거르면 로그 없이 b-roll로 바뀌었다.
         edge 제외는 **자동으로 채우는** b-roll(_next_cut·_fill_for)에만 적용한다."""
@@ -4246,11 +4625,21 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         out = []
         for sid in ids:
             sid = str(sid).strip()
-            if sid in seg_map and sid not in out:
+            if sid not in seg_map and sid in keys:
+                sid = match_seg_key(keys[sid], seg_map) or sid
+            # ★씨앗 컷은 2단계가 지목했어도 잇지 않는다(관제 138) — 사람이 스토리보드에서 직접 고른 줄(pinned)만 예외.
+            #   2단계는 씨앗을 대본 글자로 알아봐 놓칠 수 있다. 빠진 줄은 아래 b-roll 채우기가 재료 컷으로 메운다.
+            if sid in seg_map and sid not in out and (x.get("pinned") or not _auto_blocked(seg_map[sid])):
                 out.append(sid)
         return out
 
+    from shopping_shorts.ai_match import is_pinned as _pinned
     per_line = [_ids_of(x) for x in srcs]
+    # ★스토리보드로 고른 장면이 재료에 없으면 조용히 버려진다 — 경보로 남긴다(관제 120: 1단계 캐시 seg_id 와
+    #   3단계에서 새로 뽑은 job 의 seg_id(s0-n)가 다를 수 있다. 캐시를 탄 job 은 실측 15/15 같았다)
+    _lost = sum(1 for x, ids in zip(srcs, per_line) if _pinned(x) and len(ids) < len(x.get("segs") or []))
+    if _lost:
+        print("[inherit] ⚠ 스토리보드 장면이 재료에 없음: %d줄 (seg_id 불일치)" % _lost, file=sys.stderr)
     if not any(per_line):
         return None
 
@@ -4335,7 +4724,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "beat_idx": len(beats),
             "role": str(srcs[i].get("role") or ""),
             "narration": line,
-            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "target_seconds": narr_secs(line),
             "primary": refs[0],
             "alternates": refs[1:],
             "effect": "cut",
@@ -4345,10 +4734,39 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "inherited": inherited,
             "visual_verb": inherited,
             "src_seg_applied": refs[0]["seg_id"] if inherited else None,
+            "pinned": bool(inherited and _pinned(srcs[i])),   # 스토리보드에서 사람이 고른 줄(관제 120)
+            # 신호어 자리 번호([1]·[2]·[3]) — 짤 자리(storyboard.meme_slots)가 읽는다(관제 139). 스토리보드 줄만 실려 온다
+            **({"sig_rank": int(srcs[i]["sig_rank"]), "signal": str(srcs[i].get("signal") or "")}
+               if str(srcs[i].get("sig_rank") or "").isdigit() else {}),
+            # 2단계에서 미리 고른 짤(관제 143) — meme_slots 가 먼저 쓴다
+            # 짤·효과음 고름 칸(meme_pick·sfx_pick 등)은 storyboard.carry_picks 한 곳이 정한다
+            **__import__("shopping_shorts.storyboard", fromlist=["carry_picks"]).carry_picks(srcs[i]),
         })
         prev_sid = refs[-1]["seg_id"]
     if not beats:
         return None
+    # ★컷 이어붙이기는 **모든 줄의 컷이 정해진 뒤 2차 패스**로(2026-09-17).
+    #   1차 루프 안에서 하면 앞 줄이 뒤 줄의 b-roll 후보(훅·CTA의 '완성' 결 컷)를 먼저 먹는다
+    #   (test_훅과_CTA의_b_roll: demo가 s0-3·s0-5까지 가져가 CTA가 s0-1로 밀렸다).
+    #   지정 컷·b-roll이 전부 used에 들어간 다음에 남은 컷으로만 이어 붙인다.
+    # ★줄마다 대사를 채울 장면 보장은 ai_match.ensure_cover 한 곳(관제 084, 0순위-B) — 2단계 백본·이야기작가와 같은 함수.
+    #   종전 _extend_refs_to_narration 은 '바로 다음 컷'이 다른 줄에 쓰였으면 멈춰, 24시간 703칸 중 130칸이 대사보다 짧았다.
+    from shopping_shorts import ai_match as _am
+    _idx = {sid: {"secs": max(0.0, float(g.get("end") or 0) - float(g.get("start") or 0)),
+                  "vid": g.get("video_id") or "", "label": (g.get("label") or "").strip(),
+                  "kind": g.get("appeal_kind") or "",
+                  "outro": bool(g.get("is_outro")) and not (g.get("hook_type") or g.get("product_benefits"))}
+            # 더할 후보는 자동 배치 후보(auto_segs)만 — 이미 줄에 있는 컷(사람이 고른 씨앗 컷 포함)은 길이를 재야 하니 남긴다
+            for sid, g in (seg_map or {}).items() if isinstance(g, dict)
+            and (not _auto_blocked(g) or any(sid == (r or {}).get("seg_id")
+                                             for b in beats for r in [b.get("primary")] + list(b.get("alternates") or [])))}
+    _bs = [{"segs":[r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")],
+            "pinned": b.get("pinned")} for b in beats]
+    _am.ensure_cover(_bs, [{"text": b.get("narration") or ""} for b in beats], _idx, None)
+    for b, x in zip(beats, _bs):
+        refs = [r for r in (_ground_ref({"seg_id": sid}, seg_map) for sid in x["segs"]) if r]
+        if refs:
+            b["primary"], b["alternates"] = refs[0], refs[1:]
     beats = _fill_beat_screen_time(beats, seg_map)
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
@@ -4973,8 +5391,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
                 #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
                 #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
-                "target_seconds": round(
-                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                "target_seconds": narr_secs(narration),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
@@ -5197,6 +5614,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     맞춰 100% 우리 대본을 생성한다(없는 장면 요구 차단 → 소스에 클립 없어도 천장 없음). 백본을
     못 고르거나 생성이 비면 조용히 레퍼런스-먼저로 폴백(회귀0)."""
     seg_map, inventory = _build_inventory(source_scripts)
+    _pool = auto_sources(source_scripts)   # 컷을 고르는 후처리(backbone.*)는 자동 배치 후보 소스만 본다(관제 138)
     detected = _normalize_video_type(
         video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE))
     if not seg_map:
@@ -5327,7 +5745,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
             plan["beats"] = backbone.ping_pong_reconcile(
-                plan["beats"], source_scripts,
+                plan["beats"], _pool,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
                 trim_call=lambda bs: _bb_trim(bs, _call),
                 # 트림이 대본을 목표의 75% 밑으로 깎으면 아예 적용하지 않는다(2026-07-31).
@@ -5356,16 +5774,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 if bb:
                     plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
                 # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
-                plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
+                plan["beats"] = backbone.dedup_and_balance(plan["beats"], _pool)
                 # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
-                plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+                plan["beats"] = backbone.ensure_sources_used(plan["beats"], _pool)
                 # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
                 # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
-                plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
+                plan["beats"] = backbone.dedup_clips_global(plan["beats"], _pool)
                 # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
                 # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
                 plan["beats"] = backbone.swap_hook_cta_for_differentiation(
-                    plan["beats"], bb, source_scripts)
+                    plan["beats"], bb, _pool)
         # ★핑퐁 후처리 뒤 구조 재교정(2026-07-31). 원래는 위 backbone 5종이 비트 순서를
         #   다시 짜면서 **CTA가 마지막이 아니게 되는** 것을 되돌리려고 넣었다(라이브 설정
         #   백테스트 20건 중 9건이 CTA끝X). 슬롯 경로에선 그 5종을 이제 안 타므로 그 사유는
@@ -5807,6 +6225,12 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["stretch_fill"] = True
         else:
             beat.pop("stretch_fill", None)
+        # [속도 맞추기](2026-09-26) — 고객이 누른 조각만. 이 칸 목록에 있는 id만 남긴다(뺀 조각의 찌꺼기 방지).
+        _fit = [x for x in (eb.get("fit") or []) if isinstance(x, str) and x in (eb.get("list") or [])]
+        if _fit:
+            beat["fit_segs"] = _fit
+        else:
+            beat.pop("fit_segs", None)
         # 구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 켠 칸만 표식을 남긴다.
         # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
         if eb.get("phrase"):
@@ -5816,6 +6240,11 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["phrase_sync"] = False
         else:
             beat.pop("phrase_sync", None)
+        # 구절 맞춤 '정확'(관제 106) — 새 규칙 작업에서 손님이 [구절 맞춤]을 켠 칸만. 화면 컷 계산(scene_play.js scenesV2)이 읽는다.
+        if eb.get("exact") and eb.get("phrase"):
+            beat["phrase_exact"] = True
+        else:
+            beat.pop("phrase_exact", None)
         # ★끈 칸 = 화면에 보이던 컷 **그대로** 렌더(2026-09-14 사장님 "그 화면 그대로, 경계만 조절").
         #   화면(scene_play.js CUTS)이 정한 컷을 받아 원본 위치로 풀어 둔다 — 서버가 다시 나누지 않는다.
         _mc = []
@@ -6271,7 +6700,7 @@ def _rebuild_beats_by_lines(beats, sents):
         nb["primary"] = uniq[0] if uniq else None
         nb["alternates"] = uniq[1:]
         nb["narration"] = ln
-        nb["target_seconds"] = round(slot["sec"] or (len(ln) / _SYLLABLES_PER_SEC), 2)
+        nb["target_seconds"] = round(slot["sec"] or narr_secs(ln), 2)
         nb["narration_reordered"] = True
         nb.pop("narration_manual", None)
         _drop_stale_tts(nb)
