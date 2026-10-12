@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>유튜브제작 · 숏템메이커</title>
+<style>
+  :root{--bg:#0a0f0d;--panel:#0f1512;--panel2:#141c18;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#37e0bd;
+    --todo:#5c6b64;--doing:#e0b23a;--done:#2fb36b;--skip:#3a4540;--rec:#e5484d}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.55}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 14px}
+  select,input,textarea,button{font:inherit;color:inherit}
+  select,input[type=text]{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:13.5px}
+  button:hover{border-color:var(--accent)} button:disabled{opacity:.5;cursor:default}
+  button.pri{background:var(--accent);color:#06221b;border-color:var(--accent);font-weight:700}
+  button.rec{background:var(--rec);border-color:var(--rec);color:#fff}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .prog{flex:1;min-width:140px;height:8px;background:var(--panel2);border-radius:6px;overflow:hidden}.prog i{display:block;height:100%;background:var(--done)}
+  .filters button.on,.tabs button.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap}
+  nav a{color:var(--sub);text-decoration:none;font-size:12.5px;padding:2px 9px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+  nav a.full{color:var(--done);border-color:#245c3d}
+  .scene{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;overflow:hidden;scroll-margin-top:56px}
+  .scene>header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:700}
+  .scene>header small{color:var(--sub);font-weight:400}
+  .tabs{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .pane{padding:10px 14px}
+  .item{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .item:last-of-type{border-bottom:0}
+  .st{border:0;border-radius:999px;padding:3px 10px;font-size:12.5px;color:#fff;min-width:64px}
+  .st.todo{background:var(--todo)}.st.doing{background:var(--doing);color:#221a00}.st.done{background:var(--done)}.st.skip{background:var(--skip)}
+  .t{font-weight:600}.item.done .t{text-decoration:line-through;color:var(--sub)}
+  .d{color:var(--sub);font-size:13px;white-space:pre-wrap}
+  .who{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;background:var(--panel2);margin-right:6px;color:var(--sub)}.who.me{color:var(--accent)}
+  textarea{width:100%;min-height:34px;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;resize:vertical;font-size:13.5px}
+  textarea.script{min-height:260px;font-size:15px;line-height:1.75}
+  .meta{color:var(--sub);font-size:13px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .add{display:flex;gap:6px;margin-top:8px}.add input{flex:1;min-width:0}
+  .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+  .f{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);font-size:12.5px;display:flex;flex-direction:column;gap:6px}
+  .f.pick{border-color:var(--done);box-shadow:0 0 0 1px var(--done)}
+  .f img,.f video{width:100%;max-height:170px;object-fit:contain;border-radius:6px;background:#000}
+  .f audio{width:100%}.f .nm{word-break:break-all}.f .row{display:flex;gap:6px;flex-wrap:wrap}.f .row button{font-size:12px;padding:3px 8px}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--sub);font-size:13.5px}
+  .drop.over{border-color:var(--accent);color:var(--accent)}
+  .req{font-size:13px;color:var(--sub);margin-top:8px}.req .fail{color:var(--rec)}
+  .log{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:20px;font-size:13px}
+  .log ul{margin:6px 0 0;padding-left:18px;max-height:360px;overflow:auto}.log li{color:var(--sub);margin:2px 0}
+  .note{color:var(--sub);font-size:13px;padding:6px 0}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:14px;display:none;z-index:50}
+  @media (max-width:640px){.item{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>유튜브제작</h1>
+  <p class="lead">씬마다 대사 · 준비 체크 · 자료/음성 · TTS를 한곳에서. 바뀐 건 아래 변경 기록에 남습니다. (관리자 전용)</p>
+  <div class="bar"><select id="proj"></select><div class="prog"><i id="pg"></i></div><span id="cnt"></span></div>
+  <div class="bar filters" id="flt"></div>
+  <nav id="toc"></nav>
+  <div id="list"><div class="note">불러오는 중…</div></div>
+  <div class="log"><b>변경 기록</b><ul id="log"></ul></div>
+</div>
+<div id="toast"></div>
+<script src="/sidebar.js"></script>
+<script>
+const ST={todo:"할 일",doing:"진행 중",done:"완료",skip:"안 씀"},NEXT={todo:"doing",doing:"done",done:"skip",skip:"todo"};
+const API="/api/admin/yt_studio";
+let S={items:[],scripts:[],files:[],requests:[],log:[]},proj=null,filter="all",tab={},rec=null,voices=[],voice=null,dirty=false;
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sid=s=>"sc-"+s.replace(/[^\w가-힣-]/g,"_");
+const fmt=t=>{if(!t)return"";const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`};
+const secs=t=>{const n=(t||"").split("\n").filter(l=>!l.trim().startsWith("[")).join("").replace(/\s/g,"").length;const s=Math.round(n/6.2);return `${n}자 · 약 ${Math.floor(s/60)}분 ${s%60}초`};
+const kind=t=>t.startsWith("image/")?"img":t.startsWith("video/")?"video":t.startsWith("audio/")?"audio":"other";
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",3500)}
+async function api(path,opt){const r=await fetch(API+path,opt);const j=await r.json().catch(()=>({}));if(!r.ok||j.ok===false)throw new Error(j.error||("HTTP "+r.status));return j}
+async function op(body){try{S=await api("/op",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});render()}catch(e){toast("저장 실패 — "+e.message)}}
+async function refresh(){try{S=await api("");render()}catch(e){$("#list").innerHTML=`<div class="note">불러오기 실패 — ${esc(e.message)}</div>`}}
+function render(){
+  const ae=document.activeElement;if(ae&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&ae.type==="text"))){dirty=true;return}
+  const ps=[...new Set(S.items.map(i=>i.project))];if(!proj||!ps.includes(proj))proj=ps[0];
+  $("#proj").innerHTML=ps.map(p=>`<option ${p===proj?"selected":""}>${esc(p)}</option>`).join("");
+  const mine=S.items.filter(i=>i.project===proj),act=mine.filter(i=>i.status!=="skip"),dn=act.filter(i=>i.status==="done").length;
+  $("#pg").style.width=(act.length?dn/act.length*100:0)+"%";$("#cnt").textContent=`${dn} / ${act.length} 완료`;
+  $("#flt").innerHTML=[["all","전체"],["boss","사장님 몫"],["claude","Claude 몫"],["open","남은 것"]].map(([k,v])=>`<button data-f="${k}" class="${k===filter?"on":""}">${v}</button>`).join("")+
+    `<span style="margin-left:auto;color:var(--sub);font-size:13px">TTS 성우</span><select id="voice">${voices.length?voices.map(v=>`<option value="${esc(v.voice_id)}" ${voice===v.voice_id?"selected":""}>${esc(v.name)}</option>`).join(""):"<option value=''>성우 목록 불러오는 중</option>"}</select>`;
+  const vis=mine.filter(i=>filter==="all"||(filter==="boss"&&i.owner==="사장님")||(filter==="claude"&&i.owner==="Claude")||(filter==="open"&&(i.status==="todo"||i.status==="doing")));
+  const ord={};mine.forEach(i=>{ord[i.scene]=Math.min(ord[i.scene]??1e9,i.order)});S.scripts.filter(s=>s.project===proj).forEach(s=>{ord[s.scene]=Math.min(ord[s.scene]??1e9,s.order)});
+  const sc=Object.keys(ord).sort((a,b)=>ord[a]-ord[b]);
+  $("#toc").innerHTML=sc.map(s=>{const a=mine.filter(i=>i.scene===s&&i.status!=="skip");return `<a href="#${sid(s)}" class="${a.length&&a.every(i=>i.status==="done")?"full":""}">${esc(s.split(" ")[0])}</a>`}).join("");
+  $("#list").innerHTML=sc.map(s=>{
+    const its=vis.filter(i=>i.scene===s),all=mine.filter(i=>i.scene===s&&i.status!=="skip"),scr=S.scripts.find(x=>x.project===proj&&x.scene===s);
+    const fs=S.files.filter(f=>f.project===proj&&f.scene===s).slice().reverse(),rq=S.requests.filter(r=>r.project===proj&&r.scene===s).slice(-3);
+    const tb=tab[s]||(scr?"script":"check");
+    const tabs=`<div class="tabs">${scr?`<button data-tab="script" data-s="${esc(s)}" class="${tb==="script"?"on":""}">대사</button>`:""}<button data-tab="check" data-s="${esc(s)}" class="${tb==="check"?"on":""}">준비 체크 ${all.filter(i=>i.status==="done").length}/${all.length}</button><button data-tab="files" data-s="${esc(s)}" class="${tb==="files"?"on":""}">자료·음성 ${fs.length}</button></div>`;
+    let body="";
+    if(tb==="script"&&scr){const running=rq.some(r=>r.status==="running");
+      body=`<textarea class="script" data-script="${scr.id}">${esc(scr.text)}</textarea><div class="meta"><span>${secs(scr.text)}</span>${scr.updatedAt?`<span>마지막 수정 ${fmt(scr.updatedAt)}</span>`:""}<button data-copy="${scr.id}">대사 복사</button><button class="pri" data-tts="${esc(s)}" ${running?"disabled":""}>${running?"TTS 만드는 중…":"🔊 이 씬 TTS 만들기"}</button></div>`+
+      (rq.length?`<div class="req">${rq.map(r=>`TTS ${fmt(r.at)} · ${esc(r.voice||"")} · ${r.status==="done"?"완료 — 자료·음성 탭에 들어감":r.status==="failed"?`<span class="fail">실패: ${esc(r.note)}</span>`:"만드는 중 "+esc(r.note||"")}`).join("<br>")}</div>`:"")}
+    else if(tb==="check")body=its.map(i=>`<div class="item ${i.status}"><div><button class="st ${i.status}" data-id="${i.id}">${ST[i.status]}</button></div><div><div class="t"><span class="who ${i.owner==="사장님"?"me":""}">${esc(i.owner)}</span>${esc(i.title)}</div>${i.detail?`<div class="d">${esc(i.detail)}</div>`:""}<textarea data-m="${i.id}" placeholder="메모">${esc(i.memo)}</textarea></div></div>`).join("")+`<div class="add"><input type="text" data-addin="${esc(s)}" placeholder="이 씬에 준비할 것 추가"><button data-add="${esc(s)}">추가</button></div>`;
+    else body=`<div class="drop" data-drop="${esc(s)}">파일을 끌어다 놓거나 <button data-up="${esc(s)}">파일 올리기</button> <button class="${rec&&rec.scene===s?"rec":""}" data-rec="${esc(s)}">${rec&&rec.scene===s?"■ 녹음 멈추기":"● 내 목소리 녹음"}</button><div style="margin-top:4px;font-size:12px">사진·영상·PDF·음성 무엇이든 · 한 파일 300MB까지</div></div><div class="files">${fs.map(f=>{const u=`${API}/file/${f.id}`,k=kind(f.type);
+      return `<div class="f ${f.pick?"pick":""}">${k==="img"?`<img src="${u}" loading="lazy" alt="">`:k==="video"?`<video src="${u}" controls preload="metadata"></video>`:k==="audio"?`<audio src="${u}" controls preload="none"></audio>`:""}<div class="nm">${esc(f.name)}</div><div style="color:var(--sub)">${fmt(f.at)} · ${esc(f.source||"")} · ${(f.size/1048576).toFixed(1)}MB</div><div class="row">${k==="audio"?`<button data-pick="${f.id}">${f.pick?"채택됨 ✓":"이걸로 채택"}</button>`:""}<a href="${u}" download="${esc(f.name)}"><button>받기</button></a><button data-del="${f.id}">삭제</button></div></div>`}).join("")}</div>`;
+    return `<section class="scene" id="${sid(s)}"><header>${esc(s)}<small>${all.filter(i=>i.status==="done").length}/${all.length}</small></header>${tabs}<div class="pane">${body}</div></section>`}).join("")||'<div class="note">항목이 없습니다.</div>';
+  $("#log").innerHTML=S.log.filter(l=>l.project===proj).slice(-120).reverse().map(l=>`<li>${fmt(l.at)} · ${esc(l.text)}</li>`).join("")||"<li>아직 기록이 없습니다.</li>";
+}
+document.addEventListener("focusout",()=>setTimeout(()=>{if(dirty){dirty=false;render()}},60));
+async function upload(scene,file,source){
+  const fd=new FormData();fd.append("project",proj);fd.append("scene",scene);fd.append("source",source||"");fd.append("file",file);
+  toast(`${file.name} 올리는 중…`);
+  try{S=await api("/upload",{method:"POST",body:fd});tab[scene]="files";render();toast(`${file.name} 올렸습니다`)}catch(e){toast(`${file.name} 실패 — ${e.message}`)}
+}
+async function toggleRec(scene){
+  if(rec){rec.mr.stop();return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){toast("마이크를 쓸 수 없습니다 — 브라우저 주소창 왼쪽에서 마이크를 허용해 주세요");return}
+  const mt=MediaRecorder.isTypeSupported("audio/webm;codecs=opus")?"audio/webm;codecs=opus":"";const mr=new MediaRecorder(stream,mt?{mimeType:mt}:{}),ch=[];
+  mr.ondataavailable=e=>ch.push(e.data);
+  mr.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());rec=null;render();const d=new Date(),p=n=>String(n).padStart(2,"0");
+    await upload(scene,new File([new Blob(ch,{type:"audio/webm"})],`녹음_${scene.split(" ")[0]}_${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.webm`,{type:"audio/webm"}),"내 녹음")};
+  mr.start();rec={scene,mr};render();toast("녹음 중 — 다 읽으면 '녹음 멈추기'");
+}
+const picker=Object.assign(document.createElement("input"),{type:"file",multiple:true});picker.style.display="none";document.body.appendChild(picker);
+picker.addEventListener("change",async()=>{const s=picker.dataset.s;for(const f of picker.files)await upload(s,f);picker.value=""});
+document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.f){filter=d.f;render()}
+  else if(d.tab){tab[d.s]=d.tab;render()}
+  else if(d.id){const i=S.items.find(x=>x.id===d.id);op({op:"status",id:i.id,status:NEXT[i.status]})}
+  else if(d.add){const inp=[...document.querySelectorAll("input[data-addin]")].find(x=>x.dataset.addin===d.add),t=inp.value.trim();if(!t)return;inp.value="";inp.blur();op({op:"add_item",project:proj,scene:d.add,title:t})}
+  else if(d.copy){const s=S.scripts.find(x=>x.id===d.copy);try{await navigator.clipboard.writeText(s.text);toast("대사를 복사했습니다")}catch(_){toast("복사가 막혀 있습니다 — 대사 칸에서 직접 선택해 주세요")}}
+  else if(d.tts){const v=voices.find(x=>x.voice_id===voice);if(!v){toast("위쪽에서 TTS 성우를 먼저 고르세요");return}
+    try{await api("/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project:proj,scene:d.tts,voice_id:v.voice_id,voice_name:v.name})});toast("TTS를 만들기 시작했습니다");refresh()}catch(err){toast("TTS 시작 실패 — "+err.message)}}
+  else if(d.up){picker.dataset.s=d.up;picker.click()}
+  else if(d.rec)toggleRec(d.rec);
+  else if(d.pick)op({op:"pick",id:d.pick});
+  else if(d.del){if(d.sure!=="1"){b.dataset.sure="1";b.textContent="정말 삭제?";setTimeout(()=>{b.dataset.sure="";b.textContent="삭제"},3000);return}op({op:"delete_file",id:d.del})}
+});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.id==="proj"){proj=t.value;render();return}
+  if(t.id==="voice"){voice=t.value;try{localStorage.setItem("yt_voice",voice)}catch(_){}return}
+  if(t.dataset.m){const i=S.items.find(x=>x.id===t.dataset.m);if(t.value!==i.memo){i.memo=t.value;op({op:"memo",id:i.id,memo:t.value})}}
+  if(t.dataset.script){const s=S.scripts.find(x=>x.id===t.dataset.script);if(t.value!==s.text){s.text=t.value;op({op:"script",id:s.id,text:t.value})}}
+});
+["dragover","dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{const z=e.target.closest&&e.target.closest("[data-drop]");if(!z)return;e.preventDefault();
+  z.classList.toggle("over",ev==="dragover");if(ev==="drop")(async()=>{for(const f of e.dataTransfer.files)await upload(z.dataset.drop,f)})()}));
+try{voice=localStorage.getItem("yt_voice")}catch(_){}
+fetch(API+"/voices").then(r=>r.json()).then(j=>{voices=j.voices||[];if(!voices.length)toast("성우 목록을 못 불러왔습니다 — "+(j.error||""));if(!voices.some(v=>v.voice_id===voice))voice=voices[0]&&voices[0].voice_id;render()}).catch(()=>{});
+refresh();
+setInterval(()=>{if(S.requests.some(r=>r.status==="running"))refresh()},4000);
+</script>
+</body>
+</html>
