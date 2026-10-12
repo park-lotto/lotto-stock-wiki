@@ -471,12 +471,12 @@ const Back: React.FC<{ p: Para }> = ({ p }) => {
   return <BgFx src={p.bg} tint={p.tint || 'amber'} dim={0.75} speed={1.8} />;
 };
 
-export const Scene: React.FC<{ voice?: string; paras: Para[]; cap?: string }> = ({ voice, paras, cap }) => {
+export const Scene: React.FC<{ voice?: string; paras: Para[]; cap?: string; bgm?: boolean }> = ({ voice, paras, cap, bgm = true }) => {
   let at = 0;
   return (
     <AbsoluteFill style={{ background: C.ink }}>
       {voice ? <Audio src={staticFile(voice)} /> : null}
-      {voice ? <Audio src={staticFile(BGM)} loop volume={0.11} /> : null}
+      {voice && bgm ? <Audio src={staticFile(BGM)} loop volume={0.11} /> : null}
       {paras.map((p, i) => {
         const from = Math.round(at * FPS);
         at += p.dur;

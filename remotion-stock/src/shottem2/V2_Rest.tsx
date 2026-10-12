@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Sequence } from 'remotion';
 import { Scene, Para, sceneFrames } from './V2_Engine';
 import { V2_S47_Proof } from './V2_S47_Proof';
+import { V2_Compare } from './V2_S41';
 import { BackKind } from './V2_Bg';
 
 /* 숏템메이커 V2 광고 — S3 · S4-7 · S5 · S6 · S7 · S8 (데이터만. 연출은 V2_Engine 한 곳)
@@ -49,8 +50,8 @@ export const V2_S3: React.FC = () => <Scene voice="shottem2/v2s3/voice.mp3" para
 
 // ── S4-7 완성·증거 — 첫 문단(완성본 비교)은 녹화 대기, 나머지는 증거 장면(V2_S47_Proof) ──
 const S47_HEAD: Para[] = [
-  { dur: 16.682, bg: RANK, tint: 'amber', hits: [
-    { t: '완성본 vs 원본', style: 'mega', sub: '녹화 들어올 자리' }, { t: '어떻습니까?', style: 'slam' },
+  { dur: 16.682, bg: RANK, tint: 'amber', hitAt: [0, 0.45, 0.72], hits: [
+    { t: '', node: <V2_Compare /> },   // 터진 썰쇼핑 원본 vs 숏템메이커 완성본 나란히(소재: public/shottem2/v2s47h/)
     { t: '머리 쥐어짠 순간\n0번', style: 'mega', accent: '0번' }, { t: '눈앞에서\n직접 만들어 보였습니다', style: 'kinetic', accent: '직접' } ] },
 ];
 const S47_TAIL: Para[] = [
