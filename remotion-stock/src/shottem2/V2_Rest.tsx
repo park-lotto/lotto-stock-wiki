@@ -25,7 +25,7 @@ const S3: Para[] = [
     { t: '"짤·효과음\n찾기 힘들어요"', style: 'quote' }, { t: '✓ 대본 줄마다 자동으로', style: 'tag' },
     { t: '"롱폼은 또\n따로 만들어요?"', style: 'quote' }, { t: '✓ 쇼츠 하나로 롱폼까지', style: 'tag' } ] },
   { dur: 10.727, bg: CODE, tint: 'amber', hits: [
-    { t: '59일\n2,478번', style: 'mega', sub: 'UPDATE' }, { t: '막힌 자리를\n하나씩 뚫었다', style: 'kinetic', accent: '뚫었다' } ] },
+    { t: '59일 동안 고친 횟수', style: 'count', num: 2478, unit: '번', sub: 'UPDATE' }, { t: '막힌 자리를\n하나씩 뚫었다', style: 'kinetic', accent: '뚫었다' } ] },
   { dur: 9.182, bg: MOM, tint: 'monoWarm', hits: [
     { t: '"이 화면, 우리 엄마가\n혼자 넘어갈 수 있나"', style: 'quote' }, { t: '막히면\n제 프로그램 잘못', style: 'slam' } ] },
   { dur: 9.045, bg: RANK, tint: 'amber', hits: [
@@ -72,15 +72,15 @@ const S5: Para[] = [
   { dur: 11.091, bg: SSUL, tint: 'amber', hits: [
     { t: '정보 싸움 ✕', style: 'slam' }, { t: '속도와\n꾸준함 싸움', style: 'mega', accent: '꾸준함' }, { t: '먼저 · 더 많이 올리는 사람이\n가져간다', style: 'kinetic', accent: '가져간다' } ] },
   { dur: 20.273, bg: CAPCUT, tint: 'red', hits: [
-    { t: '계산해 보면', style: 'tag' }, { t: '영상 하나\n3시간', style: 'mega' }, { t: '한 달이면\n90시간', style: 'mega', accent: '90시간' },
+    { t: '계산해 보면', style: 'tag' }, { t: '손으로 영상 하나', style: 'count', num: 3, unit: '시간' }, { t: '하루 하나씩 한 달이면', style: 'count', num: 90, unit: '시간' },
     { t: '다들 2주 만에\n멈춥니다', style: 'slam' }, { t: '편집자?\n편집비가 먼저 나간다', style: 'kinetic', accent: '편집비' },
     { t: '시간을 사고\n기회로 바꾼다', style: 'mega', accent: '기회' } ] },
   { dur: 13.545, bg: RANK, tint: 'amber', hits: [
-    { t: '뭘 만들지 → 랭킹', style: 'tag' }, { t: '제품 → 숏템파워검색', style: 'tag' }, { t: '대본 → 터진 채널 말맛', style: 'tag' },
+    { t: '숏템메이커가 하는 일', style: 'flow', steps: ['랭킹\n뭘 만들지', '파워검색\n제품', '대본은행\n말맛', '장면·효과\n자동'] },
     { t: '장면·효과음·짤·템플릿\n알아서', style: 'stack' }, { t: '고르고 · 확인하고 · 올린다', style: 'mega', accent: '올린다' } ] },
   { dur: 16.318, bg: MOM2, tint: 'monoWarm', hits: [
     { t: '"이 나이에\n늦지 않았나…"', style: 'quote' }, { t: '거꾸로입니다', style: 'mega' },
-    { t: '젊은 사람\n퇴근 후 한두 시간', style: 'slam' }, { t: '시간 있는 사람이\n이긴다', style: 'mega', accent: '이긴다' } ] },
+    { t: '', style: 'vs', vs: ['젊은 사람\n퇴근 후 1~2시간', '은퇴·육아 끝\n하루가 통째로'] }, { t: '시간 있는 사람이\n이긴다', style: 'mega', accent: '이긴다' } ] },
   { dur: 13.182, bg: CAT, tint: 'amber', hits: [
     { t: '쇼핑쇼츠 =\n물건 파는 일', style: 'slam' }, { t: '주방 · 청소 · 생활용품', style: 'tag' },
     { t: '살림 이삼십 년의 눈', style: 'mega', accent: '눈' } ] },
@@ -105,8 +105,8 @@ export const V2_S5: React.FC = () => <Scene voice="shottem2/v2s5/voice.mp3" para
 // ── S6 계속 진화 ──
 const S6: Para[] = [
   { dur: 17.182, bg: CODE, tint: 'cyan', hits: [
-    { t: '매일 진화하겠다', style: 'quote' }, { t: '59일\n2,478번', style: 'mega', sub: 'PROMISE KEPT' },
-    { t: 'V1 → V2', style: 'mega' }, { t: '방구석 불은\n오늘 밤에도 켜져 있다', style: 'kinetic', accent: '오늘 밤' } ] },
+    { t: '매일 진화하겠다', style: 'quote' }, { t: '약속 지킨 업데이트', style: 'count', num: 2478, unit: '번', sub: '59일' },
+    { t: '계속 진화', style: 'flow', steps: ['V1', 'V2', 'V3'] }, { t: '방구석 불은\n오늘 밤에도 켜져 있다', style: 'kinetic', accent: '오늘 밤' } ] },
   { dur: 9.182, bg: CODE, tint: 'amber', hits: [
     { t: '오늘 기준\n내일 또 바뀐다', style: 'slam' }, { t: '바뀌는 모든 걸\n그대로', style: 'mega', accent: '그대로' } ] },
   { dur: 7.545, bg: RANK, tint: 'amber', hits: [
@@ -138,7 +138,7 @@ export const V2_S7: React.FC = () => <Scene voice="shottem2/v2s7/voice.mp3" para
 const S8: Para[] = [
   { dur: 5.227, bg: RANK, tint: 'amber', hits: [{ t: '누군가에겐 기회', style: 'mega', accent: '기회' }, { t: '누군가에겐 광고', style: 'slam' }] },
   { dur: 15.091, bg: SSUL, tint: 'amber', hits: [
-    { t: '한 달 뒤', style: 'mega' }, { t: '오늘 시작한 사람\n매일 쌓인 영상', style: 'kinetic', accent: '쌓인' },
+    { t: '한 달 뒤', style: 'mega' }, { t: '', style: 'vs', vs: ['미룬 사람\n"조금 더…"', '시작한 사람\n매일 쌓인 영상'] },
     { t: '하나가 터지면\n이야기가 달라진다', style: 'mega', accent: '달라진다' }, { t: '미룬 사람은\n여전히 "조금 더…"', style: 'slam' } ] },
   { dur: 23.5, bg: MOM, tint: 'monoWarm', hits: [
     { t: '5 · 60대 분들께', style: 'tag' }, { t: '자식 먼저\n가족 먼저\n회사 먼저', style: 'stack' },

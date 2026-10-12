@@ -14,11 +14,11 @@ const P: Para[] = [
     { t: '시니어 · 은퇴하고', style: 'tag' }, { t: '"쉽다.\n누구나 한다."', style: 'quote' } ] },
   { dur: 14.727, bg: A('senior.mp4'), frame: 'screen', tint: 'mono', hits: [
     { t: '시니어 롱폼', style: 'tag' }, { t: '야담 롱폼', style: 'tag' },
-    { t: '시간은 엄청 걸리고', style: 'kinetic', accent: '엄청' }, { t: '채널 정지 · 규제', style: 'mega' } ] },
+    { t: '시간은 엄청 걸리고', style: 'kinetic', accent: '엄청' }, { t: '채널 정지 · 규제', style: 'neon' } ] },
   { dur: 18.364, bg: CAPCUT, tint: 'mono', hits: [
     { t: '그럼 쇼츠?', style: 'slam' }, { t: '쇼츠는\n마라톤', style: 'mega' },
     { t: '매일 해야 하는데\n그게 지옥', style: 'kinetic', accent: '지옥' },
-    { t: '기획\n영상 찾기\n대본\n편집', style: 'stack' }, { t: '하루 종일 붙잡아도\n한 개', style: 'slam' } ] },
+    { t: '매일 이걸 반복', style: 'flow', steps: ['기획', '영상 찾기', '대본', '편집'] }, { t: '하루 종일 붙잡아도\n한 개', style: 'slam' } ] },
   { dur: 6.727, bg: RANK, tint: 'monoWarm', hits: [
     { t: '그래서 결국\n쇼핑쇼츠', style: 'mega' }, { t: '얼굴 X · 링크만', style: 'tag' } ] },
   { dur: 12.682, bg: A('yadam.mp4'), frame: 'screen', tint: 'mono', hits: [
@@ -36,7 +36,7 @@ const P: Para[] = [
     { t: '아닙니다', style: 'mega' }, { t: '나이 탓이\n아닙니다', style: 'slam' },
     { t: '도구가\n젊은 사람 기준', style: 'kinetic', accent: '젊은' }, { t: '따라갈 수 없게\n만든 것', style: 'mega' },
     { t: '"딸깍 한 번이면 끝"', style: 'quote' }, { t: '퀄리티\n나오던가요?', style: 'slam' },
-    { t: '같은 틀 · 같은 목소리\n같은 자막', style: 'stack' }, { t: '양산형', style: 'mega' } ] },
+    { t: '같은 틀 · 같은 목소리\n같은 자막', style: 'stack' }, { t: '양산형', style: 'neon' } ] },
   { dur: 17.227, bg: CODE, tint: 'cyan', hits: [
     { t: '개발자 입장에서', style: 'tag' }, { t: '직접 결제해서\n뜯어봤습니다', style: 'kinetic', accent: '뜯어봤습니다' },
     { t: '전부\n구멍', style: 'mega' }, { t: '퀄리티 나오는 건\n손에 꼽습니다', style: 'slam' } ] },

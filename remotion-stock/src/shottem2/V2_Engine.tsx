@@ -11,8 +11,15 @@ import { C, F } from './theme2';
    한 덩어리마다 컷을 바꾼다 — 컷마다 줌펀치·플래시·RGB 글리치·빛 줄기·흔들림이 자동으로 붙는다.
    한 씬의 연출 판단은 이 파일 하나에서만 한다(씬 파일은 데이터만 적는다). */
 
-export type Hit = string | { t: string; style?: Style; accent?: string; sub?: string; img?: string; bg?: string };
-export type Style = 'slam' | 'kinetic' | 'mega' | 'quote' | 'tag' | 'stack';
+export type Hit = string | {
+  t: string; style?: Style; accent?: string; sub?: string; img?: string; bg?: string;
+  num?: number; unit?: string;              // style 'count' — 숫자 카운트업
+  bars?: [string, number][];                // style 'bars' — 막대 그래프(마지막 막대가 주인공)
+  vs?: [string, string];                    // style 'vs' — 왼쪽(나쁨) vs 오른쪽(숏템메이커)
+  steps?: string[];                         // style 'flow' — 단계 흐름 화살표
+};
+export type Style = 'slam' | 'kinetic' | 'mega' | 'quote' | 'tag' | 'stack'
+  | 'count' | 'bars' | 'vs' | 'neon' | 'flip' | 'flow';
 export type Para = {
   dur: number;                    // 초
   bg?: string;                    // public 경로(영상)
@@ -88,6 +95,201 @@ const SpeedLines: React.FC<{ seed: number }> = ({ seed }) => {
   return <AbsoluteFill style={{ opacity: o, mixBlendMode: 'screen' }}>{lines}</AbsoluteFill>;
 };
 
+/** 불꽃 입자 — 터지는 순간 사방으로 */
+const Burst: React.FC<{ seed: number; color?: string; at?: number }> = ({ seed, color = C.gold, at = 0 }) => {
+  const f = useCurrentFrame() - at;
+  if (f < 0 || f > 40) return null;
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+      {Array.from({ length: 36 }, (_, i) => {
+        const a = random('ba' + seed + i) * Math.PI * 2;
+        const v = 14 + random('bv' + seed + i) * 26;
+        const d = v * f * (1 - f / 80);
+        const o = interpolate(f, [0, 30, 40], [1, 0.6, 0]);
+        const s = 6 + random('bs' + seed + i) * 10;
+        return (
+          <div key={i} style={{
+            position: 'absolute', left: 960 + Math.cos(a) * d, top: 540 + Math.sin(a) * d + f * f * 0.15,
+            width: s, height: s, borderRadius: s, background: color, opacity: o, boxShadow: '0 0 18px ' + color,
+          }} />
+        );
+      })}
+      {[0, 6].map((dl) => {
+        const g = f - dl;
+        const r = interpolate(g, [0, 24], [40, 900], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE.out });
+        return (
+          <div key={dl} style={{
+            position: 'absolute', left: 960 - r, top: 540 - r, width: r * 2, height: r * 2, borderRadius: r,
+            border: '6px solid ' + color, opacity: interpolate(g, [0, 24], [0.9, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+          }} />
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+/** 숫자 카운트업 — 숫자 굴러가며 커지고 마지막에 폭발 */
+const CountBig: React.FC<{ h: any; seed: number }> = ({ h, seed }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const N = 28;
+  const v = Math.round(interpolate(f, [0, N], [0, h.num], { extrapolateRight: 'clamp', easing: EASE.out }));
+  const done = f >= N;
+  const pop = spring({ frame: f - N, fps, config: { damping: 8, mass: 0.6 } });
+  const sc = done ? 1 + (1 - pop) * 0.25 + 0.04 : interpolate(f, [0, N], [0.6, 1]);
+  const jit = !done ? (random('j' + f) - 0.5) * 8 : 0;
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle, rgba(250,204,21,0.18), rgba(0,0,0,0.8) 70%)' }}>
+      <SpeedLines seed={seed} />
+      <Burst seed={seed} at={N} />
+      <div style={{ textAlign: 'center', transform: 'translateX(' + jit + 'px) scale(' + sc + ')' }}>
+        {h.sub ? <div style={{ font: '800 44px ' + F.sans, color: C.paper, letterSpacing: 8, marginBottom: 6 }}>{h.sub}</div> : null}
+        <div style={{
+          font: '900 260px/1 ' + F.sans, letterSpacing: -10,
+          background: 'linear-gradient(180deg, #fff6c2 0%, #facc15 45%, #f59e0b 100%)', WebkitBackgroundClip: 'text', color: 'transparent',
+          filter: 'drop-shadow(0 0 40px rgba(250,204,21,0.7)) drop-shadow(0 14px 30px rgba(0,0,0,0.9))',
+        }}>
+          {v.toLocaleString()}<span style={{ fontSize: 110 }}>{h.unit || ''}</span>
+        </div>
+        {h.t ? <div style={{ font: '900 64px ' + F.sans, color: C.paper, marginTop: 10, ...STROKE }}>{h.t}</div> : null}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/** 막대 그래프 — 차례로 솟고 마지막 막대가 금색으로 터진다 */
+const Bars: React.FC<{ h: any; seed: number }> = ({ h, seed }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const data: [string, number][] = h.bars;
+  const max = Math.max(...data.map((d) => d[1]));
+  const last = data.length - 1;
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.6)' }}>
+      {h.t ? <div style={{ font: '900 66px ' + F.sans, color: C.paper, marginBottom: 40, ...STROKE }}>{h.t}</div> : null}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 60, height: 560 }}>
+        {data.map(([k, v], i) => {
+          const p = spring({ frame: f - 6 - i * 8, fps, config: { damping: 12, mass: 0.7 } });
+          const hero = i === last;
+          return (
+            <div key={k} style={{ textAlign: 'center', width: 210 }}>
+              <div style={{ font: '900 54px ' + F.sans, color: hero ? C.gold : C.paper, opacity: p }}>{Math.round(v * Math.min(1, p)).toLocaleString()}{h.unit || ''}</div>
+              <div style={{
+                height: (v / max) * 430 * p, marginTop: 10, borderRadius: '16px 16px 0 0',
+                background: hero ? 'linear-gradient(180deg,#fff2a8,#facc15 40%,#d97706)' : 'linear-gradient(180deg,rgba(255,255,255,0.45),rgba(255,255,255,0.12))',
+                boxShadow: hero ? '0 0 80px rgba(250,204,21,0.8)' : 'none',
+              }} />
+              <div style={{ font: '900 50px ' + F.sans, color: hero ? C.gold : C.paper, marginTop: 14 }}>{k}</div>
+            </div>
+          );
+        })}
+      </div>
+      <Burst seed={seed} at={6 + last * 8 + 14} />
+    </AbsoluteFill>
+  );
+};
+
+/** VS — 화면이 갈라지며 왼쪽은 회색·빨강 X, 오른쪽은 금색 */
+const Versus: React.FC<{ h: any; seed: number }> = ({ h, seed }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const l = spring({ frame: f, fps, config: { damping: 14 } });
+  const r = spring({ frame: f - 10, fps, config: { damping: 10 } });
+  const x = spring({ frame: f - 22, fps, config: { damping: 8 } });
+  const box = (txt: string, good: boolean, p: number, dir: number): React.ReactNode => (
+    <div style={{
+      flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: good ? 'linear-gradient(135deg, rgba(250,204,21,0.35), rgba(0,0,0,0.6))' : 'rgba(30,30,36,0.85)',
+      transform: 'translateX(' + (1 - p) * 900 * dir + 'px)',
+    }}>
+      <div style={{ font: '900 96px/1.2 ' + F.sans, color: good ? C.gold : '#9ca3af', textAlign: 'center', whiteSpace: 'pre-line', ...STROKE,
+        filter: good ? 'drop-shadow(0 0 30px rgba(250,204,21,0.6))' : 'grayscale(1)' }}>{txt}</div>
+    </div>
+  );
+  return (
+    <AbsoluteFill style={{ flexDirection: 'row' }}>
+      {box(h.vs[0], false, l, -1)}
+      {box(h.vs[1], true, r, 1)}
+      <div style={{ position: 'absolute', left: 960 - 6, top: 0, width: 12, height: '100%', background: C.gold, boxShadow: '0 0 40px ' + C.gold }} />
+      <div style={{ position: 'absolute', left: 860, top: 440, width: 200, height: 200, borderRadius: 100, background: '#111', border: '6px solid ' + C.gold,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', font: '900 90px ' + F.sans, color: C.gold, transform: 'scale(' + r + ') rotate(' + (1 - r) * 180 + 'deg)' }}>VS</div>
+      <div style={{ position: 'absolute', left: 300, top: 300, font: '900 480px/1 ' + F.sans, color: 'rgba(248,113,113,0.85)', transform: 'scale(' + (2 - x) + ')', opacity: Math.min(1, x) }}>✕</div>
+      <Burst seed={seed} at={10} />
+    </AbsoluteFill>
+  );
+};
+
+/** 단계 흐름 — 카드가 차례로 날아와 화살표로 이어진다 */
+const Flow: React.FC<{ h: any }> = ({ h }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const st: string[] = h.steps;
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.6)' }}>
+      {h.t ? <div style={{ font: '900 64px ' + F.sans, color: C.gold, marginBottom: 50, ...STROKE }}>{h.t}</div> : null}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        {st.map((s, i) => {
+          const p = spring({ frame: f - i * 9, fps, config: { damping: 11, mass: 0.6 } });
+          const lastOne = i === st.length - 1;
+          return (
+            <React.Fragment key={i}>
+              {i ? <div style={{ font: '900 70px ' + F.sans, color: C.gold, opacity: p }}>→</div> : null}
+              <div style={{
+                padding: '30px 34px', borderRadius: 22, font: '900 54px ' + F.sans, whiteSpace: 'pre-line', textAlign: 'center',
+                background: lastOne ? C.gold : 'rgba(255,255,255,0.1)', color: lastOne ? '#111' : C.paper,
+                border: '3px solid ' + (lastOne ? C.gold : 'rgba(255,255,255,0.3)'),
+                boxShadow: lastOne ? '0 0 60px rgba(250,204,21,0.7)' : 'none',
+                transform: 'translateY(' + (1 - p) * 160 + 'px) rotate(' + (1 - p) * 12 + 'deg)', opacity: p,
+              }}>{s}</div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/** 네온 — 깜빡이며 켜지는 네온 간판 글자 */
+const Neon: React.FC<{ h: any }> = ({ h }) => {
+  const f = useCurrentFrame();
+  const flick = f < 14 ? (random('n' + f) > 0.45 ? 1 : 0.15) : 1 + Math.sin(f / 5) * 0.06;
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.65)' }}>
+      {h.t.split('\n').map((l: string, i: number) => (
+        <div key={i} style={{
+          font: '900 140px/1.15 ' + F.sans, color: '#fffbe6', opacity: flick,
+          textShadow: '0 0 10px #fff, 0 0 30px ' + C.gold + ', 0 0 60px ' + C.gold + ', 0 0 120px #f59e0b',
+        }}>{l}</div>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+/** 플립 — 글자 하나하나 3D로 뒤집히며 등장 */
+const Flip: React.FC<{ h: any }> = ({ h }) => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  let n = 0;
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.45)', perspective: 1200 }}>
+      {h.t.split('\n').map((l: string, i: number) => (
+        <div key={i} style={{ font: '900 130px/1.2 ' + F.sans, ...STROKE }}>
+          {Array.from(l).map((ch, j) => {
+            const k = n++;
+            const p = spring({ frame: f - k * 1.6, fps, config: { damping: 12, mass: 0.5 } });
+            const hot = h.accent && l.indexOf(h.accent) >= 0 && j >= l.indexOf(h.accent) && j < l.indexOf(h.accent) + h.accent.length;
+            return (
+              <span key={j} style={{ display: 'inline-block', color: hot ? C.gold : C.paper, transform: 'rotateX(' + (1 - p) * 100 + 'deg)', opacity: Math.min(1, p * 1.3), minWidth: ch === ' ' ? 34 : undefined }}>
+                {ch}
+              </span>
+            );
+          })}
+        </div>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
 /** 글자 — 스타일 다섯 가지를 돌려 쓴다 */
 const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> = ({ h, style, seed }) => {
   const f = useCurrentFrame();
@@ -99,6 +301,12 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
     const [a, b] = s.split(acc);
     return (<>{a}<span style={{ color: C.gold }}>{acc}</span>{b}</>);
   };
+  if (style === 'count') return <CountBig h={h} seed={seed} />;
+  if (style === 'bars') return <Bars h={h} seed={seed} />;
+  if (style === 'vs') return <Versus h={h} seed={seed} />;
+  if (style === 'flow') return <Flow h={h} />;
+  if (style === 'neon') return <Neon h={h} />;
+  if (style === 'flip') return <Flip h={h} />;
   const lines = h.t.split('\n');
   if (style === 'mega') {
     const s = interpolate(f, [0, 6], [2.2, 1], { extrapolateRight: 'clamp', easing: EASE.slam });
@@ -106,10 +314,12 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
       <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
         <SpeedLines seed={seed} />
         <AbsoluteFill style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.15), rgba(0,0,0,0.75))' }} />
+        <Burst seed={seed} at={4} />
         <div style={{ textAlign: 'center', transform: 'scale(' + s + ') rotate(' + (1 - p) * -4 + 'deg)' }}>
           {h.sub ? <div style={{ font: '800 40px ' + F.sans, color: C.gold, letterSpacing: 10, marginBottom: 10 }}>{h.sub}</div> : null}
           {lines.map((l, i) => (
-            <div key={i} style={{ font: '900 190px/1.05 ' + F.sans, color: i === lines.length - 1 ? C.gold : C.paper, ...STROKE, letterSpacing: -6 }}>
+            <div key={i} style={{ font: '900 190px/1.05 ' + F.sans, color: i === lines.length - 1 ? C.gold : C.paper, ...STROKE, letterSpacing: -6,
+              ...(i === lines.length - 1 && lines.length > 1 ? { background: 'linear-gradient(180deg,#fff6c2,#facc15 50%,#f59e0b)', WebkitBackgroundClip: 'text', color: 'transparent', WebkitTextStroke: '0px', filter: 'drop-shadow(0 0 30px rgba(250,204,21,0.6)) drop-shadow(0 10px 20px #000)' } : {}) }}>
               {paint(l)}
             </div>
           ))}
@@ -248,12 +458,12 @@ export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, para
               const h = typeof raw === 'string' ? { t: raw } : raw;
               const s0 = Math.round(marks[k] * len);
               const s1 = k + 1 < p.hits.length ? Math.round(marks[k + 1] * len) : len;
-              const style: Style = h.style || (['slam', 'kinetic', 'mega', 'stack'] as Style[])[(i + k) % 4];
+              const style: Style = h.style || (['slam', 'flip', 'mega', 'kinetic', 'neon', 'stack'] as Style[])[(i + k) % 6];
               const seed = i * 31 + k;
               return (
                 <Sequence key={k} from={s0} durationInFrames={Math.max(1, s1 - s0)}>
                   {h.img || h.bg ? <Punch seed={seed + 7}><Back p={{ ...p, img: h.img, bg: h.bg || p.bg, frame: h.img ? undefined : p.frame }} /></Punch> : null}
-                  {h.t ? (
+                  {h.t || h.vs || h.bars || h.steps || h.num !== undefined ? (
                     <Glitch at={[0, 1]}>
                       <Punch seed={seed}><Words h={h} style={style} seed={seed} /></Punch>
                     </Glitch>
