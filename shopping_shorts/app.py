@@ -57,6 +57,7 @@ from shopping_shorts import single_source
 from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
+from shopping_shorts import yt_studio             # 유튜브제작 관리판(관제 185)
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
@@ -27509,6 +27510,91 @@ app.add_api_route("/fx_samples.html", _fx_samples_page, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples", _fx_samples_list, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples/video/{vid}.mp4", _fx_samples_video, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples/verdict", _fx_samples_verdict, methods=["POST"], include_in_schema=False)
+
+
+# ── 유튜브제작(2026-10-12, 관제 185) — 관리자 전용 ───────────────────────────
+# 사장님 유튜브 영상 제작판: 씬별 대사·준비 체크·자료·녹음·TTS. 상태 판단은 yt_studio.apply_op 한 곳.
+def _yt_studio_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "yt_studio.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _yt_studio_state(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return JSONResponse({"ok": True, **yt_studio.load()}, headers=_NOCACHE)
+
+
+async def _yt_studio_op(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        st = await asyncio.to_thread(yt_studio.apply_op, str(b.get("op") or ""), b)
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, **st}, headers=_NOCACHE)
+
+
+async def _yt_studio_upload(request: Request, project: str = Form(...), scene: str = Form(...),
+                            source: str = Form(""), file: UploadFile = File(...)):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    data = await file.read()
+    if not data or len(data) > yt_studio.MAX_UPLOAD:
+        return JSONResponse({"ok": False, "error": "빈 파일이거나 300MB를 넘습니다"}, status_code=400)
+    st = await asyncio.to_thread(yt_studio.add_file, project, scene, file.filename or "file",
+                                 file.content_type or "", data, source or "직접 올림")
+    return JSONResponse({"ok": True, **st}, headers=_NOCACHE)
+
+
+def _yt_studio_file(fid: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    try:
+        path, f = yt_studio.file_path(fid)
+    except ValueError:
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    if not path.exists():
+        return JSONResponse({"error": "파일이 지워졌습니다"}, status_code=404)
+    return FileResponse(path, media_type=f["type"], filename=f["name"], content_disposition_type="inline")
+
+
+def _yt_studio_voices(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import eleven_voices
+    return JSONResponse(eleven_voices.list_account_voices(0), headers=_NOCACHE)
+
+
+async def _yt_studio_tts(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        rid = yt_studio.start_tts(str(b.get("project")), str(b.get("scene")),
+                                  str(b.get("voice_id") or ""), str(b.get("voice_name") or ""))
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, "request_id": rid})
+
+
+app.add_api_route("/yt_studio", _yt_studio_page, include_in_schema=False)
+app.add_api_route("/yt_studio.html", _yt_studio_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/yt_studio", _yt_studio_state, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/op", _yt_studio_op, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/upload", _yt_studio_upload, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/file/{fid}", _yt_studio_file, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/voices", _yt_studio_voices, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/tts", _yt_studio_tts, methods=["POST"], include_in_schema=False)
 
 
 def _archive_channel_cat_fn(store):

@@ -63,6 +63,8 @@
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
       // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
       { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
+      // 유튜브제작(2026-10-12 관제 185) — 사장님 유튜브 영상 제작판. 서버 라우트(_yt_studio_page)도 관리자만 연다.
+      { icon: "🎬", text: "유튜브제작",     href: "/yt_studio", admin: true },
       // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
       { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
     ] },
