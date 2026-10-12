@@ -15,15 +15,18 @@ from google.genai import types
 
 MODEL = "gemini-2.5-flash"
 USD_IN, USD_OUT, KRW = 0.30 / 1e6, 2.50 / 1e6, 1400  # 정가(유료 등급) 기준
-COLS, MAXSEC = 8, 48
+COLS, MAXSEC = 8, 60
 
 
-def _env_key():
-    for p in (Path(__file__).resolve().parents[2] / ".env",):
-        for ln in p.read_text(encoding="utf-8").splitlines():
-            if ln.startswith("GEMINI_API_KEY="):
-                return ln.split("=", 1)[1].strip().strip('"')
-    raise SystemExit("GEMINI_API_KEY 없음")
+def _env_keys():
+    """.env 의 GEMINI_* 키 전부(무료 키는 모델당 하루 20회라 번갈아 쓴다)."""
+    ks = []
+    for ln in (Path(__file__).resolve().parents[2] / ".env").read_text(encoding="utf-8").splitlines():
+        if ln.startswith("GEMINI_") and "_KEY" in ln.split("=")[0] and "EMBED" not in ln:
+            v = ln.split("=", 1)[1].strip().strip('"')
+            if v and v not in ks:
+                ks.append(v)
+    return ks
 
 
 def make_sheet(mp4, out_jpg):
@@ -60,13 +63,20 @@ PROMPT = """너는 쇼핑 숏폼 편집자다. 첫 이미지는 레퍼런스 영
 {slots}
 
 후보 영상을 판정해 JSON만 답하라:
-{{"same_product": true/false (레퍼런스와 같은 종류의 제품인가),
+제품 판정 규칙(가장 중요): 종류가 같아도 생김새가 다르면 다른 제품이다.
+레퍼런스에 실제로 보이는 제품의 모양·색·크기·받침(스탠드) 구조를 먼저 적고, 후보 제품과 하나씩 대조하라.
+비슷한 다른 브랜드·다른 모양 제품, 레퍼런스에 없는 형태면 same_product=false.
+{{"ref_product_look": "레퍼런스 제품 생김새(모양·색·받침 구조)",
+ "cand_product_look": "후보 제품 생김새",
+ "same_product": true/false,
+ "product_diff": "다른 점(같으면 빈 문자열)",
  "product_seen": "후보에 보이는 제품 한 줄",
  "burned_text": true/false (화면에 자막·큰 글자가 박혀 있어 그대로 쓰기 어려운가),
  "ref_copy": true/false (레퍼런스와 같은 영상을 재업로드한 것인가),
  "usable": [{{"slot":"칸 기호","from":초,"to":초,"why":"보이는 장면 한 줄"}}],
  "discard": [{{"from":초,"to":초,"why":"채널 프로필·엔딩·다른 제품 등"}}],
  "verdict": "use" | "partial" | "reject"}}
+외국인이 일상에서 제품을 쓰는 다양한 장면(집·카페·야외 등)도 쓸 장면이다 — 해당 칸에 넣고 버리지 마라.
 usable 은 실제로 그 칸 장면이 보이는 초만 적는다. 없으면 빈 배열. 짐작 금지."""
 
 
@@ -102,32 +112,52 @@ def decide(j, spec):
     return j
 
 
+def _one(c, ref_jpg, spec, keys, work):
+    vid = Path(c).parent.name
+    t0 = time.time()
+    cj = work / f"{vid}.jpg"
+    n = make_sheet(c, cj)
+    t1 = time.time()
+    err = None
+    for k in keys:  # 한도(429) 걸린 키는 넘긴다
+        try:
+            j, tin, tout = judge(genai.Client(api_key=k), ref_jpg, cj, spec["product"], spec["slots"])
+            break
+        except Exception as e:
+            err = e
+            if not any(c in str(e) for c in ("429", "503", "500")):
+                raise
+    else:
+        return {"vid": vid, "error": str(err)[:120]}
+    j["usable"] = [u for u in j.get("usable", []) if u["to"] < n]  # 영상 길이 밖 구간은 지어낸 것
+    decide(j, spec)
+    t2 = time.time()
+    krw = (tin * USD_IN + tout * USD_OUT) * KRW
+    return {"vid": vid, "secs": n, "sheet_s": round(t1 - t0, 1), "judge_s": round(t2 - t1, 1),
+            "in_tok": tin, "out_tok": tout, "krw": round(krw, 2), **j}
+
+
 def main():
+    from concurrent.futures import ThreadPoolExecutor
     a = [x for x in sys.argv[1:] if not x.startswith("--")]
     out = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "scene_judge_result.json"
     if "--out" in sys.argv:
         a.remove(out)
     ref, spec, cands = a[0], json.loads(Path(a[1]).read_text(encoding="utf-8")), a[2:]
-    client = genai.Client(api_key=_env_key())
+    keys = _env_keys()
     work = Path(tempfile.mkdtemp())
     ref_jpg = work / "ref.jpg"
     make_sheet(ref, ref_jpg)
-    res = []
-    for c in cands:
-        vid = Path(c).parent.name
-        t0 = time.time()
-        cj = work / f"{vid}.jpg"
-        n = make_sheet(c, cj)
-        t1 = time.time()
-        j, tin, tout = judge(client, ref_jpg, cj, spec["product"], spec["slots"])
-        t2 = time.time()
-        decide(j, spec)
-        krw = (tin * USD_IN + tout * USD_OUT) * KRW
-        res.append({"vid": vid, "secs": n, "sheet_s": round(t1 - t0, 1), "judge_s": round(t2 - t1, 1),
-                    "in_tok": tin, "out_tok": tout, "krw": round(krw, 2), **j})
-        print(f"{vid} {j.get('verdict'):8} 시트{t1-t0:.1f}s 판정{t2-t1:.1f}s {krw:.1f}원 "
-              f"same={j.get('same_product')} copy={j.get('ref_copy')} text={j.get('burned_text')} "
-              f"usable={[(u['slot'],u['from'],u['to']) for u in j.get('usable',[])]}", flush=True)
+    T = time.time()
+    with ThreadPoolExecutor(8) as ex:
+        res = list(ex.map(lambda ic: _one(ic[1], ref_jpg, spec, keys[ic[0] % len(keys):] + keys[:ic[0] % len(keys)], work),
+                          enumerate(cands)))
+    for r in res:
+        if "error" in r:
+            print(r["vid"], "판정 실패", r["error"]); continue
+        print(f"{r['vid']} {r['verdict']:7} 판정{r['judge_s']}s {r['krw']}원 "
+              f"usable={[(u['slot'],u['from'],u['to']) for u in r['usable']]}", flush=True)
+    print(f"전체 {len(cands)}개 {time.time()-T:.1f}초(병렬 8)")
     Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
