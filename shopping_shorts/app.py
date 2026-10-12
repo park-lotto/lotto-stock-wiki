@@ -19418,7 +19418,8 @@ def api_my_channel_set(request: Request, body: dict):
 #   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
 # 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
 # {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
-_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+# scene_style_my_presets = 장면꾸미기 "내 프리셋"(관제 183, 10-12 이성택님 — 크롬 데이터가 지워지자 프리셋이 통째로 사라졌다)
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets", "scene_style_my_presets")
 _PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
 _PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
 
