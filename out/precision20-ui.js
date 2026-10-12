@@ -789,10 +789,16 @@
     syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   // ── 단어 강조 줄(관제 102) — 본문 자막 등장 바로 아래. 값 목록·상수는 위 상태 선언 옆(WORD_FX_STYLES).
-  bodyMotionPanel.insertAdjacentHTML('beforeend','<div class="hook-motion-head word-fx-head"><b>단어 강조</b><small>말하는 단어를 따라갑니다</small></div><div class="hook-motion-grid"><button type="button" data-word-fx="">없음</button>'+Object.entries(WORD_FX_STYLES).map(([k,v])=>`<button type="button" data-word-fx="${k}">${v}</button>`).join('')+'</div><div class="word-fx-more" hidden><div class="word-fx-colors"><button type="button" data-word-fx-color="">자동</button>'+WORD_FX_COLORS.map(c=>`<button type="button" data-word-fx-color="${c}" style="background:${c}" aria-label="강조색 ${c}"></button>`).join('')+'</div><div class="word-fx-grow"><span>지금 단어 크기</span><div class="hook-motion-grid"><button type="button" data-word-fx-grow="">그대로</button>'+Object.entries(WORD_FX_GROWS).map(([k,v])=>`<button type="button" data-word-fx-grow="${k}">${v.label}</button>`).join('')+'</div></div></div>');
+  bodyMotionPanel.insertAdjacentHTML('beforeend','<div class="hook-motion-head word-fx-head"><b>단어 강조</b><small>말하는 단어를 따라갑니다</small></div><div class="hook-motion-grid"><button type="button" data-word-fx="">없음</button>'+Object.entries(WORD_FX_STYLES).map(([k,v])=>`<button type="button" data-word-fx="${k}">${v}</button>`).join('')+'</div><div class="word-fx-more" hidden><div class="word-fx-colors"><label class="word-fx-pick" title="팔레트 — 모든 색"><input type="color" data-word-fx-pick value="#FFE600" aria-label="강조색 직접 고르기"></label><button type="button" data-word-fx-color="">자동</button>'+WORD_FX_COLORS.map(c=>`<button type="button" data-word-fx-color="${c}" style="background:${c}" aria-label="강조색 ${c}"></button>`).join('')+'</div><div class="word-fx-grow"><span>지금 단어 크기</span><div class="hook-motion-grid"><button type="button" data-word-fx-grow="">그대로</button>'+Object.entries(WORD_FX_GROWS).map(([k,v])=>`<button type="button" data-word-fx-grow="${k}">${v.label}</button>`).join('')+'</div></div></div>');
   bodyMotionPanel.addEventListener('click',event=>{
     const style=event.target.closest('[data-word-fx]'),color=event.target.closest('[data-word-fx-color]'),grow=event.target.closest('[data-word-fx-grow]');if(!style&&!color&&!grow)return;
     wordFx=style?{...wordFx,style:style.dataset.wordFx}:color?{...wordFx,color:color.dataset.wordFxColor}:{...wordFx,grow:grow.dataset.wordFxGrow};
+    syncHookMotionUI();rememberLocal({wordFx});runWordFx();
+  });
+  // 팔레트(맨 앞) — 견본 5색 밖의 아무 색. 값 모양은 견본과 같은 #RRGGBB라 저장·렌더·캡컷 길은 그대로다.
+  bodyMotionPanel.addEventListener('input',event=>{
+    const pick=event.target.closest('[data-word-fx-pick]');if(!pick)return;
+    wordFx={...wordFx,color:pick.value.toUpperCase()};
     syncHookMotionUI();rememberLocal({wordFx});runWordFx();
   });
   const fixedPanel=document.createElement('section');
@@ -815,7 +821,7 @@
      bodyMotionPanel.querySelectorAll('[data-word-fx]').forEach(b=>{if(WORD_FX_DRAW[b.dataset.wordFx]?.pack)b.hidden=!on});}
     {const now=bodyMotionPanel.querySelector('[data-caption-pack-now]'),no=motionPackNo();if(now){now.hidden=!no;if(no){const m=BODY_CAPTION_MOTIONS[captionMotionKey()];now.textContent=`${no}번 · 이 장면(${sceneIndex+1}장) · ${CAPTION_SLOTS[captionSlot()]||''} → ${m?m.label:'없음'}`;}}}
     bodyMotionPanel.querySelectorAll('[data-word-fx]').forEach(b=>b.classList.toggle('active',b.dataset.wordFx===(WORD_FX_STYLES[wordFx.style]?wordFx.style:'')));
-    bodyMotionPanel.querySelectorAll('[data-word-fx-color]').forEach(b=>b.classList.toggle('active',b.dataset.wordFxColor.toLowerCase()===String(wordFx.color||'').toLowerCase()));
+    bodyMotionPanel.querySelectorAll('[data-word-fx-color]').forEach(b=>b.classList.toggle('active',b.dataset.wordFxColor.toLowerCase()===String(wordFx.color||'').toLowerCase()));{const pk=bodyMotionPanel.querySelector('[data-word-fx-pick]'),cv=String(wordFx.color||''),own=/^#[0-9a-f]{6}$/i.test(cv)&&!WORD_FX_COLORS.some(c=>c.toLowerCase()===cv.toLowerCase());if(pk){if(/^#[0-9a-f]{6}$/i.test(cv))pk.value=cv;pk.parentElement.classList.toggle('active',own);pk.parentElement.style.background=own?cv:'';}}
     bodyMotionPanel.querySelectorAll('[data-word-fx-grow]').forEach(b=>b.classList.toggle('active',b.dataset.wordFxGrow===(WORD_FX_GROWS[wordFx.grow]?wordFx.grow:'')));
     {const more=bodyMotionPanel.querySelector('.word-fx-more'),auto=bodyMotionPanel.querySelector('[data-word-fx-color=""]');if(more)more.hidden=!WORD_FX_STYLES[wordFx.style];if(auto&&rows[current])auto.style.borderColor=wordFxColor(true);}
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));

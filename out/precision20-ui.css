@@ -184,6 +184,9 @@
 .word-fx-colors{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .word-fx-colors button{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer}
 .word-fx-colors button[data-word-fx-color=""]{width:auto;height:26px;padding:0 10px;border-radius:13px;background:transparent;color:inherit;font-size:12px}
+.word-fx-pick{position:relative;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer;background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);overflow:hidden;flex:0 0 auto}
+.word-fx-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.word-fx-pick.active{outline:2px solid #fff;outline-offset:2px}
 .word-fx-colors button.active{outline:2px solid #fff;outline-offset:2px}
 .word-fx-grow{display:flex;flex-direction:column;gap:6px}
 .word-fx-grow>span{font-size:12px;font-weight:800;color:#b9c7cf}
