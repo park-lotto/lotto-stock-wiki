@@ -13,6 +13,12 @@ import { S02_Common, ST2_S02_FRAMES } from './shottem2/S02_Common';
 import { S03_Limit, ST2_S03_FRAMES } from './shottem2/S03_Limit';
 import { S04_Direction, ST2_S04_FRAMES, S05_Alternatives, ST2_S05_FRAMES } from './shottem2/S04_S05';
 import { S06_Intro, ST2_S06_FRAMES } from './shottem2/S06_Intro';
+import { V2_S47_Proof, V2_S47_FRAMES } from './shottem2/V2_S47_Proof';
+import { V2_S1_Open, V2_S1_FRAMES } from './shottem2/V2_S1_Open';
+import { V2_S2, V2_S2_FRAMES } from './shottem2/V2_S2';
+import { V2_S1B, V2_S1B_FRAMES } from './shottem2/V2_S1b';
+import { V2_S47V2, V2_S47V2_FRAMES } from './shottem2/V2_S47v2';
+import { V2_S3, V2_S3_FRAMES, V2_S47F, V2_S47F_FRAMES, V2_S5, V2_S5_FRAMES, V2_S6, V2_S6_FRAMES, V2_S7, V2_S7_FRAMES, V2_S8, V2_S8_FRAMES } from './shottem2/V2_Rest';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
 import { LeadingStockVideo } from './LeadingStockVideo';
@@ -862,6 +868,94 @@ export const RemotionRoot: React.FC = () => {
         id="ST2-S06"
         component={S06_Intro}
         durationInFrames={ST2_S06_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S1"
+        component={V2_S1_Open}
+        durationInFrames={V2_S1_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S2"
+        component={V2_S2}
+        durationInFrames={V2_S2_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S3"
+        component={V2_S3}
+        durationInFrames={V2_S3_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S47F"
+        component={V2_S47F}
+        durationInFrames={V2_S47F_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S5"
+        component={V2_S5}
+        durationInFrames={V2_S5_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S6"
+        component={V2_S6}
+        durationInFrames={V2_S6_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S7"
+        component={V2_S7}
+        durationInFrames={V2_S7_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S8"
+        component={V2_S8}
+        durationInFrames={V2_S8_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S1B"
+        component={V2_S1B}
+        durationInFrames={V2_S1B_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S47V2"
+        component={V2_S47V2}
+        durationInFrames={V2_S47V2_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S47"
+        component={V2_S47_Proof}
+        durationInFrames={V2_S47_FRAMES}
         fps={30}
         width={1920}
         height={1080}
