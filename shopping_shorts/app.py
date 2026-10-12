@@ -57,6 +57,7 @@ from shopping_shorts import single_source
 from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
+from shopping_shorts import yt_studio             # 유튜브제작 관리판(관제 185)
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
@@ -5212,6 +5213,23 @@ def _save_render_inputs(store, job_id, **fields):
     return render_changed
 
 
+def _preview_gate_passed(job) -> bool:
+    """1단계 미리보기 게이트를 **한 번이라도** 통과했나(관제 186) — 판단은 여기 한 곳.
+
+    게이트의 목적은 '미리보기를 안 보고 유료 자막제거로 건너뛰기'를 막는 것이다. 한 번 만든 미리보기가
+    효과음·배경음 변경으로 무효(preview_status='')가 돼도 고객은 이미 통과했다 — 그때 다시 잠그면
+    완성한 작업이 통째로 1단계로 떨어진다(2026-10-12 이성택님 '아이스 칠링볼'). 미리보기 파일이 남아
+    있으면 통과로 본다(무효화는 파일을 지우지 않는다 — api_produce_mix_settings 주석).
+    """
+    try:
+        if (job or {}).get("preview_status") in ("ready", "failed"):
+            return True
+        p = (job or {}).get("preview_path")
+        return bool(p) and Path(p).exists()
+    except Exception:
+        return False
+
+
 def _preview_is_stale(job) -> bool:
     """미리보기 파일이 **지금 편성과 다른 편성**으로 만들어졌나(2026-09-02).
 
@@ -5549,6 +5567,9 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             # 미리보기를 만든 뒤 편성(대본·컷)이 바뀌었나 — 화면이 "낡았다"고 말할 수 있게(2026-09-02).
             "preview_stale": _preview_is_stale(job),
+            # ★1단계 게이트 통과 여부(관제 186) — 화면 canGoNext 가 이걸 본다. preview_status 는 효과음·배경음을
+            #   바꾸면 비워지는데(다시 만들어야 함), 그걸 게이트로도 쓰면 작업 전체가 잠겨 1단계로 떨어졌다.
+            "preview_gate_passed": _preview_gate_passed(job),
             "clean_status": clean_status,
             "clean_error": clean_error,
             # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
@@ -10714,6 +10735,21 @@ def api_mix_capcut(job_id: str, base: str = ""):
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
             _scene_layers, _scene_dims, _scene_zooms = None, None, None
+    # 🎬 장면 전용 가림효과('이 장면만'·'☑ 골라서', 관제 182) — 렌더와 **같은 함수**(_scene_mask_layers)로
+    #   시간 창을 받는다. 종전엔 _template_layer 가 떼어내기만 하고 다시 얹는 곳이 렌더뿐이라 캡컷에서 사라졌다.
+    #   자막 아래·영상 위 겹(scene_dim 트랙)에 싣는다. 흐림 효과는 그림이 아니라 캡컷엔 못 간다(색 막만).
+    if _style_on and _deco and _deco.get("template"):
+        try:
+            _sm_durs = {v: (_probe_duration(str(p_)) or 0.0)
+                        for v, p_ in source_video_paths.items()}
+            _masks = [{"path": l["_abspath"], "start": l["start"], "dur": l["dur"]}
+                      for l in mix_pipeline._scene_mask_layers(_deco["template"], plan, tts_paths, _sm_durs)
+                      if l.get("_abspath")]
+            if _masks:
+                _scene_dims = list(_scene_dims or []) + _masks
+        except Exception:      # noqa: BLE001 — 가림효과 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb5
+            _tb5.print_exc(file=sys.stderr)
     if _scene_layers:
         # 제목·채널명은 장면 레이어에 이미 그려져 있다 — 머리카피를 또 올리면 겹쳐 보인다.
         _hc_png, _hc_span = None, None
@@ -15605,6 +15641,10 @@ def _check_pc_device(customer_id, request, path):
         if not customer_id:                       # 사장님(0)·비로그인은 제외
             return None
         if _pc_gate_open_path(path):              # 막혀도 반드시 열려 있어야 하는 길
+            # ★여기서도 도장은 찍는다(관제 184): 마이페이지로 바로 들어온 브라우저는 도장이 없어
+            #   '이 PC 등록하기'가 "이 브라우저를 확인할 수 없어요"로 실패했다(라이브 실클릭 실측).
+            if not _device_id(request) and _is_page_nav(request, path):
+                request.state.new_device_id = secrets.token_hex(16)
             return None
         cust = Store(DB_PATH).get_customer(customer_id)
         if cust and cust.get("admin"):
@@ -19418,7 +19458,8 @@ def api_my_channel_set(request: Request, body: dict):
 #   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
 # 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
 # {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
-_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+# scene_style_my_presets = 장면꾸미기 "내 프리셋"(관제 183, 10-12 이성택님 — 크롬 데이터가 지워지자 프리셋이 통째로 사라졌다)
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets", "scene_style_my_presets")
 _PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
 _PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
 
@@ -27508,6 +27549,91 @@ app.add_api_route("/fx_samples.html", _fx_samples_page, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples", _fx_samples_list, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples/video/{vid}.mp4", _fx_samples_video, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples/verdict", _fx_samples_verdict, methods=["POST"], include_in_schema=False)
+
+
+# ── 유튜브제작(2026-10-12, 관제 185) — 관리자 전용 ───────────────────────────
+# 사장님 유튜브 영상 제작판: 씬별 대사·준비 체크·자료·녹음·TTS. 상태 판단은 yt_studio.apply_op 한 곳.
+def _yt_studio_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "yt_studio.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _yt_studio_state(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return JSONResponse({"ok": True, **yt_studio.load()}, headers=_NOCACHE)
+
+
+async def _yt_studio_op(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        st = await asyncio.to_thread(yt_studio.apply_op, str(b.get("op") or ""), b)
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, **st}, headers=_NOCACHE)
+
+
+async def _yt_studio_upload(request: Request, project: str = Form(...), scene: str = Form(...),
+                            source: str = Form(""), file: UploadFile = File(...)):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    data = await file.read()
+    if not data or len(data) > yt_studio.MAX_UPLOAD:
+        return JSONResponse({"ok": False, "error": "빈 파일이거나 300MB를 넘습니다"}, status_code=400)
+    st = await asyncio.to_thread(yt_studio.add_file, project, scene, file.filename or "file",
+                                 file.content_type or "", data, source or "직접 올림")
+    return JSONResponse({"ok": True, **st}, headers=_NOCACHE)
+
+
+def _yt_studio_file(fid: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    try:
+        path, f = yt_studio.file_path(fid)
+    except ValueError:
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    if not path.exists():
+        return JSONResponse({"error": "파일이 지워졌습니다"}, status_code=404)
+    return FileResponse(path, media_type=f["type"], filename=f["name"], content_disposition_type="inline")
+
+
+def _yt_studio_voices(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import eleven_voices
+    return JSONResponse(eleven_voices.list_account_voices(0), headers=_NOCACHE)
+
+
+async def _yt_studio_tts(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        rid = yt_studio.start_tts(str(b.get("project")), str(b.get("scene")),
+                                  str(b.get("voice_id") or ""), str(b.get("voice_name") or ""))
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, "request_id": rid})
+
+
+app.add_api_route("/yt_studio", _yt_studio_page, include_in_schema=False)
+app.add_api_route("/yt_studio.html", _yt_studio_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/yt_studio", _yt_studio_state, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/op", _yt_studio_op, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/upload", _yt_studio_upload, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/file/{fid}", _yt_studio_file, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/voices", _yt_studio_voices, include_in_schema=False)
+app.add_api_route("/api/admin/yt_studio/tts", _yt_studio_tts, methods=["POST"], include_in_schema=False)
 
 
 def _archive_channel_cat_fn(store):

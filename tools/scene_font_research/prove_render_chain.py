@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """글꼴·색톤이 '편집기 화면 → 저장값 → 서버 검증 → 진짜 렌더러 PNG'까지 그대로 가는지 실제로 돌려 본다.
-   py tools/scene_font_research/prove_render_chain.py <출력폴더> [fontSetId] [바탕색] [1줄색] [2줄색]
+   py tools/scene_font_research/prove_render_chain.py <출력폴더> [fontSetId | look:<id> | font:<fam>] [바탕색] [1줄색] [2줄색]
    (8773 서버 필요. 렌더러는 shopping_shorts.scene_style.render_layers가 쓰는 tools/render_scene_style.js 그대로)"""
 import sys, json, pathlib, subprocess
 from playwright.sync_api import sync_playwright
@@ -12,7 +12,9 @@ with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 1000}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://127.0.0.1:8773/out/scene-style-ui-showcase.html?qa=1', wait_until='networkidle')
     look = fid.startswith('look:')
-    if look: pg.click('[data-left-tab="look"]'); pg.click(f'[data-look="{fid[5:]}"]')     # 추천 룩 카드 한 번
+    if fid.startswith('font:'):                                                          # 낱개 폰트(관제 187): 고르고 → 모든 글자에 적용
+        pg.click('[data-left-tab="font"]'); pg.click(f'[data-font-one="{fid[5:]}"]'); pg.click('[data-font-all]')
+    elif look: pg.click('[data-left-tab="look"]'); pg.click(f'[data-look="{fid[5:]}"]')     # 추천 룩 카드 한 번
     else: pg.click('[data-left-tab="font"]'); pg.click(f'[data-font-set="{fid}"]')          # 고객이 누르는 그 버튼
     for key, val in (() if look else (('top', bg), ('title1', c1), ('title2', c2))):                      # 고객이 만지는 그 색상칸
         pg.evaluate("([k,v])=>{const i=document.querySelector(`[data-fixed-color=\"${k}\"]`);i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}))}", [key, val])
@@ -23,7 +25,7 @@ with sync_playwright() as p:
     pg.locator('#a-live-preview').screenshot(path=str(out / 'A_editor.png'))
     snap = pg.evaluate('window.sceneStyle.snapshot()'); print('페이지 오류', errs); b.close()
 snap = scene_style.validate_snapshot(snap)                                              # 서버가 저장 전에 돌리는 그 검증
-print('서버 검증 통과 → 남은 값: fontSet=', snap.get('fontSet'), '| titleDeco=', snap.get('titleDeco'), '| fixedColors=', snap.get('fixedColors'), '| colors=', snap.get('colors'))
+print('서버 검증 통과 → 남은 값: fontSet=', snap.get('fontSet'), '| fontPick=', snap.get('fontPick'), '| titleDeco=', snap.get('titleDeco'), '| fixedColors=', snap.get('fixedColors'), '| colors=', snap.get('colors'))
 ctx = {'jobId': None, 'text': snap['text'], 'scenes': [
     {'start': 0, 'end': 1.5, 'caption': '', 'caption_visible': True, 'beat_idx': 0, 'kind': 'hook'},
     {'start': 1.5, 'end': 3, 'caption': '전 세계 건망증 환자들의', 'caption_visible': True, 'beat_idx': 1, 'kind': 'body'}]}

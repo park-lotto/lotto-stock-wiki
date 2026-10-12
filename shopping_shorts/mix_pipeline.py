@@ -2442,7 +2442,18 @@ def _scene_mask_layers(tpl, plan, tts_paths, src_durs):
             lay["blur_mask"], lay["blur_sigma"] = str(bm), bs
         if lay.get("_abspath") or lay.get("blur_mask"):
             out.append(lay)
-    return out
+    # ☑ 골라서(관제 182): 같은 그림이 이어지는 장면들은 한 겹으로 합친다(17장면 = 오버레이 17겹 방지).
+    out.sort(key=lambda x: x["start"])
+    merged = []
+    for lay in out:
+        p = merged[-1] if merged else None
+        if (p and p.get("_abspath") == lay.get("_abspath")
+                and p.get("blur_mask") == lay.get("blur_mask")
+                and abs(lay["start"] - (p["start"] + p["dur"])) < 0.05):
+            p["dur"] = lay["start"] + lay["dur"] - p["start"]
+        else:
+            merged.append(dict(lay))
+    return merged
 
 
 def _resolve_cutaway_paths(store, plan, customer_id):

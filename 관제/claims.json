@@ -144,6 +144,11 @@
     "card": 147,
     "track": "씨앗1단계"
   },
+  "shopping_shorts/static/produce.html:canGoNext": {
+    "at": "2026-10-12 14:51",
+    "card": 186,
+    "track": "작업잠김"
+  },
   "shopping_shorts/static/scene_play.js:planClips": {
     "at": "2026-10-03 23:09",
     "card": 106,

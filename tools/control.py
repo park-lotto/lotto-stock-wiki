@@ -381,11 +381,15 @@ def install(repo, printer=print):
     return sha
 
 
-def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", check="", printer=print):
+def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", check="", approval_why="", printer=print):
     """카드 등록 → 번호. approval None 이면 '미정'(finish 가 diff 로 판정해 필요하면 막는다)."""
     title = (title or "").strip()
     if not title:
         raise ControlError("카드 제목이 비었다")
+    approval_why = (approval_why or "").strip()
+    if approval and not approval_why:
+        # 관리자 보드 '결정할 것'에 사유가 뜬다(관제 180) — 사유 없는 승인 카드는 사장님이 판단할 수 없다
+        raise ControlError("승인 필요 카드는 사유가 있어야 한다: --approval-why \"돈: … / 회원 데이터: …\"")
     if not installed(repo):
         raise ControlError("관제가 설치되지 않았다: py tools/control.py install")
     made = {}
@@ -395,7 +399,7 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
         n = next_number(cards)
         c = {"번호": n, "제목": title, "쉬운 설명": easy, "상태": "분배" if track else "등록", "등록": _now(), "제보": reporter,
              "판단 주인": owner, "분배": track, "됐다의 기준": done, "검사": check,
-             "승인 필요": ("예" if approval else "아니오") if approval is not None else "미정(finish 가 diff 로 판정)",
+             "승인 필요": (("예 — " + approval_why) if approval else "아니오") if approval is not None else "미정(finish 가 diff 로 판정)",
              "승인": "", "병합": "", "서버 반영": "", "라이브 실측": "", "재발": "", "요청": body,
              "이력": ["%s 등록%s" % (_now(), (" · 분배 → " + track) if track else "")]}
         rel = card_filename(n, title)
@@ -763,6 +767,7 @@ def main(argv=None):
     p.add_argument("--body", default="", help="요청 원문")
     p.add_argument("--easy", default="", help="사장님용 한 줄(고객·돈에 무엇이 달라지나)")
     p.add_argument("--approval", choices=["예", "아니오"], default=None)
+    p.add_argument("--approval-why", dest="approval_why", default="", help="승인 필요 사유(--approval 예 일 때 필수, 예: '돈: 새 결제' / '회원 데이터: 설정 저장')")
     p.add_argument("--check", default="", help="라이브 실측 방법: 영상 | url <경로> <글자> | api <경로> 키=값[,키=값] | 수동 (비면 판단 주인으로 추론)")
     sub.add_parser("list", help="카드 목록(origin/main)")
     sub.add_parser("board", help="보드 재생성(main 에 커밋)")
@@ -797,7 +802,7 @@ def main(argv=None):
             install(repo)
         elif args.cmd == "new":
             new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track, check=args.check,
-                     body=args.body, easy=args.easy, approval=(None if args.approval is None else args.approval == "예"))
+                     body=args.body, easy=args.easy, approval=(None if args.approval is None else args.approval == "예"), approval_why=args.approval_why)
         elif args.cmd == "list":
             _git(repo, "fetch", "origin")
             _print_cards(cards_from_ref(repo))

@@ -184,6 +184,9 @@
 .word-fx-colors{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .word-fx-colors button{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer}
 .word-fx-colors button[data-word-fx-color=""]{width:auto;height:26px;padding:0 10px;border-radius:13px;background:transparent;color:inherit;font-size:12px}
+.word-fx-pick{position:relative;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer;background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);overflow:hidden;flex:0 0 auto}
+.word-fx-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.word-fx-pick.active{outline:2px solid #fff;outline-offset:2px}
 .word-fx-colors button.active{outline:2px solid #fff;outline-offset:2px}
 .word-fx-grow{display:flex;flex-direction:column;gap:6px}
 .word-fx-grow>span{font-size:12px;font-weight:800;color:#b9c7cf}
@@ -196,3 +199,14 @@
 .layout-a .font-stepper .stp-gap{margin-left:10px}
 .layout-a .font-stepper button{width:26px;height:24px}
 .layout-a .font-stepper [data-field-reset]{width:auto;margin-left:auto;padding:0 9px;font-size:11px;font-weight:800}
+.font-search{width:100%;box-sizing:border-box;margin:0 0 10px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:inherit;font-size:14px}
+.font-one-head{display:flex;align-items:center;gap:6px;margin:10px 0 6px;font-size:12px}
+.font-one-head span{flex:1}
+.font-one-head button{padding:4px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:transparent;color:inherit;font-size:12px;cursor:pointer}
+.font-one-head button:disabled{opacity:.35;cursor:default}
+.font-one-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:260px;overflow:auto;margin-bottom:12px;padding-right:2px}
+.font-one{position:relative;padding:10px 8px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:inherit;font-size:17px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.font-one.selected{border-color:#ffe600;box-shadow:0 0 0 1px #ffe600 inset}
+.font-one i{position:absolute;top:3px;right:5px;font:700 9px/1 sans-serif;color:#ffe600}
+.font-one[hidden]{display:none}
+.font-set-head{margin:12px 0 6px;font-size:12px;opacity:.75}
