@@ -5213,6 +5213,23 @@ def _save_render_inputs(store, job_id, **fields):
     return render_changed
 
 
+def _preview_gate_passed(job) -> bool:
+    """1단계 미리보기 게이트를 **한 번이라도** 통과했나(관제 186) — 판단은 여기 한 곳.
+
+    게이트의 목적은 '미리보기를 안 보고 유료 자막제거로 건너뛰기'를 막는 것이다. 한 번 만든 미리보기가
+    효과음·배경음 변경으로 무효(preview_status='')가 돼도 고객은 이미 통과했다 — 그때 다시 잠그면
+    완성한 작업이 통째로 1단계로 떨어진다(2026-10-12 이성택님 '아이스 칠링볼'). 미리보기 파일이 남아
+    있으면 통과로 본다(무효화는 파일을 지우지 않는다 — api_produce_mix_settings 주석).
+    """
+    try:
+        if (job or {}).get("preview_status") in ("ready", "failed"):
+            return True
+        p = (job or {}).get("preview_path")
+        return bool(p) and Path(p).exists()
+    except Exception:
+        return False
+
+
 def _preview_is_stale(job) -> bool:
     """미리보기 파일이 **지금 편성과 다른 편성**으로 만들어졌나(2026-09-02).
 
@@ -5550,6 +5567,9 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             # 미리보기를 만든 뒤 편성(대본·컷)이 바뀌었나 — 화면이 "낡았다"고 말할 수 있게(2026-09-02).
             "preview_stale": _preview_is_stale(job),
+            # ★1단계 게이트 통과 여부(관제 186) — 화면 canGoNext 가 이걸 본다. preview_status 는 효과음·배경음을
+            #   바꾸면 비워지는데(다시 만들어야 함), 그걸 게이트로도 쓰면 작업 전체가 잠겨 1단계로 떨어졌다.
+            "preview_gate_passed": _preview_gate_passed(job),
             "clean_status": clean_status,
             "clean_error": clean_error,
             # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면

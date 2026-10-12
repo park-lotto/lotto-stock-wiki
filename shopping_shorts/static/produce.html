@@ -9025,11 +9025,12 @@ async function _restoreWork(workId){
   // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거로 그냥 넘어간다.
   // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
   // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
-  PREVIEW_STATUS = null; WATCHED_ALL = false;
+  PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false;
   if(MIX_JOB){
     try{
       const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
       if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+      if(s && s.ok) PREVIEW_GATE_PASSED = !!s.preview_gate_passed;   // 관제 186 — 판단은 서버 _preview_gate_passed
       try{ MIX_FAIL_MSG = (s && s.ok && s.status==='failed') ? (s.error||'원인 미상') : null; }catch(_){}   // 앞 절단 하네스엔 선언부가 없다
       // ★진행 중 매칭 이어받기(2026-08-06 사장님 제보 "다른 작업 갔다 오면 매칭중이 풀린다").
       //   서버 잡은 계속 도는데 복원 경로가 폴링을 재시작하지 않아 UI만 잊었다.
@@ -9729,7 +9730,7 @@ function cancelMixReview(){
   try{ clearInterval(MIX_POLL); }catch(_){ } MIX_POLL=null;
   try{ clearInterval(PREVIEW_POLL); }catch(_){ } PREVIEW_POLL=null;
   try{ ++PREVIEW_GEN; }catch(_){ }
-  PREVIEW_STATUS=null; WATCHED_ALL=false; MIX_JOB=null; try{ MIX_FAIL_MSG=null; }catch(_){}
+  PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false; MIX_JOB=null; try{ MIX_FAIL_MSG=null; }catch(_){}
   try{ MIX_SCRIPT=null; }catch(e){}   // 같은 이유로 try(위 주석 참고)
   try{ _syncSceneLab(false); }catch(_){ }   // 실험실 iframe도 내린다(옛 잡을 계속 보여주면 안 된다)
   const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
@@ -11723,7 +11724,7 @@ async function startProduceMix(){
     // 옛 폴러도 여기서 죽인다: pollPreview는 주인이 아니면 return만 하고 자기 인터벌은 안 끄므로
     // 안 죽이면 옛 job을 2.5초마다 계속 두드린다.
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
-    PREVIEW_STATUS=null; WATCHED_ALL=false;
+    PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false;
     MIX_JOB=d.job_id; try{ MIX_FAIL_MSG=null; }catch(_){}
     // Vertex 미등록 회원 — 막지 않고 안내만(판정은 서버 vertex_route.needs_notice, 문구·주소도 서버가 준다)
     if(d.vertex_notice){ try{ const vn=d.vertex_notice; const box=document.createElement('div');
@@ -12128,7 +12129,7 @@ async function loadMixReview(){
   // 새 매칭 — 옛 확정본은 낡았다. 장면편집 안 확정본 탭을 잠그고 가조립으로 되돌린다
   // (2026-08-22). 안 지우면 새 편집안 옆에 옛 영상이 남아 "이게 지금 것"으로 보인다.
   if (typeof _labCall==='function') _labCall('clearConfirm');
-  PREVIEW_STATUS = null; WATCHED_ALL = false; refreshNextBtn();
+  PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false; refreshNextBtn();
 }
 
 // ── 장면 우선 후보 카드(2026-07-20, Task7) ─── CANDIDATES-START
@@ -12374,7 +12375,7 @@ async function cloneCandidate(idx){
   // ★새 job = 한 번도 미리보기를 본 적 없다. 재매칭(3779줄)과 같은 초기화를 그대로 건다 —
   //   안 걸면 옛 job의 preview_status를 물고 유료 자막제거로 그냥 넘어간다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
-  PREVIEW_STATUS=null; WATCHED_ALL=false;
+  PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false;
   const pv=document.getElementById('mixPreview'); if(pv) pv.innerHTML='';
   MIX_JOB = d.job_id; try{ MIX_FAIL_MSG = null; }catch(_){}
   CAND_SEL = idx;
@@ -12794,6 +12795,7 @@ async function openPaletteView(){
 // 편집안(텍스트)만 보고는 "잘 붙었나"를 판단할 수 없으므로 여기서 공짜로(clean_fn 없이) 렌더해
 // 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
 let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
+let PREVIEW_GATE_PASSED = false;   // 관제 186 — 서버 /api/mix/status 의 preview_gate_passed
 let PREVIEW_POLL = null;
 // 미리보기의 "현재 주인" 세대번호 — PM_GEN(위 openScriptModal/openGenFromWiki 경합)과 같은 패턴이다.
 // await 뒤 돌아온 continuation은 자기가 아직 주인인지 확인하고, 아니면 아무것도 건드리지 않는다.
@@ -12822,7 +12824,8 @@ function onPlayAllFinished(){
 function canGoNext(){
   // 'failed'도 통과시킨다 — 렌더가 고장 났을 때의 탈출구(스펙 §7.1).
   // ffmpeg 문제 하나로 사장님이 영영 갇히면 안 된다. 정상 경로에선 안 뜬다.
-  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed' || WATCHED_ALL;
+  // ★한 번 통과한 작업은 효과음·배경음을 바꿔 미리보기가 비워져도 잠그지 않는다(관제 186, 서버 판단).
+  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed' || WATCHED_ALL || PREVIEW_GATE_PASSED;
 }
 
 // T7: 게이트 판정 단일화(§4-3). 어느 단계가 지금 잠겨 있나 — jump·go·refreshNextBtn·renderSteps가
