@@ -669,9 +669,37 @@ def dim_of(effect, frames):
     return level,n
 
 
+# ★완성본(compose)이 장면 영상에 입히는 효과 → 캡컷 초안이 싣는 법. 판단 주인은 이 표 하나(관제 191).
+#   compose 에 효과가 새로 생기면 여기 줄을 더해야 시험(test_capcut_scene_fx)이 통과한다 — 캡컷에서 조용히 빠지는 일을 막는다.
+#   keyframe = capcut_fx_spans(확대·흑백 충격 키프레임) · under = dim_spans(영상 칸 밖 검정 + 어둡게 막)
+#   word_frames = overlay_spans(단어 강조 장면별 그림) · bake = capcut_bake_spans(완성본에서 그 장면을 그대로 떠 온다)
+CAPCUT_SCENE_FX = {
+    "media": "under",          # 영상 칸 밖 검정 바탕(pad=…:black) — 자막 칸 배경으로 보인다
+    "zoom": "keyframe", "zoomIn": "keyframe", "zoomMove": "keyframe", "panX": "keyframe", "panY": "keyframe",
+    "shock": "keyframe",
+    "dim": "under",
+    "animation": "word_frames",
+    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다
+    "highlight": "bake",       # 장면 강조(highlight_fc)
+    "camera": "bake",          # 틀 카메라 움직임(zoompan) — 글자 그림까지 같이 움직인다
+}
+
+
+def _needs_bake(effect, layer):
+    """이 장면을 완성본에서 떠 와야 하나 — CAPCUT_SCENE_FX 의 bake 효과가 실제로 켜졌는지."""
+    effect=effect or {}
+    if any((m or {}).get("fx")=="blur" for m in effect.get("masks") or []):
+        return True
+    from .video_assemble import scene_hl_of      # 강조 켜짐 해석은 렌더(compose→highlight_fc)와 같은 함수 — "on":false 는 꺼짐
+    if effect.get("highlight") and scene_hl_of({"scene_hl":effect.get("highlight")}):
+        return True
+    return any(abs(float(f.get("zoom",1))-1)>.00001 for f in (layer or {}).get("camera") or [])
+
+
 def dim_spans(scenes, snapshot, layers, folder):
-    """캡컷용 어둡게 구간 [{path,start,end}] — 영상 칸 자리만 반투명 검정 PNG(투명도 1-밝기).
-    완성본은 영상에 밝기를 곱하고, 캡컷은 같은 구간에 검정 막을 얹는다(같은 dim_of)."""
+    """캡컷용 영상 칸 아래 겹 구간 [{path,start,end}] — 영상 칸 밖은 검정(완성본 pad=…:black), 칸 자리는 어둡게 막(투명도 1-밝기).
+    완성본은 원본을 칸에 맞춰 자르고 나머지를 검게 채운다 → 캡컷엔 칸 밖을 덮는 검정 PNG 를 장면 내내 깐다(관제 191 — 왕혜원님
+    job 0ddd: 그 검정이 자막 배경으로 보였는데 캡컷엔 영상이 비쳤다). 어둡게(dim_of)는 같은 그림 칸 자리에 얹는다(관제 124)."""
     from PIL import Image
     from . import video_assemble as va
     folder,out=Path(folder),[]
@@ -682,14 +710,70 @@ def dim_spans(scenes, snapshot, layers, folder):
         start,end=float(scene["start"]),float(scene["end"])
         frames=round(end*30)-round(start*30)
         got=dim_of(effects.get(str(index)),frames)
-        if not got:
+        box=None
+        if layer.get("media"):
+            _,height,top,*_=media_geometry(layer,effects.get(str(index)))
+            if top>0 or top+height<va._OUT_H:
+                box=(top,height)
+        if not got and not box:
             continue
-        level,n=got
-        _,height,top,*_=media_geometry(layer,effects.get(str(index)))
-        img=Image.new("RGBA",(va._OUT_W,va._OUT_H),(0,0,0,0))
-        img.paste((0,0,0,round(255*(1-level))),(0,top,va._OUT_W,top+height))
-        path=folder/f"scene-style-dim-{index}.png";img.save(path)
-        out.append({"path":str(path),"start":start,"end":min(end,start+n/30)})
+        def _png(level, name):
+            img=Image.new("RGBA",(va._OUT_W,va._OUT_H),(0,0,0,255 if box else 0))
+            if box:
+                img.paste((0,0,0,0),(0,box[0],va._OUT_W,box[0]+box[1]))
+            if level is not None:
+                top_,height_=box if box else (media_geometry(layer,effects.get(str(index)))[2],media_geometry(layer,effects.get(str(index)))[1])
+                img.paste((0,0,0,round(255*(1-level))),(0,top_,va._OUT_W,top_+height_))
+            path=folder/name;img.save(path);return str(path)
+        cut=start
+        if got:
+            level,n=got
+            cut=min(end,start+n/30)
+            out.append({"path":_png(level,f"scene-style-dim-{index}.png"),"start":start,"end":cut})
+        if box and cut<end:
+            out.append({"path":_png(None,f"scene-style-under-{index}.png"),"start":cut,"end":end})
+    return out
+
+
+def capcut_bake_spans(scenes, snapshot, layers, folder, final_video):
+    """캡컷이 그림으로 못 싣는 효과(CAPCUT_SCENE_FX 의 bake)가 켜진 장면을 **완성본에서 그대로** 떠 온다 → [{path,start,end,scene}].
+    ★완성본이 지금 편집과 같은 판인지 장면마다 확인한다: 그 장면 글자 그림(불투명 픽셀)이 완성본 화면과 맞아야만 뜬다.
+      안 맞으면(렌더 뒤 편집) 그 장면은 건너뛰고 경고만 남긴다 — 옛 화면을 캡컷에 넣지 않는다.
+    인트로(prepend_still)가 붙은 완성본은 길이 차이만큼 밀어 읽는다."""
+    import subprocess,sys
+    from io import BytesIO
+    from PIL import Image,ImageChops,ImageStat
+    from . import video_assemble as va
+    if not final_video or not Path(final_video).exists() or not scenes:
+        return []
+    folder,out=Path(folder),[]
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    picks=[i for i,(sc,ly) in enumerate(zip(scenes,layers)) if ly and _needs_bake(effects.get(str(i)),ly)]
+    if not picks:
+        return []
+    shift=max(0.0,(va._probe_duration(str(final_video)) or 0.0)-float(scenes[-1]["end"]))
+    if shift>3.0:
+        print(f"[capcut_bake] 완성본 길이가 장면보다 {shift:.2f}초 길다 — 다른 판으로 보고 굽지 않는다",file=sys.stderr)
+        return []
+    for i in picks:
+        start,end=float(scenes[i]["start"]),float(scenes[i]["end"])
+        ink_path=folder/(layers[i].get("file") or "")
+        r=subprocess.run(["ffmpeg","-v","error","-ss",f"{shift+(start+end)/2:.3f}","-i",str(final_video),"-frames:v","1",
+                          "-f","image2pipe","-vcodec","png","-"],capture_output=True)
+        if not r.stdout or not ink_path.is_file():
+            print(f"[capcut_bake] 장면{i}: 완성본 프레임/글자 그림 없음 — 건너뜀",file=sys.stderr);continue
+        frame=Image.open(BytesIO(r.stdout)).convert("RGB").resize((va._OUT_W,va._OUT_H))
+        ink=Image.open(ink_path).convert("RGBA").resize((va._OUT_W,va._OUT_H))
+        solid=ink.getchannel("A").point(lambda v:255 if v>=250 else 0)
+        if ImageStat.Stat(solid).sum[0]/255>2000 and not layers[i].get("animation") and not layers[i].get("camera"):
+            diff=ImageStat.Stat(ImageChops.difference(frame,ink.convert("RGB")).convert("L"),solid).mean[0]
+            if diff>30:
+                print(f"[capcut_bake] 장면{i}: 완성본 글자가 지금 편집과 다르다(차 {diff:.1f}) — 렌더 뒤 편집으로 보고 건너뜀",file=sys.stderr)
+                continue
+        path=folder/f"scene-style-bake-{i:04d}.mp4"
+        va._run_ffmpeg(["ffmpeg","-y","-ss",f"{shift+start:.3f}","-i",str(final_video),"-t",f"{end-start:.3f}","-an",
+                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),"-pix_fmt","yuv420p","-r","30",str(path)])
+        out.append({"path":str(path),"start":start,"end":end,"scene":i})
     return out
 
 
