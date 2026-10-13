@@ -690,7 +690,8 @@ def _needs_bake(effect, layer):
     effect=effect or {}
     if any((m or {}).get("fx")=="blur" for m in effect.get("masks") or []):
         return True
-    if effect.get("highlight"):
+    from .video_assemble import scene_hl_of      # 강조 켜짐 해석은 렌더(compose→highlight_fc)와 같은 함수 — "on":false 는 꺼짐
+    if effect.get("highlight") and scene_hl_of({"scene_hl":effect.get("highlight")}):
         return True
     return any(abs(float(f.get("zoom",1))-1)>.00001 for f in (layer or {}).get("camera") or [])
 

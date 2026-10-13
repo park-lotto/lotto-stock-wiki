@@ -29,7 +29,8 @@ def test_every_compose_effect_has_capcut_route():
 def test_needs_bake_follows_table():
     assert scene_style._needs_bake({"masks": [{"fx": "blur"}]}, {})
     assert not scene_style._needs_bake({"masks": [{"fx": "fill"}]}, {})
-    assert scene_style._needs_bake({"highlight": {"cx": .5}}, {})
+    assert scene_style._needs_bake({"highlight": {"cx": .5, "on": True}}, {})
+    assert not scene_style._needs_bake({"highlight": {"cx": .5, "on": False}}, {})   # 꺼 둔 강조(실측 job 607562e55ddf 33장면)
     assert scene_style._needs_bake({}, {"camera": [{"zoom": 1}, {"zoom": 1.2}]})
     assert not scene_style._needs_bake({"zoom": 1.3, "shock": True}, {"camera": [{"zoom": 1}]})
 

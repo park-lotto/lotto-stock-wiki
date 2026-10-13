@@ -113,7 +113,18 @@ def rebuild(job):
     app_file = str(patch / "app.py") if patch and (patch / "app.py").exists() else None
     f = cea.route_fn(app, "api_mix_capcut", cea._CAPCUT_SUBS,
                      {"_AUDIT_OUT": wd, "Store": S, "mix_pipeline": cea._proxy(mp, export_sources_for=_esf)}, app_file)
-    resp = f(job, base="C:/capcut_check")
+    from shopping_shorts import scene_style as ss
+    _ctx = ss.context_for
+
+    def _rec(*a, **k):      # 라우트가 계산한 장면 시각을 남긴다 — 단어별 쪼갬 job 도 장면과 짝을 맞추게
+        r = _ctx(*a, **k)
+        (wd / "scenes.json").write_text(json.dumps([{"start": x["start"], "end": x["end"]} for x in r["scenes"]]), encoding="utf-8")
+        return r
+    ss.context_for = _rec
+    try:
+        resp = f(job, base="C:/capcut_check")
+    finally:
+        ss.context_for = _ctx
     if not (isinstance(resp, dict) and resp.get("ok")):
         raise SystemExit(f"{job} 초안 만들기 실패: {getattr(resp, 'body', resp)}")
     return wd
@@ -132,14 +143,23 @@ def audit(job, work=None):
     ov = [tr for tr in d["tracks"] if tr.get("name") == "scene-style-overlay"]
     segs = ov[0]["segments"] if ov else []
     out = OUT / job;out.mkdir(parents=True, exist_ok=True)
-    if len(segs) != len(layers):
-        print(job, f"장면 겹 {len(segs)}장 ≠ 장면 {len(layers)} — 단어별 쪼갬 job 은 아직 짝을 못 맞춘다");return None
-    mats = {m["id"]: m for m in d["materials"]["videos"]}
+    sj = work / "scenes.json"
+    if sj.exists():
+        spans = [(x["start"], x["end"]) for x in json.loads(sj.read_text(encoding="utf-8"))]
+    elif len(segs) == len(layers):
+        spans = [(s_["target_timerange"]["start"] / 1e6, (s_["target_timerange"]["start"] + s_["target_timerange"]["duration"]) / 1e6) for s_ in segs]
+    else:
+        print(job, f"장면 겹 {len(segs)}장 ≠ 장면 {len(layers)} — 단어별 쪼갬 job 은 --rebuild 로 재라");return None
+    # 완성본 앞에 인트로(prepend_still)가 붙었으면 그만큼 밀어 읽는다(캡컷엔 인트로가 없다)
+    fdur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(final)],
+                                capture_output=True, text=True).stdout.strip() or 0)
+    shift = fdur - d["duration"] / 1e6
+    shift = shift if 0.05 < shift < 3.0 else 0.0
+    from shopping_shorts.video_assemble import scene_hl_of
     fails = 0
-    for i, (seg, layer) in enumerate(zip(segs, layers)):
-        st, du = seg["target_timerange"]["start"] / 1e6, seg["target_timerange"]["duration"] / 1e6
-        t = st + du / 2
-        F, C = frame(final, t), composite(dd, d, t)
+    for i, ((st, en), layer) in enumerate(zip(spans, layers)):
+        t = (st + en) / 2
+        F, C = frame(final, t + shift), composite(dd, d, t)
         if F is None:
             continue
         F = F.resize((W, H))
@@ -161,7 +181,7 @@ def audit(job, work=None):
             ratio = cs / max(fs, 1e-3)
             msg += f" | 흐림 선명도 완성{fs:6.1f} 캡컷{cs:6.1f}(×{ratio:4.1f}) 차{bd:4.1f}"
             bad = bad or (ratio > 2.0 and bd > 8)
-        hl = (effects.get(str(i)) or {}).get("highlight") or {}
+        hl = scene_hl_of({"scene_hl": (effects.get(str(i)) or {}).get("highlight")}) or {}
         if hl:     # 장면 강조 — 원 자리(cx·cy·r, 화면 너비 기준) 안팎이 완성본과 같은가
             cx, cy, r = float(hl.get("cx", .5)) * W, float(hl.get("cy", .55)) * H, float(hl.get("r", .22)) * W
             box = (max(0, round(cx - r * 1.3)), max(0, round(cy - r * 1.3)), min(W, round(cx + r * 1.3)), min(H, round(cy + r * 1.3)))
@@ -172,7 +192,7 @@ def audit(job, work=None):
         print(("FAIL " if bad else "ok   ") + msg)
         side = Image.new("RGB", (W * 2 // 3, H // 3));side.paste(F.resize((W // 3, H // 3)), (0, 0));side.paste(C.resize((W // 3, H // 3)), (W // 3, 0))
         side.save(out / f"scene_{i:02d}.jpg", quality=80)
-    print(f"== {job} FAIL {fails} / 장면 {len(layers)}  (그림: {out})")
+    print(f"== {job} (인트로 {shift:.2f}초 밀어 읽음) FAIL {fails} / 장면 {len(layers)}  (그림: {out})")
     return fails
 
 
