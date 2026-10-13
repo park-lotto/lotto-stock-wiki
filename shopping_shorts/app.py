@@ -10783,21 +10783,32 @@ def api_mix_capcut(job_id: str, base: str = ""):
         if name.endswith(".json"):
             texts[name] = (proj / name).read_text(encoding="utf-8")
         else:
-            assets.append({"name": name, "url": f"/api/mix/capcut_asset/{job_id}/{name}"})
+            # ★어느 내보내기(project 폴더)의 파일인지 주소에 박는다 — 같은 이름 파일이 옛 내보내기
+            #   폴더에도 남아 있어, 이름만 주면 서버가 옛 그림(수정 전 자막 바탕 없음)을 보냈다(관제 195).
+            assets.append({"name": name, "url": f"/api/mix/capcut_asset/{job_id}/{name}?p={urllib.parse.quote(project)}"})
     return {"ok": True, "project": project, "texts": texts, "assets": assets}
 
 
 @app.get("/api/mix/capcut_asset/{job_id}/{name}")
-def api_mix_capcut_asset(job_id: str, name: str):
-    """capcut 조립 폴더의 에셋(mp4/mp3) 서빙. 경로순회 차단 후 work/<job>/capcut/*/<name>."""
-    safe_j, safe_n = os.path.basename(job_id), os.path.basename(name)
-    if safe_j != job_id or safe_n != name:
+def api_mix_capcut_asset(job_id: str, name: str, p: str = ""):
+    """capcut 조립 폴더의 에셋 서빙 — work/<job>/capcut/<p>/<name>.
+
+    ★p(내보내기 폴더)가 열쇠다. 종전엔 capcut/*/<name> 중 **아무거나**(glob 첫 번째) 보내,
+    같은 이름 파일이 남은 옛 내보내기 폴더의 그림(수정 전)이 새 캡컷 프로젝트에 섞였다(관제 195).
+    p 없는 옛 주소는 가장 최근 폴더의 파일. 브라우저 캐시도 막는다(같은 주소·다른 내용)."""
+    safe_j, safe_n, safe_p = os.path.basename(job_id), os.path.basename(name), os.path.basename(p or "")
+    if safe_j != job_id or safe_n != name or safe_p != (p or ""):
         return JSONResponse(status_code=400, content={"ok": False})
     capdir = _MIX_WORK_DIR / job_id / "capcut"
-    hits = list(capdir.glob(f"*/{safe_n}")) if capdir.exists() else []
+    if safe_p:
+        f = capdir / safe_p / safe_n
+        hits = [f] if f.is_file() else []
+    else:
+        hits = sorted(capdir.glob(f"*/{safe_n}") if capdir.exists() else [],
+                      key=lambda x: x.parent.stat().st_mtime, reverse=True)
     if not hits:
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(hits[0]))
+    return FileResponse(str(hits[0]), headers={"Cache-Control": "no-store"})
 
 
 def _thumb_dir(job_id: str):
