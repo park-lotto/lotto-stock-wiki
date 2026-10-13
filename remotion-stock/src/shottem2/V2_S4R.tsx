@@ -33,17 +33,14 @@ const camAt = (s: S4Scene, t: number) => {
   return { x: cx, y: cy, z };
 };
 
-// 차분한 설명 녹화 — 확대·펀치 없이 녹화 화면 전체를 원래 비율(16:9) 그대로 보여 준다
+// 차분한 설명 녹화 — 확대·펀치 없이 녹화 화면을 화면 가득(16:9 그대로) 보여 준다
 const Monitor: React.FC<{ s: S4Scene; k: string }> = ({ k }) => {
   const f = useCurrentFrame();
   const enter = interpolate(f, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
-  const W = 1552, H = 873;
   return (
-    <AbsoluteFill style={{ alignItems: 'center', paddingTop: 72 }}>
-      <div style={{ width: W, height: H, borderRadius: 14, overflow: 'hidden', background: '#000',
-        border: '2px solid rgba(250,204,21,0.45)', boxShadow: '0 20px 60px rgba(0,0,0,0.7)', opacity: enter }}>
-        <OffthreadVideo src={staticFile(`shottem2/v2s4/${k}/rec.mp4`)} muted style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-      </div>
+    <AbsoluteFill style={{ opacity: enter, background: '#000' }}>
+      <OffthreadVideo src={staticFile(`shottem2/v2s4/${k}/rec.mp4`)} muted style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      <AbsoluteFill style={{ background: 'linear-gradient(transparent 78%, rgba(0,0,0,0.75) 100%)' }} />
     </AbsoluteFill>
   );
 };
@@ -53,7 +50,7 @@ const Chip: React.FC<{ text: string; n: number }> = ({ text, n }) => {
   const p = spring({ frame: f, fps: FPS, config: { damping: 14, mass: 0.6 } });
   const out = interpolate(f, [FPS * 3.2, FPS * 3.6], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
-    <AbsoluteFill style={{ padding: '14px 184px', pointerEvents: 'none' }}>
+    <AbsoluteFill style={{ padding: '24px 32px', pointerEvents: 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, transform: `translateX(${(1 - p) * -80}px)`, opacity: p * out }}>
         <div style={{ fontFamily: F.mono, fontSize: 24, fontWeight: 700, color: C.ink, background: C.gold, borderRadius: 10, padding: '4px 14px' }}>{String(n).padStart(2, '0')}</div>
         <div style={{ fontFamily: F.sans, fontSize: 32, fontWeight: 800, color: 'white', textShadow: '0 4px 18px rgba(0,0,0,0.9)', background: 'rgba(11,13,16,0.72)', borderRadius: 12, padding: '6px 22px', borderLeft: `6px solid ${C.gold}` }}>{text}</div>
@@ -87,12 +84,6 @@ export const V2_S4R: React.FC<{ k: string; bgm?: boolean }> = ({ k, bgm = true }
     <AbsoluteFill style={{ background: C.ink }}>
       <Backdrop kind="aurora" seed={s.seed ?? 3} dim={0.55} />
       <Monitor s={s} k={k} />
-      {s.chips.map(([at, text], i) => (
-        <Sequence key={'c' + i} from={Math.round(at * FPS)} durationInFrames={Math.round(3.7 * FPS)}>
-          <Chip text={text} n={i + 1} />
-          <Audio src={staticFile('sfx/transition_swipe.mp3')} volume={0.45} />
-        </Sequence>
-      ))}
       <WordCaption k={'s4' + k} />
       <Audio src={staticFile(`shottem2/v2s4/${k}/voice.mp3`)} />
       {bgm ? <Audio src={staticFile(BGM)} loop volume={0.08} /> : null}
