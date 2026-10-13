@@ -1,5 +1,6 @@
 import React from 'react';
-import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
+import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, interpolate } from 'remotion';
+import { C as COL, F as FONT } from './theme2';
 import { Scene, Para } from './V2_Engine';
 import { KakaoChat, Challenge30, MemberGallery, WordCaption } from './V2_Fx2';
 import { V2_S47_Proof } from './V2_S47_Proof';
@@ -17,16 +18,30 @@ const CH = 450;               // 카톡 장면 15초
 const VEND = F(50.27);        // 음성 끝
 const P2 = CUT + CH;          // 나레이션 다시 시작하는 프레임
 const at = (voiceSec: number) => P2 + F(voiceSec) - CUT;   // 뒤쪽 음성 시각 → 전체 프레임
-// 완성본 비교 20초 — "나란히 놓아 보겠습니다"(5.9초)에서 나레이션을 멈추고 원본 10초 · 완성본 10초를 원래 소리로 튼다
-const CMP_AT = F(5.9);
+// 완성본 비교 20초 — 맨 앞, 나레이션 없이 원본·완성본을 양옆에 나란히 틀고(소리는 앞 10초 원본 · 뒤 10초 완성본) 그다음 나레이션이 처음부터
 const CMP = 600;
 export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20 + CMP;
+
+// 조회수 목록 — 원본 캡처(1092x3478)를 1.7배로 키워 천천히 내려 보며 글자가 읽히게
+const ListScroll: React.FC = () => {
+  const f = useCurrentFrame();
+  const W = 1860, H = (3478 * W) / 1092;
+  const y = interpolate(f, [0, 132], [0, -(H * 0.42)], { extrapolateRight: 'clamp' });
+  return (
+    <AbsoluteFill style={{ background: '#fff', overflow: 'hidden', alignItems: 'center' }}>
+      <Img src={staticFile('shottem2/s47/list.png')} style={{ width: W, height: H, transform: 'translateY(' + y + 'px)' }} />
+      <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 330 }}>
+        <div style={{ padding: '14px 44px', background: COL.gold, color: '#111', font: '900 64px ' + FONT.sans, transform: 'rotate(-2deg)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>실제로 받은 조회수</div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
 
 const HEAD: Para[] = [
   { dur: 16.9, back: 'hero', seed: 21, hits: [
     { t: '완성본 vs 원본', style: 'mega' }, { t: '어떻습니까?', style: 'neon' },
     { t: '머리 쥐어짠 순간\n0번', style: 'mega', accent: '0번' }, { t: '눈앞에서\n직접 만들어 보였습니다', style: 'flip', accent: '직접' } ], hitAt: [0, 0.35, 0.5, 0.78] },
-  { dur: 4.4, img: 'shottem2/s47/list.png', hits: [{ t: '실제로 받은 조회수', style: 'tag' }] },
+  { dur: 4.4, hits: [{ t: '', node: <ListScroll /> }] },
   { dur: 1.7, hits: [{ t: '', node: <MemberGallery title="회원님들 반응도 보시죠" sub="1기 회원 실제 후기" seed={6} /> }] },
 ];
 const TAIL: Para[] = [
@@ -72,16 +87,34 @@ const Body: React.FC = () => (
   </AbsoluteFill>
 );
 
-const Compare20: React.FC = () => (
-  <AbsoluteFill style={{ background: '#05060a' }}>
-    <Sequence durationInFrames={300}><Solo src={SSUL} label="지금 터지는 원본" sub="다른 썰쇼핑 채널의 터진 영상" loop={720} sound /></Sequence>
-    <Sequence from={300}><Solo src={MINE} label="숏템메이커 완성본" sub="방금 눈앞에서 만든 영상" gold loop={860} sound /></Sequence>
-  </AbsoluteFill>
-);
+const Side: React.FC<{ src: string; label: string; gold?: boolean; on: boolean }> = ({ src, label, gold, on }) => {
+  const W = 470;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, opacity: on ? 1 : 0.55, transform: 'scale(' + (on ? 1 : 0.94) + ')' }}>
+      <div style={{ padding: '8px 28px', borderRadius: 999, font: '900 36px ' + FONT.sans, color: gold ? '#111' : '#fff', background: gold ? COL.gold : 'rgba(255,255,255,0.18)' }}>{label}{on ? '  🔊' : ''}</div>
+      <div style={{ width: W, height: (W * 16) / 9, borderRadius: 28, overflow: 'hidden', background: '#000',
+        boxShadow: (gold ? '0 0 0 5px ' + COL.gold : '0 0 0 3px rgba(255,255,255,0.5)') + ', 0 30px 90px rgba(0,0,0,0.9)' }}>
+        <OffthreadVideo src={staticFile(src)} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+    </div>
+  );
+};
+const Compare20: React.FC = () => {
+  const f = useCurrentFrame();
+  const left = f < 300;
+  return (
+    <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 40%, #1b1d2a 0%, #05060a 75%)', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 160 }}>
+      <Sequence durationInFrames={CMP} layout="none"><Audio src={staticFile(SSUL)} volume={(t) => (t < 300 ? 1 : 0)} /></Sequence>
+      <Sequence durationInFrames={CMP} layout="none"><Audio src={staticFile(MINE)} volume={(t) => (t < 300 ? 0 : 1)} /></Sequence>
+      <Side src={SSUL} label="지금 터지는 원본" on={left} />
+      <div style={{ font: '900 110px ' + FONT.sans, color: COL.gold, transform: 'rotate(-6deg)', WebkitTextStroke: '4px #000', paintOrder: 'stroke fill' }}>VS</div>
+      <Side src={MINE} label="숏템메이커 완성본" gold on={!left} />
+    </AbsoluteFill>
+  );
+};
 export const V2_S47V2: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
-    <Sequence durationInFrames={CMP_AT}><Body /></Sequence>
-    <Sequence from={CMP_AT} durationInFrames={CMP}><Compare20 /></Sequence>
-    <Sequence from={CMP_AT + CMP}><Sequence from={-CMP_AT}><Body /></Sequence></Sequence>
+    <Sequence durationInFrames={CMP}><Compare20 /></Sequence>
+    <Sequence from={CMP}><Body /></Sequence>
   </AbsoluteFill>
 );

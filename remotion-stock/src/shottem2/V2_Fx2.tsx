@@ -123,10 +123,7 @@ const Bubble: React.FC<{ r: typeof REVIEWS[number]; at: number; big: boolean }> 
           font: '500 ' + (big ? 40 : 34) + 'px/1.5 ' + F.sans, color: '#f1f5f9',
         }}>
           {typing ? <span style={{ letterSpacing: 8 }}>{'●'.repeat(1 + (Math.floor(f / 4) % 3))}</span> : (
-            <>{a}<span style={{ position: 'relative', color: '#111', fontWeight: 900 }}>
-              <span style={{ position: 'absolute', left: -4, right: (100 - hlp) + '%', top: 4, bottom: 0, background: C.gold, borderRadius: 6, zIndex: 0 }} />
-              <span style={{ position: 'relative', color: hlp > 50 ? '#111' : '#f1f5f9' }}>{r.hl}</span>
-            </span>{b}</>
+            <>{a}<span style={{ fontWeight: 900, borderRadius: 6, padding: '0 4px', backgroundImage: 'linear-gradient(' + C.gold + ',' + C.gold + ')', backgroundRepeat: 'no-repeat', backgroundSize: hlp + '% 100%', WebkitBoxDecorationBreak: 'clone', boxDecorationBreak: 'clone', color: hlp >= 100 ? '#111' : '#f1f5f9' }}>{r.hl}</span>{b}</>
           )}
         </div>
       </div>
