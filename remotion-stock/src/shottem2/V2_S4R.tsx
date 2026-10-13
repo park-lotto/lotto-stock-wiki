@@ -33,28 +33,16 @@ const camAt = (s: S4Scene, t: number) => {
   return { x: cx, y: cy, z };
 };
 
-const Monitor: React.FC<{ s: S4Scene; k: string }> = ({ s, k }) => {
+// 차분한 설명 녹화 — 확대·펀치 없이 녹화 화면 전체를 원래 비율(16:9) 그대로 보여 준다
+const Monitor: React.FC<{ s: S4Scene; k: string }> = ({ k }) => {
   const f = useCurrentFrame();
-  const t = f / FPS;
-  // 카메라는 0.5초 앞뒤를 평균해 덜컹이지 않게
-  const cams = [-0.5, -0.25, 0, 0.25, 0.5].map((d) => camAt(s, Math.max(0, t + d)));
-  const cam = { x: cams.reduce((a, c) => a + c.x, 0) / 5, y: cams.reduce((a, c) => a + c.y, 0) / 5, z: cams.reduce((a, c) => a + c.z, 0) / 5 };
-  const lastCut = [...s.cuts].reverse().find((c) => c <= t) ?? 0;
-  const pf = Math.round((t - lastCut) * FPS);
-  const punch = lastCut > 0 ? 1 + 0.04 * Math.max(0, 1 - pf / 8) : 1;
-  const enter = spring({ frame: f, fps: FPS, config: { damping: 16 } });
-  const W = 1640, H = 922;
-  const ox = (0.5 - cam.x) * W * (cam.z - 1), oy = (0.5 - cam.y) * H * (cam.z - 1);
-  const clampX = (W * (cam.z - 1)) / 2, clampY = (H * (cam.z - 1)) / 2;
+  const enter = interpolate(f, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
+  const W = 1552, H = 873;
   return (
-    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', paddingBottom: 40 }}>
-      <div style={{ width: W, height: H, borderRadius: 22, overflow: 'hidden', position: 'relative',
-        border: '2px solid rgba(250,204,21,0.45)', boxShadow: '0 30px 90px rgba(0,0,0,0.75), 0 0 60px rgba(250,204,21,0.12)',
-        transform: `scale(${(0.9 + 0.1 * enter) * punch})`, opacity: enter }}>
-        <div style={{ position: 'absolute', inset: 0, transform: `translate(${Math.max(-clampX, Math.min(clampX, ox))}px, ${Math.max(-clampY, Math.min(clampY, oy))}px) scale(${cam.z})` }}>
-          <OffthreadVideo src={staticFile(`shottem2/v2s4/${k}/rec.mp4`)} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        {lastCut > 0 && pf < 5 ? <AbsoluteFill style={{ background: 'white', opacity: 0.18 * (1 - pf / 5) }} /> : null}
+    <AbsoluteFill style={{ alignItems: 'center', paddingTop: 72 }}>
+      <div style={{ width: W, height: H, borderRadius: 14, overflow: 'hidden', background: '#000',
+        border: '2px solid rgba(250,204,21,0.45)', boxShadow: '0 20px 60px rgba(0,0,0,0.7)', opacity: enter }}>
+        <OffthreadVideo src={staticFile(`shottem2/v2s4/${k}/rec.mp4`)} muted style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
       </div>
     </AbsoluteFill>
   );
@@ -65,10 +53,10 @@ const Chip: React.FC<{ text: string; n: number }> = ({ text, n }) => {
   const p = spring({ frame: f, fps: FPS, config: { damping: 14, mass: 0.6 } });
   const out = interpolate(f, [FPS * 3.2, FPS * 3.6], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
-    <AbsoluteFill style={{ padding: '46px 70px', pointerEvents: 'none' }}>
+    <AbsoluteFill style={{ padding: '14px 184px', pointerEvents: 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, transform: `translateX(${(1 - p) * -80}px)`, opacity: p * out }}>
-        <div style={{ fontFamily: F.mono, fontSize: 30, fontWeight: 700, color: C.ink, background: C.gold, borderRadius: 10, padding: '4px 14px' }}>{String(n).padStart(2, '0')}</div>
-        <div style={{ fontFamily: F.sans, fontSize: 44, fontWeight: 900, color: 'white', textShadow: '0 4px 18px rgba(0,0,0,0.9)', background: 'rgba(11,13,16,0.72)', borderRadius: 12, padding: '6px 22px', borderLeft: `6px solid ${C.gold}` }}>{text}</div>
+        <div style={{ fontFamily: F.mono, fontSize: 24, fontWeight: 700, color: C.ink, background: C.gold, borderRadius: 10, padding: '4px 14px' }}>{String(n).padStart(2, '0')}</div>
+        <div style={{ fontFamily: F.sans, fontSize: 32, fontWeight: 800, color: 'white', textShadow: '0 4px 18px rgba(0,0,0,0.9)', background: 'rgba(11,13,16,0.72)', borderRadius: 12, padding: '6px 22px', borderLeft: `6px solid ${C.gold}` }}>{text}</div>
       </div>
     </AbsoluteFill>
   );
@@ -103,17 +91,6 @@ export const V2_S4R: React.FC<{ k: string; bgm?: boolean }> = ({ k, bgm = true }
         <Sequence key={'c' + i} from={Math.round(at * FPS)} durationInFrames={Math.round(3.7 * FPS)}>
           <Chip text={text} n={i + 1} />
           <Audio src={staticFile('sfx/transition_swipe.mp3')} volume={0.45} />
-        </Sequence>
-      ))}
-      {s.punches.map(([at, text, accent], i) => (
-        <Sequence key={'p' + i} from={Math.round(at * FPS)} durationInFrames={Math.round(2.4 * FPS)}>
-          <Punch text={text} accent={accent} />
-          <Audio src={staticFile('sfx/sting_hit.mp3')} volume={0.55} />
-        </Sequence>
-      ))}
-      {s.cuts.slice(1).map((c, i) => (
-        <Sequence key={'x' + i} from={Math.max(0, Math.round(c * FPS) - 3)} durationInFrames={20}>
-          <Audio src={staticFile('sfx/sting_whoosh.mp3')} volume={0.22} />
         </Sequence>
       ))}
       <WordCaption k={'s4' + k} />
