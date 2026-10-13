@@ -2,6 +2,9 @@ import React from 'react';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame, interpolate } from 'remotion';
 import { C as COL, F as FONT } from './theme2';
 import { Scene, Para } from './V2_Engine';
+import { CAP } from './V2_Captions';
+import { V3W } from './V2_V3Words';
+Object.assign(CAP, { s47n: V3W.s47n });
 import { KakaoChat, Challenge30, MemberGallery, WordCaption } from './V2_Fx2';
 import { V2_S47_Proof } from './V2_S47_Proof';
 import { Solo } from './V2_S41';
@@ -18,9 +21,19 @@ const CH = 450;               // 카톡 장면 15초
 const VEND = F(50.27);        // 음성 끝
 const P2 = CUT + CH;          // 나레이션 다시 시작하는 프레임
 const at = (voiceSec: number) => P2 + F(voiceSec) - CUT;   // 뒤쪽 음성 시각 → 전체 프레임
-// 완성본 비교 20초 — 맨 앞, 나레이션 없이 원본·완성본을 양옆에 나란히 틀고(소리는 앞 10초 원본 · 뒤 10초 완성본) 그다음 나레이션이 처음부터
-const CMP = 600;
-export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20 + CMP;
+// 완성본 비교 — 맨 앞, 나레이션 없이: 왼쪽 원본(흑백·무음) · 오른쪽 숏템메이커 완성본(원래 소리로 끝까지)
+const CMP = Math.round(28.8 * 30);
+// 비교 뒤 새 멘트(필재 s47n, 16.3초) → 옛 나레이션은 "그리고 이건,"(16.9초)부터 이어 붙인다
+const NEWHEAD: Para[] = [
+  { dur: 16.8, back: 'hero', seed: 21, hitAt: [0, 0.25, 0.42, 0.73], hits: [
+    { t: '비교해 보니\n어떻습니까?', style: 'mega', accent: '어떻습니까?' },
+    { t: '이 정도면\n괜찮지 않습니까?', style: 'neon' },
+    { t: '키보드 0번\n마우스로만', style: 'mega', accent: '0번' },
+    { t: '처음부터 끝까지\n직접 만들어 보였습니다', style: 'flip', accent: '직접' } ] },
+];
+const NH = Math.round(16.8 * 30);
+const OLD_AT = F(16.9);
+export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20 + CMP + NH - OLD_AT;
 
 // 조회수 목록 — 원본 캡처(1092x3478)를 1.7배로 키워 천천히 내려 보며 글자가 읽히게
 const ListScroll: React.FC = () => {
@@ -87,34 +100,29 @@ const Body: React.FC = () => (
   </AbsoluteFill>
 );
 
-const Side: React.FC<{ src: string; label: string; gold?: boolean; on: boolean }> = ({ src, label, gold, on }) => {
+const Side: React.FC<{ src: string; label: string; gold?: boolean; gray?: boolean }> = ({ src, label, gold, gray }) => {
   const W = 470;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, opacity: on ? 1 : 0.55, transform: 'scale(' + (on ? 1 : 0.94) + ')' }}>
-      <div style={{ padding: '8px 28px', borderRadius: 999, font: '900 36px ' + FONT.sans, color: gold ? '#111' : '#fff', background: gold ? COL.gold : 'rgba(255,255,255,0.18)' }}>{label}{on ? '  🔊' : ''}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <div style={{ padding: '8px 28px', borderRadius: 999, font: '900 36px ' + FONT.sans, color: gold ? '#111' : '#fff', background: gold ? COL.gold : 'rgba(255,255,255,0.18)' }}>{label}</div>
       <div style={{ width: W, height: (W * 16) / 9, borderRadius: 28, overflow: 'hidden', background: '#000',
-        boxShadow: (gold ? '0 0 0 5px ' + COL.gold : '0 0 0 3px rgba(255,255,255,0.5)') + ', 0 30px 90px rgba(0,0,0,0.9)' }}>
-        <OffthreadVideo src={staticFile(src)} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        boxShadow: (gold ? '0 0 0 5px ' + COL.gold : '0 0 0 3px rgba(255,255,255,0.4)') + ', 0 30px 90px rgba(0,0,0,0.9)' }}>
+        <OffthreadVideo src={staticFile(src)} muted={gray} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: gray ? 'grayscale(1) brightness(0.8)' : undefined }} />
       </div>
     </div>
   );
 };
-const Compare20: React.FC = () => {
-  const f = useCurrentFrame();
-  const left = f < 300;
-  return (
-    <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 40%, #1b1d2a 0%, #05060a 75%)', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 160 }}>
-      <Sequence durationInFrames={CMP} layout="none"><Audio src={staticFile(SSUL)} volume={(t) => (t < 300 ? 1 : 0)} /></Sequence>
-      <Sequence durationInFrames={CMP} layout="none"><Audio src={staticFile(MINE)} volume={(t) => (t < 300 ? 0 : 1)} /></Sequence>
-      <Side src={SSUL} label="지금 터지는 원본" on={left} />
-      <div style={{ font: '900 110px ' + FONT.sans, color: COL.gold, transform: 'rotate(-6deg)', WebkitTextStroke: '4px #000', paintOrder: 'stroke fill' }}>VS</div>
-      <Side src={MINE} label="숏템메이커 완성본" gold on={!left} />
-    </AbsoluteFill>
-  );
-};
+const CompareFull: React.FC = () => (
+  <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 40%, #1b1d2a 0%, #05060a 75%)', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 160 }}>
+    <Side src={SSUL} label="지금 터지는 원본" gray />
+    <div style={{ font: '900 110px ' + FONT.sans, color: COL.gold, transform: 'rotate(-6deg)', WebkitTextStroke: '4px #000', paintOrder: 'stroke fill' }}>VS</div>
+    <Side src={MINE} label="숏템메이커 완성본" gold />
+  </AbsoluteFill>
+);
 export const V2_S47V2: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
-    <Sequence durationInFrames={CMP}><Compare20 /></Sequence>
-    <Sequence from={CMP}><Body /></Sequence>
+    <Sequence durationInFrames={CMP}><CompareFull /></Sequence>
+    <Sequence from={CMP} durationInFrames={NH}><Scene voice="shottem2/v2s47/s47n.mp3" paras={NEWHEAD} cap="s47n" /></Sequence>
+    <Sequence from={CMP + NH}><Sequence from={-OLD_AT}><Body /></Sequence></Sequence>
   </AbsoluteFill>
 );
