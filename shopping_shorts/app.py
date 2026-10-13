@@ -20993,6 +20993,14 @@ def api_produce_autoload(request: Request, body: dict):
     codes = [(i.get("shortcode") or "").strip()
              or hashlib.sha1((i.get("url") or "").strip().encode()).hexdigest()[:12] for i in items]
     tried = store.autoload_attempts(codes)
+    # ★이미 도는 중인 영상은 다시 걸지 않는다(관제 194, 2026-10-13 실측 work db0bcb66d0b8).
+    #   화면은 페이지를 열 때마다 이 함수를 부르는데, 앞 호출이 아직 도는 중에 새로고침하면
+    #   같은 영상을 또 받고(PC 릴레이 3중 다운로드) 시도 횟수만 깎였다 — 30초 새 3번 새로고침에
+    #   한도 3회가 다 차서, 그 시도가 하나라도 실패하면 영영 포기로 굳는다.
+    #   '도는 중' 판정은 _analysis_state와 같은 기준(_AUTOLOAD_STALL_SEC)을 쓴다.
+    _inflight = {k for k, v in store.autoload_status(codes).items()
+                 if v.get("attempts") and not v.get("last_error")
+                 and v.get("age_sec") is not None and v["age_sec"] < _AUTOLOAD_STALL_SEC}
 
     # ★3단계 구조(2026-07-30 동시화). 예전엔 영상들을 순차로 돌려 제미니 대기가 그대로
     #   더해졌다(3개면 3배). 대기의 정체는 우리 CPU가 아니라 **제미니 업로드·처리 응답**
@@ -21027,6 +21035,9 @@ def api_produce_autoload(request: Request, body: dict):
         #   바꾼 것과 짝인데, 읽는 쪽 두 곳이 옛 기준으로 남아 있었다).
         cached = store.get_extract(code, method=current_method())
         cache_ok = has_usable_result(cached)
+        if not cache_ok and code in _inflight:
+            slots[i] = {"shortcode": code, "status": "running"}
+            continue
         if not cache_ok:
             # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
             if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
