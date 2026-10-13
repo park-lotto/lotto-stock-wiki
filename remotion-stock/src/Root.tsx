@@ -20,6 +20,8 @@ import { V2_S1B, V2_S1B_FRAMES } from './shottem2/V2_S1b';
 import { V2_S47V2, V2_S47V2_FRAMES } from './shottem2/V2_S47v2';
 import { V2_S3, V2_S3_FRAMES, V2_S47F, V2_S47F_FRAMES, V2_S5, V2_S5_FRAMES, V2_S6, V2_S6_FRAMES, V2_S7, V2_S7_FRAMES, V2_S8, V2_S8_FRAMES } from './shottem2/V2_Rest';
 import { V2_S41, V2_S41_FRAMES, V2_S47H, V2_S47H_FRAMES } from './shottem2/V2_S41';
+import { V2_S4R, s4Frames } from './shottem2/V2_S4R';
+import { S4R } from './shottem2/V2_S4Data';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
 import { LeadingStockVideo } from './LeadingStockVideo';
@@ -913,6 +915,9 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
       />
+      {Object.keys(S4R).map((k) => (
+        <Composition key={k} id={"V2-S4R-" + k} component={V2_S4R} durationInFrames={s4Frames(k)} fps={30} width={1920} height={1080} defaultProps={{ k, bgm: true }} />
+      ))}
       <Composition
         id="V2-S41"
         component={V2_S41}
