@@ -3427,7 +3427,9 @@ function beatFill(i, clips){
            lack: Math.max(0, need - have),
            // ★구절 맞춤을 끈 칸은 담은 장면을 **줄여서 전부** 넣는다(2026-09-14) — 버려지는 장면이
            //   없으니 '안 나와요'가 거짓말이 된다(사장님 로컬 조작 캡쳐 1493). 남음은 0으로 본다.
-           over: (typeof CUTS !== "undefined" && CUTS[i]) ? 0 : Math.max(0, have - need),
+           // ★[빠르게 맞추기](관제 192)로 컷 길이보다 더 읽는 몫은 화면에 나온다 — 컷 계산(planClips) 결과에서 빼고 센다.
+           over: (typeof CUTS !== "undefined" && CUTS[i]) ? 0
+             : Math.max(0, have - need - cuts.reduce((a, c) => a + (c.fit ? Math.max(0, (+c.src_dur || 0) - (+c.dur || 0)) : 0), 0)),
            gap: (typeof cutsGap === 'function') ? cutsGap(i) : 0,
            tinyN: ids.length - okIds.length,
            empty: cuts.length === 0,
