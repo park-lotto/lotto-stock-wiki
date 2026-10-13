@@ -131,6 +131,45 @@ def write_summary():
     (REFS / "요약.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
+DESK = Path(r"C:/Users/TheRose/Desktop/대화형_연구")
+
+
+def _safe(t):
+    return re.sub(r'[\\/:*?"<>|\s]+', "", t or "")[:20] or "제품"
+
+
+def export_desktop():
+    """바탕화면 대화형_연구/참고영상 — 편마다 영상 + 줄 대본(md) 한 쌍, 번호 = 분석한 순서. 요약표도 복사."""
+    import shutil
+    out = DESK / "참고영상"
+    out.mkdir(parents=True, exist_ok=True)
+    for n, f in enumerate(sorted(REFS.glob("*.json"), key=lambda p: p.stat().st_mtime), 1):
+        g = json.loads(f.read_text(encoding="utf-8")); st = g.get("stats") or {}
+        stem = f"{n:02d}_{_safe(g.get('product'))}_{f.stem}"
+        for old in out.glob(f"*_{f.stem}.*"):          # 제품명이 바뀌어 다시 돌린 경우 옛 이름 정리
+            if old.stem != stem:
+                old.unlink()
+        mp4 = REFS / f"{f.stem}.mp4"
+        if mp4.exists() and not (out / f"{stem}.mp4").exists():
+            shutil.copy2(mp4, out / f"{stem}.mp4")
+        md = [f"# {n:02d}. {g.get('product','')}", "",
+              f"- 링크: {g.get('url','')}",
+              f"- 형식: {g.get('format','')}",
+              f"- 훅(첫 2초): {g.get('hook','')}",
+              f"- 주고받기: {g.get('turns','')}",
+              f"- 왜 먹히나: {' '.join(str(g.get('why_works','')).split())}",
+              f"- 자막: {g.get('subtitle','')}",
+              f"- 숫자: 목소리 {g.get('n_voices')} · 줄 {st.get('줄')} · 나레이션 {st.get('나레이션줄')}줄 · 화자전환 {st.get('화자전환')}번"
+              f" · 첫 대사 {st.get('첫대사초')}초 · 제품 등장 {st.get('제품초')}초", "",
+              "| 초 | 누가 | 대사 | 역할 | 목소리 |", "|---|---|---|---|---|"]
+        for L in g.get("lines") or []:
+            h = L.get("heard")
+            warn = " ⚠받아쓰기와 다름" if h is not None and h < 0.5 else ""
+            md.append(f"| {L.get('t')} | {L.get('who','')} | {L.get('text','')}{warn} | {L.get('role','')} | {L.get('voice','')} |")
+        (out / f"{stem}.md").write_text("\n".join(md) + "\n", encoding="utf-8")
+    shutil.copy2(REFS / "요약.md", DESK / "참고영상_요약표.md")
+
+
 def main(urls):
     whisper_ok = True
     for url in urls:
@@ -152,8 +191,12 @@ def main(urls):
         (REFS / f"{vid}.json").write_text(json.dumps(g, ensure_ascii=False, indent=1), encoding="utf-8")
         st = g["stats"]
         write_summary()
+        export_desktop()
         print(json.dumps({"id": vid, "format": g.get("format"), "stats": st}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if sys.argv[1:] == ["--export"]:
+        write_summary(); export_desktop()
+    else:
+        main(sys.argv[1:])
