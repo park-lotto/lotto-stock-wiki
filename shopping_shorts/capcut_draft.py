@@ -837,7 +837,11 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 continue
             if source_path and asset_paths.get(source_path) == path:
                 assets_to_copy.append((source_path, path))
-            material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
+            if path.lower().endswith(".mp4"):     # 완성본에서 떠 온 장면(scene_style.capcut_bake_spans, 관제 191)
+                material = _video_material(path, path.rsplit("/", 1)[-1], duration, cw, ch)
+                material["has_audio"] = False
+            else:
+                material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
             mats["videos"].append(material)
             segment = _base_segment(material["id"], start, duration, source_start=0,
                                     source_dur=duration, render_index=0, volume=0.0)

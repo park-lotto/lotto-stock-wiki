@@ -10731,6 +10731,19 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
             _scene_dims = _scene_style.dim_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir)   # 어둡게 막(관제 124)
             _scene_zooms = _scene_style.capcut_fx_spans(_ss_scenes, _ss_snapshot, _ss_layers)   # 확대·확대 움직임·흑백 충격 → 캡컷 키프레임(관제 124)
+            # 흐림 가림막·장면 강조·틀 카메라는 캡컷에 그림으로 못 싣는다 → 그 장면은 완성본에서 떠 와 맨 위 겹에 올리고
+            #   그 장면의 글자 그림은 뺀다(완성본 조각에 이미 들어 있다). 무엇을 뜰지는 scene_style.CAPCUT_SCENE_FX 한 곳(관제 191).
+            try:
+                _bakes = _scene_style.capcut_bake_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir, _final)
+            except Exception:      # noqa: BLE001 — 떠 오기가 실패해도 장면 겹은 그대로 간다(그 효과만 빠진다)
+                import traceback as _tb6
+                _tb6.print_exc(file=sys.stderr)
+                _bakes = []
+            if _bakes:
+                _scene_layers = [l for l in _scene_layers
+                                 if not any(b["start"] - 1e-3 <= l["start"] and l["end"] <= b["end"] + 1e-3 for b in _bakes)]
+                _scene_layers = sorted(_scene_layers + [{k: b[k] for k in ("path", "start", "end")} for b in _bakes],
+                                       key=lambda l: l["start"])
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
