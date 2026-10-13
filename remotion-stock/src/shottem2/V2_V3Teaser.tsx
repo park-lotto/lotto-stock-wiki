@@ -2,7 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Audio, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from 'remotion';
 import { Grain } from './fx';
 import { C, F } from './theme2';
-import { Backdrop } from './V2_Bg';
+import { Scene, Para } from './V2_Engine';
 import { WordCaption } from './V2_Fx2';
 import { CAP } from './V2_Captions';
 import { V3W } from './V2_V3Words';
@@ -13,7 +13,7 @@ Object.assign(CAP, V3W);
    영상 찾기부터 완성까지 AI 혼자 만든 쇼츠(Paragon 3편 밍밍)를 보여 주고 V3 로 기대감을 남긴다. 내레이션 없음. */
 
 const SRC = 'shottem2/v3t/clean.mp4';  // 원본 쇼츠에서 제목띠·자막띠·워터마크를 잘라내고 글자 없는 구간만 이은 것
-const A_SEC = 12.3;          // 필재 소개(음성 a)
+const A_SEC = 10.0;          // 필재 소개(음성 a)
 const FULL = 'shottem2/v3t/mingming_clean.mp4';  // 실제 완성 쇼츠 그대로 + 원본에 박혀 있던 영어 글자 구간만 VMake 청소본으로 덮음
 const FULL_SEC = 33.1;
 export const V3T_FRAMES = Math.round((A_SEC + FULL_SEC + 13.0 + 1.2) * 30);
@@ -76,15 +76,14 @@ const Full: React.FC = () => {
   );
 };
 
-// 소개 — 영상 없이 금빛 배경 + 문구만(실제 쇼츠는 다음 장면에서 처음부터 보여 준다)
-const Intro: React.FC = () => (
-  <AbsoluteFill>
-    <Backdrop kind="aurora" seed={5} dim={0.6} />
-    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', gap: 18, paddingBottom: 80 }}>
-      {LINES.map(([at, t, g], i) => <Line key={i} at={at} text={t} gold={g} />)}
-    </AbsoluteFill>
-  </AbsoluteFill>
-);
+// 소개 — 앞 장면들과 같은 엔진(회원 쇼츠 배경 + 큰 글자). 쇼츠 자체는 다음 장면에서 처음부터 보여 준다
+const INTRO: Para[] = [
+  { dur: 2.3, back: 'wall', seed: 31, hits: [{ t: '마지막으로\n하나만 더', style: 'slam' }] },
+  { dur: 4.8, back: 'ring', seed: 33, hitAt: [0, 0.3], hits: [
+    { t: '지금 보실 쇼츠', style: 'tag' },
+    { t: '', style: 'flow', steps: ['영상\n찾기', '대본', '장면', '성우', '편집'] } ] },
+  { dur: 2.9, back: 'mosaic', seed: 35, hits: [{ t: '처음부터 끝까지\n혼자 만든 영상', style: 'mega', accent: '혼자' }] },
+];
 
 const Coming: React.FC = () => {
   const f = useCurrentFrame();
@@ -105,10 +104,7 @@ const Coming: React.FC = () => {
 export const V2_V3Teaser: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (
   <AbsoluteFill style={{ background: '#05060a' }}>
     <Sequence durationInFrames={Math.round(A_SEC * 30)}>
-      <Intro />
-      <Audio src={staticFile('shottem2/v3t/v3t_a.mp3')} />
-      <WordCaption k="v3a" />
-      {bgm ? <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} volume={0.06} /> : null}
+      <Scene voice="shottem2/v3t/v3t_a.mp3" paras={INTRO} cap="v3a" bgm={bgm} />
     </Sequence>
     <Sequence from={Math.round(A_SEC * 30)} durationInFrames={Math.round(FULL_SEC * 30)}>
       <Full />

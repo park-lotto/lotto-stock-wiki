@@ -3,7 +3,9 @@ import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
 import { Scene, Para } from './V2_Engine';
 import { KakaoChat, Challenge30, MemberGallery, WordCaption } from './V2_Fx2';
 import { V2_S47_Proof } from './V2_S47_Proof';
-import { V2_Compare } from './V2_S41';
+import { Solo } from './V2_S41';
+const SSUL = 'shottem2/v2s47h/ssul_snd.mp4';  // 소리 있는 원본
+const MINE = 'shottem2/v2s47h/mine_snd.mp4';
 
 /* S4-7 완성·증거 2판 (2026-10-12 사장님: 카톡 후기 각색 / 30일 챌린지 극적으로 / 판매 수량 강조)
    나레이션은 "회원분들 반응도 보시죠"(23.0초)에서 멈추고 카톡 장면(CH)을 넣은 뒤 이어진다.
@@ -15,11 +17,15 @@ const CH = 450;               // 카톡 장면 15초
 const VEND = F(50.27);        // 음성 끝
 const P2 = CUT + CH;          // 나레이션 다시 시작하는 프레임
 const at = (voiceSec: number) => P2 + F(voiceSec) - CUT;   // 뒤쪽 음성 시각 → 전체 프레임
-export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20;
+// 완성본 비교 20초 — "나란히 놓아 보겠습니다"(5.9초)에서 나레이션을 멈추고 원본 10초 · 완성본 10초를 원래 소리로 튼다
+const CMP_AT = F(5.9);
+const CMP = 600;
+export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20 + CMP;
 
 const HEAD: Para[] = [
-  // 완성본 비교 — 원본 먼저, "나란히 놓아 보겠습니다"(5.8초) 뒤 숏템메이커 완성본
-  { dur: 16.9, hits: [{ t: '', node: <V2_Compare switchSec={6.0} /> }] },
+  { dur: 16.9, back: 'hero', seed: 21, hits: [
+    { t: '완성본 vs 원본', style: 'mega' }, { t: '어떻습니까?', style: 'neon' },
+    { t: '머리 쥐어짠 순간\n0번', style: 'mega', accent: '0번' }, { t: '눈앞에서\n직접 만들어 보였습니다', style: 'flip', accent: '직접' } ], hitAt: [0, 0.35, 0.5, 0.78] },
   { dur: 4.4, img: 'shottem2/s47/list.png', hits: [{ t: '실제로 받은 조회수', style: 'tag' }] },
   { dur: 1.7, hits: [{ t: '', node: <MemberGallery title="회원님들 반응도 보시죠" sub="1기 회원 실제 후기" seed={6} /> }] },
 ];
@@ -29,7 +35,7 @@ const TAIL: Para[] = [
     { t: '', style: 'vs', vs: ['양산형\n같은 틀 반복', '숏템메이커\n매일, 다르게'] } ], hitAt: [0, 0.45, 0.78] },
 ];
 
-export const V2_S47V2: React.FC = () => (
+const Body: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
     <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} loop volume={0.11} />
     {/* 앞 나레이션 0~23초 */}
@@ -63,5 +69,19 @@ export const V2_S47V2: React.FC = () => (
     {/* 마무리 */}
     <Sequence from={at(40.1)}><Scene paras={TAIL} /></Sequence>
     <Sequence from={P2}><WordCaption k="14" offset={23.0} /></Sequence>
+  </AbsoluteFill>
+);
+
+const Compare20: React.FC = () => (
+  <AbsoluteFill style={{ background: '#05060a' }}>
+    <Sequence durationInFrames={300}><Solo src={SSUL} label="지금 터지는 원본" sub="다른 썰쇼핑 채널의 터진 영상" loop={720} sound /></Sequence>
+    <Sequence from={300}><Solo src={MINE} label="숏템메이커 완성본" sub="방금 눈앞에서 만든 영상" gold loop={860} sound /></Sequence>
+  </AbsoluteFill>
+);
+export const V2_S47V2: React.FC = () => (
+  <AbsoluteFill style={{ background: '#000' }}>
+    <Sequence durationInFrames={CMP_AT}><Body /></Sequence>
+    <Sequence from={CMP_AT} durationInFrames={CMP}><Compare20 /></Sequence>
+    <Sequence from={CMP_AT + CMP}><Sequence from={-CMP_AT}><Body /></Sequence></Sequence>
   </AbsoluteFill>
 );

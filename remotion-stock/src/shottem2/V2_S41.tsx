@@ -33,8 +33,8 @@ export const V2_S41: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (
 );
 
 // ── S4-7 머리 — 터진 썰쇼핑 원본 vs 숏템메이커 완성본 나란히 ──
-const SSUL = 'shottem2/v2s47h/ssul.mp4';
-const MINE = 'shottem2/v2s47h/mine.mp4';
+export const SSUL = 'shottem2/v2s47h/ssul.mp4';
+export const MINE = 'shottem2/v2s47h/mine.mp4';
 const Phone: React.FC<{ src: string; label: string; sub: string; gold?: boolean; delay: number; loop: number }> = ({ src, label, sub, gold, delay, loop }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -53,7 +53,7 @@ const Phone: React.FC<{ src: string; label: string; sub: string; gold?: boolean;
   );
 };
 // 나란히 대신 차례로 — 원본 한 편을 크게 보여 준 뒤 완성본으로 넘어간다(뒤는 같은 영상 흐림)
-const Solo: React.FC<{ src: string; label: string; sub: string; gold?: boolean; loop: number }> = ({ src, label, sub, gold, loop }) => {
+export const Solo: React.FC<{ src: string; label: string; sub: string; gold?: boolean; loop: number; sound?: boolean }> = ({ src, label, sub, gold, loop, sound }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = spring({ frame: f, fps, config: { damping: 15, mass: 0.7 } });
@@ -68,7 +68,7 @@ const Solo: React.FC<{ src: string; label: string; sub: string; gold?: boolean; 
         </div>
         <div style={{ width: W, height: (W * 16) / 9 * 0.98, borderRadius: 30, overflow: 'hidden', background: '#000', transform: 'scale(' + (0.9 + p * 0.1) + ')',
           boxShadow: gold ? '0 0 0 5px ' + C.gold + ', 0 0 80px rgba(250,204,21,0.45), 0 40px 100px rgba(0,0,0,0.9)' : '0 0 0 3px rgba(255,255,255,0.45), 0 40px 100px rgba(0,0,0,0.9)' }}>
-          <Loop durationInFrames={loop}><OffthreadVideo src={staticFile(src)} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Loop>
+          <Loop durationInFrames={loop}><OffthreadVideo src={staticFile(src)} muted={!sound} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Loop>
         </div>
         <div style={{ width: 520 }} />
       </AbsoluteFill>
