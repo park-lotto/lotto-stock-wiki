@@ -119,9 +119,9 @@ const Aurora: React.FC<{ seed: number; dim: number }> = ({ seed }) => {
     <AbsoluteFill style={{ background: '#05060a', overflow: 'hidden' }}>
       {[0, 1, 2].map((k) => (
         <div key={k} style={{
-          position: 'absolute', width: 1400, height: 1400, borderRadius: 700, filter: 'blur(140px)', opacity: 0.55,
+          position: 'absolute', width: 1400, height: 1400, opacity: 0.75,
           left: 260 + Math.sin(a + k * 2.1) * 500 - 700 + k * 400, top: 300 + Math.cos(a * 0.8 + k) * 300 - 700,
-          background: ['#f59e0b', '#7c3aed', '#facc15'][k],
+          background: `radial-gradient(circle, ${['#f59e0b', '#7c3aed', '#facc15'][k]} 0%, ${['#f59e0b', '#7c3aed', '#facc15'][k]}99 35%, transparent 75%)`,
         }} />
       ))}
       {Array.from({ length: 50 }, (_, i) => {
