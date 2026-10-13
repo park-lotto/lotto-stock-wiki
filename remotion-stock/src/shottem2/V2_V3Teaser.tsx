@@ -12,8 +12,10 @@ Object.assign(CAP, V3W);
    영상 찾기부터 완성까지 AI 혼자 만든 쇼츠(Paragon 3편 밍밍)를 보여 주고 V3 로 기대감을 남긴다. 내레이션 없음. */
 
 const SRC = 'shottem2/v3t/clean.mp4';  // 원본 쇼츠에서 제목띠·자막띠·워터마크를 잘라내고 글자 없는 구간만 이은 것
-const A_SEC = 12.3;
-export const V3T_FRAMES = Math.round((A_SEC + 13.0 + 1.2) * 30);
+const A_SEC = 12.3;          // 필재 소개(음성 a)
+const FULL = 'shottem2/v3t/mingming.mp4';  // 실제 완성 쇼츠 — 처음부터 끝까지 원래 소리 그대로
+const FULL_SEC = 33.1;
+export const V3T_FRAMES = Math.round((A_SEC + FULL_SEC + 13.0 + 1.2) * 30);
 const LINES: [number, string, boolean?][] = [
   [2.6, '이 쇼츠,'],
   [4.6, '영상 찾기부터'],
@@ -55,6 +57,24 @@ const Shorts: React.FC = () => {
   );
 };
 
+const Full: React.FC = () => {
+  const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const p = spring({ frame: f, fps, config: { damping: 16 } });
+  const H = 1040;
+  return (
+    <AbsoluteFill style={{ background: '#05060a' }}>
+      <OffthreadVideo src={staticFile(FULL)} muted style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(36px) brightness(0.3)', transform: 'scale(1.2)' }} />
+      <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ height: H, width: (H * 9) / 16, borderRadius: 26, overflow: 'hidden', opacity: p, transform: 'scale(' + (0.94 + p * 0.06) + ')',
+          boxShadow: '0 0 0 4px ' + C.gold + ', 0 0 80px rgba(250,204,21,0.4)' }}>
+          <OffthreadVideo src={staticFile(FULL)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
 const Coming: React.FC = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -77,14 +97,18 @@ export const V2_V3Teaser: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (
       <Shorts />
       <Audio src={staticFile('shottem2/v3t/v3t_a.mp3')} />
       <WordCaption k="v3a" />
+      {bgm ? <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} volume={0.06} /> : null}
     </Sequence>
-    <Sequence from={Math.round(A_SEC * 30)}>
+    <Sequence from={Math.round(A_SEC * 30)} durationInFrames={Math.round(FULL_SEC * 30)}>
+      <Full />
+    </Sequence>
+    <Sequence from={Math.round((A_SEC + FULL_SEC) * 30)}>
       <Coming />
       <Audio src={staticFile('sfx/impact.mp3')} volume={0.5} />
       <Audio src={staticFile('shottem2/v3t/v3t_b.mp3')} />
       <WordCaption k="v3b" />
+      {bgm ? <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} volume={0.1} /> : null}
     </Sequence>
-    {bgm ? <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} loop volume={(f) => (f < A_SEC * 30 ? 0.06 : 0.1)} /> : null}
     <Grain opacity={0.08} />
   </AbsoluteFill>
 );
