@@ -6583,13 +6583,20 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
     src_duration = {}
+    # ★영상 하나가 깨져도 나머지는 잰다(관제 194) — 종전엔 try 하나가 반복문 전체를 감싸
+    #   첫 영상(깨진 핀터레스트 재생목록)에서 멈춰 9개 필름이 전부 '원본 길이를 몰라'가 됐다.
     try:
-        for vid, p in _resolve_sources(job, work).items():
-            d = video_assemble._probe_duration(p)
-            if d:
-                src_duration[vid] = round(d, 2)
+        _srcs = _resolve_sources(job, work).items()
     except Exception:
-        pass
+        _srcs = []
+    for vid, p in _srcs:
+        try:
+            d = video_assemble._probe_duration(p)
+        except Exception as e:      # noqa: BLE001
+            print(f"[scene_lab] 원본 길이 실패 {job_id}/{vid}: {e!r}"[:300])
+            continue
+        if d:
+            src_duration[vid] = round(d, 2)
     # 소스별 갈래(2026-08-17) — 팔레트를 '결'이 아니라 **어느 영상에서 왔나**로 묶을 때
     # 머리글에 제품명을 찍으려고 싣는다. 옛 추출본엔 source_brief가 없어 {}가 되고,
     # 그러면 화면은 '소스 N'만 찍는다(fail-open, 회귀 없음).
