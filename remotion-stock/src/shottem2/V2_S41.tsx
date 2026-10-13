@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, Audio, Loop, OffthreadVideo, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from 'remotion';
+import { AbsoluteFill, Audio, Loop, Sequence, OffthreadVideo, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from 'remotion';
 import { Scene, Para, sceneFrames } from './V2_Engine';
 import { WordCaption } from './V2_Fx2';
 import { Grain } from './fx';
@@ -52,23 +52,36 @@ const Phone: React.FC<{ src: string; label: string; sub: string; gold?: boolean;
     </div>
   );
 };
-export const V2_Compare: React.FC = () => {
+// 나란히 대신 차례로 — 원본 한 편을 크게 보여 준 뒤 완성본으로 넘어간다(뒤는 같은 영상 흐림)
+const Solo: React.FC<{ src: string; label: string; sub: string; gold?: boolean; loop: number }> = ({ src, label, sub, gold, loop }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const v = spring({ frame: f - 14, fps, config: { damping: 8, mass: 0.6 } });
-  const drift = interpolate(f, [0, 400], [1.04, 1], { extrapolateRight: 'clamp' });
+  const p = spring({ frame: f, fps, config: { damping: 15, mass: 0.7 } });
+  const W = 500;
   return (
-    <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 50% 40%, #1b1d2a 0%, #05060a 75%)', overflow: 'hidden' }}>
-      <AbsoluteFill style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: 230, paddingTop: 22, transform: 'scale(' + drift + ')' }}>
-        <Phone src={SSUL} label="지금 터지는 원본" sub="다른 썰쇼핑 채널의 터진 영상" delay={0} loop={720} />
-        <Phone src={MINE} label="숏템메이커 완성본" sub="방금 눈앞에서 만든 영상" gold delay={8} loop={860} />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', paddingBottom: 90 }}>
-        <div style={{ font: '900 110px ' + F.sans, color: C.gold, transform: 'scale(' + v + ') rotate(-6deg)', WebkitTextStroke: '4px #000', paintOrder: 'stroke fill', textShadow: '0 0 40px rgba(250,204,21,0.7), 0 12px 40px #000' }}>VS</div>
+    <AbsoluteFill style={{ opacity: Math.min(1, p * 1.4) }}>
+      <Loop durationInFrames={loop}><OffthreadVideo src={staticFile(src)} muted style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(28px) brightness(0.35)', transform: 'scale(1.15)' }} /></Loop>
+      <AbsoluteFill style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 70, paddingBottom: 60 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 18, width: 520, transform: 'translateX(' + (1 - p) * -80 + 'px)' }}>
+          <div style={{ padding: '10px 30px', borderRadius: 999, font: '900 44px ' + F.sans, color: gold ? '#111' : '#fff', background: gold ? C.gold : 'rgba(255,255,255,0.16)', border: gold ? 'none' : '2px solid rgba(255,255,255,0.5)' }}>{label}</div>
+          <div style={{ font: '700 30px ' + F.sans, color: gold ? C.gold : 'rgba(255,255,255,0.8)', textAlign: 'right' }}>{sub}</div>
+        </div>
+        <div style={{ width: W, height: (W * 16) / 9 * 0.98, borderRadius: 30, overflow: 'hidden', background: '#000', transform: 'scale(' + (0.9 + p * 0.1) + ')',
+          boxShadow: gold ? '0 0 0 5px ' + C.gold + ', 0 0 80px rgba(250,204,21,0.45), 0 40px 100px rgba(0,0,0,0.9)' : '0 0 0 3px rgba(255,255,255,0.45), 0 40px 100px rgba(0,0,0,0.9)' }}>
+          <Loop durationInFrames={loop}><OffthreadVideo src={staticFile(src)} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Loop>
+        </div>
+        <div style={{ width: 520 }} />
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
+const SWITCH = Math.round(4.4 * 30);
+export const V2_Compare: React.FC = () => (
+  <AbsoluteFill style={{ background: '#05060a' }}>
+    <Sequence durationInFrames={SWITCH}><Solo src={SSUL} label="지금 터지는 원본" sub="다른 썰쇼핑 채널의 터진 영상" loop={720} /></Sequence>
+    <Sequence from={SWITCH}><Solo src={MINE} label="숏템메이커 완성본" sub="방금 눈앞에서 만든 영상" gold loop={860} /></Sequence>
+  </AbsoluteFill>
+);
 const HEAD_SEC = 12.95;
 export const V2_S47H_FRAMES = Math.round(HEAD_SEC * 30);
 export const V2_S47H: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (
