@@ -434,3 +434,14 @@ def test_register_api_replaces_ghost_end_to_end(client, monkeypatch):
     assert body["ok"] and body["slot"] == 2 and "바꿨어요" in body["message"], body
     assert {d["slot"]: d["device_id"] for d in st.device_list(4250)} == {1: "a" * 32, 2: "c" * 32}
     st.device_reset(4250)
+
+
+def test_settings_page_stamps_new_browser(client, monkeypatch):
+    """관제 184 라이브 실측: 마이페이지로 바로 들어온 새 브라우저에 도장이 없어 등록이 실패했다."""
+    c, app_mod = client
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "full")
+    _login(c, app_mod, 4251)
+    r = c.get("/settings", headers={"user-agent": PC, "accept": "text/html", "sec-fetch-mode": "navigate",
+                                    "sec-fetch-dest": "document"}, follow_redirects=False)
+    assert app_mod._DEVICE_COOKIE in r.headers.get("set-cookie", ""), (r.status_code, r.headers)

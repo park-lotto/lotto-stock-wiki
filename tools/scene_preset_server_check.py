@@ -33,9 +33,15 @@ with sync_playwright() as p:
     ctx.add_cookies([{"name": "dash_auth", "value": appmod._sign_session(cid, exp), "url": f"http://127.0.0.1:{PORT}"}])
     pg = ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.goto(URL); pg.evaluate(f"localStorage.setItem('{KEY}', {json.dumps(json.dumps(old, ensure_ascii=False))})")
+    pg.goto(URL); pg.evaluate(f"localStorage.setItem('{KEY}', {json.dumps(json.dumps(old, ensure_ascii=False))})"+"; localStorage.removeItem('scene_style_my_presets_migrated')")  # 새 코드를 처음 여는 옛 브라우저 상태
     pg.reload(); pg.wait_for_timeout(4000)
     res["①이관"] = [x["name"] for x in server_items()]
+    # ①-b 다른 PC에서 지움(서버 목록 비움) → 이 브라우저의 옛 사본이 되살리면 안 된다
+    s.set_pref("preset::" + KEY, [], customer_id=cid)
+    pg.evaluate(f"localStorage.setItem('{KEY}', {json.dumps(json.dumps(old, ensure_ascii=False))})")
+    pg.reload(); pg.wait_for_timeout(4000)
+    res["①b지운것_부활없음"] = [x["name"] for x in server_items()]
+    s.set_pref("preset::" + KEY, old, customer_id=cid)
     pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(4000)
     res["②비운뒤_화면사본"] = [x["name"] for x in json.loads(pg.evaluate(f"localStorage.getItem('{KEY}')") or "[]")]
     # ③ 화면의 저장 버튼
@@ -50,6 +56,6 @@ with sync_playwright() as p:
     res["JS오류"] = errs
     b.close()
 for k, v in res.items(): print(k, v)
-ok = ("옛 브라우저 프리셋" in res["①이관"] and res["②비운뒤_화면사본"] and "화면 저장 프리셋" in res["③저장버튼후_서버"]
+ok = ("옛 브라우저 프리셋" in res["①이관"] and res["①b지운것_부활없음"] == [] and res["②비운뒤_화면사본"] and "화면 저장 프리셋" in res["③저장버튼후_서버"]
       and "화면 저장 프리셋" in res["③비운뒤_목록화면"] and not res["JS오류"])
 print("PASS" if ok else "FAIL"); sys.exit(0 if ok else 1)
