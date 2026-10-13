@@ -3541,7 +3541,15 @@ function renderBand(){
     const _fitSegs = (DATA.beats[i] || {}).fit_segs || [];
     const fitHtml = !phraseSyncOn(i) ? '' : clips.map((c, ci) => {
       const src = +(c.src_dur || c.dur), gap = +c.dur - src;
-      if (!String(c.seg_id || '').startsWith('film_') || gap < 0.05) return '';
+      if (!String(c.seg_id || '').startsWith('film_')) return '';
+      // ★빠르게(관제 192 강병주님 "박스로 고른 뒷부분까지 쓰고 싶다") — 고른 구간이 컷보다 길면 뒤가 잘린다. 누르면 구간 전체를 빠르게(음성 그대로).
+      const _sg = (DATA.segments || {})[c.seg_id] || {}, _len = +_sg.end - +_sg.start;
+      if (src > +c.dur + 0.05)
+        return `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 고른 구간 전체를 ${(src / +c.dur).toFixed(2)}배 빠르게 넣었어요${
+          _len > src + 0.05 ? ` <span class="slowwarn">너무 길어 뒤 ${(_len - src).toFixed(1)}초는 잘려요 — 구간을 줄여 주세요</span>` : ''} <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button></div>`;
+      if (cutRuleIsV2() && _len > +c.dur + 0.3 && gap < 0.05)
+        return `<div class="cutgap" onclick="event.stopPropagation()">⏩ ${ci + 1}번째 카드: 고른 구간 뒤 ${(_len - +c.dur).toFixed(1)}초가 잘려요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">빠르게 맞추기 ${Math.min(FIT_FAST_MAX, _len / +c.dur).toFixed(2)}배</button></div>`;
+      if (gap < 0.05) return '';
       const ratio = (+c.dur / src).toFixed(2);
       return _fitSegs.includes(c.seg_id)
         ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 속도 맞춤 ${ratio}배로 채웠어요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button>${

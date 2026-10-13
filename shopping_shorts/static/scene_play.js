@@ -473,6 +473,8 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 //   구절 맞춤     = 같은 배분에서 **장면 전환을 자막 경계에 정확히**(모자란 화면은 상한 없이 느리게). 컷 수는 여전히 장면 수.
 //   상태는 PHRASE_EXACT 한 곳(칸 표식 beat.phrase_exact) — 켠 칸만 기록한다. 옛 규칙 작업에는 쓰지 않는다.
 const PHRASE_EXACT = {};            // beat_idx → true(구절 맞춤 정확)일 때만 기록
+// ★[빠르게 맞추기] 배속 상한 — **여기 한 곳**(관제 192). planClips 와 3단계 카드 버튼(scene_lab fitHtml)이 같이 읽는다.
+const FIT_FAST_MAX = 2.0;
 function cutRuleIsV2(){ return typeof DATA === 'object' && !!DATA && DATA.cut_rule === 'scenes_v2'; }
 function phraseExactOn(i){ return cutRuleIsV2() && PHRASE_EXACT[i] === true && phraseSyncOn(i); }
 // 화면의 [구절 맞춤] 체크 상태 — 새 규칙 작업은 '정확' 표식, 옛 작업은 종전 그대로
@@ -726,6 +728,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
+  // [속도 맞추기]를 누른 조각인가(칸 데이터 beat.fit_segs — scene_lab fitToggle 이 적는다). 상한은 파일 맨 위 FIT_FAST_MAX
+  function fitSegOn(bi, segId){
+    const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[bi] || {};
+    return bi != null && Array.isArray(b.fit_segs) && b.fit_segs.includes(segId);
+  }
   // ★청소 뒤에도 같은 편성이면 컷이 그대로(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸).
   //   청소본은 **청소 전 컷이 읽은 구간**을 지운 것이다. 그런데 지운 구간(DATA.clean_spans)이 생기면 아래 배분의 여유(room)가
   //   달라져(구간이 장면보다 짧으면 cleanBound 가 null → room=len) 같은 편성의 컷이 바뀌었다(s5 2.53→2.13초, s1 1.49→1.90초)
@@ -893,8 +900,15 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     return memeCut.concat(scenes.map((g, k) => {
       const d = Math.round(dur[k] * 100) / 100;
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
-      const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
-      if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      let src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
+      // ★[속도 맞추기] 빠르게(관제 192, 2026-10-13 강병주님 "박스로 고른 구간 뒷부분까지 쓰고 싶다") — 사람이 고른 구간(film_)이
+      //   이 컷 길이보다 길면 남는 뒷부분이 잘렸다. 누른 조각은 구간 전체를 컷 길이 안에 빠르게 튼다(음성은 그대로, 최대 FIT_FAST_MAX배).
+      //   렌더·캡컷은 이 컷을 서버 러너(screen_clips.lookup)로 그대로 받아 src_dur>dur 이면 playback_speed 로 빠르게 튼다.
+      //   ★켠 조각에서만 — 그 밖은 종전 한 줄 그대로(dur 반올림 차이로 src>d 가 되는 컷을 빠르게로 바꾸면 기존 작업 컷이 달라진다).
+      const fast = fitSegOn(beatIdx, g.seg_id) && av[k].len > d + 0.05;
+      if (fast) src = Math.min(av[k].len, d * FIT_FAST_MAX);
+      if (src < d - EPS || fast) c.src_dur = +src.toFixed(3);
+      if (fast) c.fit = true;
       if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
