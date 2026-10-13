@@ -473,6 +473,8 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 //   구절 맞춤     = 같은 배분에서 **장면 전환을 자막 경계에 정확히**(모자란 화면은 상한 없이 느리게). 컷 수는 여전히 장면 수.
 //   상태는 PHRASE_EXACT 한 곳(칸 표식 beat.phrase_exact) — 켠 칸만 기록한다. 옛 규칙 작업에는 쓰지 않는다.
 const PHRASE_EXACT = {};            // beat_idx → true(구절 맞춤 정확)일 때만 기록
+// ★[빠르게 맞추기] 배속 상한 — **여기 한 곳**(관제 192). planClips 와 3단계 카드 버튼(scene_lab fitHtml)이 같이 읽는다.
+const FIT_FAST_MAX = 2.0;
 function cutRuleIsV2(){ return typeof DATA === 'object' && !!DATA && DATA.cut_rule === 'scenes_v2'; }
 function phraseExactOn(i){ return cutRuleIsV2() && PHRASE_EXACT[i] === true && phraseSyncOn(i); }
 // 화면의 [구절 맞춤] 체크 상태 — 새 규칙 작업은 '정확' 표식, 옛 작업은 종전 그대로
@@ -726,8 +728,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
-  // [속도 맞추기]를 누른 조각인가(칸 데이터 beat.fit_segs — scene_lab fitToggle 이 적는다) · 빠르게 틀 상한(관제 192)
-  const FIT_FAST_MAX = 2.0;
+  // [속도 맞추기]를 누른 조각인가(칸 데이터 beat.fit_segs — scene_lab fitToggle 이 적는다). 상한은 파일 맨 위 FIT_FAST_MAX
   function fitSegOn(bi, segId){
     const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[bi] || {};
     return bi != null && Array.isArray(b.fit_segs) && b.fit_segs.includes(segId);

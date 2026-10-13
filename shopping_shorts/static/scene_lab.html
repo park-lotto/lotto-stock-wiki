@@ -3548,7 +3548,7 @@ function renderBand(){
         return `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 고른 구간 전체를 ${(src / +c.dur).toFixed(2)}배 빠르게 넣었어요${
           _len > src + 0.05 ? ` <span class="slowwarn">너무 길어 뒤 ${(_len - src).toFixed(1)}초는 잘려요 — 구간을 줄여 주세요</span>` : ''} <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button></div>`;
       if (cutRuleIsV2() && _len > +c.dur + 0.3 && gap < 0.05)
-        return `<div class="cutgap" onclick="event.stopPropagation()">⏩ ${ci + 1}번째 카드: 고른 구간 뒤 ${(_len - +c.dur).toFixed(1)}초가 잘려요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">빠르게 맞추기 ${Math.min(2, _len / +c.dur).toFixed(2)}배</button></div>`;
+        return `<div class="cutgap" onclick="event.stopPropagation()">⏩ ${ci + 1}번째 카드: 고른 구간 뒤 ${(_len - +c.dur).toFixed(1)}초가 잘려요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">빠르게 맞추기 ${Math.min(FIT_FAST_MAX, _len / +c.dur).toFixed(2)}배</button></div>`;
       if (gap < 0.05) return '';
       const ratio = (+c.dur / src).toFixed(2);
       return _fitSegs.includes(c.seg_id)
