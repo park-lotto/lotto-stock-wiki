@@ -25,13 +25,13 @@ const at = (voiceSec: number) => P2 + F(voiceSec) - CUT;   // 뒤쪽 음성 시�
 const CMP = Math.round(28.8 * 30);
 // 비교 뒤 새 멘트(필재 s47n, 16.3초) → 옛 나레이션은 "그리고 이건,"(16.9초)부터 이어 붙인다
 const NEWHEAD: Para[] = [
-  { dur: 16.8, back: 'hero', seed: 21, hitAt: [0, 0.25, 0.42, 0.73], hits: [
+  { dur: 13.7, back: 'hero', seed: 21, hitAt: [0, 0.25, 0.42, 0.73], hits: [
     { t: '비교해 보니\n어떻습니까?', style: 'mega', accent: '어떻습니까?' },
     { t: '이 정도면\n괜찮지 않습니까?', style: 'neon' },
     { t: '키보드 0번\n마우스로만', style: 'mega', accent: '0번' },
     { t: '처음부터 끝까지\n직접 만들어 보였습니다', style: 'flip', accent: '직접' } ] },
 ];
-const NH = Math.round(16.8 * 30);
+const NH = Math.round(13.7 * 30);
 const OLD_AT = F(16.9);
 export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20 + CMP + NH - OLD_AT;
 
@@ -122,7 +122,7 @@ const CompareFull: React.FC = () => (
 export const V2_S47V2: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
     <Sequence durationInFrames={CMP}><CompareFull /></Sequence>
-    <Sequence from={CMP} durationInFrames={NH}><Scene voice="shottem2/v2s47/s47n.mp3" paras={NEWHEAD} cap="s47n" /></Sequence>
+    <Sequence from={CMP} durationInFrames={NH}><Scene voice="shottem2/v2s47/s47n_fast.mp3" paras={NEWHEAD} cap="s47n" /></Sequence>
     <Sequence from={CMP + NH}><Sequence from={-OLD_AT}><Body /></Sequence></Sequence>
   </AbsoluteFill>
 );
