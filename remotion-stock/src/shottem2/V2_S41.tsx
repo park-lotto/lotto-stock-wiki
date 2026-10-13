@@ -75,13 +75,12 @@ const Solo: React.FC<{ src: string; label: string; sub: string; gold?: boolean; 
     </AbsoluteFill>
   );
 };
-const SWITCH = Math.round(4.4 * 30);
-export const V2_Compare: React.FC = () => (
+export const V2_Compare: React.FC<{ switchSec?: number }> = ({ switchSec = 4.4 }) => { const SWITCH = Math.round(switchSec * 30); return (
   <AbsoluteFill style={{ background: '#05060a' }}>
     <Sequence durationInFrames={SWITCH}><Solo src={SSUL} label="지금 터지는 원본" sub="다른 썰쇼핑 채널의 터진 영상" loop={720} /></Sequence>
     <Sequence from={SWITCH}><Solo src={MINE} label="숏템메이커 완성본" sub="방금 눈앞에서 만든 영상" gold loop={860} /></Sequence>
   </AbsoluteFill>
-);
+); };
 const HEAD_SEC = 12.95;
 export const V2_S47H_FRAMES = Math.round(HEAD_SEC * 30);
 export const V2_S47H: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (

@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Audio, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig, spring, interpolate } from 'remotion';
 import { Grain } from './fx';
 import { C, F } from './theme2';
+import { Backdrop } from './V2_Bg';
 import { WordCaption } from './V2_Fx2';
 import { CAP } from './V2_Captions';
 import { V3W } from './V2_V3Words';
@@ -13,7 +14,7 @@ Object.assign(CAP, V3W);
 
 const SRC = 'shottem2/v3t/clean.mp4';  // 원본 쇼츠에서 제목띠·자막띠·워터마크를 잘라내고 글자 없는 구간만 이은 것
 const A_SEC = 12.3;          // 필재 소개(음성 a)
-const FULL = 'shottem2/v3t/mingming.mp4';  // 실제 완성 쇼츠 — 처음부터 끝까지 원래 소리 그대로
+const FULL = 'shottem2/v3t/mingming_clean.mp4';  // 실제 완성 쇼츠 그대로 + 원본에 박혀 있던 영어 글자 구간만 VMake 청소본으로 덮음
 const FULL_SEC = 33.1;
 export const V3T_FRAMES = Math.round((A_SEC + FULL_SEC + 13.0 + 1.2) * 30);
 const LINES: [number, string, boolean?][] = [
@@ -75,6 +76,16 @@ const Full: React.FC = () => {
   );
 };
 
+// 소개 — 영상 없이 금빛 배경 + 문구만(실제 쇼츠는 다음 장면에서 처음부터 보여 준다)
+const Intro: React.FC = () => (
+  <AbsoluteFill>
+    <Backdrop kind="aurora" seed={5} dim={0.6} />
+    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', gap: 18, paddingBottom: 80 }}>
+      {LINES.map(([at, t, g], i) => <Line key={i} at={at} text={t} gold={g} />)}
+    </AbsoluteFill>
+  </AbsoluteFill>
+);
+
 const Coming: React.FC = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -94,7 +105,7 @@ const Coming: React.FC = () => {
 export const V2_V3Teaser: React.FC<{ bgm?: boolean }> = ({ bgm = true }) => (
   <AbsoluteFill style={{ background: '#05060a' }}>
     <Sequence durationInFrames={Math.round(A_SEC * 30)}>
-      <Shorts />
+      <Intro />
       <Audio src={staticFile('shottem2/v3t/v3t_a.mp3')} />
       <WordCaption k="v3a" />
       {bgm ? <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} volume={0.06} /> : null}

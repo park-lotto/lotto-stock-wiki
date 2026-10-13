@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
 import { Scene, Para } from './V2_Engine';
 import { KakaoChat, Challenge30, MemberGallery, WordCaption } from './V2_Fx2';
 import { V2_S47_Proof } from './V2_S47_Proof';
+import { V2_Compare } from './V2_S41';
 
 /* S4-7 완성·증거 2판 (2026-10-12 사장님: 카톡 후기 각색 / 30일 챌린지 극적으로 / 판매 수량 강조)
    나레이션은 "회원분들 반응도 보시죠"(23.0초)에서 멈추고 카톡 장면(CH)을 넣은 뒤 이어진다.
@@ -17,9 +18,8 @@ const at = (voiceSec: number) => P2 + F(voiceSec) - CUT;   // 뒤쪽 음성 시�
 export const V2_S47V2_FRAMES = P2 + (VEND - CUT) + 20;
 
 const HEAD: Para[] = [
-  { dur: 16.9, back: 'hero', seed: 21, hits: [
-    { t: '완성본 vs 원본', style: 'mega', sub: '녹화 들어올 자리' }, { t: '어떻습니까?', style: 'neon' },
-    { t: '머리 쥐어짠 순간\n0번', style: 'mega', accent: '0번' }, { t: '눈앞에서\n직접 만들어 보였습니다', style: 'flip', accent: '직접' } ], hitAt: [0, 0.35, 0.5, 0.78] },
+  // 완성본 비교 — 원본 먼저, "나란히 놓아 보겠습니다"(5.8초) 뒤 숏템메이커 완성본
+  { dur: 16.9, hits: [{ t: '', node: <V2_Compare switchSec={6.0} /> }] },
   { dur: 4.4, img: 'shottem2/s47/list.png', hits: [{ t: '실제로 받은 조회수', style: 'tag' }] },
   { dur: 1.7, hits: [{ t: '', node: <MemberGallery title="회원님들 반응도 보시죠" sub="1기 회원 실제 후기" seed={6} /> }] },
 ];
