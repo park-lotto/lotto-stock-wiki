@@ -1231,11 +1231,16 @@ P_INS_SEAM = """
 """
 
 
-def _seam_txt(slots, extra):
-    """끼울 칸마다 앞 문장·뒤 문장(자리 = arc_place, 끼워 넣는 실제 자리와 같은 함수)."""
+def _ins_place(slots, extra, at=None):
+    """끼울 자리 주인 — 사람이 줄 [＋ 칸 추가]로 고른 자리(at)가 있으면 그 자리, 없으면 흐름 순위(arc_place). 문장 지시와 실제 끼우기가 같이 쓴다."""
+    return at if at is not None else arc_place(slots, extra)
+
+
+def _seam_txt(slots, extra, at_fixed=None):
+    """끼울 칸마다 앞 문장·뒤 문장(자리 = _ins_place, 끼워 넣는 실제 자리와 같은 함수)."""
     out = []
     for e in extra:
-        at = arc_place(slots, e)
+        at = _ins_place(slots, e, at_fixed)
         prev = (slots[at - 1].get("line") or "") if 0 < at <= len(slots) else "(맨 앞)"
         nxt = (slots[at].get("line") or "") if at < len(slots) else "(끝)"
         out.append("- %s: 앞 칸 %d \"%s\" → [여기] → 뒤 칸 %d \"%s\"" % (e, at, prev, at + 1, nxt))
@@ -1363,7 +1368,12 @@ def insert(db_path, jid, payload, R=None, ex=None):
                                             with_seed=bool(payload.get("use_seed")))
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
-    extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]
+    # at = 줄의 [＋ 칸 추가]가 정한 자리(그 칸 뒤 번호, 관제 200) — 사람이 자리를 골랐으니 칸 하나만, 같은 종류가 있어도 끼운다
+    at = payload.get("at") if isinstance(payload.get("at"), int) else None
+    extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and (at is not None or e not in have)]
+    if at is not None:
+        extra = extra[:1]
+        at = max(0, min(at, len(slots)))
     used = {c for x in slots for c in (x.get("ids") or [])}
     board_txt = "\n".join("%d | %s | %s | %s" % (i + 1, x.get("slot"), x.get("line"),
                                                  " / ".join("%s(%s)" % (c, texts.get(c, "?")[:40]) for c in x.get("ids") or []))
@@ -1381,7 +1391,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
         except ValueError:
             pass
     avg = sum(narr_secs(x.get("line") or "") for x in slots) / max(1, len(slots))
-    prompt = head + P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt) + style_voice + P_INS_SEAM % _seam_txt(slots, extra)
+    prompt = head + P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt) + style_voice + P_INS_SEAM % _seam_txt(slots, extra, at)
     n = {}
     r = (sg._call_json(prompt, S_INS, note=n, vertex=True) or {}) if extra else {}
     ok_ids = set(cand)
@@ -1391,7 +1401,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
         if sl not in extra or any(x["slot"] == sl for x in ins):
             continue
         ids = [c for c in it.get("ids") or [] if c in ok_ids][:3]
-        ins.append({"after": arc_place(slots, sl), "slot": sl,
+        ins.append({"after": _ins_place(slots, sl, at), "slot": sl,
                     "need": it.get("need") or EXTRA_DESC[sl].split(" — ")[0],
                     "line": (it.get("line") or "").strip(), "ids": ids, "why_scene": it.get("why_scene") or "", "added": True})
     touched = []
@@ -1402,7 +1412,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
             x["line_before"], x["line"], x["fixed_why"] = x.get("line"), t["line"].strip(), t.get("why") or "이어짐"
             touched.append(i)
     for it in sorted(ins, key=lambda x: arc_rank(x["slot"])):      # 흐름 순위 순서로 하나씩 — 고조·반전을 같이 넣어도 고조 → 반전
-        it["after"] = arc_place(slots, it["slot"])
+        it["after"] = _ins_place(slots, it["slot"], at)
         slots.insert(it["after"], it)
     sig_key = bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or []))
     flow_fixed, auth2, flow_retry = [], None, []
