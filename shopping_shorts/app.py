@@ -6667,6 +6667,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # AI 장면 만들기 버튼(2026-09-23) — 3단계 카드는 실험실(iframe)이 그리므로 스위치를 여기로도 내린다.
         #   (produce.html 카드에만 넣었더니 사장님 화면엔 안 보였다 — 실측 14:32)
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
+        # 3단계 장면 보충 팝업(관제 209) — 스위치 scene_find_enabled(비면 관리자만)
+        "scene_find_enabled": _scene_find_on(_cid(request) if request is not None else 0),
         # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
         "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         "scene_lab_at": scene_lab_at,
@@ -6864,6 +6866,63 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     if not src or not Path(src).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     return _range_mp4_response(src, request)
+
+
+def _scene_find_on(customer_id):
+    """3단계 '장면 보충' 팝업 스위치(관제 209) — 비어 있으면 관리자만(AI 장면과 같은 규약)."""
+    store = Store(DB_PATH)
+    try:
+        v = (store.get_setting("scene_find_enabled", "") or "").strip()
+    except Exception:      # noqa: BLE001
+        v = ""
+    if not v:
+        return bool(_is_admin(customer_id))
+    return bool(_setting_gate(store, "scene_find_enabled", customer_id))
+
+
+@app.post("/api/mix/scene_lab/{job_id}/add_source")
+def api_mix_scene_lab_add_source(job_id: str, request: Request, body: dict):
+    """장면 보충(관제 209): 검색에서 고른 영상 1개를 이 job의 원본에 더한다 → {video_id:'x{n}', duration}.
+    저장 자리는 work/x{n}/ — job["urls"]는 건드리지 않는다(바뀌면 2단계가 유료 재매칭을 돌린다).
+    어느 길이든 원본 표는 mix_pipeline.extra_source_paths 한 곳이 읽는다. 같은 주소는 다시 받지 않는다."""
+    if not _scene_find_on(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "장면 보충은 아직 관리자만 쓸 수 있어요"})
+    url = str((body or {}).get("url") or "").strip()
+    if not re.match(r"^https?://", url):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "영상 주소가 필요해요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "생성·렌더 중에는 더할 수 없어요"})
+    work = _MIX_WORK_DIR / job_id
+    have = mix_pipeline.extra_source_paths(work)
+    for vid, p in have.items():                     # 같은 주소면 받아 둔 것을 돌려준다
+        try:
+            if json.loads((Path(p).parent / "source.json").read_text("utf-8")).get("url") == url:
+                return {"ok": True, "video_id": vid, "duration": round(video_assemble._probe_duration(p) or 0, 2), "reused": True}
+        except Exception:      # noqa: BLE001 — 표식이 없으면 새로 받는다
+            pass
+    # 번호는 폴더 기준(받다 만 폴더도 건너뛴다 — 다른 영상과 번호가 겹치지 않게)
+    used = [int(p.name[1:]) for p in (work.iterdir() if work.exists() else []) if re.match(r"^x\d+$", p.name)]
+    n = 1 + max(used + [0])
+    d = work / f"x{n}"
+    d.mkdir(parents=True, exist_ok=True)
+    try:
+        path, _cap = download_any(url, str(d))
+    except Exception as e:      # noqa: BLE001
+        shutil.rmtree(d, ignore_errors=True)
+        return JSONResponse(status_code=502, content={"ok": False, "error": f"영상을 받지 못했어요: {str(e)[:200]}"})
+    if not path or not Path(path).exists() or not str(path).endswith(".mp4"):
+        shutil.rmtree(d, ignore_errors=True)
+        return JSONResponse(status_code=502, content={"ok": False, "error": "영상 파일을 찾지 못했어요(사진 게시물일 수 있어요)"})
+    (d / "source.json").write_text(json.dumps({"url": url, "thumbnail": (body or {}).get("thumbnail") or "",
+                                               "platform": (body or {}).get("platform") or "",
+                                               "beat_idx": (body or {}).get("beat_idx"),
+                                               "at": datetime.now(timezone.utc).isoformat()}, ensure_ascii=False), "utf-8")
+    dur = video_assemble._probe_duration(path) or 0
+    return {"ok": True, "video_id": f"x{n}", "duration": round(dur, 2)}
 
 
 # ── 전체재생용 저화질 합본(2026-09-14 사장님 "음성은 나오는데 화면이 끊겨 보인다") ──────
@@ -16773,6 +16832,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "clean_base_enabled",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
                        "ai_scene_enabled",
+                       # 3단계 장면 보충 팝업(관제 209) — ""=관리자만 · "11,42" · "1" 전체
+                       "scene_find_enabled",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
