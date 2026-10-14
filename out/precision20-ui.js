@@ -687,7 +687,7 @@
   // ★바탕을 칠하는 꾸밈(박스·알약·띠·밑줄·그라데이션·투톤 등)은 글자 줄이 아니라 '글꼴 기본 높이'만큼만 칠한다 — 위로 큰 글꼴은 윗부분이 바탕 밖으로 나가
   //   바탕색 글자(-webkit-text-fill-color)나 그라데이션(background-clip:text)이 그 부분만 사라져 '위쪽이 잘린' 것처럼 보였다(10-14 사장님 제보: 알약 박스·그라데이션).
   //   inline-block + 줄 높이로 바탕을 글자 전체 높이까지 늘린다. 편집기·렌더·썸네일·캡컷이 같은 함수를 쓴다.
-  for(const d of DECOS)for(const k of ['css','accent'])if(d[k]&&/background/.test(d[k])&&!/display:/.test(d[k]))d[k]+=';display:inline-block;line-height:1.3';
+  for(const d of DECOS)for(const k of ['css','accent'])if(d[k]&&/background|box-shadow/.test(d[k])&&!/display:/.test(d[k]))d[k]+=';display:inline-block;line-height:1.3';
   const LOOKS=[
     {id:'l01',name:'이븐 클래식',font:'f330',tone:'p01',deco:'outline'},{id:'l02',name:'속보 옐로',font:'f223',tone:'p02',deco:'box'},
     {id:'l03',name:'네온 사인',font:'f1369',tone:'p03',deco:'glow'},{id:'l04',name:'핫딜 핑크',font:'f364',tone:'p04',deco:'shadow3d'},
