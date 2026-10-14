@@ -199,6 +199,10 @@ def validate_snapshot(value):
         raise ValueError("폰트 템플릿 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("titleDeco") or "")):   # precision20-ui.js DECOS의 id(훅 제목 꾸밈)
         raise ValueError("제목 꾸밈 값이 올바르지 않습니다")
+    text_deco = value.get("textDeco")   # precision20-ui.js textDeco — 채널명·작은 제목·자막 꾸밈(DECOS id)
+    if text_deco is not None and (not isinstance(text_deco, dict) or set(text_deco) - {"channel", "titleSmall", "caption"}
+            or not all(re.fullmatch(r"[a-z0-9_-]{1,32}", str(v or "")) for v in text_deco.values())):
+        raise ValueError("글자 꾸밈 값이 올바르지 않습니다")
     for key, old, label in (("textWeight", ("", "bold", "heavy"), "글자 두께"), ("textShadow", ("", "soft", "strong"), "글자 그림자")):
         look = value.get(key)
         # 2026-09-29: 새 저장값은 0~100(5단위), 09-28의 3단계 문자열은 기존 작업 재열기용으로 계속 허용한다.
@@ -260,7 +264,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
