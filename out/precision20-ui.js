@@ -743,7 +743,15 @@
     const sample=(tone,deco,family)=>{const d=DECOS.find(x=>x.id===deco)||{},on=c=>readableInk(c);
       return `<span class="lk-prev" style="background:${tone.bg};font-family:'${family}',sans-serif"><i style="color:${tone.c1};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c1)};${d.css||''}">제목 첫줄</i><i style="color:${tone.c2};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c2)};--deco-on-accent:${on(tone.c2)};--deco-on-bg:${on(tone.bg)};${[d.css,d.accent].filter(Boolean).join(';')}">제목 둘째줄</i></span>`;};
     const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
-    let lookSub='look';
+    let lookSub='look',colorTarget='titleLarge';
+    // 색상 탭 위쪽: 글자 대상 버튼 + 줄마다 색(바로 고르는 칩 + 직접 고르기). 실제 저장은 편집기 쪽 window._p20Color 한 곳이 한다.
+    const SWATCH=['#FFFFFF','#111111','#FFE600','#FF2D6F','#FF5FA8','#FF8A1F','#33B5F5','#00F9ED','#7CFF4F','#B48CFF','#FF3B30','#8E8E93'];
+    const colorBox=()=>{const C=window._p20Color;if(!C)return '';const band=C.band();if(band&&colorTarget==='titleSmall')colorTarget='caption';
+      const T=[['channel','채널명'],['titleLarge','큰 제목'],['titleSmall','작은 제목'],['caption','자막']].filter(t=>!(band&&t[0]==='titleSmall'));
+      const lines=colorTarget==='titleLarge'?[[1,'1줄'],[2,'2줄']]:[[0,'글자색']];
+      const row=([n,label])=>{const cur=C.get(colorTarget,n).toLowerCase();return `<div class="lk-color-row"><span>${label}</span><div class="lk-swatches">${SWATCH.map(h=>`<button type="button" data-color-pick="${h}" data-color-line="${n}" class="${h.toLowerCase()===cur?'on':''}" style="background:${h}" aria-label="${h}"></button>`).join('')}<input type="color" data-color-custom data-color-line="${n}" value="${cur}" title="직접 고르기"></div></div>`};
+      return `<div class="text-look-targets lk-color-targets">${T.map(t=>`<button type="button" data-color-target="${t[0]}" class="${t[0]===colorTarget?'active':''}">${t[1]}</button>`).join('')}</div>`+lines.map(row).join('')
+        +(colorTarget==='titleLarge'?'<div class="font-set-head">큰 제목 색 조합 <small>1줄·2줄을 한 번에</small></div>':'');};
     const draw=()=>{
       const fp0=window._p20Fonts;if(fp0&&panes.look.contains(fp0.pane)){fp0.pane.hidden=true;panes.look.after(fp0.pane);}   // 다시 그리기 전에 글꼴 창을 밖으로 빼 둔다(innerHTML에 지워지지 않게)
       const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
@@ -754,12 +762,12 @@
       //   카드 그리는 식은 위 세 줄 그대로 쓰고 자리만 모은다. 글꼴 세트 카드는 data-font-set — 누르면 오른쪽 글꼴 창과 같은 함수(pickFontSet)를 부른다.
       const curTone=[{id:'',name:'템플릿 원래 색'},...TONES].find(t=>t.id===currentTone())?.name||'직접 고른 색',curDeco=[{id:'',name:'꾸밈 없음'},...DECOS].find(d=>d.id===titleDeco)?.name||'',curFont=[{id:'',name:'기본 (강렬 어그로)'},...FONT_SETS].find(f=>f.id===fontSet)?.name||'직접 고른 글꼴';
       const fontCards='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',title:'SBAggroB'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card look-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="lk-prev" style="background:#1b1b1b;font-family:'${f.title||'Pretendard'}',sans-serif"><i style="color:#fff">제목 첫줄</i><i style="color:#fff">제목 둘째줄</i></span><b>${f.name}</b></button>`).join('')+'</div>';
-      const SUBS=[['look','완성조합','글꼴+색+꾸밈을 한 번에'],['font','글꼴','글꼴만 바꿉니다 · 색·꾸밈은 그대로'],['tone','색상','제목 색만 바꿉니다 · 글꼴·꾸밈은 그대로'],['deco','꾸밈','제목 모양만 바꿉니다(기울임 포함) · 글꼴·색은 그대로']];
+      const SUBS=[['look','완성조합','글꼴+색+꾸밈을 한 번에'],['font','글꼴','글꼴만 바꿉니다 · 색·꾸밈은 그대로'],['tone','색상','글자를 고르고 색을 바꿉니다 · 글꼴·꾸밈은 그대로'],['deco','꾸밈','제목 모양만 바꿉니다(기울임 포함) · 글꼴·색은 그대로']];
       const sub=SUBS.find(x=>x[0]===lookSub)||SUBS[0];
       const lookCards=panes.look.innerHTML.replace(/^<div class="font-set-head">[\s\S]*?<\/div>/,'');
       panes.look.innerHTML=`<div class="lk-sub-tabs">${SUBS.map(x=>`<button type="button" data-look-sub="${x[0]}" class="${x[0]===sub[0]?'active':''}">${x[1]}</button>`).join('')}</div>`
         +`<div class="lk-now"><span>지금</span><b>글꼴</b> ${curFont} · <b>색</b> ${curTone} · <b>꾸밈</b> ${curDeco||'없음'}</div><div class="lk-sub-help">${sub[2]}</div>`
-        +(sub[0]==='look'?lookCards:sub[0]==='font'?'<div class="lk-font-slot"></div><div class="font-set-head">글꼴 세트 <small>채널명·제목·자막을 한 벌로</small></div>'+fontCards:sub[0]==='tone'?panes.tone.innerHTML:panes.deco.innerHTML);
+        +(sub[0]==='look'?lookCards:sub[0]==='font'?'<div class="lk-font-slot"></div><div class="font-set-head">글꼴 세트 <small>채널명·제목·자막을 한 벌로</small></div>'+fontCards:sub[0]==='tone'?colorBox()+(colorTarget==='titleLarge'?panes.tone.innerHTML:''):panes.deco.innerHTML);
       // 글꼴: 오른쪽에 있던 '글꼴 직접 고르기' 창(검색·글자별 글꼴·크기·굵기)을 여기로 데려온다 — 창 자신의 이벤트는 그대로 돈다.
       const fp=window._p20Fonts;if(sub[0]==='font'&&fp){const slot=panes.look.querySelector('.lk-font-slot');slot.append(fp.pane);fp.pane.hidden=false;fp.draw();}
     };
@@ -768,13 +776,15 @@
     const setDeco=id=>{titleDeco=DECOS.some(d=>d.id===id)?id:'';fittedText.clear();rememberLocal({titleDeco});};
     panes.tone.addEventListener('click',event=>{const c=event.target.closest('[data-tone]');if(!c)return;applyTone(c.dataset.tone);draw();});
     panes.deco.addEventListener('click',event=>{const c=event.target.closest('[data-deco]');if(!c)return;setDeco(c.dataset.deco);renderEdit();draw();});
-    panes.look.addEventListener('click',event=>{const sb=event.target.closest('[data-look-sub]');if(sb){lookSub=sb.dataset.lookSub;draw();return;}const t=event.target.closest('[data-tone]');if(t){applyTone(t.dataset.tone);draw();return;}
+    panes.look.addEventListener('input',event=>{const c=event.target.closest('[data-color-custom]');if(c)window._p20Color?.set(colorTarget,Number(c.dataset.colorLine),c.value);});
+    panes.look.addEventListener('change',event=>{if(event.target.closest('[data-color-custom]'))draw();});
+    panes.look.addEventListener('click',event=>{const sb=event.target.closest('[data-look-sub]');if(sb){lookSub=sb.dataset.lookSub;draw();return;}const ct=event.target.closest('[data-color-target]');if(ct){colorTarget=ct.dataset.colorTarget;draw();return;}const cp=event.target.closest('[data-color-pick]');if(cp){window._p20Color?.set(colorTarget,Number(cp.dataset.colorLine),cp.dataset.colorPick);draw();return;}const t=event.target.closest('[data-tone]');if(t){applyTone(t.dataset.tone);draw();return;}
       const d=event.target.closest('[data-deco]');if(d){setDeco(d.dataset.deco);renderEdit();draw();return;}
       const f=event.target.closest('[data-font-set]');if(f){pickFontSet(f.dataset.fontSet);renderEdit();rememberLocal({fontSet,fontSets:{...fontSets}});draw();window._p20Fonts?.draw();return;}});
     panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
       pickFontSet(look.font);rememberLocal({fontSet,fontSets:{...fontSets}});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
     const css=document.createElement('style');
-    css.textContent='.lk-sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}.lk-sub-tabs button{padding:9px 0;border-radius:10px;border:1px solid #294451;background:#0b1a22;color:#cfe3df;font:800 13px system-ui,sans-serif;cursor:pointer}.lk-sub-tabs button.active{background:#0f2a24;border-color:#43e2b4;color:#e8f3f0;box-shadow:inset 0 0 0 1px #43e2b4}.lk-sub-help{color:#8fa3ad;font:700 11px system-ui,sans-serif;margin:0 2px 8px}.lk-font-slot .font-template-pane{overflow:visible;padding:0}.lk-now{position:sticky;top:0;z-index:2;background:#0b1a22;border:1px solid #294451;border-radius:10px;padding:8px 10px;margin-bottom:8px;color:#cfe3df;font:700 11px/1.5 system-ui,sans-serif}.lk-now span{color:#63edc6;font-weight:900;margin-right:6px}.lk-now b{color:#8fa3ad;font-weight:800}.lk-step{border:1px solid #294451;border-radius:12px;background:#0b1a22;margin-bottom:8px}.lk-step>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:10px 12px;align-items:center}.lk-step>summary::-webkit-details-marker{display:none}.lk-step>summary em{grid-row:span 3;width:22px;height:22px;border-radius:50%;background:#43e2b4;color:#062019;font:900 12px/22px system-ui,sans-serif;text-align:center;font-style:normal}.lk-step>summary b{color:#e8f3f0;font:900 13px system-ui,sans-serif}.lk-step>summary small{grid-column:2;color:#cfe3df;font:700 11px system-ui,sans-serif}.lk-step>summary i{grid-column:2;color:#8fa3ad;font:700 10px system-ui,sans-serif;font-style:normal}.lk-step[open]>summary{border-bottom:1px solid #1d3440}.lk-step>.font-set-grid{padding:8px}.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
+    css.textContent='.lk-color-targets{margin-bottom:8px}.lk-color-row{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:6px;margin:0 0 8px}.lk-color-row>span{color:#d7e2e7;font:800 12px system-ui,sans-serif}.lk-swatches{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.lk-swatches button{width:24px;height:24px;border-radius:50%;border:2px solid #294451;cursor:pointer;padding:0}.lk-swatches button.on{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b4}.lk-swatches input[type=color]{width:30px;height:26px;border:1px solid #294451;border-radius:6px;background:#0b1a22;padding:1px;cursor:pointer}.lk-sub-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}.lk-sub-tabs button{padding:9px 0;border-radius:10px;border:1px solid #294451;background:#0b1a22;color:#cfe3df;font:800 13px system-ui,sans-serif;cursor:pointer}.lk-sub-tabs button.active{background:#0f2a24;border-color:#43e2b4;color:#e8f3f0;box-shadow:inset 0 0 0 1px #43e2b4}.lk-sub-help{color:#8fa3ad;font:700 11px system-ui,sans-serif;margin:0 2px 8px}.lk-font-slot .font-template-pane{overflow:visible;padding:0}.lk-now{position:sticky;top:0;z-index:2;background:#0b1a22;border:1px solid #294451;border-radius:10px;padding:8px 10px;margin-bottom:8px;color:#cfe3df;font:700 11px/1.5 system-ui,sans-serif}.lk-now span{color:#63edc6;font-weight:900;margin-right:6px}.lk-now b{color:#8fa3ad;font-weight:800}.lk-step{border:1px solid #294451;border-radius:12px;background:#0b1a22;margin-bottom:8px}.lk-step>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:10px 12px;align-items:center}.lk-step>summary::-webkit-details-marker{display:none}.lk-step>summary em{grid-row:span 3;width:22px;height:22px;border-radius:50%;background:#43e2b4;color:#062019;font:900 12px/22px system-ui,sans-serif;text-align:center;font-style:normal}.lk-step>summary b{color:#e8f3f0;font:900 13px system-ui,sans-serif}.lk-step>summary small{grid-column:2;color:#cfe3df;font:700 11px system-ui,sans-serif}.lk-step>summary i{grid-column:2;color:#8fa3ad;font:700 10px system-ui,sans-serif;font-style:normal}.lk-step[open]>summary{border-bottom:1px solid #1d3440}.lk-step>.font-set-grid{padding:8px}.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
     document.head.append(css);
   }
   // ── 이 장면을 썸네일 후보로(2026-09-22 사장님): 구버전 6단계 화면의 [🖼 이 장면을 썸네일로]를 새 편집기로 옮겼다.
@@ -1394,7 +1404,7 @@
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
-    const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
+    const forcedColor=fixedColorKey&&mode==='continuous'&&((bind==='bodyTitle'&&fixedColors.get(rows[current].id)?.small)||fixedColors.get(rows[current].id)?.[fixedColorKey]);
     if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
     }else if(ln.word_colors?.length){
       String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
@@ -1565,7 +1575,7 @@
       const align=(drawLine.lpct??50)<4&&(drawLine.rpct??50)>10?'left':'center';
       const roleColor=key==='hook2'?'accent':key==='hook1'?'white':null;
       const fixedOverride=mode==='continuous'?fixedColors.get(p.id):null;
-      const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:(key==='hook2'||key==='bodyTitle')?fixedOverride.title2:null):null;
+      const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:key==='bodyTitle'?(fixedOverride.small||fixedOverride.title2):key==='hook2'?fixedOverride.title2:null):null;
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
@@ -1691,7 +1701,7 @@
       }
       if(paint){
         if(el.classList.contains('precision-text')){
-          const color=el.dataset.editBind==='hook1'?paint.title1:['hook2','bodyTitle'].includes(el.dataset.editBind)?paint.title2:null;
+          const color=el.dataset.editBind==='hook1'?paint.title1:el.dataset.editBind==='bodyTitle'?(paint.small||paint.title2):el.dataset.editBind==='hook2'?paint.title2:null;
           if(color){el.style.color=color;el.querySelectorAll('span').forEach(s=>s.style.color=color);}
         }else if(el.style.background&&paint.top)el.style.background=paint.top;
       }
@@ -2008,6 +2018,19 @@
       if(Math.abs(gap)>0.05){currentLayout.top=currentLayout.top-gap;fixedLayouts.set(layoutKey(p.id,frame),currentLayout);}
     }
     fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
+  };
+  // ★글자 대상별 색(10-14 관제 202, 사장님 "색상도 글꼴처럼 대상별로 다 조정"). 대상 → 저장 칸: 채널명=channel · 큰 제목=title1/title2 · 작은 제목=small · 자막=자막 설정 color.
+  //   썰 템플릿 훅의 띠는 자막칸(storyHookBand) — '자막'을 고르면 띠 글자(small)에 건다.
+  const colorSlot=(target,line)=>target==='channel'?'channel':target==='titleLarge'?(line===2?'title2':'title1'):target==='titleSmall'||(target==='caption'&&storyHookBand())?'small':'caption';
+  window._p20Color={
+    band:()=>storyHookBand(),
+    get:(target,line)=>{const slot=colorSlot(target,line);if(slot==='caption')return root.querySelector('[data-caption-layout="color"]')?.value||'#ffffff';
+      const p=rows[current],c=fixedColorsFor(p.id,frameFor(p));return (slot==='small'?(c.small||c.title2):c[slot])||'#ffffff';},
+    set:(target,line,hex)=>{if(!/^#[0-9a-f]{6}$/i.test(hex||''))return;const slot=colorSlot(target,line);
+      if(slot==='caption'){const input=root.querySelector('[data-caption-layout="color"]');if(input){input.value=hex;input.dispatchEvent(new Event('input',{bubbles:true}));}return;}
+      const p=rows[current],key=layoutKey(p.id,frameFor(p)),next={...(fixedColors.get(key)||{})};next[slot]=hex;fixedColors.set(key,next);
+      if(slot==='title1'||slot==='title2')colorOverrides.delete(colorKey(slot==='title1'?'white':'accent'));
+      preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();}
   };
   fixedPanel.addEventListener('input',event=>{
     const range=event.target.closest('[data-fixed-range]');
