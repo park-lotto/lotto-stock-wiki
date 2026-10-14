@@ -6716,6 +6716,19 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     }}
 
 
+def _scene_find_on(customer_id):
+    """3단계 '장면 보충' 팝업 스위치(관제 209) — 비어 있으면 관리자만(AI 장면과 같은 규약).
+    ★api_mix_scene_lab_data 바로 뒤(다음 @app. 앞)에 둔다 — 영상 관문이 그 범위만 라이브 app 에 바꿔 끼운다."""
+    store = Store(DB_PATH)
+    try:
+        v = (store.get_setting("scene_find_enabled", "") or "").strip()
+    except Exception:      # noqa: BLE001
+        v = ""
+    if not v:
+        return bool(_is_admin(customer_id))
+    return bool(_setting_gate(store, "scene_find_enabled", customer_id))
+
+
 @app.get("/api/mix/scene_lab/{job_id}/phash")
 def api_mix_scene_lab_phash(job_id: str):
     """phash 늦채움 폴링 — 썸네일(seg_thumb)이 만들어질 때마다 캐시가 늘어난다."""
@@ -6866,18 +6879,6 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     if not src or not Path(src).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     return _range_mp4_response(src, request)
-
-
-def _scene_find_on(customer_id):
-    """3단계 '장면 보충' 팝업 스위치(관제 209) — 비어 있으면 관리자만(AI 장면과 같은 규약)."""
-    store = Store(DB_PATH)
-    try:
-        v = (store.get_setting("scene_find_enabled", "") or "").strip()
-    except Exception:      # noqa: BLE001
-        v = ""
-    if not v:
-        return bool(_is_admin(customer_id))
-    return bool(_setting_gate(store, "scene_find_enabled", customer_id))
 
 
 @app.post("/api/mix/scene_lab/{job_id}/add_source")
