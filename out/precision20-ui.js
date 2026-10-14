@@ -2399,11 +2399,11 @@
   //   왼쪽 [폰트|색톤|꾸밈] 탭은 없앴다. 그 창들은 지우지 않고 여기로 옮겨 온다(이벤트는 창 자신에 걸려 있어 그대로 돈다).
   const GROUPS=[
     {key:'scope',title:'적용 범위',pick:p=>[...p.querySelectorAll(':scope > .edit-scope')]},   // 09-28: 자막·제목·채널명 공용 [모든 장면|이 장면만] — 맨 위, 기본 펼침
+    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
+    {key:'bodyMotion',title:'자막 스타일·등장·단어 강조',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
     {key:'title',title:'제목 (문구·색·꾸밈)',pick:p=>[...['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)),p.querySelector(':scope > .title-look-box')].filter(Boolean)},
     {key:'font',title:'글꼴 (제목·자막·채널명)',pick:p=>{const f=window._p20Fonts?.pane;return f&&f.parentElement===p?[f]:[];}},
     {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor'),p.querySelector(':scope > .hook-caption-note')].filter(Boolean)},
-    {key:'bodyMotion',title:'자막 스타일·등장·단어 강조',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
-    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
     {key:'quick',title:'칸 크기·배경색',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
   ];
   const style=document.createElement('style');
