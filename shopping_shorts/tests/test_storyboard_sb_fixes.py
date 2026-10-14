@@ -194,3 +194,22 @@ def test_sb_run_old_generation_does_not_clobber_new(monkeypatch):
             break
         time.sleep(0.01)
     assert app_mod._SB_TASKS[key]["result"] == {"v": 2}
+
+
+def test_insert_at_row_place_and_dup_kind(tmp_path, monkeypatch):
+    """줄 [＋ 칸 추가](관제 200): 고른 자리(at)에 한 칸 — 같은 종류가 이미 있어도 끼우고, 문장 지시의 [여기]도 그 자리."""
+    prompts = []
+
+    def fake(prompt, schema, note=None, vertex=True, model=None):
+        prompts.append(prompt)
+        if "inserts" in json.dumps(schema):
+            return {"inserts": [{"after": 9, "slot": "escalation", "line": "심지어 더 세", "ids": []}]}
+        return {"fix": []}
+    monkeypatch.setattr(sb.sg, "_call_json", fake)
+    sb._HEAD_CACHE.clear()
+    bd = _board(True)
+    bd["slots"][2]["slot"] = "escalation"      # 같은 종류가 이미 있다 — 종전 끼워 넣기는 빼던 것
+    out = sb.insert(_db(tmp_path), "j", {"board": bd, "extra": ["escalation"], "key": "1", "at": 3},
+                    R={"inventory": {}}, ex=_ex())
+    assert [x["slot"] for x in out["slots"]][3] == "escalation" and out["slots"][3].get("added")
+    assert '앞 칸 3 "손에 묻지도 않아" → [여기] → 뒤 칸 4 "이러니 품절이지"' in prompts[0]
