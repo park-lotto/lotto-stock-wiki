@@ -123,6 +123,17 @@ py tools/live_admin.py setting <키> <값>                       # 관리자 설
 □ 스위치 켜기·관리자 화면 확인·렌더/캡컷 대조 = 전부 Claude 몫. "콘솔에 붙여 넣으세요" 같은 안내 금지
 □ 경로는 `produce`처럼 앞 / 없이(git bash 가 /produce 를 파일 경로로 바꾼다)
 
+### 구글(폼·Apps Script·콘솔)도 Claude가 직접 한다 — 크롬 확장 끊겨도 (2026-10-14 사장님)
+
+사장님: **"플레이라이트 크롬확장 매일 너가 직접 하고 있는데 왜 매번 그러냐."** → "붙여넣고 실행하세요" 안내 금지.
+```
+py tools/google_browser.py check                 # 로그인 살아있나
+py tools/google_browser.py gs <파일.gs> <함수>     # Apps Script 붙여넣기+실행(권한 '허용'만 사장님)
+py tools/google_browser.py open <url>            # 로그인된 창으로 열기
+```
+□ 로그인 프로필 = `~/.claude/google_browser_profile` (한 번 로그인하면 유지). check 가 False 일 때만 `login` 띄우고 사장님께 "창에서 로그인만" 부탁
+□ 비밀번호는 Claude가 치지 않는다 — 로그인·권한 허용 클릭만 사장님 몫
+
 ---
 
 ## 🚫 0순위-A1 — **무슨 일이든 "다 됐다"는 라이브에서 끝까지 돌려본 뒤에만** (2026-09-04 → 2026-09-17 확대)

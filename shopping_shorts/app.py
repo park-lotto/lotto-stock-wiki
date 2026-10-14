@@ -6674,6 +6674,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "max_slowmo": float(config.MAX_SLOWMO),
         "cut_rule": str(plan.get("cut_rule") or ""),        # 관제 084 — 표식 있는 작업만 planClips 새 규칙
         "scene_stop": 1 if plan.get("scene_stop") else 0,   # 관제 150 — 표식 있는 새 작업만 이어 틀기를 장면 전환 앞에서 멈춘다
+        "hand_cut": 1 if plan.get("hand_cut") else 0,       # 관제 204 — 표식 있는 새 작업만 손 길이·빈칸 메우기
     }}
 
 
@@ -23771,10 +23772,44 @@ def api_produce_mix_meme(job_id: str, request: Request, body: dict):
     if float(a.get("duration") or 0) < head - 1e-3:
         return JSONResponse(status_code=422, content={"ok": False, "error": "짤이 %.2f초보다 짧아요" % head})
     hit.pop("meme_off", None)
-    hit["cutaway"] = _sbm.meme_cut({"asset_id": a["id"], "owner": 0}, head, str(a["tone"]).strip(), manual=True)
+    hit["cutaway"] = _sbm.meme_cut({"asset_id": a["id"], "owner": 0}, head, str(a["tone"]).strip(), manual=True,
+                                   pos=_sbm.meme_pos(cw) if cw else None)   # 짤을 바꿔도 사람이 고른 자리는 그대로(관제 203)
     mix_pipeline._apply_line_sfx(plan, store, _lj)          # 짤을 넣으면 그 감정 리액션 효과음도(storyboard.sfx_slots)
     _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "cutaway": hit["cutaway"], "sfx": hit.get("sfx")}
+
+
+@app.post("/api/produce/mix/{job_id}/meme_adjust")
+def api_produce_mix_meme_adjust(job_id: str, request: Request, body: dict):
+    """3단계 칸 짤 자리(앞/중간/뒤)·길이 바꾸기(관제 203) — body {beat_idx, pos?, head_sec?}.
+    판단은 storyboard.meme_adjust 한 곳. 컷 배분은 화면 scenesV2Alloc 이 cutaway(pos·head_sec)를 읽어 정하고 렌더·캡컷은 그 컷을 그대로 굽는다."""
+    from shopping_shorts import storyboard as _sbm
+    _c, denied = _meme_gate(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 바꿀 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in plan.get("beats") or [] if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    cw = hit.get("cutaway")
+    a = _meme_asset(store, (cw or {}).get("asset_id")) if isinstance(cw, dict) else None
+    _words, dur = mix_pipeline._meme_words_of(hit)
+    new, why = _sbm.meme_adjust(cw, dur, (a or {}).get("duration"), pos=body.get("pos"), sec=body.get("head_sec"))
+    if new is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": why})
+    hit["cutaway"] = new
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "cutaway": new, "sfx": hit.get("sfx")}
 
 
 def _meme_pack_page(request: Request):

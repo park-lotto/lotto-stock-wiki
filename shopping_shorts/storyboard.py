@@ -478,7 +478,7 @@ def apply_signals(slots, key, nth=0, yt=True):
 
 
 # ── 감정짤 자리(관제 139, 2026-10-06 사장님 확정) ─────────────────────────────────────────────────────
-#   ★"어느 줄 맨 앞에 짤을 몇 초 넣나"의 주인은 meme_slots 하나다. 3단계 화면(scene_play.js scenesV2Alloc)·렌더·캡컷·ZIP 은
+#   ★"어느 줄에 짤을 몇 초 넣나"의 주인은 meme_slots 하나다(자리 앞/중간/뒤·길이를 사람이 바꾸면 meme_adjust, 관제 203). 3단계 화면(scene_play.js scenesV2Alloc)·렌더·캡컷·ZIP 은
 #     이 함수가 남긴 beat["cutaway"](match_type "meme", head_sec)를 **읽기만** 한다 — 짤 컷을 첫 컷으로 두고 남은 시간에 장면을 나눈다.
 #   규칙: 신호어 자리 [1]·[3] 줄만 · 길이 = 그 줄 음성에서 신호어 마지막 낱말이 끝나는 초를 1.0~2.0초로 자름 · 시작은 줄 시작 ·
 #         짤 뒤 남은 시간이 장면 하나 하한(1.0초)보다 짧으면 그 줄은 짤 없음.
@@ -608,13 +608,58 @@ def meme_head(beat, words, dur, manual=False):
     return head, None
 
 
-def meme_cut(asset, head, emotion, manual=False):
+MEME_POS = ("head", "mid", "tail")   # 짤 자리(관제 203) — 줄 맨 앞 / 가운데 / 맨 끝. 없으면 head(종전)
+MEME_ADJ_MIN = 0.5          # 사람이 −/+ 로 줄일 수 있는 짤 최소 길이
+MEME_ADJ_MAX = 3.0          # 사람이 −/+ 로 늘릴 수 있는 짤 최대 길이
+
+
+def meme_pos(cw):
+    """짤 자리 판정의 주인 — 화면(scene_play.js memeHeadOf)도 같은 규칙(없거나 모르는 값 = head)."""
+    p = str((cw or {}).get("pos") or "head")
+    return p if p in MEME_POS else "head"
+
+
+def meme_adjust(cw, dur, asset_dur, pos=None, sec=None):
+    """사람이 3단계에서 짤 자리·길이를 바꾼다(관제 203) — 판단은 여기 한 곳. 돌려주는 것 = (새 cutaway, None) | (None, 이유).
+    길이는 0.5~3.0초 · 짤 파일 길이 이하 · 짤 뒤(또는 앞뒤) 장면이 scene_min 이상 남게. 바꾼 짤은 manual(자동이 다시 안 정함)."""
+    if not isinstance(cw, dict) or cw.get("match_type") != "meme":
+        return None, "이 줄엔 짤이 없어요"
+    out = dict(cw)
+    if pos is not None:
+        if pos not in MEME_POS:
+            return None, "자리는 앞·중간·뒤 중 하나예요"
+        out["pos"] = pos
+    if sec is not None:
+        try:
+            sec = round(float(sec), 2)
+        except (TypeError, ValueError):
+            return None, "길이가 숫자가 아니에요"
+        hi = min(MEME_ADJ_MAX, float(asset_dur or 0) or MEME_ADJ_MAX)
+        if sec < MEME_ADJ_MIN - 1e-6 or sec > hi + 1e-6:
+            return None, "짤 길이는 %.1f~%.2f초예요" % (MEME_ADJ_MIN, hi)
+        out["head_sec"] = sec
+    smin = float(out.get("scene_min") or MEME_SCENE_MIN)
+    try:
+        rest = float(dur or 0) - float(out.get("head_sec") or 0)
+    except (TypeError, ValueError):
+        rest = 0.0
+    if rest < smin - 1e-6:
+        return None, "짤 뒤 장면이 %.1f초는 남아야 해요(지금 %.2f초)" % (smin, rest)
+    if meme_pos(out) == "head":
+        out.pop("pos", None)      # 종전 모양 그대로(앞 = 표식 없음)
+    out["manual"] = 1
+    return out, None
+
+
+def meme_cut(asset, head, emotion, manual=False, pos=None):
     """beat["cutaway"] 짤 모양 — 화면·렌더·캡컷이 읽는 열쇠는 여기 한 곳에서 만든다."""
     cw = {"asset_id": int(asset["asset_id"]), "match_type": "meme", "head_sec": head,
           "vid": "meme_%d" % int(asset["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
           "emotion": emotion, "scene_min": MEME_SCENE_MIN, "owner": int(asset.get("owner") or 0)}
     if manual:
         cw["manual"] = 1          # 사람이 고른 짤 — meme_slots 가 다시 정할 때 건드리지 않는다
+    if pos in ("mid", "tail"):
+        cw["pos"] = pos           # 짤 자리(관제 203) — 화면 scenesV2Alloc 이 이 자리에 짤 컷을 둔다
     return cw
 
 
