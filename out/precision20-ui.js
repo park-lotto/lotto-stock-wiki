@@ -216,7 +216,7 @@
     leftTabs.className='tool-tabs left-pane-tabs';
     // 2026-09-22 사장님 확정: [추천|장면|폰트|색톤|꾸밈]. 추천·색톤·꾸밈 창은 아래 '장면폰트 룩' 블록이 만든다(scene-style-lefttab 이벤트로 연결).
     //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
-    leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button>';
+    leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천 완성조합</button><button type="button" class="active" data-left-tab="scene">장면</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{const lookRow=r=>{const cur=lookValue(r.key);return `<div class="text-look-row" data-look-row="${r.key}"><span>${r.label}<small>${r.help}</small></span><button type="button" data-look-step="${r.key}" data-delta="${-r.step}" aria-label="${r.label} 줄이기">−</button><input type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${cur}" data-look-range="${r.key}" aria-label="${r.label}"><button type="button" data-look-step="${r.key}" data-delta="${r.step}" aria-label="${r.label} 늘리기">＋</button><output data-look-value="${r.key}">${cur}</output></div>`};const targetButtons=TEXT_LOOK_TARGETS.map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');const curFam=fontPick[textLookTarget]||'',tLabel=TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget)?.label||'';
       const fontItems=FONT_LIST.map(f=>`<button type="button" class="font-one${f.fam===curFam?' selected':''}" data-font-one="${f.fam}" data-font-name="${f.name}" style="font-family:'${f.fam}'">${f.name}${f.isNew?'<i>NEW</i>':''}</button>`).join('');
@@ -741,7 +741,7 @@
     const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
     const draw=()=>{
       const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
-      panes.look.innerHTML='<div class="font-set-head">완성 조합 <small>글꼴·색·꾸밈을 한 번에</small></div><div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
+      panes.look.innerHTML='<div class="font-set-head">추천 완성조합 <small>글꼴·색·꾸밈을 한 번에</small></div><div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
       panes.tone.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 원래 색',bg:'#1b1b1b',c1:'#FFFFFF',c2:'#9aa7b0'},...TONES].map(t=>`<button type="button" class="font-set-card look-card${t.id===currentTone()?' selected':''}" data-tone="${t.id}">${sample(t,titleDeco,family)}<b>${t.name}</b></button>`).join('')+'</div>';
       panes.deco.innerHTML='<div class="font-set-grid">'+[{id:'',name:'꾸밈 없음'},...DECOS].map(d=>`<button type="button" class="font-set-card look-card${d.id===titleDeco?' selected':''}" data-deco="${d.id}">${sample(tone,d.id,family)}<b>${d.name}</b></button>`).join('')+'</div>';
     };
