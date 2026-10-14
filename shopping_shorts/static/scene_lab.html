@@ -1037,7 +1037,8 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-cut{position:absolute;top:0;height:100%;border:2px solid #ff9614;border-radius:4px;
     background:#12161c;overflow:hidden;cursor:pointer}
 .tl-cut .tl-thumb{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.tl-cut.open .tl-thumb{display:none}
+/* 필름 그림은 대표 썸네일 위에 덮는다 — 못 오면 썸네일이 그대로 보인다(검은 칸 금지, 관제 204) */
+.tl-cut .tl-frames img.strip{flex:none;width:100%;height:100%;object-fit:fill;display:block;border:0}
 .tl-cut .tl-frames{position:absolute;inset:0;display:flex;pointer-events:none}
 .tl-cut .tl-frames img{flex:1;min-width:0;height:100%;object-fit:cover;
     border-right:1px solid rgba(255,255,255,.15)}
