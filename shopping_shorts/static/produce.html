@@ -12496,8 +12496,9 @@ function renderSceneCutaway(beat, idx){
   // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
   const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
   if(memeOn && cw && cw.match_type==='meme'){
-    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
-      + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 ${({mid:'가운데',tail:'맨 끝'})[cw.pos]||'맨 앞'} ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+      + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`
+      + `<div class="mp-cell">${memePosBtns(cw, p => `memeCellAdjust(${idx},{pos:'${p}'})`, d => `memeCellAdjust(${idx},{head_sec:${d}})`, 'mp-btn')}</div>`;
   }
   if(memeOn && !cw){
     html += `<button class="mp-btn mp-add" onclick="memeCellOpen(${idx})" title="이 줄 맨 앞에 감정짤을 넣어요">＋짤</button>`;
@@ -12525,6 +12526,18 @@ function memeCellOpen(idx){
   const cw = b.cutaway || {};
   MemePack.openDrawer({title: (idx+1)+'번 줄 짤 고르기', emotion: cw.emotion || '', cur: cw.asset_id,
                        onPick: id => memeCellSet(idx, id)});
+}
+// 짤 자리(앞/중간/뒤)·길이(−/+) 바꾸기(관제 203) — 판단은 서버 storyboard.meme_adjust. 칸 상자는 _refreshBeatBox 로만 다시 그린다
+async function memeCellAdjust(idx, ch){
+  if(!MIX_JOB) return;
+  let r = null;
+  try{
+    r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/meme_adjust',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({beat_idx: mixBeatIdAt(idx)}, ch))})).json();
+  }catch(e){ toast('짤 반영 실패(네트워크)'); return; }
+  if(!r || !r.ok){ toast((r&&r.error)||'짤 반영 실패'); return; }
+  await _refreshBeatBox(idx);
 }
 // 저장 — 길이(head_sec)는 서버가 정한다(storyboard.meme_head, 자동 배치와 같은 함수). 칸 상자는 renderSceneCutaway 로만 다시 그린다
 async function memeCellSet(idx, assetId){

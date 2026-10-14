@@ -127,6 +127,21 @@
     ".mp-btn{cursor:pointer;border:1px solid #6b2d7a;border-radius:8px;padding:2px 9px;font-size:12px;background:transparent;color:inherit}" +
     ".mp-add{display:inline-block;margin-top:6px}";
   document.head.appendChild(css);
+  // 짤 자리(앞/중간/뒤)·길이(−/+ 0.25초) 버튼 한 벌(관제 203) — 3단계 두 화면(produce·scene_lab)이 같이 쓴다.
+  //   onPos(p)·onLen(초) = onclick 문자열을 돌려주는 함수. 판단(허용 범위)은 서버 storyboard.meme_adjust 가 한다.
+  function posBtns(cw, onPos, onLen, cls) {
+    var cur = (cw && (cw.pos === "mid" || cw.pos === "tail")) ? cw.pos : "head";
+    var sec = Number((cw || {}).head_sec) || 0;
+    var c = cls ? ' class="' + cls + '"' : "";
+    var on = function (p) { return p === cur ? ' style="background:#c85cff;color:#fff;border-color:#c85cff"' : ""; };
+    var b = function (p, t) { return "<button" + c + on(p) + ' title="짤을 줄 ' + t + '에" onclick="' + onPos(p) + '">' + t + "</button>"; };
+    return '<span style="font-size:12px;opacity:.8">자리</span>' + b("head", "앞") + b("mid", "중간") + b("tail", "뒤") +
+      ' <span style="font-size:12px;opacity:.8">길이</span>' +
+      "<button" + c + ' title="0.25초 짧게" onclick="' + onLen(Math.round((sec - 0.25) * 100) / 100) + '">−</button>' +
+      '<b style="font-size:12px;min-width:38px;text-align:center;display:inline-block">' + sec.toFixed(2) + "초</b>" +
+      "<button" + c + ' title="0.25초 길게" onclick="' + onLen(Math.round((sec + 0.25) * 100) / 100) + '">＋</button>';
+  }
+  window.memePosBtns = posBtns;
   window.MemePack = { load: load, toggleFav: toggleFav, onChange: onChange, clip: clip, rankOf: rankOf, favIds: favIds,
     video: video, card: card, tabs: tabs, listOf: listOf, openDrawer: openDrawer, closeDrawer: closeDrawer,
     drawerTab: drawerTab, grid: grid, NOTE: "이 감정 줄(특정 연결어 자리)에 들어갈 짤을 ⭐ 1·2·3·4 로 담아 두면 그 후보 중 랜덤으로 배치돼요", pick: pick, poster: poster, media: media, state: S, esc: e };
