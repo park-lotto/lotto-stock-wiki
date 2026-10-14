@@ -2,7 +2,7 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open class="dec-shopset"><summary>🛍 구매링크 숏폼 안내</summary><p data-shopset-help>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target" hidden>가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs hidden><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ box.innerHTML=`<details open class="dec-shopset"><summary>🛍 구매링크 숏폼 안내</summary><p data-shopset-help>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target" hidden>가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs hidden><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small><div class="dec-mysets"><p>⭐ <b>내 세트</b> — 지금 장면에 꾸민 것(배지·화살표·스티커 등)을 통째로 저장해 두고 다른 영상에서도 한 번에 넣어요</p><button type="button" data-myset-save>⭐ 지금 장면 꾸밈을 내 세트로 저장</button><div data-myset-list></div><small data-myset-status></small></div></details>
  <details open class="dec-longform" hidden><summary>📺 구매링크 롱폼 안내</summary><p>완성한 쇼츠를 <b>가로(롱폼) 영상</b>으로 만들 때 얹는 문구 띠와 큰 화살표예요. 문구를 고르면 미리보기가 롱폼으로 바뀝니다. 끌어서 옮기고, 초록 점을 끌어 크기를 바꾸세요. 9단계 「롱폼으로 렌더」에서 이대로 만들어져요.</p><div class="dec-choices" data-lf-sets></div><div data-lf-edit hidden><label>앞말<input data-lf="pre" type="text" maxlength="24"></label><label data-lf-hot>강조 칸<input data-lf="hot" type="text" maxlength="24"></label><label>뒷말<input data-lf="post" type="text" maxlength="24"></label><label class="dec-lf-tts">🔊 읽어 줄 말(성우가 영상 머리에 한 번)<input data-lf="tts" type="text" maxlength="80" placeholder="비우면 무음"></label><div class="dec-choices" data-lf-tts-presets></div></div><div class="dec-choices"><button type="button" data-lf-clear>롱폼 안내 빼기</button></div><small data-lf-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
@@ -294,6 +294,24 @@
    selected=-1;controls();draw();
    const st=box.querySelector('.dec-my-badges p');if(st)st.textContent=(done.length?`⭐ 「${def.text}」 ${done.join('·')}장에 넣었어요`:'넣을 장면이 없어요')+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
  }
+ // 내 세트(관제 206 — 회원 "만든 꾸밈을 즐겨찾기로 두고 마지막 3컷에 바로"): 한 장면의 꾸밈 항목(masks) 전부를 이름 붙여 이 브라우저에 저장.
+ //   넣는 자리 규칙(1장=훅 제외·12개 상한·다시 누르면 새로 놓임)은 구매링크 세트(shopSet)·내 배지와 같다. 최대 12세트.
+ const MY_SETS='scene_style_my_sets',MY_SET_MAX=12;
+ const mySets=()=>{try{const v=JSON.parse(localStorage.getItem(MY_SETS)||'[]');return Array.isArray(v)?v.filter(x=>x&&x.name&&Array.isArray(x.items)&&x.items.length).slice(0,MY_SET_MAX):[]}catch{return []}};
+ const saveMySets=list=>{try{localStorage.setItem(MY_SETS,JSON.stringify(list.slice(0,MY_SET_MAX)));return true}catch{return false}};
+ function mySetList(){
+   const el=box.querySelector('[data-myset-list]');if(!el)return;el.replaceChildren();
+   mySets().forEach((st,i)=>{const row=document.createElement('div');row.className='dec-myset';const nm=document.createElement('b');nm.textContent=`${st.name} (${st.items.length}개)`;
+     row.append(nm,button('마지막 3장면','data-myset-last3',i),button('이 장면만','data-myset-here',i),button('×','data-myset-del',i));el.append(row);});
+ }
+ function mySetApply(st,scope){
+   const total=api.sceneCount?.()||0,cur=api.geometry().sceneIndex,tag='myset:'+st.name;
+   const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):[cur];let done=[],full=[];
+   for(const i of targets){const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==tag);if(keep.length+st.items.length>12){full.push(i+1);continue;}
+     api.effectAt(i,{...api.effectAt(i),masks:[...keep,...st.items.map(m=>({...structuredClone(m),set:tag}))]});done.push(i+1);}
+   selected=-1;controls();draw();
+   box.querySelector('[data-myset-status]').textContent=(done.length?`「${st.name}」 ${done.join('·')}장에 넣었어요`:'넣을 장면이 없어요')+(full.length?` (${full.join('·')}장은 항목이 12개를 넘어 못 넣음)`:'');
+ }
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
@@ -314,6 +332,13 @@
    const b=event.target.closest('button');if(!b)return;
    if(b.hasAttribute('data-dec-kit')){box.querySelectorAll('[data-kit]').forEach(el=>el.hidden=el.dataset.kit!==b.dataset.decKit);box.querySelectorAll('[data-dec-kit]').forEach(el=>el.classList.toggle('active',el===b));return;}
    if(b.hasAttribute('data-dec-category')){category=Number(b.dataset.decCategory);picker();return;}
+   if(b.hasAttribute('data-myset-save')){
+     const items=masks().filter(m=>m.kind!=='image').map(({set,...m})=>m),stt=box.querySelector('[data-myset-status]');
+     if(!items.length){stt.textContent='이 장면에 꾸민 것이 없어요 — 배지·화살표 등을 먼저 넣어 주세요';return;}
+     const name=(prompt('세트 이름',`내 세트 ${mySets().length+1}`)||'').trim().slice(0,20);if(!name)return;
+     const ok=saveMySets([{name,items},...mySets().filter(x=>x.name!==name)]);mySetList();stt.textContent=ok?`「${name}」 저장했어요(${items.length}개)`:'저장하지 못했어요(브라우저 저장 공간)';return;}
+   if(b.hasAttribute('data-myset-last3')||b.hasAttribute('data-myset-here')){const st=mySets()[Number(b.dataset.mysetLast3??b.dataset.mysetHere)];if(st)mySetApply(st,b.hasAttribute('data-myset-last3')?'last3':'here');return;}
+   if(b.hasAttribute('data-myset-del')){const l=mySets();l.splice(Number(b.dataset.mysetDel),1);saveMySets(l);mySetList();return;}
    if(b.hasAttribute('data-my-badge-last3')){const def=myBadges()[Number(b.dataset.myBadgeLast3)];if(def)myBadgeLast3(def);return;}
    if(b.hasAttribute('data-del-my-badge')){const mine=myBadges();mine.splice(Number(b.dataset.delMyBadge),1);saveMyBadges(mine);picker();return;}
    if(b.hasAttribute('data-save-badge')){
@@ -399,7 +424,7 @@
  toolbar.querySelector('button').addEventListener('click',removeSelected);
  document.addEventListener('keydown',event=>{if(!['Delete','Backspace'].includes(event.key)||event.target.closest('input,textarea,select,[contenteditable="true"]')||panel.hidden)return;if(selected>=0){event.preventDefault();removeSelected();}});
  new MutationObserver(draw).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
- addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();draw();
+ addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();mySetList();draw();
  box.querySelector('[data-lf-edit]').addEventListener('input',event=>{const el=event.target.closest('[data-lf]'),i=Number(box.querySelector('[data-lf-edit]').dataset.i);if(el&&i>=0)lfApi()?.patch(i,{[el.dataset.lf]:el.value});});
  window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();},linkGuide(on){guideForce=!!on;applyGuide();ytDraw();return guideOn()}};
 })();
