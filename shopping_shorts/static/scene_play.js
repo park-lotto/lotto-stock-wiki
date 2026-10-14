@@ -2571,7 +2571,11 @@ function togglePause(ev){
 let sfxAudio = null;
 const sfxTimers = [];
 
-function sfxUrl(assetId){ return '/api/scene/' + encodeURIComponent(assetId) + '/media'; }
+function sfxUrl(assetId){
+  // 우리 효과음팩(서랍) 소리는 /api/sfx 로(회원도 들을 수 있게) — 서랍 목록은 scene_lab loadSfxList(cat 있는 항목)
+  const bank = typeof SFX_LIST !== 'undefined' && SFX_LIST && SFX_LIST.some(a => a.cat && String(a.id) === String(assetId));
+  return (bank ? '/api/sfx/' : '/api/scene/') + encodeURIComponent(assetId) + '/media';
+}
 
 // 자산 하나를 지금 즉시 들려준다(드롭다운 옆 ▶ 미리듣기).
 function previewSfx(assetId){

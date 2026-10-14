@@ -22271,14 +22271,27 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     manual = {b["beat_idx"] for b in beats if (b.get("sfx") or {}).get("match_type") == "manual"}
     ev = sfx_pack.plan_events(timeline, manual, density=st["density"], mute_beats=st["mute_beats"]) if (timeline and on and got) else []
     tl_by = {t["beat_idx"]: t for t in timeline}
+    # ★칸마다 실제로 울리는 효과음(관제 203, 10-14 사장님 "2단계에서 매칭된 효과음이 어디 배치됐는지 볼 수가 없나") —
+    #   렌더·캡컷과 같은 함수(video_assemble.sfx_events_for + _resolve_sfx_paths)로 잰다. 화면은 음성 줄에 🔊 로 그리기만.
+    sounds = []
+    try:
+        if timeline:
+            _sp = mix_pipeline._resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job) or {}
+            _line = {str(v) for k, v in _sp.items() if k != "_pack" and v}
+            for e in video_assemble.sfx_events_for(timeline, _sp):
+                sounds.append((float(e[1]), Path(str(e[0])).stem, "line" if str(e[0]) in _line else "pack"))
+    except Exception as _e:      # noqa: BLE001 — 표시만 못 한다(렌더와 무관)
+        print("[sfx] 칸 효과음 표시 실패 job=%s: %r" % (job_id, _e), file=sys.stderr)
     for b in beats:
         bi = b.get("beat_idx")
         t = tl_by.get(bi)
         hits = [e for e in ev if t and float(t["t0"]) <= e[1] < float(t["t0"]) + float(t["dur"])]
+        _snd = [{"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd} for s0, nm, kd in sounds
+                if t and float(t["t0"]) - 1e-3 <= s0 < float(t["t0"]) + float(t["dur"])]
         caps = b.get("caption_lines") or []
         label = (caps[0] if caps else str(b.get("narration") or ""))[:18]
         beats_out.append({"beat_idx": bi, "role": b.get("role") or "", "label": label, "hits": len(hits),
-                          "muted": bi in st["mute_beats"], "manual": bi in manual})
+                          "muted": bi in st["mute_beats"], "manual": bi in manual, "sounds": _snd})
     return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
             "pack": got[0] if got else None, "pack_no": pack_no, "pack_choice": choice or "auto",
             "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
