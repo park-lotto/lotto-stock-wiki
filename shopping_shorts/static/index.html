@@ -2656,9 +2656,9 @@ function render(opts){
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
       ${i.thumbnail?`<div class="thumb" data-thumb="${thumbURL(i.thumbnail, i.shortcode)}">
-        <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} onerror="this.style.visibility='hidden'">
+        <img src="${thumbURL(i.thumbnail, i.shortcode)}" ${_thumbPlayAttr(i.platform||PLATFORM, i.shortcode, i.video_url)} onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
-        ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
+        ${_thumbPlayAttr(i.platform||PLATFORM, i.shortcode, i.video_url)?'<span class="play-badge">▶</span>':''}
       </div>`:''}
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}${viewBadge(i.views)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
@@ -2808,9 +2808,24 @@ async function _renderChannelHistory(username, liveShortcodes){
     markSavedButtons();
   }catch(e){ wrap.innerHTML=''; }
 }
+// 썸네일 클릭 재생 연결 — 48h 카드·'지난 한 달' 카드가 같이 쓴다(한 곳에서만 정한다).
+// '지난 한 달'엔 재생 연결이 없어 눌러도 안 됐다(2026-10-14 제보).
+function _platformOfUrl(u){
+  u=String(u||'');
+  if(/youtube\.com|youtu\.be/.test(u)) return 'youtube';
+  if(/tiktok\.com/.test(u)) return 'tiktok';
+  if(/instagram\.com/.test(u)) return 'instagram';
+  return '';
+}
+function _thumbPlayAttr(platform, sc, videoUrl){
+  if(videoUrl) return `data-vurl="${'/api/video?url='+encodeURIComponent(videoUrl)}" onclick="playInline(this)"`;
+  if(!sc) return '';
+  const fn={youtube:'playYoutube', tiktok:'playTiktok', instagram:'playInstagram'}[platform];
+  return fn?`onclick="${fn}(this,'${sc}')"`:'';
+}
 function _historyCard(h){
   return `<div class="card">
-    <div class="thumb"><img src="${thumbURL(h.thumb, h.shortcode)}" onerror="this.style.visibility='hidden'"></div>
+    <div class="thumb"><img src="${thumbURL(h.thumb, h.shortcode)}" ${_thumbPlayAttr(_platformOfUrl(h.url), h.shortcode)} onerror="this.style.visibility='hidden'">${_thumbPlayAttr(_platformOfUrl(h.url), h.shortcode)?'<span class="play-badge">▶</span>':''}</div>
     <div class="body">
       <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
       <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
