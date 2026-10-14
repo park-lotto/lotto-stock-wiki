@@ -2029,7 +2029,9 @@
       const p=rows[current],c=fixedColorsFor(p.id,frameFor(p));return (slot==='small'?(c.small||c.title2):c[slot])||'#ffffff';},
     set:(target,line,hex)=>{if(!/^#[0-9a-f]{6}$/i.test(hex||''))return;const slot=colorSlot(target,line);
       if(slot==='caption'){const input=root.querySelector('[data-caption-layout="color"]');if(input){input.value=hex;input.dispatchEvent(new Event('input',{bubbles:true}));}return;}
-      const p=rows[current],key=layoutKey(p.id,frameFor(p)),next={...(fixedColors.get(key)||{})};next[slot]=hex;fixedColors.set(key,next);
+      const p=rows[current],key=layoutKey(p.id,frameFor(p)),next={...(fixedColors.get(key)||{})};
+      if(slot==='title2'&&!next.small){const el=preview.querySelector('.precision-text[data-edit-bind="bodyTitle"]'),m=el&&getComputedStyle(el).color.match(/\d+/g);if(m)next.small='#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join('');}   // 작은 제목(띠)은 따로 안 골랐으면 2줄 색을 따라간다 — 2줄을 바꿀 때 띠까지 같이 바뀌지 않게 지금 색으로 붙잡아 둔다(10-14 사장님 제보)
+      next[slot]=hex;fixedColors.set(key,next);
       if(slot==='title1'||slot==='title2')colorOverrides.delete(colorKey(slot==='title1'?'white':'accent'));
       preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();}
   };
