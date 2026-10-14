@@ -188,6 +188,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbcut .delx{position:absolute;right:3px;bottom:6px;z-index:4;background:rgba(0,0,0,.72);
     color:#ff9d9d;border:1px solid var(--line);border-radius:5px;padding:0 5px;
     font-size:12px;line-height:16px;cursor:pointer}
+.tbcut .tailb{position:absolute;right:3px;top:26px;z-index:4;border:0;border-radius:6px;padding:2px 6px;
+  font-size:11px;font-weight:800;cursor:pointer;background:var(--warn);color:#3a2a08}
+.tbcut .tailb.on{background:#2fbf71;color:#04201b}
 .tbcut .delx:hover{background:#a03434;color:#fff;border-color:transparent}
 /* 🔒 컷 잠금은 **위쪽 필름(타임라인)**에 있다(2026-09-16 사장님 "자물쇠는 카드가 아니라
    위쪽 필름 위에 있어야 한다") — 길이를 끌어 조절하는 곳이 거기다. CSS는 scene_timeline.js
@@ -2781,6 +2784,17 @@ function cardThumbId(c){
   if (seg.start != null && Math.abs(a - +seg.start) < 0.05 && b <= +seg.end + 0.05) return c.seg_id;
   return _extraId(c.video_id, a, b);
 }
+// ★카드 꼬리 배지(관제 201, 2026-10-14 사장님 "0.2초가 뒤에 더 있는 걸 알 수 있게, 끝까지 보여줄지 버튼 — 아주 심플하게").
+//   박스로 고른 구간(film_)이 이 컷보다 길면 카드에 "+0.2초" — 누르면 그 구간을 끝까지 빠르게(fitToggle → planClips 가 정한다).
+//   켠 카드는 "끝까지 ✓" — 다시 누르면 되돌림. 판단(배속·길이)은 여기서 안 한다: planClips 의 src_dur 를 그대로 읽는다.
+function tailBadge(i, c){
+  if (!cutRuleIsV2() || !String(c.seg_id || '').startsWith('film_')) return '';
+  const g = (DATA.segments || {})[c.seg_id] || {}, len = +g.end - +g.start, src = +(c.src_dur || c.dur);
+  if (src > +c.dur + 0.05)
+    return `<button type="button" class="tailb on" title="고른 구간을 끝까지 ${(src / +c.dur).toFixed(2)}배 빠르게 보여 주는 중 — 누르면 되돌립니다" onclick="event.stopPropagation();clearTimeout(clickTimer);fitToggle(${i}, '${c.seg_id}', false)">끝까지 ✓</button>`;
+  if (!(len > +c.dur + 0.05)) return '';
+  return `<button type="button" class="tailb" title="고른 구간 뒤 ${(len - +c.dur).toFixed(1)}초가 잘려요 — 누르면 끝까지 보여 줍니다(영상만 ${Math.min(FIT_FAST_MAX, len / +c.dur).toFixed(2)}배 빠르게, 목소리 그대로)" onclick="event.stopPropagation();clearTimeout(clickTimer);fitToggle(${i}, '${c.seg_id}', true)">+${(len - +c.dur).toFixed(1)}초 ▶</button>`;
+}
 // [속도 맞추기] 켜고 끄기 — 칸 데이터(fit_segs)에 적고 다시 그린다. 저장은 _editPayload가 싣는다(다른 토글과 같은 길).
 function fitToggle(i, segId, on){
   const b = DATA.beats[i]; if (!b) return;
@@ -3551,7 +3565,7 @@ function renderBand(){
       if (src > +c.dur + 0.05)
         return `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 고른 구간 전체를 ${(src / +c.dur).toFixed(2)}배 빠르게 넣었어요${
           _len > src + 0.05 ? ` <span class="slowwarn">너무 길어 뒤 ${(_len - src).toFixed(1)}초는 잘려요 — 구간을 줄여 주세요</span>` : ''} <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button></div>`;
-      if (cutRuleIsV2() && _len > +c.dur + 0.3 && gap < 0.05)
+      if (cutRuleIsV2() && _len > +c.dur + 0.05 && gap < 0.05)
         return `<div class="cutgap" onclick="event.stopPropagation()">⏩ ${ci + 1}번째 카드: 고른 구간 뒤 ${(_len - +c.dur).toFixed(1)}초가 잘려요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">빠르게 맞추기 ${Math.min(FIT_FAST_MAX, _len / +c.dur).toFixed(2)}배</button></div>`;
       if (gap < 0.05) return '';
       const ratio = (+c.dur / src).toFixed(2);
@@ -3577,7 +3591,7 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초${c.more ? ` · 옆 장면이 짧아 원본에서 ${c.more.toFixed(1)}초 더 이어 보여 줘요` : ''} · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
+             <img src="${SL.thumb(cardThumbId(c))}">${tailBadge(i, c)}<span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
