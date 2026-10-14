@@ -96,6 +96,9 @@
     if(sc[sceneIndex]?.beat_idx===sc[0]?.beat_idx)return false;   // 첫 비트(훅 문장)는 기존 훅 그대로
     return !!(frameFor(rows[current])?.white_box||hookCapLine(frameFor(rows[current])));
   };
+  // ★썰 템플릿 훅의 제목 아래 띠(작은 제목 자리) = 자막칸으로 다룬다(10-14 사장님 "썰 템플릿 훅에서는 작은 제목을 없애라 — 자막자리면 자막칸으로").
+  //   글자 묶음(글꼴·두께·그림자·자간·행간)의 주인은 textLookGroup 하나 — 편집기·렌더·썸네일·캡컷이 모두 이 페이지로 그리므로 여기 한 곳만 바꾼다.
+  const storyHookBand=()=>kind==='hook'&&mode!=='continuous'&&rows[current]?.id!==PLAIN_ID&&!!(frameFor(rows[current])?.white_box||hookCapLine(frameFor(rows[current])));
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
   // ★자막 기본 배치는 **이 함수 하나**로 정한다(2026-09-25 Opus 검토 — 네 곳에 따로 적혀 원본 예외가 두 곳에서 빠졌다:
   //   원본에서 슬라이더를 만지면 다른 장면 자막이 'title' 배치가 돼 화면 맨 위(y=0)로 튀었다. 렌더·캡컷도 같은 코드라 영상에도 나온다).
@@ -218,7 +221,7 @@
     //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
     leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천 완성조합</button><button type="button" class="active" data-left-tab="scene">추천 템플릿</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
-    const drawFontSets=()=>{const lookRow=r=>{const cur=lookValue(r.key);return `<div class="text-look-row" data-look-row="${r.key}"><span>${r.label}<small>${r.help}</small></span><button type="button" data-look-step="${r.key}" data-delta="${-r.step}" aria-label="${r.label} 줄이기">−</button><input type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${cur}" data-look-range="${r.key}" aria-label="${r.label}"><button type="button" data-look-step="${r.key}" data-delta="${r.step}" aria-label="${r.label} 늘리기">＋</button><output data-look-value="${r.key}">${cur}</output></div>`};const targetButtons=TEXT_LOOK_TARGETS.map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');const curFam=fontPick[textLookTarget]||'',tLabel=TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget)?.label||'';
+    const drawFontSets=()=>{const lookRow=r=>{const cur=lookValue(r.key);return `<div class="text-look-row" data-look-row="${r.key}"><span>${r.label}<small>${r.help}</small></span><button type="button" data-look-step="${r.key}" data-delta="${-r.step}" aria-label="${r.label} 줄이기">−</button><input type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${cur}" data-look-range="${r.key}" aria-label="${r.label}"><button type="button" data-look-step="${r.key}" data-delta="${r.step}" aria-label="${r.label} 늘리기">＋</button><output data-look-value="${r.key}">${cur}</output></div>`};const band=storyHookBand();if(band&&textLookTarget==='titleSmall')textLookTarget='caption';const targetButtons=TEXT_LOOK_TARGETS.filter(t=>!(band&&t.id==='titleSmall')).map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');const curFam=fontPick[textLookTarget]||'',tLabel=TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget)?.label||'';
       const fontItems=FONT_LIST.map(f=>`<button type="button" class="font-one${f.fam===curFam?' selected':''}" data-font-one="${f.fam}" data-font-name="${f.name}" style="font-family:'${f.fam}'">${f.name}${f.isNew?'<i>NEW</i>':''}</button>`).join('');
       fontPane.innerHTML=`<input type="search" class="font-search" data-font-search placeholder="🔍 폰트 검색 (예: 콘콘, 고딕)"><div class="text-look-targets">${targetButtons}</div>`
         +`<div class="font-one-head"><span><b>${tLabel}</b> 폰트${curFam?'':' · 지금은 조합 폰트'}</span><button type="button" data-font-all ${curFam?'':'disabled'}>모든 글자에 적용</button><button type="button" data-font-one="" ${curFam?'':'disabled'}>되돌리기</button></div><div class="font-one-list">${fontItems}</div>`
@@ -227,7 +230,7 @@
     window._p20Fonts={pane:fontPane,draw:()=>drawFontSets()};   // 10-14 관제 202: 폰트 창은 오른쪽 '글꼴' 묶음이 옮겨 가 연다   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
     const setTextLook=(key,value)=>{const r=LOOK_ROWS.find(x=>x.key===key);if(!r)return;const v=Math.max(r.min,Math.min(r.max,Math.round(Number(value||0)/r.step)*r.step));
       manualText=true;   // 글자 설정을 만지는 순간부터 새 방식(지금 화면을 보고 정하는 것이므로)
-      if(key==='size'){for(const bind of TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget).binds)setFontScale(bind,v/100);}
+      if(key==='size'){for(const bind of lookBinds(textLookTarget))setFontScale(bind,v/100);}
       else{({tw:textWeight,ts:textShadow,ls:textSpacing,lh:textLeading})[key][textLookTarget]=v;fittedText.clear();renderEdit();}
       const range=fontPane.querySelector(`[data-look-range="${key}"]`),out=fontPane.querySelector(`[data-look-value="${key}"]`);if(range)range.value=String(v);if(out)out.value=out.textContent=String(v);
       rememberLocal({textWeight:{...textWeight},textShadow:{...textShadow},textSpacing:{...textSpacing},textLeading:{...textLeading}});};
@@ -342,15 +345,16 @@
   const blankTextLook=()=>Object.fromEntries(TEXT_LOOK_TARGETS.map(t=>[t.id,0]));
   const textLookNumber=(value,kind)=>{if(typeof value==='number'&&Number.isFinite(value))return Math.max(0,Math.min(100,Math.round(value/5)*5));const old=kind==='weight'?{bold:50,heavy:100}:{soft:50,strong:100};return old[value]||0;};
   const textLookMap=(value,kind)=>{const out=blankTextLook();if(value&&typeof value==='object'&&!Array.isArray(value)){for(const t of TEXT_LOOK_TARGETS)out[t.id]=textLookNumber(value[t.id],kind);return out;}const old=textLookNumber(value,kind);for(const t of TEXT_LOOK_TARGETS)out[t.id]=old;return out;};
-  const textLookGroup=bind=>TEXT_LOOK_TARGETS.find(t=>t.binds.includes(bind))?.id||'titleSmall';
+  const textLookGroup=bind=>bind==='bodyTitle'&&storyHookBand()?'caption':TEXT_LOOK_TARGETS.find(t=>t.binds.includes(bind))?.id||'titleSmall';
   let textWeight=blankTextLook(),textShadow=blankTextLook(),textSpacing=blankTextLook(),textLeading=blankTextLook(),textLookTarget='titleLarge';
   // 글자 설정 다섯 줄 — 대상(채널명·큰 제목·작은 제목·자막)을 고르고 한곳에서 정한다. 크기는 기존 크기 값(fontScales)을 그대로 쓴다(값은 한 벌).
   //   자간 = 글자 크기의 %, 행간 = 줄 높이에 더하는 %. 허용 범위는 scene_style.py 와 짝.
   const LOOK_ROWS=[{key:'size',label:'글자 크기',help:'100 = 기본',min:50,max:300,step:5},{key:'tw',label:'글자 두께',help:'0 = 기본',min:0,max:100,step:5},{key:'ts',label:'그림자',help:'썸네일과 같은 검정',min:0,max:100,step:5},{key:'ls',label:'자간',help:'0 = 기본',min:-20,max:60,step:2},{key:'lh',label:'행간',help:'0 = 기본',min:-30,max:100,step:5}];
-  const lookValue=key=>key==='size'?Math.round(textScale(TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget).binds[0])*100):(({tw:textWeight,ts:textShadow,ls:textSpacing,lh:textLeading})[key][textLookTarget]||0);
+  const lookBinds=id=>id==='caption'&&storyHookBand()?['bodyTitle']:TEXT_LOOK_TARGETS.find(t=>t.id===id).binds;   // 썰 훅 띠는 자막칸 — 크기는 띠 글자(bodyTitle)에 건다
+  const lookValue=key=>key==='size'?Math.round(textScale(lookBinds(textLookTarget)[0])*100):(({tw:textWeight,ts:textShadow,ls:textSpacing,lh:textLeading})[key][textLookTarget]||0);
   const textLookSigned=(value,lo,hi)=>{const out=blankTextLook();if(value&&typeof value==='object'&&!Array.isArray(value))for(const t of TEXT_LOOK_TARGETS){const n=Number(value[t.id]);if(Number.isFinite(n))out[t.id]=Math.max(lo,Math.min(hi,n));}return out;};
   {const css=document.createElement('style');css.textContent='.text-look-row{display:grid;grid-template-columns:94px 32px minmax(120px,1fr) 32px 42px;align-items:center;gap:8px;margin:0 0 10px}.text-look-row>span{color:#d7e2e7;font:800 12px system-ui,sans-serif}.text-look-row>span small{display:block;margin-top:2px;color:#718993;font:500 10px system-ui,sans-serif}.text-look-row button{width:32px;height:32px;padding:0;border-radius:8px;border:1px solid #294451;background:#0b1a22;color:#dfe9ee;font:800 17px system-ui,sans-serif;cursor:pointer}.text-look-row button:hover{border-color:#43e2b4;color:#63edc6}.text-look-row input{width:100%;accent-color:#63a9df}.text-look-row output{display:grid;place-items:center;min-width:42px;height:30px;border:1px solid #294451;border-radius:7px;background:#071219;color:#fff;font:800 12px ui-monospace,monospace;font-variant-numeric:tabular-nums}';document.head.append(css);}
-  {const css=document.createElement('style');css.textContent='.precision-text[data-tw-on="1"]{-webkit-text-stroke-width:var(--p20-text-stroke)!important}.precision-text[data-ts-on="1"],.precision-text[data-ts-on="1"]>span,.precision-text[data-ts-on="1"] .title-deco-ink{text-shadow:var(--p20-text-shadow)!important}.text-look-targets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:0 0 12px}.text-look-targets button{height:31px;padding:0 3px;border:1px solid #294451;border-radius:7px;background:#0b1a22;color:#91a5af;font:800 10px system-ui,sans-serif;cursor:pointer}.text-look-targets button.active{border-color:#43e2b4;background:#10362f;color:#63edc6}';document.head.append(css);}
+  {const css=document.createElement('style');css.textContent='.precision-text[data-tw-on="1"]{-webkit-text-stroke-width:var(--p20-text-stroke)!important}.precision-text[data-ts-on="1"],.precision-text[data-ts-on="1"]>span,.precision-text[data-ts-on="1"] .title-deco-ink{text-shadow:var(--p20-text-shadow)!important}.text-look-targets{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin:0 0 12px}.text-look-targets button{height:31px;padding:0 3px;border:1px solid #294451;border-radius:7px;background:#0b1a22;color:#91a5af;font:800 10px system-ui,sans-serif;cursor:pointer}.text-look-targets button.active{border-color:#43e2b4;background:#10362f;color:#63edc6}';document.head.append(css);}
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -1446,7 +1450,9 @@
     grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
     renderEdit();
   }
+  let lastBand=null;
   function renderEdit(){
+    {const b=storyHookBand();if(b!==lastBand){lastBand=b;const fp=window._p20Fonts;if(fp&&!fp.pane.hidden&&fp.pane.isConnected)fp.draw();}}   // 훅↔본문을 넘기면 글자 대상 버튼(작은 제목 유무)을 다시 그린다
     // 글자층을 비워야 scene-style-connect의 감시(MutationObserver)가 돌아 영상 틀을 화면 전체로 다시 잡는다.
     if(noTemplate){[...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());layer.hidden=true;Object.assign(media.style,{top:'0%',height:'100%'});return;}
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
