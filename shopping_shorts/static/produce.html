@@ -1905,6 +1905,20 @@
     </div>
 
     <div class="steps" id="steps"></div>
+    <!-- 작은 단계 이동줄(관제 205 회원 제보 "스크롤로 올라가지 않고 맨앞·맨뒤·몇 단계 이동") — 위 단계바가 화면 밖일 때만 아래에 뜬다.
+         이동 판단은 jump(o) 하나(잠금·게이트 그대로). 그리기는 renderSteps 가 위 단계바와 같이 한다 -->
+    <div id="stepsMini" class="steps-mini" hidden></div>
+    <style>
+      .steps-mini{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;display:flex;gap:4px;align-items:center;
+        padding:5px 8px;border-radius:999px;background:rgba(18,22,34,.92);box-shadow:0 4px 18px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+      .steps-mini[hidden]{display:none}
+      .steps-mini .smk{min-width:30px;height:30px;padding:0 6px;border-radius:999px;border:1.5px solid var(--c);background:transparent;color:#e8ecf6;
+        font:600 12px/1 inherit;cursor:pointer;white-space:nowrap}
+      .steps-mini .smk.done{background:color-mix(in srgb,var(--c) 30%,transparent)}
+      .steps-mini .smk.cur{background:var(--c);color:#fff;padding:0 10px}
+      .steps-mini .smk:hover{filter:brightness(1.25)}
+      .steps-mini .smt{color:#9aa3b8;font-size:11px;margin-right:2px}
+    </style>
 
     <!-- 1) 제작소: 좌(재료 그리드 ✓토글) · 우(AI PICK/빈 상태) — Task 4 재구성(2026-07-23).
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
@@ -3748,6 +3762,21 @@ function renderSteps(){
         + `<div class="dkl">${stepShort(o)}</div></div>`;
     }).join('')
     + '</div>';
+  renderStepsMini(oi);
+}
+// 작은 단계 이동줄 — 숫자만(지금 단계는 이름까지). 누르면 jump(o) 그대로라 잠긴 단계는 위 단계바와 똑같이 막힌다.
+function renderStepsMini(oi){
+  const m = document.getElementById('stepsMini');
+  if(!m) return;
+  m.innerHTML = '<span class="smt">단계</span>' + STEP_LABELS.map((label, o)=>{
+    const [c] = STEP_COLORS[o] || ['#3b455e'];
+    const cls = o === oi ? 'smk cur' : (o < oi && stepHasOutput(o) ? 'smk done' : 'smk');
+    return `<button type="button" class="${cls}" style="--c:${c}" title="${o+1}. ${label}" onclick="jump(${o})">${o === oi ? (o+1)+' '+stepShort(o) : (o+1)}</button>`;
+  }).join('');
+  if(!m._io && typeof IntersectionObserver === 'function'){
+    const top = document.getElementById('steps');
+    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; }); m._io.observe(top); }
+  }
 }
 // ── 도크 단계바 끝 ──
 // ★단계가 확정되기 전에는 패널을 그리지 않는다(2026-09-07 사장님 "3단계 새로고침하면
