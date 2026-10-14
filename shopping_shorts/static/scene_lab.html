@@ -3082,9 +3082,10 @@ function memeControl(i){
   if (!SL.server || !DATA.meme_enabled || typeof MemePack === 'undefined') return '';
   const cw = (DATA.beats[i] || {}).cutaway;
   if (cw && cw.match_type === 'meme')
-    return `<span class="hint" title="이 줄 맨 앞 ${esc(cw.head_sec)}초에 들어가는 감정짤${cw.manual ? '(직접 고름)' : '(자동)'}">🎭 ${esc(cw.emotion || '')} 짤 ${esc(cw.head_sec)}초</span>`
+    return `<span class="hint" title="이 줄 ${({mid:'가운데',tail:'맨 끝'})[cw.pos]||'맨 앞'} ${esc(cw.head_sec)}초에 들어가는 감정짤${cw.manual ? '(직접 고름)' : '(자동)'}">🎭 ${esc(cw.emotion || '')} 짤 ${esc(cw.head_sec)}초</span>`
       + `<button title="다른 짤로 바꿉니다" onclick="memeOpen(${i})">바꾸기</button>`
-      + `<button class="danger" title="이 줄의 짤을 뺍니다(자동 배치가 다시 넣지 않아요)" onclick="memeSet(${i}, null)">짤 빼기</button>`;
+      + `<button class="danger" title="이 줄의 짤을 뺍니다(자동 배치가 다시 넣지 않아요)" onclick="memeSet(${i}, null)">짤 빼기</button>`
+      + memePosBtns(cw, p => `memeAdjust(${i}, {pos:'${p}'})`, d => `memeAdjust(${i}, {head_sec:${d}})`, '');
   if (cw) return '';           // AI 장면 등 다른 끼움 장면이 있는 칸엔 짤을 안 넣는다(서버도 같은 규칙)
   return `<button title="이 줄 맨 앞에 감정짤을 넣어요" onclick="memeOpen(${i})">＋짤</button>`;
 }
@@ -3108,6 +3109,21 @@ async function memeSet(i, assetId){
     const h = document.getElementById('tbhint');
     if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
     alert('짤을 바꾸지 못했어요: ' + (e.message || e));
+  }
+}
+// 짤 자리(앞/중간/뒤)·길이(−/+ 0.25초) 바꾸기(관제 203) — 판단은 서버 storyboard.meme_adjust. 서버가 돌려준 값으로만 화면을 맞춘다
+async function memeAdjust(i, ch){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/meme_adjust', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i)}, ch))});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    DATA.beats[i].cutaway = d.cutaway || null;
+    renderBand();
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
   }
 }
 // ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면

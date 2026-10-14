@@ -769,7 +769,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (typeof console === 'object') console.warn('[meme] 칸', beatIdx, '짤 뒤 남은 시간', (ttsDur - head).toFixed(2), '< ', smin, '— 짤 뺌');
       return null;
     }
-    return {vid: String(cw.vid), head, smin, asset_id: cw.asset_id, emotion: cw.emotion || ''};
+    // 짤 자리(관제 203) — 서버 storyboard.meme_pos 와 같은 규칙: head(없거나 모르는 값)·mid·tail
+    const pos = (cw.pos === 'mid' || cw.pos === 'tail') ? cw.pos : 'head';
+    return {vid: String(cw.vid), head, smin, asset_id: cw.asset_id, emotion: cw.emotion || '', pos, full: ttsDur};
   }
   function scenesV2Alloc(segments, ttsDur, beatIdx, exact, useClean){
     const meme = memeHeadOf(beatIdx, ttsDur);
@@ -838,7 +840,15 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     // ④ 전환 시점을 가까운 자막 경계에 — 양쪽 컷이 MIN_CLIP 이상이고 배속 상한을 안 넘을 때만
     const caps = (typeof capsOf === 'function' ? (capsOf(beatIdx) || []) : []);
     const SNAP_SEC = 0.4;
-    const capB = caps.slice(1).map(c => Number(c.start) - headSec).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
+    // 자막 경계를 장면 시간축으로 옮긴다 — 앞 짤이면 짤만큼 당기고, 뒤 짤이면 그대로, 가운데 짤이면 짤 뒤 경계만 당긴다(짤 안 경계는 버림)
+    const memeAt = !meme ? 0 : (meme.pos === 'tail' ? ttsDur : (meme.pos === 'mid' ? ttsDur / 2 : 0));   // 장면 시간축에서 짤이 끼는 자리
+    const capB = caps.slice(1).map(c => {
+      const x = Number(c.start);
+      if (!meme) return x;
+      if (x < memeAt - EPS) return x;
+      if (x < memeAt + headSec - EPS) return NaN;
+      return x - headSec;
+    }).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
     if (exact && dur.length > 1){
       // ★구절 맞춤(관제 106): 전환을 자막 경계에 **정확히** — 0.4초·배속 상한을 보지 않는다.
       //   고른 배분의 전환 자리(ideal)에서 가장 덜 움직이는 경계 조합을 고른다(순서 유지 · 맞춘 전환 수가 최대인 조합 중 이동이 최소).
@@ -897,7 +907,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     }
     const memeCut = meme ? [{seg_id: 'meme:' + meme.vid, video_id: meme.vid, start: 0, dur: Math.round(headSec * 100) / 100,
                              src_dur: Math.round(headSec * 100) / 100, meme: 1, emotion: meme.emotion}] : [];
-    return memeCut.concat(scenes.map((g, k) => {
+    const sceneCuts = scenes.map((g, k) => {
       const d = Math.round(dur[k] * 100) / 100;
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
       let src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
@@ -912,7 +922,24 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
-    }));
+    });
+    if (!meme || meme.pos === 'head') return memeCut.concat(sceneCuts);
+    if (meme.pos === 'tail') return sceneCuts.concat(memeCut);
+    // ★가운데 짤(관제 203) — 장면 전환 중 칸 가운데에 가장 가까운 곳에 끼운다. 장면이 하나면 그 장면을 둘로 나눠 앞뒤로 이어 튼다.
+    if (sceneCuts.length > 1){
+      let run = 0, at = 1, bestD = Infinity;
+      for (let k = 0; k < sceneCuts.length - 1; k++){
+        run += Number(sceneCuts[k].dur);
+        if (Math.abs(run - memeAt) < bestD){ bestD = Math.abs(run - memeAt); at = k + 1; }
+      }
+      return sceneCuts.slice(0, at).concat(memeCut, sceneCuts.slice(at));
+    }
+    const c = sceneCuts[0];
+    const d = Number(c.dur), d1 = Math.round(d / 2 * 100) / 100, d2 = Math.round((d - d1) * 100) / 100;
+    const sd = Number(c.src_dur || d), s1 = sd * d1 / d;
+    const c1 = {...c, dur: d1}, c2 = {...c, dur: d2, start: Number(c.start) + s1};
+    if (c.src_dur != null){ c1.src_dur = +s1.toFixed(3); c2.src_dur = +(sd - s1).toFixed(3); }
+    return [c1].concat(memeCut, [c2]);
   }
 
   // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
