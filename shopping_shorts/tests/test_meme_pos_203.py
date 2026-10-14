@@ -72,3 +72,33 @@ def test_render_cut_plan_뒤_짤이_마지막_컷(monkeypatch):
     clips = out[0]["clips"]
     assert [c["video_id"] for c in clips] == ["s0", "meme_11"] and clips[1]["cfr"] == 42
     assert va.overlay_cutaway_path(beat, {0: "meme11.mp4"}) is None
+
+
+def test_짤_시작_앞은_0_뒤는_컷목록_못읽으면_규칙(monkeypatch):
+    from shopping_shorts import video_assemble as va, screen_clips
+    monkeypatch.setattr(screen_clips, "meme_at", lambda b, d: None)
+    assert va.meme_start({"cutaway": dict(MEME)}, 4.0) == 0.0
+    assert va.meme_start({"cutaway": dict(MEME, pos="tail")}, 4.0) == 2.6
+    assert va.meme_start({"cutaway": dict(MEME, pos="mid")}, 4.0) == 1.3
+    assert va.meme_start({"cutaway": {"match_type": "ai", "asset_id": 1}}, 4.0) is None
+
+
+def test_짤_시작은_화면_컷목록에서(monkeypatch):
+    from shopping_shorts import screen_clips, video_assemble as va
+    beat = {"beat_idx": 0, "narration": "가", "cutaway": dict(MEME, pos="mid"),
+            "primary": {"video_id": "s0", "seg_id": "a", "start": 10.0, "end": 13.0}, "alternates": []}
+    cuts = {"t": 4.0, "c": [{"v": "s0", "s": 10.0, "d": 1.3}, {"v": "meme_11", "s": 0, "d": 1.4}, {"v": "s0", "s": 20.0, "d": 1.3}]}
+    monkeypatch.setattr(screen_clips, "_CACHE", {screen_clips.beat_key(beat): cuts})
+    monkeypatch.setenv("SCREEN_CLIPS", "1")
+    assert va.meme_start(beat, 4.0) == 1.3
+
+
+def test_짤_효과음은_짤_시작에_울린다():
+    from shopping_shorts import video_assemble as va
+    tl = [{"beat_idx": 0, "t0": 10.0, "dur": 4.0, "narration": "가", "meme_at": 2.6,
+           "sfx": {"asset_id": 1, "match_type": "line", "position": "first", "cat": "리액션"}},
+          {"beat_idx": 1, "t0": 14.0, "dur": 3.0, "narration": "나", "meme_at": 0.0,
+           "sfx": {"asset_id": 2, "match_type": "line", "position": "first", "cat": "리액션"}}]
+    ev = va.sfx_events_for(tl, {0: "a.mp3", 1: "b.mp3"})
+    at = {p: t for p, t, *_ in ev}
+    assert abs(at["a.mp3"] - 12.6) < 1e-6 and abs(at["b.mp3"] - 14.0) < 1e-6
