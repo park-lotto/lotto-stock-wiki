@@ -137,10 +137,8 @@
     var opt = function (p, t) { return '<option value="' + p + '"' + (p === cur ? " selected" : "") + ">짤 " + t + "</option>"; };
     var sel = '<select title="짤이 줄의 어디에 나올지" onchange="' + onPos("__P__").replace("'__P__'", "this.value") + '">' +
       opt("head", "앞") + opt("mid", "중간") + opt("tail", "뒤") + "</select>";
-    return sel +
-      "<button" + c + ' title="0.25초 짧게" onclick="' + onLen(Math.round((sec - 0.25) * 100) / 100) + '">−</button>' +
-      '<b style="font-size:12px;min-width:38px;text-align:center;display:inline-block">' + sec.toFixed(2) + "초</b>" +
-      "<button" + c + ' title="0.25초 길게" onclick="' + onLen(Math.round((sec + 0.25) * 100) / 100) + '">＋</button>';
+    // 길이 −/+ 는 숨김(10-14 사장님 "짤 시간도 고르게 하면 너무 복잡") — 서버 meme_adjust(sec) 는 그대로 둔다
+    return sel;
   }
   window.memePosBtns = posBtns;
   window.MemePack = { load: load, toggleFav: toggleFav, onChange: onChange, clip: clip, rankOf: rankOf, favIds: favIds,

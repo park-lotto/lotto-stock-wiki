@@ -2733,6 +2733,30 @@ def meme_cutaway(beat):
         return None
 
 
+def meme_start(beat, dur):
+    """★짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음 타점(렌더·캡컷 sfx_events_for, 팩 비우기)이 이 값 하나를 쓴다.
+    앞 짤 = 0. 중간·뒤 짤 = 화면 컷 목록(screen_clips.meme_at — 렌더가 굽는 바로 그 컷)에서 짤 컷 시작. 짤 없으면 None.
+    컷 목록을 못 읽으면 자리 규칙으로 근사(뒤 = 칸 끝−짤, 중간 = 가운데)하고 한 줄 남긴다 — 조용히 줄 시작으로 돌아가지 않는다."""
+    cw = meme_cutaway(beat)
+    if not cw:
+        return None
+    pos = str(cw.get("pos") or "head")
+    if pos not in ("mid", "tail"):
+        return 0.0
+    try:
+        from shopping_shorts import screen_clips
+        at = screen_clips.meme_at(beat, dur)
+    except Exception as e:      # noqa: BLE001
+        at = None
+        print("[meme] 짤 시작 못 읽음 칸%s: %r" % ((beat or {}).get("beat_idx"), e), file=sys.stderr)
+    if at is not None:
+        return at
+    head = float(cw.get("head_sec") or 0)
+    rest = max(0.0, float(dur or 0) - head)
+    print("[meme] 칸%s 화면 컷 없음 — 짤 시작을 자리 규칙으로(%s)" % ((beat or {}).get("beat_idx"), pos), file=sys.stderr)
+    return round(rest if pos == "tail" else rest / 2, 3)
+
+
 def meme_sources(edit_plan, cutaway_paths):
     """{짤 컷 video_id: 짤 파일} — 소스 표(source_video_paths)에 더해 짤 컷을 보통 컷처럼 굽게 한다. cutaway_paths={beat_idx: 경로}."""
     out = {}
@@ -3563,6 +3587,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "pack_edit": beat.get("pack_edit"),            # 2단계에서 고른 기본 팩 소리 빼기·바꾸기 — sfx_events_for 가 sfx_pack.events 로 넘긴다
             # 맨 앞 감정짤이 붙은 칸인가(관제 158) — 장면꾸미기가 이 칸을 '연결어(짤 장면)'로 본다(scene_style.moment_of). 판단은 meme_cutaway 한 곳.
             "meme": meme_cutaway(beat) is not None,
+            "meme_at": meme_start(beat, dur),              # 짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음이 짤 카드와 같이 울린다
             "head_trim": beat.get("head_trim", 0.0),
             # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
             #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).
@@ -3683,7 +3708,9 @@ def sfx_events_for(timeline, sfx_paths):
         segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
         seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
         pos = sfx.get("position")
-        if pos == "first":
+        if pos == "first" and sfx.get("match_type") == "line" and b.get("meme_at"):
+            offset = float(b["meme_at"])          # 짤 칸의 줄 효과음은 짤 카드가 나올 때(관제 203 — 짤을 중간·뒤로 옮기면 소리도 따라간다)
+        elif pos == "first":
             offset = 0.0
         elif pos == "transition":
             offset = b["dur"]

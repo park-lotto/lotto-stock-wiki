@@ -356,6 +356,30 @@ def plays_at_speed(fit, sync, sd, out):
         return bool(fit)
 
 
+def meme_at(beat, tts_dur):
+    """화면 컷 목록에서 짤 컷이 칸 안 몇 초에 시작하나(관제 203) — 없거나 못 읽으면 None. 컷 목록 = lookup 과 같은 캐시."""
+    if not _enabled():
+        return None
+    k = (beat or {}).get("_screen_key") or beat_key(beat)
+    with _LOCK:
+        r = _CACHE.get(k) if k else None
+    if not r and k and _heal(beat):
+        with _LOCK:
+            r = _CACHE.get(k)
+    cuts = (r or {}).get("c") or []
+    try:
+        t_screen = float((r or {}).get("t") or 0) or sum(float(c["d"]) for c in cuts)
+        scale = (float(tts_dur) / t_screen) if (tts_dur and t_screen > 1e-3) else 1.0
+        at = 0.0
+        for c in cuts:
+            if str(c.get("v") or "").startswith("meme_"):
+                return round(at * scale, 3)
+            at += float(c.get("d") or 0.0)
+    except (TypeError, ValueError):
+        return None
+    return None
+
+
 def lookup(beat, tts_dur, src_durs):
     """화면 컷 → 렌더 조각 계획 [{video_id,start,src_dur,out_dur[,playback_speed]}]. 없거나 못 쓰면 None."""
     if not _enabled():

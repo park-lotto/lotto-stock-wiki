@@ -2594,7 +2594,11 @@ function armSfx(i){
   if (!sfx || !sfx.asset_id || !SL.server) return;
   const dur = beatDur(i);                      // 이 칸이 화면에 머무는 초
   let at = 0;
-  if (sfx.position === 'transition') at = dur;
+  // 짤 칸의 줄 효과음은 짤 카드가 나올 때(관제 203) — 렌더 video_assemble.meme_start 와 같은 컷 목록(planClips)에서 짤 컷 시작
+  const _memeAt = () => { if (typeof lists === 'undefined' || typeof planClips !== 'function') return 0; let t = 0;
+    for (const c of planClips(lists[i] || [], dur, STRETCH[i], i)){ if (c.meme) return t; t += Number(c.dur) || 0; } return 0; };
+  if (sfx.position === 'first' && sfx.match_type === 'line' && b.cutaway && b.cutaway.match_type === 'meme' && b.cutaway.pos) at = _memeAt();
+  else if (sfx.position === 'transition') at = dur;
   else if (sfx.position !== 'first'){
     // last = 마지막 자막 구간이 시작하는 지점. 자막 구간 정보가 없으면 칸 끝 근처로 근사한다
     // (렌더는 실제 자막 길이로 계산한다 — 여기선 들려주는 게 목적이라 근사로 충분하다).

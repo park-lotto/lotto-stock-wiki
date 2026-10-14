@@ -351,7 +351,7 @@ def plan_events(timeline, manual_beats=(), density="normal", first_beats=(), mut
                 continue
             if density == "low" and k > 0:
                 continue        # 적게: 칸의 첫 자막 줄에만
-            if k == 0 and b["beat_idx"] in line_first:
+            if k == 0 and b["beat_idx"] in line_first and not float(b.get("meme_at") or 0):
                 pass            # 줄 시작은 줄 효과음이 맡았다 — 긴 줄 한가운데 한 발은 아래에서 그대로 본다
             elif bi == 1 and k == 0:
                 pass        # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다 — 줄 한가운데는 아래에서 본다
@@ -366,7 +366,9 @@ def plan_events(timeline, manual_beats=(), density="normal", first_beats=(), mut
                 ev.append((ring[n % len(ring)], (float(start) + float(end)) / 2.0, seg))
     ev = [e for e in ev if e[1] < total]
     if hold:
-        spans = [(float(b["t0"]), float(b["t0"]) + float(hold.get(b["beat_idx"]) or 0) + HOLD_PAD)
+        # 짤 칸은 짤이 나오는 순간부터 비운다(관제 203 meme_at — 줄 효과음이 짤 카드를 따라간다)
+        spans = [(float(b["t0"]) + float(b.get("meme_at") or 0),
+                  float(b["t0"]) + float(b.get("meme_at") or 0) + float(hold.get(b["beat_idx"]) or 0) + HOLD_PAD)
                  for b in tl if float(hold.get(b["beat_idx"]) or 0) > 0]
         ev = [e for e in ev if not any(a - 1e-6 <= float(e[1]) < z for a, z in spans)]
     ev.sort(key=lambda e: e[1])
