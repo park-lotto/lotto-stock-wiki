@@ -119,9 +119,11 @@
     if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
+  let bandCut=null;   // 훅 띠에 모양을 고른 때: 제목판이 끝나는 자리(%) — paintBoxes 가 정하고 mediaBounds 가 쓴다
   const mediaBounds=(frame,presetId)=>{
     if(!frame||noTemplate||(presetId||rows[current]?.id)===PLAIN_ID)return {top:0,height:100};   // 템플릿 없음·원본 = 영상이 화면 전체
-    const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'&&(captionLayouts.get(captionKey())||{}).look!=='none'?captionSettings().h:0);   // 10-14 사장님: '박스 없음'이면 자막 칸 자리도 비우고 영상이 그 밑까지 올라온다(자막은 영상 위에)
+    if(bandCut!=null&&kind==='hook'&&mode!=='continuous')return {top:bandCut,height:Math.max(10,100-bandCut-fixedLayoutFor(presetId||rows[current].id,frame).bottom)};
+    const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'&&(captionLayouts.get(captionKey())||{}).look===undefined?captionSettings().h:0);   // 10-14 사장님: '박스 없음'이면 자막 칸 자리도 비우고 영상이 그 밑까지 올라온다(자막은 영상 위에)
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
   };
@@ -1401,6 +1403,7 @@
     syncFieldLimits();
   }
   function paintBoxes(frame,p){
+    bandCut=null;
     const pc=fixedColors.get(layoutKey(p.id,frame))||{},all=fixedColorsFor(p.id,frame);
     const kids=[...layer.children].filter(el=>el.classList.contains('precision-patch')||el.classList.contains('body-material'));
     const num=v=>parseFloat(v);const c0=channelBlock(frame),c=c0!=null?c0+channelDelta(frame):null;
@@ -1419,7 +1422,8 @@
       {const d=Number(fixedLayouts.get(layoutKey(p.id,frame))?.band)||0;if(band&&d>0){band.style.height=(num(band.style.height)+d)+'%';bt.style.top=(num(bt.style.top)+d/2)+'%';}/* 아래로 키운다 — 제목 줄은 그대로(위로 키우면 제목 2줄을 덮었다) */}
       // 훅 띠 = 자막칸 — 박스 탭에서 고른 자막박스 모양(captionLayouts.look)도 띠에 입힌다(10-14 사장님 "적용 안 됨")
       const sv=captionLayouts.get(captionKey())||{};
-      if(band&&sv.look!=null&&sv.look!=='auto'){const lk=captionLook(frame);if(lk){const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object.assign(band.style,look);if(lk.color&&!pc.small){bt.style.color=lk.color;bt.querySelectorAll('span').forEach(x=>x.style.color=lk.color);}}}
+      if(band&&sv.look!=null&&sv.look!=='auto'){bandCut=num(band.style.top);plates.forEach(pl=>{if(num(pl.style.height)>bandCut)pl.style.height=bandCut+'%';});   /* 10-14 사장님: 모양 뒤에 검정 판이 깔려 있었다 — 판을 띠 위에서 끊고 영상이 띠 밑까지 */
+        const lk=captionLook(frame);if(lk){const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object.assign(band.style,look);if(lk.color&&!pc.small){bt.style.color=lk.color;bt.querySelectorAll('span').forEach(x=>x.style.color=lk.color);}}}
       if(band&&!pc.band&&boxFx.band&&BOX_FX_LAYER[boxFx.band]){const cs=getComputedStyle(band),img=cs.backgroundImage;band.style.background=BOX_FX_LAYER[boxFx.band]+','+(img&&img!=='none'?img+','+cs.backgroundColor:cs.backgroundColor);}   // 띠 본래 그림(모양·그라데이션) 위에 빛만 얹는다
       else if(band&&(pc.band||boxFx.band)){const bg=getComputedStyle(band).backgroundColor,col=pc.band||(/rgba\(0, 0, 0, 0\)/.test(bg)?'#ffffff':bg);band.style.background=boxPaint(/^#/.test(col)?col:(col.match(/\d+/g)||[0,0,0]).slice(0,3).reduce((a,x)=>a+(+x).toString(16).padStart(2,'0'),'#'),boxFx.band);}}
     // 칸별 투명도 — 칸 바탕만 옅게(글자는 따로라 그대로)
