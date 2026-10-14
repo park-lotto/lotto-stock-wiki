@@ -1406,8 +1406,12 @@
       layer.querySelectorAll('.body-ornament').forEach(o=>{if(num(o.style.top)<c)o.style.color=readableInk(chCol);});}
     // 훅 제목 아래 띠(썰 훅 자막칸)
     const bt=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
-    if(bt&&(pc.band||boxFx.band)&&kind==='hook'){const y=num(bt.style.top),band=kids.filter(el=>!plates.includes(el)&&num(el.style.top)<=y+1&&num(el.style.top)+num(el.style.height)>=y+1&&num(el.style.height)<20).pop();
-      if(band&&(pc.band||!/rgba\(0, 0, 0, 0\)/.test(getComputedStyle(band).backgroundColor))){const col=pc.band||getComputedStyle(band).backgroundColor;band.style.background=boxPaint(/^#/.test(col)?col:(col.match(/\d+/g)||[0,0,0]).slice(0,3).reduce((a,x)=>a+(+x).toString(16).padStart(2,'0'),'#'),boxFx.band);}}
+    if(bt&&kind==='hook'){const y=num(bt.style.top),band=kids.filter(el=>!plates.includes(el)&&num(el.style.top)<=y+1&&num(el.style.top)+num(el.style.height)>=y+1&&num(el.style.height)<20).pop();
+      // 훅 띠 = 자막칸 — 박스 탭에서 고른 자막박스 모양(captionLayouts.look)도 띠에 입힌다(10-14 사장님 "적용 안 됨")
+      const sv=captionLayouts.get(captionKey())||{};
+      if(band&&sv.look!=null&&sv.look!=='auto'){const lk=captionLook(frame);if(lk){const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object.assign(band.style,look);if(lk.color&&!pc.small){bt.style.color=lk.color;bt.querySelectorAll('span').forEach(x=>x.style.color=lk.color);}}}
+      if(band&&!pc.band&&boxFx.band&&BOX_FX_LAYER[boxFx.band]){const cs=getComputedStyle(band),img=cs.backgroundImage;band.style.background=BOX_FX_LAYER[boxFx.band]+','+(img&&img!=='none'?img+','+cs.backgroundColor:cs.backgroundColor);}   // 띠 본래 그림(모양·그라데이션) 위에 빛만 얹는다
+      else if(band&&(pc.band||boxFx.band)){const bg=getComputedStyle(band).backgroundColor,col=pc.band||(/rgba\(0, 0, 0, 0\)/.test(bg)?'#ffffff':bg);band.style.background=boxPaint(/^#/.test(col)?col:(col.match(/\d+/g)||[0,0,0]).slice(0,3).reduce((a,x)=>a+(+x).toString(16).padStart(2,'0'),'#'),boxFx.band);}}
     // 칸별 투명도 — 칸 바탕만 옅게(글자는 따로라 그대로)
     const op=k=>String(1-(boxAlpha[k]||0)/100);
     if(boxAlpha.top)plates.forEach(el=>el.style.opacity=op('top'));
