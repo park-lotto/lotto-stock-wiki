@@ -259,9 +259,12 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 .tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .tbeat.sel{border-color:var(--good)}
 .tbeat .picked{font-size:10.5px;color:var(--good);font-weight:700}
-.tbtools{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;font-size:10.5px;color:var(--dim)}
-.tbtools > *{white-space:nowrap;flex-shrink:0}   /* 버튼이 늘어도 글자가 세로로 쪼개지지 않게 — 넘치면 다음 줄로(관제 203) */
-.tbtools .meme-row{flex-basis:100%;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px}
+.tbtools{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);
+  min-width:0;overflow-x:auto;scrollbar-width:thin}
+/* ★버튼은 줄지도 줄바꿈하지도 않는다(관제 203) — 버튼이 늘면 글자가 세로로 쪼개지고(사장님 캡처) 줄바꿈하면 칸마다 높이가 달라졌다.
+   넘치면 도구줄만 옆으로 밀어 본다 — 모든 칸 높이가 같다 */
+.tbtools > *{white-space:nowrap;flex-shrink:0}
+.tbtools .meme-row{display:flex;align-items:center;gap:4px}
 .tbtools button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   border-radius:5px;padding:1px 6px;cursor:pointer;font-size:10.5px}
 .tbtools button:hover{border-color:var(--accent);color:var(--ink)}
