@@ -2746,11 +2746,34 @@ function playBeatHere(i, ev){
 }
 
 function bandDragStart(i, segId, ev){
+  // ★짤 카드(관제 203, 10-14 사장님 "카드는 잡고 이동되는데 짤카드는 왜 안 되나") — 짤은 장면 목록(lists)에 없고
+  //   자리 값(앞/중간/뒤)으로 놓인다. 끌면 놓은 곳으로 자리 값만 바꾼다(판단·저장은 서버 meme_adjust).
+  if (String(segId || '').startsWith('meme:')){
+    dragFrom = {i, k: -1, meme: true};
+    if (ev && ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
+    return;
+  }
   const k = (lists[i] || []).indexOf(segId);
   if (k < 0) return;
   dragStart(i, k, ev);          // 기존 로직 그대로 — 왼쪽 소스가 휴지통이 되는 것도 함께 따라온다
 }
+// 짤 카드를 놓은 카드 → 자리: 맨 앞 카드 = 앞 · 맨 끝 카드 = 뒤 · 그 사이 = 중간
+function memeDropPos(i, segId){
+  const ids = planClips(lists[i] || [], beatDur(i), STRETCH[i], i).map(c => c.seg_id);
+  const at = ids.indexOf(segId);
+  if (at < 0) return null;
+  return at === 0 ? 'head' : (at === ids.length - 1 ? 'tail' : 'mid');
+}
 function bandDrop(i, segId, ev){
+  if (dragFrom && dragFrom.meme){
+    if (ev){ ev.preventDefault(); ev.stopPropagation(); }
+    const from = dragFrom; itemDragEnd();
+    if (from.i !== i) return;                       // 짤은 다른 칸으로 옮기지 않는다
+    const pos = memeDropPos(i, segId);
+    const cur = ((DATA.beats[i] || {}).cutaway || {}).pos || 'head';
+    if (pos && pos !== cur) memeAdjust(i, {pos});
+    return;
+  }
   const k = (lists[i] || []).indexOf(segId);
   if (k < 0) return;
   dragDrop(i, k, ev);           // 같은 칸 안에서 자리 바꾸기(기존 로직)
@@ -4162,7 +4185,7 @@ function dragDrop(i, k, ev){
   if (ev) ev.preventDefault();
   // ★끝내는 길은 itemDragEnd() 하나뿐이다. 종전엔 여기서 dragFrom만 비우고
   //   휴지통 표시(bin)는 안 걷어서, 제자리에 놓으면 빨간 띠가 남아 먹통이 됐다.
-  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ itemDragEnd(); return; }
+  if (!dragFrom || dragFrom.meme || dragFrom.i !== i || dragFrom.k === k){ itemDragEnd(); return; }   // 짤 카드는 bandDrop 만 받는다(k=-1 splice 금지)
   if (ev) ev.stopPropagation();      // 순서 변경이 칸 드롭(beatDrop)까지 번지지 않게
   const l = lists[i];
   const [moved] = l.splice(dragFrom.k, 1);
@@ -4214,6 +4237,7 @@ function beatDrop(i, ev){
   //   조각을 2번 칸에 끌면 **아무 일도 안 일어났다**(에러도 안내도 없음). 그래서
   //   빼고 → 팔레트에서 찾아 → 다시 담기 3단계를 거쳐야 했다.
   //   담기·빼기 로직은 새로 만들지 않는다 — 있는 목록을 옮길 뿐이다.
+  if (dragFrom && dragFrom.meme){ itemDragEnd(); return; }   // 짤 카드는 다른 칸으로 안 옮긴다
   if (dragFrom && dragFrom.i !== i){
     const from = dragFrom.i, k = dragFrom.k;
     const sid = (lists[from] || [])[k];
