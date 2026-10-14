@@ -1366,7 +1366,7 @@
   function fieldSet(frameKind,p){
     const keys=frameKeys(frameKind,p);
     root.querySelectorAll('.layout-a [data-field-key]').forEach(f=>f.hidden=!keys.includes(f.dataset.fieldKey));
-    root.querySelectorAll('.layout-a [data-hook-label][data-body-label]').forEach(label=>label.textContent=label.dataset[frameKind+'Label']);
+    root.querySelectorAll('.layout-a [data-hook-label][data-body-label]').forEach(label=>label.textContent=frameKind==='hook'&&label.closest('[data-field-key="bodyTitle"]')&&storyHookBand()?'자막':label.dataset[frameKind+'Label']);   // 썰 훅 띠 = 자막칸(10-14 사장님)
     const label1=root.querySelector('.layout-a [data-field-key="hook1"] [data-field-label]');
     const label2=root.querySelector('.layout-a [data-field-key="hook2"] [data-field-label]');
     if(label1)label1.textContent=mode==='continuous'?'제목 1':'훅 제목 1';
@@ -2534,8 +2534,8 @@
     {key:'scope',title:'적용 범위',pick:p=>[...p.querySelectorAll(':scope > .edit-scope')]},   // 09-28: 자막·제목·채널명 공용 [모든 장면|이 장면만] — 맨 위, 기본 펼침
     {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
     {key:'bodyMotion',title:'자막 스타일·등장·단어 강조',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
-    {key:'title',title:'제목 (문구·색)',pick:p=>[...['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)),p.querySelector(':scope > .title-look-box')].filter(Boolean)},
-    {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor'),p.querySelector(':scope > .hook-caption-note')].filter(Boolean)},
+    // 10-14 사장님: 채널명 → 제목 → 자막 순서로 한 묶음(문구). 색·꾸밈·박스는 왼쪽 추천 완성조합 탭
+    {key:'title',title:'문구 (채널명·제목·자막)',pick:p=>[...['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)),p.querySelector(':scope > .title-look-box'),p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor'),p.querySelector(':scope > .hook-caption-note')].filter(Boolean)},
     {key:'quick',title:'칸 크기·배경색',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
   ];
   const style=document.createElement('style');
