@@ -222,7 +222,7 @@
       const fontItems=FONT_LIST.map(f=>`<button type="button" class="font-one${f.fam===curFam?' selected':''}" data-font-one="${f.fam}" data-font-name="${f.name}" style="font-family:'${f.fam}'">${f.name}${f.isNew?'<i>NEW</i>':''}</button>`).join('');
       fontPane.innerHTML=`<input type="search" class="font-search" data-font-search placeholder="🔍 폰트 검색 (예: 콘콘, 고딕)"><div class="text-look-targets">${targetButtons}</div>`
         +`<div class="font-one-head"><span><b>${tLabel}</b> 폰트${curFam?'':' · 지금은 조합 폰트'}</span><button type="button" data-font-all ${curFam?'':'disabled'}>모든 글자에 적용</button><button type="button" data-font-one="" ${curFam?'':'disabled'}>되돌리기</button></div><div class="font-one-list">${fontItems}</div>`
-        +LOOK_ROWS.map(lookRow).join('')+'<div class="font-set-head">추천 조합</div><div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
+        +LOOK_ROWS.map(lookRow).join('')+'<div class="font-set-head">글꼴 세트 <small>채널명·제목·자막 글꼴을 한 벌로 · 색은 그대로</small></div><div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});
     window._p20Fonts={pane:fontPane,draw:()=>drawFontSets()};   // 10-14 관제 202: 폰트 창은 오른쪽 '글꼴' 묶음이 옮겨 가 연다   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
     const setTextLook=(key,value)=>{const r=LOOK_ROWS.find(x=>x.key===key);if(!r)return;const v=Math.max(r.min,Math.min(r.max,Math.round(Number(value||0)/r.step)*r.step));
@@ -741,7 +741,7 @@
     const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
     const draw=()=>{
       const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
-      panes.look.innerHTML='<div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
+      panes.look.innerHTML='<div class="font-set-head">완성 조합 <small>글꼴·색·꾸밈을 한 번에</small></div><div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
       panes.tone.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 원래 색',bg:'#1b1b1b',c1:'#FFFFFF',c2:'#9aa7b0'},...TONES].map(t=>`<button type="button" class="font-set-card look-card${t.id===currentTone()?' selected':''}" data-tone="${t.id}">${sample(t,titleDeco,family)}<b>${t.name}</b></button>`).join('')+'</div>';
       panes.deco.innerHTML='<div class="font-set-grid">'+[{id:'',name:'꾸밈 없음'},...DECOS].map(d=>`<button type="button" class="font-set-card look-card${d.id===titleDeco?' selected':''}" data-deco="${d.id}">${sample(tone,d.id,family)}<b>${d.name}</b></button>`).join('')+'</div>';
     };
@@ -2423,6 +2423,8 @@
   .title-look-box{margin-top:10px}.title-look-box .tl-head{color:#e8f3f0;font:900 12px system-ui,sans-serif;margin:12px 0 6px}.title-look-box .tl-head small{color:#8fa3ad;font-weight:700;margin-left:6px}
   .title-look-box .tl-colors{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.title-look-box .tl-colors label{display:flex;align-items:center;gap:6px;background:#0f2028;border:1px solid #294451;border-radius:10px;padding:6px 8px;color:#cfe3df;font:800 11px system-ui,sans-serif}.title-look-box .tl-colors input{width:28px;height:24px;border:0;padding:0;background:none;cursor:pointer}
   .title-look-box .look-pane .font-set-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .font-set-card:not(.look-card) .fs-title em{color:#fff!important}.font-set-head small{color:#8fa3ad;font-weight:700;margin-left:6px;font-size:10px}
+  .fixed-quick-panel .fixed-palette-row{display:none!important}
   .fixed-color-grid label:has([data-fixed-color="top"]),.fixed-color-grid label:has([data-fixed-color="title1"]),.fixed-color-grid label:has([data-fixed-color="title2"]){display:none}`;
   document.head.append(style);
   function hint(key,body){
