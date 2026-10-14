@@ -21804,7 +21804,8 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     _cid = getattr(request.state, "customer_id", 0)
     _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or [],
                                                                          "key": str(body.get("key") or ""),
-                                                                         "use_seed": body.get("use_seed") is True}, ex=_ex)))
+                                                                         "use_seed": body.get("use_seed") is True,
+                                                                         "at": body.get("at") if isinstance(body.get("at"), int) else None}, ex=_ex)))
     return {"ok": True}
 
 
