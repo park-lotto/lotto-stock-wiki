@@ -728,7 +728,8 @@
   //   칸 효과 boxFx = 전 칸 공통 하나(서버 허용 형식은 scene_style.py와 짝). 그리는 주인 = paintBoxes 한 곳 — 편집기·렌더·썸네일·캡컷이 같은 페이지로 그린다.
   let boxFx={},boxAlpha={};   // boxAlpha = 칸별 투명도 0~90(%) {chBg,top,band,bottom}. 자막 박스는 자막 설정 boxClear
   const cleanBoxAlpha=v=>{const o={};if(v&&typeof v==='object')for(const k of ['chBg','top','band','bottom']){const n=Number(v[k]);if(Number.isFinite(n)&&n>0)o[k]=Math.max(0,Math.min(90,Math.round(n/5)*5));}return o;};   // 칸별 효과 {chBg,top,band,bottom,capBg: BOX_FX id}
-  const cleanBoxFx=v=>{const o={};if(v&&typeof v==='object')for(const k of ['chBg','top','band','bottom','capBg'])if(v[k]&&BOX_FX[v[k]]!=null)o[k]=v[k];return o;};
+  const cleanBoxFx=v=>({});   // 10-14 사장님: 칸 효과는 뺐다 — 저장돼 있던 값도 쓰지 않는다
+  const _oldCleanBoxFx=v=>{const o={};if(v&&typeof v==='object')for(const k of ['chBg','top','band','bottom','capBg'])if(v[k]&&BOX_FX[v[k]]!=null)o[k]=v[k];return o;};
   const BOX_FX={'':'단색',grad:'그라데이션',gloss:'광택',deep:'깊은 그림자',glass:'유리'};
   // 효과는 바탕색 위에 흰·검정 빛을 겹친다 — 색을 섞어 밝기만 바꾸던 방식은 검정·흰 칸에서 거의 안 보였다(10-14 사장님 "보여주기식").
   const BOX_FX_LAYER={grad:'linear-gradient(180deg,rgba(255,255,255,.30) 0%,rgba(255,255,255,0) 55%,rgba(0,0,0,.38) 100%)',
@@ -787,7 +788,7 @@
         +`<div class="lk-color-row"><span>바탕색</span><div class="lk-swatches"><input type="color" value="${cur}" data-box-color="${sp.slot}">${SWATCH.map(h=>`<button type="button" data-box-pick="${sp.slot}|${h}" class="${h.toLowerCase()===cur?'on':''}" style="background:${h}"></button>`).join('')}</div></div>`
         +(sp.help?`<div class="lk-sub-help">${sp.help}</div>`:'')+sp.rows.map(rng).join('')+(sp.slot==='capBg'?'':`<div class="text-look-row"><span>투명도</span><span></span><input type="range" min="0" max="90" step="5" value="${B.alpha(sp.slot)}" data-box-alpha="${sp.slot}"><span></span><output>${B.alpha(sp.slot)}</output></div>`)+(sp.pack?packBox():'')
         
-        +`<div class="font-set-head">칸 효과 <button type="button" class="lk-mini-btn" data-box-fx-all>모든 칸에</button><button type="button" class="lk-mini-btn" data-box-all>색도 모든 칸에</button></div><div class="lk-deco-chips">${Object.entries(BOX_FX).map(([k,n])=>`<button type="button" class="lk-fx-chip ${B.fx(sp.slot)===k?'active':''}" data-box-fx="${k}"><span class="lk-fx-mini lk-box-mini" style="background:${boxPaintPreview(cur,k)}"></span><small>${n}</small></button>`).join('')}</div>`
+        +`<div class="lk-deco-chips"><button type="button" class="lk-mini-btn" data-box-all>이 색을 모든 칸에</button></div>`
 };
     const boxPaintPreview=(c,k)=>boxPaint(c,k)||((c,k)=>k==='grad'?`linear-gradient(180deg,color-mix(in srgb,${c} 78%,#fff),${c} 55%,color-mix(in srgb,${c} 72%,#000))`:k==='gloss'?`linear-gradient(180deg,color-mix(in srgb,${c} 58%,#fff),color-mix(in srgb,${c} 85%,#fff) 46%,${c} 50%,color-mix(in srgb,${c} 82%,#000))`:k==='deep'?`radial-gradient(120% 140% at 50% 0%,color-mix(in srgb,${c} 88%,#fff),${c} 45%,color-mix(in srgb,${c} 55%,#000))`:k==='glass'?`color-mix(in srgb,${c} 75%,transparent)`:c)(c,k);
     // 자막 스타일(오른쪽 '자막 스타일·등장' 묶음의 카드)을 자막 칸에 같이 보인다 — 카드는 복사본, 누르면 원래 카드를 대신 누른다(값·저장은 그쪽 한 벌)
