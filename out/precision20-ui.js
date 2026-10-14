@@ -1936,7 +1936,7 @@ const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=boxPaint(settings.background,boxFx.capBg);
     const capLook=captionLook(frame);
-    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
+    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'&&!Number.isInteger((captionLayouts.get(captionKey())||{}).look)?capLook.box:look);   /* 10-14: 고른 모양은 처음부터 박스 너비 그대로(끌면 넓어지던 것) */if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
     if(settings.boxClear>0)patch.style.opacity=String(1-Math.min(90,settings.boxClear)/100);   // 자막박스 투명도(2026-09-24 고객) — 박스만 옅게, 글자는 별도 요소라 그대로
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
     // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
