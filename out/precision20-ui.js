@@ -145,7 +145,7 @@
   let manualText=true;
   const PLAIN_LEGACY_CAP_Y=1560/1920*100;   // 예전 원본 자막 줄 y0(81.25%)
   // 자막박스 '모양'만 뽑아낸다 — 지금 장면에 없으면 다른 장면에서 찾는다(훅에서 저장해도 담기게).
-  const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser','boxClear'];
+  const CAPTION_LOOK_KEYS=['look','lookColor','w','h','background','color','bgUser','colorUser','boxClear'];
   const captionLookStyle=()=>{
     const pick=src=>{const out={};for(const k of CAPTION_LOOK_KEYS)if(src&&src[k]!==undefined)out[k]=src[k];return out};
     let v=pick(captionLayouts.get(captionKey()));
@@ -1423,9 +1423,10 @@
       // 훅 띠 = 자막칸 — 박스 탭에서 고른 자막박스 모양(captionLayouts.look)도 띠에 입힌다(10-14 사장님 "적용 안 됨")
       const sv=captionLayouts.get(captionKey())||{};
       if(band&&sv.look!=null&&sv.look!=='auto'){bandCut=num(band.style.top);plates.forEach(pl=>{if(num(pl.style.height)>bandCut)pl.style.height=bandCut+'%';});   /* 10-14 사장님: 모양 뒤에 검정 판이 깔려 있었다 — 판을 띠 위에서 끊고 영상이 띠 밑까지 */
-        const lk=captionLook(frame);if(lk){const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object.assign(band.style,look);if(lk.color&&!pc.small){bt.style.color=lk.color;bt.querySelectorAll('span').forEach(x=>x.style.color=lk.color);}}}
+        const lk=Number.isInteger(sv.look)&&pc.band&&CAPTION_LOOKS[sv.look]?CAPTION_LOOKS[sv.look](pc.band):captionLook(frame);if(lk){   // 띠 색을 골랐으면 모양은 두고 색만
+const {left,width,top,height,...look}=lk.box||{};band.style.background='';Object.assign(band.style,look);if(lk.color&&!pc.small){bt.style.color=lk.color;bt.querySelectorAll('span').forEach(x=>x.style.color=lk.color);}}}
       if(band&&!pc.band&&boxFx.band&&BOX_FX_LAYER[boxFx.band]){const cs=getComputedStyle(band),img=cs.backgroundImage;band.style.background=BOX_FX_LAYER[boxFx.band]+','+(img&&img!=='none'?img+','+cs.backgroundColor:cs.backgroundColor);}   // 띠 본래 그림(모양·그라데이션) 위에 빛만 얹는다
-      else if(band&&(pc.band||boxFx.band)){const bg=getComputedStyle(band).backgroundColor,col=pc.band||(/rgba\(0, 0, 0, 0\)/.test(bg)?'#ffffff':bg);band.style.background=boxPaint(/^#/.test(col)?col:(col.match(/\d+/g)||[0,0,0]).slice(0,3).reduce((a,x)=>a+(+x).toString(16).padStart(2,'0'),'#'),boxFx.band);}}
+      else if(band&&!(Number.isInteger(sv.look))&&(pc.band||boxFx.band)){const bg=getComputedStyle(band).backgroundColor,col=pc.band||(/rgba\(0, 0, 0, 0\)/.test(bg)?'#ffffff':bg);band.style.background=boxPaint(/^#/.test(col)?col:(col.match(/\d+/g)||[0,0,0]).slice(0,3).reduce((a,x)=>a+(+x).toString(16).padStart(2,'0'),'#'),boxFx.band);}}
     // 칸별 투명도 — 칸 바탕만 옅게(글자는 따로라 그대로)
     const op=k=>String(1-(boxAlpha[k]||0)/100);
     if(boxAlpha.top)plates.forEach(el=>el.style.opacity=op('top'));
@@ -1914,7 +1915,7 @@
     const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
     // 고른 모양의 포인트 색 = 제목 2줄 색. 그 색이 흰·검정·회색(채도 없음)이면 버튼에 보이는 민트로 — 본문 제목 2줄이 흰색이라 흰 알약에 흰 글자가 됐다(10-14 사장님)
     const grayish=h=>{const m=h.match(/[0-9a-f]{2}/gi)||[];if(m.length<3)return true;const v=m.slice(0,3).map(x=>parseInt(x,16));return Math.max(...v)-Math.min(...v)<40;};
-    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](grayish(accent0)?'#43E2B4':accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
+    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](/^#[0-9a-f]{6}$/i.test(saved.lookColor||'')?saved.lookColor:grayish(accent0)?'#43E2B4':accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
     if(mode!=='continuous'||saved.bgUser)return null;
     const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
     const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
@@ -2216,7 +2217,8 @@
   captionField?.addEventListener('input',event=>{
     const input=event.target.closest('[data-caption-layout]');if(!input)return;
     const name=input.dataset.captionLayout,val=input.type==='range'?Number(input.value):input.value;
-    const put=o=>{o[name]=val;if(name==='background'){o.bgUser=true;delete o.look;}if(name==='color')o.colorUser=true;};
+    const put=o=>{if(name==='background'&&Number.isInteger(o.look)){o.lookColor=val;return;}   // 모양을 고른 뒤 바탕색 = 그 모양의 색만 바꾼다(10-14 사장님: 단색으로 바뀌었다)
+      o[name]=val;if(name==='background'){o.bgUser=true;delete o.look;}if(name==='color')o.colorUser=true;};
     const settings=captionSettings();put(settings);
     captionLayouts.set(captionKey(),settings);
     // 2026-09-24 고객(데이워커님): '모든 장면'을 골라 놔도 크기·색은 이 장면에만 들어갔다 — 스위치가 모양 버튼에만 걸려 있었다.
