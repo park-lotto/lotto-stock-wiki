@@ -121,7 +121,7 @@
   };
   const mediaBounds=(frame,presetId)=>{
     if(!frame||noTemplate||(presetId||rows[current]?.id)===PLAIN_ID)return {top:0,height:100};   // 템플릿 없음·원본 = 영상이 화면 전체
-    const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
+    const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'&&(captionLayouts.get(captionKey())||{}).look!=='none'?captionSettings().h:0);   // 10-14 사장님: '박스 없음'이면 자막 칸 자리도 비우고 영상이 그 밑까지 올라온다(자막은 영상 위에)
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
   };
