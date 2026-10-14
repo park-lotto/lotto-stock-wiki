@@ -52,10 +52,18 @@ def canonical_product_url(url):
     ★남의 추적링크를 그대로 쓰면 수수료가 그쪽으로 간다(2026-08-18 채이홈 사례).
       `link.coupang.com/re/AFFSDP?...&pageKey=123` / `coupang.com/vp/products/123?...` →
       `https://www.coupang.com/vp/products/123`. 단축링크(`link.coupang.com/a/xxx`)는
-      상품번호를 알 수 없어 그대로 둔다(그건 사람이 상품 URL로 바꿔 넣어야 한다)."""
+      상품번호를 알 수 없어 그대로 둔다(그건 사람이 상품 URL로 바꿔 넣어야 한다).
+    ★옵션(`itemId`·`vendorItemId`)은 남긴다(2026-10-14 회원 제보, 관제 207) — 추적값이 아니라
+      **어느 옵션 화면으로 여는지**다. 지우면 발급 링크가 기본 옵션으로 열려 회원이 고른 옵션과 달라진다.
+      수수료 주인은 `lptag`라 그건 계속 걷어낸다."""
     u = (url or "").strip()
     m = _PAGEKEY_RE.search(u) or _PRODUCT_RE.search(u)
-    return f"https://www.coupang.com/vp/products/{m.group(1)}" if m else u
+    if not m:
+        return u
+    q = urllib.parse.parse_qsl(urllib.parse.urlsplit(u).query)
+    kept = [(k, v) for k, v in q if k in _KEEP_PARAMS and v.isdigit()]
+    base = f"https://www.coupang.com/vp/products/{m.group(1)}"
+    return base + ("?" + urllib.parse.urlencode(kept) if kept else "")
 
 
 def _auth_header(method, path_with_query, ak, sk):
