@@ -6464,6 +6464,42 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
     return FileResponse(str(cached), media_type="image/jpeg")
 
 
+_CLIP_STRIP_SEM = __import__("threading").BoundedSemaphore(2)
+
+
+@app.get("/api/mix/clip_strip/{job_id}/{vid}")
+def api_mix_clip_strip(job_id: str, vid: str, a: float = 0.0, b: float = 1.0, n: int = 8):
+    """3단계 위 컷 띠의 필름 그림(관제 204, 2026-10-14 사장님 "검정 로딩·엄청 느림").
+    종전엔 손님 브라우저가 원본 영상을 열어 한 장씩 시크해 찍었다 — 느리고, 못 찍으면 검은 칸.
+    여기서 ffmpeg 한 번으로 [a,b] 구간 n장을 가로로 이어 붙인 jpg 한 장을 만들어 캐시한다(같은 구간은 다시 안 만든다).
+    동시 생성은 2개까지(3단계를 열 때 칸이 한꺼번에 요청한다 — 서버 CPU 보호)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False})
+    src = (_job_sources_with_memes(job, _MIX_WORK_DIR / job_id) or {}).get(vid)
+    if not src or not Path(src).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+    a = max(0.0, float(a)); b = max(a + 0.05, float(b)); n = max(1, min(16, int(n)))
+    safe = re.sub(r"[^0-9A-Za-z_.-]", "", vid)
+    out = _MIX_WORK_DIR / job_id / "seg_thumbs" / ("strip_%s_%.2f_%.2f_%d.jpg" % (safe, a, b, n))
+    if not out.exists():
+        out.parent.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_suffix(".tmp.jpg")
+        with _CLIP_STRIP_SEM:
+            if not out.exists():
+                import subprocess
+                vf = "fps=%.4f,scale=96:170:force_original_aspect_ratio=increase,crop=96:170,tile=%dx1" % (n / (b - a), n)
+                try:
+                    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", "%.3f" % a, "-t", "%.3f" % (b - a),
+                                    "-i", str(src), "-vf", vf, "-frames:v", "1", "-q:v", "6", str(tmp)],
+                                   check=True, timeout=60, capture_output=True)
+                    tmp.replace(out)
+                except Exception as e:      # noqa: BLE001 — 못 만들면 화면이 대표 썸네일로 둔다(검은 칸 금지)
+                    print("[clip_strip] 실패 job=%s vid=%s: %r" % (job_id, vid, e), file=sys.stderr)
+                    return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(out), media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
+
+
 # ── 장면실험실(scene_lab) 서버 배선 (2026-08-15) ─────────────────────────────────
 # 로컬 실험실(tools/scene_lab)이 SSH로 빼가던 데이터를 제작소 2단계 iframe
 # (/scene_lab.html?job=…)이 API로 받는다. 데이터 모양은 fetch.py가 만들던 data.json과
