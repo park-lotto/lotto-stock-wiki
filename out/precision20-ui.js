@@ -795,7 +795,7 @@
         +`<div class="lk-color-row"><span>바탕색</span><div class="lk-swatches"><input type="color" value="${cur}" data-box-color="${sp.slot}">${SWATCH.map(h=>`<button type="button" data-box-pick="${sp.slot}|${h}" class="${h.toLowerCase()===cur?'on':''}" style="background:${h}"></button>`).join('')}</div></div>`
         +(sp.help?`<div class="lk-sub-help">${sp.help}</div>`:'')+(sp.bandSize?`<div class="text-look-row"><span>칸 크기</span><span></span><input type="range" min="0" max="8" step="0.5" value="${B.bandSize()}" data-box-band><span></span><output>${B.bandSize()}</output></div>`:'')+sp.rows.map(rng).join('')+(sp.slot==='capBg'?'':`<div class="text-look-row"><span>투명도</span><span></span><input type="range" min="0" max="90" step="5" value="${B.alpha(sp.slot)}" data-box-alpha="${sp.slot}"><span></span><output>${B.alpha(sp.slot)}</output></div>`)+(sp.pack?packBox():'')
         
-        +`<div class="lk-deco-chips"><button type="button" class="lk-mini-btn" data-box-all>이 색을 모든 칸에</button></div>`
+        
 };
     const boxPaintPreview=(c,k)=>boxPaint(c,k)||((c,k)=>k==='grad'?`linear-gradient(180deg,color-mix(in srgb,${c} 78%,#fff),${c} 55%,color-mix(in srgb,${c} 72%,#000))`:k==='gloss'?`linear-gradient(180deg,color-mix(in srgb,${c} 58%,#fff),color-mix(in srgb,${c} 85%,#fff) 46%,${c} 50%,color-mix(in srgb,${c} 82%,#000))`:k==='deep'?`radial-gradient(120% 140% at 50% 0%,color-mix(in srgb,${c} 88%,#fff),${c} 45%,color-mix(in srgb,${c} 55%,#000))`:k==='glass'?`color-mix(in srgb,${c} 75%,transparent)`:c)(c,k);
     // 자막 스타일(오른쪽 '자막 스타일·등장' 묶음의 카드)을 자막 칸에 같이 보인다 — 카드는 복사본, 누르면 원래 카드를 대신 누른다(값·저장은 그쪽 한 벌)
