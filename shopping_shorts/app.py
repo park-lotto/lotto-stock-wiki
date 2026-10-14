@@ -14425,6 +14425,40 @@ border-radius:8px;padding:9px 18px;font-size:14px}</style></head><body><div clas
 <a href="/settings#pc" style="margin-right:8px">마이페이지에서 등록</a><a href="__KAKAO__">문의하기</a></div></body></html>""")
 
 
+# ── 콘텐츠 운영 책임 안내(관제 199, 2026-10-14 사장님) ─────────────────────
+# 해외 영상 등을 활용한 짜깁기에서 저작권·중복(재사용) 콘텐츠로 채널이 제한·정지·삭제될 수 있고
+# 그 책임은 회원 본인에게 있다는 안내. ★문구는 여기 한 곳(0순위-B) — 가입(아이디·구글)·대기실·
+# 결제 동의·이용약관이 전부 이 값을 부른다. 구글 신청폼은 out/ 의 Apps Script 패치가 같은 문장을 쓴다.
+_CONTENT_NOTICE_TITLE = "꼭 읽어 주세요 · 콘텐츠 운영 안내"
+_CONTENT_NOTICE_ITEMS = (
+    "숏템메이커는 영상 제작을 돕는 도구예요. 어떤 소재를 골라 어떻게 편집하고 어느 채널에 올릴지는 "
+    "회원님이 정하시며, 그 결과에 대한 책임도 회원님께 있어요.",
+    "해외 영상 등 다른 사람이 만든 영상을 활용할 때는 원작자의 권리와 각 플랫폼(유튜브·인스타그램·틱톡 등)의 "
+    "정책을 먼저 확인해 주세요. 같은 소재를 거의 그대로 쓰거나 비슷한 영상을 반복해 올리면 "
+    "'재사용·중복 콘텐츠'나 저작권 신고 대상이 되어 노출 감소, 수익 제한, 채널 정지·삭제로 이어질 수 있어요.",
+    "플랫폼의 조치나 권리자의 신고·청구는 회사가 대신 해결하거나 되돌려 드릴 수 없고, "
+    "이로 인한 손해는 회사가 책임지지 않으며 이용권 환불 사유에도 해당하지 않아요.",
+    "오래 가는 채널을 위해 직접 촬영·구매했거나 사용 허락을 받은 소재를 우선 쓰고, 자신만의 대본·편집을 충분히 더해 "
+    "주세요. 비슷한 영상을 한 채널에 몰아서 올리는 것도 피해 주세요.",
+)
+_CONTENT_NOTICE_LIS = "".join(f"<li>{t}</li>" for t in _CONTENT_NOTICE_ITEMS)   # 약관 조항용
+_CONTENT_AGREE_LABEL = "위 콘텐츠 운영 안내를 읽었고, 채널 운영과 업로드 결과의 책임이 저에게 있음을 확인합니다."
+
+
+def _content_notice_html(*, accent="#ffcf6f", agree_name=None):
+    """안내 상자 HTML. agree_name을 주면 필수 동의 체크박스까지 붙인다(서버도 같은 이름을 검사)."""
+    lis = "".join(f'<li style="margin:4px 0">{t}</li>' for t in _CONTENT_NOTICE_ITEMS)
+    box = (f'<div style="text-align:left;margin:16px 0 4px;padding:12px 14px;border:1px solid {accent}55;'
+           f'border-radius:10px;background:{accent}12;font-size:12.5px;line-height:1.6;color:#d6d8dc">'
+           f'<div style="font-weight:800;color:{accent};margin-bottom:4px">⚠️ {_CONTENT_NOTICE_TITLE}</div>'
+           f'<ul style="margin:0;padding-left:18px">{lis}</ul>')
+    if agree_name:
+        box += (f'<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-weight:700;'
+                f'color:#e8eaed;cursor:pointer"><input type=checkbox name={agree_name} value=1 required '
+                f'style="margin-top:3px;width:auto"> <span>{_CONTENT_AGREE_LABEL}</span></label>')
+    return box + "</div>"
+
+
 _PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
@@ -14437,9 +14471,10 @@ text-decoration:none;font-size:14px}</style></head>
 <body><div class=box><div class=emoji>🙏</div>
 <h1>가입 신청이 접수됐어요</h1>
 <p>운영자 승인 후 이용할 수 있어요.<br>결제하고 알려주시면 바로 열어드려요.</p>
+__CNOTICE__
 <a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;font-weight:700;padding:12px 24px;border-radius:11px;text-decoration:none;font-size:15px">__PAY_LABEL__</a>
 <form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form>
-<div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""")
+<div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""").replace("__CNOTICE__", _content_notice_html())
 
 # ── 가입 마무리: 이름·전화 받기 (2026-08-24 사장님 요청) ──────────────────
 # 구글 로그인 가입은 이메일만 들어오고 이름·전화가 **아예 안 들어온다**(get_or_create_by_google이
@@ -14490,6 +14525,7 @@ color:#08110e;border:0;border-radius:11px;font-weight:700;font-size:15px;cursor:
 <div class=pick>__GENDER__</div>
 <label>연령대</label>
 <div class="pick age">__AGE__</div>
+__CNOTICE__
 <button class=go type=submit>시작하기</button>
 <div class=err>__ERR__</div>
 </form>
@@ -14585,6 +14621,7 @@ def _welcome_page(request: Request, e: str = ""):
             .replace("__PHONE_V__", _esc_attr(cust.get("phone")))
             .replace("__GENDER__", _pick_html("gender", _GENDER_OPTS, cust.get("gender")))
             .replace("__AGE__", _pick_html("age_band", _AGE_OPTS, cust.get("age_band")))
+            .replace("__CNOTICE__", _content_notice_html(agree_name="content_agree"))
             .replace("__ERR__", msg))
     return HTMLResponse(html)
 
@@ -14611,6 +14648,8 @@ async def _api_welcome(req: Request):
         return RedirectResponse("/welcome?e=" + urllib.parse.quote("성별을 선택해주세요"), status_code=303)
     if age_band not in _AGE_OPTS:
         return RedirectResponse("/welcome?e=" + urllib.parse.quote("연령대를 선택해주세요"), status_code=303)
+    if (form.get("content_agree") or [""])[0] != "1":
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("콘텐츠 운영 안내 확인에 체크해주세요"), status_code=303)
     st = Store(DB_PATH)
     # ★관리자 정보수정과 같은 경로를 쓴다(0순위-B)
     st.update_customer_info(cid, name, phone, gender=gender, age_band=age_band)
@@ -14643,7 +14682,7 @@ _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 _SIGNUP_HTML = r"""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>숏템메이커 가입</title>
-<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+<style>body{margin:0;min-height:100vh;padding:20px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
 .box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
 h1{color:#4f9dfa;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
@@ -14670,6 +14709,7 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 <input name=pass type=password placeholder=비밀번호 autocomplete=new-password required>
 <span class=plabel>성별</span><div class=pick>__GENDER__</div>
 <span class=plabel>연령대</span><div class=pick>__AGE__</div>
+__CNOTICE__
 <button>가입하기</button>
 <div class=err>__ERR__</div>
 <div class=foot><a href=/login>이미 계정이 있으신가요? 로그인</a></div>
@@ -14991,11 +15031,13 @@ def _toss_checkout(request: Request):
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
 <input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
+{_pay_legal_box()}
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
   <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
-  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.</span></label>
+  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
+<input id=sg placeholder="서명 — 결제자 성함을 그대로 적어 주세요" maxlength=40 style="{inp};margin-top:10px">
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -15017,6 +15059,7 @@ document.getElementById('go').onclick = async () => {{
   if (!fd.checked) {{ msg.textContent = '① 신청서를 먼저 작성·제출하고 체크해 주세요.'; return; }}
   if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
   if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
+  if (sg.value.replace(/ /g, '') !== payer.name.replace(/ /g, '')) {{ msg.textContent = '서명 칸에 결제자 성함을 똑같이 적어 주세요.'; sg.focus(); return; }}
   busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
   try {{
     const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
@@ -15268,6 +15311,8 @@ _TERMS_BODY = f"""
 <li>불법·음란·타인 비방 등 위법하거나 제3자의 권리를 침해하는 콘텐츠 제작에 서비스를 이용할 수 없습니다.</li>
 <li>계정을 타인과 공유하거나 자동화 수단으로 부정 이용해서는 안 됩니다.</li>
 </ul>
+<h2>제4조의2 (콘텐츠 운영 책임)</h2>
+<ul>{_CONTENT_NOTICE_LIS}</ul>
 <h2>제5조 (콘텐츠의 권리)</h2>
 <p>이용자가 서비스로 생성한 결과물의 이용권한은 이용자에게 있습니다. 다만 이용자가 업로드한 소재에 제3자의 권리가 포함된 경우, 그 이용에 대한 책임은 이용자가 부담합니다.</p>
 <h2>제6조 (서비스의 중단·변경)</h2>
@@ -15323,6 +15368,22 @@ _PRIVACY_BODY = f"""
 <h2>7. 개인정보 보호책임자</h2>
 <p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
 """
+
+def _pay_legal_box():
+    """프로 이용권 결제 화면의 '읽고 서명하는 칸'(관제 199, 2026-10-14 사장님).
+    환불정책·이용약관·콘텐츠 운영 안내 원문을 페이지 안에서 바로 읽게 펼친다.
+    ★문서 본문은 /refund·/terms 와 같은 상수를 그대로 쓴다(0순위-B) — 따로 요약해 적지 마라."""
+    def sec(title, body, open_=False):
+        return (f'<details{" open" if open_ else ""} style="margin:8px 0;border:1px solid #2a3436;border-radius:10px;'
+                f'background:#0e1416"><summary style="cursor:pointer;padding:10px 12px;font-weight:800;font-size:14px">'
+                f'{title}</summary><div style="max-height:220px;overflow:auto;padding:0 14px 12px;font-size:12.5px;'
+                f'line-height:1.6;color:#c9cdd2">{body}</div></details>')
+    return ('<div style="font-weight:800;font-size:16px;margin-top:18px">③ 꼭 읽고 서명해 주세요</div>'
+            '<div class=p>결제 전에 아래 세 가지를 펼쳐 읽어 주세요.</div>'
+            + _content_notice_html()
+            + sec("📄 환불정책 전문", _REFUND_BODY)
+            + sec("📄 이용약관 전문", _TERMS_BODY))
+
 
 _REFUND_BODY = f"""
 <p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다.
@@ -15403,6 +15464,7 @@ def _signup_page(e: str = ""):
     return (_SIGNUP_HTML
             .replace("__GENDER__", _pick_html("gender", _GENDER_OPTS, None))
             .replace("__AGE__", _pick_html("age_band", _AGE_OPTS, None))
+            .replace("__CNOTICE__", _content_notice_html(accent="#4f9dfa", agree_name="content_agree"))
             .replace("__ERR__", e or ""))
 
 
@@ -15464,6 +15526,8 @@ async def _api_signup(req: Request):
         return RedirectResponse("/signup?e=" + urllib.parse.quote("성별을 선택해주세요"), status_code=303)
     if age_band not in _AGE_OPTS:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("연령대를 선택해주세요"), status_code=303)
+    if (form.get("content_agree") or [""])[0] != "1":
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("콘텐츠 운영 안내 확인에 체크해주세요"), status_code=303)
     try:
         customer_id = Store(DB_PATH).create_customer(
             u, p, approved=False, name=name or None, phone=phone or None,
