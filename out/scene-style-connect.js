@@ -35,7 +35,7 @@
   // ① 서버 AI(/api/produce/mix/scene_focus — video_analysis.product_box)에 제품 상자를 묻는다 → 제품이 영상 칸의 약 75%를
   //    채우는 배율(1.2~2배, 사장님 상한 2배)로 그 중심을 향해 자른다. ② AI가 없거나 못 찾으면 그림 윤곽·움직임(아래)으로.
   async function aiBox(sc){
-    const url=(sc?.media_points?.[1]||sc?.media||'');if(!url.includes('/beatframe/'))return null;
+    const mp=sc?.media_points||[];const url=(mp[mp.length>>1]||sc?.media||'');if(!url.includes('/beatframe/'))return null;
     try{const r=await fetch(url.replace('/beatframe/','/scene_focus/'));if(!r.ok)return null;const d=await r.json();return Array.isArray(d.box)?d.box:null;}catch{return null;}
   }
   async function focusPan(i,zoom){

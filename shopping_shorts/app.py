@@ -22416,10 +22416,12 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
 
 
 def _scene_page_points(scene):
-    """한 페이지의 앞·가운데·뒤 완성본 시각 — 앞·뒤는 창 끝에서 창 길이의 1/5(최대 0.15초) 안쪽. 가운데 = _scene_page_time."""
+    """한 페이지의 맨앞·앞·가운데·뒤·맨뒤 완성본 시각(관제 205 회원 제보 — 3칸→5칸).
+    맨앞·맨뒤는 창 끝에서 창 길이의 1/5(최대 0.15초) 안쪽, 앞·뒤는 그 사이 1/4·3/4 지점. 가운데(=SCENE_PEEK_MID) = _scene_page_time."""
     a, b = float(scene["start"]), float(scene["end"])
     e = min(0.15, max(0.0, (b - a) * 0.2))
-    return [round(a + e, 2), _scene_page_time(scene), round(b - e, 2)]
+    lo, hi = a + e, b - e
+    return [round(lo, 2), round(lo + (hi - lo) * 0.25, 2), _scene_page_time(scene), round(lo + (hi - lo) * 0.75, 2), round(hi, 2)]
 
 
 def _scene_page_time(scene):
