@@ -1923,6 +1923,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     plan["cut_rule"] = _CUT_RULE
     from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
     plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
+    from shopping_shorts.config import HAND_CUT as _HAND_CUT
+    plan["hand_cut"] = _HAND_CUT              # 관제 204 — 새 작업만 손 길이·빈칸 메우기
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로

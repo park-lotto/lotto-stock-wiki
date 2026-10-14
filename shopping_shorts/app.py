@@ -6674,6 +6674,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "max_slowmo": float(config.MAX_SLOWMO),
         "cut_rule": str(plan.get("cut_rule") or ""),        # 관제 084 — 표식 있는 작업만 planClips 새 규칙
         "scene_stop": 1 if plan.get("scene_stop") else 0,   # 관제 150 — 표식 있는 새 작업만 이어 틀기를 장면 전환 앞에서 멈춘다
+        "hand_cut": 1 if plan.get("hand_cut") else 0,       # 관제 204 — 표식 있는 새 작업만 손 길이·빈칸 메우기
     }}
 
 
