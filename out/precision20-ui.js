@@ -424,7 +424,8 @@
   const effFontSet=()=>{const fk=frameKind();if(fontSets[fk]!=null)return fontSets[fk];
     const picked=Object.keys(fontSets);return picked.length===1?fontSets[picked[0]]:'';};
   const syncFontSet=()=>{const next=effFontSet();if(next!==fontSet){fontSet=next;fittedText.clear();}return fontSet;};
-  const pickFontSet=id=>{fontSets[frameKind()]=id;fontSet=effFontSet();fittedText.clear();};
+  // 세트를 고르면 글자별로 직접 고른 글꼴(fontPick)은 비운다 — 안 비우면 직접 고른 글꼴이 이겨 세트를 눌러도 그대로였다(10-14 사장님 제보)
+  const pickFontSet=id=>{fontSets[frameKind()]=id;fontSet=effFontSet();for(const k of Object.keys(fontPick))delete fontPick[k];rememberLocal({fontPick:{}});fittedText.clear();};
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
   const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 130%(자막 칸 위치·높이는 그대로)
   // ★적용 범위(2026-09-28 사장님 "자막·제목·채널명 등 이 장면만 등록이나 전체 등록이나 해야 한다"):
