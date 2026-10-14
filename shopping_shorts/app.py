@@ -15031,11 +15031,13 @@ def _toss_checkout(request: Request):
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
 <input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
+{_pay_legal_box()}
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
   <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
   <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.<br><b style="color:#ffcf6f">업로드한 콘텐츠의 저작권·중복 콘텐츠 문제와 그로 인한 채널 제한·정지·삭제의 책임이 저에게 있음</b>을 확인했습니다.</span></label>
+<input id=sg placeholder="서명 — 결제자 성함을 그대로 적어 주세요" maxlength=40 style="{inp};margin-top:10px">
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -15057,6 +15059,7 @@ document.getElementById('go').onclick = async () => {{
   if (!fd.checked) {{ msg.textContent = '① 신청서를 먼저 작성·제출하고 체크해 주세요.'; return; }}
   if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
   if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
+  if (sg.value.replace(/ /g, '') !== payer.name.replace(/ /g, '')) {{ msg.textContent = '서명 칸에 결제자 성함을 똑같이 적어 주세요.'; sg.focus(); return; }}
   busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
   try {{
     const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
@@ -15365,6 +15368,22 @@ _PRIVACY_BODY = f"""
 <h2>7. 개인정보 보호책임자</h2>
 <p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
 """
+
+def _pay_legal_box():
+    """프로 이용권 결제 화면의 '읽고 서명하는 칸'(관제 199, 2026-10-14 사장님).
+    환불정책·이용약관·콘텐츠 운영 안내 원문을 페이지 안에서 바로 읽게 펼친다.
+    ★문서 본문은 /refund·/terms 와 같은 상수를 그대로 쓴다(0순위-B) — 따로 요약해 적지 마라."""
+    def sec(title, body, open_=False):
+        return (f'<details{" open" if open_ else ""} style="margin:8px 0;border:1px solid #2a3436;border-radius:10px;'
+                f'background:#0e1416"><summary style="cursor:pointer;padding:10px 12px;font-weight:800;font-size:14px">'
+                f'{title}</summary><div style="max-height:220px;overflow:auto;padding:0 14px 12px;font-size:12.5px;'
+                f'line-height:1.6;color:#c9cdd2">{body}</div></details>')
+    return ('<div style="font-weight:800;font-size:16px;margin-top:18px">③ 꼭 읽고 서명해 주세요</div>'
+            '<div class=p>결제 전에 아래 세 가지를 펼쳐 읽어 주세요.</div>'
+            + _content_notice_html()
+            + sec("📄 환불정책 전문", _REFUND_BODY)
+            + sec("📄 이용약관 전문", _TERMS_BODY))
+
 
 _REFUND_BODY = f"""
 <p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다.
