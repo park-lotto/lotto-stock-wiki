@@ -40,8 +40,12 @@ main() {
 
   # ── 2. 전용 프로젝트 ───────────────────────────────────────
   say "2/5 숏템메이커 전용 프로젝트 준비"
-  local PID
-  PID=$(gcloud projects list --filter="labels.$LABEL lifecycleState=ACTIVE" --format='value(projectId)' 2>/dev/null | head -1)
+  local PID="" p
+  # 전용 프로젝트가 여럿이면(예전 실패로 생긴 것) 결제가 붙은 것을 먼저 쓴다
+  for p in $(gcloud projects list --filter="labels.$LABEL lifecycleState=ACTIVE" --format='value(projectId)' 2>/dev/null); do
+    [ -z "$PID" ] && PID="$p"
+    if [ "$(gcloud billing projects describe "$p" --format='value(billingEnabled)' 2>/dev/null)" = "True" ]; then PID="$p"; break; fi
+  done
   if [ -n "$PID" ]; then
     ok "이미 만든 프로젝트를 씁니다: $PID"
   else
@@ -57,8 +61,30 @@ main() {
   LINKED=$(gcloud billing projects describe "$PID" --format='value(billingEnabled)' 2>/dev/null)
   if [ "$LINKED" != "True" ]; then
     if ! gcloud billing projects link "$PID" --billing-account="$BA" >/dev/null 2>/tmp/ss_err; then
-      cat /tmp/ss_err
-      die "프로젝트에 결제 계정을 붙이지 못했습니다(위 메시지)."; return 1
+      if ! grep -qi 'quota' /tmp/ss_err; then
+        cat /tmp/ss_err
+        die "프로젝트에 결제 계정을 붙이지 못했습니다(위 메시지)."; return 1
+      fi
+      # 무료 체험 결제 계정은 붙일 수 있는 프로젝트 수가 적다 → 이미 결제가 붙은 프로젝트를 쓴다
+      warn "결제 계정에 붙일 수 있는 프로젝트 수가 꽉 찼습니다 — 이미 결제가 붙은 프로젝트를 씁니다"
+      local -a LP=()
+      mapfile -t LP < <(gcloud billing projects list --billing-account="$BA" --format='value(projectId)' 2>/dev/null)
+      if [ ${#LP[@]} -eq 0 ]; then
+        die "결제가 붙은 프로젝트가 없어 이어갈 수 없습니다. 아래 주소에서 한도 늘리기를 신청해 주세요:
+     https://support.google.com/code/contact/billing_quota_increase"; return 1
+      fi
+      local pick=1 i
+      if [ ${#LP[@]} -gt 1 ]; then
+        printf '\n  숏템메이커에 쓸 프로젝트 번호를 고르세요(모르면 그냥 엔터):\n'
+        for i in "${!LP[@]}"; do printf '    %d) %s\n' $((i+1)) "${LP[$i]}"; done
+        { read -r -p "  번호 [1]: " pick </dev/tty 2>/dev/tty; } 2>/dev/null || pick=1
+        [[ "$pick" =~ ^[0-9]+$ ]] && [ "$pick" -ge 1 ] && [ "$pick" -le ${#LP[@]} ] || pick=1
+      fi
+      gcloud projects update "$PID" --remove-labels=shortsmaker --quiet >/dev/null 2>&1
+      PID="${LP[$((pick-1))]}"
+      gcloud projects update "$PID" --update-labels="$LABEL" --quiet >/dev/null 2>&1
+      gcloud config set project "$PID" >/dev/null 2>&1
+      ok "이 프로젝트를 씁니다: $PID"
     fi
   fi
   ok "결제 연결됨"
