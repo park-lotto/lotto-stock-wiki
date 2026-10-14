@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>구절 맞춤 점검</title>
+<style>
+:root{--bg:#14161b;--card:#1d2028;--line:#2c313c;--txt:#e8eaf0;--sub:#9aa3b2;--cap:#2b4a7a;--c1:#2fbf71;--c2:#f2a33a;--c3:#b07cff;--bad:#ff5a5a}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:25px;margin:0 0 4px}h2{font-size:20px;margin:34px 0 8px}
+.sub{color:var(--sub)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.lab{width:52px;flex:0 0 52px;color:var(--sub);font-size:13px;text-align:right}
+.track{position:relative;flex:1;height:38px}
+.seg{position:absolute;top:0;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0b0d10;overflow:hidden;white-space:nowrap}
+.cap{background:var(--cap);color:#cfe0ff;font-weight:600}
+.k1{background:var(--c1)}.k2{background:var(--c2)}.k3{background:var(--c3)}
+.mark{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed #ffd27a}
+.miss{position:absolute;top:-8px;bottom:-8px;width:0;border-left:3px solid var(--bad)}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.ok{background:#173a2a;color:#9be7bf}.no{background:#4a1f24;color:#ffb3b3}.pick{background:#3a2e14;color:#ffe0a8}
+.note{font-size:15px;margin-top:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.two{grid-template-columns:1fr}.lab{width:40px;flex-basis:40px}}
+</style></head><body><main>
+<h1>구절 맞춤 점검 — 무엇이 문제고 어떻게 고칠지</h1>
+<div class="sub">점선(<span style="color:#ffd27a">┆</span>) = 자막이 바뀌는 순간 · 구절 맞춤 = 장면도 이 순간에 바뀌게 맞추는 기능</div>
+
+<h2>✅ 처음 배치 — 잘 맞음</h2>
+<div class="box">
+  <div class="row"><div class="lab">자막</div><div class="track">
+    <div class="seg cap" style="left:0;width:49.5%">미슐랭 셰프도 감탄해서</div>
+    <div class="seg cap" style="left:50.5%;width:49.5%">돈방석 앉은 발명품</div>
+    <div class="mark" style="left:50%"></div></div></div>
+  <div class="row"><div class="lab">장면</div><div class="track">
+    <div class="seg k1" style="left:0;width:49.5%">카드1</div>
+    <div class="seg k2" style="left:50.5%;width:49.5%">카드2</div>
+    <div class="mark" style="left:50%"></div></div></div>
+  <div class="note"><span class="tag ok">맞음</span> 자막이 바뀔 때 장면도 같이 바뀝니다.</div>
+</div>
+
+<h2>⚠ ① 카드를 하나 더 넣으면 — 원래부터 있던 일</h2>
+<div class="box">
+  <div class="row"><div class="lab">자막</div><div class="track">
+    <div class="seg cap" style="left:0;width:49.5%">미슐랭 셰프도 감탄해서</div>
+    <div class="seg cap" style="left:50.5%;width:49.5%">돈방석 앉은 발명품</div>
+    <div class="mark" style="left:50%"></div></div></div>
+  <div class="row"><div class="lab">장면</div><div class="track">
+    <div class="seg k1" style="left:0;width:49.5%">카드1</div>
+    <div class="seg k2" style="left:50.5%;width:19%">카드2</div>
+    <div class="seg k3" style="left:70.5%;width:29.5%">카드3</div>
+    <div class="mark" style="left:50%"></div><div class="miss" style="left:70%"></div></div></div>
+  <div class="note"><span class="tag no">어긋남</span> 자막은 2줄인데 카드는 3장 — 자막 경계가 1곳뿐이라 한 번은 <b>자막 중간</b>(빨간 선)에서 장면이 바뀝니다.
+  카드2가 0.6~0.7초로 짧아지기도 합니다.<br><span class="sub">→ 이번에 만든 것과 무관, 예전부터 이렇습니다. 손님이 카드를 자막 줄 수보다 많이 넣으면 생깁니다.</span></div>
+</div>
+
+<h2>⚠ ② 끝을 잡아 줄이면 — 이번 기능, 고칠 것</h2>
+<div class="box">
+  <div class="sub">카드1 끝을 잡아 왼쪽으로 줄였을 때</div>
+  <div class="two">
+    <div class="box">
+      <span class="tag no">지금 기본값: 옆 장면 더 보여줌</span>
+      <div class="row"><div class="lab">자막</div><div class="track">
+        <div class="seg cap" style="left:0;width:49.5%">셰프도 감탄</div>
+        <div class="seg cap" style="left:50.5%;width:49.5%">발명품</div>
+        <div class="mark" style="left:50%"></div></div></div>
+      <div class="row"><div class="lab">장면</div><div class="track">
+        <div class="seg k1" style="left:0;width:35%">카드1</div>
+        <div class="seg k2" style="left:36%;width:64%">카드2 (앞당겨짐)</div>
+        <div class="mark" style="left:50%"></div><div class="miss" style="left:35.5%"></div></div></div>
+      <div class="note">경계가 같이 움직여서 <b>자막과 장면이 어긋남</b>.</div>
+    </div>
+    <div class="box">
+      <span class="tag ok">바꿀 기본값: 그 카드만 느리게</span>
+      <div class="row"><div class="lab">자막</div><div class="track">
+        <div class="seg cap" style="left:0;width:49.5%">셰프도 감탄</div>
+        <div class="seg cap" style="left:50.5%;width:49.5%">발명품</div>
+        <div class="mark" style="left:50%"></div></div></div>
+      <div class="row"><div class="lab">장면</div><div class="track">
+        <div class="seg k1" style="left:0;width:49.5%">카드1 (살짝 느리게)</div>
+        <div class="seg k2" style="left:50.5%;width:49.5%">카드2</div>
+        <div class="mark" style="left:50%"></div></div></div>
+      <div class="note">자리는 그대로, 고른 만큼만 보여주며 살짝 느리게 → <b>자막과 계속 맞음</b>.</div>
+    </div>
+  </div>
+  <div class="note">단, 너무 느려지면(1.2배 넘게) 이상하니 그때는 자동으로 <b>옆 장면 더 보여줌</b>으로 넘어갑니다. 위에 뜨는 줄에서 언제든 바꿀 수 있습니다.</div>
+</div>
+
+<h2>한 줄 요약</h2>
+<div class="box">
+  <ul style="margin:0;padding-left:20px">
+    <li><span class="tag ok">컷 리듬</span> 처음·추가·줄이기 모두 문제없음 (10줄 × 3상황 실측)</li>
+    <li><span class="tag ok">구절 맞춤 처음 배치</span> 잘 맞음</li>
+    <li><span class="tag pick">구절 맞춤 + 카드 추가</span> 예전부터 있던 어긋남 — 이번엔 손 안 댐</li>
+    <li><span class="tag pick">구절 맞춤 + 끝 잡아 줄이기</span> 기본값을 <b>그 카드만 느리게</b>로 바꿔 자막과 맞게 유지 ← 이걸 고칠 예정</li>
+  </ul>
+</div>
+</main></body></html>
