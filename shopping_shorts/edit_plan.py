@@ -6226,6 +6226,11 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("stretch_fill", None)
         # [속도 맞추기](2026-09-26) — 고객이 누른 조각만. 이 칸 목록에 있는 id만 남긴다(뺀 조각의 찌꺼기 방지).
+        # 손 길이로 생긴 빈칸을 무엇으로 메우나(관제 204) — 'self'·'all'만 남긴다(없으면 옆 카드, 기본).
+        if eb.get("fill") in ("self", "all"):
+            beat["hand_fill"] = eb.get("fill")
+        else:
+            beat.pop("hand_fill", None)
         _fit = [x for x in (eb.get("fit") or []) if isinstance(x, str) and x in (eb.get("list") or [])]
         if _fit:
             beat["fit_segs"] = _fit

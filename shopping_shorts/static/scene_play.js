@@ -274,6 +274,8 @@ const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
 // ★칸 전체 길이는 음성에 매여 있어 바꿀 수 없다(자막이 t0 누적으로 자리를 잡는다).
 //   그래서 "정한 컷은 그대로, **나머지 컷이 비례로 줄어든다**"가 규칙이다(사장님 선택).
 const FIXLEN = {};
+// 손 길이로 생긴 빈칸·넘침을 무엇으로 메우나(관제 204) — {칸: 'self'|'all'}, 없으면 'next'(옆 카드). 새 작업(DATA.hand_cut)만 읽는다.
+const FILLMODE = {};
 function fixKey(i, sid){ return i + ':' + sid; }
 function getFix(i, sid){ const v = FIXLEN[fixKey(i, sid)]; return v > 0 ? v : 0; }
 function setFix(i, sid, sec){
@@ -509,7 +511,7 @@ function screenStateFromServer(D){
   D = D || DATA || {};
   const beats = D.beats || [];
   const st = {lists: [], stretch: {}, phrase_sync: {}, phrase_exact: {}, cuts: {}, slow: {}, fixlen: {},
-              trims: {}, merges: {}};
+              trims: {}, merges: {}, fill: {}};
   beats.forEach((b, i) => {
     b = b || {};
     const ov = b.scene_override, seen = [];
@@ -525,6 +527,7 @@ function screenStateFromServer(D){
     if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
     if (+b.slow > 1) st.slow[i] = +b.slow;
     for (const [sid, v] of Object.entries(b.fixed_lens || {})) st.fixlen[i + ':' + sid] = v;
+    if (b.hand_fill === 'self' || b.hand_fill === 'all') st.fill[i] = b.hand_fill;
   });
   const ed = D.scene_lab_edits || {};        // 서버 plan.scene_lab 의 트림·합치기(api_mix_scene_lab_data)
   Object.assign(st.trims, ed.trims || {});
@@ -534,12 +537,12 @@ function screenStateFromServer(D){
 function screenState(){                      // 지금 화면 상태를 떠 간다(제작소 큰 화면이 받아 같은 컷을 짠다)
   return {lists: lists.map(l => (l || []).slice()), stretch: {...STRETCH}, phrase_sync: {...PHRASE_SYNC},
           phrase_exact: {...PHRASE_EXACT}, cuts: JSON.parse(JSON.stringify(CUTS)), slow: {...SLOW},
-          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES))};
+          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES)), fill: {...FILLMODE}};
 }
 function applyScreenState(st){
   st = st || {};
   const clr = o => Object.keys(o).forEach(k => delete o[k]);
-  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES].forEach(clr);
+  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES, FILLMODE].forEach(clr);
   lists = (st.lists || []).map(l => (l || []).slice());
   for (const [k, v] of Object.entries(st.stretch || {})) if (v) STRETCH[k] = true;
   for (const [k, v] of Object.entries(st.phrase_sync || {})) if (v === false) PHRASE_SYNC[k] = false;
@@ -553,6 +556,7 @@ function applyScreenState(st){
   for (const [k, v] of Object.entries(st.fixlen || {})){ const n = parseFloat(v); if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100; }
   for (const [k, v] of Object.entries(st.trims || {})) if (Array.isArray(v) && v.length === 2) TRIMS[k] = [+v[0], +v[1]];
   for (const [k, v] of Object.entries(st.merges || {})) if (Array.isArray(v) && v.length) MERGES[k] = v.slice();
+  for (const [k, v] of Object.entries(st.fill || {})) if (v === 'self' || v === 'all') FILLMODE[k] = v;
 }
 function cutsSum(i){ return (CUTS[i] || []).reduce((a, c) => a + c.dur, 0); }
 function _r2(x){ return Math.round(x * 100) / 100; }
@@ -905,6 +909,38 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const okB = b >= minScene && b <= Math.max(real[j + 1], av[j + 1].room) * _maxS() + EPS;
       if (okA && okB){ dur[j] = a; dur[j + 1] = b; acc = best; }
     }
+    // ★손 길이 + 빈칸 메우기(관제 204, 2026-10-14 사장님 "끝을 잡아 줄이면 빈칸 — 위에서 고르게").
+    //   표식(DATA.hand_cut) 있는 **새 작업만** — 옛 작업에 묻혀 있던 손 길이(fixed_lens)는 계속 안 쓴다(기존 영상 불변).
+    //   L = 손으로 정한 컷 길이. 생긴 차이를 무엇으로 메울지는 칸 설정 FILLMODE[beatIdx]:
+    //     'next'(기본) = 옆 카드가 그만큼 더/덜 보여 준다(끝이면 앞 카드) · 'self' = 이 카드만 느리게/빠르게(시간 그대로)
+    //     'all' = 이 칸 카드 전부 같은 배속으로 칸을 채운다.  판단은 여기 한 곳 — 화면 줄(handGapInfo)·렌더·캡컷은 이 결과를 읽는다.
+    const hsrc = scenes.map(() => null);
+    if (D.hand_cut && beatIdx != null && typeof getFix === 'function'){
+      const mode = (typeof FILLMODE === 'object' && FILLMODE && FILLMODE[beatIdx]) || 'next';
+      const base = scenes.map((g, k) => Math.min(Math.max(real[k], av[k].room), dur[k]));
+      const want = scenes.map((g, k) => getFix(beatIdx, g.seg_id));
+      if (want.some(x => x > 0)){
+        const src = base.slice();
+        want.forEach((L, k) => { if (L > 0) src[k] = Math.min(Math.max(MANUAL_MIN, L), av[k].far); });
+        if (mode === 'self'){
+          want.forEach((L, k) => { if (L > 0) hsrc[k] = src[k]; });
+        } else if (mode === 'all'){
+          const tot = sum(src);
+          if (tot > EPS){ dur = src.map(x => x * ttsDur / tot); src.forEach((x, k) => { hsrc[k] = x; }); }
+        } else {
+          want.forEach((L, k) => {
+            if (!(L > 0) || scenes.length < 2) return;
+            const j = k + 1 < scenes.length ? k + 1 : k - 1;
+            // 늘리기는 원본에 있는 만큼까지(넘기면 슬로모션) · 옆 카드는 장면 하한(minScene)보다 짧게 만들지 않는다(번쩍 컷 금지)
+            let diff = dur[k] - Math.min(Math.max(MANUAL_MIN, L), Math.max(dur[k], av[k].far));   // +면 빈칸(옆이 더), -면 넘침(옆이 덜)
+            diff = Math.max(diff, Math.min(0, minScene - dur[j]));
+            dur[k] -= diff; dur[j] += diff;
+            hsrc[k] = Math.min(dur[k], av[k].far);
+            hsrc[j] = Math.min(dur[j], Math.max(base[j], av[j].room));
+          });
+        }
+      }
+    }
     const memeCut = meme ? [{seg_id: 'meme:' + meme.vid, video_id: meme.vid, start: 0, dur: Math.round(headSec * 100) / 100,
                              src_dur: Math.round(headSec * 100) / 100, meme: 1, emotion: meme.emotion}] : [];
     const sceneCuts = scenes.map((g, k) => {
@@ -920,6 +956,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (src < d - EPS || fast) c.src_dur = +src.toFixed(3);
       if (fast) c.fit = true;
       if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
+      if (hsrc[k] != null){                                       // 손 길이(관제 204) — 위에서 정한 읽는 길이 그대로, 다르면 정확히 배속
+        src = hsrc[k];
+        if (Math.abs(src - d) > 0.01){ c.src_dur = +src.toFixed(3); c.fit = true; } else delete c.src_dur;
+        c.hand = 1;
+      }
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
     });
