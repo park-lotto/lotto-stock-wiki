@@ -157,9 +157,9 @@
    catalog.emoji[category][1].forEach(ch=>grid.append(button(ch,'data-add-emoji',ch)));
    [...catalog.thumbnailBadges,...catalog.badges.filter(t=>!catalog.thumbnailBadges.some(b=>b.label===t)).map(label=>({label,color:'#FF2D5E'}))].forEach(def=>{const b=button(def.label,'data-add-badge',def.label);b.style.background=def.color;b.style.color='white';b.style.borderRadius='99px';badges.append(b)});
    const mine=box.querySelector('.dec-my-badges'),saved=myBadges();mine.replaceChildren();mine.hidden=!saved.length;
-   if(saved.length){const head=document.createElement('p');head.textContent='⭐ 내 배지 · 누르면 추가, ×로 지우기';mine.append(head);}
+   if(saved.length){const head=document.createElement('p');head.textContent='⭐ 내 배지 · 누르면 이 장면에 추가 · [끝3]은 마지막 3장면에 바로 · ×로 지우기';mine.append(head);}
    saved.forEach((def,i)=>{const wrap=document.createElement('span');wrap.className='dec-my-badge';const b=button(def.text,'data-add-my-badge',i);b.style.background=def.color||'#FF2D5E';b.style.color='white';b.style.borderRadius='99px';
-     const x=button('×','data-del-my-badge',i);x.title='내 배지에서 지우기';x.setAttribute('aria-label',def.text+' 지우기');wrap.append(b,x);mine.append(wrap)});
+     const x=button('×','data-del-my-badge',i);x.title='내 배지에서 지우기';x.setAttribute('aria-label',def.text+' 지우기');const l3=button('끝3','data-my-badge-last3',i);l3.title='저장한 모양·자리 그대로 마지막 3장면에 넣기(다시 누르면 새로 놓여요)';wrap.append(b,l3,x);mine.append(wrap)});
    const shapes=box.querySelector('.dec-shapes');shapes.replaceChildren();
    catalog.shapes.forEach(def=>{const b=button('','data-add-graphic',def.key),canvas=document.createElement('canvas');canvas.width=96;canvas.height=72;const ctx=canvas.getContext('2d');ctx.translate(48,36);catalog.shapeDraw[def.key](ctx,26,def.color);b.append(canvas,document.createTextNode(def.label));shapes.append(b)});
  }
@@ -283,6 +283,17 @@
      {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(floor-6),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
    ];
  }
+ // 내 배지 → 장면 항목 하나(관제 206). 저장 때 자리·크기가 없던 옛 배지는 예전 기본 자리.
+ function myBadgeMask(def){return {l:Number.isFinite(def.l)?def.l:6,t:Number.isFinite(def.t)?def.t:42,w:Number.isFinite(def.w)?def.w:Math.min(60,18+def.text.length*3),h:Number.isFinite(def.h)?def.h:7,
+   shape:'round',fx:'solid',op:100,soft:30,rot:def.rot||0,kind:'badge',text:def.text,color:def.color||'#FF2D5E',badgeStyle:def.badgeStyle||'pill',motion:def.motion||'none'};}
+ // 내 배지를 마지막 3장면에 — 자리 규칙(1장=훅 제외·12개 상한)은 구매링크 세트(shopSet)와 같다. 같은 배지를 다시 누르면 겹치지 않고 새로 놓인다(set 표식).
+ function myBadgeLast3(def){
+   const total=api.sceneCount?.()||0,targets=[total-3,total-2,total-1].filter(i=>i>=1),tag='mybadge:'+def.text;let full=[],done=[];
+   for(const i of targets){const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==tag);if(keep.length>=12){full.push(i+1);continue;}
+     api.effectAt(i,{...api.effectAt(i),masks:[...keep,{...myBadgeMask(def),set:tag}]});done.push(i+1);}
+   selected=-1;controls();draw();
+   const st=box.querySelector('.dec-my-badges p');if(st)st.textContent=(done.length?`⭐ 「${def.text}」 ${done.join('·')}장에 넣었어요`:'넣을 장면이 없어요')+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
+ }
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
@@ -303,10 +314,11 @@
    const b=event.target.closest('button');if(!b)return;
    if(b.hasAttribute('data-dec-kit')){box.querySelectorAll('[data-kit]').forEach(el=>el.hidden=el.dataset.kit!==b.dataset.decKit);box.querySelectorAll('[data-dec-kit]').forEach(el=>el.classList.toggle('active',el===b));return;}
    if(b.hasAttribute('data-dec-category')){category=Number(b.dataset.decCategory);picker();return;}
+   if(b.hasAttribute('data-my-badge-last3')){const def=myBadges()[Number(b.dataset.myBadgeLast3)];if(def)myBadgeLast3(def);return;}
    if(b.hasAttribute('data-del-my-badge')){const mine=myBadges();mine.splice(Number(b.dataset.delMyBadge),1);saveMyBadges(mine);picker();return;}
    if(b.hasAttribute('data-save-badge')){
      const m=masks()[selected];if(!m||m.kind!=='badge'||!String(m.text||'').trim())return;
-     const text=String(m.text).trim().slice(0,24),def={text,color:m.color||'#FF2D5E',badgeStyle:m.badgeStyle||'pill'};
+     const text=String(m.text).trim().slice(0,24),def={text,color:m.color||'#FF2D5E',badgeStyle:m.badgeStyle||'pill',l:m.l,t:m.t,w:m.w,h:m.h,rot:m.rot||0,motion:m.motion||'none'};   // 자리·크기·움직임도 기억(관제 206 — 그대로 마지막 3장면에)
      const ok=saveMyBadges([def,...myBadges().filter(x=>x.text!==text)]);picker();
      b.textContent=ok?'✓ 내 배지에 저장했습니다':'저장하지 못했습니다(브라우저 저장 공간)';setTimeout(()=>{b.textContent='⭐ 이 배지를 내 버튼으로 저장'},1600);return;
    }
@@ -324,7 +336,7 @@
      let m={kind:'shape',l:6,t:70,w:88,h:12,shape:'round',fx:'solid',color:'#000000',op:100,soft:30,rot:0};
      if(b.hasAttribute('data-add-mask')){m.fx=b.dataset.addMask;if(m.fx==='fade'){m.fx='blur';m.soft=80;}}
      else if(b.hasAttribute('data-add-emoji'))m={...m,kind:'emoji',ch:b.dataset.addEmoji,l:43,t:42,w:18,h:18*9/16};
-     else if(b.hasAttribute('data-add-my-badge')){const def=myBadges()[Number(b.dataset.addMyBadge)];if(!def)return;m={...m,kind:'badge',text:def.text,l:6,t:42,w:Math.min(60,18+def.text.length*3),h:7,color:def.color,badgeStyle:def.badgeStyle||'pill',motion:'none'};}
+     else if(b.hasAttribute('data-add-my-badge')){const def=myBadges()[Number(b.dataset.addMyBadge)];if(!def)return;m=myBadgeMask(def);}
      else if(b.hasAttribute('data-add-badge'))m={...m,kind:'badge',text:b.dataset.addBadge,l:6,t:42,w:Math.min(60,18+b.dataset.addBadge.length*3),h:7,color:catalog.thumbnailBadges.find(x=>x.label===b.dataset.addBadge)?.color||'#FF2D5E',badgeStyle:'pill',motion:'none'};
      else if(b.hasAttribute('data-add-graphic')){const def=catalog.shapes.find(s=>s.key===b.dataset.addGraphic);m={...m,kind:'graphic',graphic:def.key,l:35,t:40,w:30,h:30*9/16,color:def.color,motion:def.key==='arrow_circle'?'spin':def.key.startsWith('arrow')?'point':def.key==='swoosh'||def.key==='check'?'reveal':def.key==='bubble'?'float':'pulse'};}
      else return;
