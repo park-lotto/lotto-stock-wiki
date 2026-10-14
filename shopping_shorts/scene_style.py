@@ -203,6 +203,10 @@ def validate_snapshot(value):
     if text_deco is not None and (not isinstance(text_deco, dict) or set(text_deco) - {"channel", "titleSmall", "caption"}
             or not all(re.fullmatch(r"[a-z0-9_-]{1,32}", str(v or "")) for v in text_deco.values())):
         raise ValueError("글자 꾸밈 값이 올바르지 않습니다")
+    box_fx = value.get("boxFx")   # precision20-ui.js boxFx — 칸별 바탕 효과(BOX_FX id)
+    if box_fx is not None and (not isinstance(box_fx, dict) or set(box_fx) - {"chBg", "top", "band", "bottom", "capBg"}
+            or not all(v in ("grad", "gloss", "deep", "glass") for v in box_fx.values())):
+        raise ValueError("칸 효과 값이 올바르지 않습니다")
     for key, old, label in (("textWeight", ("", "bold", "heavy"), "글자 두께"), ("textShadow", ("", "soft", "strong"), "글자 그림자")):
         look = value.get(key)
         # 2026-09-29: 새 저장값은 0~100(5단위), 09-28의 3단계 문자열은 기존 작업 재열기용으로 계속 허용한다.
@@ -264,7 +268,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textDeco", "boxFx", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
