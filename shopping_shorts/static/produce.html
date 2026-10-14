@@ -18750,7 +18750,8 @@ function s2RenderDrafts(){
   const band=document.getElementById('s2ResultBand'), tabs=document.getElementById('s2Tabs'),
         box=document.getElementById('s2Drafts'), bar=document.getElementById('s2ConfirmBar');
   if(!band) return;
-  if(!S2.drafts.length){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
+  // ★스토리보드 켠 계정은 스토리보드가 곧 대본 화면 — 옛 ③결과 대본(안 카드)을 그 아래 또 보이지 않는다(관제 200 사장님 "예전 대본이 나온다")
+  if(!S2.drafts.length || window.STORYBOARD_ON){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
   band.style.display=''; if(bar) bar.style.display='';
   // ★"이 대본이 무엇으로 만들어졌나"를 화면이 말한다(사장님 제보 "무슨 영상인지 모르겠다").
   //   재료가 어긋나도 대본만 봐서는 알 수 없다 — 쓴 재료를 그대로 보여줘야 어긋남이 보인다.
@@ -19530,11 +19531,34 @@ function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd
 function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbPicksSync(ek,bd); }
 function sbRowAdd(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i+1,0,{slot:'free',need:'새 칸',line:'',ids:[],added:true});
   if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbPicksSync(ek,bd); }
+// 🌐 영어모드(관제 029를 스토리보드로, 관제 200) — 줄 문장을 영어로 갈아끼우고 원문은 line_ko 에 둔다(되돌리기).
+//   변환 판단은 서버 /api/script/translate 하나(줄 수 다르면 거부) — 2단계 옛 안 카드 s2ToggleLang 과 같은 길.
+function sbLangBtn(bd){ const en=bd.lang==='en';
+  return `<button class="sb-btn" id="sbLangBtn" title="${en?'영어 문장을 버리고 한국어 원문으로 되돌립니다':'모든 줄을 영어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)'}" onclick="sbToggleLang()">${en?'🇰🇷 한국어로':'🌐 영어모드로 변환'}</button>`; }
+async function sbToggleLang(){
+  const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd);
+  if(bd.lang==='en'){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang='ko'; sbRender(); _sbSaveSoon(); toast('한국어 원문으로 되돌렸어요'); return; }
+  const rows=bd.slots.map((sl,k)=>[k,String(sl.line||'').trim()]).filter(x=>x[1]);
+  if(!rows.length){ toast('문장이 없어요'); return; }
+  const b=document.getElementById('sbLangBtn'); if(b){ b.disabled=true; b.textContent='⏳ 영어로 바꾸는 중…'; }
+  try{
+    const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lines:rows.map(x=>x[1]), product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
+    if(!Array.isArray(d.lines)||d.lines.length!==rows.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
+    rows.forEach(([k,t],m)=>{ bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
+    bd.lang='en'; _sbSaveSoon();
+    toast('🌐 영어로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+  }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
+  finally{ sbRender(); }
+}
 function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
 function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
     <button class="sb-rb" title="이 줄을 대본에서 뺍니다(장면 칸도 같이)" onclick="sbRowDel(${i})">🗑 빼기</button>
-    <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button><button title="아래에 빈 칸" onclick="sbRowAdd(${i})">＋</button></span></div>`; }
+    <button class="sb-rb" title="이 줄 아래에 빈 칸을 하나 넣어요 — 문장을 쓰고 관련 후보에서 장면을 고르세요" onclick="sbRowAdd(${i})">＋ 칸 추가</button>
+    <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button></span></div>`; }
 // ── 감정짤 미리 고르기(관제 143) — 짤 들어갈 줄([1]·[3])·감정은 서버가 정해 칸에 싣는다(storyboard.apply_signals → meme_emotion).
 //   여기선 보여 주고 고른 번호를 칸(sl.meme_pick)에 붙일 뿐 — 줄을 옮겨도 칸과 함께 다닌다. 확정 때 storyboard 줄에 실려 meme_slots 가 먼저 쓴다.
 function sbMemeCell(i, sl){
@@ -19684,12 +19708,6 @@ function sbAddCand(ek, i, id){ const bd=SB.made[ek]; if(!bd) return; sbOrdOf(ek,
 function sbXset(ek){ return SB.xtra[ek]=SB.xtra[ek]||new Set(); }
 function sbTxtra(ek, r){ const s=sbXset(ek); s.has(r)?s.delete(r):s.add(r); sbRender(); }
 function sbXBusy(ek){ return Object.entries(SB.pend).some(([nk,from])=>from===ek && (sbTask('insert:'+nk)||{state:'run'}).state==='run'); }
-function sbXpick(ek, bd){
-  const have=new Set(bd.slots.map(s=>String(s.slot||'').split('_')[0].toLowerCase())); const opts=SB_EXTRA.filter(([r])=>!have.has(r));
-  if(!opts.length) return ''; const n=sbXset(ek).size, busy=sbXBusy(ek);
-  return `<div class="sb-xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="sb-note">지금 대본은 그대로 두고 고른 칸만 끼워요 — 앞 칸에 이어 쓰고, 안 쓴 장면 중 그 문장을 보여 주는 장면을 골라요(약 20초)</span>
-    <div class="sb-xopts">${opts.map(([r,nm,d])=>`<span class="sb-xo ${sbXset(ek).has(r)?'on':''}" onclick="sbTxtra('${sbA(ek)}','${r}')">${nm} <small>${d}</small></span>`).join('')}</div>
-    <button class="sb-btn main" ${n&&!busy?'':'disabled'} onclick="sbInsert()">${busy?'⏳ 끼워 넣는 중…':(n?'고른 '+n+'칸 끼워 넣기':'칸을 고르면 끼워 넣어요')}</button></div>`; }
 // 뺀 영상 장면 안내 — 지금 보는 탭에 몇 개가 어느 칸에 남았는지, 남은 장면이 없는 칸은 어디인지
 function sbGoneBar(){
   const [ek,bd]=sbCur(); if(!bd || !Array.isArray(bd.slots)) return '';
@@ -19789,8 +19807,8 @@ function sbPage2(){
           ${sbRowActs(i,bd.slots.length,sl)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
-      <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
-      <div style="text-align:right;margin-top:10px"><button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
+      <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}
+      <div style="text-align:right;margin-top:10px">${sbLangBtn(bd)} <button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="sb-pickbar"><b>대본 스타일 고르기</b> <span class="sb-note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
       <span style="margin-left:auto"></span>
