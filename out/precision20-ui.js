@@ -216,14 +216,15 @@
     leftTabs.className='tool-tabs left-pane-tabs';
     // 2026-09-22 사장님 확정: [추천|장면|폰트|색톤|꾸밈]. 추천·색톤·꾸밈 창은 아래 '장면폰트 룩' 블록이 만든다(scene-style-lefttab 이벤트로 연결).
     //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
-    leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
+    leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{const lookRow=r=>{const cur=lookValue(r.key);return `<div class="text-look-row" data-look-row="${r.key}"><span>${r.label}<small>${r.help}</small></span><button type="button" data-look-step="${r.key}" data-delta="${-r.step}" aria-label="${r.label} 줄이기">−</button><input type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${cur}" data-look-range="${r.key}" aria-label="${r.label}"><button type="button" data-look-step="${r.key}" data-delta="${r.step}" aria-label="${r.label} 늘리기">＋</button><output data-look-value="${r.key}">${cur}</output></div>`};const targetButtons=TEXT_LOOK_TARGETS.map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');const curFam=fontPick[textLookTarget]||'',tLabel=TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget)?.label||'';
       const fontItems=FONT_LIST.map(f=>`<button type="button" class="font-one${f.fam===curFam?' selected':''}" data-font-one="${f.fam}" data-font-name="${f.name}" style="font-family:'${f.fam}'">${f.name}${f.isNew?'<i>NEW</i>':''}</button>`).join('');
       fontPane.innerHTML=`<input type="search" class="font-search" data-font-search placeholder="🔍 폰트 검색 (예: 콘콘, 고딕)"><div class="text-look-targets">${targetButtons}</div>`
         +`<div class="font-one-head"><span><b>${tLabel}</b> 폰트${curFam?'':' · 지금은 조합 폰트'}</span><button type="button" data-font-all ${curFam?'':'disabled'}>모든 글자에 적용</button><button type="button" data-font-one="" ${curFam?'':'disabled'}>되돌리기</button></div><div class="font-one-list">${fontItems}</div>`
         +LOOK_ROWS.map(lookRow).join('')+'<div class="font-set-head">추천 조합</div><div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
-    window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
+    window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});
+    window._p20Fonts={pane:fontPane,draw:()=>drawFontSets()};   // 10-14 관제 202: 폰트 창은 오른쪽 '글꼴' 묶음이 옮겨 가 연다   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
     const setTextLook=(key,value)=>{const r=LOOK_ROWS.find(x=>x.key===key);if(!r)return;const v=Math.max(r.min,Math.min(r.max,Math.round(Number(value||0)/r.step)*r.step));
       manualText=true;   // 글자 설정을 만지는 순간부터 새 방식(지금 화면을 보고 정하는 것이므로)
       if(key==='size'){for(const bind of TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget).binds)setFontScale(bind,v/100);}
@@ -306,7 +307,7 @@
     leftTabs.addEventListener('click',event=>{
       const b=event.target.closest('[data-left-tab]');if(!b)return;
       leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
-      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');fontPane.hidden=tab!=='font';if(tab==='font')drawFontSets();minePane.hidden=tab!=='mine';if(tab==='mine')drawMine();
+      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');minePane.hidden=tab!=='mine';if(tab==='mine')drawMine();
       window.dispatchEvent(new CustomEvent('scene-style-lefttab',{detail:tab}));
     });
     const css=document.createElement('style');
@@ -744,7 +745,8 @@
       panes.tone.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 원래 색',bg:'#1b1b1b',c1:'#FFFFFF',c2:'#9aa7b0'},...TONES].map(t=>`<button type="button" class="font-set-card look-card${t.id===currentTone()?' selected':''}" data-tone="${t.id}">${sample(t,titleDeco,family)}<b>${t.name}</b></button>`).join('')+'</div>';
       panes.deco.innerHTML='<div class="font-set-grid">'+[{id:'',name:'꾸밈 없음'},...DECOS].map(d=>`<button type="button" class="font-set-card look-card${d.id===titleDeco?' selected':''}" data-deco="${d.id}">${sample(tone,d.id,family)}<b>${d.name}</b></button>`).join('')+'</div>';
     };
-    window.addEventListener('scene-style-lefttab',event=>{for(const [name,el] of Object.entries(panes))el.hidden=event.detail!==name;if(panes[event.detail])draw();});
+    window.addEventListener('scene-style-lefttab',event=>{panes.look.hidden=event.detail!=='look';if(event.detail==='look')draw();});   // 10-14 관제 202: 색톤·꾸밈은 오른쪽 '제목' 묶음으로 갔다 — 왼쪽은 추천만
+    window._p20Look={tone:panes.tone,deco:panes.deco,draw};
     window.addEventListener('scene-style-fontset',()=>{if(Object.values(panes).some(el=>!el.hidden))draw();});
     const setDeco=id=>{titleDeco=DECOS.some(d=>d.id===id)?id:'';fittedText.clear();rememberLocal({titleDeco});};
     panes.tone.addEventListener('click',event=>{const c=event.target.closest('[data-tone]');if(!c)return;applyTone(c.dataset.tone);draw();});
@@ -752,7 +754,7 @@
     panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
       pickFontSet(look.font);rememberLocal({fontSet,fontSets:{...fontSets}});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
     const css=document.createElement('style');
-    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
+    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
     document.head.append(css);
   }
   // ── 이 장면을 썸네일 후보로(2026-09-22 사장님): 구버전 6단계 화면의 [🖼 이 장면을 썸네일로]를 새 편집기로 옮겼다.
@@ -2393,13 +2395,16 @@
 //   훅 모션 효과 / 빠른 조절 / 제목 / 자막. 칸을 옮기기만 하고 새로 만들지 않는다 — 기존 코드는 선택자(data-field-key 등)로
 //   칸을 찾아 숨김·보임만 바꾸므로 위치가 바뀌어도 그대로 돈다. 안내 상자(.ai-card)는 연결 스크립트의 기준점이라 지우지 않고 숨긴다.
 (()=>{
+  // 10-14 관제 202(사장님 "배치가 복잡하다"): 화면 부위 기준으로 묶는다 — 제목에 관한 건 '제목' 하나에서(문구·색·꾸밈).
+  //   왼쪽 [폰트|색톤|꾸밈] 탭은 없앴다. 그 창들은 지우지 않고 여기로 옮겨 온다(이벤트는 창 자신에 걸려 있어 그대로 돈다).
   const GROUPS=[
     {key:'scope',title:'적용 범위',pick:p=>[...p.querySelectorAll(':scope > .edit-scope')]},   // 09-28: 자막·제목·채널명 공용 [모든 장면|이 장면만] — 맨 위, 기본 펼침
-    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
-    {key:'bodyMotion',title:'본문 모션',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
-    {key:'quick',title:'빠른 조절',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
-    {key:'title',title:'제목',pick:p=>['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)).filter(Boolean)},
+    {key:'title',title:'제목 (문구·색·꾸밈)',pick:p=>[...['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)),p.querySelector(':scope > .title-look-box')].filter(Boolean)},
+    {key:'font',title:'글꼴 (제목·자막·채널명)',pick:p=>{const f=window._p20Fonts?.pane;return f&&f.parentElement===p?[f]:[];}},
     {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor'),p.querySelector(':scope > .hook-caption-note')].filter(Boolean)},
+    {key:'bodyMotion',title:'자막 스타일·등장·단어 강조',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
+    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
+    {key:'quick',title:'칸 크기·배경색',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
   ];
   const style=document.createElement('style');
   style.textContent=`.scene-text-panel > .ai-card{display:none!important}
@@ -2414,7 +2419,11 @@
   .text-group > .text-group-body{padding:10px 12px 12px;background:#060f14;border-radius:0 0 11px 11px}
   .text-group > summary{background:#132a33;border-radius:11px}
   .text-group[open] > summary{background:#173640;border-radius:11px 11px 0 0;box-shadow:inset 3px 0 0 #43e2b4}
-  .text-group > .text-group-body > section{margin:0;border:0;background:none;padding:0}`;
+  .text-group > .text-group-body > section{margin:0;border:0;background:none;padding:0}
+  .title-look-box{margin-top:10px}.title-look-box .tl-head{color:#e8f3f0;font:900 12px system-ui,sans-serif;margin:12px 0 6px}.title-look-box .tl-head small{color:#8fa3ad;font-weight:700;margin-left:6px}
+  .title-look-box .tl-colors{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.title-look-box .tl-colors label{display:flex;align-items:center;gap:6px;background:#0f2028;border:1px solid #294451;border-radius:10px;padding:6px 8px;color:#cfe3df;font:800 11px system-ui,sans-serif}.title-look-box .tl-colors input{width:28px;height:24px;border:0;padding:0;background:none;cursor:pointer}
+  .title-look-box .look-pane .font-set-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fixed-color-grid label:has([data-fixed-color="top"]),.fixed-color-grid label:has([data-fixed-color="title1"]),.fixed-color-grid label:has([data-fixed-color="title2"]){display:none}`;
   document.head.append(style);
   function hint(key,body){
     const val=sel=>body.querySelector(sel)?.value?.trim()||'';
@@ -2422,6 +2431,7 @@
     if(key==='motion'){const m=body.querySelector('.hook-motion-grid .active')?.textContent||'',b=body.querySelector('[data-hook-band-motion].active')?.textContent||'';return [m,b&&b!=='없음'?b:''].filter(Boolean).join(' + ');}
     if(key==='bodyMotion'){const p=body.querySelector('[data-caption-pack].active b')?.textContent,m=body.querySelector('[data-motion-pack].active')?.textContent;if(p||(m&&m!=='끔'))return [p,m&&m!=='끔'?'효과팩 '+m:''].filter(Boolean).join(' · ');const t=body.querySelector('[data-body-caption-motion].active')?.textContent||'';return t==='없음'?'':t;}
     if(key==='quick')return body.querySelector('.fixed-size-control output')?.textContent?`상단 ${body.querySelector('.fixed-size-control output').textContent}`:'';
+    if(key==='font')return '';
     if(key==='title')return [...body.querySelectorAll('[data-field-key]:not([hidden]) :is(input,textarea)')].map(i=>i.value.split('\n')[0].trim()).filter(Boolean)[1]||val('input,textarea');   // 10-03: 제목 칸도 여러 줄 칸
     if(key==='caption')return body.querySelector('[data-field-key="caption"]')?.hidden?'':val('textarea');   // 자막이 안 나오는 장면(템플릿 훅)에선 비운다
     return '';
@@ -2455,14 +2465,31 @@
     const want=!document.body.classList.contains('no-template');
     if(note.hidden!==want)note.hidden=want;
   }
+  const PROXY=[['title1','제목 1줄'],['title2','제목 2줄'],['top','제목 배경']];
+  const fixedInput=k=>document.querySelector(`.fixed-quick-panel [data-fixed-color="${k}"]`);
+  function adopt(panel){
+    const look=window._p20Look,fonts=window._p20Fonts;
+    if(look&&!panel.querySelector('.title-look-box')&&!document.querySelector('.text-group .title-look-box')){
+      const box=document.createElement('div');box.className='title-look-box';
+      // 제목 색은 '빠른 조절'의 색 칸이 정본이다 — 여기 칸은 그 값을 대신 바꿔 주기만 한다(저장·렌더 길 그대로).
+      box.innerHTML='<div class="tl-head">제목 색 <small>아무 색이나 직접</small></div><div class="tl-colors">'+PROXY.map(([k,n])=>`<label><input type="color" data-proxy-color="${k}"><span>${n}</span></label>`).join('')+'</div><div class="tl-head">색 조합</div>';
+      box.append(look.tone);const h=document.createElement('div');h.className='tl-head';h.innerHTML='꾸밈 <small>기울임·외곽선·박스</small>';box.append(h,look.deco);
+      look.tone.hidden=false;look.deco.hidden=false;
+      box.addEventListener('input',e=>{const i=e.target.closest('[data-proxy-color]');if(!i)return;const o=fixedInput(i.dataset.proxyColor);if(!o)return;o.value=i.value;o.dispatchEvent(new Event('input',{bubbles:true}));});
+      panel.append(box);look.draw();
+    }
+    if(fonts&&!fonts.pane.closest('.scene-text-panel')){panel.append(fonts.pane);fonts.pane.hidden=false;fonts.draw();}
+  }
+  function syncProxy(){document.querySelectorAll('[data-proxy-color]').forEach(i=>{const o=fixedInput(i.dataset.proxyColor);if(o&&o.value&&i.value!==o.value)i.value=o.value;});}
   function build(){
     const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
-    noTemplateNote(panel);
+    noTemplateNote(panel);adopt(panel);
     for(const g of GROUPS){
       let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
       const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
       if(!box){box=document.createElement('details');box.className='text-group';box.dataset.group=g.key;
-        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;if(g.key==='scope')box.open=true;nodes[0].before(box);}
+        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;if(g.key==='scope')box.open=true;
+        if(g.key==='title')box.addEventListener('toggle',()=>{if(box.open)window._p20Look?.draw();});if(g.key==='font')box.addEventListener('toggle',()=>{if(box.open)window._p20Fonts?.draw();});nodes[0].before(box);}
       const body=box.querySelector('.text-group-body');nodes.forEach(n=>body.append(n));
     }
     // 그룹 순서를 고정(나중에 끼어든 요소가 순서를 바꾸지 않게)
@@ -2470,7 +2497,7 @@
     refresh();
   }
   function refresh(){
-    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel)noTemplateNote(panel);
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel)noTemplateNote(panel);syncProxy();
     document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
       const body=box.querySelector('.text-group-body');
       // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
