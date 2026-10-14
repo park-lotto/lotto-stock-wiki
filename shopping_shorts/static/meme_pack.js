@@ -133,10 +133,11 @@
     var cur = (cw && (cw.pos === "mid" || cw.pos === "tail")) ? cw.pos : "head";
     var sec = Number((cw || {}).head_sec) || 0;
     var c = cls ? ' class="' + cls + '"' : "";
-    var on = function (p) { return p === cur ? ' style="background:#c85cff;color:#fff;border-color:#c85cff"' : ""; };
-    var b = function (p, t) { return "<button" + c + on(p) + ' title="짤을 줄 ' + t + '에" onclick="' + onPos(p) + '">' + t + "</button>"; };
-    return '<span style="font-size:12px;opacity:.8">자리</span>' + b("head", "앞") + b("mid", "중간") + b("tail", "뒤") +
-      ' <span style="font-size:12px;opacity:.8">길이</span>' +
+    // 자리는 고르기 칸 하나(버튼 3개는 도구줄을 넘쳐 글자가 세로로 쪼개졌다 — 사장님 캡처 10-14)
+    var opt = function (p, t) { return '<option value="' + p + '"' + (p === cur ? " selected" : "") + ">짤 " + t + "</option>"; };
+    var sel = '<select title="짤이 줄의 어디에 나올지" onchange="' + onPos("__P__").replace("'__P__'", "this.value") + '">' +
+      opt("head", "앞") + opt("mid", "중간") + opt("tail", "뒤") + "</select>";
+    return sel +
       "<button" + c + ' title="0.25초 짧게" onclick="' + onLen(Math.round((sec - 0.25) * 100) / 100) + '">−</button>' +
       '<b style="font-size:12px;min-width:38px;text-align:center;display:inline-block">' + sec.toFixed(2) + "초</b>" +
       "<button" + c + ' title="0.25초 길게" onclick="' + onLen(Math.round((sec + 0.25) * 100) / 100) + '">＋</button>';
