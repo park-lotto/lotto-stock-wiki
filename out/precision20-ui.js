@@ -1912,7 +1912,9 @@
     //   고객이 모양을 고르거나(look) 박스색을 직접 고르면(bgUser) 그걸 따른다.
     if(rows[current]?.id===PLAIN_ID&&!plainLegacy&&saved.look===undefined&&!saved.bgUser)return CAPTION_NONE;
     const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
-    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
+    // 고른 모양의 포인트 색 = 제목 2줄 색. 그 색이 흰·검정·회색(채도 없음)이면 버튼에 보이는 민트로 — 본문 제목 2줄이 흰색이라 흰 알약에 흰 글자가 됐다(10-14 사장님)
+    const grayish=h=>{const m=h.match(/[0-9a-f]{2}/gi)||[];if(m.length<3)return true;const v=m.slice(0,3).map(x=>parseInt(x,16));return Math.max(...v)-Math.min(...v)<40;};
+    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](grayish(accent0)?'#43E2B4':accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
     if(mode!=='continuous'||saved.bgUser)return null;
     const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
     const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
