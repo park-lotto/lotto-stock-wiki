@@ -2252,12 +2252,12 @@
   function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
   lookRow.addEventListener('click',event=>{
     const b=event.target.closest('[data-caption-look]');if(!b)return;
-    const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
+    const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;delete settings.background;delete settings.color;   // 10-14: 저장된 박스색·글자색이 남아 '기본'을 눌러도 검정 박스였다 — 모양을 고르면 둘 다 푼다
     if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
     captionLayouts.set(captionKey(),settings);
     // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
     //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
-    if(editScope==='all')spreadCaption(other=>{delete other.bgUser;delete other.colorUser;if('look' in settings)other.look=settings.look;else delete other.look;});   // '이 장면만'이면 다른 장면은 그대로
+    if(editScope==='all')spreadCaption(other=>{delete other.bgUser;delete other.colorUser;delete other.background;delete other.color;if('look' in settings)other.look=settings.look;else delete other.look;});   // '이 장면만'이면 다른 장면은 그대로
     markDirty('caption');renderEdit();syncCaptionLookButtons();
   });
   // 지금 장면 말고 나머지 장면의 자막 설정에 change(other)를 적용한다 — 모양 버튼·크기/색 칸이 같이 쓴다.
