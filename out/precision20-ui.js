@@ -755,7 +755,7 @@
     const isTitle=['hook1','hook2'].includes(bind),g0=textLookGroup(bind),deco=DECOS.find(d=>d.id===(isTitle||g0==='titleLarge'?titleDeco:textDeco[g0]));if(!deco)return;
     if(!isTitle){   // 채널명·작은 제목·자막: 한 줄뿐이라 바탕(css)과 강조(accent)를 같이 건다. 색 기준은 그 글자의 지금 색
       const rule=[deco.css,deco.accent].filter(Boolean).join(';'),own=(()=>{const m=getComputedStyle(el).color.match(/\d+/g);return m?'#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join(''):'#ffffff'})();
-      const ink=document.createElement('span');ink.className='title-deco-ink';ink.append(...el.childNodes);el.append(ink);ink.style.cssText=rule;const hi=textDecoInk[textLookGroup(bind)];ink.style.color=hi||own;
+      const ink=document.createElement('span');ink.className='title-deco-ink';ink.append(...el.childNodes);el.append(ink);ink.style.cssText=rule;const hi=deco.accent?textDecoInk[textLookGroup(bind)]:'';ink.style.color=hi||own;
       ink.style.setProperty('--deco-edge',readableInk(own));ink.style.setProperty('--deco-shade','color-mix(in srgb,'+(hi||own)+' 35%,#000)');ink.style.setProperty('--deco-on-accent',hi?own:readableInk(own));ink.style.setProperty('--deco-on-bg',own);return;}
     const rule=[deco.css,bind==='hook2'?deco.accent:''].filter(Boolean).join(';');if(!rule)return;
     const paint=fixedColorsFor(rows[current].id,frame),bg=(paint.top||frame.title_bg||'#000000').slice(0,7),accent=(colorOverrides.get(colorKey('accent'))||paint.title2||'#00F9ED').slice(0,7);
@@ -1706,7 +1706,7 @@
     }
     if(mode==='story'&&p.id!==PLAIN_ID)paintBoxes(frame,p);
     // 채널명 색 칠하기가 안쪽 span(꾸밈 잉크)까지 같은 색으로 덮는다 — 칠한 뒤 꾸밈 잉크의 글자색·효과색을 다시 맞춘다(10-14 사장님: 형광펜이면 형광펜만 바뀜)
-    layer.querySelectorAll('.precision-text:not([data-edit-bind="hook1"]):not([data-edit-bind="hook2"]) > .title-deco-ink').forEach(ink=>{const el=ink.parentElement,g=textLookGroup(el.dataset.editBind),m=getComputedStyle(el).color.match(/\d+/g),own=m?'#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join(''):'',hi=textDecoInk[g];
+    layer.querySelectorAll('.precision-text:not([data-edit-bind="hook1"]):not([data-edit-bind="hook2"]) > .title-deco-ink').forEach(ink=>{const el=ink.parentElement,g=textLookGroup(el.dataset.editBind),m=getComputedStyle(el).color.match(/\d+/g),own=m?'#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join(''):'',hi=DECOS.find(d=>d.id===textDeco[g])?.accent?textDecoInk[g]:'';   // 효과색은 바탕 칠하는 효과일 때만(외곽선 등엔 글자색 그대로)
       if(!own)return;ink.style.color=hi||own;ink.style.setProperty('--deco-on-bg',own);ink.style.setProperty('--deco-on-accent',hi?own:readableInk(own));ink.style.setProperty('--deco-edge',readableInk(own));});
     if(hasEditableCaption())renderCaption(frame);
     oneLineTitleLines(frame);   // ★09-22 사장님: 보조 제목도 "한 포인트 작게 하니까 맞는다" — 한 줄 규격 제목 줄(훅 1·2줄, 보조 제목)도 같은 규칙
@@ -2132,7 +2132,13 @@
       for(const [slot,hex] of Object.entries(patch)){if(!/^#[0-9a-f]{6}$/i.test(hex||''))continue;
         if(slot==='capBg'){const i=root.querySelector('[data-caption-layout="background"]');if(i){i.value=hex;i.dispatchEvent(new Event('input',{bubbles:true}));}continue;}
         if(slot==='capInk'){const i=root.querySelector('[data-caption-layout="color"]');if(i){i.value=hex;i.dispatchEvent(new Event('input',{bubbles:true}));}continue;}
-        for(const key of (patch._all?toneKeys(p):[layoutKey(p.id,frameFor(p))])){const next={...(fixedColors.get(key)||{})};next[slot]=hex;if(slot==='top')next.bottom=next.bottom||hex;fixedColors.set(key,next);}touched=true;}
+        const frames=p.mode==='continuous'?[p.frame]:[p.hook,p.body];   // 칸 색은 훅·본문 같이(채널명 색과 같은 규칙)
+        for(const fr of frames){const key=layoutKey(p.id,fr);const next={...(fixedColors.get(key)||{})};
+          if(slot==='top'&&!patch._all){const cur=fixedColorsFor(p.id,fr);if(!next.chBg)next.chBg=(next.top||cur.top||'#000000').slice(0,7);if(!next.bottom)next.bottom=(cur.bottom||'#000000').slice(0,7);
+            if(!next.band&&fr===frameFor(p)){const bt=preview.querySelector('.precision-text[data-edit-bind="bodyTitle"]'),y=bt&&parseFloat(bt.style.top);   // 띠는 지금 보이는 색으로 붙잡는다(제목 칸 칠하기가 띠까지 덮는다)
+              const bandEl=bt&&[...bt.parentElement.children].filter(e=>e.classList.contains('precision-patch')&&parseFloat(e.style.top)<=y+1&&parseFloat(e.style.top)+parseFloat(e.style.height)>=y+1&&parseFloat(e.style.height)<20).pop();
+              if(bandEl){const cs=getComputedStyle(bandEl),m=(cs.backgroundColor.includes('rgba(0, 0, 0, 0)')?cs.backgroundImage:cs.backgroundColor).match(/\d+/g);if(m)next.band='#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join('');}}}   // 제목 칸만 바꾼다 — 채널명 칸·하단 칸은 지금 색으로 붙잡아 둔다(10-14 사장님: 다 같이 변함)
+        next[slot]=hex;fixedColors.set(key,next);}touched=true;}
       if(touched){preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();}},
     alpha:(slot,v)=>{if(v===undefined)return boxAlpha[slot]||0;const n=Math.max(0,Math.min(90,Math.round(Number(v)/5)*5));if(n)boxAlpha[slot]=n;else delete boxAlpha[slot];rememberLocal({boxAlpha:{...boxAlpha}});renderEdit();},
     fx:(slot,v,all)=>{if(v===undefined)return boxFx[slot]||'';for(const k of all?['chBg','top','band','bottom','capBg']:[slot]){if(v)boxFx[k]=v;else delete boxFx[k];}rememberLocal({boxFx:{...boxFx}});renderEdit();}
