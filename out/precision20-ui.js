@@ -836,7 +836,7 @@
       // 10-14 관제 202(사장님 "왼쪽에 안 헷갈리게"): 글자 스타일 한 탭에 단계로 — ①완성조합(글꼴까지 자동) ②글꼴 세트(글꼴만) ③색 조합(색만) ④꾸밈(모양만).
       //   카드 그리는 식은 위 세 줄 그대로 쓰고 자리만 모은다. 글꼴 세트 카드는 data-font-set — 누르면 오른쪽 글꼴 창과 같은 함수(pickFontSet)를 부른다.
       const curTone=[{id:'',name:'템플릿 원래 색'},...TONES].find(t=>t.id===currentTone())?.name||'직접 고른 색',curDeco=[{id:'',name:'꾸밈 없음'},...DECOS].find(d=>d.id===titleDeco)?.name||'',curFont=[{id:'',name:'기본 (강렬 어그로)'},...FONT_SETS].find(f=>f.id===fontSet)?.name||'직접 고른 글꼴';
-      const fontCards='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',title:'SBAggroB'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card look-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="lk-prev" style="background:#1b1b1b;font-family:'${f.title||'Pretendard'}',sans-serif"><i style="color:#fff">제목 첫줄</i><i style="color:#fff">제목 둘째줄</i></span><b>${f.name}</b></button>`).join('')+'</div>';
+      const fontCards='<div class="font-set-grid">'+FONT_SETS.map(f=>`<button type="button" class="font-set-card look-card${f.id===fontSet||(f.id==='aggro'&&!fontSet)?' selected':''}" data-font-set="${f.id}"><span class="lk-prev" style="background:#1b1b1b;font-family:'${f.title||'Pretendard'}',sans-serif"><i style="color:#fff">제목 첫줄</i><i style="color:#fff">제목 둘째줄</i></span><b>${f.name}</b></button>`).join('')+'</div>';
       const SUBS=[['look','완성조합','글꼴+색+꾸밈을 한 번에'],['font','글꼴','글꼴만 바꿉니다 · 색·꾸밈은 그대로'],['tone','색상','글자 색과 제목 효과를 바꿉니다 · 글꼴은 그대로'],['box','박스','칸 크기와 바탕색을 바꿉니다 · 글자는 그대로']];
       const sub=SUBS.find(x=>x[0]===lookSub)||SUBS[0];
       const lookCards=panes.look.innerHTML.replace(/^<div class="font-set-head">[\s\S]*?<\/div>/,'');
