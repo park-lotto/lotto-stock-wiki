@@ -38,6 +38,8 @@
     inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
     const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
     frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:900px;border:1px solid #35505b;border-radius:12px;background:#071118';
+    // 편집기 높이 = 안 내용 높이(2026-10-15 관제 205). 고정 높이면 내용(938)이 틀(898)을 넘어 안쪽 스크롤이 하나 더 생겼다
+    frame.addEventListener('load',()=>{try{const d=frame.contentDocument;if(!d)return;const fit=()=>{const h=d.documentElement.scrollHeight;if(h>frame.clientHeight+1)frame.style.height=h+2+'px';};fit();new ResizeObserver(fit).observe(d.body);}catch(_){}});
     inlineShell.append(note,frame);panel.append(inlineShell);return inlineShell;
   }
   let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
