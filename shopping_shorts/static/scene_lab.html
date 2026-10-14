@@ -709,6 +709,10 @@ body.tight.hintson #tbhint,
 body.tight.hintson footer .hint{display:inline}
 /* ⋯ 메뉴(관제 086) */
 .tbmore{position:relative;display:inline-block}
+/* 칸 번호로 바로 넘기기(관제 205, 회원 제보 "칸이 9개라 마우스로 옆으로 넘기기 힘들다") — ⋯ 오른쪽 */
+.tbjump{display:inline-flex;gap:3px;align-items:center;flex-wrap:wrap;margin-left:6px}
+.tbjump .tbjl{color:var(--mut,#8a96a8);font-size:11.5px;margin-right:2px}
+.tbjump .act{padding:2px 7px;font-size:11.5px;min-width:24px;line-height:1.4}
 .tbmenu{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;flex-direction:column;gap:6px;
   background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 .tbmore.open .tbmenu{display:flex}
@@ -3823,6 +3827,24 @@ function renderBand(){
   const hidden = row.querySelectorAll('.tbcut.unused').length;
   if (t) t.textContent = `· 총 ${total.toFixed(1)}초 · 컷 ${shown}개`
     + (hidden ? ` · 안 나오는 조각 ${hidden}개` : '');
+  bandJumpRender(row);
+}
+// 칸 번호 버튼 — 누르면 위 띠(#tbrow)가 그 칸으로 옆으로 넘어간다. 보기만 옮긴다(편성·선택은 안 바뀐다).
+function bandJumpRender(row){
+  let j = document.getElementById('tbjump');
+  if (!j){ const m = document.getElementById('tbmore'); if (!m) return;
+    j = document.createElement('span'); j.id = 'tbjump'; j.className = 'tbjump'; m.after(j); }
+  const n = row.querySelectorAll(':scope > .tbeat').length;
+  if (j.dataset.n === String(n)) return;
+  j.dataset.n = String(n);
+  j.innerHTML = n > 1 ? '<span class="tbjl">칸</span>' + Array.from({length:n}, (_, i) =>
+    `<button type="button" class="act" onclick="bandJump(${i})" title="${i+1}번 칸으로 바로 넘기기">${i+1}</button>`).join('') : '';
+}
+function bandJump(i){
+  const row = document.getElementById('tbrow');
+  const c = row && row.querySelectorAll(':scope > .tbeat')[i]; if (!c) return;
+  _bandKeepLeft = null; _bandKeepTok++;   // 다시 그린 뒤 "보던 자리 지키기" 감시가 돌고 있으면 끈다 — 내가 고른 칸을 되돌리면 안 된다
+  row.scrollTo({left: row.scrollLeft + c.getBoundingClientRect().left - row.getBoundingClientRect().left - 6, behavior: 'smooth'});
 }
 
 function render(){

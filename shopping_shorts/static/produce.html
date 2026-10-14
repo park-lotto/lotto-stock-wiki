@@ -1905,11 +1905,11 @@
     </div>
 
     <div class="steps" id="steps"></div>
-    <!-- 작은 단계 이동줄(관제 205 회원 제보 "스크롤로 올라가지 않고 맨앞·맨뒤·몇 단계 이동") — 위 단계바가 화면 밖일 때만 오른쪽 위에 뜬다(사장님 자리 지정).
+    <!-- 작은 단계 이동줄(관제 205 회원 제보 "스크롤로 올라가지 않고 맨앞·맨뒤·몇 단계 이동") — 위 단계바가 화면 밖일 때만 아래에 뜬다.
          이동 판단은 jump(o) 하나(잠금·게이트 그대로). 그리기는 renderSteps 가 위 단계바와 같이 한다 -->
     <div id="stepsMini" class="steps-mini" hidden></div>
     <style>
-      .steps-mini{position:fixed;right:18px;top:10px;z-index:150;display:flex;gap:4px;align-items:center;
+      .steps-mini{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;display:flex;gap:4px;align-items:center;
         padding:5px 8px;border-radius:999px;background:rgba(18,22,34,.92);box-shadow:0 4px 18px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
       .steps-mini[hidden]{display:none}
       .steps-mini .smk{min-width:30px;height:30px;padding:0 6px;border-radius:999px;border:1.5px solid var(--c);background:transparent;color:#e8ecf6;
