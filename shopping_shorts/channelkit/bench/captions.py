@@ -20,7 +20,7 @@ from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
                         GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, GLYPH_SHADOW_ASYM, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
                         BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG,
-                        CAP_MIN_SCORE, CAP_TIE_FRAC, CAP_SUB_STEPS, CAP_SUB_MAX_FRAC, CAP_LOW_PRESENCE, CAP_STATIC_MAX, CAP_STATIC_MIN_SPANS, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
+                        CAP_MIN_SCORE, CAP_TIGHT_GAP, CAP_TIGHT_REL, CAP_TIE_FRAC, CAP_SUB_STEPS, CAP_SUB_MAX_FRAC, CAP_LOW_PRESENCE, CAP_STATIC_MAX, CAP_STATIC_MIN_SPANS, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
 
 
 def caption_region(vl: dict) -> tuple[int, int] | None:
@@ -399,20 +399,45 @@ def _mid_ink_rows(path: str, vl: dict, cap: dict, y0: int, y1: int) -> list[np.n
 
 
 def tighten_band(path: str, vl: dict, cap: dict) -> list[int] | None:
-    """고른 띠를 **실제 글자 행**으로 좁힌다: 자막 구간(흔들림 제외)마다 가운데 프레임의 잉크 행(> GLYPH_ROW_PX)을 합친 범위.
+    """고른 띠를 **실제 글자 행**에 맞춘다(좁히거나 넓힌다): 자막 구간(흔들림 제외)마다 가운데 프레임의 잉크 행(> GLYPH_ROW_PX)을 합친 범위.
     띠 후보는 표본 비율로 잡혀 엔딩·영상이 비친 행까지 넓어진다(2026-10-16 ZdeZRtCeAC4 [1438,1920] → 글자 ≈1466~1529)."""
-    reg = caption_region(vl)
-    if not reg or not cap.get("items"):
+    if not cap.get("items"):
+        return None
+    # 띠 높이만큼 위아래로 넓혀 본다(창 경계 자르기는 caption_region 그대로) — 자리를 옮긴 자막이 원래 띠 밖에 있을 수 있다
+    # (2026-10-16 썰풀다 w-Yg: 자막이 y≈1320~1400 과 1400~1490 을 오가는데 띠 [1328,1390] 만 봤다)
+    b0, b1 = vl["caption"]["band"]
+    hgt = b1 - b0
+    reg = caption_region({**vl, "caption": {**vl["caption"], "band": [b0 - hgt, b1 + hgt]}})
+    if not reg:
         return None
     y0, y1 = reg
-    rows_l = _mid_ink_rows(path, vl, cap, y0, y1)
-    if not rows_l:
+    a_ = _mid_inks(path, vl, cap, y0, y1)
+    b_ = _mid_inks(path, vl, cap, y0, y1, dt=CAP_EXTEND_DT)
+    if not a_ or len(a_) != len(b_):
         return None
-    rows = np.any(rows_l, axis=0)
-    runs = segs(rows, min_len=GLYPH_FIRST_LINE_MIN, gap=SEG_GAP * 4)
+    # 구간 안에서 가만히 있는 잉크만(가운데 ∧ +0.2초) — 영상 속 밝은 것은 움직여 빠진다
+    rows_l = [((x & y).sum(axis=1) > GLYPH_ROW_PX) for x, y in zip(a_, b_)]
+    # 행마다 '그 행에 글자가 있는 자막 구간 비율' f → f ≥ 최댓값×CAP_TIGHT_REL 인 행만 남기고, 틈이 줄 높이의 CAP_TIGHT_GAP 배를
+    # 넘으면 끊는다 → f 합이 가장 큰 묶음 = 자막 자리. 모든 프레임을 그냥 합치면 영상 속 밝은 것까지 들어갔다
+    # (2026-10-16 썰풀다 7DYb: 자막 행 f 0.67~0.95, 영상 행 ≤0.38 인데 합치면 [929,1156]).
+    # 문턱이 최댓값 비례라 자리를 옮겨 다니는 자막(자리마다 f 0.25)도 다 남는다(가만히 있는 잉크로 재면 영상 행은 ≤0.24).
+    f = np.mean(rows_l, axis=0)
+    keep = f >= CAP_TIGHT_REL * float(f.max()) if f.max() > 0 else f > 0
+    runs = segs(keep, min_len=GLYPH_FIRST_LINE_MIN, gap=4)
     if not runs:
         return None
-    return [int(runs[0][0] + y0), int(runs[-1][1] + y0)]
+    hs = sorted(e0 - s0 for s0, e0 in runs)
+    lh = float(hs[len(hs) // 2])
+    groups: list[list[int]] = []
+    for s0, e0 in runs:
+        if groups and s0 - groups[-1][1] <= CAP_TIGHT_GAP * lh:
+            groups[-1][1] = e0
+        else:
+            groups.append([s0, e0])
+    # 원래 띠와 겹치는 묶음 중 글자 비율 합이 가장 큰 것(겹치는 게 없으면 전체에서)
+    over = [g for g in groups if g[0] + y0 < b1 and g[1] + y0 > b0] or groups
+    g = max(over, key=lambda g: float(f[g[0]:g[1]].sum()))
+    return [int(g[0] + y0), int(g[1] + y0)]
 
 
 def extend_band(path: str, vl: dict, cap: dict) -> list[int] | None:
@@ -540,7 +565,7 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
             c, cap = {k: x[k] for k in ("pos", "band", "ink") if k in x}, cp
     c = {**c, **({"polarity_check": pol_note} if pol_note else {})}
     tb = tighten_band(path, {**vl, "caption": c}, cap)
-    if tb and (tb[1] - tb[0]) < (c["band"][1] - c["band"][0]):
+    if tb and tb != c["band"]:
         c = {**c, "band": tb, "band_before_tighten": c["band"]}
         cap = measure_video(path, {**vl, "caption": c}, meta)
     eb = extend_band(path, {**vl, "caption": c}, cap)
