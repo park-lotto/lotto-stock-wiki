@@ -30,6 +30,8 @@ NARR = "tc_68257f68bc6e3c161ab5078d"     # 필재(숏템 기본 tc-piljae-stable
 TARGET_CPS = 8.2                   # 사장님 "무음 없이 빠르게"(원본 7.4)
 GAP = 0.0                         # 줄 사이(원본은 쉬지 않고 이어 말한다)
 BGM = ROOT / "shopping_shorts/assets/bgm_lib/otsukare_summer.mp3"   # 쉼(-40dB↓) 0개·하위5% -19.3dB — 끊어 치는 곡은 끊겨 들린다
+USE_BGM = os.environ.get("CC_BGM", "0") == "1"   # 사장님 10-15 "배경음 다 꺼서" 기본 끔, 우리 팩 1곡만 켤 때 CC_BGM=1
+USE_SFX = False                   # sfx_pack 은 원본 음악이 통째로 잘려 들어가 있었다(4개 모두 -15~-20dB 연속) — 쓰지 않는다
 BGM_GAIN = 0.30                    # 고정 크기(자동 낮추기 없음 — 오르내림이 끊김처럼 들렸다)
 MEME_DIR = Path("C:/숏템_칼카피/memes")
 SFX_DIR = Path("C:/숏템_칼카피/sseolpulda/sfx_pack")
@@ -218,19 +220,22 @@ def render(script_path: str, clips_dir: str, out_dir: str):
     sx = []
     for k in range(len(seg)):
         x = cuts[k][3]
-        f = (SFX_DIR / x["sfx"]) if x.get("sfx") else (sfx[k % len(sfx)] if (sfx and not picks_p.exists() and k) else None)
+        f = None if not USE_SFX else (SFX_DIR / x["sfx"]) if x.get("sfx") else (sfx[k % len(sfx)] if (sfx and not picks_p.exists() and k) else None)
         if not f:
             continue
         j = _n()
         inputs += ["-i", str(f)]
         alist.append(f"[{j}:a]volume=0.45,adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[s{len(sx)}]")
         sx.append(f"[s{len(sx)}]")
-    jb = _n()
-    inputs += ["-stream_loop", "-1", "-i", str(BGM)]
     alist.append("".join(f"[a{k}]" for k in range(len(narr))) + f"amix=inputs={len(narr)}:normalize=0[nar]")
-    alist.append(f"[{jb}:a]volume={BGM_GAIN},atrim=0:{total:.2f}[bg]")
-    mix_in = "[nar][bg]" + "".join(sx)
-    alist.append(f"{mix_in}amix=inputs={2 + len(sx)}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
+    mix_in = "[nar]"
+    if USE_BGM:
+        jb = _n()
+        inputs += ["-stream_loop", "-1", "-i", str(BGM)]
+        alist.append(f"[{jb}:a]volume={BGM_GAIN},atrim=0:{total:.2f}[bg]")
+        mix_in += "[bg]"
+    mix_in += "".join(sx)
+    alist.append(f"{mix_in}amix=inputs={mix_in.count('[')}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
     fil += alist
     mp4 = out / "칼카피본.mp4"
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fil), "-map", "[vout]", "-map", "[aout]",
