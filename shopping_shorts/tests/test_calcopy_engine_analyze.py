@@ -6,7 +6,8 @@ ffmpeg 로 1080×1920·6초·30fps 영상을 만든다: 흰 바탕 + 상단 검�
 (0~3초 "스벅 메뉴판에", 3~6초 "숨겨진 사이즈", 글꼴 GmarketSansBold).
 단언: (a) 글꼴 합산 top1 == GmarketSansBold (b) 자막 구간 2개 (c) probe 1080×1920.
 제미나이는 부르지 않는다 — OCR 은 라벨의 시각으로 drawtext 글자를 그대로 돌려주는 가짜, 나머지는 빈 답.
-사보타주(2026-10-16): FONT 를 NanumMyeongjo-ExtraBold.otf 로 바꿔 만들면 (a)가 실패해야 한다.
+사보타주(2026-10-16): FONT 를 NanumMyeongjo-ExtraBold.ttf 로 바꿔 만들면 (a)가 실패해야 한다.
+제목 띠(검정 띠 위 흰 글자, BlackHanSans "숨은 메뉴 꿀팁")는 fonts.title 1위가 BlackHanSans 여야 한다(사보타주: 제목 글꼴을 바꾸면 실패).
 """
 from __future__ import annotations
 
@@ -20,16 +21,21 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 FONT = "GmarketSansBold.otf"
 TEXTS = ("스벅 메뉴판에", "숨겨진 사이즈")
+TITLE_FONT = "BlackHanSans.ttf"     # 제목 띠는 자막과 다른 글꼴(분석기 2판 fonts.title)
+TITLE = "숨은 메뉴 꿀팁"
 
 pytestmark = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg 없음")
 
 
-def _make_video(d: Path, font: str) -> Path:
+def _make_video(d: Path, font: str, title_font: str = TITLE_FONT) -> Path:
     shutil.copy(REPO / "shopping_shorts" / "static" / "fonts" / font, d / "f.otf")
+    shutil.copy(REPO / "shopping_shorts" / "static" / "fonts" / title_font, d / "tf.ttf")
+    (d / "title.txt").write_text(TITLE, encoding="utf-8")
     for i, t in enumerate(TEXTS):
         (d / f"t{i}.txt").write_text(t, encoding="utf-8")
     cap = ("drawtext=fontfile=f.otf:textfile=t{i}.txt:fontsize=84:fontcolor=black:x=(w-text_w)/2:y=1580:enable='{en}'")
     vf = ("[0:v][1:v]overlay=0:420,drawbox=x=0:y=0:w=1080:h=300:color=black:t=fill,"
+          "drawtext=fontfile=tf.ttf:textfile=title.txt:fontsize=110:fontcolor=white:x=(w-text_w)/2:y=95,"
           + cap.format(i="0", en="lt(t,3)") + "," + cap.format(i="1", en="gte(t,3)"))
     out = d / "test.mp4"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=white:s=1080x1920:d=6:r=30",
@@ -50,6 +56,8 @@ def fake_llm(parts, prompt, tag):
                     mid = (float(m.group(2)) + float(m.group(3))) / 2
                     items.append({"label": p, "lines": [TEXTS[0] if mid < 3 else TEXTS[1]]})
         return {"items": items}, None
+    if tag.startswith("title"):
+        return {"items": [{"label": p, "lines": [TITLE]} for p in parts if isinstance(p, str)]}, None
     if tag.startswith("mat"):
         return {"items": [{"label": p, "kind": "글자만", "why": "시험"} for p in parts if isinstance(p, str)]}, None
     if tag.startswith("ov"):
@@ -57,9 +65,9 @@ def fake_llm(parts, prompt, tag):
     return {"segments": []}, None
 
 
-def run_analyze(tmp: Path, font: str) -> dict:
+def run_analyze(tmp: Path, font: str, title_font: str = TITLE_FONT) -> dict:
     from tools.calcopy.engine import analyze
-    v = _make_video(tmp, font)
+    v = _make_video(tmp, font, title_font)
     return analyze.analyze(str(v), str(tmp / "out"), llm=fake_llm)
 
 
@@ -70,6 +78,9 @@ def test_analyze_known_answers(tmp_path):
     assert R["captions"]["n_spans"] == 2, R["captions"]["spans"]
     assert R["fonts"].get("ok"), R["fonts"]
     assert R["fonts"]["top3"][0]["font"] == "GmarketSansBold.otf", R["fonts"]["top3"]
+    assert R["fonts"]["title"].get("top3"), R["fonts"].get("title_bands")
+    assert R["fonts"]["title"]["top3"][0]["font"] == TITLE_FONT, R["fonts"]["title"]
+    assert R["fonts"]["title"]["italic"] is False
     out = tmp_path / "out"
     for f in ("뜯기.json", "뜯기.md", "sheet.jpg"):
         assert (out / f).exists(), f

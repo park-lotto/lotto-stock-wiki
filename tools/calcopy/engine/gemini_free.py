@@ -15,9 +15,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 os.environ["BRAINBULB_VERTEX"] = "0"
 # 2026-10-16 실측: SHORTS_GEMINI_KEY* 새 키 대부분은 gemini-2.5-flash 가 404("no longer available to new users").
-# 그래서 3.5-flash(실측 4키 OK) → 별칭 flash-latest(503 잦음) → 2.5 순. 키마다 404 난 모델·429 난 (키,모델)은 이번 실행 동안 다시 안 부른다.
-MODELS = ("gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest")
+# 모델은 **하나로 고정**(PRIMARY) — 받아쓰기·소리 구성이 실행마다 흔들린 원인이 503 때 lite·별칭으로 넘어간 것이었다(1판).
+# PRIMARY 가 503 이면 키를 바꿔 PRIMARY 로 PRIMARY_ROUNDS 바퀴 재시도한 뒤에만 FALLBACK. 답에는 _model 표식을 붙인다.
+PRIMARY = "gemini-3.5-flash"
+PRIMARY_ROUNDS = 3
+FALLBACK = "gemini-flash-lite-latest"
+MODELS = (PRIMARY, FALLBACK)
 TIMEOUT_MS = 180_000
+SEED = 7               # 같은 입력 → 같은 답에 가깝게(temperature 0 + 고정 seed)
 _DEAD: set = set()      # (키번호, 모델) — 404/429
 _CURSOR = {"i": 0}      # 키 라운드로빈 시작점
 CALLS: list[dict] = []   # 이번 실행의 호출 장부(모델·키번호·결과) — 뜯기.json 에 남긴다
@@ -49,9 +54,12 @@ def ask(parts: list, prompt: str, tag: str = "") -> tuple[dict | None, str | Non
     n = len(keys)
     start = _CURSOR["i"] % n
     _CURSOR["i"] += 1
-    for step in range(n):
-        ki = (start + step) % n
-        for model in MODELS:
+    plan = [PRIMARY] * PRIMARY_ROUNDS + [FALLBACK]
+    for rnd, model in enumerate(plan):
+        if rnd and model == PRIMARY:
+            time.sleep(5 * rnd)          # 503(과부하)면 잠깐 쉬고 같은 모델로 다시
+        for step in range(n):
+            ki = (start + step) % n
             if (ki, model) in _DEAD:
                 continue
             t0 = time.time()
@@ -59,15 +67,16 @@ def ask(parts: list, prompt: str, tag: str = "") -> tuple[dict | None, str | Non
                 c = genai.Client(api_key=keys[ki], http_options=types.HttpOptions(timeout=TIMEOUT_MS))
                 r = c.models.generate_content(model=model, contents=contents,
                                               config=types.GenerateContentConfig(response_mime_type="application/json",
-                                                                                 temperature=0))
+                                                                                 temperature=0, seed=SEED))
                 d = json.loads(r.text)
                 if isinstance(d, list):      # 3.x 모델은 최상위 목록으로 답할 때가 있다(2026-10-16 실측) → {"items": 목록}
                     d = {"items": d}
                 if not isinstance(d, dict):
                     raise ValueError(f"JSON 모양 이상: {type(d).__name__}")
+                d["_model"] = model
                 CALLS.append({"tag": tag, "model": model, "key": ki, "ok": True, "sec": round(time.time() - t0, 1)})
                 return d, None
-            except Exception as e:  # noqa: BLE001 — 한도·없는 모델·일시 장애면 다음 모델/키, 끝까지 막히면 이유를 돌려준다
+            except Exception as e:  # noqa: BLE001 — 한도·없는 모델·일시 장애면 다음 키, 끝까지 막히면 이유를 돌려준다
                 msg = str(e)
                 if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
                     last = "429"
@@ -75,9 +84,11 @@ def ask(parts: list, prompt: str, tag: str = "") -> tuple[dict | None, str | Non
                 elif "404" in msg or "NOT_FOUND" in msg:
                     last = "404 모델 없음"
                     _DEAD.add((ki, model))
+                elif "503" in msg or "UNAVAILABLE" in msg:
+                    last = "503"
+                    CALLS.append({"tag": tag, "model": model, "key": ki, "failed": last, "sec": round(time.time() - t0, 1)})
+                    break                # 과부하는 모델 탓 — 다음 바퀴(잠깐 쉰 뒤 같은 모델)
                 else:
                     last = msg[:120]
                 CALLS.append({"tag": tag, "model": model, "key": ki, "failed": last, "sec": round(time.time() - t0, 1)})
-                if last == "429":
-                    break           # 이 키는 쉬게 하고 다음 키
     return None, last

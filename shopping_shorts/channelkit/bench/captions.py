@@ -274,6 +274,27 @@ def caption_score(cap: dict, pers: dict) -> float:
     return round(n * pers["persist"] * pers["coverage"], 2)
 
 
+def tighten_band(path: str, vl: dict, cap: dict) -> list[int] | None:
+    """고른 띠를 **실제 글자 행**으로 좁힌다: 자막 구간(흔들림 제외)마다 가운데 프레임의 잉크 행(> GLYPH_ROW_PX)을 합친 범위.
+    띠 후보는 표본 비율로 잡혀 엔딩·영상이 비친 행까지 넓어진다(2026-10-16 ZdeZRtCeAC4 [1438,1920] → 글자 ≈1466~1529)."""
+    reg = caption_region(vl)
+    if not reg or not cap.get("items"):
+        return None
+    y0, y1 = reg
+    W = vl["canvas"][0]
+    rows = np.zeros(y1 - y0, bool)
+    for it in cap["items"]:
+        if it.get("lines", 0) < 1:
+            continue
+        img = probe.grab(path, (it["t0"] + it["t1"]) / 2, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
+        if img is not None:
+            rows |= ink_mask(img, vl["caption"]["ink"]).sum(axis=1) > GLYPH_ROW_PX
+    runs = segs(rows, min_len=GLYPH_FIRST_LINE_MIN, gap=SEG_GAP * 4)
+    if not runs:
+        return None
+    return [int(runs[0][0] + y0), int(runs[-1][1] + y0)]
+
+
 def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[dict] | None = None) -> dict:
     """후보 띠마다 measure_video + persistence → 점수 최고(같으면 좁은 띠). 반환 {caption, result, scored}.
     점수가 모두 0이면 caption = layout 이 고른 것, result = None."""
@@ -292,7 +313,13 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
         if best is None or s > best[0] or (s == best[0] and h < best[3]):
             best = (s, c, cap, h)
     if best and best[0] > 0:
-        return {"caption": best[1], "result": best[2], "scored": scored}
+        c, cap = best[1], best[2]
+        tb = tighten_band(path, {**vl, "caption": c}, cap)
+        if tb and (tb[1] - tb[0]) < (c["band"][1] - c["band"][0]):
+            c2 = {**c, "band": tb, "band_before_tighten": c["band"]}
+            cap = measure_video(path, {**vl, "caption": c2}, meta)
+            c = c2
+        return {"caption": c, "result": cap, "scored": scored}
     return {"caption": vl.get("caption"), "result": None, "scored": scored}
 
 

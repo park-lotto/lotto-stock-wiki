@@ -23,7 +23,8 @@ from . import probe
 from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WINDOW_COL_FRAC, WINDOW_MIN_PX,
                         SEG_GAP, DYN_ROW_CHG, ROW_CHG_DIFF, INK_ROW_PX, BAND_PRESENCE, LOGO_XVID_STD, LOGO_MIN_H,
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
-                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S)
+                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
+                        FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -166,8 +167,47 @@ def window_vote(path: str, meta: dict) -> dict | None:
     if not groups:
         return None
     g = max(groups, key=len)
-    return {"window": [int(np.median([c["window"][k] for c in g])) for k in range(4)], "chunks": chunks,
-            "main": [c["t"] for c in g], "other": [c["t"] for c in chunks if c not in g], "votes": f"{len(g)}/{n}"}
+    win = [int(np.median([c["window"][k] for c in g])) for k in range(4)]
+    main = [c["t"] for c in g]
+    other_chunks = [c["t"] for c in chunks if c not in g]
+    seg = frame_segments(path, meta, win, main, other_chunks)
+    return {"window": win, "chunks": chunks, "main": main, "other_chunks": other_chunks,
+            "other": seg["other"], "other_method": seg["method"], "votes": f"{len(g)}/{n}"}
+
+
+def frame_segments(path: str, meta: dict, win: list[int], main: list[list[float]], other: list[list[float]]) -> dict:
+    """조각 다수결로 찾은 '틀 없는 구간'의 경계를 프레임 단위(FRAME_SEG_FPS)로 좁힌다.
+    프레임마다 창 밖(틀 자리) 회색이 '틀 있는 조각들의 중앙값 그림'과 얼마나 다른지 d(t) → 문턱 = 틀 구간 d 중앙값과
+    틀 없는 조각 d p90 의 가운데. 문턱 넘는 프레임이 FRAME_SEG_MIN_S 이상 이어진 곳 = 틀 없는 구간.
+    (2026-10-16 ZdeZRtCeAC4: 조각 경계 17.92초 → 실측 21.7초, 틀 구간 d≈3 / 엔딩 d≈120)"""
+    H = meta["height"]
+    sh = int(round(H * FRAME_SEG_W / meta["width"] / 2) * 2)
+    fr = np.array([f.astype(np.float32) for f in probe.frames(path, f"fps={FRAME_SEG_FPS},scale={FRAME_SEG_W}:{sh}",
+                                                               FRAME_SEG_W, sh, "gray")])
+    if len(fr) < 3 or not other:
+        return {"other": other, "method": "조각 단위(프레임 표본 부족)"}
+    rows = np.ones(sh, bool)
+    k = sh / H
+    rows[int(win[1] * k):int(np.ceil((win[1] + win[3]) * k))] = False
+    if not rows.any():
+        return {"other": other, "method": "조각 단위(창 밖 행 없음)"}
+    t = np.arange(len(fr)) / FRAME_SEG_FPS
+
+    def inside(spans):
+        return np.array([any(a <= x < b for a, b in spans) for x in t])
+    m_main, m_other = inside(main), inside(other)
+    if not m_main.any() or not m_other.any():
+        return {"other": other, "method": "조각 단위(표본 없음)"}
+    tpl = np.median(fr[m_main][:, rows], axis=0)
+    d = np.abs(fr[:, rows] - tpl).mean(axis=(1, 2))
+    lo, hi = float(np.median(d[m_main])), float(np.percentile(d[m_other], 90))   # 틀 없는 조각엔 틀 있는 앞부분이 섞여 있어 p90
+    if hi - lo < 10:
+        return {"other": other, "method": f"조각 단위(틀 차이 작음 {lo:.1f}/{hi:.1f})"}
+    thr = (lo + hi) / 2
+    runs = segs(d > thr, min_len=max(1, int(round(FRAME_SEG_MIN_S * FRAME_SEG_FPS))), gap=1)
+    out = [[round(a / FRAME_SEG_FPS, 2), round(min(len(fr), b) / FRAME_SEG_FPS, 2)] for a, b in runs]
+    return {"other": out or other,
+            "method": f"창 밖 회색 차 d(t) {FRAME_SEG_FPS}fps > {thr:.1f}(틀 {lo:.1f}·틀 없음 {hi:.1f}의 가운데)"}
 
 
 def measure_video(path: str, meta: dict) -> dict:
@@ -181,7 +221,8 @@ def measure_video(path: str, meta: dict) -> dict:
         v = window_vote(path, meta)
         if v:
             win, method = v["window"], f"layout.window_vote(조각 다수결 {v['votes']})"
-            frames = {"main": v["main"], "other": v["other"], "chunks": v["chunks"]}
+            frames = {"main": v["main"], "other": v["other"], "other_chunks": v["other_chunks"],
+                      "other_method": v["other_method"], "chunks": v["chunks"]}
     lv = _finish(win, st)
     lv["window_method"] = method
     if frames:

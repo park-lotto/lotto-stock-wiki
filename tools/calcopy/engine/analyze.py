@@ -68,8 +68,13 @@ def _batched(llm, items: list[tuple[str, bytes]], prompt: str, tag: str) -> tupl
             continue
         for it in (d or {}).get("items", []):
             if isinstance(it, dict) and it.get("label"):
+                it["_model"] = (d or {}).get("_model")      # 어느 모델이 답했나(1판 흔들림 추적)
                 got[str(it["label"]).strip()] = it
     return got, errs
+
+
+def _models(got: dict) -> list[str]:
+    return sorted({str(v.get("_model")) for v in got.values() if isinstance(v, dict) and v.get("_model")})
 
 
 # ── 3. 자막 글자(OCR) ─────────────────────────────────────────────────────
@@ -102,7 +107,7 @@ def ocr_captions(path, vl, cap, out_dir, llm) -> dict:
         g = got.get(lab) or got.get(f"자막 {i}")
         if g is not None:
             texts[i] = [str(x) for x in (g.get("lines") or [])]
-    return {"crops": crops, "texts": texts, "asked": len(items), "read": len(texts), "errors": errs}
+    return {"crops": crops, "texts": texts, "asked": len(items), "read": len(texts), "errors": errs, "models": _models(got)}
 
 
 # ── 4·5. 글꼴 · 글자 효과 ─────────────────────────────────────────────────
@@ -200,6 +205,74 @@ def fonts_and_fx(cap, ocr, vl, out_dir) -> tuple[dict, dict]:
     return fonts, fx
 
 
+# ── 4-2. 제목·브랜드 띠 글꼴 ─────────────────────────────────────────────
+TITLE_PROMPT = ('각 그림은 숏폼 영상 맨 위의 고정 글자 띠(제목·채널 표식)를 잘라낸 것이다. 그림마다 앞에 라벨이 있다. '
+                '글자를 줄 단위로 **보이는 그대로** 옮겨라(띄어쓰기·부호 그대로). 글자가 없으면 빈 목록.' + chr(10) +
+                'JSON만: {"items":[{"label":"제목 띠 0","lines":["첫 줄"]}]}')
+BRAND_H_FRAC = 0.75     # 띠 높이가 가장 큰 띠의 75% 미만이면 브랜드(채널 표식·[광고] 등 작은 글자), 아니면 제목
+
+
+def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, out_dir, llm) -> dict:
+    """layout '창 위 고정 글자 띠'마다 크롭 → OCR → fontmatch.rank 로 후보 top5 + 기울기. 역할: 제목 / 브랜드(작은 띠).
+    극성은 띠 크롭의 중앙 밝기로(밝으면 어두운 글자). 자막 글꼴과 따로 — 제목을 자막 글꼴로 그리면 굵기가 다르다(2026-10-16 to_frame)."""
+    if not above:
+        return {"failed": "창 위 고정 글자 띠 없음(layout above_bands)"}
+    W, H = meta["width"], meta["height"]
+    items = [it for it in (cap or {}).get("items", []) if it.get("lines", 0) > 0]
+    t = (items[0]["t0"] + items[0]["t1"]) / 2 if items else min(1.0, meta["duration"] / 2)
+    fdir = Path(out_dir) / "fonts"
+    fdir.mkdir(exist_ok=True)
+    hmax = max(b[1] - b[0] for b in above)
+    bands = []
+    for k, (y0, y1) in enumerate(above):
+        a0, a1 = max(0, y0 - 6), min(H, y1 + 6)
+        img = probe.grab(path, t, f"crop={W}:{a1 - a0}:0:{a0}", W, a1 - a0)
+        if img is None:
+            continue
+        pol = "dark" if float(np.median(layout.lum(img))) >= 128 else "bright"
+        role = "brand" if (y1 - y0) < BRAND_H_FRAC * hmax else "title"
+        (Path(out_dir) / "captions").mkdir(exist_ok=True)
+        Image.fromarray(img).save(Path(out_dir) / "captions" / f"{role}{k}.png")
+        bands.append({"k": k, "band": [int(y0), int(y1)], "role": role, "pol": pol, "img": img})
+    got, errs = _batched(llm, [(f"제목 띠 {b['k']}", _jpeg(b["img"], 720)) for b in bands], TITLE_PROMPT, "title")
+    out = {"method": f"layout above_bands 크롭 → gemini OCR → fontmatch.rank ({fontmatch.METHOD}) + fontmatch.slant_deg",
+           "frame_t": round(t, 2), "bands": [], "models": _models(got)}
+    totals: dict[str, dict[str, list]] = {"title": {}, "brand": {}}
+    for b in bands:
+        g = got.get(f"제목 띠 {b['k']}")
+        lines = [x for x in ((g or {}).get("lines") or []) if str(x).strip()]
+        row = {"k": b["k"], "band": b["band"], "role": b["role"], "ink": b["pol"], "text": lines}
+        masks = fontmatch.line_masks(b["img"], b["pol"])
+        if not lines:
+            row["failed"] = errs[0] if errs else "글자 못 읽음"
+        elif len(masks) != len(lines):
+            row["failed"] = f"OCR 줄 {len(lines)} ≠ 잉크 줄 {len(masks)}"
+        else:
+            j = max(range(len(lines)), key=lambda q: len(str(lines[q]).replace(" ", "")))
+            r = fontmatch.rank(masks[j], str(lines[j]))
+            png = fdir / f"{b['role']}{b['k']}.png"
+            fontmatch.grid(masks[j], str(lines[j]), r[:5], str(png))
+            row.update({"top5": [{"font": x["font"], "score": x["score"]} for x in r[:5]], "slant_deg": fontmatch.slant_deg(masks[j]),
+                        "grid": str(png.relative_to(out_dir)).replace(chr(92), "/")})
+            for x in r:
+                totals[b["role"]].setdefault(x["font"], []).append(x["score"])
+        out["bands"].append(row)
+    for role in ("title", "brand"):
+        rows = [r for r in out["bands"] if r["role"] == role and r.get("top5")]
+        if rows:
+            tot = sorted(({"font": f, "score": round(float(np.mean(v)), 4)} for f, v in totals[role].items()), key=lambda x: -x["score"])
+            sl = [r["slant_deg"] for r in rows if r.get("slant_deg") is not None]
+            out[role] = {"top3": tot[:3], "top5": tot[:5], "n_bands": len(rows), "slant_deg": float(np.median(sl)) if sl else None,
+                         "italic": bool(sl and float(np.median(sl)) >= 6)}
+        elif any(r["role"] == role for r in out["bands"]):
+            out[role] = {"failed": next(r.get("failed") for r in out["bands"] if r["role"] == role)}
+    if out.get("title", {}).get("top3") or out.get("brand", {}).get("top3"):
+        out["ok"] = True
+    else:
+        out["failed"] = "제목·브랜드 띠 대조 못 함: " + "; ".join(str(r.get("failed")) for r in out["bands"])
+    return out
+
+
 # ── 6. 등장 곡선 ─────────────────────────────────────────────────────────
 def caption_motion(path, vl, cap, meta) -> dict:
     reg = captions.caption_region(vl)
@@ -233,6 +306,7 @@ MAT_PROMPT = ('각 그림은 세로 숏폼 영상의 한 컷 가운데 프레임
               '짤·밈=유행 짤·밈 이미지 / 역할극·인물컷=사람이 연기·대화하는 연출 컷 / 화면녹화=폰·PC 화면 녹화 / '
               '글자만=그림 없이 글자 화면 / 직접촬영=채널 주인이 직접 찍은 영상(같은 사람·장소가 이어지고 채널 나레가 그 사람 목소리일 때만). '
               '외국인·원본 언어 소리·서로 다른 장소/인물의 영상을 채널 틀(위아래 글자 띠) 안에 넣은 것은 남의영상재편집이다.\n'
+              'why 는 **그 컷에 보이는 것**(사람·물건·장소)을 들어 컷마다 따로 써라 — 다른 컷 근거를 복사하지 마라.' + chr(10) +
               'JSON만: {"items":[{"label":"컷 0","kind":"사전 항목","why":"한 줄"}]}')
 
 
@@ -275,7 +349,8 @@ def shots_and_materials(path, vl, meta, cap, out_dir, llm, want_materials=True, 
     for k, s, e, img in frames:
         g = got.get(f"컷 {k} ({s:.2f}~{e:.2f}s)") or got.get(f"컷 {k}")
         kind = str(g.get("kind", "")).strip() if g else None
-        row = {"shot": k, "t": [round(s, 2), round(e, 2)], "kind": kind, "why": g.get("why") if g else None}
+        row = {"shot": k, "t": [round(s, 2), round(e, 2)], "kind": kind, "why": g.get("why") if g else None,
+               "model": g.get("_model") if g else None}
         if g is None:
             row["failed"] = errs[0] if errs else "답 없음"
         elif kind not in MATERIAL_KINDS:
@@ -286,7 +361,10 @@ def shots_and_materials(path, vl, meta, cap, out_dir, llm, want_materials=True, 
     tot = sum(cnt.values())
     mats = {"method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)", "dict": MATERIAL_KINDS, "per_shot": per,
             "share_by_time": {k: round(v / tot, 3) for k, v in sorted(cnt.items(), key=lambda x: -x[1])} if tot else {},
-            "share_by_count": {k: sum(1 for r in per if r["kind"] == k) for k in cnt}}
+            "share_by_count": {k: sum(1 for r in per if r["kind"] == k) for k in cnt}, "models": _models(got)}
+    whys = [r["why"] for r in per if r.get("why")]
+    if len(whys) >= 3 and len(set(whys)) == 1:
+        mats["why_copied"] = True      # 근거가 컷마다 똑같다 = 컷을 따로 안 본 답(1판 실측) — 미확인으로 올린다
     if got:
         mats["ok"] = True
     else:
@@ -339,7 +417,7 @@ def audio_and_tone(path, meta, llm, R: dict | None = None) -> tuple[dict, dict]:
     gaps = [b["start"] - a["end"] for a, b in zip(ko, ko[1:]) if b["start"] - a["end"] > 0.05]
     langs = sorted({s["lang"] for s in seg if s["lang"]})
     res["asr_extra"] = {k: (d or {}).get(k) for k in ("sfx", "bgm", "voice_tone", "speakers")}
-    res["transcript"] = {"segments": seg, "n": len(seg), "langs": langs, "ambient": (d or {}).get("ambient") or "",
+    res["transcript"] = {"model": (d or {}).get("_model"), "segments": seg, "n": len(seg), "langs": langs, "ambient": (d or {}).get("ambient") or "",
                          "speech_sec_all": round(sum(max(0.0, s["end"] - s["start"]) for s in seg), 2),
                          "ko_speech_sec": round(speak, 2), "speech_share_ko": round(speak / meta["duration"], 3) if meta["duration"] else None,
                          "chars_nospace_ko": chars, "cps": round(chars / speak, 2) if speak > 0 else None,
@@ -406,7 +484,7 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
         items = [{**it, "text": ocr["texts"].get(it["i"])} for it in cap["items"]]
         R["captions"] = {"ok": True, "method": "bench.captions.measure_video + gemini_free.ask(OCR)", "region": cap["region"],
                          "changes": cap["changes"], "spans": cap["spans"], "n_spans": len(cap["spans"]), "items": items,
-                         "glyph": cap["glyph"], "unstable": cap.get("unstable", []), "ocr": {"asked": ocr["asked"], "read": ocr["read"], "errors": ocr["errors"]}}
+                         "glyph": cap["glyph"], "unstable": cap.get("unstable", []), "ocr": {"asked": ocr["asked"], "read": ocr["read"], "errors": ocr["errors"], "models": ocr["models"]}}
         if ocr["errors"]:
             R["captions"]["ocr"]["failed"] = ocr["errors"][0]
             unknown.append(f"자막 OCR 일부 실패: {ocr['errors']}")
@@ -419,6 +497,15 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
     t = time.time()
     if ocr:
         R["fonts"], fx = fonts_and_fx(cap, ocr, vl, out_dir)
+        try:
+            tf = title_fonts(mp4, meta, vl, lay["bench_full"].get("above_bands") or [], cap, out_dir, llm)
+        except Exception as e:  # noqa: BLE001 — 제목 대조 실패는 항목에 남기고 계속
+            tf = {"failed": f"{type(e).__name__}: {str(e)[:120]}"}
+        R["fonts"]["title"] = tf.get("title") or {"failed": tf.get("failed", "제목 띠 없음")}
+        R["fonts"]["brand"] = tf.get("brand") or {"failed": "브랜드 띠 없음"}
+        R["fonts"]["title_bands"] = tf
+        if tf.get("failed"):
+            unknown.append(f"제목 글꼴: {tf['failed']}")
         if R["fonts"].get("failed"):
             unknown.append(f"글꼴: {R['fonts']['failed']}")
         elif R["fonts"]["top3"][0]["score"] < 0.5:
@@ -479,6 +566,8 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
             unknown.append(f"제작법 모름: 컷 {r['shot']} ({r.get('why')})")
         elif r.get("failed"):
             unknown.append(f"제작법 판독 실패: 컷 {r['shot']} ({r['failed']})")
+    if R["materials"].get("why_copied"):
+        unknown.append("제작법 근거가 컷마다 똑같음(컷을 따로 안 본 답일 수 있음)")
     T["cuts_materials"] = time.time() - t
 
     t = time.time()
@@ -557,6 +646,16 @@ def to_md(R: dict) -> str:
               "| 자막 | 대조 글자 | top5 | 그리드 |", "|---|---|---|---|"]
         o += [f"| {p['caption']} | {p['text']} | {', '.join(f'{x['font']} {x['score']}' for x in p['top5'])} | {p['grid']} |"
               for p in F["per_crop"]]
+    for role, name in (("title", "제목"), ("brand", "브랜드")):
+        tr = F.get(role) or {}
+        if tr.get("top3"):
+            o += ["", f"**{name} 띠 글꼴** top5: " + " · ".join(f"{x['font']} ({x['score']})" for x in tr["top5"])
+                  + f" · 기울기 {tr['slant_deg']}° · 기울임 {tr['italic']}"]
+        elif tr.get("failed"):
+            o += ["", f"**{name} 띠 글꼴**: 실패 — {tr['failed']}"]
+    for b in (F.get("title_bands") or {}).get("bands", []):
+        o += [f"- 띠 {b['k']} {b['role']} {b['band']} 잉크 {b['ink']} 글자 {' / '.join(map(str, b['text'])) or '—'} → "
+              + (", ".join(f"{x['font']} {x['score']}" for x in b.get('top5', [])) or f"실패: {b.get('failed')}")]
     X = R["text_fx"]
     o += ["", f"## 5 글자 효과 — {_st(X)}"]
     if X.get("ok"):

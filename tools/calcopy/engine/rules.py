@@ -17,9 +17,8 @@ NEAR_S = 0.15           # "직후" = 사건 뒤 0~0.15초 (사장님 ±0.15초)
 SFX_KINDS = ["띵", "휙", "펑", "웃음", "탄성", "기타"]
 OVERLAY_KINDS = ["한국연예인_리액션", "해외밈_캐릭터", "해외_리액션영상", "애니·만화컷", "이모지·스티커", "글자짤", "화살표·도형", "기타"]
 OV_FPS = 10             # 구간 다듬기 표본 fps
-OV_PIX = 12.0           # 화소 회색 차 < 12 = 같은 화소
-OV_LIFT = 0.15          # 같은 화소 비율이 바깥 기준선보다 0.15 높으면 얹힌 그림이 아직 있다(미검증)
-OV_MIN = 0.3
+OV_EDGE_S = 1.0         # 경계 다듬기: 1초 표본 양끝 바깥 1초를 0.1초 간격으로 다시 본다
+OV_EDGE_FPS = 10
 OV_MERGE_BOX = 0.12     # 이웃 초의 상자 중심 차 < 12% = 같은 등장
 HOOK_S = 3.0            # 훅 = 첫 3초
 END_FRAC = 0.85         # 끝 = 편 길이 85% 이후
@@ -120,33 +119,71 @@ def _slot(t: float, dur: float, items: list[dict]) -> str:
     return "중간"
 
 
-def _refine(path: str, W: int, H: int, box, full: bool, t0: float, t1: float, dur: float) -> tuple[float, float, str]:
-    """1초 표본으로 본 구간 [t0,t1]을 ±1.5초 넓혀 10fps로 보고, 상자 안 화소 중 t0 프레임과 거의 같은(|차|<OV_PIX) 비율이
-    바깥 기준선(앞뒤 1초 중앙값)+OV_LIFT 를 넘는 연속 구간. 결과는 제미나이가 본 [t0, t1] 을 항상 포함한다.
-    (2026-10-16 실측: 움직이는 이모지·카운트다운은 상자 평균 차분으로는 0.1초로 줄어들었다 → 같은 화소 비율로 바꿈. 문턱 미검증)"""
-    a, b = max(0.0, t0 - 1.5), min(dur, t1 + 1.5)
-    if full:
-        x0, y0, x1, y1 = 0, 0, W, H
-    else:
-        x0, y0 = int(max(0, box[0]) * W), int(max(0, box[1]) * H)
-        x1, y1 = int(min(1, box[0] + box[2]) * W), int(min(1, box[1] + box[3]) * H)
-    if x1 - x0 < 8 or y1 - y0 < 8:
-        return t0, min(dur, t1 + 1.0), "상자 너무 작음 — 1초 표본 구간"
-    w, h = (x1 - x0) // 2 * 2, (y1 - y0) // 2 * 2
-    fr = [f.astype(np.float32) for f in probe.frames(path, f"fps={OV_FPS},crop={w}:{h}:{x0}:{y0}", w, h, "gray", ss=a, dur=b - a)]
-    if len(fr) < 5:
-        return t0, min(dur, t1 + 1.0), "프레임 못 읽음 — 1초 표본 구간"
-    ref_i = min(len(fr) - 1, int(round((t0 - a) * OV_FPS)))
-    same = np.array([(np.abs(f - fr[ref_i]) < OV_PIX).mean() for f in fr])
-    edge = np.concatenate([same[:OV_FPS], same[-OV_FPS:]])
-    thr = max(OV_MIN, float(np.median(edge)) + OV_LIFT)
-    i = j = ref_i
-    while i > 0 and same[i - 1] >= thr:
-        i -= 1
-    while j < len(fr) - 1 and same[j + 1] >= thr:
-        j += 1
-    s0, s1 = min(t0, a + i / OV_FPS), max(t1, a + (j + 1) / OV_FPS)
-    return round(s0, 2), round(s1, 2), f"상자 안 같은 화소 비율 ≥ max({OV_MIN}, 바깥중앙값+{OV_LIFT}) 연속 ∪ 1초 표본 구간({OV_FPS}fps, 미검증)"
+def _box(o: dict, full: bool):
+    """제미나이 상자 → [x,y,w,h](0~1). 없거나 이상하면 None(=unknown). 1판은 [0,0,1,1]로 채워 크기 100%가 찍혔다."""
+    b = o.get("box")
+    if isinstance(b, dict):                      # {x,y,w,h} 꼴로 올 때
+        b = [b.get("x"), b.get("y"), b.get("w", b.get("width")), b.get("h", b.get("height"))]
+    if isinstance(b, list) and len(b) == 1 and isinstance(b[0], (list, dict)):   # [[x,y,w,h]] 로 감싸 올 때(2026-10-16 실측)
+        b = b[0]
+        if isinstance(b, dict):
+            b = [b.get("x"), b.get("y"), b.get("w", b.get("width")), b.get("h", b.get("height"))]
+    if not isinstance(b, list) or len(b) != 4:
+        return None
+    try:
+        b = [float(v) for v in b]
+    except (TypeError, ValueError):
+        return None
+    if max(b) > 1 and max(b) <= 1000:            # 0~1000 정규화로 답할 때(제미나이 관례)
+        b = [v / 1000 for v in b]
+    if not (0 <= b[0] <= 1 and 0 <= b[1] <= 1 and 0 < b[2] <= 1 and 0 < b[3] <= 1):
+        return None
+    if not full and b == [0.0, 0.0, 1.0, 1.0]:
+        return None
+    return b
+
+
+EDGE_PROMPT = ('각 그림은 같은 영상의 0.1초 간격 프레임이다(라벨에 시각). 영상 위에 덧얹은 그림 "{what}"({kind})이 그 프레임에 '
+               '**보이는지** 판정하라(조금이라도 보이면 true).' + chr(10) +
+               'JSON만: {{"items":[{{"label":"프레임 20.30s","visible":true}}]}}')
+
+
+def _edges(path: str, e: dict, dur: float, llm, jpeg) -> tuple[float, float, str]:
+    """1초 표본으로 본 [첫 표본, 끝 표본] 양끝 바깥 OV_EDGE_S 를 0.1초 간격 프레임으로 다시 판독해 경계를 넓힌다.
+    프레임 차분은 움직이는 이모지(2026-10-16 mYxuF1A74j4 엄지)에서 0.1초로 줄어들어 못 쓴다 → 같은 판독기로 '보이나'만 묻는다."""
+    t0, t1 = e["ts"][0], e["ts"][-1]
+    pre = [round(t0 - k / OV_EDGE_FPS, 2) for k in range(int(OV_EDGE_S * OV_EDGE_FPS), 0, -1) if t0 - k / OV_EDGE_FPS >= 0]
+    post = [round(t1 + k / OV_EDGE_FPS, 2) for k in range(1, int(OV_EDGE_S * OV_EDGE_FPS) + 1) if t1 + k / OV_EDGE_FPS < dur]
+    part, labs = [], {}
+    for t in pre + post:
+        img = probe.grab(path, t, "scale=360:640", 360, 640)
+        if img is not None:
+            lab = f"프레임 {t:.2f}s"
+            labs[lab] = t
+            part += [lab, jpeg(img, 360)]
+    fb = (max(0.0, t0 - 0.5), min(dur, t1 + 0.5))
+    if not part:
+        return round(fb[0], 2), round(fb[1], 2), "1초 표본 ±0.5초(경계 프레임 못 읽음)"
+    d, err = llm(part, EDGE_PROMPT.format(what=e["what"] or e["kind"], kind=e["kind"]), "ovedge")
+    if err:
+        return round(fb[0], 2), round(fb[1], 2), f"1초 표본 ±0.5초(경계 판독 실패 {err})"
+    vis = {}
+    for it in (d or {}).get("items", []):
+        if isinstance(it, dict) and str(it.get("label", "")).strip() in labs:
+            vis[labs[str(it["label"]).strip()]] = bool(it.get("visible"))
+    start = t0
+    for t in reversed(pre):
+        if vis.get(t):
+            start = t
+        else:
+            break
+    end = t1 + 1 / OV_EDGE_FPS
+    for t in post:
+        if vis.get(t):
+            end = t + 1 / OV_EDGE_FPS
+        else:
+            break
+    return round(start, 2), round(min(dur, end), 2), f"1초 표본 → 양끝 {OV_EDGE_S}초를 0.1초 간격 '보이나' 판독(판독 {len(vis)}/{len(labs)}장)"
 
 
 def overlay_rules(path: str, meta: dict, cap_items: list[dict], llm, jpeg) -> dict:
@@ -176,27 +213,32 @@ def overlay_rules(path: str, meta: dict, cap_items: list[dict], llm, jpeg) -> di
             if not isinstance(o, dict):
                 continue
             kind = o.get("kind") if o.get("kind") in OVERLAY_KINDS else "기타"
-            box = o.get("box") if isinstance(o.get("box"), list) and len(o["box"]) == 4 else [0, 0, 1, 1]
-            try:
-                box = [float(v) for v in box]
-            except (TypeError, ValueError):
-                box = [0.0, 0.0, 1.0, 1.0]
             full = bool(o.get("full"))
-            cx, cy = box[0] + box[2] / 2, box[1] + box[3] / 2
+            box = _box(o, full)
             for e in seen:
-                ex, ey = e["box"][0] + e["box"][2] / 2, e["box"][1] + e["box"][3] / 2
-                if e["kind"] == kind and abs(t - e["ts"][-1]) <= 1.01 and abs(cx - ex) < OV_MERGE_BOX and abs(cy - ey) < OV_MERGE_BOX:
+                if e["kind"] != kind or abs(t - e["ts"][-1]) > 1.01:
+                    continue
+                if box and e["box"]:
+                    near = (abs((box[0] + box[2] / 2) - (e["box"][0] + e["box"][2] / 2)) < OV_MERGE_BOX
+                            and abs((box[1] + box[3] / 2) - (e["box"][1] + e["box"][3] / 2)) < OV_MERGE_BOX)
+                else:
+                    near = True        # 상자를 모르면 같은 종류·이웃 초면 같은 등장(움직이는 이모지)
+                if near:
                     e["ts"].append(t)
+                    e["box"] = e["box"] or box
+                    e["box_raw"].append(o.get("box"))
                     break
             else:
-                seen.append({"kind": kind, "box": box, "full": full, "what": str(o.get("what") or ""), "ts": [t]})
+                seen.append({"kind": kind, "box": box, "full": full, "what": str(o.get("what") or ""), "ts": [t],
+                             "box_raw": [o.get("box")]})
     apps = []
     for e in seen:
-        s0, s1, how = _refine(path, W, H, e["box"], e["full"], e["ts"][0], e["ts"][-1], dur)
+        s0, s1, how = _edges(path, e, dur, llm, jpeg)
         apps.append({"kind": e["kind"], "what": e["what"], "t": [s0, s1], "t_pct": round(100 * s0 / dur, 1),
                      "len_s": round(s1 - s0, 2), "slot": _slot(s0, dur, cap_items), "full": e["full"],
-                     "size_pct": 100.0 if e["full"] else round(100 * e["box"][2] * e["box"][3], 1),
-                     "box": [round(v, 3) for v in e["box"]], "seen_at": e["ts"], "interval_method": how})
+                     "size_pct": 100.0 if e["full"] else (round(100 * e["box"][2] * e["box"][3], 1) if e["box"] else "unknown"),
+                     "box": [round(v, 3) for v in e["box"]] if e["box"] else "unknown", "seen_at": e["ts"],
+                     "box_raw": e["box_raw"][:3], "interval_method": how})
     tot = {}
     for a in apps:
         tot[a["kind"]] = tot.get(a["kind"], 0) + 1
@@ -208,5 +250,5 @@ def overlay_rules(path: str, meta: dict, cap_items: list[dict], llm, jpeg) -> di
             "kind_share": {k: round(v / n, 3) for k, v in sorted(tot.items(), key=lambda kv: -kv[1])},
             "slot_share": {k: round(v / n, 3) for k, v in sorted(slots.items(), key=lambda kv: -kv[1])},
             "appearances": apps, "errors": errs,
-            "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 상자 프레임 차분으로 구간. "
+            "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 양끝 0.1초 간격 '보이나' 판독으로 구간. "
                       f"자리: 훅<{HOOK_S}s / 끝≥{int(END_FRAC * 100)}% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"}
