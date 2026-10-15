@@ -462,8 +462,7 @@
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
             (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
-            if (_box(i)) { (g.HAND_PEND = g.HAND_PEND || {})[i] = { k, sid: c.seg_id, L: sec, auto: c.dur }; render(); }
-            else setFix(i, c.seg_id, sec);
+            setFix(i, c.seg_id, sec);                       // 새 작업은 칸 전체가 한 속도로 맞춘다(scenesV2Alloc 'all')
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();

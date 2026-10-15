@@ -925,10 +925,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         want.forEach((L, k) => { if (L > 0) src[k] = Math.min(Math.max(MANUAL_MIN, L), av[k].far); });
         // ★기본값(관제 204 7번, 2026-10-14 사장님): 구절 맞춤 칸은 '그 카드만 느리게/빠르게' — 장면 바뀌는 자리가 자막 경계에
         //   그대로 남는다. 배속 한도(느리게 maxSlowmo · 빠르게 FIT_FAST_MAX)를 넘으면 '옆 장면 더'. 그 밖의 칸은 '옆 장면 더'.
-        if (!mode){
-          const selfOk = want.every((L, k) => !(L > 0) || (dur[k] / src[k] <= maxSlowmo() + 1e-3 && src[k] / dur[k] <= FIT_FAST_MAX + 1e-3));
-          mode = (typeof phraseExactOn === 'function' && phraseExactOn(beatIdx) && selfOk) ? 'self' : 'next';
-        }
+        // ★기본 = 칸 전체를 한 속도로(2026-10-15 사장님 "늘이고 줄이면 전체 칸 속도만 한 번에 — 1번 줄인다고 2·3번에 영향 없게,
+        //   2·3번을 바꾸고 싶으면 그걸 직접 끈다"). 묻지 않는다. 예전에 고른 값(FILLMODE)이 있으면 그대로.
+        if (!mode) mode = 'all';
         handMode = mode;
         if (mode === 'self'){
           want.forEach((L, k) => { if (L > 0) hsrc[k] = src[k]; });
