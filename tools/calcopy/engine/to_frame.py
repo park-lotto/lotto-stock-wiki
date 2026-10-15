@@ -370,8 +370,8 @@ def title_font(J: dict, img, title_b, texts: list, pol: str) -> tuple[str | None
     """제목 글꼴 — ① 분석기 fonts.title(2판) ② 없으면 분석기와 같은 판별 함수(fontmatch.rank)를 제목 줄에 직접 돌린다
     (판별 주인은 fontmatch 그대로 — 여기선 부르기만) ③ 그것도 못 하면 None(부르는 쪽이 자막 글꼴 + notes)."""
     ft = (J.get("fonts") or {}).get("title")
-    if isinstance(ft, dict) and ft.get("ok"):
-        fam, note = pick_font(ft)
+    if isinstance(ft, dict) and (ft.get("ok") or ft.get("top3")):   # 분석기 2판 fonts.title = {top3, top5, n_bands, slant_deg, italic}('ok' 없음)
+        fam, note = pick_font({"ok": True, "top3": ft.get("top3") or [], "per_crop": [{"top5": ft.get("top5") or []}]})
         return fam, f"분석기 fonts.title 1위 {note.get('top1')}({note.get('top1_score')}), 신뢰 {note.get('font_confidence')}"
     if img is None or not texts:
         return None, "분석기 fonts.title 없음 · 프레임/제목 OCR 없어 직접 판별 못 함"
