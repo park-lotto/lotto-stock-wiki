@@ -29,10 +29,10 @@ FONT = "SB Aggro"                  # SBAggroB.ttf — 원본 제목·자막처�
 NARR = "tc_68257f68bc6e3c161ab5078d"     # 필재(숏템 기본 tc-piljae-stable) — 사장님 10-15
 TARGET_CPS = 8.2                   # 사장님 "무음 없이 빠르게"(원본 7.4)
 GAP = 0.0                         # 줄 사이(원본은 쉬지 않고 이어 말한다)
-BGM = ROOT / "shopping_shorts/assets/bgm_lib/otsukare_summer.mp3"   # 쉼(-40dB↓) 0개·하위5% -19.3dB — 끊어 치는 곡은 끊겨 들린다
+BGM = ROOT / "shopping_shorts/assets/bgm_lib/qiuqiu.mp3"   # 사장님 10-15 지정(Qiu Qiu · Young Dan, 숏템 배경음 15%)
 USE_BGM = os.environ.get("CC_BGM", "0") == "1"   # 사장님 10-15 "배경음 다 꺼서" 기본 끔, 우리 팩 1곡만 켤 때 CC_BGM=1
 USE_SFX = False                   # sfx_pack 은 원본 음악이 통째로 잘려 들어가 있었다(4개 모두 -15~-20dB 연속) — 쓰지 않는다
-BGM_GAIN = 0.30                    # 고정 크기(자동 낮추기 없음 — 오르내림이 끊김처럼 들렸다)
+BGM_GAIN = 0.15                    # 숏템 화면 음량 15% 와 같게
 MEME_DIR = Path("C:/숏템_칼카피/memes")
 SFX_DIR = Path("C:/숏템_칼카피/sseolpulda/sfx_pack")
 

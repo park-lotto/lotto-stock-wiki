@@ -1,0 +1,56 @@
+{
+ "style": "밈/챌린지 모음형",
+ "style_why": "여러 사람이 같은 콘셉트의 짧은 연기를 반복적으로 보여주는 편집 방식",
+ "voice": {
+  "narration": false,
+  "kind": "없음",
+  "gender": "없음",
+  "roles": [],
+  "speed": "없음"
+ },
+ "hook": {
+  "text": null,
+  "t_end": 0.0,
+  "why": "첫 장면부터 손가락 총을 쏘는 동작과 과장된 피격 연기가 바로 나와 흥미를 유발함"
+ },
+ "beats": [
+  {
+   "t0": 0.0,
+   "t1": 5.9,
+   "fn": "상황",
+   "text": "손가락 총으로 영화를 찍는다는 콘셉트를 여러 인물의 연기로 보여줌"
+  }
+ ],
+ "script": "",
+ "tone": {
+  "ending": [],
+  "honorific": "없음",
+  "person": "없음",
+  "slang": []
+ },
+ "frame": {
+  "bg": "흰색 단색 배경",
+  "title_band": "상단 중앙, 흰색 배경에 검은색 글자",
+  "video_box": "중앙에 위치한 정사각형 비율",
+  "logo": "좌측 상단, 'TinyDose 한입지식' 텍스트와 이모지",
+  "other": "하단 중앙에 고정된 검은색 자막 띠"
+ },
+ "subtitle": {
+  "pos": "하단 중앙",
+  "lines": 1,
+  "color": "검은색",
+  "outline": "없음",
+  "highlight": "없음",
+  "appear": "그냥",
+  "matches_voice": false
+ },
+ "effects": [],
+ "sfx": [],
+ "bgm": {
+  "present": true,
+  "mood": "경쾌하고 코믹한",
+  "ducking": false
+ },
+ "scenes_from": "해외 쇼츠",
+ "length_note": "약 6초 길이의 짧은 영상으로, 동일한 콘셉트의 여러 장면을 빠르게 이어 붙여 반복적으로 보여주며 마무리됨."
+}

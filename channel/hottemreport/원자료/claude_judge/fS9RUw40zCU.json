@@ -1,0 +1,52 @@
+{
+ "id": "fS9RUw40zCU",
+ "views": 47000,
+ "title": "영화 CG 감독도 현타 온 영상! #웃긴영상",
+ "style": "웃긴 원본 그대로+자막",
+ "style_why": "6초 원본 클립, 제목·자막만",
+ "topic": "손가락 총 쏘는 연기 놀이",
+ "known_target": 1,
+ "surprise": 4,
+ "fun": 6,
+ "story": 1,
+ "gain": 0,
+ "hook": {
+  "text": "손가락 총으로 영화 찍음ㅎ",
+  "why": "자막 한 줄"
+ },
+ "beats": [
+  {
+   "t0": 0,
+   "t1": 6.3,
+   "fn": "기타",
+   "text": "거란 걸 잊거나 덮어 두는"
+  }
+ ],
+ "script": "",
+ "tone": {
+  "endings": [],
+  "honorific": "없음"
+ },
+ "voice": "나레 없음(원본 소리 조각)",
+ "frame": "흰 배경, 위 'TinyDose 편집지식' 로고, 굵은 검정 제목 1줄, 가운데 레터박스된 원본 영상, 아래 굵은 검정 자막 1줄(다른 채널 틀 - 재업 추정)",
+ "cuts": [
+  {
+   "t0": 0,
+   "t1": 6.3,
+   "media": "영상",
+   "motion": "없음",
+   "color": "원색",
+   "overlay": "원본"
+  }
+ ],
+ "edit_summary": {
+  "photo_ratio": 0.0,
+  "ai_image_ratio": 0.0,
+  "zoom_ratio": 0.0,
+  "bw_count": 0,
+  "cut_len_median": 6.3,
+  "memes": 0
+ },
+ "why_viral": "4.7만: 짧고 웃기지만 이야기 없음",
+ "note": "컷 경계·확대는 0.5초 시트 기준 추정"
+}

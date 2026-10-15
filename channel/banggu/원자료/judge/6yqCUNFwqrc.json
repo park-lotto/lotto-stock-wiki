@@ -1,0 +1,239 @@
+{
+ "style": "제품 이야기썰형",
+ "style_why": "특정 제품(LG 세탁기)의 성공 요인과 그 배경을 설명하는 내러티브 형식의 짧은 영상입니다.",
+ "voice": {
+  "narration": true,
+  "kind": "TTS",
+  "gender": "남",
+  "roles": [
+   "나레"
+  ],
+  "speed": "보통"
+ },
+ "hook": {
+  "text": "또 대단한 거 해낸 LG전자",
+  "t_end": 1.0,
+  "why": "강렬한 주장으로 시청자의 호기심을 자극하고, 어떤 '대단한 것'인지 궁금하게 만듭니다."
+ },
+ "beats": [
+  {
+   "t0": 0.0,
+   "t1": 1.0,
+   "fn": "훅",
+   "text": "LG전자가 또 대단한 일을 해냈다는 선언"
+  },
+  {
+   "t0": 1.0,
+   "t1": 3.0,
+   "fn": "상황",
+   "text": "최근 미국에서 난리 난 LG 제품이 있음"
+  },
+  {
+   "t0": 3.0,
+   "t1": 4.0,
+   "fn": "정체공개",
+   "text": "그 제품은 바로 세탁기임"
+  },
+  {
+   "t0": 4.0,
+   "t1": 6.0,
+   "fn": "원리",
+   "text": "성공 이유는 미국의 독특한 집 구조 때문"
+  },
+  {
+   "t0": 6.0,
+   "t1": 10.0,
+   "fn": "상황",
+   "text": "기존 미국 세탁기는 소음과 진동 때문에 지하실에 둬야 했음"
+  },
+  {
+   "t0": 10.0,
+   "t1": 15.0,
+   "fn": "원리",
+   "text": "LG 세탁기는 인버터 모터 기술로 소음과 진동을 없앰"
+  },
+  {
+   "t0": 15.0,
+   "t1": 18.0,
+   "fn": "상황",
+   "text": "소문을 들은 미국인들이 LG 세탁기를 대거 구매하기 시작"
+  },
+  {
+   "t0": 18.0,
+   "t1": 20.0,
+   "fn": "결말",
+   "text": "결국 LG는 미국 세탁기 시장 점유율을 장악하게 됨"
+  },
+  {
+   "t0": 20.0,
+   "t1": 22.0,
+   "fn": "결말",
+   "text": "LG 가전제품은 믿고 쓸 수 있다는 긍정적 마무리"
+  }
+ ],
+ "script": "또 대단한 거 해낸 LG전자. 최근 미국에서 난리라는 LG 제품이 있는데 바로 세탁기임. 그 이유가 상당히 특이한데 바로 미국의 집 구조 때문임. 미국 국민 세탁기인 월풀이나 GE는 소음과 진동 때문에 거리가 먼 지하실에 둬야 했음. 하지만 LG 세탁기는 인버터 모터 기술의 미친 성능 때문에 소음과 진동이 아예 사라진 거. 그러자 소문을 들은 미국인들은 너도나도 LG 세탁기를 구매하였고 결국 LG는 미국 세탁기 시장에서 미친 점유율을 차지하게 됨. 역시 LG 가전제품은 믿고 쓰는 LG.",
+ "tone": {
+  "ending": [
+   "임",
+   "했음",
+   "거",
+   "됨",
+   "는"
+  ],
+  "honorific": "반말",
+  "person": "3인칭",
+  "slang": [
+   "난리라는",
+   "미친 성능",
+   "미친 점유율",
+   "너도나도"
+  ]
+ },
+ "frame": {
+  "bg": "흰색 배경에 희미한 격자 무늬 패턴",
+  "title_band": "상단 파란색 띠, 흰색 글자 ('방구석')",
+  "video_box": "중앙에 가로가 긴 직사각형 (약 16:9 비율), 상단과 하단에 여백 있음",
+  "logo": "상단 파란색 띠 좌측에 햄버거 메뉴 아이콘, 우측에 돋보기 아이콘",
+  "other": "메인 제목 ('또 대단한 거 해낸 LG전자')과 채널명/시간 ('방구석 | 14:25')이 영상 위에 고정되어 표시됨"
+ },
+ "subtitle": {
+  "pos": "중앙 하단",
+  "lines": 1,
+  "color": "흰색",
+  "outline": "검은색 외곽선",
+  "highlight": "없음",
+  "appear": "그냥",
+  "matches_voice": true
+ },
+ "effects": [
+  {
+   "t": 0.0,
+   "kind": "text_pop",
+   "desc": "'또 대단한 거 해낸 LG전자' 제목이 팝업 효과로 등장"
+  },
+  {
+   "t": 1.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 3.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 4.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 5.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 6.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 8.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 10.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 13.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 15.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 18.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  },
+  {
+   "t": 20.0,
+   "kind": "transition",
+   "desc": "화면 전환 (컷)"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "desc": "뿅 (text pop sound)",
+   "alone": true
+  },
+  {
+   "t": 1.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 3.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 4.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 5.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 6.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 8.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 10.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 13.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 15.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 18.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  },
+  {
+   "t": 20.0,
+   "desc": "딩 (transition sound)",
+   "alone": false
+  }
+ ],
+ "bgm": {
+  "present": true,
+  "mood": "경쾌하고 밝음",
+  "ducking": true
+ },
+ "scenes_from": "제품 광고, 해외 쇼츠 (사용자 리뷰), 직접 촬영 (매장 내부), 이미지 (미국 집)",
+ "length_note": "22초의 짧은 영상으로, LG 제품의 성공 스토리를 간결하게 전달하며 긍정적인 메시지로 마무리됩니다."
+}

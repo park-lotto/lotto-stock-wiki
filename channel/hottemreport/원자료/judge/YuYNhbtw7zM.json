@@ -1,0 +1,139 @@
+{
+ "style": "제품 이야기썰형",
+ "style_why": "강아지 오줌 얼룩이라는 문제 상황을 제시하고, 특정 청소기 제품을 해결책으로 소개하며 시연하는 방식으로 진행됩니다.",
+ "voice": {
+  "narration": true,
+  "kind": "TTS",
+  "gender": "남",
+  "roles": [
+   "나레"
+  ],
+  "speed": "보통"
+ },
+ "hook": {
+  "text": "미국 남자들이 두 번 이상 돌려봤다는",
+  "t_end": 0.02,
+  "why": "흥미를 유발하는 제목과 함께, 강아지 오줌 얼룩이라는 일상적인 문제를 제시하여 시청자의 공감을 얻고 궁금증을 자아냅니다."
+ },
+ "beats": [
+  {
+   "t0": 0.0,
+   "t1": 0.05,
+   "fn": "훅",
+   "text": "미국 남자들이 두 번 본다는 청소 영상 소개 및 강아지 오줌 얼룩 상황 제시"
+  },
+  {
+   "t0": 0.05,
+   "t1": 0.11,
+   "fn": "정체공개",
+   "text": "미국 1위 청소기 브랜드의 얼룩 전용 모델 소개 및 기본 기능 설명"
+  },
+  {
+   "t0": 0.11,
+   "t1": 0.14,
+   "fn": "원리",
+   "text": "남은 얼룩 문제 제기 및 전용 세제 사용으로 완벽 제거 시연"
+  },
+  {
+   "t0": 0.14,
+   "t1": 0.18,
+   "fn": "원리",
+   "text": "청소기로 얼룩을 완전히 제거하는 과정 보여주기"
+  },
+  {
+   "t0": 0.18,
+   "t1": 0.23,
+   "fn": "원리",
+   "text": "사용 후 청소기 자체 세척의 간편함 설명"
+  },
+  {
+   "t0": 0.23,
+   "t1": 0.29,
+   "fn": "결말",
+   "text": "강아지 키우는 남자들이 얼룩 제거에 유독 진심인 이유에 대한 유머러스한 결론"
+  }
+ ],
+ "script": "나레: 미국 남자들이 두 번 이상 돌려봤다는 얘가 리코 또 오줌 싸서 닦고 있잖아 청소 영상인데요 이건 미국 1위 청소기 청소기 브랜드가 만든 얼룩 전용 모델로 무선이라 편하고 얼룩 제거도 강력한데 근데 남은 얼룩은? 살짝 누렇잖아 전용 세제를 뿌리고 밀면 완전 삭제되고 한 번 더 밀어주면 와우 끝내주는데 근데 세척은? 완전 쉬워! 사용 후 세척도 간단한데요 강아지가 집집마다 있으니 관심이 많은 건 알겠는데 유독 남자들이 얼룩 제거에 더 진심일 줄은 몰랐네\n여자: the dog peed on the rug again. I'm just trying to soak it up. Okay, but what about the rest of it? It's still kinda yellow. Spray it all down. And then right out. Wow, that's way better than the towel, but how do we clean it up? Oh, it's super easy.",
+ "tone": {
+  "ending": [
+   "잖아",
+   "데요",
+   "네"
+  ],
+  "honorific": "반말",
+  "person": "섞임",
+  "slang": []
+ },
+ "frame": {
+  "bg": "영상 콘텐츠",
+  "title_band": "상단, 녹색 배경, 노란색 글자 ('핫템리포트'), 빨간색 글자 ('남자들의 두 번 보는 청소 영상')",
+  "video_box": "전체 화면",
+  "logo": null,
+  "other": null
+ },
+ "subtitle": {
+  "pos": "하단 중앙",
+  "lines": 1,
+  "color": "white",
+  "outline": "black",
+  "highlight": "yellow box",
+  "appear": "그냥",
+  "matches_voice": true
+ },
+ "effects": [
+  {
+   "t": 0.0,
+   "kind": "text_pop",
+   "desc": "상단 제목 텍스트 팝업"
+  },
+  {
+   "t": 0.06,
+   "kind": "zoom",
+   "desc": "청소기에 클로즈업"
+  },
+  {
+   "t": 0.16,
+   "kind": "zoom",
+   "desc": "청소기에 클로즈업"
+  },
+  {
+   "t": 0.22,
+   "kind": "zoom",
+   "desc": "청소기에 클로즈업"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "desc": "텍스트 팝업 효과음",
+   "alone": false
+  },
+  {
+   "t": 0.05,
+   "desc": "청소기 작동음",
+   "alone": false
+  },
+  {
+   "t": 0.14,
+   "desc": "스프레이 분사음",
+   "alone": false
+  },
+  {
+   "t": 0.15,
+   "desc": "청소기 작동음",
+   "alone": false
+  },
+  {
+   "t": 0.21,
+   "desc": "청소기 자체 세척음",
+   "alone": false
+  }
+ ],
+ "bgm": {
+  "present": true,
+  "mood": "경쾌하고 밝음",
+  "ducking": true
+ },
+ "scenes_from": "제품 광고, 해외 쇼츠",
+ "length_note": "짧은 길이의 영상으로, 문제 제시-해결-결론의 명확한 흐름을 가지며 유머러스한 멘트로 마무리합니다."
+}

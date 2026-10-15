@@ -1,0 +1,192 @@
+{
+ "style": "제품 이야기썰형",
+ "style_why": "특정 제품(VR 세팅)의 구성 요소와 가격을 나열하며 정보를 전달하는 형식입니다.",
+ "voice": {
+  "narration": true,
+  "kind": "TTS|사람",
+  "gender": "섞임",
+  "roles": [
+   "나레",
+   "본인"
+  ],
+  "speed": "보통"
+ },
+ "hook": {
+  "text": "방구석에 월세보다 비싼 VR 세팅을 쑤셔 넣었다는데",
+  "t_end": 3.0,
+  "why": "비싼 VR 세팅이라는 흥미로운 주제와 가격에 대한 궁금증을 유발합니다."
+ },
+ "beats": [
+  {
+   "t0": 0.0,
+   "t1": 3.0,
+   "fn": "훅",
+   "text": "월세보다 비싼 방구석 VR 세팅 소개"
+  },
+  {
+   "t0": 3.0,
+   "t1": 6.0,
+   "fn": "정체공개",
+   "text": "메타 퀘스트 3 + 바이브 트래커 가격 공개"
+  },
+  {
+   "t0": 6.0,
+   "t1": 8.0,
+   "fn": "정체공개",
+   "text": "하이퍼쉘 외골격 슈트 가격 공개"
+  },
+  {
+   "t0": 8.0,
+   "t1": 10.0,
+   "fn": "정체공개",
+   "text": "비햅틱스 조끼 가격 공개"
+  },
+  {
+   "t0": 10.0,
+   "t1": 12.0,
+   "fn": "정체공개",
+   "text": "유미캡 VR 컨트롤러 장갑 가격 공개"
+  },
+  {
+   "t0": 12.0,
+   "t1": 14.0,
+   "fn": "정체공개",
+   "text": "게이밍 PC 가격 공개"
+  },
+  {
+   "t0": 14.0,
+   "t1": 16.0,
+   "fn": "정체공개",
+   "text": "캣 VR 트레드밀 가격 공개"
+  },
+  {
+   "t0": 16.0,
+   "t1": 18.0,
+   "fn": "결말",
+   "text": "총합 가격 공개 및 사용 중 넘어지는 모습"
+  },
+  {
+   "t0": 18.0,
+   "t1": 19.0,
+   "fn": "댓글유도",
+   "text": "총 비용에 대한 의문 제기"
+  }
+ ],
+ "script": "나레: 방구석에 월세보다 비싼 VR 세팅을 쑤셔 넣었다는데\n본인: I got Quest 3 and a Vive tracker for tracking.\n본인: My Hypershell exoskeleton.\n본인: My Bhaptics suit.\n본인: A YumiCap VR controller glove.\n본인: Gaming PC.\n본인: And last we got the Kat.\n나레: 대체 얼마를 쓴 거야?",
+ "tone": {
+  "ending": [
+   "~다는데",
+   "~야?"
+  ],
+  "honorific": "반말",
+  "person": "3인칭",
+  "slang": []
+ },
+ "frame": {
+  "bg": "원본 영상 배경 (방 안)",
+  "title_band": "상단 검정색 띠, 흰색 글자, 분홍색 강조",
+  "video_box": "전체 화면",
+  "logo": "우측 상단 '[광고]' 텍스트",
+  "other": null
+ },
+ "subtitle": {
+  "pos": "하단 중앙",
+  "lines": 1,
+  "color": "흰색",
+  "outline": "검정색 외곽선",
+  "highlight": "노란색 박스 (가격), 분홍색 박스 (제품명)",
+  "appear": "그냥",
+  "matches_voice": false
+ },
+ "effects": [
+  {
+   "t": 3.0,
+   "kind": "text_pop",
+   "desc": "가격 $550 팝업"
+  },
+  {
+   "t": 6.0,
+   "kind": "text_pop",
+   "desc": "가격 $1,100 팝업"
+  },
+  {
+   "t": 8.0,
+   "kind": "text_pop",
+   "desc": "가격 $730 팝업"
+  },
+  {
+   "t": 10.0,
+   "kind": "text_pop",
+   "desc": "가격 $700 팝업"
+  },
+  {
+   "t": 12.0,
+   "kind": "text_pop",
+   "desc": "가격 $6,100 팝업"
+  },
+  {
+   "t": 14.0,
+   "kind": "text_pop",
+   "desc": "가격 $1,600 팝업"
+  },
+  {
+   "t": 16.0,
+   "kind": "text_pop",
+   "desc": "총합 가격 $10,780 팝업"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "desc": "휙 (전환)",
+   "alone": false
+  },
+  {
+   "t": 3.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 6.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 8.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 10.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 12.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 14.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 16.0,
+   "desc": "딩 (가격 팝업)",
+   "alone": false
+  },
+  {
+   "t": 17.0,
+   "desc": "쿵 (넘어지는 소리)",
+   "alone": false
+  }
+ ],
+ "bgm": {
+  "present": true,
+  "mood": "경쾌함, 호기심",
+  "ducking": "말할 때 줄어듦"
+ },
+ "scenes_from": "해외 쇼츠",
+ "length_note": "19초 길이의 짧은 영상. VR 세팅 가격을 나열하고 총합을 보여준 뒤, 사용자가 넘어지는 모습으로 마무리하며 질문을 던집니다."
+}

@@ -1,0 +1,180 @@
+{
+ "style": "제품 소개형",
+ "style_why": "제품의 특징과 장점을 빠르게 보여주며 구매를 유도하는 형식입니다.",
+ "voice": {
+  "narration": true,
+  "kind": "TTS",
+  "gender": "남",
+  "roles": [
+   "나레"
+  ],
+  "speed": "빠름"
+ },
+ "hook": {
+  "text": "이게 식탁이라고?",
+  "t_end": 1.0,
+  "why": "일상적인 물건에 대한 의문으로 시청자의 호기심을 자극합니다."
+ },
+ "beats": [
+  {
+   "t0": 0.0,
+   "t1": 1.0,
+   "fn": "훅",
+   "text": "접이식 식탁에 대한 의문 제기"
+  },
+  {
+   "t0": 1.0,
+   "t1": 2.0,
+   "fn": "반전",
+   "text": "식탁의 놀라운 변신에 대한 감탄"
+  },
+  {
+   "t0": 2.0,
+   "t1": 5.0,
+   "fn": "원리",
+   "text": "평소엔 접어두고 손님 오면 6인용 테이블로 확장 가능"
+  },
+  {
+   "t0": 5.0,
+   "t1": 6.0,
+   "fn": "덤",
+   "text": "바퀴가 달려 이동이 편리함"
+  },
+  {
+   "t0": 6.0,
+   "t1": 8.0,
+   "fn": "덤",
+   "text": "예쁜 디자인으로 인테리어 효과까지"
+  },
+  {
+   "t0": 8.0,
+   "t1": 9.0,
+   "fn": "댓글유도",
+   "text": "제품 정보는 고정 댓글에서 확인"
+  }
+ ],
+ "script": "이게 식탁이라고? 미쳤다 진짜! 평소엔 딱 접어두고 손님 오면 쫙 펼치면 6인용 테이블 완성 이동도 껌이지 디자인까지 예뻐서 인스타 갬성 뿜뿜이야",
+ "tone": {
+  "ending": [
+   "라고?",
+   "진짜!",
+   "완성",
+   "껌이지",
+   "뿜뿜이야"
+  ],
+  "honorific": "반말",
+  "person": "3인칭",
+  "slang": [
+   "미쳤다",
+   "껌이지",
+   "뿜뿜이야"
+  ]
+ },
+ "frame": {
+  "bg": "화이트/베이지 톤의 벽과 바닥, 현대적인 가구들",
+  "title_band": "상단, 노란색 배경에 검은색 테두리와 글자",
+  "video_box": "전체 화면",
+  "logo": null,
+  "other": null
+ },
+ "subtitle": {
+  "pos": "하단 중앙",
+  "lines": 1,
+  "color": "white",
+  "outline": "black outline",
+  "highlight": "yellow box background",
+  "appear": "팝",
+  "matches_voice": true
+ },
+ "effects": [
+  {
+   "t": 0.0,
+   "kind": "text_pop",
+   "desc": "이게 식탁이라고?"
+  },
+  {
+   "t": 1.0,
+   "kind": "text_pop",
+   "desc": "미쳤다 진짜!"
+  },
+  {
+   "t": 2.0,
+   "kind": "text_pop",
+   "desc": "평소엔 딱 접어두고"
+  },
+  {
+   "t": 3.0,
+   "kind": "text_pop",
+   "desc": "손님 오면"
+  },
+  {
+   "t": 4.0,
+   "kind": "text_pop",
+   "desc": "6인용 테이블 완성"
+  },
+  {
+   "t": 5.0,
+   "kind": "text_pop",
+   "desc": "이동도 껌이지"
+  },
+  {
+   "t": 6.0,
+   "kind": "text_pop",
+   "desc": "디자인까지 예뻐서"
+  },
+  {
+   "t": 7.0,
+   "kind": "text_pop",
+   "desc": "인스타 갬성 뿜뿜이야"
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 1.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 2.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 3.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 4.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 5.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 6.0,
+   "desc": "뿅",
+   "alone": false
+  },
+  {
+   "t": 7.0,
+   "desc": "뿅",
+   "alone": false
+  }
+ ],
+ "bgm": {
+  "present": true,
+  "mood": "경쾌함",
+  "ducking": true
+ },
+ "scenes_from": "제품 광고",
+ "length_note": "9초 길이의 짧은 제품 소개 영상으로, 제품의 핵심 기능과 장점을 빠르게 보여주고 구매를 유도하며 끝난다."
+}
