@@ -528,6 +528,14 @@ body.grow #playerhost{overflow:visible;position:sticky;top:8px;align-self:flex-s
 .item .trm:hover{background:var(--warn);color:#3a2a08}
 .item .trm.tiny{bottom:98px;cursor:default;border-color:var(--bad);color:#ffb9b9;background:#3a1a20cc}
 .cutgap{margin:4px 0 2px;padding:5px 9px;border-radius:8px;background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.45);color:#ffb3b3;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bnotes{position:relative;height:36px;margin:4px 0 2px}
+.bnotes.open{height:auto}
+.bnotes>.cutgap{margin:0 0 3px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;height:36px;box-sizing:border-box;padding:3px 64px 3px 9px}
+.bnotes.open>.cutgap{height:auto}
+.bnotes>.cutgap .act,.bnotes>.cutgap button{padding:3px 9px;font-size:12px;line-height:1.3;flex:none}
+.bnotes.open>.cutgap{white-space:normal;flex-wrap:wrap;padding-right:9px}
+.bnotes>.cutgap.none{visibility:hidden}
+.bnotes .bnmore{position:absolute;right:6px;top:5px;z-index:2;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid #556;background:#222833;color:#dfe6f2;cursor:pointer}
 .cutgap.slow{background:rgba(120,170,255,.1);border-color:rgba(120,170,255,.4);color:#bcd3ff}
 .cutgap .slowwarn{color:#ffd27a}
 .handbar{background:rgba(255,190,80,.1);border-color:rgba(255,190,80,.45);color:#ffe2b0}
@@ -1146,6 +1154,12 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-edge:hover{opacity:1}
 .tl-gap.tl-blank{border-color:#ff6b6b;color:#ffb3b3;background:repeating-linear-gradient(45deg,rgba(255,90,90,.10) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;box-sizing:border-box}
 .tl-edge.l{right:auto;left:0}   /* 컷 앞 손잡이(얼린 컷 칸만) */
+/* ★위 컷 주황 박스(관제 204 9번) — 아래 소스 필름 박스와 같은 모양: 두꺼운 주황 테두리 + 늘 보이는 양끝 손잡이, 가운데는 잡고 밀기 */
+.tl-cut.obox{border:3px solid #ff9614;cursor:grab;user-select:none;touch-action:none}
+.tl-cut.obox .tl-edge{width:10px;opacity:1;background:#ff9614}
+.tl-cut.obox .tl-edge::after{content:"";position:absolute;left:3px;top:35%;bottom:35%;width:2px;border-radius:1px;background:#3a2000}
+.tl-cut.obox.sliding{cursor:grabbing;z-index:9;box-shadow:0 0 10px rgba(255,150,20,.6)}
+.tl-cut.obox .tl-frames{will-change:transform}
 .tl-cut.sizing{z-index:9;box-shadow:0 0 10px rgba(255,150,20,.6)}
 .tl-len.fixed{color:#ffd24a;cursor:pointer}
 .tl-len.fixed:hover{background:#3a2a08}
@@ -2863,7 +2877,10 @@ function tailBadge(i, c){
 function handGapInfo(i){
   if (!DATA.hand_cut || !cutRuleIsV2()) return null;
   const ids = lists[i] || [];
-  const k = ids.findIndex(sid => getFix(i, sid) > 0);
+  // 방금 손댄 카드가 있으면 그 카드 기준(손 길이가 여러 장이면 첫 장이 아니라 지금 만진 장)
+  const last = (window.HAND_LAST || {})[i];
+  let k = (last && getFix(i, last) > 0) ? ids.indexOf(last) : -1;
+  if (k < 0) k = ids.findIndex(sid => getFix(i, sid) > 0);
   if (k < 0) return null;
   const saved = {};
   ids.forEach(sid => { const key = fixKey(i, sid); if (key in FIXLEN){ saved[key] = FIXLEN[key]; delete FIXLEN[key]; } });
@@ -2872,11 +2889,15 @@ function handGapInfo(i){
   const sid = ids[k], a = auto.find(c => c.seg_id === sid);
   if (!a) return null;
   const pos = auto.indexOf(a);
-  return {sid, pos, diff: +(a.dur - getFix(i, sid)).toFixed(2), auto: a.dur, n: auto.length,
-          mode: FILLMODE[i] || 'next'};
+  // 지금 쓰는 메우기 방식 = planClips(scenesV2Alloc)가 정한 값(기본값 판단도 거기 한 곳)
+  const cur = planClips(ids, beatDur(i), STRETCH[i], i).find(c => c.hand);
+  // 앞 손잡이·가운데 밀기로 새 조각이 됐으면 '원래 화면 길이'는 바뀌기 전 카드 길이(그래야 빈칸이 보인다)
+  const hb = (window.HAND_BASE || {})[i], ad = (hb && hb.sid === sid) ? hb.dur : a.dur;
+  return {sid, pos, diff: +(ad - getFix(i, sid)).toFixed(2), auto: ad, n: auto.length,
+          mode: FILLMODE[i] || (cur && cur.hand_mode) || 'next'};
 }
 function handFill(i, mode){
-  if (mode === 'next') delete FILLMODE[i]; else FILLMODE[i] = mode;
+  FILLMODE[i] = mode;                       // 고른 것은 그대로 적는다(기본값이 칸마다 달라 'next'도 명시)
   render();
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
   try { playBeatHere(i); } catch (e) { console.warn('[손 길이] 바로 듣기 실패', e); }
@@ -2884,6 +2905,16 @@ function handFill(i, mode){
 function handUndo(i, sid){
   delete FILLMODE[i];
   setFix(i, sid, 0);                       // setFix 가 그리기·저장까지
+}
+// ★칸 위 안내 = 늘 한 줄(관제 204 8번, 2026-10-15 사장님 "칸마다 높이가 달라진다") — 안내가 몇 개든 한 줄 자리만 쓰고
+//   나머지는 [+N]으로 펼친다. 안내가 없는 칸도 같은 자리를 비워 둬 옆 칸과 높이가 같다.
+const NOTE_OPEN = {};
+function notesHtml(i, list){
+  const n = list.filter(Boolean);
+  const open = NOTE_OPEN[i] && n.length > 1;
+  const more = n.length > 1
+    ? `<button type="button" class="bnmore" onclick="event.stopPropagation();NOTE_OPEN[${i}]=!NOTE_OPEN[${i}];render()">${open ? '접기 ▴' : `+${n.length - 1} ▾`}</button>` : '';
+  return `<div class="bnotes${open ? ' open' : ''}">${n.length ? n[0] : '<div class="cutgap none"></div>'}${more}${open ? n.slice(1).join('') : ''}</div>`;
 }
 function handBarHtml(i){
   const h = handGapInfo(i);
@@ -3602,10 +3633,26 @@ function speedControl(i){
       onclick="event.stopPropagation()" onchange="setBeatSpeed(${i},this.value,event)">
     ${vals.map(v => `<option value="${v}" ${Math.abs(v-cur)<0.01?'selected':''}>${
       SPEED_BUSY[i] && Math.abs(v-cur)<0.01 ? '변경 중…' : '속도 '+v.toFixed(1)+'×'}</option>`).join('')}
+    <option value="all">⏩ 이 속도(${cur.toFixed(1)}×)를 전체 칸에</option>
   </select>`;
+}
+// ★속도 전체 적용(2026-10-15 이윤정님 "칸마다 고르기 귀찮다 — 한 번에"). 칸 하나 바꾸는 길(setBeatSpeed) 그대로를
+//   다른 칸마다 부른다(음성 다시 만들기·장면 맞춤 규칙은 그 한 곳). ★한 칸씩 차례로 — 서버 속도 저장이 작업 전체를
+//   읽고-고쳐-쓰기라 동시에 부르면 서로 덮어쓴다(실측: 3칸 동시 → 13칸 중 2칸 누락).
+async function setAllSpeed(i){
+  const v = beatSyncSpeed(i);
+  const todo = (DATA.beats || []).map((b, j) => j).filter(j => j !== i && Math.abs(beatSyncSpeed(j) - v) > 0.01);
+  if (!todo.length){ nsay(`모든 칸이 이미 ${v.toFixed(1)}배예요`); renderBand(); return; }
+  nsay(`🎚 나머지 ${todo.length}칸을 ${v.toFixed(1)}배로 바꾸는 중…(음성을 다시 만들어 조금 걸려요)`);
+  let k = 0;
+  const worker = async () => { while (k < todo.length){ const j = todo[k++]; await setBeatSpeed(j, v); } };
+  await worker();
+  const miss = (DATA.beats || []).filter((b, j) => Math.abs(beatSyncSpeed(j) - v) > 0.01).length;
+  nsay(miss ? `⚠ ${miss}칸은 못 바꿨어요 — 그 칸에서 다시 골라 주세요` : `✅ 전체 ${DATA.beats.length}칸을 ${v.toFixed(1)}배로 맞췄어요`);
 }
 async function setBeatSpeed(i, raw, ev){
   if (ev) ev.stopPropagation();
+  if (raw === 'all') return setAllSpeed(i);
   const wanted = Number(raw), beat = (DATA.beats || [])[i];
   if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
   const before = beatSyncSpeed(i);
@@ -3693,7 +3740,7 @@ function renderBand(){
     // ★[속도 맞추기](2026-09-26 사장님 "꼬다리를 잘라내면 남는 0.3초를 자동으로 속도 맞출까요? 이런 확인").
     //   사람이 정한 구간(film_)이 구절보다 짧으면 종전엔 말없이 1.15배+정지였다. 카드마다 알리고, 누르면 그 조각만 정확히 늘린다.
     const _fitSegs = (DATA.beats[i] || {}).fit_segs || [];
-    const fitHtml = !phraseSyncOn(i) ? '' : clips.map((c, ci) => {
+    const fitList = !phraseSyncOn(i) ? [] : clips.map((c, ci) => {
       const src = +(c.src_dur || c.dur), gap = +c.dur - src;
       if (!String(c.seg_id || '').startsWith('film_')) return '';
       // ★빠르게(관제 192 강병주님 "박스로 고른 뒷부분까지 쓰고 싶다") — 고른 구간이 컷보다 길면 뒤가 잘린다. 누르면 구간 전체를 빠르게(음성 그대로).
@@ -3715,7 +3762,7 @@ function renderBand(){
                <button class="act" onclick="autoFill(${i})">✨ 같은 의미 장면 붙이기</button>
                <button class="act" onclick="addNextScene(${i}, '${c.seg_id}')">➕ 원본 다음 장면 붙이기</button></div>`
           : `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드: ${gap.toFixed(1)}초가 비어요(끝이 멈춰요) <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">속도 맞추기 ${ratio}배</button></div>`);
-    }).join('');
+    }).filter(Boolean);
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              data-sid="${c.seg_id}"
@@ -3806,7 +3853,7 @@ function renderBand(){
             <label title="장면이 바뀌는 순간을 자막 줄 경계에 정확히 맞춥니다. 컷 수는 담은 장면 수 그대로이고, 화면이 모자란 장면은 그만큼 느리게 틉니다(1.2배를 넘을 수 있습니다). 장면이 자막 줄보다 많으면 남는 전환은 고르게 나눕니다. 끄면 컷 리듬이 켜집니다"><input type="checkbox" ${phraseBoxOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`
               : `${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
             <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). 켜면 컷 리듬보다 우선합니다. ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`}
-            ${frozen ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
+            ${(frozen || DATA.hand_cut) ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
                  몇 글자 고치려고 2단계를 왕복하던 것을 없앤다. -->
@@ -3821,7 +3868,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${gapHtml}${handBarHtml(i)}${fitHtml}
+        ${notesHtml(i, [handBarHtml(i), gapHtml, ...fitList])}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
