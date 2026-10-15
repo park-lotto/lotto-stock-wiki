@@ -13596,6 +13596,9 @@ let CLEAN_PICK = null;          // {job, mode:'all'|'some', cuts:[...], sel:Set(
 async function loadCleanPick(job){
   const wrap=document.getElementById('cleanPickWrap');
   if(!wrap) return;
+  // ★이 화면에 다시 들어올 때마다 전/후 비교 컷 목록도 새로 받는다(관제 211, 이성택님). 종전엔 job당 한 번만 받아
+  //   영상대본MIX에서 장면을 빼고 넣은 뒤 돌아와도 비교 화면이 지운 장면을 그대로, 새 장면은 안 보였다.
+  if(CLEAN_CLIPS_JOB===job) CLEAN_CLIPS_JOB=null;
   try{
     const d=await (await fetch('/api/produce/mix/clean_pick/'+encodeURIComponent(job))).json();
     if(MIX_JOB!==job) return;
@@ -13676,7 +13679,7 @@ function paintCleanPick(){
       const on=P.sel.has(c.key);
       const keptLbl = c.kept ? '<span class="pk-kept">지움'+((c.done&&c.done.pro)?'·고급':((c.done&&c.done.basic)?'·기본':''))+'</span>' : '';
       return '<button type="button" class="pick-card'+(on?' on':'')+(c.kept?' kept':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
-        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
+        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'&k='+encodeURIComponent(c.key)+'" alt="">'
         +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'+keptLbl
         +'<span class="pk-sec">'+Number(c.dur).toFixed(1)+'초</span></button>';
     }).join('');
