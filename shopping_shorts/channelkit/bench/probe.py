@@ -102,6 +102,14 @@ def grab(path: str, t: float, vf: str, w: int, h: int, pix: str = "rgb24") -> np
     return a.reshape(h, w, 3) if ch == 3 else a.reshape(h, w)
 
 
+def clip(path: str, t0: float, t1: float, out: str) -> None:
+    """[t0, t1) 구간을 소리 없이 다시 인코딩해 out 에 쓴다(정확 탐색, 화질 거의 그대로 crf 16) — layout.window_vote 조각용."""
+    r = _run([FFMPEG, "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{max(0.0, t0):.3f}", "-i", path,
+              "-t", f"{t1 - t0:.3f}", "-an", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "16", out])
+    if r.returncode != 0:
+        raise RuntimeError(f"조각 자르기 실패: {r.stderr.decode('utf-8', errors='replace')[:200]}")
+
+
 def pcm_stereo(path: str, sr: int) -> np.ndarray | None:
     """f32 스테레오 PCM (N,2) float64. 소리가 없으면 None."""
     r = _run([FFMPEG, "-hide_banner", "-loglevel", "error", "-i", path, "-vn", "-ac", "2", "-ar", str(sr),

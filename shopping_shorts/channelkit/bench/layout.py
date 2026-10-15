@@ -3,6 +3,7 @@
 
 찾는 것(편마다 → 같은 틀끼리 묶어 채널 값):
   - 영상창(window): 시간에 따라 변하는 화소가 행의 85% 이상인 가장 긴 행 구간 + 그 안의 열 구간
+    (편 안에 틀 없는 구간 — 끝 전체화면 엔딩 등 — 이 섞여 창이 화면 전체로 잡히면 시간 조각 다수결 window_vote)
   - 배경색(bg_rgb): 창 밖 시간평균 화소 중앙값
   - 자막띠(caption): 창 **위/아래/안** 중 글자가 자주 바뀌는 곳, 그 행 범위, 잉크 극성(dark/bright)
   - 로고띠(logo): 창 위 글자 행 중 **같은 틀 영상끼리 똑같은** 첫 덩어리(헤드라인은 편마다 다르다)
@@ -12,6 +13,9 @@
 """
 from __future__ import annotations
 
+import os
+import tempfile
+
 import numpy as np
 import cv2
 
@@ -19,7 +23,7 @@ from . import probe
 from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WINDOW_COL_FRAC, WINDOW_MIN_PX,
                         SEG_GAP, DYN_ROW_CHG, ROW_CHG_DIFF, INK_ROW_PX, BAND_PRESENCE, LOGO_XVID_STD, LOGO_MIN_H,
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
-                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE)
+                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -57,10 +61,9 @@ def segs(mask, min_len: int = 1, gap: int = 0) -> list[tuple[int, int]]:
 
 
 # ── 편 하나 ────────────────────────────────────────────────────────────────
-def measure_video(path: str, meta: dict) -> dict:
-    """편 하나의 배치. 반환값의 `_above_ext`는 틀 묶음(로고 판정)용 내부 자료다(json에 안 쓴다)."""
+def _scan(path: str, meta: dict) -> dict:
+    """LAYOUT_FPS 표본을 한 번 훑어 시간 통계를 모은다(창·배경·자막 판정의 재료)."""
     W, H = meta["width"], meta["height"]
-    sx = W / LAYOUT_W
     n = 0
     s1 = s2 = srgb = gmin = gmax = None
     rowchg = np.zeros(H)
@@ -83,21 +86,27 @@ def measure_video(path: str, meta: dict) -> dict:
         raise ValueError(f"레이아웃 표본 부족({n}): {path}")
     mean = s1 / n
     std = np.sqrt(np.maximum(s2 / n - mean ** 2, 0))
-    mean_rgb = srgb / n
-    rowchg /= max(1, n - 1)
-    hot = std > WINDOW_PX_STD
+    return {"n": n, "W": W, "H": H, "std": std, "mean_rgb": srgb / n, "rowchg": rowchg / max(1, n - 1),
+            "ink_rows": ink_rows, "gmin": gmin, "gmax": gmax}
 
-    # 영상창
+
+def _window(st: dict) -> list[int] | None:
+    """영상창: 시간 표준편차 > WINDOW_PX_STD 화소가 행의 WINDOW_ROW_FRAC 이상인 가장 긴 행 구간 + 그 안의 열 구간."""
+    sx = st["W"] / LAYOUT_W
+    hot = st["std"] > WINDOW_PX_STD
     rows = segs(hot.mean(axis=1) > WINDOW_ROW_FRAC, min_len=WINDOW_MIN_PX, gap=SEG_GAP)
-    win = None
-    if rows:
-        y0, y1 = max(rows, key=lambda s: s[1] - s[0])
-        cols = segs(hot[y0:y1].mean(axis=0) > WINDOW_COL_FRAC, min_len=int(WINDOW_MIN_PX / sx), gap=SEG_GAP)
-        c0, c1 = max(cols, key=lambda s: s[1] - s[0]) if cols else (0, LAYOUT_W)
-        x0 = int(round(c0 * sx)); x1 = int(round(c1 * sx))
-        win = [x0, int(y0), x1 - x0, int(y1 - y0)]
+    if not rows:
+        return None
+    y0, y1 = max(rows, key=lambda s: s[1] - s[0])
+    cols = segs(hot[y0:y1].mean(axis=0) > WINDOW_COL_FRAC, min_len=int(WINDOW_MIN_PX / sx), gap=SEG_GAP)
+    c0, c1 = max(cols, key=lambda s: s[1] - s[0]) if cols else (0, LAYOUT_W)
+    x0 = int(round(c0 * sx)); x1 = int(round(c1 * sx))
+    return [x0, int(y0), x1 - x0, int(y1 - y0)]
 
-    # 배경: 창 밖 시간평균 화소 중앙값
+
+def _finish(win, st: dict) -> dict:
+    """창이 정해진 뒤의 배경·극성·정지 글자 띠·자막 자리(편 전체 통계로)."""
+    H, n, mean_rgb = st["H"], st["n"], st["mean_rgb"]
     outside = np.ones(H, bool)
     if win:
         outside[win[1]:win[1] + win[3]] = False
@@ -111,14 +120,73 @@ def measure_video(path: str, meta: dict) -> dict:
     static_rows = diff_bg.mean(axis=1) > 0.004
     above_bands = [list(s) for s in segs(static_rows[:win[1]], min_len=6)] if win else []
 
-    caption = _caption(win, H, rowchg, ink_rows, outside_pol, n)
+    caption = _caption(win, H, st["rowchg"], st["ink_rows"], outside_pol, n)
     return {
         "window": win, "bg_rgb": bg_rgb, "bg_lum": round(bg_lum, 1), "caption": caption,
         "above_bands": above_bands, "n_samples": n,
         # 로고 판정용: 글자가 한 번이라도 찍힌 모습(밝은 배경 → 시간 최솟값, 어두운 배경 → 최댓값).
         # 로고가 편마다 보이는 시간이 달라 시간평균은 편끼리 안 맞는다(2026-09-28 실측 최솟값 0~228).
-        "_above_ext": (gmin if outside_pol == "dark" else gmax)[:win[1]].astype(np.float32) if win else None,
+        "_above_ext": (st["gmin"] if outside_pol == "dark" else st["gmax"])[:win[1]].astype(np.float32) if win else None,
+        # 편 하나 자막 띠 후보(captions.choose_caption)용: 극성별 '행에 잉크 있음' 표본 비율
+        "_presence": {p: (np.array(r) > INK_ROW_PX).mean(axis=0) for p, r in st["ink_rows"].items()},
     }
+
+
+def _same_window(a, b) -> bool:
+    return bool(a and b and abs(a[1] - b[1]) <= VARIANT_TOL_PX and abs((a[1] + a[3]) - (b[1] + b[3])) <= VARIANT_TOL_PX)
+
+
+def window_vote(path: str, meta: dict) -> dict | None:
+    """편을 WINDOW_CHUNK_S 조각으로 잘라 조각마다 _window → 같은 창(VARIANT_TOL_PX)끼리 묶어 다수결.
+    반환 {window(중앙값), chunks:[{t,window}], main:[[t0,t1]…], other:[[t0,t1]…], votes} — 다수가 없으면 None."""
+    H, d = meta["height"], meta["duration"]
+    n = max(3, int(round(d / WINDOW_CHUNK_S)))
+    chunks = []
+    with tempfile.TemporaryDirectory() as td:
+        for i in range(n):
+            a, b = d * i / n, d * (i + 1) / n
+            p = os.path.join(td, f"c{i}.mp4")
+            probe.clip(path, a, b, p)
+            try:
+                w = _window(_scan(p, probe.info(p)))
+            except ValueError as e:      # 표본 부족 조각은 표에 남기고 다수결에서 뺀다
+                chunks.append({"t": [round(a, 2), round(b, 2)], "window": None, "failed": str(e)[:80]})
+                continue
+            chunks.append({"t": [round(a, 2), round(b, 2)], "window": w})
+    groups: list[list[dict]] = []
+    for c in chunks:
+        if not c["window"] or c["window"][3] >= WINDOW_FULL_FRAC * H:
+            continue
+        for g in groups:
+            if _same_window(g[0]["window"], c["window"]):
+                g.append(c)
+                break
+        else:
+            groups.append([c])
+    if not groups:
+        return None
+    g = max(groups, key=len)
+    return {"window": [int(np.median([c["window"][k] for c in g])) for k in range(4)], "chunks": chunks,
+            "main": [c["t"] for c in g], "other": [c["t"] for c in chunks if c not in g], "votes": f"{len(g)}/{n}"}
+
+
+def measure_video(path: str, meta: dict) -> dict:
+    """편 하나의 배치. `_above_ext`·`_presence`는 내부 자료다(json에 안 쓴다).
+    편 전체로 잰 창이 없거나 화면 거의 전체(WINDOW_FULL_FRAC)면 — 틀 없는 구간(전체화면 엔딩 등)이 섞인 것 —
+    시간 조각 다수결(window_vote)로 창을 다시 잡고, 배경·자막 자리는 편 전체 통계를 그 창으로 다시 잰다."""
+    st = _scan(path, meta)
+    win = _window(st)
+    method, frames = "layout._window(편 전체)", None
+    if win is None or win[3] >= WINDOW_FULL_FRAC * st["H"]:
+        v = window_vote(path, meta)
+        if v:
+            win, method = v["window"], f"layout.window_vote(조각 다수결 {v['votes']})"
+            frames = {"main": v["main"], "other": v["other"], "chunks": v["chunks"]}
+    lv = _finish(win, st)
+    lv["window_method"] = method
+    if frames:
+        lv["frame_segments"] = frames
+    return lv
 
 
 def _caption(win, H, rowchg, ink_rows, outside_pol, n) -> dict:

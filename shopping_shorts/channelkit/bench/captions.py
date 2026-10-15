@@ -17,7 +17,8 @@ from .layout import ink_mask, lum, segs
 from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
                         LINE_ROW_FRAC, LINE_MIN_H, FILL_LUM, FILL_CHROMA, FILL_BG_DIFF, FILL_FRAC,
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
-                        GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA)
+                        GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
+                        BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG)
 
 
 def caption_region(vl: dict) -> tuple[int, int] | None:
@@ -221,6 +222,78 @@ def measure_video(path: str, vl: dict, meta: dict) -> dict:
             glyph.append(g)
     return {"region": [y0, y1], "changes": changes, "spans": [[round(a, 2), round(b, 2)] for a, b in spans],
             "unstable": tr["unstable"], "items": items, "glyph": glyph}
+
+
+# ── 편 하나: 자막 띠 고르기 ────────────────────────────────────────────────
+# layout._caption 은 "창 위/아래에 자주 바뀌는 행이 10행만 있어도 그쪽"이라 편 하나에선 머리띠(고정 제목)를 자막으로
+# 고를 때가 있다(2026-10-16 썰풀다). 편 하나를 잴 때(칼카피 analyze·compare)는 후보 띠를 여럿 세워 실제로 재 보고 고른다.
+def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None) -> list[dict]:
+    """후보 띠: layout 이 고른 것 + 창 위/아래(BAND_PRESENCE)·안(INSIDE_PRESENCE) × 극성 2 의 잉크 행 덩어리.
+    presence = layout.measure_video 의 `_presence`(극성별 '행에 잉크 있음' 표본 비율)."""
+    win = vl["window"]
+    H = vl["canvas"][1]
+    wy0, wy1 = win[1], win[1] + win[3]
+    regions = {"above": (0, max(0, wy0 - CAPTION_INSET), BAND_PRESENCE),
+               "below": (min(H, wy1 + CAPTION_INSET), H, BAND_PRESENCE),
+               "inside": (wy0, wy1, INSIDE_PRESENCE)}
+    out = [dict(c) for c in ([vl.get("caption")] + list(extra or [])) if c and c.get("band")]
+    for pos, (a, b, thr) in regions.items():
+        if b - a < LINE_MIN_H:
+            continue
+        for pol in ("dark", "bright"):
+            for s0, e0 in segs(presence[pol][a:b] >= thr, min_len=LINE_MIN_H // 2, gap=SEG_GAP * 4):
+                if e0 - s0 <= CAP_BAND_MAX_FRAC * H:
+                    out.append({"pos": pos, "band": [int(s0 + a), int(e0 + a)], "ink": pol})
+    uniq: list[dict] = []
+    for c in out:
+        if not any(u["pos"] == c["pos"] and u["ink"] == c["ink"] and abs(u["band"][0] - c["band"][0]) <= 8
+                   and abs(u["band"][1] - c["band"][1]) <= 8 for u in uniq):
+            uniq.append(c)
+    return uniq
+
+
+def persistence(path: str, vl: dict) -> dict:
+    """띠 잉크가 CAP_PERSIST_LAG 표본(0.3초) 뒤에도 그 자리에 남는 비율(중앙값)·잉크가 보이는 표본 비율.
+    자막은 바뀌기 전까지 가만히 있어 ~1.0, 영상 속 밝은 모서리는 움직여 ~0 (2026-10-15 썰풀다 실측 1.0 vs 0.0)."""
+    reg = caption_region(vl)
+    if not reg:
+        return {"persist": 0.0, "coverage": 0.0}
+    y0, y1 = reg
+    W = vl["canvas"][0]
+    fr = [ink_mask(f, vl["caption"]["ink"]) for f in
+          probe.frames(path, f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0},scale={CAP_SCALE_W}:{CAP_SCALE_H}", CAP_SCALE_W, CAP_SCALE_H)]
+    v = [(a & b).sum() / a.sum() for a, b in zip(fr, fr[CAP_PERSIST_LAG:]) if a.sum() > 30]
+    return {"persist": round(float(np.median(v)), 3) if v else 0.0,
+            "coverage": round(float(np.mean([a.sum() > 30 for a in fr])), 3) if fr else 0.0}
+
+
+def caption_score(cap: dict, pers: dict) -> float:
+    """자막다운 구간 수(길이 CAP_SPAN_OK 안 + 가운데 프레임에 줄 1~3개) × 잉크 지속도 × 잉크 보이는 비율."""
+    n = sum(1 for it in cap.get("items", []) if CAP_SPAN_OK[0] <= it["t1"] - it["t0"] <= CAP_SPAN_OK[1]
+            and 1 <= it.get("lines", 0) <= 3)
+    return round(n * pers["persist"] * pers["coverage"], 2)
+
+
+def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[dict] | None = None) -> dict:
+    """후보 띠마다 measure_video + persistence → 점수 최고(같으면 좁은 띠). 반환 {caption, result, scored}.
+    점수가 모두 0이면 caption = layout 이 고른 것, result = None."""
+    scored, best = [], None
+    for c in band_candidates(vl, presence, extra):
+        v = {**vl, "caption": c}
+        try:
+            cap = measure_video(path, v, meta)
+        except Exception as e:  # noqa: BLE001 — 후보 하나 실패는 표에 남긴다
+            scored.append({**c, "score": None, "failed": f"{type(e).__name__}: {str(e)[:80]}"})
+            continue
+        pers = persistence(path, v)
+        s = caption_score(cap, pers)
+        scored.append({**c, "score": s, "spans": len(cap["spans"]), **pers})
+        h = c["band"][1] - c["band"][0]
+        if best is None or s > best[0] or (s == best[0] and h < best[3]):
+            best = (s, c, cap, h)
+    if best and best[0] > 0:
+        return {"caption": best[1], "result": best[2], "scored": scored}
+    return {"caption": vl.get("caption"), "result": None, "scored": scored}
 
 
 # ── 채널 기준 ──────────────────────────────────────────────────────────────
