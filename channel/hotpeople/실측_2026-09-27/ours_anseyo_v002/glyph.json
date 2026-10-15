@@ -1,0 +1,17 @@
+{
+ "ours_anseyo": {
+  "line_h": 60.5,
+  "stroke": 11.0,
+  "outline": 1,
+  "shadow": 0,
+  "n": 6,
+  "anim": {
+   "없음": 6
+  },
+  "ring_rgb": [
+   238,
+   223,
+   151
+  ]
+ }
+}

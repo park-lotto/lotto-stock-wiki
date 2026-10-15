@@ -1,0 +1,75 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:03.48,CARD,,0,0,0,,{\p1\pos(0,469)\c&H3B3B3B&\bord0\shad0}m 0 0 l 1080 0 l 1080 273 l 0 273{\p0}
+Dialogue: 1,0:00:00.00,0:00:03.48,CARD,,0,0,0,,{\p1\pos(0,565)\c&HFDFDFD&\bord0\shad0}m 0 0 l 1080 0 l 1080 137 l 0 137{\p0}
+Dialogue: 2,0:00:00.00,0:00:03.48,CARD,,0,0,0,,{\an5\pos(546,633)\fs46\c&H000000&\bord0\shad0}제주에 카페 열었다 접은 배우 이동건 때문에 옆집이 난리났다
+Dialogue: 3,0:00:00.00,0:00:56.83,HL1,,0,0,0,,{\an8\pos(530,215)\fs123}이동건 제주 카페 폐업
+Dialogue: 3,0:00:00.00,0:00:56.83,HL2,,0,0,0,,{\an8\pos(530,330)\fs113}2억 대출 받고 벌레 연못
+Dialogue: 4,0:00:03.48,0:00:05.90,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}배우 이동건이 제주
+Dialogue: 4,0:00:03.48,0:00:05.90,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}애월에 카페를 열었음
+Dialogue: 4,0:00:05.90,0:00:07.54,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}오래된 주택을
+Dialogue: 4,0:00:05.90,0:00:07.54,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}개조한 카페였음
+Dialogue: 4,0:00:07.54,0:00:09.48,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}창업 과정은
+Dialogue: 4,0:00:07.54,0:00:09.48,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}미운우리새끼에 나왔음
+Dialogue: 4,0:00:09.48,0:00:11.48,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}방송에서 2억 대출
+Dialogue: 4,0:00:09.48,0:00:11.48,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}상담까지 받았음
+Dialogue: 4,0:00:11.48,0:00:13.61,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근데 올해 6월
+Dialogue: 4,0:00:11.48,0:00:13.61,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}공사 이유로 휴업
+Dialogue: 4,0:00:13.61,0:00:15.92,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}7월엔 재정비 시간을
+Dialogue: 4,0:00:13.61,0:00:15.92,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}갖는다며 영업 중단
+Dialogue: 4,0:00:15.92,0:00:17.41,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그리고 그대로 떠남
+Dialogue: 4,0:00:17.41,0:00:19.52,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이달 2일 한 유튜버가
+Dialogue: 4,0:00:17.41,0:00:19.52,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}카페를 찾아감
+Dialogue: 4,0:00:19.52,0:00:21.65,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}야외에 인테리어로 만든
+Dialogue: 4,0:00:19.52,0:00:21.65,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}연못이 남아있었음
+Dialogue: 4,0:00:21.65,0:00:24.02,ORANGE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}물은 짙은 녹색에
+Dialogue: 4,0:00:21.65,0:00:24.02,ORANGE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}낙엽과 부유물이 둥둥
+Dialogue: 4,0:00:24.02,0:00:25.93,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}유튜버는 벌레가
+Dialogue: 4,0:00:24.02,0:00:25.93,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}엄청 많다고 주장함
+Dialogue: 4,0:00:25.93,0:00:28.08,PINK,,0,0,0,,{\an8\pos(636,1269)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}옆집 가족이라는
+Dialogue: 4,0:00:25.93,0:00:28.08,PINK,,0,0,0,,{\an8\pos(636,1356)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}댓글까지 등장
+Dialogue: 4,0:00:28.08,0:00:30.78,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}알 깐 벌레들 때문에
+Dialogue: 4,0:00:28.08,0:00:30.78,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}피해가 너무 심하다
+Dialogue: 4,0:00:30.78,0:00:32.57,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}다만 진짜 이웃인지는
+Dialogue: 4,0:00:30.78,0:00:32.57,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}확인 안 됨
+Dialogue: 4,0:00:32.57,0:00:34.81,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}벌레와 연못의 인과관계도
+Dialogue: 4,0:00:32.57,0:00:34.81,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}확인된 바 없음
+Dialogue: 4,0:00:34.81,0:00:36.01,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이동건 측
+Dialogue: 4,0:00:34.81,0:00:36.01,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}입장은 이랬음
+Dialogue: 4,0:00:36.01,0:00:39.21,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이미 사업 접었고 8월부터
+Dialogue: 4,0:00:36.01,0:00:39.21,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}다른 매장이 운영 중임
+Dialogue: 4,0:00:39.21,0:00:41.45,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}종료 후 가본 적
+Dialogue: 4,0:00:39.21,0:00:41.45,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}없어 확인 어렵다
+Dialogue: 4,0:00:41.45,0:00:42.75,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}저희가 관여할 수
+Dialogue: 4,0:00:41.45,0:00:42.75,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}있는 게 아니다
+Dialogue: 4,0:00:42.75,0:00:45.83,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근데 제주 소상공인
+Dialogue: 4,0:00:42.75,0:00:45.83,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}폐업률은 전국 2위임
+Dialogue: 4,0:00:45.83,0:00:48.16,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}2023년 기준
+Dialogue: 4,0:00:45.83,0:00:48.16,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}11.1%였음
+Dialogue: 4,0:00:48.16,0:00:50.03,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}제주 카페 수도
+Dialogue: 4,0:00:48.16,0:00:50.03,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}지난해부터 감소세
+Dialogue: 4,0:00:50.03,0:00:53.14,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}2180곳이던 카페가
+Dialogue: 4,0:00:50.03,0:00:53.14,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}2123곳으로 줄었음
+Dialogue: 4,0:00:53.14,0:00:55.20,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}코로나 때 급증한
+Dialogue: 4,0:00:53.14,0:00:55.20,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}카페가 정점 찍은 셈
+Dialogue: 4,0:00:55.20,0:00:56.83,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}떠난 뒤 남은 건
+Dialogue: 4,0:00:55.20,0:00:56.83,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}녹색 연못뿐임
