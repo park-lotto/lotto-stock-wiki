@@ -196,15 +196,6 @@ tiktok_session.json
 # 효과팩 수집 원본(대용량, 2026-09-13)
 /research/effect_packs/raw/
 /research/effect_packs/library/
-# brainbulb 실제 제작 산출물(wav·mp4·job.json) — 커밋 금지 (2026-09-12)
-/out/brainbulb/
-
-# channelkit 동일성 기준선(로컬 실측) — 커밋 금지
-/out/channelkit_parity/
-# hotpeople 제작 산출물(다운로드 영상·mp4) — 커밋 금지 (2026-09-25)
-/out/hotpeople/
-# channelkit bench 표본 mp4 캐시(재다운로드 가능, 2026-09-28)
-/out/bench_cache/
 
 # 옛 테스트·제작 결과 영상(2026-09-27 사장님 — 트랙마다 사본이 쌓여 git에서 뺌).
 #   원본 백업: C:\Users\CH\Videos\git에서뺀영상_0927 (md5 목록 _목록_md5.txt)

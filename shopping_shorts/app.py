@@ -18313,90 +18313,6 @@ def _admin_production_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
-# ── 칼카피 진행판(관제 097, 2026-10-15) — 채널마다 칼카피 7단계가 어디까지 왔나.
-#    판단은 calcopy_board.collect() 하나, 원장은 channel/<채널>/calcopy.json.
-@app.get("/admin/calcopy", response_class=HTMLResponse)
-def _admin_calcopy_page(request: Request):
-    if not _is_admin(getattr(request.state, "customer_id", None)):
-        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
-    return FileResponse(Path(__file__).parent / "static" / "admin_calcopy.html",
-                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
-
-
-@app.get("/api/admin/calcopy")
-def api_admin_calcopy(request: Request):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    from shopping_shorts import calcopy_board as _cb
-    return _cb.board()
-
-
-def _calcopy_resolve(url):
-    """채널 주소 → {channel_id, subs}. 유튜브 API(키 로테이션은 youtube_client 안)."""
-    import urllib.parse as _up
-    from shopping_shorts import youtube_client as _yc
-    from shopping_shorts.calcopy_board import slug_of as _slug
-    # ★한글 핸들(@썰풀다)은 youtube_client._HANDLE(영문만)에 안 걸린다 → 핸들만 넘겨 forHandle 분기를 탄다
-    seed = _up.unquote(url) if "/channel/" in url else _slug(url)
-    cid, _ = _yc._resolve_channel(seed)
-    if not cid:
-        raise RuntimeError("채널을 찾지 못했습니다(주소 확인)")
-    return {"channel_id": cid, "subs": _yc.fetch_subscribers([cid]).get(cid)}
-
-
-@app.get("/api/admin/calcopy/ch/{slug}")
-def api_admin_calcopy_detail(request: Request, slug: str):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    from shopping_shorts import calcopy_board as _cb
-    try:
-        return _cb.detail(slug)
-    except KeyError:
-        return JSONResponse({"error": "없는 채널"}, status_code=404)
-
-
-@app.post("/api/admin/calcopy/channels")
-def api_admin_calcopy_add(request: Request, body: dict = None):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    from shopping_shorts import calcopy_board as _cb
-    b = body or {}
-    try:
-        c = _cb.add_channel(b.get("url", ""), tags=b.get("tags"), memo=b.get("memo", ""),
-                            priority=b.get("priority", 3), resolver=_calcopy_resolve)
-    except ValueError as e:
-        return JSONResponse({"error": str(e)}, status_code=400)
-    return {"ok": True, "channel": c}
-
-
-@app.post("/api/admin/calcopy/ch/{slug}")
-def api_admin_calcopy_update(request: Request, slug: str, body: dict = None):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    from shopping_shorts import calcopy_board as _cb
-    try:
-        return {"ok": True, "channel": _cb.update_channel(slug, body or {})}
-    except ValueError as e:
-        return JSONResponse({"error": str(e)}, status_code=400)
-
-
-@app.post("/api/admin/calcopy/ch/{slug}/style")
-def api_admin_calcopy_style(request: Request, slug: str, body: dict = None):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    from shopping_shorts import calcopy_board as _cb
-    b = body or {}
-    if not b.get("name"):
-        return JSONResponse({"error": "갈래 이름이 없습니다"}, status_code=400)
-    return {"ok": True, "style": _cb.set_style(slug, b["name"], rename=b.get("rename"),
-                                               confirmed=b.get("confirmed"), memo=b.get("memo"))}
-
-
 @app.get("/admin/customer/{customer_id}", response_class=HTMLResponse)
 def _admin_customer_page(request: Request, customer_id: int):
     """고객 1명 상세 시트 화면(2026-08-29).
@@ -27841,16 +27757,6 @@ except Exception:                                  # noqa: BLE001 — 이 기능
     traceback.print_exc()
 
 
-# 뇌전구 제작소 API(2026-09-15). 같은 이유로 brainbulb_api.py에 모아두고 여기선 붙이기만 한다.
-# ★관리자 전용(사장님 지시) — 편당 EvoLink·Typecast·Claude 요금이 나가므로 게이트를 건다.
-#   미들웨어(_verify_session)는 로그인만 보므로 관리자 판정은 _require_admin으로 따로 넘긴다.
-try:
-    from shopping_shorts import brainbulb_api as _bb_api
-    _bb_api.register(app, _require_admin)
-except Exception:                                  # noqa: BLE001 — 이 기능이 앱 기동을 막지 않는다
-    traceback.print_exc()
-
-
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
@@ -27981,22 +27887,6 @@ def _produce_page(request: Request):
 
 app.add_api_route("/produce", _produce_page, include_in_schema=False)
 app.add_api_route("/produce.html", _produce_page, include_in_schema=False)
-
-
-# ── 뇌전구 제작소(2026-09-15) — 관리자 전용 ──────────────────────────────────
-# 볼케이노 서버 없이 우리 코드로만 뇌전구 규격 숏폼을 만든다(shopping_shorts/brainbulb/).
-# 지금은 13단계가 어디까지 갔는지 **과정을 보기 위한** 화면이다(사장님: "원클릭으로 갈 건데
-# 지금은 과정을 보려고"). API는 brainbulb_api.py, 단계 엔진은 brainbulb/pipeline.py.
-# ★/brainbulb.html도 함께 등록해야 StaticFiles 마운트로 게이트가 뚫리지 않는다(2026-07-22 실사고).
-def _brainbulb_page(request: Request):
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    return FileResponse(_STATIC / "brainbulb.html", media_type="text/html", headers=_NOCACHE)
-
-
-app.add_api_route("/brainbulb", _brainbulb_page, include_in_schema=False)
-app.add_api_route("/brainbulb.html", _brainbulb_page, include_in_schema=False)
 
 
 # ── 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용 ─────────────────────
