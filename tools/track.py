@@ -1015,17 +1015,10 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None, urgent
     if held is None:
         raise _track_finish_busy_error(name)
     try:
-        if os.environ.get("TRACK_SOLO", "") == "1":           # 옛 경로(혼자 병합) — 비상용. 일꾼 락을 같이 쥔다(묶음과 경주 금지)
-            while True:
-                wl = _try_worker_lock(repo)
-                if wl is not None:
-                    break
-                print("[대기] 병합 일꾼이 묶음을 넣는 중 — 끝나면 혼자 병합한다")
-                time.sleep(10)
-            try:
-                return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
-            finally:
-                wl.close()
+        if os.environ.get("TRACK_SOLO", "") == "1":           # 옛 경로(혼자 병합) — 비상용
+            # ★일꾼 락을 같이 쥐지 않는다(2026-10-15 실측: 쥐게 했더니 급행·보통 SOLO 둘이 서로 기다려 관문이 45분 멈췄다 —
+            #   test_급행이_먼저_push_보통은_보류). SOLO 와 묶음이 겹치면 push 단계의 'raced' 처리(3회 상한)가 받는다.
+            return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
         return _finish_queued(name, repo, gate, video_gate, urgent)
     finally:
         held.close()
