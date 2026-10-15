@@ -54,6 +54,7 @@
     const id = _extraIdOf(c.video_id, a, b);
     const L = len != null ? len : old;
     if (id) (g.HAND_LAST = g.HAND_LAST || {})[i] = id;
+    if (id) (g.HAND_BASE = g.HAND_BASE || {})[i] = { sid: id, dur: +c.dur };   // 바뀌기 전 화면 길이(안내 줄 기준)
     if (L > 0 && id) setFix(i, id, L);
   }
   function _extraIdOf(vid, a, b) {
