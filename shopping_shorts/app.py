@@ -13618,7 +13618,8 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
             or path.startswith("/api/find/frame/")
-            or path.startswith("/api/help/media/")):
+            or path.startswith("/api/help/media/")
+            or path.startswith("/api/studio/mcp/")):   # 설치팩(관제 213) — 연결 코드 발급(/api/studio/link)이 등급 게이트를 지난다
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
     #   위 submit·mine과 같은 이유로 등급 게이트에서 빼야 한다 — 권한은 핸들러가
@@ -15990,7 +15991,8 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
-            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
+            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")
+            or path.startswith("/api/studio/mcp/")):   # 설치팩 — 연결 코드로 server_api 가 직접 가린다(관제 213)
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
@@ -28197,5 +28199,9 @@ class _NoCacheStaticFiles(StaticFiles):
             return NotModifiedResponse(response.headers)
         return response
 
+
+# 컨셉 스튜디오(관제 213) — 웹 설정·설치팩(MCP) 다리. 정적 마운트("/")보다 먼저 붙어야 라우트가 산다.
+from shopping_shorts.concept_studio.server_api import router as _studio_router  # noqa: E402
+app.include_router(_studio_router)
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")

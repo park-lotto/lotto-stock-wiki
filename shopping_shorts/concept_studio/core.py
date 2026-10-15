@@ -56,18 +56,91 @@ def _engine():
     return pipeline, providers, registry
 
 
+# ── 웹 컨셉 스튜디오와 동기화 ─────────────────────────────────────────
+SYNCED = os.path.join(HOME, "concepts")          # 서버에서 받은 컨셉(있으면 동봉본보다 먼저)
+PACKS = os.path.join(HOME, "packs")              # 서버에서 받은 팩 파일 <종류>/<이름>
+
+
+def studio_conn():
+    """(주소, 연결 코드) — 설치팩 설정 칸(환경변수)에서. 둘 중 하나라도 없으면 동기화 없이 동봉본으로 돈다."""
+    return (os.environ.get("SHOTTEM_STUDIO_URL", "").rstrip("/"), os.environ.get("SHOTTEM_STUDIO_TOKEN", "").strip())
+
+
+def _get(path, stream=False):
+    import requests
+    url, tok = studio_conn()
+    r = requests.get(url + path, headers={"X-Studio-Token": tok}, timeout=120, stream=stream)
+    if r.status_code == 401:
+        raise PermissionError("연결 코드가 틀렸거나 만료됐다 — 웹 컨셉 스튜디오에서 새 코드를 받아 설치팩 설정에 넣으세요")
+    r.raise_for_status()
+    return r
+
+
+def sync(kinds=("font", "sfx", "bgm")):
+    """웹 스튜디오의 컨셉·내 설정·팩을 고객 PC로 받는다. 지문(sha256)이 같은 파일은 다시 안 받는다."""
+    url, tok = studio_conn()
+    if not (url and tok):
+        return {"ok": False, "why": "스튜디오 주소·연결 코드가 설치팩 설정에 없다 — 동봉 컨셉으로만 돈다"}
+    me = _get("/api/studio/mcp/me").json()
+    os.makedirs(SYNCED, exist_ok=True)
+    for c in me.get("concepts") or []:
+        _wj(os.path.join(SYNCED, f"{c['id']}.json"), c)
+    _wj(SETTINGS, me.get("settings") or {})
+    packs = _get("/api/studio/mcp/packs").json().get("packs") or {}
+    got, same = 0, 0
+    for kind in kinds:
+        d = os.path.join(PACKS, kind)
+        os.makedirs(d, exist_ok=True)
+        for e in packs.get(kind) or []:
+            p = os.path.join(d, os.path.basename(e["name"]))
+            if os.path.exists(p) and os.path.getsize(p) == e["bytes"] and _file_sha(p) == e["sha256"]:
+                same += 1
+                continue
+            r = _get(e["url"], stream=True)
+            h = hashlib.sha256()
+            with open(p + ".part", "wb") as fh:
+                for b in r.iter_content(1 << 20):
+                    fh.write(b)
+                    h.update(b)
+            if h.hexdigest() != e["sha256"]:
+                os.remove(p + ".part")
+                raise IOError(f"받은 파일 지문이 다르다: {kind}/{e['name']}")
+            os.replace(p + ".part", p)
+            got += 1
+    return {"ok": True, "customer_id": me.get("customer_id"), "concepts": [c["id"] for c in me.get("concepts") or []],
+            "downloaded": got, "unchanged": same, "packs": {k: len(packs.get(k) or []) for k in kinds}}
+
+
+def _file_sha(p):
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for b in iter(lambda: fh.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
 # ── 컨셉·설정 ─────────────────────────────────────────────────────────
+def _concept_files():
+    """{id: 경로} — 동봉본 위에 서버에서 받은 것을 덮는다(서버가 최신)."""
+    out = {}
+    for d in (PRESETS, SYNCED):
+        if os.path.isdir(d):
+            for f in sorted(os.listdir(d)):
+                if f.endswith(".json"):
+                    out[f[:-5]] = os.path.join(d, f)
+    return out
+
+
 def list_concepts():
     out = []
-    for f in sorted(os.listdir(PRESETS)):
-        if f.endswith(".json"):
-            c = load_concept(f[:-5])
-            out.append({k: c.get(k) for k in ("id", "name", "description", "source_kind", "source_hint")})
+    for cid in _concept_files():
+        c = load_concept(cid)
+        out.append({k: c.get(k) for k in ("id", "name", "description", "source_kind", "source_hint")})
     return out
 
 
 def load_concept(cid):
-    p = os.path.join(PRESETS, f"{cid}.json")
+    p = _concept_files().get(cid, "")
     if not os.path.exists(p):
         raise KeyError(f"없는 컨셉: {cid} (있는 것: {[x['id'] for x in list_concepts()]})")
     with open(p, encoding="utf-8") as fh:
@@ -84,6 +157,23 @@ def my_settings():
             return json.load(fh)
     except FileNotFoundError:
         return {}
+
+
+def choose_bgm(settings, seed):
+    """내 팩 배경음 → (경로, 시작초) 또는 None. 판단 주인은 여기 하나(엔진의 pick_bgm 자리에 끼운다).
+    settings.bgm: 곡 id(예 'beggin') / 'auto'(받은 곡 중 소재 글자로 하나) / 'off'·없음(엔진 기본)."""
+    want = (settings or {}).get("bgm") or ""
+    d = os.path.join(PACKS, "bgm")
+    if want in ("", "off") or not os.path.isdir(d):
+        return None
+    have = sorted(f for f in os.listdir(d) if f.endswith(".mp3"))
+    if not have:
+        return None
+    if want == "auto":
+        import random
+        return os.path.join(d, random.Random(seed or "").choice(have)), 0.0
+    f = want + ".mp3"
+    return (os.path.join(d, f), 0.0) if f in have else None
 
 
 def resolve_settings(concept, mine=None):
@@ -168,7 +258,10 @@ def _spawn(job_id):
     wd = _wd(job_id)
     logp = os.path.join(wd, "worker.log")
     root = os.path.normpath(os.path.join(HERE, "..", ".."))
-    exe = getattr(sys, "_base_executable", "") or sys.executable
+    exe = sys.executable          # WMI 로 띄우면 작업 개체 밖이라 venv 런처도 산다 — 의존성이 있는 이 파이썬 그대로
+    # 키·설정은 명령줄(프로세스 목록에 보인다) 대신 작업 폴더 파일로 넘긴다 → run() 첫 줄이 읽는다
+    _wj(os.path.join(wd, ".worker_env.json"),
+        {k: v for k, v in os.environ.items() if k.startswith(_PASS_ENV)})
     with open(logp, "a", encoding="utf-8") as log:
         log.write(f"[spawn] {time.strftime('%H:%M:%S')} exe={exe}\n")
     if os.name != "nt":
@@ -178,7 +271,7 @@ def _spawn(job_id):
                          start_new_session=True, env=env)
         return
     eng = os.environ.get("SHOTTEM_ENGINE_ROOT", "")
-    cmd = (f'cmd /c "set PYTHONUTF8=1&& set PYTHONIOENCODING=utf-8&& set PYTHONPATH={root}&& '
+    cmd = (f'cmd /c "set PYTHONUTF8=1&& set PYTHONIOENCODING=utf-8&& set PYTHONPATH={root}&& set SHOTTEM_HOME={HOME}&& '
            + (f'set SHOTTEM_ENGINE_ROOT={eng}&& ' if eng else "")
            + f'"{exe}" -m shopping_shorts.concept_studio.core run {job_id} >> "{logp}" 2>&1"')
     ps = ("$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments "
@@ -245,13 +338,23 @@ def _script_view(script):
     return "\n".join(lines)
 
 
+_PASS_ENV = ("SHOTTEM_", "GEMINI_", "GOOGLE_", "TYPECAST_", "HOTPEOPLE_", "BRAINBULB_", "PATH")
+
+
 def run(job_id):
     """작업 프로세스 본체 — 멈출 자리(대본 요청·대본 확인·실패·완료)까지 단계를 민다."""
+    for k, v in (_rj(os.path.join(_wd(job_id), ".worker_env.json"), {}) or {}).items():
+        os.environ[k] = v
     pipeline, providers, registry = _engine()
     wd = _wd(job_id)
     job = _rj(os.path.join(wd, "studio_job.json"))
     c = load_concept(job["concept"])
     registry.use(c["engine"]["channel"])
+    if c["engine"]["channel"] == "hotpeople":
+        # 배경음은 내 팩에서(웹 스튜디오 설정). 고를 게 없으면 엔진 기본(원본 곡 폴더)으로 둔다.
+        from shopping_shorts.channel_presets.hotpeople import render as _hr
+        _orig = _hr.pick_bgm
+        _hr.pick_bgm = lambda seed_text, _s=job.get("settings"), _o=_orig: choose_bgm(_s, seed_text) or _o(seed_text)
     st = status(job_id)
     llm = HostLLM(wd)
     note = st.get("rewrite_note")

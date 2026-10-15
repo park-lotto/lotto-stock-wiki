@@ -12,12 +12,19 @@ mcp = MCPServer(
     "shottem-studio",
     instructions=(
         "숏템 컨셉 스튜디오. 고객이 '스튜디오 설정대로 OO 만들어줘'라고 하면: "
+        "⓪ 처음이거나 고객이 웹에서 설정을 바꿨다고 하면 studio_sync 로 받아 온다. "
         "① studio_concepts 로 컨셉을 보고 ② studio_start(concept, seed) 로 시작한다. "
         "③ studio_status 가 need_script 면 prompt 의 지시를 그대로 따라 **요청한 형식(JSON)만** 써서 "
         "studio_submit_script 로 넣는다(사실은 prompt 안 자료에 있는 것만). 반려가 오면 다시 쓴다. "
         "④ confirm_script 면 대본을 고객에게 보여 주고 확인을 받아 studio_confirm 을 부른다. "
         "⑤ running 이면 잠시 뒤 다시 status. done 이면 final 경로를 알려 준다. failed 면 이유를 그대로 전한다."),
 )
+
+
+@mcp.tool()
+def studio_sync() -> dict:
+    """웹 컨셉 스튜디오에 저장한 컨셉·내 설정·팩(글꼴·효과음·배경음)을 이 PC로 받는다. 처음 한 번, 설정을 바꾼 뒤마다."""
+    return core.sync()
 
 
 @mcp.tool()
