@@ -89,25 +89,32 @@
    "kind": "text",
    "role": "brand",
    "x": 1052,
-   "y": 14,
+   "y": 15,
    "w": 180,
    "align": "right",
    "lines": 1,
    "font": "TmonMonsori",
-   "size": 47.1,
-   "line_h": 54,
+   "size": 48.0,
+   "line_h": 55,
    "rgb": [
     190,
     188,
     191
    ],
    "line_rgb": null,
-   "outline": "$per_video",
+   "outline": {
+    "px": 3,
+    "rgb": [
+     96,
+     95,
+     98
+    ]
+   },
    "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": true,
-   "letter_spacing": -1.7,
+   "letter_spacing": -2.3,
    "word_spacing": 0,
    "enter": null,
    "text": "[광고]"

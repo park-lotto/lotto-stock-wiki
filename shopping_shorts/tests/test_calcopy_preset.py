@@ -145,3 +145,22 @@ def test_relation_rules_compute_dependents(tmp_path):
     assert t["size"] < K["size_cap"]                                    # 긴 줄은 폭에 맞춰 작아진다
     short = P.apply(pre, None, {"layers[text:title].text": "짧\n다"}, M["variable_stats"], None, M["rules"])
     assert title(short)["size"] == K["size_cap"]                        # 짧은 줄은 상한
+
+
+def test_fix_value_pins_and_survives_merge(tmp_path):
+    d = tmp_path / "s" / "preset" / "A"
+    P.save(J, FRAME_A, d, "Z", "x")
+    M = P.fix_value(d, "layers[text:brand].outline", {"px": 3, "rgb": [96, 95, 98]}, "렌더 대조: 4px 잉크 +25% 밖, 3px 안")
+    assert M["fixed"]["layers[text:brand].outline"]["value"]["px"] == 3
+    g = other_video(FRAME_A); next(l for l in g["layers"] if l.get("role") == "brand")["outline"] = {"px": 5, "rgb": [10, 10, 10]}
+    M = P.save(J, g, d, "1", "y")
+    pre, _ = P.load(d)
+    assert "layers[text:brand].outline" not in M["variables"]
+    assert next(l for l in pre["layers"] if l.get("role") == "brand")["outline"] == {"px": 3, "rgb": [96, 95, 98]}
+
+
+def test_fill_w_prefers_measured_ink_width(tmp_path):
+    d = tmp_path / "s" / "preset" / "A"
+    f = copy.deepcopy(FRAME_A); f["made_from"] = {**f.get("made_from", {}), "title_ink_w": 782}
+    M = P.save(J, f, d, "Z", "x")
+    assert M["rules"]["keys"]["fill_w"]["values"] == {"Z": 782}        # 실측 잉크 폭이 있으면 그것(글꼴 계산 대신)

@@ -92,14 +92,14 @@ def same(a, b, path: str = "") -> bool:
     return a == b
 
 
-def merge(preset: dict, new: dict, exclude: tuple = ()) -> tuple[dict, list[str]]:
-    """프리셋 설명서 + 같은 틀의 새 편 설명서 → (합친 프리셋, 이번에 변수가 된 자리)."""
+def merge(preset: dict, new: dict, exclude: tuple = (), fixed: tuple = ()) -> tuple[dict, list[str]]:
+    """프리셋 설명서 + 같은 틀의 새 편 설명서 → (합친 프리셋, 이번에 변수가 된 자리). fixed = 대조로 못 박은 자리(안 건드림)."""
     P, N = flat(preset), flat(new)
     became = []
     for path, v in P.items():
         if v == VAR:
             continue
-        if path in NOT_COMPARED or any(path.startswith(f"layers[{e}") for e in exclude) or path not in N:
+        if path in NOT_COMPARED or path in fixed or any(path.startswith(f"layers[{e}") for e in exclude) or path not in N:
             continue
         if not same(v, N[path], path):
             P[path] = VAR
@@ -246,6 +246,8 @@ def rule_stats(preset_dir: Path, M: dict) -> dict:
         f = preset_dir / "sources" / f"{s['id']}.json"
         if f.exists():
             d = derived(json.loads(f.read_text(encoding="utf-8")), "text:caption" not in s["excluded_layers"])
+            if s.get("title_ink_w"):          # 프레임에서 잰 제목 가장 긴 줄 잉크 폭(to_frame made_from) — 글꼴로 계산한 값보다 먼저
+                d["fill_w"] = s["title_ink_w"]
             for k, x in d.items():
                 vals.setdefault(k, {})[s["id"]] = x
     keys = {k: stats(v) for k, v in vals.items()}
@@ -292,7 +294,7 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
         M = json.loads(mp.read_text(encoding="utf-8"))
         if any(s["id"] == source_id for s in M["sources"]):
             raise ValueError(f"{source_id} 는 이미 이 프리셋의 출처입니다")
-        preset, became = merge(preset, new, exclude)
+        preset, became = merge(preset, new, exclude, tuple(M.get("fixed") or {}))
     else:
         preset = new
         P = flat(preset)
@@ -309,6 +311,7 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
                          "frame_tool": mf.get("tool"), "font": mf.get("font"), "font_confidence": mf.get("font_confidence"),
                          "notes": mf.get("notes") or [], "unknown": J.get("unknown") or [], "excluded_layers": list(exclude),
                          "became_variables": became, "caption_style": caption_style,
+                         "title_ink_w": mf.get("title_ink_w"),   # 프레임 실측(없으면 None → 규칙이 글꼴로 계산, 1_V 1102>1080 같은 오차)
                          "frame_sha1": hashlib.sha1(schema.canonical(new).encode("utf-8")).hexdigest()[:12]})
     (preset_dir / "sources").mkdir(exist_ok=True)
     (preset_dir / "sources" / f"{source_id}.json").write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -319,6 +322,24 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     M["rules"] = rule_stats(preset_dir, M)
     fp.write_text(json.dumps(preset, ensure_ascii=False, indent=1), encoding="utf-8")
     mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+    return M
+
+
+def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
+    """실측 대조로 정한 값을 프리셋 고정값으로 못 박는다(변수였으면 변수에서 뺀다). manifest.fixed 에 근거와 함께 남긴다.
+    다음 save(편 추가)가 같은 자리를 다시 변수로 만들 수 있으므로 merge 는 fixed 자리를 건드리지 않는다."""
+    frame, M = load(preset_dir)
+    P = flat(frame)
+    if path not in P:
+        raise ValueError(f"자리 없음: {path}")
+    P[path] = value
+    frame = unflat(P, layer_order(frame))
+    M.setdefault("fixed", {})[path] = {"value": value, "why": why,
+                                       "at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")}
+    M["variables"] = variables(frame)
+    M.get("variable_stats", {}).pop(path, None)
+    (preset_dir / "frame.json").write_text(json.dumps(frame, ensure_ascii=False, indent=1), encoding="utf-8")
+    (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
 
 
