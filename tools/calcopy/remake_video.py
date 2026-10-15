@@ -116,11 +116,8 @@ def material(M, spec, tail_start, dur, work, bgm_id, bgm_ratio, target):
     return out, bgm, silent_ranges
 
 
-def main():
-    frame_p, J_p, M_p, S_p, out = sys.argv[1:6]
-    bgm_id = sys.argv[6] if len(sys.argv) > 6 else None
-    bgm_ratio = float(sys.argv[7]) if len(sys.argv) > 7 else 0.15
-    target = float(sys.argv[8]) if len(sys.argv) > 8 else -10.1
+def make(frame_p, J_p, M_p, S_p, out, bgm_id=None, bgm_ratio=0.15, target=-10.1) -> pathlib.Path:
+    """틀·뜯기·재료·대본 → out/final.mp4 (+ material.mp4·timeline.json·audio.json). engine/remake.py 가 부른다."""
     out = pathlib.Path(out).resolve()
     shutil.rmtree(out / "work", ignore_errors=True); (out / "work").mkdir(parents=True, exist_ok=True)
     frame = json.loads(pathlib.Path(frame_p).read_text(encoding="utf-8"))
@@ -150,6 +147,12 @@ def main():
                                                 "final": _lufs(final), "tts": None, "narration": "없음(원음만+자막)"},
                                                ensure_ascii=False, indent=1), encoding="utf-8")
     print("final:", final)
+    return final
+
+
+def main():
+    a = sys.argv
+    make(*a[1:6], a[6] if len(a) > 6 else None, float(a[7]) if len(a) > 7 else 0.15, float(a[8]) if len(a) > 8 else -10.1)
 
 
 if __name__ == "__main__":
