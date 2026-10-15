@@ -1128,15 +1128,24 @@ def _finish_queued(name, repo, gate, video_gate, urgent):
         time.sleep(5)
 
 
+BATCH_GATHER_SEC = 30      # 첫 트랙이 오면 이만큼 모았다가 묶는다 — 세션들이 비슷한 시각에 finish 를 건다
+
+
 def _merge_worker(repo, gate, video_gate):
-    """일꾼: 줄이 빌 때까지 묶음을 넣는다."""
+    """일꾼: 줄이 빌 때까지 묶음을 넣는다.
+    ★묶음은 **시험 자원을 쥔 뒤·시험 직전에** 줄을 다시 읽어 정한다(2026-10-15 실측: 17:07 혼자일 때 묶음을 정하고
+      17:21 까지 자원을 기다리는 사이 17:19 에 온 3트랙을 못 태웠다). 자원은 일꾼이 쥔 채 묶음·이분까지 다 돈다."""
     while True:
         run(["git", "fetch", "origin"], repo)
-        pending = _queue_pending(repo)
-        if not pending:
+        if not _queue_pending(repo):
             return
         _clean_dead_stages(repo)
-        _run_batch(repo, pending[:BATCH_MAX], gate, video_gate)
+        time.sleep(BATCH_GATHER_SEC)
+        with _gate_slot(urgent=any(t.get("urgent") for t in _queue_pending(repo))):
+            pending = _queue_pending(repo)          # 자원 기다리는 동안 온 트랙까지
+            if not pending:
+                return
+            _run_batch(repo, pending[:BATCH_MAX], gate, video_gate, slot_held=True)
 
 
 def _control_precheck(repo, t):
@@ -1158,7 +1167,7 @@ def _control_precheck(repo, t):
         _close_stage(repo, stage)
 
 
-def _run_batch(repo, batch, gate, video_gate):
+def _run_batch(repo, batch, gate, video_gate, slot_held=False):
     names = [t["name"] for t in batch]
     print("\n=== 묶음 %d개: %s ===" % (len(batch), ", ".join(names)))
     ok, cards = [], {}
@@ -1182,7 +1191,7 @@ def _run_batch(repo, batch, gate, video_gate):
     try:
         result = _merge_and_gate(label, repo, stage, [t["br"] for t in ok], gate, ok[0]["wt"], video_gate, lock=None,
                                  push_lock=lambda: _finish_gate_lock(urgent=urgent), urgent=urgent,
-                                 control_cards=cards)
+                                 control_cards=cards, slot_held=slot_held)
     except TrackError as e:
         _close_stage(repo, stage)
         if len(ok) == 1:
@@ -1191,8 +1200,8 @@ def _run_batch(repo, batch, gate, video_gate):
         mid = len(ok) // 2
         print("  ⚠️ 묶음 실패 — 반으로 나눠 다시 잰다(깨뜨린 트랙만 빠진다): %s | %s"
               % (",".join(t["name"] for t in ok[:mid]), ",".join(t["name"] for t in ok[mid:])))
-        _run_batch(repo, ok[:mid], gate, video_gate)
-        _run_batch(repo, ok[mid:], gate, video_gate)
+        _run_batch(repo, ok[:mid], gate, video_gate, slot_held=slot_held)
+        _run_batch(repo, ok[mid:], gate, video_gate, slot_held=slot_held)
         return
     _close_stage(repo, stage)
     if result == "raced":            # 옛 판본 finish 가 끼어들었다(전환기) — 번호표는 그대로, 다음 바퀴에 다시
@@ -1295,7 +1304,7 @@ def _retry_test_subset(stage, prev_base, my_changed, *, half=0.2):
 
 
 def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None,
-                    urgent=False, control_cards=None):
+                    urgent=False, control_cards=None, slot_held=False):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -1347,7 +1356,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
             after = dict(before)
             ran_full = False
         else:
-            with (_gate_slot(urgent=urgent, priority=bool(prev_base)) if push_lock is not None
+            with (_gate_slot(urgent=urgent, priority=bool(prev_base)) if (push_lock is not None and not slot_held)
                   else contextlib.nullcontext()):
                 if sub:
                     print("재시도: 끼어든 코드·내 변경 관련 시험 %d개 파일만 다시(앞 시도 통과 · 줄 밖)..." % len(sub))

@@ -27,6 +27,7 @@ def _queue(repo, name):
 
 
 def test_줄에_선_두_트랙은_시험_1번으로_같이_들어간다(repo, monkeypatch):
+    monkeypatch.setattr(track, "BATCH_GATHER_SEC", 0)
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
     _make_track_commit(repo, "가", fname="t_a.py", body="A = 1\n")
     _make_track_commit(repo, "나", fname="t_b.py", body="B = 1\n")
@@ -44,6 +45,7 @@ def test_줄에_선_두_트랙은_시험_1번으로_같이_들어간다(repo, mo
 
 
 def test_묶음이_깨지면_반으로_나눠_깨뜨린_트랙만_뺀다(repo, monkeypatch):
+    monkeypatch.setattr(track, "BATCH_GATHER_SEC", 0)
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
     _make_track_commit(repo, "착한", fname="t_good.py", body="G = 1\n")
     _make_track_commit(repo, "나쁜", fname="bad.py", body="X = 1\n")
@@ -62,8 +64,28 @@ def test_묶음이_깨지면_반으로_나눠_깨뜨린_트랙만_뺀다(repo, m
 
 
 def test_finish_는_줄에_올리고_일꾼이_되어_넣는다(repo, monkeypatch):
+    monkeypatch.setattr(track, "BATCH_GATHER_SEC", 0)
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
     _make_track_commit(repo, "혼자", fname="t_solo.py", body="S = 1\n")
     g = _CountGate()
     assert track.finish("혼자", repo=repo, gate=g, video_gate=_ok_video) == 0
     assert len(g.runs) == 1
+
+
+def test_시험_자원을_기다리는_사이_온_트랙도_같은_묶음에_탄다(repo, monkeypatch):
+    """2026-10-15 실측: 일꾼이 혼자일 때 묶음을 정하고 자원을 기다리는 사이 온 3트랙을 못 태웠다."""
+    import contextlib
+    monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
+    monkeypatch.setattr(track, "BATCH_GATHER_SEC", 0)
+    _make_track_commit(repo, "먼저", fname="t_first.py", body="F = 1\n")
+    _make_track_commit(repo, "나중", fname="t_late.py", body="L = 1\n")
+    _queue(repo, "먼저")
+
+    @contextlib.contextmanager
+    def slow_slot(urgent=False, priority=False):
+        _queue(repo, "나중")              # 자원을 기다리는 동안 다른 트랙이 줄에 선다
+        yield 2
+    monkeypatch.setattr(track, "_gate_slot", slow_slot)
+    g = _CountGate()
+    track._merge_worker(repo, g, _ok_video)
+    assert g.runs == [["t_first.py", "t_late.py"]], g.runs
