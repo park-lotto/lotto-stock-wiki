@@ -171,6 +171,11 @@
              width:min(720px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
              box-shadow:0 10px 44px rgba(0,0,0,.6)}
   .modal-box.wide{width:min(1040px,96vw);max-height:88vh}   /* 렌즈 결과용 큰 팝업 */
+  /* 3단계 장면 찾기가 iframe 으로 열 때(관제 209) — 렌즈 창만 꽉 차게, 나머지 화면은 숨긴다 */
+  .kwfind-embed body{background:#0b0f16}
+  .kwfind-embed body > *:not(#scriptModal):not(script):not(style){display:none!important}
+  .kwfind-embed #scriptModal .modal-box{top:0!important;left:0!important;transform:none!important;width:100vw!important;max-width:none;height:100vh;max-height:100vh!important;border-radius:0}
+  .kwfind-embed #scriptModal .modal-head{display:none}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
               padding:14px 18px;border-bottom:1px solid var(--line);cursor:move;user-select:none}
   .modal-head b{font-size:15px}
@@ -3744,6 +3749,47 @@ async function traceByUrl(urlArg){
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
+// ── 🎬 3단계 장면 찾기(관제 209, 2026-10-15 사장님 "첫 장면은 숏템파워를 동일하게, 대본 분석 없이") ─────────
+// 3단계 팝업이 이 화면을 /?kwfind=<제품>&job=<작업>&embed=1 로 연다. 숏템파워 렌즈 패널(renderLens)을 그대로 쓰고
+// 대본 분석·유료 렌즈 칸만 뺀다(st.kwOnly). 카드마다 「🎬 3단계에 담기」 → 그 작업 영상 소스(서버 _add_extra_source 한 곳).
+// 열 때 담기 목적지(grab_target)도 켠다 — 사이트에서 📥를 누르면 뜨는 창에 「🎬 3단계 작업에 담기」가 같이 뜬다.
+async function openKwFind(kw, job){
+  let saved=new Set();
+  try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+  LENS_STATE['__kw__']={items:[], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
+    sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false,
+    ytLoading:false, keyword:'', caption:'', cnCands:[], kwSeed:kw||'', kwOnly:true, job:job||'', toJob:{}};
+  openScript('', '🔎 장면 찾기 — 숏템파워', true);
+  renderLens('__kw__');
+  if(job){ try{ await fetch('/api/mix/scene_lab/'+encodeURIComponent(job)+'/grab_target',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:true})}); }catch(e){} }
+  if(kw) lensExpandKeyword('__kw__');
+}
+async function lensToJob(shortcode, savesc, btn){
+  const st=LENS_STATE[shortcode]; if(!st || !st.job) return;
+  const it=(st.items||[]).find(x=>x.savesc===savesc); if(!it) return;
+  st.toJob=st.toJob||{};
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 받는 중…'; }
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+encodeURIComponent(st.job)+'/add_source',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:it.url, thumbnail:it.thumbnail||'', platform:it.platform||'', title:it.title||''})});
+    const d=await r.json();
+    if(!r.ok || !d.ok) throw new Error(d.error||('실패 '+r.status));
+    st.toJob[savesc]='🎬 3단계에 담김✓';
+    try{ window.parent && window.parent.postMessage({ss:'scene_find_added', vid:d.video_id}, location.origin); }catch(e){}
+  }catch(e){ st.toJob[savesc]='⚠️ 다시 담기'; alertLite && alertLite('담지 못했어요: '+(e.message||e)); }
+  _lensRerender(shortcode);
+}
+function alertLite(t){ try{ const b=document.getElementById('scriptBody'); const n=document.createElement('div'); n.textContent=t;
+  n.style.cssText='position:sticky;top:0;background:#3a1d1d;color:#fca5a5;padding:6px 10px;border-radius:8px;margin-bottom:6px;font-size:12px'; b&&b.prepend(n); setTimeout(()=>n.remove(),5000);}catch(e){} }
+(function(){
+  try{
+    const q=new URLSearchParams(location.search);
+    if(!q.has('kwfind')) return;
+    if(q.get('embed')==='1') document.documentElement.classList.add('kwfind-embed');
+    const go=()=>openKwFind(q.get('kwfind')||'', q.get('job')||'');
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go); else setTimeout(go, 0);
+  }catch(e){}
+})();
 // ── 🔗 주소로 가져오기(2026-08-18 사장님: "주소 넣으면 이렇게 카드로 뜨게") ─────────
 // ★렌즈(SerpApi 월 100회·유료)를 타지 않는다. 사장님이 원한 건 "넣은 그 영상"이고,
 //   비슷한 영상은 아래 버튼으로 **누를 때만** 옛 경로(traceByUrl)를 부른다.
@@ -3966,7 +4012,10 @@ async function lensKwSearch(shortcode, idx, langOverride){
     fd.append('keyword', ko);
     fd.append('max_results', 8);
     if(L!=='auto') fd.append('lang', L);   // 서버가 이 언어만 돌린다(중복 호출 방지)
-    const d=await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
+    // ★3단계 장면 찾기(검색어 모드)는 **유튜브만**(무료 쿼터·포인트 차감 없음, 관제 209 사장님 "유튜브만 완전 무료이니 유튜브만").
+    const d=st.kwOnly && st.job
+      ? await (await fetch('/api/mix/scene_lab/'+encodeURIComponent(st.job)+'/yt_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:ko})})).json()
+      : await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
     const st2=LENS_STATE[shortcode]; if(!st2) return;
     const got=(d.items||[]);
     got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); i._src='여기서'; });
@@ -4542,7 +4591,7 @@ function renderLens(shortcode, mountId){
   // ── 제품 칸(가운데) — '대본에서 찾은 제품'과 '대본 분석' 버튼을 한 곳에 ──
   //   분석 전(hasSource===false)엔 서버가 product를 줘도 썸네일만 보고 짐작한 것이라 틀릴 수 있다
   //   (사장님 "대본분석 전에도 저게 나올 때가 있는데 정확하지 않아서 분석 후 뽑기를 눌러야 잘된다").
-  const _canExtract = shortcode!=='__single__';
+  const _canExtract = shortcode!=='__single__' && !st.kwOnly;   // 3단계 장면 찾기(검색어 모드)는 대본 분석 없음(관제 209)
   const _analyzed = st.hasSource!==false;
   // ★2026-09-14 사장님 "눈에 띄게 꼭 눌러보고 할 수 있게". 캡션만 있어도 hasSource가 참이라
   //   '✅ 대본에서 찾은 제품'이 대본 분석 없이 떴다 — ✅는 **이번에 대본 분석을 실제로 돌린 뒤**
@@ -4640,7 +4689,7 @@ function renderLens(shortcode, mountId){
       <button onclick="runLensSearch('${shortcode}')" ${(st.lensLoading||!st.frameBlob)?'disabled':''} style="padding:9px 22px;border-radius:10px;border:0;background:#f59e0b;color:#1a1206;font-weight:800;font-size:14px;cursor:pointer">${st.lensLoading?'⏳ 렌즈 검색 중… (10~30초)':(st.lensRan?'🔍 다시 검색':'🔍 검색')}</button>
       ${st.lensErr?`<span style="margin-left:10px;font-size:12px;color:#e0623d">${st.lensErr}</span>`:''}
     </div>`;
-  const bar=`${prodBox}${kwBox}${findBox}${lensBox}
+  const bar=`${st.kwOnly?'':prodBox}${kwBox}${findBox}${st.kwOnly?'':lensBox}
   <div style="${_secCss};padding-bottom:0"><div style="${_lblCss};margin-bottom:0">${_num(3)}모인 영상 <b style="color:var(--fg,inherit)">${shown.length}개</b></div></div>
   <div style="position:sticky;top:0;background:var(--panel);padding:6px 0;margin-bottom:8px;z-index:1;max-height:40vh;overflow:auto">
     <div>${chips}</div>
@@ -4705,6 +4754,7 @@ function renderLens(shortcode, mountId){
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>
         ${meta?`<div style="display:flex;flex-wrap:wrap;gap:4px 6px;font-size:12px;line-height:1.7;color:var(--sub);margin:3px 0 5px">${meta}</div>`:''}
+        ${st.job?`<button onclick="lensToJob('${shortcode}','${i.savesc}',this)" title="지금 편집 중인 작업의 3단계 아래 영상 소스로 담습니다(⭐즐겨찾기와 별개)" style="display:block;width:100%;margin:0 0 6px;padding:8px 6px;border-radius:9px;border:1px solid #34d399;background:#1d4f3c;color:#d1fae5;font-weight:800;font-size:13px;cursor:pointer">${(st.toJob||{})[i.savesc]||'🎬 3단계에 담기'}</button>`:''}
         <div class="btns">
           <button class="view" title="카드 안에서 바로 재생합니다(원본으로 안 나갑니다)" onclick="lensPlayInline('${shortcode}','${i.savesc}', this.closest('.card')?.querySelector('.thumb img'))">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
