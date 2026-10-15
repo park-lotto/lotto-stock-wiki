@@ -424,6 +424,10 @@
         const badge = cut.querySelector('.tl-len');
         cut.classList.add('sizing');
         try { ed.setPointerCapture(e.pointerId); } catch (_) {}
+        // ★박스만 움직이고 그림은 제자리(관제 204, 2026-10-16 사장님 "아래 필름 박스처럼 — 장면이 따라오지 않게").
+        //   끄는 동안 필름 그림·대표 썸네일의 폭을 잡을 때 폭(w0)으로 고정하고, 앞 손잡이면 오른쪽에 붙인다. 관리자만.
+        const pin = (_box(i) && DATA.box_frames_fixed) ? [...cut.querySelectorAll('.tl-frames, .tl-thumb')] : [];
+        pin.forEach(el => { el.style.position = 'absolute'; el.style.top = '0'; el.style.width = cut.clientWidth + 'px'; el.style.left = '0'; el.style.right = 'auto'; });
         // ★끄는 도중에도 한계에서 딱 멈춘다(2026-09-14 사장님 "마지막 컷 잡고 뒤로 최대한 해도 끝에
         //   딱 맞게 멈추게"). 한계 = 놓았을 때 dragCut이 허락하는 길이와 같다(두 벌 규칙 금지 — 같은 식).
         let maxSec = Infinity, minSec = 0.2;
@@ -437,6 +441,7 @@
           const w = Math.min(maxSec * pps - 2, Math.max(minSec * pps - 2, w0 + dx));   // 폭은 dur*pps-2로 그린다
           cut.style.width = w + 'px';                       // 미리보기 — 확정은 놓을 때
           if (fromLeft) cut.style.left = (left0 - (w - w0)) + 'px';
+          if (fromLeft) pin.forEach(el => { el.style.left = (w - w0) + 'px'; });   // 박스 왼끝이 움직여도 그림은 화면에 그대로
           if (badge) badge.textContent = (CUTS[i] ? '' : '✋') + ((w + 2) / pps).toFixed(2) + 's';
           me.stopPropagation();
         };
