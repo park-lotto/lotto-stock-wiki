@@ -2097,6 +2097,26 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
             _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
+from shopping_shorts.edit_plan import EXTRA_SRC_RE as _EXTRA_SRC_RE  # 판정 한 곳(edit_plan)
+
+
+def extra_source_paths(work):
+    """3단계 '장면 보충'(관제 209)으로 더한 영상 {x1: mp4경로, …} — 번호순. 판단 주인은 이 함수 하나."""
+    out = []
+    try:
+        dirs = list(Path(work).iterdir())
+    except OSError:
+        return {}
+    for d in dirs:
+        m = _EXTRA_SRC_RE.match(d.name)
+        if not m or not d.is_dir():
+            continue
+        mp4 = next(d.glob("*.mp4"), None)
+        if mp4 is not None:
+            out.append((int(m.group(1)), d.name, str(mp4)))
+    return {vid: p for _, vid, p in sorted(out)}
+
+
 def _resolve_sources(job, work):
     """다운로드된 소스 mp4 경로 맵 {video_id: path}.
 
@@ -2110,6 +2130,10 @@ def _resolve_sources(job, work):
         mp4 = next((work / vid).glob("*.mp4"), None)
         if mp4 is not None:
             source_video_paths[vid] = str(mp4)
+    # ★3단계 '장면 보충'으로 나중에 더한 영상(관제 209) — work/x{n}/*.mp4. job["urls"]엔 넣지 않는다:
+    #   urls가 바뀌면 2단계가 '담은 영상이 바뀌었어요'로 유료 재매칭을 돌려 편집이 날아간다(_sources_hash).
+    #   렌더·캡컷·필름·청소본이 전부 이 표를 읽으므로 여기 한 곳에서 더하면 모든 길이 같이 본다.
+    source_video_paths.update(extra_source_paths(work))
     if not source_video_paths:
         raise RuntimeError("소스 영상을 하나도 찾지 못했습니다 (다운로드 디렉터리에 mp4 없음)")
     return source_video_paths

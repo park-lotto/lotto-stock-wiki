@@ -107,3 +107,26 @@ def test_run_all_regresses_all_when_audit_fails(repo):
     control.set_status(repo, n, "서버반영", printer=lambda *a: None)
     assert lc.run_all(repo, control.cards_from_ref(repo), sh=lambda cmd, timeout=0: (1, "== 칸 30 · 다른 장면 2\n❌\n"), printer=lambda *a: None) == 1
     assert control.find_card(control.cards_from_ref(repo), n)["상태"] == "회귀"
+
+
+def test_판단주인이_제작라인이_아니어도_병합이_제작라인을_바꿨으면_영상(monkeypatch):
+    """관제 212(10-15): 카드 209 는 주인이 app.py 라 '수동'으로 빠졌지만 mix_pipeline.py 를 고쳤다.
+    병합 sha 가 따라잡기 커밋이면 둘째 부모(main)와 비교해야 트랙이 가져온 파일이 보인다."""
+    import live_check
+    calls = []
+
+    class R:
+        def __init__(self, out, rc=0):
+            self.stdout, self.returncode = out, rc
+
+    def fake_run(args, **kw):
+        calls.append(args)
+        if args[:2] == ["git", "log"]:
+            return R("Merge remote-tracking branch 'origin/main' into HEAD\n")
+        base = args[-2]
+        return R("shopping_shorts/mix_pipeline.py\n" if base.endswith("^2") else "관제/BOARD.md\n")
+
+    monkeypatch.setattr(live_check.subprocess, "run", fake_run)
+    card = {"검사": "", "판단 주인": "shopping_shorts/app.py:add_source_to_job", "병합": "9987244bc3 2026-10-15 10:43 (x)"}
+    assert live_check._merge_touches_video(card, repo=".") is True
+    assert live_check.check_kind(dict(card, 병합="")) [0] == "수동", "병합 기록 없으면 종전대로"
