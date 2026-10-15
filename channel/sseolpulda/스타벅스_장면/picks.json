@@ -5,7 +5,8 @@
    "kind": "photo",
    "src": "cand/00/p2.jpg",
    "zoom": true,
-   "sfx": "003_쿵_소리.wav"
+   "sfx": "003_쿵_소리.wav",
+   "meme": "놀람"
   },
   {
    "i": 1,
@@ -33,7 +34,8 @@
    "src": "cand/04/v_iRnm9rRMHE4.mp4",
    "start": 0.0,
    "bw": true,
-   "sfx": "003_쿵_소리.wav"
+   "sfx": "003_쿵_소리.wav",
+   "meme": "분노_짜증"
   },
   {
    "i": 5,
@@ -52,7 +54,8 @@
    "i": 7,
    "kind": "video",
    "src": "cand/07/v_E5QerFSpsxg.mp4",
-   "start": 0.5
+   "start": 0.5,
+   "meme": "웃음"
   }
  ]
 }

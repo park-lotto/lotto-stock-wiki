@@ -28,12 +28,25 @@ FONT_DIR = ROOT / "shopping_shorts/channel_presets/brainbulb/fonts"
 FONT = "SB Aggro"                  # SBAggroB.ttf — 원본 제목·자막처럼 굵은 고딕
 NARR = "tc_6059dad0b83880769a50502f"
 TARGET_CPS = 7.4
+GAP = 0.03                         # 줄 사이(원본은 쉬지 않고 이어 말한다)
+BGM = ROOT / "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3"
+BGM_GAIN = 0.16                    # 말할 때는 사이드체인으로 더 내려간다
+MEME_DIR = Path("C:/숏템_칼카피/memes")
 SFX_DIR = Path("C:/숏템_칼카피/sseolpulda/sfx_pack")
 
 
 def _dur(p) -> float:
     return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)],
                                 capture_output=True, text=True).stdout.strip() or 0)
+
+
+def _trim(src: Path) -> Path:
+    """TTS 앞뒤 무음 자르기 — 줄마다 앞 0.1~0.18s·뒤 0.08~0.24s 무음이 붙어 줄 경계마다 0.3~0.4s 소리가 비었다(10-15 실측)."""
+    dst = src.with_suffix(".trim.wav")
+    if not dst.exists():
+        f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", f"{f},areverse,{f},areverse", str(dst)], check=True)
+    return dst
 
 
 def tts(lines, out: Path, tempo: float):
@@ -44,7 +57,8 @@ def tts(lines, out: Path, tempo: float):
         f = out / f"n{i:02d}.mp3"
         if not f.exists():
             synth(t, str(f))
-        parts.append((f, _dur(f)))
+        t = _trim(f)
+        parts.append((t, _dur(t)))
     return parts
 
 
@@ -124,7 +138,7 @@ def render(script_path: str, clips_dir: str, out_dir: str):
             subs.append((a, b, p))
             a = b
         seg.append((t, t + du))
-        t += du + 0.05
+        t += du + GAP
     total = t
     title = (d.get("title") or "").split("\n")
     ass(title, subs, out / "subs.ass")
@@ -164,13 +178,30 @@ def render(script_path: str, clips_dir: str, out_dir: str):
                        f"format=yuv420p{bw},setpts=PTS-STARTPTS[v{k}]")
     fil.append("".join(f"[v{k}]" for k in range(len(cuts))) + f"concat=n={len(cuts)}:v=1:a=0[win]")
     fil.append(f"color=c={BG}:s={W}x{H}:d={total:.2f}:r=30[bg]")
-    fil.append(f"[bg][win]overlay=0:{WIN[0]}:shortest=1,ass={(out / 'subs.ass').as_posix().replace(':', '\\\\:')}:fontsdir={FONT_DIR.as_posix().replace(':', '\\\\:')}[vout]")
+    memes = []
+    for k, (c, st, du, x) in enumerate(cuts):
+        if x.get("meme"):
+            mf = next(iter(sorted(MEME_DIR.glob(x["meme"] + "_*.mp4"))), None)
+            if mf:
+                memes.append((k, mf))
+    fil.append(f"[bg][win]overlay=0:{WIN[0]}:shortest=1[base0]")
+    cur = "base0"
+    for n, (k, mf) in enumerate(memes):
+        inputs += ["-i", str(mf)]
+        j = sum(1 for a in inputs if a == "-i") - 1
+        t0 = seg[k][0]
+        fil.append(f"[{j}:v]scale=460:-2,setpts=PTS-STARTPTS+{t0:.2f}/TB[m{n}]")
+        fil.append(f"[{cur}][m{n}]overlay=W-w-30:{WIN[1]}-h-40:enable='between(t,{t0:.2f},{t0 + 1.2:.2f})':eof_action=pass[base{n + 1}]")
+        cur = f"base{n + 1}"
+    fil.append(f"[{cur}]null,ass={(out / 'subs.ass').as_posix().replace(':', '\\\\:')}:fontsdir={FONT_DIR.as_posix().replace(':', '\\\\:')}[vout]")
     # 소리: 나레 + 효과음(줄 바뀔 때, 깨끗한 팩에서 돌려 씀)
-    na = len(cuts)
+    def _n():   # 지금까지 넣은 입력 수 = 다음 입력 번호(짤이 앞에 끼어도 번호가 안 밀린다)
+        return sum(1 for a in inputs if a == "-i")
     alist = []
     for k, (f, du) in enumerate(narr):
+        j = _n()
         inputs += ["-i", str(f)]
-        alist.append(f"[{na + k}:a]adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[a{k}]")
+        alist.append(f"[{j}:a]adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[a{k}]")
     sfx = sorted(SFX_DIR.glob("*.wav"))
     sx = []
     for k in range(len(seg)):
@@ -178,12 +209,17 @@ def render(script_path: str, clips_dir: str, out_dir: str):
         f = (SFX_DIR / x["sfx"]) if x.get("sfx") else (sfx[k % len(sfx)] if (sfx and not picks_p.exists() and k) else None)
         if not f:
             continue
+        j = _n()
         inputs += ["-i", str(f)]
-        j = na + len(narr) + len(sx)
         alist.append(f"[{j}:a]volume=0.45,adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[s{len(sx)}]")
         sx.append(f"[s{len(sx)}]")
-    mix_in = "".join(f"[a{k}]" for k in range(len(narr))) + "".join(sx)
-    alist.append(f"{mix_in}amix=inputs={len(narr) + len(sx)}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
+    jb = _n()
+    inputs += ["-stream_loop", "-1", "-i", str(BGM)]
+    alist.append("".join(f"[a{k}]" for k in range(len(narr))) + f"amix=inputs={len(narr)}:normalize=0,asplit=2[nar][sc]")
+    alist.append(f"[{jb}:a]volume={BGM_GAIN},atrim=0:{total:.2f}[bg0]")
+    alist.append("[bg0][sc]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[bg]")
+    mix_in = "[nar][bg]" + "".join(sx)
+    alist.append(f"{mix_in}amix=inputs={2 + len(sx)}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
     fil += alist
     mp4 = out / "칼카피본.mp4"
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(fil), "-map", "[vout]", "-map", "[aout]",
