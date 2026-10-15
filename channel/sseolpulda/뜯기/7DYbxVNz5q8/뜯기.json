@@ -1,0 +1,2390 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/sseolpulda/mp4/7DYbxVNz5q8.mp4",
+ "measured_at": "2026-10-16 01:53",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "duration": 29.267,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 878,
+   "duration": 29.267,
+   "duration_container": 29.327,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 44100,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   365,
+   1080,
+   1256
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   252,
+   249,
+   253
+  ],
+  "ink_polarity": "dark",
+  "caption_pos": "above",
+  "caption_band": [
+   122,
+   359
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    10,
+    65
+   ],
+   [
+    121,
+    233
+   ],
+   [
+    247,
+    365
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    365,
+    1080,
+    1256
+   ],
+   "bg_rgb": [
+    252,
+    249,
+    253
+   ],
+   "bg_lum": 250.4,
+   "caption": {
+    "pos": "above",
+    "band": [
+     122,
+     359
+    ],
+    "ink": "dark"
+   },
+   "above_bands": [
+    [
+     10,
+     65
+    ],
+    [
+     121,
+     233
+    ],
+    [
+     247,
+     365
+    ]
+   ],
+   "n_samples": 59,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "above",
+    "band": [
+     122,
+     359
+    ],
+    "ink": "dark",
+    "score": 12.0,
+    "spans": 12,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     10,
+     65
+    ],
+    "ink": "dark",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     8,
+     67
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 0.563
+   },
+   {
+    "pos": "above",
+    "band": [
+     120,
+     359
+    ],
+    "ink": "bright",
+    "score": 1.0,
+    "spans": 2,
+    "persist": 1.0,
+    "coverage": 1.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     796,
+     809
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 4,
+    "persist": 0.0,
+    "coverage": 0.819
+   },
+   {
+    "pos": "inside",
+    "band": [
+     834,
+     868
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 3,
+    "persist": 0.005,
+    "coverage": 0.908
+   },
+   {
+    "pos": "inside",
+    "band": [
+     929,
+     1014
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 3,
+    "persist": 0.013,
+    "coverage": 0.939
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1067,
+     1156
+    ],
+    "ink": "bright",
+    "score": 0.5,
+    "spans": 4,
+    "persist": 0.268,
+    "coverage": 0.925
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   82,
+   359
+  ],
+  "changes": [
+   2.3,
+   2.7,
+   3.2,
+   4.5,
+   6.3,
+   10.6,
+   14.7,
+   17.5,
+   25.0,
+   25.6,
+   27.0,
+   28.5
+  ],
+  "spans": [
+   [
+    2.3,
+    2.7
+   ],
+   [
+    2.7,
+    3.2
+   ],
+   [
+    3.2,
+    4.5
+   ],
+   [
+    4.5,
+    6.3
+   ],
+   [
+    6.3,
+    10.6
+   ],
+   [
+    10.6,
+    14.7
+   ],
+   [
+    14.7,
+    17.5
+   ],
+   [
+    17.5,
+    25.0
+   ],
+   [
+    25.0,
+    25.6
+   ],
+   [
+    25.6,
+    27.0
+   ],
+   [
+    27.0,
+    28.5
+   ],
+   [
+    28.5,
+    29.27
+   ]
+  ],
+  "n_spans": 12,
+  "items": [
+   {
+    "i": 0,
+    "t0": 2.3,
+    "t1": 2.7,
+    "lines": 2,
+    "widths": [
+     865,
+     988
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 1,
+    "t0": 2.7,
+    "t1": 3.2,
+    "lines": 2,
+    "widths": [
+     865,
+     1079
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 3.2,
+    "t1": 4.5,
+    "lines": 2,
+    "widths": [
+     865,
+     1079
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 4.5,
+    "t1": 6.3,
+    "lines": 2,
+    "widths": [
+     865,
+     1018
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 4,
+    "t0": 6.3,
+    "t1": 10.6,
+    "lines": 2,
+    "widths": [
+     865,
+     896
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 5,
+    "t0": 10.6,
+    "t1": 14.7,
+    "lines": 2,
+    "widths": [
+     865,
+     896
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 6,
+    "t0": 14.7,
+    "t1": 17.5,
+    "lines": 2,
+    "widths": [
+     865,
+     987
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 7,
+    "t0": 17.5,
+    "t1": 25.0,
+    "lines": 2,
+    "widths": [
+     865,
+     896
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 8,
+    "t0": 25.0,
+    "t1": 25.6,
+    "lines": 2,
+    "widths": [
+     865,
+     1078
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 9,
+    "t0": 25.6,
+    "t1": 27.0,
+    "lines": 2,
+    "widths": [
+     865,
+     938
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지L l O어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 10,
+    "t0": 27.0,
+    "t1": 28.5,
+    "lines": 2,
+    "widths": [
+     865,
+     1079
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지니어가",
+     "저지른 미친 실수"
+    ]
+   },
+   {
+    "i": 11,
+    "t0": 28.5,
+    "t1": 29.27,
+    "lines": 2,
+    "widths": [
+     865,
+     896
+    ],
+    "top_y": 122,
+    "leading": 126,
+    "mark": false,
+    "text": [
+     "삼성 엔지니어가",
+     "저지른 미친 실수"
+    ]
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 0,
+    "anim": "이동"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 2,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 4,
+    "anim": "없음"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 6,
+    "anim": "없음"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 8,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 11,
+    "anim": "없음"
+   }
+  ],
+  "unstable": [
+   [
+    0.0,
+    2.3
+   ]
+  ],
+  "ocr": {
+   "asked": 12,
+   "read": 12,
+   "errors": [],
+   "models": [
+    "gemini-flash-lite-latest"
+   ]
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 61,
+  "usable": 12,
+  "per_crop": [
+   {
+    "caption": 0,
+    "text": "삼성 엔지L l O어가",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.4691
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4676
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4598
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.45
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.4393
+     }
+    ],
+    "grid": "fonts/c00.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가삼성어엔"
+     }
+    ]
+   },
+   {
+    "caption": 2,
+    "text": "삼성 엔지L l O어가",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.469
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4674
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.46
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.4499
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.4393
+     }
+    ],
+    "grid": "fonts/c02.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가삼성어엔"
+     }
+    ]
+   },
+   {
+    "caption": 4,
+    "text": "삼성 엔지L l O어가",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.469
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4674
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.46
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.4499
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.4393
+     }
+    ],
+    "grid": "fonts/c04.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가삼성어엔"
+     }
+    ]
+   },
+   {
+    "caption": 7,
+    "text": "삼성 엔지L l O어가",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.4691
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4675
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4598
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.45
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.4393
+     }
+    ],
+    "grid": "fonts/c07.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가삼성어엔"
+     }
+    ]
+   },
+   {
+    "caption": 9,
+    "text": "삼성 엔지L l O어가",
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.469
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4674
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4599
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.4499
+     },
+     {
+      "font": "BagelFatOne-Regular.ttf",
+      "score": 0.4392
+     }
+    ],
+    "grid": "fonts/c09.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가삼성어엔"
+     }
+    ]
+   },
+   {
+    "caption": 11,
+    "text": "삼성 엔지니어가",
+    "top5": [
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7912
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.7776
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.7632
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6767
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.6686
+     }
+    ],
+    "grid": "fonts/c11.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 가니삼성어"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "yg-jalnan.ttf",
+    "score": 0.5205
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "score": 0.5167
+   },
+   {
+    "font": "JalnanGothic.ttf",
+    "score": 0.5068
+   }
+  ]
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 0,
+    "fill_rgb": [
+     48,
+     1,
+     89
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 2,
+    "fill_rgb": [
+     37,
+     1,
+     100
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 4,
+    "fill_rgb": [
+     108,
+     1,
+     67
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": "화면 배경과 같은 색(상자 아님)"
+   },
+   {
+    "caption": 7,
+    "fill_rgb": [
+     114,
+     1,
+     72
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 9,
+    "fill_rgb": [
+     102,
+     1,
+     74
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 11,
+    "fill_rgb": [
+     109,
+     1,
+     73
+    ],
+    "outline": null,
+    "box": null,
+    "box_note": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 0,
+    "anim": "이동"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 2,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 4,
+    "anim": "없음"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 6,
+    "anim": "없음"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 8,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 110,
+    "stroke": 22.0,
+    "outline": false,
+    "shadow": null,
+    "i": 11,
+    "anim": "없음"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   2,
+   4,
+   6,
+   8,
+   11
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    105,
+    1,
+    73
+   ],
+   "outline_px": 0,
+   "outline_rgb": null,
+   "box": null,
+   "shadow": null,
+   "stroke_px": 22.0,
+   "line_h_px": 110.0
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 1,
+    "t0": 2.7,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 2.4,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105964
+     },
+     {
+      "t": 2.433,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 106863
+     },
+     {
+      "t": 2.467,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105781
+     },
+     {
+      "t": 2.5,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105746
+     },
+     {
+      "t": 2.533,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105810
+     },
+     {
+      "t": 2.567,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 106793
+     },
+     {
+      "t": 2.6,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105795
+     },
+     {
+      "t": 2.633,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105760
+     },
+     {
+      "t": 2.667,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 107079
+     },
+     {
+      "t": 2.7,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112952
+     },
+     {
+      "t": 2.733,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112951
+     },
+     {
+      "t": 2.767,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112953
+     },
+     {
+      "t": 2.8,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112926
+     },
+     {
+      "t": 2.833,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112950
+     },
+     {
+      "t": 2.867,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112953
+     },
+     {
+      "t": 2.9,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112953
+     },
+     {
+      "t": 2.933,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112888
+     },
+     {
+      "t": 2.967,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112953
+     },
+     {
+      "t": 3.0,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 112463
+     }
+    ]
+   },
+   {
+    "caption": 6,
+    "t0": 14.7,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 14.4,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.433,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.467,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.5,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.533,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.567,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.6,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.633,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.667,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102089
+     },
+     {
+      "t": 14.7,
+      "bbox": [
+       92,
+       122,
+       897,
+       236
+      ],
+      "ink": 102093
+     },
+     {
+      "t": 14.733,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106311
+     },
+     {
+      "t": 14.767,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106311
+     },
+     {
+      "t": 14.8,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106313
+     },
+     {
+      "t": 14.833,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106316
+     },
+     {
+      "t": 14.867,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106319
+     },
+     {
+      "t": 14.9,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106321
+     },
+     {
+      "t": 14.933,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106322
+     },
+     {
+      "t": 14.967,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106322
+     },
+     {
+      "t": 15.0,
+      "bbox": [
+       92,
+       122,
+       988,
+       237
+      ],
+      "ink": 106322
+     }
+    ]
+   },
+   {
+    "caption": 11,
+    "t0": 28.5,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 28.2,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109180
+     },
+     {
+      "t": 28.233,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109180
+     },
+     {
+      "t": 28.267,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109182
+     },
+     {
+      "t": 28.3,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109185
+     },
+     {
+      "t": 28.333,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109194
+     },
+     {
+      "t": 28.367,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109208
+     },
+     {
+      "t": 28.4,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109210
+     },
+     {
+      "t": 28.433,
+      "bbox": [
+       0,
+       122,
+       1080,
+       237
+      ],
+      "ink": 109232
+     },
+     {
+      "t": 28.467,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103007
+     },
+     {
+      "t": 28.5,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103114
+     },
+     {
+      "t": 28.533,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103164
+     },
+     {
+      "t": 28.567,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103273
+     },
+     {
+      "t": 28.6,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103316
+     },
+     {
+      "t": 28.633,
+      "bbox": [
+       0,
+       122,
+       989,
+       237
+      ],
+      "ink": 105014
+     },
+     {
+      "t": 28.667,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103547
+     },
+     {
+      "t": 28.7,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103181
+     },
+     {
+      "t": 28.733,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103177
+     },
+     {
+      "t": 28.767,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103375
+     },
+     {
+      "t": 28.8,
+      "bbox": [
+       92,
+       122,
+       897,
+       237
+      ],
+      "ink": 103484
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -7.1,
+   "LRA": 0.6,
+   "TP": 0.8,
+   "S_spread": 0.5,
+   "S_n": 264,
+   "open3s_M": -6.7,
+   "rest_M": -7.0,
+   "hf_8k16k_dbfs": -33.97,
+   "openvoice": {
+    "floor_db": -21.14,
+    "open": 14.28,
+    "body": 13.9
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "급박한",
+     "긴장감",
+     "스릴러"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 다급한 30대 남성 해설톤",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "male",
+     "voice": "tts"
+    }
+   ]
+  },
+  "transcript": {
+   "model": "gemini-flash-lite-latest",
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 2.5,
+     "text": "삼성 내부에서도 난리 났다는 폴드 8에 미친 속사정.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 2.6,
+     "end": 5.9,
+     "text": "원래 삼성은 기존 폴더블 라인업만 유지하려 했는데, 개발팀 한 엔지니어가",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 5.9,
+     "end": 9.2,
+     "text": "가로로 넓은 화면 안 만들면 올해 애플한테 다 빼앗깁니다!",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 9.2,
+     "end": 12.8,
+     "text": "며 원가를 무시한 채 가로형 폴드 8에 강행해 버린 거임.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 12.8,
+     "end": 15.5,
+     "text": "이에 당황한 경영진이 아니 부품 단가는 어떡할 거냐고?",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 15.5,
+     "end": 22.1,
+     "text": "고수하 붙이자. 올해 나올 폴더블 아이폰 화면도 어차피 우리가 안들 거니까 똑같은 디스플레이 얹어서 싹 다 찍어내면 단가 떨궈요!",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 22.2,
+     "end": 29.0,
+     "text": "이라는 미친 한 수를 던져버렸다는 거. 진짜 소름 돋는 포인트는 폴드 8에 적용된 화면이 가로로 넓어져 영상 볼 때 몰입감이 미쳐버린다고.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "narration"
+    }
+   ],
+   "n": 7,
+   "langs": [
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 28.8,
+   "ko_speech_sec": 28.8,
+   "speech_share_ko": 0.984,
+   "chars_nospace_ko": 234,
+   "cps": 8.12,
+   "pause_median": 0.1,
+   "pauses": 2,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S1",
+     "gender": "male",
+     "voice_guess": "tts",
+     "share": 1.0,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    }
+   ],
+   "narration": "tts",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 885,
+     "f0_median_hz": 161.6,
+     "semitone_std": 5.53
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": false,
+   "source_evidence": {
+    "foreign_or_source_segments": 0,
+    "ambient": ""
+   },
+   "duck_db": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "caption_eq_narration": 0.09,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.0,
+   "sfx": {
+    "count": 0,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "나레 1명"
+  }
+ },
+ "script_tone": {
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 7,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 0.286,
+  "hearsay": 4,
+  "person_1st": 0,
+  "person_2nd": 0
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   0.367,
+   1.8,
+   2.7,
+   4.5,
+   6.333,
+   7.267,
+   8.3,
+   9.2,
+   9.867,
+   10.633,
+   11.8,
+   12.767,
+   14.733,
+   17.5,
+   19.733,
+   22.767,
+   23.833,
+   25.633,
+   27.0,
+   28.467
+  ],
+  "shots": 21,
+  "shot_len": {
+   "median": 1.17,
+   "p10": 0.77,
+   "p90": 2.23
+  },
+  "first_cut": 0.37,
+  "cut_per_min": 41.0,
+  "cut_eq_sub": [
+   9,
+   20
+  ],
+  "cut_eq_sub_rate": 0.45,
+  "zoom": {
+   "n": 98,
+   "median_rate_pct_s": -0.0,
+   "p90_abs_rate_pct_s": 27.29,
+   "zoomin_frac": 0.194,
+   "zoomout_frac": 0.214
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    0.367,
+    1.8,
+    2.7,
+    4.5,
+    6.333,
+    7.267,
+    8.3,
+    9.2,
+    9.867,
+    10.633,
+    11.8,
+    12.767,
+    14.733,
+    17.5,
+    19.733,
+    21.467,
+    22.767,
+    23.833,
+    25.633,
+    27.0,
+    28.467
+   ],
+   "raw_stats": {
+    "shots": 22,
+    "first_cut": 0.37,
+    "cut_std": 0.56,
+    "cut_eq_sub": [
+     9,
+     21
+    ]
+   },
+   "candidates": [
+    0.367,
+    1.8,
+    2.7,
+    4.5,
+    6.333,
+    7.267,
+    8.3,
+    9.2,
+    9.867,
+    10.633,
+    11.8,
+    12.767,
+    14.733,
+    17.5,
+    19.733,
+    21.467,
+    22.767,
+    23.833,
+    25.633,
+    27.0,
+    28.467
+   ],
+   "corr": [
+    -0.077,
+    0.309,
+    -0.101,
+    -0.105,
+    0.214,
+    0.589,
+    0.497,
+    0.513,
+    0.395,
+    0.181,
+    0.152,
+    0.066,
+    0.425,
+    0.539,
+    0.521,
+    0.676,
+    0.153,
+    -0.041,
+    0.192,
+    0.107,
+    -0.282
+   ],
+   "cuts": [
+    0.367,
+    1.8,
+    2.7,
+    4.5,
+    6.333,
+    7.267,
+    8.3,
+    9.2,
+    9.867,
+    10.633,
+    11.8,
+    12.767,
+    14.733,
+    17.5,
+    19.733,
+    22.767,
+    23.833,
+    25.633,
+    27.0,
+    28.467
+   ],
+   "merged_out": [],
+   "rejected": [
+    21.467
+   ],
+   "shots": 21,
+   "shot_median": 1.17,
+   "shot_min": 0.37,
+   "shot_max": 3.03,
+   "first_cut": 0.37,
+   "cut_std": 0.68,
+   "cut_per_min": 41.0,
+   "cut_eq_sub": [
+    9,
+    20
+   ],
+   "longest_still": 3.1,
+   "event_gap_med": 1.0,
+   "zoom": {
+    "n": 98,
+    "median_rate_pct_s": -0.0,
+    "p90_abs_rate_pct_s": 27.29,
+    "zoomin_frac": 0.194,
+    "zoomout_frac": 0.214
+   }
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     0.37
+    ],
+    "kind": "남의영상재편집",
+    "why": "물에 담긴 폴더블 스마트폰의 외형을 손으로 직접 조작하고 촬영한 해외 리뷰어의 원본 영상을 가져와 채널 틀 안에 넣고 자막을 얹어 재편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 1,
+    "t": [
+     0.37,
+     1.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "물속에 손으로 들고 있는 폴더블 스마트폰 뒷면 카메라의 모습을 보여주는 해외 원본 영상을 가져와 채널 틀 안에서 활용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 2,
+    "t": [
+     1.8,
+     2.7
+    ],
+    "kind": "남의영상재편집",
+    "why": "물가 근처에서 폴더블 스마트폰의 카메라 모듈 부분을 클로즈업하여 촬영한 해외 원본 영상을 재편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 3,
+    "t": [
+     2.7,
+     4.5
+    ],
+    "kind": "남의영상재편집",
+    "why": "물속에서 손으로 폴더블 스마트폰을 반쯤 펼치거나 접는 모습을 촬영한 해외 원본 영상을 가져와 사용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 4,
+    "t": [
+     4.5,
+     6.33
+    ],
+    "kind": "남의영상재편집",
+    "why": "비행기 좌석 등의 공간에서 손으로 폴더블 스마트폰을 펼치는 모습을 담은 해외 원본 영상을 가져와 재편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 5,
+    "t": [
+     6.33,
+     7.27
+    ],
+    "kind": "남의영상재편집",
+    "why": "접힌 상태의 스마트폰 측면 'SAMSUNG' 로고 부분을 비추며 촬영한 해외 원본 영상을 사용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 6,
+    "t": [
+     7.27,
+     8.3
+    ],
+    "kind": "남의영상재편집",
+    "why": "보라색 스마트폰의 측면과 카메라 배열 부분을 손으로 들고 보여주는 해외 원본 영상을 가져와 활용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 7,
+    "t": [
+     8.3,
+     9.2
+    ],
+    "kind": "남의영상재편집",
+    "why": "스마트폰이 반쯤 접힌 측면 두께와 버튼부를 손으로 쥐고 돌려가며 보여주는 해외 원본 영상을 사용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 8,
+    "t": [
+     9.2,
+     9.87
+    ],
+    "kind": "남의영상재편집",
+    "why": "펼쳐진 상태의 폴더블 화면 내부를 양손으로 펼쳐 보이고 있는 해외 원본 영상을 재편집했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 9,
+    "t": [
+     9.87,
+     10.63
+    ],
+    "kind": "남의영상재편집",
+    "why": "잠금화면 시계가 켜진 넓은 내부 화면을 양손으로 들고 정면에서 보여주는 해외 원본 영상을 그대로 활용했기 때문입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 10,
+    "t": [
+     10.63,
+     11.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "다양한 색상의 폴더블폰들이 놓여 있는 장면으로, 외국의 기존 리뷰 영상을 채널 틀 안에 가져와 편집한 것입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 11,
+    "t": [
+     11.8,
+     12.77
+    ],
+    "kind": "남의영상재편집",
+    "why": "보라색과 파란색 스마트폰을 나란히 보여주는 외국의 제품 리뷰 영상을 가져와 편집한 장면입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 12,
+    "t": [
+     12.77,
+     14.73
+    ],
+    "kind": "남의영상재편집",
+    "why": "다양한 색상의 스마트폰 뒷면을 손으로 들고 보여주는 해외 원본 영상을 가져와 편집한 장면입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 13,
+    "t": [
+     14.73,
+     17.5
+    ],
+    "kind": "남의영상재편집",
+    "why": "금발의 외국인 여성이 양손으로 펼쳐진 스마트폰의 측면을 잡고 있는 해외 릴스 영상을 가져와 편집한 것입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 14,
+    "t": [
+     17.5,
+     19.73
+    ],
+    "kind": "남의영상재편집",
+    "why": "펼쳐진 넓은 스마트폰 화면에 인스타그램 영상이 재생되고 있는 해외 원본 영상을 가져와 편집한 것입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 15,
+    "t": [
+     19.73,
+     22.77
+    ],
+    "kind": "남의영상재편집",
+    "why": "넓게 펼쳐진 화면 속에서 선글라스를 쓴 두 사람이 미소 짓는 영상을 보여주는 해외 출처의 편집 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 16,
+    "t": [
+     22.77,
+     23.83
+    ],
+    "kind": "남의영상재편집",
+    "why": "펼쳐진 화면에 축구 경기 중계 영상이 나오는 모습을 손으로 들고 있는 해외 원본 영상 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 17,
+    "t": [
+     23.83,
+     25.63
+    ],
+    "kind": "남의영상재편집",
+    "why": "야외에서 여러 대의 폴더블폰과 상자들을 손으로 다루고 있는 해외 리뷰어의 원본 영상을 가져온 것입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 18,
+    "t": [
+     25.63,
+     27.0
+    ],
+    "kind": "남의영상재편집",
+    "why": "손으로 폴더블 스마트폰의 접히는 부분과 화면을 만지며 보여주는 해외 리뷰 영상을 편집한 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 19,
+    "t": [
+     27.0,
+     28.47
+    ],
+    "kind": "남의영상재편집",
+    "why": "보라색 폴더블폰의 뒷면과 측면을 손으로 쓰다듬으며 보여주는 해외 원본 영상을 가져와 구성한 컷입니다.",
+    "model": "gemini-flash-lite-latest"
+   },
+   {
+    "shot": 20,
+    "t": [
+     28.47,
+     29.27
+    ],
+    "kind": "직접촬영",
+    "why": "사람이 손으로 스마트폰 기기를 직접 들고 접힌 측면을 보여주는 모습을 촬영한 영상입니다.",
+    "model": "gemini-flash-lite-latest"
+   }
+  ],
+  "share_by_time": {
+   "남의영상재편집": 0.973,
+   "직접촬영": 0.027
+  },
+  "share_by_count": {
+   "남의영상재편집": 20,
+   "직접촬영": 1
+  },
+  "models": [
+   "gemini-flash-lite-latest"
+  ],
+  "ok": true
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.0,
+  "count": 0,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.0,
+   "둘다_아님": 0.0
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "급박한",
+   "긴장감",
+   "스릴러"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": {
+   "failed": "말 없는 구간 0.5초 미만"
+  },
+  "end": {
+   "fade": false,
+   "last0.5s_db": -9.8,
+   "prev_db": -10.3,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [
+   "male"
+  ],
+  "roles": 1,
+  "speakers_all": 1,
+  "cps": 8.12,
+  "narration": "tts",
+  "tone": "빠르고 다급한 30대 남성 해설톤",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 1,
+  "per_min": 2.05,
+  "kind_share": {
+   "글자짤": 1.0
+  },
+  "slot_share": {
+   "중간": 1.0
+  },
+  "appearances": [
+   {
+    "kind": "글자짤",
+    "what": "노란색 배경의 글자 짤",
+    "t": [
+     21.5,
+     21.6
+    ],
+    "t_pct": 73.5,
+    "len_s": 0.1,
+    "slot": "중간",
+    "full": false,
+    "size_pct": "unknown",
+    "box": "unknown",
+    "seen_at": [
+     21.5
+    ],
+    "interval_method": "1초 표본 → 양끝 1.0초를 0.1초 간격 '보이나' 판독(판독 20/20장)"
+   }
+  ],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 양끝 0.1초 간격 '보이나' 판독으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 0,
+   "failed": "429",
+   "sec": 4.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 1,
+   "failed": "429",
+   "sec": 1.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 2,
+   "failed": "429",
+   "sec": 1.5
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 3,
+   "failed": "429",
+   "sec": 1.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 4,
+   "failed": "429",
+   "sec": 1.3
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 5,
+   "failed": "429",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 6,
+   "failed": "429",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 7,
+   "failed": "429",
+   "sec": 1.2
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 8,
+   "failed": "429",
+   "sec": 1.3
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 9,
+   "failed": "503",
+   "sec": 11.5
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 9,
+   "failed": "429",
+   "sec": 3.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 10,
+   "failed": "429",
+   "sec": 1.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 11,
+   "failed": "503",
+   "sec": 9.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 11,
+   "failed": "429",
+   "sec": 2.8
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 12,
+   "failed": "429",
+   "sec": 2.9
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 13,
+   "failed": "429",
+   "sec": 2.1
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-flash-lite-latest",
+   "key": 0,
+   "ok": true,
+   "sec": 10.2
+  },
+  {
+   "tag": "ocr1",
+   "model": "gemini-flash-lite-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 4.9
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-flash-lite-latest",
+   "key": 2,
+   "ok": true,
+   "sec": 5.5
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 3,
+   "failed": "429",
+   "sec": 1.4
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 4,
+   "failed": "429",
+   "sec": 1.7
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 8.3
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 11.0
+  },
+  {
+   "tag": "mat2",
+   "model": "gemini-flash-lite-latest",
+   "key": 5,
+   "ok": true,
+   "sec": 3.5
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-flash-lite-latest",
+   "key": 6,
+   "ok": true,
+   "sec": 10.0
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-flash-lite-latest",
+   "key": 7,
+   "ok": true,
+   "sec": 8.3
+  },
+  {
+   "tag": "ov2",
+   "model": "gemini-flash-lite-latest",
+   "key": 8,
+   "ok": true,
+   "sec": 6.1
+  },
+  {
+   "tag": "ovedge",
+   "model": "gemini-flash-lite-latest",
+   "key": 9,
+   "ok": true,
+   "sec": 12.5
+  }
+ ],
+ "timing_sec": {
+  "probe": 0.0,
+  "layout": 47.1,
+  "captions": 98.1,
+  "fonts_fx": 8.2,
+  "caption_motion": 6.6,
+  "audio_tone": 23.3,
+  "cuts_materials": 89.9,
+  "rules": 118.7,
+  "total": 391.8
+ }
+}
