@@ -2097,7 +2097,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
             _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
-_EXTRA_SRC_RE = re.compile(r"^x(\d+)$")
+from shopping_shorts.edit_plan import EXTRA_SRC_RE as _EXTRA_SRC_RE  # 판정 한 곳(edit_plan)
 
 
 def extra_source_paths(work):
