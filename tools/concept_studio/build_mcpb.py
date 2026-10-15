@@ -91,7 +91,7 @@ def build():
     manifest = {
         "manifest_version": "0.4", "name": "shottem-studio", "display_name": "숏템 컨셉 스튜디오",
         "version": VERSION, "author": {"name": "숏템메이커"},
-        "description": "웹 컨셉 스튜디오에 저장한 컨셉·팩대로 내 PC에서 숏폼을 만든다.",
+        "description": "숏폼(쇼츠) 영상 제작 — '인물형으로 OO 만들어줘'라고 하면 실제 공개 영상·자료로 자막 쇼츠를 내 PC에서 완성한다.",
         "long_description": "Claude 에게 '스튜디오 설정대로 OO 만들어줘'라고 말하면 대본(내 Claude)·소재·렌더(내 PC)까지 진행한다. 사람 확인은 대본 1회.",
         "server": {"type": "uv", "entry_point": "server/main.py",
                    "mcp_config": {"command": "uv", "args": ["run", "--directory", "${__dirname}", "server/main.py"],

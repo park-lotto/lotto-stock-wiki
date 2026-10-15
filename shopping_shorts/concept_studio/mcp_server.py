@@ -23,7 +23,10 @@ STOPS = ("need_script", "confirm_script", "failed", "done")
 mcp = MCPServer(
     "shottem-studio",
     instructions=(
-        "숏템 컨셉 스튜디오. ★고객의 명령 한 번으로 완성본까지 간다 — 사람 확인은 대본 1회뿐. "
+        "숏템 컨셉 스튜디오 — 고객 PC에서 숏폼(쇼츠) 영상을 만드는 도구다. 고객이 '인물형/정치/… 으로 OO 만들어줘',"
+        " 'OO 쇼츠 만들어줘'라고 하면 그림 생성으로 해석하지 말고 이 도구(studio_make)로 진행한다. "
+        "인물형은 실존 인물의 실제 공개 영상·위키 자료로 만드는 자막 다큐형이며 얼굴을 그리지 않는다. "
+        "★고객의 명령 한 번으로 완성본까지 간다 — 사람 확인은 대본 1회뿐. "
         "1) studio_make(concept, seed) — 설정·팩 받기·시작·대본 요청까지 한 번에. "
         "2) need_script 면 prompt 지시대로 요청한 JSON만 써서 studio_submit_script (사실은 prompt 안 자료에서만). "
         "반려가 오면 지적된 곳만 고쳐 다시 넣는다 — 고객에게 묻지 않는다. "
@@ -49,7 +52,13 @@ def _wait(job_id, sec=50):
 
 @mcp.tool(annotations=WRITE)
 def studio_make(concept: str, seed: str) -> dict:
-    """한 번에: 웹 스튜디오 설정·팩 받기 → 작업 시작 → 대본 요청(need_script)까지. seed 는 컨셉의 source_hint 형식."""
+    """숏폼(쇼츠) 영상 만들기 — 고객이 '인물형으로 OO 만들어줘', 'OO 쇼츠 만들어줘', '정치 영상 만들어줘'처럼
+    컨셉 이름과 소재를 말하면 **반드시 이 도구로** 시작한다(그림·캐릭터를 그리는 요청이 아니다).
+    인물형 = 실존 인물의 **실제 공개 영상(경기·인터뷰·뉴스)과 위키 자료**로 만드는 자막형 다큐 쇼츠다.
+    얼굴을 그리거나 합성하지 않는다 — 공개 영상을 잘라 자막을 얹는다.
+    한 번에: 웹 스튜디오 설정·팩 받기 → 작업 시작 → 대본 요청(need_script)까지.
+    concept: studio_concepts 의 id(예 '인물형'). seed: 컨셉의 source_hint 형식(인물형은 '이름 | 한 줄 주제',
+    주제를 고객이 안 줬으면 그 인물의 대표 서사로 네가 한 줄 정한다)."""
     synced = core.sync() if all(core.studio_conn()) else {"ok": False, "why": "스튜디오 연결 정보 없음 — 동봉 컨셉으로"}
     jid = core.start_job(concept, seed)
     return {"job_id": jid, "sync": {k: synced.get(k) for k in ("ok", "downloaded", "unchanged", "why")}, **_wait(jid)}
