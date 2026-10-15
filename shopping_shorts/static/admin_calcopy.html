@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피 진행판</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e5e7eb;
+  --done:#16a34a;--doing:#2563eb;--blocked:#dc2626;--todo:#cbd5e1}
+body{margin:0;word-break:keep-all;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Malgun Gothic",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}
+h1{font-size:22px;margin:0 0 4px} .lead{color:var(--sub);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
+.name{font-size:18px;font-weight:700} .name a{color:inherit}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:#eef2ff;color:#3730a3}
+.tag.blocked{background:#fee2e2;color:var(--blocked)}
+.stats{color:var(--sub);font-size:13px}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0 8px}
+.st{border-radius:8px;padding:8px 6px;font-size:12px;text-align:center;background:#f1f5f9;color:var(--sub);cursor:default}
+.st b{display:block;font-size:13px;color:var(--ink)}
+.st.done{background:#dcfce7}.st.doing{background:#dbeafe;outline:2px solid var(--doing)}
+.st.blocked{background:#fee2e2;outline:2px solid var(--blocked)}
+.notes{font-size:13px;overflow-wrap:anywhere;margin:6px 0 0;padding-left:18px} .notes li{margin:2px 0}
+.notes .k{color:var(--sub)} .next{margin-top:8px;font-size:14px}
+.err{color:var(--blocked)} .empty{color:var(--sub)}
+@media (max-width:640px){.steps{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body><main>
+<h1>🧬 칼카피 진행판</h1>
+<p class="lead">채널마다 칼카피 7단계가 어디까지 왔나. 원장 = <code>channel/&lt;채널&gt;/calcopy.json</code></p>
+<div id="list"><p class="empty">불러오는 중…</p></div>
+</main>
+<script>
+const LABEL={done:"끝",doing:"진행 중",blocked:"막힘",todo:"대기"};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=n=>typeof n==="number"?n.toLocaleString("ko-KR"):esc(n);
+function card(c,steps){
+  const st=c.stats||{}, bits=[];
+  if(st.subs!=null)bits.push("구독 "+num(st.subs));
+  if(st.median_views!=null)bits.push("조회 중앙 "+num(st.median_views));
+  if(st.per_day!=null)bits.push("하루 "+num(st.per_day)+"편");
+  const grid=steps.map(s=>{const v=c.steps[s.key];
+    return `<div class="st ${v.state}" title="${esc(v.note)}"><b>${s.key}. ${esc(s.label)}</b>${LABEL[v.state]}${v.date?"<br>"+esc(v.date.slice(5)):""}</div>`}).join("");
+  const notes=steps.filter(s=>c.steps[s.key].note).map(s=>{const v=c.steps[s.key];
+    return `<li><span class="k">${s.key}.</span> ${esc(v.note)}${v.files.length?` <span class="k">(${v.files.map(esc).join(", ")})</span>`:""}</li>`}).join("");
+  return `<div class="card"><div class="head">
+    <span class="name">${c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>`:esc(c.name)}</span>
+    ${c.concept?`<span class="tag">${esc(c.concept)}</span>`:""}
+    ${c.blocked?`<span class="tag blocked">막힘 있음</span>`:""}
+    <span class="stats">${bits.join(" · ")} · ${c.done}/7 끝</span></div>
+    <div class="steps">${grid}</div>
+    ${notes?`<ul class="notes">${notes}</ul>`:""}
+    ${c.next?`<div class="next">⏭ ${esc(c.next)}</div>`:""}</div>`;
+}
+fetch("/api/admin/calcopy",{credentials:"same-origin"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+.then(d=>{
+  const el=document.getElementById("list");
+  let h=d.channels.length?d.channels.map(c=>card(c,d.steps)).join(""):'<p class="empty">원장이 아직 없습니다.</p>';
+  if(d.errors.length)h+=`<div class="card err">원장 읽기 실패: ${d.errors.map(e=>esc(e.slug)+" — "+esc(e.error)).join("<br>")}</div>`;
+  el.innerHTML=h;
+}).catch(e=>{document.getElementById("list").innerHTML=`<p class="err">불러오기 실패: ${esc(e.message)}</p>`});
+</script>
+</body></html>

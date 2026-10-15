@@ -18313,6 +18313,25 @@ def _admin_production_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── 칼카피 진행판(관제 097, 2026-10-15) — 채널마다 칼카피 7단계가 어디까지 왔나.
+#    판단은 calcopy_board.collect() 하나, 원장은 channel/<채널>/calcopy.json.
+@app.get("/admin/calcopy", response_class=HTMLResponse)
+def _admin_calcopy_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin_calcopy.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/calcopy")
+def api_admin_calcopy(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.calcopy_board import collect
+    return collect()
+
+
 @app.get("/admin/customer/{customer_id}", response_class=HTMLResponse)
 def _admin_customer_page(request: Request, customer_id: int):
     """고객 1명 상세 시트 화면(2026-08-29).
