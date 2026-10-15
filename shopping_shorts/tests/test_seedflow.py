@@ -92,6 +92,8 @@ def test_pick_angle_requires_surprise_and_run_refuses_without_angle():
     assert sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(dull, ensure_ascii=False))["angle"] == ""   # 재미 없으면 안 쓴다
     unknown = dict(good, scores=[{"id": "f1", "surprise": 9, "known": 2, "throwable": 8, "fun": 9}])
     assert sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(unknown, ensure_ascii=False))["angle"] == ""  # 모르는 주제면 안 쓴다
+    blind = dict(good, scores=[{"id": "f1", "surprise": 9, "known": 9, "throwable": 8, "fun": 9, "showable": 2}])
+    assert sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(blind, ensure_ascii=False))["angle"] == ""  # 보여줄 게 없으면 안 쓴다
     weak = dict(good, scores=[{"id": "f1", "surprise": 4, "known": 9, "throwable": 8, "fun": 8}], angle="그래도 각도", why_none="")
     a = sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(weak, ensure_ascii=False))
     assert a["angle"] == "" and "surprise 4" in a["why_none"]

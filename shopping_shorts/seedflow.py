@@ -135,6 +135,8 @@ ANGLE_PROMPT = """쇼핑 쇼츠 '썰'의 **각도**를 고른다. 이 채널의 
   fun       재미·흥미 — 듣고 남한테 말해 주고 싶을 만큼 재밌나(웃기다·황당하다·소름·반전). 건조한 정보는 3점 이하.
   story     이야기가 되나 — 주인공·갈등(대기업 vs 우리, 원조 vs 카피, 실수 vs 대박)과 마지막 한 방이 있나.
   gain      시청자가 얻는 것 — 바로 써먹는 쓸모·대리만족·승리감·남에게 말해 주고 싶음.
+  showable  보여 줄 수 있나 — 이야기의 핵심 장면을 실제 영상이나 증거(기사·가격표·메뉴판·성분표 캡처)로 화면에 띄울 수 있나.
+            (실측 2026-10-15: 터진 썰은 화면의 73~95%%가 실제 영상, 사진은 증거 캡처뿐. 보여줄 게 없으면 재료 단계에서 막힌다)
 ★기준(사장님 2026-10-15): 사람들이 **아는 주제**이면서 **몰랐던** **재밌는** 소재여야 한다 — known·surprise·fun 셋 다 높아야 한다.
   본보기(방구석 친구들 아웃백 1,015만): 다 아는 부시맨브레드 + "집에선 왜 그 맛이 안 나지?" 다들 가진 의문 + 원인(업소용 오븐) +
   빵돌이들이 찾아낸 쉬운 해법(물 한 컵+전자레인지) + 한 방("500원이라 아웃백 갈 이유가 없어졌다") = 대기업을 이긴 승리감.
@@ -142,7 +144,7 @@ ANGLE_PROMPT = """쇼핑 쇼츠 '썰'의 **각도**를 고른다. 이 채널의 
 ★후보 밖의 사실을 만들지 마라. surprise 가 전부 5 이하면 angle 은 빈 문자열로 두고 why_none 에 이유를 적어라(이 제품은 이 채널 썰감이 아니다).
 
 출력은 JSON 객체 하나:
-{"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 7, "fun": 8, "story": 7, "gain": 6}], "pick": "f1", "angle": "한 줄", "hooks": ["...", "...", "..."], "why_none": ""}
+{"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 7, "fun": 8, "story": 7, "gain": 6, "showable": 7}], "pick": "f1", "angle": "한 줄", "hooks": ["...", "...", "..."], "why_none": ""}
 
 [제품] %s
 [후보]
@@ -274,6 +276,7 @@ def _facts_block(facts):
 ANGLE_MIN_SURPRISE = 6       # 이보다 낮으면 "아 그래?"가 없다 — 썰감이 아니다
 ANGLE_MIN_KNOWN = 6          # 사람들이 아는 주제여야 한다(사장님 2026-10-15)
 ANGLE_MIN_FUN = 6            # 재밌어야 한다 — 건조한 정보는 안 된다
+ANGLE_MIN_SHOWABLE = 5       # 화면에 띄울 영상·증거가 있어야 한다(없으면 재료 단계에서 막힌다)
 _SOURCE_TIER = (("언론·공식", r"경제|일보|뉴스|news|신문|times|herald|공식|official|\.co\.kr|\.com/article|press"),
                 ("백과·위키", r"위키|wiki|백과|namu"), ("커뮤니티·블로그·SNS", r"blog|티스토리|네이버|youtube|유튜브|facebook|instagram|cafe|커뮤니티|reddit|tiktok"))
 
@@ -296,12 +299,13 @@ def pick_angle(product, points, facts, call):
     scores = [s for s in (out.get("scores") or []) if isinstance(s, dict) and s.get("id") in ids]
     pick = out.get("pick") if out.get("pick") in ids else ""
     def _ok(s):
-        return (s.get("known") or 0) >= ANGLE_MIN_KNOWN and (s.get("fun") or 0) >= ANGLE_MIN_FUN
+        return ((s.get("known") or 0) >= ANGLE_MIN_KNOWN and (s.get("fun") or 0) >= ANGLE_MIN_FUN
+                and (s.get("showable") if s.get("showable") is not None else ANGLE_MIN_SHOWABLE) >= ANGLE_MIN_SHOWABLE)
     passing = [s for s in scores if _ok(s)]
     if pick and not any(s["id"] == pick for s in passing):
         pick = ""
     best = max(passing, key=lambda s: (s.get("surprise") or 0) + (s.get("fun") or 0) + (s.get("story") or 0) + (s.get("gain") or 0)
-               + (s.get("known") or 0) * 0.5 + (s.get("throwable") or 0) * 0.5, default=None)
+               + (s.get("showable") or 0) + (s.get("known") or 0) * 0.5 + (s.get("throwable") or 0) * 0.5, default=None)
     if best:   # 순위 1등을 쓴다(사장님 2026-10-15 "여러 개 뽑아 1등 판정") — 모델이 따로 고른 것보다 점수 1등이 먼저
         pick = best["id"]
     sup = next((s.get("surprise") or 0 for s in scores if s["id"] == pick), 0)
