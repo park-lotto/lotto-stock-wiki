@@ -144,6 +144,16 @@ def write(rules_path: str, topics: list[str]) -> list[dict]:
         d = seedflow.parse(call(p))
         d.update({"topic": t, **g})
         d["check"] = check(d, R)
+        bad = d["check"]
+        if bad["lines_without_fact"] or bad["unsourced_numbers"] or not bad["in_range"] or bad["polite_endings"]:
+            fix = (p + "\n\n방금 쓴 대본: " + json.dumps({"lines": d.get("lines")}, ensure_ascii=False) +
+                   "\n고칠 것: 근거 번호 없는 사실 줄 " + json.dumps(bad["lines_without_fact"], ensure_ascii=False) +
+                   " → 조사 항목에 기대게 고치거나 빼라(꾸밈말 금지) / 근거 없는 숫자 " + json.dumps(bad["unsourced_numbers"]) +
+                   f" / 길이 {bad['chars']}자 → {lo}~{hi}자 / 존댓말 {bad['polite_endings']}개 → 0. 같은 JSON 꼴로 다시.")
+            d2 = seedflow.parse(call(fix))
+            d2.update({"topic": t, **g, "first_draft": d.get("lines")})
+            d2["check"] = check(d2, R)
+            d = d2
         out.append(d)
         print(f"제목: {d.get('title')}")
         for ln in d.get("lines", []):
@@ -170,11 +180,13 @@ def check(d: dict, R: dict) -> dict:
     nums = re.findall(r"\d[\d,.]*", text)
     unsourced_nums = [n for n in nums if n not in facts_text]
     bad_ids = sorted({i for l in d.get("lines", []) for i in (l.get("facts") or []) if i not in ids})
+    # 근거 번호 없이 사실을 말하는 줄 — 훅·의문·댓글유도만 근거 없이 둘 수 있다
+    bare = [l["text"] for l in d.get("lines", []) if not l.get("facts") and l.get("fn") not in ("훅", "의문", "댓글유도")]
     polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
     return {"chars": n, "in_range": R["length_chars"]["p25"] <= n <= R["length_chars"]["p75"],
             "sec_est": round(n / CPS, 1), "first_is_hook": bool(fns) and fns[0] == "훅",
             "order_breaks": sum(1 for a, b in zip(order, order[1:]) if b < a - 1),
-            "polite_endings": polite, "unsourced_numbers": unsourced_nums, "unknown_fact_ids": bad_ids, "copied_8grams": len(copied), "copied_sample": copied[:3]}
+            "polite_endings": polite, "unsourced_numbers": unsourced_nums, "unknown_fact_ids": bad_ids, "lines_without_fact": bare, "copied_8grams": len(copied), "copied_sample": copied[:3]}
 
 
 if __name__ == "__main__":
