@@ -180,11 +180,12 @@
         title="${TL_EDIT[i] ? '경계 편집 끝내기' : '자막 구절 경계 고치기 — 어절 사이를 눌러 끊고 합칩니다 (초는 실제 발화 시각으로 자동 재계산)'}"
         onclick="event.stopPropagation();tlEditToggle(${i})">${TL_EDIT[i] ? '✔ 끝내기' : '✂ 경계'}</button>`;
 
-    return `<div class="tlwrap" data-i="${i}" data-pps="${pps.toFixed(3)}"
+    return `<div class="tlwrap${_tlSndFolded() ? ' sndfold' : ''}" data-i="${i}" data-pps="${pps.toFixed(3)}"
                  onclick="event.stopPropagation()">
       <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${emptyHtml}${stretchBadge}</div>
       ${capLane}
-      <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
+      <div class="tl-lane tl-auds"><button type="button" class="tl-sndfold" title="효과음·배경음 줄 접기/펼치기"
+        onclick="event.stopPropagation();tlSndFold()">음성 ${_tlSndFolded() ? '▸' : '▾'}</button>${audHtml}</div>
       ${sfxLane}
       <div class="tl-lane tl-bgms"><span class="tl-name">배경음</span><div class="tl-bgmbar" data-i="${i}" style="left:0;width:${(dur * pps).toFixed(1)}px"
         onclick="event.stopPropagation();tlBgmPlay(${i},this)">${tlBgmLabel()}</div></div>
@@ -192,6 +193,15 @@
       <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span></div>
     </div>`;
   }
+
+  // 효과음·배경음 줄 접기(10-15 사장님) — 보는 사람 취향이라 브라우저에만 기억한다
+  function _tlSndFolded(){ try { return localStorage.getItem('tl_snd_fold') === '1'; } catch (e) { return false; } }
+  window.tlSndFold = function(){
+    const on = !_tlSndFolded();
+    try { localStorage.setItem('tl_snd_fold', on ? '1' : '0'); } catch (e) {}
+    document.querySelectorAll('.tlwrap').forEach(w => w.classList.toggle('sndfold', on));
+    document.querySelectorAll('.tl-sndfold').forEach(b => { b.textContent = '음성 ' + (on ? '▸' : '▾'); });
+  };
 
   const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
 

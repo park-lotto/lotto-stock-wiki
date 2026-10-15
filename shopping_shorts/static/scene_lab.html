@@ -1082,7 +1082,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     overflow:hidden;white-space:nowrap;pointer-events:none}
 .tl-cap-s{color:#8fc3ea;font-size:9.5px;margin-left:4px;flex:none}
 .tl-sfxs,.tl-bgms{position:relative}
-.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 5px;font-size:10px;line-height:1;
+/* 효과음·배경음 줄 높이(10-15 사장님 "글자가 너무 작다 / 자리에 맞게") — 높이가 없어 0px로 찌그러져 이름표가 겹쳤다 */
+.tl-auds{margin-bottom:3px}
+.tl-sfxs{height:24px}
+.tl-bgms{height:22px}
+.tl-sfxs .tl-loading{font-size:11px;line-height:24px}
+.tl-sndfold{position:absolute;left:-50px;top:50%;transform:translateY(-50%);width:46px;padding:0;background:none;border:0;
+  color:#8b93a0;font-size:10.5px;text-align:right;cursor:pointer}
+.tl-sndfold:hover{color:#e6eef8}
+.tlwrap.sndfold .tl-sfxs,.tlwrap.sndfold .tl-bgms{display:none}
+.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 6px;font-size:12px;line-height:1;
   white-space:nowrap;cursor:pointer;background:#3b2a12;border:1px solid #d9902b;border-radius:4px;color:#ffd9a0}
 .tl-sfxmark:hover{background:#5a3d14}
 .tl-sfxmark.line{background:#2e1840;border-color:#c85cff;color:#ebc8ff}   /* 칸 효과음(짤 리액션 등) = 보라 */
@@ -1096,7 +1105,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-sfxpop button{background:#2b3a50;border:1px solid #4b6a92;color:#e6eef8;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:12px;white-space:nowrap}
 .tl-sfxpop .del{margin-left:auto;border-color:#a14a4a}
 .tl-sfxpop .v{min-width:38px;text-align:center}
-.tl-bgmbar{position:absolute;top:1px;bottom:1px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 6px;font-size:10px;
+.tl-bgmbar{position:absolute;top:1px;bottom:1px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 8px;font-size:12px;
   background:#13302a;border:1px solid #2f8a6f;border-radius:4px;color:#a8ecd6;cursor:pointer;overflow:hidden;white-space:nowrap}
 .tl-bgmbar.playing{background:#1f5a4a}
 .tl-bgmbar .pl{color:#d8fff0;flex:none}
