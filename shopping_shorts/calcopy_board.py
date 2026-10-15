@@ -212,6 +212,15 @@ def board(root: Path | None = None, data_dir=None) -> dict:
     base = collect(root)
     store = _store_load(data_dir)
     by = {c["slug"]: c for c in base["channels"]}
+    # 같은 채널이 두 이름으로 갈리지 않게: 보관함에 저장한 주소가 분석 원장(channel/<slug>)의 주소와 같으면 원장 이름으로 합친다
+    def _norm(u):
+        u = _up.unquote(str(u or "")).strip().rstrip("/")
+        return u[:-7] if u.endswith("/shorts") else u
+    by_url = {_norm(c.get("url")): k for k, c in by.items() if c.get("url")}
+    for k in list(store):
+        tgt = by_url.get(_norm(store[k].get("url")))
+        if tgt and tgt != k:
+            store[tgt] = {**store.pop(k), **{x: v for x, v in (store.get(tgt) or {}).items() if v}}
     out = []
     for slug in sorted(set(by) | set(store)):
         c = dict(by.get(slug) or {"slug": slug, "name": slug, "url": "", "concept": "", "stats": {},
