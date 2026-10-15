@@ -1081,9 +1081,25 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     background:repeating-linear-gradient(-45deg,transparent 0 4px,rgba(120,128,140,.10) 4px 8px);
     overflow:hidden;white-space:nowrap;pointer-events:none}
 .tl-cap-s{color:#8fc3ea;font-size:9.5px;margin-left:4px;flex:none}
-.tl-sfxmark{position:absolute;top:-2px;z-index:3;transform:translateX(-50%);font-size:12px;line-height:1;cursor:help;
-  filter:drop-shadow(0 0 2px #000)}
-.tl-sfxmark.line{font-size:14px;filter:drop-shadow(0 0 3px #c85cff)}   /* 줄 효과음(짤 리액션 등) = 보라 테두리 */
+.tl-sfxs,.tl-bgms{position:relative}
+.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 5px;font-size:10px;line-height:1;
+  white-space:nowrap;cursor:pointer;background:#3b2a12;border:1px solid #d9902b;border-radius:4px;color:#ffd9a0}
+.tl-sfxmark:hover{background:#5a3d14}
+.tl-sfxmark.line{background:#2e1840;border-color:#c85cff;color:#ebc8ff}   /* 칸 효과음(짤 리액션 등) = 보라 */
+.tl-sfxmark.dragging{cursor:grabbing;outline:2px solid #fff;z-index:5}
+.tl-sfxpop select{flex:1;background:#2b3a50;border:1px solid #4b6a92;color:#e6eef8;border-radius:5px;padding:3px;font-size:12px}
+.tl-sfxmark.mute{opacity:.45;text-decoration:line-through}
+.tl-sfxpop{position:fixed;z-index:9999;background:#1d2633;border:1px solid #4b6a92;border-radius:8px;padding:8px 10px;color:#e6eef8;font-size:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);width:220px}
+.tl-sfxpop .t{color:#9db4cf;margin-left:4px}
+.tl-sfxpop .row{display:flex;gap:4px;align-items:center;margin-top:6px}
+.tl-sfxpop button{background:#2b3a50;border:1px solid #4b6a92;color:#e6eef8;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:12px;white-space:nowrap}
+.tl-sfxpop .del{margin-left:auto;border-color:#a14a4a}
+.tl-sfxpop .v{min-width:38px;text-align:center}
+.tl-bgmbar{position:absolute;top:1px;bottom:1px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 6px;font-size:10px;
+  background:#13302a;border:1px solid #2f8a6f;border-radius:4px;color:#a8ecd6;cursor:pointer;overflow:hidden;white-space:nowrap}
+.tl-bgmbar.playing{background:#1f5a4a}
+.tl-bgmbar .pl{color:#d8fff0;flex:none}
 .tl-aud-bar{position:absolute;top:0;height:100%;border:1px solid #3a5578;border-radius:4px;
     background:repeating-linear-gradient(90deg,#1b2432 0 2px,#263650 2px 4px)}
 .tl-aud-l{position:absolute;right:4px;top:50%;transform:translateY(-50%);
@@ -2983,7 +2999,9 @@ async function sfxpRefresh(){
   await bgmRefresh();
   try{
     const d = await (await fetch('/api/produce/mix/sfx_pack/' + SL.job, {cache:'no-store'})).json();
-    window.SFX_SOUNDS = d.ok ? (d.beats || []) : null;     // 음성 줄 🔊(관제 203) — 효과음팩을 못 써도 줄 효과음은 보인다
+    window.SFX_SOUNDS = d.ok ? (d.beats || []) : null;
+    window.SFX_PACK_SLOTS = d.ok ? (d.pack_slots || []) : [];      // 효과음 줄 '바꾸기'(팩 소리)
+    window.sfxBankList = loadSfxList;                              // 효과음 줄 '바꾸기'(칸 효과음 = 효과음 서랍)     // 음성 줄 🔊(관제 203) — 효과음팩을 못 써도 줄 효과음은 보인다
     if (!d.ok || !d.eligible){ SFXP = null; sfxpShow(); renderBand(); return; }
     SFXP = d;
     sfxpPaint();
@@ -3005,6 +3023,7 @@ function sfxpShow(){
 }
 // ── 🎵 배경음 목록(2026-10-06 관제 146) — 곡·파일은 서버 bgm_lib 한 곳, 저장은 sfxpSave 와 같은 settings API ──
 let BGMP = null, _bgmAudio = null, _bgmPlaying = '';
+window.bgmInfo = () => BGMP;      // 타임라인 배경음 줄(scene_timeline.js tlBgmLabel)이 읽는다
 async function bgmRefresh(){
   try{
     const d = await (await fetch('/api/produce/mix/bgm_lib/' + SL.job, {cache:'no-store'})).json();
@@ -3013,6 +3032,7 @@ async function bgmRefresh(){
   bgmPaint();
 }
 function bgmPaint(){
+  if (typeof window.tlBgmRepaint === 'function') window.tlBgmRepaint();
   const box = document.getElementById('bgmList'); if (!box) return;
   if (!BGMP || !(BGMP.tracks || []).length){ box.innerHTML = ''; return; }   // 안 열린 작업(관리자 전용 기본)
   const cur = BGMP.current || '';
@@ -3248,6 +3268,7 @@ async function memeSet(i, assetId){
     DATA.beats[i].cutaway = d.cutaway || null;
     if (assetId == null) DATA.beats[i].meme_off = 1; else delete DATA.beats[i].meme_off;
     renderBand();
+    if (typeof sfxpRefresh === 'function') sfxpRefresh();   // 짤을 넣거나 빼면 그 리액션 효과음 줄도 다시(서버 _apply_line_sfx)
   }catch(e){
     const h = document.getElementById('tbhint');
     if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
