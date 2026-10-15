@@ -21,9 +21,9 @@
   {
    "kind": "video",
    "x": 0,
-   "y": 740,
+   "y": 660,
    "w": 1080,
-   "h": 1180,
+   "h": 1260,
    "radius": 0
   },
   {
@@ -160,13 +160,13 @@
    "kind": "text",
    "role": "label",
    "x": 80,
-   "y": 414,
+   "y": 412,
    "w": 960,
    "align": "left",
    "lines": 1,
    "font": "BMDOHYEON",
-   "size": 78.8,
-   "line_h": 91,
+   "size": 81.8,
+   "line_h": 94,
    "rgb": [
     0,
     0,
@@ -180,7 +180,7 @@
    "letter_spacing": 0,
    "word_spacing": 0,
    "enter": null,
-   "text": "한국 코스트코가 억울했던 이유"
+   "text": "코스트코 두바이 스프레드 사기 전 알아둘 것"
   },
   {
    "kind": "band",

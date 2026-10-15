@@ -7,7 +7,7 @@ from shopping_shorts.calcopy_frame import schema
 
 OUT = sys.argv[1]
 BRAND = "맛잘알 친구들"      # 원본 채널 이름(맛있는 친구들) 대신 — 남의 채널 이름을 그대로 쓰지 않는다
-TITLE = "한국 코스트코가 억울했던 이유"
+TITLE = "코스트코 두바이 스프레드 사기 전 알아둘 것"   # 10-16 2판: 대본을 확인된 사실로 바꿔 제목도(원본 '억울했던 이유'는 근거 없음)
 
 
 def text(role, fam, sample, ink_top, ink_h, x, w, align, rgb, lines=1, line_h=None, **kw):
@@ -23,7 +23,7 @@ body = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": "rGFXQlS9Cp
         "made_from": {"tool": "scratch build_frames_rgfx.py", "note": "원본 2.8초 프레임 픽셀 실측(헤더 연두 227,239,211 y0~236 · 프로필 칸 · 글 제목 · 구분선 y515 · 누적 자막 2줄 570/663)"},
         "layers": [
             {"kind": "bg", "rgb": [255, 255, 255]},
-            {"kind": "video", "x": 0, "y": 740, "w": 1080, "h": 1180, "radius": 0},
+            {"kind": "video", "x": 0, "y": 660, "w": 1080, "h": 1260, "radius": 0},   # 원본 컷별 그림 칸 y 666~1185 를 다 담게
             {"kind": "band", "x": 0, "y": 0, "w": 1080, "h": 236, "rgb": [227, 239, 211], "radius": 0},
             text("label", "BMDOHYEON", BRAND, 75, 100, 77, 960, "left", [0, 0, 0], text="» " + BRAND + " 🍽"),
             {"kind": "band", "x": 85, "y": 265, "w": 140, "h": 128, "rgb": [227, 239, 213], "radius": 0},
@@ -39,8 +39,8 @@ hook = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": "rGFXQlS9Cp
         "layers": [
             {"kind": "bg", "rgb": [64, 64, 64]},
             {"kind": "video", "x": 0, "y": 690, "w": 1080, "h": 1008, "radius": 0},
-            text("title", "PretendardXBold", "한국 코스트코가", 228, 132, 540, 1000, "center", [255, 255, 255], lines=2, line_h=150,
-                 text="한국 코스트코가\n억울했던 이유", line_rgb=[[255, 255, 255], [142, 248, 133]], shadow={"dx": 4, "dy": 4, "blur": 6, "rgb": [0, 0, 0]}),
+            text("title", "PretendardXBold", "코스트코 두바이", 228, 132, 540, 1000, "center", [255, 255, 255], lines=2, line_h=150,
+                 text="코스트코 두바이\n스프레드 알아둘 것", line_rgb=[[255, 255, 255], [142, 248, 133]], shadow={"dx": 4, "dy": 4, "blur": 6, "rgb": [0, 0, 0]}),
             {"kind": "band", "x": 0, "y": 568, "w": 1080, "h": 116, "rgb": [235, 235, 235], "radius": 0},
             text("label", "CcPretendard-Bold", TITLE, 590, 66, 540, 960, "center", [0, 0, 0], text=TITLE),
             text("label", "BMDOHYEON", "»", 75, 100, 77, 200, "left", [0, 0, 0], text="»"),

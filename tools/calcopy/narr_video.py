@@ -41,6 +41,9 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
             out.append(cur); cur = ""
     if cur:
         out.append(cur)
+    if len(out) > 1 and len(out[-1].rstrip(",.?!").replace(" ", "")) <= 5:   # '있음.' 처럼 짧은 꼬리는 앞 조각에 붙인다(혼자 뜨면 어색 — 10-16 2판)
+        tail = out.pop()
+        out[-1] = out[-1] + " " + tail
     return [o.rstrip(",") for o in out]
 
 
@@ -103,14 +106,25 @@ def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[d
 
 
 # ── 재료(그림 칸) ──────────────────────────────────────────────────────────
-def shot_clip(src, ss, dur, win, box_w, full, out, ar=None):
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
     w, h = win["w"], win["h"]
     top = (H - h) // 2
     pre = f"crop='min(iw,ih*{ar})':'min(ih,iw/{ar})'," if ar else ""
-    if full:
+    if box:   # 원본 그 컷의 그림 칸 [x,y,w,h](캔버스 좌표, 뜯기 cuts.picture_boxes) — cover=꽉 채워 자름 / contain=다 보이게 줄임
+        bx, by, bw, bh = box
+        by = max(by, min_y)   # 자막 2줄 아래로 — 원본 컷 칸(y666)을 그대로 두면 2줄째 자막을 덮었다(10-16 2판)
+        bh = min(bh, win["y"] + win["h"] - by)
+        oy = max(0, by - win["y"])
+        if fit == "contain":
+            core = (f"scale={bw}:{bh}:force_original_aspect_ratio=decrease,crop='min(iw,{bw})':'min(ih,{bh})',"   # 반올림으로 1px 넘치면 pad 가 실패했다
+                    f"pad={bw}:ih:(ow-iw)/2:0:white")
+        else:
+            core = f"scale={bw}:{bh}:force_original_aspect_ratio=increase,crop={bw}:{bh}"
+        vf = f"{core},pad={w}:{h}:{bx}:{oy}:white,pad={W}:{H}:0:{top}:white,setsar=1,fps=30"
+    elif full:
         vf = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},pad={W}:{H}:0:{top}:white,setsar=1,fps=30"
     else:
         bh = h - 16
@@ -118,7 +132,8 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None):
               f"pad={W}:{H}:0:{top}:white,setsar=1,fps=30")
     still = Path(src).suffix.lower() in (".png", ".jpg", ".jpeg")
     inp = ["-loop", "1", "-i", str(src)] if still else ["-ss", f"{ss:.3f}", "-i", str(src)]
-    va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf, "-an",
+    # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
+    va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf + ",scale=out_range=tv,format=yuv420p", "-color_range", "tv", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
 
@@ -150,6 +165,8 @@ def build(plan: dict):
         spec = schema.validate(frame)
         win = next(l for l in spec["layers"] if l["kind"] == "video")
         has_cap = any(l["kind"] == "text" and l["role"] == "caption" for l in spec["layers"])
+        cap = next((l for l in spec["layers"] if l["kind"] == "text" and l["role"] == "caption"), None)
+        min_y = int(cap["y"] + cap["lines"] * cap["line_h"] + 12) if cap else 0
         parts = []
         for k, (a, b) in enumerate(shots_t):
             if b <= t_a + 1e-6 or a >= t_b - 1e-6:
@@ -157,7 +174,8 @@ def build(plan: dict):
             a2, b2 = max(a, t_a), min(b, t_b)
             sh = mshots[k]
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
-            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p, sh.get("ar")))
+            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p, sh.get("ar"),
+                                    None if fi == 0 else sh.get("box"), sh.get("fit", "cover"), min_y))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"

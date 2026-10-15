@@ -1,154 +1,338 @@
 {
- "_note": "rGFX 칼카피 재료 — 원본 컷 14개 중 흑백요리사 짤 2개는 방송 클립이라 쓰지 않고 시식 반응·휘젓기로 대체. 코스트코 NUSSPO 통은 한국 순위 영상(OunWseluP2Y)의 상품 사진을 잘라 씀. 나머지는 같은 소재(두바이 초코·피스타치오 스프레드) 유튜브 쇼츠/영상. ar=가운데 자르기 비율, box_w=그림 칸 폭.",
+ "_note": "rGFX 칼카피 재료 3판(10-16 반려 반영): 같은 제품(누스포 1kg) 사진·상품 페이지 캡처(모바일 폭, 빨간 테두리)·실제 통 영상 + 한국 반응 짤 2개만. 다른 제품·무관 장면 없음. box=원본 그 컷의 그림 칸(뜯기 cuts.picture_boxes per_shot 같은 순번, 자막 2줄 아래로 내림), 캡처는 읽히게 폭 1080 가로 칸.",
  "cand_dir": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/make",
+ "orig_picture_boxes": [
+  [
+   0,
+   672,
+   1080,
+   975
+  ],
+  [
+   165,
+   750,
+   750,
+   897
+  ],
+  [
+   138,
+   1185,
+   741,
+   462
+  ],
+  [
+   159,
+   744,
+   762,
+   873
+  ],
+  [
+   84,
+   837,
+   912,
+   600
+  ],
+  [
+   87,
+   666,
+   906,
+   495
+  ],
+  [
+   87,
+   747,
+   906,
+   498
+  ],
+  [
+   168,
+   798,
+   744,
+   828
+  ],
+  [
+   72,
+   744,
+   945,
+   645
+  ],
+  [
+   99,
+   705,
+   882,
+   822
+  ],
+  [
+   63,
+   699,
+   954,
+   522
+  ],
+  [
+   120,
+   756,
+   840,
+   831
+  ],
+  [
+   93,
+   807,
+   789,
+   756
+  ],
+  [
+   36,
+   756,
+   1008,
+   810
+  ],
+  [
+   0,
+   759,
+   1080,
+   660
+  ]
+ ],
  "shots": [
   {
    "i": 0,
-   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
-   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
-   "ss": 40.0,
-   "ar": null,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "두바이 피스타치오 초코 스프레드 통 숟가락 근접(훅 카드 전폭)",
-   "orig_scene": "스프레드 통 윗면(피스타치오+초코 무늬)",
-   "full": true
+   "src": "재료후보3/costco_682334.jpg",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": null,
+   "fit": "cover",
+   "ours": "누스포 1kg 통 상품 사진(코스트코 상품 대표 이미지)",
+   "why": "훅 카드 — 제목이 이 제품"
   },
   {
    "i": 1,
-   "src": "재료후보/nusspo_jar.png",
-   "url": "https://www.youtube.com/watch?v=OunWseluP2Y",
-   "ss": 0,
-   "ar": null,
-   "box_w": 620,
-   "status": "같은 제품 사진",
-   "ours": "코스트코 NUSSPO 두바이초콜릿 크림 1kg 통 사진(순위 영상 12.5초 캡처 잘라냄)",
-   "orig_scene": "해외 틱톡 두바이 초콜릿 먹방"
+   "src": "재료후보3/k_title.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 상품명(빨간 테두리)",
+   "why": "'코스트코 코리아가 누스포 두바이 초콜릿' — 상품명 캡처"
   },
   {
    "i": 2,
-   "src": "재료후보2/v_lzSG8Ze8Z3Y.mp4",
-   "url": "https://www.youtube.com/watch?v=lzSG8Ze8Z3Y",
-   "ss": 38.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "카다이프를 버터에 볶는 장면(바삭함)",
-   "orig_scene": "스프레드 언박싱·카다이프 조리"
+   "src": "재료후보/nusspo_jar.png",
+   "url": "https://www.youtube.com/watch?v=OunWseluP2Y",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": [
+    165,
+    750,
+    750,
+    897
+   ],
+   "fit": "contain",
+   "ours": "누스포 통 사진(한국 순위 영상 캡처)",
+   "why": "'1kg 통으로 내놨는데' — 통"
   },
   {
    "i": 3,
-   "src": "재료후보2/v_O15mlL2ZNkU.mp4",
-   "url": "https://www.youtube.com/watch?v=O15mlL2ZNkU",
-   "ss": 0.2,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "해외 바이럴 두바이 초콜릿 바 쪼개기",
-   "orig_scene": "제품·피스타치오 연출"
+   "src": "재료후보3/k_feature.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 제품 특징(카다이프 함유·바삭)",
+   "why": "'카다이프가 씹혀서' — 설명 문장"
   },
   {
    "i": 4,
-   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
-   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
-   "ss": 24.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "외국인 시식 반응(얼굴)",
-   "orig_scene": "흑백요리사 블라인드 심사 짤"
+   "src": "재료후보3/nusspo_photo_w38.png",
+   "url": "https://www.youtube.com/watch?v=WCUYzLptW1o",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": [
+    159,
+    744,
+    762,
+    873
+   ],
+   "fit": "cover",
+   "ours": "누스포 통 실물 사진(추천 영상 38초)",
+   "why": "'바삭한 게 특징' — 실물 통"
   },
   {
    "i": 5,
-   "src": "재료후보2/v_tNGUmh2Mb7c.mp4",
-   "url": "https://www.youtube.com/watch?v=tNGUmh2Mb7c",
-   "ss": 14.5,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "초코 스프레드 숟가락으로 뜨기",
-   "orig_scene": "빵 스프레드 시식"
+   "src": "재료후보3/k_price_hl.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 판매금액·할인·총 결제금액",
+   "why": "'17,990원에서 3,000원 할인' — 가격 캡처"
   },
   {
    "i": 6,
-   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
-   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
-   "ss": 15.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "시식하며 갸웃(같은 시식 영상 앞부분)",
-   "orig_scene": "빵 스프레드 시식"
+   "src": "재료후보3/costco_682334.jpg",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": [
+    168,
+    798,
+    744,
+    828
+   ],
+   "fit": "contain",
+   "ours": "누스포 통 상품 사진",
+   "why": "'14,990원에 팔았던 것' — 그 가격의 통"
   },
   {
    "i": 7,
-   "src": "재료후보2/v_tNGUmh2Mb7c.mp4",
-   "url": "https://www.youtube.com/watch?v=tNGUmh2Mb7c",
-   "ss": 40.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "초코 스프레드 한 숟갈",
-   "orig_scene": "식빵 크림 리뷰"
+   "src": "재료후보3/k_rating_hl.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 별점 4.7(28)(빨간 테두리)",
+   "why": "'상품 페이지에는 리뷰' — 별점 캡처"
   },
   {
    "i": 8,
-   "src": "재료후보2/v_lzSG8Ze8Z3Y.mp4",
-   "url": "https://www.youtube.com/watch?v=lzSG8Ze8Z3Y",
-   "ss": 3.5,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "초코 바 단면 — 초코 속 피스타치오(두 맛)",
-   "orig_scene": "식빵 반반 크림"
+   "src": "재료후보3/meme_감탄박수_6K72US0yiww.mp4",
+   "url": "https://www.youtube.com/watch?v=6K72US0yiww&t=96s",
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    87,
+    666,
+    906,
+    495
+   ],
+   "fit": "cover",
+   "ours": "K리액션 짤 감탄_박수",
+   "why": "'평점 4.7' — 반응 줄은 한국 반응 짤(원본 흑백요리사 캡처 자리)"
   },
   {
    "i": 9,
-   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
-   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
-   "ss": 50.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "통 속 두 크림 숟가락 근접",
-   "orig_scene": "제품 용기(반반)"
+   "src": "재료후보3/nusspo_photo_w38.png",
+   "url": "https://www.youtube.com/watch?v=WCUYzLptW1o",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": [
+    99,
+    705,
+    882,
+    822
+   ],
+   "fit": "cover",
+   "ours": "누스포 통 실물 사진 — 옆면 두 크림",
+   "why": "'뚜껑을 열면 헤이즐넛 크림과' — 통 속 두 크림 무늬"
   },
   {
    "i": 10,
-   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
-   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
-   "ss": 57.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "통 속 두 크림을 숟가락으로 휘젓기",
-   "orig_scene": "흑백요리사 비빔대왕 짤"
+   "src": "재료후보3/costco_682334.jpg",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "제품 사진",
+   "box": [
+    120,
+    756,
+    840,
+    831
+   ],
+   "fit": "cover",
+   "ours": "누스포 통 상품 사진 — 반반 무늬",
+   "why": "'반반씩 나뉘어 담겨' — 통 옆면 반반"
   },
   {
    "i": 11,
-   "src": "재료후보/v_rCPaqz3Dv70.mp4",
-   "url": "https://www.youtube.com/watch?v=rCPaqz3Dv70",
-   "ss": 22.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "딸기·추로스를 초코에 찍어 먹기",
-   "orig_scene": "유튜브 검색 결과 캡처(찍먹 유튜버들)"
+   "src": "재료후보3/k_storage_hl.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 보관방법(층분리 안내, 빨간 테두리)",
+   "why": "'층이 분리될 수 있지만' — 그 문구"
   },
   {
    "i": 12,
-   "src": "재료후보2/v_V8tJtI9-xXk.mp4",
-   "url": "https://www.youtube.com/watch?v=V8tJtI9-xXk",
-   "ss": 40.0,
-   "ar": 0.8,
-   "box_w": 750,
-   "status": "대체",
-   "ours": "피스타치오·초코 크레페",
-   "orig_scene": "빵에 바르기·매장 진열"
+   "src": "재료후보3/qtvz_jar2.mp4",
+   "url": "https://www.youtube.com/watch?v=QtvZzeo07jg",
+   "ss": 0.0,
+   "kind": "제품 영상",
+   "box": [
+    93,
+    807,
+    789,
+    756
+   ],
+   "fit": "cover",
+   "ours": "한국 먹방 속 누스포 통(피스타치오 쪽, 옆 제품은 잘라 냄)",
+   "why": "'잘 저어 먹으라고' — 실제로 먹는 통"
+  },
+  {
+   "i": 13,
+   "src": "재료후보3/k_nutrition_hl.png",
+   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
+   "ss": 0.0,
+   "kind": "캡처",
+   "box": [
+    0,
+    760,
+    1080,
+    600
+   ],
+   "fit": "contain",
+   "ours": "상품 페이지 캡처: 영양정보 540kcal·당류 48.3g(빨간 테두리)",
+   "why": "'100g에 540kcal' — 영양정보"
+  },
+  {
+   "i": 14,
+   "src": "재료후보3/meme_의심황당_d18h4bM9a2Q.mp4",
+   "url": "https://www.youtube.com/watch?v=d18h4bM9a2Q&t=196s",
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    0,
+    759,
+    1080,
+    660
+   ],
+   "fit": "cover",
+   "ours": "K리액션 짤 의심_황당",
+   "why": "'당류 48.3g … 주의' — 놀람 반응 짤"
   }
  ],
  "_history": [
-  "1판: 8번 컷 OF5UopnDGRI 가운데 자르기가 'ELNUT EAM' 글자만 남아 lzSG8Ze8Z3Y 단면으로 바꿈",
-  "2판: 8번 컷 lzSG8 4.0→3.5(소스 7초 컷 넘어 '반죽 자르기' 장면이 끼었음) · 10번 컷 Maltesers 세 번째 반복 → 6slg 57초(통 속 두 크림 휘젓기)"
+  "1판 반려: 서양 리뷰어·몰티져스·퐁듀·크레페 등 줄과 안 맞는 장면",
+  "2판: 같은 제품·캡처·짤로 교체, 그림 칸 원본 순번",
+  "3판: 자막 조각 14→10자(자막당 초 1.54→0.93, 원본 1.0)로 컷 15개 — 재료 15개"
  ]
 }

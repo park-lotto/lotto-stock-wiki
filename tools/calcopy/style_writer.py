@@ -444,7 +444,8 @@ NARR_PROMPT = """너는 한국 쇼츠 채널의 나레이션 작가다. 원본 �
 - 말투는 원본과 같은 반말 전언체(…했는데 / …다고 함 / …던 것 / …했다고). 존댓말(습니다·어요·해요·세요) 0.
 - 원본 문장과 8글자 넘게 이어서 같으면 실패다. 같은 사실도 다른 말로.
 - 위 '쓸 수 있는 사실'에 없는 숫자·이름·사건을 지어내지 마라.
-JSON으로만: {{"lines":[{{"fn":"역할","text":"문장"}}, ...]}}  (정확히 {n}개)
+- 문장마다 기대는 사실 번호(위 [f1] 꼴)를 facts 에 적어라. 사실 번호 없이 평가·반응을 말하지 마라(지어낸 사실 금지).
+JSON으로만: {{"lines":[{{"fn":"역할","text":"문장","facts":["f1"]}}, ...]}}  (정확히 {n}개)
 """
 
 
@@ -457,7 +458,9 @@ def check_narration(lines: list[dict], orig: list[str], ranges: list, facts: str
     off = [i for i, (a, r) in enumerate(zip(lens, ranges)) if not (r[0] <= a <= r[1])]
     polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
     nums = [n for n in re.findall(r"\d[\d,.]*", text) if n not in facts]
-    return {"n_ok": len(lines) == len(orig), "chars": lens, "ranges": [list(r) for r in ranges], "len_off_lines": off,
+    ids = set(re.findall(r"\[(f\d+)\]", facts))
+    no_fact = [i for i, l in enumerate(lines) if ids and not (set(l.get("facts") or []) & ids)]   # 10-16 반려: 근거 없는 평가 문장
+    return {"n_ok": len(lines) == len(orig), "lines_without_fact": no_fact, "chars": lens, "ranges": [list(r) for r in ranges], "len_off_lines": off,
             "copied_lines": copied, "polite_endings": polite, "unsourced_numbers": nums}
 
 
@@ -480,18 +483,18 @@ def write_narration(ttj_path: str, topic: str, roles: list[str], points: str = "
             c = tries[-1]["check"]
             fix = ("\n\n직전 답: " + json.dumps([l["text"] for l in tries[-1]["lines"]], ensure_ascii=False) +
                    f"\n고칠 것: 글자 수 어긋난 문장 {[i + 1 for i in c['len_off_lines']]} (목표 범위로) / 원본과 겹친 문장 {[i + 1 for i in c['copied_lines']]} / "
-                   f"존댓말 {c['polite_endings']} / 사실 밖 숫자 {c['unsourced_numbers']}")
+                   f"존댓말 {c['polite_endings']} / 사실 밖 숫자 {c['unsourced_numbers']} / 사실 번호 없는 문장 {[i + 1 for i in c['lines_without_fact']]}")
         d, err = gemini_free.ask([], prompt + fix, tag=f"narr{k}", models=models or CAP_MODELS)
         if not d:
             tries.append({"error": err}); continue
         lines = d.get("lines") or d.get("items") or []
         c = check_narration(lines, orig, ranges, points + topic)
         tries.append({"lines": lines, "check": c, "model": d.get("_model")})
-        if c["n_ok"] and not c["len_off_lines"] and not c["copied_lines"] and not c["polite_endings"] and not c["unsourced_numbers"]:
+        if c["n_ok"] and not c["len_off_lines"] and not c["copied_lines"] and not c["polite_endings"] and not c["unsourced_numbers"] and not c["lines_without_fact"]:
             break
     ok = [t for t in tries if t.get("check")]
     best = min(ok, key=lambda t: (not t["check"]["n_ok"], len(t["check"]["copied_lines"]) + t["check"]["polite_endings"] * 3
-                                   + len(t["check"]["unsourced_numbers"]) * 3, len(t["check"]["len_off_lines"]))) if ok else (tries[-1] if tries else {})
+                                   + len(t["check"]["unsourced_numbers"]) * 3 + len(t["check"]["lines_without_fact"]) * 3, len(t["check"]["len_off_lines"]))) if ok else (tries[-1] if tries else {})
     return {"topic": topic, "orig": orig, "roles": roles, "points": points, "final": best, "tries": tries, "gemini_calls": gemini_free.CALLS}
 
 
