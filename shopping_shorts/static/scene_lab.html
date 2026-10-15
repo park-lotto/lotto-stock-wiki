@@ -1164,6 +1164,11 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-gap.tl-blank{border-color:#ff6b6b;color:#ffb3b3;background:repeating-linear-gradient(45deg,rgba(255,90,90,.10) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;box-sizing:border-box}
 .tl-edge.l{right:auto;left:0}   /* 컷 앞 손잡이(얼린 컷 칸만) */
 /* ★위 컷 주황 박스(관제 204 9번) — 아래 소스 필름 박스와 같은 모양: 두꺼운 주황 테두리 + 늘 보이는 양끝 손잡이, 가운데는 잡고 밀기 */
+.tl-head .tl-cutat{pointer-events:auto;position:absolute;top:-2px;left:6px;z-index:8;white-space:nowrap;background:#ff4a4a;color:#fff;border:0;border-radius:4px;font-size:11px;font-weight:700;padding:1px 6px;cursor:pointer}
+.tl-len.ask{cursor:text;text-decoration:underline dotted}
+.tbcut .splitpick{position:absolute;left:2px;right:2px;bottom:22px;display:flex;gap:2px;z-index:5}
+.tbcut .splitpick button{flex:1;font-size:11px;font-weight:700;border:0;border-radius:4px;padding:2px 0;cursor:pointer;background:#2fbf71;color:#04201b}
+.tbcut .splitpick button+button{background:#ff6b6b;color:#2a0606}
 .tl-cut.obox{border:3px solid #ff9614;cursor:grab;user-select:none;touch-action:none}
 .tl-cut.obox .tl-edge{width:10px;opacity:1;background:#ff9614}
 .tl-cut.obox .tl-edge::after{content:"";position:absolute;left:3px;top:35%;bottom:35%;width:2px;border-radius:1px;background:#3a2000}
@@ -2637,7 +2642,7 @@ function replaceRoll(sid, vid, r){
   }
   const id = _makeFilmSeg(vid, a, b);
   // ★되돌리기용 — 처음 손대기 전 칸 재료를 한 번만 기억한다(2026-10-15 실측: 짧게 잡고 되돌리면 짧은 장면이 남아 4배 슬로모션)
-  if (DATA.hand_cut) where.forEach(i => { const o = (window.HAND_ORIG = window.HAND_ORIG || {}); if (!o[i]) o[i] = { list: (lists[i] || []).slice(), fix: Object.fromEntries(Object.entries(FIXLEN).filter(([k]) => (lists[i] || []).some(x => k === fixKey(i, x)))) }; });
+  where.forEach(i => handSnap(i));
   // ★같은 구간으로 교체 = 아무 일도 안 한다(2026-10-15 실측: 박스를 안 움직이고 교체를 누르면 아래 '이미 있으면 자리 비우기'가 카드를 지웠다)
   if (id === sid){ closeRoll(); nsay('같은 구간이에요 — 박스를 옮기거나 늘려 주세요'); return; }
   let n = 0;
@@ -2935,6 +2940,61 @@ function handBarHtml(i){
   return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ 칸 전체 ${tag}${warn}${exactNote} ${swap}
     ${warn && sp < 1 ? `<button class="act" onclick="event.stopPropagation();autoFill(${i})">✨ 장면 넣기</button>` : ''}
     <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
+}
+// ★빨간 막대 자리에서 카드 자르기(관제 204, 2026-10-16 사장님 · 관리자만) — 한 장을 같은 영상의 앞/뒤 두 장으로.
+//   두 장 길이를 원본 길이 그대로 정해 두므로(FIXLEN) 칸 속도는 그대로다. 남길지 지울지는 아래 썸네일에서 고른다.
+const SPLIT_PEND = {};
+// 되돌리기용 — 손대기 전 칸 재료·길이를 한 번만 기억한다(교체·자르기·초 입력·끝 끌기 모두 이 한 곳)
+function handSnap(i){
+  if (!DATA.hand_cut) return;
+  const o = (window.HAND_ORIG = window.HAND_ORIG || {});
+  if (!o[i]) o[i] = { list: (lists[i] || []).slice(), fix: Object.fromEntries(Object.entries(FIXLEN).filter(([kk]) => (lists[i] || []).some(x => kk === fixKey(i, x)))) };
+}
+window.handSnap = handSnap;
+function tlSplitAt(i){
+  const t = (window.TL_POS || {})[i];
+  if (t == null){ nsay('빨간 막대를 자를 자리로 옮겨 주세요'); return; }
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
+  let acc = 0, k = -1;
+  for (let j = 0; j < clips.length; j++){ if (t < acc + clips[j].dur){ k = j; break; } acc += clips[j].dur; }
+  const c = clips[k];
+  if (!c || c.meme){ nsay('자를 카드가 없어요'); return; }
+  const o = t - acc;
+  if (o < 0.2 || c.dur - o < 0.2){ nsay('카드 끝에 너무 가까워요 — 조금 안쪽에서 잘라 주세요'); return; }
+  const used = +c.src_dur || c.dur, a = +c.start, e = a + used, sp = Math.round((a + o * used / c.dur) * 100) / 100;
+  const at = (lists[i] || []).indexOf(c.seg_id);
+  if (at < 0){ nsay('이 카드는 자를 수 없어요'); return; }
+  handSnap(i);
+  const id1 = _makeFilmSeg(c.video_id, a, sp), id2 = _makeFilmSeg(c.video_id, sp, e);
+  delete FIXLEN[fixKey(i, c.seg_id)];
+  lists[i].splice(at, 1, id1, id2);
+  chosen.add(id1); chosen.add(id2);
+  FIXLEN[fixKey(i, id1)] = Math.round((sp - a) * 100) / 100;
+  FIXLEN[fixKey(i, id2)] = Math.round((e - sp) * 100) / 100;
+  SPLIT_PEND[i] = [id1, id2];
+  (window.HAND_LAST = window.HAND_LAST || {})[i] = id2;
+  render();
+  nsay(`${k + 1}번 카드를 ${sp.toFixed(1)}초에서 둘로 잘랐어요 — 아래에서 남길지 지울지 골라 주세요`);
+}
+function splitKeep(i){ delete SPLIT_PEND[i]; render(); }
+function splitDrop(i, sid){
+  delete SPLIT_PEND[i];
+  delete FIXLEN[fixKey(i, sid)];
+  dropCutFromBand(i, sid);
+  GAP_ASK[i] = 1;            // 빈 시간을 어떻게 채울지 묻는다(전체로 / 다른 장면)
+  render();
+}
+const GAP_ASK = {};
+function gapAskHtml(i){
+  if (!GAP_ASK[i]) return '';
+  return `<div class="cutgap handbar" onclick="event.stopPropagation()">✂ 지운 시간을 어떻게 채울까요?
+    <button class="act" onclick="event.stopPropagation();delete GAP_ASK[${i}];render()">칸 전체로 채우기</button>
+    <button class="act" onclick="event.stopPropagation();delete GAP_ASK[${i}];autoFill(${i})">✨ 다른 장면 넣기</button></div>`;
+}
+function splitPendHtml(i, sid){
+  const p = SPLIT_PEND[i];
+  if (!p || !p.includes(sid)) return '';
+  return `<span class="splitpick" onclick="event.stopPropagation()"><button onclick="event.stopPropagation();splitKeep(${i})">남기기</button><button onclick="event.stopPropagation();splitDrop(${i}, '${sid}')">지우기</button></span>`;
 }
 function handUndoAll(i){
   const o = (window.HAND_ORIG || {})[i];
@@ -3793,7 +3853,7 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초${c.more ? ` · 옆 장면이 짧아 원본에서 ${c.more.toFixed(1)}초 더 이어 보여 줘요` : ''} · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(cardThumbId(c))}">${tailBadge(i, c)}<span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
+             <img src="${SL.thumb(cardThumbId(c))}">${tailBadge(i, c)}${splitPendHtml(i, c.seg_id)}<span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -3887,7 +3947,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${notesHtml(i, [...fitList.filter(h => h.includes('fitToggle(') && h.includes(', true)')), gapHtml, handBarHtml(i), ...fitList.filter(h => !(h.includes('fitToggle(') && h.includes(', true)')))])}
+        ${notesHtml(i, [...fitList.filter(h => h.includes('fitToggle(') && h.includes(', true)')), gapHtml, gapAskHtml(i), handBarHtml(i), ...fitList.filter(h => !(h.includes('fitToggle(') && h.includes(', true)')))])}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
@@ -4617,8 +4677,8 @@ function toastlo(t){
 // ★칸 전체 길이는 음성에 매여 바꿀 수 없다 — 정한 컷은 그대로 두고
 //   **나머지 컷이 비례로 줄어든다**(사장님 선택). 계산은 applyFixedLens 한 곳(0순위-B).
 // ★prompt()는 쓰지 않는다 — 브라우저 모달은 자동화·확장에서 화면을 통째로 멈춘다.
-function askCutLen(i, sid){
-  if (getFix(i, sid) > 0){                  // 이미 정해둔 것 → 누르면 자동으로
+function askCutLen(i, sid, direct){
+  if (!direct && getFix(i, sid) > 0){                  // 이미 정해둔 것 → 누르면 자동으로
     setFix(i, sid, 0);
     nsay(`${segMark(sid)} 길이를 자동으로 되돌렸어요`);
     return;
@@ -4646,6 +4706,8 @@ function saveCutLen(){
     // 한 컷이 칸을 다 먹으면 나머지가 사라진다 — 막지 말고 알려만 준다(사장님 뜻일 수 있다).
     nsay(`${v.toFixed(1)}초는 칸 전체(${need.toFixed(1)}초)와 비슷해요 — 나머지 컷이 아주 짧아집니다`);
   }
+  handSnap(i);
+  (window.HAND_LAST = window.HAND_LAST || {})[i] = sid;      // 안내 줄의 「N번만」이 이 카드를 가리키게
   setFix(i, sid, v);
 }
 function closeCutLen(){ const b=document.getElementById('cutLenBox'); if (b) b.style.display='none'; }
