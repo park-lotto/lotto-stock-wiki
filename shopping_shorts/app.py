@@ -7121,7 +7121,7 @@ def _pvproxy_prewarm(job_id: str) -> None:
                                                "fit": c.get("fit")}))
         if not cuts or sum(blens) != len(cuts):
             return
-        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats, _pvproxy_cutaways(job)))
+        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats, _pvproxy_cutaways(job), deco=job.get("deco")))
         if (d / ("%s.mp4" % sig)).exists():
             return                          # 이미 있다
         with _PVPROXY_LOCK:
@@ -7487,6 +7487,23 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             # 나레이션 한 줄 = 완성본(_render_mix)과 **같은 함수**(표본 수 = 총 프레임 × 1600, head_trim 부터 읽기) → AAC 한 번
             _plan = {"beats": [{"beat_idx": bi, "head_trim": _trims(bi)[0]} for bi, _ in nar_frames]}
             narr = video_assemble.narration_track(_plan, dict(tts), nar_frames, tmp / "narr.wav")
+            # 🔊 원음 깔기(관제 097) — 판단은 video_assemble.source_audio_bed 한 곳. 여기선 이 합본의 컷(읽는 자리·배속·
+            #   프레임 수 = 위 굽기와 같은 _cut_motion·_nf)을 그 함수가 읽는 모양으로 넘기기만 한다.
+            try:
+                _sa = video_assemble.source_audio_settings((_job or {}).get("deco"))
+            except NameError:       # 작업을 못 읽었다(위 구도 계산 실패) — 원음 없이 종전대로
+                _sa = None
+            if _sa:
+                _scp, _k2 = [], 0
+                for bi, n in enumerate(beat_lens):
+                    _clips = []
+                    for c in cuts[_k2:_k2 + n]:
+                        _take, _slow, _ = _cut_motion(c)
+                        _clips.append({"video_id": c.get("video_id"), "start": float(c.get("start") or 0.0),
+                                       "c_src": _take, "play_out": _take * _slow, "cfr": int(c.get("_nf") or 0)})
+                    _k2 += n
+                    _scp.append({"idx": bi, "clips": _clips})
+                narr = video_assemble.source_audio_bed(_scp, srcs, nar_frames, narr, _sa, tmp)
             cmd2 = ["ffmpeg", "-y", "-v", "error",
                     "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(narr),
                     "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "96k",
@@ -7597,7 +7614,7 @@ def _job_sources_with_memes(job, work) -> dict:
     return srcs
 
 
-def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
+def _pvproxy_beat_meta(beats: list, cutaways: dict = None, deco: dict = None) -> list:
     """칸마다 [음성 경로, 음성 지문, tts_ver, voice_override, 구도(, 끼움 장면 파일·지문)] — 칸 순서(edit_plan beats 순서) 그대로.
     끼움 장면은 **붙은 칸에만** 싣는다 — 안 붙은 작업의 서명은 종전과 같다(합본을 다시 굽지 않는다)."""
     out = []
@@ -7616,6 +7633,10 @@ def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
         if cw:
             row += ["cw", str(cw), _pvproxy_tts_stamp(cw)]
         out.append(row)
+    # 🔊 원음 깔기(관제 097)가 켜진 작업만 서명에 싣는다 — 꺼진 작업의 서명은 종전과 같다(합본을 다시 굽지 않는다)
+    _sa = video_assemble.source_audio_settings(deco)
+    if _sa:
+        out.append(["source_audio", round(_sa["volume"], 4), round(_sa["duck_db"], 3)])
     return out
 
 
@@ -7653,7 +7674,7 @@ def api_mix_preview_proxy(job_id: str, body: dict):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     sig = _pvproxy_sig(norm, blens, _pvproxy_beat_meta((job.get("edit_plan") or {}).get("beats") or [],
-                                                      _pvproxy_cutaways(job)))
+                                                      _pvproxy_cutaways(job), deco=job.get("deco")))
     if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
         res = {"ok": True, "sig": sig, "state": "ready",
                "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}

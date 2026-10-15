@@ -130,3 +130,14 @@ def test_render_mix_source_bed(tmp_path, keep):
     loud, quiet = _rms_db(ducked, 0.3, 1.2), _rms_db(ducked, 2.4, 1.2)
     assert abs((loud - quiet) - DUCK_DB) <= 2.0, (loud, quiet)
     assert _rms_db(bed, 0.3, 1.2) > -40      # 나레 무음 구간에 원음이 들린다
+
+
+def test_pvproxy_signature_only_changes_when_on():
+    """편집 화면 합본 서명 — 원음 깔기가 꺼진 작업은 종전 서명 그대로(다시 굽지 않음), 켜면 달라진다."""
+    from shopping_shorts import app
+    beats = [{"beat_idx": 0, "tts_path": ""}]
+    base = app._pvproxy_beat_meta(beats, {})
+    assert app._pvproxy_beat_meta(beats, {}, deco={}) == base
+    assert app._pvproxy_beat_meta(beats, {}, deco={"source_audio": {"keep": False}}) == base
+    on = app._pvproxy_beat_meta(beats, {}, deco={"source_audio": {"keep": True}})
+    assert on != base and on[-1][0] == "source_audio"
