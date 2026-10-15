@@ -116,9 +116,9 @@
     if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
-  const mediaBounds=(frame,presetId)=>{
+  const mediaBounds=(frame,presetId,index=sceneIndex)=>{   // index: 어느 장면의 영상 칸인가(설명서 모드의 '틀 끄는 장면'이 장면마다 다르다)
     if(!frame||noTemplate||(presetId||rows[current]?.id)===PLAIN_ID)return {top:0,height:100};   // 템플릿 없음·원본 = 영상이 화면 전체
-    if(frame.spec)return specMedia(frame);   // 칼카피 틀 설명서: 영상 창은 설명서 값 그대로(고정형 제목칸 표준 26% 를 타지 않는다)
+    if(frame.spec)return specMedia(frame,index);   // 칼카피 틀 설명서: 영상 창은 설명서 값 그대로(고정형 제목칸 표준 26% 를 타지 않는다)
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
@@ -1439,9 +1439,22 @@
     const i=fixedRows.findIndex(p=>p.id===row.id);if(i>=0)fixedRows[i]=row;else fixedRows.push(row);
   }
   const specVideo=frame=>(frame.spec.layers||[]).find(l=>l.kind==='video')||null;
-  function specMedia(frame){const v=specVideo(frame),H=frame.height;return v?{top:v.y/H*100,height:v.h/H*100}:{top:0,height:100};}
+  // 틀을 끄는 장면(설명서 template_off)인가 — 판단은 이 함수 하나. 그리기(renderSpec)·영상 칸(specMedia)이 모두 여기에 묻는다.
+  //   scenes = 장면 번호 목록(context.scenes 순번, 자막 단위) / tail_sec = 영상 끝에서 이 초 안에 **시작하는** 장면(걸친 장면은 켠 채). 0 은 '끄는 장면 없음'.
+  function specOffAt(frame,i){
+    const off=frame.spec.template_off;if(!off)return false;
+    if(Array.isArray(off.scenes)&&off.scenes.includes(i))return true;
+    const sc=sceneContext?.scenes||[],s=sc[i];
+    if(off.tail_sec==null||!s||!sc.length)return false;
+    const end=Math.max(...sc.map(x=>Number(x.end)||0));
+    return off.tail_sec>0&&Number(s.start)>=end-off.tail_sec-1e-6;
+  }
+  function specMedia(frame,index=sceneIndex){
+    if(specOffAt(frame,index))return {top:0,height:100};   // 틀 끈 장면 = 영상 전체 화면
+    const v=specVideo(frame),H=frame.height;return v?{top:v.y/H*100,height:v.h/H*100}:{top:0,height:100};}
   const specRgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
   function renderSpec(frame){
+    if(specOffAt(frame,sceneIndex))return;   // 틀 끈 장면: 바탕·띠·제목·자막·문구 전부 없음(영상 칸은 specMedia 가 전체로)
     const W=frame.width,H=frame.height,scale=preview.clientHeight/H,v=specVideo(frame),pct=(n,d)=>n/d*100;
     for(const l of frame.spec.layers){
       if(l.kind==='bg'){
@@ -1872,7 +1885,7 @@
   // 어둡게 강조 장면은 자막 띠가 비므로 영상 칸을 그 띠 위쪽까지 넓힌다(사장님 2026-10-06 "당연히 검은 칸이 안 보여야지").
   //   장면 번호 → 띠 윗선(%) — geometry()/geometryAt() 이 이 값으로 영상 칸을 늘린다(미리보기·완성본 렌더러·썸네일이 같은 값).
   const emphTop=new Map();
-  const mediaFor=(frame,id,i)=>{const b=mediaBounds(frame,id),t=emphTop.get(i);return t==null||t>=b.top?b:{...b,top:t,height:b.height+(b.top-t)};};
+  const mediaFor=(frame,id,i)=>{const b=mediaBounds(frame,id,i),t=emphTop.get(i);return t==null||t>=b.top?b:{...b,top:t,height:b.height+(b.top-t)};};
   function emphasisCaption(frame,text,patch){
     emphTop.delete(sceneIndex);
     const d=(effects[String(sceneIndex)]||{}).dim;

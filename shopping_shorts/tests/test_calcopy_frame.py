@@ -110,8 +110,10 @@ def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
     spec = schema.validate(frame)
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
     cap = "아니 이거 해외 릴스에서 맨날 보이길래"
-    timeline = [{"beat_idx": 0, "t0": 0, "dur": 2, "narration": cap, "caption_lines": [cap], "role": "hook",
-                 "primary": {"video_id": "s0", "start": 0, "end": 2}}]
+    timeline = [{"beat_idx": 0, "t0": 0, "dur": 8, "narration": cap, "caption_lines": [cap], "role": "hook",
+                 "primary": {"video_id": "s0", "start": 0, "end": 8}},
+                {"beat_idx": 1, "t0": 8, "dur": 2, "narration": "끝 장면", "caption_lines": ["끝 장면"], "role": "body",
+                 "primary": {"video_id": "s0", "start": 8, "end": 10}}]   # 장면 2(8초 시작)는 틀 A 의 template_off.tail_sec=3.5 에 걸린다
     png = scene_style.render_layer_one(timeline, snap, tmp_path, 0, {"text": "닿으면 스피커\n소름 돋는 음질 수준"}, "t")
     im = Image.open(png).convert("RGBA"); px = im.load()
     assert im.size == (1080, 1920)
@@ -131,3 +133,29 @@ def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
     alpha = [px[x, y][3] for y in range(video["y"] + 4, video["y"] + video["h"] - 4, 25) for x in range(0, 1080, 40)]
     assert max(alpha) == 0                                         # 영상 창은 투명(omitBackground) — 합성이 영상을 둔다
     assert px[540, video["y"] - 6][3] == 255 and px[540, 1800][3] == 255   # 바탕은 불투명
+
+
+@pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
+def test_template_off_tail_scene_draws_nothing(tmp_path):
+    """원본 끝 3.5초는 틀이 사라지고 영상이 전체 화면 — template_off 에 걸린 장면은 레이어가 전부 투명, 영상 칸은 전체."""
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame_a()))
+    timeline = [{"beat_idx": i, "t0": t0, "dur": d, "narration": c, "caption_lines": [c], "role": "hook" if i == 0 else "body",
+                 "primary": {"video_id": "s0", "start": t0, "end": t0 + d}}
+                for i, (t0, d, c) in enumerate([(0, 8, "첫 장면 자막"), (8, 2, "끝 장면 자막")])]
+    layers = scene_style.render_layers(timeline, snap, tmp_path, {"text": "닿으면 스피커\n소름 돋는 음질 수준"}, "t")
+    assert len(layers) == 2
+    assert layers[1]["media"] == {"top": 0, "height": 100}
+    assert Image.open(tmp_path / layers[1]["file"]).convert("RGBA").split()[3].getextrema()[1] == 0
+    assert layers[0]["media"]["top"] > 0                                      # 장면 1은 틀 그대로
+    assert Image.open(tmp_path / layers[0]["file"]).convert("RGBA").split()[3].getextrema()[1] == 255
+
+
+def test_template_off_schema():
+    f = frame_a(); f["template_off"] = {"tail_sec": 0, "scenes": [3, 1, 3]}
+    assert schema.validate(f)["template_off"] == {"tail_sec": 0, "scenes": [1, 3]}   # 0 = 유효(끄는 장면 없음), 번호는 정렬·중복 제거
+    f = frame_a(); f["template_off"] = None
+    assert schema.validate(f)["template_off"] is None
+    for bad in ({"tail_sec": -1}, {"scenes": "1"}, {"when": 3}, {"tail_sec": True}):
+        f = frame_a(); f["template_off"] = bad
+        with pytest.raises(schema.FrameError):
+            schema.validate(f)

@@ -23,7 +23,13 @@
        {"kind": "text", "role": "brand", "text": "[광고]", ...},   # 고정 문구 — text 필수
        {"kind": "image", "src": "...", "x":..., "y":..., "w":..., "h":...}
      ],
+     "template_off": {"tail_sec": 3.5},   # 틀을 끄는 장면(없으면 null) — 아래 설명
      "made_by": "calcopy_frame v1", "source": "ZdeZRtCeAC4"}
+
+틀 끄기(template_off): 그 장면은 바탕·띠·글자를 하나도 안 그리고 영상이 화면 전체가 된다(원본 끝 3.5초처럼).
+  tail_sec = 영상 끝에서 이 초 안에 **시작하는** 장면(끝 경계에 걸친 장면은 켠 채 둔다). 0 = 끄는 장면 없음.
+  scenes   = 장면 번호 목록(장면꾸미기 장면 = 자막 단위, 0부터). 둘 다 주면 어느 하나에 걸리면 끈다.
+  어느 장면이 꺼지나의 판단은 out/precision20-ui.js specOffAt 한 곳(편집 화면·렌더·썸네일·캡컷이 같은 함수).
 
 글자 층의 자리: role=title·caption 의 x·align 은 가로 기준(center=가운데 x, left=왼쪽 끝, right=오른쪽 끝),
 y 는 첫 줄 칸의 위 끝, 줄 칸 높이 = line_h(없으면 size×1.15 반올림). 줄 n 의 칸 = [y + n·line_h, y + (n+1)·line_h).
@@ -201,10 +207,21 @@ def validate(frame) -> dict:
     for single in ("bg", "video", "title", "caption"):
         if count.get(single, 0) > 1:
             raise FrameError(f"{single} 층은 한 장만 둘 수 있습니다 (받은 수 {count[single]})")
+    off = frame.get("template_off")
+    if off is not None:
+        if not isinstance(off, dict) or set(off) - {"tail_sec", "scenes"}:
+            raise FrameError("template_off: {tail_sec, scenes} 이거나 null 이어야 합니다")
+        tail = off.get("tail_sec")
+        scenes = off.get("scenes")
+        if scenes is not None:
+            if not isinstance(scenes, list) or len(scenes) > MAX_LAYERS:
+                raise FrameError(f"template_off.scenes: 장면 번호 목록(최대 {MAX_LAYERS}개)이거나 null 이어야 합니다")
+            scenes = sorted({_num(n, f"template_off.scenes[{i}]", 0, 9999, integer=True) for i, n in enumerate(scenes)})
+        off = {"tail_sec": None if tail is None else _num(tail, "template_off.tail_sec", 0, 600), "scenes": scenes}
     source = frame.get("source")
     if source is not None and (not isinstance(source, str) or len(source) > 200):
         raise FrameError("source: 200자 이하 글이거나 null 이어야 합니다")
-    return {"canvas": [W, H], "layers": out, "made_by": MADE_BY, "source": source}
+    return {"canvas": [W, H], "layers": out, "template_off": off, "made_by": MADE_BY, "source": source}
 
 
 def canonical(frame: dict) -> str:

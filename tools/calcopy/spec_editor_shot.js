@@ -17,9 +17,13 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.addStyleTag({content:'#a-live-preview{border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}'});
     await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
     const el=await page.$('#a-live-preview');
-    await el.screenshot({path:path.join(request.output,'editor.png')});
+    const tag=request.tag||'editor';
+    await el.screenshot({path:path.join(request.output,tag+'.png')});
+    // 틀 끈 장면 검사용: 이 장면의 영상 칸 · 글자층에 그려진 요소 수(배지 제외)
+    const probe=await page.evaluate(()=>({geometry:window.sceneStyle.geometry(),drawn:[...document.querySelectorAll('.precision-edit-layer > *')].filter(e=>!e.classList.contains('precision-badge')).length}));
+    fs.writeFileSync(path.join(request.output,tag+'-probe.json'),JSON.stringify(probe));
     const snap=await page.evaluate(()=>window.sceneStyle.snapshot());
-    fs.writeFileSync(path.join(request.output,'editor-snapshot.json'),JSON.stringify(snap));
+    fs.writeFileSync(path.join(request.output,tag+'-snapshot.json'),JSON.stringify(snap));
     if(errors.length)throw new Error(errors.join('\n'));
   }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

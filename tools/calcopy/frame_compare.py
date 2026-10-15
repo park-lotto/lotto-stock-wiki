@@ -21,8 +21,9 @@ from shopping_shorts.calcopy_frame import schema, to_snapshot  # noqa: E402
 
 
 def timeline_for(caption):
-    return [{"beat_idx": 0, "t0": 0, "dur": 2, "narration": caption, "caption_lines": [caption], "role": "hook",
-             "primary": {"video_id": "s0", "start": 0, "end": 2}}]
+    # 20초 — 설명서의 template_off(끝 N초 틀 끄기)에 걸리지 않는 첫 장면 하나(짧게 잡으면 첫 장면이 '끝 N초' 안이 돼 틀이 꺼진다)
+    return [{"beat_idx": 0, "t0": 0, "dur": 20, "narration": caption, "caption_lines": [caption], "role": "hook",
+             "primary": {"video_id": "s0", "start": 0, "end": 20}}]
 
 
 def ink_box(im, y0, y1, x0=0, x1=None, dark=200):
