@@ -113,7 +113,7 @@ def build():
             ("studio_make", "한 번에: 설정·팩 받기 → 시작 → 대본 요청까지"),
             ("studio_sync", "웹 스튜디오의 컨셉·내 설정·팩 받기"), ("studio_concepts", "컨셉 목록"),
             ("studio_start", "작업 시작"), ("studio_status", "작업 상태"), ("studio_submit_script", "대본 넣기"),
-            ("studio_confirm", "대본 확인"), ("studio_resume", "멈춘 작업 이어 돌리기")]],
+            ("studio_confirm", "대본 확인"), ("studio_resume", "멈춘 작업 이어 돌리기"), ("studio_result", "완성 영상과 검수 시트")]],
         "compatibility": {"platforms": ["win32", "darwin"], "runtimes": {"python": ">=3.11"}},
         "license": "Proprietary"}
     with open(os.path.join(STAGE, "manifest.json"), "w", encoding="utf-8") as fh:

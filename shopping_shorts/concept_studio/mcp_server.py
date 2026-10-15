@@ -11,7 +11,7 @@
 """
 import time
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver import Image, MCPServer
 from mcp.types import ToolAnnotations
 
 from shopping_shorts.concept_studio import core
@@ -30,7 +30,9 @@ mcp = MCPServer(
         "running 이면 '10~20분 걸린다, 다 되면 물어봐 달라'고 말하고 끝낸다. 고객이 물을 때만 studio_status 로 본다. "
         "★예약 작업·알림·스케줄을 만들지 마라(만들 때마다 고객에게 허용 창이 뜬다). 짧은 간격으로 반복 호출하지 마라. "
         "alive 가 true 면 멈춘 게 아니다 — studio_resume 을 부르지 마라. "
-        "done 이면 final 경로, failed 면 이유를 그대로 전한다. 앱을 껐다 켜서 멈췄으면 studio_resume."),
+        "done 이면 studio_result 로 검수 시트 그림을 **직접 보고** 컷마다 화면이 자막과 맞는지 스스로 판단해 결과와 함께 알린다 "
+        "— 고객에게 '확인해 달라'고 떠넘기지 마라. failed 면 이유를 그대로 전한다. 앱을 껐다 켜서 멈췄으면 studio_resume. "
+        "사람 확인은 대본 1회뿐이다 — 그 밖에는 고객에게 중간 확인을 묻지 말고 끝까지 진행한다."),
 )
 
 
@@ -96,6 +98,18 @@ def studio_resume(job_id: str) -> dict:
     """멈춘 작업(앱을 껐다 켰거나 진행이 없을 때)을 이어서 돌린다."""
     r = core.resume(job_id)
     return r if r.get("alive") and r.get("note", "").startswith("이미") else _wait(job_id, 20)
+
+
+@mcp.tool(annotations=READ)
+def studio_result(job_id: str) -> list:
+    """완성된 작업의 결과 — 영상 경로·길이와 검수 시트(컷마다 화면+자막) 그림. Claude 가 그림을 직접 보고 판단한다."""
+    st = core.status(job_id)
+    if st.get("state") != "done":
+        return [f"아직 완성 전: {st.get('state')} ({st.get('step')})"]
+    out = [f"영상: {st.get('final')} · {st.get('duration')}초"]
+    if st.get("sheet"):
+        out.append(Image(path=st["sheet"]))
+    return out
 
 
 if __name__ == "__main__":
