@@ -170,3 +170,24 @@ def test_line_outline_schema_and_snapshot_depth():
     t["line_outline"] = [[6, 255, 255]]
     with pytest.raises(schema.FrameError):
         schema.validate(f)
+
+
+def test_frames_with_time_spans_and_video_cuts():
+    """틀 여러 장 + 시간축(훅 카드 0~1.5초 / 본문) · 영상 창 컷별 자리 · 자막 아래 붙임 · 누적 자막 valign top."""
+    hook = [{"kind": "bg", "rgb": [64, 64, 64]}, {"kind": "video", "x": 0, "y": 672, "w": 1080, "h": 1026}]
+    body = [{"kind": "bg", "rgb": [255, 255, 255]},
+            {"kind": "video", "x": 165, "y": 750, "w": 750, "h": 897, "anchor": {"below": "caption", "gap": 18},
+             "cuts": [{"t": [1.5, 3.4], "w": 750, "h": 897}, {"t": [9.97, 10.77], "w": 906, "h": 495, "x": 87, "y": 666}]},
+            {"kind": "text", "role": "caption", "x": 540, "y": 554, "w": 1000, "lines": 2, "font": "BMDOHYEON", "size": 67.5,
+             "line_h": 94, "rgb": [0, 0, 0], "valign": "top"}]
+    f = {"canvas": [1080, 1920], "frames": [{"id": "body", "span": [1.5, None], "layers": body}, {"id": "hook", "span": [0, 1.5], "layers": hook}]}
+    spec = schema.validate(f)
+    assert [x["id"] for x in spec["frames"]] == ["hook", "body"]            # 시작 시각 순으로
+    assert schema.layers_at(spec, 0.5)[0]["rgb"] == [64, 64, 64] and schema.layers_at(spec, 10.0)[0]["rgb"] == [255, 255, 255]
+    v = next(l for l in schema.layers_at(spec, frame_id="body") if l["kind"] == "video")
+    assert v["cuts"][0]["x"] is None and v["cuts"][1]["y"] == 666 and v["anchor"] == {"below": "caption", "gap": 18}
+    assert text_layer({"layers": schema.layers_at(spec, 10.0)}, "caption")["valign"] == "top"
+    scene_style.validate_snapshot(to_snapshot.to_snapshot(f))            # 틀 여러 장도 서버 검사 통과(행은 schema 가 검사)
+    bad = copy.deepcopy(f); bad["frames"][0]["span"] = [3, 2]
+    with pytest.raises(schema.FrameError):
+        schema.validate(bad)

@@ -48,8 +48,9 @@ def build_row(frame) -> dict:
     W, H = spec["canvas"]
     rid = frame_id(spec)
     lines, sample = [], {"channel": "숏템메이커", "hook1": "", "hook2": "", "bodyTitle": "", "caption": ""}
-    video = next((l for l in spec["layers"] if l["kind"] == "video"), None)
-    for layer in spec["layers"]:
+    first = schema.layers_at(spec)          # 틀 여러 장이면 첫 틀(편집기 입력칸 힌트·영상 시작용)
+    video = next((l for l in first if l["kind"] == "video"), None)
+    for layer in first:
         if layer["kind"] != "text" or layer["role"] not in ("title", "caption"):
             continue
         binds = ["hook1", "hook2"][:layer["lines"]] if layer["role"] == "title" else ["caption"]
@@ -83,7 +84,7 @@ def to_snapshot(frame, text: dict | None = None) -> dict:
     """설명서 → 라이브 렌더러 스냅샷(scene_style.validate_snapshot 을 통과하는 모양).
     text: 작업의 제목 문구 등({"hook1": .., "hook2": ..}) — 비우면 작업 제목(context.text)을 그대로 쓴다."""
     row = build_row(frame)
-    title = next((l for l in row["frame"]["spec"]["layers"] if l["kind"] == "text" and l["role"] == "title"), None)
+    title = next((l for l in schema.all_layers(row["frame"]["spec"]) if l["kind"] == "text" and l["role"] == "title"), None)
     enter = title and title["enter"]
     snap = {"version": 1, "mode": "continuous", "presetId": row["id"], "customFrame": row, "sceneIndex": 0, "frameKind": "frame",
             # 제목 등장: 설명서에 없으면 'none'(라이브 기본 'zoom-punch' 카메라 확대를 물려받지 않는다)

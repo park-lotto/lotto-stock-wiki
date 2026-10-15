@@ -94,7 +94,7 @@ def validate_snapshot(value):
             raise ValueError("설정 수치가 범위를 벗어났습니다")
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
-    walk(value)
+    walk({k: v for k, v in value.items() if k != "customFrame"})   # 칼카피 틀 행은 check_row 가 설명서 규칙(schema)으로 따로 검사·재생성한다(틀 여러 장이면 깊이·개수가 이 상한을 넘는다)
     for name in ("text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")

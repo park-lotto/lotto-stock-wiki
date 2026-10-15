@@ -1438,7 +1438,32 @@
     if(!row||!/^custom_[0-9a-f]{12}$/.test(String(row.id||''))||!row.frame?.spec)return;
     const i=fixedRows.findIndex(p=>p.id===row.id);if(i>=0)fixedRows[i]=row;else fixedRows.push(row);
   }
-  const specVideo=frame=>(frame.spec.layers||[]).find(l=>l.kind==='video')||null;
+  // 틀 여러 장(frames: [{id, span:[시작,끝|null], layers}]) — 장면 시작 시각이 든 틀의 층. 판단은 이 함수 하나(schema.layers_at 와 같은 규칙)
+  const specTime=i=>Number(sceneContext?.scenes?.[i]?.start)||0;
+  function specLayers(frame,i=sceneIndex){
+    const fr=frame.spec.frames;if(!fr)return frame.spec.layers||[];
+    const t=specTime(i)+1e-6;return (fr.find(f=>f.span[0]<=t&&(f.span[1]==null||t<f.span[1]))||fr[0]).layers;
+  }
+  const specVideo=(frame,i=sceneIndex)=>specLayers(frame,i).find(l=>l.kind==='video')||null;
+  // 장면 i 의 자막 글(편집기에서 고친 글 먼저) — 누적형 자막은 줄바꿈 수로 줄 수를 정한다. input 칸은 줄바꿈을 지우므로 장면 글을 직접 본다
+  function specCaption(i=sceneIndex){
+    const k=`${rows[current].id}:${mode}:${i}:caption`;
+    const t=captionTexts.has(k)?captionTexts.get(k):sceneContext?.scenes?.[i]?.caption;
+    return t!=null?String(t):(i===sceneIndex?String(value('caption')):'');
+  }
+  // 장면 i 의 영상 창 [x,y,w,h] — 컷별 자리(cuts: 그 장면 시각의 컷 w·h, x 없으면 가운데) · 자막 아래 붙임(anchor below caption:
+  //   y = 자막 칸 위 + 그 장면 자막 줄 수 × 줄높이 + gap). 판단은 이 함수 하나 — 영상 칸(specMedia)·바탕 가림(renderSpec)이 함께 쓴다.
+  function specRect(frame,i=sceneIndex){
+    const v=specVideo(frame,i);if(!v)return null;
+    const W=frame.width,t=specTime(i)+1e-6,c=(v.cuts||[]).find(c=>c.t[0]<=t&&t<c.t[1]);
+    const w=c?c.w:v.w,h=c?c.h:v.h,x=c?(c.x!=null?c.x:(W-w)/2):v.x;let y=v.y;
+    if(c&&c.y!=null)y=c.y;
+    else if(v.anchor&&v.anchor.below==='caption'){
+      const cap=specLayers(frame,i).find(l=>l.kind==='text'&&l.role==='caption');
+      if(cap){const txt=specCaption(i).trim();const n=txt?Math.min(cap.lines,txt.split(String.fromCharCode(10)).length):0;y=cap.y+n*cap.line_h+v.anchor.gap;}
+    }
+    return {x,y,w,h};
+  }
   // 틀을 끄는 장면(설명서 template_off)인가 — 판단은 이 함수 하나. 그리기(renderSpec)·영상 칸(specMedia)이 모두 여기에 묻는다.
   //   scenes = 장면 번호 목록(context.scenes 순번, 자막 단위) / tail_sec = 영상 끝에서 이 초 안에 **시작하는** 장면(걸친 장면은 켠 채). 0 은 '끄는 장면 없음'.
   function specOffAt(frame,i){
@@ -1451,14 +1476,14 @@
   }
   function specMedia(frame,index=sceneIndex){
     if(specOffAt(frame,index))return {top:0,height:100};   // 틀 끈 장면 = 영상 전체 화면
-    const v=specVideo(frame),H=frame.height;return v?{top:v.y/H*100,height:v.h/H*100}:{top:0,height:100};}
+    const r=specRect(frame,index),H=frame.height;return r?{top:r.y/H*100,height:r.h/H*100}:{top:0,height:100};}
   const specRgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
   // 줄 n 의 외곽선 — line_outline(줄마다 [px,r,g,b]|null)이 있으면 그것, 없으면 층 outline. 값의 주인은 schema.validate
   const specOutline=(l,n)=>Array.isArray(l.line_outline)?(l.line_outline[n]?{px:l.line_outline[n][0],rgb:l.line_outline[n].slice(1)}:null):l.outline;
   function renderSpec(frame){
     if(specOffAt(frame,sceneIndex))return;   // 틀 끈 장면: 바탕·띠·제목·자막·문구 전부 없음(영상 칸은 specMedia 가 전체로)
-    const W=frame.width,H=frame.height,scale=preview.clientHeight/H,v=specVideo(frame),pct=(n,d)=>n/d*100;
-    for(const l of frame.spec.layers){
+    const W=frame.width,H=frame.height,scale=preview.clientHeight/H,v=specRect(frame,sceneIndex),pct=(n,d)=>n/d*100;
+    for(const l of specLayers(frame,sceneIndex)){
       if(l.kind==='bg'){
         const c=specRgb(l.rgb);
         if(!v){addPatch(0,100,c,0,100,'spec-bg');continue;}
@@ -1481,7 +1506,7 @@
     const W=frame.width,H=frame.height,pct=(n,d)=>n/d*100,fixed=String(l.text||'').split('\n');
     const items=[];
     if(l.role==='title'){for(let n=0;n<l.lines;n++){const bind=n===0?'hook1':n===1?'hook2':'';items.push({bind:bind||'spec-title',text:bind?String(value(bind)).trim():(fixed[n]||''),n,rows:1});}}
-    else if(l.role==='caption'){if(captionVisible())items.push({bind:'caption',text:String(value('caption')).trim(),n:0,rows:l.lines});}
+    else if(l.role==='caption'){if(captionVisible())items.push({bind:'caption',text:specCaption().trim(),n:0,rows:l.lines});}
     else items.push({bind:'spec-'+l.role,text:fixed.join(' '),n:0,rows:1});
     const x0=l.align==='center'?l.x-l.w/2:l.align==='left'?l.x:l.x-l.w;
     for(const it of items){
@@ -1491,7 +1516,7 @@
       Object.assign(el.style,{left:pct(x0,W)+'%',right:'auto',width:pct(l.w,W)+'%',top:pct(l.y+it.n*l.line_h,H)+'%',height:pct(l.line_h*it.rows,H)+'%',
         fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*scale+'px',
         letterSpacing:l.letter_spacing*scale+'px',wordSpacing:(l.word_spacing||0)*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
-        justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],whiteSpace:it.rows>1?'pre-line':'nowrap',wordBreak:'keep-all',
+        justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],alignItems:l.valign==='top'?'flex-start':'center',whiteSpace:it.rows>1?'pre-line':'nowrap',wordBreak:'keep-all',
         webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
         textShadow:l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'none'});
       let ink=el;

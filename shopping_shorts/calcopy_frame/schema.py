@@ -19,6 +19,7 @@
         "shadow":{"dx":0,"dy":4,"blur":6,"rgb":[0,0,0]},   # 그림자(없으면 null)
         "box":{"rgb":[255,255,255],"pad":12,"radius":8},   # 글자 상자(없으면 null)
         "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효) — 글자마다(공백 포함) 뒤에 붙는다(CSS)
+        "valign": "center",                         # 여러 줄 칸 안 세로 자리: center | top(누적형 자막 — 1줄일 때도 첫 줄 자리)
         "word_spacing": 0,                          # 낱말 간격 px — 공백마다 더한다(CSS word-spacing). 자간이 음수면 공백이 같이 줄어 낱말이 붙는다
         "enter":{"kind":"pop","ms":300}},           # 등장 효과(없으면 null)
        {"kind": "text", "role": "caption", ...},   # 자막 — 글은 장면마다 대본 자막이 들어간다
@@ -48,6 +49,8 @@ from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+MAX_FRAMES = 4                      # 틀 여러 장(frames) 상한
+MAX_CUTS = 200                      # 영상 창 컷별 자리(video.cuts) 상한
 MAX_LAYERS = 12                     # scene_style.validate_snapshot walk() 의 목록 상한과 같다(그 상한이 주인)
 KINDS = ("bg", "video", "band", "text", "image")
 ROLES = ("title", "caption", "brand", "label")
@@ -168,6 +171,10 @@ def _text(layer, where, W, H):
     out["italic"] = italic
     out["letter_spacing"] = _num(layer.get("letter_spacing", 0), where + ".letter_spacing", -100, 200)
     out["word_spacing"] = _num(layer.get("word_spacing", 0), where + ".word_spacing", -100, 200)
+    valign = layer.get("valign", "center")
+    if valign not in ("center", "top"):
+        raise FrameError(f"{where}.valign: center|top 이어야 합니다")
+    out["valign"] = valign      # top = 여러 줄 칸에서 글을 위에서부터(누적형 자막: 1줄일 때도 첫 줄 자리)
     enter = _opt(layer, "enter")
     if enter is not None:
         if not isinstance(enter, dict) or enter.get("kind") not in ENTER_KINDS:
@@ -186,21 +193,41 @@ def _text(layer, where, W, H):
     return out
 
 
-def validate(frame) -> dict:
-    """설명서 한 장을 검사하고 정규화한 사본을 돌려준다(원본은 건드리지 않는다). 형식이 틀리면 FrameError."""
-    if not isinstance(frame, dict):
-        raise FrameError("설명서는 객체(dict)여야 합니다")
-    canvas = frame.get("canvas")
-    if not isinstance(canvas, (list, tuple)) or len(canvas) != 2:
-        raise FrameError("canvas: [가로, 세로] 여야 합니다")
-    W = _num(canvas[0], "canvas[0]", 100, 4000, integer=True)
-    H = _num(canvas[1], "canvas[1]", 100, 4000, integer=True)
-    layers = frame.get("layers")
+def _video_cuts(layer, where, W, H):
+    """영상 창의 컷별 자리(가변 그림 칸) — cuts: [{t:[시작,끝], w, h, x?, y?}] (x 없으면 가운데, y 없으면 아래 anchor 또는 층 y).
+    anchor: {"below": "caption", "gap": px} 면 창 위 끝 = 그 장면 자막 줄 수 × 줄높이 아래 + gap(자막이 1→2줄로 늘면 그림이 내려간다).
+    둘 다 없으면 null — 창은 x·y·w·h 그대로."""
+    cuts = layer.get("cuts")
+    if cuts is not None:
+        if not isinstance(cuts, list) or not 1 <= len(cuts) <= MAX_CUTS:
+            raise FrameError(f"{where}.cuts: 1~{MAX_CUTS}개 목록이거나 null 이어야 합니다")
+        norm = []
+        for i, c in enumerate(cuts):
+            wc = f"{where}.cuts[{i}]"
+            if not isinstance(c, dict) or not isinstance(c.get("t"), list) or len(c["t"]) != 2:
+                raise FrameError(f"{wc}: {{t:[시작,끝], w, h, x?}} 이어야 합니다")
+            a, b = _num(c["t"][0], wc + ".t[0]", 0, 3600), _num(c["t"][1], wc + ".t[1]", 0, 3600)
+            if b <= a:
+                raise FrameError(f"{wc}.t: 끝이 시작보다 뒤여야 합니다")
+            item = {"t": [a, b], "w": _num(c.get("w"), wc + ".w", 1, W), "h": _num(c.get("h"), wc + ".h", 1, H),
+                    "x": None if c.get("x") is None else _num(c["x"], wc + ".x", -W, W),
+                    "y": None if c.get("y") is None else _num(c["y"], wc + ".y", -H, H)}   # y 없으면 anchor(자막 아래) 또는 층 y
+            norm.append(item)
+        cuts = norm
+    anchor = layer.get("anchor")
+    if anchor is not None:
+        if not isinstance(anchor, dict) or anchor.get("below") != "caption":
+            raise FrameError(f"{where}.anchor: {{below: 'caption', gap}} 이거나 null 이어야 합니다")
+        anchor = {"below": "caption", "gap": _num(anchor.get("gap", 0), where + ".anchor.gap", -500, 500)}
+    return cuts, anchor
+
+
+def _layers(layers, W, H, where0: str) -> list:
     if not isinstance(layers, list) or not 1 <= len(layers) <= MAX_LAYERS:
-        raise FrameError(f"layers: 1~{MAX_LAYERS}개 목록이어야 합니다")
+        raise FrameError(f"{where0}: 1~{MAX_LAYERS}개 목록이어야 합니다")
     out, count = [], {}
     for i, layer in enumerate(layers):
-        where = f"layers[{i}]"
+        where = f"{where0}[{i}]"
         if not isinstance(layer, dict) or layer.get("kind") not in KINDS:
             raise FrameError(f"{where}.kind: {KINDS} 중 하나여야 합니다")
         kind = layer["kind"]
@@ -211,6 +238,7 @@ def validate(frame) -> dict:
         elif kind == "video":
             item = {"kind": "video", **_rect(layer, where, W, H),
                     "radius": _num(layer.get("radius", 0), where + ".radius", 0, 500)}
+            item["cuts"], item["anchor"] = _video_cuts(layer, where, W, H)
         elif kind == "band":
             item = {"kind": "band", **_rect(layer, where, W, H), "rgb": _rgb(layer.get("rgb"), where + ".rgb"),
                     "radius": _num(layer.get("radius", 0), where + ".radius", 0, 500)}
@@ -227,6 +255,43 @@ def validate(frame) -> dict:
     for single in ("bg", "video", "title", "caption"):
         if count.get(single, 0) > 1:
             raise FrameError(f"{single} 층은 한 장만 둘 수 있습니다 (받은 수 {count[single]})")
+    return out
+
+
+def validate(frame) -> dict:
+    """설명서 한 장을 검사하고 정규화한 사본을 돌려준다(원본은 건드리지 않는다). 형식이 틀리면 FrameError."""
+    if not isinstance(frame, dict):
+        raise FrameError("설명서는 객체(dict)여야 합니다")
+    canvas = frame.get("canvas")
+    if not isinstance(canvas, (list, tuple)) or len(canvas) != 2:
+        raise FrameError("canvas: [가로, 세로] 여야 합니다")
+    W = _num(canvas[0], "canvas[0]", 100, 4000, integer=True)
+    H = _num(canvas[1], "canvas[1]", 100, 4000, integer=True)
+    frames = frame.get("frames")
+    if frames is not None:
+        # 틀 여러 장 + 시간축(구간마다 다른 틀 — 예: 훅 카드 0~1.5초 / 본문 게시글). template_off 의 일반화.
+        if not isinstance(frames, list) or not 1 <= len(frames) <= MAX_FRAMES:
+            raise FrameError(f"frames: 1~{MAX_FRAMES}개 목록이어야 합니다")
+        fo, ids = [], set()
+        for k, fr in enumerate(frames):
+            wk = f"frames[{k}]"
+            if not isinstance(fr, dict) or not isinstance(fr.get("id"), str) or not re.fullmatch(r"[A-Za-z0-9_가-힣-]{1,20}", fr["id"]):
+                raise FrameError(f"{wk}.id: 1~20자 이름이어야 합니다")
+            if fr["id"] in ids:
+                raise FrameError(f"{wk}.id: 이름이 겹칩니다({fr['id']})")
+            ids.add(fr["id"])
+            sp = fr.get("span")
+            if not isinstance(sp, list) or len(sp) != 2:
+                raise FrameError(f"{wk}.span: [시작초, 끝초|null] 이어야 합니다")
+            a = _num(sp[0], wk + ".span[0]", 0, 3600)
+            b = None if sp[1] is None else _num(sp[1], wk + ".span[1]", 0, 3600)
+            if b is not None and b <= a:
+                raise FrameError(f"{wk}.span: 끝이 시작보다 뒤여야 합니다")
+            fo.append({"id": fr["id"], "span": [a, b], "layers": _layers(fr.get("layers"), W, H, wk + ".layers")})
+        fo.sort(key=lambda f: f["span"][0])
+        body = {"frames": fo}
+    else:
+        body = {"layers": _layers(frame.get("layers"), W, H, "layers")}
     off = frame.get("template_off")
     if off is not None:
         if not isinstance(off, dict) or set(off) - {"tail_sec", "scenes"}:
@@ -241,7 +306,25 @@ def validate(frame) -> dict:
     source = frame.get("source")
     if source is not None and (not isinstance(source, str) or len(source) > 200):
         raise FrameError("source: 200자 이하 글이거나 null 이어야 합니다")
-    return {"canvas": [W, H], "layers": out, "template_off": off, "made_by": MADE_BY, "source": source}
+    return {"canvas": [W, H], **body, "template_off": off, "made_by": MADE_BY, "source": source}
+
+
+def layers_at(spec: dict, t: float | None = None, frame_id: str | None = None) -> list:
+    """정규화된 설명서의 층 목록 — 틀 여러 장이면 frame_id 또는 시각 t 가 속한 틀(없으면 첫 틀). 그리는 쪽 specLayers 와 같은 규칙."""
+    if "frames" not in spec:
+        return spec["layers"]
+    if frame_id is not None:
+        return next(f["layers"] for f in spec["frames"] if f["id"] == frame_id)
+    if t is not None:
+        for f in spec["frames"]:
+            a, b = f["span"]
+            if a <= t and (b is None or t < b):
+                return f["layers"]
+    return spec["frames"][0]["layers"]
+
+
+def all_layers(spec: dict) -> list:
+    return [l for f in spec["frames"] for l in f["layers"]] if "frames" in spec else spec["layers"]
 
 
 def canonical(frame: dict) -> str:
