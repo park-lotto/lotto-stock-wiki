@@ -1,0 +1,16 @@
+{"canvas": [1080, 1920],
+ "layers": [
+  {"kind": "bg", "rgb": [251, 248, 252]},
+  {"kind": "video", "x": 0, "y": 426, "w": 1080, "h": 1006, "radius": 0},
+  {"kind": "text", "role": "title", "x": 540, "y": 224, "w": 1000, "align": "center", "lines": 2,
+   "font": "GmarketSansBold", "size": 92, "line_h": 94, "rgb": [0, 0, 0], "line_rgb": null,
+   "outline": {"px": 0, "rgb": [0, 0, 0]}, "shadow": null, "box": null, "italic": false, "letter_spacing": 0,
+   "enter": null, "text": "닿으면 스피커\n소름 돋는 음질 수준"},
+  {"kind": "text", "role": "caption", "x": 540, "y": 1468, "w": 1000, "align": "center", "lines": 1,
+   "font": "BMJUA", "size": 70, "line_h": 70, "rgb": [0, 0, 0], "line_rgb": null,
+   "outline": null, "shadow": null, "box": null, "italic": false, "letter_spacing": -3, "enter": null},
+  {"kind": "text", "role": "brand", "text": "[광고]", "x": 1060, "y": 10, "w": 150, "align": "right", "lines": 1,
+   "font": "GmarketSansBold", "size": 54, "line_h": 60, "rgb": [190, 189, 192], "line_rgb": null,
+   "outline": {"px": 3, "rgb": [89, 88, 91]}, "shadow": null, "box": null, "italic": true, "letter_spacing": -4, "enter": null}
+ ],
+ "made_by": "calcopy_frame v1", "source": "ZdeZRtCeAC4"}

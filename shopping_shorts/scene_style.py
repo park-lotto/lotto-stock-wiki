@@ -62,11 +62,21 @@ def validate_snapshot(value):
     mode = value.get("mode")
     if mode not in ("story", "continuous"):
         raise ValueError("템플릿 종류가 올바르지 않습니다")
-    data_file = "precision20-data.js" if mode == "story" else "continuous20-data.js"
-    raw = (ROOT / "out" / data_file).read_text(encoding="utf-8-sig").strip()
-    rows = json.loads(raw.split("=", 1)[1].rstrip(";\r\n "))
-    if value.get("presetId") not in {p["id"] for p in rows}:
-        raise ValueError("알 수 없는 템플릿입니다")
+    if value.get("customFrame") is not None:
+        # 칼카피 틀 설명서(설계 2026-10-15 §6-3): 데이터 파일에 없는 틀을 스냅샷에 실어 보낸다. 실려 온 행은 믿지 않고
+        #   행 안의 설명서로 다시 만든다 — 행 모양의 주인은 calcopy_frame.to_snapshot.build_row 하나.
+        from .calcopy_frame.to_snapshot import check_row
+        if mode != "continuous":
+            raise ValueError("칼카피 틀은 고정형(continuous)만 됩니다")
+        value = {**value, "customFrame": check_row(value["customFrame"])}
+        if value.get("presetId") != value["customFrame"]["id"]:
+            raise ValueError("알 수 없는 템플릿입니다")
+    else:
+        data_file = "precision20-data.js" if mode == "story" else "continuous20-data.js"
+        raw = (ROOT / "out" / data_file).read_text(encoding="utf-8-sig").strip()
+        rows = json.loads(raw.split("=", 1)[1].rstrip(";\r\n "))
+        if value.get("presetId") not in {p["id"] for p in rows}:
+            raise ValueError("알 수 없는 템플릿입니다")
     def walk(obj, depth=0):
         if depth > 8:
             raise ValueError("설정이 너무 복잡합니다")
@@ -177,7 +187,7 @@ def validate_snapshot(value):
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake"):
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake","none"):   # none = 제목 등장 없음(칼카피 틀 설명서, precision20-ui.js runHookMotion 과 짝)
         raise ValueError("제목 효과가 올바르지 않습니다")
     if value.get("hookBandMotion") not in (None, "", "rise", "grow"):
         raise ValueError("흰 띠 효과 값이 올바르지 않습니다")
@@ -260,7 +270,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "customFrame", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 

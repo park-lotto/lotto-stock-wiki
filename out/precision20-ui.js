@@ -118,6 +118,7 @@
   };
   const mediaBounds=(frame,presetId)=>{
     if(!frame||noTemplate||(presetId||rows[current]?.id)===PLAIN_ID)return {top:0,height:100};   // 템플릿 없음·원본 = 영상이 화면 전체
+    if(frame.spec)return specMedia(frame);   // 칼카피 틀 설명서: 영상 창은 설명서 값 그대로(고정형 제목칸 표준 26% 를 타지 않는다)
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
@@ -1007,6 +1008,7 @@
         }
       }
     }
+    if(hookMotion==='none')return duration;   // 제목 등장 없음(칼카피 틀 설명서에 등장이 없을 때) — 아래 else(번쩍)로 떨어지지 않게
     if(CAMERA_MOTIONS.includes(hookMotion)){
       // 렌더(sceneStyleExporting)는 카메라를 PNG에 굽지 않는다 — FFmpeg가 cameraAt 숫자로 따로 건다(중복 확대 방지).
       const total=hookMotion==='zoom-punch'?time(760):hookMotion==='push-in'?Math.round(1500*hookMotionSpeed/.72):Math.round(hookEndMs());
@@ -1428,6 +1430,65 @@
     grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
     renderEdit();
   }
+  // ── 칼카피 틀 설명서 모드(설계 docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §6-3) ──
+  //   frame.spec = 정규화된 설명서. 값의 주인은 shopping_shorts/calcopy_frame/schema.validate — 여기서 기본값을 다시 정하지 않는다.
+  //   편집 화면·렌더 레이어(render_layers)·썸네일(render_layer_one)·캡컷이 모두 이 함수들을 거친다(같은 페이지를 찍는다).
+  //   검사: tools/calcopy/check_spec_downstream.py(편집 화면 · 렌더 레이어 · 썸네일 · 합성 잉크 대조)
+  function upsertSpecRow(row){
+    if(!row||!/^custom_[0-9a-f]{12}$/.test(String(row.id||''))||!row.frame?.spec)return;
+    const i=fixedRows.findIndex(p=>p.id===row.id);if(i>=0)fixedRows[i]=row;else fixedRows.push(row);
+  }
+  const specVideo=frame=>(frame.spec.layers||[]).find(l=>l.kind==='video')||null;
+  function specMedia(frame){const v=specVideo(frame),H=frame.height;return v?{top:v.y/H*100,height:v.h/H*100}:{top:0,height:100};}
+  const specRgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
+  function renderSpec(frame){
+    const W=frame.width,H=frame.height,scale=preview.clientHeight/H,v=specVideo(frame),pct=(n,d)=>n/d*100;
+    for(const l of frame.spec.layers){
+      if(l.kind==='bg'){
+        const c=specRgb(l.rgb);
+        if(!v){addPatch(0,100,c,0,100,'spec-bg');continue;}
+        // 영상 창만 비우고 나머지를 바탕색으로 덮는다 — 영상 창은 투명으로 남아 렌더 합성(compose)이 그 자리에 영상을 둔다
+        const vy0=Math.max(0,v.y),vy1=Math.min(H,v.y+v.h),vx0=Math.max(0,v.x),vx1=Math.min(W,v.x+v.w);
+        if(vy0>0)addPatch(0,pct(vy0,H),c,0,100,'spec-bg');
+        if(vy1<H)addPatch(pct(vy1,H),pct(H-vy1,H),c,0,100,'spec-bg');
+        if(vx0>0)addPatch(pct(vy0,H),pct(vy1-vy0,H),c,0,pct(vx0,W),'spec-bg');
+        if(vx1<W)addPatch(pct(vy0,H),pct(vy1-vy0,H),c,pct(vx1,W),pct(W-vx1,W),'spec-bg');
+      }else if(l.kind==='band'){
+        const el=addPatch(pct(l.y,H),pct(l.h,H),specRgb(l.rgb),pct(l.x,W),pct(l.w,W),'spec-band');el.style.borderRadius=l.radius*scale+'px';
+      }else if(l.kind==='image'){
+        const img=document.createElement('img');img.className='precision-patch spec-image';img.alt='';img.src=l.src;
+        Object.assign(img.style,{left:pct(l.x,W)+'%',top:pct(l.y,H)+'%',width:pct(l.w,W)+'%',height:pct(l.h,H)+'%',objectFit:'contain'});layer.insertBefore(img,badge);
+      }else if(l.kind==='text')specTexts(l,frame,scale);
+    }
+  }
+  // 글자 층 → 줄마다 글자 요소. 제목 1·2줄 = 작업 제목(hook1·hook2), 자막 = 지금 장면 자막, 그 밖(brand·label) = 설명서의 고정 문구.
+  function specTexts(l,frame,scale){
+    const W=frame.width,H=frame.height,pct=(n,d)=>n/d*100,fixed=String(l.text||'').split('\n');
+    const items=[];
+    if(l.role==='title'){for(let n=0;n<l.lines;n++){const bind=n===0?'hook1':n===1?'hook2':'';items.push({bind:bind||'spec-title',text:bind?String(value(bind)).trim():(fixed[n]||''),n,rows:1});}}
+    else if(l.role==='caption'){if(captionVisible())items.push({bind:'caption',text:String(value('caption')).trim(),n:0,rows:l.lines});}
+    else items.push({bind:'spec-'+l.role,text:fixed.join(' '),n:0,rows:1});
+    const x0=l.align==='center'?l.x-l.w/2:l.align==='left'?l.x:l.x-l.w;
+    for(const it of items){
+      if(!it.text)continue;   // 글이 없으면 그리지 않는다(빈 상자·빈 줄 없음)
+      const color=specRgb(l.line_rgb&&l.line_rgb[it.n]?l.line_rgb[it.n]:l.rgb);
+      const el=document.createElement('div');el.className='precision-text spec-text';el.dataset.editBind=it.bind;el.dataset.specRole=l.role;
+      Object.assign(el.style,{left:pct(x0,W)+'%',right:'auto',width:pct(l.w,W)+'%',top:pct(l.y+it.n*l.line_h,H)+'%',height:pct(l.line_h*it.rows,H)+'%',
+        fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*scale+'px',
+        letterSpacing:l.letter_spacing*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
+        justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],whiteSpace:it.rows>1?'normal':'nowrap',wordBreak:'keep-all',
+        webkitTextStroke:l.outline&&l.outline.px>0?`${2*l.outline.px*scale}px ${specRgb(l.outline.rgb)}`:'0px',paintOrder:'stroke fill',
+        textShadow:l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'none'});
+      let ink=el;
+      if(l.box){ink=document.createElement('span');Object.assign(ink.style,{background:specRgb(l.box.rgb),padding:`0 ${l.box.pad*scale}px`,borderRadius:l.box.radius*scale+'px'});el.append(ink);}
+      ink.textContent=it.text;
+      layer.insertBefore(el,badge);
+      // 칸 폭(w)을 넘으면 넘지 않을 때까지 줄인다 — 잘리거나 칸 밖으로 나가는 일은 없다(바닥 40%)
+      const size0=l.size*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};
+      let size=size0;while(over()&&size>size0*.4){size*=.97;el.style.fontSize=size+'px';}
+      el.dataset.specFit=String(Math.round(size/size0*100));
+    }
+  }
   function renderEdit(){
     // 글자층을 비워야 scene-style-connect의 감시(MutationObserver)가 돌아 영상 틀을 화면 전체로 다시 잡는다.
     if(noTemplate){[...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());layer.hidden=true;Object.assign(media.style,{top:'0%',height:'100%'});return;}
@@ -1453,6 +1514,7 @@
     {const wrap=root.querySelector('[data-scene-peek]');if(wrap){wrap.hidden=!(sceneNow?.media_points?.length===5);wrap.querySelectorAll('[data-peek]').forEach(b=>b.classList.toggle('on',Number(b.dataset.peek)===scenePeek));}}
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     badge.hidden=!!frame.design_label;
+    if(frame.spec){renderSpec(frame);syncMediaLayout();return;}   // 칼카피 틀 설명서 모드 — 고정형 20종의 표준 배치 규칙을 하나도 타지 않고 설명서대로만 그린다(영상 칸 그림 교체는 위에서 이미 했다)
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
     // ★원본(plain)은 띠가 없는 틀이다 — 고정형 기본 띠(위/아래 색 띠)를 물려받으면
@@ -2247,7 +2309,7 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(CAPTION_PACKS[captionPack]?{captionPack}:{}),...(motionPack==='off'?{motionPack:'off'}:motionPackNo()?{motionPack:String(motionPackNo())}:{}),...(fxPresetSel?{fxPreset:structuredClone(fxPresetSel)}:{}),...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:WORD_FX_GROWS[wordFx.grow]?wordFx.grow:''}}:{}),fontSet,fontSets:{...fontSets},...(Object.keys(fontPick).length?{fontPick:{...fontPick}}:{}),titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,...(rows[current].frame?.spec?{customFrame:rows[current]}:{}),sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(CAPTION_PACKS[captionPack]?{captionPack}:{}),...(motionPack==='off'?{motionPack:'off'}:motionPackNo()?{motionPack:String(motionPackNo())}:{}),...(fxPresetSel?{fxPreset:structuredClone(fxPresetSel)}:{}),...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:WORD_FX_GROWS[wordFx.grow]?wordFx.grow:''}}:{}),fontSet,fontSets:{...fontSets},...(Object.keys(fontPick).length?{fontPick:{...fontPick}}:{}),titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
@@ -2262,6 +2324,7 @@
         effects=saved.effects||{};
         fxPresetSel=validFxPreset(saved.fxPreset);   // 관제 158 — 새 영상은 부르는 쪽이 api.snapshot()(마지막에 고른 프리셋)을 넘긴다
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';captionPack=CAPTION_PACKS[saved.captionPack]?saved.captionPack:'';motionPack=saved.motionPack==='off'||MOTION_PACKS[Number(saved.motionPack)-1]?String(saved.motionPack):'';wordFx={style:'',color:'',grow:'',...(saved.wordFx&&typeof saved.wordFx==='object'?saved.wordFx:{})};if(wordFx.grow===true)wordFx.grow='hold';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');textSpacing=textLookSigned(saved.textSpacing,-20,60);textLeading=textLookSigned(saved.textLeading,-30,100);window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        upsertSpecRow(saved.customFrame);   // 칼카피 틀 설명서(설계 2026-10-15 §6-3): 저장본에 실린 틀을 고정형 목록에 넣는다 — 그 뒤는 고정형과 같은 길
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         {const sel=mode==='continuous'?'[data-template-mode="continuous"]':(saved.presetId===PLAIN_ID?'[data-plain-pick]':`[data-frame-rule="${frameRule}"]`);const b=modeBar.querySelector(sel);if(b)markMode(b);}
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));

@@ -1,0 +1,133 @@
+"""칼카피 틀 설명서(frame.json) — 형식 검사 · 스냅샷 변환 · 라이브 렌더러 설명서 모드 실제 렌더.
+
+설계 docs/superpowers/specs/2026-10-15-칼카피엔진-design.md §5·§6-3.
+(c)는 실제 렌더(node+puppeteer, render_layer_one)를 돌린다 — 그림에서 잉크·투명을 잰다.
+"""
+import copy
+import json
+import shutil
+from pathlib import Path
+
+import pytest
+from PIL import Image
+
+from shopping_shorts import scene_style
+from shopping_shorts.calcopy_frame import schema, to_snapshot
+
+ROOT = Path(__file__).resolve().parents[2]
+FRAME_A = ROOT / "shopping_shorts/calcopy_frame/examples/frame_A_ZdeZRtCeAC4.json"
+
+
+def frame_a():
+    return json.loads(FRAME_A.read_text(encoding="utf-8"))
+
+
+def text_layer(frame, role):
+    return next(l for l in frame["layers"] if l.get("kind") == "text" and l.get("role") == role)
+
+
+# ── (a) 형식 검사 ──
+def test_frame_a_valid_and_zero_null_are_values():
+    spec = schema.validate(frame_a())
+    title = text_layer(spec, "title")
+    assert title["outline"] == {"px": 0, "rgb": [0, 0, 0]}      # px 0 = 유효(외곽선 없음), 기본값으로 튀지 않는다
+    assert title["letter_spacing"] == 0 and title["line_rgb"] is None and title["shadow"] is None
+    video = next(l for l in spec["layers"] if l["kind"] == "video")
+    assert video["x"] == 0 and video["radius"] == 0              # 0 좌표·0 모서리 그대로
+    cap = text_layer(spec, "caption")
+    assert cap["outline"] is None and cap["enter"] is None
+
+
+def test_line_h_default_only_when_absent():
+    f = frame_a(); t = text_layer(f, "caption"); t.pop("line_h")
+    assert text_layer(schema.validate(f), "caption")["line_h"] == round(t["size"] * 1.15)
+    f = frame_a(); text_layer(f, "caption")["line_h"] = None
+    assert text_layer(schema.validate(f), "caption")["line_h"] == round(text_layer(f, "caption")["size"] * 1.15)
+
+
+@pytest.mark.parametrize("break_it, word", [
+    (lambda f: text_layer(f, "title").__setitem__("font", "NoSuchFont"), "font"),
+    (lambda f: text_layer(f, "title").__setitem__("rgb", [0, 0, 256]), "rgb"),
+    (lambda f: text_layer(f, "title").__setitem__("size", True), "size"),            # 참/거짓은 숫자가 아니다
+    (lambda f: text_layer(f, "brand").__setitem__("text", ""), "text"),
+    (lambda f: f["layers"].append({"kind": "video", "x": 0, "y": 0, "w": 10, "h": 10}), "video"),
+    (lambda f: f["layers"].extend([{"kind": "band", "x": 0, "y": 0, "w": 1, "h": 1, "rgb": [0, 0, 0]}] * 9), "layers"),
+    (lambda f: text_layer(f, "caption").__setitem__("enter", {"kind": "pop", "ms": 300}), "enter"),
+    (lambda f: f.__setitem__("canvas", [1080]), "canvas"),
+])
+def test_validate_rejects(break_it, word):
+    f = frame_a(); break_it(f)
+    with pytest.raises(schema.FrameError) as err:
+        schema.validate(f)
+    assert word in str(err.value)
+
+
+# ── (b) 스냅샷 변환 → 서버 검사 ──
+def test_to_snapshot_passes_validate_snapshot():
+    snap = to_snapshot.to_snapshot(frame_a())
+    ok = scene_style.validate_snapshot(copy.deepcopy(snap))
+    assert ok["presetId"] == snap["presetId"] and ok["presetId"].startswith("custom_")
+    assert ok["customFrame"]["frame"]["spec"] == schema.validate(frame_a())
+    assert ok["hookMotion"] == "none" and ok["motionPack"] == "off"   # 등장 없음 = 라이브 기본(줌 펀치)을 물려받지 않는다
+    assert to_snapshot.frame_id(schema.validate(frame_a())) == snap["presetId"]   # 같은 설명서 = 같은 번호
+
+
+def test_validate_snapshot_rebuilds_row_and_rejects_tamper():
+    snap = to_snapshot.to_snapshot(frame_a())
+    junk = copy.deepcopy(snap); junk["customFrame"]["frame"]["lines"] = []; junk["customFrame"]["evil"] = 1
+    rebuilt = scene_style.validate_snapshot(junk)["customFrame"]
+    assert "evil" not in rebuilt and rebuilt["frame"]["lines"]               # 실려 온 행은 설명서로 다시 만든다
+    moved = copy.deepcopy(snap); text_layer(moved["customFrame"]["frame"]["spec"], "caption")["y"] += 5
+    with pytest.raises(ValueError):                                          # 설명서를 바꾸고 번호는 그대로 = 거절
+        scene_style.validate_snapshot(moved)
+    story = copy.deepcopy(snap); story["mode"] = "story"
+    with pytest.raises(ValueError):
+        scene_style.validate_snapshot(story)
+    ghost = {"version": 1, "mode": "continuous", "presetId": snap["presetId"]}   # 행 없이 번호만 = 모르는 틀
+    with pytest.raises(ValueError):
+        scene_style.validate_snapshot(ghost)
+
+
+def test_existing_fixed_template_still_validates():
+    ok = scene_style.validate_snapshot({"version": 1, "mode": "continuous", "presetId": "fixed_s0034", "hookMotion": "none"})
+    assert ok["presetId"] == "fixed_s0034" and "customFrame" not in ok
+
+
+# ── (c) 라이브 렌더러 설명서 모드 실제 렌더 ──
+def _renderer_ready():
+    """렌더러(tools/render_scene_style.js)가 require 하는 puppeteer 를 node 가 찾나 — 트랙 폴더는 상위(main) node_modules 를 쓴다."""
+    import subprocess
+    if not shutil.which("node"):
+        return False
+    probe = subprocess.run(["node", "-e", "require.resolve('puppeteer',{paths:[process.argv[1]]})", str(ROOT / "tools")],
+                           capture_output=True, timeout=30)
+    return probe.returncode == 0
+
+
+@pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
+def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
+    frame = frame_a()
+    spec = schema.validate(frame)
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
+    cap = "아니 이거 해외 릴스에서 맨날 보이길래"
+    timeline = [{"beat_idx": 0, "t0": 0, "dur": 2, "narration": cap, "caption_lines": [cap], "role": "hook",
+                 "primary": {"video_id": "s0", "start": 0, "end": 2}}]
+    png = scene_style.render_layer_one(timeline, snap, tmp_path, 0, {"text": "닿으면 스피커\n소름 돋는 음질 수준"}, "t")
+    im = Image.open(png).convert("RGBA"); px = im.load()
+    assert im.size == (1080, 1920)
+
+    def ink(y0, y1):   # 불투명하고 어두운 점(글자) 수
+        return sum(1 for y in range(int(y0), int(y1), 2) for x in range(0, 1080, 3)
+                   if px[x, y][3] > 200 and sum(px[x, y][:3]) < 200)
+    title, caption = text_layer(spec, "title"), text_layer(spec, "caption")
+    t0, t1 = title["y"], title["y"] + title["lines"] * title["line_h"]
+    c0, c1 = caption["y"], caption["y"] + caption["line_h"]
+    assert ink(t0, t1) > 2000, ink(t0, t1)
+    assert ink(c0, c1) > 800, ink(c0, c1)
+    # 원본 프레임에서 잰 자리(제목 223~397·자막 1467~1528) — 설명서가 그 자리에 그려지는지
+    assert ink(223, 397) > 2000 and ink(1467, 1528) > 800
+    assert ink(1560, 1900) == 0                                   # 자막 아래는 바탕만
+    video = next(l for l in spec["layers"] if l["kind"] == "video")
+    alpha = [px[x, y][3] for y in range(video["y"] + 4, video["y"] + video["h"] - 4, 25) for x in range(0, 1080, 40)]
+    assert max(alpha) == 0                                         # 영상 창은 투명(omitBackground) — 합성이 영상을 둔다
+    assert px[540, video["y"] - 6][3] == 255 and px[540, 1800][3] == 255   # 바탕은 불투명
