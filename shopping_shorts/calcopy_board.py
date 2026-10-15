@@ -69,3 +69,30 @@ def collect(root: Path | None = None) -> dict:
     channels.sort(key=lambda c: c["updated"], reverse=True)
     return {"steps": [{"key": k, "label": l} for k, l in STEPS],
             "channels": channels, "errors": errors}
+
+
+def ledger_path(slug: str, root: Path | None = None) -> Path:
+    return (Path(root) if root else ROOT) / "channel" / slug / "calcopy.json"
+
+
+def load(slug: str, root: Path | None = None) -> dict:
+    p = ledger_path(slug, root)
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {"steps": {}}
+
+
+def set_step(slug: str, key: str, state: str, note: str = "", files: list[str] | None = None,
+             date: str = "", root: Path | None = None, **top) -> dict:
+    """원장 쓰기의 주인 — 자동 실행기·손 기록 모두 이 함수로만 쓴다. top 은 name·url·concept·stats·next."""
+    import datetime as _dt
+    if key not in dict(STEPS) or state not in STATES:
+        raise ValueError(f"단계/상태가 틀림: {key} {state}")
+    d = load(slug, root)
+    for k, v in top.items():
+        if v is not None:
+            d[k] = v
+    d.setdefault("steps", {})[key] = {"state": state, "date": date or _dt.date.today().isoformat(),
+                                     "note": note, "files": list(files or [])}
+    p = ledger_path(slug, root)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    return d
