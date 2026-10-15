@@ -624,7 +624,7 @@
     const paint = () => { pop.querySelector('.v').textContent = Math.round(vol * 100) + '%'; };
     pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span>
       <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>
-      <div class="row"><select class="swap"><option value="">다른 소리로 바꾸기…</option></select></div>`;
+      <div class="row"><select class="swap" title="고르면 바로 바뀝니다"></select></div>`;
     document.body.appendChild(pop); paint();
     pop.addEventListener('click', e => e.stopPropagation());
     const job = new URLSearchParams(location.search).get('job') || window.JOB_ID;
@@ -648,15 +648,15 @@
     // 바꾸기 — 팩 소리는 팩 안 다른 소리(pack_edit.swap), 칸 효과음은 효과음 서랍 소리(/sfx asset_id, 종전 길)
     const sel = pop.querySelector('.swap'), esc2 = x => String(x).replace(/[<>"&]/g, '');
     if (s.kind === 'pack') {
-      sel.innerHTML += (window.SFX_PACK_SLOTS || []).map(o => `<option value="${o.slot}" ${o.slot === s.name ? 'disabled' : ''}>${esc2(o.label)}${o.slot === s.slot && o.slot !== s.name ? ' (원래 소리)' : ''}</option>`).join('');
+      sel.innerHTML += (window.SFX_PACK_SLOTS || []).map(o => `<option value="${o.slot}" ${o.slot === s.name ? 'selected' : ''}>${esc2(o.label)}${o.slot === s.slot && o.slot !== s.name ? ' (원래 소리)' : ''}</option>`).join('');
     } else if (typeof window.sfxBankList === 'function') {
       window.sfxBankList().then(list => {
         const cats = {}; (list || []).forEach(a => { (cats[a.cat || '기타'] = cats[a.cat || '기타'] || []).push(a); });
-        sel.innerHTML += Object.keys(cats).map(c => `<optgroup label="${esc2(c)}">${cats[c].map(a => `<option value="${a.id}" ${String(a.id) === String(s.asset_id) ? 'disabled' : ''}>${esc2(a.title)}</option>`).join('')}</optgroup>`).join('');
+        sel.innerHTML += Object.keys(cats).map(c => `<optgroup label="${esc2(c)}">${cats[c].map(a => `<option value="${a.id}" ${String(a.id) === String(s.asset_id) ? 'selected' : ''}>${esc2(a.title)}</option>`).join('')}</optgroup>`).join('');
       });
     }
     sel.onchange = async () => {
-      const v = sel.value; if (!v) return;
+      const v = sel.value; if (!v || v === String(s.kind === 'pack' ? s.name : s.asset_id)) return;
       if (s.kind === 'pack') { if (await sendSwap(v)) close(); return; }
       const res = await fetch(`/api/produce/mix/${job}/sfx`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ beat_idx: bi, asset_id: +v }) });
       const d = await res.json().catch(() => ({}));
