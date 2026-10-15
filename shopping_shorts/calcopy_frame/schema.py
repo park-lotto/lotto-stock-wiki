@@ -18,7 +18,8 @@
         "line_outline":[null,[6,255,255,255]],      # 줄마다 외곽선 [px,r,g,b]|null(없으면 null = 모든 줄 outline)
         "shadow":{"dx":0,"dy":4,"blur":6,"rgb":[0,0,0]},   # 그림자(없으면 null)
         "box":{"rgb":[255,255,255],"pad":12,"radius":8},   # 글자 상자(없으면 null)
-        "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효)
+        "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효) — 글자마다(공백 포함) 뒤에 붙는다(CSS)
+        "word_spacing": 0,                          # 낱말 간격 px — 공백마다 더한다(CSS word-spacing). 자간이 음수면 공백이 같이 줄어 낱말이 붙는다
         "enter":{"kind":"pop","ms":300}},           # 등장 효과(없으면 null)
        {"kind": "text", "role": "caption", ...},   # 자막 — 글은 장면마다 대본 자막이 들어간다
        {"kind": "text", "role": "brand", "text": "[광고]", ...},   # 고정 문구 — text 필수
@@ -166,6 +167,7 @@ def _text(layer, where, W, H):
         raise FrameError(f"{where}.italic: 참/거짓이어야 합니다")
     out["italic"] = italic
     out["letter_spacing"] = _num(layer.get("letter_spacing", 0), where + ".letter_spacing", -100, 200)
+    out["word_spacing"] = _num(layer.get("word_spacing", 0), where + ".word_spacing", -100, 200)
     enter = _opt(layer, "enter")
     if enter is not None:
         if not isinstance(enter, dict) or enter.get("kind") not in ENTER_KINDS:

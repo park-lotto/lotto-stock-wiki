@@ -38,6 +38,7 @@
    ],
    "line_rgb": null,
    "outline": null,
+   "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": false,
@@ -67,6 +68,7 @@
    "box": null,
    "italic": false,
    "letter_spacing": -7.4,
+   "word_spacing": 6.8,
    "enter": null
   },
   {
@@ -126,9 +128,10 @@
    "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
    "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "자막 낱말 간격 6.8px — 원본 낱말 틈 13.0px 에 맞춤(자간 -7.4px 은 글자 사이만)",
    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
    "고정 문구 글꼴 TmonMonsori·외곽선 3px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462)"
   ],
-  "ocr_model": "gemini-flash-lite-latest"
+  "ocr_model": "gemini-3.5-flash"
  }
 }

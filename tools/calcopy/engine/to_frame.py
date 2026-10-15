@@ -125,6 +125,103 @@ def spacing_for(fam: str, size: float, text, target_w):
     return round(max(-0.15 * size, min(0.3 * size, ls)), 1)
 
 
+_INK_X: dict = {}
+
+
+def _ink_x(font, ch: str):
+    """글자 하나의 실제 잉크 가로 범위(advance 원점 기준) — getbbox 는 이 글꼴(Spoqa)에서 advance 상자(0~61)를 돌려
+    글자 옆 여백 3~5px 를 못 봤다(10-16 실측: 모형 틈 0.2px vs 렌더 9px). 그려서 잰다."""
+    key = (id(font), ch)
+    if key not in _INK_X:
+        from PIL import Image, ImageDraw
+        sz = int(font.size * 3)
+        im = Image.new("L", (sz, sz), 0)
+        ImageDraw.Draw(im).text((font.size, font.size * 2), ch, font=font, fill=255, anchor="ls")
+        xs = np.where(np.asarray(im).max(axis=0) > 128)[0]
+        _INK_X[key] = (float(xs[0] - font.size), float(xs[-1] + 1 - font.size)) if len(xs) else None
+    return _INK_X[key]
+
+
+def _css_line(font, text: str, ls: float, ws: float) -> tuple[float, list[float]]:
+    """CSS 처럼 한 줄을 놓는다 — 글자마다 advance + letter-spacing, 공백엔 word-spacing 을 더한다(렌더러 precision20-ui.js 의 spec-text).
+    반환 (잉크 폭, 낱말 사이 잉크 틈 목록). 10-16 실측: 렌더 틈과 1~2px 안(모형 11.2/9.2/7.2 vs 렌더 11/9/8)."""
+    x, boxes = 0.0, []
+    for ch in text:
+        bb = _ink_x(font, ch) if ch != " " else None
+        boxes.append((ch, x + bb[0], x + bb[1]) if bb else (ch, None, None))
+        x += font.getlength(ch) + ls + (ws if ch == " " else 0)
+    ink = [(l, r) for ch, l, r in boxes if l is not None]
+    gaps, k = [], 0
+    while k < len(text):
+        if text[k] == " ":
+            j = k
+            while j < len(text) and text[j] == " ":
+                j += 1
+            left = next((boxes[i][2] for i in range(k - 1, -1, -1) if boxes[i][2] is not None), None)
+            right = next((boxes[i][1] for i in range(j, len(text)) if boxes[i][1] is not None), None)
+            if left is not None and right is not None:
+                gaps.append(right - left)
+            k = j
+        else:
+            k += 1
+    return (ink[-1][1] - ink[0][0]) if ink else 0.0, gaps
+
+
+GAP_Q = 0.25   # 낱말 틈은 아래쪽 4분위로 맞춘다 — 받침·모음 모양 따라 우리 글꼴 틈이 5~13px 로 출렁여, 중앙값으로 맞추면 좁은 틈(5px)이 여전히 붙어 보인다
+
+
+def _q(v: list, q: float = GAP_Q) -> float:
+    v = sorted(v)
+    return v[min(len(v) - 1, int(q * len(v)))]
+
+
+def spacing_and_word_gap(fam: str, size: float, text, target_w, target_gap, gap_texts: list | None = None):
+    """자간 + 낱말 간격(px) — 판단 주인 한 곳. 자간은 글자 사이 폭을, 낱말 간격은 **원본 낱말 사이 잉크 틈**(target_gap)을 맞춘다.
+    ★10-16 사장님 반려: spacing_for 는 폭 차를 공백까지 포함한 글자 사이 수로 나눠 −7.4px 자간이 공백에도 걸렸다
+      → 원본 낱말 틈 13~16px 가 우리 8~11px 로 줄어 '유리문에원판대자마자…'처럼 뭉개 보였다.
+    target_gap = 원본 낱말 틈의 아래 4분위(caption_word_gap). gap_texts(원본 자막 글 전부)로 우리 틈의 아래 4분위를 잰다.
+    자간(ls)은 spacing_for 그대로 둔다 — 낱말 간격을 넣고 폭을 다시 맞추면 자간이 −9.6px 로 더 줄어 글자끼리 붙었다(10-16 2판 실측:
+      '대자마자' 획이 닿음). 글자 사이 틈은 −7.4 에서 이미 원본과 같다(픽셀 잰 글자 사이 틈 중앙 우리 3.5 / 원본 4px).
+      그래서 원본 글 폭은 공백 수 × ws 만큼 넓어진다(감수 — 글자 붙음보다 낫다).
+    반환 (ls, ws) — 글·폭·틈 중 하나라도 없으면 (spacing_for, 0)."""
+    ls = spacing_for(fam, size, text, target_w)
+    if ls is None or not target_gap or " " not in str(text).strip():
+        return ls, 0
+    font = _pil_font(fam, size)
+    texts = [t for t in (gap_texts or [text]) if t and " " in t.strip()]
+    gaps = [g for t in texts for g in _css_line(font, t, ls, 0.0)[1]]
+    ws = target_gap - _q(gaps) if gaps else 0.0
+    return ls, round(max(-0.5 * size, min(size, ws)), 1)
+
+
+def caption_word_gap(src: str, J: dict, W: int, H: int, pol: str) -> float | None:
+    """원본 자막의 낱말 사이 잉크 틈(px, 아래 4분위 GAP_Q) — 자막마다 구간 가운데 프레임의 자막 줄을 잘라 잉크 열 틈 중 큰 것 공백 수만큼.
+    (ZdeZ 실측 10-16: 원본 12~16px, 글자 사이 4~7px)"""
+    from shopping_shorts.channelkit.bench import probe
+    cap = J.get("captions") or {}
+    lh = st.median(g["line_h"] for g in cap.get("glyph") or [{"line_h": 60}])
+    out = []
+    for it, (a, b) in zip(cap.get("items") or [], cap.get("spans") or []):
+        txt = " ".join(it.get("text") or [])
+        k = txt.strip().count(" ")
+        if not k or it.get("top_y") is None or int(it.get("lines") or 1) != 1:
+            continue
+        img = probe.grab(src, (a + b) / 2, f"scale={W}:{H}", W, H)
+        if img is None:
+            continue
+        y0 = max(0, int(it["top_y"]) - 4); y1 = min(H, int(it["top_y"] + lh) + 4)
+        g = img[y0:y1].astype(int).mean(axis=2)
+        col = ((g < 100) if pol == "dark" else (g > 180)).any(axis=0)
+        xs = np.where(col)[0]
+        if len(xs) < 2:
+            continue
+        d = np.diff(xs) - 1
+        big = sorted((int(v) for v in d if v > 0), reverse=True)[:k]
+        if len(big) == k:
+            out.extend(big)
+    return float(_q(out)) if out else None
+
+
 def line_outline_of(img: np.ndarray, fill, over_from: int, bg=None) -> list | None:
     """한 줄 글자의 외곽선 [px, r, g, b] — 채움색 둘레를 한 겹씩 넓혀 가며, **창 영상 위 행**(over_from 행부터)에 걸린 고리만 본다.
     바탕과 같은 색 외곽선(흰 바탕의 흰 외곽선)은 바탕 위에선 안 보이고 창 위로 걸칠 때만 보인다(1_V 둘째 줄 실측) —
@@ -323,7 +420,7 @@ def band_body(b, cols, o: int, ital: bool) -> tuple[int, int, int]:
     return body_h, (cols[1] - cols[0] + 1) - 2 * o - lean, lean
 
 
-def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None) -> dict:
+def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None, cap_word_gap: float | None = None) -> dict:
     """뜯기 → 설명서(검사 전 원본 모양 + notes). frame_img = 틀이 있는 구간의 원본 한 프레임(RGB),
     ocr = {"title": [줄...], "brand": "글"} 또는 None, tail_probe(t)→bool = 그 시각 틀이 있나(없으면 뜯기 값 그대로)."""
     notes = []
@@ -422,7 +519,10 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
         it0 = next((i for i in items if i.get("text") and i.get("widths")), None)
-        cap_ls = spacing_for(fam, fit["size"], it0["text"][0], it0["widths"][0]) if it0 else None
+        cap_ls, cap_ws = spacing_and_word_gap(fam, fit["size"], it0["text"][0], it0["widths"][0], cap_word_gap,
+                                              [" ".join(i.get("text") or []) for i in items]) if it0 else (None, 0)
+        if cap_ws:
+            notes.append(f"자막 낱말 간격 {cap_ws}px — 원본 낱말 틈 {cap_word_gap}px 에 맞춤(자간 {cap_ls}px 은 글자 사이만)")
         lines = max(int(i.get("lines") or 1) for i in items)
         boxes = [c["curve"][0]["bbox"] for c in (J.get("caption_motion") or {}).get("starts") or [] if c.get("curve")]
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
@@ -432,7 +532,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
                        "rgb": fxs.get("fill_rgb") or ([0, 0, 0] if pol == "dark" else [255, 255, 255]), "line_rgb": None,
                        "outline": {"px": ol, "rgb": fxs["outline_rgb"]} if ol and fxs.get("outline_rgb") else None,
                        "shadow": None, "box": ({"rgb": fxs["box"]["color"], "pad": 0, "radius": 0} if fxs.get("box") else None),
-                       "italic": False, "letter_spacing": cap_ls if cap_ls is not None else 0, "enter": None})
+                       "italic": False, "letter_spacing": cap_ls if cap_ls is not None else 0, "word_spacing": cap_ws or 0, "enter": None})
         if fxs.get("shadow"):
             notes.append(f"자막 그림자 {fxs['shadow']} — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)")
         if not fxs:
@@ -551,7 +651,9 @@ def main(argv=None):
     if src and Path(src).exists() and L.get("bg_rgb"):
         rows = gap_rows(L.get("window"), [tuple(b) for b in L.get("above_bands") or []])
         probe_fn = lambda t: (lambda f: f is not None and framed(f, rows, L["bg_rgb"]))(probe.grab(src, t, f"scale={W}:{H}", W, H))  # noqa: E731
-    F = build(J, img, ocr, probe_fn)
+    pol = L.get("ink_polarity") or "dark"            # build 의 자막 극성과 같은 값
+    gap = caption_word_gap(src, J, W, H, pol) if src and Path(src).exists() else None
+    F = build(J, img, ocr, probe_fn, gap)
     if err:
         F["made_from"]["notes"].append(f"고정 띠 OCR 실패: {err}")
     if ocr:

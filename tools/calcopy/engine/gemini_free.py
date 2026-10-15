@@ -33,7 +33,7 @@ def _keys() -> list[str]:
     return keys()
 
 
-def ask(parts: list, prompt: str, tag: str = "") -> tuple[dict | None, str | None]:
+def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
     """parts = [bytes(jpeg)|str, ...] 순서대로 붙인다. JSON 응답을 dict 로."""
     from google import genai
     from google.genai import types
@@ -54,9 +54,10 @@ def ask(parts: list, prompt: str, tag: str = "") -> tuple[dict | None, str | Non
     n = len(keys)
     start = _CURSOR["i"] % n
     _CURSOR["i"] += 1
-    plan = [PRIMARY] * PRIMARY_ROUNDS + [FALLBACK]
+    # models = 부르는 쪽이 고른 모델 순서(글쓰기처럼 판독 일관성보다 글 품질이 중요한 곳). 없으면 뜯기 기본(PRIMARY 고정)
+    plan = [PRIMARY] * PRIMARY_ROUNDS + [FALLBACK] if not models else list(models)
     for rnd, model in enumerate(plan):
-        if rnd and model == PRIMARY:
+        if rnd and model == plan[0]:
             time.sleep(5 * rnd)          # 503(과부하)면 잠깐 쉬고 같은 모델로 다시
         for step in range(n):
             ki = (start + step) % n

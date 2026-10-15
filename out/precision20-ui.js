@@ -1490,7 +1490,7 @@
       const el=document.createElement('div');el.className='precision-text spec-text';el.dataset.editBind=it.bind;el.dataset.specRole=l.role;
       Object.assign(el.style,{left:pct(x0,W)+'%',right:'auto',width:pct(l.w,W)+'%',top:pct(l.y+it.n*l.line_h,H)+'%',height:pct(l.line_h*it.rows,H)+'%',
         fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*scale+'px',
-        letterSpacing:l.letter_spacing*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
+        letterSpacing:l.letter_spacing*scale+'px',wordSpacing:(l.word_spacing||0)*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
         justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],whiteSpace:it.rows>1?'normal':'nowrap',wordBreak:'keep-all',
         webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
         textShadow:l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'none'});

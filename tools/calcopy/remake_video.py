@@ -101,8 +101,17 @@ def material(M, spec, tail_start, dur, work, bgm_id, bgm_ratio, target):
     # 한 번 loudnorm 은 목표보다 ~1dB 덜 나온다(10-16 실측 -11.0 vs -10.1) → 잰 만큼 더하고 피크 제한
     gain = round(target - _lufs(mixed)["I"], 2)
     out = work / "material.mp4"
-    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(silent), "-i", str(mixed), "-filter_complex",
-                    f"[1:a]volume={gain}dB,alimiter=limit=0.89:level=false[a]", "-map", "0:v", "-map", "[a]",
+    # 효과음(재료.json sfx: [{file, t, db}]) — 음량 맞춘 섞인 소리 위에 그 시각 그대로 얹는다(뜯기 rules 효과음 시각)
+    sfx = [x for x in (M.get("sfx") or []) if (ROOT / x["file"]).exists()]
+    fc2 = f"[1:a]volume={gain}dB[a0]"
+    for k, x in enumerate(sfx):
+        ms = int(round(float(x["t"]) * 1000))
+        fc2 += f";[{k + 2}:a]aresample=48000,aformat=channel_layouts=stereo,volume={float(x.get('db', 0))}dB,adelay={ms}|{ms}[s{k}]"
+    if sfx:
+        fc2 += ";[a0]" + "".join(f"[s{k}]" for k in range(len(sfx))) + f"amix=inputs={len(sfx) + 1}:normalize=0:duration=first[a1]"
+    fc2 += f";[{'a1' if sfx else 'a0'}]alimiter=limit=0.89:level=false[a]"
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(silent), "-i", str(mixed), *[a for x in sfx for a in ("-i", str(ROOT / x["file"]))],
+                    "-filter_complex", fc2, "-map", "0:v", "-map", "[a]",
                     "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(out)])
     return out, bgm, silent_ranges
 
@@ -137,7 +146,7 @@ def main():
     ctx = scene_style.context_for(tl, head, snap)
     (out / "timeline.json").write_text(json.dumps({"beats": tl, "scenes": [(s["start"], s["end"], s["caption"]) for s in ctx["scenes"]],
                                                    "tail_start": tail_start}, ensure_ascii=False, indent=1), encoding="utf-8")
-    (out / "audio.json").write_text(json.dumps({"bgm": bgm_id, "bgm_file": bgm, "bgm_ratio": bgm_ratio, "bgm_fill_where_source_silent": {"ranges": silent, "ratio": BGM_FILL, "silent_db": SILENT_DB}, "target_lufs": target,
+    (out / "audio.json").write_text(json.dumps({"bgm": bgm_id, "bgm_file": bgm, "bgm_ratio": bgm_ratio, "sfx": M.get("sfx") or [], "bgm_fill_where_source_silent": {"ranges": silent, "ratio": BGM_FILL, "silent_db": SILENT_DB}, "target_lufs": target,
                                                 "final": _lufs(final), "tts": None, "narration": "없음(원음만+자막)"},
                                                ensure_ascii=False, indent=1), encoding="utf-8")
     print("final:", final)

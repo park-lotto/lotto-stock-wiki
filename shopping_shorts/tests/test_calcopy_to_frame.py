@@ -158,3 +158,28 @@ def test_line_outline_of_white_ring_over_video():
     lo = to_frame.line_outline_of(a, [186, 0, 120], 70, list(PAINT))
     assert lo and 5 <= lo[0] <= 7 and min(lo[1:]) >= 240
     assert to_frame.line_outline_of(a, [186, 0, 120], 200, None) is None   # 창에 안 닿으면 못 잼
+
+
+def test_word_spacing_widens_only_word_gaps_and_keeps_letter_spacing():
+    """10-16 반려(자막 낱말이 붙어 보임): 낱말 간격은 공백 틈만 넓히고, 자간은 spacing_for 그대로(다시 줄여 글자가 붙지 않게)."""
+    fam, size, txt = "CcSpoqaHanSansNeo-Bold", 66.0, "아니 이거 해외 릴스에서"
+    f = to_frame._pil_font(fam, size)
+    w0, g0 = to_frame._css_line(f, txt, -7.4, 0.0)
+    w1, g1 = to_frame._css_line(f, txt, -7.4, 10.0)
+    assert all(abs((b - a) - 10.0) < 1e-6 for a, b in zip(g0, g1))     # 공백마다 정확히 ws 만큼
+    assert abs((w1 - w0) - 10.0 * txt.count(" ")) < 1e-6
+    target_w = 700
+    ls0 = to_frame.spacing_for(fam, size, txt, target_w)
+    gl = to_frame._css_line(f, txt, ls0, 0.0)[1]
+    ls, ws = to_frame.spacing_and_word_gap(fam, size, txt, target_w, target_gap=max(gl) + 6, gap_texts=[txt])
+    assert ls == ls0 and ws >= 6
+    assert to_frame.spacing_and_word_gap(fam, size, txt, target_w, None) == (ls, 0)    # 틈을 못 쟀으면 낱말 간격 0
+
+
+def test_schema_keeps_word_spacing():
+    f = {"canvas": [1080, 1920], "layers": [{"kind": "video", "x": 0, "y": 0, "w": 1080, "h": 1080},
+                                             {"kind": "text", "role": "caption", "x": 540, "y": 1500, "w": 1000, "lines": 1,
+                                              "font": "CcSpoqaHanSansNeo-Bold", "size": 66, "line_h": 76, "rgb": [0, 0, 0],
+                                              "letter_spacing": -7.4, "word_spacing": 6.8}]}
+    cap = next(l for l in schema.validate(f)["layers"] if l.get("role") == "caption")
+    assert cap["word_spacing"] == 6.8 and cap["letter_spacing"] == -7.4
