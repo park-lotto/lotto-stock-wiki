@@ -132,11 +132,17 @@ ANGLE_PROMPT = """쇼핑 쇼츠 '썰'의 **각도**를 고른다. 이 채널의 
   surprise  "아 그래?" 정도 — 누구나 아는 것에 대해 몰랐던 사실일수록 높다. 제품 설명(기능이 좋다)은 2점 이하.
   known     그 제품·브랜드·종류를 보는 사람이 **이미 알고 있을** 정도 — 아웃백·코스트코·팔도처럼 다 아는 것은 9~10, 처음 보는 가젯은 2~3.
   throwable 첫 줄로 **던질 수 있나** — 한 문장으로 "OO에 이런 게 있었다고?" 꼴이 되나.
+  fun       재미·흥미 — 듣고 남한테 말해 주고 싶을 만큼 재밌나(웃기다·황당하다·소름·반전). 건조한 정보는 3점 이하.
+  story     이야기가 되나 — 주인공·갈등(대기업 vs 우리, 원조 vs 카피, 실수 vs 대박)과 마지막 한 방이 있나.
+  gain      시청자가 얻는 것 — 바로 써먹는 쓸모·대리만족·승리감·남에게 말해 주고 싶음.
+★기준(사장님 2026-10-15): 사람들이 **아는 주제**이면서 **몰랐던** **재밌는** 소재여야 한다 — known·surprise·fun 셋 다 높아야 한다.
+  본보기(방구석 친구들 아웃백 1,015만): 다 아는 부시맨브레드 + "집에선 왜 그 맛이 안 나지?" 다들 가진 의문 + 원인(업소용 오븐) +
+  빵돌이들이 찾아낸 쉬운 해법(물 한 컵+전자레인지) + 한 방("500원이라 아웃백 갈 이유가 없어졌다") = 대기업을 이긴 승리감.
 그리고 가장 높은 하나를 골라 그 각도를 한 줄로 쓰고(angle), 그 각도를 거는 첫 줄 후보 3개(hooks, 12~20자, 제품 종류 낱말로 끝, 문장부호 없이)를 적어라.
 ★후보 밖의 사실을 만들지 마라. surprise 가 전부 5 이하면 angle 은 빈 문자열로 두고 why_none 에 이유를 적어라(이 제품은 이 채널 썰감이 아니다).
 
 출력은 JSON 객체 하나:
-{"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 7}], "pick": "f1", "angle": "한 줄", "hooks": ["...", "...", "..."], "why_none": ""}
+{"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 7, "fun": 8, "story": 7, "gain": 6}], "pick": "f1", "angle": "한 줄", "hooks": ["...", "...", "..."], "why_none": ""}
 
 [제품] %s
 [후보]
@@ -266,6 +272,8 @@ def _facts_block(facts):
 
 
 ANGLE_MIN_SURPRISE = 6       # 이보다 낮으면 "아 그래?"가 없다 — 썰감이 아니다
+ANGLE_MIN_KNOWN = 6          # 사람들이 아는 주제여야 한다(사장님 2026-10-15)
+ANGLE_MIN_FUN = 6            # 재밌어야 한다 — 건조한 정보는 안 된다
 _SOURCE_TIER = (("언론·공식", r"경제|일보|뉴스|news|신문|times|herald|공식|official|\.co\.kr|\.com/article|press"),
                 ("백과·위키", r"위키|wiki|백과|namu"), ("커뮤니티·블로그·SNS", r"blog|티스토리|네이버|youtube|유튜브|facebook|instagram|cafe|커뮤니티|reddit|tiktok"))
 
@@ -287,11 +295,20 @@ def pick_angle(product, points, facts, call):
     ids = {i for _, i, _ in cands}
     scores = [s for s in (out.get("scores") or []) if isinstance(s, dict) and s.get("id") in ids]
     pick = out.get("pick") if out.get("pick") in ids else ""
-    best = max(scores, key=lambda s: (s.get("surprise") or 0) + (s.get("known") or 0) * 0.5 + (s.get("throwable") or 0) * 0.5, default=None)
-    if best and (not pick or (best.get("surprise") or 0) >= (next((s.get("surprise") or 0 for s in scores if s["id"] == pick), 0) + 2)):
+    def _ok(s):
+        return (s.get("known") or 0) >= ANGLE_MIN_KNOWN and (s.get("fun") or 0) >= ANGLE_MIN_FUN
+    passing = [s for s in scores if _ok(s)]
+    if pick and not any(s["id"] == pick for s in passing):
+        pick = ""
+    best = max(passing, key=lambda s: (s.get("surprise") or 0) + (s.get("fun") or 0) + (s.get("story") or 0) + (s.get("gain") or 0)
+               + (s.get("known") or 0) * 0.5 + (s.get("throwable") or 0) * 0.5, default=None)
+    if best:   # 순위 1등을 쓴다(사장님 2026-10-15 "여러 개 뽑아 1등 판정") — 모델이 따로 고른 것보다 점수 1등이 먼저
         pick = best["id"]
     sup = next((s.get("surprise") or 0 for s in scores if s["id"] == pick), 0)
-    angle = (out.get("angle") or "").strip() if pick and sup >= ANGLE_MIN_SURPRISE else ""
+    angle = ""
+    if pick and sup >= ANGLE_MIN_SURPRISE:
+        # 모델이 적은 angle 은 모델 pick 기준이다 — 1등이 다르면 1등 소재 글을 각도로 쓴다
+        angle = (out.get("angle") or "").strip() if pick == out.get("pick") else next(t for _, i, t in cands if i == pick)
     return {"angle": angle, "pick": pick if angle else "", "surprise": sup, "hooks": [h.strip() for h in (out.get("hooks") or []) if str(h).strip()][:3] if angle else [],
             "scores": scores, "why_none": "" if angle else ((out.get("why_none") or "").strip() or "surprise %d — 몰랐던 것이 없다" % sup)}
 

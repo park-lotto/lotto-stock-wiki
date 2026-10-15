@@ -1,0 +1,24 @@
+{
+ "steps": {
+  "1": {
+   "state": "done",
+   "date": "2026-10-15",
+   "note": "전체 110편 중 조회 상위 50편(8,200,000~29,000)",
+   "files": []
+  },
+  "2": {
+   "state": "doing",
+   "date": "2026-10-15",
+   "note": "1차 분석 멈춤 — 사장님: 버텍스·제미나이 말고 클로드로 분석",
+   "files": []
+  }
+ },
+ "name": "Hot Item Report",
+ "url": "https://www.youtube.com/@핫템리포트",
+ "concept": "",
+ "next": "③ 방구석 다음: 상위 50편 1차 분석",
+ "stats": {
+  "subs": 11800,
+  "total": 110
+ }
+}

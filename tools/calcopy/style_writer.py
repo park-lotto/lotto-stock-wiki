@@ -69,7 +69,10 @@ PROMPT = """너는 한국어 쇼츠 채널의 대본 작가다. 아래 '갈래 �
 - ★예문 문장을 그대로 베끼지 마라. 틀(박자·리듬·말끝)만 따르고 문장은 새로 써라.
 - ★사실은 아래 '조사한 비하인드'에 있는 것만 써라. 거기 없는 숫자·회사명·연도·인증·효능은 쓰지 마라.
 - 이 영상의 각도(가장 '아 그래?' 할 비하인드): {angle}
-  이 각도가 훅·반전의 중심이 되게 써라. 각도 첫 줄 후보: {angle_hooks}
+  이 각도가 훅·반전의 중심이 되게 써라.
+- ★스토리가 탄탄해야 한다(시청자가 빠져들게): 다들 가진 의문/문제 제기 → 원인(몰랐던 비밀) → 주인공(누가)과 갈등 → 해결·반전 →
+  시청자가 얻는 것 → 마지막 한 방(승리감·말해 주고 싶은 한 줄). 정보 나열 금지 — 한 줄기 이야기로.
+- 과장·꾸밈 말투는 괜찮다(이 채널 스타일). 단 조사에 없는 사실·숫자는 금지. 각도 첫 줄 후보: {angle_hooks}
 조사한 비하인드(출처 있음):
 {facts}
 예문(조회 상위):
@@ -114,9 +117,27 @@ def _calls():
 def gather(topic: str, call, search_call) -> dict:
     """제품 비하인드 모으기 — 조사·각도 고르기는 seedflow 의 것을 그대로 부른다(판단 주인 = seedflow.research / pick_angle)."""
     from shopping_shorts import seedflow
-    facts = seedflow.research(topic, [], search_call)
+    # 후보를 넓게 — 주제 하나를 여러 갈래로 나눠 각각 조사하고 합친다(사장님 2026-10-15 "여러 개 뽑아 1등")
+    facets = [topic] + [f"{topic} — {f}" for f in FACETS]
+    facts, seen = [], set()
+    for q in facets:
+        for f in seedflow.research(q, [x["text"] for x in facts][:20], search_call):
+            key = re.sub(r"\W", "", f["text"])[:30]
+            if key in seen:
+                continue
+            seen.add(key)
+            f["id"] = "f%d" % (len(facts) + 1)
+            facts.append(f)
     angle = seedflow.pick_angle(topic, [], facts, call)
-    return {"facts": facts, "angle": angle}
+    # 순위표 — 아는 주제·몰랐던 정도·재미 합(판정은 pick_angle 이 한 점수 그대로)
+    sc = {s["id"]: s for s in angle.get("scores") or []}
+    rank = sorted(({"id": f["id"], "text": f["text"], "kind": f.get("kind"), "source": f.get("source"),
+                    **{k: sc.get(f["id"], {}).get(k) for k in ("known", "surprise", "fun", "throwable", "story", "gain")}} for f in facts),
+                  key=lambda r: -sum((r[k] or 0) for k in ("known", "surprise", "fun", "story", "gain")))
+    return {"facts": facts, "angle": angle, "ranking": rank}
+
+
+FACETS = ["메뉴·음료 탄생 비화", "푸드·재료 숨은 사실", "브랜드·매장·로고 뒷이야기", "사건·논란·화제"]
 
 
 def write(rules_path: str, topics: list[str]) -> list[dict]:
@@ -131,8 +152,9 @@ def write(rules_path: str, topics: list[str]) -> list[dict]:
     for t in topics:
         g = gather(t, call, search_call)
         print(f"\n■ {t}  — 비하인드 {len(g['facts'])}개, 각도: {g['angle'].get('angle') or '(없음: ' + g['angle'].get('why_none', '') + ')'}")
-        for f in g["facts"]:
-            print(f"   {f['id']} ({f.get('kind')}) {f['text']}  [{seedflow.source_tier(f.get('source'))}]")
+        print("   순위  아는·몰랐던·재미·이야기·얻는것  소재")
+        for n, r in enumerate(g["ranking"][:12], 1):
+            print(f"   {n:>2}. {r['known']}·{r['surprise']}·{r['fun']}·{r['story']}·{r['gain']}  {r['text'][:70]}  [{seedflow.source_tier(r.get('source'))}]")
         if not g["angle"].get("angle"):
             out.append({"topic": t, "skipped": "썰감 없음 — " + g["angle"].get("why_none", ""), **g})
             print("  → 이 주제는 '아 그래?' 할 비하인드가 없어 대본을 쓰지 않는다")
