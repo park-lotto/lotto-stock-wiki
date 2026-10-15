@@ -197,6 +197,7 @@ def test_재시험은_시험자원_줄에서_자기_순번(monkeypatch, tmp_path
 
 
 def test_재시도는_통과한_뒤_끼어든_코드_관련만_다시_돌린다(repo, monkeypatch):
+    monkeypatch.setenv("TRACK_SOLO", "1")   # 옛 경로(혼자 병합·끼어듦 재시험) 시험 — 묶음 병합에선 끼어듦이 없다(관제 212)
     _commit_main(repo, "shopping_shorts/tests/test_mod.py", "import shopping_shorts.mod\n")
     _make_track_commit(repo, "재시도시험")
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
@@ -221,6 +222,7 @@ def test_재시도는_통과한_뒤_끼어든_코드_관련만_다시_돌린다(
 
 
 def test_재시도에서도_끼어든_코드와_맞물려_깨지면_막는다(repo, monkeypatch):
+    monkeypatch.setenv("TRACK_SOLO", "1")   # 옛 경로(혼자 병합·끼어듦 재시험) 시험 — 묶음 병합에선 끼어듦이 없다(관제 212)
     _commit_main(repo, "shopping_shorts/tests/test_mod.py", "import shopping_shorts.mod\n")
     _make_track_commit(repo, "재시도막힘")
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())

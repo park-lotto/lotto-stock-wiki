@@ -76,7 +76,9 @@ def _video_lock_path():
 #   몰리면 한 판씩 전속력(-n 8 376초)으로 — 둘이 반씩(-n 4 각 727초)보다 먼저 끝난다(카드 081 실측).
 GATE_WORKER_TOKENS = 8           # 동시에 도는 시험 프로세스 합계 상한(16코어의 절반)
 GATE_WORKER_MB = 550             # 시험 프로세스 1개 메모리(실측: -n 8 한 판 4,027~4,501MB / 13~14개)
-GATE_RESERVE_MB = 2500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+GATE_RESERVE_MB = 4500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+#   ★2500→4500(관제 212, 2026-10-15): 일꾼을 띄운 뒤 남는 양이 2.5GB 까지 떨어져 Claude Code 가 '메모리 위험'으로
+#   다른 세션의 백그라운드 작업(대기·로컬 서버)을 강제로 껐다(하루 6번 실측). 일꾼 8개는 남은 메모리 8.9GB 이상일 때만.
 GATE_MIN_WORKERS = 2
 
 
@@ -1013,9 +1015,201 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None, urgent
     if held is None:
         raise _track_finish_busy_error(name)
     try:
-        return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
+        if os.environ.get("TRACK_SOLO", "") == "1":           # 옛 경로(혼자 병합) — 비상용
+            return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
+        return _finish_queued(name, repo, gate, video_gate, urgent)
     finally:
         held.close()
+
+
+# ── 묶음 병합(관제 212, 2026-10-15 사장님 "한 번 하는 것도 힘든데 / 서로 들어가려다 밀리고") ─────────────
+#  실측(finish 로그 178건): 한 건이 전체 시험을 평균 2.3번 돌렸다 — finish 끼리 main 을 두고 경주해 서로 밀어냈다.
+#  이제 finish 는 **줄에 이름만** 올린다. 병합 일꾼 하나(일꾼 락을 쥔 finish)가 줄의 트랙을 최대 BATCH_MAX 개 한꺼번에
+#  합쳐(octopus) 시험·영상 관문을 **1번**, push 도 1번. main 에 코드를 넣는 주체가 하나라 경주(raced)가 없다.
+#  실패하면 반으로 나눠 다시(이분) — 깨뜨린 트랙만 빠지고 나머지는 들어간다. 관제 관문(카드·승인·소유권)은 트랙마다 따로.
+BATCH_MAX = 6
+_MERGE_BATCH = {}           # 묶음 이름 → [(트랙, [카드번호])] — push 뒤 카드마다 병합 기록
+
+
+def _queue_dir(repo):
+    d = tracks_dir(repo) / "_merge_queue"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _enqueue(repo, name, br, wt, urgent):
+    """줄에 번호표를 건다(줄 순서 = _queue_rank: 급행 먼저·선착순). 같은 트랙 옛 번호표·결과는 지운다."""
+    q = _queue_dir(repo)
+    for old in list(q.glob("*__%s.json" % name)) + list(q.glob("*__%s.result.json" % name)):
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    t = q / ("%s__%s.json" % (_queue_rank(urgent), name))
+    t.write_text(json.dumps({"name": name, "br": br, "wt": str(wt), "urgent": bool(urgent), "pid": os.getpid()},
+                            ensure_ascii=False), encoding="utf-8")
+    return t
+
+
+def _queue_pending(repo):
+    """결과가 아직 없는 번호표(줄 순서). 주인 finish 가 죽은 표는 치운다(기다리는 사람이 없다)."""
+    out = []
+    for t in sorted(_queue_dir(repo).glob("*__*.json")):
+        if t.name.endswith(".result.json"):
+            continue
+        try:
+            d = json.loads(t.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if d.get("pid") and d["pid"] != os.getpid() and not _pid_alive(d["pid"]):
+            try:
+                t.unlink()
+            except OSError:
+                pass
+            continue
+        d["_file"] = str(t)
+        out.append(d)
+    return out
+
+
+def _finish_ticket(t, rc, msg):
+    f = Path(t["_file"])
+    try:
+        f.with_name(f.name[:-5] + ".result.json").write_text(json.dumps({"rc": rc, "msg": msg}, ensure_ascii=False),
+                                                              encoding="utf-8")
+        f.unlink()
+    except OSError:
+        pass
+
+
+def _try_worker_lock(repo):
+    return _track_finish_lock("_merge_worker", repo)
+
+
+def _finish_queued(name, repo, gate, video_gate, urgent):
+    merge_gate.make_output_safe()
+    validate_name(name)
+    warm(name, repo)
+    wt = _preflight(name, repo)
+    br = branch_name(name)
+    run(["git", "fetch", "origin"], repo)
+    if os.environ.get("TRACK_PRECHECK", "") == "1":
+        _precheck(name, repo, wt, br, gate)
+    _disk_guard(repo, "finish")
+    t = _enqueue(repo, name, br, wt, urgent)
+    print(f"줄 등록: '{name}'{' (급행)' if urgent else ''} — 병합 일꾼이 줄의 트랙을 묶어 시험 1번·push 1번으로 넣는다")
+    res_file = t.with_name(t.name[:-5] + ".result.json")
+    said = False
+    while True:
+        if res_file.exists():
+            try:
+                r = json.loads(res_file.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                r = {"rc": 1, "msg": "결과 파일을 못 읽었다"}
+            try:
+                res_file.unlink()
+            except OSError:
+                pass
+            if int(r.get("rc", 1)) != 0:                      # 실패는 종전처럼 TrackError — main() 이 '중단:'으로 찍는다
+                m = r.get("msg", "")
+                raise TrackError(m[4:] if m.startswith("중단: ") else m)
+            print(r.get("msg", ""))
+            return 0
+        lk = _try_worker_lock(repo)
+        if lk is not None:
+            try:
+                _merge_worker(repo, gate, video_gate)
+            finally:
+                lk.close()
+            continue
+        if not said:
+            print("[대기] 병합 일꾼이 앞 묶음을 넣는 중 — 다음 묶음에 같이 들어간다")
+            said = True
+        time.sleep(5)
+
+
+def _merge_worker(repo, gate, video_gate):
+    """일꾼: 줄이 빌 때까지 묶음을 넣는다."""
+    while True:
+        run(["git", "fetch", "origin"], repo)
+        pending = _queue_pending(repo)
+        if not pending:
+            return
+        _clean_dead_stages(repo)
+        _run_batch(repo, pending[:BATCH_MAX], gate, video_gate)
+
+
+def _control_precheck(repo, t):
+    """관제 관문(카드·승인·소유권)은 트랙마다 따로 — 묶음 diff 로 보면 남의 카드 승인을 요구하게 된다. 싸다(git 만).
+    → 카드 번호 목록 / None(새 커밋 없음). 충돌·관제 실패는 TrackError."""
+    stage = _open_stage(repo, t["name"])
+    try:
+        rc, out = run(["git", "merge", "--no-ff", "--no-commit", t["br"]], stage)
+        if "Already up to date" in out:
+            return None
+        if rc != 0:
+            raise TrackError("병합 충돌 — 트랙 폴더에서 main 을 먼저 받아 풀어라:\n  cd \"%s\"\n"
+                             "  git fetch origin && git merge origin/main\n%s" % (t["wt"], out[-800:]))
+        cg = _control.finish_gate(repo, stage, t["br"], t["name"])
+        if not cg.ok:
+            raise TrackError("❌ 관제 관문 실패 — 병합 안 함(라이브 무사)\n" + "\n".join("  • " + f for f in cg.fails))
+        return [c["번호"] for c in cg.cards]
+    finally:
+        _close_stage(repo, stage)
+
+
+def _run_batch(repo, batch, gate, video_gate):
+    names = [t["name"] for t in batch]
+    print("\n=== 묶음 %d개: %s ===" % (len(batch), ", ".join(names)))
+    ok, cards = [], {}
+    for t in batch:
+        try:
+            c = _control_precheck(repo, t)
+        except TrackError as e:
+            _finish_ticket(t, 1, "중단: %s" % e)
+            print("  ✗ %s — 관제·충돌로 뺐다" % t["name"])
+            continue
+        if c is None:
+            _finish_ticket(t, 0, "병합할 것이 없다 (트랙 '%s'에 새 커밋 없음)." % t["name"])
+            continue
+        ok.append(t)
+        cards[t["name"]] = c
+    if not ok:
+        return
+    label = "묶음:" + "+".join(t["name"] for t in ok)
+    urgent = any(t["urgent"] for t in ok)
+    stage = _open_stage(repo, "_batch")
+    try:
+        result = _merge_and_gate(label, repo, stage, [t["br"] for t in ok], gate, ok[0]["wt"], video_gate, lock=None,
+                                 push_lock=lambda: _finish_gate_lock(urgent=urgent), urgent=urgent,
+                                 control_cards=cards)
+    except TrackError as e:
+        _close_stage(repo, stage)
+        if len(ok) == 1:
+            _finish_ticket(ok[0], 1, "중단: %s" % e)
+            return
+        mid = len(ok) // 2
+        print("  ⚠️ 묶음 실패 — 반으로 나눠 다시 잰다(깨뜨린 트랙만 빠진다): %s | %s"
+              % (",".join(t["name"] for t in ok[:mid]), ",".join(t["name"] for t in ok[mid:])))
+        _run_batch(repo, ok[:mid], gate, video_gate)
+        _run_batch(repo, ok[mid:], gate, video_gate)
+        return
+    _close_stage(repo, stage)
+    if result == "raced":            # 옛 판본 finish 가 끼어들었다(전환기) — 번호표는 그대로, 다음 바퀴에 다시
+        print("  ⚠️ 그사이 main 에 코드가 들어왔다(옛 경로 finish) — 다음 바퀴에 다시")
+        return
+    if result == "nothing":
+        for t in ok:
+            _finish_ticket(t, 0, "병합할 것이 없다 (트랙 '%s'에 새 커밋 없음)." % t["name"])
+        return
+    _sync_main_folder(repo)
+    for t in ok:
+        try:
+            _level_track_with_main(t["name"], repo, Path(t["wt"]), t["br"])
+        except Exception as e:  # noqa: BLE001 — 트랙 폴더 맞추기 실패는 병합 결과를 못 바꾼다
+            print("  ⚠️ %s 트랙 폴더 맞추기 실패: %r" % (t["name"], e))
+        _finish_ticket(t, 0, "✅ main에 병합 완료(묶음 %d개: %s) — push됨. 3분 뒤 서버 반영."
+                       % (len(ok), ", ".join(x["name"] for x in ok)))
 
 
 def _finish_locked(name, repo, gate, attempts, video_gate, urgent):
@@ -1101,7 +1295,7 @@ def _retry_test_subset(stage, prev_base, my_changed, *, half=0.2):
 
 
 def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None,
-                    urgent=False):
+                    urgent=False, control_cards=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -1121,7 +1315,10 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
         raise TrackError("병합 폴더가 사라졌거나 다른 저장소를 가리킨다 — main 폴더 보호를 위해 멈췄다(라이브 무사).\n"
                          f"  폴더 {stage} · git 이 본 위치 {_top.strip()[:200]}\n다시: py tools/track.py finish {name}")
     # ★ 커밋 없이 병합만 — 커밋하면 post-commit(git push)이 게이트 전에 라이브로 보낸다
-    rc, out = run(["git", "merge", "--no-ff", "--no-commit", br], stage)
+    # 묶음 병합(관제 212): br 이 목록이면 여러 갈래를 한 번에 합친다(octopus). 충돌이면 실패 → 일꾼이 반으로 나눠 다시.
+    _brs = list(br) if isinstance(br, (list, tuple)) else [br]
+    br = _brs[0] if len(_brs) == 1 else ("묶음(%d)" % len(_brs))
+    rc, out = run(["git", "merge", "--no-ff", "--no-commit", *_brs], stage)
 
     if "Already up to date" in out:
         return "nothing"
@@ -1186,13 +1383,19 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
 
     # ★관제 관문(2026-09-28): 카드 없는 병합 없음 · 고객 화면/과금/데이터 변경은 카드 승인 · 판단 두 벌 새로 생기면 거절.
     #   merge_gate 뒤·영상 관문 앞 — 서버 영상 비교(수십 분)를 돌리기 전에 싼 검사로 먼저 거른다.
-    cg = _control.finish_gate(repo, stage, br, name)
-    if not cg.ok:
+    if control_cards is not None:
+        # 묶음: 관제 관문은 트랙마다 따로 이미 통과했다(_control_precheck) — 카드만 이어받는다
+        _MERGE_BATCH[name] = list(control_cards.items())
+        cg = None
+    else:
+        cg = _control.finish_gate(repo, stage, br, name)
+    if cg is not None and not cg.ok:
         raise TrackError(
             "❌ 관제 관문 실패 — 병합을 버렸다. 라이브는 무사하다.\n"
             + "\n".join("  • " + f for f in cg.fails)
             + f"\n\n트랙 폴더는 그대로 있다: {wt}\n고친 뒤 다시: py tools/track.py finish {name}")
-    _MERGE_CARDS[name] = [c["번호"] for c in cg.cards]
+    if cg is not None:
+        _MERGE_CARDS[name] = [c["번호"] for c in cg.cards]
 
     # ★영상 관문(2026-09-27): 제작 라인(미리보기 굽기·렌더·청소·컷 계산)을 건드린 병합은
     #   서버에서 '편집 화면 vs 완성본' 영상 비교를 통과해야 커밋된다. 해당 변경이 없으면 한 줄 찍고 건너뛴다.
@@ -1241,6 +1444,9 @@ def _commit_and_push(name, repo, stage, light, _after_failed_for_store):
         except Exception as e:  # noqa: BLE001
             print(f"  ⚠️ 전체 실패 목록 저장 실패(병합엔 영향 없음): {e!r}")
     rc, sha = run(["git", "rev-parse", "--short=10", "HEAD"], stage)
+    for _tn, _cards in _MERGE_BATCH.pop(name, []):          # 묶음: 트랙마다 카드에 병합 기록
+        if _cards:
+            _control.record_merge(repo, _cards, _tn, sha.strip())
     if _MERGE_CARDS.get(name):
         _control.record_merge(repo, _MERGE_CARDS[name], name, sha.strip())
         print("   라이브 실측은 묻지 않아도 자동 — 매시간 tools/live_check.py --all 이 실제 고객 작업으로 영상·소리·자막·캡컷을 재서 카드에 적는다"
