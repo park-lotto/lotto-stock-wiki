@@ -494,8 +494,8 @@
    "method": "captions.caption_lines",
    "criterion": "첫 줄 y 중앙 차 ≤ 화면 높이의 6%",
    "orig": 1467.0,
-   "ours": 1467.0,
-   "diff": "0.0px (0.0% of H1920)",
+   "ours": 1466.0,
+   "diff": "-1.0px (0.1% of H1920)",
    "status": "in"
   },
   {
@@ -518,8 +518,8 @@
    "method": "captions.caption_lines",
    "criterion": "줄 폭 중앙 차 ≤ 6%",
    "orig": 583.0,
-   "ours": 596.0,
-   "diff": "13.0 (2.2%)",
+   "ours": 574.0,
+   "diff": "-9.0 (1.5%)",
    "status": "in"
   },
   {
@@ -530,8 +530,8 @@
    "method": "captions.glyph_style",
    "criterion": "첫 줄 높이 중앙 차 ≤ 6%",
    "orig": 62.0,
-   "ours": 61.5,
-   "diff": "-0.5 (0.8%)",
+   "ours": 62.0,
+   "diff": "0.0 (0.0%)",
    "status": "in"
   },
   {

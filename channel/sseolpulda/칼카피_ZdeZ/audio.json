@@ -2,12 +2,16 @@
  "bgm": "qiuqiu",
  "bgm_file": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\shopping_shorts\\assets\\bgm_lib\\qiuqiu.mp3",
  "bgm_ratio": 0.15,
+ "sfx": [
+  {
+   "file": "shopping_shorts/assets/sfx_packs/팩01/ding.wav",
+   "t": 20.22,
+   "db": 0,
+   "why": "원본 효과음 1발 = 뜯기 audio.composition.sfx.times [20.22,0.18](자막 교체·컷 어느 쪽도 아님 — 자리 '둘다_아님' 1.0). 같은 시각에 ding 1발"
+  }
+ ],
  "bgm_fill_where_source_silent": {
   "ranges": [
-   [
-    13.4,
-    17.4
-   ],
    [
     21.233,
     21.72
@@ -23,7 +27,7 @@
  "target_lufs": -10.1,
  "final": {
   "I": -10.3,
-  "LRA": 5.3,
+  "LRA": 6.7,
   "TP": -0.6
  },
  "tts": null,

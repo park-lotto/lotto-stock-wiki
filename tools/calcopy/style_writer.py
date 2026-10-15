@@ -270,7 +270,7 @@ def line_ranges(orig: list[str], widths: list | None = None, px_per_char: float 
 
 # 자막 쓰기 모델 — 10-16 gemini-3.5-flash 는 키 14개 전부 429(일일 한도 소진, 키 돌리기는 정상), lite 는 글 길이·말끝을 못 지켰다.
 # 무료 키로 되는 상위 모델 순서(10-16 실측 OK: 3-flash-preview·flash-latest)
-CAP_MODELS = ("gemini-3-flash-preview", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-flash-lite-latest")
+CAP_MODELS = ("gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-flash-lite-latest")
 CAP_W_TOL = 0.10   # 폭 기준일 때 줄마다 원본 폭 ±10% — ±6%(대조 기준)는 lite 모델이 12개 후보 중 하나도 못 맞췄다(10-16). 중앙값은 width_median_pct 로 따로 잰다
 
 
@@ -305,6 +305,7 @@ def check_captions(lines: list[dict], orig: list[str], R: dict, ranges: list | N
     text = " ".join(l["text"] for l in lines)
     o5 = set().union(*(_ngrams_n(t, 5) for t in orig))
     copied5 = sorted({g for l in lines for g in _ngrams_n(l["text"], 5)} & o5)
+    copied_lines = [i for i, l in enumerate(lines) if _ngrams_n(l["text"], 5) & o5]   # 줄 단위로 고칠 수 있게
     ex8 = set().union(*(_ngrams(e["script"]) for e in R["examples"]))
     lens = [len(l["text"].replace(" ", "")) for l in lines]
     olens = [len(t.replace(" ", "")) for t in orig]
@@ -323,7 +324,7 @@ def check_captions(lines: list[dict], orig: list[str], R: dict, ranges: list | N
     if est:
         import statistics as _st
         wmed = round((_st.median(est) - _st.median(width["orig"])) / _st.median(width["orig"]) * 100, 1)
-    return {"n_lines": len(lines), "n_ok": len(lines) == len(orig), "width_median_pct": wmed, "describe_lines": describe, "ending_off": ending_off, "off_tone": off_tone, "chars": lens, "orig_chars": olens, "ranges": [list(r) for r in ranges], "est_px": est, "orig_px": (width or {}).get("orig"), "len_off_lines": off,
+    return {"n_lines": len(lines), "n_ok": len(lines) == len(orig), "width_median_pct": wmed, "describe_lines": describe, "copied_lines": copied_lines, "ending_off": ending_off, "off_tone": off_tone, "chars": lens, "orig_chars": olens, "ranges": [list(r) for r in ranges], "est_px": est, "orig_px": (width or {}).get("orig"), "len_off_lines": off,
             "polite_endings": polite, "copied_5grams_vs_orig": copied5, "copied_8grams_vs_examples": len(_ngrams(text) & ex8),
             "numbers": re.findall(r"\d[\d,.]*", text)}
 
@@ -355,7 +356,7 @@ def _cap_fix(prev: dict) -> str:
 
 
 def _cap_ok(chk: dict) -> bool:
-    return bool(chk.get("n_ok")) and not chk.get("len_off_lines") and not chk.get("polite_endings") and not chk.get("copied_5grams_vs_orig")         and not chk.get("copied_8grams_vs_examples") and not chk.get("numbers") and not chk.get("describe_lines") and not chk.get("off_tone") and not chk.get("ending_off")
+    return bool(chk.get("n_ok")) and not chk.get("len_off_lines") and not chk.get("polite_endings") and not chk.get("copied_lines")         and not chk.get("copied_8grams_vs_examples") and not chk.get("numbers") and not chk.get("describe_lines") and not chk.get("off_tone") and not chk.get("ending_off")
 
 
 def write_captions(rules_path: str, ttj_path: str, topic: str, fns: list[str], scenes: list[str] | None = None,
@@ -387,7 +388,7 @@ def write_captions(rules_path: str, ttj_path: str, topic: str, fns: list[str], s
             break
     # 글자 수만 어긋난 줄이 남으면 그 줄만 후보 여러 개를 받아 범위 안의 첫 것으로 바꾼다
     # (temperature 0 이라 전체 다시 쓰기는 같은 답·한 줄 왔다갔다만 했다 — 10-16 실측 5번 모두 5번 줄 5↔13자)
-    PER_LINE = ("len_off_lines", "ending_off", "describe_lines")
+    PER_LINE = ("len_off_lines", "ending_off", "describe_lines", "copied_lines")
 
     def _rank(t):   # 줄 단위로 못 고치는 문제(겹침·존댓말·숫자·톤·줄 수)가 없는 것 먼저, 그다음 어긋난 줄이 적은 것
         c = t.get("check") or {}
@@ -403,18 +404,20 @@ def write_captions(rules_path: str, ttj_path: str, topic: str, fns: list[str], s
             lo, hi = chk["ranges"][i]
             q = (prompt + "\n\n지금 대본: " + json.dumps([l["text"] for l in lines], ensure_ascii=False) +
                  f"\n{i + 1}번 줄(역할 {fns[i]}" + (f", 그때 화면: {scenes[i]}" if scenes else "") +
-                 f")만 다른 말로 12가지 써라. 각각 공백 빼고 {lo}~{hi}자" + (f"(화면 폭 약 {W['orig'][i]}px)" if W else "") + (f", 문장은 '{EN[i]}' 로 끝낸다(말끝을 자르지 마라)" if EN[i] else "") + f". 화면 묘사 말고 시청자에게 썰 푸는 말. JSON으로만: {{\"alts\":[\"…\", …]}}")
+                 f")만 다른 말로 12가지 써라. 각각 공백 빼고 {lo}~{hi}자" + (f"(화면 폭 약 {W['orig'][i]}px)" if W else "") + (f", 문장은 '{EN[i]}' 로 끝낸다(말끝을 자르지 마라)" if EN[i] else "") + (f". 원본 자막 {json.dumps(orig, ensure_ascii=False)} 과 5글자 넘게 같은 말 금지" if i in chk.get("copied_lines", []) else "") + f". 화면 묘사 말고 시청자에게 썰 푸는 말. JSON으로만: {{\"alts\":[\"…\", …]}}")
             d, err = gemini_free.ask([], q, tag=f"captions_line{i}", models=CAP_MODELS)
             # 말끝·묘사·겹침이 맞는 후보 중 목표 폭에 가장 가까운 것(범위 안이면 그대로 통과, 밖이어도 지금 줄보다 가까우면 바꾼다)
             def _dist(c, k=i):
                 return abs(c["est_px"][k] - W["orig"][k]) if W and c.get("est_px") else abs(c["chars"][k] - sum(c["ranges"][k]) / 2)
-            best = (_dist(check_captions(lines, orig, R, rng, W, EN)), lines)
+            cur = check_captions(lines, orig, R, rng, W, EN)
+            hard = any(i in cur[k] for k in ("ending_off", "describe_lines", "copied_lines"))   # 길이 말고 틀린 줄은 지금 줄을 버린다
+            best = (float("inf") if hard else _dist(cur), lines)
             for alt in (d or {}).get("alts") or (d or {}).get("items") or []:
                 if not isinstance(alt, str):
                     continue
                 trial = lines[:i] + [{**lines[i], "text": alt}] + lines[i + 1:]
                 c2 = check_captions(trial, orig, R, rng, W, EN)
-                if i in c2["ending_off"] or i in c2["describe_lines"] or c2["polite_endings"] or c2["copied_5grams_vs_orig"] or c2["numbers"] or c2["off_tone"]:
+                if i in c2["ending_off"] or i in c2["describe_lines"] or i in c2["copied_lines"] or c2["polite_endings"] or c2["numbers"] or c2["off_tone"]:
                     continue
                 if _dist(c2) < best[0]:
                     best = (_dist(c2), trial)

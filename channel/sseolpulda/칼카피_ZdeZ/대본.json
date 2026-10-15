@@ -1,5 +1,5 @@
 {
- "topic": "닿으면 스피커 — 작은 금속 원판(골전도 진동 스피커)을 아무 물체에 대면 그 물체가 울려서 스피커가 된다",
+ "topic": "닿으면 스피커 — 작은 금속 원판(골전도 진동 스피커). 아무 물체에 대면 그 물체가 울려서 스피커가 된다",
  "orig": [
   "아니 이거 해외 릴스에서 맨날 보이길래",
   "바이럴인 줄 알았는데...",
@@ -35,29 +35,29 @@
   ]
  ],
  "fns": [
-  "훅",
-  "의문",
-  "상황",
-  "반전",
-  "반응",
-  "댓글유도"
+  "발견 맥락(어디서 보고 알게 됐나) · 말끝 ~길래",
+  "의심(처음엔 안 믿음) · 말끝 ~는데",
+  "반전 시연(그냥 대기만 하면) · 말끝 ~면",
+  "결과 과장(평범한 물건이 뭐로 변함) · 말끝 ~함;;",
+  "감탄 · 말끝 ~네",
+  "인정·댓글유도 · 말끝 ~인정?"
  ],
  "scenes": [
-  "손에 든 은색 금속 원판을 유리 미닫이문에 갖다 댐",
+  "손에 든 은색 원판을 유리 미닫이문에 갖다 댐",
   "원판이 유리문에 붙어 있음",
-  "금발 여자가 원판을 보여주며 웃음",
-  "여자가 원판을 벽에 대고 손을 뗌",
-  "검은 원판을 손가락으로 집어 보여줌",
-  "여자가 원판을 보여주며 말함, 이어서 플라스틱 통 뚜껑에 원판을 댐"
+  "금발 여자가 원판을 들고 웃음",
+  "여자가 원판을 벽에 붙임 → 다른 여자가 나무 문에 원판을 붙임",
+  "나무 문에 붙은 원판, 여자가 귀 기울임 → 여자가 원판 들고 말함",
+  "여자가 원판을 보여줌 → 플라스틱 통 뚜껑에 원판을 댐"
  ],
  "ranges": [
   [
-   17,
-   18
+   16,
+   17
   ],
   [
-   10,
-   11
+   9,
+   10
   ],
   [
    8,
@@ -65,55 +65,61 @@
   ],
   [
    15,
-   16
+   15
   ],
   [
    10,
    11
   ],
   [
-   11,
-   12
+   10,
+   11
   ]
  ],
- "px_per_char": 53.0,
- "width_spec": "shopping_shorts/static/fonts/SpoqaHanSansNeo-Bold.otf:66:0.843",
+ "px_per_char": 55.0,
+ "width_spec": "shopping_shorts/calcopy_frame/examples/frame_A_auto_ZdeZRtCeAC4.json",
+ "points": "해외 틱톡·릴스·아마존에서 'Turn anything into a speaker(아무거나 스피커로)'로 퍼진 바이럴 가젯 / 'everyone is going crazy about it' / 물건마다 소리가 다름(그릴 2점, 금속 벽 10점 같은 채점 영상) / 문·유리·통 뚜껑·기타에 대면 울림통이 커짐 / 지하철 전체를 스피커로 만든 영상",
  "final": {
   "lines": [
    {
-    "fn": "훅",
-    "text": "유리문에 원판 대자마자 음악이 흘러나옴"
+    "fn": "발견 맥락",
+    "text": "해외 영상에서 하도 신기하다고 하길래"
    },
    {
-    "fn": "의문",
-    "text": "스피커가 숨겨져 있나?"
+    "fn": "의심",
+    "text": "솔직히 주작 의심했는데"
    },
    {
-    "fn": "상황",
-    "text": "신기해서 웃음이 남"
+    "fn": "반전 시연",
+    "text": "어디든 툭 갖다 대면"
    },
    {
-    "fn": "반전",
-    "text": "벽에 갖다 붙이기만 했는데 소리 남"
+    "fn": "결과 과장",
+    "text": "온 집안이 초대형 우퍼로 둔갑함;;"
    },
    {
-    "fn": "반응",
-    "text": "진짜 조그마한데 짱 신기함"
+    "fn": "감탄",
+    "text": "소리 퍼지는 게 예술이네"
    },
    {
-    "fn": "댓글유도",
-    "text": "이거 사는 곳 좀 아는 사람?"
+    "fn": "인정·댓글유도",
+    "text": "이거 은근 탐나는 거 인정?"
    }
   ],
   "check": {
    "n_lines": 6,
    "n_ok": true,
+   "width_median_pct": 2.7,
+   "describe_lines": [],
+   "copied_lines": [],
+   "ending_off": [],
+   "off_tone": [],
    "chars": [
-    17,
+    16,
     10,
     8,
-    14,
-    11,
+    15,
+    10,
     11
    ],
    "orig_chars": [
@@ -126,12 +132,12 @@
    ],
    "ranges": [
     [
-     17,
-     18
+     16,
+     17
     ],
     [
-     10,
-     11
+     9,
+     10
     ],
     [
      8,
@@ -139,24 +145,24 @@
     ],
     [
      15,
-     16
+     15
     ],
     [
      10,
      11
     ],
     [
-     11,
-     12
+     10,
+     11
     ]
    ],
    "est_px": [
-    925,
-    517,
-    437,
-    783,
-    604,
-    606
+    914,
+    563,
+    469,
+    777,
+    578,
+    620
    ],
    "orig_px": [
     903,
@@ -178,40 +184,49 @@
   {
    "lines": [
     {
-     "fn": "훅",
-     "text": "유리문에 딱 붙였더니 진짜 소리 남"
+     "fn": "발견 맥락",
+     "text": "해외 틱톡에서 다들 하도 난리법석이길래"
     },
     {
-     "fn": "의문",
-     "text": "이게 스피커라고?"
+     "fn": "의심",
+     "text": "그냥 광고인 줄 알았는데"
     },
     {
-     "fn": "상황",
-     "text": "신기해서 웃음 나옴"
+     "fn": "반전 시연",
+     "text": "그냥 아무 데나 대면"
     },
     {
-     "fn": "반전",
-     "text": "벽에 그냥 갖다 대기만 했는데도 울림"
+     "fn": "결과 과장",
+     "text": "온 사방이 초대형 스피커로 변함;;"
     },
     {
-     "fn": "반응",
-     "text": "진짜 신박한 물건임"
+     "fn": "감탄",
+     "text": "소리 퍼지는 거 진짜 미쳤네"
     },
     {
-     "fn": "댓글유도",
-     "text": "너네도 어디에 대고 싶냐?"
+     "fn": "인정·댓글유도",
+     "text": "이건 솔직히 꿀템 인정?"
     }
    ],
    "check": {
     "n_lines": 6,
     "n_ok": true,
+    "width_median_pct": 5.0,
+    "describe_lines": [],
+    "copied_lines": [
+     1,
+     2,
+     3
+    ],
+    "ending_off": [],
+    "off_tone": [],
     "chars": [
-     14,
-     8,
+     17,
+     10,
      8,
      15,
-     8,
-     11
+     11,
+     10
     ],
     "orig_chars": [
      16,
@@ -223,12 +238,12 @@
     ],
     "ranges": [
      [
-      17,
-      18
+      16,
+      17
      ],
      [
-      10,
-      11
+      9,
+      10
      ],
      [
       8,
@@ -236,24 +251,24 @@
      ],
      [
       15,
-      16
+      15
      ],
      [
       10,
       11
      ],
      [
-      11,
-      12
+      10,
+      11
      ]
     ],
     "est_px": [
-     783,
-     401,
-     437,
-     835,
-     437,
-     581
+     967,
+     578,
+     470,
+     777,
+     646,
+     552
     ],
     "orig_px": [
      903,
@@ -264,157 +279,66 @@
      591
     ],
     "len_off_lines": [
-     0,
-     1,
      4
     ],
     "polite_endings": 0,
-    "copied_5grams_vs_orig": [],
+    "copied_5grams_vs_orig": [
+     "로변함;;",
+     "무데나대면",
+     "스피커로변",
+     "아무데나대",
+     "인줄알았는",
+     "줄알았는데",
+     "커로변함;",
+     "피커로변함"
+    ],
     "copied_8grams_vs_examples": 0,
     "numbers": []
    },
-   "model": "gemini-flash-lite-latest"
+   "model": "gemini-flash-latest"
   },
   {
    "lines": [
     {
-     "fn": "훅",
-     "text": "유리문에 갖다 대니까 노래가 바로 흘러나옴"
+     "fn": "발견 맥락",
+     "text": "해외 영상에서 하도 신기하다고 하길래"
     },
     {
-     "fn": "의문",
-     "text": "스피커가 없는데?"
+     "fn": "의심",
+     "text": "솔직히 주작 의심했는데"
     },
     {
-     "fn": "상황",
-     "text": "진짜 신기함"
+     "fn": "반전 시연",
+     "text": "표면에 딱 닿기만 하면"
     },
     {
-     "fn": "반전",
-     "text": "벽에 그냥 붙이기만 해도 소리가 커지는 중"
+     "fn": "결과 과장",
+     "text": "온 집안이 초대형 우퍼로 둔갑함;;"
     },
     {
-     "fn": "반응",
-     "text": "손에 쏙 들어옴"
+     "fn": "감탄",
+     "text": "소리 퍼지는 게 예술이네"
     },
     {
-     "fn": "댓글유도",
-     "text": "너네도 하나 갖고 싶지 않냐?"
+     "fn": "인정·댓글유도",
+     "text": "이거 은근 탐나는 거 인정?"
     }
    ],
    "check": {
     "n_lines": 6,
     "n_ok": true,
+    "width_median_pct": 2.7,
+    "describe_lines": [],
+    "copied_lines": [],
+    "ending_off": [],
+    "off_tone": [],
     "chars": [
-     18,
-     8,
-     5,
-     17,
-     6,
-     12
-    ],
-    "orig_chars": [
-     16,
-     12,
-     8,
      16,
      10,
-     11
-    ],
-    "ranges": [
-     [
-      17,
-      18
-     ],
-     [
-      10,
-      11
-     ],
-     [
-      8,
-      9
-     ],
-     [
-      15,
-      16
-     ],
-     [
-      10,
-      11
-     ],
-     [
-      11,
-      12
-     ]
-    ],
-    "est_px": [
-     989,
-     401,
-     270,
-     950,
-     334,
-     645
-    ],
-    "orig_px": [
-     903,
-     546,
-     464,
-     825,
-     575,
-     591
-    ],
-    "len_off_lines": [
-     0,
-     1,
-     2,
-     3,
-     4,
-     5
-    ],
-    "polite_endings": 0,
-    "copied_5grams_vs_orig": [],
-    "copied_8grams_vs_examples": 0,
-    "numbers": []
-   },
-   "model": "gemini-flash-lite-latest"
-  },
-  {
-   "lines": [
-    {
-     "fn": "훅",
-     "text": "유리문에 원판 대자마자 음악이 흘러나옴"
-    },
-    {
-     "fn": "의문",
-     "text": "스피커가 숨겨져 있나?"
-    },
-    {
-     "fn": "상황",
-     "text": "신기해서 웃음이 남"
-    },
-    {
-     "fn": "반전",
-     "text": "벽에 그냥 갖다 붙였는데도 소리가 들림"
-    },
-    {
-     "fn": "반응",
-     "text": "크기도 엄청 조그마함"
-    },
-    {
-     "fn": "댓글유도",
-     "text": "이거 어디서 파는지 아는 사람?"
-    }
-   ],
-   "check": {
-    "n_lines": 6,
-    "n_ok": true,
-    "chars": [
-     17,
-     10,
-     8,
-     16,
      9,
-     13
+     15,
+     10,
+     11
     ],
     "orig_chars": [
      16,
@@ -426,12 +350,12 @@
     ],
     "ranges": [
      [
-      17,
-      18
+      16,
+      17
      ],
      [
-      10,
-      11
+      9,
+      10
      ],
      [
       8,
@@ -439,24 +363,24 @@
      ],
      [
       15,
-      16
+      15
      ],
      [
       10,
       11
      ],
      [
-      11,
-      12
+      10,
+      11
      ]
     ],
     "est_px": [
-     925,
-     517,
-     437,
-     886,
-     488,
-     696
+     914,
+     563,
+     524,
+     777,
+     578,
+     620
     ],
     "orig_px": [
      903,
@@ -467,53 +391,59 @@
      591
     ],
     "len_off_lines": [
-     3,
-     4,
-     5
+     2
     ],
     "polite_endings": 0,
     "copied_5grams_vs_orig": [],
     "copied_8grams_vs_examples": 0,
     "numbers": []
    },
-   "model": "gemini-flash-lite-latest"
+   "model": "gemini-flash-latest"
   },
   {
    "lines": [
     {
-     "fn": "훅",
-     "text": "유리문에 원판 대자마자 음악이 흘러나옴"
+     "fn": "발견 맥락",
+     "text": "해외 영상에서 다들 미쳤다며 난리길래"
     },
     {
-     "fn": "의문",
-     "text": "스피커가 숨겨져 있나?"
+     "fn": "의심",
+     "text": "솔직히 뻥인 줄 알았는데"
     },
     {
-     "fn": "상황",
-     "text": "신기해서 웃음이 남"
+     "fn": "반전 시연",
+     "text": "아무 데나 갖다 대면"
     },
     {
-     "fn": "반전",
-     "text": "벽에 갖다 붙이기만 했는데 소리 남"
+     "fn": "결과 과장",
+     "text": "방 전체가 거대한 스피커로 변함;;"
     },
     {
-     "fn": "반응",
-     "text": "진짜 조그마한데 짱 신기함"
+     "fn": "감탄",
+     "text": "진짜 울림통 장난 아니네"
     },
     {
-     "fn": "댓글유도",
-     "text": "이거 사는 곳 좀 아는 사람?"
+     "fn": "인정·댓글유도",
+     "text": "하나쯤 갖고 싶은 거 인정?"
     }
    ],
    "check": {
     "n_lines": 6,
     "n_ok": true,
+    "width_median_pct": 2.9,
+    "describe_lines": [],
+    "copied_lines": [
+     1,
+     3
+    ],
+    "ending_off": [],
+    "off_tone": [],
     "chars": [
-     17,
+     16,
      10,
      8,
-     14,
-     11,
+     15,
+     10,
      11
     ],
     "orig_chars": [
@@ -526,12 +456,12 @@
     ],
     "ranges": [
      [
-      17,
-      18
+      16,
+      17
      ],
      [
-      10,
-      11
+      9,
+      10
      ],
      [
       8,
@@ -539,24 +469,132 @@
      ],
      [
       15,
-      16
+      15
      ],
      [
       10,
       11
      ],
      [
-      11,
-      12
+      10,
+      11
      ]
     ],
     "est_px": [
-     925,
-     517,
-     437,
-     783,
-     604,
-     606
+     914,
+     578,
+     470,
+     775,
+     577,
+     622
+    ],
+    "orig_px": [
+     903,
+     546,
+     464,
+     825,
+     575,
+     591
+    ],
+    "len_off_lines": [],
+    "polite_endings": 0,
+    "copied_5grams_vs_orig": [
+     "로변함;;",
+     "스피커로변",
+     "인줄알았는",
+     "줄알았는데",
+     "커로변함;",
+     "피커로변함"
+    ],
+    "copied_8grams_vs_examples": 0,
+    "numbers": []
+   },
+   "model": "gemini-flash-latest"
+  },
+  {
+   "lines": [
+    {
+     "fn": "발견 맥락",
+     "text": "해외 영상에서 하도 신기하다고 하길래"
+    },
+    {
+     "fn": "의심",
+     "text": "솔직히 주작 의심했는데"
+    },
+    {
+     "fn": "반전 시연",
+     "text": "어디든 툭 갖다 대면"
+    },
+    {
+     "fn": "결과 과장",
+     "text": "온 집안이 초대형 우퍼로 둔갑함;;"
+    },
+    {
+     "fn": "감탄",
+     "text": "소리 퍼지는 게 예술이네"
+    },
+    {
+     "fn": "인정·댓글유도",
+     "text": "이거 은근 탐나는 거 인정?"
+    }
+   ],
+   "check": {
+    "n_lines": 6,
+    "n_ok": true,
+    "width_median_pct": 2.7,
+    "describe_lines": [],
+    "copied_lines": [],
+    "ending_off": [],
+    "off_tone": [],
+    "chars": [
+     16,
+     10,
+     8,
+     15,
+     10,
+     11
+    ],
+    "orig_chars": [
+     16,
+     12,
+     8,
+     16,
+     10,
+     11
+    ],
+    "ranges": [
+     [
+      16,
+      17
+     ],
+     [
+      9,
+      10
+     ],
+     [
+      8,
+      9
+     ],
+     [
+      15,
+      15
+     ],
+     [
+      10,
+      11
+     ],
+     [
+      10,
+      11
+     ]
+    ],
+    "est_px": [
+     914,
+     563,
+     469,
+     777,
+     578,
+     620
     ],
     "orig_px": [
      903,
@@ -578,157 +616,66 @@
  "gemini_calls": [
   {
    "tag": "captions0",
-   "model": "gemini-3.5-flash",
+   "model": "gemini-flash-latest",
    "key": 0,
-   "failed": "429",
-   "sec": 2.0
+   "ok": true,
+   "sec": 31.4
   },
   {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
+   "tag": "captions1",
+   "model": "gemini-flash-latest",
    "key": 1,
+   "failed": "503",
+   "sec": 1.8
+  },
+  {
+   "tag": "captions1",
+   "model": "gemini-3-flash-preview",
+   "key": 1,
+   "failed": "504 DEADLINE_EXCEEDED. {'error': {'code': 504, 'message': 'Deadline expired before operation could complete.', 'status':",
+   "sec": 180.3
+  },
+  {
+   "tag": "captions1",
+   "model": "gemini-3-flash-preview",
+   "key": 2,
+   "failed": "503",
+   "sec": 25.9
+  },
+  {
+   "tag": "captions1",
+   "model": "gemini-flash-latest",
+   "key": 1,
+   "ok": true,
+   "sec": 32.5
+  },
+  {
+   "tag": "captions2",
+   "model": "gemini-flash-latest",
+   "key": 2,
+   "ok": true,
+   "sec": 37.0
+  },
+  {
+   "tag": "captions_line2",
+   "model": "gemini-flash-latest",
+   "key": 3,
+   "failed": "429",
+   "sec": 0.8
+  },
+  {
+   "tag": "captions_line2",
+   "model": "gemini-flash-latest",
+   "key": 4,
    "failed": "429",
    "sec": 1.5
   },
   {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 2,
-   "failed": "429",
-   "sec": 1.7
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 3,
-   "failed": "429",
-   "sec": 1.6
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 4,
-   "failed": "429",
-   "sec": 1.4
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 5,
-   "failed": "429",
-   "sec": 3.9
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 6,
-   "failed": "429",
-   "sec": 1.8
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 7,
-   "failed": "429",
-   "sec": 3.2
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 8,
-   "failed": "429",
-   "sec": 2.2
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 9,
-   "failed": "429",
-   "sec": 7.4
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 10,
-   "failed": "429",
-   "sec": 5.9
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 11,
-   "failed": "429",
-   "sec": 7.3
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 12,
-   "failed": "429",
-   "sec": 3.3
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-3.5-flash",
-   "key": 13,
-   "failed": "429",
-   "sec": 2.1
-  },
-  {
-   "tag": "captions0",
-   "model": "gemini-flash-lite-latest",
-   "key": 0,
-   "ok": true,
-   "sec": 7.4
-  },
-  {
-   "tag": "captions1",
-   "model": "gemini-flash-lite-latest",
-   "key": 1,
-   "ok": true,
-   "sec": 6.5
-  },
-  {
-   "tag": "captions2",
-   "model": "gemini-flash-lite-latest",
-   "key": 2,
-   "ok": true,
-   "sec": 7.2
-  },
-  {
-   "tag": "captions_line3",
-   "model": "gemini-flash-lite-latest",
-   "key": 3,
-   "failed": "429",
-   "sec": 5.5
-  },
-  {
-   "tag": "captions_line3",
-   "model": "gemini-flash-lite-latest",
-   "key": 4,
-   "failed": "429",
-   "sec": 6.8
-  },
-  {
-   "tag": "captions_line3",
-   "model": "gemini-flash-lite-latest",
+   "tag": "captions_line2",
+   "model": "gemini-flash-latest",
    "key": 5,
    "ok": true,
-   "sec": 7.2
-  },
-  {
-   "tag": "captions_line4",
-   "model": "gemini-flash-lite-latest",
-   "key": 5,
-   "ok": true,
-   "sec": 3.3
-  },
-  {
-   "tag": "captions_line5",
-   "model": "gemini-flash-lite-latest",
-   "key": 5,
-   "ok": true,
-   "sec": 2.9
+   "sec": 22.9
   }
  ]
 }
