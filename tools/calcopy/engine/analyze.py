@@ -130,7 +130,8 @@ def _cdist(a, b) -> float:
 
 
 def text_fx_one(img: np.ndarray, pol: str, canvas_bg: list[int]) -> dict | None:
-    """채움색·외곽선(두께·색)·글자 상자. 잉크 = bench layout.ink_mask(티끌 제거)."""
+    """채움색·첫 고리 색(외곽선이면 외곽선 색)·글자 상자. 잉크 = bench layout.ink_fill.
+    외곽선 있음·두께 판정은 하지 않는다 — bench captions.glyph_style 한 곳(text_fx 요약이 그 값을 쓴다)."""
     ink = fontmatch.glyph_mask(img, pol)
     if ink.sum() < 50:
         return None
@@ -141,19 +142,11 @@ def text_fx_one(img: np.ndarray, pol: str, canvas_bg: list[int]) -> dict | None:
         ring = d & ~prev
         rings.append([int(v) for v in np.median(img[ring], axis=0)] if ring.any() else None)
         prev = d
-    local_bg = rings[15] or rings[-1]
-    thick = 0
-    if rings[0] and _cdist(rings[0], fill) > 60 and local_bg and _cdist(rings[0], local_bg) > 40:
-        for rc in rings[:12]:
-            if rc and _cdist(rc, fill) > 60 and _cdist(rc, rings[0]) < 60:
-                thick += 1
-            else:
-                break
     ys, xs = np.where(ink)
     pad = 24
     a0, a1 = max(0, ys.min() - pad), min(img.shape[0], ys.max() + pad)
     b0, b1 = max(0, xs.min() - pad), min(img.shape[1], xs.max() + pad)
-    k = 2 * (thick + 6) + 1
+    k = 2 * 14 + 1          # 외곽선(최대 ~8px)까지 비켜서 상자 색을 본다
     away = ~(cv2.dilate(ink.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))) > 0)
     reg = img[a0:a1, b0:b1][away[a0:a1, b0:b1]]
     box = None
@@ -162,7 +155,7 @@ def text_fx_one(img: np.ndarray, pol: str, canvas_bg: list[int]) -> dict | None:
         med = [int(v) for v in np.median(reg, axis=0)]
         if lum.std() < 15:
             box = {"color": med} if _cdist(med, canvas_bg) > 40 else {"color": med, "note": "화면 배경과 같은 색(상자 아님)"}
-    return {"fill_rgb": fill, "outline": {"px": thick, "rgb": rings[0]} if thick else None,
+    return {"fill_rgb": fill, "ring_rgb": rings[0],
             "box": box if box and "note" not in box else None, "box_note": box.get("note") if box else None}
 
 
@@ -547,8 +540,10 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
             R["text_fx"]["ok"] = True
             R["text_fx"]["summary"] = {
                 "fill_rgb": [int(np.median([f["fill_rgb"][k] for f in fx])) for k in range(3)],
-                "outline_px": int(np.median([(f["outline"] or {}).get("px", 0) for f in fx])),
-                "outline_rgb": next((f["outline"]["rgb"] for f in fx if f["outline"]), None),
+                # 외곽선 있음·두께는 bench captions.glyph_style 한 곳(outline·outline_px). 여기 링 색은 색만 빌린다(0순위-B)
+                "outline_px": int(np.median([g.get("outline_px", 0) for g in gl])) if gl else 0,
+                "outline_rgb": (next((f["ring_rgb"] for f in fx if f.get("ring_rgb")), None)
+                                if gl and np.median([g.get("outline_px", 0) for g in gl]) > 0 else None),
                 "box": next((f["box"] for f in fx if f["box"]), None),
                 "shadow": [g["shadow"] for g in gl if g.get("shadow")][:1] or None,
                 "stroke_px": st.median([g["stroke"] for g in gl if g.get("stroke")]) if any(g.get("stroke") for g in gl) else None,

@@ -100,15 +100,18 @@ def segs(mask, min_len: int = 1, gap: int = 0) -> list[tuple[int, int]]:
 
 
 # ── 편 하나 ────────────────────────────────────────────────────────────────
-def _scan(path: str, meta: dict) -> dict:
-    """LAYOUT_FPS 표본을 한 번 훑어 시간 통계를 모은다(창·배경·자막 판정의 재료)."""
+def _scan(path: str, meta: dict, skip: list | None = None) -> dict:
+    """LAYOUT_FPS 표본을 한 번 훑어 시간 통계를 모은다(창·배경·자막 판정의 재료).
+    skip = [[t0,t1]…] 이면 그 구간 표본은 뺀다(틀이 다른 훅 카드가 흰 여백까지 '움직임'으로 만들어 창이 화면 끝까지 늘었다)."""
     W, H = meta["width"], meta["height"]
     n = 0
     s1 = s2 = srgb = gmin = gmax = None
     rowchg = np.zeros(H)
     ink_rows = {"dark": [], "bright": []}
     prev = None
-    for f in probe.frames(path, f"fps={LAYOUT_FPS},scale={LAYOUT_W}:{H}", LAYOUT_W, H):
+    for k, f in enumerate(probe.frames(path, f"fps={LAYOUT_FPS},scale={LAYOUT_W}:{H}", LAYOUT_W, H)):
+        if skip and any(a <= k / LAYOUT_FPS < b for a, b in skip):
+            continue
         g = lum(f).astype(np.float64)
         if s1 is None:
             s1 = np.zeros_like(g); s2 = np.zeros_like(g); srgb = np.zeros(f.shape, np.float64)
@@ -321,6 +324,17 @@ def measure_video(path: str, meta: dict) -> dict:
         fb = frame_breaks(path, meta, win)       # 짧은 다른 틀(첫 1~3초 훅 카드·인트로)은 6초 조각 다수결로 안 보인다
         if fb["other"]:
             frames = {"main": None, "other": fb["other"], "other_method": fb["method"], "chunks": []}
+            # 그 구간을 빼고 창·통계를 다시 잰다(방구석 ayNy6CSSrIQ: 훅 카드가 아래 흰 여백을 덮어 창 아래 끝이 1920)
+            try:
+                st2 = _scan(path, meta, skip=fb["other"])
+                w2 = _window(st2)
+            except ValueError:
+                w2 = None
+            if w2 and w2[3] < WINDOW_FULL_FRAC * st["H"]:
+                if w2 != win:
+                    frames["window_before_skip"] = win
+                    method += " — 틀 다른 구간 빼고 다시"
+                st, win = st2, w2
     lv = _finish(win, st)
     lv["window_method"] = method
     if frames:
