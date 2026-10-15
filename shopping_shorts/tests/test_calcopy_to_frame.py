@@ -28,8 +28,13 @@ def synth():
     im = Image.new("RGB", (W, H), PAINT); d = ImageDraw.Draw(im)
     d.text((540, 260), TITLE[0], font=f80, fill=(0, 0, 0), anchor="ms")
     d.text((540, 360), TITLE[1], font=f80, fill=(0, 0, 0), anchor="ms")
-    d.text((1060, 70), "[광고]", font=to_frame._pil_font("NotoSansKRBold", 50), fill=(190, 189, 192), anchor="rs",
-           stroke_width=3, stroke_fill=(80, 80, 80))
+    # [광고] 는 12도 기울여 붙인다(기울임 판정 답) — 위가 오른쪽으로
+    br = Image.new("RGB", (300, 100), PAINT); bd = ImageDraw.Draw(br)
+    bd.text((260, 75), "[광고]", font=to_frame._pil_font("NotoSansKRBold", 50), fill=(190, 189, 192), anchor="rs",
+            stroke_width=3, stroke_fill=(80, 80, 80))
+    k = np.tan(np.radians(12))
+    br = br.transform(br.size, Image.AFFINE, (1, k, -k * 50, 0, 1, 0), resample=Image.BICUBIC, fillcolor=PAINT)
+    im.paste(br, (W - 300, 0))
     d.rectangle((0, 500, W - 1, 1499), fill=(30, 90, 120))     # 영상 창
     f60 = to_frame._pil_font("NotoSansKRBold", 60)
     d.text((540, 1600), CAP, font=f60, fill=(0, 0, 0), anchor="ms")
@@ -49,7 +54,9 @@ def synth():
                    "per_crop": []}}
     ocr = {"title": TITLE, "brand": "[광고]"}
     F = to_frame.build(J, np.asarray(im), ocr, tail_probe=lambda t: t < 17.3)
-    return F, bands, (cy0, cy1)
+    J2 = {**J, "fonts": {**J["fonts"], "title": {"ok": True, "top3": [{"font": "BlackHanSans.ttf", "score": 0.81}], "per_crop": []}}}
+    F2 = to_frame.build(J2, np.asarray(im), ocr, tail_probe=lambda t: t < 17.3)
+    return F, bands, (cy0, cy1), F2
 
 
 def layer(F, kind, role=None):
@@ -57,7 +64,7 @@ def layer(F, kind, role=None):
 
 
 def test_valid_and_frame_fields(synth):
-    F, bands, _ = synth
+    F, bands, _, _ = synth
     schema.validate(F)
     assert layer(F, "bg")["rgb"] == list(PAINT)                       # 잰 값(240,231,234)이 아니라 실제 칠
     assert layer(F, "video") == {"kind": "video", "x": 0, "y": 500, "w": W, "h": 1000, "radius": 0}
@@ -65,32 +72,52 @@ def test_valid_and_frame_fields(synth):
 
 
 def test_title_from_bands(synth):
-    F, bands, _ = synth
+    F, bands, _, _ = synth
     t = layer(F, "text", "title")
     assert t["text"] == "\n".join(TITLE) and t["lines"] == 2 and t["align"] == "center"
-    assert t["font"] == "NotoSansKRBold" and abs(t["size"] - 80) <= 2
+    # 분석기 fonts.title 이 없으면 같은 판별 함수(fontmatch.rank)를 제목에 직접 — 출처가 notes 에 남는다
+    assert any("제목 글꼴" in n and "fontmatch.rank" in n for n in F["made_from"]["notes"])
+    assert t["font"] in schema.font_families() and abs(t["size"] - 80) <= 4
     assert t["line_h"] == bands[2][0] - bands[1][0]
     assert t["rgb"] == [0, 0, 0] and t["outline"] is None and t["shadow"] is None and t["box"] is None
-    assert abs(t["letter_spacing"]) <= 2                               # 같은 글꼴로 그렸으니 폭 보정이 거의 0
+    assert t["italic"] is False
 
 
 def test_brand_and_caption(synth):
-    F, bands, (cy0, cy1) = synth
+    F, bands, (cy0, cy1), _ = synth
     b = layer(F, "text", "brand")
     assert b["text"] == "[광고]" and b["align"] == "right"
+    assert b["italic"] is True                                         # 12도 기울인 답 → 기울임
+    assert any("고정 문구 기울기" in n for n in F["made_from"]["notes"])
     assert max(abs(x - y) for x, y in zip(b["rgb"], (190, 189, 192))) <= 20
     assert b["outline"] and abs(b["outline"]["px"] - 3) <= 1 and max(b["outline"]["rgb"]) <= 110
     c = layer(F, "text", "caption")
-    assert c["font"] == "NotoSansKRBold" and abs(c["size"] - 60) <= 2 and c["lines"] == 1
+    # 자막 = 합산 1위(Spoqa) — 렌더러에 등록돼 그대로 쓴다(1위가 미등록이라 내려가던 일 없음). 그린 글꼴(Noto)과 달라 크기·자간은 느슨히
+    assert c["font"] == "CcSpoqaHanSansNeo-Bold" and abs(c["size"] - 60) <= 6 and c["lines"] == 1
     assert c["outline"] is None and c["rgb"] == [0, 0, 0]
-    assert abs(c["letter_spacing"]) <= 2
 
 
 def test_font_confidence_and_notes(synth):
     F, *_ = synth
     m = F["made_from"]
     assert m["font_confidence"] == "low"                              # 1위 0.42 < 0.5
-    assert m["font"]["top1"] == "SpoqaHanSansNeo-Bold.otf" and "SpoqaHanSansNeo-Bold.otf(장면꾸미기 미등록)" in m["font"]["skipped"]
+    assert m["font"]["top1"] == "SpoqaHanSansNeo-Bold.otf" and m["font"]["skipped"] == []   # 창고 전부 등록(register_fonts)
+
+
+def test_title_font_from_analyzer_when_given(synth):
+    *_, F2 = synth
+    t = layer(F2, "text", "title")
+    assert t["font"] == "BlackHanSans"                                 # 분석기 2판 fonts.title 이 있으면 그것
+    assert any("분석기 fonts.title 1위 BlackHanSans.ttf" in n for n in F2["made_from"]["notes"])
+    assert layer(F2, "text", "caption")["font"] == "CcSpoqaHanSansNeo-Bold"   # 자막은 그대로 자막 순위
+
+
+def test_every_warehouse_font_is_drawable():
+    """창고 ttf/otf 전부가 렌더러에 등록돼 있다(register_fonts.py --check 와 같은 뜻)."""
+    from pathlib import Path
+    root = Path(to_frame.ROOT) / "shopping_shorts/static/fonts"
+    miss = [p.name for p in root.glob("*") if p.suffix.lower() in (".ttf", ".otf") and not to_frame.family_of(p.name)]
+    assert miss == []
 
 
 def test_missing_values_are_null_not_guessed():

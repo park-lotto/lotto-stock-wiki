@@ -180,6 +180,87 @@ def gap_rows(window, bands) -> list[tuple[int, int]]:
     return edges
 
 
+ITALIC_MIN = 6.0        # 글자 기둥이 이 각도(도) 이상 오른쪽으로 누우면 기울임 — 렌더러 합성 기울임은 약 11~14도
+
+
+def slant_deg(mask: np.ndarray) -> float:
+    """글자 잉크 마스크의 기울기(도, + = 위가 오른쪽). 각도마다 위아래를 반대로 밀어(전단) 세로 기둥이 가장 곧게 서는
+    각 = 열 투영 제곱합이 가장 큰 각. 분석기 값이 없을 때 프레임에서 직접 잰다."""
+    import cv2
+    m = mask.astype(np.float32)
+    h, w = m.shape
+    yc = h / 2
+    best, ang = -1.0, 0.0
+    for a in np.arange(-25, 25.5, 1.0):
+        t = np.tan(np.radians(a))
+        M = np.float32([[1, t, -t * yc], [0, 1, 0]])
+        col = cv2.warpAffine(m, M, (w, h)).sum(axis=0)
+        sc = float((col ** 2).sum())
+        if sc > best:
+            best, ang = sc, float(a)
+    return ang
+
+
+def italic_of(img, bands_cols, bg, notes: list, label: str) -> bool:
+    """띠들의 글자 기울기 → 기울임 여부. 프레임이 없으면 False + notes."""
+    if img is None or not bg:
+        notes.append(f"{label} 기울임: 프레임 없음 → false(안 잼)")
+        return False
+    angs = []
+    for b, cols in bands_cols:
+        if not cols:
+            continue
+        crop = img[b[0]:b[1] + 1, cols[0]:cols[1] + 1].astype(int)
+        mask = np.abs(crop - np.array(bg)).max(axis=2) > 40
+        if mask.sum() > 50:
+            angs.append(slant_deg(mask))
+    if not angs:
+        notes.append(f"{label} 기울임: 잉크 없음 → false"); return False
+    a = st.median(angs)
+    notes.append(f"{label} 기울기 {a:+.0f}도(기둥 전단 투영) → {'기울임' if a >= ITALIC_MIN else '바름'}")
+    return a >= ITALIC_MIN
+
+
+def title_font(J: dict, img, title_b, texts: list, pol: str) -> tuple[str | None, str]:
+    """제목 글꼴 — ① 분석기 fonts.title(2판) ② 없으면 분석기와 같은 판별 함수(fontmatch.rank)를 제목 줄에 직접 돌린다
+    (판별 주인은 fontmatch 그대로 — 여기선 부르기만) ③ 그것도 못 하면 None(부르는 쪽이 자막 글꼴 + notes)."""
+    ft = (J.get("fonts") or {}).get("title")
+    if isinstance(ft, dict) and ft.get("ok"):
+        fam, note = pick_font(ft)
+        return fam, f"분석기 fonts.title 1위 {note.get('top1')}({note.get('top1_score')}), 신뢰 {note.get('font_confidence')}"
+    if img is None or not texts:
+        return None, "분석기 fonts.title 없음 · 프레임/제목 OCR 없어 직접 판별 못 함"
+    from tools.calcopy.engine import fontmatch
+    y0, y1 = title_b[0][0][0] - 12, title_b[-1][0][1] + 12
+    masks = fontmatch.line_masks(img[max(0, y0):y1], pol)
+    if len(masks) != len(texts):
+        return None, f"분석기 fonts.title 없음 · 제목 잉크 줄 {len(masks)} ≠ OCR 줄 {len(texts)}"
+    per, tot = [], {}
+    for m, t in zip(masks, texts):
+        r = fontmatch.rank(m, t)
+        per.append({"text": t, "top5": [{"font": x["font"], "score": x["score"]} for x in r[:5]]})
+        for x in r:
+            tot.setdefault(x["font"], []).append(x["score"])
+    top = sorted(({"font": k, "score": round(float(np.mean(v)), 4)} for k, v in tot.items()), key=lambda r: -r["score"])
+    fam, note = pick_font({"ok": True, "top3": top[:3], "per_crop": per})
+    return fam, (f"분석기 fonts.title 없음 → fontmatch.rank 를 제목 {len(texts)}줄에 직접(1위 {note.get('top1')} "
+                 f"{note.get('top1_score')}, 신뢰 {note.get('font_confidence')})")
+
+
+def band_font(img, b, cols, text: str, bg) -> tuple[str | None, str]:
+    """고정 문구 띠의 글꼴 — 분석기는 이 띠를 판별하지 않는다. 바탕과 다른 점 전체(채움+외곽선)를 글자 모양으로 보고
+    fontmatch.rank(분석기와 같은 판별 함수)를 직접 부른다. 외곽선만큼 획이 두껍게 보여 굵은 쪽으로 기울 수 있다."""
+    if img is None or not cols or not text:
+        return None, "프레임/글자 없어 판별 못 함 → 자막 글꼴"
+    from tools.calcopy.engine import fontmatch
+    crop = img[b[0]:b[1] + 1, cols[0]:cols[1] + 1].astype(int)
+    mask = np.abs(crop - np.array(bg)).max(axis=2) > 40
+    r = fontmatch.rank(mask, text)
+    fam, note = pick_font({"ok": True, "top3": [{"font": x["font"], "score": x["score"]} for x in r[:3]],
+                           "per_crop": [{"top5": [{"font": x["font"], "score": x["score"]} for x in r[:5]]}]})
+    return fam, f"fontmatch.rank 직접(채움+외곽선 모양, 1위 {note.get('top1')} {note.get('top1_score')}, 신뢰 {note.get('font_confidence')})"
+
+
 def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None) -> dict:
     """뜯기 → 설명서(검사 전 원본 모양 + notes). frame_img = 틀이 있는 구간의 원본 한 프레임(RGB),
     ocr = {"title": [줄...], "brand": "글"} 또는 None, tail_probe(t)→bool = 그 시각 틀이 있나(없으면 뜯기 값 그대로)."""
@@ -221,6 +302,13 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     otext = ocr or {}
     if title_b and fam:
         tl = otext.get("title") or []
+        tfam, tsrc = title_font(J, frame_img, title_b, tl, pol)
+        if tfam:
+            notes.append(f"제목 글꼴 {tfam} — {tsrc}")
+        else:
+            tfam = fam
+            notes.append(f"제목 글꼴 = 자막 글꼴({fam}) — {tsrc}")
+        fam_c, fam = fam, tfam            # 이 블록 안에서만 제목 글꼴(아래 자막·문구는 fam_c 로 되돌린다)
         lines = len(title_b)
         line_h = (title_b[-1][0][0] - title_b[0][0][0]) / (lines - 1) if lines > 1 else None
         fits = [size_and_top(fam, tl[i] if i < len(tl) else None, b[0], b[1] - b[0] + 1, line_h) for i, (b, _) in enumerate(title_b)]
@@ -240,13 +328,14 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
                        "rgb": (fx or {}).get("fill_rgb") or ([0, 0, 0] if pol == "dark" else [255, 255, 255]),
                        "line_rgb": None, "outline": (fx or {}).get("outline"), "shadow": None,
                        "box": ({"rgb": fx["box"]["color"], "pad": 0, "radius": 0} if fx and fx.get("box") else None),
-                       "italic": False, "letter_spacing": round(st.mean(sp), 1) if sp else 0, "enter": None,
+                       "italic": italic_of(frame_img, title_b, bg, notes, "제목"),
+                       "letter_spacing": round(st.mean(sp), 1) if sp else 0, "enter": None,
                        "text": "\n".join(tl) if tl else None})
         if not tl:
             notes.append("제목 글자 OCR 없음 → text null(크기는 표본 글자로 잼)")
         if fx is None:
             notes.append("제목 채움색 못 잼 → 잉크 극성 기본색")
-        notes.append("제목 글꼴 = 자막 글꼴(제목은 글꼴 판별 안 함 — 분석기는 자막만 판별)")
+        fam = fam_c
     # 자막
     cap = J.get("captions") or {}
     items = [i for i in cap.get("items") or [] if i.get("top_y") is not None]
@@ -279,13 +368,16 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             notes.append(f"띠 {b} 는 고정 문구로 보이나 글자 OCR 없음 → 층 생략(brand 는 글이 있어야 그린다)")
             continue
         tone = two_tone(frame_img, (cols[0], b[0], cols[1], b[1]), bg)
-        f2 = size_and_top(fam, txt, b[0], b[1] - b[0] + 1, None)
+        bfam, bsrc = band_font(frame_img, b, cols, txt, bg)
+        notes.append(f"고정 문구 글꼴 {bfam or fam} — {bsrc}")
+        bfam = bfam or fam
+        f2 = size_and_top(bfam, txt, b[0], b[1] - b[0] + 1, None)
         layers.append({"kind": "text", "role": "brand", "text": txt, "x": cols[1], "y": f2["y"], "w": cols[1] - cols[0] + 60,
                        "align": "right" if cols[1] > W * 0.7 else ("left" if cols[0] < W * 0.3 else "center"),
-                       "lines": 1, "font": fam, "size": f2["size"], "line_h": f2["line_h"],
+                       "lines": 1, "font": bfam, "size": f2["size"], "line_h": f2["line_h"],
                        "rgb": tone["fill"] or [128, 128, 128], "line_rgb": None, "outline": tone["outline"],
-                       "shadow": None, "box": None, "italic": False, "letter_spacing": spacing_for(fam, f2["size"], txt, cols[1] - cols[0] + 1) or 0, "enter": None})
-        notes.append("고정 문구 기울임은 재지 않음(italic false)")
+                       "shadow": None, "box": None, "italic": italic_of(frame_img, [(b, cols)], bg, notes, "고정 문구"),
+                       "letter_spacing": spacing_for(bfam, f2["size"], txt, cols[1] - cols[0] + 1) or 0, "enter": None})
     # 틀이 다른 구간 → template_off
     dur = float(pr.get("duration") or 0)
     tail = None

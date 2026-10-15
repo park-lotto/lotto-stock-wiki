@@ -56,6 +56,20 @@ def line_runs(im, y0, y1, x0, x1, dark, want):
     return [ink_box(im, a, b + 1, x0, x1, dark) for a, b in runs] + [None] * (want - len(runs))
 
 
+def stroke_px(im, box, dark=200):
+    """잉크 상자 안 글자 획 두께(px) = 획 가운데 줄(거리 변환의 지역 최대)의 거리 × 2 의 중앙값. 글꼴 굵기 대조용."""
+    import cv2
+    import numpy as np
+    if not box:
+        return None
+    x0, y0, x1, y1 = box
+    a = np.asarray(im.convert("RGB"))[y0:y1 + 1, x0:x1 + 1].astype(int).sum(axis=2)
+    m = (a < dark).astype(np.uint8)
+    d = cv2.distanceTransform(m, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)   # 3×3 근사는 값이 계단(7.6·13.4…)이라 글꼴끼리 안 갈렸다
+    ridge = (d >= cv2.dilate(d, np.ones((3, 3), np.uint8))) & (m > 0) & (d > 1)
+    return round(float(np.mean(d[ridge]) * 2), 1) if ridge.any() else None
+
+
 def measure(im, spec):
     """설명서의 글자 층마다 실제 잉크 상자 — 원본과 우리를 같은 구역·같은 방법으로 잰다."""
     out = []
@@ -90,12 +104,15 @@ def main():
     scene_style.compose_still(str(src), tl, snap, out / "work", 0, ours, head)
     shutil.copy(out / "work" / json.loads((out / "work" / "scene-style-layers.json").read_text(encoding="utf-8"))[0]["file"], out / "layer.png")
     mine = Image.open(ours).convert("RGB")
-    print(f"{'층':10s} {'원본 (x0,y0,x1,y1)':28s} {'우리 (x0,y0,x1,y1)':28s} 차이(x0,y0,x1,y1)")
+    print(f"{'층':10s} {'원본 (x0,y0,x1,y1)':28s} {'우리 (x0,y0,x1,y1)':28s} {'차이(x0,y0,x1,y1)':22s} 획 원본/우리/차(px)")
     rows = []
     for (name, b0), (_, b1) in zip(measure(original, spec), measure(mine, spec)):
         diff = tuple(q - p for p, q in zip(b0, b1)) if b0 and b1 else None
-        rows.append({"layer": name, "original": b0, "ours": b1, "diff": diff})
-        print(f"{name:10s} {str(b0):28s} {str(b1):28s} {diff}")
+        dark = 400 if name == "brand" else 200
+        s0, s1 = stroke_px(original, b0, dark), stroke_px(mine, b1, dark)
+        sd = round(s1 - s0, 1) if s0 is not None and s1 is not None else None
+        rows.append({"layer": name, "original": b0, "ours": b1, "diff": diff, "stroke": [s0, s1, sd]})
+        print(f"{name:10s} {str(b0):28s} {str(b1):28s} {str(diff):22s} {s0}/{s1}/{sd}")
     (out / "ink.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
     W, H = original.size
     sheet = Image.new("RGB", (W * 2 + 30, H + 80), (40, 40, 40))

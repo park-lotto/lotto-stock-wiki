@@ -26,10 +26,10 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 210,
+   "y": 224,
    "lines": 2,
-   "font": "NotoSansKRBold",
-   "size": 88.8,
+   "font": "SBAggroB",
+   "size": 93.2,
    "line_h": 96,
    "rgb": [
     0,
@@ -41,7 +41,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 6.4,
+   "letter_spacing": -1.3,
    "enter": null,
    "text": "닿으면 스피커\n소름 돋는 음질 수준"
   },
@@ -51,9 +51,9 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 1456,
+   "y": 1462,
    "lines": 1,
-   "font": "NotoSansKRBold",
+   "font": "CcSpoqaHanSansNeo-Bold",
    "size": 66.0,
    "line_h": 76,
    "rgb": [
@@ -74,11 +74,11 @@
    "role": "brand",
    "text": "[광고]",
    "x": 1068,
-   "y": 2,
+   "y": 10,
    "w": 198,
    "align": "right",
    "lines": 1,
-   "font": "NotoSansKRBold",
+   "font": "TmonMonsori",
    "size": 54.9,
    "line_h": 63,
    "rgb": [
@@ -97,8 +97,8 @@
    },
    "shadow": null,
    "box": null,
-   "italic": false,
-   "letter_spacing": -1.7,
+   "italic": true,
+   "letter_spacing": -2.3,
    "enter": null
   }
  ],
@@ -114,23 +114,21 @@
    "top1": "SpoqaHanSansNeo-Bold.otf",
    "top1_score": 0.4235,
    "picked_from": {
-    "file": "NotoSansKR-Bold.otf",
-    "score": 0.2975
+    "file": "SpoqaHanSansNeo-Bold.otf",
+    "score": 0.4235
    },
    "font_confidence": "low",
-   "skipped": [
-    "SpoqaHanSansNeo-Bold.otf(장면꾸미기 미등록)",
-    "IBMPlexSansKR-Bold.otf(장면꾸미기 미등록)",
-    "Pretendard-Bold.otf(장면꾸미기 미등록)"
-   ]
+   "skipped": []
   },
   "font_confidence": "low",
   "notes": [
    "바탕색 = 프레임 실제 칠 [251, 248, 252] (뜯기 잰 값 [241, 235, 237])",
-   "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 NotoSansKRBold({'file': 'NotoSansKR-Bold.otf', 'score': 0.2975})",
-   "제목 글꼴 = 자막 글꼴(제목은 글꼴 판별 안 함 — 분석기는 자막만 판별)",
-   "고정 문구 기울임은 재지 않음(italic false)"
+   "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
+   "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "고정 문구 글꼴 TmonMonsori — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462, 신뢰 low)",
+   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임"
   ],
-  "ocr_model": "gemini-3.5-flash"
+  "ocr_model": "gemini-flash-lite-latest"
  }
 }
