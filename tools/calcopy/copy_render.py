@@ -26,11 +26,11 @@ TITLE_Y = (117, 351)
 BG = "0xFCF9FD"
 FONT_DIR = ROOT / "shopping_shorts/channel_presets/brainbulb/fonts"
 FONT = "SB Aggro"                  # SBAggroB.ttf — 원본 제목·자막처럼 굵은 고딕
-NARR = "tc_6059dad0b83880769a50502f"
-TARGET_CPS = 7.4
-GAP = 0.03                         # 줄 사이(원본은 쉬지 않고 이어 말한다)
-BGM = ROOT / "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3"
-BGM_GAIN = 0.16                    # 말할 때는 사이드체인으로 더 내려간다
+NARR = "tc_68257f68bc6e3c161ab5078d"     # 필재(숏템 기본 tc-piljae-stable) — 사장님 10-15
+TARGET_CPS = 8.2                   # 사장님 "무음 없이 빠르게"(원본 7.4)
+GAP = 0.0                         # 줄 사이(원본은 쉬지 않고 이어 말한다)
+BGM = ROOT / "shopping_shorts/assets/bgm_lib/otsukare_summer.mp3"   # 쉼(-40dB↓) 0개·하위5% -19.3dB — 끊어 치는 곡은 끊겨 들린다
+BGM_GAIN = 0.30                    # 고정 크기(자동 낮추기 없음 — 오르내림이 끊김처럼 들렸다)
 MEME_DIR = Path("C:/숏템_칼카피/memes")
 SFX_DIR = Path("C:/숏템_칼카피/sseolpulda/sfx_pack")
 
@@ -45,7 +45,8 @@ def _trim(src: Path) -> Path:
     dst = src.with_suffix(".trim.wav")
     if not dst.exists():
         f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", f"{f},areverse,{f},areverse", str(dst)], check=True)
+        mid = "silenceremove=stop_periods=-1:stop_duration=0.1:stop_threshold=-45dB:stop_silence=0.05"   # 문장 안 쉼도 0.05초만
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", f"{f},areverse,{f},areverse,{mid}", str(dst)], check=True)
     return dst
 
 
@@ -127,6 +128,17 @@ def render(script_path: str, clips_dir: str, out_dir: str):
     base_cps = len(lines[0].replace(" ", "")) / probe[0][1]
     tempo = round(min(1.6, max(1.0, TARGET_CPS / base_cps)), 2)
     narr = tts(lines, out, tempo)
+    # 전체 말 속도를 목표에 맞춘다(첫 줄로 고른 tempo 만으로는 모자란다) — 모자란 만큼 atempo
+    spoken = sum(d for _, d in narr)
+    fac = round(min(1.3, max(1.0, (chars / spoken) and TARGET_CPS / (chars / spoken))), 3)
+    if fac > 1.01:
+        sped = []
+        for f, _ in narr:
+            g = f.with_name(f.stem + f".x{fac}.wav")
+            if not g.exists():
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(f), "-af", f"atempo={fac}", str(g)], check=True)
+            sped.append((g, _dur(g)))
+        narr = sped
     # 나레 이어 붙이기(줄 사이 0.05초) + 시각표
     t, subs, seg = 0.0, [], []
     for (f, du), text in zip(narr, lines):
@@ -215,9 +227,8 @@ def render(script_path: str, clips_dir: str, out_dir: str):
         sx.append(f"[s{len(sx)}]")
     jb = _n()
     inputs += ["-stream_loop", "-1", "-i", str(BGM)]
-    alist.append("".join(f"[a{k}]" for k in range(len(narr))) + f"amix=inputs={len(narr)}:normalize=0,asplit=2[nar][sc]")
-    alist.append(f"[{jb}:a]volume={BGM_GAIN},atrim=0:{total:.2f}[bg0]")
-    alist.append("[bg0][sc]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[bg]")
+    alist.append("".join(f"[a{k}]" for k in range(len(narr))) + f"amix=inputs={len(narr)}:normalize=0[nar]")
+    alist.append(f"[{jb}:a]volume={BGM_GAIN},atrim=0:{total:.2f}[bg]")
     mix_in = "[nar][bg]" + "".join(sx)
     alist.append(f"{mix_in}amix=inputs={2 + len(sx)}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")
     fil += alist
