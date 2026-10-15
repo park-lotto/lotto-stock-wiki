@@ -711,6 +711,7 @@
   let pop = null, au = null;
   function close() { if (pop) { pop.remove(); pop = null; } if (au) { au.pause(); au = null; } }
   document.addEventListener('click', e => { if (pop && !pop.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (pop && e.key === 'Escape') close(); });   // 10-16 사장님 "끄거나 접는 게 없어"
   window.tlSfxOpen = function (bi, k, el) {
     close();
     const sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(bi));
@@ -721,7 +722,7 @@
     pop.style.left = Math.max(8, Math.min(window.innerWidth - 230, r.left)) + 'px';
     pop.style.top = (r.bottom + 4) + 'px';
     const paint = () => { pop.querySelector('.v').textContent = Math.round(vol * 100) + '%'; };
-    pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span>
+    pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span><button class="x" title="닫기">✕</button>
       <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>
       <div class="row"><select class="swap" title="고르면 바로 바뀝니다"></select></div>`;
     document.body.appendChild(pop); paint();
@@ -739,6 +740,7 @@
     let timer = null;
     const step = d => { vol = Math.round(Math.min(2, Math.max(0, vol + d)) * 10) / 10; paint(); if (au) au.volume = Math.min(1, vol);
       clearTimeout(timer); timer = setTimeout(() => send('vol'), 500); };
+    pop.querySelector('.x').onclick = close;
     pop.querySelector('.dn').onclick = () => step(-0.1);
     pop.querySelector('.up').onclick = () => step(0.1);
     pop.querySelector('.play').onclick = () => { if (!s.url) return alertSay('들어볼 파일이 없어요');
