@@ -418,9 +418,20 @@ def clean_pack_edit(v):
             continue
         if r and 0.0 <= g <= 2.0:
             vol = [y for y in vol if (y["slot"], y["n"]) != (r["slot"], r["n"])] + [{**r, "g": g}]
+    move = []    # 3단계 효과음 줄에서 끌어 옮긴 소리 하나의 시각 이동(초, −5~+5) — 같은 소리를 이름+순번으로 가리킨다
+    for x in (v.get("move") or [])[:30] if isinstance(v.get("move"), list) else []:
+        r = _ref(x)
+        try:
+            dt = round(float((x or {}).get("dt")), 2)
+        except (TypeError, ValueError):
+            continue
+        if r and -5.0 <= dt <= 5.0:
+            move = [y for y in move if (y["slot"], y["n"]) != (r["slot"], r["n"])] + ([{**r, "dt": dt}] if dt else [])
     out = {}
     if vol:
         out["vol"] = vol
+    if move:
+        out["move"] = move
     if off:
         out["off"] = off
     if swap:
@@ -472,6 +483,11 @@ def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None, with_e
                 r = _find(ref)
                 if r is not None:
                     r[4] = float(ref["g"])
+            for ref in ed.get("move") or []:
+                r = _find(ref)
+                if r is not None:
+                    r[1] = max(0.0, float(r[1]) + float(ref["dt"]))
+                    r[5] = {**r[5], "dt": float(ref["dt"])}
         out[bi] = [tuple(r if with_extra else r[:4]) for r in rows if keep_off or r[3] != "off"]
     return out
 

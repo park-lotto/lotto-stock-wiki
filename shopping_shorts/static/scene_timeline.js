@@ -139,8 +139,8 @@
     // 효과음 줄(10-15 사장님 "음성이 아니라 효과음으로, 들어보고 음량·삭제 간편하게") — 칩을 누르면 tlSfxOpen 작은 창
     const _bk = _b.beat_idx != null ? _b.beat_idx : i;
     const sfxChips = ((_sb && _sb.sounds) || []).map((s, k) => `<span class="tl-sfxmark ${s.kind === 'line' ? 'line' : ''}${(+s.vol === 0) ? ' mute' : ''}"
-        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${String(s.label || s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초 — 눌러서 듣기·음량·빼기"
-        onclick="event.stopPropagation();tlSfxOpen(${_bk},${k},this)">🔊 ${String(s.label || s.name).replace(/[<>"&]/g, '').slice(0, 6)}${(+s.vol !== 1) ? ` ${Math.round(+s.vol * 100)}%` : ''}</span>`).join('');
+        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${String(s.label || s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초 — 눌러서 듣기·바꾸기·음량·빼기 / 좌우로 끌어 자리 옮기기"
+        data-bi="${_bk}" data-k="${k}" data-pps="${pps.toFixed(3)}" onpointerdown="tlSfxDown(event,this)" onclick="event.stopPropagation()">🔊 ${String(s.label || s.name).replace(/[<>"&]/g, '').slice(0, 6)}${(+s.vol !== 1) ? ` ${Math.round(+s.vol * 100)}%` : ''}</span>`).join('');
     const sfxLane = `<div class="tl-lane tl-sfxs"><span class="tl-name">효과음</span>${sfxChips || '<span class="tl-loading">없음</span>'}</div>`;
     const audHtml = `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
         <span class="tl-aud-l">${srcBadge}${ttsReal ? ` beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
@@ -623,7 +623,8 @@
     pop.style.top = (r.bottom + 4) + 'px';
     const paint = () => { pop.querySelector('.v').textContent = Math.round(vol * 100) + '%'; };
     pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span>
-      <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>`;
+      <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>
+      <div class="row"><select class="swap"><option value="">다른 소리로 바꾸기…</option></select></div>`;
     document.body.appendChild(pop); paint();
     pop.addEventListener('click', e => e.stopPropagation());
     const job = new URLSearchParams(location.search).get('job') || window.JOB_ID;
@@ -644,6 +645,55 @@
     pop.querySelector('.play').onclick = () => { if (!s.url) return alertSay('들어볼 파일이 없어요');
       if (au) au.pause(); au = new Audio(s.url); au.volume = Math.min(1, vol); au.play().catch(() => alertSay('재생 못 했어요')); };
     pop.querySelector('.del').onclick = async () => { if (await send('off')) close(); };
+    // 바꾸기 — 팩 소리는 팩 안 다른 소리(pack_edit.swap), 칸 효과음은 효과음 서랍 소리(/sfx asset_id, 종전 길)
+    const sel = pop.querySelector('.swap'), esc2 = x => String(x).replace(/[<>"&]/g, '');
+    if (s.kind === 'pack') {
+      sel.innerHTML += (window.SFX_PACK_SLOTS || []).map(o => `<option value="${o.slot}" ${o.slot === s.name ? 'disabled' : ''}>${esc2(o.label)}${o.slot === s.slot && o.slot !== s.name ? ' (원래 소리)' : ''}</option>`).join('');
+    } else if (typeof window.sfxBankList === 'function') {
+      window.sfxBankList().then(list => {
+        const cats = {}; (list || []).forEach(a => { (cats[a.cat || '기타'] = cats[a.cat || '기타'] || []).push(a); });
+        sel.innerHTML += Object.keys(cats).map(c => `<optgroup label="${esc2(c)}">${cats[c].map(a => `<option value="${a.id}" ${String(a.id) === String(s.asset_id) ? 'disabled' : ''}>${esc2(a.title)}</option>`).join('')}</optgroup>`).join('');
+      });
+    }
+    sel.onchange = async () => {
+      const v = sel.value; if (!v) return;
+      if (s.kind === 'pack') { if (await sendSwap(v)) close(); return; }
+      const res = await fetch(`/api/produce/mix/${job}/sfx`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ beat_idx: bi, asset_id: +v }) });
+      const d = await res.json().catch(() => ({}));
+      if (!d.ok) return alertSay(d.error || '못 바꿨어요');
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+      close();
+    };
+    async function sendSwap(to) {
+      const res = await fetch(`/api/produce/mix/${job}/sfx_hit`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beat_idx: bi, kind: 'pack', op: 'swap', to, slot: s.slot, n: s.n }) });
+      const d = await res.json().catch(() => ({}));
+      if (!d.ok) { alertSay(d.error || '못 바꿨어요'); return false; }
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+      return true;
+    }
+  };
+  // 칩 끌기 = 자리 옮기기(3px 넘게 움직이면 끌기, 아니면 눌러서 작은 창). 놓으면 옮긴 총량(dt)을 서버에 — 시각 판단은 서버 sfx_events_for
+  window.tlSfxDown = function (e, el) {
+    e.stopPropagation();
+    const x0 = e.clientX, left0 = parseFloat(el.style.left) || 0, pps = +el.dataset.pps || 1;
+    const bi = +el.dataset.bi, k = +el.dataset.k;
+    let moved = false;
+    const mv = ev => { const dx = ev.clientX - x0; if (Math.abs(dx) > 3) moved = true; if (moved) { el.style.left = Math.max(0, left0 + dx) + 'px'; el.classList.add('dragging'); } };
+    const up = async ev => {
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up);
+      el.classList.remove('dragging');
+      if (!moved) { window.tlSfxOpen(bi, k, el); return; }
+      const sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(bi));
+      const s = sb && sb.sounds && sb.sounds[k]; if (!s) return;
+      const newT = Math.max(0, left0 + (ev.clientX - x0)) / pps;
+      const dt = Math.round(((+s.dt || 0) + (newT - (+s.t))) * 100) / 100;
+      const job = new URLSearchParams(location.search).get('job') || window.JOB_ID;
+      await fetch(`/api/produce/mix/${job}/sfx_hit`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beat_idx: bi, kind: s.kind, op: 'move', dt, slot: s.slot, n: s.n }) }).catch(() => {});
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+    };
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up);
   };
 })();
 

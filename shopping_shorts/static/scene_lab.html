@@ -1074,10 +1074,12 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     overflow:hidden;white-space:nowrap;pointer-events:none}
 .tl-cap-s{color:#8fc3ea;font-size:9.5px;margin-left:4px;flex:none}
 .tl-sfxs,.tl-bgms{position:relative}
-.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;display:flex;align-items:center;padding:0 5px;font-size:10px;line-height:1;
+.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 5px;font-size:10px;line-height:1;
   white-space:nowrap;cursor:pointer;background:#3b2a12;border:1px solid #d9902b;border-radius:4px;color:#ffd9a0}
 .tl-sfxmark:hover{background:#5a3d14}
 .tl-sfxmark.line{background:#2e1840;border-color:#c85cff;color:#ebc8ff}   /* 칸 효과음(짤 리액션 등) = 보라 */
+.tl-sfxmark.dragging{cursor:grabbing;outline:2px solid #fff;z-index:5}
+.tl-sfxpop select{flex:1;background:#2b3a50;border:1px solid #4b6a92;color:#e6eef8;border-radius:5px;padding:3px;font-size:12px}
 .tl-sfxmark.mute{opacity:.45;text-decoration:line-through}
 .tl-sfxpop{position:fixed;z-index:9999;background:#1d2633;border:1px solid #4b6a92;border-radius:8px;padding:8px 10px;color:#e6eef8;font-size:12px;
   box-shadow:0 6px 20px rgba(0,0,0,.5);width:220px}
@@ -2965,7 +2967,9 @@ async function sfxpRefresh(){
   await bgmRefresh();
   try{
     const d = await (await fetch('/api/produce/mix/sfx_pack/' + SL.job, {cache:'no-store'})).json();
-    window.SFX_SOUNDS = d.ok ? (d.beats || []) : null;     // 음성 줄 🔊(관제 203) — 효과음팩을 못 써도 줄 효과음은 보인다
+    window.SFX_SOUNDS = d.ok ? (d.beats || []) : null;
+    window.SFX_PACK_SLOTS = d.ok ? (d.pack_slots || []) : [];      // 효과음 줄 '바꾸기'(팩 소리)
+    window.sfxBankList = loadSfxList;                              // 효과음 줄 '바꾸기'(칸 효과음 = 효과음 서랍)     // 음성 줄 🔊(관제 203) — 효과음팩을 못 써도 줄 효과음은 보인다
     if (!d.ok || !d.eligible){ SFXP = null; sfxpShow(); renderBand(); return; }
     SFXP = d;
     sfxpPaint();

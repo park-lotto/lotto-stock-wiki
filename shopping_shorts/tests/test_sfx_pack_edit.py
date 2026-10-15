@@ -155,4 +155,19 @@ def test_음량_칸효과음_렌더이벤트_203():
     b2 = dict(b, sfx={**b["sfx"]}); b2["sfx"].pop("vol")
     ev2 = va.sfx_events_for([b2], {0: "x.mp3"})
     assert abs(ev[0][2] - ev2[0][2] * 0.5) < 1e-9
-    assert va.sfx_events_for([b], {0: "x.mp3"}, with_ref=True)[0][3] == {"beat_idx": 0, "line": True}
+    assert va.sfx_events_for([b], {0: "x.mp3"}, with_ref=True)[0][3] == {"beat_idx": 0, "line": True, "dt": 0.0}
+
+
+def test_자리옮김_팩소리_시각이동_203():
+    per = {2: [("pop", 5.0, ""), ("pop", 6.0, "")]}
+    got = sfx_pack.apply_pack_edit(per, {2: {"move": [{"slot": "pop", "n": 0, "dt": 0.4}]}})[2]
+    assert [round(r[1], 2) for r in got] == [5.4, 6.0]
+    assert sfx_pack.clean_pack_edit({"move": [{"slot": "pop", "n": 0, "dt": 9}]}) is None
+
+
+def test_자리옮김_칸효과음_렌더이벤트_203():
+    b = {"beat_idx": 0, "t0": 10.0, "dur": 2.0, "narration": "가나다", "caption_lines": None, "cap_durs": None,
+         "sfx": {"asset_id": 1, "match_type": "line", "position": "first", "cat": "웃음", "shift": 0.7}}
+    assert abs(va.sfx_events_for([b], {0: "x.mp3"})[0][1] - 10.7) < 1e-9
+    b["sfx"]["shift"] = 5                                   # 칸 밖으로는 못 나간다
+    assert abs(va.sfx_events_for([b], {0: "x.mp3"})[0][1] - 12.0) < 1e-9
