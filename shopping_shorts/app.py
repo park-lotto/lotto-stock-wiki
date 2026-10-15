@@ -19207,6 +19207,28 @@ def _grab_platform(url):
     return ""
 
 
+def _grab_platform_of(url):
+    for k in ("youtube", "tiktok", "instagram", "douyin", "xiaohongshu", "pinterest", "threads"):
+        if k in (url or "") or (k == "youtube" and "youtu.be" in (url or "")) or (k == "xiaohongshu" and "rednote" in (url or "")):
+            return k
+    return ""
+
+
+def _grab_choice_html(request, job_id):
+    """📥 담기 창의 갈림길(관제 209) — ⭐ 영상 즐겨찾기 / 🎬 3단계 작업(지금 장면 찾기를 연 작업). 같은 주소에 dest 만 붙인다."""
+    from urllib.parse import urlencode
+    q = dict(request.query_params)
+    q.pop("dest", None)
+    b = "/api/grab?" + urlencode(dict(q, dest="basket"))
+    j = "/api/grab?" + urlencode(dict(q, dest="job"))
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>담기</title>
+<body style="margin:0;font-family:system-ui,sans-serif;background:#111;color:#eee;text-align:center;padding:18px 14px">
+<div style="font-size:15px;font-weight:700;margin-bottom:12px">어디에 담을까요?</div>
+<a href="{j}" style="display:block;padding:12px;border-radius:10px;background:#1d4f3c;color:#d1fae5;font-weight:800;text-decoration:none;font-size:15px;margin-bottom:8px">🎬 3단계 작업에 담기</a>
+<a href="{b}" style="display:block;padding:10px;border-radius:10px;border:1px solid #444;color:#ddd;text-decoration:none;font-size:14px">⭐ 영상 즐겨찾기에 담기</a>
+<div style="font-size:11px;color:#888;margin-top:8px">작업 {job_id[:6]} · 장면 찾기를 연 뒤 1시간</div></body>""")
+
+
 def _grab_popup_html(ok, msg, sub=""):
     """팝업창에 뜨는 결과 화면 — 성공 시 잠깐 뒤 자동으로 닫힌다."""
     icon = "✅" if ok else "⚠️"
@@ -19314,7 +19336,7 @@ def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks
 
 @app.get("/api/grab", include_in_schema=False)
 def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = "", dest: str = ""):
     """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
     미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
     백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환). 판단은 _grab_video."""
@@ -19322,13 +19344,19 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     if cid is None:
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    # ★3단계에서 장면 찾기를 열어 둔 동안(담기 목적지, 관제 209)이면 📥 창에 **버튼 두 개**를 띄운다 —
+    #   같은 📥가 몰래 작업에도 넣으면 헷갈린다(사장님 "담기 버튼을 하나 더 만들어야 안 헷갈리지").
+    _tj = _grab_target_job(cid) if _scene_find_on(cid) else None
+    if _tj and dest not in ("basket", "job"):
+        return _grab_choice_html(request, _tj)
+    if _tj and dest == "job":
+        if not re.match(r"^https?://", url or ""):
+            return _grab_popup_html(False, "담을 수 없는 링크예요", "영상 페이지에서 눌러주세요")
+        background_tasks.add_task(_add_extra_source, _tj, url, {"thumbnail": thumbnail, "title": title,
+                                                                "platform": _grab_platform_of(url), "via": "grab"})
+        return _grab_popup_html(True, "3단계 영상 소스로 담는 중이에요!", "편집 화면 아래 영상 소스에 곧 나타나요(10~40초)")
     r = _grab_video(cid, url, thumbnail, title, video_url, background_tasks)
     st = r["status"]
-    # ★3단계 장면 찾기에서 '6곳 열기'를 눌러 둔 동안이면 이 job 의 영상 소스로도 받는다(관제 209). 받기는 뒤에서.
-    _tj = _grab_target_job(cid) if st in ("added", "exists") and _scene_find_on(cid) else None
-    if _tj:
-        background_tasks.add_task(_add_extra_source, _tj, url, {"thumbnail": thumbnail, "title": title,
-                                                                "platform": r.get("platform") or "", "via": "grab"})
     if st == "pending":
         return _grab_popup_html(False, "승인 대기중이에요", "운영자 승인 후 담기를 쓸 수 있어요")
     if st == "paid":
@@ -19336,9 +19364,6 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
                                 "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
     if st == "badlink":
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
-    if _tj:
-        return _grab_popup_html(True, "3단계 영상 소스로 담는 중이에요!",
-                                f"{r['platform']} · 편집 화면 아래 영상 소스에 곧 나타나요")
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
                             f"{r['platform']} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
