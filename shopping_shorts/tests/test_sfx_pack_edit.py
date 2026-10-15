@@ -129,3 +129,30 @@ def test_줄효과음_길이동안_팩소리를_비운다_빼면_돌아온다():
     assert not [e for e in held if t0 - 1e-6 <= float(e[1]) < t0 + 2.05]
     assert len(held) < len(base) and near
     assert sfx_pack.plan_events(tl, first_beats=()) == base      # 줄 효과음을 빼면 종전 그대로 돌아온다
+
+
+def test_음량_고름_팩소리_한발만_배수_203():
+    per = {2: [("pop", 5.0, ""), ("pop", 6.0, "")]}
+    got = sfx_pack.apply_pack_edit(per, {2: {"vol": [{"slot": "pop", "n": 1, "g": 0.5}]}}, with_extra=True)[2]
+    assert [r[4] for r in got] == [1.0, 0.5]
+    assert got[1][5] == {"beat_idx": 2, "slot": "pop", "n": 1}
+    assert sfx_pack.clean_pack_edit({"vol": [{"slot": "pop", "n": 0, "g": 3}]}) is None      # 범위 밖은 버림
+
+
+def test_음량_팩_렌더이벤트에_곱해짐_203():
+    tl = _tl()
+    base = sfx_pack.events(tl, PACK, with_ref=True)
+    ref = base[0][3]
+    half = sfx_pack.events(tl, PACK, pack_edit={ref["beat_idx"]: {"vol": [{"slot": ref["slot"], "n": ref["n"], "g": 0.5}]}})
+    assert abs(half[0][2] - base[0][2] * 0.5) < 1e-9
+    assert half[1][2] == base[1][2]
+
+
+def test_음량_칸효과음_렌더이벤트_203():
+    b = {"beat_idx": 0, "t0": 0.0, "dur": 2.0, "narration": "가나다", "caption_lines": None, "cap_durs": None,
+         "sfx": {"asset_id": 1, "match_type": "line", "position": "first", "cat": "웃음", "vol": 0.5}}
+    ev = va.sfx_events_for([b], {0: "x.mp3"})
+    b2 = dict(b, sfx={**b["sfx"]}); b2["sfx"].pop("vol")
+    ev2 = va.sfx_events_for([b2], {0: "x.mp3"})
+    assert abs(ev[0][2] - ev2[0][2] * 0.5) < 1e-9
+    assert va.sfx_events_for([b], {0: "x.mp3"}, with_ref=True)[0][3] == {"beat_idx": 0, "line": True}
