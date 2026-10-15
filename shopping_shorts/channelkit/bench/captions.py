@@ -20,7 +20,7 @@ from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
                         GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, GLYPH_SHADOW_ASYM, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
                         BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG,
-                        CAP_MIN_SCORE, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
+                        CAP_MIN_SCORE, CAP_TIE_FRAC, CAP_SUB_STEPS, CAP_SUB_MAX_FRAC, CAP_LOW_PRESENCE, CAP_STATIC_MAX, CAP_STATIC_MIN_SPANS, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
 
 
 def caption_region(vl: dict) -> tuple[int, int] | None:
@@ -289,16 +289,27 @@ def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None, r
     wy0, wy1 = win[1], win[1] + win[3]
     regions = {"above": (0, max(0, wy0 - CAPTION_INSET), BAND_PRESENCE),
                "below": (min(H, wy1 + CAPTION_INSET), H, BAND_PRESENCE),
-               "inside": (wy0, wy1, INSIDE_PRESENCE)}
+               "inside": (wy0, wy1, INSIDE_PRESENCE),
+               # 장면마다 자리를 옮겨 다니는 창 안 자막은 한 행에 오래 머물지 않아 30% 문턱에 안 걸린다
+               # (2026-10-16 썰풀다 7DYb y≈1067~1156 · w-Yg 반투명 상자 y≈1340~1440) → 낮은 문턱 후보도 세운다
+               "inside_low": (wy0, wy1, CAP_LOW_PRESENCE)}
     out = [dict(c) for c in ([vl.get("caption")] + list(extra or [])) if c and c.get("band")]
-    for pos, (a, b, thr) in regions.items():
+    for pos_key, (a, b, thr) in regions.items():
+        pos = "inside" if pos_key == "inside_low" else pos_key
         if b - a < LINE_MIN_H:
             continue
         for pol in ("dark", "bright"):
-            runs = segs(presence[pol][a:b] >= thr, min_len=LINE_MIN_H // 2, gap=SEG_GAP * 4)
+            runs = segs(presence[pol][a:b] >= thr, min_len=LINE_MIN_H, gap=SEG_GAP * 4)   # 글자 한 줄(21px)보다 얇은 띠는 영상 경계선(w-Yg 창 아래 끝 17px)
             for s0, e0 in runs:
                 if e0 - s0 <= CAP_BAND_MAX_FRAC * H:
                     out.append({"pos": pos, "band": [int(s0 + a), int(e0 + a)], "ink": pol})
+                else:
+                    # 너무 넓은 덩어리(밝은 영상 위)는 문턱을 올려 가며 속의 짙은 줄 묶음을 후보로 꺼낸다
+                    # (2026-10-16 w-Yg: 창 안 밝은 영상 때문에 자막 행 1330~1380 이 672px 넘는 덩어리에 묻혔다)
+                    for up in CAP_SUB_STEPS:
+                        for s1, e1 in segs(presence[pol][a + s0:a + e0] >= thr + up, min_len=LINE_MIN_H, gap=SEG_GAP):
+                            if e1 - s1 <= CAP_SUB_MAX_FRAC * H:
+                                out.append({"pos": pos, "band": [int(s1 + s0 + a), int(e1 + s0 + a)], "ink": pol})
             # 줄끼리 이은 후보: 이웃 줄 틈 ≤ 두 줄 중 큰 높이 — 누적형 자막의 1·2·3줄을 한 띠로(줄마다 따로면 덧붙는 순간을 못 센다)
             for i in range(len(runs)):
                 j = i
@@ -335,13 +346,23 @@ def persistence(path: str, vl: dict, spans: list | None = None) -> dict:
     fr = [ink_mask(f, vl["caption"]["ink"]) for f in
           probe.frames(path, f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0},scale={CAP_SCALE_W}:{CAP_SCALE_H}", CAP_SCALE_W, CAP_SCALE_H)]
     v = [(a & b).sum() / a.sum() for a, b in zip(fr, fr[CAP_PERSIST_LAG:]) if a.sum() > 30]
+    # 고정 글자 비율 = 영상 내내(표본 90% 이상) 찍힌 잉크 ÷ 평균 잉크. 창 위 끝에 걸친 제목 줄은 자막처럼 '바뀜'이 나와도
+    # 글자 자체는 늘 같다(2026-10-16 썰풀다 7DYb inside [323,365] 7.91점으로 1등)
+    static = 0.0
+    if fr:   # 띠 행만(위아래 여유 행은 영상이라 고정 글자를 묽게 만든다 — 워터마크 '@채널' 띠가 7.49점으로 1등)
+        b0, b1 = vl["caption"]["band"]
+        r0 = max(0, int((b0 - y0) * CAP_SCALE_H / (y1 - y0)))
+        r1 = min(CAP_SCALE_H, max(r0 + 1, int(np.ceil((b1 - y0) * CAP_SCALE_H / (y1 - y0)))))
+        sub = [a[r0:r1] for a in fr]
+        avg = float(np.mean([a.sum() for a in sub]))
+        static = round(float((np.mean(sub, axis=0) >= 0.9).sum()) / avg, 3) if avg > 0 else 0.0
     change = 0.0          # 구간이 하나뿐이면 바뀜을 모른다 = 자막 증거 없음(고정 제목도 구간 하나로 나온다)
     if spans and len(spans) >= 2 and fr:
         mids = [fr[min(len(fr) - 1, int(round((a + b) / 2 * CAP_FPS)))] for a, b in spans]
         ch = [1.0 - (m & n).sum() / max(1, (m | n).sum()) for m, n in zip(mids, mids[1:]) if m.sum() > 30 or n.sum() > 30]
         change = round(float(np.median(ch)), 3) if ch else 0.0
     return {"persist": round(float(np.median(v)), 3) if v else 0.0,
-            "coverage": round(float(np.mean([a.sum() > 30 for a in fr])), 3) if fr else 0.0, "change": change}
+            "coverage": round(float(np.mean([a.sum() > 30 for a in fr])), 3) if fr else 0.0, "change": change, "static": static}
 
 
 def caption_score(cap: dict, pers: dict) -> float:
@@ -349,6 +370,10 @@ def caption_score(cap: dict, pers: dict) -> float:
     글자 바뀜(change)이 CAP_LINE_CHANGE 미만이면 0 — 영상 내내 같은 글자(고정 제목)는 자막이 아니다.
     (곱하지 않고 문턱으로: 누적형은 1줄→2줄 바뀜이 0.5 안팎이라 곱하면 진짜 자막이 깎인다)"""
     if pers.get("change", 1.0) < CAP_LINE_CHANGE:
+        return 0.0
+    # 고정 글자 판정은 자막 구간이 CAP_STATIC_MIN_SPANS 이상일 때만 — 자막 2~3개뿐이면 가운데 정렬 글자끼리 획이 겹쳐
+    # '늘 찍힌 화소'가 절반을 넘는다(2026-10-16 합성 시험 '스벅 메뉴판에'/'숨겨진 사이즈' 0.57)
+    if pers.get("static", 0.0) >= CAP_STATIC_MAX and len(cap.get("spans", [])) >= CAP_STATIC_MIN_SPANS:
         return 0.0
     n = sum(1 for it in cap.get("items", []) if CAP_SPAN_OK[0] <= it["t1"] - it["t0"] <= CAP_SPAN_OK[1]
             and 1 <= it.get("lines", 0) <= 3)
@@ -493,7 +518,8 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
         scored.append({**c, "score": s, "spans": len(cap["spans"]), **pers})
         cands.append((scored[-1], cap))
         h = c["band"][1] - c["band"][0]
-        if best is None or s > best[0] or (s == best[0] and h < best[3]):
+        # 점수가 CAP_TIE_FRAC 안으로 비슷하면 넓은 띠 — 장면마다 자리를 옮기는 자막을 다 덮게. 넓은 쪽은 뒤에서 tighten_band 가 글자 행으로 좁힌다
+        if best is None or s > best[0] * (1 + CAP_TIE_FRAC) or (s >= best[0] * (1 - CAP_TIE_FRAC) and h > best[3]):
             best = (s, c, cap, h)
     if not best or best[0] < CAP_MIN_SCORE:
         return {"caption": None, "result": None, "scored": scored,
@@ -508,7 +534,9 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
         want = "bright" if (r is not None and r >= CAP_FILL_BRIGHT) else "dark"
         pol_note = {"fill_ratio": r, "chose": want, "by": "fill_is_bright"}
         if want != c["ink"]:
-            x, cp = max(rivals, key=lambda z: z[0]["score"])
+            top = max(z[0]["score"] for z in rivals)
+            x, cp = max((z for z in rivals if z[0]["score"] >= top * (1 - CAP_TIE_FRAC)),
+                        key=lambda z: z[0]["band"][1] - z[0]["band"][0])
             c, cap = {k: x[k] for k in ("pos", "band", "ink") if k in x}, cp
     c = {**c, **({"polarity_check": pol_note} if pol_note else {})}
     tb = tighten_band(path, {**vl, "caption": c}, cap)

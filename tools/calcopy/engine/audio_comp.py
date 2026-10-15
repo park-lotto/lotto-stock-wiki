@@ -125,7 +125,10 @@ def composition(path: str, meta: dict, asr: dict, ocr_texts: list[str]) -> dict:
                                     "pause_cv": round(st.pstdev(gaps) / st.mean(gaps), 2) if len(gaps) >= 3 else None,
                                     "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"}
     # (3) 원음 + 덕킹
-    out["source_audio_kept"] = bool(src or str(asr.get("ambient") or "").strip())
+    amb = str(asr.get("ambient") or "").strip()
+    # 배경음악만 있는 것은 원음이 아니다(2026-10-16 핫템 H9: BGM 만 있어도 True) — 현장음 설명에서 음악 낱말만 있으면 뺀다
+    amb_src = bool(amb) and not re.fullmatch(r"[\s,./·]*(배경\s*음악|음악|BGM|bgm|music|노래)[\s,./·]*", amb)
+    out["source_audio_kept"] = bool(src or amb_src)
     out["source_evidence"] = {"foreign_or_source_segments": len(src), "ambient": asr.get("ambient") or ""}
     if lv is None:
         out["duck_db"] = {"failed": "소리 없음"}

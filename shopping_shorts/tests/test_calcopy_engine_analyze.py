@@ -177,3 +177,41 @@ def test_hook_card_then_body_frame(tmp_path):
     other = r["window"]["other_frame_segments"]
     assert other and abs(other[0][0] - 0.0) <= 0.1 and abs(other[0][1] - 1.5) <= 0.1, (other, r["window"])
     assert r["vl"]["window"][1] == 420, r["vl"]["window"]
+
+
+def test_gemini_quota_ledger_fails_fast(tmp_path, monkeypatch):
+    """오늘 모든 키·모델이 429 장부에 오르면 ask 는 네트워크 없이 즉시 'quota' 로 끝난다(3판: 재시도로 시간 낭비 금지)."""
+    import time as _t
+    from tools.calcopy.engine import gemini_keys as gk, gemini_free as g
+    monkeypatch.setattr(gk, "QUOTA_FILE", tmp_path / "q.json")
+    monkeypatch.setattr(gk, "_pairs", lambda env_file=None: [("K1", "v1"), ("K2", "v2")])
+    for nm in ("K1", "K2"):
+        for m in g.MODELS:
+            gk.mark(nm, m, "429")
+    t0 = _t.time()
+    d, err = g.ask(["x"], "y", "t")
+    assert (d, err) == (None, "quota") and _t.time() - t0 < 2
+    assert gk.quota_report()["models"][g.PRIMARY]["alive"] == 0
+    monkeypatch.setattr(gk, "quota_day", lambda: "2099-01-01")     # 날이 바뀌면 장부가 비워진다
+    assert not gk.is_dead("K1", g.PRIMARY)
+
+
+def test_caption_moving_between_scenes(tmp_path):
+    """장면마다 자막이 ±60px 오르내리는 꼴(썰풀다 7DYb·w-Yg): 띠 하나에 고정되지 않아도 창 안 자막으로 잡히고
+    네 자막이 다 구간으로 나온다(표본 30% 문턱에 안 걸려 1판·2판-b 는 못 찾거나 제목을 골랐다)."""
+    from shopping_shorts.channelkit.bench import probe
+    from tools.calcopy.engine import layout1
+    shutil.copy(REPO / "shopping_shorts" / "static" / "fonts" / FONT, tmp_path / "f.otf")
+    words = ("스벅 메뉴판에", "숨겨진 사이즈", "직원만 아는", "비밀 주문법")
+    ys = (1200, 1260, 1140, 1230)
+    for i, t in enumerate(words):
+        (tmp_path / f"m{i}.txt").write_text(t, encoding="utf-8")
+    cap = ("drawtext=fontfile=f.otf:textfile=m{i}.txt:fontsize=76:fontcolor=white:borderw=6:bordercolor=black:"
+           "x=(w-text_w)/2:y={y}:enable='between(t,{a},{b})'")
+    vf = "[0:v][1:v]overlay=0:300," + ",".join(cap.format(i=i, y=ys[i], a=1.5 * i, b=1.5 * i + 1.49) for i in range(4))
+    v = _ff(tmp_path, "move.mp4", ["color=black:s=1080x1920:d=6:r=30", _blocks(1080, 1620, 6, lo=120, span=135)], vf)
+    r = layout1.measure(str(v), probe.info(str(v)))
+    c = r["vl"]["caption"]
+    assert c["pos"] == "inside" and c["ink"] == "bright", (c, r["caption_candidates"])
+    assert c["band"][0] <= 1150 and c["band"][1] >= 1300, c
+    assert len(r["caption"]["spans"]) == 4, (r["caption"]["spans"], r["caption"].get("unstable"))

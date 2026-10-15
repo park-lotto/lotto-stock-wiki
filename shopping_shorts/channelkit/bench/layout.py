@@ -26,7 +26,7 @@ from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WI
                         INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
                         FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S,
                         FRAME_BREAK_ABS, FRAME_BREAK_REL, WINDOW_BRIDGE_PX, WINDOW_BRIDGE_FRAC,
-                        WINDOW_NONBG_FRAC, WINDOW_SOFT_FRAC, WINDOW_BRIDGE_NONBG)
+                        WINDOW_NONBG_FRAC, WINDOW_SOFT_FRAC, WINDOW_BRIDGE_NONBG, PICTURE_FRAC)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -151,10 +151,10 @@ def _window(st: dict) -> list[int] | None:
     row_ok = (rf > WINDOW_ROW_FRAC) | (nonbg.mean(axis=1) > WINDOW_NONBG_FRAC)
     runs = segs(row_ok, gap=SEG_GAP)
     # 창 안에 오래 가만히 있는 넓은 자막 줄이 있으면 그 행만 '덜 움직여' 창이 둘로 갈린다 → 위아래 창 조각 사이 틈이
-    # WINDOW_BRIDGE_PX 이하이고 틈 행이 평균 WINDOW_BRIDGE_FRAC 이상 움직이면 잇는다(2026-10-16 외곽선 자막 합성 시험)
+    # WINDOW_BRIDGE_PX 이하이고 틈 행이 바탕색 아닌 화소 WINDOW_BRIDGE_NONBG 이상이면 잇는다(창 안 넓은 자막 줄·영상 속 정지 행)
     merged: list[list[int]] = []
     for a_, b_ in runs:
-        gap_ok = merged and a_ - merged[-1][1] <= WINDOW_BRIDGE_PX * st["H"] and rf[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_FRAC
+        gap_ok = merged and a_ - merged[-1][1] <= WINDOW_BRIDGE_PX * st["H"]   # 움직임 조건은 뺐다: 영상 속 정지 행(지붕·하늘)도 창(핫템 vLcK)
         # 틈 행이 바탕색이면(흰 틀 위 자막 줄 — 방구석 ILIiqCJAOSI 창이 582로 올라감) 창 안이 아니다 → 잇지 않는다
         if gap_ok and nonbg[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_NONBG:
             merged[-1][1] = b_
@@ -171,6 +171,29 @@ def _window(st: dict) -> list[int] | None:
     c0, c1 = max(cols, key=lambda s: s[1] - s[0]) if cols else (0, LAYOUT_W)
     x0 = int(round(c0 * sx)); x1 = int(round(c1 * sx))
     return [x0, int(y0), x1 - x0, int(y1 - y0)]
+
+
+def picture_box(img: np.ndarray, bg_rgb: list[int], win: list[int] | None = None) -> list[int] | None:
+    """프레임 한 장의 그림 칸 [x,y,w,h](그 프레임 좌표) — 틀 바탕색과 다른 화소가 행·열의 PICTURE_FRAC 이상인 가장 긴 덩어리.
+    창(편 전체 시간 통계)은 컷마다 크기가 다른 그림 칸을 한 값으로 뭉갠다(2026-10-16 방구석: 전폭 ↔ x19~1057) → 컷 가운데 프레임마다 잰다.
+    win(같은 좌표계)이 있으면 그 행 범위 ±10% 안에서만 찾는다(제목·자막 띠 제외)."""
+    a = img.astype(np.int16)
+    nonbg = np.abs(a - np.array(bg_rgb, np.int16)[None, None, :]).max(axis=2) > FILL_BG_DIFF
+    H, W = nonbg.shape
+    r0, r1 = 0, H
+    if win:
+        pad = int(0.1 * win[3])
+        r0, r1 = max(0, win[1] - pad), min(H, win[1] + win[3] + pad)
+    rows = segs(nonbg[r0:r1].mean(axis=1) > PICTURE_FRAC, min_len=max(4, H // 20), gap=max(2, H // 200))
+    if not rows:
+        return None
+    y0, y1 = max(rows, key=lambda r: r[1] - r[0])
+    y0, y1 = y0 + r0, y1 + r0
+    cols = segs(nonbg[y0:y1].mean(axis=0) > PICTURE_FRAC, min_len=max(4, W // 20), gap=max(2, W // 200))
+    if not cols:
+        return None
+    x0, x1 = max(cols, key=lambda c: c[1] - c[0])
+    return [int(x0), int(y0), int(x1 - x0), int(y1 - y0)]
 
 
 def _finish(win, st: dict) -> dict:

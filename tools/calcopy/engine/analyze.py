@@ -243,6 +243,13 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
         g = got.get(f"제목 띠 {b['k']}")
         lines = [x for x in ((g or {}).get("lines") or []) if str(x).strip()]
         row = {"k": b["k"], "band": b["band"], "role": b["role"], "ink": b["pol"], "text": lines}
+        # 띠 글자 색·외곽선(제미나이 없이): 채움·첫 고리 색은 text_fx_one, 외곽선 있음·두께는 bench glyph_style(H6 재료)
+        fx_b = text_fx_one(b["img"], b["pol"], vl["bg_rgb"])
+        gs_b = captions.glyph_style(b["img"], b["pol"], vl["bg_rgb"])
+        row["color"] = {"fill_rgb": (fx_b or {}).get("fill_rgb"),
+                        "outline_px": (gs_b or {}).get("outline_px"),
+                        "outline_rgb": (fx_b or {}).get("ring_rgb") if (gs_b or {}).get("outline_px") else None,
+                        "shadow": (gs_b or {}).get("shadow")}
         masks = fontmatch.line_masks(b["img"], b["pol"])
         if not lines:
             row["failed"] = errs[0] if errs else "글자 못 읽음"
@@ -267,6 +274,11 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
                          "italic": bool(sl and float(np.median(sl)) >= 6)}
         elif any(r["role"] == role for r in out["bands"]):
             out[role] = {"failed": next(r.get("failed") for r in out["bands"] if r["role"] == role)}
+    # 채널명 후보(H6): 브랜드 띠 글자 — 없으면 제목 띠 위 첫 줄. '이 채널 틀인가' 판정은 프리셋 단계에서(여기선 재료만)
+    br = [r for r in out["bands"] if r["role"] == "brand" and r.get("text")]
+    out["channel_name_ocr"] = {"text": " / ".join(" ".join(map(str, r["text"])) for r in br) or None,
+                               "color": br[0]["color"] if br else None,
+                               "source": "brand 띠 OCR" if br else "브랜드 띠 없음"}
     if out.get("title", {}).get("top3") or out.get("brand", {}).get("top3"):
         out["ok"] = True
     else:
@@ -332,6 +344,22 @@ def shots_and_materials(path, vl, meta, cap, out_dir, llm, want_materials=True, 
     for k, (s, e) in enumerate(zip(bounds, bounds[1:])):
         img = probe.grab(path, (s + e) / 2, f"scale={cw * 2}:{chh * 2}", cw * 2, chh * 2)
         frames.append((k, s, e, img))
+    # 컷마다 그림 칸(bench layout.picture_box) — 컷마다 크기가 다른 채널(방구석 전폭↔x19~1057)을 분포로
+    sxf = W / (cw * 2)
+    win_s = [int(round(v / sxf)) for v in vl["window"]]
+    pb = []
+    for k, s_, e_, img in frames:
+        b = layout.picture_box(img, vl["bg_rgb"], win_s) if img is not None else None
+        pb.append({"shot": k, "t": [round(s_, 2), round(e_, 2)], "box": [int(round(v * sxf)) for v in b] if b else None})
+    boxes = [tuple(x["box"]) for x in pb if x["box"]]
+    if boxes:
+        q = [tuple(int(round(v / 20)) * 20 for v in b) for b in boxes]       # 20px 단위로 묶어 최빈
+        mode = max(set(q), key=q.count)
+        cuts["picture_boxes"] = {"per_shot": pb, "mode": list(mode), "mode_share": round(q.count(mode) / len(q), 3),
+                                 "range": {k: [min(b[i] for b in boxes), max(b[i] for b in boxes)] for i, k in enumerate("xywh")},
+                                 "kinds": len(set(q)), "method": "bench.layout.picture_box(컷 가운데 프레임, 바탕색과 다른 화소 행·열 50%)"}
+    else:
+        cuts["picture_boxes"] = {"failed": "컷마다 그림 칸 못 찾음", "per_shot": pb}
     cols = 6
     rows = (len(frames) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * cw, rows * (chh + 18)), "white")
@@ -701,6 +729,9 @@ def to_md(R: dict) -> str:
               f"| 샷 길이 중앙/p10/p90 | {K['shot_len']['median']} / {K['shot_len']['p10']} / {K['shot_len']['p90']}초 |",
               f"| 첫 컷 | {K['first_cut']}초 |", f"| 분당 컷 | {K['cut_per_min']} |",
               f"| 컷=자막교체 | {K['cut_eq_sub']} ({K['cut_eq_sub_rate']}) |", f"| 줌 | {K['zoom']} |"]
+        pbx = K.get("picture_boxes") or {}
+        if pbx.get("mode"):
+            o += [f"| 그림 칸(컷별) | 최빈 {pbx['mode']}({pbx['mode_share']}) · 종류 {pbx['kinds']} · 범위 {pbx['range']} |"]
     Mt = R["materials"]
     o += ["", f"## 8 제작법 — {_st(Mt)}", "시트: sheet.jpg (컷마다 가운데 프레임, #번호 시작-끝초)"]
     if Mt.get("per_shot"):

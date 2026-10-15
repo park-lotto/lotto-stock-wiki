@@ -33,6 +33,11 @@ def _keys() -> list[str]:
     return keys()
 
 
+def _names() -> list[str]:
+    from tools.calcopy.engine.gemini_keys import key_names
+    return key_names()
+
+
 def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
     """parts = [bytes(jpeg)|str, ...] 순서대로 붙인다. JSON 응답을 dict 로."""
     from google import genai
@@ -50,18 +55,26 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
         else:
             contents.append(p)
     contents.append(prompt)
+    from tools.calcopy.engine import gemini_keys as gk
+    names = _names()
     last = None
     n = len(keys)
     start = _CURSOR["i"] % n
     _CURSOR["i"] += 1
     # models = 부르는 쪽이 고른 모델 순서(글쓰기처럼 판독 일관성보다 글 품질이 중요한 곳). 없으면 뜯기 기본(PRIMARY 고정)
     plan = [PRIMARY] * PRIMARY_ROUNDS + [FALLBACK] if not models else list(models)
+    led = gk._load()
+    # 오늘 장부에서 모든 키가 끝난 모델은 계획에서 뺀다 — 다 끝났으면 즉시 failed:quota(재시도로 시간 버리지 않기)
+    plan = [m for m in plan if any(not gk.is_dead(nm, m, led) for nm in names)]
+    if not plan:
+        CALLS.append({"tag": tag, "failed": "quota", "day": led["day"]})
+        return None, "quota"
     for rnd, model in enumerate(plan):
         if rnd and model == plan[0]:
             time.sleep(5 * rnd)          # 503(과부하)면 잠깐 쉬고 같은 모델로 다시
         for step in range(n):
             ki = (start + step) % n
-            if (ki, model) in _DEAD:
+            if (ki, model) in _DEAD or gk.is_dead(names[ki], model):
                 continue
             t0 = time.time()
             try:
@@ -75,6 +88,7 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
                 if not isinstance(d, dict):
                     raise ValueError(f"JSON 모양 이상: {type(d).__name__}")
                 d["_model"] = model
+                gk.mark(names[ki], model, "ok")
                 CALLS.append({"tag": tag, "model": model, "key": ki, "ok": True, "sec": round(time.time() - t0, 1)})
                 return d, None
             except Exception as e:  # noqa: BLE001 — 한도·없는 모델·일시 장애면 다음 키, 끝까지 막히면 이유를 돌려준다
@@ -82,6 +96,7 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
                 if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
                     last = "429"
                     _DEAD.add((ki, model))
+                    gk.mark(names[ki], model, "429")
                 elif "404" in msg or "NOT_FOUND" in msg:
                     last = "404 모델 없음"
                     _DEAD.add((ki, model))
@@ -92,4 +107,6 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
                 else:
                     last = msg[:120]
                 CALLS.append({"tag": tag, "model": model, "key": ki, "failed": last, "sec": round(time.time() - t0, 1)})
+    if last == "429" and all(gk.is_dead(nm, m) for nm in names for m in plan):
+        last = "quota"
     return None, last
