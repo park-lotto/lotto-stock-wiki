@@ -36,6 +36,7 @@ BRAND_TOP = 0.06        # 화면 높이 대비 — 이 위에서 시작하는 �
 BRAND_MAX_W = 0.40      # 화면 폭 대비
 LOW_FONT = 0.5          # 글꼴 1위 점수 문턱(뜯기 unknown 과 같은 값)
 SIDE_PAD = 40           # 가운데 정렬 글자 칸 = 화면 폭 − 양쪽 40px
+LINE_RGB_DIFF = 40      # 제목 줄끼리 채움색이 이 값(채널 최대차)보다 다르면 줄마다 색(line_rgb)
 FRAMED_TOL = 30         # 틀 있음 판정: 띠 사이 빈 줄이 바탕색 ±30 안
 
 
@@ -122,6 +123,14 @@ def spacing_for(fam: str, size: float, text, target_w):
     b = _pil_font(fam, size).getbbox(text, anchor="ls")
     ls = (target_w - (b[2] - b[0])) / (len(text) - 1)
     return round(max(-0.15 * size, min(0.3 * size, ls)), 1)
+
+
+def band_rows_end(b, win) -> int:
+    """띠 가로 범위를 잴 마지막 행. 창에 붙은 띠(끝이 창 시작 ±8px)는 위 70% 행만 — 창 영상이 띠 아래쪽으로 비스듬히
+    들어와(1_V 실측: 창 다수결 352인데 324행부터 영상 가장자리) 왼쪽 끝이 0으로 잡혔다."""
+    if win and b[1] >= win[1] - 8:
+        return int(b[0] + 0.7 * (b[1] - b[0]))
+    return b[1]
 
 
 def ink_columns(img: np.ndarray, y0: int, y1: int, bg: list, tol: int = 40) -> tuple[int, int] | None:
@@ -309,7 +318,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     bands = [tuple(b) for b in (L.get("above_bands") or [])]
     brand_b, title_b = [], []
     for b in sorted(bands):
-        cols = ink_columns(frame_img, b[0], b[1], bg) if frame_img is not None and bg else None
+        cols = ink_columns(frame_img, b[0], band_rows_end(b, win), bg) if frame_img is not None and bg else None
         narrow = cols is not None and (cols[1] - cols[0]) < BRAND_MAX_W * W
         (brand_b if b[0] < BRAND_TOP * H and narrow else title_b).append((b, cols))
     if frame_img is None and bands:
@@ -333,15 +342,19 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         al = align_of(cols, W)
         sp = [spacing_for(fam, size, tl[i], c[1] - c[0] + 1) for i, (_, c) in enumerate(title_b) if i < len(tl) and c]
         sp = [v for v in sp if v is not None]
-        fx = None
+        fx, line_rgb = None, None
         if frame_img is not None:
             from tools.calcopy.engine.analyze import text_fx_one
             y0, y1 = title_b[0][0][0] - 12, title_b[-1][0][1] + 12
             fx = text_fx_one(frame_img[max(0, y0):y1], pol, bg)
+            # 줄마다 채움색(예: 1줄 검정 + 2줄 자홍) — 두 줄을 한 번에 재면 중앙값이 한쪽 색이 된다(1_V 실측 [102,0,68])
+            fills = [(text_fx_one(frame_img[max(0, bb[0] - 4):bb[1] + 5], pol, bg) or {}).get("fill_rgb") for bb, _ in title_b]
+            if all(fills) and max(max(abs(p - q) for p, q in zip(f, fills[0])) for f in fills) > LINE_RGB_DIFF:
+                line_rgb = fills
         layers.append({"kind": "text", "role": "title", **al, "y": round(st.mean(ys)), "lines": lines,
                        "font": fam, "size": size, "line_h": fits[0]["line_h"],
-                       "rgb": (fx or {}).get("fill_rgb") or ([0, 0, 0] if pol == "dark" else [255, 255, 255]),
-                       "line_rgb": None, "outline": (fx or {}).get("outline"), "shadow": None,
+                       "rgb": (line_rgb[0] if line_rgb else (fx or {}).get("fill_rgb")) or ([0, 0, 0] if pol == "dark" else [255, 255, 255]),
+                       "line_rgb": line_rgb, "outline": (fx or {}).get("outline"), "shadow": None,
                        "box": ({"rgb": fx["box"]["color"], "pad": 0, "radius": 0} if fx and fx.get("box") else None),
                        "italic": italic_of(frame_img, title_b, bg, notes, "제목"),
                        "letter_spacing": round(st.mean(sp), 1) if sp else 0, "enter": None,

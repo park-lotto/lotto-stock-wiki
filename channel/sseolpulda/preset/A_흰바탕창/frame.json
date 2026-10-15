@@ -1,0 +1,108 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": "$per_video",
+ "made_by": "calcopy_frame v1",
+ "source": "ZdeZRtCeAC4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    251,
+    248,
+    252
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": "$per_video",
+   "w": 1080,
+   "h": "$per_video",
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": "$per_video",
+   "lines": 2,
+   "font": "$per_video",
+   "size": "$per_video",
+   "line_h": "$per_video",
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": "$per_video",
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": "$per_video",
+   "enter": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1462,
+   "lines": 1,
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 66.0,
+   "line_h": 76,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.4,
+   "enter": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "[광고]",
+   "x": 1053,
+   "y": 14,
+   "w": 181,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 49.0,
+   "line_h": 56,
+   "rgb": [
+    185,
+    184,
+    188
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     95,
+     94,
+     97
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.7,
+   "enter": null
+  }
+ ]
+}
