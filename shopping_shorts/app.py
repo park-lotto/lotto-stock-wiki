@@ -13044,7 +13044,7 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/kw/expand")
 async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
-                              exclude: str = Form(""), n: int = Form(6)):
+                              exclude: str = Form(""), n: int = Form(6), scene: str = Form("")):
     """한국어 소재어 → 검색어 조합 [{ko, zh}]. 프레임 불필요(2026-08-14 사장님).
 
     렌즈 후보는 화면 기반이라 '시금치 치아바타'처럼 사장님이 떠올린 소재는 새로고침해도
@@ -13056,7 +13056,7 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
         return {"ok": True, "keyword": "", "candidates": []}
     seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
     try:
-        cands = await asyncio.to_thread(expand_search_keywords, kw, n=n, exclude=seen)   # 블로킹 Gemini
+        cands = await asyncio.to_thread(expand_search_keywords, kw, n=n, exclude=seen, scene=scene)   # 블로킹 Gemini
     except Exception:                       # noqa: BLE001 — 실패해도 렌즈는 정상
         cands = []
     return {"ok": True, "keyword": kw, "candidates": cands}

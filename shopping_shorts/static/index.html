@@ -3753,12 +3753,13 @@ async function traceByUrl(urlArg){
 // 3단계 팝업이 이 화면을 /?kwfind=<제품>&job=<작업>&embed=1 로 연다. 숏템파워 렌즈 패널(renderLens)을 그대로 쓰고
 // 대본 분석·유료 렌즈 칸만 뺀다(st.kwOnly). 카드마다 「🎬 3단계에 담기」 → 그 작업 영상 소스(서버 _add_extra_source 한 곳).
 // 열 때 담기 목적지(grab_target)도 켠다 — 사이트에서 📥를 누르면 뜨는 창에 「🎬 3단계 작업에 담기」가 같이 뜬다.
-async function openKwFind(kw, job){
+async function openKwFind(kw, job, scene){
   let saved=new Set();
   try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
   LENS_STATE['__kw__']={items:[], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
     sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false,
-    ytLoading:false, keyword:'', caption:'', cnCands:[], kwSeed:kw||'', kwOnly:true, job:job||'', toJob:{}};
+    ytLoading:false, keyword:'', caption:'', cnCands:[], kwSeed:kw||'', kwOnly:true, job:job||'', toJob:{},
+    kwScene:scene||''};
   openScript('', '🔎 장면 찾기 — 숏템파워', true);
   renderLens('__kw__');
   if(job){ try{ await fetch('/api/mix/scene_lab/'+encodeURIComponent(job)+'/grab_target',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:true})}); }catch(e){} }
@@ -3786,7 +3787,7 @@ function alertLite(t){ try{ const b=document.getElementById('scriptBody'); const
     const q=new URLSearchParams(location.search);
     if(!q.has('kwfind')) return;
     if(q.get('embed')==='1') document.documentElement.classList.add('kwfind-embed');
-    const go=()=>openKwFind(q.get('kwfind')||'', q.get('job')||'');
+    const go=()=>openKwFind(q.get('kwfind')||'', q.get('job')||'', q.get('scene')||'');
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go); else setTimeout(go, 0);
   }catch(e){}
 })();
@@ -3948,6 +3949,8 @@ async function lensExpandKeyword(shortcode){
   try{
     const fd=new FormData();
     fd.append('keyword', kw);
+    // 3단계 장면 찾기(관제 209): 그 칸 대사를 보고 제품 중심 검색어 5개
+    if(st.kwScene){ fd.append('scene', st.kwScene); fd.append('n', '5'); }
     // 이미 화면에 있는 후보는 빼고 받는다 — 같은 키워드로 또 눌러도 새 조합이 쌓인다.
     fd.append('exclude', (st.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/kw/expand',{method:'POST',body:fd})).json();

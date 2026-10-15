@@ -51,7 +51,10 @@ function openSceneFind(i){
   const el = _sfEnsureBox();
   el.style.display = 'flex';
   const need = (typeof beatDur === 'function') ? beatDur(i) : 3;
-  const src = '/?' + new URLSearchParams({kwfind: _sfProduct(), job: SL.job, embed: '1'}).toString();
+  const b0 = (DATA.beats || [])[i] || {};
+  const role0 = String(b0.role || '').trim();          // 그 칸의 역할(훅·문제·불편·해결·결과…)
+  const narr0 = (role0 ? '(' + role0 + ') ' : '') + (b0.narration || b0.text || '');
+  const src = '/?' + new URLSearchParams({kwfind: _sfProduct(), job: SL.job, embed: '1', scene: narr0}).toString();
   el.innerHTML = `<div class="sfw">
     <div class="sfh"><b>🔎 ${i + 1}번 칸 장면 찾기</b><span style="color:#9aa3b5;font-size:12.5px">이 칸 ${need.toFixed(1)}초 · 카드의 <b style="color:#a7f3d0">🎬 3단계에 담기</b>나 사이트 📥 창의 <b style="color:#a7f3d0">🎬 3단계 작업에 담기</b>로 담으면 아래 영상 소스에 들어와요</span>
       <button class="x" onclick="closeSceneFind()" title="닫기">✕</button></div>
