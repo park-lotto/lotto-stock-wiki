@@ -132,6 +132,70 @@ def test_재시도_범위_비코드면_생략_코드면_관련만(repo):
         track._close_stage(repo, stage)
 
 
+def test_재시도_내_변경과_안_겹치면_내_파일_관련_시험은_안_넣는다(repo):
+    """관제 212(2026-10-15): 종전엔 내 app.py 까지 넣어 거의 모든 시험이 걸려 매번 전체로 갔다(재시험 83회·약 700분)."""
+    _commit_main(repo, "shopping_shorts/tests/test_mod.py", "import shopping_shorts.mod\n")
+    _commit_main(repo, "shopping_shorts/tests/test_app_a.py", "import shopping_shorts.app\n")
+    _commit_main(repo, "shopping_shorts/tests/test_app_b.py", "import shopping_shorts.app\n")
+    track.start("재시도겹침", repo=repo)
+    stage = track._open_stage(repo, "재시도겹침")
+    try:
+        base = _git(stage, "rev-parse", "HEAD").strip()
+        _commit_main(repo, "shopping_shorts/mod.py", "X = 3\n")
+        _git(stage, "fetch", "origin")
+        _git(stage, "reset", "--hard", "origin/main")
+        mine = ["shopping_shorts/app.py"]
+        assert track._retry_test_subset(stage, base, mine) == ["shopping_shorts/tests/test_mod.py"], \
+            "안 겹치면 끼어든 mod 관련만"
+        # 같은 파일을 둘 다 고쳤으면 내 변경 관련까지(맞물림)
+        sub = track._retry_test_subset(stage, base, ["shopping_shorts/mod.py", "shopping_shorts/app.py"])
+        assert sub is None or "shopping_shorts/tests/test_app_a.py" in sub
+    finally:
+        track._close_stage(repo, stage)
+
+
+def test_재시도_안_겹치는_화면파일은_그_이름을_읽는_시험만_없으면_생략(repo):
+    _commit_main(repo, "shopping_shorts/tests/test_js.py", "P = 'static/a.js'\n")
+    track.start("재시도화면", repo=repo)
+    stage = track._open_stage(repo, "재시도화면")
+    try:
+        base = _git(stage, "rev-parse", "HEAD").strip()
+        _commit_main(repo, "shopping_shorts/static/a.js", "var a=1\n")
+        _git(stage, "fetch", "origin")
+        _git(stage, "reset", "--hard", "origin/main")
+        assert track._retry_test_subset(stage, base, ["shopping_shorts/app.py"]) == ["shopping_shorts/tests/test_js.py"]
+        base2 = _git(stage, "rev-parse", "HEAD").strip()
+        _commit_main(repo, "shopping_shorts/static/zz.html", "<b>\n")
+        _git(stage, "fetch", "origin")
+        _git(stage, "reset", "--hard", "origin/main")
+        assert track._retry_test_subset(stage, base2, ["shopping_shorts/app.py"]) == [], "읽는 시험 없음 → 생략"
+    finally:
+        track._close_stage(repo, stage)
+
+
+def test_같은_트랙_finish_는_하나만(repo):
+    """관제 212: 같은 트랙 둘은 병합 폴더 _merge-<트랙> 을 같이 써 서로 지운다(10-15 실측)."""
+    a = track._track_finish_lock("중복", repo)
+    try:
+        assert a is not None
+        assert track._track_finish_lock("중복", repo) is None, "둘째는 거절"
+        assert track._track_finish_lock("다른트랙", repo) is not None, "다른 트랙은 상관없다"
+        with pytest.raises(track.TrackError, match="이미 돌고"):
+            track.finish("중복", repo=repo)
+    finally:
+        a.close()
+    b = track._track_finish_lock("중복", repo)
+    assert b is not None, "앞이 끝나면 다시 잡힌다"
+    b.close()
+
+
+def test_재시험은_시험자원_줄에서_자기_순번(monkeypatch, tmp_path):
+    import inspect
+    assert "priority" in inspect.signature(track._gate_slot).parameters
+    src = inspect.getsource(track._merge_and_gate)
+    assert "priority=bool(prev_base)" in src
+
+
 def test_재시도는_통과한_뒤_끼어든_코드_관련만_다시_돌린다(repo, monkeypatch):
     _commit_main(repo, "shopping_shorts/tests/test_mod.py", "import shopping_shorts.mod\n")
     _make_track_commit(repo, "재시도시험")
