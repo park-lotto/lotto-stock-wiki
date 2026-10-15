@@ -14,7 +14,7 @@ import cv2
 
 from . import probe
 from .layout import ink_mask, lum, segs
-from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_BAND_PAD, CAPTION_INSET,
+from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
                         LINE_ROW_FRAC, LINE_MIN_H, FILL_LUM, FILL_CHROMA, FILL_BG_DIFF, FILL_FRAC,
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
                         GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA)
@@ -40,27 +40,54 @@ def caption_region(vl: dict) -> tuple[int, int] | None:
 
 
 # ── 교체 시각 ──────────────────────────────────────────────────────────────
-def caption_changes(path: str, vl: dict, duration: float) -> list[float]:
-    """자막 교체 시각(첫 자막 시작 0 제외). 띠를 540×100으로 줄여 CAP_FPS로 잉크 XOR 평균 > CAP_DIFF, CAP_MERGE_S 병합."""
+def caption_track(path: str, vl: dict, duration: float) -> dict:
+    """자막 교체 시각·자막 구간·흔들림 구간 — 교체 판단의 주인(caption_changes·measure_video 가 이것을 부른다).
+
+    1) 띠를 540×100으로 줄여 CAP_FPS로 잉크 XOR 평균 d > CAP_DIFF 인 프레임 = 바뀜 후보, CAP_MERGE_S 병합.
+    2) 후보 사이 구간마다 안쪽 프레임 d 의 중앙값 > CAP_STILL 이면 '흔들림'(글자가 아니라 영상이 띠에 비침)
+       → 자막 구간에서 빼고, 앞뒤 구간이 둘 다 흔들림인 후보는 교체에서도 뺀다(흔들림 시작·끝 시각은 남는다).
+    반환: {"changes": [초…], "spans": [(시작, 끝)…](흔들림 제외), "unstable": [[시작, 끝]…](이어진 것끼리 합침)}"""
     reg = caption_region(vl)
     if not reg:
-        return []
+        return {"changes": [], "spans": [], "unstable": []}
     y0, y1 = reg
     W = vl["canvas"][0]
     vf = f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0},scale={CAP_SCALE_W}:{CAP_SCALE_H}"
     pol = vl["caption"]["ink"]
     prev = None
-    ch = []
-    for k, f in enumerate(probe.frames(path, vf, CAP_SCALE_W, CAP_SCALE_H)):
+    d: list[float] = []
+    for f in probe.frames(path, vf, CAP_SCALE_W, CAP_SCALE_H):
         ink = ink_mask(f, pol)
-        if prev is not None and (ink ^ prev).mean() > CAP_DIFF:
-            ch.append(k / CAP_FPS)
+        d.append(float((ink ^ prev).mean()) if prev is not None else 0.0)
         prev = ink
-    out: list[float] = []
-    for t in ch:
-        if t < duration and (not out or t - out[-1] > CAP_MERGE_S):
-            out.append(round(t, 2))
-    return out
+    cand: list[float] = []
+    for k, x in enumerate(d):
+        t = k / CAP_FPS
+        if x > CAP_DIFF and t < duration and (not cand or t - cand[-1] > CAP_MERGE_S):
+            cand.append(round(t, 2))
+    bounds = [0.0] + cand + [duration]
+    still = []
+    for a, e in zip(bounds, bounds[1:]):
+        inside = d[int(round(a * CAP_FPS)) + 1:int(round(e * CAP_FPS))]
+        if inside:
+            still.append(float(np.median(inside)) <= CAP_STILL)
+        else:  # 안쪽 프레임이 없는 끝 조각(0.1초)은 잴 수 없다 → 바로 앞 구간을 따른다
+            still.append(still[-1] if still else True)
+    changes = [t for i, t in enumerate(cand) if still[i] or still[i + 1]]
+    spans = [(a, e) for (a, e), s in zip(zip(bounds, bounds[1:]), still) if s]
+    unstable: list[list[float]] = []
+    for (a, e), s in zip(zip(bounds, bounds[1:]), still):
+        if not s:
+            if unstable and abs(unstable[-1][1] - a) < 1e-6:
+                unstable[-1][1] = e
+            else:
+                unstable.append([a, e])
+    return {"changes": changes, "spans": spans, "unstable": [[round(a, 2), round(e, 2)] for a, e in unstable]}
+
+
+def caption_changes(path: str, vl: dict, duration: float) -> list[float]:
+    """자막 교체 시각(첫 자막 시작 0 제외) — caption_track 의 changes."""
+    return caption_track(path, vl, duration)["changes"]
 
 
 def caption_spans(changes: list[float], duration: float) -> list[tuple[float, float]]:
@@ -169,8 +196,8 @@ def measure_video(path: str, vl: dict, meta: dict) -> dict:
     if not reg:
         return {"region": None, "changes": [], "spans": [], "items": [], "glyph": []}
     dur = meta["duration"]
-    changes = caption_changes(path, vl, dur)
-    spans = caption_spans(changes, dur)
+    tr = caption_track(path, vl, dur)
+    changes, spans = tr["changes"], tr["spans"]
     y0, y1 = reg
     W = vl["canvas"][0]
     pol = vl["caption"]["ink"]
@@ -193,7 +220,7 @@ def measure_video(path: str, vl: dict, meta: dict) -> dict:
             g["anim"] = caption_anim(path, vl, spans[i][0] + 0.03, meta["fps"])
             glyph.append(g)
     return {"region": [y0, y1], "changes": changes, "spans": [[round(a, 2), round(b, 2)] for a, b in spans],
-            "items": items, "glyph": glyph}
+            "unstable": tr["unstable"], "items": items, "glyph": glyph}
 
 
 # ── 채널 기준 ──────────────────────────────────────────────────────────────

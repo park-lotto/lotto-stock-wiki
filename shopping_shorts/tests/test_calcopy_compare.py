@@ -188,3 +188,49 @@ def test_rules_layer_reported_not_judged(synth, tmp_path):
     assert v["verdict"] == "통과" and "짤 개수/편" in v["rules_out"]
     md = (tmp_path / "c" / "차이표.md").read_text(encoding="utf-8")
     assert "## ① 픽셀 수준" in md and "## ② 규칙 수준" in md
+
+
+# ── 자막 교체 자(bench captions.caption_track): 영상이 자막 띠로 비치는 구간은 자막이 아니다 ─────────
+REAL = Path("C:/숏템_칼카피/sseolpulda/mp4/ZdeZRtCeAC4.mp4")
+
+
+def make_synth_intrude(dirpath: Path, name: str = "intrude.mp4") -> Path:
+    """합성 영상(자막 4개 0~6초) 뒤에 1.5초 동안 움직이는 영상을 화면 전체로 덮는다(엔딩 전체화면 흉내)."""
+    base = dirpath / "syn.mp4"
+    if not base.exists():
+        make_synth(dirpath)
+    _ff(["-i", str(base), "-f", "lavfi", "-i", "testsrc2=s=1080x1920:r=30:d=1.5",
+         "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000:duration=1.5",
+         "-filter_complex", "[0:v][0:a][1:v][2:a]concat=n=2:v=1:a=1[v][a]", "-map", "[v]", "-map", "[a]",
+         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-c:a", "aac", name], dirpath)
+    return dirpath / name
+
+
+def test_caption_track_ignores_video_in_band(synth):
+    """띠 좌표는 원래 합성 영상에서 잰 것(전체화면 구간이 창 판정을 흔들지 않게) → 자막 자만 시험한다."""
+    from tools.calcopy.engine import bench_one
+    from shopping_shorts.channelkit.bench import captions, probe
+    vl = bench_one.measure(str(synth))["vl"]
+    bad = make_synth_intrude(synth.parent)
+    cap = captions.measure_video(str(bad), vl, probe.info(str(bad)))
+    assert len(cap["spans"]) == 4, cap["spans"]
+    assert [round(b - a, 1) for a, b in cap["spans"]] == [1.5, 1.5, 1.5, 1.5]
+    assert len(cap["unstable"]) == 1 and abs(cap["unstable"][0][0] - 6.0) <= 0.15, cap["unstable"]
+    assert all(c <= 6.1 for c in cap["changes"]), cap["changes"]  # 흔들림 안의 가짜 교체 없음
+
+
+# 실제 영상 원본 썰풀다 ZdeZRtCeAC4: 눈으로 센 자막 6개(코디네이터 띠 0.5초 절단 판독, 2026-10-16).
+# 띠 좌표는 tools/calcopy/engine/layout1.measure 실측값(창 [0,426,1080,1006]·자막 below [1466,1529] dark) — 자막 자만 시험.
+REAL_VL = {"window": [0, 426, 1080, 1006], "caption": {"pos": "below", "band": [1466, 1529], "ink": "dark"},
+           "bg_rgb": [251, 248, 252], "canvas": [1080, 1920]}
+
+
+@pytest.mark.skipif(not REAL.exists(), reason=f"실제 영상 없음: {REAL}")
+def test_real_video_six_captions():
+    import statistics
+    from shopping_shorts.channelkit.bench import captions, probe
+    cap = captions.measure_video(str(REAL), REAL_VL, probe.info(str(REAL)))
+    assert len(cap["spans"]) == 6, cap["spans"]
+    med = statistics.median(b - a for a, b in cap["spans"])
+    assert 3.0 <= med <= 3.8, med
+    assert cap["unstable"] and cap["unstable"][0][0] >= 21.0, cap["unstable"]
