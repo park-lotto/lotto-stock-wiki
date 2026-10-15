@@ -36,7 +36,9 @@ mcp = MCPServer(
         "중간에 대화를 끝내거나 '나중에 확인하겠다'고 하지 마라. 예약 작업·알림·스케줄을 만들지 마라. "
         "기다리는 동안 고객에게 묻지 마라(진행 단계만 짧게 알려도 된다). "
         "5) done 이면 studio_result 로 검수 시트 그림을 직접 보고 컷마다 화면이 자막과 맞는지 스스로 판단해 결과와 함께 알린다. "
-        "failed 면 이유를 그대로 전한다. alive 가 true 면 멈춘 게 아니다 — studio_resume 을 부르지 마라."),
+        "failed 면 이유를 그대로 전한다. alive 가 true 면 멈춘 게 아니다 — studio_resume 을 부르지 마라. "
+        "진행은 progress(last_file_sec_ago·videos_downloaded·videos_scanned)로 판단한다 — updated 시각은 단계가 바뀔 때만 바뀐다. "
+        "last_file_sec_ago 가 15분(900초)을 넘고 alive 가 false 일 때만 멈춘 것이다."),
 
 )
 

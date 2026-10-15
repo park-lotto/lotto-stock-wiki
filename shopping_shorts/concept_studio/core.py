@@ -427,6 +427,28 @@ def _heartbeat(job_id):
     threading.Thread(target=beat, daemon=True).start()
 
 
+def _progress(job_id):
+    """단계 안의 진행 — 상태 파일은 단계가 바뀔 때만 갱신돼 '22분째 그대로 = 멈춤'으로 오해됐다(실측 2026-10-15:
+    그동안 소재 영상 9편을 받고 얼굴 분석 중이었다). 작업 폴더에서 가장 최근에 만들어진 파일 시각과 개수로 보여 준다."""
+    wd = _wd(job_id)
+    newest, n_vid, n_scan = 0.0, 0, 0
+    for dp, _, fs in os.walk(wd):
+        for f in fs:
+            if f in ("studio_status.json", "worker.alive", "worker.log") or f.endswith(".tmp"):
+                continue
+            try:
+                newest = max(newest, os.path.getmtime(os.path.join(dp, f)))
+            except OSError:
+                continue
+            if f.endswith(".mp4") and os.path.basename(dp) == "videos":
+                n_vid += 1
+            elif f.endswith(".faces.npz"):
+                n_scan += 1
+    ago = int(time.time() - newest) if newest else None
+    return {"last_file_sec_ago": ago, "videos_downloaded": n_vid, "videos_scanned": n_scan,
+            "hint": "새 파일이 계속 생기면 진행 중이다(소재 영상 1편 받기·분석에 수 분)" if ago is not None else ""}
+
+
 def resume(job_id):
     st = status(job_id)
     if st.get("alive"):
@@ -442,6 +464,7 @@ def status(job_id):
         raise KeyError(f"없는 작업: {job_id}")
     pid = _alive(job_id)
     st["alive"] = bool(pid)
+    st["progress"] = _progress(job_id)
     if st.get("state") in ("running", "queued"):
         st["note"] = ("진행 중(작업 프로세스 살아 있음) — 소재 수집·렌더는 수 분~십수 분 걸린다. 다시 띄우지 마라"
                       if pid else "작업 프로세스가 없다 — 앱을 껐다 켰으면 studio_resume")
