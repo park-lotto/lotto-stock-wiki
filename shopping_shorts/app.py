@@ -18328,8 +18328,73 @@ def api_admin_calcopy(request: Request):
     denied = _require_admin(request)
     if denied:
         return denied
-    from shopping_shorts.calcopy_board import collect
-    return collect()
+    from shopping_shorts import calcopy_board as _cb
+    return _cb.board()
+
+
+def _calcopy_resolve(url):
+    """채널 주소 → {channel_id, subs}. 유튜브 API(키 로테이션은 youtube_client 안)."""
+    import urllib.parse as _up
+    from shopping_shorts import youtube_client as _yc
+    from shopping_shorts.calcopy_board import slug_of as _slug
+    # ★한글 핸들(@썰풀다)은 youtube_client._HANDLE(영문만)에 안 걸린다 → 핸들만 넘겨 forHandle 분기를 탄다
+    seed = _up.unquote(url) if "/channel/" in url else _slug(url)
+    cid, _ = _yc._resolve_channel(seed)
+    if not cid:
+        raise RuntimeError("채널을 찾지 못했습니다(주소 확인)")
+    return {"channel_id": cid, "subs": _yc.fetch_subscribers([cid]).get(cid)}
+
+
+@app.get("/api/admin/calcopy/ch/{slug}")
+def api_admin_calcopy_detail(request: Request, slug: str):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    try:
+        return _cb.detail(slug)
+    except KeyError:
+        return JSONResponse({"error": "없는 채널"}, status_code=404)
+
+
+@app.post("/api/admin/calcopy/channels")
+def api_admin_calcopy_add(request: Request, body: dict = None):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    b = body or {}
+    try:
+        c = _cb.add_channel(b.get("url", ""), tags=b.get("tags"), memo=b.get("memo", ""),
+                            priority=b.get("priority", 3), resolver=_calcopy_resolve)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+    return {"ok": True, "channel": c}
+
+
+@app.post("/api/admin/calcopy/ch/{slug}")
+def api_admin_calcopy_update(request: Request, slug: str, body: dict = None):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    try:
+        return {"ok": True, "channel": _cb.update_channel(slug, body or {})}
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.post("/api/admin/calcopy/ch/{slug}/style")
+def api_admin_calcopy_style(request: Request, slug: str, body: dict = None):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    b = body or {}
+    if not b.get("name"):
+        return JSONResponse({"error": "갈래 이름이 없습니다"}, status_code=400)
+    return {"ok": True, "style": _cb.set_style(slug, b["name"], rename=b.get("rename"),
+                                               confirmed=b.get("confirmed"), memo=b.get("memo"))}
 
 
 @app.get("/admin/customer/{customer_id}", response_class=HTMLResponse)
