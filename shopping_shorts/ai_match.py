@@ -55,7 +55,8 @@ BRIEF = """너는 쇼핑 쇼츠에서 **대본과 장면을 딱 맞게 배치하
    d. **시간을 맞춰라.** 줄마다 고른 컷 길이 합 × 1.2 ≥ 대사 초가 되게 하고, have(합)·need(대사 초)를 적어라.
       모자라면 같은 영상의 **같은 쓰임** 컷을 이어 붙이고, 그래도 모자라면 다른 영상의 같은 뜻 컷을 더한다.
       **딴 장면(다른 물건·다른 쓰임)으로 길이를 채우지 마라** — 길이보다 그림이 먼저다.
-      ★한 장면만 길게 틀지 마라: **2.5초가 넘는 줄은 서로 다른 장면(다른 컷 번호) 2개 이상**, 5초가 넘으면 3개. 같은 뜻의 다른 컷·다른 영상의
+      ★한 장면만 길게 틀지 마라: **2.5초가 넘는 줄은 서로 다른 장면(다른 컷 번호) 2개 이상**, 5초가 넘으면 3개.
+      자막이 여러 줄로 나뉘는 대사면 **자막 줄(1.2초 넘는 덩어리)마다 다른 장면**이 오게 그 수만큼 고른다(최대 4). 같은 뜻의 다른 컷·다른 영상의
       같은 쓰임 컷으로 리듬을 줘라(2026-10-02 실측: 2.5초↑ 칸 34%가 한 장면만 이어져 같은 화면이 계속 나왔다).
    e. 씨앗 영상(표시됨)의 컷은 쓰지 마라. 목록에 없는 번호를 만들지 마라.
 4단계 — 점검: 다 고른 뒤 전체를 다시 보며 ①중복 컷 ②길이 부족 ③세 줄 연속 같은 영상 을 스스로 잡아 고쳐라.
@@ -108,6 +109,21 @@ def _secs_of(text):
 LONG_LINE_SECS = 2.5     # 이 길이 이상인 줄은 서로 다른 장면 2개 이상(2026-10-02)
 
 
+def want_scenes(i, line, need):
+    """줄 하나에 서로 다른 장면 몇 개 — **판정은 여기 한 곳**(관제 204 10번, 2026-10-16 사장님 1안).
+    max(2.5초마다 1장, 자막 묶음 수), 최대 4. 홀드 줄(훅·핵심 결과)은 자막 묶음으로 더 쪼개지 않는다(09-22 결정) — 단 종전 '2.5초↑ 2장'은 지킨다.
+    자막 묶음 = 10자 자막 줄을 글자 수로 시간 어림해 1.2초 미만 줄은 옆 줄과 묶은 수(mix_pipeline._caption_groups)."""
+    import math
+    from shopping_shorts import mix_pipeline as _mp
+    text = (line.get("text") or "").strip()
+    if not need:
+        return 1
+    by_time = 2 if need >= LONG_LINE_SECS else 1          # 종전 규칙(10-02) 그대로 — 홀드 줄도 이것까지는 지킨다(멈춤 방지)
+    if _mp._hold_beat(i, {"narration": text, "role": line.get("role") or ""}):
+        return by_time                                      # 홀드는 자막 묶음 수로 더 쪼개지 않는다
+    return max(1, min(4, max(by_time, int(math.ceil(need / LONG_LINE_SECS - 1e-6)), _mp._caption_groups(text, need))))
+
+
 def _spare_cuts(seg_index, used, backbone_vid):
     """아직 어느 줄도 안 쓴, 쓸 수 있는 컷이 남았나(재료가 모자라면 '한 장면 더'를 요구하지 않는다)."""
     return any(_usable(seg_index, c, backbone_vid) for c in seg_index if c not in used)
@@ -132,8 +148,9 @@ def check(picks, lines, seg_index, backbone_vid):
             why.append("길이 %.1f×%.1f < %.1f" % (have, SLOW, need))
         # ★긴 줄 한 장면(2026-10-02 사장님 "같은 장면 계속 / 화면 모자라 멈춤"): 2.5초↑ 줄에 다른 컷이 1개뿐이면 다시 묻는다.
         #   실측 24시간 687칸 중 2.5초↑인데 한 장면만 이어진 칸 237(34%). 남은 쓸 컷이 없으면(재료 부족) 묻지 않는다.
-        if need >= LONG_LINE_SECS and len({c for c in cs if c in seg_index}) == 1 and _spare_cuts(seg_index, used, backbone_vid):
-            why.append("%.1f초 줄에 장면 1개 — 다른 장면 1개 이상 더" % need)
+        n_have, n_want = len({c for c in cs if c in seg_index}), want_scenes(i, L, need)
+        if cs and n_have < n_want and _spare_cuts(seg_index, used, backbone_vid):
+            why.append("%.1f초 줄(자막 %d묶음)에 장면 %d개 — 서로 다른 장면 %d개로" % (need, n_want, n_have, n_want))
         if why:
             bad[i] = "; ".join(why)
     vids = [sorted({seg_index[c]["vid"] for c in picks.get(i, []) if c in seg_index}) for i in range(len(lines))]
