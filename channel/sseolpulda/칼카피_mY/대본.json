@@ -1,0 +1,115 @@
+{
+ "topic": "플레임스 워밍업 — 퍽을 양보한 소년",
+ "orig": [
+  "하키 경기 중 선수가 퍽을 관중석으로 던졌어요. 한 여성이 퍽을 잡았지만 사실 이 어린 소녀가 처음부터 간절히 퍽을 기다리고 있었죠.",
+  "소녀는 퍽을 받지 못해 울음을 터뜨렸어요. 그때 다른 선수가 퍽을 던졌고 이번엔 선수의 아내가 잡았지 뭐예요? 모두를 놀라게 한 감동적인 순간. 선수의 아내는 망설임 없이 울고 있는 소녀에게 퍽을 건넸어요."
+ ],
+ "facts": {
+  "s1": {
+   "text": "Sportsnet 설명: 워밍업 중 마이크 스미스가 소년에게 퍽을 던졌지만, 소년은 근처의 다른 팬에게 퍽을 주겠다고 고집했고, 설득 끝에 그 팬이 받아 들고 눈물을 흘렸다(2019-04-04)",
+   "url": "https://www.youtube.com/watch?v=OEKoaunJr9Q"
+  },
+  "n1": {
+   "text": "NHL 설명: 플레임스 소년 팬이 워밍업 중 한 소녀에게 퍽을 건네 하루를 만들어 줬고, 이어 뒤에 있던 더 어린 팬에게도 퍽을 넘겨줬다(2019-04-04)",
+   "url": "https://www.youtube.com/watch?v=NGJkTR60PGM"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "상황",
+    "text": "하키 경기 전 몸을 푸는 시간에 골리가 관중석의 한 소년에게 퍽을 던져줬어요.",
+    "facts": [
+     "s1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=OEKoaunJr9Q"
+    ]
+   },
+   {
+    "fn": "반전",
+    "text": "그런데 소년은 그 퍽을 옆자리 팬에게 주겠다고 고집을 부렸죠.",
+    "facts": [
+     "s1",
+     "n1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=OEKoaunJr9Q",
+     "https://www.youtube.com/watch?v=NGJkTR60PGM"
+    ]
+   },
+   {
+    "fn": "감동",
+    "text": "처음엔 사양하던 그 팬은 결국 퍽을 받아 들고 눈물을 쏟았어요.",
+    "facts": [
+     "s1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=OEKoaunJr9Q"
+    ]
+   },
+   {
+    "fn": "강조",
+    "text": "모두를 미소 짓게 만든 따뜻한 순간이에요.",
+    "facts": [
+     "s1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=OEKoaunJr9Q"
+    ]
+   },
+   {
+    "fn": "덤",
+    "text": "소년은 그 뒤에도 뒤에 있던 더 어린 팬에게 퍽을 또 건네줬답니다.",
+    "facts": [
+     "n1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=NGJkTR60PGM"
+    ]
+   }
+  ],
+  "check": {
+   "n_ok": false,
+   "lines_without_fact": [],
+   "chars": [
+    32,
+    26,
+    26,
+    18,
+    27
+   ],
+   "ranges": [
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ],
+    [
+     0,
+     999
+    ]
+   ],
+   "len_off_lines": [],
+   "copied_lines": [],
+   "polite_endings": 2,
+   "unsourced_numbers": []
+  },
+  "model": "오푸스 손 작성(원본 존댓말 구조: 상황→반전→감동→강조→마무리)"
+ },
+ "titles": {
+  "hook": "퍽 하나 양보했는데\n눈물 펑펑 ㅠㅠ"
+ },
+ "note": "원본(KHL 직캠, 선수 아내가 우는 소녀에게 퍽)은 유튜브에서 못 찾아 같은 유형 감동 장면(NHL 2019-04-04 플레임스)으로 대체 — 이야기도 대체 장면 기준. 말투 존댓말(원본 존댓말 비율 1.0)."
+}

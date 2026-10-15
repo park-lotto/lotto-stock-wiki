@@ -1,0 +1,95 @@
+{
+ "_note": "mY 3호 재료 계획(렌더 전): 원본(KHL 직캠 — 선수 아내가 우는 소녀에게 퍽)은 키워드 검색 8회로 못 찾음(렌즈 유료라 안 씀) → 같은 유형 감동 장면(NHL 2019-04-04 애너하임전 플레임스 워밍업: 소년이 받은 퍽을 옆 팬에게 양보) 두 각도(Sportsnet·NHL 중계)로 대체. 가로 1280×720 중계 화면을 세로 창(1080×1573)에 꽉 채우려면 가운데 494px 폭만 남아 약 2.2배 확대 — 흐릴 수 있음.",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/칼카피_mY/cand",
+ "replaced": true,
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_NGJkTR60PGM.mp4",
+   "url": "https://www.youtube.com/watch?v=NGJkTR60PGM",
+   "ss": 2.0,
+   "kind": "남의영상재편집(대체)",
+   "full": true,
+   "ours": "골리 스미스(41번)가 유리 너머 관중석 쪽으로 퍽을 건네는 워밍업 장면",
+   "why": "'골리가 한 소년에게 퍽을 던져줬어요'",
+   "overlays": [
+    {
+     "kind": "red_circle",
+     "at": "퍽을 받는 소년",
+     "t": [
+      0.5,
+      2.0
+     ],
+     "why": "원본 1.5초 빨간 원 강조(던진 퍽) — 같은 자리"
+    }
+   ]
+  },
+  {
+   "i": 1,
+   "src": "v_OEKoaunJr9Q.mp4",
+   "url": "https://www.youtube.com/watch?v=OEKoaunJr9Q",
+   "ss": 10.0,
+   "kind": "남의영상재편집(대체)",
+   "full": true,
+   "ours": "빨간 모자 소년이 옆 팬 쪽으로 팔을 뻗어 퍽을 내미는 장면",
+   "why": "'옆자리 팬에게 주겠다고 고집'"
+  },
+  {
+   "i": 2,
+   "src": "v_OEKoaunJr9Q.mp4",
+   "url": "https://www.youtube.com/watch?v=OEKoaunJr9Q",
+   "ss": 42.0,
+   "kind": "남의영상재편집(대체)",
+   "full": true,
+   "ours": "퍽을 받은 여성 팬이 입을 가리고 울먹이는 근접",
+   "why": "'결국 퍽을 받아 들고 눈물'"
+  },
+  {
+   "i": 3,
+   "src": "v_OEKoaunJr9Q.mp4",
+   "url": "https://www.youtube.com/watch?v=OEKoaunJr9Q",
+   "ss": 24.0,
+   "kind": "남의영상재편집(대체)",
+   "full": true,
+   "ours": "소년과 옆 팬들이 함께 웃는 장면",
+   "why": "'모두를 미소 짓게 만든 따뜻한 순간'",
+   "overlays": [
+    {
+     "kind": "emoji",
+     "emoji": "👍",
+     "t": [
+      0.3,
+      3.0
+     ],
+     "why": "원본 20~22초 👍 스티커 — 감동 마무리 자리"
+    }
+   ]
+  },
+  {
+   "i": 4,
+   "src": "v_NGJkTR60PGM.mp4",
+   "url": "https://www.youtube.com/watch?v=NGJkTR60PGM",
+   "ss": 29.0,
+   "kind": "남의영상재편집(대체)",
+   "full": true,
+   "ours": "소년이 뒤쪽 어린 팬에게 다시 퍽을 넘겨주는 장면",
+   "why": "'뒤에 있던 더 어린 팬에게 퍽을 또 건네줬답니다'"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+   "t": 3.46,
+   "db": 0,
+   "why": "원본 효과음 3.46초"
+  },
+  {
+   "file": "shopping_shorts/assets/sfx_packs/팩01/ding.wav",
+   "t": 8.92,
+   "db": 0,
+   "why": "원본 효과음 8.92·9.12초(붙은 두 발 → 한 발)"
+  }
+ ],
+ "audio_plan": "원본 실측: 나레 1명(여성 TTS 추정) + BGM(감동·잔잔), 원음 깔림 False(뜯기 audio.composition, 말 쉼 구간 −21dB 는 BGM) → 우리도 나레 + BGM(here_with_me, 0.15). 원음 깔기(덕킹)는 원본에 없어 넣지 않음 — 넣으라면 소스 원음 −18dB 로 덕킹 가능",
+ "watermark": "원본은 소스 워터마크를 흐림 상자로 가림(창 왼쪽 위 y≈470). 우리 소스(중계 화면)는 창으로 자르면 방송사 표식이 창 밖 — 흐림 상자 불필요(접촉 시트로 확인)"
+}

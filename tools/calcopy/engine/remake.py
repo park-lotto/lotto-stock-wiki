@@ -142,22 +142,117 @@ def sheet_1s(video: Path, dst: Path, cols: int = 8):
     S.save(dst, quality=88)
 
 
+def narration_kind(J: dict) -> str:
+    """뜯기 audio.composition.narration — 'none'(원음만+자막 → remake_video) / 'tts'·'human'(나레 → narr_video). 판단은 뜯기 값 하나."""
+    n = ((J.get("audio") or {}).get("composition") or {}).get("narration")
+    return (n.get("kind") if isinstance(n, dict) else n) or "none"
+
+
+def plan_sheet(M: dict, J: dict, dst: Path):
+    """컷마다 소스 3프레임(칸 비율로 자름, src_crop 반영) + 대사 why — 렌더 전 선검수용 접촉 시트."""
+    import io
+    from PIL import Image, ImageDraw, ImageFont
+    base = Path(M["cand_dir"])
+    pb = [x["box"] for x in (((J.get("cuts") or {}).get("picture_boxes") or {}).get("per_shot") or []) if x.get("box")]
+    f = ImageFont.truetype(str(ROOT / "shopping_shorts/static/fonts/SpoqaHanSansNeo-Bold.otf"), 18)
+    rows = []
+    for k, s in enumerate(M["shots"]):
+        box = s.get("box") or (pb[k % len(pb)] if pb else None)
+        bw, bh = (box[2], box[3]) if (box and not s.get("full")) else (1080, 1008)
+        th = 200
+        tw = int(th * bw / bh)
+        row = Image.new("RGB", (560 + 3 * (tw + 6), th + 10), "white")
+        d = ImageDraw.Draw(row)
+        d.text((6, 6), f"#{s['i']} {s.get('kind', '')} · {Path(s['src']).name[:30]} @{s.get('ss', 0)}", font=f, fill=(200, 0, 0))
+        texts = [s.get("ours", "")[:30], s.get("ours", "")[30:60], "왜: " + s.get("why", "")[:28], s.get("why", "")[28:58]]
+        for n, txt in enumerate(texts):
+            d.text((6, 34 + n * 26), txt, font=f, fill=(0, 0, 0) if n < 2 else (0, 90, 0))
+        crop = "crop={2}:{3}:{0}:{1},".format(*s["src_crop"]) if s.get("src_crop") else ""
+        src = base / s["src"]
+        still = src.suffix.lower() in (".png", ".jpg", ".jpeg")
+        for j, dt in enumerate((0.2, 1.0, 1.8)):
+            seek = [] if still else ["-ss", f"{float(s.get('ss', 0)) + dt:.2f}"]
+            b = subprocess.run(["ffmpeg", "-v", "error", *seek, "-i", str(src), "-frames:v", "1",
+                                "-vf", f"{crop}scale={tw}:{th}:force_original_aspect_ratio=increase,crop={tw}:{th}",
+                                "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+            if b:
+                row.paste(Image.open(io.BytesIO(b)).convert("RGB"), (560 + j * (tw + 6), 5))
+        rows.append(row)
+    W = max(r.width for r in rows)
+    S = Image.new("RGB", (W, sum(r.height for r in rows)), "white")
+    y = 0
+    for r in rows:
+        S.paste(r, (0, y))
+        y += r.height
+    S.save(dst, quality=82)
+
+
+def write_plan(out: Path, J: dict, frames: list, S: dict, M: dict, kind: str) -> Path:
+    """선검수 계획.md — 대본(+근거)·컷별 소스·why·접촉 시트·규칙 예상. 렌더·TTS 전에 사람(조율자)이 본다(10-16 rGFX 3차 반려 교훈)."""
+    from collections import Counter
+    sheet = out / "계획_시트.jpg"
+    plan_sheet(M, J, sheet)
+    lines = (S.get("final") or {}).get("lines") or []
+    facts = S.get("facts") or {}
+    form = "원음만+자막(remake_video)" if kind == "none" else f"나레 {kind}(narr_video)"
+    md = [f"# 계획 — {Path(str(J.get('source', ''))).stem}", "",
+          f"- 꼴: {form} · 틀 {', '.join(Path(x).name for x in frames)}",
+          f"- 접촉 시트: `{sheet}`", "", "## 대본", ""]
+    for n, l in enumerate(lines, 1):
+        fx = l.get("facts") or []
+        md.append(f"{n}. ({l.get('fn', '')}) {l.get('text', '')}" + (f" — 근거 {', '.join(fx)}" if fx else ""))
+    if facts:
+        md += ["", "| 근거 | 내용 | 출처 |", "|---|---|---|"]
+        md += [f"| {k} | {v.get('text', '')} | {v.get('url', '')} |" for k, v in facts.items()]
+    md += ["", "## 재료(컷별)", "", "| # | 종류 | 소스 | 시작 | 칸 | src_crop | 왜 |", "|---|---|---|---|---|---|---|"]
+    for s in M["shots"]:
+        box = s.get("box") or ("전폭" if s.get("full") else "원본 순번")
+        md.append(f"| {s['i']} | {s.get('kind', '')} | [{Path(s['src']).name}]({s.get('url', '')}) | {s.get('ss', 0)} | {box} | {s.get('src_crop') or '-'} | {s.get('why', '')} |")
+    cnt = Counter(s.get("kind", "?") for s in M["shots"])
+    tot = sum(cnt.values()) or 1
+    mats = J.get("materials") or {}
+    sfx0 = (((J.get("audio") or {}).get("composition") or {}).get("sfx") or {}).get("times")
+    md += ["", "## 규칙 예상(렌더 전 — 컷 수 기준, 실제 시간 비율은 렌더 뒤 규칙표)", "",
+           f"- 컷 {tot}개 · 종류 비율(컷 수) {dict((k, round(v / tot, 2)) for k, v in cnt.items())}",
+           f"- 원본 제작법 비율: {mats.get('time_ratio') or mats.get('ratio') or '뜯기 materials 참고'}",
+           f"- 효과음: {[x.get('t') for x in M.get('sfx') or []]} · 원본 {sfx0}"]
+    p = out / "계획.md"
+    p.write_text("\n".join(md) + "\n", encoding="utf-8")
+    return p
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="칼카피 한 편 한 명령")
-    ap.add_argument("tteutgi"); ap.add_argument("frame"); ap.add_argument("--out", required=True)
-    ap.add_argument("--materials"); ap.add_argument("--script")
+    ap.add_argument("tteutgi")
+    ap.add_argument("frame", help="본문 틀(frame.json)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--hook-frame", help="훅 카드 틀(있으면 첫 문장 동안 이 틀) — 나레 꼴")
+    ap.add_argument("--materials")
+    ap.add_argument("--script")
+    ap.add_argument("--plan-only", action="store_true", help="계획.md·접촉 시트만 쓰고 멈춤(렌더·TTS 전 선검수)")
+    ap.add_argument("--tts", help="나레 소리 파일(나레 꼴). 없으면 --make-tts 로 타입캐스트 1회")
+    ap.add_argument("--make-tts", action="store_true")
+    ap.add_argument("--tempo", type=float, default=1.36)
+    ap.add_argument("--chunk", type=int, default=10, help="나레 꼴 자막 한 줄 글자 수")
+    ap.add_argument("--caption-mode", default="accumulate", choices=["accumulate", "replace"], help="누적형(1줄→2줄) / 교체형(1줄씩)")
     ap.add_argument("--queries", default="", help="재료 후보 검색어 '|' 구분(재료.json 없을 때)")
-    ap.add_argument("--topic", default=""); ap.add_argument("--roles", default=""); ap.add_argument("--scenes", default="")
-    ap.add_argument("--points", default=""); ap.add_argument("--rules", default=str(ROOT / "channel/sseolpulda/제품_이야기썰형.rules.json"))
-    ap.add_argument("--bgm", default="qiuqiu"); ap.add_argument("--bgm-ratio", type=float, default=0.15)
-    ap.add_argument("--lufs", type=float, default=None, help="목표 통합 LUFS(기본 = 뜯기 audio.I)")
+    ap.add_argument("--topic", default="")
+    ap.add_argument("--roles", default="")
+    ap.add_argument("--scenes", default="")
+    ap.add_argument("--points", default="")
+    ap.add_argument("--rules", default=str(ROOT / "channel/sseolpulda/제품_이야기썰형.rules.json"))
+    ap.add_argument("--bgm", default="qiuqiu")
+    ap.add_argument("--bgm-ratio", type=float, default=0.15)
+    ap.add_argument("--lufs", type=float, default=None, help="목표 통합 LUFS(기본 = 뜯기 audio.bench.I)")
     a = ap.parse_args(argv)
     from shopping_shorts.calcopy_frame import schema
-    out = Path(a.out).resolve(); out.mkdir(parents=True, exist_ok=True)
+    out = Path(a.out).resolve()
+    out.mkdir(parents=True, exist_ok=True)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
     frame = json.loads(Path(a.frame).read_text(encoding="utf-8"))
     spec = schema.validate(frame)
-    log = {"steps": {}}
+    kind = narration_kind(J)
+    log = {"steps": {}, "kind": kind}
     # 1) 재료
     if not a.materials:
         qs = [q.strip() for q in a.queries.split("|") if q.strip()]
@@ -170,18 +265,43 @@ def main(argv=None):
     if a.script:
         S_p = Path(a.script)
         log["steps"]["script"] = {"from": str(S_p)}
-    else:
+    elif kind == "none":
         from tools.calcopy import style_writer
         res = style_writer.write_captions(a.rules, a.tteutgi, a.topic, a.roles.split(","), a.scenes.split("|") if a.scenes else None,
                                           55.0, a.frame, a.points)
         S_p = out / "대본.json"
         S_p.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
         log["steps"]["script"] = {"written": str(S_p), "check": res["final"].get("check")}
-    # 3) 만들기
-    from tools.calcopy import remake_video
-    target = a.lufs if a.lufs is not None else float((((J.get("audio") or {}).get("bench") or {}).get("I")) or -14.0)   # 뜯기 audio.bench.I
-    final = remake_video.make(a.frame, a.tteutgi, a.materials, str(S_p), out, a.bgm, a.bgm_ratio, target)
-    # 4) 대조 + 1초 시트
+    else:
+        ap.error("나레 꼴은 --script(style_writer narration 결과 + 근거) 가 필요하다")
+    S = json.loads(S_p.read_text(encoding="utf-8"))
+    M = json.loads(Path(a.materials).read_text(encoding="utf-8"))
+    frames = ([a.hook_frame] if a.hook_frame else []) + [a.frame]
+    # 3) 선검수 계획
+    plan_md = write_plan(out, J, frames, S, M, kind)
+    print("계획:", plan_md)
+    if a.plan_only:
+        return 3
+    # 4) 만들기 — 뜯기 audio.composition 으로 꼴 분기
+    target = a.lufs if a.lufs is not None else float((((J.get("audio") or {}).get("bench") or {}).get("I")) or -14.0)
+    if kind == "none":
+        from tools.calcopy import remake_video
+        final = remake_video.make(a.frame, a.tteutgi, a.materials, str(S_p), out, a.bgm, a.bgm_ratio, target)
+    else:
+        from tools.calcopy import narr_video
+        tts = a.tts
+        if not tts:
+            if not a.make_tts:
+                ap.error("나레 꼴: --tts 파일이 없으면 --make-tts(타입캐스트 1회 — 비용)")
+            from shopping_shorts.channelkit import providers
+            from tools.calcopy.copy_render import NARR
+            tts = str(out / "narr_full.mp3")
+            providers.typecast_synth(NARR, tempo=a.tempo)(" ".join(l["text"] for l in S["final"]["lines"]), tts)
+            log["steps"]["tts"] = {"made": tts, "chars": sum(len(l["text"].replace(" ", "")) for l in S["final"]["lines"])}
+        plan = {"tteutgi": a.tteutgi, "frames": [{"frame": f, "t_end": None} for f in frames], "script": str(S_p), "tts": tts,
+                "materials": a.materials, "out": str(out), "bgm": a.bgm, "bgm_ratio": a.bgm_ratio, "lufs": target, "chunk": a.chunk, "caption_mode": a.caption_mode}
+        final = narr_video.build(plan)
+    # 5) 대조 + 1초 시트
     from tools.calcopy.engine import compare
     res = compare.compare(J["source"], str(final), str(out / "대조"), "single")
     sheet_1s(final, out / "final_sheet_1s.jpg")

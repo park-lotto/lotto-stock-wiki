@@ -47,7 +47,19 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
     return [o.rstrip(",") for o in out]
 
 
-def steps_of(sentences: list[str], n: int = 14) -> list[dict]:
+def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> list[dict]:
+    """mode=replace(교체형: 조각마다 새 1줄, 컷=새 문장 — 썰풀다 틀 B 1초 교체) 이면 아래 누적형 대신 이것."""
+    if mode == "replace":
+        out = []
+        subs = [x for line in sentences for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]
+        for si, s in enumerate(subs):
+            for k, c in enumerate(chunk_sentence(s, n)):
+                out.append({"text": c, "chars": len(c.replace(" ", "")), "new_cut": k == 0, "sent": si})
+        return out
+    return _steps_accumulate(sentences, n)
+
+
+def _steps_accumulate(sentences: list[str], n: int = 14) -> list[dict]:
     """누적형 단계: 조각 짝마다 [1줄] → [1줄\\n2줄]. 문장이 바뀌면 새로. 반환 [{text, chars(새로 읽는 글자), new_cut}]"""
     steps = []
     subs = [x for line in sentences for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]   # 한 줄에 문장 여럿이면 문장마다 새로
@@ -106,7 +118,7 @@ def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[d
 
 
 # ── 재료(그림 칸) ──────────────────────────────────────────────────────────
-def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False):
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
@@ -118,7 +130,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
         pre = f"crop={w_}:{h_}:{x}:{y}," + pre
     if box:   # 원본 그 컷의 그림 칸 [x,y,w,h](캔버스 좌표, 뜯기 cuts.picture_boxes) — cover=꽉 채워 자름 / contain=다 보이게 줄임
         bx, by, bw, bh = box
-        by = max(by, min_y)   # 자막 2줄 아래로 — 원본 컷 칸(y666)을 그대로 두면 2줄째 자막을 덮었다(10-16 2판)
+        by = min_y if anchor else max(by, min_y)   # ★기본 = 자막 바로 아래에 붙임(10-16 조율자: y1185 칸이 빈칸 위에 떠 아마추어처럼 보였다). 크기는 원본 그대로
         bh = min(bh, win["y"] + win["h"] - by)
         oy = max(0, by - win["y"])
         if fit == "contain":
@@ -148,9 +160,10 @@ def build(plan: dict):
     S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
     sentences = [l["text"] for l in S["final"]["lines"]]
     M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
-    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14)), plan["tts"])
+    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"])
     # 훅 카드 끝 = 둘째 문장이 시작하는 시각(원본: 훅 카드 1.5초 = 첫 문장 "…억울했던 이유?" 동안)
-    hook_end = plan["frames"][0].get("t_end") or next(s["t0"] for s in steps if s["sent"] >= 1)
+    one = len(plan["frames"]) == 1   # 틀 한 장(훅 카드 없음 — 썰풀다 틀 B) 이면 처음부터 끝까지 그 틀
+    hook_end = 0.0 if one else (plan["frames"][0].get("t_end") or next(s["t0"] for s in steps if s["sent"] >= 1))
     # 훅 카드 구간은 자막 없음(원본: 훅 카드엔 제목만) — 첫 문장 조각은 훅 동안 말로만
     cuts = [s["t0"] for s in steps if s["new_cut"] and s["t0"] >= hook_end - 1e-6]
     cuts = sorted(set([0.0, hook_end] + cuts)) + [dur]
@@ -159,11 +172,13 @@ def build(plan: dict):
     if len(mshots) < len(shots_t):
         raise SystemExit(f"재료 컷 {len(mshots)}개 < 필요한 컷 {len(shots_t)}개 — 재료.json shots 를 늘려라(컷 시각: {shots_t})")
     base = Path(M["cand_dir"])
+    J = json.loads(Path(plan["tteutgi"]).read_text(encoding="utf-8")) if plan.get("tteutgi") else {}
+    pboxes = [x["box"] for x in (((J.get("cuts") or {}).get("picture_boxes") or {}).get("per_shot") or []) if x.get("box")]
     seg_files = []
     for fi, fr in enumerate(plan["frames"]):
         t_a = 0.0 if fi == 0 else plan["frames"][fi - 1]["t_end"] or hook_end
         t_b = fr.get("t_end") or dur
-        if fi == 0:
+        if fi == 0 and not one:
             t_b = hook_end
         frame = json.loads(Path(fr["frame"]).read_text(encoding="utf-8"))
         spec = schema.validate(frame)
@@ -177,10 +192,11 @@ def build(plan: dict):
                 continue
             a2, b2 = max(a, t_a), min(b, t_b)
             sh = mshots[k]
+            box = sh.get("box") or (pboxes[k % len(pboxes)] if pboxes else None)   # 칸 크기 기본 = 뜯기 cuts.picture_boxes 같은 순번
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
-            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p, sh.get("ar"),
-                                    None if fi == 0 else sh.get("box"), sh.get("fit", "cover"), min_y, sh.get("src_crop"),
-                                    sh.get("kind") == "짤"))
+            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0 and not one), p, sh.get("ar"),
+                                    None if (fi == 0 and not one) else box, sh.get("fit", "cover"), min_y, sh.get("src_crop"),
+                                    sh.get("kind") == "짤", sh.get("anchor", True)))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"
