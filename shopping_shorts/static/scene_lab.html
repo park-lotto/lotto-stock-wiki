@@ -528,6 +528,7 @@ body.grow #playerhost{overflow:visible;position:sticky;top:8px;align-self:flex-s
 .item .trm:hover{background:var(--warn);color:#3a2a08}
 .item .trm.tiny{bottom:98px;cursor:default;border-color:var(--bad);color:#ffb9b9;background:#3a1a20cc}
 .cutgap{margin:4px 0 2px;padding:5px 9px;border-radius:8px;background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.45);color:#ffb3b3;font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tl-gap.tl-pend{z-index:3}.tl-gap.tl-pend.over{border-color:#ffb020;color:#ffd27a;background:repeating-linear-gradient(45deg,rgba(255,176,32,.18) 0 6px,transparent 6px 12px);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-sizing:border-box}
 .bnotes{position:relative;height:36px;margin:4px 0 2px}
 .bnotes.open{height:auto}
 .bnotes>.cutgap{margin:0 0 3px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;height:36px;box-sizing:border-box;padding:3px 64px 3px 9px}
@@ -2900,7 +2901,31 @@ function notesHtml(i, list){
     ? `<button type="button" class="bnmore" onclick="event.stopPropagation();NOTE_OPEN[${i}]=!NOTE_OPEN[${i}];render()">${open ? '접기 ▴' : `+${n.length - 1} ▾`}</button>` : '';
   return `<div class="bnotes${open ? ' open' : ''}">${n.length ? n[0] : '<div class="cutgap none"></div>'}${more}${open ? n.slice(1).join('') : ''}</div>`;
 }
+// 대기 중(고르기 전) 손 길이 — 고르면 그때 적용·저장, 취소면 버린다(scene_timeline 이 놓을 때 HAND_PEND 에 둔다)
+function handPick(i, mode){
+  const p = (window.HAND_PEND || {})[i]; if (!p) return;
+  delete window.HAND_PEND[i];
+  FILLMODE[i] = mode;
+  setFix(i, p.sid, p.L);                    // setFix 가 render·저장까지
+  try { playBeatHere(i); } catch (e) {}
+}
+function handCancel(i){ if (window.HAND_PEND) delete window.HAND_PEND[i]; render(); }
+function handPendHtml(i){
+  const p = (window.HAND_PEND || {})[i]; if (!p) return '';
+  const short = p.auto > p.L, d = Math.abs(p.auto - p.L).toFixed(1), no = p.k + 1;
+  const n = (lists[i] || []).length, nb = p.k + 1 < n ? p.k + 2 : p.k;
+  const sp = (p.L / p.auto).toFixed(2), tot = beatDur(i), fAll = tot > 0 ? (tot - (p.auto - p.L)) / tot : 1;
+  const okF = f => short ? f >= 1 / maxSlowmo() - 1e-3 : f <= FIT_FAST_MAX + 1e-3;
+  const b = (m, t) => `<button class="act" onclick="event.stopPropagation();handPick(${i}, '${m}')">${t}</button>`;
+  return `<div class="cutgap handbar" onclick="event.stopPropagation()">${short ? `✂ ${no}번 카드를 줄여 ${d}초가 비었어요 — 어떻게 채울까요?` : `↔ ${no}번 카드를 늘려 ${d}초 넘쳐요 — 어떻게 할까요?`}
+    ${n > 1 ? b('next', short ? `${nb}번 장면 더 보여줌` : `${nb}번 줄이기`) : ''}
+    ${okF(p.L / p.auto) ? b('self', `${no}번만 ${short ? '느리게' : '빠르게'}(${sp}배)`) : ''}
+    ${okF(fAll) ? b('all', `전부 같이 ${short ? '느리게' : '빠르게'}`) : ''}
+    ${short && !okF(p.L / p.auto) && !okF(fAll) ? `<button class="act" onclick="event.stopPropagation();handCancel(${i});autoFill(${i})">✨ 장면 하나 더 넣기</button>` : ''}
+    <button class="act" onclick="event.stopPropagation();handCancel(${i})">취소</button></div>`;
+}
 function handBarHtml(i){
+  if ((window.HAND_PEND || {})[i]) return handPendHtml(i);
   const h = handGapInfo(i);
   if (!h || Math.abs(h.diff) < 0.05) return '';
   const short = h.diff > 0, d = Math.abs(h.diff).toFixed(1), no = h.pos + 1;
@@ -3847,7 +3872,9 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${notesHtml(i, [handBarHtml(i), gapHtml, ...fitList])}
+        ${notesHtml(i, (window.HAND_PEND || {})[i]
+          ? [handBarHtml(i), ...fitList, gapHtml]
+          : [...fitList.filter(h => h.includes('fitToggle(') && h.includes(', true)')), gapHtml, handBarHtml(i), ...fitList.filter(h => !(h.includes('fitToggle(') && h.includes(', true)')))])}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님

@@ -75,8 +75,19 @@
 
     // ── 컷 레인: planClips = 실제 렌더와 같은 배치("다 채움" 그대로 보인다)
     let acc = 0;
+    const pend = (g.HAND_PEND || {})[i];
+    let pendHtml = '';
     const cutHtml = clips.map((c, k) => {
-      const left = acc * pps, wd = Math.max(10, c.dur * pps - 2);
+      const left = acc * pps;
+      let wd = Math.max(10, c.dur * pps - 2);
+      // ★고르기 전(대기) — 끈 카드만 새 길이로 그리고, 생긴 빈칸은 빗금으로 둔다. 옆 카드는 제자리(2026-10-15 사장님
+      //   "줄이면 공백으로 두고 고르게 — 지금은 2번 카드가 따라온다"). 고르기 전엔 저장·렌더 그대로(planClips 미반영).
+      if (pend && pend.k === k){
+        wd = Math.max(10, pend.L * pps - 2);
+        const diff = c.dur - pend.L;
+        if (diff > 0.02) pendHtml = `<div class="tl-gap tl-blank tl-pend" style="left:${(left + pend.L * pps).toFixed(1)}px;width:${Math.max(14, diff * pps - 2).toFixed(1)}px">빈칸 ${diff.toFixed(1)}s</div>`;
+        else if (diff < -0.02) pendHtml = `<div class="tl-gap tl-pend over" style="left:${(left + c.dur * pps).toFixed(1)}px;width:${Math.max(14, -diff * pps - 2).toFixed(1)}px">넘침 ${(-diff).toFixed(1)}s</div>`;
+      }
       acc += c.dur;
       // 마지막 컷이 모자람을 흡수해 늘어난 경우 — 그 늘어난 꼬리를 빗금으로 표시
       //   (★보정 후 합계만 보여주면 정보가 0이 된다는 교훈: 보정분을 눈에 보이게)
@@ -178,7 +189,7 @@
 
     return `<div class="tlwrap" data-i="${i}" data-pps="${pps.toFixed(3)}"
                  onclick="event.stopPropagation()">
-      <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${emptyHtml}${stretchBadge}</div>
+      <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${pendHtml}${emptyHtml}${stretchBadge}</div>
       ${capLane}
       <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
       ${editBtn}
@@ -451,7 +462,8 @@
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
             (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
-            setFix(i, c.seg_id, sec);
+            if (_box(i)) { (g.HAND_PEND = g.HAND_PEND || {})[i] = { k, sid: c.seg_id, L: sec, auto: c.dur }; render(); }
+            else setFix(i, c.seg_id, sec);
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
