@@ -458,7 +458,7 @@ def check_narration(lines: list[dict], orig: list[str], ranges: list, facts: str
     off = [i for i, (a, r) in enumerate(zip(lens, ranges)) if not (r[0] <= a <= r[1])]
     polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
     nums = [n for n in re.findall(r"\d[\d,.]*", text) if n not in facts]
-    ids = set(re.findall(r"\[(f\d+)\]", facts))
+    ids = set(re.findall(r"\[([a-z]\d+)\]", facts))   # 사실 f·원본 영상 o·댓글 c 번호
     no_fact = [i for i, l in enumerate(lines) if ids and not (set(l.get("facts") or []) & ids)]   # 10-16 반려: 근거 없는 평가 문장
     return {"n_ok": len(lines) == len(orig), "lines_without_fact": no_fact, "chars": lens, "ranges": [list(r) for r in ranges], "len_off_lines": off,
             "copied_lines": copied, "polite_endings": polite, "unsourced_numbers": nums}
