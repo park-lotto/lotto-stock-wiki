@@ -1082,7 +1082,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     overflow:hidden;white-space:nowrap;pointer-events:none}
 .tl-cap-s{color:#8fc3ea;font-size:9.5px;margin-left:4px;flex:none}
 .tl-sfxs,.tl-bgms{position:relative}
-.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 5px;font-size:10px;line-height:1;
+/* 효과음·배경음 줄 높이(10-15 사장님 "글자가 너무 작다 / 자리에 맞게") — 높이가 없어 0px로 찌그러져 이름표가 겹쳤다 */
+.tl-auds{margin-bottom:3px}
+.tl-sfxs{height:24px}
+.tl-bgms{height:22px}
+.tl-sfxs .tl-loading{font-size:11px;line-height:24px}
+.tl-sndfold{position:absolute;left:-50px;top:50%;transform:translateY(-50%);width:46px;padding:0;background:none;border:0;
+  color:#8b93a0;font-size:10.5px;text-align:right;cursor:pointer}
+.tl-sndfold:hover{color:#e6eef8}
+.tlwrap.sndfold .tl-sfxs,.tlwrap.sndfold .tl-bgms{display:none}
+.tl-sfxmark{position:absolute;top:1px;bottom:1px;z-index:3;touch-action:none;user-select:none;display:flex;align-items:center;padding:0 6px;font-size:12px;line-height:1;
   white-space:nowrap;cursor:pointer;background:#3b2a12;border:1px solid #d9902b;border-radius:4px;color:#ffd9a0}
 .tl-sfxmark:hover{background:#5a3d14}
 .tl-sfxmark.line{background:#2e1840;border-color:#c85cff;color:#ebc8ff}   /* 칸 효과음(짤 리액션 등) = 보라 */
@@ -1096,7 +1105,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-sfxpop button{background:#2b3a50;border:1px solid #4b6a92;color:#e6eef8;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:12px;white-space:nowrap}
 .tl-sfxpop .del{margin-left:auto;border-color:#a14a4a}
 .tl-sfxpop .v{min-width:38px;text-align:center}
-.tl-bgmbar{position:absolute;top:1px;bottom:1px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 6px;font-size:10px;
+.tl-bgmbar{position:absolute;top:1px;bottom:1px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 8px;font-size:12px;
   background:#13302a;border:1px solid #2f8a6f;border-radius:4px;color:#a8ecd6;cursor:pointer;overflow:hidden;white-space:nowrap}
 .tl-bgmbar.playing{background:#1f5a4a}
 .tl-bgmbar .pl{color:#d8fff0;flex:none}
@@ -2627,6 +2636,8 @@ function replaceRoll(sid, vid, r){
     return;
   }
   const id = _makeFilmSeg(vid, a, b);
+  // ★같은 구간으로 교체 = 아무 일도 안 한다(2026-10-15 실측: 박스를 안 움직이고 교체를 누르면 아래 '이미 있으면 자리 비우기'가 카드를 지웠다)
+  if (id === sid){ closeRoll(); nsay('같은 구간이에요 — 박스를 옮기거나 늘려 주세요'); return; }
   let n = 0;
   for (const i of where){
     const l = lists[i];
@@ -2651,6 +2662,14 @@ function replaceRoll(sid, vid, r){
     delete TRIMS[sid];
   }
   closeRoll();
+  // ★짧게 잡은 구간(2026-10-15 사장님): 잡은 길이 그대로 쓰고 칸 전체를 한 속도로 맞춘다(그 카드만 3.5배 느려지던 것 막기). 새 작업만.
+  if (DATA.hand_cut && cutRuleIsV2()) where.forEach(i => {
+    const cl = planClips(lists[i] || [], beatDur(i), STRETCH[i], i), k = cl.findIndex(c => c.seg_id === id);
+    if (k >= 0 && Math.abs((b - a) - cl[k].dur) > 0.05){
+      FIXLEN[fixKey(i, id)] = Math.round((b - a) * 100) / 100;
+      (window.HAND_LAST = window.HAND_LAST || {})[i] = id;          // 안내 줄의 「N번만」이 방금 바꾼 카드를 가리키게
+    }
+  });
   render();
   nsay(`${n}개 칸의 조각을 ${a.toFixed(1)}~${b.toFixed(1)}초로 바꿨어요`);
 }
@@ -2874,38 +2893,6 @@ function tailBadge(i, c){
 }
 // ★손 길이 빈칸 줄(관제 204, 2026-10-14 사장님 "끝을 잡아 줄이면 생긴 빈칸 — 위에서 고르고, 되돌리고, 다른 것도 들어 보게").
 //   새 작업(DATA.hand_cut)만. 길이·배속 판단은 planClips(scenesV2Alloc) 한 곳 — 여기는 손 길이 없을 때 컷과 비교해 '몇 초'만 보여 준다.
-function handGapInfo(i){
-  if (!DATA.hand_cut || !cutRuleIsV2()) return null;
-  const ids = lists[i] || [];
-  // 방금 손댄 카드가 있으면 그 카드 기준(손 길이가 여러 장이면 첫 장이 아니라 지금 만진 장)
-  const last = (window.HAND_LAST || {})[i];
-  let k = (last && getFix(i, last) > 0) ? ids.indexOf(last) : -1;
-  if (k < 0) k = ids.findIndex(sid => getFix(i, sid) > 0);
-  if (k < 0) return null;
-  const saved = {};
-  ids.forEach(sid => { const key = fixKey(i, sid); if (key in FIXLEN){ saved[key] = FIXLEN[key]; delete FIXLEN[key]; } });
-  let auto;
-  try { auto = planClips(ids, beatDur(i), STRETCH[i], i).filter(c => !c.meme); } finally { Object.assign(FIXLEN, saved); }
-  const sid = ids[k], a = auto.find(c => c.seg_id === sid);
-  if (!a) return null;
-  const pos = auto.indexOf(a);
-  // 지금 쓰는 메우기 방식 = planClips(scenesV2Alloc)가 정한 값(기본값 판단도 거기 한 곳)
-  const cur = planClips(ids, beatDur(i), STRETCH[i], i).find(c => c.hand);
-  // 앞 손잡이·가운데 밀기로 새 조각이 됐으면 '원래 화면 길이'는 바뀌기 전 카드 길이(그래야 빈칸이 보인다)
-  const hb = (window.HAND_BASE || {})[i], ad = (hb && hb.sid === sid) ? hb.dur : a.dur;
-  return {sid, pos, diff: +(ad - getFix(i, sid)).toFixed(2), auto: ad, n: auto.length,
-          mode: FILLMODE[i] || (cur && cur.hand_mode) || 'next'};
-}
-function handFill(i, mode){
-  FILLMODE[i] = mode;                       // 고른 것은 그대로 적는다(기본값이 칸마다 달라 'next'도 명시)
-  render();
-  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
-  try { playBeatHere(i); } catch (e) { console.warn('[손 길이] 바로 듣기 실패', e); }
-}
-function handUndo(i, sid){
-  delete FILLMODE[i];
-  setFix(i, sid, 0);                       // setFix 가 그리기·저장까지
-}
 // ★칸 위 안내 = 늘 한 줄(관제 204 8번, 2026-10-15 사장님 "칸마다 높이가 달라진다") — 안내가 몇 개든 한 줄 자리만 쓰고
 //   나머지는 [+N]으로 펼친다. 안내가 없는 칸도 같은 자리를 비워 둬 옆 칸과 높이가 같다.
 const NOTE_OPEN = {};
@@ -2916,24 +2903,42 @@ function notesHtml(i, list){
     ? `<button type="button" class="bnmore" onclick="event.stopPropagation();NOTE_OPEN[${i}]=!NOTE_OPEN[${i}];render()">${open ? '접기 ▴' : `+${n.length - 1} ▾`}</button>` : '';
   return `<div class="bnotes${open ? ' open' : ''}">${n.length ? n[0] : '<div class="cutgap none"></div>'}${more}${open ? n.slice(1).join('') : ''}</div>`;
 }
+// ★손 길이 안내 줄(관제 204) — 길이를 바꾸면 칸 전체가 한 속도(scenesV2Alloc 'all'), 원하면 그 카드만('self').
+function handFill(i, mode){
+  FILLMODE[i] = mode;                       // 고른 것은 그대로 적는다(기본값이 칸마다 달라 'next'도 명시)
+  render();
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+  try { playBeatHere(i); } catch (e) { console.warn('[손 길이] 바로 듣기 실패', e); }
+}
 function handBarHtml(i){
-  const h = handGapInfo(i);
-  if (!h || Math.abs(h.diff) < 0.05) return '';
-  const short = h.diff > 0, d = Math.abs(h.diff).toFixed(1), no = h.pos + 1;
-  const nb = h.pos + 1 < h.n ? h.pos + 2 : h.pos;          // 옆 카드 번호(끝이면 앞 카드)
-  const warn = phraseExactOn(i) ? ' <small>⚠구절 어긋남</small>' : '';
-  const L = getFix(i, h.sid), sp = (L / h.auto).toFixed(2);
-  // 배속 한계(느리게 MAX_SLOWMO · 빠르게 FIT_FAST_MAX)를 넘는 선택은 숨긴다 — 둘 다 막히면 장면 붙이기(관제 084와 같은 길)
-  const tot = beatDur(i), fAll = tot > 0 ? (tot - h.diff) / tot : 1;
-  const okF = f => short ? f >= 1 / maxSlowmo() - 1e-3 : f <= FIT_FAST_MAX + 1e-3;
-  const okSelf = okF(L / h.auto), okAll = okF(fAll);
-  const btn = (m, label) => `<button class="act${h.mode === m ? ' on' : ''}" onclick="event.stopPropagation();handFill(${i}, '${m}')">${h.mode === m ? '✓ ' : ''}${label}</button>`;
-  return `<div class="cutgap handbar" onclick="event.stopPropagation()">${short ? `✂ ${no}번 카드를 줄여 ${d}초가 비었어요` : `↔ ${no}번 카드를 늘려 ${d}초 넘쳐요`}
-    ${btn('next', (short ? `${nb}번 장면 더 보여줌` : `${nb}번 줄이기`) + warn)}
-    ${okSelf || h.mode === 'self' ? btn('self', `${no}번만 ${short ? '느리게' : '빠르게'}(${sp}배)`) : ''}
-    ${okAll || h.mode === 'all' ? btn('all', `전부 같이 ${short ? '느리게' : '빠르게'}` + warn) : ''}
-    ${short && !okSelf && !okAll ? `<button class="act" onclick="event.stopPropagation();autoFill(${i})">✨ 장면 하나 더 넣기</button>` : ''}
-    <button class="act" onclick="event.stopPropagation();handUndo(${i}, '${h.sid}')">되돌리기</button></div>`;
+  if (!DATA.hand_cut || !cutRuleIsV2()) return '';
+  const ids = lists[i] || [], fixed = ids.filter(sid => getFix(i, sid) > 0);
+  if (!fixed.length) return '';
+  const c = planClips(ids, beatDur(i), STRETCH[i], i).find(x => x.hand && !x.meme);
+  if (!c) return '';
+  const sp = (+(c.src_dur || c.dur)) / c.dur;                      // 칸 전체가 같은 배속(scenesV2Alloc 'all')
+  const tag = Math.abs(sp - 1) < 0.02 ? '그대로(1.0배)' : (sp < 1 ? `${(1 / sp).toFixed(2)}배 느리게` : `${sp.toFixed(2)}배 빠르게`);
+  const warn = (sp < 1 && 1 / sp > maxSlowmo() + 1e-3) ? ' <span class="slowwarn" title="1.2배보다 느리면 슬로모션처럼 보여요 — 장면을 하나 더 넣어 주세요">너무 느려요</span>'
+             : (sp > FIT_FAST_MAX + 1e-3 ? ' <span class="slowwarn" title="2배보다 빠르면 어색해요 — 카드를 줄여 주세요">너무 빨라요</span>' : '');
+  // 「이 카드만」(사장님 10-15 "선택하게 하는 게 있어야 되면 넣고") — 방금 만진 카드 하나만 배속, 다른 카드는 원래대로
+  const last = (window.HAND_LAST || {})[i], li = ids.indexOf(last), no = li >= 0 ? li + 1 : ids.indexOf(fixed[0]) + 1;
+  const self = FILLMODE[i] === 'self';
+  const swap = ids.length < 2 ? '' : self ? `<button class="act" onclick="event.stopPropagation();handFill(${i}, 'all')">칸 전체로 맞추기</button>`
+                    : `<button class="act" onclick="event.stopPropagation();handFill(${i}, 'self')">${no}번만 속도 바꾸기</button>`;
+  if (self) return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ ${no}번 카드만 속도를 바꿨어요 ${swap}
+    <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
+  // 구절 맞춤 칸(사장님 10-15): 전체로 맞추면 장면 전환이 자막 경계에서 조금 벗어날 수 있다 — 알리고 「N번만」을 권한다
+  const exactNote = (phraseExactOn(i) && ids.length > 1)
+    ? ` <span class="slowwarn" title="구절 맞춤 칸이라 전체로 맞추면 장면 전환이 자막 경계에서 조금 벗어날 수 있어요 — 경계를 지키려면 「${no}번만」">⚠ 자막 경계 조금 어긋남</span>` : '';
+  return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ 칸 전체 ${tag}${warn}${exactNote} ${swap}
+    ${warn && sp < 1 ? `<button class="act" onclick="event.stopPropagation();autoFill(${i})">✨ 장면 넣기</button>` : ''}
+    <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
+}
+function handUndoAll(i){
+  (lists[i] || []).forEach(sid => { delete FIXLEN[fixKey(i, sid)]; });
+  delete FILLMODE[i];
+  render();
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
 // [속도 맞추기] 켜고 끄기 — 칸 데이터(fit_segs)에 적고 다시 그린다. 저장은 _editPayload가 싣는다(다른 토글과 같은 길).
 function fitToggle(i, segId, on){
@@ -3743,6 +3748,7 @@ function renderBand(){
     const fitList = !phraseSyncOn(i) ? [] : clips.map((c, ci) => {
       const src = +(c.src_dur || c.dur), gap = +c.dur - src;
       if (!String(c.seg_id || '').startsWith('film_')) return '';
+      if (c.hand) return '';          // 손 길이 카드는 칸 전체 속도로 이미 맞췄다 — 안내는 handBarHtml 한 줄(멈춤 아님)
       // ★빠르게(관제 192 강병주님 "박스로 고른 뒷부분까지 쓰고 싶다") — 고른 구간이 컷보다 길면 뒤가 잘린다. 누르면 구간 전체를 빠르게(음성 그대로).
       const _sg = (DATA.segments || {})[c.seg_id] || {}, _len = +_sg.end - +_sg.start;
       if (src > +c.dur + 0.05)
@@ -3868,7 +3874,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${notesHtml(i, [handBarHtml(i), gapHtml, ...fitList])}
+        ${notesHtml(i, [...fitList.filter(h => h.includes('fitToggle(') && h.includes(', true)')), gapHtml, handBarHtml(i), ...fitList.filter(h => !(h.includes('fitToggle(') && h.includes(', true)')))])}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
@@ -4376,6 +4382,7 @@ function snapWork(){
     mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
     stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
     fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
+    fill: FILLMODE,        // 손 길이 메우기 방식(관제 204 — 'self'가 새로고침·되돌리기에서 사라지던 것)
     phraseOff: PHRASE_SYNC,  // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
     phraseExact: PHRASE_EXACT,   // 새 규칙 작업의 [구절 맞춤] 켠 칸(관제 106)
     cuts: CUTS, slow: SLOW   // 끈 칸의 얼린 컷·느리게(2026-09-14)
@@ -4480,7 +4487,7 @@ window.flushApply = flushApply;
 function stateOfWork(w){
   return {lists: (w.lists || []).map(l => Array.isArray(l) ? [...new Set(l)] : []),
           stretch: w.stretch || {}, phrase_sync: w.phraseOff || {}, phrase_exact: w.phraseExact || {},
-          cuts: w.cuts || {}, slow: w.slow || {}, fixlen: w.fixlen || {}, trims: w.trims || {}, merges: w.merges || {}};
+          cuts: w.cuts || {}, slow: w.slow || {}, fixlen: w.fixlen || {}, trims: w.trims || {}, merges: w.merges || {}, fill: w.fill || {}};
 }
 function loadWork(){
   try{
