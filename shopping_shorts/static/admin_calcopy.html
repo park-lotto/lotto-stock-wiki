@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피 채널 보관함</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e5e7eb;--acc:#2563eb;
+  --done:#16a34a;--doing:#2563eb;--blocked:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;word-break:keep-all;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Malgun Gothic",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:18px;margin:18px 0 8px} .lead{color:var(--sub);margin:0 0 16px;overflow-wrap:anywhere}
+a{color:var(--acc)} .sub{color:var(--sub);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+input[type=url]{flex:1 1 320px;min-width:0} textarea{width:100%;min-height:60px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--acc)} button:disabled{opacity:.5;cursor:default}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tabs button{background:#fff;color:var(--ink);border-color:var(--line)} .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#eef2ff;color:#3730a3;margin-right:4px}
+.tag.st{background:#f1f5f9;color:#334155} .tag.red{background:#fee2e2;color:var(--blocked)} .tag.ok{background:#dcfce7;color:#166534}
+.list .card{cursor:pointer} .list .card:hover{border-color:var(--acc)}
+.name{font-size:18px;font-weight:700}
+.bar{display:flex;gap:3px;margin-top:8px}.bar i{flex:1;height:8px;border-radius:4px;background:#e2e8f0}
+.bar i.done{background:var(--done)}.bar i.doing{background:var(--doing)}.bar i.blocked{background:var(--blocked)}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.st{border-radius:8px;padding:8px 6px;font-size:12px;text-align:center;background:#f1f5f9;color:var(--sub)}
+.st b{display:block;font-size:13px;color:var(--ink)}
+.st.done{background:#dcfce7}.st.doing{background:#dbeafe;outline:2px solid var(--doing)}.st.blocked{background:#fee2e2;outline:2px solid var(--blocked)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:0}.kv dt{color:var(--sub)}.kv dd{margin:0}
+.style{border-left:4px solid var(--line)} .style.ok{border-left-color:var(--done)}
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.vid{font-size:12px;color:var(--ink);text-decoration:none}.vid img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#e2e8f0}
+.vid b{display:block;font-size:13px}
+.msg{padding:8px 12px;border-radius:8px;margin:8px 0;display:none}.msg.err{display:block;background:#fee2e2;color:var(--blocked)}.msg.ok{display:block;background:#dcfce7;color:#166534}
+details summary{cursor:pointer;color:var(--acc)}
+@media (max-width:640px){.steps{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body><main id="app"><p class="sub">불러오는 중…</p></main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=n=>typeof n==="number"?n.toLocaleString("ko-KR"):(n==null?"–":esc(n));
+const LABEL={done:"끝",doing:"진행 중",blocked:"막힘",todo:"대기"};
+const params=new URLSearchParams(location.search);
+async function api(url,body){
+  const r=await fetch(url,body?{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{credentials:"same-origin"});
+  const j=await r.json().catch(()=>({error:"응답을 읽지 못했습니다 (HTTP "+r.status+")"}));
+  if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+  return j;
+}
+function msg(el,text,ok){el.className="msg "+(ok?"ok":"err");el.textContent=text}
+function bar(c,steps){return `<div class="bar">${steps.map(s=>`<i class="${c.steps[s.key].state}" title="${s.key}. ${esc(s.label)}: ${LABEL[c.steps[s.key].state]}"></i>`).join("")}</div>`}
+
+// ── 목록 ──
+let FILTER=params.get("st")||"전체";
+async function list(){
+  const d=await api("/api/admin/calcopy");
+  const counts={};d.channels.forEach(c=>counts[c.status]=(counts[c.status]||0)+1);
+  const shown=d.channels.filter(c=>FILTER==="전체"||c.status===FILTER);
+  $("#app").innerHTML=`<h1>🧬 칼카피 채널 보관함</h1>
+  <p class="lead">칼카피할 채널을 저장하고, 채널마다 갈래·분석·7단계 진행을 봅니다.</p>
+  <div class="card"><b>채널 추가</b>
+    <div class="row" style="margin-top:8px">
+      <input type="url" id="url" placeholder="https://www.youtube.com/@채널이름">
+      <select id="tag"><option value="">분야</option>${d.tags.map(t=>`<option>${t}</option>`).join("")}</select>
+      <button id="add">저장</button></div>
+    <input id="memo" placeholder="메모(선택)" style="width:100%;margin-top:8px">
+    <div id="addmsg" class="msg"></div></div>
+  <div class="tabs">${["전체",...d.statuses.filter(s=>s!=="삭제")].map(s=>`<button data-st="${s}" class="${s===FILTER?"on":""}">${s} ${s==="전체"?d.channels.length:(counts[s]||0)}</button>`).join("")}</div>
+  <div class="list">${shown.length?shown.map(c=>`<div class="card" data-slug="${esc(c.slug)}">
+    <div class="row"><span class="name">${esc(c.name)}</span><span class="tag st">${esc(c.status)}</span>
+      ${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}${c.blocked?'<span class="tag red">막힘</span>':""}
+      <span class="sub">${c.stats.subs!=null?"구독 "+num(c.stats.subs)+" · ":""}${c.stats.median_views!=null?"조회 중앙 "+num(c.stats.median_views)+" · ":""}갈래 ${c.n_styles} · ${c.done}/7 끝</span></div>
+    ${bar(c,d.steps)}${c.memo?`<div class="sub" style="margin-top:6px">📝 ${esc(c.memo)}</div>`:""}
+    ${c.resolve_error?`<div class="sub" style="color:var(--blocked)">수치 못 가져옴: ${esc(c.resolve_error)}</div>`:""}</div>`).join(""):'<p class="sub">이 상태의 채널이 없습니다.</p>'}</div>
+  ${d.errors.length?`<div class="card" style="color:var(--blocked)">원장 읽기 실패: ${d.errors.map(e=>esc(e.slug)+" — "+esc(e.error)).join("<br>")}</div>`:""}`;
+  document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{FILTER=b.dataset.st;list()});
+  document.querySelectorAll(".list .card[data-slug]").forEach(el=>el.onclick=()=>{location.search="?ch="+encodeURIComponent(el.dataset.slug)});
+  $("#add").onclick=async()=>{
+    const b=$("#add");b.disabled=true;
+    try{const r=await api("/api/admin/calcopy/channels",{url:$("#url").value,tags:[$("#tag").value].filter(Boolean),memo:$("#memo").value});
+      msg($("#addmsg"),"저장했습니다: "+r.channel.name+(r.channel.resolve_error?" (구독 수는 못 가져옴)":""),true);setTimeout(list,700);}
+    catch(e){msg($("#addmsg"),e.message,false)}finally{b.disabled=false}};
+}
+
+// ── 상세 ──
+async function detail(slug){
+  const c=await api("/api/admin/calcopy/ch/"+encodeURIComponent(slug));
+  const steps=[["1","채널 선정"],["2","실측(10층)"],["3","대본 구조"],["4","소재 확보"],["5","컨셉 프리셋"],["6","시험 3편"],["7","시청 판정·등록"]];
+  const tagsAll=["정치","연예","뷰티","썰","홈템"];
+  $("#app").innerHTML=`<p><a href="?">← 보관함</a></p>
+  <h1>${esc(c.name)}</h1><p class="lead">${c.url?`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.url)}</a> · `:""}${c.stats.subs!=null?"구독 "+num(c.stats.subs)+" · ":""}${c.stats.total!=null?"전체 "+num(c.stats.total)+"편 · ":""}분석 ${c.n_videos}편</p>
+  <div class="steps">${steps.map(([k,l])=>{const v=c.steps[k];return `<div class="st ${v.state}" title="${esc(v.note)}"><b>${k}. ${l}</b>${LABEL[v.state]}${v.date?"<br>"+esc(v.date.slice(5)):""}</div>`}).join("")}</div>
+  ${c.next?`<p>⏭ ${esc(c.next)}</p>`:""}
+  <div class="card"><b>채널 정보</b>
+    <div class="row" style="margin-top:8px">
+      <input id="nm" value="${esc(c.name)}" placeholder="이름">
+      <select id="st">${["후보","진행","완료","보류","삭제"].map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
+      <select id="pr">${[1,2,3,4,5].map(p=>`<option value="${p}" ${p==c.priority?"selected":""}>우선순위 ${p}</option>`).join("")}</select></div>
+    <div class="row" style="margin-top:8px">${tagsAll.map(t=>`<label><input type="checkbox" class="tg" value="${t}" ${c.tags.includes(t)?"checked":""}> ${t}</label>`).join("")}</div>
+    <textarea id="mm" placeholder="메모" style="margin-top:8px">${esc(c.memo)}</textarea>
+    <div class="row"><button id="save">정보 저장</button><span id="savemsg" class="msg"></span></div></div>
+  <h2>갈래 ${c.styles.length}개 <span class="sub">— 1차 자동 묶음. 맞으면 '확정', 이름은 고쳐도 됩니다.</span></h2>
+  ${c.styles.length?"":'<p class="sub">아직 분석된 갈래가 없습니다.</p>'}
+  ${c.styles.map((s,i)=>`<div class="card style ${s.confirmed?"ok":""}">
+    <div class="row"><span class="name">${esc(s.label)}</span>${s.confirmed?'<span class="tag ok">확정</span>':'<span class="tag st">미확정</span>'}
+      <span class="sub">${s.n}편 · 조회 중앙 ${num(s.views_median)} · 최고 ${num(s.views_max)}</span></div>
+    <dl class="kv" style="margin-top:8px">
+      <dt>목소리</dt><dd>${s.voice.map(([k,n])=>esc(k)+" "+n).join(" · ")||"–"}</dd>
+      <dt>말투</dt><dd>${s.honorific.map(([k,n])=>esc(k)+" "+n).join(" · ")||"–"}</dd>
+      <dt>길이 중앙</dt><dd>${num(s.duration_median)}초 · 말 속도 ${num(s.cps_median)}자/초 · 효과 ${num(s.effects_per_video)}개/편</dd>
+      <dt>판독 원래 이름</dt><dd class="sub">${s.from_labels.map(([k,n])=>esc(k)+" "+n).join(", ")}</dd></dl>
+    <div class="row" style="margin-top:8px">
+      <input class="rn" data-i="${i}" value="${esc(s.label)}" placeholder="갈래 이름">
+      <button class="cf" data-i="${i}">${s.confirmed?"확정 취소":"이 갈래 확정"}</button>
+      <button class="ghost rs" data-i="${i}">이름만 저장</button></div>
+    <details style="margin-top:8px"><summary>편 ${s.videos.length}개 보기</summary>
+      <div class="vids">${s.videos.map(v=>`<a class="vid" href="https://www.youtube.com/shorts/${esc(v.id)}" target="_blank" rel="noopener">
+        <img loading="lazy" src="https://i.ytimg.com/vi/${esc(v.id)}/oar2.jpg" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/${esc(v.id)}/hqdefault.jpg'" alt="">
+        <b>${num(v.views)}회</b>${esc(v.hook||v.title)}<br><span class="sub">${num(v.duration)}초 · ${esc(v.voice||"")} · 틀 ${esc(v.frame_variant||"")}</span></a>`).join("")}</div></details>
+  </div>`).join("")}
+  <div id="stylemsg" class="msg"></div>`;
+  $("#save").onclick=async()=>{try{await api("/api/admin/calcopy/ch/"+encodeURIComponent(slug),{name:$("#nm").value,status:$("#st").value,priority:+$("#pr").value,
+      tags:[...document.querySelectorAll(".tg:checked")].map(x=>x.value),memo:$("#mm").value});msg($("#savemsg"),"저장했습니다",true)}catch(e){msg($("#savemsg"),e.message,false)}};
+  const post=async(i,body)=>{try{await api("/api/admin/calcopy/ch/"+encodeURIComponent(slug)+"/style",{name:c.styles[i].name,...body});detail(slug)}catch(e){msg($("#stylemsg"),e.message,false)}};
+  document.querySelectorAll(".cf").forEach(b=>b.onclick=()=>post(+b.dataset.i,{confirmed:!c.styles[+b.dataset.i].confirmed,rename:document.querySelector(`.rn[data-i="${b.dataset.i}"]`).value}));
+  document.querySelectorAll(".rs").forEach(b=>b.onclick=()=>post(+b.dataset.i,{rename:document.querySelector(`.rn[data-i="${b.dataset.i}"]`).value}));
+}
+(params.get("ch")?detail(params.get("ch")):list()).catch(e=>{$("#app").innerHTML=`<p class="msg err">불러오기 실패: ${esc(e.message)}</p>`});
+</script>
+</body></html>

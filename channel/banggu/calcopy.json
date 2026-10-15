@@ -1,0 +1,54 @@
+{
+ "name": "방구석 친구들 / 선물가게",
+ "url": "https://www.youtube.com/channel/UChmVE-MBoZBGbiM5Q1w02Og",
+ "concept": "게시글 썰(이유 숨김)",
+ "stats": {},
+ "steps": {
+  "1": {
+   "state": "done",
+   "date": "2026-10-05",
+   "note": "info 107편, 50만↑ 13편 + 선물가게 9편",
+   "files": []
+  },
+  "2": {
+   "state": "done",
+   "date": "2026-10-05",
+   "note": "컷·그림 상자·말 속도 실측(bench 자막 값은 이 틀에서 못 씀)",
+   "files": []
+  },
+  "3": {
+   "state": "done",
+   "date": "2026-10-06",
+   "note": "6박자·전언 말투·39편 갈래",
+   "files": [
+    "channel/banggu/역분석_2026-10-05.md"
+   ]
+  },
+  "4": {
+   "state": "done",
+   "date": "2026-10-07",
+   "note": "씨앗 흐름(seedflow)·조사 썰·커뮤니티 소재",
+   "files": [
+    "channel/banggu/방향_커뮤니티소재_썰쇼핑_2026-10-07.md"
+   ]
+  },
+  "5": {
+   "state": "doing",
+   "date": "2026-10-06",
+   "note": "channel_presets/banggu 뼈대 있음(말맛 부족 판정)",
+   "files": [
+    "shopping_shorts/channel_presets/banggu"
+   ]
+  },
+  "6": {
+   "state": "doing",
+   "date": "2026-10-08",
+   "note": "픽션 썰 라이브 렌더(원블레이드) 시청 판정 대기",
+   "files": []
+  },
+  "7": {
+   "state": "todo"
+  }
+ },
+ "next": "픽션 썰 시청 판정 → 엔진에 붙일 형식 결정"
+}
