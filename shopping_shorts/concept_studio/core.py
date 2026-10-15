@@ -76,7 +76,7 @@ def _get(path, stream=False):
     return r
 
 
-def sync(kinds=("font", "sfx", "bgm")):
+def sync(kinds=("font", "sfx", "bgm", "meme")):
     """웹 스튜디오의 컨셉·내 설정·팩을 고객 PC로 받는다. 지문(sha256)이 같은 파일은 다시 안 받는다."""
     url, tok = studio_conn()
     if not (url and tok):

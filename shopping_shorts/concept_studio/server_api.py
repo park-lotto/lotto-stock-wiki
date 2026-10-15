@@ -126,7 +126,16 @@ def _entry(kind, name, path):
 
 def _pack_files():
     """{kind: {name: 절대경로}} — 내려줄 수 있는 팩 파일 전부(이 표 하나가 목록·파일 둘 다의 기준)."""
-    out = {"font": {}, "sfx": {}, "bgm": {}}
+    out = {"font": {}, "sfx": {}, "bgm": {}, "meme": {}}
+    try:
+        # 짤: 관리자(0) 장면 자산 중 category=meme — /api/meme/pack 과 같은 기준(감정=tone)
+        for a in _store().list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+            p = a.get("media_path") or ""
+            if p and os.path.isfile(p):
+                emo = str(a.get("tone") or "기타").strip().replace("/", "_") or "기타"
+                out["meme"][f"{emo}__{a['id']}{os.path.splitext(p)[1] or '.mp4'}"] = p
+    except Exception:  # noqa: BLE001 — DB 가 없으면 짤만 빈다
+        out["meme"] = {}
     for f in sorted(os.listdir(FONT_DIR)) if os.path.isdir(FONT_DIR) else []:
         if f.lower().endswith((".ttf", ".otf")):
             out["font"][f] = os.path.join(FONT_DIR, f)
