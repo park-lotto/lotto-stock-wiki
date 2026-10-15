@@ -3,9 +3,21 @@
  "bgm": "qiuqiu",
  "bgm_ratio": 0.12,
  "target_lufs": -16.2,
+ "sfx": [
+  [
+   "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\shopping_shorts\\assets\\sfx_packs\\팩01\\whoosh.wav",
+   0.0,
+   0.0
+  ],
+  [
+   "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\shopping_shorts\\assets\\sfx_packs\\팩01\\pop.wav",
+   29.8,
+   0.0
+  ]
+ ],
  "final": {
   "I": -16.2,
-  "LRA": 2.9,
-  "TP": -1.0
+  "LRA": 1.8,
+  "TP": -0.9
  }
 }

@@ -1,5 +1,5 @@
 {
- "_note": "rGFX 칼카피 재료 3판(10-16 반려 반영): 같은 제품(누스포 1kg) 사진·상품 페이지 캡처(모바일 폭, 빨간 테두리)·실제 통 영상 + 한국 반응 짤 2개만. 다른 제품·무관 장면 없음. box=원본 그 컷의 그림 칸(뜯기 cuts.picture_boxes per_shot 같은 순번, 자막 2줄 아래로 내림), 캡처는 읽히게 폭 1080 가로 칸.",
+ "_note": "rGFX 칼카피 재료 4판 계획(10-16 3차 반려 반영, 아직 렌더 안 함): 같은 제품(누스포 1kg) 실사용 영상 10컷(코스트코 신상 리뷰 dEncs4d961Y·코스트코 할인정보 C9KZL5F2u_g·누스포 먹방 라이브 SNgIqyzB9pU) + 한국 반응 짤 3컷(의심_황당·끄덕_엄지·감탄_박수). 캡처·정지 사진 0. box=원본 컷별 picture_boxes 같은 순번(자막 2줄 아래로 내림).",
  "cand_dir": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/make",
  "orig_picture_boxes": [
   [
@@ -96,69 +96,72 @@
  "shots": [
   {
    "i": 0,
-   "src": "재료후보3/costco_682334.jpg",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "제품 사진",
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 459.4,
+   "kind": "제품 영상",
    "box": null,
    "fit": "cover",
-   "ours": "누스포 1kg 통 상품 사진(코스트코 상품 대표 이미지)",
-   "why": "훅 카드 — 제목이 이 제품"
+   "ours": "누스포 통 뚜껑을 여는 순간(459~462초) — 이어 통 속 반반이 보임",
+   "why": "훅: '한국인이 비벼버린 두바이 스프레드' — 그 통을 여는 순간",
+   "full": true,
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
   },
   {
    "i": 1,
-   "src": "재료후보3/k_title.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
-    0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 상품명(빨간 테두리)",
-   "why": "'코스트코 코리아가 누스포 두바이 초콜릿' — 상품명 캡처"
-  },
-  {
-   "i": 2,
-   "src": "재료후보/nusspo_jar.png",
-   "url": "https://www.youtube.com/watch?v=OunWseluP2Y",
-   "ss": 0.0,
-   "kind": "제품 사진",
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 457.0,
+   "kind": "제품 영상",
    "box": [
     165,
     750,
     750,
     897
    ],
-   "fit": "contain",
-   "ours": "누스포 통 사진(한국 순위 영상 캡처)",
-   "why": "'1kg 통으로 내놨는데' — 통"
+   "fit": "cover",
+   "ours": "누스포 1kg 통 정면 근접(반반 무늬)",
+   "why": "'코스트코가 진한 초코 크림이랑' — 그 통",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  },
+  {
+   "i": 2,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 516.0,
+   "kind": "제품 영상",
+   "box": [
+    138,
+    1185,
+    741,
+    462
+   ],
+   "fit": "cover",
+   "ours": "매장 팔레트에 쌓인 누스포 통들(통마다 반반 무늬)",
+   "why": "'큰 통 하나에 딱 반반' — 반반 통이 줄지어",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
   },
   {
    "i": 3,
-   "src": "재료후보3/k_feature.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
-    0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 제품 특징(카다이프 함유·바삭)",
-   "why": "'카다이프가 씹혀서' — 설명 문장"
-  },
-  {
-   "i": 4,
-   "src": "재료후보3/nusspo_photo_w38.png",
-   "url": "https://www.youtube.com/watch?v=WCUYzLptW1o",
-   "ss": 0.0,
-   "kind": "제품 사진",
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 510.5,
+   "kind": "제품 영상",
    "box": [
     159,
     744,
@@ -166,61 +169,41 @@
     873
    ],
    "fit": "cover",
-   "ours": "누스포 통 실물 사진(추천 영상 38초)",
-   "why": "'바삭한 게 특징' — 실물 통"
+   "ours": "코스트코 진열대(누스포 매대)",
+   "why": "'담아서 내놨는데' — 출시된 매대",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  },
+  {
+   "i": 4,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 486.5,
+   "kind": "제품 영상",
+   "box": [
+    84,
+    837,
+    912,
+    600
+   ],
+   "fit": "cover",
+   "ours": "포크로 스프레드 올린 바나나를 들어 먹기",
+   "why": "'막상 사 먹은 사람들' — 먹어 보는 장면",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
   },
   {
    "i": 5,
-   "src": "재료후보3/k_price_hl.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
-    0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 판매금액·할인·총 결제금액",
-   "why": "'17,990원에서 3,000원 할인' — 가격 캡처"
-  },
-  {
-   "i": 6,
-   "src": "재료후보3/costco_682334.jpg",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "제품 사진",
-   "box": [
-    168,
-    798,
-    744,
-    828
-   ],
-   "fit": "contain",
-   "ours": "누스포 통 상품 사진",
-   "why": "'14,990원에 팔았던 것' — 그 가격의 통"
-  },
-  {
-   "i": 7,
-   "src": "재료후보3/k_rating_hl.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
-    0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 별점 4.7(28)(빨간 테두리)",
-   "why": "'상품 페이지에는 리뷰' — 별점 캡처"
-  },
-  {
-   "i": 8,
-   "src": "재료후보3/meme_감탄박수_6K72US0yiww.mp4",
-   "url": "https://www.youtube.com/watch?v=6K72US0yiww&t=96s",
+   "src": "재료후보3/meme_의심황당_d18h4bM9a2Q.mp4",
+   "url": "https://www.youtube.com/watch?v=d18h4bM9a2Q&t=196s",
    "ss": 0.0,
    "kind": "짤",
    "box": [
@@ -230,15 +213,75 @@
     495
    ],
    "fit": "cover",
-   "ours": "K리액션 짤 감탄_박수",
-   "why": "'평점 4.7' — 반응 줄은 한국 반응 짤(원본 흑백요리사 캡처 자리)"
+   "ours": "K리액션 의심_황당(눈 크게 뜬 얼굴)",
+   "why": "'피스타치오 맛 거의 안 나고 그냥 초코 맛' — 실망·황당 반응"
+  },
+  {
+   "i": 6,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 462.2,
+   "kind": "제품 영상",
+   "box": [
+    87,
+    747,
+    906,
+    498
+   ],
+   "fit": "cover",
+   "ours": "뚜껑 연 통 속 — 두 크림 경계 근접(소스 465.8초 컷 전에 끝냄)",
+   "why": "'두 크림 맛을 각각 따로' — 통 속 두 크림",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  },
+  {
+   "i": 7,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 471.8,
+   "kind": "제품 영상",
+   "box": [
+    168,
+    798,
+    744,
+    828
+   ],
+   "fit": "cover",
+   "ours": "숟가락으로 통 속 크림을 떠서 접시에 올리기(소스 471.72~477.92 한 컷, 475초부터 박힌 자막 전에 끝남)",
+   "why": "'반반 나눠 담은 거였다는데' — 한쪽씩 떠먹는 모습",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  },
+  {
+   "i": 8,
+   "src": "재료후보3/meme_끄덕엄지_mJSzsecTAfc.mp4",
+   "url": "https://www.youtube.com/watch?v=mJSzsecTAfc&t=95s",
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    72,
+    744,
+    945,
+    645
+   ],
+   "fit": "cover",
+   "ours": "끄덕_엄지 '오케이' 짤(사딸라)",
+   "why": "'비빔밥의 민족답게' — 당연하다는 끄덕 반응"
   },
   {
    "i": 9,
-   "src": "재료후보3/nusspo_photo_w38.png",
-   "url": "https://www.youtube.com/watch?v=WCUYzLptW1o",
-   "ss": 0.0,
-   "kind": "제품 사진",
+   "src": "재료후보4/v_SNgIqyzB9pU.mp4",
+   "url": "https://www.youtube.com/watch?v=SNgIqyzB9pU",
+   "ss": 2074.0,
+   "kind": "제품 영상",
    "box": [
     99,
     705,
@@ -246,15 +289,37 @@
     822
    ],
    "fit": "cover",
-   "ours": "누스포 통 실물 사진 — 옆면 두 크림",
-   "why": "'뚜껑을 열면 헤이즐넛 크림과' — 통 속 두 크림 무늬"
+   "ours": "누스포 스프레드를 식빵 위에서 포크로 섞어 바르기(위 채팅 글자는 칸 밖으로)",
+   "why": "'통째로 휘저어 버리니까' — 섞어 바르는 장면"
   },
   {
    "i": 10,
-   "src": "재료후보3/costco_682334.jpg",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "제품 사진",
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 495.0,
+   "kind": "제품 영상",
+   "box": [
+    63,
+    699,
+    954,
+    522
+   ],
+   "fit": "cover",
+   "ours": "숟가락에 뜬 두 크림이 섞인 덩어리 근접",
+   "why": "'초코가 피스타치오 향을 싹 다 덮어' — 섞인 색",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  },
+  {
+   "i": 11,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 479.0,
+   "kind": "제품 영상",
    "box": [
     120,
     756,
@@ -262,30 +327,20 @@
     831
    ],
    "fit": "cover",
-   "ours": "누스포 통 상품 사진 — 반반 무늬",
-   "why": "'반반씩 나뉘어 담겨' — 통 옆면 반반"
-  },
-  {
-   "i": 11,
-   "src": "재료후보3/k_storage_hl.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
+   "ours": "바나나·빵 위에 스프레드를 따로 올린 접시",
+   "why": "'떠서 빵에 따로 올려 먹는 게 정석' — 따로 올린 모습",
+   "src_crop": [
+    300,
     0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 보관방법(층분리 안내, 빨간 테두리)",
-   "why": "'층이 분리될 수 있지만' — 그 문구"
+    554,
+    480
+   ]
   },
   {
    "i": 12,
-   "src": "재료후보3/qtvz_jar2.mp4",
-   "url": "https://www.youtube.com/watch?v=QtvZzeo07jg",
-   "ss": 0.0,
+   "src": "재료후보4/v_dEncs4d961Y.mp4",
+   "url": "https://www.youtube.com/watch?v=dEncs4d961Y",
+   "ss": 503.0,
    "kind": "제품 영상",
    "box": [
     93,
@@ -294,45 +349,43 @@
     756
    ],
    "fit": "cover",
-   "ours": "한국 먹방 속 누스포 통(피스타치오 쪽, 옆 제품은 잘라 냄)",
-   "why": "'잘 저어 먹으라고' — 실제로 먹는 통"
+   "ours": "리뷰어가 누스포 통을 들고 말하는 장면(소스 499.84~509.28 한 컷, 박힌 자막 없음)",
+   "why": "'의견이 확 갈렸다고 함' — 먹어 본 사람이 통을 들고 이야기하는 장면",
+   "src_crop": [
+    300,
+    0,
+    554,
+    480
+   ]
+  }
+ ],
+ "sfx": [
+  {
+   "file": "shopping_shorts/assets/sfx_packs/팩01/whoosh.wav",
+   "t": 0.0,
+   "db": 0,
+   "why": "원본 효과음 0.06초(훅 시작) — 뜯기 audio.composition.sfx.times"
   },
   {
-   "i": 13,
-   "src": "재료후보3/k_nutrition_hl.png",
-   "url": "https://www.costco.co.kr/Foods/SaucesCondiments/HoneySyrupsJam/Nusspo-Dubai-Chocolate-Cream-Spread-1kg/p/682334",
-   "ss": 0.0,
-   "kind": "캡처",
-   "box": [
-    0,
-    760,
-    1080,
-    600
-   ],
-   "fit": "contain",
-   "ours": "상품 페이지 캡처: 영양정보 540kcal·당류 48.3g(빨간 테두리)",
-   "why": "'100g에 540kcal' — 영양정보"
-  },
-  {
-   "i": 14,
-   "src": "재료후보3/meme_의심황당_d18h4bM9a2Q.mp4",
-   "url": "https://www.youtube.com/watch?v=d18h4bM9a2Q&t=196s",
-   "ss": 0.0,
-   "kind": "짤",
-   "box": [
-    0,
-    759,
-    1080,
-    660
-   ],
-   "fit": "cover",
-   "ours": "K리액션 짤 의심_황당",
-   "why": "'당류 48.3g … 주의' — 놀람 반응 짤"
+   "file": "shopping_shorts/assets/sfx_packs/팩01/pop.wav",
+   "t": "end-0.2",
+   "db": 0,
+   "why": "원본 효과음 33.44초(끝 0.2초 전)"
   }
  ],
  "_history": [
-  "1판 반려: 서양 리뷰어·몰티져스·퐁듀·크레페 등 줄과 안 맞는 장면",
-  "2판: 같은 제품·캡처·짤로 교체, 그림 칸 원본 순번",
-  "3판: 자막 조각 14→10자(자막당 초 1.54→0.93, 원본 1.0)로 컷 15개 — 재료 15개"
+  "4판 계획 1차 시트: 시각을 1초 단위로 다시 확인(자막 박힌 구간 468~469·490~494·475~478 피함)",
+  "시트 2차: 6번이 소스 465.8초 컷을 넘어 얼굴 컷이 끼어 462.2초로 당김 · 훅 459.4초",
+  "조율자 조건: dEncs4d961Y 왼쪽 위 '코스트코 품명·가격' 표 상자(소스 854×480 기준 x0~255·y0~120)를 빼려고 dEncs 컷 전부 src_crop [265,0,589,480]",
+  "상자검사 1차: x265 자르기에서 #4·#6·#10·#11 왼쪽 위에 흰 귀퉁이 남음(상자 실제 오른쪽 끝 x286) → x300",
+  "TTS 뒤 컷 길이로 소스 컷(456.88·465.24·467.80·470.96·471.72·477.92·482.76·489.24·492.28·499.84·509.28) 대조: 7번이 470.96 을 넘어 471.8 로 · 짤 3초 < 컷 3.9초는 되풀이",
+  "렌더 1차 규칙표: 짤 0.30(원본 0.20) → 마지막 짤(감탄_박수)을 같은 제품 영상으로",
+  "12번: 포크·스프레드가 왼쪽이라 x300 자르기로 블루베리만 남음 → 상자 아래(y125~)로 자르기 [0,125,854,355]",
+  "12번: y125 자르기에도 상자 아래 끝 흰 띠가 남음 → 다른 구간(503초, x300 자르기)"
+ ],
+ "notes": [
+  "dEncs4d961Y 화면 왼쪽 위에 그 채널의 '코스트코 품명·가격' 표 상자가 계속 떠 있음(그림 칸 cover 자르기로 일부 남을 수 있음)",
+  "컷 길이는 TTS 뒤에 정해짐 — 소스 안 컷(465.8·471.5초 등)을 넘으면 렌더 전에 시작 시각을 당김",
+  "SNgIqyzB9pU 는 480p 세로 라이브라 확대 시 흐림(9번 1컷만 사용)"
  ]
 }

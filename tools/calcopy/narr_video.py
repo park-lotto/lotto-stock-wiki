@@ -106,13 +106,16 @@ def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[d
 
 
 # ── 재료(그림 칸) ──────────────────────────────────────────────────────────
-def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0):
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
     w, h = win["w"], win["h"]
     top = (H - h) // 2
     pre = f"crop='min(iw,ih*{ar})':'min(ih,iw/{ar})'," if ar else ""
+    if src_crop:   # 소스에서 먼저 잘라 낼 [x,y,w,h](소스 픽셀) — 남의 채널 그래픽(표 상자 등)을 화면 밖으로(10-16 조율자 조건)
+        x, y, w_, h_ = src_crop
+        pre = f"crop={w_}:{h_}:{x}:{y}," + pre
     if box:   # 원본 그 컷의 그림 칸 [x,y,w,h](캔버스 좌표, 뜯기 cuts.picture_boxes) — cover=꽉 채워 자름 / contain=다 보이게 줄임
         bx, by, bw, bh = box
         by = max(by, min_y)   # 자막 2줄 아래로 — 원본 컷 칸(y666)을 그대로 두면 2줄째 자막을 덮었다(10-16 2판)
@@ -131,7 +134,8 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
         vf = (f"scale={box_w}:{bh}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:8:white,"
               f"pad={W}:{H}:0:{top}:white,setsar=1,fps=30")
     still = Path(src).suffix.lower() in (".png", ".jpg", ".jpeg")
-    inp = ["-loop", "1", "-i", str(src)] if still else ["-ss", f"{ss:.3f}", "-i", str(src)]
+    # loop = 짤처럼 짧은 소스가 컷보다 짧으면 되풀이(짤 3초 < 컷 3.9초 — 10-16 4판)
+    inp = ["-loop", "1", "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
     va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf + ",scale=out_range=tv,format=yuv420p", "-color_range", "tv", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
@@ -175,7 +179,8 @@ def build(plan: dict):
             sh = mshots[k]
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
             parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p, sh.get("ar"),
-                                    None if fi == 0 else sh.get("box"), sh.get("fit", "cover"), min_y))
+                                    None if fi == 0 else sh.get("box"), sh.get("fit", "cover"), min_y, sh.get("src_crop"),
+                                    sh.get("kind") == "짤"))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"
@@ -216,12 +221,26 @@ def build(plan: dict):
                     "-map", "[a]", "-t", f"{dur:.3f}", "-c:a", "pcm_s16le", str(mixed)])
     gain = round(target - _lufs(mixed)["I"], 2)   # 한 번 loudnorm 은 목표보다 ~1dB 덜 나온다(remake_video 와 같은 보정)
     final = out / "final.mp4"
-    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(vid), "-i", str(mixed), "-filter_complex", f"[1:a]volume={gain}dB,alimiter=limit=0.89:level=false[a]",
+    # 효과음(재료.json sfx: [{file, t(초 또는 "end-0.2"), db}]) — 원본 효과음 자리(뜯기 audio.composition.sfx.times)
+    sfx = []
+    for x in M.get("sfx") or []:
+        t = x["t"]
+        t = dur + float(t[3:]) if isinstance(t, str) and t.startswith("end") else float(t)
+        if (ROOT / x["file"]).exists():
+            sfx.append((ROOT / x["file"], max(0.0, t), float(x.get("db", 0))))
+    fc2 = f"[1:a]volume={gain}dB[a0]"
+    for k, (fp, t, db) in enumerate(sfx):
+        ms = int(round(t * 1000))
+        fc2 += f";[{k + 2}:a]aresample=48000,aformat=channel_layouts=stereo,volume={db}dB,adelay={ms}|{ms}[s{k}]"
+    if sfx:
+        fc2 += ";[a0]" + "".join(f"[s{k}]" for k in range(len(sfx))) + f"amix=inputs={len(sfx) + 1}:normalize=0:duration=first[a1]"
+    fc2 += f";[{'a1' if sfx else 'a0'}]alimiter=limit=0.89:level=false[a]"
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(vid), "-i", str(mixed), *[a for fp, _, _ in sfx for a in ("-i", str(fp))], "-filter_complex", fc2,
                     "-map", "0:v", "-map", "[a]", "-t", f"{dur:.3f}", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
     (out / "timeline.json").write_text(json.dumps({"steps": steps, "hook_end": hook_end, "shots": shots_t, "dur": dur},
                                                   ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "audio.json").write_text(json.dumps({"tts": plan["tts"], "bgm": plan.get("bgm"), "bgm_ratio": plan.get("bgm_ratio", 0.15),
-                                                "target_lufs": target, "final": _lufs(final)}, ensure_ascii=False, indent=1), encoding="utf-8")
+                                                "target_lufs": target, "sfx": [(str(fp), t, db) for fp, t, db in sfx], "final": _lufs(final)}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("final:", final)
     return final
 
