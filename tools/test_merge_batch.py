@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import track  # noqa: E402
 from test_track import repo, _git, _origin_head  # noqa: E402,F401
 from test_finish_speed import _LightGate, _make_track_commit, _ok_video  # noqa: E402
+from test_queue_after_gate import _commit_main  # noqa: E402
 
 
 class _CountGate(_LightGate):
@@ -170,3 +171,26 @@ def test_일꾼은_자기_결과가_나오면_남은_줄을_넘기고_빠진다(
     g = _CountGate()
     track._merge_worker(repo, g, _ok_video, own_result=res)
     assert g.runs == [], "자기 결과가 이미 있으면 묶음을 돌지 않고 빠진다"
+
+
+def test_깨진_시험과_관련된_트랙이_하나면_그것만_먼저_빼서_시험_횟수를_줄인다(repo, monkeypatch):
+    """이분이면 3트랙 중 1개 범인에 시험 5번 — 용의 트랙을 먼저 빼면 3번(묶음 1 + 나머지 1 + 범인 1)."""
+    monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
+    _commit_main(repo, "shopping_shorts/tests/test_culprit.py", "import shopping_shorts.culprit\n")
+    _make_track_commit(repo, "착1", fname="t_ok1.py", body="A = 1\n")
+    _make_track_commit(repo, "범인", fname="shopping_shorts/culprit.py", body="X = 1\n")
+    _make_track_commit(repo, "착2", fname="t_ok2.py", body="B = 1\n")
+    for n in ("착1", "범인", "착2"):
+        _queue(repo, n)
+
+    class G(_CountGate):
+        def snapshot(self, cwd=None, paths=None, **kw):
+            self.runs.append(sorted(p.name for p in Path(cwd).glob("t_*.py")))
+            bad = (Path(cwd) / "shopping_shorts" / "culprit.py").exists()
+            return self._snap(["shopping_shorts/tests/test_culprit.py::test_x"] if bad else [])
+    g = G()
+    track._merge_worker(repo, g, _ok_video)
+    assert len(g.runs) == 3, g.runs
+    _git(repo, "fetch", "origin")
+    files = _git(repo, "ls-tree", "-r", "--name-only", "origin/main")
+    assert "t_ok1.py" in files and "t_ok2.py" in files and "shopping_shorts/culprit.py" not in files

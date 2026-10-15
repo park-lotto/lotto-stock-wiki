@@ -1170,12 +1170,29 @@ def _merge_worker(repo, gate, video_gate, own_result=None):
 
 
 def _precheck_pending(repo, checked):
-    """줄의 트랙 중 아직 관제 검사를 안 받은 것만 검사한다. 실패·새 커밋 없음은 바로 결과를 남긴다."""
-    for t in _queue_pending(repo):
-        if t["name"] in checked and checked[t["name"]][0] == t.get("sha"):
-            continue
+    """줄의 트랙 중 아직 관제 검사를 안 받은 것만 검사한다. 실패·새 커밋 없음은 바로 결과를 남긴다.
+    ★임시 폴더는 **한 번만** 만들고 트랙마다 되돌려 쓴다(관제 212 진단: 트랙마다 만들고 지우면 70~75초/트랙)."""
+    todo = [t for t in _queue_pending(repo)
+            if not (t["name"] in checked and checked[t["name"]][0] == t.get("sha"))]
+    if not todo:
+        return
+    stage = _open_stage(repo, "_precheck")
+    try:
+        _precheck_in(repo, stage, todo, checked)
+    finally:
+        _close_stage(repo, stage)
+
+
+def _reset_stage(stage):
+    run(["git", "merge", "--abort"], stage)
+    run(["git", "reset", "--hard", "-q", "HEAD"], stage)
+    run(["git", "clean", "-fdq"], stage)
+
+
+def _precheck_in(repo, stage, todo, checked):
+    for t in todo:
         try:
-            c = _control_precheck(repo, t)
+            c = _control_precheck(repo, t, stage=stage)
         except Exception as e:  # noqa: BLE001 — ControlError·git 오류 하나가 일꾼을 죽이지 않게(관제 212 진단)
             _finish_ticket(t, 1, "중단: %s" % e)
             print("  ✗ %s — 관제·충돌로 뺐다: %s" % (t["name"], str(e).splitlines()[0][:120] if str(e) else repr(e)))
@@ -1186,10 +1203,12 @@ def _precheck_pending(repo, checked):
         checked[t["name"]] = (t.get("sha"), c)
 
 
-def _control_precheck(repo, t):
+def _control_precheck(repo, t, stage=None):
     """관제 관문(카드·승인·소유권)은 트랙마다 따로 — 묶음 diff 로 보면 남의 카드 승인을 요구하게 된다. 싸다(git 만).
-    → 카드 번호 목록 / None(새 커밋 없음). 충돌·관제 실패는 TrackError."""
-    stage = _open_stage(repo, t["name"])
+    → 카드 번호 목록 / None(새 커밋 없음). 충돌·관제 실패는 TrackError. stage 를 주면 그 폴더를 되돌려 쓴다."""
+    own = stage is None
+    if own:
+        stage = _open_stage(repo, t["name"])
     try:
         rc, out = run(["git", "merge", "--no-ff", "--no-commit", t.get("sha") or t["br"]], stage)
         if "Already up to date" in out:
@@ -1202,7 +1221,43 @@ def _control_precheck(repo, t):
             raise TrackError("❌ 관제 관문 실패 — 병합 안 함(라이브 무사)\n" + "\n".join("  • " + f for f in cg.fails))
         return [c["번호"] for c in cg.cards]
     finally:
-        _close_stage(repo, stage)
+        if own:
+            _close_stage(repo, stage)
+        else:
+            _reset_stage(stage)
+
+
+def _batch_suspects(repo, tracks, err):
+    """묶음 실패 메시지로 범인 후보 트랙을 고른다. 영상 관문 실패 → 제작 라인 파일을 바꾼 트랙,
+    시험 실패 → 깨진 시험 파일과 관련된 파일을 바꾼 트랙. 못 고르면 [](이분으로)."""
+    changed = {}
+    for t in tracks:
+        changed[t["name"]] = _diff_names(repo, "origin/main..." + (t.get("sha") or t["br"])) or []
+    if "영상 관문" in err:
+        sus = []
+        for t in tracks:
+            try:
+                run_, _w, _u = _video_gate.needs_video_gate(changed[t["name"]], _video_gate.load_config())
+            except Exception:  # noqa: BLE001
+                run_ = True
+            if run_:
+                sus.append(t)
+        return sus
+    failed = set(re.findall(r"([\w./\\-]*test_[\w]+\.py)", err))
+    if not failed:
+        return []
+    texts = {}
+    for f in failed:
+        fp = Path(repo) / f
+        try:
+            texts[f] = fp.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            texts[f] = ""
+    sus = []
+    for t in tracks:
+        if any(c in failed for c in changed[t["name"]]) or _select_related_tests(changed[t["name"]], texts, limit=10 ** 6):
+            sus.append(t)
+    return sus
 
 
 def _run_batch(repo, batch, gate, video_gate, slot_held=False, checked=None):
@@ -1239,6 +1294,13 @@ def _run_batch(repo, batch, gate, video_gate, slot_held=False, checked=None):
             print("  ⚠️ 묶음 중 예상 못 한 오류: %r" % (e,))
         if len(ok) == 1:
             _finish_ticket(ok[0], 1, "중단: %s" % e)
+            return
+        sus = _batch_suspects(repo, ok, str(e))
+        if len(sus) == 1:
+            rest = [t for t in ok if t["name"] != sus[0]["name"]]
+            print("  ⚠️ 묶음 실패 — 깨진 곳과 관련된 트랙 '%s' 만 빼고 먼저 다시 잰다" % sus[0]["name"])
+            _run_batch(repo, rest, gate, video_gate, slot_held=slot_held, checked=checked)
+            _run_batch(repo, sus, gate, video_gate, slot_held=slot_held, checked=checked)
             return
         mid = len(ok) // 2
         print("  ⚠️ 묶음 실패 — 반으로 나눠 다시 잰다(깨뜨린 트랙만 빠진다): %s | %s"
