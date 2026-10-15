@@ -24544,6 +24544,13 @@ def _cut_at(cuts, at):
     return c, float(c["src"]) + min(max(at - f, 0.0), max(d - 0.04, 0.0)) * rate
 
 
+def _frame_ratio(sec, dur):
+    """완성본 시각(초) → 청소본 비율. 영상 처음(0초)부터 끝 0.05초 전까지 그대로 둔다.
+    ★종전 2%~98% 묶음은 32초 영상에서 0.64초 앞을 전부 같은 그림으로 만들어
+      1쪽 맨앞·앞·가운데가 똑같았다(관제 210, 고객 제보 "맨앞 버튼이 안 눌린다")."""
+    return min(max(0.0, dur - 0.05), max(0.0, float(sec))) / dur
+
+
 def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
 
@@ -24619,7 +24626,7 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
                         _c, _sec = _ca, _sa
                 _f = _paths.get(_c["video_id"]) or cvp
                 _dur = _d2.get(_c["video_id"]) or (frame_extract._probe_duration(_f) or 0.0)
-                return {}, _f, (min(0.98, max(0.02, _sec / _dur)) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
+                return {}, _f, (_frame_ratio(_sec, _dur) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
         except Exception as e:      # noqa: BLE001 — 정본 좌표 실패는 아래 종전 계산으로
             print(f"[beatframe] 정본 좌표 실패(종전 계산 사용): {e!r}", file=sys.stderr)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
@@ -24653,7 +24660,7 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
         return {}, cvp, (r if r is not None else 0.5), _ctag, fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), _ctag, fresh
+    return {}, cvp, (_frame_ratio(sec, _d) if _d > 0 else 0.5), _ctag, fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
@@ -24846,7 +24853,7 @@ def _beatframe_file(job, job_id: str, i: int, cut=None, at=None):
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     _ct = "" if cut is None else f"c{cut}_"
     if at is not None:
-        _ct = f"t{at:.2f}_"         # 완성본 시각으로 뜬 그림 — 칸·컷 그림과 캐시를 가른다
+        _ct = f"t{at:.2f}f_"        # 완성본 시각으로 뜬 그림 — 칸·컷 그림과 캐시를 가른다(f=관제 210 끝 묶음 수리 뒤 그림 — 옛 2% 묶음 그림을 다시 쓰지 않게)
     # ★컷 좌표가 있으면 _extract_beat_frame이 **소스에서** 뜬다(완성본 청소본은 좌표계가
     #   달라 안 쓴다 — 아래 함수 주석). 그런데 캐시 이름은 그대로 _clean이라, 옛 완성본에서
     #   뜬 **틀린 그림**이 그대로 재사용됐다. 실제로 무엇에서 떴는지를 이름에 반영한다.
