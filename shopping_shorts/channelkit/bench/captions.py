@@ -13,24 +13,30 @@ import numpy as np
 import cv2
 
 from . import probe
-from .layout import ink_mask, lum, segs
-from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
+from .layout import ink_mask, ink_fill, lum, segs
+from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_CORE_MIN_PX, CAP_CORE_KEEP,
+                        CAP_CORE_SAME, CAP_CORE_MAX_FRAC, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
                         LINE_ROW_FRAC, LINE_MIN_H, FILL_LUM, FILL_CHROMA, FILL_BG_DIFF, FILL_FRAC,
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
-                        GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
-                        BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG)
+                        GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, GLYPH_SHADOW_ASYM, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
+                        BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG,
+                        CAP_MIN_SCORE, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
 
 
 def caption_region(vl: dict) -> tuple[int, int] | None:
-    """재는 행 범위 [y0, y1). 자막 띠 ± CAP_BAND_PAD, 영상창 안(아래/위 자리일 때)은 넘지 않는다."""
+    """재는 행 범위 [y0, y1). 자막 띠 ± CAP_BAND_PAD, 영상창 안(아래/위 자리일 때)은 넘지 않는다.
+    caption["free"] 이면 창 경계로 자르지 않는다 — 누적형 자막이 창 위로 넘어 3줄째가 창에 걸칠 때(extend_band)."""
     cap = vl["caption"]
     if not cap or not cap.get("band"):
         return None
     H = vl["canvas"][1]
     wx, wy, ww, wh = vl["window"]
     b0, b1 = cap["band"]
-    y0, y1 = b0 - CAP_BAND_PAD, b1 + CAP_BAND_PAD
-    if cap["pos"] == "below":
+    pad = CAP_FREE_PAD if cap.get("free") else CAP_BAND_PAD   # 넓힌 띠는 이미 글자 줄 단위 — 넉넉히 두면 창 속 영상이 섞인다
+    y0, y1 = b0 - pad, b1 + pad
+    if cap.get("free"):
+        pass
+    elif cap["pos"] == "below":
         y0 = max(y0, wy + wh + CAPTION_INSET)
     elif cap["pos"] == "above":
         y1 = min(y1, wy - CAPTION_INSET)
@@ -45,8 +51,11 @@ def caption_track(path: str, vl: dict, duration: float) -> dict:
     """자막 교체 시각·자막 구간·흔들림 구간 — 교체 판단의 주인(caption_changes·measure_video 가 이것을 부른다).
 
     1) 띠를 540×100으로 줄여 CAP_FPS로 잉크 XOR 평균 d > CAP_DIFF 인 프레임 = 바뀜 후보, CAP_MERGE_S 병합.
-    2) 후보 사이 구간마다 안쪽 프레임 d 의 중앙값 > CAP_STILL 이면 '흔들림'(글자가 아니라 영상이 띠에 비침)
-       → 자막 구간에서 빼고, 앞뒤 구간이 둘 다 흔들림인 후보는 교체에서도 뺀다(흔들림 시작·끝 시각은 남는다).
+    2) 후보 사이 조각마다 '글자 심지'(조각 프레임의 절반 이상에 찍힌 잉크)를 만들고, 심지가 CAP_CORE_MIN_PX 이상이며
+       프레임들이 심지를 평균 CAP_CORE_KEEP 이상 덮으면 '가만히 있는 글자'(자막 조각), 아니면 '흔들림'(영상이 띠에 비침).
+       1판(faf9ca750)은 조각 안 XOR 중앙값 ≤ CAP_STILL 로 갈라, 움직이는 영상 위 자막(창 안 흰 글자)까지 흔들림으로 버렸다
+       (2026-10-16 썰풀다 mYxuF1A74j4 자막 19→8, 핫템 a06y 1/3만). 글자 아닌 화소가 바뀌는 것은 심지에 안 들어가 무관하다.
+    3) 이웃한 자막 조각의 심지가 CAP_CORE_SAME 이상 겹치면 같은 자막 하나로 잇는다(영상 출렁임에 쪼개진 것).
     반환: {"changes": [초…], "spans": [(시작, 끝)…](흔들림 제외), "unstable": [[시작, 끝]…](이어진 것끼리 합침)}"""
     reg = caption_region(vl)
     if not reg:
@@ -55,35 +64,48 @@ def caption_track(path: str, vl: dict, duration: float) -> dict:
     W = vl["canvas"][0]
     vf = f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0},scale={CAP_SCALE_W}:{CAP_SCALE_H}"
     pol = vl["caption"]["ink"]
-    prev = None
-    d: list[float] = []
-    for f in probe.frames(path, vf, CAP_SCALE_W, CAP_SCALE_H):
-        ink = ink_mask(f, pol)
-        d.append(float((ink ^ prev).mean()) if prev is not None else 0.0)
-        prev = ink
+    masks = [ink_mask(f, pol) for f in probe.frames(path, vf, CAP_SCALE_W, CAP_SCALE_H)]
+    d = [0.0] + [float((m ^ p_).mean()) for p_, m in zip(masks, masks[1:])]
     cand: list[float] = []
     for k, x in enumerate(d):
         t = k / CAP_FPS
         if x > CAP_DIFF and t < duration and (not cand or t - cand[-1] > CAP_MERGE_S):
             cand.append(round(t, 2))
     bounds = [0.0] + cand + [duration]
-    still = []
-    for a, e in zip(bounds, bounds[1:]):
-        inside = d[int(round(a * CAP_FPS)) + 1:int(round(e * CAP_FPS))]
-        if inside:
-            still.append(float(np.median(inside)) <= CAP_STILL)
-        else:  # 안쪽 프레임이 없는 끝 조각(0.1초)은 잴 수 없다 → 바로 앞 구간을 따른다
-            still.append(still[-1] if still else True)
-    changes = [t for i, t in enumerate(cand) if still[i] or still[i + 1]]
-    spans = [(a, e) for (a, e), s in zip(zip(bounds, bounds[1:]), still) if s]
-    unstable: list[list[float]] = []
-    for (a, e), s in zip(zip(bounds, bounds[1:]), still):
-        if not s:
-            if unstable and abs(unstable[-1][1] - a) < 1e-6:
-                unstable[-1][1] = e
+    pieces = []          # [시작, 끝, 가만?, 심지]
+    pending = None       # 맨 앞 0.1초 조각(인코더 첫 프레임 흔들림 — 1판 '첫 자막 0.0~0.1초')을 다음 조각 시작으로
+    for a_, e_ in zip(bounds, bounds[1:]):
+        fr = masks[int(round(a_ * CAP_FPS)) + 1:int(round(e_ * CAP_FPS))]
+        if len(fr) < 2:  # 안쪽 프레임이 거의 없는 조각(0.1초)은 잴 수 없다 → 이웃 조각에 붙인다(앞이 없으면 뒤에)
+            if pieces:
+                pieces[-1][1] = e_
             else:
-                unstable.append([a, e])
-    return {"changes": changes, "spans": spans, "unstable": [[round(a, 2), round(e, 2)] for a, e in unstable]}
+                pending = a_
+            continue
+        if pending is not None:
+            a_, pending = pending, None
+        core = np.mean(fr, axis=0) >= 0.5
+        n = int(core.sum())
+        keep = float(np.mean([(m & core).sum() / n for m in fr])) if n else 0.0
+        # 심지가 띠를 CAP_CORE_MAX_FRAC 넘게 덮으면서 조각 안 XOR 중앙값도 CAP_STILL 를 넘으면 움직이는 영상(엔딩 전체화면 얼굴 등).
+        # 큰 굵은 자막은 띠의 17%를 덮지만 XOR≈0 이라 글자다(2026-10-16 bench 기준선 10편: 넓이만 보면 자막 232→203).
+        moving = n > CAP_CORE_MAX_FRAC * core.size and float(np.median(d[int(round(a_ * CAP_FPS)) + 1:int(round(e_ * CAP_FPS))])) > CAP_STILL
+        pieces.append([a_, e_, n >= CAP_CORE_MIN_PX and keep >= CAP_CORE_KEEP and not moving, core])
+    merged = []
+    for pc in pieces:
+        if merged and pc[2] and merged[-1][2] and pc[3] is not None and merged[-1][3] is not None:
+            c0, c1 = merged[-1][3], pc[3]
+            if (c0 & c1).sum() / max(1, (c0 | c1).sum()) >= CAP_CORE_SAME:
+                merged[-1][1] = pc[1]
+                continue
+        if merged and not pc[2] and not merged[-1][2]:
+            merged[-1][1] = pc[1]
+            continue
+        merged.append(list(pc))
+    spans = [(round(a_, 2), round(e_, 2)) for a_, e_, st_, _ in merged if st_]
+    changes = [round(merged[i][0], 2) for i in range(1, len(merged)) if merged[i][2] or merged[i - 1][2]]
+    unstable = [[round(a_, 2), round(e_, 2)] for a_, e_, st_, _ in merged if not st_]
+    return {"changes": changes, "spans": spans, "unstable": unstable}
 
 
 def caption_changes(path: str, vl: dict, duration: float) -> list[float]:
@@ -132,9 +154,10 @@ def _run_median(mask: np.ndarray) -> float | None:
 
 
 def glyph_style(img: np.ndarray, pol: str, bg_rgb: list[int]) -> dict | None:
-    """획 폭(잉크 가로/세로 연속길이 중앙값 중 작은 쪽)·첫 줄 높이·외곽선·그림자 (glyph_style 정의)."""
+    """획 폭(잉크 가로/세로 연속길이 중앙값 중 작은 쪽)·첫 줄 높이·외곽선(두께)·그림자 (glyph_style 정의).
+    잉크 = ink_fill(밝은 글자는 속까지 채움) — 테두리 고리만으로 재면 획 2px·외곽선 없음으로 나왔다(2026-10-16)."""
     L = lum(img)
-    ink = ink_mask(img, pol)
+    ink = ink_fill(img, pol)
     if ink.sum() < 50:
         return None
     rows = ink.sum(axis=1) > GLYPH_ROW_PX
@@ -144,22 +167,50 @@ def glyph_style(img: np.ndarray, pol: str, bg_rgb: list[int]) -> dict | None:
     y0, y1 = first[0]
     sub = ink[y0:y1]
     sw = [x for x in (_run_median(sub), _run_median(sub.T)) if x]
-    bg_l = float(0.299 * bg_rgb[0] + 0.587 * bg_rgb[1] + 0.114 * bg_rgb[2])
-    ring = cv2.dilate(ink.astype(np.uint8), np.ones((7, 7), np.uint8)).astype(bool) & ~ink
+    # 바탕 밝기 = 글자에서 9~15px 떨어진 고리(그 자리 실제 바탕). 화면 배경색(bg_rgb)은 창 안 자막이면 영상과 다르다
+    # (2026-10-16 썰풀다: 검은 바탕 편의 영상 위 흰 글자 굵은 검정 외곽선이 '외곽선 없음'으로 나옴). 고리를 못 재면 bg_rgb.
+    def dil(r):
+        return cv2.dilate(ink.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))) > 0
+    far = dil(15) & ~dil(9)
+    bg_l = float(np.median(L[far])) if far.sum() > 50 else float(0.299 * bg_rgb[0] + 0.587 * bg_rgb[1] + 0.114 * bg_rgb[2])
+    ink_l = float(L[ink].mean())
+    ring = dil(3) & ~ink
     ring_l = float(L[ring].mean()) if ring.any() else None
-    outline = bool(ring_l is not None and abs(ring_l - bg_l) > GLYPH_OUTLINE_DIFF
-                   and abs(ring_l - float(L[ink].mean())) > GLYPH_OUTLINE_DIFF)
+    outline = bool(ring_l is not None and abs(ring_l - bg_l) > GLYPH_OUTLINE_DIFF and abs(ring_l - ink_l) > GLYPH_OUTLINE_DIFF)
+    outline_px = 0
+    if outline:          # 1px 고리마다 글자·바탕과 다르고 첫 고리와 같은 쪽인 동안 = 외곽선 두께
+        prev = ink
+        r1 = None
+        for r in range(1, 13):
+            d = dil(r)
+            rr = d & ~prev
+            prev = d
+            if not rr.any():
+                break
+            l = float(np.median(L[rr]))
+            r1 = l if r1 is None else r1
+            if (abs(l - ink_l) > GLYPH_OUTLINE_DIFF and abs(l - bg_l) > GLYPH_OUTLINE_DIFF / 2
+                    and (l - bg_l) * (r1 - bg_l) > 0):     # 글자와 다르고, 바탕과도 다르고, 첫 고리와 같은 쪽(어둡/밝)
+                outline_px = r
+            else:
+                break
+    # 그림자 = 한쪽으로만 치우친 어두운(밝은) 자리. 사방 외곽선은 모든 방향이 같아 그림자가 아니다 —
+    # 1판은 외곽선이 있으면 첫 후보 [-6,2]가 늘 걸렸다(썰풀다 다섯 편 전부 [-6,2]).
     shadow_px = (np.abs(L - bg_l) > GLYPH_SHADOW_DROP) & ~ink
+
+    def frac(dx, dy):
+        sh = np.roll(np.roll(ink, dy, 0), dx, 1) & ~ink
+        return (shadow_px & sh).sum() / sh.sum() if sh.sum() else 0.0
     shadow = None
+    best = 0.0
     for dy in range(2, 7):
         for dx in range(-6, 7, 2):
-            sh = np.roll(np.roll(ink, dy, 0), dx, 1) & ~ink
-            if sh.sum() and (shadow_px & sh).sum() / sh.sum() > GLYPH_SHADOW_FRAC:
-                shadow = [dx, dy]
-                break
-        if shadow:
-            break
-    return {"line_h": int(y1 - y0), "stroke": min(sw) if sw else None, "outline": outline, "shadow": shadow}
+            v = frac(dx, dy)
+            asym = v - frac(-dx, -dy)
+            if v > GLYPH_SHADOW_FRAC and asym > GLYPH_SHADOW_ASYM and asym > best:
+                shadow, best = [dx, dy], asym
+    return {"line_h": int(y1 - y0), "stroke": min(sw) if sw else None, "outline": outline, "outline_px": outline_px,
+            "shadow": shadow}
 
 
 def _ink_box(mask: np.ndarray):
@@ -227,9 +278,12 @@ def measure_video(path: str, vl: dict, meta: dict) -> dict:
 # ── 편 하나: 자막 띠 고르기 ────────────────────────────────────────────────
 # layout._caption 은 "창 위/아래에 자주 바뀌는 행이 10행만 있어도 그쪽"이라 편 하나에선 머리띠(고정 제목)를 자막으로
 # 고를 때가 있다(2026-10-16 썰풀다). 편 하나를 잴 때(칼카피 analyze·compare)는 후보 띠를 여럿 세워 실제로 재 보고 고른다.
-def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None) -> list[dict]:
+def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None, row_lum=None) -> list[dict]:
     """후보 띠: layout 이 고른 것 + 창 위/아래(BAND_PRESENCE)·안(INSIDE_PRESENCE) × 극성 2 의 잉크 행 덩어리.
-    presence = layout.measure_video 의 `_presence`(극성별 '행에 잉크 있음' 표본 비율)."""
+    presence = layout.measure_video 의 `_presence`(극성별 '행에 잉크 있음' 표본 비율).
+    row_lum(행별 시간평균 밝기 중앙값)이 있으면 극성을 바탕으로 거른다: 흰 바탕(≥INK_BRIGHT)에선 bright 후보를 버린다 —
+    검은 글자 옆 흰 바탕 화소가 'bright 잉크'(밝음+어두운 것 옆)로 잡혀 1등이 됐다(2026-10-16 방구석 ILIiqCJAOSI).
+    검은 바탕(≤INK_OUTLINE_DARK)에선 dark 후보를 버린다."""
     win = vl["window"]
     H = vl["canvas"][1]
     wy0, wy1 = win[1], win[1] + win[3]
@@ -241,9 +295,25 @@ def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None) -
         if b - a < LINE_MIN_H:
             continue
         for pol in ("dark", "bright"):
-            for s0, e0 in segs(presence[pol][a:b] >= thr, min_len=LINE_MIN_H // 2, gap=SEG_GAP * 4):
+            runs = segs(presence[pol][a:b] >= thr, min_len=LINE_MIN_H // 2, gap=SEG_GAP * 4)
+            for s0, e0 in runs:
                 if e0 - s0 <= CAP_BAND_MAX_FRAC * H:
                     out.append({"pos": pos, "band": [int(s0 + a), int(e0 + a)], "ink": pol})
+            # 줄끼리 이은 후보: 이웃 줄 틈 ≤ 두 줄 중 큰 높이 — 누적형 자막의 1·2·3줄을 한 띠로(줄마다 따로면 덧붙는 순간을 못 센다)
+            for i in range(len(runs)):
+                j = i
+                while j + 1 < len(runs) and runs[j + 1][0] - runs[j][1] <= max(runs[j][1] - runs[j][0], runs[j + 1][1] - runs[j + 1][0]):
+                    j += 1
+                    if runs[j][1] - runs[i][0] <= CAP_BAND_MAX_FRAC * H:
+                        out.append({"pos": pos, "band": [int(runs[i][0] + a), int(runs[j][1] + a)], "ink": pol})
+    if row_lum is not None:
+        keep = []
+        for c in out:
+            m = float(np.median(row_lum[c["band"][0]:c["band"][1]]))
+            if (c["ink"] == "bright" and m >= INK_BRIGHT) or (c["ink"] == "dark" and m <= INK_OUTLINE_DARK):
+                continue
+            keep.append(c)
+        out = keep
     uniq: list[dict] = []
     for c in out:
         if not any(u["pos"] == c["pos"] and u["ink"] == c["ink"] and abs(u["band"][0] - c["band"][0]) <= 8
@@ -252,26 +322,55 @@ def band_candidates(vl: dict, presence: dict, extra: list[dict] | None = None) -
     return uniq
 
 
-def persistence(path: str, vl: dict) -> dict:
-    """띠 잉크가 CAP_PERSIST_LAG 표본(0.3초) 뒤에도 그 자리에 남는 비율(중앙값)·잉크가 보이는 표본 비율.
-    자막은 바뀌기 전까지 가만히 있어 ~1.0, 영상 속 밝은 모서리는 움직여 ~0 (2026-10-15 썰풀다 실측 1.0 vs 0.0)."""
+def persistence(path: str, vl: dict, spans: list | None = None) -> dict:
+    """띠 잉크가 CAP_PERSIST_LAG 표본(0.3초) 뒤에도 그 자리에 남는 비율(중앙값)·잉크가 보이는 표본 비율·글자 바뀜.
+    자막은 바뀌기 전까지 가만히 있어 ~1.0, 영상 속 밝은 모서리는 움직여 ~0 (2026-10-15 썰풀다 실측 1.0 vs 0.0).
+    change = 이웃 자막 구간 가운데 프레임끼리 잉크 1−IoU 의 중앙값. 고정 제목(영상 내내 같은 글자)은 ~0 —
+    잉크 폭 출렁임을 교체로 세어 제목이 자막 1등이 됐다(2026-10-16 썰풀다 7DYbxVNz5q8 above [122,359] 점수 12)."""
     reg = caption_region(vl)
     if not reg:
-        return {"persist": 0.0, "coverage": 0.0}
+        return {"persist": 0.0, "coverage": 0.0, "change": 0.0}
     y0, y1 = reg
     W = vl["canvas"][0]
     fr = [ink_mask(f, vl["caption"]["ink"]) for f in
           probe.frames(path, f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0},scale={CAP_SCALE_W}:{CAP_SCALE_H}", CAP_SCALE_W, CAP_SCALE_H)]
     v = [(a & b).sum() / a.sum() for a, b in zip(fr, fr[CAP_PERSIST_LAG:]) if a.sum() > 30]
+    change = 0.0          # 구간이 하나뿐이면 바뀜을 모른다 = 자막 증거 없음(고정 제목도 구간 하나로 나온다)
+    if spans and len(spans) >= 2 and fr:
+        mids = [fr[min(len(fr) - 1, int(round((a + b) / 2 * CAP_FPS)))] for a, b in spans]
+        ch = [1.0 - (m & n).sum() / max(1, (m | n).sum()) for m, n in zip(mids, mids[1:]) if m.sum() > 30 or n.sum() > 30]
+        change = round(float(np.median(ch)), 3) if ch else 0.0
     return {"persist": round(float(np.median(v)), 3) if v else 0.0,
-            "coverage": round(float(np.mean([a.sum() > 30 for a in fr])), 3) if fr else 0.0}
+            "coverage": round(float(np.mean([a.sum() > 30 for a in fr])), 3) if fr else 0.0, "change": change}
 
 
 def caption_score(cap: dict, pers: dict) -> float:
-    """자막다운 구간 수(길이 CAP_SPAN_OK 안 + 가운데 프레임에 줄 1~3개) × 잉크 지속도 × 잉크 보이는 비율."""
+    """자막다운 구간 수(길이 CAP_SPAN_OK 안 + 가운데 프레임에 줄 1~3개) × 잉크 지속도 × 잉크 보이는 비율.
+    글자 바뀜(change)이 CAP_LINE_CHANGE 미만이면 0 — 영상 내내 같은 글자(고정 제목)는 자막이 아니다.
+    (곱하지 않고 문턱으로: 누적형은 1줄→2줄 바뀜이 0.5 안팎이라 곱하면 진짜 자막이 깎인다)"""
+    if pers.get("change", 1.0) < CAP_LINE_CHANGE:
+        return 0.0
     n = sum(1 for it in cap.get("items", []) if CAP_SPAN_OK[0] <= it["t1"] - it["t0"] <= CAP_SPAN_OK[1]
             and 1 <= it.get("lines", 0) <= 3)
     return round(n * pers["persist"] * pers["coverage"], 2)
+
+
+def _mid_inks(path: str, vl: dict, cap: dict, y0: int, y1: int, dt: float = 0.0) -> list[np.ndarray]:
+    """자막 구간(줄 ≥1)마다 가운데(+dt초) 프레임의 [y0,y1) 잉크 마스크(창 경계 무시)."""
+    W = vl["canvas"][0]
+    out = []
+    for it in cap.get("items", []):
+        if it.get("lines", 0) < 1:
+            continue
+        t = min(it["t1"] - 0.05, (it["t0"] + it["t1"]) / 2 + dt)
+        img = probe.grab(path, t, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
+        if img is not None:
+            out.append(ink_mask(img, vl["caption"]["ink"]))
+    return out
+
+
+def _mid_ink_rows(path: str, vl: dict, cap: dict, y0: int, y1: int) -> list[np.ndarray]:
+    return [m.sum(axis=1) > GLYPH_ROW_PX for m in _mid_inks(path, vl, cap, y0, y1)]
 
 
 def tighten_band(path: str, vl: dict, cap: dict) -> list[int] | None:
@@ -281,46 +380,146 @@ def tighten_band(path: str, vl: dict, cap: dict) -> list[int] | None:
     if not reg or not cap.get("items"):
         return None
     y0, y1 = reg
-    W = vl["canvas"][0]
-    rows = np.zeros(y1 - y0, bool)
-    for it in cap["items"]:
-        if it.get("lines", 0) < 1:
-            continue
-        img = probe.grab(path, (it["t0"] + it["t1"]) / 2, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
-        if img is not None:
-            rows |= ink_mask(img, vl["caption"]["ink"]).sum(axis=1) > GLYPH_ROW_PX
+    rows_l = _mid_ink_rows(path, vl, cap, y0, y1)
+    if not rows_l:
+        return None
+    rows = np.any(rows_l, axis=0)
     runs = segs(rows, min_len=GLYPH_FIRST_LINE_MIN, gap=SEG_GAP * 4)
     if not runs:
         return None
     return [int(runs[0][0] + y0), int(runs[-1][1] + y0)]
 
 
-def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[dict] | None = None) -> dict:
-    """후보 띠마다 measure_video + persistence → 점수 최고(같으면 좁은 띠). 반환 {caption, result, scored}.
-    점수가 모두 0이면 caption = layout 이 고른 것, result = None."""
-    scored, best = [], None
-    for c in band_candidates(vl, presence, extra):
+def extend_band(path: str, vl: dict, cap: dict) -> list[int] | None:
+    """누적형 자막(줄이 덧붙는 꼴)의 다른 줄이 띠 밖(창 경계 너머·머리띠 쪽)에 있을 때 띠를 글자 줄 단위로 넓힌다.
+    띠 위아래 CAP_EXTEND_LINES 줄 높이까지 창 경계 무시하고 보고, 띠에 붙은(틈 ≤ 줄 높이) 글자 줄이
+    ① 높이가 띠 줄 높이의 0.5~1.6배 ② 아래로 넓힐 줄은 자막 구간 일부에만 있음(덧붙는 줄 — 늘 있으면 영상) ③ 자막 구간끼리 글자가 바뀜(1−IoU 중앙값 ≥ CAP_LINE_CHANGE — 머리띠·제목처럼
+    늘 같은 글자면 자막 줄이 아니다) 이면 띠에 넣는다.
+    (2026-10-16 방구석 ILIiqCJAOSI: 1줄째 y502~552·3줄째 y660~709 가 띠 [580,676] 밖이라 잘렸고 OCR 이 지어 읽었다)"""
+    H = vl["canvas"][1]
+    b0, b1 = vl["caption"]["band"]
+    fv = {**vl, "caption": {**vl["caption"], "free": True}}
+    band_rows = _mid_ink_rows(path, fv, cap, b0, b1)
+    lines = [e - s0 for r in band_rows for s0, e in segs(r, min_len=GLYPH_FIRST_LINE_MIN, gap=4)]
+    if not lines:
+        return None
+    lh = float(np.median(lines))
+    a0, a1 = max(0, int(b0 - CAP_EXTEND_LINES * lh * 1.4)), min(H, int(b1 + CAP_EXTEND_LINES * lh * 1.4))
+    inks = _mid_inks(path, fv, cap, a0, a1)
+    inks2 = _mid_inks(path, fv, cap, a0, a1, dt=CAP_EXTEND_DT)
+    if len(inks) < 2 or len(inks2) != len(inks):
+        return None
+    # 줄 후보는 프레임마다 따로 자른 줄을 겹치는 것끼리 묶어 만든다 — 모든 프레임을 합쳐 자르면
+    # 틀이 다른 한 장면(훅 카드 큰 글자)이 머리띠·자막 줄을 한 덩어리로 이어 붙였다(2026-10-16 ILIiqCJAOSI).
+    per = sorted((s0 + a0, e0 + a0) for m in inks for s0, e0 in segs(m.sum(axis=1) > GLYPH_ROW_PX, min_len=GLYPH_FIRST_LINE_MIN, gap=4)
+                 if 0.5 * lh <= e0 - s0 <= 1.6 * lh)
+    runs: list[tuple[int, int]] = []
+    for s0, e0 in per:
+        if runs and s0 < runs[-1][1]:
+            runs[-1] = (runs[-1][0], max(runs[-1][1], e0))
+        else:
+            runs.append((s0, e0))
+
+    def steady(s0, e0):
+        """구간 안(가운데 vs +CAP_EXTEND_DT초)에서 그 줄 글자가 그대로인가 — 영상 속 밝은/어두운 것은 움직인다."""
+        v = [(x[s0 - a0:e0 - a0] & y[s0 - a0:e0 - a0]).sum() / max(1, (x[s0 - a0:e0 - a0] | y[s0 - a0:e0 - a0]).sum())
+             for x, y in zip(inks, inks2) if x[s0 - a0:e0 - a0].any()]
+        return float(np.median(v)) if v else 0.0
+
+    def changes(s0, e0):
+        ms = [m[s0 - a0:e0 - a0] for m in inks]
+        ch = [1.0 - (x & y).sum() / max(1, (x | y).sum()) for x, y in zip(ms, ms[1:]) if x.any() or y.any()]
+        return float(np.median(ch)) if ch else 0.0
+    lo, hi = b0, b1
+    changed = True
+    while changed:
+        changed = False
+        for s0, e0 in runs:
+            if s0 >= lo and e0 <= hi:
+                continue
+            if not (0.5 * lh <= e0 - s0 <= 1.6 * lh) or changes(s0, e0) < CAP_LINE_CHANGE:
+                continue
+            if steady(s0, e0) < CAP_EXTEND_STEADY:
+                continue
+            share = sum(1 for m in inks if (m[s0 - a0:e0 - a0].sum(axis=1) > GLYPH_ROW_PX).any()) / len(inks)
+            if e0 > hi and -lh <= s0 - hi <= lh and share < CAP_EXTEND_SHARE:   # 아래로 붙은(띠 끝에 걸친) 덧붙는 줄
+                hi, changed = e0, True
+            elif s0 < lo and -lh <= lo - e0 <= lh:   # 위로 붙은(또는 띠 머리에 걸친) 줄
+                lo, changed = s0, True
+    if (lo, hi) == (b0, b1):
+        return None
+    return [int(lo), int(hi)]
+
+
+def fill_is_bright(path: str, vl: dict, cap: dict) -> float | None:
+    """같은 띠에서 bright·dark 두 극성이 비슷한 점수일 때 글자 채움이 밝은지 판정하는 비율.
+    = (외곽선에 둘러싸인 밝은 채움 넓이, ink_fill) ÷ (그 채움 8px 안의 어두운 화소 넓이). 흰 글자+검정 외곽선이면 채움이 넓어 ≥ 1 근처,
+    흰 바탕 검정 글자면 밝은 채움은 글자 속 구멍뿐이라 작다. (2026-10-16 yummyknow: 구간 수 1개 차이로 극성이 뒤집힘 —
+    점수만으로 극성을 정하지 않는다)"""
+    reg = caption_region(vl)
+    if not reg:
+        return None
+    y0, y1 = reg
+    W = vl["canvas"][0]
+    its = [it for it in cap.get("items", []) if it.get("lines", 0) >= 1][:5]
+    rs = []
+    for it in its:
+        img = probe.grab(path, (it["t0"] + it["t1"]) / 2, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
+        if img is None:
+            continue
+        fb = ink_fill(img, "bright") & ~ink_mask(img, "dark")
+        near = cv2.dilate(fb.astype(np.uint8), np.ones((17, 17), np.uint8)) > 0
+        dk = (lum(img) < INK_DARK) & near
+        if dk.sum() > 50:
+            rs.append(float(fb.sum()) / float(dk.sum()))
+    return round(float(np.median(rs)), 3) if rs else None
+
+
+def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[dict] | None = None,
+                   row_lum=None) -> dict:
+    """후보 띠마다 measure_video + persistence → 점수 최고(같으면 좁은 띠) → 글자 행으로 좁히기 → 잘린 줄 넓히기.
+    반환 {caption, result, scored, failed?}. 1등 점수가 CAP_MIN_SCORE 미만이면 자막 띠 못 찾음(caption None) —
+    점수 0.05 짜리 라벨 띠를 '확인됨'으로 내던 1판 결함(2026-10-16 썰풀다 w-Ygny1f8O8)."""
+    scored, best, cands = [], None, []
+    for c in band_candidates(vl, presence, extra, row_lum):
         v = {**vl, "caption": c}
         try:
             cap = measure_video(path, v, meta)
         except Exception as e:  # noqa: BLE001 — 후보 하나 실패는 표에 남긴다
             scored.append({**c, "score": None, "failed": f"{type(e).__name__}: {str(e)[:80]}"})
             continue
-        pers = persistence(path, v)
+        pers = persistence(path, v, cap["spans"])
         s = caption_score(cap, pers)
         scored.append({**c, "score": s, "spans": len(cap["spans"]), **pers})
+        cands.append((scored[-1], cap))
         h = c["band"][1] - c["band"][0]
         if best is None or s > best[0] or (s == best[0] and h < best[3]):
             best = (s, c, cap, h)
-    if best and best[0] > 0:
-        c, cap = best[1], best[2]
-        tb = tighten_band(path, {**vl, "caption": c}, cap)
-        if tb and (tb[1] - tb[0]) < (c["band"][1] - c["band"][0]):
-            c2 = {**c, "band": tb, "band_before_tighten": c["band"]}
-            cap = measure_video(path, {**vl, "caption": c2}, meta)
-            c = c2
-        return {"caption": c, "result": cap, "scored": scored}
-    return {"caption": vl.get("caption"), "result": None, "scored": scored}
+    if not best or best[0] < CAP_MIN_SCORE:
+        return {"caption": None, "result": None, "scored": scored,
+                "failed": f"자막 띠 못 찾음(1등 점수 {best[0] if best else None} < {CAP_MIN_SCORE})"}
+    c, cap = best[1], best[2]
+    # 극성 다시 보기: 같은 자리(행 50% 이상 겹침) 반대 극성 후보가 점수 CAP_POL_TIE 배 안이면 채움 판정으로 고른다
+    rivals = [(x, cp) for x, cp in cands if x["ink"] != c["ink"] and x.get("score") and x["score"] >= CAP_POL_TIE * best[0]
+              and min(x["band"][1], c["band"][1]) - max(x["band"][0], c["band"][0]) >= 0.5 * (c["band"][1] - c["band"][0])]
+    pol_note = None
+    if rivals:
+        r = fill_is_bright(path, {**vl, "caption": c}, cap)
+        want = "bright" if (r is not None and r >= CAP_FILL_BRIGHT) else "dark"
+        pol_note = {"fill_ratio": r, "chose": want, "by": "fill_is_bright"}
+        if want != c["ink"]:
+            x, cp = max(rivals, key=lambda z: z[0]["score"])
+            c, cap = {k: x[k] for k in ("pos", "band", "ink") if k in x}, cp
+    c = {**c, **({"polarity_check": pol_note} if pol_note else {})}
+    tb = tighten_band(path, {**vl, "caption": c}, cap)
+    if tb and (tb[1] - tb[0]) < (c["band"][1] - c["band"][0]):
+        c = {**c, "band": tb, "band_before_tighten": c["band"]}
+        cap = measure_video(path, {**vl, "caption": c}, meta)
+    eb = extend_band(path, {**vl, "caption": c}, cap)
+    if eb:
+        c = {**c, "band": eb, "free": True, "band_before_extend": c["band"]}
+        cap = measure_video(path, {**vl, "caption": c}, meta)
+    return {"caption": c, "result": cap, "scored": scored}
 
 
 # ── 채널 기준 ──────────────────────────────────────────────────────────────

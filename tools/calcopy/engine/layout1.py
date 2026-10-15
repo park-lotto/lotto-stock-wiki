@@ -20,7 +20,7 @@ def measure(path: str, meta: dict) -> dict:
     window = {"method": lv.get("window_method"), "chunks": fs.get("chunks", []), "other_frame_segments": fs.get("other", [])}
     if not vl.get("window"):
         return {"vl": vl, "bench_full": L["per_video"]["v"], "window": window, "caption_candidates": [], "caption": None}
-    ch = captions.choose_caption(path, vl, meta, lv["_presence"])
-    vl = {**vl, "caption": ch["caption"]}
+    ch = captions.choose_caption(path, vl, meta, lv["_presence"], row_lum=lv.get("_row_lum"))
+    vl = {**vl, "caption": ch["caption"] or {"pos": "none", "band": None, "ink": None}}
     return {"vl": vl, "bench_full": L["per_video"]["v"], "window": window, "caption_candidates": ch["scored"],
-            "caption": ch["result"]}
+            "caption": ch["result"], "caption_failed": ch.get("failed")}

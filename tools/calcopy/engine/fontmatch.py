@@ -27,10 +27,7 @@ FONT_DIRS = [ROOT / "shopping_shorts" / "static" / "fonts", ROOT / "shopping_sho
 METHOD = "gap_collapse+bbox_fit_iou×aspect×density"
 RENDER_PX = 120          # 후보 그리는 글자 크기(font.py 와 같음)
 LINE_FRAG_FRAC = 0.4     # 줄 높이가 가장 높은 줄의 40% 미만이면 조각으로 버린다
-FILL_LUM_MIN = 110       # 어두운 단색 바탕에서 밝은 글자 채움 문턱(그 밖엔 INK_BRIGHT)
-BIG_FRAC = 0.15         # 밝은 덩어리가 크롭 넓이의 15% 넘으면 글자가 아니라 배경
-OUTLINED_FRAC = 0.6      # 밝은 덩어리 둘레의 60% 이상이 외곽선 옆이어야 글자 채움
-SPECK_PX = 12            # 이보다 작은 잉크 덩어리는 티끌로 버린다
+SPECK_PX = layout.FILL_SPECK_PX   # 티끌 문턱은 bench 한 곳
 LABEL_FONT = ROOT / "shopping_shorts" / "static" / "fonts" / "NanumGothic-Bold.ttf"
 
 
@@ -53,35 +50,8 @@ def _bbox(a: np.ndarray) -> np.ndarray | None:
 
 
 def glyph_mask(img: np.ndarray, pol: str) -> np.ndarray:
-    """글자 **채움** 마스크. 씨앗 = bench layout.ink_mask(티끌 제거).
-    밝은 글자(bright)는 bench 정의가 '외곽선 2px 안의 밝은 화소'라 굵은 획은 테두리 고리만 잡힌다
-    (2026-10-16 mYxuF1A74j4 실측: 글꼴 점수 0.1 미만) → 밝은 화소(lum>INK_BRIGHT) 덩어리 중 씨앗에 닿는 것을 통째로 채운다.
-    크롭 넓이의 BIG_FRAC 넘는 큰 덩어리(밝은 배경)는 뺀다."""
-    seed = layout.ink_mask(img, pol).astype(np.uint8)
-    n, lab, st, _ = cv2.connectedComponentsWithStats(seed, 8)
-    keep = np.zeros(n, bool)
-    keep[1:] = st[1:, cv2.CC_STAT_AREA] >= SPECK_PX
-    seed = keep[lab]
-    if pol != "bright":
-        return seed
-    L = layout.lum(img)
-    # 단색 어두운 바탕(제목 띠 등, 중앙 밝기 ≤ 외곽선 문턱)에선 노랑(lum≈199) 채움도 담게 문턱을 낮춘다.
-    # 영상 위 자막에선 낮추면 영상 속 밝은 곳이 글자에 붙는다(2026-10-16 mY 자막 c01 실측) → INK_BRIGHT 그대로.
-    thr = FILL_LUM_MIN if float(np.median(L)) <= C.INK_OUTLINE_DARK else C.INK_BRIGHT
-    bright = (L > thr).astype(np.uint8)
-    n, lab, st, _ = cv2.connectedComponentsWithStats(bright, 8)
-    hit = np.zeros(n, bool)
-    hit[np.unique(lab[seed])] = True
-    hit[0] = False
-    hit &= st[:, cv2.CC_STAT_AREA] < BIG_FRAC * img.shape[0] * img.shape[1]   # 밝은 배경 덩어리 제외(높이 기준은 꽉 낀 제목 크롭에서 글자를 버렸다)
-    # 글자 채움은 둘레가 거의 다 외곽선(어두움)에 닿는다 — 영상 속 밝은 덩어리는 아니다
-    k = 2 * C.INK_OUTLINE_R + 1
-    near_dark = cv2.dilate((layout.lum(img) <= C.INK_OUTLINE_DARK).astype(np.uint8), np.ones((k, k), np.uint8)) > 0
-    edge = (bright > 0) & ~(cv2.erode(bright, np.ones((3, 3), np.uint8)) > 0)
-    tot = np.bincount(lab[edge], minlength=n)
-    dark = np.bincount(lab[edge & near_dark], minlength=n)
-    hit &= dark >= OUTLINED_FRAC * np.maximum(tot, 1)
-    return hit[lab] | seed
+    """글자 채움 마스크 — 판단은 bench layout.ink_fill 한 곳(글꼴 대조·glyph_style 이 같이 쓴다)."""
+    return layout.ink_fill(img, pol)
 
 
 def line_masks(img: np.ndarray, pol: str) -> list[np.ndarray]:

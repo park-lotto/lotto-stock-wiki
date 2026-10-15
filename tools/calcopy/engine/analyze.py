@@ -80,7 +80,9 @@ def _models(got: dict) -> list[str]:
 # ── 3. 자막 글자(OCR) ─────────────────────────────────────────────────────
 OCR_PROMPT = ('각 그림은 숏폼 영상의 자막 띠를 잘라낸 것이다. 그림마다 앞의 라벨이 붙어 있다. '
               '화면에 얹은 자막 글자만 줄 단위로 **보이는 그대로** 옮겨라(띄어쓰기·문장부호·이모티콘 글자 그대로, 고치지 마라). '
-              '영상 속 간판·물건의 글자는 빼라. 자막이 없으면 lines 는 빈 목록.\n'
+              '영상 속 간판·물건의 글자는 빼라. 자막이 없으면 lines 는 빈 목록. '
+              '**추측 금지**: 그림 위·아래 끝에서 잘려 다 안 보이는 줄은 지어내지 말고 빼라(보이는 글자만). '
+              '라벨에 [잘림 가능]이 붙은 그림은 특히 그렇다.\n'
               'JSON만: {"items":[{"label":"자막 0","lines":["첫 줄","둘째 줄"]}]}')
 
 
@@ -90,7 +92,7 @@ def ocr_captions(path, vl, cap, out_dir, llm) -> dict:
     y0, y1 = reg
     cdir = Path(out_dir) / "captions"
     cdir.mkdir(exist_ok=True)
-    crops, items = {}, []
+    crops, items, trunc = {}, [], {}
     for it in cap["items"]:
         t = (it["t0"] + it["t1"]) / 2
         img = probe.grab(path, t, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
@@ -98,16 +100,22 @@ def ocr_captions(path, vl, cap, out_dir, llm) -> dict:
             continue
         crops[it["i"]] = img
         Image.fromarray(img).save(cdir / f"c{it['i']:02d}_{it['t0']:.2f}s.png")
+        ink = layout.ink_mask(img, vl["caption"]["ink"])
+        rows = ink.sum(axis=1) > 3
+        if rows[:3].any() or rows[-3:].any():      # 크롭 위·아래 끝에 글자가 걸림 = 줄이 잘렸을 수 있다
+            trunc[it["i"]] = True
         if it.get("lines", 0) > 0:
-            items.append((f"자막 {it['i']} ({it['t0']:.2f}~{it['t1']:.2f}s)", _jpeg(img, 720)))
+            items.append((f"자막 {it['i']} ({it['t0']:.2f}~{it['t1']:.2f}s){' [잘림 가능]' if trunc.get(it['i']) else ''}",
+                          _jpeg(img, 720)))
     got, errs = _batched(llm, items, OCR_PROMPT, "ocr")
     texts = {}
     for lab, _ in items:
         i = int(lab.split()[1])
-        g = got.get(lab) or got.get(f"자막 {i}")
+        g = got.get(lab) or got.get(lab.replace(" [잘림 가능]", "")) or got.get(f"자막 {i}")
         if g is not None:
             texts[i] = [str(x) for x in (g.get("lines") or [])]
-    return {"crops": crops, "texts": texts, "asked": len(items), "read": len(texts), "errors": errs, "models": _models(got)}
+    return {"crops": crops, "texts": texts, "asked": len(items), "read": len(texts), "errors": errs, "models": _models(got),
+            "truncated": sorted(trunc)}
 
 
 # ── 4·5. 글꼴 · 글자 효과 ─────────────────────────────────────────────────
@@ -387,6 +395,10 @@ ASR_PROMPT = ('이 오디오의 말소리를 들리는 그대로(원래 언어 �
               '"sfx":[{"t":0.0,"kind":"띵"}],"bgm":{"present":true,"mood":["경쾌"],"start":0.0,"fade_out":false},"voice_tone":""}')
 
 
+ASR_SILENT_LUFS = -45.0   # 받아쓰기가 비었을 때 소리가 이보다 작아야 '말소리 없음'으로 본다
+ASR_LONG_SEG_S = 8.0      # 구절 하나가 이보다 길면 분할 실패로 표시
+
+
 def audio_and_tone(path, meta, llm, R: dict | None = None) -> tuple[dict, dict]:
     au = baudio.measure_video(path, meta)
     res = {"method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition", "bench": au}
@@ -411,13 +423,27 @@ def audio_and_tone(path, meta, llm, R: dict | None = None) -> tuple[dict, dict]:
         res["transcript"] = {"failed": f"받아쓰기 모양 이상: {e}"}
         res["composition"] = {"failed": "받아쓰기 모양 이상"}
         return res, {"failed": "받아쓰기 모양 이상"}
+    if not seg and (au.get("I") is None or au["I"] > ASR_SILENT_LUFS):
+        # 빈 답을 '말소리 없음'으로 확정하지 않는다 — 429 뒤 빈 답이 그렇게 굳었다(2026-10-16 yummyknow g7cx)
+        res["transcript"] = {"failed": f"빈 받아쓰기 답(소리 {au.get('I')} LUFS — 말소리 없음 확정 안 함)", "model": (d or {}).get("_model")}
+        res["composition"] = {"failed": "받아쓰기 빈 답"}
+        return res, {"failed": "받아쓰기 빈 답"}
+    dur = meta["duration"]
+    warn = []
+    for s_ in seg:                      # 영상 길이를 넘는 시각은 자른다(2026-10-16 방구석 48P·E9h)
+        if s_["end"] > dur + 0.05 or s_["start"] > dur:
+            warn.append(f"길이 초과 {s_['start']:.1f}~{s_['end']:.1f}")
+            s_["start"], s_["end"] = min(s_["start"], dur), min(s_["end"], dur)
+        if s_["end"] - s_["start"] > ASR_LONG_SEG_S:
+            warn.append(f"구절 미분할 {s_['start']:.1f}~{s_['end']:.1f}({s_['end'] - s_['start']:.1f}초)")
+    seg = [s_ for s_ in seg if s_["end"] > s_["start"]]
     ko = [s for s in seg if s["lang"] == "ko"]
     speak = sum(max(0.0, s["end"] - s["start"]) for s in ko)
     chars = sum(len(s["text"].replace(" ", "")) for s in ko)
     gaps = [b["start"] - a["end"] for a, b in zip(ko, ko[1:]) if b["start"] - a["end"] > 0.05]
     langs = sorted({s["lang"] for s in seg if s["lang"]})
     res["asr_extra"] = {k: (d or {}).get(k) for k in ("sfx", "bgm", "voice_tone", "speakers")}
-    res["transcript"] = {"model": (d or {}).get("_model"), "segments": seg, "n": len(seg), "langs": langs, "ambient": (d or {}).get("ambient") or "",
+    res["transcript"] = {"model": (d or {}).get("_model"), "warnings": warn, "segments": seg, "n": len(seg), "langs": langs, "ambient": (d or {}).get("ambient") or "",
                          "speech_sec_all": round(sum(max(0.0, s["end"] - s["start"]) for s in seg), 2),
                          "ko_speech_sec": round(speak, 2), "speech_share_ko": round(speak / meta["duration"], 3) if meta["duration"] else None,
                          "chars_nospace_ko": chars, "cps": round(chars / speak, 2) if speak > 0 else None,
@@ -476,22 +502,23 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
 
     t = time.time()
     cap = lay["caption"]
-    if cap is None and vl.get("caption", {}).get("band") and vl.get("window"):
-        cap = captions.measure_video(mp4, vl, meta)
     ocr = None
     if cap and cap.get("region"):
         ocr = ocr_captions(mp4, vl, cap, out_dir, llm)
-        items = [{**it, "text": ocr["texts"].get(it["i"])} for it in cap["items"]]
+        items = [{**it, "text": ocr["texts"].get(it["i"]), **({"truncated": True} if it["i"] in ocr["truncated"] else {})}
+                 for it in cap["items"]]
         R["captions"] = {"ok": True, "method": "bench.captions.measure_video + gemini_free.ask(OCR)", "region": cap["region"],
                          "changes": cap["changes"], "spans": cap["spans"], "n_spans": len(cap["spans"]), "items": items,
                          "glyph": cap["glyph"], "unstable": cap.get("unstable", []), "ocr": {"asked": ocr["asked"], "read": ocr["read"], "errors": ocr["errors"], "models": ocr["models"]}}
         if ocr["errors"]:
             R["captions"]["ocr"]["failed"] = ocr["errors"][0]
             unknown.append(f"자막 OCR 일부 실패: {ocr['errors']}")
+        if ocr["truncated"]:
+            unknown.append(f"자막 크롭 끝에 글자가 걸림(줄 잘림 가능) {len(ocr['truncated'])}개: {ocr['truncated'][:10]}")
         if ocr["asked"] > ocr["read"]:
             unknown.append(f"자막 글자 못 읽음 {ocr['asked'] - ocr['read']}/{ocr['asked']}개")
     else:
-        R["captions"] = {"failed": "자막 띠를 못 찾음(후보 점수 0)", "method": "bench.captions.caption_score"}
+        R["captions"] = {"failed": lay.get("caption_failed") or "자막 띠를 못 찾음", "method": "bench.captions.choose_caption"}
     T["captions"] = time.time() - t
 
     t = time.time()
@@ -542,6 +569,8 @@ def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
 
     t = time.time()
     R["audio"], R["script_tone"] = audio_and_tone(mp4, meta, llm, R)
+    for w in (R["audio"].get("transcript") or {}).get("warnings", []):
+        unknown.append(f"받아쓰기: {w}")
     if (R["audio"].get("transcript") or {}).get("failed"):
         unknown.append(f"받아쓰기 실패: {R['audio']['transcript']['failed']}")
     comp = R["audio"].get("composition") or {}

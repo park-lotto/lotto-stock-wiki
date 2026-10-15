@@ -24,7 +24,8 @@ from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WI
                         SEG_GAP, DYN_ROW_CHG, ROW_CHG_DIFF, INK_ROW_PX, BAND_PRESENCE, LOGO_XVID_STD, LOGO_MIN_H,
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
                         INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
-                        FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S)
+                        FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S,
+                        FRAME_BREAK_ABS, FRAME_BREAK_REL, WINDOW_BRIDGE_PX, WINDOW_BRIDGE_FRAC)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -42,6 +43,42 @@ def ink_mask(img: np.ndarray, polarity: str) -> np.ndarray:
     k = 2 * INK_OUTLINE_R + 1
     near_dark = cv2.dilate((L <= INK_OUTLINE_DARK).astype(np.uint8), np.ones((k, k), np.uint8)) > 0
     return (L > INK_BRIGHT) & near_dark
+
+
+FILL_SPECK_PX = 12       # 채움 마스크에서 버리는 티끌 덩어리(화소)
+FILL_LUM_MIN = 110       # 어두운 단색 바탕(제목 띠 등)에서 밝은 글자 채움 문턱 — 노랑(lum≈199)까지 담는다
+FILL_BIG_FRAC = 0.15     # 밝은 덩어리가 크롭 넓이의 15% 넘으면 글자가 아니라 배경
+FILL_OUTLINED_FRAC = 0.6 # 밝은 덩어리 둘레의 60% 이상이 외곽선 옆이어야 글자 채움
+
+
+def ink_fill(img: np.ndarray, polarity: str) -> np.ndarray:
+    """글자 **채움** 마스크(획 굵기·외곽선·글꼴 대조용). 씨앗 = ink_mask(티끌 제거).
+    dark 는 씨앗 그대로. bright 는 ink_mask 정의가 '외곽선 2px 안의 밝은 화소'라 굵은 획은 테두리 고리만 잡힌다
+    (2026-10-16 mYxuF1A74j4: 글꼴 점수 0.1 미만·외곽선 판정 실패) → 밝은 덩어리 중 씨앗에 닿고, 크롭의 FILL_BIG_FRAC 보다 작고,
+    둘레의 FILL_OUTLINED_FRAC 이상이 어두운 외곽선 옆인 것을 통째로 채운다.
+    밝은 문턱: 바탕 중앙 밝기 ≤ INK_OUTLINE_DARK(단색 어두운 띠)면 FILL_LUM_MIN, 아니면 INK_BRIGHT(영상 위 자막 — 낮추면 영상이 붙는다)."""
+    seed = ink_mask(img, polarity).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(seed, 8)
+    keep = np.zeros(n, bool)
+    keep[1:] = st[1:, cv2.CC_STAT_AREA] >= FILL_SPECK_PX
+    seed = keep[lab]
+    if polarity != "bright":
+        return seed
+    L = lum(img)
+    thr = FILL_LUM_MIN if float(np.median(L)) <= INK_OUTLINE_DARK else INK_BRIGHT
+    bright = (L > thr).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(bright, 8)
+    hit = np.zeros(n, bool)
+    hit[np.unique(lab[seed])] = True
+    hit[0] = False
+    hit &= st[:, cv2.CC_STAT_AREA] < FILL_BIG_FRAC * img.shape[0] * img.shape[1]
+    k = 2 * INK_OUTLINE_R + 1
+    near_dark = cv2.dilate((L <= INK_OUTLINE_DARK).astype(np.uint8), np.ones((k, k), np.uint8)) > 0
+    edge = (bright > 0) & ~(cv2.erode(bright, np.ones((3, 3), np.uint8)) > 0)
+    tot = np.bincount(lab[edge], minlength=n)
+    dark = np.bincount(lab[edge & near_dark], minlength=n)
+    hit &= dark >= FILL_OUTLINED_FRAC * np.maximum(tot, 1)
+    return hit[lab] | seed
 
 
 def segs(mask, min_len: int = 1, gap: int = 0) -> list[tuple[int, int]]:
@@ -95,7 +132,17 @@ def _window(st: dict) -> list[int] | None:
     """영상창: 시간 표준편차 > WINDOW_PX_STD 화소가 행의 WINDOW_ROW_FRAC 이상인 가장 긴 행 구간 + 그 안의 열 구간."""
     sx = st["W"] / LAYOUT_W
     hot = st["std"] > WINDOW_PX_STD
-    rows = segs(hot.mean(axis=1) > WINDOW_ROW_FRAC, min_len=WINDOW_MIN_PX, gap=SEG_GAP)
+    rf = hot.mean(axis=1)
+    runs = segs(rf > WINDOW_ROW_FRAC, gap=SEG_GAP)
+    # 창 안에 오래 가만히 있는 넓은 자막 줄이 있으면 그 행만 '덜 움직여' 창이 둘로 갈린다 → 위아래 창 조각 사이 틈이
+    # WINDOW_BRIDGE_PX 이하이고 틈 행이 평균 WINDOW_BRIDGE_FRAC 이상 움직이면 잇는다(2026-10-16 외곽선 자막 합성 시험)
+    merged: list[list[int]] = []
+    for a_, b_ in runs:
+        if merged and a_ - merged[-1][1] <= WINDOW_BRIDGE_PX * st["H"] and rf[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_FRAC:
+            merged[-1][1] = b_
+        else:
+            merged.append([a_, b_])
+    rows = [(a_, b_) for a_, b_ in merged if b_ - a_ >= WINDOW_MIN_PX]
     if not rows:
         return None
     y0, y1 = max(rows, key=lambda s: s[1] - s[0])
@@ -130,6 +177,8 @@ def _finish(win, st: dict) -> dict:
         "_above_ext": (st["gmin"] if outside_pol == "dark" else st["gmax"])[:win[1]].astype(np.float32) if win else None,
         # 편 하나 자막 띠 후보(captions.choose_caption)용: 극성별 '행에 잉크 있음' 표본 비율
         "_presence": {p: (np.array(r) > INK_ROW_PX).mean(axis=0) for p, r in st["ink_rows"].items()},
+        # 행별 시간평균 밝기 중앙값 — 자막 띠 극성 거르기(captions.band_candidates)
+        "_row_lum": np.median(lum(mean_rgb), axis=1).astype(np.float32),
     }
 
 
@@ -167,6 +216,8 @@ def window_vote(path: str, meta: dict) -> dict | None:
     if not groups:
         return None
     g = max(groups, key=len)
+    if len(g) * 2 <= n:     # 과반 미달 = 틀 없는 전체화면 편 — 창을 지어내지 않는다(2026-10-16 썰풀다 D3Pc6HZ6t6c 1/3로 창을 지어냄)
+        return None
     win = [int(np.median([c["window"][k] for c in g])) for k in range(4)]
     main = [c["t"] for c in g]
     other_chunks = [c["t"] for c in chunks if c not in g]
@@ -210,6 +261,29 @@ def frame_segments(path: str, meta: dict, win: list[int], main: list[list[float]
             "method": f"창 밖 회색 차 d(t) {FRAME_SEG_FPS}fps > {thr:.1f}(틀 {lo:.1f}·틀 없음 {hi:.1f}의 가운데)"}
 
 
+def frame_breaks(path: str, meta: dict, win: list[int]) -> dict:
+    """창이 정상으로 잡힌 편에서도 틀이 잠깐 다른 구간(훅 카드·인트로·엔딩)을 프레임 단위로 찾는다.
+    d(t) = 창 밖(틀 자리) 회색이 편 전체 중앙값 그림과 다른 정도. 문턱 = max(FRAME_BREAK_ABS, FRAME_BREAK_REL × 중앙값 d).
+    (2026-10-16 방구석 ILIiqCJAOSI 0~1.63초 훅 카드 · 핫템 0~3초 분홍 인트로를 '없음'으로 냈다)"""
+    H = meta["height"]
+    sh = int(round(H * FRAME_SEG_W / meta["width"] / 2) * 2)
+    fr = np.array([f.astype(np.float32) for f in probe.frames(path, f"fps={FRAME_SEG_FPS},scale={FRAME_SEG_W}:{sh}",
+                                                               FRAME_SEG_W, sh, "gray")])
+    if len(fr) < 3:
+        return {"other": [], "method": "프레임 표본 부족"}
+    rows = np.ones(sh, bool)
+    k = sh / H
+    rows[int(win[1] * k):int(np.ceil((win[1] + win[3]) * k))] = False
+    if rows.sum() < 3:
+        return {"other": [], "method": "창 밖 행 없음"}
+    tpl = np.median(fr[:, rows], axis=0)
+    d = np.abs(fr[:, rows] - tpl).mean(axis=(1, 2))
+    thr = max(FRAME_BREAK_ABS, FRAME_BREAK_REL * float(np.median(d)))
+    runs = segs(d > thr, min_len=max(1, int(round(FRAME_SEG_MIN_S * FRAME_SEG_FPS))), gap=1)
+    out = [[round(a / FRAME_SEG_FPS, 2), round(min(len(fr), b) / FRAME_SEG_FPS, 2)] for a, b in runs]
+    return {"other": out, "method": f"창 밖 회색 차 d(t) {FRAME_SEG_FPS}fps > {thr:.1f}(편 중앙값 {float(np.median(d)):.1f})"}
+
+
 def measure_video(path: str, meta: dict) -> dict:
     """편 하나의 배치. `_above_ext`·`_presence`는 내부 자료다(json에 안 쓴다).
     편 전체로 잰 창이 없거나 화면 거의 전체(WINDOW_FULL_FRAC)면 — 틀 없는 구간(전체화면 엔딩 등)이 섞인 것 —
@@ -223,6 +297,12 @@ def measure_video(path: str, meta: dict) -> dict:
             win, method = v["window"], f"layout.window_vote(조각 다수결 {v['votes']})"
             frames = {"main": v["main"], "other": v["other"], "other_chunks": v["other_chunks"],
                       "other_method": v["other_method"], "chunks": v["chunks"]}
+        elif win is not None:
+            method = "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편"
+    if frames is None and win is not None and win[3] < WINDOW_FULL_FRAC * st["H"]:
+        fb = frame_breaks(path, meta, win)       # 짧은 다른 틀(첫 1~3초 훅 카드·인트로)은 6초 조각 다수결로 안 보인다
+        if fb["other"]:
+            frames = {"main": None, "other": fb["other"], "other_method": fb["method"], "chunks": []}
     lv = _finish(win, st)
     lv["window_method"] = method
     if frames:
