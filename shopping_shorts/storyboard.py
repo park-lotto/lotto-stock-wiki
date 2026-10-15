@@ -1319,6 +1319,86 @@ ARC_KO = {"hook": "훅", "bait": "미끼(궁금증)", "pain": "불편", "reveal"
           "benefit": "이점·반응", "proof": "반응·증거", "how": "사용법", "result": "결과", "closing": "마무리"}
 
 
+# ── 칸 이름 한국어(관제 215, 2026-10-15) — 고객 화면에 보이는 칸 이름의 주인은 여기 한 곳.
+#   화면(produce.html sbKo)은 /api/produce/storyboard 의 role_ko 를 받아 쓴다. 손으로 두 벌 적다 영어 노출(1353판 중 626판).
+ROLE_KO = {
+    "hook": "훅",
+    "title": "제목",
+    "bait": "미끼",
+    "fame": "유명세",
+    "reveal": "정체 공개",
+    "limit": "한계",
+    "solve": "해결",
+    "more": "더",
+    "twist": "반전",
+    "land": "마무리",
+    "price": "가격",
+    "power": "성능",
+    "easy": "쉬움",
+    "extra": "덤",
+    "deal": "딜",
+    "howto": "사용법",
+    "vs": "비교",
+    "proof": "증거",
+    "react": "반응",
+    "what": "정체",
+    "good": "좋은 점",
+    "pain": "불편",
+    "how": "어떻게",
+    "story": "탄생 이야기",
+    "benefit": "효능",
+    "escalate": "고조",
+    "escalation": "고조",
+    "method": "방법",
+    "steps": "단계",
+    "texture": "식감",
+    "usage": "활용",
+    "witness": "증인",
+    "cta": "마무리",
+    "situation": "상황",
+    "notice": "눈치챔",
+    "ask": "물어봄",
+    "result": "결과",
+    "regret": "후회",
+    "origin": "본래 용도",
+    "cases": "엉뚱한 쓰임",
+    "mistake": "실수",
+    "authority": "권위",
+    "reason": "이유",
+    "problem": "문제",
+    "mechanism": "원리",
+    "ease": "쉬움",
+    "context": "맥락",
+    "spec": "스펙",
+    "bonus": "덤",
+    "source": "출처",
+    "fit": "맞는 사람",
+    "control": "조절",
+    "free": "새 칸",
+    "feature": "특징",
+    "closing": "마무리",
+    "targets": "쓰는 곳",
+    "spread": "입소문",
+    "scale": "화제성",
+    "action": "동작",
+    "before": "쓰기 전",
+    "contrast": "비교",
+    "effect": "효과",
+    "end": "마무리",
+    "identity": "정체 공개",
+    "intro": "소개",
+    "outro": "마무리",
+    "shock": "충격",
+    "use": "쓰는 법",
+}
+
+
+def role_ko(slot):
+    """칸 이름(escalation_2 처럼 번호가 붙어도) → 한국어. 모르는 이름은 None(호출부가 경보)."""
+    t = str(slot or "").lower()
+    return ROLE_KO.get(t) or ROLE_KO.get(t.split("_")[0])
+
+
 def arc_rank(slot):
     t = str(slot or "").lower()
     b = t.split("_")[0]

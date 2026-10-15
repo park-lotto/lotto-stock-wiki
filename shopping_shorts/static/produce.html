@@ -19366,12 +19366,8 @@ function s2Confirm(i){
 // 데이터: /api/produce/storyboard/{MIX_JOB} (판단은 서버 shopping_shorts.storyboard 한 곳). 확정은 기존 s2Confirm 흐름을 그대로 탄다.
 const SB = {jid:'', data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, showall:{}, openf:{}, useSeed:false,
             edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, poll:null, err:''};
-const SB_KO = {hook:'훅',title:'제목',bait:'미끼',fame:'유명세',reveal:'정체 공개',limit:'한계',solve:'해결',more:'더',twist:'반전',land:'마무리',
-  price:'가격',power:'성능',easy:'쉬움',extra:'덤',deal:'딜',howto:'사용법',vs:'비교',proof:'증거',react:'반응',what:'정체',good:'좋은 점',
-  pain:'불편',how:'어떻게',story:'탄생 이야기',benefit:'효능',escalate:'고조',escalation:'고조',method:'방법',steps:'단계',texture:'식감',usage:'활용',
-  witness:'증인',cta:'마무리',situation:'상황',notice:'눈치챔',ask:'물어봄',result:'결과',regret:'후회',origin:'본래 용도',cases:'엉뚱한 쓰임',
-  mistake:'실수',authority:'권위',reason:'이유',problem:'문제',mechanism:'원리',ease:'쉬움',context:'맥락',spec:'스펙',bonus:'덤',source:'출처',fit:'맞는 사람',control:'조절',free:'새 칸'};
-function sbKo(s){ s=String(s||''); const b=s.split('_')[0].toLowerCase(); return SB_KO[s.toLowerCase()]||SB_KO[b]||s; }
+// 칸 이름 한국어는 서버 storyboard.ROLE_KO 한 곳(관제 215) — 응답 role_ko 로 받는다
+function sbKo(s){ s=String(s||''); const K=(SB.data&&SB.data.role_ko)||{}; const b=s.split('_')[0].toLowerCase(); return K[s.toLowerCase()]||K[b]||s; }
 function sbE(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function sbA(s){ return sbE(String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }   // onclick 안 '…' 인자
 const SB_TAGI = {"훅감":"🎣","비포":"😩","애프터":"✨","반전":"🔄","반응":"👥"};
