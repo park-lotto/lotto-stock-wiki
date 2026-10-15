@@ -22514,17 +22514,29 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     try:
         if timeline:
             _sp = mix_pipeline._resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job) or {}
-            _line = {str(v) for k, v in _sp.items() if k != "_pack" and v}
-            for e in video_assemble.sfx_events_for(timeline, _sp):
-                sounds.append((float(e[1]), Path(str(e[0])).stem, "line" if str(e[0]) in _line else "pack"))
+            for e in video_assemble.sfx_events_for(timeline, _sp, with_ref=True):
+                ref = e[3] if len(e) > 3 and isinstance(e[3], dict) else {}
+                sounds.append((float(e[1]), Path(str(e[0])).stem, "line" if ref.get("line") else "pack", ref, float(e[2]) if len(e) > 2 else 1.0))
     except Exception as _e:      # noqa: BLE001 — 표시만 못 한다(렌더와 무관)
         print("[sfx] 칸 효과음 표시 실패 job=%s: %r" % (job_id, _e), file=sys.stderr)
     for b in beats:
         bi = b.get("beat_idx")
         t = tl_by.get(bi)
         hits = [e for e in ev if t and float(t["t0"]) <= e[1] < float(t["t0"]) + float(t["dur"])]
-        _snd = [{"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd} for s0, nm, kd in sounds
-                if t and float(t["t0"]) - 1e-3 <= s0 < float(t["t0"]) + float(t["dur"])]
+        # 소리마다: 들어보기 주소·음량 배수·가리킴(빼기/음량은 /sfx_hit 로 이 가리킴을 보낸다)
+        _pe_vol = {(v["slot"], v["n"]): v["g"] for v in ((sfx_pack.clean_pack_edit(b.get("pack_edit")) or {}).get("vol") or [])}
+        _snd = []
+        for s0, nm, kd, ref, _g in sounds:
+            if not (t and float(t["t0"]) - 1e-3 <= s0 < float(t["t0"]) + float(t["dur"])):
+                continue
+            if kd == "line":
+                _ls = b.get("sfx") or {}
+                _snd.append({"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd, "label": str(_ls.get("cat") or "효과음"),
+                             "vol": video_assemble._sfx_vol(_ls), "dt": ref.get("dt", 0.0), "asset_id": _ls.get("asset_id"), "url": "/api/sfx/%s/media" % _ls.get("asset_id") if _ls.get("asset_id") else ""})
+            else:
+                _snd.append({"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd, "label": sfx_pack.SLOT_LABEL.get(nm, nm),
+                             "slot": ref.get("slot"), "n": ref.get("n"), "dt": ref.get("dt", 0.0), "vol": _pe_vol.get((ref.get("slot"), ref.get("n")), 1.0),
+                             "url": "/api/produce/sfx_pack/sound/%s/%s" % (pack_no, nm) if pack_no else ""})
         caps = b.get("caption_lines") or []
         label = (caps[0] if caps else str(b.get("narration") or ""))[:18]
         beats_out.append({"beat_idx": bi, "role": b.get("role") or "", "label": label, "hits": len(hits),
@@ -22533,7 +22545,64 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
             "pack": got[0] if got else None, "pack_no": pack_no, "pack_choice": choice or "auto",
             "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
             "packs": packs, "beats": beats_out, "timeline_ready": bool(timeline),
+            "pack_slots": [{"slot": k, "label": sfx_pack.SLOT_LABEL.get(k, k)} for k in sfx_pack.SLOTS],   # 효과음 줄 '바꾸기' 목록
             "family": sfx_pack.script_family(store, job)}
+
+
+@app.post("/api/produce/mix/{job_id}/sfx_hit")
+def api_produce_mix_sfx_hit(job_id: str, request: Request, body: dict):
+    """3단계 효과음 줄에서 소리 하나를 빼거나 음량을 바꾼다(관제 203, 10-15 사장님 "들어보고 음량조절·삭제 간편하게").
+    body: {beat_idx, kind:"line"|"pack", op:"off"|"vol"|"move"|"swap", vol?, dt?(초, 끌어 옮긴 총량), to?(pack=소리 이름), slot?, n?}
+      swap: pack 은 pack_edit.swap(팩 안 다른 소리), line 은 /sfx 의 asset_id 교체를 쓴다(화면이 그쪽으로 보냄)
+      line = 칸 효과음(beat.sfx) — off 는 /sfx 빼기와 같음, vol 은 beat.sfx.vol
+      pack = 기본 효과음팩 소리 — beat.pack_edit(off/vol, 모양 주인 sfx_pack.clean_pack_edit)
+    렌더·캡컷은 video_assemble.sfx_events_for 하나가 이 값을 읽는다."""
+    from shopping_shorts import sfx_pack
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in plan.get("beats") or [] if b.get("beat_idx") == bi), None)
+    op, kind = body.get("op"), body.get("kind")
+    if hit is None or op not in ("off", "vol", "move", "swap") or kind not in ("line", "pack") or (kind == "line" and op == "swap"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "요청 모양이 맞지 않아요"})
+    try:
+        vol = round(min(2.0, max(0.0, float(body.get("vol", 1.0)))), 2)
+        dt = round(min(5.0, max(-5.0, float(body.get("dt", 0.0)))), 2)
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "음량은 숫자"})
+    if kind == "line":
+        if not hit.get("sfx"):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "이 칸엔 효과음이 없어요"})
+        if op == "off":
+            hit.pop("sfx", None)
+            hit["sfx_off"] = 1
+        elif op == "move":
+            hit["sfx"] = {**hit["sfx"], "shift": dt}
+        else:
+            hit["sfx"] = {**hit["sfx"], "vol": vol}
+    else:
+        ref = {"slot": body.get("slot"), "n": body.get("n")}
+        pe = dict(sfx_pack.clean_pack_edit(hit.get("pack_edit")) or {})
+        key = op
+        item = {**ref, "g": vol} if op == "vol" else {**ref, "dt": dt} if op == "move" else {**ref, "to": body.get("to")} if op == "swap" else ref
+        pe[key] = [x for x in pe.get(key) or [] if (x["slot"], x["n"]) != (ref["slot"], ref["n"])] + [item]
+        pe = sfx_pack.clean_pack_edit(pe) or {}
+        if (op == "swap" and body.get("to") == ref["slot"]) or (op == "move" and not dt):
+            pass                                            # 원래 소리·제자리로 되돌림 = 항목 없음이 정상
+        elif not any((x["slot"], x["n"]) == (ref["slot"], int(ref["n"] or 0)) for x in pe.get(key) or []):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "그 소리를 찾을 수 없어요"})
+        if pe:
+            hit["pack_edit"] = pe
+        else:
+            hit.pop("pack_edit", None)
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True}
 
 
 @app.get("/api/produce/mix/bgm_lib/{job_id}")

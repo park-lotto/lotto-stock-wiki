@@ -915,13 +915,21 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     //     'next'(기본) = 옆 카드가 그만큼 더/덜 보여 준다(끝이면 앞 카드) · 'self' = 이 카드만 느리게/빠르게(시간 그대로)
     //     'all' = 이 칸 카드 전부 같은 배속으로 칸을 채운다.  판단은 여기 한 곳 — 화면 줄(handGapInfo)·렌더·캡컷은 이 결과를 읽는다.
     const hsrc = scenes.map(() => null);
+    let handMode = null;                                          // 이 칸에서 실제로 쓴 메우기 방식(화면 안내 줄이 읽는다)
     if (D.hand_cut && beatIdx != null && typeof getFix === 'function'){
-      const mode = (typeof FILLMODE === 'object' && FILLMODE && FILLMODE[beatIdx]) || 'next';
       const base = scenes.map((g, k) => Math.min(Math.max(real[k], av[k].room), dur[k]));
       const want = scenes.map((g, k) => getFix(beatIdx, g.seg_id));
+      let mode = (typeof FILLMODE === 'object' && FILLMODE && FILLMODE[beatIdx]) || null;
       if (want.some(x => x > 0)){
         const src = base.slice();
         want.forEach((L, k) => { if (L > 0) src[k] = Math.min(Math.max(MANUAL_MIN, L), av[k].far); });
+        // ★기본값(관제 204 7번, 2026-10-14 사장님): 구절 맞춤 칸은 '그 카드만 느리게/빠르게' — 장면 바뀌는 자리가 자막 경계에
+        //   그대로 남는다. 배속 한도(느리게 maxSlowmo · 빠르게 FIT_FAST_MAX)를 넘으면 '옆 장면 더'. 그 밖의 칸은 '옆 장면 더'.
+        if (!mode){
+          const selfOk = want.every((L, k) => !(L > 0) || (dur[k] / src[k] <= maxSlowmo() + 1e-3 && src[k] / dur[k] <= FIT_FAST_MAX + 1e-3));
+          mode = (typeof phraseExactOn === 'function' && phraseExactOn(beatIdx) && selfOk) ? 'self' : 'next';
+        }
+        handMode = mode;
         if (mode === 'self'){
           want.forEach((L, k) => { if (L > 0) hsrc[k] = src[k]; });
         } else if (mode === 'all'){
@@ -959,7 +967,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (hsrc[k] != null){                                       // 손 길이(관제 204) — 위에서 정한 읽는 길이 그대로, 다르면 정확히 배속
         src = hsrc[k];
         if (Math.abs(src - d) > 0.01){ c.src_dur = +src.toFixed(3); c.fit = true; } else delete c.src_dur;
-        c.hand = 1;
+        c.hand = 1; c.hand_mode = handMode;
       }
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
