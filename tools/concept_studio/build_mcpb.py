@@ -110,12 +110,15 @@ def build():
             "typecast_api_key": {"type": "string", "title": "타입캐스트 키(선택)", "sensitive": True, "required": False,
                                  "description": "목소리가 들어가는 컨셉에서만 쓴다"}},
         "tools": [{"name": n, "description": d} for n, d in [
+            ("shottem_start", "숏템 시작 — 준비 점검·설정 받기·컨셉 목록"),
             ("studio_make", "한 번에: 설정·팩 받기 → 시작 → 대본 요청까지"),
             ("studio_wait", "완성까지 기다리기(50초씩)"),
             ("studio_sync", "웹 스튜디오의 컨셉·내 설정·팩 받기"), ("studio_concepts", "컨셉 목록"),
             ("studio_start", "작업 시작"), ("studio_status", "작업 상태"), ("studio_submit_script", "대본 넣기"),
             ("studio_confirm", "대본 확인"), ("studio_resume", "멈춘 작업 이어 돌리기"), ("studio_result", "완성 영상과 검수 시트")]],
-        "prompts": [{"name": "make", "description": "컨셉과 소재만 넣으면 완성 영상까지", "arguments": ["concept", "subject"],
+        "prompts": [{"name": "start", "description": "숏템 시작 — 준비 점검과 설정 받기", "arguments": [],
+                     "text": "숏템 MCP 시작하자. shottem_start 도구를 먼저 불러서 준비 상태와 컨셉 목록을 보여줘."},
+                    {"name": "make", "description": "컨셉과 소재만 넣으면 완성 영상까지", "arguments": ["concept", "subject"],
                      "text": "숏템 컨셉 스튜디오 MCP 도구로 '${arguments.concept}' 컨셉 쇼츠를 만들어줘. 소재: ${arguments.subject}. 먼저 studio_make 를 불러라."}],
         "compatibility": {"platforms": ["win32", "darwin"], "runtimes": {"python": ">=3.11"}},
         "license": "Proprietary"}

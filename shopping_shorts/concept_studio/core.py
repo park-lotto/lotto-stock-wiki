@@ -119,6 +119,42 @@ def _file_sha(p):
     return h.hexdigest()
 
 
+def hello():
+    """일 시작 점검 — 무엇이 준비됐고 무엇이 빠졌나(빠진 것은 고칠 방법과 함께). 그다음 설정·팩 받기."""
+    import shutil
+    checks = []
+
+    def ck(name, ok, fix=""):
+        checks.append({"항목": name, "ok": bool(ok), **({"고칠 것": fix} if not ok else {})})
+    url, tok = studio_conn()
+    ck("웹 스튜디오 연결 정보", url and tok, "설치팩 설정(Claude 설정 → 확장 프로그램 → 숏템 컨셉 스튜디오 → 구성)에 주소·연결 코드")
+    ck("제미니 키", os.environ.get("GEMINI_API_KEY", "").strip(), "설치팩 설정에 제미니 API 키")
+    ck("ffmpeg", shutil.which("ffmpeg") and shutil.which("ffprobe"), "설치팩을 다시 켜면 처음 한 번 받는다")
+    ck("yt-dlp", shutil.which("yt-dlp"), "설치팩을 다시 켜면 설치된다")
+    try:
+        _engine()
+        ck("영상 엔진", True)
+    except Exception as e:  # noqa: BLE001
+        ck("영상 엔진", False, repr(e)[:150])
+    synced = {"ok": False, "why": "연결 정보 없음"}
+    if url and tok:
+        try:
+            synced = sync()
+        except Exception as e:  # noqa: BLE001 — 받기 실패는 이유를 그대로 보여 준다(동봉 컨셉으로는 계속 된다)
+            synced = {"ok": False, "why": str(e)[:200]}
+        ck("설정·팩 받기", synced.get("ok"), synced.get("why", ""))
+    jobs = sorted(os.listdir(JOBS), reverse=True)[:3] if os.path.isdir(JOBS) else []
+    recent = []
+    for j in jobs:
+        try:
+            s = status(j)
+            recent.append({"job_id": j, "seed": s.get("seed"), "state": s.get("state")})
+        except Exception:  # noqa: BLE001
+            pass
+    return {"ready": all(c["ok"] for c in checks), "checks": checks,
+            "packs": synced.get("packs"), "concepts": list_concepts(), "recent_jobs": recent}
+
+
 # ── 컨셉·설정 ─────────────────────────────────────────────────────────
 def _concept_files():
     """{id: 경로} — 동봉본 위에 서버에서 받은 것을 덮는다(서버가 최신)."""
