@@ -171,9 +171,29 @@ def choose_bgm(settings, seed):
         return None
     if want == "auto":
         import random
-        return os.path.join(d, random.Random(seed or "").choice(have)), 0.0
-    f = want + ".mp3"
-    return (os.path.join(d, f), 0.0) if f in have else None
+        f = random.Random(seed or "").choice(have)
+    else:
+        f = want + ".mp3"
+        if f not in have:
+            return None
+    return _looped(os.path.join(d, f)), 0.0
+
+
+BGM_MIN_SEC = 240   # 엔진은 영상을 배경음 길이에서 끊는다 — 팩 곡은 17~60초라 반복해 늘려 넘긴다
+                    # (실측 2026-10-15: 17초 곡을 골라 63초 영상이 17.4초로 잘렸다)
+
+
+def _looped(src):
+    out = os.path.join(PACKS, "bgm_loop", os.path.splitext(os.path.basename(src))[0] + f"_{BGM_MIN_SEC}s.wav")
+    if os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(src):
+        return out
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", src, "-t", str(BGM_MIN_SEC),
+                        "-ar", "48000", "-ac", "2", out + ".tmp.wav"], capture_output=True, text=True, timeout=300)
+    if r.returncode or not os.path.exists(out + ".tmp.wav"):
+        raise RuntimeError(f"배경음 늘리기 실패: {r.stderr[-200:]}")
+    os.replace(out + ".tmp.wav", out)
+    return out
 
 
 def resolve_settings(concept, mine=None):
@@ -326,14 +346,22 @@ def submit_script(job_id, text):
     _spawn(job_id)
 
 
+def reset_to(job_id, step):
+    """이 단계부터 다시. ★엔진 단계표는 채널마다 다르다 — 채널을 먼저 고르지 않으면 기본(뇌전구) 표로
+    되돌려 다음 단계 계산이 깨진다(실측 2026-10-15: 'frames' is not in list)."""
+    pipeline, _, registry = _engine()
+    job = _rj(os.path.join(_wd(job_id), "studio_job.json"))
+    registry.use(load_concept(job["concept"])["engine"]["channel"])
+    pipeline.reset_to(_wd(job_id), step)
+
+
 def confirm_script(job_id, ok=True, note=""):
     st = status(job_id)
     if st.get("state") != "confirm_script":
         raise ValueError(f"대본 확인 단계가 아니다(지금: {st.get('state')})")
     if not ok:
         # 다시 쓰기: 대본 단계부터 되돌리고 메모를 손님 AI 요청에 붙인다
-        pipeline, _, _ = _engine()
-        pipeline.reset_to(_wd(job_id), "script")
+        reset_to(job_id, "script")
         _wj(os.path.join(_wd(job_id), "host_answers.json"), {})
         _set(job_id, state="queued", confirmed=False, rewrite_note=note)
     else:

@@ -27,7 +27,9 @@ mcp = MCPServer(
         "(웹 스튜디오 설정 받기·시작·대본 요청까지 한 번에). "
         "need_script 면 prompt 지시대로 **요청한 JSON만** 써서 studio_submit_script 로 넣는다(사실은 prompt 안 자료에서만). "
         "반려가 오면 지적된 곳만 고쳐 다시 넣는다. confirm_script 면 대본을 고객에게 보여 주고 확인을 받아 studio_confirm. "
-        "running 이면 고객에게 진행 중이라고 말하고 고객이 물을 때 studio_status 로 본다(짧은 간격으로 반복 호출하지 마라). "
+        "running 이면 '10~20분 걸린다, 다 되면 물어봐 달라'고 말하고 끝낸다. 고객이 물을 때만 studio_status 로 본다. "
+        "★예약 작업·알림·스케줄을 만들지 마라(만들 때마다 고객에게 허용 창이 뜬다). 짧은 간격으로 반복 호출하지 마라. "
+        "alive 가 true 면 멈춘 게 아니다 — studio_resume 을 부르지 마라. "
         "done 이면 final 경로, failed 면 이유를 그대로 전한다. 앱을 껐다 켜서 멈췄으면 studio_resume."),
 )
 
