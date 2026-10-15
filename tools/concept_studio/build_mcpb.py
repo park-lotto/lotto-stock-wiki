@@ -111,6 +111,7 @@ def build():
                                  "description": "목소리가 들어가는 컨셉에서만 쓴다"}},
         "tools": [{"name": n, "description": d} for n, d in [
             ("studio_make", "한 번에: 설정·팩 받기 → 시작 → 대본 요청까지"),
+            ("studio_wait", "완성까지 기다리기(50초씩)"),
             ("studio_sync", "웹 스튜디오의 컨셉·내 설정·팩 받기"), ("studio_concepts", "컨셉 목록"),
             ("studio_start", "작업 시작"), ("studio_status", "작업 상태"), ("studio_submit_script", "대본 넣기"),
             ("studio_confirm", "대본 확인"), ("studio_resume", "멈춘 작업 이어 돌리기"), ("studio_result", "완성 영상과 검수 시트")]],
