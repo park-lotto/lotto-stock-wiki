@@ -6684,6 +6684,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
         # 3단계 장면 보충 팝업(관제 209) — 스위치 scene_find_enabled(비면 관리자만)
         "scene_find_enabled": _scene_find_on(_cid(request) if request is not None else 0),
+        # 관제 204(2026-10-16 사장님 "관리자만 켜고"): 위 주황 박스 끝을 끌 때 그림은 제자리, 박스만 움직인다(아래 필름 박스와 같은 손맛)
+        "box_frames_fixed": bool(_is_admin(_cid(request) if request is not None else 0)),
         # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
         "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         "scene_lab_at": scene_lab_at,
