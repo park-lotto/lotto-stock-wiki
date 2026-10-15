@@ -2636,6 +2636,8 @@ function replaceRoll(sid, vid, r){
     return;
   }
   const id = _makeFilmSeg(vid, a, b);
+  // ★되돌리기용 — 처음 손대기 전 칸 재료를 한 번만 기억한다(2026-10-15 실측: 짧게 잡고 되돌리면 짧은 장면이 남아 4배 슬로모션)
+  if (DATA.hand_cut) where.forEach(i => { const o = (window.HAND_ORIG = window.HAND_ORIG || {}); if (!o[i]) o[i] = { list: (lists[i] || []).slice(), fix: Object.fromEntries(Object.entries(FIXLEN).filter(([k]) => (lists[i] || []).some(x => k === fixKey(i, x)))) }; });
   // ★같은 구간으로 교체 = 아무 일도 안 한다(2026-10-15 실측: 박스를 안 움직이고 교체를 누르면 아래 '이미 있으면 자리 비우기'가 카드를 지웠다)
   if (id === sid){ closeRoll(); nsay('같은 구간이에요 — 박스를 옮기거나 늘려 주세요'); return; }
   let n = 0;
@@ -2935,7 +2937,18 @@ function handBarHtml(i){
     <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
 }
 function handUndoAll(i){
-  (lists[i] || []).forEach(sid => { delete FIXLEN[fixKey(i, sid)]; });
+  const o = (window.HAND_ORIG || {})[i];
+  const was = {};
+  (lists[i] || []).forEach(sid => { const k = fixKey(i, sid); if (k in FIXLEN) was[k] = FIXLEN[k]; delete FIXLEN[k]; });
+  if (o){                                   // 바꾸기 전 장면으로 돌린다
+    lists[i] = o.list.slice(); o.list.forEach(x => chosen.add(x)); Object.assign(FIXLEN, o.fix);
+    delete window.HAND_ORIG[i];
+  } else {                                  // 기억이 없으면(새로고침 뒤): 풀면 1.2배 넘게 느려지는 카드는 잡은 길이를 지킨다 — 슬로모션 금지
+    planClips(lists[i] || [], beatDur(i), STRETCH[i], i).forEach(c => {
+      const k = fixKey(i, c.seg_id);
+      if ((k in was) && (+(c.src_dur || c.dur)) / c.dur < 1 / 1.2) FIXLEN[k] = was[k];
+    });
+  }
   delete FILLMODE[i];
   render();
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }

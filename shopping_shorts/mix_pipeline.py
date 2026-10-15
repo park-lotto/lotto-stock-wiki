@@ -3423,6 +3423,22 @@ def _hold_beat(i, beat):
     return (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
 
 
+def _caption_groups(narr, secs, min_sec=1.2):
+    """처음 카드 수용 자막 묶음 수 — 줄 길이를 글자 수로 어림(음성 전이라)하고 1.2초 미만 줄은 옆 줄과 묶는다."""
+    from shopping_shorts.video_assemble import simple_caption_split
+    lines = simple_caption_split(narr, _CAPTION_MAX_CHARS_DEFAULT) if narr else []
+    chars = [len(str(x).replace(" ", "")) for x in lines]
+    tot = sum(chars)
+    if not tot or secs <= 0:
+        return 1
+    n, acc = 0, 0.0
+    for c in chars:
+        acc += secs * c / tot
+        if acc >= min_sec:
+            n, acc = n + 1, 0.0
+    return max(1, n)
+
+
 def _trim_for_cut_rhythm(plan):
     """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
     n = 0
@@ -3452,6 +3468,8 @@ def _trim_for_cut_rhythm(plan):
         #   종전 round(secs/2.5)는 3.7초 줄까지 1컷이라, 2단계가 준 장면을 깎아 같은 장면이 조각나고(구절 맞춤) 모자라 멈췄다
         #   (실측 24시간: 2.5초↑ 칸 35%가 한 장면, 멈춤 18%). 2.5초까지 1 · 5초까지 2 · 7.5초까지 3 · 최대 4.
         want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(math.ceil(secs / 2.5 - 1e-6)))))
+        if not hold:   # ★자막 묶음 수보다 적게 놓지 않는다(2026-10-15 사장님 "다해" — 10번 1안). 홀드는 그대로 1장
+            want = max(want, min(4, _caption_groups(narr, secs)))
         from shopping_shorts.ai_match import is_pinned as _is_pinned
         if _is_pinned(b):   # 스토리보드에서 사람이 고른 장면은 깎지 않는다(관제 120)
             want = 1 + len(alts)
