@@ -1353,6 +1353,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 <script src="/meme_pack.js"></script>
 <script src="/scene_timeline.js"></script>
 <script src="/filmroll.js"></script>
+<script src="/scene_find.js"></script>
 <script>
 // ★확정본 탭(2026-08-22 사장님 "미리보기 재생했던 곳에서 하라니까").
 //   확정 결과가 부모(제작소) 좌측에 또 다른 9:16 칸으로 열리던 것을 이 자리로 가져왔다.
@@ -3792,6 +3793,7 @@ function renderBand(){
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             ${sfxControl(i)}
             ${aiSceneControl(i)}
+            ${typeof sceneFindControl === "function" ? sceneFindControl(i) : ""}
             ${memeControl(i)}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
             <button id="fill-${i}" title="${AUTOADD[i] ? '방금 담은 장면만 도로 뺍니다'

@@ -6642,6 +6642,21 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         _b = (_s or {}).get("source_brief") or {}
         if _v and _b:
             src_brief[_v] = _b
+    # ★장면 보충으로 담은 영상(관제 209) — 조각이 없으면 아래 영상 소스 목록에 안 뜬다. 영상 통째 조각 하나와
+    #   머리글(담은 영상 · 사이트)을 붙인다. 자동 채우기는 안 집는다(_auto_ok 밖) — 사람이 필름에서 고른다.
+    for _v, _p in mix_pipeline.extra_source_paths(work).items():
+        _d = src_duration.get(_v) or 0
+        if _d <= 0:
+            continue
+        try:
+            _sj = json.loads((Path(_p).parent / "source.json").read_text("utf-8"))
+        except Exception:      # noqa: BLE001 — 표식이 없어도 영상은 보인다
+            _sj = {}
+        src_brief.setdefault(_v, {"product": "담은 영상" + (" · " + _sj["platform"] if _sj.get("platform") else ""),
+                                  "role": str(_sj.get("title") or "")[:40]})
+        _sid = "film_%s_0.00_%.2f" % (_v, _d)
+        seg_map.setdefault(_sid, {"video_id": _v, "seg_id": _sid, "start": 0.0, "end": _d,
+                                  "scene_desc": str(_sj.get("title") or ""), "label": "영상 통째", "shot_role": "기타"})
     caps, tts_dur = _lab_captions(plan, job.get("deco"))
     # 편성이 서버에 얹힌 시각 — 기존 응답 계약과 이력 표시용. 충돌 판정은 아래 내용 지문이 한다.
     scene_lab_at = (plan.get("scene_lab") or {}).get("at")
@@ -6667,6 +6682,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # AI 장면 만들기 버튼(2026-09-23) — 3단계 카드는 실험실(iframe)이 그리므로 스위치를 여기로도 내린다.
         #   (produce.html 카드에만 넣었더니 사장님 화면엔 안 보였다 — 실측 14:32)
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
+        # 3단계 장면 보충 팝업(관제 209) — 스위치 scene_find_enabled(비면 관리자만)
+        "scene_find_enabled": _scene_find_on(_cid(request) if request is not None else 0),
         # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
         "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         "scene_lab_at": scene_lab_at,
@@ -6712,6 +6729,19 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "scene_stop": 1 if plan.get("scene_stop") else 0,   # 관제 150 — 표식 있는 새 작업만 이어 틀기를 장면 전환 앞에서 멈춘다
         "hand_cut": 1 if plan.get("hand_cut") else 0,       # 관제 204 — 표식 있는 새 작업만 손 길이·빈칸 메우기
     }}
+
+
+def _scene_find_on(customer_id):
+    """3단계 '장면 보충' 팝업 스위치(관제 209) — 비어 있으면 관리자만(AI 장면과 같은 규약).
+    ★api_mix_scene_lab_data 바로 뒤(다음 @app. 앞)에 둔다 — 영상 관문이 그 범위만 라이브 app 에 바꿔 끼운다."""
+    store = Store(DB_PATH)
+    try:
+        v = (store.get_setting("scene_find_enabled", "") or "").strip()
+    except Exception:      # noqa: BLE001
+        v = ""
+    if not v:
+        return bool(_is_admin(customer_id))
+    return bool(_setting_gate(store, "scene_find_enabled", customer_id))
 
 
 @app.get("/api/mix/scene_lab/{job_id}/phash")
@@ -6864,6 +6894,142 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     if not src or not Path(src).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     return _range_mp4_response(src, request)
+
+
+_EXTRA_SRC_LOCK = threading.Lock()
+
+
+def _job_owned(request, job_id) -> bool:
+    """장면 보충 API(관제 209) 문지기 — 자기 작업이거나 관리자일 때만. 남의 job 에 영상을 넣거나 목록을 못 본다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return False
+    cid = _cid(request)
+    return int(job.get("customer_id") or 0) == _as_cid(cid) or bool(_is_admin(cid))
+
+
+def _add_extra_source(job_id: str, url: str, meta: dict = None):
+    """장면 보충(관제 209) 영상 1개를 이 job 원본에 더하는 **주인 함수** → (HTTP 상태, 응답 dict).
+    부르는 곳: 3단계 [담기](add_source) · 사이트 📥 담기(/api/grab, 담기 목적지가 이 job 일 때).
+    저장 자리는 work/x{n}/ — job["urls"]는 건드리지 않는다(바뀌면 2단계가 유료 재매칭을 돌린다).
+    원본 표는 mix_pipeline.extra_source_paths 한 곳이 읽는다. 같은 주소는 다시 받지 않는다(받는 중 포함)."""
+    meta = meta or {}
+    url = str(url or "").strip()
+    if not re.match(r"^https?://", url):
+        return 422, {"ok": False, "error": "영상 주소가 필요해요"}
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return 404, {"ok": False, "error": "편집안 없음"}
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return 409, {"ok": False, "error": "생성·렌더 중에는 더할 수 없어요"}
+    work = _MIX_WORK_DIR / job_id
+    with _EXTRA_SRC_LOCK:                           # 번호 정하기·같은 주소 찾기는 한 번에 하나(사이트 담기가 겹쳐 온다)
+        dirs = [p for p in (work.iterdir() if work.exists() else []) if p.is_dir() and _edit_plan.EXTRA_SRC_RE.match(p.name)]
+        for d0 in dirs:
+            try:
+                sj = json.loads((d0 / "source.json").read_text("utf-8"))
+            except Exception:      # noqa: BLE001 — 표식이 없으면 비교하지 않는다
+                continue
+            if sj.get("url") == url:
+                mp4 = next(d0.glob("*.mp4"), None)
+                if mp4 is None:
+                    return 200, {"ok": True, "video_id": d0.name, "pending": True, "reused": True}
+                return 200, {"ok": True, "video_id": d0.name, "reused": True,
+                             "duration": round(video_assemble._probe_duration(str(mp4)) or 0, 2)}
+        n = 1 + max([int(p.name[1:]) for p in dirs] + [0])
+        d = work / f"x{n}"
+        d.mkdir(parents=True, exist_ok=True)
+        info = {"url": url, "thumbnail": meta.get("thumbnail") or "", "platform": meta.get("platform") or "",
+                "title": str(meta.get("title") or "")[:120], "via": meta.get("via") or "",
+                "at": datetime.now(timezone.utc).isoformat()}
+        (d / "source.json").write_text(json.dumps(info, ensure_ascii=False), "utf-8")   # 받기 전에 — 겹친 담기가 같은 주소를 또 받지 않게
+    try:
+        path, _cap = download_any(url, str(d))
+    except Exception as e:      # noqa: BLE001
+        shutil.rmtree(d, ignore_errors=True)
+        print("[장면보충] 받기 실패 job=%s url=%s: %r" % (job_id, url[:120], e), file=sys.stderr)
+        return 502, {"ok": False, "error": f"영상을 받지 못했어요: {str(e)[:200]}"}
+    if not path or not Path(path).exists() or not str(path).endswith(".mp4"):
+        shutil.rmtree(d, ignore_errors=True)
+        return 502, {"ok": False, "error": "영상 파일을 찾지 못했어요(사진 게시물일 수 있어요)"}
+    dur = video_assemble._probe_duration(path) or 0
+    return 200, {"ok": True, "video_id": f"x{n}", "duration": round(dur, 2)}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/add_source")
+def api_mix_scene_lab_add_source(job_id: str, request: Request, body: dict):
+    """3단계 장면 찾기의 [담기] — 판단은 _add_extra_source 한 곳."""
+    if not _scene_find_on(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "장면 보충은 아직 관리자만 쓸 수 있어요"})
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    code, res = _add_extra_source(job_id, (body or {}).get("url"), dict(body or {}, via="scene_find"))
+    return res if code == 200 else JSONResponse(status_code=code, content=res)
+
+
+@app.get("/api/mix/scene_lab/{job_id}/extra_sources")
+def api_mix_scene_lab_extra_sources(job_id: str, request: Request):
+    """장면 보충으로 더한 영상 목록 {video_id: {duration, url, title, thumbnail, platform, pending}} — 3단계가 몇 초마다 본다."""
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    work = _MIX_WORK_DIR / job_id
+    out = {}
+    for d in sorted((work.iterdir() if work.exists() else []), key=lambda p: p.name):
+        m = _edit_plan.EXTRA_SRC_RE.match(d.name)
+        if not m or not d.is_dir():
+            continue
+        try:
+            sj = json.loads((d / "source.json").read_text("utf-8"))
+        except Exception:      # noqa: BLE001
+            sj = {}
+        mp4 = next(d.glob("*.mp4"), None)
+        out[d.name] = {"n": int(m.group(1)), "url": sj.get("url") or "", "title": sj.get("title") or "",
+                       "thumbnail": sj.get("thumbnail") or "", "platform": sj.get("platform") or "",
+                       "pending": mp4 is None,
+                       "duration": round(video_assemble._probe_duration(str(mp4)) or 0, 2) if mp4 else 0}
+    return {"ok": True, "sources": out, "grab_target": _grab_target_job(_cid(request)) == job_id}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/yt_search")
+def api_mix_scene_lab_yt_search(job_id: str, request: Request, body: dict):
+    """장면 찾기 팝업의 썸네일 목록 — **유튜브만**(무료 쿼터, 관제 209 사장님 "유튜브만 완전 무료이니 유튜브만").
+    유료 검색(틱톡 Apify 등)은 부르지 않고 포인트도 안 깎는다. 검색 함수는 렌즈와 같은 kw_backends.youtube."""
+    if not _scene_find_on(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "장면 보충은 아직 관리자만 쓸 수 있어요"})
+    kw = str((body or {}).get("keyword") or "").strip()[:80]
+    if not kw:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "검색어가 필요해요"})
+    from shopping_shorts import kw_backends
+    items = kw_backends.youtube(kw, 12)
+    return {"ok": True, "keyword": kw, "items": items}
+
+
+_GRAB_TARGET_MIN = 60          # 사이트 📥 담기가 이 job 으로 들어오는 시간(분) — 3단계에서 '6곳 열기'를 누를 때마다 다시 잰다
+
+
+def _grab_target_job(cid):
+    """이 고객의 담기 목적지 job(시간 안이면) 또는 None — 판단 한 곳(/api/grab · 3단계가 같이 본다)."""
+    try:
+        v = json.loads(Store(DB_PATH).get_setting("grab_target:%s" % _as_cid(cid), "") or "{}")
+    except Exception:      # noqa: BLE001
+        return None
+    if not v.get("job") or float(v.get("until") or 0) < time.time():
+        return None
+    return v["job"]
+
+
+@app.post("/api/mix/scene_lab/{job_id}/grab_target")
+def api_mix_scene_lab_grab_target(job_id: str, request: Request, body: dict):
+    """3단계 장면 찾기에서 '6곳 열기'를 누르면 켠다 — 그동안 사이트에서 📥 담기를 누른 영상이 이 job 의 영상 소스로도 들어온다."""
+    cid = _cid(request)
+    if not _scene_find_on(cid):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "장면 보충은 아직 관리자만 쓸 수 있어요"})
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    on = bool((body or {}).get("on", True))
+    Store(DB_PATH).set_setting("grab_target:%s" % _as_cid(cid),
+                               json.dumps({"job": job_id, "until": time.time() + _GRAB_TARGET_MIN * 60}) if on else "")
+    return {"ok": True, "on": on, "minutes": _GRAB_TARGET_MIN if on else 0}
 
 
 # ── 전체재생용 저화질 합본(2026-09-14 사장님 "음성은 나오는데 화면이 끊겨 보인다") ──────
@@ -16773,6 +16939,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "clean_base_enabled",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
                        "ai_scene_enabled",
+                       # 3단계 장면 보충 팝업(관제 209) — ""=관리자만 · "11,42" · "1" 전체
+                       "scene_find_enabled",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
@@ -19039,6 +19207,28 @@ def _grab_platform(url):
     return ""
 
 
+def _grab_platform_of(url):
+    for k in ("youtube", "tiktok", "instagram", "douyin", "xiaohongshu", "pinterest", "threads"):
+        if k in (url or "") or (k == "youtube" and "youtu.be" in (url or "")) or (k == "xiaohongshu" and "rednote" in (url or "")):
+            return k
+    return ""
+
+
+def _grab_choice_html(request, job_id):
+    """📥 담기 창의 갈림길(관제 209) — ⭐ 영상 즐겨찾기 / 🎬 3단계 작업(지금 장면 찾기를 연 작업). 같은 주소에 dest 만 붙인다."""
+    from urllib.parse import urlencode
+    q = dict(request.query_params)
+    q.pop("dest", None)
+    b = "/api/grab?" + urlencode(dict(q, dest="basket"))
+    j = "/api/grab?" + urlencode(dict(q, dest="job"))
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>담기</title>
+<body style="margin:0;font-family:system-ui,sans-serif;background:#111;color:#eee;text-align:center;padding:18px 14px">
+<div style="font-size:15px;font-weight:700;margin-bottom:12px">어디에 담을까요?</div>
+<a href="{j}" style="display:block;padding:12px;border-radius:10px;background:#1d4f3c;color:#d1fae5;font-weight:800;text-decoration:none;font-size:15px;margin-bottom:8px">🎬 3단계 작업에 담기</a>
+<a href="{b}" style="display:block;padding:10px;border-radius:10px;border:1px solid #444;color:#ddd;text-decoration:none;font-size:14px">⭐ 영상 즐겨찾기에 담기</a>
+<div style="font-size:11px;color:#888;margin-top:8px">작업 {job_id[:6]} · 장면 찾기를 연 뒤 1시간</div></body>""")
+
+
 def _grab_popup_html(ok, msg, sub=""):
     """팝업창에 뜨는 결과 화면 — 성공 시 잠깐 뒤 자동으로 닫힌다."""
     icon = "✅" if ok else "⚠️"
@@ -19146,7 +19336,7 @@ def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks
 
 @app.get("/api/grab", include_in_schema=False)
 def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = "", dest: str = ""):
     """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
     미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
     백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환). 판단은 _grab_video."""
@@ -19154,6 +19344,17 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     if cid is None:
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    # ★3단계에서 장면 찾기를 열어 둔 동안(담기 목적지, 관제 209)이면 📥 창에 **버튼 두 개**를 띄운다 —
+    #   같은 📥가 몰래 작업에도 넣으면 헷갈린다(사장님 "담기 버튼을 하나 더 만들어야 안 헷갈리지").
+    _tj = _grab_target_job(cid) if _scene_find_on(cid) else None
+    if _tj and dest not in ("basket", "job"):
+        return _grab_choice_html(request, _tj)
+    if _tj and dest == "job":
+        if not re.match(r"^https?://", url or ""):
+            return _grab_popup_html(False, "담을 수 없는 링크예요", "영상 페이지에서 눌러주세요")
+        background_tasks.add_task(_add_extra_source, _tj, url, {"thumbnail": thumbnail, "title": title,
+                                                                "platform": _grab_platform_of(url), "via": "grab"})
+        return _grab_popup_html(True, "3단계 영상 소스로 담는 중이에요!", "편집 화면 아래 영상 소스에 곧 나타나요(10~40초)")
     r = _grab_video(cid, url, thumbnail, title, video_url, background_tasks)
     st = r["status"]
     if st == "pending":

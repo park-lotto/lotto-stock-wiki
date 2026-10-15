@@ -76,7 +76,9 @@ def _video_lock_path():
 #   몰리면 한 판씩 전속력(-n 8 376초)으로 — 둘이 반씩(-n 4 각 727초)보다 먼저 끝난다(카드 081 실측).
 GATE_WORKER_TOKENS = 8           # 동시에 도는 시험 프로세스 합계 상한(16코어의 절반)
 GATE_WORKER_MB = 550             # 시험 프로세스 1개 메모리(실측: -n 8 한 판 4,027~4,501MB / 13~14개)
-GATE_RESERVE_MB = 2500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+GATE_RESERVE_MB = 4500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+#   ★2500→4500(관제 212, 2026-10-15): 일꾼을 띄운 뒤 남는 양이 2.5GB 까지 떨어져 Claude Code 가 '메모리 위험'으로
+#   다른 세션의 백그라운드 작업(대기·로컬 서버)을 강제로 껐다(하루 6번 실측). 일꾼 8개는 남은 메모리 8.9GB 이상일 때만.
 GATE_MIN_WORKERS = 2
 
 
@@ -207,14 +209,15 @@ def _wait_for_urgent(max_s=None):
 
 
 @contextlib.contextmanager
-def _gate_slot(urgent=False):
+def _gate_slot(urgent=False, priority=False):
     """시험 프로세스 표를 잡는다 → 쓸 병렬 수(n)를 돌려준다(GATE_XDIST_N 으로 merge_gate 에 넘긴다).
     표가 모자라거나 메모리가 모자라면 기다린다. 프로세스가 죽으면 커널이 표를 놓는다(파일락)."""
     import msvcrt
     base = _finish_lock_path()
     held = []
     qdir = base.parent / (base.stem + "_slotq")
-    ticket = _new_ticket_file(qdir, urgent=urgent, tag=id(held))      # 줄 앞 번호표만 표를 잡는다(관제 157)
+    # 줄 앞 번호표만 표를 잡는다(관제 157). priority = 이미 시험을 통과하고 끼어듦 때문에 다시 도는 병합 → 같은 등급 맨 앞(관제 212)
+    ticket = _new_ticket_file(qdir, urgent=urgent, priority=priority, tag=id(held))
     try:
         _gate_slot_wait(base, held, ticket, qdir)
     finally:
@@ -867,9 +870,12 @@ def _select_related_tests(changed, test_texts, limit=60):
     """바뀐 코드 파일과 관련된 시험 파일 — 시험 파일 자체가 바뀌었거나, 본문이 그 모듈 이름을 부르는 것. 많으면(>limit) 빈 목록."""
     stems = set()
     picked = []
+    names = set()
     for c in changed:
         c = c.replace("\\", "/")
         if not c.endswith(".py"):
+            if c.startswith(("shopping_shorts/", "tools/")):
+                names.add(Path(c).name)          # 화면 js·html — 그 파일 이름을 읽는 시험(관제 212)
             continue
         if c in test_texts:
             picked.append(c)
@@ -880,6 +886,10 @@ def _select_related_tests(changed, test_texts, limit=60):
         pat = re.compile(r"\b(%s)\b" % "|".join(re.escape(x) for x in sorted(stems)))
         for t, txt in sorted(test_texts.items()):
             if t not in picked and pat.search(txt):
+                picked.append(t)
+    for n in sorted(names):
+        for t, txt in sorted(test_texts.items()):
+            if t not in picked and n in txt:
                 picked.append(t)
     picked = sorted(set(picked))
     return [] if len(picked) > limit else picked
@@ -942,6 +952,10 @@ def _finish_detached(name, urgent=False):
     """finish 를 **분리된 프로세스**로 띄우고 로그를 따라 읽는다(카드 081). 이 창(또는 Claude 백그라운드 명령)이 시간 제한으로
     꺼져도 병합은 끝까지 간다 — 10-02 실측: 2시간 줄 서다 Claude 제한에 꺼진 finish. 결과는 로그·rc 파일에 남는다."""
     import subprocess
+    probe = _track_finish_lock(name)
+    if probe is None:
+        raise _track_finish_busy_error(name)
+    probe.close()
     logs = tracks_dir(BASE) / "_finish_logs"
     logs.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -971,7 +985,42 @@ def _finish_detached(name, urgent=False):
         time.sleep(2)
 
 
+def _track_finish_lock(name, repo=BASE):
+    """같은 트랙 finish 는 하나만(관제 212). 잡으면 파일 핸들, 이미 누가 쥐었으면 None. 프로세스가 죽으면 커널이 놓는다.
+    왜: 같은 트랙 둘은 병합 폴더 _merge-<트랙> 을 같이 써 서로 지우고(10-15 실측: 둘째가 'not a git repository'로 죽음)
+    시험 자원도 이중으로 쥔다."""
+    p = tracks_dir(repo) / ("_finish_running_%s.lock" % name)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fh = open(p, "a+")
+    try:
+        if os.name == "nt":
+            import msvcrt
+            msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh.close()
+        return None
+    return fh
+
+
+def _track_finish_busy_error(name):
+    return TrackError(f"트랙 '{name}' 의 finish 가 이미 돌고 있다 — 두 번 걸지 마라(병합 폴더를 서로 지운다).\n"
+                      f"  진행 확인: .tracks/_finish_logs/{name}_*.log (가장 최근)")
+
+
 def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None, urgent=False):
+    held = _track_finish_lock(name, repo)
+    if held is None:
+        raise _track_finish_busy_error(name)
+    try:
+        return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
+    finally:
+        held.close()
+
+
+def _finish_locked(name, repo, gate, attempts, video_gate, urgent):
     """★다 된 것만 줄 선다(2026-10-03 카드 088): 병합·시험·관제·영상 관문은 줄(전역 락) 밖에서,
     줄 안에선 커밋·push 만(몇 초). 그사이 main 에 코드가 들어왔으면 줄에서 빠져 밖에서 다시 잰다."""
     merge_gate.make_output_safe()
@@ -1038,10 +1087,18 @@ def _retry_test_subset(stage, prev_base, my_changed, *, half=0.2):
             texts[p.relative_to(stage).as_posix()] = p.read_text(encoding="utf-8", errors="replace")
         except OSError:
             pass
-    want = [x for x in set(inter_code) | {c for c in my_changed if not _is_non_code(c)}]
+    mine = {c for c in my_changed if not _is_non_code(c)}
+    if set(inter_code) & mine:
+        want = sorted(set(inter_code) | mine)          # 같은 파일을 둘 다 고쳤다 — 맞물림까지(종전)
+    else:
+        # ★내 변경과 파일이 안 겹치면 끼어든 코드 관련 시험만(관제 212, 2026-10-15). 내 변경은 앞 시도에서 통과했고
+        #   끼어든 커밋도 제 관문을 통과했다. 종전엔 내 app.py 까지 넣어 거의 모든 시험이 걸려 → 매번 전체(재시험 83회·약 700분).
+        want = sorted(inter_code)
     sel = _select_related_tests(want, texts, limit=max(1, int(len(texts) * half)))
     if not sel and any(x.endswith(".py") for x in want):
         return None                         # 너무 많아 빈 목록(또는 못 고름) — 전체로
+    if not sel and not (set(inter_code) & mine):
+        return []                           # 안 겹치는 비파이썬 코드(화면 js·html)이고 그걸 읽는 시험도 없다 — 시험 생략
     return sel or None
 
 
@@ -1095,7 +1152,8 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
             after = dict(before)
             ran_full = False
         else:
-            with (_gate_slot(urgent=urgent) if push_lock is not None else contextlib.nullcontext()):
+            with (_gate_slot(urgent=urgent, priority=bool(prev_base)) if push_lock is not None
+                  else contextlib.nullcontext()):
                 if sub:
                     print("재시도: 끼어든 코드·내 변경 관련 시험 %d개 파일만 다시(앞 시도 통과 · 줄 밖)..." % len(sub))
                     try:

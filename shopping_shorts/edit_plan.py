@@ -2007,9 +2007,18 @@ def film_seg_from_id(seg_id, extract):
         if v:
             known.setdefault(_wash(v), str(v))
     real = known.get(vid)
+    if real is None and EXTRA_SRC_RE.match(vid):
+        # ★3단계 '장면 보충'으로 더한 영상 x1·x2…(관제 209) — extract 에 없어도 이 표에서 풀려야 한다.
+        #   안 풀리면 썸네일 검은 칸 + 화면 컷·완성본에서 그 조각이 빠진다(10-15 라이브 실측 job ed7c92abb6b4).
+        #   경로 안전: id 는 숫자만 허용하고, 파일은 하류(_resolve_sources 표)에서만 찾는다.
+        real = vid
     if real is None:
         return None
     return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+# 3단계 '장면 보충' 영상 id(work/x{n}/) — 판정은 이 한 곳(mix_pipeline.extra_source_paths 도 이것을 쓴다)
+EXTRA_SRC_RE = re.compile(r"^x(\d+)$")
 
 
 def scene_table(extract, plan, *, seg_map=None, film=True):
