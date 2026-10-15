@@ -183,3 +183,23 @@ def test_schema_keeps_word_spacing():
                                               "letter_spacing": -7.4, "word_spacing": 6.8}]}
     cap = next(l for l in schema.validate(f)["layers"] if l.get("role") == "caption")
     assert cap["word_spacing"] == 6.8 and cap["letter_spacing"] == -7.4
+
+
+def test_short_centered_captions_inside_window():
+    """답 아는 합성: 짧은 자막 3개(가운데 정렬) — 창 안 자막이라 잰 상자·잰 폭이 영상 내용까지 잡혀 흐리다(mY 10-16).
+    정렬 = 가운데(중심 중앙값 ±20), 자간·낱말 간격 = 0(잰 폭이 글 길이를 안 따른다)."""
+    from tools.calcopy.engine import to_frame as T
+    W = 1080
+    boxes = [(7, 742), (192, 917), (238, 843)]                     # mY 실측 상자 — 각자 중심 374·554·540
+    assert T.align_of(boxes, W)["align"] == "center"
+    assert T.align_of([(100, 906), (288, 797), (296, 730)], W)["align"] == "center"   # 끝이 안 모이면 가운데
+    assert T.align_of([(60, 700), (61, 400), (62, 900)], W)["align"] == "left"        # 왼쪽 끝이 모이면 왼쪽
+    items = [{"text": ["하키 경기 중"], "widths": [738], "lines": 1},
+             {"text": ["퍽을 기다리고 있었죠"], "widths": [673], "lines": 1},
+             {"text": ["한 여성이"], "widths": [687], "lines": 1}]
+    notes = []
+    assert T.caption_width_ref("Pretendard", 64, items, notes) is None and "글 길이를 안 따른다" in notes[-1]
+    f = T._pil_font("Pretendard", 64)
+    good = [{"text": [t], "widths": [round(f.getlength(t) * 0.95)], "lines": 1}
+            for t in ("유리문에 원판을 대자마자", "이게 진짜 되는 거였어", "생각보다 훨씬 단단하다")]
+    assert T.caption_width_ref("Pretendard", 64, good, []) is good[0]   # 잰 폭이 글 길이를 따르면 첫 자막으로 역산

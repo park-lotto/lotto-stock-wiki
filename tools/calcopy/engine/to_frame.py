@@ -36,6 +36,11 @@ BRAND_TOP = 0.06        # 화면 높이 대비 — 이 위에서 시작하는 �
 BRAND_MAX_W = 0.40      # 화면 폭 대비
 LOW_FONT = 0.5          # 글꼴 1위 점수 문턱(뜯기 unknown 과 같은 값)
 SIDE_PAD = 40           # 가운데 정렬 글자 칸 = 화면 폭 − 양쪽 40px
+ALIGN_CENTER = 20       # 자막 가운데들의 중앙값이 화면 가운데 ±이 안이면 가운데 정렬
+ALIGN_EDGE = 12         # 왼쪽/오른쪽 끝이 이만큼 안으로 모이면 그 끝 정렬(가운데는 ALIGN_SPREAD 넘게 흩어졌을 때)
+ALIGN_SPREAD = 40
+CAP_W_MIN = 400         # 자간·낱말 간격을 역산할 자막의 최소 잰 폭(짧은 자막은 잰 폭 오차가 자간을 크게 흔든다)
+CAP_W_SPREAD = 0.15     # 잰 폭/그린 폭 비의 사분위 폭(중앙값 대비) — 넘으면 잰 폭이 글 길이를 안 따른다(못 믿음)
 LINE_RGB_DIFF = 40      # 제목 줄끼리 채움색이 이 값(채널 최대차)보다 다르면 줄마다 색(line_rgb)
 FRAMED_TOL = 30         # 틀 있음 판정: 띠 사이 빈 줄이 바탕색 ±30 안
 
@@ -521,9 +526,9 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         ink_h = fxs.get("line_h_px") or st.median(g["line_h"] for g in cap.get("glyph") or [{"line_h": 0}])
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
-        it0 = next((i for i in items if i.get("text") and i.get("widths")), None)
+        it0 = caption_width_ref(fam, fit["size"], items, notes)
         cap_ls, cap_ws = spacing_and_word_gap(fam, fit["size"], it0["text"][0], it0["widths"][0], cap_word_gap,
-                                              [" ".join(i.get("text") or []) for i in items]) if it0 else (None, 0)
+                                              [" ".join(i.get("text") or []) for i in items]) if it0 else (0, 0)
         if cap_ws:
             notes.append(f"자막 낱말 간격 {cap_ws}px — 원본 낱말 틈 {cap_word_gap}px 에 맞춤(자간 {cap_ls}px 은 글자 사이만)")
         lines = max(int(i.get("lines") or 1) for i in items)
@@ -584,16 +589,61 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
 
 
 def align_of(cols: list[tuple[int, int]], W: int) -> dict:
-    """가로 범위들 → 정렬·x·w. 가운데(±30px)면 center, 아니면 왼쪽/오른쪽 끝이 더 고른 쪽."""
+    """가로 범위들 → 정렬·x·w. 판단 순서:
+    ① 3개 이상이고 왼쪽(오른쪽) 끝이 ALIGN_EDGE px 안으로 모이고 가운데는 흩어졌으면(> ALIGN_SPREAD) left(right)
+    ② 가운데들의 중앙값이 화면 가운데 ± ALIGN_CENTER px 면 center — 한두 개가 영상 내용까지 잡혀 넓게 재여도(창 안 자막) 가운데
+       (10-16 mY: 자막 상자 [7..742]·[192..917]·[238..843] — '모두 ±30' 규칙이 깨져 오른쪽 정렬 x917 로 냈다. 정답 가운데)
+    ③ 그 밖은 왼쪽/오른쪽 끝 중 ALIGN_EDGE 안으로 모인 쪽(둘 다면 더 고른 쪽). 어느 끝도 안 모였으면 center — 끝이 안 모인 정렬은
+       잰 상자가 흐린 것이다(10-16 1_V: 상자 끝 왼쪽 100~296·오른쪽 730~906 가 다 흩어졌는데 '덜 흩어진' 오른쪽으로 x906)."""
     if not cols:
         return {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
     centers = [(a + b) / 2 for a, b in cols]
-    if all(abs(c - W / 2) <= 30 for c in centers):
-        return {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
     lefts, rights = [a for a, _ in cols], [b for _, b in cols]
-    if max(lefts) - min(lefts) <= max(rights) - min(rights):
+    if len(cols) >= 3 and max(centers) - min(centers) > ALIGN_SPREAD:
+        if max(lefts) - min(lefts) <= ALIGN_EDGE:
+            return {"x": min(lefts), "w": W - min(lefts) - SIDE_PAD, "align": "left"}
+        if max(rights) - min(rights) <= ALIGN_EDGE:
+            return {"x": max(rights), "w": max(rights) - SIDE_PAD, "align": "right"}
+    if abs(st.median(centers) - W / 2) <= ALIGN_CENTER:
+        return {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
+    sl, sr = max(lefts) - min(lefts), max(rights) - min(rights)
+    if min(sl, sr) > ALIGN_EDGE:
+        return {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
+    if sl <= sr:
         return {"x": min(lefts), "w": W - min(lefts) - SIDE_PAD, "align": "left"}
     return {"x": max(rights), "w": max(rights) - SIDE_PAD, "align": "right"}
+
+
+def caption_width_ref(fam: str, size: float, items: list, notes: list) -> dict | None:
+    """자간 역산에 쓸 자막 하나 — 판단 한 곳. 잰 폭을 믿는 조건 둘:
+      ① 폭 CAP_W_MIN 이상(짧은 자막은 잰 폭 몇 px 오차가 자간을 크게 흔든다)
+      ② 잰 폭 / 그 글꼴로 그린 폭 의 비가 자막끼리 고르다(사분위 폭 / 중앙값 ≤ CAP_W_SPREAD, 3개 이상) — 잰 폭이 글 길이를 따르나.
+    둘 다 맞으면 그 중 원래 순서 첫 자막, 아니면 None(자간·낱말 간격 0 — 글꼴 그대로).
+    10-16 mY: 창 안 흰 자막(영상 위)이라 잰 폭이 영상 내용까지 잡혀 글 길이와 따로 놀았다('하키 경기 중' 6자 738px,
+    '퍽을 기다리고 있었죠' 11자 673px) — 이걸로 자간 +26.6·낱말 −44.2 를 냈다. 정답 0·0."""
+    font = _pil_font(fam, size)
+    rs = []
+    for it in items:
+        if not it.get("text") or not it.get("widths") or int(it.get("lines") or 1) != 1:
+            continue
+        w, txt = it["widths"][0], it["text"][0]
+        nat = font.getlength(txt)
+        if w and nat and w >= CAP_W_MIN:
+            rs.append((w / nat, it))
+    n_all = sum(1 for it in items if it.get("widths"))
+    if len(rs) < 3:
+        notes.append(f"자막 자간·낱말 간격 0 — 폭 ≥{CAP_W_MIN}px 자막 {len(rs)}/{n_all}개(3개 미만)")
+        return None
+    rs.sort(key=lambda r: r[0])
+    q = [r for r, _ in rs]
+    spread = (q[(3 * len(q)) // 4] - q[len(q) // 4]) / max(1e-6, q[len(q) // 2])
+    if spread > CAP_W_SPREAD:
+        notes.append(f"자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 {spread:.2f} > {CAP_W_SPREAD}, "
+                     f"{len(rs)}개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다")
+        return None
+    first = next(it for it in items if any(it is r[1] for r in rs))   # 원래 순서의 첫 자막(예전 판과 같은 기준 — ZdeZ 2판 값 유지)
+    notes.append(f"자막 자간은 잰 폭 고른 {len(rs)}/{n_all}개(사분위 폭 {spread:.2f}) 중 첫 자막으로 역산")
+    return first
 
 
 def refine_tail(is_framed, t0: float, t1: float, step: float = 0.1) -> float | None:
