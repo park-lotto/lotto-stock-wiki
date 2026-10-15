@@ -58,8 +58,9 @@ def _vid_of(seg_id):
 
 def _seg_index(sources):
     """seg_id -> {secs, desc, vid, ...}. 모든 소스의 컷을 한 표로."""
+    from shopping_shorts.edit_plan import auto_sources
     idx = {}
-    for s in sources:
+    for s in auto_sources(sources):    # 씨앗(2026-09-30): 영상 소스엔 있되 자동 배치 표엔 안 올린다 — 판단은 edit_plan.auto_sources
         for x in (s.get("segments") or []):
             sid = x.get("seg_id")
             if not sid:
@@ -74,7 +75,15 @@ def _seg_index(sources):
                              #   컷 번호 접두어(예 DdOayfhAnpx)로 두면 백본과 절대 안 맞아 '서브 먼저·원본 나중'이
                              #   통째로 무력이었다(2026-09-18 실측: 씨앗 s0 백본인데 원본 컷 10/29).
                              "key": bool(x.get("is_key")), "vid": s.get("video_id") or _vid_of(sid),
-                             "text": (x.get("text") or "").strip()}
+                             "text": (x.get("text") or "").strip(),
+                             # 2026-10-01 태깅 확장(카드 051): 훅 유형·뒷컷·화면 배속 힌트 — 없으면 빈칸/False/None
+                             "label": (x.get("label") or "").strip(),          # 1단계 '이 장면이 하는 일' — 같은 장면 판정(ai_match 채우기)에 쓴다
+                             "use": (x.get("use_point") or "").strip(), "kind": x.get("appeal_kind") or "", "tempo": x.get("tempo") or "",
+                             "hook": str(x.get("hook_type") or "").strip(),
+                             # ★뒷컷은 "제품이 안 보일 때"만 믿는다 — 태거가 영상 끝의 제품 컷(가방 수납·완성품)을 자꾸 뒷컷으로
+                             #   찍었다(10-01 실측 4차: 뒷컷 5개 전부 제품 컷). 훅 유형이나 특장점이 달린 컷은 제품 컷이다.
+                             "outro": bool(x.get("is_outro")) and not (x.get("hook_type") or x.get("product_benefits")),
+                             "speed": x.get("speed_hint")}
     return idx
 
 
@@ -117,7 +126,11 @@ def _source_block(s, is_backbone):
                      + (f" | 말:{say}" if say else "")
                      + (f" | 변화:{(x.get('change') or '')[:40]}" if x.get("change") else "")
                      + (f" | 특징:{ben[:80]}" if ben else "")
-                     + (f" | 용처:{(x.get('use_point') or '')[:60]}" if x.get("use_point") else ""))
+                     + (f" | 용처:{(x.get('use_point') or '')[:60]}" if x.get("use_point") else "")
+                     # 2026-10-01: 훅 유형·속도·뒷컷을 작가도 본다(사장님 "훅컷은 제품의 뚜렷한 클로즈업·줌…")
+                     + (f" | 훅:{x.get('hook_type')}({(x.get('hook_why') or '')[:12]})" if x.get("hook_type") else "")
+                     + (f" | 속도:{x.get('tempo')}/{x.get('speed_hint') or 1.0}배" if x.get("tempo") else "")
+                     + (" | 뒷컷(안 씀)" if x.get("is_outro") else ""))
     return "\n".join(lines)
 
 
@@ -561,6 +574,19 @@ def seed_voice_gap(lines, cells):
     return gaps
 
 
+# ★2단계 영상 대본 작가 지침서(2026-10-02 사장님 "영상추출분석 전문가 / 영상대본작가 / 장면매칭 전문가 — 지침서가 확실하게 있어야").
+#   대본을 쓰는 프롬프트 세 곳(원문 옮기기·자유 쓰기·틀 채우기) 머리에 **이 한 상수**를 붙인다 — 1단계(script_extract._SEG_FIELD_GUIDE)·3단계(ai_match.BRIEF)와 짝.
+WRITER_BRIEF = """너는 수천 편을 쓴 **쇼핑 쇼츠 영상 대본 작가**다.
+1단계 영상 추출·분석 전문가가 영상마다 컷과 "그 컷 위에 읽힐 문장(소구점·스토리)"을 짝지어 넘겼다 — 그게 네 재료다.
+★왜 네 대본이 중요한가: 네 줄 하나하나가 그대로 화면 위에 읽히고, 3단계 장면 매칭 전문가는 **네 줄과 재료 문장이 같은 말인지**로 컷을 고른다.
+  재료에 없는 말을 지어내면 맞는 컷이 없어 화면이 어긋나고, 밋밋하게 쓰면 시청자가 넘긴다.
+그러니: ① 재료 문장의 디테일(구체 동작·부위 — 무엇을 어떻게 하면 어떻게 되는지)을 살려라 ② 주어진 틀·말투로 말맛 있게 써라
+③ 구체적인 가짜 사실(판매량·구매자 수·가격 같은 숫자, 화면에 없는 효능)만 지어내지 마라 — **품절 대란·난리·돈방석·기립박수·떼돈 같은
+  과장·소문 표현은 쇼츠 스타일이라 마음껏 써도 된다**(2026-09-18 사장님) ④ 한 줄 = 한 그림. 두 장면을 한 줄에 몰지 마라.
+⑤ 불편은 요약하지 말고 **한 순간의 장면**으로 — "짜증 나는 상황" 대신 "겨우 재워 내려놓는 순간 등이 닿자마자 눈을 번쩍 떠서 처음부터 다시 재우던".
+"""
+
+
 def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None, seed_src=None):
     """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성.
 
@@ -611,6 +637,7 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
         prod_rule = "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
         cast_part = "[상황표]\n%s\n\n" % json.dumps(cast, ensure_ascii=False)
     prompt = (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. %s\n\n규칙\n%s%s"
         "- 칸은 정확히 %d개, 순서는 원문과 똑같이. 칸을 더 만들거나 빼지 마라.\n"
         "- 칸마다 원문의 말투·어미·연결어를 그대로 살리고, 글자수도 [칸 구조]의 ±20%% 안으로.\n"
@@ -729,6 +756,7 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         lines = _no_made_up_country(lines, seg_index)
         return _fit_length(lines, target_seconds, note=note)
     prompt = (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
         f"말투: {hook_spine.get('emotion_arc') or ''} / {hook_spine.get('appeal') or ''}\n\n"
@@ -976,6 +1004,7 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
         tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
         lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀: {ex}")
     return (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         f"제품: {groups_out.get('product')}\n"
         f"대본 스타일: 「{spine.get('name')}」 — {spine.get('situation_type') or ''}\n"
         f"감정선: {spine.get('emotion_arc') or ''}\n\n"
@@ -1100,8 +1129,20 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     훅·CTA(group=-1)는 order 밖의 '휴대/외관' 류 서브 컷 → 없으면 아무 미사용 서브 컷."""
     used = set()
 
+    def _is_outro(s):
+        """1단계 태그 is_outro — CTA·마무리·인사·남의 채널 UI 컷. 어떤 줄에도 안 붙인다(사장님 2026-10-01 "뒷쪽 컷 금지")."""
+        return bool(seg_index.get(s, {}).get("outro"))
+
+    def _hook_first(sids, line_role=""):
+        """훅 줄엔 훅 유형이 달린 컷(문제 제외)을 앞세운다 — 길이 규칙은 그대로, 순서만 바꾼다."""
+        if not str(line_role or "").startswith("훅"):
+            return list(sids)
+        hk = [s for s in sids if seg_index.get(s, {}).get("hook") and seg_index[s]["hook"] != "문제"]
+        return hk + [s for s in sids if s not in hk]
+
     def _cands(sids):
-        out = [s for s in sids if s in seg_index and s not in used and seg_index[s]["secs"] >= MIN_CUT_SECS]
+        out = [s for s in sids if s in seg_index and s not in used and not _is_outro(s)
+               and seg_index[s]["secs"] >= MIN_CUT_SECS]
         sub = [s for s in out if seg_index[s]["vid"] != backbone_vid]
         org = [s for s in out if seg_index[s]["vid"] == backbone_vid]
         return sub + org      # 서브 먼저
@@ -1118,7 +1159,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
                 break
         return picked, have
 
-    all_sub = [s for s, v in seg_index.items() if v["vid"] != backbone_vid]
+    all_sub = [s for s, v in seg_index.items() if v["vid"] != backbone_vid and not v.get("outro")]
     order = groups_out.get("order") or []
     in_group = {c for g in groups_out["groups"] for c in (g.get("cuts") or [])}
     # 구조 줄(정체·떼돈·이건 바로·한계·마무리)용 후보: 어느 특징에도 안 들어간 컷 중 '제품 전체·외관'을 먼저,
@@ -1174,6 +1215,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
                 sids = [s for s in all_sub if _is_problem(s) and s not in used] + sids
         else:
             sids = _structural_pool(L.get("role"))
+        sids = _hook_first(sids, L.get("role"))
         picked, have = _fill(sids, need)
         # ★모자라면 서브에서 보충 — 짧은 컷(<MIN_CUT_SECS)을 거르고 나면 그룹 컷만으론 부족할 때가 있다
         #   (실측 1회차: 펜촉 줄 화면 2.6s < 대사 4.9s). 안 채우면 3단계 채우기가 대본 안 보고 메운다.
@@ -1186,9 +1228,21 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         if len(picked) < MIN_CUTS_PER_LINE and need > TARGET_CUT_SECS:
             more, more_have = _fill(free + all_sub, 0.0)  # 0.0 = 개수만 채운다(길이는 이미 찼다)
             picked += more; have += more_have
-        if not picked:                                   # 그래도 없으면 원본 아무 컷
+        if not picked:                                   # 그래도 없으면 원본 아무 컷(뒷컷은 _cands 가 거른다)
             picked, have = _fill(list(seg_index), need)
         beat_sources[li] = {"role": L["role"], "seg": picked[0] if picked else "", "segs": picked}
+        # 2026-10-01: 컷별 화면 배속 힌트를 **데이터로만** 싣는다. 렌더 적용은 sync_speed(음성+화면 통합) 설계와
+        #   부딪혀 사장님 결정 대기 — 여기서 재생 속도를 바꾸지 않는다.
+        _sp = {}
+        for sid in picked:
+            try:
+                _v = float(seg_index.get(sid, {}).get("speed"))
+            except (TypeError, ValueError):
+                continue
+            if abs(_v - 1.0) > 1e-6:
+                _sp[sid] = _v
+        if _sp:
+            beat_sources[li]["speed_hints"] = _sp
         report[li] = {"text": L["text"], "need": round(need, 1), "have": round(have, 1),
                       "cuts": picked, "from_sub": all(seg_index[s]["vid"] != backbone_vid for s in picked)}
     return beat_sources, report
@@ -1225,7 +1279,15 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         backbone_vid = max(vis_sources, key=lambda x: len(x.get("segments") or [])).get("video_id")
         note["backbone_moved"] = backbone_vid      # 씨앗이 백본이었으면 재료 중 하나로 옮긴다
     seg_index = _seg_index(vis_sources)
-    groups_out = build_groups(vis_sources, backbone_vid, note=note)
+    # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 비씨앗 소스 전부에 1단계 스토리가 있으면 그것이 특징 묶음이다 — AI 묶기 호출 없음,
+    #   문장(말맛)과 컷이 태깅 때 이미 짝. 하나라도 없으면 종전 build_groups(note 에 이유 — 조용한 분기 아님).
+    from shopping_shorts import story_tag as _st
+    if _st.has_stories(vis_sources):
+        groups_out = _st.groups_from_stories(vis_sources, seg_index, max_groups=MAX_GROUPS)
+        note["groups_from"] = "story"
+    else:
+        note["groups_from"] = "build_groups(스토리 없는 소스 %d)" % sum(1 for s_ in vis_sources if not (s_.get("story") or []))
+        groups_out = build_groups(vis_sources, backbone_vid, note=note)
     # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
     #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
     for wait in (4, 10):
@@ -1252,6 +1314,11 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         note["reason"] = "lines_short"
         return None, None, {"note": note, "groups": groups_out}
     beat_sources, report = assign_cuts(lines, groups_out, seg_index, backbone_vid)
+    # ★3단계 매칭 전문가(2026-10-02 사장님 "각 단계별로 전문가가 들어가는 것"): 고객 기본 경로도 이야기작가와 **같은 함수**로
+    #   대본 줄↔컷을 전문가에게 다시 맡긴다. 코드 매칭(스토리 짝 컷·훅·뒷컷 규칙)은 전문가가 실패·비운 줄의 대비다.
+    from shopping_shorts import ai_match as _am
+    beat_sources = _am.apply(lines, beat_sources, seg_index, backbone_vid, note=note, product=groups_out.get("product") or "")
+    _am.ensure_cover(beat_sources, lines, seg_index, backbone_vid, note=note)   # ★줄마다 대사를 채울 장면 보장(관제 084)
     given = "\n".join(L["text"] for L in lines)
     # 씨앗을 뼈대로 썼으면 이름도 그렇게 말한다 — 유형을 고르느라 집은 스파인 이름("히트작 발명품형…")이
     #   뜨면 그 스파인 틀로 만든 줄 안다(2026-09-21 사장님 화면 확인).

@@ -6,10 +6,10 @@
 
   ① 설정이 그대로면 도장이 같다(정상 렌더는 완성본으로 박힌다)
   ② 꾸미기(deco)가 바뀌면 도장이 달라진다 → 결과물을 버린다
-  ③ 제목·자막 스타일·편성이 바뀌어도 달라진다
-  ④ SEO·썸네일은 도장에 안 들어간다(멀쩡한 완성본을 버리지 않게)
-  ★편성(edit_plan)도 안 넣는다 — 렌더가 도는 동안 파이프라인이 스스로 편성을 고쳐 써서,
-    넣으면 정상 렌더까지 매번 버려진다(test_run_render_happy_path가 실제로 잡았다).
+  ③ 제목·자막 스타일·자막제거 스위치가 바뀌어도 달라진다
+  ④ 편성(대사·장면)이 바뀌면 도장이 달라진다 — 2026-09-27부터 편성 지문(plan_signature)이 도장에 든다
+     (렌더가 편성표를 고쳐 쓰지 않게 됐고, 도장은 TTS 보장 저장 뒤에 찍는다 — 옛 ④'편성만 바뀌면 그대로'는 뒤집혔다)
+  ⑤ SEO·썸네일 글자·완성본 경로는 도장에 안 들어간다(멀쩡한 완성본을 버리지 않게)
 """
 import sys, pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
@@ -29,10 +29,13 @@ for key, val, label in (('headcopy', {'text': '새 제목'}, '제목'),
                         ('caption_style', {'color': '#000'}, '자막 스타일'),
                         ('subtitle_removal', True, '자막제거 스위치')):
     need(_render_stamp(dict(BASE, **{key: val})) != _render_stamp(BASE), f'③ {label}이 바뀌면 도장이 달라진다')
+for val, label in (({'beats': [{'beat_idx': 0, 'narration': '나'}]}, '대사'),
+                   ({'beats': [{'beat_idx': 0, 'narration': '가',
+                                'primary': {'video_id': 's1', 'seg_id': 's1-0', 'start': 0.0, 'end': 2.0}}]}, '장면')):
+    need(_render_stamp(dict(BASE, edit_plan=val)) != _render_stamp(BASE), f'④ 편성({label})이 바뀌면 도장이 달라진다')
 for key, val, label in (('seo', {'title': '새 제목'}, 'SEO'),
                         ('thumbnail', {'pins': ['a']}, '썸네일'),
-                        ('video_path', '/y/final.mp4', '완성본 경로'),
-                        ('edit_plan', {'beats': [{'beat_idx': 0, 'narration': '나'}]}, '편성')):
-    need(_render_stamp(dict(BASE, **{key: val})) == _render_stamp(BASE), f'④ {label}만 바뀌면 도장은 그대로(멀쩡한 완성본을 안 버린다)')
+                        ('video_path', '/y/final.mp4', '완성본 경로')):
+    need(_render_stamp(dict(BASE, **{key: val})) == _render_stamp(BASE), f'⑤ {label}만 바뀌면 도장은 그대로(멀쩡한 완성본을 안 버린다)')
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
 sys.exit(1 if fails else 0)

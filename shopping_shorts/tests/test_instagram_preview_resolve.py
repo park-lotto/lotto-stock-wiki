@@ -35,10 +35,11 @@ def test_unknown_platform_still_returns_empty():
 def test_card_wires_instagram_click():
     """video_url이 비어도 인스타 카드에 재생 클릭이 붙어야 한다(그게 사라진 게 증상)."""
     html = _INDEX.read_text(encoding="utf-8")
-    assert "playInstagram(this," in html, "인스타 썸네일 클릭 배선이 없다"
+    assert "instagram:'playInstagram'" in html, "인스타 썸네일 클릭 배선이 없다"
     assert "function playInstagram" in html
     # 유튜브·틱톡 배선은 그대로 남아 있어야 한다
-    assert "playYoutube(this," in html and "playTiktok(this," in html
+    assert "youtube:'playYoutube'" in html and "tiktok:'playTiktok'" in html
+    assert "onclick=\"${fn}(this,'${sc}')\"" in html
 
 
 def test_discover_page_also_wires_instagram_preview():
@@ -59,7 +60,9 @@ def test_play_badge_shown_for_instagram_cards():
     배선 조건과 배지 조건이 어긋나 있었다 — 클릭은 붙는데 표시만 없었다."""
     idx = (pathlib.Path(media_download.__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
     dis = (pathlib.Path(media_download.__file__).parent / "static" / "discover.html").read_text(encoding="utf-8")
-    assert "(i.platform||PLATFORM)==='instagram')?'<span class=\"play-badge\">" in idx
+    # 배선·배지가 같은 _thumbPlayAttr 결과로 정해진다(관제 198) — 어긋날 수 없다.
+    assert "${_thumbPlayAttr(i.platform||PLATFORM, i.shortcode, i.video_url)?'<span class=\"play-badge\">" in idx
+    assert "instagram:'playInstagram'" in idx
     assert "(i.video_url||i.shortcode)?'<span class=\"play-badge\">" in dis
 
 

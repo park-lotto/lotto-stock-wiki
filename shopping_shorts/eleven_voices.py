@@ -33,7 +33,7 @@ VARIANT_SPECS = [
     ("whisper",    {"stability": 0.55, "similarity_boost": 0.78, "style": 0.15}),
 ]
 DEFAULT_MODEL_ID = "eleven_v3"
-DEFAULT_SPEED = 1.6
+# 기본 속도는 voice_presets.default_speed 가 정한다(2026-10-01 관제 049) — 여기 숫자를 두지 않는다.
 DEFAULT_SILENCE_TRIM = "mid"
 ORIGIN = "library"
 
@@ -102,7 +102,7 @@ def build_group(voice_id, name, one_liner="", lang="KR", group_id=None):
             "base_voice_id": voice_id,
             "model_id": DEFAULT_MODEL_ID,
             "voice_settings": dict(settings),
-            "default_speed": DEFAULT_SPEED,
+            "default_speed": voice_presets.default_speed(voice_id),
             "default_silence_trim": DEFAULT_SILENCE_TRIM,
             "sample_file": f"{pid}.mp3",
             "source_ref": "일레븐랩스 계정 보이스",
@@ -157,7 +157,7 @@ def make_preview(voice_id, force=False):
     synthesize_line(
         DEMO_TEXT, out,
         voice={"voice_id": voice_id, "settings": settings,
-               "speed": DEFAULT_SPEED, "silence_trim": DEFAULT_SILENCE_TRIM,
+               "speed": voice_presets.default_speed(voice_id), "silence_trim": DEFAULT_SILENCE_TRIM,
                "naturalize_profile": None, "model_id": DEFAULT_MODEL_ID},
         beat_role="훅", beat_index=0, beat_total=5)
     return out, False

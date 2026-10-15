@@ -39,6 +39,15 @@ class BufferError(Exception):
     """Buffer가 거절했다. message는 **사용자에게 보여줄 수 있는** 한국어로 만든다."""
 
 
+class BufferNotFound(BufferError):
+    """그 게시물이 Buffer에 없다(고객이 Buffer에서 직접 지웠다 등).
+
+    ★글자가 아니라 **코드**로 가른다(실측 2026-10-04: errors[0].extensions.code ==
+      "NOT_FOUND", message "Post not found for id: …"). '없다'와 '못 물어봤다'를
+      섞으면 살아 있는 예약을 지워진 것으로 적는다.
+    """
+
+
 def _call(key: str, query: str, variables: dict | None = None) -> dict:
     """GraphQL 한 번. 성공하면 data를, 아니면 BufferError를 던진다.
 
@@ -69,6 +78,8 @@ def _call(key: str, query: str, variables: dict | None = None) -> dict:
     if errs:
         log.warning("buffer GraphQL errors 원문: %s", json.dumps(errs, ensure_ascii=False)[:1500])
         msg = (errs[0] or {}).get("message") or "알 수 없는 오류"
+        if ((errs[0] or {}).get("extensions") or {}).get("code") == "NOT_FOUND":
+            raise BufferNotFound(_humanize(msg))
         raise BufferError(_humanize(msg))
     return out.get("data") or {}
 
@@ -213,6 +224,12 @@ def _post_metadata(key: str, channel_id: str, privacy: str = "",
         pv = privacy if privacy in ("public", "unlisted", "private") else "public"
         return {"youtube": {"title": _yt_title(text), "privacy": pv,
                             "categoryId": _YT_CATEGORY}}
+    if svc == "facebook":
+        # ★페이스북도 type이 **필수**다(라이브 거절 실측 2026-10-03 2회:
+        #   "Invalid post: Facebook posts require a type (post, story, or reel)").
+        #   스키마 실측 2026-10-04: FacebookPostMetadataInput.type = post|reel|story.
+        #   우리가 올리는 것은 세로 완성본이므로 인스타와 같이 reel이다.
+        return {"facebook": {"type": "reel"}}
     return {}
 
 
@@ -262,3 +279,48 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
     if not post.get("id"):
         raise BufferError("Buffer가 예약 결과를 주지 않았습니다.")
     return {"id": post["id"], "dueAt": post.get("dueAt") or ""}
+
+
+_POST = """
+query($id: PostId!) {
+  post(input: { id: $id }) { id status dueAt sentAt externalLink }
+}
+"""
+
+_DELETE = """
+mutation($id: PostId!) {
+  deletePost(input: { id: $id }) {
+    ... on DeletePostSuccess { id }
+    ... on MutationError { message }
+  }
+}
+"""
+
+
+def post_status(key: str, post_id: str) -> dict:
+    """게시물 하나의 **지금 상태**. → {id, status, dueAt, sentAt, link}
+
+    status: draft|error|needs_approval|scheduled|sending|sent (스키마 실측 2026-10-04).
+    Buffer에 없으면 BufferNotFound — 호출부가 '지워졌다'로 적는다.
+    """
+    d = _call(key, _POST, {"id": post_id})
+    p = d.get("post") or {}
+    if not p.get("id"):
+        raise BufferNotFound("Buffer에 그 게시물이 없습니다.")
+    return {"id": p["id"], "status": p.get("status") or "",
+            "dueAt": p.get("dueAt") or "", "sentAt": p.get("sentAt") or "",
+            "link": p.get("externalLink") or ""}
+
+
+def delete_post(key: str, post_id: str) -> None:
+    """예약을 Buffer에서 지운다. ★이미 올라간 글(sent)을 SNS에서 내려 주지는 않는다 —
+    그 판단(취소할 수 있는 상태인가)은 buffer_posts.cancel 한 곳이 한다."""
+    d = _call(key, _DELETE, {"id": post_id})
+    res = d.get("deletePost") or {}
+    if res.get("message"):
+        # 없는 게시물은 errors가 아니라 여기로 온다(실측 2026-10-04: "Document not found").
+        if "not found" in res["message"].lower():
+            raise BufferNotFound(_humanize(res["message"]))
+        raise BufferError(_humanize(res["message"]))
+    if not res.get("id"):
+        raise BufferError("Buffer가 취소 결과를 주지 않았습니다.")

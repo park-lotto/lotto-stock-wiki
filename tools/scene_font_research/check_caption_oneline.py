@@ -45,10 +45,10 @@ with sync_playwright() as p:
     pg.evaluate('()=>window.sceneStyle.show(1)'); pg.wait_for_timeout(200)
     pg.evaluate("()=>{document.querySelector('.caption-looks')?.closest('details')?.setAttribute('open','');}")
     click = lambda sel: pg.evaluate(f"document.querySelector('{sel}').click()")   # 접힌 패널 안이라 JS로 누른다
-    click('[data-caption-look-scope="one"]'); click('[data-caption-look="0"]'); pg.wait_for_timeout(300)
+    click('[data-edit-scope="one"]'); click('[data-caption-look="0"]'); pg.wait_for_timeout(300)
     s1 = snap(); k1, k2 = 't11:story:1:caption', 't11:story:2:caption'
     need(s1.get(k1, {}).get('look') == 0 and 'look' not in s1.get(k2, {}), f"② [이 장면만]: 2장면만 모양 0, 3장면은 그대로 (2장면 {s1.get(k1)} / 3장면 {s1.get(k2)})")
-    click('[data-caption-look-scope="all"]'); click('[data-caption-look="3"]'); pg.wait_for_timeout(300)
+    click('[data-edit-scope="all"]'); click('[data-caption-look="3"]'); pg.wait_for_timeout(300)
     s2 = snap()
     need(s2.get(k1, {}).get('look') == 3 and s2.get(k2, {}).get('look') == 3, f"② [모든 장면]: 2·3장면 모두 모양 3 ({s2.get(k1)} / {s2.get(k2)})")
     pg.screenshot(path=str(out / 'look_scope.png'))

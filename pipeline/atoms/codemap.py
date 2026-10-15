@@ -59,6 +59,18 @@ def refresh_krx_cache() -> dict[str, str]:
             m.update(chunk)
         except Exception as e:
             print(f"\n  [WARN] {label} 조회 실패: {e}")
+    # ★내려받은 표가 비었거나 종전보다 크게 줄었으면 **덮어쓰지 않는다**(2026-09-27 실사고).
+    #   KRX(kind.krx.co.kr)가 서버 요청을 403으로 막아 두 시장 다 실패했는데, 빈 dict를 그대로 저장해
+    #   krx_codes.json이 44바이트(codes {})가 됐고 대시보드가 종목코드를 통째로 잃었다.
+    #   옛 표(2,595종목)가 없는 것보다 낫다 — 남기고, updated는 그대로 둬 다음 로드 때 다시 시도한다.
+    _old = {}
+    try:
+        _old = json.loads(_KRX_CACHE_FILE.read_text(encoding="utf-8")).get("codes", {}) or {}
+    except (OSError, json.JSONDecodeError, ValueError):
+        _old = {}
+    if not m or (len(_old) > 100 and len(m) < len(_old) * 0.5):
+        print(f"[codemap] KRX 갱신 결과가 {len(m)}종목 — 종전 {len(_old)}종목을 지킨다(파일 안 덮어씀)")
+        return _old if _old else m
     _KRX_CACHE_FILE.write_text(
         json.dumps(
             {"updated": datetime.now().strftime("%Y-%m-%d"), "codes": m},

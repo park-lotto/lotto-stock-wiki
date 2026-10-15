@@ -36,10 +36,8 @@ def main():
         print("=== %s · %s · %d줄 · %.1f초 ===" % (d["style_name"], d["platform"], len(d["beats"]), d["sec"]))
         print("    컷 %d개(중복 %d) · 씨앗 컷 %d · 컷 없는 줄 %d" % (
             len(used), len(used) - len(set(used)), len(seed_cuts), sum(1 for b in d["beats"] if not b["src_segs"])))
-        names = d.get("feat_names") or []
-        print("    재료: " + " / ".join("%d.%s" % (i + 1, n) for i, n in enumerate(names)))
-        for b, g in zip(d["beats"], d.get("line_groups") or []):
-            print("  [%s]%s %s" % (b["role"], (" <재료%d>" % (g + 1)) if g >= 0 else "", b["text"]))
+        for b in d["beats"]:
+            print("  [%s] %s" % (b["role"], b["text"]))
             for s in b["src_segs"]:
                 v = idx.get(s, {})
                 print("        %-16s %.1fs %s" % (s, v.get("secs") or 0, (v.get("desc") or "")[:60]))

@@ -108,9 +108,10 @@ def norm_chars_per_30s(style):
 #   _SYLLABLES_PER_SEC(5.7, 성우 14명 실합성 측정) × _speech_speed()(라이브 배속 1.44).
 #   여기에 8.19를 따로 적어두면 배속을 튜닝한 날 화면·판정·계획이 서로 다른 초를 말한다
 #   (같은 판단이 두 곳에 적히면 반드시 어긋난다 = 0순위-B). 값 하나만 빌려 쓴다.
-def _speech_cps():
+def _speech_cps(lang="ko"):
+    """자/초 — 정본은 edit_plan.speech_cps 하나(2026-09-29 언어별로 갈라짐)."""
     from shopping_shorts import edit_plan as _ep
-    return _ep._SYLLABLES_PER_SEC * _ep._speech_speed()
+    return _ep.speech_cps(lang=lang, norm=True)     # 게이트·화면은 norm 글자 기준
 
 
 def __getattr__(name):          # 모듈 속성 지연 평가 — import 순환을 피한다
@@ -164,6 +165,41 @@ def density_range(style, seconds=30):
     cap = int(_speech_cps() * sec)
     lo = max(int(tgt * DENSITY_LO), int(_LEN_FLOOR * cap))
     return min(lo, cap), min(int(tgt * DENSITY_HI), cap)
+
+
+# ★후킹은 무조건 한 문장(2026-09-29 사장님 "후킹은 무조건 한문장으로 들어가는거야").
+#   실측 job 06fab43a4922: 씨앗 자막에 마침표가 없어 모델이 "여러분 다이소 가면 이거 바로 사오세요 요리 진짜
+#   잘하는 친구 집에 갔는데 … 끝나는 거예요."를 훅 한 줄로 썼다 → 훅 비트 7.4초, 본문이 훅 디자인에 갇혔다.
+#   대본 생성기(이야기작가·script_generate)가 전부 이 함수 하나로 가른다 — 판단은 여기 한 곳(0순위-B).
+_HOOK_END = re.compile(r"[.!?…]+[\"'」』)]*(?=\s|$)|(?:요|다|죠)(?=\s)")
+
+
+def split_hook_sentence(text):
+    """훅 줄 → (첫 문장, 나머지). 문장이 하나뿐이면 (text, "").
+    끝맺음 = 문장부호, 또는 마침표 없이 '요·다·죠' 뒤 띄어쓰기(말자막엔 마침표가 없다)."""
+    t = (text or "").strip()
+    for m in _HOOK_END.finditer(t):
+        head, rest = t[:m.end()].strip(), t[m.end():].strip()
+        if len(norm(head)) >= 4 and len(norm(rest)) >= 4:
+            return head, rest
+        if len(norm(head)) >= 4:
+            break
+    return t, ""
+
+
+def enforce_one_sentence_hook(beats, text_key="text", rest_role="장면"):
+    """첫 줄이 훅이고 문장이 둘 이상이면 첫 문장만 훅에 남기고 나머지는 바로 다음 줄(rest_role)로 넣는다.
+    새 줄은 장면 출처를 비워 둔다(하류 매칭이 채운다). 원본 리스트를 바꾸지 않고 새 리스트를 돌려준다."""
+    if not beats or not isinstance(beats[0], dict) or beats[0].get("role") not in ("훅", "hook"):
+        return beats
+    head, rest = split_hook_sentence(beats[0].get(text_key))
+    if not rest:
+        return beats
+    first = dict(beats[0]); first[text_key] = head
+    extra = {"role": rest_role, text_key: rest}
+    if "group" in first:
+        extra["group"] = -1
+    return [first, extra] + list(beats[1:])
 
 
 def norm(s):
@@ -340,10 +376,20 @@ _ESC_HEADS = ("심지어", "게다가", "거기다", "그것도", "더 대박인
               "충격인 건", "근데 더 미친 건", "근데 진짜는 여기서부터인데", "놀랍게도")
 
 
+def _esc_heads():
+    """고조 연결어 목록 = 이 파일의 옛 목록 ∪ 대본 작가 신호어 목록(story_writer._ALL_SIGNAL_WORDS — 신호어의 주인).
+    ★10-05 사장님 "합치고": 신호어를 늘려도 이 검사가 모르고 지나가던 두 번째 사본을 주인 목록에 묶었다."""
+    try:
+        from shopping_shorts.story_writer import _ALL_SIGNAL_WORDS as _sw_words
+    except Exception:      # noqa: BLE001 — 대본 작가를 못 읽으면 옛 목록만(검사가 멈추면 안 된다)
+        _sw_words = ()
+    return tuple(set(_ESC_HEADS) | set(_sw_words))
+
+
 def _strip_esc_head(t):
     """고조 연결어를 떼고 알맹이만 남긴다 — 판정은 알맹이로 해야 한다."""
     t = (t or "").strip()
-    for h in sorted(_ESC_HEADS, key=len, reverse=True):
+    for h in sorted(_esc_heads(), key=len, reverse=True):
         if t.startswith(h):
             return t[len(h):].strip(" ,.")
     return t
@@ -379,7 +425,7 @@ def escalation_content(beats, facts_text):
     bad = []
     for b in (beats or []):
         t = (b.get("text") or "") if isinstance(b, dict) else str(b)
-        if not any(h in t for h in _ESC_HEADS):
+        if not any(h in t for h in _esc_heads()):
             continue
         n += 1
         core = _strip_esc_head(t)

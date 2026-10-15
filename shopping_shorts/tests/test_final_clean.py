@@ -82,6 +82,13 @@ class TestPlanSignature:
 from cryptography.fernet import Fernet
 
 from shopping_shorts import mix_pipeline as mp
+
+
+@pytest.fixture(autouse=True)
+def _assembled_cut_map(monkeypatch):
+    """진짜 조립본은 옆에 컷 지도를 남긴다(video_assemble.write_cut_map). 지도가 없으면 자막제거는 시작 전에 멈춘다(관제 176) —
+    이 파일의 가짜 조립본(mix_raw 바이트 몇 개)에는 빈 지도를 준다."""
+    monkeypatch.setattr(mp, "_va_read_cut_map", lambda _p: [])
 from shopping_shorts.store import Store
 
 
@@ -100,7 +107,7 @@ def test_완성본을_한_번만_보낸다(store, tmp_path, monkeypatch):
     """★소스가 몇 개든 VMake 호출은 1회 — 이게 이번 변경의 전부다."""
     sent = []
 
-    def fake_remove(src, key, out_path, tier=None):
+    def fake_remove(src, key, out_path, tier=None, **k):
         sent.append(src)
         Path = type(tmp_path)
         open(out_path, "wb").write(b"x" * 4096)
@@ -122,7 +129,7 @@ def test_편성이_그대로면_다시_안_청소한다(store, tmp_path, monkeyp
     """★재과금 방지의 핵심 — 같은 편성으로 다시 렌더해도 VMake를 또 부르지 않는다."""
     calls = []
 
-    def fake_remove(src, key, out_path, tier=None):
+    def fake_remove(src, key, out_path, tier=None, **k):
         calls.append(src)
         open(out_path, "wb").write(b"y" * 4096)
         return out_path
@@ -142,7 +149,7 @@ def test_편성이_바뀌면_다시_청소한다(store, tmp_path, monkeypatch):
     """장면을 진짜로 바꾸면 완성본이 달라지므로 다시 청소해야 한다 — 안 하면 옛 영상이 나간다."""
     calls = []
 
-    def fake_remove(src, key, out_path, tier=None):
+    def fake_remove(src, key, out_path, tier=None, **k):
         calls.append(out_path)
         open(out_path, "wb").write(b"z" * 4096)
         return out_path

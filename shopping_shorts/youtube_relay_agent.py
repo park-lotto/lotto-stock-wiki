@@ -22,10 +22,11 @@ import tempfile
 import time
 import traceback
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
-from shopping_shorts.media_download import _download_ytdlp
+from shopping_shorts.media_download import _download_pinterest, _download_ytdlp, _is_pinterest_host
 
 SERVER = os.getenv("YT_RELAY_SERVER", "https://shoppingshorts.duckdns.org").rstrip("/")
 KEY = os.getenv("YT_RELAY_KEY", "")
@@ -70,7 +71,12 @@ def _handle(job):
     print(f"[relay] 처리 시작 {req_id}: {url}", flush=True)
     with tempfile.TemporaryDirectory() as td:
         try:
-            path, _ = _download_ytdlp(url, td)      # 주거용 IP로 실다운로드
+            host = (urlparse(url).hostname or "").lower()
+            if _is_pinterest_host(host):
+                # PC 주거용 IP로 핀 페이지를 해석한다. 재큐잉 무한루프는 끈다.
+                path, _ = _download_pinterest(url, td, allow_relay=False)
+            else:
+                path, _ = _download_ytdlp(url, td)
             print(f"[relay] 다운로드 완료 {req_id}: {path}", flush=True)
             _deliver(req_id, file_path=path)
         except Exception as e:

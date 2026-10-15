@@ -1,0 +1,14 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>단계 이동줄</title>
+<style>body{margin:0;background:#11151f;color:#e8ecf6;font:16px/1.7 'Malgun Gothic',sans-serif}main{max-width:960px;margin:0 auto;padding:28px 16px}
+h1{font-size:22px}.card{background:#1a2030;border-radius:14px;padding:18px 22px;margin:14px 0}li{margin:6px 0}
+.demo{display:inline-flex;gap:4px;align-items:center;padding:5px 8px;border-radius:999px;background:rgba(18,22,34,.92);box-shadow:0 4px 18px #0008}
+.demo b{min-width:30px;height:30px;line-height:30px;text-align:center;border-radius:999px;border:1.5px solid #6c8cff;font-size:12px;padding:0 6px}
+.demo b.cur{background:#ff5fa8;border-color:#ff5fa8}img{width:100%;border-radius:10px;border:1px solid #333}small{color:#9aa3b8}</style></head>
+<body><main><h1>1. 단계 이동 (회원 1번 요청)</h1>
+<div class="card"><ul>
+<li>위쪽 단계바는 원래 아이콘을 누르면 그 단계로 바로 갑니다. 다만 화면 맨 위에만 있어서, 아래에서 작업하다 보면 스크롤로 올라가야 했습니다.</li>
+<li>그래서 위쪽 단계바가 화면에서 사라지면 화면 아래에 「단계 1 2 ③ … 10」 숫자 버튼 줄이 뜨게 했습니다. 누르면 맨앞·맨뒤든 몇 단계 건너뛰든 바로 이동합니다. 잠긴 단계는 위쪽 단계바와 똑같이 막힙니다.</li>
+<li>실제 서비스 화면에 이 줄을 넣어 아래로 스크롤해 보니 의도대로 떴습니다. 이동 버튼은 사장님 작업 단계가 바뀔 수 있어서 누르지 않았습니다.</li></ul></div>
+<div class="card"><b>이동줄 모양</b><br><br><span class="demo"><small>단계</small><b>1</b><b>2</b><b class="cur">3 영상대본MIX</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b><b>10</b></span></div>
+<div class="card"><b>실제 화면 (3단계에서 맨 아래로 스크롤한 상태 — 화면 아래 가운데)</b><br><br><img src="단계이동줄_실측.png"></div>
+</main></body></html>

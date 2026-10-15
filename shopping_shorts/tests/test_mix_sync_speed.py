@@ -52,7 +52,8 @@ def test_절대값처럼_잘못저장된_첫배포_기본속도를_복구한다(
     beat["voice_override"] = {"speed": 1.4}
     base = mix_pipeline.base_voice_for_beat(None, beat)
     assert base["speed"] == pytest.approx(mix_pipeline._DEFAULT_VOICE["speed"])
-    assert mix_pipeline.voice_for_beat(base, beat)["speed"] == pytest.approx(2.24)
+    assert mix_pipeline.voice_for_beat(base, beat)["speed"] == pytest.approx(
+        mix_pipeline._DEFAULT_VOICE["speed"] * 1.4)   # 기본 1.6→1.35(관제 049)라 숫자 대신 식으로
 
 
 def test_저장된_칸별_성우톤은_배속을_바꿔도_보존되고_중복가속하지_않는다():
@@ -132,7 +133,9 @@ def test_구워진_청소조각을_캡컷_배속용_길이로_역변환한다(tm
 
 def test_렌더는_빠른_setpts도_적용한다():
     src = inspect.getsource(video_assemble._render_mix)
-    assert "abs(factor - 1.0)" in src
+    # 2026-09-27: 배율과 상관없이 늘 cut_setpts((PTS-STARTPTS)*factor)를 건다 — 빠르게(factor<1)도 같은 식
+    assert "cut_setpts(factor)" in src
+    assert video_assemble.cut_setpts(0.714286) == "setpts=(PTS-STARTPTS)*0.714286"
 
 
 @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg 없음")

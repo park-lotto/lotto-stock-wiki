@@ -58,7 +58,7 @@ def test_자막단계에서_마지막줄을_나눠도_둘째줄_장면이_안_�
     plan = va._plan_phrase_clips(b, va._beat_material(b), 4.46)
     assert [x["video_id"] for x in plan] == ["s2", "s5", "s2", "s2"]
     # GET(믹스 화면이 여는 데이터)도 같은 값을 싣는다 — 같은 함수(_lab_captions)
-    caps2, _ = appmod._lab_captions(appmod.Store(appmod.DB_PATH).get_mix_job("j")["edit_plan"])
+    caps2, _ = appmod._lab_captions(appmod.Store(appmod.DB_PATH).get_mix_job("j")["edit_plan"], None)
     assert [x["owner"] for x in caps2["0"]] == [0, 1, 2, 2]
 
 

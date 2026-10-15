@@ -100,7 +100,9 @@ def test_conform_pass_rewrite_failure_keeps_original_and_flag(monkeypatch, tmp_p
     mp._conform_beats(beats, tmp_path, voice=None)
     assert beats[0]["narration"] == "아주 긴 원래 문장"
     assert "conformed" not in beats[0]
-    assert beats[0]["sync_gap"] == pytest.approx(2.7, abs=0.01)
+    # 예산 = 재료 2.0s × config.MAX_SLOWMO(관제 020, 숫자를 여기 다시 적지 않는다). 1.15일 땐 2.7, 1.2면 2.6.
+    from shopping_shorts import config
+    assert beats[0]["sync_gap"] == pytest.approx(5.0 - 2.0 * config.MAX_SLOWMO, abs=0.01)
 
 
 def test_conform_pass_tts_exception_does_not_swap_narration(monkeypatch, tmp_path):
@@ -118,13 +120,14 @@ def test_conform_pass_tts_exception_does_not_swap_narration(monkeypatch, tmp_pat
 
 def test_conform_pass_skips_small_gap(monkeypatch, tmp_path):
     """gap ≤ 0.8s(켄번즈 홀드로 자연 흡수 수준)는 제미니를 부르지 않는다 — 비용 가드."""
-    beats = [_beat(0, "문장", 4.0)]   # 예산 4.6s
-    monkeypatch.setattr(mp, "_probe_duration", lambda p: 5.0)   # gap 0.4
+    beats = [_beat(0, "문장", 4.0)]   # 예산 4.0×MAX_SLOWMO (1.15→4.6, 1.2→4.8)
+    monkeypatch.setattr(mp, "_probe_duration", lambda p: 5.0)   # gap 0.4 / 0.2 — 어느 쪽이든 0.8 이하
     def boom(*a, **k):
         raise AssertionError("작은 gap인데 리라이트를 불렀다")
     monkeypatch.setattr(mp, "conform_narration", boom)
     mp._conform_beats(beats, tmp_path, voice=None)
-    assert beats[0]["sync_gap"] == pytest.approx(0.4, abs=0.01)
+    from shopping_shorts import config
+    assert beats[0]["sync_gap"] == pytest.approx(5.0 - 4.0 * config.MAX_SLOWMO, abs=0.01)
 
 
 # ── T4: 마지막 비트 여운 ───────────────────────────────────────

@@ -39,4 +39,6 @@ def test_gap_does_not_cross_beat_boundary():
               {"start": 1, "end": 1.2, "caption": "", "beat_idx": 1, "kind": "body", "caption_visible": True},
               {"start": 1.2, "end": 2, "caption": "b", "beat_idx": 1, "kind": "body", "caption_visible": True}]
     out = scene_style._absorb_tiny_gaps(scenes)
-    assert [(s["caption"], s["start"], s["end"]) for s in out] == [("a", 0, 1), ("b", 1, 2)]
+    # 2026-09-27: 칸 **앞** 틈은 caption_schedule(absorb_lead)이 흡수해 오므로 여기엔 안 온다 — 온다면 손대지 않는다.
+    #   (칸 경계를 넘어 앞 칸 자막에 붙지 않는 것은 그대로)
+    assert [(s["caption"], s["start"], s["end"]) for s in out] == [("a", 0, 1), ("", 1, 1.2), ("b", 1.2, 2)]

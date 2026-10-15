@@ -1,0 +1,23 @@
+[Unit]
+Description=매일 영상 점검 타이머(04:30 KST — 편집 화면 미리보기 vs 완성본, 어긋나면 관리자 쪽지)
+
+[Timer]
+# 04:30 KST 인 이유(2026-09-27 서버 실측):
+#   · 최근 14일 mix_jobs 갱신이 가장 적은 때가 KST 03~06시(UTC 18~21시: 9·7·5·4건 / 낮은 60~90건)
+#   · 04:00 daily_batch(크론)과 05:30 카테고리 백필 사이. 비교는 ffmpeg CPU를 쓰므로 Nice=10.
+#   · ⚠️ 배포 시간창(KST 02~06, auto_deploy.sh)과는 피할 수 없이 겹친다 — 점검 중 배포가 들면
+#     summary.json 의 git 앞/뒤 해시가 달라지고 쪽지 detail 에 "점검 중 배포됨"이 붙는다.
+# Persistent=false: 서버가 꺼져 놓친 날을 낮에(고객 시간에) 몰아 돌리지 않는다.
+#
+# 설치(서버, 한 번):
+#   sudo cp deploy/shopping-shorts-video-audit.service deploy/shopping-shorts-video-audit.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now shopping-shorts-video-audit.timer
+#   # 즉시 1회: sudo systemctl start shopping-shorts-video-audit.service
+#   # 다음 실행: systemctl list-timers shopping-shorts-video-audit.timer
+#   # 결과: /home/ubuntu/video_audit/<날짜>/report.txt · journalctl -u shopping-shorts-video-audit
+OnCalendar=*-*-* 04:30:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

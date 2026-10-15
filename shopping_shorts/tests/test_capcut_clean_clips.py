@@ -180,7 +180,11 @@ class Test조각안의_컷경계:
         render, b = self._folded(self._beat())
         got = cd._beat_clips(b, 6.0, {"cc0": 6.0})
         assert [round(c["out_dur"], 3) for c in got] == [round(c["out_dur"], 3) for c in render]
-        assert [round(c["start"], 3) for c in got] == [0.0, 1.5, 3.5]
+        # 컷 시작 = 완성본 컷 경계(누적). 화면(syncCuts)이 손 컷을 목록 순서로 정렬하므로 렌더 순서를 기준으로 잰다
+        acc, want = 0.0, []
+        for c in render:
+            want.append(round(acc, 3)); acc += c["out_dur"]
+        assert [round(c["start"], 3) for c in got] == want
         assert {c["video_id"] for c in got} == {"cc0"}
 
     def test_배속이_구워진_조각은_소스_좌표를_배속만큼_늘린다(self):

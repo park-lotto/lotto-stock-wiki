@@ -71,6 +71,21 @@ with sync_playwright() as p:
     fr = open_editor(); pg.wait_for_timeout(1000)
     t = ((job().get('deco') or {}).get('scene_style') or {}).get('text') or {}
     need(t.get('channel') == '내채널' and t.get('hook1'), f"② 고친 채널명이 서버 저장본에 완전한 글과 함께 들어감 (channel {t.get('channel')!r}, hook1 {t.get('hook1')!r})")
-    close_editor(); b.close()
+    close_editor(); pg.wait_for_timeout(600)
+    # ③ 다른 장면을 구경만 하고 닫기(2026-09-28 사장님 job 8c63b0691924 실측: 렌더 완료 → 01:39:22 편집기 재오픈 → 01:39:46 [닫기] 저장 →
+    #    status done→ready_for_review, video_path None). 저장값의 sceneIndex(보고 있던 장면)만 달라도 서버가 '설정이 바뀌었다'고 봤다.
+    Store(module.DB_PATH).update_mix_job(JOB, status='done', video_path=str(work / 'final.mp4'))
+    fr = open_editor(); fr.evaluate('window.sceneStyle.show(2)'); pg.wait_for_timeout(500)
+    _srv = (job().get('deco') or {}).get('scene_style') or {}; _now = fr.evaluate('window.sceneStyle.snapshot()') or {}
+    _diff = sorted(k for k in set(_srv) | set(_now) if k not in ('sceneIndex', 'frameKind') and _srv.get(k) != _now.get(k))
+    print('   (③ 닫기 직전 편집기 저장값 vs 서버 저장본 — 화면 전용 값 빼고 다른 키:', _diff, {k: (str(_srv.get(k))[:90], str(_now.get(k))[:90]) for k in _diff[:3]}, ')')
+    settings_posts.clear(); close_editor(); pg.wait_for_timeout(1000)
+    j = job(); ss = (j.get('deco') or {}).get('scene_style') or {}
+    need(j.get('status') == 'done' and j.get('video_path'), f"③ 다른 장면(2)을 보다가 닫아도 완성본 그대로 (status {j.get('status')}, video_path {'있음' if j.get('video_path') else '없음'}, 저장요청 {len(settings_posts)}회, 저장본 sceneIndex {ss.get('sceneIndex')}) — 고치기 전엔 ready_for_review·없음")
+    # ④ 렌더 도중 편집기를 열었다 닫아도(sceneIndex만 바뀜) 도장이 안 깨진다 — mix_pipeline._render_stamp
+    from shopping_shorts.mix_pipeline import _render_stamp
+    before = job(); after = dict(before); after['deco'] = {**(before.get('deco') or {}), 'scene_style': {**ss, 'sceneIndex': (ss.get('sceneIndex') or 0) + 1, 'frameKind': 'hook'}}
+    need(_render_stamp(before) == _render_stamp(after), '④ 렌더 도장: 보고 있던 장면·틀만 달라진 저장값은 같은 도장 — 고치기 전엔 달라서 렌더 결과를 버렸다')
+    b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)

@@ -117,6 +117,19 @@
   .warnbox b{color:var(--warn)}
   .warnbox .ic{flex:0 0 auto; font-size:19px; line-height:1.4}
 
+  details.manual{margin:0 0 16px}
+  details.manual>summary{
+    cursor:pointer; list-style:none; background:var(--card); border:1px dashed var(--line);
+    border-radius:16px; padding:16px 20px; font-weight:700; font-size:18px; color:var(--ink-2);
+  }
+  details.manual>summary::-webkit-details-marker{display:none}
+  details.manual[open]>summary{margin-bottom:16px}
+  .copy-btn{
+    display:inline-flex; align-items:center; margin:0 22px 20px; cursor:pointer;
+    background:var(--ink); color:#fff; border:0; font-weight:700; font-family:inherit;
+    border-radius:12px; padding:12px 18px; font-size:17px;
+  }
+
   code{
     font-family:'Consolas','D2Coding',ui-monospace,monospace;
     background:var(--line-2); border-radius:8px; padding:2px 7px; font-size:16px;
@@ -187,10 +200,12 @@
     <a href="#gemini"><span class="ico">🤖</span><span class="tt"><b>① 구글 제미나이</b><span>대본 만들기 · 영상 분석 · 썸네일</span></span><span class="go">›</span></a>
     <a href="#elevenlabs"><span class="ico">🔊</span><span class="tt"><b>② ElevenLabs</b><span>영상에 넣을 AI 목소리</span></span><span class="go">›</span></a>
     <a href="#typecast"><span class="ico">🎤</span><span class="tt"><b>③ 타입캐스트</b><span>한국 성우 목소리 (필재·김건·박창수…)</span></span><span class="go">›</span></a>
+    <a href="#fish"><span class="ico">🐟</span><span class="tt"><b>③-2 Fish (무료)</b><span>무료 성우 목소리 (하늘·소연·태호…) · 비용 0원</span></span><span class="go">›</span></a>
     <a href="#serpapi"><span class="ico">🔎</span><span class="tt"><b>④ SerpApi</b><span>숏템 파워검색 (비슷한 영상 찾기)</span></span><span class="go">›</span></a>
     <a href="#vmake"><span class="ico">🎬</span><span class="tt"><b>⑤ Vmake</b><span>영상에 박힌 자막 지우기</span></span><span class="go">›</span></a>
     <a href="#youtube"><span class="ico">📺</span><span class="tt"><b>⑥ 유튜브</b><span>유튜브 영상 정보 가져오기</span></span><span class="go">›</span></a>
     <a href="#buffer"><span class="ico">📅</span><span class="tt"><b>⑦ Buffer</b><span>완성한 영상을 SNS에 예약해 올리기</span></span><span class="go">›</span></a>
+    <a href="#vertex"><span class="ico">🚀</span><span class="tt"><b>⑧ 구글 버텍스 API</b><span>대본·장면매칭 한도 없이 · AI 장면 생성</span></span><span class="go">›</span></a>
   </div>
 
   <!-- ══════════════ ① 제미나이 ══════════════ -->
@@ -272,7 +287,7 @@
       </svg>
     </div>
     <p class="say"><code>AIzaSy…</code> 로 시작하는 긴 글자입니다. <b>복사 버튼</b>을 눌러 그대로 숏템메이커 설정 칸에 붙여넣으세요.</p>
-    <div class="warnbox"><span class="ic">💡</span><span>제미나이는 <b>여러 개를 한 번에</b> 넣을 수 있습니다. 많이 만드실 거면 계정을 바꿔 2~3개 받아 <b>한 줄에 하나씩</b> 붙여넣으세요. 하나를 다 쓰면 다음 키로 자동으로 넘어갑니다.</span></div>
+    <div class="warnbox"><span class="ic">💡</span><span>제미나이는 <b>여러 개를 한 번에</b> 넣을 수 있습니다. 예비로 <b>2~3개</b> 넣어 두시면 하나가 멈춰도 이어서 작업돼요. 구글 사용 한도는 키가 아니라 <b>프로젝트</b> 단위라, <b>서로 다른 프로젝트</b>에서 만든 키를 <b>한 줄에 하나씩</b> 붙여넣으세요. 결제를 연결하지 않은 무료 키로 넣어 주세요(유료 키는 쓰는 만큼 요금이 나가요).</span></div>
   </div>
 
   <div class="done">
@@ -552,6 +567,38 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
+  <!-- ══════════════ ③-2 Fish (2026-10-05, 관제 123) ══════════════ -->
+  <div class="svc" id="fish">
+    <h2 class="svc-t">③-2 Fish (무료)</h2>
+    <div class="tags">
+      <span class="tag">성우 목소리(TTS)</span>
+      <span class="tag">무료 모델 · 비용 0원 (2026-11-30까지)</span>
+      <span class="tag">하늘 · 소연 · 다인 · 정숙 · 태호 · 민준 · 도윤 · 지성</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">1</div><h3>Fish<br>가입 · 로그인</h3></div>
+    <p class="say"><b>fish.audio</b>에 들어가 <b>구글 계정으로 로그인</b>하면 바로 가입됩니다. 결제는 필요 없습니다.</p>
+    <a class="go-btn" href="https://fish.audio" target="_blank" rel="noopener">fish.audio 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">2</div><h3>API 키<br>만들기</h3></div>
+    <p class="say"><code>fish.audio/app/api-keys</code> 화면에서 <b>Create</b>를 누르고, 나온 키를 <b>바로 복사</b>하세요.</p>
+    <a class="go-btn" href="https://fish.audio/app/api-keys/" target="_blank" rel="noopener">API 키 화면 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">3</div><h3>숏템메이커에<br>붙여넣기</h3></div>
+    <p class="say">설정 화면의 <b>🔑 API 키</b> → <b>🐟 목소리 (Fish · 무료)</b> 칸에 붙여넣고 <b>저장</b>을 누르세요.<br>
+      <b>● 정상</b>이라고 뜨면 끝입니다(저장할 때 짧은 문장을 실제로 한 번 만들어 확인합니다).</p>
+    <a class="go-btn" href="/settings#keys" target="_blank" rel="noopener">설정 화면 열기 →</a>
+    <div class="done"><span class="ic">✅</span><span><b>다 됐습니다</b>
+      <span>성우 목록의 <b>Fish</b> 열(하늘 · 소연 · 태호…)을 고르시면 이 키가 쓰입니다.
+      <b>무료 모델이라 비용은 0원</b>입니다(2026-11-30까지). 일레븐랩스·타입캐스트 키가 없으면 기본 성우가 Fish로 잡힙니다.</span></span></div>
+  </div>
+
   <!-- ══════════════ ④ SerpApi ══════════════ -->
   <div class="svc" id="serpapi">
     <h2 class="svc-t">④ SerpApi</h2>
@@ -651,7 +698,7 @@
     <div class="tags">
       <span class="tag">자막 지우기</span>
       <span class="tag pay">Plus 월 14,000원 · Pro 월 44,000원</span>
-      <span class="tag">키를 둘 합쳐 넣습니다</span>
+      <span class="tag">키 두 개를 칸에 따로</span>
       <span class="tag pay">고급 지우기는 Pro(44,000원)만</span>
     </div>
   </div>
@@ -808,29 +855,11 @@
   </div>
 
   <div class="card">
-    <div class="card-head"><div class="num">2</div><h3>★ 두 개를 받습니다<br>가운데에 : 을 넣어 합치기</h3></div>
-    <div class="pic">
-      <svg viewBox="0 0 560 150" role="img" aria-label="App Key와 Secret 두 값을 콜론으로 이어 붙여 한 줄로 만드는 그림">
-        <rect x="14" y="16" width="230" height="54" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-        <text x="30" y="38" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">API Key (앞의 칸)</text>
-        <text x="30" y="58" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".8">1a2b3c4d…9f8e7</text>
-        <rect x="14" y="80" width="230" height="54" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-        <text x="30" y="102" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">Secret Access Key (👁 눌러야 보임)</text>
-        <text x="30" y="122" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".8">5c6d7e8f…3b2a1</text>
-
-        <path d="M262 75h38" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
-        <path d="M292 68l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
-
-        <rect x="320" y="48" width="226" height="54" rx="10" fill="var(--accent-soft)" stroke="#E23A5E" stroke-width="2.5"/>
-        <text x="336" y="80" font-family="'Consolas',monospace" font-size="13" fill="currentColor">1a2b3c4d…</text>
-        <text x="434" y="82" font-family="'Consolas',monospace" font-size="22" fill="#E23A5E" font-weight="700">:</text>
-        <text x="448" y="80" font-family="'Consolas',monospace" font-size="13" fill="currentColor">5c6d7e8f…</text>
-        <text x="320" y="126" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#E23A5E" font-weight="600">이렇게 한 줄로 붙여넣기</text>
-      </svg>
-    </div>
-    <p class="say">Vmake만 값이 <b>두 개(API Key, Secret Access Key)</b>입니다. 숏템메이커 칸에는 <b>가운데에 쌍점 <code>:</code> 을 찍어 한 줄로</b> 넣어 주세요.<br><b>둘 다 32자리로 생김새가 똑같습니다</b> — <b>같은 줄</b>에서 <b>왼쪽 칸 먼저, 오른쪽 칸 나중</b>으로, 옆의 <b>복사 버튼</b>을 눌러 옮기세요(눈으로 보고 옮기면 틀리기 쉽습니다).</p>
-    <span class="keybox">API&nbsp;Key<b>:</b>Secret&nbsp;Access&nbsp;Key</span>
-    <div class="warnbox"><span class="ic">⚠</span><span><b>띄어쓰기 없이</b> 붙여야 합니다. <b>순서가 바뀌거나 짝이 안 맞으면</b> 저장할 때 바로 <b>“키가 틀렸습니다”</b>가 뜹니다.<br>Vmake에서 <b>키를 새로 만드셨다면 여기에도 다시 등록</b>해 주세요 — 옛 키는 더 이상 안 됩니다.</span></div>
+    <div class="card-head"><div class="num">2</div><h3>★ 두 개를 받습니다<br>칸에 따로 넣기</h3></div>
+    <p class="say">Vmake는 값이 <b>두 개(API Key, Secret Access Key)</b>입니다. 숏템메이커 설정의 자막 지우기 칸도 <b>두 칸</b>이에요 —
+      <b>윗칸에 API Key</b>, <b>아랫칸에 Secret Access Key</b>를 하나씩 붙여넣고 「저장」을 누르세요. 따로 이어 붙이거나 기호를 넣을 필요 없습니다.<br>
+      <b>둘 다 32자리로 생김새가 똑같습니다</b> — Vmake 화면에서 <b>같은 줄의 왼쪽 값 → 윗칸, 오른쪽 값 → 아랫칸</b> 순서로, 옆의 <b>복사 버튼</b>을 눌러 옮기세요(눈으로 보고 옮기면 틀리기 쉽습니다).</p>
+    <div class="warnbox"><span class="ic">⚠</span><span><b>두 칸이 바뀌거나 짝이 안 맞으면</b> 저장할 때 바로 <b>“키가 틀렸습니다”</b>가 뜹니다.<br>Vmake에서 <b>키를 새로 만드셨다면 여기에도 다시 등록</b>해 주세요 — 옛 키는 더 이상 안 됩니다.</span></div>
   </div>
 
   <div class="card">
@@ -1061,12 +1090,170 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
+  <div class="svc" id="vertex">
+    <h2 class="svc-t">⑧ 구글 버텍스 API</h2>
+    <div class="tags">
+      <span class="tag">대본 쓰기 · 장면 매칭 · AI 장면 생성</span>
+      <span class="tag free">무료 체험 $300 · 90일</span>
+      <span class="tag">내 구글 계정 비용</span>
+    </div>
+  </div>
+
+  <!-- ★실제 화면 영상(2026-09-27) — 구글 콘솔을 직접 돌며 캡처(개인정보 가림). 만드는 법: tools/vertex_guide/ -->
+  <div class="card">
+    <div class="card-head"><div class="num">▶</div><h3>영상으로 보기<br>(1분 12초)</h3></div>
+    <video src="/landing/vertex_guide.mp4?v=4" poster="/landing/vertex_guide.jpg?v=4" controls preload="metadata" playsinline
+           style="width:100%;border-radius:12px;background:#000;display:block"></video>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">★</div><h3>연결하면<br>무엇이 좋아지나</h3></div>
+    <p class="say"><b>대본 쓰기와 장면 매칭</b>을 내 구글 버텍스(Gemini 3.6)로 돌립니다.
+      무료 제미나이(①)는 <b>오류와 버그가 자주 생겨</b> 대본이 안 나오거나 한 안만 나오는 일이 있습니다.
+      버텍스로 돌리면 <b>대본 품질이 올라가고 오류가 거의 없어집니다.</b> <b>AI 장면 생성</b>도 이 API로 씁니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>AI 스튜디오 키와<br>다릅니다</h3></div>
+    <p class="say">위 ① 제미나이의 <b>AI 스튜디오 키</b>로는 무료 체험 $300이 <b>안 먹습니다</b>. 여기서는
+      <b>구글 클라우드 콘솔</b>의 <b>서비스 계정 키(.json 파일)</b>를 받습니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">1</div><h3>구글 클라우드<br>무료 체험 가입</h3></div>
+    <p class="say">쓰시던 구글 계정으로 들어가 <b>「무료로 시작하기」</b> → 국가 <b>대한민국</b>, 약관 두 칸 체크 → <b>「계속」</b>.<br/>
+      결제 정보 화면에서 <b>계좌 유형을 「개인」</b>으로 바꾸고(처음엔 「회사명」으로 되어 있어요) 이름·주소·카드를 넣으세요.
+      본인 확인용이라 <b>직접 「유료 전환」을 누르기 전엔 청구되지 않습니다.</b> 가입하면 $300 크레딧이 들어와요(90일).</p>
+    <a class="go-btn" href="https://console.cloud.google.com/freetrial" target="_blank" rel="noopener">구글 클라우드 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>「액세스 차단됨」이<br>뜨면 — 2단계 인증</h3></div>
+    <p class="say">구글 클라우드는 <b>2단계 인증(MFA)을 켜야</b> 들어갈 수 있어요. <b>「Google Cloud 액세스 차단됨」</b> 화면이 뜨면
+      <b>「MFA 사용 설정」</b> → <b>「2단계 인증 사용 설정」</b> → 휴대폰으로 확인하세요.
+      켠 뒤 몇 분 지나 이 페이지를 새로고침하면 열립니다. 이미 켜 두신 분은 이 화면이 안 떠요.</p>
+  </div>
+
+  <!-- ★4단계(2026-10-05 관제 119) — 마이페이지 버텍스 칸의 ①~④와 같은 순서·같은 말: 1 가입 → 2 셸 열기 → 3 명령 붙여넣기 → 4 나온 한 줄 붙여넣고 연결.
+       명령 글자는 static/landing/vertex_setup.sh 머리말과 같아야 한다(test_vertex_setup_script·check_pages ⑧). -->
+  <div class="card" id="vertex-auto">
+    <div class="card-head"><div class="num">2</div><h3>클라우드 셸<br>열기</h3></div>
+    <p class="say">아래 <b>「클라우드 셸 열기」</b>를 누르세요(마이페이지 버텍스 칸의 ②와 같은 버튼).
+      화면 아래 <b>검은 창</b>이 뜰 때까지 기다리세요 — 처음엔 1~2분 걸려요.</p>
+    <a class="go-btn" id="vertexShellLink" href="https://shell.cloud.google.com/?show=ide%2Cterminal" target="_blank" rel="noopener">클라우드 셸 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">3</div><h3>명령 복사 →<br>붙여넣고 엔터</h3></div>
+    <p class="say"><b>「명령 복사」</b>를 누르고 검은 창을 한 번 클릭 → <b>Ctrl+V</b>로 붙여넣고 <b>엔터</b>.
+      「승인(Authorize)」 창이 뜨면 <b>「승인」</b>을 누르세요. API 켜기·서비스 계정·역할·키 차단 풀기·키 만들기를 <b>알아서</b> 합니다(2~3분).</p>
+    <code class="keybox" id="vertexCmd">curl -fsSL https://shoppingshorts.duckdns.org/landing/vertex_setup.sh | bash</code>
+    <button class="copy-btn" type="button" id="vertexCmdCopy" onclick="copyCmd(this)">명령 복사</button>
+    <p class="say" style="opacity:.8">빨간 <b>✘</b> 줄이 나오면 그 안내대로 하고 같은 명령을 다시 붙여넣으면 이어서 됩니다.
+      결제 계정이 없다고 나오면 1단계 무료 체험 가입부터 하세요.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">4</div><h3>나온 한 줄을<br>붙여넣고 연결</h3></div>
+    <p class="say">끝나면 초록 줄 <b>「아래 { 부터 } 까지 전부 복사하세요」</b> 밑에 긴 글이 나옵니다.
+      <b>{"type"</b> 부터 맨 끝 <b>}</b> 까지 마우스로 끌어서 복사 → <b>마이페이지 › 🔑 내 키 등록 › 🚀 구글 버텍스 API</b> 칸에 붙여넣고
+      <b>「확인하고 연결」</b>. <b>「확인 완료」</b>가 뜨면 끝입니다. 이 글은 비밀번호와 같아요 — 다른 곳에 올리지 마세요.</p>
+    <a class="go-btn" href="/settings#keys">마이페이지로 →</a>
+  </div>
+
+  <details class="manual" id="vertex-manual">
+    <summary>▸ 자동 설정(2~4단계)이 안 될 때 — 화면에서 직접 하기</summary>
+
+  <div class="card">
+    <div class="card-head"><div class="num">가</div><h3>Agent Platform API<br>사용 설정</h3></div>
+    <p class="say">상단에서 프로젝트를 고른 뒤(없으면 「새 프로젝트」), 아래 버튼 화면에서 <b>「사용」</b>을 누르세요.
+      <b>「API 사용 설정됨」</b>이 보이면 이미 켜진 것이니 넘어가세요.<br/>
+      <span style="opacity:.75">★구글이 이름을 바꿨어요 — 예전 이름 「Vertex AI API」가 지금은 <b>「Agent Platform API」</b>로 나옵니다(같은 것).</span></p>
+    <a class="go-btn" href="https://console.cloud.google.com/apis/library/aiplatform.googleapis.com" target="_blank" rel="noopener">Agent Platform API 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">나</div><h3>서비스 계정<br>만들기</h3></div>
+    <p class="say"><b>IAM 및 관리자 › 서비스 계정 › 「서비스 계정 만들기」</b> → 이름은 아무거나(예: shorts) →
+      역할 검색에 <b>「Agent Platform 사용자」</b>를 쳐서 하나만 고르고 <b>「완료」</b>.<br/>
+      <span style="opacity:.75">★예전 이름 「Vertex AI 사용자」가 지금은 「Agent Platform 사용자」로 나옵니다(같은 것).</span><br/>
+      <span style="opacity:.75">★다른 역할(소유자·편집자)은 주지 마세요 — 필요한 건 이것 하나입니다.</span></p>
+    <p class="say"><b>들어갔는지 확인:</b> 아래 「IAM 열기」에서 서비스 계정 줄의 <b>역할 칸에 「Agent Platform 사용자」</b>가 보여야 합니다.
+      안 보이면 줄 끝 ✏️ → 「다른 역할 추가」 → 「Agent Platform 사용자」 → <b>「저장」</b>(저장을 안 누르면 안 들어가요). 넣은 뒤 반영까지 <b>5분</b>쯤 걸립니다.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/iam" target="_blank" rel="noopener">IAM 열기(역할 확인) →</a>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">서비스 계정 열기 →</a>
+  </div>
+
+  <!-- ★키 생성 차단 풀기(2026-10-01 관제 050) — 2024-05 이후 새 계정은 구글이 「서비스 계정 키 생성 사용 중지」
+       조직 정책(iam.disableServiceAccountKeyCreation)을 기본으로 켠다. 이 단계가 없어서 등록이 전부 막혔다
+       (09-30~10-01 422 15건). 사장님 계정으로 실제 수행해 확인한 순서다. -->
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>키 만들기가 막히면<br>— 차단 풀기(대부분 해당)</h3></div>
+    <p class="say">「다」단계에서 <b>「서비스 계정 키 생성 사용 중지됨」</b> 창이 뜨면 구글이 새 계정에 기본으로 걸어 둔 차단입니다.
+      아래 두 번만 바꾸면 풀립니다. <span style="opacity:.75">(창이 안 뜨면 이 단계는 건너뛰세요)</span></p>
+    <p class="say"><b>① 나에게 권한 주기</b> — 아래 버튼 → 맨 위 <b>프로젝트 이름 버튼</b>을 눌러 <b>「○○-org」(건물 모양)</b>을 고르기 →
+      내 이메일 줄 끝 <b>연필 ✏️</b> → <b>「다른 역할 추가」</b> → <b>「조직 정책 관리자」</b> → <b>저장</b>.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/iam" target="_blank" rel="noopener">IAM 열기 →</a>
+    <p class="say" style="margin-top:14px"><b>② 차단 끄기</b> — 아래 버튼(위쪽이 「○○-org」인 상태) → <b>「정책 관리」</b> →
+      <b>「상위 정책 재정의」</b> 선택 → 규칙을 <b>「미적용」</b>으로 → <b>「정책 설정」</b>.
+      화면의 상태가 <b>「미적용」</b>으로 바뀌면 끝입니다.<br/>
+      <span style="opacity:.75">★「권한이 없습니다」가 뜨면 ①을 저장하고 1~2분 뒤 새로고침하세요.</span></p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation" target="_blank" rel="noopener">키 생성 차단 정책 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">다</div><h3>키(.json)<br>내려받기</h3></div>
+    <p class="say">만든 서비스 계정을 누르고 <b>「키」 탭 › 「키 추가」 › 「새 키 만들기」 › JSON › 「만들기」</b> → 파일이 <b>다운로드 폴더</b>에 저장됩니다.
+      아래 목록에 키 한 줄(「Active」)이 생기면 성공이에요. 이 파일은 비밀번호와 같아요 — 다른 곳에 올리지 마세요.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">라</div><h3>설정에<br>붙여넣기</h3></div>
+    <p class="say">내려받은 파일을 <b>메모장</b>으로 열어 <b>전체를 복사</b> → <b>마이페이지 › 🔑 내 키 등록 › 🚀 구글 버텍스 API</b>에 붙여넣고
+      <b>「확인하고 연결」</b>. 저희가 구글에 한 번 확인한 뒤 연결합니다. 막히면 화면에 원인과 할 일이 나와요.</p>
+    <a class="go-btn" href="/settings#keys">설정으로 →</a>
+  </div>
+  </details>
+
+  <!-- ★「권한이 없습니다」가 떠도 역할이 맞는 경우(2026-10-01 관제 053) — 결제 계정이 프로젝트에 안 붙은 것이 대부분.
+       구글 클라우드를 이미 쓰던 분은 1단계(무료 체험=결제 등록)가 안 떠서 결제 없이 프로젝트만 만들어진다. -->
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>「권한이 없습니다」가<br>뜨면 — 결제 연결 확인</h3></div>
+    <p class="say">역할(직접 하기 「나」단계)을 맞게 넣었는데도 <b>「권한이 없습니다」</b>가 뜨면, 거의 다 <b>이 프로젝트에 결제 계정이 안 붙은 것</b>입니다.
+      구글 클라우드를 <b>전부터 쓰던 분</b>은 1단계 무료 체험 화면이 안 떠서 결제 없이 프로젝트만 만들어져요.</p>
+    <p class="say">아래 버튼을 눌러 <b>결제</b> 화면을 여세요. <b>「결제 계정 연결」 버튼이 보이면</b> 그걸 눌러 결제 계정을 만들거나 고르세요
+      (처음이면 무료 체험 $300이 함께 들어와요). <b>결제 계정 이름과 「개요」 화면이 보이면</b> 이미 붙은 것이니,
+      역할을 <b>방금 넣은 경우 5분 기다렸다가</b> 「확인하고 연결」을 다시 눌러 주세요.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">이 프로젝트의 결제 연결 보기 →</a>
+  </div>
+
+  <!-- ★카드가 실제로 결제되지 않게(2026-09-27 사장님) — 근거: 구글 공식 문서(무료 체험·예산·결제 계정 폐쇄), 캡처로 화면 문구 확인 -->
+  <div class="card">
+    <div class="card-head"><div class="num">💳</div><h3>카드가 실제로<br>결제되지 않게</h3></div>
+    <p class="say"><b>무료 체험 중에는 카드가 청구되지 않습니다</b>(구글 공식). 화면 맨 위 파란 <b>「업그레이드」</b>
+      (일반 계정으로 전환)만 누르지 않으면, 90일이 지나거나 $300을 다 써도 <b>자동으로 결제되지 않고 그냥 멈춥니다</b>.<br/>
+      지금 상태는 <b>결제 › 개요</b> 위쪽에서 확인하세요 — <b>「무료 체험판 계정」</b>이라고 떠 있으면 안전합니다.</p>
+    <p class="say"><b>이미 「업그레이드」를 누르셨다면(「유료 계정」으로 뜸):</b> 쓰는 동안은 그대로 두세요 — 쓴 만큼만 청구되고, 숏템메이커는 한 편에 몇십 원 수준입니다.
+      <b>버텍스를 아예 그만 쓰고 싶을 때만</b> <b>결제 › 계정 관리 › 「결제 계정 폐쇄」</b>를 누르세요. 그때까지 쓴 만큼만 청구되고 이후로는 멈춥니다.
+      <b>예산 알림만 걸어서는 결제가 막히지 않아요</b>(알림만 옵니다).</p>
+    <div class="warnbox"><span class="ic">⚠</span><span><b>연결하는 중에는 「결제 계정 폐쇄」를 누르지 마세요.</b> 폐쇄하면 버텍스 연결이 아예 안 됩니다. 「권한이 없습니다」가 떠서 막힌 것이라면 위의 <b>결제 연결 확인</b>·직접 하기 「나」단계 <b>역할 저장</b>을 보세요.</span></div>
+    <p class="say" style="opacity:.8">멈추면 숏템메이커 쪽 Vertex 연결도 멈춥니다(설정에 “연결이 멈췄어요”).
+      대본 쓰기·장면 매칭은 무료 제미나이로 계속되고, <b>AI 장면 생성</b>만 쓸 수 없게 됩니다.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">결제 화면 열기 →</a>
+  </div>
+
+  <a class="top" href="#top">↑ 맨 위로</a>
+
   <!-- ══════════════ 안 될 때 ══════════════ -->
   <h4 id="fix">안 될 때</h4>
   <div class="fix">
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>저장했더니 <b>“키가 틀렸습니다”</b></span></div>
       <div class="a"><span class="ic">→</span><span>앞뒤에 <b>빈칸이나 줄바꿈</b>이 딸려온 경우가 가장 많습니다. 다시 복사해서 넣어보세요. Vmake는 <code>앱키:시크릿</code> 모양이 맞는지 확인하세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">?</span><span>버텍스에서 <b>「권한이 없습니다」</b>가 뜹니다 (역할은 맞게 넣었는데)</span></div>
+      <div class="a"><span class="ic">→</span><span>프로젝트에 <b>결제 계정이 안 붙은</b> 경우가 대부분입니다. ⑧의 <b>「결제 연결 확인」</b> 카드대로 결제 › 「결제 계정 연결」을 눌러 주세요. 역할을 <b>방금</b> 넣으셨다면 5분 뒤 다시 눌러 보세요.</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>유튜브 키가 <b>계속 틀렸다고</b> 나옵니다</span></div>
@@ -1116,3 +1303,19 @@
     <a href="/settings.html">설정 화면으로 가기 →</a>
   </footer>
 </div>
+<script>
+// 버텍스 자동 설정 명령 복사(관제 096) — 클립보드가 막힌 환경에서도 되게 textarea로 한 번 더
+function copyCmd(btn){
+  var t = (document.getElementById("vertexCmd") || {}).textContent || "";
+  function done(){ var o = btn.textContent; btn.textContent = "복사됨 ✔"; setTimeout(function(){ btn.textContent = o; }, 1500); }
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback);
+  else fallback();
+}
+</script>

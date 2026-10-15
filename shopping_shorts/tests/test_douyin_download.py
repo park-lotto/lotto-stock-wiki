@@ -99,7 +99,8 @@ def test_normalize_keeps_safe_file_untouched(monkeypatch, tmp_path):
 
     monkeypatch.setattr(df.subprocess, "run", fake_run)
     assert df._normalize(src) == str(src)
-    assert calls == ["ffprobe"]
+    # 재는 것만(ffprobe) 돈다 — 코덱·높이 1번 + 화면 구멍 1번(관제 176, media_download.video_holes). 변환(ffmpeg)은 0번
+    assert calls == ["ffprobe", "ffprobe"]
 
 
 def test_normalize_converts_hevc(monkeypatch, tmp_path):

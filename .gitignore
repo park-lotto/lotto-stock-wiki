@@ -205,3 +205,20 @@ tiktok_session.json
 /out/hotpeople/
 # channelkit bench 표본 mp4 캐시(재다운로드 가능, 2026-09-28)
 /out/bench_cache/
+
+# 옛 테스트·제작 결과 영상(2026-09-27 사장님 — 트랙마다 사본이 쌓여 git에서 뺌).
+#   원본 백업: C:\Users\CH\Videos\git에서뺀영상_0927 (md5 목록 _목록_md5.txt)
+/out/이븐쇼핑_백본5건/*.mp4
+/out/페이드확인/*.mp4
+/productions/s3_kakao_claude/04_output.mp4
+/productions/s5_kakao_claude/04_output.mp4
+out/lang_mode_check_*.json
+
+# 고객 로고 업로드(관제 065) — 서버 데이터
+/out/장면꾸미기_로고/
+# 관제 자동 작업 기록(PC마다 다름 — 관제 107·109)
+/관제/*.log
+/관제/storage_last.json
+
+# 단어 강조 검사 결과물(tools/word_fx_check.py) — 영상·프레임이라 올리지 않는다
+/out/_word_fx_check/

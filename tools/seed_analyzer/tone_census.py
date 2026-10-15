@@ -195,7 +195,7 @@ def run_corpus(n, seed_no=7, src="/tmp/hits_cls_all.json", platforms=("instagram
             feats = [{"name": a.get("product") or "제품", "claim": "", "from_cuts": [], "pain": ""}]
         plat = sw.seed_platform(seed_text)
         note = {}
-        lines = sw.write(a.get("product") or "", seed_text[:1500], feats, platform=plat, key=r.get("id") or "", nth=0, note=note, seconds=25)
+        lines = sw.write_styled(a.get("product") or "", seed_text[:1500], sw.frame_of(None), [], {}, platform=plat, seconds=25, note=note)   # 재료 없이 씨앗 결만(2026-09-27 한 번 호출 작가)
         ls = [L["text"] for L in lines]
         row = {"job_id": "%s:%s" % (r["platform"][:2], (r.get("id") or "")[:10]), "seed_vid": r.get("id"),
                "seed_platform": plat, "seed_text": seed_text[:1500], "seed": measure(_seed_sentences(seed_text)),

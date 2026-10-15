@@ -30,7 +30,104 @@ from shopping_shorts import script_generate as _sg
 #                      → [2] 심지어 …까지 …한다는 거  → [3] 근데 진짜 충격적인 포인트는 …다고 → 마무리 …라는데
 #   공개 뒤 첫 신호어까지 중앙값 3어절, 첫 자리는 "이게 말도 안 되는게"가 50편 중 31편. "심지어"는 두 번째 자리 말이다
 #   (사장님 화면 확인: 대비 앞에 심지어가 붙어 어색했다). 프리셋은 **낱말만** 다르고 위치·세기 순서는 같다.
-YT_SETS = {
+# ★2026-10-05 사장님 "모든 게 다 똑같으면 지루하고 이상하니까 신호어를 조사 많이 하고 변형해서 세트로":
+#   8세트 고정 → **자리별 낱말 풀 + 실측 빈도 가중**으로 바꿨다. 자리 순서([1]대비 → [2]더하기 → [3]최고 반전)와
+#   세기 순서는 그대로, 낱말만 달라진다. 근거 = tools/storyboard_mock/signal_census.py
+#   (썰 히트작 자막 2,051편 중 신호어 있는 1,242편 — 숫자는 그 편들에서 나온 횟수 전체).
+#   풀 분류: [1] = "~게"로 끝나 "…다는 거"로 받는 꼴(실측 [1]자리 비율 90% 이상), [2] = 덧붙이는 말, [3] = "~는/~건" 최상급.
+#   한 편 안에서 같은 뿌리 낱말(미친·충격적인·대박인·말도 안 되는·놀라운·소름 돋는·반전)은 두 번 안 쓴다.
+# ★2026-10-05 2차 조사(사장님 "더 다양하게, 억지스럽지 않게 많이 쓰는 것들로"): signal_census.py 를 넓혀
+#   (자막 2,051편 + 톤 조사 유튜브 씨앗 = 2,057편·103채널) 목록 밖 꼴을 n-gram 전수로 찾고, 채택 = 서로 다른 영상 5편↑ ·
+#   채널 2개↑ · 자리(신호어 2개↑ 편의 등장 순서, 비슷한 꼴 묶음 합산) 60%↑ 인 것만. 숫자 = 그 꼴이 나온 횟수.
+#   [1]에 "미친 포인트인게"·"대박인게", [3]에 "근데 진짜는 여기서부터"·"(근데) 미친 포인트는"·"(근데 진짜) 반전은"·
+#   "충격적인 사실은"·"소름 돋는 건" 계열을 더했다. "진짜 미친 건"(35편이지만 **한 채널**)은 말버릇이라 뺐다.
+YT_POOLS = {
+    1: [("이게 말도 안 되는게", 120), ("이게 미친 포인트인게", 108), ("이게 진짜 말도 안 되는게", 67),
+        ("이게 진짜 대박인게", 26), ("이게 진짜 미친 포인트인게", 22), ("진짜 미친 포인트인게", 16),
+        ("말도 안 되는게", 13), ("진짜 말도 안 되는게", 11), ("이게 대박인게", 8),
+        ("미친 포인트인게", 7), ("대박인게", 5)],
+    # "게다가"는 뺐다(2026-10-05 사장님 "게다가는 좀 약해서 빼는 게 좋고") — 모델이 쓰면 떼기 목록이 뗀다
+    2: [("심지어", 599), ("무엇보다", 35), ("뿐만 아니라", 28), ("거기다", 11)],
+    3: [("근데 진짜 충격적인 포인트는", 84), ("근데 진짜 미친 포인트는", 39), ("더 충격적인 건", 71),
+        ("진짜 미친 포인트는", 29), ("진짜 충격적인 포인트는", 54), ("더 대박인 건", 31),
+        ("더 놀라운 건", 24), ("진짜 충격적인 건", 23), ("진짜 대박인 건", 15), ("근데 더 대박인 건", 10), ("충격적인 건", 9),
+        ("근데 진짜는 여기서부터", 64), ("진짜는 여기서부터", 7), ("미친 포인트는", 20), ("하지만 진짜 미친 포인트는", 15),
+        ("근데 미친 포인트는", 9), ("근데 진짜 반전은", 13), ("진짜 반전은", 8), ("근데 진짜 충격적인 사실은", 8), ("진짜 소름 돋는 건", 6),
+        # 10-05 사장님 "대박·충격·놀랍 같은 센 말로 더" — 자막 실측 5편·2채널 이상만(이게 놀라운게 1편·이게 신기한게 0편은 못 넣음)
+        ("놀라운 건", 9), ("대박인 건", 9), ("신기한 건", 9), ("무엇보다 미친 포인트는", 6), ("근데 더 미친 포인트는", 5)],
+}
+# [1]을 비우는 몫 — 옛 8세트 중 1세트(E)가 [1]을 비웠다(기계 티 줄이기). 그 비율(1/8)을 이어 받는다.
+YT_BLANK_FIRST = 1 / 8
+# 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6 — 인스타 641편, 2026-09-22).
+# 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다. 자리 순서가 따로 없어(옛 5세트 실측)
+# 세 자리 중 [1]·[2] 중 하나를 비우고 나머지 둘을 빈도 가중으로 고른다.
+IG_POOL = [("심지어", 73), ("대박인 건", 21), ("거기다", 7), ("무엇보다", 6)]   # 게다가 뺌(10-05 사장님)
+_SIG_ROOTS = ("말도 안 되는", "미친", "충격적인", "대박인", "놀라운", "소름 돋는", "반전", "신기한")
+
+
+def _root(w):
+    return next((r for r in _SIG_ROOTS if r in w), w)
+
+
+# 줄 본문과 신호어가 같은 말을 두 번 하면 어색하다("이게 미친 포인트인게 … 성능이 미쳤다는 거", 10-05 시안 실측) — 뿌리별 본문 꼴
+_ROOT_STEMS = {"미친": ("미친", "미쳤", "미쳐"), "충격적인": ("충격",), "대박인": ("대박",), "놀라운": ("놀라", "놀랍", "놀랄"),
+               "말도 안 되는": ("말도 안", "말이 돼", "말이 됨"), "소름 돋는": ("소름",), "반전": ("반전",), "신기한": ("신기",)}
+
+
+def signal_fits(word, line):
+    """신호어가 그 줄 본문과 같은 말을 반복하지 않나(★판단 한 곳 — 대본 작가·스토리보드 공용)."""
+    stems = _ROOT_STEMS.get(_root(word or ""), ())
+    return not any(x in (line or "") for x in stems)
+
+
+def refit_signal(word, line, rank, platform="yt", avoid=()):
+    """word 가 줄과 겹치면 같은 자리 풀에서 겹치지 않는 다른 신호어(빈도 순)로 — 없으면 ''. rank = 1·2·3 자리."""
+    if not word or signal_fits(word, line):
+        return word
+    pool = IG_POOL if platform == "ig" else YT_POOLS.get(rank) or []
+    used = {_root(a) for a in avoid if a}
+    for w, _n in sorted(pool, key=lambda x: -x[1]):
+        if w and w != word and _root(w) not in used and signal_fits(w, line):
+            return w
+    return ""
+
+
+def _weighted(rng, pool, avoid):
+    cand = [(w, n) for w, n in pool if w and _root(w) not in avoid]
+    if not cand:
+        return ""
+    x = rng.random() * sum(n for _, n in cand)
+    for w, n in cand:
+        x -= n
+        if x <= 0:
+            return w
+    return cand[-1][0]
+
+
+def _draw_signals(platform, seed):
+    import random
+    rng = random.Random(seed)
+    used = set()
+    if platform == "ig":
+        blank = rng.randrange(2)
+        out = []
+        for i in range(3):
+            w = "" if i == blank else _weighted(rng, IG_POOL, used)
+            used.add(_root(w))
+            out.append(w)
+        return out
+    w1 = "" if rng.random() < YT_BLANK_FIRST else _weighted(rng, YT_POOLS[1], used)
+    used.add(_root(w1))
+    w2 = _weighted(rng, YT_POOLS[2], used)
+    used.add(_root(w2))
+    return [w1, w2, _weighted(rng, YT_POOLS[3], used)]
+
+
+# ★새 풀(실측 빈도 가중)은 스위치 signal_pool_enabled 뒤에 둔다(2026-10-05 사장님 "내 꺼만 먼저") — 꺼진 계정은 종전 고정 8세트 그대로.
+#   누가 켜졌나는 app 이 요청마다 SIGNAL_POOL 에 꽂는다(대본 작가·스토리보드 둘 다 이 함수 하나만 보므로 판단 한 곳).
+import contextvars as _cv
+SIGNAL_POOL = _cv.ContextVar("signal_pool_on", default=False)
+_OLD_YT_SETS = {
     "A": ["이게 말도 안 되는게", "심지어", "근데 진짜 충격적인 포인트는"],
     "B": ["이게 말도 안 되는 게", "게다가", "진짜 충격적인 포인트는"],
     "C": ["진짜 말도 안 되는게", "심지어", "근데 진짜 미친 포인트는"],
@@ -40,16 +137,108 @@ YT_SETS = {
     "G": ["이게 말도 안 되는게", "심지어", "더 대박인 건"],
     "H": ["진짜 말도 안 되는게", "거기다", "근데 진짜 충격적인 포인트는"],
 }
-_ALL_SIGNAL_WORDS = sorted({w for v in YT_SETS.values() for w in v if w} | {"심지어", "게다가", "거기다", "진짜 미친 건", "진짜 대박인 건", "미친 포인트는", "충격적인 포인트는", "이게 진짜 미친 게", "근데 진짜"})   # 모델이 반전을 자기 신호어로 열면 뗀다("근데 진짜 충격적인 포인트는 진짜 미친 건 …" 실측)
-# 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6).
-# 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다.
-IG_SETS = {
-    "A": ["", "심지어", "무엇보다"],
-    "B": ["게다가", "", "대박인 건"],
-    "C": ["", "거기다", "심지어"],
-    "D": ["심지어", "", "게다가"],
-    "E": ["", "대박인 건", "거기다"],
-}
+_OLD_IG_SETS = {"A": ["", "심지어", "무엇보다"], "B": ["게다가", "", "대박인 건"], "C": ["", "거기다", "심지어"],
+                "D": ["심지어", "", "게다가"], "E": ["", "대박인 건", "거기다"]}
+
+
+def pick_signals(platform, key, nth=0):
+    """신호어 세 자리를 고른다(★주인 함수 — 라이브 대본 작가와 스토리보드가 둘 다 이걸 부른다).
+    같은 key·nth 면 늘 같은 답(다시 만들어도 안 바뀜), key 가 다르면 회원마다 다르게(실측 빈도 가중).
+    ★같은 작업의 1안·2안·3안(nth)은 **반드시 서로 다르게** — 앞 안과 같으면 다시 뽑는다
+      (해시에 nth 만 섞으면 1안과 3안이 우연히 같아진다, 2026-09-22 실측). 반환 (이름, [w1, w2, w3])."""
+    if not SIGNAL_POOL.get():      # 스위치 꺼짐 = 종전 그대로(고정 8세트·인스타 5세트)
+        return _pick(_OLD_IG_SETS if platform == "ig" else _OLD_YT_SETS, key, nth)
+    import zlib
+    seen = []
+    for j in range(int(nth) + 1):
+        for t in range(50):
+            out = _draw_signals(platform, zlib.crc32(("%s|%s|%d|%d" % (platform, key, j, t)).encode("utf-8")))
+            if out not in seen:
+                break
+        seen.append(out)
+    return "|".join(seen[-1]), seen[-1]
+
+
+def _all_combos(platform):
+    import itertools
+    if platform == "ig":
+        ws = [w for w, _ in IG_POOL]
+        return [c for b in range(2) for c in (list(p[:b]) + [""] + list(p[b:]) for p in itertools.permutations(ws, 2))]
+    p1 = [""] + [w for w, _ in YT_POOLS[1]]
+    return [[a, b, c] for a in p1 for b in (w for w, _ in YT_POOLS[2]) for c in (w for w, _ in YT_POOLS[3])
+            if len({_root(x) for x in (a, b, c) if x}) == len([x for x in (a, b, c) if x])]
+
+
+def signal_combo_count(platform):
+    """뽑힐 수 있는 서로 다른 조합 수(점검 도구용)."""
+    return len(_all_combos(platform))
+
+
+# 옛 이름(세트 사전) — 다른 도구(tools/seed_analyzer/signal_sets.py)가 읽는다. 풀에서 만든 **모든 조합**이다.
+YT_SETS = {"c%03d" % i: c for i, c in enumerate(_all_combos("yt"))}
+IG_SETS = {"c%03d" % i: c for i, c in enumerate(_all_combos("ig"))}
+_ALL_SIGNAL_WORDS = sorted({w for v in YT_POOLS.values() for w, _ in v} | {w for w, _ in IG_POOL}
+                           | {"게다가", "이게 말도 안 되는 게", "진짜 대박인 건", "미친 포인트는", "충격적인 포인트는", "이게 진짜 미친 게", "근데 진짜"})
+# ↑ 모델이 칸을 자기 신호어로 열면 뗀다("근데 진짜 충격적인 포인트는 진짜 미친 건 …" 실측)
+
+
+def attach_signal(text, word):
+    """칸 첫 줄에 신호어를 박는다(★박는 함수 — 라이브 대본 작가·스토리보드 공용).
+    모델이 이미 다른 신호어·접속사로 열었으면 떼고 붙인다(목록에 있는 낱말 → 형태(_TWIST_LEAD) 두 겹까지)."""
+    t = re.sub(r"\s+", " ", text or "").strip()
+    for _ in range(2):
+        t = _LEAD_CONJ.sub("", t)
+        for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):
+            if t.startswith(w + " "):
+                t = t[len(w):].strip()
+                break
+            # ★띄어쓰기만 다른 꼴("되는 게" vs "되는게")도 같은 신호어로 뗀다 — 못 떼면 신호어가 두 겹으로 붙었다
+            #   (10-06 라이브: "이게 미친 포인트인게 이게 진짜 말도 안 되는 게 차 시트에…")
+            cw = w.replace(" ", "")
+            j, k = 0, 0
+            while j < len(t) and k < len(cw):
+                if t[j] == " ":
+                    j += 1
+                    continue
+                if t[j] != cw[k]:
+                    break
+                j += 1
+                k += 1
+            if k == len(cw) and (j == len(t) or t[j] == " "):
+                t = t[j:].strip()
+                break
+        t = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", t)).strip()
+    t = t.lstrip(",， ")
+    if word and SIGNAL_POOL.get() and not signal_fits(word, t):   # 새 풀 계정: 본문과 같은 말 반복이면 같은 자리 다른 신호어로
+        rank = next((r for r, pool in YT_POOLS.items() if any(w == word for w, _ in pool)), 0)
+        word = refit_signal(word, t, rank, "yt" if rank else "ig")
+    return (word + " " + t).strip() if word else t
+
+
+def storyboard_signals(kinds, key, nth=0, platform="yt", ranks=None):
+    """스토리보드 칸 종류 목록(esc/twist/"") → 칸마다 박을 신호어. ★칸 **순서대로** 자리를 준다(10-05 라이브 실측:
+    고조·반전·고조 순서 대본에서 [3]"대박인 건" 뒤에 [2]"심지어"가 붙었다 — 반전 다음 '더하기'는 어색하다).
+      [1] = 첫 신호 칸 · [3] = 반전 칸(없으면 셋 이상일 때 마지막 고조) · [2] = 그 사이 첫 칸 · [3] 뒤 칸은 빈칸.
+    남는 칸은 빈칸(한 편 안 반복 금지)."""
+    _, ws = pick_signals(platform, key, nth)
+    out = [""] * len(kinds)
+    rk = [0] * len(kinds)                 # 칸마다 몇 번 자리 신호어인가 — 짤 자리 판정이 이걸 본다
+    sig = [i for i, k in enumerate(kinds) if k in ("esc", "twist")]
+    if not sig:
+        if ranks is not None:
+            ranks[:] = rk
+        return out
+    tw = [i for i in sig if kinds[i] == "twist"]
+    last = tw[0] if tw else (sig[-1] if len(sig) >= 3 else None)
+    first = sig[0] if sig[0] != last else None
+    mid = next((i for i in sig if i != first and i != last and (last is None or i < last)), None)
+    for i, r in ((first, 1), (mid, 2), (last, 3)):
+        if i is not None:
+            out[i], rk[i] = ws[r - 1], r
+    if ranks is not None:
+        ranks[:] = rk
+    return out
+
 
 _EXPR = """■ 표현은 자유롭게 — 후킹이 전부다
 불편·상황·인물·수치·효능·가격은 **화면에 없어도 쓸 수 있다.** 그 제품을 쓰는 사람이
@@ -131,7 +320,10 @@ YT_SCHEMA = {
             "from_pain": {"type": "string"},
             "feat": {"type": "integer"},
             "detail": {"type": "array", "items": {"type": "string"}},     # 풀코스: 없앤 뒤 장면 풀이 3~4줄
-        }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]}},
+        }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]},
+            # ★고조는 **2칸 무조건**(2026-09-26 사장님 "고조2는 무조건 들어가야 된다"). 히트작 실측 프리셋도
+            #   고조1 80자·고조2 39자 둘이다. 모델이 1칸만 쓰고 끝내던 것을 구조(minItems)로 막는다.
+            "minItems": 2},
         "twist": {"type": "string"},
         "twist_feat": {"type": "integer"},      # 반전이 근거로 삼은 재료 번호 — 그 특징의 컷이 붙는다(2026-09-22)
         "finale": {"type": "array", "items": {"type": "string"}},       # 풀코스: 마지막 셀링 2~3줄(반전 대신)
@@ -140,7 +332,7 @@ YT_SCHEMA = {
     "required": ["hook", "bait", "reveal", "contrast", "escalations", "twist", "closing"],
 }
 
-YT_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 유튜브 썰쇼핑 대본을 써라.
+YT_BRIEF = """■ 이번 대본 스타일 = **유튜브 썰쇼핑** (씨앗 말투가 반말 썰이다). 한 편 전체를 이 스타일 하나로 — 인스타 존댓말 어미를 섞지 마라.
 
 ■ 말투 = 남 얘기 전하는 혼잣말 (썰 히트작 520편 실측 — 청자에게 말 거는 반말은 4%뿐이다)
 보는 사람에게 말을 걸지 마라. "~있지?" "~해봐" "다들 알지?" 같은 대화체는 이 채널 말투가 아니다.
@@ -229,7 +421,7 @@ IG_SCHEMA = {
     "required": ["opening", "scene", "ask", "reveal", "beats", "feeling", "cta"],
 }
 
-IG_BRIEF = """너는 인스타 릴스 쇼핑 대본 작가다. **겪은 일을 이야기하듯** 써라.
+IG_BRIEF = """■ 이번 대본 스타일 = **인스타 릴스 체험담** (씨앗 말투가 존댓말 체험담이다). **겪은 일을 이야기하듯**, 한 편 전체를 이 스타일 하나로 — 유튜브 썰 어미를 섞지 마라.
 
 ■ 이건 설명이 아니라 상황극이다
   X 이 제품은 콩알만큼 떼어 붙이면 고정되는 기능이 있습니다
@@ -273,7 +465,11 @@ def _feats_block(feats):
     #   적어 글자 대조가 실패 → 그 줄이 근거 컷을 못 받고 아무 컷이나 받았다).
     rows = ["(고조 칸마다 feat에 아래 **재료 번호**를 적어라. 그 번호의 화면이 그 칸에 붙는다.)"]
     for i, f in enumerate(feats or []):
-        rows.append("%d. %s — %s" % (i + 1, f.get("name") or "", f.get("claim") or ""))
+        tag = ""
+        if "new" in f:        # pick_diff_feats가 단 표시 — 차별점(새 특징)과 씨앗이 이미 한 말을 모델이 구분하게
+            tag = (("  [새 특징 — 씨앗에 없음, 영상 %d개가 보여줌]" % f.get("videos", 0)) if f["new"]
+                   else "  [씨앗이 이미 말함 — 고조1에만 쓸 수 있다]")
+        rows.append("%d. %s — %s%s" % (i + 1, f.get("name") or "", f.get("claim") or "", tag))
         if f.get("pain"):
             rows.append("    이게 없을 때: %s" % f["pain"])
     return "\n".join(rows)
@@ -288,14 +484,113 @@ def _pick(sets, key, nth=0):
     return names[i], sets[names[i]]
 
 
-def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, note=None, seconds=0, preset="short"):
+def _seed_last(seed_text):
+    """씨앗의 마지막 포인트(마지막 문장). ★문장이 하나뿐이면 빈칸 — 그걸 지시문에 넣으면 씨앗 **첫 줄**이 보여
+    훅이 베껴진다(story_hook.instruction: "씨앗 문장은 절대 보여주지 않는다", 테스트가 잡았다)."""
+    parts = [p.strip() for p in re.split(r"[.!?\n]", seed_text or "") if len(p.strip()) >= 8]
+    if len(parts) < 2:
+        return ""
+    last = parts[-1][:120]
+    return "" if _gram_share(parts[0], last) > 0.3 else last
+
+
+def _diff_rule(feats, twist_n, seed_text, seed_points=None):
+    """차별점 지시(pick_diff_feats가 new 표시를 단 재료가 있을 때만). 새 특징이 없으면 빈 문자열 = 종전 그대로.
+    ★새 특징이 **1개뿐**이면 반전만 새 특징, 고조2는 고조1과 **다른** 씨앗 특징(2026-09-26 실측: 새 1개로 고조2·반전을
+      둘 다 채우라 했더니 같은 특징을 두 번 말했다 — '1인분 포장' → '개별 포장이라 신선')."""
+    new = [i + 1 for i, f in enumerate(feats or []) if f.get("new")]
+    if not new:
+        return ""
+    old = [i + 1 for i, f in enumerate(feats or []) if "new" in f and not f.get("new")]
+    rows = ["■ 차별점 — 이 대본이 씨앗 영상과 달라지는 곳은 **특징(셀링포인트)**이다. 씨앗이 이미 한 말을 또 하면 같은 영상이 된다."]
+    if len(new) >= 2:
+        if old:
+            rows.append("  씨앗이 이미 말한 특징(재료 %s번)은 **고조1에서만** 쓸 수 있다." % ", ".join(map(str, old)))
+        rows.append("  고조2부터는 **새 특징(재료 %s번)**으로만 채워라." % ", ".join(map(str, [n for n in new if n != twist_n] or new)))
+    else:
+        rows.append("  고조는 칸마다 **서로 다른 특징**을 쓴다(같은 번호를 두 칸에 쓰지 마라). 재료 %d번은 **반전 전용**이다." % new[0])
+    if twist_n:
+        rows.append("  반전(twist)은 **재료 %d번**으로 쓰고 twist_feat에 %d을 적어라 — 여러 영상이 공통으로 보여준 가장 센 새 특징이다."
+                    % (twist_n, twist_n))
+    pts = [p for p in (seed_points or []) if p]
+    if pts:
+        rows.append("  ★씨앗이 이미 말한 것 — 반전과 고조2에는 **이 내용을 쓰지 마라**(표현만 바꿔도 같은 내용이면 안 된다):")
+        rows += ["    - %s" % p for p in pts[:10]]
+    return "\n".join(rows)
+
+
+def _seed_word_hits(text, seed_points, product=""):
+    """문장 속에 씨앗 셀링포인트의 **특징 낱말**이 몇 개 나오나(제품명 낱말은 뺀다 — 어느 줄에나 나온다)."""
+    skip = set(_words(product))
+    sw_ = {w for w in _words(" ".join(seed_points or [])) if w not in skip}
+    t = re.sub(r"\s+", "", text or "")
+    return sorted(w for w in sw_ if w in t)
+
+
+def _diff_violations(out, feats, twist_n, seed_text, seed_points=None, product=""):
+    """모델 출력이 차별점 규칙을 어긴 곳(다시 쓰라는 말로). 없으면 []."""
+    bad = []
+    n_new = sum(1 for f in feats or [] if f.get("new"))
+    def _is_old(n):
+        return isinstance(n, int) and 1 <= n <= len(feats or []) and "new" in feats[n - 1] and not feats[n - 1].get("new")
+    escs = out.get("escalations") or []
+    seen = [e.get("feat") for e in escs]
+    for i, e in enumerate(escs[1:], start=2):
+        n = e.get("feat")
+        if n_new >= 2 and _is_old(n):
+            bad.append("고조%d가 씨앗이 이미 말한 %d번 특징을 썼다. 새 특징 번호로 바꿔라" % (i, n))
+        if isinstance(n, int) and n in seen[:i - 1]:
+            bad.append("고조%d가 앞 고조와 같은 %d번 특징을 또 썼다. 다른 특징으로" % (i, n))
+        if n_new == 1 and twist_n and n == twist_n:
+            bad.append("고조%d가 반전 전용 %d번을 썼다. 다른 특징으로" % (i, n))
+    # ★내용 대조(2026-09-26 실측: 번호는 새 특징이라 적고 글은 씨앗 내용 — "비싼 브랜드 제품을 압도"·"온 집안 물컵을 이걸로").
+    #   씨앗 문장을 마침표로 나누는 방식은 마침표 없는 씨앗에서 아예 안 돌았다 → 씨앗 셀링포인트 목록의 낱말로 본다.
+    for label, t in [("반전", out.get("twist") or "")] + [
+            ("고조%d" % (i + 2), " ".join(str(e.get(k) or "") for k in ("moment", "what_happens", "erased")))
+            for i, e in enumerate(escs[1:]) if n_new >= 2]:
+        hits = _seed_word_hits(t, seed_points, product)
+        if len(hits) >= 2:
+            bad.append("%s가 씨앗이 이미 말한 내용(%s)을 썼다. 새 특징으로 새로 써라" % (label, ", ".join(hits[:4])))
+    # 번호를 **안 적은** 건 위반이 아니다(write가 twist_n으로 채운다). 다른 번호를 적었을 때만 다시 쓴다.
+    if twist_n and out.get("twist_feat") is not None and out.get("twist_feat") != twist_n:
+        bad.append("반전(twist)은 재료 %d번으로 쓰고 twist_feat=%d" % (twist_n, twist_n))
+    tw = (out.get("twist") or "").strip()
+    last = _seed_last(seed_text)
+    if tw and last:
+        from shopping_shorts import story_hook
+        if story_hook.copied(tw, last) or _gram_share(tw, last) > 0.4:
+            bad.append("반전 문장이 씨앗의 마지막 포인트를 옮겼다. 새 특징으로 새로 써라")
+    return bad
+
+
+def _gram_share(a, b, n=4):
+    """a의 n글자 조각 중 b에도 있는 비율(글자만)."""
+    ca, cb = re.sub(r"[^가-힣A-Za-z0-9]", "", a or ""), re.sub(r"[^가-힣A-Za-z0-9]", "", b or "")
+    ga = {ca[i:i + n] for i in range(max(0, len(ca) - n + 1))}
+    gb = {cb[i:i + n] for i in range(max(0, len(cb) - n + 1))}
+    return len(ga & gb) / len(ga) if ga else 0.0
+
+
+def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, note=None, seconds=0, preset="short",
+          hook_slots=None, twist_n=0, seed_points=None):
     """대본 한 편 → [{beat, text}]. 실패하면 [](호출부가 옛 경로로 간다).
 
     platform: "yt"(유튜브 썰) | "ig"(인스타)
     style:    {"name","hook_angle","flow","extra"} — 고객이 고른 스타일(없으면 기본 흐름)
+    hook_slots(썰, 2026-09-26): 씨앗의 홀린 요인(권위자·대상·나라…). 주면 첫 줄은 **꼴 은행**(story_hook)에서 회전해
+              고른 꼴로 쓰고, 씨앗 첫 줄을 베끼면 다른 꼴로 1회 재작성 → 그래도면 결정적 채움. None이면 종전 그대로.
     """
     ig = (platform == "ig")
-    brief = IG_BRIEF if ig else YT_BRIEF
+    hook_mold = None
+    if not ig and hook_slots is not None:
+        from shopping_shorts import story_hook
+        hook_mold, _ = story_hook.pick(hook_slots, key, nth, seed_text)
+        if hook_mold and style:
+            style = dict(style, hook_angle="")       # 꼴은 은행이 정한다 — 씨앗 첫 줄 꼴(_seed_style)은 쓰지 않는다
+    # ★2단계 영상 대본 작가 지침서(지위·재료·왜·규칙)는 backbone_assemble.WRITER_BRIEF 한 곳 — 고객 경로(이 함수)와 백본이 같이 쓴다(2026-10-02).
+    #   그 아래에 스타일(유튜브 썰 / 인스타 체험담)이 붙는다. 스타일은 씨앗 말투(seed_platform)로 하나만 고른다.
+    from shopping_shorts import backbone_assemble as _ba
+    brief = _ba.WRITER_BRIEF + chr(10) + (IG_BRIEF if ig else YT_BRIEF)
     if preset == "full":
         brief += IG_FULL_BLOCK if ig else FULL_BLOCK
     elif not ig:
@@ -310,11 +605,84 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
         from shopping_shorts.script_gate import SPEECH_CHARS_PER_SEC as _CPS
         brief += ("\n\n■ 분량: 전체 **%d자 안팎**(읽으면 약 %d초). 넘치면 고조 **칸 수를 줄여라** — "
                   "칸 하나를 얇게 쓰지 마라. 남긴 칸은 깊게 파라." % (int(seconds * _CPS), int(seconds)))
-    prompt = "%s\n\n[제품] %s\n\n[씨앗 — 이 제품으로 터진 영상의 말]\n%s\n\n[재료]\n%s" % (
+    if hook_mold:
+        from shopping_shorts import story_hook
+        brief += "\n\n■ " + story_hook.instruction(hook_mold, hook_slots)
+    _diff = _diff_rule(feats, twist_n, seed_text, seed_points) if not ig else ""
+    if _diff:
+        brief += "\n\n" + _diff
+    prompt ="%s\n\n[제품] %s\n\n[씨앗 — 이 제품으로 터진 영상의 말]\n%s\n\n[재료]\n%s" % (
         brief, product or "", (seed_text or "").strip(), _feats_block(feats))
     schema = IG_SCHEMA if ig else (_short_schema() if preset == "short" else YT_SCHEMA)
     out = _sg._call_json(prompt, schema, note=note) or {}
-    return _to_lines(out, ig, key, nth, feats, preset=preset)
+    if not ig and _n_escalations(out) < MIN_ESCALATIONS:
+        # ★고조2 무조건(2026-09-26 사장님). 스키마 minItems로도 모델이 빈 문자열 칸을 채워 올 수 있어
+        #   내용이 있는 고조 칸을 세고, 모자라면 **무엇이 모자란지 말해 1회 다시** 쓴다. 그래도 모자라면 반려([]) —
+        #   호출부(make_drafts)가 why에 남겨 화면이 이유를 보인다(조용히 얇은 대본을 내보내지 않는다).
+        if note is not None:
+            note["escalation_retry"] = _n_escalations(out)
+        out = _sg._call_json(prompt + ESCALATION_RETRY_BLOCK % _n_escalations(out), schema, note=note) or {}
+        if _n_escalations(out) < MIN_ESCALATIONS:
+            if note is not None:
+                note["reason"] = "고조2 없음(%d칸)" % _n_escalations(out)
+            return []
+    if _diff:
+        _bad = _diff_violations(out, feats, twist_n, seed_text, seed_points, product)
+        if _bad:
+            # ★차별점 검사(2026-09-26): 고조2·반전이 씨앗 특징을 쓰거나 반전이 씨앗 문장을 옮기면 **1회** 다시 쓴다.
+            #   그래도 어기면 그대로 낸다(대본이 안 나오는 것보다 낫다) — note에 남겨 화면·점검이 본다.
+            if note is not None:
+                note["diff_retry"] = _bad
+            out2 = _sg._call_json(prompt + "\n\n■ 다시 써라 — " + " / ".join(_bad), schema, note=note) or {}
+            if out2 and _n_escalations(out2) >= MIN_ESCALATIONS:
+                out = out2
+                _left = _diff_violations(out, feats, twist_n, seed_text, seed_points, product)
+                if _left and note is not None:
+                    note["diff_left"] = _left
+    if _diff and twist_n and out.get("twist_feat") is None and (out.get("twist") or "").strip():
+        out = dict(out, twist_feat=twist_n)     # 반전 줄은 지정 특징(새 특징 1위)의 근거 컷을 받는다
+    lines = _to_lines(out, ig, key, nth, feats, preset=preset)
+    if not ig and lines and hook_slots is not None:
+        lines = _guard_hook(lines, prompt, schema, hook_slots, key, nth, seed_text, feats, preset, note)
+    return lines
+
+
+def _guard_hook(lines, prompt, schema, hook_slots, key, nth, seed_text, feats, preset, note):
+    """첫 줄이 씨앗 첫 줄을 베꼈으면 → 다른 꼴로 1회 재작성 → 그래도면 결정적 채움(story_hook.resolve).
+    ★판정·채움은 story_hook 한 곳. 여기는 순서만 정한다. 재작성 결과는 고조2 규칙도 다시 본다."""
+    from shopping_shorts import story_hook
+    if not story_hook.copied(lines[0].get("text"), seed_text):
+        return lines
+    mold2, _ = story_hook.pick(hook_slots, key, nth + 1, seed_text)
+    if mold2:
+        if note is not None:
+            note["hook_retry"] = lines[0].get("text")
+        out2 = _sg._call_json(prompt + "\n\n■ 첫 줄을 다시 써라 — 씨앗 영상의 첫 문장과 너무 비슷하다. "
+                              + story_hook.instruction(mold2, hook_slots), schema, note=note) or {}
+        if _n_escalations(out2) >= MIN_ESCALATIONS:
+            lines2 = _to_lines(out2, False, key, nth, feats, preset=preset)
+            if lines2 and not story_hook.copied(lines2[0].get("text"), seed_text):
+                return lines2
+    fixed, why = story_hook.resolve(lines[0].get("text"), hook_slots, key, nth, seed_text)
+    if note is not None:
+        note["hook_fix"] = why
+    lines[0] = dict(lines[0], text=fixed)
+    return lines
+
+
+MIN_ESCALATIONS = 2      # 썰: 고조1(불편→없앰) + 고조2(심지어) — 히트작 프리셋과 같은 수
+ESCALATION_RETRY_BLOCK = ("\n\n■ 다시 써라 — 고조 칸이 %d개뿐이다. **고조 칸은 정확히 2개**여야 한다. 두 번째 고조는 "
+                          "첫 번째와 **다른 특징·다른 장면**(재료의 다른 번호)으로 쓰고, moment·what_happens·erased를 다 채워라. "
+                          "다른 칸은 그대로 두어도 된다.")
+
+
+def _n_escalations(out):
+    """내용이 채워진 고조 칸 수 — moment·what_happens·erased 중 하나라도 글이 있으면 1칸으로 센다."""
+    n = 0
+    for e in (out or {}).get("escalations") or []:
+        if isinstance(e, dict) and any((e.get(k) or "").strip() for k in ("moment", "what_happens", "erased")):
+            n += 1
+    return n
 
 
 # 한입썰 칸별 최대 글자(공백 포함) — 썰 히트작 49편 실측 75% 지점을 조금 넘는 값. 지시문은 모델이 넘기지만
@@ -352,7 +720,12 @@ def _group_of(from_pain, feats):
 
 
 _LEAD_CONJ = re.compile(r"^(근데|그런데|그리고|또|그래서|또한)\s+")
-_RANK_ONE = re.compile(r"말도 안 되는|미친 포인트인게")   # 위치[1] 낱말(한 줄 단독으로 둘 수 있는 것)
+# ★모델이 반전을 자기 신호어로 연 **형태**(2026-09-26 실측 "근데 진짜 충격적인 포인트는 진짜 충격적인 건 …" /
+#   라이브 "… 포인트는 충격은 마스카포네가 …"). 목록(_ALL_SIGNAL_WORDS)엔 앞에 "진짜"가 붙은 꼴이 없어 안 떼어졌다.
+_TWIST_LEAD = re.compile(r"^(?:(?:근데|그런데|그리고)\s+)?(?:(?:진짜|정말|더|제일|가장)\s+)*"
+                         r"(?:(?:충격적인|충격인|미친|대박인|놀라운|신기한|소름\s?돋는)\s*(?:건|게|거|점은|사실은|포인트는|포인트인\s*게|포인트)"
+                         r"|충격은|대박은|반전은)[,\s]+")
+_RANK_ONE = re.compile(r"말도 안 되는|포인트인게|대박인게")   # 위치[1] 낱말(한 줄 단독으로 둘 수 있는 것)
 
 
 def _to_lines(o, ig, key, nth, feats=None, preset="short"):
@@ -361,7 +734,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
     esc_keys = ("before", "after") if ig else ("moment", "what_happens", "erased")
     if ig:
         escs = o.get("beats") or []
-        _, sigs = _pick(IG_SETS, key, nth)
+        _, sigs = pick_signals("ig", key, nth)
         all_sigs = list(sigs)
         rows = [("훅", o.get("opening"), -1), ("장면", o.get("scene"), -1)]
         if (o.get("ask") or "").strip():
@@ -372,7 +745,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             tail = [("반응", t.strip(), -1) for t in (o.get("reaction") or [])[:2] if (t or "").strip()] + tail
     else:
         escs = o.get("escalations") or []
-        _, sigs = _pick(YT_SETS, key, nth)
+        _, sigs = pick_signals("yt", key, nth)
         all_sigs = list(sigs)          # 중복 제거는 세트 전체로 본다(대비가 첫 신호어를 가져가도)
         rows = [("훅", o.get("hook"), -1), ("미끼", o.get("bait"), -1), ("공개", o.get("reveal"), -1)]
         if (o.get("contrast") or "").strip():
@@ -391,7 +764,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                 if preset == "full":      # 풀코스: 신호어 [1]은 한 줄 단독(히트작 시안 실측)
                     rows.insert(len(rows) - 1, ("대비", w, -1))
                 else:
-                    rows[-1] = ("대비", w + " " + rows[-1][1], -1)
+                    rows[-1] = ("대비", attach_signal(rows[-1][1], w), -1)
         sigs = slot_words + [""] * 8
     for i, e in enumerate(escs):
         n = e.get("feat")
@@ -409,7 +782,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                 if not ig and preset == "full" and i == 0 and _RANK_ONE.search(sig):
                     rows.append(("고조%d" % (i + 1), sig, gi)); sig = ""     # [1]은 한 줄 단독
                 else:
-                    t, sig = sig + " " + t, ""
+                    t, sig = attach_signal(t, sig), ""
             rows.append(("고조%d" % (i + 1), t, gi, k))          # k = moment/what_happens/erased(썰) · before/after(인스타)
         if not ig and preset == "full":
             for t in (e.get("detail") or [])[:4]:                          # 장면 풀이 3~4줄
@@ -422,11 +795,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
     if not ig:
         left = [last_word] if last_word else []
         if left and (tail[0][1] or "").strip():
-            tw = tail[0][1].strip()
-            for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
-                if tw.startswith(w + " "):
-                    tw = tw[len(w):].strip()
-            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), tail[0][2])
+            tail[0] = ("반전", attach_signal(tail[0][1], left[0]), tail[0][2])   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
     rows += tail
     return _drop_repeat_signal(
         [{"role": r[0], "text": re.sub(r"\s+", " ", r[1]).strip(), "group": r[2], "sub": (r[3] if len(r) > 3 else "")}
@@ -448,20 +817,35 @@ FEATS_SCHEMA = {
         "claim": {"type": "string"},
         "pain": {"type": "string"},
         "from_cuts": {"type": "array", "items": {"type": "string"}},
-    }, "required": ["name", "claim", "pain", "from_cuts"]}}},
-    "required": ["feats"],
+        "seed_quote": {"type": "string"},   # 씨앗이 이미 말했으면 그 씨앗 문장(인용) — 빈칸 = 새 특징(2026-09-26)
+        "seed_point": {"type": "integer"},  # seed_points의 몇 번과 같은가(1부터). 없으면 0
+    }, "required": ["name", "claim", "pain", "from_cuts", "seed_quote", "seed_point"]}},
+        # ★씨앗이 말한 셀링포인트를 **먼저** 적게 한다 — 인용만 시켰더니 빠뜨렸다(09-26 실측: 이어폰 씨앗의
+        #   "특수 실리콘 패드가 … 압박감은 줄이고"를 두고 '유연한 소재'를 새 특징이라 했다).
+        "seed_points": {"type": "array", "items": {"type": "string"}},
+        # ★홀린 요인(2026-09-26, 노바 2단계) — 첫 줄 꼴의 빈칸 재료. 이름은 스파인 문형 슬롯과 같다(story_hook.SLOT_KEYS).
+        "hook": {"type": "object", "properties": {
+            "권위자": {"type": "string"}, "대상": {"type": "string"}, "나라": {"type": "string"},
+            "제품군": {"type": "string"}, "불편함": {"type": "string"}, "장소": {"type": "string"}, "계기": {"type": "string"}}}},
+    "required": ["feats", "hook"],
 }
 
 FEATS_BRIEF = """아래는 같은 제품을 찍은 영상들의 장면 태깅이다.
-이 제품의 특징을 **3~4개**만 뽑아라. 제일 센 것만 남기고 약한 건 버려라.
+이 제품의 특징 후보를 **5~6개** 뽑아라. 서로 겹치는 건 하나로 합치고 약한 건 버려라.
 
-특징마다 네 가지를 적는다:
+특징마다 다섯 가지를 적는다:
   name   짧은 이름
   claim  이 제품이 실제로 하는 일 (화면에 보이는 것만)
   pain   ★**이게 없을 때 뭐가 괴로운가** — 기능을 뒤집어 쓰지 말고, 그 사람이 겪던 장면으로 적어라
          X 고정이 안 된다                     (기능을 뒤집은 말 — 쓸모없다)
          O 조금만 건드려도 쓰러지고 굴러다녀서 매번 다시 세워야 했다
   from_cuts  그 특징이 **화면에 실제로 보이는** 컷 번호들 (목록에 있는 번호만. 지어내지 마라)
+  seed_quote ★씨앗 영상의 말에 이 특징이 **이미 나오면** 그 씨앗 문장을 **그대로 옮겨** 적어라. 안 나오면 빈 문자열.
+             (대본의 차별점을 가른다 — 씨앗이 이미 한 말을 또 하면 같은 영상이 된다. 비슷한 말이면 나온 것으로 본다)
+  seed_point 아래 seed_points 중 이 특징과 **같은 것의 번호**(1부터). 없으면 0.
+
+★seed_points를 **먼저** 채워라 — 씨앗 영상의 말이 자랑한 셀링포인트를 빠짐없이, 한 줄에 하나씩 짧게.
+  (소재·구조·기능·수치·가격·맛·용도… 씨앗이 말했으면 전부. 이 목록에 있는 건 이 대본의 차별점이 될 수 없다)
 
 pain을 적는 법:
 - 태깅에 **[문제]·[before] 컷**이 있으면 먼저 거기서 가져와라. 제작자가 찍어 둔 불편이다.
@@ -472,7 +856,16 @@ pain을 적는 법:
     O 테이프로 붙이면 나중에 누렇게 떠서 떼어낼 때 자국이 남는다
 - 기능을 뒤집어 쓰지 마라.  X 고정이 안 된다  /  X 도포가 균일하지 않다
 
-★claim(이 제품이 하는 일)은 화면에 보이는 것만 쓴다. pain은 화면 밖에서 와도 된다."""
+★claim(이 제품이 하는 일)은 화면에 보이는 것만 쓴다. pain은 화면 밖에서 와도 된다.
+
+■ hook — 첫 줄 빈칸 재료(**홀린 요인**). 씨앗·재료에 **실제로 나온 것만**, 각 20자 이내, 없으면 빈 문자열:
+  권위자  이 제품을 보고 놀랄 만한 전문가·회사·직군 (예: 개발자, 제조사, 안경사, 호텔 직원)
+  대상    이 제품으로 구원받는 사람들 — 복수형 (예: 게이머들, 육아맘들, 자취생들)
+  나라    씨앗·재료에 나온 나라만 (예: 한국, 미국, 일본). ★없으면 빈칸 — 지어내지 마라
+  제품군  제품 종류 짧게 (예: 열수축 필름, 손가락 젓가락)
+  불편함  이 제품이 없앤 불편 한 토막, 명사형 (예: 리모컨 손때, 과자 가루 손)
+  장소    구매처·쓰는 곳 (예: 다이소, 이케아, 호텔)
+  계기    시작된 계기 (예: 육아 불편, 게이머의 짜증)"""
 
 
 def source_block(sources):
@@ -497,9 +890,97 @@ def source_block(sources):
     return "\n".join(out)
 
 
-def extract_feats(sources, product="", note=None):
+def extract_feats(sources, product="", note=None, seed_text=""):
+    """특징 3~4개 + 첫 줄 빈칸 재료(hook 슬롯, note["hook_slots"]). 호출 1회 — 슬롯을 따로 부르지 않는다."""
     prompt = "%s\n\n[제품] %s\n\n%s" % (FEATS_BRIEF, product or "(미상)", source_block(sources))
-    return (_sg._call_json(prompt, FEATS_SCHEMA, note=note) or {}).get("feats") or []
+    if (seed_text or "").strip():
+        prompt += "\n\n[씨앗 영상의 말 — hook 빈칸 재료는 여기서 먼저 찾아라]\n" + seed_text.strip()[:1200]
+    out = _sg._call_json(prompt, FEATS_SCHEMA, note=note) or {}
+    if note is not None:
+        from shopping_shorts import story_hook
+        note["hook_slots"] = story_hook.clean_slots(out.get("hook"))
+    pts = [str(p).strip() for p in (out.get("seed_points") or []) if str(p).strip()]
+    if note is not None:
+        note["seed_points"] = pts
+    feats = out.get("feats") or []
+    for f in feats:
+        f["_seed_points"] = pts          # pick_diff_feats의 코드 대조용(모델 표시 + 낱말 대조 둘 다 본다)
+    return feats
+
+
+# ★차별점 고르기(2026-09-26 사장님 "대본이 씨앗이랑 거의 똑같다 — 차별 포인트는 기능·특징·장점"; 노바 작가 방식
+#   docs/nova_writer_script_2026-09-22.md: 씨앗 7줄 → 시안 18줄, 늘어난 건 씨앗에 없던 셀링포인트).
+#   실측 work 28499a00008a: 영상 7개에서 특징 44개가 뽑혔는데 '제일 센 3개'만 남겨 둘이 씨앗이 이미 말한 것(유리컵 재사용…),
+#   반전은 씨앗 문장("컵 때문에 샀다가 맛 때문에 또 산다")을 거의 그대로 썼다. 1인분·홈카페 컵 같은 새 특징은 버려졌다.
+#   → 모델은 후보와 '씨앗 인용'만 내고 고르는 건 코드가 한다(근거가 셀 수 있는 숫자여야 설명된다):
+#     새 특징(씨앗 인용 없음)을 **보여준 영상 수** 순(같으면 컷 수), 씨앗 특징은 고조1용으로 최대 1개.
+#     반전 = 새 특징 1위(여러 제작자가 공통으로 보여준 셀링포인트) — 맨 뒤 번호.
+DIFF_MIN_NEW = 2
+
+
+def _feat_videos(f, seg_index):
+    return len({(seg_index.get(c) or {}).get("vid") for c in (f.get("from_cuts") or []) if c in seg_index} - {None})
+
+
+_DIFF_STOP = {"제품", "사용", "가능", "있음", "있는", "없이", "쉽게", "간편", "다른", "용도", "형태", "구성", "한번",
+              "하나", "바로", "매우", "정말", "진짜", "특징", "기능", "장점", "효과", "개선", "제공", "적용", "완벽"}
+_JOSA = re.compile(r"(으로|에서|에게|까지|부터|이나|이랑|처럼|보다|하고|으로도|로도|에도|과|와|이|가|을|를|은|는|에|의|도|로|만)$")
+
+
+def _words(t):
+    out = []
+    for w in re.findall(r"[가-힣A-Za-z0-9]+", t or ""):
+        w = _JOSA.sub("", w)
+        w = re.sub(r"(한|하게|적인|스러운|로운|진|된|되는|하는|있는)$", "", w)
+        if len(w) >= 2 and w not in _DIFF_STOP:
+            out.append(w)
+    return out
+
+
+def _in_seed_points(f, seed_points):
+    """모델이 인용을 빠뜨려도 코드가 한 번 더 본다 — 특징 **이름** 낱말이 씨앗 셀링포인트에 나오거나,
+    설명(claim) 낱말이 2개 이상 나오면 '씨앗이 이미 말함'(09-26 실측: '간편한 세척' ↔ 씨앗 '식기세척기에도 사용')."""
+    blob = " ".join(seed_points or [])
+    if not blob:
+        return False
+    if any(w in blob for w in _words(f.get("name"))):
+        return True
+    return sum(1 for w in set(_words(f.get("claim"))) if w in blob) >= 2
+
+
+def pick_diff_feats(cands, seg_index, n=4):
+    """후보 → (고른 특징, 반전 번호 0-based | -1). 각 특징에 new(bool)·videos(int)를 단다.
+    새 특징이 모자라면 있는 만큼만 쓰고 씨앗 특징으로 채운다 — 대본이 안 나오는 것보다 낫다(호출부가 note에 남긴다)."""
+    rows = []
+    for f in cands or []:
+        f = dict(f)
+        sp = f.pop("_seed_points", None) or []
+        by_model = bool((f.get("seed_quote") or "").strip()) or (isinstance(f.get("seed_point"), int) and f["seed_point"] > 0)
+        f["new"] = not (by_model or _in_seed_points(f, sp))
+        f["videos"] = _feat_videos(f, seg_index)
+        rows.append(f)
+    rank = lambda f: (-f["videos"], -len(f.get("from_cuts") or []))
+    new = sorted([f for f in rows if f["new"]], key=rank)
+    old = sorted([f for f in rows if not f["new"]], key=rank)
+    top = new[:1]                                  # 반전 = 새 특징 1위
+    picked = old[:1] + new[1:n - 1]
+    for f in old[1:]:
+        if len(picked) + len(top) >= 3:
+            break
+        picked.append(f)
+    picked += top
+    return picked, (len(picked) - 1 if top else -1)
+
+
+def _rotate(items, key, nth=0):
+    """고조에 넣는 특징 순서를 회원·작업 키로 돌린다(2026-09-26) — 같은 씨앗·같은 재료라도 안마다·회원마다
+    고조1이 다른 특징으로 시작해 본문이 같아지는 것을 막는다(실측: 같은 작업 A안·B안 미끼·고조가 거의 같은 문장)."""
+    import zlib
+    items = list(items or [])
+    if len(items) < 2:
+        return items
+    k = (zlib.crc32(str(key).encode("utf-8")) + int(nth)) % len(items)
+    return items[k:] + items[:k]
 
 
 # ── 라이브 연결: 대본 먼저 → 컷은 뒤에 (관리자 스위치 story_writer_enabled) ──────
@@ -528,12 +1009,80 @@ def _seed_style(seed_text):
             "hook_angle": "첫 줄(hook)은 씨앗 첫 줄의 **꼴**을 빌린다 — 「%s」의 OO 자리를 이 제품의 사람·물건으로 바꿔 새 문장을 쓴다. 씨앗 문장을 그대로 쓰지 마라." % shape}
 
 
-def _style_of(sp):
-    """고객이 고른 스타일(스파인) → write()의 style. 빈칸 틀은 안 넘긴다 — 이름·흐름만."""
+def _fill_nodup(mold, slots):
+    """틀 빈칸을 채우되, 빈칸 값의 낱말이 **틀의 고정 낱말과 겹치면 뺀다**(2026-09-26 실측: 권위자="미국 천재" +
+    "{권위자}도 감탄한 천재 아이디어" → "미국 천재도 감탄한 천재 아이디어"). 빼고 나서 빈칸이 비면 None(그 틀은 안 쓴다)."""
+    from shopping_shorts import story_hook
+    need = story_hook.slots_of(mold)
+    fixed = set(re.findall(r"[가-힣A-Za-z0-9]+", re.sub(r"\{[^}]*\}", " ", mold)))
+    vals = {}
+    for k in need:
+        v = (slots or {}).get(k) or ""
+        toks = [w for w in v.split() if re.sub(r"[^가-힣A-Za-z0-9]", "", w) not in fixed]
+        if not toks:
+            return None
+        vals[k] = " ".join(toks)
+    return story_hook.fill(mold, vals)
+
+
+def style_hook_line(sp, slots, seed_text="", key="", nth=0):
+    """고른 스타일의 제목 틀(templates.title) 중 **빈칸을 채울 수 있는 것**을 골라 완성 문장으로. 없으면 첫 틀에서
+    못 채운 빈칸 낱말만 빼고 쓴다(2026-09-26 사장님 A안: 「OO의 정체」를 골랐는데 은행 꼴 "개발자도 예상 못한…"이 나왔다 —
+    그 틀 "{나라} 천재가…"는 나라가 없으면 후보에서 빠지고, 은행이 스타일을 안 보고 다른 꼴을 골랐다). 틀이 없으면 None."""
+    tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
+    titles = [t for t in (tpl.get("title") or []) if isinstance(t, str) and t.strip()]
+    if not titles:
+        return None
+    from shopping_shorts import story_hook
+    cands = []
+    for t in titles:
+        f = _fill_nodup(t, slots or {})
+        if f and not (seed_text and story_hook.copied(f, seed_text)):
+            cands.append((t, f))
+    if cands:
+        import zlib
+        return cands[(zlib.crc32(str(key).encode("utf-8")) + int(nth)) % len(cands)][1]
+    # 채울 틀이 없으면 None — 모델이 틀의 빈칸을 제품에 맞게 채운다(_hook_angle). 빈칸을 빼 버리면
+    # "예상 못한 미친 활용법"처럼 누가 놀랐는지가 빠진 약한 첫 줄이 된다(09-26 비교 실측).
+    return None
+
+
+def style_land_lines(sp):
+    tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
+    return [t.strip() for t in (tpl.get("land") or []) if isinstance(t, str) and t.strip() and "{" not in t]
+
+
+def _style_of(sp, slots=None, seed_text="", key="", nth=0):
+    """고객이 고른 스타일(스파인) → write()의 style.
+    ★첫 줄·마무리는 **스타일이 정한다**(2026-09-26 A안) — 은행(story_hook)은 자동 1안(씨앗 결)에만 쓴다."""
+    hook = style_hook_line(sp, slots, seed_text, key, nth)
+    lands = style_land_lines(sp)
+    extra = ""
+    if lands:
+        extra = "closing(마무리)은 **이 중 하나를 그대로** 쓴다: " + " / ".join("「%s」" % x for x in lands)
     return {"name": sp.get("name") or "",
             "flow": " → ".join(str(r) for r in (sp.get("beat_roles") or [])),
-            "hook_angle": _hook_angle(sp),
-            "extra": ""}
+            # 채울 틀이 없으면 틀의 빈칸을 모델에게 맡기지 않는다(09-26 실측: 권위자 자리에 "천재의 발명품도…"를 넣었다) —
+            # 스타일 이름의 각도로만 연다.
+            "hook_angle": (("첫 줄(hook)은 **이 문장을 그대로** 쓴다: 「%s」" % hook) if hook
+                           else "스타일 이름 「%s」이 말하는 각도로 첫 줄을 연다" % (sp.get("name") or "")),
+            "extra": extra, "hook_line": hook, "lands": lands}
+
+
+def _enforce_style(lines, style):
+    """모델이 스타일의 첫 줄·마무리를 안 따랐으면 코드가 바꿔 끼운다(검사가 아니라 결정 — 따를 수밖에 없게).
+    첫 줄은 코드가 틀을 채운 문장이 있을 때만 강제한다(채울 재료가 없으면 스타일 이름 각도로 모델이 쓴 줄 그대로)."""
+    if not style or not lines:
+        return lines
+    from shopping_shorts import script_gate
+    h = style.get("hook_line")
+    if h and lines[0].get("role") == "훅" and script_gate.norm(lines[0].get("text")) != script_gate.norm(h):
+        lines[0] = dict(lines[0], text=h)
+    lands = style.get("lands") or []
+    if lands and lines[-1].get("role") == "마무리":
+        if not any(script_gate.norm(x) in script_gate.norm(lines[-1].get("text")) for x in lands):
+            lines[-1] = dict(lines[-1], text=lands[0])
+    return lines
 
 
 def _fit_length(lines, limit_secs):
@@ -544,7 +1093,7 @@ def _fit_length(lines, limit_secs):
     lines, dropped = list(lines), 0
     while sum(ba._secs(L["text"]) for L in lines) > limit_secs:
         escs = sorted({L["role"] for L in lines if L["role"].startswith("고조")}, key=lambda r: int(r[2:]))
-        if len(escs) <= 1:
+        if len(escs) <= MIN_ESCALATIONS:      # ★고조2는 길이 때문에도 안 뺀다(2026-09-26 사장님 "무조건")
             break
         lines = [L for L in lines if L["role"] != escs[-1]]
         dropped += 1
@@ -609,45 +1158,115 @@ def seed_platform(seed_text):
     return "ig" if pol >= 3 and pol / max(1, len(ws)) >= 0.03 else "yt"
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
+def _norm_text(t):
+    return re.sub(r"\s+", "", str(t or ""))
+
+
+# 씨앗이 없을 때 씨앗 자리에 넣는 안내(2026-10-02). 60자 이상이어야 하고, 대본에 그대로 옮기지 않게 괄호로 감싼다.
+SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국어 말이 없다. 씨앗을 흉내 내지 말고, 아래 재료의 스토리 문장과 "
+                 "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
+
+
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", seed_vid="",
+                dialogue_form=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
     ★화면은 씨앗 영상을 안 쓴다(backbone_assemble.assemble과 같은 규칙, 2026-09-21 사장님).
+
+    seed_text/seed_product (2026-09-26): **사용자가 2단계에서 고른 씨앗**의 원문·제품. 씨앗은 화면 재료에서
+      빼기(useFootage=false) 때문에 job에 없어서, 종전엔 "job 안에서 가장 긴 한국어 글"이 씨앗 노릇을 했다 —
+      실사고 work ea29430903d3: 고른 씨앗은 유튜브 썰(반말)인데 인스타 s5(존댓말 "여러분 다이소에서…")가 씨앗이
+      되어 "씨앗 결 이야기"가 다이소 존댓말로 나왔다. 명시값이 오면 그것이 씨앗이고, 없으면 종전 규칙.
     """
     from shopping_shorts import backbone_assemble as ba
     srcs = ba.sources_from_extract((job or {}).get("extract") or {})
     if not srcs:
         return [], "재료 분석(extract)이 아직 없음"
-    seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
-    seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
-    if len(seed_text) < 60:
-        return [], "씨앗 영상의 말이 너무 짧음(%d자)" % len(seed_text)
-    vis = ba._drop_seed(srcs, seed_src)
+    seed_text = (seed_text or "").strip()
+    if len(seed_text) >= 60:
+        seed_src = None
+        seed_from = "explicit"
+        # 고른 씨앗과 같은 글의 영상이 job에도 담겨 있으면 그건 화면에서 뺀다(씨앗 화면 금지 규칙 그대로)
+        # ★seed_vid(관제 138): 호출부가 고른 씨앗이 job 의 어느 영상인지 알면 그 번호로 뺀다. 글자 대조만으로는
+        #   위키 대본과 job 추출본의 글이 한 글자만 달라도 씨앗이 화면 재료에 남아, 2단계가 씨앗 컷을 줄에 지목했다
+        #   (라이브 6일 씨앗 표식 작업 82건 중 10건). 다 빠지면 화면이 비므로 그때는 그대로 둔다(_drop_seed 와 같은 규칙).
+        key = _norm_text(seed_text)
+        vis = [s for s in srcs
+               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key
+               and not (seed_vid and str(s.get("video_id") or "") == str(seed_vid))] or list(srcs)
+        product = (seed_product or "").strip()
+    else:
+        seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
+        seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
+        if len(seed_text) >= 60:
+            seed_from = "job:%s" % (seed_src.get("video_id") or "")
+            vis = ba._drop_seed(srcs, seed_src)
+            product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
+        else:
+            # ★씨앗 없음(2026-10-02 사장님 "씨앗 없는 것도 라이브 가자"): 외국 영상만 담으면 한국어 씨앗이 없다.
+            #   막지 않고 1단계 스토리·소구점만으로 쓴다(실측: 목베개 2편·트럭 1편, 스타일 2개씩 8안 전부 말맛 대본).
+            #   재료 영상은 전부 화면에 쓴다(뺄 씨앗이 없다).
+            seed_text, seed_src, seed_from, vis = SEEDLESS_NOTE, None, "none", list(srcs)
+            product = (seed_product or "").strip() or next(
+                ((s_.get("source_brief") or {}).get("product") or "" for s_ in srcs if (s_.get("source_brief") or {}).get("product")), "")
     seg_index = ba._seg_index(vis)
-    product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     note = {}
-    feats = extract_feats(vis, product, note=note)
-    if not feats:
+    from shopping_shorts import story_tag as _st
+    # ★특징 뽑기 호출은 **늘** 한다 — 이 호출이 씨앗의 '홀린 요인'(hook_slots: 권위자·대상·나라…)과 씨앗 셀링포인트(seed_points)도
+    #   같이 뽑는다. 2026-10-02 실측: 스토리 모드에서 이 호출을 건너뛰었더니 첫 줄 틀 빈칸이 비어 「OO도 예상 못한」이 「셰프도 감탄한」으로 샜다.
+    feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
+    note["feats_from"] = "extract_feats"
+    if _st.has_stories(vis):                      # 2026-10-01: 스토리가 있으면 특징 후보는 스토리(문장·컷이 태깅 때 이미 짝). 씨앗은 vis 에서 이미 빠졌다.
+        feats_cands = _st.feats_from_stories(vis, seg_index) or feats_cands
+        note["feats_from"] = "story"
+    if not feats_cands:
         return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
-    groups_out = {"product": product, "order": list(range(len(feats))), "alt_use": False,
-                  "groups": [{"name": f.get("name") or "", "claim": f.get("claim") or "",
-                              "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]}
-                             for f in feats]}
+    hook_slots = note.get("hook_slots") or {}
+    # 차별점: 새 특징 우선(영상 수 순)·반전 = 새 특징 1위 — pick_diff_feats 주석
+    feats_all, _twist_i = pick_diff_feats(feats_cands, seg_index)
+    _n_new = sum(1 for f in feats_all if f.get("new"))
+
+    def _groups_out(fs):
+        return {"product": product, "order": list(range(len(fs))), "alt_use": False,
+                "groups": [{"name": f.get("name") or "", "claim": f.get("claim") or "",
+                            "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]}
+                           for f in fs]}
     preset = preset if preset in LENGTH_PRESETS else "short"
     if preset != "short":
         seconds = LENGTH_PRESETS[preset]["seconds"]
     plans = [(None, seed_platform(seed_text))]
     for sp in (spines or [])[:1]:
         plans.append((sp, "yt" if sp.get("no_cta") else "ig"))
-    backbone_vid = seed_src.get("video_id")
+    backbone_vid = (seed_src or {}).get("video_id")
     drafts, whys = [], []
     for nth, (sp, plat) in enumerate(plans):
         name = (sp or {}).get("name") or "씨앗 결 이야기"
         n = {}
+        # ★안마다 특징 순서를 돌린다(본문 다양화) — 컷 배정(groups_out)도 같은 순서로 만든다(줄의 group 번호가 이 목록을 가리킨다)
+        #   반전 특징(맨 뒤)은 돌리지 않는다 — 반전 = 새 특징 1위가 안마다 흔들리면 근거가 사라진다.
+        if _twist_i >= 0:
+            feats = _rotate(feats_all[:-1], job_id or product, nth) + [feats_all[-1]]
+        else:
+            feats = _rotate(feats_all, job_id or product, nth)
+        twist_n = len(feats) if _twist_i >= 0 else 0
+        groups_out = _groups_out(feats)
+        # ★고른 스타일이 있으면 첫 줄·마무리는 스타일이 정한다 — 첫 줄 꼴 은행은 자동 1안(씨앗 결)에만(2026-09-26 A안).
+        #   종전엔 은행이 스타일 첫 줄 지시를 지웠다(write의 hook_angle="") → 「OO의 정체」를 골라도 "개발자도 예상 못한…".
+        _style = _style_of(sp, hook_slots, seed_text, job_id or product, nth) if sp else _seed_style(seed_text)
         lines = write(product, seed_text[:1500], feats, platform=plat,
-                      style=_style_of(sp) if sp else _seed_style(seed_text), key=job_id or product, nth=nth, note=n,
-                      seconds=seconds, preset=preset)
+                      style=_style, key=job_id or product, nth=nth, note=n,
+                      seconds=seconds, preset=preset, hook_slots=(hook_slots if (plat == "yt" and not sp) else None),
+                      twist_n=twist_n, seed_points=note.get("seed_points") or [])
+        if sp and plat == "yt":
+            lines = _enforce_style(lines, _style)
+        # ★후킹은 무조건 한 문장 — 판단은 script_gate 한 곳(2026-09-29). 컷 매칭(아래) 전에 갈라야 줄마다 장면이 붙는다.
+        from shopping_shorts import script_gate as _sg
+        lines = _sg.enforce_one_sentence_hook(lines)
+        n["feats"] = [{"name": f.get("name"), "new": f.get("new"), "videos": f.get("videos"),
+                       "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]} for f in feats]
+        n["twist_n"] = twist_n
+        n["n_new"] = _n_new
         if len(lines) < MIN_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "칸 빔"))
             continue
@@ -662,30 +1281,114 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
         #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
         from shopping_shorts import ai_match as _am
-        _an = {}
-        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
-        if ai_bs:
-            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
-            for i, b in enumerate(ai_bs):
-                if b.get("segs"):
-                    bs[i] = b
-                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
-                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
-                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
-                    _used.update(keep)
-            n["matcher"] = "ai"
-        else:
-            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
+        code_bs = [dict(b) for b in bs]                        # 코드 매칭 원본(근거 컷) — 아래 장면 고정이 쓴다
+        bs = _am.apply(lines, code_bs, seg_index, backbone_vid, note=n, product=product)   # 3단계 매칭 전문가(백본과 같은 함수)
+        # ★장면 고정(2026-09-26 사장님 "다른 소스에 나온 고조·반전 장면을 정말 쓰는지, 쓸 수밖에 없는 구조"):
+        #   특징 번호가 붙은 줄(고조·반전)은 **그 특징의 근거 컷(from_cuts) 안에서만**. AI는 특징↔근거 컷을 모르고 골랐고,
+        #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.
+        #   근거 컷이 줄보다 적으면 같은 근거 컷을 이어 쓴다(구절 이어 틀기로 그 장면이 이어진다). 훅·미끼·공개·마무리는 그대로.
+        _locked = 0
+        _taken = {c for b in bs for c in (b.get("segs") or [])}       # 다른 줄이 이미 쓴 컷 — 고정할 때 같은 컷을 또 박지 않는다
+        for i, L in enumerate(lines):
+            gi = L.get("group", -1)
+            if not (isinstance(gi, int) and 0 <= gi < len(groups_out["groups"])):
+                continue
+            # ★스토리 모드(2026-10-01)에선 고정하지 않는다 — 스토리 컷은 작가 재료이고, 최종 컷은 전문가 매처+검사(중복·뒷컷·길이)가 정한다.
+            #   실측: 고정이 AI 선택 7/11줄을 묶음 첫 컷으로 덮어써 같은 컷이 세 줄에 갔다.
+            if note.get("feats_from") == "story" and (bs[i].get("segs") or []):
+                continue
+            allowed = groups_out["groups"][gi]["cuts"]
+            if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
+                # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
+                #   고조1 세 줄 = 8e1-38 배수구 0.8초). 아직 아무 줄도 안 쓴 묶음 컷을 먼저, 없을 때만 첫 컷.
+                mine = list(bs[i].get("segs") or [])
+                for c in mine:
+                    _taken.discard(c)
+                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed and c not in _taken]
+                if not keep:
+                    keep = [c for c in allowed if c not in _taken][:1]
+                if not keep:
+                    # ★근거 컷이 다른 줄에 다 쓰였으면 첫 컷을 **다시 쓰지 않는다** — 매칭 전문가가 고른 컷을 그대로 둔다
+                    #   (2026-10-03 실측: 반영 후 중복 3건 전부 고조2 두 줄에 같은 컷 = 여기 allowed[:1] 대체값. 사장님 "같은 카드가 자주 쓰인다")
+                    _taken.update(mine)
+                    continue
+                bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
+                _taken.update(keep)
+                _locked += 1
+        n["locked_lines"] = _locked
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
+        _am.ensure_cover(bs, lines, seg_index, backbone_vid, note=n)   # ★줄마다 대사를 채울 장면 보장(관제 084) — 배정의 마지막
+        # ★대화형(관제 128, 2026-10-08 사장님 "썰대본이 나오기 전에"): 2단계에서 틀을 고르고 왔으면 안을 확정하기 **직전**
+        #   — 줄과 장면 출처가 아직 짝일 때 — 대화로 바꾸고 출처를 대화 줄에 맞춰 다시 붙인다. 판단은 dialogue_script 한 곳.
+        #   변환이 실패하면 썰 그대로 내보내고 이유를 안에 싣는다(조용히 삼키지 않는다 — 카드가 보여 준다).
+        _dlg_meta, _dlg_err = None, ""
+        if dialogue_form:
+            from shopping_shorts import dialogue_script as _ds
+            lines, bs, _dlg_meta, _dlg_err = _ds.apply_to_lines(lines, bs, dialogue_form, product)
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
         d = ba.to_draft("\n".join(L["text"] for L in lines), bs, meta)
         d["made_by"] = "이야기작가"
+        if _dlg_meta:
+            # ★화자는 **칸에** 싣는다 — 2단계에서 칸을 옮기고·빼고·더해도 화자가 그 문장을 따라간다.
+            #   확정 때 화면(s2ApplyDraftContract)이 글 있는 칸 순서대로 대화 줄을 다시 뽑아 3단계로 보낸다.
+            for _b, _l in zip(d.get("beats") or [], _dlg_meta["lines"]):
+                _b["speaker"], _b["tag"] = _l["speaker"], _l["tag"]
+            d["dialogue"] = {"form": _dlg_meta["form"], "cast": _dlg_meta["cast"],
+                             "roles": list(_ds.FORMS[dialogue_form]["roles"]),
+                             "label": _ds.FORMS[dialogue_form]["label"]}
+        if _dlg_err:
+            d["dialogue_error"] = _dlg_err
         d["length_preset"] = preset
         d["auto_pick"] = sp is None
         d["platform"] = plat
+        d["seed_from"] = seed_from          # 점검용: 씨앗이 고른 영상(explicit)인가 job 대체(job:vid)인가
+        # ★작가 메모를 안에 남긴다(2026-09-26) — to_draft는 meta.note를 버려서 훅 판정·고조 재작성이 작동했는지
+        #   감사(tools/story_hook_audit.py)가 볼 수 없었다("판정 작동: 없음"으로 보임).
+        d["writer_note"] = {k: n.get(k) for k in ("hook_fix", "hook_retry", "escalation_retry", "matcher",
+                                                  "no_cut_lines", "cover_added", "cover_short", "dropped_escalations", "diff_retry", "diff_left",
+                                                  "locked_lines", "twist_n", "n_new") if n.get(k)}
+        d["feats_meta"] = n.get("feats") or []    # 점검용: 특징별 새것 여부·영상 수·근거 컷(tools/script_diff 대조)
+        d["seed_points"] = note.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
         d["feat_names"] = [f.get("name") or "" for f in feats]
         drafts.append(d)
     return drafts, "; ".join(whys)
+
+
+def storyboard_to_beat_sources(slots, seg_lookup=None):
+    """★스토리보드(사람이 칸마다 장면을 고르고 그 위에 쓴 대본) → 확정 대본 + 줄별 출처 장면(관제 120).
+
+    slots = [{slot(역할), line(문장), ids(고른 장면 번호들)}] — 2단계 스토리보드 한 탭.
+    돌려주는 것 = {"script": 줄바꿈으로 이은 대본, "beat_sources": [{role, seg, segs, pinned}]}.
+    ★줄 = 칸이다: 문장 안 줄바꿈은 공백으로 펴서 3단계 script_sentences 가 한 칸을 둘로 쪼개지 않게 한다
+      (갈리면 줄 수 ≠ 출처 수 → 상속이 옛 경로로 떨어져 고른 장면이 통째로 버려진다).
+    ★장면을 고른 줄만 pinned — 판정은 ai_match.is_pinned 한 곳이 읽는다. 장면 보장·화면 채우기·컷 리듬·저장 관문은
+      그 줄의 장면을 더하거나 깎지 않는다. 고른 번호가 실재하는지는 3단계 상속(build_inherit_plan)이 재료와 대조한다."""
+    lines, bs = [], []
+    for sl in slots or []:
+        if not isinstance(sl, dict):
+            continue
+        text = " ".join(str(sl.get("line") or "").split())
+        if not text:
+            continue
+        ids = []
+        for c in sl.get("ids") or []:
+            c = str(c).strip()
+            if c and c not in ids:
+                ids.append(c)
+        lines.append(text)
+        keys = []
+        for c in ids:      # ★3단계 작업은 같은 캐시 장면에 번호를 새로 붙인다(…-12 → s0-11, 10-05 라이브 실측) — 번호 대신 '같은 장면'으로 잇는 열쇠
+            g = (seg_lookup(c) if seg_lookup else None) or {}
+            keys.append({"id": c, "start": g.get("start"), "end": g.get("end"), "vsig": g.get("_vsig") or []})
+        bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
+                   "segs": ids, "pinned": bool(ids), "seg_keys": keys,
+                   # 신호어 자리 번호 — storyboard.apply_signals 가 slot 에 남긴 것을 그대로 싣는다(짤 자리 판정용, 관제 139)
+                   **({"sig_rank": int(sl["sig_rank"]), "signal": str(sl.get("signal") or "")}
+                      if str(sl.get("sig_rank") or "").isdigit() else {}),
+                   # 2단계에서 미리 고른 짤 번호(관제 143) — meme_slots 가 이 짤을 먼저 쓴다(sig_rank 와 같은 길)
+                   # 짤·효과음 고름 칸(meme_pick·sfx_pick 등)은 storyboard.carry_picks 한 곳이 정한다
+                   **__import__("shopping_shorts.storyboard", fromlist=["carry_picks"]).carry_picks(sl)})
+    return {"script": "\n".join(lines), "beat_sources": bs}

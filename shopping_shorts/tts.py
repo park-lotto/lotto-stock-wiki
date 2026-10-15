@@ -17,6 +17,7 @@ import requests
 from shopping_shorts import config
 from shopping_shorts import tts_timestamps
 from shopping_shorts import typecast_tts
+from shopping_shorts import fish_tts
 
 _ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 # 같은 합성인데 응답에 문자단위 정렬이 얹혀 온다(추가 과금 없음, 2026-07-31).
@@ -126,10 +127,16 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     #   일레븐랩스 기본(미나)으로 갈아끼운다(2026-09-07). 여기까지 타입캐스트 값이
     #   내려오는 길은 mix_pipeline 말고도 있다(튜닝 작업대 미리듣기·미리보기 API).
     #   판정·대체값은 typecast_tts 한 곳에서만 온다(0순위-B).
-    if typecast_tts.use_fallback(model_id):
+    # ★Fish(2026-10-05): 엔진이 꺼졌으면(FISH_ENABLED=0) 타입캐스트처럼 일레븐 기본 성우로 대체.
+    #   판정은 fish_tts 한 곳, 대체값은 typecast_tts.FALLBACK_VOICE 한 곳(0순위-B).
+    if typecast_tts.use_fallback(model_id) or fish_tts.use_fallback(model_id):
         model_id = typecast_tts.FALLBACK_VOICE["model_id"]
         voice_id = typecast_tts.FALLBACK_VOICE["voice_id"]
         voice_settings = dict(typecast_tts.FALLBACK_VOICE["settings"])
+    if fish_tts.is_fish(model_id):
+        return _synthesize_fish(
+            text, out_path, voice_id=voice_id, speed=speed, model_id=model_id,
+            max_retries=max_retries, customer_id=customer_id)
     if typecast_tts.is_typecast(model_id):
         return _synthesize_typecast(
             text, out_path, voice_id=voice_id, voice_settings=voice_settings,
@@ -138,6 +145,17 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             max_retries=max_retries, customer_id=customer_id)
     api_key = _api_key(customer_id)
     if not api_key:
+        # ★회원(면제 아님)이 키 없이 오면 무음이 아니라 **안내문으로 실패**(2026-09-29, 타입캐스트 경로와 같은 계약).
+        #   keys_for가 회원에겐 사장님 키를 안 주므로(사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고")
+        #   여기서 무음으로 내려가면 소리 없는 영상이 "완료"로 나간다.
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
+            # ★문구에 '지금 성우가 일레븐랩스'임을 밝힌다(2026-09-30 차순엽 신고 #53 — 타입캐스트 키가 있는데
+            #   "타입캐스트 키를 등록하라"고 나와 헷갈렸다). "키를 등록해야"는 need_own_key 화면 판정용이라 유지.
+            raise RuntimeError("지금 성우는 일레븐랩스 성우라 일레븐랩스 API 키를 등록해야 해요. "
+                               "타입캐스트 키가 있으면 성우를 타입캐스트 성우로 바꿔 주세요. "
+                               "설정 > 🔑 API 키에서 등록해 주세요.")
         _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
@@ -222,6 +240,13 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
       호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
       이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
     if not typecast_tts.api_key(customer_id):
+        # ★회원(면제 아님)이 키 없이 타입캐스트 성우로 오면 무음이 아니라 **안내문으로 실패**한다
+        #   (2026-09-29). 무음 mp3는 소리 없는 영상을 "완료"로 만든다. 문구는 keyroute 한 곳의 것을
+        #   그대로 — app._user_error_kind가 "키를 등록해야"를 보고 need_own_key 화면을 띄운다.
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
+            raise RuntimeError(_kr.TYPECAST_NEED_KEY_MSG)
         _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
@@ -245,6 +270,38 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
             return out_path
         except requests.RequestException as e:
             _record_tts_event("typecast", e, customer_id=customer_id)
+            attempt += 1
+            if attempt < max_retries:
+                time.sleep(attempt * 2)
+                continue
+            raise
+
+
+def _synthesize_fish(text, out_path, *, voice_id, speed, model_id, max_retries,
+                     customer_id=0):
+    """Fish Audio 경로(2026-10-05). 정렬(타임스탬프)을 주지 않으므로 tts_timestamps를 남기지 않는다 —
+    자막은 타입캐스트 403 폴백과 같은 계약으로 ASR 경로가 받는다.
+    키: 회원 본인 키만(사장님 키 폴백 없음, 2026-10-05). 회원이 키 없이 오면 **안내문으로 실패**
+    (일레븐·타입캐스트 경로와 같은 계약). 사장님·면제 명단은 키가 없으면 무음 mock(개발 환경)."""
+    if not fish_tts.api_key(customer_id):
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("fish", None, silent=True, customer_id=customer_id)
+            raise RuntimeError(fish_tts.NEED_KEY_MSG)
+        _record_tts_event("fish", None, silent=True, customer_id=customer_id)
+        _write_silent_mp3(out_path, _estimate_seconds(text))
+        return out_path
+    attempt = 0
+    while True:
+        try:
+            _t0 = time.monotonic()
+            fish_tts.synthesize(text, out_path, voice_id=voice_id, speed=speed,
+                                model_id=model_id, customer_id=customer_id)
+            _record_tts_event("fish", None, ok=True, customer_id=customer_id,
+                              dur_ms=int((time.monotonic() - _t0) * 1000))
+            return out_path
+        except requests.RequestException as e:
+            _record_tts_event("fish", e, customer_id=customer_id)
             attempt += 1
             if attempt < max_retries:
                 time.sleep(attempt * 2)
@@ -281,7 +338,13 @@ def synthesize_best(text, out_path, n=1, base_seed=None, ranker=None, **kw):
         synthesize_tts(text, cand, seed=seed, **kw)
         score = ranker(cand, text) if ranker else i
         cands.append((score, cand))
-    cands.sort(key=lambda x: x[0])
+    # ★점수(오독)가 같으면 **짧은 take**(2026-10-01 관제 049). 동점이면 첫 take를 골랐는데, 필재 job 14882edcb67a
+    #   "이건 바로…"에서 4.49초짜리(바로~~~ 1초 끌림)가 2.64초짜리 정상 take를 이겼다(둘 다 오독 0).
+    #   오독이 같다 = 글자는 다 맞게 읽었다 → 더 짧은 쪽이 덜 늘어진 소리다.
+    from shopping_shorts import audio_post as _ap     # audio_post는 tts를 import하지 않는다(순환 없음)
+    cands = [(s, _ap._audio_dur(c) or 0.0, c) for s, c in cands]
+    cands.sort(key=lambda x: (x[0], x[1]))
+    cands = [(s, c) for s, _d, c in cands]
     shutil.copyfile(cands[0][1], out_path)
     # ★고른 take의 정렬도 같이 옮긴다. 안 옮기면 out_path엔 정렬이 없어 ASR 폴백으로
     #   돌아가고(효과 0), 더 나쁘게는 옛 정렬이 남아 있으면 stale이 된다(copy가 지운다).

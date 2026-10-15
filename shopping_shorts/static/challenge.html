@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>1기 챌린지 — 영상 제출</title>
+<title>챌린지 — 영상 제출</title>
 <link rel="stylesheet" href="/theme.css">
 <style>
   /* ★팔레트는 index.html·produce.html과 같은 토큰을 쓴다(실측 index.html:12-27).
@@ -118,7 +118,7 @@
                 color:#fff;font-size:26px;cursor:pointer;line-height:1}
 </style>
 <div class="wrap">
-  <h1>🔥 1기 챌린지</h1>
+  <h1>🔥 챌린지</h1>
   <div class="sub" id="period">하루 2영상 · 올린 영상 링크를 넣어주세요</div>
 
   <div class="today">
@@ -277,7 +277,7 @@ function render() {
   }
   if (!d.is_member) {
     $('#tabs').hidden = true;
-    $('#list').innerHTML = '<div class="empty">1기 챌린지 참가자만 제출할 수 있어요.<br>'
+    $('#list').innerHTML = '<div class="empty">챌린지 참가자만 제출할 수 있어요.<br>'
       + '참가 신청은 사장님께 문의해주세요.</div>';
     $('#go').disabled = true;
     $('#url').disabled = true;

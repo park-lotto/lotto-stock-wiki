@@ -306,12 +306,12 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 @media(max-width:700px){.dl.v2 .in{padding:12px!important}.dl.v2 .dday{font-size:22px!important}.dl.v2 .cd b,.dl.v2 .cd{font-size:22px!important}.dl.v2 .go{font-size:15px!important;padding:9px 14px!important}}
 </style></head><body>
 
-<div class="dl v2"><div class=in>
-  <span class=dday>1기 마감 D-<b id=cdD>0<small></small></b></span>
-  <div class=msg><div class=track><span>🔥 숏템메이커 1기 모집 중</span><span>__DEADLINE_LABEL__ 마감 후 <b>__NEXT_PRICE__</b>으로 인상</span><span>지금은 <b>__PRO_PRICE__</b></span><span>🔥 숏템메이커 1기 모집 중</span><span>__DEADLINE_LABEL__ 마감 후 <b>__NEXT_PRICE__</b>으로 인상</span><span>지금은 <b>__PRO_PRICE__</b></span></div></div>
+<!--DL--><div class="dl v2"><div class=in>
+  <span class=dday>__COHORT__ 마감 D-<b id=cdD>0<small></small></b></span>
+  <div class=msg><div class=track><span>🔥 숏템메이커 __COHORT__ 모집 중</span><span>__DEADLINE_LABEL__ 마감 후 <b>__NEXT_PRICE__</b>으로 인상</span><span>지금은 <b>__PRO_PRICE__</b></span><span>🔥 숏템메이커 __COHORT__ 모집 중</span><span>__DEADLINE_LABEL__ 마감 후 <b>__NEXT_PRICE__</b>으로 인상</span><span>지금은 <b>__PRO_PRICE__</b></span></div></div>
   <span class=cd id=cd><b id=cdH>00<small></small></b>:<b id=cdM>00<small></small></b>:<b id=cdS>00<small></small></b></span>
-  <a class=go href="__CARD_HREF__">1기 신청 →</a>
-</div><i class=gauge id=gauge></i></div>
+  <a class=go href="__CARD_HREF__">__COHORT__ 신청 →</a>
+</div><i class=gauge id=gauge></i></div><!--/DL-->
 
 <div class=wrap>
 <div class=nav>
@@ -325,7 +325,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     <div class=hd><div class=kin id=kin></div><span>숏템메이커 랭킹에 잡힌 100만뷰+ 쇼핑쇼츠 <b id=hitN></b></span></div>
     <div class=cols><div class=col></div><div class=col></div><div class=col></div></div>
   </div>
-  <div class=hookgo><a class="cta big" href="__CARD_HREF__"><span class=bt>💳 1기 신청하기 <i>→</i></span><span class=pr><s>__LIST_PRICE__</s><b>__PRO_PRICE__</b><span class=off>__DISCOUNT__% 할인</span></span></a><p style="margin:8px 0 0;font-size:13px;opacity:.8;text-align:center">이용기간 __PRO_PERIOD__</p><a class="cta ghost" href="/login">무료로 레퍼런스 랭킹 둘러보기</a></div>
+  <div class=hookgo><a class="cta big" href="__CARD_HREF__"><span class=bt>💳 __COHORT__ 신청하기 <i>→</i></span><span class=pr><s>__LIST_PRICE__</s><b>__PRO_PRICE__</b><span class=off>__DISCOUNT__% 할인</span></span></a><p style="margin:8px 0 0;font-size:13px;opacity:.8;text-align:center">이용기간 __PRO_PERIOD__</p><a class="cta ghost" href="/login">무료로 레퍼런스 랭킹 둘러보기</a></div>
   <div class=trust>설치 없이 브라우저에서 · 구글 계정으로 3초 가입</div>
 </div>
 
@@ -367,12 +367,12 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 <div class=sodiv><i></i><span>그래서!</span><i></i></div>
 <div class="sec reveal climax">
   <div class=urg><span class=uk>⏰ 지금 신청해야 하는 이유</span>
-    <h2><span class=pw style="--d:0s">1기 동안 프로그램</span> <mark class=pw style="--d:.25s">대규모 업데이트</mark><br><span class=pw style="--d:.5s">→ 2기부터</span> <b class="pw hot" style="--d:.75s">가격 인상</b></h2>
-    <p class=chance><span class=now7>🔥 지금이 기회 · <b>__PRO_PRICE__</b></span><br><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b>(이용기간 __PRO_PERIOD__) · __NEXT_START_LABEL__부터 <em class=up>__NEXT_PRICE__</em></p></div>
-  <div class=pcmp data-video=price_compare data-label="1기 770,000원 · 2기 880,000원"></div>
+    <h2><span class=pw style="--d:0s">__COHORT__ 동안 프로그램</span> <mark class=pw style="--d:.25s">대규모 업데이트</mark><br><span class=pw style="--d:.5s">→ __NEXT_COHORT__부터</span> <b class="pw hot" style="--d:.75s">가격 인상</b></h2>
+    <p class=chance><span class=now7>🔥 지금이 기회 · <b>__PRO_PRICE__</b></span><br><!--DL--><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b>(이용기간 __PRO_PERIOD__) · __NEXT_START_LABEL__부터 <em class=up>__NEXT_PRICE__</em><!--/DL--><!--NODL-->__COHORT__ 모집 중 <b class=g>__PRO_PRICE__</b>(이용기간 __PRO_PERIOD__) · __NEXT_COHORT__부터 <em class=up>__NEXT_PRICE__</em><!--/NODL--></p></div>
+  <div class=pcmp data-video=price_compare data-label="__COHORT__ __PRO_PRICE__ · __NEXT_COHORT__ __NEXT_PRICE__"></div>
   <div class="price final">
-    <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 2기 __NEXT_PRICE__</b>으로 오릅니다.<br>1기 동안 프로그램 업데이트가 많아 2기부터 가격을 올립니다.</div>
-    <a class="cta go1" href="__CARD_HREF__"><span>💳 지금 1기 신청하기</span><i>→</i></a>
+    <div class=why>⚠️ <b><!--DL-->__NEXT_START_LABEL__부터 <!--/DL-->__NEXT_COHORT__ __NEXT_PRICE__</b>으로 오릅니다.<br>__COHORT__ 동안 프로그램 업데이트가 많아 __NEXT_COHORT__부터 가격을 올립니다.</div>
+    <a class="cta go1" href="__CARD_HREF__"><span>💳 지금 __COHORT__ 신청하기</span><i>→</i></a>
     <a class=alt href="__PAY_HREF__">계좌이체 · 결제 안내</a>
   </div>
 </div>
@@ -382,8 +382,8 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 
 <script>
 (function(){
-  /* 마감 카운트다운 — 마감 시각은 서버가 넣는다(__DEADLINE_ISO__) */
-  var end = Date.parse("__DEADLINE_ISO__");
+  /* 마감 카운트다운 — 마감 시각은 서버가 넣는다(__DEADLINE_ISO__). 마감이 없으면 서버가 바 블록(DL 마커)을 통째로 뺀다(2026-10-01) */
+  var end = document.getElementById('cdD') ? Date.parse("__DEADLINE_ISO__") : NaN;
   function pad(n){return (n<10?'0':'')+n}
   function tick(){
     var ms = Math.max(0, end - Date.now()), s = Math.floor(ms/1000);
@@ -394,7 +394,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     document.getElementById('cdS').firstChild.nodeValue=pad(x);
   }
   try{ var g=document.getElementById('gauge'), st=new Date('2026-09-01T00:00:00+09:00').getTime(); if(g&&!isNaN(end)) g.style.width=Math.max(4,Math.min(100,(Date.now()-st)/(end-st)*100))+'%'; }catch(e){}
-  if (!isNaN(end)) { tick(); setInterval(tick, 1000); } else { document.getElementById('cd').style.display='none'; }
+  if (!isNaN(end)) { tick(); setInterval(tick, 1000); } else if (document.getElementById('cd')) { document.getElementById('cd').style.display='none'; }
 
   /* 영상 칸 — 파일이 있으면 자동재생(음소거·반복), 없으면 자리표시 */
   document.querySelectorAll('[data-video]').forEach(function(el){

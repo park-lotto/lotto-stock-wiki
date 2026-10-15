@@ -43,7 +43,8 @@ def test_require_list_is_exactly_vmake_and_tts():
     """★사장님이 정한 범위 그대로다. 여기에 gemini·youtube가 들어가면 공용 풀
     정책(키 1개 받고 무료)이 깨진다 — 그건 의도된 거래다."""
     assert set(keyroute.REQUIRE_OWN_KEY) == {
-        keyroute.SVC_VMAKE, keyroute.SVC_ELEVENLABS, keyroute.SVC_TYPECAST}
+        keyroute.SVC_VMAKE, keyroute.SVC_ELEVENLABS, keyroute.SVC_TYPECAST,
+        keyroute.SVC_FISH}           # 2026-10-05 사장님 "Fish도 사장님 키로 돌리지 않는다"
 
 
 @pytest.mark.parametrize("svc", [keyroute.SVC_GEMINI, keyroute.SVC_YOUTUBE])
@@ -152,10 +153,11 @@ def test_exempt_list_is_exactly_the_four_people():
     숫자를 박아 고정한다. 지시 없이 늘어나면 이 테스트가 잡는다."""
     # ⚠️291(최일환)은 2026-09-03 **하루만** 열어둔 임시 면제다(사장님 지시).
     #   2026-09-04에 keyroute에서 291을 빼고 이 줄도 원래대로 되돌린다.
-    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 291}
+    # ✅451(심효진)은 2026-10-07 사장님 "심효진만 처리"로 뺐다(관제 153) — 회사 키를 못 쓴다.
+    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12}
 
 
-@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 291])
+@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12])
 def test_exempt_members_are_never_blocked(store, cid):
     """면제 대상은 키가 없어도 VMake·음성 둘 다 열린다."""
     assert keyroute.block_reason(store, cid, keyroute.SVC_VMAKE) is None
@@ -171,3 +173,59 @@ def test_nonexempt_member_is_still_blocked(store):
     """★면제는 명단뿐이다 — 비슷한 이름(민정훈 cid 234)까지 풀리면 안 된다."""
     assert keyroute.tts_block_reason(store, 234) is not None
     assert keyroute.block_reason(store, 261, keyroute.SVC_VMAKE) is not None
+
+
+# ── 성우 엔진에 맞는 키 (2026-09-29 사장님 "왜 내 키를 쓰나 — 타입캐스트 유료 가입 후 키 등록하라고 안내해") ──
+# 라이브 실측 9월: 타입캐스트 음성 작업 380건 중 296건이 타입캐스트 키 없는(일레븐만 낸) 회원 →
+# 사장님 타입캐스트 계정 초과 154,199크레딧. 종전 tts_block_reason은 "둘 중 하나"만 봤다.
+
+def test_typecast_voice_blocked_with_elevenlabs_key_only(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    hit = keyroute.tts_block_reason(store, 7, model_id="ssfm-v30")
+    assert hit is not None and hit[0] == "need_own_key"
+    assert "유료" in hit[1] and "등록" in hit[1] and "일레븐랩스" in hit[1]
+
+
+def test_typecast_voice_allowed_with_own_typecast_key(store):
+    store.add_customer_key(8, keyroute.SVC_TYPECAST, "TC")
+    assert keyroute.tts_block_reason(store, 8, model_id="ssfm-v30") is None
+
+
+def test_elevenlabs_voice_still_allowed_with_elevenlabs_key(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    assert keyroute.tts_block_reason(store, 7, model_id="eleven_v3") is None
+
+
+def test_unknown_engine_falls_back_to_either_key_rule(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    assert keyroute.tts_block_reason(store, 7, model_id=None) is None
+
+
+def test_exempt_member_may_use_typecast_voice_without_key(store):
+    assert keyroute.tts_block_reason(store, 12, model_id="ssfm-v30") is None
+
+
+def test_451_no_longer_gets_owner_keys(store, monkeypatch):
+    """관제 153(2026-10-07): 심효진(451)은 면제에서 빠졌다 — 회사 일레븐·타입캐스트 키를 못 받는다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    assert not keyroute.is_block_exempt(451)
+    assert keyroute.keys_for(store, 451, keyroute.SVC_ELEVENLABS) == ([], False)
+    assert keyroute.keys_for(store, 451, keyroute.SVC_TYPECAST) == ([], False)
+
+
+def test_keys_for_typecast_never_falls_back_to_owner_for_member(store, monkeypatch):
+    """요청 관문을 우회한 뒷길(워커·재합성)도 사장님 타입캐스트 키를 못 받는다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님TC"])
+    keys, is_user = keyroute.keys_for(store, 7, keyroute.SVC_TYPECAST)
+    assert keys == [] and is_user is False
+    keys0, _ = keyroute.keys_for(store, 0, keyroute.SVC_TYPECAST)
+    assert keys0 == ["사장님TC"]
+    keysx, _ = keyroute.keys_for(store, 12, keyroute.SVC_TYPECAST)
+    assert keysx == ["사장님TC"]
+
+
+def test_elevenlabs_never_falls_back_to_owner_for_member(store, monkeypatch):
+    """일레븐도 회원에겐 사장님 키 폴백 없음(2026-09-29 사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고")."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님EL"])
+    assert keyroute.keys_for(store, 7, keyroute.SVC_ELEVENLABS) == ([], False)
+    assert keyroute.keys_for(store, 0, keyroute.SVC_ELEVENLABS)[0] == ["사장님EL"]

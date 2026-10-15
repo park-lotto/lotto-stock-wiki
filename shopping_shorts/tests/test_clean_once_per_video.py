@@ -61,7 +61,10 @@ class Test청소_전에_TTS를_확정한다:
     def test_렌더와_같은_형태로_부른다(self):
         """★호출 형태가 갈리면 서명이 어긋난다(0순위-B). skip_existing=True가 핵심."""
         import inspect
-        for fn in (mp.run_clean_sources, mp.run_render):
+        # ★렌더·미리보기는 음성 보장 + 저장 + **DB 편성 다시 읽기**를 공용 함수(_save_plan_with_tts)로 한다
+        #   (2026-10-05 관제 122) — 그 함수가 부르는 형태를 본다. 렌더가 그 함수를 부르는지도 본다.
+        assert "_save_plan_with_tts(" in inspect.getsource(mp.run_render), "run_render가 음성 보장 공용 함수를 안 부른다"
+        for fn in (mp.run_clean_sources, mp._save_plan_with_tts):
             src = inspect.getsource(fn)
             i = src.find("_synthesize_beats(")
             assert i > 0, f"{fn.__name__}에 TTS 보장이 없다"

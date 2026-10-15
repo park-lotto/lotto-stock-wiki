@@ -430,6 +430,35 @@ def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336)
     return items
 
 
+# 채널별 터진 영상(2026-10-06 사장님 "채널 대비해서 눈에 띄게 높은 것만 / 한 채널에 2~3개", 관제 137).
+#   잣대 = **그 채널 자기 영상들의 중앙값 대비 배수**. 구독자 대비(🚀)는 구독자 1명짜리 채널이
+#   2,263배로 맨 위를 차지해 가려내지 못했다(실측 2026-10-05). 중앙값은 한두 편의 대박에 안 끌려간다.
+#   실측(205채널·쇼츠 31,825편): 5배·1만 이상이 3,788편 — 채널당 상위 3편으로 끊어 529편.
+HIT_MULT, HIT_FLOOR, HIT_TOP, HIT_MIN_VIDEOS = 5, 10000, 3, 10
+
+
+def pick_channel_hits(videos, mult=HIT_MULT, floor=HIT_FLOOR, top=HIT_TOP, min_videos=HIT_MIN_VIDEOS):
+    """한 채널의 영상들 → (평소 조회수(중앙값), 터진 영상 목록). ★이 판단의 주인은 여기 하나다.
+
+    videos: [{"views": int, ...}] — 그 채널의 영상 전부(전수조사분).
+    영상이 min_videos 편 미만이면 평소 값을 믿을 수 없어 (0, []) — 3편짜리 채널의 '5배'는 우연이다.
+    돌려주는 영상에는 hit_ratio(평소의 몇 배)를 붙인다. 조회수 큰 순, 최대 top 편.
+    """
+    vs = [v for v in (videos or []) if isinstance(v, dict)]
+    if len(vs) < min_videos:
+        return 0, []
+    views = sorted(int(v.get("views") or 0) for v in vs)
+    n = len(views)
+    med = views[n // 2] if n % 2 else (views[n // 2 - 1] + views[n // 2]) / 2
+    base = med or 1                      # 평소가 0인 채널(전부 0뷰)에서 0 나눗셈 방지
+    out = []
+    for v in sorted(vs, key=lambda x: -int(x.get("views") or 0))[:top]:
+        w = int(v.get("views") or 0)
+        if w >= base * mult and w >= floor:
+            out.append(dict(v, hit_ratio=round(w / base, 1)))
+    return int(med), out
+
+
 def fill_intensity(items, now=None):
     """강도 지표(시간당댓글·조회수당댓글·팔로워당댓글)가 없는 항목에 채워 넣는다.
 

@@ -23,6 +23,14 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.store import Store
 
 
+@pytest.fixture(autouse=True)
+def _fish_default_off(monkeypatch):
+    """이 파일은 '성우 기억' 자체를 잰다. 키 없는 회원의 Fish 기본 성우 정책(2026-10-05,
+    fish_tts.use_fish_default)은 test_fish_tts·test_voice_fallback_no_key가 따로 잰다."""
+    from shopping_shorts import config
+    monkeypatch.setattr(config, "FISH_ENABLED", False)
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     from shopping_shorts import keycrypt
@@ -70,7 +78,8 @@ def test_기억한_성우가_실제_합성_파라미터까지_닿는다(store):
     voice = store.get_mix_job("job_p")["voice"]
     got = mix_pipeline._voice_params(voice)
     assert got[0] == "VID_SENA"                     # voice_id
-    assert got[2] == 1.4                            # speed
+    assert got[2] == 1.0                            # API 속도는 항상 1.0(관제 049)
+    assert got[3] == 1.4                            # 고른 속도는 atempo 배율로 닿는다
     default = mix_pipeline._voice_params(None)
     assert default[0] == mix_pipeline._DEFAULT_VOICE["voice_id"]
     assert got[0] != default[0], "기억이 미나 폴백을 실제로 대체해야 한다"

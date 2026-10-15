@@ -1,0 +1,435 @@
+{
+ "sig": "49f966d692fb637es38538ada",
+ "tier": "basic",
+ "clean_cuts": [
+  "0|s4|0.00",
+  "0|s4|1.39",
+  "6|s4|4.12",
+  "6|s4|5.38",
+  "8|s0|9.73",
+  "8|s0|7.83",
+  "9|s4|22.33",
+  "9|s4|24.48"
+ ],
+ "kind": "current",
+ "file_mtime": 1790446217.2264318,
+ "plan": {
+  "beats": [
+   {
+    "beat_idx": 0,
+    "target_seconds": 2.4,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "fdd1f8bc76e3",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": null,
+    "narration": "보이면 무조건 사야 되는 필수템",
+    "primary": {
+     "video_id": "s4",
+     "start": 0.0,
+     "end": 4.117,
+     "seg_id": "lens_tiktok_w0s97j-0"
+    },
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 0.0,
+      "end": 4.117,
+      "seg_id": "lens_tiktok_w0s97j-0"
+     }
+    ]
+   },
+   {
+    "beat_idx": 1,
+    "target_seconds": 5.0,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "40901a61f87e",
+     "n": 2,
+     "offs": [
+      0,
+      22
+     ]
+    },
+    "caption_lines": [
+     "몸 전체를 쫀득하게 감싸 안아줘서",
+     "집돌이들 사이에서",
+     "난리가 났다는데"
+    ],
+    "narration": "몸 전체를 쫀득하게 감싸 안아줘서 집돌이들 사이에서 난리가 났다는데",
+    "primary": {
+     "video_id": "s3",
+     "start": 10.6,
+     "end": 17.2,
+     "seg_id": "lens_tiktok_3joodp-3"
+    },
+    "alternates": [
+     {
+      "video_id": "s3",
+      "start": 17.2,
+      "end": 23.8,
+      "seg_id": "lens_tiktok_3joodp-4"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s3",
+      "start": 10.6,
+      "end": 17.2,
+      "seg_id": "lens_tiktok_3joodp-3"
+     },
+     {
+      "video_id": "s3",
+      "start": 17.2,
+      "end": 23.8,
+      "seg_id": "lens_tiktok_3joodp-4"
+     }
+    ]
+   },
+   {
+    "beat_idx": 2,
+    "target_seconds": 1.8,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "623f80bf7626",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": null,
+    "narration": "이건 바로 빈백 소파.",
+    "primary": {
+     "video_id": "s3",
+     "start": 41.7,
+     "end": 43.7,
+     "seg_id": "lens_tiktok_3joodp-12"
+    },
+    "scene_override": [
+     {
+      "video_id": "s3",
+      "start": 41.7,
+      "end": 43.7,
+      "seg_id": "lens_tiktok_3joodp-12"
+     }
+    ]
+   },
+   {
+    "beat_idx": 3,
+    "target_seconds": 4.0,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "1b68c27339d2",
+     "n": 2,
+     "offs": [
+      0,
+      18
+     ]
+    },
+    "caption_lines": [
+     "진짜 말도 안 되는게",
+     "딱딱한 바닥이나 소파에",
+     "오래 앉아 있어"
+    ],
+    "narration": "진짜 말도 안 되는게 딱딱한 바닥이나 소파에 오래 앉아 있어",
+    "primary": {
+     "video_id": "s1",
+     "start": 0.667,
+     "end": 3.833,
+     "seg_id": "lens_youtube_8j9sxu-1"
+    },
+    "alternates": [
+     {
+      "video_id": "s1",
+      "start": 6.6,
+      "end": 8.033,
+      "seg_id": "lens_youtube_8j9sxu-5"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s1",
+      "start": 0.667,
+      "end": 3.833,
+      "seg_id": "lens_youtube_8j9sxu-1"
+     },
+     {
+      "video_id": "s1",
+      "start": 6.6,
+      "end": 8.033,
+      "seg_id": "lens_youtube_8j9sxu-5"
+     }
+    ]
+   },
+   {
+    "beat_idx": 4,
+    "target_seconds": 3.3,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "af6e3d829679",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": [
+     "허리랑 엉덩이가 뻐근해서",
+     "끙끙 앓던 그 지옥을"
+    ],
+    "narration": "허리랑 엉덩이가 뻐근해서 끙끙 앓던 그 지옥을",
+    "primary": {
+     "video_id": "s3",
+     "start": 23.8,
+     "end": 27.233,
+     "seg_id": "lens_tiktok_3joodp-5"
+    },
+    "scene_override": [
+     {
+      "video_id": "s3",
+      "start": 23.8,
+      "end": 27.233,
+      "seg_id": "lens_tiktok_3joodp-5"
+     }
+    ]
+   },
+   {
+    "beat_idx": 5,
+    "target_seconds": 3.6,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "d796bf9c15e0",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": [
+     "체형 맞춰",
+     "푹신하게 감싸 안아",
+     "없애 버렸다는 거"
+    ],
+    "narration": "체형 맞춰 푹신하게 감싸 안아 없애 버렸다는 거",
+    "primary": {
+     "video_id": "s2",
+     "start": 4.295,
+     "end": 8.590998,
+     "seg_id": "lens_youtube_1h8lbnw-1"
+    },
+    "scene_override": [
+     {
+      "video_id": "s2",
+      "start": 4.295,
+      "end": 8.590998,
+      "seg_id": "lens_youtube_1h8lbnw-1"
+     }
+    ]
+   },
+   {
+    "beat_idx": 6,
+    "target_seconds": 2.8,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "943adb268f9d",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": [
+     "거기다 하부 청소",
+     "한번 하려고 할 때마다"
+    ],
+    "narration": "거기다 하부 청소 한번 하려고 할 때마다",
+    "primary": {
+     "video_id": "s4",
+     "start": 4.117,
+     "end": 8.233,
+     "seg_id": "lens_tiktok_w0s97j-1"
+    },
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 4.117,
+      "end": 8.233,
+      "seg_id": "lens_tiktok_w0s97j-1"
+     }
+    ]
+   },
+   {
+    "beat_idx": 7,
+    "target_seconds": 2.9,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "706903287157",
+     "n": 1,
+     "offs": [
+      0
+     ]
+    },
+    "caption_lines": [
+     "무거운 소파",
+     "혼자 못 옮겨",
+     "쩔쩔매던 걸"
+    ],
+    "narration": "무거운 소파 혼자 못 옮겨 쩔쩔매던 걸",
+    "primary": {
+     "video_id": "s3",
+     "start": 48.833,
+     "end": 52.467,
+     "seg_id": "lens_tiktok_3joodp-15"
+    },
+    "scene_override": [
+     {
+      "video_id": "s3",
+      "start": 48.833,
+      "end": 52.467,
+      "seg_id": "lens_tiktok_3joodp-15"
+     }
+    ]
+   },
+   {
+    "beat_idx": 8,
+    "target_seconds": 2.7,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "81e3ed93e92d",
+     "n": 5,
+     "offs": [
+      0,
+      5,
+      10,
+      17,
+      17
+     ]
+    },
+    "caption_lines": [
+     "손잡이 잡고",
+     "쓱 들어 올려",
+     "해결해 버렸다고"
+    ],
+    "narration": "손잡이 잡고 쓱 들어 올려 해결해 버렸다고",
+    "primary": {
+     "video_id": "s3",
+     "start": 47.7,
+     "end": 48.833,
+     "seg_id": "lens_tiktok_3joodp-14"
+    },
+    "scene_override": [
+     {
+      "video_id": "s0",
+      "start": 9.733,
+      "end": 10.8,
+      "seg_id": "lens_youtube_9qxjdm-5"
+     },
+     {
+      "video_id": "s3",
+      "start": 47.7,
+      "end": 48.833,
+      "seg_id": "lens_tiktok_3joodp-14"
+     },
+     {
+      "video_id": "s0",
+      "start": 7.833,
+      "end": 8.9,
+      "seg_id": "lens_youtube_9qxjdm-3"
+     },
+     {
+      "video_id": "s3",
+      "start": 5.633,
+      "end": 10.6,
+      "seg_id": "lens_tiktok_3joodp-2"
+     },
+     {
+      "video_id": "s2",
+      "start": 4.295,
+      "end": 8.590998,
+      "seg_id": "lens_youtube_1h8lbnw-1"
+     }
+    ]
+   },
+   {
+    "beat_idx": 9,
+    "target_seconds": 6.5,
+    "phrase_sync": true,
+    "clip_anchor": {
+     "key": "0969153a8715",
+     "n": 2,
+     "offs": [
+      0,
+      23
+     ]
+    },
+    "caption_lines": [
+     "근데 진짜 충격적인 포인트는",
+     "음료 쏟아 냄새나던 지옥도",
+     "지퍼 열어 싹 세탁하면 끝이라고"
+    ],
+    "narration": "근데 진짜 충격적인 포인트는 음료 쏟아 냄새나던 지옥도 지퍼 열어 싹 세탁하면 끝이라고",
+    "primary": {
+     "video_id": "s4",
+     "start": 22.333,
+     "end": 26.933,
+     "seg_id": "lens_tiktok_w0s97j-8"
+    },
+    "alternates": [
+     {
+      "video_id": "s3",
+      "start": 43.7,
+      "end": 47.7,
+      "seg_id": "lens_tiktok_3joodp-13"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 22.333,
+      "end": 26.933,
+      "seg_id": "lens_tiktok_w0s97j-8"
+     },
+     {
+      "video_id": "s3",
+      "start": 43.7,
+      "end": 47.7,
+      "seg_id": "lens_tiktok_3joodp-13"
+     }
+    ]
+   },
+   {
+    "beat_idx": 10,
+    "target_seconds": 1.9,
+    "phrase_sync": false,
+    "caption_lines": null,
+    "primary": {
+     "video_id": "s3",
+     "start": 0.0,
+     "end": 1.8,
+     "seg_id": "lens_tiktok_3joodp-0"
+    },
+    "scene_override": [
+     {
+      "video_id": "s3",
+      "start": 0.0,
+      "end": 1.8,
+      "seg_id": "lens_tiktok_3joodp-0"
+     },
+     {
+      "video_id": "s2",
+      "start": 4.295,
+      "end": 8.590998,
+      "seg_id": "lens_youtube_1h8lbnw-1"
+     },
+     {
+      "video_id": "s3",
+      "start": 5.633,
+      "end": 10.6,
+      "seg_id": "lens_tiktok_3joodp-2"
+     }
+    ]
+   }
+  ]
+ }
+}

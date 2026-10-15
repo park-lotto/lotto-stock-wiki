@@ -1,0 +1,222 @@
+{
+  "handoff/장면폰트.md": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
+  "out/precision20-ui.js": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
+  "out/precision20-ui.js:addText": {
+    "at": "2026-10-03 22:33",
+    "card": 103,
+    "track": "단어강조"
+  },
+  "out/precision20-ui.js:autoFxKinds": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
+  "out/precision20-ui.js:cameraAt": {
+    "at": "2026-10-05 15:47",
+    "card": 124,
+    "track": "장면효과팩"
+  },
+  "out/precision20-ui.js:drawFontSets": {
+    "at": "2026-09-29 16:06",
+    "card": 30,
+    "track": "장면폰트"
+  },
+  "out/precision20-ui.js:effect": {
+    "at": "2026-10-05 22:39",
+    "card": 131,
+    "track": "로고기억"
+  },
+  "out/scene-style-ui-showcase.html": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/ai_match.py:ensure_cover": {
+    "at": "2026-10-05 11:38",
+    "card": 120,
+    "track": "장면배분"
+  },
+  "shopping_shorts/app.py": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/app.py:_analysis_state": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/app.py:api_buffer_schedule": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/app.py:api_mix_voice_preview": {
+    "at": "2026-10-04 11:05",
+    "card": 113,
+    "track": "단어강조"
+  },
+  "shopping_shorts/app.py:api_storyboard_prepare": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/buffer_api.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/buffer_posts.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/capcut_draft.py": {
+    "at": "2026-10-05 15:47",
+    "card": 124,
+    "track": "장면효과팩"
+  },
+  "shopping_shorts/clean_base.py:_remap_replay": {
+    "at": "2026-10-06 02:29",
+    "card": 135,
+    "track": "청소뒤원본전수"
+  },
+  "shopping_shorts/deco_frame.py:_norm_masks": {
+    "at": "2026-10-03 20:53",
+    "card": 100,
+    "track": "화살표회전"
+  },
+  "shopping_shorts/edit_plan.py:build_inherit_plan": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/edit_plan.py:non_edge_segs": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/mix_pipeline.py:mark_auto_exclude": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/scene_style.py": {
+    "at": "2026-09-29 22:57",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/scene_style.py:compose": {
+    "at": "2026-10-05 15:47",
+    "card": 124,
+    "track": "장면효과팩"
+  },
+  "shopping_shorts/scene_style.py:context_for": {
+    "at": "2026-10-03 21:53",
+    "card": 102,
+    "track": "단어강조"
+  },
+  "shopping_shorts/scene_style.py:moment_of": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
+  "shopping_shorts/scene_style.py:validate_snapshot": {
+    "at": "2026-09-29 16:06",
+    "card": 30,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/static/produce.html": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/static/produce.html:_seedFootageOff": {
+    "at": "2026-10-06 20:48",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/static/produce.html:canGoNext": {
+    "at": "2026-10-12 14:51",
+    "card": 186,
+    "track": "작업잠김"
+  },
+  "shopping_shorts/static/scene_play.js:planClips": {
+    "at": "2026-10-03 23:09",
+    "card": 106,
+    "track": "구절컷리듬분리"
+  },
+  "shopping_shorts/static/text-look-contract.js": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/store.py:Store.device_register": {
+    "at": "2026-10-12 11:23",
+    "card": 184,
+    "track": "PC유령칸"
+  },
+  "shopping_shorts/store.py:_apply_beat_sources": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/store.py:autoload_status": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/story_writer.py:make_drafts": {
+    "at": "2026-09-29 19:18",
+    "card": 33,
+    "track": "장면분량"
+  },
+  "shopping_shorts/storyboard.py:inventory": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/storyboard.py:make_boards": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/tests": {
+    "at": "2026-09-29 22:57",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/tests/test_text_look_contract.py": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/userscript/grab_logic.js:_dockAnchor": {
+    "at": "2026-10-03 17:40",
+    "card": 94,
+    "track": "팝업버튼자리"
+  },
+  "shopping_shorts/userscript/grab_logic.js:_igMainWorld": {
+    "at": "2026-10-08 13:00",
+    "card": 162,
+    "track": "해외레퍼런스추적"
+  },
+  "shopping_shorts/video_assemble.py:_beat_timeline": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
+  "tools/scene_font_research/check_text_look.py": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  }
+}

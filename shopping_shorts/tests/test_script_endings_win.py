@@ -94,11 +94,12 @@ def test_synthesize_line_keeps_endings_when_script_wins(monkeypatch, tmp_path):
 
 
 def test_synthesize_line_default_unchanged(monkeypatch, tmp_path):
-    """★기본값은 종전 그대로 — 인자를 안 주면 어미 치환이 살아있다(회귀 0)."""
+    """★2026-10-01 관제 049: 합성 글 = 대본 원문 — 인자를 안 줘도 어미 치환은 꺼진다(사장님 청취 확정).
+    종전엔 기본이 켬이었다. 대본이 어미를 이긴다는 이 파일의 원칙이 이제 모든 job 에 적용된다."""
     seen = _capture_naturalize(monkeypatch)
     mix_pipeline.synthesize_line("이건 진짜 물건입니다.", tmp_path / "a.mp3",
                                  voice={"voice_id": "v"})
-    assert seen["profile"]["spoken_style"]["on"] is True
+    assert seen["profile"]["spoken_style"]["on"] is False
 
 
 def test_script_endings_does_not_mutate_caller_profile(monkeypatch, tmp_path):
@@ -140,4 +141,8 @@ def test_all_synthesize_beats_callers_pass_script_endings():
     # 정의 1개(def) + 호출 n개 → 호출부 = calls - 1
     assert calls - 1 == wired, (
         "_synthesize_beats 호출부 %d곳 중 %d곳만 script_endings를 넘긴다" % (calls - 1, wired))
-    assert wired >= 5
+    # ★렌더·미리보기는 공용 함수 _save_plan_with_tts 한 곳에서 부른다(2026-10-05 관제 122) — 5곳→4곳.
+    #   대신 두 경로가 그 함수를 실제로 부르는지 같이 본다(경로가 빠져 숫자만 맞는 일이 없게).
+    assert wired >= 4
+    for fn in (mix_pipeline.run_render, mix_pipeline.run_preview):
+        assert "_save_plan_with_tts(" in inspect.getsource(fn), fn.__name__ + " 가 음성 보장 공용 함수를 안 부른다"

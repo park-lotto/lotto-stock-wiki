@@ -8,10 +8,11 @@ from shopping_shorts import scene_style
 def test_context_hides_every_hook_caption_without_changing_text_or_time(monkeypatch):
     from shopping_shorts import video_assemble
 
-    def fake_schedule(beat):
+    def fake_schedule(beat, **_kw):   # context_for 가 absorb_lead 를 넘긴다(2026-09-27)
         if beat["beat_idx"] == 0:
+            # 앞 틈 흡수는 caption_schedule(주인)의 몫 — 가짜도 absorb_lead 를 진짜처럼 따른다(2026-09-27)
             return [
-                ("훅 첫줄", 0.2, 0.9),
+                ("훅 첫줄", 0.0 if _kw.get("absorb_lead", 0) > 0.2 else 0.2, 0.9),
                 ("훅 둘째줄", 0.9, 1.8),
             ]
         return [("본문 대사", 1.8, 3.8)]
@@ -43,7 +44,7 @@ def test_context_keeps_legacy_caption_visibility_when_policy_is_absent(monkeypat
     monkeypatch.setattr(
         video_assemble,
         "caption_schedule",
-        lambda beat: [(beat["narration"], beat["t0"], beat["t0"] + beat["dur"])],
+        lambda beat, **_kw: [(beat["narration"], beat["t0"], beat["t0"] + beat["dur"])],
     )
     context = scene_style.context_for(
         [{"beat_idx": 0, "t0": 0.0, "dur": 1.0, "narration": "기존 훅"}],

@@ -21,6 +21,22 @@ def test_caption_mask_placement_survives_validation():
         validate_snapshot(saved)
 
 
+def test_text_weight_and_shadow_accept_numeric_controls_and_legacy_values():
+    base = {"mode": "story", "presetId": "t11"}
+    numeric = {**base, "textWeight": 90, "textShadow": 65}
+    assert validate_snapshot(numeric)["textWeight"] == 90
+    assert validate_snapshot(numeric)["textShadow"] == 65
+    assert validate_snapshot({**base, "textWeight": "heavy", "textShadow": "soft"})["textWeight"] == "heavy"
+    split = {"channel": 5, "titleLarge": 100, "titleSmall": 55, "caption": 35}
+    assert validate_snapshot({**base, "textWeight": split, "textShadow": split})["textShadow"] == split
+    for bad in (-5, 7, 105, True, "medium"):
+        with pytest.raises(ValueError):
+            validate_snapshot({**base, "textWeight": bad})
+    for bad in ({"wrong": 50}, {"channel": 7}, {"caption": True}):
+        with pytest.raises(ValueError):
+            validate_snapshot({**base, "textShadow": bad})
+
+
 def test_real_caption_gaps_and_hook_beat_are_preserved():
     timeline=[{"beat_idx":7,"t0":0,"dur":2,"narration":"첫 줄 다음 줄","caption_lines":["첫 줄","다음 줄"],"cap_durs":[.7,1.1],"cap_lead":.2},
               {"beat_idx":9,"t0":2,"dur":1,"narration":"본문","caption_lines":["본문"]}]

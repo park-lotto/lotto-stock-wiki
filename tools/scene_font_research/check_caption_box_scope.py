@@ -26,8 +26,8 @@ with sync_playwright() as p:
         show = lambda i: (pg.evaluate(f'window.sceneStyle.show({i})'), pg.wait_for_timeout(250))
         first = 1 if mode == 'story' else 0   # 썰쇼핑형 0번은 훅(자막 칸 없음)
         def open_panel():
-            pg.evaluate("()=>{const s=document.querySelector('[data-caption-look-scope]');for(let e=s;e;e=e.parentElement){if(e.tagName==='DETAILS')e.open=true;if(e.hidden)e.hidden=false}return 1}")
-        def scope(v): open_panel(); pg.click(f'[data-caption-look-scope="{v}"]'); pg.wait_for_timeout(150)
+            pg.evaluate("()=>{const s=document.querySelectorAll('.layout-a details').forEach(d=>d.open=true);return 1}")
+        def scope(v): open_panel(); pg.click(f'[data-edit-scope="{v}"]'); pg.wait_for_timeout(150)
         def put(key, val):   # 고객이 슬라이더를 끌거나 색을 고른 것과 같게 input 이벤트를 낸다
             open_panel()
             ok = pg.evaluate("([k,v])=>{const i=document.querySelector(`[data-caption-layout=\"${k}\"]`);if(!i)return false;i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));return true}", [key, val])

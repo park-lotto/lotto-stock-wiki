@@ -86,6 +86,39 @@ def _stats(video_ids, token):
     return out
 
 
+def video_details(video_ids, tokens):
+    """videos.list(statistics,contentDetails,snippet) → {id: {views,likes,comments,published,dur}}.
+
+    관제 156(2026-10-08 사장님): 유튜브 Shorts 검색 화면에 인스타처럼 📅날짜·⏱길이·조회·댓글 배지와
+    조회수순·댓글순 정렬. 검색 화면엔 조회수만 있다(실측) → 50개씩 1호출(쿼터 1). 키는 실패 시 다음 키."""
+    out = {}
+    ids = [v for v in dict.fromkeys(video_ids or []) if v and len(v) == 11][:200]
+    for i in range(0, len(ids), 50):
+        chunk = ids[i:i + 50]
+        for tok in (tokens or []):
+            try:
+                r = requests.get(_VIDEOS_URL, params={
+                    "part": "statistics,contentDetails,snippet", "id": ",".join(chunk),
+                    "fields": "items(id,statistics(viewCount,likeCount,commentCount),"
+                              "contentDetails(duration),snippet(publishedAt))",
+                    "key": tok}, timeout=20)
+            except requests.RequestException:
+                continue
+            if r.status_code != 200:
+                continue                      # 쿼터·키 문제 → 다음 키
+            for it in r.json().get("items", []):
+                s = it.get("statistics", {})
+                out[it["id"]] = {
+                    "views": int(s.get("viewCount") or 0),
+                    "likes": int(s["likeCount"]) if s.get("likeCount") is not None else None,
+                    "comments": int(s["commentCount"]) if s.get("commentCount") is not None else None,
+                    "published": (it.get("snippet") or {}).get("publishedAt", "")[:10],
+                    "dur": _parse_duration_secs((it.get("contentDetails") or {}).get("duration")),
+                }
+            break
+    return out
+
+
 # 언어코드 → YouTube regionCode(검색 지역 편향). 없는 언어는 기본 KR.
 _LANG_REGION = {"ko": "KR", "en": "US", "ja": "JP", "zh": "TW", "ru": "RU"}
 
@@ -327,6 +360,30 @@ def channels_from_video_urls(urls):
                 "channel_url": f"https://www.youtube.com/channel/{cid}",
             })
     return out
+
+
+def uploader_of_video(url):
+    """유튜브 영상 URL → (채널 핸들 또는 UC아이디, 채널명). 못 찾으면 ("", "").
+
+    ★서버에서 yt-dlp는 유튜브에 막힌다(2026-09-28 실측: 데이터센터 IP라 "로봇 아님을
+    확인하려면 로그인" 거절, 폰 공유 첫 시도가 이걸로 실패). 공식 API는 안 막힌다.
+    videos.list(1) + channels.list(1) = 2 units. 핸들은 yt-dlp가 주던 것과 같은 모양
+    (@ 뗀 customUrl)이라 이미 담긴 채널과 중복되지 않는다."""
+    vid = video_id_from_url(url)
+    if not vid:
+        return "", ""
+    vd, _ = _first_ok(_VIDEOS_URL, {"part": "snippet", "id": vid})
+    items = (vd or {}).get("items") or []
+    if not items:
+        return "", ""
+    sn = items[0].get("snippet") or {}
+    cid, title = sn.get("channelId") or "", sn.get("channelTitle") or ""
+    if not cid:
+        return "", ""
+    cd, _ = _first_ok(_CHANNELS_URL, {"part": "snippet", "id": cid})
+    citems = (cd or {}).get("items") or []
+    handle = ((citems[0].get("snippet") or {}).get("customUrl") or "") if citems else ""
+    return (handle.lstrip("@") or cid), title
 
 
 def enrich_youtube(url):

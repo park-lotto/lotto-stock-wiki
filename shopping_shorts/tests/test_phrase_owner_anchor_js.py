@@ -65,7 +65,7 @@ console.log(JSON.stringify({clips: out, caps: DATA.captions['0']}));
 
 def _caps(monkeypatch, beat):
     monkeypatch.setattr(appmod.video_assemble, "_probe_duration", lambda p: TTS)
-    return appmod._lab_captions({"beats": [beat]})[0]["0"]
+    return appmod._lab_captions({"beats": [beat]}, None)[0]["0"]
 
 
 def _same(server_plan, js_clips):

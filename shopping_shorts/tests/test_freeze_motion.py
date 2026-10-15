@@ -44,8 +44,10 @@ def test_frozen_tail_has_motion(tmp_path):
     # 총 길이 보존 = play_out + freeze (오디오/자막 싱크 불변).
     assert va._probe_duration(out) == pytest.approx(2.0, abs=0.15)
 
-    # 정지 구간(1.0~2.0초) 안의 두 프레임이 서로 달라야 한다 = 켄번즈로 살아있음.
-    # 죽은 정지(tpad clone 단독)면 이 값이 ~0이다.
+    # 정지 구간(1.0~2.0초)은 **미리보기와 같은 정지**다(2026-09-27 켄번즈 제거) — 두 프레임이 같아야 한다.
+    # (종전 단언은 > 2.0 "켄번즈로 살아있음"이었다. 뒤집은 이유는 video_assemble._FREEZE_ZOOM 주석.)
     f_mid = _frame_gray(out, 1.4)
     f_late = _frame_gray(out, 1.9)
-    assert _mean_abs_diff(f_mid, f_late) > 2.0
+    assert _mean_abs_diff(f_mid, f_late) < 0.5
+    # 움직이는 구간(0~1초)은 여전히 움직인다 — 정지 컷 처리가 앞부분까지 얼리지 않았다.
+    assert _mean_abs_diff(_frame_gray(out, 0.2), _frame_gray(out, 0.8)) > 2.0

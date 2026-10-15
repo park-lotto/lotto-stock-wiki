@@ -34,7 +34,10 @@ def test_default_setting_means_admin_only(monkeypatch):
     monkeypatch.setattr(A, "Store", lambda db: st)
     monkeypatch.setattr(A, "_is_admin", lambda cid: cid == 0)
     monkeypatch.setattr(A, "_save_render_inputs", lambda s, j, **kw: st.update_mix_job(j, **kw))
-    r = A.api_produce_mix_ai_scene("j", _Req(), {"beat_idx": 0, "style": "impact"})
+    # 관제 117: 생성은 서버에 저장된 초안 번호로만 받는다
+    monkeypatch.setattr(A, "_ai_scene_draft_load", lambda j, bi: {"id": "d1", "style": "impact", "sec": 4,
+                                                                 "prompt_en": "INPUT IMAGE = FRAME 0: x" * 3, "base": None})
+    r = A.api_produce_mix_ai_scene("j", _Req(), {"beat_idx": 0, "style": "impact", "draft": "d1"})
     assert _body(r)["ok"] is True and st.queued == [("ai_scene", {"job_id": "j", "beat_idx": 0, "style": "impact"})]
     assert st.job["edit_plan"]["beats"][0]["ai_scene"]["state"] == "queued"
     class _Cust(_Req):
@@ -59,7 +62,9 @@ def test_bad_beat_and_style_fallback(monkeypatch):
     monkeypatch.setattr(A, "Store", lambda db: st)
     monkeypatch.setattr(A, "_save_render_inputs", lambda s, j, **kw: None)
     assert getattr(A.api_produce_mix_ai_scene("j", _Req(), {"beat_idx": 9}), "status_code", 200) == 422
-    r = A.api_produce_mix_ai_scene("j", _Req(), {"beat_idx": 1, "style": "weird"})
+    monkeypatch.setattr(A, "_ai_scene_draft_load", lambda j, bi: {"id": "d2", "style": "weird", "sec": 4,
+                                                                 "prompt_en": "INPUT IMAGE = FRAME 0: x" * 3, "base": None})
+    r = A.api_produce_mix_ai_scene("j", _Req(), {"beat_idx": 1, "style": "weird", "draft": "d2"})
     assert _body(r)["style"] == "natural"
 
 

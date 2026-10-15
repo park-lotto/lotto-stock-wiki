@@ -225,6 +225,7 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
     """1이벤트 기록. 실패해도 예외를 올리지 않는다(관측이 본작업을 죽이면 안 된다)."""
     if not _enabled():
         return
+    _owner_cids = []                  # 죽은 키의 주인 회원(OUT_AUTH일 때만 채운다) — 경보 처방이 갈린다
     if os.environ.get("PYTEST_CURRENT_TEST") and str(_DB_PATH).endswith("reference.db"):
         # ★테스트가 라이브 DB를 오염시키지 않게(ops_alert 2026-08-14 실사고와 같은 이유).
         #   테스트는 set_db_path()로 임시 DB를 지정해서 검증한다.
@@ -265,6 +266,10 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
             if outcome == OUT_AUTH and key:
                 try:
                     from shopping_shorts import keycrypt
+                    # 누구 키인지 먼저 본다 — 경보 처방이 갈린다(회원 키에 'env에서 빼라'는 헛처방).
+                    _owner_cids = [r[0] for r in conn.execute(
+                        "SELECT DISTINCT customer_id FROM customer_keys WHERE key_hash=?",
+                        (keycrypt.fingerprint(key),)).fetchall()]
                     conn.execute(
                         "UPDATE customer_keys SET status='bad', checked_at=? "
                         "WHERE key_hash=? AND COALESCE(status,'') <> 'bad'",
@@ -283,7 +288,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
             # 제미니·유튜브는 회사 풀 키, 나머지는 회원 등록(BYOK) 키가 대부분이다 —
             # 처방을 갈라 보낸다(리뷰 8: 회원 키에 ".env에서 제거"는 틀린 처방).
             # kind도 서비스별로 — 한 쿨다운에 서로 다른 서비스 사망이 묻히지 않게.
-            if service in ("gemini", "youtube"):
+            if _owner_cids:
+                # ★회원 등록 키(2026-09-25) — 제미니도 회원 키가 공용 풀에 섞인다. 실측: 09-23·24 경보
+                #   2건이 회원 57·315 키였는데 "env에서 빼라"가 붙어 있었다. 회원 화면엔 교체 안내가 자동으로 뜬다.
+                cure = f" — 회원 {', '.join(str(c) for c in _owner_cids)}의 등록 키"
+            elif service in ("gemini", "youtube"):
                 cure = " — /apiwatch에서 확인, env에서 제거 필요"
             else:
                 cure = " — 회원 등록 키(BYOK)일 수 있음: /apiwatch 피드에서 고객 확인"
@@ -296,7 +305,9 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure,
                 grade=ops_alert.GRADE_OPS,
                 auto="이 키는 자동 제외됐고 다른 키로 계속 돕니다 — 서비스 중단 아님",
-                todo=("env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
+                todo=(f"회원 {', '.join(str(c) for c in _owner_cids)} 화면에 교체 안내가 자동으로 뜬다(설정·사이드바)"
+                      if _owner_cids else
+                      "env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
                       else "회원 키면 회원에게 키 교체 안내"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
@@ -385,17 +396,24 @@ def _shorts_pool_snapshot():
         locked = comment_gen._live_exhausted()          # {idx: 만료ts} — 만료분 자동 제외
         state = comment_gen._load_state()
         burned = sorted(state.get("revived_once") or [])
+        # ★사망·사용불가 정지도 표시한다(2026-09-25) — 실제 로테이션(comment_gen._live_key_indices)은
+        #   이 지문들을 빼는데 화면은 'live'로 세서 live 수·예산이 부풀려졌다(반박 검토에서 발견).
+        #   같은 함수를 봐야 화면과 실제가 어긋나지 않는다(0순위-B).
+        dead_fps = comment_gen._dead_fingerprints(state)
+        dead_idx = {i for i, k in enumerate(keys)
+                    if dead_fps and comment_gen._key_fingerprint(k) in dead_fps}
         now = time.time()
         out.update({
             "total": len(keys), "owner": n_owner, "member": max(0, len(keys) - n_owner),
             "locked": [{"idx": i, "left_s": max(0, int(t - now)),
                         "tail": key_tail(keys[i]) if i < len(keys) else None}
                        for i, t in sorted(locked.items())],
-            "live": len(keys) - len([i for i in locked if i < len(keys)]),
+            "live": len([i for i in range(len(keys)) if i not in locked and i not in dead_idx]),
+            "stopped": len(dead_idx),
             "revived_once": burned,
             "keys": [{"idx": i, "tail": key_tail(k),
                       "owner": "owner" if i < n_owner else "member",
-                      "state": ("locked" if i in locked else "live")}
+                      "state": ("stopped" if i in dead_idx else "locked" if i in locked else "live")}
                      for i, k in enumerate(keys)],
         })
     except Exception as e:                # noqa: BLE001

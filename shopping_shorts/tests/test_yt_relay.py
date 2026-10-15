@@ -129,3 +129,22 @@ def test_proxy_priority_over_relay():
         m._download_via_relay, m._download_ytdlp = orig_relay, orig_ytdlp
         config.YT_RELAY_ENABLED = False
         config.YTDLP_PROXY = orig_proxy
+
+
+def test_pc_agent_routes_pinterest_without_requeue(monkeypatch, tmp_path):
+    import shopping_shorts.youtube_relay_agent as agent
+    calls = []
+    out = tmp_path / "pin.mp4"
+    out.write_bytes(b"MP4")
+    monkeypatch.setattr(agent, "_download_pinterest",
+                        lambda url, dest, allow_relay=True:
+                        (calls.append((url, allow_relay)) or (str(out), "")))
+    monkeypatch.setattr(agent, "_download_ytdlp",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("Pinterest가 yt-dlp로 감")))
+    monkeypatch.setattr(agent, "_deliver",
+                        lambda req_id, file_path=None, error=None: calls.append((req_id, file_path, error)))
+
+    agent._handle({"req_id": "pin-1", "url": "https://kr.pinterest.com/pin/123/"})
+
+    assert calls[0] == ("https://kr.pinterest.com/pin/123/", False)
+    assert calls[1] == ("pin-1", str(out), None)

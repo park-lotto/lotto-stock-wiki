@@ -31,7 +31,7 @@ def test_속도계산이_상한을_지킨다():
     code = _code()
     i = code.index("playbackRate")
     around = code[max(0, i - 400):i + 400]
-    assert "MAX_SLOWMO" in around, "재생 속도가 상한(MAX_SLOWMO)을 안 본다"
+    assert "maxSlowmo()" in around, "재생 속도가 상한(maxSlowmo)을 안 본다"
 
 
 def test_컷을_틀_때_속도가_적용된다():
@@ -49,4 +49,4 @@ def test_applyRate_정의가_상한과_속도를_다룬다():
     code = _code()
     body = code[code.index("function applyRate("):]
     body = body[:body.index("\n}")]
-    assert "playbackRate" in body and "MAX_SLOWMO" in body
+    assert "playbackRate" in body and "maxSlowmo()" in body

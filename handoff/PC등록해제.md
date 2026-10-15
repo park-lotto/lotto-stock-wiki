@@ -55,6 +55,15 @@
   `alert/confirm/prompt` 관례라 맞췄다. 슬롯별 버튼이 있는 커스텀 모달로 바꾸면
   더 편하지만 파일 관례를 깨고 검증 범위가 커진다.
 
+## 2026-09-25 (CH PC) — 이윤정 PC 2칸 전부 해제 (완료)
+
+- 사장님: "이윤정님 pc 2개 가득찬거 리셋좀해줘"
+- 라이브 `reference.db` 조회: 이윤정 = id **505** (irene24754947@gmail.com, 09-10 가입, 승인됨).
+  slot 1(ip 58.29.190.153, 마지막 09-25) · slot 2(ip 14.5.241.56, 마지막 09-23) 둘 다 Chrome/Win.
+- 서버에서 앱 코드 그대로 `Store(DB_PATH).device_reset(505, None)` → before 2건 / after 0건.
+- 회원은 **마이페이지에서 PC를 다시 등록**해야 한다(자동등록 없음).
+- 함정: 서버에 `sqlite3` CLI가 없다 → `python3 -c "import sqlite3..."`로 조회.
+
 ### 관련 파일
 
 - `shopping_shorts/store.py:6360` `PC_SLOTS = 2` (늘리려면 여기 한 곳)

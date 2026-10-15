@@ -63,12 +63,12 @@
       return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
-        onclick="event.stopPropagation();tlToggleCut(${i},${k})">
+        onclick="event.stopPropagation();tlSeekPlay(${i}, event)">
         <img class="tl-thumb" src="${SL.thumb(c.seg_id)}" loading="lazy">
         <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
           ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
-          >${(getFix(i, c.seg_id) && !CUTS[i]) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
+          >${(getFix(i, c.seg_id) && !CUTS[i] && !sceneRuleOn(i)) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
         ${CUTS[i] ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
         <span class="tl-edge" data-k="${k}" title="${CUTS[i] ? '끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다' : '끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다'}"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
@@ -134,7 +134,11 @@
       : capSrc === 'estimate'
         ? '<span class="tl-src bad" title="구절 초가 글자수 추정입니다 — 🔊 음성·자막 다시 뽑기 한 번이면 정밀로 올라갑니다">≈ 추정</span>'
       : '';    // 옛 작업은 기록이 없다 — 아무것도 안 단다(모르는 걸 아는 척하지 않는다)
-    const audHtml = `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
+    // 🔊 이 칸에서 실제로 울리는 효과음(관제 203) — 서버가 렌더와 같은 함수로 잰 시각(SFXP.beats[].sounds). 그리기만 한다
+    const _sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(_b.beat_idx != null ? _b.beat_idx : i));
+    const sfxMarks = ((_sb && _sb.sounds) || []).map(s => `<span class="tl-sfxmark ${s.kind === 'line' ? 'line' : ''}"
+        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${s.kind === 'line' ? '줄 효과음' : '효과음팩'} · ${String(s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초">🔊</span>`).join('');
+    const audHtml = sfxMarks + `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
         <span class="tl-aud-l">${srcBadge}${ttsReal ? ` beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
                                          : ' 🔇 음성 없음 — 추정 길이'}</span></div>`;
 
@@ -200,6 +204,8 @@
 
   g.tlReplaceToggle = function (i, k) {
     if (REPLACE && REPLACE.i === i && REPLACE.k === k) { REPLACE = null; render(); return; }
+    // ★같은 조각이 카드 여러 장이면 먼저 카드마다 쪼갠다 — 안 그러면 교체가 조각 단위라 다른 카드까지 바뀐다(2026-09-26).
+    if (typeof splitBeatCards === 'function') splitBeatCards(i);
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
     const c = clips[k];
     if (!c) return;
@@ -424,25 +430,46 @@
     g.tlFillFrames(i, k, el);
   };
 
+  /* ★컷 가운데를 누르면 그 자리로 재생선을 옮기고 재생(2026-10-14 사장님 "카드 중간 누르면 빨간 막대 위치하고 재생,
+   *   다시 누르면 한 장짜리로 돌아갈 필요 없다 — 한 장짜리 카드 금지"). 이동은 seekTo 하나(재생선 손잡이와 같은 길). */
+  g.tlSeekPlay = function (i, ev) {
+    const host = document.querySelector(`.tl-host[data-i="${i}"]`);
+    const lane = host && host.querySelector('.tl-lane'), wrap = host && host.querySelector('.tlwrap');
+    if (!lane || !wrap) return;
+    const pps = parseFloat(wrap.dataset.pps);
+    const t = Math.max(0, Math.min(_dur(i) - 0.05, (ev.clientX - lane.getBoundingClientRect().left) / pps));
+    TL_POS[i] = t;
+    if (typeof playKey === 'undefined' || playKey !== 'beat:' + i) { try { playBeat(i); } catch (_) {} }
+    let tries = 0;
+    const go = () => {
+      try {
+        if (typeof seq !== 'undefined' && seq.length) {
+          if (seqPaused) togglePause();
+          seekTo(t);
+          try { if (typeof tickSub === 'function') tickSub(); } catch (_) {}
+          return;
+        }
+      } catch (_) { return; }
+      if (tries++ < 20) setTimeout(go, 120);
+    };
+    go();
+  };
+
   /* 펼친 컷을 실제 프레임들로 채운다 — clip 구간을 폭에 맞는 장수로. */
-  g.tlFillFrames = async function (i, k, el) {
+  g.tlFillFrames = function (i, k, el) {
+    // ★서버가 만든 필름 그림 한 장(관제 204, 2026-10-14 사장님 "검정 로딩·엄청 느림") — 종전엔 브라우저가 원본을
+    //   한 장씩 시크해 찍어 느리고, 못 찍으면 검은 칸이었다. 대표 썸네일은 밑에 그대로 두고 그림이 오면 위에 덮는다.
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
     const c = clips[k];
-    if (!c || typeof filmframes !== 'function') return;
-    const n = Math.max(3, Math.round(el.offsetWidth / 34));
-    let fr = el.querySelector('.tl-frames');
-    if (!fr) {
-      fr = document.createElement('div'); fr.className = 'tl-frames';
-      fr.innerHTML = '<span class="tl-loading">🎞…</span>';
-      el.appendChild(fr);
-    }
-    try {
-      const urls = await filmframes(c.video_id, SL.src(c.video_id), c.start, c.start + c.dur, n);
-      if (!el.classList.contains('open')) return;          // 그 사이 접혔다 — 버린다
-      fr.innerHTML = urls.map(u => u ? `<img src="${u}">` : '<img>').join('');
-    } catch (e) {
-      fr.innerHTML = '<span class="tl-loading">프레임 실패</span>';
-    }
+    if (!c || !SL.server || !SL.job) return;
+    const n = Math.max(3, Math.min(16, Math.round(el.offsetWidth / 34)));
+    const a = +c.start, b = a + (+c.src_dur || c.dur);   // 실제로 읽는 원본 구간(빠르게/느리게 맞춘 컷은 dur 과 다르다)
+    if (el.querySelector('.tl-frames')) return;
+    const fr = document.createElement('div'); fr.className = 'tl-frames';
+    const img = new Image(); img.className = 'strip';
+    img.onload = () => { if (document.body.contains(el)) { fr.appendChild(img); el.appendChild(fr); } };
+    img.onerror = () => { el.classList.add('noframes'); };          // 못 만들면 대표 썸네일 그대로(검은 칸 금지)
+    img.src = `/api/mix/clip_strip/${SL.job}/${encodeURIComponent(c.video_id)}?a=${a.toFixed(2)}&b=${b.toFixed(2)}&n=${n}`;
   };
 
   /* 마운트 — renderBand()가 innerHTML을 갈아끼운 직후 부른다. */
@@ -465,6 +492,13 @@
     const capEls = [...host.querySelectorAll('.tl-cap')];
     const caps = capsOf(i);
     wireEdges(host, i, pps);               // 컷 가장자리 드래그(길이 조절)
+    // ★컷은 늘 필름식(프레임 여러 장)으로 — 한 장짜리 카드 금지(2026-10-14 사장님). 화면에 보일 때 채운다(칸이 많아도 가볍게).
+    const _cuts = [...host.querySelectorAll('.tl-cut')];
+    const _fill = el => { if (el.classList.contains('open') || el.classList.contains('noframes')) return; el.classList.add('open'); g.tlFillFrames(i, +el.dataset.k, el); };
+    if (typeof IntersectionObserver === 'function') {
+      const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { io.unobserve(en.target); _fill(en.target); } }), {rootMargin: '200px'});
+      _cuts.forEach(el => io.observe(el));
+    } else _cuts.forEach(_fill);
     // ── 재생선 손잡이(2026-08-29 사장님 "가운데 잡고 재생위치 옮길수있게") ─────────
     //    이동은 기존 seekTo 하나로(0순위-B — 진행바(#seek)와 같은 길: 컷·음성·타이머
     //    정렬을 그 함수가 다 한다). 끄는 동안은 진행바처럼 **일시정지**.
