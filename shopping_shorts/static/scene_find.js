@@ -51,7 +51,10 @@ function openSceneFind(i){
   const el = _sfEnsureBox();
   el.style.display = 'flex';
   const need = (typeof beatDur === 'function') ? beatDur(i) : 3;
-  const src = '/?' + new URLSearchParams({kwfind: _sfProduct(), job: SL.job, embed: '1'}).toString();
+  const b0 = (DATA.beats || [])[i] || {};
+  const role0 = String(b0.role || '').trim();          // 그 칸의 역할(훅·문제·불편·해결·결과…)
+  const narr0 = (role0 ? '(' + role0 + ') ' : '') + (b0.narration || b0.text || '');
+  const src = '/?' + new URLSearchParams({kwfind: _sfProduct(), job: SL.job, embed: '1', scene: narr0}).toString();
   el.innerHTML = `<div class="sfw">
     <div class="sfh"><b>🔎 ${i + 1}번 칸 장면 찾기</b><span style="color:#9aa3b5;font-size:12.5px">이 칸 ${need.toFixed(1)}초 · 카드의 <b style="color:#a7f3d0">🎬 3단계에 담기</b>나 사이트 📥 창의 <b style="color:#a7f3d0">🎬 3단계 작업에 담기</b>로 담으면 아래 영상 소스에 들어와요</span>
       <button class="x" onclick="closeSceneFind()" title="닫기">✕</button></div>
@@ -79,6 +82,9 @@ async function sfPollOnce(){
   try{ d = await (await fetch(`/api/mix/scene_lab/${SL.job}/extra_sources`)).json(); }catch(e){ return; }
   if (!d || !d.ok) return;
   SF.got = d.sources || {};
+  const newFail = (d.failed || []).filter(r => !(SF.failed || []).some(x => x.url === r.url));
+  SF.failed = d.failed || [];
+  if (newFail.length && typeof nsay === 'function') nsay('⚠️ 담은 영상 받기 실패 — ' + (newFail[0].reason || ''));
   let added = [];
   for (const [vid, s] of Object.entries(SF.got)){
     if (s.pending || !(s.duration > 0.1)) continue;
@@ -111,7 +117,9 @@ function _sfAddSource(vid, s){
 function _sfRenderGot(){
   const box = document.getElementById('sfGot'); if (!box) return;
   const rows = Object.entries(SF.got || {});
+  const fails = (SF.failed || []).map(r => `⚠️ ${_sfEsc(r.platform || '')} 받기 실패 — ${_sfEsc(r.reason || '')}`).join(' · ');
   box.innerHTML = rows.length ? '📥 이 작업에 담긴 영상: ' + rows.map(([vid, s]) =>
     `<b>${s.pending ? '⏳' : '✅'} ${_sfEsc(s.platform || vid)}</b>${s.pending ? ' 받는 중' : ` ${(+s.duration).toFixed(1)}초`}`).join(' · ')
     + ' — 아래 영상 소스의 🎞 필름에서 칸에 담으세요' : '';
+  if (fails) box.innerHTML += (box.innerHTML ? '<br>' : '') + `<span style="color:#fca5a5">${fails}</span>`;
 }

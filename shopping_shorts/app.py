@@ -6695,6 +6695,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
         # 3단계 장면 보충 팝업(관제 209) — 스위치 scene_find_enabled(비면 관리자만)
         "scene_find_enabled": _scene_find_on(_cid(request) if request is not None else 0),
+        # 관제 204(2026-10-16 사장님 "관리자만 켜고"): 위 주황 박스 끝을 끌 때 그림은 제자리, 박스만 움직인다(아래 필름 박스와 같은 손맛)
+        "box_frames_fixed": bool(_is_admin(_cid(request) if request is not None else 0)),
         # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
         "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         "scene_lab_at": scene_lab_at,
@@ -6919,6 +6921,34 @@ def _job_owned(request, job_id) -> bool:
     return int(job.get("customer_id") or 0) == _as_cid(cid) or bool(_is_admin(cid))
 
 
+def _extra_fail_reason(e) -> str:
+    """받기 실패 사유를 사람 말로 한 줄 — 사이트 📥 담기는 뒤에서 받으므로 3단계 화면이 이 줄을 보여 준다."""
+    t = str(e)
+    if "unavailable" in t or "Private video" in t or "removed" in t:
+        return "볼 수 없는 영상이에요(삭제·비공개·지역 제한)"
+    if "cookies" in t.lower() and "no longer valid" in t:
+        return "사이트 로그인이 만료돼 못 받았어요 — 잠시 뒤 다시 담아 주세요"
+    if "photo" in t.lower() or "image" in t.lower():
+        return "사진 게시물이라 영상이 없어요"
+    return "영상을 받지 못했어요: " + t.splitlines()[-1][:120] if t.strip() else "영상을 받지 못했어요"
+
+
+def _note_extra_fail(work, url, info, reason):
+    """실패를 work/x_failed.json 에 남긴다(최근 20건) — 조용히 사라지지 않게(2026-10-16 라이브 실측: 실패가 화면에 안 보였다)."""
+    f = Path(work) / "x_failed.json"
+    try:
+        rows = json.loads(f.read_text("utf-8")) if f.exists() else []
+    except Exception:      # noqa: BLE001
+        rows = []
+    rows = [r for r in rows if r.get("url") != url][-19:]
+    rows.append({"url": url, "title": (info or {}).get("title") or "", "platform": (info or {}).get("platform") or "",
+                 "reason": reason, "at": datetime.now(timezone.utc).isoformat()})
+    try:
+        f.write_text(json.dumps(rows, ensure_ascii=False), "utf-8")
+    except OSError:
+        pass
+
+
 def _add_extra_source(job_id: str, url: str, meta: dict = None):
     """장면 보충(관제 209) 영상 1개를 이 job 원본에 더하는 **주인 함수** → (HTTP 상태, 응답 dict).
     부르는 곳: 3단계 [담기](add_source) · 사이트 📥 담기(/api/grab, 담기 목적지가 이 job 일 때).
@@ -6959,9 +6989,11 @@ def _add_extra_source(job_id: str, url: str, meta: dict = None):
     except Exception as e:      # noqa: BLE001
         shutil.rmtree(d, ignore_errors=True)
         print("[장면보충] 받기 실패 job=%s url=%s: %r" % (job_id, url[:120], e), file=sys.stderr)
+        _note_extra_fail(work, url, info, _extra_fail_reason(e))
         return 502, {"ok": False, "error": f"영상을 받지 못했어요: {str(e)[:200]}"}
     if not path or not Path(path).exists() or not str(path).endswith(".mp4"):
         shutil.rmtree(d, ignore_errors=True)
+        _note_extra_fail(work, url, info, "영상 파일을 찾지 못했어요(사진 게시물일 수 있어요)")
         return 502, {"ok": False, "error": "영상 파일을 찾지 못했어요(사진 게시물일 수 있어요)"}
     dur = video_assemble._probe_duration(path) or 0
     return 200, {"ok": True, "video_id": f"x{n}", "duration": round(dur, 2)}
@@ -6998,7 +7030,13 @@ def api_mix_scene_lab_extra_sources(job_id: str, request: Request):
                        "thumbnail": sj.get("thumbnail") or "", "platform": sj.get("platform") or "",
                        "pending": mp4 is None,
                        "duration": round(video_assemble._probe_duration(str(mp4)) or 0, 2) if mp4 else 0}
-    return {"ok": True, "sources": out, "grab_target": _grab_target_job(_cid(request)) == job_id}
+    try:
+        failed = json.loads((work / "x_failed.json").read_text("utf-8"))
+    except Exception:      # noqa: BLE001
+        failed = []
+    have = {v["url"] for v in out.values()}
+    return {"ok": True, "sources": out, "failed": [r for r in failed if r.get("url") not in have][-5:],
+            "grab_target": _grab_target_job(_cid(request)) == job_id}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/yt_search")
@@ -13019,7 +13057,7 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/kw/expand")
 async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
-                              exclude: str = Form(""), n: int = Form(6)):
+                              exclude: str = Form(""), n: int = Form(6), scene: str = Form("")):
     """한국어 소재어 → 검색어 조합 [{ko, zh}]. 프레임 불필요(2026-08-14 사장님).
 
     렌즈 후보는 화면 기반이라 '시금치 치아바타'처럼 사장님이 떠올린 소재는 새로고침해도
@@ -13031,7 +13069,7 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
         return {"ok": True, "keyword": "", "candidates": []}
     seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
     try:
-        cands = await asyncio.to_thread(expand_search_keywords, kw, n=n, exclude=seen)   # 블로킹 Gemini
+        cands = await asyncio.to_thread(expand_search_keywords, kw, n=n, exclude=seen, scene=scene)   # 블로킹 Gemini
     except Exception:                       # noqa: BLE001 — 실패해도 렌즈는 정상
         cands = []
     return {"ok": True, "keyword": kw, "candidates": cands}
