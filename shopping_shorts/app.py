@@ -22604,6 +22604,11 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
                 sounds.append((float(e[1]), Path(str(e[0])).stem, "line" if ref.get("line") else "pack", ref, float(e[2]) if len(e) > 2 else 1.0))
     except Exception as _e:      # noqa: BLE001 — 표시만 못 한다(렌더와 무관)
         print("[sfx] 칸 효과음 표시 실패 job=%s: %r" % (job_id, _e), file=sys.stderr)
+    # 칸 효과음 칩 이름 = 소리 이름(10-15 사장님 "효과음이 안 바뀜" — 분류 이름이라 같은 분류 안에서 바꿔도 그대로 보였다)
+    try:
+        _sfx_titles = {str(a["asset_id"]): str(a.get("title") or "") for lst in mix_pipeline._sfx_bank(store).values() for a in lst}
+    except Exception:                      # noqa: BLE001 — 이름만 못 바꾼다(분류 이름으로 남는다)
+        _sfx_titles = {}
     for b in beats:
         bi = b.get("beat_idx")
         t = tl_by.get(bi)
@@ -22616,7 +22621,7 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
                 continue
             if kd == "line":
                 _ls = b.get("sfx") or {}
-                _snd.append({"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd, "label": str(_ls.get("cat") or "효과음"),
+                _snd.append({"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd, "label": _sfx_titles.get(str(_ls.get("asset_id"))) or str(_ls.get("cat") or "효과음"),
                              "vol": video_assemble._sfx_vol(_ls), "dt": ref.get("dt", 0.0), "asset_id": _ls.get("asset_id"), "url": "/api/sfx/%s/media" % _ls.get("asset_id") if _ls.get("asset_id") else ""})
             else:
                 _snd.append({"t": round(s0 - float(t["t0"]), 3), "name": nm, "kind": kd, "label": sfx_pack.SLOT_LABEL.get(nm, nm),
