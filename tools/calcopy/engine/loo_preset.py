@@ -110,6 +110,14 @@ def main(argv=None):
     ap.add_argument("--out", required=True); ap.add_argument("--no-loo", action="store_true")
     ap.add_argument("--note", default="워커 점검.md 분류")
     ap.add_argument("--tteutgi-root", help="뜯기 폴더(<root>/<id>/뜯기.json) — 분석기 새 판으로 다시 뜯은 것")
+    ap.add_argument("--rejudge", help="렌더 없이 이 loo.json 을 두 층으로 다시 판정(결과 같은 폴더 loo_judge.json)")
+    if argv is None and "--rejudge" in sys.argv:
+        i = sys.argv.index("--rejudge"); lp = Path(sys.argv[i + 1])
+        two = judge(json.loads(lp.read_text(encoding="utf-8")))
+        (lp.parent / "loo_judge.json").write_text(json.dumps(two, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+        for k, v in two.items():
+            print(k, "두 층 판정", v["in"], "/", v["n"], "밖:", v["defects"])
+        return
     a = ap.parse_args(argv)
     global TTEUTGI_ROOT
     TTEUTGI_ROOT = Path(a.tteutgi_root) if a.tteutgi_root else None
@@ -153,6 +161,63 @@ def main(argv=None):
                          "side_by_side": str(d / "cmp" / "side_by_side.jpg")}
         print(held, results[held]["in"], "/", results[held]["n"])
     (out / "loo.json").write_text(json.dumps(results, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    two = judge(results)
+    (out / "loo_judge.json").write_text(json.dumps(two, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    for k, v in two.items():
+        print(k, "두 층 판정", v["in"], "/", v["n"], "밖:", v["defects"])
+
+
+# ── LOO 판정 두 층(관제 2026-10-16) — 판정은 여기 한 곳 ─────────────────────────────────────────────
+# 고정 항목(그 하위 스타일이면 편마다 같아야 하는 것) = 뺀 편과 compare 기준 그대로.
+# 변수 항목(편집자가 편마다 고르는 값: 제목 크기·줄 높이·창 y·자간과 그 결과인 제목 띠 획·잉크) = 뺀 편의 값을 맞출 수 없는 게
+#   정상이므로, 우리 값이 다른 편들의 원본 잰 값 [min×0.9, max×1.1] 안이면 '안'.
+VAR_PAD = 0.10
+TITLE_BAND_MIN = 1        # 띠 #0 = 창 위 맨 윗줄([광고] 문구, 고정) · #1 이상 = 제목 줄(변수)
+
+
+def _kind(key: str) -> str:
+    base, _, idx = key.partition("#")
+    if base.startswith("band.") and idx and int(idx) >= TITLE_BAND_MIN:
+        return "var"
+    return "fixed"
+
+
+def _in_range(v, others):
+    lo, hi = min(others) * (1 - VAR_PAD), max(others) * (1 + VAR_PAD)
+    return lo <= v <= hi, [round(lo, 4), round(hi, 4)]
+
+
+def judge(results: dict) -> dict:
+    """results(loo.json) → 편마다 두 층 판정 줄. 창 [x,y,w,h] 는 둘로 가른다: x·w·아래 끝(고정, ≤4px) / y(변수)."""
+    ok = {k: v for k, v in results.items() if "rows" in v}
+    orig = {k: {r["key"]: r["orig"] for r in v["rows"]} for k, v in ok.items()}
+    out = {}
+    for held, v in ok.items():
+        others = [o for o in ok if o != held]
+        rows = []
+        for r in v["rows"]:
+            key = r["key"]
+            if key == "frame.window":
+                (ox, oy, ow, oh), (ux, uy, uw, uh) = r["orig"], r["ours"]
+                d = max(abs(ox - ux), abs(ow - uw), abs((oy + oh) - (uy + uh)))
+                rows.append({"key": "frame.window.fixed", "name": "영상 창 x·w·아래 끝", "tier": "고정",
+                             "orig": [ox, ow, oy + oh], "ours": [ux, uw, uy + uh], "diff": d, "in": d <= 4, "rule": "≤4px"})
+                ys = [orig[o][key][1] for o in others if key in orig[o]]
+                inn, rg = _in_range(uy, ys) if ys else (False, None)
+                rows.append({"key": "frame.window.y", "name": "영상 창 y", "tier": "변수", "orig": oy, "ours": uy,
+                             "range": rg, "others": ys, "in": inn, "rule": "다른 편 범위 ±10%"})
+                continue
+            if _kind(key) == "var":
+                vals = [orig[o][key] for o in others if key in orig[o] and isinstance(orig[o][key], (int, float))]
+                inn, rg = _in_range(r["ours"], vals) if vals else (False, None)
+                rows.append({"key": key, "name": r["name"], "tier": "변수", "orig": r["orig"], "ours": r["ours"],
+                             "range": rg, "others": vals, "in": inn, "rule": "다른 편 범위 ±10%"})
+            else:
+                rows.append({"key": key, "name": r["name"], "tier": "고정", "orig": r["orig"], "ours": r["ours"],
+                             "diff": r.get("diff"), "in": r["status"] == "in", "rule": "compare 기준"})
+        out[held] = {"rows": rows, "in": sum(x["in"] for x in rows), "n": len(rows),
+                     "defects": [x["name"] for x in rows if not x["in"]]}
+    return out
 
 
 if __name__ == "__main__":

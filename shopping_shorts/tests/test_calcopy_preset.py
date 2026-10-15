@@ -204,3 +204,25 @@ def test_title_font_prefers_pooled(tmp_path):
     M = _two_fonts(tmp_path, pooled={"top3": [{"font": "Cafe24Ohsquare.ttf", "score": 0.7}]})
     st = M["variable_stats"]["layers[text:title].font"]
     assert st["default"] == "Cafe24Ohsquare" and "묶음 판별" in st["how"]
+
+
+def test_loo_judge_two_tiers():
+    """LOO 두 층 판정: 고정(창 x·w·아래 끝, [광고] 띠 #0)은 뺀 편과, 변수(창 y, 제목 띠 #1+)는 다른 편 원본 범위 ±10%."""
+    from tools.calcopy.engine import loo_preset as L
+
+    def run(win_o, win_u, h1_o, h1_u, ink0_status="in"):
+        return {"rows": [
+            {"key": "frame.window", "name": "창", "orig": win_o, "ours": win_u, "diff": 0, "status": "out"},
+            {"key": "band.ink#0", "name": "광고 잉크", "orig": 0.025, "ours": 0.025, "diff": 0, "status": ink0_status},
+            {"key": "band.line_h#1", "name": "제목1 높이", "orig": h1_o, "ours": h1_u, "diff": 0, "status": "out"}]}
+    R = {"a": run([0, 322, 1080, 1300], [0, 342, 1080, 1280], 93.0, 84.0),
+         "b": run([0, 323, 1080, 1298], [0, 338, 1080, 1284], 110.0, 87.0, "out"),
+         "c": run([0, 323, 1080, 1298], [0, 400, 1080, 1221], 91.0, 130.0)}
+    J = L.judge(R)
+    a = {r["key"]: r["in"] for r in J["a"]["rows"]}
+    assert a == {"frame.window.fixed": True, "frame.window.y": True, "band.ink#0": True, "band.line_h#1": True}  # 84 ∈ [81.9,121]
+    b = {r["key"]: r["in"] for r in J["b"]["rows"]}
+    assert b["band.ink#0"] is False and b["band.line_h#1"] is True                     # 고정은 compare 판정 그대로
+    c = {r["key"]: r["in"] for r in J["c"]["rows"]}
+    assert c["frame.window.y"] is False and c["band.line_h#1"] is False                 # 400 > 355.3, 130 > 121
+    assert J["c"]["defects"] == ["영상 창 y", "제목1 높이"]
