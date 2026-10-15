@@ -1,0 +1,12 @@
+{
+  "id": "인물형",
+  "name": "인물 스토리 (뜨거운사람들 틀)",
+  "description": "인물 이름과 한 줄 주제를 넣으면 흰 바탕·2줄 헤드라인·컷=자막 틀의 50~60초 쇼츠를 만든다.",
+  "source_kind": "person",
+  "source_hint": "'인물명 | 한 줄 주제'  예) 안세영 | 배드민턴 세계 1위가 되기까지",
+  "engine": {"channel": "hotpeople"},
+  "script": {"writer_default": "host", "confirm": true},
+  "defaults": {"bgm": "auto"},
+  "customer_can_change": ["bgm"],
+  "keys_needed": ["gemini"]
+}
