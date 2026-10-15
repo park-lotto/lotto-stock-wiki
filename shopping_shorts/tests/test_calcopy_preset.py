@@ -137,7 +137,9 @@ def test_relation_rules_compute_dependents(tmp_path):
     v2 = next(l for l in g2["layers"] if l["kind"] == "video"); v2["y"], v2["h"] = 120 + 206 - 8, 1621 - (120 + 206 - 8)
     P.save(J, g1, d, "a", "x"); M = P.save(J, g2, d, "b", "y")
     K = {k: v["default"] for k, v in M["rules"]["keys"].items()}
-    assert K["gap"] == -8 and K["video_bottom"] == 1621 and K["size_cap"] == 106.8
+    assert K["gap"] == -8 and K["video_bottom"] == 1621 and K["size_cap"] == 103.4   # 크기 = 잰 크기 중앙값
+    assert K["video_anchor"] == "gap"                                    # gap 은 두 편 같고(−8) 창 y 는 34px 흔들림 → gap 규칙
+    assert K["fill_w"] >= 1080 - P.EDGE_MARGIN                           # 폭 상한 바닥 = 화면 폭 − 48
     pre, M = P.load(d)
     out = P.apply(pre, None, {"layers[text:title].text": "아주 아주 아주 아주 긴 제목 줄 입니다\n둘째"}, M["variable_stats"], None, M["rules"])
     t, v = title(out), next(l for l in out["layers"] if l["kind"] == "video")
@@ -164,3 +166,17 @@ def test_fill_w_prefers_measured_ink_width(tmp_path):
     f = copy.deepcopy(FRAME_A); f["made_from"] = {**f.get("made_from", {}), "title_ink_w": 782}
     M = P.save(J, f, d, "Z", "x")
     assert M["rules"]["keys"]["fill_w"]["values"] == {"Z": 782}        # 실측 잉크 폭이 있으면 그것(글꼴 계산 대신)
+
+
+
+def test_video_anchor_constant_when_window_fixed(tmp_path):
+    """창 y 가 편마다 같고 gap 이 흔들리면 창은 고정(분석기 2판 실측: ho5·7DY·1_V 창 322/323/323, gap −17/−36/−19)."""
+    d = tmp_path / "s" / "preset" / "A" / "창안"
+    g1 = other_video(FRAME_A); v1 = next(l for l in g1["layers"] if l["kind"] == "video"); v1["y"], v1["h"] = 323, 1298
+    g2 = other_video(FRAME_A); t2 = title(g2); t2.update(y=107, size=99.6, line_h=126)
+    v2 = next(l for l in g2["layers"] if l["kind"] == "video"); v2["y"], v2["h"] = 323, 1298
+    P.save(J, g1, d, "a", "x"); M = P.save(J, g2, d, "b", "y")
+    assert M["rules"]["keys"]["video_anchor"]["default"] == "constant"
+    pre, M = P.load(d)
+    out = P.apply(pre, None, {"layers[text:title].text": "새 제목\n둘째 줄"}, M["variable_stats"], None, M["rules"])
+    assert next(l for l in out["layers"] if l["kind"] == "video")["y"] == 323

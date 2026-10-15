@@ -32,7 +32,12 @@ TEMP_CAP_FONT = "CcPretendard-Bold"
 FRAME_KEYS = ("frame.window", "frame.bg_rgb", "frame.band_count", "band.line_h", "band.stroke", "band.ink")
 
 
+TTEUTGI_ROOT: Path | None = None   # --tteutgi-root: 다른 판 뜯기 폴더(<root>/<id>/뜯기.json)를 먼저 본다
+
+
 def tteutgi(slug: str, vid: str) -> Path:
+    if TTEUTGI_ROOT and (TTEUTGI_ROOT / vid / "뜯기.json").exists():
+        return TTEUTGI_ROOT / vid / "뜯기.json"
     p = ROOT / "channel" / slug / "뜯기" / vid / "뜯기.json"
     return p if p.exists() else Path(f"C:/숏템_칼카피/{slug}/engine_뜯기/{vid}/뜯기.json")
 
@@ -75,13 +80,21 @@ def temp_caption(frame: dict, bc: dict) -> dict:
     return F
 
 
+FIXED: dict = {}   # 대조로 못 박은 값(manifest.fixed) — 다시 만들어도 이어 붙인다(예: [광고] 외곽선 3px)
+
+
 def build(preset_dir: Path, slug: str, ids: list[str], frames: dict, note: str) -> dict:
+    mp = preset_dir / "manifest.json"
+    if mp.exists():
+        FIXED.update(json.loads(mp.read_text(encoding="utf-8")).get("fixed") or {})
     shutil.rmtree(preset_dir, ignore_errors=True)
     M = None
     for vid in ids:
         J = json.loads(tteutgi(slug, vid).read_text(encoding="utf-8"))
         M = P.save(J, frames[vid], preset_dir, vid, str(tteutgi(slug, vid)).replace("\\", "/"),
                    caption_style=preset_dir.name, caption_note=note)
+    for path, f in FIXED.items():
+        M = P.fix_value(preset_dir, path, f["value"], f["why"])
     return M
 
 
@@ -96,7 +109,10 @@ def main(argv=None):
     ap.add_argument("--frames", required=True); ap.add_argument("--ids", nargs="+", required=True)
     ap.add_argument("--out", required=True); ap.add_argument("--no-loo", action="store_true")
     ap.add_argument("--note", default="워커 점검.md 분류")
+    ap.add_argument("--tteutgi-root", help="뜯기 폴더(<root>/<id>/뜯기.json) — 분석기 새 판으로 다시 뜯은 것")
     a = ap.parse_args(argv)
+    global TTEUTGI_ROOT
+    TTEUTGI_ROOT = Path(a.tteutgi_root) if a.tteutgi_root else None
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     frames = {}
     for vid in a.ids:

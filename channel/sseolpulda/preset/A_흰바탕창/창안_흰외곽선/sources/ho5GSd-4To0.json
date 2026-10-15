@@ -15,21 +15,21 @@
   {
    "kind": "video",
    "x": 0,
-   "y": 340,
+   "y": 322,
    "w": 1080,
-   "h": 1282,
+   "h": 1300,
    "radius": 0
   },
   {
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 126,
+   "y": 121,
    "w": 1000,
    "align": "center",
    "lines": 2,
    "font": "Cafe24Ohsquare",
-   "size": 112.6,
+   "size": 102.3,
    "line_h": 109,
    "rgb": [
     0,
@@ -43,25 +43,25 @@
      0
     ],
     [
-     251,
-     2,
-     82
+     253,
+     1,
+     81
     ]
    ],
    "outline": null,
    "line_outline": [
     null,
     [
-     8,
+     9,
      255,
-     252,
+     251,
      255
     ]
    ],
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": -6.8,
+   "letter_spacing": 2.5,
    "word_spacing": 0,
    "enter": null,
    "text": "전 세계 매출 폭발시킨\n덴마크 회사의 실수"
@@ -75,8 +75,8 @@
    "align": "center",
    "lines": 1,
    "font": "CcPretendard-Bold",
-   "size": 88.3,
-   "line_h": 102,
+   "size": 87.8,
+   "line_h": 101,
    "rgb": [
     255,
     255,

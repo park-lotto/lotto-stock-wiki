@@ -18,9 +18,9 @@
   {
    "kind": "video",
    "x": 0,
-   "y": "$per_video",
+   "y": 322,
    "w": 1080,
-   "h": 1282,
+   "h": 1300,
    "radius": 0
   },
   {
@@ -44,9 +44,9 @@
    "line_outline": [
     null,
     [
-     8,
+     9,
      255,
-     252,
+     251,
      255
     ]
    ],
@@ -75,7 +75,14 @@
     255
    ],
    "line_rgb": null,
-   "outline": "$per_video",
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
    "line_outline": null,
    "shadow": null,
    "box": null,

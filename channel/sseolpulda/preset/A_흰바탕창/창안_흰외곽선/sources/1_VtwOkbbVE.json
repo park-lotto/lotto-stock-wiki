@@ -15,21 +15,21 @@
   {
    "kind": "video",
    "x": 0,
-   "y": 352,
+   "y": 323,
    "w": 1080,
-   "h": 1269,
+   "h": 1298,
    "radius": 0
   },
   {
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 140,
+   "y": 122,
    "w": 1000,
    "align": "center",
    "lines": 2,
-   "font": "Jalnan2",
-   "size": 106.8,
+   "font": "YgJalnan",
+   "size": 91.7,
    "line_h": 110,
    "rgb": [
     0,
@@ -45,7 +45,7 @@
     [
      186,
      0,
-     120
+     121
     ]
    ],
    "outline": null,
@@ -61,7 +61,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": -2.8,
+   "letter_spacing": 11.4,
    "word_spacing": 0,
    "enter": null,
    "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"

@@ -214,8 +214,10 @@ def slug_style(preset_dir: Path) -> tuple[str, str]:
 #     제목 크기 = min(size_cap, 가장 긴 줄이 fill_w 폭이 되는 크기)  · 줄높이 = 크기 × lh_ratio · 제목 위 끝 = title_top
 #     창 y = 제목 아래 끝(title_top + 줄수×줄높이) + gap   · 창 아래 끝 = video_bottom(자막 하위 스타일이 정함)
 #     자막 y = 창 아래 끝 + cap_dy(창아래면 +, 창안이면 −)
-RULE_FORMULA = ("title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · "
-                "video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy")
+RULE_FORMULA = ("title.size = min(size_cap(잰 크기 중앙값), 가장 긴 줄 폭이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)가 되는 크기) · "
+                "title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'constant' 면 video_top, 'gap' 이면 "
+                "title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy")
+EDGE_MARGIN = 48   # 제목 폭 상한의 바닥 = 화면 폭 − 48(양쪽 24px) — 두 편으로 만든 프리셋이 '긴 제목' 예를 못 봤을 때(LOO 1_V 실측: 930 상한 → 84pt)
 
 
 def _line_w(fam: str, size: float, ls: float, line: str) -> float:
@@ -232,7 +234,7 @@ def derived(frame: dict, caption_ok: bool = True) -> dict:
     if t and v:
         n = t["lines"]
         out.update(title_top=t["y"], gap=v["y"] - (t["y"] + n * t["line_h"]), lh_ratio=round(t["line_h"] / t["size"], 3),
-                   size_cap=t["size"], video_bottom=v["y"] + v["h"])
+                   size_cap=t["size"], video_bottom=v["y"] + v["h"], video_top=v["y"])
         if t.get("text"):
             out["fill_w"] = round(max(_line_w(t["font"], t["size"], t["letter_spacing"], ln) for ln in t["text"].split("\n")))
     if c and v and caption_ok:
@@ -251,8 +253,19 @@ def rule_stats(preset_dir: Path, M: dict) -> dict:
             for k, x in d.items():
                 vals.setdefault(k, {})[s["id"]] = x
     keys = {k: stats(v) for k, v in vals.items()}
-    if "size_cap" in keys:                     # 크기 상한 = 잰 편 중 가장 큰 크기(중앙값이 아니다)
-        keys["size_cap"]["default"], keys["size_cap"]["how"] = max(vals["size_cap"].values()), "최대"
+    # 제목 크기 = 잰 크기의 중앙값, 폭 상한 = 잰 폭 최대와 화면 폭−48 중 큰 값.
+    #   (첫 판은 크기 상한=최대·폭=중앙값이었는데, 잰 폭은 글자 길이를 따라 889~1032 로 흔들리고 크기는 92~102 로 덜 흔들렸다 —
+    #    폭 중앙값에 맞추면 긴 제목이 84pt 로 작아졌다, LOO 2026-10-16)
+    if "fill_w" in keys:
+        W = 1080
+        keys["fill_w"]["default"] = max(max(vals["fill_w"].values()), W - EDGE_MARGIN)
+        keys["fill_w"]["how"] = f"잰 폭 최대와 화면 폭−{EDGE_MARGIN} 중 큰 값"
+    # 창 위 끝: 고정(video_top)과 제목 아래+gap 중 편마다 덜 흔들리는 쪽
+    if "video_top" in keys and "gap" in keys:
+        sp = lambda k: max(vals[k].values()) - min(vals[k].values())   # noqa: E731
+        anchor = "constant" if sp("video_top") <= sp("gap") else "gap"
+        keys["video_anchor"] = {"values": None, "default": anchor, "range": None,
+                                "how": f"창 y 폭 {sp('video_top')} vs gap 폭 {sp('gap')} → {anchor}"}
     return {"formula": RULE_FORMULA, "keys": keys}
 
 
@@ -271,7 +284,9 @@ def apply_rules(F: dict, rules: dict) -> dict:
         t["lines"] = len(lines)
     if t and "title_top" in K:
         t["y"] = K["title_top"]
-    if t and v and "gap" in K:
+    if v and K.get("video_anchor") == "constant" and "video_top" in K:
+        v["y"] = K["video_top"]
+    elif t and v and "gap" in K:
         v["y"] = round(t["y"] + t["lines"] * t["line_h"] + K["gap"])
     if v and "video_bottom" in K:
         v["h"] = K["video_bottom"] - v["y"]
