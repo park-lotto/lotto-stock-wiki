@@ -463,6 +463,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     if frame_img is None and bands:
         notes.append("원본 프레임 없음 — 띠 가로 범위를 못 재 모든 띠를 제목으로 봄")
     otext = ocr or {}
+    title_ink_w = None
     if title_b and fam:
         tl = otext.get("title") or []
         tfam, tsrc = title_font(J, frame_img, title_b, tl, tpol)
@@ -478,6 +479,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         size = round(st.mean(f["size"] for f in fits), 1)
         ys = [f["y"] - i * fits[0]["line_h"] for i, f in enumerate(fits)]   # 줄마다 푼 첫 줄 위치의 평균
         cols = [c for _, c in title_b if c]
+        title_ink_w = max(c[1] - c[0] + 1 for c in cols) if cols else None   # 프레임 실측 제목 가장 긴 줄 잉크 폭 → preset rules.fill_w(글꼴 계산보다 먼저)
         al = align_of(cols, W)
         sp = [spacing_for(fam, size, tl[i], c[1] - c[0] + 1) for i, (_, c) in enumerate(title_b) if i < len(tl) and c]
         sp = [v for v in sp if v is not None]
@@ -576,7 +578,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             notes.append(f"틀이 다른 구간 {s0}~{s1} 은 끝 구간이 아님 — 설명서 시간 축(template_off.scenes)은 장면 번호라 자동 매핑 안 함")
     return {"canvas": [W, H], "layers": layers, "template_off": {"tail_sec": tail} if tail is not None else None,
             "made_by": schema.MADE_BY, "source": Path(str(J.get("source") or "")).stem or None,
-            "made_from": {"tool": "tools/calcopy/engine/to_frame.py", "engine": J.get("engine"), "font": fnote,
+            "made_from": {"tool": "tools/calcopy/engine/to_frame.py", "engine": J.get("engine"), "font": fnote, "title_ink_w": title_ink_w,
                           "font_confidence": fnote.get("font_confidence"), "notes": notes}}
 
 
