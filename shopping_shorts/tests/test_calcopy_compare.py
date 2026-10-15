@@ -46,9 +46,20 @@ def _ff(args, cwd):
     assert r.returncode == 0, r.stderr.decode("utf-8", "replace")
 
 
-def make_synth(dirpath: Path, name: str = "syn.mp4") -> Path:
+TITLE_Y = 200        # 창(420) 위 고정 제목 띠
+TITLE_FONTS = {"bold": "C:/Windows/Fonts/malgunbd.ttf", "thin": "C:/Windows/Fonts/malgunsl.ttf"}
+
+
+def make_synth(dirpath: Path, name: str = "syn.mp4", title: str = "bold") -> Path:
+    """title = 창 위 고정 제목 글꼴 굵기(bold/thin). 그 글꼴이 없으면 제목 없이 만든다(띠 시험은 따로 skip)."""
     font = _font(dirpath)  # 상대경로로 넘긴다(윈도 드라이브 콜론이 drawtext 파서를 깬다)
-    dt = "".join(
+    tf = TITLE_FONTS.get(title)
+    dt = ""
+    if tf and os.path.exists(tf):
+        shutil.copy(tf, dirpath / f"title_{title}.ttf")
+        dt = (f",drawtext=fontfile=title_{title}.ttf:text='BIG TITLE':fontsize=110:fontcolor=black"
+              f":x=(w-tw)/2:y={TITLE_Y}")
+    dt += "".join(
         f",drawtext=fontfile={font}:text='{t}':fontsize=64:fontcolor=black:borderw=4:bordercolor=red"
         f":x=(w-tw)/2:y={CAP_Y}:enable='between(t,{i * 1.5},{(i + 1) * 1.5})'" for i, t in enumerate(TEXTS))
     _ff(["-f", "lavfi", "-i", f"color=c={BG}:s=1080x1920:r=30:d=6",
@@ -234,3 +245,32 @@ def test_real_video_six_captions():
     med = statistics.median(b - a for a, b in cap["spans"])
     assert 3.0 <= med <= 3.8, med
     assert cap["unstable"] and cap["unstable"][0][0] >= 21.0, cap["unstable"]
+
+
+@pytest.mark.skipif(not all(os.path.exists(f) for f in TITLE_FONTS.values()), reason="제목 굵기 글꼴(맑은고딕 굵게/얇게) 없음")
+def test_sabotage_thin_title(synth, tmp_path):
+    """2026-10-16 반려: 제목을 가는 글꼴로 그려도 16/16 통과하던 구멍. 제목만 얇은 글꼴로 바꾸면 띠 획·잉크가 밖."""
+    compare = _cmp()
+    thin = make_synth(synth.parent, "thin_title.mp4", title="thin")
+    res = compare.compare(str(synth), str(thin), str(tmp_path / "out"), layout_mode="bench", picture=False)
+    assert res["verdict"]["verdict"] == "미달"
+    rows = {r["key"]: r for r in res["rows"] if r["key"].startswith("band.")}
+    title = [k for k, r in rows.items() if r["orig"] is not None and k.startswith("band.stroke")
+             and r["status"] == "out"]
+    assert title, rows
+    st = rows[title[0]]
+    assert st["orig"] - st["ours"] >= 2, st
+    i = title[0].split("#")[1]
+    assert rows[f"band.ink#{i}"]["status"] == "out", rows[f"band.ink#{i}"]
+    assert _row(res, "cap.top_y")["status"] == "in"  # 자막은 그대로
+
+
+def test_same_video_bands_measured(synth, tmp_path):
+    """같은 영상이면 띠 항목이 실제로 재지고(제목 띠 ≥1개) 전부 안."""
+    if not os.path.exists(TITLE_FONTS["bold"]):
+        pytest.skip("제목 글꼴 없음")
+    compare = _cmp()
+    res = compare.compare(str(synth), str(synth), str(tmp_path / "out"), layout_mode="bench", picture=False)
+    b = [r for r in res["rows"] if r["key"].startswith("band.")]
+    assert b and all(r["status"] == "in" and r["orig"] is not None for r in b), b
+    assert _row(res, "frame.band_count")["orig"] >= 1

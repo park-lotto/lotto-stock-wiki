@@ -57,6 +57,11 @@ TOL = {
     "cut.median": ("rel", 15, "컷 길이 중앙 차 ≤ 15%"),
     "cut.p90": ("rel", 15, "컷 길이 p90 차 ≤ 15%"),
     "len.duration": ("rel", 15, "길이 차 ≤ 15%"),
+    # 창 위 고정 글자 띠(제목·브랜드) — 2026-10-16 반려: 제목을 가는 글꼴로 그려도 통과하던 구멍
+    "frame.band_count": ("eq", None, "창 위 고정 글자 띠 개수 같음"),
+    "band.line_h": ("rel", 6, "띠 글자 높이 차 ≤ 6%"),
+    "band.stroke": ("px", 1, "띠 획 두께 차 ≤ 1px"),
+    "band.ink": ("rel", 20, "띠 잉크 비율 차 ≤ 20%"),
 }
 
 # ② 규칙 수준(사장님 10-16): 같은 파일인지 말고 규칙만. verdict 에는 넣지 않고 표에만 남긴다.
@@ -121,6 +126,11 @@ RULE_ITEMS = [
 ]
 
 
+def _base(key: str) -> str:
+    """띠 항목은 'band.stroke#2'처럼 번호가 붙는다 — 기준은 번호 뗀 키로 찾는다."""
+    return key.split("#", 1)[0]
+
+
 class Fail(Exception):
     """이 항목은 못 잼 — 이유를 표에 남긴다."""
 
@@ -162,7 +172,7 @@ def _value(key: str, m: dict, asr: str | None):
     if "probe" not in m:
         raise Fail(m["errors"].get("probe", "probe 실패"))
     vl = m.get("vl")
-    if key.startswith("frame.") and key != "frame.band_rgb" and not vl:
+    if key.startswith("frame.") and key not in ("frame.band_rgb", "frame.band_count") and not vl:
         raise Fail(m["errors"].get("layout", "layout 실패"))
     if key == "frame.window":
         if not vl["window"]:
@@ -180,6 +190,19 @@ def _value(key: str, m: dict, asr: str | None):
         return list(vl["caption"]["band"])
     if key == "frame.above_bands":
         return m.get("layout", {}).get("above_bands", [])
+    if key == "frame.band_count":
+        if m["errors"].get("bands"):
+            raise Fail(m["errors"]["bands"])
+        return len(m.get("bands") or [])
+    if key.startswith("band."):
+        field, i = _base(key).split(".", 1)[1], int(key.split("#")[1])
+        b = (m.get("_band_pair") or {}).get(i)
+        if b is None:
+            raise Fail("짝 띠 없음(원본 띠와 가운데가 가까운 띠를 못 찾음)")
+        v = b.get({"line_h": "line_h", "stroke": "stroke", "ink": "ink_ratio"}[field])
+        if v is None:
+            raise Fail("glyph_style 이 이 띠에서 글자를 못 찾음")
+        return v
     if key == "frame.band_rgb":
         raise Fail("bench에 띠 색을 재는 자가 없음(layout은 창 밖 배경 RGB만 잰다)")
     if key.startswith("cap."):
@@ -322,6 +345,7 @@ def _rule_value(key: str, m: dict, R: dict | None, asr: str | None):
 # ── 안/밖 ────────────────────────────────────────────────────────────────
 def _judge(key: str, a, b) -> tuple[object, str]:
     """(차, 상태). 기준 없는 항목은 '참고'."""
+    key = _base(key)
     if key not in ALL_TOL:
         if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
             return round(b - a, 3), "참고"
@@ -365,7 +389,7 @@ def _judge(key: str, a, b) -> tuple[object, str]:
 
 def _row(key, grp, name, method, mo, mu, asr_o, asr_u, layer="pixel", R_o=None, R_u=None) -> dict:
     row = {"key": key, "layer": layer, "group": grp, "name": name, "method": method,
-           "criterion": ALL_TOL[key][2] if key in ALL_TOL else None}
+           "criterion": ALL_TOL[_base(key)][2] if _base(key) in ALL_TOL else None}
     vals = {}
     for side, m, asr, R in (("orig", mo, asr_o, R_o), ("ours", mu, asr_u, R_u)):
         try:
@@ -380,7 +404,7 @@ def _row(key, grp, name, method, mo, mu, asr_o, asr_u, layer="pixel", R_o=None, 
     if row.get("fail"):
         row["diff"] = None
         row["status"] = "failed:" + " / ".join(row.pop("fail"))
-        if key not in ALL_TOL:
+        if _base(key) not in ALL_TOL:
             row["status"] = "참고(" + row["status"] + ")"
         return row
     a, b = vals["orig"], vals["ours"]
@@ -396,7 +420,7 @@ def _row(key, grp, name, method, mo, mu, asr_o, asr_u, layer="pixel", R_o=None, 
 
 def verdict(rows: list[dict]) -> dict:
     """판정은 ① 픽셀 수준만(사장님 10-16). ② 규칙 수준은 rules_* 로 따로 센다(판정에 안 들어감)."""
-    crit = [r for r in rows if r["key"] in TOL]
+    crit = [r for r in rows if _base(r["key"]) in TOL]
     outs = [r["name"] for r in crit if r["status"] == "out"]
     fails = [f'{r["name"]} ({r["status"]})' for r in crit if r["status"].startswith("failed")]
     rule = [r for r in rows if r["key"] in RULE_TOL]
@@ -485,6 +509,33 @@ def _table(rows: list[dict]) -> list[str]:
     return L
 
 
+def pair_bands(ob: list[dict], ub: list[dict]) -> list[tuple[dict, dict | None]]:
+    """원본 띠마다 우리 띠 중 가운데 y가 가장 가까운 것(거리 ≤ 원본 띠 높이, 최소 20px). 없으면 None."""
+    out = []
+    for b in ob:
+        c, h = (b["band"][0] + b["band"][1]) / 2, b["band"][1] - b["band"][0]
+        best = min(ub, key=lambda u: abs((u["band"][0] + u["band"][1]) / 2 - c), default=None)
+        if best is not None and abs((best["band"][0] + best["band"][1]) / 2 - c) > max(20, h):
+            best = None
+        out.append((b, best))
+    return out
+
+
+def band_items(mo: dict, mu: dict) -> list[tuple]:
+    """창 위 고정 글자 띠 항목(띠 개수 + 원본 띠마다 글자 높이·획·잉크). 짝은 mo/mu['_band_pair'] 에 둔다."""
+    pairs = pair_bands(mo.get("bands") or [], mu.get("bands") or [])
+    mo["_band_pair"] = {i: o for i, (o, _) in enumerate(pairs)}
+    mu["_band_pair"] = {i: u for i, (_, u) in enumerate(pairs)}
+    meth = "bands.band_style(captions.glyph_style)"
+    items = [("frame.band_count", "틀", "창 위 고정 글자 띠 개수", "bands.measure_video")]
+    for i, (o, _) in enumerate(pairs):
+        tag = f"창 위 띠{i + 1} [{o['band'][0]},{o['band'][1]})"
+        items += [(f"band.line_h#{i}", "틀", f"{tag} 글자 높이(px)", meth),
+                  (f"band.stroke#{i}", "틀", f"{tag} 획 두께(px)", meth),
+                  (f"band.ink#{i}", "틀", f"{tag} 잉크 비율", "bands.band_style(layout.ink_mask)")]
+    return items
+
+
 def _load_rules(p: str | None) -> dict | None:
     if not p or p == "-":
         return None
@@ -522,11 +573,13 @@ def compare(orig: str, ours: str, out_dir: str, layout_mode: str = "bench",
     mu = bench_one.measure(ours, layout_mode=layout_mode)
     R_o, R_u = _load_rules(rules_orig), _load_rules(rules_ours)
     rows = [_row(k, g, n, meth, mo, mu, asr_orig, asr_ours) for k, g, n, meth in ITEMS]
+    at = next(i for i, r in enumerate(rows) if r["key"] == "frame.band_rgb") + 1
+    rows[at:at] = [_row(k, g, n, meth, mo, mu, asr_orig, asr_ours) for k, g, n, meth in band_items(mo, mu)]
     rows += [_row(k, g, n, meth, mo, mu, asr_orig, asr_ours, "rule", R_o, R_u) for k, g, n, meth in RULE_ITEMS]
     v = verdict(rows)
     sbs = side_by_side(mo, mu, os.path.join(out_dir, "side_by_side.jpg")) if picture else {"path": None}
     slim = lambda m: {"path": m["path"], "probe": m.get("probe"), "vl": m.get("vl"), "errors": m["errors"],  # noqa: E731
-                      "layout_method": m.get("layout_method")}
+                      "layout_method": m.get("layout_method"), "bands": m.get("bands")}
     res = {"tool": "tools/calcopy/engine/compare.py", "layout_mode": layout_mode, "orig": slim(mo), "ours": slim(mu),
            "rows": rows, "verdict": v, "side_by_side": sbs,
            "rules_json": [rules_orig, rules_ours], "criteria": {k: t[2] for k, t in TOL.items()},

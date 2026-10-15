@@ -3,7 +3,8 @@
 
 흐름(bench/__init__.py run 과 같은 순서·같은 함수, bench 코드는 고치지 않고 부르기만):
   probe.info → layout.measure_video → layout.consolidate({vid: …}) → layout.video_layout
-  → captions.measure_video(자막 띠가 있을 때) → cuts.measure_video(자막 교체 시각을 받는다) → audio.measure_video
+  → captions.measure_video(자막 띠가 있을 때) → cuts.measure_video(자막 교체 시각을 받는다)
+  → bands.measure_video(창 위 고정 글자 띠: 글자 높이·획·잉크 비율) → audio.measure_video
 
 대조 도구(compare.py)와 분석기(analyze.py)가 같이 부른다 — 편 하나 재는 법은 여기 한 곳(0순위-B).
 단계 하나가 실패해도 멈추지 않고 `errors[단계] = 이유`로 남긴다(조용한 실패 금지: 결과에 그대로 보인다).
@@ -23,7 +24,7 @@ _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from shopping_shorts.channelkit.bench import probe, layout, captions, cuts, audio  # noqa: E402
+from shopping_shorts.channelkit.bench import probe, layout, captions, cuts, audio, bands  # noqa: E402
 
 _EMPTY_CAP = {"region": None, "changes": [], "spans": [], "items": [], "glyph": []}
 
@@ -82,6 +83,12 @@ def measure(path: str, vid: str | None = None, zoom: bool = False, layout_mode: 
         except Exception as e:  # noqa: BLE001
             res["errors"]["cuts"] = _err(e)
     res["captions"] = cap
+    res["bands"] = []
+    if res.get("layout"):
+        try:
+            res["bands"] = bands.measure_video(path, meta, res["layout"])
+        except Exception as e:  # noqa: BLE001
+            res["errors"]["bands"] = _err(e)
     try:
         res["audio"] = audio.measure_video(path, meta)
     except Exception as e:  # noqa: BLE001
