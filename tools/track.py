@@ -1159,6 +1159,8 @@ def _merge_worker(repo, gate, video_gate, own_result=None):
         _clean_dead_stages(repo)
         time.sleep(BATCH_GATHER_SEC)
         _precheck_pending(repo, checked)
+        if not [t for t in _queue_pending(repo) if t["name"] in checked]:
+            continue                                # 넣을 트랙이 없다(충돌·관제 실패·새 커밋 없음) — 시험 자원을 기다리지 않는다
         with _gate_slot(urgent=any(t.get("urgent") for t in _queue_pending(repo))):
             _precheck_pending(repo, checked)        # 자원 기다리는 동안 온 트랙까지(검사 안 된 것만)
             pending = [t for t in _queue_pending(repo) if t["name"] in checked]
@@ -1229,7 +1231,8 @@ def _run_batch(repo, batch, gate, video_gate, slot_held=False, checked=None):
     try:
         result = _merge_and_gate(label, repo, stage, [t.get("sha") or t["br"] for t in ok], gate, ok[0]["wt"], video_gate, lock=None,
                                  push_lock=lambda: _finish_gate_lock(urgent=urgent), urgent=urgent,
-                                 control_cards=cards, slot_held=slot_held)
+                                 control_cards=cards, slot_held=slot_held,
+                                 br_label=(ok[0]["br"] if len(ok) == 1 else None))
     except Exception as e:  # noqa: BLE001 — 게이트·관문 예외도 묶음 실패로(이분). 일꾼이 죽지 않게
         _close_stage(repo, stage)
         if not isinstance(e, TrackError):
@@ -1352,7 +1355,7 @@ def _retry_test_subset(stage, prev_base, my_changed, *, half=0.2):
 
 
 def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None,
-                    urgent=False, control_cards=None, slot_held=False):
+                    urgent=False, control_cards=None, slot_held=False, br_label=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -1374,7 +1377,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
     # ★ 커밋 없이 병합만 — 커밋하면 post-commit(git push)이 게이트 전에 라이브로 보낸다
     # 묶음 병합(관제 212): br 이 목록이면 여러 갈래를 한 번에 합친다(octopus). 충돌이면 실패 → 일꾼이 반으로 나눠 다시.
     _brs = list(br) if isinstance(br, (list, tuple)) else [br]
-    br = _brs[0] if len(_brs) == 1 else ("묶음(%d)" % len(_brs))
+    br = br_label or (_brs[0] if len(_brs) == 1 else ("묶음(%d)" % len(_brs)))   # 영상 관문·기록에 쓰는 이름
     rc, out = run(["git", "merge", "--no-ff", "--no-commit", *_brs], stage)
 
     if "Already up to date" in out:
