@@ -67,10 +67,15 @@ PROMPT = """너는 한국어 쇼츠 채널의 대본 작가다. 아래 '갈래 �
 - 첫 문장은 훅. 이 채널 훅 꼴을 참고: {hooks}
 - 말투: 반말 음슴체(~임, ~버림, ~는데, ~다는 거). 존댓말 금지. 1인칭 경험담 금지(지어낸 경험 금지).
 - ★예문 문장을 그대로 베끼지 마라. 틀(박자·리듬·말끝)만 따르고 문장은 새로 써라.
-- 사실이 확실하지 않은 숫자·회사명·연도는 지어내지 말고 빼라.
+- ★사실은 아래 '조사한 비하인드'에 있는 것만 써라. 거기 없는 숫자·회사명·연도·인증·효능은 쓰지 마라.
+- 이 영상의 각도(가장 '아 그래?' 할 비하인드): {angle}
+  이 각도가 훅·반전의 중심이 되게 써라. 각도 첫 줄 후보: {angle_hooks}
+조사한 비하인드(출처 있음):
+{facts}
 예문(조회 상위):
 {examples}
-출력 JSON만: {{"title":"영상 위 제목 2줄(줄바꿈 \\n)","lines":[{{"fn":"훅|정체공개|상황|의문|반전|원리|덤|결말|댓글유도","text":"한 문장"}}],"facts_to_check":["확인이 필요한 사실"]}}"""
+출력 JSON만: {{"title":"영상 위 제목 2줄(줄바꿈 \\n)","lines":[{{"fn":"훅|정체공개|상황|의문|반전|원리|덤|결말|댓글유도","text":"한 문장","facts":["f1"]}}]}}
+lines[].facts = 그 줄이 기대는 조사 항목 id(사실 주장이 없는 줄만 빈 목록)."""
 
 
 def _client():
@@ -78,26 +83,71 @@ def _client():
     return _gemini_client(None, str(ROOT / ".env"))
 
 
-def write(rules_path: str, topics: list[str]) -> list[dict]:
+def _calls():
+    """(일반 호출, 검색 붙은 호출) — 조사는 반드시 검색이 붙어야 한다(모델 지식만이면 지어낸다)."""
+    import time
     from google.genai import types
+    client = _client()
+
+    def call(prompt, model="gemini-2.5-pro"):
+        for wait in (0, 10, 30):
+            time.sleep(wait)
+            try:
+                return client.models.generate_content(model=model, contents=prompt, config=types.GenerateContentConfig(
+                    response_mime_type="application/json", temperature=0.8)).text
+            except Exception as e:  # noqa: BLE001
+                last = e
+        raise last
+
+    def search_call(prompt):
+        for wait in (0, 10, 30):
+            time.sleep(wait)
+            try:
+                return client.models.generate_content(model="gemini-2.5-pro", contents=prompt, config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())])).text
+            except Exception as e:  # noqa: BLE001
+                last = e
+        raise last
+    return call, search_call
+
+
+def gather(topic: str, call, search_call) -> dict:
+    """제품 비하인드 모으기 — 조사·각도 고르기는 seedflow 의 것을 그대로 부른다(판단 주인 = seedflow.research / pick_angle)."""
+    from shopping_shorts import seedflow
+    facts = seedflow.research(topic, [], search_call)
+    angle = seedflow.pick_angle(topic, [], facts, call)
+    return {"facts": facts, "angle": angle}
+
+
+def write(rules_path: str, topics: list[str]) -> list[dict]:
     R = json.loads(Path(rules_path).read_text(encoding="utf-8"))
     ex = "\n\n".join(f"[{e['views']:,}회]\n" + "\n".join(f"({b['fn']}) {b['text']}" for b in e["beats"]) + f"\n전문: {e['script']}"
                      for e in R["examples"][:3])
     beats = " → ".join(f"{b['fn']}({b['start_ratio']:.0%})" for b in R["beats"])
     lo, hi = R["length_chars"]["p25"], R["length_chars"]["p75"]
-    client, out = _client(), []
+    from shopping_shorts import seedflow
+    call, search_call = _calls()
+    out = []
     for t in topics:
+        g = gather(t, call, search_call)
+        print(f"\n■ {t}  — 비하인드 {len(g['facts'])}개, 각도: {g['angle'].get('angle') or '(없음: ' + g['angle'].get('why_none', '') + ')'}")
+        for f in g["facts"]:
+            print(f"   {f['id']} ({f.get('kind')}) {f['text']}  [{seedflow.source_tier(f.get('source'))}]")
+        if not g["angle"].get("angle"):
+            out.append({"topic": t, "skipped": "썰감 없음 — " + g["angle"].get("why_none", ""), **g})
+            print("  → 이 주제는 '아 그래?' 할 비하인드가 없어 대본을 쓰지 않는다")
+            continue
         p = PROMPT.format(topic=t, lo=lo, hi=hi, med=R["length_chars"]["median"], sec=R["seconds_at_cps"],
-                          beats=beats, hooks=" / ".join(R["hooks"][:10]), examples=ex)
-        r = client.models.generate_content(model="gemini-2.5-pro", contents=p,
-                                           config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.8))
-        d = json.loads(r.text)
-        d["topic"] = t
+                          beats=beats, hooks=" / ".join(R["hooks"][:10]), examples=ex,
+                          angle=g["angle"]["angle"], angle_hooks=" / ".join(g["angle"].get("hooks") or []),
+                          facts=seedflow._facts_block(g["facts"]))
+        d = seedflow.parse(call(p))
+        d.update({"topic": t, **g})
         d["check"] = check(d, R)
         out.append(d)
-        print(f"\n■ {t}\n제목: {d.get('title')}")
+        print(f"제목: {d.get('title')}")
         for ln in d.get("lines", []):
-            print(f"  ({ln['fn']}) {ln['text']}")
+            print(f"  ({ln['fn']}) {ln['text']}  {ln.get('facts') or ''}")
         print("  검사:", d["check"])
     return out
 
@@ -115,11 +165,16 @@ def check(d: dict, R: dict) -> dict:
     order = [ORDER.index(f) for f in fns if f in ORDER]
     ex = set().union(*(_ngrams(e["script"]) for e in R["examples"]))
     copied = sorted(_ngrams(text) & ex)
+    ids = {f["id"] for f in d.get("facts") or []}
+    facts_text = " ".join(f["text"] for f in d.get("facts") or [])
+    nums = re.findall(r"\d[\d,.]*", text)
+    unsourced_nums = [n for n in nums if n not in facts_text]
+    bad_ids = sorted({i for l in d.get("lines", []) for i in (l.get("facts") or []) if i not in ids})
     polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
     return {"chars": n, "in_range": R["length_chars"]["p25"] <= n <= R["length_chars"]["p75"],
             "sec_est": round(n / CPS, 1), "first_is_hook": bool(fns) and fns[0] == "훅",
             "order_breaks": sum(1 for a, b in zip(order, order[1:]) if b < a - 1),
-            "polite_endings": polite, "copied_8grams": len(copied), "copied_sample": copied[:3]}
+            "polite_endings": polite, "unsourced_numbers": unsourced_nums, "unknown_fact_ids": bad_ids, "copied_8grams": len(copied), "copied_sample": copied[:3]}
 
 
 if __name__ == "__main__":
