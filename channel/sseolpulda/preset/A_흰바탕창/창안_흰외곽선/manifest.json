@@ -1,0 +1,544 @@
+{
+ "slug": "sseolpulda",
+ "style": "A_흰바탕창/창안_흰외곽선",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T04:23:34+09:00",
+ "sources": [
+  {
+   "id": "ho5GSd-4To0",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/ho5GSd-4To0/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:36",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "IBMPlexSansKR-Bold.otf",
+    "top1_score": 0.1758,
+    "picked_from": {
+     "file": "IBMPlexSansKR-Bold.otf",
+     "score": 0.1758
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+    "글꼴 1위 IBMPlexSansKR-Bold.otf(0.1758) < 0.5 — 확신 낮음. 쓴 글꼴 CcIBMPlexSansKR-Bold({'file': 'IBMPlexSansKR-Bold.otf', 'score': 0.1758})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 Cafe24Ohsquare.ttf 0.5675, 신뢰 ok)",
+    "제목 줄별 외곽선 [None, [8, 255, 252, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "자막 그림자 [[-6, 2]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5377)",
+    "자막 층 = 임시(bench 측정 첫 줄 y 1151.0·줄 높이 79.5·bright·외곽선 True, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.1758 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "창안_흰외곽선",
+   "frame_sha1": "3f9877491073"
+  },
+  {
+   "id": "7DYbxVNz5q8",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/7DYbxVNz5q8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:53",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "yg-jalnan.ttf",
+    "top1_score": 0.5205,
+    "picked_from": {
+     "file": "yg-jalnan.ttf",
+     "score": 0.5205
+    },
+    "font_confidence": "ok",
+    "skipped": []
+   },
+   "font_confidence": "ok",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+    "제목 글꼴 YgJalnan — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 yg-jalnan.ttf 0.56, 신뢰 ok)",
+    "제목 줄별 외곽선 [None, [8, 255, 254, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5367)",
+    "자막 층 = 임시(bench 측정 첫 줄 y 323·줄 높이 42.5·bright·외곽선 False, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+   ],
+   "unknown": [
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[video].y",
+    "layers[text:title].y",
+    "layers[text:title].font",
+    "layers[text:title].size",
+    "layers[text:title].line_h",
+    "layers[text:title].line_rgb",
+    "layers[text:title].letter_spacing",
+    "layers[text:caption].y",
+    "layers[text:caption].size",
+    "layers[text:caption].line_h",
+    "layers[text:caption].outline"
+   ],
+   "caption_style": "창안_흰외곽선",
+   "frame_sha1": "6be329620348"
+  },
+  {
+   "id": "1_VtwOkbbVE",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/1_VtwOkbbVE/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 02:06",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "SBAggroB.ttf",
+    "top1_score": 0.7752,
+    "picked_from": {
+     "file": "SBAggroB.ttf",
+     "score": 0.7752
+    },
+    "font_confidence": "ok",
+    "skipped": []
+   },
+   "font_confidence": "ok",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+    "제목 글꼴 Jalnan2 — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 Jalnan2.ttf 0.771, 신뢰 ok)",
+    "제목 줄별 외곽선 [None, [8, 255, 255, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5527)",
+    "자막 층 = 임시(bench 측정 첫 줄 y 1097.5·줄 높이 79.5·bright·외곽선 True, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+   ],
+   "unknown": [
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:brand].outline"
+   ],
+   "caption_style": "창안_흰외곽선",
+   "frame_sha1": "a1f87a5731d3"
+  }
+ ],
+ "updated_at": "2026-10-16T04:23:34+09:00",
+ "variables": [
+  "layers[video].y",
+  "layers[text:title].y",
+  "layers[text:title].font",
+  "layers[text:title].size",
+  "layers[text:title].line_h",
+  "layers[text:title].line_rgb",
+  "layers[text:title].letter_spacing",
+  "layers[text:title].text",
+  "layers[text:caption].y",
+  "layers[text:caption].size",
+  "layers[text:caption].line_h",
+  "layers[text:caption].outline",
+  "layers[text:brand].outline"
+ ],
+ "caption_styles": [
+  {
+   "name": "창안_흰외곽선",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1140,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "CcPretendard-Bold",
+    "size": 88.3,
+    "line_h": 102,
+    "rgb": [
+     255,
+     255,
+     255
+    ],
+    "line_rgb": null,
+    "outline": {
+     "px": 6,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "enter": null,
+    "text": null
+   },
+   "status": "잰 편 ho5GSd-4To0",
+   "sources": [
+    "ho5GSd-4To0",
+    "7DYbxVNz5q8",
+    "1_VtwOkbbVE"
+   ],
+   "notes": [
+    "ho5GSd-4To0: 워커 점검.md: 창 안 흰/색 글씨+외곽선",
+    "7DYbxVNz5q8: 워커 점검.md: 창 안 흰/색 글씨+외곽선",
+    "1_VtwOkbbVE: 워커 점검.md: 창 안 흰/색 글씨+외곽선"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[video].y": {
+   "values": {
+    "ho5GSd-4To0": 340,
+    "7DYbxVNz5q8": 365,
+    "1_VtwOkbbVE": 352
+   },
+   "default": 352,
+   "range": [
+    340,
+    365
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:title].y": {
+   "values": {
+    "ho5GSd-4To0": 126,
+    "7DYbxVNz5q8": 117,
+    "1_VtwOkbbVE": 140
+   },
+   "default": 126,
+   "range": [
+    117,
+    140
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:title].font": {
+   "values": {
+    "ho5GSd-4To0": "Cafe24Ohsquare",
+    "7DYbxVNz5q8": "YgJalnan",
+    "1_VtwOkbbVE": "Jalnan2"
+   },
+   "default": "Cafe24Ohsquare",
+   "range": null,
+   "how": "최빈(1/3편)"
+  },
+  "layers[text:title].size": {
+   "values": {
+    "ho5GSd-4To0": 112.6,
+    "7DYbxVNz5q8": 121.5,
+    "1_VtwOkbbVE": 106.8
+   },
+   "default": 112.6,
+   "range": [
+    106.8,
+    121.5
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:title].line_h": {
+   "values": {
+    "ho5GSd-4To0": 109,
+    "7DYbxVNz5q8": 126,
+    "1_VtwOkbbVE": 110
+   },
+   "default": 110,
+   "range": [
+    109,
+    126
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:title].line_rgb": {
+   "values": {
+    "ho5GSd-4To0": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      251,
+      2,
+      82
+     ]
+    ],
+    "7DYbxVNz5q8": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      217,
+      5,
+      134
+     ]
+    ],
+    "1_VtwOkbbVE": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      186,
+      0,
+      120
+     ]
+    ]
+   },
+   "default": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     217,
+     2,
+     120
+    ]
+   ],
+   "range": null,
+   "how": "자리별 중앙값(3/3편)"
+  },
+  "layers[text:title].letter_spacing": {
+   "values": {
+    "ho5GSd-4To0": -6.8,
+    "7DYbxVNz5q8": 8.1,
+    "1_VtwOkbbVE": -2.8
+   },
+   "default": -2.8,
+   "range": [
+    -6.8,
+    8.1
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:title].text": {
+   "values": {
+    "ho5GSd-4To0": "전 세계 매출 폭발시킨\n덴마크 회사의 실수",
+    "7DYbxVNz5q8": "삼성 엔지니어가\n저지른 미친 실수",
+    "1_VtwOkbbVE": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:caption].y": {
+   "values": {
+    "ho5GSd-4To0": 1140,
+    "7DYbxVNz5q8": 318,
+    "1_VtwOkbbVE": 1086
+   },
+   "default": 1086,
+   "range": [
+    318,
+    1140
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:caption].size": {
+   "values": {
+    "ho5GSd-4To0": 88.3,
+    "7DYbxVNz5q8": 47.2,
+    "1_VtwOkbbVE": 88.3
+   },
+   "default": 88.3,
+   "range": [
+    47.2,
+    88.3
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:caption].line_h": {
+   "values": {
+    "ho5GSd-4To0": 102,
+    "7DYbxVNz5q8": 54,
+    "1_VtwOkbbVE": 102
+   },
+   "default": 102,
+   "range": [
+    54,
+    102
+   ],
+   "how": "중앙값(3/3편)"
+  },
+  "layers[text:caption].outline": {
+   "values": {
+    "ho5GSd-4To0": {
+     "px": 6,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "7DYbxVNz5q8": null,
+    "1_VtwOkbbVE": {
+     "px": 7,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "default": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "range": null,
+   "how": "자리별 중앙값(2/3편)"
+  },
+  "layers[text:brand].outline": {
+   "values": {
+    "ho5GSd-4To0": {
+     "px": 4,
+     "rgb": [
+      96,
+      96,
+      99
+     ]
+    },
+    "7DYbxVNz5q8": {
+     "px": 4,
+     "rgb": [
+      96,
+      95,
+      98
+     ]
+    },
+    "1_VtwOkbbVE": {
+     "px": 4,
+     "rgb": [
+      110,
+      108,
+      112
+     ]
+    }
+   },
+   "default": {
+    "px": 4,
+    "rgb": [
+     96,
+     96,
+     99
+    ]
+   },
+   "range": null,
+   "how": "자리별 중앙값(3/3편)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "ho5GSd-4To0": 126,
+     "7DYbxVNz5q8": 117,
+     "1_VtwOkbbVE": 140
+    },
+    "default": 126,
+    "range": [
+     117,
+     140
+    ],
+    "how": "중앙값(3/3편)"
+   },
+   "gap": {
+    "values": {
+     "ho5GSd-4To0": -4,
+     "7DYbxVNz5q8": -4,
+     "1_VtwOkbbVE": -8
+    },
+    "default": -4,
+    "range": [
+     -8,
+     -4
+    ],
+    "how": "중앙값(3/3편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "ho5GSd-4To0": 0.968,
+     "7DYbxVNz5q8": 1.037,
+     "1_VtwOkbbVE": 1.03
+    },
+    "default": 1.0,
+    "range": [
+     0.968,
+     1.037
+    ],
+    "how": "중앙값(3/3편)"
+   },
+   "size_cap": {
+    "values": {
+     "ho5GSd-4To0": 112.6,
+     "7DYbxVNz5q8": 121.5,
+     "1_VtwOkbbVE": 106.8
+    },
+    "default": 121.5,
+    "range": [
+     106.8,
+     121.5
+    ],
+    "how": "최대"
+   },
+   "video_bottom": {
+    "values": {
+     "ho5GSd-4To0": 1622,
+     "7DYbxVNz5q8": 1621,
+     "1_VtwOkbbVE": 1621
+    },
+    "default": 1621,
+    "range": [
+     1621,
+     1622
+    ],
+    "how": "중앙값(3/3편)"
+   },
+   "fill_w": {
+    "values": {
+     "ho5GSd-4To0": 929,
+     "7DYbxVNz5q8": 987,
+     "1_VtwOkbbVE": 1102
+    },
+    "default": 987,
+    "range": [
+     929,
+     1102
+    ],
+    "how": "중앙값(3/3편)"
+   },
+   "cap_dy": {
+    "values": {
+     "ho5GSd-4To0": -482,
+     "7DYbxVNz5q8": -1303,
+     "1_VtwOkbbVE": -535
+    },
+    "default": -535,
+    "range": [
+     -1303,
+     -482
+    ],
+    "how": "중앙값(3/3편)"
+   }
+  }
+ }
+}

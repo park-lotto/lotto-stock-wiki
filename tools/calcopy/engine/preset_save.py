@@ -202,6 +202,82 @@ def caption_style_entry(M: dict, name: str, layer: dict | None, source_id: str, 
         st["layer"], st["status"] = layer, f"잰 편 {source_id}"
 
 
+def slug_style(preset_dir: Path) -> tuple[str, str]:
+    """channel/<slug>/preset/<스타일>[/<하위 스타일>] → (slug, '스타일/하위'). 하위 스타일 = 프리셋 단위(평균 내지 않는다)."""
+    parts = list(preset_dir.parts)
+    i = len(parts) - 1 - parts[::-1].index("preset") if "preset" in parts else len(parts) - 2
+    return parts[i - 1], "/".join(parts[i + 1:])
+
+
+# ── 관계 규칙(2026-10-16 사장님·관제: 평균 틀은 아무 편도 아니다 — 종속값은 규칙으로) ──
+#   편마다 다른 값 중 일부는 다른 값에서 나온다. 기본값은 독립 변수에만 두고 apply 가 종속값을 계산한다.
+#     제목 크기 = min(size_cap, 가장 긴 줄이 fill_w 폭이 되는 크기)  · 줄높이 = 크기 × lh_ratio · 제목 위 끝 = title_top
+#     창 y = 제목 아래 끝(title_top + 줄수×줄높이) + gap   · 창 아래 끝 = video_bottom(자막 하위 스타일이 정함)
+#     자막 y = 창 아래 끝 + cap_dy(창아래면 +, 창안이면 −)
+RULE_FORMULA = ("title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · "
+                "video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy")
+
+
+def _line_w(fam: str, size: float, ls: float, line: str) -> float:
+    from tools.calcopy.engine.to_frame import _pil_font
+    b = _pil_font(fam, size).getbbox(line, anchor="ls")
+    return (b[2] - b[0]) + ls * max(0, len(line) - 1)
+
+
+def derived(frame: dict, caption_ok: bool = True) -> dict:
+    """편 설명서 한 장에서 규칙의 독립 값(측정값)을 뽑는다."""
+    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in frame["layers"]}
+    t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
+    out = {}
+    if t and v:
+        n = t["lines"]
+        out.update(title_top=t["y"], gap=v["y"] - (t["y"] + n * t["line_h"]), lh_ratio=round(t["line_h"] / t["size"], 3),
+                   size_cap=t["size"], video_bottom=v["y"] + v["h"])
+        if t.get("text"):
+            out["fill_w"] = round(max(_line_w(t["font"], t["size"], t["letter_spacing"], ln) for ln in t["text"].split("\n")))
+    if c and v and caption_ok:
+        out["cap_dy"] = c["y"] - (v["y"] + v["h"])
+    return out
+
+
+def rule_stats(preset_dir: Path, M: dict) -> dict:
+    vals = {}
+    for s in M["sources"]:
+        f = preset_dir / "sources" / f"{s['id']}.json"
+        if f.exists():
+            d = derived(json.loads(f.read_text(encoding="utf-8")), "text:caption" not in s["excluded_layers"])
+            for k, x in d.items():
+                vals.setdefault(k, {})[s["id"]] = x
+    keys = {k: stats(v) for k, v in vals.items()}
+    if "size_cap" in keys:                     # 크기 상한 = 잰 편 중 가장 큰 크기(중앙값이 아니다)
+        keys["size_cap"]["default"], keys["size_cap"]["how"] = max(vals["size_cap"].values()), "최대"
+    return {"formula": RULE_FORMULA, "keys": keys}
+
+
+def apply_rules(F: dict, rules: dict) -> dict:
+    """규칙으로 종속값(제목 크기·줄높이·위치, 창 y·h, 자막 y)을 계산해 넣는다. 제목 글자가 있어야 한다."""
+    K = {k: v["default"] for k, v in (rules or {}).get("keys", {}).items()}
+    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in F["layers"]}
+    t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
+    if t and t.get("text") and "fill_w" in K:
+        lines = t["text"].split("\n")
+        w100 = max(_line_w(t["font"], 100, 0, ln) for ln in lines)
+        ls_total = max(t["letter_spacing"] * max(0, len(ln) - 1) for ln in lines)
+        size = (K["fill_w"] - ls_total) * 100 / max(1, w100)
+        t["size"] = round(min(K.get("size_cap", size), size), 1)
+        t["line_h"] = round(t["size"] * K.get("lh_ratio", 1.15))
+        t["lines"] = len(lines)
+    if t and "title_top" in K:
+        t["y"] = K["title_top"]
+    if t and v and "gap" in K:
+        v["y"] = round(t["y"] + t["lines"] * t["line_h"] + K["gap"])
+    if v and "video_bottom" in K:
+        v["h"] = K["video_bottom"] - v["y"]
+    if c and v and "cap_dy" in K:
+        c["y"] = v["y"] + v["h"] + K["cap_dy"]
+    return F
+
+
 def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: str, exclude: tuple = (),
          caption_style: str | None = None, caption_note: str | None = None) -> dict:
     """프리셋 폴더에 frame.json·manifest.json 을 쓰거나(처음) 합친다(같은 틀 다른 편). 돌려주는 값 = manifest.
@@ -225,9 +301,10 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
                 P[p] = VAR
         preset = unflat(P, layer_order(preset))
         became = [p for p in ALWAYS_PER_VIDEO if p in P]
-        M = {"slug": None, "style": preset_dir.name, "made_by": MADE_BY, "rule": RULE, "created_at": now, "sources": []}
+        M = {"slug": None, "style": None, "made_by": MADE_BY, "rule": RULE, "created_at": now, "sources": []}
     mf = frame.get("made_from") or {}
-    M.update({"slug": preset_dir.parent.parent.name, "updated_at": now, "variables": variables(preset)})
+    slug, style = slug_style(preset_dir)
+    M.update({"slug": slug, "style": style, "updated_at": now, "variables": variables(preset)})
     M["sources"].append({"id": source_id, "tteutgi": tteutgi_path, "engine": J.get("engine"), "measured_at": J.get("measured_at"),
                          "frame_tool": mf.get("tool"), "font": mf.get("font"), "font_confidence": mf.get("font_confidence"),
                          "notes": mf.get("notes") or [], "unknown": J.get("unknown") or [], "excluded_layers": list(exclude),
@@ -239,6 +316,7 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
         cap = next((l for l in new["layers"] if l.get("role") == "caption"), None)
         caption_style_entry(M, caption_style, None if "text:caption" in exclude else cap, source_id, caption_note)
     M["variable_stats"] = variable_stats(preset_dir, M, preset)
+    M["rules"] = rule_stats(preset_dir, M)
     fp.write_text(json.dumps(preset, ensure_ascii=False, indent=1), encoding="utf-8")
     mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
@@ -254,7 +332,7 @@ def load(preset_dir: Path) -> tuple[dict, dict]:
 
 
 def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = None,
-          defaults: dict | None = None, caption_style: dict | None = None) -> dict:
+          defaults: dict | None = None, caption_style: dict | None = None, rules: dict | None = None) -> dict:
     """프리셋의 변수 자리를 채운 설명서. 순서: overrides({자리: 값}) → per_video(그 편 설명서, to_frame 결과)
     → defaults(manifest variable_stats — 새 소재로 만들 때). 못 채운 변수가 하나라도 남으면 ValueError(목록).
     caption_style = manifest caption_styles 의 한 항목 — 자막 층을 그 하위 스타일의 잰 층으로 바꾼다(미측정이면 ValueError)."""
@@ -281,6 +359,8 @@ def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = 
     if left:
         raise ValueError(f"채우지 못한 변수: {left}")
     out = unflat(P, layer_order(preset))
+    if rules:
+        out = apply_rules(out, rules)       # 종속값은 규칙이 정한다(독립 기본값을 채운 뒤)
     schema.validate(out)
     return out
 
@@ -303,7 +383,7 @@ def main(argv=None):
         cs = next((x for x in M.get("caption_styles") or [] if x["name"] == a.caption_style), None) if a.caption_style else None
         if a.caption_style and cs is None:
             raise SystemExit(f"자막 스타일 없음: {a.caption_style}")
-        F = apply(preset, per, ov, M.get("variable_stats") if a.defaults else None, cs)
+        F = apply(preset, per, ov, M.get("variable_stats") if a.defaults else None, cs, M.get("rules") if a.defaults else None)
         F["made_from"] = {"tool": "preset_save apply", "preset": str(a.preset), "variables_filled": M["variables"],
                           "from_frame": a.from_frame, "overrides": list(ov), "defaults": a.defaults, "caption_style": a.caption_style}
         Path(a.out).write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")

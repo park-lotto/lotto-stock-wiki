@@ -1,0 +1,181 @@
+{
+ "slug": "sseolpulda",
+ "style": "A_흰바탕창/창안_상자",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T04:18:00+09:00",
+ "sources": [
+  {
+   "id": "w-Ygny1f8O8",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/w-Ygny1f8O8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:59",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GasoekOne-Regular.ttf",
+    "top1_score": 0.1655,
+    "picked_from": {
+     "file": "GasoekOne-Regular.ttf",
+     "score": 0.1655
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+    "글꼴 1위 GasoekOne-Regular.ttf(0.1655) < 0.5 — 확신 낮음. 쓴 글꼴 GasoekOne({'file': 'GasoekOne-Regular.ttf', 'score': 0.1655})",
+    "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 Cafe24Ohsquare.ttf 0.9317, 신뢰 ok)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "자막 그림자 [[-6, 2]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5352)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.1655 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "창안_상자",
+   "frame_sha1": "94e3f240caf1"
+  }
+ ],
+ "updated_at": "2026-10-16T04:18:00+09:00",
+ "variables": [
+  "layers[text:title].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "창안_상자",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 963,
+    "y": 482,
+    "w": 923,
+    "align": "right",
+    "lines": 1,
+    "font": "GasoekOne",
+    "size": 36.4,
+    "line_h": 42,
+    "rgb": [
+     209,
+     222,
+     154
+    ],
+    "line_rgb": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 10.9,
+    "word_spacing": 0,
+    "enter": null,
+    "text": null
+   },
+   "status": "잰 편 w-Ygny1f8O8",
+   "sources": [
+    "w-Ygny1f8O8"
+   ],
+   "notes": [
+    "w-Ygny1f8O8: 워커 점검.md: 반투명 검정 상자+흰 작은 글씨(상자는 임시 층에 없음)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "w-Ygny1f8O8": "전기 없던 시절\n음악 저장법 ㄷㄷ"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "w-Ygny1f8O8": 166
+    },
+    "default": 166,
+    "range": [
+     166,
+     166
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap": {
+    "values": {
+     "w-Ygny1f8O8": 4
+    },
+    "default": 4,
+    "range": [
+     4,
+     4
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "w-Ygny1f8O8": 1.006
+    },
+    "default": 1.0,
+    "range": [
+     1.006,
+     1.006
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "size_cap": {
+    "values": {
+     "w-Ygny1f8O8": 103.4
+    },
+    "default": 103.4,
+    "range": [
+     103.4,
+     103.4
+    ],
+    "how": "최대"
+   },
+   "video_bottom": {
+    "values": {
+     "w-Ygny1f8O8": 1827
+    },
+    "default": 1827,
+    "range": [
+     1827,
+     1827
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "w-Ygny1f8O8": 679
+    },
+    "default": 679,
+    "range": [
+     679,
+     679
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "cap_dy": {
+    "values": {
+     "w-Ygny1f8O8": -1345
+    },
+    "default": -1345,
+    "range": [
+     -1345,
+     -1345
+    ],
+    "how": "중앙값(1/1편)"
+   }
+  }
+ }
+}

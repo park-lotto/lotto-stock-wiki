@@ -1,0 +1,182 @@
+{
+ "slug": "sseolpulda",
+ "style": "A_흰바탕창/창아래_검정",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T04:13:54+09:00",
+ "sources": [
+  {
+   "id": "ZdeZRtCeAC4",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/ZdeZRtCeAC4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:23",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "SpoqaHanSansNeo-Bold.otf",
+    "top1_score": 0.4235,
+    "picked_from": {
+     "file": "SpoqaHanSansNeo-Bold.otf",
+     "score": 0.4235
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [251, 248, 252] (뜯기 잰 값 [241, 235, 237])",
+    "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
+    "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 3px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462)"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[17.92, 23.9]] — 창 다수결에서 뺌",
+    "글꼴 1위 점수 0.4235 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 한국어 나레 구간 없음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "창아래_검정",
+   "frame_sha1": "7b6ee1ae178d"
+  }
+ ],
+ "updated_at": "2026-10-16T04:13:54+09:00",
+ "variables": [
+  "layers[text:title].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "창아래_검정",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1462,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "CcSpoqaHanSansNeo-Bold",
+    "size": 66,
+    "line_h": 76,
+    "rgb": [
+     0,
+     0,
+     0
+    ],
+    "line_rgb": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": -7.4,
+    "word_spacing": 0,
+    "enter": null,
+    "text": null
+   },
+   "status": "잰 편 ZdeZRtCeAC4",
+   "sources": [
+    "ZdeZRtCeAC4"
+   ],
+   "notes": [
+    "ZdeZRtCeAC4: 분석기 자막 측정 사용(점검: 자막 6개 맞음)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "ZdeZRtCeAC4": "닿으면 스피커\n소름 돋는 음질 수준"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "ZdeZRtCeAC4": 224
+    },
+    "default": 224,
+    "range": [
+     224,
+     224
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap": {
+    "values": {
+     "ZdeZRtCeAC4": 10
+    },
+    "default": 10,
+    "range": [
+     10,
+     10
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "ZdeZRtCeAC4": 1.03
+    },
+    "default": 1.0,
+    "range": [
+     1.03,
+     1.03
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "size_cap": {
+    "values": {
+     "ZdeZRtCeAC4": 93.2
+    },
+    "default": 93.2,
+    "range": [
+     93.2,
+     93.2
+    ],
+    "how": "최대"
+   },
+   "video_bottom": {
+    "values": {
+     "ZdeZRtCeAC4": 1432
+    },
+    "default": 1432,
+    "range": [
+     1432,
+     1432
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "ZdeZRtCeAC4": 777
+    },
+    "default": 777,
+    "range": [
+     777,
+     777
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "cap_dy": {
+    "values": {
+     "ZdeZRtCeAC4": 30
+    },
+    "default": 30,
+    "range": [
+     30,
+     30
+    ],
+    "how": "중앙값(1/1편)"
+   }
+  }
+ }
+}

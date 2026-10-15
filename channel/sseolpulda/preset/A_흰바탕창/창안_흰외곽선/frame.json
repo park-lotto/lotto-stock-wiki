@@ -1,0 +1,116 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "ho5GSd-4To0",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": "$per_video",
+   "w": 1080,
+   "h": 1282,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": "$per_video",
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "$per_video",
+   "size": "$per_video",
+   "line_h": "$per_video",
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": "$per_video",
+   "outline": null,
+   "line_outline": [
+    null,
+    [
+     8,
+     255,
+     252,
+     255
+    ]
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": "$per_video",
+   "word_spacing": 0,
+   "enter": null,
+   "text": "$per_video"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": "$per_video",
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": "$per_video",
+   "line_h": "$per_video",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": "$per_video",
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 14,
+   "w": 180,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 47.1,
+   "line_h": 54,
+   "rgb": [
+    190,
+    188,
+    191
+   ],
+   "line_rgb": null,
+   "outline": "$per_video",
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1.7,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "[광고]"
+  }
+ ]
+}

@@ -119,3 +119,29 @@ def test_caption_styles_recorded_per_source(tmp_path):
     assert [s["caption_style"] for s in M["sources"]] == ["창아래_검정"] + ["창안_흰외곽선"] * 4
     with pytest.raises(ValueError):
         P.apply(pre, None, {"layers[text:title].text": "x"}, M["variable_stats"], st["창안_흰외곽선"])   # 미측정 스타일은 못 씀
+
+
+def test_slug_style_for_sub_style(tmp_path):
+    d = tmp_path / "channel" / "sseolpulda" / "preset" / "A_흰바탕창" / "창안_흰외곽선"
+    assert P.slug_style(d) == ("sseolpulda", "A_흰바탕창/창안_흰외곽선")
+    M = P.save(J, FRAME_A, d, "Z", "x")
+    assert M["slug"] == "sseolpulda" and M["style"] == "A_흰바탕창/창안_흰외곽선"
+
+
+def test_relation_rules_compute_dependents(tmp_path):
+    """종속값은 규칙으로: 창 y = 제목 아래 끝 + gap, 창 아래 끝 = video_bottom, 제목 크기 = min(상한, 가장 긴 줄이 fill_w)."""
+    d = tmp_path / "s" / "preset" / "A" / "창안"
+    g1 = other_video(FRAME_A)                                           # 제목 140 + 2×110 = 360, 창 352 → gap −8, 아래 1621
+    g2 = other_video(FRAME_A); t2 = title(g2)
+    t2.update(y=120, size=100.0, line_h=103, text="짧은 제목\n둘째 줄")
+    v2 = next(l for l in g2["layers"] if l["kind"] == "video"); v2["y"], v2["h"] = 120 + 206 - 8, 1621 - (120 + 206 - 8)
+    P.save(J, g1, d, "a", "x"); M = P.save(J, g2, d, "b", "y")
+    K = {k: v["default"] for k, v in M["rules"]["keys"].items()}
+    assert K["gap"] == -8 and K["video_bottom"] == 1621 and K["size_cap"] == 106.8
+    pre, M = P.load(d)
+    out = P.apply(pre, None, {"layers[text:title].text": "아주 아주 아주 아주 긴 제목 줄 입니다\n둘째"}, M["variable_stats"], None, M["rules"])
+    t, v = title(out), next(l for l in out["layers"] if l["kind"] == "video")
+    assert v["y"] == t["y"] + 2 * t["line_h"] + K["gap"] and v["y"] + v["h"] == 1621
+    assert t["size"] < K["size_cap"]                                    # 긴 줄은 폭에 맞춰 작아진다
+    short = P.apply(pre, None, {"layers[text:title].text": "짧\n다"}, M["variable_stats"], None, M["rules"])
+    assert title(short)["size"] == K["size_cap"]                        # 짧은 줄은 상한
