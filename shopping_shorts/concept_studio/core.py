@@ -247,6 +247,22 @@ def start_job(concept_id, seed):
     return job_id
 
 
+def _real_path(p):
+    """스토어(MSIX)판 Claude 데스크톱은 %APPDATA% 를 앱 안에서만 보이게 가상화한다 — 실제 파일은
+    %LOCALAPPDATA%\\Packages\\<앱>\\LocalCache\\Roaming\\… 에 있다. 앱 밖(WMI)에서 띄울 땐 실제 경로를 줘야 한다.
+    (실측 2026-10-15: 가상 경로로 띄우자 Win32_Process.Create 가 8 을 돌려줬다)"""
+    if os.name != "nt":
+        return p
+    ap = os.environ.get("APPDATA", "")
+    if not ap or not os.path.normcase(p).startswith(os.path.normcase(ap)):
+        return p
+    rel = os.path.relpath(p, ap)
+    import glob
+    for cand in glob.glob(os.path.join(os.environ.get("LOCALAPPDATA", ""), "Packages", "*", "LocalCache", "Roaming", rel)):
+        return cand
+    return p
+
+
 def _spawn(job_id):
     """작업 프로세스를 MCP 연결과 **분리해서** 띄운다.
 
@@ -261,16 +277,24 @@ def _spawn(job_id):
     exe = sys.executable          # WMI 로 띄우면 작업 개체 밖이라 venv 런처도 산다 — 의존성이 있는 이 파이썬 그대로
     # 키·설정은 명령줄(프로세스 목록에 보인다) 대신 작업 폴더 파일로 넘긴다 → run() 첫 줄이 읽는다
     _wj(os.path.join(wd, ".worker_env.json"),
-        {k: v for k, v in os.environ.items() if k.startswith(_PASS_ENV)})
+        {k: os.pathsep.join(_real_path(x) for x in v.split(os.pathsep)) for k, v in os.environ.items()
+         if k.startswith(_PASS_ENV + ("SHORTEM_",))})
     with open(logp, "a", encoding="utf-8") as log:
         log.write(f"[spawn] {time.strftime('%H:%M:%S')} exe={exe}\n")
-    if os.name != "nt":
+    inside_app = os.name == "nt" and _real_path(HERE) != HERE
+    if os.name != "nt" or inside_app:
+        # 스토어판 Claude 데스크톱 안: 파일이 가상 폴더라 앱 밖(WMI)에선 못 띄운다(실측 코드 8).
+        # 데스크톱의 MCP 서버는 앱이 켜진 동안 살아 있으니 그 자식으로 띄운다(앱을 끄면 같이 멈춤 → studio_resume).
         env = dict(os.environ, PYTHONUTF8="1", PYTHONPATH=root + os.pathsep + os.environ.get("PYTHONPATH", ""))
+        flags = (subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW) if os.name == "nt" else 0
         subprocess.Popen([exe, "-m", "shopping_shorts.concept_studio.core", "run", job_id], cwd=root,
-                         stdout=open(logp, "a"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                         start_new_session=True, env=env)
+                         stdout=open(logp, "a", encoding="utf-8"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                         env=env, creationflags=flags, **({} if os.name == "nt" else {"start_new_session": True}))
+        with open(logp, "a", encoding="utf-8") as log:
+            log.write("[spawn] 앱 안에서 띄움\n")
         return
-    eng = os.environ.get("SHOTTEM_ENGINE_ROOT", "")
+    eng = _real_path(os.environ.get("SHOTTEM_ENGINE_ROOT", ""))
+    exe, root = _real_path(exe), _real_path(root)
     cmd = (f'cmd /c "set PYTHONUTF8=1&& set PYTHONIOENCODING=utf-8&& set PYTHONPATH={root}&& set SHOTTEM_HOME={HOME}&& '
            + (f'set SHOTTEM_ENGINE_ROOT={eng}&& ' if eng else "")
            + f'"{exe}" -m shopping_shorts.concept_studio.core run {job_id} >> "{logp}" 2>&1"')
