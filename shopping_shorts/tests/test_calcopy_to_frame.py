@@ -145,3 +145,16 @@ def test_brand_layer_inside_measured_box(synth):
     f = to_frame._pil_font(b["font"], b["size"])
     bb = f.getbbox("[광고]", anchor="ls")
     assert abs((bb[3] - bb[1]) + 2 * o - (bands[0][1] - bands[0][0] + 1)) <= 3   # 글자 몸 + 외곽선 = 잰 띠 높이
+
+
+def test_line_outline_of_white_ring_over_video():
+    """흰 바탕의 흰 외곽선은 창 영상 위에서만 보인다 — 창 행(over_from)부터의 고리로 잰다."""
+    a = np.full((120, 400, 3), PAINT, np.uint8)
+    a[70:] = (40, 90, 120)                                             # 70행부터 창(영상) — 글자 아래쪽과 외곽선이 창 위로 걸친다
+    import cv2
+    m = np.zeros((120, 400), np.uint8); cv2.rectangle(m, (50, 20), (350, 74), 1, -1)
+    ring = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13))).astype(bool) & ~m.astype(bool)
+    a[ring] = (255, 255, 255); a[m.astype(bool)] = (186, 0, 120)
+    lo = to_frame.line_outline_of(a, [186, 0, 120], 70, list(PAINT))
+    assert lo and 5 <= lo[0] <= 7 and min(lo[1:]) >= 240
+    assert to_frame.line_outline_of(a, [186, 0, 120], 200, None) is None   # 창에 안 닿으면 못 잼

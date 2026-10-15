@@ -74,3 +74,48 @@ def test_exclude_layer_is_not_compared(tmp_path):
     next(l for l in g["layers"] if l.get("role") == "caption")["y"] = 132   # 분석기가 자막을 제목으로 잘못 읽은 편(D9)
     M = P.save(J, g, d, "7D", "y", exclude=("text:caption",))
     assert not any("caption" in v for v in M["variables"]) and M["sources"][1]["excluded_layers"] == ["text:caption"]
+
+
+def _five(tmp_path):
+    """같은 틀 다섯 편 — 창 y 426/340/365/352/378 · 줄색 하나만 없음(ZdeZ 꼴) — 기본값·범위 셈 확인용."""
+    d = tmp_path / "s" / "preset" / "A"
+    P.save(J, FRAME_A, d, "Z", "x", caption_style="창아래_검정")
+    for sid, vy, col in (("h", 340, [251, 2, 82]), ("7", 365, [217, 5, 134]), ("1", 352, [186, 0, 120]), ("w", 378, [253, 1, 80])):
+        g = other_video(FRAME_A)
+        next(l for l in g["layers"] if l["kind"] == "video")["y"] = vy
+        title(g)["line_rgb"] = [[0, 0, 0], col]
+        P.save(J, g, d, sid, "y", exclude=("text:caption",), caption_style="창안_흰외곽선")
+    return d
+
+
+def test_variable_stats_values_default_range(tmp_path):
+    d = _five(tmp_path)
+    _, M = P.load(d)
+    vy = M["variable_stats"]["layers[video].y"]
+    assert vy["values"] == {"Z": 426, "h": 340, "7": 365, "1": 352, "w": 378}
+    assert vy["default"] == 365 and vy["range"] == [340, 426]            # 중앙값·최소최대
+    lr = M["variable_stats"]["layers[text:title].line_rgb"]
+    assert lr["default"] == [[0, 0, 0], [234, 2, 101]] and lr["how"].startswith("자리별 중앙값(4/5")   # 같은 모양 4편의 자리별 중앙값
+    assert M["variable_stats"]["layers[text:title].text"]["default"] is None   # 내용은 기본값 없음
+
+
+def test_apply_defaults_for_new_material(tmp_path):
+    d = _five(tmp_path)
+    pre, M = P.load(d)
+    with pytest.raises(ValueError) as e:
+        P.apply(pre, None, None, M["variable_stats"])                     # 제목 글자 없이는 못 만든다
+    assert "layers[text:title].text" in str(e.value)
+    out = P.apply(pre, None, {"layers[text:title].text": "새 소재\n제목"}, M["variable_stats"])
+    assert next(l for l in out["layers"] if l["kind"] == "video")["y"] == 365
+    assert title(out)["line_rgb"] == [[0, 0, 0], [234, 2, 101]] and title(out)["text"] == "새 소재\n제목"
+
+
+def test_caption_styles_recorded_per_source(tmp_path):
+    d = _five(tmp_path)
+    pre, M = P.load(d)
+    st = {s["name"]: s for s in M["caption_styles"]}
+    assert st["창아래_검정"]["layer"]["role"] == "caption" and st["창아래_검정"]["sources"] == ["Z"]
+    assert st["창안_흰외곽선"]["layer"] is None and st["창안_흰외곽선"]["status"] == "미측정" and len(st["창안_흰외곽선"]["sources"]) == 4
+    assert [s["caption_style"] for s in M["sources"]] == ["창아래_검정"] + ["창안_흰외곽선"] * 4
+    with pytest.raises(ValueError):
+        P.apply(pre, None, {"layers[text:title].text": "x"}, M["variable_stats"], st["창안_흰외곽선"])   # 미측정 스타일은 못 씀

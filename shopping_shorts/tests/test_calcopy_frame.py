@@ -159,3 +159,14 @@ def test_template_off_schema():
         f = frame_a(); f["template_off"] = bad
         with pytest.raises(schema.FrameError):
             schema.validate(f)
+
+
+def test_line_outline_schema_and_snapshot_depth():
+    f = frame_a(); t = text_layer(f, "title")
+    t["line_outline"] = [None, {"px": 6, "rgb": [255, 255, 255]}]       # {px,rgb} 로 써도 [px,r,g,b] 로 정규화
+    spec = schema.validate(f)
+    assert text_layer(spec, "title")["line_outline"] == [None, [6, 255, 255, 255]]
+    scene_style.validate_snapshot(to_snapshot.to_snapshot(f))            # 서버 검사 깊이 상한(8) 안
+    t["line_outline"] = [[6, 255, 255]]
+    with pytest.raises(schema.FrameError):
+        schema.validate(f)

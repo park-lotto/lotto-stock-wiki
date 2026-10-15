@@ -116,13 +116,101 @@ def _strip(frame: dict) -> dict:
     return copy.deepcopy(f)
 
 
-def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: str, exclude: tuple = ()) -> dict:
-    """프리셋 폴더에 frame.json·manifest.json 을 쓰거나(처음) 합친다(같은 틀 다른 편). 돌려주는 값 = manifest."""
+def _median(xs):
+    xs = sorted(xs)
+    n = len(xs)
+    m = xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
+    return int(round(m)) if all(isinstance(x, int) for x in xs) else round(m, 1)
+
+
+NO_DEFAULT = "내용 — 기본값 없음(새 소재는 --set)"
+
+
+def _num(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _shape(v):
+    """값의 모양 — 숫자만 '#'로 바꾼 것. 글자·참거짓·null 은 그대로라 모양이 같으면 숫자만 다른 값이다."""
+    if _num(v):
+        return "#"
+    if isinstance(v, list):
+        return [_shape(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _shape(x) for k, x in sorted(v.items())}
+    return v
+
+
+def _elem_median(vs):
+    """모양이 같은 값들의 자리별 중앙값(숫자 자리만, 나머지는 그대로)."""
+    v0 = vs[0]
+    if _num(v0):
+        return _median(vs)
+    if isinstance(v0, list):
+        return [_elem_median([v[i] for v in vs]) for i in range(len(v0))]
+    if isinstance(v0, dict):
+        return {k: _elem_median([v[k] for v in vs]) for k in v0}
+    return v0
+
+
+def stats(values: dict) -> dict:
+    """변수 한 자리의 편별 값 → {values, default, range, how}.
+    가장 많은 편이 가진 모양(숫자만 다른 값끼리 한 무리)을 고르고 그 무리의 자리별 중앙값을 기본값으로(숫자 없는 값 = 최빈).
+    줄색 [[0,0,0],[251,2,82]] 처럼 숫자만 조금씩 다른 값이 '최빈 1/5' 로 흩어지지 않게(2026-10-16 첫판 실측). 범위는 숫자 하나일 때만."""
+    vals = list(values.values())
+    groups = {}
+    for v in vals:
+        groups.setdefault(json.dumps(_shape(v), ensure_ascii=False, sort_keys=True), []).append(v)
+    if not groups:
+        return {"values": values, "default": None, "range": None, "how": "값 없음"}
+    best = max(groups.values(), key=len)
+    rng = [min(best), max(best)] if _num(best[0]) else None
+    how = ("중앙값" if _num(best[0]) else "자리별 중앙값" if json.dumps(_shape(best[0])).count('"#"') else "최빈") + f"({len(best)}/{len(vals)}편)"
+    return {"values": values, "default": _elem_median(best), "range": rng, "how": how}
+
+
+def variable_stats(preset_dir: Path, M: dict, preset: dict) -> dict:
+    """프리셋의 변수 자리마다 출처 편들의 값(sources/<id>.json)으로 stats. 그 편에서 뺀 층(excluded_layers)·없는 자리는 빼고 센다.
+    제목 글자처럼 내용인 자리(ALWAYS_PER_VIDEO)는 default 를 두지 않는다(새 소재는 반드시 --set)."""
+    out = {}
+    flats = {}
+    for s in M["sources"]:
+        f = preset_dir / "sources" / f"{s['id']}.json"
+        if f.exists():
+            flats[s["id"]] = (flat(json.loads(f.read_text(encoding="utf-8"))), s["excluded_layers"])
+    for path in variables(preset):
+        vals = {sid: F[path] for sid, (F, ex) in flats.items()
+                if path in F and not any(path.startswith(f"layers[{e}") for e in ex)}
+        st = stats(vals)
+        if path in ALWAYS_PER_VIDEO:
+            st.update(default=None, range=None, how=NO_DEFAULT)
+        out[path] = st
+    return out
+
+
+def caption_style_entry(M: dict, name: str, layer: dict | None, source_id: str, note: str | None) -> None:
+    """자막 하위 스타일(같은 틀 안에서 자막만 다른 갈래) — 이름별로 잰 층과 편 목록. 층이 없으면(뜯기 결함으로 뺌) 미측정."""
+    styles = M.setdefault("caption_styles", [])
+    st = next((x for x in styles if x["name"] == name), None)
+    if st is None:
+        st = {"name": name, "layer": None, "status": "미측정", "sources": [], "notes": []}
+        styles.append(st)
+    st["sources"].append(source_id)
+    if note:
+        st["notes"].append(f"{source_id}: {note}")
+    if layer is not None and st["layer"] is None:
+        st["layer"], st["status"] = layer, f"잰 편 {source_id}"
+
+
+def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: str, exclude: tuple = (),
+         caption_style: str | None = None, caption_note: str | None = None) -> dict:
+    """프리셋 폴더에 frame.json·manifest.json 을 쓰거나(처음) 합친다(같은 틀 다른 편). 돌려주는 값 = manifest.
+    편마다 정규화한 설명서를 sources/<편>.json 으로 남겨, 변수마다 편별 값·기본값·범위(variable_stats)를 다시 센다.
+    caption_style = 이 편 자막이 속한 하위 스타일 이름(워커 정답 등 사람이 준 분류) — 자막 층을 뺐으면 그 스타일은 미측정으로 남는다."""
     preset_dir.mkdir(parents=True, exist_ok=True)
     fp, mp = preset_dir / "frame.json", preset_dir / "manifest.json"
     now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
-    new = _strip(frame)
-    schema.validate(new)                                    # 저장하는 편 설명서는 형식이 맞아야 한다
+    new = schema.validate(_strip(frame))                    # 형식 검사 + 정규화 모양으로 비교·저장(층마다 같은 키)
     if fp.exists():
         preset = json.loads(fp.read_text(encoding="utf-8"))
         M = json.loads(mp.read_text(encoding="utf-8"))
@@ -143,8 +231,14 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     M["sources"].append({"id": source_id, "tteutgi": tteutgi_path, "engine": J.get("engine"), "measured_at": J.get("measured_at"),
                          "frame_tool": mf.get("tool"), "font": mf.get("font"), "font_confidence": mf.get("font_confidence"),
                          "notes": mf.get("notes") or [], "unknown": J.get("unknown") or [], "excluded_layers": list(exclude),
-                         "became_variables": became,
-                         "frame_sha1": hashlib.sha1(schema.canonical(schema.validate(new)).encode("utf-8")).hexdigest()[:12]})
+                         "became_variables": became, "caption_style": caption_style,
+                         "frame_sha1": hashlib.sha1(schema.canonical(new).encode("utf-8")).hexdigest()[:12]})
+    (preset_dir / "sources").mkdir(exist_ok=True)
+    (preset_dir / "sources" / f"{source_id}.json").write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
+    if caption_style:
+        cap = next((l for l in new["layers"] if l.get("role") == "caption"), None)
+        caption_style_entry(M, caption_style, None if "text:caption" in exclude else cap, source_id, caption_note)
+    M["variable_stats"] = variable_stats(preset_dir, M, preset)
     fp.write_text(json.dumps(preset, ensure_ascii=False, indent=1), encoding="utf-8")
     mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
@@ -159,9 +253,11 @@ def load(preset_dir: Path) -> tuple[dict, dict]:
     return frame, M
 
 
-def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = None) -> dict:
-    """프리셋의 변수 자리를 그 편 값으로 채운 설명서. per_video = 그 편 설명서(to_frame 결과), overrides = {자리: 값}(먼저 씀).
-    못 채운 변수가 하나라도 남으면 ValueError(목록)."""
+def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = None,
+          defaults: dict | None = None, caption_style: dict | None = None) -> dict:
+    """프리셋의 변수 자리를 채운 설명서. 순서: overrides({자리: 값}) → per_video(그 편 설명서, to_frame 결과)
+    → defaults(manifest variable_stats — 새 소재로 만들 때). 못 채운 변수가 하나라도 남으면 ValueError(목록).
+    caption_style = manifest caption_styles 의 한 항목 — 자막 층을 그 하위 스타일의 잰 층으로 바꾼다(미측정이면 ValueError)."""
     P = flat(preset)
     V = flat(per_video) if per_video else {}
     left = []
@@ -172,8 +268,16 @@ def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = 
             P[path] = overrides[path]
         elif path in V and V[path] != VAR:
             P[path] = V[path]
+        elif defaults and path in defaults and defaults[path].get("how") != NO_DEFAULT:
+            P[path] = defaults[path]["default"]          # None(최빈이 '없음')도 값이다 — 예: template_off
         else:
             left.append(path)
+    if caption_style is not None:
+        if not caption_style.get("layer"):
+            raise ValueError(f"자막 스타일 {caption_style.get('name')} 은 미측정 — 잰 층이 없다")
+        for f, v in caption_style["layer"].items():
+            if f != "kind":
+                P[f"layers[text:caption].{f}"] = v
     if left:
         raise ValueError(f"채우지 못한 변수: {left}")
     out = unflat(P, layer_order(preset))
@@ -186,6 +290,8 @@ def main(argv=None):
     if argv and argv[0] == "apply":
         ap = argparse.ArgumentParser()
         ap.add_argument("preset"); ap.add_argument("--from-frame"); ap.add_argument("--set", action="append", default=[])
+        ap.add_argument("--defaults", action="store_true", help="그 편 값 대신 manifest 기본값(새 소재)")
+        ap.add_argument("--caption-style", help="manifest caption_styles 의 이름")
         ap.add_argument("--out", required=True)
         a = ap.parse_args(argv[1:])
         preset, M = load(Path(a.preset))
@@ -194,20 +300,26 @@ def main(argv=None):
         for s in a.set:
             k, v = s.split("=", 1)
             ov[k] = json.loads(v)
-        F = apply(preset, per, ov)
+        cs = next((x for x in M.get("caption_styles") or [] if x["name"] == a.caption_style), None) if a.caption_style else None
+        if a.caption_style and cs is None:
+            raise SystemExit(f"자막 스타일 없음: {a.caption_style}")
+        F = apply(preset, per, ov, M.get("variable_stats") if a.defaults else None, cs)
         F["made_from"] = {"tool": "preset_save apply", "preset": str(a.preset), "variables_filled": M["variables"],
-                          "from_frame": a.from_frame, "overrides": list(ov)}
+                          "from_frame": a.from_frame, "overrides": list(ov), "defaults": a.defaults, "caption_style": a.caption_style}
         Path(a.out).write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")
         print("frame:", a.out, "변수", M["variables"])
         return
     ap = argparse.ArgumentParser()
     ap.add_argument("tteutgi"); ap.add_argument("frame"); ap.add_argument("--slug", required=True); ap.add_argument("--style", required=True)
     ap.add_argument("--exclude", action="append", default=[], help="이 편에선 비교하지 않을 층 이름(예 text:caption)")
+    ap.add_argument("--caption-style", help="이 편 자막이 속한 하위 스타일 이름(예 창아래_검정)")
+    ap.add_argument("--caption-note", help="그 분류의 근거(예 워커 점검.md)")
     a = ap.parse_args(argv)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
     frame = json.loads(Path(a.frame).read_text(encoding="utf-8"))
     src = Path(str(J.get("source") or a.tteutgi)).stem
-    M = save(J, frame, ROOT / "channel" / a.slug / "preset" / a.style, src, a.tteutgi.replace("\\", "/"), tuple(a.exclude))
+    M = save(J, frame, ROOT / "channel" / a.slug / "preset" / a.style, src, a.tteutgi.replace("\\", "/"), tuple(a.exclude),
+             a.caption_style, a.caption_note)
     print(json.dumps({"variables": M["variables"], "sources": [s["id"] for s in M["sources"]]}, ensure_ascii=False))
 
 

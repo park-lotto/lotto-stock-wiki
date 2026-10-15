@@ -7,7 +7,8 @@
   - 영상 칸 재료 = 원본의 영상 창 부분(틀 있는 구간) / 원본 전체 화면(설명서 template_off 꼬리 구간)
     compose 는 재료를 칸에 cover 로 채우고 가운데를 자른다 — 그래서 창 부분을 1080×1920 한가운데 붙여 두면 그 부분만 정확히 남는다.
 
-    PYTHONUTF8=1 py tools/calcopy/frame_video.py <frame.json> <뜯기.json> <출력폴더>
+    PYTHONUTF8=1 py tools/calcopy/frame_video.py <frame.json> <뜯기.json> <출력폴더> [--src-window]
+    --src-window: 원본의 실제 창(뜯기 layout.window)을 오려 우리 창에 cover — 프리셋 기본값처럼 창 자리가 원본과 다를 때
 """
 import json
 import pathlib
@@ -43,11 +44,18 @@ def timeline_from(J: dict, tail_start: float | None) -> list[dict]:
             for i, (a, b, txt) in enumerate(beats)]
 
 
-def material(src: str, spec: dict, tail_start: float | None, dur: float, out: pathlib.Path) -> pathlib.Path:
+def material(src: str, spec: dict, tail_start: float | None, dur: float, out: pathlib.Path, src_window=None) -> pathlib.Path:
+    """src_window = 원본의 실제 영상 창 [x,y,w,h](뜯기 layout.window). 주면 그 부분을 우리 창 크기로 cover 맞춤
+    (새 소재 시험: 프리셋 창이 원본 창과 다를 때 원본의 제목·자막 띠가 재료에 섞이지 않게). 안 주면 우리 창 자리 그대로 오린다."""
     v = next(l for l in spec["layers"] if l["kind"] == "video")
     W, H = spec["canvas"]
     top = (H - v["h"]) // 2
-    win = f"crop={v['w']}:{v['h']}:{v['x']}:{v['y']},scale={W}:{v['h']},pad={W}:{H}:0:{top}:black,setsar=1"
+    if src_window:
+        x, y, w, h = src_window
+        win = (f"crop={w}:{h}:{x}:{y},scale={v['w']}:{v['h']}:force_original_aspect_ratio=increase,crop={v['w']}:{v['h']},"
+               f"scale={W}:{v['h']},pad={W}:{H}:0:{top}:black,setsar=1")
+    else:
+        win = f"crop={v['w']}:{v['h']}:{v['x']}:{v['y']},scale={W}:{v['h']},pad={W}:{H}:0:{top}:black,setsar=1"
     if tail_start is None:
         fc = f"[0:v]{win}[v]"
     else:
@@ -59,7 +67,9 @@ def material(src: str, spec: dict, tail_start: float | None, dur: float, out: pa
 
 
 def main():
-    frame_p, J_p, out = sys.argv[1], sys.argv[2], pathlib.Path(sys.argv[3]).resolve()
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    frame_p, J_p, out = args[0], args[1], pathlib.Path(args[2]).resolve()
+    src_win_auto = "--src-window" in sys.argv   # 원본 창(뜯기 layout.window)을 재료로
     shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
     frame = json.loads(pathlib.Path(frame_p).read_text(encoding="utf-8"))
     J = json.loads(pathlib.Path(J_p).read_text(encoding="utf-8"))
@@ -71,7 +81,8 @@ def main():
     title = next((l for l in spec["layers"] if l["kind"] == "text" and l["role"] == "title"), None)
     head = {"text": (title or {}).get("text") or ""}
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
-    mat = material(J["source"], spec, tail_start, dur, out / "material.mp4")
+    mat = material(J["source"], spec, tail_start, dur, out / "material.mp4",
+                   (J.get("layout") or {}).get("window") if src_win_auto else None)
     ours = out / "ours.mp4"
     scene_style.compose(str(mat), tl, snap, str(ours), out / "work", head)
     ctx = scene_style.context_for(tl, head, snap)

@@ -125,6 +125,44 @@ def spacing_for(fam: str, size: float, text, target_w):
     return round(max(-0.15 * size, min(0.3 * size, ls)), 1)
 
 
+def line_outline_of(img: np.ndarray, fill, over_from: int, bg=None) -> list | None:
+    """한 줄 글자의 외곽선 [px, r, g, b] — 채움색 둘레를 한 겹씩 넓혀 가며, **창 영상 위 행**(over_from 행부터)에 걸린 고리만 본다.
+    바탕과 같은 색 외곽선(흰 바탕의 흰 외곽선)은 바탕 위에선 안 보이고 창 위로 걸칠 때만 보인다(1_V 둘째 줄 실측) —
+    analyze.text_fx_one 은 바탕 고리까지 섞어 12px 분홍처럼 틀린 값을 냈다. 색으로 '바탕 아님'을 고르면 흰 외곽선이 바탕(252)과
+    같아 빠지므로 자리(행)로 고른다. 고리 색이 채움과 60 넘게 다르고 서로 40 안이면 외곽선. 창에 안 닿는 줄은 None(못 잼)."""
+    import cv2
+    a = img.astype(int)
+    fm = (np.abs(a - np.array(fill)).max(axis=2) < 60).astype(np.uint8)
+    if fm.sum() < 50:
+        return None
+    if bg is not None:   # 창 영상이 실제로 시작하는 행 — 창 다수결(1_V 352)보다 위로 비스듬히 들어올 수 있다(실측 324)
+        far = ~cv2.dilate(fm, np.ones((31, 31), np.uint8)).astype(bool)       # 글자에서 15px 넘게 떨어진 점만
+        vid = (np.abs(a - np.array(bg)).max(axis=2) > 30) & far
+        rows = np.where(vid.sum(axis=1) > 0.3 * far.sum(axis=1).clip(1))[0]
+        if len(rows):
+            over_from = min(over_from, int(rows.min()))
+    if over_from >= img.shape[0]:
+        return None
+    notbg = np.zeros(fm.shape, bool)
+    notbg[max(0, over_from):] = True
+    prev, color, px = fm.astype(bool), None, 0
+    for r in range(1, 13):
+        d = cv2.dilate(fm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))).astype(bool)
+        ring, prev = d & ~prev & notbg, d
+        if ring.sum() < 30:
+            if color is None and r <= 3:   # 글자 아래 끝이 창 위 행에 막 닿는 경우 — 처음 몇 겹은 창 행에 거의 없다
+                continue
+            break
+        c = np.median(a[ring], axis=0)
+        if r == 1:            # 첫 고리는 채움과 외곽선이 섞이는 경계(안티에일리어싱) — 색 판정 없이 두께에만 센다
+            px = 1; continue
+        if np.abs(c - np.array(fill)).max() <= 60 or (color is not None and np.abs(c - color).max() > 40):
+            break
+        color = c if color is None else color
+        px = r
+    return [px, *[int(v) for v in color]] if color is not None and px >= 2 else None
+
+
 def band_rows_end(b, win) -> int:
     """띠 가로 범위를 잴 마지막 행. 창에 붙은 띠(끝이 창 시작 ±8px)는 위 70% 행만 — 창 영상이 띠 아래쪽으로 비스듬히
     들어와(1_V 실측: 창 다수결 352인데 324행부터 영상 가장자리) 왼쪽 끝이 0으로 잡혔다."""
@@ -312,7 +350,11 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         notes.append(f"글꼴 못 정함: {fnote.get('why')} — 글자 층 생략")
     elif fnote.get("font_confidence") == "low":
         notes.append(f"글꼴 1위 {fnote['top1']}({fnote['top1_score']}) < {LOW_FONT} — 확신 낮음. 쓴 글꼴 {fam}({fnote['picked_from']})")
-    pol = L.get("ink_polarity") or "dark"
+    pol = L.get("ink_polarity") or "dark"            # 자막 잉크 극성(뜯기 layout) — 자막 층에만
+    # 창 위 띠(제목·고정 문구)의 극성은 바탕 밝기로 — bench bands.polarity 와 같은 규칙. 자막 극성을 빌려 쓰면
+    #   창 안 흰 자막 편(ho5·w-Y)에서 검정 제목을 '밝은 글자'로 재 채움·글꼴·외곽선이 전부 틀렸다(2026-10-16 실측).
+    from shopping_shorts.channelkit.bench.bands import polarity
+    tpol = polarity(0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) if bg else pol
 
     # 창 위 고정 띠 → brand / title
     bands = [tuple(b) for b in (L.get("above_bands") or [])]
@@ -326,7 +368,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     otext = ocr or {}
     if title_b and fam:
         tl = otext.get("title") or []
-        tfam, tsrc = title_font(J, frame_img, title_b, tl, pol)
+        tfam, tsrc = title_font(J, frame_img, title_b, tl, tpol)
         if tfam:
             notes.append(f"제목 글꼴 {tfam} — {tsrc}")
         else:
@@ -342,19 +384,25 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         al = align_of(cols, W)
         sp = [spacing_for(fam, size, tl[i], c[1] - c[0] + 1) for i, (_, c) in enumerate(title_b) if i < len(tl) and c]
         sp = [v for v in sp if v is not None]
-        fx, line_rgb = None, None
+        fx, line_rgb, line_outline = None, None, None
         if frame_img is not None:
             from tools.calcopy.engine.analyze import text_fx_one
             y0, y1 = title_b[0][0][0] - 12, title_b[-1][0][1] + 12
-            fx = text_fx_one(frame_img[max(0, y0):y1], pol, bg)
+            fx = text_fx_one(frame_img[max(0, y0):y1], tpol, bg)
             # 줄마다 채움색(예: 1줄 검정 + 2줄 자홍) — 두 줄을 한 번에 재면 중앙값이 한쪽 색이 된다(1_V 실측 [102,0,68])
-            fills = [(text_fx_one(frame_img[max(0, bb[0] - 4):bb[1] + 5], pol, bg) or {}).get("fill_rgb") for bb, _ in title_b]
+            fills = [(text_fx_one(frame_img[max(0, bb[0] - 4):bb[1] + 5], tpol, bg) or {}).get("fill_rgb") for bb, _ in title_b]
             if all(fills) and max(max(abs(p - q) for p, q in zip(f, fills[0])) for f in fills) > LINE_RGB_DIFF:
                 line_rgb = fills
+            lo = [line_outline_of(frame_img[max(0, bb[0] - 4):bb[1] + 16], f, (win[1] - max(0, bb[0] - 4)) if win else 10 ** 6, bg)
+                  if f else None for (bb, _), f in zip(title_b, fills)]
+            if any(lo):
+                line_outline = lo
+                notes.append(f"제목 줄별 외곽선 {lo} (창 위로 걸친 고리만 잼)")
         layers.append({"kind": "text", "role": "title", **al, "y": round(st.mean(ys)), "lines": lines,
                        "font": fam, "size": size, "line_h": fits[0]["line_h"],
-                       "rgb": (line_rgb[0] if line_rgb else (fx or {}).get("fill_rgb")) or ([0, 0, 0] if pol == "dark" else [255, 255, 255]),
-                       "line_rgb": line_rgb, "outline": (fx or {}).get("outline"), "shadow": None,
+                       "rgb": (line_rgb[0] if line_rgb else (fx or {}).get("fill_rgb")) or ([0, 0, 0] if tpol == "dark" else [255, 255, 255]),
+                       "line_rgb": line_rgb, "outline": None if line_outline else (fx or {}).get("outline"),
+                       "line_outline": line_outline, "shadow": None,
                        "box": ({"rgb": fx["box"]["color"], "pad": 0, "radius": 0} if fx and fx.get("box") else None),
                        "italic": italic_of(frame_img, title_b, bg, notes, "제목"),
                        "letter_spacing": round(st.mean(sp), 1) if sp else 0, "enter": None,

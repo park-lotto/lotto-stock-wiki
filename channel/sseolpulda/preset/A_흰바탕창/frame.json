@@ -27,9 +27,9 @@
    "kind": "text",
    "role": "title",
    "x": 540,
+   "y": "$per_video",
    "w": 1000,
    "align": "center",
-   "y": "$per_video",
    "lines": 2,
    "font": "$per_video",
    "size": "$per_video",
@@ -41,6 +41,7 @@
    ],
    "line_rgb": "$per_video",
    "outline": null,
+   "line_outline": "$per_video",
    "shadow": null,
    "box": null,
    "italic": false,
@@ -52,12 +53,12 @@
    "kind": "text",
    "role": "caption",
    "x": 540,
+   "y": 1462,
    "w": 1000,
    "align": "center",
-   "y": 1462,
    "lines": 1,
    "font": "CcSpoqaHanSansNeo-Bold",
-   "size": 66.0,
+   "size": 66,
    "line_h": 76,
    "rgb": [
     0,
@@ -66,23 +67,24 @@
    ],
    "line_rgb": null,
    "outline": null,
+   "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -7.4,
-   "enter": null
+   "enter": null,
+   "text": null
   },
   {
    "kind": "text",
    "role": "brand",
-   "text": "[광고]",
    "x": 1053,
    "y": 14,
    "w": 181,
    "align": "right",
    "lines": 1,
    "font": "TmonMonsori",
-   "size": 49.0,
+   "size": 49,
    "line_h": 56,
    "rgb": [
     185,
@@ -90,19 +92,14 @@
     188
    ],
    "line_rgb": null,
-   "outline": {
-    "px": 3,
-    "rgb": [
-     95,
-     94,
-     97
-    ]
-   },
+   "outline": "$per_video",
+   "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": true,
    "letter_spacing": -2.7,
-   "enter": null
+   "enter": null,
+   "text": "[광고]"
   }
  ]
 }

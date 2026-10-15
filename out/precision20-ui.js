@@ -1453,6 +1453,8 @@
     if(specOffAt(frame,index))return {top:0,height:100};   // 틀 끈 장면 = 영상 전체 화면
     const v=specVideo(frame),H=frame.height;return v?{top:v.y/H*100,height:v.h/H*100}:{top:0,height:100};}
   const specRgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
+  // 줄 n 의 외곽선 — line_outline(줄마다 [px,r,g,b]|null)이 있으면 그것, 없으면 층 outline. 값의 주인은 schema.validate
+  const specOutline=(l,n)=>Array.isArray(l.line_outline)?(l.line_outline[n]?{px:l.line_outline[n][0],rgb:l.line_outline[n].slice(1)}:null):l.outline;
   function renderSpec(frame){
     if(specOffAt(frame,sceneIndex))return;   // 틀 끈 장면: 바탕·띠·제목·자막·문구 전부 없음(영상 칸은 specMedia 가 전체로)
     const W=frame.width,H=frame.height,scale=preview.clientHeight/H,v=specVideo(frame),pct=(n,d)=>n/d*100;
@@ -1490,7 +1492,7 @@
         fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*scale+'px',
         letterSpacing:l.letter_spacing*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
         justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],whiteSpace:it.rows>1?'normal':'nowrap',wordBreak:'keep-all',
-        webkitTextStroke:l.outline&&l.outline.px>0?`${2*l.outline.px*scale}px ${specRgb(l.outline.rgb)}`:'0px',paintOrder:'stroke fill',
+        webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
         textShadow:l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'none'});
       let ink=el;
       if(l.box){ink=document.createElement('span');Object.assign(ink.style,{background:specRgb(l.box.rgb),padding:`0 ${l.box.pad*scale}px`,borderRadius:l.box.radius*scale+'px'});el.append(ink);}

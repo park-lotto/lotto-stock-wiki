@@ -15,6 +15,7 @@
         "font":"GmarketSansBold", "size":92, "line_h":95, "rgb":[0,0,0],
         "line_rgb":[[0,0,0],[255,45,111]],          # 줄마다 색(없으면 null → 모든 줄 rgb)
         "outline":{"px":0,"rgb":[0,0,0]},           # 외곽선(없으면 null, px 0 도 '없음'으로 유효)
+        "line_outline":[null,[6,255,255,255]],      # 줄마다 외곽선 [px,r,g,b]|null(없으면 null = 모든 줄 outline)
         "shadow":{"dx":0,"dy":4,"blur":6,"rgb":[0,0,0]},   # 그림자(없으면 null)
         "box":{"rgb":[255,255,255],"pad":12,"radius":8},   # 글자 상자(없으면 null)
         "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효)
@@ -127,6 +128,23 @@ def _text(layer, where, W, H):
             raise FrameError(f"{where}.outline: {{px,rgb}} 이거나 null 이어야 합니다")
         outline = {"px": _num(outline.get("px"), where + ".outline.px", 0, 60), "rgb": _rgb(outline.get("rgb"), where + ".outline.rgb")}
     out["outline"] = outline
+    lo = _opt(layer, "line_outline")
+    if lo is not None:
+        # 줄마다 외곽선 — 각 줄 [px, r, g, b] 또는 null(그 줄은 외곽선 없음). 있으면 그 줄은 outline 대신 이것.
+        #   {px,rgb} 모양이 아니라 납작한 [px,r,g,b] 인 까닭: 서버 스냅샷 검사(walk)의 깊이 상한 8 안에 들어가야 한다.
+        if not isinstance(lo, list) or not 1 <= len(lo) <= 4:
+            raise FrameError(f"{where}.line_outline: 줄마다 [px,r,g,b]|null 목록(1~4개)이거나 null 이어야 합니다")
+        norm = []
+        for i, item in enumerate(lo):
+            if item is None:
+                norm.append(None); continue
+            if isinstance(item, dict):      # {px,rgb} 로 써도 받는다
+                item = [item.get("px"), *(item.get("rgb") or [None] * 3)]
+            if not isinstance(item, list) or len(item) != 4:
+                raise FrameError(f"{where}.line_outline[{i}]: [px,r,g,b] 또는 null 이어야 합니다")
+            norm.append([_num(item[0], f"{where}.line_outline[{i}].px", 0, 60), *_rgb(item[1:], f"{where}.line_outline[{i}].rgb")])
+        lo = norm
+    out["line_outline"] = lo
     shadow = _opt(layer, "shadow")
     if shadow is not None:
         if not isinstance(shadow, dict):
