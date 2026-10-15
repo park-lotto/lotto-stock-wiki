@@ -976,7 +976,7 @@ _KW_EXPAND_SCHEMA = {
 }
 
 
-def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_sleep=8):
+def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_sleep=8, scene=""):
     """한국어 소재어('시금치 치아바타') → [{"ko","zh"}] 검색어 조합. 실패·키없음 시 [].
 
     왜(2026-08-14 사장님): 렌즈의 후보 검색어는 **화면(프레임) 기반**이라 사장님이 머리로
@@ -991,6 +991,19 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
     seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
     prompt = _KW_EXPAND_PROMPT.format(keyword=kw[:100], n=max(1, min(int(n or 6), 8)),
                                     first_rule=_kw_first_rule(kw[:100]))
+    scene = (scene or "").strip()[:200]
+    if scene:
+        # ★3단계 장면 찾기(관제 209, 2026-10-16 사장님 "제품이 메인이고 장면을 보면서 5개") — 그 칸 대사가 보여 주는
+        #   장면(동작·상황)을 제품명에 붙인 검색어. 제품 없는 장면어("반죽 붓기")만 만들면 남의 제품이 나온다.
+        prompt += ("\n\n※ 이 검색어는 영상의 **이 장면**에 쓸 소스를 찾기 위한 것이다: 「%s」\n"
+                   "모든 검색어는 제품(「%s」)을 중심어로 반드시 넣고, 그 장면의 동작·상황·쓰임을 한두 단어로 붙여라"
+                   "(예: 와플메이커 반죽 붓기 / waffle maker pouring batter). 서로 다른 장면 각도로 %d개.\n"
+                   "괄호 안은 그 칸의 역할이다 — 훅=눈길을 확 끄는 장면, 문제·불편·페인=제품 없을 때 불편한 상황, "
+                   "해결·사용=제품으로 해결하는 시연, 결과·반전=완성·전후 비교, CTA=제품 전체 모습. "
+                   "5개 모두 그 역할의 장면이어야 한다(역할과 상관없는 '추천·문구·테스트' 같은 일반어 금지).\n"
+                   "중심어는 브랜드명이 아니라 **일반 제품명**(예: '라이텍 젤펜' → '젤펜')으로 써라 — 해외 영상엔 국내 브랜드명이 없다. "
+                   "en 은 3단어 이내(예: gel pen smudge)."
+                   % (scene, kw[:60], max(1, min(int(n or 5), 8))))
     if seen:
         prompt += ("\n\n※ 아래는 이미 보여준 검색어다. 겹치지 않는 다른 축으로만 만들라:\n"
                    + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
@@ -1029,7 +1042,7 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
             #     화면이 그 언어 버튼을 흐리게 그리는 건 같지만, 후보마다 모양이 달라
             #     디버깅이 어려워진다 — 모든 후보가 같은 칸을 갖게 한다.
             # 한국어 입력일 때만 — 외국어 입력을 ko 칸에 넣으면 언어가 섞여 보인다(관제 156).
-            if _has_hangul(kw) and kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
+            if not scene and _has_hangul(kw) and kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
                 out.insert(0, {"ko": kw, "zh": "", "en": "", "ja": "", "ru": ""})
             return out
         except Exception as e:
