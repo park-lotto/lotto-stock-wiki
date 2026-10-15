@@ -1,0 +1,31 @@
+{
+ "bgm": "qiuqiu",
+ "bgm_file": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\shopping_shorts\\assets\\bgm_lib\\qiuqiu.mp3",
+ "bgm_ratio": 0.15,
+ "bgm_fill_where_source_silent": {
+  "ranges": [
+   [
+    13.4,
+    17.4
+   ],
+   [
+    21.233,
+    21.72
+   ],
+   [
+    21.72,
+    23.9
+   ]
+  ],
+  "ratio": 1.0,
+  "silent_db": -40.0
+ },
+ "target_lufs": -10.1,
+ "final": {
+  "I": -10.3,
+  "LRA": 5.3,
+  "TP": -0.6
+ },
+ "tts": null,
+ "narration": "없음(원음만+자막)"
+}

@@ -1,0 +1,109 @@
+{
+ "_note": "썰풀다 1위 ZdeZRtCeAC4 칼카피 재료 — 원본 6컷(뜯기 cuts) 자리마다 쓸 해외 소스 구간. found=원본이 쓴 바로 그 영상(프레임 대조), 대체=같은 제품(은색 금속 원판형 진동·골전도 스피커, 'Anything Speaker' 계열) 다른 시연 영상. 찾는 법: 유튜브 쇼츠 키워드 검색(4분 미만 필터) 23개 받기 → 접촉 시트로 원본 컷과 눈 대조. 렌즈 역검색(/api/lens/*)은 SerpApi 유료라 안 씀. crop_y = 창(1080x1006)으로 자를 때 세로 위치(0=위, 0.5=가운데) — 소스에 박힌 영어 글자를 창 밖으로 빼려고 조정.",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/칼카피_ZdeZ",
+ "shots": [
+  {
+   "i": 0,
+   "t0": 0.0,
+   "t1": 7.333,
+   "src": "cand/v_2VtFS9uvhDk.mp4",
+   "url": "https://www.youtube.com/shorts/2VtFS9uvhDk",
+   "ss": 0.0,
+   "crop_y": 0.62,
+   "status": "대체",
+   "orig_scene": "수영장 타일에 원판 붙이기(카운트다운 원)",
+   "ours": "손에 든 은색 원판 → 유리 미닫이문에 붙임"
+  },
+  {
+   "i": 1,
+   "t0": 7.333,
+   "t1": 13.4,
+   "src": "cand2/v_K5pRA1D0dNk.mp4",
+   "url": "https://www.youtube.com/watch?v=K5pRA1D0dNk",
+   "ss": 0.0,
+   "crop_y": 0.5,
+   "status": "찾음",
+   "orig_scene": "앞머리 금발 여자가 원판을 보여주고 벽에 붙임",
+   "ours": "같은 장면(Tale Town 'Anything Speaker' 0~6초 = 원본 7.3~13.4초 프레임 일치)"
+  },
+  {
+   "i": 2,
+   "t0": 13.4,
+   "t1": 17.4,
+   "src": "cand/v_iPFgwFa83hc.mp4",
+   "url": "https://www.youtube.com/shorts/iPFgwFa83hc",
+   "ss": 5.25,
+   "crop_y": 0.5,
+   "status": "대체",
+   "orig_scene": "바닷가 경고 표지판에 검은 원판 붙이기",
+   "ours": "검은 원판을 손에 들고 부엌·가스레인지 쪽으로(창 밖 아래 'Limited 50% OFF'는 창에 안 들어옴)"
+  },
+  {
+   "i": 3,
+   "t0": 17.4,
+   "t1": 19.867,
+   "src": "cand/v__BfNeIrFAjE.mp4",
+   "url": "https://www.youtube.com/shorts/_BfNeIrFAjE",
+   "ss": 0.5,
+   "crop_y": 0.5,
+   "status": "대체",
+   "orig_scene": "금발 여자가 보라 상자 옆에서 웃음",
+   "ours": "여자가 원판 보여주며 말함(소스 3.1초 컷 전에 끝냄 — 1판은 1.5초부터라 컷이 하나 더 생겼다)"
+  },
+  {
+   "i": 4,
+   "t0": 19.867,
+   "t1": 21.233,
+   "src": "cand/v__91NijE4HK4.mp4",
+   "url": "https://www.youtube.com/shorts/_91NijE4HK4",
+   "ss": 7.0,
+   "crop_y": 0.5,
+   "status": "대체",
+   "orig_scene": "금발 여자 얼굴 근접",
+   "ours": "플라스틱 통 뚜껑에 원판을 댐"
+  },
+  {
+   "i": 5,
+   "t0": 21.233,
+   "t1": 23.9,
+   "src": "cand/v_iPFgwFa83hc.mp4",
+   "url": "https://www.youtube.com/shorts/iPFgwFa83hc",
+   "ss": 2.55,
+   "crop_y": 0.5,
+   "status": "대체",
+   "orig_scene": "입에 원판 대는 얼굴 근접(틀 꺼짐, 전체 화면)",
+   "ours": "원판을 집은 손(21.72초부터 전체 화면 = 소스 3.04초부터 — 소스 위 'I hope JBL…' 글자는 3.0초에 사라짐)"
+  }
+ ],
+ "found": 1,
+ "replaced": 5,
+ "searched": {
+  "queries": [
+   "bone conduction speaker any surface",
+   "vibration speaker turns anything into speaker",
+   "speaker that turns any surface into a speaker",
+   "touch speaker viral tiktok",
+   "surface speaker shower door",
+   "humbird speaker",
+   "humbird speaker shorts",
+   "anything speaker shorts",
+   "anythingspeaker",
+   "anything speaker pool",
+   "speaker on glass shower door bone conduction",
+   "bone conduction speaker sign beach",
+   "turn anything into a speaker girl"
+  ],
+  "downloaded": 23,
+  "not_found_scenes": [
+   "수영장 타일",
+   "바닷가 표지판(Southend-on-Sea)",
+   "보라 상자 금발 여자",
+   "입에 댄 얼굴 근접"
+  ]
+ },
+ "_history": [
+  "1판(10-16): shot3 ss1.5→소스 컷 3.1초가 19.0초에 끼어 샷 7개, shot5 iPF 5.9 → 꼬리 첫 0.4초가 멈춘 화면이라 자막 구간으로 잡혀 띠가 1920까지",
+  "2판: 꼬리 iPF 2.55 → 21.7~22.1초 띠 잉크 0.109·keep 0.77 로 '가만한 글자'로 잡혀 자막 7개(원본 꼬리 0.296=움직이는 영상) → 3판 jnNi 1.0(얼굴·움직임)",
+  "3판: 꼬리 jnNi 1.0(942×720 2.67배 확대 얼굴) → bench 창 찾기가 [0,399,1080,1521]로 무너져 18/26 → 4판 iPF 2.55 로 되돌림"
+ ]
+}

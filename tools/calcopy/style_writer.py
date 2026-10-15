@@ -2,6 +2,7 @@
 """갈래 규칙대로 대본 쓰기 — 주제 하나를 주면 그 갈래 말투·박자로 대본이 나온다 (관제 097, 2026-10-15).
 
     PYTHONUTF8=1 py tools/calcopy/style_writer.py rules  C:/숏템_칼카피/sseolpulda channel/sseolpulda 제품_이야기썰형
+    PYTHONUTF8=1 py tools/calcopy/style_writer.py captions <rules.json> <뜯기.json> "주제" 훅,반전,… <대본.json>   # 나레 없는 자막만 영상
     PYTHONUTF8=1 py tools/calcopy/style_writer.py write  channel/sseolpulda/제품_이야기썰형.rules.json "주제" ["주제2" …]
 
 rules: 갈래 편들의 판독(judge)에서 길이·박자 위치·훅 꼴·말끝·예문을 뽑아 규칙 한 장(.rules.json)으로.
@@ -211,10 +212,179 @@ def check(d: dict, R: dict) -> dict:
             "polite_endings": polite, "unsourced_numbers": unsourced_nums, "unknown_fact_ids": bad_ids, "lines_without_fact": bare, "copied_8grams": len(copied), "copied_sample": copied[:3]}
 
 
+CAP_PROMPT = """너는 한국 쇼츠 채널 '{style}' 갈래의 자막 작가다. 이 영상은 **한국어 나레이션이 없다** — 해외 원본 영상 위에 자막만 얹는다.
+그래서 대본 = 화면 아래 자막 {n}줄이다. 한 줄이 한 화면(3~4초) 동안 떠 있다.
+
+소재(제품): {topic}
+
+원본 영상의 자막 구조(줄마다 역할·길이·떠 있는 초). 이 **틀(역할 순서·줄 길이·호흡)**만 따라 하고 문장은 새로 써라:
+{structure}
+
+이 갈래의 말투: {honorific} · 자주 쓰는 말끝: {endings}
+
+규칙:
+- 반말 음슴체·혼잣말 반응(~길래 / ~;; / ~인정? 같은 결). 존댓말(습니다·어요·해요·세요) 0.
+- 줄마다 글자 수(공백 제외)는 위 목표 범위 안. 쓰고 나서 직접 세어 확인해라.
+- 사람이 실제로 쓸 법한 자연스러운 문장. 뜻이 어색한 말(예: '터지는 실수')·억지 줄임말 금지.
+- 원본 자막 문장을 베끼지 마라 — 원본과 5글자 넘게 이어서 같으면 실패다.
+- 이 영상은 '써본 사람 반응' 자막이다. 제품 사연(발명가·회사·누구의 실수·탄생 비화)을 지어내지 마라.
+- 줄마다 '그때 화면'에 없는 물건·장소(책상·집안 등)를 말하지 마라 — 자막과 화면이 어긋난다.
+- 화면에 보이는 것(작은 금속 원판을 유리·벽·표지판·상자·얼굴 등에 대면 소리가 남)만 말해라. 가격·출력(W)·브랜드 같은 확인 안 된 사실·숫자는 쓰지 마라.
+JSON으로만: {{"lines":[{{"fn":"역할","text":"자막"}}, ...]}}  (정확히 {n}줄)
+"""
+
+
+CAP_TOL = 0.15   # 줄 글자 수 허용(원본 그 줄 ±15%, 최소 ±1자) — ±30% 로는 대조 '줄 폭 중앙 ≤6%'를 못 맞췄다(10-16 실측 541 vs 583px)
+
+
+def _cap_range(b: int) -> tuple[int, int]:
+    import math
+    # 긴 줄(≥14자)은 원본보다 길게 쓰지 않는다 — 17자 줄이 원본 16자보다 넓어 자막 띠 잉크 비율 0.167 vs 0.141(10-16 실측)
+    hi = b if b >= 14 else max(b + 1, math.floor(b * (1 + CAP_TOL)))
+    return min(b - 1, math.ceil(b * (1 - CAP_TOL))), hi
+
+
+def _ngrams_n(s: str, n: int) -> set:
+    s = re.sub(r"\s+", "", s)
+    return {s[i:i + n] for i in range(len(s) - n + 1)}
+
+
+def line_ranges(orig: list[str], widths: list | None = None, px_per_char: float | None = None) -> list[tuple[int, int]]:
+    """줄마다 허용 글자 수(공백 제외) — 판단 주인 한 곳.
+    px_per_char 와 원본 줄 폭(뜯기 captions.items.widths)이 있으면 **폭 기준**: 목표 = 원본 폭 ÷ px_per_char, 범위 = [내림, 올림].
+    (10-16 실측: 글자 수 ±15%로 맞춰도 '바이럴인 줄 알았는데...'처럼 점·공백이 많은 줄은 폭이 달라 줄 폭 중앙이 7.1% 밖이었다)
+    없으면 원본 글자 수 기준 _cap_range."""
+    import math
+    out = []
+    for k, t in enumerate(orig):
+        w = (widths or [None] * len(orig))[k] if widths else None
+        if px_per_char and w:
+            tgt = w / px_per_char
+            out.append((math.floor(tgt), max(math.floor(tgt), math.ceil(tgt))))
+        else:
+            out.append(_cap_range(len(t.replace(" ", ""))))
+    return out
+
+
+CAP_W_TOL = 0.06   # 폭 기준일 때 줄마다 원본 폭 ±6% (대조 '줄 폭 중앙 차 ≤ 6%'와 같은 자)
+
+
+def width_estimator(spec: str):
+    """'글꼴파일:크기:배율' → 글자 → 렌더 폭(px) 추정 함수. 배율 = 우리 렌더(scene_style.compose) 실측 폭 ÷ PIL getlength.
+    10-16 실측: SpoqaHanSansNeo-Bold 66px · 배율 0.843 → 자막 12줄 오차 ≤ 7px(bench captions.caption_lines 폭 대조)."""
+    from PIL import ImageFont
+    path, size, scale = spec.rsplit(":", 2)
+    font = ImageFont.truetype(str(ROOT / path) if not Path(path).is_absolute() else path, float(size))
+    return lambda t: round(float(scale) * font.getlength(t))
+
+
+def check_captions(lines: list[dict], orig: list[str], R: dict, ranges: list | None = None, width: dict | None = None) -> dict:
+    """자막 대본을 같은 자로 잰다 — 줄 수 · 줄 길이(원본 ±CAP_TOL) · 존댓말 · 원본 자막과 5글자 겹침 · 갈래 예문과 8글자 겹침 · 숫자."""
+    text = " ".join(l["text"] for l in lines)
+    o5 = set().union(*(_ngrams_n(t, 5) for t in orig))
+    copied5 = sorted({g for l in lines for g in _ngrams_n(l["text"], 5)} & o5)
+    ex8 = set().union(*(_ngrams(e["script"]) for e in R["examples"]))
+    lens = [len(l["text"].replace(" ", "")) for l in lines]
+    olens = [len(t.replace(" ", "")) for t in orig]
+    ranges = ranges or [_cap_range(b) for b in olens]
+    off = [i for i, (a, r) in enumerate(zip(lens, ranges)) if not (r[0] <= a <= r[1])]
+    est = None
+    if width:   # 폭 기준이면 글자 수 범위는 힌트일 뿐 — 판정은 추정 렌더 폭
+        est = [width["est"](l["text"]) for l in lines]
+        off = [i for i, (e, w) in enumerate(zip(est, width["orig"])) if w and abs(e - w) / w > CAP_W_TOL]
+    polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
+    return {"n_lines": len(lines), "n_ok": len(lines) == len(orig), "chars": lens, "orig_chars": olens, "ranges": [list(r) for r in ranges], "est_px": est, "orig_px": (width or {}).get("orig"), "len_off_lines": off,
+            "polite_endings": polite, "copied_5grams_vs_orig": copied5, "copied_8grams_vs_examples": len(_ngrams(text) & ex8),
+            "numbers": re.findall(r"\d[\d,.]*", text)}
+
+
+def _cap_fix(prev: dict) -> str:
+    """직전 답의 검사 결과를 줄 번호·목표 글자 수로 바꿔 말한다(막연한 '다시'는 같은 답이 돌아온다)."""
+    c = prev.get("check") or {}
+    out = []
+    for i in c.get("len_off_lines") or []:
+        lo, hi = c["ranges"][i]
+        if c.get("est_px"):
+            e, w = c["est_px"][i], c["orig_px"][i]
+            out.append(f"{i + 1}번 줄이 화면에서 {e}px → {w}px 쯤이어야({'짧게' if e > w else '길게'}, 약 {lo}~{hi}자)")
+        else:
+            out.append(f"{i + 1}번 줄 {c['chars'][i]}자 → {lo}~{hi}자(공백 제외)")
+    if c.get("polite_endings"):
+        out.append(f"존댓말 {c['polite_endings']}개 → 0")
+    if c.get("copied_5grams_vs_orig"):
+        out.append(f"원본과 겹친 조각 {c['copied_5grams_vs_orig']} → 다른 말로")
+    if c.get("numbers"):
+        out.append(f"숫자 {c['numbers']} → 빼라")
+    return " / ".join(out)
+
+
+def _cap_ok(chk: dict) -> bool:
+    return bool(chk.get("n_ok")) and not chk.get("len_off_lines") and not chk.get("polite_endings") and not chk.get("copied_5grams_vs_orig")         and not chk.get("copied_8grams_vs_examples") and not chk.get("numbers")
+
+
+def write_captions(rules_path: str, ttj_path: str, topic: str, fns: list[str], scenes: list[str] | None = None,
+                   px_per_char: float | None = None, width_spec: str | None = None) -> dict:
+    """나레 없는(원음만+자막) 영상용 — 원본 자막 줄 구조를 틀로 우리 자막 N줄을 쓴다. 무료 제미나이 창구(gemini_free)만 쓴다."""
+    from tools.calcopy.engine import gemini_free
+    R = json.loads(Path(rules_path).read_text(encoding="utf-8"))
+    J = json.loads(Path(ttj_path).read_text(encoding="utf-8"))
+    items = {i["i"]: " ".join(i.get("text") or []) for i in J["captions"]["items"]}
+    spans = J["captions"]["spans"]
+    orig = [items.get(k, "") for k in range(len(spans))]
+    widths = [((J["captions"]["items"][k].get("widths") or [None])[0] if k < len(J["captions"]["items"]) else None) for k in range(len(orig))]
+    rng = line_ranges(orig, widths, px_per_char)
+    W = {"est": width_estimator(width_spec), "orig": widths} if width_spec and all(widths) else None
+    structure = "\n".join(f"{k + 1}. 역할={fns[k]} · 목표 {rng[k][0]}~{rng[k][1]}자(공백 제외) · {b - a:.1f}초" + (f" · 그때 화면: {scenes[k]}" if scenes else "") for k, (t, (a, b)) in enumerate(zip(orig, spans)))
+    prompt = CAP_PROMPT.format(style=R["style"], n=len(orig), topic=topic, structure=structure, honorific=R["tone"]["honorific"],
+                               endings=", ".join(e for e, _ in R["tone"]["endings_seen"][:12]), hooks=" / ".join(R["hooks"][:8]))
+    tries = []
+    for k in range(3):
+        d, err = gemini_free.ask([], prompt if not tries else prompt + "\n\n직전 답: " + json.dumps(tries[-1], ensure_ascii=False) +
+                                 "\n검사 실패 — 고쳐서 같은 꼴로 다시. " + _cap_fix(tries[-1]), tag=f"captions{k}")
+        if not d:
+            tries.append({"error": err}); continue
+        lines = d.get("lines") or d.get("items") or []
+        chk = check_captions(lines, orig, R, rng, W)
+        tries.append({"lines": lines, "check": chk, "model": d.get("_model")})
+        if _cap_ok(chk):
+            break
+    # 글자 수만 어긋난 줄이 남으면 그 줄만 후보 여러 개를 받아 범위 안의 첫 것으로 바꾼다
+    # (temperature 0 이라 전체 다시 쓰기는 같은 답·한 줄 왔다갔다만 했다 — 10-16 실측 5번 모두 5번 줄 5↔13자)
+    last = tries[-1] if tries else {}
+    chk = last.get("check") or {}
+    if last.get("lines") and chk.get("n_ok") and chk.get("len_off_lines") and _cap_ok({**chk, "len_off_lines": []}):
+        lines = [dict(l) for l in last["lines"]]
+        for i in chk["len_off_lines"]:
+            lo, hi = chk["ranges"][i]
+            q = (prompt + "\n\n지금 대본: " + json.dumps([l["text"] for l in lines], ensure_ascii=False) +
+                 f"\n{i + 1}번 줄(역할 {fns[i]}" + (f", 그때 화면: {scenes[i]}" if scenes else "") +
+                 f")만 다른 말로 8가지 써라. 각각 공백 빼고 {lo}~{hi}자. JSON으로만: {{\"alts\":[\"…\", …]}}")
+            d, err = gemini_free.ask([], q, tag=f"captions_line{i}")
+            for alt in (d or {}).get("alts") or (d or {}).get("items") or []:
+                if not isinstance(alt, str):
+                    continue
+                trial = lines[:i] + [{**lines[i], "text": alt}] + lines[i + 1:]
+                c2 = check_captions(trial, orig, R, rng, W)
+                if i not in c2["len_off_lines"] and not c2["polite_endings"] and not c2["copied_5grams_vs_orig"] and not c2["numbers"]:
+                    lines = trial
+                    break
+        chk = check_captions(lines, orig, R, rng, W)
+        tries.append({"lines": lines, "check": chk, "model": "line_repair"})
+    return {"topic": topic, "orig": orig, "spans": spans, "fns": fns, "scenes": scenes, "ranges": rng, "px_per_char": px_per_char, "width_spec": width_spec, "final": tries[-1], "tries": tries,
+            "gemini_calls": gemini_free.CALLS}
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "rules":
         build_rules(*sys.argv[2:5])
+    elif cmd == "captions":   # captions <rules.json> <뜯기.json> <주제> <역할,역할,…> <출력.json> ["줄별 화면|…"] [px_per_char] [글꼴:크기:배율]
+        res = write_captions(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5].split(","), sys.argv[7].split("|") if len(sys.argv) > 7 and sys.argv[7] else None,
+                             float(sys.argv[8]) if len(sys.argv) > 8 else None, sys.argv[9] if len(sys.argv) > 9 else None)
+        Path(sys.argv[6]).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+        for ln in (res["final"].get("lines") or []):
+            print(f"  ({ln.get('fn')}) {ln.get('text')}")
+        print("  검사:", res["final"].get("check") or res["final"])
     elif cmd == "write":
         res = write(sys.argv[2], sys.argv[3:])
         Path(sys.argv[2]).with_name("시험대본_" + Path(sys.argv[2]).stem.split(".")[0] + ".json").write_text(
