@@ -103,18 +103,22 @@ def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[d
 
 
 # ── 재료(그림 칸) ──────────────────────────────────────────────────────────
-def shot_clip(src, ss, dur, win, box_w, full, out):
-    """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데."""
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None):
+    """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
+    ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
     w, h = win["w"], win["h"]
     top = (H - h) // 2
+    pre = f"crop='min(iw,ih*{ar})':'min(ih,iw/{ar})'," if ar else ""
     if full:
         vf = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},pad={W}:{H}:0:{top}:white,setsar=1,fps=30"
     else:
         bh = h - 16
         vf = (f"scale={box_w}:{bh}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:8:white,"
               f"pad={W}:{H}:0:{top}:white,setsar=1,fps=30")
-    va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{ss:.3f}", "-i", str(src), "-t", f"{dur:.3f}", "-vf", vf, "-an",
+    still = Path(src).suffix.lower() in (".png", ".jpg", ".jpeg")
+    inp = ["-loop", "1", "-i", str(src)] if still else ["-ss", f"{ss:.3f}", "-i", str(src)]
+    va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf, "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
 
@@ -153,7 +157,7 @@ def build(plan: dict):
             a2, b2 = max(a, t_a), min(b, t_b)
             sh = mshots[k]
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
-            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p))
+            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0), p, sh.get("ar")))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"
@@ -176,7 +180,9 @@ def build(plan: dict):
     vlist = out / "work" / "segs.txt"
     vlist.write_text("".join(f"file '{p.as_posix()}'\n" for p in seg_files), encoding="utf-8")
     vid = out / "work" / "video.mp4"
-    va._run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(vlist), "-an", "-c:v", "copy", str(vid)])
+    # ★-c copy 로 이으면 두 조각의 시간 단위가 달라 r_frame_rate 120 이 됐다(대조가 길이 7.97초로 잼, 10-16) → 다시 인코딩해 30fps 로
+    va._run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(vlist), "-an", "-r", "30", "-c:v", "libx264", "-crf", "16",
+                    "-preset", "veryfast", "-pix_fmt", "yuv420p", str(vid)])
     # 소리: 나레(목표 LUFS) + BGM(나레 대비 비율) — 원본 '원음 깔림 False'
     target = plan.get("lufs", -16.2)
     bgm = bgm_lib.path_of(plan.get("bgm")) if plan.get("bgm") else None
@@ -187,8 +193,12 @@ def build(plan: dict):
         fc += (f";[2:a]atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,loudnorm=I={target}:TP=-1.5:LRA=11,aresample=48000,volume={plan.get('bgm_ratio', 0.15)}[b]"
                f";[n][b]amix=inputs=2:normalize=0:duration=first[m]")
     fc += f";[{'m' if bgm else 'n'}]alimiter=limit=0.89:level=false[a]"
+    mixed = out / "work" / "mixed.wav"
+    va._run_ffmpeg(["ffmpeg", "-y", *ins, "-filter_complex", fc.replace("[1:a]", "[0:a]", 1).replace("[2:a]", "[1:a]", 1),
+                    "-map", "[a]", "-t", f"{dur:.3f}", "-c:a", "pcm_s16le", str(mixed)])
+    gain = round(target - _lufs(mixed)["I"], 2)   # 한 번 loudnorm 은 목표보다 ~1dB 덜 나온다(remake_video 와 같은 보정)
     final = out / "final.mp4"
-    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(vid), *ins, "-filter_complex", fc,
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(vid), "-i", str(mixed), "-filter_complex", f"[1:a]volume={gain}dB,alimiter=limit=0.89:level=false[a]",
                     "-map", "0:v", "-map", "[a]", "-t", f"{dur:.3f}", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(final)])
     (out / "timeline.json").write_text(json.dumps({"steps": steps, "hook_end": hook_end, "shots": shots_t, "dur": dur},
                                                   ensure_ascii=False, indent=1), encoding="utf-8")

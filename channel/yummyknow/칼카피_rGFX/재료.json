@@ -1,0 +1,154 @@
+{
+ "_note": "rGFX 칼카피 재료 — 원본 컷 14개 중 흑백요리사 짤 2개는 방송 클립이라 쓰지 않고 시식 반응·휘젓기로 대체. 코스트코 NUSSPO 통은 한국 순위 영상(OunWseluP2Y)의 상품 사진을 잘라 씀. 나머지는 같은 소재(두바이 초코·피스타치오 스프레드) 유튜브 쇼츠/영상. ar=가운데 자르기 비율, box_w=그림 칸 폭.",
+ "cand_dir": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/make",
+ "shots": [
+  {
+   "i": 0,
+   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
+   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
+   "ss": 40.0,
+   "ar": null,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "두바이 피스타치오 초코 스프레드 통 숟가락 근접(훅 카드 전폭)",
+   "orig_scene": "스프레드 통 윗면(피스타치오+초코 무늬)",
+   "full": true
+  },
+  {
+   "i": 1,
+   "src": "재료후보/nusspo_jar.png",
+   "url": "https://www.youtube.com/watch?v=OunWseluP2Y",
+   "ss": 0,
+   "ar": null,
+   "box_w": 620,
+   "status": "같은 제품 사진",
+   "ours": "코스트코 NUSSPO 두바이초콜릿 크림 1kg 통 사진(순위 영상 12.5초 캡처 잘라냄)",
+   "orig_scene": "해외 틱톡 두바이 초콜릿 먹방"
+  },
+  {
+   "i": 2,
+   "src": "재료후보2/v_lzSG8Ze8Z3Y.mp4",
+   "url": "https://www.youtube.com/watch?v=lzSG8Ze8Z3Y",
+   "ss": 38.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "카다이프를 버터에 볶는 장면(바삭함)",
+   "orig_scene": "스프레드 언박싱·카다이프 조리"
+  },
+  {
+   "i": 3,
+   "src": "재료후보2/v_O15mlL2ZNkU.mp4",
+   "url": "https://www.youtube.com/watch?v=O15mlL2ZNkU",
+   "ss": 0.2,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "해외 바이럴 두바이 초콜릿 바 쪼개기",
+   "orig_scene": "제품·피스타치오 연출"
+  },
+  {
+   "i": 4,
+   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
+   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
+   "ss": 24.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "외국인 시식 반응(얼굴)",
+   "orig_scene": "흑백요리사 블라인드 심사 짤"
+  },
+  {
+   "i": 5,
+   "src": "재료후보2/v_tNGUmh2Mb7c.mp4",
+   "url": "https://www.youtube.com/watch?v=tNGUmh2Mb7c",
+   "ss": 14.5,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "초코 스프레드 숟가락으로 뜨기",
+   "orig_scene": "빵 스프레드 시식"
+  },
+  {
+   "i": 6,
+   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
+   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
+   "ss": 15.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "시식하며 갸웃(같은 시식 영상 앞부분)",
+   "orig_scene": "빵 스프레드 시식"
+  },
+  {
+   "i": 7,
+   "src": "재료후보2/v_tNGUmh2Mb7c.mp4",
+   "url": "https://www.youtube.com/watch?v=tNGUmh2Mb7c",
+   "ss": 40.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "초코 스프레드 한 숟갈",
+   "orig_scene": "식빵 크림 리뷰"
+  },
+  {
+   "i": 8,
+   "src": "재료후보2/v_lzSG8Ze8Z3Y.mp4",
+   "url": "https://www.youtube.com/watch?v=lzSG8Ze8Z3Y",
+   "ss": 3.5,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "초코 바 단면 — 초코 속 피스타치오(두 맛)",
+   "orig_scene": "식빵 반반 크림"
+  },
+  {
+   "i": 9,
+   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
+   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
+   "ss": 50.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "통 속 두 크림 숟가락 근접",
+   "orig_scene": "제품 용기(반반)"
+  },
+  {
+   "i": 10,
+   "src": "재료후보2/v_6slgjZ9BH0s.mp4",
+   "url": "https://www.youtube.com/watch?v=6slgjZ9BH0s",
+   "ss": 57.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "통 속 두 크림을 숟가락으로 휘젓기",
+   "orig_scene": "흑백요리사 비빔대왕 짤"
+  },
+  {
+   "i": 11,
+   "src": "재료후보/v_rCPaqz3Dv70.mp4",
+   "url": "https://www.youtube.com/watch?v=rCPaqz3Dv70",
+   "ss": 22.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "딸기·추로스를 초코에 찍어 먹기",
+   "orig_scene": "유튜브 검색 결과 캡처(찍먹 유튜버들)"
+  },
+  {
+   "i": 12,
+   "src": "재료후보2/v_V8tJtI9-xXk.mp4",
+   "url": "https://www.youtube.com/watch?v=V8tJtI9-xXk",
+   "ss": 40.0,
+   "ar": 0.8,
+   "box_w": 750,
+   "status": "대체",
+   "ours": "피스타치오·초코 크레페",
+   "orig_scene": "빵에 바르기·매장 진열"
+  }
+ ],
+ "_history": [
+  "1판: 8번 컷 OF5UopnDGRI 가운데 자르기가 'ELNUT EAM' 글자만 남아 lzSG8Ze8Z3Y 단면으로 바꿈",
+  "2판: 8번 컷 lzSG8 4.0→3.5(소스 7초 컷 넘어 '반죽 자르기' 장면이 끼었음) · 10번 컷 Maltesers 세 번째 반복 → 6slg 57초(통 속 두 크림 휘젓기)"
+ ]
+}
