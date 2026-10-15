@@ -18,18 +18,20 @@
    "y": 323,
    "w": 1080,
    "h": 1298,
-   "radius": 0
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
   },
   {
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 107,
+   "y": 106,
    "w": 1000,
    "align": "center",
    "lines": 2,
-   "font": "YgJalnan",
-   "size": 99.6,
+   "font": "Cafe24Ohsquare",
+   "size": 108,
    "line_h": 126,
    "rgb": [
     0,
@@ -61,8 +63,9 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 18,
+   "letter_spacing": 21.2,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "삼성 엔지니어가\n저지른 미친 실수"
   },
@@ -70,33 +73,27 @@
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 1052,
+   "y": 1054,
    "w": 1000,
    "align": "center",
    "lines": 1,
    "font": "CcPretendard-Bold",
-   "size": 77.2,
-   "line_h": 89,
+   "size": 92.8,
+   "line_h": 107,
    "rgb": [
     255,
     255,
     255
    ],
    "line_rgb": null,
-   "outline": {
-    "px": 5,
-    "rgb": [
-     0,
-     0,
-     0
-    ]
-   },
+   "outline": null,
    "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": null
   },
@@ -131,6 +128,7 @@
    "italic": true,
    "letter_spacing": -1.7,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "[광고]"
   }

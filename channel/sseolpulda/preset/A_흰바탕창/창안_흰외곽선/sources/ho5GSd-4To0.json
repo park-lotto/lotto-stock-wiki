@@ -18,7 +18,9 @@
    "y": 322,
    "w": 1080,
    "h": 1300,
-   "radius": 0
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
   },
   {
    "kind": "text",
@@ -63,6 +65,7 @@
    "italic": false,
    "letter_spacing": 2.5,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "전 세계 매출 폭발시킨\n덴마크 회사의 실수"
   },
@@ -70,13 +73,13 @@
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 1140,
+   "y": 1138,
    "w": 1000,
    "align": "center",
    "lines": 1,
    "font": "CcPretendard-Bold",
-   "size": 87.8,
-   "line_h": 101,
+   "size": 103.9,
+   "line_h": 119,
    "rgb": [
     255,
     255,
@@ -84,7 +87,7 @@
    ],
    "line_rgb": null,
    "outline": {
-    "px": 6,
+    "px": 7,
     "rgb": [
      0,
      0,
@@ -97,6 +100,7 @@
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": null
   },
@@ -131,6 +135,7 @@
    "italic": true,
    "letter_spacing": -1.7,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "[광고]"
   }

@@ -26,10 +26,10 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 122,
+   "y": 120,
    "lines": 2,
-   "font": "YgJalnan",
-   "size": 91.7,
+   "font": "Cafe24Ohsquare",
+   "size": 98.3,
    "line_h": 110,
    "rgb": [
     0,
@@ -61,7 +61,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 11.4,
+   "letter_spacing": 16.2,
    "enter": null,
    "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
   },
@@ -71,8 +71,8 @@
    "x": 906,
    "w": 866,
    "align": "right",
-   "y": 1083,
-   "lines": 2,
+   "y": 1084,
+   "lines": 1,
    "font": "BMDOHYEON",
    "size": 103.2,
    "line_h": 119,
@@ -93,8 +93,8 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": -15.5,
-   "word_spacing": -5.0,
+   "letter_spacing": -6.7,
+   "word_spacing": -21.6,
    "enter": null
   },
   {
@@ -151,10 +151,10 @@
   "notes": [
    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
    "글꼴 1위 BMDOHYEON.ttf(0.2045) < 0.5 — 확신 낮음. 쓴 글꼴 BMDOHYEON({'file': 'BMDOHYEON.ttf', 'score': 0.2045})",
-   "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.6382), 신뢰 ok",
+   "제목 글꼴 Cafe24Ohsquare — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
    "제목 줄별 외곽선 [None, [8, 255, 255, 255]] (창 위로 걸친 고리만 잼)",
    "제목 기울기 +0도(기둥 전단 투영) → 바름",
-   "자막 낱말 간격 -5.0px — 원본 낱말 틈 3.0px 에 맞춤(자간 -15.5px 은 글자 사이만)",
+   "자막 낱말 간격 -21.6px — 원본 낱말 틈 4.0px 에 맞춤(자간 -6.7px 은 글자 사이만)",
    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5527)"
   ],

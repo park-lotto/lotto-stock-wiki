@@ -26,10 +26,10 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 107,
+   "y": 106,
    "lines": 2,
-   "font": "YgJalnan",
-   "size": 99.6,
+   "font": "Cafe24Ohsquare",
+   "size": 108.0,
    "line_h": 126,
    "rgb": [
     0,
@@ -61,40 +61,40 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 18.0,
+   "letter_spacing": 21.2,
    "enter": null,
    "text": "삼성 엔지니어가\n저지른 미친 실수"
   },
   {
    "kind": "text",
    "role": "caption",
-   "x": 15,
-   "w": 1025,
-   "align": "left",
-   "y": 1058,
-   "lines": 3,
-   "font": "CcSunflower-Medium",
-   "size": 69.5,
-   "line_h": 80,
+   "x": 1028,
+   "w": 988,
+   "align": "right",
+   "y": 1060,
+   "lines": 2,
+   "font": "Kkubulim",
+   "size": 92.8,
+   "line_h": 107,
    "rgb": [
-    252,
-    251,
-    250
+    254,
+    253,
+    255
    ],
    "line_rgb": null,
    "outline": {
-    "px": 4,
+    "px": 3,
     "rgb": [
-     136,
-     184,
-     128
+     39,
+     39,
+     40
     ]
    },
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": -10.4,
-   "word_spacing": 7.8,
+   "letter_spacing": -13.9,
+   "word_spacing": 2.8,
    "enter": null
   },
   {
@@ -137,11 +137,11 @@
   "tool": "tools/calcopy/engine/to_frame.py",
   "engine": "뜯기 1판 2026-10-15",
   "font": {
-   "top1": "Sunflower-Medium.ttf",
-   "top1_score": 0.1009,
+   "top1": "Kkubulim.ttf",
+   "top1_score": 0.1721,
    "picked_from": {
-    "file": "Sunflower-Medium.ttf",
-    "score": 0.1009
+    "file": "Kkubulim.ttf",
+    "score": 0.1721
    },
    "font_confidence": "low",
    "skipped": []
@@ -150,11 +150,11 @@
   "font_confidence": "low",
   "notes": [
    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
-   "글꼴 1위 Sunflower-Medium.ttf(0.1009) < 0.5 — 확신 낮음. 쓴 글꼴 CcSunflower-Medium({'file': 'Sunflower-Medium.ttf', 'score': 0.1009})",
-   "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.6654), 신뢰 ok",
+   "글꼴 1위 Kkubulim.ttf(0.1721) < 0.5 — 확신 낮음. 쓴 글꼴 Kkubulim({'file': 'Kkubulim.ttf', 'score': 0.1721})",
+   "제목 글꼴 Cafe24Ohsquare — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
    "제목 줄별 외곽선 [None, [8, 255, 247, 255]] (창 위로 걸친 고리만 잼)",
    "제목 기울기 +0도(기둥 전단 투영) → 바름",
-   "자막 낱말 간격 7.8px — 원본 낱말 틈 8.0px 에 맞춤(자간 -10.4px 은 글자 사이만)",
+   "자막 낱말 간격 2.8px — 원본 낱말 틈 9.0px 에 맞춤(자간 -13.9px 은 글자 사이만)",
    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5367)"
   ],

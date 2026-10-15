@@ -21,7 +21,9 @@
    "y": 322,
    "w": 1080,
    "h": 1300,
-   "radius": 0
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
   },
   {
    "kind": "text",
@@ -31,7 +33,7 @@
    "w": 1000,
    "align": "center",
    "lines": 2,
-   "font": "$per_video",
+   "font": "Cafe24Ohsquare",
    "size": "$per_video",
    "line_h": "$per_video",
    "rgb": [
@@ -55,6 +57,7 @@
    "italic": false,
    "letter_spacing": "$per_video",
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "$per_video"
   },
@@ -75,20 +78,14 @@
     255
    ],
    "line_rgb": null,
-   "outline": {
-    "px": 6,
-    "rgb": [
-     0,
-     0,
-     0
-    ]
-   },
+   "outline": "$per_video",
    "line_outline": null,
    "shadow": null,
    "box": null,
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": null
   },
@@ -123,6 +120,7 @@
    "italic": true,
    "letter_spacing": -2.3,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "[광고]"
   }

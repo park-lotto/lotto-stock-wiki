@@ -73,10 +73,26 @@ def analyze_image(img: np.ndarray, skip_rows: list[tuple[int, int]], video_rect,
         keep[max(0, y0):min(H, y1 + 1)] = False
     vx, vy, vw, vh = video_rect if video_rect else (0, H, 0, 0)
     keep[max(0, vy):min(H, vy + vh)] = False
+    ext = []
+    if video_rect and img2 is not None:
+        # 영상 창에 붙어 이어지는 '움직이는 줄'(같은 구간 다른 시각과 평균 차 > STILL_DIFF) = 영상이 뜯기 그림 칸보다 더 나온 것
+        mv = np.abs(a - img2.astype(int)).mean(axis=(1, 2)) > STILL_DIFF
+        y = vy + vh
+        while y < H and mv[y]:
+            y += 1
+        if y > vy + vh + 2:
+            ext.append((vy + vh, y - 1))
+        y = vy - 1
+        while y >= 0 and mv[y]:
+            y -= 1
+        if y < vy - 3:
+            ext.append((y + 1, vy - 1))
+        for y0, y1 in ext:
+            keep[y0:y1 + 1] = False
     outside = a[keep]
     bg, _ = _mode_color(outside.reshape(-1, 3))
     diff = np.abs(a - np.array(bg)).max(axis=2) > DIFF
-    bands, dividers, boxes, texts, ext = [], [], [], [], []
+    bands, dividers, boxes, texts = [], [], [], []
     # 띠 행 · 구분선 행 — 띠는 화면 양 끝(좌우 EDGE px)이 바탕과 다른 같은 색인 행. 가운데에 글자가 얹혀도(헤더 채널명)·
     #   세로 그라데이션이어도(훅 회색 띠) 끝은 띠 색이다. 제목 글자 행은 끝이 바탕이라 띠가 아니다(첫 판은 '주된 색 비율'로 재
     #   흰 제목 줄을 흰 띠로 오판했다, 2026-10-16).
@@ -98,11 +114,6 @@ def analyze_image(img: np.ndarray, skip_rows: list[tuple[int, int]], video_rect,
         # 띠 면이 고른가 — 띠 색에서 40 안인 점이 절반 넘어야 띠(영상 가장자리가 비친 줄은 색이 흩어져 빠진다)
         rc = np.array([row_color[y] for y in range(y0, y1 + 1)])[:, None, :]   # 행마다 그 행의 색(세로 그라데이션 띠)
         flat = float((np.abs(a[y0:y1 + 1] - rc).max(axis=2) <= 60).mean())
-        touches = video_rect and (abs(y0 - (vy + vh)) <= 4 or abs(y1 + 1 - vy) <= 4)
-        moving = img2 is not None and float(np.abs(a[y0:y1 + 1] - img2[y0:y1 + 1].astype(int)).mean()) > STILL_DIFF
-        if not thin_dark and touches and moving:
-            ext.append((y0, y1))                     # 영상 창에 붙은 고르지 않은 줄 = 영상이 뜯기 그림 칸보다 더 내려온 것(창을 늘린다)
-            continue
         if not thin_dark and flat < 0.5:
             continue
         (dividers if thin_dark else bands).append({"y": y0, "h": y1 - y0 + 1, "rgb": col})

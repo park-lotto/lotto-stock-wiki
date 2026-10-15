@@ -250,7 +250,7 @@ def slug_style(preset_dir: Path) -> tuple[str, str]:
 #     제목 크기 = min(size_cap, 가장 긴 줄이 fill_w 폭이 되는 크기)  · 줄높이 = 크기 × lh_ratio · 제목 위 끝 = title_top
 #     창 y = 제목 아래 끝(title_top + 줄수×줄높이) + gap   · 창 아래 끝 = video_bottom(자막 하위 스타일이 정함)
 #     자막 y = 창 아래 끝 + cap_dy(창아래면 +, 창안이면 −)
-RULE_FORMULA = ("title.size = min(size_cap(잰 크기 중앙값), 가장 긴 줄 폭이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)가 되는 크기) · "
+RULE_FORMULA = ("title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · "
                 "title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'constant' 면 video_top, 'gap' 이면 "
                 "title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy")
 EDGE_MARGIN = 48   # 제목 폭 상한의 바닥 = 화면 폭 − 48(양쪽 24px) — 두 편으로 만든 프리셋이 '긴 제목' 예를 못 봤을 때(LOO 1_V 실측: 930 상한 → 84pt)
@@ -311,11 +311,21 @@ def apply_rules(F: dict, rules: dict) -> dict:
     L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in F["layers"]}
     t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
     if t and t.get("text") and "fill_w" in K:
-        lines = t["text"].split("\n")
-        w100 = max(_line_w(t["font"], 100, 0, ln) for ln in lines)
-        ls_total = max(t["letter_spacing"] * max(0, len(ln) - 1) for ln in lines)
-        size = (K["fill_w"] - ls_total) * 100 / max(1, w100)
-        t["size"] = round(min(K.get("size_cap", size), size), 1)
+        lines = t["text"].split(chr(10))
+        # 크기는 잰 크기(중앙값) 그대로 — 글자 키(띠 높이)가 틀의 모양이다. 폭이 상한(fill_w)을 넘으면 먼저 자간을 줄이고
+        #   (크기의 −15% 까지, to_frame.spacing_for 와 같은 바닥), 그래도 넘을 때만 크기를 줄인다.
+        #   (2026-10-16 LOO: 폭 맞춤으로 크기부터 줄이니 제목 띠 높이가 원본 91~110 → 75~87 로 작아졌다)
+        size = K.get("size_cap") or t["size"]
+        n = max(lines, key=lambda ln: _line_w(t["font"], size, 0, ln))
+        nat = _line_w(t["font"], size, 0, n)
+        gaps = max(1, len(n) - 1)
+        ls = t["letter_spacing"]
+        if nat + ls * gaps > K["fill_w"]:
+            ls = max(-0.15 * size, (K["fill_w"] - nat) / gaps)
+            if nat + ls * gaps > K["fill_w"]:
+                size = size * (K["fill_w"] - ls * gaps) / max(1, nat)
+        t["letter_spacing"] = round(ls, 1)
+        t["size"] = round(size, 1)
         t["line_h"] = round(t["size"] * K.get("lh_ratio", 1.15))
         t["lines"] = len(lines)
     if t and "title_top" in K:

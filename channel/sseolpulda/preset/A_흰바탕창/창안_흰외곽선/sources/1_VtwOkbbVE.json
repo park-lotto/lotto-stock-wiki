@@ -18,18 +18,20 @@
    "y": 323,
    "w": 1080,
    "h": 1298,
-   "radius": 0
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
   },
   {
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 122,
+   "y": 120,
    "w": 1000,
    "align": "center",
    "lines": 2,
-   "font": "YgJalnan",
-   "size": 91.7,
+   "font": "Cafe24Ohsquare",
+   "size": 98.3,
    "line_h": 110,
    "rgb": [
     0,
@@ -61,8 +63,9 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 11.4,
+   "letter_spacing": 16.2,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
   },
@@ -70,7 +73,7 @@
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 1086,
+   "y": 1088,
    "w": 1000,
    "align": "center",
    "lines": 1,
@@ -97,6 +100,7 @@
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": null
   },
@@ -131,6 +135,7 @@
    "italic": true,
    "letter_spacing": -2,
    "word_spacing": 0,
+   "valign": "center",
    "enter": null,
    "text": "[광고]"
   }

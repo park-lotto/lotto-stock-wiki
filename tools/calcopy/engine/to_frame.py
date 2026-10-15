@@ -635,6 +635,13 @@ def main(argv=None):
     ap.add_argument("--ocr-from", help="고정 띠 글자를 다시 읽지 않고 이 설명서(frame.json)의 제목·고정 문구 글을 쓴다(제미나이 한도 소진 때)")
     a = ap.parse_args(argv)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
+    dur0 = float((J.get("probe") or {}).get("duration") or 0)
+    if any(s1 < dur0 - 0.3 for _, s1 in (J.get("layout") or {}).get("other_frame_segments") or []):
+        # 끝이 아닌 틀 구간(훅 카드 등)이 있으면 틀 여러 장 설명서로 — to_frame_multi 가 맡는다(판단 한 곳).
+        #   --ocr-from 은 "hook=a.json,body=b.json" 꼴(틀마다 예전 설명서)
+        from tools.calcopy.engine import to_frame_multi
+        argv2 = [a.tteutgi, "--out", a.out] + (["--ocr-from", *a.ocr_from.split(",")] if a.ocr_from and "=" in a.ocr_from else [])
+        return to_frame_multi.main(argv2)
     from shopping_shorts.channelkit.bench import probe
     src = J.get("source")
     pr = J.get("probe") or {}

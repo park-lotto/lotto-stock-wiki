@@ -68,41 +68,34 @@
   {
    "kind": "text",
    "role": "caption",
-   "x": 160,
-   "w": 880,
+   "x": 74,
+   "w": 966,
    "align": "left",
-   "y": 1140,
+   "y": 1138,
    "lines": 2,
    "font": "CcPretendard-Bold",
-   "size": 87.8,
-   "line_h": 101,
+   "size": 103.9,
+   "line_h": 119,
    "rgb": [
     253,
     252,
     253
    ],
    "line_rgb": null,
-   "outline": {
-    "px": 5,
-    "rgb": [
-     34,
-     34,
-     34
-    ]
-   },
+   "outline": null,
    "shadow": null,
    "box": {
     "rgb": [
-     54,
-     49,
-     45
+     62,
+     58,
+     52
     ],
     "pad": 0,
     "radius": 0
    },
    "italic": false,
-   "letter_spacing": -13.2,
-   "word_spacing": 16.4,
+   "letter_spacing": -15.6,
+   "word_spacing": 14.2,
    "enter": null
   },
   {
@@ -146,10 +139,10 @@
   "engine": "뜯기 1판 2026-10-15",
   "font": {
    "top1": "Pretendard-Bold.otf",
-   "top1_score": 0.3197,
+   "top1_score": 0.2917,
    "picked_from": {
     "file": "Pretendard-Bold.otf",
-    "score": 0.3197
+    "score": 0.2917
    },
    "font_confidence": "low",
    "skipped": []
@@ -158,11 +151,11 @@
   "font_confidence": "low",
   "notes": [
    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
-   "글꼴 1위 Pretendard-Bold.otf(0.3197) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-Bold({'file': 'Pretendard-Bold.otf', 'score': 0.3197})",
-   "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.5365), 신뢰 ok",
+   "글꼴 1위 Pretendard-Bold.otf(0.2917) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-Bold({'file': 'Pretendard-Bold.otf', 'score': 0.2917})",
+   "제목 글꼴 Cafe24Ohsquare — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
    "제목 줄별 외곽선 [None, [9, 255, 251, 255]] (창 위로 걸친 고리만 잼)",
    "제목 기울기 +0도(기둥 전단 투영) → 바름",
-   "자막 낱말 간격 16.4px — 원본 낱말 틈 13.0px 에 맞춤(자간 -13.2px 은 글자 사이만)",
+   "자막 낱말 간격 14.2px — 원본 낱말 틈 13.0px 에 맞춤(자간 -15.6px 은 글자 사이만)",
    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5377)"
   ],
