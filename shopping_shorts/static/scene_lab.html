@@ -2893,8 +2893,8 @@ function handBarHtml(i){
   if (!c) return '';
   const sp = (+(c.src_dur || c.dur)) / c.dur;                      // 칸 전체가 같은 배속(scenesV2Alloc 'all')
   const tag = Math.abs(sp - 1) < 0.02 ? '그대로(1.0배)' : (sp < 1 ? `${(1 / sp).toFixed(2)}배 느리게` : `${sp.toFixed(2)}배 빠르게`);
-  const warn = (sp < 1 && 1 / sp > maxSlowmo() + 1e-3) ? ' <span class="slowwarn">너무 느려요 — 장면을 하나 더 넣어 주세요</span>'
-             : (sp > FIT_FAST_MAX + 1e-3 ? ' <span class="slowwarn">너무 빨라요 — 카드를 줄여 주세요</span>' : '');
+  const warn = (sp < 1 && 1 / sp > maxSlowmo() + 1e-3) ? ' <span class="slowwarn" title="1.2배보다 느리면 슬로모션처럼 보여요 — 장면을 하나 더 넣어 주세요">너무 느려요</span>'
+             : (sp > FIT_FAST_MAX + 1e-3 ? ' <span class="slowwarn" title="2배보다 빠르면 어색해요 — 카드를 줄여 주세요">너무 빨라요</span>' : '');
   // 「이 카드만」(사장님 10-15 "선택하게 하는 게 있어야 되면 넣고") — 방금 만진 카드 하나만 배속, 다른 카드는 원래대로
   const last = (window.HAND_LAST || {})[i], li = ids.indexOf(last), no = li >= 0 ? li + 1 : ids.indexOf(fixed[0]) + 1;
   const self = FILLMODE[i] === 'self';
@@ -2902,8 +2902,11 @@ function handBarHtml(i){
                     : `<button class="act" onclick="event.stopPropagation();handFill(${i}, 'self')">${no}번만 속도 바꾸기</button>`;
   if (self) return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ ${no}번 카드만 속도를 바꿨어요 ${swap}
     <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
-  return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ 길이를 바꿔 칸 전체를 ${tag} 맞췄어요${warn} ${swap}
-    ${warn && sp < 1 ? `<button class="act" onclick="event.stopPropagation();autoFill(${i})">✨ 장면 하나 더 넣기</button>` : ''}
+  // 구절 맞춤 칸(사장님 10-15): 전체로 맞추면 장면 전환이 자막 경계에서 조금 벗어날 수 있다 — 알리고 「N번만」을 권한다
+  const exactNote = (phraseExactOn(i) && ids.length > 1)
+    ? ` <span class="slowwarn" title="구절 맞춤 칸이라 전체로 맞추면 장면 전환이 자막 경계에서 조금 벗어날 수 있어요 — 경계를 지키려면 「${no}번만」">⚠ 자막 경계 조금 어긋남</span>` : '';
+  return `<div class="cutgap handbar" onclick="event.stopPropagation()">↔ 칸 전체 ${tag}${warn}${exactNote} ${swap}
+    ${warn && sp < 1 ? `<button class="act" onclick="event.stopPropagation();autoFill(${i})">✨ 장면 넣기</button>` : ''}
     <button class="act" onclick="event.stopPropagation();handUndoAll(${i})">되돌리기</button></div>`;
 }
 function handUndoAll(i){
