@@ -1,0 +1,136 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    251,
+    248,
+    252
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 426,
+   "w": 1080,
+   "h": 1006,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 210,
+   "lines": 2,
+   "font": "NotoSansKRBold",
+   "size": 88.8,
+   "line_h": 96,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 6.4,
+   "enter": null,
+   "text": "닿으면 스피커\n소름 돋는 음질 수준"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1456,
+   "lines": 1,
+   "font": "NotoSansKRBold",
+   "size": 66.0,
+   "line_h": 76,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.4,
+   "enter": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "[광고]",
+   "x": 1068,
+   "y": 2,
+   "w": 198,
+   "align": "right",
+   "lines": 1,
+   "font": "NotoSansKRBold",
+   "size": 54.9,
+   "line_h": 63,
+   "rgb": [
+    185,
+    184,
+    188
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     95,
+     94,
+     97
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -1.7,
+   "enter": null
+  }
+ ],
+ "template_off": {
+  "tail_sec": 2.18
+ },
+ "made_by": "calcopy_frame v1",
+ "source": "ZdeZRtCeAC4",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "SpoqaHanSansNeo-Bold.otf",
+   "top1_score": 0.4235,
+   "picked_from": {
+    "file": "NotoSansKR-Bold.otf",
+    "score": 0.2975
+   },
+   "font_confidence": "low",
+   "skipped": [
+    "SpoqaHanSansNeo-Bold.otf(장면꾸미기 미등록)",
+    "IBMPlexSansKR-Bold.otf(장면꾸미기 미등록)",
+    "Pretendard-Bold.otf(장면꾸미기 미등록)"
+   ]
+  },
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [251, 248, 252] (뜯기 잰 값 [241, 235, 237])",
+   "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 NotoSansKRBold({'file': 'NotoSansKR-Bold.otf', 'score': 0.2975})",
+   "제목 글꼴 = 자막 글꼴(제목은 글꼴 판별 안 함 — 분석기는 자막만 판별)",
+   "고정 문구 기울임은 재지 않음(italic false)"
+  ],
+  "ocr_model": "gemini-3.5-flash"
+ }
+}

@@ -13,5 +13,5 @@
    "font": "GmarketSansBold", "size": 54, "line_h": 60, "rgb": [190, 189, 192], "line_rgb": null,
    "outline": {"px": 3, "rgb": [89, 88, 91]}, "shadow": null, "box": null, "italic": true, "letter_spacing": -4, "enter": null}
  ],
- "template_off": {"tail_sec": 3.5},
+ "template_off": {"tail_sec": 2.18},
  "made_by": "calcopy_frame v1", "source": "ZdeZRtCeAC4"}

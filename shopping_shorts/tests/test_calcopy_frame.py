@@ -113,7 +113,7 @@ def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
     timeline = [{"beat_idx": 0, "t0": 0, "dur": 8, "narration": cap, "caption_lines": [cap], "role": "hook",
                  "primary": {"video_id": "s0", "start": 0, "end": 8}},
                 {"beat_idx": 1, "t0": 8, "dur": 2, "narration": "끝 장면", "caption_lines": ["끝 장면"], "role": "body",
-                 "primary": {"video_id": "s0", "start": 8, "end": 10}}]   # 장면 2(8초 시작)는 틀 A 의 template_off.tail_sec=3.5 에 걸린다
+                 "primary": {"video_id": "s0", "start": 8, "end": 10}}]   # 장면 2(8초 시작)는 틀 A 의 template_off.tail_sec=2.18 에 걸린다
     png = scene_style.render_layer_one(timeline, snap, tmp_path, 0, {"text": "닿으면 스피커\n소름 돋는 음질 수준"}, "t")
     im = Image.open(png).convert("RGBA"); px = im.load()
     assert im.size == (1080, 1920)
@@ -137,7 +137,7 @@ def test_frame_a_render_layer_has_ink_where_spec_says(tmp_path):
 
 @pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
 def test_template_off_tail_scene_draws_nothing(tmp_path):
-    """원본 끝 3.5초는 틀이 사라지고 영상이 전체 화면 — template_off 에 걸린 장면은 레이어가 전부 투명, 영상 칸은 전체."""
+    """원본 끝(21.8초~)은 틀이 사라지고 영상이 전체 화면 — template_off 에 걸린 장면은 레이어가 전부 투명, 영상 칸은 전체."""
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame_a()))
     timeline = [{"beat_idx": i, "t0": t0, "dur": d, "narration": c, "caption_lines": [c], "role": "hook" if i == 0 else "body",
                  "primary": {"video_id": "s0", "start": t0, "end": t0 + d}}
