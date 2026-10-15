@@ -228,6 +228,12 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 7px;
   max-height:4.5em;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
 .tbsay.none{color:var(--dim);font-style:italic}
+/* ✏ 대본 수정 = 대본 상자 오른쪽 아래(10-14 사장님 "옮기고 잘 보이게") — 도구줄에선 뺐다 */
+.tbsayrow{display:flex;align-items:flex-end;gap:6px}
+.tbsayrow .tbsay{flex:1;min-width:0}
+.narrbtn{flex-shrink:0;white-space:nowrap;min-height:30px;padding:4px 12px;font-size:12.5px;font-weight:700;border-radius:8px;
+  border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.narrbtn:hover{filter:brightness(1.15)}
 /* ✏대본수정 중 — 편집칸임을 한눈에(2026-08-17). max-height를 풀어 긴 문장도 다 보인다. */
 .tbsay.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;
   background:#0a1018;color:var(--txt);font-style:normal;cursor:text;
@@ -1067,6 +1073,9 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     background:repeating-linear-gradient(-45deg,transparent 0 4px,rgba(120,128,140,.10) 4px 8px);
     overflow:hidden;white-space:nowrap;pointer-events:none}
 .tl-cap-s{color:#8fc3ea;font-size:9.5px;margin-left:4px;flex:none}
+.tl-sfxmark{position:absolute;top:-2px;z-index:3;transform:translateX(-50%);font-size:12px;line-height:1;cursor:help;
+  filter:drop-shadow(0 0 2px #000)}
+.tl-sfxmark.line{font-size:14px;filter:drop-shadow(0 0 3px #c85cff)}   /* 줄 효과음(짤 리액션 등) = 보라 테두리 */
 .tl-aud-bar{position:absolute;top:0;height:100%;border:1px solid #3a5578;border-radius:4px;
     background:repeating-linear-gradient(90deg,#1b2432 0 2px,#263650 2px 4px)}
 .tl-aud-l{position:absolute;right:4px;top:50%;transform:translateY(-50%);
@@ -2942,6 +2951,7 @@ async function sfxpRefresh(){
   await bgmRefresh();
   try{
     const d = await (await fetch('/api/produce/mix/sfx_pack/' + SL.job, {cache:'no-store'})).json();
+    window.SFX_SOUNDS = d.ok ? (d.beats || []) : null;     // 음성 줄 🔊(관제 203) — 효과음팩을 못 써도 줄 효과음은 보인다
     if (!d.ok || !d.eligible){ SFXP = null; sfxpShow(); renderBand(); return; }
     SFXP = d;
     sfxpPaint();
@@ -3133,8 +3143,11 @@ const SFX_POS_LABEL = {transition: "다음 칸 넘어갈 때", first: "칸 시�
 async function loadSfxList(){
   if (SFX_LIST || !SL.server) return SFX_LIST || [];
   try{
-    const d = await (await fetch('/api/scene/list?type=sfx')).json();
-    SFX_LIST = (d.items || []);
+    // ★우리 효과음팩(사장님 효과음 서랍 /api/sfx/bank)만(10-14 사장님 "우리 효과음팩에 있는 것만, 나머지 빼고").
+    //   서랍을 못 여는 계정(짤·효과음 스위치 꺼짐)은 종전 목록 그대로.
+    let d = await (await fetch('/api/sfx/bank')).json().catch(() => ({}));
+    if (d && d.ok && (d.items || []).length) SFX_LIST = d.items.map(a => ({id: a.id, title: a.title, cat: a.cat}));
+    else { d = await (await fetch('/api/scene/list?type=sfx')).json(); SFX_LIST = (d.items || []); }
   }catch(e){ SFX_LIST = []; }
   return SFX_LIST;
 }
@@ -3143,16 +3156,17 @@ function sfxControl(i){
   // 효과음이 하나도 없으면 줄을 안 낸다 — 빈 드롭다운은 고장으로 보인다.
   if (!SL.server || !SFX_LIST || !SFX_LIST.length) return '';
   const cur = (DATA.beats[i] || {}).sfx || {};
-  const opts = ['<option value="">🔇 없음</option>'].concat(SFX_LIST.map(a =>
-    `<option value="${a.id}" ${String(cur.asset_id)===String(a.id)?'selected':''}>🔊 ${esc(a.title || ('#'+a.id))}</option>`)).join('');
+  const opt = a => `<option value="${a.id}" ${String(cur.asset_id)===String(a.id)?'selected':''}>🔊 ${esc(a.title || ('#'+a.id))}</option>`;
+  const cats = [...new Set(SFX_LIST.map(a => a.cat || ''))];
+  const opts = ['<option value="">🔇 없음</option>'].concat(cats.map(c => c
+    ? `<optgroup label="${esc(c)}">${SFX_LIST.filter(a => a.cat === c).map(opt).join('')}</optgroup>`
+    : SFX_LIST.filter(a => !a.cat).map(opt).join(''))).join('');
   const pos = cur.position || 'transition';
   const posOpts = Object.entries(SFX_POS_LABEL).map(([k,l]) =>
     `<option value="${k}" ${pos===k?'selected':''}>${l}</option>`).join('');
   return `<select class="sfxsel" title="이 칸에 넣을 효과음" onchange="setSfx(${i}, this.value)">${opts}</select>`
     + (cur.asset_id ? `<button class="sfxplay" title="이 효과음만 지금 들어봅니다"
-           onclick="event.stopPropagation();previewSfx(${cur.asset_id})">▶</button>`
-         + `<select class="sfxsel" title="효과음이 울리는 자리 — 칸을 재생하면 이 시각에 실제로 울립니다"
-              onchange="setSfxPos(${i}, this.value)">${posOpts}</select>` : '');
+           onclick="event.stopPropagation();previewSfx(${cur.asset_id})">▶</button>` : '');   // 울리는 자리는 음성 줄 🔊 로 본다(고르기 칸은 뺐다)
 }
 
 // ── AI 장면 만들기(Veo, 2026-09-23) — 스위치 DATA.ai_scene_enabled(관리자만 기본). 상태는 DATA.beats[i].ai_scene.
@@ -3182,7 +3196,7 @@ function memeControl(i){
     return `<span class="meme-row"><span class="hint" title="이 줄 ${({mid:'가운데',tail:'맨 끝'})[cw.pos]||'맨 앞'} ${esc(cw.head_sec)}초에 들어가는 감정짤${cw.manual ? '(직접 고름)' : '(자동)'}">🎭 ${esc(cw.emotion || '')} 짤 ${esc(cw.head_sec)}초</span>`
       + `<button title="다른 짤로 바꿉니다" onclick="memeOpen(${i})">바꾸기</button>`
       + `<button class="danger" title="이 줄의 짤을 뺍니다(자동 배치가 다시 넣지 않아요)" onclick="memeSet(${i}, null)">짤 빼기</button>`
-      + memePosBtns(cw, p => `memeAdjust(${i}, {pos:'${p}'})`, d => `memeAdjust(${i}, {head_sec:${d}})`, '') + '</span>';
+      + '</span>';   // 자리는 짤 카드를 끌어 옮긴다(10-14 사장님 "고르기 칸 필요없다") — memeAdjust 는 bandDrop 이 부른다
   if (cw) return '';           // AI 장면 등 다른 끼움 장면이 있는 칸엔 짤을 안 넣는다(서버도 같은 규칙)
   return `<button title="이 줄 맨 앞에 감정짤을 넣어요" onclick="memeOpen(${i})">＋짤</button>`;
 }
@@ -3218,6 +3232,7 @@ async function memeAdjust(i, ch){
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     DATA.beats[i].cutaway = d.cutaway || null;
     renderBand();
+    if (typeof sfxpRefresh === 'function') sfxpRefresh();   // 음성 줄 🔊 표시(짤 효과음 자리)도 다시
   }catch(e){
     const h = document.getElementById('tbhint');
     if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
@@ -3773,8 +3788,6 @@ function renderBand(){
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
                  몇 글자 고치려고 2단계를 왕복하던 것을 없앤다. -->
-            <button title="이 칸의 대본을 고칩니다 — 아래 대본을 눌러 수정하세요"
-              onclick="openNarrEdit(${i})">✏ 대본수정</button>
             ${pickCount(i) ? `<button class="danger" title="체크한 장면만 이 칸에서 뺍니다"
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             ${sfxControl(i)}
@@ -3790,13 +3803,14 @@ function renderBand(){
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
              "누르면 썸네일아래 대본 수정되게"). 읽기 전용일 때는 종전과 같은 모양이다. -->
-        <div class="tbsay ${narrOf(i) ? '' : 'none'}${NARR_EDIT[i] ? ' editing' : ''}"
+        <div class="tbsayrow"><div class="tbsay ${narrOf(i) ? '' : 'none'}${NARR_EDIT[i] ? ' editing' : ''}"
              title="${NARR_EDIT[i] ? '고친 뒤 [저장]을 누르세요' : '이 칸에서 나올 말'}"
              ${NARR_EDIT[i] ? `contenteditable="true" spellcheck="false" data-i="${i}"
                onclick="event.stopPropagation()" onkeydown="narrKey(event,${i})"` : ''}>${
           NARR_EDIT[i] ? '' : `<button type="button" class="saymore" title="대본 펼치기/접기"
             onclick="event.stopPropagation();this.parentNode.classList.toggle('open')">⌄</button>`}${
-          esc(narrOf(i)) || (NARR_EDIT[i] ? '' : '이 칸엔 멘트가 없어요')}</div>
+          esc(narrOf(i)) || (NARR_EDIT[i] ? '' : '이 칸엔 멘트가 없어요')}</div>${NARR_EDIT[i] ? '' :
+          `<button type="button" class="narrbtn" title="이 칸의 대본을 고칩니다" onclick="event.stopPropagation();openNarrEdit(${i})">✏ 대본 수정</button>`}</div>
         ${NARR_EDIT[i] ? '' : segsHtml(i)}
         ${NARR_EDIT[i] ? `<div class="tbedit" onclick="event.stopPropagation()">
              <button class="act" style="border-color:var(--good);color:var(--good)"

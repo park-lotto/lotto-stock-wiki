@@ -134,7 +134,11 @@
       : capSrc === 'estimate'
         ? '<span class="tl-src bad" title="구절 초가 글자수 추정입니다 — 🔊 음성·자막 다시 뽑기 한 번이면 정밀로 올라갑니다">≈ 추정</span>'
       : '';    // 옛 작업은 기록이 없다 — 아무것도 안 단다(모르는 걸 아는 척하지 않는다)
-    const audHtml = `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
+    // 🔊 이 칸에서 실제로 울리는 효과음(관제 203) — 서버가 렌더와 같은 함수로 잰 시각(SFXP.beats[].sounds). 그리기만 한다
+    const _sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(_b.beat_idx != null ? _b.beat_idx : i));
+    const sfxMarks = ((_sb && _sb.sounds) || []).map(s => `<span class="tl-sfxmark ${s.kind === 'line' ? 'line' : ''}"
+        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${s.kind === 'line' ? '줄 효과음' : '효과음팩'} · ${String(s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초">🔊</span>`).join('');
+    const audHtml = sfxMarks + `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
         <span class="tl-aud-l">${srcBadge}${ttsReal ? ` beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
                                          : ' 🔇 음성 없음 — 추정 길이'}</span></div>`;
 
