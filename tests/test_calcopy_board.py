@@ -62,3 +62,10 @@ def test_detail_applies_human_style(tmp_path):
     B.set_style("x", "A형", rename="에이", confirmed=True, data_dir=tmp_path)
     d = B.detail("x", root=root, data_dir=tmp_path)
     assert d["styles"][0]["label"] == "에이" and d["styles"][0]["confirmed"] and d["styles"][0]["videos"][0]["id"] == "v1"
+
+
+def test_board_merges_store_into_ledger_by_url(tmp_path):
+    root = tmp_path / "repo"; _w(root, "sseolpulda", {"name": "썰풀다", "url": "https://www.youtube.com/@썰풀다/shorts", "steps": {}})
+    B.add_channel("https://www.youtube.com/@%EC%8D%B0%ED%92%80%EB%8B%A4", tags=["썰"], data_dir=tmp_path)
+    chs = B.board(root=root, data_dir=tmp_path)["channels"]
+    assert [c["slug"] for c in chs] == ["sseolpulda"] and chs[0]["tags"] == ["썰"]
