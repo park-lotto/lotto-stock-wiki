@@ -2720,6 +2720,205 @@ def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR
     return str(out_wav)
 
 
+# ── 🔊 소스 원음 깔기 + 나레이션 덕킹(관제 097, 2026-10-16) ─────────────────────────────
+#   해외 원본 영상 하나에 한국어 나레를 입히는 꼴(썰풀다 등) — 원음을 배경처럼 깔고, 나레가 나올 때만 낮춘다.
+#   ★판단의 주인 = 여기 함수 하나씩: 설정 읽기(source_audio_settings) · 원음 한 줄(source_audio_track) ·
+#     말소리 구간(speech_spans) · 덕킹(duck_source_audio) · 나레와 합치기(mix_narration_bed) · 한 벌(source_audio_bed).
+#     렌더·미리보기는 assemble 이, 캡컷은 capcut_draft.assemble_draft_folder 가 **같은 함수**를 부른다(0순위-B).
+#   ★기본은 끔(keep=false) — 종전 그대로 원음을 버린다(칸 클립 -an, 소리 = narration_track 한 줄).
+SOURCE_AUDIO_DEFAULT_VOLUME = 35      # % — 원음의 바탕 크기
+SOURCE_AUDIO_DEFAULT_DUCK_DB = 12     # dB — 나레가 나오는 동안 원음을 더 낮추는 양
+SOURCE_AUDIO_RAMP = 0.15              # 초 — 낮추고 되돌리는 경사(툭 끊기지 않게). 말 시작 **전**에 다 내려가 있다
+SOURCE_AUDIO_MERGE_GAP = 0.5          # 초 — 이보다 짧은 숨은 말소리로 친다(원음이 들썩이지 않게, 경사 2개보다 길어야 한다)
+_SPEECH_NOISE_DB = -35                # 나레 무음 판정 문턱(dBFS)
+_SPEECH_MIN_SILENCE = 0.25            # 초 — 이보다 짧은 무음은 무음으로 안 친다
+
+
+def _truthy(v):
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes", "on", "y")
+    return bool(v)
+
+
+def source_audio_settings(deco):
+    """deco["source_audio"] → {"volume": 0~1, "duck_db": dB} / 꺼져 있으면 None(종전 그대로).
+    ★0·false 는 유효값이다: volume=0 이면 원음 무음, duck_db=0 이면 덕킹 없음 — 기본값으로 튀지 않는다."""
+    sa = (deco or {}).get("source_audio") if isinstance(deco, dict) else None
+    if not isinstance(sa, dict) or not _truthy(sa.get("keep", False)):
+        return None
+
+    def _num(key, default, lo, hi):
+        v = sa.get(key)
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return float(default)
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return float(default)
+        if not math.isfinite(v):
+            return float(default)
+        return max(lo, min(hi, v))
+    return {"volume": _num("volume", SOURCE_AUDIO_DEFAULT_VOLUME, 0.0, 100.0) / 100.0,
+            "duck_db": _num("duck_db", SOURCE_AUDIO_DEFAULT_DUCK_DB, 0.0, 60.0)}
+
+
+_HAS_AUDIO_CACHE = {}
+
+
+def _has_audio(path):
+    key = str(path)
+    if key not in _HAS_AUDIO_CACHE:
+        try:
+            r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index",
+                                "-of", "csv=p=0", key], stdin=subprocess.DEVNULL, **_FF_TEXT)
+            _HAS_AUDIO_CACHE[key] = bool((r.stdout or "").strip())
+        except Exception:      # noqa: BLE001 — 못 재면 소리 없는 걸로(그 컷은 무음)
+            _HAS_AUDIO_CACHE[key] = False
+    return _HAS_AUDIO_CACHE[key]
+
+
+def _atempo_chain(speed):
+    """배속 → atempo 사슬(한 마디는 0.5~2.0 안이어야 옛 ffmpeg 에서도 된다). 1배면 빈 문자열."""
+    if not math.isfinite(speed) or speed <= 0 or abs(speed - 1.0) < 1e-3:
+        return ""
+    parts = []
+    while speed > 2.0:
+        parts.append("atempo=2.0")
+        speed /= 2.0
+    while speed < 0.5:
+        parts.append("atempo=0.5")
+        speed /= 0.5
+    parts.append(f"atempo={speed:.5f}")
+    return ",".join(parts) + ","
+
+
+def source_audio_track(cut_plan, source_video_paths, beat_frames, out_wav, sample_rate=NARR_SR):
+    """컷 계획(render_cut_plan) 그대로 소스 원음 **한 줄**을 만든다 — 화면 컷과 같은 자리·같은 배속·같은 프레임 자.
+
+    beat_frames: [(beat_idx, 프레임 수)] — narration_track 과 같은 자(완성본에 들어간 칸, 순서대로).
+    컷마다: 소스를 [start, start+c_src] 만 읽어(화면과 같은 창) 화면 배속(c_src/play_out)으로 맞추고, 정지(freeze) 몫은
+      무음으로 채워 **화면 프레임 수(cfr) × 표본/프레임** 에서 정확히 자른다. 칸 끝은 칸 프레임 수에 맞춘다.
+    소리 없는 소스(또는 컷 계획에 없는 칸)는 그 길이만큼 무음. 반환: out_wav(48kHz 스테레오 pcm)."""
+    spf = sample_rate // 30
+    by = {bp["idx"]: bp for bp in (cut_plan or [])}
+    ins, fc, labels = [], [], []
+
+    def _silence(ns):
+        lb = f"s{len(labels)}"
+        fc.append(f"anullsrc=r={sample_rate}:cl=stereo,atrim=end_sample={ns},asetpts=N/SR/TB[{lb}]")
+        labels.append(lb)
+
+    for idx, nfr in beat_frames:
+        left = int(nfr) * spf
+        if left <= 0:
+            continue
+        for cp in ((by.get(idx) or {}).get("clips") or []):
+            if left <= 0:
+                break
+            ns = min(left, int(cp["cfr"]) * spf)
+            if ns <= 0:
+                continue
+            src = (source_video_paths or {}).get(cp["video_id"])
+            if src and os.path.exists(str(src)) and _has_audio(src):
+                c_src, play_out = float(cp["c_src"]), float(cp["play_out"])
+                ins += ["-ss", f"{float(cp['start']):.3f}", "-t", f"{c_src:.3f}", "-i", str(src)]
+                k = ins.count("-i") - 1
+                tempo = _atempo_chain(c_src / play_out if play_out > 1e-6 else 1.0)
+                lb = f"s{len(labels)}"
+                fc.append(f"[{k}:a]aresample={sample_rate},aformat=sample_fmts=fltp:sample_rates={sample_rate}"
+                          f":channel_layouts=stereo,asetpts=PTS-STARTPTS,{tempo}"
+                          f"apad=whole_len={ns},atrim=end_sample={ns},asetpts=N/SR/TB[{lb}]")
+                labels.append(lb)
+            else:
+                _silence(ns)
+            left -= ns
+        if left > 0:            # 컷이 칸을 다 못 채웠다(컷 계획 없는 칸 포함) — 남은 몫은 무음
+            _silence(left)
+    if not labels:
+        raise RuntimeError("source_audio_track: 칸이 없습니다")
+    fc.append("".join(f"[{lb}]" for lb in labels) + f"concat=n={len(labels)}:v=0:a=1[a]")
+    _run_ffmpeg(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(fc), "-map", "[a]",
+                 "-c:a", "pcm_s16le", "-ar", str(sample_rate), str(out_wav)])
+    return str(out_wav)
+
+
+def speech_spans(narr_wav, merge_gap=SOURCE_AUDIO_MERGE_GAP):
+    """나레이션 한 줄에서 **말소리가 나는 구간** [(시작초, 끝초)] — 덕킹이 이 구간만 원음을 낮춘다.
+    무음(silencedetect)의 여집합이고, merge_gap 보다 짧은 숨은 말소리에 붙인다."""
+    total = _probe_duration(narr_wav)
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(narr_wav), "-af",
+                        f"silencedetect=noise={_SPEECH_NOISE_DB}dB:d={_SPEECH_MIN_SILENCE}", "-f", "null", "-"],
+                       stdin=subprocess.DEVNULL, **_FF_TEXT)
+    sil, cur = [], None
+    for line in (r.stderr or "").splitlines():
+        m = re.search(r"silence_start:\s*(-?[\d.]+)", line)
+        if m:
+            cur = max(0.0, float(m.group(1)))
+            continue
+        m = re.search(r"silence_end:\s*(-?[\d.]+)", line)
+        if m and cur is not None:
+            sil.append((cur, float(m.group(1))))
+            cur = None
+    if cur is not None:
+        sil.append((cur, total))
+    spans, t = [], 0.0
+    for a, b in sil:
+        if a - t > 1e-3:
+            spans.append([t, a])
+        t = max(t, b)
+    if total - t > 1e-3:
+        spans.append([t, total])
+    merged = []
+    for a, b in spans:
+        if merged and a - merged[-1][1] < merge_gap:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    return [(round(a, 3), round(b, 3)) for a, b in merged]
+
+
+def source_gain_expr(spans, volume, duck_db, ramp=SOURCE_AUDIO_RAMP):
+    """원음 크기 식(ffmpeg volume eval=frame): 바탕 volume, 말소리 구간에선 duck_db 만큼 더 낮춤(경사 ramp초).
+    경사는 말 시작 **전** ramp초에 내려가 말 끝 **뒤** ramp초에 돌아온다."""
+    if duck_db <= 0 or not spans:
+        return f"{volume:.5f}"
+    terms = "+".join(f"clip(min((t-{a - ramp:.3f})/{ramp},({b + ramp:.3f}-t)/{ramp}),0,1)" for a, b in spans)
+    return f"{volume:.5f}*pow(10,-{duck_db / 20.0:.5f}*min(1,{terms}))"
+
+
+def duck_source_audio(narr_wav, src_wav, settings, out_wav):
+    """원음 한 줄에 크기·덕킹을 구워 out_wav 로(나레는 안 섞는다 — 캡컷은 이것을 따로 트랙에 싣는다).
+    반환: (out_wav, spans)."""
+    spans = speech_spans(narr_wav)
+    expr = source_gain_expr(spans, float(settings["volume"]), float(settings["duck_db"]))
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(src_wav), "-af", f"volume='{expr}':eval=frame",
+                 "-c:a", "pcm_s16le", "-ar", str(NARR_SR), str(out_wav)])
+    return str(out_wav), spans
+
+
+def mix_narration_bed(narr_wav, ducked_wav, out_wav):
+    """나레 + (덕킹된) 원음 → 한 줄. ★amix normalize=0 — 기본(normalize=1)은 입력 개수로 나눠 나레가 -6dB 가 된다.
+    길이는 나레(첫 입력) 그대로라 표본 수 = 총 프레임 × 1600 이 유지된다.
+    ★채널 배치는 **나레를 따른다** — 모노 나레를 stereo 로 올리면 ffmpeg 가 채널마다 -3dB 로 나눠 목소리가 작아졌다(실측 -3.01dB)."""
+    layout = "stereo" if _audio_channels(narr_wav) >= 2 else "mono"
+    fmt = f"aformat=sample_fmts=fltp:sample_rates={NARR_SR}:channel_layouts={layout}"
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(narr_wav), "-i", str(ducked_wav), "-filter_complex",
+                 f"[0:a]{fmt}[n];[1:a]{fmt}[s];[n][s]amix=inputs=2:duration=first:normalize=0[a]",
+                 "-map", "[a]", "-c:a", "pcm_s16le", "-ar", str(NARR_SR), str(out_wav)])
+    return str(out_wav)
+
+
+def source_audio_bed(cut_plan, source_video_paths, beat_frames, narr_wav, settings, work, mix=True):
+    """원음 깔기 한 벌: 원음 한 줄 → 덕킹 → (mix=True) 나레와 합친 한 줄 / (mix=False) 덕킹된 원음만.
+    렌더(assemble)와 캡컷(capcut_draft)이 이 함수 하나를 부른다."""
+    work = Path(work)
+    src = source_audio_track(cut_plan, source_video_paths, beat_frames, work / "source_audio_raw.wav")
+    ducked, _ = duck_source_audio(narr_wav, src, settings, work / "source_audio_ducked.wav")
+    if not mix:
+        return ducked
+    return mix_narration_bed(narr_wav, ducked, work / "narration_bed.wav")
+
+
 def meme_cutaway(beat):
     """이 칸의 끼움 장면이 '맨 앞 감정짤'(관제 139, storyboard.meme_slots 가 남긴 match_type "meme" + head_sec + vid)인가 → 그 dict | None.
     ★짤은 덮어씌우기가 아니라 **컷 목록의 첫 컷**이다(화면 scenesV2Alloc 이 짤 컷을 앞에 둔다). 렌더·캡컷·ZIP·편집 화면 합본은
@@ -2786,7 +2985,7 @@ def cutaway_overlay(asset_dur, beat_dur, w, h):
     return win, fc
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None, source_audio=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
@@ -2956,6 +3155,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     #   (clean_fn)·장면꾸미기(compose)는 종전처럼 mix_raw.mp4 의 소리를 받는다 — 입력 모양(영상+AAC 한 줄)은 그대로다.
     #   인코딩 횟수도 종전과 같다(종전: 칸 클립마다 1회 → 이제: 한 줄 1회 / 효과음·BGM이 있으면 뒤에서 1회 더 — 종전과 같음).
     narr = narration_track(edit_plan, tts_paths, beat_frames, work / "narration.wav")
+    if source_audio:
+        # 🔊 원음 깔기(관제 097) — 같은 컷 계획·같은 칸 프레임으로 원음 한 줄 → 덕킹 → 나레와 합친 narration_bed.wav.
+        #   assemble 이 이 파일을 소리의 바탕으로 쓴다. mix_raw(자막제거 입력)는 종전대로 나레만 싣는다(청소 입력 불변).
+        source_audio_bed(_cplan, source_video_paths, beat_frames, narr, source_audio, work)
     mix_raw = work / "mix_raw.mp4"
     _run_ffmpeg(["ffmpeg", "-y", "-i", str(mix_video), "-i", str(narr),
                  "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", str(mix_raw)])
@@ -4099,11 +4302,13 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     #   ⚠️out_path는 work **밖**이라 안전하다(work는 out_path의 형제 폴더).
     #     실패해도 삼킨다 — 청소가 렌더를 죽이면 안 된다.
     try:
-        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
+        _sa = source_audio_settings(deco)          # 원음 깔기(관제 097) — 꺼져 있으면 None, 종전 그대로
+        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths,
+                              **({"source_audio": _sa} if _sa else {}))
         base_video = clean_fn(mix_raw) if clean_fn else mix_raw
         # ★소리는 나레이션 무손실 한 줄(narration_track)에서 **한 번만** AAC 로 — 효과음·BGM 섞기·자막제거본·장면꾸미기 모두(2026-09-27).
         #   audio_wav_out 을 주면 완성본 소리(섞은 뒤)를 무손실로도 남긴다 — 호출부가 인트로를 붙일 때(prepend_still audio_wav) 쓴다.
-        _narr = work / "narration.wav"
+        _narr = work / ("narration_bed.wav" if _sa else "narration.wav")     # 원음 깔기 켜짐 = 나레+덕킹 원음 한 줄
         _narr = str(_narr) if _narr.exists() else None
         if not burn_captions:
             # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를

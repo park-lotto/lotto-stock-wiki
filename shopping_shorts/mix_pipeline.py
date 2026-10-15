@@ -5729,6 +5729,9 @@ def run_preview(job_id, db_path, work_root):
         #   곡→파일은 렌더·캡컷과 같은 resolve_deco_media 한 곳. 나머지 꾸미기는 종전대로 뺀다(4단계 소관).
         _pv_bgm = (job.get("deco") or {}).get("bgm")
         _pv_deco = resolve_deco_media({"bgm": _pv_bgm}, work) if _pv_bgm else {}
+        # 🔊 원음 깔기(관제 097)도 소리라 배경음처럼 싣는다 — 판단(크기·덕킹)은 video_assemble.source_audio_settings 한 곳.
+        if (job.get("deco") or {}).get("source_audio"):
+            _pv_deco = {**_pv_deco, "source_audio": (job.get("deco") or {})["source_audio"]}
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.

@@ -374,6 +374,19 @@ def _baked_of(beat):
     return v if (v > 0 and math.isfinite(v)) else 0.0
 
 
+def capcut_cut_plan(plan, timeline, source_video_paths, tts_paths=None, video_durs=None):
+    """캡컷이 쓰는 완성본 컷 계획 하나 — 영상 조각(capcut_segments)과 원음 트랙(관제 097)이 같은 계획을 받는다."""
+    from shopping_shorts.video_assemble import render_cut_plan
+    srcd = {vid: float((video_durs or {}).get(real, 0.0) or 0.0)
+            for vid, real in (source_video_paths or {}).items() if real}
+    bd = {tl["beat_idx"]: float(tl.get("dur") or 0.0) for tl in timeline or []
+          if float(tl.get("dur") or 0.0) > 0}
+    # 정본 job: 렌더 컷 계획을 소스별 파일 좌표로 옮긴 것(mix_pipeline.export_sources_for → plan["_cut_plan"]) 그대로 —
+    #   다시 계산하면 소스별 파일 길이로 당기기·정지가 달라진다(11cfc4a4b75c)
+    return (plan or {}).get("_cut_plan") or render_cut_plan(plan, tts_paths or {}, source_video_paths or {},
+                                                            beat_durs=bd, src_durs=srcd)
+
+
 def capcut_segments(plan, timeline, source_video_paths, tts_paths=None, video_durs=None):
     """완성본 컷 계획(video_assemble.render_cut_plan) → 캡컷 영상 트랙 조각 {beat_idx: [조각]} (2026-09-27).
 
@@ -388,15 +401,7 @@ def capcut_segments(plan, timeline, source_video_paths, tts_paths=None, video_du
     계획을 못 구하면 None — 호출부가 종전 조각 계획(_beat_clips)으로 가되 stderr 경보를 남긴다. 계획에 없는 칸도 같다."""
     import sys
     try:
-        from shopping_shorts.video_assemble import render_cut_plan
-        srcd = {vid: float((video_durs or {}).get(real, 0.0) or 0.0)
-                for vid, real in (source_video_paths or {}).items() if real}
-        bd = {tl["beat_idx"]: float(tl.get("dur") or 0.0) for tl in timeline or []
-              if float(tl.get("dur") or 0.0) > 0}
-        # 정본 job: 렌더 컷 계획을 소스별 파일 좌표로 옮긴 것(mix_pipeline.export_sources_for → plan["_cut_plan"]) 그대로 —
-        #   다시 계산하면 소스별 파일 길이로 당기기·정지가 달라진다(11cfc4a4b75c)
-        cplan = (plan or {}).get("_cut_plan") or render_cut_plan(plan, tts_paths or {}, source_video_paths or {},
-                                                                 beat_durs=bd, src_durs=srcd)
+        cplan = capcut_cut_plan(plan, timeline, source_video_paths, tts_paths, video_durs)
     except Exception as e:      # noqa: BLE001 — 계획 실패가 내보내기를 죽이면 안 된다(대신 경보)
         print("[capcut] 완성본 컷 계획 실패 — 종전 조각 계획으로 대체: %r" % (e,), file=sys.stderr)
         return None
@@ -628,7 +633,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
                 sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None, scene_dim_layers=None,
                 scene_zoom_spans=None,
-                cut_segments=None, freeze_images=None):
+                cut_segments=None, freeze_images=None, source_audio_layer=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -927,6 +932,20 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             bseg["speed"] = _bsp
             bgm_track["segments"].append(bseg)
 
+    # ── 🔊 소스 원음(관제 097) — 렌더와 같은 함수(video_assemble.source_audio_bed)가 크기·덕킹까지 구운 한 줄 ──
+    #   ★덕킹은 볼륨 키프레임이 아니라 **소리 파일에 구워** 싣는다 — 렌더와 같은 소리가 보장되는 대신
+    #     캡컷에서 덕킹 깊이를 다시 고치려면 이 트랙을 지우고 영상 클립 볼륨(0)을 올려 직접 해야 한다.
+    src_audio_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
+                       "name": "source-audio", "is_default_name": False, "segments": []}
+    if source_audio_layer and source_audio_layer.get("_capcut_path") and total_us > 0:
+        _sadur = min(_us(source_audio_layer.get("dur", 0.0)) or total_us, total_us)
+        if _sadur > 0:
+            sam = _audio_material(source_audio_layer["_capcut_path"],
+                                  source_audio_layer["_capcut_path"].rsplit("/", 1)[-1], _sadur)
+            mats["audios"].append(sam)
+            src_audio_track["segments"].append(
+                _base_segment(sam["id"], 0, _sadur, source_start=0, source_dur=_sadur, render_index=0, volume=1.0))
+
     # ── 🔔 효과음(sfx) — 타점은 렌더와 같은 함수가 준다(video_assemble.sfx_events_for) ──
     for _sx in (sfx_layers or []):
         if not _sx.get("_capcut_path"):
@@ -961,7 +980,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wm_track["segments"].append(wseg)
 
     tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
-                          aud_track, bgm_track, sfx_track, txt_track, wm_track,
+                          aud_track, src_audio_track, bgm_track, sfx_track, txt_track, wm_track,
                           scene_dim_track, scene_overlay_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
@@ -1166,6 +1185,26 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                     freeze_images[(_bi, _sg["ci"])] = f"{base_abs}/{project}/{_fname}"
                     break
 
+    # ── 🔊 소스 원음 깔기(관제 097) — deco["source_audio"] 가 켜져 있을 때만. 판단은 video_assemble 한 곳 ──
+    source_audio_layer = None
+    try:
+        from shopping_shorts import video_assemble as _va
+        _sa = _va.source_audio_settings(deco)
+        if _sa:
+            _cpl = capcut_cut_plan(plan, timeline, source_video_paths, tts_paths, video_durs)
+            _bf = [(bp["idx"], bp["nfr"]) for bp in _cpl]
+            _tmp = proj / "_src_audio_work"
+            _tmp.mkdir(exist_ok=True)
+            _narr = _va.narration_track(plan, tts_paths, _bf, _tmp / "narration.wav")
+            _ducked = _va.source_audio_bed(_cpl, source_video_paths, _bf, _narr, _sa, _tmp, mix=False)
+            _sap, _sad = _bring(_ducked, "source_audio.wav")
+            if _sap:
+                source_audio_layer = {"_capcut_path": _sap, "dur": _sad}
+            shutil.rmtree(_tmp, ignore_errors=True)
+    except Exception as e:      # noqa: BLE001 — 원음이 내보내기를 죽이면 안 된다(대신 경보)
+        import sys as _s
+        print("[capcut] 소스 원음 트랙 실패 — 원음 없이 내보낸다: %r" % (e,), file=_s.stderr)
+
     draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
@@ -1174,7 +1213,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                            sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
                            scene_overlay_layers=copied_scene_layers, scene_dim_layers=copied_dim_layers,
                            scene_zoom_spans=scene_zoom_spans,
-                           cut_segments=cut_segs, freeze_images=freeze_images)
+                           cut_segments=cut_segs, freeze_images=freeze_images,
+                           source_audio_layer=source_audio_layer)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.
