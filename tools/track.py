@@ -1015,8 +1015,17 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None, urgent
     if held is None:
         raise _track_finish_busy_error(name)
     try:
-        if os.environ.get("TRACK_SOLO", "") == "1":           # 옛 경로(혼자 병합) — 비상용
-            return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
+        if os.environ.get("TRACK_SOLO", "") == "1":           # 옛 경로(혼자 병합) — 비상용. 일꾼 락을 같이 쥔다(묶음과 경주 금지)
+            while True:
+                wl = _try_worker_lock(repo)
+                if wl is not None:
+                    break
+                print("[대기] 병합 일꾼이 묶음을 넣는 중 — 끝나면 혼자 병합한다")
+                time.sleep(10)
+            try:
+                return _finish_locked(name, repo, gate, attempts, video_gate, urgent)
+            finally:
+                wl.close()
         return _finish_queued(name, repo, gate, video_gate, urgent)
     finally:
         held.close()
@@ -1046,9 +1055,19 @@ def _enqueue(repo, name, br, wt, urgent):
         except OSError:
             pass
     t = q / ("%s__%s.json" % (_queue_rank(urgent), name))
-    t.write_text(json.dumps({"name": name, "br": br, "wt": str(wt), "urgent": bool(urgent), "pid": os.getpid()},
-                            ensure_ascii=False), encoding="utf-8")
+    # ★등록 시점 커밋을 박는다(관제 212 진단) — 관제 검사와 병합이 다른 시각에 브랜치를 읽으면 검사 안 받은 커밋이 들어간다
+    rc, sha = run(["git", "rev-parse", br], repo)
+    _atomic_write(t, json.dumps({"name": name, "br": br, "sha": sha.strip() if rc == 0 else br, "wt": str(wt),
+                                 "urgent": bool(urgent), "pid": os.getpid(), "raced": 0}, ensure_ascii=False))
     return t
+
+
+def _atomic_write(path, text):
+    """반쯤 쓴 파일을 남이 읽지 않게 — 임시 파일에 쓰고 바꿔 끼운다(관제 212 진단: 결과 파일 경쟁)."""
+    path = Path(path)
+    tmp = path.with_name(path.name + ".tmp%d" % os.getpid())
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def _queue_pending(repo):
@@ -1062,10 +1081,8 @@ def _queue_pending(repo):
         except (OSError, ValueError):
             continue
         if d.get("pid") and d["pid"] != os.getpid() and not _pid_alive(d["pid"]):
-            try:
-                t.unlink()
-            except OSError:
-                pass
+            d["_file"] = str(t)                  # 조용히 사라지지 않게 결과를 남긴다(다시 걸면 새 번호표)
+            _finish_ticket(d, 1, "중단: 이 finish 를 건 프로세스가 죽어 줄에서 뺐다(창 닫힘·메모리 정리 등) — 다시 걸어라")
             continue
         d["_file"] = str(t)
         out.append(d)
@@ -1075,8 +1092,7 @@ def _queue_pending(repo):
 def _finish_ticket(t, rc, msg):
     f = Path(t["_file"])
     try:
-        f.with_name(f.name[:-5] + ".result.json").write_text(json.dumps({"rc": rc, "msg": msg}, ensure_ascii=False),
-                                                              encoding="utf-8")
+        _atomic_write(f.with_name(f.name[:-5] + ".result.json"), json.dumps({"rc": rc, "msg": msg}, ensure_ascii=False))
         f.unlink()
     except OSError:
         pass
@@ -1105,7 +1121,8 @@ def _finish_queued(name, repo, gate, video_gate, urgent):
             try:
                 r = json.loads(res_file.read_text(encoding="utf-8"))
             except (OSError, ValueError):
-                r = {"rc": 1, "msg": "결과 파일을 못 읽었다"}
+                time.sleep(1)                      # 쓰는 중일 수 있다(원자 쓰기라 드물다) — 다시 읽는다
+                continue
             try:
                 res_file.unlink()
             except OSError:
@@ -1118,7 +1135,11 @@ def _finish_queued(name, repo, gate, video_gate, urgent):
         lk = _try_worker_lock(repo)
         if lk is not None:
             try:
-                _merge_worker(repo, gate, video_gate)
+                _merge_worker(repo, gate, video_gate, own_result=res_file)
+            except Exception as e:  # noqa: BLE001 — 일꾼이 죽으면 다음 대기자가 이어받는다. 자기 표엔 남긴다
+                if t.exists():
+                    _finish_ticket({"_file": str(t)}, 1, "중단: 병합 일꾼 오류 — %r" % (e,))
+                raise
             finally:
                 lk.close()
             continue
@@ -1131,21 +1152,43 @@ def _finish_queued(name, repo, gate, video_gate, urgent):
 BATCH_GATHER_SEC = 30      # 첫 트랙이 오면 이만큼 모았다가 묶는다 — 세션들이 비슷한 시각에 finish 를 건다
 
 
-def _merge_worker(repo, gate, video_gate):
+def _merge_worker(repo, gate, video_gate, own_result=None):
     """일꾼: 줄이 빌 때까지 묶음을 넣는다.
     ★묶음은 **시험 자원을 쥔 뒤·시험 직전에** 줄을 다시 읽어 정한다(2026-10-15 실측: 17:07 혼자일 때 묶음을 정하고
       17:21 까지 자원을 기다리는 사이 17:19 에 온 3트랙을 못 태웠다). 자원은 일꾼이 쥔 채 묶음·이분까지 다 돈다."""
+    checked = {}                                    # 트랙 → (sha, 카드) — 관제 미리 검사는 git 만이라 자원 밖에서
     while True:
+        if own_result is not None and Path(own_result).exists():
+            return                                  # 내 결과가 나왔다 — 남은 줄은 다른 대기자가 이어받는다(볼모 방지)
         run(["git", "fetch", "origin"], repo)
         if not _queue_pending(repo):
             return
         _clean_dead_stages(repo)
         time.sleep(BATCH_GATHER_SEC)
+        _precheck_pending(repo, checked)
         with _gate_slot(urgent=any(t.get("urgent") for t in _queue_pending(repo))):
-            pending = _queue_pending(repo)          # 자원 기다리는 동안 온 트랙까지
+            _precheck_pending(repo, checked)        # 자원 기다리는 동안 온 트랙까지(검사 안 된 것만)
+            pending = [t for t in _queue_pending(repo) if t["name"] in checked]
             if not pending:
-                return
-            _run_batch(repo, pending[:BATCH_MAX], gate, video_gate, slot_held=True)
+                continue
+            _run_batch(repo, pending[:BATCH_MAX], gate, video_gate, slot_held=True, checked=checked)
+
+
+def _precheck_pending(repo, checked):
+    """줄의 트랙 중 아직 관제 검사를 안 받은 것만 검사한다. 실패·새 커밋 없음은 바로 결과를 남긴다."""
+    for t in _queue_pending(repo):
+        if t["name"] in checked and checked[t["name"]][0] == t.get("sha"):
+            continue
+        try:
+            c = _control_precheck(repo, t)
+        except Exception as e:  # noqa: BLE001 — ControlError·git 오류 하나가 일꾼을 죽이지 않게(관제 212 진단)
+            _finish_ticket(t, 1, "중단: %s" % e)
+            print("  ✗ %s — 관제·충돌로 뺐다: %s" % (t["name"], str(e).splitlines()[0][:120] if str(e) else repr(e)))
+            continue
+        if c is None:
+            _finish_ticket(t, 0, "병합할 것이 없다 (트랙 '%s'에 새 커밋 없음)." % t["name"])
+            continue
+        checked[t["name"]] = (t.get("sha"), c)
 
 
 def _control_precheck(repo, t):
@@ -1153,7 +1196,7 @@ def _control_precheck(repo, t):
     → 카드 번호 목록 / None(새 커밋 없음). 충돌·관제 실패는 TrackError."""
     stage = _open_stage(repo, t["name"])
     try:
-        rc, out = run(["git", "merge", "--no-ff", "--no-commit", t["br"]], stage)
+        rc, out = run(["git", "merge", "--no-ff", "--no-commit", t.get("sha") or t["br"]], stage)
         if "Already up to date" in out:
             return None
         if rc != 0:
@@ -1167,45 +1210,57 @@ def _control_precheck(repo, t):
         _close_stage(repo, stage)
 
 
-def _run_batch(repo, batch, gate, video_gate, slot_held=False):
+def _run_batch(repo, batch, gate, video_gate, slot_held=False, checked=None):
     names = [t["name"] for t in batch]
     print("\n=== 묶음 %d개: %s ===" % (len(batch), ", ".join(names)))
-    ok, cards = [], {}
-    for t in batch:
-        try:
-            c = _control_precheck(repo, t)
-        except TrackError as e:
-            _finish_ticket(t, 1, "중단: %s" % e)
-            print("  ✗ %s — 관제·충돌로 뺐다" % t["name"])
-            continue
-        if c is None:
-            _finish_ticket(t, 0, "병합할 것이 없다 (트랙 '%s'에 새 커밋 없음)." % t["name"])
-            continue
-        ok.append(t)
-        cards[t["name"]] = c
+    if checked is None:
+        checked = {}
+        for t in batch:
+            try:
+                c = _control_precheck(repo, t)
+            except Exception as e:  # noqa: BLE001
+                _finish_ticket(t, 1, "중단: %s" % e)
+                print("  ✗ %s — 관제·충돌로 뺐다" % t["name"])
+                continue
+            if c is None:
+                _finish_ticket(t, 0, "병합할 것이 없다 (트랙 '%s'에 새 커밋 없음)." % t["name"])
+                continue
+            checked[t["name"]] = (t.get("sha"), c)
+    ok = [t for t in batch if t["name"] in checked]
+    cards = {t["name"]: checked[t["name"]][1] for t in ok}
     if not ok:
         return
     label = "묶음:" + "+".join(t["name"] for t in ok)
     urgent = any(t["urgent"] for t in ok)
     stage = _open_stage(repo, "_batch")
     try:
-        result = _merge_and_gate(label, repo, stage, [t["br"] for t in ok], gate, ok[0]["wt"], video_gate, lock=None,
+        result = _merge_and_gate(label, repo, stage, [t.get("sha") or t["br"] for t in ok], gate, ok[0]["wt"], video_gate, lock=None,
                                  push_lock=lambda: _finish_gate_lock(urgent=urgent), urgent=urgent,
                                  control_cards=cards, slot_held=slot_held)
-    except TrackError as e:
+    except Exception as e:  # noqa: BLE001 — 게이트·관문 예외도 묶음 실패로(이분). 일꾼이 죽지 않게
         _close_stage(repo, stage)
+        if not isinstance(e, TrackError):
+            print("  ⚠️ 묶음 중 예상 못 한 오류: %r" % (e,))
         if len(ok) == 1:
             _finish_ticket(ok[0], 1, "중단: %s" % e)
             return
         mid = len(ok) // 2
         print("  ⚠️ 묶음 실패 — 반으로 나눠 다시 잰다(깨뜨린 트랙만 빠진다): %s | %s"
               % (",".join(t["name"] for t in ok[:mid]), ",".join(t["name"] for t in ok[mid:])))
-        _run_batch(repo, ok[:mid], gate, video_gate, slot_held=slot_held)
-        _run_batch(repo, ok[mid:], gate, video_gate, slot_held=slot_held)
+        _run_batch(repo, ok[:mid], gate, video_gate, slot_held=slot_held, checked=checked)
+        _run_batch(repo, ok[mid:], gate, video_gate, slot_held=slot_held, checked=checked)
         return
     _close_stage(repo, stage)
     if result == "raced":            # 옛 판본 finish 가 끼어들었다(전환기) — 번호표는 그대로, 다음 바퀴에 다시
         print("  ⚠️ 그사이 main 에 코드가 들어왔다(옛 경로 finish) — 다음 바퀴에 다시")
+        for t in ok:                  # 무한 바퀴 방지 — 표당 3번
+            n = int(t.get("raced", 0)) + 1
+            if n >= 3:
+                _finish_ticket(t, 1, "중단: main 이 계속 바뀌어(3번) 넣지 못했다 — 다시 걸어라")
+            else:
+                d = {k: v for k, v in t.items() if not k.startswith("_")}
+                d["raced"] = n
+                _atomic_write(t["_file"], json.dumps(d, ensure_ascii=False))
         return
     if result == "nothing":
         for t in ok:
