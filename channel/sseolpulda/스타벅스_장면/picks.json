@@ -2,11 +2,12 @@
  "lines": [
   {
    "i": 0,
-   "kind": "photo",
-   "src": "cand/00/p2.jpg",
-   "zoom": true,
+   "kind": "video",
+   "src": "cand2/00/v_PB3Y5RuhpZs.mp4",
+   "zoom": false,
    "sfx": "003_쿵_소리.wav",
-   "meme": "놀람"
+   "meme": "놀람",
+   "start": 0.5
   },
   {
    "i": 1,
@@ -23,16 +24,17 @@
   },
   {
    "i": 3,
-   "kind": "photo",
-   "src": "cand/03/p0.jpg",
-   "zoom": true,
-   "sfx": "002_딩_소리.wav"
+   "kind": "video",
+   "src": "cand2/03/v_CTXegFn_oh8.mp4",
+   "zoom": false,
+   "sfx": "002_딩_소리.wav",
+   "start": 0.8
   },
   {
    "i": 4,
    "kind": "video",
-   "src": "cand/04/v_iRnm9rRMHE4.mp4",
-   "start": 0.0,
+   "src": "cand2/00/v_99CkR2mXNls.mp4",
+   "start": 2.0,
    "bw": true,
    "sfx": "003_쿵_소리.wav",
    "meme": "분노_짜증"
@@ -40,20 +42,21 @@
   {
    "i": 5,
    "kind": "photo",
-   "src": "cand/05/p2.jpg",
+   "src": "ai/05.png",
    "zoom": true
   },
   {
    "i": 6,
-   "kind": "photo",
-   "src": "cand/06/p2.jpg",
-   "zoom": true,
-   "sfx": "004_뿅.wav"
+   "kind": "video",
+   "src": "cand2/06/v_klmcJoeGG2k.mp4",
+   "zoom": false,
+   "sfx": "004_뿅.wav",
+   "start": 2.5
   },
   {
    "i": 7,
    "kind": "video",
-   "src": "cand/07/v_E5QerFSpsxg.mp4",
+   "src": "cand2/07/v_nzkdBANeZ9o.mp4",
    "start": 0.5,
    "meme": "웃음"
   }

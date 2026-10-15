@@ -22,14 +22,27 @@ def _wh(p):
         return 0, 0
 
 
-def videos(q, out, n=2):
-    subprocess.run(["yt-dlp", "--encoding", "utf-8", "-q", "--match-filter", "duration<90", "--max-downloads", str(n + 2),
-                    "-f", "bv*[height<=1920][ext=mp4]+ba/b[ext=mp4]/b", "--merge-output-format", "mp4",
-                    "-o", str(out / "v_%(id)s.%(ext)s"), f"ytsearch15:{q} #shorts"], capture_output=True)
-    for f in out.glob("v_*.mp4"):          # 세로만 남긴다(엔진이 가로를 거절, 크롭하면 확대됨)
-        w, h = _wh(f)
-        if not h or w >= h:
-            f.unlink()
+def videos(q, out, n=3):
+    """유튜브 '4분 미만' 필터 검색(sp=EgIYAQ) — ytsearch 는 긴 영상만 줘서 후보가 0이었다(10-15 실측).
+    목록을 먼저 받아 60초 이하만 고르고, 받은 뒤 가로는 지운다(엔진이 거절·크롭하면 확대됨)."""
+    import urllib.parse as up
+    url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=EgIYAQ%253D%253D"
+    lst = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--flat-playlist", "-I", "1:25", "--print", "%(id)s %(duration)s", url],
+                         capture_output=True, encoding="utf-8").stdout.splitlines()
+    ids = [l.split()[0] for l in lst if l.strip() and l.split()[-1] not in ("NA", "None") and float(l.split()[-1]) <= 60]
+    got = 0
+    for vid in ids:
+        if got >= n:
+            break
+        f = out / f"v_{vid}.mp4"
+        subprocess.run(["yt-dlp", "--encoding", "utf-8", "-q", "-f", "bv*[height<=1920][ext=mp4]+ba/b[ext=mp4]/b",
+                        "--merge-output-format", "mp4", "-o", str(f), f"https://www.youtube.com/shorts/{vid}"], capture_output=True)
+        if f.exists():
+            w, h = _wh(f)
+            if not h or w >= h:
+                f.unlink()
+            else:
+                got += 1
 
 
 def photos(q, out, n=4):
