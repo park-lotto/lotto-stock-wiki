@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 W, H = 1080, 1920
-WIN = (349, 1622)                  # 영상 창 y 범위
+WIN = (349, 1621)                  # 영상 창 y 범위
 TITLE_Y = (117, 351)
 BG = "0xFCF9FD"
 FONT_DIR = ROOT / "shopping_shorts/channel_presets/brainbulb/fonts"
@@ -77,7 +77,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     y = WIN[0] + int((WIN[1] - WIN[0]) * 0.70)
     keys = {w for w in " ".join(title).split() if len(w) >= 2}
     def _hl(t):   # 제목 낱말이 나오면 연두 강조(원본: 강조어 연두)
-        return " ".join("{\c&H0060FF7A&}" + w + "{\c&H00FFFFFF&}" if any(k[:2] in w for k in keys) else w for w in t.split())
+        return " ".join(r"{\c&H0060FF7A&}" + w + r"{\c&H00FFFFFF&}" if any(k[:2] in w for k in keys) else w for w in t.split())
     for a, b, t in subs:
         t = _hl(t)
         # 팝 등장: 0.12초에 115%→100%
@@ -129,23 +129,39 @@ def render(script_path: str, clips_dir: str, out_dir: str):
     title = (d.get("title") or "").split("\n")
     ass(title, subs, out / "subs.ass")
     # 장면: 줄마다 클립 하나(차례로), 창 크기로 크롭
-    clips = sorted(Path(clips_dir).glob("*.mp4"))
-    cuts = []
-    used = {}
-    for i, (a, b) in enumerate(seg):
-        c = clips[i % len(clips)]
-        cd = _dur(c)
-        st = used.get(c, 0.5)
-        if st + (b - a) + 0.1 > cd:
-            st = 0.3
-        used[c] = st + (b - a) + 0.05
-        cuts.append((c, st, (b - a) + 0.05))
     wh = WIN[1] - WIN[0]
+    picks_p = Path(clips_dir) / "picks.json"
+    cuts = []
+    if picks_p.exists():
+        # 오푸스가 고른 줄별 장면: 동영상(1순위)·사진(2순위, 천천히 확대)·흑백·효과음
+        P = {x["i"]: x for x in json.loads(picks_p.read_text(encoding="utf-8"))["lines"]}
+        for i, (a, b) in enumerate(seg):
+            x = P.get(i, {})
+            cuts.append((Path(clips_dir) / x["src"], x.get("start", 0.0), (b - a) + 0.05, x))
+    else:
+        clips = sorted(Path(clips_dir).glob("*.mp4"))
+        used = {}
+        for i, (a, b) in enumerate(seg):
+            c = clips[i % len(clips)]
+            cd = _dur(c)
+            st = used.get(c, 0.5)
+            if st + (b - a) + 0.1 > cd:
+                st = 0.3
+            used[c] = st + (b - a) + 0.05
+            cuts.append((c, st, (b - a) + 0.05, {"kind": "video"}))
     inputs, fil = [], []
-    for k, (c, st, du) in enumerate(cuts):
-        inputs += ["-ss", f"{st:.2f}", "-t", f"{du:.2f}", "-i", str(c)]
-        fil.append(f"[{k}:v]scale={W}:{wh}:force_original_aspect_ratio=increase,crop={W}:{wh},setsar=1,fps=30,"
-                   f"format=yuv420p,setpts=PTS-STARTPTS[v{k}]")
+    for k, (c, st, du, x) in enumerate(cuts):
+        bw = ",hue=s=0" if x.get("bw") else ""
+        if x.get("kind") == "photo":
+            inputs += ["-loop", "1", "-t", f"{du:.2f}", "-i", str(c)]
+            nf = max(1, int(du * 30))
+            zoom = f",zoompan=z='1+0.12*on/{nf}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={nf}:s={W}x{wh}:fps=30" if x.get("zoom") else ""
+            fil.append(f"[{k}:v]scale={W*2}:{wh*2}:force_original_aspect_ratio=increase,crop={W*2}:{wh*2}{zoom},scale={W}:{wh},setsar=1,fps=30,"
+                       f"format=yuv420p{bw},trim=duration={du:.2f},setpts=PTS-STARTPTS[v{k}]")
+        else:
+            inputs += ["-ss", f"{st:.2f}", "-t", f"{du:.2f}", "-i", str(c)]
+            fil.append(f"[{k}:v]scale={W}:{wh}:force_original_aspect_ratio=increase,crop={W}:{wh},setsar=1,fps=30,"
+                       f"format=yuv420p{bw},setpts=PTS-STARTPTS[v{k}]")
     fil.append("".join(f"[v{k}]" for k in range(len(cuts))) + f"concat=n={len(cuts)}:v=1:a=0[win]")
     fil.append(f"color=c={BG}:s={W}x{H}:d={total:.2f}:r=30[bg]")
     fil.append(f"[bg][win]overlay=0:{WIN[0]}:shortest=1,ass={(out / 'subs.ass').as_posix().replace(':', '\\\\:')}:fontsdir={FONT_DIR.as_posix().replace(':', '\\\\:')}[vout]")
@@ -156,14 +172,15 @@ def render(script_path: str, clips_dir: str, out_dir: str):
         inputs += ["-i", str(f)]
         alist.append(f"[{na + k}:a]adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[a{k}]")
     sfx = sorted(SFX_DIR.glob("*.wav"))
-    random.seed(1)
     sx = []
-    for k in range(1, len(seg)):
-        if not sfx:
-            break
-        inputs += ["-i", str(sfx[k % len(sfx)])]
+    for k in range(len(seg)):
+        x = cuts[k][3]
+        f = (SFX_DIR / x["sfx"]) if x.get("sfx") else (sfx[k % len(sfx)] if (sfx and not picks_p.exists() and k) else None)
+        if not f:
+            continue
+        inputs += ["-i", str(f)]
         j = na + len(narr) + len(sx)
-        alist.append(f"[{j}:a]volume=0.35,adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[s{len(sx)}]")
+        alist.append(f"[{j}:a]volume=0.45,adelay={int(seg[k][0] * 1000)}|{int(seg[k][0] * 1000)}[s{len(sx)}]")
         sx.append(f"[s{len(sx)}]")
     mix_in = "".join(f"[a{k}]" for k in range(len(narr))) + "".join(sx)
     alist.append(f"{mix_in}amix=inputs={len(narr) + len(sx)}:normalize=0,loudnorm=I=-14:TP=-1.5[aout]")

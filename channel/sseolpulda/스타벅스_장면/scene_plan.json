@@ -1,0 +1,11 @@
+{"script":"channel/sseolpulda/스타벅스_대본_2026-10-15.json",
+ "lines":[
+ {"i":0,"want":"영상","video":"vegan shocked reaction starbucks","photo":"스타벅스 채식주의자 항의","ai":"Shocked young vegan woman staring at a pink Starbucks strawberry frappuccino in a cafe, dramatic","fx":{"zoom":true},"sfx":"쾅","meme":"놀람"},
+ {"i":1,"want":"영상","video":"starbucks strawberry frappuccino","photo":"스타벅스 딸기 프라푸치노 2012","ai":"","fx":{},"sfx":"뿅","meme":""},
+ {"i":2,"want":"영상","video":"strawberry frappuccino pink drink close up","photo":"딸기 프라푸치노 붉은색","ai":"","fx":{"zoom":true},"sfx":"","meme":""},
+ {"i":3,"want":"사진","video":"cochineal insects carmine dye","photo":"연지벌레 코치닐","ai":"Macro photo of cochineal insects on cactus pad, crushed into red carmine powder","fx":{"zoom":true},"sfx":"띠용","meme":""},
+ {"i":4,"want":"사진","video":"vegan protest","photo":"채식주의자 시위 스타벅스","ai":"Angry crowd of vegans with protest signs in front of a coffee shop, news photo","fx":{"bw":true},"sfx":"웅성","meme":"분노"},
+ {"i":5,"want":"사진","video":"starbucks statement news","photo":"스타벅스 코치닐 사과 2012 기사","ai":"","fx":{"zoom":true},"sfx":"","meme":"백기"},
+ {"i":6,"want":"사진","video":"lycopene tomato extract","photo":"토마토 라이코펜 추출물","ai":"Red tomato extract liquid poured into a lab beaker next to fresh tomatoes","fx":{"zoom":true},"sfx":"뿅","meme":""},
+ {"i":7,"want":"영상","video":"starbucks strawberry drink asmr","photo":"스타벅스 딸기 음료","ai":"","fx":{},"sfx":"","meme":"ㅋㅋ"}
+ ]}

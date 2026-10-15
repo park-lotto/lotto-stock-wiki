@@ -1,0 +1,58 @@
+{
+ "lines": [
+  {
+   "i": 0,
+   "kind": "photo",
+   "src": "cand/00/p2.jpg",
+   "zoom": true,
+   "sfx": "003_쿵_소리.wav"
+  },
+  {
+   "i": 1,
+   "kind": "video",
+   "src": "cand/01/v_m-xz-FHAFvU.mp4",
+   "start": 0.5,
+   "sfx": "004_뿅.wav"
+  },
+  {
+   "i": 2,
+   "kind": "video",
+   "src": "cand/02/v_RdYC9dkfH9E.mp4",
+   "start": 0.3
+  },
+  {
+   "i": 3,
+   "kind": "photo",
+   "src": "cand/03/p0.jpg",
+   "zoom": true,
+   "sfx": "002_딩_소리.wav"
+  },
+  {
+   "i": 4,
+   "kind": "video",
+   "src": "cand/04/v_iRnm9rRMHE4.mp4",
+   "start": 0.0,
+   "bw": true,
+   "sfx": "003_쿵_소리.wav"
+  },
+  {
+   "i": 5,
+   "kind": "photo",
+   "src": "cand/05/p2.jpg",
+   "zoom": true
+  },
+  {
+   "i": 6,
+   "kind": "photo",
+   "src": "cand/06/p2.jpg",
+   "zoom": true,
+   "sfx": "004_뿅.wav"
+  },
+  {
+   "i": 7,
+   "kind": "video",
+   "src": "cand/07/v_E5QerFSpsxg.mp4",
+   "start": 0.5
+  }
+ ]
+}
