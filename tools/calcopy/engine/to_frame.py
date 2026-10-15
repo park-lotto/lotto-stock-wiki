@@ -420,7 +420,8 @@ def band_body(b, cols, o: int, ital: bool) -> tuple[int, int, int]:
     return body_h, (cols[1] - cols[0] + 1) - 2 * o - lean, lean
 
 
-def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None, cap_word_gap: float | None = None) -> dict:
+def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None, cap_word_gap: float | None = None,
+          title_font_fixed: str | None = None) -> dict:
     """뜯기 → 설명서(검사 전 원본 모양 + notes). frame_img = 틀이 있는 구간의 원본 한 프레임(RGB),
     ocr = {"title": [줄...], "brand": "글"} 또는 None, tail_probe(t)→bool = 그 시각 틀이 있나(없으면 뜯기 값 그대로)."""
     notes = []
@@ -466,7 +467,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     title_ink_w = None
     if title_b and fam:
         tl = otext.get("title") or []
-        tfam, tsrc = title_font(J, frame_img, title_b, tl, tpol)
+        tfam, tsrc = (title_font_fixed, "고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)") if title_font_fixed else title_font(J, frame_img, title_b, tl, tpol)
         if tfam:
             notes.append(f"제목 글꼴 {tfam} — {tsrc}")
         else:
@@ -630,6 +631,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("tteutgi"); ap.add_argument("--out", required=True); ap.add_argument("--no-ocr", action="store_true")
     ap.add_argument("--at", type=float, default=None, help="틀이 있는 원본 프레임 시각(기본 = 첫 정상 구간 + 1초)")
+    ap.add_argument("--title-font", help="제목 글꼴을 판별 대신 이 등록 글꼴로(하위 스타일에서 확정한 값 — 크기 역산도 이 글꼴로)")
     ap.add_argument("--ocr-from", help="고정 띠 글자를 다시 읽지 않고 이 설명서(frame.json)의 제목·고정 문구 글을 쓴다(제미나이 한도 소진 때)")
     a = ap.parse_args(argv)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
@@ -661,7 +663,7 @@ def main(argv=None):
         probe_fn = lambda t: (lambda f: f is not None and framed(f, rows, L["bg_rgb"]))(probe.grab(src, t, f"scale={W}:{H}", W, H))  # noqa: E731
     pol = L.get("ink_polarity") or "dark"            # build 의 자막 극성과 같은 값
     gap = caption_word_gap(src, J, W, H, pol) if src and Path(src).exists() else None
-    F = build(J, img, ocr, probe_fn, gap)
+    F = build(J, img, ocr, probe_fn, gap, title_font_fixed=a.title_font)
     if err:
         F["made_from"]["notes"].append(f"고정 띠 OCR 실패: {err}")
     if ocr:
