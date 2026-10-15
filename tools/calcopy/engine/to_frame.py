@@ -630,6 +630,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("tteutgi"); ap.add_argument("--out", required=True); ap.add_argument("--no-ocr", action="store_true")
     ap.add_argument("--at", type=float, default=None, help="틀이 있는 원본 프레임 시각(기본 = 첫 정상 구간 + 1초)")
+    ap.add_argument("--ocr-from", help="고정 띠 글자를 다시 읽지 않고 이 설명서(frame.json)의 제목·고정 문구 글을 쓴다(제미나이 한도 소진 때)")
     a = ap.parse_args(argv)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
     from shopping_shorts.channelkit.bench import probe
@@ -643,7 +644,12 @@ def main(argv=None):
         t = a.at if a.at is not None else main_segs[0][0] + 1.0
         img = probe.grab(src, t, f"scale={W}:{H}", W, H)
     ocr, err = None, None
-    if img is not None and not a.no_ocr:
+    if a.ocr_from:   # 예전 설명서의 OCR 글 재사용 — 글자 내용만 쓰고 자리·크기는 이번에 다시 잰다
+        old = json.loads(Path(a.ocr_from).read_text(encoding="utf-8"))
+        t_old = next((l for l in old.get("layers", []) if l.get("role") == "title"), {}).get("text")
+        b_old = next((l for l in old.get("layers", []) if l.get("role") == "brand"), {}).get("text")
+        ocr = {"title": t_old.split("\n") if t_old else [], "brand": b_old, "_model": "ocr-from " + Path(a.ocr_from).name}
+    elif img is not None and not a.no_ocr:
         bands = sorted(tuple(b) for b in L.get("above_bands") or [])
         bg = L.get("bg_rgb")
         brand = [b for b in bands if b[0] < BRAND_TOP * H and (lambda c: c and c[1] - c[0] < BRAND_MAX_W * W)(ink_columns(img, b[0], b[1], bg))]
