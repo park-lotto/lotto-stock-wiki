@@ -2562,7 +2562,7 @@ function togglePause(ev){
       paintCut();
     }
     if (seqBeat != null) tickSub();
-    if (seqBeat != null) armSfx(seqBeat);
+    if (seqBeat != null) armSfx(seqBeat, (a && a.src && !a.ended) ? a.currentTime : 0);   // 멈춘 자리부터
   }
   updatePlayBtns();
 }
@@ -2597,12 +2597,44 @@ function previewSfx(assetId){
 
 function clearSfxTimers(){
   while (sfxTimers.length) clearTimeout(sfxTimers.pop());
+  if (_bgmAu) { try { _bgmAu.pause(); } catch(e){} }     // 배경음도 같이 멈춘다(멈춤·정지 둘 다 여기를 지난다)
+}
+
+// ★미리보기 효과음·배경음(10-15 사장님 "부분재생·전체재생해도 효과음·배경음이 적용 안 됨").
+//   종전 armSfx 는 칸 효과음 한 발만 **자기 계산**으로 울려 팩 효과음·음량·자리 옮기기·배경음이 빠졌다.
+//   이제 서버가 렌더와 같은 함수(video_assemble.sfx_events_for)로 잰 SFX_SOUNDS(칸 안 초·음량)를 그대로 울린다.
+let _bgmAu = null, _bgmKey = '';
+function armBgm(i, off){
+  const b = typeof window.bgmInfo === 'function' ? window.bgmInfo() : null;
+  if (!b || !b.current || !SL.server) { if (_bgmAu) _bgmAu.pause(); return; }
+  let t0 = 0;                                   // 칸 시작 = 앞 칸들이 화면에 머무는 초의 합(beatDur — 재생과 같은 길이)
+  for (let k = 0; k < i; k++) t0 += +beatDur(k) || 0;
+  t0 += off || 0;
+  const key = b.current;
+  if (!_bgmAu || _bgmKey !== key) { if (_bgmAu) _bgmAu.pause(); _bgmAu = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(key)); _bgmAu.loop = true; _bgmKey = key; }
+  const au = _bgmAu, rate = +b.speed || 1;
+  au.playbackRate = rate; au.volume = Math.max(0, Math.min(1, (+b.volume || 0) / 100));
+  const go = () => { const want = au.duration ? (t0 * rate) % au.duration : 0;
+    if (Math.abs(au.currentTime - want) > 0.4) au.currentTime = want; au.play().catch(() => {}); };
+  if (au.readyState >= 1) go(); else au.addEventListener('loadedmetadata', go, { once: true });
 }
 
 // 이 칸을 지금 재생하기 시작했다 — 타점에 맞춰 효과음을 예약한다.
-function armSfx(i){
+function armSfx(i, off){
   clearSfxTimers();
+  off = +off || 0;
   const b = (DATA.beats || [])[i];
+  armBgm(i, off);
+  const _bk = b && b.beat_idx != null ? b.beat_idx : i;
+  const _row = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(_bk));
+  if (_row && SL.server) {                      // 서버 계산이 있으면 그것만 쓴다(옛 계산은 서버 표가 없을 때만)
+    for (const s of (_row.sounds || [])) {
+      const v = Math.max(0, +s.vol || 0), at = (+s.t || 0) - off;
+      if (!s.url || v === 0 || at < -0.05) continue;
+      sfxTimers.push(setTimeout(() => { try { const a = new Audio(s.url); a.volume = Math.min(1, v); a.play().catch(() => {}); } catch(e){} }, Math.max(0, at * 1000)));
+    }
+    return;
+  }
   const sfx = b && b.sfx;
   if (!sfx || !sfx.asset_id || !SL.server) return;
   const dur = beatDur(i);                      // 이 칸이 화면에 머무는 초
