@@ -92,8 +92,8 @@ def studio_confirm(job_id: str, ok: bool = True, note: str = "") -> dict:
 @mcp.tool(annotations=WRITE)
 def studio_resume(job_id: str) -> dict:
     """멈춘 작업(앱을 껐다 켰거나 진행이 없을 때)을 이어서 돌린다."""
-    core.resume(job_id)
-    return _wait(job_id, 20)
+    r = core.resume(job_id)
+    return r if r.get("alive") and r.get("note", "").startswith("이미") else _wait(job_id, 20)
 
 
 if __name__ == "__main__":

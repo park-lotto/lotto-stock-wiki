@@ -341,16 +341,46 @@ def confirm_script(job_id, ok=True, note=""):
     _spawn(job_id)
 
 
+ALIVE_SEC = 60          # 작업 프로세스가 15초마다 숨을 쉰다 — 60초 안에 쉬었으면 살아 있는 것
+
+
+def _alive(job_id):
+    """살아 있는 작업 프로세스의 pid 또는 None. ★이어 돌리기·새로 띄우기는 이걸 보고 겹치지 않게 한다
+    (실측 2026-10-15: 소재 수집이 느린 걸 '멈춤'으로 보고 이어 돌려 같은 작업에 프로세스 2개가 돌았다)."""
+    a = _rj(os.path.join(_wd(job_id), "worker.alive"))
+    if a and time.time() - a.get("at", 0) < ALIVE_SEC:
+        return a.get("pid")
+    return None
+
+
+def _heartbeat(job_id):
+    import threading
+
+    def beat():
+        while True:
+            _wj(os.path.join(_wd(job_id), "worker.alive"), {"pid": os.getpid(), "at": time.time()})
+            time.sleep(15)
+    threading.Thread(target=beat, daemon=True).start()
+
+
 def resume(job_id):
-    status(job_id)
+    st = status(job_id)
+    if st.get("alive"):
+        return dict(st, note="이미 돌고 있다 — 멈춘 게 아니라 진행 중이다(다시 띄우지 않았다)")
     _set(job_id, state="queued")
     _spawn(job_id)
+    return status(job_id)
 
 
 def status(job_id):
     st = _rj(os.path.join(_wd(job_id), "studio_status.json"))
     if st is None:
         raise KeyError(f"없는 작업: {job_id}")
+    pid = _alive(job_id)
+    st["alive"] = bool(pid)
+    if st.get("state") in ("running", "queued"):
+        st["note"] = ("진행 중(작업 프로세스 살아 있음) — 소재 수집·렌더는 수 분~십수 분 걸린다. 다시 띄우지 마라"
+                      if pid else "작업 프로세스가 없다 — 앱을 껐다 켰으면 studio_resume")
     return st
 
 
@@ -369,6 +399,11 @@ def run(job_id):
     """작업 프로세스 본체 — 멈출 자리(대본 요청·대본 확인·실패·완료)까지 단계를 민다."""
     for k, v in (_rj(os.path.join(_wd(job_id), ".worker_env.json"), {}) or {}).items():
         os.environ[k] = v
+    other = _alive(job_id)
+    if other and other != os.getpid():
+        print(f"[run] 이미 pid {other} 가 이 작업을 돌리는 중 — 겹치지 않게 그냥 끝낸다")
+        return 0
+    _heartbeat(job_id)
     pipeline, providers, registry = _engine()
     wd = _wd(job_id)
     job = _rj(os.path.join(wd, "studio_job.json"))
