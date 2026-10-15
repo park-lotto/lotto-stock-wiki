@@ -116,6 +116,16 @@ def studio_resume(job_id: str) -> dict:
     return r if r.get("alive") and r.get("note", "").startswith("이미") else _wait(job_id, 20)
 
 
+@mcp.prompt(name="make", title="숏템 쇼츠 만들기",
+            description="컨셉과 소재만 넣으면 숏템 컨셉 스튜디오로 완성 영상까지 만든다")
+def make_prompt(concept: str = "인물형", subject: str = "") -> str:
+    """메뉴(＋ → 숏템 컨셉 스튜디오)에서 고르는 시작 버튼 — 처음부터 우리 도구로 가게 못 박는다."""
+    return (f"숏템 컨셉 스튜디오 MCP 도구로 '{concept}' 컨셉 쇼츠를 만들어줘. 소재: {subject or '(내가 정해 달라)'}.\n"
+            "그림 생성이 아니라 실제 공개 영상·자료로 만드는 자막 쇼츠다. 먼저 studio_make 를 불러라. "
+            "대본은 나에게 한 번만 확인받고, 확인 뒤엔 studio_wait 로 완성까지 같은 차례 안에서 기다린 다음 "
+            "studio_result 로 검수 시트를 직접 보고 결과를 알려줘.")
+
+
 @mcp.tool(annotations=READ)
 def studio_result(job_id: str) -> list:
     """완성된 작업의 결과 — 영상 경로·길이와 검수 시트(컷마다 화면+자막) 그림. Claude 가 그림을 직접 보고 판단한다."""
