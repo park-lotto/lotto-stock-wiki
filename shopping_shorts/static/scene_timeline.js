@@ -36,6 +36,31 @@
     try { console.warn('[timeline]', fallback, '|', why || '(서버 사유 없음)'); } catch (_) {}
   }
 
+  // ★위 컷 = 주황 박스(관제 204 9번, 2026-10-15 사장님 "고무줄 말고 박스 크기 줄이듯") — 새 작업(hand_cut)만.
+  //   양 끝 = 그 카드 길이만, 가운데 밀기 = 원본에서 쓰는 구간 옮기기. 구간은 replaceRoll 한 길로 바꾼다(0순위-B).
+  function _box(i) {
+    return !!(DATA && DATA.hand_cut) && !(typeof CUTS !== 'undefined' && CUTS[i]);
+  }
+  // 칸 i 의 컷 c 를 원본 [a,b] 구간으로 바꾸고, 정해 둔 길이(✋)는 새 조각으로 옮긴다.
+  function _boxRange(i, c, a, b, len) {
+    const srcDur = (DATA.src_duration || {})[c.video_id] || b;
+    const w = b - a;
+    if (a < 0) { a = 0; b = w; }
+    if (b > srcDur) { b = srcDur; a = Math.max(0, b - w); }
+    a = Math.round(a * 100) / 100; b = Math.round(b * 100) / 100;
+    const old = getFix(i, c.seg_id);
+    delete FIXLEN[fixKey(i, c.seg_id)];                  // 옛 조각 길이는 걷는다(찌꺼기 금지)
+    replaceRoll(c.seg_id, c.video_id, { s: a, e: b });
+    const id = _extraIdOf(c.video_id, a, b);
+    const L = len != null ? len : old;
+    if (id) (g.HAND_LAST = g.HAND_LAST || {})[i] = id;
+    if (id) (g.HAND_BASE = g.HAND_BASE || {})[i] = { sid: id, dur: +c.dur };   // 바뀌기 전 화면 길이(안내 줄 기준)
+    if (L > 0 && id) setFix(i, id, L);
+  }
+  function _extraIdOf(vid, a, b) {
+    return (typeof _extraId === 'function') ? _extraId(vid, a, b) : null;
+  }
+
   function _dur(i) {
     return Math.max(0.2, beatDur(i) || 0.2);
   }
@@ -60,7 +85,7 @@
       //   딱 맞는 칸(3.6/3.6)에도 떠서 틀린 경고였다. 모자람은 머리글 문구 한 곳에서만 알린다.
       const stretchPx = 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
-      return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}" data-k="${k}" data-seg="${c.seg_id}"
+      return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}${_box(i) ? ' obox' : ''}" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlSeekPlay(${i}, event)">
@@ -69,7 +94,7 @@
           ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
           >${(getFix(i, c.seg_id) && !CUTS[i] && !sceneRuleOn(i)) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
-        ${CUTS[i] ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
+        ${(CUTS[i] || _box(i)) ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
         <span class="tl-edge" data-k="${k}" title="${CUTS[i] ? '끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다' : '끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다'}"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
@@ -212,7 +237,9 @@
     // ★박스 = 그 조각이 쓰인 자리(2026-08-29 사장님 "그 영상이 담긴 부분이 오렌지박스로
     //   되어서 해당 영상을 필름으로 펼치고") — 그 영상 필름을 바로 펼치고, 잠금 박스를
     //   조각의 원본 위치에 놓는다. 카드의 🎞펼치기는 이 버튼이 겸한다(폭도 확보).
-    REPLACE = { i, k, len: Math.round(c.dur * 100) / 100, oldSeg: c.seg_id,
+    // ★박스 길이 = 실제로 읽는 원본 구간(2026-10-15 사장님 "아래 박스엔 바나나가 없는데 위엔 나온다") —
+    //   빠르게/느리게 맞춘 컷은 화면 길이(dur)와 원본 길이(src_dur)가 달라 dur 로 그리면 쓰는 끝이 박스 밖에 숨는다.
+    REPLACE = { i, k, len: Math.round((+c.src_dur || c.dur) * 100) / 100, oldSeg: c.seg_id,
                 vid: c.video_id, from: Math.round(c.start * 100) / 100 };
     render();
     try {
@@ -321,6 +348,55 @@
     const c = clips[k];
     if (c) setFix(i, c.seg_id, 0);         // setFix가 render()까지 부른다
   };
+  // 주황 박스 가운데를 잡고 밀기 = 원본에서 쓰는 구간 옮기기(길이 그대로). 4px 안 움직이면 그냥 누름(재생).
+  function wireBox(host, i, pps) {
+    if (!_box(i)) return;
+    host.querySelectorAll('.tl-cut.obox').forEach(cut => {
+      cut.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('.tl-edge, button, .tl-len')) return;
+        e.preventDefault(); e.stopPropagation();               // 그림 기본 끌기·칸 고르기(다시 그리기)가 끌기를 끊지 않게
+        const k = +cut.dataset.k, x0 = e.clientX;
+        let moved = false;
+        const fr = () => cut.querySelector('.tl-frames');
+        const move = me => {
+          const dx = me.clientX - x0;
+          if (!moved && Math.abs(dx) < 4) return;
+          if (!moved) { moved = true; cut.classList.add('sliding'); try { cut.setPointerCapture(me.pointerId); } catch (_) {} }
+          const f = fr(); if (f) f.style.transform = `translateX(${-dx}px)`;   // 그림이 반대로 흘러 '창이 옮겨 가는' 느낌
+          const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i), c = clips[k];
+          const badge = cut.querySelector('.tl-len');
+          if (c && badge) {
+            const ratio = (+c.src_dur || c.dur) / c.dur, st = Math.max(0, +c.start + dx / pps * ratio);
+            badge.textContent = `${st.toFixed(1)}초부터`;
+          }
+        };
+        const up = ue => {
+          cut.removeEventListener('pointermove', move);
+          cut.removeEventListener('pointerup', up);
+          cut.removeEventListener('pointercancel', up);
+          if (!moved) return;                                  // 그냥 누름 → onclick(재생)이 받는다
+          cut.classList.remove('sliding');
+          cut.dataset.slid = '1';                              // 뒤따르는 click(재생) 한 번 막기
+          const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i), c = clips[k];
+          const dx = ue.clientX - x0;
+          if (!c) { g.tlMount(); return; }
+          const used = +c.src_dur || c.dur, ds = dx / pps * (used / c.dur);
+          if (Math.abs(ds) < 0.05) { g.tlMount(); return; }
+          const seg = DATA.segments[c.seg_id] || {};
+          // 조각 전체(앞뒤 여유 포함)를 같이 옮긴다 — 쓰는 창과 원본 위치 관계를 그대로 둔다
+          const a0 = isFinite(+seg.start) ? +seg.start : +c.start, b0 = isFinite(+seg.end) ? +seg.end : +c.start + used;
+          _boxRange(i, c, a0 + ds, b0 + ds, null);
+        };
+        cut.addEventListener('pointermove', move);
+        cut.addEventListener('pointerup', up);
+        cut.addEventListener('pointercancel', up);
+      });
+      cut.addEventListener('dragstart', ev => ev.preventDefault());
+      cut.addEventListener('click', ev => {
+        if (cut.dataset.slid) { delete cut.dataset.slid; ev.stopImmediatePropagation(); ev.preventDefault(); }
+      }, true);
+    });
+  }
   function wireEdges(host, i, pps) {
     host.querySelectorAll('.tl-edge').forEach(ed => {
       ed.addEventListener('pointerdown', e => {
@@ -358,6 +434,13 @@
           const c = clips[k];
           // ★구절 맞춤을 끈 칸 = 양옆 두 컷만(scene_play.js CUTS 규칙). ✋는 안 쓴다.
           if (c && CUTS[i]) { if (Math.abs(sec - c.dur) >= 0.02) dragCut(i, k, sec); else g.tlMount(); }
+          else if (c && fromLeft && _box(i)) {
+            // 앞 손잡이 = 원본의 앞을 자르거나 늘린다(끝은 그대로). 화면 길이도 그만큼.
+            if (Math.abs(sec - c.dur) < 0.05) { g.tlMount(); ue.stopPropagation(); return; }
+            const used = +c.src_dur || c.dur, ratio = used / c.dur;
+            const b = +c.start + used, a = b - sec * ratio;
+            _boxRange(i, c, a, b, sec);
+          }
           else if (c && Math.abs(sec - c.dur) >= 0.05) {
             // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
             //   (2026-09-14 사장님 "줄여지는게 있고 안될때도 있고"). 끈 컷 말고 전부 ✋면
@@ -367,6 +450,7 @@
               const nb = clips[k + 1] || clips[k - 1];
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
+            (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
             setFix(i, c.seg_id, sec);
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
@@ -492,6 +576,7 @@
     const capEls = [...host.querySelectorAll('.tl-cap')];
     const caps = capsOf(i);
     wireEdges(host, i, pps);               // 컷 가장자리 드래그(길이 조절)
+    wireBox(host, i, pps);                 // 주황 박스 가운데 밀기(쓰는 구간 옮기기)
     // ★컷은 늘 필름식(프레임 여러 장)으로 — 한 장짜리 카드 금지(2026-10-14 사장님). 화면에 보일 때 채운다(칸이 많아도 가볍게).
     const _cuts = [...host.querySelectorAll('.tl-cut')];
     const _fill = el => { if (el.classList.contains('open') || el.classList.contains('noframes')) return; el.classList.add('open'); g.tlFillFrames(i, +el.dataset.k, el); };
