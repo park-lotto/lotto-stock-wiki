@@ -3592,10 +3592,26 @@ function speedControl(i){
       onclick="event.stopPropagation()" onchange="setBeatSpeed(${i},this.value,event)">
     ${vals.map(v => `<option value="${v}" ${Math.abs(v-cur)<0.01?'selected':''}>${
       SPEED_BUSY[i] && Math.abs(v-cur)<0.01 ? '변경 중…' : '속도 '+v.toFixed(1)+'×'}</option>`).join('')}
+    <option value="all">⏩ 이 속도(${cur.toFixed(1)}×)를 전체 칸에</option>
   </select>`;
+}
+// ★속도 전체 적용(2026-10-15 이윤정님 "칸마다 고르기 귀찮다 — 한 번에"). 칸 하나 바꾸는 길(setBeatSpeed) 그대로를
+//   다른 칸마다 부른다(음성 다시 만들기·장면 맞춤 규칙은 그 한 곳). ★한 칸씩 차례로 — 서버 속도 저장이 작업 전체를
+//   읽고-고쳐-쓰기라 동시에 부르면 서로 덮어쓴다(실측: 3칸 동시 → 13칸 중 2칸 누락).
+async function setAllSpeed(i){
+  const v = beatSyncSpeed(i);
+  const todo = (DATA.beats || []).map((b, j) => j).filter(j => j !== i && Math.abs(beatSyncSpeed(j) - v) > 0.01);
+  if (!todo.length){ nsay(`모든 칸이 이미 ${v.toFixed(1)}배예요`); renderBand(); return; }
+  nsay(`🎚 나머지 ${todo.length}칸을 ${v.toFixed(1)}배로 바꾸는 중…(음성을 다시 만들어 조금 걸려요)`);
+  let k = 0;
+  const worker = async () => { while (k < todo.length){ const j = todo[k++]; await setBeatSpeed(j, v); } };
+  await worker();
+  const miss = (DATA.beats || []).filter((b, j) => Math.abs(beatSyncSpeed(j) - v) > 0.01).length;
+  nsay(miss ? `⚠ ${miss}칸은 못 바꿨어요 — 그 칸에서 다시 골라 주세요` : `✅ 전체 ${DATA.beats.length}칸을 ${v.toFixed(1)}배로 맞췄어요`);
 }
 async function setBeatSpeed(i, raw, ev){
   if (ev) ev.stopPropagation();
+  if (raw === 'all') return setAllSpeed(i);
   const wanted = Number(raw), beat = (DATA.beats || [])[i];
   if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
   const before = beatSyncSpeed(i);
