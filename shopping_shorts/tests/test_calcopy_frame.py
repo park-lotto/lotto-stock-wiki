@@ -51,7 +51,7 @@ def test_line_h_default_only_when_absent():
     (lambda f: text_layer(f, "title").__setitem__("size", True), "size"),            # 참/거짓은 숫자가 아니다
     (lambda f: text_layer(f, "brand").__setitem__("text", ""), "text"),
     (lambda f: f["layers"].append({"kind": "video", "x": 0, "y": 0, "w": 10, "h": 10}), "video"),
-    (lambda f: f["layers"].extend([{"kind": "band", "x": 0, "y": 0, "w": 1, "h": 1, "rgb": [0, 0, 0]}] * 9), "layers"),
+    (lambda f: f["layers"].extend([{"kind": "band", "x": 0, "y": 0, "w": 1, "h": 1, "rgb": [0, 0, 0]}] * 13), "layers"),   # 기존 4~5층 + 13 = 상한 16 넘김
     (lambda f: text_layer(f, "caption").__setitem__("enter", {"kind": "pop", "ms": 300}), "enter"),
     (lambda f: f.__setitem__("canvas", [1080]), "canvas"),
 ])

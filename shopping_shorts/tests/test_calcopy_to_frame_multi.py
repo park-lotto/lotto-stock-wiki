@@ -38,3 +38,48 @@ def test_analyze_image_layers():
     big = [t for t in an["texts"] if t["y1"] - t["y0"] + 1 >= 80 and not t.get("in_band")]
     assert len(big) == 2                                                 # 큰 제목 2줄 — 낱말 사이 띄어쓰기로 안 쪼개진다
     assert any(t.get("in_band") for t in an["texts"])                   # 헤더 글자는 띠 안 글자
+
+
+def synth_hook():
+    """훅 카드 꼴: 바탕 64 · 머리 띠(56,58,51 — 바탕과 차 8~13, 0~234) · 회색 띠(560~671: 위 20줄 번짐, 가로 양 끝 156 → 가운데 242)."""
+    a = np.full((H, W, 3), 64, np.uint8)
+    a[0:235] = (56, 58, 51)
+    xs = np.abs(np.arange(W) - W / 2) / (W / 2)
+    prof = np.clip(242 - np.maximum(0, xs - 0.8) / 0.2 * 86, 156, 242)          # 가운데 242, 양 끝 156
+    for y in range(560, 672):
+        r = min(1.0, (y - 560 + 0.5) / 20)
+        a[y] = (64 + r * (prof - 64))[:, None].astype(np.uint8)
+    im = Image.fromarray(a); d = ImageDraw.Draw(im)
+    d.text((540, 650), "한국 코스트코가", font=T._pil_font("BMDOHYEON", 60), fill=(0, 0, 0), anchor="ms")
+    d.line((80, 80, 160, 130), fill=(0, 0, 0), width=6)                         # 머리 띠 위 검정 선 그림(차 56)
+    return np.asarray(im)
+
+
+def test_low_contrast_band_fade_and_gradient():
+    a = synth_hook()
+    an = M.analyze_image(a, [], [0, 672, W, 1026], a)
+    bands = sorted(an["bands"], key=lambda b: b["y"])
+    head, grey = bands[0], bands[-1]
+    assert head["y"] == 0 and abs(head["h"] - 235) <= 2 and head["rgb"] == [56, 58, 51]   # 바탕과 13 차이 띠도 띠
+    assert grey["fade"][0] >= 10 and grey["y"] <= 566                                     # 위 번짐
+    g = dict((p, c[0]) for p, c in grey["grad_x"])
+    assert g[0] <= 170 and g[0.5] >= 235                                                  # 가로 그라데이션
+    txt = [t for t in an["texts"] if 600 < t["y1"] < 672]
+    assert txt and min(t["y0"] for t in txt) > 590                                        # 번진 줄·띠 끝은 글자가 아니다
+    assert any(t["y0"] < 140 and t["x0"] < 100 for t in an["texts"])                      # 어두운 띠 위 검정 선 그림은 글자 덩어리
+
+
+def test_band_grad_fade_schema():
+    from shopping_shorts.calcopy_frame import schema
+    base = {"canvas": [W, H], "layers": [{"kind": "bg", "rgb": [64, 64, 64]},
+            {"kind": "band", "x": 0, "y": 560, "w": W, "h": 112, "rgb": [242, 242, 242],
+             "grad_x": [[0, [156, 156, 156]], [0.5, [242, 242, 242]], [1, [156, 156, 156]]], "fade": [20, 0]}]}
+    s = schema.validate(base)
+    assert s["layers"][1]["fade"] == [20, 0] and len(s["layers"][1]["grad_x"]) == 3
+    import copy, pytest
+    bad = copy.deepcopy(base); bad["layers"][1]["fade"] = [80, 80]
+    with pytest.raises(schema.FrameError):
+        schema.validate(bad)
+    bad = copy.deepcopy(base); bad["layers"][1]["grad_x"] = [[0.6, [1, 1, 1]], [0.2, [1, 1, 1]]]
+    with pytest.raises(schema.FrameError):
+        schema.validate(bad)

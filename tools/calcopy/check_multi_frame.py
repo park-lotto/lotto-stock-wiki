@@ -22,6 +22,9 @@ from shopping_shorts.calcopy_frame import schema, to_snapshot  # noqa: E402
 from shopping_shorts.channelkit.bench import probe  # noqa: E402
 
 
+INK = 40   # 획 문턱(어두운 머리 띠 56 위 검정 선 그림도 잡히게)
+
+
 def caption_at(J, t):
     it = next((i for i in (J.get("captions") or {}).get("items") or [] if i["t0"] <= t < i["t1"]), None)
     return "\n".join(it["text"]) if it and it.get("text") else ""
@@ -48,19 +51,19 @@ def rect_at(spec, t, cap_text):
 
 
 def ink_rows(img, rect, dark_or_diff):
-    """영상 창 밖 행 중 바탕(행의 최빈 색)과 80 넘게 다른 점이 있는 행 묶음."""
+    """영상 창 밖 행 중 글자 획이 있는 행 묶음. 획 = 그 행을 가로 31px 로 고르게 편 값(가운데값)과 dark_or_diff 넘게 다른 점 —
+    띠의 가로 그라데이션(훅 회색 띠 양 끝 156·가운데 242)은 고르게 변해 빠지고, 날카로운 글자 획만 남는다
+    (첫 판은 '행 가운데값과 다른 점'이라 그라데이션 띠 끝을 글자로 세 원본 띠 글자 줄이 585~666 으로 나왔다 — 실제 획 590~656)."""
+    import cv2
     a = np.asarray(img.convert("RGB")).astype(int)
     H, W = a.shape[:2]
     keep = np.ones(H, bool)
     if rect:
         keep[max(0, rect[1]):min(H, rect[1] + rect[3])] = False
-    rows = []
-    for y in range(H):
-        if not keep[y]:
-            rows.append(False); continue
-        row = a[y]
-        med = np.median(row, axis=0)
-        rows.append(bool((np.abs(row - med).max(axis=1) > dark_or_diff).sum() > 3))
+    # 가로 31px 이동 평균(cv2.blur, 1행 높이) — 글자 획(폭 20px 안팎)은 평균에 묻혀 튀고, 고르게 변하는 그라데이션은 평균과 같다
+    smooth = cv2.blur(a.astype(np.float32), (31, 1), borderType=cv2.BORDER_REPLICATE).astype(int)
+    hit = (np.abs(a - smooth).max(axis=2) > dark_or_diff).sum(axis=1) > 3
+    rows = [bool(hit[y] and keep[y]) for y in range(H)]
     runs, s = [], None
     for y, on in enumerate(rows + [False]):
         if on and s is None:
@@ -101,7 +104,7 @@ def main():
         ours = out / f"ours_{t}.png"
         scene_style.compose_still(str(mat), tl, snap, out / f"work_{t}", idx, ours, head)
         mine = Image.open(ours).convert("RGB")
-        ro, ru = ink_rows(orig, r, 80), ink_rows(mine, r, 80)
+        ro, ru = ink_rows(orig, r, INK), ink_rows(mine, r, INK)
         sheet = Image.new("RGB", (W * 2 + 30, H + 70), (40, 40, 40))
         sheet.paste(orig, (0, 70)); sheet.paste(mine, (W + 30, 70))
         d = ImageDraw.Draw(sheet)

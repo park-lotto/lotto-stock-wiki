@@ -11,6 +11,8 @@
        {"kind": "bg", "rgb": [245,245,245]},                        # 화면 바탕(영상 창 밖 전부). 한 장만
        {"kind": "video", "x":0, "y":420, "w":1080, "h":1010, "radius":0},   # 영상 창 — 렌더 합성이 이 자리에 영상을 둔다. 0~1장
        {"kind": "band", "x":0, "y":0, "w":1080, "h":110, "rgb":[0,0,0], "radius":0},  # 색 띠·상자
+       #   선택: "grad_x":[[0,[156,156,156]],[0.5,[242,242,242]],[1,[170,170,170]]] — 가로 색 변화(자리 0~1, 2~12개, rgb 대신 칠함)
+       #         "fade":[위px, 아래px] — 위·아래 끝에서 이만큼 바탕으로 흐려짐(훅 회색 띠처럼 가장자리가 번진 띠)
        {"kind": "text", "role": "title", "x":540, "y":230, "w":980, "align":"center", "lines":2,
         "font":"GmarketSansBold", "size":92, "line_h":95, "rgb":[0,0,0],
         "line_rgb":[[0,0,0],[255,45,111]],          # 줄마다 색(없으면 null → 모든 줄 rgb)
@@ -51,7 +53,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MAX_FRAMES = 4                      # 틀 여러 장(frames) 상한
 MAX_CUTS = 200                      # 영상 창 컷별 자리(video.cuts) 상한
-MAX_LAYERS = 12                     # scene_style.validate_snapshot walk() 의 목록 상한과 같다(그 상한이 주인)
+MAX_LAYERS = 16                     # 틀 한 장의 층 수. validate_snapshot 은 customFrame 을 walk 에서 빼고 check_row(이 schema)로 검사한다
+#   (게시글형 본문: 바탕·창·띠 3·글 7·자막 = 13 — 12 상한에 자막이 잘려 나갔다, 2026-10-16)
 KINDS = ("bg", "video", "band", "text", "image")
 ROLES = ("title", "caption", "brand", "label")
 ALIGNS = ("left", "center", "right")
@@ -242,6 +245,26 @@ def _layers(layers, W, H, where0: str) -> list:
         elif kind == "band":
             item = {"kind": "band", **_rect(layer, where, W, H), "rgb": _rgb(layer.get("rgb"), where + ".rgb"),
                     "radius": _num(layer.get("radius", 0), where + ".radius", 0, 500)}
+            gx = _opt(layer, "grad_x")
+            if gx is not None:
+                if not isinstance(gx, list) or not 2 <= len(gx) <= 12:
+                    raise FrameError(f"{where}.grad_x: [[자리 0~1, [r,g,b]], ...] 2~12개여야 합니다")
+                stops = []
+                for i, st_ in enumerate(gx):
+                    if not isinstance(st_, (list, tuple)) or len(st_) != 2:
+                        raise FrameError(f"{where}.grad_x[{i}]: [자리, [r,g,b]] 여야 합니다")
+                    stops.append([_num(st_[0], f"{where}.grad_x[{i}][0]", 0, 1), _rgb(st_[1], f"{where}.grad_x[{i}][1]")])
+                if any(b[0] < a[0] for a, b in zip(stops, stops[1:])):
+                    raise FrameError(f"{where}.grad_x: 자리가 커지는 순서여야 합니다")
+                item["grad_x"] = stops
+            fd = _opt(layer, "fade")
+            if fd is not None:
+                if not isinstance(fd, (list, tuple)) or len(fd) != 2:
+                    raise FrameError(f"{where}.fade: [위px, 아래px] 여야 합니다")
+                top, bot = (_num(v, f"{where}.fade[{i}]", 0, item["h"]) for i, v in enumerate(fd))
+                if top + bot > item["h"]:
+                    raise FrameError(f"{where}.fade: 위+아래({top}+{bot})가 띠 높이 {item['h']} 를 넘습니다")
+                item["fade"] = [top, bot]
         elif kind == "image":
             src = layer.get("src")
             if not isinstance(src, str) or not re.fullmatch(r"[^\s\"'<>()\\]{1,300}", src):

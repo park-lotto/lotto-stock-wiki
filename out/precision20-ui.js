@@ -1495,6 +1495,8 @@
         if(vx1<W)addPatch(pct(vy0,H),pct(vy1-vy0,H),c,pct(vx1,W),pct(W-vx1,W),'spec-bg');
       }else if(l.kind==='band'){
         const el=addPatch(pct(l.y,H),pct(l.h,H),specRgb(l.rgb),pct(l.x,W),pct(l.w,W),'spec-band');el.style.borderRadius=l.radius*scale+'px';
+        if(l.grad_x)el.style.background=`linear-gradient(90deg,${l.grad_x.map(s=>`${specRgb(s[1])} ${(s[0]*100).toFixed(2)}%`).join(',')})`;
+        if(l.fade&&(l.fade[0]||l.fade[1])){const m=`linear-gradient(180deg,transparent 0,#000 ${pct(l.fade[0],l.h)}%,#000 ${100-pct(l.fade[1],l.h)}%,transparent 100%)`;el.style.webkitMaskImage=m;el.style.maskImage=m;}
       }else if(l.kind==='image'){
         const img=document.createElement('img');img.className='precision-patch spec-image';img.alt='';img.src=l.src;
         Object.assign(img.style,{left:pct(l.x,W)+'%',top:pct(l.y,H)+'%',width:pct(l.w,W)+'%',height:pct(l.h,H)+'%',objectFit:'contain'});layer.insertBefore(img,badge);

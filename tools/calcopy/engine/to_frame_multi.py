@@ -64,6 +64,78 @@ def _runs(mask: np.ndarray, min_len: int = 1, gap: int = 0) -> list[tuple[int, i
 STILL_DIFF = 8.0     # 같은 구간 다른 시각 두 장의 평균 차가 이보다 크면 움직이는 줄(영상) — 틀(띠)은 가만히 있다
 
 
+
+LOW_DIFF = 6         # 바탕과 조금만 다른 띠(어두운 머리 띠) — 양 끝 색이 바탕과 이만큼 넘게 다르면
+LOW_MIN_H = 20       # 그런 행이 이만큼 이어져야 띠(그라데이션 띠 가장자리 번짐 10줄 안팎은 띠가 아니다)
+INK_DARK_BAND = 35   # 어두운 띠 안 글자·선 그림 문턱
+FADE_MIN_FRAC = 0.15  # 바탕 쪽으로 이만큼 넘게 띠 색이 남은 줄만 번짐으로 센다
+FADE_MIN_ROWS = 6    # 번짐 줄이 이만큼 안 되면 번짐이 아니라 가장자리 압축 번짐
+FADE_FULL = 0.85     # 번진 가장자리: 띠 밝기(바탕→띠)가 이 비율에 닿는 줄부터 온전한 띠
+GRAD_MIN = 25        # 띠 가로 색 변화가 이보다 크면 grad_x 로 칠한다
+GRAD_POS = (0, 0.03, 0.08, 0.15, 0.3, 0.5, 0.7, 0.85, 0.92, 0.97, 1)
+
+
+def _band_paint(a, b, bg, keep, W):
+    """띠 하나의 칠 — 위·아래로 바탕에 번진 줄(fade)과 가로 색 변화(grad_x). 글자 없는 줄(가로 거칠기 작은 줄)로 잰다.
+    훅 회색 띠(rGFX): 바탕 64 → 556줄부터 밝아져 585줄에 띠 밝기(가운데 242·양 끝 156/170), 띠 높이 위쪽 30줄이 번짐."""
+    H = a.shape[0]
+    bgl = float(np.mean(bg))
+    core = [y for y in range(b["y"], b["y"] + b["h"])]
+    # 번짐 비율 = 1 − (그 줄 양 끝 색과 띠 양 끝 색의 거리) / (바탕과 띠 양 끝 색의 거리). 양 끝만 본다 — 가운데는 글자가 얹히고,
+    #   훅 회색 띠처럼 가운데만 늦게 밝아지는 띠도 끝은 띠 색이다. 채널 최대 차로 잰다(압축으로 한 채널이 2~4 흔들려도 띠다).
+    edge = {y: np.median(np.concatenate([a[y, :EDGE], a[y, W - EDGE:]]), axis=0) for y in range(H)}
+    band_e = np.median(np.array([edge[y] for y in core]), axis=0)
+    span = max(1.0, float(np.abs(band_e - np.array(bg)).max()))
+
+    # 가운데도 같이 본다 — 훅 회색 띠는 끝이 574줄에 띠 색인데 가운데는 585줄에야 닿는다(둥글게 번진 띠). 번짐 비율 = 끝·가운데 평균.
+    cx = W // 2
+    cen = {y: float(np.median(a[y, cx - EDGE:cx + EDGE])) for y in range(H)}
+    # 가운데에 글자가 얹힌 줄(가운데 조각이 고르지 않은 줄)은 가운데를 안 본다 — 본문 머리 띠 '친구들' 줄을 번짐으로 읽었다
+    smooth = {y: float(np.std(a[y, cx - EDGE:cx + EDGE])) < 8 for y in range(H)}
+    cen_core = [cen[y] for y in core if smooth[y]] or [float(np.mean(band_e))]
+    band_c = float(np.percentile(cen_core, 90 if float(np.mean(band_e)) > bgl else 10))   # 글자 줄은 가운데가 글자 색이라 띠 쪽 끝값
+    span_c = max(1.0, abs(band_c - bgl))
+
+    def frac(y):
+        fe = 1 - float(np.abs(edge[y] - band_e).max()) / span
+        if not smooth[y]:
+            return fe
+        fc = 1 - min(1.0, abs(cen[y] - band_c) / span_c)
+        return (fe + fc) / 2
+    lv_m = {y: float(np.median(a[y])) for y in range(H)}
+    lv_core = [lv_m[y] for y in core]
+    full_m = max(lv_core) if float(np.mean(band_e)) > bgl else min(lv_core)   # 띠 쪽 끝 밝기(글자 줄은 가운데값이 글자 쪽으로 끌린다)
+    top = b["y"]
+    while top - 1 >= 0 and keep[top - 1] and FADE_MIN_FRAC < frac(top - 1) < 1 and np.std(a[top - 1]) < 30:
+        top -= 1
+    bot = b["y"] + b["h"] - 1
+    while bot + 1 < H and keep[bot + 1] and FADE_MIN_FRAC < frac(bot + 1) < 1 and np.std(a[bot + 1]) < 30:
+        bot += 1
+    # 몇 줄짜리 가장자리(압축 번짐 — 본문 머리 띠 아래 234~236줄)는 번짐이 아니다: 늘리지 않는다(늘리니 흰 바탕에 연두 줄이 생겼다)
+    #   번짐 줄 수 = 늘린 줄 중 띠 밝기에 못 미친 줄(FADE_FULL 아래) — 띠 색 그대로인 줄(본문 234~236)은 번짐이 아니라 띠다
+    #   번짐 줄 수 = 바깥 끝(top/bot)부터 띠 밝기(FADE_FULL)에 닿는 줄까지 — 띠 안쪽 번짐 줄도 센다(훅 회색 띠는 띠로 잡힌 566줄 위아래로 번진다)
+    f_top = next((y for y in range(top, bot + 1) if frac(y) >= FADE_FULL), top)
+    f_bot = next((y for y in range(bot, top - 1, -1) if frac(y) >= FADE_FULL), bot)
+    if f_top - top < FADE_MIN_ROWS:
+        top = f_top
+    if bot - f_bot < FADE_MIN_ROWS:
+        bot = f_bot
+    b["y"], b["h"] = top, bot - top + 1          # 늘린 띠 색 줄도 띠(번짐이 없어도 — 본문 머리 띠 234~235줄이 빠졌던 것)
+    if f_top - top or bot - f_bot:
+        b["fade"] = [f_top - top, bot - f_bot]
+    near = lambda y: abs(lv_m[y] - full_m) <= 0.05 * abs(full_m - bgl) + 1   # noqa: E731 — 띠 밝기에 닿은 줄만(가장자리 번짐 줄 빼고)
+    rough = [y for y in range(f_top, f_bot + 1) if near(y) and float(np.abs(np.diff(a[y], axis=0)).mean()) < 1.5]
+    if not rough:
+        return
+    prof = np.median(a[rough], axis=0)                                    # 칸마다 띠 색(W,3)
+    k = 15
+    pad = np.pad(prof, ((k, k), (0, 0)), mode="edge")
+    prof = np.array([np.median(pad[x:x + 2 * k + 1], axis=0) for x in range(W)])
+    b["rgb"] = [int(v) for v in prof[W // 2]]
+    if float(np.ptp(prof.mean(axis=1))) > GRAD_MIN:
+        b["grad_x"] = [[p, [int(v) for v in prof[min(W - 1, int(round(p * (W - 1))))]]] for p in GRAD_POS]
+        b["_profile"] = prof.astype(int)
+
 def analyze_image(img: np.ndarray, skip_rows: list[tuple[int, int]], video_rect, img2: np.ndarray | None = None) -> dict:
     """원본 프레임 한 장 → 바탕·띠·구분선·상자·글자 덩어리. skip_rows(자막 칸 등)와 영상 창은 건너뛴다."""
     H, W = img.shape[:2]
@@ -117,11 +189,44 @@ def analyze_image(img: np.ndarray, skip_rows: list[tuple[int, int]], video_rect,
         if not thin_dark and flat < 0.5:
             continue
         (dividers if thin_dark else bands).append({"y": y0, "h": y1 - y0 + 1, "rgb": col})
-    # 글자·상자: 띠 안은 띠 색 기준, 밖은 바탕 기준
-    local = np.tile(np.array(bg), (H, 1))
+    # 바탕과 조금만 다른 띠(훅 머리 띠 56,58,51 vs 바탕 64 — 차 13, DIFF 40 아래라 위에서 빠졌다): 양 끝이 같은 색이고 바탕과
+    #   LOW_DIFF 넘게 다르며 행의 60% 이상이 그 색인 행이 LOW_MIN_H 줄 넘게 같은 색으로 이어지면 띠.
+    low = np.zeros(H, bool)
+    for y in range(H):
+        if not keep[y] or band_rows[y]:
+            continue
+        lft, rgt = np.median(a[y, :EDGE], axis=0), np.median(a[y, W - EDGE:], axis=0)
+        if np.abs(lft - rgt).max() <= 6 and np.abs(lft - np.array(bg)).max() > LOW_DIFF \
+                and float((np.abs(a[y] - lft).max(axis=1) <= 12).mean()) >= 0.6:
+            low[y] = True
+            row_color[y] = [int(v) for v in lft]
+    for y0, y1 in _runs(low, LOW_MIN_H):
+        cols = np.array([row_color[y] for y in range(y0, y1 + 1)])
+        if (cols.max(axis=0) - cols.min(axis=0)).max() <= 10:
+            bands.append({"y": y0, "h": y1 - y0 + 1, "rgb": [int(v) for v in np.median(cols, axis=0)], "low": True})
+            band_rows[y0:y1 + 1] = True
+    bands.sort(key=lambda b: b["y"])
     for b in bands:
-        local[b["y"]:b["y"] + b["h"]] = b["rgb"]
-    ink = np.abs(a - local[:, None, :]).max(axis=2) > INK
+        _band_paint(a, b, bg, keep, W)
+    # 글자·상자: 띠 안은 띠 색(가로 그라데이션이면 칸마다 그 색) 기준, 밖은 바탕 기준. 어두운 띠 위 검정 선 그림(훅 머리 띠의 » ·
+    #   포크 접시)은 띠와 차가 56 뿐이라 INK 80 으로는 안 보인다 → 어두운 띠(가장 밝은 채널 < 120) 안은 INK_DARK_BAND.
+    local = np.tile(np.array(bg, dtype=int), (H, W, 1))
+    thr = np.full(H, INK)
+    for b in bands:
+        prof = b.pop("_profile") if "_profile" in b else np.tile(np.array(b["rgb"], dtype=int), (W, 1))
+        ft, fb = b.get("fade") or (0, 0)
+        for y in range(b["y"], b["y"] + b["h"]):
+            # 번진 줄은 바탕과 띠 사이(그 줄 밝기 비율만큼) — 아니면 번진 줄 전체가 글자로 잡힌다
+            r = 1.0
+            if y < b["y"] + ft:
+                r = (y - b["y"] + 0.5) / max(1, ft)
+            elif y >= b["y"] + b["h"] - fb:
+                r = (b["y"] + b["h"] - y - 0.5) / max(1, fb)
+            local[y] = np.round(np.array(bg) + r * (prof - np.array(bg))).astype(int) if r < 1 else prof
+        band_rows[b["y"]:b["y"] + b["h"]] = True
+        if max(b["rgb"]) < 120:
+            thr[b["y"]:b["y"] + b["h"]] = INK_DARK_BAND
+    ink = np.abs(a - local).max(axis=2) > thr[:, None]
     for b in dividers:
         ink[b["y"]:b["y"] + b["h"]] = False
     ink[~keep] = False
@@ -161,7 +266,7 @@ def analyze_image(img: np.ndarray, skip_rows: list[tuple[int, int]], video_rect,
         texts.append(dict(t))
     for y0, y1 in ext:                               # 늘린 창 줄의 글자 덩어리는 영상 내용이다
         texts = [t for t in texts if not (t["y0"] >= y0 - 2 and t["y1"] <= y1 + 2)]
-    return {"bg": bg, "bands": bands, "dividers": dividers, "boxes": boxes, "texts": texts, "video_ext": ext}
+    return {"bg": bg, "bands": bands, "dividers": dividers, "boxes": boxes, "texts": texts, "video_ext": ext, "_ink": ink}
 
 
 def _ocr_texts(frame: dict | None) -> list[list]:
@@ -236,10 +341,40 @@ def text_layers(an: dict, ocr: list, W: int, font_default: str, notes: list, fid
         if tid in got or o[5]:
             continue
         got[tid] = o[1]; o[5] = True
+    import re
+    jobs, free = [], [t for t in rest if not got.get(id(t))]
     for t in rest:
         txt = got.get(id(t))
         if not txt:
-            notes.append(f"{fid}: 글자 덩어리 y{t['y0']}~{t['y1']} x{t['x0']}~{t['x1']} — OCR 이을 글 없음 → 층 생략")
+            continue
+        head, tail = re.match(SYM_RE_HEAD, txt), None
+        runs = _split_runs(an, t)
+        if head and len(runs) >= 2:                       # 앞 기호가 같은 덩어리에 붙어 있다 → 첫 잉크 묶음이 기호
+            jobs.append((_sub_piece(an, t, *runs[0]), head.group(1), True))
+            t = _sub_piece(an, t, runs[1][0], runs[-1][1]); txt = head.group(2); runs = runs[1:]
+        tail = re.match(SYM_RE_TAIL, txt)
+        if tail:
+            # 뒤 기호가 떨어져 따로 잡힌 덩어리(같은 줄 오른쪽, 글 안 받은 것)가 먼저 — 없을 때만 덩어리의 마지막 잉크 묶음
+            #   (낱말 사이 띄어쓰기도 SYM_GAP 을 넘어 '친구들'을 🍽 로 떼어 낸 적이 있다)
+            right = [f for f in free if f["x0"] > t["x1"] and min(f["y1"], t["y1"]) - max(f["y0"], t["y0"]) > 0.5 * (t["y1"] - t["y0"])]
+            if right:
+                r0 = min(right, key=lambda f: f["x0"]); free.remove(r0)
+                jobs.append((r0, tail.group(2), True)); txt = tail.group(1)
+            elif len(runs) >= 2 and runs[-1][0] - runs[-2][1] > SYM_GAP:
+                jobs.append((_sub_piece(an, t, *runs[-1]), tail.group(2), True))
+                t = _sub_piece(an, t, runs[0][0], runs[-2][1]); txt = tail.group(1)
+        jobs.append((t, txt, False))
+    for t in free:
+        notes.append(f"{fid}: 글자 덩어리 y{t['y0']}~{t['y1']} x{t['x0']}~{t['x1']} — OCR 이을 글 없음 → 층 생략")
+    for t, txt, is_sym in jobs:
+        if is_sym or re.fullmatch(r"[^\w\s]+", txt):
+            fam = _sym_font(an, t, txt, font_default)
+            f = _sym_size(fam, txt, t["y0"], t["y1"] - t["y0"] + 1)
+            notes.append(f"{fid}: 기호 {txt!r} 따로 층 — 잉크 {t['x0']}~{t['x1']}×{t['y0']}~{t['y1']}, 글꼴 {fam}, 잰 글꼴 {f.get('measured_by')}")
+            out.append({"kind": "text", "role": "label", **_align(t["x0"], t["x1"], W), "y": f["y"], "lines": 1, "font": fam,
+                        "size": f["size"], "line_h": f["line_h"], "rgb": t["rgb"], "line_rgb": None, "outline": None, "shadow": None,
+                        "box": None, "italic": False, "letter_spacing": 0, "enter": None, "text": txt,
+                        "_target": [t["x0"], t["y0"], t["x1"], t["y1"]]})
             continue
         fam = _font_for(an, [t], [txt], font_default)
         f = T.size_and_top(fam, txt, t["y0"], t["y1"] - t["y0"] + 1, None)
@@ -248,6 +383,79 @@ def text_layers(an: dict, ocr: list, W: int, font_default: str, notes: list, fid
                     "box": None, "italic": False, "letter_spacing": T.spacing_for(fam, f["size"], txt, t["x1"] - t["x0"] + 1) or 0,
                     "enter": None, "text": txt})
     return out
+
+
+
+# ── 기호 낱개(헤더 » · 🍽) ─────────────────────────────────────────────────────────────────────────────
+# 글 앞뒤의 기호(낱말 글자가 아닌 것)는 그 덩어리 안 자기 잉크 크기로 따로 층을 만든다 — 한 층에 같이 두면 기호가 글 크기를 따라
+#   원본보다 작게 나왔다(rGFX 머리 띠: 원본 » 107px·🍽 108px 높이 vs 우리 61/54px, 2026-10-16).
+SYM_RE_HEAD = r"^([^\w\s]+)\s+(.+)$"
+SYM_RE_TAIL = r"^(.+?)\s+([^\w\s]+)$"
+SYM_GAP = 20          # 기호와 글 사이 가로 틈(px) — 이 넘는 틈으로 덩어리를 가른다
+EMOJI_FALLBACK = ("C:/Windows/Fonts/seguiemj.ttf", "C:/Windows/Fonts/seguisym.ttf",
+                  "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf")
+
+
+def _has_glyph(font, ch: str) -> bool:
+    """빈 글자 상자(.notdef)와 다르면 있다. 비교 글자는 U+0378(쓰이지 않는 자리) — U+F0000 은 Pretendard 에 그림이 있어(10-16 실측)
+    이모지 없는 Pretendard 가 🍽 이 '있다'고 나왔다."""
+    return font.getmask(ch).getbbox() != font.getmask(chr(0x378)).getbbox()
+
+
+def _sym_font(an, piece, sym: str, default: str) -> str:
+    """기호 글꼴 — fontmatch 순위에서 그 기호가 있는 첫 등록 글꼴(점수 문턱 없음: 기호는 글자 수가 적어 점수가 낮다). 없으면 기본."""
+    try:
+        from tools.calcopy.engine import fontmatch
+        img = an["_img"]
+        crop = img[max(0, piece["y0"] - 4):piece["y1"] + 5, max(0, piece["x0"] - 4):piece["x1"] + 5].astype(int)
+        border = np.concatenate([crop[0], crop[-1], crop[:, 0], crop[:, -1]])
+        bgc = np.median(border, axis=0)
+        # 잉크 색에 더 가까운 점 — 어두운 띠(56) 위 검정 선은 '잉크 색에서 70 안'으로 재면 띠까지 잉크가 돼 굵은 글꼴이 뽑혔다
+        mask = np.abs(crop - np.array(piece["rgb"])).max(axis=2) < np.abs(crop - bgc).max(axis=2)
+        for r in fontmatch.rank(mask, sym)[:30]:
+            fam = T.family_of(r["font"])
+            if fam and r["score"] > 0 and all(_has_glyph(T._pil_font(fam, 100), c) for c in sym):
+                return fam
+    except Exception as e:  # noqa: BLE001
+        print("sym_font 실패:", e)
+    return default
+
+
+def _sym_size(fam: str, sym: str, ink_top: float, ink_h: float) -> dict:
+    """기호 잉크 높이·위 끝 → 크기·줄 칸 y. 그 글꼴에 없는 기호(이모지)는 렌더러가 시스템 글꼴로 대신 그린다 — 같은 대신 글꼴로 잰다
+    (윈도 Segoe UI Emoji / 리눅스 Noto Color Emoji — 서버와 이 PC의 대신 글꼴이 다르면 크기가 다를 수 있다)."""
+    from PIL import ImageFont
+    f100 = T._pil_font(fam, 100)
+    meas = f100 if all(_has_glyph(f100, c) for c in sym) else None
+    path = None
+    if meas is None:
+        for p in EMOJI_FALLBACK:
+            if Path(p).exists():
+                try:
+                    meas = ImageFont.truetype(p, 109 if "Color" in p else 100); path = p; break
+                except OSError:
+                    continue
+    if meas is None:
+        return T.size_and_top(fam, sym, ink_top, ink_h, None) | {"measured_by": "없음"}
+    base = 109 if path and "Color" in path else 100
+    b = meas.getbbox(sym, anchor="ls")
+    size = ink_h * base / max(1, b[3] - b[1])
+    asc, desc = T._pil_font(fam, size).getmetrics()
+    bt = b[1] * size / base
+    lh = round(size * 1.15)
+    y = ink_top - ((lh - (asc + desc)) / 2 + asc + bt)
+    return {"size": round(size, 1), "y": round(y), "line_h": lh, "measured_by": Path(path).name if path else fam}
+
+
+def _split_runs(an, t) -> list[tuple[int, int]]:
+    ink = an["_ink"][t["y0"]:t["y1"] + 1, t["x0"]:t["x1"] + 1].any(axis=0)
+    return [(t["x0"] + a, t["x0"] + b) for a, b in _runs(ink, 1, gap=SYM_GAP - 1)]
+
+
+def _sub_piece(an, t, x0, x1) -> dict:
+    sub = an["_ink"][t["y0"]:t["y1"] + 1, x0:x1 + 1]
+    ys = np.where(sub.any(axis=1))[0]
+    return {**t, "x0": x0, "x1": x1, "y0": t["y0"] + int(ys.min()), "y1": t["y0"] + int(ys.max())}
 
 
 def _font_for(an, blocks, texts, default) -> str:
@@ -271,7 +479,7 @@ def _font_for(an, blocks, texts, default) -> str:
     return default
 
 
-def build_multi(J: dict, src: str, ocr_from: dict | None = None) -> dict:
+def build_multi(J: dict, src: str, ocr_from: dict | None = None, calibrate: bool = True) -> dict:
     from shopping_shorts.channelkit.bench import probe
     notes = []
     pr = J.get("probe") or {}
@@ -326,7 +534,8 @@ def build_multi(J: dict, src: str, ocr_from: dict | None = None) -> dict:
                               "x": s["box"][0], "y": s["box"][1]} for s in sh]
             layers.append(v)
         for bnd in an["bands"]:
-            layers.append({"kind": "band", "x": 0, "y": bnd["y"], "w": W, "h": bnd["h"], "rgb": bnd["rgb"], "radius": 0})
+            layers.append({"kind": "band", "x": 0, "y": bnd["y"], "w": W, "h": bnd["h"], "rgb": bnd["rgb"], "radius": 0,
+                           **{k: bnd[k] for k in ("grad_x", "fade") if k in bnd}})
         for d in an["dividers"]:
             layers.append({"kind": "band", "x": 0, "y": d["y"], "w": W, "h": d["h"], "rgb": d["rgb"], "radius": 0})
         for bx in an["boxes"]:
@@ -362,23 +571,111 @@ def build_multi(J: dict, src: str, ocr_from: dict | None = None) -> dict:
         frames.append({"id": fid, "span": [a, b], "layers": layers[:schema.MAX_LAYERS]})
         if len(layers) > schema.MAX_LAYERS:
             notes.append(f"{fid}: 층 {len(layers)}개 → 상한 {schema.MAX_LAYERS}개로 자름")
+    if calibrate:
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            calibrate_symbols({"canvas": [W, H], "frames": frames, "template_off": None, "made_by": schema.MADE_BY}, Path(td), notes)
+    else:
+        for fr in frames:
+            for l in fr["layers"]:
+                l.pop("_target", None)
     out = {"canvas": [W, H], "frames": frames, "template_off": None, "made_by": schema.MADE_BY,
            "source": Path(str(J.get("source") or "")).stem or None,
            "made_from": {"tool": "tools/calcopy/engine/to_frame_multi.py", "engine": J.get("engine"), "notes": notes}}
     return out
 
 
+
+# ── 기호 크기 맞추기(렌더러로 재서) ───────────────────────────────────────────────────────────────────────
+# 기호는 등록 글꼴에 없으면 렌더러(크롬)가 시스템 글꼴로 대신 그린다 — PIL 로 잰 크기와 실제 그림이 다르다(🍽: Segoe UI Emoji 로 재
+#   121px 로 정했는데 렌더 높이 75px, 원본 108px, 2026-10-16). 그래서 실제 렌더(render_layer_one — 편집 화면·렌더·썸네일과 같은 길)로
+#   한 번 그려 잉크 상자를 재고, 높이 비율로 크기를, 다시 그려 위 끝·정렬 끝을 맞춘다.
+CAL_PAD = 30           # 기호 잉크를 찾을 때 원본 상자 바깥 여유(px)
+CAL_INK = 35
+
+
+def _render_frame(F: dict, t: float, work: Path) -> np.ndarray:
+    from shopping_shorts import scene_style
+    from shopping_shorts.calcopy_frame import to_snapshot
+    from PIL import Image
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(F))
+    spec = schema.validate(F)
+    title = next((l for l in schema.all_layers(spec) if l["kind"] == "text" and l["role"] == "title"), None)
+    head = {"text": (title or {}).get("text") or ""}
+    tl = [{"beat_idx": 0, "t0": 0, "dur": max(0.05, t), "narration": "", "caption_lines": [], "role": "hook",
+           "primary": {"video_id": "s0", "start": 0, "end": max(0.05, t)}},
+          {"beat_idx": 1, "t0": max(0.05, t), "dur": 1.0, "narration": "", "caption_lines": [], "role": "body",
+           "primary": {"video_id": "s0", "start": max(0.05, t), "end": max(0.05, t) + 1}}]
+    png = scene_style.render_layer_one(tl, snap, work, 1, head)
+    im = Image.open(png).convert("RGBA")
+    base = Image.new("RGBA", im.size, (0, 0, 0, 255))
+    return np.asarray(Image.alpha_composite(base, im).convert("RGB")).astype(int)
+
+
+def _ink_box(img: np.ndarray, box) -> list | None:
+    x0, y0, x1, y1 = box
+    H, W = img.shape[:2]
+    X0, Y0, X1, Y1 = max(0, x0 - CAL_PAD), max(0, y0 - CAL_PAD), min(W - 1, x1 + CAL_PAD), min(H - 1, y1 + CAL_PAD)
+    reg = img[Y0:Y1 + 1, X0:X1 + 1]
+    border = np.concatenate([reg[0], reg[-1], reg[:, 0], reg[:, -1]])
+    m = np.abs(reg - np.median(border, axis=0)).max(axis=2) > CAL_INK
+    if not m.any():
+        return None
+    ys, xs = np.where(m.any(axis=1))[0], np.where(m.any(axis=0))[0]
+    return [X0 + int(xs.min()), Y0 + int(ys.min()), X0 + int(xs.max()), Y0 + int(ys.max())]
+
+
+def _strip(F: dict) -> dict:
+    return {**F, "frames": [{**x, "layers": [{k: v for k, v in l.items() if k != "_target"} for l in x["layers"]]} for x in F["frames"]]}
+
+
+def calibrate_symbols(F: dict, work: Path, notes: list) -> None:
+    """F 의 기호 층(_target = 원본 잉크 상자 [x0,y0,x1,y1] 이 붙은 글자 층)을 렌더 실측으로 크기·자리 맞춤. 끝나면 _target 을 지운다."""
+    for fr in F["frames"]:
+        syms = [l for l in fr["layers"] if l.get("_target")]
+        if not syms:
+            continue
+        t = fr["span"][0] + 0.1
+        try:
+            for step in ("size", "place", "check"):
+                img = _render_frame(_strip(F), t, work / f"{fr['id']}_{step}")
+                for l in syms:
+                    tg = l["_target"]
+                    got = _ink_box(img, tg)
+                    if got is None:
+                        notes.append(f"{fr['id']}: 기호 {l['text']!r} 렌더에서 못 찾음({step})")
+                        continue
+                    if step == "size":
+                        l["size"] = round(l["size"] * (tg[3] - tg[1] + 1) / max(1, got[3] - got[1] + 1), 1)
+                        l["line_h"] = round(l["size"] * 1.15)
+                    elif step == "place":
+                        l["y"] = round(l["y"] + tg[1] - got[1])
+                        if l["align"] == "left":
+                            l["x"] = round(l["x"] + tg[0] - got[0])
+                        elif l["align"] == "right":
+                            l["x"] = round(l["x"] + tg[2] - got[2])
+                    else:
+                        notes.append(f"{fr['id']}: 기호 {l['text']!r} 렌더 실측 맞춤 — 원본 상자 {tg} / 우리 {got} "
+                                     f"(높이 차 {(got[3] - got[1]) - (tg[3] - tg[1])}px, 위 끝 차 {got[1] - tg[1]}px)")
+        except Exception as e:  # noqa: BLE001 — 렌더러(node)가 없는 곳: 맞춤 없이 PIL 크기 그대로, 이유는 notes 에
+            notes.append(f"{fr['id']}: 기호 렌더 맞춤 못 함 — {str(e)[:160]}")
+    for fr in F["frames"]:
+        for l in fr["layers"]:
+            l.pop("_target", None)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("tteutgi"); ap.add_argument("--out", required=True)
     ap.add_argument("--ocr-from", nargs="*", default=[], help="틀이름=frame.json (예 hook=a.json body=b.json)")
+    ap.add_argument("--no-calibrate", action="store_true", help="기호 크기를 렌더 실측으로 맞추지 않는다(렌더러 node 가 없는 곳)")
     a = ap.parse_args(argv)
     J = json.loads(Path(a.tteutgi).read_text(encoding="utf-8"))
     ocr = {}
     for kv in a.ocr_from:
         k, p = kv.split("=", 1)
         ocr[k] = json.loads(Path(p).read_text(encoding="utf-8"))
-    F = build_multi(J, J["source"], ocr)
+    F = build_multi(J, J["source"], ocr, calibrate=not a.no_calibrate)
     schema.validate(F)
     Path(a.out).write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(F["made_from"], ensure_ascii=False, indent=1))
