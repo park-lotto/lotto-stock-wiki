@@ -3,11 +3,11 @@
  "style": "A_흰바탕창/창안_흰외곽선",
  "made_by": "preset_save v1",
  "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
- "created_at": "2026-10-16T06:49:44+09:00",
+ "created_at": "2026-10-16T07:13:31+09:00",
  "sources": [
   {
    "id": "ho5GSd-4To0",
-   "tteutgi": "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/738308f5-1e6e-47e0-9cba-ad53b2e22836/scratchpad/cf/v2/ho5GSd-4To0/뜯기.json",
+   "tteutgi": "channel/sseolpulda/뜯기2/ho5GSd-4To0/뜯기.json",
    "engine": "뜯기 1판 2026-10-15",
    "measured_at": "2026-10-16 06:14",
    "frame_tool": "tools/calcopy/engine/to_frame.py",
@@ -48,11 +48,50 @@
    ],
    "caption_style": "창안_흰외곽선",
    "title_ink_w": 930,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5365
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.4542
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4517
+     }
+    ],
+    "top5": [
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.5365
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.4542
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4517
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.4488
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.4128
+     }
+    ]
+   },
+   "title_pooled": null,
    "frame_sha1": "be3c934fde80"
   },
   {
    "id": "7DYbxVNz5q8",
-   "tteutgi": "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/738308f5-1e6e-47e0-9cba-ad53b2e22836/scratchpad/cf/v2/7DYbxVNz5q8/뜯기.json",
+   "tteutgi": "channel/sseolpulda/뜯기2/7DYbxVNz5q8/뜯기.json",
    "engine": "뜯기 1판 2026-10-15",
    "measured_at": "2026-10-16 06:19",
    "frame_tool": "tools/calcopy/engine/to_frame.py",
@@ -98,11 +137,50 @@
    ],
    "caption_style": "창안_흰외곽선",
    "title_ink_w": 889,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6654
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6557
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.6258
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6654
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6557
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.6258
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.5865
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.552
+     }
+    ]
+   },
+   "title_pooled": null,
    "frame_sha1": "18839caab5ca"
   },
   {
    "id": "1_VtwOkbbVE",
-   "tteutgi": "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/738308f5-1e6e-47e0-9cba-ad53b2e22836/scratchpad/cf/v2/1_VtwOkbbVE/뜯기.json",
+   "tteutgi": "channel/sseolpulda/뜯기2/1_VtwOkbbVE/뜯기.json",
    "engine": "뜯기 1판 2026-10-15",
    "measured_at": "2026-10-16 06:22",
    "frame_tool": "tools/calcopy/engine/to_frame.py",
@@ -141,10 +219,49 @@
    ],
    "caption_style": "창안_흰외곽선",
    "title_ink_w": 1032,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6382
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6352
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6307
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6382
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6352
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6307
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.6175
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.5948
+     }
+    ]
+   },
+   "title_pooled": null,
    "frame_sha1": "40771e133c52"
   }
  ],
- "updated_at": "2026-10-16T06:49:44+09:00",
+ "updated_at": "2026-10-16T07:13:31+09:00",
  "variables": [
   "layers[text:title].y",
   "layers[text:title].font",
@@ -229,7 +346,7 @@
    },
    "default": "YgJalnan",
    "range": null,
-   "how": "최빈(2/3편)"
+   "how": "편별 판별 최빈(2/3편)"
   },
   "layers[text:title].size": {
    "values": {
@@ -500,42 +617,42 @@
     ]
    },
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].size": {
    "value": 48.0,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].y": {
    "value": 15,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].line_h": {
    "value": 55,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].x": {
    "value": 1052,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].letter_spacing": {
    "value": -2.3,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].font": {
    "value": "TmonMonsori",
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   },
   "layers[text:brand].italic": {
    "value": true,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T06:49:44+09:00"
+   "at": "2026-10-16T07:13:31+09:00"
   }
  }
 }

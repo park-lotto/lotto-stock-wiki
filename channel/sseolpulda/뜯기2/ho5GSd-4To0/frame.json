@@ -1,0 +1,171 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 322,
+   "w": 1080,
+   "h": 1300,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 121,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 102.3,
+   "line_h": 109,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     253,
+     1,
+     81
+    ]
+   ],
+   "outline": null,
+   "line_outline": [
+    null,
+    [
+     9,
+     255,
+     251,
+     255
+    ]
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 2.5,
+   "enter": null,
+   "text": "전 세계 매출 폭발시킨\n덴마크 회사의 실수"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 160,
+   "w": 880,
+   "align": "left",
+   "y": 1140,
+   "lines": 2,
+   "font": "CcPretendard-Bold",
+   "size": 87.8,
+   "line_h": 101,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     34,
+     34,
+     34
+    ]
+   },
+   "shadow": null,
+   "box": {
+    "rgb": [
+     54,
+     49,
+     45
+    ],
+    "pad": 0,
+    "radius": 0
+   },
+   "italic": false,
+   "letter_spacing": -13.2,
+   "word_spacing": 16.4,
+   "enter": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "[광고]",
+   "x": 1052,
+   "y": 14,
+   "w": 180,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 47.1,
+   "line_h": 54,
+   "rgb": [
+    190,
+    188,
+    191
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     96,
+     96,
+     99
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1.7,
+   "enter": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "ho5GSd-4To0",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "Pretendard-Bold.otf",
+   "top1_score": 0.3197,
+   "picked_from": {
+    "file": "Pretendard-Bold.otf",
+    "score": 0.3197
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 930,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+   "글꼴 1위 Pretendard-Bold.otf(0.3197) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-Bold({'file': 'Pretendard-Bold.otf', 'score': 0.3197})",
+   "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.5365), 신뢰 ok",
+   "제목 줄별 외곽선 [None, [9, 255, 251, 255]] (창 위로 걸친 고리만 잼)",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "자막 낱말 간격 16.4px — 원본 낱말 틈 13.0px 에 맞춤(자간 -13.2px 은 글자 사이만)",
+   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+   "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5377)"
+  ],
+  "ocr_model": "ocr-from frame_ho5GSd-4To0.json"
+ }
+}

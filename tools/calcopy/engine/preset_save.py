@@ -169,6 +169,40 @@ def stats(values: dict) -> dict:
     return {"values": values, "default": _elem_median(best), "range": rng, "how": how}
 
 
+TITLE_FONT = "layers[text:title].font"
+
+
+def title_font_stats(M: dict, vals: dict, st: dict) -> dict:
+    """하위 스타일 제목 글꼴 = ① 분석기 묶음 판별(fonts.title_pooled — 여러 편 제목을 한 번에 판별, 3판-b)이 있으면 그 1위
+    ② 없으면 편별 판별의 최빈 ③ 동률이면 편별 판별 점수(top5)를 글꼴마다 더해 높은 쪽.
+    (2026-10-16 관제가 눈으로 확인: ho5·7DY·1_V 제목은 같은 글꼴인데 편별 판별이 Cafe24/yg-jalnan 으로 갈렸다)"""
+    from tools.calcopy.engine.to_frame import family_of
+    pooled = [s.get("title_pooled") for s in M["sources"] if s.get("title_pooled")]
+    for pl in pooled:
+        top = (pl.get("top3") or pl.get("top5") or []) if isinstance(pl, dict) else (pl if isinstance(pl, list) else [])
+        for x in top:
+            fam = family_of(x.get("font", ""))
+            if fam:
+                return {**st, "default": fam, "how": f"분석기 묶음 판별 fonts.title_pooled 1위 {x['font']}({x.get('score')})"}
+    counts = {}
+    for v in vals.values():
+        counts[v] = counts.get(v, 0) + 1
+    if not counts:
+        return st
+    best = max(counts.values())
+    tied = [f for f, c in counts.items() if c == best]
+    if len(tied) == 1:
+        return {**st, "default": tied[0], "how": f"편별 판별 최빈({best}/{len(vals)}편)"}
+    score = {f: 0.0 for f in tied}
+    for s in M["sources"]:
+        for x in ((s.get("title_fonts") or {}).get("top5") or (s.get("title_fonts") or {}).get("top3") or []):
+            fam = family_of(x.get("font", ""))
+            if fam in score:
+                score[fam] += float(x.get("score") or 0)
+    win = max(tied, key=lambda f: (score[f], -tied.index(f)))
+    return {**st, "default": win, "how": f"편별 판별 동률 {tied} → 점수 합 {{{', '.join(f'{f}: {score[f]:.3f}' for f in tied)}}} 높은 쪽"}
+
+
 def variable_stats(preset_dir: Path, M: dict, preset: dict) -> dict:
     """프리셋의 변수 자리마다 출처 편들의 값(sources/<id>.json)으로 stats. 그 편에서 뺀 층(excluded_layers)·없는 자리는 빼고 센다.
     제목 글자처럼 내용인 자리(ALWAYS_PER_VIDEO)는 default 를 두지 않는다(새 소재는 반드시 --set)."""
@@ -182,6 +216,8 @@ def variable_stats(preset_dir: Path, M: dict, preset: dict) -> dict:
         vals = {sid: F[path] for sid, (F, ex) in flats.items()
                 if path in F and not any(path.startswith(f"layers[{e}") for e in ex)}
         st = stats(vals)
+        if path == TITLE_FONT:
+            st = title_font_stats(M, vals, st)
         if path in ALWAYS_PER_VIDEO:
             st.update(default=None, range=None, how=NO_DEFAULT)
         out[path] = st
@@ -326,7 +362,10 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
                          "frame_tool": mf.get("tool"), "font": mf.get("font"), "font_confidence": mf.get("font_confidence"),
                          "notes": mf.get("notes") or [], "unknown": J.get("unknown") or [], "excluded_layers": list(exclude),
                          "became_variables": became, "caption_style": caption_style,
-                         "title_ink_w": mf.get("title_ink_w"),   # 프레임 실측(없으면 None → 규칙이 글꼴로 계산, 1_V 1102>1080 같은 오차)
+                         "title_ink_w": mf.get("title_ink_w"),
+                         # 제목 글꼴 판별(분석기 fonts.title top3·top5)과 묶음 판별(fonts.title_pooled, 3판-b) — 하위 스타일 글꼴을 정할 때 쓴다
+                         "title_fonts": {k: v for k, v in ((J.get("fonts") or {}).get("title") or {}).items() if k in ("top3", "top5")} or None,
+                         "title_pooled": (J.get("fonts") or {}).get("title_pooled"),   # 프레임 실측(없으면 None → 규칙이 글꼴로 계산, 1_V 1102>1080 같은 오차)
                          "frame_sha1": hashlib.sha1(schema.canonical(new).encode("utf-8")).hexdigest()[:12]})
     (preset_dir / "sources").mkdir(exist_ok=True)
     (preset_dir / "sources" / f"{source_id}.json").write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -180,3 +180,27 @@ def test_video_anchor_constant_when_window_fixed(tmp_path):
     pre, M = P.load(d)
     out = P.apply(pre, None, {"layers[text:title].text": "새 제목\n둘째 줄"}, M["variable_stats"], None, M["rules"])
     assert next(l for l in out["layers"] if l["kind"] == "video")["y"] == 323
+
+
+def _two_fonts(tmp_path, pooled=None):
+    d = tmp_path / "s" / "preset" / "A" / "창안"
+    g1 = other_video(FRAME_A); title(g1)["font"] = "Cafe24Ohsquare"
+    g2 = other_video(FRAME_A); title(g2)["font"] = "YgJalnan"
+    J1 = {**J, "fonts": {"title": {"top5": [{"font": "Cafe24Ohsquare.ttf", "score": 0.54}, {"font": "yg-jalnan.ttf", "score": 0.50}]}}}
+    J2 = {**J, "fonts": {"title": {"top5": [{"font": "yg-jalnan.ttf", "score": 0.67}, {"font": "Cafe24Ohsquare.ttf", "score": 0.40}]}}}
+    if pooled:
+        J2["fonts"]["title_pooled"] = pooled
+    P.save(J1, g1, d, "a", "x")
+    return P.save(J2, g2, d, "b", "y")
+
+
+def test_title_font_tie_broken_by_summed_scores(tmp_path):
+    M = _two_fonts(tmp_path)
+    st = M["variable_stats"]["layers[text:title].font"]
+    assert st["default"] == "YgJalnan" and "점수 합" in st["how"]          # 1:1 동률 → 0.50+0.67 > 0.54+0.40
+
+
+def test_title_font_prefers_pooled(tmp_path):
+    M = _two_fonts(tmp_path, pooled={"top3": [{"font": "Cafe24Ohsquare.ttf", "score": 0.7}]})
+    st = M["variable_stats"]["layers[text:title].font"]
+    assert st["default"] == "Cafe24Ohsquare" and "묶음 판별" in st["how"]

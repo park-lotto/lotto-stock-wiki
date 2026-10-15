@@ -1,0 +1,4 @@
+{"what": "분석기 2판(d3f66e3b0)으로 다시 뜯은 결과 — 워커 1판 폴더(채널/뜯기/<id>)는 그대로 둔다",
+ "how": "py tools/calcopy/engine/analyze.py <mp4> --out <폴더> --no-materials (무료 제미나이 14키 429라 제작법·OCR 빠짐)",
+ "frame.json": "to_frame.py <뜯기.json> --ocr-from <1판 설명서> — 제목·[광고] 글자는 1판 OCR 재사용, 자리·크기·색은 2판 값으로 다시 잼",
+ "when": "2026-10-16", "ids": ["ho5GSd-4To0", "7DYbxVNz5q8", "1_VtwOkbbVE"]}

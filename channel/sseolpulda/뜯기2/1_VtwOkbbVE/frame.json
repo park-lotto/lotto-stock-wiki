@@ -1,0 +1,163 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 323,
+   "w": 1080,
+   "h": 1298,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 122,
+   "lines": 2,
+   "font": "YgJalnan",
+   "size": 91.7,
+   "line_h": 110,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     186,
+     0,
+     121
+    ]
+   ],
+   "outline": null,
+   "line_outline": [
+    null,
+    [
+     8,
+     255,
+     255,
+     255
+    ]
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 11.4,
+   "enter": null,
+   "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 906,
+   "w": 866,
+   "align": "right",
+   "y": 1083,
+   "lines": 2,
+   "font": "BMDOHYEON",
+   "size": 103.2,
+   "line_h": 119,
+   "rgb": [
+    250,
+    254,
+    246
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     74,
+     74,
+     75
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -15.5,
+   "word_spacing": -5.0,
+   "enter": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "[광고]",
+   "x": 1052,
+   "y": 14,
+   "w": 179,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 47.1,
+   "line_h": 54,
+   "rgb": [
+    188,
+    186,
+    190
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     110,
+     108,
+     112
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.0,
+   "enter": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "1_VtwOkbbVE",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "BMDOHYEON.ttf",
+   "top1_score": 0.2045,
+   "picked_from": {
+    "file": "BMDOHYEON.ttf",
+    "score": 0.2045
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 1032,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+   "글꼴 1위 BMDOHYEON.ttf(0.2045) < 0.5 — 확신 낮음. 쓴 글꼴 BMDOHYEON({'file': 'BMDOHYEON.ttf', 'score': 0.2045})",
+   "제목 글꼴 YgJalnan — 분석기 fonts.title 1위 yg-jalnan.ttf(0.6382), 신뢰 ok",
+   "제목 줄별 외곽선 [None, [8, 255, 255, 255]] (창 위로 걸친 고리만 잼)",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "자막 낱말 간격 -5.0px — 원본 낱말 틈 3.0px 에 맞춤(자간 -15.5px 은 글자 사이만)",
+   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+   "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5527)"
+  ],
+  "ocr_model": "ocr-from frame_1_VtwOkbbVE.json"
+ }
+}
