@@ -13124,7 +13124,7 @@ function cleanGo(si,pos,ci){
     if(typeof ci!=='number') ci=CLEAN_VIEW.ci||0;
     ci=Math.max(0,Math.min(n-1,ci));
     CLEAN_VIEW={ci:ci, si:CLEAN_CLIPS[ci].si, pos:pos, job:CLEAN_VIEW.job};
-    renderCleanReady(CLEAN_VIEW.job||MIX_JOB); return;
+    renderCleanReady(CLEAN_VIEW.job||MIX_JOB, true); return;
   }
   // 목록에 없는 번호로는 가지 않는다 — 안 쓰인 소스는 AFTER를 뽑을 수 없다.
   const L=_cleanIdxList();
@@ -13134,7 +13134,7 @@ function cleanGo(si,pos,ci){
     if(typeof si!=='number') si=L[0];
   }
   CLEAN_VIEW={si:si, pos:pos, job:CLEAN_VIEW.job};
-  renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
+  renderCleanReady(CLEAN_VIEW.job||MIX_JOB, true);
 }
 // ★지운 결과를 쓸지 말지 — 마음에 안 들면 원본으로 되돌리는 취소 버튼(2026-09-20 이윤정 고객 요청).
 //   결과 자체는 서버에 남겨둔 채 **쓸지 말지만** 뒤집는다. 그래서 되돌려도, 다시 켜도 0원이다.
@@ -13182,11 +13182,15 @@ async function setCleanUse(use, btn){
   }
 }
 
-function renderCleanReady(job){
+function renderCleanReady(job, browsing){
   const box=document.getElementById('cleanPreview'); if(!box) return;
   CLEAN_VIEW.job=job;
-  if(CLEAN_CLIPS_JOB!==job){             // 컷 목록을 한 번 받아온 뒤 그린다
-    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job); });
+  // ★컷 목록 저장본은 ◀▶ 넘겨보기(browsing) 동안만 쓴다(관제 211, 이성택님). 그 밖의 모든 진입은 서버에서 새로 받는다 —
+  //   종전엔 job당 한 번만 받아 영상대본MIX에서 장면을 빼고 넣은 뒤 돌아와도 지운 장면이 그대로, 새 장면은 안 보였다.
+  //   진입 경로마다 비우는 대신 여기 한 곳에서 정한다(경로가 늘어도 옛 목록이 남을 수 없다).
+  if(!browsing || CLEAN_CLIPS_JOB!==job){
+    CLEAN_CLIPS_JOB=null;
+    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job, true); });
     return;
   }
   const pos=CLEAN_VIEW.pos;
@@ -13604,9 +13608,6 @@ let CLEAN_PICK = null;          // {job, mode:'all'|'some', cuts:[...], sel:Set(
 async function loadCleanPick(job){
   const wrap=document.getElementById('cleanPickWrap');
   if(!wrap) return;
-  // ★이 화면에 다시 들어올 때마다 전/후 비교 컷 목록도 새로 받는다(관제 211, 이성택님). 종전엔 job당 한 번만 받아
-  //   영상대본MIX에서 장면을 빼고 넣은 뒤 돌아와도 비교 화면이 지운 장면을 그대로, 새 장면은 안 보였다.
-  if(CLEAN_CLIPS_JOB===job) CLEAN_CLIPS_JOB=null;
   try{
     const d=await (await fetch('/api/produce/mix/clean_pick/'+encodeURIComponent(job))).json();
     if(MIX_JOB!==job) return;

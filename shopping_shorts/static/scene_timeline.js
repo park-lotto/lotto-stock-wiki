@@ -89,8 +89,9 @@
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlSeekPlay(${i}, event)">
         <img class="tl-thumb" src="${SL.thumb(c.seg_id)}" loading="lazy">
-        <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
-          ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
+        <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}${(_box(i) && DATA.box_frames_fixed) ? ' ask' : ''}"
+          ${(_box(i) && DATA.box_frames_fixed) ? `title="누르면 초를 직접 넣어 길이를 정합니다" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}', true)"`
+            : getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
           >${(getFix(i, c.seg_id) && !CUTS[i] && !sceneRuleOn(i)) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
         ${(CUTS[i] || _box(i)) ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
@@ -189,7 +190,7 @@
       <div class="tl-lane tl-bgms"><span class="tl-name">배경음</span><div class="tl-bgmbar" data-i="${i}" style="left:0;width:${(dur * pps).toFixed(1)}px"
         onclick="event.stopPropagation();tlBgmPlay(${i},this)">${tlBgmLabel()}</div></div>
       ${editBtn}
-      <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span></div>
+      <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span>${(_box(i) && DATA.box_frames_fixed && clips.length) ? `<button type="button" class="tl-cutat" title="빨간 막대 자리에서 이 카드를 두 장으로 자릅니다" onclick="event.stopPropagation();tlSplitAt(${i})">✂ 자르기</button>` : ''}</div>
     </div>`;
   }
 
@@ -203,6 +204,7 @@
   };
 
   const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
+  g.TL_POS = TL_POS;               // 3단계 「✂ 자르기」(scene_lab tlSplitAt)가 읽는다
 
   // ── 스페이스 = 선택 칸 재생/일시정지(2026-08-29 사장님 — 재생선을 옮겨놓고 스페이스로
   //    그 지점부터 듣고 멈추며 자막과 비교하는 흐름). 재생·정지·이어서는 전부 기존 경로
@@ -471,6 +473,7 @@
               const nb = clips[k + 1] || clips[k - 1];
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
+            if (typeof g.handSnap === 'function') g.handSnap(i);
             (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
             setFix(i, c.seg_id, sec);                       // 새 작업은 칸 전체가 한 속도로 맞춘다(scenesV2Alloc 'all')
           }
@@ -711,6 +714,7 @@
   let pop = null, au = null;
   function close() { if (pop) { pop.remove(); pop = null; } if (au) { au.pause(); au = null; } }
   document.addEventListener('click', e => { if (pop && !pop.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (pop && e.key === 'Escape') close(); });   // 10-16 사장님 "끄거나 접는 게 없어"
   window.tlSfxOpen = function (bi, k, el) {
     close();
     const sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(bi));
@@ -721,7 +725,7 @@
     pop.style.left = Math.max(8, Math.min(window.innerWidth - 230, r.left)) + 'px';
     pop.style.top = (r.bottom + 4) + 'px';
     const paint = () => { pop.querySelector('.v').textContent = Math.round(vol * 100) + '%'; };
-    pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span>
+    pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span><button class="x" title="닫기">✕</button>
       <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>
       <div class="row"><select class="swap" title="고르면 바로 바뀝니다"></select></div>`;
     document.body.appendChild(pop); paint();
@@ -739,6 +743,7 @@
     let timer = null;
     const step = d => { vol = Math.round(Math.min(2, Math.max(0, vol + d)) * 10) / 10; paint(); if (au) au.volume = Math.min(1, vol);
       clearTimeout(timer); timer = setTimeout(() => send('vol'), 500); };
+    pop.querySelector('.x').onclick = close;
     pop.querySelector('.dn').onclick = () => step(-0.1);
     pop.querySelector('.up').onclick = () => step(0.1);
     pop.querySelector('.play').onclick = () => { if (!s.url) return alertSay('들어볼 파일이 없어요');
