@@ -25,7 +25,8 @@ from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WI
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
                         INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
                         FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S,
-                        FRAME_BREAK_ABS, FRAME_BREAK_REL, WINDOW_BRIDGE_PX, WINDOW_BRIDGE_FRAC)
+                        FRAME_BREAK_ABS, FRAME_BREAK_REL, WINDOW_BRIDGE_PX, WINDOW_BRIDGE_FRAC,
+                        WINDOW_NONBG_FRAC, WINDOW_SOFT_FRAC, WINDOW_BRIDGE_NONBG)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -129,24 +130,41 @@ def _scan(path: str, meta: dict) -> dict:
 
 
 def _window(st: dict) -> list[int] | None:
-    """영상창: 시간 표준편차 > WINDOW_PX_STD 화소가 행의 WINDOW_ROW_FRAC 이상인 가장 긴 행 구간 + 그 안의 열 구간."""
+    """영상창: 시간 표준편차 > WINDOW_PX_STD 화소가 행의 WINDOW_ROW_FRAC 이상인 가장 긴 행 구간 + 그 안의 열 구간.
+    또는 '바탕색과 다른 화소'가 행(열)의 WINDOW_NONBG_FRAC 이상인 행(열) — 덩어리 전체 평균 움직임이 WINDOW_SOFT_FRAC 이상일 때만 창.
+    카메라가 고정된 영상(벽 앞 인물 등)은 움직이는 화소가 행의 85%가 안 돼 창이 없었다(2026-10-16 핫템 1·2위 창 None).
+    바탕색 = 가만히 있는 화소의 시간평균 색 중 가장 흔한 색(32단계 양자화 최빈) — 틀 바탕은 넓고 고르다."""
     sx = st["W"] / LAYOUT_W
     hot = st["std"] > WINDOW_PX_STD
+    q = (st["mean_rgb"] // 8).astype(np.int32)
+    key = q[..., 0] * 1024 + q[..., 1] * 32 + q[..., 2]
+    # 최빈색은 가만히 있는 화소에서만 센다 — 움직이는 영상의 시간평균이 고른 회색이 되어 바탕으로 뽑히지 않게
+    still_key = key[~hot] if (~hot).sum() > 100 else key.ravel()
+    vals, cnt = np.unique(still_key, return_counts=True)
+    m = int(vals[np.argmax(cnt)])
+    bg = np.array([m // 1024, (m // 32) % 32, m % 32], np.float64) * 8 + 4
+    nonbg = np.abs(st["mean_rgb"] - bg[None, None, :]).max(axis=2) > FILL_BG_DIFF
     rf = hot.mean(axis=1)
-    runs = segs(rf > WINDOW_ROW_FRAC, gap=SEG_GAP)
+    row_ok = (rf > WINDOW_ROW_FRAC) | (nonbg.mean(axis=1) > WINDOW_NONBG_FRAC)
+    runs = segs(row_ok, gap=SEG_GAP)
     # 창 안에 오래 가만히 있는 넓은 자막 줄이 있으면 그 행만 '덜 움직여' 창이 둘로 갈린다 → 위아래 창 조각 사이 틈이
     # WINDOW_BRIDGE_PX 이하이고 틈 행이 평균 WINDOW_BRIDGE_FRAC 이상 움직이면 잇는다(2026-10-16 외곽선 자막 합성 시험)
     merged: list[list[int]] = []
     for a_, b_ in runs:
-        if merged and a_ - merged[-1][1] <= WINDOW_BRIDGE_PX * st["H"] and rf[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_FRAC:
+        gap_ok = merged and a_ - merged[-1][1] <= WINDOW_BRIDGE_PX * st["H"] and rf[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_FRAC
+        # 틈 행이 바탕색이면(흰 틀 위 자막 줄 — 방구석 ILIiqCJAOSI 창이 582로 올라감) 창 안이 아니다 → 잇지 않는다
+        if gap_ok and nonbg[merged[-1][1]:a_].mean() >= WINDOW_BRIDGE_NONBG:
             merged[-1][1] = b_
         else:
             merged.append([a_, b_])
-    rows = [(a_, b_) for a_, b_ in merged if b_ - a_ >= WINDOW_MIN_PX]
+    # 바탕과 다른 덩어리라도 거의 안 움직이면(고정 제목 상자·검정 띠) 창이 아니다 — 덩어리 평균 움직임 ≥ WINDOW_SOFT_FRAC
+    rows = [(a_, b_) for a_, b_ in merged if b_ - a_ >= WINDOW_MIN_PX and rf[a_:b_].mean() >= WINDOW_SOFT_FRAC]
     if not rows:
         return None
     y0, y1 = max(rows, key=lambda s: s[1] - s[0])
-    cols = segs(hot[y0:y1].mean(axis=0) > WINDOW_COL_FRAC, min_len=int(WINDOW_MIN_PX / sx), gap=SEG_GAP)
+    cf = hot[y0:y1].mean(axis=0)
+    col_ok = (cf > WINDOW_COL_FRAC) | (nonbg[y0:y1].mean(axis=0) > WINDOW_NONBG_FRAC)
+    cols = segs(col_ok, min_len=int(WINDOW_MIN_PX / sx), gap=SEG_GAP)
     c0, c1 = max(cols, key=lambda s: s[1] - s[0]) if cols else (0, LAYOUT_W)
     x0 = int(round(c0 * sx)); x1 = int(round(c1 * sx))
     return [x0, int(y0), x1 - x0, int(y1 - y0)]
