@@ -215,3 +215,20 @@ def test_caption_moving_between_scenes(tmp_path):
     assert c["pos"] == "inside" and c["ink"] == "bright", (c, r["caption_candidates"])
     assert c["band"][0] <= 1150 and c["band"][1] >= 1300, c
     assert len(r["caption"]["spans"]) == 4, (r["caption"]["spans"], r["caption"].get("unstable"))
+
+
+def test_font_pooled_rank_overrides_noisy_sample():
+    """같은 글꼴(BlackHanSans) 제목 줄 3개 중 1개가 번져(굵게) 단독 1위가 다른 글꼴이어도 묶음 판별은 BlackHanSans."""
+    import os
+    import cv2
+    import numpy as np
+    from tools.calcopy.engine import fontmatch as fm
+    p = next(x for x in fm.font_paths() if os.path.basename(x) == "BlackHanSans.ttf")
+    texts = ["숨은 메뉴 꿀팁", "직원만 아는 비밀", "오늘의 추천 음료"]
+    samples = [(fm.render(p, t), t) for t in texts]
+    noisy = cv2.dilate(samples[1][0].astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
+    samples[1] = (noisy, texts[1])
+    alone = fm.rank(noisy, texts[1])[0]["font"]
+    assert alone != "BlackHanSans.ttf", alone          # 번진 줄 단독으로는 틀린다(시험이 뭔가를 재고 있다는 확인)
+    pooled = fm.pooled_rank(samples)
+    assert pooled["top"][0]["font"] == "BlackHanSans.ttf", pooled

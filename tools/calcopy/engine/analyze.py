@@ -239,6 +239,7 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
     out = {"method": f"layout above_bands 크롭 → gemini OCR → fontmatch.rank ({fontmatch.METHOD}) + fontmatch.slant_deg",
            "frame_t": round(t, 2), "bands": [], "models": _models(got)}
     totals: dict[str, dict[str, list]] = {"title": {}, "brand": {}}
+    pool_samples: dict[str, list] = {"title": [], "brand": []}   # 편 안 같은 역할의 모든 줄 → fontmatch.pooled_rank
     for b in bands:
         g = got.get(f"제목 띠 {b['k']}")
         lines = [x for x in ((g or {}).get("lines") or []) if str(x).strip()]
@@ -264,13 +265,15 @@ def title_fonts(path: str, meta: dict, vl: dict, above: list, cap: dict | None, 
                         "grid": str(png.relative_to(out_dir)).replace(chr(92), "/")})
             for x in r:
                 totals[b["role"]].setdefault(x["font"], []).append(x["score"])
+            pool_samples[b["role"]] += [(m_, str(t_)) for m_, t_ in zip(masks, lines)]
         out["bands"].append(row)
     for role in ("title", "brand"):
         rows = [r for r in out["bands"] if r["role"] == role and r.get("top5")]
         if rows:
             tot = sorted(({"font": f, "score": round(float(np.mean(v)), 4)} for f, v in totals[role].items()), key=lambda x: -x["score"])
             sl = [r["slant_deg"] for r in rows if r.get("slant_deg") is not None]
-            out[role] = {"top3": tot[:3], "top5": tot[:5], "n_bands": len(rows), "slant_deg": float(np.median(sl)) if sl else None,
+            out[role] = {"pooled_in_video": fontmatch.pooled_rank(pool_samples[role]) if pool_samples[role] else None,
+                         "top3": tot[:3], "top5": tot[:5], "n_bands": len(rows), "slant_deg": float(np.median(sl)) if sl else None,
                          "italic": bool(sl and float(np.median(sl)) >= 6)}
         elif any(r["role"] == role for r in out["bands"]):
             out[role] = {"failed": next(r.get("failed") for r in out["bands"] if r["role"] == role)}

@@ -173,3 +173,31 @@ def slant_deg(mask: np.ndarray) -> float | None:
         if best is None or v > best[0]:
             best = (v, deg)
     return float(best[1])
+
+
+def pooled_rank(samples: list[tuple[np.ndarray, str]], fonts: list[str] | None = None) -> dict:
+    """묶음 판별 — 같은 하위 스타일(같은 채널·같은 역할)의 줄 크롭 여럿을 모아 후보 글꼴 하나로 정한다.
+    줄마다 rank 한 점수를 그 줄 1위 점수로 나눠(0~1) 더한 평균 → 줄 하나가 흐리거나 잘려도(점수 전체가 낮아도) 한 표씩만 센다.
+    (2026-10-16 썰풀다: 같은 글꼴로 보이는 ho5·7DY·1_V 제목이 편 단위로 Cafe24Ohsquare / yg-jalnan 으로 갈렸다)
+    반환 {top: [{font, score(정규화 평균), wins(줄 1위 횟수), raw(원점수 평균)}], n, per_sample_top1, agree(1위가 묶음 1위와 같은 줄 비율)}."""
+    fonts = fonts or font_paths()
+    acc: dict[str, list] = {}
+    tops = []
+    for mask, text in samples:
+        r = rank(mask, text, fonts)
+        best = r[0]["score"] if r and r[0]["score"] > 0 else None
+        if not best:
+            continue
+        tops.append(r[0]["font"])
+        for x in r:
+            a = acc.setdefault(x["font"], [0.0, 0, 0.0])
+            a[0] += x["score"] / best
+            a[1] += int(x["font"] == r[0]["font"])
+            a[2] += x["score"]
+    n = len(tops)
+    if not n:
+        return {"top": [], "n": 0, "failed": "점수 낼 줄 없음"}
+    top = sorted(({"font": f, "score": round(v[0] / n, 4), "wins": v[1], "raw": round(v[2] / n, 4)} for f, v in acc.items()),
+                 key=lambda x: -x["score"])
+    return {"top": top[:5], "n": n, "per_sample_top1": tops,
+            "agree": round(sum(1 for t in tops if t == top[0]["font"]) / n, 3), "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"}
