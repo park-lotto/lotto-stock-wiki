@@ -913,7 +913,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     //   표식(DATA.hand_cut) 있는 **새 작업만** — 옛 작업에 묻혀 있던 손 길이(fixed_lens)는 계속 안 쓴다(기존 영상 불변).
     //   L = 손으로 정한 컷 길이. 생긴 차이를 무엇으로 메울지는 칸 설정 FILLMODE[beatIdx]:
     //     'next'(기본) = 옆 카드가 그만큼 더/덜 보여 준다(끝이면 앞 카드) · 'self' = 이 카드만 느리게/빠르게(시간 그대로)
-    //     'all' = 이 칸 카드 전부 같은 배속으로 칸을 채운다.  판단은 여기 한 곳 — 화면 줄(handGapInfo)·렌더·캡컷은 이 결과를 읽는다.
+    //     'all' = 이 칸 카드 전부 같은 배속으로 칸을 채운다.  판단은 여기 한 곳 — 화면 안내 줄(handBarHtml)·렌더·캡컷은 이 결과를 읽는다.
     const hsrc = scenes.map(() => null);
     let handMode = null;                                          // 이 칸에서 실제로 쓴 메우기 방식(화면 안내 줄이 읽는다)
     if (D.hand_cut && beatIdx != null && typeof getFix === 'function'){
@@ -925,10 +925,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         want.forEach((L, k) => { if (L > 0) src[k] = Math.min(Math.max(MANUAL_MIN, L), av[k].far); });
         // ★기본값(관제 204 7번, 2026-10-14 사장님): 구절 맞춤 칸은 '그 카드만 느리게/빠르게' — 장면 바뀌는 자리가 자막 경계에
         //   그대로 남는다. 배속 한도(느리게 maxSlowmo · 빠르게 FIT_FAST_MAX)를 넘으면 '옆 장면 더'. 그 밖의 칸은 '옆 장면 더'.
-        if (!mode){
-          const selfOk = want.every((L, k) => !(L > 0) || (dur[k] / src[k] <= maxSlowmo() + 1e-3 && src[k] / dur[k] <= FIT_FAST_MAX + 1e-3));
-          mode = (typeof phraseExactOn === 'function' && phraseExactOn(beatIdx) && selfOk) ? 'self' : 'next';
-        }
+        // ★기본 = 칸 전체를 한 속도로(2026-10-15 사장님 "늘이고 줄이면 전체 칸 속도만 한 번에 — 1번 줄인다고 2·3번에 영향 없게,
+        //   2·3번을 바꾸고 싶으면 그걸 직접 끈다"). 묻지 않는다. 예전에 고른 값(FILLMODE)이 있으면 그대로.
+        if (!mode) mode = 'all';
         handMode = mode;
         if (mode === 'self'){
           want.forEach((L, k) => { if (L > 0) hsrc[k] = src[k]; });
@@ -1111,7 +1110,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     base.forEach(c => {
       if (c.meme){ c.src_dur = Number(c.dur); return; }            // 짤 컷: 1배속·처음부터(칸 통합 속도·창 늘리기 대상 아님)
       const natural = Number(c.src_dur || c.dur || 0);
-      let wanted = natural * syncSpeed;
+      // ★손 길이 카드(관제 204)는 읽을 원본 길이가 이미 정해져 있다 — 칸 속도가 빨라지면 음성이 짧아져 그 안에 넣는 것만으로
+      //   같은 배속이 된다. 여기서 syncSpeed 를 또 곱하면 두 번 빨라진다(실측 10-15: 1.2배 칸에서 1.42배여야 할 카드가 1.71배).
+      let wanted = natural * (c.hand ? 1 : syncSpeed);
       const seg = ((typeof DATA === 'object' && DATA && DATA.segments) || {})[c.seg_id];
       const sourceTotal = Number((((typeof DATA === 'object' && DATA) || {}).src_duration || {})[c.video_id] || 0);
       let end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;

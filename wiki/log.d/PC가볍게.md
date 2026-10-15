@@ -1,0 +1,1 @@
+- 2026-10-15 [관제 214] PC 메모리 점검기 tools/pc_watch.py(유령 claude·고아 node·관문 일꾼 정리, 쉬는 창 알림). 도구 서버 3개+agentmemory 끔(약 2.3GB), 유령 claude 2개 정리.

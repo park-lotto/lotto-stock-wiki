@@ -54,7 +54,6 @@
     const id = _extraIdOf(c.video_id, a, b);
     const L = len != null ? len : old;
     if (id) (g.HAND_LAST = g.HAND_LAST || {})[i] = id;
-    if (id) (g.HAND_BASE = g.HAND_BASE || {})[i] = { sid: id, dur: +c.dur };   // 바뀌기 전 화면 길이(안내 줄 기준)
     if (L > 0 && id) setFix(i, id, L);
   }
   function _extraIdOf(vid, a, b) {
@@ -180,11 +179,12 @@
         title="${TL_EDIT[i] ? '경계 편집 끝내기' : '자막 구절 경계 고치기 — 어절 사이를 눌러 끊고 합칩니다 (초는 실제 발화 시각으로 자동 재계산)'}"
         onclick="event.stopPropagation();tlEditToggle(${i})">${TL_EDIT[i] ? '✔ 끝내기' : '✂ 경계'}</button>`;
 
-    return `<div class="tlwrap" data-i="${i}" data-pps="${pps.toFixed(3)}"
+    return `<div class="tlwrap${_tlSndFolded() ? ' sndfold' : ''}" data-i="${i}" data-pps="${pps.toFixed(3)}"
                  onclick="event.stopPropagation()">
       <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${emptyHtml}${stretchBadge}</div>
       ${capLane}
-      <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
+      <div class="tl-lane tl-auds"><button type="button" class="tl-sndfold" title="효과음·배경음 줄 접기/펼치기"
+        onclick="event.stopPropagation();tlSndFold()">음성 ${_tlSndFolded() ? '▸' : '▾'}</button>${audHtml}</div>
       ${sfxLane}
       <div class="tl-lane tl-bgms"><span class="tl-name">배경음</span><div class="tl-bgmbar" data-i="${i}" style="left:0;width:${(dur * pps).toFixed(1)}px"
         onclick="event.stopPropagation();tlBgmPlay(${i},this)">${tlBgmLabel()}</div></div>
@@ -192,6 +192,15 @@
       <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span></div>
     </div>`;
   }
+
+  // 효과음·배경음 줄 접기(10-15 사장님) — 보는 사람 취향이라 브라우저에만 기억한다
+  function _tlSndFolded(){ try { return localStorage.getItem('tl_snd_fold') === '1'; } catch (e) { return false; } }
+  window.tlSndFold = function(){
+    const on = !_tlSndFolded();
+    try { localStorage.setItem('tl_snd_fold', on ? '1' : '0'); } catch (e) {}
+    document.querySelectorAll('.tlwrap').forEach(w => w.classList.toggle('sndfold', on));
+    document.querySelectorAll('.tl-sndfold').forEach(b => { b.textContent = '음성 ' + (on ? '▸' : '▾'); });
+  };
 
   const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
 
@@ -446,7 +455,7 @@
             if (Math.abs(sec - c.dur) < 0.05) { g.tlMount(); ue.stopPropagation(); return; }
             const used = +c.src_dur || c.dur, ratio = used / c.dur;
             const b = +c.start + used, a = b - sec * ratio;
-            _boxRange(i, c, a, b, sec);
+            _boxRange(i, c, a, b, +(sec * ratio).toFixed(2));   // FIXLEN = 읽는 원본 길이(화면 초 아님 — Fable 점검 10-15)
           }
           else if (c && Math.abs(sec - c.dur) >= 0.05) {
             // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
@@ -458,7 +467,7 @@
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
             (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
-            setFix(i, c.seg_id, sec);
+            setFix(i, c.seg_id, sec);                       // 새 작업은 칸 전체가 한 속도로 맞춘다(scenesV2Alloc 'all')
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
