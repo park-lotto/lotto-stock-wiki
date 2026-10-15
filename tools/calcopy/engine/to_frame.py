@@ -180,6 +180,7 @@ def gap_rows(window, bands) -> list[tuple[int, int]]:
     return edges
 
 
+OBLIQUE_DEG = 14.0      # 크롬 합성 기울임(font-synthesis:style) 각 — 렌더 실측으로 맞춘 값(보고 참조)
 ITALIC_MIN = 6.0        # 글자 기둥이 이 각도(도) 이상 오른쪽으로 누우면 기울임 — 렌더러 합성 기울임은 약 11~14도
 
 
@@ -256,9 +257,23 @@ def band_font(img, b, cols, text: str, bg) -> tuple[str | None, str]:
     crop = img[b[0]:b[1] + 1, cols[0]:cols[1] + 1].astype(int)
     mask = np.abs(crop - np.array(bg)).max(axis=2) > 40
     r = fontmatch.rank(mask, text)
-    fam, note = pick_font({"ok": True, "top3": [{"font": x["font"], "score": x["score"]} for x in r[:3]],
-                           "per_crop": [{"top5": [{"font": x["font"], "score": x["score"]} for x in r[:5]]}]})
-    return fam, f"fontmatch.rank 직접(채움+외곽선 모양, 1위 {note.get('top1')} {note.get('top1_score')}, 신뢰 {note.get('font_confidence')})"
+    fams, seen = [], set()
+    for x in r:
+        f = family_of(x["font"])
+        if f and f not in seen:
+            seen.add(f); fams.append((f, x["score"]))
+    if not fams:
+        return None, "fontmatch 순위에 등록 글꼴 없음 → 자막 글꼴"
+    return fams, f"fontmatch.rank 직접(채움+외곽선 모양, 1위 {r[0]['font']} {r[0]['score']})"
+
+
+def band_body(b, cols, o: int, ital: bool) -> tuple[int, int, int]:
+    """잰 띠·가로 범위(채움+외곽선 전체)에서 '글자 몸'의 높이·폭과 기울임이 윗끝을 미는 양.
+    렌더러는 외곽선을 글자 밖에 더 그리고(paint-order stroke) 기울임은 윗부분을 OBLIQUE_DEG 만큼 민다 — 그 둘을 뺀다.
+    (2026-10-16 대조: 빼지 않아 [광고] 글자 높이 61 vs 원본 52~55, 오른쪽 끝이 화면 끝 1079에 닿았다)"""
+    body_h = (b[1] - b[0] + 1) - 2 * o
+    lean = round(np.tan(np.radians(OBLIQUE_DEG)) * body_h) if ital else 0
+    return body_h, (cols[1] - cols[0] + 1) - 2 * o - lean, lean
 
 
 def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=None) -> dict:
@@ -368,16 +383,23 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
             notes.append(f"띠 {b} 는 고정 문구로 보이나 글자 OCR 없음 → 층 생략(brand 는 글이 있어야 그린다)")
             continue
         tone = two_tone(frame_img, (cols[0], b[0], cols[1], b[1]), bg)
-        bfam, bsrc = band_font(frame_img, b, cols, txt, bg)
-        notes.append(f"고정 문구 글꼴 {bfam or fam} — {bsrc}")
-        bfam = bfam or fam
-        f2 = size_and_top(bfam, txt, b[0], b[1] - b[0] + 1, None)
-        layers.append({"kind": "text", "role": "brand", "text": txt, "x": cols[1], "y": f2["y"], "w": cols[1] - cols[0] + 60,
-                       "align": "right" if cols[1] > W * 0.7 else ("left" if cols[0] < W * 0.3 else "center"),
-                       "lines": 1, "font": bfam, "size": f2["size"], "line_h": f2["line_h"],
+        cands, bsrc = band_font(frame_img, b, cols, txt, bg)
+        # 잰 띠·가로 범위는 채움+외곽선 전체다. 렌더러는 외곽선을 글자 밖에 더 그리고(paint-order stroke),
+        #   기울임은 글자 윗부분을 오른쪽으로 민다 — 그 둘을 빼고 '글자 몸'의 높이·폭·오른쪽 끝을 구한다.
+        #   (2026-10-16 대조: 빼지 않아 [광고] 글자 높이 61 vs 원본 52~55, 오른쪽 끝이 화면 끝 1079에 닿았다)
+        ital = italic_of(frame_img, [(b, cols)], bg, notes, "고정 문구")
+        bfam = cands[0][0] if cands else fam
+        o = (tone["outline"] or {}).get("px", 0)
+        notes.append(f"고정 문구 글꼴 {bfam}·외곽선 {o}px — {bsrc}")
+        body_h, body_w, lean = band_body(b, cols, o, ital)
+        f2 = size_and_top(bfam, txt, b[0] + o, body_h, None)
+        align = "right" if cols[1] > W * 0.7 else ("left" if cols[0] < W * 0.3 else "center")
+        x = {"right": cols[1] - o - lean, "left": cols[0] + o, "center": (cols[0] + cols[1]) // 2}[align]
+        layers.append({"kind": "text", "role": "brand", "text": txt, "x": x, "y": f2["y"], "w": body_w + 60,
+                       "align": align, "lines": 1, "font": bfam, "size": f2["size"], "line_h": f2["line_h"],
                        "rgb": tone["fill"] or [128, 128, 128], "line_rgb": None, "outline": tone["outline"],
-                       "shadow": None, "box": None, "italic": italic_of(frame_img, [(b, cols)], bg, notes, "고정 문구"),
-                       "letter_spacing": spacing_for(bfam, f2["size"], txt, cols[1] - cols[0] + 1) or 0, "enter": None})
+                       "shadow": None, "box": None, "italic": ital,
+                       "letter_spacing": spacing_for(bfam, f2["size"], txt, body_w) or 0, "enter": None})
     # 틀이 다른 구간 → template_off
     dur = float(pr.get("duration") or 0)
     tail = None

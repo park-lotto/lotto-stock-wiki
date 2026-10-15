@@ -125,3 +125,23 @@ def test_missing_values_are_null_not_guessed():
     F = to_frame.build(J, None, None)
     assert F["layers"] == [] and F["template_off"] is None
     assert any("배경색 없음" in n for n in F["made_from"]["notes"]) and any("글꼴 못 정함" in n for n in F["made_from"]["notes"])
+
+
+def test_band_body_removes_outline_and_lean():
+    """잰 띠(채움+외곽선)에서 글자 몸을 구한다 — 외곽선은 위아래·좌우로 px 씩, 기울임은 윗끝을 tan(14도)×높이만큼 민다.
+    (2026-10-16 대조: 이걸 안 빼서 [광고] 글자 높이 61 vs 원본 52, 오른쪽 끝이 화면 끝에 닿았다)"""
+    body_h, body_w, lean = to_frame.band_body((10, 64), (930, 1067), 3, True)
+    assert body_h == 55 - 6
+    assert lean == round(np.tan(np.radians(to_frame.OBLIQUE_DEG)) * 49)
+    assert body_w == 138 - 6 - lean
+    assert to_frame.band_body((10, 64), (930, 1067), 0, False) == (55, 138, 0)
+
+
+def test_brand_layer_inside_measured_box(synth):
+    F, bands, _, _ = synth
+    b = layer(F, "text", "brand")
+    o = b["outline"]["px"]
+    assert b["x"] <= 1060 - o                                          # 오른쪽 끝 = 잰 끝 − 외곽선 − 기울임(화면 끝에 닿지 않게)
+    f = to_frame._pil_font(b["font"], b["size"])
+    bb = f.getbbox("[광고]", anchor="ls")
+    assert abs((bb[3] - bb[1]) + 2 * o - (bands[0][1] - bands[0][0] + 1)) <= 3   # 글자 몸 + 외곽선 = 잰 띠 높이

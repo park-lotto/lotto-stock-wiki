@@ -73,14 +73,14 @@
    "kind": "text",
    "role": "brand",
    "text": "[광고]",
-   "x": 1068,
-   "y": 10,
-   "w": 198,
+   "x": 1053,
+   "y": 14,
+   "w": 181,
    "align": "right",
    "lines": 1,
    "font": "TmonMonsori",
-   "size": 54.9,
-   "line_h": 63,
+   "size": 49.0,
+   "line_h": 56,
    "rgb": [
     185,
     184,
@@ -98,7 +98,7 @@
    "shadow": null,
    "box": null,
    "italic": true,
-   "letter_spacing": -2.3,
+   "letter_spacing": -2.7,
    "enter": null
   }
  ],
@@ -126,8 +126,8 @@
    "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
    "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
    "제목 기울기 +0도(기둥 전단 투영) → 바름",
-   "고정 문구 글꼴 TmonMonsori — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462, 신뢰 low)",
-   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임"
+   "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+   "고정 문구 글꼴 TmonMonsori·외곽선 3px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462)"
   ],
   "ocr_model": "gemini-flash-lite-latest"
  }
