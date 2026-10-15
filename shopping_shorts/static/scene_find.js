@@ -79,6 +79,9 @@ async function sfPollOnce(){
   try{ d = await (await fetch(`/api/mix/scene_lab/${SL.job}/extra_sources`)).json(); }catch(e){ return; }
   if (!d || !d.ok) return;
   SF.got = d.sources || {};
+  const newFail = (d.failed || []).filter(r => !(SF.failed || []).some(x => x.url === r.url));
+  SF.failed = d.failed || [];
+  if (newFail.length && typeof nsay === 'function') nsay('⚠️ 담은 영상 받기 실패 — ' + (newFail[0].reason || ''));
   let added = [];
   for (const [vid, s] of Object.entries(SF.got)){
     if (s.pending || !(s.duration > 0.1)) continue;
@@ -111,7 +114,9 @@ function _sfAddSource(vid, s){
 function _sfRenderGot(){
   const box = document.getElementById('sfGot'); if (!box) return;
   const rows = Object.entries(SF.got || {});
+  const fails = (SF.failed || []).map(r => `⚠️ ${_sfEsc(r.platform || '')} 받기 실패 — ${_sfEsc(r.reason || '')}`).join(' · ');
   box.innerHTML = rows.length ? '📥 이 작업에 담긴 영상: ' + rows.map(([vid, s]) =>
     `<b>${s.pending ? '⏳' : '✅'} ${_sfEsc(s.platform || vid)}</b>${s.pending ? ' 받는 중' : ` ${(+s.duration).toFixed(1)}초`}`).join(' · ')
     + ' — 아래 영상 소스의 🎞 필름에서 칸에 담으세요' : '';
+  if (fails) box.innerHTML += (box.innerHTML ? '<br>' : '') + `<span style="color:#fca5a5">${fails}</span>`;
 }
