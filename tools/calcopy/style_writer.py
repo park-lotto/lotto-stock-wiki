@@ -428,6 +428,73 @@ def write_captions(rules_path: str, ttj_path: str, topic: str, fns: list[str], s
             "gemini_calls": gemini_free.CALLS}
 
 
+
+NARR_PROMPT = """너는 한국 쇼츠 채널의 나레이션 작가다. 원본 영상의 나레이션 **구조**(문장 수·역할·문장 길이·말투)만 따라 하고 문장은 새로 써라.
+
+소재: {topic}
+쓸 수 있는 사실(이것만 — 지어내지 마라): {points}
+
+원본 나레이션 문장(구조 참고용, 베끼지 마라):
+{orig}
+
+문장 {n}개를 써라. 문장마다 역할·목표 글자 수(공백 제외):
+{structure}
+
+규칙:
+- 말투는 원본과 같은 반말 전언체(…했는데 / …다고 함 / …던 것 / …했다고). 존댓말(습니다·어요·해요·세요) 0.
+- 원본 문장과 8글자 넘게 이어서 같으면 실패다. 같은 사실도 다른 말로.
+- 위 '쓸 수 있는 사실'에 없는 숫자·이름·사건을 지어내지 마라.
+JSON으로만: {{"lines":[{{"fn":"역할","text":"문장"}}, ...]}}  (정확히 {n}개)
+"""
+
+
+def check_narration(lines: list[dict], orig: list[str], ranges: list, facts: str) -> dict:
+    """나레이션 문장을 잰다 — 문장 수 · 글자 수(범위) · 존댓말 · 원본과 8글자 겹침 · 사실 밖 숫자."""
+    text = " ".join(l["text"] for l in lines)
+    o8 = set().union(*(_ngrams(t) for t in orig))
+    copied = [i for i, l in enumerate(lines) if _ngrams(l["text"]) & o8]
+    lens = [len(l["text"].replace(" ", "")) for l in lines]
+    off = [i for i, (a, r) in enumerate(zip(lens, ranges)) if not (r[0] <= a <= r[1])]
+    polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))
+    nums = [n for n in re.findall(r"\d[\d,.]*", text) if n not in facts]
+    return {"n_ok": len(lines) == len(orig), "chars": lens, "ranges": [list(r) for r in ranges], "len_off_lines": off,
+            "copied_lines": copied, "polite_endings": polite, "unsourced_numbers": nums}
+
+
+def write_narration(ttj_path: str, topic: str, roles: list[str], points: str = "", models: tuple | None = None) -> dict:
+    """나레이션 있는 영상용 — 원본 받아쓰기(뜯기 audio.transcript) 문장 구조를 틀로 우리 나레이션을 쓴다(무료 제미나이만)."""
+    from tools.calcopy.engine import gemini_free
+    J = json.loads(Path(ttj_path).read_text(encoding="utf-8"))
+    tr = (J.get("audio") or {}).get("transcript") or []
+    tr = tr.get("segments") or [] if isinstance(tr, dict) else tr
+    segs = [t for t in tr if isinstance(t, dict) and t.get("lang", "ko") == "ko"]
+    orig = [t["text"].strip() for t in segs]
+    olens = [len(t.replace(" ", "")) for t in orig]
+    ranges = [(int(b * 0.9), int(b * 1.1) + 1) for b in olens]
+    structure = "\n".join(f"{k + 1}. 역할={roles[k] if k < len(roles) else '-'} · 목표 {ranges[k][0]}~{ranges[k][1]}자" for k in range(len(orig)))
+    prompt = NARR_PROMPT.format(topic=topic, points=points or "(없음)", orig="\n".join(f"- {t}" for t in orig), n=len(orig), structure=structure)
+    tries = []
+    for k in range(3):
+        fix = ""
+        if tries and tries[-1].get("check"):
+            c = tries[-1]["check"]
+            fix = ("\n\n직전 답: " + json.dumps([l["text"] for l in tries[-1]["lines"]], ensure_ascii=False) +
+                   f"\n고칠 것: 글자 수 어긋난 문장 {[i + 1 for i in c['len_off_lines']]} (목표 범위로) / 원본과 겹친 문장 {[i + 1 for i in c['copied_lines']]} / "
+                   f"존댓말 {c['polite_endings']} / 사실 밖 숫자 {c['unsourced_numbers']}")
+        d, err = gemini_free.ask([], prompt + fix, tag=f"narr{k}", models=models or CAP_MODELS)
+        if not d:
+            tries.append({"error": err}); continue
+        lines = d.get("lines") or d.get("items") or []
+        c = check_narration(lines, orig, ranges, points + topic)
+        tries.append({"lines": lines, "check": c, "model": d.get("_model")})
+        if c["n_ok"] and not c["len_off_lines"] and not c["copied_lines"] and not c["polite_endings"] and not c["unsourced_numbers"]:
+            break
+    ok = [t for t in tries if t.get("check")]
+    best = min(ok, key=lambda t: (not t["check"]["n_ok"], len(t["check"]["copied_lines"]) + t["check"]["polite_endings"] * 3
+                                   + len(t["check"]["unsourced_numbers"]) * 3, len(t["check"]["len_off_lines"]))) if ok else (tries[-1] if tries else {})
+    return {"topic": topic, "orig": orig, "roles": roles, "points": points, "final": best, "tries": tries, "gemini_calls": gemini_free.CALLS}
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "rules":
@@ -441,6 +508,12 @@ if __name__ == "__main__":
         for ln in (res["final"].get("lines") or []):
             print(f"  ({ln.get('fn')}) {ln.get('text')}")
         print("  검사:", res["final"].get("check") or res["final"])
+    elif cmd == "narration":   # narration <뜯기.json> <주제> <역할,…> <출력.json> ["쓸 수 있는 사실"]
+        res = write_narration(sys.argv[2], sys.argv[3], sys.argv[4].split(","), sys.argv[6] if len(sys.argv) > 6 else "")
+        Path(sys.argv[5]).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+        for ln in (res["final"].get("lines") or []):
+            print(f"  ({ln.get('fn')}) {ln.get('text')}")
+        print("  검사:", res["final"].get("check"))
     elif cmd == "write":
         res = write(sys.argv[2], sys.argv[3:])
         Path(sys.argv[2]).with_name("시험대본_" + Path(sys.argv[2]).stem.split(".")[0] + ".json").write_text(

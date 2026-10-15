@@ -1,0 +1,167 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "rGFXQlS9Cp4",
+ "made_from": {
+  "tool": "scratch build_frames_rgfx.py",
+  "note": "원본 0.7초 훅 카드 실측(바탕 64,64,64 · 제목 흰/연두 2줄 · 회색 띠 568~683 · 그림 690~1697 전폭)"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    64,
+    64,
+    64
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 690,
+   "w": 1080,
+   "h": 1008,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 218,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "PretendardXBold",
+   "size": 145.1,
+   "line_h": 150,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     142,
+     248,
+     133
+    ]
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 4,
+    "blur": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "한국 코스트코가\n억울했던 이유"
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 568,
+   "w": 1080,
+   "h": 116,
+   "rgb": [
+    235,
+    235,
+    235
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 581,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 73.3,
+   "line_h": 84,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "한국 코스트코가 억울했던 이유"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 77,
+   "y": 44,
+   "w": 200,
+   "align": "left",
+   "lines": 1,
+   "font": "BMDOHYEON",
+   "size": 151.5,
+   "line_h": 174,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "»"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 990,
+   "y": 52,
+   "w": 200,
+   "align": "right",
+   "lines": 1,
+   "font": "NotoSansKRBold",
+   "size": 105.9,
+   "line_h": 122,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "🍽"
+  }
+ ]
+}
