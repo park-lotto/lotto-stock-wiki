@@ -10693,8 +10693,15 @@ async function autoloadAllFootage(){
     try{
       const r = await fetch('/api/produce/autoload', {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+      if(!r.ok) throw new Error('HTTP '+r.status);
       d = await r.json();
-    }catch(e){ break; }
+    }catch(e){
+      // ★요청이 끊기면(배포 재시작·502) 잠깐 뒤 다시 건다(관제 216, 2026-10-15 박세현님).
+      //   종전엔 여기서 끝나 화면은 "분석 중"인데 아무도 분석을 안 거는 상태로 굳었다 —
+      //   새로고침해야만 다시 돌았다. 서버가 도는 중인 영상은 다시 안 태우므로(_inflight) 중복 과금은 없다.
+      if(waits < 30){ waits++; batch--; await new Promise(r=>setTimeout(r, 15000)); continue; }
+      break;
+    }
     const results = (d && d.results) || [];
     added += (d && d.added) || 0;
     already += results.filter(x=>x.status==='already').length;

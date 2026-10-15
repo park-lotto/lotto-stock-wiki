@@ -199,6 +199,17 @@ def _seed_voice_presets():
 
 
 @app.on_event("startup")
+def _release_interrupted_autoload():
+    """배포 재시작에 끊긴 1단계 분석 시도를 돌려준다(관제 216) — 판정은 store.autoload_release_interrupted 한 곳."""
+    try:
+        n = Store(DB_PATH).autoload_release_interrupted(window_sec=_AUTOLOAD_STALL_SEC)
+        if n:
+            logging.warning("[autoload] 재시작에 끊긴 분석 시도 %d건 되돌림", n)
+    except Exception as e:      # noqa: BLE001 — 기동은 막지 않되 사실은 남긴다
+        logging.warning("[autoload] 끊긴 시도 되돌리기 실패: %r", e)
+
+
+@app.on_event("startup")
 def _join_member_keys():
     """회원이 등록한 키를 공용 풀(제미니·유튜브)에 합류시킨다(2026-08-24 사장님 정책).
 

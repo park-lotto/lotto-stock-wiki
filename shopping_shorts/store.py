@@ -3496,6 +3496,23 @@ class Store:
                 ((error or "")[:300], shortcode),
             )
 
+    def autoload_release_interrupted(self, window_sec=600):
+        """서버 재시작에 **끊긴** 시도를 돌려준다 — 기동 시 1회(관제 216, 2026-10-15).
+
+        ★선래치는 추출 **전에** 횟수를 올린다(재시작 루프 방지). 그런데 배포 재시작(SIGKILL)이
+          추출 도중 끊으면 그 1회가 영상 탓처럼 남는다. 실측 박세현님 work e4646d20d4f5:
+          소스 11개가 20:29·21:09 두 번의 배포 재시작에 끊겨 attempts=2·오류 없음·결과 없음 —
+          한 번만 더 끊기면 영구 포기(3회)가 되는 상태였다.
+        기동 직전 window_sec 안에 시작됐고 오류 없이 끝나지 못한 시도 = 이 재시작이 끊은 것.
+        결과가 있는 영상은 횟수가 쓰이지 않으므로 같이 깎여도 무해하다.
+        반환: 되돌린 행 수."""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1) "
+                "WHERE attempts>0 AND COALESCE(last_error,'')='' "
+                "AND updated_at >= datetime('now', ?)", ("-%d seconds" % int(window_sec),))
+            return cur.rowcount or 0
+
     def autoload_mark_error(self, shortcode, error):
         """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
         with self._conn() as c:
