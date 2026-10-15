@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""장면 보충(관제 209) 라이브 끝까지 시험 — 관리자 작업을 복제해서(원본·고객 작업은 안 건드린다)
+"""장면 보충(관제 209) 라이브 끝까지 시험(2026-10-15 판: 유튜브 썸네일 담기 → 아래 영상 소스 → 필름에서 칸에 담기) — 관리자 작업을 복제해서(원본·고객 작업은 안 건드린다)
 ① 3단계 장면 찾기 → 검색 → [이 칸에 쓰기] ② 필름 노란 박스 ③ 저장된 편성(scene_override video_id=x*)
 ④ 렌더 완성본에 그 영상이 그 칸에 나오나(프레임 대조) ⑤ 캡컷 매니페스트에 x* 소스가 들어갔나.
 
@@ -50,28 +50,38 @@ def main():
             return 1
         pg.evaluate("openSceneFind(%d)" % beat)
         pg.wait_for_timeout(800)
-        word = kw or pg.evaluate("document.getElementById('sfKw').value")
-        pg.evaluate("w => sfSearch(w)", word)
-        pg.wait_for_selector("#sfRes .sfit", timeout=120000)
-        n_res = pg.evaluate("document.querySelectorAll('#sfRes .sfit').length")
-        print("   검색어 %r 결과 %d개" % (word, n_res))
+        if kw:
+            pg.fill("#sfKw", kw)
+        pg.click("#sfExp")
+        pg.wait_for_selector("#sfCands .sfk", timeout=90000)
+        print("   나라별 검색어", pg.evaluate("SF.cands.length"), pg.evaluate("JSON.stringify(SF.cands[0])")[:200])
+        pg.evaluate("sfSetLang('en')")
+        pg.locator("#sfCands .sfk button.yt").first.click()
+        pg.wait_for_selector("#sfRes .sfit", timeout=90000)
+        print("   유튜브 썸네일 %d개" % pg.evaluate("SF.items.length"))
         pg.screenshot(path=str(OUT / "1_popup.png"))
         before = set(pg.evaluate("Object.keys(DATA.src_duration||{})"))
         pg.evaluate("sfUse(0)")
         t0 = time.time()
         while time.time() - t0 < 240:
-            now = set(pg.evaluate("Object.keys(DATA.src_duration||{})"))
-            if now - before:
+            pg.wait_for_timeout(3000)
+            if set(pg.evaluate("Object.keys(DATA.src_duration||{})")) - before:
                 break
-            pg.wait_for_timeout(2000)
         new = sorted(set(pg.evaluate("Object.keys(DATA.src_duration||{})")) - before)
-        print("   받은 영상", new, "(%.0f초)" % (time.time() - t0), pg.evaluate("document.getElementById('sfMsg') && document.getElementById('sfMsg').textContent"))
+        print("② 아래 영상 소스에 들어옴", new, "(%.0f초)" % (time.time() - t0))
         if not new:
             return 1
         vid = new[0]
+        pg.evaluate("closeSceneFind()")
+        heads = pg.evaluate("[...document.querySelectorAll('.srchead')].map(h=>h.innerText.split(String.fromCharCode(10)).join(' ').slice(0,50))")
+        print("   소스 목록 끝:", heads[-1:])
+        # 사람이 하는 길: 🎞 필름 펼치기 → 박스 → 담기(칸 길이만큼)
+        need = pg.evaluate("Math.min(DATA.src_duration['%s'], beatDur(%d))" % (vid, beat))
+        pg.evaluate("v => { if (ROLL.key) closeRoll(ROLL); toggleRoll('src', v); }", vid)
         pg.wait_for_timeout(2500)
-        boxes = pg.evaluate("ROLL && ROLL.inst && ROLL.inst.boxes ? JSON.stringify(ROLL.inst.boxes()) : null")
-        print("② 필름 노란 박스", boxes)
+        pg.evaluate("([v,i,n]) => { ROLL.inst.addBox(0, n); commitRoll('src', v, v, [{s:0,e:n}], i); }", [vid, beat, need])
+        pg.wait_for_timeout(2500)
+        print("   필름 박스", pg.evaluate("ROLL && ROLL.inst && ROLL.inst.boxes ? JSON.stringify(ROLL.inst.boxes()) : null"))
         pg.screenshot(path=str(OUT / "2_film_box.png"))
         pg.wait_for_timeout(8000)                     # 자동저장
     plan = ssh("cd %s && python3 -c \"import json,sqlite3;c=sqlite3.connect('data/reference.db');"
