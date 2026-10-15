@@ -54,7 +54,6 @@
     const id = _extraIdOf(c.video_id, a, b);
     const L = len != null ? len : old;
     if (id) (g.HAND_LAST = g.HAND_LAST || {})[i] = id;
-    if (id) (g.HAND_BASE = g.HAND_BASE || {})[i] = { sid: id, dur: +c.dur };   // 바뀌기 전 화면 길이(안내 줄 기준)
     if (L > 0 && id) setFix(i, id, L);
   }
   function _extraIdOf(vid, a, b) {
@@ -456,7 +455,7 @@
             if (Math.abs(sec - c.dur) < 0.05) { g.tlMount(); ue.stopPropagation(); return; }
             const used = +c.src_dur || c.dur, ratio = used / c.dur;
             const b = +c.start + used, a = b - sec * ratio;
-            _boxRange(i, c, a, b, sec);
+            _boxRange(i, c, a, b, +(sec * ratio).toFixed(2));   // FIXLEN = 읽는 원본 길이(화면 초 아님 — Fable 점검 10-15)
           }
           else if (c && Math.abs(sec - c.dur) >= 0.05) {
             // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
@@ -468,7 +467,7 @@
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
             (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
-            setFix(i, c.seg_id, sec);
+            setFix(i, c.seg_id, sec);                       // 새 작업은 칸 전체가 한 속도로 맞춘다(scenesV2Alloc 'all')
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
