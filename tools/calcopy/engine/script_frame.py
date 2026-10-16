@@ -38,13 +38,14 @@ SHOT_KINDS = ["제품전체", "사용동작", "설치·조립과정", "디테일
 # S1 사실 종류(축) — 규칙 측정기. 키워드는 원본·대조 받아쓰기에서 실제로 나온 말(2026-10-16 50편+대조 1,868편 읽고 고름)
 AXES = {
     "설치·사용난이도": ["설치", "끼우기만", "끼워만", "붙이기만", "붙여만", "얹어만", "걸쳐만", "무타공", "타공", "공사 없이", "공사없이", "시공 없이",
-                  "쉬워", "쉽게", "간단", "초보", "똥손", "따라할", "연결만", "꽂기만", "올려두기만", "넣어주기만", "누르면", "버튼"],
+                  "쉬워", "쉽게", "간단", "초보", "똥손", "따라할", "따라 할", "연결만", "꽂기만", "올려두기만", "넣어주기만", "누르면", "버튼",
+                  "없이", "어디서든", "쓰기 쉬", "쓰기도"],
     "공간·분위기": ["공간", "분위기", "호텔", "카페", "갤러리", "쇼룸", "인테리어", "고급", "넓어", "깔끔", "감성", "포인트", "예쁘", "예뻐",
                 "근사", "럭셔리", "모던", "미니멀", "힐링", "레트로", "전통", "기품", "차분"],
     "사회적반응": ["보는 사람마다", "어디서 샀", "물어보", "난리", "품절", "입소문", "유행", "대세", "화제", "불티", "1위", "인기", "열광", "소리 질렀",
               "사이에서"],
     "가격·대안비교": ["가격", "저렴", "만원", "원 ", "비싸", "비싼", "공사비", "돈 ", "돈주고", "돈 주고", "가성비", "최저가", "생활비", "아낄", "공사 하지",
-                "공사 안", "대신"],
+                "공사 안", "대신", "보다", "보통", "살 일", "필요 없", "일반 "],
     "소재·질감": ["원목", "나무", "소재", "실리콘", "스틸", "스테인", "질감", "결이", "나뭇결", "패브릭", "페브릭", "알루미늄", "철제", "쇠로", "가죽", "돌"],
     "수치·스펙": [],     # 숫자+단위는 정규식(_NUM_UNIT)으로 센다
     "원리·개발비하인드": ["개발자", "개발했", "개발한", "천재", "설계", "원리", "기술", "연구", "스타트업", "회사", "방식", "구조", "모방", "적용",
@@ -546,6 +547,8 @@ def brief(product: dict, frame: dict, facts: list[str], k_examples: int = 3, exc
         "axes_drop": [x["axis"] for x in frame["S1_selection"]["drop"]],
         "chains": [x["shape"] for x in s2["shapes"][:3]],
         "endings": sp["ending_list"][:10], "signature_phrases": [x["phrase"] for x in sp["signature_phrases"][:12]],
+        "connectives": [x["c"] for x in sp.get("connectives", [])[:6]], "connect_per_sent": sp["stats"]["connect_per_sent"]["median"],
+        "foreign_endings": sp.get("foreign_endings", []),
         "length": {"chars_median": sk["chars"]["median"], "sent_len_median": sp["stats"]["sent_len_mean"]["median"],
                    "n_sent_median": sp["stats"]["n_sent"]["median"]},
         "examples": [{"id": x["id"], "item": x.get("item"), "text": x.get("text", "")} for x in nearest_examples(product, frame, k_examples, exclude)],
@@ -739,7 +742,10 @@ def _speech(docs, contrast) -> dict:
     foreign = [e for e, c in ce.items() if c / tc >= 0.03 and oe.get(e, 0) / to < 0.01 and e != "기타"]
     char_set = [e["ending"] for e in endings if e["ending"] != "기타" and e["share"] >= 0.01 and e["share"] >= CHAR_LIFT * e["contrast_share"]]
     keys = ["n_sent", "chars", "sent_len_mean", "polite_ratio", "hearsay_ratio", "person1_ratio", "connect_per_sent", "question_ratio", "exclaim_ratio"]
-    return {"endings": endings[:20], "ending_list": elist, "ending_char_set": char_set, "foreign_endings": sorted(foreign),
+    conn = Counter(m for d in docs for s_ in sentences(d["text"]) for m in CONNECT.findall(s_))
+    tconn = sum(conn.values()) or 1
+    return {"connectives": [{"c": c, "share": round(n / tconn, 3)} for c, n in conn.most_common(8)],
+            "endings": endings[:20], "ending_list": elist, "ending_char_set": char_set, "foreign_endings": sorted(foreign),
             "stats": {k: _dist([f[k] for f in F]) for k in keys},
             "contrast_stats": {k: _dist([f[k] for f in CF]) for k in keys},
             "signature_phrases": _signature_phrases([d["text"] for d in docs], [c["text"] for c in contrast])}
@@ -789,7 +795,15 @@ def _s1(docs, labs, contrast, imitators) -> dict:
         return {a: round(tot[a] / n, 3) for a in AXES}
     db = [c for c in contrast if c["src"] == "db" and c["id"] not in imitators]
     own_all = rate([d["text"] for d in docs])
-    con_all = rate([c["text"] for c in db]) if db else rate([c["text"] for c in contrast])
+    groups = defaultdict(list)                       # 대조 축 비율 = 묶음(채널·발굴DB)마다 낸 뒤 평균(판별기·어미와 같은 방식)
+    for c in contrast:
+        if c["id"] not in imitators:
+            groups[c["chan"] if c["src"] != "db" else "발굴DB"].append(c["text"])
+    by_group = {g: rate(t) for g, t in groups.items()}
+    # 고르기 기준 = 같은 카테고리(발굴 DB 홈템)가 있으면 그것 — 음식·잡학 채널과 견주면 '공간' 같은 축이 품목 탓으로 부풀어서
+    # 이 채널의 '고르는 버릇'이 아니라 '다루는 품목'을 재게 된다. 없으면 대조 묶음 평균
+    con_all = by_group["발굴DB"] if "발굴DB" in by_group else (
+        {a: round(st.mean(r[a] for r in by_group.values()), 3) for a in AXES} if by_group else rate([]))
     # 같은 품목 짝: 원본의 검색어(제미나이 match_kw, 3자 이상 구절)가 대조 글에 그대로 들어간 것
     pairs = []
     for d in docs:
@@ -809,7 +823,9 @@ def _s1(docs, labs, contrast, imitators) -> dict:
                    if L[a] >= PICK_LIFT and O[a] >= 0.08], key=lambda x: -(x["own"] * math.log(x["lift"])))
     drop = sorted([{"axis": a, "own": O[a], "contrast": C[a], "lift": L[a], "lift_all": la[a]} for a in AXES
                    if L[a] <= DROP_LIFT and C[a] >= 0.05], key=lambda x: x["lift"])
-    return {"basis": "같은 품목 짝" if use_pairs else ("같은 카테고리(발굴 DB 홈템) 전체" if db else "대조 채널 전체"), "n_pairs": len(pairs),
+    lift_by_group = {g: {a: round((own_all[a] + 0.01) / (r[a] + 0.01), 2) for a in AXES} for g, r in by_group.items()}
+    return {"basis": "같은 품목 짝" if use_pairs else ("같은 카테고리(발굴 DB 홈템, 베낀 글 제외)" if "발굴DB" in by_group else "대조 묶음 평균"), "n_pairs": len(pairs),
+            "lift_by_group": lift_by_group, "rate_by_group": by_group,
             "n_contrast": len(db), "imitators_removed": len(imitators),
             "own_rate": own_all, "contrast_rate": con_all, "lift_all": la, "own_rate_pairs": own_p, "contrast_rate_pairs": con_p, "lift_pairs": lp,
             "pick": pick, "drop": drop, "pairs": pairs[:30],

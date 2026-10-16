@@ -26,7 +26,8 @@ PROMPT = """너는 한국어 쇼핑 숏폼 나레이션 대본 작가다. 아래
 - 사실은 [고른 사실]을 중심으로 쓴다. [뺄 사실 종류]({drop})는 쓰지 마라. 사실 목록에 없는 사실·숫자·브랜드를 지어내지 마라.
 - 화자의 체험(누가 선물했다·직접 써봤다)은 사실 목록에 없다 — 지어내지 말고 전언(~대요/~다던데)이나 듣는 사람 상황으로 쓴다.
 - 논리 사슬(노드 순서) 꼴: {chains} 중 하나.
-- 문장 끝 어미는 {endings} 안에서만. 말버릇(결만 참고, 그대로 베끼기 금지): {sig}
+- 문장 끝 어미는 {endings} 안에서만({foreign} 금지). 말버릇(결만 참고, 그대로 베끼기 금지): {sig}
+- 문장은 연결어미({conn})로 이어 쓴다 — 문장당 약 {cps}개.
 - 길이: 전체 약 {chars}자, 문장 {nsent}개 안팎, 문장 평균 {slen}자.
 - [예문]은 설명 방식만 참고하고, 예문과 공백 뺀 7자 이상 같은 구절을 쓰지 마라.
 출력 JSON: {{"lines":[{{"text": 문장, "role": 칸 이름({slots} 중), "node": 상황|불편|속성|결과|증거|감상|권유, "facts": ["f1",…], "shot_kind": {shots} 중}}]}}
@@ -43,7 +44,9 @@ PROMPT = """너는 한국어 쇼핑 숏폼 나레이션 대본 작가다. 아래
 def make_prompt(b: dict, facts: list[dict], slots: list[str], ratio: dict | None) -> str:
     return PROMPT.format(slots=" > ".join(slots), ratio=json.dumps(ratio or {}, ensure_ascii=False), hooks="·".join(b["hook_types"]),
                          drop="·".join(b["axes_drop"]) or "없음", chains=" / ".join(b["chains"]), endings="·".join(b["endings"]),
-                         sig=" / ".join(b["signature_phrases"][:8]) or "없음", chars=int(b["length"]["chars_median"]),
+                         sig=" / ".join(b["signature_phrases"][:8]) or "없음",
+                         foreign="·".join(b.get("foreign_endings") or []) or "없음", conn="·".join(b.get("connectives") or []) or "-",
+                         cps=b.get("connect_per_sent", 1), chars=int(b["length"]["chars_median"]),
                          nsent=int(b["length"]["n_sent_median"]), slen=int(b["length"]["sent_len_median"]), shots="|".join(SF.SHOT_KINDS),
                          picked="\n".join(f"{facts[x['i']]['id']}: {x['text']} (축 {','.join(x['axes']) or '-'})" for x in b["facts_picked"]),
                          facts="\n".join(f"{f['id']}: {f['text']}" for f in facts),
@@ -74,7 +77,8 @@ def run(chan: Path, db: Path, out: Path, ask=None):
     orig = json.loads((chan / "script_labels" / f"{hid}.json").read_text(encoding="utf-8"))
     rows = {}
     for k, r in res.items():
-        lines = (r["draft"] or {}).get("lines") or []
+        dr = r["draft"] or {}
+        lines = dr.get("lines") or dr.get("items") or next((v for v in dr.values() if isinstance(v, list)), [])
         text = " ".join(x.get("text", "") for x in lines)
         ex_texts = [x["text"] for x in (bh if k == "homedesignnote" else bt)["examples"]]
         rows[k] = {"text": text, "lines": lines,
@@ -84,7 +88,8 @@ def run(chan: Path, db: Path, out: Path, ask=None):
                    "chain3_rules": SF.chain_shape(SF.features(text)["nodes"], 3),
                    "endings": SF.features(text)["endings"],
                    "judge_hdn": SF.judge_like(text, fr), "judge_hot": SF.judge_like(text, hot),
-                   "copy7": SF.copy_spans(text, ex_texts), "brief_facts": r["brief_facts"], "examples": r["examples"], "err": r["err"]}
+                   "copy7": SF.copy_spans(text, ex_texts), "brief_facts": r["brief_facts"], "examples": r["examples"], "err": r["err"],
+                   "raw": r["draft"], "prompt": jobs[k]}
     o_text = orig["_text"]
     o_macro = SF._collapse([SF.MACRO[b["role"]] for b in orig["beats"] if b.get("role") in SF.MACRO])
     original = {"text": o_text, "macro": o_macro, "nodes_llm": SF._collapse([b.get("node") for b in orig["beats"]]),
