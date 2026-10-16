@@ -150,24 +150,9 @@
   "strong_words_max": 1,
   "interest_story_required": true,
   "sfx": {
-   "where": "컷 경계 그 자리(0ms)",
-   "ratio": {
-    "반짝": 0.8,
-    "붐": 0.17,
-    "기타": 0.03
-   },
-   "len_median_ms": 80,
-   "len_max_ms": 200,
-   "pack": "C:/숏템_칼카피/packs/sfx",
-   "pool_반짝": [
-    "pop4_0..5(32~42ms)",
-    "click_1(122ms)",
-    "click_4(127ms)"
-   ],
-   "pool_붐": [
-    "hit_2(333ms → 200ms로 자르고 끝 40ms 페이드)"
-   ],
-   "pool_note": "반짝/붐 나눔은 스펙트럼 중심·저역 비율로 내가 판정(귀로 미확인). 200ms 이하만(_SFX_MAX_SECS 0.20과 같은 선)"
+   "engine": "shopping_shorts/sfx_pack.events (숏템 효과음팩, 자막 줄 기준·칸 역할)",
+   "pack": "pack_for(0) = 팩21_사장님",
+   "_old": "09-21 컷 경계 반짝/붐 규칙은 폐기(페이블 10-17 정정)"
   },
   "material_slots": {
    "kinds": [
@@ -203,7 +188,10 @@
   "loudness": {
    "I": -13.4,
    "TP_max": -0.5
-  }
+  },
+  "bgm": "none",
+  "bgm_why": "사장님 10-17: 재미썸홈 배경음 금지(원본 이븐쇼핑은 BGM 있음 — 의도된 차이). 나레 + sfx_pack 효과음만",
+  "cut_rules": "사장님 10-17: 이야기 한 묶음 = 한 인물·한 영상 줄기(인물은 이야기가 바뀔 때만) · 같은 묶음 이웃 자막 조각은 한 컷으로 이음 · 컷 중앙 ≥0.93초·최소 0.6초 · 마지막 묶음 컷 ≥1.2초, 끝 컷(제품) ≥1.5초"
  },
  "voice_proposal": [
   {

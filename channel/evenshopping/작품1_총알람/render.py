@@ -19,8 +19,9 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(D))
 import make_plan as MP  # noqa: E402
 from tools.calcopy import narr_video as N  # noqa: E402
 
-V2 = "--v2" in sys.argv          # 사장님 10-17 수정본: TTS 단계 속도↑(atempo ≤1.2)·컷 3개 교체 → render_v2·바탕화면 _수정
-R = MP.SRC / ("render_v2" if V2 else "render")
+V3 = "--v3" in sys.argv          # 수정2(사장님 10-17): 묶음=한 인물·이웃 토막 한 컷·BGM 없음·끝 컷 길게. TTS 는 render_v2 것 그대로
+V2 = "--v2" in sys.argv or V3          # 사장님 10-17 수정본: TTS 단계 속도↑(atempo ≤1.2)·컷 3개 교체 → render_v2·바탕화면 _수정
+R = MP.SRC / ("render_v3" if V3 else "render_v2" if V2 else "render")
 TTS_TEMPO = 1.4 if V2 else None   # Typecast output.audio_tempo
 PRE = MP.PRESET
 VOICE = "tc_68257f68bc6e3c161ab5078d"   # 필재(페이블 10-17)
@@ -28,7 +29,7 @@ CPS = PRE["measured"]["speech_rate"]["chars_per_s_total"]   # 8.8
 BGM = ROOT / "shopping_shorts/assets/bgm_lib/qiuqiu.mp3"
 BGM_DB_BELOW = 17.0                      # bench A.openvoice 17.02(말 p90 − 바닥)
 TARGET_LUFS, TP = PRE["measured"]["lufs"]["I"], -2.0
-DESK = Path.home() / "Desktop" / ("칼카피_재미썸홈_총쏘는알람시계_수정.mp4" if "--v2" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계.mp4")
+DESK = Path.home() / "Desktop" / ("칼카피_재미썸홈_총쏘는알람시계_수정2.mp4" if "--v3" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계_수정.mp4" if "--v2" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계.mp4")
 FPS = 30
 # 스파인 칸 → sfx_pack 역할(ROLE_GROUPS). "이게 말도 안 되는 게"=limit(둥) · 반전=twist(둥) · 결과=more(띠링) — 페이블 10-17
 SFX_ROLES = ["title", "bait", "reveal", "limit", "more", "more", "twist", "land"]
@@ -56,6 +57,8 @@ def main():
     R.mkdir(parents=True, exist_ok=True)
     lines = [s for _, s in MP.SENTENCES]
     full, tight, narr = R / "narr_full.mp3", R / "narr_tight.wav", R / "narr.wav"
+    if V3 and not full.exists():   # TTS 재호출 금지 — 수정본 TTS 그대로
+        shutil.copy(MP.SRC / "render_v2" / "narr_full.mp3", full)
     if not full.exists():
         from shopping_shorts.channelkit import providers
         providers.typecast_synth(VOICE, tempo=TTS_TEMPO)(" ".join(lines), str(full))
@@ -81,28 +84,33 @@ def main():
             li, used = li + 1, 0
         steps.append({"text": c[0], "chars": n, "new_cut": True, "line": li}); used += n
     timed, dur = N.time_steps(steps, str(narr), lines=lines)
-    END = round(dur + 0.4, 3)
+    END = round(dur + (1.2 if V3 else 0.4), 3)   # 수정2: 끝 컷(과녁 명중) ≥1.5초
     timed[-1]["t1"] = END
 
     # 재료: 토막마다 컷 1개, t11 영상 칸 비율 크롭 → 1080×1407, 원음 없음, 프레임 정확
     parts = R / "parts"; shutil.rmtree(parts, ignore_errors=True); parts.mkdir()
-    lst, cuts = [], []
-    tcur = 0
+    lst, cuts, groups = [], [], []
     for k, (st, c) in enumerate(zip(timed, MP.CUTS)):
         cap, kind, src, ss, cx, sfx, seen = c
         f0, f1 = round(st["t0"] * FPS), round(st["t1"] * FPS)
-        n = max(1, f1 - f0)
-        p = MP.path_of(src); w, h, sd = MP.probe(p)
+        if src == "+":
+            g = groups[-1]; g["f1"] = f1; g["pieces"].append(k + 1); kind, src = g["kind"], g["src"]
+        else:
+            groups.append({"src": src, "ss": ss, "cx": cx, "kind": kind, "f0": f0, "f1": f1, "pieces": [k + 1], "seen": seen})
+        cuts.append({"i": k + 1, "t0": round(f0 / FPS, 3), "t1": round(f1 / FPS, 3), "caption": cap, "kind": kind, "src": src, "cut": len(groups)})
+    for gi, g in enumerate(groups):
+        n = max(1, g["f1"] - g["f0"])
+        p = MP.path_of(g["src"]); w, h, sd = MP.probe(p)
         cw = int(h * MP.WIN[0] / MP.WIN[1]) // 2 * 2
-        x = (w - cw) // 2 if cx is None else int(cx)
-        if ss + n / FPS > sd:
-            raise SystemExit(f"#{k + 1} 소스 길이 부족 {src} {ss}+{n / FPS:.2f}>{sd:.2f}")
-        out = parts / f"p{k:02d}.mp4"
-        run(["ffmpeg", "-y", "-ss", f"{ss:.3f}", "-i", str(p), "-an", "-vf",
+        x = (w - cw) // 2 if g["cx"] is None else int(g["cx"])
+        if g["ss"] + n / FPS > sd:
+            raise SystemExit(f"컷{gi + 1} 소스 길이 부족 {g['src']} {g['ss']}+{n / FPS:.2f}>{sd:.2f}")
+        out = parts / f"p{gi:02d}.mp4"
+        run(["ffmpeg", "-y", "-ss", f"{g['ss']:.3f}", "-i", str(p), "-an", "-vf",
              f"crop={cw}:{h}:{x}:0,scale={MP.WIN[0]}:{MP.WIN[1] + 1}:flags=lanczos,setsar=1,fps={FPS}", "-frames:v", str(n),
              "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
         lst.append(f"file '{out.as_posix()}'")
-        cuts.append({"i": k + 1, "t0": round(f0 / FPS, 3), "t1": round(f1 / FPS, 3), "caption": cap, "kind": kind, "src": src, "ss": ss, "sfx": sfx})
+        g["t0"], g["t1"], g["dur"] = round(g["f0"] / FPS, 3), round(g["f1"] / FPS, 3), round(n / FPS, 3)
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     mat = R / "material.mp4"
     run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(parts / "list.txt"), "-c", "copy", str(mat)])
@@ -149,14 +157,16 @@ def main():
     evs = SP.events(stl, pack)
     (R / "sfx_events.json").write_text(json.dumps({"pack": pname, "plan": plan, "events": evs, "timeline": stl}, ensure_ascii=False, indent=1), encoding="utf-8")
     ins, flt, lab = ["-i", str(narr), "-stream_loop", "-1", "-i", str(BGM)], [], []
+    bgm_on = not V3   # 사장님 10-17: 재미썸홈 배경음 금지
     for j, (path, t, mul) in enumerate(evs):
         ins += ["-i", path]
         ms = int(round(t * 1000))
         flt.append(f"[{2 + j}:a]aresample=44100,aformat=channel_layouts=mono,volume={mul:.4f},adelay={ms}|{ms}[s{j}]")
         lab.append(f"[s{j}]")
     flt.append(f"[0:a]aformat=channel_layouts=mono,volume={ngain:.2f}dB,apad=whole_dur={total:.3f}[n]")
-    flt.append(f"[1:a]aformat=channel_layouts=mono,volume={g:.2f}dB,atrim=0:{total:.3f},afade=t=out:st={max(0, total - 0.6):.3f}:d=0.6[b]")
-    flt.append(f"[n][b]{''.join(lab)}amix=inputs={2 + len(lab)}:normalize=0:duration=first[o]")
+    if bgm_on:
+        flt.append(f"[1:a]aformat=channel_layouts=mono,volume={g:.2f}dB,atrim=0:{total:.3f},afade=t=out:st={max(0, total - 0.6):.3f}:d=0.6[b]")
+    flt.append(f"[n]{'[b]' if bgm_on else ''}{''.join(lab)}amix=inputs={(2 if bgm_on else 1) + len(lab)}:normalize=0:duration=first[o]")
     run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(flt), "-map", "[o]", "-ar", "44100", "-ac", "2", str(R / "mix_raw.wav")])
     mix = R / "mix.wav"
     gain = 6.0
@@ -173,11 +183,11 @@ def main():
     shutil.copy(final, DESK)
     md5 = [hashlib.md5(Path(p).read_bytes()).hexdigest() for p in (final, DESK)]
     fI, fpk = lufs(final)
-    tsum = {k: round(sum(c["t1"] - c["t0"] for c in cuts if c["kind"] == k), 2) for k in ("제품", "유사", "짤")}
+    tsum = {k: round(sum(g["dur"] for g in groups if g["kind"] == k), 2) for k in ("제품", "유사", "짤")}
     rep = {"final": str(final), "desktop": str(DESK), "md5": md5, "dur": dur_of(final), "lufs": fI, "peak_dbfs": fpk, "tempo": tempo,
-           "cps_out": round(chars / dn, 2), "cuts": len(cuts), "cut_median": sorted(c["t1"] - c["t0"] for c in cuts)[len(cuts) // 2],
+           "cps_out": round(chars / dn, 2), "pieces": len(cuts), "cuts": len(groups), "cut_median": round(sorted(g["dur"] for g in groups)[len(groups) // 2], 3), "cut_min": min(g["dur"] for g in groups), "bgm": "on" if bgm_on else "none", "last_group": [g["dur"] for g in groups if g["pieces"][0] >= 31],
            "time_by_kind": tsum, "max_caption": max(len(c["caption"]) for c in cuts), "bgm_gain_db": round(g, 2), "mix_gain_db": round(gain, 2)}
-    (R / "timeline.json").write_text(json.dumps({"report": rep, "cuts": cuts, "tl": tl}, ensure_ascii=False, indent=1), encoding="utf-8")
+    (R / "timeline.json").write_text(json.dumps({"report": rep, "cuts": cuts, "groups": groups, "tl": tl}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(rep, ensure_ascii=False))
 
 
