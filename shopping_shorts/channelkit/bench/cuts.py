@@ -47,8 +47,15 @@ def scene_scores(path: str, window: list[int]) -> list[tuple[float, float]]:
     return out
 
 
+def inset(mask: np.ndarray) -> bool:
+    """바탕 아닌 화소(mask)가 창 네 변 중 하나라도 닿지 않으면 True — 그림 칸이 창 안에 떠 있다(게시글형 가변 칸).
+    네 변 다 닿으면(창을 꽉 채운 영상) 바탕 빼기를 하지 않는다 = 옛 방식 그대로(흰 물건 장면에서 결과가 흔들리지 않게)."""
+    return not (mask[0].any() and mask[-1].any() and mask[:, 0].any() and mask[:, -1].any())
+
+
 def active_fracs(path: str, window: list[int], bg: float) -> np.ndarray:
-    """프레임 k마다 'k 또는 k−1 에서 배경색이 아닌' 창 화소 비율(64×64 회색). [0] = 프레임 0 자체."""
+    """프레임 k마다 'k 또는 k−1 에서 배경색이 아닌' 창 화소 비율(64×64 회색). [0] = 프레임 0 자체.
+    그 화소가 창 네 변에 다 닿으면(inset 아님) 1.0 — 보정 없음."""
     x, y, w, h = window
     nb = np.array([np.abs(g.astype(np.float32) - bg) > CUT_BG_TOL
                    for g in probe.frames(path, f"crop={w}:{h}:{x}:{y},scale=64:64", 64, 64, "gray")])
@@ -56,33 +63,40 @@ def active_fracs(path: str, window: list[int], bg: float) -> np.ndarray:
         return np.zeros(0)
     un = nb.copy()
     un[1:] |= nb[:-1]
-    return un.mean(axis=(1, 2))
+    return np.array([float(u.mean()) if inset(u) else 1.0 for u in un])
 
 
 def scene_detect(path: str, window: list[int], threshold: float | None = None,
                  bg: float | None = None, fps: float | None = None) -> list[float]:
     """영상창 crop의 scene 점수 > T 시각(첫 CUT_MIN_T 제외). T 기본값 = constants.SCENE_T(호출 때 읽는다).
-    bg(배경 회색)·fps 를 주면 점수를 '바탕 아닌 화소 비율'로 나눠 본다(희석 보정, 상한 1/CUT_ACTIVE_MIN 배)."""
+    bg(배경 회색)·fps 를 주면 점수를 '바탕 아닌 화소 비율'로 나눠 본 보정 점수로 '보정으로만 넘은' 프레임을 더한다
+    (희석 보정, 상한 1/CUT_ACTIVE_MIN 배). 원래 점수로 넘은 프레임(옛 자)은 그대로 두고, 보정으로만 넘은 프레임은
+    옛 프레임과 CUT_MERGE_S 안이면 버리고 나머지는 CUT_MERGE_S 묶음마다 보정 점수 최대 하나만 — 약한 앞 프레임이
+    진짜 컷을 밀어내지 않게(2026-10-16 방구석 ILIi 원본 5.933(0.19)이 6.0(0.40)을 밀어냄 · 기준선 표본 한 편의
+    0.2초 간격 연속 컷 3개를 묶음 최대로 바꾸자 컷 2개를 잃음 → 옛 프레임은 손대지 않는다)."""
     T = C.SCENE_T if threshold is None else threshold
     if bg is not None and fps:
         fr = active_fracs(path, window, bg)
-        hits = []
+        raw, boost = [], []
         for t, s in scene_scores(path, window):
+            if t <= CUT_MIN_T:
+                continue
             k = int(round(t * fps))
             a = float(fr[k]) if 0 <= k < len(fr) else 1.0
             e = s / max(a, CUT_ACTIVE_MIN)
-            if t > CUT_MIN_T and e > T:
-                hits.append((round(t, 3), e))
-        # CUT_MERGE_S 묶음마다 보정 점수가 가장 큰 프레임 하나 — 보정으로 새로 넘은 약한 앞 프레임(부분 변화)이
-        # merge_close 에서 진짜 컷을 밀어내지 않게(2026-10-16 방구석 ILIi 원본 5.933(0.19)이 6.0(0.40)을 밀어냄)
+            if s > T:
+                raw.append(round(t, 3))
+            elif e > T:
+                boost.append((round(t, 3), e))
+        boost = [(t, e) for t, e in boost if not any(abs(t - r) < CUT_MERGE_S - 1e-6 for r in raw)]
         out, grp = [], []
-        for t, e in hits:
-            if grp and t - grp[0][0] >= CUT_MERGE_S:
+        for t, e in boost:
+            if grp and t - grp[0][0] >= CUT_MERGE_S - 1e-6:
                 out.append(max(grp, key=lambda x: x[1])[0]); grp = []
             grp.append((t, e))
         if grp:
             out.append(max(grp, key=lambda x: x[1])[0])
-        return out
+        return sorted(raw + out)
     x, y, w, h = window
     log = probe.ffmpeg_log(["-i", path, "-an", "-vf", f"crop={w}:{h}:{x}:{y},select='gt(scene,{T})',showinfo",
                             "-f", "null", "-"])
@@ -127,8 +141,10 @@ def cut_verify(path: str, window: list[int], cands: list[float], fps: float,
                bg: float | None = None, info: dict | None = None) -> tuple[list[float], list]:
     """컷 앞(k−1)·뒤(k+1) 프레임의 창 위쪽 65% 64×64 z정규화 상관 < CUT_VERIFY_CORR 이면 진짜 컷.
     bg(배경 회색)를 주면 '두 프레임 다 배경색'인 화소를 빼고 재고(남는 화소 < CUT_VERIFY_ACTIVE_MIN 이면 전체),
-    상관이 낮아도 같은 그림이 자리·크기만 바뀐 것(same_picture_moved 일치점 ≥ CUT_MOVE_INLIERS, 배율 CUT_MOVE_SCALE 안)이면
-    컷이 아니다 — 그 시각은 info["moved"] 에 [t, 일치점, 배율] 로 남긴다."""
+    그 바탕 빼기를 한 쌍(그림 칸이 창 안에 뜬 inset 쌍)에 한해 상관이 낮아도 같은 그림이 자리·크기만 바뀐 것
+    (same_picture_moved 일치점 ≥ CUT_MOVE_INLIERS, 배율 CUT_MOVE_SCALE 안)이면 컷이 아니다 — info["moved"] 에 [t, 일치점, 배율].
+    창 안에 자막 줄이 함께 있으면 칸 테두리로는 이동을 못 본다(rGFX 원본 7.83: 상자 그대로·그림만 20px 아래) → 그림 일치로만 본다.
+    한계: 칸 안에서 같은 그림을 당겨 찍은 편집 컷(펀치인)도 이동으로 본다."""
     if not cands:
         return [], []
     x, y, w, h = window
@@ -153,13 +169,13 @@ def cut_verify(path: str, window: list[int], cands: list[float], fps: float,
         m = None
         if bg is not None:
             m = (np.abs(A - bg) > CUT_BG_TOL) | (np.abs(B - bg) > CUT_BG_TOL)
-            if m.mean() < CUT_VERIFY_ACTIVE_MIN:
+            if m.mean() < CUT_VERIFY_ACTIVE_MIN or not inset(m.reshape(64, 64)):
                 m = None
         c = _zcorr(A, B) if m is None else _zcorr(A[m], B[m])
         corr.append(round(c, 3))
         if c >= CUT_VERIFY_CORR:
             continue
-        if bg is not None and k - 1 in big and k + 1 in big:
+        if m is not None and k - 1 in big and k + 1 in big:
             n, sc = same_picture_moved(big[k - 1], big[k + 1])
             if n >= CUT_MOVE_INLIERS and sc is not None and CUT_MOVE_SCALE[0] <= sc <= CUT_MOVE_SCALE[1]:
                 moved.append([t, n, sc])
