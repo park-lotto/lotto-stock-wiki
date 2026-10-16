@@ -43,6 +43,7 @@ WORKERS = 4               # 무거운 일 동시 상한
 MAX_429 = 10              # 제미나이 429 이 횟수 넘으면 멈춤
 REUSE_GAP = 3.0           # 같은 소스 ±3초 안 재사용 금지(사장님 10-17)
 MIN_LUMA = 45             # 칸 평균 밝기(0~255) 이 미만은 어두움(B9 첫·끝 컷 기준 60보다 느슨)
+SECTION_PAD = 1.0         # 구간 앞뒤 여유(초). 받은 길이 검사는 끝 여유를 빼고 — 영상 끝 근처는 실제 스트림이 메타 길이보다 0.4초쯤 짧다(6판)
 VERIFY_ROUNDS = 2         # 1080 검사 → 재선택 바퀴 수(마지막 바퀴 뒤엔 검사만 하고 걸린 컷은 빈칸)
 MIN_SCORE = 5             # 짝짓기 점수(0~10) 이 미만은 안 쓴다
 PREVIEW_HEAD = 300        # 미리보기는 앞 300초까지
@@ -269,17 +270,17 @@ class Net:
         """쓸 구간만 1080p(없으면 ≥720p) 영상만 — 통째로 받지 않는다(SECTION_FMT 주석)."""
         out = self.wd / "sections" / f"{vid}_{int(a * 10):05d}_{int(b * 10):05d}.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
-        if _valid_video(out, b - a):
+        if _valid_video(out, b - a - SECTION_PAD):
             return str(out)
         out.unlink(missing_ok=True)
         for fmt in (SECTION_FMT, "137/bv*[height>=1080]/bv*[width>=1080]/bv*[height>=720]"):   # HLS 가 빈 파일이면(10-17 qTWg) DASH 로 한 번 더
             self._gap()
             r = _run(["yt-dlp", "--no-update", "-f", fmt, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
                       f"https://www.youtube.com/watch?v={vid}"], timeout=900)
-            if _valid_video(out, b - a):
+            if _valid_video(out, b - a - SECTION_PAD):
                 break
             out.unlink(missing_ok=True)
-        if _valid_video(out, b - a):
+        if _valid_video(out, b - a - SECTION_PAD):
             self.bytes += out.stat().st_size
             return str(out)
         out.unlink(missing_ok=True)
@@ -936,7 +937,8 @@ def ban_cells(flagged, cells: dict):
                 c["text" if p["verify"] == "text" else "dark"] = True
 
 
-def fetch_sections(picks, meta, net, pad: float = 1.0, join_gap: float = 8.0):
+def fetch_sections(picks, meta, net, pad: float = None, join_gap: float = 8.0):
+    pad = SECTION_PAD if pad is None else pad
     """쓸 구간만 받는다 — 영상마다 가까운 구간(join_gap 안)은 한 덩어리로."""
     by = {}
     for p in picks:
@@ -953,6 +955,9 @@ def fetch_sections(picks, meta, net, pad: float = 1.0, join_gap: float = 8.0):
                 groups.append([p])
         for g in groups:
             a, b = max(0.0, g[0]["src_t0"] - pad), max(p["src_t1"] for p in g) + pad
+            vd = (meta.get(vid) or {}).get("duration") or 0
+            if vd:   # 영상 끝을 넘는 여유는 자른다 — 6판: 끝 넘은 요청이 '짧게 받음'으로 실패(rBCN 272~275 / 길이 275)
+                b = min(b, vd - 0.1)
             jobs.append((vid, a, b, g))
 
     def one(j):
