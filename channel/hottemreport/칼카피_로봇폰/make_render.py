@@ -9,6 +9,7 @@
 흐름: 시각 계산 → 재료.json·대본.json 시각 갱신 → narr_video.build → hottem_audio.add_source_bed → final_src.mp4
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -19,10 +20,15 @@ from tools.calcopy import narr_video as nv, hottem_audio as ha  # noqa: E402
 
 D = Path(__file__).resolve().parent
 MK = Path("C:/숏템_칼카피/hottemreport/칼카피_로봇폰/make")
-WAV = MK / "narr_gapped.wav"
-BR = [3.455, 7.112, 9.75, 12.79, 17.046, 21.814]      # 원 TTS(narr_full.mp3) 줄 끝 쉼 가운데 — 받아쓰기로 확인
+TEMPO = 1.06                                          # 페이블 10-16 2판: 말속도 7.47 → 7.9자/초 근방(OE11 7.97)
+TTS_RAW = MK / "narr_full.mp3"                          # 필재 1회 합성본(다시 부르지 않는다)
+TTS = MK / "narr_full_t106.wav"
+WAV = MK / "narr_gapped_t106.wav"
+BR0 = [3.455, 7.112, 9.75, 12.79, 17.046, 21.814]     # 원 TTS(narr_full.mp3) 줄 끝 쉼 가운데 — 받아쓰기로 확인
+BR = [round(b / TEMPO, 3) for b in BR0]                # atempo 는 시간축을 1/TEMPO 로 줄인다
 GAPS = {0: 3.0, 3: 4.5}                                # 줄 번호 뒤 무음(초)
-END = 1.0
+OUTNAME = os.environ.get("HR_OUT", "final_src.mp4")   # 채널명 바꾼 판(숏템메이커)은 HR_FRAME=frame_숏템메이커.json HR_OUT=final_shortem.mp4
+END = 0.85                                              # 2판: 마지막 컷(소녀 1.70 + 짐벌 클로즈업 1.50)이 두 장면 안에 들어가게(1판 1.0, OE11 끝 0.976)
 
 
 def line_starts(segs):
@@ -67,7 +73,19 @@ def time_steps_lines(steps, audio, snap=0.4, _lines=None):
     return out, dur
 
 
+def prep():
+    """atempo 1.06 → 확인한 줄 끝(BR)으로 무음 끼우기. 이미 있으면 그대로."""
+    import subprocess
+    if not TTS.exists():
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(TTS_RAW), "-af", f"atempo={TEMPO}", "-ar", "44100", "-ac", "1", str(TTS)], check=True)
+    if not WAV.exists():
+        ha.sentence_breaks = lambda *a, **k: BR   # 우회 1
+        S = json.loads((D / "대본.json").read_text(encoding="utf-8"))
+        print("gap", ha.gap_tts(str(TTS), [l["text"] for l in S["final"]["lines"]], {str(k): v for k, v in GAPS.items()} | {"end": END}, str(WAV)))
+
+
 def main(render=True):
+    prep()
     S = json.loads((D / "대본.json").read_text(encoding="utf-8"))
     M = json.loads((D / "재료.json").read_text(encoding="utf-8"))
     lines = [l["text"] for l in S["final"]["lines"]]
@@ -91,7 +109,7 @@ def main(render=True):
     M["sfx"][1]["t"] = round(g2[0] + 0.4, 2); M["sfx"][1]["why"] = "🕺 등장(원음2 시작 +0.4)"
     M["sfx"][2]["t"] = round(shots_t[6][0], 2); M["sfx"][2]["why"] = "반전 줄 시작(컷6)"
     M.pop("timing_est", None)
-    M["timing"] = {"tts": f"{MK / 'narr_full.mp3'} (필재 tc_68257f68bc6e3c161ab5078d · 템포 1.24 · 184자 · 24.637초 · 10-16 1회, 쉼표 뺀 원문)",
+    M["timing"] = {"tts": f"{TTS_RAW} (필재 tc_68257f68bc6e3c161ab5078d · 템포 1.24 · 184자 · 24.637초 · 10-16 1회, 쉼표 뺀 원문) → atempo {TEMPO} = {TTS}",
                    "narr_gapped": f"{WAV} {dur}초 — 줄 끝 BR {BR}(받아쓰기 확인) 중 0번 줄 뒤 3.0 · 3번 줄 뒤 4.5 · 끝 1.0",
                    "shots": [list(x) for x in shots_t], "gaps": [list(g1), list(g2), list(gend)],
                    "how": "make_render.time_steps_lines(줄 시작 고정 + 줄 안 글자 비례) — narr_video.build 에 같은 함수로 넘김"}
@@ -112,18 +130,18 @@ def main(render=True):
         print(k, s["src"], s["t_final"], s["src_span"], s.get("audio_ss"))
     if not render:
         return
-    nv.time_steps = lambda st, audio, snap=0.4: time_steps_lines(st, audio, snap, _lines=lines)   # 우회 2
+    nv.time_steps = lambda st, audio, snap=0.4, **kw: time_steps_lines(st, audio, snap, _lines=lines)   # 엔진 새 인자(lines=) 는 받기만 — 이 편은 페이블이 우회 인정   # 우회 2
     plan = {"tteutgi": str(ROOT / "channel/hottemreport/칼카피_OE11/뜯기2/뜯기.json"),
-            "frames": [{"frame": str(D / "frame_로봇폰.json"), "t_end": None}], "script": str(D / "대본.json"), "tts": str(WAV),
+            "frames": [{"frame": str(D / os.environ.get("HR_FRAME", "frame_로봇폰.json")), "t_end": None}], "script": str(D / "대본.json"), "tts": str(WAV),
             "materials": str(D / "재료.json"), "out": str(MK), "bgm": "passo_bem_solto", "bgm_ratio": 0.15, "lufs": -15.3,
             "chunk": 10, "caption_mode": "replace"}
     final = nv.build(plan)
     print("final", final)
     gg = [[g1[0], g1[1], 9.0], [g2[0], g2[1], 7.5]]   # 원음 구간만 올림(1판 실측 −22.2/−21.9 LUFS → OE11 −16.7/−18.1 근방)
     res = ha.add_source_bed(str(MK / "final.mp4"), str(MK / "timeline.json"), str(D / "재료.json"), str(WAV),
-                            str(MK / "final_src.mp4"), 1.0, 10.0, work=str(MK / "srcbed"), gap_gain=gg)
+                            str(MK / OUTNAME), 1.0, 10.0, work=str(MK / "srcbed"), gap_gain=gg)
     print(json.dumps(res, ensure_ascii=False))
-    print(json.dumps(ha.measure(str(MK / "final_src.mp4"), [(0, g1[0]), g1, (g1[1], g2[0]), g2, (g2[1], gend[0]), (0, dur)]), ensure_ascii=False))
+    print(json.dumps(ha.measure(str(MK / OUTNAME), [(0, g1[0]), g1, (g1[1], g2[0]), g2, (g2[1], gend[0]), (0, dur)]), ensure_ascii=False))
 
 
 if __name__ == "__main__":
