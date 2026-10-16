@@ -29,7 +29,7 @@ if str(ROOT) not in sys.path:
 from tools.calcopy.engine import preset_save as P  # noqa: E402
 
 TEMP_CAP_FONT = "CcPretendard-Bold"
-FRAME_KEYS = ("frame.window", "frame.bg_rgb", "frame.band_count", "band.line_h", "band.stroke", "band.ink")
+FRAME_KEYS = ("frame.window", "frame.bg_rgb", "frame.band_count", "frame.title_gap", "band.line_h", "band.stroke", "band.ink")
 
 
 TTEUTGI_ROOT: Path | None = None   # --tteutgi-root: 다른 판 뜯기 폴더(<root>/<id>/뜯기.json)를 먼저 본다
@@ -177,7 +177,8 @@ TITLE_BAND_MIN = 1        # 띠 #0 = 창 위 맨 윗줄([광고] 문구, 고정)
 
 def _kind(key: str) -> str:
     base, _, idx = key.partition("#")
-    if base.startswith("band.") and idx and int(idx) >= TITLE_BAND_MIN:
+    # 획 두께는 글꼴+외곽선이 정하는 값 — 편집자가 편마다 고르지 않으니 고정(관제 10-16). 높이·잉크 비율만 변수.
+    if base in ("band.line_h", "band.ink") and idx and int(idx) >= TITLE_BAND_MIN:
         return "var"
     return "fixed"
 

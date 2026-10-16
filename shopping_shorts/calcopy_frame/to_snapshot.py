@@ -59,7 +59,9 @@ def build_row(frame) -> dict:
             x0, x1, y0, y1 = _text_box(layer, n)
             color = (layer["line_rgb"][n] if layer["line_rgb"] and n < len(layer["line_rgb"]) else layer["rgb"])
             lines.append({"bind": bind, "x0": x0, "x1": x1, "y0": y0, "y1": y1, "h": y1 - y0,
-                          "font_family": layer["font"], "font_size": layer["size"], "font_weight": 400,
+                          "font_family": layer["font"],
+                          "font_size": round(layer["size"] * ((layer.get("line_scale") or [])[n] if n < len(layer.get("line_scale") or []) else 1), 1),
+                          "font_weight": 400,
                           "color": _hex(color), "no_patch": True, "max_lines": 1})
             if layer["role"] == "title" and n < len(texts):
                 sample[bind] = texts[n]

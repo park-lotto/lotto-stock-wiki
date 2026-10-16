@@ -138,12 +138,12 @@ def test_relation_rules_compute_dependents(tmp_path):
     P.save(J, g1, d, "a", "x"); M = P.save(J, g2, d, "b", "y")
     K = {k: v["default"] for k, v in M["rules"]["keys"].items()}
     assert K["gap"] == -8 and K["video_bottom"] == 1621 and K["size_cap"] == 103.4   # 크기 = 잰 크기 중앙값
-    assert K["video_anchor"] == "gap"                                    # gap 은 두 편 같고(−8) 창 y 는 34px 흔들림 → gap 규칙
+    assert K["video_anchor"] == "gap_ink"                                # 제목 끝–창 간격 고정(관제 10-16)
     assert K["fill_w"] >= 1080 - P.EDGE_MARGIN                           # 폭 상한 바닥 = 화면 폭 − 48
     pre, M = P.load(d)
     out = P.apply(pre, None, {"layers[text:title].text": "아주 아주 아주 아주 긴 제목 줄 입니다\n둘째"}, M["variable_stats"], None, M["rules"])
     t, v = title(out), next(l for l in out["layers"] if l["kind"] == "video")
-    assert v["y"] == t["y"] + 2 * t["line_h"] + K["gap"] and v["y"] + v["h"] == 1621
+    assert v["y"] == round(P.title_ink_bottom(t) + K["gap_ink"]) and v["y"] + v["h"] == 1621
     assert t["size"] < K["size_cap"]                                    # 긴 줄은 폭에 맞춰 작아진다
     short = P.apply(pre, None, {"layers[text:title].text": "짧\n다"}, M["variable_stats"], None, M["rules"])
     assert title(short)["size"] == K["size_cap"]                        # 짧은 줄은 상한
@@ -169,17 +169,22 @@ def test_fill_w_prefers_measured_ink_width(tmp_path):
 
 
 
-def test_video_anchor_constant_when_window_fixed(tmp_path):
-    """창 y 가 편마다 같고 gap 이 흔들리면 창은 고정(분석기 2판 실측: ho5·7DY·1_V 창 322/323/323, gap −17/−36/−19)."""
+def test_title_gap_fixed_window_follows_title(tmp_path):
+    """제목 끝–창 간격(gap_ink)은 고정, 창 y 는 제목 잉크 아래 끝 + gap_ink — 제목 y·줄높이가 다른 편 값으로 바뀌어도
+    마지막 줄이 창으로 내려앉지 않는다(LOO ho5: 둘째 줄 12px 내려가 창에 걸침, 10-16)."""
     d = tmp_path / "s" / "preset" / "A" / "창안"
     g1 = other_video(FRAME_A); v1 = next(l for l in g1["layers"] if l["kind"] == "video"); v1["y"], v1["h"] = 323, 1298
     g2 = other_video(FRAME_A); t2 = title(g2); t2.update(y=107, size=99.6, line_h=126)
     v2 = next(l for l in g2["layers"] if l["kind"] == "video"); v2["y"], v2["h"] = 323, 1298
     P.save(J, g1, d, "a", "x"); M = P.save(J, g2, d, "b", "y")
-    assert M["rules"]["keys"]["video_anchor"]["default"] == "constant"
+    K = {k: v["default"] for k, v in M["rules"]["keys"].items()}
+    assert K["video_anchor"] == "gap_ink"
+    gaps = M["rules"]["keys"]["gap_ink"]["values"]
     pre, M = P.load(d)
-    out = P.apply(pre, None, {"layers[text:title].text": "새 제목\n둘째 줄"}, M["variable_stats"], None, M["rules"])
-    assert next(l for l in out["layers"] if l["kind"] == "video")["y"] == 323
+    out = P.apply(pre, None, {"layers[text:title].text": "새 제목" + chr(10) + "둘째 줄"}, M["variable_stats"], None, M["rules"])
+    t, v = title(out), next(l for l in out["layers"] if l["kind"] == "video")
+    assert abs((v["y"] - P.title_ink_bottom(t)) - K["gap_ink"]) <= 0.5 and min(gaps.values()) <= K["gap_ink"] <= max(gaps.values())
+    assert v["y"] + v["h"] == 1621
 
 
 def _two_fonts(tmp_path, pooled=None):

@@ -36,6 +36,8 @@ BRAND_TOP = 0.06        # 화면 높이 대비 — 이 위에서 시작하는 �
 BRAND_MAX_W = 0.40      # 화면 폭 대비
 LOW_FONT = 0.5          # 글꼴 1위 점수 문턱(뜯기 unknown 과 같은 값)
 SIDE_PAD = 40           # 가운데 정렬 글자 칸 = 화면 폭 − 양쪽 40px
+TITLE_W_PAD = 20        # 제목 칸 = 원본 잉크 폭 + 양쪽 이만큼(가운데 정렬 기본 칸보다 넓을 때만)
+LINE_SCALE_MIN = 0.03   # 제목 줄 크기가 평균에서 이만큼 넘게 벗어나면 줄 배율(line_scale)
 ALIGN_CENTER = 20       # 자막 가운데들의 중앙값이 화면 가운데 ±이 안이면 가운데 정렬
 ALIGN_EDGE = 12         # 왼쪽/오른쪽 끝이 이만큼 안으로 모이면 그 끝 정렬(가운데는 ALIGN_SPREAD 넘게 흩어졌을 때)
 ALIGN_SPREAD = 40
@@ -483,12 +485,25 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         line_h = (title_b[-1][0][0] - title_b[0][0][0]) / (lines - 1) if lines > 1 else None
         fits = [size_and_top(fam, tl[i] if i < len(tl) else None, b[0], b[1] - b[0] + 1, line_h) for i, (b, _) in enumerate(title_b)]
         size = round(st.mean(f["size"] for f in fits), 1)
+        # 줄마다 크기가 다르면(LINE_SCALE_MIN 넘게) 줄 배율로 — 평균 하나로 그리면 1줄이 작고 얇게, 2줄이 크게 나왔다(10-16 LOO)
+        line_scale = [round(f["size"] / size, 3) for f in fits] if max(abs(f["size"] / size - 1) for f in fits) > LINE_SCALE_MIN else None
+        if line_scale:
+            notes.append(f"제목 줄마다 크기 {[f['size'] for f in fits]} → size {size} × line_scale {line_scale}")
         ys = [f["y"] - i * fits[0]["line_h"] for i, f in enumerate(fits)]   # 줄마다 푼 첫 줄 위치의 평균
         cols = [c for _, c in title_b if c]
         title_ink_w = max(c[1] - c[0] + 1 for c in cols) if cols else None   # 프레임 실측 제목 가장 긴 줄 잉크 폭 → preset rules.fill_w(글꼴 계산보다 먼저)
         al = align_of(cols, W)
-        sp = [spacing_for(fam, size, tl[i], c[1] - c[0] + 1) for i, (_, c) in enumerate(title_b) if i < len(tl) and c]
-        sp = [v for v in sp if v is not None]
+        if al["align"] == "center" and title_ink_w and title_ink_w + 2 * TITLE_W_PAD > al["w"]:
+            # 글자 칸이 원본 잉크 폭보다 좁으면 렌더러가 칸에 맞춰 글자를 줄인다(10-16 1_V: 잉크 1032 > 칸 1000 → 1줄 높이 91→73)
+            al["w"] = min(W, title_ink_w + 2 * TITLE_W_PAD)
+            notes.append(f"제목 칸 폭 {al['w']} — 원본 가장 긴 줄 잉크 {title_ink_w}px 가 기본 칸보다 넓다")
+        sp = [(c[1] - c[0], spacing_for(fam, fits[i]["size"] if line_scale else size, tl[i], c[1] - c[0] + 1))
+              for i, (_, c) in enumerate(title_b) if i < len(tl) and c]
+        # 자간은 줄별 값 중 가장 작은 것 하나 — 평균 내면 한 줄의 큰 자간이 다른 줄을 원본보다 넓혀 칸 밖으로 밀고 렌더러가 글자를 줄였다
+        #   (10-16 1_V: 줄별 평균 15.9 → 1줄 높이 원본 90 vs 우리 79 / 7DY: 2줄 값 26.2 를 1줄에 쓰니 1줄 폭 866→949, 높이 110→101).
+        #   가장 작은 값이면 어느 줄도 원본 폭을 넘지 않는다(남는 줄은 원본보다 조금 좁다)
+        sp = [v for _, v in sp if v is not None]
+        sp = [min(sp)] if sp else []
         fx, line_rgb, line_outline = None, None, None
         if frame_img is not None:
             from tools.calcopy.engine.analyze import text_fx_one
@@ -506,7 +521,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         layers.append({"kind": "text", "role": "title", **al, "y": round(st.mean(ys)), "lines": lines,
                        "font": fam, "size": size, "line_h": fits[0]["line_h"],
                        "rgb": (line_rgb[0] if line_rgb else (fx or {}).get("fill_rgb")) or ([0, 0, 0] if tpol == "dark" else [255, 255, 255]),
-                       "line_rgb": line_rgb, "outline": None if line_outline else (fx or {}).get("outline"),
+                       "line_rgb": line_rgb, "line_scale": line_scale, "outline": None if line_outline else (fx or {}).get("outline"),
                        "line_outline": line_outline, "shadow": None,
                        "box": ({"rgb": fx["box"]["color"], "pad": 0, "radius": 0} if fx and fx.get("box") else None),
                        "italic": italic_of(frame_img, title_b, bg, notes, "제목"),
@@ -524,6 +539,11 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     if items and fam:
         top = st.median(i["top_y"] for i in items)
         ink_h = fxs.get("line_h_px") or st.median(g["line_h"] for g in cap.get("glyph") or [{"line_h": 0}])
+        # 잰 줄 높이는 외곽선까지 든 잉크다 — 크기는 채움 글자로 역산하니 외곽선 두께×2 를 뺀다(렌더러 외곽선은 글자 밖으로 덧그린다).
+        #   10-16 mY: line_h_px 80.5(외곽선 5px 포함)로 역산해 88.5 — 정답 63.7
+        if fxs.get("outline_px"):
+            notes.append(f"자막 잰 높이 {ink_h}px 에서 외곽선 {fxs['outline_px']}px×2 를 빼고 크기 역산")
+            ink_h = ink_h - 2 * fxs["outline_px"]
         first = next((i["text"][0] for i in items if i.get("text")), None)
         fit = size_and_top(fam, first, top, ink_h, None)
         it0 = caption_width_ref(fam, fit["size"], items, notes)

@@ -18,6 +18,7 @@ from .captions import glyph_style
 from .constants import BG_DARK_LUM
 
 BAND_REL = (0.1, 0.25, 0.4, 0.55, 0.7)  # 표본 시각(길이 대비). 0.7 넘으면 엔딩 전체화면이 흔해 뺀다
+BOTTOM_ROW_PX = 3                        # 잉크 아래 끝: 이만큼 넘는 잉크 점이 있는 줄
 BAND_PAD = 4                             # 띠 위아래 여유 px(글자 끝이 띠 경계에 걸리는 것 방지)
 
 
@@ -31,7 +32,7 @@ def band_style(path: str, meta: dict, band: list[int], bg_rgb: list[int], bg_lum
     W, H = meta["width"], meta["height"]
     y0, y1 = max(0, band[0] - BAND_PAD), min(H, band[1] + BAND_PAD)
     pol = polarity(bg_lum)
-    lh, sw, ink, used = [], [], [], []
+    lh, sw, ink, used, bot = [], [], [], [], []
     for r in BAND_REL:
         t = r * meta["duration"]
         if avoid and any(a <= t < b for a, b in avoid):
@@ -40,7 +41,12 @@ def band_style(path: str, meta: dict, band: list[int], bg_rgb: list[int], bg_lum
         if img is None:
             continue
         used.append(round(t, 2))
-        ink.append(float(ink_mask(img, pol).mean()))
+        im = ink_mask(img, pol)
+        ink.append(float(im.mean()))
+        # 띠 잉크 아래 끝(절대 y) — 띠 끝(band[1]) 위 줄만(아래 여유 BAND_PAD 는 창 안 영상일 수 있다). 제목 끝–창 간격(compare)이 쓴다
+        rows = np.where(im[:max(0, band[1] - y0)].sum(axis=1) > BOTTOM_ROW_PX)[0]
+        if len(rows):
+            bot.append(y0 + int(rows.max()))
         g = glyph_style(img, pol, bg_rgb)
         if g:
             lh.append(g["line_h"])
@@ -50,7 +56,7 @@ def band_style(path: str, meta: dict, band: list[int], bg_rgb: list[int], bg_lum
         return None
     return {"band": [int(band[0]), int(band[1])], "crop": [y0, y1], "ink": pol, "t": used,
             "line_h": float(np.median(lh)) if lh else None, "stroke": float(np.median(sw)) if sw else None,
-            "ink_ratio": round(float(np.median(ink)), 5), "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"}
+            "ink_ratio": round(float(np.median(ink)), 5), "ink_bottom": int(np.median(bot)) if bot else None, "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"}
 
 
 def measure_video(path: str, meta: dict, lv: dict) -> list[dict]:

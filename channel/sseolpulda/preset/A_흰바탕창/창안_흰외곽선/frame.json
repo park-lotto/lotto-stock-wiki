@@ -30,7 +30,7 @@
    "role": "title",
    "x": 540,
    "y": "$per_video",
-   "w": 1000,
+   "w": "$per_video",
    "align": "center",
    "lines": 2,
    "font": "Cafe24Ohsquare",
@@ -42,6 +42,10 @@
     0
    ],
    "line_rgb": "$per_video",
+   "line_scale": [
+    1.067,
+    0.934
+   ],
    "outline": null,
    "line_outline": [
     null,
@@ -78,6 +82,7 @@
     255
    ],
    "line_rgb": null,
+   "line_scale": null,
    "outline": "$per_video",
    "line_outline": null,
    "shadow": null,
@@ -106,6 +111,7 @@
     191
    ],
    "line_rgb": null,
+   "line_scale": null,
    "outline": {
     "px": 3,
     "rgb": [

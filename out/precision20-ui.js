@@ -1516,7 +1516,7 @@
       const color=specRgb(l.line_rgb&&l.line_rgb[it.n]?l.line_rgb[it.n]:l.rgb);
       const el=document.createElement('div');el.className='precision-text spec-text';el.dataset.editBind=it.bind;el.dataset.specRole=l.role;
       Object.assign(el.style,{left:pct(x0,W)+'%',right:'auto',width:pct(l.w,W)+'%',top:pct(l.y+it.n*l.line_h,H)+'%',height:pct(l.line_h*it.rows,H)+'%',
-        fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*scale+'px',
+        fontFamily:`"${l.font}",sans-serif`,fontWeight:'400',fontStyle:l.italic?'italic':'normal',fontSynthesis:l.italic?'style':'none',fontSize:l.size*((l.line_scale&&l.line_scale[it.n])||1)*scale+'px',
         letterSpacing:l.letter_spacing*scale+'px',wordSpacing:(l.word_spacing||0)*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
         justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],alignItems:l.valign==='top'?'flex-start':'center',whiteSpace:it.rows>1?'pre-line':'nowrap',wordBreak:'keep-all',
         webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
@@ -1526,7 +1526,7 @@
       ink.textContent=it.text;
       layer.insertBefore(el,badge);
       // 칸 폭(w)을 넘으면 넘지 않을 때까지 줄인다 — 잘리거나 칸 밖으로 나가는 일은 없다(바닥 40%)
-      const size0=l.size*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};
+      const size0=l.size*((l.line_scale&&l.line_scale[it.n])||1)*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};
       let size=size0;while(over()&&size>size0*.4){size*=.97;el.style.fontSize=size+'px';}
       el.dataset.specFit=String(Math.round(size/size0*100));
     }

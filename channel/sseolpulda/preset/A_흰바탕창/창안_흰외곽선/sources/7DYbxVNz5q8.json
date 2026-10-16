@@ -50,6 +50,10 @@
      135
     ]
    ],
+   "line_scale": [
+    1.189,
+    0.81
+   ],
    "outline": null,
    "line_outline": [
     null,
@@ -63,7 +67,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 21.2,
+   "letter_spacing": 3.6,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
@@ -86,6 +90,7 @@
     255
    ],
    "line_rgb": null,
+   "line_scale": null,
    "outline": null,
    "line_outline": null,
    "shadow": null,
@@ -114,6 +119,7 @@
     191
    ],
    "line_rgb": null,
+   "line_scale": null,
    "outline": {
     "px": 4,
     "rgb": [

@@ -191,3 +191,17 @@ def test_frames_with_time_spans_and_video_cuts():
     bad = copy.deepcopy(f); bad["frames"][0]["span"] = [3, 2]
     with pytest.raises(schema.FrameError):
         schema.validate(bad)
+
+
+def test_line_scale_schema_and_snapshot_font_size():
+    """줄마다 크기 배율(line_scale) — 썰풀다 제목 1줄이 2줄보다 크다(10-16). 편집기 줄 힌트 font_size 도 배율대로."""
+    f = frame_a()
+    t = text_layer(f, "title"); t["line_scale"] = [1.1, 0.9]
+    spec = schema.validate(f)
+    assert text_layer(spec, "title")["line_scale"] == [1.1, 0.9]
+    row = to_snapshot.build_row(spec)
+    sizes = [l["font_size"] for l in row["frame"]["lines"] if l["bind"] in ("hook1", "hook2")]
+    assert sizes == [round(t["size"] * 1.1, 1), round(t["size"] * 0.9, 1)]
+    bad = copy.deepcopy(f); text_layer(bad, "title")["line_scale"] = [5]
+    with pytest.raises(schema.FrameError):
+        schema.validate(bad)

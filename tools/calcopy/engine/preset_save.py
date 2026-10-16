@@ -251,7 +251,7 @@ def slug_style(preset_dir: Path) -> tuple[str, str]:
 #     창 y = 제목 아래 끝(title_top + 줄수×줄높이) + gap   · 창 아래 끝 = video_bottom(자막 하위 스타일이 정함)
 #     자막 y = 창 아래 끝 + cap_dy(창아래면 +, 창안이면 −)
 RULE_FORMULA = ("title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · "
-                "title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'constant' 면 video_top, 'gap' 이면 "
+                "title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 "
                 "title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy")
 EDGE_MARGIN = 48   # 제목 폭 상한의 바닥 = 화면 폭 − 48(양쪽 24px) — 두 편으로 만든 프리셋이 '긴 제목' 예를 못 봤을 때(LOO 1_V 실측: 930 상한 → 84pt)
 
@@ -260,6 +260,27 @@ def _line_w(fam: str, size: float, ls: float, line: str) -> float:
     from tools.calcopy.engine.to_frame import _pil_font
     b = _pil_font(fam, size).getbbox(line, anchor="ls")
     return (b[2] - b[0]) + ls * max(0, len(line) - 1)
+
+
+def _scales(t: dict) -> list:
+    n = int(t.get("lines") or 1)
+    sc = t.get("line_scale") or []
+    return [sc[i] if i < len(sc) else 1 for i in range(n)]
+
+
+def title_ink_bottom(t: dict) -> float | None:
+    """제목 마지막 줄 잉크 아래 끝(y) — 렌더러 규칙(줄 칸 line_h 안에 글꼴 ascent+descent 상자를 세로 가운데, to_frame.size_and_top 과
+    같은 모형)으로 그 글꼴·줄 크기·글을 놓아 잰다. 글이 없으면 None."""
+    if not t.get("text"):
+        return None
+    from tools.calcopy.engine.to_frame import _pil_font
+    lines = t["text"].split(chr(10))
+    i = len(lines) - 1
+    size = t["size"] * _scales({**t, "lines": len(lines)})[i]
+    f = _pil_font(t["font"], size)
+    asc, desc = f.getmetrics()
+    base = t["y"] + i * t["line_h"] + (t["line_h"] - (asc + desc)) / 2 + asc
+    return base + f.getbbox(lines[i], anchor="ls")[3]
 
 
 def derived(frame: dict, caption_ok: bool = True) -> dict:
@@ -271,8 +292,13 @@ def derived(frame: dict, caption_ok: bool = True) -> dict:
         n = t["lines"]
         out.update(title_top=t["y"], gap=v["y"] - (t["y"] + n * t["line_h"]), lh_ratio=round(t["line_h"] / t["size"], 3),
                    size_cap=t["size"], video_bottom=v["y"] + v["h"], video_top=v["y"])
+        ib = title_ink_bottom(t)
+        if ib is not None:
+            out["gap_ink"] = round(v["y"] - ib)          # 제목 마지막 줄 잉크 아래 끝 ~ 창 위 끝(고정 — 관제 10-16)
         if t.get("text"):
-            out["fill_w"] = round(max(_line_w(t["font"], t["size"], t["letter_spacing"], ln) for ln in t["text"].split("\n")))
+            sc = _scales({**t, "lines": len(t["text"].split(chr(10)))})
+            out["fill_w"] = round(max(_line_w(t["font"], t["size"] * sc[i], t["letter_spacing"], ln)
+                                      for i, ln in enumerate(t["text"].split(chr(10)))))
     if c and v and caption_ok:
         out["cap_dy"] = c["y"] - (v["y"] + v["h"])
     return out
@@ -297,7 +323,11 @@ def rule_stats(preset_dir: Path, M: dict) -> dict:
         keys["fill_w"]["default"] = max(max(vals["fill_w"].values()), W - EDGE_MARGIN)
         keys["fill_w"]["how"] = f"잰 폭 최대와 화면 폭−{EDGE_MARGIN} 중 큰 값"
     # 창 위 끝: 고정(video_top)과 제목 아래+gap 중 편마다 덜 흔들리는 쪽
-    if "video_top" in keys and "gap" in keys:
+    if "gap_ink" in keys:
+        # 제목 끝–창 간격은 고정(관제 10-16: 제목 y·줄높이는 편집자가 고르는 변수, 간격은 틀). 창 y 는 제목 잉크 아래 끝 + gap_ink.
+        #   (예전: 창 y 고정 vs 상자 gap 중 덜 흔들리는 쪽 — 창 고정이면 제목 2줄이 창으로 내려앉아도 못 막았다, LOO ho5 12px)
+        keys["video_anchor"] = {"values": None, "default": "gap_ink", "range": None, "how": "제목 끝–창 간격 고정(gap_ink)"}
+    elif "video_top" in keys and "gap" in keys:
         sp = lambda k: max(vals[k].values()) - min(vals[k].values())   # noqa: E731
         anchor = "constant" if sp("video_top") <= sp("gap") else "gap"
         keys["video_anchor"] = {"values": None, "default": anchor, "range": None,
@@ -316,8 +346,10 @@ def apply_rules(F: dict, rules: dict) -> dict:
         #   (크기의 −15% 까지, to_frame.spacing_for 와 같은 바닥), 그래도 넘을 때만 크기를 줄인다.
         #   (2026-10-16 LOO: 폭 맞춤으로 크기부터 줄이니 제목 띠 높이가 원본 91~110 → 75~87 로 작아졌다)
         size = K.get("size_cap") or t["size"]
-        n = max(lines, key=lambda ln: _line_w(t["font"], size, 0, ln))
-        nat = _line_w(t["font"], size, 0, n)
+        sc = _scales({**t, "lines": len(lines)})               # 줄 배율(line_scale) — 줄마다 크기가 다른 제목
+        k = max(range(len(lines)), key=lambda i: _line_w(t["font"], size * sc[i], 0, lines[i]))
+        n = lines[k]
+        nat = _line_w(t["font"], size * sc[k], 0, n)
         gaps = max(1, len(n) - 1)
         ls = t["letter_spacing"]
         if nat + ls * gaps > K["fill_w"]:
@@ -330,7 +362,9 @@ def apply_rules(F: dict, rules: dict) -> dict:
         t["lines"] = len(lines)
     if t and "title_top" in K:
         t["y"] = K["title_top"]
-    if v and K.get("video_anchor") == "constant" and "video_top" in K:
+    if t and v and K.get("video_anchor") == "gap_ink" and "gap_ink" in K and title_ink_bottom(t) is not None:
+        v["y"] = round(title_ink_bottom(t) + K["gap_ink"])
+    elif v and K.get("video_anchor") == "constant" and "video_top" in K:
         v["y"] = K["video_top"]
     elif t and v and "gap" in K:
         v["y"] = round(t["y"] + t["lines"] * t["line_h"] + K["gap"])

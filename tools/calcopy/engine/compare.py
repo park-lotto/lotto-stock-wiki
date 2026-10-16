@@ -62,6 +62,8 @@ TOL = {
     "band.line_h": ("rel", 6, "띠 글자 높이 차 ≤ 6%"),
     "band.stroke": ("px", 1, "띠 획 두께 차 ≤ 1px"),
     "band.ink": ("rel", 20, "띠 잉크 비율 차 ≤ 20%"),
+    # 제목 끝–창 간격(관제 10-16): 창 위 끝 − 창 위 마지막 띠 잉크 아래 끝. 제목 줄이 창으로 내려앉으면(LOO ho5 12px) 여기서 잡힌다
+    "frame.title_gap": ("px", 8, "제목 블록 아래 끝~창 위 끝 간격 차 ≤ 8px"),
 }
 
 # ② 규칙 수준(사장님 10-16): 같은 파일인지 말고 규칙만. verdict 에는 넣지 않고 표에만 남긴다.
@@ -190,6 +192,11 @@ def _value(key: str, m: dict, asr: str | None):
         return list(vl["caption"]["band"])
     if key == "frame.above_bands":
         return m.get("layout", {}).get("above_bands", [])
+    if key == "frame.title_gap":
+        bs = [b for b in (m.get("bands") or []) if b.get("ink_bottom") is not None]
+        if not vl.get("window") or not bs:
+            raise Fail("창 또는 창 위 띠 잉크 아래 끝 못 잼")
+        return int(vl["window"][1] - max(b["ink_bottom"] for b in bs))
     if key == "frame.band_count":
         if m["errors"].get("bands"):
             raise Fail(m["errors"]["bands"])
@@ -527,7 +534,8 @@ def band_items(mo: dict, mu: dict) -> list[tuple]:
     mo["_band_pair"] = {i: o for i, (o, _) in enumerate(pairs)}
     mu["_band_pair"] = {i: u for i, (_, u) in enumerate(pairs)}
     meth = "bands.band_style(captions.glyph_style)"
-    items = [("frame.band_count", "틀", "창 위 고정 글자 띠 개수", "bands.measure_video")]
+    items = [("frame.band_count", "틀", "창 위 고정 글자 띠 개수", "bands.measure_video"),
+             ("frame.title_gap", "틀", "제목 블록 아래 끝~창 위 끝(px)", "layout.window − bands.ink_bottom")]
     for i, (o, _) in enumerate(pairs):
         tag = f"창 위 띠{i + 1} [{o['band'][0]},{o['band'][1]})"
         items += [(f"band.line_h#{i}", "틀", f"{tag} 글자 높이(px)", meth),

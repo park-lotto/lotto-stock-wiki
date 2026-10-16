@@ -16,6 +16,7 @@
        {"kind": "text", "role": "title", "x":540, "y":230, "w":980, "align":"center", "lines":2,
         "font":"GmarketSansBold", "size":92, "line_h":95, "rgb":[0,0,0],
         "line_rgb":[[0,0,0],[255,45,111]],          # 줄마다 색(없으면 null → 모든 줄 rgb)
+        "line_scale":[1.07,0.93],                   # 줄마다 크기 배율(size × 배율, 없으면 null → 모든 줄 size)
         "outline":{"px":0,"rgb":[0,0,0]},           # 외곽선(없으면 null, px 0 도 '없음'으로 유효)
         "line_outline":[null,[6,255,255,255]],      # 줄마다 외곽선 [px,r,g,b]|null(없으면 null = 모든 줄 outline)
         "shadow":{"dx":0,"dy":4,"blur":6,"rgb":[0,0,0]},   # 그림자(없으면 null)
@@ -129,6 +130,14 @@ def _text(layer, where, W, H):
             raise FrameError(f"{where}.line_rgb: 줄마다 [r,g,b] 목록(1~4개)이거나 null 이어야 합니다")
         line_rgb = [_rgb(c, f"{where}.line_rgb[{i}]") for i, c in enumerate(line_rgb)]
     out["line_rgb"] = line_rgb
+    line_scale = _opt(layer, "line_scale")
+    if line_scale is not None:
+        # 줄마다 글자 크기 배율(size × 배율) — 썰풀다 제목은 1줄이 2줄보다 크다(ho5 109/95·7DY 128/87·1_V 103/93, 10-16 실측).
+        #   한 크기로 평균 내면 1줄은 작고 얇게, 2줄은 크게 나왔다(LOO 획·높이 결함의 뿌리)
+        if not isinstance(line_scale, list) or not 1 <= len(line_scale) <= 4:
+            raise FrameError(f"{where}.line_scale: 줄마다 배율 목록(1~4개)이거나 null 이어야 합니다")
+        line_scale = [_num(v, f"{where}.line_scale[{i}]", 0.3, 3) for i, v in enumerate(line_scale)]
+    out["line_scale"] = line_scale
     outline = _opt(layer, "outline")
     if outline is not None:
         if not isinstance(outline, dict):

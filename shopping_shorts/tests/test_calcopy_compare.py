@@ -50,7 +50,7 @@ TITLE_Y = 200        # 창(420) 위 고정 제목 띠
 TITLE_FONTS = {"bold": "C:/Windows/Fonts/malgunbd.ttf", "thin": "C:/Windows/Fonts/malgunsl.ttf"}
 
 
-def make_synth(dirpath: Path, name: str = "syn.mp4", title: str = "bold") -> Path:
+def make_synth(dirpath: Path, name: str = "syn.mp4", title: str = "bold", title_y: int = TITLE_Y) -> Path:
     """title = 창 위 고정 제목 글꼴 굵기(bold/thin). 그 글꼴이 없으면 제목 없이 만든다(띠 시험은 따로 skip)."""
     font = _font(dirpath)  # 상대경로로 넘긴다(윈도 드라이브 콜론이 drawtext 파서를 깬다)
     tf = TITLE_FONTS.get(title)
@@ -58,7 +58,7 @@ def make_synth(dirpath: Path, name: str = "syn.mp4", title: str = "bold") -> Pat
     if tf and os.path.exists(tf):
         shutil.copy(tf, dirpath / f"title_{title}.ttf")
         dt = (f",drawtext=fontfile=title_{title}.ttf:text='BIG TITLE':fontsize=110:fontcolor=black"
-              f":x=(w-tw)/2:y={TITLE_Y}")
+              f":x=(w-tw)/2:y={title_y}")
     dt += "".join(
         f",drawtext=fontfile={font}:text='{t}':fontsize=64:fontcolor=black:borderw=4:bordercolor=red"
         f":x=(w-tw)/2:y={CAP_Y}:enable='between(t,{i * 1.5},{(i + 1) * 1.5})'" for i, t in enumerate(TEXTS))
@@ -274,3 +274,17 @@ def test_same_video_bands_measured(synth, tmp_path):
     b = [r for r in res["rows"] if r["key"].startswith("band.")]
     assert b and all(r["status"] == "in" and r["orig"] is not None for r in b), b
     assert _row(res, "frame.band_count")["orig"] >= 1
+
+
+def test_title_gap_item(synth, tmp_path):
+    """제목 끝–창 간격(관제 10-16): 같은 영상이면 안, 제목만 90px 내려 창에 붙이면 밖."""
+    if not os.path.exists(TITLE_FONTS["bold"]):
+        pytest.skip("제목 글꼴 없음")
+    compare = _cmp()
+    same = compare.compare(str(synth), str(synth), str(tmp_path / "a"), layout_mode="bench", picture=False)
+    g = _row(same, "frame.title_gap")
+    assert g["status"] == "in" and g["orig"] is not None and g["orig"] > 20, g
+    low = make_synth(synth.parent, "low_title.mp4", title_y=TITLE_Y + 90)
+    res = compare.compare(str(synth), str(low), str(tmp_path / "b"), layout_mode="bench", picture=False)
+    g = _row(res, "frame.title_gap")
+    assert g["status"] == "out" and g["orig"] - g["ours"] >= 60, g
