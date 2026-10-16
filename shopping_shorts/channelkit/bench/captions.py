@@ -13,7 +13,7 @@ import numpy as np
 import cv2
 
 from . import probe
-from .layout import ink_mask, ink_fill, lum, segs
+from .layout import ink_mask, ink_fill, lum, segs, FILL_BIG_FRAC
 from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_CORE_MIN_PX, CAP_CORE_KEEP,
                         CAP_CORE_SAME, CAP_CORE_MAX_FRAC, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
                         LINE_ROW_FRAC, LINE_MIN_H, FILL_LUM, FILL_CHROMA, FILL_BG_DIFF, FILL_FRAC,
@@ -21,6 +21,10 @@ from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S
                         GLYPH_SHADOW_DROP, GLYPH_SHADOW_FRAC, GLYPH_SHADOW_ASYM, ANIM_FRAMES, ANIM_W_FRAC, ANIM_CX_PX, ANIM_AREA,
                         BAND_PRESENCE, INSIDE_PRESENCE, SEG_GAP, CAP_SPAN_OK, CAP_BAND_MAX_FRAC, CAP_PERSIST_LAG,
                         CAP_MIN_SCORE, CAP_TIGHT_GAP, CAP_TIGHT_REL, CAP_TIE_FRAC, CAP_SUB_STEPS, CAP_SUB_MAX_FRAC, CAP_LOW_PRESENCE, CAP_STATIC_MAX, CAP_STATIC_MIN_SPANS, CAP_POL_TIE, CAP_FILL_BRIGHT, INK_DARK, CAP_FREE_PAD, CAP_EXTEND_LINES, CAP_LINE_CHANGE, CAP_EXTEND_DT, CAP_EXTEND_STEADY, CAP_EXTEND_SHARE, INK_BRIGHT, INK_OUTLINE_DARK)
+
+
+GLYPH_BG_RING = (18, 24)   # 글자 바탕 밝기를 재는 고리(px, 글자에서) — 외곽선 두께 상한 17px(핫템 굵은 외곽선 13px)보다 바깥
+GLYPH_OUTLINE_BG = 30      # 외곽선 고리(둘째부터) 밝기 중앙값이 바탕과 이만큼은 달라야 외곽선(반투명 상자 26 · 핫템 IRFN 굵은 외곽선 40)
 
 
 def caption_region(vl: dict) -> tuple[int, int] | None:
@@ -171,29 +175,38 @@ def glyph_style(img: np.ndarray, pol: str, bg_rgb: list[int]) -> dict | None:
     # (2026-10-16 썰풀다: 검은 바탕 편의 영상 위 흰 글자 굵은 검정 외곽선이 '외곽선 없음'으로 나옴). 고리를 못 재면 bg_rgb.
     def dil(r):
         return cv2.dilate(ink.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))) > 0
-    far = dil(15) & ~dil(9)
+    # 바탕 고리는 외곽선보다 바깥(GLYPH_BG_RING) — 9~15px 고리는 굵은 외곽선(핫템 IRFN·RWS 13px, 썰풀다 6iW 9px) 속이라
+    # 바탕을 외곽선 색으로 재 '외곽선 없음'이 됐다(2026-10-16 뜯기 4판 결함 목록 D6: 흰 글자 굵은 검정 외곽선 7편이 0px).
+    far = dil(GLYPH_BG_RING[1]) & ~dil(GLYPH_BG_RING[0])
     bg_l = float(np.median(L[far])) if far.sum() > 50 else float(0.299 * bg_rgb[0] + 0.587 * bg_rgb[1] + 0.114 * bg_rgb[2])
     ink_l = float(L[ink].mean())
-    ring = dil(3) & ~ink
-    ring_l = float(L[ring].mean()) if ring.any() else None
-    outline = bool(ring_l is not None and abs(ring_l - bg_l) > GLYPH_OUTLINE_DIFF and abs(ring_l - ink_l) > GLYPH_OUTLINE_DIFF)
+    # 1px 고리마다 글자·바탕과 다르고 같은 쪽(어둡/밝)인 동안 = 외곽선 두께. 쪽은 둘째 고리로 정한다 — 첫 고리는 글자 가장자리
+    # 번짐(중간 밝기)이라 바탕 반대쪽으로 튈 수 있다(RWS 5초: 첫 고리 115·둘째부터 0·바탕 70 → 첫 고리로 쪽을 정하면 1px).
+    rings, prev = [], ink
+    for r in range(1, GLYPH_BG_RING[0]):
+        d = dil(r)
+        rr = d & ~prev
+        prev = d
+        if not rr.any():
+            break
+        rings.append(float(np.median(L[rr])))
+
+    def ok(l):
+        return abs(l - ink_l) > GLYPH_OUTLINE_DIFF and abs(l - bg_l) > GLYPH_OUTLINE_DIFF / 2
     outline_px = 0
-    if outline:          # 1px 고리마다 글자·바탕과 다르고 첫 고리와 같은 쪽인 동안 = 외곽선 두께
-        prev = ink
-        r1 = None
-        for r in range(1, 13):
-            d = dil(r)
-            rr = d & ~prev
-            prev = d
-            if not rr.any():
-                break
-            l = float(np.median(L[rr]))
-            r1 = l if r1 is None else r1
-            if (abs(l - ink_l) > GLYPH_OUTLINE_DIFF and abs(l - bg_l) > GLYPH_OUTLINE_DIFF / 2
-                    and (l - bg_l) * (r1 - bg_l) > 0):     # 글자와 다르고, 바탕과도 다르고, 첫 고리와 같은 쪽(어둡/밝)
+    if len(rings) >= 2 and ok(rings[1]):
+        side = rings[1] - bg_l
+        outline_px = 2
+        for r, l in enumerate(rings[2:], start=3):
+            if ok(l) and (l - bg_l) * side > 0:
                 outline_px = r
             else:
                 break
+    # 첫 고리 하나만 다른 것은 글자 가장자리 번짐(흰 바탕 검정 글자 첫 고리 212·바탕 255 → 방구석 전편 1px 로 나왔다) — 외곽선 아님.
+    # 외곽선 고리들(둘째부터)의 밝기는 바탕과 GLYPH_OUTLINE_BG 넘게 달라야 — 반투명 검정 상자(w-Yg 48~55 vs 바탕 76)는 외곽선이 아니다.
+    if outline_px >= 2 and abs(float(np.median(rings[1:outline_px])) - bg_l) <= GLYPH_OUTLINE_BG:
+        outline_px = 0
+    outline = outline_px > 0
     # 그림자 = 한쪽으로만 치우친 어두운(밝은) 자리. 사방 외곽선은 모든 방향이 같아 그림자가 아니다 —
     # 1판은 외곽선이 있으면 첫 후보 [-6,2]가 늘 걸렸다(썰풀다 다섯 편 전부 [-6,2]).
     shadow_px = (np.abs(L - bg_l) > GLYPH_SHADOW_DROP) & ~ink
@@ -501,28 +514,68 @@ def extend_band(path: str, vl: dict, cap: dict) -> list[int] | None:
     return [int(lo), int(hi)]
 
 
-def fill_is_bright(path: str, vl: dict, cap: dict) -> float | None:
-    """같은 띠에서 bright·dark 두 극성이 비슷한 점수일 때 글자 채움이 밝은지 판정하는 비율.
-    = (외곽선에 둘러싸인 밝은 채움 넓이, ink_fill) ÷ (그 채움 8px 안의 어두운 화소 넓이). 흰 글자+검정 외곽선이면 채움이 넓어 ≥ 1 근처,
-    흰 바탕 검정 글자면 밝은 채움은 글자 속 구멍뿐이라 작다. (2026-10-16 yummyknow: 구간 수 1개 차이로 극성이 뒤집힘 —
-    점수만으로 극성을 정하지 않는다)"""
+CAP_RING_BG_MAX = 0.5     # 어두운 화소 둘레(2px)의 절반 이상이 '큰 밝은 바탕'(크롭의 FILL_BIG_FRAC 이상 한 덩어리)이면
+                          # 어두운 것이 글자 자체(흰 바탕 검정 글자) — 외곽선이면 둘레가 채움(작은 덩어리)·영상에 닿는다.
+                          # 실측(2026-10-16): 흰 바탕 검정 LED 렌더 0.79~0.85·ZdeZ 0.82~0.88·p8ID 0.76~0.80 / 영상 위 외곽선 글자 mY·OE·D3 0.00~0.08
+CAP_JOIN_PART_REL = 0.7   # 창 경계를 사이에 둔 두 줄 후보를 이을 때 두 쪽 점수가 다 '전체 1등 × 0.7' 이상이어야(제목·머리띠 제외)
+CAP_JOIN_MAX_FRAC = 0.12  # 이은 띠 높이 상한(화면의 12% — 자막 2~3줄)
+
+
+def fill_stats(img: np.ndarray) -> tuple[float, float] | None:
+    """띠 크롭 한 장의 극성 증거 (밝은 채움 ÷ 그 옆 어두운 화소, 어두운 화소 둘레 중 큰 밝은 바탕 비율).
+    ① 채움비 = (외곽선에 둘러싸인 밝은 채움 넓이, ink_fill) ÷ (그 채움 8px 안의 어두운 화소 넓이). 흰 글자+검정 외곽선이면 ≥ 1 근처,
+       흰 바탕 검정 글자면 글자 속 구멍뿐이라 작다 — 단 굵은 글꼴은 구멍이 많아 0.50~0.54 까지 올라 문턱 0.5 를 넘었다
+       (2026-10-16 썰풀다 LED 수도꼭지 렌더: 흰 바탕 검정 자막을 bright 로 뒤집음).
+    ② 둘레 바탕비 = 어두운 화소를 2px 넓힌 고리 중 '크롭 넓이 FILL_BIG_FRAC 이상인 밝은 덩어리'에 닿는 비율.
+       흰 바탕 검정 글자는 글자 바깥 둘레가 전부 바탕 한 덩어리라 ~0.8, 외곽선 글자는 바깥이 영상·안이 채움이라 ~0."""
+    L = lum(img)
+    fb = ink_fill(img, "bright") & ~ink_mask(img, "dark")
+    near = cv2.dilate(fb.astype(np.uint8), np.ones((17, 17), np.uint8)) > 0
+    dark = (L < INK_DARK)
+    dk = dark & near
+    if dk.sum() <= 50:
+        return None
+    ring = (cv2.dilate(dark.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0) & ~dark
+    br = (L > INK_BRIGHT).astype(np.uint8)
+    n, lab, st_, _ = cv2.connectedComponentsWithStats(br, 8)
+    big = np.zeros(n, bool)
+    big[1:] = st_[1:, cv2.CC_STAT_AREA] >= FILL_BIG_FRAC * L.size
+    ring_bg = float((ring & big[lab]).sum()) / max(1, int(ring.sum()))
+    return float(fb.sum()) / float(dk.sum()), ring_bg
+
+
+def bright_wins(stats: list[tuple[float, float]]) -> tuple[bool, float | None, float | None]:
+    """크롭 여러 장의 fill_stats → (밝은 글자인가, 채움비 중앙값, 둘레 바탕비 중앙값). 판단 한 곳(choose_caption 이 부른다).
+    밝은 글자 = 채움비 ≥ CAP_FILL_BRIGHT **그리고** 둘레 바탕비 < CAP_RING_BG_MAX."""
+    if not stats:
+        return False, None, None
+    r = round(float(np.median([s[0] for s in stats])), 3)
+    g = round(float(np.median([s[1] for s in stats])), 3)
+    return (r >= CAP_FILL_BRIGHT and g < CAP_RING_BG_MAX), r, g
+
+
+def fill_is_bright(path: str, vl: dict, cap: dict) -> dict | None:
+    """같은 띠에서 bright·dark 두 극성이 비슷한 점수일 때 글자 채움이 밝은지 — 띠 크롭(자막 구간 가운데 프레임 5장)의
+    fill_stats → bright_wins. (2026-10-16 yummyknow: 구간 수 1개 차이로 극성이 뒤집힘 — 점수만으로 극성을 정하지 않는다)
+    반환 {"bright": bool, "fill_ratio", "ring_bg"} 또는 None(못 잼)."""
     reg = caption_region(vl)
     if not reg:
         return None
     y0, y1 = reg
     W = vl["canvas"][0]
     its = [it for it in cap.get("items", []) if it.get("lines", 0) >= 1][:5]
-    rs = []
+    stats = []
     for it in its:
         img = probe.grab(path, (it["t0"] + it["t1"]) / 2, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)
         if img is None:
             continue
-        fb = ink_fill(img, "bright") & ~ink_mask(img, "dark")
-        near = cv2.dilate(fb.astype(np.uint8), np.ones((17, 17), np.uint8)) > 0
-        dk = (lum(img) < INK_DARK) & near
-        if dk.sum() > 50:
-            rs.append(float(fb.sum()) / float(dk.sum()))
-    return round(float(np.median(rs)), 3) if rs else None
+        s = fill_stats(img)
+        if s:
+            stats.append(s)
+    if not stats:
+        return None
+    b, r, g = bright_wins(stats)
+    return {"bright": b, "fill_ratio": r, "ring_bg": g}
 
 
 def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[dict] | None = None,
@@ -530,22 +583,27 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
     """후보 띠마다 measure_video + persistence → 점수 최고(같으면 좁은 띠) → 글자 행으로 좁히기 → 잘린 줄 넓히기.
     반환 {caption, result, scored, failed?}. 1등 점수가 CAP_MIN_SCORE 미만이면 자막 띠 못 찾음(caption None) —
     점수 0.05 짜리 라벨 띠를 '확인됨'으로 내던 1판 결함(2026-10-16 썰풀다 w-Ygny1f8O8)."""
-    scored, best, cands = [], None, []
-    for c in band_candidates(vl, presence, extra, row_lum):
+    scored, cands = [], []
+
+    def _score(c: dict) -> None:
         v = {**vl, "caption": c}
         try:
             cap = measure_video(path, v, meta)
         except Exception as e:  # noqa: BLE001 — 후보 하나 실패는 표에 남긴다
             scored.append({**c, "score": None, "failed": f"{type(e).__name__}: {str(e)[:80]}"})
-            continue
+            return
         pers = persistence(path, v, cap["spans"])
-        s = caption_score(cap, pers)
-        scored.append({**c, "score": s, "spans": len(cap["spans"]), **pers})
+        scored.append({**c, "score": caption_score(cap, pers), "spans": len(cap["spans"]), **pers})
         cands.append((scored[-1], cap))
-        h = c["band"][1] - c["band"][0]
-        # 점수가 CAP_TIE_FRAC 안으로 비슷하면 넓은 띠 — 장면마다 자리를 옮기는 자막을 다 덮게. 넓은 쪽은 뒤에서 tighten_band 가 글자 행으로 좁힌다
-        if best is None or s > best[0] * (1 + CAP_TIE_FRAC) or (s >= best[0] * (1 - CAP_TIE_FRAC) and h > best[3]):
-            best = (s, c, cap, h)
+
+    for c in band_candidates(vl, presence, extra, row_lum):
+        _score(c)
+    # 창 경계를 사이에 둔 두 줄 잇기 — 누적형 자막의 1줄이 창 위, 2줄이 창 안 첫 행에 있으면(흰 게시글 틀: 창이 2줄째까지 먹음)
+    # 후보가 위/안으로 갈라져 각자 반쪽 점수가 되고, 그림 칸의 바뀌는 사진(정지 화면이라 '가만히 있는 글자'와 같다)이 1등을 가져갔다
+    # (2026-10-16 yummyknow gBVX: 위 [576,632] 18.0 · 안 [671,722] 18.1 < 그림 칸 bright [752,1369] 17.93 이 넓어서 이김 → 극성까지 뒤집힘).
+    for c in join_candidates([x for x, _ in cands], vl["canvas"][1]):
+        _score(c)
+    best = pick_caption(cands)
     if not best or best[0] < CAP_MIN_SCORE:
         return {"caption": None, "result": None, "scored": scored,
                 "failed": f"자막 띠 못 찾음(1등 점수 {best[0] if best else None} < {CAP_MIN_SCORE})"}
@@ -555,16 +613,66 @@ def choose_caption(path: str, vl: dict, meta: dict, presence: dict, extra: list[
               and min(x["band"][1], c["band"][1]) - max(x["band"][0], c["band"][0]) >= 0.5 * (c["band"][1] - c["band"][0])]
     pol_note = None
     if rivals:
-        r = fill_is_bright(path, {**vl, "caption": c}, cap)
-        want = "bright" if (r is not None and r >= CAP_FILL_BRIGHT) else "dark"
-        pol_note = {"fill_ratio": r, "chose": want, "by": "fill_is_bright"}
+        fb = fill_is_bright(path, {**vl, "caption": c}, cap)
+        want = "bright" if (fb and fb["bright"]) else "dark"
+        pol_note = {"fill_ratio": fb and fb["fill_ratio"], "ring_bg": fb and fb["ring_bg"], "chose": want, "by": "fill_is_bright"}
         if want != c["ink"]:
             top = max(z[0]["score"] for z in rivals)
             x, cp = max((z for z in rivals if z[0]["score"] >= top * (1 - CAP_TIE_FRAC)),
                         key=lambda z: z[0]["band"][1] - z[0]["band"][0])
-            c, cap = {k: x[k] for k in ("pos", "band", "ink") if k in x}, cp
+            c, cap = {k: x[k] for k in ("pos", "band", "ink", "free", "joined") if k in x}, cp
+    return _finish_caption(path, vl, meta, c, cap, pol_note, scored)
+
+
+def join_candidates(scored: list[dict], H: int) -> list[dict]:
+    """점수 매긴 후보 중 창 경계를 사이에 둔(위↔안, 안↔아래) 같은 극성 두 띠를 잇는 후보(free=창 경계로 자르지 않음).
+    조건: 두 쪽 점수가 다 '전체 1등 × CAP_JOIN_PART_REL' 이상(고정 제목·머리띠는 점수 1 안팎이라 빠진다) ·
+    틈 ≤ 두 띠 중 큰 높이(줄 사이) · 이은 높이 ≤ CAP_JOIN_MAX_FRAC × H."""
+    ok = [x for x in scored if x.get("score")]
+    if not ok:
+        return []
+    top = max(x["score"] for x in ok)
+    strong = [x for x in ok if x["score"] >= CAP_JOIN_PART_REL * top]
+    out = []
+    for a in strong:
+        for b in strong:
+            if a["ink"] != b["ink"] or a.get("pos") == b.get("pos") or a["band"][1] > b["band"][0]:
+                continue
+            gap = b["band"][0] - a["band"][1]
+            h = max(a["band"][1] - a["band"][0], b["band"][1] - b["band"][0])
+            if gap <= h and b["band"][1] - a["band"][0] <= CAP_JOIN_MAX_FRAC * H:
+                j = {"pos": a["pos"], "band": [a["band"][0], b["band"][1]], "ink": a["ink"], "free": True, "joined": True}
+                if not any(o["band"] == j["band"] and o["ink"] == j["ink"] for o in out):
+                    out.append(j)
+    return out
+
+
+def pick_caption(cands: list[tuple[dict, dict]]):
+    """(후보 표 행, measure_video 결과) 목록에서 자막 띠 1등 → (점수, 띠, 결과, 높이) 또는 None. 고르기 판단 한 곳.
+    점수가 CAP_TIE_FRAC 안으로 비슷하면 넓은 띠 — 장면마다 자리를 옮기는 자막을 다 덮게(넓은 쪽은 tighten_band 가 좁힌다).
+    단 넓은 쪽이 **같은 극성이고 지금 1등 띠와 겹칠 때만** — 극성·자리가 다른 그림 칸(사진이 바뀌는 칸)이 넓다는 이유로
+    이기면 안 된다(2026-10-16 yummyknow gBVX)."""
+    best = None
+    for x, cap in cands:
+        s = x.get("score")
+        if s is None:
+            continue
+        c = {k: x[k] for k in ("pos", "band", "ink", "free", "joined") if k in x}
+        h = c["band"][1] - c["band"][0]
+        if best is None or s > best[0] * (1 + CAP_TIE_FRAC):
+            best = (s, c, cap, h)
+        elif s >= best[0] * (1 - CAP_TIE_FRAC) and h > best[3] and c["ink"] == best[1]["ink"] \
+                and min(c["band"][1], best[1]["band"][1]) > max(c["band"][0], best[1]["band"][0]):
+            best = (s, c, cap, h)
+    return best
+
+
+def _finish_caption(path, vl, meta, c, cap, pol_note, scored) -> dict:
+    """고른 띠를 글자 행으로 좁히고(tighten_band) 잘린 누적형 줄을 넓힌다(extend_band)."""
     c = {**c, **({"polarity_check": pol_note} if pol_note else {})}
-    tb = tighten_band(path, {**vl, "caption": c}, cap)
+    # 이은 띠(join_candidates)는 이미 글자 줄 단위 — 좁히기를 돌리면 위아래 띠 높이만큼 넓혀 보다가 그림 칸의 정지 사진 행까지
+    # '가만히 있는 글자'로 먹었다(2026-10-16 yummyknow gBVX [576,722] → [576,876])
+    tb = None if c.get("joined") else tighten_band(path, {**vl, "caption": c}, cap)
     if tb and tb != c["band"]:
         c = {**c, "band": tb, "band_before_tighten": c["band"]}
         cap = measure_video(path, {**vl, "caption": c}, meta)
