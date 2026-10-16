@@ -1,0 +1,316 @@
+{
+ "_note": "얜샷템 2편(벤치 itYwQVyuCcc) 재료 계획 — TTS·렌더 전. 원본 = 고은언니 한고은 LcQv9yOh3Wc 한 편(1080p). 창 1080x1080(만템 색톤 얜샷템 틀 예정). 나레 시각은 9.0자/초 추정.",
+ "cand_dir": "C:/숏템_칼카피/annapick/1편_한고은채소통/src",
+ "narration": "일레븐랩스 미나(kr-mina, voice_id aiUUgjHa4mpHf6UenZuf, eleven_v3, 속도 1.35) — 벤치 나레 여성",
+ "sources": {
+  "LcQv9yOh3Wc": {
+   "채널": "고은언니 한고은",
+   "제목": "편식하던 남편도 -20kg 감량시킨 한고은 부부가 아침에 먹는 것 (샐러드 1kg, 부부레시피)",
+   "업로드": "2026-03-26",
+   "해상도": "1920x1080 29.97",
+   "길이": 1123.06,
+   "주의": "같은 영상 8:49~11:55 셀로닉스 오메가3 유료 광고 구간 — 안 씀(쓴 구간 745~806 은 광고 아님, 본인 말 '오늘의 PPL 아니지만' 784.0)"
+  }
+ },
+ "source_audio": {
+  "keep": true,
+  "note": "원음 = 한고은 본인 말만(받아쓰기 3회 1명). 원본 RMS −20~−24 dBFS(B14 −35dB 기준 위)."
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "H",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 751.06,
+   "dur": 3.1,
+   "src_span": [
+    751.06,
+    754.16
+   ],
+   "t_final": [
+    0.0,
+    3.1
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    520,
+    0,
+    840,
+    840
+   ],
+   "res": "1920x1080",
+   "scale": 1.29,
+   "ours": "검은 쟁반 위 상추·로메인 더미(한고은 손·노란 소매가 위에서 잎을 만짐)",
+   "why": "훅 원음 '한 달 두 달이 가도 너무 신선해요' ↔ 싱싱한 잎 더미. 원본 자막 '[푸릇푸릇]'(y861~)·아래 자막(y900~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 780.62
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 745.1,
+   "dur": 2.54,
+   "src_span": [
+    745.1,
+    747.64
+   ],
+   "t_final": [
+    3.1,
+    5.64
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    525,
+    0,
+    860,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.26,
+   "ours": "부엌에서 비닐봉지째 온 샐러드 채소를 꺼내 드는 한고은",
+   "why": "'1킬로씩 산다는데요' — 본인 말 746.9 '유러피안 샐러드 1kg 하면 요렇게 와요'와 같은 샷. 아래 자막(y915~) 밖",
+   "mute": true
+  },
+  {
+   "i": 2,
+   "line": "O2",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 763.3,
+   "dur": 2.93,
+   "src_span": [
+    763.3,
+    766.23
+   ],
+   "t_final": [
+    5.64,
+    8.57
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    500,
+    0,
+    850,
+    850
+   ],
+   "res": "1920x1080",
+   "scale": 1.27,
+   "ours": "상추·로메인 근접(많은 양)",
+   "why": "'갑자기 많은 양을 구매를 하면' 원음과 같은 샷(원본 컷 763.16~766.23). '[궁금할 수 있어]'(y864~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 763.3
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 766.23,
+   "dur": 3.17,
+   "src_span": [
+    766.23,
+    769.4
+   ],
+   "t_final": [
+    8.57,
+    11.74
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    675,
+    0,
+    690,
+    690
+   ],
+   "res": "1920x1080",
+   "scale": 1.57,
+   "ours": "부엌 카운터 뒤에서 말하는 한고은(허리 위)",
+   "why": "'금방 상하지 않나요…걱정을 하시더라고요' 같은 샷. 왼쪽 아래 댓글 말풍선(y696~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 766.23
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 769.4,
+   "dur": 2.5,
+   "src_span": [
+    769.4,
+    771.9
+   ],
+   "t_final": [
+    11.74,
+    14.24
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    545,
+    0,
+    860,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.26,
+   "ours": "두 손을 펴며 말하는 한고은",
+   "why": "'저도 그게 항상 가장 고민이었어요' 같은 샷. 주황 자막(y880~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 769.4
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 776.63,
+   "dur": 1.91,
+   "src_span": [
+    776.63,
+    778.54
+   ],
+   "t_final": [
+    14.24,
+    16.15
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    520,
+    0,
+    880,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.23,
+   "ours": "구멍 뚫린 스텐 채반을 기울여 보여주는 손(노란 소매)",
+   "why": "'물 빠지는 채반이 달린' — 776.4 본인 말 '이렇게 보시면 배수구 물 안 닿게'와 같은 샷. 아래 자막(y924~) 밖",
+   "mute": true
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 803.76,
+   "dur": 1.3,
+   "src_span": [
+    803.76,
+    805.06
+   ],
+   "t_final": [
+    16.15,
+    17.45
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    260,
+    0,
+    840,
+    840
+   ],
+   "res": "1920x1080",
+   "scale": 1.29,
+   "ours": "수돗물 아래 채반째 채소를 씻는 손(노란 소매)",
+   "why": "'보관통이래요' — 채반에 담아 씻는 쓰임. 주황 자막(y870~) 밖",
+   "mute": true
+  },
+  {
+   "i": 7,
+   "line": "O5",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 788.18,
+   "dur": 3.37,
+   "src_span": [
+    788.18,
+    791.55
+   ],
+   "t_final": [
+    17.45,
+    20.82
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    560,
+    0,
+    840,
+    840
+   ],
+   "res": "1920x1080",
+   "scale": 1.29,
+   "ours": "상추 담은 통에 투명 뚜껑을 덮는 손(노란 소매)",
+   "why": "'그냥 보관을 하셔서…씻어서 하셔도 되고' 같은 샷. '[이거 진짜 꿀팁이야]'(y855~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 788.18
+  },
+  {
+   "i": 8,
+   "line": "O5",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "url": "https://www.youtube.com/watch?v=LcQv9yOh3Wc",
+   "src_date": "고은언니 한고은 유튜브 2026.03.26",
+   "ss": 791.55,
+   "dur": 1.97,
+   "src_span": [
+    791.55,
+    793.52
+   ],
+   "t_final": [
+    20.82,
+    22.79
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    710,
+    200,
+    715,
+    715
+   ],
+   "res": "1920x1080",
+   "scale": 1.51,
+   "ours": "손사래 치며 말하는 한고은 얼굴",
+   "why": "'저는 씻어서 보관해요. 귀찮으니까' 같은 샷(입 맞음 — 소리 +0.07초 늦춰 '귀찮으니까' 끝(793.64)까지, 화면은 원본 컷 793.62 전 793.52에서 끊음). 빨간 꾸밈 글 '먹을 때 귀찮아'(792.77~793.62, y92~183)은 y200부터 잘라 뺌(머리 윗부분 조금 잘림)·아래 자막(y924~) 밖",
+   "audio_src": "hge_LcQv9yOh3Wc.mp4",
+   "audio_ss": 791.62
+  }
+ ],
+ "check": {
+  "total": 22.79,
+  "bench": 25.1,
+  "ratio": 0.908,
+  "n_shots": 9,
+  "shot_median": 2.54,
+  "bench_cut_median": 2.17,
+  "max_scale": 1.57,
+  "orig_share": 0.748,
+  "orig_share_rule": [
+   0.61,
+   1.0
+  ],
+  "cap_max_chars": 10,
+  "narr_cps_est": 9.0,
+  "sources_used": [
+   "고은언니 한고은 유튜브 2026.03.26"
+  ]
+ }
+}
