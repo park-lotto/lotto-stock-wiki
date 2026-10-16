@@ -269,17 +269,17 @@ class Net:
         """쓸 구간만 1080p(없으면 ≥720p) 영상만 — 통째로 받지 않는다(SECTION_FMT 주석)."""
         out = self.wd / "sections" / f"{vid}_{int(a * 10):05d}_{int(b * 10):05d}.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
-        if _valid_video(out):
+        if _valid_video(out, b - a):
             return str(out)
         out.unlink(missing_ok=True)
         for fmt in (SECTION_FMT, "137/bv*[height>=1080]/bv*[width>=1080]/bv*[height>=720]"):   # HLS 가 빈 파일이면(10-17 qTWg) DASH 로 한 번 더
             self._gap()
             r = _run(["yt-dlp", "--no-update", "-f", fmt, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
                       f"https://www.youtube.com/watch?v={vid}"], timeout=900)
-            if _valid_video(out):
+            if _valid_video(out, b - a):
                 break
             out.unlink(missing_ok=True)
-        if _valid_video(out):
+        if _valid_video(out, b - a):
             self.bytes += out.stat().st_size
             return str(out)
         out.unlink(missing_ok=True)
@@ -288,10 +288,11 @@ class Net:
 
 
 # ── 3. 프레임 → 시트 → 설명(시트 한 장씩) ─────────────────────────────────
-def _valid_video(p) -> bool:
-    """받은 파일이 진짜 영상인가 — 1판 실측: 구간 받기 실패가 262바이트 껍데기를 남겨 '받음'으로 셌다(17개 중 7개)."""
+def _valid_video(p, need: float = 0.0) -> bool:
+    """받은 파일이 진짜 영상인가 — 1판 실측: 구간 받기 실패가 262바이트 껍데기를 남겨 '받음'으로 셌다(17개 중 7개).
+    need = 요청한 길이(초) — 5판 실측: HLS 구간 79개 중 9개가 요청보다 짧게 끊겼다(2.9초 요청 → 1.04초). 0.3초 넘게 모자라면 무효."""
     p = Path(p)
-    return p.exists() and p.stat().st_size > 10000 and _probe_dur(str(p)) > 0
+    return p.exists() and p.stat().st_size > 10000 and _probe_dur(str(p)) >= max(0.01, need - 0.3)
 
 
 def _probe_dur(p: str) -> float:
@@ -832,7 +833,7 @@ def save_state(wd: Path, st: dict):
     (wd / "state.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
 
 
-def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool = True) -> dict:
+def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool = True, rematch: bool = False) -> dict:
     """state.json 으로 선택부터 다시(규칙만 바뀌었을 때) — 검색·태깅·짝짓기 모델 호출 없음(1080 검사만 호출)."""
     wd = Path(workdir)
     rules = CHANNELS[channel_rules] if isinstance(channel_rules, str) else channel_rules
@@ -846,6 +847,9 @@ def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool
     llm = llm if isinstance(llm, LLM) else LLM(llm)
     T, t0, stopped = {}, time.time(), None
     try:
+        if rematch:   # 짝짓기만 다시(검색·태깅 없음) — 짝짓기 프롬프트·후보 수가 바뀌었을 때
+            ranked = match_lines(d["toks"], needs, cells, d["meta"], rules, llm, log)
+            save_state(wd, {**d, "cells": cells, "needs": needs, "memes": memes, "ranked": ranked})
         picks, sheets = finish_plan(d["toks"], needs, ranked, memes, state, rules, net, llm, wd, sections, T)
     except Stop as e:
         picks, sheets, stopped = [], [], str(e)
@@ -894,6 +898,8 @@ def verify_cuts(picks, wd: Path, llm, only_new: bool = False) -> list[dict]:
         for p in chunk:
             g = _grab(p["section_file"], p["section_ss"] + p["dur"] / 2, vdir / f"{p['i']}.jpg")
             ims.append(g)
+            if not g:
+                p["verify"] = "프레임 없음"   # 빈 칸을 모델에 보여 'ok'를 받지 않는다(5판: 잘린 구간이 ok 로 통과)
         sh = Image.new("RGB", (cols * (W + 6), math.ceil(len(chunk) / cols) * (H + 6)), "white")
         d = ImageDraw.Draw(sh)
         for j, g in enumerate(ims):
@@ -910,6 +916,8 @@ def verify_cuts(picks, wd: Path, llm, only_new: bool = False) -> list[dict]:
         got = {_as_int(x.get("n")): x for x in (r or {}).get("cells") or [] if isinstance(x, dict)}
         for j, p in enumerate(chunk):
             x = got.get(j)
+            if not ims[j]:
+                continue
             if x is None:
                 p["verify"] = "unchecked"
             elif x.get("text") or x.get("dark"):
@@ -1079,12 +1087,13 @@ def main(argv=None):
     ap.add_argument("--human-src", help="사람 재료 원본 폴더(src_<id>.mp4) — 다른 토막 대조 시트")
     ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
     ap.add_argument("--replan", action="store_true", help="state.json 으로 선택부터 다시(검색·태깅 없음)")
+    ap.add_argument("--rematch", action="store_true", help="--replan 때 짝짓기(글)도 다시")
     a = ap.parse_args(argv)
     llm = LLM()
     if a.compare_only:
         res = json.loads(Path(a.out, "재료_auto.json").read_text(encoding="utf-8"))
     elif a.replan:
-        res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections)
+        res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections, rematch=a.rematch)
     else:
         res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
     print(json.dumps(res["stats"], ensure_ascii=False))

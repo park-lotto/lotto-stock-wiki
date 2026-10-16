@@ -270,7 +270,10 @@ def test_replan_from_state(tmp_path, monkeypatch):
 def test_verify_loop_final_picks_all_checked(tmp_path, monkeypatch):
     """1080 검사에 걸린 컷은 다시 고르고, 최종 컷은 전부 검사 결과가 있어야 한다(4판: 두 바퀴 재선택 뒤 최종 컷이 검사 없이 나감)."""
     monkeypatch.setattr(ma, "plan_sheet", lambda picks, toks, wd: [])
-    monkeypatch.setattr(ma, "_grab", lambda src, t, out: None)
+    from PIL import Image
+    img = tmp_path / "f.jpg"
+    Image.new("RGB", (32, 18), "gray").save(img)
+    monkeypatch.setattr(ma, "_grab", lambda src, t, out: img)
 
     class N(FakeNet):
         def section(self, vid, info, a, b):
@@ -288,3 +291,19 @@ def test_verify_loop_final_picks_all_checked(tmp_path, monkeypatch):
     T = {}
     picks, _ = ma.finish_plan(ts, _needs(ts), {0: [(0, 9), (1, 7), (3, 6)], 1: [(2, 9)]}, {}, state, ITS, N(tmp_path), ma.LLM(llm), tmp_path, True, T)
     assert picks[0]["vid"] == "D" and all(p.get("verify") == "ok" for p in picks)
+
+
+def test_verify_missing_frame_is_not_ok(tmp_path, monkeypatch):
+    """프레임을 못 뽑은 컷(잘린 구간)은 모델이 뭐라 하든 'ok' 가 아니다(5판: 1.04초로 잘린 구간이 ok 로 통과)."""
+    monkeypatch.setattr(ma, "_grab", lambda src, t, out: None)
+    p = [{"i": 0, "vid": "A", "section_file": "x.mp4", "section_ss": 1.0, "dur": 1.0, "src_t0": 0, "src_t1": 1}]
+    ma.verify_cuts(p, tmp_path, ma.LLM(lambda a, b, c: ({"cells": [{"n": 0, "text": False}]}, None)))
+    assert p[0]["verify"] == "프레임 없음"
+
+
+def test_valid_video_rejects_short_section(tmp_path, monkeypatch):
+    f = tmp_path / "s.mp4"
+    f.write_bytes(b"0" * 20000)
+    monkeypatch.setattr(ma, "_probe_dur", lambda p: 1.04)
+    assert not ma._valid_video(f, 2.9)          # 2.9초 요청에 1.04초(실사례)
+    assert ma._valid_video(f, 1.2)
