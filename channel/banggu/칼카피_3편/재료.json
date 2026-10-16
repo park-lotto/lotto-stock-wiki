@@ -405,7 +405,7 @@
   {
    "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
    "asset_id": 1473,
-   "t": 1.763,
+   "t": 1.748,
    "db": 0,
    "why": "원본 1.8초 띵(훅→본문) — 쉼 줄인 TTS 자막 시각(narr_video.time_steps)"
   },
@@ -419,12 +419,12 @@
   {
    "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
    "asset_id": 1459,
-   "t": 14.275,
+   "t": 14.015,
    "db": 0,
    "why": "원본 11.2초 휙(전개) — 쉼 줄인 TTS 자막 시각(narr_video.time_steps)"
   }
  ],
- "narration": "타입캐스트 필재(남성) tempo 1.25 — 2회째(페이블 OK: 1회째가 00원을 '영원'으로 읽음) TTS 글만 00원→공공원(자막 00원) · 쉼 0.07초로 줄임(narr_tight2 31.30초) → atempo 1.055(말속도 8.3자/초, ≤30초) = narr_final2.mp3 29.68초",
+ "narration": "타입캐스트 필재(남성) tempo 1.25 — 2회째(페이블 OK: 1회째가 00원을 '영원'으로 읽음) TTS 글만 00원→공공원(자막 00원) · 쉼 0.07초로 줄임(narr_tight2 31.30초) → atempo 1.055(말속도 8.3자/초, ≤30초) = narr_final2.mp3 29.68초 · '90원은 어 그냥'의 '어'(9.16~9.40초, 받아쓰기 2회 모두 들림)를 ffmpeg로 잘라 냄(크로스페이드 20ms) = narr_final3.mp3 29.42초, 받아쓰기 2회 '어' 없음",
  "caption_effects": {
   "now": "1편과 같음: 누적형 2줄(y502 고정, 줄 칸 79, 검정 CcPretendard-Bold, 외곽선·그림자·등장 효과 없음 = 원본 실측) · 훅 카드 제목 2줄 흰/파랑(JalnanGothic, 폭 980 — 1편보다 −20px) + 흰 띠 첫 문장 · 페이지 14장(--chunk 13)",
   "planned": "3줄 페이지 없음(대본을 2줄 페이지로 짬). enter/emphasis 는 원본에 없음"
