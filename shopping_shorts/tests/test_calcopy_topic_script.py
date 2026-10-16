@@ -206,7 +206,7 @@ def _same_scores(ids, drop_why=None):
 def test_topic_overlap_with_made_lowers_score(tmp_path):
     llm = FakeLLM({"bench_c1": {"points": [{"kind": "hook", "text": "아무 데나 붙이면 스피커", "from": "v_sp1"}], "best_angle": "x"},
                    "bench_c2": {"points": [{"kind": "number", "text": "하루 생산량", "from": "v_rm1"}]},
-                   "score": _same_scores(["c1", "c2"])})
+                   "fit": {"items": [{"id": "c1", "fit": "예", "why": "제품"}, {"id": "c2", "fit": "예", "why": "제품"}]}, "score": _same_scores(["c1", "c2"])})
     res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], months=6, bench_n=1,
                 net=_fake_net(), llm=llm, log=lambda *_: None, limits=T.Limits(sleep=lambda s: None))
     by = {c["id"]: c for c in res["candidates"]}
@@ -225,11 +225,30 @@ def test_topic_overlap_with_made_lowers_score(tmp_path):
 
 
 def test_score_without_reason_is_dropped(tmp_path):
-    llm = FakeLLM({"bench_c1": {"points": []}, "bench_c2": {"points": []}, "score": _same_scores(["c1", "c2"], drop_why="c2")})
+    llm = FakeLLM({"bench_c1": {"points": []}, "bench_c2": {"points": []}, "fit": {"items": [{"id": "c1", "fit": "예", "why": "제품"}, {"id": "c2", "fit": "예", "why": "제품"}]}, "score": _same_scores(["c1", "c2"], drop_why="c2")})
     res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], bench_n=1, net=_fake_net(), llm=llm, log=lambda *_: None, limits=T.Limits(sleep=lambda s: None))
     rm = next(c for c in res["candidates"] if c["id"] == "c2")
     assert rm["scores"]["fun"]["score"] is None and "fun 근거 없음" in rm["flags"]
     assert rm["total"] == 7 * 5                               # 근거 없는 9점은 합계에 안 들어간다
+
+
+def test_channel_fit_no_skips_scoring_and_promo_caps(tmp_path):
+    """채널 결 '아니오'면 점수 호출에 안 들어가고 점수·추천 없음. 공식(채널 이름 official)·광고면 아는 대상/몰랐던 ≤5."""
+    shorts = {"spk": [{"id": "sp1", "duration": 30, "views": 900, "title": "신기한 스피커 원판", "channel": "Gadget Official", "url": "u/sp1"}],
+              "dog": [{"id": "dg1", "duration": 30, "views": 800, "title": "강아지 춤 신라면", "channel": "dogs", "url": "u/dg1"}]}
+    net = {**_fake_net(), "yt_search": lambda q, n, m: shorts["spk"] if "스피커" in q else shorts["dog"] if "신라면" in q else [],
+           "yt_detail": lambda vid, n: {"id": vid, "failed": "시험: 상세 없음"}}
+    llm = FakeLLM({"fit": {"items": [{"id": "c1", "fit": "예", "why": "제품 시연"}, {"id": "c2", "fit": "아니오", "why": "동물 영상"}]},
+                   "score": lambda p: _same_scores(["c1"]) if "c2." not in p else {"scores": []}})
+    for c in ("c1", "c2"):
+        llm.answers[f"bench_{c}"] = {"points": []}
+    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], bench_n=1, net=net, llm=llm, log=lambda *_: None,
+                limits=T.Limits(sleep=lambda s: None))
+    by = {c["id"]: c for c in res["candidates"]}
+    assert "c2." not in llm.prompts["score"]                                   # 결 밖 후보는 점수 프롬프트에 없다
+    assert by["c2"]["scores"]["known"]["score"] is None and any("채널 결 밖" in f for f in by["c2"]["flags"])
+    assert by["c1"]["promo"] and by["c1"]["scores"]["known"]["score"] == T.PROMO_CAP and by["c1"]["scores"]["surprise"]["score"] == T.PROMO_CAP
+    assert "c2" not in res["recommend"]
 
 
 def test_source_kind_from_manifest_or_required():

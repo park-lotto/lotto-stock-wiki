@@ -753,6 +753,49 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     return res
 
 
+# 채널 소재 유형 설명 — manifest.channel_desc 가 주인. 없을 때 기본(근거: 각 채널 손 칼카피 편·top50 제목 결, 10-16)
+CHANNEL_DESC = {
+    "sseolpulda": "해외에서 조회수가 터진 신기한 생활 제품·가젯을 한국어 자막으로 소개하는 제품 이야기썰 — 실제 사용·시연 영상이 있는 소비자 제품(사람·요리·코미디·브이로그 아님)",
+    "yummyknow": "한국 식품·유통 브랜드(코스트코·맘스터치·다이소 등)의 억울한 사연·영업비밀·실수·숨은 이유를 전언체로 푸는 비하인드 썰 — 공식 홍보·신상 소개가 아니라 사건과 사람들 반응",
+    "banggu": "다들 아는 제품을 사람들이 사는 진짜 이유·원리·대체품을 커뮤니티 썰처럼 푸는 채널",
+}
+FIT_PROMPT = """너는 쇼츠 채널의 소재 담당이다. 채널 소재 유형: {desc}
+아래 후보마다 이 채널 소재 유형에 **맞나** 예/아니오와 근거 한 줄을 적어라. 공식 홍보·광고·신상 소개면 비하인드 채널엔 아니오. 제품이 아니면 제품 채널엔 아니오.
+출력 JSON만: {{"items":[{{"id":"c1","fit":"예|아니오","why":"한 줄"}}]}}
+
+후보:
+{cands}"""
+PROMO_CAP = 5   # 광고·공식이면 아는 대상/몰랐던 상한(조율자 10-16: 다이소 공식 홍보가 아는 대상 10·몰랐던 9를 받았다)
+
+
+def channel_fit(cands: list[dict], benches: dict, desc: str, llm) -> tuple[dict, str | None]:
+    """점수 전 채널 결 필터(판단 주인) — LLM 1회: 후보마다 {fit: bool, why}. 실패면 ({}, 이유) — 부르는 쪽이 점수를 매기지 않는다."""
+    rows = []
+    for c in cands:
+        pts = " / ".join(p["text"] for p in (benches.get(c["id"]) or {}).get("points", [])[:5])
+        src = c.get("source") or {}
+        rows.append(f"{c['id']}. {c['topic'][:120]} (출처 채널: {src.get('channel') or src.get('username') or '-'}"
+                    + (f", 공식·광고 의심: {c['promo']}" if c.get("promo") else "") + f")\n   벤치: {pts or '(없음)'}")
+    d, err = llm(FIT_PROMPT.format(desc=desc, cands="\n".join(rows)), "fit")
+    if not d:
+        return {}, err
+    out = {}
+    for it in d.get("items") or []:
+        if isinstance(it, dict) and it.get("id"):
+            out[it["id"]] = {"fit": str(it.get("fit", "")).strip().startswith("예"), "why": (it.get("why") or "").strip()}
+    return out, None
+
+
+def promo_of(c: dict) -> str | None:
+    """후보 자체가 광고·공식인가 — 출처 채널 이름에 'official'·브랜드·소재 명사 낱말, 제목에 광고 표기."""
+    src = c.get("source") or {}
+    v = {"channel": src.get("channel") or src.get("username"), "title": src.get("title") or c.get("topic"), "description": ""}
+    words = list(c.get("brands") or [])
+    if "official" in (v["channel"] or "").lower():
+        return f"공식 채널('{v['channel']}')"
+    return official_or_ad(v, words)
+
+
 def score(cands: list[dict], benches: dict, slug: str, llm: LLM) -> tuple[dict, str | None]:
     lines = []
     for c in cands:
@@ -804,12 +847,36 @@ def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, key
             continue
         benches[c["id"]] = bench(c, out, net, llm, bench_n, limits=limits)
         log(f"[벤치] {c['id']} {c['topic'][:40]} — 영상 {len(benches[c['id']]['videos'])} · 포인트 {len(benches[c['id']]['points'])}")
-    rows, err = score(cands, benches, P["slug"], llm) if cands else ({}, "후보 0")
+    for c in cands:
+        c["promo"] = promo_of(c)
+    desc = P["manifest"].get("channel_desc") or CHANNEL_DESC.get(P["slug"]) or kind
+    fit, ferr = channel_fit(cands, benches, desc, llm) if cands else ({}, "후보 0")
+    if ferr:
+        failed.append({"where": "채널 결 필터", "why": f"{ferr} — 점수를 매기지 않는다"})
+    fitting = [c for c in cands if (fit.get(c["id"]) or {}).get("fit")]
+    rows, err = score(fitting, benches, P["slug"], llm) if fitting else ({}, "채널 결에 맞는 후보 0")
     if err:
         failed.append({"where": "score", "why": err})
     for c in cands:
+        f = fit.get(c["id"])
+        c["fit"] = f
         cs = _clean_scores(rows.get(c["id"]) or {})
-        c["scores"], c["flags"] = cs["scores"], cs["flags"] + ([] if c["id"] in rows else ["점수 없음(LLM 실패)"])
+        flags = cs["flags"]
+        if not f:
+            flags = ["채널 결 판정 없음 — 점수 안 매김"]
+            cs["scores"] = {k: {"score": None, "why": ""} for k, _ in CRITERIA}
+        elif not f["fit"]:
+            flags = [f"채널 결 밖 — {f['why']}"]
+            cs["scores"] = {k: {"score": None, "why": ""} for k, _ in CRITERIA}
+        elif c["id"] not in rows:
+            flags = flags + ["점수 없음(LLM 실패)"]
+        if c.get("promo"):
+            for k in ("known", "surprise"):
+                if (cs["scores"][k]["score"] or 0) > PROMO_CAP:
+                    cs["scores"][k]["score"] = PROMO_CAP
+                    cs["scores"][k]["why"] += f" [광고·공식 상한 {PROMO_CAP}]"
+            flags.append(f"광고·공식: {c['promo']}")
+        c["scores"], c["flags"] = cs["scores"], flags
         c["angle"] = (rows.get(c["id"]) or {}).get("angle") or benches[c["id"]].get("best_angle") or ""
         c["overlap"] = overlap(c["topic"], corpus)
         if c["overlap"]["score"] >= OVERLAP_CUT:
@@ -820,7 +887,8 @@ def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, key
     ranked = sorted(cands, key=lambda c: -c["total"])
     for i, c in enumerate(ranked, 1):
         c["rank"] = i
-    rec = [c["id"] for c in ranked if not any("점수 없음" in f for f in c["flags"]) and c["overlap"]["score"] < OVERLAP_CUT][:3]
+    rec = [c["id"] for c in ranked if (c.get("fit") or {}).get("fit") and not any("점수 없음" in f for f in c["flags"])
+           and c["overlap"]["score"] < OVERLAP_CUT][:3]
     res = {"engine": "topic_find v1", "preset": preset, "slug": P["slug"], "source_kind": kind, "keywords": kws, "queries": queries, "months": months,
            "made_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "candidates": ranked, "recommend": rec, "failed": failed, "llm_calls": llm.calls,
            "limits": limits.summary(), "stopped": limits.stopped,
