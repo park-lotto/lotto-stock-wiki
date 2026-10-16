@@ -19,14 +19,16 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(D))
 import make_plan as MP  # noqa: E402
 from tools.calcopy import narr_video as N  # noqa: E402
 
-R = MP.SRC / "render"
+V2 = "--v2" in sys.argv          # 사장님 10-17 수정본: TTS 단계 속도↑(atempo ≤1.2)·컷 3개 교체 → render_v2·바탕화면 _수정
+R = MP.SRC / ("render_v2" if V2 else "render")
+TTS_TEMPO = 1.4 if V2 else None   # Typecast output.audio_tempo
 PRE = MP.PRESET
 VOICE = "tc_68257f68bc6e3c161ab5078d"   # 필재(페이블 10-17)
 CPS = PRE["measured"]["speech_rate"]["chars_per_s_total"]   # 8.8
 BGM = ROOT / "shopping_shorts/assets/bgm_lib/qiuqiu.mp3"
 BGM_DB_BELOW = 17.0                      # bench A.openvoice 17.02(말 p90 − 바닥)
 TARGET_LUFS, TP = PRE["measured"]["lufs"]["I"], -2.0
-DESK = Path.home() / "Desktop" / "칼카피_재미썸홈_총쏘는알람시계.mp4"
+DESK = Path.home() / "Desktop" / ("칼카피_재미썸홈_총쏘는알람시계_수정.mp4" if "--v2" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계.mp4")
 FPS = 30
 # 스파인 칸 → sfx_pack 역할(ROLE_GROUPS). "이게 말도 안 되는 게"=limit(둥) · 반전=twist(둥) · 결과=more(띠링) — 페이블 10-17
 SFX_ROLES = ["title", "bait", "reveal", "limit", "more", "more", "twist", "land"]
@@ -56,7 +58,7 @@ def main():
     full, tight, narr = R / "narr_full.mp3", R / "narr_tight.wav", R / "narr.wav"
     if not full.exists():
         from shopping_shorts.channelkit import providers
-        providers.typecast_synth(VOICE)(" ".join(lines), str(full))
+        providers.typecast_synth(VOICE, tempo=TTS_TEMPO)(" ".join(lines), str(full))
         print("TTS 1회:", full)
     if not tight.exists():
         f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
@@ -65,6 +67,8 @@ def main():
     chars = MP.nchar(" ".join(lines))
     d0 = dur_of(tight)
     tempo = round(min(1.6, max(0.8, CPS / (chars / d0))), 4)
+    if V2 and tempo > 1.2:
+        raise SystemExit(f"atempo {tempo} > 1.2 — TTS 원속도 {chars / d0:.2f}자/초가 모자람")
     run(["ffmpeg", "-y", "-i", str(tight), "-af", f"atempo={tempo}", "-ar", "44100", str(narr)])
     dn = dur_of(narr)
     print(f"TTS {chars / d0:.2f}자/초 → atempo {tempo} → {chars / dn:.2f}자/초 {dn:.2f}초")
