@@ -28480,7 +28480,9 @@ def api_admin_calcopy_worker_kpi(request: Request, hours: float = 1):
         return denied
     from tools.calcopy.engine import worker_ledger as _wl
     from shopping_shorts import calcopy_topics as _ct
-    return _wl.summary(max(0.25, min(float(hours), 168)), data_dir=_ct.base_dir().parent)
+    out = _wl.summary(max(0.25, min(float(hours), 168)), data_dir=_ct.base_dir().parent)
+    out["recent"] = _wl.tail(80, data_dir=_ct.base_dir().parent)
+    return out
 
 
 @app.post("/api/admin/calcopy/topics/caps")
@@ -28586,7 +28588,14 @@ def _calcopy_make_call(request, fn):
 
 @app.get("/api/calcopy/make/presets")
 def api_calcopy_make_presets(request: Request):
-    return _calcopy_make_call(request, lambda mk: {"presets": mk.list_presets(), "packs": mk.load_packs(), "sessions": mk.sessions()})
+    return _calcopy_make_call(request, lambda mk: {"presets": mk.list_presets(), "packs": mk.load_packs(), "sessions": mk.sessions(),
+                                                   "pack_check": {k: mk.check_pack(v) for k, v in mk.load_packs().items()},
+                                                   "reusable": mk.reusable()})
+
+
+@app.get("/api/admin/calcopy/results")
+def api_admin_calcopy_results(request: Request):
+    return _calcopy_make_call(request, lambda mk: mk.results())
 
 
 @app.post("/api/calcopy/make/pack/{n}")
@@ -28598,7 +28607,8 @@ def api_calcopy_make_pack(request: Request, n: str, body: dict = None):
 def api_calcopy_make_start(request: Request, body: dict = None):
     b = body or {}
     return _calcopy_make_call(request, lambda mk: mk.start(b.get("preset", ""), b.get("pack", "1"), topic=b.get("topic") or None,
-                                                           ref_url=b.get("ref_url") or None))
+                                                           ref_url=b.get("ref_url") or None, facts=b.get("facts") or None,
+                                                           reuse_of=b.get("reuse_of") or None, pack_patch=b.get("pack_patch") or None))
 
 
 @app.post("/api/calcopy/make/choose")
@@ -28609,7 +28619,7 @@ def api_calcopy_make_choose(request: Request, body: dict = None):
 
 @app.post("/api/calcopy/make/approve")
 def api_calcopy_make_approve(request: Request, body: dict = None):
-    return _calcopy_make_call(request, lambda mk: mk.approve((body or {}).get("sid", "")))
+    return _calcopy_make_call(request, lambda mk: mk.approve((body or {}).get("sid", ""), by="관리자"))   # 관리자 세션만 여기까지 온다
 
 
 @app.post("/api/calcopy/make/reject")

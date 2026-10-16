@@ -157,7 +157,7 @@ def test_start_후보_choose_plan_review_approve_final_review(env):
     assert M["tts"]["voice_id"] == "tc_68257f68bc6e3c161ab5078d" and all(s["src"] for s in M["shots"])
     files = {f["name"] for f in st["files"]}
     assert {"계획.md", "계획_시트.jpg", "대본.json", "재료_뼈대.json", "재료.json"} <= files
-    S = MK.approve(S["sid"], data_dir=d, deps=deps)
+    S = MK.approve(S["sid"], by="페이블", data_dir=d, deps=deps)
     st = MK.status(S["sid"], data_dir=d)
     assert st["state"] == "final_review", st.get("error")
     cmd = fake.produce_cmd
@@ -214,3 +214,103 @@ def test_후보에_AI의심댓글_반전_벤치수(env):
     assert c is None or True        # tid 는 plan_review 라 후보에서 빠진다
     row = MK._candidate(CT.detail(tid, data_dir=d)["topic"], d)
     assert row["ai_suspect_comments"] == 1 and row["twist"] == "사실은 반대였다" and row["bench_videos"] == 1
+
+
+# ── 내 팩 키트 점검 · 응용 모드(소재 1 : 제작물 N) ───────────────────────────────
+def test_asset_file_효과음은_scene_assets_뒤_하위경로까지():
+    a = {"file": "sfx_13.mp3", "media_path": "/home/ubuntu/x/shopping_shorts/data/scene_assets/sfx_pick/sfx_13.mp3"}
+    assert MK.asset_file(a, "D:/p/sfx", "sfx").as_posix() == "D:/p/sfx/sfx_pick/sfx_13.mp3"
+    assert MK.asset_file({"file": "a.mp3", "media_path": "shopping_shorts/data/scene_assets/a.mp3"}, "D:/p/sfx", "sfx").as_posix() == "D:/p/sfx/a.mp3"
+    assert MK.asset_file({"file": "m.mp4"}, "D:/p/meme", "meme").as_posix() == "D:/p/meme/m.mp4"
+
+
+def test_check_pack_없는_파일을_한줄씩(tmp_path):
+    (tmp_path / "sfx" / "sfx_pick").mkdir(parents=True)
+    (tmp_path / "sfx" / "sfx_pick" / "s1.mp3").write_bytes(b"x")
+    (tmp_path / "meme").mkdir()
+    (tmp_path / "meme" / "m1.mp4").write_bytes(b"x")
+    assets = {1: {"file": "s1.mp3", "media_path": "scene_assets/sfx_pick/s1.mp3"}, 2: {"file": "s2.mp3", "media_path": "scene_assets/s2.mp3"},
+              3: {"file": "m1.mp4"}}
+    pack = {"sfx_pool": {"dir": str(tmp_path / "sfx"), "start": [1], "end": [2]}, "meme_pool": {"dir": str(tmp_path / "meme"), "ids": [3, 9]},
+            "bgm": {"lib": "shopping_shorts/assets/bgm_lib", "candidates": ["qiuqiu", "없는곡"]},
+            "tts": {"voice_id": "tc_68257f68bc6e3c161ab5078d", "name": "필재"}, "base_preset": PRESET}
+    r = MK.check_pack(pack, assets)
+    assert r["counts"] == {"sfx": 2, "meme": 2, "bgm": 2, "voices": 1}
+    assert len(r["missing"]) == 3 and not r["ok"]
+    assert any("#2" in m for m in r["missing"]) and any("#9" in m for m in r["missing"]) and any("없는곡" in m for m in r["missing"])
+
+
+def test_저장소_1번팩은_채널키트_전부_적혀있다():
+    p = json.loads((ROOT / "shopping_shorts/calcopy_frame/my_packs.json").read_text(encoding="utf-8"))["1"]
+    assert {"brand", "text", "tts", "meme_pool", "sfx_pool", "bgm", "base_preset"} <= set(p)
+    assert p["sfx_pool"]["dir"] == "C:/숏템_칼카피/packs/sfx" and p["meme_pool"]["dir"].startswith("C:/숏템_칼카피/packs/meme")
+    assert p["bgm"]["lib"] == "shopping_shorts/assets/bgm_lib" and (ROOT / p["base_preset"] / "manifest.json").exists()
+    names = {v["base_voice_id"]: v["name"] for v in json.loads((ROOT / "shopping_shorts/assets/voice_presets.json").read_text(encoding="utf-8"))}
+    for v in [p["tts"]] + p["tts"]["alternates"]:
+        assert names[v["voice_id"]] == v["name"]
+
+
+def test_distinct_목소리_틀_컷_중_둘이상():
+    base = {"voice": "v1", "frame": "f1", "cuts": ["a@0", "b@1", "c@2", "d@3"]}
+    assert not MK.distinct(base, {**base})["ok"]
+    assert not MK.distinct(base, {**base, "cuts": ["x@0", "y@1", "z@2", "w@3"]})["ok"]                  # 컷만 다름 = 하나
+    assert MK.distinct(base, {**base, "voice": "v2", "cuts": ["x@0", "y@1", "c@2", "d@3"]})["ok"]       # 목소리 + 컷 50%
+    r = MK.distinct(base, {**base, "voice": "v2", "cuts": ["x@0", "b@1", "c@2", "d@3"]})               # 컷 25% 만 다름
+    assert not r["ok"] and r["cut_diff"] == 0.25 and r["diff"] == ["목소리"]
+    assert MK.distinct(base, {**base, "voice": "v2", "frame": "f2"})["ok"]
+    r = MK.distinct({**base, "cuts": None}, {**base, "voice": "v2"})                                   # 컷 모름
+    assert not r["ok"] and r["possible"] and r["maybe"] == ["컷"]
+    assert not MK.distinct({**base, "cuts": None}, {**base})["possible"]
+
+
+def test_approve는_관리자만(env):
+    fake, deps, d = env
+    S = MK.start(PRESET, "1", topic="코스트코 핫도그 40년 같은 가격", data_dir=d, deps=deps)
+    for who in (None, "워커", "make-x"):
+        with pytest.raises(MK.MakeError) as e:
+            MK.approve(S["sid"], by=who, data_dir=d, deps=deps)
+        assert e.value.code == 403
+    assert "produce" not in [c[0] for c in fake.calls]                 # 승인 전엔 TTS·렌더 0
+
+
+def test_응용_소재1_제작물N_중복은_거절(env):
+    fake, deps, d = env
+    S1 = MK.start(PRESET, "1", topic="바나나맛우유 단지 모양의 비밀", data_dir=d, deps=deps)
+    st1 = MK.status(S1["sid"], data_dir=d)
+    assert st1["state"] == "plan_review" and st1["mode"] == "new" and st1["variant"]["cuts"]
+    root = st1["topic_id"]
+    # 같은 팩·프리셋 그대로 응용 = 목소리·틀 같음 → 컷만으로는 하나 → 시작부터 거절
+    with pytest.raises(MK.MakeError) as e:
+        MK.start(PRESET, "1", reuse_of=root, data_dir=d, deps=deps)
+    assert e.value.code == 409 and "둘 이상" in e.value.msg
+    # 목소리만 바꾼 응용: 시작은 됨(컷이 다를 수 있음) → 벤치·점수는 다시 안 부름(원 소재 것 그대로)
+    n0 = len(fake.calls)
+    S2 = MK.start(PRESET, "1", reuse_of=root, pack_patch={"tts": {"voice_id": "tc_61c2f7741330d213c238cba6", "name": "김건"}}, data_dir=d, deps=deps)
+    st2 = MK.status(S2["sid"], data_dir=d)
+    assert st2["state"] == "plan_review", st2.get("error")
+    assert [c[0] for c in fake.calls[n0:]] == ["script", "source", "plan"]
+    assert st2["topic"]["name"] == "바나나맛우유 단지 모양의 비밀 · 응용 1" and st2["topic"]["source"]["reuse_of"] == root
+    assert st2["mode"] == "reuse" and st2["root_topic"] == root and MK.made_counts(d)[root] == 2
+    # 같은 후보 영상 → 컷 같음 → 목소리 하나만 다름 → 승인 거절(TTS·렌더 안 감)
+    with pytest.raises(MK.MakeError) as e:
+        MK.approve(S2["sid"], by="페이블", data_dir=d, deps=deps)
+    assert e.value.code == 409 and "응용 중복" in e.value.msg and st2["variant_warn"]
+    assert "produce" not in [c[0] for c in fake.calls]
+    # 목소리 + 틀(채널명) 다르게 → 승인 통과
+    S3 = MK.start(PRESET, "1", reuse_of=root, data_dir=d, deps=deps,
+                  pack_patch={"tts": {"voice_id": "tc_6059dad0b83880769a50502f", "name": "박창수"}, "brand": {"channel_name": "둘째채널"}})
+    assert MK.status(S3["sid"], data_dir=d)["variant_warn"] == []
+    MK.approve(S3["sid"], by="사장님", data_dir=d, deps=deps)
+    st3 = MK.status(S3["sid"], data_dir=d)
+    assert st3["state"] == "final_review" and st3["approved_by"] == "사장님"
+    assert [r["id"] for r in MK.reusable(d)] == [root]
+
+
+def test_소재직접_facts_가_대본단계로(env):
+    fake, deps, d = env
+    facts = [{"text": "트윅(2024-11-10): 바나나맛우유는 1974년 출시, 용기는 달항아리", "url": "https://www.twig24.com/news/x", "date": "2024-11-10"}]
+    S = MK.start(PRESET, "1", topic="바나나맛우유 단지", facts=facts, data_dir=d, deps=deps)
+    st = MK.status(S["sid"], data_dir=d)
+    assert st["state"] == "plan_review" and fake.facts == {"f1": facts[0]} and st["topic"]["source"]["facts_n"] == 1
+    with pytest.raises(MK.MakeError):
+        MK.start(PRESET, "1", topic="x", facts=[{"url": "u"}], data_dir=d, deps=deps)

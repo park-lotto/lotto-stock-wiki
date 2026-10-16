@@ -113,6 +113,22 @@ def take(worker: str, kind: str, n: int, what: str, data_dir=None):
         _append(p, {"t": time.time(), "worker": worker, "kind": kind, "n": int(n), "note": what[:200]})
 
 
+def tail(n: int = 60, data_dir=None) -> list[dict]:
+    """최근 장부 줄(작업기록 탭) — 새 것이 위."""
+    p = path(data_dir)
+    if not p.exists():
+        return []
+    out = []
+    for line in p.read_text(encoding="utf-8").splitlines()[-int(n):]:
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        r["at"] = time.strftime("%m-%d %H:%M:%S", time.localtime(r.get("t", 0)))
+        out.append(r)
+    return out[::-1]
+
+
 def pause_until(worker: str, data_dir=None) -> float:
     """429 로 쉬기로 한 시각(없으면 0)."""
     rows = [r for r in _rows(path(data_dir), time.time() - PAUSE_429_SEC) if r["kind"] == "pause" and r["worker"] == worker]

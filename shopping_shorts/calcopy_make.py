@@ -6,8 +6,11 @@
                                                   내 팩  = 브랜드(채널명·색)·글꼴·자막 꼴·목소리·짤풀·효과음풀·BGM
   start(preset, pack, topic=None, ref_url=None)  → 세션(소재 후보 목록, 또는 topic/ref_url 이면 바로 작업)
   choose(sid, n)                                  → bench→score→assign→script→source→plan(--plan-only) → plan_review(사람)
-  approve(sid) / reject(sid, 사유)                → produce(TTS 1회·렌더·대조) / 사유 적고 대본 다시 1회
+  approve(sid, by) / reject(sid, 사유)            → produce(TTS 1회·렌더·대조, by = 관리자만) / 사유 적고 대본 다시 1회
   status(sid)                                     → 세션 상태·산출물
+  start(..., reuse_of=tid)                        → 응용 모드: 소재 1 : 제작물 N(벤치·점수는 원 소재 것을 그대로 — 제미나이 0)
+  distinct(a, b)                                  → 응용 중복 판정 한 곳: 목소리·틀·컷(≥50%) 중 둘 이상 달라야
+  check_pack(pack)                                → 내 팩 키트의 파일(효과음·짤·BGM·프리셋·목소리)이 실제로 있나
 상태는 소재창고(calcopy_topics)의 같은 상태기계를 그대로 탄다 — 단계 실행은 worker.Worker 를 같은 프로세스 창구(LocalApi)로 돌린다
 (워커 상시 가동과 같은 코드, 판단 두 벌 없음). 세션 원장 = DATA_DIR/calcopy/make/<sid>.json.
 
@@ -34,6 +37,11 @@ CHANNELS = ROOT / "tools" / "calcopy" / "engine" / "warehouse_channels.json"   #
 AI_WORDS = re.compile(r"(\bai\b|에이아이|인공지능|합성|딥페이크|가짜 ?영상|생성형|ai로|ai 영상)", re.I)
 N_CANDIDATES = 10
 STEPS_TO_PLAN = ["bench", "score", "assign", "script", "source", "plan"]
+ADMINS = ("페이블", "사장님", "관리자")            # approve(TTS·렌더 = 돈·시간) 는 이 이름만 — API 는 관리자 세션이 "관리자"로 부른다
+PACK_ROOT = Path("C:/숏템_칼카피/packs")
+VOICES = ROOT / "shopping_shorts" / "assets" / "voice_presets.json"
+CUT_DIFF_MIN = 0.5                                 # 응용: 컷(재료 영상·초)이 이 비율 이상 달라야 '컷 다름'
+MADE_STATES = ("plan_review", "producing", "final_review", "passed")
 
 
 class MakeError(Exception):
@@ -50,17 +58,19 @@ def packs_path() -> Path:
     return CT.base_dir() / "my_packs.json"
 
 
-def load_packs() -> dict:
+def load_packs(raw: bool = False) -> dict:
+    """팩 번호 → 키트. '_' 로 시작하는 키(_schema 설명)는 빼고 준다(raw=True 면 그대로 — 저장용)."""
     for p in (packs_path(), REPO_PACKS):
         if p.exists():
-            return json.loads(p.read_text(encoding="utf-8"))
+            d = json.loads(p.read_text(encoding="utf-8"))
+            return d if raw else {k: v for k, v in d.items() if not k.startswith("_")}
     return {}
 
 
 def save_pack(n: str, patch: dict) -> dict:
     """보드 편집 칸(채널명 등) — 얕은 키별 병합. 저장소 파일은 안 건드린다(서버 git 파일 쓰기 = 자동배포 멈춤)."""
-    packs = load_packs()
-    if str(n) not in packs:
+    packs = load_packs(raw=True)
+    if str(n).startswith("_") or str(n) not in packs:
         raise MakeError(f"없는 팩: {n}", 404)
     cur = packs[str(n)]
     for k, v in (patch or {}).items():
@@ -174,11 +184,64 @@ def write_merged(cfg: dict, dst: Path) -> Path:
     return dst
 
 
-def _pack_assets() -> dict:
-    p = Path("C:/숏템_칼카피/packs/packs_manifest.json")
+def _pack_assets(manifest: str | Path | None = None) -> dict:
+    p = Path(manifest) if manifest else PACK_ROOT / "packs_manifest.json"
     if not p.exists():
         return {}
     return {a["id"]: a for a in json.loads(p.read_text(encoding="utf-8"))}
+
+
+def asset_file(a: dict, pool_dir: str | Path | None = None, kind: str = "sfx") -> Path | None:
+    """팩 자산 → 로컬 파일 경로(판단 한 곳). 효과음은 media_path 의 scene_assets/ 뒤 하위 경로까지(sfx_pick/sfx_13.mp3 —
+    파일명만 붙이면 없는 경로가 된다, 10-16 실측 1459·1473), 짤은 짤 폴더/파일명."""
+    f = (a or {}).get("file")
+    if not f:
+        return None
+    if kind == "sfx":
+        mp = str(a.get("media_path") or "").replace("\\", "/")
+        sub_ = mp.split("scene_assets/", 1)[1] if "scene_assets/" in mp else f
+        return Path(pool_dir or PACK_ROOT / "sfx") / sub_
+    return Path(pool_dir or PACK_ROOT / "meme" / "meme_pack") / f
+
+
+def _voices() -> dict:
+    try:
+        return {v["base_voice_id"]: v["name"] for v in json.loads(VOICES.read_text(encoding="utf-8"))}
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
+def check_pack(pack: dict, assets: dict | None = None) -> dict:
+    """내 팩 키트 점검 — 적힌 파일이 실제로 있나(효과음·짤·BGM·기본 프리셋·목소리 이름). 없으면 missing 에 한 줄씩."""
+    sp, mp, bgm, tts = pack.get("sfx_pool") or {}, pack.get("meme_pool") or {}, pack.get("bgm") or {}, pack.get("tts") or {}
+    assets = assets if assets is not None else _pack_assets(sp.get("manifest") or mp.get("manifest"))
+    missing, n = [], {"sfx": 0, "meme": 0, "bgm": 0, "voices": 0}
+    for slot in ("start", "point", "end"):
+        for aid in sp.get(slot) or []:
+            f = asset_file(assets.get(aid) or {}, sp.get("dir"), "sfx")
+            n["sfx"] += 1
+            if not f or not f.exists():
+                missing.append(f"효과음 {slot} #{aid}: {f or '목록에 없음'}")
+    for aid in mp.get("ids") or []:
+        f = asset_file(assets.get(aid) or {}, mp.get("dir"), "meme")
+        n["meme"] += 1
+        if not f or not f.exists():
+            missing.append(f"짤 #{aid}: {f or '목록에 없음'}")
+    lib = Path(bgm.get("lib") or "shopping_shorts/assets/bgm_lib")
+    lib = lib if lib.is_absolute() else ROOT / lib
+    for name in bgm.get("candidates") or []:
+        n["bgm"] += 1
+        if not (lib / f"{name}.mp3").exists():
+            missing.append(f"BGM {name}: {lib / (name + '.mp3')}")
+    names = _voices()
+    for v in [tts] + list(tts.get("alternates") or []):
+        if v.get("voice_id"):
+            n["voices"] += 1
+            if names and names.get(v["voice_id"]) != v.get("name"):
+                missing.append(f"목소리 {v.get('name')} {v['voice_id']}: voice_presets 이름 {names.get(v['voice_id'])!r}")
+    if pack.get("base_preset") and not (ROOT / pack["base_preset"] / "manifest.json").exists():
+        missing.append(f"기본 프리셋 없음: {pack['base_preset']}")
+    return {"ok": not missing, "missing": missing, "counts": n}
 
 
 def draft_materials(skel: dict, defaults: dict, assets: dict | None = None) -> dict:
@@ -194,14 +257,27 @@ def draft_materials(skel: dict, defaults: dict, assets: dict | None = None) -> d
 
     def sfx(aid, t, why):
         a = assets.get(aid) or {}
-        f = a.get("file")
-        return {"file": f"C:/숏템_칼카피/packs/sfx/{f}" if f else None, "asset_id": aid, "title": a.get("title"), "t": t, "db": 0, "why": why}
+        f = asset_file(a, pools.get("dir"), "sfx")
+        return {"file": f.as_posix() if f else None, "asset_id": aid, "title": a.get("title"), "t": t, "db": 0, "why": why}
     M["sfx"] = ([sfx(pools["start"][0], 0.0, "팩 효과음(시작)")] if pools.get("start") else []) + \
                ([sfx(pools["end"][0], "end-0.2", "팩 효과음(끝)")] if pools.get("end") else [])
     M["sfx_pool"], M["meme_pool"] = pools, defaults.get("meme_pool") or {}
     M["bgm"], M["tts"], M["caption_style"] = defaults.get("bgm") or {}, defaults.get("tts") or {}, defaults.get("caption") or {}
     M["_note"] = "만들기 입구 자동 초안 — 팩 기본값(효과음·짤 후보·BGM·목소리) 주입, 컷 선택은 선검수에서 확정"
     return M
+
+
+RESULTS = ROOT / "channel" / "결과물.json"
+
+
+def results() -> dict:
+    """통과작 목록(결과물 탭) — channel/결과물.json 한 파일. 파일이 이 컴퓨터에 있나(exists)만 덧붙인다."""
+    if not RESULTS.exists():
+        return {"items": [], "error": f"없음: {RESULTS}"}
+    d = json.loads(RESULTS.read_text(encoding="utf-8"))
+    for it in d.get("items") or []:
+        it["exists"] = bool(it.get("path")) and Path(it["path"]).exists()
+    return d
 
 
 # ── 같은 프로세스 창구: worker.Worker 가 HTTP 대신 calcopy_topics 를 바로 부른다 ─────────────────
@@ -300,31 +376,65 @@ def _new_session(preset, pack_no, cfg, data_dir=None) -> dict:
     mdir = _sdir(data_dir) / sid / "preset"
     write_merged(cfg, mdir)
     return {"sid": sid, "preset": preset, "pack": str(pack_no), "merged_preset": str(mdir), "applied": cfg["applied"],
-            "slug": cfg["manifest"].get("slug"), "state": "new", "log": [], "topic_id": None, "candidates": [], "rewrites": 0}
+            "slug": cfg["manifest"].get("slug"), "state": "new", "log": [], "topic_id": None, "candidates": [], "rewrites": 0,
+            "mode": "new", "root_topic": None}
 
 
-def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
-    """후보 목록(창고 found~scored 상위 10, 모자라면 그 자리에서 찾기) — topic/ref_url 이 오면 후보를 건너뛰고 바로 작업."""
+def _patched(pack: dict, patch: dict | None) -> dict:
+    """세션 한 번만 쓰는 팩 덮어쓰기(응용 때 목소리만 바꾸기 등) — 원본 팩은 안 바뀐다(깊은 복사)."""
+    out = copy.deepcopy(pack)
+    for k, v in (patch or {}).items():
+        out[k] = {**(out.get(k) or {}), **v} if isinstance(v, dict) and isinstance(out.get(k), dict) else copy.deepcopy(v)
+    return out
+
+
+def _norm_facts(facts) -> dict:
+    """사장님이 준 근거(기사) → 엔진 facts 꼴 {id: {text, url, date?}}. 목록이면 f1.. 로 번호. 파일 경로도 받는다."""
+    if not facts:
+        return {}
+    if isinstance(facts, (str, Path)) and Path(facts).exists():
+        facts = json.loads(Path(facts).read_text(encoding="utf-8"))
+    if isinstance(facts, list):
+        facts = {f"f{i}": x for i, x in enumerate(facts, 1)}
+    if not isinstance(facts, dict) or not all(isinstance(v, dict) and v.get("text") for v in facts.values()):
+        raise MakeError("facts 는 {id: {text, url, date}} 또는 [{text, url, date}] 꼴이어야 한다")
+    return facts
+
+
+def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url: str | None = None, data_dir=None, deps: dict | None = None,
+          facts=None, reuse_of: int | None = None, pack_patch: dict | None = None) -> dict:
+    """후보 목록(창고 found~scored 상위 10, 모자라면 그 자리에서 찾기) — topic/ref_url 이 오면 후보를 건너뛰고 바로 작업.
+    facts = 사장님이 준 근거(기사 URL·날짜·발췌) — 제품비하인드 기사 관문용. reuse_of = 응용(이미 만든 소재로 다른 벌).
+    pack_patch = 이 세션만 팩 일부 바꾸기(예: {"tts": {"voice_id": …, "name": …}})."""
     deps = deps or {}
     packs = load_packs()
     if str(pack) not in packs:
         raise MakeError(f"없는 팩 번호: {pack} — {sorted(packs)}")
-    cfg = merge_preset_pack(preset, packs[str(pack)])
+    pk = _patched(packs[str(pack)], pack_patch)
+    cfg = merge_preset_pack(preset, pk)
     S = _new_session(preset, pack, cfg, data_dir)
+    if pack_patch:
+        S["pack_patch"] = pack_patch
     cat = _category(S["slug"])
     S["category"] = cat
+    if reuse_of:
+        return _start_reuse(S, int(reuse_of), data_dir, deps)
+    facts = _norm_facts(facts)
     if topic or ref_url:
-        src, facts = {"via": "사장님"}, None
+        src = {"via": "사장님"}
         if ref_url:
-            facts, title = (deps.get("ref_facts") or ref_facts)(ref_url)
+            f2, title = (deps.get("ref_facts") or ref_facts)(ref_url)
+            facts = {**f2, **facts}
             src = {"via": "참고 URL", "url": ref_url}
             topic = topic or title
+        if facts:
+            src["facts_n"] = len(facts)
         t = CT.add(topic, cat, "bench", source=src, by="만들기 입구", data_dir=data_dir)
         if facts:
             fp = _sdir(data_dir) / S["sid"] / "facts.json"
             fp.write_text(json.dumps(facts, ensure_ascii=False, indent=1), encoding="utf-8")
             S["facts_path"] = str(fp)
-        S.update(topic_id=t["id"], state="queued", candidates=[_candidate(t, data_dir)])
+        S.update(topic_id=t["id"], root_topic=t["id"], state="queued", candidates=[_candidate(t, data_dir)])
         _save(S, data_dir)
         return choose(S["sid"], 1, data_dir=data_dir, deps=deps)
     S["candidates"] = (deps.get("candidates") or candidates)(S, data_dir=data_dir, deps=deps)
@@ -340,7 +450,128 @@ def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
         w.find()
         rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored")]
     rows.sort(key=lambda t: -((t.get("score") or {}).get("total") or -1))
-    return [{"n": i + 1, **_candidate(t, data_dir)} for i, t in enumerate(rows[:N_CANDIDATES])]
+    made = made_counts(data_dir)
+    return [{"n": i + 1, **_candidate(t, data_dir), "made": made.get(t["id"], 0)} for i, t in enumerate(rows[:N_CANDIDATES])]
+
+
+# ── 응용 모드(소재 1 : 제작물 N) ─────────────────────────────────────────────
+def _all_sessions(data_dir=None) -> list[dict]:
+    out = []
+    for p in _sdir(data_dir).glob("*.json"):
+        try:
+            out.append(json.loads(p.read_text(encoding="utf-8")))
+        except ValueError:
+            continue
+    return out
+
+
+def made_counts(data_dir=None) -> dict:
+    """원 소재 id → 그 소재로 계획(선검수) 이상 간 제작물 수. 후보 표의 '새로 / 응용 n' 표시."""
+    out: dict = {}
+    for S in _all_sessions(data_dir):
+        if S.get("root_topic") and S.get("state") in MADE_STATES:
+            out[S["root_topic"]] = out.get(S["root_topic"], 0) + 1
+    return out
+
+
+def reusable(data_dir=None) -> list[dict]:
+    """응용할 수 있는 소재 = 계획까지 간 제작물이 있는 원 소재(보드 '응용' 목록)."""
+    rows = []
+    for tid, n in sorted(made_counts(data_dir).items(), key=lambda kv: -kv[1]):
+        try:
+            t = CT.detail(tid, data_dir=data_dir)["topic"]
+        except CT.TopicError:
+            continue
+        rows.append({"id": tid, "title": t["name"], "category": t["category"], "made": n})
+    return rows
+
+
+def variant_of(S: dict) -> dict:
+    """제작물 한 벌의 얼굴 — 목소리(voice_id)·틀(합친 frame.json 내용 지문)·컷(재료 영상@초)."""
+    import hashlib
+    mdir = Path(S["merged_preset"])
+    mk = json.loads((mdir / "make.json").read_text(encoding="utf-8")) if (mdir / "make.json").exists() else {}
+    fr = mdir / "frame.json"
+    frame = hashlib.sha1(fr.read_bytes()).hexdigest()[:12] if fr.exists() else f"preset:{S.get('preset')}"
+    cuts = None
+    if S.get("topic_id"):
+        m = mdir.parent / "work" / str(S["topic_id"]) / "제작" / "재료.json"
+        if m.exists():
+            M = json.loads(m.read_text(encoding="utf-8"))
+            cuts = [f"{s.get('src')}@{int(float(s.get('ss') or 0))}" for s in M.get("shots") or [] if s.get("src")]
+    return {"voice": (mk.get("remake_args") or {}).get("voice"), "frame": frame, "cuts": cuts}
+
+
+def distinct(a: dict, b: dict) -> dict:
+    """응용 중복 판정(한 곳): 목소리·틀·컷(≥50% 다름) 중 **둘 이상** 다르면 다른 제작물.
+    컷을 아직 모르면(재료 전) 컷은 maybe — possible(아직 다를 수 있나)만 본다."""
+    diff, maybe = [], []
+    if a.get("voice") != b.get("voice"):
+        diff.append("목소리")
+    if a.get("frame") != b.get("frame"):
+        diff.append("틀")
+    ca, cb, cut_diff = a.get("cuts"), b.get("cuts"), None
+    if ca and cb:
+        A, B = set(ca), set(cb)
+        cut_diff = round(1 - len(A & B) / max(len(A), len(B)), 3)
+        if cut_diff >= CUT_DIFF_MIN:
+            diff.append("컷")
+    else:
+        maybe.append("컷")
+    return {"diff": diff, "maybe": maybe, "cut_diff": cut_diff, "ok": len(diff) >= 2, "possible": len(diff) + len(maybe) >= 2}
+
+
+def siblings(S: dict, data_dir=None) -> list[dict]:
+    """같은 원 소재로 계획 이상 간 다른 제작물 세션."""
+    root = S.get("root_topic")
+    return [x for x in _all_sessions(data_dir) if root and x.get("root_topic") == root and x["sid"] != S["sid"]
+            and x.get("state") in MADE_STATES]
+
+
+def variant_check(S: dict, data_dir=None, final: bool = False) -> list[str]:
+    """형제 제작물과 겹치면 이유 목록(비면 통과). final=False(시작 때)는 '아직 다를 수 있나', True(승인 때)는 '실제로 다른가'."""
+    me = variant_of(S)
+    bad = []
+    for x in siblings(S, data_dir):
+        d = distinct(me, x.get("variant") or variant_of(x))
+        if not (d["ok"] if final else d["possible"]):
+            bad.append(f"세션 {x['sid']}(#{x.get('topic_id')})와 다른 것 {d['diff'] or '없음'}"
+                       + (f" · 컷 다름 {d['cut_diff']}" if d["cut_diff"] is not None else "") + " — 목소리·틀·컷 중 둘 이상 달라야")
+    return bad
+
+
+def _start_reuse(S: dict, src_id: int, data_dir, deps) -> dict:
+    """응용: 원 소재의 벤치·점수를 그대로 실은 새 행(이름 '… · 응용 n') — 상태기계는 같은 길(claim→advance)로 넘긴다(제미나이 0)."""
+    import shutil
+    src = CT.detail(src_id, data_dir=data_dir)["topic"]
+    root = (src.get("source") or {}).get("reuse_of") or src_id
+    S.update(mode="reuse", root_topic=root, reuse_of=src_id)
+    bad = variant_check(S, data_dir, final=False)
+    if bad:
+        shutil.rmtree(_sdir(data_dir) / S["sid"], ignore_errors=True)
+        raise MakeError("응용 거절(중복): " + " / ".join(bad), 409)
+    k = sum(1 for x in _all_sessions(data_dir) if x.get("root_topic") == root and x.get("mode") == "reuse") + 1
+    base = CT.detail(root, data_dir=data_dir)["topic"]["name"]
+    t = CT.add(f"{base} · 응용 {k}", S["category"], "bench", source={**(src.get("source") or {}), "via": "응용", "reuse_of": root},
+               by="만들기 입구(응용)", data_dir=data_dir)
+    who = f"make-{S['sid']}"
+    for step, key in (("bench", "bench"), ("score", "score")):
+        if not src.get(key):
+            break
+        CT.claim(t["id"], who, step, data_dir=data_dir)
+        CT.advance(t["id"], who, data={key: src[key]}, note=f"응용: #{src_id} 의 {key} 그대로", data_dir=data_dir)
+    for f in ("벤치.md", "벤치.json"):
+        sp = CT.topic_dir(src_id, data_dir) / f
+        if sp.exists():
+            CT.save_upload(t["id"], f, sp.read_bytes(), data_dir=data_dir)
+    old = next((x for x in _all_sessions(data_dir) if x.get("topic_id") == src_id and x.get("facts_path")), None)
+    if old and Path(old["facts_path"]).exists():
+        fp = _sdir(data_dir) / S["sid"] / "facts.json"
+        fp.write_text(Path(old["facts_path"]).read_text(encoding="utf-8"), encoding="utf-8")
+        S["facts_path"] = str(fp)
+    S.update(topic_id=t["id"], state="queued", candidates=[{**_candidate(CT.detail(t["id"], data_dir=data_dir)["topic"], data_dir), "n": 1}])
+    _save(S, data_dir)
+    return choose(S["sid"], 1, data_dir=data_dir, deps=deps)
 
 
 def ref_facts(url: str) -> tuple[dict, str]:
@@ -416,6 +647,7 @@ def choose(sid: str, n: int, data_dir=None, deps: dict | None = None) -> dict:
         if not c:
             raise MakeError(f"후보 {n} 없음")
         S["topic_id"] = c["id"]
+        S["root_topic"] = c["id"]
     S["state"] = "working"
     _save(S, data_dir)
 
@@ -425,18 +657,28 @@ def choose(sid: str, n: int, data_dir=None, deps: dict | None = None) -> dict:
         S3 = _load(sid, data_dir)
         S3["log"] = S2["log"]
         S3.update(state="plan_review" if t["state"] == "plan_review" else "stopped", error=err, topic_state=t["state"])
+        if t["state"] == "plan_review":
+            S3["variant"] = variant_of(S3)
+            S3["variant_warn"] = variant_check(S3, data_dir, final=True)    # 승인 전에 보드가 미리 보여 준다
         _save(S3, data_dir)
     _bg(S, job, data_dir, deps)
     return _load(sid, data_dir)
 
 
-def approve(sid: str, data_dir=None, deps: dict | None = None) -> dict:
+def approve(sid: str, by: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
+    """OK → TTS 1회·렌더. 관리자(ADMINS)만 — 돈(타입캐스트)·시간이 드는 첫 자리. 응용이면 형제 제작물과 실제로 다른지 다시 판다."""
+    if by not in ADMINS:
+        raise MakeError(f"승인은 관리자({'/'.join(ADMINS[:2])})만 — by={by!r}", 403)
     S = _load(sid, data_dir)
     t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"]
     if t["state"] != "plan_review":
         raise MakeError(f"선검수 자리가 아니다(지금 {t['state']})", 409)
-    CT.review(S["topic_id"], "plan_review", "pass", by="만들기 입구", data_dir=data_dir)
+    bad = variant_check(S, data_dir, final=True)
+    if bad:
+        raise MakeError("승인 거절(응용 중복): " + " / ".join(bad), 409)
+    CT.review(S["topic_id"], "plan_review", "pass", by=f"만들기 입구 · {by}", data_dir=data_dir)
     S["state"] = "producing"
+    S["approved_by"] = by
     _save(S, data_dir)
 
     def job():
@@ -483,6 +725,6 @@ def sessions(limit: int = 20, data_dir=None) -> list[dict]:
             S = json.loads(p.read_text(encoding="utf-8"))
         except ValueError:
             continue
-        out.append({k: S.get(k) for k in ("sid", "preset", "pack", "state", "topic_id", "updated_at", "error")})
+        out.append({k: S.get(k) for k in ("sid", "preset", "pack", "state", "topic_id", "updated_at", "error", "mode", "root_topic", "approved_by")})
     return out
 
