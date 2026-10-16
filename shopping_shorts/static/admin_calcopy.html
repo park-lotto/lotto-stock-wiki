@@ -61,6 +61,7 @@ async function list(){
   const shown=d.channels.filter(c=>FILTER==="전체"||c.status===FILTER);
   $("#app").innerHTML=`<h1>🧬 칼카피 채널 보관함</h1>
   <p class="lead">칼카피할 채널을 저장하고, 채널마다 갈래·분석·7단계 진행을 봅니다.</p>
+  <p><a href="/admin/calcopy/topics">🏭 소재창고(카테고리 워커·검수) →</a></p>
   <div class="card"><b>채널 추가</b>
     <div class="row" style="margin-top:8px">
       <input type="url" id="url" placeholder="https://www.youtube.com/@채널이름">
