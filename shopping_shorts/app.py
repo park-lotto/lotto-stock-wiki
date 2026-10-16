@@ -17006,6 +17006,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_fx_enabled",
                        # 자막팩(관제 127, 2026-10-06) — 팩 카드·새 등장 효과·새 단어 강조 방식. ""끔 · "admin" · "11,42" · "1" 전체
                        "caption_pack_enabled",
+                       # 모션그래픽팩(관제 222, 2026-10-17) — 효과 탭 '🎞 모션그래픽' 칸. ""끔 · "admin" · "11,42" · "1" 전체
+                       "mograph_enabled",
                        # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
                        "bgm_lib_enabled"}
 
@@ -22792,7 +22794,8 @@ def api_scene_style_asset(asset_path: str):
     names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js",
              "link-longform-stage.html", "link-longform-blocks.js"}   # 구매링크 롱폼 화면(관제 133)
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
-    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "shopping_shorts/static/caption-motions.js", "out/scene-style-labels.js"}
+    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "shopping_shorts/static/caption-motions.js", "out/scene-style-labels.js",
+                             "shopping_shorts/static/motion-graphics-pack.js"}   # 모션그래픽팩(관제 222)
     allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
@@ -22864,6 +22867,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
     context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
+    # 모션그래픽팩(관제 222) 스위치 — 꺼진 계정은 효과 탭에 '🎞 모션그래픽' 칸이 안 뜬다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다
+    context["mographEnabled"] = bool(_setting_gate(Store(DB_PATH), "mograph_enabled", _cid(request)))
     # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
     # 자동 배치는 새 영상에만(2026-10-06 사장님 "기존영상은 하지말고") — 장면 효과 자동 배치·등장 효과팩 자동 번호가 같은 기준(scene_style.auto_new_job)
     from .scene_style import auto_new_job, caption_motion_pack_for
@@ -28038,6 +28043,66 @@ def _archive_page(request: Request):
 
 
 app.add_api_route("/archive", _archive_page, include_in_schema=False)
+
+
+# ── 숏템팩(관제 222, 2026-10-17 사장님 "숏템메이커 좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 관리자 전용 ──
+# 우리 팩 전부를 한 화면에서 본다. ★목록을 여기서 따로 적지 않는다 — 팩마다 주인 함수·파일을 그대로 읽는다
+#   (효과음팩 sfx_pack.list_packs · 효과음 서랍 mix_pipeline._sfx_bank · 배경음 bgm_lib.list_tracks · 성우 voice_presets ·
+#    감정짤 scene_assets meme · 글꼴 static/fonts · 효과 견본 data/fx_samples/manifest.json).
+#   자막 스타일·등장 효과팩·모션그래픽·스티커·템플릿은 화면이 그 팩의 JS 파일을 직접 읽는다(static/shortem_packs.html).
+def _shortem_packs_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "shortem_packs.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _count_by(values):
+    out = {}
+    for v in values:
+        out[v] = out.get(v, 0) + 1
+    return out
+
+
+def _shortem_packs_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import sfx_pack, bgm_lib, voice_presets
+    from shopping_shorts import storyboard as _sbm
+    st = Store(DB_PATH)
+    packs = [{"no": i + 1, "name": name, "slots": [{"slot": s_, "label": sfx_pack.SLOT_LABEL.get(s_, s_)} for s_ in sfx_pack.SLOTS]}
+             for i, (name, _d) in enumerate(sfx_pack.list_packs())]
+    bank = mix_pipeline._sfx_bank(st)
+    drawer = [{"cat": c, "count": len(bank.get(c) or []),
+               "items": [{"id": a["asset_id"], "title": a.get("title") or "", "dur": round(a["duration"], 2)} for a in (bank.get(c) or [])[:12]]}
+              for c in _sbm.SFX_CATS]
+    memes = {}
+    for a in st.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            memes.setdefault(emo, []).append(a["id"])
+    meme_rows = [{"emotion": k, "count": len(v), "sample": sorted(v)[:8]} for k, v in sorted(memes.items(), key=lambda kv: -len(kv[1]))]
+    try:
+        voices = voice_presets.load_presets_file()
+    except Exception as e:      # noqa: BLE001 — 성우 목록이 깨져도 다른 팩은 보여 준다(대신 한 줄)
+        print("[shortem_packs] 성우 목록 실패: %r" % (e,), file=sys.stderr)
+        voices = []
+    fonts = sorted(f.name for f in (_STATIC / "fonts").iterdir() if f.suffix.lower() in (".ttf", ".otf"))
+    fx = {"groups": 0, "items": 0}
+    manifest = _fx_samples_dir() / "manifest.json"
+    if manifest.exists():
+        groups = json.loads(manifest.read_text(encoding="utf-8")).get("groups") or []
+        fx = {"groups": len(groups), "items": sum(len(g.get("items") or []) for g in groups)}
+    return JSONResponse({"ok": True, "sfx_packs": packs, "sfx_drawer": drawer, "bgm": bgm_lib.list_tracks(),
+                         "voices": {"count": len(voices), "engines": _count_by(voice_presets.engine_of(v.get("model_id")) for v in voices)},
+                         "memes": {"total": sum(r["count"] for r in meme_rows), "emotions": meme_rows},
+                         "fonts": fonts, "fx_samples": fx}, headers=_NOCACHE)
+
+
+app.add_api_route("/shortem_packs", _shortem_packs_page, include_in_schema=False)
+app.add_api_route("/shortem_packs.html", _shortem_packs_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/shortem_packs", _shortem_packs_list, include_in_schema=False)
 
 
 # ── 효과 견본(2026-10-04, 관제 118) — 관리자 전용 ───────────────────────────
