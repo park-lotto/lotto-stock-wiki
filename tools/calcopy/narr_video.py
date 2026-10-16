@@ -96,10 +96,10 @@ def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> lis
     """mode=replace(교체형: 조각마다 새 1줄, 컷=새 문장 — 썰풀다 틀 B 1초 교체) 이면 아래 누적형 대신 이것."""
     if mode == "replace":
         out = []
-        subs = [x for line in sentences for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]
-        for si, s in enumerate(subs):
+        subs = [(li, x) for li, line in enumerate(sentences) for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]
+        for si, (li, s) in enumerate(subs):
             for k, c in enumerate(chunk_sentence(s, n)):
-                out.append({"text": c, "chars": len(c.replace(" ", "")), "new_cut": k == 0, "sent": si})
+                out.append({"text": c, "chars": len(c.replace(" ", "")), "new_cut": k == 0, "sent": si, "line": li})
         return out
     return _steps_accumulate(sentences, n)
 
@@ -107,14 +107,14 @@ def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> lis
 def _steps_accumulate(sentences: list[str], n: int = 14) -> list[dict]:
     """누적형 단계: 조각 짝마다 [1줄] → [1줄\\n2줄]. 문장이 바뀌면 새로. 반환 [{text, chars(새로 읽는 글자), new_cut}]"""
     steps = []
-    subs = [x for line in sentences for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]   # 한 줄에 문장 여럿이면 문장마다 새로
-    for si, s in enumerate(subs):
+    subs = [(li, x) for li, line in enumerate(sentences) for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]   # 한 줄에 문장 여럿이면 문장마다 새로
+    for si, (li, s) in enumerate(subs):
         ch = chunk_sentence(s, n)
         for k in range(0, len(ch), 2):
             a = ch[k]
-            steps.append({"text": a, "chars": len(a.replace(" ", "")), "new_cut": True, "sent": si})
+            steps.append({"text": a, "chars": len(a.replace(" ", "")), "new_cut": True, "sent": si, "line": li})
             if k + 1 < len(ch):
-                steps.append({"text": a + "\n" + ch[k + 1], "chars": len(ch[k + 1].replace(" ", "")), "new_cut": False, "sent": si})
+                steps.append({"text": a + "\n" + ch[k + 1], "chars": len(ch[k + 1].replace(" ", "")), "new_cut": False, "sent": si, "line": li})
     return steps
 
 
@@ -136,29 +136,55 @@ def speech_segments(audio: str, noise="-38dB", d=0.12) -> tuple[list[tuple[float
     return segs, dur
 
 
-def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[dict], float]:
-    """글자 수 비례로 말 구간에 놓고, 조각 시작을 가까운 말 구간 시작(쉼 끝)에 붙인다."""
-    segs, dur = speech_segments(audio)
-    total_speech = sum(b - a for a, b in segs)
-    total_chars = sum(s["chars"] for s in steps)
+def _place(steps: list[dict], segs: list[tuple[float, float]], snap: float, first: float, end: float) -> list[float]:
+    """구간 [first, end) 안에서 조각 시작 — 말 구간(segs)에 글자 수 비례로 놓고 가까운 말 구간 시작(±snap)에 붙인다. 첫 조각 = first."""
+    loc = [(max(a, first), min(b, end)) for a, b in segs if b > first and a < end] or [(first, end)]
+    total_speech = sum(b - a for a, b in loc)
+    total_chars = sum(s["chars"] for s in steps) or 1
 
     def at(frac):   # 말 시간 비율 → 실제 시각
         x = frac * total_speech
-        for a, b in segs:
+        for a, b in loc:
             if x <= b - a:
                 return a + x
             x -= b - a
-        return segs[-1][1]
+        return loc[-1][1]
     starts, c = [], 0
     for s in steps:
         t = at(c / total_chars)
-        near = min((a for a, _ in segs), key=lambda a: abs(a - t))
+        near = min((a for a, _ in loc), key=lambda a: abs(a - t))
         starts.append(near if abs(near - t) <= snap else t)
         c += s["chars"]
-    starts[0] = 0.0
+    if starts:
+        starts[0] = first
     for i in range(1, len(starts)):            # 순서 보장(붙이기로 뒤집히지 않게)
         starts[i] = max(starts[i], starts[i - 1] + 0.3)
-    out = [{**s, "t0": round(starts[i], 3), "t1": round(starts[i + 1] if i + 1 < len(starts) else dur, 3)} for i, s in enumerate(steps)]
+    return starts
+
+
+def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]]) -> list[float]:
+    """(판단 주인) 대본 줄마다 실제 말 시작 — 줄 끝 쉼(hottem_audio.sentence_breaks) 다음 첫 말 구간 시작. 줄 0 = 0.
+    10-16 핫템 HONOR 실측: 전체 글자 비례로 놓으면 줄 시작이 실제 말보다 0.46~0.75초 늦었다(자막·컷 늦음)."""
+    from tools.calcopy import hottem_audio as ha
+    br = ha.sentence_breaks(audio, lines)
+    return [0.0] + [next((a for a, _ in segs if a >= b - 1e-3), b) for b in br]
+
+
+def time_steps(steps: list[dict], audio: str, snap: float = 0.4, lines: list[str] | None = None) -> tuple[list[dict], float]:
+    """조각 시각. lines(대본 줄)를 주면 줄 시작을 실제 말 시작(line_starts)에 고정하고 줄 안에서만 글자 비례.
+    안 주면(또는 한 줄) 전체를 글자 비례로(종전)."""
+    segs, dur = speech_segments(audio)
+    if lines and len(lines) > 1 and steps and all("line" in s for s in steps):
+        W = line_starts(audio, lines, segs) + [dur]
+        starts = []
+        for li in range(len(lines)):
+            st = [s for s in steps if s["line"] == li]
+            starts += _place(st, segs, snap, W[li], W[li + 1])
+        order = [s for li in range(len(lines)) for s in steps if s["line"] == li]
+    else:
+        starts, order = _place(steps, segs, snap, 0.0, dur), steps
+    starts[0] = 0.0
+    out = [{**s, "t0": round(starts[i], 3), "t1": round(starts[i + 1] if i + 1 < len(starts) else dur, 3)} for i, s in enumerate(order)]
     return out, dur
 
 
@@ -194,7 +220,8 @@ def _lerp_expr(keys, idx):
     return f"if(lt(t,{keys[0][0]}),{keys[0][idx]},{e})"
 
 
-def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True, overlays=None):
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True, overlays=None,
+              frames=None):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
@@ -227,7 +254,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
     tail = ",scale=out_range=tv,format=yuv420p"
     if not overlays:
-        va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf + tail, "-color_range", "tv", "-an",
+        va._run_ffmpeg(["ffmpeg", "-y", *inp, *_len_args(dur, frames), "-vf", pre + vf + tail, "-color_range", "tv", "-an",
                         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
         return out
     # 꾸밈: 캔버스 좌표 중심 at=[x,y] 또는 path=[[t,x,y]…](컷 안 시각), t=[보이기 시작, 끝](컷 안 시각)
@@ -244,7 +271,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
                f":enable='between(t,{a},{b})':eval=frame[b{k + 1}]")
         last = f"b{k + 1}"
     fc += f";[{last}]{tail.lstrip(',')}[v]"
-    va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", "-t", f"{dur:.3f}", "-color_range", "tv", "-an",
+    va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", *_len_args(dur, frames), "-color_range", "tv", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
 
@@ -284,21 +311,39 @@ def shot_pieces(sh: dict, off: float, dur: float) -> list[dict]:
     return out
 
 
+def frame_at(t: float) -> int:
+    """(판단 주인) 조각 시각(틀 구간 시작 기준 초) → 프레임 번호. 반올림(0.5 올림) — ffmpeg -t 가 내는 프레임 수와 같은 규칙(10-16 실측 1.017초=31·1.05초=32).
+    컷·토막 길이를 따로 반올림하면 오차가 쌓여 뒤 컷이 1~2프레임 당겨졌다(바나나 cuts판 실측) → 경계를 절대 시각에서 한 번만 반올림한다."""
+    return int(t * FPS + 0.5 + 1e-9)
+
+
+def _len_args(dur: float, frames: int | None) -> list[str]:
+    return ["-frames:v", str(frames)] if frames is not None else ["-t", f"{dur:.3f}"]
+
+
 def _shift_overlays(overlays, dt: float):
     """꾸밈 시각(t·path 의 t)은 컷 안 시각 — 토막·틀 경계로 dt 만큼 늦게 시작하면 그만큼 당긴다."""
     return [dict(o, t=[x - dt for x in o["t"]], **({"path": [[p[0] - dt, p[1], p[2]] for p in o["path"]]} if o.get("path") else {}))
             if o.get("t") else o for o in overlays or []] or None
 
 
-def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: bool, box, min_y: int, out: Path) -> Path:
-    """컷 하나 → 영상 파일 하나. 토막(shot_pieces)마다 shot_clip 으로 같은 칸·같은 크기로 그리고 이어 붙인다(같은 인코딩이라 복사로 잇는다)."""
+def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: bool, box, min_y: int, out: Path, seg_t0: float | None = None) -> Path:
+    """컷 하나 → 영상 파일 하나. 토막(shot_pieces)마다 shot_clip 으로 같은 칸·같은 크기로 그리고 이어 붙인다(같은 인코딩이라 복사로 잇는다).
+    seg_t0 = 이 컷이 틀 구간 안에서 시작하는 초 — 주면 토막마다 프레임 수를 frame_at(끝)−frame_at(시작)으로 정해 합이 구간 시각과 맞는다."""
     pcs = shot_pieces(sh, off, dur)
     files = []
     for j, pc in enumerate(pcs):
         p = pc["sh"]
         f = out if len(pcs) == 1 else out.with_name(f"{out.stem}_c{j}.mp4")
+        nf = None
+        if seg_t0 is not None:
+            a_ = seg_t0 + (pc["t"] - off)
+            b_ = seg_t0 + (pcs[j + 1]["t"] - off) if j + 1 < len(pcs) else seg_t0 + dur
+            nf = frame_at(b_) - frame_at(a_)
+            if nf <= 0:
+                continue
         shot_clip(base / p["src"], pc["ss"], pc["dur"], win, p.get("box_w", 750), full, f, p.get("ar"), box, p.get("fit", "cover"), min_y,
-                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]))
+                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]), nf)
         files.append(f)
     if len(files) > 1:
         lst = out.with_suffix(".txt")
@@ -368,7 +413,7 @@ def build(plan: dict):
     S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
     sentences = [l["text"] for l in S["final"]["lines"]]
     M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
-    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"])
+    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"], lines=sentences)
     # 훅 카드 끝 = 둘째 문장이 시작하는 시각(원본: 훅 카드 1.5초 = 첫 문장 "…억울했던 이유?" 동안)
     one = len(plan["frames"]) == 1   # 틀 한 장(훅 카드 없음 — 썰풀다 틀 B) 이면 처음부터 끝까지 그 틀
     hook_end = 0.0 if one else (plan["frames"][0].get("t_end") or next(s["t0"] for s in steps if s["sent"] >= 1))
@@ -408,7 +453,7 @@ def build(plan: dict):
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
             # 컷이 틀 경계로 잘려 늦게 시작하면(a2 > a) 소스 시작·꾸밈 시각을 그만큼 — 페이지 안 다중 컷(sh.cuts)도 render_shot 한 곳에서
             parts.append(render_shot(base, sh, a2 - a, b2 - a2, win, sh.get("full", fi == 0 and not one), None if (fi == 0 and not one) else box,
-                                     min_y, p))
+                                     min_y, p, seg_t0=a2 - t_a))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"

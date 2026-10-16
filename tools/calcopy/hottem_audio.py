@@ -46,25 +46,38 @@ def _silences(audio, noise="-38dB", d=0.12) -> list[tuple[float, float]]:
     return list(zip(st, en))
 
 
+BREAK_LEN_W = 0.3   # 같은 거리면 긴 쉼을 고른다(문장 끝 쉼 0.26~0.70초 > 쉼표 쉼, HONOR 실측)
+
+
 def sentence_breaks(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[float]:
-    """문장 k 끝의 쉼 가운데 시각(k=0..n-2). 글자 수 비례 예상 시각(말 구간 = 앞뒤 무음 뺀 곳)에 가장 가까운 쉼을 고른다.
+    """(판단 주인) 문장 k 끝의 쉼 가운데 시각(k=0..n-2) — 무음 검출 + **말 시간** 기준 글자 비례.
+    각 쉼의 위치를 '그 앞까지 말한 시간'(쉼 길이를 뺀 시간)으로 바꾸고, 글자 비례 예상 말 시간에 가까운 쉼을 순서대로 고른다
+    (비용 = |말 시간 차| − BREAK_LEN_W × 쉼 길이, 앞에서 고른 쉼 뒤에서만).
     ★10-16 실측: -38dB/0.12초 로 찾으면 문장 사이 0.1초 쉼(3.44~3.54)을 못 보고 '?' 쉼(1.56~1.87)을 1번 줄 끝으로 골랐다
-      → -30dB/0.08초 + 앞뒤 무음 뺀 말 구간 기준. 같은 쉼을 두 번 고르면 멈춘다(조용히 어긋나지 않게)."""
+      → -30dB/0.08초 + 앞뒤 무음 뺀 말 구간 기준.
+    ★10-16 핫템 HONOR: 벽시계 시각으로 글자 비례하면 쉼표 쉼이 쌓여 2·3번 줄 끝을 11.408·13.669로 골랐다(받아쓰기 9.75·12.79)
+      → 말 시간 기준으로 바꿈. 쉼이 모자라면 멈춘다(조용히 어긋나지 않게)."""
     dur = _dur(audio)
     allsil = _silences(audio, noise, d)
     lead = next((b for a, b in allsil if a <= 0.01), 0.0)
     tail = next((a for a, b in allsil if b >= dur - 0.01), dur)
     sil = [(a, b) for a, b in allsil if a > lead + 0.01 and b < tail - 0.01]
-    lens = [len(s.replace(" ", "")) for s in sentences]
-    tot = sum(lens)
-    out, used, c = [], set(), 0
+    pos, acc = [], 0.0
+    for a, b in sil:
+        pos.append(a - lead - acc)
+        acc += b - a
+    speech = tail - lead - acc
+    lens = [len(re.sub(r"[\s,.?!~;…]", "", s)) for s in sentences]
+    tot = sum(lens) or 1
+    out, prev, c = [], -1, 0
     for k in range(len(sentences) - 1):
         c += lens[k]
-        exp = lead + (tail - lead) * c / tot
-        j = min(range(len(sil)), key=lambda i: abs((sil[i][0] + sil[i][1]) / 2 - exp))
-        if j in used:
-            raise SystemExit(f"문장 {k} 끝 쉼을 못 가름(예상 {exp:.2f}초, 이미 쓴 쉼) — 쉼 목록 {sil}")
-        used.add(j)
+        exp = speech * c / tot
+        cand = range(prev + 1, len(sil) - (len(sentences) - 2 - k))
+        if not cand:
+            raise SystemExit(f"문장 {k} 끝 쉼을 못 가름(예상 말 시간 {exp:.2f}초, 남은 쉼 부족) — 쉼 목록 {sil}")
+        j = min(cand, key=lambda i: abs(pos[i] - exp) - BREAK_LEN_W * (sil[i][1] - sil[i][0]))
+        prev = j
         out.append(round((sil[j][0] + sil[j][1]) / 2, 3))
     return out
 
