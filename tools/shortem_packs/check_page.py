@@ -33,6 +33,9 @@ JS = r"""async()=>{
   const all=[...document.images],loaded=all.filter(i=>i.naturalWidth>0).length;
   const broken=all.filter(i=>i.getAttribute('src')&&i.complete&&i.naturalWidth===0).map(i=>i.src).slice(0,5);
   const pending=all.filter(i=>i.dataset.src).length,imgMs=Math.round(performance.now()-t0);
+  // 글꼴 견본은 눌러야 받는다 — 앞 3개만 눌러 본다
+  [...document.querySelectorAll('#font [data-font]')].slice(0,3).forEach(el=>el.click());
+  for(let i=0;i<40;i++){if([...document.querySelectorAll('#font .sample')].slice(0,3).every(e=>e.textContent==='숏템 123 Aa'))break;await new Promise(r=>setTimeout(r,500));}
   const fontsLoaded=[...document.fonts].filter(f=>/^SP\d+$/.test(f.family)&&f.status==='loaded').length;
   scrollTo(0,0);
   const mg=[...document.querySelectorAll('[data-mg] canvas')].map(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n});
