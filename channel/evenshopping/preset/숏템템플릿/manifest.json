@@ -1,0 +1,76 @@
+{
+ "slug": "evenshopping",
+ "style": "숏템템플릿",
+ "channel_name": "재미썸홈",
+ "made_by": "오푸스 재미썸홈 담당 2026-10-17 (관제 097)",
+ "decision": "사장님 10-16 확정: 외관 = 우리 숏템 템플릿(precision20 t11 '이븐쇼핑 원본형' 훅/본문), 새로 뜯지 않음. 브랜드만 재미썸홈. 대본 틀 = 숏템 이븐쇼핑 스파인 55(반말 전언, CTA 없음).",
+ "template": {
+  "source": "out/precision20-data.js",
+  "preset_id": "t11",
+  "name": "썰 스타일 01",
+  "design_label": ["이븐쇼핑 원본형 · 훅", "이븐쇼핑 원본형 · 본문"],
+  "snapshot": {"mode": "story", "presetId": "t11", "text": {"channel": "재미썸홈"}},
+  "frame_rule": "hook_body (첫 장면 훅·나머지 본문 = scene_style.frame_kind 기본)",
+  "title_contract": "shopping_shorts/template_copy.py EVEN_SHOPPING: hook1 ≤11자 · hook2 ≤10자(공백 포함) · bodyTitle 엔진 상한 22자지만 본문 띠 1줄은 렌더 실측 ≤16자(19자 '애들 깨우다 현타 온 천재의 발명품?'은 본문에서 2줄로 접힘, 대조 1판)",
+  "render_path": "scene_style.compose_still (render_layer_one + compose 기하) — render_template.py",
+  "render_check": "대조_프레임.jpg (이븐쇼핑 원본 같은 시각 | 재미썸홈 렌더)"
+ },
+ "brand": {"channel_name": "재미썸홈", "slot": "t11 channel_box(훅·본문 맨 위 회색 캡슐, GmarketSansBold 40)", "watermark": null},
+ "sample_title": {
+  "hook1": "애들 깨우다 현타 온",
+  "hook2": "일본 천재의 발명품",
+  "bodyTitle": "현타 온 일본 천재의 발명품?",
+  "_spoken": "애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체.",
+  "_why": "대본 첫 문장(26자)은 2줄 11/10에 안 들어간다. 엔진 hook_from_script 는 '일본 천재가 만들어'에서 잘라 말이 끊김 → 이븐쇼핑 실측 꼴('[수식] [나라] 천재의 발명품', top50 제목)로 손으로 끊음. 나레이션은 대본 그대로."
+ },
+ "compare_ref": {"id": "ABjQ0YCZoes", "hook_t": 0.8, "body_t": 3.0, "why": "이븐쇼핑 조회 1위(470만)"},
+ "measured": {
+  "_src": "C:/숏템_칼카피/evenshopping/bench_main/bench.json(50편) · asr/47편(제미니 무료 받아쓰기) · 소리 실측 scratch measure_even.py(47편) · 화자 판독 제미니 flash-latest 5편 · 컷 시트 8편 210컷 눈 판정",
+  "duration_s": {"median": 27.08, "range": [21.23, 36.72], "n": 49},
+  "cut_s": {"median": 0.93, "range": [0.53, 2.02], "n": 49, "note": "bench T.cut_sec"},
+  "cut_count": {"median": 22, "range": [9, 43]},
+  "cut_per_min": 44.3,
+  "first_cut_s": 1.82,
+  "sub_s": {"median": 0.9, "p10": 0.6, "p90": 1.3, "n": 1307},
+  "sub_lines": "1줄 98.8%(1290/1306)",
+  "cut_eq_sub_pct": 76,
+  "speech_rate": {"chars_per_s_total": 8.8, "range": [8.22, 9.65], "chars_per_s_voiced": 10.43, "chars_median": 242, "n": 47, "note": "글자=한글·영숫자(공백·문장부호 제외), 길이=편 전체"},
+  "voice": {"gender": "남(추정)", "f0_median_hz": 156.9, "f0_range": [140.4, 170.2], "n": 47, "tts": "판독 5편 중 4편 TTS", "evidence": "제미니 flash-latest 5/5 '남·20대' · flash-lite 2/2 '여'(약한 모델, 반대) · f0 157Hz = 우리 남성 성우 123~150·여성 213~286 사이에서 남성 쪽(필재 141.6·도윤 150.2)"},
+  "bgm": {"present": "있음(제미니 5/5 '보통', 경쾌한 비트)", "floor_vs_voice_db": -18.9, "floor_range": [-35.9, -16.7], "note": "30ms RMS 하위 5% − 상위 10%. 말 쉬는 틈에도 바닥이 −19dB에 머묾 = 깔린 음악"},
+  "lufs": {"I": -13.4, "TP": 0.5, "LRA": 1.1},
+  "material_mix_8편_210컷": {"product": "203컷 96.7%", "similar_situation": "4컷 1.9%(Iet 기름·지친 여성·가스레인지 닦기)", "info_graphic": "3컷 1.4%(tca 균 실험·인증)", "meme": "0컷 0%"},
+  "sfx": {"_src": "handoff/장면분량.md 2026-09-18 실측", "at_cut": "컷 경계 그 자리 Δ중앙 0ms", "kind": {"반짝": 0.80, "붐": 0.17}, "len_median_ms": 80, "len_le_200ms": 1.0}
+ },
+ "channel_rules": {
+  "allow_hype": true,
+  "source_note_in_script": false,
+  "tone": "반말 전언(~라는데·~다는 거·~는데·~라고), CTA 없음",
+  "spine": "숏템 스파인 55 칸 순서: title → bait(최근 …바이럴) → reveal(이건 바로) → solve(이게 말도 안 되는 게) → more(심지어) → twist(근데 진짜 충격적인 포인트는 …라고)",
+  "hype_min": 4,
+  "hype_kinds": ["①센 시작(필수)", "②숫자·권위", "③'진짜 핵심' 반전(필수)", "④'심지어' 두 번째 반전", "⑤'~까지 난리'(필수)"],
+  "hype_rule": "①③⑤ 필수 + ②④ 중 하나 이상, 4개 미만 반려",
+  "start_formula": "첫 문장 = [누가] + [무엇을 하다가] + [감정어: 귀찮아서·현타와서·답답해서 우선] + [만들어 떼돈 번/만들어버린]. 셋 중 하나라도 없으면 반려",
+  "strong_words_max": 1,
+  "interest_story_required": true,
+  "sfx": {"where": "컷 경계 그 자리(0ms)", "ratio": {"반짝": 0.80, "붐": 0.17, "기타": 0.03}, "len_median_ms": 80, "len_max_ms": 200,
+          "pack": "C:/숏템_칼카피/packs/sfx",
+          "pool_반짝": ["pop4_0..5(32~42ms)", "click_1(122ms)", "click_4(127ms)"],
+          "pool_붐": ["hit_2(333ms → 200ms로 자르고 끝 40ms 페이드)"],
+          "pool_note": "반짝/붐 나눔은 스펙트럼 중심·저역 비율로 내가 판정(귀로 미확인). 200ms 이하만(_SFX_MAX_SECS 0.20과 같은 선)"},
+  "material_slots": {
+   "kinds": ["제품 실영상", "유사·연상 영상", "짤"],
+   "target_ratio": {"제품": ">=0.60", "유사·연상": "<=0.30", "짤": "<=0.15"},
+   "why": "사장님 10-17 '짤 + 다양한 유사 영상 + 흥미 유발 장면'을 섞는다. 단 원본 실측은 제품 96.7%·짤 0% — 짤 비중을 원본과 다르게 가는 것은 사장님 확정 규칙이며, 상한 15%는 담당 판단(페이블 확인 대상)",
+   "scene_first": "장면과 대사가 맞는 게 핵심. 장면 부족하면 대사 말고 장면을 더 찾는다(검색어 작품당 ≤10)"
+  },
+  "caption": {"piece_max_chars": 13, "lines": 1, "piece_s_median": 0.9},
+  "voice_target": {"gender": "남", "f0_hz": 157, "chars_per_s_total": 8.8},
+  "length_target_s": {"median": 27.1, "allow": [23.0, 31.2]},
+  "loudness": {"I": -13.4, "TP_max": -0.5}
+ },
+ "voice_proposal": [
+  {"rank": 1, "preset_id": "tc-piljae-stable", "name": "필재", "engine": "typecast", "voice_id": "tc_68257f68bc6e3c161ab5078d", "f0_hz": 141.6, "why": "타입캐스트(담당 규칙상 허용 엔진) 남성 중 f0 원본(157)과 가장 가까움, 내 팩 1번 기본 성우"},
+  {"rank": 2, "preset_id": "fs-doyun-stable", "name": "도윤", "engine": "fish", "voice_id": "f5ce3e1771d44d6eae3749a1be49117b", "f0_hz": 150.2, "why": "우리 성우 중 f0 최근접(Δ−7Hz), '또렷하고 설득력 있는 남성'. 피시 엔진 사용 여부는 페이블 판단"}
+ ],
+ "voice_proposal_method": "shopping_shorts/assets/voice_samples/*-stable.mp3 f0 실측(같은 자기상관 방법, 호출 없음)"
+}
