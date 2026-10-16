@@ -38,7 +38,9 @@ JS = r"""async()=>{
   for(let i=0;i<40;i++){if([...document.querySelectorAll('#font .sample')].slice(0,3).every(e=>e.textContent==='숏템 123 Aa'))break;await new Promise(r=>setTimeout(r,500));}
   const fontsLoaded=[...document.fonts].filter(f=>/^SP\d+$/.test(f.family)&&f.status==='loaded').length;
   scrollTo(0,0);
-  const mg=[...document.querySelectorAll('[data-mg] canvas')].map(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n});
+  // 미리보기는 한 바퀴(2.15초) 뒤 0.7초 쉬고 다시 돈다 — 3초 동안 여러 번 찍어 가장 많이 칠한 값
+  const ink=()=>[...document.querySelectorAll('[data-mg] canvas')].map(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n});
+  let mg=ink();for(let k=0;k<10;k++){await new Promise(r=>setTimeout(r,300));mg=ink().map((v,i)=>Math.max(v,mg[i]||0));}
   const capFonts=[...document.querySelectorAll('#caption .sample')].map(e=>({f:getComputedStyle(e).fontFamily,ok:document.fonts.check('20px '+getComputedStyle(e).fontFamily.split(',')[0])}));
   return {secs,items,plays:plays.length,status,broken,mg,capFonts,grid:document.querySelectorAll('.card').length,imgs:all.length,loaded,pending,imgMs,fontsLoaded,readyMs:window.__shortemReadyMs};
 }"""
