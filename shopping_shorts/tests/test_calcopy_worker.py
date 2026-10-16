@@ -131,7 +131,9 @@ def test_한바퀴_find부터_passed까지_검수는_사람(env):
     assert [h["to"] for h in d["history"] if h["kind"] == "advance"] == [
         "benched", "scored", "assigned", "scripted", "sourced", "plan_review", "produced", "final_review"]
     assert d["topic"]["outputs"]["plan"] == "계획.md" and d["topic"]["outputs"]["final"] == "final.mp4"
-    assert d["topic"]["cost"] == {"gemini": 4, "typecast": 1}
+    cost = d["topic"]["cost"]
+    assert {k: v for k, v in cost.items() if k != "seconds"} == {"gemini": 4, "typecast": 1}
+    assert isinstance(cost["seconds"], int) and 0 <= cost["seconds"] <= 10      # 가짜 단계라 거의 0초(벽시계라 정확일치는 흔들린다)
     names = {f["name"] for f in d["files"]}
     assert {"계획.md", "final.mp4", "verdict.json", "대본.json", "벤치.md"} <= names
     assert cl.get(next(f["url"] for f in d["files"] if f["name"] == "계획.md")).text.startswith("# 계획")
@@ -330,3 +332,54 @@ def test_Api는_requests가_받는_인자만_쓴다(tmp_path):
     a.release(1, "w", "이유")
     a.heartbeat(1, "w", "1/3")
     assert calls[0]["data"] == "# 계획".encode("utf-8")
+
+
+
+# ── 규격 §6 보완 ───────────────────────────────────────────────────────────
+def test_단계소요초가_cost_seconds로_쌓인다(env):
+    cl, clk, tmp = env
+    tid = _add(cl, "A")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, slow=1.2), find_every=0)
+    assert w.tick()["result"] == "advanced"
+    sec = _topic(cl, tid)["topic"]["cost"]["seconds"]
+    assert 1 <= sec <= 3, sec
+
+
+def test_카테고리_트랙_채널로_거른다(env):
+    cl, clk, tmp = env
+    t_home = _add(cl, "홈템 소재", category="홈템")
+    w = _worker(cl, tmp, find_every=0)                       # 식품·bench·yummyknow
+    assert w.tick()["result"] == "idle"                        # 홈템은 안 집는다
+    t_food = _add(cl, "식품 소재")
+    _to(cl, w, t_food, 3)                                      # assign 까지는 채널 없이 → 내 채널로 배정
+    other = _worker(cl, tmp, name="sseol-식품", find_every=0)
+    other.channel = "sseolpulda"
+    r = other.tick()                                           # 다른 채널 워커는 내 채널에 배정된 script 를 못 집는다
+    assert r["result"] == "idle", r
+    assert _topic(cl, t_food)["topic"]["state"] == "assigned"
+    assert _topic(cl, t_home)["topic"]["state"] == "found"
+    assert w.tick()["topic"]["state"] == "scripted"
+
+
+def test_쉬는워커도_보드_워커패널에_이유와함께(env):
+    cl, clk, tmp = env
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"find": WS.StepError("후보 0 — 도우인 로그인벽")}))
+    assert w.tick()["result"] == "error"
+    ws = cl.get("/api/admin/calcopy/topics").json()["workers"]
+    me = next(x for x in ws if x["worker"] == w.name)
+    assert me["status"] == "idle" and "도우인 로그인벽" in (me["idle_reason"] or "") and me["category"] == "식품"
+
+
+def test_세번_실패하면_stalled_사람이_unstall(env):
+    cl, clk, tmp = env
+    tid = _add(cl, "A")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"bench": RuntimeError("검색 차단")}), find_every=0)
+    for i in range(3):
+        assert w.tick()["result"] == "error"
+        clk.tick(minutes=31)                                   # 실패 뒤 대기(30분) 지남
+    b = cl.get("/api/admin/calcopy/topics").json()
+    assert [x["id"] for x in b["stalled"]] == [tid]
+    assert w.tick()["result"] == "idle"                        # 멈춘 소재는 안 준다
+    r = cl.post(f"/api/admin/calcopy/topics/{tid}/unstall", json={"by": "시험", "note": "쿠키 갈았음"})
+    assert r.status_code == 200 and r.json()["topic"]["stalled"] is False
+    assert _worker(cl, tmp, find_every=0).tick()["result"] == "advanced"
