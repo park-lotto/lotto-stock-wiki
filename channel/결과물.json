@@ -160,6 +160,20 @@
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 밤 핫템 2편",
    "비고": "핫템리포트 채널명 판 final_src_v2_hottem.mp4 별도 보관 · 줄 끝/줄 시작 우회 사용(엔진 8·9 수리 뒤 재확인 필요)"
+  },
+  {
+   "n": 13,
+   "channel": "sseolpulda",
+   "channel_name": "썰풀다",
+   "title": "틀 A 새 소재 벗겨 쓰는 종이접시",
+   "path": "C:/숏템_칼카피/sseolpulda/새소재4/render/final.mp4",
+   "seconds": 23.87,
+   "commit": "7fada36ff",
+   "rules": "전 컷 원음 끔(remake_video shots[].mute)+BGM qiuqiu · -10.3 LUFS(LED -10.4) · 1080×1920 재료 6컷(nqp6X 5·03jU 1, 겹침 0) · 자막 6줄 원본 글자 범위 안 · 댓글 근거(재난 9,380·설거지 1,095)",
+   "judge": "페이블 판정 통과",
+   "date": "2026-10-16",
+   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
+   "비고": "틀 A 소리 변형(원음 없음·효과음 원본 자리 1발, 소재 특성) · compare 20/27(제목 글 차이)"
   }
  ]
 }
