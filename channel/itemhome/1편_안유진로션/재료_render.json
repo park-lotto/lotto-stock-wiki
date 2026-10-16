@@ -1,0 +1,339 @@
+{
+ "_note": "make_render.py 가 재료.json(계획 23컷)에서 만든 렌더용 — 자막 페이지 3개 × shots[].cuts",
+ "cand_dir": "C:/숏템_칼카피/itemhome/1편_안유진로션/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "ss": 99.9,
+   "src_crop": [
+    470,
+    90,
+    645,
+    860
+   ],
+   "cuts": [
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 99.9,
+     "src_crop": [
+      470,
+      90,
+      645,
+      860
+     ],
+     "dur": 0.87,
+     "plan_i": 0
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 100.75,
+     "src_crop": [
+      560,
+      150,
+      540,
+      720
+     ],
+     "dur": 0.87,
+     "plan_i": 1
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 101.6,
+     "src_crop": [
+      470,
+      90,
+      645,
+      860
+     ],
+     "dur": 0.87,
+     "plan_i": 2
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 102.45,
+     "src_crop": [
+      522,
+      130,
+      540,
+      720
+     ],
+     "dur": 1.095,
+     "plan_i": 3
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 568.2,
+     "src_crop": [
+      560,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.05,
+     "plan_i": 4
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 7.05,
+     "src_crop": [
+      640,
+      110,
+      645,
+      860
+     ],
+     "dur": 1.2,
+     "plan_i": 5
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 571.35,
+     "src_crop": [
+      640,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.27,
+     "plan_i": 6
+    }
+   ],
+   "t_final": [
+    0.0,
+    7.224
+   ]
+  },
+  {
+   "i": 1,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "ss": 536.3,
+   "src_crop": [
+    370,
+    0,
+    645,
+    860
+   ],
+   "cuts": [
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 536.3,
+     "src_crop": [
+      370,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.948,
+     "plan_i": 7
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 590.9,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.593,
+     "plan_i": 8
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 591.6,
+     "src_crop": [
+      632,
+      40,
+      540,
+      720
+     ],
+     "dur": 0.712,
+     "plan_i": 9
+    },
+    {
+     "src": "eos_HOGLbtiiFZE.mp4",
+     "ss": 0.3,
+     "src_crop": [
+      130,
+      110,
+      645,
+      860
+     ],
+     "dur": 2.096,
+     "plan_i": 10
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 576.1,
+     "src_crop": [
+      560,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.75,
+     "plan_i": 11
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 576.85,
+     "src_crop": [
+      612,
+      40,
+      540,
+      720
+     ],
+     "dur": 0.75,
+     "plan_i": 12
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 577.6,
+     "src_crop": [
+      620,
+      0,
+      540,
+      720
+     ],
+     "dur": 1.5,
+     "plan_i": 13
+    },
+    {
+     "src": "eos_85AU_3DohFs.mp4",
+     "ss": 3.0,
+     "src_crop": [
+      1100,
+      300,
+      540,
+      720
+     ],
+     "dur": 0.85,
+     "plan_i": 14
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 580.5,
+     "src_crop": [
+      600,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.1,
+     "plan_i": 15
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 581.6,
+     "src_crop": [
+      652,
+      40,
+      540,
+      720
+     ],
+     "dur": 1.222,
+     "plan_i": 16
+    }
+   ],
+   "t_final": [
+    7.224,
+    17.745
+   ]
+  },
+  {
+   "i": 2,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "ss": 582.45,
+   "src_crop": [
+    632,
+    40,
+    540,
+    720
+   ],
+   "cuts": [
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 582.45,
+     "src_crop": [
+      632,
+      40,
+      540,
+      720
+     ],
+     "dur": 1.498,
+     "plan_i": 17
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 583.85,
+     "src_crop": [
+      580,
+      0,
+      645,
+      860
+     ],
+     "dur": 0.75,
+     "plan_i": 18
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 584.6,
+     "src_crop": [
+      632,
+      40,
+      540,
+      720
+     ],
+     "dur": 0.75,
+     "plan_i": 19
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 585.35,
+     "src_crop": [
+      600,
+      0,
+      540,
+      720
+     ],
+     "dur": 1.7,
+     "plan_i": 20
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 587.05,
+     "src_crop": [
+      440,
+      0,
+      645,
+      860
+     ],
+     "dur": 1.07,
+     "plan_i": 21
+    },
+    {
+     "src": "ive_8o3M3DmY05E.mp4",
+     "ss": 588.12,
+     "src_crop": [
+      492,
+      40,
+      540,
+      720
+     ],
+     "dur": 1.097,
+     "plan_i": 22
+    }
+   ],
+   "t_final": [
+    17.745,
+    24.61
+   ]
+  }
+ ]
+}
