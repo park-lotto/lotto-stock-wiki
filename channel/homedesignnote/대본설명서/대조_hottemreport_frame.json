@@ -246,12 +246,12 @@
     "beat_share": 0.071
    },
    {
-    "axis": "원리·개발비하인드",
+    "axis": "내구·안전",
     "video_share": 0.375,
     "beat_share": 0.089
    },
    {
-    "axis": "내구·안전",
+    "axis": "원리·개발비하인드",
     "video_share": 0.375,
     "beat_share": 0.089
    },
@@ -266,14 +266,14 @@
     "beat_share": 0.036
    },
    {
-    "axis": "문제·불편",
-    "video_share": 0.125,
-    "beat_share": 0.018
-   },
-   {
     "axis": "소재·질감",
     "video_share": 0.125,
     "beat_share": 0.036
+   },
+   {
+    "axis": "문제·불편",
+    "video_share": 0.125,
+    "beat_share": 0.018
    }
   ],
   "evidence": {
@@ -511,37 +511,7 @@
     "lift": 20.0
    },
    {
-    "phrase": "회사가 만든",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "유리컵으로 조회수 폭발하는",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "안전하게 쓸",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "유리 같은 고투명",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "있게 와인잔",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "회사가 만든 실제",
+    "phrase": "손자가 유리컵에 다치자",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
@@ -553,37 +523,85 @@
     "lift": 10.0
    },
    {
-    "phrase": "거 더 놀라운",
+    "phrase": "엄마 인싸템이라는 거",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "수 있게 와인잔",
+    "phrase": "SNS에서 AI",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "폭발하는 영상인데",
+    "phrase": "80년 넘게",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "고무를 만들어",
+    "phrase": "던져도 안",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "영상인데 유리컵이",
+    "phrase": "실제 제품이라는",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "일본 장인이 만든",
+    "phrase": "어르신이나 손이 불편한",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "사지만 결국 엄마",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "유리 같은",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "80년 넘게 쌓아온",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "쌓아온 기술력으로 유리",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "만든 안",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "만든 실제 제품이라는",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "놀라운 건",
+    "own_df": 0.125,
+    "contrast_df": 0.0,
+    "lift": 10.0
+   },
+   {
+    "phrase": "진짜 반전은 아이",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
@@ -595,43 +613,25 @@
     "lift": 10.0
    },
    {
-    "phrase": "안 깨지고",
+    "phrase": "이유인데 창업주",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "끝이 아님",
+    "phrase": "위스키잔까지 출시",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "사람도 쓸 수",
+    "phrase": "안전하게 쓸 수",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
    },
    {
-    "phrase": "조회수 폭발하는",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "일본 장인이",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "있는 유리컵을",
-    "own_df": 0.125,
-    "contrast_df": 0.0,
-    "lift": 10.0
-   },
-   {
-    "phrase": "실리콘 고무를",
+    "phrase": "눌림 근데 충격적인",
     "own_df": 0.125,
     "contrast_df": 0.0,
     "lift": 10.0
@@ -1298,7 +1298,7 @@
    "feel_share": 0.327,
    "creative_ratio": 0.033
   },
-  "threshold": 0.5586,
+  "threshold": 0.5588,
   "hard": [
    "polite_ratio",
    "ending_char",
@@ -1332,7 +1332,7 @@
     0.48501,
     1.0,
     0.22745,
-    0.51629,
+    0.52395,
     0.40716
    ],
    "sd": [
@@ -1347,25 +1347,25 @@
     0.21278,
     1.05045,
     0.2318,
-    0.35778,
+    0.35285,
     0.33935
    ],
    "coef": [
-    0.1341,
-    0.2216,
-    -0.3667,
+    0.136,
+    0.2221,
+    -0.3663,
     -0.2559,
-    1.2852,
-    0.4016,
-    -0.6383,
-    0.4298,
-    0.3523,
-    -0.2781,
-    0.0823,
-    -0.2154,
-    0.1459
+    1.2845,
+    0.3992,
+    -0.6378,
+    0.4296,
+    0.3517,
+    -0.2769,
+    0.0787,
+    -0.2217,
+    0.1462
    ],
-   "b": -2.9284
+   "b": -2.9276
   },
   "fit": {
    "own_pass": 1.0,
@@ -1383,7 +1383,7 @@
    },
    "own_score": {
     "p10": 0.741,
-    "median": 0.952,
+    "median": 0.951,
     "p90": 0.98,
     "n": 8
    },
@@ -1391,7 +1391,7 @@
     "homedesignnote": {
      "p10": 0.003,
      "median": 0.015,
-     "p90": 0.057,
+     "p90": 0.058,
      "n": 49
     },
     "sseolpulda": {
@@ -1403,13 +1403,13 @@
     "yummyknow": {
      "p10": 0.02,
      "median": 0.084,
-     "p90": 0.168,
+     "p90": 0.166,
      "n": 10
     },
     "banggu": {
-     "p10": 0.051,
+     "p10": 0.05,
      "median": 0.118,
-     "p90": 0.281,
+     "p90": 0.282,
      "n": 10
     }
    }

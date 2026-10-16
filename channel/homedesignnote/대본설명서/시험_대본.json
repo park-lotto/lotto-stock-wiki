@@ -135,7 +135,7 @@
    "fold": "B"
   }
  ],
- "note": "fold=A 인 대본은 script_frame_숨김10_A 를 맞출 때 대조로 쓰였다 → 시험은 다른 fold 설명서로 한다(처음 보는 대본). hdn_blind = 상위50 밖 조회 51~62위 11편(규칙 손본 뒤 처음 잰 블라인드, 받아쓰기=제미나이). draft1_설명문 = 1판 LOO 초안(어미만 같은 제품 설명문, 페이블 판정) + 제미나이 서사 표시.",
+ "note": "fold=A 인 대본은 script_frame_숨김10_A 를 맞출 때 대조로 쓰였다 → 시험은 다른 fold 설명서로 한다(처음 보는 대본). hdn_blind = 상위50 밖 조회 51~62위 11편(규칙 손본 뒤 처음 잰 블라인드, 받아쓰기=제미나이). draft1_설명문 = 1판 LOO 초안 + 제미나이 서사 표시.",
  "source": {
   "own": "C:/숏템_칼카피/homedesignnote/asr/<id>.json (Speechmatics)",
   "contrast": "C:/숏템_칼카피/<채널>/engine_뜯기3/<id>/뜯기.json audio.transcript.segments"
