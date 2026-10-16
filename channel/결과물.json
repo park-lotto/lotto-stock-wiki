@@ -189,6 +189,24 @@
    "judge": "페이블 판정 통과(시트·비율·LUFS, '어' 처리 조건 반영)",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 방구석 3편"
+  },
+  {
+   "n": 15,
+   "channel": "homedesignnote",
+   "channel_name": "잇썸홈(두유노홈디노 결)",
+   "title": "작품1 싱크대 매립형 식기세척기",
+   "path": "C:/숏템_칼카피/homedesignnote/작품1_식기세척기/render/final.mp4",
+   "desktop": "칼카피_잇썸홈_싱크대식기세척기.mp4",
+   "md5": "6f6f20ebf5ced0a428370c3b41329265",
+   "seconds": 24.93,
+   "commit": "(이 커밋) · 렌더 accece154",
+   "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+   "tts": "박창수 1회(atempo 1.185 → 8.32자/초)",
+   "rules": "짤 0·효과음 0·원음 끔·BGM honwaka_puppu 나레 −14.4dB·26토막=26컷 중앙 0.95초·자막 최대 10자(공백 뺀)",
+   "note": "LUFS −9.6(원본 −7.5는 클리핑) · #18 분사 장면 없음 · 비포 4컷 타제품",
+   "judge": "페이블 판정 통과(15호, 잇썸홈 1호)",
+   "date": "2026-10-17",
+   "from": "handoff/칼카피숏템엔진.md 10-17 잇썸홈"
   }
  ]
 }
