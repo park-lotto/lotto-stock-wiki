@@ -253,6 +253,20 @@
    "date": "2026-10-17",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 19,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품3_나이키핸즈프리",
+   "path": "C:/숏템_칼카피/evenshopping/작품3_나이키핸즈프리/auto/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_나이키핸즈프리.mp4",
+   "md5": "a5680639d799ffa800b96b598297dfc7",
+   "seconds": 28.8,
+   "preset": "channel/evenshopping/preset/숏템템플릿",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
