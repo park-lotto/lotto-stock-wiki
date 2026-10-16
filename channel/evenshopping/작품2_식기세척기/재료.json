@@ -9,9 +9,10 @@
    "cont": false,
    "seen": "",
    "url": "https://www.youtube.com/watch?v=0mqo2-yA4GI",
-   "src_t0": 241.4,
+   "src_t0": 241.0,
    "res": 1080,
-   "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\0mqo2-yA4GI_02404_02437.mp4",
+   "crop_x": null,
+   "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\0mqo2-yA4GI_02400_02453.mp4",
    "ss": 1.0
   },
   {
@@ -21,8 +22,9 @@
    "cont": true,
    "seen": "",
    "url": null,
-   "src_t0": 241.97,
+   "src_t0": 241.57,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -30,24 +32,26 @@
    "i": 2,
    "caption": "중국 천재가 만들어",
    "kind": "product",
-   "cont": false,
+   "cont": true,
    "seen": "",
-   "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
-   "src_t0": 47.6,
-   "res": 1080,
-   "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_00466_00495.mp4",
-   "ss": 1.0
+   "url": null,
+   "src_t0": 242.37,
+   "res": null,
+   "crop_x": null,
+   "src": "+",
+   "ss": 0.0
   },
   {
    "i": 3,
    "caption": "떼돈 번 싱크대의 정체",
    "kind": "meme",
-   "cont": false,
-   "seen": "짤 fm_ohmygodwow",
+   "cont": true,
+   "seen": "",
    "url": null,
-   "src_t0": 0.0,
+   "src_t0": 243.28,
    "res": null,
-   "src": "meme:fm_ohmygodwow",
+   "crop_x": null,
+   "src": "+",
    "ss": 0.0
   },
   {
@@ -59,6 +63,7 @@
    "url": "https://www.youtube.com/watch?v=HB-x3PImMmE",
    "src_t0": 2.5,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\HB-x3PImMmE_00015_00049.mp4",
    "ss": 1.0
   },
@@ -71,6 +76,7 @@
    "url": null,
    "src_t0": 3.41,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -83,6 +89,7 @@
    "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
    "src_t0": 42.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\wqJZ_00Sogc_00416_00444.mp4",
    "ss": 1.0
   },
@@ -95,6 +102,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 10.9,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_00099_00130.mp4",
    "ss": 1.0
   },
@@ -107,6 +115,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 114.9,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_01139_01174.mp4",
    "ss": 1.0
   },
@@ -119,6 +128,7 @@
    "url": null,
    "src_t0": 115.4,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -131,6 +141,7 @@
    "url": null,
    "src_t0": 0.0,
    "res": null,
+   "crop_x": null,
    "src": "meme:fm_mindblown",
    "ss": 0.0
   },
@@ -143,6 +154,7 @@
    "url": "https://www.youtube.com/watch?v=v8lwDWJc-CQ",
    "src_t0": 15.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\v8lwDWJc-CQ_00146_00175.mp4",
    "ss": 1.0
   },
@@ -155,6 +167,7 @@
    "url": "https://www.youtube.com/watch?v=SfkDubvu1oo",
    "src_t0": 161.8,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\SfkDubvu1oo_01608_01636.mp4",
    "ss": 1.0
   },
@@ -167,6 +180,7 @@
    "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
    "src_t0": 34.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\wqJZ_00Sogc_00336_00367.mp4",
    "ss": 1.0
   },
@@ -179,6 +193,7 @@
    "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
    "src_t0": 50.7,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\wqJZ_00Sogc_00497_00528.mp4",
    "ss": 1.0
   },
@@ -191,6 +206,7 @@
    "url": "https://www.youtube.com/watch?v=kAD-Guk5iXc",
    "src_t0": 82.7,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\kAD-Guk5iXc_00817_00845.mp4",
    "ss": 1.0
   },
@@ -203,6 +219,7 @@
    "url": "https://www.youtube.com/watch?v=kAD-Guk5iXc",
    "src_t0": 125.6,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\kAD-Guk5iXc_01246_01274.mp4",
    "ss": 1.0
   },
@@ -215,6 +232,7 @@
    "url": "https://www.youtube.com/watch?v=kAD-Guk5iXc",
    "src_t0": 48.6,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\kAD-Guk5iXc_00476_00505.mp4",
    "ss": 1.0
   },
@@ -227,6 +245,7 @@
    "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
    "src_t0": 26.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\wqJZ_00Sogc_00256_00293.mp4",
    "ss": 1.0
   },
@@ -239,6 +258,7 @@
    "url": null,
    "src_t0": 27.1,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -251,6 +271,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 1.5,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_00005_00030.mp4",
    "ss": 1.0
   },
@@ -263,6 +284,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 272.8,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_02718_02749.mp4",
    "ss": 1.0
   },
@@ -275,6 +297,7 @@
    "url": "https://www.youtube.com/watch?v=kAD-Guk5iXc",
    "src_t0": 94.6,
    "res": 2160,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\kAD-Guk5iXc_00936_00970.mp4",
    "ss": 1.0
   },
@@ -287,6 +310,7 @@
    "url": null,
    "src_t0": 95.28,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -299,6 +323,7 @@
    "url": "https://www.youtube.com/watch?v=NCHslySsNtM",
    "src_t0": 5.6,
    "res": 720,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\NCHslySsNtM_00046_00080.mp4",
    "ss": 1.0
   },
@@ -311,6 +336,7 @@
    "url": null,
    "src_t0": 6.1,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -323,6 +349,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 38.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_00376_00404.mp4",
    "ss": 1.0
   },
@@ -335,6 +362,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 98.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_00976_01004.mp4",
    "ss": 1.0
   },
@@ -347,6 +375,7 @@
    "url": null,
    "src_t0": 0.0,
    "res": null,
+   "crop_x": null,
    "src": "meme:fm_joeyshock",
    "ss": 0.0
   },
@@ -359,6 +388,7 @@
    "url": "https://www.youtube.com/watch?v=i-eq5Enigyc",
    "src_t0": 1.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\i-eq5Enigyc_00006_00041.mp4",
    "ss": 1.0
   },
@@ -371,6 +401,7 @@
    "url": null,
    "src_t0": 2.28,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -383,6 +414,7 @@
    "url": "https://www.youtube.com/watch?v=cFL4LQH_trE",
    "src_t0": 185.6,
    "res": 1080,
+   "crop_x": null,
    "src": "C:\\숏템_칼카피\\evenshopping\\작품2_식기세척기\\auto\\sections\\cFL4LQH_trE_01846_01888.mp4",
    "ss": 1.0
   },
@@ -395,6 +427,7 @@
    "url": null,
    "src_t0": 186.4,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   },
@@ -407,6 +440,7 @@
    "url": null,
    "src_t0": 187.31,
    "res": null,
+   "crop_x": null,
    "src": "+",
    "ss": 0.0
   }
