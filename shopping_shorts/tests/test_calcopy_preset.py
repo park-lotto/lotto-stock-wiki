@@ -269,3 +269,25 @@ def test_manifest_meta_roles_source_kind_rules_path(tmp_path):
     finally:
         L.tteutgi = old
     assert M2["roles"] == ["발견", "의심"] and M2["rules_path"] == "channel/sseolpulda/제품_이야기썰형.rules.json"
+
+
+def test_multi_frame_preset_roundtrip_and_span_per_video(tmp_path):
+    """틀 여러 장(훅+본문) 프리셋: flat↔unflat 그대로, 틀 시간축(span)은 편마다 변수(기본값 = 중앙값), 제목 글은 기본값 없음."""
+    def mk(he, title):
+        return {"canvas": [1080, 1920], "made_by": "x", "source": "s", "template_off": None,
+                "frames": [{"id": "hook", "span": [0, he], "layers": [{"kind": "bg", "rgb": [64, 64, 64]},
+                            {"kind": "text", "role": "title", "x": 540, "y": 200, "w": 1000, "lines": 2, "font": "BMDOHYEON",
+                             "size": 100, "line_h": 110, "rgb": [255, 255, 255], "text": title}]},
+                           {"id": "body", "span": [he, None], "layers": [{"kind": "bg", "rgb": [255, 255, 255]}]}]}
+    a = mk(3.137, "가\n나")
+    f = P.flat(schema.validate(a))
+    assert f["frames[hook].span"] == [0, 3.137] and "frames[hook].layers[text:title].size" in f
+    assert P.unflat(f, P.layer_order(schema.validate(a))) == {k: v for k, v in schema.validate(a).items()}
+    d = tmp_path / "channel" / "yummyknow" / "preset" / "게시글형"
+    P.save(J, a, d, "a", "x"); M = P.save(J, mk(2.446, "다\n라"), d, "b", "y")
+    assert set(M["variables"]) == {"frames[hook].span", "frames[body].span", "frames[hook].layers[text:title].text"}
+    assert M["variable_stats"]["frames[hook].span"]["default"] == [0, 2.792]
+    assert M["variable_stats"]["frames[hook].layers[text:title].text"]["default"] is None
+    pre, M = P.load(d)
+    out = P.apply(pre, None, {"frames[hook].layers[text:title].text": "새\n제목"}, M["variable_stats"])
+    assert schema.validate(out)["frames"][1]["span"] == [2.792, None]

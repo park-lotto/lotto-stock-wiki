@@ -17,6 +17,7 @@ import argparse
 import copy
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,23 +41,63 @@ def _key(layer: dict) -> str:
     return layer["kind"] + (":" + layer["role"] if layer.get("role") else "")
 
 
-def flat(frame: dict) -> dict:
-    """설명서 → {자리: 값}. 층은 kind(:role) 로 이름 붙인다(같은 이름 층이 둘이면 #2…)."""
-    out = {k: v for k, v in frame.items() if k not in ("layers", "made_from")}   # canvas·template_off·made_by·source …
-    seen = {}
-    for layer in frame.get("layers") or []:
+def _names(layers: list) -> list[str]:
+    names, seen = [], {}
+    for layer in layers or []:
         k = _key(layer)
         seen[k] = seen.get(k, 0) + 1
-        name = k if seen[k] == 1 else f"{k}#{seen[k]}"
+        names.append(k if seen[k] == 1 else f"{k}#{seen[k]}")
+    return names
+
+
+def flat(frame: dict) -> dict:
+    """설명서 → {자리: 값}. 층은 kind(:role) 로 이름 붙인다(같은 이름 층이 둘이면 #2…).
+    틀 여러 장(frames)이면 'frames[<id>].span' · 'frames[<id>].layers[<층>].<필드>' (게시글형 훅·본문, 10-16)."""
+    out = {k: v for k, v in frame.items() if k not in ("layers", "frames", "made_from")}   # canvas·template_off·made_by·source …
+    if frame.get("frames"):
+        for fr in frame["frames"]:
+            pre = f"frames[{fr['id']}]."
+            out[pre + "span"] = fr["span"]
+            for name, layer in zip(_names(fr["layers"]), fr["layers"]):
+                for f, v in layer.items():
+                    if f != "kind":
+                        out[f"{pre}layers[{name}].{f}"] = v
+        return out
+    for name, layer in zip(_names(frame.get("layers")), frame.get("layers") or []):
         for f, v in layer.items():
             if f != "kind":
                 out[f"layers[{name}].{f}"] = v
     return out
 
 
+_FR = re.compile(r"^frames\[([^\]]+)\]\.(.+)$")
+
+
+def _layer_of(name: str) -> dict:
+    return {"kind": name.split(":")[0].split("#")[0], **({"role": name.split(":")[1].split("#")[0]} if ":" in name else {})}
+
+
 def unflat(flat_map: dict, order: list[str]) -> dict:
-    """flat 의 거꾸로 — order = 층 이름 순서(프리셋 frame 의 층 순서 유지)."""
-    layers = {n: {"kind": n.split(":")[0].split("#")[0], **({"role": n.split(":")[1].split("#")[0]} if ":" in n else {})} for n in order}
+    """flat 의 거꾸로 — order = 층 이름 순서(프리셋 frame 의 층 순서 유지). 틀 여러 장이면 '<틀 id>/<층 이름>'."""
+    if any("/" in n for n in order):
+        fids = list(dict.fromkeys(n.split("/", 1)[0] for n in order))
+        layers = {n: _layer_of(n.split("/", 1)[1]) for n in order}
+        spans = {}
+        out = {}
+        for path, v in flat_map.items():
+            m = _FR.match(path)
+            if not m:
+                out[path] = v
+                continue
+            fid, rest = m.group(1), m.group(2)
+            if rest == "span":
+                spans[fid] = v
+            else:
+                name, field = rest[len("layers["):].split("].", 1)
+                layers[f"{fid}/{name}"][field] = v
+        out["frames"] = [{"id": fid, "span": spans[fid], "layers": [layers[n] for n in order if n.split("/", 1)[0] == fid]} for fid in fids]
+        return out
+    layers = {n: _layer_of(n) for n in order}
     out = {k: v for k, v in flat_map.items() if not k.startswith("layers[")}
     for path, v in flat_map.items():
         if path.startswith("layers["):
@@ -67,12 +108,16 @@ def unflat(flat_map: dict, order: list[str]) -> dict:
 
 
 def layer_order(frame: dict) -> list[str]:
-    names, seen = [], {}
-    for layer in frame.get("layers") or []:
-        k = _key(layer)
-        seen[k] = seen.get(k, 0) + 1
-        names.append(k if seen[k] == 1 else f"{k}#{seen[k]}")
-    return names
+    if frame.get("frames"):
+        return [f"{fr['id']}/{n}" for fr in frame["frames"] for n in _names(fr["layers"])]
+    return _names(frame.get("layers"))
+
+
+def always_per_video(path: str) -> bool:
+    """내용인 자리(제목 글자) — 틀 여러 장이면 틀마다 같은 자리(frames[hook].layers[text:title].text).
+    틀 시간축(frames[..].span)도 편마다 — 훅 카드 길이 = 그 편 훅 나레 길이(rGFX 3.137·신라면 2.446초). 숫자 기준 max(4,3%)는
+    초 단위엔 뜻이 없어 같다고 봤다."""
+    return any(path == p or path.endswith("." + p) for p in ALWAYS_PER_VIDEO) or bool(_FR.match(path) and path.endswith("].span"))
 
 
 def same(a, b, path: str = "") -> bool:
@@ -219,7 +264,7 @@ def variable_stats(preset_dir: Path, M: dict, preset: dict) -> dict:
         st = stats(vals)
         if path == TITLE_FONT:
             st = title_font_stats(M, vals, st)
-        if path in ALWAYS_PER_VIDEO:
+        if path == "layers[text:title].text" or path.endswith(".text"):   # 글 내용(제목·글 제목 문구) — 새 소재는 반드시 --set
             st.update(default=None, range=None, how=NO_DEFAULT)
         out[path] = st
     return out
@@ -286,7 +331,7 @@ def title_ink_bottom(t: dict) -> float | None:
 
 def derived(frame: dict, caption_ok: bool = True) -> dict:
     """편 설명서 한 장에서 규칙의 독립 값(측정값)을 뽑는다."""
-    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in frame["layers"]}
+    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in frame.get("layers") or []}   # 틀 여러 장은 관계 규칙 없음(아직)
     t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
     out = {}
     if t and v:
@@ -339,7 +384,7 @@ def rule_stats(preset_dir: Path, M: dict) -> dict:
 def apply_rules(F: dict, rules: dict) -> dict:
     """규칙으로 종속값(제목 크기·줄높이·위치, 창 y·h, 자막 y)을 계산해 넣는다. 제목 글자가 있어야 한다."""
     K = {k: v["default"] for k, v in (rules or {}).get("keys", {}).items()}
-    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in F["layers"]}
+    L = {(l["kind"] + (":" + l["role"] if l.get("role") else "")): l for l in F.get("layers") or []}
     t, v, c = L.get("text:title"), L.get("video"), L.get("text:caption")
     if t and t.get("text") and "fill_w" in K:
         lines = t["text"].split(chr(10))
@@ -394,11 +439,11 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     else:
         preset = new
         P = flat(preset)
-        for p in ALWAYS_PER_VIDEO:
-            if p in P:
+        for p in P:
+            if always_per_video(p):
                 P[p] = VAR
         preset = unflat(P, layer_order(preset))
-        became = [p for p in ALWAYS_PER_VIDEO if p in P]
+        became = [p for p in P if always_per_video(p)]
         M = {"slug": None, "style": None, "made_by": MADE_BY, "rule": RULE, "created_at": now, "sources": []}
     mf = frame.get("made_from") or {}
     slug, style = slug_style(preset_dir)
@@ -415,7 +460,7 @@ def save(J: dict, frame: dict, preset_dir: Path, source_id: str, tteutgi_path: s
     (preset_dir / "sources").mkdir(exist_ok=True)
     (preset_dir / "sources" / f"{source_id}.json").write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
     if caption_style:
-        cap = next((l for l in new["layers"] if l.get("role") == "caption"), None)
+        cap = next((l for l in schema.all_layers(new) if l.get("role") == "caption"), None)
         caption_style_entry(M, caption_style, None if "text:caption" in exclude else cap, source_id, caption_note)
     M["variable_stats"] = variable_stats(preset_dir, M, preset)
     M["rules"] = rule_stats(preset_dir, M)
@@ -442,7 +487,7 @@ def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
     return M
 
 
-META_KEYS = ("roles", "source_kind", "rules_path", "unfixed", "nearest_template")   # 프리셋 다시 만들 때 이어 붙일 manifest 칸
+META_KEYS = ("roles", "source_kind", "rules_path", "unfixed", "nearest_template", "source_choice")   # 프리셋 다시 만들 때 이어 붙일 manifest 칸
 
 
 def set_meta(preset_dir: Path, roles: list | None = None, source_kind: str | None = None, rules_path: str | None = None) -> dict:
