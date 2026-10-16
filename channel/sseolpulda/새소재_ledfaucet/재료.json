@@ -1,0 +1,114 @@
+{
+ "_note": "썰풀다 틀 A(창아래_검정) 새 소재 1편 — LED 세면대 수도꼭지(Kaiping Austler 'LED Basin Faucet'). 6컷 전부 제조사 채널(Austler 계열) 실사용 시연 쇼츠, 한 컷 = 한 소스 원테이크(프레임 차 분석으로 소스 안 컷 없음 확인: 32x32 회색 평균차 최대 9.2~16.1, 컷 있는 비교 영상 4KVJ 24.8). 남의 채널 그래픽(글자·로고) 없음 → src_crop 불필요. 원음 유지(나레 없음) + BGM qiuqiu(ZdeZ 와 같음). ★소스 해상도 360x640(유튜브 봇 확인에 걸려 android 클라이언트 18번 형식만 받힘) — 창 1080x1006 에 3배 확대라 흐림. 렌더 전에 고화질로 다시 받아야 함(미해결).",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/새소재_ledfaucet/cand",
+ "shots": [
+  {
+   "i": 0,
+   "t0": 0.0,
+   "t1": 3.6,
+   "src": "v_imWT_7NJJZ0.mp4",
+   "url": "https://www.youtube.com/shorts/imWT_7NJJZ0",
+   "ss": 0.4,
+   "crop_y": 0.4,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "노란 원판 아래에서 물이 곧게 떨어지고 몸통에 초록·파랑 불이 들어옴(원판이 떠 있는 듯 보임) → 끝에 아치 물줄기 시작",
+   "why": "1줄 '블루투스 물' — 물이 허공 원판에서 나오는 것처럼 보이는 바로 그 장면(이 영상 댓글 1위가 Bluetooth water)"
+  },
+  {
+   "i": 1,
+   "t0": 3.6,
+   "t1": 7.3,
+   "src": "v_FoGNFCbgpuc.mp4",
+   "url": "https://www.youtube.com/shorts/FoGNFCbgpuc",
+   "ss": 0.3,
+   "crop_y": 0.4,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "초록 원판에 손을 얹은 흰 수도꼭지, 몸통 파란 불, 물줄기",
+   "why": "1줄 끝·2줄 '그냥 장식인가' — 원판이 뚜껑·장식처럼 보이는 정면 모습"
+  },
+  {
+   "i": 2,
+   "t0": 7.3,
+   "t1": 10.9,
+   "src": "v_R6UXZIOrraQ.mp4",
+   "url": "https://www.youtube.com/shorts/R6UXZIOrraQ",
+   "ss": 4.6,
+   "crop_y": 0.4,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "검은 원판 샤워 물줄기 → 손이 원판을 잡고 위로 당겨 호스가 드러남(소스 6.2~7.2초 = 우리 8.9~9.9초)",
+   "why": "3줄 '위 뚜껑을 쭉 당기면' — 당기는 순간이 이 자막 구간(7.3~10.9) 안에 들어옴"
+  },
+  {
+   "i": 3,
+   "t0": 10.9,
+   "t1": 14.8,
+   "src": "v_nY1rpnWvrvs.mp4",
+   "url": "https://www.youtube.com/shorts/nY1rpnWvrvs",
+   "ss": 5.6,
+   "crop_y": 0.25,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "분홍 원판을 높이 들어 올려 검은 호스가 길게 딸려 나오고 그 헤드에서 물이 나옴(소스 7.2초 = 우리 12.5초) → 다시 내려놓음",
+   "why": "4줄 '숨어 있던 호스 샤워기로 변신' — 호스가 가장 잘 보이는 각도(crop_y 0.25 로 들어 올린 헤드가 창 안)"
+  },
+  {
+   "i": 4,
+   "t0": 14.8,
+   "t1": 18.2,
+   "src": "v_xL5RlHymHaQ.mp4",
+   "url": "https://www.youtube.com/shorts/xL5RlHymHaQ",
+   "ss": 0.9,
+   "crop_y": 0.25,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "노란 원판·초록 몸통 수도꼭지에서 물줄기가 위로 솟아 아치(분수)를 그림",
+   "why": "5줄 '분수처럼 솟는 것도' — 아치 꼭대기가 창 안에 들게 crop_y 0.25"
+  },
+  {
+   "i": 5,
+   "t0": 18.2,
+   "t1": 23.9,
+   "src": "v_UVrvD3OOrJA.mp4",
+   "url": "https://www.youtube.com/shorts/UVrvD3OOrJA",
+   "ss": 2.0,
+   "crop_y": 0.4,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "노란 수도꼭지 샤워 물줄기·몸통 초록→파랑 불 → 21.72초부터 틀 없이 전체 화면 꼬리(소스 5.5초~ 원판을 들어 올린 헤드·물줄기)",
+   "why": "6줄 '갖고 싶은 거 인정?' — 제일 화려한 샤워+불빛 장면으로 끝, 꼬리 2.18초는 원본처럼 틀 없이 영상만(프리셋 template_off.tail_sec 2.18)"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/bb35a411e8da4090aff5bd5a310661f8.mp3",
+   "pack_id": 30,
+   "pack_title": "ding_0",
+   "pack_category": null,
+   "t": 20.22,
+   "db": 0,
+   "why": "원본 ZdeZ 효과음 1발 = 뜯기 audio.composition.sfx.times [20.22, 0.18] → 같은 시각, 우리 팩(packs_manifest id 30 'ding_0', 길이 0.179초 = 원본 0.18초와 같은 길이). 팩 manifest 에 category 가 비어 있어(null) category 로는 못 고르고 keywords 'ding'·길이로 고름. 카테고리 '팝/띵'(id 1473·1474)은 길이 2.0·1.6초라 원본 0.18초와 안 맞음"
+  }
+ ],
+ "bgm": {
+  "id": "qiuqiu",
+  "lib": "shopping_shorts/assets/bgm_lib/catalog.json",
+  "ratio": 0.15,
+  "why": "ZdeZ 와 같은 곡·같은 배율(원음 있는 구간 0.15, 원음 없는 구간 1.0 — remake_video 규칙)"
+ },
+ "memes": {
+  "used": [],
+  "why": "틀 A 원본(ZdeZ)에 채널이 얹은 그림은 [광고] 표기뿐(정답_눈으로.md) — 짤 0개가 채널 규칙. 짤 팩(packs/meme) 안 씀"
+ },
+ "searched": {
+  "how": "유튜브 해시태그 쇼츠 피드(yt-dlp /hashtag/<태그>/shorts) — ytsearch·검색 URL 은 쇼츠를 거의 못 줬다(10-16 실측 10개 검색어 400줄 중 60초 이하 25개). 제품 영상: #ledfaucet #faucet #ledtap 피드 + ytsearch 'LED faucet …' 4개",
+  "downloaded": 20
+ },
+ "narration": "나레 없음 — 원본 ZdeZ 도 나레 없이 소스 원음(스페인어 남성 1명, share 1.0)+자막. 우리도 소스 원음(제조사 시연 영상 소리) 유지 + BGM qiuqiu, 타입캐스트 호출 0",
+ "caption_effects": {
+  "now": "즉시 교체(등장 효과 없음) · 검정 채움·외곽선·그림자·상자 없음 · 강조 낱말 없음 — 원본 ZdeZ 실측(caption_motion 3개 전부 \"없음\", text_fx 6줄 전부 채움 [0,0,0]·외곽선 없음·상자 없음)과 같다. frame.json 자막 층 enter=null 이 이 규칙 그대로",
+  "planned": "틀 담당이 enter/emphasis 를 잇는 중 — 이 틀 A 원본엔 등장 효과·강조가 없어서 연결돼도 값은 없음(null) 유지 예정. 렌더 뒤 대조 ① 자막 띠·교체 시각으로 확인"
+ }
+}

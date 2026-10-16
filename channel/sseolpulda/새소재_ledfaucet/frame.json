@@ -1,0 +1,131 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": {
+  "tail_sec": 2.18,
+  "scenes": null
+ },
+ "made_by": "calcopy_frame v1",
+ "source": "ZdeZRtCeAC4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    251,
+    248,
+    252
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1012,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 224,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "SBAggroB",
+   "size": 93.2,
+   "line_h": 93,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -9.3,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "블루투스 물 수도꼭지\n뚜껑 당기면 소름 주의"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1462,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcSpoqaHanSansNeo-Bold",
+   "size": 66,
+   "line_h": 76,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.4,
+   "word_spacing": 0,
+   "enter": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 15,
+   "w": 181,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 48.0,
+   "line_h": 55,
+   "rgb": [
+    185,
+    184,
+    188
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 3,
+    "rgb": [
+     96,
+     95,
+     98
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2.3,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "[광고]"
+  }
+ ],
+ "made_from": {
+  "tool": "preset_save apply",
+  "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+  "variables_filled": [
+   "layers[text:title].text"
+  ],
+  "from_frame": null,
+  "overrides": [
+   "layers[text:title].text"
+  ],
+  "defaults": true,
+  "caption_style": "창아래_검정"
+ }
+}
