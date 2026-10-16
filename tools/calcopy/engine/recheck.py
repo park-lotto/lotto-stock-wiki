@@ -143,6 +143,20 @@ def j_frames(R, truth):
     return _ok(hit), str(other)
 
 
+def j_outro(R, truth):
+    """아웃트로 = 영상 끝에 닿는 틀 다른 구간만. 처음 훅 카드(0~1.5초)를 아웃트로로 세면 '없음'이 틀림이 됐다(2026-10-16 rGFX)."""
+    other = (R.get("layout") or {}).get("other_frame_segments") or []
+    dur = R["probe"]["duration"]
+    tail = [seg for seg in other if seg[1] >= dur - TOL_T - 0.2 and seg[0] > 0.5]
+    if re.search(r"없음|해당 없음", truth) and not _secs(truth):
+        return _ok(not tail), str(tail)
+    sc = _secs(truth)
+    if not sc:
+        return None
+    a = sc[0]
+    return _ok(any(abs(s0 - a) <= TOL_T + 0.2 for s0, _ in tail)), str(tail)
+
+
 def j_cap_count(R, truth):
     n = _count(truth)
     got = (R.get("captions") or {}).get("n_spans")
@@ -203,10 +217,11 @@ def j_tone(R, truth):
     st = R.get("script_tone") or {}
     if not st.get("ok"):
         return None
-    if "존댓말" in truth:
-        return _ok(st["polite_ratio"] >= 0.5), f"존댓말 {st['polite_ratio']}"
+    # '반말' 먼저 — "반말 나레 + 인용 존댓말"은 반말이다(2026-10-16 7DY 거짓 틀림)
     if "반말" in truth:
         return _ok(st["polite_ratio"] < 0.5), f"존댓말 {st['polite_ratio']}"
+    if "존댓말" in truth:
+        return _ok(st["polite_ratio"] >= 0.5), f"존댓말 {st['polite_ratio']}"
     return None
 
 
@@ -222,7 +237,8 @@ def j_material(R, truth):
 
 JUDGES = [   # (항목 이름에 들어 있으면, 판정 함수) — 위에서부터 첫 일치
     (r"길이|크기", j_duration),
-    (r"^(?!.*글자).*(훅|인트로|틀이 다른|틀 사라|아웃트로|전환)", j_frames),
+    (r"아웃트로", j_outro),
+    (r"^(?!.*글자).*(훅|인트로|틀이 다른|틀 사라|전환)", j_frames),
     (r"배경", j_bg),
     (r"영상 창|^창$|그림 칸", j_window),
     (r"자막 (개수|수)|교체 6개|자막 수", j_cap_count),
@@ -238,7 +254,9 @@ JUDGES = [   # (항목 이름에 들어 있으면, 판정 함수) — 위에서�
 def judge_row(R: dict | None, row: dict) -> tuple[str, str]:
     if R is None:
         return "새 결과 없음", ""
-    truth = _col(row, "정답") or row["text"]
+    # 정답 칸 이름이 워커마다 다르다('정답'·'시트로 본 것'). 못 찾으면 행 전체 글인데, 그러면 분석기 값 칸('존댓말 0.0')까지 정답으로 읽혀
+    # 말투 3건이 거짓 틀림이 됐다(2026-10-16 썰풀다 1_Vt·7DY·ho5G)
+    truth = _col(row, "정답", "시트로 본", "눈으로 본") or row["text"]
     for pat, fn in JUDGES:
         if re.search(pat, row["item"]):
             try:
