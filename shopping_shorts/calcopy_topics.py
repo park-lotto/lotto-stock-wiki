@@ -195,16 +195,18 @@ def _topic(r, now) -> dict:
     }
 
 
-def _fail(c, r, now, by, kind, msg, retry_min=RETRY_AFTER_MIN):
-    """잠금을 풀고 실패를 센다(끊김·release 공통). STALL_AT 회면 stalled — claim 이 막히고 보드 '멈춘 이유'에 고정."""
-    n = (r["error_count"] or 0) + 1
-    stalled = 1 if n >= STALL_AT else 0
+def _fail(c, r, now, by, kind, msg, retry_min=RETRY_AFTER_MIN, count=True):
+    """잠금을 풀고 실패를 센다(끊김·release 공통). STALL_AT 회면 stalled — claim 이 막히고 보드 '멈춘 이유'에 고정.
+    count=False = 우리 쪽 한도(시간당 제미나이·429 쉼)로 못 한 것 — 소재 탓이 아니니 실패 횟수에 안 넣는다(대기만)."""
+    n = (r["error_count"] or 0) + (1 if count else 0)
+    stalled = 1 if (count and n >= STALL_AT) or r["stalled"] else 0
     retry = _iso(now + timedelta(minutes=retry_min))
     c.execute("UPDATE topics SET lock_owner=NULL,lock_step=NULL,lock_at=NULL,heartbeat_at=NULL,doing=NULL,"
               "last_error=?,error_count=?,retry_at=?,stalled=?,updated_at=? WHERE id=?",
               (msg, n, retry, stalled, _iso(now), r["id"]))
     _event(c, r["id"], now, by, kind, r["state"], r["state"], r["lock_step"],
-           msg + (f" — 실패 {n}회, 멈춤(stalled)" if stalled else f" — 실패 {n}회, {retry} 뒤 다시"))
+           msg + ((f" — 한도 대기(실패 횟수 안 셈), {retry} 뒤 다시") if not count else
+                  (f" — 실패 {n}회, 멈춤(stalled)" if stalled else f" — 실패 {n}회, {retry} 뒤 다시")))
 
 
 def _touch_worker(c, worker, now, **kw):
@@ -561,9 +563,10 @@ def advance(tid, worker, data=None, outputs=None, files=None, cost=None, note=""
         return _topic(_get(c, tid), now)
 
 
-def release(tid, worker, error, retry_after_min=None, data_dir=None) -> dict:
+def release(tid, worker, error, retry_after_min=None, count=True, data_dir=None) -> dict:
     """워커가 손을 뗀다(실패 보고). 이유 없이는 못 뗀다 — 조용한 실패 금지.
-    retry_after_min(기본 30) 동안 claim_next 가 이 행을 다시 안 준다. 실패 STALL_AT 회면 stalled."""
+    retry_after_min(기본 30) 동안 claim_next 가 이 행을 다시 안 준다. 실패 STALL_AT 회면 stalled.
+    count=False = 한도 대기(워커 장부 LimitHit·429) — 실패 횟수를 안 올린다(소재가 한도 때문에 멈춤으로 가지 않게, 10-16 실측)."""
     worker = _need_worker(worker)
     if not isinstance(error, str) or not error.strip():
         raise TopicError("release 에는 error(왜 못 했나)가 필요합니다")
@@ -576,7 +579,7 @@ def release(tid, worker, error, retry_after_min=None, data_dir=None) -> dict:
         _expire(c, now)
         r = _held(c, tid, worker, now)
         msg = f"{worker} {r['lock_step']}: {error.strip()}"[:500]
-        _fail(c, r, now, worker, "release", msg, retry_after_min)
+        _fail(c, r, now, worker, "release", msg, retry_after_min, count=count is not False)
         _touch_worker(c, worker, now, topic_id=None, step=None, doing=None, last_error=msg)
         return _topic(_get(c, tid), now)
 

@@ -28517,7 +28517,7 @@ def api_admin_calcopy_topic_advance(request: Request, tid: int, body: dict = Non
 def api_admin_calcopy_topic_release(request: Request, tid: int, body: dict = None):
     b = body or {}
     return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.release(
-        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"))})
+        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"), count=b.get("count", True))})
 
 
 @app.post("/api/admin/calcopy/topics/{tid:int}/unstall")

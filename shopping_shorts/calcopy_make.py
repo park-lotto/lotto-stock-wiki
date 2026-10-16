@@ -243,8 +243,8 @@ class LocalApi:
     def advance(self, tid, worker, data=None, outputs=None, cost=None, note=""):
         return {"topic": self._wrap(CT.advance, tid, worker, data=data, outputs=outputs, cost=cost, note=note)}
 
-    def release(self, tid, worker, error):
-        return {"topic": self._wrap(CT.release, tid, worker, error)}
+    def release(self, tid, worker, error, count=True):
+        return {"topic": self._wrap(CT.release, tid, worker, error, count=count)}
 
     def reject(self, tid, reason, back_to=None, by="worker"):
         return {"topic": self._wrap(CT.reject, tid, reason, back_to=back_to, by=by)}

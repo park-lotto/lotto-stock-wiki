@@ -112,12 +112,21 @@ class Api:
     def claim(self, tid, worker, step):
         return self._req("post", f"/{tid}/claim", json={"worker": worker, "step": step})
 
-    def release(self, tid, worker, error):
-        return self._req("post", f"/{tid}/release", json={"worker": worker, "error": error})
+    def release(self, tid, worker, error, count=True):
+        body = {"worker": worker, "error": error}
+        if not count:
+            body["count"] = False
+        return self._req("post", f"/{tid}/release", json=body)
 
     def upload(self, tid, name, path: Path):
         # ★data= (requests·TestClient 둘 다 받는다). content= 는 httpx 전용이라 requests 에선 TypeError — 시험만 통과하고 실물에서 죽었다(10-16)
         return self._req("post", f"/{tid}/upload/{quote(name)}", data=Path(path).read_bytes())
+
+
+def is_limit(err: str) -> bool:
+    """우리 쪽 한도로 못 한 것인가(장부 LimitHit·제미나이 429/쿼터) — 판정 한 곳. 그런 실패는 소재 실패 횟수에 안 센다."""
+    s = str(err or "")
+    return "LimitHit" in s or "한도: gemini" in s or "한도: yt" in s or "RESOURCE_EXHAUSTED" in s
 
 
 def _cost(c: dict) -> dict:
@@ -382,7 +391,7 @@ class Worker:
         self.log(f"[받음] {step} · #{tid} {topic.get('name', '')[:40]}")
         self._set(idle_reason=None)
         self.beat()
-        err, res = None, {}
+        err, res, limited = None, {}, False
         t0 = time.time()
         try:
             res = self.steps.run_step(step, topic, self.ctx)
@@ -393,6 +402,7 @@ class Worker:
         except Exception as e:  # noqa: BLE001 — 어떤 예외든 이유(원문+마지막 줄)와 함께 서버에 올린다
             tb = traceback.format_exc().strip().splitlines()[-1]
             err = f"{type(e).__name__}: {str(e)[:250]} ({tb[:120]})"
+        limited = bool(err) and is_limit(err)
         try:
             ok, bad = self._upload(tid, res.get("artifacts") or {})
             if bad:
@@ -401,8 +411,8 @@ class Worker:
                 if bad:
                     err += f" / 올리기 실패 {bad}"
                 self._set(last_error=f"#{tid} {step}: {err}"[:300])
-                self._note("error", 1, f"#{tid} {step}: {err}")
-                self.api.release(tid, self.name, err)
+                self._note("limit" if limited else "error", 1, f"#{tid} {step}: {err}")
+                self.api.release(tid, self.name, err, count=not limited)
                 self.log(f"[멈춤] #{tid} {step}: {err}")
                 return {"result": "error", "error": err}
             outs = {k: v for k, v in (res.get("outputs") or {}).items() if v in ok}

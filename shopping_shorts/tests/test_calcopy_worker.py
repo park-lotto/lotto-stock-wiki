@@ -416,3 +416,22 @@ def test_장부켠_워커는_단계통과와_실패를_장부에_남긴다(env):
     assert w.tick()["result"] == "error"              # score 실패
     k = L.kpi(1)
     assert k["steps"]["bench"]["ok"] == 1 and k["steps"]["score"] == {"ok": 0, "fail": 1, "rate": 0.0}
+
+
+def test_한도에_걸린_실패는_소재_실패횟수에_안센다(env):
+    """10-16 실측: 시간당 제미나이 한도(LimitHit)로 script 가 3번 멈추자 소재가 stalled — 소재 탓이 아닌데 사람이 풀어야 했다."""
+    cl, clk, tmp = env
+    from tools.calcopy.engine.worker_ledger import LimitHit
+    tid = _add(cl, "신라면 공장")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"bench": LimitHit("한도: gemini 시간당 10(w) — 지금 10 + rewrite1 1")}), find_every=0)
+    for _ in range(4):
+        assert w.tick()["result"] == "error"
+        clk.tick(minutes=31)
+    t = _topic(cl, tid)["topic"]
+    assert t["error_count"] == 0 and not t["stalled"] and "LimitHit" in t["last_error"]
+    w2 = _worker(cl, tmp, steps=MockSteps(tmp, fail={"bench": WS.StepError("벤치 포인트 0")}), find_every=0, name="w2")
+    for _ in range(3):
+        assert w2.tick()["result"] == "error"
+        clk.tick(minutes=31)
+    t = _topic(cl, tid)["topic"]
+    assert t["error_count"] == 3 and t["stalled"]           # 진짜 실패는 그대로 센다
