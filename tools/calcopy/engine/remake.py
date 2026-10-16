@@ -411,10 +411,16 @@ def main(argv=None):
     sheet_1s(final, out / "final_sheet_1s.jpg")
     v = res["verdict"]
     log["steps"]["compare"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"], "failed": v["failed"]}
+    # 6) 이음매(되감김) — 검수 B13. 10-17 아이템홈 1판 17.77초 0.37초 되감김을 B표·compare 가 못 잡았다
+    from tools.calcopy.engine import check_seams
+    sw, sm = check_seams.from_frame(a.frame)   # 훅 카드 틀 말고 본편 틀
+    seam = check_seams.check(str(final), sw, sm)
+    log["steps"]["seams"] = {"ok": seam["ok"], "rewinds": seam["되감김"]}
     (out / "remake_log.json").write_text(json.dumps(log, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"판정(① 픽셀): {v['verdict']} (기준 {v['n_criteria']} 중 안 {v['n_in']}) · 밖 {v['out'] or '없음'}")
+    print(f"이음매(B13 되감김): {'통과' if seam['ok'] else '걸림 ' + str(seam['되감김'])}")
     print("final:", final)
-    return 0 if v["verdict"] == "통과" else 1
+    return 0 if v["verdict"] == "통과" and seam["ok"] else 1
 
 
 if __name__ == "__main__":
