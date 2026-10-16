@@ -28601,6 +28601,14 @@ async def api_admin_calcopy_topic_upload(request: Request, tid: int, name: str):
     return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.save_upload(tid, name, data)})
 
 
+@app.get("/admin/calcopy/topics", response_class=HTMLResponse)
+def _admin_calcopy_topics_page(request: Request):   # 소재창고 보드(관리자) — 화면은 위 라우트만 부른다
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin_calcopy_topics.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
 # 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를
