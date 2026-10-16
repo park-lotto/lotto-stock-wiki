@@ -570,8 +570,105 @@ def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = 
     return out
 
 
+# ── 프리셋 고정값 == 자동본 (10-16: 원천 설명서가 옛 to_frame 판이라 고정값이 지금 자동본과 어긋났다 — 창아래_검정 낱말 간격 0·
+#    lh_ratio 1.0, 창안_흰외곽선 제목 2줄 크기(창 위로 걸친 줄을 띠 끝에서 잘라 잼: 7DY 원본 2줄 잉크 250~357 vs 저장본 렌더 257~333)) ──
+AUTO_TOOL = "tools/calcopy/engine/to_frame.py"
+
+
+def auto_frames(preset_dir: Path, out_dir: Path) -> dict:
+    """출처 편마다 지금 to_frame 으로 설명서를 다시 만든다(자동본). 글자(제목·고정 문구)는 저장된 출처 설명서에서(--ocr-from, 제미나이 안 부름),
+    제목 글꼴은 출처 설명서 값(--title-font — 하위 스타일에서 확정한 글꼴, 크기 역산도 그 글꼴로). 돌려주는 값 {편: 자동본 설명서}.
+    to_frame 으로 만든 편만(preset_multi 편은 훅·본문 손 설명서라 자동본이 없다 → ValueError)."""
+    import contextlib
+    import io
+    from tools.calcopy.engine import to_frame
+    _, M = load(preset_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    got = {}
+    for s in M["sources"]:
+        if not str(s.get("frame_tool") or "").replace("\\", "/").endswith(AUTO_TOOL):
+            raise ValueError(f"{s['id']}: to_frame 자동본이 아닌 출처({s.get('frame_tool')}) — 다시 만들 수 없다")
+        src = preset_dir / "sources" / f"{s['id']}.json"
+        tf = next((l.get("font") for l in schema.all_layers(json.loads(src.read_text(encoding="utf-8"))) if l.get("role") == "title"), None)
+        t = Path(s["tteutgi"]) if Path(s["tteutgi"]).is_absolute() else ROOT / s["tteutgi"]
+        o = out_dir / f"{s['id']}.json"
+        with contextlib.redirect_stdout(io.StringIO()):
+            to_frame.main([str(t), "--out", str(o), "--ocr-from", str(src)] + (["--title-font", tf] if tf else []))
+        got[s["id"]] = json.loads(o.read_text(encoding="utf-8"))
+    return got
+
+
+def auto_diff(preset_dir: Path, autos: dict) -> list[dict]:
+    """프리셋 고정값(변수·출처 표식·manifest.fixed 로 손으로 못 박은 자리 빼고)이 편마다 자동본과 기준(same) 안인가 — 밖인 자리 목록."""
+    pre, M = load(preset_dir)
+    P, fixed = flat(pre), (M.get("fixed") or {})
+    ex = {s["id"]: s.get("excluded_layers") or [] for s in M["sources"]}
+    out = []
+    for sid, F in autos.items():
+        A = flat(schema.validate(_strip(F)))
+        for path, v in P.items():
+            if v == VAR or path in NOT_COMPARED or path in fixed or any(path.startswith(f"layers[{e}") for e in ex.get(sid, [])):
+                continue
+            if not same(v, A.get(path), path):
+                out.append({"source": sid, "path": path, "preset": v, "auto": A.get(path)})
+    return out
+
+
+def rebuild(preset_dir: Path, autos: dict) -> dict:
+    """프리셋을 자동본(auto_frames)으로 처음부터 다시 만든다 — 출처 순서·자막 하위 스타일·뺀 층 그대로, manifest.fixed 는 다시 못 박고
+    META_KEYS(roles·source_kind·rules_path·unfixed·…)와 created_at 은 이어 붙인다. 옛 폴더는 preset_dir/../_old_<이름>_<시각> 로 옮긴다."""
+    import shutil
+    _, M = load(preset_dir)
+    keep = {k: M[k] for k in META_KEYS if k in M}
+    notes = {}
+    for cs in M.get("caption_styles") or []:
+        for n in cs.get("notes") or []:
+            sid, _, note = n.partition(": ")
+            notes[sid] = note
+    order = [(s["id"], s["tteutgi"], tuple(s.get("excluded_layers") or []), s.get("caption_style")) for s in M["sources"]]
+    fixed, created = M.get("fixed") or {}, M.get("created_at")
+    missing = [sid for sid, *_ in order if sid not in autos]
+    if missing:
+        raise ValueError(f"자동본 없는 출처: {missing}")
+    old = preset_dir.parent / f"_old_{preset_dir.name}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    shutil.move(str(preset_dir), str(old))
+    try:
+        for sid, tpath, ex, cstyle in order:
+            t = Path(tpath) if Path(tpath).is_absolute() else ROOT / tpath
+            J = json.loads(t.read_text(encoding="utf-8"))
+            save(J, autos[sid], preset_dir, sid, tpath, ex, cstyle, notes.get(sid))
+        for path, f in fixed.items():
+            fix_value(preset_dir, path, f["value"], f["why"])
+        frame, M2 = load(preset_dir)
+        M2.update(keep)
+        if created:
+            M2["created_at"] = created
+        M2["rebuilt"] = {"at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"), "from": AUTO_TOOL,
+                         "why": "고정값 == 자동본(출처 설명서를 지금 to_frame 으로 다시 만듦)"}
+        (preset_dir / "manifest.json").write_text(json.dumps(M2, ensure_ascii=False, indent=1), encoding="utf-8")
+    except Exception:
+        if preset_dir.exists():
+            shutil.rmtree(preset_dir)
+        shutil.move(str(old), str(preset_dir))     # 실패하면 옛 프리셋 그대로 되돌린다
+        raise
+    shutil.rmtree(old)
+    return M2
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in ("auto-diff", "rebuild"):
+        # 고정값 == 자동본 점검(auto-diff) · 자동본으로 다시 만들기(rebuild, 다시 만든 뒤 점검까지)
+        ap = argparse.ArgumentParser()
+        ap.add_argument("preset"); ap.add_argument("--work", required=True, help="자동본 설명서를 둘 폴더")
+        a = ap.parse_args(argv[1:])
+        d = Path(a.preset)
+        autos = auto_frames(d, Path(a.work))
+        if argv[0] == "rebuild":
+            rebuild(d, autos)
+        diff = auto_diff(d, autos)
+        print(json.dumps({"preset": str(d), "sources": list(autos), "fixed_vs_auto_out": diff}, ensure_ascii=False, indent=1))
+        raise SystemExit(1 if diff else 0)
     if argv and argv[0] == "apply":
         ap = argparse.ArgumentParser()
         ap.add_argument("preset"); ap.add_argument("--from-frame"); ap.add_argument("--set", action="append", default=[])

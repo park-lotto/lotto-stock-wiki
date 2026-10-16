@@ -26,13 +26,16 @@
     "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
     "글꼴 1위 Pretendard-Bold.otf(0.2917) < 0.5 — 확신 낮음. 쓴 글꼴 CcPretendard-Bold({'file': 'Pretendard-Bold.otf', 'score': 0.2917})",
     "제목 글꼴 Cafe24Ohsquare — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
-    "제목 줄마다 크기 [109.2, 95.5] → size 102.3 × line_scale [1.067, 0.934]",
-    "제목 줄별 외곽선 [None, [9, 255, 251, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 줄 아래 끝을 창 안까지 이어 잼: [(322, 329)]",
+    "제목 줄별 외곽선 [None, [8, 255, 244, 255]] (창 위로 걸친 고리만 잼)",
     "제목 기울기 +0도(기둥 전단 투영) → 바름",
     "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.54 > 0.15, 18개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 22, 2: 2} → 최빈 1줄 칸",
+    "자막 외곽선 6px [0, 0, 0] — 분석기 요약 0, 프레임 자막 줄에서 직접 잼",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
     "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
-    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5377)",
-    "자막 층 = 임시(bench 측정 첫 줄 y 1150.5·줄 높이 93.5·bright·외곽선 True, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5377)"
    ],
    "unknown": [
     "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 5개: [1, 2, 6, 13, 22]",
@@ -88,7 +91,7 @@
     ]
    },
    "title_pooled": null,
-   "frame_sha1": "82c2b7199ffd"
+   "frame_sha1": "ccca9a5f4550"
   },
   {
    "id": "7DYbxVNz5q8",
@@ -111,14 +114,16 @@
     "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
     "글꼴 1위 Kkubulim.ttf(0.1721) < 0.5 — 확신 낮음. 쓴 글꼴 Kkubulim({'file': 'Kkubulim.ttf', 'score': 0.1721})",
     "제목 글꼴 BlackHanSans — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
-    "제목 줄마다 크기 [146.8, 98.7] → size 122.8 × line_scale [1.195, 0.804]",
-    "제목 줄별 외곽선 [None, [8, 255, 247, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 줄 아래 끝을 창 안까지 이어 잼: [(323, 355)]",
+    "제목 줄별 외곽선 [None, [8, 255, 227, 255]] (창 위로 걸친 고리만 잼)",
     "제목 기울기 +0도(기둥 전단 투영) → 바름",
     "자막 잰 높이 83.5px 에서 외곽선 3px×2 를 빼고 크기 역산",
     "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.31 > 0.15, 14개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 줄 수 {1: 14, 2: 4} → 최빈 1줄 칸",
+    "자막 등장 rise — 뜯기 등장 표본 3개 중 '이동' 1개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
     "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
-    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5367)",
-    "자막 층 = 임시(bench 측정 첫 줄 y 1065.5·줄 높이 83.5·bright·외곽선 False, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5367)"
    ],
    "unknown": [
     "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 11개: [1, 3, 6, 7, 8, 9, 12, 13, 14, 15]",
@@ -129,14 +134,19 @@
    ],
    "excluded_layers": [],
    "became_variables": [
+    "layers[text:title].y",
     "layers[text:title].font",
     "layers[text:title].size",
     "layers[text:title].line_h",
     "layers[text:title].line_rgb",
+    "layers[text:title].line_outline",
     "layers[text:caption].y",
+    "layers[text:caption].font",
     "layers[text:caption].size",
     "layers[text:caption].line_h",
-    "layers[text:caption].outline"
+    "layers[text:caption].outline",
+    "layers[text:caption].box",
+    "layers[text:caption].enter"
    ],
    "caption_style": "창안_흰외곽선",
    "title_ink_w": 889,
@@ -179,7 +189,7 @@
     ]
    },
    "title_pooled": null,
-   "frame_sha1": "29b888a716cb"
+   "frame_sha1": "8c8dfcc2602c"
   },
   {
    "id": "1_VtwOkbbVE",
@@ -202,15 +212,17 @@
     "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
     "글꼴 1위 BMDOHYEON.ttf(0.2045) < 0.5 — 확신 낮음. 쓴 글꼴 BMDOHYEON({'file': 'BMDOHYEON.ttf', 'score': 0.2045})",
     "제목 글꼴 BlackHanSans — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
-    "제목 줄마다 크기 [119.2, 105.1] → size 112.2 × line_scale [1.062, 0.937]",
+    "제목 줄 아래 끝을 창 안까지 이어 잼: [(323, 343)]",
+    "제목 줄마다 크기 [119.2, 130.4] → size 124.8 × line_scale [0.955, 1.045]",
     "제목 칸 폭 1072 — 원본 가장 긴 줄 잉크 1032px 가 기본 칸보다 넓다",
-    "제목 줄별 외곽선 [None, [8, 255, 255, 255]] (창 위로 걸친 고리만 잼)",
+    "제목 줄별 외곽선 [None, [7, 255, 254, 255]] (창 위로 걸친 고리만 잼)",
     "제목 기울기 +0도(기둥 전단 투영) → 바름",
     "자막 잰 높이 79.5px 에서 외곽선 6px×2 를 빼고 크기 역산",
     "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.39 > 0.15, 17개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
     "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
-    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5527)",
-    "자막 층 = 임시(bench 측정 첫 줄 y 1098.5·줄 높이 79.5·bright·외곽선 True, 글꼴 모름 → CcPretendard-Bold) — 분석기 D9 수리 전"
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5527)"
    ],
    "unknown": [
     "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 8개: [0, 1, 10, 11, 12, 13, 15, 16]",
@@ -221,8 +233,8 @@
    ],
    "excluded_layers": [],
    "became_variables": [
-    "layers[text:title].y",
     "layers[text:title].w",
+    "layers[text:title].line_scale",
     "layers[text:brand].outline"
    ],
    "caption_style": "창안_흰외곽선",
@@ -266,10 +278,10 @@
     ]
    },
    "title_pooled": null,
-   "frame_sha1": "ca16e8d844c2"
+   "frame_sha1": "5b68846f5ab4"
   }
  ],
- "updated_at": "2026-10-16T10:11:35+09:00",
+ "updated_at": "2026-10-16T17:25:11+09:00",
  "variables": [
   "layers[text:title].y",
   "layers[text:title].w",
@@ -277,11 +289,16 @@
   "layers[text:title].size",
   "layers[text:title].line_h",
   "layers[text:title].line_rgb",
+  "layers[text:title].line_scale",
+  "layers[text:title].line_outline",
   "layers[text:title].text",
   "layers[text:caption].y",
+  "layers[text:caption].font",
   "layers[text:caption].size",
   "layers[text:caption].line_h",
-  "layers[text:caption].outline"
+  "layers[text:caption].outline",
+  "layers[text:caption].box",
+  "layers[text:caption].enter"
  ],
  "caption_styles": [
   {
@@ -298,14 +315,14 @@
     "size": 103.9,
     "line_h": 119,
     "rgb": [
-     255,
-     255,
-     255
+     253,
+     252,
+     253
     ],
     "line_rgb": null,
     "line_scale": null,
     "outline": {
-     "px": 7,
+     "px": 6,
      "rgb": [
       0,
       0,
@@ -314,12 +331,25 @@
     },
     "line_outline": null,
     "shadow": null,
-    "box": null,
+    "glow": null,
+    "box": {
+     "rgb": [
+      62,
+      58,
+      52
+     ],
+     "pad": 0,
+     "radius": 0
+    },
     "italic": false,
     "letter_spacing": 0,
     "word_spacing": 0,
     "valign": "center",
-    "enter": null,
+    "enter": {
+     "kind": "pop",
+     "ms": 300
+    },
+    "emphasis": null,
     "text": null
    },
    "status": "잰 편 ho5GSd-4To0",
@@ -338,14 +368,14 @@
  "variable_stats": {
   "layers[text:title].y": {
    "values": {
-    "ho5GSd-4To0": 121,
-    "7DYbxVNz5q8": 117,
-    "1_VtwOkbbVE": 131
+    "ho5GSd-4To0": 122,
+    "7DYbxVNz5q8": 128,
+    "1_VtwOkbbVE": 137
    },
-   "default": 121,
+   "default": 128,
    "range": [
-    117,
-    131
+    122,
+    137
    ],
    "how": "중앙값(3/3편)"
   },
@@ -374,14 +404,14 @@
   },
   "layers[text:title].size": {
    "values": {
-    "ho5GSd-4To0": 102.3,
-    "7DYbxVNz5q8": 122.8,
-    "1_VtwOkbbVE": 112.2
+    "ho5GSd-4To0": 106.3,
+    "7DYbxVNz5q8": 143.2,
+    "1_VtwOkbbVE": 124.8
    },
-   "default": 112.2,
+   "default": 124.8,
    "range": [
-    102.3,
-    122.8
+    106.3,
+    143.2
    ],
    "how": "중앙값(3/3편)"
   },
@@ -452,6 +482,61 @@
    "range": null,
    "how": "자리별 중앙값(3/3편)"
   },
+  "layers[text:title].line_scale": {
+   "values": {
+    "ho5GSd-4To0": null,
+    "7DYbxVNz5q8": null,
+    "1_VtwOkbbVE": [
+     0.955,
+     1.045
+    ]
+   },
+   "default": null,
+   "range": null,
+   "how": "최빈(2/3편)"
+  },
+  "layers[text:title].line_outline": {
+   "values": {
+    "ho5GSd-4To0": [
+     null,
+     [
+      8,
+      255,
+      244,
+      255
+     ]
+    ],
+    "7DYbxVNz5q8": [
+     null,
+     [
+      8,
+      255,
+      227,
+      255
+     ]
+    ],
+    "1_VtwOkbbVE": [
+     null,
+     [
+      7,
+      255,
+      254,
+      255
+     ]
+    ]
+   },
+   "default": [
+    null,
+    [
+     8,
+     255,
+     244,
+     255
+    ]
+   ],
+   "range": null,
+   "how": "자리별 중앙값(3/3편)"
+  },
   "layers[text:title].text": {
    "values": {
     "ho5GSd-4To0": "전 세계 매출 폭발시킨\n덴마크 회사의 실수",
@@ -465,25 +550,35 @@
   "layers[text:caption].y": {
    "values": {
     "ho5GSd-4To0": 1138,
-    "7DYbxVNz5q8": 1054,
-    "1_VtwOkbbVE": 1088
+    "7DYbxVNz5q8": 1062,
+    "1_VtwOkbbVE": 1086
    },
-   "default": 1088,
+   "default": 1086,
    "range": [
-    1054,
+    1062,
     1138
    ],
    "how": "중앙값(3/3편)"
   },
+  "layers[text:caption].font": {
+   "values": {
+    "ho5GSd-4To0": "CcPretendard-Bold",
+    "7DYbxVNz5q8": "Kkubulim",
+    "1_VtwOkbbVE": "BMDOHYEON"
+   },
+   "default": "CcPretendard-Bold",
+   "range": null,
+   "how": "최빈(1/3편)"
+  },
   "layers[text:caption].size": {
    "values": {
     "ho5GSd-4To0": 103.9,
-    "7DYbxVNz5q8": 92.8,
-    "1_VtwOkbbVE": 88.3
+    "7DYbxVNz5q8": 86.1,
+    "1_VtwOkbbVE": 87.7
    },
-   "default": 92.8,
+   "default": 87.7,
    "range": [
-    88.3,
+    86.1,
     103.9
    ],
    "how": "중앙값(3/3편)"
@@ -491,12 +586,12 @@
   "layers[text:caption].line_h": {
    "values": {
     "ho5GSd-4To0": 119,
-    "7DYbxVNz5q8": 107,
-    "1_VtwOkbbVE": 102
+    "7DYbxVNz5q8": 99,
+    "1_VtwOkbbVE": 101
    },
-   "default": 107,
+   "default": 101,
    "range": [
-    102,
+    99,
     119
    ],
    "how": "중앙값(3/3편)"
@@ -504,33 +599,80 @@
   "layers[text:caption].outline": {
    "values": {
     "ho5GSd-4To0": {
-     "px": 7,
+     "px": 6,
      "rgb": [
       0,
       0,
       0
      ]
     },
-    "7DYbxVNz5q8": null,
-    "1_VtwOkbbVE": {
-     "px": 7,
+    "7DYbxVNz5q8": {
+     "px": 3,
      "rgb": [
-      0,
-      0,
-      0
+      39,
+      39,
+      40
+     ]
+    },
+    "1_VtwOkbbVE": {
+     "px": 6,
+     "rgb": [
+      74,
+      74,
+      75
      ]
     }
    },
    "default": {
-    "px": 7,
+    "px": 6,
     "rgb": [
-     0,
-     0,
-     0
+     39,
+     39,
+     40
     ]
    },
    "range": null,
-   "how": "자리별 중앙값(2/3편)"
+   "how": "자리별 중앙값(3/3편)"
+  },
+  "layers[text:caption].box": {
+   "values": {
+    "ho5GSd-4To0": {
+     "rgb": [
+      62,
+      58,
+      52
+     ],
+     "pad": 0,
+     "radius": 0
+    },
+    "7DYbxVNz5q8": null,
+    "1_VtwOkbbVE": null
+   },
+   "default": null,
+   "range": null,
+   "how": "최빈(2/3편)"
+  },
+  "layers[text:caption].enter": {
+   "values": {
+    "ho5GSd-4To0": {
+     "kind": "pop",
+     "ms": 300
+    },
+    "7DYbxVNz5q8": {
+     "kind": "rise",
+     "ms": 300
+    },
+    "1_VtwOkbbVE": {
+     "kind": "none",
+     "ms": 300
+    }
+   },
+   "default": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "range": null,
+   "how": "자리별 중앙값(1/3편)"
   }
  },
  "rules": {
@@ -538,53 +680,53 @@
   "keys": {
    "title_top": {
     "values": {
-     "ho5GSd-4To0": 121,
-     "7DYbxVNz5q8": 117,
-     "1_VtwOkbbVE": 131
+     "ho5GSd-4To0": 122,
+     "7DYbxVNz5q8": 128,
+     "1_VtwOkbbVE": 137
     },
-    "default": 121,
+    "default": 128,
     "range": [
-     117,
-     131
+     122,
+     137
     ],
     "how": "중앙값(3/3편)"
    },
    "gap": {
     "values": {
-     "ho5GSd-4To0": -17,
-     "7DYbxVNz5q8": -46,
-     "1_VtwOkbbVE": -28
+     "ho5GSd-4To0": -18,
+     "7DYbxVNz5q8": -57,
+     "1_VtwOkbbVE": -34
     },
-    "default": -28,
+    "default": -34,
     "range": [
-     -46,
-     -17
+     -57,
+     -18
     ],
     "how": "중앙값(3/3편)"
    },
    "lh_ratio": {
     "values": {
-     "ho5GSd-4To0": 1.065,
-     "7DYbxVNz5q8": 1.026,
-     "1_VtwOkbbVE": 0.98
+     "ho5GSd-4To0": 1.025,
+     "7DYbxVNz5q8": 0.88,
+     "1_VtwOkbbVE": 0.881
     },
-    "default": 1.0,
+    "default": 0.881,
     "range": [
-     0.98,
-     1.065
+     0.88,
+     1.025
     ],
     "how": "중앙값(3/3편)"
    },
    "size_cap": {
     "values": {
-     "ho5GSd-4To0": 102.3,
-     "7DYbxVNz5q8": 122.8,
-     "1_VtwOkbbVE": 112.2
+     "ho5GSd-4To0": 106.3,
+     "7DYbxVNz5q8": 143.2,
+     "1_VtwOkbbVE": 124.8
     },
-    "default": 112.2,
+    "default": 124.8,
     "range": [
-     102.3,
-     122.8
+     106.3,
+     143.2
     ],
     "how": "중앙값(3/3편)"
    },
@@ -616,14 +758,14 @@
    },
    "gap_ink": {
     "values": {
-     "ho5GSd-4To0": -4,
-     "7DYbxVNz5q8": -12,
-     "1_VtwOkbbVE": -3
+     "ho5GSd-4To0": -9,
+     "7DYbxVNz5q8": -35,
+     "1_VtwOkbbVE": -16
     },
-    "default": -4,
+    "default": -16,
     "range": [
-     -12,
-     -3
+     -35,
+     -9
     ],
     "how": "중앙값(3/3편)"
    },
@@ -643,12 +785,12 @@
    "cap_dy": {
     "values": {
      "ho5GSd-4To0": -484,
-     "7DYbxVNz5q8": -567,
-     "1_VtwOkbbVE": -533
+     "7DYbxVNz5q8": -559,
+     "1_VtwOkbbVE": -535
     },
-    "default": -533,
+    "default": -535,
     "range": [
-     -567,
+     -559,
      -484
     ],
     "how": "중앙값(3/3편)"
@@ -672,42 +814,42 @@
     ]
    },
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:12+09:00"
   },
   "layers[text:brand].size": {
    "value": 48.0,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:12+09:00"
   },
   "layers[text:brand].y": {
    "value": 15,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:12+09:00"
   },
   "layers[text:brand].line_h": {
    "value": 55,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:12+09:00"
   },
   "layers[text:brand].x": {
    "value": 1052,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:12+09:00"
   },
   "layers[text:brand].letter_spacing": {
    "value": -2.3,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:13+09:00"
   },
   "layers[text:brand].font": {
    "value": "TmonMonsori",
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:13+09:00"
   },
   "layers[text:brand].italic": {
    "value": true,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T10:11:36+09:00"
+   "at": "2026-10-16T17:25:13+09:00"
   }
  },
  "roles": [
@@ -777,5 +919,10 @@
     ]
    }
   }
+ },
+ "rebuilt": {
+  "at": "2026-10-16T17:25:14+09:00",
+  "from": "tools/calcopy/engine/to_frame.py",
+  "why": "고정값 == 자동본(출처 설명서를 지금 to_frame 으로 다시 만듦)"
  }
 }

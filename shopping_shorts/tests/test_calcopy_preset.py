@@ -291,3 +291,28 @@ def test_multi_frame_preset_roundtrip_and_span_per_video(tmp_path):
     pre, M = P.load(d)
     out = P.apply(pre, None, {"frames[hook].layers[text:title].text": "새\n제목"}, M["variable_stats"])
     assert schema.validate(out)["frames"][1]["span"] == [2.792, None]
+
+
+def test_auto_diff_and_rebuild_from_auto_frames(tmp_path):
+    """옛 to_frame 판으로 만든 프리셋(자막 낱말 간격 0·제목 줄 배율 옛 값) → auto_diff 가 자동본과 어긋난 고정 자리를 집고,
+    rebuild 뒤엔 0 — 손으로 못 박은 자리(fixed)·META(roles·source_kind)·만든 시각은 그대로 남는다."""
+    old = copy.deepcopy(FRAME_A)
+    next(l for l in old["layers"] if l.get("role") == "caption").update(word_spacing=0)
+    title(old)["line_scale"] = [1.2, 0.8]
+    d = tmp_path / "s" / "preset" / "A" / "창아래"
+    tj = tmp_path / "뜯기.json"; tj.write_text(json.dumps(J, ensure_ascii=False), encoding="utf-8")
+    P.save(J, old, d, "Z", str(tj), caption_style="창아래", caption_note="워커 정답")
+    P.fix_value(d, "layers[text:brand].size", 48.0, "렌더 대조")
+    P.set_meta(d, roles=["발견", "감탄"])
+    created = P.load(d)[1]["created_at"]
+    auto = copy.deepcopy(FRAME_A)
+    next(l for l in auto["layers"] if l.get("role") == "caption").update(word_spacing=6.8)
+    before = P.auto_diff(d, {"Z": auto})
+    assert {x["path"] for x in before} == {"layers[text:caption].word_spacing", "layers[text:title].line_scale"}, before
+    M = P.rebuild(d, {"Z": auto})
+    assert P.auto_diff(d, {"Z": auto}) == []
+    pre, M = P.load(d)
+    assert next(l for l in pre["layers"] if l.get("role") == "brand")["size"] == 48.0 and "layers[text:brand].size" in M["fixed"]
+    assert M["roles"] == ["발견", "감탄"] and M["created_at"] == created and M["rebuilt"]["from"] == P.AUTO_TOOL
+    assert M["caption_styles"][0]["name"] == "창아래" and M["caption_styles"][0]["notes"] == ["Z: 워커 정답"]
+    assert not list(d.parent.glob("_old_*"))                                    # 옛 폴더는 다 만든 뒤 지운다

@@ -26,12 +26,12 @@
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 131,
+   "y": 137,
    "w": 1072,
    "align": "center",
    "lines": 2,
    "font": "BlackHanSans",
-   "size": 112.2,
+   "size": 124.8,
    "line_h": 110,
    "rgb": [
     0,
@@ -51,62 +51,69 @@
     ]
    ],
    "line_scale": [
-    1.062,
-    0.937
+    0.955,
+    1.045
    ],
    "outline": null,
    "line_outline": [
     null,
     [
-     8,
+     7,
      255,
-     255,
+     254,
      255
     ]
    ],
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -2.9,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
   },
   {
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 1088,
+   "y": 1086,
    "w": 1000,
    "align": "center",
    "lines": 1,
-   "font": "CcPretendard-Bold",
-   "size": 88.3,
-   "line_h": 102,
+   "font": "BMDOHYEON",
+   "size": 87.7,
+   "line_h": 101,
    "rgb": [
-    255,
-    255,
-    255
+    250,
+    254,
+    246
    ],
    "line_rgb": null,
    "line_scale": null,
    "outline": {
-    "px": 7,
+    "px": 6,
     "rgb": [
-     0,
-     0,
-     0
+     74,
+     74,
+     75
     ]
    },
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
    "valign": "center",
-   "enter": null,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
    "text": null
   },
   {
@@ -137,12 +144,14 @@
    },
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": true,
    "letter_spacing": -2,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "[광고]"
   }
  ],

@@ -49,12 +49,14 @@
    "outline": null,
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -2,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "$per_video"
   },
   {
@@ -78,12 +80,17 @@
    "outline": null,
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -7.4,
    "word_spacing": 6.8,
    "valign": "center",
-   "enter": null,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
    "text": null
   },
   {
@@ -114,12 +121,14 @@
    },
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": true,
    "letter_spacing": -2.3,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "[광고]"
   }
  ]

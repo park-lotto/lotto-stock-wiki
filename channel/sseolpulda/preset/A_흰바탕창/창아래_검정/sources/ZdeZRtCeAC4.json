@@ -43,12 +43,14 @@
    "outline": null,
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -2,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "닿으면 스피커\n소름 돋는 음질 수준"
   },
   {
@@ -72,12 +74,17 @@
    "outline": null,
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
    "letter_spacing": -7.4,
    "word_spacing": 6.8,
    "valign": "center",
-   "enter": null,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
    "text": null
   },
   {
@@ -108,12 +115,14 @@
    },
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": true,
    "letter_spacing": -2.7,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "[광고]"
   }
  ],

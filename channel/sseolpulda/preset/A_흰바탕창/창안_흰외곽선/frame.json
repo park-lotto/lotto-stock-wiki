@@ -42,27 +42,18 @@
     0
    ],
    "line_rgb": "$per_video",
-   "line_scale": [
-    1.067,
-    0.934
-   ],
+   "line_scale": "$per_video",
    "outline": null,
-   "line_outline": [
-    null,
-    [
-     9,
-     255,
-     251,
-     255
-    ]
-   ],
+   "line_outline": "$per_video",
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": -3.2,
+   "letter_spacing": -0.6,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "$per_video"
   },
   {
@@ -73,25 +64,27 @@
    "w": 1000,
    "align": "center",
    "lines": 1,
-   "font": "CcPretendard-Bold",
+   "font": "$per_video",
    "size": "$per_video",
    "line_h": "$per_video",
    "rgb": [
-    255,
-    255,
-    255
+    253,
+    252,
+    253
    ],
    "line_rgb": null,
    "line_scale": null,
    "outline": "$per_video",
    "line_outline": null,
    "shadow": null,
-   "box": null,
+   "glow": null,
+   "box": "$per_video",
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0,
    "valign": "center",
-   "enter": null,
+   "enter": "$per_video",
+   "emphasis": null,
    "text": null
   },
   {
@@ -122,12 +115,14 @@
    },
    "line_outline": null,
    "shadow": null,
+   "glow": null,
    "box": null,
    "italic": true,
    "letter_spacing": -2.3,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,
+   "emphasis": null,
    "text": "[광고]"
   }
  ]
