@@ -72,7 +72,8 @@ def save_pack(n: str, patch: dict) -> dict:
 
 
 def channels() -> dict:
-    return json.loads(CHANNELS.read_text(encoding="utf-8")) if CHANNELS.exists() else {}
+    d = json.loads(CHANNELS.read_text(encoding="utf-8")) if CHANNELS.exists() else {}
+    return {k: v for k, v in d.items() if not k.startswith("_")}
 
 
 def list_presets() -> list[dict]:
@@ -367,6 +368,11 @@ def _worker(S: dict, data_dir=None, deps: dict | None = None):
         extra["facts_path"] = S["facts_path"]
     mk = json.loads((Path(S["merged_preset"]) / "make.json").read_text(encoding="utf-8"))
     extra["remake_args"] = mk["remake_args"]
+    chn = channels().get(S["slug"]) or {}
+    if chn.get("keywords"):
+        extra["keywords"] = chn["keywords"]           # 찾기 검색 명사 — 워커 가동표와 같은 파일
+    if chn.get("source_kind"):
+        extra["source_kind"] = chn["source_kind"]
     extra["materials_hook"] = lambda skel: draft_materials(skel, mk["materials_defaults"], deps.get("assets"))
     w = Worker(deps.get("api") or LocalApi(data_dir), S["category"], "bench", S["slug"], name=f"make-{S['sid']}",
                out_root=_sdir(data_dir) / S["sid"] / "work", steps=deps.get("steps") or __import__("tools.calcopy.engine.worker_steps", fromlist=["x"]),

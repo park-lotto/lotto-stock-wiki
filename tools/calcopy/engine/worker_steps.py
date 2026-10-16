@@ -87,11 +87,12 @@ def _net(TF, ctx: Ctx) -> dict:
         L.take(ctx.worker, "yt", 1, f"상세 {vid}")
         return _f(vid, *a, **k)
     net["yt_search"], net["yt_detail"] = search, detail
-    if "yt_upload_date" in TF.NET:
-        def upload_date(vid, _f=TF.NET["yt_upload_date"]):
-            L.take(ctx.worker, "yt", 1, f"날짜 {vid}")
-            return _f(vid)
-        net["yt_upload_date"] = upload_date
+    for k, f in TF.NET.items():                     # 그 밖 유튜브 통로(날짜·메타…)는 1편씩
+        if k.startswith("yt_") and k not in ("yt_search", "yt_detail"):
+            def one(*a, _f=f, _k=k, **kw):
+                L.take(ctx.worker, "yt", 1, f"{_k} {a[0] if a else ''}")
+                return _f(*a, **kw)
+            net[k] = one
     return net
 
 
@@ -149,27 +150,40 @@ def _exists(d: dict) -> dict:
 
 # ── 단계 ──────────────────────────────────────────────────────────────────
 def step_find(topic, ctx: Ctx) -> dict:
-    """소재 후보 모으기(검색만, LLM 없음) → 새 행. 벤치·점수는 다음 단계가 행마다 한다."""
+    """소재 후보 모으기 → 새 행. 검색어 만들기·통로는 topic_find.run 앞부분과 **같은 함수**를 같은 순서로 부른다
+    (해외영상+검색어 없음 = db_candidates, 그 밖 = target_queries+gather). ★엔진에 find_candidates() 가 생기면 그걸 부르고 이 순서는 지운다."""
     TF = _engine("topic_find")
-    P = _preset(TF, ctx, None)
-    kind = (P["manifest"] or {}).get("source_kind") or ctx.extra.get("source_kind")
-    if kind not in TF.SOURCE_KINDS:
-        raise StepError(f"소재 출처 유형 없음/모름: {kind!r} (manifest.source_kind 또는 --source-kind)")
-    top = TF._read_json(P["chdir"] / "원자료" / "top50.json") or []
-    limits = TF.Limits()                                   # 검색어 ≤6 · 검색어당 ≤20 · 메타 ≤100 · 간격 ≥1초(엔진 주인)
-    nouns = ctx.extra.get("keywords") or TF.concrete_nouns(top)
-    kws = [q["q"] for q in TF.target_queries(kind, nouns, limits.max_queries)]
-    if not kws:
-        raise StepError("검색어 0 — 채널 top50 이 없고 --keywords 도 없다")
-    ctx.log(f"[검색어] {kws}")
-    try:
-        cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, _net(TF, ctx), ctx.log, limits)
-    except Exception as e:  # noqa: BLE001 — 장부 한도(LimitHit) 등은 이유로
-        raise StepError(f"찾기 멈춤: {type(e).__name__}: {e}") from None
-    if limits.stopped:
-        failed.append({"where": "limits", "why": limits.stopped})
+    if hasattr(TF, "find_candidates"):
+        r = TF.find_candidates(ctx.preset_of(None), ctx.find_n, keywords=ctx.extra.get("keywords"), net=_net(TF, ctx), llm=_llm(TF, ctx), log=ctx.log)
+        cands, failed = r["candidates"], r["failed"]
+    else:
+        P = _preset(TF, ctx, None)
+        kind = (P["manifest"] or {}).get("source_kind") or ctx.extra.get("source_kind")
+        if kind not in TF.SOURCE_KINDS:
+            raise StepError(f"소재 출처 유형 없음/모름: {kind!r} (manifest.source_kind 또는 --source-kind)")
+        top = TF._read_json(P["chdir"] / "원자료" / "top50.json") or []
+        limits, kws_in = TF.Limits(), ctx.extra.get("keywords")
+        try:
+            if kind == "해외영상" and not kws_in and hasattr(TF, "db_candidates"):
+                cands, failed, queries = TF.db_candidates(_net(TF, ctx), _llm(TF, ctx), ctx.find_n, ctx.log, limits=limits)
+            else:
+                if not kws_in:
+                    raise StepError(f"'{kind}' 은 검색어(구체 명사)가 필요 — warehouse_channels.json keywords (엔진: 우리 과거 제목에서 뽑지 않는다)")
+                R = TF._read_json(Path(P["rules"])) if P.get("rules") else {}
+                angles = tuple((R or {}).get("topic_angles") or getattr(TF, "DEFAULT_ANGLES", ()))
+                tq = TF.target_queries(kind, kws_in, limits.max_queries, angles) if angles else TF.target_queries(kind, kws_in, limits.max_queries)
+                kws = [q["q"] for q in tq]
+                ctx.log(f"[검색어] {kws}")
+                cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, _net(TF, ctx), ctx.log,
+                                          limits, brands=list(kws_in))
+        except StepError:
+            raise
+        except Exception as e:  # noqa: BLE001 — 장부 한도(LimitHit)·엔진 오류는 이유로
+            raise StepError(f"찾기 멈춤: {type(e).__name__}: {e}") from None
+        if limits.stopped:
+            failed.append({"where": "limits", "why": limits.stopped})
     if not cands:
-        raise StepError("후보 0 — " + "; ".join(f"{f['where']}: {f['why']}" for f in failed)[:300])
+        raise StepError("후보 0 — " + "; ".join(f"{f.get('where')}: {f.get('why')}" for f in failed)[:300])
     rows = [{"name": c["topic"], "source": {**c["source"], "via": c["source"].get("kind"), "query": c["query"], "key": c.get("key", ""),
                                             "found_at": time.strftime("%Y-%m-%dT%H:%M:%S+09:00")}} for c in cands]
     return {"rows": rows, "failed": failed}

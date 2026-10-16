@@ -2,31 +2,48 @@
  "sseolpulda": {
   "category": "해외썰",
   "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
-  "steps": "bench,score,assign,script,source",
-  "extra": []
+  "steps": "bench,score,assign,script,source"
  },
  "yummyknow": {
   "category": "식품",
   "preset": "channel/yummyknow/preset/게시글형",
   "steps": "bench,score,assign,script,source",
-  "extra": []
+  "keywords": [
+   "신라면",
+   "코스트코",
+   "맥도날드",
+   "CU 편의점",
+   "배스킨라빈스",
+   "농심"
+  ]
  },
  "banggu": {
   "category": "숨은이유",
   "preset": "channel/banggu/preset/게시글형",
   "steps": "bench,score,assign,script,source",
-  "extra": []
+  "keywords": [
+   "아웃백",
+   "다이소",
+   "이케아",
+   "스타벅스",
+   "올리브영",
+   "바나나맛우유"
+  ]
  },
  "hottemreport": {
   "category": "신기한제품",
   "preset": "hottemreport",
   "steps": "bench,score,assign,script",
-  "extra": [
-   "--source-kind",
-   "해외영상",
-   "--keywords",
-   "신기한 제품,신박한 아이템,생활 발명품,amazing gadget,cool gadgets,kitchen gadget"
-  ],
-  "_note": "프리셋(뜯기·틀)이 아직 없어 재료 후보(source)는 못 받는다 — 소재·벤치·점수·대본까지"
- }
+  "_note": "프리셋(뜯기·틀)이 아직 없어 재료 후보(source)는 못 받는다 — 소재·벤치·점수·대본까지",
+  "source_kind": "해외영상",
+  "keywords": [
+   "신기한 제품",
+   "신박한 아이템",
+   "생활 발명품",
+   "amazing gadget",
+   "cool gadgets",
+   "kitchen gadget"
+  ]
+ },
+ "_note": "keywords = 제품비하인드 검색 명사 초기값(엔진: 우리 과거 제목에서 뽑지 않는다 — 사장님/조율자가 고친다). 해외영상은 비우면 reference.db 대표 영상(db_candidates)"
 }

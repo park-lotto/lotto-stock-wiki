@@ -16,7 +16,11 @@ $pidf = Join-Path $data "pids.json"
 $port = 8851
 # 채널 → 카테고리·프리셋·단계 = warehouse_channels.json 한 곳(만들기 입구 calcopy_make 도 같은 파일을 읽는다)
 $chj = Get-Content -Raw -Encoding utf8 (Join-Path $PSScriptRoot "warehouse_channels.json") | ConvertFrom-Json
-$workers = @($chj.PSObject.Properties | ForEach-Object { @{slug=$_.Name; category=$_.Value.category; preset=$_.Value.preset; steps=$_.Value.steps; extra=@($_.Value.extra)} })
+$workers = @($chj.PSObject.Properties | Where-Object { -not $_.Name.StartsWith("_") } | ForEach-Object {
+  $v = $_.Value; $ex = @()
+  if ($v.source_kind) { $ex += @("--source-kind", $v.source_kind) }
+  if ($v.keywords) { $ex += @("--keywords", ($v.keywords -join ",")) }
+  @{slug=$_.Name; category=$v.category; preset=$v.preset; steps=$v.steps; extra=$ex} })
 
 function Start-One($name, $args_, $log) {
   # Start-Process 는 인자를 공백으로 다시 쪼갠다 — 공백 있는 인자는 따옴표로 감싼다(핫템 --keywords 가 깨졌다, 10-16 실측)
