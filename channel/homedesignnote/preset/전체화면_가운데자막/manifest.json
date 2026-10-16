@@ -834,10 +834,10 @@
    "checks": {
     "length_s": {
      "allow": [
-      17.4,
-      23.6
+      14.75,
+      29.61
      ],
-     "from": "bench T.duration 45편 중앙 20.5 ±15%(B1)"
+     "from": "bench_main/bench.json 채널 50편 길이 p10~p90(B1, 페이블 10-17: 중앙 ±15% 대신)"
     },
     "lufs": {
      "allow": [
@@ -869,7 +869,9 @@
     "sfx_max_extra": null,
     "sfx_max": 0,
     "caption_max_chars": 13,
-    "edge_y_min": 60
+    "edge_y_min": 60,
+    "aba_same_scene_s": 10.0,
+    "aba_why": "페이블 10-17: A-B-A 는 같은 소스 ±10초 이내(같은 장면·인물) 사이에 컷 하나가 끼었다 돌아올 때만 미달 — 같은 제품 다른 장면끼리 번갈아는 허용"
    },
    "tts_split": {
     "max_chars": 35,

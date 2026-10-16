@@ -244,10 +244,10 @@
    "checks": {
     "length_s": {
      "allow": [
-      23.0,
-      31.2
+      23.02,
+      32.83
      ],
-     "from": "length_target_s(이븐쇼핑 중앙 27.1 ±15%, B1)"
+     "from": "bench_main/bench.json 채널 50편 길이 p10~p90(B1, 페이블 10-17: 중앙 ±15% 대신)"
     },
     "lufs": {
      "allow": [
@@ -279,7 +279,9 @@
     "sfx_max_extra": 3,
     "sfx_max": null,
     "caption_max_chars": 13,
-    "edge_y_min": 60
+    "edge_y_min": 60,
+    "aba_same_scene_s": 10.0,
+    "aba_why": "페이블 10-17: A-B-A 는 같은 소스 ±10초 이내(같은 장면·인물) 사이에 컷 하나가 끼었다 돌아올 때만 미달 — 같은 제품 다른 장면끼리 번갈아는 허용"
    },
    "tts_split": {
     "max_chars": 35,
