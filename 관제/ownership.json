@@ -786,6 +786,26 @@
    }
   },
   {
+   "이름": "모션그래픽 모양·시간표·장면 안 자리(모션그래픽팩, 관제 222)",
+   "주인": [
+    "shopping_shorts/static/motion-graphics-pack.js"
+   ],
+   "시그니처": [
+    "const CD_ANGLE\b",
+    "function cdAngle\b",
+    "function cdDraw\b"
+   ],
+   "소비처": [
+    "편집기 미리보기",
+    "완성본",
+    "썸네일",
+    "캡컷(완성본에서 떠 옴 — scene_style._needs_bake)"
+   ],
+   "검사도구": "tools/mograph/check_countdown.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
    "이름": "카드뉴스 장 구성·문구(개요→장별 문구→검사→한 번 다시 쓰기)",
    "주인": [
     "shopping_shorts/cardnews.py:build_carousel",

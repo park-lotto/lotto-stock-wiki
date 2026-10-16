@@ -5,7 +5,7 @@
  box.innerHTML=`<details open class="dec-shopset"><summary>🛍 구매링크 숏폼 안내</summary><p data-shopset-help>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target" hidden>가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs hidden><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small><div class="dec-mysets"><p>⭐ <b>내 세트</b> — 지금 장면에 꾸민 것(배지·화살표·스티커 등)을 통째로 저장해 두고 다른 영상에서도 한 번에 넣어요</p><button type="button" data-myset-save>⭐ 지금 장면 꾸밈을 내 세트로 저장</button><div data-myset-list></div><small data-myset-status></small></div></details>
  <details open class="dec-longform" hidden><summary>📺 구매링크 롱폼 안내</summary><p>완성한 쇼츠를 <b>가로(롱폼) 영상</b>으로 만들 때 얹는 문구 띠와 큰 화살표예요. 문구를 고르면 미리보기가 롱폼으로 바뀝니다. 끌어서 옮기고, 초록 점을 끌어 크기를 바꾸세요. 9단계 「롱폼으로 렌더」에서 이대로 만들어져요.</p><div class="dec-choices" data-lf-sets></div><div data-lf-edit hidden><label>앞말<input data-lf="pre" type="text" maxlength="24"></label><label data-lf-hot>강조 칸<input data-lf="hot" type="text" maxlength="24"></label><label>뒷말<input data-lf="post" type="text" maxlength="24"></label><label class="dec-lf-tts">🔊 읽어 줄 말(성우가 영상 머리에 한 번)<input data-lf="tts" type="text" maxlength="80" placeholder="비우면 무음"></label><div class="dec-choices" data-lf-tts-presets></div></div><div class="dec-choices"><button type="button" data-lf-clear>롱폼 안내 빼기</button></div><small data-lf-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
- <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
+ <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button><button data-dec-kit="mograph" data-mograph-kit hidden>🎞 모션그래픽</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="mograph" hidden><p>🎞 모션그래픽팩 · 잘된 영상에서 그대로 옮긴 움직이는 그래픽 · 누르면 <b>이 장면 끝</b>에 맞춰 들어가요</p><div class="dec-mographs"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
  // ★로고(관제 065, 2026-10-01): 파일을 올려 장면 맨 위에 얹는다. 값의 주인 = masks[] 안 {kind:'image',src}. 렌더·썸네일·캡컷은 이 draw()를
  //   headless로 돌려 같은 그림을 얻는다. 파일은 out/장면꾸미기_로고/<계정>/ (편집기 http·렌더 file:// 둘 다 같은 상대 경로).
@@ -161,17 +161,27 @@
    saved.forEach((def,i)=>{const wrap=document.createElement('span');wrap.className='dec-my-badge';const b=button(def.text,'data-add-my-badge',i);b.style.background=def.color||'#FF2D5E';b.style.color='white';b.style.borderRadius='99px';
      const x=button('×','data-del-my-badge',i);x.title='내 배지에서 지우기';x.setAttribute('aria-label',def.text+' 지우기');const l3=button('끝3','data-my-badge-last3',i);l3.title='저장한 모양·자리 그대로 마지막 3장면에 넣기(다시 누르면 새로 놓여요)';wrap.append(b,l3,x);mine.append(wrap)});
    const shapes=box.querySelector('.dec-shapes');shapes.replaceChildren();
+   // 🎞 모션그래픽팩(관제 222) — 목록·모양은 motion-graphics-pack.js 한 곳. 버튼 안 미리보기는 팩 시계로 되풀이한다.
+   const mographs=box.querySelector('.dec-mographs'),pack=window.MOTION_GRAPHICS;
+   //   분류(카운트다운·가리키기·강조)는 팩의 groups — 기존 움직이는 도형 중 쓰이는 것도 여기로 옮겨 왔다(스위치 켠 계정은 '🎨 도형' 탭 대신 이 칸).
+   if(mographs&&pack){mographs.replaceChildren();pack.groups.forEach(group=>{const head=document.createElement('p');head.className='dec-mograph-group';head.textContent=group.name;const row=document.createElement('div');row.className='dec-shapes';
+     group.items.forEach(it=>{
+       if(it.mograph){const item=pack.items[it.mograph];if(!item)return;const b=button('','data-add-mograph',it.mograph),thumb=document.createElement('span');thumb.className='scene-decoration';thumb.style.cssText='position:relative;display:block;width:72px;height:72px;margin:0 auto 4px;outline:none';
+         pack.poster(thumb,{mograph:it.mograph,w:100},72);pack.clock(thumb,{mograph:it.mograph},0);b.title=item.moment;b.append(thumb,document.createTextNode(item.label));row.append(b);return;}
+       const def=catalog.shapes.find(s=>s.key===it.graphic);if(!def)return;const b=button('','data-add-graphic',def.key),canvas=document.createElement('canvas');canvas.width=96;canvas.height=72;const ctx=canvas.getContext('2d');ctx.translate(48,36);catalog.shapeDraw[def.key](ctx,26,def.color);b.append(canvas,document.createTextNode(def.label));row.append(b);});
+     mographs.append(head,row);});}
    catalog.shapes.forEach(def=>{const b=button('','data-add-graphic',def.key),canvas=document.createElement('canvas');canvas.width=96;canvas.height=72;const ctx=canvas.getContext('2d');ctx.translate(48,36);catalog.shapeDraw[def.key](ctx,26,def.color);b.append(canvas,document.createTextNode(def.label));shapes.append(b)});
  }
  function controls(){
    const list=masks(),items=box.querySelector('.dec-items');items.replaceChildren();
-   list.forEach((m,i)=>{const row=document.createElement('div');row.className='dec-item';const label=m.kind==='emoji'?m.ch:m.kind==='image'?'🏷 로고':m.kind==='badge'?m.text:m.kind==='graphic'?(catalog.shapes.find(s=>s.key===m.graphic)?.label||'도형'):'가림막';const b=button(`${i+1}. ${label}`,'data-dec-select',i);b.classList.toggle('active',selected===i);const del=button('×','data-dec-remove',i);del.setAttribute('aria-label',`${i+1}. ${label} 삭제`);row.append(b,del);items.append(row)});
+   list.forEach((m,i)=>{const row=document.createElement('div');row.className='dec-item';const label=m.kind==='emoji'?m.ch:m.kind==='image'?'🏷 로고':m.kind==='badge'?m.text:m.kind==='graphic'?(catalog.shapes.find(s=>s.key===m.graphic)?.label||'도형'):m.kind==='mograph'?'🎞 '+(window.MOTION_GRAPHICS?.items[m.mograph]?.label||'모션그래픽'):'가림막';const b=button(`${i+1}. ${label}`,'data-dec-select',i);b.classList.toggle('active',selected===i);const del=button('×','data-dec-remove',i);del.setAttribute('aria-label',`${i+1}. ${label} 삭제`);row.append(b,del);items.append(row)});
    toolbar.hidden=!list[selected];toolbar.querySelector('span').textContent=list[selected]?`${selected+1}번 선택`:'';
    const edit=box.querySelector('.dec-edit'),m=list[selected];edit.hidden=!m;if(!m)return;
    edit.querySelectorAll('[data-dec]').forEach(el=>el.value=el.dataset.dec==='size'?m.w:m[el.dataset.dec]??0);
    edit.querySelectorAll('label').forEach(l=>l.hidden=false);   // 항목 종류가 바뀔 때 앞 항목의 숨김이 남지 않게 먼저 전부 보이게
    edit.querySelector('[data-mask-height]').hidden=m.kind==='emoji';edit.querySelector('[data-mask-color]').hidden=m.kind==='emoji';
-   edit.querySelector('[data-badge-text]').hidden=m.kind!=='badge';edit.querySelector('[data-badge-style]').hidden=m.kind!=='badge';edit.querySelector('[data-save-badge]').hidden=m.kind!=='badge';edit.querySelector('[data-motion-control]').hidden=m.kind==='shape';
+   edit.querySelector('[data-badge-text]').hidden=m.kind!=='badge';edit.querySelector('[data-badge-style]').hidden=m.kind!=='badge';edit.querySelector('[data-save-badge]').hidden=m.kind!=='badge';edit.querySelector('[data-motion-control]').hidden=m.kind==='shape'||m.kind==='mograph';
+   if(m.kind==='mograph'){edit.querySelector('[data-mask-height]').hidden=true;edit.querySelector('[data-mask-color]').hidden=true;}
    // 가림막은 투명도만(2026-09-18 사장님). 크기·위치는 화면 손잡이와 끌기로 한다.
    const isMask=m.kind==='shape';
    edit.querySelectorAll('label').forEach(l=>{if(isMask)l.hidden=!l.querySelector('[data-dec="op"]');});
@@ -224,6 +234,8 @@
    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();el.blur();}e.stopPropagation();});
  }
  let editing=false;
+ // 지금 장면 길이(ms) — 모션그래픽이 장면 끝에 맞춰 끝나게(motion-graphics-pack.js place)
+ const sceneMs=()=>{const sc=api.context?.()?.scenes?.[api.geometry().sceneIndex];return sc?Math.max(0,(Number(sc.end)-Number(sc.start))*1000):0};
  function draw(){
    if(editing)return;
    const next=api.geometry().sceneIndex;if(index!==next){index=next;selected=-1;controls()}
@@ -236,8 +248,11 @@
      catalog.paint(el,m,preview.clientWidth,preview.clientHeight);
      (m.kind==='image'?layerTop:layer).append(el);
      if(selected===i&&!window.sceneStyleExporting)placeHandles(m);
-     catalog.animate(el,m,preview.clientWidth);
+     catalog.animate(el,m,preview.clientWidth,{sceneMs:sceneMs()});
    });
+   // 모션그래픽팩 스위치(관제 222, mograph_enabled): 켠 계정은 '🎞 모션그래픽' 탭이 '🎨 도형' 탭을 대신한다(쓰이는 도형은 그 안 분류로 옮겨 감). 꺼진 계정은 종전 그대로.
+   const mgOn=!!(api.context?.()?.mographEnabled&&window.MOTION_GRAPHICS),kit=box.querySelector('[data-mograph-kit]'),shapeKit=box.querySelector('[data-dec-kit="shape"]');
+   if(kit&&kit.hidden===mgOn){kit.hidden=!mgOn;shapeKit.hidden=mgOn;const sum=kit.closest('details')?.querySelector('summary');if(sum)sum.textContent=mgOn?'스티커 · 배지 · 모션그래픽':'스티커 · 도형 · 배지';if(mgOn&&shapeKit.classList.contains('active'))kit.click();if(!mgOn&&kit.classList.contains('active'))shapeKit.click();}
  }
  // 🛍 쇼핑 안내 세트(2026-09-23 사장님 "화살표랑 문구를 일일이 배치하기 힘드니 세트 버튼 — 23·24·25 세 장면에"):
  //   유튜브 쇼핑 스티커가 기본으로 뜨는 왼쪽 아래를 가리키는 굵은 화살표 + 「영상 속 제품 클릭!」 배지.
@@ -363,6 +378,7 @@
      else if(b.hasAttribute('data-add-emoji'))m={...m,kind:'emoji',ch:b.dataset.addEmoji,l:43,t:42,w:18,h:18*9/16};
      else if(b.hasAttribute('data-add-my-badge')){const def=myBadges()[Number(b.dataset.addMyBadge)];if(!def)return;m=myBadgeMask(def);}
      else if(b.hasAttribute('data-add-badge'))m={...m,kind:'badge',text:b.dataset.addBadge,l:6,t:42,w:Math.min(60,18+b.dataset.addBadge.length*3),h:7,color:catalog.thumbnailBadges.find(x=>x.label===b.dataset.addBadge)?.color||'#FF2D5E',badgeStyle:'pill',motion:'none'};
+     else if(b.hasAttribute('data-add-mograph')){const d=window.MOTION_GRAPHICS?.defaults(b.dataset.addMograph);if(!d)return;m=d;}
      else if(b.hasAttribute('data-add-graphic')){const def=catalog.shapes.find(s=>s.key===b.dataset.addGraphic);m={...m,kind:'graphic',graphic:def.key,l:35,t:40,w:30,h:30*9/16,color:def.color,motion:def.key==='arrow_circle'?'spin':def.key.startsWith('arrow')?'point':def.key==='swoosh'||def.key==='check'?'reveal':def.key==='bubble'?'float':'pulse'};}
      else return;
      list.push(m);selected=list.length-1;commit(list);
@@ -426,5 +442,5 @@
  new MutationObserver(draw).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
  addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();mySetList();draw();
  box.querySelector('[data-lf-edit]').addEventListener('input',event=>{const el=event.target.closest('[data-lf]'),i=Number(box.querySelector('[data-lf-edit]').dataset.i);if(el&&i>=0)lfApi()?.patch(i,{[el.dataset.lf]:el.value});});
- window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();},linkGuide(on){guideForce=!!on;applyGuide();ytDraw();return guideOn()}};
+ window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}window.MOTION_GRAPHICS?.tick(layer);return masks().some(m=>(m.motion&&m.motion!=='none')||m.kind==='mograph')},still(){window.MOTION_GRAPHICS?.still(layer)},refresh(){controls();draw();},linkGuide(on){guideForce=!!on;applyGuide();ytDraw();return guideOn()}};
 })();

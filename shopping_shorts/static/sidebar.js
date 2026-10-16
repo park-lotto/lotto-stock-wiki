@@ -63,12 +63,28 @@
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
-      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
-      { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
       // 유튜브제작(2026-10-12 관제 185) — 사장님 유튜브 영상 제작판. 서버 라우트(_yt_studio_page)도 관리자만 연다.
       { icon: "🎬", text: "유튜브제작",     href: "/yt_studio", admin: true },
       // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
       { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
+    ] },
+    // 🧳 숏템팩(관제 222, 2026-10-17 사장님 "좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 우리 팩 전부를 한 화면(/shortem_packs)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_packs_page)도 관리자만 연다. 세부 팩은 그 화면의 칸(#id)으로 바로 간다.
+    { label: "숏템팩", admin: true, items: [
+      { icon: "🧳", text: "전체 보기",       href: "/shortem_packs", admin: true },
+      { icon: "🔊", text: "효과음팩",        href: "/shortem_packs#sfx", admin: true },
+      { icon: "🧰", text: "효과음 서랍",     href: "/shortem_packs#drawer", admin: true },
+      { icon: "🎵", text: "배경음",          href: "/shortem_packs#bgm", admin: true },
+      { icon: "🎙", text: "성우",            href: "/shortem_packs#voice", admin: true },
+      { icon: "💬", text: "자막 스타일",     href: "/shortem_packs#caption", admin: true },
+      { icon: "✨", text: "등장 효과팩",     href: "/shortem_packs#motion", admin: true },
+      { icon: "🎞", text: "모션그래픽팩",    href: "/shortem_packs#mograph", admin: true },
+      { icon: "😀", text: "스티커·배지·도형", href: "/shortem_packs#deco", admin: true },
+      { icon: "🖼", text: "템플릿",          href: "/shortem_packs#template", admin: true },
+      { icon: "😂", text: "감정짤팩",        href: "/shortem_packs#meme", admin: true },
+      { icon: "🔤", text: "글꼴",            href: "/shortem_packs#font", admin: true },
+      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다. (관제 222: 제작 묶음 → 숏템팩 묶음)
+      { icon: "🔒", text: "효과 견본(에펙)", href: "/fx_samples", admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -214,7 +230,8 @@
     ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
-    html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
+    // 묶음째 관리자 전용(g.admin, 숏템팩) — 항목처럼 기본 숨김, /api/me 가 관리자면 같은 ss-admin-only 로 보인다
+    html += '<div class="ss-group' + (g.admin ? ' ss-admin-only"' + ' style="display:none"' : '"') + '><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
