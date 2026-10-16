@@ -22,6 +22,29 @@ POP_BASE_MS = 520      # precision20-ui.js runHookMotion 'pop' 의 기본 길이
 SLIDE_BASE_MS = 620
 FLASH_BASE_MS = 480
 _ENTER_BASE = {"pop": POP_BASE_MS, "slide": SLIDE_BASE_MS, "flash": FLASH_BASE_MS}
+# 자막 등장 → 라이브 CAPTION_MOTIONS 키(shopping_shorts/static/caption-motions.js) — 새 애니메이션 코드 없이 이름만 옮긴다.
+#   길이(ms)는 라이브 효과의 길이를 쓴다(설명서 ms 는 옮기지 못함 → unsupported 에 남김)
+CAPTION_ENTER_LIVE = {"pop": "pop", "fade": "fade", "rise": "rise", "typewriter": "typing", "none": ""}
+EMPH_LIVE = {"color": ("color", ""), "underline": ("underline", ""), "grow": ("color", "pop")}   # words 'auto' → wordFx(style, grow)
+
+
+def caption_effects(spec: dict) -> tuple[dict, list]:
+    """설명서 자막 층의 등장·강조 → (스냅샷 칸, 못 옮긴 것 목록). 판단 주인 한 곳."""
+    cap = next((l for l in schema.all_layers(spec) if l["kind"] == "text" and l["role"] == "caption"), None)
+    snap, unsupported = {}, []
+    if not cap:
+        return snap, unsupported
+    if cap.get("enter"):
+        snap["bodyCaptionMotion"] = CAPTION_ENTER_LIVE[cap["enter"]["kind"]]
+        if cap["enter"]["kind"] != "none":
+            unsupported.append(f"자막 등장 길이 {cap['enter']['ms']}ms — 라이브 '{snap['bodyCaptionMotion']}' 효과 길이를 쓴다")
+    e = cap.get("emphasis")
+    if e and e["words"] == "auto":
+        style, grow = EMPH_LIVE[e["style"]]
+        snap["wordFx"] = {"style": style, "color": "#%02X%02X%02X" % tuple(e["rgb"]), "grow": grow}
+    elif e:
+        unsupported.append("낱말 목록 강조 — 라이브 wordFx 에 없는 꼴: 설명서 모드 자막에만 색 span 으로 그린다(편집기 단어 강조 단추와 무관)")
+    return snap, unsupported
 ID_RE = r"custom_[0-9a-f]{12}"
 
 
@@ -93,6 +116,7 @@ def to_snapshot(frame, text: dict | None = None) -> dict:
             "hookMotion": enter["kind"] if enter else "none", "motionPack": "off"}
     if enter:
         snap["hookMotionSpeed"] = round(min(2.0, max(0.5, enter["ms"] / _ENTER_BASE[enter["kind"]])), 3)
+    snap.update(caption_effects(row["frame"]["spec"])[0])
     if text:
         snap["text"] = {k: str(v) for k, v in text.items() if k in ("channel", "hook1", "hook2", "bodyTitle")}
     return snap

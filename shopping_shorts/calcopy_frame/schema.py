@@ -24,7 +24,9 @@
         "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효) — 글자마다(공백 포함) 뒤에 붙는다(CSS)
         "valign": "center",                         # 여러 줄 칸 안 세로 자리: center | top(누적형 자막 — 1줄일 때도 첫 줄 자리)
         "word_spacing": 0,                          # 낱말 간격 px — 공백마다 더한다(CSS word-spacing). 자간이 음수면 공백이 같이 줄어 낱말이 붙는다
-        "enter":{"kind":"pop","ms":300}},           # 등장 효과(없으면 null)
+        "enter":{"kind":"pop","ms":300}},           # 등장 효과(없으면 null). 제목 pop|slide|flash · 자막 pop|fade|rise|typewriter|none
+       #   자막 선택: "emphasis":{"words":["구미공장"]|"auto","rgb":[255,230,0],"style":"color|grow|underline"}
+       #     'auto' = 라이브 단어 강조(wordFx, 말하는 낱말 차례로) · 낱말 목록 = 그 낱말만 색(설명서 모드 자막에만 — 라이브에 없는 꼴)
        {"kind": "text", "role": "caption", ...},   # 자막 — 글은 장면마다 대본 자막이 들어간다
        {"kind": "text", "role": "brand", "text": "[광고]", ...},   # 고정 문구 — text 필수
        {"kind": "image", "src": "...", "x":..., "y":..., "w":..., "h":...}
@@ -60,6 +62,8 @@ KINDS = ("bg", "video", "band", "text", "image")
 ROLES = ("title", "caption", "brand", "label")
 ALIGNS = ("left", "center", "right")
 ENTER_KINDS = ("pop", "slide", "flash")   # 제목 등장 — precision20-ui.js runHookMotion 이 그리는 것만
+CAPTION_ENTER_KINDS = ("pop", "fade", "rise", "typewriter", "none")   # 자막 등장 — 라이브 CAPTION_MOTIONS 로 옮긴다(to_snapshot.CAPTION_ENTER_LIVE)
+EMPH_STYLES = ("color", "grow", "underline")   # 낱말 강조 — words 'auto' 는 라이브 wordFx, 낱말 목록은 설명서 모드 자막에 색 span
 MADE_BY = "calcopy_frame v1"
 
 
@@ -189,12 +193,26 @@ def _text(layer, where, W, H):
     out["valign"] = valign      # top = 여러 줄 칸에서 글을 위에서부터(누적형 자막: 1줄일 때도 첫 줄 자리)
     enter = _opt(layer, "enter")
     if enter is not None:
-        if not isinstance(enter, dict) or enter.get("kind") not in ENTER_KINDS:
-            raise FrameError(f"{where}.enter.kind: {ENTER_KINDS} 중 하나이거나 enter 가 null 이어야 합니다")
+        kinds = CAPTION_ENTER_KINDS if role == "caption" else ENTER_KINDS
+        if role not in ("title", "caption"):
+            raise FrameError(f"{where}.enter: 제목·자막 등장만 그립니다")
+        if not isinstance(enter, dict) or enter.get("kind") not in kinds:
+            raise FrameError(f"{where}.enter.kind: {kinds} 중 하나이거나 enter 가 null 이어야 합니다")
         enter = {"kind": enter["kind"], "ms": _num(enter.get("ms", 300), where + ".enter.ms", 0, 5000)}
-        if role != "title":
-            raise FrameError(f"{where}.enter: v1 은 제목(title) 등장만 그립니다 — 자막 등장은 아직 없음")
     out["enter"] = enter
+    emph = _opt(layer, "emphasis")
+    if emph is not None:
+        if role != "caption" or not isinstance(emph, dict):
+            raise FrameError(f"{where}.emphasis: 자막 층의 {{words, rgb, style}} 이거나 null 이어야 합니다")
+        words = emph.get("words")
+        if words != "auto" and not (isinstance(words, list) and 1 <= len(words) <= 30
+                                    and all(isinstance(w, str) and 1 <= len(w.strip()) <= 20 for w in words)):
+            raise FrameError(f"{where}.emphasis.words: 'auto' 또는 낱말 목록(1~30개, 각 1~20자)이어야 합니다")
+        if emph.get("style", "color") not in EMPH_STYLES:
+            raise FrameError(f"{where}.emphasis.style: {EMPH_STYLES} 중 하나여야 합니다")
+        emph = {"words": words if words == "auto" else [w.strip() for w in words], "rgb": _rgb(emph.get("rgb"), where + ".emphasis.rgb"),
+                "style": emph.get("style", "color")}
+    out["emphasis"] = emph
     text = _opt(layer, "text")
     if role in ("brand", "label"):
         if not isinstance(text, str) or not text.strip() or len(text) > 80:

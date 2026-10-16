@@ -52,7 +52,8 @@ def test_line_h_default_only_when_absent():
     (lambda f: text_layer(f, "brand").__setitem__("text", ""), "text"),
     (lambda f: f["layers"].append({"kind": "video", "x": 0, "y": 0, "w": 10, "h": 10}), "video"),
     (lambda f: f["layers"].extend([{"kind": "band", "x": 0, "y": 0, "w": 1, "h": 1, "rgb": [0, 0, 0]}] * 13), "layers"),   # 기존 4~5층 + 13 = 상한 16 넘김
-    (lambda f: text_layer(f, "caption").__setitem__("enter", {"kind": "pop", "ms": 300}), "enter"),
+    (lambda f: text_layer(f, "caption").__setitem__("enter", {"kind": "slide", "ms": 300}), "enter"),   # 자막 등장은 pop|fade|rise|typewriter|none
+    (lambda f: text_layer(f, "caption").__setitem__("emphasis", {"words": [], "rgb": [255, 230, 0]}), "emphasis"),
     (lambda f: f.__setitem__("canvas", [1080]), "canvas"),
 ])
 def test_validate_rejects(break_it, word):
@@ -205,3 +206,36 @@ def test_line_scale_schema_and_snapshot_font_size():
     bad = copy.deepcopy(f); text_layer(bad, "title")["line_scale"] = [5]
     with pytest.raises(schema.FrameError):
         schema.validate(bad)
+
+
+def test_caption_effects_to_live_snapshot():
+    """자막 등장·강조 → 라이브 스냅샷 칸(bodyCaptionMotion·wordFx) — 새 애니메이션 없이 이름만 옮긴다(to_snapshot.caption_effects)."""
+    f = frame_a()
+    cap = text_layer(f, "caption")
+    cap["enter"] = {"kind": "typewriter", "ms": 400}
+    cap["emphasis"] = {"words": "auto", "rgb": [255, 230, 0], "style": "grow"}
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(f))
+    assert snap["bodyCaptionMotion"] == "typing" and snap["motionPack"] == "off"
+    assert snap["wordFx"] == {"style": "color", "color": "#FFE600", "grow": "pop"}
+    cap["emphasis"] = {"words": ["구미공장"], "rgb": [255, 45, 111], "style": "color"}
+    fx, unsupported = to_snapshot.caption_effects(schema.validate(f))
+    assert "wordFx" not in fx and any("낱말 목록" in u for u in unsupported)
+
+
+@pytest.mark.skipif(not _renderer_ready(), reason="node·puppeteer 없음 — 실제 렌더 불가")
+def test_caption_emphasis_words_render_color(tmp_path):
+    """낱말 목록 강조: 렌더 레이어에서 그 낱말 자리만 강조색(분홍) — 설명서 모드 자막 색 span(precision20-ui.js specEmph)."""
+    f = frame_a()
+    cap = text_layer(f, "caption")
+    cap["emphasis"] = {"words": ["해외 릴스"], "rgb": [255, 45, 111], "style": "color"}
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(f))
+    c = "아니 이거 해외 릴스에서 맨날 보이길래"
+    timeline = [{"beat_idx": 0, "t0": 0, "dur": 3, "narration": c, "caption_lines": [c], "role": "hook",
+                 "primary": {"video_id": "s0", "start": 0, "end": 3}}]
+    png = scene_style.render_layer_one(timeline, snap, tmp_path, 0, {"text": "닿으면 스피커\n소름 돋는 음질 수준"}, "t")
+    im = Image.open(png).convert("RGBA"); px = im.load()
+    y0, y1 = cap["y"], cap["y"] + cap["line_h"]
+    pink = [x for y in range(int(y0), int(y1), 2) for x in range(0, 1080, 2)
+            if px[x, y][3] > 200 and abs(px[x, y][0] - 255) < 40 and abs(px[x, y][1] - 45) < 50 and abs(px[x, y][2] - 111) < 50]
+    assert len(pink) > 300, len(pink)
+    assert 250 < min(pink) and max(pink) < 600, (min(pink), max(pink))   # '해외 릴스' 자리(실측 311~539)만

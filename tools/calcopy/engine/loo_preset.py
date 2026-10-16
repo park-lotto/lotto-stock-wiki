@@ -64,7 +64,9 @@ def temp_caption(frame: dict, bc: dict) -> dict:
     F = copy.deepcopy(frame)
     if not bc.get("top_y") or not bc.get("line_h"):
         return F
-    fit = size_and_top(TEMP_CAP_FONT, None, bc["top_y"], bc["line_h"], None)
+    # bench 줄 높이는 외곽선까지 든 잉크 — 크기는 채움 글자로 역산하니 외곽선×2 를 뺀다(to_frame 자막과 같은 규칙, 10-16 ho5 103.9 → 원본보다 큼)
+    ink_h = bc["line_h"] - (2 * bc["outline_px"] if bc.get("outline") and bc.get("outline_px") else 0)
+    fit = size_and_top(TEMP_CAP_FONT, None, bc["top_y"], ink_h, None)
     cap = next((l for l in F["layers"] if l.get("role") == "caption"), None)
     layer = {"kind": "text", "role": "caption", "x": 540, "w": 1000, "align": "center", "y": fit["y"], "lines": 1,
              "font": TEMP_CAP_FONT, "size": fit["size"], "line_h": fit["line_h"],

@@ -1504,6 +1504,16 @@
     }
   }
   // 글자 층 → 줄마다 글자 요소. 제목 1·2줄 = 작업 제목(hook1·hook2), 자막 = 지금 장면 자막, 그 밖(brand·label) = 설명서의 고정 문구.
+  // 설명서 자막의 낱말 강조(emphasis.words 목록) — 그 낱말만 색 span(라이브 wordFx 는 '말하는 낱말 차례로'라 이 꼴이 없다).
+  //   style: color = 글자색 · grow = 색 + 1.15배 · underline = 색 밑줄. 긴 낱말부터 찾는다(겹칠 때 긴 쪽).
+  function specEmph(ink,text,e,scale){
+    const ws=[...e.words].sort((a,b)=>b.length-a.length).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));if(!ws.length)return;
+    const re=new RegExp('('+ws.join('|')+')','g'),c=specRgb(e.rgb);ink.textContent='';
+    text.split(re).forEach((part,k)=>{if(!part)return;if(k%2===0){ink.append(document.createTextNode(part));return}
+      const s=document.createElement('span');s.className='spec-emph';s.textContent=part;
+      Object.assign(s.style,e.style==='underline'?{textDecoration:`underline ${c}`,textDecorationThickness:'.1em',textUnderlineOffset:'.12em',color:c}:{color:c,...(e.style==='grow'?{fontSize:'1.15em'}:{})});
+      ink.append(s);});
+  }
   function specTexts(l,frame,scale){
     const W=frame.width,H=frame.height,pct=(n,d)=>n/d*100,fixed=String(l.text||'').split('\n');
     const items=[];
@@ -1524,6 +1534,7 @@
       let ink=el;
       if(l.box){ink=document.createElement('span');Object.assign(ink.style,{background:specRgb(l.box.rgb),padding:`0 ${l.box.pad*scale}px`,borderRadius:l.box.radius*scale+'px'});el.append(ink);}
       ink.textContent=it.text;
+      if(l.role==='caption'&&Array.isArray(l.emphasis?.words))specEmph(ink,it.text,l.emphasis,scale);
       layer.insertBefore(el,badge);
       // 칸 폭(w)을 넘으면 넘지 않을 때까지 줄인다 — 잘리거나 칸 밖으로 나가는 일은 없다(바닥 40%)
       const size0=l.size*((l.line_scale&&l.line_scale[it.n])||1)*scale,over=()=>{if(it.rows>1)return el.scrollHeight>el.clientHeight+1;const r=document.createRange();r.selectNodeContents(el);return Math.max(el.scrollWidth,r.getBoundingClientRect().width)>el.clientWidth+1;};

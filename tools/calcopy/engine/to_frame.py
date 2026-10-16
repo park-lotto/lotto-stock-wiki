@@ -560,7 +560,9 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
                        "rgb": fxs.get("fill_rgb") or ([0, 0, 0] if pol == "dark" else [255, 255, 255]), "line_rgb": None,
                        "outline": {"px": ol, "rgb": fxs["outline_rgb"]} if ol and fxs.get("outline_rgb") else None,
                        "shadow": None, "box": ({"rgb": fxs["box"]["color"], "pad": 0, "radius": 0} if fxs.get("box") else None),
-                       "italic": False, "letter_spacing": cap_ls if cap_ls is not None else 0, "word_spacing": cap_ws or 0, "enter": None})
+                       "italic": False, "letter_spacing": cap_ls if cap_ls is not None else 0, "word_spacing": cap_ws or 0,
+                       "enter": caption_enter_of(J, notes), "emphasis": None})
+        notes.append("자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록")
         if fxs.get("shadow"):
             notes.append(f"자막 그림자 {fxs['shadow']} — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)")
         if not fxs:
@@ -632,6 +634,23 @@ def align_of(cols: list[tuple[int, int]], W: int) -> dict:
     if sl <= sr:
         return {"x": min(lefts), "w": W - min(lefts) - SIDE_PAD, "align": "left"}
     return {"x": max(rights), "w": max(rights) - SIDE_PAD, "align": "right"}
+
+
+ANIM_TO_ENTER = {"확대/축소": "pop", "이동": "rise", "페이드/타자기": "fade", "없음": "none"}   # bench captions.caption_anim → 설명서 자막 등장
+ENTER_MS = 300
+
+
+def caption_enter_of(J: dict, notes: list) -> dict | None:
+    """자막 등장 = 뜯기 caption_motion.starts 의 anim(bench 등장 종류) 최빈값. 판단 한 곳.
+    '페이드/타자기'는 bench 가 둘을 못 가른다 → fade(타자 효과·커서는 따로 못 잼, 분석기 몫). 표본이 없으면 None."""
+    import collections
+    anims = [s.get("anim") for s in (J.get("caption_motion") or {}).get("starts") or [] if s.get("anim") in ANIM_TO_ENTER]
+    if not anims:
+        return None
+    top, n = collections.Counter(anims).most_common(1)[0]
+    kind = ANIM_TO_ENTER[top]
+    notes.append(f"자막 등장 {kind} — 뜯기 등장 표본 {len(anims)}개 중 '{top}' {n}개" + (" (페이드/타자기 구분 못 함 → fade)" if top == "페이드/타자기" else ""))
+    return {"kind": kind, "ms": ENTER_MS}
 
 
 def caption_width_ref(fam: str, size: float, items: list, notes: list) -> dict | None:
