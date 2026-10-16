@@ -1,0 +1,254 @@
+{
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md 3번(대사 교체본, 페이블 10-17 판정)",
+ "title_slots": {
+  "hook1": "애들 깨우다 현타 온",
+  "hook2": "일본 천재의 발명품",
+  "bodyTitle": "현타 온 일본 천재의 발명품?"
+ },
+ "spine55": [
+  {
+   "slot": "title",
+   "line": "애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체.",
+   "tts": "애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체."
+  },
+  {
+   "slot": "bait",
+   "line": "최근 등교 전쟁 겪는 엄마들 사이에서 바이럴이 터지며 논란인 알람이 있는데,",
+   "tts": "최근 등교 전쟁 겪는 엄마들 사이에서 바이럴이 터지며 논란인 알람이 있는데,"
+  },
+  {
+   "slot": "reveal",
+   "line": "이건 바로 총 쏘는 알람시계.",
+   "tts": "이건 바로 총 쏘는 알람시계."
+  },
+  {
+   "slot": "solve",
+   "line": "이게 말도 안 되는 게 알람이 울리면 버튼이 아니라 과녁을 맞혀야만 꺼진다는 거.",
+   "tts": "이게 말도 안 되는 게 알람이 울리면 버튼이 아니라 과녁을 맞혀야만 꺼진다는 거."
+  },
+  {
+   "slot": "more",
+   "line": "심지어 이게 건담 만든 반다이 작품인데,",
+   "tts": "심지어 이게 건담 만든 반다이 작품인데,"
+  },
+  {
+   "slot": "twist",
+   "line": "근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고.",
+   "tts": "근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고."
+  }
+ ],
+ "chars": 162,
+ "est_sec": 18.42,
+ "cps_used": 8.8,
+ "hype": {
+  "①센 시작": "현타 온 … 떼돈 번",
+  "②권위": "건담 만든 반다이",
+  "③진짜 핵심 반전": "근데 진짜 충격적인 포인트는",
+  "④심지어": "심지어 이게",
+  "⑤~까지 난리": null
+ },
+ "pieces": [
+  {
+   "i": 1,
+   "t0": 0.0,
+   "dur": 0.91,
+   "caption": "애들 깨우다 현타 온",
+   "caption_chars": 11,
+   "hook": true
+  },
+  {
+   "i": 2,
+   "t0": 0.91,
+   "dur": 0.91,
+   "caption": "일본 천재가 만들어",
+   "caption_chars": 10,
+   "hook": true
+  },
+  {
+   "i": 3,
+   "t0": 1.82,
+   "dur": 0.91,
+   "caption": "떼돈 번 알람의 정체",
+   "caption_chars": 11,
+   "hook": true
+  },
+  {
+   "i": 4,
+   "t0": 2.73,
+   "dur": 0.91,
+   "caption": "최근 등교 전쟁 겪는",
+   "caption_chars": 11,
+   "hook": false
+  },
+  {
+   "i": 5,
+   "t0": 3.64,
+   "dur": 0.8,
+   "caption": "엄마들 사이에서",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 6,
+   "t0": 4.44,
+   "dur": 0.8,
+   "caption": "바이럴이 터지며",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 7,
+   "t0": 5.24,
+   "dur": 1.02,
+   "caption": "논란인 알람이 있는데",
+   "caption_chars": 11,
+   "hook": false
+  },
+  {
+   "i": 8,
+   "t0": 6.26,
+   "dur": 0.45,
+   "caption": "이건 바로",
+   "caption_chars": 5,
+   "hook": false
+  },
+  {
+   "i": 9,
+   "t0": 6.71,
+   "dur": 0.8,
+   "caption": "총 쏘는 알람시계",
+   "caption_chars": 9,
+   "hook": false
+  },
+  {
+   "i": 10,
+   "t0": 7.51,
+   "dur": 0.91,
+   "caption": "이게 말도 안 되는 게",
+   "caption_chars": 12,
+   "hook": false
+  },
+  {
+   "i": 11,
+   "t0": 8.42,
+   "dur": 0.68,
+   "caption": "알람이 울리면",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 12,
+   "t0": 9.1,
+   "dur": 0.68,
+   "caption": "버튼이 아니라",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 13,
+   "t0": 9.78,
+   "dur": 0.8,
+   "caption": "과녁을 맞혀야만",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 14,
+   "t0": 10.58,
+   "dur": 0.57,
+   "caption": "꺼진다는 거",
+   "caption_chars": 6,
+   "hook": false
+  },
+  {
+   "i": 15,
+   "t0": 11.15,
+   "dur": 0.57,
+   "caption": "심지어 이게",
+   "caption_chars": 6,
+   "hook": false
+  },
+  {
+   "i": 16,
+   "t0": 11.72,
+   "dur": 0.45,
+   "caption": "건담 만든",
+   "caption_chars": 5,
+   "hook": false
+  },
+  {
+   "i": 17,
+   "t0": 12.17,
+   "dur": 0.8,
+   "caption": "반다이 작품인데",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 18,
+   "t0": 12.97,
+   "dur": 0.45,
+   "caption": "근데 진짜",
+   "caption_chars": 5,
+   "hook": false
+  },
+  {
+   "i": 19,
+   "t0": 13.42,
+   "dur": 0.91,
+   "caption": "충격적인 포인트는",
+   "caption_chars": 9,
+   "hook": false
+  },
+  {
+   "i": 20,
+   "t0": 14.33,
+   "dur": 0.91,
+   "caption": "침대에 누운 채로는",
+   "caption_chars": 10,
+   "hook": false
+  },
+  {
+   "i": 21,
+   "t0": 15.24,
+   "dur": 0.68,
+   "caption": "절대 못 맞혀서",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 22,
+   "t0": 15.92,
+   "dur": 0.57,
+   "caption": "결국 일어나",
+   "caption_chars": 6,
+   "hook": false
+  },
+  {
+   "i": 23,
+   "t0": 16.49,
+   "dur": 0.68,
+   "caption": "조준하다 보면",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 24,
+   "t0": 17.17,
+   "dur": 0.57,
+   "caption": "잠이 저절로",
+   "caption_chars": 6,
+   "hook": false
+  },
+  {
+   "i": 25,
+   "t0": 17.74,
+   "dur": 0.68,
+   "caption": "다 깨버린다고",
+   "caption_chars": 7,
+   "hook": false
+  }
+ ]
+}
