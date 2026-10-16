@@ -1,0 +1,433 @@
+{
+ "_note": "방구석 3편 코스트코 가격표 재료 계획(렌더·TTS 전): 같은 소재 영상 재편집(한국 매장 Yttz 1080×1920 web137 · 미국 별표 1컷만 2bA41) + 제품/포장(같은 영상 상품 위주 장면) + 우리 짤 팩 2(1017·1221). 14 페이지 = shots 14, 그중 7개는 페이지 안 2컷(narr_video shots[].cuts) → 컷 21. 박힌 자막(위 y≈180~300)·빨간 원/X 덧그림 구간(Yttz 1.5~3.0·23.0~23.5·44.0~45.5·51.0~51.5)은 안 씀. BSQj는 연예인 영상 재업로드+가운데 큰 글자 덧그림이라 안 씀.",
+ "cand_dir": "C:/숏템_칼카피/banggu/칼카피_3편/src",
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 6.3,
+   "kind": "남의영상재편집",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    380,
+    1080,
+    900
+   ],
+   "ours": "한국 코스트코 '할인행사 INSTANT SAVINGS' 가격표 ₩27,990 −5,600 = ₩22,390 근접",
+   "why": "훅 '코스트코가 가격표에 숨겨 둔 암호' — 숫자 빼곡한 한국 매장 가격표(Yttz 6.0~7.0초 같은 장면, 위 박힌 자막은 crop 밖)"
+  },
+  {
+   "i": 1,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 7.6,
+   "kind": "남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    330,
+    1080,
+    900
+   ],
+   "cuts": [
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 7.6,
+     "dur": 1.2,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      330,
+      1080,
+      900
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 15.9,
+     "dur": 1.4,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      500,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "카트 끌고 붐비는 매장 통로(Yttz 7.6) → 냉장고 위 14,990원 가격표(15.9)",
+   "why": "'장 보러 가면 다들 그냥 지나치는, 코스트코 가격표'"
+  },
+  {
+   "i": 2,
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mathlady.mp4",
+   "asset_id": 1017,
+   "url": "pack:meme/1017 | https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 0.0,
+   "kind": "짤+남의영상재편집(2컷)",
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mathlady.mp4",
+     "ss": 0.0,
+     "dur": 1.6,
+     "kind": "짤"
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 17.9,
+     "dur": 1.6,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      500,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "짤 Math Lady(팩 1017, 1.6초) → 44,990원 가격표(Yttz 17.9)",
+   "why": "'끝자리만 봐도 할인인지 아닌지 갈린다는데' — 1·2편과 같은 의문 자리 반응 짤"
+  },
+  {
+   "i": 3,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 19.0,
+   "kind": "남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    320,
+    1080,
+    900
+   ],
+   "cuts": [
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 19.0,
+     "dur": 1.2,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      320,
+      1080,
+      900
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 32.9,
+     "dur": 1.3,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      400,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "26,790원(끝자리 90) 가격표(Yttz 19.0) → 1,934,970원(끝자리 70) 가격표(32.9)",
+   "why": "'사실 끝자리 90원은, 그냥 정가고, 70원이면' — 90·70 실물 차례로"
+  },
+  {
+   "i": 4,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 36.6,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    560,
+    1080,
+    900
+   ],
+   "ours": "TV 아래 799,970원(끝자리 70) 가격표",
+   "why": "'할인 중이라는 거'"
+  },
+  {
+   "i": 5,
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/tnr_15413251757413168905.mp4",
+   "asset_id": 1221,
+   "url": "pack:meme/1221",
+   "ss": 0.0,
+   "kind": "짤",
+   "fit": "cover",
+   "ours": "짤 퓨처라마 프라이 실눈 '글쎄'(팩 1221)",
+   "why": "'문제는 그 할인이, 언제 끝날지 모른다고'"
+  },
+  {
+   "i": 6,
+   "src": "v_2bA41-ZywSU.mp4",
+   "url": "https://www.youtube.com/watch?v=2bA41-ZywSU | https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 27.0,
+   "kind": "남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    200,
+    1080,
+    850
+   ],
+   "cuts": [
+    {
+     "src": "v_2bA41-ZywSU.mp4",
+     "ss": 27.0,
+     "dur": 1.4,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      200,
+      1080,
+      850
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 52.0,
+     "dur": 1.5,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      600,
+      900,
+      750
+     ]
+    }
+   ],
+   "ours": "미국 코스트코 가격표 별표(*) 짚는 손(2bA41 27.0, 미국 매장) → 한국 가격표 '675549 *' 근접(Yttz 52.0)",
+   "why": "'그래서 미국 틱톡에선 상품번호 옆 별표를, 죽음의 별이라' — 미국 장면은 미국 줄에만"
+  },
+  {
+   "i": 7,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 54.0,
+   "kind": "제품/포장",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    350,
+    1080,
+    900
+   ],
+   "ours": "그 별표 붙은 무아스 체중계 상자를 집어 드는 손",
+   "why": "'부르는데, 재입고가 더는 없다는 뜻' — 별표 상품 실물"
+  },
+  {
+   "i": 8,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 28.9,
+   "kind": "남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    450,
+    1080,
+    900
+   ],
+   "cuts": [
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 28.9,
+     "dur": 1.3,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      450,
+      1080,
+      900
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 10.9,
+     "dur": 1.4,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      450,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "84,900원(끝자리 00) 가격표(Yttz 28.9) → 고기 냉장고 84,900원 가격표(10.9)",
+   "why": "'심지어 00원은 매장마다 가격이 다르고, 플러스는'"
+  },
+  {
+   "i": 9,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 42.9,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    150,
+    900,
+    900,
+    750
+   ],
+   "ours": "한국 가격표 '676677 +' 근접(마이어 전기포트)",
+   "why": "'용량 변경이나 단종 신호라는 얘기' — + 표시 실물(확대 프레임으로 + 확인)"
+  },
+  {
+   "i": 10,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 42.0,
+   "kind": "제품/포장+남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    330,
+    1080,
+    900
+   ],
+   "cuts": [
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 42.0,
+     "dur": 1.5,
+     "kind": "제품/포장",
+     "src_crop": [
+      0,
+      330,
+      1080,
+      900
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 40.6,
+     "dur": 1.5,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      400,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "마이어 전기포트 실물(Yttz 42.0) → 2,199,970원(끝자리 70) 가격표(40.6)",
+   "why": "'근데 댓글에선 70원도 무조건 싼 건 아니라며, 온라인이랑'"
+  },
+  {
+   "i": 11,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 47.3,
+   "kind": "제품/포장",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    330,
+    1080,
+    900
+   ],
+   "ours": "네오플램 스테인리스 용기 진열(상품 위주)",
+   "why": "'꼭 비교하라고 함'"
+  },
+  {
+   "i": 12,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 3.6,
+   "kind": "남의영상재편집(2컷)",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    330,
+    1080,
+    900
+   ],
+   "cuts": [
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 3.6,
+     "dur": 1.2,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      330,
+      1080,
+      900
+     ]
+    },
+    {
+     "src": "v_YttznP0V85U.mp4",
+     "ss": 13.4,
+     "dur": 1.3,
+     "kind": "남의영상재편집",
+     "src_crop": [
+      0,
+      500,
+      1080,
+      900
+     ]
+    }
+   ],
+   "ours": "할인행사 14,390원 가격표(Yttz 3.6) → 체중계 17,990원 가격표(13.4)",
+   "why": "'결국 코스트코 가격표는, 가격보다 끝자리부터 읽는'"
+  },
+  {
+   "i": 13,
+   "src": "v_YttznP0V85U.mp4",
+   "url": "https://www.youtube.com/watch?v=YttznP0V85U",
+   "ss": 57.4,
+   "kind": "제품/포장",
+   "fit": "cover",
+   "src_crop": [
+    0,
+    380,
+    1080,
+    900
+   ],
+   "ours": "체중계 상자를 카트에 담음",
+   "why": "'거였다고ㅋㅋ' — 결말"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": 0.0,
+   "db": 0,
+   "why": "원본 0.1초 휙(훅 시작)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤 숫자로: 훅 끝",
+   "db": 0,
+   "why": "원본 1.8초 띵(훅→본문)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤 숫자로: '사실 끝자리 90원은' 시작",
+   "db": 0,
+   "why": "원본 15.8초 띵(핵심 공개)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": "TTS 뒤 숫자로: '그래서 미국 틱톡에선' 시작",
+   "db": 0,
+   "why": "원본 11.2초 휙(전개)"
+  }
+ ],
+ "narration": "타입캐스트 필재(남성, 1·2편과 같음) 1회 — 페이블 OK 뒤 · 공백·쉼표 제외 230자 ÷ 8.3 ≈ 27.7초 · TTS 뒤 쉼 줄임(1·2편과 같은 처리)",
+ "caption_effects": {
+  "now": "1편과 같음: 누적형 2줄(y502 고정, 줄 칸 79, 검정 CcPretendard-Bold, 외곽선·그림자·등장 효과 없음 = 원본 실측) · 훅 카드 제목 2줄 흰/파랑(JalnanGothic, 폭 980 — 1편보다 −20px) + 흰 띠 첫 문장 · 페이지 14장(--chunk 13)",
+  "planned": "3줄 페이지 없음(대본을 2줄 페이지로 짬). enter/emphasis 는 원본에 없음"
+ },
+ "watermark": "Yttz 위 박힌 자막·Costco 로고 제목(0~3초)·빨간 밑줄(19.5~22·29~32·34~36 일부)·빨간 원(44~45.5·51)·빨간 X(23~23.5) — src_crop/구간 선택으로 피함(빨간 밑줄은 숫자 강조라 일부 남을 수 있음 — 계획_시트로 확인). 2bA41 가운데 초록 자막은 crop 위로."
+}
