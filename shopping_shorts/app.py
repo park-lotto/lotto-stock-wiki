@@ -28492,6 +28492,139 @@ def _last_run_thumb(store, shortcode):
         pass
     return ""
 
+# ── 칼카피 소재창고(관제 097) ──
+#    소재 하나가 한 행, 상태기계(found → … → plan_review(사람) → … → final_review(사람) → passed|rejected).
+#    판단은 calcopy_topics 하나(전이·잠금·11분 끊김·하루 비용 상한·KPI). 여기는 관리자 확인 + 오류 모양만.
+#    규격: docs/superpowers/specs/2026-10-16-소재창고-api.md
+def _calcopy_topics_call(request, fn, *a, **kw):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_topics as _ct
+    try:
+        return fn(_ct, *a, **kw)
+    except _ct.TopicError as e:
+        return JSONResponse({"error": e.msg}, status_code=e.code)
+
+
+@app.get("/api/admin/calcopy/topics")
+def api_admin_calcopy_topics(request: Request, state: str = "", category: str = "", limit: int = 300):
+    return _calcopy_topics_call(request, lambda ct: ct.board(state=state or None, category=category or None,
+                                                              limit=limit))
+
+
+@app.post("/api/admin/calcopy/topics")
+def api_admin_calcopy_topics_add(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.add(
+        b.get("name"), b.get("category"), track=b.get("track", "discover"), source=b.get("source"),
+        by=b.get("by", ""), note=b.get("note", ""))})
+
+
+@app.post("/api/admin/calcopy/topics/claim_next")
+def api_admin_calcopy_topics_claim_next(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.claim_next(
+        b.get("worker"), b.get("steps"), category=b.get("category"), track=b.get("track"), channel=b.get("channel"))})
+
+
+@app.post("/api/admin/calcopy/workers/heartbeat")
+def api_admin_calcopy_worker_heartbeat(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.worker_heartbeat(
+        b.get("worker"), category=b.get("category"), track=b.get("track"), channel=b.get("channel"),
+        doing=b.get("doing"), idle_reason=b.get("idle_reason"), last_error=b.get("last_error"))})
+
+
+@app.post("/api/admin/calcopy/topics/caps")
+def api_admin_calcopy_topics_caps(request: Request, body: dict = None):
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "caps": ct.set_caps(body or {})})
+
+
+@app.get("/api/admin/calcopy/topics/{tid:int}")
+def api_admin_calcopy_topic_detail(request: Request, tid: int):
+    return _calcopy_topics_call(request, lambda ct: ct.detail(tid))
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/claim")
+def api_admin_calcopy_topic_claim(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.claim(tid, b.get("worker"), b.get("step"))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/heartbeat")
+def api_admin_calcopy_topic_heartbeat(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.heartbeat(tid, b.get("worker"), b.get("doing"))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/advance")
+def api_admin_calcopy_topic_advance(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.advance(
+        tid, b.get("worker"), data=b.get("data"), outputs=b.get("outputs"), files=b.get("files"),
+        cost=b.get("cost"), note=b.get("note", ""))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/release")
+def api_admin_calcopy_topic_release(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.release(
+        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/unstall")
+def api_admin_calcopy_topic_unstall(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.unstall(
+        tid, by=b.get("by", "admin"), note=b.get("note", ""))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/reject")
+def api_admin_calcopy_topic_reject(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.reject(
+        tid, b.get("reason"), back_to=b.get("back_to"), by=b.get("by", "admin"))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/review")
+def api_admin_calcopy_topic_review(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.review(
+        tid, b.get("stage"), b.get("verdict"), by=b.get("by", "admin"), reason=b.get("reason", ""),
+        back_to=b.get("back_to"))})
+
+
+@app.get("/api/admin/calcopy/topics/{tid:int}/file/{name}")
+def api_admin_calcopy_topic_file(request: Request, tid: int, name: str):
+    import mimetypes as _mt
+
+    def _send(ct):
+        p = ct.file_path(tid, name)
+        mt = _mt.guess_type(p.name)[0] or ("text/markdown" if p.suffix == ".md" else "application/octet-stream")
+        if mt.startswith("text/") or mt == "application/json":
+            mt += "; charset=utf-8"
+        return _send_media(p, request, mt)
+    return _calcopy_topics_call(request, _send)
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/upload/{name}")
+async def api_admin_calcopy_topic_upload(request: Request, tid: int, name: str):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    data = await request.body()
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.save_upload(tid, name, data)})
+
+
+@app.get("/admin/calcopy/topics", response_class=HTMLResponse)
+def _admin_calcopy_topics_page(request: Request):   # 소재창고 보드(관리자) — 화면은 위 라우트만 부른다
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin_calcopy_topics.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
 # 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를

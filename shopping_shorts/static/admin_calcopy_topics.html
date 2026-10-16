@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피 소재창고</title>
+<!-- 관리자 전용(관제 097, 2026-10-16). 규격: docs/superpowers/specs/2026-10-16-소재창고-api.md (판단 주인 calcopy_topics.py)
+     데이터 = GET /api/admin/calcopy/topics (KPI·끊김·상한은 서버가 판정해 준 값을 그대로 그린다 — 화면에서 다시 세지 않는다)
+     결정 = POST /api/admin/calcopy/topics/{id}/review · 상세 = GET /api/admin/calcopy/topics/{id} -->
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e5e7eb;--acc:#2563eb;
+  --ok:#16a34a;--warn:#d97706;--bad:#dc2626;--wait:#7c3aed}
+*{box-sizing:border-box}
+body{margin:0;word-break:keep-all;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Malgun Gothic",sans-serif}
+main{max-width:1400px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:22px 0 8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.lead{color:var(--sub);margin:0 0 12px;overflow-wrap:anywhere} .sub{color:var(--sub);font-size:13px}
+a{color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+button,select,input{font:inherit;border-radius:8px;max-width:100%}
+button{padding:6px 12px;border:1px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--acc)} button.bad{background:var(--bad);border-color:var(--bad)} button.ok{background:var(--ok);border-color:var(--ok)}
+button:disabled{opacity:.5;cursor:default}
+select,input{padding:6px 8px;border:1px solid #cbd5e1;background:#fff;color:var(--ink)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tabs button{background:#fff;color:var(--ink);border-color:var(--line)} .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:#eef2ff;color:#3730a3;white-space:nowrap}
+.tag.red{background:#fee2e2;color:var(--bad)} .tag.ok{background:#dcfce7;color:#166534} .tag.wait{background:#ede9fe;color:var(--wait)} .tag.grey{background:#f1f5f9;color:#334155}
+/* 계기판 */
+.meter{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-size:22px;font-variant-numeric:tabular-nums} .tile span{font-size:12px;color:var(--sub)}
+.tile.red{border-color:var(--bad)} .tile.red b{color:var(--bad)}
+.gauge{height:6px;border-radius:3px;background:#e2e8f0;margin-top:6px;overflow:hidden}.gauge i{display:block;height:100%;background:var(--acc)}
+.gauge i.hot{background:var(--bad)}
+/* 워커 */
+.workers{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.wk{border-left:4px solid var(--ok)} .wk.dead{border-left-color:var(--bad);background:#fff7f7}
+.wk .name{font-weight:700;overflow-wrap:anywhere} .wk.idle{border-left-color:#94a3b8}
+.stalled .card{border-left:4px solid var(--bad);background:#fff7f7}
+/* 결정 줄 */
+.decide .card{border-left:4px solid var(--wait)}
+.decide textarea{width:100%;min-height:44px;font:inherit;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:6px}
+/* 칸반 */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,1fr);gap:8px;overflow-x:auto;padding-bottom:8px}
+.col{background:#eef1f5;border-radius:10px;padding:8px;min-width:0}
+.col h3{font-size:13px;margin:0 0 6px;display:flex;justify-content:space-between;gap:4px}
+.col.review{background:#f3efff}
+.item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 8px;margin-bottom:6px;cursor:pointer;font-size:13px}
+.item:hover{border-color:var(--acc)} .item.err{border-color:var(--bad);background:#fff7f7} .item.live{box-shadow:0 0 0 2px #bfdbfe}
+.item .t,.item .sub{overflow-wrap:anywhere}.item .t{font-weight:600}
+.stops li{margin:4px 0;overflow-wrap:anywhere}
+/* 상세 */
+#detail{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:10}
+#detail.on{display:flex}
+#detail .panel{background:var(--card);border-radius:14px;max-width:980px;width:100%;padding:16px 18px;position:relative}
+#detail .x{position:absolute;right:12px;top:10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:8px 0}.kv dt{color:var(--sub)}.kv dd{margin:0;overflow-wrap:anywhere}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair video,.pair img{width:100%;border-radius:8px;background:#0f172a}
+.md{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:340px;overflow:auto;font-size:13px}
+.sheet{width:100%;border-radius:8px;border:1px solid var(--line)}
+/* 갤러리 */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.gallery a{font-size:12px;color:var(--ink);text-decoration:none}
+.gallery img,.gallery video{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#e2e8f0;display:block}
+.msg{padding:8px 12px;border-radius:8px;margin:8px 0;display:none}.msg.err{display:block;background:#fee2e2;color:var(--bad)}.msg.ok{display:block;background:#dcfce7;color:#166534}
+.stamp{font-size:12px;color:var(--sub)}
+@media (max-width:640px){
+  .board{grid-auto-flow:row;grid-auto-columns:auto;overflow-x:visible}
+  .col.empty{display:none}
+  .pair{grid-template-columns:1fr}
+  h1{font-size:19px}
+}
+</style></head>
+<body><main>
+<p class="sub"><a href="/admin/calcopy">← 칼카피 채널 보관함</a></p>
+<h1>🏭 칼카피 소재창고</h1>
+<p class="lead">카테고리 워커가 소재를 찾고·벤치하고·대본·재료·제작까지 돌린다. 사람 자리는 <b>선검수</b>와 <b>최종 검수</b> 둘. <span class="stamp" id="stamp"></span></p>
+<div class="tabs" id="cats"></div>
+<div id="err" class="msg"></div>
+<h2>계기판</h2><div class="meter" id="meter"></div>
+<h2>결정할 것 <span class="sub" id="decideN"></span></h2><div class="decide" id="decide"></div>
+<h2>워커</h2><div class="workers" id="workers"></div>
+<h2>멈춤(stalled) <span class="sub">— 같은 소재가 3번 실패해 워커가 더는 안 집는다. 원인을 고친 뒤 '다시 돌리기'</span></h2><div id="stalled"></div>
+<h2>멈춘 이유 <span class="sub">— 워커가 이유를 적고 손 뗀 소재·반려·끊김·비용 상한</span></h2><div class="card"><ul class="stops" id="stops" style="margin:0;padding-left:18px"></ul></div>
+<h2>진행판</h2><div class="board" id="board"></div>
+<h2>통과작</h2><div class="gallery" id="gallery"></div>
+</main>
+<div id="detail"><div class="panel" id="panel"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=n=>typeof n==="number"?n.toLocaleString("ko-KR"):(n==null?"–":esc(n));
+const LABEL={found:"발견",benched:"벤치",scored:"점수",assigned:"배정",scripted:"대본",sourced:"재료",plan_review:"선검수",
+  producing:"제작 대기",produced:"제작됨",final_review:"최종 검수",passed:"통과",rejected:"반려",
+  bench:"벤치",score:"점수",assign:"배정",script:"대본",source:"재료",plan:"계획",produce:"제작",check:"대조"};
+const HUMAN=["plan_review","final_review"];
+const BACK_TO=["found","benched","scored","assigned","scripted","sourced","producing","produced"];   // 서버 BACK_TO_OK 와 같은 목록(검증은 서버)
+const COST={gemini:"글 AI 호출",typecast:"나레 음성 생성"};
+const API="/api/admin/calcopy/topics";
+const params=new URLSearchParams(location.search);
+let CAT=params.get("cat")||"", D=null;
+
+async function api(url,body){
+  const r=await fetch(url,body?{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{credentials:"same-origin"});
+  const j=await r.json().catch(()=>({error:"응답을 읽지 못했습니다 (HTTP "+r.status+")"}));
+  if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+  return j;
+}
+function msg(el,text,ok){el.className="msg "+(ok?"ok":"err");el.textContent=text}
+const rate=r=>r==null?"–":Math.round(r*100)+"%";
+const ago=s=>s==null?"기록 없음":(s<60?Math.round(s)+"초 전":s<3600?Math.round(s/60)+"분 전":(s/3600).toFixed(1)+"시간 전");
+const fileUrl=(id,name)=>`${API}/${encodeURIComponent(id)}/file/${encodeURIComponent(name)}`;
+
+function tile(label,val,sub,cls){return `<div class="tile ${cls||""}"><span>${label}</span><b>${val}</b>${sub||""}</div>`}
+function capTile(k,c){
+  const used=(c.used||{})[k]??0,cap=(c.caps||{})[k];const p=cap?Math.min(100,used/cap*100):(used?100:0);
+  const blocked=(c.blocked||[]).includes(k);
+  return tile(COST[k]+"(오늘)",`${num(used)}<span style="font-size:14px"> / ${cap!=null?num(cap):"–"}</span>`,
+    `<div class="gauge"><i class="${blocked||p>=90?"hot":""}" style="width:${p}%"></i></div>${blocked?'<span style="color:var(--bad)">상한 — 멈춤</span>':""}`,blocked?"red":"");
+}
+function drawMeter(k,c){
+  k=k||{};c=c||{};const pr=k.plan_review||{},fr=k.final_review||{},h=k.hours_per_passed||{},cp=k.cost_per_passed||{},wm=k.work_min_per_passed||{};
+  const d7=(k.candidates_7d||[]).map(x=>x.n).join(" · ");
+  $("#meter").innerHTML=[
+    tile("오늘 후보",num(k.candidates_today),d7?`<span>7일 ${esc(d7)}</span>`:""),
+    tile("선검수 통과율",rate(pr.rate),`<span>통과 ${num(pr.pass)} · 반려 ${num(pr.reject)}</span>`),
+    tile("최종 통과율",rate(fr.rate),`<span>통과 ${num(fr.pass)} · 반려 ${num(fr.reject)}</span>`),
+    tile("통과 1편 작업(중앙)",wm.median!=null?num(wm.median)+"분":"–",`<span>워커가 실제로 든 시간 · 통과 ${num(wm.n)}편</span>`),
+    tile("통과 1편 벽시계(중앙)",h.median!=null?num(h.median)+"시간":"–",`<span>추가→통과 · 검수 대기 포함</span>`),
+    tile("통과 1편 글 AI 호출",cp.gemini!=null?`${num(cp.gemini)}<span style="font-size:14px">회</span>`:"–",`<span>나레 음성 ${num(cp.typecast)}회</span>`),
+    capTile("gemini",c),capTile("typecast",c),
+  ].join("");
+}
+function drawCats(){
+  const cats=Object.keys(D.grid||{}).sort();
+  if(CAT&&!cats.includes(CAT))cats.push(CAT);
+  const total=g=>Object.values(g||{}).reduce((a,b)=>a+b,0);
+  $("#cats").innerHTML=`<button data-c="" class="${CAT?"":"on"}">전체 ${num(total(D.totals))}</button>`+
+    cats.map(c=>`<button data-c="${esc(c)}" class="${c===CAT?"on":""}">${esc(c)} ${num(total(D.grid[c]))}</button>`).join("");
+  document.querySelectorAll("#cats button").forEach(b=>b.onclick=()=>{CAT=b.dataset.c;history.replaceState(null,"",CAT?"?cat="+encodeURIComponent(CAT):"?");load()});
+}
+function drawWorkers(ws){
+  const ST={working:["ok","일하는 중"],idle:["grey","쉬는 중"],stale:["red","끊김(11분+)"]};
+  $("#workers").innerHTML=(ws||[]).length?ws.map(w=>{const st=w.status||(w.stale?"stale":w.topic_id?"working":"idle"),[cls,lab]=ST[st]||ST.idle;
+    return `<div class="card wk ${st==="stale"?"dead":st==="idle"?"idle":""}"><div class="row"><span class="name">${esc(w.worker)}</span>
+      <span class="tag ${cls}">${lab}</span></div>
+      <div class="sub">${esc(w.category||"")}${w.track?" · "+(w.track==="discover"?"발굴":"벤치"):""}${w.channel?" · "+esc(w.channel):""}</div>
+      ${w.topic_id?`<div>지금: <b>${esc(LABEL[w.step]||w.step||"")}</b> · <a href="#" data-open="${esc(w.topic_id)}">#${esc(w.topic_id)} ${esc(w.name)}</a></div>`
+        :`<div>지금: <b>${w.doing?esc(LABEL[w.doing]||w.doing):"쉬는 중"}</b></div>`}
+      ${w.topic_id&&w.doing?`<div class="sub">${esc(w.doing)}</div>`:""}
+      ${w.idle_reason?`<div class="sub">쉬는 이유: ${esc(w.idle_reason)}</div>`:""}
+      ${w.last_error?`<div class="sub" style="color:var(--bad)">⚠ ${esc(w.last_error)}</div>`:""}
+      <div class="sub">맥박 ${ago(w.age_sec)}</div></div>`}).join("")
+    :'<p class="sub">하루 안에 맥박을 보낸 워커가 없습니다 — PC에서 <code>worker.py --category … --loop</code> 를 켜면 여기 뜹니다.</p>';
+}
+function drawStalled(rows){
+  const keep={};document.querySelectorAll("#stalled input").forEach(t=>keep[t.dataset.id]=t.value);
+  $("#stalled").className="stalled";
+  $("#stalled").innerHTML=(rows||[]).length?rows.map(t=>`<div class="card" data-id="${esc(t.id)}"><div class="row">
+      <span class="tag red">멈춤 · 실패 ${num(t.error_count)}회</span><a href="#" data-open="${esc(t.id)}"><b>#${esc(t.id)} ${esc(t.name)}</b></a>
+      <span class="tag grey">${esc(LABEL[t.state]||t.state)}</span></div>
+      <div class="sub" style="color:var(--bad);overflow-wrap:anywhere">${esc(t.error||"")}</div>
+      <div class="row" style="margin-top:6px"><input data-id="${esc(t.id)}" placeholder="무엇을 고쳤나(예: 쿠키 갈았음)" value="${esc(keep[t.id]||"")}" style="flex:1 1 220px;min-width:0">
+        <button class="ghost" data-act="unstall">다시 돌리기</button><span class="msg"></span></div></div>`).join("")
+    :'<p class="sub">멈춘 소재 없음.</p>';
+  document.querySelectorAll("#stalled .card[data-id]").forEach(card=>{
+    card.querySelector("button[data-act=unstall]").onclick=async e=>{
+      const b=e.currentTarget,m=card.querySelector(".msg");b.disabled=true;
+      try{await api(`${API}/${encodeURIComponent(card.dataset.id)}/unstall`,{by:"관리자",note:card.querySelector("input").value.trim()});
+        msg(m,"풀었습니다 — 워커가 다시 집습니다",true);setTimeout(load,500)}
+      catch(err){msg(m,err.message,false);b.disabled=false}};
+  });
+}
+function drawStops(errs,caps){
+  const capLines=((caps||{}).blocked_steps||[]).map(s=>`<li><b>${esc(LABEL[s]||s)}</b> — <span style="color:var(--bad)">하루 비용 상한으로 멈춤 (${((caps||{}).blocked||[]).map(k=>esc(COST[k]||k)+" "+num((caps.used||{})[k])+"/"+num((caps.caps||{})[k])).join(", ")})</span></li>`);
+  const rows=(errs||[]).map(e=>`<li><a href="#" data-open="${esc(e.id)}">#${esc(e.id)} ${esc(e.name)}</a>
+    <span class="tag grey">${esc(LABEL[e.state]||e.state)}</span> — <span style="color:var(--bad)">${esc(e.error)}</span></li>`);
+  $("#stops").innerHTML=[...capLines,...rows].join("")||'<li class="sub">멈춘 것 없음</li>';
+}
+function drawDecide(rows){
+  const keep={};document.querySelectorAll("#decide textarea").forEach(t=>keep[t.dataset.id]=t.value);
+  $("#decideN").textContent=rows.length?rows.length+"건":"";
+  $("#decide").innerHTML=rows.length?rows.map(t=>{const fin=t.state==="final_review";
+    return `<div class="card" data-id="${esc(t.id)}" data-stage="${esc(t.state)}"><div class="row"><span class="tag wait">${LABEL[t.state]}</span>
+      <a href="#" data-open="${esc(t.id)}"><b>#${esc(t.id)} ${esc(t.name)}</b></a><span class="sub">대기 시작 ${esc((t.since||"").slice(5,16).replace("T"," "))}</span></div>
+      <div class="sub">${fin?"완성본·원본·대조를 보고 판정":"계획.md·접촉 시트를 보고 제작 전 판정"} — 자료 ${(t.files||[]).map(f=>`<a href="${esc(fileUrl(t.id,f))}" target="_blank" rel="noopener">${esc(f)}</a>`).join(" · ")||"없음"} · <a href="#" data-open="${esc(t.id)}">상세</a></div>
+      <textarea data-id="${esc(t.id)}" placeholder="반려 사유(반려할 때 필수) / 통과 메모">${esc(keep[t.id]||"")}</textarea>
+      <div class="row" style="margin-top:6px"><button class="ok" data-act="pass">통과</button>
+        <select data-back><option value="">반려(폐기)</option>${BACK_TO.map(s=>`<option value="${s}">되돌림 → ${LABEL[s]}</option>`).join("")}</select>
+        <button class="bad" data-act="reject">반려</button><span class="msg"></span></div></div>`}).join("")
+    :'<p class="sub">검수 대기 없음.</p>';
+  document.querySelectorAll("#decide .card[data-id]").forEach(card=>{
+    card.querySelectorAll("button[data-act]").forEach(b=>b.onclick=async()=>{
+      const id=card.dataset.id,reason=card.querySelector("textarea").value.trim(),m=card.querySelector(".msg");
+      const verdict=b.dataset.act,back=card.querySelector("[data-back]").value||null;
+      if(verdict==="reject"&&!reason){msg(m,"반려 사유를 적어 주세요",false);return}
+      b.disabled=true;
+      try{await api(`${API}/${encodeURIComponent(id)}/review`,{stage:card.dataset.stage,verdict,by:"관리자",reason,back_to:verdict==="reject"?back:null});
+        msg(m,verdict==="pass"?"통과했습니다":"반려했습니다",true);card.querySelector("textarea").value="";setTimeout(load,500)}
+      catch(e){msg(m,e.message,false);b.disabled=false}});
+  });
+}
+function drawBoard(topics){
+  const by={};(D.states||Object.keys(LABEL)).forEach(s=>by[s]=[]);
+  topics.forEach(t=>(by[t.state]=by[t.state]||[]).push(t));
+  $("#board").innerHTML=Object.entries(by).map(([s,list])=>`<div class="col ${HUMAN.includes(s)?"review":""} ${list.length?"":"empty"}">
+    <h3><span>${LABEL[s]||esc(s)}</span><span class="sub">${list.length}</span></h3>
+    ${list.map(t=>{const lk=t.lock||{};return `<div class="item ${t.last_error?"err":""} ${lk.owner?"live":""}" data-open="${esc(t.id)}">
+      <div class="t">${esc(t.name)}</div>
+      <div class="sub">#${esc(t.id)} · ${esc(t.category)} · ${t.track==="discover"?"발굴":"벤치"}${(t.assign||{}).channel?" · "+esc(t.assign.channel):""}${(t.score||{}).total!=null?" · "+num(t.score.total)+"점":""}${t.rework_n?" · 재작업 "+t.rework_n:""}</div>
+      ${t.state==="rejected"?`<div class="sub">${t.back_to?"되돌림 → "+esc(LABEL[t.back_to]||t.back_to):"폐기"}</div>`:""}
+      ${lk.owner?`<div class="sub" style="${lk.stale?"color:var(--bad)":""}">⚙ ${esc(lk.owner)} ${esc(LABEL[lk.step]||lk.step||"")}${lk.stale?" (끊김)":""}</div>`:""}
+      ${t.stalled?`<div class="sub"><span class="tag red">멈춤 · 실패 ${num(t.error_count)}회</span></div>`:t.retry_at?`<div class="sub">다시 시도 ${esc(String(t.retry_at).slice(11,16))} 뒤</div>`:""}
+      ${t.last_error?`<div class="sub" style="color:var(--bad)">⚠ ${esc(String(t.last_error).slice(0,90))}</div>`:""}</div>`}).join("")}</div>`).join("");
+}
+function drawGallery(topics){
+  const g=topics.filter(t=>t.state==="passed");
+  $("#gallery").innerHTML=g.length?g.map(t=>{const o=t.outputs||{};
+    return `<a href="#" data-open="${esc(t.id)}">
+    ${o.sheet_1s?`<img src="${esc(fileUrl(t.id,o.sheet_1s))}" alt="">`:o.final?`<video src="${esc(fileUrl(t.id,o.final))}" muted preload="metadata"></video>`:'<div class="sub" style="aspect-ratio:9/16;background:#e2e8f0;border-radius:8px"></div>'}
+    <b>${esc(t.name)}</b><br><span class="sub">${esc((t.assign||{}).channel||"")} · ${esc((t.passed_at||"").slice(0,10))}</span></a>`}).join(""):'<p class="sub">아직 통과작이 없습니다.</p>';
+}
+function bindOpen(){document.querySelectorAll("[data-open]").forEach(el=>el.onclick=e=>{e.preventDefault();openDetail(el.dataset.open)})}
+
+async function load(){
+  try{
+    D=await api(API+(CAT?"?category="+encodeURIComponent(CAT):""));
+    $("#err").className="msg";
+    const topics=D.topics||[];
+    drawCats();drawMeter(D.kpi,D.caps);drawWorkers(D.workers);drawStops(D.errors,D.caps);
+    if(!document.activeElement||!document.activeElement.closest("#stalled"))drawStalled(D.stalled||[]);
+    if(!document.activeElement||!document.activeElement.closest("#decide"))drawDecide(D.decide||[]);
+    drawBoard(topics);drawGallery(topics);bindOpen();
+    $("#stamp").textContent="· 갱신 "+new Date().toLocaleTimeString("ko-KR")+" (10초마다)";
+  }catch(e){msg($("#err"),"불러오기 실패: "+e.message,false)}
+}
+
+// ── 상세 ──
+async function openDetail(id){
+  $("#detail").classList.add("on");$("#panel").innerHTML='<p class="sub">불러오는 중…</p>';
+  let d;try{d=await api(`${API}/${encodeURIComponent(id)}`)}catch(e){$("#panel").innerHTML=`<button class="ghost x" id="close">닫기</button><p class="msg err" style="display:block">${esc(e.message)}</p>`;$("#close").onclick=closeDetail;return}
+  const t=d.topic,sc=t.score||{},o=t.outputs||{},F={};(d.files||[]).forEach(f=>F[f.name]=f.url);
+  const url=k=>o[k]&&F[o[k]]?F[o[k]]:"";
+  const crit=Object.entries(sc.criteria||{});
+  $("#panel").innerHTML=`<button class="ghost x" id="close">닫기</button>
+  <div class="row"><span class="tag ${HUMAN.includes(t.state)?"wait":t.state==="passed"?"ok":t.state==="rejected"?"red":"grey"}">${LABEL[t.state]||esc(t.state)}</span><span class="sub">#${esc(t.id)}${t.next_step?" · 다음 일 "+esc(LABEL[t.next_step]||t.next_step):""}${t.rework_n?" · 재작업 "+t.rework_n:""}</span></div>
+  <h2 style="margin-top:6px">${esc(t.name)}</h2>
+  ${t.last_error?`<p class="msg err" style="display:block">멈춤: ${esc(t.last_error)}</p>`:""}
+  <dl class="kv"><dt>카테고리·트랙</dt><dd>${esc(t.category)} · ${t.track==="discover"?"발굴":"벤치"}</dd>
+    <dt>출처</dt><dd>${(t.source||{}).url?`<a href="${esc(t.source.url)}" target="_blank" rel="noopener">${esc(t.source.title||t.source.url)}</a>`:esc((t.source||{}).via||"–")}${(t.source||{}).expires?` <span class="sub">만료 ${esc(t.source.expires)}</span>`:""}</dd>
+    <dt>배정</dt><dd>${esc((t.assign||{}).channel||"–")} <span class="sub">${esc((t.assign||{}).preset||"")}</span></dd>
+    <dt>점수</dt><dd>${sc.total!=null?`<b>${num(sc.total)}</b> · `:""}${crit.map(([k,v])=>`<span title="${esc(v.why)}">${esc(k)} ${num(v.score)}</span>`).join(" · ")||"–"}</dd>
+    <dt>벤치</dt><dd>${(t.bench||{}).n_videos!=null?`영상 ${num(t.bench.n_videos)}편 · 포인트 ${(t.bench.points||[]).length}개`:(t.bench||{}).skipped?esc(t.bench.skipped):"–"}</dd>
+    <dt>비용</dt><dd>글 AI ${num((t.cost||{}).gemini||0)}회 · 나레 음성 ${num((t.cost||{}).typecast||0)}회 · 작업 ${num(Math.round(((t.cost||{}).seconds||0)/60))}분</dd>
+    <dt>실패</dt><dd>${t.error_count?`${num(t.error_count)}회${t.stalled?' <span class="tag red">멈춤</span>':""}${t.retry_at?" · 다시 시도 "+esc(t.retry_at):""}`:"–"}</dd>
+    <dt>권리</dt><dd>${Object.entries(t.rights||{}).map(([k,v])=>esc(k)+": "+esc(v)).join("<br>")||"–"}</dd>
+    <dt>판정</dt><dd>${(d.reviews||[]).map(r=>`${r.stage==="plan_review"?"선검수":"최종"} <b>${r.verdict==="pass"?"통과":"반려"}</b> ${esc(r.reason||"")}${r.back_to?" → "+esc(LABEL[r.back_to]||r.back_to):""} <span class="sub">${esc(r.by||"")} ${esc((r.at||"").slice(5,16).replace("T"," "))}</span>`).join("<br>")||"–"}</dd>
+  </dl>
+  ${(url("final")||url("original"))?`<h2>완성본 · 원본</h2><div class="pair">
+     <div><div class="sub">우리 완성본</div>${url("final")?`<video src="${esc(url("final"))}" controls preload="metadata"></video>`:'<p class="sub">없음</p>'}</div>
+     <div><div class="sub">원본</div>${url("original")?`<video src="${esc(url("original"))}" controls preload="metadata"></video>`:'<p class="sub">없음</p>'}</div></div>`:""}
+  ${url("sheet_1s")?`<h2>1초 시트</h2><img class="sheet" src="${esc(url("sheet_1s"))}" alt="1초 시트">`:""}
+  ${url("side_by_side")?`<h2>나란히(대조)</h2><img class="sheet" src="${esc(url("side_by_side"))}" alt="대조">`:""}
+  ${url("plan")?`<h2>계획 <a class="sub" href="${esc(url("plan"))}" target="_blank">원문</a></h2><div class="md" data-md="${esc(url("plan"))}">불러오는 중…</div>`:""}
+  ${url("plan_sheet")?`<img class="sheet" src="${esc(url("plan_sheet"))}" alt="계획 시트" style="margin-top:8px">`:""}
+  ${url("verdict")?`<h2>판정 사유 <a class="sub" href="${esc(url("verdict"))}" target="_blank">원문</a></h2><div class="md" data-md="${esc(url("verdict"))}">불러오는 중…</div>`:""}
+  ${url("diff")?`<h2>차이표 <a class="sub" href="${esc(url("diff"))}" target="_blank">원문</a></h2><div class="md" data-md="${esc(url("diff"))}">불러오는 중…</div>`:""}
+  <h2>산출물</h2><ul>${(d.files||[]).map(f=>`<li><a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.name)}</a>
+     <span class="sub">${num(Math.round(f.size/1024))}KB${Object.entries(o).filter(([,v])=>v===f.name).map(([k])=>" · "+esc(k)).join("")}</span></li>`).join("")||'<li class="sub">없음</li>'}</ul>
+  <h2>이력</h2><ul>${(d.history||[]).slice().reverse().map(h=>`<li><span class="sub">${esc((h.at||"").slice(5,16).replace("T"," "))}</span>
+     ${esc(h.kind)} ${h.from||h.to?`${esc(LABEL[h.from]||h.from||"")} → <b>${esc(LABEL[h.to]||h.to||"")}</b>`:""} ${h.step?esc(LABEL[h.step]||h.step):""} <span class="sub">${esc(h.by||"")}</span>${h.note?` — ${esc(h.note)}`:""}</li>`).join("")||'<li class="sub">없음</li>'}</ul>`;
+  $("#close").onclick=closeDetail;
+  document.querySelectorAll("#panel [data-md]").forEach(el=>fetch(el.dataset.md,{credentials:"same-origin"})
+    .then(r=>r.ok?r.text():Promise.reject(new Error("HTTP "+r.status))).then(x=>{el.textContent=x}).catch(e=>{el.textContent="못 불러옴: "+e.message}));
+}
+function closeDetail(){$("#detail").classList.remove("on")}
+$("#detail").onclick=e=>{if(e.target.id==="detail")closeDetail()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail()});
+
+load();setInterval(load,10000);
+</script>
+</body></html>
