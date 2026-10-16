@@ -265,3 +265,26 @@ def test_replan_from_state(tmp_path, monkeypatch):
                              "cells": {0: cell("A", 10.0), 1: cell("B", 20.0)}, "meta": META, "queries": [{"q": "x"}], "rounds": 0})
     out = ma.replan(tmp_path, "잇썸홈", net=FakeNet(tmp_path), llm=lambda p, q, t: ({}, None), sections=False)
     assert [s["vid"] for s in out["shots"]] == ["A", "B"]
+
+
+def test_verify_loop_final_picks_all_checked(tmp_path, monkeypatch):
+    """1080 검사에 걸린 컷은 다시 고르고, 최종 컷은 전부 검사 결과가 있어야 한다(4판: 두 바퀴 재선택 뒤 최종 컷이 검사 없이 나감)."""
+    monkeypatch.setattr(ma, "plan_sheet", lambda picks, toks, wd: [])
+    monkeypatch.setattr(ma, "_grab", lambda src, t, out: None)
+
+    class N(FakeNet):
+        def section(self, vid, info, a, b):
+            return f"{vid}_{a}.mp4"
+    calls = []
+
+    def llm(parts, prompt, tag):
+        if tag == "ma_verify":
+            calls.append(prompt)
+            return {"cells": [{"n": 0, "text": len(calls) <= 2}, {"n": 1, "text": False}]}, None
+        return {}, None
+    ts = [dict(toks(1)[0], i=0, line=0), dict(toks(1)[0], i=1, line=1)]
+    cells = {0: cell("A", 10.0), 1: cell("B", 30.0), 2: cell("C", 50.0), 3: cell("D", 70.0)}
+    state = {"queries": [], "meta": {**META, "C": {"res": 1080}, "D": {"res": 1080}}, "cells": cells}
+    T = {}
+    picks, _ = ma.finish_plan(ts, _needs(ts), {0: [(0, 9), (1, 7), (3, 6)], 1: [(2, 9)]}, {}, state, ITS, N(tmp_path), ma.LLM(llm), tmp_path, True, T)
+    assert picks[0]["vid"] == "D" and all(p.get("verify") == "ok" for p in picks)

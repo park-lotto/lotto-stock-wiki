@@ -43,6 +43,7 @@ WORKERS = 4               # 무거운 일 동시 상한
 MAX_429 = 10              # 제미나이 429 이 횟수 넘으면 멈춤
 REUSE_GAP = 3.0           # 같은 소스 ±3초 안 재사용 금지(사장님 10-17)
 MIN_LUMA = 45             # 칸 평균 밝기(0~255) 이 미만은 어두움(B9 첫·끝 컷 기준 60보다 느슨)
+VERIFY_ROUNDS = 2         # 1080 검사 → 재선택 바퀴 수(마지막 바퀴 뒤엔 검사만 하고 걸린 컷은 빈칸)
 MIN_SCORE = 5             # 짝짓기 점수(0~10) 이 미만은 안 쓴다
 PREVIEW_HEAD = 300        # 미리보기는 앞 300초까지
 SHEET_N = 30              # 시트 한 장 칸 수(6×5)
@@ -271,9 +272,13 @@ class Net:
         if _valid_video(out):
             return str(out)
         out.unlink(missing_ok=True)
-        self._gap()
-        r = _run(["yt-dlp", "--no-update", "-f", SECTION_FMT, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
-                  f"https://www.youtube.com/watch?v={vid}"], timeout=900)
+        for fmt in (SECTION_FMT, "137/bv*[height>=1080]/bv*[width>=1080]/bv*[height>=720]"):   # HLS 가 빈 파일이면(10-17 qTWg) DASH 로 한 번 더
+            self._gap()
+            r = _run(["yt-dlp", "--no-update", "-f", fmt, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
+                      f"https://www.youtube.com/watch?v={vid}"], timeout=900)
+            if _valid_video(out):
+                break
+            out.unlink(missing_ok=True)
         if _valid_video(out):
             self.bytes += out.stat().st_size
             return str(out)
@@ -522,7 +527,7 @@ def cut_lengths(picks: list[dict]) -> list[float]:
 
 
 # ── 짝짓기(글) ─────────────────────────────────────────────────────────────
-MATCH_PROMPT = """숏폼 편집자다. [토막]마다 [장면 목록]에서 토막의 명사·동작이 **화면에 그대로 보이는** 장면을 점수(0~10)와 함께 최대 3개 골라라.
+MATCH_PROMPT = """숏폼 편집자다. [토막]마다 [장면 목록]에서 토막의 명사·동작이 **화면에 그대로 보이는** 장면을 점수(0~10)와 함께 최대 5개 골라라.
 10 = 말한 사물·동작이 정확히 보임, 6 = 대체로 맞음, 3 이하 = 분위기만 비슷. 맞는 게 없으면 빈 목록. 번호를 순서대로 찍지 마라.
 [토막]
 {toks}
@@ -584,7 +589,7 @@ def match_lines(toks, needs, cells, meta, rules, llm, log=print) -> dict:
                         cid, s = _as_int(c[0]), _as_int(c[1])
                         if cid in ids and s is not None:
                             lst.append((cid, s))
-                ranked[ti] = sorted(lst, key=lambda x: -x[1])[:3]
+                ranked[ti] = sorted(lst, key=lambda x: -x[1])[:5]   # 3개면 1080 검사로 몇 개 빠지면 빈칸(4판 실측)
             seq = [r[0][0] for r in (ranked.get(t["i"]) for t in ts) if r]
             n_seq = sum(1 for a, b in zip(seq, seq[1:]) if b == a + 1)
             if len(seq) > 3 and n_seq >= len(seq) - 1:
@@ -789,16 +794,27 @@ def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections
         T["6_구간받기"] = round(time.time() - t, 1)
         # 1080 컷 프레임 검사(남의 글자·어두움) — 360p 미리보기 설명이 놓친 작은 글자를 잡는다(1판: 'Click' 설명 자막 컷 통과)
         t = time.time()
-        for vr in range(2):
-            flagged = verify_cuts(picks, wd, llm, only_new=vr > 0)
-            if not flagged:
+        seen = {}            # (vid, src_t0, src_t1) → 검사 결과 — 다시 고른 뒤 그대로인 컷은 다시 안 묻는다
+        for vr in range(VERIFY_ROUNDS + 1):
+            for p in picks:
+                k = (p.get("vid"), p.get("src_t0"), p.get("src_t1"))
+                if k in seen:
+                    p["verify"] = seen[k]
+            flagged = verify_cuts(picks, wd, llm, only_new=True)
+            for p in picks:
+                if "verify" in p:
+                    seen[(p.get("vid"), p.get("src_t0"), p.get("src_t1"))] = p["verify"]
+            if not flagged or vr == VERIFY_ROUNDS:
                 break
             ban_cells(flagged, state["cells"])
             picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
             fetch_sections(picks, state["meta"], net)
+        # 마지막 검사에도 걸린 컷은 쓰지 않는다(A5 > 빈칸) — 1판 4: 두 바퀴 재선택 뒤 최종 컷이 검사 없이 나갔다
         for p in picks:
-            if p.get("verify") in ("text", "dark"):   # 두 바퀴 뒤에도 걸린 컷은 쓰지 않는다(A5 > 빈칸)
+            if p.get("verify") in ("text", "dark"):
                 p.update({"none": True, "why": f"1080 검사 {p['verify']}"})
+            elif p.get("vid") and not p.get("section_file"):
+                p["verify"] = "구간 못 받음"
         T["6b_1080검사"] = round(time.time() - t, 1)
     for p in picks:
         if p.get("none"):
@@ -933,7 +949,7 @@ def fetch_sections(picks, meta, net, pad: float = 1.0, join_gap: float = 8.0):
 
     def one(j):
         vid, a, b, g = j
-        return j, net.section(vid, meta[vid]["info"], a, b)
+        return j, net.section(vid, meta[vid].get("info"), a, b)
     with cf.ThreadPoolExecutor(WORKERS) as ex:
         for (vid, a, b, g), f in ex.map(one, jobs):
             for p in g:
