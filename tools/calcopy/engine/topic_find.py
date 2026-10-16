@@ -6,8 +6,11 @@
     PYTHONUTF8=1 py tools/calcopy/engine/topic_find.py --preset yummyknow --source-kind 제품비하인드 --keywords "코스트코,신라면" --out …
 
 설계 §4-2 "소재 단계 = 같은 소재 영상 벤치":
+  0) 정확하게, 무작위 금지(사장님 10-16): 검색어 = 출처 유형 + 구체 명사(≤6, 후보표에 '왜 이 검색어인가' 한 줄씩) ·
+     검색어당 ≤20편 · 전체 메타 ≤100편 · 요청 간격 ≥1초 · 벤치 댓글은 후보 상위 3개만 — Limits. 넘으면 멈추고 후보.json stopped 에 이유.
+     해시태그 피드·'조회순 전체' 긁기는 하지 않는다.
   1) 통로 — 프리셋의 소재 출처 유형(manifest.source_kind, 없으면 --source-kind)에 따라
-       해외영상/제품비하인드 = 유튜브 쇼츠 검색(조회순·짧은 영상·최근 N개월 필터) — 검색어 = 채널 top50 제목 낱말 n-gram
+       해외영상/제품비하인드 = 유튜브 쇼츠 검색(조회순·짧은 영상·최근 N개월 필터) — 검색어 = 출처 유형 틀 + 구체 명사(--keywords, 없으면 top50 해시태그·고유명사)
        커뮤니티            = community_mine(보배드림 베스트, robots 허용 곳만) 재사용
        뉴스                = 네이버 뉴스 검색 결과 페이지 파싱(안 되면 failed 로 남긴다)
        고객제품            = --keywords 로 받은 제품 그대로(검색 없음)
@@ -142,29 +145,116 @@ def _hashtags(title: str) -> list[str]:
     return out
 
 
-def keyword_bundles(top: list[dict], k: int = 8) -> list[str]:
-    """제목 낱말 1·2-gram + 해시태그 묶음에 조회수 로그 가중 → 위에서 k개(앞 것에 포함되는 것은 뺀다).
-    2-gram ×1.5, 해시태그 ×2, 낱말 하나는 제목 2개 이상에 나올 때만(한 편짜리 꾸밈말 거르기)."""
-    sc, df = Counter(), Counter()
+# top50 n-gram 에서 나온 잡음(10-16 실측 'household'·'painting'·'seed'·'felt'·'causing' — 구체 명사가 아니다)
+NOISE = {"household", "painting", "seed", "felt", "causing", "surprisingly", "delicious", "trend", "brand", "cheese", "chicken", "budget",
+         "double", "living", "room", "space", "must", "have", "camping", "hand", "hands", "home", "homehacks", "relatable", "asmr",
+         "dessert", "menu", "snack", "korean", "korea's", "mr", "ms", "update"}
+
+# 소재 출처 유형 + 구체 명사 = 검색어(사장님 10-16 "천천히 타겟 서칭, 무작위로 받지 말고"). 해시태그 피드 전체 긁기는 하지 않는다.
+QUERY_TEMPLATES = {"해외영상": "{n}", "제품비하인드": "{n} 신상", "커뮤니티": "{n}", "뉴스": "{n}", "고객제품": "{n}"}
+
+
+def _caps(title: str) -> list[str]:
+    """영어 제목의 고유명사 덩어리(대문자 낱말 연속, 꾸밈·잡음 낱말에서 끊는다) — 'Why Costco Korea felt' → 'costco korea'."""
+    t = re.sub(r"#\w+", " ", title or "")
+    out, cur = [], []
+    for w in re.findall(r"[A-Za-z][A-Za-z'’]*|[^A-Za-z\s]+", t):
+        lw = w.lower().replace("’", "'")
+        if w[:1].isupper() and len(w) >= 2 and lw not in STOP and lw not in NOISE:
+            cur.append(lw)
+        else:
+            if cur:
+                out.append(" ".join(cur))
+            cur = []
+    if cur:
+        out.append(" ".join(cur))
+    return out
+
+
+def concrete_nouns(top: list[dict], k: int = 6) -> list[str]:
+    """채널 top50 제목에서 구체 명사(제품명·브랜드)만: 해시태그(제품 이름) ×2 + 제목 2편 이상에 나온 고유명사 덩어리·한글 낱말.
+    잘린 제목('…' 끝)의 마지막 해시태그는 잘린 글자라 뺀다('budget frie')."""
+    sc, df, src = Counter(), Counter(), {}
+    tags = set()
     for v in top:
+        title = v.get("title", "")
         w = math.log10(max(int(v.get("views") or 0), 10))
-        tk = _tokens(v.get("title", ""))
-        for g in set(tk):
+        hs = _hashtags(title)
+        if title.rstrip().endswith(("...", "…")) and hs:
+            hs = hs[:-1]
+        hs = [h for h in hs if not any(x in NOISE for x in h.split())]
+        tags |= set(hs)
+        ko = [x for x in re.findall(r"[가-힣]{2,}", re.sub(r"#\S+", " ", title)) if x not in STOP]
+        grams = set(_caps(title)) | set(ko)
+        for g in grams:
             df[g] += 1
-        grams = {(g, 1.0) for g in set(tk)} | {(f"{a} {b}", 1.5) for a, b in zip(tk, tk[1:])} | {(h, 2.0) for h in _hashtags(v.get("title", ""))}
-        for g, m in grams:
-            sc[g] += w * m
-    for g in list(sc):
-        if " " not in g and df[g] < 2 and g not in {h for v in top for h in _hashtags(v.get("title", ""))}:
-            del sc[g]
+        for g in grams | set(hs):
+            sc[g] += w * (2.0 if g in hs else 1.0)
+            if g not in src or (v.get("views") or 0) > src[g][1]:
+                src[g] = (v.get("id"), v.get("views") or 0, title[:40])
     out = []
     for g, _ in sc.most_common():
-        if any(g in o or o in g for o in out):
+        if g not in tags and df[g] < 2:
+            continue
+        if g in STOP or g in NOISE or any(g in o or o in g for o in out):
             continue
         out.append(g)
         if len(out) >= k:
             break
-    return out
+    return [{"noun": g, "why": (f"해시태그(제품 이름)" if g in tags else f"고유명사·낱말 top50 {df[g]}편") +
+             f" · 최고 조회 {src[g][1]:,} {src[g][0]} '{src[g][2]}'"} for g in out]
+
+
+def target_queries(kind: str, nouns: list, max_queries: int) -> list[dict]:
+    """검색어 = 출처 유형 틀 + 구체 명사 → [{q, why}]. why = 왜 이 검색어인가(후보표에 한 줄씩 — 무작위가 아님을 보인다).
+    nouns = 글(사람 지정 --keywords) 또는 concrete_nouns 의 {noun, why}. 두 낱말 이상 한글 지정어('편의점 신메뉴')는 그대로."""
+    tpl = QUERY_TEMPLATES[kind]
+    out, seen = [], set()
+    for x in nouns:
+        n, why = (x["noun"], x["why"]) if isinstance(x, dict) else (x.strip(), "사람 지정(--keywords)")
+        q = n if (" " in n and kind != "해외영상" and not n.isascii()) else tpl.format(n=n)
+        if q in seen:
+            continue
+        seen.add(q)
+        out.append({"q": q, "why": f"출처 유형 '{kind}' 틀 '{tpl}' + {why}"})
+    return out[:max_queries]
+
+
+class LimitHit(Exception):
+    pass
+
+
+class Limits:
+    """한 실행의 네트워크 상한(사장님 10-16 정정 "느리게가 아니라 정확하게"): 검색어 ≤6(출처 유형+구체 명사만) · 검색어당 ≤20편 ·
+    전체 메타 조회 ≤100편 · 요청 간격 ≥1초(봇 확인 피할 만큼만, 일부러 늦추지 않는다) · 벤치 댓글은 후보 상위 3개만.
+    넘기면 LimitHit — run 이 멈추고 이유를 후보.json stopped 에 남긴다."""
+    MIN_RATE = 1.0
+
+    def __init__(self, max_queries: int = 6, per_query: int = 20, max_meta: int = 100, rate: float = 1.0, bench_top: int = 3, sleep=time.sleep):
+        if rate < self.MIN_RATE:
+            raise SystemExit(f"요청 간격 {rate}초 < {self.MIN_RATE}초 — 봇 확인 위험이라 거절")
+        if max_queries > 6 or per_query > 20 or max_meta > 100 or bench_top > 3:
+            raise SystemExit("상한은 검색어 ≤6 · 검색어당 ≤20 · 메타 ≤100 · 벤치 상위 ≤3 (사장님 10-16)")
+        self.max_queries, self.per_query, self.max_meta, self.rate, self.bench_top = max_queries, per_query, max_meta, rate, bench_top
+        self.meta, self.requests, self._last, self._sleep, self.stopped = 0, 0, 0.0, sleep, None
+
+    def take(self, n: int, what: str):
+        """메타 n편을 쓰기 전에 부른다 — 넘으면 멈춤. 통과하면 간격을 지켜 기다린다."""
+        if self.stopped:   # 한 번 멈추면 그 실행의 네트워크는 끝(남은 상한으로 다른 단계를 이어 가지 않는다)
+            raise LimitHit(self.stopped)
+        if self.meta + n > self.max_meta:
+            self.stopped = f"메타 조회 상한 {self.max_meta}편 — {what} {n}편을 더하면 {self.meta + n}편이라 멈춤"
+            raise LimitHit(self.stopped)
+        gap = time.time() - self._last
+        if self._last and gap < self.rate:
+            self._sleep(self.rate - gap)
+        self._last = time.time()
+        self.meta += n
+        self.requests += 1
+
+    def summary(self) -> dict:
+        return {"meta": self.meta, "requests": self.requests, "max_meta": self.max_meta, "max_queries": self.max_queries,
+                "per_query": self.per_query, "rate": self.rate, "bench_top": self.bench_top, "stopped": self.stopped}
 
 
 # ── 통로(네트워크) — 주입 가능 ─────────────────────────────────────────────
@@ -178,7 +268,7 @@ def _yt_sp(months: int | None) -> str:
 def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
     """유튜브 검색 목록(flat) — id·제목·조회·길이. 쇼츠 길이 넘는 것은 뺀다."""
     url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=" + _yt_sp(months)
-    r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--flat-playlist", "-I", f"1:{n * 2}", "--print",
+    r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--flat-playlist", "-I", f"1:{n}", "--print",   # 요청한 n편만(메타 상한에 그대로 센다)
                         "%(id)s\t%(duration)s\t%(view_count)s\t%(title)s", url],
                        capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=120)
     out = []
@@ -333,8 +423,11 @@ def _clean_title(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
-def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: set, net: dict, log=print) -> tuple[list[dict], list[dict]]:
-    """통로별 후보 목록 → [{id, topic, query, source}], 실패 목록."""
+def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: set, net: dict, log=print, limits: "Limits | None" = None,
+           per_query: int = 10) -> tuple[list[dict], list[dict]]:
+    """통로별 후보 목록 → [{id, topic, query, source}], 실패 목록. 네트워크는 limits.take 를 거친다(상한 넘으면 LimitHit — 모은 데까지 돌려준다)."""
+    limits = limits or Limits()
+    pq = min(per_query, limits.per_query)
     route = SOURCE_KINDS[kind]
     cands, failed, seen = [], [], set()
     if route == "given":
@@ -343,7 +436,11 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
         pool = []
         for q in keywords:
             try:
-                got = net["yt_search"](q, n, months)
+                limits.take(pq, f"검색 '{q}'")
+            except LimitHit:
+                break
+            try:
+                got = net["yt_search"](q, pq, months)
             except Exception as e:  # noqa: BLE001 — 검색어 하나 실패는 failed 로 남기고 다음으로
                 failed.append({"where": f"yt_search {q}", "why": f"{type(e).__name__}: {str(e)[:120]}"}); continue
             if not got:
@@ -362,7 +459,10 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
                 break
     elif route == "community":
         try:
+            limits.take(min(n, pq) * len(keywords), "커뮤니티 검색")
             rows = net["community_search"](keywords)
+        except LimitHit:
+            rows = []
         except Exception as e:  # noqa: BLE001
             rows = []; failed.append({"where": "community", "why": f"{type(e).__name__}: {str(e)[:120]}"})
         for x in rows[:n]:
@@ -370,7 +470,11 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
     elif route == "news":
         for q in keywords:
             try:
-                rows = net["news_search"](q, n)
+                limits.take(pq, f"뉴스 '{q}'")
+            except LimitHit:
+                break
+            try:
+                rows = net["news_search"](q, pq)
             except Exception as e:  # noqa: BLE001
                 rows = []; failed.append({"where": f"news {q}", "why": f"{type(e).__name__}: {str(e)[:120]}"})
             if not rows:
@@ -401,14 +505,23 @@ def _relevant(d: dict, query: str) -> bool:
     return any(w in hay for w in words)
 
 
-def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 6, n_comments: int = 50, delay: float = 1.0) -> dict:
-    """같은 소재 영상 n편(조회순) — 제목·설명·댓글 → 포인트(LLM 1회) → 벤치/<id>.md·.json."""
+def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments: int = 50, limits: "Limits | None" = None) -> dict:
+    """같은 소재 영상 n편(조회순) — 제목·설명·댓글 → 포인트(LLM 1회) → 벤치/<id>.md·.json. 메타 조회는 limits 상한 안에서만."""
+    limits = limits or Limits()
     vids, failed = [], []
     try:
+        limits.take(n_videos, f"벤치 검색 {c['id']}")
         lst = net["yt_search"](c["query"], n_videos, None)
+    except LimitHit as e:
+        lst = []; failed.append(f"멈춤: {e}")
     except Exception as e:  # noqa: BLE001
         lst = []; failed.append(f"검색 {type(e).__name__}: {str(e)[:100]}")
     for v in lst[:n_videos]:
+        try:
+            limits.take(1, f"벤치 상세 {v['id']}")
+        except LimitHit as e:
+            failed.append(f"멈춤: {e}")
+            break
         d = net["yt_detail"](v["id"], n_comments)
         if d.get("failed"):
             failed.append(f"{v['id']}: {d['failed'][:100]}")
@@ -417,7 +530,6 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 6, n_comments
             failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]})")
             continue
         vids.append(d)
-        time.sleep(delay)
     dump = "\n\n".join(f"[v_{d['id']}] 조회 {d.get('views')} · {d.get('title')}\n설명: {(d.get('description') or '')[:300]}\n댓글: " +
                        " / ".join(f"({x['likes']}) {x['text'][:80]}" for x in d.get("comments", [])[:15]) for d in vids)
     points, best, err = [], "", None
@@ -468,7 +580,8 @@ def score(cands: list[dict], benches: dict, slug: str, llm: LLM) -> tuple[dict, 
 
 
 def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, keywords: list[str] | None = None, months: int | None = 6,
-        bench_n: int = 6, made_extra: list[str] | None = None, net: dict | None = None, llm: LLM | None = None, log=print) -> dict:
+        bench_n: int = 4, made_extra: list[str] | None = None, net: dict | None = None, llm: LLM | None = None, log=print,
+        limits: "Limits | None" = None, per_query: int = 10) -> dict:
     net = {**NET, **(net or {})}
     llm = llm or LLM()
     P = load_preset(preset)
@@ -476,14 +589,22 @@ def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, key
     if kind not in SOURCE_KINDS:
         raise SystemExit(f"소재 출처 유형이 없다/모름: {kind!r} — manifest.source_kind 또는 --source-kind {list(SOURCE_KINDS)}")
     top = _read_json(P["chdir"] / "원자료" / "top50.json") or []
-    kws = keywords or keyword_bundles(top)
+    limits = limits or Limits()
+    nouns = keywords or concrete_nouns(top)
+    queries = target_queries(kind, nouns, limits.max_queries)
+    if len(nouns) > limits.max_queries:
+        log(f"[검색어] {len(nouns)}개 중 상한 {limits.max_queries}개만")
+    kws = [q["q"] for q in queries]
     log(f"[검색어] {kws}")
     out.mkdir(parents=True, exist_ok=True)
-    cands, failed = gather(kind, kws, n, months, {v["id"] for v in top}, net, log)
+    cands, failed = gather(kind, kws, n, months, {v["id"] for v in top}, net, log, limits, per_query)
     corpus = made_corpus(P["chdir"], made_extra)
     benches = {}
-    for c in cands:
-        benches[c["id"]] = bench(c, out, net, llm, bench_n)
+    for i, c in enumerate(cands):
+        if i >= limits.bench_top:   # 벤치(댓글)는 후보 상위(조회순) bench_top 개만 — 나머지는 네트워크·LLM 없이 자리만
+            benches[c["id"]] = {"videos": [], "points": [], "best_angle": "", "failed": [f"벤치 안 함 — 상위 {limits.bench_top}개 밖"]}
+            continue
+        benches[c["id"]] = bench(c, out, net, llm, bench_n, limits=limits)
         log(f"[벤치] {c['id']} {c['topic'][:40]} — 영상 {len(benches[c['id']]['videos'])} · 포인트 {len(benches[c['id']]['points'])}")
     rows, err = score(cands, benches, P["slug"], llm) if cands else ({}, "후보 0")
     if err:
@@ -496,14 +617,15 @@ def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, key
         if c["overlap"]["score"] >= OVERLAP_CUT:
             c["flags"].append(f"이미 만든 소재와 겹침 {c['overlap']['score']} ({c['overlap']['with']})")
         c["total"] = total(c["scores"], c["overlap"])
-        c["bench"] = str(out / "벤치" / f"{c['id']}.md")
+        c["bench"] = str(out / "벤치" / f"{c['id']}.md") if (out / "벤치" / f"{c['id']}.md").exists() else None
         c["bench_points"] = benches[c["id"]]["points"]
     ranked = sorted(cands, key=lambda c: -c["total"])
     for i, c in enumerate(ranked, 1):
         c["rank"] = i
     rec = [c["id"] for c in ranked if not any("점수 없음" in f for f in c["flags"]) and c["overlap"]["score"] < OVERLAP_CUT][:3]
-    res = {"engine": "topic_find v1", "preset": preset, "slug": P["slug"], "source_kind": kind, "keywords": kws, "months": months,
+    res = {"engine": "topic_find v1", "preset": preset, "slug": P["slug"], "source_kind": kind, "keywords": kws, "queries": queries, "months": months,
            "made_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "candidates": ranked, "recommend": rec, "failed": failed, "llm_calls": llm.calls,
+           "limits": limits.summary(), "stopped": limits.stopped,
            "note": "고르는 건 사람/오푸스 자리 — recommend 는 점수 순 추천일 뿐"}
     (out / "후보.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
     write_table(res, out / "후보표.md")
@@ -517,12 +639,18 @@ def write_table(res: dict, dst: Path):
           f"- 검색어: {', '.join(res['keywords'])} · 최근 {res['months']}개월 · 만든 시각 {res['made_at']}",
           f"- 추천(점수 순, 겹침·점수없음 제외): **{', '.join(res['recommend']) or '없음'}** — 고르는 건 사람/오푸스",
           f"- 합계 = 6기준 합(근거 없는 점수 0) − 겹침 {OVERLAP_CUT} 이상이면 겹침×{OVERLAP_PENALTY}", ""]
+    md += ["", "## 왜 이 검색어인가", ""] + [f"- `{q['q']}` — {q['why']}" for q in res.get("queries") or []] + [""]
+    lm = res.get("limits") or {}
+    md.append(f"- 네트워크: 메타 {lm.get('meta')}/{lm.get('max_meta')}편 · 요청 {lm.get('requests')}회 · 간격 ≥{lm.get('rate')}초 · 벤치 상위 {lm.get('bench_top')}개")
+    if res.get("stopped"):
+        md.append(f"- ⛔ 멈춤: {res['stopped']}")
+    md.append("")
     if res["failed"]:
         md += [f"- ⚠ 실패: {f['where']} — {f['why']}" for f in res["failed"]] + [""]
     md += ["| 순위 | id | 소재 | " + " | ".join(names) + " | 겹침 | 합계 | 벤치 |", "|---|---|---|" + "---|" * len(names) + "---|---|---|"]
     for c in res["candidates"]:
         sc = " | ".join("-" if c["scores"][k]["score"] is None else str(c["scores"][k]["score"]) for k, _ in CRITERIA)
-        md.append(f"| {c['rank']} | {c['id']} | {c['topic'][:40].replace('|', '¦')} | {sc} | {c['overlap']['score']} | {c['total']} | [벤치]({Path(c['bench']).name and '벤치/' + Path(c['bench']).name}) |")
+        md.append(f"| {c['rank']} | {c['id']} | {c['topic'][:40].replace('|', '¦')} | {sc} | {c['overlap']['score']} | {c['total']} | {('[벤치](벤치/' + Path(c['bench']).name + ')') if c.get('bench') else '-'} |")
     md += ["", "## 근거", ""]
     for c in res["candidates"]:
         md += [f"### {c['rank']}. {c['id']} {c['topic']}", f"- 출처: {c['source'].get('url', '')} · 각도: {c.get('angle') or '-'}"]
@@ -537,14 +665,20 @@ def main(argv=None):
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--out", required=True)
     ap.add_argument("--source-kind", choices=list(SOURCE_KINDS))
-    ap.add_argument("--keywords", default="", help="쉼표 구분(없으면 top50 제목 n-gram)")
+    ap.add_argument("--keywords", default="", help="쉼표 구분 구체 명사(제품·브랜드·사건). 없으면 top50 제목의 해시태그·고유명사")
     ap.add_argument("--months", type=int, default=6, help="유튜브 올린 날짜 필터(≤1 이번 달, ≤12 올해, 0=없음)")
-    ap.add_argument("--bench-n", type=int, default=6)
+    ap.add_argument("--bench-n", type=int, default=4, help="벤치 영상 수(후보 하나당)")
+    ap.add_argument("--per-query", type=int, default=10, help="검색어당 편수(≤20)")
+    ap.add_argument("--max-queries", type=int, default=6, help="검색어 수(≤6)")
+    ap.add_argument("--max-meta", type=int, default=100, help="전체 메타 조회 편수(≤100)")
+    ap.add_argument("--rate", type=float, default=1.0, help="요청 간격 초(≥1)")
+    ap.add_argument("--bench-top", type=int, default=3, help="벤치(댓글) 받을 후보 수(≤3)")
     ap.add_argument("--made", default="", help="이미 만든 소재 추가(| 구분)")
     ap.add_argument("--max-llm", type=int, default=12, help="무료 제미나이 호출 상한(한 번 실행)")
     a = ap.parse_args(argv)
     res = run(a.preset, Path(a.out), a.n, a.source_kind, [k.strip() for k in a.keywords.split(",") if k.strip()] or None,
-              a.months or None, a.bench_n, [x for x in a.made.split("|") if x], llm=LLM(budget=a.max_llm))
+              a.months or None, a.bench_n, [x for x in a.made.split("|") if x], llm=LLM(budget=a.max_llm),
+              limits=Limits(a.max_queries, a.per_query, a.max_meta, a.rate, a.bench_top), per_query=a.per_query)
     return 0 if res["candidates"] else 1
 
 

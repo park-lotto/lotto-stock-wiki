@@ -206,7 +206,7 @@ def test_topic_overlap_with_made_lowers_score(tmp_path):
                    "bench_c2": {"points": [{"kind": "number", "text": "하루 생산량", "from": "v_rm1"}]},
                    "score": _same_scores(["c1", "c2"])})
     res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], months=6, bench_n=1,
-                net=_fake_net(), llm=llm, log=lambda *_: None)
+                net=_fake_net(), llm=llm, log=lambda *_: None, limits=T.Limits(sleep=lambda s: None))
     by = {c["id"]: c for c in res["candidates"]}
     sp, rm = by["c1"], by["c2"]
     assert "스피커" in sp["topic"] and "신라면" in rm["topic"]
@@ -224,7 +224,7 @@ def test_topic_overlap_with_made_lowers_score(tmp_path):
 
 def test_score_without_reason_is_dropped(tmp_path):
     llm = FakeLLM({"bench_c1": {"points": []}, "bench_c2": {"points": []}, "score": _same_scores(["c1", "c2"], drop_why="c2")})
-    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], bench_n=1, net=_fake_net(), llm=llm, log=lambda *_: None)
+    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면"], bench_n=1, net=_fake_net(), llm=llm, log=lambda *_: None, limits=T.Limits(sleep=lambda s: None))
     rm = next(c for c in res["candidates"] if c["id"] == "c2")
     assert rm["scores"]["fun"]["score"] is None and "fun 근거 없음" in rm["flags"]
     assert rm["total"] == 7 * 5                               # 근거 없는 9점은 합계에 안 들어간다
@@ -235,22 +235,40 @@ def test_source_kind_required():
         T.run(SSEOL, Path("."), source_kind=None, keywords=["x"], net=_fake_net(), llm=FakeLLM({}), log=lambda *_: None)
 
 
-def test_keyword_bundles_use_hashtags_and_skip_bait_words():
-    kw = T.keyword_bundles([{"views": 8_800_000, "title": "Make sure #BoneConductionSpeaker insane"},
-                            {"views": 1_000, "title": "The insane secret chair"}])
-    assert "bone conduction speaker" in kw and "insane" not in kw and "secret" not in kw
+def test_concrete_nouns_and_why():
+    """검색어 = 구체 명사(해시태그·고유명사)만, 잡음·꾸밈 낱말 없음, 잘린 해시태그 없음, 검색어마다 '왜' 한 줄."""
+    top = [{"id": "a", "views": 8_800_000, "title": "Make sure #BoneConductionSpeaker #Household insane #BudgetFrie..."},
+           {"id": "b", "views": 1_000, "title": "Why Costco Korea felt so bad"}, {"id": "c", "views": 900, "title": "Costco Korea painting secret"}]
+    nouns = T.concrete_nouns(top)
+    names = [x["noun"] for x in nouns]
+    assert "bone conduction speaker" in names and "costco korea" in names
+    assert not {"household", "budget frie", "insane", "felt", "painting", "secret"} & set(names)
+    qs = T.target_queries("제품비하인드", nouns + ["편의점 신메뉴"], 6)
+    assert all(q["why"] for q in qs) and "해시태그" in qs[0]["why"]
+    assert {"q": "편의점 신메뉴", "why": "출처 유형 '제품비하인드' 틀 '{n} 신상' + 사람 지정(--keywords)"} in qs
+    assert "costco korea 신상" in [q["q"] for q in qs]
 
 
-def test_bench_drops_unrelated_videos(tmp_path):
-    """10-16 실측 결함: 벤치 검색이 조회순 무관 영상(ASMR·pov)을 물어 왔다 → 검색어 낱말이 없는 영상은 뺀다."""
-    net = {"yt_search": lambda q, n, m: [{"id": "a"}, {"id": "b"}],
-           "yt_detail": lambda vid, n: {"id": vid, "url": vid, "title": {"a": "Bone conduction speaker test", "b": "pov: you can't sleep"}[vid],
-                                        "description": "", "comments": []}}
-    c = {"id": "c1", "topic": "x", "key": "bone conduction speaker",
-         "query": T.bench_query("bone conduction speaker", "I Can t Sleep Without Sound Pillow Speaker")}
-    assert c["query"].startswith("bone conduction speaker") and "sleep" in c["query"]
-    r = T.bench(c, tmp_path, net, FakeLLM({}), n_videos=2, delay=0)
-    assert [v["id"] for v in r["videos"]] == ["a"] and any("무관 영상 제외" in f for f in r["failed"])
+def test_limit_exceeded_stops_and_records(tmp_path):
+    """메타 조회 상한을 넘기면 더 검색하지 않고 멈춤 이유를 후보.json·후보표에 남긴다."""
+    calls = []
+    net = _fake_net()
+    orig = net["yt_search"]
+    net["yt_search"] = lambda q, n, m: (calls.append(q), orig(q, n, m))[1]
+    lim = T.Limits(max_meta=12, sleep=lambda s: None)
+    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", keywords=["스피커", "신라면", "라면"], bench_n=1, net=net,
+                llm=FakeLLM({}), log=lambda *_: None, limits=lim, per_query=5)
+    assert calls == ["스피커", "신라면"]                     # 세 번째 검색(5편 더 → 15 > 12) 전에 멈춤
+    assert res["stopped"] and "메타 조회 상한 12편" in res["stopped"]
+    assert res["limits"]["meta"] <= 12
+    assert "멈춤" in (tmp_path / "후보표.md").read_text(encoding="utf-8")
+
+
+def test_limits_refuse_too_fast_or_too_big():
+    with pytest.raises(SystemExit):
+        T.Limits(rate=0.5)
+    with pytest.raises(SystemExit):
+        T.Limits(max_meta=500)
 
 
 def test_llm_budget_stops_calls():
