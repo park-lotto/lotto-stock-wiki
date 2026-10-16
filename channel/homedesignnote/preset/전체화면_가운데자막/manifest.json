@@ -857,9 +857,9 @@
     "cut_median_s": {
      "allow": [
       0.805,
-      1.495
+      1.667
      ],
-     "from": "bench T.cut_sec 1.15 ±30%(B4)"
+     "from": "bench T.cut_sec 1.15 ±30%(B4) · 느린 쪽 상한 원본 +45%(페이블 10-17, 사장님 지적은 '너무 빠름' — 빠른 쪽 그대로)"
     },
     "cut_min_s": null,
     "last_cut_min_s": null,

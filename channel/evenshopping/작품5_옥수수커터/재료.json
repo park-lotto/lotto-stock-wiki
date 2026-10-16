@@ -227,14 +227,14 @@
    "i": 17,
    "caption": "벗겨진다는 거",
    "kind": "product",
-   "cont": false,
+   "cont": true,
    "seen": "",
-   "url": "https://www.youtube.com/watch?v=QiI4ioGdtrg",
-   "src_t0": 141.6,
-   "res": 1080,
+   "url": null,
+   "src_t0": 26.07,
+   "res": null,
    "crop_x": null,
-   "src": "C:\\숏템_칼카피\\evenshopping\\작품5_옥수수커터\\auto\\sections\\QiI4ioGdtrg_01406_01432.mp4",
-   "ss": 1.0
+   "src": "+",
+   "ss": 0.0
   },
   {
    "i": 18,
@@ -332,12 +332,12 @@
    "caption": "근데 진짜",
    "kind": "meme",
    "cont": false,
-   "seen": "짤 fm_owenwow",
+   "seen": "짤 fm_ohmygodwow",
    "url": null,
    "src_t0": 0.0,
    "res": null,
    "crop_x": null,
-   "src": "meme:fm_owenwow",
+   "src": "meme:fm_ohmygodwow",
    "ss": 0.0
   },
   {
@@ -345,12 +345,12 @@
    "caption": "충격적인 포인트는",
    "kind": "product",
    "cont": true,
-   "seen": "짤 fm_owenwow",
+   "seen": "짤 fm_ohmygodwow",
    "url": null,
    "src_t0": 0.5,
    "res": null,
    "crop_x": null,
-   "src": "meme:fm_owenwow",
+   "src": "meme:fm_ohmygodwow",
    "ss": 0.5
   },
   {
@@ -359,11 +359,11 @@
    "kind": "product",
    "cont": false,
    "seen": "",
-   "url": "https://www.youtube.com/watch?v=9YCGX0cvj9Q",
-   "src_t0": 49.6,
+   "url": "https://www.youtube.com/watch?v=BootSDeaOZ8",
+   "src_t0": 34.2,
    "res": 1080,
    "crop_x": null,
-   "src": "C:\\숏템_칼카피\\evenshopping\\작품5_옥수수커터\\auto\\sections\\9YCGX0cvj9Q_00486_00514.mp4",
+   "src": "C:\\숏템_칼카피\\evenshopping\\작품5_옥수수커터\\auto\\sections\\BootSDeaOZ8_00332_00360.mp4",
    "ss": 1.0
   },
   {

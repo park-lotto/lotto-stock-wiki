@@ -205,12 +205,12 @@
    "hook": "first_line",
    "voice_id": "tc_68257f68bc6e3c161ab5078d",
    "voice_name": "필재",
-   "tts_tempo": 1.4,
-   "tts_tempo_why": "16호 실측: Typecast audio_tempo 1.4 → atempo 1.115(≤1.2)",
+   "tts_tempo": 1.6,
+   "tts_tempo_why": "페이블 10-17: 1.4 → 숫자 많은 대본 원속도 약 7자/초(atempo 1.24~1.26) — 1.6으로 atempo ≈1.1 목표(다음 작품부터, 작품2~5 는 1.4 캐시로 제작)",
    "cps": 8.8,
    "atempo_range": [
     0.8,
-    1.2
+    1.27
    ],
    "line_rate": {
     "max_ratio": 1.05,
@@ -267,9 +267,9 @@
     "cut_median_s": {
      "allow": [
       0.93,
-      1.209
+      1.349
      ],
-     "from": "cut_rules 중앙 ≥0.93 · 원본 0.93 +30%(B4)"
+     "from": "cut_rules 중앙 ≥0.93 · 원본 0.93 +30%(B4) · 느린 쪽 상한 원본 +45%(페이블 10-17, 사장님 지적은 '너무 빠름' — 빠른 쪽 그대로)"
     },
     "cut_min_s": 0.6,
     "last_cut_min_s": 1.5,
@@ -287,7 +287,8 @@
     "max_chars": 35,
     "at": ",",
     "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
-   }
+   },
+   "atempo_range_why": "페이블 10-17: 필재 tempo 1.4 원속도 약 7자/초(숫자 많은 대본) → 상한 1.27"
   }
  },
  "voice_proposal": [

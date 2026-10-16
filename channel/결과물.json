@@ -295,6 +295,48 @@
    "date": "2026-10-17",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 22,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품2_식기세척기",
+   "path": "C:/숏템_칼카피/evenshopping/작품2_식기세척기/auto/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_식기세척기.mp4",
+   "md5": "9dd640dc3baf7e054cfeffae0564b2ce",
+   "seconds": 29.17,
+   "preset": "channel/evenshopping/preset/숏템템플릿",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 23,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품4_아이스큐브",
+   "path": "C:/숏템_칼카피/evenshopping/작품4_아이스큐브/auto/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_아이스큐브.mp4",
+   "md5": "bb7e718ff63efe575571f5b9580d29fb",
+   "seconds": 29.29,
+   "preset": "channel/evenshopping/preset/숏템템플릿",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 24,
+   "channel": "evenshopping",
+   "channel_name": "재미썸홈",
+   "title": "작품5_옥수수커터",
+   "path": "C:/숏템_칼카피/evenshopping/작품5_옥수수커터/auto/make/final.mp4",
+   "desktop": "칼카피_재미썸홈_옥수수커터.mp4",
+   "md5": "cd9a5829c743b8ddd2456aa4bf2dd116",
+   "seconds": 29.16,
+   "preset": "channel/evenshopping/preset/숏템템플릿",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
