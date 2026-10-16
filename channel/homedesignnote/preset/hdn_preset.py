@@ -65,9 +65,9 @@ CHANNEL_RULES = {
         "master_lufs": -7.5, "master_lufs_range": [-21.9, -6.0], "master_from": "bench A.lufs 50편 중앙",
         "bgm_candidates": [
             {"id": "honwaka_puppu", "file": "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3", "lufs": -14.3, "lra": 3.5,
-             "why": "제목 'ほんわか'(포근한) MoppySound — 청취·보컬 유무 미검증"},
+             "why": "제미나이 청취(gemini-3-flash-preview, 앞 30초 10-17): 보컬 없음·차분 7/10·나레 밑 적합 → 1순위"},
             {"id": "before_spring_ends", "file": "shopping_shorts/assets/bgm_lib/before_spring_ends.mp3", "lufs": -14.2, "lra": 3.3,
-             "why": "Wang OK 'Before spring ends' — 청취·보컬 유무 미검증"}],
+             "why": "제미나이 청취: 보컬 있음(0~30초 내내)·차분 4/10·나레 밑 부적합 → 탈락(보조 후보 mori_no_restaurant 도 보컬 있음)"}],
         "sfx": 0,
         "voice_candidates": [
             {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "why": "남성·'친근하고 편안한'(add_typecast_presets) — 원본 '~더라고요' 체험 말투"},

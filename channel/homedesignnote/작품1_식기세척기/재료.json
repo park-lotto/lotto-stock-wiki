@@ -1,0 +1,552 @@
+{
+ "_note": "토막 1개 = 컷 1개. 같은 제품(FOTILE 싱크 매립형) 실영상만 — OBRO(7YL, 타 브랜드)·5H2(3D CG) 안 씀. 쇼룸=TJDO(세로 손촬영) 대체 확정. 남의 글자(영상 자막·FOTILE 로고·끝카드) 구간 피함 — wqJZ 8~14·22~24·48~49·54~55·60~70, -JU 하단 설명 자막 구간 피함.",
+ "cand_dir": "C:/숏템_칼카피/homedesignnote/작품1_식기세척기",
+ "shots": [
+  {
+   "i": 0,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 1.0,
+   "dur": 0.72,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    502,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "좁은 타이니하우스 주방, 싱크대 앞에 선 사람",
+   "caption": "좁은 주방에서"
+  },
+  {
+   "i": 1,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 16.8,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    886,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크볼에 물 틀어 씻기(설거지)",
+   "caption": "설거지하다 허리"
+  },
+  {
+   "i": 2,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 58.4,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    560,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크대 앞에서 허리 굽히는 사람",
+   "caption": "굽히는 게 귀찮았던"
+  },
+  {
+   "i": 3,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 26.0,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "주방가전 매장 — 후드·오븐 줄지어 진열",
+   "caption": "중국 주방가전 회사가"
+  },
+  {
+   "i": 4,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 30.3,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    502,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크대가 있는 밝은 주방 전경",
+   "caption": "아예 싱크대 안에"
+  },
+  {
+   "i": 5,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 20.4,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    502,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크대 한 칸 덮개를 열자 식기세척기 칸",
+   "caption": "식기세척기를 쏙"
+  },
+  {
+   "i": 6,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 32.8,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    310,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "검은 유리 덮개 닫기(쏙 숨김)",
+   "caption": "숨겨버렸대요."
+  },
+  {
+   "i": 7,
+   "src": "src_-JU-gKEN1gQ.mp4",
+   "url": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
+   "ss": 13.0,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    848,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "그릇이 꽉 찬 세척기 칸 안",
+   "caption": "보통 식기세척기는"
+  },
+  {
+   "i": 8,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 60.3,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    560,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "허리 숙여 칸에 바구니 넣기",
+   "caption": "허리 숙여서 넣고 빼야"
+  },
+  {
+   "i": 9,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 68.3,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    502,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "바구니를 들어 빼는 사람",
+   "caption": "되는데 그거 진짜"
+  },
+  {
+   "i": 10,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 54.3,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    464,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크대 쪽으로 몸 숙임",
+   "caption": "허리 나가잖아요."
+  },
+  {
+   "i": 11,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 46.0,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "매장 진열 싱크 매립형 제품(과일 담긴 싱크)",
+   "caption": "근데 이건 중국에서만"
+  },
+  {
+   "i": 12,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 30.0,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "매장 전시 주방 줄",
+   "caption": "누적 판매 수백만"
+  },
+  {
+   "i": 13,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 34.0,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "매장 전시 줄 끝까지",
+   "caption": "대를 찍었다는데"
+  },
+  {
+   "i": 14,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 6.8,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    1001,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "어두운 싱크 수전 클로즈업(반전 분위기)",
+   "caption": "진짜 핵심은 이건데"
+  },
+  {
+   "i": 15,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 34.3,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    464,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "손으로 접시를 선반에 툭 넣기",
+   "caption": "싱크볼에 그릇 툭툭"
+  },
+  {
+   "i": 16,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 50.3,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    1040,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "손으로 덮개 닫기",
+   "caption": "넣고 뚜껑만 닫으면"
+  },
+  {
+   "i": 17,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 36.3,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    502,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크볼 속 식기 선반 위에서 본 모습",
+   "caption": "그 싱크볼이 그대로"
+  },
+  {
+   "i": 18,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 58.0,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "덮개 열린 칸 안 세척 선반(그대로 식기세척기)",
+   "caption": "식기세척기가 돼요."
+  },
+  {
+   "i": 19,
+   "src": "src_-JU-gKEN1gQ.mp4",
+   "url": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
+   "ss": 48.3,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    656,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "과일·채소 바구니(포도·토마토·피망)",
+   "caption": "심지어 과일이랑 채소"
+  },
+  {
+   "i": 20,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 18.3,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    848,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크에서 채소(감자) 씻는 손",
+   "caption": "농약까지 초음파로"
+  },
+  {
+   "i": 21,
+   "src": "src_-JU-gKEN1gQ.mp4",
+   "url": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
+   "ss": 45.4,
+   "dur": 1.2,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    1193,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "덮개 터치판 모드 누르기",
+   "caption": "털어내는 모드가 있어서"
+  },
+  {
+   "i": 22,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 40.3,
+   "dur": 0.84,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    656,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "그릇 들고 웃는 사람(밝은 주방)",
+   "caption": "요즘 신혼부부들"
+  },
+  {
+   "i": 23,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 44.3,
+   "dur": 1.08,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    560,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "싱크 위에 그릇 올려놓기",
+   "caption": "사이에서 이거 없으면"
+  },
+  {
+   "i": 24,
+   "src": "src_wqJZ_00Sogc.mp4",
+   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
+   "ss": 28.8,
+   "dur": 0.72,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    848,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "새 주방 전경(싱크·가스레인지)",
+   "caption": "주방 공사 다시"
+  },
+  {
+   "i": 25,
+   "src": "src_TJDOFm5BQkE.mp4",
+   "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
+   "ss": 88.5,
+   "dur": 0.96,
+   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    0,
+    1080,
+    1920
+   ],
+   "res": "1080x1920",
+   "zoom": 1.0,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "과일 얹은 매립형 싱크 완성 모습",
+   "caption": "한다고 난리래요."
+  }
+ ]
+}

@@ -41,7 +41,7 @@
    "line_rgb": null,
    "line_scale": null,
    "outline": {
-    "px": 4,
+    "px": 16,
     "rgb": [
      0,
      0,
@@ -52,7 +52,7 @@
    "shadow": {
     "dx": 0,
     "dy": 0,
-    "blur": 20,
+    "blur": 30,
     "rgb": [
      0,
      0,
@@ -60,7 +60,7 @@
     ]
    },
    "glow": {
-    "px": 40,
+    "px": 60,
     "rgb": [
      0,
      0,
