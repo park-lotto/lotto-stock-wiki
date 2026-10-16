@@ -214,3 +214,28 @@ def test_reupload_red_green():
     assert ma.reupload_of({"duration": 275.4}, acc) == "rBCN"        # 빨강: 같은 길이 재업(cFL4 = rBCN 실사례)
     assert ma.reupload_of({"duration": 120.0}, acc) is None          # 초록: 다른 길이
     assert ma.reupload_of({"duration": 20.0}, [{"id": "x", "duration": 20.0}]) is None   # 짧은 영상은 판정 안 함
+
+
+def test_dark_by_luma_even_if_model_says_bright():
+    c = cell("A", 3)
+    c["luma"] = 20.0
+    assert not ma.allowed(c, "product", ITS, 1080)          # 1판 검정 컷 실사례
+    c["luma"] = 120.0
+    assert ma.allowed(c, "product", ITS, 1080)
+
+
+def test_ban_cells_after_1080_text_check_changes_pick():
+    ts = toks(1)
+    cells = {0: cell("A", 10.0), 1: cell("A", 40.0)}
+    p = ma.select(ts, _needs(ts), {0: [(0, 9), (1, 7)]}, cells, META, ITS)
+    assert p[0]["cell_t"] == 10.0
+    p[0]["verify"] = "text"
+    ma.ban_cells([p[0]], cells)
+    p2 = ma.select(ts, _needs(ts), {0: [(0, 9), (1, 7)]}, cells, META, ITS)
+    assert p2[0]["cell_t"] == 40.0
+
+
+def test_cut_centred_on_described_frame():
+    ts = toks(1, dur=1.0)
+    p = ma.select(ts, _needs(ts), {0: [(0, 9)]}, {0: cell("A", 10.0, interval=4.6)}, META, ITS)
+    assert p[0]["src_t0"] <= 10.0 <= p[0]["src_t1"]           # 칸 간격 4.6초여도 설명한 프레임이 컷 안

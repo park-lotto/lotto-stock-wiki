@@ -42,6 +42,7 @@ RATE = 1.0                # 유튜브 요청 간격(초)
 WORKERS = 4               # 무거운 일 동시 상한
 MAX_429 = 10              # 제미나이 429 이 횟수 넘으면 멈춤
 REUSE_GAP = 3.0           # 같은 소스 ±3초 안 재사용 금지(사장님 10-17)
+MIN_LUMA = 45             # 칸 평균 밝기(0~255) 이 미만은 어두움(B9 첫·끝 컷 기준 60보다 느슨)
 MIN_SCORE = 5             # 짝짓기 점수(0~10) 이 미만은 안 쓴다
 PREVIEW_HEAD = 300        # 미리보기는 앞 300초까지
 SHEET_N = 30              # 시트 한 장 칸 수(6×5)
@@ -245,15 +246,17 @@ class Net:
     def preview(self, vid: str, info: str) -> str | None:
         out = self.wd / "preview" / f"{vid}.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
-        if out.exists() and out.stat().st_size > 10000:
+        if _valid_video(out):
             return str(out)
+        out.unlink(missing_ok=True)
         # 주소로 새로 받는다 — info 파일 재사용은 2/24편이 403(1판 실측: wqJZ·UNB6, 사람 정답의 핵심 소스)
         self._gap()
         r = _run(["yt-dlp", "--no-update", "-f", "bv*", "-S", "res:360,+size", "--download-sections",
                   f"*0-{PREVIEW_HEAD}", "-o", str(out), f"https://www.youtube.com/watch?v={vid}"], timeout=600)
-        if out.exists():
+        if _valid_video(out):
             self.bytes += out.stat().st_size
             return str(out)
+        out.unlink(missing_ok=True)
         self.log(f"[미리보기 실패] {vid} {(r.stderr or '')[-120:]}")
         return None
 
@@ -261,19 +264,27 @@ class Net:
         """쓸 구간만 1080p(없으면 ≥720p) 영상만 — 통째로 받지 않는다(SECTION_FMT 주석)."""
         out = self.wd / "sections" / f"{vid}_{int(a * 10):05d}_{int(b * 10):05d}.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
-        if out.exists() and out.stat().st_size > 10000:
+        if _valid_video(out):
             return str(out)
+        out.unlink(missing_ok=True)
         self._gap()
         r = _run(["yt-dlp", "--no-update", "-f", SECTION_FMT, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
                   f"https://www.youtube.com/watch?v={vid}"], timeout=900)
-        if out.exists():
+        if _valid_video(out):
             self.bytes += out.stat().st_size
             return str(out)
+        out.unlink(missing_ok=True)
         self.log(f"[구간 받기 실패] {vid} {a}-{b} {(r.stderr or '')[-160:]}")
         return None
 
 
 # ── 3. 프레임 → 시트 → 설명(시트 한 장씩) ─────────────────────────────────
+def _valid_video(p) -> bool:
+    """받은 파일이 진짜 영상인가 — 1판 실측: 구간 받기 실패가 262바이트 껍데기를 남겨 '받음'으로 셌다(17개 중 7개)."""
+    p = Path(p)
+    return p.exists() and p.stat().st_size > 10000 and _probe_dur(str(p)) > 0
+
+
 def _probe_dur(p: str) -> float:
     r = _run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], timeout=60)
     try:
@@ -298,8 +309,16 @@ def frame_cells(preview: str, vid: str, wd: Path) -> list[dict]:
         t = round(k * step + step / 2, 2)   # fps 필터는 각 간격 가운데 프레임
         if t >= dur:
             break
-        out.append({"vid": vid, "t": t, "interval": step, "img": str(f)})
+        out.append({"vid": vid, "t": t, "interval": step, "img": str(f), "luma": _luma(f)})
     return out
+
+
+def _luma(img) -> float:
+    from PIL import Image, ImageStat
+    try:
+        return round(ImageStat.Stat(Image.open(img).convert("L")).mean[0], 1)
+    except Exception:  # noqa: BLE001 — 못 재면 밝다고 보지 않는다(어두움 판정에서 빠지지 않게 0)
+        return 0.0
 
 
 def make_sheet(cells: list[dict], start_no: int, out: Path) -> Path:
@@ -339,6 +358,9 @@ def tag_video(cells: list[dict], product: str, llm, wd: Path, vid: str) -> list[
         c = json.loads(cache.read_text(encoding="utf-8"))
         ck = str(c.get("key") or "")
         if ck == key or (ck.startswith(PROMPT_VER + "|") and ck.endswith(f"|{len(cells)}")):   # 1판 키(제품 설명 포함)도 받는다
+            for x in c["cells"]:
+                if x.get("luma") is None and x.get("img"):
+                    x["luma"] = _luma(x["img"])
             return c["cells"]
     got = {}
     for s0 in range(0, len(cells), SHEET_N):
@@ -365,6 +387,8 @@ def tag_video(cells: list[dict], product: str, llm, wd: Path, vid: str) -> list[
 def allowed(cell: dict, kind: str, rules: dict, res: int) -> bool:
     """후보 칸 하나를 이 종류 토막에 써도 되나 — 유일한 판단 자리."""
     if cell.get("text") or cell.get("dark"):          # A5 남의 글자 · 어두운 칸
+        return False
+    if cell.get("luma") is not None and cell["luma"] < MIN_LUMA:   # 모델이 dark=false 라 해도 실제로 어두운 칸(1판 '중국 주방가전 회사가' 검정 컷)
         return False
     if cell.get("cg") and not rules.get("allow_cg"):
         return False
@@ -425,7 +449,7 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
             pv, _, pe, _ = prev
             for cid, s in ranked.get(i, []):
                 c = cells[cid]
-                if c["vid"] == pv and c["t"] - c["interval"] / 2 - 0.5 <= pe <= c["t"] + c["interval"] * 1.5 and s >= MIN_SCORE - 1:
+                if c["vid"] == pv and c["t"] - 1.5 <= pe <= c["t"] + 1.0 and s >= MIN_SCORE - 1:   # 이어 간 구간이 설명한 프레임 곁
                     if allowed(c, kind, rules, meta[pv]["res"]):
                         best, best_s = ("cont", c, pe), s + 3
                         break
@@ -436,7 +460,7 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
             res = meta.get(c["vid"], {}).get("res", 0)
             if not allowed(c, kind, rules, res):
                 continue
-            a = max(0.0, c["t"] - c["interval"] / 2 + 0.2)
+            a = max(0.0, c["t"] - dur / 2)   # 설명한 프레임(칸 시각 t)을 컷 가운데에 — 칸 간격이 4.6초면 칸 시작부터 자르면 2초 어긋난다(10-17 실측)
             if reuse_conflict(c["vid"], a, a + dur, used, prev[:3] if prev else None):
                 continue
             sc = s + (2 if prev and prev[0] == c["vid"] and prev[3] == t["line"] else 0) + (1 if res >= rules.get("pref_res", 1080) else 0)
@@ -738,6 +762,19 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
             t = time.time()
             fetch_sections(picks, state["meta"], net)
             T["6_구간받기"] = round(time.time() - t, 1)
+            # 1080 컷 프레임 검사(남의 글자·어두움) — 360p 미리보기 설명이 놓친 작은 글자를 잡는다(1판: 'Click' 설명 자막 컷 통과)
+            t = time.time()
+            for vr in range(2):
+                flagged = verify_cuts(picks, wd, llm, only_new=vr > 0)
+                if not flagged:
+                    break
+                ban_cells(flagged, state["cells"])
+                picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
+                fetch_sections(picks, state["meta"], net)
+            for p in picks:
+                if p.get("verify") in ("text", "dark"):   # 두 바퀴 뒤에도 걸린 컷은 쓰지 않는다(A5 > 빈칸)
+                    p.update({"none": True, "why": f"1080 검사 {p['verify']}"})
+            T["6b_1080검사"] = round(time.time() - t, 1)
         t = time.time()
         sheets = plan_sheet(picks, toks, wd)
         T["7_계획시트"] = round(time.time() - t, 1)
@@ -764,6 +801,59 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
            "sheets": sheets if not stopped else []}
     (wd / "재료_auto.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     return out
+
+
+VERIFY_PROMPT = """그림은 영상 컷 후보 프레임들이다(노란 번호 {lo}~{hi}). 각 번호마다 보이는 것만 적어라.
+- text: 화면에 글자(자막·캡션·설명 문구·로고·워터마크·손글씨·앱/UI 글자)가 조금이라도 보이면 true. 제품 본체에 새겨진 아주 작은 상표만 있으면 false.
+- dark: 거의 검정·암전이면 true   - what: 보이는 것 영어 6~10낱말
+번호를 빠짐없이. 출력 JSON만: {{"cells":[{{"n":번호,"text":false,"dark":false,"what":"..."}}]}}"""
+
+
+def verify_cuts(picks, wd: Path, llm, only_new: bool = False) -> list[dict]:
+    """고른 컷마다 1080 구간의 가운데 프레임을 시트(20칸)로 모아 남의 글자·어두움 검사 → 걸린 컷 목록(p['verify'] 표시)."""
+    from PIL import Image, ImageDraw, ImageFont
+    todo = [p for p in picks if p.get("section_file") and not p.get("none") and (not only_new or "verify" not in p)]
+    vdir = wd / "verify"
+    vdir.mkdir(parents=True, exist_ok=True)
+    flagged, W, H, cols = [], 360, 360, 5
+    font = ImageFont.truetype(FONT_B, 26)
+    for c0 in range(0, len(todo), 20):
+        chunk, ims = todo[c0:c0 + 20], []
+        for p in chunk:
+            g = _grab(p["section_file"], p["section_ss"] + p["dur"] / 2, vdir / f"{p['i']}.jpg")
+            ims.append(g)
+        sh = Image.new("RGB", (cols * (W + 6), math.ceil(len(chunk) / cols) * (H + 6)), "white")
+        d = ImageDraw.Draw(sh)
+        for j, g in enumerate(ims):
+            x, y = (j % cols) * (W + 6), (j // cols) * (H + 6)
+            if g:
+                im = Image.open(g).convert("RGB")
+                im.thumbnail((W, H))
+                sh.paste(im, (x + (W - im.width) // 2, y + (H - im.height) // 2))
+            d.rectangle([x, y, x + 40, y + 32], fill="black")
+            d.text((x + 5, y + 1), str(j), font=font, fill="yellow")
+        sp = vdir / f"sheet_{c0 // 20}.jpg"
+        sh.save(sp, quality=88)
+        r, _ = llm([sp.read_bytes()], VERIFY_PROMPT.format(lo=0, hi=len(chunk) - 1), "ma_verify")
+        got = {_as_int(x.get("n")): x for x in (r or {}).get("cells") or [] if isinstance(x, dict)}
+        for j, p in enumerate(chunk):
+            x = got.get(j)
+            if x is None:
+                p["verify"] = "unchecked"
+            elif x.get("text") or x.get("dark"):
+                p["verify"] = "text" if x.get("text") else "dark"
+                flagged.append(p)
+            else:
+                p["verify"] = "ok"
+    return flagged
+
+
+def ban_cells(flagged, cells: dict):
+    """1080 검사에 걸린 컷의 칸(같은 영상, 칸 시각 ±간격)을 글자 칸으로 표시 — 다음 select 가 안 고른다."""
+    for p in flagged:
+        for c in cells.values():
+            if c["vid"] == p.get("vid") and abs(c["t"] - p.get("cell_t", -99)) <= c["interval"] + 0.01:
+                c["text" if p["verify"] == "text" else "dark"] = True
 
 
 def fetch_sections(picks, meta, net, pad: float = 1.0, join_gap: float = 8.0):
@@ -853,6 +943,60 @@ def compare_human(auto: dict, human: dict, llm=None) -> dict:
             "rate": round(match / n, 3) if n else None, "rows": res}
 
 
+def compare_sheet(cmp_: dict, auto: dict, human: dict, human_src_dir: str, out: Path, rows_per: int = 12) -> list[str]:
+    """사람 매핑과 다른 토막(동일 구간 아님)만: 자막 | 사람 프레임 | 도구 프레임 — 눈 대조용 시트."""
+    from PIL import Image, ImageDraw, ImageFont
+    font, small = ImageFont.truetype(FONT_B, 16), ImageFont.truetype(FONT, 13)
+    hm, shots = human_map(human), {s["i"]: s for s in auto["shots"]}
+    diff = [i for i, r in sorted(cmp_["rows"].items(), key=lambda x: int(x[0])) if not r["same_seg"]]
+    tmp = out.parent / "_cmp_frames"
+    tmp.mkdir(parents=True, exist_ok=True)
+    pages = []
+
+    def src_of_h(vid):
+        return str(MEME_DIR / f"{vid[5:]}.mp4") if str(vid).startswith("meme:") else str(Path(human_src_dir) / f"src_{vid}.mp4")
+    for p0 in range(0, len(diff), rows_per):
+        chunk = diff[p0:p0 + rows_per]
+        RH, W = 200, 1060
+        sh = Image.new("RGB", (W, RH * len(chunk)), "white")
+        d = ImageDraw.Draw(sh)
+        for r, i in enumerate(chunk):
+            i = int(i)
+            y, row, s, h = r * RH, cmp_["rows"][i] if i in cmp_["rows"] else cmp_["rows"][str(i)], shots.get(i), hm.get(i)
+            d.text((6, y + 6), f"{i}. {row['caption']}", font=font, fill="black")
+            d.text((6, y + 32), f"판정 {('같은 뜻' if row.get('same_meaning') else '다름')} · 더 나음 {row.get('better')}", font=small, fill="blue")
+            d.text((6, y + 52), "H " + (row.get("human_seen") or "")[:30], font=small, fill="gray")
+            d.text((6, y + 70), "A " + (row.get("auto_seen") or "")[:30], font=small, fill="gray")
+            imgs = []
+            if h and h.get("t0") is not None:
+                imgs.append(_grab(src_of_h(h["vid"]), float(h["t0"]) + 0.3, tmp / f"{i}_h.jpg"))
+            else:
+                imgs.append(None)
+            if s and not s.get("none"):
+                if str(s["src"]).startswith("meme:"):
+                    imgs.append(_grab(str(MEME_DIR / f"{s['src'][5:]}.mp4"), s["src_t0"] + 0.3, tmp / f"{i}_a.jpg"))
+                elif s.get("section_file"):
+                    imgs.append(_grab(s["section_file"], s["section_ss"] + 0.3, tmp / f"{i}_a.jpg"))
+                else:
+                    imgs.append(_grab(str(out.parent / "preview" / f"{s['vid']}.mp4"), s["src_t0"] + 0.3, tmp / f"{i}_a.jpg"))
+            else:
+                imgs.append(None)
+            for k, g in enumerate(imgs):
+                x = 300 + k * 380
+                d.text((x, y + 4), "사람" if k == 0 else "도구", font=small, fill="red")
+                if g:
+                    im = Image.open(g).convert("RGB")
+                    im.thumbnail((360, 175))
+                    sh.paste(im, (x, y + 22))
+                else:
+                    d.text((x, y + 80), "없음", font=font, fill="red")
+            d.line([(0, y + RH - 1), (W, y + RH - 1)], fill="#ccc")
+        f = out.parent / f"{out.stem}_{p0 // rows_per + 1}.jpg"
+        sh.save(f, quality=85)
+        pages.append(str(f))
+    return pages
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("script")
@@ -860,14 +1004,22 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--no-sections", action="store_true")
     ap.add_argument("--human", help="사람 재료.json — 대조표를 같이 만든다")
+    ap.add_argument("--human-src", help="사람 재료 원본 폴더(src_<id>.mp4) — 다른 토막 대조 시트")
+    ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
     a = ap.parse_args(argv)
     llm = LLM()
-    res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
+    if a.compare_only:
+        res = json.loads(Path(a.out, "재료_auto.json").read_text(encoding="utf-8"))
+    else:
+        res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
     print(json.dumps(res["stats"], ensure_ascii=False))
     if a.human:
-        cmp_ = compare_human(res, json.loads(Path(a.human).read_text(encoding="utf-8")), llm)
+        human = json.loads(Path(a.human).read_text(encoding="utf-8"))
+        cmp_ = compare_human(res, human, llm)
         Path(a.out, "대조_사람.json").write_text(json.dumps(cmp_, ensure_ascii=False, indent=1), encoding="utf-8")
         print(json.dumps({k: v for k, v in cmp_.items() if k != "rows"}, ensure_ascii=False))
+        if a.human_src:
+            print(compare_sheet(cmp_, res, human, a.human_src, Path(a.out, "대조_시트.jpg")))
 
 
 if __name__ == "__main__":
