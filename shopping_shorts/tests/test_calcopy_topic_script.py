@@ -187,7 +187,9 @@ def _fake_net():
         title = next(v["title"] for vs in shorts.values() for v in vs if v["id"] == vid)
         return {"id": vid, "url": f"https://www.youtube.com/shorts/{vid}", "title": title, "views": 100, "date": "20260101",
                 "description": "설명", "comments": [{"likes": 9, "text": "와 신기하다", "id": "c"}]}
-    return {"yt_search": yt_search, "yt_detail": yt_detail}
+    import datetime as dt
+    today = dt.date.today().strftime("%Y%m%d")   # 가짜 네트워크도 날짜 통로를 준다 — 빠지면 run 이 진짜 yt-dlp 를 부른다
+    return {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": lambda vid: today}
 
 
 def _same_scores(ids, drop_why=None):
@@ -269,6 +271,18 @@ def test_limits_refuse_too_fast_or_too_big():
         T.Limits(rate=0.5)
     with pytest.raises(SystemExit):
         T.Limits(max_meta=500)
+
+
+def test_date_filter_keeps_recent_sorted_and_logs(tmp_path):
+    """최근 N개월은 로컬에서: 날짜 모름·오래된 것은 빼고 이유를 failed 에 남긴다."""
+    import datetime as dt
+    today = dt.date.today()
+    dates = {"a": today.strftime("%Y%m%d"), "b": (today - dt.timedelta(days=400)).strftime("%Y%m%d"), "c": None}
+    pool = [{"id": k, "views": v} for k, v in (("a", 9), ("b", 8), ("c", 7))]
+    failed = []
+    kept = T.date_filter(pool, 3, {"yt_upload_date": lambda vid: dates[vid]}, T.Limits(sleep=lambda s: None), failed)
+    assert [v["id"] for v in kept] == ["a"]
+    assert "오래됨 1" in failed[0]["why"] and "날짜 모름 1" in failed[0]["why"]
 
 
 def test_llm_budget_stops_calls():

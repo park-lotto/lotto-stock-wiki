@@ -50,7 +50,8 @@ CRITERIA = [("known", "아는 대상"), ("surprise", "몰랐던"), ("fun", "재�
 WHY_MIN = 6            # 근거 문장 최소 글자 — 이보다 짧으면 근거 없음으로 점수를 버린다
 OVERLAP_CUT = 0.35     # 글자 2-gram 포함률이 이 이상이면 "이미 만든 소재"(10-16 실측: ZdeZ 다른 말 0.38·하키 퍽 0.60 / 무관 소재 0~0.22)
 OVERLAP_PENALTY = 30   # 겹침 점수(0~1) × 이 값을 합계에서 뺀다(겹침 1.0 = 6기준 합 60점 중 절반)
-YT_SHORT = 180         # 쇼츠 길이 상한(초)
+YT_SHORT = 60          # 쇼츠 길이 상한(초) — 조율자 10-16 "쇼츠 길이 ≤60초"
+DATE_PROBE = 20       # 날짜 판정은 조회 상위 이만큼만(편마다 요청 1번)
 
 
 # ── LLM 창구(무료 제미나이) — 상한·장부 ─────────────────────────────────────
@@ -259,35 +260,74 @@ class Limits:
 
 # ── 통로(네트워크) — 주입 가능 ─────────────────────────────────────────────
 def _yt_sp(months: int | None) -> str:
-    """조회순(sort=3) + 짧은 영상(duration=1) + 올린 날짜(이번 달=4 / 올해=5). 10-16 실측: CAMSBAgFGAE= · CAMSAhgB 둘 다 조회순 정렬."""
+    """짧은 영상(duration=1) + 올린 날짜(이번 달=4 / 올해=5) — 정렬은 넣지 않는다(로컬에서 조회순).
+    10-16 실측: 조회순 정렬(CAMS…) 필터는 오후에 5개 중 4개 120초 멈춤·1개 0건 / 정렬 뺀 EgQIBRgB(올해+짧은)는 5편씩 나옴."""
     if months is None or months > 12:
-        return "CAMSAhgB"
-    return "CAMSBAgEGAE%253D" if months <= 1 else "CAMSBAgFGAE%253D"
+        return "EgIYAQ%253D%253D"
+    return "EgQIBBgB" if months <= 1 else "EgQIBRgB"
 
 
-def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
-    """유튜브 검색 목록(flat) — id·제목·조회·길이. 쇼츠 길이 넘는 것은 뺀다."""
-    url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=" + _yt_sp(months)
-    r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--flat-playlist", "-I", f"1:{n}", "--print",   # 요청한 n편만(메타 상한에 그대로 센다)
-                        "%(id)s\t%(duration)s\t%(view_count)s\t%(title)s", url],
-                       capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=120)
+def _flat(cmd: list[str], timeout: int) -> tuple[list[dict], str | None]:
+    try:
+        r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return [], f"시간 초과 {timeout}초"
     out = []
     for l in r.stdout.splitlines():
-        p = l.split("\t")
-        if len(p) < 4 or p[1] in ("NA", "None"):
-            continue
-        if float(p[1]) > YT_SHORT:
+        p = l.split("	")
+        if len(p) < 4 or p[1] in ("NA", "None", ""):
             continue
         out.append({"id": p[0], "duration": float(p[1]), "views": int(p[2]) if p[2].isdigit() else None, "title": p[3],
                     "url": f"https://www.youtube.com/shorts/{p[0]}"})
-    return out[:n]
+    return out, (None if out else f"0건 rc={r.returncode} {(r.stderr or '')[-80:].strip()}")
+
+
+def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
+    """유튜브 쇼츠 후보 목록(flat: id·제목·조회·길이). 정렬·날짜 판정은 부르는 쪽(gather)이 로컬에서 한다.
+    ① 검색 페이지 + sp(짧은·올린 날짜) 필터, 30초 ② 실패·0건이면 ytsearch{2n, ≤40}(관련도 순) 폴백 — 폴백 이유는 항목 'fallback' 에.
+    쇼츠 길이 YT_SHORT(60초) 넘는 것은 뺀다."""
+    fmt = "%(id)s	%(duration)s	%(view_count)s	%(title)s"
+    url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=" + _yt_sp(months)
+    sp_cmd = ["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--flat-playlist", "-I", f"1:{n}", "--print", fmt, url]
+    items, why = _flat(sp_cmd, 30)
+    if not items:   # 10-16 실측: 같은 sp 검색이 한 번 멈췄다가 다음엔 바로 나온다 — 한 번만 다시
+        time.sleep(3)
+        items, why = _flat(sp_cmd, 30)
+    via, fb = "sp", None
+    if not items:
+        fb = f"sp 필터 {why} → ytsearch 폴백"
+        items, why2 = _flat(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--flat-playlist", "--print", fmt,
+                             f"ytsearch{min(40, max(2 * n, 20))}:{q}"], 60)
+        via = "ytsearch"
+        if why2:
+            fb += f" ({why2})"
+    out = [{**v, "via": via, "fallback": fb} for v in items if v["duration"] <= YT_SHORT]
+    if not out and fb:
+        out = [{"id": None, "fallback": fb + f" · {YT_SHORT}초 이하 0편"}]   # 이유만 전달(gather 가 failed 로)
+    return out
+
+
+def yt_upload_date(vid: str) -> str | None:
+    """올린 날짜 YYYYMMDD — flat 목록엔 없다. android 클라이언트(기본은 로봇 확인에 막힘, 10-16 실측)."""
+    try:
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+                            "--print", "%(upload_date)s", f"https://www.youtube.com/watch?v={vid}"],
+                           capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
+    except subprocess.TimeoutExpired:
+        return None
+    d = (r.stdout or "").strip().splitlines()
+    return d[-1] if d and d[-1].isdigit() and len(d[-1]) == 8 else None
 
 
 def yt_detail(vid: str, n_comments: int = 50) -> dict:
     """제목·설명·조회·날짜 + 댓글(좋아요 순 n). 10-16 실측: 기본 클라이언트는 '로봇 확인'으로 막혀 android 로 받는다."""
-    r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--write-comments", "--extractor-args",
-                        f"youtube:player_client=android;comment_sort=top;max_comments={n_comments},{n_comments},0,0", "-J",
-                        f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=180)
+    try:
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--write-comments", "--extractor-args",
+                            f"youtube:player_client=android;comment_sort=top;max_comments={n_comments},{n_comments},0,0", "-J",
+                            f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", errors="replace",
+                           stdin=subprocess.DEVNULL, timeout=150)
+    except subprocess.TimeoutExpired:   # 10-16 실측: 한 편이 180초 멈춰 실행 전체가 죽었다 → 그 편만 실패로
+        return {"id": vid, "failed": "시간 초과(150초)"}
     try:
         d = json.loads(r.stdout or "null")
     except ValueError:
@@ -325,7 +365,7 @@ def community_search(keywords: list[str], pages: int = 1) -> list[dict]:
     return sorted(rows, key=lambda x: -(x.get("recomm") or 0))
 
 
-NET = {"yt_search": yt_search, "yt_detail": yt_detail, "news_search": news_search, "community_search": community_search}
+NET = {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": yt_upload_date, "news_search": news_search, "community_search": community_search}
 
 
 # ── 겹침(이미 만든 소재) ────────────────────────────────────────────────────
@@ -443,6 +483,10 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
                 got = net["yt_search"](q, pq, months)
             except Exception as e:  # noqa: BLE001 — 검색어 하나 실패는 failed 로 남기고 다음으로
                 failed.append({"where": f"yt_search {q}", "why": f"{type(e).__name__}: {str(e)[:120]}"}); continue
+            fb = next((v.get("fallback") for v in got if v.get("fallback")), None)
+            if fb:
+                failed.append({"where": f"yt_search {q}", "why": fb})
+            got = [v for v in got if v.get("id")]
             if not got:
                 failed.append({"where": f"yt_search {q}", "why": "결과 0"})
             for v in got:
@@ -450,6 +494,7 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
                     continue
                 seen.add(v["id"]); pool.append({**v, "query": q})
         pool.sort(key=lambda v: -(v.get("views") or 0))
+        pool = date_filter(pool, months, net, limits, failed)
         for v in pool:
             t = _clean_title(v["title"])
             if any(overlap(t, [{"what": "", "text": c["topic"]}])["score"] >= 0.6 for c in cands):
@@ -488,6 +533,36 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
         cands = cands[:n]
     log(f"[후보] {kind} → {len(cands)}개 · 실패 {len(failed)}")
     return cands, failed
+
+
+def date_filter(pool: list[dict], months: int | None, net: dict, limits: "Limits", failed: list) -> list[dict]:
+    """최근 N개월만 — 조회 상위 DATE_PROBE 편의 올린 날짜를 받아 로컬에서 거른다(날짜 모르면 뺀다, 개수는 failed 에).
+    날짜 통로가 없으면(시험 가짜 네트워크) 거르지 않고 그 사실을 남긴다."""
+    if not months:
+        return pool
+    probe = net.get("yt_upload_date")
+    if not probe:
+        failed.append({"where": "날짜", "why": "날짜 통로 없음 — 최근 N개월 거르기 안 함"})
+        return pool
+    import datetime as dt
+    cut = (dt.date.today() - dt.timedelta(days=int(months * 30.5))).strftime("%Y%m%d")
+    kept, unknown, old = [], 0, 0
+    for v in pool[:DATE_PROBE]:
+        if not v.get("date"):
+            try:
+                limits.take(1, f"날짜 {v['id']}")
+            except LimitHit:
+                break
+            v["date"] = probe(v["id"])
+        if not v.get("date"):
+            unknown += 1
+        elif v["date"] >= cut:
+            kept.append(v)
+        else:
+            old += 1
+    if unknown or old or len(pool) > DATE_PROBE:
+        failed.append({"where": "날짜", "why": f"최근 {months}개월({cut}~) 남음 {len(kept)} · 오래됨 {old} · 날짜 모름 {unknown} · 조회 상위 {DATE_PROBE}편만 판정(전체 {len(pool)})"})
+    return kept
 
 
 def bench_query(q: str, title: str, k: int = 2) -> str:
