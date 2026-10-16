@@ -20,10 +20,12 @@ sys.path.insert(0, str(ROOT))
 from shopping_shorts import bgm_lib, scene_style, video_assemble as va  # noqa: E402
 from shopping_shorts.calcopy_frame import schema, to_snapshot  # noqa: E402
 from tools.calcopy.frame_video import timeline_from  # noqa: E402   ★자막 시각 나누기는 frame_video 한 곳
+from tools.calcopy import hottem_audio as HA  # noqa: E402   ★컷 원음 끄기 판단은 hottem_audio.shot_muted 한 곳
 
 
-def _seg(src, ss, dur, w, h, crop_y, W, H, out, full=False, src_crop=None):
-    """소스 한 구간 → W×H 캔버스. 창이면 w×h 로 cover 후 crop_y 위치로 잘라 가운데 세로에 붙이고, full 이면 W×H cover."""
+def _seg(src, ss, dur, w, h, crop_y, W, H, out, full=False, src_crop=None, mute=False):
+    """소스 한 구간 → W×H 캔버스. 창이면 w×h 로 cover 후 crop_y 위치로 잘라 가운데 세로에 붙이고, full 이면 W×H cover.
+    mute = 원음 0(소리 줄은 남김 — 아래 '원음 없음' 판정이 그 구간을 BGM 으로 채운다)."""
     if full:
         vf = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1"
     else:
@@ -33,7 +35,7 @@ def _seg(src, ss, dur, w, h, crop_y, W, H, out, full=False, src_crop=None):
     if src_crop:   # 소스 안 남의 그래픽(표 상자·워터마크 등)을 먼저 잘라 냄 [x,y,w,h] — narr_video 와 같은 칸
         vf = "crop={2}:{3}:{0}:{1},".format(*src_crop) + vf
     va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{ss:.3f}", "-i", str(src), "-t", f"{dur:.3f}", "-vf", vf + ",fps=30",
-                    "-af", "aresample=48000,aformat=channel_layouts=stereo", "-ar", "48000", "-ac", "2",
+                    "-af", ("volume=0," if mute else "") + "aresample=48000,aformat=channel_layouts=stereo", "-ar", "48000", "-ac", "2",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(out)])
     return out
 
@@ -80,7 +82,8 @@ def material(M, spec, tail_start, dur, work, bgm_id, bgm_ratio, target):
             cuts = [(a, b, True)]
         for c0, c1, full in cuts:
             p = work / f"seg_{len(parts):02d}.mkv"
-            parts.append(_seg(base / s["src"], s["ss"] + (c0 - s["t0"]), c1 - c0, v["w"], v["h"], s.get("crop_y", 0.5), W, H, p, full, s.get("src_crop")))
+            parts.append(_seg(base / s["src"], s["ss"] + (c0 - s["t0"]), c1 - c0, v["w"], v["h"], s.get("crop_y", 0.5), W, H, p, full, s.get("src_crop"),
+                              HA.shot_muted(s)))
             if _mean_db(p) < SILENT_DB:
                 silent_ranges.append((round(c0, 3), round(c1, 3)))
     lst = work / "segs.txt"

@@ -104,6 +104,12 @@ def gap_tts(tts, sentences: list[str], gaps: dict, out_wav) -> dict:
     return {"breaks": br, "inserted": ins, "dur": round(_dur(out_wav), 3), "src_dur": round(_dur(tts), 3)}
 
 
+def shot_muted(sh: dict) -> bool:
+    """(판단 주인) 이 컷의 원음을 끄나 — 재료 shots[i].mute 가 참이거나 짤(kind '짤'). narr_video 원음 깔기(cut_plan_from)와
+    remake_video(원음 꼴 틀 A) 둘 다 이것만 부른다(10-16 썰풀다 새소재4 요청: 컷별 원음 끄기)."""
+    return bool(sh.get("mute")) or sh.get("kind") == "짤"
+
+
 def cut_plan_from(timeline: dict, M: dict) -> tuple[list, dict, list]:
     """narr_video timeline.json(shots=[(a,b)]) + 재료.json → source_audio_track 의 (cut_plan, source_video_paths, beat_frames).
     칸 하나(idx 0)에 컷마다 소스 [ss, ss+길이] 를 배속 1로 — narr_video.shot_clip 이 화면에 쓴 바로 그 구간."""
@@ -115,7 +121,7 @@ def cut_plan_from(timeline: dict, M: dict) -> tuple[list, dict, list]:
         vid = f"s{k}"
         # audio_src/audio_ss = 화면과 다른 소스의 소리(10-16: 어두운 LED 화면을 밝은 화면으로 바꾸되 원음 리액션은 그대로 두려고)
         paths[vid] = str(base / (sh.get("audio_src") or sh["src"]))
-        mute = sh.get("kind") == "짤" or sh.get("mute")
+        mute = shot_muted(sh)
         start = float(sh["audio_ss"]) if sh.get("audio_ss") is not None else float(sh.get("ss", 0))
         clips.append({"video_id": vid if not mute else "__mute__", "start": start, "c_src": (b - a), "play_out": (b - a), "cfr": nfr})
         tot += nfr
