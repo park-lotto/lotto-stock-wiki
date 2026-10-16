@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>칼카피 소재창고</title>
+<!-- 관리자 전용(관제 097, 2026-10-16). 설계: docs/superpowers/specs/2026-10-16-소재창고-보드-워커-design.md
+     데이터 = GET /api/admin/calcopy/topics/board (서버가 센 숫자를 그대로 그린다 — 화면에서 다시 세지 않는다)
+     결정 = POST /api/admin/calcopy/topics/{id}/review · 상세 = GET /api/admin/calcopy/topics/{id} -->
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e5e7eb;--acc:#2563eb;
+  --ok:#16a34a;--warn:#d97706;--bad:#dc2626;--wait:#7c3aed}
+*{box-sizing:border-box}
+body{margin:0;word-break:keep-all;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Malgun Gothic",sans-serif}
+main{max-width:1400px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:22px 0 8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.lead{color:var(--sub);margin:0 0 12px;overflow-wrap:anywhere} .sub{color:var(--sub);font-size:13px}
+a{color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+button,select,input{font:inherit;border-radius:8px;max-width:100%}
+button{padding:6px 12px;border:1px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--acc)} button.bad{background:var(--bad);border-color:var(--bad)} button.ok{background:var(--ok);border-color:var(--ok)}
+button:disabled{opacity:.5;cursor:default}
+select,input{padding:6px 8px;border:1px solid #cbd5e1;background:#fff;color:var(--ink)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tabs button{background:#fff;color:var(--ink);border-color:var(--line)} .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:#eef2ff;color:#3730a3;white-space:nowrap}
+.tag.red{background:#fee2e2;color:var(--bad)} .tag.ok{background:#dcfce7;color:#166534} .tag.wait{background:#ede9fe;color:var(--wait)} .tag.grey{background:#f1f5f9;color:#334155}
+/* 계기판 */
+.meter{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-size:22px;font-variant-numeric:tabular-nums} .tile span{font-size:12px;color:var(--sub)}
+.tile.red{border-color:var(--bad)} .tile.red b{color:var(--bad)}
+.gauge{height:6px;border-radius:3px;background:#e2e8f0;margin-top:6px;overflow:hidden}.gauge i{display:block;height:100%;background:var(--acc)}
+.gauge i.hot{background:var(--bad)}
+/* 워커 */
+.workers{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.wk{border-left:4px solid var(--ok)} .wk.dead{border-left-color:var(--bad);background:#fff7f7}
+.wk .name{font-weight:700;overflow-wrap:anywhere}
+/* 결정 줄 */
+.decide .card{border-left:4px solid var(--wait)}
+.decide textarea{width:100%;min-height:44px;font:inherit;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:6px}
+/* 칸반 */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,1fr);gap:8px;overflow-x:auto;padding-bottom:8px}
+.col{background:#eef1f5;border-radius:10px;padding:8px;min-width:0}
+.col h3{font-size:13px;margin:0 0 6px;display:flex;justify-content:space-between;gap:4px}
+.col.review{background:#f3efff}
+.item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 8px;margin-bottom:6px;cursor:pointer;font-size:13px}
+.item:hover{border-color:var(--acc)} .item.err{border-color:var(--bad);background:#fff7f7} .item.live{box-shadow:0 0 0 2px #bfdbfe}
+.item .t,.item .sub{overflow-wrap:anywhere}.item .t{font-weight:600}
+.stops li{margin:4px 0;overflow-wrap:anywhere}
+/* 상세 */
+#detail{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:10}
+#detail.on{display:flex}
+#detail .panel{background:var(--card);border-radius:14px;max-width:980px;width:100%;padding:16px 18px;position:relative}
+#detail .x{position:absolute;right:12px;top:10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:8px 0}.kv dt{color:var(--sub)}.kv dd{margin:0;overflow-wrap:anywhere}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair video,.pair img{width:100%;border-radius:8px;background:#0f172a}
+.md{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:340px;overflow:auto;font-size:13px}
+.sheet{width:100%;border-radius:8px;border:1px solid var(--line)}
+/* 갤러리 */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.gallery a{font-size:12px;color:var(--ink);text-decoration:none}
+.gallery img,.gallery video{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#e2e8f0;display:block}
+.msg{padding:8px 12px;border-radius:8px;margin:8px 0;display:none}.msg.err{display:block;background:#fee2e2;color:var(--bad)}.msg.ok{display:block;background:#dcfce7;color:#166534}
+.stamp{font-size:12px;color:var(--sub)}
+@media (max-width:640px){
+  .board{grid-auto-flow:row;grid-auto-columns:auto;overflow-x:visible}
+  .col.empty{display:none}
+  .pair{grid-template-columns:1fr}
+  h1{font-size:19px}
+}
+</style></head>
+<body><main>
+<p class="sub"><a href="/admin/calcopy">← 칼카피 채널 보관함</a></p>
+<h1>🏭 칼카피 소재창고</h1>
+<p class="lead">카테고리 워커가 소재를 찾고·벤치하고·대본·재료·제작까지 돌린다. 사람 자리는 <b>선검수</b>와 <b>최종 검수</b> 둘. <span class="stamp" id="stamp"></span></p>
+<div class="tabs" id="cats"></div>
+<div id="err" class="msg"></div>
+<h2>계기판</h2><div class="meter" id="meter"></div>
+<h2>결정할 것 <span class="sub" id="decideN"></span></h2><div class="decide" id="decide"></div>
+<h2>워커</h2><div class="workers" id="workers"></div>
+<h2>멈춘 이유 <span class="sub">— 워커가 이유를 적고 멈춘 행·건너뛴 단계</span></h2><div class="card"><ul class="stops" id="stops" style="margin:0;padding-left:18px"></ul></div>
+<h2>진행판</h2><div class="board" id="board"></div>
+<h2>통과작</h2><div class="gallery" id="gallery"></div>
+</main>
+<div id="detail"><div class="panel" id="panel"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=n=>typeof n==="number"?n.toLocaleString("ko-KR"):(n==null?"–":esc(n));
+const LABEL={found:"발견",benched:"벤치",scored:"점수",assigned:"배정",scripted:"대본",sourced:"재료",plan_review:"선검수",
+  producing:"제작 대기",produced:"제작됨",final_review:"최종 검수",passed:"통과",rejected:"반려"};
+const REVIEW=["plan_review","final_review"];
+const HB_DEAD=660;   // 11분 — 진행판 설계 §5 끊김 기준
+const params=new URLSearchParams(location.search);
+let CAT=params.get("cat")||"", D=null, OPEN=null;
+
+async function api(url,body){
+  const r=await fetch(url,body?{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{credentials:"same-origin"});
+  const j=await r.json().catch(()=>({error:"응답을 읽지 못했습니다 (HTTP "+r.status+")"}));
+  if(!r.ok)throw new Error(j.detail||j.error||("HTTP "+r.status));
+  return j;
+}
+function msg(el,text,ok){el.className="msg "+(ok?"ok":"err");el.textContent=text}
+const pct=(a,b)=>b?Math.round(a/b*100)+"%":"–";
+const dur=s=>s==null?"–":(s>=3600?(s/3600).toFixed(1)+"시간":s>=60?Math.round(s/60)+"분":Math.round(s)+"초");
+const ago=s=>s==null?"기록 없음":(s<60?Math.round(s)+"초 전":s<3600?Math.round(s/60)+"분 전":(s/3600).toFixed(1)+"시간 전");
+
+function tile(label,val,sub,cls){return `<div class="tile ${cls||""}"><span>${label}</span><b>${val}</b>${sub||""}</div>`}
+function capTile(label,o){
+  o=o||{};const used=o.used??0,cap=o.cap;const p=cap?Math.min(100,used/cap*100):0;
+  return tile(label,`${num(used)}<span style="font-size:14px"> / ${cap!=null?num(cap):"상한 없음"}</span>`,
+    `<div class="gauge"><i class="${p>=90?"hot":""}" style="width:${p}%"></i></div>`,cap&&used>=cap?"red":"");
+}
+function drawMeter(m){
+  m=m||{};const pp=m.plan_pass||{},fp=m.final_pass||{},pc=m.per_piece||{};
+  $("#meter").innerHTML=[
+    tile("오늘 후보",num(m.candidates_today)),
+    tile("선검수 통과율",pct(pp.pass,pp.total),`<span>${num(pp.pass)} / ${num(pp.total)}</span>`),
+    tile("최종 통과율",pct(fp.pass,fp.total),`<span>${num(fp.pass)} / ${num(fp.total)}</span>`),
+    tile("편당 시간(중앙)",dur(pc.seconds_median)),
+    tile("편당 비용(중앙)",pc.won_median!=null?num(pc.won_median)+"원":"–"),
+    capTile("글 AI 호출(오늘)",m.llm),
+    capTile("나레 음성 생성(오늘)",m.tts),
+  ].join("");
+}
+function drawCats(){
+  const cats=["",...(D.categories||[])];
+  $("#cats").innerHTML=cats.map(c=>`<button data-c="${esc(c)}" class="${c===CAT?"on":""}">${c||"전체"}</button>`).join("");
+  document.querySelectorAll("#cats button").forEach(b=>b.onclick=()=>{CAT=b.dataset.c;history.replaceState(null,"",CAT?"?cat="+encodeURIComponent(CAT):"?");load()});
+}
+function drawWorkers(ws){
+  $("#workers").innerHTML=(ws||[]).length?ws.map(w=>{const dead=w.age_sec==null||w.age_sec>HB_DEAD;
+    return `<div class="card wk ${dead?"dead":""}"><div class="row"><span class="name">${esc(w.worker)}</span>
+      <span class="tag ${dead?"red":"ok"}">${dead?"끊김":"살아있음"}</span></div>
+      <div class="sub">${esc(w.category)} · ${w.track==="discover"?"발굴":"벤치"} · ${esc(w.channel||"")} · ${esc(w.host||"")}</div>
+      <div>지금: <b>${w.step?esc(LABEL[w.step]||w.step):"쉬는 중"}</b>${w.topic_id?` <a href="#" data-open="${esc(w.topic_id)}">${esc(w.topic_id)}</a>`:""}</div>
+      <div class="sub">맥박 ${ago(w.age_sec)} · 오늘 처리 ${num(w.done_today)}</div>
+      ${w.last_error?`<div class="sub" style="color:var(--bad)">⚠ ${esc(w.last_error)}</div>`:""}</div>`}).join("")
+    :'<p class="sub">등록된 워커가 없습니다 — PC에서 <code>worker.py --category … --loop</code> 를 켜면 여기 뜹니다.</p>';
+}
+function drawStops(st){
+  $("#stops").innerHTML=(st||[]).length?st.map(s=>`<li><b>${esc(LABEL[s.step]||s.step||"")}</b>
+    ${s.topic_id?`<a href="#" data-open="${esc(s.topic_id)}">${esc(s.topic||s.topic_id)}</a>`:""} — <span style="color:var(--bad)">${esc(s.error)}</span>
+    <span class="sub">${esc(s.worker||"")} ${esc((s.at||"").slice(5,16).replace("T"," "))}</span></li>`).join(""):'<li class="sub">멈춘 것 없음</li>';
+}
+function drawDecide(rows){
+  const keep={};document.querySelectorAll("#decide textarea").forEach(t=>keep[t.dataset.id]=t.value);
+  $("#decideN").textContent=rows.length?rows.length+"건":"";
+  $("#decide").innerHTML=rows.length?rows.map(t=>{const fin=t.state==="final_review";
+    const backs=fin?["producing","sourced","scripted","assigned"]:["sourced","scripted","assigned"];
+    return `<div class="card" data-id="${esc(t.id)}"><div class="row"><span class="tag wait">${LABEL[t.state]}</span>
+      <a href="#" data-open="${esc(t.id)}"><b>${esc(t.topic)}</b></a><span class="sub">${esc(t.category)} · ${esc((t.assign||{}).channel||"")} · ${esc(t.id)}</span></div>
+      <div class="sub">${fin?"완성본·원본·대조를 보고 판정":"계획.md·접촉 시트를 보고 제작 전 판정"} — <a href="#" data-open="${esc(t.id)}">자료 열기</a></div>
+      <textarea data-id="${esc(t.id)}" placeholder="반려 사유(반려할 때 필수) / 통과 메모">${esc(keep[t.id]||"")}</textarea>
+      <div class="row" style="margin-top:6px"><button class="ok" data-act="pass">통과</button>
+        <select data-back>${["rejected",...backs].map(s=>`<option value="${s}">${s==="rejected"?"반려(끝)":"되돌림 → "+LABEL[s]}</option>`).join("")}</select>
+        <button class="bad" data-act="reject">반려</button><span class="msg"></span></div></div>`}).join("")
+    :'<p class="sub">검수 대기 없음.</p>';
+  document.querySelectorAll("#decide .card[data-id]").forEach(card=>{
+    card.querySelectorAll("button[data-act]").forEach(b=>b.onclick=async()=>{
+      const id=card.dataset.id,reason=card.querySelector("textarea").value.trim(),m=card.querySelector(".msg");
+      const act=b.dataset.act,back=card.querySelector("[data-back]").value;
+      if(act==="reject"&&!reason){msg(m,"반려 사유를 적어 주세요",false);return}
+      b.disabled=true;
+      try{await api("/api/admin/calcopy/topics/"+encodeURIComponent(id)+"/review",
+          {decision:act,reason,back_to:act==="reject"&&back!=="rejected"?back:undefined});
+        msg(m,act==="pass"?"통과했습니다":"반려했습니다",true);setTimeout(load,500)}
+      catch(e){msg(m,e.message,false);b.disabled=false}});
+  });
+}
+function drawBoard(topics){
+  const by={};(D.states||Object.keys(LABEL)).forEach(s=>by[s]=[]);
+  topics.forEach(t=>(by[t.state]=by[t.state]||[]).push(t));
+  $("#board").innerHTML=Object.entries(by).map(([s,list])=>`<div class="col ${REVIEW.includes(s)?"review":""} ${list.length?"":"empty"}">
+    <h3><span>${LABEL[s]||esc(s)}</span><span class="sub">${list.length}</span></h3>
+    ${list.map(t=>`<div class="item ${t.error?"err":""} ${t.worker?"live":""}" data-open="${esc(t.id)}">
+      <div class="t">${esc(t.topic)}</div>
+      <div class="sub">${esc(t.category)}${(t.assign||{}).channel?" · "+esc(t.assign.channel):""}${(t.scores||{}).total!=null?" · "+num(t.scores.total)+"점":""}</div>
+      ${t.worker?`<div class="sub">⚙ ${esc(t.worker)} ${esc(LABEL[t.step]||t.step||"")}</div>`:""}
+      ${t.error?`<div class="sub" style="color:var(--bad)">⚠ ${esc(String(t.error).slice(0,80))}</div>`:""}</div>`).join("")}</div>`).join("");
+}
+function drawGallery(g){
+  $("#gallery").innerHTML=(g||[]).length?g.map(x=>`<a href="#" data-open="${esc(x.id)}">
+    ${x.thumb_url?`<img src="${esc(x.thumb_url)}" alt="">`:`<video src="${esc(x.final_url||"")}" muted preload="metadata"></video>`}
+    <b>${esc(x.topic)}</b><br><span class="sub">${esc(x.channel||"")} · ${esc((x.at||"").slice(0,10))}</span></a>`).join(""):'<p class="sub">아직 통과작이 없습니다.</p>';
+}
+function bindOpen(){document.querySelectorAll("[data-open]").forEach(el=>el.onclick=e=>{e.preventDefault();openDetail(el.dataset.open)})}
+
+async function load(){
+  try{
+    D=await api("/api/admin/calcopy/topics/board"+(CAT?"?category="+encodeURIComponent(CAT):""));
+    $("#err").className="msg";
+    const topics=D.topics||[];
+    drawCats();drawMeter(D.meter);drawWorkers(D.workers);drawStops(D.stops);
+    if(!document.activeElement||!document.activeElement.closest("#decide"))drawDecide(topics.filter(t=>REVIEW.includes(t.state)));
+    drawBoard(topics);drawGallery(D.gallery);bindOpen();
+    $("#stamp").textContent="· 갱신 "+new Date().toLocaleTimeString("ko-KR")+" (10초마다)";
+  }catch(e){msg($("#err"),"불러오기 실패: "+e.message,false)}
+}
+
+// ── 상세 ──
+function art(t,k){return ((t.artifacts||{})[k]||{}).url||""}
+async function openDetail(id){
+  OPEN=id;$("#detail").classList.add("on");$("#panel").innerHTML='<p class="sub">불러오는 중…</p>';
+  let t;try{t=await api("/api/admin/calcopy/topics/"+encodeURIComponent(id))}catch(e){$("#panel").innerHTML=`<p class="msg err">${esc(e.message)}</p>`;return}
+  const sc=t.scores||{},rv=t.review||{},A=t.artifacts||{};
+  const crit=[["known","아는 대상"],["surprise","몰랐던"],["fun","재미"],["story","이야기"],["gain","얻는 것"],["showable","보여줄 수 있나"]];
+  $("#panel").innerHTML=`<button class="ghost x" id="close">닫기</button>
+  <div class="row"><span class="tag ${REVIEW.includes(t.state)?"wait":t.state==="passed"?"ok":t.state==="rejected"?"red":"grey"}">${LABEL[t.state]||esc(t.state)}</span><span class="sub">${esc(t.id)}</span></div>
+  <h2 style="margin-top:6px">${esc(t.topic)}</h2>
+  ${t.error?`<p class="msg err" style="display:block">멈춤: ${esc(t.error)}</p>`:""}
+  <dl class="kv"><dt>카테고리·트랙</dt><dd>${esc(t.category)} · ${t.track==="discover"?"발굴":"벤치"}</dd>
+    <dt>출처</dt><dd>${(t.source||{}).url?`<a href="${esc(t.source.url)}" target="_blank" rel="noopener">${esc(t.source.title||t.source.url)}</a>`:esc((t.source||{}).kind||"–")}</dd>
+    <dt>배정</dt><dd>${esc((t.assign||{}).channel||"–")} <span class="sub">${esc((t.assign||{}).preset||"")}</span></dd>
+    <dt>점수</dt><dd>${sc.total!=null?`<b>${num(sc.total)}</b> · `:""}${crit.map(([k,n])=>sc[k]?`<span title="${esc(sc[k].why)}">${n} ${sc[k].score??"-"}</span>`:"").filter(Boolean).join(" · ")||"–"}${sc.overlap!=null?` · 겹침 ${sc.overlap}`:""}</dd>
+    <dt>벤치</dt><dd>${(t.bench||{}).n_videos!=null?`영상 ${t.bench.n_videos}편 · 포인트 ${(t.bench.points||[]).length}개`:"–"}</dd>
+    <dt>비용</dt><dd>글 AI ${num((t.cost||{}).llm_calls||0)}회 · 나레 음성 ${num((t.cost||{}).tts_calls||0)}회 · ${dur((t.cost||{}).seconds)}${(t.cost||{}).won!=null?" · "+num(t.cost.won)+"원":""}</dd>
+    <dt>권리</dt><dd>${esc((t.rights||{}).basis||"–")} ${esc((t.rights||{}).note||"")}</dd>
+    <dt>판정</dt><dd>${["plan","final"].map(k=>rv[k]?`${k==="plan"?"선검수":"최종"} <b>${rv[k].decision==="pass"?"통과":"반려"}</b> ${esc(rv[k].reason||"")} <span class="sub">${esc(rv[k].by||"")} ${esc((rv[k].at||"").slice(5,16))}</span>`:"").filter(Boolean).join("<br>")||"–"}</dd>
+  </dl>
+  ${(art(t,"final")||art(t,"original"))?`<h2>완성본 · 원본</h2><div class="pair">
+     <div><div class="sub">우리 완성본</div>${art(t,"final")?`<video src="${esc(art(t,"final"))}" controls preload="metadata"></video>`:'<p class="sub">없음</p>'}</div>
+     <div><div class="sub">원본</div>${art(t,"original")?`<video src="${esc(art(t,"original"))}" controls preload="metadata"></video>`:`<p class="sub">${esc((A.original||{}).upload_error?"올리지 못함: "+A.original.upload_error:"없음")}</p>`}</div></div>`:""}
+  ${art(t,"sheet_1s")?`<h2>1초 시트</h2><img class="sheet" src="${esc(art(t,"sheet_1s"))}" alt="1초 시트">`:""}
+  ${art(t,"side_by_side")?`<h2>나란히(대조)</h2><img class="sheet" src="${esc(art(t,"side_by_side"))}" alt="대조">`:""}
+  ${art(t,"계획.md")?`<h2>계획.md <a class="sub" href="${esc(art(t,"계획.md"))}" target="_blank">원문</a></h2><div class="md" id="planmd">불러오는 중…</div>`:""}
+  ${art(t,"계획_시트.jpg")?`<img class="sheet" src="${esc(art(t,"계획_시트.jpg"))}" alt="계획 시트" style="margin-top:8px">`:""}
+  ${art(t,"차이표.md")?`<h2>차이표 <a class="sub" href="${esc(art(t,"차이표.md"))}" target="_blank">원문</a></h2><div class="md" id="diffmd">불러오는 중…</div>`:""}
+  <h2>산출물</h2><ul>${Object.entries(A).map(([k,v])=>`<li>${v.url?`<a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(k)}</a>`:esc(k)}
+     <span class="sub">${esc(v.local||"")}</span>${v.upload_error?` <span class="tag red">${esc(v.upload_error)}</span>`:""}</li>`).join("")||'<li class="sub">없음</li>'}</ul>
+  <h2>이력</h2><ul>${(t.history||[]).slice().reverse().map(h=>`<li><span class="sub">${esc((h.at||"").slice(5,16).replace("T"," "))}</span>
+     ${esc(LABEL[h.from]||h.from)} → <b>${esc(LABEL[h.to]||h.to)}</b> <span class="sub">${esc(h.by||"")}</span>${h.note?` — ${esc(h.note)}`:""}</li>`).join("")||'<li class="sub">없음</li>'}</ul>`;
+  $("#close").onclick=closeDetail;
+  for(const [k,el] of [["계획.md","#planmd"],["차이표.md","#diffmd"]]){
+    if(!art(t,k))continue;
+    fetch(art(t,k),{credentials:"same-origin"}).then(r=>r.ok?r.text():Promise.reject(new Error("HTTP "+r.status)))
+      .then(x=>{const e=$(el);if(e)e.textContent=x}).catch(e=>{const n=$(el);if(n)n.textContent="못 불러옴: "+e.message});
+  }
+}
+function closeDetail(){OPEN=null;$("#detail").classList.remove("on")}
+$("#detail").onclick=e=>{if(e.target.id==="detail")closeDetail()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail()});
+
+load();setInterval(load,10000);
+</script>
+</body></html>
