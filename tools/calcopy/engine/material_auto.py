@@ -942,6 +942,9 @@ def apply_fixes(wd, ops: list[dict], net=None, log=print) -> dict:
             s.clear(); s.update({**keep, "src": o["vid"], "vid": o["vid"], "src_t0": float(o["t0"]), "cont": False, "fix": "pick",
                                  "seen": o.get("seen", ""), "res": (meta.get(o["vid"]) or {}).get("res"),
                                  "url": f"https://www.youtube.com/watch?v={o['vid']}"})
+        elif o["op"] == "crop":           # 크롭 위치만(원본 픽셀 왼쪽 x) — 인물·제품이 가운데 크롭 밖일 때(A3)
+            s["crop_x"] = int(o["x"])
+            continue
         elif o["op"] == "meme":
             s.clear(); s.update({**keep, "src": "meme:" + o["id"], "vid": None, "src_t0": 0.0, "cont": False, "kind": "meme", "fix": "meme",
                                  "seen": "짤 " + o["id"]})
@@ -1011,7 +1014,7 @@ def emit_material(auto: dict, wd, work_dir) -> list[str]:
     rows, bad = [], []
     for s in auto["shots"]:
         r = {"i": s["i"], "caption": s["caption"], "kind": s.get("kind"), "cont": bool(s.get("cont")), "seen": s.get("seen", ""),
-             "url": s.get("url"), "src_t0": s.get("src_t0"), "res": s.get("res")}
+             "url": s.get("url"), "src_t0": s.get("src_t0"), "res": s.get("res"), "crop_x": s.get("crop_x")}
         if s.get("none"):
             bad.append(f"{s['i']} 빈칸({s.get('why', '')[:60]})")
         elif str(s.get("src", "")).startswith("meme:"):
