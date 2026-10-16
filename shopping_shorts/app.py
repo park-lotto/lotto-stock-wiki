@@ -17006,6 +17006,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_fx_enabled",
                        # 자막팩(관제 127, 2026-10-06) — 팩 카드·새 등장 효과·새 단어 강조 방식. ""끔 · "admin" · "11,42" · "1" 전체
                        "caption_pack_enabled",
+                       # 모션그래픽팩(관제 222, 2026-10-17) — 효과 탭 '🎞 모션그래픽' 칸. ""끔 · "admin" · "11,42" · "1" 전체
+                       "mograph_enabled",
                        # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
                        "bgm_lib_enabled"}
 
@@ -22792,7 +22794,8 @@ def api_scene_style_asset(asset_path: str):
     names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js",
              "link-longform-stage.html", "link-longform-blocks.js"}   # 구매링크 롱폼 화면(관제 133)
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
-    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "shopping_shorts/static/caption-motions.js", "out/scene-style-labels.js"}
+    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "shopping_shorts/static/caption-motions.js", "out/scene-style-labels.js",
+                             "shopping_shorts/static/motion-graphics-pack.js"}   # 모션그래픽팩(관제 222)
     allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
@@ -22864,6 +22867,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
     context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
+    # 모션그래픽팩(관제 222) 스위치 — 꺼진 계정은 효과 탭에 '🎞 모션그래픽' 칸이 안 뜬다(고객 화면 불변). 저장값·렌더는 스위치와 무관하게 받는다
+    context["mographEnabled"] = bool(_setting_gate(Store(DB_PATH), "mograph_enabled", _cid(request)))
     # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
     # 자동 배치는 새 영상에만(2026-10-06 사장님 "기존영상은 하지말고") — 장면 효과 자동 배치·등장 효과팩 자동 번호가 같은 기준(scene_style.auto_new_job)
     from .scene_style import auto_new_job, caption_motion_pack_for

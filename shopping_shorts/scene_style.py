@@ -153,7 +153,7 @@ def validate_snapshot(value):
             for mask in effect["masks"]:
                 if not isinstance(mask,dict):
                     raise ValueError("가림막 항목이 올바르지 않습니다")
-                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image") else mask.get("kind")}])
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image","mograph") else mask.get("kind")}])
                 if not base:
                     continue
                 item=base[0]
@@ -161,6 +161,11 @@ def validate_snapshot(value):
                     if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
                         raise ValueError("도형 종류가 올바르지 않습니다")
                     item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("kind")=="mograph":
+                    # 모션그래픽팩(관제 222): 어떤 효과인지(이름)만 받는다 — 모양·시간표의 주인은 static/motion-graphics-pack.js
+                    if not re.fullmatch(r"[a-z0-9_]{1,32}",str(mask.get("mograph") or "")):
+                        raise ValueError("모션그래픽 종류가 올바르지 않습니다")
+                    item.update(kind="mograph",mograph=mask["mograph"])
                 if mask.get("kind")=="image":
                     # 로고(관제 065): 계정 폴더의 PNG만. 파일이 없으면 버린다(없는 그림을 렌더가 기다리지 않게).
                     src=str(mask.get("src") or "")
@@ -683,7 +688,7 @@ CAPCUT_SCENE_FX = {
     "shock": "keyframe",
     "dim": "under",
     "animation": "word_frames",
-    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다
+    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다 · 모션그래픽(관제 222)도 움직임이 본체라 완성본에서 뜬다
     "highlight": "bake",       # 장면 강조(highlight_fc)
     "camera": "bake",          # 틀 카메라 움직임(zoompan) — 글자 그림까지 같이 움직인다
 }
@@ -692,7 +697,7 @@ CAPCUT_SCENE_FX = {
 def _needs_bake(effect, layer):
     """이 장면을 완성본에서 떠 와야 하나 — CAPCUT_SCENE_FX 의 bake 효과가 실제로 켜졌는지."""
     effect=effect or {}
-    if any((m or {}).get("fx")=="blur" for m in effect.get("masks") or []):
+    if any((m or {}).get("fx")=="blur" or (m or {}).get("kind")=="mograph" for m in effect.get("masks") or []):
         return True
     from .video_assemble import scene_hl_of      # 강조 켜짐 해석은 렌더(compose→highlight_fc)와 같은 함수 — "on":false 는 꺼짐
     if effect.get("highlight") and scene_hl_of({"scene_hl":effect.get("highlight")}):
