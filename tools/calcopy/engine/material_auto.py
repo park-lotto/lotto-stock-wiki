@@ -32,7 +32,12 @@ PROMPT_VER = "ma1"
 MAX_QUERIES = 10          # 작품당 검색어 상한(사장님 10-17)
 PER_QUERY = 15            # 검색어당 편 상한
 META_PER_QUERY = 5        # 검색어당 메타(해상도) 조회 편수
-MAX_PREVIEWS = 24         # 미리보기 받는 편 상한(작품당)
+PREVIEW_PER_QUERY = 3     # 검색어당 미리보기 편수 — 앞 검색어가 상한을 다 먹어 뒤 검색어(재검색 포함)가 0편 되는 것 방지(1판 실측)
+MAX_PREVIEWS = 30         # 미리보기 받는 편 상한(작품당)
+# 1080 구간은 HLS(m3u8) 포맷으로 — 10-17 실측: DASH 137 을 --download-sections 로 자르면 16~20KiB/s 로 막혀 7초 구간에 3분 반,
+# HLS 270 은 같은 구간 6.5초 · 시작 시각 오차 0.1초 안(미리보기 프레임 대조).
+SECTION_FMT = ("270/614/bv*[height>=1080][protocol^=m3u8]/bv*[width>=1080][protocol^=m3u8]/bv*[height>=720][protocol^=m3u8]"
+               "/137/bv*[height>=1080]/bv*[height>=720]")
 RATE = 1.0                # 유튜브 요청 간격(초)
 WORKERS = 4               # 무거운 일 동시 상한
 MAX_429 = 10              # 제미나이 429 이 횟수 넘으면 멈춤
@@ -119,7 +124,9 @@ def norm_script(sj: dict) -> tuple[str, list[dict]]:
 QUERY_PROMPT = """숏폼 재료 담당이다. 주제: {topic}
 채널 규칙: {rule_text}
 아래 토막(자막 조각)마다 화면에 보여야 할 장면을 정하고, 그 장면을 찾을 유튜브 검색어를 만들어라.
-- need: 그 토막의 명사·동작이 그대로 보이는 장면(영어 6~12낱말, 구체적으로 — 예 'hand puts plates into sink dishwasher basket')
+- need: 그 토막이 **문장 안에서** 말하는 순간을 보여줄 장면(영어 6~12낱말, 구체적으로 — 예 'hand puts plates into sink dishwasher basket').
+  토막은 문장의 조각이다 — 문장 전체 뜻을 따른다(예: '설거지하다 허리 / 굽히는 게 귀찮았던' = 허리 굽혀 설거지하는 불편한 모습, 제품 자랑 장면 아님).
+  같은 문장의 이웃 토막은 같은 장면이 이어져도 된다(인물·장소를 바꾸지 마라). 로고·글자 클로즈업은 장면으로 쓰지 않는다(회사·브랜드 얘기 = 매장·공장·진열·사용하는 사람).
 - keywords: need 의 핵심 영어 낱말 3~6개(소문자)
 - kind: {kinds}  (product=이 제품 실영상, before=비교 대상 일반 제품, similar=제품이 아닌 연상·상황 영상, meme=반응 짤)
 {meme_rule}
@@ -240,8 +247,10 @@ class Net:
         out.parent.mkdir(parents=True, exist_ok=True)
         if out.exists() and out.stat().st_size > 10000:
             return str(out)
-        r = _run(["yt-dlp", "--no-update", "--load-info-json", info, "-f", "bv*", "-S", "res:360,+size", "--download-sections",
-                  f"*0-{PREVIEW_HEAD}", "-o", str(out)], timeout=600)
+        # 주소로 새로 받는다 — info 파일 재사용은 2/24편이 403(1판 실측: wqJZ·UNB6, 사람 정답의 핵심 소스)
+        self._gap()
+        r = _run(["yt-dlp", "--no-update", "-f", "bv*", "-S", "res:360,+size", "--download-sections",
+                  f"*0-{PREVIEW_HEAD}", "-o", str(out), f"https://www.youtube.com/watch?v={vid}"], timeout=600)
         if out.exists():
             self.bytes += out.stat().st_size
             return str(out)
@@ -249,13 +258,14 @@ class Net:
         return None
 
     def section(self, vid: str, info: str, a: float, b: float) -> str | None:
-        """쓸 구간만 1080p(없으면 ≥720p) 영상만 — 통째로 받지 않는다. 키프레임을 구간 끝에 맞춰 시작 시각이 정확하다."""
+        """쓸 구간만 1080p(없으면 ≥720p) 영상만 — 통째로 받지 않는다(SECTION_FMT 주석)."""
         out = self.wd / "sections" / f"{vid}_{int(a * 10):05d}_{int(b * 10):05d}.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
         if out.exists() and out.stat().st_size > 10000:
             return str(out)
-        r = _run(["yt-dlp", "--no-update", "--load-info-json", info, "-f", "137/bv*[height>=1080]/bv*[width>=1080]/bv*[height>=720]",
-                  "--download-sections", f"*{a:.2f}-{b:.2f}", "--force-keyframes-at-cuts", "-o", str(out)], timeout=900)
+        self._gap()
+        r = _run(["yt-dlp", "--no-update", "-f", SECTION_FMT, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
+                  f"https://www.youtube.com/watch?v={vid}"], timeout=900)
         if out.exists():
             self.bytes += out.stat().st_size
             return str(out)
@@ -324,10 +334,11 @@ def tag_video(cells: list[dict], product: str, llm, wd: Path, vid: str) -> list[
     """영상 하나의 칸들을 시트 한 장(30칸)씩 설명. 캐시 = tags/<vid>.json(프롬프트 판·제품 설명이 같을 때만)."""
     cache = wd / "tags" / f"{vid}.json"
     cache.parent.mkdir(parents=True, exist_ok=True)
-    key = f"{PROMPT_VER}|{product}|{len(cells)}"
+    key = f"{PROMPT_VER}|{len(cells)}"     # 같은 작업 폴더 = 같은 제품. 제품 설명 글은 실행마다 조금씩 달라 키에 넣지 않는다(재태깅 낭비)
     if cache.exists():
         c = json.loads(cache.read_text(encoding="utf-8"))
-        if c.get("key") == key:
+        ck = str(c.get("key") or "")
+        if ck == key or (ck.startswith(PROMPT_VER + "|") and ck.endswith(f"|{len(cells)}")):   # 1판 키(제품 설명 포함)도 받는다
             return c["cells"]
     got = {}
     for s0 in range(0, len(cells), SHEET_N):
@@ -612,6 +623,19 @@ def plan_sheet(picks, toks, wd: Path, rows_per: int = 10) -> list[str]:
 
 
 # ── 전체 흐름 ──────────────────────────────────────────────────────────────
+def reupload_of(m: dict, accepted: list[dict]) -> str | None:
+    """재업로드(같은 영상 다른 id) 판정 — 길이 30초 넘고 이미 받기로 한 영상과 길이 차 ≤1초면 같은 영상으로 본다.
+    1판 실측: cFL4LQH_trE(Amazing Finds) = rBCNBy1xmjQ(DreadTech) 재업(275초, 사람 시트 동일) — 두 id 를 다른 소스로 세면
+    같은 그림이 두 번 나와도 ±3초 재사용 규칙이 못 막는다."""
+    d = m.get("duration") or 0
+    if d <= 30:
+        return None
+    for a in accepted:
+        if abs((a.get("duration") or 0) - d) <= 1.0:
+            return a.get("id")
+    return None
+
+
 def _gather(queries, net, state, log):
     """검색 → 메타(해상도) → 미리보기 대상 고르기. state 에 누적."""
     for q in queries:
@@ -620,9 +644,9 @@ def _gather(queries, net, state, log):
             break
         state["queries"].append(q)
         rows = [r for r in net.search(q["q"], PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800]
-        n_meta = 0
+        n_meta = n_prev = 0
         for r in rows:
-            if n_meta >= META_PER_QUERY or len(state["previews"]) >= MAX_PREVIEWS:
+            if n_meta >= META_PER_QUERY or n_prev >= PREVIEW_PER_QUERY or len(state["previews"]) >= MAX_PREVIEWS:
                 break
             if r["id"] in state["meta"]:
                 continue
@@ -630,8 +654,13 @@ def _gather(queries, net, state, log):
             n_meta += 1
             m.update({"query": q["q"], "purpose": q.get("purpose"), "search_title": r.get("title")})
             state["meta"][r["id"]] = m
-            if m.get("res", 0) >= 720:
+            dup = reupload_of(m, [state["meta"][v] | {"id": v} for v in state["previews"]])
+            if dup:
+                m["reupload_of"] = dup
+                log(f"[재업 의심] {r['id']} = {dup}(길이 같음) — 안 씀")
+            elif m.get("res", 0) >= 720:
                 state["previews"].append(r["id"])
+                n_prev += 1
         log(f"[검색] «{q['q']}» {len(rows)}편 → 미리보기 대상 누적 {len(state['previews'])}")
 
 

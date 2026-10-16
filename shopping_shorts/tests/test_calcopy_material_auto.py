@@ -146,7 +146,7 @@ class FakeNet:
         return [{"id": "A", "duration": 60}, {"id": "B", "duration": 60}] if "dish" in q else []
 
     def meta(self, vid):
-        return {"res": 1080, "duration": 60, "title": vid, "channel": "c", "info": "x"}
+        return {"res": 1080, "duration": {"A": 60, "B": 75}.get(vid, 90), "title": vid, "channel": "c", "info": "x"}
 
     def preview(self, vid, info):
         return None   # 프레임은 아래 패치로
@@ -207,3 +207,10 @@ def test_compare_human_criteria():
     human = {"shots": [{"i": 0, "src": "src_X.mp4", "ss": 9.0, "ours": "h"}, {"i": 1, "src": "src_X.mp4", "ss": 5.0, "ours": "h"}]}
     r = ma.compare_human(auto, human)
     assert r["same_seg"] == 1 and r["rows"][1]["same_src"] is False
+
+
+def test_reupload_red_green():
+    acc = [{"id": "rBCN", "duration": 275.0}]
+    assert ma.reupload_of({"duration": 275.4}, acc) == "rBCN"        # 빨강: 같은 길이 재업(cFL4 = rBCN 실사례)
+    assert ma.reupload_of({"duration": 120.0}, acc) is None          # 초록: 다른 길이
+    assert ma.reupload_of({"duration": 20.0}, [{"id": "x", "duration": 20.0}]) is None   # 짧은 영상은 판정 안 함
