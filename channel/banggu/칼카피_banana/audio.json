@@ -1,0 +1,33 @@
+{
+ "tts": "C:/숏템_칼카피/banggu/칼카피_banana/render/narr_tight.mp3",
+ "bgm": "honwaka_puppu",
+ "bgm_ratio": 0.22,
+ "target_lufs": -14.3,
+ "sfx": [
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_13.mp3",
+   0.0,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_27.mp3",
+   2.364,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_27.mp3",
+   8.735,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_13.mp3",
+   17.537,
+   0.0
+  ]
+ ],
+ "final": {
+  "I": -14.2,
+  "LRA": 1.8,
+  "TP": -0.8
+ }
+}

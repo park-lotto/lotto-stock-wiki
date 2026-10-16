@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """ILIi 렌더 뒤 규칙표(원본 뜯기2 실측 vs 우리 완성본 실측) — 말속도·쉼·덕킹·LUFS·컷·자막·재료 시간 비율·효과음.
-    PYTHONUTF8=1 py channel/banggu/칼카피_ILIi/rules_table.py <render 폴더>
+    PYTHONUTF8=1 py channel/banggu/칼카피_ILIi/rules_table.py <render 폴더> [편 폴더(대본·재료.json)]
 덕킹 = 나레 말 구간 RMS − 말 없는 구간(쉼) RMS (뜯기 audio_comp.duck_db 와 같은 뜻 — 섞인 소리에서 잼)."""
 import json, re, subprocess, sys
 from pathlib import Path
 import numpy as np
 ROOT = Path(__file__).resolve().parents[3]; sys.path.insert(0, str(ROOT))
 from tools.calcopy.narr_video import speech_segments
-R = Path(sys.argv[1]); D = Path(__file__).parent
-J = json.loads((D / "뜯기2/뜯기.json").read_text(encoding="utf-8"))
+R = Path(sys.argv[1]); D = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).parent   # 둘째 인자 = 그 편 폴더(대본·재료), 원본 뜯기는 이 폴더 뜯기2
+JD = Path(__file__).parent
+J = json.loads((JD / "뜯기2/뜯기.json").read_text(encoding="utf-8"))
 S = json.loads((D / "대본.json").read_text(encoding="utf-8")); M = json.loads((D / "재료.json").read_text(encoding="utf-8"))
 A = json.loads((R / "audio.json").read_text(encoding="utf-8")); T = json.loads((R / "timeline.json").read_text(encoding="utf-8"))
 final = R / "final.mp4"
