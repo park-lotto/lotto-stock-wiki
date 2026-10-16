@@ -10,13 +10,15 @@
 ① 되감김: 컷(이웃 프레임 차이 급등) 바로 뒤 프레임을 컷 앞 REWIND_LOOKBACK 초의 프레임들과 그림 일치(ORB+부분 아핀,
    bench.cuts.same_picture_moved — 같은 판단 두 벌 금지)로 대 본다. 가장 잘 맞는 앞 프레임이 마지막 프레임보다
    REWIND_MIN_S 이상 앞이고 일치점이 충분하면 '되감김'. 시간이 앞으로 흐른 정상 컷(크롭·배율만 바뀜)은 마지막 프레임과 가장 잘 맞는다.
+①-2 점프 줌: 컷 앞뒤 프레임이 같은 그림(일치점 ≥ JUMP_ZOOM_INLIERS)인데 배율만 바뀜 — 이어지는 한 장면을 확대만 바꿔 자르면
+   셀카 흔들림과 겹쳐 '끊긴다'(10-17 2판 11곳, 사장님 '19초부터 끊긴다'). 벤치(사람 편집본) 0.
 ② 소리 급변: 50ms RMS. 컷 경계 ±0.2초 안에서 '앞 150ms 평균이 조용(≤ JUMP_QUIET_DB)한데 다음 50ms 칸이 JUMP_DB 이상 뜀'.
    ★참고만(판정에 안 씀): 10-17 실측 — 벤치(사람 편집본 MfptnwqlGKs)도 말 시작마다 13~17dB 급등 9곳이 나와 1판 17.8초(18.8dB)와
    갈리지 않았다(바닥 소리 하락·윗소리 상승 지표도 벤치 15.0/13.4 vs 1판 20.5/14.4로 겹침). 소리 끊김은 귀·받아쓰기로 본다.
    되감김은 벤치 0 · 1판 2(17.77초, 0.37초) · 2판 0 으로 갈린다(시험 test_calcopy_check_seams).
 자막 띠는 --mask 로 가린다(자막 글자가 컷 너머까지 같아 일치점이 부풀기 때문). 영상 내내 안 변하는 줄(제목 띠)은 자동으로 가린다
 — 10-17 실측: 전체 화면 그대로 재면 제목 글자 때문에 1판 되감김을 놓쳤다(0건).
-종료코드: 되감김 있으면 1.
+종료코드: 되감김·점프 줌 있으면 1.
 """
 from __future__ import annotations
 
@@ -44,6 +46,8 @@ REWIND_MIN_S = 0.12      # 가장 잘 맞는 앞 프레임이 마지막보다 �
 REWIND_INLIERS = 40      # 그 일치점 하한
 REWIND_RATIO = 1.3       # 그 일치점이 마지막 프레임 일치점의 이 배수 이상
 STATIC_ROW_STD = 4.0     # 영상 내내 거의 안 변하는 줄(제목 띠·검은 여백)은 가린다 — 고정 글자가 일치점을 부풀려 되감김을 가림
+JUMP_ZOOM_INLIERS = 40    # 컷 앞뒤가 같은 그림(이어지는 한 장면)인데
+JUMP_ZOOM_SCALE = 0.06    # 배율만 이만큼 넘게 바뀌면 '점프 줌'(1.67배↔2.0배 = 1.19/0.84)
 RMS_WIN = 0.05
 JUMP_QUIET_DB = -22.0
 JUMP_DB = 12.0
@@ -96,6 +100,18 @@ def rewinds(fr: list[np.ndarray], cuts: list[int], fps: float) -> list[dict]:
     return out
 
 
+def jump_zooms(fr: list[np.ndarray], cuts: list[int], fps: float) -> list[dict]:
+    """한 장면이 이어지는데 확대만 바뀐 컷 — 10-17 아이템홈 1편 2판 11곳(벤치 0), 사장님 '19초부터 화면이 끊긴다'."""
+    out = []
+    for c in cuts:
+        if c < 1 or c >= len(fr):
+            continue
+        n, sc = same_picture_moved(fr[c - 1], fr[c])
+        if n >= JUMP_ZOOM_INLIERS and sc and abs(sc - 1) > JUMP_ZOOM_SCALE:
+            out.append({"t": round(c / fps, 3), "배율": sc, "일치점": n})
+    return out
+
+
 def rms_db(path: str) -> list[float]:
     sr = 16000
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-vn", "-ac", "1", "-ar", str(sr), "-f", "s16le", "-"],
@@ -144,8 +160,9 @@ def check(path: str, win=None, mask=None) -> dict:
     cuts = find_cuts(fr)
     cut_ts = [round(c / fps, 3) for c in cuts]
     rw = rewinds(fr, cuts, fps)
+    jz = jump_zooms(fr, cuts, fps)
     jp = jumps(rms_db(path), cut_ts)
-    return {"file": str(path), "fps": fps, "컷": cut_ts, "되감김": rw, "소리급변_참고": jp, "ok": not rw}
+    return {"file": str(path), "fps": fps, "컷": cut_ts, "되감김": rw, "점프줌": jz, "소리급변_참고": jp, "ok": not rw and not jz}
 
 
 def main() -> int:
@@ -162,7 +179,9 @@ def main() -> int:
     if mask is None:
         print("[경보] 자막 띠를 모름(--frame/--mask 없음) — 자막 글자가 컷 너머까지 같으면 되감김 오탐이 난다")
     r = check(a.mp4, win, mask)
-    print(f"컷 {len(r['컷'])} · 되감김 {len(r['되감김'])} → {'통과' if r['ok'] else '걸림'} (소리급변 참고 {len(r['소리급변_참고'])})")
+    print(f"컷 {len(r['컷'])} · 되감김 {len(r['되감김'])} · 점프줌 {len(r['점프줌'])} → {'통과' if r['ok'] else '걸림'} (소리급변 참고 {len(r['소리급변_참고'])})")
+    for x in r["점프줌"]:
+        print("  점프줌", x)
     for x in r["되감김"]:
         print("  되감김", x)
     for x in r["소리급변_참고"]:

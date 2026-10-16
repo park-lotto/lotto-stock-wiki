@@ -39,9 +39,18 @@ def test_1판_17초_되감김을_잡는다():
     assert hit and all(0.3 <= x["되감김_초"] <= 0.45 for x in hit)
 
 
-def test_2판은_되감김_없음():
+def test_2판은_되감김_없지만_점프줌_11곳():
+    """2판: 되감김 0, 그러나 같은 장면 확대만 바꾼 컷 11곳(1.67↔2.0배) — 사장님 '19초부터 끊긴다'(19.37·20.13·22.90 포함)."""
     _need(V2)
-    assert check_seams.check(str(V2), WIN, MASK)["ok"]
+    r = check_seams.check(str(V2), WIN, MASK)
+    assert r["되감김"] == [] and not r["ok"]
+    ts = [x["t"] for x in r["점프줌"]]
+    assert len(ts) >= 8 and any(19.2 <= t <= 19.5 for t in ts)
+
+
+def test_벤치는_점프줌_없음():
+    _need(BENCH)
+    assert check_seams.check(str(BENCH), WIN, MASK)["점프줌"] == []
 
 
 def test_틀에서_창과_자막띠를_읽는다():
