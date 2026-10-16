@@ -789,7 +789,94 @@
    "ink_lum": "평균 밝기 220~255(불투명에 가까운 흰 글자 + 옅은 검정 그림자)",
    "ours": "brand 층 '잇썸홈' x540 가운데·y1422 줄 칸 54·CcHiMelody 46px(잉크 높이 43 vs 원본 35~52)"
   },
-  "excluded": "[광고] 표기(오른쪽 위, 일부 편) — 우리 판에 안 넣음(광고 아님)"
+  "excluded": "[광고] 표기(오른쪽 위, 일부 편) — 우리 판에 안 넣음(광고 아님)",
+  "make": {
+   "_why": "tools/calcopy/engine/preset_make.py(한 명령 제작기)가 읽는 값 — 작품1 render.py 두 벌에 흩어져 있던 값을 여기 한 곳으로(관제 097, 10-17). 코드에 채널 이름 분기 없음",
+   "window": [
+    1080,
+    1920
+   ],
+   "frame": {
+    "kind": "preset_save"
+   },
+   "hook": "first_piece",
+   "voice_id": "tc_6059dad0b83880769a50502f",
+   "voice_name": "박창수",
+   "tts_tempo": 1.2,
+   "tts_tempo_why": "15호 실측: tempo 없이 받은 박창수 → atempo 1.185 필요 — 다음 호출부터 TTS 단계에서 1.2(atempo ≈1.0)",
+   "cps": 8.32,
+   "atempo_range": [
+    0.8,
+    1.35
+   ],
+   "line_rate": {
+    "max_ratio": 1.05,
+    "last_lines": 2,
+    "why": "검수 B15 — 끝 문장이 평균보다 5% 넘게 빠르면 그 줄 구간만 늘린다",
+    "max_change": 0.1,
+    "why_change": "페이블 10-17 재발방지: 줄별 늘리기·줄이기는 ±10% 이내(수정3 끝 줄 0.698배가 말투를 바꿨을 가능성) — 넘으면 10%까지만 하고 B15 미달"
+   },
+   "end_pad_s": 0.4,
+   "narr_voice_dbfs": null,
+   "bgm": {
+    "file": "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3",
+    "db_below_voice": 14.4
+   },
+   "sfx": null,
+   "master": {
+    "pre": "dynaudnorm=f=100:g=9:p=0.9:m=20,acompressor=threshold=0.125:ratio=8:attack=1:release=40",
+    "lufs": -9.0,
+    "tp_limit_db": -2.0,
+    "gain_start": 16.0,
+    "gain_max": 22.0,
+    "why": "15호 render.py 그대로 — 리미터 −2(aac 뒤 최고점 ≤−0.5), 이득 상한 22(페이블: LUFS 맞추려 클리핑 안 함)"
+   },
+   "checks": {
+    "length_s": {
+     "allow": [
+      17.4,
+      23.6
+     ],
+     "from": "bench T.duration 45편 중앙 20.5 ±15%(B1)"
+    },
+    "lufs": {
+     "allow": [
+      -9.0,
+      -6.0
+     ],
+     "from": "bench A.lufs 중앙 −7.5 ±1.5(B2)"
+    },
+    "peak_max_dbfs": -0.5,
+    "cps": {
+     "allow": [
+      7.9,
+      8.74
+     ],
+     "from": "8.32 ±5%(B3)"
+    },
+    "cut_median_s": {
+     "allow": [
+      0.805,
+      1.495
+     ],
+     "from": "bench T.cut_sec 1.15 ±30%(B4)"
+    },
+    "cut_min_s": null,
+    "last_cut_min_s": null,
+    "last_line_cut_min_s": null,
+    "meme_ratio_max": 0.0,
+    "same_meme_max": 0,
+    "sfx_max_extra": null,
+    "sfx_max": 0,
+    "caption_max_chars": 13,
+    "edge_y_min": 60
+   },
+   "tts_split": {
+    "max_chars": 35,
+    "at": ",",
+    "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
+   }
+  }
  },
  "verification": {
   "at": "2026-10-17T00:53:48",

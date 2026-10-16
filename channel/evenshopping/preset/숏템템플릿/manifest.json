@@ -191,7 +191,102 @@
   },
   "bgm": "none",
   "bgm_why": "사장님 10-17: 재미썸홈 배경음 금지(원본 이븐쇼핑은 BGM 있음 — 의도된 차이). 나레 + sfx_pack 효과음만",
-  "cut_rules": "사장님 10-17: 이야기 한 묶음 = 한 인물·한 영상 줄기(인물은 이야기가 바뀔 때만) · 같은 묶음 이웃 자막 조각은 한 컷으로 이음 · 컷 중앙 ≥0.93초·최소 0.6초 · 마지막 묶음 컷 ≥1.2초, 끝 컷(제품) ≥1.5초"
+  "cut_rules": "사장님 10-17: 이야기 한 묶음 = 한 인물·한 영상 줄기(인물은 이야기가 바뀔 때만) · 같은 묶음 이웃 자막 조각은 한 컷으로 이음 · 컷 중앙 ≥0.93초·최소 0.6초 · 마지막 묶음 컷 ≥1.2초, 끝 컷(제품) ≥1.5초",
+  "make": {
+   "_why": "tools/calcopy/engine/preset_make.py(한 명령 제작기)가 읽는 값 — 작품1 render.py 두 벌에 흩어져 있던 값을 여기 한 곳으로(관제 097, 10-17). 코드에 채널 이름 분기 없음",
+   "window": [
+    1080,
+    1407
+   ],
+   "window_why": "숏템 t11 본문 영상 칸 비율(make_plan WIN) — 크롭 폭 = 소스 높이×1080/1407",
+   "frame": {
+    "kind": "template"
+   },
+   "hook": "first_line",
+   "voice_id": "tc_68257f68bc6e3c161ab5078d",
+   "voice_name": "필재",
+   "tts_tempo": 1.4,
+   "tts_tempo_why": "16호 실측: Typecast audio_tempo 1.4 → atempo 1.115(≤1.2)",
+   "cps": 8.8,
+   "atempo_range": [
+    0.8,
+    1.2
+   ],
+   "line_rate": {
+    "max_ratio": 1.05,
+    "last_lines": 2,
+    "why": "검수 B15 — 수정3(페이블 판정): 끝 두 줄만 줄별 보정, more2 9.72 는 그대로",
+    "max_change": 0.1,
+    "why_change": "페이블 10-17 재발방지: 줄별 늘리기·줄이기는 ±10% 이내(수정3 끝 줄 0.698배가 말투를 바꿨을 가능성) — 넘으면 10%까지만 하고 B15 미달"
+   },
+   "end_pad_s": 0.5,
+   "narr_voice_dbfs": -17.5,
+   "bgm": null,
+   "sfx": {
+    "pack_customer": 0,
+    "density": "low",
+    "level": "normal",
+    "role_of_slot": {
+     "solve": "limit",
+     "more2": "more"
+    },
+    "why": "sfx_pack.events 호출만 · 칸 역할 = 스파인 칸('이게 말도 안 되는 게'=limit) · density low = 칸 첫 줄만(사장님 수정3)"
+   },
+   "meme_dir": "C:/숏템_칼카피/packs/meme/meme_pack",
+   "master": {
+    "pre": "acompressor=threshold=0.125:ratio=4:attack=2:release=60",
+    "lufs": -13.4,
+    "tp_limit_db": -2.0,
+    "gain_start": 6.0,
+    "gain_max": 30.0,
+    "why": "16호 render.py 그대로"
+   },
+   "checks": {
+    "length_s": {
+     "allow": [
+      23.0,
+      31.2
+     ],
+     "from": "length_target_s(이븐쇼핑 중앙 27.1 ±15%, B1)"
+    },
+    "lufs": {
+     "allow": [
+      -14.9,
+      -11.9
+     ],
+     "from": "loudness.I −13.4 ±1.5(B2)"
+    },
+    "peak_max_dbfs": -0.5,
+    "cps": {
+     "allow": [
+      8.36,
+      9.24
+     ],
+     "from": "8.8 ±5%(B3)"
+    },
+    "cut_median_s": {
+     "allow": [
+      0.93,
+      1.209
+     ],
+     "from": "cut_rules 중앙 ≥0.93 · 원본 0.93 +30%(B4)"
+    },
+    "cut_min_s": 0.6,
+    "last_cut_min_s": 1.5,
+    "last_line_cut_min_s": 1.2,
+    "meme_ratio_max": 0.15,
+    "same_meme_max": 2,
+    "sfx_max_extra": 3,
+    "sfx_max": null,
+    "caption_max_chars": 13,
+    "edge_y_min": 60
+   },
+   "tts_split": {
+    "max_chars": 35,
+    "at": ",",
+    "why": "페이블 10-17 재발방지: 공백 뺀 35자 넘는 문장은 쉼표 자리에서 나눠 따로 넣는다(알람 끝 문장 53자를 4.2초에 몰아 읽음)"
+   }
+  }
  },
  "voice_proposal": [
   {
