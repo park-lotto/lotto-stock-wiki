@@ -50,6 +50,14 @@ BREAK_LEN_W = 0.3   # 같은 거리면 긴 쉼을 고른다(문장 끝 쉼 0.26~
 
 
 def sentence_breaks(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[float]:
+    """문장 끝 쉼 가운데 시각들 — 판정은 break_points 한 곳."""
+    bp = break_points(audio, sentences, noise, d)
+    if any(m is None for m, _ in bp):
+        raise SystemExit(f"문장 끝 쉼을 못 가름(쉼 부족) — {bp}")
+    return [m for m, _ in bp]
+
+
+def break_points(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[tuple[float, float]]:
     """(판단 주인) 문장 k 끝의 쉼 가운데 시각(k=0..n-2) — 무음 검출 + **말 시간** 기준 글자 비례.
     각 쉼의 위치를 '그 앞까지 말한 시간'(쉼 길이를 뺀 시간)으로 바꾸고, 글자 비례 예상 말 시간에 가까운 쉼을 순서대로 고른다
     (비용 = |말 시간 차| − BREAK_LEN_W × 쉼 길이, 앞에서 고른 쉼 뒤에서만).
@@ -74,11 +82,12 @@ def sentence_breaks(audio, sentences: list[str], noise="-30dB", d=0.08) -> list[
         c += lens[k]
         exp = speech * c / tot
         cand = range(prev + 1, len(sil) - (len(sentences) - 2 - k))
-        if not cand:
-            raise SystemExit(f"문장 {k} 끝 쉼을 못 가름(예상 말 시간 {exp:.2f}초, 남은 쉼 부족) — 쉼 목록 {sil}")
+        if not cand:   # 쉼이 경계 수보다 적다(쉼 줄인 나레) — 이 경계는 못 가름(None), 부르는 쪽이 정한다
+            out.append((None, float("inf")))
+            continue
         j = min(cand, key=lambda i: abs(pos[i] - exp) - BREAK_LEN_W * (sil[i][1] - sil[i][0]))
         prev = j
-        out.append(round((sil[j][0] + sil[j][1]) / 2, 3))
+        out.append((round((sil[j][0] + sil[j][1]) / 2, 3), round(abs(pos[j] - exp), 3)))   # (쉼 가운데, 예상 말 시간과의 거리)
     return out
 
 

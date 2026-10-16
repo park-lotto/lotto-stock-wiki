@@ -162,20 +162,34 @@ def _place(steps: list[dict], segs: list[tuple[float, float]], snap: float, firs
     return starts
 
 
-def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]]) -> list[float]:
-    """(판단 주인) 대본 줄마다 실제 말 시작 — 줄 끝 쉼(hottem_audio.sentence_breaks) 다음 첫 말 구간 시작. 줄 0 = 0.
-    10-16 핫템 HONOR 실측: 전체 글자 비례로 놓으면 줄 시작이 실제 말보다 0.46~0.75초 늦었다(자막·컷 늦음)."""
+BREAK_NEAR = 0.5   # 줄 끝 쉼이 글자 비례 예상(말 시간)에서 이보다 멀면 '그 경계엔 쉼 없음' — 방구석처럼 TTS 쉼을 0.07초로 줄인 나레(10-16)
+
+
+def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], expected: list[float] | None = None, log=print) -> list[float]:
+    """(판단 주인) 대본 줄마다 시작 — 줄 끝 쉼(hottem_audio.break_points) 다음 첫 말 구간 시작. 줄 0 = 0.
+    10-16 핫템 HONOR 실측: 전체 글자 비례로 놓으면 줄 시작이 실제 말보다 0.46~0.75초 늦었다(자막·컷 늦음).
+    ★그 경계 근처(예상 말 시간 ±BREAK_NEAR)에 쉼이 없으면 그 경계만 글자 비례 예상(expected[k])으로 되돌리고 [경보]
+      (10-16 방구석 3편: 쉼을 0.07초로 줄인 나레라 엉뚱한 쉼에 붙어 훅이 3.71초까지 늘었다 — 실제 2줄 시작 1.6초)."""
     from tools.calcopy import hottem_audio as ha
-    br = ha.sentence_breaks(audio, lines)
-    return [0.0] + [next((a for a, _ in segs if a >= b - 1e-3), b) for b in br]
+    out = [0.0]
+    for k, (mid, dist) in enumerate(ha.break_points(audio, lines)):
+        anchored = next((a for a, _ in segs if a >= mid - 1e-3), mid) if mid is not None else None
+        if (dist > BREAK_NEAR or anchored is None) and expected:
+            log(f"[경보] 줄 {k + 1} 시작: 예상 근처(±{BREAK_NEAR}초 말 시간)에 쉼 없음(가장 가까운 쉼 {mid}초, 거리 {dist}) → 글자 비례 {expected[k + 1]:.3f}초")
+            out.append(expected[k + 1])
+        else:
+            out.append(anchored)
+    return out
 
 
-def time_steps(steps: list[dict], audio: str, snap: float = 0.4, lines: list[str] | None = None) -> tuple[list[dict], float]:
+def time_steps(steps: list[dict], audio: str, snap: float = 0.4, lines: list[str] | None = None, log=print) -> tuple[list[dict], float]:
     """조각 시각. lines(대본 줄)를 주면 줄 시작을 실제 말 시작(line_starts)에 고정하고 줄 안에서만 글자 비례.
     안 주면(또는 한 줄) 전체를 글자 비례로(종전)."""
     segs, dur = speech_segments(audio)
     if lines and len(lines) > 1 and steps and all("line" in s for s in steps):
-        W = line_starts(audio, lines, segs) + [dur]
+        g = _place(steps, segs, snap, 0.0, dur)   # 글자 비례(종전) — 쉼 없는 경계의 되돌림 값
+        exp = [next(t for t, s in zip(g, steps) if s["line"] == li) if any(s["line"] == li for s in steps) else 0.0 for li in range(len(lines))]
+        W = line_starts(audio, lines, segs, exp, log) + [dur]
         starts = []
         for li in range(len(lines)):
             st = [s for s in steps if s["line"] == li]
