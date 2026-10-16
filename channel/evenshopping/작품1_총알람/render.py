@@ -19,9 +19,10 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(D))
 import make_plan as MP  # noqa: E402
 from tools.calcopy import narr_video as N  # noqa: E402
 
-V3 = "--v3" in sys.argv          # 수정2(사장님 10-17): 묶음=한 인물·이웃 토막 한 컷·BGM 없음·끝 컷 길게. TTS 는 render_v2 것 그대로
+V4 = "--v4" in sys.argv          # 수정3(사장님 10-17): 같은 소스 ±3초 중복 금지·효과음 density=low·끝 줄 말속도 줄별 보정
+V3 = "--v3" in sys.argv or V4          # 수정2(사장님 10-17): 묶음=한 인물·이웃 토막 한 컷·BGM 없음·끝 컷 길게. TTS 는 render_v2 것 그대로
 V2 = "--v2" in sys.argv or V3          # 사장님 10-17 수정본: TTS 단계 속도↑(atempo ≤1.2)·컷 3개 교체 → render_v2·바탕화면 _수정
-R = MP.SRC / ("render_v3" if V3 else "render_v2" if V2 else "render")
+R = MP.SRC / ("render_v4" if V4 else "render_v3" if V3 else "render_v2" if V2 else "render")
 TTS_TEMPO = 1.4 if V2 else None   # Typecast output.audio_tempo
 PRE = MP.PRESET
 VOICE = "tc_68257f68bc6e3c161ab5078d"   # 필재(페이블 10-17)
@@ -29,7 +30,7 @@ CPS = PRE["measured"]["speech_rate"]["chars_per_s_total"]   # 8.8
 BGM = ROOT / "shopping_shorts/assets/bgm_lib/qiuqiu.mp3"
 BGM_DB_BELOW = 17.0                      # bench A.openvoice 17.02(말 p90 − 바닥)
 TARGET_LUFS, TP = PRE["measured"]["lufs"]["I"], -2.0
-DESK = Path.home() / "Desktop" / ("칼카피_재미썸홈_총쏘는알람시계_수정2.mp4" if "--v3" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계_수정.mp4" if "--v2" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계.mp4")
+DESK = Path.home() / "Desktop" / ("칼카피_재미썸홈_총쏘는알람시계_수정3.mp4" if "--v4" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계_수정2.mp4" if "--v3" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계_수정.mp4" if "--v2" in sys.argv else "칼카피_재미썸홈_총쏘는알람시계.mp4")
 FPS = 30
 # 스파인 칸 → sfx_pack 역할(ROLE_GROUPS). "이게 말도 안 되는 게"=limit(둥) · 반전=twist(둥) · 결과=more(띠링) — 페이블 10-17
 SFX_ROLES = ["title", "bait", "reveal", "limit", "more", "more", "twist", "land"]
@@ -41,6 +42,16 @@ def run(cmd):
 
 def run_bytes(cmd):
     return subprocess.run(cmd, check=True, stdin=subprocess.DEVNULL, capture_output=True).stdout
+
+
+def line_spans(timed, lines, dur):
+    """줄(문장)마다 [시작, 다음 줄 시작) — time_steps 가 받아쓰기로 고정한 줄 시작."""
+    st = [next(s["t0"] for s in timed if s["line"] == li) for li in range(len(lines))]
+    return [(st[i], st[i + 1] if i + 1 < len(st) else dur) for i in range(len(st))]
+
+
+def line_rates(timed, lines, dur):
+    return [round(MP.nchar(l) / (b - a), 2) for l, (a, b) in zip(lines, line_spans(timed, lines, dur))]
 
 
 def dur_of(p):
@@ -83,8 +94,38 @@ def main():
         while used >= MP.nchar(lines[li]):
             li, used = li + 1, 0
         steps.append({"text": c[0], "chars": n, "new_cut": True, "line": li}); used += n
+    if V4 and (MP.SRC / "render_v3" / "narr.wav.asr.json").exists():
+        # 같은 TTS·같은 atempo = 같은 나레(md5 같음). 받아쓰기는 매번 시각이 달라(실측 24.4↔26.3) 수정2 것을 그대로 쓴다 — 쉼 실측(24.22~24.44 쉼)과 맞는 판
+        shutil.copy(MP.SRC / "render_v3" / "narr.wav.asr.json", R / "narr.wav.asr.json")
     timed, dur = N.time_steps(steps, str(narr), lines=lines)
-    END = round(dur + (1.2 if V3 else 0.4), 3)   # 수정2: 끝 컷(과녁 명중) ≥1.5초
+    line_rate_before = line_rates(timed, lines, dur)
+    if V4:
+        # 끝 두 줄 중 평균(8.8)보다 5% 넘게 빠른 줄만 그 구간을 늘린다(atempo<1) — 전체 일괄 대신 줄별 보정
+        spans = line_spans(timed, lines, dur)
+        slow = {li: round(CPS / r, 4) for li, r in enumerate(line_rate_before) if li >= len(lines) - 2 and r > CPS * 1.05}
+        if slow:
+            narr2 = R / "narr_lines.wav"
+            parts_a, labs = [], []
+            for li, (a_, b_) in enumerate(spans):
+                f = slow.get(li)
+                parts_a.append(f"[0:a]atrim={a_:.3f}:{b_:.3f},asetpts=PTS-STARTPTS{',atempo=' + str(f) if f else ''}[l{li}]"); labs.append(f"[l{li}]")
+            run(["ffmpeg", "-y", "-i", str(narr), "-filter_complex", ";".join(parts_a) + ";" + "".join(labs) + f"concat=n={len(labs)}:v=0:a=1[o]",
+                 "-map", "[o]", "-ar", "44100", str(narr2)])
+            shutil.copy(narr2, narr)
+            # ★받아쓰기로 다시 재지 않는다 — 제미나이 시각은 늘린 뒤 줄 시작을 2초 늦게 잡았다(실측 24.4→26.3).
+            #   늘린 구간 안의 시각만 비율대로 옮긴다(앞 줄들은 그대로).
+            def remap(t):
+                out_t, shift = t, 0.0
+                for li, (a_, b_) in enumerate(spans):
+                    f = slow.get(li)
+                    if f and t > a_:
+                        shift += (min(t, b_) - a_) * (1 / f - 1)
+                return round(t + shift, 3)
+            timed = [{**x, "t0": remap(x["t0"]), "t1": remap(x["t1"])} for x in timed]
+            dur = dur_of(narr)
+        print("줄별 보정", slow)
+    line_rate_after = line_rates(timed, lines, dur)
+    END = round(dur + (0.5 if V4 else 1.2 if V3 else 0.4), 3)   # 수정2: 끝 컷(과녁 명중) ≥1.5초
     timed[-1]["t1"] = END
 
     # 재료: 토막마다 컷 1개, t11 영상 칸 비율 크롭 → 1080×1407, 원음 없음, 프레임 정확
@@ -152,8 +193,8 @@ def main():
                     "caption_lines": [c["caption"] for c in mine], "cap_durs": [round(c["t1"] - c["t0"], 3) for c in mine],
                     "cap_lead": 0.0, "cap_offset": 0.0, "role": roles[li]})
     pname, pdir = SP.pack_for(0)
-    pack = {"name": pname, "dir": pdir, "density": "normal", "level": "normal", "mute_beats": []}
-    plan = SP.plan_events(stl)
+    pack = {"name": pname, "dir": pdir, "density": "low" if V4 else "normal", "level": "normal", "mute_beats": []}
+    plan = SP.plan_events(stl, density=pack["density"])
     evs = SP.events(stl, pack)
     (R / "sfx_events.json").write_text(json.dumps({"pack": pname, "plan": plan, "events": evs, "timeline": stl}, ensure_ascii=False, indent=1), encoding="utf-8")
     ins, flt, lab = ["-i", str(narr), "-stream_loop", "-1", "-i", str(BGM)], [], []
@@ -185,7 +226,7 @@ def main():
     fI, fpk = lufs(final)
     tsum = {k: round(sum(g["dur"] for g in groups if g["kind"] == k), 2) for k in ("제품", "유사", "짤")}
     rep = {"final": str(final), "desktop": str(DESK), "md5": md5, "dur": dur_of(final), "lufs": fI, "peak_dbfs": fpk, "tempo": tempo,
-           "cps_out": round(chars / dn, 2), "pieces": len(cuts), "cuts": len(groups), "cut_median": round(sorted(g["dur"] for g in groups)[len(groups) // 2], 3), "cut_min": min(g["dur"] for g in groups), "bgm": "on" if bgm_on else "none", "last_group": [g["dur"] for g in groups if g["pieces"][0] >= 31],
+           "cps_out": round(chars / dn, 2), "pieces": len(cuts), "cuts": len(groups), "cut_median": round(sorted(g["dur"] for g in groups)[len(groups) // 2], 3), "cut_min": min(g["dur"] for g in groups), "bgm": "on" if bgm_on else "none", "sfx_count": len(evs), "line_rate_before": line_rate_before, "line_rate_after": line_rate_after, "last_group": [g["dur"] for g in groups if g["pieces"][0] >= 31],
            "time_by_kind": tsum, "max_caption": max(len(c["caption"]) for c in cuts), "bgm_gain_db": round(g, 2), "mix_gain_db": round(gain, 2)}
     (R / "timeline.json").write_text(json.dumps({"report": rep, "cuts": cuts, "groups": groups, "tl": tl}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(rep, ensure_ascii=False))
