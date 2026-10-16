@@ -1,0 +1,12 @@
+{
+ "_note": "핫템리포트 예비 소재(조율자 10-16: 12월용 메모만, 계획 전)",
+ "items": [
+  {"id": "christmas_ceiling_projector", "for": "12월",
+   "product": "크리스마스 천장 투사 조명(산타·썰매를 천장에 비추는 플러그형 프로젝터) — 브랜드명 미확인('link in bio')",
+   "angle": "실제 리뷰 vs 광고 AI 의혹 — '광고 속 썰매 장면은 AI 과장? 실제로 켜 보면 이 정도'",
+   "seed": {"url": "https://www.youtube.com/watch?v=qS6uXDwSyvk", "channel": "TheXmasGlow", "views": 906799, "ai_comments": "19개 중 4개('AI'·'Fake or fake'·'Che pura IA no puede ser'·'IA FALSO', PlayMCP 10-16)"},
+   "real_reviews": ["https://www.youtube.com/shorts/KYaKmaP0eek (75,104, 1080p 확인)", "https://www.youtube.com/shorts/cMGOSYSsTfE (30,603)", "https://www.youtube.com/shorts/wqRaTbpzRfQ (22,766)", "https://www.youtube.com/shorts/G6qBO4KPIE4 (14,810)"],
+   "todo": "판매처·브랜드 확인 / 실제 리뷰 영상의 투사 장면을 눈으로 보고 '광고와 다르다'를 확정한 뒤에만 반전으로 씀(못 확정하면 각도 바꿈)",
+   "source_file": "C:/숏템_칼카피/hottemreport/칼카피_new/v_qS6uXDwSyvk.mp4"}
+ ]
+}

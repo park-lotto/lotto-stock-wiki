@@ -320,6 +320,77 @@ def comment_as_fact(lines: list[dict], facts: dict, bench: dict, roles: list[str
     return out
 
 
+SPACE_MIN_SHARE = 0.5     # 줄 공백 비율이 근거 글 평균의 이 배 미만이면 '띄어쓰기 지움'(10-16 폴드8 초안 '울트라나온다길래안믿었는데')
+SPACE_MIN_CHARS = 8       # 이보다 짧은 줄은 공백이 없어도 자연스럽다('두 가지' 등)
+SUPERLATIVE = {"가장": ("가장", "제일", "최고"), "최초": ("최초", "처음으로"), "유일": ("유일",), "세계": ("세계에서", "세상에서", "전세계", "전 세계")}
+_EN_SUPER = re.compile(r"\b(\w+est|most|best|first|only|world's|worlds)\b", re.I)
+
+
+def spacing_off(texts: list[str], facts: dict) -> dict:
+    """(묶음4) 띄어쓰기 지움 — 줄 공백 비율 < 근거 글 평균 × SPACE_MIN_SHARE (근거 없으면 0.15 기준)."""
+    rs = [t.count(" ") / len(t) for t in (v["text"] for v in facts.values()) if len(t) >= 10]
+    base = (sum(rs) / len(rs)) if rs else 0.15
+    out = {}
+    for k, t in enumerate(texts):
+        core = t.strip()
+        if len(core.replace(" ", "")) < SPACE_MIN_CHARS:
+            continue
+        r = core.count(" ") / len(core)
+        if r < base * SPACE_MIN_SHARE:
+            out[k] = f"공백 비율 {r:.2f} < 근거 평균 {base:.2f}×{SPACE_MIN_SHARE}"
+    return out
+
+
+def superlative_off(lines: list[dict], facts: dict, bench: dict) -> dict:
+    """(묶음4) 최상급 주장(가장·제일·최초·유일·세계에서) — 그 줄이 기댄 근거 글에 같은 무리의 주장(영어 -est·most·first·only 포함)이 없으면 실패."""
+    allf = {**facts, **bench["points"]}
+    out = {}
+    for k, l in enumerate(lines):
+        t = l.get("text") or ""
+        src = " ".join((allf.get(i) or {}).get("text", "") for i in (l.get("facts") or []))
+        miss = []
+        for grp, words in SUPERLATIVE.items():
+            if any(w in t for w in words) and not (any(w in src for w in words) or (grp in ("가장", "최초", "유일", "세계") and _EN_SUPER.search(src))):
+                miss.append(next(w for w in words if w in t))
+        if miss:
+            out[k] = miss
+    return out
+
+
+SUPPORT_PROMPT = """아래 대본 줄마다, 그 줄이 기댄 **근거 글**이 그 문장의 사실 내용을 뒷받침하는지 판정해라.
+- 근거에 없는 행동·경고·인용·이유·숫자를 지어 붙였으면 아니오(예: 근거는 '228만 원 썼다는 댓글'인데 줄은 '절대 먹지 말라고 경고'면 아니오).
+- 꾸밈 말투·감탄(미쳤다·대박)은 사실이 아니니 따지지 마라. 주장된 사실만 본다.
+- 근거의 주장(회사·댓글 주장)을 단정 사실처럼 바꿨으면 아니오.
+출력 JSON만: {{"items":[{{"i":번호,"ok":"예|아니오","why":"한 줄"}}]}}
+
+{rows}"""
+
+
+def support_check(lines: list[dict], facts: dict, bench: dict, llm) -> tuple[dict | None, str | None]:
+    """(묶음4) 줄↔근거 일치 — 제미나이 1회 묶음. 돌려주는 값 {줄: 이유}(아니오인 줄). 판정 실패면 (None, 이유) — 부르는 쪽이 통과시키지 않는다."""
+    allf = {**facts, **bench["points"]}
+    rows = []
+    for k, l in enumerate(lines):
+        src = " / ".join(f"[{i}] {(allf.get(i) or {}).get('text', '(없는 번호)')}" for i in (l.get("facts") or [])) or "(근거 없음)"
+        rows.append(f"{k + 1}. 줄: {l.get('text')}\n   근거: {src}")
+    d, err = llm(SUPPORT_PROMPT.format(rows="\n".join(rows)), "support")
+    if not d:
+        return None, f"줄↔근거 판정 LLM 실패: {err}"
+    out, seen = {}, set()
+    for it in d.get("items") or []:
+        try:
+            k = int(it.get("i")) - 1
+        except (TypeError, ValueError):
+            continue
+        seen.add(k)
+        if not str(it.get("ok", "")).strip().startswith("예"):
+            out[k] = (it.get("why") or "근거가 뒷받침 안 함").strip()
+    for k in range(len(lines)):
+        if k not in seen:
+            out[k] = "판정 답 없음"
+    return out, None
+
+
 def _banggu_lint(lines: list[dict], sk: dict, facts: dict, title):
     """방구석 채널 린터(주인 = shopping_shorts/channel_presets/banggu/rules.lint)를 부른다 — 판정을 여기 다시 적지 않는다."""
     from shopping_shorts.channel_presets.banggu import rules as BR
@@ -359,7 +430,7 @@ def channel_lint(slug, lines: list[dict], sk: dict, facts: dict, title) -> dict:
 
 
 def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_roles: tuple = (), topic: dict | None = None,
-                 slug: str | None = None, title: str | None = None) -> dict:
+                 slug: str | None = None, title: str | None = None, support: dict | None = None) -> dict:
     """한 곳에서 판정 — style_writer 검사 + 역할 칸·근거·말투 섞임·전체 길이·소재 일치. 줄 번호는 0부터."""
     n = len(sk["roles"])
     R = sk["rules"] or {"examples": []}
@@ -408,15 +479,19 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
             total_off = {"chars": tot, "range": list(sk["total"]), "fix_line": (max if tot > sk["total"][1] else min)(range(len(chars)), key=lambda k: chars[k]) if chars else None}
     tm = topic_match(texts[:n], topic or {}, facts, sk["mode"]) if topic else {"other_brand": {}, "product_missing": False}
     rng = number_ranges(texts[:n], facts)
+    spc = spacing_off(texts[:n], facts)
+    sup = superlative_off(lines[:n], facts, bench)
+    unsup = support or {}
     cmt = comment_as_fact(lines[:n], facts, bench, sk["roles"])
     cl = channel_lint(slug, lines[:n], sk, facts, title) if slug else {"linter": None, "by_line": {}, "global": []}
-    per_line = {"range_as_single": sorted(rng), "comment_as_fact": sorted(cmt), "channel_lint": sorted(cl["by_line"]),
+    per_line = {"spacing_off": sorted(spc), "superlative": sorted(sup), "unsupported": sorted(unsup), "range_as_single": sorted(rng), "comment_as_fact": sorted(cmt), "channel_lint": sorted(cl["by_line"]),
                 "off_topic_brand": sorted(tm["other_brand"]), "product_missing": [0] if tm["product_missing"] else [], "role_missing": role_missing, "no_ground": no_ground, "len_off": len_off, "copied_orig": copied, "copied_bench": copied_bench,
                 "describe": describe, "ending_off": ending_off, "numbers_unsourced": num_lines, "tone_off": tone_off, "off_tone_words": off_tone_words}
     chk = {**per_line, "n_lines": len(lines), "n_roles": n, "extra_lines": extra_lines, "unknown_ids": unknown_ids, "total_off": total_off,
            "chars": chars, "ranges": [list(r) for r in sk["ranges"]], "sec_est": round(sum(chars) / sk["cps"], 1) if sk.get("cps") else None,
            "est_px": base.get("est_px"), "orig_px": base.get("orig_px"), "width_median_pct": base.get("width_median_pct"),
            "copied_8grams_vs_examples": base.get("copied_8grams_vs_examples"), "topic_match": tm,
+           "spacing_hit": spc, "superlative_hit": sup, "support_hit": unsup, "support_checked": support is not None,
            "ranges_hit": rng, "comment_hit": cmt, "channel_lint_detail": cl, "total_basis": sk.get("total_basis")}
     chk["bad"] = bad_lines(chk)
     chk["ok"] = not chk["bad"] and not extra_lines and not unknown_ids and not total_off and len(lines) == n and not cl["global"]
@@ -426,11 +501,13 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
 def bad_lines(chk: dict) -> dict:
     """다시 쓸 줄 → 이유 목록(판단 주인). 전체 길이 어긋남은 가장 긴/짧은 줄에 붙인다."""
     why = {}
-    names = {"range_as_single": "근거의 범위를 한쪽 값으로 단정", "comment_as_fact": "댓글 승격·근거 없는 과장", "channel_lint": "채널 규칙 반려",
+    names = {"spacing_off": "띄어쓰기 지움", "superlative": "근거 없는 최상급 주장", "unsupported": "근거가 문장을 뒷받침 안 함",
+             "range_as_single": "근거의 범위를 한쪽 값으로 단정", "comment_as_fact": "댓글 승격·근거 없는 과장", "channel_lint": "채널 규칙 반려",
              "off_topic_brand": "소재 밖 브랜드명(소재 이탈)", "product_missing": "소재 제품명이 대본에 없음", "role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
              "copied_bench": "벤치 영상 문장과 겹침", "describe": "화면 묘사", "ending_off": "정해진 말끝으로 안 끝남",
              "numbers_unsourced": "사실에 없는 숫자", "tone_off": "말투 섞임(채널 말투 밖)", "off_tone_words": "톤 밖 낱말"}
-    detail = {"range_as_single": chk.get("ranges_hit") or {}, "comment_as_fact": chk.get("comment_hit") or {},
+    detail = {"spacing_off": chk.get("spacing_hit") or {}, "superlative": chk.get("superlative_hit") or {}, "unsupported": chk.get("support_hit") or {},
+              "range_as_single": chk.get("ranges_hit") or {}, "comment_as_fact": chk.get("comment_hit") or {},
               "channel_lint": (chk.get("channel_lint_detail") or {}).get("by_line") or {}}
     for key, label in names.items():
         for k in chk.get(key) or []:
@@ -467,11 +544,22 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
         return {"error": f"초안 LLM 실패: {err}", "tries": [{"error": err}], "prompt": prompt}
     lines = [l for l in d.get("lines") or d.get("items") or [] if isinstance(l, dict)]
     meta = {k: d.get(k) for k in ("angle", "twist", "title")}
-    chk = check_script(lines, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
+
+    def judge(ls):
+        """결정 검사 → 통과하면 줄↔근거 판정(LLM 1회)까지. 판정 실패는 통과로 치지 않는다(조용한 통과 금지)."""
+        c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
+        if c["ok"]:
+            sup, serr = support_check(ls[:len(sk["roles"])], facts, bench, llm)
+            if sup is None:
+                c["ok"], c["support_error"] = False, serr
+            else:
+                c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"), support=sup)
+        return c
+    chk = judge(lines)
     tries.append({"lines": lines, "check": chk, "model": d.get("_model")})
     log(f"[초안] {len(lines)}줄 · 다시 쓸 줄 {list(chk['bad'])}")
     for r in range(MAX_REWRITES):
-        if chk["ok"]:
+        if chk["ok"] or chk.get("support_error"):
             break
         bad = chk["bad"] or {k: ["칸 수 맞추기"] for k in range(len(sk["roles"])) if k >= len(lines)}
         fixes = []
@@ -491,7 +579,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
             log(f"[다시 쓰기 {r + 1}] LLM 실패 {err} — 멈춤")
             break
         lines = _merge(cur, d2.get("lines") or d2.get("items") or [], len(sk["roles"]))
-        chk = check_script(lines, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
+        chk = judge(lines)
         tries.append({"lines": lines, "check": chk, "model": d2.get("_model"), "round": r + 1, "asked": list(bad)})
         log(f"[다시 쓰기 {r + 1}] 남은 줄 {list(chk['bad'])}")
     return {"lines": lines, "check": chk, "tries": tries, "meta": meta}
@@ -593,7 +681,7 @@ def main(argv=None):
     ap.add_argument("--tteutgi")
     ap.add_argument("--source-kind", help="기사 대조 관문용 출처 유형(없으면 소재 source.kind → manifest.source_kind)")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--max-llm", type=int, default=4, help="무료 제미나이 호출 상한(초안 1 + 다시 쓰기 2 + 여유)")
+    ap.add_argument("--max-llm", type=int, default=7, help="무료 제미나이 호출 상한(초안 1 + 다시 쓰기 2 + 줄↔근거 판정 ≤3 + 여유)")
     a = ap.parse_args(argv)
     S = run(a.preset, a.topic, Path(a.out), a.bench, a.facts, a.mode, [r for r in a.roles.split(",") if r.strip()] or None, a.tteutgi, a.pick,
             tuple(x for x in a.free_roles.split(",") if x), TF.LLM(budget=a.max_llm), source_kind=a.source_kind)

@@ -1,0 +1,143 @@
+{
+ "topic": "딸 안고 한 손으로 파울볼 잡은 아빠(2016 필라델피아, 케빈 필라 파울)",
+ "facts": {
+  "f1": {
+   "text": "MLB 설명(2016-06-17): A fan makes a fantastic one-handed catch on Kevin Pillar's foul ball while holding his daughter in his other arm",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+  },
+  "c1": {
+   "text": "댓글 1위(좋아요 5.8만): \"Dad reflexes are real...\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "c2": {
+   "text": "댓글(좋아요 2.6만): \"A man who catches the ball in one hand while holding a kid and some hotdogs.\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "c3": {
+   "text": "댓글(좋아요 2.6만): \"Guy on the staircase: My disappointment is immeasurable and my day is ruined\"",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "댓글"
+  },
+  "v1": {
+   "text": "MLB 영상 25.5~28초 느린 다시보기: 하늘색 셔츠 남성이 계단을 뛰어 내려오다 빈손으로 멈춤, 아빠는 딸을 안고 무릎에 은박 음식 접시를 둔 채 한 손으로 잡은 공을 들어 보임",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  },
+  "v2": {
+   "text": "MLB 영상 13~19초 근접: 아빠가 공을 들어 보인 뒤 품에 안긴 딸 손에 공을 쥐여 줌(18.5초 딸이 공을 들고 있음)",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "상황",
+    "text": "야구장에서 한 아빠가 어린 딸을 한 팔에 안고 경기를 보고 있었어요.",
+    "facts": [
+     "f1",
+     "v2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "사건",
+    "text": "그때 파울볼이 하필 이 아빠 쪽으로 날아왔죠.",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "반전",
+    "text": "아빠는 딸을 안은 채 남은 한 손을 쭉 뻗어 공을 그대로 잡아냈어요.",
+    "facts": [
+     "f1",
+     "v1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "디테일",
+    "text": "무릎 위엔 먹던 음식 접시까지 올려져 있었는데도 말이죠.",
+    "facts": [
+     "v1",
+     "c2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "반응",
+    "text": "계단을 뛰어 내려오던 아저씨는 한발 늦어 빈손으로 멈춰 섰고요.",
+    "facts": [
+     "v1",
+     "c3"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   },
+   {
+    "fn": "마무리",
+    "text": "아빠는 잡은 공을 품에 안긴 딸 손에 꼭 쥐여 줬답니다.",
+    "facts": [
+     "v2"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=PrM6FhbO5fs"
+    ]
+   }
+  ],
+  "model": "오푸스 손 작성(틀 B 존댓말, 훅=댓글 1위 꼴)",
+  "check": {
+   "chars": [
+    28,
+    19,
+    27,
+    24,
+    27,
+    22
+   ],
+   "total": 147
+  }
+ },
+ "titles": {
+  "hook": "아빠 반사신경은\n진짜다 ㄷㄷ"
+ },
+ "gate": {
+  "scores": {
+   "원본 mY(하키 퍽)": {
+    "아는 대상": 5,
+    "몰랐던": 6,
+    "재미": 6,
+    "이야기": 8,
+    "얻는 것": 3,
+    "보여줄 수 있나": 9
+   },
+   "5호 한 손 파울볼 아빠": {
+    "아는 대상": 7,
+    "몰랐던": 5,
+    "재미": 8,
+    "이야기": 6,
+    "얻는 것": 2,
+    "보여줄 수 있나": 9
+   }
+  },
+  "score_note": "오푸스 판정(10-16). 재미 8 = 딸·음식 접시를 든 채 한 손 캐치 + 계단 아저씨 허탈. 이야기 6 = 사건이 한 순간이라 반응(계단 아저씨)·마무리(공을 딸에게)로 이음. 조회 1,545만·댓글 8,000.",
+  "angle": "'아빠 반사신경은 진짜다'(댓글 1위 5.8만) — 두 손이 다 찬 아빠가 한 손으로 잡아낸 파울볼",
+  "twist": "3번 줄 '딸을 안은 채 남은 한 손으로 그대로 잡아냈어요' + 4번 줄 '음식 접시까지'(댓글 2.6만 '핫도그')",
+  "twist_orig": "원본 mY: 우는 소녀 → 선수 아내가 퍽을 건넴",
+  "bench_note": "같은 사건 쇼츠 2편 이상은 확인 못 함(검색 3개 중 이 사건은 MLB 1편만). B(2009 딸이 공 던짐)는 소스가 480p 이하라 제외 — 조율자 지시대로 A"
+ },
+ "note": "후보 검색: 구체 검색어 6+확인 3. 댓글은 yt-dlp comment_sort=top 20개."
+}

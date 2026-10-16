@@ -203,3 +203,57 @@ def test_short_centered_captions_inside_window():
     good = [{"text": [t], "widths": [round(f.getlength(t) * 0.95)], "lines": 1}
             for t in ("유리문에 원판을 대자마자", "이게 진짜 되는 거였어", "생각보다 훨씬 단단하다")]
     assert T.caption_width_ref("Pretendard", 64, good, []) is good[0]   # 잰 폭이 글 길이를 따르면 첫 자막으로 역산
+
+
+def _dark_band_frame():
+    """답 아는 합성(핫템 OE11 꼴): 검정 바탕 · 초록 글로우 흰 채널명(132~258) · 노랑 1줄(297~396) · 더 큰 빨강 2줄(408~560, 창 560 위로 이어짐)."""
+    import numpy as np
+    from PIL import Image, ImageDraw, ImageFilter
+    from tools.calcopy.engine import to_frame as T
+    W, H = 1080, 1920
+    im = Image.new("RGB", (W, H), (0, 0, 0))
+    glow = Image.new("RGB", (W, H), (0, 0, 0)); g = ImageDraw.Draw(glow)
+    g.text((540, 222), "핫템리포트", font=T._pil_font("BMDOHYEON", 54), fill=(0, 255, 0), anchor="ms")
+    im = Image.fromarray(np.maximum(np.asarray(im), np.asarray(glow.filter(ImageFilter.GaussianBlur(28))) * 3 // 2))
+    d = ImageDraw.Draw(im)
+    d.text((540, 222), "핫템리포트", font=T._pil_font("BMDOHYEON", 54), fill=(242, 255, 240), anchor="ms")
+    d.text((540, 390), "AI 주작 논란", font=T._pil_font("BMDOHYEON", 100), fill=(250, 234, 2), anchor="ms")
+    d.text((540, 570), "아이언맨 헬멧", font=T._pil_font("BMDOHYEON", 150), fill=(253, 32, 30), anchor="ms")
+    a = np.asarray(im).copy()
+    rng = np.random.default_rng(3)
+    vid = rng.integers(60, 200, (H - 560, W, 3), dtype=np.uint8)
+    keep = a[560:].max(axis=2) > 150          # 글자가 영상 위로 그려진 틀 — 글자 점은 그대로 둔다
+    a[560:][~keep] = vid[~keep]
+    return a
+
+
+def test_dark_band_brand_glow_and_title_bottom():
+    import numpy as np
+    from tools.calcopy.engine import to_frame as T
+    a = _dark_band_frame()
+    bg = [0, 0, 0]
+    cores = {b: T.band_core(a, b, bg) for b in ((132, 258), (297, 396), (408, 559))}
+    brand, l1, l2 = cores[(132, 258)], cores[(297, 396)], cores[(408, 559)]
+    assert brand["w"] < T.BRAND_MAX_W * 1080 and brand["h"] < T.BRAND_CORE_RATIO * max(l1["h"], l2["h"])   # 채널명 = 고정 문구 자격
+    gl = T.glow_of(a, (132, 258), bg, brand)
+    assert gl and gl["rgb"][1] > 2 * max(gl["rgb"][0], gl["rgb"][2]) and gl["px"] >= 10                    # 초록 글로우
+    assert T.glow_of(a, (297, 396), bg, l1) is None                                                         # 제목 줄은 글로우 아님
+    assert max(abs(x - y) for x, y in zip(l2["fill"], (253, 32, 30))) <= 10                                 # 빨강 줄 채움(분석기 bright 문턱 밖)
+    bot = T.title_line_bottom(a, (408, 559), [0, 560, 1080, 1360])
+    assert bot > 565                                                                                        # 창 위로 이어진 글자 아래까지
+
+
+def test_line_outline_none_when_ring_never_ends():
+    """어두운 바탕·어두운 영상 위 글자: 고리 색이 12px 까지 안 바뀌면 외곽선이 아니라 바탕(mY 12px 오판)."""
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from tools.calcopy.engine import to_frame as T
+    im = Image.new("RGB", (600, 200), (45, 30, 38)); d = ImageDraw.Draw(im)
+    d.text((300, 150), "눈물 줄줄", font=T._pil_font("BMDOHYEON", 120), fill=(240, 198, 18), anchor="ms")
+    assert T.line_outline_of(np.asarray(im), [240, 198, 18], 0, None) is None
+    im2 = Image.new("RGB", (600, 200), (0, 0, 0)); rng = np.random.default_rng(1)
+    a2 = rng.integers(0, 255, (200, 600, 3)).astype(np.uint8)
+    im2 = Image.fromarray(a2); d2 = ImageDraw.Draw(im2)
+    d2.text((300, 150), "눈물 줄줄", font=T._pil_font("BMDOHYEON", 120), fill=(240, 198, 18), anchor="ms", stroke_width=5, stroke_fill=(255, 255, 255))
+    m = T.line_outline_of(np.asarray(im2), [240, 198, 18], 0, None)
+    assert m and 3 <= m[0] <= 7 and min(m[1:]) > 200                                                     # 영상 위 흰 외곽선 5px

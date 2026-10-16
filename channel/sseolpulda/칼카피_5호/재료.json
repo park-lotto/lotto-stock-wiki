@@ -1,0 +1,126 @@
+{
+ "_note": "5호 재료 계획(렌더 전): MLB 공식 PrM6FhbO5fs 한 편(1280×720, 원음 영어 original, 0~29초 본편·29초부터 MLB.tv 광고). 쓸 수 있는 화면: 관중석 넓게 6.5~12.7 · 근접 12.7~19.8(왼쪽 위 점수판 그래픽 src x 53~427 → 창 x430 부터) · 다시보기 21~28(타격·공·느린 캐치). 대본 6줄(≈22초) 대비 화면이 적어 같은 순간을 다른 창으로 다시 씀.",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/칼카피_5호/cand",
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 9.0,
+   "full": true,
+   "src_crop": [
+    430,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "파울볼이 떨어진 관중석 넓은 화면(9~12.7) → 딸을 안은 아빠 근접(12.7~)",
+   "why": "'야구장에서 한 아빠가 어린 딸을 한 팔에 안고'"
+  },
+  {
+   "i": 1,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 21.0,
+   "full": true,
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "다시보기: 타자가 치고(21~22.5) 공이 관중석으로 날아감(22.5~24.5)",
+   "why": "'파울볼이 하필 이 아빠 쪽으로 날아왔죠'"
+  },
+  {
+   "i": 2,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 24.6,
+   "full": true,
+   "src_crop": [
+    470,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "느린 다시보기: 딸을 안은 아빠가 한 손으로 잡은 공을 들어 보임(25.5~28)",
+   "why": "'남은 한 손을 쭉 뻗어 공을 그대로 잡아냈어요'",
+   "overlays_plan": "빨간 원(원본 규칙 지름 170·약 1초) — 아빠가 들어 올린 공. TTS 뒤 실측"
+  },
+  {
+   "i": 3,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 12.8,
+   "full": true,
+   "src_crop": [
+    430,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "근접: 공을 든 아빠 무릎 위 은박 음식 접시(13~14.5)",
+   "why": "'무릎 위엔 먹던 음식 접시까지'"
+  },
+  {
+   "i": 4,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 25.6,
+   "full": true,
+   "src_crop": [
+    0,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "느린 다시보기 왼쪽: 하늘색 셔츠 아저씨가 계단을 뛰어 내려오다 빈손으로 멈춤(25.6~28)",
+   "why": "'계단을 뛰어 내려오던 아저씨는 … 빈손으로 멈춰 섰고요'",
+   "cuts_plan": "이 줄(≈4초)에 다시보기가 2.4초뿐 → 페이지 안 컷(narr_video cuts, 다음 기능)으로 [다시보기 왼쪽 25.6~28.0] + [관중석 넓게 10.5~12.2] 이어 붙일 예정"
+  },
+  {
+   "i": 5,
+   "src": "v_PrM6FhbO5fs.mp4",
+   "url": "https://www.youtube.com/watch?v=PrM6FhbO5fs",
+   "ss": 16.3,
+   "full": true,
+   "src_crop": [
+    430,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "근접: 공을 딸 손에 쥐여 주고 안아 줌(16.3~19.8, 18.5초 딸이 공을 듦)",
+   "why": "'잡은 공을 품에 안긴 딸 손에 꼭 쥐여 줬답니다'",
+   "overlays_plan": "👍(끝 컷) — 얼굴 안 가리는 자리, TTS 뒤 실측"
+  }
+ ],
+ "sfx_plan": [
+  {
+   "pack_id": 1456,
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_10.mp3",
+   "at": "3번 줄(반전) 시작"
+  },
+  {
+   "pack_id": 1474,
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "at": "5번 줄(반응) 시작"
+  }
+ ],
+ "sfx": [],
+ "bgm": {
+  "lib": "shopping_shorts/assets/bgm_lib",
+  "id": "here_with_me",
+  "ratio": 0.15
+ },
+ "source_audio": {
+  "keep": true,
+  "plan": "받아쓰기 뒤 결정 — 해설·관중 함성 크기 실측해 4호처럼(해설 컷 묵음·관중 올림·덕킹 8)"
+ },
+ "narration": "타입캐스트 문정 · 템포 1.36(4호처럼 실측 뒤 atempo 로 6.52자/초 맞춤) · 존댓말 6줄 147자",
+ "caption_effects": {
+  "now": "흰 글자 83.2+외곽선 5px · 교체형 조각 11자(4호 9자 → 줄 폭 −24% 지적 반영)",
+  "planned": "자막 등장 효과 — 틀 담당 연결 뒤"
+ }
+}

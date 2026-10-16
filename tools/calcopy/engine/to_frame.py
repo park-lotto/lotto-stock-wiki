@@ -229,7 +229,8 @@ def caption_word_gap(src: str, J: dict, W: int, H: int, pol: str) -> float | Non
     return float(_q(out)) if out else None
 
 
-OUTLINE_MAX = 12        # 외곽선 두께 상한(px) — 여기까지 끝을 못 찾으면 외곽선 아님
+OUTLINE_BG_TOL = 45      # 외곽선 바깥이 외곽선 색과 이 안이면 바탕(외곽선 아님)
+OUTLINE_MAX = 16        # 외곽선 두께 상한(px) — 여기까지 끝을 못 찾으면 외곽선 아님(OE11 자막 검정 12px 은 13px 에서 끝난다)
 OUTLINE_SHARE = 0.7     # 외곽선 고리: 이 비율 이상이 외곽선 색
 EXT_MAX = 0.6           # 창 안으로 이어 잴 최대 길이 = 띠 높이 × 이 값
 EXT_MIN_PX = 20         # 이어 잴 줄: 글자 채움색 점이 이 수 이상
@@ -275,6 +276,8 @@ def line_outline_of(img: np.ndarray, fill, over_from: int, bg=None) -> list | No
     import cv2
     a = img.astype(int)
     fm = (np.abs(a - np.array(fill)).max(axis=2) < 60).astype(np.uint8)
+    # 영상 속 낱개 같은 색 점은 글자가 아니다 — 3×3 열림으로 지운다(그 둘레 고리가 외곽선 색을 흐렸다)
+    fm = cv2.morphologyEx(fm, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
     if fm.sum() < 50:
         return None
     if bg is not None:   # 창 영상이 실제로 시작하는 행 — 창 다수결(1_V 352)보다 위로 비스듬히 들어올 수 있다(실측 324)
@@ -307,6 +310,13 @@ def line_outline_of(img: np.ndarray, fill, over_from: int, bg=None) -> list | No
             break
         color = c if color is None else color
         px = r
+    if color is not None:
+        # 외곽선 바깥(글자에서 OUTLINE_MAX+4~+8px)의 색이 외곽선 색과 같으면 외곽선이 아니라 그 바탕이다
+        #   (mY: 고리 2~13px 이 (46,29,38) — 그 바깥 어두운 공연장 영상과 같은 색. OE11 자막 검정 0 은 바깥 영상(빨강·회색)과 다르다)
+        dd = lambda r: cv2.dilate(fm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))).astype(bool)   # noqa: E731
+        outer = dd(OUTLINE_MAX + 8) & ~dd(OUTLINE_MAX + 4) & notbg
+        if outer.sum() > 50 and float((np.abs(a[outer] - color).max(axis=1) <= OUTLINE_BG_TOL).mean()) > 0.6:
+            return None
     if px >= OUTLINE_MAX:
         # 12px 까지 고리 색이 안 바뀌었다 = 외곽선 끝을 못 찾음 — 외곽선이 아니라 같은 색 바탕·영상(mY: 검정 띠·어두운 공연장 영상 위
         #   노란 글자, 고리 3~13px 이 전부 (46,29,38)). 못 잰 값으로 12px 를 내지 않는다
@@ -333,6 +343,7 @@ def ink_columns(img: np.ndarray, y0: int, y1: int, bg: list, tol: int = 40) -> t
 BRAND_CORE_RATIO = 0.6   # 진한 글자 몸 높이가 가장 큰 띠의 이 비율보다 작고 좁으면 고정 문구
 CORE_DIFF = 150          # 진한 글자 몸 = 바탕과 이만큼 넘게 다른 점
 GLOW_DIFF = 25           # 번짐 = 바탕과 25~150 다른 점
+GLOW_MIN_PX = 10         # 번짐이 글자에서 이만큼 넘게 퍼져야 글로우
 GLOW_SHARE = 2.0         # 번짐 점이 진한 점의 이 배 넘으면 글로우
 
 
@@ -362,7 +373,10 @@ def glow_of(img, b, bg, core) -> dict | None:
     dist = cv2.distanceTransform((~strong).astype(np.uint8), cv2.DIST_L2, 5)
     lum = c.max(axis=2)
     bright = soft & (lum >= np.percentile(lum[soft], 90))
-    return {"px": int(round(float(np.percentile(dist[soft], 90)))), "rgb": [int(v) for v in np.median(c[bright], axis=0)]}
+    px = int(round(float(np.percentile(dist[soft], 90))))
+    if px < GLOW_MIN_PX:      # 글자에 붙은 외곽선·안티에일리어싱(ZdeZ [광고] 회색 외곽선 4px)은 글로우가 아니다
+        return None
+    return {"px": px, "rgb": [int(v) for v in np.median(c[bright], axis=0)]}
 
 
 def two_tone(img: np.ndarray, box, bg: list) -> dict:

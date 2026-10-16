@@ -26,13 +26,16 @@ class FakeLLM:
         self.calls.append({"tag": tag})
         self.prompts[tag] = prompt
         a = self.answers.get(tag)
+        if a is None and tag == "support":   # 줄↔근거 판정 기본 = 전부 예(그 판정을 시험하는 곳만 따로 답을 준다)
+            n = prompt.count("\n   근거: ")
+            return {"items": [{"i": i + 1, "ok": "예", "why": "가짜"} for i in range(n)]}, None
         if a is None:
             return None, "가짜: 답 없음"
         return (a(prompt) if callable(a) else json.loads(json.dumps(a))), None
 
     @property
-    def tags(self):
-        return [c["tag"] for c in self.calls]
+    def tags(self):   # 기본 '예' 판정(support)은 빼고 센다 — 쓰기·다시 쓰기 흐름만 본다
+        return [c["tag"] for c in self.calls if c["tag"] != "support" or "support" in self.answers]
 
 
 # 썰풀다 6칸 — 줄 길이·말끝·겹침 검사를 통과하는 줄(ZdeZ 통과편과 같은 꼴, 글자 수는 원본 ±15% 안)
@@ -386,9 +389,17 @@ def _narr_lines(sk, text_for):
 
 
 def _filler(n, head=""):
-    base = "그래서사람들이그걸알게된뒤로분위기가싹바뀌었다는얘기가돌았음"
-    body = (base * (n // len(base) + 2))
-    return (head + body)[:n - 1] + "음"
+    """공백 빼고 n글자 — 띄어쓰기 있는 말(띄어쓰기 지움 검사에 안 걸리게)."""
+    words = (head + " 그래서 사람들이 그걸 알게 된 뒤로 분위기가 싹 바뀌었다는 얘기가 돌았음").split() * 20
+    out, cnt = [], 0
+    for w in words:
+        if cnt + len(w) > n - 1:
+            w = w[:max(0, n - 1 - cnt)]
+        if w:
+            out.append(w); cnt += len(w)
+        if cnt >= n - 1:
+            break
+    return " ".join(out) + "음"
 
 
 def test_off_topic_brand_and_missing_product_caught(tmp_path):
@@ -466,6 +477,61 @@ def test_channel_length_range_from_channel_bench():
         pytest.skip("방구석 뜯기 없음")
     (lo, hi), basis = E.channel_length(P, {}, 999)
     assert "채널 뜯기" in basis and hi < 311 and lo > 100
+
+
+FIX = ROOT / "shopping_shorts/tests/fixtures/calcopy_engine"
+
+
+def _fx(name):
+    return json.loads((FIX / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def test_spacing_removed_lines_fail():
+    """(묶음4) 폴드8 초안: 폭 맞추려고 띄어쓰기를 지운 줄('울트라나온다길래안믿었는데'·'댓글창안닫은거멋지네') → 실패. 손 대본 LED 는 0줄."""
+    d = _fx("engine_fold8_c1")
+    assert sorted(E.spacing_off([l["text"] for l in d["lines"]], d["facts"])) == [1, 4]
+    h = _fx("hand_led_faucet")
+    assert E.spacing_off([l["text"] for l in h["lines"]], h["facts"]) == {}
+
+
+def test_superlative_needs_same_claim_in_its_evidence():
+    facts = {"f1": {"text": "충전 3시간이면 된다", "url": ""}, "f2": {"text": "삼성 주장 world's lightest fold", "url": ""}}
+    lines = [{"text": "세계 최초로 나온 충전기", "facts": ["f1"]}, {"text": "제일 가벼운 폴드폰", "facts": ["f2"]}, {"text": "충전이 빠름", "facts": ["f1"]}]
+    hit = E.superlative_off(lines, facts, {"points": {}})
+    assert hit == {0: ["최초", "세계에서"]} or hit == {0: ["최초"]} or 0 in hit
+    assert 1 not in hit and 2 not in hit
+
+
+def test_unsupported_line_caught_by_evidence_judge_and_rewritten(tmp_path):
+    """(묶음4) 다이소 c3 초안 1번 줄 '절대 먹지 말라고 경고'(근거는 '228만 원 썼다'는 댓글뿐) — 줄↔근거 판정이 아니오 → 그 줄만 다시."""
+    d = _fx("engine_daiso_c3")
+    lines = [dict(l) for l in d["lines"]]
+    lines[1]["text"] = lines[1]["text"].replace("역대급으로 ", "")
+    for l in lines:   # 벤치 포인트(b*)는 이 시험에 안 싣는다 — 사실(f*) 근거만
+        l["facts"] = [i for i in l["facts"] if i.startswith("f")]
+    facts = tmp_path / "f.json"
+    facts.write_text(json.dumps(d["facts"], ensure_ascii=False), encoding="utf-8")
+    fixed = {"i": 1, "fn": lines[0]["fn"], "facts": ["f3"],
+             "text": "한 달에 다이소에서만 228만 원 썼다는 댓글까지 달린 곰돌이 푸 베이커리 신상 얘기 아는 사람 있음? 요즘 댓글창이 아주 난리인데."}
+    calls = {"n": 0}
+
+    def support(p):
+        calls["n"] += 1
+        n = p.count("\n   근거: ")
+        return {"items": [{"i": i + 1, "ok": "아니오" if (i == 0 and calls["n"] == 1) else "예",
+                           "why": "근거는 228만 원 썼다는 댓글뿐, 먹지 말라는 경고는 없음" if i == 0 else "ok"} for i in range(n)]}
+    llm = FakeLLM({"draft": {"lines": lines}, "support": support, "rewrite1": {"lines": [fixed]}})
+    S = E.run("yummyknow", "다이소 베이커리 푸 신상", tmp_path / "o", None, str(facts), llm=llm, log=lambda *_: None)
+    c0 = S["tries"][0]["check"]
+    assert c0["unsupported"] == [0] and "경고" in c0["support_hit"][0]
+    assert "근거가 문장을 뒷받침 안 함" in llm.prompts["rewrite1"]
+    assert S["final"]["check"]["ok"], S["final"]["check"]["bad"]
+
+
+def test_support_judge_failure_is_not_a_pass(inputs):
+    """줄↔근거 판정이 답을 안 주면(빈 답·LLM 실패) 통과가 아니다 — 조용한 통과 금지."""
+    S = _run(inputs, FakeLLM({"draft": {"lines": GOOD}, "support": {"items": []}}))
+    assert not S["final"]["check"]["ok"] and S["final"]["check"]["unsupported"] == list(range(6))
 
 
 def test_llm_budget_stops_calls():
