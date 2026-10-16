@@ -3,14 +3,14 @@
 
     PYTHONUTF8=1 py channel/homedesignnote/preset/check_overlay.py <원본.mp4> <우리.mp4> <초> [--out 시트.png]
 
-잰 것(띠마다): 밝은 잉크(>225) 상자 x0·x1·y0·y1·폭·높이 / 잉크 밖 12~40px 고리 평균 밝기 · 40~80px 바탕 밝기 · halo = 바탕−고리(검정 번짐 세기) / 잉크 안 평균 색.
-자막 띠 = y 420~760(원본 자막 자리 두 무리 483·585 포함), 브랜드 띠 = y 1395~1505(원본 워터마크 1423~1475).
+잰 것(띠마다): 밝은 잉크(>225, 둘레 9px 의 25% 이상이 어두운(<110) 덩어리만 — 밝은 영상 바탕 제외) 상자 x0·x1·y0·y1·폭·높이 / 잉크 밖 12~40px 고리 평균 밝기 · 40~80px 바탕 밝기 · halo = 바탕−고리(검정 번짐 세기) / 잉크 안 평균 색.
+자막 띠 = --cap-top 주면 [위−25, 위+85](없으면 420~760), 브랜드 띠 = y 1405~1495(원본 워터마크 1423~1475).
 우리 렌더는 원본 자막·워터마크를 칠로 가린 재료(clean)에 그린 것이어야 한다 — 겹쳐 그리면 잉크가 섞인다.
 """
 import sys, json
 import cv2, numpy as np
 
-BANDS = {"caption": (420, 760), "brand": (1395, 1505)}
+BANDS = {"caption": (420, 760), "brand": (1405, 1495)}
 
 
 def grab(p, t):
@@ -20,15 +20,21 @@ def grab(p, t):
     return im
 
 
-def measure(im, band):
+def measure(im, band, halo_only=True):
     y0, y1 = band; a = im[y0:y1].astype(np.float32); g = a.mean(2)
     ink = (a.min(2) > 225)
     # 작은 점 잡음 제거
     n, lab, st_, _ = cv2.connectedComponentsWithStats(ink.astype(np.uint8), 8)
     keep = np.zeros_like(ink)
+    dark = g < 110
     for k in range(1, n):
-        if st_[k, cv2.CC_STAT_AREA] >= 6:
-            keep[lab == k] = True
+        if st_[k, cv2.CC_STAT_AREA] < 6:
+            continue
+        comp = (lab == k).astype(np.uint8)
+        edge = (cv2.dilate(comp, np.ones((9, 9), np.uint8)) > 0) & (comp == 0)
+        # 글자 = 둘레에 검정 번짐·외곽선이 있는 밝은 덩어리. 밝은 영상 바탕(흰 벽·제품)은 둘레가 안 어둡다 → 뺀다
+        if not halo_only or (edge.any() and dark[edge].mean() >= 0.25):
+            keep[comp > 0] = True
     ys, xs = np.nonzero(keep)
     if len(xs) < 30:
         return None
@@ -45,8 +51,10 @@ def measure(im, band):
 def main():
     a = [x for x in sys.argv[1:] if not x.startswith("--")]
     src, ours, t = a[0], a[1], float(a[2])
+    if "--cap-top" in sys.argv:   # 그 편 자막 잉크 위 — 띠를 [위−25, 위+85]로 좁힌다(띠 밖 밝은 영상 잉크가 섞이지 않게)
+        ct = int(sys.argv[sys.argv.index("--cap-top") + 1]); BANDS["caption"] = (ct - 25, ct + 85)
     A, B = grab(src, t), grab(ours, t)
-    rows = {k: {"orig": measure(A, b), "ours": measure(B, b)} for k, b in BANDS.items()}
+    rows = {k: {"orig": measure(A, b, k == "caption"), "ours": measure(B, b, k == "caption")} for k, b in BANDS.items()}   # 워터마크는 그림자가 옅어 둘레 조건 안 씀
     print(json.dumps({"t": t, **rows}, ensure_ascii=False, indent=1))
     if "--out" in sys.argv:
         o = sys.argv[sys.argv.index("--out") + 1]

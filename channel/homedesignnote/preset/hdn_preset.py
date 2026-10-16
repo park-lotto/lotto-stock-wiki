@@ -27,11 +27,12 @@ from tools.calcopy.engine import loo_preset as L, preset_save as P  # noqa: E402
 SLUG, STYLE = "homedesignnote", "전체화면_가운데자막"
 PRESET = ROOT / "channel" / SLUG / "preset" / STYLE
 WORK = Path("C:/숏템_칼카피/homedesignnote/preset_work")
-HAND = WORK / "hand"                      # 손질 설명서(frame_<id>.json) — to_frame 자동본 + 손질 근거 notes
+HAND = Path(__file__).parent / "_hand"   # 손질 설명서(frame_<id>.json) — to_frame 자동본 + 손질 근거(made_from.notes)
 MP4 = Path("C:/숏템_칼카피/homedesignnote/mp4")
 IDS = ["fQPX6XeXeN0", "DCXQjaWcZ-g", "7Nj6b0mX4HM", "e15KZ_nO1_Y", "R0-bfj7JarA", "Ez7KsS2K_Pk", "seFkrVR-nYs", "orBlWWhejtc"]
 CAP_Y = "layers[text:caption].y"
-CAP_Y_MODE = 930                          # 50편 bench 자막 띠 위 최빈 무리 936(13/45편) − 6(줄 칸 위 여백)
+BRAND = "layers[text:brand].text"
+CAP_Y_MODE = 927                          # 50편 bench 자막 띠 위 최빈 무리 936(13/45편) − 9(크기 64·줄 칸 74 의 칸 위 여백, 렌더 실측)
 
 # script_frame 공식 F1 칸(1_skeleton.formulas[F1].slots) — 대본 줄마다 맡는 일
 ROLES = ["훅", "도입", "설명", "효과", "행동유도"]
@@ -86,11 +87,21 @@ def post_edit(preset_dir: Path) -> dict:
     vs = M["variable_stats"].get(CAP_Y)
     if vs:
         vs["default"] = CAP_Y_MODE
-        vs["how"] = "편마다 고르는 값 — 기본 = 50편 bench 띠 최빈 무리 936(13/45편)−6. (이 프리셋 8편 중앙값은 두 무리 사이라 쓰지 않는다)"
+        vs["how"] = "편마다 고르는 값 — 기본 = 50편 bench 띠 최빈 무리 936(13/45편)−9. (이 프리셋 8편 중앙값은 두 무리 사이라 쓰지 않는다)"
     keys = (M.get("rules") or {}).get("keys") or {}
     if "cap_dy" in keys:
         M.setdefault("rules_removed", {})["cap_dy"] = {"was": keys.pop("cap_dy"),
                                                       "why": "전체 화면 틀 — 자막 y 를 창 아래 끝 관계로 묶으면 두 무리 중앙(528, 원본에 없는 자리)으로 고정된다"}
+    # 채널명(brand 글) = 변수 — 기본 '잇썸홈', 다른 채널명은 apply(overrides={BRAND: '…'}) 로 덮어쓴다(같은 자리·크기)
+    F = json.loads((preset_dir / "frame.json").read_text(encoding="utf-8"))
+    for l in F["layers"]:
+        if l.get("role") == "brand":
+            l["text"] = P.VAR
+    (preset_dir / "frame.json").write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")
+    if BRAND not in M["variables"]:
+        M["variables"].append(BRAND)
+    M["variable_stats"][BRAND] = {"values": {}, "default": "잇썸홈", "range": None,
+                                  "how": "채널명 — 기본 잇썸홈(사장님 10-17), 다른 채널명은 overrides 로(원본 워터마크 자리·크기 그대로)"}
     M["roles"] = ROLES
     M["source_kind"] = "제품비하인드"
     M["channel_rules"] = CHANNEL_RULES
@@ -103,13 +114,17 @@ def frames() -> dict:
 
 
 def build():
+    old = json.loads((PRESET / "manifest.json").read_text(encoding="utf-8")).get("verification") if (PRESET / "manifest.json").exists() else None
     M = L.build(PRESET, SLUG, IDS, frames(), "오푸스 HDN 손질본(자막 크기·번짐·글꼴 렌더 대조로 고침, 10-17)")
     M = post_edit(PRESET)
+    if old:   # 직전 loo 결과는 남긴다(설명서가 바뀌었으면 loo 를 다시 돌려 덮는다)
+        M["verification"] = {**old, "note": "build 전 loo 결과 — 이 build 뒤 다시 안 돌렸으면 옛 값"}
+        (PRESET / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     print("프리셋", PRESET, "변수", M["variables"])
 
 
 def _cap_top(F: dict) -> int:
-    return next(l for l in F["layers"] if l.get("role") == "caption")["y"] + 6
+    return next(l for l in F["layers"] if l.get("role") == "caption")["y"] + 9
 
 
 def clean_clip(vid: str, ink_top: int, out: Path, sec: float = 6.0) -> Path:
@@ -135,8 +150,9 @@ def short_J(vid: str, src: Path, sec: float = 6.0) -> tuple[Path, list[float]]:
     return p, times
 
 
-def measure(vid: str, ours: Path, t: float) -> dict:
-    r = subprocess.run([sys.executable, str(Path(__file__).parent / "check_overlay.py"), str(MP4 / f"{vid}.mp4"), str(ours), str(t)],
+def measure(vid: str, ours: Path, t: float, cap_top: int) -> dict:
+    r = subprocess.run([sys.executable, str(Path(__file__).parent / "check_overlay.py"), str(MP4 / f"{vid}.mp4"), str(ours), str(t),
+                        "--cap-top", str(cap_top)],
                        capture_output=True, text=True, encoding="utf-8")
     return json.loads(r.stdout)
 
@@ -192,7 +208,7 @@ def loo(ids=None):
         ours = d / "vid" / "ours.mp4"
         if not ours.exists():
             res[held] = {"failed": "렌더 없음"}; continue
-        rows = [judge_row(measure(held, ours, t)) for t in times]
+        rows = [judge_row(measure(held, ours, t, _cap_top(F_all[held]))) for t in times]
         cap = next(l for l in F["layers"] if l.get("role") == "caption")
         cap_def = next(l for l in F_def["layers"] if l.get("role") == "caption")
         res[held] = {"times": times, "rows": rows, "font": cap["font"], "size": cap["size"], "y_given": y_held, "y_default": cap_def["y"],
@@ -200,6 +216,20 @@ def loo(ids=None):
         print(held, "통과" if res[held]["pass"] else "미달", json.dumps(rows, ensure_ascii=False))
     (WORK / "loo" / "loo_hdn.json").write_text(json.dumps({"tol": TOL, "results": res}, ensure_ascii=False, indent=1), encoding="utf-8")
     n = sum(v.get("pass", False) for v in res.values())
+    rows = [x for v in res.values() for x in v.get("rows", [])]
+    cap = [x for x in rows if "cap_y0" in x]
+    summ = {"at": __import__("datetime").datetime.now().isoformat(timespec="seconds"), "tool": "channel/homedesignnote/preset/hdn_preset.py loo",
+            "tol": TOL, "videos_all_pass": f"{n}/{len(res)}",
+            "items": {"자막 잉크 위 y": f"{sum(x['ok_y0'] for x in cap)}/{len(cap)}", "자막 높이": f"{sum(x['ok_h'] for x in cap)}/{len(cap)}",
+                      "자막 폭": f"{sum(x['ok_w'] for x in cap)}/{len(cap)}",
+                      "브랜드 중심": f"{sum(x.get('ok_brand', False) for x in rows if 'ok_brand' in x)}/{sum('ok_brand' in x for x in rows)}"},
+            "halo_median": {"orig": st.median(x["halo"][0] for x in cap if x["halo"][0] is not None),
+                            "ours": st.median(x["halo"][1] for x in cap if x["halo"][1] is not None)},
+            "detail": str(WORK / "loo" / "loo_hdn.json")}
+    M = json.loads((PRESET / "manifest.json").read_text(encoding="utf-8"))
+    M["verification"] = summ
+    (PRESET / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(summ, ensure_ascii=False))
     print(f"LOO {n}/{len(res)} 편 통과(자막 y0 ±{TOL['cap_y0_px']}px·높이 ±{TOL['cap_h_pct']}%·폭 ±{TOL['cap_w_pct']}%·브랜드 중심 ±{TOL['brand_cx_px']}/{TOL['brand_cy_px']}px)")
 
 

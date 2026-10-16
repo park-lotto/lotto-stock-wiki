@@ -30,8 +30,8 @@
    "align": "center",
    "lines": 1,
    "font": "CcPoorStory",
-   "size": 61,
-   "line_h": 70,
+   "size": 64,
+   "line_h": 74,
    "rgb": "$per_video",
    "line_rgb": null,
    "line_scale": null,
@@ -109,7 +109,7 @@
    "valign": "center",
    "enter": null,
    "emphasis": null,
-   "text": "잇썸홈"
+   "text": "$per_video"
   }
  ]
 }
