@@ -40,7 +40,14 @@ def vids(tmp_path_factory):
     fade = _ff(page + ["-f", "lavfi", "-i", "testsrc2=s=280x150:r=30:d=2",
                        "-filter_complex", "[1]fade=t=out:st=0.5:d=1.2:color=white[f];[0][f]overlay=40:200,format=yuv420p"],
                d / "fade.mp4")
-    return {"syn": syn, "nocut": nocut, "fade": fade}
+    # pre : syn 과 같은데 컷 직전 0.92~0.99초에 칸 위쪽 1/3 이 검게 덮인다(부분 변화). 보정 점수로 0.933 도 문턱을
+    #       넘는데, merge_close 가 앞의 약한 0.933 을 남기면 그 앞뒤(둘 다 testsrc2)는 상관이 높아 진짜 컷 1.0 을 잃는다
+    #       (방구석 ILIi 원본 5.933(0.19)·6.0(0.40) 실측과 같은 꼴)
+    pre = _ff(page + ["-f", "lavfi", "-i", "testsrc2=s=280x150:r=30:d=1", "-f", "lavfi", "-i", "mandelbrot=s=280x150:r=30",
+                      "-filter_complex", "[2]trim=duration=1,setpts=PTS-STARTPTS+1/TB[b];[0][1]overlay=40:200:eof_action=pass[t];"
+                                         "[t]drawbox=x=40:y=200:w=280:h=50:color=black:t=fill:enable='between(t,0.92,0.99)'[t2];"
+                                         "[t2][b]overlay=40:200:enable='gte(t,1)':eof_action=pass,format=yuv420p"], d / "pre.mp4")
+    return {"syn": syn, "nocut": nocut, "fade": fade, "pre": pre}
 
 
 def _measure(path, vl):
@@ -71,3 +78,9 @@ def test_no_bg_means_old_behaviour(vids):
 def test_no_false_cut(vids, name):
     """같은 장면이 이어지거나 흰색으로 사라지는 것은 컷이 아니다(바탕 빼기가 거짓 컷을 만들지 않는다)."""
     assert _measure(vids[name], VL)["cuts"] == []
+
+
+def test_strongest_frame_wins_merge(vids):
+    """보정으로 문턱을 넘은 약한 앞 프레임이 진짜 컷을 밀어내지 않는다 — 묶음마다 보정 점수 최대 프레임."""
+    r = _measure(vids["pre"], VL)
+    assert len(r["cuts"]) == 1 and abs(r["cuts"][0] - 1.0) <= 1 / 30 + 1e-6, (r["detected"], r["corr"], r["cuts"])

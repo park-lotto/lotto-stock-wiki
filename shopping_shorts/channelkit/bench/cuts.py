@@ -65,12 +65,22 @@ def scene_detect(path: str, window: list[int], threshold: float | None = None,
     T = C.SCENE_T if threshold is None else threshold
     if bg is not None and fps:
         fr = active_fracs(path, window, bg)
-        out = []
+        hits = []
         for t, s in scene_scores(path, window):
             k = int(round(t * fps))
             a = float(fr[k]) if 0 <= k < len(fr) else 1.0
-            if t > CUT_MIN_T and s / max(a, CUT_ACTIVE_MIN) > T:
-                out.append(round(t, 3))
+            e = s / max(a, CUT_ACTIVE_MIN)
+            if t > CUT_MIN_T and e > T:
+                hits.append((round(t, 3), e))
+        # CUT_MERGE_S 묶음마다 보정 점수가 가장 큰 프레임 하나 — 보정으로 새로 넘은 약한 앞 프레임(부분 변화)이
+        # merge_close 에서 진짜 컷을 밀어내지 않게(2026-10-16 방구석 ILIi 원본 5.933(0.19)이 6.0(0.40)을 밀어냄)
+        out, grp = [], []
+        for t, e in hits:
+            if grp and t - grp[0][0] >= CUT_MERGE_S:
+                out.append(max(grp, key=lambda x: x[1])[0]); grp = []
+            grp.append((t, e))
+        if grp:
+            out.append(max(grp, key=lambda x: x[1])[0])
         return out
     x, y, w, h = window
     log = probe.ffmpeg_log(["-i", path, "-an", "-vf", f"crop={w}:{h}:{x}:{y},select='gt(scene,{T})',showinfo",
