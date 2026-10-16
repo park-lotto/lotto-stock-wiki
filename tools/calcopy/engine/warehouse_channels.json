@@ -1,0 +1,32 @@
+{
+ "sseolpulda": {
+  "category": "해외썰",
+  "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+  "steps": "bench,score,assign,script,source",
+  "extra": []
+ },
+ "yummyknow": {
+  "category": "식품",
+  "preset": "channel/yummyknow/preset/게시글형",
+  "steps": "bench,score,assign,script,source",
+  "extra": []
+ },
+ "banggu": {
+  "category": "숨은이유",
+  "preset": "channel/banggu/preset/게시글형",
+  "steps": "bench,score,assign,script,source",
+  "extra": []
+ },
+ "hottemreport": {
+  "category": "신기한제품",
+  "preset": "hottemreport",
+  "steps": "bench,score,assign,script",
+  "extra": [
+   "--source-kind",
+   "해외영상",
+   "--keywords",
+   "신기한 제품,신박한 아이템,생활 발명품,amazing gadget,cool gadgets,kitchen gadget"
+  ],
+  "_note": "프리셋(뜯기·틀)이 아직 없어 재료 후보(source)는 못 받는다 — 소재·벤치·점수·대본까지"
+ }
+}

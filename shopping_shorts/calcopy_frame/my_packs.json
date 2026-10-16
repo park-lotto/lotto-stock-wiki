@@ -1,0 +1,60 @@
+{
+ "1": {
+  "name": "오늘 통과작 조합(신라면·리센느·아웃백, 10-16)",
+  "_from": "channel/yummyknow/새소재_shinramyun_gumi·새소재_rescene_bread·channel/banggu/칼카피_ILIi 의 재료.json·audio.json·frame 실측값",
+  "brand": {
+   "channel_name": "내 채널",
+   "colors": {}
+  },
+  "text": {
+   "title_font": "JalnanGothic",
+   "caption_font": "CcPretendard-Bold",
+   "caption": {
+    "mode": "accumulate",
+    "enter": "none",
+    "emphasis": "none",
+    "outline_px": 0
+   }
+  },
+  "tts": {
+   "voice_id": "tc_68257f68bc6e3c161ab5078d",
+   "name": "필재",
+   "tempo": 1.36,
+   "_note": "remake 기본(copy_render.NARR·--tempo 1.36). 통과작 audio.json 에 목소리 기록이 없어 기본값으로 둠 — 확인 필요"
+  },
+  "meme_pool": {
+   "kinds": [
+    "연예인",
+    "해외밈"
+   ],
+   "ids": [
+    1026,
+    1005,
+    182,
+    1012,
+    1052,
+    617
+   ]
+  },
+  "sfx_pool": {
+   "start": [
+    80,
+    1459
+   ],
+   "point": [
+    1473
+   ],
+   "end": [
+    78
+   ]
+  },
+  "bgm": {
+   "lib": "bgm_lib",
+   "candidates": [
+    "qiuqiu",
+    "honwaka_puppu"
+   ],
+   "gain": 0.12
+  }
+ }
+}

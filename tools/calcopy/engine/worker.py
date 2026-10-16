@@ -39,8 +39,8 @@ from tools.calcopy.engine import worker_steps as WS  # noqa: E402
 
 PREFIX = "/api/admin/calcopy/topics"
 LLM_STEPS = ("bench", "score", "script")          # 제미나이를 쓰는 단계 — 시간당 한도에 걸리면 이 단계만 쉰다
-ENGINE_FILES = ("tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/worker_steps.py",
-                "tools/calcopy/engine/worker_ledger.py")
+ENGINE_FILES = ("tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py")   # 판별 엔진 — 바뀌면 engine_ver·재점수
+RELOAD_FILES = ENGINE_FILES + ("tools/calcopy/engine/worker_steps.py", "tools/calcopy/engine/worker_ledger.py")  # 바뀌면 다시 읽기만
 DEFAULT_SERVER = "https://shoppingshorts.duckdns.org"
 
 
@@ -105,6 +105,12 @@ class Api:
 
     def reject(self, tid, reason, back_to=None, by="worker"):
         return self._req("post", f"/{tid}/reject", json={"reason": reason, "back_to": back_to, "by": by})
+
+    def detail(self, tid):
+        return self._req("get", f"/{tid}")
+
+    def claim(self, tid, worker, step):
+        return self._req("post", f"/{tid}/claim", json={"worker": worker, "step": step})
 
     def release(self, tid, worker, error):
         return self._req("post", f"/{tid}/release", json={"worker": worker, "error": error})
@@ -183,11 +189,11 @@ class Worker:
             L.add(self.name, kind, n, note)
 
     @staticmethod
-    def _rev(ref: str = "HEAD") -> str | None:
+    def _rev(ref: str = "HEAD", files=ENGINE_FILES) -> str | None:
         """ref 에서 엔진 파일들의 마지막 커밋. 워커는 창고 전용 체크아웃(warehouse.ps1 — 트랙 폴더와 분리)에서 돌아
         다른 담당의 **커밋 안 된 편집**을 읽지 않는다(10-16 실측: 편집 중인 topic_find 에서 concrete_nouns 가 사라져 find 전멸)."""
         try:
-            r = subprocess.run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", ref, "--", *ENGINE_FILES],
+            r = subprocess.run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", ref, "--", *files],
                                capture_output=True, text=True, timeout=20)
             return r.stdout.strip() or None
         except (OSError, subprocess.SubprocessError) as e:
@@ -198,15 +204,19 @@ class Worker:
         ref = os.environ.get("CALCOPY_FOLLOW_REF")
         if not ref:
             return
-        tip, here = self._rev(ref), self._rev("HEAD")
+        tip, here = self._rev(ref, RELOAD_FILES), self._rev("HEAD", RELOAD_FILES)
         if tip and here and tip != here and not tip.startswith("err:"):
             r = subprocess.run(["git", "-C", str(ROOT), "checkout", "--detach", "-q", ref], capture_output=True, text=True, timeout=60)
             self.log(f"[따라감] {ref} {here[:9]} → {tip[:9]} rc={r.returncode} {r.stderr.strip()[:150]}")
 
     def _maybe_reload(self):
         self._follow_branch()
-        rev = self._rev()
-        if not self.ledger or rev == self._engine_rev or not rev or rev.startswith("err:"):
+        rev, code = self._rev(), self._rev("HEAD", RELOAD_FILES)
+        if not self.ledger or not code or code.startswith("err:") or code == getattr(self, "_code_rev", None):
+            return
+        first = getattr(self, "_code_rev", None) is None
+        self._code_rev = code
+        if first:
             return
         names = ["tools.calcopy.engine.worker_ledger", "tools.calcopy.engine.topic_find", "tools.calcopy.engine.script_engine",
                  "tools.calcopy.engine.worker_steps"]
@@ -220,9 +230,10 @@ class Worker:
                 except Exception as e:  # noqa: BLE001 — 새 코드가 깨졌으면 옛 코드로 계속 돌고 이유를 남긴다
                     self.log(f"[재로드 실패] {n}: {type(e).__name__}: {e}")
                     self._note("error", 1, f"재로드 실패 {n}: {e}")
-        self.log(f"[재로드] 엔진 커밋 {str(self._engine_rev)[:9]} → {rev[:9]} · {done}")
-        self._engine_rev = rev
-        self.requeue_old()
+        self.log(f"[재로드] 코드 {code[:9]} · 엔진 {str(self._engine_rev)[:9]} → {str(rev)[:9]} · {done}")
+        if rev and rev != self._engine_rev:              # 판별 엔진(topic_find·script_engine)이 바뀐 때만 재점수
+            self._engine_rev = rev
+            self.requeue_old()
 
     def requeue_old(self) -> list:
         """엔진이 바뀌면 옛 엔진으로 점수 낸 scored 소재를 재점수 큐로(back_to=benched — 다음 score 단계가 새 엔진으로 다시 잰다).
@@ -318,6 +329,12 @@ class Worker:
     def _claim(self) -> dict:
         """배정 뒤 일(script~check)은 내 채널에 배정된 소재만, 배정까지(bench·score·assign)는 카테고리·트랙으로만 거른다."""
         allowed = list(self.allowed)
+        if getattr(self, "only_topic", None):            # 만들기 입구: 그 소재 하나만(다음 일은 서버가 정한 next_step)
+            t = self.api.detail(self.only_topic)["topic"]
+            ns = t.get("next_step")
+            if not ns or ns not in allowed:
+                return {"topic": None, "step": None, "reasons": [f"#{self.only_topic} 다음 일 {ns or '없음(' + t['state'] + ')'}"]}
+            return self.api.claim(self.only_topic, self.name, ns)
         if self.ledger:
             from tools.calcopy.engine import worker_ledger as L
             if L.count("gemini", worker=self.name) >= L.GEMINI_PER_HOUR:      # 시간당 제미나이 한도 — 제미나이 단계만 쉰다

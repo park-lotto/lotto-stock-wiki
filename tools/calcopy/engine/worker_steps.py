@@ -229,7 +229,7 @@ def step_script(topic, ctx: Ctx) -> dict:
                               "overlap": {"score": sc.get("overlap"), "with": sc.get("overlap_with")}, "total": sc.get("total"),
                               "source": topic.get("source") or {}},
                              ensure_ascii=False, indent=1), encoding="utf-8")
-    S = SE.run(ctx.preset_of(topic), str(tj), wd, str(bench_md) if bench_md.exists() else None, llm=llm, log=ctx.log)
+    S = SE.run(ctx.preset_of(topic), str(tj), wd, str(bench_md) if bench_md.exists() else None, ctx.extra.get("facts_path"), llm=llm, log=ctx.log)
     arts = _exists({"대본.json": wd / "대본.json", "대본_검사.md": wd / "대본_검사.md", "대본_계획.md": wd / "대본_계획.md"})
     cost = {"gemini": _llm_n(llm)}
     chk = (S.get("final") or {}).get("check") or {}
@@ -263,6 +263,11 @@ def step_source(topic, ctx: Ctx) -> dict:
         arts["재료후보_시트.jpg"] = str(sheets[0])
     if rc != 2 or "재료_뼈대.json" not in arts:
         raise StepError(f"재료 후보 모드 rc={rc}(기대 2) — {tail[-300:]}", arts)
+    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
+    if hook and not (out / "재료.json").exists():
+        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
+        (out / "재료.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+        arts["재료.json"] = str(out / "재료.json")
     vids = sorted(cand.glob("v_*.mp4")) + sorted(out.glob("v_*.mp4"))
     rights = {v.name: "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)" for v in vids}
     if not rights:
@@ -300,6 +305,10 @@ def step_produce(topic, ctx: Ctx) -> dict:
     had_tts = tts.exists()
     t0 = time.time()
     extra = ["--tts", str(tts)] if had_tts else ["--make-tts"]
+    ra = ctx.extra.get("remake_args") or {}                  # 내 팩 키트(목소리·빠르기·자막 꼴·BGM) — calcopy_make.merge_preset_pack 이 정한 값
+    for k, flag in (("voice", "--voice"), ("tempo", "--tempo"), ("caption_mode", "--caption-mode"), ("bgm", "--bgm"), ("bgm_ratio", "--bgm-ratio")):
+        if ra.get(k) is not None:
+            extra += [flag, str(ra[k])]
     rc, tail = ctx.run(cmd + ["--materials", str(mats), "--script", str(script)] + extra, 3600)
     cost = {"typecast": int(tts.exists() and not had_tts)}
     ctx.log(f"[제작] {round(time.time() - t0)}초 rc={rc}")

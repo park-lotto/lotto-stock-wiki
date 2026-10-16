@@ -14,13 +14,9 @@ $root = Join-Path $data "code"
 $py = (Get-Command python.exe).Source
 $pidf = Join-Path $data "pids.json"
 $port = 8851
-$workers = @(
-  @{slug="sseolpulda";  category="해외썰";     preset="channel/sseolpulda/preset/A_흰바탕창/창아래_검정"; steps="bench,score,assign,script,source"; extra=@()},
-  @{slug="yummyknow";   category="식품";       preset="channel/yummyknow/preset/게시글형";            steps="bench,score,assign,script,source"; extra=@()},
-  @{slug="banggu";      category="숨은이유";   preset="channel/banggu/preset/게시글형";               steps="bench,score,assign,script,source"; extra=@()},
-  # 핫템은 프리셋(뜯기·틀)이 아직 없다 → 재료 후보(source)는 못 받는다. 소재·벤치·점수·대본까지만.
-  @{slug="hottemreport"; category="신기한제품"; preset="hottemreport";                                steps="bench,score,assign,script";        extra=@("--source-kind","해외영상","--keywords","신기한 제품,신박한 아이템,생활 발명품,amazing gadget,cool gadgets,kitchen gadget")}
-)
+# 채널 → 카테고리·프리셋·단계 = warehouse_channels.json 한 곳(만들기 입구 calcopy_make 도 같은 파일을 읽는다)
+$chj = Get-Content -Raw -Encoding utf8 (Join-Path $PSScriptRoot "warehouse_channels.json") | ConvertFrom-Json
+$workers = @($chj.PSObject.Properties | ForEach-Object { @{slug=$_.Name; category=$_.Value.category; preset=$_.Value.preset; steps=$_.Value.steps; extra=@($_.Value.extra)} })
 
 function Start-One($name, $args_, $log) {
   # Start-Process 는 인자를 공백으로 다시 쪼갠다 — 공백 있는 인자는 따옴표로 감싼다(핫템 --keywords 가 깨졌다, 10-16 실측)
