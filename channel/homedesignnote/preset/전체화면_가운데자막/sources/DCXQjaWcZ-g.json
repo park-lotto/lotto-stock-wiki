@@ -1,0 +1,134 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    137,
+    121,
+    108
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 1920,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 578,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPoorStory",
+   "size": 61,
+   "line_h": 70,
+   "rgb": [
+    250,
+    250,
+    249
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 20,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "glow": {
+    "px": 40,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "box": {
+    "rgb": [
+     7,
+     9,
+     9
+    ],
+    "pad": 0,
+    "radius": 0
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 540,
+   "y": 1422,
+   "w": 400,
+   "align": "center",
+   "lines": 1,
+   "font": "CcHiMelody",
+   "size": 46,
+   "line_h": 54,
+   "rgb": [
+    240,
+    240,
+    240
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": {
+    "dx": 1,
+    "dy": 1,
+    "blur": 3,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "잇썸홈"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "DCXQjaWcZ-g"
+}
