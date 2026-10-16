@@ -264,6 +264,8 @@ def test_article_gate_blocks_behind_topic_without_article(tmp_path):
     assert E.article_gate({"topic": "신라면 구미공장"}, art, "해외영상")[0]                                   # 식품 낱말 → 대상, 기사 있음 → 통과
     assert not E.article_gate({"topic": "신라면 구미공장"}, {"f1": {"text": "짧음", "url": "https://news.x/1"}}, None)[0]   # 날짜·발췌 없음
     assert E.article_gate({"topic": "LED 수도꼭지"}, {}, "해외영상")[0]                                         # 대상 아님
+    # 날짜·발췌가 있어도 영상·SNS 주소는 기사가 아니다(다이소 c3 초안의 facts 꼴)
+    assert E.article_facts({"f1": {"text": "다이소 공식 쇼츠 2026-10-12 설명: 베이커리 푸 봉제키링 신상 공개", "url": "https://www.youtube.com/shorts/x"}}) == []
 
 
 def test_source_kind_from_manifest_or_required():
