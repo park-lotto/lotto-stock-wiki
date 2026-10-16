@@ -55,11 +55,12 @@ def test_holdout_frame_really_excludes(data, frames_hold):
         assert not ids & {x["id"] for x in f["S3_search"]["index"]}
 
 
-# 2026-10-16 실측(설계 요구 = 원본 10/10 통과·다른 채널 전부 반려에 못 미친다 — 아래 바닥값은 실측을 지키는 회귀 가드):
-#   숨긴 원본 통과 A 8/10 · B 8/10 (반려: 2Y20YAQmit0 '습니다체 비교형' 연결어미·소구 축 밖, WZgM5Ca8_eM 받아쓰기 조각 '두었다고.' 남의 어미)
-#   처음 보는 다른 채널 반려 16/18 (통과: 핫템 존댓말형 RWS43GF1A_U '~는데요/~하네요' 4문장, 썰풀다 w-Ygny1f8O8 '~니다/~어요' 2문장)
+# 2026-10-16 2판 실측(설계 요구 = 원본 10/10·다른 채널 전부 반려·홈템 DB ≤30% — 원본·DB 는 미달, 아래 바닥값은 실측 회귀 가드):
+#   숨긴 원본 통과 A 8/10 · B 8/10 (반려: 2Y20YAQmit0 '습니다체 비교형', WZgM5Ca8_eM 받아쓰기 조각 '두었다고.')
+#   처음 보는 다른 채널 반려 18/18 · 상위50 밖 블라인드 HDN 10/11 통과(반려 SLCG8nbBLec '꿀템 3가지' 목록형)
+#   1판 LOO 초안(어미만 같은 설명문): 규칙 판별만이면 통과, 제미나이 서사 표시를 주면 story=설명문 → 반려
 OWN_FLOOR = 8          # 숨긴 원본 10편 중 통과 하한(설명서마다)
-REJECT_FLOOR = 16      # 처음 보는 핫템·썰풀다 18편 중 반려 하한
+REJECT_FLOOR = 18      # 처음 보는 핫템·썰풀다 18편 중 반려 하한
 
 
 def _own_pass(data, frame):
@@ -87,6 +88,25 @@ def test_other_channels_rejected_floor(data, frames_hold):
     assert len(res) == 18
     rejected = sum(not r["pass"] for _, _, r in res)
     assert rejected >= REJECT_FLOOR, f"다른 채널 반려 {rejected}/18 — 통과: {[(c, i, r['score']) for c, i, r in res if r['pass']]}"
+
+
+def test_hdn_blind_floor(data, frames_hold):
+    for k, f in frames_hold.items():
+        n = sum(SF.judge_like(x["text"], f)["pass"] for x in data["hdn_blind"])
+        assert n >= 10, f"상위50 밖 블라인드 원본 통과 {n}/{len(data['hdn_blind'])} (설명서 {k})"
+
+
+def test_story_gate_rejects_description_draft(data, frames_hold):
+    d = data["draft1_설명문"]
+    for f in frames_hold.values():
+        r = SF.judge_like(d["text"], f, tags=d["narr"])
+        assert r["story"] == "설명문" and not r["pass"], r
+
+
+def test_grounding_audit_split():
+    a = SF.grounding_audit(["와이프가 이걸 사왔는데 저 이거 보고 바로 버렸어요.", "안쪽 스프링이 압력을 걸어주는 방식이라 크레마가 나와요."])
+    assert a[0]["creative"] and not a[0]["needs_ground"]
+    assert a[1]["needs_ground"]
 
 
 @pytest.mark.xfail(strict=False, reason="설계 요구(원본 10/10·다른 채널 18/18) 미달 — 실측은 위 주석. 판별기 고도화 전까지 기록용")

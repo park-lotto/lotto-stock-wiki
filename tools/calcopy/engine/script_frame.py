@@ -80,7 +80,7 @@ CONNECT = re.compile(r"(는데|은데|인데|던데|니까|어서|아서|라서|
 
 
 # ── 문장·조각 나누기 ──────────────────────────────────────────────────────
-_FINAL_SPLIT = re.compile(r"(?:(?<![필중])요|니다|(?<=[가-힣])죠|(?<![다마처])음|(?<=[가-힣])[함됨짐림]|(?<=[가-힣])임|(?<=[했됐었았])다|거(?=\s+(?:근데|그래서|더|진짜|심지어|이게|이건|그리고|하지만|그런데)))[~;]*\s+")
+_FINAL_SPLIT = re.compile(r"(?:(?<![필중담])요|니다|(?<=[가-힣])죠|(?<![다마처])음|(?<=[가-힣])[함됨짐림]|(?<=[가-힣])임|(?<=[했됐었았])다|거(?=\s+(?:근데|그래서|더|진짜|심지어|이게|이건|그리고|하지만|그런데)))[~;]*\s+")
 
 
 def sentences(text: str) -> list[str]:
@@ -314,6 +314,150 @@ def label_llm(chan_dir: Path, vid: str, bench_pv: dict, cache_dir: Path, ask=Non
     return d, None
 
 
+# ── 2판: 서사 노드(이 채널의 설명 결) — 페이블 10-16 밤 판정 "1판은 화법 층만 잡았다" ──────────
+# 문장 단위 다중 표시. 위 7개 = 서사(창작 허용), 아래 = 제품 사실(근거 필수)·기타
+NARR = ["계기", "극단행동", "자기위치", "체감비유", "결과과장", "감상", "원리스펙", "체감사실", "사회반응", "가격", "불편공감", "권유"]
+NARR_CREATIVE = {"계기", "극단행동", "자기위치", "체감비유", "결과과장", "감상", "불편공감", "권유"}   # 화자 설정·지인·계기·감상·비유 = 지어내도 되는 것
+NARR_GROUNDED = {"원리스펙", "체감사실", "사회반응", "가격"}                                     # 제품 속성·수치·사회적 반응·가격 = 근거 필수
+NARR_PROMPT = """너는 한국어 쇼핑 숏폼 대본 분석가다. 아래 여러 편 대본의 문장마다 표시를 붙여라(여러 개 가능, 없으면 빈 목록).
+표시 뜻
+- 계기: 화자가 이 물건을 알게 된 경위(지인·가족이 보여줌/선물, 우연히 발견, 사려다 실패, 친구 집에서 봄)
+- 극단행동: 과장된 행동(바로 버렸다, 절대 안 산다, 다 바꿨다, 바로 샀다, 혼났다)
+- 자기위치: 화자가 자기 처지를 밝힘(초보, 커알못, 똥손, 전셋집 사는, 모던한 거 좋아하는데도)
+- 체감비유: 비유·대비로 체감 전달(호텔 같다, 편의점 vs 바리스타, 갤러리 같아짐, 산 것 같아)
+- 결과과장: 쓴 뒤 결과를 과장(카페 커피 못 마시겠다, 인테리어 반은 먹고 감, 생활비까지 아낌)
+- 감상: 화자 만족·감탄(너무 좋아요, 깜짝 놀랐어요)
+- 원리스펙: 제품의 작동 원리·구조·방식·소재·수치·기능 설명
+- 체감사실: 쓰는 사람이 느끼는 효과·편의(맛 차이, 쉬워서 초보도, 깔끔해짐, 편함)
+- 사회반응: 남들 반응·인기·품절·유행
+- 가격: 가격·비용 언급
+- 불편공감: 기존 방식의 불편에 공감(~잖아요)
+- 권유: 행동 요구(댓글·사세요·하지 마세요)
+JSON만: {{"videos":[{{"id": 편 id, "tags": [[문장1 표시들], [문장2 표시들], …]}}]}}  — tags 길이 = 그 편 문장 수(순서 그대로)
+
+{body}
+"""
+
+
+# 서사 표시 규칙(측정기) — 대조·새 대본에 LLM 없이 같은 자. 낱말은 원본 49편 제미나이 표시와 맞춰 고른 것(일치율은 build 가 inputs.narr_rule_agree 로 남긴다)
+NARR_RULES = {
+    "계기": r"((친구|와이프|아내|남편|엄마|부모님|장모님|동생|언니|지인|사장님|직원|조카)[^.?!]{0,30}(알려|보여|소개|선물|사왔|사 오|추천|해놨|하는데|하더라|줬|놀러)|놀러 ?갔|찾다가|알아보다가|사려고|하려고 했|바꿔보려고|신으려고|꺼냈는데|선물(을|로|이라|해|받))",
+    "극단행동": r"(버렸|안 사요|절대 안 사|다 바꿨|바로 샀|따라 ?샀|혼났|못 돌아가|갈아탔|싹 다 버|돈 주고 .{0,6}안)",
+    "자기위치": r"(초보|똥손|알못|귀찮|전셋집|전세|자취|월세|좁은 ?집|저같은|저 같은|좋아하는데도|잘 모르는|몰라도)",
+    "체감비유": r"(같아|같은 ?느낌|같더라|같아서|같았|처럼|인 줄|마치|부럽지 않|못지않|라면 이건|느낌이)",
+    "결과과장": r"(못 마시|못 가|반은 먹|아낄|확 달라|확 바뀌|완전히 바뀌|부럽지 않|다시는|절대 못|대만족|인생템|필수템|못 참|바로 정리|생활비)",
+    "감상": r"(너무 좋|대만족|만족|놀랐|충격|반했|미쳤|대박|예쁘더라|좋아요|좋던데|예뻐요|좋더라|소름)",
+    "원리스펙": r"(방식|구조|원리|기술|소재|원목|설계|센서|모터|기능|적용|탑재|달려 ?있|들어 ?있|되어 ?있|만든|개발|모방|\d+(\.\d+)? ?(cm|mm|인치|%|배|분|초|kg|도|단|년|장|개))",
+    "체감사실": r"(편해|편하|쉬워|쉽게|깔끔|간편|맛|예뻐|예쁘|고급스|넓어|정리돼|정리됐|가능해서|할 수 있|쓸 수 있|좋아|튼튼|오래)",
+    "사회반응": r"(보는 사람마다|어디서 샀|물어보|난리|품절|입소문|불티|1위|1등|열광|인기|화제|사이에서|유행|대세|유명)",
+    "가격": r"(가격|저렴|만원|원도|비싸|비싼|가성비|공사비|돈 ?주고|돈 ?들|최저가)",
+    "불편공감": r"(잖아요|불편|짜증|스트레스|힘들|고민|그림의 떡|막히|더러워)",
+    "권유": r"(댓글|링크|찾아봤|찾아왔|알아왔|구매처|사오세요|쓰세요|해보세요|보세요|하지 마세요|하지마세요|남겨주세요|참고해)",
+}
+NARR_STORY = ["계기", "극단행동", "자기위치", "체감비유", "결과과장"]     # 판별기 서사 표시(0/1)
+
+
+def narr_rules(sent: str) -> list[str]:
+    return [k for k, pat in NARR_RULES.items() if re.search(pat, sent)]
+
+
+def narr_features(text: str) -> dict:
+    """(측정기) 서사 지표 — 계기·극단행동·자기위치·비유·결과과장 있음(0/1) + 원리스펙·체감사실 문장 비율 + 체감형 비율."""
+    ss = sentences(text)
+    tags = [narr_rules(x) for x in ss]
+    n = max(1, len(ss))
+    out = {f"has_{k}": int(any(k in t for t in tags)) for k in NARR_STORY}
+    out["story_n"] = sum(out[f"has_{k}"] for k in NARR_STORY)
+    pr = sum("원리스펙" in t for t in tags)
+    fe = sum("체감사실" in t for t in tags)
+    out["principle_ratio"] = round(pr / n, 3)
+    out["feel_ratio"] = round(fe / n, 3)
+    out["feel_share"] = round(fe / (fe + pr), 3) if fe + pr else 0.5
+    out["creative_ratio"] = round(sum(1 for t in tags if set(t) & NARR_CREATIVE) / n, 3)
+    return out
+
+
+def grounding_audit(lines: list[str]) -> list[dict]:
+    """창작 허용선 — 줄마다 {text, needs_ground, creative}. 제품 속성·수치·사회적 반응·가격(NARR_GROUNDED)은 근거 필수,
+    화자 설정·지인·계기·감상·비유·과장(NARR_CREATIVE)만 있는 줄은 지어내도 된다(이 채널의 결). check 가 근거 없는 needs_ground 줄만 흠으로 친다."""
+    out = []
+    for t in lines:
+        tg = set(narr_rules(t))
+        out.append({"text": t, "tags": sorted(tg), "needs_ground": bool(tg & NARR_GROUNDED), "creative": bool(tg & NARR_CREATIVE)})
+    return out
+
+
+NARR_PRIMARY = ["계기", "극단행동", "자기위치", "불편공감", "원리스펙", "체감비유", "체감사실", "결과과장", "사회반응", "가격", "감상", "권유"]
+
+
+def narr_chain(tags: list[list[str]], k: int = 5) -> str:
+    """문장 표시 → 대표 노드(NARR_PRIMARY 앞쪽 우선) 순서, 연속 중복 접고 k 마디."""
+    seq = [next((t for t in NARR_PRIMARY if t in set(x)), "기타") for x in tags]
+    return ">".join(_collapse(seq)[:k])
+
+
+def _s2_narr(docs, narr: dict) -> dict:
+    """S2(2판) 서사 노드 — 제미나이 문장 표시(label_narr_llm 캐시)로 편 출현율·자리(앞/중/끝 1/3)·사슬 꼴."""
+    rows = [narr[d["id"]] for d in docs if d["id"] in narr]
+    n = len(rows)
+    if not n:
+        return {}
+    vid, sent, pos, ns = Counter(), Counter(), defaultdict(Counter), 0
+    for r in rows:
+        k = len(r["tags"])
+        ns += k
+        for i, tg in enumerate(r["tags"]):
+            p = "앞" if i < k / 3 else ("중" if i < 2 * k / 3 else "끝")
+            for t in tg:
+                sent[t] += 1
+                pos[t][p] += 1
+        vid.update({t for tg in r["tags"] for t in tg})
+    chains = Counter(narr_chain(r["tags"], 4) for r in rows)
+    story = [sum(1 for k in NARR_STORY if any(k in t for t in r["tags"])) for r in rows]
+    tot = lambda k: sum(pos[k].values()) or 1
+    return {"n": n, "nodes": {k: {"video": round(vid[k] / n, 3), "sentence": round(sent[k] / max(1, ns), 3),
+                                   "pos": {p: round(pos[k][p] / tot(k), 2) for p in ("앞", "중", "끝")}} for k in NARR},
+            "chains": [{"shape": c, "share": round(m / n, 3)} for c, m in chains.most_common(8)],
+            "story_n": _dist(story), "story0_share": round(sum(1 for x in story if x == 0) / n, 3),
+            "principle_vs_feel": {"principle_sent": round(sent["원리스펙"] / max(1, ns), 3), "feel_sent": round(sent["체감사실"] / max(1, ns), 3)},
+            "creative_rule": {"창작 허용": sorted(NARR_CREATIVE), "근거 필수": sorted(NARR_GROUNDED)}}
+
+
+def label_narr_llm(docs: list[dict], cache_dir: Path, ask=None, batch: int = 7) -> dict:
+    """서사 표시 — 편 7개씩 묶어 1회(글만). 문장은 sentences()(규칙과 같은 단위). 캐시 cache_dir/<id>.json."""
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    out, todo = {}, []
+    for d in docs:
+        f = cache_dir / f"{d['id']}.json"
+        if f.exists():
+            out[d["id"]] = json.loads(f.read_text(encoding="utf-8"))
+        else:
+            todo.append(d)
+    if ask is None:
+        from tools.calcopy.engine.gemini_free import ask as _ask
+        ask = _ask
+    for i in range(0, len(todo), batch):
+        grp = todo[i:i + batch]
+        body = "\n\n".join(f"[편 {d['id']}]\n" + "\n".join(f"{j + 1}. {s}" for j, s in enumerate(sentences(d["text"]))) for d in grp)
+        r, err = ask([], NARR_PROMPT.format(body=body), tag=f"script_frame:narr{i // batch}",
+                     models=("gemini-3.5-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-flash-lite-latest"))
+        if not r:
+            print("narr 라벨 실패", err, [d["id"] for d in grp], flush=True)
+            continue
+        got = {v.get("id"): v.get("tags") for v in (r.get("videos") or r.get("items") or [])}
+        for d in grp:
+            ss = sentences(d["text"])
+            tags = got.get(d["id"])
+            if not isinstance(tags, list) or len(tags) != len(ss):
+                print("narr 문장 수 불일치", d["id"], len(ss), None if tags is None else len(tags), flush=True)
+                continue
+            rec = {"id": d["id"], "sentences": ss, "tags": [[t for t in (x or []) if t in NARR] for x in tags], "_model": r.get("_model")}
+            (cache_dir / f"{d['id']}.json").write_text(json.dumps(rec, ensure_ascii=False, indent=1), encoding="utf-8")
+            out[d["id"]] = rec
+    return out
+
+
 # ── 계산 도우미 ───────────────────────────────────────────────────────────
 def _norm(s: str) -> str:
     return re.sub(r"[\W_]+", "", s or "")
@@ -433,9 +577,9 @@ def _llm_labels(labels_dir, ids) -> dict:
 
 # ── 판별기 자 ─────────────────────────────────────────────────────────────
 JUDGE_FEATS = ["polite_ratio", "voice_ratio", "sent_len_mean", "connect_per_sent", "ending_char", "ending_cos", "foreign_ending", "axis_cos",
-               "node_cos"]
+               "node_cos", "story_n", "principle_ratio", "feel_share", "creative_ratio"]
 JUDGE_WEIGHTS = {"polite_ratio": 2, "voice_ratio": 1, "sent_len_mean": 1, "connect_per_sent": 1, "ending_char": 2, "ending_cos": 1,
-                 "foreign_ending": 1, "axis_cos": 2, "node_cos": 2}
+                 "foreign_ending": 1, "axis_cos": 2, "node_cos": 2, "story_n": 2, "principle_ratio": 1, "feel_share": 1, "creative_ratio": 2}
 # 필수(점수로 메우지 못함) = 화법 칸의 정의 그대로(설계서 4칸 "어미는 목록 안"): 존댓말 비율 + 특유 어미 비율 + 남의 어미(대조만 쓰는 어미) 비율. 데이터로 고르지 않는다
 JUDGE_HARD = ["polite_ratio", "ending_char", "foreign_ending"]
 CHAR_LIFT = 1.2          # 특유 어미 = 원본 비율 ≥1% 이고 대조보다 1.2배 이상 잦은 어미
@@ -475,6 +619,7 @@ def _judge_vec(text: str, core: dict) -> dict:
         "axis_cos": _cos(dict(f["axes_sent"]), core["axis_centroid"]),
         "node_cos": _cos(_node_vec(f["nodes"]), core["node_centroid"]),
         "_chain3": chain_shape(f["nodes"], 3),
+        **{k: v for k, v in narr_features(text).items() if k in ("story_n", "principle_ratio", "feel_share", "creative_ratio")},
     }
 
 
@@ -498,15 +643,67 @@ def _as_text(script) -> str:
     return str(script)
 
 
-def judge_like(script, frame: dict) -> dict:
+def _fit_lr(own_vecs: list[dict], groups: dict, l2: float = 0.05, iters: int = 3000, step: float = 0.2) -> dict:
+    """원본(1) vs 대조(0) 로지스틱 — 대조는 묶음마다 합 무게 1(발굴 DB 1,868편이 한 표), 원본 합 무게 = 대조 묶음 수. numpy 만."""
+    import numpy as np
+    rows, ys, ws = [], [], []
+    for x in own_vecs:
+        rows.append([x[k] for k in JUDGE_FEATS]); ys.append(1.0); ws.append(max(1, len(groups)) / len(own_vecs))
+    for name, g in groups.items():
+        gw = 1.0                                     # 묶음마다 같은 무게(2판 시험: 발굴DB 무게를 키워도 DB 통과율이 줄지 않았다)
+        for x in g:
+            rows.append([x[k] for k in JUDGE_FEATS]); ys.append(0.0); ws.append(gw / len(g))
+    X, y, w = np.array(rows, float), np.array(ys), np.array(ws)
+    mu, sd = X.mean(0), X.std(0) + 1e-6
+    Z = (X - mu) / sd
+    coef, b = np.zeros(Z.shape[1]), 0.0
+    for _ in range(iters):
+        p = 1 / (1 + np.exp(-(Z @ coef + b)))
+        g_ = (w * (p - y))
+        coef -= step * (Z.T @ g_ / w.sum() + l2 * coef)
+        b -= step * g_.sum() / w.sum()
+    return {"feats": list(JUDGE_FEATS), "mu": [round(float(v), 5) for v in mu], "sd": [round(float(v), 5) for v in sd],
+            "coef": [round(float(v), 4) for v in coef], "b": round(float(b), 4)}
+
+
+def _lr_prob(vec: dict, lr: dict) -> float:
+    z = lr["b"] + sum(c * ((vec[k] - m) / s) for k, c, m, s in zip(lr["feats"], lr["coef"], lr["mu"], lr["sd"]))
+    return round(1 / (1 + math.exp(-max(-30, min(30, z)))), 4)
+
+
+_REL = re.compile(r"(친구|와이프|아내|남편|엄마|어머니|부모님|장모님|시어머니|동생|언니|누나|선배|지인|사장님|직원|조카|아빠|아버지|할머니|애기|아이|저희|제가|저는|저도|^저 )")
+STORY_HEARSAY_MIN = 0.25   # 전언 해설형(…대요/…다는데) 문장 비율 하한
+
+
+def story_mode(sents: list[str], tags: list[list[str]]) -> str:
+    """서사 검사(2판, 제미나이 문장 표시 = 설명서 S2_narr 와 같은 표시기) — '체험담'(인물 계기 또는 극단행동·자기위치·결과과장) /
+    '전언해설'(전언 문장 ≥25%) / '설명문'(둘 다 없음 = 어미만 같은 제품 설명). 원본 49편: 체험담+전언해설 82%(나머지 18%는 원본에도 있는 설명형)."""
+    concrete = any("계기" in t and _REL.search(x) for t, x in zip(tags, sents)) or any(k in t for t in tags for k in ("극단행동", "자기위치", "결과과장"))
+    if concrete:
+        return "체험담"
+    if sum(1 for x in sents if HEARSAY.search(x)) / max(1, len(sents)) >= STORY_HEARSAY_MIN:
+        return "전언해설"
+    return "설명문"
+
+
+def judge_like(script, frame: dict, tags=None) -> dict:
     """(판단 주인) 새 대본이 이 채널처럼 설명하나 — 화법·S1(소구 축 분포)·S2(사슬 꼴)를 설명서 범위로 잰다.
-    script = 글 / {lines:[{text}]} / [{text}] / [글]. 반환 {score, pass, hard_fail, parts, threshold}."""
+    script = 글 / {lines:[{text}]} / [{text}] / [글]. tags = label_narr_llm 표시(문장마다) — 주면 서사 검사(story_mode)를 더해
+    '설명문'이면 반려한다(원본도 18%가 설명형이라 LLM 표시가 있을 때만 거는 추가 관문). 반환 {score, pass, hard_fail, parts, threshold, story}."""
     J = frame["judge"]
     vec = _judge_vec(_as_text(script), J["core"])
     score, parts = _score(vec, J["ranges"], J.get("weights"))
+    if J.get("lr"):
+        score = _lr_prob(vec, J["lr"])
     hard = [k for k in J.get("hard", []) if not parts[k]["ok"]]
+    story = None
+    if tags is not None:                              # tags = label_narr_llm 기록({sentences, tags}) 또는 문장 표시 목록
+        sents, tg = (tags["sentences"], tags["tags"]) if isinstance(tags, dict) else (sentences(_as_text(script)), tags)
+        story = story_mode(sents if len(sents) == len(tg) else [""] * len(tg), tg)
+        if story == "설명문":
+            hard = hard + ["story_mode"]
     return {"score": score, "pass": bool(score >= J["threshold"] and not hard), "hard_fail": hard, "threshold": J["threshold"],
-            "parts": parts, "chain3": vec["_chain3"], "channel": frame.get("channel")}
+            "parts": parts, "chain3": vec["_chain3"], "channel": frame.get("channel"), "story": story}
 
 
 # ── S3 예문 검색·S1 사실 고르기(설명서를 쓰는 쪽 = script_engine.draft 가 부른다) ──
@@ -530,9 +727,26 @@ def select_facts(facts: list[str], frame: dict, k: int = 4) -> list[dict]:
     out = []
     for i, t in enumerate(facts):
         ax = axes_of(t)
+        tg = set(narr_rules(t))
+        kind = "원리스펙" if "원리스펙" in tg and "체감사실" not in tg else ("체감사실" if "체감사실" in tg else "기타")
         s = sum(pick.get(a, 0) for a in ax) - sum(1.0 for a in ax if a in drop and a not in pick)
-        out.append({"i": i, "text": t, "axes": ax, "score": round(s, 2)})
-    return sorted(out, key=lambda x: (-x["score"], x["i"]))[:k]
+        out.append({"i": i, "text": t, "axes": ax, "kind": kind, "score": round(s, 2)})
+    ranked = sorted(out, key=lambda x: (-x["score"], x["i"]))
+    pf = (frame.get("S2_narr") or {}).get("principle_vs_feel")
+    if not pf:
+        return ranked[:k]
+    # 2판: 원리스펙 사실 수 상한 = 채널의 원리 문장 비율 / (원리+체감) × k (반올림). 나머지 자리는 체감·기타 사실
+    cap = round(k * pf["principle_sent"] / max(1e-6, pf["principle_sent"] + pf["feel_sent"]))
+    sel, npr = [], 0
+    for x in ranked:
+        if x["kind"] == "원리스펙":
+            if npr >= cap:
+                continue
+            npr += 1
+        sel.append(x)
+        if len(sel) == k:
+            break
+    return sel
 
 
 def brief(product: dict, frame: dict, facts: list[str], k_examples: int = 3, exclude: tuple = (), n_facts: int = 4) -> dict:
@@ -548,6 +762,9 @@ def brief(product: dict, frame: dict, facts: list[str], k_examples: int = 3, exc
         "chains": [x["shape"] for x in s2["shapes"][:3]],
         "endings": sp["ending_list"][:10], "signature_phrases": [x["phrase"] for x in sp["signature_phrases"][:12]],
         "connectives": [x["c"] for x in sp.get("connectives", [])[:6]], "connect_per_sent": sp["stats"]["connect_per_sent"]["median"],
+        "narr_chains": [x["shape"] for x in (frame.get("S2_narr") or {}).get("chains", [])[:4]],
+        "narr_nodes": {k: v["video"] for k, v in (frame.get("S2_narr") or {}).get("nodes", {}).items()},
+        "creative_rule": (frame.get("S2_narr") or {}).get("creative_rule"),
         "foreign_endings": sp.get("foreign_endings", []),
         "length": {"chars_median": sk["chars"]["median"], "sent_len_median": sp["stats"]["sent_len_mean"]["median"],
                    "n_sent_median": sp["stats"]["n_sent"]["median"]},
@@ -922,17 +1139,22 @@ def _judge_fit(docs, contrast, speech, s1, s2) -> dict:
     def score(x):
         tot = sum(wts.values())
         return round(sum(wts[k] * (rng[k][0] <= x[k] <= rng[k][1]) for k in JUDGE_FEATS) / tot, 3)
+    lr = _fit_lr(own_vecs, groups)
+
+    def score(x):                                    # 점수 = 원본/대조 로지스틱(묶음마다 같은 무게) 확률. 범위(parts)는 설명·필수 판정용
+        return _lr_prob(x, lr)
+
     def ok(x, t):
         return score(x) >= t and all(rng[k][0] <= x[k] <= rng[k][1] for k in hard)
     own_s = [score(x) for x in own_vecs]
     best = (-9, 0.75)
     for t in sorted(set(own_s)):
         tp = sum(ok(x, t) for x in own_vecs) / max(1, len(own_vecs))
-        fp = con_rate(lambda x, t=t: ok(x, t))
+        fp = max(sum(ok(x, t) for x in g) / len(g) for g in groups.values()) if groups else 0.0   # 가장 잘 섞이는 대조 묶음 기준
         if tp >= 0.9 and tp - fp > best[0]:
             best = (tp - fp, t)
     thr = best[1]
-    return {"core": core, "ranges": rng, "weights": wts, "power": power, "threshold": thr, "hard": hard,
+    return {"core": core, "ranges": rng, "weights": wts, "power": power, "threshold": thr, "hard": hard, "lr": lr,
             "fit": {"own_pass": round(sum(ok(x, thr) for x in own_vecs) / max(1, len(own_vecs)), 3),
                     "contrast_pass": {g: round(sum(ok(x, thr) for x in v) / len(v), 3) for g, v in groups.items()},
                     "contrast_n": {g: len(v) for g, v in groups.items()}, "own_score": _dist(own_s),
@@ -941,7 +1163,8 @@ def _judge_fit(docs, contrast, speech, s1, s2) -> dict:
                       "원본 편의 축·어미·사슬 중심은 자기 뺀 평균(LOO). 필수 = JUDGE_HARD(존댓말·특유 어미, 설계로 고정). 문턱 = 원본 통과 ≥90% 중 (원본 통과 − 대조 통과) 최대"}
 
 
-def build(asr_dir, meta=None, bench=None, contrast_dirs=(), labels_dir=None, exclude=(), channel: str | None = None, out=None) -> dict:
+def build(asr_dir, meta=None, bench=None, contrast_dirs=(), labels_dir=None, exclude=(), channel: str | None = None, out=None,
+          narr_dir=None) -> dict:
     """(판단 주인) 설명서 만들기 — 원본 받아쓰기(+제미나이 라벨 캐시)와 대조군을 같은 자로 재서 1~5칸·S1·S2·S3·판별기 범위를 낸다.
     asr_dir: Speechmatics asr 폴더 또는 engine 뜯기 폴더 · meta: top50.json · bench: bench.json(per_video 컷) ·
     contrast_dirs: 다른 채널 뜯기 폴더 · 발굴 DB 덤프 json · asr 폴더 · labels_dir: label_llm 캐시 · exclude: 숨길 편(LOO)."""
@@ -979,6 +1202,7 @@ def build(asr_dir, meta=None, bench=None, contrast_dirs=(), labels_dir=None, exc
         "5_shot_contract": _shot_contract(docs, labs, beats_by, bench_pv) if bench_pv else {"videos": 0, "by_role": {}},
         "S1_selection": s1,
         "S2_chains": s2,
+        "S2_narr": _s2_narr(docs, {k: v for k, v in ((p.stem, json.loads(p.read_text(encoding="utf-8"))) for p in Path(narr_dir).glob("*.json"))}) if narr_dir else {},
         "S3_search": _s3(docs, labs),
     }
     frame["judge"] = _judge_fit(docs, contrast_clean, speech, s1, s2)
