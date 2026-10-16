@@ -2,24 +2,114 @@
  "_note": "썰풀다 3호 — 아너 로봇 폰(카메라가 짐벌처럼 솟는 폰). 소재 출처 = 우리 발굴 DB(reference.db source_enrichment, 최근 60일·해외·제품 시연, 조회순). 재료 = 실영상 리뷰 2편(인도 리뷰 쇼츠 stwt 1,763,656회 5컷 + 영국 리뷰 -vE6 1컷). 공식 광고(YB6j·U9ap)·렌더(MrqP)·영화 촬영본(AKUR)은 AI·CG 의심 또는 제품이 안 나와서 안 씀. 전부 web 137 계열 1080p(stwt 1080x1920 / -vE6 1920x1080). 소스 안 컷(프레임 차 >22): stwt 1.24·10.49·11.92·15.73·18.1·25.68·27.85초, -vE6 53.05·62.37초 — 컷마다 그 사이에서 잘라 씀(마지막 컷만 꼬리 안 22.18초에 소스 컷 1개).",
  "cand_dir": "C:/숏템_칼카피/sseolpulda/새소재3/cand_hd",
  "shots": [
-  {"i": 0, "t0": 0.0, "t1": 3.6, "src": "v_-vE6Nl0cILw.mp4", "url": "https://www.youtube.com/watch?v=-vE6Nl0cILw", "ss": 55.0, "crop_y": 0.5, "src_crop": [500, 70, 1420, 1010], "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "선글라스 남자가 얼굴 옆에 폰을 들고 웃음, 폰 위로 카메라 머리가 솟아 있음", "why": "1줄 '카메라 튀어나오는 폰이라길래' — 첫 화면부터 솟은 카메라. src_crop = 왼쪽 위 'Shot on Oppo Find X9 Ultra' 글자와 왼쪽 끝 제품 사진 끼움을 잘라냄"},
-  {"i": 1, "t0": 3.6, "t1": 7.3, "src": "v_stwtJyFQyKg.mp4", "url": "https://www.youtube.com/shorts/stwtJyFQyKg", "ss": 1.3, "crop_y": 0.35, "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "공원에서 평범한 폰 앞면(홈 화면 → 화면 꺼짐)", "why": "1줄 끝·2줄 '처음엔 AI인가 했는데' — 아직 그냥 폰처럼 보이는 장면(반전 전)"},
-  {"i": 2, "t0": 7.3, "t1": 10.9, "src": "v_stwtJyFQyKg.mp4", "url": "https://www.youtube.com/shorts/stwtJyFQyKg", "ss": 5.0, "crop_y": 0.25, "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "폰 뒷면 카메라 덩어리 → 위로 솟아 올라 폰 위에 섬(소스 6.5~7.6초 = 우리 8.8~9.9초)", "why": "3줄 '카메라가 쑥 솟으면' — 솟는 순간이 이 자막 구간 안"},
-  {"i": 3, "t0": 10.9, "t1": 14.7, "src": "v_stwtJyFQyKg.mp4", "url": "https://www.youtube.com/shorts/stwtJyFQyKg", "ss": 11.95, "crop_y": 0.25, "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "뒷면 → 앞면, 폰 위에 짐벌처럼 선 카메라(13.1~15.3초)", "why": "4줄 '폰이 통째로 짐벌 카메라로 변신함;;' — 설명란 'Honor Gimbal Phone'. 소스 컷 11.92~15.73 사이"},
-  {"i": 4, "t0": 14.7, "t1": 18.2, "src": "v_stwtJyFQyKg.mp4", "url": "https://www.youtube.com/shorts/stwtJyFQyKg", "ss": 18.15, "crop_y": 0.3, "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "카메라 머리 근접 — 고개를 이리저리 돌림, 화면엔 눈 표정", "why": "5줄 '고개 돌리는 게 소름이네' — 머리가 도는 장면(소스 18.1~25.68 한 컷)"},
-  {"i": 5, "t0": 18.2, "t1": 23.9, "src": "v_stwtJyFQyKg.mp4", "url": "https://www.youtube.com/shorts/stwtJyFQyKg", "ss": 22.1, "crop_y": 0.35, "kind": "남의영상재편집", "status": "새 소재",
-   "ours": "눈 표정 화면 + 솟은 카메라 → 21.72초부터 틀 없이 전체 화면 꼬리(소스 25.6~ : 리뷰어가 웃으며 폰 듦)", "why": "6줄 '탐나는 거 인정?' — 표정 짓는 폰으로 끝, 꼬리는 원본처럼 사람 얼굴. ss 22.1 = 앞 컷과 0.45초 건너뛰어 컷이 보이게"}
+  {
+   "i": 0,
+   "t0": 0.0,
+   "t1": 3.6,
+   "src": "v_-vE6Nl0cILw.mp4",
+   "url": "https://www.youtube.com/watch?v=-vE6Nl0cILw",
+   "ss": 55.0,
+   "crop_y": 0.5,
+   "src_crop": [
+    500,
+    70,
+    1420,
+    1010
+   ],
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "선글라스 남자가 얼굴 옆에 폰을 들고 웃음, 폰 위로 카메라 머리가 솟아 있음",
+   "why": "1줄 '카메라 튀어나오는 폰이라길래' — 첫 화면부터 솟은 카메라. src_crop = 왼쪽 위 'Shot on Oppo Find X9 Ultra' 글자와 왼쪽 끝 제품 사진 끼움을 잘라냄"
+  },
+  {
+   "i": 1,
+   "t0": 3.6,
+   "t1": 7.3,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 1.3,
+   "crop_y": 0.35,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "공원에서 평범한 폰 앞면(홈 화면 → 화면 꺼짐)",
+   "why": "1줄 끝·2줄 '처음엔 AI인가 했는데' — 아직 그냥 폰처럼 보이는 장면(반전 전)"
+  },
+  {
+   "i": 2,
+   "t0": 7.3,
+   "t1": 10.9,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 5.0,
+   "crop_y": 0.25,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "폰 뒷면 카메라 덩어리 → 위로 솟아 올라 폰 위에 섬(10-16 저녁 0.25초 프레임 재실측: 소스 6.0~6.75초 = 우리 8.3~9.05초, 이전 표기 6.5~7.6은 어긋남)",
+   "why": "3줄 '카메라가 쑥 솟으면' — 솟는 순간이 이 자막 구간 안"
+  },
+  {
+   "i": 3,
+   "t0": 10.9,
+   "t1": 14.7,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 11.95,
+   "crop_y": 0.25,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "뒷면 → 앞면, 폰 위에 짐벌처럼 선 카메라(13.1~15.3초) · 소스 12.65~13.0 에 두 번째 솟음",
+   "why": "4줄 '폰이 통째로 짐벌 카메라로 변신함;;' — 설명란 'Honor Gimbal Phone'. 소스 컷 11.92~15.73 사이"
+  },
+  {
+   "i": 4,
+   "t0": 14.7,
+   "t1": 18.2,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 18.15,
+   "crop_y": 0.3,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "카메라 머리 근접 — 고개를 이리저리 돌림, 화면엔 눈 표정",
+   "why": "5줄 '고개 돌리는 게 소름이네' — 머리가 도는 장면(소스 18.1~25.68 한 컷)"
+  },
+  {
+   "i": 5,
+   "t0": 18.2,
+   "t1": 23.9,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 22.1,
+   "crop_y": 0.35,
+   "kind": "남의영상재편집",
+   "status": "새 소재",
+   "ours": "눈 표정 화면 + 솟은 카메라 → 21.72초부터 틀 없이 전체 화면 꼬리(소스 25.6~ : 리뷰어가 웃으며 폰 듦)",
+   "why": "6줄 '탐나는 거 인정?' — 표정 짓는 폰으로 끝, 꼬리는 원본처럼 사람 얼굴. ss 22.1 = 앞 컷과 0.45초 건너뛰어 컷이 보이게"
+  }
  ],
  "sfx": [
-  {"file": "C:/숏템_칼카피/packs/sfx/bb35a411e8da4090aff5bd5a310661f8.mp3", "pack_id": 30, "pack_title": "ding_0", "t": 20.22, "db": 0, "why": "원본 ZdeZ 효과음 1발 [20.22, 0.18] 같은 시각·길이(LED 편과 같음)"}
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/bb35a411e8da4090aff5bd5a310661f8.mp3",
+   "pack_id": 30,
+   "pack_title": "ding_0",
+   "t": 20.22,
+   "db": 0,
+   "why": "원본 ZdeZ 효과음 1발 [20.22, 0.18] 같은 시각·길이(LED 편과 같음)"
+  }
  ],
- "bgm": {"id": "qiuqiu", "ratio": 0.15, "why": "ZdeZ·LED 편과 같은 곡·배율"},
- "memes": {"used": [], "why": "틀 A 원본은 [광고] 표기뿐 — 짤 0"},
+ "bgm": {
+  "id": "qiuqiu",
+  "ratio": 0.15,
+  "why": "ZdeZ·LED 편과 같은 곡·배율"
+ },
+ "memes": {
+  "used": [],
+  "why": "틀 A 원본은 [광고] 표기뿐 — 짤 0"
+ },
  "narration": "나레 없음 — 소스 원음(리뷰어 말소리) 유지 + BGM qiuqiu, TTS 0",
- "caption_effects": {"now": "즉시 교체·검정·외곽선/상자/강조 없음(원본 ZdeZ 실측과 같음, frame enter=null)", "planned": "틀 담당 enter/emphasis 연결 뒤에도 이 틀은 null 유지"}
+ "caption_effects": {
+  "now": "즉시 교체·검정·외곽선/상자/강조 없음(원본 ZdeZ 실측과 같음, frame enter=null)",
+  "planned": "틀 담당 enter/emphasis 연결 뒤에도 이 틀은 null 유지"
+ },
+ "_review_10-16": "오푸스 선검수 점검: 해상도 ffprobe 재실측(stwt 1080x1920 / -vE6 1920x1080) · 댓글 f2(현재 좋아요 1,770)·f5(74) PlayMCP 재확인 · -vE6 제목 'I shot this with the new Honor Robot Phone' 확인(아너 로봇 폰 맞음) · 솟는 시각 정정. 미확인: 원음(stwt 리뷰어 말소리 언어·내용)."
 }
