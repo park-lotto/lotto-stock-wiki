@@ -1,0 +1,220 @@
+{
+ "_note": "바나나맛우유 2편 재료 계획(렌더 전): 같은 소재 영상 재편집 10컷(14F 빙그레 지원 설명 영상 7·왱 1·YTN 1·KBS 한국의 유산 1) + 우리 짤 팩 1컷(원본 Q 자리). 1080p(web 137, 10-16). 남의 영상 박힌 자막·로고는 src_crop 으로 창 밖. 칸 = 1편 뜯기2 picture_boxes 같은 순번.",
+ "cand_dir": "C:/숏템_칼카피/banggu/칼카피_banana/make/hq",
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 103.0,
+   "kind": "남의영상재편집",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    460,
+    40,
+    1000,
+    860
+   ],
+   "ours": "노란 바탕에 빨대 꽂힌 바나나맛우유 단지 하나",
+   "why": "훅 '50년째 모양을 못 바꾼다는 바나나맛우유' — 그 단지 모양을 정면으로 (103.0~105.5초 같은 장면 — 105.8초에 장면 바뀜)"
+  },
+  {
+   "i": 1,
+   "src": "v_yX8wLi__dRc.mp4",
+   "url": "https://www.youtube.com/watch?v=yX8wLi__dRc",
+   "ss": 12.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    200,
+    40,
+    1500,
+    620
+   ],
+   "ours": "그림일기 — 엄마·아빠가 손에 쥐여 주는 바나나맛우유 단지 그림(12~16초, 아래 손글씨 줄은 잘라 냄)",
+   "why": "'목욕탕 나오면 손에 쥐여 주던 단지우유'"
+  },
+  {
+   "i": 2,
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/gdb_xcqjp88f5st8k9jg.mp4",
+   "asset_id": 413,
+   "url": "pack:meme/413",
+   "ss": 0.0,
+   "kind": "짤",
+   "fit": "cover",
+   "ours": "우리 짤 팩 413 '[GIFDB] steve harvey confused reaction'(tone 의심_황당)",
+   "why": "'대용량은 내기도 어렵다는데' — 원본도 의문 자리(6.0~8.4초)에 반응 짤 1개"
+  },
+  {
+   "i": 3,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 52.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    60,
+    60,
+    1700,
+    840
+   ],
+   "ours": "도자기 박람회장 — 흰 받침대 위 도자기들",
+   "why": "'개발팀이 도자기 박람회에서'"
+  },
+  {
+   "i": 4,
+   "src": "v_upBDOvlnEnw.mp4",
+   "url": "https://www.youtube.com/watch?v=upBDOvlnEnw",
+   "ss": 5.2,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    40,
+    40,
+    700,
+    680
+   ],
+   "ours": "KBS 한국의 유산 — 검은 바탕의 국보 백자 달항아리 전체(7.5초부터 오른쪽 아래 글자는 잘라 냄)",
+   "why": "'마주친 달항아리를 그대로 따온 거임' (계획 2차: 14F 56초 컷은 58초부터 배우 얼굴, 박물관 영상 항아리는 달항아리 아님 → KBS 국보 달항아리) · 칸: 원본 이 순번 칸(1080×513)은 너무 납작해 항아리가 잘려 1080×900 으로(원본 다른 컷 높이 범위 513~1170 안)",
+   "box": [
+    0,
+    711,
+    1080,
+    900
+   ]
+  },
+  {
+   "i": 5,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 72.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    60,
+    60,
+    1700,
+    840
+   ],
+   "ours": "단지 용기가 윗부분·아랫부분으로 갈라졌다 붙는 그림(14F 설명 그래픽)",
+   "why": "'위아래를 따로 찍어 붙여야 하는 모양이라'"
+  },
+  {
+   "i": 6,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 86.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    60,
+    60,
+    1700,
+    840
+   ],
+   "ours": "단지 용기들이 공장 레일 위를 지나감(86~88.4초, 14F 자막 '국내에서는 이걸 만들 수 있는 기계가 없었다고 해요' 자리)",
+   "why": "'국내엔 만들 기계가 아예 없었다는 거'"
+  },
+  {
+   "i": 7,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 80.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    60,
+    60,
+    1700,
+    840
+   ],
+   "ours": "초록 레일 위 단지 용기 근접(80~81.9초, 14F 자막 '수입해서 제작하게 됩니다' 자리)",
+   "why": "'그 기계를 해외에서 겨우 구해 왔다는데'"
+  },
+  {
+   "i": 8,
+   "src": "v_NHSounPyqCQ.mp4",
+   "url": "https://www.youtube.com/watch?v=NHSounPyqCQ",
+   "ss": 0.3,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    60,
+    60,
+    1160,
+    460
+   ],
+   "ours": "바나나맛우유 단지와 '바나나맛 젤리' 봉지를 나란히(YTN 보도 화면, 아래 자막·왼쪽 위 뉴스 표식은 잘라 냄)",
+   "why": "'이 모양 베낀 젤리는 법원에서 판매 금지당했고'"
+  },
+  {
+   "i": 9,
+   "src": "v_WxIoAPn7MLw.mp4",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw",
+   "ss": 109.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    200,
+    60,
+    1500,
+    800
+   ],
+   "ours": "1974·1984·1993·2004·2013·2023 연도별 단지(14F 그래픽 — 50년 같은 모양)",
+   "why": "'2016년엔 용기 모양을 아예 상표로 등록해 버림' — 50년 같은 모양"
+  },
+  {
+   "i": 10,
+   "src": "v_upBDOvlnEnw.mp4",
+   "url": "https://www.youtube.com/watch?v=upBDOvlnEnw",
+   "ss": 62.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    160,
+    0,
+    960,
+    560
+   ],
+   "ours": "KBS 한국의 유산 — 국보 백자 달항아리 근접(아래 자막 줄은 잘라 냄)",
+   "why": "'이젠 이 단지를 문화유산으로 올리겠다고 나섰다고ㅋㅋ' — 원조 달항아리는 이미 국보"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": 0.0,
+   "db": 0,
+   "why": "원본 0.1초 휙(훅 시작)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤 숫자로: 훅 끝",
+   "db": 0,
+   "why": "원본 1.8초 띵(훅→본문)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤 숫자로: '사실 이 단지 모양은' 시작",
+   "db": 0,
+   "why": "원본 15.8초 띵(핵심 공개)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": "TTS 뒤 숫자로: '그래서 빙그레는' 시작",
+   "db": 0,
+   "why": "원본 11.2초 휙(전개)"
+  }
+ ],
+ "narration": "타입캐스트 필재(남성, 원본도 남성 TTS) 1회 · tempo 1.25(1편과 같음 — 1편 실측 말 구간 8.32자/초) · 공백 제외 207자(+제목) ÷ 8.3 ≈ 27~28초 · TTS 뒤 쉼표 쉼을 silenceremove 로 0.07초+로 줄임(1편 render2 와 같은 처리) — 규칙표에 말속도·쉼·덕킹 전/후",
+ "caption_effects": {
+  "now": "1편과 같음: 누적형 2줄(y502 고정, 줄 칸 79, 검정 CcPretendard-Bold, 외곽선·그림자·등장 효과 없음 = 원본 실측) · 훅 카드 제목 2줄 흰/파랑(JalnanGothic, 폭 980 — 1편보다 −20px) + 흰 띠 첫 문장 · 페이지 10장(--chunk 13)",
+  "planned": "3줄 페이지 없음(대본을 2줄 페이지로 짬). enter/emphasis 는 원본에 없음"
+ },
+ "watermark": "WxIo(14F) 아래 자막 띠·오른쪽 위 14F 로고, NHSo(YTN) 아래 제목 자막·왼쪽 위 '기업 뉴스', upBD(KBS) 아래 자막 — 전부 src_crop 으로 밖. 계획_시트로 확인"
+}

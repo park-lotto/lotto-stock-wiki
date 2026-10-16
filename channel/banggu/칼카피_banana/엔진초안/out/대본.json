@@ -1,0 +1,389 @@
+{
+ "engine": "script_engine v1",
+ "topic": "빙그레 바나나맛우유 단지 용기 — 50년째 모양을 못 바꾸는 숨은 이유(달항아리·만들 기계 수입·젤리 판매 금지·상표·문화유산)",
+ "mode": "narration",
+ "preset": "banggu",
+ "tteutgi": "channel/banggu/칼카피_ILIi/뜯기2/뜯기.json",
+ "roles": [
+  "소개(남들이 좋아한다는 수식+제품, 명사로 끝)",
+  "의문(사는 이유는 단순히 OO 때문이 아니라는데)",
+  "살펴봄(특징 1~2개)",
+  "꺾음(정작 꽂힌 포인트는 따로 있다는데)",
+  "진짜 이유(그건 바로 ~)",
+  "혼잣말(말투 바꾼 한 줄)"
+ ],
+ "ranges": [
+  [
+   14,
+   71
+  ],
+  [
+   14,
+   71
+  ],
+  [
+   14,
+   71
+  ],
+  [
+   14,
+   71
+  ],
+  [
+   14,
+   71
+  ],
+  [
+   14,
+   71
+  ]
+ ],
+ "orig": [
+  "영업비밀을 빼앗겨 버린 아웃백",
+  "아웃백에서 사람들이 가장 열광한다는 부시맨 브레드",
+  "똑같은 빵을 사서 집에서 먹어보면 의외로 퍽퍽한 노맛에 사람들이 놀라곤 하는데",
+  "이 차이는 사실 아웃백에서 쓰는 업소용 오븐에 있었음",
+  "아웃백 빵을 못 잊은 빵돌이들은 이 맛을 똑같이 재현하기 위해",
+  "실험에 실험을 거듭한 결과",
+  "빵을 해동 후 전자레인지 30초 돌릴 때 물 한 컵을 같이 넣으면 업소용 오븐처럼 촉촉하게 빵을 데울 수 있다는 것을 발견하게 됨",
+  "인터넷에서 사면 개당 500원 수준이라 아웃백에 가야 할 이유가 없어져 버렸다고"
+ ],
+ "facts": {
+  "f1": {
+   "text": "트윅(2024-11-10): 바나나맛우유는 1974년 출시, 용기는 전통 백자 달항아리 모습을 차용(출시 당시 고급 이미지 의도로 알려짐), 지난 50년간 처음 모습 그대로 유지, 빙그레는 2016년 용기 모양을 상표권으로 등록, 용기의 국가등록문화유산 등재를 추진(신청 시기는 미정)",
+   "url": "https://www.twig24.com/news/world/2024/11/10/20241110500030"
+  },
+  "f2": {
+   "text": "머니S(2017-01-31): 빙그레가 바나나맛우유 용기·디자인과 비슷한 '바나나맛젤리'를 만든 3개 업체 상대 가처분에서 승소 — 서울중앙지법, 부정경쟁방지법 위반, 젤리 판매 중단",
+   "url": "https://www.sidae.com/article/2017013116538027533"
+  },
+  "b1": {
+   "text": "14F '바나나맛우유는 왜 단지 모양일까?'(2024-08-30, 조회 21만, 빙그레 지원 제작) 나레: 출시 때 용기 고민 중 개발팀이 도자기 박람회에서 달항아리를 보고 단지 디자인을 떠올림 · 보통 용기와 달리 윗부분·아랫부분을 따로 만들어 결합 · 국내엔 만들 기계가 없어 기계를 어렵게 찾아 수입",
+   "url": "https://www.youtube.com/watch?v=WxIoAPn7MLw"
+  },
+  "b2": {
+   "text": "취재대행소 왱 '대용량 가공우유는 왜 찾기 힘든 걸까?'(2020-10-09, 조회 99만): 빙그레 바나나우유는 항아리 모양 용기가 시그니처로 자리 잡아 용량 변화를 주는 것 자체가 쉽지 않다 · 설명: 목욕을 마치면 엄빠가 손에 쥐여 주는 바나나우유",
+   "url": "https://www.youtube.com/watch?v=yX8wLi__dRc"
+  },
+  "d1": {
+   "text": "특허청 디자인맵 IP칼럼 영상 설명(2021-08-25): 'B사의 바나나맛 우유, 단지우유' — 경쟁사 '맛단지' 상표에 특허법원이 무효 사유 있다고 판단",
+   "url": "https://www.youtube.com/watch?v=er53utEW8BY"
+  },
+  "b3": {
+   "text": "(반응) 14F 댓글 좋아요 423: 저 단지가 뭔가 더 맛있게 해 주는 플라시보 — https://www.youtube.com/watch?v=WxIoAPn7MLw&lc=UgxDGY3SIG4s8vlbT7l4AaABAg",
+   "url": ""
+  },
+  "b4": {
+   "text": "(반응) 14F 댓글 좋아요 341: 항아리 모양이 정체성이니까, 오래 가는 제품은 다 그럴 만한 이유가 있음 — https://www.youtube.com/watch?v=WxIoAPn7MLw&lc=UgyYO3CSwcmigFporLN4AaABAg",
+   "url": ""
+  },
+  "b5": {
+   "text": "(사실 주장) 14F 댓글 좋아요 97: 단지 용기 바나나맛우유는 한국에만 있고 수출은 오래 보관되는 팩으로 나간다 함 — https://www.youtube.com/watch?v=WxIoAPn7MLw&lc=Ugy7qgRQZMMGic9lAhJ4AaABAg",
+   "url": ""
+  },
+  "b6": {
+   "text": "(반응) 왱 댓글 좋아요 1900: 240ml 고정고객이 아니라 빙그레 바나나맛우유의 고정고객이겠지 — https://www.youtube.com/watch?v=yX8wLi__dRc&lc=Ugz5tRCiwbG4JWf7wg94AaABAg",
+   "url": ""
+  },
+  "b7": {
+   "text": "(반응) 왱 댓글 좋아요 1700: 그럼 왜 요쿠르트는 대용량이 나오냐, 알아서 나눠 먹을 테니 크게 만들어 달라 — https://www.youtube.com/watch?v=yX8wLi__dRc&lc=UgzRnn2nAJp3kB1OEl14AaABAg",
+   "url": ""
+  }
+ },
+ "title": "50년째 단지 모양\n못 바꾸는 진짜 이유",
+ "bench": "channel/banggu/칼카피_banana/엔진초안/벤치.md",
+ "gate": {
+  "scores": {},
+  "score_note": "",
+  "angle": "50년 넘게 단지 모양을 고수하며 문화유산 등재까지 노리는 바나나맛우유의 정체성",
+  "twist": "5번째 줄, 단순한 용기 디자인이 법적 상표권 보호와 국가문화유산 등재를 위한 핵심 전략이라는 점"
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "소개",
+    "text": "목욕 끝나고 마시면 극락 간다는 국민 우유, 빙그레 바나나맛우유.",
+    "facts": [
+     "f1",
+     "b2"
+    ],
+    "sources": [
+     "https://www.twig24.com/news/world/2024/11/10/20241110500030",
+     "https://www.youtube.com/watch?v=yX8wLi__dRc"
+    ]
+   },
+   {
+    "fn": "의문",
+    "text": "사람들이 이걸 사는 게 단순히 맛 때문만은 아니라는데.",
+    "facts": [
+     "b3",
+     "b6"
+    ],
+    "sources": []
+   },
+   {
+    "fn": "살펴봄",
+    "text": "1974년 출시 때부터 달항아리를 본떠 만든 이 단지 모양은 국내에 기계가 없어 수입까지 해온 귀한 몸임.",
+    "facts": [
+     "f1",
+     "b1"
+    ],
+    "sources": [
+     "https://www.twig24.com/news/world/2024/11/10/20241110500030",
+     "https://www.youtube.com/watch?v=WxIoAPn7MLw"
+    ]
+   },
+   {
+    "fn": "꺾음",
+    "text": "정작 빙그레가 50년 넘게 이 불편한 모양을 고집하는 진짜 이유는 따로 있다는데.",
+    "facts": [
+     "f1",
+     "b2"
+    ],
+    "sources": [
+     "https://www.twig24.com/news/world/2024/11/10/20241110500030",
+     "https://www.youtube.com/watch?v=yX8wLi__dRc"
+    ]
+   },
+   {
+    "fn": "진짜 이유",
+    "text": "그건 바로 모양 자체가 독보적인 상표라 젤리 업체도 이겨버리고, 이제는 국가문화유산 등재까지 노리는 대체 불가능한 정체성이기 때문임.",
+    "facts": [
+     "f1",
+     "f2",
+     "d1"
+    ],
+    "sources": [
+     "https://www.sidae.com/article/2017013116538027533",
+     "https://www.twig24.com/news/world/2024/11/10/20241110500030",
+     "https://www.youtube.com/watch?v=er53utEW8BY"
+    ]
+   },
+   {
+    "fn": "혼잣말",
+    "text": "어쩐지 팩에 든 건 이 맛이 안 나더라니 다 계획이 있었네.",
+    "facts": [
+     "b3",
+     "b5"
+    ],
+    "sources": []
+   }
+  ],
+  "check": {
+   "off_topic_brand": [],
+   "product_missing": [],
+   "role_missing": [],
+   "no_ground": [],
+   "len_off": [],
+   "copied_orig": [],
+   "copied_bench": [],
+   "describe": [],
+   "ending_off": [],
+   "numbers_unsourced": [],
+   "tone_off": [],
+   "off_tone_words": [],
+   "n_lines": 6,
+   "n_roles": 6,
+   "extra_lines": [],
+   "unknown_ids": [],
+   "total_off": null,
+   "chars": [
+    28,
+    23,
+    44,
+    34,
+    58,
+    23
+   ],
+   "ranges": [
+    [
+     14,
+     71
+    ],
+    [
+     14,
+     71
+    ],
+    [
+     14,
+     71
+    ],
+    [
+     14,
+     71
+    ],
+    [
+     14,
+     71
+    ],
+    [
+     14,
+     71
+    ]
+   ],
+   "sec_est": 25.9,
+   "est_px": null,
+   "orig_px": null,
+   "width_median_pct": null,
+   "copied_8grams_vs_examples": null,
+   "topic_match": {
+    "other_brand": {},
+    "product_terms": [
+     "빙그레",
+     "바나나맛우유",
+     "단지",
+     "용기"
+    ],
+    "product_named": [
+     "빙그레",
+     "바나나맛우유",
+     "단지"
+    ],
+    "product_missing": false,
+    "product_warn": false
+   },
+   "bad": {},
+   "ok": true
+  }
+ },
+ "tries": [
+  {
+   "lines": [
+    {
+     "fn": "소개",
+     "text": "목욕 끝나고 마시면 극락 간다는 국민 우유, 빙그레 바나나맛우유.",
+     "facts": [
+      "f1",
+      "b2"
+     ]
+    },
+    {
+     "fn": "의문",
+     "text": "사람들이 이걸 사는 게 단순히 맛 때문만은 아니라는데.",
+     "facts": [
+      "b3",
+      "b6"
+     ]
+    },
+    {
+     "fn": "살펴봄",
+     "text": "1974년 출시 때부터 달항아리를 본떠 만든 이 단지 모양은 국내에 기계가 없어 수입까지 해온 귀한 몸임.",
+     "facts": [
+      "f1",
+      "b1"
+     ]
+    },
+    {
+     "fn": "꺾음",
+     "text": "정작 빙그레가 50년 넘게 이 불편한 모양을 고집하는 진짜 이유는 따로 있다는데.",
+     "facts": [
+      "f1",
+      "b2"
+     ]
+    },
+    {
+     "fn": "진짜 이유",
+     "text": "그건 바로 모양 자체가 독보적인 상표라 젤리 업체도 이겨버리고, 이제는 국가문화유산 등재까지 노리는 대체 불가능한 정체성이기 때문임.",
+     "facts": [
+      "f1",
+      "f2",
+      "d1"
+     ]
+    },
+    {
+     "fn": "혼잣말",
+     "text": "어쩐지 팩에 든 건 이 맛이 안 나더라니 다 계획이 있었네.",
+     "facts": [
+      "b3",
+      "b5"
+     ]
+    }
+   ],
+   "check": {
+    "off_topic_brand": [],
+    "product_missing": [],
+    "role_missing": [],
+    "no_ground": [],
+    "len_off": [],
+    "copied_orig": [],
+    "copied_bench": [],
+    "describe": [],
+    "ending_off": [],
+    "numbers_unsourced": [],
+    "tone_off": [],
+    "off_tone_words": [],
+    "n_lines": 6,
+    "n_roles": 6,
+    "extra_lines": [],
+    "unknown_ids": [],
+    "total_off": null,
+    "chars": [
+     28,
+     23,
+     44,
+     34,
+     58,
+     23
+    ],
+    "ranges": [
+     [
+      14,
+      71
+     ],
+     [
+      14,
+      71
+     ],
+     [
+      14,
+      71
+     ],
+     [
+      14,
+      71
+     ],
+     [
+      14,
+      71
+     ],
+     [
+      14,
+      71
+     ]
+    ],
+    "sec_est": 25.9,
+    "est_px": null,
+    "orig_px": null,
+    "width_median_pct": null,
+    "copied_8grams_vs_examples": null,
+    "topic_match": {
+     "other_brand": {},
+     "product_terms": [
+      "빙그레",
+      "바나나맛우유",
+      "단지",
+      "용기"
+     ],
+     "product_named": [
+      "빙그레",
+      "바나나맛우유",
+      "단지"
+     ],
+     "product_missing": false,
+     "product_warn": false
+    },
+    "bad": {},
+    "ok": true
+   },
+   "model": "gemini-3-flash-preview"
+  }
+ ],
+ "llm_calls": [
+  {
+   "tag": "draft",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-3-flash-preview"
+  }
+ ]
+}
