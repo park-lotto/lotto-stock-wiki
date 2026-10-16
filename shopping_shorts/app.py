@@ -28472,6 +28472,17 @@ def api_admin_calcopy_worker_heartbeat(request: Request, body: dict = None):
         doing=b.get("doing"), idle_reason=b.get("idle_reason"), last_error=b.get("last_error"))})
 
 
+@app.get("/api/admin/calcopy/workers/kpi")
+def api_admin_calcopy_worker_kpi(request: Request, hours: float = 1):
+    """워커 장부 KPI(시간당 새 후보·단계별 통과율·제미나이·429) — 판정은 worker_ledger.kpi/summary 한 곳."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from tools.calcopy.engine import worker_ledger as _wl
+    from shopping_shorts import calcopy_topics as _ct
+    return _wl.summary(max(0.25, min(float(hours), 168)), data_dir=_ct.base_dir().parent)
+
+
 @app.post("/api/admin/calcopy/topics/caps")
 def api_admin_calcopy_topics_caps(request: Request, body: dict = None):
     return _calcopy_topics_call(request, lambda ct: {"ok": True, "caps": ct.set_caps(body or {})})

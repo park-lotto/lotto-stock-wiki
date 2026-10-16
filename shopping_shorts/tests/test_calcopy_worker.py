@@ -383,3 +383,36 @@ def test_세번_실패하면_stalled_사람이_unstall(env):
     r = cl.post(f"/api/admin/calcopy/topics/{tid}/unstall", json={"by": "시험", "note": "쿠키 갈았음"})
     assert r.status_code == 200 and r.json()["topic"]["stalled"] is False
     assert _worker(cl, tmp, find_every=0).tick()["result"] == "advanced"
+
+
+# ── KPI(시간당 후보·통과율) — 판정 주인 worker_ledger.kpi ─────────────────────
+def test_KPI_답을_아는_장부줄로_통과율과_시간당(tmp_path):
+    from tools.calcopy.engine import worker_ledger as L
+    now = time.time()
+    rows = [{"t": now, "worker": "w", "kind": "ok", "n": 1, "note": "bench #1"},
+            {"t": now, "worker": "w", "kind": "ok", "n": 1, "note": "bench #2"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "#3 bench: 벤치 포인트 0"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "#2 script: 대본 검사 미통과: {...}"},
+            {"t": now, "worker": "w", "kind": "error", "n": 1, "note": "find: 찾기 멈춤: LimitHit"},
+            {"t": now, "worker": "w", "kind": "topic", "n": 3, "note": "찾기 3"},
+            {"t": now, "worker": "w", "kind": "gemini", "n": 4, "note": "x"},
+            {"t": now, "worker": "w", "kind": "pause", "n": 1, "note": "제미나이 429"},
+            {"t": now, "worker": "w", "kind": "limit", "n": 1, "note": "한도"}]
+    k = L.kpi(2, rows=rows)
+    assert k["steps"]["bench"] == {"ok": 2, "fail": 1, "rate": 0.667}
+    assert k["steps"]["script"] == {"ok": 0, "fail": 1, "rate": 0.0}
+    assert k["steps"]["find"]["fail"] == 1
+    assert k["topics_per_hour"] == 1.5 and k["gemini_per_hour"] == 2.0
+    assert k["pause_429"] == 1 and k["limit_hits"] == 1
+    assert k["pass_rate"] == 0.4 and k["script_pass_rate"] == 0.0
+
+
+def test_장부켠_워커는_단계통과와_실패를_장부에_남긴다(env):
+    cl, clk, tmp = env
+    from tools.calcopy.engine import worker_ledger as L
+    _add(cl, "신라면 공장")
+    w = _worker(cl, tmp, steps=MockSteps(tmp, fail={"score": WS.StepError("근거 있는 점수 3개 < 5")}), find_every=0, ledger=True)
+    assert w.tick()["result"] == "advanced"           # bench
+    assert w.tick()["result"] == "error"              # score 실패
+    k = L.kpi(1)
+    assert k["steps"]["bench"]["ok"] == 1 and k["steps"]["score"] == {"ok": 0, "fail": 1, "rate": 0.0}

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -22,7 +23,7 @@ from pathlib import Path
 YT_PER_HOUR = 300
 GEMINI_PER_HOUR = 10       # 10-16 보정: 엔진이 광고·과거 소재를 물어오는 동안 낮춤(처음 40)
 PAUSE_429_SEC = 30 * 60
-KINDS = ("yt", "gemini", "topic", "script", "limit", "pause", "error", "rescore", "rescore_done")
+KINDS = ("yt", "gemini", "topic", "script", "ok", "limit", "pause", "error", "rescore", "rescore_done")   # ok = 단계 통과(note=단계 이름)
 
 
 class LimitHit(Exception):
@@ -127,7 +128,34 @@ def summary(hours: float = 1, data_dir=None) -> dict:
         w[r["kind"]] = w.get(r["kind"], 0) + r["n"]
         if r["kind"] in ("limit", "pause", "error"):
             out["limits" if r["kind"] != "error" else "errors"].append(f"{time.strftime('%H:%M', time.localtime(r['t']))} {r['worker']} {r['note']}")
+    out["kpi"] = kpi(hours, rows=rows)
     return out
+
+
+_STEP_RE = re.compile(r"^(?:#\d+ )?(\w+):")
+
+
+def kpi(hours: float = 1, data_dir=None, rows: list | None = None) -> dict:
+    """KPI 판정 한 곳 — 시간당 새 후보·단계별 통과율·제미나이/유튜브 시간당·한도·429.
+    통과 = 'ok' 줄(note=단계), 실패 = 'error' 줄('#id 단계: 이유' / 'find: 이유'). 통과율 = ok / (ok + error)."""
+    rows = rows if rows is not None else _rows(path(data_dir), time.time() - hours * 3600)
+    steps: dict = {}
+    for r in rows:
+        if r.get("kind") == "ok":
+            st = (r.get("note") or "?").split()[0]
+            steps.setdefault(st, {"ok": 0, "fail": 0})["ok"] += r.get("n", 1)
+        elif r.get("kind") == "error":
+            m = _STEP_RE.match(r.get("note") or "")
+            st = m.group(1) if m else "?"
+            steps.setdefault(st, {"ok": 0, "fail": 0})["fail"] += r.get("n", 1)
+    for v in steps.values():
+        v["rate"] = round(v["ok"] / (v["ok"] + v["fail"]), 3) if (v["ok"] + v["fail"]) else None
+    tot = lambda k: sum(r.get("n", 0) for r in rows if r.get("kind") == k)   # noqa: E731
+    ok_all, fail_all = sum(v["ok"] for v in steps.values()), sum(v["fail"] for v in steps.values())
+    return {"hours": hours, "topics_per_hour": round(tot("topic") / hours, 2), "gemini_per_hour": round(tot("gemini") / hours, 2),
+            "yt_per_hour": round(tot("yt") / hours, 2), "limit_hits": tot("limit"), "pause_429": tot("pause"),
+            "steps": steps, "pass_rate": round(ok_all / (ok_all + fail_all), 3) if (ok_all + fail_all) else None,
+            "script_pass_rate": (steps.get("script") or {}).get("rate")}
 
 
 if __name__ == "__main__":

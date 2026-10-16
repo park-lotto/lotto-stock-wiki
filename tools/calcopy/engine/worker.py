@@ -311,6 +311,7 @@ class Worker:
                 dup.append(f"{r['name'][:30]}: {e.msg}")
         self.log(f"[찾음] 새 소재 {len(ids)}개 · 중복 {len(dup)}개" + (f" — {dup[:3]}" if dup else ""))
         self._note("topic", len(ids), f"찾기 {len(ids)} · 중복 {len(dup)}")
+        self._note("ok", 1, "find")
         self._set(idle_reason=None, last_error=None)
         return {"result": "found", "ids": ids, "dup": dup}
 
@@ -427,6 +428,7 @@ class Worker:
         finally:
             self._set(step=None, topic_id=None)
         self.done += 1
+        self._note("ok", 1, f"{step} #{tid}")              # KPI 통과율(worker_ledger.kpi) — 실패는 위 'error' 줄
         if step == "script":
             self._note("script", 1, f"#{tid}")
         self._set(last_error=None)
