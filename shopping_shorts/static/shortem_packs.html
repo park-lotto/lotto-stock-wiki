@@ -56,6 +56,7 @@
 <script src="/api/produce/scene-style/assets/out/precision20-data.js"></script>
 <script src="/api/produce/scene-style/assets/out/continuous20-data.js"></script>
 <script>
+const __shortemT0=performance.now();
 (async()=>{
 const ASSET='/api/produce/scene-style/assets/out/';
 const root=document.getElementById('root'),nav=document.getElementById('nav');
@@ -67,14 +68,17 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-play]');if
 const sections=[];
 function section(id,title,count,html){sections.push({id,title,count});root.insertAdjacentHTML('beforeend',`<section id="${id}" data-pack="${id}" data-count="${count}"><h2>${title}<small>${esc(count)}</small></h2>${html}</section>`);}
 
-// 장면꾸미기 글꼴 = 편집기 화면의 @font-face 그대로(주인: out/scene-style-ui-showcase.html) — 자막 스타일 견본이 편집기와 같은 글꼴로 나오게
-try{const html=await (await fetch(ASSET+'scene-style-ui-showcase.html')).text();
-  const faces=(html.match(/@font-face\{[^}]*\}/g)||[]).map(f=>f.replace(/url\("\.\.\/shopping_shorts\/static\/fonts\//g,'url("/fonts/'));
-  const st=document.createElement('style');st.textContent=faces.join('\n');document.head.append(st);}catch(e){}
-
 let data={};
 try{data=await (await fetch('/api/admin/shortem_packs')).json();}catch(e){data={ok:false};}
 if(!data.ok)root.insertAdjacentHTML('beforeend','<p class="err">서버 팩 목록을 못 읽었습니다(관리자 로그인 필요).</p>');
+// ★보일 때만 받는다(관제 222 라이브 실측: 글꼴 60개 = 197MB 를 한꺼번에 받아 목록이 80초 밀렸다).
+//   그림은 data-src, 글꼴 견본은 data-font — 칸이 화면에 가까워지면 그때 단다. (브라우저 기본 지연 로딩은 격자 칸에서 요청이 아예 안 가서 금지 — 그래서 직접 관찰한다)
+const seen=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;seen.unobserve(el);
+  if(el.dataset.src){el.src=el.dataset.src;delete el.dataset.src;}
+  if(el.dataset.font){try{const ff=new FontFace(el.dataset.fontName,`url("/fonts/${el.dataset.font}")`);document.fonts.add(ff);ff.load().catch(()=>{});}catch(e){}delete el.dataset.font;}
+}),{rootMargin:'600px 0px'});
+const watch=()=>document.querySelectorAll('[data-src],[data-font]').forEach(el=>seen.observe(el));
+
 
 // ── 🔊 소리 ──
 if(data.sfx_packs){section('sfx','🔊 효과음팩',`${data.sfx_packs.length}팩 × ${data.sfx_packs[0]?.slots.length||0}칸`,
@@ -85,6 +89,11 @@ if(data.bgm){section('bgm','🎵 배경음',`${data.bgm.length}곡`,
   `<div class="grid">`+data.bgm.map(t=>`<div class="card"><b>${esc(t.title)}</b><small>${esc(t.artist)}</small><div class="chips"><button class="chip" data-play="/api/produce/bgm_lib/sound/${encodeURIComponent(t.id)}">▶ 듣기</button></div></div>`).join('')+'</div>');}
 if(data.voices){section('voice','🎙 성우',`${data.voices.count}개 프리셋`,`<p class="lead">엔진별: ${Object.entries(data.voices.engines).map(([k,v])=>esc(k)+' '+v).join(' · ')} — 아래는 4단계 성우 목록 그대로.</p><div class="grid" id="voiceGrid"></div>`);
   fetch('/api/voice-presets').then(r=>r.json()).then(v=>{const groups=v.groups||v.presets||v.items||[];document.getElementById('voiceGrid').innerHTML=groups.map(g=>{const vs=Object.values(g.variants||{});const url=vs.find(x=>x.sample_url)?.sample_url;return `<div class="card"><b>${esc(g.name)}</b><small>${esc(g.one_liner||'')} · ${esc(g.engine||'')}</small>${url?`<div class="chips"><button class="chip" data-play="${esc(url)}">▶ 들어 보기</button></div>`:''}</div>`}).join('')||'<p class="lead">성우 목록을 못 읽었습니다.</p>';}).catch(()=>{});}
+
+// 장면꾸미기 글꼴 = 편집기 화면의 @font-face 그대로(주인: out/scene-style-ui-showcase.html) — 자막 스타일 견본이 편집기와 같은 글꼴로 나오게
+try{const html=await (await fetch(ASSET+'scene-style-ui-showcase.html')).text();
+  const faces=(html.match(/@font-face\{[^}]*\}/g)||[]).map(f=>f.replace(/url\("\.\.\/shopping_shorts\/static\/fonts\//g,'url("/fonts/'));
+  const st=document.createElement('style');st.textContent=faces.join('\n');document.head.append(st);}catch(e){}
 
 // ── 💬 자막 ── (주인: static/caption-motions.js)
 const CP=window.CAPTION_PACKS||{},CM=window.CAPTION_MOTIONS||{},MP=window.CAPTION_MOTION_PACKS||[],WF=window.CAPTION_WORD_FX||{};
@@ -116,21 +125,23 @@ if(CAT){const stickers=CAT.emoji.reduce((n,c)=>n+c[1].length,0);section('deco','
 
 // ── 🖼 템플릿 ── (주인: out/precision20-data.js · out/continuous20-data.js)
 const P20=window.PRECISION20||[],C20=window.CONTINUOUS20||[];
-section('template','🖼 템플릿',`썰 스타일 ${P20.length} · 고정 스타일 ${C20.length}`,`<h3>썰 스타일</h3><div class="grid">${P20.map(t=>`<div class="card">${t.hook_image?`<img class="thumb" src="${ASSET}${esc(t.hook_image)}" alt="">`:''}<b>${esc(t.name)}</b><small>${esc(t.hook?.design_label||'')}</small></div>`).join('')}</div><h3>고정 스타일</h3><div class="grid">${C20.map(t=>`<div class="card">${t.frame_image?`<img class="thumb" src="${ASSET}${esc(t.frame_image)}" alt="">`:''}<b>${esc(t.name)}</b></div>`).join('')}</div>`);
+section('template','🖼 템플릿',`썰 스타일 ${P20.length} · 고정 스타일 ${C20.length}`,`<h3>썰 스타일</h3><div class="grid">${P20.map(t=>`<div class="card">${t.hook_image?`<img class="thumb" data-src="${ASSET}${esc(t.hook_image)}" alt="">`:''}<b>${esc(t.name)}</b><small>${esc(t.hook?.design_label||'')}</small></div>`).join('')}</div><h3>고정 스타일</h3><div class="grid">${C20.map(t=>`<div class="card">${t.frame_image?`<img class="thumb" data-src="${ASSET}${esc(t.frame_image)}" alt="">`:''}<b>${esc(t.name)}</b></div>`).join('')}</div>`);
 
 // ── 😂 짤 ──
-if(data.memes){section('meme','😂 감정짤팩',`${data.memes.emotions.length}감정 · ${data.memes.total}개`,`<p class="lead">감정별 앞 8개 표지. 전체·⭐ 우선 짤 고르기는 <a class="more" href="/meme_pack">밈팩 화면</a>.</p>`+data.memes.emotions.map(e=>`<h3>${esc(e.emotion)} <small style="color:var(--sub)">${e.count}개</small></h3><div class="posters">${e.sample.map(id=>`<img src="/api/meme/${id}/poster" alt="">`).join('')}</div>`).join(''));}
+if(data.memes){section('meme','😂 감정짤팩',`${data.memes.emotions.length}감정 · ${data.memes.total}개`,`<p class="lead">감정별 앞 8개 표지. 전체·⭐ 우선 짤 고르기는 <a class="more" href="/meme_pack">밈팩 화면</a>.</p>`+data.memes.emotions.map(e=>`<h3>${esc(e.emotion)} <small style="color:var(--sub)">${e.count}개</small></h3><div class="posters">${e.sample.map(id=>`<img data-src="/api/meme/${id}/poster" alt="">`).join('')}</div>`).join(''));}
 
 // ── 🔤 글꼴 ── (파일: static/fonts · 이름: static/fonts.json)
 if(data.fonts){let names={};try{(await (await fetch('/fonts.json')).json()).forEach(f=>names[f.file]=f.name);}catch(e){}
-  section('font','🔤 글꼴',`${data.fonts.length}개`,`<div class="grid">${data.fonts.map((f,i)=>`<div class="card"><div class="sample" style="font-family:'SP${i}',sans-serif">숏템 123 Aa</div><b>${esc(names[f]||f.replace(/\.(ttf|otf)$/,''))}</b><small>${esc(f)}</small></div>`).join('')}</div>`);
-  data.fonts.forEach((f,i)=>{try{const ff=new FontFace('SP'+i,`url("/fonts/${f}")`);document.fonts.add(ff);ff.load().catch(()=>{});}catch(e){}});}
+  section('font','🔤 글꼴',`${data.fonts.length}개`,`<div class="grid">${data.fonts.map((f,i)=>`<div class="card"><div class="sample" data-font="${esc(f)}" data-font-name="SP${i}" style="font-family:'SP${i}',sans-serif">숏템 123 Aa</div><b>${esc(names[f]||f.replace(/\.(ttf|otf)$/,''))}</b><small>${esc(f)}</small></div>`).join('')}</div>`);
+}
 
 // ── 🔒 관리자·연구용 ──
 if(data.fx_samples)section('fxsample','🔒 효과 견본(에펙)',`${data.fx_samples.groups}묶음 · ${data.fx_samples.items}개`,`<p class="lead">에펙으로 뽑은 견본 영상 — 편집기에서 바로 쓰는 팩이 아니라 고르는 참고용. <a class="more" href="/fx_samples">효과 견본 화면 열기</a></p>`);
 
 nav.innerHTML=sections.map(s=>`<a href="#${s.id}">${esc(s.title.replace(/^\S+\s/,''))}<b>${esc(String(s.count).split(' · ')[0])}</b></a>`).join('');
 if(location.hash){const t=document.querySelector(location.hash);if(t)t.scrollIntoView();}
+watch();
+window.__shortemReadyMs=Math.round(performance.now()-__shortemT0);
 window.__shortemPacksReady=sections;
 })();
 </script>
