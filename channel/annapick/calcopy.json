@@ -1,0 +1,27 @@
+{
+ "steps": {
+  "1": {"state": "done", "date": "2026-10-17", "note": "쇼츠 탭 최근 60편 → 조회 상위 연예인템 6편(46.9만~107.7만) 1080p 받기", "files": []},
+  "2": {"state": "done", "date": "2026-10-17", "note": "6편 뜯기 1판 + 원음 실측 + 프리셋 검정띠2줄_출처(기록용, 렌더는 얜샷템=만템 색톤 프레임)", "files": ["channel/annapick/뜯기/원음_실측.md", "channel/annapick/preset/검정띠2줄_출처/manifest.json", "channel/annapick/frame_itYwQVyuCcc.json"]}
+ },
+ "name": "안나픽 annapick",
+ "url": "https://www.youtube.com/channel/UCKFmJFCmSRgTpPHp9OR2ylw",
+ "channel_id": "UCKFmJFCmSRgTpPHp9OR2ylw",
+ "our_channel": "얜샷템",
+ "concept": "연예인 본인 영상(유튜브 채널·방송)에서 제품 하나를 말하는 구간을 원음 그대로 잘라 붙이고, 4초 전후 나레 1줄로 인물+정체를 꽂는다. 화면 하단 출처 표기",
+ "rules": {
+  "n_videos": 6,
+  "duration_sec": {"median": 20.1, "range": [12.2, 26.0]},
+  "cut_sec": {"median": 1.68, "range": [1.03, 2.17], "note": "편별 컷 길이 중앙의 중앙"},
+  "narration": {"lines_median": 1, "range": [0, 2], "share_median": 0.095, "share_range": [0.0, 0.35], "first_start_median": 4.3, "style": "~다는데(요) 전언체"},
+  "source_audio_share": {"median": 0.905, "range": [0.61, 1.0]},
+  "starts_with": "원음 6/6",
+  "lufs": {"median": -16.15, "range": [-18.5, -14.7]},
+  "true_peak": {"max": -2.3},
+  "caption_max_chars": {"max": 15, "median_of_max": 12, "median": 7.5, "note": "공백 뺀 한 줄"},
+  "title": {"font": "Cafe24Ohsquare(6/6 1위 0.9 이상 itY)", "lines": 2, "band": "검정 위 419px"},
+  "window": [0, 419, 1080, 1082],
+  "source_credit": {"text": "출처 : <원본 채널명>", "y": [1518, 1551], "rgb": "회색 ~125"},
+  "brand": {"text": "anna pick", "y": [1748, 1830], "note": "얜샷템은 만템 색톤 프레임을 따른다"},
+  "from": "channel/annapick/뜯기/*/뜯기.json 6편 · channel/annapick/뜯기/원음_실측.md"
+ }
+}
