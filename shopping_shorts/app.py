@@ -28561,6 +28561,57 @@ def _admin_calcopy_topics_page(request: Request):   # 소재창고 보드(관리
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── 칼카피 만들기 입구(관제 097) — 판단은 calcopy_make 하나. 여기는 관리자 확인 + 오류 모양만.
+def _calcopy_make_call(request, fn):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_make as _mk, calcopy_topics as _ct
+    try:
+        return fn(_mk)
+    except (_mk.MakeError, _ct.TopicError) as e:
+        return JSONResponse({"error": e.msg}, status_code=e.code)
+
+
+@app.get("/api/calcopy/make/presets")
+def api_calcopy_make_presets(request: Request):
+    return _calcopy_make_call(request, lambda mk: {"presets": mk.list_presets(), "packs": mk.load_packs(), "sessions": mk.sessions()})
+
+
+@app.post("/api/calcopy/make/pack/{n}")
+def api_calcopy_make_pack(request: Request, n: str, body: dict = None):
+    return _calcopy_make_call(request, lambda mk: {"ok": True, "pack": mk.save_pack(n, body or {})})
+
+
+@app.post("/api/calcopy/make/start")
+def api_calcopy_make_start(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.start(b.get("preset", ""), b.get("pack", "1"), topic=b.get("topic") or None,
+                                                           ref_url=b.get("ref_url") or None))
+
+
+@app.post("/api/calcopy/make/choose")
+def api_calcopy_make_choose(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.choose(b.get("sid", ""), int(b.get("n") or 0)))
+
+
+@app.post("/api/calcopy/make/approve")
+def api_calcopy_make_approve(request: Request, body: dict = None):
+    return _calcopy_make_call(request, lambda mk: mk.approve((body or {}).get("sid", "")))
+
+
+@app.post("/api/calcopy/make/reject")
+def api_calcopy_make_reject(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_make_call(request, lambda mk: mk.reject(b.get("sid", ""), b.get("reason", "")))
+
+
+@app.get("/api/calcopy/make/status")
+def api_calcopy_make_status(request: Request, sid: str = ""):
+    return _calcopy_make_call(request, lambda mk: mk.status(sid))
+
+
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
 # 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를

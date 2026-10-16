@@ -467,3 +467,16 @@ def status(sid: str, data_dir=None) -> dict:
         d = CT.detail(S["topic_id"], data_dir=data_dir)
         S["topic"], S["files"] = d["topic"], d["files"]
     return S
+
+
+def sessions(limit: int = 20, data_dir=None) -> list[dict]:
+    """최근 세션(보드 '만들기' 칸 목록)."""
+    out = []
+    for p in sorted(_sdir(data_dir).glob("*.json"), key=lambda p: -p.stat().st_mtime)[:limit]:
+        try:
+            S = json.loads(p.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        out.append({k: S.get(k) for k in ("sid", "preset", "pack", "state", "topic_id", "updated_at", "error")})
+    return out
+

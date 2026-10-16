@@ -80,6 +80,17 @@ select,input{padding:6px 8px;border:1px solid #cbd5e1;background:#fff;color:var(
 <div id="err" class="msg"></div>
 <h2>계기판</h2><div class="meter" id="meter"></div>
 <h2>최근 1시간 <span class="sub">— 워커가 창고에 쌓는 속도</span></h2><div class="meter" id="meter1h"></div>
+<h2>만들기 <span class="sub">— 프리셋(구조) + 내 팩(브랜드·글꼴·목소리·짤·효과음·BGM) → 후보 고르기 → 선검수 → 제작</span></h2>
+<div class="card" id="make">
+  <div class="row"><label>프리셋 <select id="mkPreset"></select></label><label>내 팩 <select id="mkPack"></select></label>
+    <label>채널명 <input id="mkChan" style="width:140px"></label><button class="ghost" id="mkChanSave">채널명 저장</button></div>
+  <div class="row" style="margin-top:6px"><input id="mkTopic" placeholder="소재 직접 입력(선택) — 예: 코스트코 핫도그 40년 같은 가격" style="flex:1 1 280px;min-width:0">
+    <input id="mkRef" placeholder="참고 영상 URL(선택)" style="flex:1 1 220px;min-width:0"><button id="mkStart">후보 보기 / 만들기</button></div>
+  <div class="sub" id="mkApplied" style="margin-top:6px"></div>
+  <div id="mkMsg" class="msg"></div>
+  <div id="mkBody"></div>
+  <details style="margin-top:8px"><summary>최근 세션</summary><div id="mkSessions" class="sub"></div></details>
+</div>
 <h2>결정할 것 <span class="sub" id="decideN"></span></h2><div class="decide" id="decide"></div>
 <h2>워커</h2><div class="workers" id="workers"></div>
 <h2>멈춤(stalled) <span class="sub">— 같은 소재가 3번 실패해 워커가 더는 안 집는다. 원인을 고친 뒤 '다시 돌리기'</span></h2><div id="stalled"></div>
@@ -297,6 +308,58 @@ function closeDetail(){$("#detail").classList.remove("on")}
 $("#detail").onclick=e=>{if(e.target.id==="detail")closeDetail()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDetail()});
 
+
+// ── 만들기 입구(판단은 서버 calcopy_make — 화면은 부르고 보여 주기만) ──
+const MK="/api/calcopy/make";let MKS=null,MKT=null,MKP=null;
+async function mkInit(){
+  try{MKP=await api(MK+"/presets")}catch(e){msg($("#mkMsg"),"만들기 준비 실패: "+e.message,false);return}
+  $("#mkPreset").innerHTML=MKP.presets.map(p=>`<option value="${esc(p.preset)}">${esc(p.slug)} · ${esc(p.style)}${p.source_kind?" · "+esc(p.source_kind):""}</option>`).join("");
+  $("#mkPack").innerHTML=Object.entries(MKP.packs).map(([k,v])=>`<option value="${esc(k)}">${esc(k)}. ${esc(v.name)}</option>`).join("");
+  const pk=()=>MKP.packs[$("#mkPack").value]||{};
+  const fill=()=>{$("#mkChan").value=(pk().brand||{}).channel_name||"";const t=pk().tts||{},x=pk().text||{};
+    $("#mkApplied").textContent=`팩: 목소리 ${t.name||"-"}(${t.tempo||"-"}배) · 제목 ${x.title_font||"-"} · 자막 ${x.caption_font||"-"} ${((x.caption||{}).mode)||""} · 효과음 ${Object.values(pk().sfx_pool||{}).flat().length}개 · 짤 ${((pk().meme_pool||{}).ids||[]).length}개 · BGM ${((pk().bgm||{}).candidates||[]).join(",")}`};
+  $("#mkPack").onchange=fill;fill();
+  $("#mkChanSave").onclick=async()=>{try{await api(`${MK}/pack/${encodeURIComponent($("#mkPack").value)}`,{brand:{channel_name:$("#mkChan").value.trim()}});
+      MKP=await api(MK+"/presets");fill();msg($("#mkMsg"),"채널명을 저장했습니다",true)}catch(e){msg($("#mkMsg"),e.message,false)}};
+  $("#mkStart").onclick=async()=>{const b=$("#mkStart");b.disabled=true;msg($("#mkMsg"),"후보를 모으는 중… (창고에 모자라면 그 자리에서 찾습니다)",true);
+    try{MKS=await api(MK+"/start",{preset:$("#mkPreset").value,pack:$("#mkPack").value,topic:$("#mkTopic").value.trim(),ref_url:$("#mkRef").value.trim()});
+      $("#mkMsg").className="msg";mkDraw()}catch(e){msg($("#mkMsg"),e.message,false)}finally{b.disabled=false}};
+  $("#mkSessions").innerHTML=(MKP.sessions||[]).map(x=>`<a href="#" data-sid="${esc(x.sid)}">${esc(x.sid)}</a> ${esc(x.state)} ${esc(x.preset||"")} 팩${esc(x.pack)} ${esc((x.updated_at||"").slice(5,16))}`).join("<br>")||"없음";
+  document.querySelectorAll("#mkSessions a[data-sid]").forEach(a=>a.onclick=async e=>{e.preventDefault();MKS=await api(`${MK}/status?sid=${a.dataset.sid}`);mkDraw()});
+}
+function mkFile(name){return ((MKS.files||[]).find(f=>f.name===name)||{}).url||""}
+function mkDraw(){
+  const S=MKS;if(!S)return;clearTimeout(MKT);
+  let h=`<div class="row" style="margin-top:8px"><span class="tag ${S.state==="plan_review"?"wait":S.state==="failed"||S.state==="stopped"?"red":"grey"}">${esc(S.state)}</span>
+    <span class="sub">세션 ${esc(S.sid)} · ${esc(S.preset)} · 팩 ${esc(S.pack)}${S.topic_id?` · <a href="#" data-open="${esc(S.topic_id)}">소재 #${esc(S.topic_id)}</a>`:""}</span></div>`;
+  if(S.error)h+=`<p class="msg err" style="display:block">${esc(S.error)}</p>`;
+  if(S.state==="candidates"){
+    h+=`<div style="overflow-x:auto"><table class="cands" style="width:100%;border-collapse:collapse;font-size:13px;margin-top:6px"><tr><th>#</th><th>소재</th><th>한 줄 썰</th><th>점수</th><th>벤치</th><th>반전</th><th>AI 의심</th><th>출처</th><th></th></tr>
+      ${S.candidates.map(c=>`<tr style="border-top:1px solid var(--line)"><td>${c.n}</td><td><b>${esc(c.title)}</b><div class="sub">${esc(c.state)}</div></td><td>${esc(c.line||"")}</td>
+        <td>${c.total!=null?num(c.total):"–"}<div class="sub">${Object.entries(c.scores||{}).map(([k,v])=>esc(k)+" "+num(v)).join(" · ")}</div></td>
+        <td>${c.bench_videos!=null?num(c.bench_videos)+"편":"–"}</td><td>${esc(c.twist||"–")}</td><td>${c.ai_suspect_comments!=null?num(c.ai_suspect_comments):"–"}</td>
+        <td>${(c.sources||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">링크</a>`).join(" ")}</td>
+        <td><button data-n="${c.n}">이걸로</button></td></tr>`).join("")}</table></div>`;
+  }
+  if(["working","producing","queued"].includes(S.state))h+=`<p class="sub">진행 중… ${esc(((S.log||[]).slice(-1)[0])||"")}</p>`;
+  if(S.state==="plan_review"){
+    const sheet=mkFile("계획_시트.jpg"),plan=mkFile("계획.md");
+    h+=`${sheet?`<img class="sheet" src="${esc(sheet)}" alt="계획 시트" style="margin-top:8px">`:""}
+      ${plan?`<div class="md" id="mkPlan" style="margin-top:8px">불러오는 중…</div>`:""}
+      <div class="row" style="margin-top:8px"><button class="ok" id="mkOk">OK — 제작(목소리 1회·렌더)</button>
+      <input id="mkWhy" placeholder="반려 사유(대본부터 한 번 다시)" style="flex:1 1 220px;min-width:0"><button class="bad" id="mkNo">반려</button></div>`;
+  }
+  if(S.state==="final_review"){const f=mkFile("final.mp4");h+=f?`<video src="${esc(f)}" controls style="max-width:360px;width:100%;margin-top:8px"></video>`:""}
+  if((S.log||[]).length)h+=`<details style="margin-top:6px"><summary>작업 기록 ${S.log.length}줄</summary><div class="md">${esc(S.log.slice(-30).join("\n"))}</div></details>`;
+  $("#mkBody").innerHTML=h;bindOpen();
+  document.querySelectorAll("#mkBody button[data-n]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{MKS=await api(MK+"/choose",{sid:S.sid,n:+b.dataset.n});mkDraw()}catch(e){msg($("#mkMsg"),e.message,false);b.disabled=false}});
+  if($("#mkPlan"))fetch(mkFile("계획.md"),{credentials:"same-origin"}).then(r=>r.text()).then(x=>{$("#mkPlan").textContent=x});
+  if($("#mkOk"))$("#mkOk").onclick=async()=>{try{MKS=await api(MK+"/approve",{sid:S.sid});mkDraw()}catch(e){msg($("#mkMsg"),e.message,false)}};
+  if($("#mkNo"))$("#mkNo").onclick=async()=>{const r=$("#mkWhy").value.trim();if(!r){msg($("#mkMsg"),"반려 사유를 적어 주세요",false);return}
+    try{MKS=await api(MK+"/reject",{sid:S.sid,reason:r});mkDraw()}catch(e){msg($("#mkMsg"),e.message,false)}};
+  if(["working","producing","queued"].includes(S.state))MKT=setTimeout(async()=>{try{MKS=await api(`${MK}/status?sid=${S.sid}`);mkDraw()}catch(e){}},4000);
+}
+mkInit();
 load();setInterval(load,10000);
 </script>
 </body></html>
