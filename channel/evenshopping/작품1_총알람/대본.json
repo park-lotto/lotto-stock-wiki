@@ -1,7 +1,7 @@
 {
  "channel": "재미썸홈",
  "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
- "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md 3번(대사 교체본, 페이블 10-17 판정)",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md 3번 → 페이블 10-17 확장본(more2·land 추가)",
  "title_slots": {
   "hook1": "애들 깨우다 현타 온",
   "hook2": "일본 천재의 발명품",
@@ -34,20 +34,30 @@
    "tts": "심지어 이게 건담 만든 반다이 작품인데,"
   },
   {
+   "slot": "more2",
+   "line": "명중하는 순간 과녁이 툭 쓰러지면서 빨간 불이 번쩍 들어와서 진짜 사격장에 온 것 같다는데,",
+   "tts": "명중하는 순간 과녁이 툭 쓰러지면서 빨간 불이 번쩍 들어와서 진짜 사격장에 온 것 같다는데,"
+  },
+  {
    "slot": "twist",
    "line": "근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고.",
    "tts": "근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고."
+  },
+  {
+   "slot": "land",
+   "line": "그래서 요즘엔 아침마다 애들이 먼저 일어나서 서로 쏘겠다고 싸우는 바람에 엄마들 사이에서 등교 전쟁 끝낸 효자템으로 난리라고.",
+   "tts": "그래서 요즘엔 아침마다 애들이 먼저 일어나서 서로 쏘겠다고 싸우는 바람에 엄마들 사이에서 등교 전쟁 끝낸 효자템으로 난리라고."
   }
  ],
- "chars": 162,
- "est_sec": 18.42,
+ "chars": 252,
+ "est_sec": 28.64,
  "cps_used": 8.8,
  "hype": {
   "①센 시작": "현타 온 … 떼돈 번",
   "②권위": "건담 만든 반다이",
   "③진짜 핵심 반전": "근데 진짜 충격적인 포인트는",
   "④심지어": "심지어 이게",
-  "⑤~까지 난리": null
+  "⑤~까지 난리": "효자템으로 난리라고"
  },
  "pieces": [
   {
@@ -189,65 +199,177 @@
   {
    "i": 18,
    "t0": 12.97,
+   "dur": 0.68,
+   "caption": "명중하는 순간",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 19,
+   "t0": 13.65,
+   "dur": 1.02,
+   "caption": "과녁이 툭 쓰러지면서",
+   "caption_chars": 11,
+   "hook": false
+  },
+  {
+   "i": 20,
+   "t0": 14.67,
+   "dur": 1.14,
+   "caption": "빨간 불이 번쩍 들어와서",
+   "caption_chars": 13,
+   "hook": false
+  },
+  {
+   "i": 21,
+   "t0": 15.81,
+   "dur": 0.68,
+   "caption": "진짜 사격장에",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 22,
+   "t0": 16.49,
+   "dur": 0.68,
+   "caption": "온 것 같다는데",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 23,
+   "t0": 17.17,
    "dur": 0.45,
    "caption": "근데 진짜",
    "caption_chars": 5,
    "hook": false
   },
   {
-   "i": 19,
-   "t0": 13.42,
+   "i": 24,
+   "t0": 17.62,
    "dur": 0.91,
    "caption": "충격적인 포인트는",
    "caption_chars": 9,
    "hook": false
   },
   {
-   "i": 20,
-   "t0": 14.33,
+   "i": 25,
+   "t0": 18.53,
    "dur": 0.91,
    "caption": "침대에 누운 채로는",
    "caption_chars": 10,
    "hook": false
   },
   {
-   "i": 21,
-   "t0": 15.24,
+   "i": 26,
+   "t0": 19.44,
    "dur": 0.68,
    "caption": "절대 못 맞혀서",
    "caption_chars": 8,
    "hook": false
   },
   {
-   "i": 22,
-   "t0": 15.92,
+   "i": 27,
+   "t0": 20.12,
    "dur": 0.57,
    "caption": "결국 일어나",
    "caption_chars": 6,
    "hook": false
   },
   {
-   "i": 23,
-   "t0": 16.49,
+   "i": 28,
+   "t0": 20.69,
    "dur": 0.68,
    "caption": "조준하다 보면",
    "caption_chars": 7,
    "hook": false
   },
   {
-   "i": 24,
-   "t0": 17.17,
+   "i": 29,
+   "t0": 21.37,
    "dur": 0.57,
    "caption": "잠이 저절로",
    "caption_chars": 6,
    "hook": false
   },
   {
-   "i": 25,
-   "t0": 17.74,
+   "i": 30,
+   "t0": 21.94,
    "dur": 0.68,
    "caption": "다 깨버린다고",
    "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 31,
+   "t0": 22.62,
+   "dur": 0.68,
+   "caption": "그래서 요즘엔",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 32,
+   "t0": 23.3,
+   "dur": 0.8,
+   "caption": "아침마다 애들이",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 33,
+   "t0": 24.1,
+   "dur": 0.68,
+   "caption": "먼저 일어나서",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 34,
+   "t0": 24.78,
+   "dur": 0.68,
+   "caption": "서로 쏘겠다고",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 35,
+   "t0": 25.46,
+   "dur": 0.68,
+   "caption": "싸우는 바람에",
+   "caption_chars": 7,
+   "hook": false
+  },
+  {
+   "i": 36,
+   "t0": 26.14,
+   "dur": 0.8,
+   "caption": "엄마들 사이에서",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 37,
+   "t0": 26.94,
+   "dur": 0.68,
+   "caption": "등교 전쟁 끝낸",
+   "caption_chars": 8,
+   "hook": false
+  },
+  {
+   "i": 38,
+   "t0": 27.62,
+   "dur": 0.57,
+   "caption": "효자템으로",
+   "caption_chars": 5,
+   "hook": false
+  },
+  {
+   "i": 39,
+   "t0": 28.19,
+   "dur": 0.45,
+   "caption": "난리라고",
+   "caption_chars": 4,
    "hook": false
   }
  ]
