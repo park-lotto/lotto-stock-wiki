@@ -1,0 +1,26 @@
+{
+  "_why": "짤 팩 중 로고·남의 글자(A5)가 보이는 짤 — material_auto.pick_memes 가 뺀다. 2026-10-17 64개 3프레임 눈 대조(관제 097).",
+  "exclude": {
+    "fm_shockedguy": "오른쪽 위 방송 로고",
+    "fm_mathlady": "수식 글자 겹침",
+    "fm_nickyoung": "??? 글자·THRU LENS 워터마크",
+    "fm_cruiselaugh": "오른쪽 아래 로고",
+    "fm_tomscream": "imgflip.com 워터마크",
+    "fm_nonocat": "no! 글자",
+    "fm_ewfallon": "EW! 글자·#FALLONTONIGHT",
+    "fm_muyaho": "tvN Awards 로고",
+    "fm_byunghun": "KBS2 로고",
+    "fm_kimheejin": "FIVB 대회 글자",
+    "fm_kimsangjung": "SBS 로고",
+    "fm_eoiga": "뒤 간판 로고",
+    "fm_yanadu": "자막 '야! 너두 영어해'",
+    "fm_jameson": "마우스 커서",
+    "fm_jordanlaugh": "ESPN 로고",
+    "fm_jokerlaugh": "VLIPSY 워터마크",
+    "fm_dawson": "오른쪽 아래 방송 로고",
+    "fm_ronswanson": "표지판 글자·워터마크",
+    "fm_thisisfine": "[adult swim] 글자",
+    "fm_ralph": "EMERGENCY EXIT 글자",
+    "fm_kombucha": "TikTok 워터마크"
+  }
+}

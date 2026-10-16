@@ -52,12 +52,14 @@ MAX_FRAMES = 60           # 영상 하나 최대 칸 수
 CELL = 200
 MEME_DIR = Path("C:/숏템_칼카피/packs/meme/meme_pack")
 MEME_INDEX = ROOT / "research/meme_pack/extra_memes.json"
+MEME_EXCLUDE = Path(__file__).with_name("meme_exclude.json")   # 로고·남의 글자 짤(A5) — 눈 대조 목록
+STORE_RE = re.compile(r"\b(store|shop|showroom|display|shelf|shelves|retail|mall|counter|booth)\b", re.I)
 FONT = "C:/Windows/Fonts/malgun.ttf"
 FONT_B = "C:/Windows/Fonts/malgunbd.ttf"
 
 CHANNELS = {
     # 잇썸홈(두유노홈디노형) = 같은 제품 실영상만(비포 비교 토막만 같은 종류 다른 제품 허용), 짤 0
-    "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before"], "meme_ratio": (0.0, 0.0),
+    "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before", "store"], "meme_ratio": (0.0, 0.0),
               "min_res": 720, "pref_res": 1080, "allow_cg": False},
     # 재미썸홈(이븐쇼핑형) = 제품 + 유사·연상 + 짤 10~15%
     "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "similar", "meme"], "meme_ratio": (0.10, 0.15),
@@ -131,10 +133,10 @@ QUERY_PROMPT = """숏폼 재료 담당이다. 주제: {topic}
   토막은 문장의 조각이다 — 문장 전체 뜻을 따른다(예: '설거지하다 허리 / 굽히는 게 귀찮았던' = 허리 굽혀 설거지하는 불편한 모습, 제품 자랑 장면 아님).
   같은 문장의 이웃 토막은 같은 장면이 이어져도 된다(인물·장소를 바꾸지 마라). 로고·글자 클로즈업은 장면으로 쓰지 않는다(회사·브랜드 얘기 = 매장·공장·진열·사용하는 사람).
 - keywords: need 의 핵심 영어 낱말 3~6개(소문자)
-- kind: {kinds}  (product=이 제품 실영상, before=비교 대상 일반 제품, similar=제품이 아닌 연상·상황 영상, meme=반응 짤)
+- kind: {kinds}  (product=이 제품 실영상, before=비교 대상 일반 제품, store=이 제품 브랜드 매장·쇼룸 진열(회사·브랜드·인기 얘기 토막), similar=제품이 아닌 연상·상황 영상, meme=반응 짤)
 {meme_rule}
 - queries: 검색어 최대 {nq}개. 영어 위주 + 제품 원산지 언어(일본어·중국어 등) 1~2개. 제품명·브랜드·모델명·'review'·'unboxing'·'stock footage' 등을 섞어 서로 다르게.
-  각 검색어에 purpose(product/before/similar)와 그 검색어가 채울 토막 번호 목록(toks).
+  각 검색어에 purpose(product/before/store/similar)와 그 검색어가 채울 토막 번호 목록(toks).
 - product: 이 제품을 화면에서 알아볼 영어 설명 1문장(모양·색·브랜드). product_terms: 제목에서 이 제품을 알아볼 낱말(브랜드·모델명·영어/현지어).
 토막:
 {toks}
@@ -144,12 +146,13 @@ REQUERY_PROMPT = """숏폼 재료 담당이다. 주제: {topic}. 아래 토막�
 (동의어·다른 언어·공식/리뷰 채널·'stock footage'·더 일반적인 상황어). 채널 규칙: {rule_text}
 못 찾은 토막: {toks}
 이미 쓴 검색어: {tried}
-출력 JSON만: {{"queries":[{{"q":"...","purpose":"product|before|similar","toks":[번호]}}]}}"""
+출력 JSON만: {{"queries":[{{"q":"...","purpose":"product|before|store|similar","toks":[번호]}}]}}"""
 
 
 def _rule_text(rules: dict) -> str:
     if rules.get("same_product_only"):
-        return "같은 제품 실영상만(짤·연상 영상 금지). '보통 제품은~' 같은 비교 토막만 before(같은 종류 다른 제품)."
+        return ("같은 제품 실영상만(짤·연상 영상 금지). '보통 제품은~' 같은 비교 토막만 before(같은 종류 다른 제품)."
+                + (" 회사·브랜드·인기 토막은 store(같은 제품의 브랜드 매장·쇼룸 진열)도 된다." if "store" in rules.get("kinds", []) else ""))
     lo, hi = rules.get("meme_ratio", (0, 0))
     return f"제품 실영상 + 유사·연상 영상 + 반응 짤 {int(lo * 100)}~{int(hi * 100)}%."
 
@@ -410,6 +413,8 @@ def allowed(cell: dict, kind: str, rules: dict, res: int) -> bool:
         return p == "same"
     if kind == "before":
         return p in ("similar", "same")
+    if kind == "store":                               # 같은 제품의 브랜드 매장·쇼룸 진열(페이블 10-17) — 제품이 보이거나, 매장·진열 칸의 같은 종류
+        return p == "same" or (p == "similar" and bool(STORE_RE.search(cell.get("what") or "")))
     if rules.get("same_product_only"):
         return p == "same"
     return True                                       # similar(연상) — 재미썸홈만 여기까지 온다
@@ -611,7 +616,8 @@ def pick_memes(toks, needs, llm) -> dict:
     mt = [t for t in toks if needs[t["i"]]["kind"] == "meme"]
     if not mt or not MEME_INDEX.exists():
         return {}
-    idx = [m for m in json.loads(MEME_INDEX.read_text(encoding="utf-8")) if (MEME_DIR / f"{m['id']}.mp4").exists()]
+    ex = set((json.loads(MEME_EXCLUDE.read_text(encoding="utf-8")).get("exclude") or {}) if MEME_EXCLUDE.exists() else ())
+    idx = [m for m in json.loads(MEME_INDEX.read_text(encoding="utf-8")) if (MEME_DIR / f"{m['id']}.mp4").exists() and m["id"] not in ex]
     ok = {m["id"] for m in idx}
     d, _ = llm([], MEME_PROMPT.format(toks="\n".join(f"{t['i']}. «{t['text']}» (문장: {t['line_text']})" for t in mt),
                                       memes="\n".join(f"{m['id']}: {m.get('title', '')} ({m.get('emotion', '')})" for m in idx)), "ma_meme")
