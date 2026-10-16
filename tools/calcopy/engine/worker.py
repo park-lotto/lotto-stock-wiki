@@ -123,6 +123,25 @@ class Api:
         return self._req("post", f"/{tid}/upload/{quote(name)}", data=Path(path).read_bytes())
 
 
+HOST_SLOW_SEC = 5.0     # 파이썬 1회 기동이 이보다 길면 이 PC 과부하 — 그 라운드는 건너뛴다(10-16 실측: python -c 28초·yt-dlp 탐지 90~240초)
+
+
+def host_probe() -> float:
+    """이 PC에서 파이썬 프로세스 하나 띄우는 데 걸린 초(유튜브·엔진 하위 프로세스가 모두 이 비용을 낸다)."""
+    t0 = time.time()
+    subprocess.run([sys.executable, "-c", "pass"], capture_output=True, timeout=300)
+    return time.time() - t0
+
+
+def host_slow(probe=host_probe, limit: float = HOST_SLOW_SEC) -> str | None:
+    """기동 지연 판정 한 곳 — 느리면 이유 문자열, 아니면 None. 과부하는 소재 탓이 아니므로 실패로 세지 않는다."""
+    try:
+        sec = probe()
+    except Exception as e:  # noqa: BLE001 — 재기도 못 할 만큼 막힌 것도 과부하로 본다
+        return f"host_slow: 기동 재기 실패 {type(e).__name__}: {e}"
+    return f"host_slow: 파이썬 기동 {sec:.1f}초 > {limit}초" if sec > limit else None
+
+
 def is_limit(err: str) -> bool:
     """우리 쪽 한도로 못 한 것인가(장부 LimitHit·제미나이 429/쿼터) — 판정 한 곳. 그런 실패는 소재 실패 횟수에 안 센다."""
     s = str(err or "")
@@ -141,7 +160,8 @@ PRE_ASSIGN = ("bench", "score", "assign")
 class Worker:
     def __init__(self, api: Api, category: str, track: str, channel: str, name: str | None = None, out_root: Path | None = None,
                  steps=WS, preset: str | None = None, hb_interval: float = 60, find_every: float = 60 * 60,
-                 allowed_steps: list[str] | None = None, log=print, extra: dict | None = None, ledger: bool = False):
+                 allowed_steps: list[str] | None = None, log=print, extra: dict | None = None, ledger: bool = False,
+                 probe=None):
         self.api, self.category, self.track, self.channel = api, category, track, channel
         self.name = name or f"{socket.gethostname()}-{category}-{track}"
         self.steps, self.hb_interval, self.find_every, self.log = steps, hb_interval, find_every, log
@@ -150,6 +170,7 @@ class Worker:
                           category=category, track=track, preset=preset, log=log, extra=extra or {})
         self.state = {"step": None, "topic_id": None, "idle_reason": None, "last_error": None}
         self.ledger = ledger
+        self.probe = probe if probe is not None else (host_probe if ledger else None)   # 시험은 probe 를 직접 준다
         if ledger:
             self.ctx.worker = self.name                 # worker_steps 가 유튜브·제미나이를 장부 한도 뒤에서 쓴다
         self._engine_rev = self._rev() if ledger else None
@@ -363,6 +384,14 @@ class Worker:
 
     def tick(self) -> dict:
         """claim 1회 → 단계 1개. 결과: idle|advanced|error|found|refused"""
+        if self.probe:
+            slow = host_slow(self.probe)
+            if slow:                                     # 잡기 전에 거른다 — 아무 소재도 release 하지 않으니 stalled 로 썩지 않는다
+                self._note("limit", 1, slow)
+                self._set(step=None, topic_id=None, idle_reason=slow)
+                self.log(f"[쉼] {slow}")
+                self.beat()
+                return {"result": "idle", "reasons": [slow]}
         if self.ledger:
             self._maybe_reload()
             if not getattr(self, "_requeued_once", False):     # 켤 때 한 번 — 꺼져 있던 사이 엔진이 바뀌었을 수 있다

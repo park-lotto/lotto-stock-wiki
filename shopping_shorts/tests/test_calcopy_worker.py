@@ -435,3 +435,28 @@ def test_한도에_걸린_실패는_소재_실패횟수에_안센다(env):
         clk.tick(minutes=31)
     t = _topic(cl, tid)["topic"]
     assert t["error_count"] == 3 and t["stalled"]           # 진짜 실패는 그대로 센다
+
+
+def test_PC_기동지연이면_그라운드는_건너뛰고_실패로_안센다(env):
+    """10-16 실측: CPU 100% 에서 python -c 28초·yt-dlp 탐지 90~240초 → 유튜브 '시간 초과'로 bench 가 실패해 소재가 stalled 로 썩었다."""
+    cl, clk, tmp = env
+    tid = _add(cl, "신라면 공장")
+    steps = MockSteps(tmp)
+    w = _worker(cl, tmp, steps=steps, find_every=0, probe=lambda: 28.0)
+    for _ in range(4):
+        r = w.tick()
+        assert r["result"] == "idle" and "host_slow" in r["reasons"][0]
+    t = _topic(cl, tid)["topic"]
+    assert steps.calls == [] and t["error_count"] == 0 and not t["stalled"] and t["state"] == "found"
+    w.probe = lambda: 0.3                              # 풀리면 바로 돈다
+    assert w.tick()["result"] == "advanced" and steps.calls == [("bench", tid)]
+
+
+def test_host_slow_판정():
+    from tools.calcopy.engine import worker as W2
+    assert W2.host_slow(lambda: 0.4) is None
+    assert "28.0초" in W2.host_slow(lambda: 28.0)
+
+    def boom():
+        raise TimeoutError("300초")
+    assert "재기 실패" in W2.host_slow(boom)
