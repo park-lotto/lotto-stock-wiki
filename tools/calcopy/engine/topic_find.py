@@ -289,7 +289,7 @@ def yt_detail(vid: str, n_comments: int = 50) -> dict:
 # 라이브 발굴 DB(읽기 전용) — 해외 참고 채널 표 overseas_ref_channel(category '해외반응', 제품 쪽 키워드)의 대표 영상(top_video·top_views).
 # 10-16 실측: reel_history 제품 카테고리는 한글 캡션이 아닌 행이 거의 다 '빈 캡션 인스타'라 해외 계정 판별이 안 됐다 → 해외 표를 쓴다.
 REF_SSH = "ubuntu@3.35.251.172"
-REF_KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+REF_KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")  # PC 마다 홈이 다르다(CH·TheRose)
 REF_DB = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db"
 PRODUCT_KW = ("gadget", "gadgets", "innovative gadgets", "useful inventions", "cleaning tools", "outdoor tools", "home improvement",
               "diy", "tech", "unboxing", "creative", "kitchen")   # overseas_ref_channel.keywords 10-16 실측 분포 중 제품 쪽
