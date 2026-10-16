@@ -1,0 +1,240 @@
+{
+ "topic": "벗겨 쓰는 종이접시(Peel Plate·Peelware 류) — 다 먹으면 맨 위 한 장을 벗기면 밑에 새 접시",
+ "orig": [
+  "아니 이거 해외 릴스에서 맨날 보이길래",
+  "바이럴인 줄 알았는데...",
+  "진짜 아무 데나 대면",
+  "수십만 원짜리 우퍼 스피커로 변함;;",
+  "소리 커지는 거 소름 돋네",
+  "솔직히 소리 미쳤다 인정?"
+ ],
+ "spans": [
+  [
+   0.0,
+   5.2
+  ],
+  [
+   5.2,
+   7.3
+  ],
+  [
+   7.3,
+   10.9
+  ],
+  [
+   10.9,
+   14.8
+  ],
+  [
+   14.8,
+   18.2
+  ],
+  [
+   18.2,
+   21.7
+  ]
+ ],
+ "fns": [
+  "발견 맥락(어디서 보고 알게 됐나) · 말끝 ~길래",
+  "의심(처음엔 안 믿음) · 말끝 ~는데",
+  "반전 시연(그냥 대기만 하면) · 말끝 ~면",
+  "결과 과장(평범한 물건이 뭐로 변함) · 말끝 ~함;;",
+  "감탄 · 말끝 ~네",
+  "인정·댓글유도 · 말끝 ~인정?"
+ ],
+ "ranges": [
+  [
+   16,
+   17
+  ],
+  [
+   9,
+   10
+  ],
+  [
+   8,
+   9
+  ],
+  [
+   15,
+   15
+  ],
+  [
+   10,
+   11
+  ],
+  [
+   10,
+   11
+  ]
+ ],
+ "px_per_char": 55.0,
+ "width_spec": "channel/sseolpulda/새소재4/frame.json",
+ "tteutgi": "channel/sseolpulda/뜯기/ZdeZRtCeAC4/뜯기.json",
+ "facts": {
+  "f1": {
+   "text": "씨앗 nqp6X_NS1mg 제목 'アメリカの天才が本気で作った「剥がせる万能皿」'·설명 'ねぎの皮のように剥がして使えるアメリカ発の画期的なアイデア皿'(1,851,554회, 2026-09-17)",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg"
+  },
+  "f2": {
+   "text": "Peelware 공식 채널 설명 '15 Servings Per Plate' · THU9iK0jN2k 나레 'Each plate is made with multiple peelable layers… peel it away to reveal a clean layer underneath'",
+   "url": "https://www.youtube.com/shorts/03jUA7IjLSE · https://www.youtube.com/shorts/THU9iK0jN2k"
+  },
+  "c1": {
+   "text": "씨앗 댓글 「災害時には良さそう」 좋아요 9,380 · 「非常時用に買おうかな」 3,557",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "댓글"
+  },
+  "c2": {
+   "text": "씨앗 댓글 「…洗わなくて済むから使ってます」(설거지 안 해도 돼서 쓴다) 1,095",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "댓글"
+  },
+  "v1": {
+   "text": "화면 nqp6X 3.4~8.6: 겹겹이 쌓인 사각 종이접시 → 음식 담긴 접시",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "화면"
+  },
+  "v2": {
+   "text": "화면 03jUA7IjLSE 4.2~6.3: 비닐 포장된 접시 묶음(라벨 PEEL PLATE)을 뜯어 평범한 빈 접시를 꺼냄",
+   "url": "https://www.youtube.com/shorts/03jUA7IjLSE",
+   "kind": "화면"
+  },
+  "v3": {
+   "text": "화면 CXiA7Sga0IY 7.8~11.4: 손글씨 '15 in 1' 접시 → 맨 위 한 장을 벗기자 밑에 ✓ 그린 새 장(8.6~9.4)",
+   "url": "https://www.youtube.com/shorts/CXiA7Sga0IY",
+   "kind": "화면"
+  },
+  "v4": {
+   "text": "화면 nqp6X 8.9~12.8: 음식 묻은 한 장의 모서리를 벗기면 밑에 깨끗한 새 장(11초)",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "화면"
+  },
+  "v5": {
+   "text": "화면 nqp6X 11.9~15.3: 벗긴 장을 쓰레기통에 버림 → 다시 벗김 → 쌓인 접시",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "화면"
+  },
+  "v6": {
+   "text": "화면 nqp6X 19.0~24.7: 접시 위에서 칼질 → 한 장 벗김 → 손가락으로 새 장 가리킴",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "발견 맥락",
+    "text": "해외에서 겹겹이 벗겨 쓰는 접시라길래",
+    "facts": [
+     "f1",
+     "f2",
+     "v1"
+    ]
+   },
+   {
+    "fn": "의심",
+    "text": "종이접시인 줄 알았는데",
+    "facts": [
+     "v2"
+    ]
+   },
+   {
+    "fn": "반전 시연",
+    "text": "다 먹고 한 장 벗기면",
+    "facts": [
+     "v3",
+     "f2"
+    ]
+   },
+   {
+    "fn": "결과 과장",
+    "text": "밑에서 깨끗한 새 접시가 또 나옴;;",
+    "facts": [
+     "v4",
+     "f2"
+    ]
+   },
+   {
+    "fn": "감탄",
+    "text": "이거면 설거지 안 해도 되네",
+    "facts": [
+     "c2",
+     "v5"
+    ]
+   },
+   {
+    "fn": "인정·댓글유도",
+    "text": "비상용으로 딱인 거 인정?",
+    "facts": [
+     "c1",
+     "v6"
+    ]
+   }
+  ],
+  "check": {
+   "chars": [
+    16,
+    10,
+    8,
+    15,
+    11,
+    11
+   ],
+   "orig_chars": [
+    16,
+    12,
+    8,
+    16,
+    10,
+    11
+   ],
+   "ranges": [
+    [
+     16,
+     17
+    ],
+    [
+     9,
+     10
+    ],
+    [
+     8,
+     9
+    ],
+    [
+     15,
+     15
+    ],
+    [
+     10,
+     11
+    ],
+    [
+     10,
+     11
+    ]
+   ],
+   "numbers": [],
+   "note": "브랜드마다 장 수가 15/20으로 달라 숫자 안 씀"
+  },
+  "model": "opus 직접 작성"
+ },
+ "gate": {
+  "scores": {
+   "벗겨 쓰는 접시": {
+    "아는 대상": 5,
+    "몰랐던": 4,
+    "재미": 4,
+    "이야기": 4,
+    "얻는 것": 3,
+    "보여줄 수 있나": 4
+   }
+  },
+  "score_note": "1~5점(오푸스). 종이접시 누구나 앎(5)·겹겹이 벗겨 쓰는 건 처음 봄(4)·벗기면 새 접시 반전(4)·의심→반전 한 줄(4)·재난/캠핑용·설거지 안 함 댓글(9,380·1,095)이 얻는 것(3)·말 없는 1080p 재료 부족은 mute 컷으로 해결(4)",
+  "angle": "'그냥 종이접시' 의심 → 한 장 벗기면 밑에서 새 접시",
+  "twist": "3줄 '한 장 벗기면'(CXiA ✓ 새 장) → 4줄 '새 접시가 나옴;;'",
+  "twist_orig": "ZdeZ 3~4줄: 아무 데나 대면 → 우퍼로 변함"
+ },
+ "made_by": "오푸스 10-16 저녁 — 페이블 1안(mute 컷) 반영"
+}

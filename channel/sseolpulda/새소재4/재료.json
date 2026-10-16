@@ -1,0 +1,126 @@
+{
+ "_note": "썰풀다 틀 A 새소재4 — 벗겨 쓰는 종이접시. 원음 살린 컷 2개(Peelware 공식 03jU·CXiA: 받아쓰기 말 없음 — 단 원음은 배경음악뿐이고 종이 소리는 없음, 제미나이 판독) + mute 컷 4개(씨앗 nqp6X 일본어 나레 → 원음 끔, 위쪽 일본어 UI·자막 띠는 src_crop y 680~1920 로 잘라냄). 전부 1080×1920(ffprobe). '15 PEELS'·'PEEL PLATE' 글자 덮인 구간(03jU 2.8~4.2·7.0~8.4)·AI 의심 식사 장면(03jU 9.8~)·CXiA 채석장(0~4.5)·그래픽(12.5~)은 안 씀. mute 는 remake_video shots[].mute(3d8ffbc98).",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/새소재4/cand",
+ "shots": [
+  {
+   "i": 0,
+   "t0": 0.0,
+   "t1": 5.2,
+   "src": "v_nqp6X_NS1mg.mp4",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "ss": 3.4,
+   "kind": "남의영상재편집",
+   "ours": "한 장 벗기는 손(3.4~3.9) → 겹겹이 쌓인 접시(4~4.6) → 음식 담긴 접시에 초콜릿 시럽(5~8.6)",
+   "why": "1줄 '겹겹이 벗겨 쓰는 접시라길래'",
+   "mute": true,
+   "src_crop": [
+    0,
+    680,
+    1080,
+    1240
+   ]
+  },
+  {
+   "i": 1,
+   "t0": 5.2,
+   "t1": 7.3,
+   "src": "v_03jUA7IjLSE.mp4",
+   "url": "https://www.youtube.com/shorts/03jUA7IjLSE",
+   "ss": 4.7,
+   "kind": "남의영상재편집",
+   "ours": "비닐 포장 접시 묶음(라벨 PEEL PLATE)을 뜯어 평범한 빈 접시를 꺼냄(4.7~6.8, 4.0~4.6 '15' 글자 피함)",
+   "why": "2줄 '종이접시인 줄 알았는데' — 겉보기엔 평범한 종이접시",
+   "mute": false
+  },
+  {
+   "i": 2,
+   "t0": 7.3,
+   "t1": 10.9,
+   "src": "v_CXiA7Sga0IY.mp4",
+   "url": "https://www.youtube.com/shorts/CXiA7Sga0IY",
+   "ss": 7.8,
+   "kind": "남의영상재편집",
+   "ours": "손글씨 '15 in 1' 접시 → 맨 위 한 장 벗기자 밑에 ✓ 새 장(8.6~9.4) → '+5 bottom layers'(10.2~)",
+   "why": "3줄 '다 먹고 한 장 벗기면'",
+   "mute": false
+  },
+  {
+   "i": 3,
+   "t0": 10.9,
+   "t1": 14.8,
+   "src": "v_nqp6X_NS1mg.mp4",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "ss": 8.9,
+   "kind": "남의영상재편집",
+   "ours": "음식 묻은 한 장 모서리를 벗기면 밑에 깨끗한 새 장(11초 = 우리 13.0)",
+   "why": "4줄 '밑에서 깨끗한 새 접시가 나옴;;'",
+   "mute": true,
+   "src_crop": [
+    0,
+    680,
+    1080,
+    1240
+   ]
+  },
+  {
+   "i": 4,
+   "t0": 14.8,
+   "t1": 18.2,
+   "src": "v_nqp6X_NS1mg.mp4",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "ss": 11.9,
+   "kind": "남의영상재편집",
+   "ours": "벗긴 장을 쓰레기통에 버림(12) → 다시 벗김(13) → 쌓인 접시(14~15.3)",
+   "why": "5줄 '이거면 설거지 안 해도 되네'",
+   "mute": true,
+   "src_crop": [
+    0,
+    680,
+    1080,
+    1240
+   ]
+  },
+  {
+   "i": 5,
+   "t0": 18.2,
+   "t1": 23.9,
+   "src": "v_nqp6X_NS1mg.mp4",
+   "url": "https://www.youtube.com/shorts/nqp6X_NS1mg",
+   "ss": 19.0,
+   "kind": "남의영상재편집",
+   "ours": "접시 위 칼질(19~21) → 한 장 벗김(22~23) → 새 장 가리킴(24~24.7), 21.72초부터 틀 없는 꼬리",
+   "why": "6줄 '비상용으로 딱인 거 인정?'",
+   "mute": true,
+   "src_crop": [
+    0,
+    680,
+    1080,
+    1240
+   ]
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/bb35a411e8da4090aff5bd5a310661f8.mp3",
+   "pack_id": 30,
+   "pack_title": "ding_0",
+   "t": 20.22,
+   "db": 0,
+   "why": "원본 ZdeZ 효과음 1발 [20.22, 0.18] 같은 시각·길이(LED 편과 같음)"
+  }
+ ],
+ "bgm": {
+  "id": "qiuqiu",
+  "ratio": 0.15,
+  "why": "ZdeZ·LED·새소재3 과 같은 곡·배율"
+ },
+ "memes": {
+  "used": [],
+  "why": "틀 A 원본은 [광고] 표기뿐"
+ },
+ "narration": "나레 없음 — 원음(2컷) + BGM, mute 4컷은 BGM 이 채움(BGM_FILL 1.0), TTS 0",
+ "source_audio_note": "원음 살린 2컷의 원음은 소스 배경음악(전자음악)이며 벗기는 소리는 없다(제미나이 판독 3구간 모두 paper_sound=false)",
+ "caption_effects": {
+  "now": "즉시 교체·검정·외곽선/상자/강조 없음(ZdeZ 실측과 같음)"
+ }
+}
