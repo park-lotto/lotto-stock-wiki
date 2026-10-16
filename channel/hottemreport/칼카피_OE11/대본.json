@@ -1,0 +1,190 @@
+{
+ "topic": "AI 주작 의심 받은 음성 인식 아이언맨 헬멧(AutoKing MK5) — 진짜 파는 물건, 근데 오토바이용은 아님",
+ "orig": [
+  "요즘 미국에서 난리 난 아이언맨 헬멧으로 사람들이 환장하는 이유가 있는데요.",
+  "말 한마디에 페이스 플레이트가 자동 개폐되고",
+  "특히 여러 조각이 갈라지는 비주얼이 간지 폭발인데다 눈에서 LED 빔까지 나와 진짜 아이언맨이 된 기분이라고 하네요.",
+  "오토바이는 물론 자전거 헬멧으로도 완전 인싸템인데 사실 집에서 그냥 이러고만 있어도 도파민이 터진다고 하네요."
+ ],
+ "facts": {
+  "f1": {
+   "text": "Mad Kicks 판매 페이지 'Iron Man Helmet MK5': 음성 명령('Jarvis…')으로 여러 판 얼굴 가리개가 모터로 열림 · 귀 터치 센서·리모컨으로도 작동 · LED 눈이 흰색 '노멀'/빨간 '컴뱃' 모드 · ABS · 'a standout collectible for cosplay or display'(분류 Collectibles)",
+   "url": "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold"
+  },
+  "f2": {
+   "text": "F9zjBjXqevI 'The latest 8-piece Iron Man helmet' 화면 글자: 'Autoking 8 pieces of open and close Chinese and English voice, remote control, touch control' · START SYSTEM/OPEN THE MASK/CLOSE THE MASK/START COMBAT MODE",
+   "url": "https://www.youtube.com/shorts/F9zjBjXqevI",
+   "kind": "화면 글자 관찰"
+  },
+  "f3": {
+   "text": "nqyIPJvfXPo 'AutoKing Full Silver MK5 Iron Man Helmet' 화면 글자: '10 Voice Commands' · 'Voice · Remote · Touch Three Control Methods' · 'Dismiss battle mode'(빨간 눈)",
+   "url": "https://www.youtube.com/shorts/nqyIPJvfXPo",
+   "kind": "화면 글자 관찰"
+  },
+  "f4": {
+   "text": "_dM_H6dc2t4 영상 제목 'Iron man Mk5 helmet NOT FOR RIDE. COLLECTABLE ONLY' + f1 판매 페이지 '코스프레·전시용 수집품'",
+   "url": "https://www.youtube.com/shorts/_dM_H6dc2t4"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "훅(AI 의심→진짜)",
+    "text": "이게 AI 영상이 아니라고요? 진짜로 파는 아이언맨 헬멧이에요.",
+    "facts": [
+     "f1",
+     "f2"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold",
+     "https://www.youtube.com/shorts/F9zjBjXqevI"
+    ]
+   },
+   {
+    "fn": "기능 1(음성)",
+    "text": "말 한마디면 얼굴 가리개가 착착 열리고 닫히는데요,",
+    "facts": [
+     "f1",
+     "f2"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold",
+     "https://www.youtube.com/shorts/F9zjBjXqevI"
+    ]
+   },
+   {
+    "fn": "기능 2(조각)",
+    "text": "조각 여러 개가 갈라졌다 닫히는 비주얼이 완전 간지폭발이에요.",
+    "facts": [
+     "f1",
+     "f2"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold",
+     "https://www.youtube.com/shorts/F9zjBjXqevI"
+    ]
+   },
+   {
+    "fn": "기능 3(눈)",
+    "text": "눈에는 LED가 들어오는데 전투 모드로 바꾸면 빨간 눈이 된대요.",
+    "facts": [
+     "f1",
+     "f3"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold",
+     "https://www.youtube.com/shorts/nqyIPJvfXPo"
+    ]
+   },
+   {
+    "fn": "기능 4(조작)",
+    "text": "목소리 말고 귀 터치나 리모컨으로도 열 수 있고요.",
+    "facts": [
+     "f1",
+     "f3"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold",
+     "https://www.youtube.com/shorts/nqyIPJvfXPo"
+    ]
+   },
+   {
+    "fn": "반전",
+    "text": "근데 반전은 이게 오토바이 헬멧이 아니라 코스프레 소품이라는 거예요.",
+    "facts": [
+     "f4",
+     "f1"
+    ],
+    "sources": [
+     "https://www.youtube.com/shorts/_dM_H6dc2t4",
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold"
+    ]
+   },
+   {
+    "fn": "마무리",
+    "text": "그래도 방에서 써 보기만 해도 아이언맨 기분은 제대로 나겠네요.",
+    "facts": [
+     "f1"
+    ],
+    "sources": [
+     "https://madkicks.com/products/iron-man-helmet-with-voice-activated-gold"
+    ]
+   }
+  ],
+  "model": "오푸스 손 작성(제미나이 안 씀) — 원본 나레 구조(훅→기능→비주얼→활용) 위에 'AI 의심 → 진짜 → 오토바이용 아님' 반전. 원본의 '오토바이·자전거 헬멧으로도 인싸템'은 판매처 설명(수집품·코스프레)과 어긋나 뺌",
+  "check": {
+   "n_ok": false,
+   "lines_without_fact": [],
+   "chars": [
+    28,
+    22,
+    27,
+    28,
+    21,
+    30,
+    27
+   ],
+   "ranges": [
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ],
+    [
+     15,
+     36
+    ]
+   ],
+   "len_off_lines": [],
+   "copied_lines": [],
+   "polite_endings": 0,
+   "unsourced_numbers": []
+  }
+ },
+ "titles": {
+  "hook": "AI 주작 논란 터진\n아이언맨 헬멧"
+ },
+ "gate": {
+  "scores": {
+   "원본 OE-11wb7vdY": {
+    "아는 대상": 9,
+    "몰랐던": 7,
+    "재미": 8,
+    "이야기": 5,
+    "얻는 것": 4,
+    "보여줄 수 있나": 9
+   },
+   "우리(같은 제품·반전 추가)": {
+    "아는 대상": 9,
+    "몰랐던": 7,
+    "재미": 8,
+    "이야기": 7,
+    "얻는 것": 6,
+    "보여줄 수 있나": 8
+   }
+  },
+  "score_note": "오푸스 판정(10-16). 아는 대상 9 = 아이언맨은 누구나 앎. 이야기: 원본은 기능 나열(5), 우리는 'AI 같은데 진짜 → 근데 오토바이용 아님' 반전 하나(7). 얻는 것: 원본은 '오토바이·자전거 헬멧으로도'라 오히려 틀린 정보(원본 댓글 상위가 '안전성 zero·장난감' 지적 — get_video_comments 40개 실측), 우리는 판매처 기준 '코스프레·전시용'을 알려줘 6. 보여줄 수 있나 8 = 원본처럼 실착 리액션 영상을 다 못 구하면 제품 시연(가로 영상 크롭) 비중이 늘어난다.",
+  "angle": "'AI 주작인 줄 알았는데 진짜 파는 물건 — 근데 타고 다니는 헬멧은 아님'",
+  "twist": "6번 줄 '이게 오토바이 헬멧이 아니라 코스프레 소품' — 원본이 '오토바이·자전거 헬멧으로도 인싸템'이라 한 자리를 바로잡는 반전",
+  "twist_orig": "원본엔 반전 없음(기능 나열 → '집에서 이러고만 있어도 도파민'). 제목의 'AI 주작 논란'은 나레에 한 번도 안 나온다"
+ }
+}

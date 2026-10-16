@@ -1,0 +1,108 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 559,
+   "w": 1080,
+   "h": 1361,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 131,
+   "lines": 3,
+   "font": "RIDIBatang",
+   "size": 123.4,
+   "line_h": 138,
+   "rgb": [
+    248,
+    234,
+    5
+   ],
+   "line_rgb": null,
+   "line_scale": [
+    1.019,
+    0.802,
+    1.178
+   ],
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -18.9,
+   "enter": null,
+   "text": "AI 주작 논란 터진\n아이언맨 헬멧"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1382,
+   "lines": 2,
+   "font": "Pretendard",
+   "size": 81.3,
+   "line_h": 94,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "OE-11wb7vdY",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "Pretendard-ExtraBold.otf",
+   "top1_score": 0.315,
+   "picked_from": {
+    "file": "Pretendard-ExtraBold.otf",
+    "score": 0.315
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 842,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+   "글꼴 1위 Pretendard-ExtraBold.otf(0.315) < 0.5 — 확신 낮음. 쓴 글꼴 Pretendard({'file': 'Pretendard-ExtraBold.otf', 'score': 0.315})",
+   "제목 글꼴 RIDIBatang — 분석기 fonts.title 1위 RIDIBatang.otf(0.448), 신뢰 low",
+   "제목 줄마다 크기 [125.7, 99.0, 145.4] → size 123.4 × line_scale [1.019, 0.802, 1.178]",
+   "제목 기울기 +3도(기둥 전단 투영) → 바름",
+   "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.76 > 0.15, 20개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다"
+  ],
+  "ocr_model": "gemini-3.5-flash"
+ }
+}
