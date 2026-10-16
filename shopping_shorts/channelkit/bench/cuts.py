@@ -19,7 +19,7 @@ import cv2
 from . import probe
 from .constants import (CUT_MERGE_S, CUT_MIN_T, CUT_VERIFY_CORR, CUT_VERIFY_TOP, CUT_SUB_TOL, ZOOM_FPS,
                         CUT_BG_TOL, CUT_ACTIVE_MIN, CUT_VERIFY_ACTIVE_MIN, CUT_MOVE_INLIERS, CUT_MOVE_SCALE,
-                        CUT_MOVE_W)
+                        CUT_MOVE_W, CUT_BG_FPS, CUT_BG_EDGE_FRAC)
 from . import constants as C
 
 
@@ -27,6 +27,21 @@ def bg_gray(vl: dict) -> float | None:
     """layout 결과의 배경 RGB → 회색 밝기(BT.601). 없으면 None(바탕 빼기 안 함)."""
     b = vl.get("bg_rgb") if vl else None
     return None if not b else float(0.299 * b[0] + 0.587 * b[1] + 0.114 * b[2])
+
+
+def window_bg(path: str, window: list[int]) -> float | None:
+    """창 안 바탕 밝기 — 창 네 변 화소(CUT_BG_FPS 표본, 64×64 회색)의 최빈값 v, 그 ±CUT_BG_TOL 안 비율 ≥ CUT_BG_EDGE_FRAC 일 때만 v.
+    layout 의 bg_rgb 는 창 '밖' 배경이라 창 안 그림 칸 바탕과 다를 수 있다(방구석 창 밖 240·창 안 흰 칸 255 → 바탕을 못 봄).
+    창을 영상이 꽉 채우면 네 변이 제각각이라 None(바탕 빼기 안 함 = 옛 방식)."""
+    x, y, w, h = window
+    edge = []
+    for g in probe.frames(path, f"fps={CUT_BG_FPS},crop={w}:{h}:{x}:{y},scale=64:64", 64, 64, "gray"):
+        edge.append(np.concatenate([g[0], g[-1], g[:, 0], g[:, -1]]))
+    if not edge:
+        return None
+    e = np.concatenate(edge).astype(np.int32)
+    v = int(np.bincount(e, minlength=256).argmax())
+    return float(v) if float((np.abs(e - v) <= CUT_BG_TOL).mean()) >= CUT_BG_EDGE_FRAC else None
 
 
 def scene_scores(path: str, window: list[int]) -> list[tuple[float, float]]:
@@ -242,7 +257,7 @@ def measure_video(path: str, vl: dict, meta: dict, sub_changes: list[float], zoo
     if not win:
         return {"cuts": None}
     dur = meta["duration"]
-    bg = bg_gray(vl)
+    bg = window_bg(path, win) if bg_gray(vl) is not None else None   # 틀(바탕)이 있는 편만, 바탕 값은 창 안에서
     raw = scene_detect(path, win)                      # 옛 자(희석 보정 없음) — raw_stats·기준선 재현용
     det = scene_detect(path, win, bg=bg, fps=meta["fps"]) if bg is not None else raw
     cands = merge_close(det)
