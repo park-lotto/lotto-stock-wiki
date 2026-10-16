@@ -1,0 +1,24 @@
+{
+ "steps": {
+  "1": {"state": "done", "date": "2026-10-17", "note": "연예인템 8편(09-25~10-06, 조회 1,995~29,655) 선정 — 10-12 이후 '중국/일본이 ○○한 한국 ○○' 편은 제외", "files": []},
+  "2": {"state": "done", "date": "2026-10-17", "note": "8편 뜯기 1판 + 프리셋 검정띠2줄(자막 하위 스타일 2: 나레_굵은체·원음_따옴표) + 원음 실측", "files": ["channel/itemhome/뜯기/원음_실측.md", "channel/itemhome/preset/검정띠2줄/manifest.json", "channel/itemhome/frame_MfptnwqlGKs.json"]}
+ },
+ "name": "아이템홈 itemhome",
+ "url": "https://www.youtube.com/@아이템홈itemhome",
+ "channel_id": "UC7RASIHu7B9QtjD81yWOYMQ",
+ "concept": "연예인 본인이 방송·브이로그에서 쓴 제품 한 가지를 나레이션 + 본인 원음으로 25~40초에 소개(출처 원본 재편집)",
+ "next": "렌더 대조(원음_따옴표 자막 글꼴·강조어 색) 후 소재 편 제작",
+ "rules": {
+  "n_videos": 8,
+  "duration_sec": {"median": 28.6, "range": [15.2, 42.3]},
+  "cut_sec": {"median": 0.87, "range": [0.77, 1.27]},
+  "narration_cps": {"median": 8.0, "range": [7.5, 9.0], "note": "나레 구간만(글자÷나레 초)"},
+  "lufs": {"median": -13.8, "range": [-13.9, -13.6]},
+  "caption_max_chars": {"max": 10, "median": 9.5, "note": "공백·따옴표 뺀 한 줄, 줄 수 거의 1"},
+  "source_audio_share": {"median": 0.56, "range": [0.46, 0.65]},
+  "source_clips": {"median": 5.5, "range": [3, 7], "clip_sec_mean": 3.2, "clip_sec_max": 7.3},
+  "title": {"font": "Pretendard-ExtraBold(7/8, 박진영 편만 Cafe24Danjunghae 판별)", "size": "101~110", "y": "206~213", "line1": "흰색 [252,250,251]", "line2": "노랑 [251,237,3]", "lines": 2, "band": "검정 [6~9,0,0] 위 480px, 영상 창 y480 h1440"},
+  "caption": {"narration": "굵은 둥근 고딕(SBAggroB 계열) 약 75px·검정 외곽선·강조어 노랑/분홍", "quote": "기울인 가는 고딕 ~70px·“ ”·강조어 노랑", "y": "1214~1224"},
+  "from": "channel/itemhome/뜯기/*/뜯기.json 8편 (엔진 뜯기 1판) · 원음 = channel/itemhome/뜯기/원음_실측.md"
+ }
+}
