@@ -449,8 +449,8 @@ def test_comment_promoted_to_fact_and_unsourced_hype_fail():
     roles = ["반응", "반응", "진짜 이유", "감탄"]
     hit = E.comment_as_fact(lines, facts, bench, roles)
     assert 0 in hit and "댓글을 사실처럼" in hit[0][0]
-    assert 1 not in hit and 3 not in hit
-    assert hit[2] == ["근거 없는 과장 ['극락']"]
+    assert 1 not in hit and 3 not in hit and 2 not in hit      # 과장은 claim_off 한 곳(겹친 판정 합침)
+    assert E.claim_off(lines, facts, bench)[2] == ["극락"]
 
 
 def test_channel_linter_is_called_banggu():
@@ -486,20 +486,69 @@ def _fx(name):
     return json.loads((FIX / f"{name}.json").read_text(encoding="utf-8"))
 
 
+SSEOL_ORIG = ["아니 이거 해외 릴스에서 맨날 보이길래", "바이럴인 줄 알았는데...", "진짜 아무 데나 대면", "집 전체가 스피커로 변함;;",
+              "소리 퍼지는 거 미쳤네", "이거 탐나는 거 인정?"]   # 썰풀다 틀 A 원본 줄(ZdeZ 뜯기) — 띄어쓰기 기준 원문
+
+
 def test_spacing_removed_lines_fail():
-    """(묶음4) 폴드8 초안: 폭 맞추려고 띄어쓰기를 지운 줄('울트라나온다길래안믿었는데'·'댓글창안닫은거멋지네') → 실패. 손 대본 LED 는 0줄."""
+    """(묶음4) 폴드8 초안: 폭 맞추려고 띄어쓰기를 지운 줄('울트라나온다길래안믿었는데'·'댓글창안닫은거멋지네') → 실패. 손 대본 LED·신라면은 0줄."""
     d = _fx("engine_fold8_c1")
-    assert sorted(E.spacing_off([l["text"] for l in d["lines"]], d["facts"])) == [1, 4]
-    h = _fx("hand_led_faucet")
-    assert E.spacing_off([l["text"] for l in h["lines"]], h["facts"]) == {}
+    texts = [l["text"] for l in d["lines"]]
+    assert sorted(E.spacing_off(texts, d["facts"])) == [1, 4]
+    assert sorted(E.spacing_off(texts, d["facts"], SSEOL_ORIG)) == [1, 4]           # 원문 대비로 재도 같다
+    for name in ("hand_led_faucet", "hand_shinramyun_gumi"):
+        h = _fx(name)
+        assert E.spacing_off([l["text"] for l in h["lines"]], h["facts"]) == {}, name
+        assert E.spacing_off([l["text"] for l in h["lines"]], h["facts"], SSEOL_ORIG) == {}, name
 
 
-def test_superlative_needs_same_claim_in_its_evidence():
+def test_spacing_same_line_red_when_spaces_stripped():
+    """답 아는 짝: 통과한 손 대본 줄의 공백만 지우면 빨강, 그대로면 초록(공백 비율 꼴과 긴 덩어리 꼴 둘 다)."""
+    good = ["숨어 있던 호스 샤워기로 변신함;;", "구미 쪽이 국물 색도 더 진하고 기름기도 많아서 훨씬 맛있다는 평이 나왔다고 함."]
+    assert E.spacing_off(good, {}, SSEOL_ORIG) == {}
+    bad = [good[0].replace(" ", ""), good[1].replace(" 더 진하고 ", " 더진하고기름기도많아서훨씬 ").replace("기름기도 많아서 훨씬 ", "")]
+    hit = E.spacing_off(bad, {}, SSEOL_ORIG)
+    assert sorted(hit) == [0, 1], hit
+    assert "덩어리" in hit[0] and "덩어리" in hit[1]
+    half = ["숨어있던호스 샤워기로변신함;;"]          # 덩어리는 짧지만(7자) 공백 비율 0.06 < 원문 0.23×0.5
+    assert 0 in E.spacing_off(half, {}, SSEOL_ORIG)
+
+
+def test_claim_needs_same_claim_in_its_evidence():
+    """(묶음4) 최상급·단정은 그 줄 근거 글에 같은 무리 주장이 있어야(영어 근거는 -est·first·world's 등)."""
     facts = {"f1": {"text": "충전 3시간이면 된다", "url": ""}, "f2": {"text": "삼성 주장 world's lightest fold", "url": ""}}
-    lines = [{"text": "세계 최초로 나온 충전기", "facts": ["f1"]}, {"text": "제일 가벼운 폴드폰", "facts": ["f2"]}, {"text": "충전이 빠름", "facts": ["f1"]}]
-    hit = E.superlative_off(lines, facts, {"points": {}})
-    assert hit == {0: ["최초", "세계에서"]} or hit == {0: ["최초"]} or 0 in hit
-    assert 1 not in hit and 2 not in hit
+    lines = [{"text": "세계에서 최초로 나온 충전기", "facts": ["f1"]}, {"text": "제일 가벼운 폴드폰", "facts": ["f2"]}, {"text": "충전이 빠름", "facts": ["f1"]},
+             {"text": "이건 절대 못 참지", "facts": ["f1"]}, {"text": "역대급으로 팔린 충전기", "facts": ["f1"]}, {"text": "유일하게 되는 폰", "facts": ["f2"]}]
+    hit = E.claim_off(lines, facts, {"points": {}})
+    assert sorted(hit) == [0, 3, 4, 5], hit
+    assert set(hit[0]) == {"최초", "세계에서"} and hit[3] == ["절대"] and hit[4] == ["역대급"] and hit[5] == ["유일"]
+
+
+def test_claim_red_on_engine_draft_green_on_hand_scripts():
+    """답 아는 입력: 다이소 c3 초안 1번 '절대 먹지 말라고'(근거 f3 댓글엔 없음)·2번 '역대급으로' → 빨강.
+    폴드8 4번 '세상에서 제일 가벼운'은 근거 f2 에 '세상에서 가장'이 있어 이 검사는 초록(회사 주장 단정은 줄↔근거 판정 몫). 손 대본 둘은 0줄."""
+    d = _fx("engine_daiso_c3")
+    bench = {"points": {}}   # 픽스처 벤치는 목록 꼴 — 이 시험은 사실(f*) 근거만 본다
+    hit = E.claim_off(d["lines"], d["facts"], bench)
+    assert hit.get(0) == ["절대"] and hit.get(1) == ["역대급"], hit
+    f8 = _fx("engine_fold8_c1")
+    assert 3 not in E.claim_off(f8["lines"], f8["facts"], {"points": {}})
+    for name in ("hand_led_faucet", "hand_shinramyun_gumi"):
+        h = _fx(name)
+        assert E.claim_off(h["lines"], h["facts"], {"points": {}}) == {}, name
+
+
+def test_claim_and_spacing_reach_rewrite_prompt(tmp_path):
+    """검사가 다시 쓰기 지시까지 닿는다 — 다이소 c3 원 초안(절대·역대급) → 다시 쓰기 1 지시에 '근거 없는 최상급·단정'."""
+    d = _fx("engine_daiso_c3")
+    lines = [dict(l, facts=[i for i in l["facts"] if i.startswith("f")]) for l in d["lines"]]
+    facts = tmp_path / "f.json"
+    facts.write_text(json.dumps(d["facts"], ensure_ascii=False), encoding="utf-8")
+    llm = FakeLLM({"draft": {"lines": lines}})
+    S = E.run("yummyknow", "다이소 베이커리 푸 신상", tmp_path / "o", None, str(facts), llm=llm, log=lambda *_: None)
+    c0 = S["tries"][0]["check"]
+    assert c0["superlative"] == [0, 1] and c0["superlative_hit"] == {0: ["절대"], 1: ["역대급"]}
+    assert "근거 없는 최상급·단정" in llm.prompts["rewrite1"]
 
 
 def test_unsupported_line_caught_by_evidence_judge_and_rewritten(tmp_path):

@@ -271,8 +271,7 @@ def topic_match(texts: list[str], topic: dict, facts: dict, mode: str) -> dict:
 _RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:~|∼|〜|–|-|에서)\s*(\d+(?:[.,]\d+)?)")
 HEARSAY = ("댓글", "반응", "라는", "다는", "라며", "이라며", "냐는", "얘기", "후기", "평이")   # "팬들 사이에서 …취급"은 전언이 아니라 단정(리센느 실례) — 넣지 않는다
 # 근거 없으면 못 쓰는 단정형 과장(10-16 리센느 '전설의 포켓몬 취급'·'극락 간다는'). 감탄(미쳤네·소름)은 채널 말투라 빼지 않는다.
-OPINION_ROLES = ("감탄", "인정", "댓글유도", "혼잣말", "의심")   # 화자 자신의 감상 칸 — 사실 주장이 아니라 전언 표식 대상 아님(과장 검사는 그대로)
-CLAIM_HYPE = ("극락", "전설", "역대급", "국민", "대란", "품절", "1위", "최초", "유일", "세계 최고", "가장", "끝판왕", "신드롬")   # '난리'는 반응 묘사(LED 손 대본 '댓글이 …라고 난리길래')라 뺀다
+OPINION_ROLES = ("감탄", "인정", "댓글유도", "혼잣말", "의심")   # 화자 자신의 감상 칸 — 사실 주장이 아니라 전언 표식 대상 아님(최상급·단정 검사는 그대로)
 
 
 def number_ranges(lines_text: list[str], facts: dict) -> dict:
@@ -302,56 +301,88 @@ def comment_facts(facts: dict, bench: dict) -> set:
 
 def comment_as_fact(lines: list[dict], facts: dict, bench: dict, roles: list[str] | None = None) -> dict:
     """(5) 댓글을 사실로 승격 금지: 근거가 전부 댓글·반응이면 그 줄에 전언 표식('댓글에선·~라는 반응')이 있어야 한다.
-    + 근거 글에 없는 단정형 과장(CLAIM_HYPE)은 실패(10-16 리센느 편)."""
+    (근거 없는 과장·최상급은 claim_off 한 곳 — 여기서 다시 재지 않는다)"""
     cids = comment_facts(facts, bench)
-    src = " ".join(v["text"] for v in facts.values())
     out = {}
     for k, l in enumerate(lines):
         t, ids = l.get("text") or "", set(l.get("facts") or [])
-        why = []
         opinion = any(o in ((roles or [""] * len(lines))[k] if k < len(roles or []) else "") for o in OPINION_ROLES)
         if ids and ids <= cids and not opinion and not any(h in t for h in HEARSAY):
-            why.append("댓글을 사실처럼(전언 표식 없음)")
-        hype = [w for w in CLAIM_HYPE if w in t and w not in src]
-        if hype:
-            why.append(f"근거 없는 과장 {hype}")
-        if why:
-            out[k] = why
+            out[k] = ["댓글을 사실처럼(전언 표식 없음)"]
     return out
 
 
-SPACE_MIN_SHARE = 0.5     # 줄 공백 비율이 근거 글 평균의 이 배 미만이면 '띄어쓰기 지움'(10-16 폴드8 초안 '울트라나온다길래안믿었는데')
+SPACE_MIN_SHARE = 0.5     # 줄 공백 비율이 원문(채널 원본 줄) 평균의 이 배 미만이면 '띄어쓰기 지움'(10-16 폴드8 초안 '울트라나온다길래안믿었는데')
 SPACE_MIN_CHARS = 8       # 이보다 짧은 줄은 공백이 없어도 자연스럽다('두 가지' 등)
-SUPERLATIVE = {"가장": ("가장", "제일", "최고"), "최초": ("최초", "처음으로"), "유일": ("유일",), "세계": ("세계에서", "세상에서", "전세계", "전 세계")}
-_EN_SUPER = re.compile(r"\b(\w+est|most|best|first|only|world's|worlds)\b", re.I)
+SPACE_RUN_MAX = 9         # 띄어쓰기 없이 이어진 한글이 이보다 길면 지운 것(4채널 원본 줄 최장 어절 4~6자, 10-16 실측) — 공백 비율과 무관하게 실패
+_HANGUL_RUN = re.compile(r"[가-힣]+")
 
 
-def spacing_off(texts: list[str], facts: dict) -> dict:
-    """(묶음4) 띄어쓰기 지움 — 줄 공백 비율 < 근거 글 평균 × SPACE_MIN_SHARE (근거 없으면 0.15 기준)."""
-    rs = [t.count(" ") / len(t) for t in (v["text"] for v in facts.values()) if len(t) >= 10]
-    base = (sum(rs) / len(rs)) if rs else 0.15
+def _space_ratio(t: str) -> float:
+    t = t.strip()
+    return t.count(" ") / len(t) if t else 0.0
+
+
+def spacing_base(facts: dict, orig: list[str] | None = None) -> tuple[float, str]:
+    """띄어쓰기 기준 비율 — ① 원문(채널 원본 줄, 8자↑ 3줄 이상) 평균 ② 한글 위주(한글 50%↑) 근거 글 평균 ③ 0.15."""
+    o = [t for t in (orig or []) if len(t.strip()) >= SPACE_MIN_CHARS]
+    if len(o) >= 3:
+        return sum(map(_space_ratio, o)) / len(o), f"원문 {len(o)}줄"
+    ko = [t for t in (v["text"] for v in facts.values()) if len(t) >= 10 and len("".join(_HANGUL_RUN.findall(t))) >= len(t) * 0.5]
+    if ko:
+        return sum(map(_space_ratio, ko)) / len(ko), f"한글 근거 {len(ko)}개"
+    return 0.15, "기본값"
+
+
+def spacing_off(texts: list[str], facts: dict, orig: list[str] | None = None) -> dict:
+    """(묶음4·판단 주인) 띄어쓰기 지움 — ① 띄어쓰기 없는 한글 덩어리 > SPACE_RUN_MAX 자 ② 줄 공백 비율 < 기준(spacing_base) × SPACE_MIN_SHARE."""
+    base, basis = spacing_base(facts, orig)
     out = {}
     for k, t in enumerate(texts):
-        core = t.strip()
+        core = (t or "").strip()
         if len(core.replace(" ", "")) < SPACE_MIN_CHARS:
             continue
-        r = core.count(" ") / len(core)
-        if r < base * SPACE_MIN_SHARE:
-            out[k] = f"공백 비율 {r:.2f} < 근거 평균 {base:.2f}×{SPACE_MIN_SHARE}"
+        run = max((len(m) for m in _HANGUL_RUN.findall(core)), default=0)
+        r = _space_ratio(core)
+        if run > SPACE_RUN_MAX:
+            out[k] = f"띄어쓰기 없는 {run}자 덩어리(>{SPACE_RUN_MAX})"
+        elif r < base * SPACE_MIN_SHARE:
+            out[k] = f"공백 비율 {r:.2f} < {basis} 평균 {base:.2f}×{SPACE_MIN_SHARE}"
     return out
 
 
-def superlative_off(lines: list[dict], facts: dict, bench: dict) -> dict:
-    """(묶음4) 최상급 주장(가장·제일·최초·유일·세계에서) — 그 줄이 기댄 근거 글에 같은 무리의 주장(영어 -est·most·first·only 포함)이 없으면 실패."""
+# 최상급·단정 무리(판단 주인 claim_off 한 곳) — 같은 무리 낱말이 그 줄의 근거 글에 있어야 쓸 수 있다. 영어 근거는 무리별 영어 표현으로.
+# 감탄(미쳤네·소름)·'난리'(반응 묘사, LED 손 대본 '…라고 난리길래')는 채널 말투라 넣지 않는다.
+CLAIM_GROUPS = {
+    "가장": (("가장", "제일", "최고"), r"\b(\w+est|most|best)\b"),
+    "최초": (("최초", "처음으로"), r"\bfirst\b"),
+    "유일": (("유일",), r"\bonly\b"),
+    "세계": (("세계에서", "세상에서", "전세계", "전 세계"), r"\bworld'?s?\b"),
+    "절대": (("절대",), r"\b(never|absolutely)\b"),
+    "역대": (("역대급", "역대"), r"\b(ever|all-time|record)\b"),
+    "1위": (("1위", "1등", "일등"), r"(#1|\bnumber one\b|\bno\.? ?1\b)"),
+    "전설": (("전설",), r"\blegend"),
+    "국민": (("국민",), r"\bnational\b"),
+    "대란": (("대란", "품절"), r"\bsold[ -]?out\b"),
+    "극락": (("극락",), None),
+    "끝판왕": (("끝판왕",), None),
+    "신드롬": (("신드롬",), r"\bsyndrome\b"),
+}
+
+
+def claim_off(lines: list[dict], facts: dict, bench: dict) -> dict:
+    """(묶음4·판단 주인) 최상급·단정(가장·최초·유일·세계에서·절대·역대급·1위·전설·극락…) — 그 줄이 기댄 근거 글(f*·b*)에
+    같은 무리의 주장(한글 낱말 또는 무리별 영어 표현)이 없으면 실패. 돌려주는 값 {줄: [걸린 낱말]}."""
     allf = {**facts, **bench["points"]}
     out = {}
     for k, l in enumerate(lines):
         t = l.get("text") or ""
         src = " ".join((allf.get(i) or {}).get("text", "") for i in (l.get("facts") or []))
         miss = []
-        for grp, words in SUPERLATIVE.items():
-            if any(w in t for w in words) and not (any(w in src for w in words) or (grp in ("가장", "최초", "유일", "세계") and _EN_SUPER.search(src))):
-                miss.append(next(w for w in words if w in t))
+        for words, en in CLAIM_GROUPS.values():
+            hit = next((w for w in words if w in t), None)
+            if hit and not (any(w in src for w in words) or (en and re.search(en, src, re.I))):
+                miss.append(hit)
         if miss:
             out[k] = miss
     return out
@@ -479,8 +510,8 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
             total_off = {"chars": tot, "range": list(sk["total"]), "fix_line": (max if tot > sk["total"][1] else min)(range(len(chars)), key=lambda k: chars[k]) if chars else None}
     tm = topic_match(texts[:n], topic or {}, facts, sk["mode"]) if topic else {"other_brand": {}, "product_missing": False}
     rng = number_ranges(texts[:n], facts)
-    spc = spacing_off(texts[:n], facts)
-    sup = superlative_off(lines[:n], facts, bench)
+    spc = spacing_off(texts[:n], facts, sk.get("orig"))
+    sup = claim_off(lines[:n], facts, bench)
     unsup = support or {}
     cmt = comment_as_fact(lines[:n], facts, bench, sk["roles"])
     cl = channel_lint(slug, lines[:n], sk, facts, title) if slug else {"linter": None, "by_line": {}, "global": []}
@@ -501,8 +532,8 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
 def bad_lines(chk: dict) -> dict:
     """다시 쓸 줄 → 이유 목록(판단 주인). 전체 길이 어긋남은 가장 긴/짧은 줄에 붙인다."""
     why = {}
-    names = {"spacing_off": "띄어쓰기 지움", "superlative": "근거 없는 최상급 주장", "unsupported": "근거가 문장을 뒷받침 안 함",
-             "range_as_single": "근거의 범위를 한쪽 값으로 단정", "comment_as_fact": "댓글 승격·근거 없는 과장", "channel_lint": "채널 규칙 반려",
+    names = {"spacing_off": "띄어쓰기 지움", "superlative": "근거 없는 최상급·단정", "unsupported": "근거가 문장을 뒷받침 안 함",
+             "range_as_single": "근거의 범위를 한쪽 값으로 단정", "comment_as_fact": "댓글 승격", "channel_lint": "채널 규칙 반려",
              "off_topic_brand": "소재 밖 브랜드명(소재 이탈)", "product_missing": "소재 제품명이 대본에 없음", "role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
              "copied_bench": "벤치 영상 문장과 겹침", "describe": "화면 묘사", "ending_off": "정해진 말끝으로 안 끝남",
              "numbers_unsourced": "사실에 없는 숫자", "tone_off": "말투 섞임(채널 말투 밖)", "off_tone_words": "톤 밖 낱말"}
@@ -546,14 +577,12 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
     meta = {k: d.get(k) for k in ("angle", "twist", "title")}
 
     def judge(ls):
-        """결정 검사 → 통과하면 줄↔근거 판정(LLM 1회)까지. 판정 실패는 통과로 치지 않는다(조용한 통과 금지)."""
-        c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
-        if c["ok"]:
-            sup, serr = support_check(ls[:len(sk["roles"])], facts, bench, llm)
-            if sup is None:
-                c["ok"], c["support_error"] = False, serr
-            else:
-                c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"), support=sup)
+        """줄↔근거 판정(LLM 1회)을 결정 검사와 같은 판에 매번 — 다른 검사에 걸린 줄도 근거 어긋남을 같이 고쳐 쓰게(10-16 다이소 c3:
+        '절대 먹지 말라고 경고' 줄이 댓글 승격에 먼저 걸려 근거 판정을 못 받았다). 판정 실패는 통과로 치지 않는다(조용한 통과 금지)."""
+        sup, serr = support_check(ls[:len(sk["roles"])], facts, bench, llm)
+        c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"), support=sup)
+        if sup is None:
+            c["ok"], c["support_error"] = False, serr
         return c
     chk = judge(lines)
     tries.append({"lines": lines, "check": chk, "model": d.get("_model")})

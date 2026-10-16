@@ -24,6 +24,7 @@ def test_every_prompt_carries_shared_rule_sentences():
     assert SW.RULE_ENDING in SW.DRAFT_PROMPT
     assert SW.RULE_NO_BRAND in SW.DRAFT_PROMPT and SW.RULE_NO_BRAND in SE.DRAFT_PROMPT        # 없는 브랜드·제품명 금지
     assert SW.RULE_KEEP_SPACES in SW.DRAFT_PROMPT and SW.RULE_KEEP_SPACES in SE.DRAFT_PROMPT  # 띄어쓰기 지우기 금지
+    assert SW.RULE_NO_SUPERLATIVE in SW.DRAFT_PROMPT and SW.RULE_NO_SUPERLATIVE in SE.DRAFT_PROMPT  # 근거 없는 최상급·단정 금지
 
 
 def test_prompts_still_format():

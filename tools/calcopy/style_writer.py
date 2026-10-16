@@ -224,6 +224,7 @@ RULE_ENDING = "- 말끝이 적힌 칸은 그 글자로 문장을 끝낸다(자�
 RULE_NO_COPY_BENCH = "- 벤치 영상·원본 문장을 베끼지 마라 — 포인트(각도·반전·반응)만 가져오고 문장은 새로."
 RULE_NO_BRAND = "- 소재·근거(f*)에 없는 브랜드·제품명을 쓰지 않는다."                                                   # 10-16 엔진 담당 요청
 RULE_KEEP_SPACES = "- 글자 수를 맞추려고 띄어쓰기를 지우지 않는다 — 폭이 넘치면 낱말을 줄인다."                       # 10-16 실측: '울트라나온다길래안믿었는데'
+RULE_NO_SUPERLATIVE = "- 최상급·단정(가장·제일·최초·유일·세계에서·절대·역대급·1위·전설)은 그 줄 근거 글에 같은 주장이 있을 때만 쓴다."   # 10-16 다이소 c3 '절대 먹지 말라고'·'역대급으로'
 
 
 DRAFT_PROMPT = ("""너는 한국 쇼츠 채널 '{slug}'의 {kind} 작가다. 소재 하나로 이 채널 틀 그대로 새 대본을 써라.
@@ -241,7 +242,7 @@ DRAFT_PROMPT = ("""너는 한국 쇼츠 채널 '{slug}'의 {kind} 작가다. 소
 - {honor}. {honor_rule}
 """ + rule_fact_ids() + "\n" + RULE_NO_DESCRIBE + """
 - 과장·꾸밈 말투는 괜찮다(이 채널 스타일). 단 근거 밖 사실은 금지.
-""" + RULE_NO_COPY_BENCH + "\n" + RULE_ENDING + "\n" + RULE_NO_BRAND + "\n" + RULE_KEEP_SPACES + """
+""" + RULE_NO_COPY_BENCH + "\n" + RULE_ENDING + "\n" + RULE_NO_BRAND + "\n" + RULE_KEEP_SPACES + "\n" + RULE_NO_SUPERLATIVE + """
 원본(이 채널 실제 영상, 구조 참고 — 베끼지 마라):
 {orig}
 출력 JSON만: {{"angle":"이 대본의 썰 각도 한 줄","twist":"반전이 몇 번째 줄인지와 무엇인지","title":"영상 위 제목(줄바꿈 \\n)",
