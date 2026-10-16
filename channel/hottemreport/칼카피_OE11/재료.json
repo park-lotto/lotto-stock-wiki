@@ -25,11 +25,11 @@
    "i": 1,
    "src": "v_8ys8LRey7_w.mp4",
    "url": "https://www.youtube.com/watch?v=8ys8LRey7_w",
-   "ss": 71.45,
+   "ss": 43.0,
    "kind": "남의영상재편집(대체)",
    "full": true,
    "src_crop": [
-    340,
+    520,
     0,
     857,
     1080
@@ -38,7 +38,7 @@
     73.2,
     75.9
    ],
-   "ours": "어두운 방에서 LED 눈이 켜진 헬멧 → 원음 'Pretty cool. This thing looks absolutely phenomenal'(73.3~75.4 자동자막)",
+   "ours": "밝은 나무 책상 위 금색 MK5, 파란 LED 눈 + 리모컨 든 손(소스 43~47.4) — 소리는 같은 영상 71.5~ 원음('Pretty cool… phenomenal' 73.25)",
    "why": "'진짜로 파는 아이언맨 헬멧이에요.' 뒤 원음 리액션 2.6초(원본 5.0~10.4 'Oh, I love it!'·웃음 자리)",
    "overlays": [
     {
@@ -55,7 +55,10 @@
      ],
      "why": "원음 'Pretty cool…' 시작(소스 73.25)에 맞춤"
     }
-   ]
+   ],
+   "audio_src": "v_8ys8LRey7_w.mp4",
+   "audio_ss": 71.5,
+   "why_change": "10-16 조율자: 어두운 화면 7초 → 밝은 배경에서 LED 눈 보이는 프레임으로 교체(8ys8 dense 시트 44~51초 파란 눈)"
   },
   {
    "i": 2,
@@ -111,19 +114,20 @@
   },
   {
    "i": 4,
-   "src": "v_8ys8LRey7_w.mp4",
-   "url": "https://www.youtube.com/watch?v=8ys8LRey7_w",
-   "ss": 77.0,
+   "src": "v_nqyIPJvfXPo.mp4",
+   "url": "https://www.youtube.com/shorts/nqyIPJvfXPo",
+   "ss": 31.0,
    "kind": "남의영상재편집(대체)",
    "full": true,
    "src_crop": [
-    340,
+    587,
     0,
-    857,
-    1080
+    746,
+    940
    ],
-   "ours": "어두운 방, LED 눈이 파랑 → 빨강으로 바뀜(80.2초 빨강)",
-   "why": "'눈에는 LED가 들어오는데 전투 모드로 바꾸면 빨간 눈이 된대요.'(원본 23~26초 '눈에서 LED빔까지')"
+   "ours": "흰 배경 받침대 위 은색 MK5 정면 — 파란 눈(31.5) → 빨간 눈(33.0, 'Dismiss battle mode' 아래 자막은 잘라 냄)",
+   "why": "'눈에는 LED가 들어오는데 전투 모드로 바꾸면 빨간 눈이 된대요.'(원본 23~26초 '눈에서 LED빔까지')",
+   "why_change": "10-16 조율자: 어두운 빨간 눈 화면 → 밝은 배경 빨간 눈(nqy dense 시트 33.0·34.5)"
   },
   {
    "i": 5,

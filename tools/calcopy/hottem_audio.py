@@ -100,9 +100,11 @@ def cut_plan_from(timeline: dict, M: dict) -> tuple[list, dict, list]:
         sh = M["shots"][k]
         nfr = int(round(b * 30)) - int(round(a * 30))
         vid = f"s{k}"
-        paths[vid] = str(base / sh["src"])
+        # audio_src/audio_ss = 화면과 다른 소스의 소리(10-16: 어두운 LED 화면을 밝은 화면으로 바꾸되 원음 리액션은 그대로 두려고)
+        paths[vid] = str(base / (sh.get("audio_src") or sh["src"]))
         mute = sh.get("kind") == "짤" or sh.get("mute")
-        clips.append({"video_id": vid if not mute else "__mute__", "start": float(sh.get("ss", 0)), "c_src": (b - a), "play_out": (b - a), "cfr": nfr})
+        start = float(sh["audio_ss"]) if sh.get("audio_ss") is not None else float(sh.get("ss", 0))
+        clips.append({"video_id": vid if not mute else "__mute__", "start": start, "c_src": (b - a), "play_out": (b - a), "cfr": nfr})
         tot += nfr
     return [{"idx": 0, "clips": clips}], paths, [(0, tot)]
 
