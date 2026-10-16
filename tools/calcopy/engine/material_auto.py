@@ -896,6 +896,88 @@ def _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, she
     return out
 
 
+def apply_fixes(wd, ops: list[dict], net=None, log=print) -> dict:
+    """사람 보정(최소한) — 재료_auto.json 의 토막을 고친다. op: cont(앞 컷 이어 가기) · pick(vid,t0 새 컷) · meme(id).
+    고친 뒤 이어 가기 줄기의 원본 시각을 다시 잇고, 구간 파일이 그 줄기를 못 덮으면 그 구간만 다시 받는다. 판단은 사람(시트 보고), 계산은 여기 한 곳."""
+    wd = Path(wd)
+    auto = json.loads((wd / "재료_auto.json").read_text(encoding="utf-8"))
+    st = json.loads((wd / "state.json").read_text(encoding="utf-8"))
+    meta, toks = st["meta"], st["toks"]
+    sh = {s["i"]: s for s in auto["shots"]}
+    for t in toks:                  # 빈칸 토막엔 dur 이 없다 — 토막 길이로 채운다
+        sh[t["i"]].setdefault("dur", t["dur"])
+    for o in ops:
+        s = sh[o["i"]]
+        keep = {k: s[k] for k in ("i", "caption", "need", "dur", "kind") if k in s}
+        if o["op"] == "cont":
+            s.clear(); s.update({**keep, "cont": True, "fix": "cont"})
+        elif o["op"] == "pick":
+            s.clear(); s.update({**keep, "src": o["vid"], "vid": o["vid"], "src_t0": float(o["t0"]), "cont": False, "fix": "pick",
+                                 "seen": o.get("seen", ""), "res": (meta.get(o["vid"]) or {}).get("res"),
+                                 "url": f"https://www.youtube.com/watch?v={o['vid']}"})
+        elif o["op"] == "meme":
+            s.clear(); s.update({**keep, "src": "meme:" + o["id"], "vid": None, "src_t0": 0.0, "cont": False, "kind": "meme", "fix": "meme",
+                                 "seen": "짤 " + o["id"]})
+    shots = auto["shots"]
+    heads = []                      # [(머리 토막, [줄기 토막들])]
+    for s in shots:
+        if s.get("cont") and heads and not s.get("none"):
+            heads[-1][1].append(s)
+        elif not s.get("none"):
+            heads.append((s, [s]))
+        else:
+            heads.append((None, []))
+    for h, chain in heads:
+        if not h:
+            continue
+        t = float(h["src_t0"])
+        for s in chain:
+            s.update({"src": h["src"], "vid": h.get("vid"), "src_t0": round(t, 2), "src_t1": round(t + float(s["dur"]), 2), "seen": s.get("seen") or h.get("seen", "")})
+            t += float(s["dur"])
+        if not h.get("vid"):
+            continue
+        a, b = chain[0]["src_t0"], chain[-1]["src_t1"]
+        f, ss = h.get("section_file"), h.get("section_ss")
+        covered = bool(f and Path(f).exists() and ss is not None and ss + (b - a) <= _probe_dur(f) - 0.05)
+        if not covered:
+            net = net or Net(wd, log)
+            vd = (meta.get(h["vid"]) or {}).get("duration") or 0
+            sa, sb = max(0.0, a - SECTION_PAD), (min(b + SECTION_PAD, vd - 0.1) if vd else b + SECTION_PAD)
+            f = net.section(h["vid"], (meta.get(h["vid"]) or {}).get("info"), sa, sb)
+            ss = round(a - sa, 2)
+        for s in chain:
+            s["section_file"], s["section_ss"] = (f, round(ss + s["src_t0"] - a, 2)) if f else (None, None)
+    auto["sheets"] = plan_sheet(shots, toks, wd)
+    auto["fixes"] = auto.get("fixes", []) + ops
+    (wd / "재료_auto.json").write_text(json.dumps(auto, ensure_ascii=False, indent=1), encoding="utf-8")
+    return auto
+
+
+def seq_report(shots: list[dict]) -> dict:
+    """완성 계획(이어 가기 줄기까지 합친 컷) 검사 — B13 같은 소스 겹침/±3초(reuse_conflict 로 판정) · B16 A-B-A 끼움.
+    select 는 줄기 첫 토막만 재사용 검사를 해서, 이어 가기로 늘어난 끝이 다른 컷 3초 안에 닿는 것을 못 본다(10-17 핸즈프리 0~3 ↔ 21~23)."""
+    cuts = []
+    for s in shots:
+        if s.get("none"):
+            cuts.append(None)
+        elif s.get("cont") and cuts and cuts[-1]:
+            cuts[-1]["t1"], cuts[-1]["toks"] = s.get("src_t1", cuts[-1]["t1"]), cuts[-1]["toks"] + [s["i"]]
+        else:
+            cuts.append({"src": s.get("src"), "t0": s.get("src_t0") or 0.0, "t1": s.get("src_t1") or 0.0, "toks": [s["i"]]})
+    cuts = [c for c in cuts if c]
+    b13, b16 = [], []
+    for k, c in enumerate(cuts):
+        if str(c["src"]).startswith("meme:"):
+            continue
+        r = reuse_conflict(c["src"], c["t0"], c["t1"], [(o["src"], o["t0"], o["t1"]) for o in cuts[:k]])
+        if r:
+            b13.append(f"토막 {c['toks'][0]} B13 {r}")
+    for k in range(1, len(cuts) - 1):
+        if cuts[k - 1]["src"] == cuts[k + 1]["src"] != cuts[k]["src"] and not str(cuts[k]["src"]).startswith("meme:"):
+            b16.append(f"토막 {cuts[k]['toks'][0]} A-B-A({cuts[k - 1]['src']}→{cuts[k]['src']}→)")
+    return {"B13": b13, "B16": b16, "cuts": len(cuts)}
+
+
 def emit_material(auto: dict, wd, work_dir) -> list[str]:
     """재료_auto.json → 작품 폴더 재료.json(preset_make 가 읽는 꼴). 빈 토막·구간 파일 없는 토막이 있으면 쓰지 않고 그 목록을 돌려준다."""
     rows, bad = [], []
@@ -913,6 +995,7 @@ def emit_material(auto: dict, wd, work_dir) -> list[str]:
         else:
             bad.append(f"{s['i']} 구간 파일 없음")
         rows.append(r)
+    bad += seq_report(auto["shots"])["B13"]
     if not bad:
         Path(work_dir, "재료.json").write_text(json.dumps({"_note": f"material_auto {PROMPT_VER} emit — 재료_auto.json 에서", "cand_dir": str(Path(wd).resolve()),
                                                         "shots": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -1132,10 +1215,13 @@ def main(argv=None):
     ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
     ap.add_argument("--replan", action="store_true", help="state.json 으로 선택부터 다시(검색·태깅 없음)")
     ap.add_argument("--rematch", action="store_true", help="--replan 때 짝짓기(글)도 다시")
+    ap.add_argument("--fix", help="보정 ops.json([{i,op:cont|pick|meme,vid,t0,id}]) — 재료_auto.json 을 고치고 필요한 구간만 다시 받는다")
     ap.add_argument("--emit", help="작품 폴더 — 재료_auto.json 을 preset_make 가 읽는 재료.json 으로 쓴다(빈칸 있으면 안 씀)")
     a = ap.parse_args(argv)
     llm = LLM()
-    if a.compare_only:
+    if a.fix:
+        res = apply_fixes(a.out, json.loads(Path(a.fix).read_text(encoding="utf-8")))
+    elif a.compare_only:
         res = json.loads(Path(a.out, "재료_auto.json").read_text(encoding="utf-8"))
     elif a.replan:
         res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections, rematch=a.rematch)
