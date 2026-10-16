@@ -28458,7 +28458,16 @@ def api_admin_calcopy_topics_add(request: Request, body: dict = None):
 @app.post("/api/admin/calcopy/topics/claim_next")
 def api_admin_calcopy_topics_claim_next(request: Request, body: dict = None):
     b = body or {}
-    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.claim_next(b.get("worker"), b.get("steps"))})
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.claim_next(
+        b.get("worker"), b.get("steps"), category=b.get("category"), track=b.get("track"), channel=b.get("channel"))})
+
+
+@app.post("/api/admin/calcopy/workers/heartbeat")
+def api_admin_calcopy_worker_heartbeat(request: Request, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, **ct.worker_heartbeat(
+        b.get("worker"), category=b.get("category"), track=b.get("track"), channel=b.get("channel"),
+        doing=b.get("doing"), idle_reason=b.get("idle_reason"), last_error=b.get("last_error"))})
 
 
 @app.post("/api/admin/calcopy/topics/caps")
@@ -28494,8 +28503,15 @@ def api_admin_calcopy_topic_advance(request: Request, tid: int, body: dict = Non
 @app.post("/api/admin/calcopy/topics/{tid:int}/release")
 def api_admin_calcopy_topic_release(request: Request, tid: int, body: dict = None):
     b = body or {}
-    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.release(tid, b.get("worker"),
-                                                                                    b.get("error"))})
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.release(
+        tid, b.get("worker"), b.get("error"), retry_after_min=b.get("retry_after_min"))})
+
+
+@app.post("/api/admin/calcopy/topics/{tid:int}/unstall")
+def api_admin_calcopy_topic_unstall(request: Request, tid: int, body: dict = None):
+    b = body or {}
+    return _calcopy_topics_call(request, lambda ct: {"ok": True, "topic": ct.unstall(
+        tid, by=b.get("by", "admin"), note=b.get("note", ""))})
 
 
 @app.post("/api/admin/calcopy/topics/{tid:int}/reject")

@@ -72,7 +72,7 @@ def test_full_flow_with_rework(env):
     kinds = [h["kind"] for h in det["history"]]
     assert kinds[0] == "add" and "rework" in kinds and kinds[-1] == "review"
     assert [v["verdict"] for v in det["reviews"]] == ["reject", "pass", "pass"]
-    assert det["topic"]["cost"] == {"gemini": 6, "typecast": 1}
+    assert det["topic"]["cost"] == {"gemini": 6, "typecast": 1, "seconds": 0}
 
 
 def test_worker_cannot_pass_review_stages(env):
@@ -218,7 +218,7 @@ def test_kpi_and_board(env):
     assert k["plan_review"] == {"pass": 1, "reject": 1, "rate": 0.5}
     assert k["final_review"] == {"pass": 1, "reject": 0, "rate": 1.0}
     assert k["hours_per_passed"] == {"n": 1, "avg": 4.0, "median": 4.0}
-    assert k["cost_per_passed"] == {"gemini": 6.0, "typecast": 2.0}
+    assert k["cost_per_passed"] == {"gemini": 6.0, "typecast": 2.0, "seconds": 0.0}
     bd = CT.board(data_dir=d)
     assert bd["grid"]["식품"] == {"passed": 1} and bd["grid"]["홈템"] == {"rejected": 1, "found": 1}
     assert CT.next_step("rejected", None) is None                    # 폐기는 다음 일 없음
@@ -271,3 +271,145 @@ def test_routes_admin_only(env, monkeypatch):
     assert cl.post("/api/admin/calcopy/topics", json={"name": "x", "category": "y"}).status_code == 403
     assert cl.post("/api/admin/calcopy/topics/1/upload/a.txt", content=b"x").status_code == 403
     assert not CT.db_path(d).exists() or CT.board(data_dir=d)["topics"] == []
+
+
+# ── 보드·워커 실측 보완(규격 §6) ──────────────────────────────────────────
+def test_claim_next_filters_category_track_channel(env):
+    d, _ = env
+    home = CT.add("다이소", "홈템", "discover", data_dir=d)["id"]
+    food = CT.add("신라면", "식품", "bench", data_dir=d)["id"]
+    r = CT.claim_next("FOOD", ["bench"], category="식품", data_dir=d)
+    assert r["topic"]["id"] == food                                  # 더 오래된 홈템을 건너뛴다
+    CT.advance(food, "FOOD", data={"bench": {"a": 1}}, data_dir=d)
+    assert CT.claim_next("X", ["bench"], category="식품", data_dir=d)["topic"] is None
+    assert CT.claim_next("X", ["bench"], track="bench", data_dir=d)["topic"] is None
+    assert CT.claim_next("X", ["bench"], track="discover", category=["홈템", "뷰티"], data_dir=d)["topic"]["id"] == home
+    # channel: 배정된 소재만
+    _do(d, food, "FOOD", "score", data={"score": SCORE})
+    _do(d, food, "FOOD", "assign", data={"assign": {"channel": "yummyknow", "preset": "p"}})
+    assert CT.claim_next("C", ["script"], channel="sseolpulda", data_dir=d)["topic"] is None
+    assert CT.claim_next("C", ["script"], channel="yummyknow", data_dir=d)["topic"]["id"] == food
+    with pytest.raises(CT.TopicError):
+        CT.claim_next("C", ["script"], track="뭐", data_dir=d)
+
+
+def test_release_retry_after_and_stall(env):
+    d, clk = env
+    tid = CT.add("a", "식품", data_dir=d)["id"]
+    for i in range(1, 3):
+        assert CT.claim_next("W", ["bench"], data_dir=d)["topic"]["id"] == tid
+        t = CT.release(tid, "W", f"실패{i}", data_dir=d)
+        assert t["error_count"] == i and not t["stalled"] and t["retry_at"]
+        nx = CT.claim_next("W", ["bench"], data_dir=d)
+        assert nx["topic"] is None and "실패 뒤 다시 시도 대기 1건" in nx["reasons"]   # 곧바로 다시 안 준다
+        clk.tick(minutes=29)
+        assert CT.claim_next("W", ["bench"], data_dir=d)["topic"] is None
+        clk.tick(minutes=1, seconds=1)                               # 30분 지나면 다시 준다(다음 반복 첫 줄)
+    # 3번째 실패는 끊김(11분 무신호)으로 — 끊김도 실패로 센다
+    assert CT.claim_next("W", ["bench"], data_dir=d)["topic"]["id"] == tid
+    clk.tick(minutes=12)
+    b = CT.board(data_dir=d)
+    assert [(x["id"], x["error_count"]) for x in b["stalled"]] == [(tid, 3)] and "끊김 해제" in b["stalled"][0]["error"]
+    clk.tick(hours=2)
+    nx = CT.claim_next("W", ["bench"], data_dir=d)
+    assert nx["topic"] is None and any("멈춤(stalled) 1건" in x for x in nx["reasons"])
+    with pytest.raises(CT.TopicError) as e:                          # 직접 claim 도 막힌다
+        CT.claim(tid, "W", "bench", data_dir=d)
+    assert e.value.code == 409 and "unstall" in e.value.msg
+    t = CT.unstall(tid, by="사장님", data_dir=d)
+    assert not t["stalled"] and t["error_count"] == 0 and t["last_error"] is None
+    assert CT.claim_next("W", ["bench"], data_dir=d)["topic"]["id"] == tid
+    t = CT.advance(tid, "W", data={"bench": {"a": 1}}, data_dir=d)
+    assert t["error_count"] == 0
+    with pytest.raises(CT.TopicError):
+        CT.unstall(tid, data_dir=d)                                  # 실패 기록 없으면 409
+    # 직접 claim 은 retry_at 을 무시(id 를 찍어 부를 때)
+    CT.claim(tid, "W", "score", data_dir=d)
+    CT.release(tid, "W", "x", retry_after_min=60, data_dir=d)
+    assert CT.claim(tid, "W2", "score", data_dir=d)["step"] == "score"
+
+
+def test_worker_heartbeat_shows_idle_and_stale(env):
+    d, clk = env
+    CT.worker_heartbeat("FOOD-1", category="식품", track="discover", doing="find",
+                        idle_reason="find 실패: 도우인 로그인벽", data_dir=d)
+    tid = CT.add("a", "식품", data_dir=d)["id"]
+    CT.worker_heartbeat("FOOD-2", category="식품", data_dir=d)
+    CT.claim(tid, "FOOD-2", "bench", data_dir=d)
+    ws = {w["worker"]: w for w in CT.board(data_dir=d)["workers"]}
+    assert ws["FOOD-1"]["status"] == "idle" and ws["FOOD-1"]["idle_reason"] == "find 실패: 도우인 로그인벽"
+    assert ws["FOOD-1"]["topic_id"] is None and ws["FOOD-1"]["category"] == "식품"
+    assert ws["FOOD-2"]["status"] == "working" and ws["FOOD-2"]["topic_id"] == tid and ws["FOOD-2"]["category"] == "식품"
+    clk.tick(minutes=12)
+    ws = {w["worker"]: w for w in CT.board(data_dir=d)["workers"]}
+    assert ws["FOOD-1"]["status"] == "stale" and ws["FOOD-1"]["stale"] is True
+    assert ws["FOOD-2"]["status"] == "stale" and ws["FOOD-2"]["topic_id"] is None     # 잠금은 끊김으로 풀림
+    clk.tick(hours=25)
+    assert CT.board(data_dir=d)["workers"] == []
+    with pytest.raises(CT.TopicError):
+        CT.worker_heartbeat("", data_dir=d)
+
+
+def test_seconds_cost_and_work_minutes_kpi(env):
+    d, _ = env
+    tid = CT.add("a", "식품", data_dir=d)["id"]
+    _to_plan_review(d, tid)
+    CT.review(tid, "plan_review", "pass", data_dir=d)
+    _do(d, tid, "W", "produce", outputs={"final": "f.mp4"}, files={"f.mp4": "x"}, cost={"typecast": 1, "seconds": 600})
+    _do(d, tid, "W", "check", outputs={"verdict": "v.md"}, files={"v.md": "x"}, cost={"seconds": 120})
+    CT.review(tid, "final_review", "pass", data_dir=d)
+    b = CT.board(data_dir=d)
+    assert b["kpi"]["work_min_per_passed"] == {"n": 1, "avg": 12.0, "median": 12.0}
+    assert b["caps"]["used"]["seconds"] == 720 and "seconds" not in b["caps"]["caps"]   # 시간엔 상한 없음
+    with pytest.raises(CT.TopicError):
+        CT.set_caps({"seconds": 10}, data_dir=d)
+
+
+def test_old_db_gets_new_columns(tmp_path):
+    import sqlite3
+    p = CT.db_path(tmp_path)
+    p.parent.mkdir(parents=True)
+    c = sqlite3.connect(str(p))
+    c.executescript(CT._SCHEMA.split("CREATE TABLE IF NOT EXISTS events")[0])
+    c.execute("INSERT INTO topics(name,category,track,state,created_at,updated_at) "
+              "VALUES('a','b','bench','found','2026-10-16T09:00:00+09:00','2026-10-16T09:00:00+09:00')")
+    c.commit()
+    c.close()
+    t = CT.detail(1, data_dir=tmp_path)["topic"]
+    assert t["error_count"] == 0 and t["cost"]["seconds"] == 0 and t["stalled"] is False
+
+
+def test_routes_worker_heartbeat_unstall_filters(env, monkeypatch):
+    d, _ = env
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as A
+    monkeypatch.setenv("CALCOPY_DATA_DIR", str(d))
+    monkeypatch.setattr(A, "_require_admin", lambda request: None)
+    cl = TestClient(A.app)
+    B = "/api/admin/calcopy/topics"
+    cl.post(B, json={"name": "다이소", "category": "홈템"})
+    tid = cl.post(B, json={"name": "신라면", "category": "식품"}).json()["topic"]["id"]
+    r = cl.post(B + "/claim_next", json={"worker": "F", "steps": ["bench"], "category": "식품"}).json()
+    assert r["topic"]["id"] == tid
+    r = cl.post(f"{B}/{tid}/release", json={"worker": "F", "error": "x", "retry_after_min": 0}).json()
+    assert r["topic"]["error_count"] == 1
+    for _ in range(2):
+        cl.post(B + "/claim_next", json={"worker": "F", "steps": ["bench"], "category": "식품"})
+        cl.post(f"{B}/{tid}/release", json={"worker": "F", "error": "x", "retry_after_min": 0})
+    assert cl.get(B).json()["stalled"][0]["id"] == tid
+    assert cl.post(f"{B}/{tid}/claim", json={"worker": "F", "step": "bench"}).status_code == 409
+    assert cl.post(f"{B}/{tid}/unstall", json={"by": "사장님"}).json()["topic"]["stalled"] is False
+    hb = cl.post("/api/admin/calcopy/workers/heartbeat",
+                 json={"worker": "F2", "category": "식품", "track": "discover", "doing": "find", "idle_reason": "후보 0"})
+    assert hb.status_code == 200 and hb.json()["worker"] == "F2"
+    assert any(w["worker"] == "F2" and w["idle_reason"] == "후보 0" for w in cl.get(B).json()["workers"])
+    assert cl.post("/api/admin/calcopy/workers/heartbeat", json={}).status_code == 400
+
+
+def test_expired_lock_is_taken_over_at_once_but_counted(env):
+    d, clk = env
+    tid = CT.add("a", "식품", data_dir=d)["id"]
+    CT.claim_next("W1", ["bench"], data_dir=d)
+    clk.tick(minutes=12)
+    r = CT.claim_next("W2", ["bench"], data_dir=d)            # 끊김은 대기 없이 곧바로 인수(release 와 다름)
+    assert r["topic"]["id"] == tid and r["topic"]["error_count"] == 1

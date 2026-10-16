@@ -49,8 +49,12 @@ TRACKS = ("bench", "discover")
 DATA_KEYS = ("source", "bench", "score", "assign", "rights")
 SCORE_N = 5                        # 소재 5기준
 STALE_SEC = 11 * 60                # 마지막 신호가 11분 넘으면 끊김
-COST_KINDS = ("gemini", "typecast")
+COST_KINDS = ("gemini", "typecast", "seconds")   # seconds = 그 단계에 실제로 든 시간(초) — 상한 없음, 편당 시간 KPI
+CAP_KINDS = ("gemini", "typecast")               # 하루 상한이 걸리는 것
 DEFAULT_CAPS = {"gemini": 500, "typecast": 30}   # 임시 기본값 — caps 로 바꾼다
+RETRY_AFTER_MIN = 30               # release·끊김 뒤 claim_next 가 그 행을 다시 주기까지(분)
+STALL_AT = 3                       # 실패(release·끊김) 3회면 stalled — 사람이 unstall 해야 다시 돈다
+WORKER_SHOW_SEC = 24 * 3600        # 보드에 보일 워커: 마지막 맥박 24시간 안
 STEP_USES = {"bench": ("gemini",), "score": ("gemini",), "assign": (), "script": ("gemini",),
              "source": ("gemini",), "plan": (), "produce": ("typecast",), "check": ("gemini",)}
 # advance 에 꼭 있어야 하는 산출물(토픽 폴더 안 실제 파일)
@@ -114,9 +118,15 @@ CREATE TABLE IF NOT EXISTS reviews(
 CREATE TABLE IF NOT EXISTS cost(
   id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER, day TEXT, kind TEXT, n INTEGER, step TEXT, at TEXT);
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS workers(
+  worker TEXT PRIMARY KEY, category TEXT, track TEXT, channel TEXT, doing TEXT, idle_reason TEXT,
+  last_error TEXT, topic_id INTEGER, step TEXT, seen_at TEXT);
 CREATE INDEX IF NOT EXISTS ix_events_topic ON events(topic_id);
 CREATE INDEX IF NOT EXISTS ix_cost_day ON cost(day);
 """
+# 나중에 붙은 칸 — 옛 DB 에도 ALTER 로 붙인다(한 곳)
+_ADDED_COLS = (("cost_seconds", "cost_seconds INTEGER DEFAULT 0"), ("error_count", "error_count INTEGER DEFAULT 0"),
+               ("retry_at", "retry_at TEXT"), ("stalled", "stalled INTEGER DEFAULT 0"))
 
 
 @contextmanager
@@ -128,6 +138,10 @@ def _tx(data_dir=None):
     c.row_factory = sqlite3.Row
     try:
         c.executescript(_SCHEMA)
+        have = {r[1] for r in c.execute("PRAGMA table_info(topics)")}
+        for col, ddl in _ADDED_COLS:
+            if col not in have:
+                c.execute(f"ALTER TABLE topics ADD COLUMN {ddl}")
         c.execute("BEGIN IMMEDIATE")
         try:
             yield c
@@ -170,7 +184,8 @@ def _topic(r, now) -> dict:
         "human_stage": r["state"] if r["state"] in HUMAN else None,
         **{k: json.loads(r[k] or "{}") for k in DATA_KEYS},
         "outputs": json.loads(r["outputs"] or "{}"),
-        "cost": {"gemini": r["cost_gemini"], "typecast": r["cost_typecast"]},
+        "cost": {"gemini": r["cost_gemini"], "typecast": r["cost_typecast"], "seconds": r["cost_seconds"]},
+        "error_count": r["error_count"], "retry_at": r["retry_at"], "stalled": bool(r["stalled"]),
         "lock": {"owner": r["lock_owner"], "step": r["lock_step"], "at": r["lock_at"],
                  "heartbeat_at": r["heartbeat_at"], "doing": r["doing"], "age_sec": age,
                  "stale": bool(age is not None and age > STALE_SEC)},
@@ -178,6 +193,28 @@ def _topic(r, now) -> dict:
         "created_at": r["created_at"], "updated_at": r["updated_at"], "passed_at": r["passed_at"],
         "by": r["by"], "note": r["note"],
     }
+
+
+def _fail(c, r, now, by, kind, msg, retry_min=RETRY_AFTER_MIN):
+    """잠금을 풀고 실패를 센다(끊김·release 공통). STALL_AT 회면 stalled — claim 이 막히고 보드 '멈춘 이유'에 고정."""
+    n = (r["error_count"] or 0) + 1
+    stalled = 1 if n >= STALL_AT else 0
+    retry = _iso(now + timedelta(minutes=retry_min))
+    c.execute("UPDATE topics SET lock_owner=NULL,lock_step=NULL,lock_at=NULL,heartbeat_at=NULL,doing=NULL,"
+              "last_error=?,error_count=?,retry_at=?,stalled=?,updated_at=? WHERE id=?",
+              (msg, n, retry, stalled, _iso(now), r["id"]))
+    _event(c, r["id"], now, by, kind, r["state"], r["state"], r["lock_step"],
+           msg + (f" — 실패 {n}회, 멈춤(stalled)" if stalled else f" — 실패 {n}회, {retry} 뒤 다시"))
+
+
+def _touch_worker(c, worker, now, **kw):
+    """워커 맥박 표 갱신. 잡기·맥박·끝내기·손떼기·workers/heartbeat 가 모두 여기를 지난다."""
+    c.execute("INSERT OR IGNORE INTO workers(worker,seen_at) VALUES(?,?)", (worker, _iso(now)))
+    sets, args = ["seen_at=?"], [_iso(now)]
+    for k, v in kw.items():
+        sets.append(f"{k}=?")
+        args.append(v)
+    c.execute(f"UPDATE workers SET {','.join(sets)} WHERE worker=?", [*args, worker])
 
 
 def _expire(c, now) -> int:
@@ -189,9 +226,7 @@ def _expire(c, now) -> int:
         if hb and hb >= cutoff:
             continue
         msg = f"끊김 해제: {r['lock_owner']} {r['lock_step']} 마지막 신호 {r['heartbeat_at']}"
-        c.execute("UPDATE topics SET lock_owner=NULL,lock_step=NULL,lock_at=NULL,heartbeat_at=NULL,doing=NULL,"
-                  "last_error=?,updated_at=? WHERE id=?", (msg, _iso(now), r["id"]))
-        _event(c, r["id"], now, "server", "expire", r["state"], r["state"], r["lock_step"], msg)
+        _fail(c, r, now, "server", "expire", msg, retry_min=0)   # 죽은 워커 몫은 곧바로 다른 워커가 인수(실패로는 센다)
         n += 1
     return n
 
@@ -211,7 +246,7 @@ def _caps_state(c, now) -> dict:
     used = {k: 0 for k in COST_KINDS}
     for r in c.execute("SELECT kind, SUM(n) s FROM cost WHERE day=? GROUP BY kind", (day,)):
         used[r["kind"]] = r["s"] or 0
-    blocked = [k for k in COST_KINDS if used[k] >= caps[k]]
+    blocked = [k for k in CAP_KINDS if used[k] >= caps[k]]
     steps = [s for s in STEPS if any(k in blocked for k in STEP_USES[s])]
     return {"day": day, "caps": caps, "used": used, "blocked": blocked, "blocked_steps": steps}
 
@@ -226,9 +261,9 @@ def _cap_refusal(cs, step):
 def set_caps(caps: dict, data_dir=None) -> dict:
     if not isinstance(caps, dict) or not caps:
         raise TopicError("상한 값이 없습니다(gemini·typecast)")
-    bad = [k for k in caps if k not in COST_KINDS]
+    bad = [k for k in caps if k not in CAP_KINDS]
     if bad:
-        raise TopicError(f"모르는 비용 종류: {bad} — {list(COST_KINDS)} 만")
+        raise TopicError(f"상한을 걸 수 없는 종류: {bad} — {list(CAP_KINDS)} 만")
     for k, v in caps.items():
         if isinstance(v, bool) or not isinstance(v, int) or v < 0:
             raise TopicError(f"상한은 0 이상 정수: {k}={v!r}")
@@ -291,6 +326,9 @@ def _claim_row(c, r, worker, step, now, cs):
     state = r["state"]
     if state in HUMAN:
         raise TopicError(f"사람 검수 자리({state}) — 워커는 넘지 못합니다", 409)
+    if r["stalled"]:
+        raise TopicError(f"멈춤(stalled): 실패 {r['error_count']}회 — 사람이 풀어야 합니다(unstall). "
+                         f"마지막: {r['last_error']}", 409)
     ns = next_step(state, r["back_to"])
     if ns is None:
         raise TopicError(f"다음 일 없음(상태 {state}{', 폐기' if state == 'rejected' else ''})", 409)
@@ -315,6 +353,7 @@ def _claim_row(c, r, worker, step, now, cs):
         _event(c, r["id"], now, worker, "rework", "rejected", back, step, "반려 뒤 재작업")
     c.execute(f"UPDATE topics SET lock_owner=?,lock_step=?,lock_at=?,heartbeat_at=?,doing=NULL,updated_at=?{sets} "
               "WHERE id=?", [worker, step, _iso(now), _iso(now), _iso(now), *args, r["id"]])
+    _touch_worker(c, worker, now, topic_id=r["id"], step=step, doing=None, idle_reason=None)
     _event(c, r["id"], now, worker, "claim", r["state"] if state != "rejected" else r["back_to"], None, step)
 
 
@@ -336,9 +375,25 @@ def claim(tid, worker, step, data_dir=None) -> dict:
         return {"topic": _topic(_get(c, tid), now), "step": step}
 
 
-def claim_next(worker, steps=None, data_dir=None) -> dict:
-    """steps 중 하나를 할 수 있는 가장 오래된 소재를 잡는다. 없으면 왜 없는지(reasons)."""
+def _as_set(v, what):
+    if v is None or v == "" or v == []:
+        return None
+    vals = [v] if isinstance(v, str) else v
+    if not isinstance(vals, (list, tuple)) or not all(isinstance(x, str) and x for x in vals):
+        raise TopicError(f"{what} 는 문자열 또는 문자열 목록이어야 합니다: {v!r}")
+    return set(vals)
+
+
+def claim_next(worker, steps=None, category=None, track=None, channel=None, data_dir=None) -> dict:
+    """steps 중 하나를 할 수 있는 가장 오래된 소재를 잡는다. 없으면 왜 없는지(reasons).
+
+    거르기: category·track(소재 칸) · channel(assign.channel — 배정 전 소재는 channel 을 주면 안 잡힌다).
+    release·끊김 뒤 retry_at 이 안 지난 행과 stalled 행은 건너뛴다(직접 claim 은 retry_at 무시, stalled 는 막음).
+    """
     worker = _need_worker(worker)
+    cats, trks, chans = _as_set(category, "category"), _as_set(track, "track"), _as_set(channel, "channel")
+    if trks and trks - set(TRACKS):
+        raise TopicError(f"트랙은 {list(TRACKS)} 중: {sorted(trks)}")
     steps = list(steps or STEPS)
     bad = [s for s in steps if s not in STEPS]
     if bad:
@@ -347,10 +402,20 @@ def claim_next(worker, steps=None, data_dir=None) -> dict:
     with _tx(data_dir) as c:
         _expire(c, now)
         cs = _caps_state(c, now)
-        locked, capped = 0, set()
+        locked, capped, waiting, stalled = 0, set(), 0, 0
         for r in c.execute("SELECT * FROM topics ORDER BY id").fetchall():
             ns = next_step(r["state"], r["back_to"])
             if ns not in steps or r["state"] in HUMAN:
+                continue
+            if (cats and r["category"] not in cats) or (trks and r["track"] not in trks):
+                continue
+            if chans and (json.loads(r["assign"] or "{}").get("channel") not in chans):
+                continue
+            if r["stalled"]:
+                stalled += 1
+                continue
+            if r["retry_at"] and _parse(r["retry_at"]) > now:
+                waiting += 1
                 continue
             if r["lock_owner"] and not (r["lock_owner"] == worker and r["lock_step"] == ns):
                 locked += 1
@@ -361,8 +426,13 @@ def claim_next(worker, steps=None, data_dir=None) -> dict:
                 continue
             _claim_row(c, r, worker, ns, now, cs)
             return {"topic": _topic(_get(c, r["id"]), now), "step": ns}
-        reasons = sorted(capped) + ([f"잠김 {locked}건"] if locked else [])
-        return {"topic": None, "step": None, "reasons": reasons or [f"{steps} 할 소재 없음"]}
+        reasons = sorted(capped) + ([f"잠김 {locked}건"] if locked else []) + (
+            [f"실패 뒤 다시 시도 대기 {waiting}건"] if waiting else []) + (
+            [f"멈춤(stalled) {stalled}건 — 사람이 unstall"] if stalled else [])
+        filt = {k: sorted(v) for k, v in (("category", cats), ("track", trks), ("channel", chans)) if v}
+        _touch_worker(c, worker, now, topic_id=None, step=None)
+        return {"topic": None, "step": None,
+                "reasons": reasons or [f"{steps}{' ' + json.dumps(filt, ensure_ascii=False) if filt else ''} 할 소재 없음"]}
 
 
 def _held(c, tid, worker, now):
@@ -384,6 +454,7 @@ def heartbeat(tid, worker, doing=None, data_dir=None) -> dict:
         _held(c, tid, worker, now)
         c.execute("UPDATE topics SET heartbeat_at=?,doing=? WHERE id=?",
                   (_iso(now), (doing or "")[:200] or None, int(tid)))
+        _touch_worker(c, worker, now, doing=(doing or "")[:200] or None)
     return {"heartbeat_at": _iso(now)}
 
 
@@ -474,11 +545,13 @@ def advance(tid, worker, data=None, outputs=None, files=None, cost=None, note=""
         for name, text in files.items():           # 검사를 다 통과한 뒤에만 쓴다
             _write_file(d, name, text.encode("utf-8"))
         c.execute("UPDATE topics SET state=?,source=?,bench=?,score=?,assign=?,rights=?,outputs=?,"
-                  "cost_gemini=cost_gemini+?,cost_typecast=cost_typecast+?,lock_owner=NULL,lock_step=NULL,"
-                  "lock_at=NULL,heartbeat_at=NULL,doing=NULL,last_error=NULL,updated_at=? WHERE id=?",
+                  "cost_gemini=cost_gemini+?,cost_typecast=cost_typecast+?,cost_seconds=cost_seconds+?,"
+                  "lock_owner=NULL,lock_step=NULL,lock_at=NULL,heartbeat_at=NULL,doing=NULL,last_error=NULL,"
+                  "error_count=0,retry_at=NULL,updated_at=? WHERE id=?",
                   (new_state, *[json.dumps(merged[k], ensure_ascii=False) for k in DATA_KEYS],
                    json.dumps(all_out, ensure_ascii=False), cost.get("gemini", 0), cost.get("typecast", 0),
-                   _iso(now), int(tid)))
+                   cost.get("seconds", 0), _iso(now), int(tid)))
+        _touch_worker(c, worker, now, topic_id=None, step=None, doing=None, last_error=None)
         day = now.strftime("%Y-%m-%d")
         for k, n in cost.items():
             if n:
@@ -488,20 +561,54 @@ def advance(tid, worker, data=None, outputs=None, files=None, cost=None, note=""
         return _topic(_get(c, tid), now)
 
 
-def release(tid, worker, error, data_dir=None) -> dict:
-    """워커가 손을 뗀다(실패 보고). 이유 없이는 못 뗀다 — 조용한 실패 금지."""
+def release(tid, worker, error, retry_after_min=None, data_dir=None) -> dict:
+    """워커가 손을 뗀다(실패 보고). 이유 없이는 못 뗀다 — 조용한 실패 금지.
+    retry_after_min(기본 30) 동안 claim_next 가 이 행을 다시 안 준다. 실패 STALL_AT 회면 stalled."""
     worker = _need_worker(worker)
     if not isinstance(error, str) or not error.strip():
         raise TopicError("release 에는 error(왜 못 했나)가 필요합니다")
+    if retry_after_min is None:
+        retry_after_min = RETRY_AFTER_MIN
+    if isinstance(retry_after_min, bool) or not isinstance(retry_after_min, (int, float)) or retry_after_min < 0:
+        raise TopicError(f"retry_after_min 은 0 이상 숫자(분): {retry_after_min!r}")
     now = _now()
     with _tx(data_dir) as c:
         _expire(c, now)
         r = _held(c, tid, worker, now)
         msg = f"{worker} {r['lock_step']}: {error.strip()}"[:500]
-        c.execute("UPDATE topics SET lock_owner=NULL,lock_step=NULL,lock_at=NULL,heartbeat_at=NULL,doing=NULL,"
-                  "last_error=?,updated_at=? WHERE id=?", (msg, _iso(now), int(tid)))
-        _event(c, tid, now, worker, "release", r["state"], r["state"], r["lock_step"], msg)
+        _fail(c, r, now, worker, "release", msg, retry_after_min)
+        _touch_worker(c, worker, now, topic_id=None, step=None, doing=None, last_error=msg)
         return _topic(_get(c, tid), now)
+
+
+def unstall(tid, by="admin", note="", data_dir=None) -> dict:
+    """사람이 멈춘(stalled) 소재를 푼다 — 실패 횟수·대기를 0 으로, last_error 는 이력에 남기고 지운다."""
+    now = _now()
+    with _tx(data_dir) as c:
+        r = _get(c, tid)
+        if not r["stalled"] and not r["retry_at"] and not r["error_count"]:
+            raise TopicError("멈춘 소재가 아닙니다(실패 기록 없음)", 409)
+        c.execute("UPDATE topics SET stalled=0,error_count=0,retry_at=NULL,last_error=NULL,updated_at=? WHERE id=?",
+                  (_iso(now), int(tid)))
+        _event(c, tid, now, by, "unstall", r["state"], r["state"], None,
+               f"{note or '풀기'} (지난 실패 {r['error_count']}회: {r['last_error']})")
+        return _topic(_get(c, tid), now)
+
+
+def worker_heartbeat(worker, category=None, track=None, channel=None, doing=None, idle_reason=None,
+                     last_error=None, data_dir=None) -> dict:
+    """워커 맥박(잡은 소재와 무관) — 쉬는 워커·find 실패도 보드에 보이게. 끊김 판정은 board 가 한다."""
+    worker = _need_worker(worker)
+    for k, v in (("category", category), ("track", track), ("channel", channel), ("doing", doing),
+                 ("idle_reason", idle_reason), ("last_error", last_error)):
+        if v is not None and not isinstance(v, str):
+            raise TopicError(f"{k} 는 문자열이어야 합니다")
+    now = _now()
+    with _tx(data_dir) as c:
+        _touch_worker(c, worker, now, category=category, track=track, channel=channel,
+                      doing=(doing or "")[:200] or None, idle_reason=(idle_reason or "")[:500] or None,
+                      last_error=(last_error or "")[:500] or None)
+    return {"worker": worker, "seen_at": _iso(now)}
 
 
 def _check_back(back_to):
@@ -521,7 +628,8 @@ def reject(tid, reason, back_to=None, by="admin", data_dir=None) -> dict:
             raise TopicError("이미 통과(passed)한 소재입니다", 409)
         note = reason.strip() + (f" (잠금 {r['lock_owner']} {r['lock_step']} 풀림)" if r["lock_owner"] else "")
         c.execute("UPDATE topics SET state='rejected',back_to=?,lock_owner=NULL,lock_step=NULL,lock_at=NULL,"
-                  "heartbeat_at=NULL,doing=NULL,last_error=?,updated_at=? WHERE id=?",
+                  "heartbeat_at=NULL,doing=NULL,stalled=0,error_count=0,retry_at=NULL,last_error=?,updated_at=? "
+                  "WHERE id=?",
                   (back_to, f"반려: {reason.strip()}"[:500], _iso(now), int(tid)))
         _event(c, tid, now, by, "reject", r["state"], "rejected", None, f"{note} → {back_to or '폐기'}")
         return _topic(_get(c, tid), now)
@@ -604,6 +712,12 @@ def _rate(p, j):
     return round(p / (p + j), 3) if (p + j) else None
 
 
+def _minutes(secs):
+    secs = [s for s in secs if s]
+    return {"n": len(secs), "avg": round(sum(secs) / len(secs) / 60, 1) if secs else None,
+            "median": round(statistics.median(secs) / 60, 1) if secs else None}
+
+
 def _kpi(c, now, rows):
     day = now.strftime("%Y-%m-%d")
     days = [(now - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(6, -1, -1)]
@@ -624,6 +738,8 @@ def _kpi(c, now, rows):
                              "median": round(statistics.median(hrs), 1) if hrs else None},
         "cost_per_passed": {k: (round(sum(r[f"cost_{k}"] for r in passed) / len(passed), 1) if passed else None)
                             for k in COST_KINDS},
+        # 실측 작업 시간(advance 의 cost.seconds 합, 분) — 추가→통과 벽시계(hours_per_passed)와 따로
+        "work_min_per_passed": _minutes([r["cost_seconds"] for r in passed]),
     }
 
 
@@ -635,6 +751,7 @@ def board(state=None, category=None, limit=300, data_dir=None) -> dict:
         rows = c.execute("SELECT * FROM topics ORDER BY id DESC").fetchall()
         cs = _caps_state(c, now)
         kpi = _kpi(c, now, rows)
+        wrows = c.execute("SELECT * FROM workers ORDER BY worker").fetchall()
     grid, totals = {}, {}
     for r in rows:
         grid.setdefault(r["category"], {}).setdefault(r["state"], 0)
@@ -644,12 +761,32 @@ def board(state=None, category=None, limit=300, data_dir=None) -> dict:
     decide = [{"id": t["id"], "name": t["name"], "state": t["state"], "since": t["updated_at"],
                "files": [f["name"] for f in _files(t["id"], data_dir)]}
               for t in topics if t["state"] in HUMAN]
-    workers = [{"worker": t["lock"]["owner"], "topic_id": t["id"], "name": t["name"], "step": t["lock"]["step"],
-                "heartbeat_at": t["lock"]["heartbeat_at"], "age_sec": t["lock"]["age_sec"],
-                "stale": t["lock"]["stale"], "doing": t["lock"]["doing"]}
-               for t in topics if t["lock"]["owner"]]
+    wrow = {w["worker"]: dict(w) for w in wrows}
+    workers = []
+    for t in topics:                                          # 잡은 일이 있는 워커(소재마다 한 줄)
+        if t["lock"]["owner"]:
+            w = wrow.get(t["lock"]["owner"], {})
+            workers.append({"worker": t["lock"]["owner"], "status": "stale" if t["lock"]["stale"] else "working",
+                            "topic_id": t["id"], "name": t["name"], "step": t["lock"]["step"],
+                            "heartbeat_at": t["lock"]["heartbeat_at"], "age_sec": t["lock"]["age_sec"],
+                            "stale": t["lock"]["stale"], "doing": t["lock"]["doing"],
+                            "category": w.get("category"), "track": w.get("track"), "channel": w.get("channel"),
+                            "idle_reason": None, "last_error": w.get("last_error")})
+    holding = {w["worker"] for w in workers}
+    for name, w in wrow.items():                              # 쉬는 워커(잡은 것 없음) — find 실패·대기 이유
+        seen = _parse(w["seen_at"])
+        age = int((now - seen).total_seconds()) if seen else None
+        if name in holding or age is None or age > WORKER_SHOW_SEC:
+            continue
+        workers.append({"worker": name, "status": "stale" if age > STALE_SEC else "idle", "topic_id": None,
+                        "name": None, "step": None, "heartbeat_at": w["seen_at"], "age_sec": age,
+                        "stale": age > STALE_SEC, "doing": w["doing"], "category": w["category"],
+                        "track": w["track"], "channel": w["channel"], "idle_reason": w["idle_reason"],
+                        "last_error": w["last_error"]})
+    stalled = [{"id": t["id"], "name": t["name"], "state": t["state"], "error_count": t["error_count"],
+                "error": t["last_error"]} for t in topics if t["stalled"]]
     errors = [{"id": t["id"], "name": t["name"], "state": t["state"], "error": t["last_error"]}
               for t in topics if t["last_error"]]
     shown = [t for t in topics if (not state or t["state"] == state) and (not category or t["category"] == category)]
     return {"now": _iso(now), "states": list(STATES), "grid": grid, "totals": totals, "decide": decide,
-            "workers": workers, "errors": errors, "caps": cs, "kpi": kpi, "topics": shown[:int(limit)]}
+            "workers": workers, "stalled": stalled, "errors": errors, "caps": cs, "kpi": kpi, "topics": shown[:int(limit)]}
