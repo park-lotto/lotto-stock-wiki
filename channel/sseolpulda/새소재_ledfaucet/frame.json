@@ -21,9 +21,9 @@
   {
    "kind": "video",
    "x": 0,
-   "y": 420,
+   "y": 426,
    "w": 1080,
-   "h": 1012,
+   "h": 1006,
    "radius": 0
   },
   {
@@ -36,7 +36,7 @@
    "lines": 2,
    "font": "SBAggroB",
    "size": 93.2,
-   "line_h": 93,
+   "line_h": 96,
    "rgb": [
     0,
     0,
@@ -76,7 +76,7 @@
    "box": null,
    "italic": false,
    "letter_spacing": -7.4,
-   "word_spacing": 0,
+   "word_spacing": 6.8,
    "enter": null,
    "text": null
   },
@@ -126,6 +126,10 @@
    "layers[text:title].text"
   ],
   "defaults": true,
-  "caption_style": "창아래_검정"
+  "caption_style": "창아래_검정",
+  "manual": [
+   "layers[text:caption].word_spacing 0→6.8 (조율자 10-16: 프리셋 고정값 오류, ZdeZ frame_A_auto 6.8)",
+   "title.line_h 93→96 · video y420→426 h1012→1006 — 프리셋 rules.lh_ratio 기본 1.0 인데 잰 값 1.03(ZdeZ frame_A_auto line_h 96·창 [0,426,1080,1006]); 대조 ① 영상 창 6px 밖이었음"
+  ]
  }
 }

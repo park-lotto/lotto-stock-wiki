@@ -1,0 +1,145 @@
+{
+ "beats": [
+  {
+   "beat_idx": 0,
+   "t0": 0.0,
+   "dur": 5.2,
+   "narration": "해외 댓글이 블루투스 물이라고 난리길래",
+   "caption_lines": [
+    "해외 댓글이 블루투스 물이라고 난리길래"
+   ],
+   "role": "hook",
+   "primary": {
+    "video_id": "s0",
+    "start": 0.0,
+    "end": 5.2
+   }
+  },
+  {
+   "beat_idx": 1,
+   "t0": 5.2,
+   "dur": 2.1,
+   "narration": "그냥 장식인가 싶었는데",
+   "caption_lines": [
+    "그냥 장식인가 싶었는데"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 5.2,
+    "end": 7.3
+   }
+  },
+  {
+   "beat_idx": 2,
+   "t0": 7.3,
+   "dur": 3.6,
+   "narration": "위 뚜껑을 쭉 당기면",
+   "caption_lines": [
+    "위 뚜껑을 쭉 당기면"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 7.3,
+    "end": 10.9
+   }
+  },
+  {
+   "beat_idx": 3,
+   "t0": 10.9,
+   "dur": 3.9,
+   "narration": "숨어 있던 호스 샤워기로 변신함;;",
+   "caption_lines": [
+    "숨어 있던 호스 샤워기로 변신함;;"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 10.9,
+    "end": 14.8
+   }
+  },
+  {
+   "beat_idx": 4,
+   "t0": 14.8,
+   "dur": 3.4,
+   "narration": "분수처럼 솟는 것도 미쳤네",
+   "caption_lines": [
+    "분수처럼 솟는 것도 미쳤네"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 14.8,
+    "end": 18.2
+   }
+  },
+  {
+   "beat_idx": 5,
+   "t0": 18.2,
+   "dur": 3.5,
+   "narration": "이거 갖고 싶은 거 인정?",
+   "caption_lines": [
+    "이거 갖고 싶은 거 인정?"
+   ],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 18.2,
+    "end": 21.7
+   }
+  },
+  {
+   "beat_idx": 6,
+   "t0": 21.72,
+   "dur": 2.18,
+   "narration": "",
+   "caption_lines": [],
+   "role": "body",
+   "primary": {
+    "video_id": "s0",
+    "start": 21.72,
+    "end": 23.9
+   }
+  }
+ ],
+ "scenes": [
+  [
+   0.0,
+   5.2,
+   "해외 댓글이 블루투스 물이라고 난리길래"
+  ],
+  [
+   5.2,
+   7.300000000000001,
+   "그냥 장식인가 싶었는데"
+  ],
+  [
+   7.3,
+   10.9,
+   "위 뚜껑을 쭉 당기면"
+  ],
+  [
+   10.9,
+   14.8,
+   "숨어 있던 호스 샤워기로 변신함;;"
+  ],
+  [
+   14.8,
+   18.2,
+   "분수처럼 솟는 것도 미쳤네"
+  ],
+  [
+   18.2,
+   21.7,
+   "이거 갖고 싶은 거 인정?"
+  ],
+  [
+   21.72,
+   23.9,
+   ""
+  ]
+ ],
+ "tail_start": 21.72
+}

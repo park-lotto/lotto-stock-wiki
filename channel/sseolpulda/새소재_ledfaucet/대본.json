@@ -147,7 +147,7 @@
   "check": {
    "n_lines": 6,
    "n_ok": true,
-   "width_median_pct": -0.4,
+   "width_median_pct": 2.7,
    "describe_lines": [],
    "copied_lines": [],
    "ending_off": [],
@@ -195,12 +195,12 @@
     ]
    ],
    "est_px": [
-    940,
-    550,
-    450,
-    750,
-    611,
-    539
+    967,
+    563,
+    470,
+    777,
+    631,
+    566
    ],
    "orig_px": [
     903,
@@ -216,7 +216,8 @@
    "copied_8grams_vs_examples": 0,
    "numbers": []
   },
-  "model": "opus(직접 작성, 제미나이 호출 0) + style_writer.check_captions"
+  "model": "opus(직접 작성, 제미나이 호출 0) + style_writer.check_captions",
+  "check_note": "낱말 간격 6.8 틀로 다시 잼(10-16)"
  },
  "made_by": "오푸스 담당 10-16 — 대본은 직접 쓰고 검사 함수(check_captions·width_estimator)만 돌림",
  "gate": {

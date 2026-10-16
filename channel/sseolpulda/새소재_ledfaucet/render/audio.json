@@ -1,0 +1,29 @@
+{
+ "bgm": "qiuqiu",
+ "bgm_file": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\shopping_shorts\\assets\\bgm_lib\\qiuqiu.mp3",
+ "bgm_ratio": 0.15,
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/bb35a411e8da4090aff5bd5a310661f8.mp3",
+   "pack_id": 30,
+   "pack_title": "ding_0",
+   "pack_category": null,
+   "t": 20.22,
+   "db": 0,
+   "why": "원본 ZdeZ 효과음 1발 = 뜯기 audio.composition.sfx.times [20.22, 0.18] → 같은 시각, 우리 팩(packs_manifest id 30 'ding_0', 길이 0.179초 = 원본 0.18초와 같은 길이). 팩 manifest 에 category 가 비어 있어(null) category 로는 못 고르고 keywords 'ding'·길이로 고름. 카테고리 '팝/띵'(id 1473·1474)은 길이 2.0·1.6초라 원본 0.18초와 안 맞음"
+  }
+ ],
+ "bgm_fill_where_source_silent": {
+  "ranges": [],
+  "ratio": 1.0,
+  "silent_db": -40.0
+ },
+ "target_lufs": -10.1,
+ "final": {
+  "I": -10.4,
+  "LRA": 4.8,
+  "TP": -0.1
+ },
+ "tts": null,
+ "narration": "없음(원음만+자막)"
+}
