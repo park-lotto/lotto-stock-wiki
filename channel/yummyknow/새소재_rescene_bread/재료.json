@@ -1,0 +1,345 @@
+{
+ "_note": "새 소재 2편(리센느 빵) 재료 1판 — 같은 소재 영상 10컷(맛상무 piEeQ6cWpHg · CU 공식 광고 LB3jV93Qc5c · 흑백리뷰 mGCzCVzlG6s · 뉴스1 연예TV ltt0E8TbQKs, 전부 1080p web 137) + 우리 짤 팩 3컷(id 962·1012·1052). 그림 칸 = rGFX 원본 picture_boxes 13개(750×897·1080×975 뺌)를 자막 아래 y752, 컷 모양 따라 순서만 바꿈.",
+ "cand_dir": "C:/숏템_칼카피/yummyknow/새소재_rescene_bread/make",
+ "shots": [
+  {
+   "src": "재료후보HQ/v_piEeQ6cWpHg.mp4",
+   "url": "https://www.youtube.com/watch?v=piEeQ6cWpHg",
+   "ss": 5.2,
+   "kind": "제품 영상",
+   "box": null,
+   "full": true,
+   "src_crop": [
+    380,
+    160,
+    1160,
+    800
+   ],
+   "ours": "리센느 빵 5종 봉지를 앞에 놓은 리뷰어(맛상무, 소스 컷 5.11~15.15초)",
+   "why": "훅: '편의점에서 리센느 빵 구경해 본 사람?' — 그 빵들",
+   "i": 0,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_LB3jV93Qc5c.mp4",
+   "url": "https://www.youtube.com/watch?v=LB3jV93Qc5c",
+   "ss": 47.3,
+   "kind": "제품 영상",
+   "box": [
+    87,
+    752,
+    906,
+    495
+   ],
+   "src_crop": [
+    0,
+    0,
+    1920,
+    880
+   ],
+   "ours": "CU 매장 안 리센느 멤버들(CU 공식 광고 영상, 컷 47.21~)",
+   "why": "'CU가 리센느 멤버들이' — CU×리센느",
+   "i": 1,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_vIIBDgj3YGc.mp4",
+   "url": "https://www.youtube.com/watch?v=vIIBDgj3YGc",
+   "ss": 2.9,
+   "kind": "제품 영상",
+   "box": [
+    87,
+    752,
+    906,
+    498
+   ],
+   "src_crop": [
+    0,
+    110,
+    1920,
+    860
+   ],
+   "ours": "CU 공식 키비주얼 '리센느와 CU의 SWEET Scene!' 빵 5종(뉴스1 영상 안 ~5.37초 · 위쪽 출처·로고 잘라냄)",
+   "why": "'각자 좋아하는 빵으로 다섯 가지를' — 5종",
+   "i": 2,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_mGCzCVzlG6s.mp4",
+   "url": "https://www.youtube.com/watch?v=mGCzCVzlG6s",
+   "ss": 49.2,
+   "kind": "제품 영상",
+   "box": [
+    84,
+    752,
+    912,
+    600
+   ],
+   "src_crop": [
+    160,
+    0,
+    1600,
+    860
+   ],
+   "ours": "옥수수크림빵 근접 → 반 갈라 크림(흑백리뷰, 컷 49.12·50.52)",
+   "why": "'첫날 풀린 원이의 옥수수크림빵이' — 그 빵",
+   "i": 3,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "짤/kr_cX_3IeDt8YA_181715.mp4",
+   "url": "pack:962",
+   "asset_id": 962,
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    67,
+    752,
+    945,
+    645
+   ],
+   "src_crop": null,
+   "ours": "짤: 남성 입 벌리고 감탄 — 팩 tone 놀람",
+   "why": "'하루도 안 돼서 99% 팔리고 나흘 만에 10만 개' — 놀람",
+   "i": 4,
+   "fit": "cover",
+   "src_res": null
+  },
+  {
+   "src": "재료후보HQ/v_mGCzCVzlG6s.mp4",
+   "url": "https://www.youtube.com/watch?v=mGCzCVzlG6s",
+   "ss": 86.85,
+   "kind": "제품 영상",
+   "box": [
+    36,
+    752,
+    1008,
+    810
+   ],
+   "src_crop": [
+    0,
+    0,
+    1920,
+    860
+   ],
+   "ours": "빵에서 나온 투명 포토카드를 들어 보임(컷 86.79~89.99)",
+   "why": "'빵마다 멤버 투명 포카가 한 장씩' — 그 포카",
+   "i": 5,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_ltt0E8TbQKs.mp4",
+   "url": "https://www.youtube.com/watch?v=ltt0E8TbQKs",
+   "ss": 37.0,
+   "kind": "제품 영상",
+   "box": [
+    99,
+    752,
+    882,
+    822
+   ],
+   "src_crop": [
+    0,
+    100,
+    1920,
+    620
+   ],
+   "ours": "리센느 멤버가 빵 봉지에서 포카를 꺼내 보임(뉴스1 연예TV, 컷 36.90~41.06)",
+   "why": "'랜덤으로 들어 있어서 그 포카가' — 포카 뽑기",
+   "i": 6,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "짤/fm_mindblown.mp4",
+   "url": "pack:1012",
+   "asset_id": 1012,
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    169,
+    752,
+    741,
+    462
+   ],
+   "src_crop": null,
+   "ours": "짤: Mind Blown — 팩 tone 놀람",
+   "why": "'빵값보다 몇 배 비싸게 거래될 정도' — 어이없는 시세",
+   "i": 7,
+   "fit": "cover",
+   "src_res": null
+  },
+  {
+   "src": "재료후보HQ/v_piEeQ6cWpHg.mp4",
+   "url": "https://www.youtube.com/watch?v=piEeQ6cWpHg",
+   "ss": 12.0,
+   "kind": "제품 영상",
+   "box": [
+    0,
+    752,
+    1080,
+    660
+   ],
+   "src_crop": [
+    180,
+    440,
+    1540,
+    520
+   ],
+   "ours": "빵 5종 봉지 나란히(맛상무)",
+   "why": "'60만 개 넘게 팔린 이 빵' — 그 빵들",
+   "i": 8,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_piEeQ6cWpHg.mp4",
+   "url": "https://www.youtube.com/watch?v=piEeQ6cWpHg",
+   "ss": 38.6,
+   "kind": "제품 영상",
+   "box": [
+    120,
+    752,
+    840,
+    831
+   ],
+   "src_crop": [
+    300,
+    150,
+    1320,
+    820
+   ],
+   "ours": "리센느 빵 먹는 남성 리뷰어(맛상무, 컷 ~41.98)",
+   "why": "'10대 팬이 아니라 30대 남자들' — 빵 먹는 아저씨(나이 주장은 화면에 안 함)",
+   "i": 9,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "재료후보HQ/v_ltt0E8TbQKs.mp4",
+   "url": "https://www.youtube.com/watch?v=ltt0E8TbQKs",
+   "ss": 42.0,
+   "kind": "제품 영상",
+   "box": [
+    159,
+    752,
+    762,
+    873
+   ],
+   "src_crop": [
+    0,
+    100,
+    1920,
+    740
+   ],
+   "ours": "멤버가 포토카드를 크게 들어 보임(뉴스1 연예TV, 컷 41.06~)",
+   "why": "'우리는 빵이 아니라 포카를 사는 거고' — 포카",
+   "i": 10,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  },
+  {
+   "src": "짤/fm_risitas.mp4",
+   "url": "pack:1052",
+   "asset_id": 1052,
+   "ss": 0.0,
+   "kind": "짤",
+   "box": [
+    145,
+    752,
+    789,
+    756
+   ],
+   "src_crop": null,
+   "ours": "짤: 숨 넘어가게 웃는 아저씨(El Risitas) — 팩 tone 웃음",
+   "why": "'빵은 덤이라는 쪽이랑' — 웃긴 댓글 반응",
+   "i": 11,
+   "fit": "cover",
+   "src_res": null
+  },
+  {
+   "src": "재료후보HQ/v_mGCzCVzlG6s.mp4",
+   "url": "https://www.youtube.com/watch?v=mGCzCVzlG6s",
+   "ss": 52.3,
+   "kind": "제품 영상",
+   "box": [
+    168,
+    752,
+    744,
+    828
+   ],
+   "src_crop": [
+    160,
+    0,
+    1600,
+    860
+   ],
+   "ours": "옥수수크림빵 한 입 먹는 리뷰어(컷 52.19~55.96)",
+   "why": "'빵만 60개 넘게 먹었다는 후기' — 빵 먹방",
+   "i": 12,
+   "fit": "cover",
+   "src_res": [
+    1920,
+    1080
+   ]
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/c9b9d22d6ecf46028cb17f0ab1bae023.mp3",
+   "asset_id": 80,
+   "title": "swoosh_2",
+   "t": 0.0,
+   "db": 0,
+   "why": "원본 효과음 0.06초 자리(1편과 같은 파일)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/4412b3841d85460abc8884cab19c83d1.mp3",
+   "asset_id": 78,
+   "title": "r3_pop_3",
+   "t": "end-0.2",
+   "db": 0,
+   "why": "원본 끝 효과음 자리"
+  }
+ ],
+ "notes": [
+  "흑백리뷰 HxCitmbq968(5종 리뷰)·MUZEVbcLlE0(포카깡)은 받기 실패(시간 초과·403) — 안 씀",
+  "전 소스 1920×1080(LB3j·ltt0 은 AV1)"
+ ],
+ "_history": [
+  "1판 시트: #3·#5·#12 아래 흑백리뷰 자막 → 높이 860 · #6·#10 뉴스1 큰 글자('짠!·그립감 좋다~')·보라 자막·위 출처 → y100~720/700 · #8 CU 매대가 김밥·샌드위치(빵 아님) → 맛상무 봉지 5종 줄, #2 는 CU 공식 키비주얼(빵 5종)",
+  "2판 시트: #2 1.8초는 '예약구매 SOLD OUT' 화면이 먼저 → 2.9초(키비주얼만) · #10 99초는 자르면 포카가 빠짐 → 42.0초 포카 크게(보라 자막 y870~ 아래로 자름)"
+ ]
+}
