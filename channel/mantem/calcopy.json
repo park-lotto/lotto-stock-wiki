@@ -1,0 +1,28 @@
+{
+ "steps": {
+  "1": {"state": "done", "date": "2026-10-17", "note": "만템 연예인템 조회 상위 8편(67만~233만, 08-14~09-08) — 예능 클립 vJvexR2tnCE 제외. 채널 쇼츠 72편 중", "files": []},
+  "2": {"state": "done", "date": "2026-10-17", "note": "8편 뜯기 1판 + 색톤 실측(좌우 반전·보정 없음 확인) + 원음 실측 + 프리셋 얜샷템(자막 스타일 2: 나레_노랑·원음_흰글자, roles 6) + 렌더 나란히 대조", "files": ["channel/mantem/뜯기/색톤_실측.md", "channel/mantem/뜯기/원음_실측.md", "channel/mantem/preset/얜샷템/manifest.json", "channel/mantem/frame_얜샷템.json", "channel/mantem/비교/나란히_만템_얜샷템프리셋.jpg"]}
+ },
+ "name": "만템 (벤치) → 우리 채널 얜샷템",
+ "url": "https://www.youtube.com/channel/UCNVXvKAeo3mM3toKsg-Mqog",
+ "channel_id": "UCNVXvKAeo3mM3toKsg-Mqog",
+ "concept": "연예인 본인 원음 한 마디로 열고, 나레 2줄('~이라는데' 다리 → '~라네요' 마무리)로 엮어 원음을 80% 들려주는 15~25초 셀럽템 쇼츠(출처 원본 재편집)",
+ "next": "제목 끝 낱말 노랑 강조·타이핑 강조 자막·종이 찢김/페이지 말림 전환(효과_요청목록.md) 팩 수령 → 얜샷템 1편 3판을 이 틀로",
+ "rules": {
+  "n_videos": 8,
+  "duration_sec": {"median": 19.4, "range": [12.2, 27.2]},
+  "cut_sec": {"median": 1.4, "range": [1.15, 1.93], "p90_median": 2.27, "first_cut_median": 1.6, "note": "bench.cuts(같은 자). check_seams 컷 수 12~36"},
+  "narration_cps": {"median": 8.4, "range": [6.3, 10.7], "note": "나레 구간만(글자÷나레 초)"},
+  "lufs": {"median": -15.0, "range": [-16.9, -12.5]},
+  "caption_max_chars": {"max": 13, "median": 11.5, "note": "공백·문장부호 뺀 한 줄 최대(편별 최대의 중앙). 줄 수 1(8편 121칸 중 116칸)"},
+  "caption_change_sec": {"median": 0.9, "range": [0.55, 1.1]},
+  "source_audio_share": {"median": 0.80, "range": [0.60, 0.87], "note": "ASR 7편(0LOy 판정 실패). 자막색 기준 원음 68%(나레 노랑 32%)"},
+  "narration_segments": {"median": 2, "range": [2, 3], "first_start_median": 2.1, "first_len_median": 2.1, "open_with_source": "7/8", "end_with_narration": "5/8"},
+  "title": {"font": "Cafe24Ohsquare 기울임 10°(8/8)", "size": 118, "letter_spacing": -5.5, "word_spacing": 14, "y_ink_top": "152~179(중앙 156)", "line1": "흰 [253,253,253]", "line2": "민트 [166,254,246]", "line2_end_word": "연노랑 [249,245,157] — 8/8, 엔진 칸 없음", "outline": "없음", "shadow": "없음", "band": "검정 [0,0,0] 화면 전체, 영상 창 y420 1080×1080"},
+  "caption": {"narration": "노랑 [245,255,22] Cafe24Ohsquare 기울임 64px·검정 외곽 5, 잉크 위 y1226", "source": "흰 [255,255,255] GmarketSansBold 58px·검정 외곽 5, 잉크 위 y1322~1329, 강조 낱말 민트 [187,255,230]/연노랑 [249,245,183]", "enter": "없음(노랑 자막 11번 실측 폭 변화 0)", "quote_marks": "없음 — 색과 자리로 구분"},
+  "credit": "창 아래 '출처 : <원본 채널>' 흰 32px y1524 — 8/8",
+  "video": {"grade": "없음(같은 장면 3곳 Y −1.3~−1.8·채도 +0.4~1.5)", "mirror": "좌우 반전(9Fc 3장면 확인, 나머지 미확인)", "zoom": "1.32~1.60배"},
+  "transitions": "종이 찢김 열림 4편·페이지 말림 등장 3편·흰 번쩍+반짝이 1·검정에서 밝아짐 2·작은 카드 확대 1 — 효과_요청목록.md",
+  "from": "channel/mantem/뜯기/*/뜯기.json 8편(엔진 뜯기 1판) · 색톤_실측.md · 원음_실측.md"
+ }
+}

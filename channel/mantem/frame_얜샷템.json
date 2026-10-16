@@ -1,0 +1,158 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "BDAjUIBTjfY",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 146,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 118,
+   "line_h": 127,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": [
+    [
+     253,
+     253,
+     253
+    ],
+    [
+     166,
+     254,
+     246
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -5.5,
+   "word_spacing": 14,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "안유진이 매일 바르는\n미국 마트 바닐라 로션"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1206,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "Cafe24Ohsquare",
+   "size": 64,
+   "line_h": 74,
+   "rgb": [
+    245,
+    255,
+    22
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1524,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 32,
+   "line_h": 40,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 : IVE"
+  }
+ ],
+ "made_from": {
+  "tool": "preset_save apply",
+  "preset": "channel/mantem/preset/얜샷템",
+  "variables_filled": [
+   "layers[text:title].text",
+   "layers[text:label].text"
+  ],
+  "from_frame": null,
+  "overrides": [
+   "layers[text:title].text",
+   "layers[text:label].text"
+  ],
+  "defaults": false,
+  "caption_style": null
+ }
+}
