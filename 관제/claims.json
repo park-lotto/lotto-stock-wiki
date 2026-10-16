@@ -119,6 +119,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/scene_style.py:_needs_bake": {
+    "at": "2026-10-17 01:09",
+    "card": 222,
+    "track": "모션그래픽팩"
+  },
   "shopping_shorts/scene_style.py:compose": {
     "at": "2026-10-05 15:47",
     "card": 124,
