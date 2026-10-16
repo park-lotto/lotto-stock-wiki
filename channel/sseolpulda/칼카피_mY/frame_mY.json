@@ -51,12 +51,7 @@
    "outline": null,
    "line_outline": [
     null,
-    [
-     12,
-     25,
-     19,
-     0
-    ]
+    null
    ],
    "shadow": null,
    "box": null,
@@ -71,11 +66,11 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 1220,
+   "y": 1225,
    "lines": 1,
    "font": "PretendardXBold",
-   "size": 90.0,
-   "line_h": 103,
+   "size": 83.2,
+   "line_h": 95,
    "rgb": [
     255,
     255,
