@@ -55,7 +55,7 @@ def test_blank_and_emph_caption_events_in_rendered_frames(tmp_path):
     mats = {"cand_dir": str(cand), "shots": [{"src": "gray.mp4", "ss": 0, "full": True}] * 3}
     (tmp_path / "m.json").write_text(json.dumps(mats), encoding="utf-8")
     final = narr_video.build({"frames": [{"frame": str(FRAME), "t_end": None}], "script": str(tmp_path / "s.json"), "tts": str(tts),
-                              "materials": str(tmp_path / "m.json"), "out": str(tmp_path / "out"), "chunk": 30, "caption_mode": "replace"})
+                              "materials": str(tmp_path / "m.json"), "out": str(tmp_path / "out"), "chunk": 30, "caption_mode": "replace", "line_asr": False})
     cap = next(l for l in json.loads(FRAME.read_text(encoding="utf-8"))["layers"] if l.get("role") == "caption")
     y0, y1 = int(cap["y"]) - 10, int(cap["y"] + cap["line_h"]) + 10
 

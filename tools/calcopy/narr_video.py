@@ -162,17 +162,103 @@ def _place(steps: list[dict], segs: list[tuple[float, float]], snap: float, firs
     return starts
 
 
+def tts_transcript(audio: str, ask=None) -> tuple[list[dict] | None, str]:
+    """나레 받아쓰기(구절 start/end/text) — 무료 제미나이 1회(gemini_free.ask, 지시문 = transcribe_free.P), 결과는 <audio>.asr.json 캐시
+    (같은 파일 md5 면 재호출 0). 돌려주는 값 (구절 목록|None, 출처/실패 이유)."""
+    import hashlib
+    ap = Path(audio)
+    md5 = hashlib.md5(ap.read_bytes()).hexdigest()
+    cache = ap.with_name(ap.name + ".asr.json")
+    if cache.exists():
+        try:
+            c = json.loads(cache.read_text(encoding="utf-8"))
+            if c.get("md5") == md5 and isinstance(c.get("segments"), list):
+                return c["segments"], f"캐시 {cache.name}"
+        except ValueError:
+            pass
+    if ask is None:
+        from tools.calcopy.engine.gemini_free import ask
+    from tools.calcopy.transcribe_free import P
+    tmp = ap.with_name(ap.stem + "_asr16k.mp3")
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(ap), "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", str(tmp)])
+    data = tmp.read_bytes(); tmp.unlink()
+    d, err = ask([(data, "audio/mp3")], P, "tts_asr")
+    seg = [x for x in ((d or {}).get("segments") or []) if isinstance(x, dict) and x.get("text") is not None and x.get("start") is not None]
+    if not seg:
+        return None, f"받아쓰기 실패: {err or '빈 답'}"
+    cache.write_text(json.dumps({"md5": md5, "model": (d or {}).get("_model"), "segments": seg}, ensure_ascii=False, indent=1), encoding="utf-8")
+    return seg, f"받아쓰기 {(d or {}).get('_model')}"
+
+
+def _norm_ko(t: str) -> str:
+    return re.sub(r"[^0-9A-Za-z가-힣]", "", t or "").lower()
+
+
+ASR_KEY_CHARS = (8, 6, 5, 4)   # 줄 머리 정규화 글자 수 — 긴 것부터 찾고 못 찾으면 줄인다
+
+
+def asr_line_starts(lines: list[str], segs: list[dict]) -> list[float | None]:
+    """(줄 시작의 1순위) 받아쓰기 구절을 이어 붙인 글에서 줄 k 머리(정규화 앞 8→4자)를 앞 줄 뒤부터 찾는다.
+    찾은 글자가 구절 안 몇 번째인지로 그 구절 start~end 를 글자 비례해 시각을 낸다. 못 찾은 줄은 None."""
+    text, owner = "", []
+    for i, sg in enumerate(segs):
+        z = _norm_ko(sg.get("text"))
+        text += z
+        owner += [(i, j, len(z)) for j in range(len(z))]
+    out, pos = [0.0], 0
+    for line in lines[1:]:
+        z = _norm_ko(line)
+        hit = None
+        for n in ASR_KEY_CHARS:
+            if len(z) >= n:
+                k = text.find(z[:n], pos)
+                if k >= 0:
+                    hit = k
+                    break
+        if hit is None:
+            out.append(None)
+            continue
+        i, j, L = owner[hit]
+        a, b = float(segs[i]["start"]), float(segs[i].get("end") or segs[i]["start"])
+        out.append(round(a + (b - a) * j / max(1, L), 3))
+        pos = hit + 1
+    return out
+
+
 BREAK_NEAR = 0.5   # 줄 끝 쉼이 글자 비례 예상(말 시간)에서 이보다 멀면 '그 경계엔 쉼 없음' — 방구석처럼 TTS 쉼을 0.07초로 줄인 나레(10-16)
 
 
-def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], expected: list[float] | None = None, log=print) -> list[float]:
+ASR_SNAP = 1.2   # 받아쓰기 줄 시작 → 가까운 쉼 끝(-38dB/0.08초)에 붙이는 거리. 제미나이 구절 시각은 거칠다
+#   (10-16 방구석 3편 narr_final2: '사실…' 구절 시작 7.03 vs 실제 쉼 끝 8.13 — 받아쓰기는 '어느 쉼인가'를 정하고 시각은 쉼이 정한다)
+
+
+def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], expected: list[float] | None = None, log=print,
+                asr: bool = True, ask=None) -> list[float]:
     """(판단 주인) 대본 줄마다 시작 — 줄 끝 쉼(hottem_audio.break_points) 다음 첫 말 구간 시작. 줄 0 = 0.
     10-16 핫템 HONOR 실측: 전체 글자 비례로 놓으면 줄 시작이 실제 말보다 0.46~0.75초 늦었다(자막·컷 늦음).
     ★그 경계 근처(예상 말 시간 ±BREAK_NEAR)에 쉼이 없으면 그 경계만 글자 비례 예상(expected[k])으로 되돌리고 [경보]
       (10-16 방구석 3편: 쉼을 0.07초로 줄인 나레라 엉뚱한 쉼에 붙어 훅이 3.71초까지 늘었다 — 실제 2줄 시작 1.6초)."""
     from tools.calcopy import hottem_audio as ha
+    # ★1순위 = 받아쓰기 정렬(10-16 조율자: 쉼 방식은 핫템·방구석에서 세 번 어긋났다 — 쉼표 쉼에 붙음)
+    A = [None] * len(lines)
+    if asr:
+        tr, why = tts_transcript(audio, ask)
+        if tr:
+            A = asr_line_starts(lines, tr)
+            miss = [k for k in range(1, len(lines)) if A[k] is None]
+            if miss:
+                log(f"[경보] 받아쓰기에서 줄 {miss} 머리를 못 찾음 — 그 줄만 쉼 방식→글자 비례 ({why})")
+        else:
+            log(f"[경보] {why} — 전 줄 쉼 방식→글자 비례로")
+    pause_ends = [e for _, e in ha._silences(audio, "-38dB", 0.08)] if any(x is not None for x in A[1:]) else []
     out = [0.0]
     for k, (mid, dist) in enumerate(ha.break_points(audio, lines)):
+        if A[k + 1] is not None:
+            t = A[k + 1]
+            ends = [e for e in pause_ends if e > out[-1] + 0.3]
+            near = min(ends, key=lambda e: abs(e - t), default=t)
+            out.append(near if abs(near - t) <= ASR_SNAP else t)
+            continue
         anchored = next((a for a, _ in segs if a >= mid - 1e-3), mid) if mid is not None else None
         if (dist > BREAK_NEAR or anchored is None) and expected:
             log(f"[경보] 줄 {k + 1} 시작: 예상 근처(±{BREAK_NEAR}초 말 시간)에 쉼 없음(가장 가까운 쉼 {mid}초, 거리 {dist}) → 글자 비례 {expected[k + 1]:.3f}초")
@@ -182,14 +268,16 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
     return out
 
 
-def time_steps(steps: list[dict], audio: str, snap: float = 0.4, lines: list[str] | None = None, log=print) -> tuple[list[dict], float]:
+def time_steps(steps: list[dict], audio: str, snap: float = 0.4, lines: list[str] | None = None, log=print, asr: bool = True, ask=None) -> tuple[list[dict], float]:
     """조각 시각. lines(대본 줄)를 주면 줄 시작을 실제 말 시작(line_starts)에 고정하고 줄 안에서만 글자 비례.
     안 주면(또는 한 줄) 전체를 글자 비례로(종전)."""
     segs, dur = speech_segments(audio)
     if lines and len(lines) > 1 and steps and all("line" in s for s in steps):
         g = _place(steps, segs, snap, 0.0, dur)   # 글자 비례(종전) — 쉼 없는 경계의 되돌림 값
         exp = [next(t for t, s in zip(g, steps) if s["line"] == li) if any(s["line"] == li for s in steps) else 0.0 for li in range(len(lines))]
-        W = line_starts(audio, lines, segs, exp, log) + [dur]
+        W = line_starts(audio, lines, segs, exp, log, asr, ask) + [dur]
+        for li in range(1, len(W) - 1):   # 순서 보장(받아쓰기·쉼·비례가 섞여도 뒤집히지 않게)
+            W[li] = max(W[li], W[li - 1] + 0.3)
         starts = []
         for li in range(len(lines)):
             st = [s for s in steps if s["line"] == li]
@@ -427,7 +515,8 @@ def build(plan: dict):
     S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
     sentences = [l["text"] for l in S["final"]["lines"]]
     M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
-    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"], lines=sentences)
+    steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"], lines=sentences,
+                            asr=plan.get("line_asr", True))   # 줄 시작 받아쓰기 정렬(시험은 꺼서 네트워크 0)
     # 훅 카드 끝 = 둘째 문장이 시작하는 시각(원본: 훅 카드 1.5초 = 첫 문장 "…억울했던 이유?" 동안)
     one = len(plan["frames"]) == 1   # 틀 한 장(훅 카드 없음 — 썰풀다 틀 B) 이면 처음부터 끝까지 그 틀
     hook_end = 0.0 if one else (plan["frames"][0].get("t_end") or next(s["t0"] for s in steps if s["sent"] >= 1))

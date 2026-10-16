@@ -73,7 +73,7 @@ def test_line_starts_anchor_to_real_speech(tmp_path):
     _, starts = _synth(wav, commas=False, ch0=0.15)
     lines = ["가나다라마바사아자차카타.", LINES[1], LINES[2]]
     steps = nv.steps_of(lines, 6, "replace")
-    new, _ = nv.time_steps(steps, str(wav), lines=lines)
+    new, _ = nv.time_steps(steps, str(wav), lines=lines, asr=False)
     old, _ = nv.time_steps([{k: v for k, v in s.items() if k != "line"} for s in steps], str(wav))
     first = lambda out, li: next(o["t0"] for o, s in zip(out, steps) if s["line"] == li)   # noqa: E731
     for li in (1, 2):
@@ -123,7 +123,7 @@ def test_no_pause_boundary_falls_back_to_char_ratio(tmp_path):
     lines = ["가나다라마바사아자차카타.", "가나다라마바, 사아자차카타.", "가나다라마바, 사아자차카타."]
     steps = nv.steps_of(lines, 6, "replace")
     logs = []
-    out, _ = nv.time_steps(steps, str(wav), lines=lines, log=logs.append)
+    out, _ = nv.time_steps(steps, str(wav), lines=lines, log=logs.append, asr=False)
     first = next(o["t0"] for o, s in zip(out, steps) if s["line"] == 1)
     assert abs(first - starts[1]) <= 0.3, (first, starts[1])
     assert any("[경보] 줄 1" in m for m in logs), logs
@@ -138,5 +138,58 @@ def test_banggu3_second_line_start():
     import json
     lines = [l["text"] for l in json.loads((ROOT / "channel/banggu/칼카피_3편/대본.json").read_text(encoding="utf-8"))["final"]["lines"]]
     steps = nv.steps_of(lines, 13, "accumulate")
-    out, _ = nv.time_steps(steps, str(BANGGU3), lines=lines, log=lambda *_: None)
+    out, _ = nv.time_steps(steps, str(BANGGU3), lines=lines, log=lambda *_: None, asr=False)
     assert abs(next(o["t0"] for o, s in zip(out, steps) if s["line"] == 1) - 1.6) <= 0.3
+
+
+# ── 줄 시작 1순위 = 받아쓰기 정렬(10-16 조율자: 쉼 방식이 핫템·방구석에서 세 번 어긋남) ─────────────
+def test_asr_line_starts_matches_line_heads():
+    segs = [{"start": 0.0, "end": 2.0, "text": "코스트코가 가격표에 숨겨둔 암호"}, {"start": 2.0, "end": 4.0, "text": "문제는 그 할인이 끝나는데 그래서"},
+            {"start": 4.0, "end": 6.0, "text": "미국 틱톡에선 별표를"}]
+    lines = ["코스트코가 가격표에 숨겨 둔 암호", "문제는 그 할인이, 끝나는데", "그래서 미국 틱톡에선 별표를,", "전혀 없는 말"]
+    got = nv.asr_line_starts(lines, segs)
+    assert got[0] == 0.0 and got[1] == 2.0 and got[3] is None
+    assert 3.5 < got[2] < 4.0, got        # '그래서'는 구절 2 끝쪽 — 구절 안 글자 비례
+
+
+def test_transcript_cache_means_no_network(tmp_path):
+    import hashlib
+    import json
+    wav = tmp_path / "n.wav"
+    _synth(wav)
+    calls = []
+
+    def ask(parts, prompt, tag=""):
+        calls.append(tag)
+        return {"segments": [{"start": 0.0, "end": 1.0, "text": "가나다"}], "_model": "가짜"}, None
+    segs, why = nv.tts_transcript(str(wav), ask)
+    assert segs and len(calls) == 1 and (tmp_path / "n.wav.asr.json").exists()
+    segs2, why2 = nv.tts_transcript(str(wav), ask)
+    assert segs2 == segs and len(calls) == 1 and "캐시" in why2          # 같은 파일 = 재호출 0
+    c = json.loads((tmp_path / "n.wav.asr.json").read_text(encoding="utf-8"))
+    assert c["md5"] == hashlib.md5(wav.read_bytes()).hexdigest()
+    _synth(wav, commas=False)                                              # 파일이 바뀌면(md5 다름) 다시 받아쓴다
+    nv.tts_transcript(str(wav), ask)
+    assert len(calls) == 2
+
+
+FINAL2 = Path("C:/숏템_칼카피/banggu/칼카피_3편/render/narr_final2.mp3")
+FINAL2_TRUE = {3: 8.13, 5: 14.27, 6: 18.40}   # 방구석 담당 실측(쉼↔쉼표 대조): '사실…'·'그래서…'·'심지어…' 줄 시작
+
+
+@pytest.mark.skipif(not FINAL2.exists() or not FINAL2.with_name(FINAL2.name + ".asr.json").exists(), reason="narr_final2·받아쓰기 캐시 없음")
+def test_banggu_final2_line_starts_by_asr():
+    """받아쓰기 캐시로(네트워크 0) 줄 시작 오차 ≤0.3초. 빨강 대조군 = 받아쓰기 끔(쉼 방식: 7.42·16.04·19.36)."""
+    import json
+    lines = [l["text"] for l in json.loads((ROOT / "channel/banggu/칼카피_3편/대본.json").read_text(encoding="utf-8"))["final"]["lines"]]
+    steps = nv.steps_of(lines, 13, "accumulate")
+
+    def starts(asr):
+        def boom(*a, **k):
+            raise AssertionError("캐시가 있는데 받아쓰기를 불렀다")
+        out, _ = nv.time_steps(steps, str(FINAL2), lines=lines, log=lambda *_: None, asr=asr, ask=boom)
+        return {k: next(o["t0"] for o, s in zip(out, steps) if s["line"] == k) for k in FINAL2_TRUE}
+    got = starts(True)
+    assert all(abs(got[k] - v) <= 0.3 for k, v in FINAL2_TRUE.items()), got
+    off = starts(False)
+    assert all(abs(off[k] - v) > 0.3 for k, v in FINAL2_TRUE.items()), off

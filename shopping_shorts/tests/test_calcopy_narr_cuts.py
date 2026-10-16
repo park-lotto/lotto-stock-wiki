@@ -55,7 +55,7 @@ def _build(tmp_path, cuts: bool):
     (tmp_path / "m.json").write_text(json.dumps(mats), encoding="utf-8")
     out = tmp_path / ("out_cuts" if cuts else "out_plain")
     final = narr_video.build({"frames": [{"frame": str(FRAME), "t_end": None}], "script": str(tmp_path / "s.json"), "tts": str(tts),
-                              "materials": str(tmp_path / "m.json"), "out": str(out), "chunk": 30, "caption_mode": "replace"})
+                              "materials": str(tmp_path / "m.json"), "out": str(out), "chunk": 30, "caption_mode": "replace", "line_asr": False})
     tl = json.loads((out / "timeline.json").read_text(encoding="utf-8"))
     return Path(final), tl
 
