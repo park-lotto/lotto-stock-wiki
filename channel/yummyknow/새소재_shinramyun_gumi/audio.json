@@ -1,0 +1,23 @@
+{
+ "tts": "C:/숏템_칼카피/yummyknow/새소재_shinramyun_gumi/render/narr_full.mp3",
+ "bgm": "qiuqiu",
+ "bgm_ratio": 0.12,
+ "target_lufs": -16.2,
+ "sfx": [
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\c9b9d22d6ecf46028cb17f0ab1bae023.mp3",
+   0.0,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\4412b3841d85460abc8884cab19c83d1.mp3",
+   28.620771,
+   0.0
+  ]
+ ],
+ "final": {
+  "I": -16.2,
+  "LRA": 1.6,
+  "TP": -1.3
+ }
+}
