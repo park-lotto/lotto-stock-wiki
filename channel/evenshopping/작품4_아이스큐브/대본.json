@@ -1,0 +1,371 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "스테인리스 아이스큐브(냉매 젤 충전)",
+ "목소리": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "voice": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "cps_target": 8.8,
+ "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "술 마시다 얼음 녹는 게 답답했던 주방 천재가 만들어 떼돈 번 얼음의 정체.",
+   "tts_text": "술 마시다 얼음 녹는 게 답답했던 주방 천재가 만들어 떼돈 번 얼음의 정체.",
+   "role": "title",
+   "shot_query": [
+    "whiskey glass bar drinking",
+    "ice melting glass timelapse",
+    "stainless steel ice cubes set",
+    "money rain meme"
+   ],
+   "shots": [
+    {
+     "piece": "술 마시다",
+     "query": "whiskey glass bar drinking",
+     "kind": "유사"
+    },
+    {
+     "piece": "얼음 녹는 게 답답했던",
+     "query": "ice melting glass timelapse",
+     "kind": "유사"
+    },
+    {
+     "piece": "주방 천재가 만들어",
+     "query": "stainless steel ice cubes set",
+     "kind": "제품"
+    },
+    {
+     "piece": "떼돈 번 얼음의 정체",
+     "query": "money rain meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 1,
+   "text": "최근 홈술족 사이에서 바이럴이 터지며 논란인 얼음이 있는데,",
+   "tts_text": "최근 홈술족 사이에서 바이럴이 터지며 논란인 얼음이 있는데,",
+   "role": "bait",
+   "shot_query": [
+    "drinking at home sofa",
+    "home bar drinks night",
+    "phone scrolling viral",
+    "stainless steel ice cubes close up"
+   ],
+   "shots": [
+    {
+     "piece": "최근 홈술족",
+     "query": "drinking at home sofa",
+     "kind": "유사"
+    },
+    {
+     "piece": "사이에서",
+     "query": "home bar drinks night",
+     "kind": "유사"
+    },
+    {
+     "piece": "바이럴이 터지며",
+     "query": "phone scrolling viral",
+     "kind": "유사"
+    },
+    {
+     "piece": "논란인 얼음이 있는데",
+     "query": "stainless steel ice cubes close up",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 영원히 안 녹는 쇠 얼음.",
+   "tts_text": "이건 바로 영원히 안 녹는 쇠 얼음.",
+   "role": "reveal",
+   "shot_query": [
+    "surprised gasp meme",
+    "stainless steel ice cubes drop into glass"
+   ],
+   "shots": [
+    {
+     "piece": "이건 바로",
+     "query": "surprised gasp meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "영원히 안 녹는 쇠 얼음",
+     "query": "stainless steel ice cubes drop into glass",
+     "kind": "제품"
+    }
+   ],
+   "kind": "짤"
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는 게 숟가락이랑 똑같은 스테인리스라 아무리 담가놔도 물이 한 방울도 안 생긴다는 거.",
+   "tts_text": "이게 말도 안 되는 게 숟가락이랑 똑같은 스테인리스라 아무리 담가놔도 물이 한 방울도 안 생긴다는 거.",
+   "role": "solve",
+   "shot_query": [
+    "shocked face meme",
+    "stainless steel spoons",
+    "stainless steel ice cubes metal shine",
+    "stainless steel ice cubes in drink",
+    "stainless steel ice cubes vs ice melting test",
+    "stainless steel ice cubes dry glass"
+   ],
+   "shots": [
+    {
+     "piece": "이게 말도 안 되는 게",
+     "query": "shocked face meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "숟가락이랑 똑같은",
+     "query": "stainless steel spoons",
+     "kind": "유사"
+    },
+    {
+     "piece": "스테인리스라",
+     "query": "stainless steel ice cubes metal shine",
+     "kind": "제품"
+    },
+    {
+     "piece": "아무리 담가놔도",
+     "query": "stainless steel ice cubes in drink",
+     "kind": "제품"
+    },
+    {
+     "piece": "물이 한 방울도",
+     "query": "stainless steel ice cubes vs ice melting test",
+     "kind": "제품"
+    },
+    {
+     "piece": "안 생긴다는 거",
+     "query": "stainless steel ice cubes dry glass",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 4,
+   "text": "심지어 겉은 쇠인데 속에 차가운 젤이 숨어 있어서 냉동실에 넣어두기만 하면 꽁꽁 얼어붙는데,",
+   "tts_text": "심지어 겉은 쇠인데 속에 차가운 젤이 숨어 있어서 냉동실에 넣어두기만 하면 꽁꽁 얼어붙는데,",
+   "role": "more",
+   "shot_query": [
+    "stainless steel ice cube in hand",
+    "stainless steel ice cube gel inside",
+    "stainless steel ice cube cut open",
+    "opening freezer door",
+    "stainless steel ice cubes freezer",
+    "frost frozen ice cubes"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 겉은 쇠인데",
+     "query": "stainless steel ice cube in hand",
+     "kind": "제품"
+    },
+    {
+     "piece": "속에 차가운 젤이",
+     "query": "stainless steel ice cube gel inside",
+     "kind": "제품"
+    },
+    {
+     "piece": "숨어 있어서",
+     "query": "stainless steel ice cube cut open",
+     "kind": "제품"
+    },
+    {
+     "piece": "냉동실에",
+     "query": "opening freezer door",
+     "kind": "유사"
+    },
+    {
+     "piece": "넣어두기만 하면",
+     "query": "stainless steel ice cubes freezer",
+     "kind": "제품"
+    },
+    {
+     "piece": "꽁꽁 얼어붙는데",
+     "query": "frost frozen ice cubes",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 5,
+   "text": "위스키뿐 아니라 콜라랑 맥주, 와인까지 다 된다고.",
+   "tts_text": "위스키뿐 아니라 콜라랑 맥주, 와인까지 다 된다고.",
+   "role": "more2",
+   "shot_query": [
+    "stainless steel ice cubes whiskey",
+    "stainless steel ice cubes soda beer",
+    "stainless steel ice cubes wine glass"
+   ],
+   "shots": [
+    {
+     "piece": "위스키뿐 아니라",
+     "query": "stainless steel ice cubes whiskey",
+     "kind": "제품"
+    },
+    {
+     "piece": "콜라랑 맥주",
+     "query": "stainless steel ice cubes soda beer",
+     "kind": "제품"
+    },
+    {
+     "piece": "와인까지 다 된다고",
+     "query": "stainless steel ice cubes wine glass",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 마지막 한 모금까지 첫 모금 맛 그대로라 바텐더들까지 비싼 술 지키려고 몰래 쓴다고.",
+   "tts_text": "근데 진짜 충격적인 포인트는 마지막 한 모금까지 첫 모금 맛 그대로라 바텐더들까지 비싼 술 지키려고 몰래 쓴다고.",
+   "role": "twist",
+   "shot_query": [
+    "jaw drop meme",
+    "stainless steel ice cube splash slow motion",
+    "last sip drink glass",
+    "whiskey tasting sip",
+    "bartender bar counter",
+    "expensive whiskey bottle pour",
+    "stainless steel ice cubes bar"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜",
+     "query": "jaw drop meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "충격적인 포인트는",
+     "query": "stainless steel ice cube splash slow motion",
+     "kind": "제품"
+    },
+    {
+     "piece": "마지막 한 모금까지",
+     "query": "last sip drink glass",
+     "kind": "유사"
+    },
+    {
+     "piece": "첫 모금 맛 그대로라",
+     "query": "whiskey tasting sip",
+     "kind": "유사"
+    },
+    {
+     "piece": "바텐더들까지",
+     "query": "bartender bar counter",
+     "kind": "유사"
+    },
+    {
+     "piece": "비싼 술 지키려고",
+     "query": "expensive whiskey bottle pour",
+     "kind": "유사"
+    },
+    {
+     "piece": "몰래 쓴다고",
+     "query": "stainless steel ice cubes bar",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 7,
+   "text": "그래서 요즘엔 캠핑 갈 때 얼음 한 봉지 대신 이거 한 통 챙긴다고 캠핑족들 사이에서 난리라고.",
+   "tts_text": "그래서 요즘엔 캠핑 갈 때 얼음 한 봉지 대신 이거 한 통 챙긴다고 캠핑족들 사이에서 난리라고.",
+   "role": "land",
+   "shot_query": [
+    "stainless steel ice cubes box set",
+    "camping tent outdoor",
+    "bag of ice",
+    "stainless steel ice cubes storage case",
+    "friends camping drinks",
+    "crowd cheering meme"
+   ],
+   "shots": [
+    {
+     "piece": "그래서 요즘엔",
+     "query": "stainless steel ice cubes box set",
+     "kind": "제품"
+    },
+    {
+     "piece": "캠핑 갈 때",
+     "query": "camping tent outdoor",
+     "kind": "유사"
+    },
+    {
+     "piece": "얼음 한 봉지 대신",
+     "query": "bag of ice",
+     "kind": "유사"
+    },
+    {
+     "piece": "이거 한 통 챙긴다고",
+     "query": "stainless steel ice cubes storage case",
+     "kind": "제품"
+    },
+    {
+     "piece": "캠핑족들 사이에서",
+     "query": "friends camping drinks",
+     "kind": "유사"
+    },
+    {
+     "piece": "난리라고",
+     "query": "crowd cheering meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  }
+ ],
+ "chars": 258,
+ "est_sec": 29.32,
+ "climax": [
+  "①센 시작",
+  "②권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤~까지 난리"
+ ],
+ "facts": {
+  "숟가락과 같은 스테인리스": "304(식기 등급) 스테인리스(판매처 설명)",
+  "물이 안 생김": "얼음이 아니라 녹지 않음(판매처 설명)",
+  "속에 젤": "밀봉 젤, 냉동실 보관(판매처 설명)",
+  "콜라·맥주·와인": "모든 음료용(판매처 설명)",
+  "바텐더들이 몰래 쓴다": "소문(전언 '~라고', 사장님 허용)",
+  "국가": "발명 국가·인물 출처 없음 → '주방 천재'로 두고 나라를 붙이지 않음",
+  "쓰지 않은 것": "돌 얼려 넣던 유래·씻어 재냉동·홈카페(잇썸홈 작품4와 겹침)"
+ },
+ "title_lines": [
+  "얼음 녹아 답답했던",
+  "주방 천재의 발명품"
+ ],
+ "title_slots": {
+  "hook1": "얼음 녹아 답답했던",
+  "hook2": "주방 천재의 발명품",
+  "bodyTitle": "얼음 녹아 답답했던 주방 천재의 발명품?"
+ },
+ "hype": {
+  "①센 시작": "답답했던 주방 천재 … 떼돈 번",
+  "②권위": "숟가락이랑 똑같은 스테인리스",
+  "③진짜 핵심 반전": "바텐더들까지 몰래",
+  "④심지어": "속에 차가운 젤",
+  "⑤~까지 난리": "캠핑족들 사이에서 난리라고"
+ },
+ "sfx": "shopping_shorts/sfx_pack density=low",
+ "bgm": null
+}

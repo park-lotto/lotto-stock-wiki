@@ -1,0 +1,371 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "나이키 핸즈프리 운동화(Nike Go FlyEase)",
+ "목소리": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "voice": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "cps_target": 8.8,
+ "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "끈, 지퍼, 찍찍이까지 실험하다 지친 나이키 천재가 만들어 떼돈 번 신발의 정체.",
+   "tts_text": "끈, 지퍼, 찍찍이까지 실험하다 지친 나이키 천재가 만들어 떼돈 번 신발의 정체.",
+   "role": "title",
+   "shot_query": [
+    "tying shoelaces close up",
+    "velcro shoe strap close up",
+    "tired designer desk",
+    "Nike Go FlyEase",
+    "money rain meme"
+   ],
+   "shots": [
+    {
+     "piece": "끈 지퍼",
+     "query": "tying shoelaces close up",
+     "kind": "유사"
+    },
+    {
+     "piece": "찍찍이까지",
+     "query": "velcro shoe strap close up",
+     "kind": "유사"
+    },
+    {
+     "piece": "실험하다 지친",
+     "query": "tired designer desk",
+     "kind": "유사"
+    },
+    {
+     "piece": "나이키 천재가 만들어",
+     "query": "Nike Go FlyEase",
+     "kind": "제품"
+    },
+    {
+     "piece": "떼돈 번 신발의 정체",
+     "query": "money rain meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 1,
+   "text": "최근 출근길 직장인들 사이에서 바이럴이 터지며 논란인 운동화가 있는데,",
+   "tts_text": "최근 출근길 직장인들 사이에서 바이럴이 터지며 논란인 운동화가 있는데,",
+   "role": "bait",
+   "shot_query": [
+    "morning commute crowd street",
+    "office worker rushing shoes",
+    "phone scrolling viral",
+    "Nike Go FlyEase pair"
+   ],
+   "shots": [
+    {
+     "piece": "최근 출근길",
+     "query": "morning commute crowd street",
+     "kind": "유사"
+    },
+    {
+     "piece": "직장인들 사이에서",
+     "query": "office worker rushing shoes",
+     "kind": "유사"
+    },
+    {
+     "piece": "바이럴이 터지며",
+     "query": "phone scrolling viral",
+     "kind": "유사"
+    },
+    {
+     "piece": "논란인 운동화가 있는데",
+     "query": "Nike Go FlyEase pair",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 손 안 대고 신는 나이키 운동화.",
+   "tts_text": "이건 바로 손 안 대고 신는 나이키 운동화.",
+   "role": "reveal",
+   "shot_query": [
+    "surprised gasp meme",
+    "Nike Go FlyEase hands free step in",
+    "Nike Go FlyEase product shot"
+   ],
+   "shots": [
+    {
+     "piece": "이건 바로",
+     "query": "surprised gasp meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "손 안 대고 신는",
+     "query": "Nike Go FlyEase hands free step in",
+     "kind": "제품"
+    },
+    {
+     "piece": "나이키 운동화",
+     "query": "Nike Go FlyEase product shot",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는 게 신발이 반으로 접힌 채로 입 쩍 벌리고 서 있어서 발만 쑥 밀어 넣으면 된다는 거.",
+   "tts_text": "이게 말도 안 되는 게 신발이 반으로 접힌 채로 입 쩍 벌리고 서 있어서 발만 쑥 밀어 넣으면 된다는 거.",
+   "role": "solve",
+   "shot_query": [
+    "shocked face meme",
+    "Nike Go FlyEase open position",
+    "Nike Go FlyEase kickstand open on floor",
+    "Nike Go FlyEase foot slide in",
+    "Nike Go FlyEase step in slow motion"
+   ],
+   "shots": [
+    {
+     "piece": "이게 말도 안 되는 게",
+     "query": "shocked face meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "신발이 반으로 접힌 채로",
+     "query": "Nike Go FlyEase open position",
+     "kind": "제품"
+    },
+    {
+     "piece": "입 쩍 벌리고 서 있어서",
+     "query": "Nike Go FlyEase kickstand open on floor",
+     "kind": "제품"
+    },
+    {
+     "piece": "발만 쑥",
+     "query": "Nike Go FlyEase foot slide in",
+     "kind": "제품"
+    },
+    {
+     "piece": "밀어 넣으면 된다는 거",
+     "query": "Nike Go FlyEase step in slow motion",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 4,
+   "text": "심지어 이 아이디어가 르브론 제임스 농구화에서 힌트를 얻은 거라는데,",
+   "tts_text": "심지어 이 아이디어가 르브론 제임스 농구화에서 힌트를 얻은 거라는데,",
+   "role": "more",
+   "shot_query": [
+    "lightbulb idea meme",
+    "LeBron James basketball dunk",
+    "Nike Zoom Soldier basketball shoe",
+    "Nike FlyEase design sketch"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 이 아이디어가",
+     "query": "lightbulb idea meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "르브론 제임스",
+     "query": "LeBron James basketball dunk",
+     "kind": "유사"
+    },
+    {
+     "piece": "농구화에서",
+     "query": "Nike Zoom Soldier basketball shoe",
+     "kind": "유사"
+    },
+    {
+     "piece": "힌트를 얻은 거라는데",
+     "query": "Nike FlyEase design sketch",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 5,
+   "text": "발이 들어가는 순간 감싼 밴드가 탁 당겨지면서 저절로 닫힌다고.",
+   "tts_text": "발이 들어가는 순간 감싼 밴드가 탁 당겨지면서 저절로 닫힌다고.",
+   "role": "more2",
+   "shot_query": [
+    "Nike Go FlyEase foot entering",
+    "Nike Go FlyEase tensioner band close up",
+    "Nike Go FlyEase closing",
+    "Nike Go FlyEase closed on foot"
+   ],
+   "shots": [
+    {
+     "piece": "발이 들어가는 순간",
+     "query": "Nike Go FlyEase foot entering",
+     "kind": "제품"
+    },
+    {
+     "piece": "감싼 밴드가",
+     "query": "Nike Go FlyEase tensioner band close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "탁 당겨지면서",
+     "query": "Nike Go FlyEase closing",
+     "kind": "제품"
+    },
+    {
+     "piece": "저절로 닫힌다고",
+     "query": "Nike Go FlyEase closed on foot",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 처음 나왔을 땐 돈이 있어도 못 사고 초대받은 회원만 살 수 있었다고.",
+   "tts_text": "근데 진짜 충격적인 포인트는 처음 나왔을 땐 돈이 있어도 못 사고 초대받은 회원만 살 수 있었다고.",
+   "role": "twist",
+   "shot_query": [
+    "jaw drop meme",
+    "Nike Go FlyEase close up",
+    "Nike Go FlyEase launch",
+    "sold out sign store",
+    "Nike app phone screen",
+    "Nike Go FlyEase box unboxing"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜",
+     "query": "jaw drop meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "충격적인 포인트는",
+     "query": "Nike Go FlyEase close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "처음 나왔을 땐",
+     "query": "Nike Go FlyEase launch",
+     "kind": "제품"
+    },
+    {
+     "piece": "돈이 있어도 못 사고",
+     "query": "sold out sign store",
+     "kind": "유사"
+    },
+    {
+     "piece": "초대받은",
+     "query": "Nike app phone screen",
+     "kind": "유사"
+    },
+    {
+     "piece": "회원만 살 수 있었다고",
+     "query": "Nike Go FlyEase box unboxing",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 7,
+   "text": "그래서 요즘엔 신발 신다 지각할 일 없다고 출근 전쟁 치르는 직장인들까지 장만한다고 난리라고.",
+   "tts_text": "그래서 요즘엔 신발 신다 지각할 일 없다고 출근 전쟁 치르는 직장인들까지 장만한다고 난리라고.",
+   "role": "land",
+   "shot_query": [
+    "morning alarm rush",
+    "late running to work",
+    "Nike Go FlyEase walking out door",
+    "crowded subway commute",
+    "office worker walking sneakers",
+    "Nike Go FlyEase unboxing",
+    "crowd cheering meme"
+   ],
+   "shots": [
+    {
+     "piece": "그래서 요즘엔",
+     "query": "morning alarm rush",
+     "kind": "유사"
+    },
+    {
+     "piece": "신발 신다 지각할 일",
+     "query": "late running to work",
+     "kind": "유사"
+    },
+    {
+     "piece": "없다고",
+     "query": "Nike Go FlyEase walking out door",
+     "kind": "제품"
+    },
+    {
+     "piece": "출근 전쟁 치르는",
+     "query": "crowded subway commute",
+     "kind": "유사"
+    },
+    {
+     "piece": "직장인들까지",
+     "query": "office worker walking sneakers",
+     "kind": "유사"
+    },
+    {
+     "piece": "장만한다고",
+     "query": "Nike Go FlyEase unboxing",
+     "kind": "제품"
+    },
+    {
+     "piece": "난리라고",
+     "query": "crowd cheering meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  }
+ ],
+ "chars": 259,
+ "est_sec": 29.43,
+ "climax": [
+  "①센 시작",
+  "②권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤~까지 난리"
+ ],
+ "facts": {
+  "끈·지퍼·찍찍이·다이얼 실험": "개발 중 벨크로·지퍼·케이블 다이얼 시험(goodthingsguy·wearemitu 2021)",
+  "접힌 채 서 있음": "bi-stable hinge 열린 상태 유지, 안 신을 땐 클로그 모양으로 받쳐 섬(stirworld)",
+  "르브론 농구화에서 힌트": "르브론 제임스와 만든 Zoom Soldier에서 영감(goodthingsguy)",
+  "밴드가 당겨지며 닫힘": "midsole tensioner(나이키 발표)",
+  "초대받은 회원만": "2021-02 출시 때 일부 나이키 회원 초대 판매(나이키 발표 — 재료 단계에서 기사 한 번 더 확인)",
+  "출근 직장인 난리": "사회 반응 과장(사장님 허용)",
+  "쓰지 않은 것": "편지 이야기·뒤꿈치 차서 벗기·임산부/부모님(잇썸홈 작품2와 겹침)"
+ },
+ "title_lines": [
+  "찍찍이까지 다 버린",
+  "나이키 천재의 신발"
+ ],
+ "title_slots": {
+  "hook1": "찍찍이까지 다 버린",
+  "hook2": "나이키 천재의 신발",
+  "bodyTitle": "찍찍이까지 다 버린 나이키 천재의 신발?"
+ },
+ "hype": {
+  "①센 시작": "실험하다 지친 나이키 천재 … 떼돈 번",
+  "②권위": "르브론 제임스 농구화",
+  "③진짜 핵심 반전": "초대받은 회원만",
+  "④심지어": "심지어 이 아이디어가",
+  "⑤~까지 난리": "직장인들까지 … 난리라고"
+ },
+ "sfx": "shopping_shorts/sfx_pack density=low",
+ "bgm": null
+}

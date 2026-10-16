@@ -1,0 +1,289 @@
+{
+ "채널": "잇썸홈",
+ "channel": "homedesignnote",
+ "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+ "topic": "옥수수 알 커터(원형 칼날 corn stripper)",
+ "목소리": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.32,
+ "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)",
+ "from": "channel/homedesignnote/대본초안_5편.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "옥수수 삶아놓고 알 하나하나 떼다 손톱이 남아나질 않던 미국 사람들이 결국 옥수수를 한 방에 털어버리는 칼을 만들어버렸대요.",
+   "tts_text": "옥수수 삶아놓고 알 하나하나 떼다 손톱이 남아나질 않던 미국 사람들이 결국 옥수수를 한 방에 털어버리는 칼을 만들어버렸대요.",
+   "role": "훅",
+   "shot_query": [
+    "boiled corn on the cob pot",
+    "removing corn kernels by hand",
+    "peeling corn kernels fingers",
+    "corn stripper review",
+    "corn stripper one stroke",
+    "round corn stripper tool close up",
+    "corn kernel stripper product"
+   ],
+   "shots": [
+    {
+     "piece": "옥수수 삶아놓고",
+     "query": "boiled corn on the cob pot",
+     "kind": "제품"
+    },
+    {
+     "piece": "알 하나하나 떼다",
+     "query": "removing corn kernels by hand",
+     "kind": "제품"
+    },
+    {
+     "piece": "손톱이 남아나질 않던",
+     "query": "peeling corn kernels fingers",
+     "kind": "제품"
+    },
+    {
+     "piece": "미국 사람들이 결국",
+     "query": "corn stripper review",
+     "kind": "제품"
+    },
+    {
+     "piece": "옥수수를 한 방에",
+     "query": "corn stripper one stroke",
+     "kind": "제품"
+    },
+    {
+     "piece": "털어버리는 칼을",
+     "query": "round corn stripper tool close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "만들어버렸대요",
+     "query": "corn kernel stripper product",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "①센 시작"
+  },
+  {
+   "i": 1,
+   "text": "옥수수 알 하나씩 떼다 보면 손목은 시큰거리고 하루가 다 가잖아요.",
+   "tts_text": "옥수수 알 하나씩 떼다 보면 손목은 시큰거리고 하루가 다 가잖아요.",
+   "role": "도입",
+   "shot_query": [
+    "removing corn kernels one by one",
+    "picking corn kernels slow",
+    "corn stripper review hand",
+    "pile of corn cobs kitchen"
+   ],
+   "shots": [
+    {
+     "piece": "옥수수 알 하나씩",
+     "query": "removing corn kernels one by one",
+     "kind": "제품"
+    },
+    {
+     "piece": "떼다 보면",
+     "query": "picking corn kernels slow",
+     "kind": "제품"
+    },
+    {
+     "piece": "손목은 시큰거리고",
+     "query": "corn stripper review hand",
+     "kind": "제품"
+    },
+    {
+     "piece": "하루가 다 가잖아요",
+     "query": "pile of corn cobs kitchen",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": null
+  },
+  {
+   "i": 2,
+   "text": "근데 미국 요리 프로그램에서 이런 옥수수 칼만 일곱 개를 놓고 실험까지 했다는데,",
+   "tts_text": "근데 미국 요리 프로그램에서 이런 옥수수 칼만 일곱 개를 놓고 실험까지 했다는데,",
+   "role": "도입(증거)",
+   "shot_query": [
+    "corn stripper review kitchen",
+    "corn stripper test kitchen",
+    "corn strippers comparison",
+    "corn stripper tools lineup",
+    "corn stripper test review"
+   ],
+   "shots": [
+    {
+     "piece": "근데 미국",
+     "query": "corn stripper review kitchen",
+     "kind": "제품"
+    },
+    {
+     "piece": "요리 프로그램에서",
+     "query": "corn stripper test kitchen",
+     "kind": "제품"
+    },
+    {
+     "piece": "이런 옥수수 칼만",
+     "query": "corn strippers comparison",
+     "kind": "제품"
+    },
+    {
+     "piece": "일곱 개를 놓고",
+     "query": "corn stripper tools lineup",
+     "kind": "제품"
+    },
+    {
+     "piece": "실험까지 했다는데",
+     "query": "corn stripper test review",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "②숫자·권위"
+  },
+  {
+   "i": 3,
+   "text": "진짜 핵심은 이건데, 옥수수 세워놓고 동그란 칼날을 위에서 쭉 내리기만 하면 알이 한 줄씩 통째로 우수수 떨어져요.",
+   "tts_text": "진짜 핵심은 이건데, 옥수수 세워놓고 동그란 칼날을 위에서 쭉 내리기만 하면 알이 한 줄씩 통째로 우수수 떨어져요.",
+   "role": "설명",
+   "shot_query": [
+    "round corn stripper close up",
+    "corn cob standing upright cutting board",
+    "round corn stripper blade ring",
+    "round corn stripper push down cob",
+    "corn kernels strips falling",
+    "corn kernels falling slow motion"
+   ],
+   "shots": [
+    {
+     "piece": "진짜 핵심은 이건데",
+     "query": "round corn stripper close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "옥수수 세워놓고",
+     "query": "corn cob standing upright cutting board",
+     "kind": "제품"
+    },
+    {
+     "piece": "동그란 칼날을",
+     "query": "round corn stripper blade ring",
+     "kind": "제품"
+    },
+    {
+     "piece": "위에서 쭉 내리기만 하면",
+     "query": "round corn stripper push down cob",
+     "kind": "제품"
+    },
+    {
+     "piece": "알이 한 줄씩 통째로",
+     "query": "corn kernels strips falling",
+     "kind": "제품"
+    },
+    {
+     "piece": "우수수 떨어져요",
+     "query": "corn kernels falling slow motion",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "③진짜 핵심 반전"
+  },
+  {
+   "i": 4,
+   "text": "심지어 한 통 까는 데 3초면 끝이라 스무 개를 까도 손목이 멀쩡하더라고요.",
+   "tts_text": "심지어 한 통 까는 데 삼 초면 끝이라 스무 개를 까도 손목이 멀쩡하더라고요.",
+   "role": "효과",
+   "shot_query": [
+    "corn stripper fast",
+    "corn stripper seconds",
+    "corn stripper many cobs",
+    "corn stripper easy one hand"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 한 통 까는 데",
+     "query": "corn stripper fast",
+     "kind": "제품"
+    },
+    {
+     "piece": "3초면 끝이라",
+     "query": "corn stripper seconds",
+     "kind": "제품"
+    },
+    {
+     "piece": "스무 개를 까도",
+     "query": "corn stripper many cobs",
+     "kind": "제품"
+    },
+    {
+     "piece": "손목이 멀쩡하더라고요",
+     "query": "corn stripper easy one hand",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "④심지어"
+  },
+  {
+   "i": 5,
+   "text": "옥수수 철만 되면 엄마들 사이에서 이거 하나로 손목 살렸다고 난리래요.",
+   "tts_text": "옥수수 철만 되면 엄마들 사이에서 이거 하나로 손목 살렸다고 난리래요.",
+   "role": "효과·행동유도",
+   "shot_query": [
+    "fresh corn harvest",
+    "corn stripper kitchen mom",
+    "round corn stripper product",
+    "bowl full of corn kernels"
+   ],
+   "shots": [
+    {
+     "piece": "옥수수 철만 되면",
+     "query": "fresh corn harvest",
+     "kind": "제품"
+    },
+    {
+     "piece": "엄마들 사이에서",
+     "query": "corn stripper kitchen mom",
+     "kind": "제품"
+    },
+    {
+     "piece": "이거 하나로",
+     "query": "round corn stripper product",
+     "kind": "제품"
+    },
+    {
+     "piece": "손목 살렸다고 난리래요",
+     "query": "bowl full of corn kernels",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "⑤난리"
+  }
+ ],
+ "chars": 224,
+ "est_sec": 26.92,
+ "climax": [
+  "①센 시작",
+  "②숫자·권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤난리"
+ ],
+ "facts": {
+  "미국 요리 프로그램 7개 실험": "America's Test Kitchen 옥수수 커터 7종 시험(americastestkitchen.com equipment_reviews/2316)",
+  "원형 칼날 위→아래": "원형 corn stripper 사용법(판매·리뷰 영상에서 재료 단계 확인)",
+  "3초·스무 개": "결과 과장(사장님 허용)",
+  "쓰지 않은 것": "'미국 주부가 만들었다'(초안) — 출처 없음 → '미국 사람들'(일반)로"
+ },
+ "title_lines": [],
+ "sfx": 0,
+ "meme": 0
+}

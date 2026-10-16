@@ -1,0 +1,376 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "옥수수 알 커터(원형 칼날 corn stripper)",
+ "목소리": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "voice": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "cps_target": 8.8,
+ "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "옥수수 알 까다 현타 온 주방 천재가 만들어 떼돈 번 칼의 정체.",
+   "tts_text": "옥수수 알 까다 현타 온 주방 천재가 만들어 떼돈 번 칼의 정체.",
+   "role": "title",
+   "shot_query": [
+    "removing corn kernels by hand",
+    "tired cook kitchen",
+    "round corn stripper",
+    "money rain meme"
+   ],
+   "shots": [
+    {
+     "piece": "옥수수 알 까다",
+     "query": "removing corn kernels by hand",
+     "kind": "유사"
+    },
+    {
+     "piece": "현타 온 주방 천재가",
+     "query": "tired cook kitchen",
+     "kind": "유사"
+    },
+    {
+     "piece": "만들어",
+     "query": "round corn stripper",
+     "kind": "제품"
+    },
+    {
+     "piece": "떼돈 번 칼의 정체",
+     "query": "money rain meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 1,
+   "text": "최근 콘치즈 덕후들 사이에서 바이럴이 터지며 논란인 주방템이 있는데,",
+   "tts_text": "최근 콘치즈 덕후들 사이에서 바이럴이 터지며 논란인 주방템이 있는데,",
+   "role": "bait",
+   "shot_query": [
+    "corn cheese skillet",
+    "corn cheese melting",
+    "phone scrolling viral",
+    "corn stripper tool close up"
+   ],
+   "shots": [
+    {
+     "piece": "최근 콘치즈 덕후들",
+     "query": "corn cheese skillet",
+     "kind": "유사"
+    },
+    {
+     "piece": "사이에서",
+     "query": "corn cheese melting",
+     "kind": "유사"
+    },
+    {
+     "piece": "바이럴이 터지며",
+     "query": "phone scrolling viral",
+     "kind": "유사"
+    },
+    {
+     "piece": "논란인 주방템이 있는데",
+     "query": "corn stripper tool close up",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 동그란 옥수수 알 커터.",
+   "tts_text": "이건 바로 동그란 옥수수 알 커터.",
+   "role": "reveal",
+   "shot_query": [
+    "surprised gasp meme",
+    "round corn stripper ring blade"
+   ],
+   "shots": [
+    {
+     "piece": "이건 바로",
+     "query": "surprised gasp meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "동그란 옥수수 알 커터",
+     "query": "round corn stripper ring blade",
+     "kind": "제품"
+    }
+   ],
+   "kind": "짤"
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는 게 칼로 썰면 알이 사방으로 튀었는데 이건 링 모양 칼날에 옥수수를 쏙 끼워서 쭉 밀면 알이 통째로 벗겨진다는 거.",
+   "tts_text": "이게 말도 안 되는 게 칼로 썰면 알이 사방으로 튀었는데 이건 링 모양 칼날에 옥수수를 쏙 끼워서 쭉 밀면 알이 통째로 벗겨진다는 거.",
+   "role": "solve",
+   "shot_query": [
+    "shocked face meme",
+    "cutting corn kernels knife",
+    "corn kernels flying mess",
+    "round corn stripper ring blade close up",
+    "corn cob into round corn stripper",
+    "round corn stripper push down",
+    "corn kernels falling off cob",
+    "corn kernels strip off slow motion"
+   ],
+   "shots": [
+    {
+     "piece": "이게 말도 안 되는 게",
+     "query": "shocked face meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "칼로 썰면",
+     "query": "cutting corn kernels knife",
+     "kind": "유사"
+    },
+    {
+     "piece": "알이 사방으로 튀었는데",
+     "query": "corn kernels flying mess",
+     "kind": "유사"
+    },
+    {
+     "piece": "이건 링 모양 칼날에",
+     "query": "round corn stripper ring blade close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "옥수수를 쏙 끼워서",
+     "query": "corn cob into round corn stripper",
+     "kind": "제품"
+    },
+    {
+     "piece": "쭉 밀면",
+     "query": "round corn stripper push down",
+     "kind": "제품"
+    },
+    {
+     "piece": "알이 통째로",
+     "query": "corn kernels falling off cob",
+     "kind": "제품"
+    },
+    {
+     "piece": "벗겨진다는 거",
+     "query": "corn kernels strip off slow motion",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 4,
+   "text": "심지어 이런 칼이 미국에선 40년도 더 전에 특허까지 나온 물건인데,",
+   "tts_text": "심지어 이런 칼이 미국에선 사십 년도 더 전에 특허까지 나온 물건인데,",
+   "role": "more",
+   "shot_query": [
+    "round corn stripper product",
+    "American flag waving",
+    "old vintage kitchen 1980s",
+    "patent drawing document"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 이런 칼이",
+     "query": "round corn stripper product",
+     "kind": "제품"
+    },
+    {
+     "piece": "미국에선",
+     "query": "American flag waving",
+     "kind": "유사"
+    },
+    {
+     "piece": "40년도 더 전에",
+     "query": "old vintage kitchen 1980s",
+     "kind": "유사"
+    },
+    {
+     "piece": "특허까지 나온 물건인데",
+     "query": "patent drawing document",
+     "kind": "유사"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 5,
+   "text": "생옥수수든 삶은 옥수수든 다 된다고.",
+   "tts_text": "생옥수수든 삶은 옥수수든 다 된다고.",
+   "role": "more2",
+   "shot_query": [
+    "raw corn on the cob",
+    "boiled corn steaming",
+    "corn stripper cooked corn"
+   ],
+   "shots": [
+    {
+     "piece": "생옥수수든",
+     "query": "raw corn on the cob",
+     "kind": "유사"
+    },
+    {
+     "piece": "삶은 옥수수든",
+     "query": "boiled corn steaming",
+     "kind": "유사"
+    },
+    {
+     "piece": "다 된다고",
+     "query": "corn stripper cooked corn",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 여름에 알만 까서 얼려두면 일 년 내내 옥수수밥이랑 콘치즈를 해 먹을 수 있다고.",
+   "tts_text": "근데 진짜 충격적인 포인트는 여름에 알만 까서 얼려두면 일 년 내내 옥수수밥이랑 콘치즈를 해 먹을 수 있다고.",
+   "role": "twist",
+   "shot_query": [
+    "jaw drop meme",
+    "round corn stripper kernels bowl",
+    "bowl full of corn kernels",
+    "corn kernels freezer bag",
+    "calendar pages flipping",
+    "corn rice cooker",
+    "corn cheese skillet",
+    "corn cheese spoon scoop"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜",
+     "query": "jaw drop meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "충격적인 포인트는",
+     "query": "round corn stripper kernels bowl",
+     "kind": "제품"
+    },
+    {
+     "piece": "여름에 알만 까서",
+     "query": "bowl full of corn kernels",
+     "kind": "제품"
+    },
+    {
+     "piece": "얼려두면",
+     "query": "corn kernels freezer bag",
+     "kind": "유사"
+    },
+    {
+     "piece": "일 년 내내",
+     "query": "calendar pages flipping",
+     "kind": "유사"
+    },
+    {
+     "piece": "옥수수밥이랑",
+     "query": "corn rice cooker",
+     "kind": "유사"
+    },
+    {
+     "piece": "콘치즈를",
+     "query": "corn cheese skillet",
+     "kind": "유사"
+    },
+    {
+     "piece": "해 먹을 수 있다고",
+     "query": "corn cheese spoon scoop",
+     "kind": "유사"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 7,
+   "text": "그래서 요즘엔 옥수수를 박스째 사다가 한 번에 다 까서 냉동실 채우는 집들 사이에서 필수템으로 난리라고.",
+   "tts_text": "그래서 요즘엔 옥수수를 박스째 사다가 한 번에 다 까서 냉동실 채우는 집들 사이에서 필수템으로 난리라고.",
+   "role": "land",
+   "shot_query": [
+    "round corn stripper kitchen",
+    "box of corn cobs",
+    "corn stripper many cobs",
+    "full freezer bags",
+    "family kitchen",
+    "crowd cheering meme"
+   ],
+   "shots": [
+    {
+     "piece": "그래서 요즘엔",
+     "query": "round corn stripper kitchen",
+     "kind": "제품"
+    },
+    {
+     "piece": "옥수수를 박스째 사다가",
+     "query": "box of corn cobs",
+     "kind": "유사"
+    },
+    {
+     "piece": "한 번에 다 까서",
+     "query": "corn stripper many cobs",
+     "kind": "제품"
+    },
+    {
+     "piece": "냉동실 채우는",
+     "query": "full freezer bags",
+     "kind": "유사"
+    },
+    {
+     "piece": "집들 사이에서",
+     "query": "family kitchen",
+     "kind": "유사"
+    },
+    {
+     "piece": "필수템으로 난리라고",
+     "query": "crowd cheering meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  }
+ ],
+ "chars": 256,
+ "est_sec": 29.09,
+ "climax": [
+  "①센 시작",
+  "②권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤~까지 난리"
+ ],
+ "facts": {
+  "링 칼날에 끼워 밀기": "원형 corn stripper 사용법(재료 단계에서 영상 확인)",
+  "40년도 더 전 특허": "US4402137 'Single element corn ear stripper'(1983 등록, Google Patents)",
+  "생옥수수·삶은 옥수수": "ATK 시험이 생 5·삶은 5개로 시험(americastestkitchen.com)",
+  "얼려두고 1년 내내": "쓰임 과장(사장님 허용) — 기능 아님",
+  "국가": "발명 인물 출처 없음 → '주방 천재'로",
+  "쓰지 않은 것": "요리 프로그램 7개 실험·3초·손톱·손목 살렸다(잇썸홈 작품5와 겹침)"
+ },
+ "title_lines": [
+  "옥수수 까다 현타 온",
+  "주방 천재의 발명품"
+ ],
+ "title_slots": {
+  "hook1": "옥수수 까다 현타 온",
+  "hook2": "주방 천재의 발명품",
+  "bodyTitle": "옥수수 까다 현타 온 주방 천재의 발명품?"
+ },
+ "hype": {
+  "①센 시작": "현타 온 주방 천재 … 떼돈 번",
+  "②권위": "40년도 더 전에 특허",
+  "③진짜 핵심 반전": "얼려두면 일 년 내내",
+  "④심지어": "심지어 이런 칼이",
+  "⑤~까지 난리": "필수템으로 난리라고"
+ },
+ "sfx": "shopping_shorts/sfx_pack density=low",
+ "bgm": null
+}

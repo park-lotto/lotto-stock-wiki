@@ -1,0 +1,308 @@
+{
+ "채널": "잇썸홈",
+ "channel": "homedesignnote",
+ "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+ "topic": "스테인리스 아이스큐브(냉매 젤 충전 스테인리스 얼음)",
+ "목소리": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.32,
+ "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)",
+ "from": "channel/homedesignnote/대본초안_5편.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "비싼 위스키에 얼음 넣었다가 물 탄 맛 돼서 속상했던 위스키 덕후들이 결국 얼음 대신 쇠로 만든 얼음을 넣기 시작했대요.",
+   "tts_text": "비싼 위스키에 얼음 넣었다가 물 탄 맛 돼서 속상했던 위스키 덕후들이 결국 얼음 대신 쇠로 만든 얼음을 넣기 시작했대요.",
+   "role": "훅",
+   "shot_query": [
+    "whiskey glass pour stainless steel ice cubes",
+    "ice cube melting whiskey",
+    "melted ice watered down drink",
+    "whiskey stainless steel ice cubes review",
+    "stainless steel ice cubes set",
+    "stainless steel ice cubes close up",
+    "stainless steel ice cube drop into whiskey slow motion"
+   ],
+   "shots": [
+    {
+     "piece": "비싼 위스키에",
+     "query": "whiskey glass pour stainless steel ice cubes",
+     "kind": "제품"
+    },
+    {
+     "piece": "얼음 넣었다가",
+     "query": "ice cube melting whiskey",
+     "kind": "제품"
+    },
+    {
+     "piece": "물 탄 맛 돼서",
+     "query": "melted ice watered down drink",
+     "kind": "제품"
+    },
+    {
+     "piece": "속상했던 위스키 덕후들이",
+     "query": "whiskey stainless steel ice cubes review",
+     "kind": "제품"
+    },
+    {
+     "piece": "결국 얼음 대신",
+     "query": "stainless steel ice cubes set",
+     "kind": "제품"
+    },
+    {
+     "piece": "쇠로 만든 얼음을",
+     "query": "stainless steel ice cubes close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "넣기 시작했대요",
+     "query": "stainless steel ice cube drop into whiskey slow motion",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "①센 시작"
+  },
+  {
+   "i": 1,
+   "text": "얼음 넣으면 금방 녹아서 마지막 한 모금은 맹물 맛 나잖아요.",
+   "tts_text": "얼음 넣으면 금방 녹아서 마지막 한 모금은 맹물 맛 나잖아요.",
+   "role": "도입",
+   "shot_query": [
+    "stainless steel ice cubes vs ice",
+    "ice melting in glass comparison",
+    "stainless steel ice cubes vs ice test",
+    "melted ice water in glass"
+   ],
+   "shots": [
+    {
+     "piece": "얼음 넣으면",
+     "query": "stainless steel ice cubes vs ice",
+     "kind": "제품"
+    },
+    {
+     "piece": "금방 녹아서",
+     "query": "ice melting in glass comparison",
+     "kind": "제품"
+    },
+    {
+     "piece": "마지막 한 모금은",
+     "query": "stainless steel ice cubes vs ice test",
+     "kind": "제품"
+    },
+    {
+     "piece": "맹물 맛 나잖아요",
+     "query": "melted ice water in glass",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": null
+  },
+  {
+   "i": 2,
+   "text": "원래는 스코틀랜드에서 돌을 차갑게 얼려서 술에 넣던 게 시작이라는데,",
+   "tts_text": "원래는 스코틀랜드에서 돌을 차갑게 얼려서 술에 넣던 게 시작이라는데,",
+   "role": "도입(유래)",
+   "shot_query": [
+    "stainless steel ice cubes whiskey bar",
+    "stainless steel ice cubes freezer",
+    "stainless steel ice cube whiskey glass",
+    "stainless steel ice cubes whiskey review"
+   ],
+   "shots": [
+    {
+     "piece": "원래는 스코틀랜드에서",
+     "query": "stainless steel ice cubes whiskey bar",
+     "kind": "제품"
+    },
+    {
+     "piece": "돌을 차갑게 얼려서",
+     "query": "stainless steel ice cubes freezer",
+     "kind": "제품"
+    },
+    {
+     "piece": "술에 넣던 게",
+     "query": "stainless steel ice cube whiskey glass",
+     "kind": "제품"
+    },
+    {
+     "piece": "시작이라는데",
+     "query": "stainless steel ice cubes whiskey review",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "②유래"
+  },
+  {
+   "i": 3,
+   "text": "진짜 핵심은 이건데, 속에 냉매 젤이 꽉 차 있어서 얼려두면 녹지도 않고 음료를 끝까지 차갑게 잡아준대요.",
+   "tts_text": "진짜 핵심은 이건데, 속에 냉매 젤이 꽉 차 있어서 얼려두면 녹지도 않고 음료를 끝까지 차갑게 잡아준대요.",
+   "role": "설명",
+   "shot_query": [
+    "stainless steel ice cube close up",
+    "stainless steel ice cube gel inside",
+    "stainless steel ice cube cut open",
+    "stainless steel ice cubes freezer take out",
+    "stainless steel ice cubes vs ice melting",
+    "stainless steel ice cubes drink",
+    "stainless steel ice cubes frost cold"
+   ],
+   "shots": [
+    {
+     "piece": "진짜 핵심은 이건데",
+     "query": "stainless steel ice cube close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "속에 냉매 젤이",
+     "query": "stainless steel ice cube gel inside",
+     "kind": "제품"
+    },
+    {
+     "piece": "꽉 차 있어서",
+     "query": "stainless steel ice cube cut open",
+     "kind": "제품"
+    },
+    {
+     "piece": "얼려두면",
+     "query": "stainless steel ice cubes freezer take out",
+     "kind": "제품"
+    },
+    {
+     "piece": "녹지도 않고",
+     "query": "stainless steel ice cubes vs ice melting",
+     "kind": "제품"
+    },
+    {
+     "piece": "음료를 끝까지",
+     "query": "stainless steel ice cubes drink",
+     "kind": "제품"
+    },
+    {
+     "piece": "차갑게 잡아준대요",
+     "query": "stainless steel ice cubes frost cold",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "③진짜 핵심 반전"
+  },
+  {
+   "i": 4,
+   "text": "심지어 다 마시고 물에 헹궈서 다시 냉동실에 넣으면 끝이라 얼음틀 채울 일이 사라지더라고요.",
+   "tts_text": "심지어 다 마시고 물에 헹궈서 다시 냉동실에 넣으면 끝이라 얼음틀 채울 일이 사라지더라고요.",
+   "role": "효과",
+   "shot_query": [
+    "stainless steel ice cubes tongs take out",
+    "stainless steel ice cubes rinse",
+    "stainless steel ice cubes put in freezer",
+    "stainless steel ice cubes storage box",
+    "ice cube tray",
+    "stainless steel ice cubes reusable"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 다 마시고",
+     "query": "stainless steel ice cubes tongs take out",
+     "kind": "제품"
+    },
+    {
+     "piece": "물에 헹궈서",
+     "query": "stainless steel ice cubes rinse",
+     "kind": "제품"
+    },
+    {
+     "piece": "다시 냉동실에 넣으면",
+     "query": "stainless steel ice cubes put in freezer",
+     "kind": "제품"
+    },
+    {
+     "piece": "끝이라",
+     "query": "stainless steel ice cubes storage box",
+     "kind": "제품"
+    },
+    {
+     "piece": "얼음틀 채울 일이",
+     "query": "ice cube tray",
+     "kind": "제품"
+    },
+    {
+     "piece": "사라지더라고요",
+     "query": "stainless steel ice cubes reusable",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "④심지어"
+  },
+  {
+   "i": 5,
+   "text": "요즘엔 홈카페 하는 분들까지 아이스 라떼 밍밍해지는 거 막는다고 난리래요.",
+   "tts_text": "요즘엔 홈카페 하는 분들까지 아이스 라떼 밍밍해지는 거 막는다고 난리래요.",
+   "role": "효과·행동유도",
+   "shot_query": [
+    "home cafe iced coffee stainless steel ice cubes",
+    "stainless steel ice cubes coffee",
+    "stainless steel ice cubes iced latte",
+    "stainless steel ice cubes iced coffee",
+    "stainless steel ice cubes drink pour"
+   ],
+   "shots": [
+    {
+     "piece": "요즘엔 홈카페",
+     "query": "home cafe iced coffee stainless steel ice cubes",
+     "kind": "제품"
+    },
+    {
+     "piece": "하는 분들까지",
+     "query": "stainless steel ice cubes coffee",
+     "kind": "제품"
+    },
+    {
+     "piece": "아이스 라떼",
+     "query": "stainless steel ice cubes iced latte",
+     "kind": "제품"
+    },
+    {
+     "piece": "밍밍해지는 거 막는다고",
+     "query": "stainless steel ice cubes iced coffee",
+     "kind": "제품"
+    },
+    {
+     "piece": "난리래요",
+     "query": "stainless steel ice cubes drink pour",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "⑤난리"
+  }
+ ],
+ "chars": 219,
+ "est_sec": 26.32,
+ "climax": [
+  "①센 시작",
+  "②유래",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤난리"
+ ],
+ "facts": {
+  "냉매 젤": "속에 밀봉 젤(판매처 설명 다수: Sharper Image 등)",
+  "녹지 않음·재사용": "얼음 아님 → 녹지 않음, 씻어 다시 냉동(판매처 설명)",
+  "돌 얼려 넣던 게 시작": "위스키 스톤 유래 소문(전언 '~라는데', 사장님 소문 허용)",
+  "홈카페 난리": "사회 반응 과장(사장님 허용)",
+  "쓰지 않은 것": "'영국에서 처음 나와 떼돈'(초안) — 출처 없음, 뺌"
+ },
+ "title_lines": [],
+ "sfx": 0,
+ "meme": 0
+}

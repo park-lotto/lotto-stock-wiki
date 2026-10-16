@@ -1,0 +1,346 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "싱크대 매립형 식기세척기(FOTILE)",
+ "목소리": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "voice": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "cps_target": 8.8,
+ "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤",
+ "from": "channel/homedesignnote/대본초안_5편_이븐쇼핑형.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "기름 범벅 웍 설거지하다 지친 중국 천재가 만들어 떼돈 번 싱크대의 정체.",
+   "tts_text": "기름 범벅 웍 설거지하다 지친 중국 천재가 만들어 떼돈 번 싱크대의 정체.",
+   "role": "title",
+   "shot_query": [
+    "greasy wok washing sink",
+    "tired washing dishes sink",
+    "FOTILE sink dishwasher",
+    "money rain meme"
+   ],
+   "shots": [
+    {
+     "piece": "기름 범벅 웍",
+     "query": "greasy wok washing sink",
+     "kind": "유사"
+    },
+    {
+     "piece": "설거지하다 지친",
+     "query": "tired washing dishes sink",
+     "kind": "유사"
+    },
+    {
+     "piece": "중국 천재가 만들어",
+     "query": "FOTILE sink dishwasher",
+     "kind": "제품"
+    },
+    {
+     "piece": "떼돈 번 싱크대의 정체",
+     "query": "money rain meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 1,
+   "text": "최근 맞벌이 커플들 사이에서 바이럴이 터지며 논란인 싱크대가 있는데,",
+   "tts_text": "최근 맞벌이 커플들 사이에서 바이럴이 터지며 논란인 싱크대가 있는데,",
+   "role": "bait",
+   "shot_query": [
+    "couple kitchen after work tired",
+    "couple arguing dishes",
+    "phone scrolling viral",
+    "FOTILE in sink dishwasher closed lid"
+   ],
+   "shots": [
+    {
+     "piece": "최근 맞벌이 커플들",
+     "query": "couple kitchen after work tired",
+     "kind": "유사"
+    },
+    {
+     "piece": "사이에서",
+     "query": "couple arguing dishes",
+     "kind": "유사"
+    },
+    {
+     "piece": "바이럴이 터지며",
+     "query": "phone scrolling viral",
+     "kind": "유사"
+    },
+    {
+     "piece": "논란인 싱크대가 있는데",
+     "query": "FOTILE in sink dishwasher closed lid",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 싱크대 속 식기세척기.",
+   "tts_text": "이건 바로 싱크대 속 식기세척기.",
+   "role": "reveal",
+   "shot_query": [
+    "surprised gasp meme",
+    "FOTILE in sink dishwasher open lid"
+   ],
+   "shots": [
+    {
+     "piece": "이건 바로",
+     "query": "surprised gasp meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "싱크대 속 식기세척기",
+     "query": "FOTILE in sink dishwasher open lid",
+     "kind": "제품"
+    }
+   ],
+   "kind": "짤"
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는 게 기존 식기세척기는 접시만 넣었지만 이건 기름 범벅 냄비까지 통째로 넣고 돌린다는 거.",
+   "tts_text": "이게 말도 안 되는 게 기존 식기세척기는 접시만 넣었지만 이건 기름 범벅 냄비까지 통째로 넣고 돌린다는 거.",
+   "role": "solve",
+   "shot_query": [
+    "shocked face meme",
+    "regular dishwasher rack plates",
+    "loading plates dishwasher",
+    "FOTILE sink dishwasher pot inside",
+    "FOTILE sink dishwasher washing spray"
+   ],
+   "shots": [
+    {
+     "piece": "이게 말도 안 되는 게",
+     "query": "shocked face meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "기존 식기세척기는",
+     "query": "regular dishwasher rack plates",
+     "kind": "유사"
+    },
+    {
+     "piece": "접시만 넣었지만",
+     "query": "loading plates dishwasher",
+     "kind": "유사"
+    },
+    {
+     "piece": "이건 기름 범벅 냄비까지",
+     "query": "FOTILE sink dishwasher pot inside",
+     "kind": "제품"
+    },
+    {
+     "piece": "통째로 넣고 돌린다는 거",
+     "query": "FOTILE sink dishwasher washing spray",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 4,
+   "text": "심지어 개발팀이 중국 40개 도시 천 가구를 찾아가서 밥하는 걸 따라다니며 만들었다는데,",
+   "tts_text": "심지어 개발팀이 중국 사십 개 도시 천 가구를 찾아가서 밥하는 걸 따라다니며 만들었다는데,",
+   "role": "more",
+   "shot_query": [
+    "engineers design team meeting",
+    "China city skyline aerial",
+    "apartment buildings China",
+    "Chinese home cooking wok",
+    "FOTILE dishwasher R&D lab"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 개발팀이",
+     "query": "engineers design team meeting",
+     "kind": "유사"
+    },
+    {
+     "piece": "중국 40개 도시",
+     "query": "China city skyline aerial",
+     "kind": "유사"
+    },
+    {
+     "piece": "천 가구를 찾아가서",
+     "query": "apartment buildings China",
+     "kind": "유사"
+    },
+    {
+     "piece": "밥하는 걸",
+     "query": "Chinese home cooking wok",
+     "kind": "유사"
+    },
+    {
+     "piece": "따라다니며 만들었다는데",
+     "query": "FOTILE dishwasher R&D lab",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사"
+  },
+  {
+   "i": 5,
+   "text": "세계 최초로 싱크대랑 식기세척기를 하나로 합친 게 바로 이 회사라고.",
+   "tts_text": "세계 최초로 싱크대랑 식기세척기를 하나로 합친 게 바로 이 회사라고.",
+   "role": "more2",
+   "shot_query": [
+    "first place trophy meme",
+    "FOTILE in sink dishwasher top view",
+    "FOTILE sink dishwasher installation",
+    "FOTILE showroom"
+   ],
+   "shots": [
+    {
+     "piece": "세계 최초로",
+     "query": "first place trophy meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "싱크대랑 식기세척기를",
+     "query": "FOTILE in sink dishwasher top view",
+     "kind": "제품"
+    },
+    {
+     "piece": "하나로 합친 게",
+     "query": "FOTILE sink dishwasher installation",
+     "kind": "제품"
+    },
+    {
+     "piece": "바로 이 회사라고",
+     "query": "FOTILE showroom",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품"
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 출시 여덟 달 만에 중국 시장 점유율 30%를 먹어버렸다고.",
+   "tts_text": "근데 진짜 충격적인 포인트는 출시 여덟 달 만에 중국 시장 점유율 삼십 퍼센트를 먹어버렸다고.",
+   "role": "twist",
+   "shot_query": [
+    "jaw drop meme",
+    "FOTILE sink dishwasher close up",
+    "calendar pages flipping",
+    "FOTILE store display",
+    "stonks meme"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜",
+     "query": "jaw drop meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "충격적인 포인트는",
+     "query": "FOTILE sink dishwasher close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "출시 여덟 달 만에",
+     "query": "calendar pages flipping",
+     "kind": "유사"
+    },
+    {
+     "piece": "중국 시장 점유율",
+     "query": "FOTILE store display",
+     "kind": "제품"
+    },
+    {
+     "piece": "30%를 먹어버렸다고",
+     "query": "stonks meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "짤"
+  },
+  {
+   "i": 7,
+   "text": "그래서 요즘엔 설거지 당번 정하다 싸우던 집들마다 이혼 막는 싱크대로 난리라고.",
+   "tts_text": "그래서 요즘엔 설거지 당번 정하다 싸우던 집들마다 이혼 막는 싱크대로 난리라고.",
+   "role": "land",
+   "shot_query": [
+    "FOTILE sink dishwasher kitchen",
+    "rock paper scissors couple",
+    "couple arguing kitchen",
+    "FOTILE sink dishwasher clean dishes",
+    "crowd cheering meme"
+   ],
+   "shots": [
+    {
+     "piece": "그래서 요즘엔",
+     "query": "FOTILE sink dishwasher kitchen",
+     "kind": "제품"
+    },
+    {
+     "piece": "설거지 당번 정하다",
+     "query": "rock paper scissors couple",
+     "kind": "유사"
+    },
+    {
+     "piece": "싸우던 집들마다",
+     "query": "couple arguing kitchen",
+     "kind": "유사"
+    },
+    {
+     "piece": "이혼 막는 싱크대로",
+     "query": "FOTILE sink dishwasher clean dishes",
+     "kind": "제품"
+    },
+    {
+     "piece": "난리라고",
+     "query": "crowd cheering meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "유사"
+  }
+ ],
+ "chars": 256,
+ "est_sec": 29.09,
+ "climax": [
+  "①센 시작",
+  "②권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤~까지 난리"
+ ],
+ "facts": {
+  "냄비까지": "접시·냄비·채소 세척(CHEAA 2017)",
+  "40개 도시 1,000가구": "2011년부터 개발팀 40개 도시 1,000여 가구 방문, 요리 전 과정 관찰(CHEAA·IDEO)",
+  "세계 최초": "2015년 세계 최초 싱크대 식기세척기(회사 주장, China Daily·CHEAA)",
+  "8달 만에 30%": "출시 8개월 만에 중국 시장 30%(IDEO 사례 — 회사 쪽 주장)",
+  "맞벌이 이혼 막는 싱크대": "사회 반응 과장(사장님 허용)",
+  "쓰지 않은 것": "허리·수백만 대·초음파 농약·신혼부부 주방공사(잇썸홈 작품1과 겹침)"
+ },
+ "title_lines": [
+  "웍 설거지에 지친",
+  "중국 천재의 발명품"
+ ],
+ "title_slots": {
+  "hook1": "웍 설거지에 지친",
+  "hook2": "중국 천재의 발명품",
+  "bodyTitle": "웍 설거지에 지친 중국 천재의 발명품?"
+ },
+ "hype": {
+  "①센 시작": "지친 중국 천재 … 떼돈 번",
+  "②권위": "세계 최초로 … 이 회사",
+  "③진짜 핵심 반전": "출시 여덟 달 만에 30%",
+  "④심지어": "40개 도시 천 가구",
+  "⑤~까지 난리": "이혼 막는 싱크대로 난리라고"
+ },
+ "sfx": "shopping_shorts/sfx_pack density=low",
+ "bgm": null
+}

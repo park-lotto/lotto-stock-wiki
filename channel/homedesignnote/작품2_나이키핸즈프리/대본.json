@@ -1,0 +1,314 @@
+{
+ "채널": "잇썸홈",
+ "channel": "homedesignnote",
+ "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+ "topic": "나이키 핸즈프리 운동화(Nike Go FlyEase)",
+ "목소리": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.32,
+ "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)",
+ "from": "channel/homedesignnote/대본초안_5편.md → 오푸스 10-17 확정(사실 확인·두 채널 차별화)",
+ "lines": [
+  {
+   "i": 0,
+   "text": "혼자 신발 신는 게 서러웠던 한 학생이 나이키에 편지 한 통을 보냈는데, 그걸 읽은 나이키가 손 안 대고 신는 신발을 만들어버렸대요.",
+   "tts_text": "혼자 신발 신는 게 서러웠던 한 학생이 나이키에 편지 한 통을 보냈는데, 그걸 읽은 나이키가 손 안 대고 신는 신발을 만들어버렸대요.",
+   "role": "훅",
+   "shot_query": [
+    "Nike FlyEase Matthew Walzer putting on shoes",
+    "Matthew Walzer Nike FlyEase story",
+    "Matthew Walzer letter to Nike",
+    "Matthew Walzer letter Nike close up",
+    "Nike FlyEase designer Tobie Hatfield",
+    "Nike Go FlyEase hands free step in",
+    "Nike Go FlyEase on feet",
+    "Nike Go FlyEase product reveal"
+   ],
+   "shots": [
+    {
+     "piece": "혼자 신발 신는 게",
+     "query": "Nike FlyEase Matthew Walzer putting on shoes",
+     "kind": "제품"
+    },
+    {
+     "piece": "서러웠던 한 학생이",
+     "query": "Matthew Walzer Nike FlyEase story",
+     "kind": "제품"
+    },
+    {
+     "piece": "나이키에 편지 한 통을",
+     "query": "Matthew Walzer letter to Nike",
+     "kind": "제품"
+    },
+    {
+     "piece": "보냈는데",
+     "query": "Matthew Walzer letter Nike close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "그걸 읽은 나이키가",
+     "query": "Nike FlyEase designer Tobie Hatfield",
+     "kind": "제품"
+    },
+    {
+     "piece": "손 안 대고",
+     "query": "Nike Go FlyEase hands free step in",
+     "kind": "제품"
+    },
+    {
+     "piece": "신는 신발을",
+     "query": "Nike Go FlyEase on feet",
+     "kind": "제품"
+    },
+    {
+     "piece": "만들어버렸대요",
+     "query": "Nike Go FlyEase product reveal",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "①센 시작"
+  },
+  {
+   "i": 1,
+   "text": "운동화 신을 때마다 쪼그려 앉아 뒤꿈치 구겨 넣는 거 귀찮잖아요.",
+   "tts_text": "운동화 신을 때마다 쪼그려 앉아 뒤꿈치 구겨 넣는 거 귀찮잖아요.",
+   "role": "도입",
+   "shot_query": [
+    "Nike Go FlyEase vs regular sneaker putting on",
+    "Nike Go FlyEase review crouching tie shoes",
+    "Nike Go FlyEase review heel squash regular shoe",
+    "Nike Go FlyEase review struggling shoes"
+   ],
+   "shots": [
+    {
+     "piece": "운동화 신을 때마다",
+     "query": "Nike Go FlyEase vs regular sneaker putting on",
+     "kind": "제품"
+    },
+    {
+     "piece": "쪼그려 앉아",
+     "query": "Nike Go FlyEase review crouching tie shoes",
+     "kind": "제품"
+    },
+    {
+     "piece": "뒤꿈치 구겨 넣는 거",
+     "query": "Nike Go FlyEase review heel squash regular shoe",
+     "kind": "제품"
+    },
+    {
+     "piece": "귀찮잖아요",
+     "query": "Nike Go FlyEase review struggling shoes",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": null
+  },
+  {
+   "i": 2,
+   "text": "근데 나이키가 이거 하나에 몇 년을 갈아 넣으면서 시제품마다 그 학생한테 먼저 신겨봤다는데,",
+   "tts_text": "근데 나이키가 이거 하나에 몇 년을 갈아 넣으면서 시제품마다 그 학생한테 먼저 신겨봤다는데,",
+   "role": "도입(증거)",
+   "shot_query": [
+    "Nike FlyEase Tobie Hatfield design",
+    "Nike FlyEase prototype development",
+    "Nike FlyEase sketches prototypes",
+    "Nike FlyEase prototypes table",
+    "Matthew Walzer wearing FlyEase",
+    "Matthew Walzer testing Nike FlyEase"
+   ],
+   "shots": [
+    {
+     "piece": "근데 나이키가",
+     "query": "Nike FlyEase Tobie Hatfield design",
+     "kind": "제품"
+    },
+    {
+     "piece": "이거 하나에 몇 년을",
+     "query": "Nike FlyEase prototype development",
+     "kind": "제품"
+    },
+    {
+     "piece": "갈아 넣으면서",
+     "query": "Nike FlyEase sketches prototypes",
+     "kind": "제품"
+    },
+    {
+     "piece": "시제품마다",
+     "query": "Nike FlyEase prototypes table",
+     "kind": "제품"
+    },
+    {
+     "piece": "그 학생한테 먼저",
+     "query": "Matthew Walzer wearing FlyEase",
+     "kind": "제품"
+    },
+    {
+     "piece": "신겨봤다는데",
+     "query": "Matthew Walzer testing Nike FlyEase",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "②권위"
+  },
+  {
+   "i": 3,
+   "text": "진짜 핵심은 이건데, 밑창 가운데가 경첩처럼 꺾여 있어서 발 쑥 넣고 꾹 밟으면 신발이 알아서 착 닫혀요.",
+   "tts_text": "진짜 핵심은 이건데, 밑창 가운데가 경첩처럼 꺾여 있어서 발 쑥 넣고 꾹 밟으면 신발이 알아서 착 닫혀요.",
+   "role": "설명",
+   "shot_query": [
+    "Nike Go FlyEase close up",
+    "Nike Go FlyEase sole hinge close up",
+    "Nike Go FlyEase bistable hinge open",
+    "Nike Go FlyEase foot slide in",
+    "Nike Go FlyEase step down",
+    "Nike Go FlyEase shoe closes slow motion"
+   ],
+   "shots": [
+    {
+     "piece": "진짜 핵심은 이건데",
+     "query": "Nike Go FlyEase close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "밑창 가운데가",
+     "query": "Nike Go FlyEase sole hinge close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "경첩처럼 꺾여 있어서",
+     "query": "Nike Go FlyEase bistable hinge open",
+     "kind": "제품"
+    },
+    {
+     "piece": "발 쑥 넣고",
+     "query": "Nike Go FlyEase foot slide in",
+     "kind": "제품"
+    },
+    {
+     "piece": "꾹 밟으면",
+     "query": "Nike Go FlyEase step down",
+     "kind": "제품"
+    },
+    {
+     "piece": "신발이 알아서 착 닫혀요",
+     "query": "Nike Go FlyEase shoe closes slow motion",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "③진짜 핵심 반전"
+  },
+  {
+   "i": 4,
+   "text": "심지어 벗을 땐 반대쪽 발로 뒤꿈치만 툭 차면 끝이라 손 쓸 일이 아예 없더라고요.",
+   "tts_text": "심지어 벗을 땐 반대쪽 발로 뒤꿈치만 툭 차면 끝이라 손 쓸 일이 아예 없더라고요.",
+   "role": "효과",
+   "shot_query": [
+    "Nike Go FlyEase taking off",
+    "Nike Go FlyEase kickstand heel other foot",
+    "Nike Go FlyEase kickstand heel step off",
+    "Nike Go FlyEase shoe opens kickstand",
+    "Nike Go FlyEase hands free walking",
+    "Nike Go FlyEase hands free review"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 벗을 땐",
+     "query": "Nike Go FlyEase taking off",
+     "kind": "제품"
+    },
+    {
+     "piece": "반대쪽 발로",
+     "query": "Nike Go FlyEase kickstand heel other foot",
+     "kind": "제품"
+    },
+    {
+     "piece": "뒤꿈치만 툭 차면",
+     "query": "Nike Go FlyEase kickstand heel step off",
+     "kind": "제품"
+    },
+    {
+     "piece": "끝이라",
+     "query": "Nike Go FlyEase shoe opens kickstand",
+     "kind": "제품"
+    },
+    {
+     "piece": "손 쓸 일이 아예",
+     "query": "Nike Go FlyEase hands free walking",
+     "kind": "제품"
+    },
+    {
+     "piece": "없더라고요",
+     "query": "Nike Go FlyEase hands free review",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "④심지어"
+  },
+  {
+   "i": 5,
+   "text": "요즘엔 임산부들이랑 부모님 효도템으로 신발장마다 들여놓는다고 난리래요.",
+   "tts_text": "요즘엔 임산부들이랑 부모님 효도템으로 신발장마다 들여놓는다고 난리래요.",
+   "role": "효과·행동유도",
+   "shot_query": [
+    "Nike Go FlyEase pregnant woman",
+    "Nike Go FlyEase elderly",
+    "Nike Go FlyEase pair on shelf",
+    "Nike Go FlyEase colorways lineup"
+   ],
+   "shots": [
+    {
+     "piece": "요즘엔 임산부들이랑",
+     "query": "Nike Go FlyEase pregnant woman",
+     "kind": "제품"
+    },
+    {
+     "piece": "부모님 효도템으로",
+     "query": "Nike Go FlyEase elderly",
+     "kind": "제품"
+    },
+    {
+     "piece": "신발장마다",
+     "query": "Nike Go FlyEase pair on shelf",
+     "kind": "제품"
+    },
+    {
+     "piece": "들여놓는다고 난리래요",
+     "query": "Nike Go FlyEase colorways lineup",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "climax": "⑤난리"
+  }
+ ],
+ "chars": 229,
+ "est_sec": 27.52,
+ "climax": [
+  "①센 시작",
+  "②권위",
+  "③진짜 핵심 반전",
+  "④심지어",
+  "⑤난리"
+ ],
+ "facts": {
+  "편지": "2012년 뇌성마비 16세 Matthew Walzer가 나이키에 편지 → 디자이너 Tobie Hatfield 개발(dogonews·goodthingsguy 2021-02)",
+  "시제품마다 학생 검사": "버전마다 Walzer에게 보내 확인(같은 기사)",
+  "경첩": "bi-stable hinge — 열린 상태·닫힌 상태 둘 다 유지, 밟으면 닫힘(나이키 발표)",
+  "뒤꿈치 킥스탠드": "kickstand heel — 반대 발로 뒤꿈치 눌러 벗음(나이키 발표)",
+  "임산부·부모님 효도템": "사회 반응 과장(사장님 허용)"
+ },
+ "title_lines": [],
+ "sfx": 0,
+ "meme": 0
+}
