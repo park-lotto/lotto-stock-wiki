@@ -131,5 +131,97 @@
   "진짜 이유(그건 바로 ~)",
   "혼잣말(말투 바꾼 한 줄)"
  ],
- "source_kind": "제품비하인드"
+ "source_kind": "제품비하인드",
+ "nearest_template": {
+  "tool": "template_match",
+  "at": "2026-10-16",
+  "close_max": 150,
+  "frames": {
+   "hook": {
+    "close": false,
+    "top": [
+     {
+      "id": "t03",
+      "name": "썰 스타일 05",
+      "kind": "훅+본문·훅",
+      "score": 159.0,
+      "parts": {
+       "win_top": 67.0,
+       "title_top": 24.0,
+       "bg": 68,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t16",
+      "name": "썰 스타일 17",
+      "kind": "훅+본문·훅",
+      "score": 196.0,
+      "parts": {
+       "win_top": 67.0,
+       "title_top": 75.0,
+       "bg": 54,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "s0101",
+      "name": "썰 스타일 02",
+      "kind": "훅+본문·훅",
+      "score": 217.0,
+      "parts": {
+       "win_top": 13.0,
+       "title_top": 72.0,
+       "bg": 132,
+       "title_lines": 0
+      }
+     }
+    ]
+   },
+   "body": {
+    "close": true,
+    "top": [
+     {
+      "id": "t03",
+      "name": "썰 스타일 05",
+      "kind": "훅+본문·본문",
+      "score": 60.0,
+      "parts": {
+       "win_top": 3.0,
+       "title_top": 34.0,
+       "cap_y": 13.0,
+       "bg": 10,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t06",
+      "name": "썰 스타일 08",
+      "kind": "훅+본문·본문",
+      "score": 64.0,
+      "parts": {
+       "win_top": 15.0,
+       "title_top": 4.0,
+       "cap_y": 23.0,
+       "bg": 22,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t16",
+      "name": "썰 스타일 17",
+      "kind": "훅+본문·본문",
+      "score": 67.0,
+      "parts": {
+       "win_top": 12.0,
+       "title_top": 16.0,
+       "cap_y": 17.0,
+       "bg": 22,
+       "title_lines": 0
+      }
+     }
+    ]
+   }
+  }
+ }
 }

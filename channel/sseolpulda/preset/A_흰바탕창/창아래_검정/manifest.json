@@ -272,5 +272,53 @@
   "인정·댓글유도 · 말끝 ~인정?"
  ],
  "source_kind": "해외영상",
- "rules_path": "channel/sseolpulda/제품_이야기썰형.rules.json"
+ "rules_path": "channel/sseolpulda/제품_이야기썰형.rules.json",
+ "nearest_template": {
+  "tool": "template_match",
+  "at": "2026-10-16",
+  "close_max": 150,
+  "frames": {
+   "one": {
+    "close": false,
+    "top": [
+     {
+      "id": "t17",
+      "name": "썰 스타일 18",
+      "kind": "훅+본문·훅",
+      "score": 291.0,
+      "parts": {
+       "win_top": 228.0,
+       "title_top": 49.0,
+       "bg": 14,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t06",
+      "name": "썰 스타일 08",
+      "kind": "훅+본문·훅",
+      "score": 386.0,
+      "parts": {
+       "win_top": 282.0,
+       "title_top": 32.0,
+       "bg": 72,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t04",
+      "name": "썰 스타일 06",
+      "kind": "훅+본문·훅",
+      "score": 451.0,
+      "parts": {
+       "win_top": 339.0,
+       "title_top": 106.0,
+       "bg": 6,
+       "title_lines": 0
+      }
+     }
+    ]
+   }
+  }
+ }
 }

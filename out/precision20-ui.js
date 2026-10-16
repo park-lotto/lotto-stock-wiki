@@ -198,10 +198,13 @@
   };
   const isPlain=p=>(p||rows[current])?.id===PLAIN_ID;
   const plainIndex=()=>storyRows.findIndex(p=>p.id===PLAIN_ID);
-  const gridRows=()=>rows.filter(p=>p.id!==PLAIN_ID);
+  // 관리자 전용 틀(칼카피 등록 틀, template_register.py admin_only) — 목록 노출 판정은 이 함수 하나. 서버가 관리자에게만 context.adminView=true
+  //   (sceneContext 는 아래 let 이라 첫 renderGrid 때 TDZ — 그래서 따로 둔 값을 load 가 채운다)
+  let adminView=false;const rowVisible=p=>!p?.admin_only||adminView;
+  const gridRows=()=>rows.filter(p=>p.id!==PLAIN_ID&&rowVisible(p));
   const renderGrid=()=>{
-    const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.filter(p=>p.id!==PLAIN_ID).length+fixedRows.length}개`;
-    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>p.id===PLAIN_ID?'':mode==='continuous'
+    const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.filter(p=>p.id!==PLAIN_ID).length+fixedRows.filter(rowVisible).length}개`;
+    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>p.id===PLAIN_ID||!rowVisible(p)?'':mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
@@ -2364,7 +2367,7 @@
   window.sceneStyle={
     snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,...(rows[current].frame?.spec?{customFrame:rows[current]}:{}),sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(CAPTION_PACKS[captionPack]?{captionPack}:{}),...(motionPack==='off'?{motionPack:'off'}:motionPackNo()?{motionPack:String(motionPackNo())}:{}),...(fxPresetSel?{fxPreset:structuredClone(fxPresetSel)}:{}),...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:WORD_FX_GROWS[wordFx.grow]?wordFx.grow:''}}:{}),fontSet,fontSets:{...fontSets},...(Object.keys(fontPick).length?{fontPick:{...fontPick}}:{}),titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
-      sceneContext=context;
+      sceneContext=context;adminView=context?.adminView===true;if(!saved)renderGrid();   // 관리자 전용 틀 노출은 context 를 받아야 정해진다(rowVisible)
       frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
       {const oldShadow=saved&&(typeof saved.textShadow==='object'&&saved.textShadow?Object.values(saved.textShadow).some(Boolean):!!saved.textShadow);

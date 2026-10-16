@@ -3273,5 +3273,699 @@ window.CONTINUOUS20= [
     }
    ]
   }
+ },
+ {
+  "id": "custom_07794e0976f9",
+  "mode": "continuous",
+  "name": "칼카피 썰풀다 A 창아래",
+  "views": 0,
+  "source_id": "custom_07794e0976f9",
+  "frame_image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+  "thumbnail_image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+  "sample": {
+   "channel": "숏템메이커",
+   "hook1": "닿으면 스피커",
+   "hook2": "소름 돋는 음질 수준",
+   "bodyTitle": "",
+   "caption": ""
+  },
+  "frame": {
+   "width": 1080,
+   "height": 1920,
+   "design_label": "칼카피 설명서",
+   "spec": {
+    "canvas": [
+     1080,
+     1920
+    ],
+    "layers": [
+     {
+      "kind": "bg",
+      "rgb": [
+       251,
+       248,
+       252
+      ]
+     },
+     {
+      "kind": "video",
+      "x": 0,
+      "y": 426,
+      "w": 1080,
+      "h": 1006,
+      "radius": 0,
+      "cuts": null,
+      "anchor": null
+     },
+     {
+      "kind": "text",
+      "role": "title",
+      "x": 540,
+      "y": 224,
+      "w": 1000,
+      "align": "center",
+      "lines": 2,
+      "font": "SBAggroB",
+      "size": 93.2,
+      "line_h": 96,
+      "rgb": [
+       0,
+       0,
+       0
+      ],
+      "line_rgb": null,
+      "line_scale": null,
+      "outline": null,
+      "line_outline": null,
+      "shadow": null,
+      "box": null,
+      "italic": false,
+      "letter_spacing": -2,
+      "word_spacing": 0,
+      "valign": "center",
+      "enter": null,
+      "emphasis": null,
+      "text": "닿으면 스피커\n소름 돋는 음질 수준"
+     },
+     {
+      "kind": "text",
+      "role": "caption",
+      "x": 540,
+      "y": 1462,
+      "w": 1000,
+      "align": "center",
+      "lines": 1,
+      "font": "CcSpoqaHanSansNeo-Bold",
+      "size": 66,
+      "line_h": 76,
+      "rgb": [
+       0,
+       0,
+       0
+      ],
+      "line_rgb": null,
+      "line_scale": null,
+      "outline": null,
+      "line_outline": null,
+      "shadow": null,
+      "box": null,
+      "italic": false,
+      "letter_spacing": -7.4,
+      "word_spacing": 6.8,
+      "valign": "center",
+      "enter": null,
+      "emphasis": null,
+      "text": null
+     },
+     {
+      "kind": "text",
+      "role": "brand",
+      "x": 1052,
+      "y": 15,
+      "w": 181,
+      "align": "right",
+      "lines": 1,
+      "font": "TmonMonsori",
+      "size": 48,
+      "line_h": 55,
+      "rgb": [
+       185,
+       184,
+       188
+      ],
+      "line_rgb": null,
+      "line_scale": null,
+      "outline": {
+       "px": 3,
+       "rgb": [
+        96,
+        95,
+        98
+       ]
+      },
+      "line_outline": null,
+      "shadow": null,
+      "box": null,
+      "italic": true,
+      "letter_spacing": -2.3,
+      "word_spacing": 0,
+      "valign": "center",
+      "enter": null,
+      "emphasis": null,
+      "text": "[광고]"
+     }
+    ],
+    "template_off": {
+     "tail_sec": 2.18,
+     "scenes": null
+    },
+    "made_by": "calcopy_frame v1",
+    "source": "ZdeZRtCeAC4"
+   },
+   "lines": [
+    {
+     "bind": "hook1",
+     "x0": 40.0,
+     "x1": 1040.0,
+     "y0": 224,
+     "y1": 320,
+     "h": 96,
+     "font_family": "SBAggroB",
+     "font_size": 93.2,
+     "font_weight": 400,
+     "color": "#000000",
+     "no_patch": true,
+     "max_lines": 1
+    },
+    {
+     "bind": "hook2",
+     "x0": 40.0,
+     "x1": 1040.0,
+     "y0": 320,
+     "y1": 416,
+     "h": 96,
+     "font_family": "SBAggroB",
+     "font_size": 93.2,
+     "font_weight": 400,
+     "color": "#000000",
+     "no_patch": true,
+     "max_lines": 1
+    },
+    {
+     "bind": "caption",
+     "x0": 40.0,
+     "x1": 1040.0,
+     "y0": 1462,
+     "y1": 1538,
+     "h": 76,
+     "font_family": "CcSpoqaHanSansNeo-Bold",
+     "font_size": 66,
+     "font_weight": 400,
+     "color": "#000000",
+     "no_patch": true,
+     "max_lines": 1
+    }
+   ],
+   "video_from": {
+    "y": 426,
+    "pct": 22.2
+   }
+  },
+  "admin_only": true,
+  "calcopy_preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정"
+ },
+ {
+  "id": "custom_4695f582df00",
+  "mode": "continuous",
+  "name": "칼카피 yummyknow 게시글형",
+  "views": 0,
+  "source_id": "custom_4695f582df00",
+  "frame_image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+  "thumbnail_image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+  "sample": {
+   "channel": "숏템메이커",
+   "hook1": "한국인이 비벼버린",
+   "hook2": "두바이 스프레드",
+   "bodyTitle": "",
+   "caption": ""
+  },
+  "frame": {
+   "width": 1080,
+   "height": 1920,
+   "design_label": "칼카피 설명서",
+   "spec": {
+    "canvas": [
+     1080,
+     1920
+    ],
+    "frames": [
+     {
+      "id": "hook",
+      "span": [
+       0,
+       3.137
+      ],
+      "layers": [
+       {
+        "kind": "bg",
+        "rgb": [
+         64,
+         64,
+         64
+        ]
+       },
+       {
+        "kind": "video",
+        "x": 0,
+        "y": 690,
+        "w": 1080,
+        "h": 1008,
+        "radius": 0,
+        "cuts": null,
+        "anchor": null
+       },
+       {
+        "kind": "text",
+        "role": "title",
+        "x": 540,
+        "y": 218,
+        "w": 1000,
+        "align": "center",
+        "lines": 2,
+        "font": "PretendardXBold",
+        "size": 145.1,
+        "line_h": 150,
+        "rgb": [
+         255,
+         255,
+         255
+        ],
+        "line_rgb": [
+         [
+          255,
+          255,
+          255
+         ],
+         [
+          142,
+          248,
+          133
+         ]
+        ],
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": {
+         "dx": 4,
+         "dy": 4,
+         "blur": 6,
+         "rgb": [
+          0,
+          0,
+          0
+         ]
+        },
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "한국인이 비벼버린\n두바이 스프레드"
+       },
+       {
+        "kind": "band",
+        "x": 0,
+        "y": 568,
+        "w": 1080,
+        "h": 116,
+        "rgb": [
+         235,
+         235,
+         235
+        ],
+        "radius": 0
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 540,
+        "y": 581,
+        "w": 960,
+        "align": "center",
+        "lines": 1,
+        "font": "CcPretendard-Bold",
+        "size": 73.3,
+        "line_h": 84,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드"
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 77,
+        "y": 44,
+        "w": 200,
+        "align": "left",
+        "lines": 1,
+        "font": "BMDOHYEON",
+        "size": 151.5,
+        "line_h": 174,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "»"
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 990,
+        "y": 52,
+        "w": 200,
+        "align": "right",
+        "lines": 1,
+        "font": "NotoSansKRBold",
+        "size": 105.9,
+        "line_h": 122,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "🍽"
+       }
+      ]
+     },
+     {
+      "id": "body",
+      "span": [
+       3.137,
+       null
+      ],
+      "layers": [
+       {
+        "kind": "bg",
+        "rgb": [
+         255,
+         255,
+         255
+        ]
+       },
+       {
+        "kind": "video",
+        "x": 0,
+        "y": 660,
+        "w": 1080,
+        "h": 1260,
+        "radius": 0,
+        "cuts": null,
+        "anchor": null
+       },
+       {
+        "kind": "band",
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 236,
+        "rgb": [
+         227,
+         239,
+         211
+        ],
+        "radius": 0
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 77,
+        "y": 62,
+        "w": 960,
+        "align": "left",
+        "lines": 1,
+        "font": "BMDOHYEON",
+        "size": 125,
+        "line_h": 144,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "» 맛잘알 친구들 🍽"
+       },
+       {
+        "kind": "band",
+        "x": 85,
+        "y": 265,
+        "w": 140,
+        "h": 128,
+        "rgb": [
+         227,
+         239,
+         213
+        ],
+        "radius": 0
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 155,
+        "y": 280,
+        "w": 140,
+        "align": "center",
+        "lines": 1,
+        "font": "NotoSansKRBold",
+        "size": 76.2,
+        "line_h": 88,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "味"
+       },
+       {
+        "kind": "text",
+        "role": "brand",
+        "x": 254,
+        "y": 278,
+        "w": 300,
+        "align": "left",
+        "lines": 1,
+        "font": "BMDOHYEON",
+        "size": 66.2,
+        "line_h": 76,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "미 식"
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 256,
+        "y": 362,
+        "w": 400,
+        "align": "left",
+        "lines": 1,
+        "font": "CcPretendard-Regular",
+        "size": 24.2,
+        "line_h": 28,
+        "rgb": [
+         140,
+         140,
+         140
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "오늘 | 11:11 | 댓글 9999"
+       },
+       {
+        "kind": "text",
+        "role": "label",
+        "x": 80,
+        "y": 412,
+        "w": 960,
+        "align": "left",
+        "lines": 1,
+        "font": "BMDOHYEON",
+        "size": 78.8,
+        "line_h": 91,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드"
+       },
+       {
+        "kind": "band",
+        "x": 0,
+        "y": 515,
+        "w": 1080,
+        "h": 2,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "radius": 0
+       },
+       {
+        "kind": "text",
+        "role": "caption",
+        "x": 540,
+        "y": 555,
+        "w": 1000,
+        "align": "center",
+        "lines": 2,
+        "font": "BMDOHYEON",
+        "size": 67.5,
+        "line_h": 93,
+        "rgb": [
+         0,
+         0,
+         0
+        ],
+        "line_rgb": null,
+        "line_scale": null,
+        "outline": null,
+        "line_outline": null,
+        "shadow": null,
+        "box": null,
+        "italic": false,
+        "letter_spacing": 0,
+        "word_spacing": 0,
+        "valign": "center",
+        "enter": null,
+        "emphasis": null,
+        "text": null
+       }
+      ]
+     }
+    ],
+    "template_off": null,
+    "made_by": "calcopy_frame v1",
+    "source": "rGFXQlS9Cp4"
+   },
+   "lines": [
+    {
+     "bind": "hook1",
+     "x0": 40.0,
+     "x1": 1040.0,
+     "y0": 218,
+     "y1": 368,
+     "h": 150,
+     "font_family": "PretendardXBold",
+     "font_size": 145.1,
+     "font_weight": 400,
+     "color": "#FFFFFF",
+     "no_patch": true,
+     "max_lines": 1
+    },
+    {
+     "bind": "hook2",
+     "x0": 40.0,
+     "x1": 1040.0,
+     "y0": 368,
+     "y1": 518,
+     "h": 150,
+     "font_family": "PretendardXBold",
+     "font_size": 145.1,
+     "font_weight": 400,
+     "color": "#8EF885",
+     "no_patch": true,
+     "max_lines": 1
+    }
+   ],
+   "video_from": {
+    "y": 690,
+    "pct": 35.9
+   }
+  },
+  "admin_only": true,
+  "calcopy_preset": "channel/yummyknow/preset/게시글형"
  }
 ];

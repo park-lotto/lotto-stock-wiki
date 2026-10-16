@@ -201,5 +201,97 @@
    "본문 구분선: 자동 y515 h1 / 손질 y515 h2"
   ],
   "at": "2026-10-16"
+ },
+ "nearest_template": {
+  "tool": "template_match",
+  "at": "2026-10-16",
+  "close_max": 150,
+  "frames": {
+   "hook": {
+    "close": true,
+    "top": [
+     {
+      "id": "t08",
+      "name": "썰 스타일 10",
+      "kind": "훅+본문·훅",
+      "score": 64.0,
+      "parts": {
+       "win_top": 24.0,
+       "title_top": 16.0,
+       "bg": 24,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t16",
+      "name": "썰 스타일 17",
+      "kind": "훅+본문·훅",
+      "score": 90.0,
+      "parts": {
+       "win_top": 3.0,
+       "title_top": 11.0,
+       "bg": 76,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t07",
+      "name": "썰 스타일 09",
+      "kind": "훅+본문·훅",
+      "score": 94.0,
+      "parts": {
+       "win_top": 30.0,
+       "title_top": 8.0,
+       "bg": 56,
+       "title_lines": 0
+      }
+     }
+    ]
+   },
+   "body": {
+    "close": false,
+    "top": [
+     {
+      "id": "t06",
+      "name": "썰 스타일 08",
+      "kind": "훅+본문·본문",
+      "score": 263.0,
+      "parts": {
+       "win_top": 15.0,
+       "title_top": 208.0,
+       "cap_y": 14.0,
+       "bg": 26,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t08",
+      "name": "썰 스타일 10",
+      "kind": "훅+본문·본문",
+      "score": 269.0,
+      "parts": {
+       "win_top": 45.0,
+       "title_top": 193.0,
+       "cap_y": 11.0,
+       "bg": 20,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t05",
+      "name": "썰 스타일 07",
+      "kind": "훅+본문·본문",
+      "score": 274.0,
+      "parts": {
+       "win_top": 42.0,
+       "title_top": 211.0,
+       "cap_y": 5.0,
+       "bg": 16,
+       "title_lines": 0
+      }
+     }
+    ]
+   }
+  }
  }
 }

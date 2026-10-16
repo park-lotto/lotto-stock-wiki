@@ -729,5 +729,53 @@
    "why": "관제 10-16 정정: 7DY·1_V 원본은 더 넓고 무거운 글꼴(렌더 대조 1줄 획 7DY 22 vs Cafe24 17·BlackHanSans 20, 1_V 17 vs 14·17) → 편별 변수",
    "at": "2026-10-16T10:45:19+09:00"
   }
+ },
+ "nearest_template": {
+  "tool": "template_match",
+  "at": "2026-10-16",
+  "close_max": 150,
+  "frames": {
+   "one": {
+    "close": false,
+    "top": [
+     {
+      "id": "t17",
+      "name": "썰 스타일 18",
+      "kind": "훅+본문·훅",
+      "score": 496.0,
+      "parts": {
+       "win_top": 332.0,
+       "title_top": 152.0,
+       "bg": 12,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t06",
+      "name": "썰 스타일 08",
+      "kind": "훅+본문·훅",
+      "score": 531.0,
+      "parts": {
+       "win_top": 386.0,
+       "title_top": 71.0,
+       "bg": 74,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t15",
+      "name": "썰 스타일 16",
+      "kind": "훅+본문·훅",
+      "score": 650.0,
+      "parts": {
+       "win_top": 329.0,
+       "title_top": 71.0,
+       "bg": 250,
+       "title_lines": 0
+      }
+     }
+    ]
+   }
+  }
  }
 }
