@@ -151,32 +151,11 @@
   },
   {
    "i": 7,
-   "src": "src_-JU-gKEN1gQ.mp4",
-   "url": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
-   "ss": 13.0,
+   "src": "src_xxGmmE_KLkI.mp4",
+   "url": "https://www.youtube.com/watch?v=xxGmmE_KLkI",
+   "ss": 0.5,
    "dur": 0.96,
-   "kind": "같은 제품 실영상(FOTILE 매립형)",
-   "full": true,
-   "fit": "cover",
-   "src_crop": [
-    848,
-    0,
-    608,
-    1080
-   ],
-   "res": "1920x1080",
-   "zoom": 1.78,
-   "audio": "끔(원음 안 씀 — 나레+BGM만)",
-   "ours": "그릇이 꽉 찬 세척기 칸 안",
-   "caption": "보통 식기세척기는"
-  },
-  {
-   "i": 8,
-   "src": "src_UNB6H9nmbP4.mp4",
-   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
-   "ss": 60.3,
-   "dur": 1.08,
-   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "kind": "비포(다른 제품 일반 식기세척기)",
    "full": true,
    "fit": "cover",
    "src_crop": [
@@ -188,37 +167,16 @@
    "res": "1920x1080",
    "zoom": 1.78,
    "audio": "끔(원음 안 씀 — 나레+BGM만)",
-   "ours": "허리 숙여 칸에 바구니 넣기",
-   "caption": "허리 숙여서 넣고 빼야"
+   "ours": "보통(빌트인) 식기세척기 문 열린 칸 — 비포, 다른 제품",
+   "caption": "보통 식기세척기는"
   },
   {
-   "i": 9,
-   "src": "src_UNB6H9nmbP4.mp4",
-   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
-   "ss": 68.3,
-   "dur": 0.84,
-   "kind": "같은 제품 실영상(FOTILE 매립형)",
-   "full": true,
-   "fit": "cover",
-   "src_crop": [
-    502,
-    0,
-    608,
-    1080
-   ],
-   "res": "1920x1080",
-   "zoom": 1.78,
-   "audio": "끔(원음 안 씀 — 나레+BGM만)",
-   "ours": "바구니를 들어 빼는 사람",
-   "caption": "되는데 그거 진짜"
-  },
-  {
-   "i": 10,
-   "src": "src_UNB6H9nmbP4.mp4",
-   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
-   "ss": 54.3,
-   "dur": 0.96,
-   "kind": "같은 제품 실영상(FOTILE 매립형)",
+   "i": 8,
+   "src": "src_HxOwUlonEW8.mp4",
+   "url": "https://www.youtube.com/watch?v=HxOwUlonEW8",
+   "ss": 6.2,
+   "dur": 1.08,
+   "kind": "비포(다른 제품 일반 식기세척기)",
    "full": true,
    "fit": "cover",
    "src_crop": [
@@ -230,7 +188,49 @@
    "res": "1920x1080",
    "zoom": 1.78,
    "audio": "끔(원음 안 씀 — 나레+BGM만)",
-   "ours": "싱크대 쪽으로 몸 숙임",
+   "ours": "낮은 식기세척기에 허리 굽혀 그릇 넣는 남자 — 비포, 다른 제품",
+   "caption": "허리 숙여서 넣고 빼야"
+  },
+  {
+   "i": 9,
+   "src": "src_NzSGmn7g4kM.mp4",
+   "url": "https://www.youtube.com/watch?v=NzSGmn7g4kM",
+   "ss": 8.5,
+   "dur": 0.84,
+   "kind": "비포(다른 제품 일반 식기세척기)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    656,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "낮은 식기세척기 선반에서 그릇 빼는 손 — 비포, 다른 제품",
+   "caption": "되는데 그거 진짜"
+  },
+  {
+   "i": 10,
+   "src": "src_HxOwUlonEW8.mp4",
+   "url": "https://www.youtube.com/watch?v=HxOwUlonEW8",
+   "ss": 9.0,
+   "dur": 0.96,
+   "kind": "비포(다른 제품 일반 식기세척기)",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    406,
+    0,
+    608,
+    1080
+   ],
+   "res": "1920x1080",
+   "zoom": 1.78,
+   "audio": "끔(원음 안 씀 — 나레+BGM만)",
+   "ours": "허리 짚고 일어나는 남자 — 비포, 다른 제품",
    "caption": "허리 나가잖아요."
   },
   {
@@ -259,7 +259,7 @@
    "src": "src_TJDOFm5BQkE.mp4",
    "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
    "ss": 30.0,
-   "dur": 0.84,
+   "dur": 1.08,
    "kind": "같은 제품 실영상(FOTILE 매립형)",
    "full": true,
    "fit": "cover",
@@ -273,14 +273,14 @@
    "zoom": 1.0,
    "audio": "끔(원음 안 씀 — 나레+BGM만)",
    "ours": "매장 전시 주방 줄",
-   "caption": "누적 판매 수백만"
+   "caption": "누적 판매 수백만 대를"
   },
   {
    "i": 13,
    "src": "src_TJDOFm5BQkE.mp4",
    "url": "https://www.youtube.com/watch?v=TJDOFm5BQkE",
    "ss": 34.0,
-   "dur": 0.84,
+   "dur": 0.6,
    "kind": "같은 제품 실영상(FOTILE 매립형)",
    "full": true,
    "fit": "cover",
@@ -294,19 +294,19 @@
    "zoom": 1.0,
    "audio": "끔(원음 안 씀 — 나레+BGM만)",
    "ours": "매장 전시 줄 끝까지",
-   "caption": "대를 찍었다는데"
+   "caption": "찍었다는데"
   },
   {
    "i": 14,
-   "src": "src_wqJZ_00Sogc.mp4",
-   "url": "https://www.youtube.com/watch?v=wqJZ_00Sogc",
-   "ss": 6.8,
+   "src": "src_UNB6H9nmbP4.mp4",
+   "url": "https://www.youtube.com/watch?v=UNB6H9nmbP4",
+   "ss": 37.0,
    "dur": 0.96,
    "kind": "같은 제품 실영상(FOTILE 매립형)",
    "full": true,
    "fit": "cover",
    "src_crop": [
-    1001,
+    752,
     0,
     608,
     1080
@@ -314,7 +314,7 @@
    "res": "1920x1080",
    "zoom": 1.78,
    "audio": "끔(원음 안 씀 — 나레+BGM만)",
-   "ours": "어두운 싱크 수전 클로즈업(반전 분위기)",
+   "ours": "싱크대 한 칸 뚜껑이 올라가며 열리는 순간",
    "caption": "진짜 핵심은 이건데"
   },
   {

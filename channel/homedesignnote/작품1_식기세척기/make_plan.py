@@ -22,6 +22,8 @@ from tools.calcopy import narr_video as N  # noqa: E402
 HERE = Path(__file__).parent
 SRC = Path("C:/숏템_칼카피/homedesignnote/작품1_식기세척기")
 CPS = 8.32
+BEFORE = {"xxGmmE_KLkI", "HxOwUlonEW8", "NzSGmn7g4kM"}   # 페이블 10-17: 비포 장면은 다른 제품 OK(원본 fQPX 도 비포는 제품 밖)
+CHUNK_FIX = {2: ["근데 이건 중국에서만", "누적 판매 수백만 대를", "찍었다는데"]}
 CHUNK = 9   # 공백 뺀 9자 — 토막 길이 중앙 0.96초(8자면 0.84초로 원본 자막 0.9·컷 1.15초보다 짧다)
 LINES = [
     "좁은 주방에서 설거지하다 허리 굽히는 게 귀찮았던 중국 주방가전 회사가 아예 싱크대 안에 식기세척기를 쏙 숨겨버렸대요.",
@@ -33,7 +35,7 @@ LINES = [
 ]
 CLIMAX = {0: "①센 시작", 2: "②숫자", 3: "③진짜 핵심 반전", 4: "④심지어", 5: "⑤난리"}
 ROLE = {0: "훅", 1: "도입", 2: "도입(증거)", 3: "설명", 4: "효과", 5: "효과·행동유도"}   # script_frame F1 칸
-URL = {"wqJZ_00Sogc": "https://www.youtube.com/watch?v=wqJZ_00Sogc", "-JU-gKEN1gQ": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
+URL = {"xxGmmE_KLkI": "https://www.youtube.com/watch?v=xxGmmE_KLkI", "HxOwUlonEW8": "https://www.youtube.com/watch?v=HxOwUlonEW8", "NzSGmn7g4kM": "https://www.youtube.com/watch?v=NzSGmn7g4kM", "wqJZ_00Sogc": "https://www.youtube.com/watch?v=wqJZ_00Sogc", "-JU-gKEN1gQ": "https://www.youtube.com/watch?v=-JU-gKEN1gQ",
        "UNB6H9nmbP4": "https://www.youtube.com/watch?v=UNB6H9nmbP4", "TJDOFm5BQkE": "https://www.youtube.com/watch?v=TJDOFm5BQkE"}
 # 토막 → (소스 id, 시작 초, 가로 중심 비율(가로 소스만), 화면에 보이는 것)
 SHOTS = [
@@ -44,14 +46,14 @@ SHOTS = [
     ("wqJZ_00Sogc", 30.3, 0.42, "싱크대가 있는 밝은 주방 전경"),
     ("wqJZ_00Sogc", 20.4, 0.42, "싱크대 한 칸 덮개를 열자 식기세척기 칸"),
     ("wqJZ_00Sogc", 32.8, 0.32, "검은 유리 덮개 닫기(쏙 숨김)"),
-    ("-JU-gKEN1gQ", 13.0, 0.6, "그릇이 꽉 찬 세척기 칸 안"),
-    ("UNB6H9nmbP4", 60.3, 0.45, "허리 숙여 칸에 바구니 넣기"),
-    ("UNB6H9nmbP4", 68.3, 0.42, "바구니를 들어 빼는 사람"),
-    ("UNB6H9nmbP4", 54.3, 0.4, "싱크대 쪽으로 몸 숙임"),
+    ("xxGmmE_KLkI", 0.5, 0.45, "보통(빌트인) 식기세척기 문 열린 칸 — 비포, 다른 제품"),
+    ("HxOwUlonEW8", 6.2, 0.4, "낮은 식기세척기에 허리 굽혀 그릇 넣는 남자 — 비포, 다른 제품"),
+    ("NzSGmn7g4kM", 8.5, 0.5, "낮은 식기세척기 선반에서 그릇 빼는 손 — 비포, 다른 제품"),
+    ("HxOwUlonEW8", 9.0, 0.37, "허리 짚고 일어나는 남자 — 비포, 다른 제품"),
     ("TJDOFm5BQkE", 46.0, None, "매장 진열 싱크 매립형 제품(과일 담긴 싱크)"),
     ("TJDOFm5BQkE", 30.0, None, "매장 전시 주방 줄"),
     ("TJDOFm5BQkE", 34.0, None, "매장 전시 줄 끝까지"),
-    ("wqJZ_00Sogc", 6.8, 0.68, "어두운 싱크 수전 클로즈업(반전 분위기)"),
+    ("UNB6H9nmbP4", 37.0, 0.55, "싱크대 한 칸 뚜껑이 올라가며 열리는 순간"),
     ("wqJZ_00Sogc", 34.3, 0.4, "손으로 접시를 선반에 툭 넣기"),
     ("wqJZ_00Sogc", 50.3, 0.7, "손으로 덮개 닫기"),
     ("wqJZ_00Sogc", 36.3, 0.42, "싱크볼 속 식기 선반 위에서 본 모습"),
@@ -90,6 +92,12 @@ def grab(p, t, crop):
 
 def main():
     steps = N.steps_of(LINES, CHUNK, "replace")
+    # 낱말 묶음 끊김 금지(페이블 10-17: '수백만 / 대를' 금지) — 그 줄만 손 토막
+    for li, parts in CHUNK_FIX.items():
+        idx = [k for k, x in enumerate(steps) if x["line"] == li]
+        sent = steps[idx[0]]["sent"]
+        new = [{"text": c, "chars": len(c.replace(" ", "")), "new_cut": j == 0, "sent": sent, "line": li} for j, c in enumerate(parts)]
+        steps = steps[:idx[0]] + new + steps[idx[-1] + 1:]
     assert len(steps) == len(SHOTS), (len(steps), len(SHOTS))
     t = 0.0
     toks, shots = [], []
@@ -100,7 +108,7 @@ def main():
         w, h = probe(p)
         crop = crop_of(w, h, cx or 0.5)
         toks.append({"i": i, "line": s["line"], "text": s["text"], "chars": s["chars"], "t0": round(t, 2), "dur": dur})
-        shots.append({"i": i, "src": p.name, "url": URL[vid], "ss": ss, "dur": dur, "kind": "같은 제품 실영상(FOTILE 매립형)",
+        shots.append({"i": i, "src": p.name, "url": URL[vid], "ss": ss, "dur": dur, "kind": ("비포(다른 제품 일반 식기세척기)" if vid in BEFORE else "같은 제품 실영상(FOTILE 매립형)"),
                       "full": True, "fit": "cover", "src_crop": crop, "res": f"{w}x{h}", "zoom": round(1920 / crop[3], 2),
                       "audio": "끔(원음 안 씀 — 나레+BGM만)", "ours": see, "caption": s["text"]})
         t += dur
