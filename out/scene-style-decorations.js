@@ -163,8 +163,13 @@
    const shapes=box.querySelector('.dec-shapes');shapes.replaceChildren();
    // 🎞 모션그래픽팩(관제 222) — 목록·모양은 motion-graphics-pack.js 한 곳. 버튼 안 미리보기는 팩 시계로 되풀이한다.
    const mographs=box.querySelector('.dec-mographs'),pack=window.MOTION_GRAPHICS;
-   if(mographs&&pack){mographs.replaceChildren();Object.entries(pack.items).forEach(([id,item])=>{const b=button('','data-add-mograph',id),thumb=document.createElement('span');thumb.className='scene-decoration';thumb.style.cssText='position:relative;display:block;width:72px;height:72px;margin:0 auto 4px;outline:none';
-     pack.poster(thumb,{mograph:id,w:100},72);pack.clock(thumb,{mograph:id},0);b.title=item.moment;b.append(thumb,document.createTextNode(item.label));mographs.append(b)});}
+   //   분류(카운트다운·가리키기·강조)는 팩의 groups — 기존 움직이는 도형 중 쓰이는 것도 여기로 옮겨 왔다(스위치 켠 계정은 '🎨 도형' 탭 대신 이 칸).
+   if(mographs&&pack){mographs.replaceChildren();pack.groups.forEach(group=>{const head=document.createElement('p');head.className='dec-mograph-group';head.textContent=group.name;const row=document.createElement('div');row.className='dec-shapes';
+     group.items.forEach(it=>{
+       if(it.mograph){const item=pack.items[it.mograph];if(!item)return;const b=button('','data-add-mograph',it.mograph),thumb=document.createElement('span');thumb.className='scene-decoration';thumb.style.cssText='position:relative;display:block;width:72px;height:72px;margin:0 auto 4px;outline:none';
+         pack.poster(thumb,{mograph:it.mograph,w:100},72);pack.clock(thumb,{mograph:it.mograph},0);b.title=item.moment;b.append(thumb,document.createTextNode(item.label));row.append(b);return;}
+       const def=catalog.shapes.find(s=>s.key===it.graphic);if(!def)return;const b=button('','data-add-graphic',def.key),canvas=document.createElement('canvas');canvas.width=96;canvas.height=72;const ctx=canvas.getContext('2d');ctx.translate(48,36);catalog.shapeDraw[def.key](ctx,26,def.color);b.append(canvas,document.createTextNode(def.label));row.append(b);});
+     mographs.append(head,row);});}
    catalog.shapes.forEach(def=>{const b=button('','data-add-graphic',def.key),canvas=document.createElement('canvas');canvas.width=96;canvas.height=72;const ctx=canvas.getContext('2d');ctx.translate(48,36);catalog.shapeDraw[def.key](ctx,26,def.color);b.append(canvas,document.createTextNode(def.label));shapes.append(b)});
  }
  function controls(){
@@ -245,7 +250,9 @@
      if(selected===i&&!window.sceneStyleExporting)placeHandles(m);
      catalog.animate(el,m,preview.clientWidth,{sceneMs:sceneMs()});
    });
-   const kit=box.querySelector('[data-mograph-kit]');if(kit)kit.hidden=!(api.context?.()?.mographEnabled&&window.MOTION_GRAPHICS);   // 모션그래픽팩 스위치(관제 222, mograph_enabled)
+   // 모션그래픽팩 스위치(관제 222, mograph_enabled): 켠 계정은 '🎞 모션그래픽' 탭이 '🎨 도형' 탭을 대신한다(쓰이는 도형은 그 안 분류로 옮겨 감). 꺼진 계정은 종전 그대로.
+   const mgOn=!!(api.context?.()?.mographEnabled&&window.MOTION_GRAPHICS),kit=box.querySelector('[data-mograph-kit]'),shapeKit=box.querySelector('[data-dec-kit="shape"]');
+   if(kit&&kit.hidden===mgOn){kit.hidden=!mgOn;shapeKit.hidden=mgOn;const sum=kit.closest('details')?.querySelector('summary');if(sum)sum.textContent=mgOn?'스티커 · 배지 · 모션그래픽':'스티커 · 도형 · 배지';if(mgOn&&shapeKit.classList.contains('active'))kit.click();if(!mgOn&&kit.classList.contains('active'))shapeKit.click();}
  }
  // 🛍 쇼핑 안내 세트(2026-09-23 사장님 "화살표랑 문구를 일일이 배치하기 힘드니 세트 버튼 — 23·24·25 세 장면에"):
  //   유튜브 쇼핑 스티커가 기본으로 뜨는 왼쪽 아래를 가리키는 굵은 화살표 + 「영상 속 제품 클릭!」 배지.

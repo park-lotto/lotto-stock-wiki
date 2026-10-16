@@ -66,6 +66,18 @@ const ITEMS={
     duration:2150,poster:300,box:{l:27.6,t:42.7,w:44.8},draw:cdDraw},
 };
 
+// ── 분류(관제 222, 2026-10-17 사장님 "분류해서 정리해서 통합해봐 뺄 거 빼고") ─────────────────────
+// 효과 탭 '🎞 모션그래픽' 칸이 이 순서로 보여 준다. 분류의 주인은 여기 하나.
+//   mograph = 이 팩의 효과(레퍼런스 실측) / graphic = 효과 탭에 있던 기존 움직이는 도형(scene-decoration-catalog.js shapes) 중
+//   실제로 쓰이는 것만 옮겨 왔다 — 라이브 실측 60일(작업 4,151 · 장면꾸미기 1,086): 굵은 화살표 77작업·회원 17명 / 번쩍 24·4 /
+//   곡선 화살표 22·3 / 동그라미 1·1. 0번인 5종(도는 화살표·강조 획·말풍선·체크·엑스)은 뺐다(저장된 옛 작업은 그대로 그려진다).
+//   기존 도형은 지어낸 모양이라 레퍼런스에서 같은 쓰임의 효과를 실측해 오면 그것으로 바꾼다(legacy 표시).
+const GROUPS=[
+  {name:'⏱ 카운트다운·숫자',items:[{mograph:'countdown321'}]},
+  {name:'👉 가리키기',items:[{graphic:'arrow_bold',legacy:true},{graphic:'arrow_curve',legacy:true}]},
+  {name:'✨ 강조',items:[{graphic:'burst',legacy:true},{graphic:'circle_ring',legacy:true}]},
+];
+
 // 장면 안 자리: 장면 끝에 맞춰 끝난다(레퍼런스 = 다음 장면으로 넘어가며 사라짐). 장면이 효과보다 짧으면 시간표를 줄여 장면에 맞춘다.
 function place(item,sceneMs){
   const d=item.duration;if(!(sceneMs>0))return {delay:0,span:d};
@@ -89,7 +101,7 @@ function tick(root){(root||document).querySelectorAll('[data-mograph]').forEach(
 (function loop(){try{tick();}catch(e){}requestAnimationFrame(loop);})();
 
 window.MOTION_GRAPHICS={
-  items:ITEMS,place,paintAt,tick,
+  items:ITEMS,groups:GROUPS,place,paintAt,tick,
   // 정지 그림 자세(렌더러가 장면 정지 그림을 찍기 직전) — 대표 시각(poster)으로 세운다
   still(root){(root||document).querySelectorAll('[data-mograph-still]').forEach(el=>{const a=el.getAnimations().find(x=>x.id==='mograph');if(a){a.pause();a.currentTime=Number(el.dataset.mographStill);drawEl(el);}});},
   // 항목 하나를 그릴 캔버스(scene-decoration-catalog.js paint). 시계가 붙기 전 정지 그림 = poster 시각.

@@ -49,8 +49,19 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     };
     await open(false);
     out.kitHiddenOff=await page.$eval('[data-dec-kit="mograph"]',b=>b.hidden).catch(()=>'없음');
+    out.shapeKitOff=await page.$eval('[data-dec-kit="shape"]',b=>!b.hidden);
+    out.titleOff=await page.$eval('[data-dec-kit="shape"]',b=>b.closest('details').querySelector('summary').textContent);
+    out.shapesOff=await page.$$eval('.dec-shapes [data-add-graphic]',bs=>bs.filter(b=>!b.closest('[data-kit="mograph"]')).map(b=>b.dataset.addGraphic));
     await open(true);
     out.kitHiddenOn=await page.$eval('[data-dec-kit="mograph"]',b=>b.hidden).catch(()=>'없음');
+    out.shapeKitOn=await page.$eval('[data-dec-kit="shape"]',b=>!b.hidden);
+    out.titleOn=await page.$eval('[data-dec-kit="mograph"]',b=>b.closest('details').querySelector('summary').textContent);
+    out.groups=await page.$$eval('[data-kit="mograph"] .dec-mograph-group',ps=>ps.map(p=>p.textContent));
+    out.groupItems=await page.$$eval('[data-kit="mograph"] .dec-shapes',rows=>rows.map(r=>[...r.querySelectorAll('button')].map(b=>b.dataset.addMograph||b.dataset.addGraphic)));
+    // 옮겨 온 화살표가 실제로 놓이나(그리고 지운다)
+    await page.$eval('[data-kit="mograph"] [data-add-graphic="arrow_bold"]',b=>b.click());
+    out.arrowAdded=await page.evaluate(()=>JSON.stringify(window.sceneStyle.snapshot().effects||{}).includes('"graphic":"arrow_bold"'));
+    await page.$eval('[data-dec-delete]',b=>b.click());
     out.kitVisible=await page.$eval('[data-dec-kit="mograph"]',b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height,hidden:b.hidden,inDetails:b.closest('details')?.open}});
     await page.$eval('[data-dec-kit="mograph"]',b=>{b.scrollIntoView();b.click()});
     out.items=await page.$$eval('[data-add-mograph]',bs=>bs.map(b=>b.dataset.addMograph));
@@ -159,6 +170,15 @@ def main():
         print("\n결과: 실패"); sys.exit(1)
     print("① 편집기: 스위치 꺼짐 칸 숨김", ed["kitHiddenOff"], "· 켜짐 칸 숨김", ed["kitHiddenOn"], "· 효과", ed["items"],
           "· 미리보기 움직임", ed["previewMoves"], "· 목록", ed["listLabel"].strip(), "· 오류", ed["errors"])
+    print("   꺼짐: 도형 탭 보임", ed["shapeKitOff"], "도형", ed["shapesOff"])
+    print("   켜짐: 도형 탭 보임", ed["shapeKitOn"], "분류", list(zip(ed["groups"], ed["groupItems"])), "· 화살표 놓임", ed["arrowAdded"])
+    if not ed["shapeKitOff"] or len(ed["shapesOff"]) != 9: fails.append("스위치 꺼진 계정의 도형 탭이 종전과 다르다")
+    print("   칸 제목: 꺼짐", ed["titleOff"], "/ 켜짐", ed["titleOn"])
+    if ed["titleOff"] != "스티커 · 도형 · 배지" or ed["titleOn"] != "스티커 · 배지 · 모션그래픽": fails.append("칸 제목이 다르다")
+    if ed["shapeKitOn"]: fails.append("스위치 켠 계정에 도형 탭이 남아 있다(모션그래픽으로 옮겼다)")
+    want = [["countdown321"], ["arrow_bold", "arrow_curve"], ["burst", "circle_ring"]]
+    if ed["groupItems"] != want: fails.append(f"모션그래픽 분류가 다르다 {ed['groupItems']}")
+    if not ed["arrowAdded"]: fails.append("모션그래픽 칸의 화살표가 안 놓인다")
     if ed["kitHiddenOff"] is not True: fails.append("스위치 꺼진 계정에도 모션그래픽 칸이 보인다")
     if ed["kitHiddenOn"] is not False: fails.append("스위치 켠 계정에 모션그래픽 칸이 안 보인다")
     if "countdown321" not in ed["items"]: fails.append("카운트다운 버튼이 없다")
