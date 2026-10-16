@@ -6,7 +6,7 @@ remake_video.py(나레 없는 '원음+자막')의 짝. yummyknow rGFXQlS9Cp4 꼴
   - 자막: 나레 문장을 한 줄 조각(약 14자)으로 나눠 1줄 → 1줄+2줄(줄바꿈 \\n) → 새 1줄 … (누적형). 렌더러는 lines>1 자막을 pre-line 으로 그린다.
   - 시각: TTS 한 파일의 말 구간(silencedetect)에 글자 수 비례로 놓고, 조각 경계는 가까운 쉼(±0.4초)에 붙인다.
   - 그림 칸: 재료.json shots[i].box_w(기본 750px)로 폭을 맞춰 창 맨 위 가운데에 놓고 나머지는 흰 바탕(원본: 컷마다 크기 다름).
-  - 컷: 새 1줄 조각이 시작할 때(원본 컷=자막교체 1.0).
+  - 컷: 새 1줄 조각이 시작할 때(원본 컷=자막교체 1.0). 한 페이지 안에서 더 바꾸려면 재료 shots[i].cuts(판단 주인 shot_pieces).
 
     PYTHONUTF8=1 py tools/calcopy/narr_video.py <plan.json>
 plan = {"tteutgi","frames":[{"frame","t_end"}...],"script","tts","materials","out","bgm","bgm_ratio","lufs","chunk"}
@@ -41,11 +41,25 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
             out.append(cur); cur = ""
     if cur:
         out.append(cur)
-    if len(out) > 1 and len(out[-1].rstrip(",.?!").replace(" ", "")) <= 5:   # '있음.' 처럼 짧은 꼬리는 앞 조각에 붙인다(혼자 뜨면 어색 — 10-16 2판)
-        tail = out.pop()
-        out[-1] = out[-1] + " " + tail
-    out = _fix_dangling(out)
+    cap = n + CHUNK_SLACK
+    if len(out) > 1 and _len(out[-1].rstrip(",.?!")) <= 5:   # '있음.' 처럼 짧은 꼬리는 혼자 두지 않는다(혼자 뜨면 어색 — 10-16 2판)
+        if _len(out[-2]) + _len(out[-1]) <= cap:
+            tail = out.pop()
+            out[-1] = out[-1] + " " + tail
+        else:   # 붙이면 상한을 넘으면 앞 조각 끝 낱말을 꼬리로 넘긴다(10-16 썰풀다: --chunk 10 에 16자 조각)
+            prev, tail = out[-2].split(), out[-1].split()
+            while len(prev) > 1 and _len(" ".join(tail).rstrip(",.?!")) <= 5 and _len(" ".join([prev[-1]] + tail)) <= cap:
+                tail.insert(0, prev.pop())
+            out[-2], out[-1] = " ".join(prev), " ".join(tail)
+    out = _fix_dangling(out, cap=cap)
     return [o.rstrip(",") for o in out]
+
+
+CHUNK_SLACK = 3   # 조각 상한 = n + 이것. 붙이기(꼬리·꾸밈 낱말·짧은 조각)도 이 상한을 넘지 않는다 — 판단 주인 chunk_sentence
+
+
+def _len(t: str) -> int:
+    return len(t.replace(" ", ""))
 
 
 # 뒤 낱말을 꾸미는 한 낱말(관형사·부사) — 조각 끝에 홀로 남으면 다음 조각으로 넘긴다
@@ -53,20 +67,25 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
 DANGLE = {"그", "이", "저", "또", "더", "한", "잘", "좀", "꼭", "딱", "다", "그런", "이런", "저런", "아주", "너무", "정말"}
 
 
-def _fix_dangling(out: list[str], short: int = 3) -> list[str]:
+def _fix_dangling(out: list[str], short: int = 3, cap: int | None = None) -> list[str]:
+    """cap = 붙인 결과 상한(공백 제외 글자) — 넘으면 안 붙인다(chunk_sentence 가 n + CHUNK_SLACK 을 준다)."""
     out = list(out)
+    fits = (lambda a, b: True) if cap is None else (lambda a, b: _len(a) + _len(b) <= cap)
     for i in range(len(out) - 1):
         ws = out[i].split()
-        while len(ws) > 1 and ws[-1] in DANGLE:
+        while len(ws) > 1 and ws[-1] in DANGLE and fits(ws[-1], out[i + 1]):
             out[i + 1] = ws.pop() + " " + out[i + 1]
         out[i] = " ".join(ws)
     i = 0
-    while i < len(out) and len(out) > 1:   # 3자 이하 조각은 혼자 두지 않는다 — 다음(없으면 앞) 조각에 붙인다
-        if len(out[i].rstrip(",.?!").replace(" ", "")) <= short:
-            if i + 1 < len(out):
+    while i < len(out) and len(out) > 1:   # 3자 이하 조각은 혼자 두지 않는다 — 다음(넘치면·없으면 앞) 조각에 붙인다
+        if _len(out[i].rstrip(",.?!")) <= short:
+            if i + 1 < len(out) and fits(out[i], out[i + 1]):
                 out[i + 1] = out[i] + " " + out[i + 1]
-            else:
+            elif i > 0 and fits(out[i - 1], out[i]):
                 out[i - 1] = out[i - 1] + " " + out[i]
+            else:
+                i += 1
+                continue
             out.pop(i)
             continue
         i += 1
@@ -230,6 +249,64 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     return out
 
 
+# ── 페이지 안 다중 컷 — 재료.json shots[i].cuts (관제 097, 10-16 바나나 2편: build_combos.py 가 밖에서 미리 잇던 일을 안으로) ──
+# shots[i].cuts = [{src, ss, dur, (src_crop·ar·fit·kind 덮어쓰기)}, …] — 그 컷(자막 페이지) 안에서 순서대로 이어 붙인다.
+# 칸(box·box_w·full·anchor)은 컷 하나 = 그 shot 값을 같이 쓴다. 마지막 토막은 페이지 끝까지 늘어난다(dur 은 최소 길이가 아니라 '여기서 바꾼다').
+FPS = 30
+CUT_KEYS = ("src", "ss", "src_crop", "ar", "fit", "kind")
+
+
+def shot_pieces(sh: dict, off: float, dur: float) -> list[dict]:
+    """(판단 주인) 컷 하나(sh)의 [off, off+dur) 구간을 토막으로 → [{"sh": 토막 재료(shot 값 + cut 덮어쓰기), "ss": 소스 시작초,
+    "t": 컷 안 시작초(off 기준 아님 — sh 시작 기준), "dur": 길이}]. cuts 없으면 토막 하나(sh.ss + off). 토막 경계는 1/FPS 격자에 맞춘다
+    (토막마다 따로 인코딩하므로 격자 밖 경계는 잇는 동안 프레임이 밀린다)."""
+    cuts = sh.get("cuts")
+    if not cuts:
+        return [{"sh": sh, "ss": float(sh.get("ss", 0)) + off, "t": off, "dur": dur}]
+    end = off + dur
+    starts, t = [], 0.0
+    for c in cuts:
+        starts.append(round(t * FPS) / FPS)
+        t += float(c["dur"])
+    out = []
+    for k, c in enumerate(cuts):
+        a = starts[k]
+        b = starts[k + 1] if k + 1 < len(cuts) else end   # 마지막 토막 = 페이지 끝까지
+        a2, b2 = max(a, off), min(b, end)
+        if b2 - a2 <= 0.5 / FPS:
+            continue
+        piece = {**{kk: v for kk, v in sh.items() if kk != "cuts"}, **{kk: c[kk] for kk in CUT_KEYS if kk in c}}
+        if "src_crop" not in c:   # 토막이 자기 소스를 가지면 shot 의 src_crop 은 그 소스 픽셀이 아니다
+            piece.pop("src_crop", None)
+        out.append({"sh": piece, "ss": float(c.get("ss", 0)) + (a2 - a), "t": a2, "dur": b2 - a2})
+    if not out:
+        raise SystemExit(f"cuts 토막이 [{off:.2f},{end:.2f}) 구간에 하나도 안 걸림: {cuts}")
+    return out
+
+
+def _shift_overlays(overlays, dt: float):
+    """꾸밈 시각(t·path 의 t)은 컷 안 시각 — 토막·틀 경계로 dt 만큼 늦게 시작하면 그만큼 당긴다."""
+    return [dict(o, t=[x - dt for x in o["t"]], **({"path": [[p[0] - dt, p[1], p[2]] for p in o["path"]]} if o.get("path") else {}))
+            if o.get("t") else o for o in overlays or []] or None
+
+
+def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: bool, box, min_y: int, out: Path) -> Path:
+    """컷 하나 → 영상 파일 하나. 토막(shot_pieces)마다 shot_clip 으로 같은 칸·같은 크기로 그리고 이어 붙인다(같은 인코딩이라 복사로 잇는다)."""
+    pcs = shot_pieces(sh, off, dur)
+    files = []
+    for j, pc in enumerate(pcs):
+        p = pc["sh"]
+        f = out if len(pcs) == 1 else out.with_name(f"{out.stem}_c{j}.mp4")
+        shot_clip(base / p["src"], pc["ss"], pc["dur"], win, p.get("box_w", 750), full, f, p.get("ar"), box, p.get("fit", "cover"), min_y,
+                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]))
+        files.append(f)
+    if len(files) > 1:
+        lst = out.with_suffix(".txt")
+        lst.write_text("".join(f"file '{f.as_posix()}'\n" for f in files), encoding="utf-8")
+        va._run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(out)])
+    return out
+
+
 # ── 자막 사건(빈 자막·강조 자막) — 대본.json caption_events (관제 097, 10-16 핫템 담당 요청) ──────────────
 # 원음 리액션 구간 동안 앞 나레 자막이 계속 떠 있었다 → [{kind:"blank", t0, dur}] 그 구간 자막 없음
 # 원음 리액션에 맞춰 띄우는 색 자막 → [{kind:"emph", text, rgb, t0, dur}] 흰 자막 대신 그 색(같은 글꼴·크기·외곽선·자리)
@@ -329,12 +406,9 @@ def build(plan: dict):
             if sh.get("full") and not sh.get("box"):
                 box = None   # ★full=꽉 채움이 이긴다(10-16 3호: 틀 한 장이면 뜯기 칸이 full 컷까지 덮어 창 아래 칸으로 밀렸다)
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
-            parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0 and not one), p, sh.get("ar"),
-                                    None if (fi == 0 and not one) else box, sh.get("fit", "cover"), min_y, sh.get("src_crop"),
-                                    sh.get("kind") == "짤", sh.get("anchor", True),
-                                    # 컷이 틀 경계로 잘려 늦게 시작하면 꾸밈 시각도 그만큼 당긴다
-                                    [dict(o, t=[x - (a2 - a) for x in o["t"]], **({"path": [[p[0] - (a2 - a), p[1], p[2]] for p in o["path"]]} if o.get("path") else {}))
-                                     if o.get("t") else o for o in sh.get("overlays") or []] or None))
+            # 컷이 틀 경계로 잘려 늦게 시작하면(a2 > a) 소스 시작·꾸밈 시각을 그만큼 — 페이지 안 다중 컷(sh.cuts)도 render_shot 한 곳에서
+            parts.append(render_shot(base, sh, a2 - a, b2 - a2, win, sh.get("full", fi == 0 and not one), None if (fi == 0 and not one) else box,
+                                     min_y, p))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"

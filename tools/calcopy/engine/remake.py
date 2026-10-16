@@ -148,8 +148,46 @@ def narration_kind(J: dict) -> str:
     return (n.get("kind") if isinstance(n, dict) else n) or "none"
 
 
+SHEET_EVERY = 2.0   # 계획 시트: 컷 길이 이 초마다 1장(10-16 썰풀다 담당: 0.2·1.0·1.8 세 장 고정이라 6초 넘는 컷 뒷부분이 안 보였다)
+SHEET_MIN, SHEET_MAX = 3, 6
+
+
+def shot_len(s: dict) -> float | None:
+    """재료 컷 길이(초) — dur · est_dur · t1−t0 · cuts 합 순. 모르면 None."""
+    for k in ("dur", "est_dur"):
+        if s.get(k):
+            return float(s[k])
+    if s.get("t0") is not None and s.get("t1") is not None:
+        return float(s["t1"]) - float(s["t0"])
+    if s.get("cuts"):
+        return sum(float(c["dur"]) for c in s["cuts"])
+    return None
+
+
+def sheet_samples(s: dict) -> list[tuple[str, float, list | None]]:
+    """(판단 주인) 계획 시트에 찍을 프레임 [(소스, 소스 초, src_crop)]. 길이 모르면 0.2·1.0·1.8(종전), 알면 0.2~끝−0.2 를
+    고르게 clamp(ceil(길이/SHEET_EVERY), 3, 6) 장. 페이지 안 다중 컷(cuts)은 narr_video.shot_pieces 로 그 시각의 토막 소스를."""
+    import math
+    L = shot_len(s)
+    if not L:
+        ts = [0.2, 1.0, 1.8]
+    else:
+        n = min(SHEET_MAX, max(SHEET_MIN, math.ceil(L / SHEET_EVERY)))
+        a, b = min(0.2, L / 4), max(L - 0.2, L * 3 / 4)
+        ts = [round(a + (b - a) * j / (n - 1), 3) for j in range(n)]
+    if not s.get("cuts"):
+        return [(s["src"], float(s.get("ss", 0)) + t, s.get("src_crop")) for t in ts]
+    from tools.calcopy.narr_video import shot_pieces
+    pcs = shot_pieces(s, 0.0, L or 2.0)
+    out = []
+    for t in ts:
+        pc = next((x for x in reversed(pcs) if x["t"] <= t), pcs[0])
+        out.append((pc["sh"]["src"], pc["ss"] + (t - pc["t"]), pc["sh"].get("src_crop")))
+    return out
+
+
 def plan_sheet(M: dict, J: dict, dst: Path):
-    """컷마다 소스 3프레임(칸 비율로 자름, src_crop 반영) + 대사 why — 렌더 전 선검수용 접촉 시트."""
+    """컷마다 소스 프레임(sheet_samples — 길이 비례 3~6장, 칸 비율로 자름, src_crop 반영) + 대사 why — 렌더 전 선검수용 접촉 시트."""
     import io
     from PIL import Image, ImageDraw, ImageFont
     base = Path(M["cand_dir"])
@@ -161,17 +199,18 @@ def plan_sheet(M: dict, J: dict, dst: Path):
         bw, bh = (box[2], box[3]) if (box and not s.get("full")) else (1080, 1008)
         th = 200
         tw = int(th * bw / bh)
-        row = Image.new("RGB", (560 + 3 * (tw + 6), th + 10), "white")
+        samples = sheet_samples(s)
+        row = Image.new("RGB", (560 + len(samples) * (tw + 6), th + 10), "white")
         d = ImageDraw.Draw(row)
         d.text((6, 6), f"#{s['i']} {s.get('kind', '')} · {Path(s['src']).name[:30]} @{s.get('ss', 0)}", font=f, fill=(200, 0, 0))
         texts = [s.get("ours", "")[:30], s.get("ours", "")[30:60], "왜: " + s.get("why", "")[:28], s.get("why", "")[28:58]]
         for n, txt in enumerate(texts):
             d.text((6, 34 + n * 26), txt, font=f, fill=(0, 0, 0) if n < 2 else (0, 90, 0))
-        crop = "crop={2}:{3}:{0}:{1},".format(*s["src_crop"]) if s.get("src_crop") else ""
-        src = base / s["src"]
-        still = src.suffix.lower() in (".png", ".jpg", ".jpeg")
-        for j, dt in enumerate((0.2, 1.0, 1.8)):
-            seek = [] if still else ["-ss", f"{float(s.get('ss', 0)) + dt:.2f}"]
+        for j, (sname, at, scrop) in enumerate(samples):
+            crop = "crop={2}:{3}:{0}:{1},".format(*scrop) if scrop else ""
+            src = base / sname
+            still = src.suffix.lower() in (".png", ".jpg", ".jpeg")
+            seek = [] if still else ["-ss", f"{at:.2f}"]
             b = subprocess.run(["ffmpeg", "-v", "error", *seek, "-i", str(src), "-frames:v", "1",
                                 "-vf", f"{crop}scale={tw}:{th}:force_original_aspect_ratio=increase,crop={tw}:{th}",
                                 "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
