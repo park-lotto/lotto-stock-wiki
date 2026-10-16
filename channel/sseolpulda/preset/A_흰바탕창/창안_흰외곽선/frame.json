@@ -74,7 +74,14 @@
    ],
    "line_rgb": null,
    "line_scale": null,
-   "outline": "$per_video",
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
    "line_outline": null,
    "shadow": null,
    "glow": null,

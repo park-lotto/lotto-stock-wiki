@@ -1,0 +1,188 @@
+{
+ "slug": "hottemreport",
+ "style": "검정띠",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T18:23:13+09:00",
+ "sources": [
+  {
+   "id": "OE-11wb7vdY",
+   "tteutgi": "channel/hottemreport/뜯기/OE-11wb7vdY/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:27",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "Pretendard-ExtraBold.otf",
+    "top1_score": 0.637,
+    "picked_from": {
+     "file": "Pretendard-ExtraBold.otf",
+     "score": 0.637
+    },
+    "font_confidence": "ok",
+    "skipped": []
+   },
+   "font_confidence": "ok",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "제목 글꼴: 분석기 CcIBMPlexSansKR-Bold(0, 신뢰 low) 대신 제목 줄 직접 판별 CcIBMPlexSansKR-Bold(0.4345)",
+    "제목 글꼴 CcIBMPlexSansKR-Bold — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 IBMPlexSansKR-Bold.otf 0.4345, 신뢰 low)",
+    "제목 줄마다 크기 [106.4, 148.4] → size 127.4 × line_scale [0.835, 1.165]",
+    "제목 기울기 +3도(기둥 전단 투영) → 바름",
+    "자막 잰 높이 75.0px 에서 외곽선 1px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.80 > 0.15, 8개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 외곽선 13px [0, 0, 0] — 프레임 자막 줄 열 (170, 927) 에서 직접 잼(분석기 요약 1px [104, 104, 104])",
+    "자막 등장 none — 뜯기 등장 표본 3개 중 '없음' 2개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "자막 그림자 [[-6, 2]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "고정 문구 글로우 {'px': 37, 'rgb': [4, 113, 4]} — 글자 몸 410~669×170~224 로 잼",
+    "고정 문구 기울기 +0도(기둥 전단 투영) → 바름",
+    "고정 문구 글꼴 GasoekOne·외곽선 0px — fontmatch.rank 직접(채움+외곽선 모양, 1위 GasoekOne-Regular.ttf 0.5966)"
+   ],
+   "unknown": [
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": null,
+   "title_ink_w": 842,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "e49978a2cad7"
+  }
+ ],
+ "updated_at": "2026-10-16T18:23:13+09:00",
+ "variables": [
+  "layers[text:title].text"
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "OE-11wb7vdY": "AI 주작 논란 터진\n아이언맨 헬멧"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "OE-11wb7vdY": 298
+    },
+    "default": 298,
+    "range": [
+     298,
+     298
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap": {
+    "values": {
+     "OE-11wb7vdY": 39
+    },
+    "default": 39,
+    "range": [
+     39,
+     39
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "OE-11wb7vdY": 0.871
+    },
+    "default": 0.871,
+    "range": [
+     0.871,
+     0.871
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "size_cap": {
+    "values": {
+     "OE-11wb7vdY": 127.4
+    },
+    "default": 127.4,
+    "range": [
+     127.4,
+     127.4
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_bottom": {
+    "values": {
+     "OE-11wb7vdY": 1920
+    },
+    "default": 1920,
+    "range": [
+     1920,
+     1920
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_top": {
+    "values": {
+     "OE-11wb7vdY": 559
+    },
+    "default": 559,
+    "range": [
+     559,
+     559
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap_ink": {
+    "values": {
+     "OE-11wb7vdY": 21
+    },
+    "default": 21,
+    "range": [
+     21,
+     21
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "OE-11wb7vdY": 842
+    },
+    "default": 1032,
+    "range": [
+     842,
+     842
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "OE-11wb7vdY": -536
+    },
+    "default": -536,
+    "range": [
+     -536,
+     -536
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "훅(의심→진짜)",
+  "기능 1",
+  "기능 2",
+  "기능 3",
+  "기능 4",
+  "반전",
+  "마무리"
+ ]
+}

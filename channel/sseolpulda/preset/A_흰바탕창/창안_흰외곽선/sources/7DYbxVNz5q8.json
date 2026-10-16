@@ -91,11 +91,11 @@
    "line_rgb": null,
    "line_scale": null,
    "outline": {
-    "px": 3,
+    "px": 6,
     "rgb": [
-     39,
-     39,
-     40
+     0,
+     0,
+     0
     ]
    },
    "line_outline": null,

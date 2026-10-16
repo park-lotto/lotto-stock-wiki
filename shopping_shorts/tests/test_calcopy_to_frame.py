@@ -309,3 +309,10 @@ def test_real_OE11_caption_outline_measured(real_OE11):
     brand = next(l for l in real_OE11["layers"] if l.get("role") == "brand")
     g = brand.get("glow")
     assert g and g["rgb"][1] > 2 * max(g["rgb"][0], g["rgb"][2])                                              # 초록 글로우 채널명
+
+
+def test_real_mY_caption_outline_black_in_caption_columns(real_mY):
+    """mY 자막: 분석기 요약 3px 회색(110 = 안티에일리어싱 첫 고리) — 프레임 실측 검정 고리(2~5px 검정 비율 0.79~0.87).
+    전폭으로 재면 흰 얼음 영상이 섞여 [2,3,0,0] → 자막 글자 열 범위(caption_cols) 안에서만 잰다."""
+    c = next(l for l in real_mY["layers"] if l.get("role") == "caption")
+    assert c["outline"] and 3 <= c["outline"]["px"] <= 6 and max(c["outline"]["rgb"]) < 40, c["outline"]

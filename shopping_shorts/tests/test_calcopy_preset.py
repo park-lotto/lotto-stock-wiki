@@ -316,3 +316,13 @@ def test_auto_diff_and_rebuild_from_auto_frames(tmp_path):
     assert M["roles"] == ["발견", "감탄"] and M["created_at"] == created and M["rebuilt"]["from"] == P.AUTO_TOOL
     assert M["caption_styles"][0]["name"] == "창아래" and M["caption_styles"][0]["notes"] == ["Z: 워커 정답"]
     assert not list(d.parent.glob("_old_*"))                                    # 옛 폴더는 다 만든 뒤 지운다
+
+
+def test_every_saved_preset_has_roles():
+    """저장소의 모든 프리셋 manifest 에 대본 역할 칸(roles) ≥5 — 없으면 script_engine 이 채널 기본·DEFAULT_ROLES 로 떨어져 경보만 낸다.
+    핫템 검정띠 7칸(엔진 담당) · 썰풀다 B 검정띠 5칸(통과작 mY 대본 칸 상황·반전·감동·반응·덤)."""
+    ms = sorted(ROOT.glob("channel/*/preset/**/manifest.json"))
+    assert len(ms) >= 7, [str(m) for m in ms]
+    bad = [(str(m.relative_to(ROOT)), json.loads(m.read_text(encoding="utf-8")).get("roles")) for m in ms
+           if len(json.loads(m.read_text(encoding="utf-8")).get("roles") or []) < 5]
+    assert not bad, bad

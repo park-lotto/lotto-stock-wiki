@@ -229,7 +229,7 @@ def caption_word_gap(src: str, J: dict, W: int, H: int, pol: str) -> float | Non
     return float(_q(out)) if out else None
 
 
-CAP_OL_TRUST = 2         # 분석기 자막 외곽선이 이 px 미만이면 못 믿고 프레임에서 직접 잰다(OE11 요약 1px · 실측 13px)
+CAP_COL_PAD = 20         # 자막 글자 열 범위 양옆 여유(px) — 외곽선 고리가 들어갈 자리
 OUTLINE_BG_TOL = 45      # 외곽선 바깥이 외곽선 색과 이 안이면 바탕(외곽선 아님)
 OUTLINE_MAX = 16        # 외곽선 두께 상한(px) — 여기까지 끝을 못 찾으면 외곽선 아님(OE11 자막 검정 12px 은 13px 에서 끝난다)
 OUTLINE_SHARE = 0.7     # 외곽선 고리: 이 비율 이상이 외곽선 색
@@ -323,6 +323,28 @@ def line_outline_of(img: np.ndarray, fill, over_from: int, bg=None) -> list | No
         #   노란 글자, 고리 3~13px 이 전부 (46,29,38)). 못 잰 값으로 12px 를 내지 않는다
         return None
     return [px, *[int(v) for v in color]] if color is not None and px >= 2 else None
+
+
+def caption_cols(img: np.ndarray, fill, ink_h: float) -> tuple[int, int] | None:
+    """자막 줄 띠(img) 안 자막 글자의 열 범위 — 채움색 덩어리 중 띠 위아래에 안 닿고(영상 속 큰 흰 면 제외) 높이가 줄 높이의
+    0.15~1.3배·폭 ≤ 1.5배인 것(글자·낱자)을 왼→오 로 이어(틈 ≤ 0.8×줄 높이) 가장 넓은 무리. 2개 미만이면 None.
+    mY 1초: 흰 얼음 덩어리를 빼 23~721 → 355~721('선수가 퍽을')."""
+    import cv2
+    fm = (np.abs(img.astype(int) - np.array(fill)).max(axis=2) < 60).astype(np.uint8)
+    n, _, S, _ = cv2.connectedComponentsWithStats(fm, 8)
+    H = img.shape[0]
+    xs = sorted((int(x), int(x + w)) for x, y, w, h, a in (S[i] for i in range(1, n))
+                if y > 0 and y + h < H and 0.15 * ink_h <= h <= 1.3 * ink_h and w <= 1.5 * ink_h and a >= 20)
+    if len(xs) < 2:
+        return None
+    groups = [[xs[0]]]
+    for a, b in xs[1:]:
+        if a - max(e for _, e in groups[-1]) <= 0.8 * ink_h:
+            groups[-1].append((a, b))
+        else:
+            groups.append([(a, b)])
+    g = max(groups, key=lambda g: sum(e - s0 for s0, e in g))
+    return (min(a for a, _ in g), max(b for _, b in g)) if len(g) >= 2 else None
 
 
 def band_rows_end(b, win) -> int:
@@ -685,15 +707,18 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
         ol = fxs.get("outline_px")
         ol_rgb = fxs.get("outline_rgb")
-        if (ol or 0) < CAP_OL_TRUST and frame_img is not None and fxs.get("fill_rgb"):
-            # 분석기 요약이 외곽선 0~1px 이면 프레임의 자막 줄에서 직접 잰다(창 안 자막은 영상 위라 고리가 보인다) — 판단은 line_outline_of
-            #   한 곳(제목 줄과 같은 함수). OE11: 요약 1px 회색(104) · 프레임 실측 검정 13px(고리 1~13px 검정 비율 0.97~1.0, 14px 0.65).
+        if frame_img is not None and fxs.get("fill_rgb"):
+            # 자막 외곽선은 프레임의 자막 줄 · **자막 글자 열 범위 안**에서 직접 잰다 — 판단은 line_outline_of 한 곳(제목 줄과 같은 함수),
+            #   열 범위는 caption_cols. 분석기 요약은 못 믿는다: OE11 요약 1px 회색(104) · 실측 검정 13px / mY 요약 3px 회색(110 = 안티
+            #   에일리어싱 첫 고리 색) · 실측 검정 4px(전폭으로 재면 흰 얼음 영상이 섞여 [2,3,0,0]). 못 재면 분석기 값 그대로.
             #   크기 역산(위)은 분석기 줄 높이와 짝인 분석기 외곽선 값으로 한다 — OE11 줄 높이 75 = 채움 높이 실측 74(외곽선 미포함)
             y0 = int(max(0, top - 8)); y1 = int(min(frame_img.shape[0], top + ink_h + 20))
-            m = line_outline_of(frame_img[y0:y1], fxs["fill_rgb"], 0, None)
+            cc = caption_cols(frame_img[y0:y1], fxs["fill_rgb"], ink_h)
+            crop = frame_img[y0:y1, max(0, cc[0] - CAP_COL_PAD):cc[1] + CAP_COL_PAD] if cc else frame_img[y0:y1]
+            m = line_outline_of(crop, fxs["fill_rgb"], 0, None)
             if m:
+                notes.append(f"자막 외곽선 {m[0]}px {m[1:]} — 프레임 자막 줄 열 {cc or '전폭'} 에서 직접 잼(분석기 요약 {ol}px {ol_rgb})")
                 ol, ol_rgb = m[0], m[1:]
-                notes.append(f"자막 외곽선 {m[0]}px {m[1:]} — 분석기 요약 0, 프레임 자막 줄에서 직접 잼")
         layers.append({"kind": "text", "role": "caption", **al, "y": fit["y"], "lines": lines, "font": fam,
                        "size": fit["size"], "line_h": fit["line_h"],
                        "rgb": fxs.get("fill_rgb") or ([0, 0, 0] if pol == "dark" else [255, 255, 255]), "line_rgb": None,
