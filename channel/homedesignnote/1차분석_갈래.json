@@ -1,0 +1,247 @@
+[
+ {
+  "style": "(판독 없음)",
+  "n": 33,
+  "views_median": 721000,
+  "views_max": 3900000,
+  "voice": [
+   [
+    null,
+    33
+   ]
+  ],
+  "honorific": [
+   [
+    null,
+    33
+   ]
+  ],
+  "duration_median": 20.5,
+  "cps_median": 8.47,
+  "first_word_median": 0.02,
+  "cuts_median": 15,
+  "effects_per_video": 0,
+  "effect_kinds": [],
+  "sfx_per_video": 0,
+  "frame_variants": [
+   [
+    "A",
+    31
+   ],
+   [
+    "E",
+    1
+   ],
+   [
+    "B",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "",
+    33
+   ]
+  ],
+  "ids": [
+   "iiBUscncqIk",
+   "WTgQPFfdSOQ",
+   "SU9YofB1IoI",
+   "orBlWWhejtc",
+   "R6mfkN814n8",
+   "eiWxEvVmDz8",
+   "kLqVHz6Frgo",
+   "usgzHg_zH9I",
+   "kybnOuZeoo0",
+   "lDUbgNUYFg0",
+   "VJqT7D-zENY",
+   "WZgM5Ca8_eM",
+   "TJ_QK_MN2js",
+   "h3dTisbioec",
+   "g5F4WrRNyE4",
+   "zGHw-CfL_uI",
+   "KF0v8WcnYN0",
+   "YmiyRMxn6bI",
+   "WGqAq3qtf00",
+   "seFkrVR-nYs",
+   "QuWUp2gEQ80",
+   "LcnftCEwjbs",
+   "R0-bfj7JarA",
+   "zEyHZDkU-gY",
+   "fKczFd2yP_0",
+   "wddJCFa4nAc",
+   "qIcswKhm-Dk",
+   "ScBMkUUm5Io",
+   "cHGEj3Nh0AY",
+   "r3Sjk_-aC4k",
+   "Py39fEhup7E",
+   "ZPIrB9KOhFY",
+   "kQK1c9o2K9o"
+  ]
+ },
+ {
+  "style": "제품 이야기썰형",
+  "n": 14,
+  "views_median": 1200000,
+  "views_max": 6000000,
+  "voice": [
+   [
+    "TTS",
+    11
+   ],
+   [
+    "사람",
+    3
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    13
+   ],
+   [
+    "섞임",
+    1
+   ]
+  ],
+  "duration_median": 20.9,
+  "cps_median": 8.51,
+  "first_word_median": 0.0,
+  "cuts_median": 14.5,
+  "effects_per_video": 12.5,
+  "effect_kinds": [
+   [
+    "text_pop",
+    104
+   ],
+   [
+    "zoom",
+    102
+   ],
+   [
+    "transition",
+    16
+   ],
+   [
+    "other",
+    4
+   ]
+  ],
+  "sfx_per_video": 8.0,
+  "frame_variants": [
+   [
+    "A",
+    11
+   ],
+   [
+    "B",
+    1
+   ],
+   [
+    "D",
+    1
+   ],
+   [
+    "C",
+    1
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 정체공개 > 원리 > 기타 > 결말",
+    1
+   ],
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 원리 > 원리 > 댓글유도",
+    1
+   ],
+   [
+    "훅 > 정체공개 > 원리 > 상황 > 반전 > 원리 > 원리 > 덤",
+    1
+   ]
+  ],
+  "ids": [
+   "_QqLEH4qlFQ",
+   "DCXQjaWcZ-g",
+   "e15KZ_nO1_Y",
+   "fQPX6XeXeN0",
+   "Ez7KsS2K_Pk",
+   "1ZAg82zzbgo",
+   "2exspDiHhCM",
+   "0gW52i3BIuQ",
+   "2_W3Azg9wV4",
+   "7Nj6b0mX4HM",
+   "8Tm_sfEoc2c",
+   "1wY0PIeFAWw",
+   "4j38pi7RaLk",
+   "6LHz-AhH-Gg"
+  ]
+ },
+ {
+  "style": "제품 소개형",
+  "n": 3,
+  "views_median": 1600000,
+  "views_max": 2600000,
+  "voice": [
+   [
+    "TTS",
+    2
+   ],
+   [
+    "사람",
+    1
+   ]
+  ],
+  "honorific": [
+   [
+    "존댓말",
+    3
+   ]
+  ],
+  "duration_median": 18.57,
+  "cps_median": 8.57,
+  "first_word_median": 0.02,
+  "cuts_median": 13,
+  "effects_per_video": 7,
+  "effect_kinds": [
+   [
+    "text_pop",
+    8
+   ],
+   [
+    "zoom",
+    6
+   ],
+   [
+    "transition",
+    3
+   ]
+  ],
+  "sfx_per_video": 17,
+  "frame_variants": [
+   [
+    "A",
+    3
+   ]
+  ],
+  "beat_shapes": [
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 결말",
+    1
+   ],
+   [
+    "훅 > 상황 > 정체공개 > 원리 > 원리 > 원리 > 원리",
+    1
+   ],
+   [
+    "훅 > 정체공개 > 원리 > 덤 > 결말",
+    1
+   ]
+  ],
+  "ids": [
+   "EINoAh8C9rQ",
+   "2Y20YAQmit0",
+   "7LXEXTn-vnY"
+  ]
+ }
+]
