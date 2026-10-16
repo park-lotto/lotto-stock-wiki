@@ -3,11 +3,11 @@
  "style": "A_흰바탕창/창아래_검정",
  "made_by": "preset_save v1",
  "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
- "created_at": "2026-10-16T04:13:54+09:00",
+ "created_at": "2026-10-16T10:46:29+09:00",
  "sources": [
   {
    "id": "ZdeZRtCeAC4",
-   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/ZdeZRtCeAC4/뜯기.json",
+   "tteutgi": "channel/sseolpulda/뜯기/ZdeZRtCeAC4/뜯기.json",
    "engine": "뜯기 1판 2026-10-15",
    "measured_at": "2026-10-16 01:23",
    "frame_tool": "tools/calcopy/engine/to_frame.py",
@@ -27,6 +27,8 @@
     "글꼴 1위 SpoqaHanSansNeo-Bold.otf(0.4235) < 0.5 — 확신 낮음. 쓴 글꼴 CcSpoqaHanSansNeo-Bold({'file': 'SpoqaHanSansNeo-Bold.otf', 'score': 0.4235})",
     "제목 글꼴 SBAggroB — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 SBAggroB.ttf 0.755, 신뢰 ok)",
     "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "자막 자간은 잰 폭 고른 6/6개(사분위 폭 0.01) 중 첫 자막으로 역산",
+    "자막 낱말 간격 6.8px — 원본 낱말 틈 13.0px 에 맞춤(자간 -7.4px 은 글자 사이만)",
     "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
     "고정 문구 글꼴 TmonMonsori·외곽선 3px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.4462)"
    ],
@@ -41,10 +43,13 @@
     "layers[text:title].text"
    ],
    "caption_style": "창아래_검정",
-   "frame_sha1": "7b6ee1ae178d"
+   "title_ink_w": 784,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "7a65cac956e4"
   }
  ],
- "updated_at": "2026-10-16T04:13:54+09:00",
+ "updated_at": "2026-10-16T10:46:29+09:00",
  "variables": [
   "layers[text:title].text"
  ],
@@ -68,13 +73,15 @@
      0
     ],
     "line_rgb": null,
+    "line_scale": null,
     "outline": null,
     "line_outline": null,
     "shadow": null,
     "box": null,
     "italic": false,
     "letter_spacing": -7.4,
-    "word_spacing": 0,
+    "word_spacing": 6.8,
+    "valign": "center",
     "enter": null,
     "text": null
    },
@@ -83,7 +90,7 @@
     "ZdeZRtCeAC4"
    ],
    "notes": [
-    "ZdeZRtCeAC4: 분석기 자막 측정 사용(점검: 자막 6개 맞음)"
+    "ZdeZRtCeAC4: 워커 점검.md 분류"
    ]
   }
  ],
@@ -98,7 +105,7 @@
   }
  },
  "rules": {
-  "formula": "title.size = min(size_cap, 가장 긴 줄 폭이 fill_w 가 되는 크기) · title.line_h = size×lh_ratio · title.y = title_top · video.y = title.y + lines×line_h + gap · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
   "keys": {
    "title_top": {
     "values": {
@@ -126,7 +133,7 @@
     "values": {
      "ZdeZRtCeAC4": 1.03
     },
-    "default": 1.0,
+    "default": 1.03,
     "range": [
      1.03,
      1.03
@@ -142,7 +149,7 @@
      93.2,
      93.2
     ],
-    "how": "최대"
+    "how": "중앙값(1/1편)"
    },
    "video_bottom": {
     "values": {
@@ -155,16 +162,38 @@
     ],
     "how": "중앙값(1/1편)"
    },
-   "fill_w": {
+   "video_top": {
     "values": {
-     "ZdeZRtCeAC4": 777
+     "ZdeZRtCeAC4": 426
     },
-    "default": 777,
+    "default": 426,
     "range": [
-     777,
-     777
+     426,
+     426
     ],
     "how": "중앙값(1/1편)"
+   },
+   "gap_ink": {
+    "values": {
+     "ZdeZRtCeAC4": 26
+    },
+    "default": 26,
+    "range": [
+     26,
+     26
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "ZdeZRtCeAC4": 784
+    },
+    "default": 1032,
+    "range": [
+     784,
+     784
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
    },
    "cap_dy": {
     "values": {
@@ -176,6 +205,12 @@
      30
     ],
     "how": "중앙값(1/1편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
    }
   }
  },
@@ -190,42 +225,52 @@
     ]
    },
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:31+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].size": {
    "value": 48.0,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:31+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].y": {
    "value": 15,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:31+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].line_h": {
    "value": 55,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:31+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].x": {
    "value": 1052,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:31+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].letter_spacing": {
    "value": -2.3,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:32+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].font": {
    "value": "TmonMonsori",
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:32+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   },
   "layers[text:brand].italic": {
    "value": true,
    "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
-   "at": "2026-10-16T04:57:32+09:00"
+   "at": "2026-10-16T10:46:30+09:00"
   }
- }
+ },
+ "roles": [
+  "발견 맥락(어디서 보고 알게 됐나) · 말끝 ~길래",
+  "의심(처음엔 안 믿음) · 말끝 ~는데",
+  "반전 시연(그냥 대기만 하면) · 말끝 ~면",
+  "결과 과장(평범한 물건이 뭐로 변함) · 말끝 ~함;;",
+  "감탄 · 말끝 ~네",
+  "인정·댓글유도 · 말끝 ~인정?"
+ ],
+ "source_kind": "해외영상",
+ "rules_path": "channel/sseolpulda/제품_이야기썰형.rules.json"
 }

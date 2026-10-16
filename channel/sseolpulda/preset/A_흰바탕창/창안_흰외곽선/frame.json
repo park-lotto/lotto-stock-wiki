@@ -33,7 +33,7 @@
    "w": "$per_video",
    "align": "center",
    "lines": 2,
-   "font": "Cafe24Ohsquare",
+   "font": "$per_video",
    "size": "$per_video",
    "line_h": "$per_video",
    "rgb": [
@@ -59,7 +59,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": "$per_video",
+   "letter_spacing": -3.2,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,

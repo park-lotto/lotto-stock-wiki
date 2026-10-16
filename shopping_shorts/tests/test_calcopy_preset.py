@@ -231,3 +231,41 @@ def test_loo_judge_two_tiers():
     c = {r["key"]: r["in"] for r in J["c"]["rows"]}
     assert c["frame.window.y"] is False and c["band.line_h#1"] is False                 # 400 > 355.3, 130 > 121
     assert J["c"]["defects"] == ["영상 창 y", "제목1 높이"]
+
+
+def test_preset_fixed_values_equal_auto_frame(tmp_path):
+    """프리셋 고정값 == 자동본 값(10-16 창아래_검정: 자막 낱말 간격 6.8 → 0, lh_ratio 1.03 → 1.0 으로 넘어가 창 y 6px 밖).
+    한 편으로 만든 프리셋은 자동본의 자막 자간·낱말 간격·외곽선과 규칙 비율을 그대로 가져야 한다."""
+    f = copy.deepcopy(FRAME_A)
+    cap = next(l for l in f["layers"] if l.get("role") == "caption")
+    cap.update(letter_spacing=-7.4, word_spacing=6.8, outline={"px": 3, "rgb": [10, 10, 10]})
+    t = title(f); t["line_h"] = round(t["size"] * 1.03)
+    d = tmp_path / "s" / "preset" / "A" / "창아래"
+    M = P.save(J, f, d, "Z", "x")
+    pre, M = P.load(d)
+    pc = next(l for l in pre["layers"] if l.get("role") == "caption")
+    for k in ("letter_spacing", "word_spacing", "outline"):
+        assert pc[k] == cap[k], (k, pc[k], cap[k])
+    assert M["rules"]["keys"]["lh_ratio"]["default"] == round(t["line_h"] / t["size"], 3)
+    out = P.apply(pre, None, {"layers[text:title].text": t["text"]}, M["variable_stats"], None, M["rules"])
+    assert title(out)["line_h"] == t["line_h"]
+
+
+def test_manifest_meta_roles_source_kind_rules_path(tmp_path):
+    """manifest 의 대본·소재 칸(roles·source_kind·rules_path) — 검사하고 저장, 프리셋을 다시 만들어도(loo_preset.build) 남는다."""
+    from tools.calcopy.engine import loo_preset as L
+    d = tmp_path / "channel" / "sseolpulda" / "preset" / "A" / "창아래"
+    P.save(J, FRAME_A, d, "Z", "x")
+    M = P.set_meta(d, roles=["발견", "의심"], source_kind="해외영상", rules_path="channel/sseolpulda/제품_이야기썰형.rules.json")
+    assert M["roles"] == ["발견", "의심"] and M["source_kind"] == "해외영상"
+    for bad in ({"source_kind": "아무거나"}, {"roles": []}, {"rules_path": "없는/파일.json"}):
+        with pytest.raises(ValueError):
+            P.set_meta(d, **bad)
+    tg = tmp_path / "t.json"; tg.write_text(json.dumps(J), encoding="utf-8")
+    old = L.tteutgi
+    L.tteutgi = lambda slug, vid: tg
+    try:
+        M2 = L.build(d, "sseolpulda", ["Z"], {"Z": FRAME_A}, "note")
+    finally:
+        L.tteutgi = old
+    assert M2["roles"] == ["발견", "의심"] and M2["rules_path"] == "channel/sseolpulda/제품_이야기썰형.rules.json"

@@ -85,8 +85,11 @@ FIXED: dict = {}   # 대조로 못 박은 값(manifest.fixed) — 다시 만들�
 
 def build(preset_dir: Path, slug: str, ids: list[str], frames: dict, note: str) -> dict:
     mp = preset_dir / "manifest.json"
+    meta = {}
     if mp.exists():
-        FIXED.update(json.loads(mp.read_text(encoding="utf-8")).get("fixed") or {})
+        old = json.loads(mp.read_text(encoding="utf-8"))
+        FIXED.update(old.get("fixed") or {})
+        meta = {k: old[k] for k in P.META_KEYS if k in old}      # 역할 칸·소재 유형·rules 경로·푼 고정값 기록은 다시 만들어도 이어 붙인다
     shutil.rmtree(preset_dir, ignore_errors=True)
     M = None
     for vid in ids:
@@ -95,6 +98,9 @@ def build(preset_dir: Path, slug: str, ids: list[str], frames: dict, note: str) 
                    caption_style=preset_dir.name, caption_note=note)
     for path, f in FIXED.items():
         M = P.fix_value(preset_dir, path, f["value"], f["why"])
+    if meta:
+        M.update(meta)
+        (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
 
 
@@ -161,7 +167,7 @@ def main(argv=None):
                          "side_by_side": str(d / "cmp" / "side_by_side.jpg")}
         print(held, results[held]["in"], "/", results[held]["n"])
     (out / "loo.json").write_text(json.dumps(results, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
-    two = judge(results)
+    two = judge(results, {next((l["font"] for l in frames[v]["layers"] if l.get("role") == "title"), None) for v in a.ids} - {None})
     (out / "loo_judge.json").write_text(json.dumps(two, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     for k, v in two.items():
         print(k, "두 층 판정", v["in"], "/", v["n"], "밖:", v["defects"])
@@ -188,7 +194,7 @@ def _in_range(v, others):
     return lo <= v <= hi, [round(lo, 4), round(hi, 4)]
 
 
-def judge(results: dict) -> dict:
+def judge(results: dict, title_fonts: set | None = None) -> dict:
     """results(loo.json) → 편마다 두 층 판정 줄. 창 [x,y,w,h] 는 둘로 가른다: x·w·아래 끝(고정, ≤4px) / y(변수)."""
     ok = {k: v for k, v in results.items() if "rows" in v}
     orig = {k: {r["key"]: r["orig"] for r in v["rows"]} for k, v in ok.items()}
@@ -216,6 +222,12 @@ def judge(results: dict) -> dict:
             else:
                 rows.append({"key": key, "name": r["name"], "tier": "고정", "orig": r["orig"], "ours": r["ours"],
                              "diff": r.get("diff"), "in": r["status"] == "in", "rule": "compare 기준"})
+        if title_fonts and v.get("frame") and Path(v["frame"]).exists():
+            # 제목 글꼴: 그 편 글꼴과 같은가가 아니라 하위 스타일이 쓴 글꼴 집합 안인가(편마다 다른 글꼴을 쓰는 하위 스타일, 10-16)
+            F = json.loads(Path(v["frame"]).read_text(encoding="utf-8"))
+            tf = next((l["font"] for l in F["layers"] if l.get("role") == "title"), None)
+            rows.append({"key": "title.font", "name": "제목 글꼴(하위 스타일 글꼴 집합 안)", "tier": "고정", "orig": sorted(title_fonts),
+                         "ours": tf, "in": tf in title_fonts, "rule": "집합 안"})
         out[held] = {"rows": rows, "in": sum(x["in"] for x in rows), "n": len(rows),
                      "defects": [x["name"] for x in rows if not x["in"]]}
     return out

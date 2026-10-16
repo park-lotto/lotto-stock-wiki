@@ -26,12 +26,12 @@
    "kind": "text",
    "role": "title",
    "x": 540,
-   "y": 106,
+   "y": 117,
    "w": 1000,
    "align": "center",
    "lines": 2,
-   "font": "Cafe24Ohsquare",
-   "size": 108,
+   "font": "BlackHanSans",
+   "size": 122.8,
    "line_h": 126,
    "rgb": [
     0,
@@ -51,8 +51,8 @@
     ]
    ],
    "line_scale": [
-    1.189,
-    0.81
+    1.195,
+    0.804
    ],
    "outline": null,
    "line_outline": [
@@ -67,7 +67,7 @@
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 3.6,
+   "letter_spacing": -4.9,
    "word_spacing": 0,
    "valign": "center",
    "enter": null,

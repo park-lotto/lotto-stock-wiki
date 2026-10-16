@@ -120,7 +120,8 @@ def _median(xs):
     xs = sorted(xs)
     n = len(xs)
     m = xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
-    return int(round(m)) if all(isinstance(x, int) for x in xs) else round(m, 1)
+    # 소수는 셋째 자리까지 — 첫째 자리로 자르니 비율(lh_ratio 1.03)이 1.0 이 돼 창 y 가 6px 밀렸다(창아래_검정 LED 수도꼭지 실측, 10-16)
+    return int(round(m)) if all(isinstance(x, int) for x in xs) else round(m, 3)
 
 
 NO_DEFAULT = "내용 — 기본값 없음(새 소재는 --set)"
@@ -437,6 +438,46 @@ def fix_value(preset_dir: Path, path: str, value, why: str) -> dict:
     M["variables"] = variables(frame)
     M.get("variable_stats", {}).pop(path, None)
     (preset_dir / "frame.json").write_text(json.dumps(frame, ensure_ascii=False, indent=1), encoding="utf-8")
+    (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+    return M
+
+
+META_KEYS = ("roles", "source_kind", "rules_path", "unfixed", "nearest_template")   # 프리셋 다시 만들 때 이어 붙일 manifest 칸
+
+
+def set_meta(preset_dir: Path, roles: list | None = None, source_kind: str | None = None, rules_path: str | None = None) -> dict:
+    """manifest 의 대본·소재 칸 — 판단 주인 한 곳(10-16 엔진 담당 요청). script_engine(--roles 없을 때)·topic_find(--source-kind 없을 때)가 읽는다.
+      roles       = 채널 역할 칸 목록(대본 줄마다 맡는 일)
+      source_kind = 소재 출처 유형 — topic_find.SOURCE_KINDS 의 키(그 목록이 주인, 여기서 다시 적지 않는다)
+      rules_path  = 갈래 rules.json 경로(저장소 기준 상대) — manifest.rules(관계 규칙 공식 dict)와 다른 것"""
+    frame, M = load(preset_dir)
+    if roles is not None:
+        if not isinstance(roles, list) or not roles or not all(isinstance(r, str) and r.strip() for r in roles):
+            raise ValueError("roles: 빈 칸 없는 글 목록이어야 합니다")
+        M["roles"] = roles
+    if source_kind is not None:
+        from tools.calcopy.engine.topic_find import SOURCE_KINDS
+        if source_kind not in SOURCE_KINDS:
+            raise ValueError(f"source_kind: {list(SOURCE_KINDS)} 중 하나여야 합니다(받은 값 {source_kind!r})")
+        M["source_kind"] = source_kind
+    if rules_path is not None:
+        rp = rules_path.replace("\\", "/")
+        if not (ROOT / rp).exists():
+            raise ValueError(f"rules_path: 저장소에 없는 파일 {rp}")
+        M["rules_path"] = rp
+    (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+    return M
+
+
+def unfix_value(preset_dir: Path, path: str, why: str) -> dict:
+    """fix_value 를 푼다 — manifest.fixed 에서 빼고 manifest.unfixed 에 근거를 남긴다. 그 자리는 다음 save(또는 프리셋 다시 만들기)
+    때 편별 값으로 다시 변수가 된다(10-16: 제목 글꼴을 Cafe24Ohsquare 로 못 박은 판정이 ho5 한 편만 보고 한 것이라 해제)."""
+    frame, M = load(preset_dir)
+    old = (M.get("fixed") or {}).pop(path, None)
+    if old is None:
+        raise ValueError(f"고정값 아님: {path}")
+    M.setdefault("unfixed", {})[path] = {"was": old, "why": why,
+                                         "at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")}
     (preset_dir / "manifest.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
     return M
 
