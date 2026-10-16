@@ -82,11 +82,50 @@ def load_facts(path: str | None) -> dict:
     out = {}
     if isinstance(d, dict):
         for k, v in d.items():
-            out[k] = {"text": v, "url": ""} if isinstance(v, str) else {"text": v.get("text", ""), "url": v.get("url") or v.get("source") or ""}
+            out[k] = {"text": v, "url": ""} if isinstance(v, str) else {"text": v.get("text", ""), "url": v.get("url") or v.get("source") or "",
+                                                                         "date": v.get("date") or ""}
     else:
         for i, v in enumerate(d, 1):
-            out[v.get("id") or f"f{i}"] = {"text": v.get("text", ""), "url": v.get("url") or v.get("source") or ""}
+            out[v.get("id") or f"f{i}"] = {"text": v.get("text", ""), "url": v.get("url") or v.get("source") or "", "date": v.get("date") or ""}
     return {k: v for k, v in out.items() if (v["text"] or "").strip()}
+
+
+# ── 기사 대조 관문(조율자 10-16 묶음3) ─────────────────────────────────────
+# 제품비하인드·식품 소재는 기사 ≥1(URL·날짜·발췌)이 facts 에 있어야 대본으로 넘어간다. 없으면 상태 facts_insufficient(이유) — LLM 을 부르지 않는다.
+# 기사 통로: 네이버 뉴스 검색 API 키는 .env 에 없다(10-16 확인, 키 이름에 NAVER·NEWS 0개) → 사람이 찾은 기사를 facts 에 넣거나 topic_find.news_search(제목·URL만).
+NOT_ARTICLE = ("youtube.com", "youtu.be", "instagram.com", "tiktok.com", "facebook.com", "x.com", "twitter.com", "threads.net", "rednote.com")
+FOOD_WORDS = ("라면", "과자", "빵", "치킨", "버거", "음료", "커피", "아이스크림", "스프레드", "초콜릿", "우유", "피자", "떡볶이", "도시락", "식품",
+              "소스", "젤리", "맥주", "소주", "김치", "햄버거", "디저트", "케이크", "쿠키")
+_DATE = re.compile(r"(19|20)\d{2}[-./년 ]\s*\d{1,2}")
+ARTICLE_MIN_CHARS = 20
+
+
+def article_facts(facts: dict) -> list[str]:
+    """기사 근거 번호 — URL 이 영상·SNS 가 아닌 http 주소 + 날짜(date 칸 또는 글 안 'YYYY-MM') + 발췌(글 ARTICLE_MIN_CHARS 자 이상)."""
+    out = []
+    for k, v in facts.items():
+        url = (v.get("url") or "").lower()
+        if not url.startswith("http") or any(d in url for d in NOT_ARTICLE):
+            continue
+        if not (v.get("date") or _DATE.search(v.get("text") or "")):
+            continue
+        if len((v.get("text") or "").replace(" ", "")) < ARTICLE_MIN_CHARS:
+            continue
+        out.append(k)
+    return out
+
+
+def article_gate(topic: dict, facts: dict, kind: str | None) -> tuple[bool, str]:
+    """(판단 주인) 이 소재가 기사 대조를 요구하나 + 충족했나 → (통과, 이유)."""
+    t = topic.get("topic") or ""
+    food = [w for w in FOOD_WORDS if w in t]
+    if kind != "제품비하인드" and not food:
+        return True, f"기사 대조 대상 아님(출처 유형 {kind}, 식품 낱말 없음)"
+    arts = article_facts(facts)
+    why_need = f"출처 유형 {kind}" if kind == "제품비하인드" else f"식품 소재({food})"
+    if arts:
+        return True, f"{why_need} — 기사 근거 {arts}"
+    return False, f"{why_need} — 기사 근거(영상·SNS 아닌 URL + 날짜 + 발췌 {ARTICLE_MIN_CHARS}자↑) 0개. facts 에 기사를 넣어야 대본으로 넘어간다"
 
 
 def load_bench(path: str | None) -> dict:
@@ -473,6 +512,8 @@ def build_outputs(out: Path, P: dict, topic: dict, facts: dict, bench: dict, sk:
          "final": {"lines": lines, "check": res.get("check")}, "tries": res.get("tries"), "llm_calls": llm_calls}
     if res.get("error"):
         S["error"] = res["error"]
+    S["status"] = (res.get("check") or {}).get("status") or ("ok" if (res.get("check") or {}).get("ok") else "failed_checks")
+    S["article_gate"] = (res.get("check") or {}).get("article_gate") or (res.get("check") or {}).get("why")
     (out / "대본.json").write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "roles.json").write_text(json.dumps({"slug": P["slug"], "roles": sk["roles"], "mode": sk["mode"],
                                                 "note": "프리셋 manifest.roles 로 옮길 값(manifest 주인 preset_save 가 저장)"}, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -514,7 +555,8 @@ def build_outputs(out: Path, P: dict, topic: dict, facts: dict, bench: dict, sk:
 
 
 def run(preset: str, topic_arg: str, out: Path, bench_path: str | None = None, facts_path: str | None = None, mode: str | None = None,
-        roles: list[str] | None = None, tteutgi: str | None = None, pick: str | None = None, free_roles: tuple = (), llm=None, log=print) -> dict:
+        roles: list[str] | None = None, tteutgi: str | None = None, pick: str | None = None, free_roles: tuple = (), llm=None, log=print,
+        source_kind: str | None = None) -> dict:
     llm = llm or TF.LLM()
     P = TF.load_preset(preset, tteutgi)
     topic = load_topic(topic_arg, pick)
@@ -523,7 +565,16 @@ def run(preset: str, topic_arg: str, out: Path, bench_path: str | None = None, f
     sk = skeleton(P, mode, roles)
     out.mkdir(parents=True, exist_ok=True)
     log(f"[규칙] {P['slug']} · {sk['mode']} · 칸 {len(sk['roles'])} · 말투 {sk['honorific']} · 사실 {len(facts)} · 벤치 포인트 {len(bench['points'])}")
+    kind = source_kind or (topic.get("source") or {}).get("kind") or P["manifest"].get("source_kind")
+    ok, why = article_gate(topic, facts, kind)
+    log(f"[기사 대조] {'통과' if ok else '멈춤'} — {why}")
+    if not ok:
+        res = {"lines": [], "check": {"ok": False, "status": "facts_insufficient", "why": why, "bad": {}}, "tries": [],
+               "error": f"facts_insufficient: {why}", "meta": {}}
+        S = build_outputs(out, P, topic, facts, bench, sk, res, bench_path, llm.calls)
+        return S
     res = write(P, topic, facts, bench, sk, llm, free_roles, log)
+    res.setdefault("check", {})["article_gate"] = why
     S = build_outputs(out, P, topic, facts, bench, sk, res, bench_path, llm.calls)
     log(f"[끝] 판정 {'통과' if (res.get('check') or {}).get('ok') else '미통과'} → {out / '대본.json'}")
     return S
@@ -540,11 +591,12 @@ def main(argv=None):
     ap.add_argument("--roles", default="", help="쉼표 구분 역할 칸(없으면 manifest.roles → 채널 기본)")
     ap.add_argument("--free-roles", default="", help="근거 번호 없이 둘 수 있는 칸 이름(쉼표)")
     ap.add_argument("--tteutgi")
+    ap.add_argument("--source-kind", help="기사 대조 관문용 출처 유형(없으면 소재 source.kind → manifest.source_kind)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--max-llm", type=int, default=4, help="무료 제미나이 호출 상한(초안 1 + 다시 쓰기 2 + 여유)")
     a = ap.parse_args(argv)
     S = run(a.preset, a.topic, Path(a.out), a.bench, a.facts, a.mode, [r for r in a.roles.split(",") if r.strip()] or None, a.tteutgi, a.pick,
-            tuple(x for x in a.free_roles.split(",") if x), TF.LLM(budget=a.max_llm))
+            tuple(x for x in a.free_roles.split(",") if x), TF.LLM(budget=a.max_llm), source_kind=a.source_kind)
     for l in S["final"]["lines"]:
         print(f"  ({l['fn']}) {l['text']}  {l['facts']}")
     return 0 if (S["final"].get("check") or {}).get("ok") else 1

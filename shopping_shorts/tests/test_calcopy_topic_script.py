@@ -160,7 +160,8 @@ def test_narration_total_length_yummyknow(tmp_path):
     short = [{"fn": roles[k], "text": say(per), "facts": ["f1"]} for k in range(5)]
     longer = {"fn": roles[0], "text": say(per + 40), "facts": ["f1"]}
     facts = tmp_path / "f.json"
-    facts.write_text(json.dumps({"f1": "코스트코 스프레드 반반 구성"}, ensure_ascii=False), encoding="utf-8")
+    facts.write_text(json.dumps({"f1": {"text": "코스트코 2026-10-01 상품 페이지: 스프레드 반반 구성 1kg", "url": "https://www.costco.co.kr/p/682334"}},
+                                ensure_ascii=False), encoding="utf-8")   # 식품 소재 → 기사·공식 페이지 근거(날짜·발췌) 필요
     llm = FakeLLM({"draft": {"lines": short}, "rewrite1": lambda p: {"lines": [{"i": 1, **longer}]}})
     S = E.run("yummyknow", "코스트코 스프레드", tmp_path / "o", None, str(facts), llm=llm, log=lambda *_: None)
     c0 = S["tries"][0]["check"]
@@ -249,6 +250,20 @@ def test_channel_fit_no_skips_scoring_and_promo_caps(tmp_path):
     assert by["c2"]["scores"]["known"]["score"] is None and any("채널 결 밖" in f for f in by["c2"]["flags"])
     assert by["c1"]["promo"] and by["c1"]["scores"]["known"]["score"] == T.PROMO_CAP and by["c1"]["scores"]["surprise"]["score"] == T.PROMO_CAP
     assert "c2" not in res["recommend"]
+
+
+def test_article_gate_blocks_behind_topic_without_article(tmp_path):
+    """제품비하인드·식품 소재는 기사(영상·SNS 아닌 URL+날짜+발췌)가 facts 에 없으면 facts_insufficient — LLM 을 부르지 않는다."""
+    vid_only = tmp_path / "v.json"
+    vid_only.write_text(json.dumps({"f1": {"text": "다이소 공식 쇼츠 설명: 베이커리 푸 봉제키링 신상", "url": "https://www.youtube.com/shorts/x"}},
+                                   ensure_ascii=False), encoding="utf-8")
+    llm = FakeLLM({"draft": {"lines": []}})
+    S = E.run("yummyknow", "다이소 베이커리 푸 신상", tmp_path / "o", None, str(vid_only), llm=llm, log=lambda *_: None, source_kind="제품비하인드")
+    assert S["status"] == "facts_insufficient" and llm.tags == [] and "기사 근거" in S["error"]
+    art = {"f1": {"text": "위키트리 2026-09-16: 유튜버가 구미공장·안성공장 신라면을 같은 조건으로 끓여 비교", "url": "https://www.wikitree.co.kr/articles/1159999"}}
+    assert E.article_gate({"topic": "신라면 구미공장"}, art, "해외영상")[0]                                   # 식품 낱말 → 대상, 기사 있음 → 통과
+    assert not E.article_gate({"topic": "신라면 구미공장"}, {"f1": {"text": "짧음", "url": "https://news.x/1"}}, None)[0]   # 날짜·발췌 없음
+    assert E.article_gate({"topic": "LED 수도꼭지"}, {}, "해외영상")[0]                                         # 대상 아님
 
 
 def test_source_kind_from_manifest_or_required():
@@ -382,7 +397,8 @@ def test_off_topic_brand_and_missing_product_caught(tmp_path):
     sk = E.skeleton(P, None, None)
     per = (sk["total"][0] + sk["total"][1]) // 2 // len(sk["roles"])
     facts = tmp_path / "f.json"
-    facts.write_text(json.dumps({"f1": "구미공장은 국내 신라면 생산량의 약 75%"}, ensure_ascii=False), encoding="utf-8")
+    facts.write_text(json.dumps({"f1": {"text": "뉴시스 2025-11-09 르포: 구미공장은 국내 신라면 생산량의 약 75%", "url": "https://www.newsis.com/view/NISX20251107"}},
+                                ensure_ascii=False), encoding="utf-8")
     off = _narr_lines(sk, lambda k: _filler(per, "오뚜기진라면공장이" if k == 2 else ""))
     good = _narr_lines(sk, lambda k: _filler(per, "신라면구미공장이" if k == 0 else ""))
     llm = FakeLLM({"draft": {"lines": off}, "rewrite1": {"lines": [{"i": 1, **good[0]}, {"i": 3, **good[2]}]}})
