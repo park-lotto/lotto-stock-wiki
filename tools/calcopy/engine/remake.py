@@ -187,6 +187,45 @@ def plan_sheet(M: dict, J: dict, dst: Path):
     S.save(dst, quality=82)
 
 
+def plan_extra(J: dict, S: dict, M: dict, voice: dict | None = None) -> list[str]:
+    """완성작 기준(사장님 10-16: "소재와 대본이 좋고 나레이션과 자막 효과도") 세 절 — 소재 5기준·썰 각도 / 나레 설계 / 자막 효과.
+    점수·각도는 대본.json gate(사람·오푸스 판정), 나레·자막 효과 규칙은 뜯기 실측에서 읽는다."""
+    from collections import Counter
+    md, g = [], S.get("gate") or {}
+    md += ["", "## 소재 5기준 + 썰 각도", ""]
+    sc = g.get("scores") or {}
+    if sc:
+        keys = ["아는 대상", "몰랐던", "재미", "이야기", "얻는 것", "보여줄 수 있나"]
+        md += ["| | " + " | ".join(keys) + " |", "|---|" + "---|" * len(keys)]
+        for who, row in sc.items():
+            md.append(f"| {who} | " + " | ".join(str(row.get(k, "-")) for k in keys) + " |")
+        if g.get("score_note"):
+            md += ["", g["score_note"]]
+    else:
+        md.append("- (대본.json gate.scores 없음 — 5기준 판정 전)")
+    for k, lab in (("angle", "썰 각도"), ("twist", "반전 자리"), ("twist_orig", "원본 반전 자리")):
+        if g.get(k):
+            md.append(f"- {lab}: {g[k]}")
+    vr = J.get("voice_rules") or {}
+    md += ["", "## 나레 설계(뜯기 voice_rules → 우리)", "",
+           f"- 원본: 성별 {vr.get('genders')} · 말속도 {vr.get('cps')}자/초 · 어조 {vr.get('tone')} · 존댓말 비율 {(J.get('script_tone') or {}).get('polite_ratio')}"]
+    voice = voice or M.get("narration")
+    if voice:
+        md.append(f"- 우리: {voice}")
+    cm = J.get("caption_motion") or {}
+    anims = Counter(x.get("anim") for x in cm.get("starts") or [])
+    fx = J.get("text_fx") or {}
+    glyph = fx.get("glyph") or []
+    md += ["", "## 자막 효과(뜯기 caption_motion·text_fx → 우리)", "",
+           f"- 등장(원본 실측 {sum(anims.values())}개): {dict(anims)}",
+           f"- 글자: 채움 {[x.get('fill_rgb') for x in (fx.get('per_crop') or [])[:1]]} · 외곽선 {[g_.get('outline_px') for g_ in glyph]}px · 강조 상자 {[x.get('box') for x in fx.get('per_crop') or []][:1]}"]
+    eff = M.get("caption_effects") or {}
+    for k in ("now", "planned"):
+        if eff.get(k):
+            md.append(f"- {'지금 렌더' if k == 'now' else '적용 예정'}: {eff[k]}")
+    return md
+
+
 def write_plan(out: Path, J: dict, frames: list, S: dict, M: dict, kind: str) -> Path:
     """선검수 계획.md — 대본(+근거)·컷별 소스·why·접촉 시트·규칙 예상. 렌더·TTS 전에 사람(조율자)이 본다(10-16 rGFX 3차 반려 교훈)."""
     from collections import Counter
@@ -216,6 +255,7 @@ def write_plan(out: Path, J: dict, frames: list, S: dict, M: dict, kind: str) ->
            f"- 컷 {tot}개 · 종류 비율(컷 수) {dict((k, round(v / tot, 2)) for k, v in cnt.items())}",
            f"- 원본 제작법 비율: {mats.get('time_ratio') or mats.get('ratio') or '뜯기 materials 참고'}",
            f"- 효과음: {[x.get('t') for x in M.get('sfx') or []]} · 원본 {sfx0}"]
+    md += plan_extra(J, S, M)
     p = out / "계획.md"
     p.write_text("\n".join(md) + "\n", encoding="utf-8")
     return p
@@ -232,6 +272,7 @@ def main(argv=None):
     ap.add_argument("--plan-only", action="store_true", help="계획.md·접촉 시트만 쓰고 멈춤(렌더·TTS 전 선검수)")
     ap.add_argument("--tts", help="나레 소리 파일(나레 꼴). 없으면 --make-tts 로 타입캐스트 1회")
     ap.add_argument("--make-tts", action="store_true")
+    ap.add_argument("--voice", default=None, help="타입캐스트 목소리 tc_…(기본 필재 copy_render.NARR). 원본이 여성 나레면 문정 tc_68f9c6a72f0f04a417bb136f(10-16 3호)")
     ap.add_argument("--tempo", type=float, default=1.36)
     ap.add_argument("--chunk", type=int, default=10, help="나레 꼴 자막 한 줄 글자 수")
     ap.add_argument("--caption-mode", default="accumulate", choices=["accumulate", "replace"], help="누적형(1줄→2줄) / 교체형(1줄씩)")
@@ -296,8 +337,8 @@ def main(argv=None):
             from shopping_shorts.channelkit import providers
             from tools.calcopy.copy_render import NARR
             tts = str(out / "narr_full.mp3")
-            providers.typecast_synth(NARR, tempo=a.tempo)(" ".join(l["text"] for l in S["final"]["lines"]), tts)
-            log["steps"]["tts"] = {"made": tts, "chars": sum(len(l["text"].replace(" ", "")) for l in S["final"]["lines"])}
+            providers.typecast_synth(a.voice or NARR, tempo=a.tempo)(" ".join(l["text"] for l in S["final"]["lines"]), tts)
+            log["steps"]["tts"] = {"made": tts, "voice": a.voice or NARR, "tempo": a.tempo, "chars": sum(len(l["text"].replace(" ", "")) for l in S["final"]["lines"])}
         plan = {"tteutgi": a.tteutgi, "frames": [{"frame": f, "t_end": None} for f in frames], "script": str(S_p), "tts": tts,
                 "materials": a.materials, "out": str(out), "bgm": a.bgm, "bgm_ratio": a.bgm_ratio, "lufs": target, "chunk": a.chunk, "caption_mode": a.caption_mode}
         final = narr_video.build(plan)

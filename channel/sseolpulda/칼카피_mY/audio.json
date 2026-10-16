@@ -1,0 +1,23 @@
+{
+ "tts": "C:/숏템_칼카피/sseolpulda/칼카피_mY/narr_full_문정.mp3",
+ "bgm": "here_with_me",
+ "bgm_ratio": 0.15,
+ "target_lufs": -17.9,
+ "sfx": [
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_10.mp3",
+   4.8,
+   0.0
+  ],
+  [
+   "C:\\숏템_칼카피\\packs\\sfx\\sfx_pick\\sfx_28.mp3",
+   9.09,
+   -3.0
+  ]
+ ],
+ "final": {
+  "I": -17.6,
+  "LRA": 2.7,
+  "TP": -1.4
+ }
+}

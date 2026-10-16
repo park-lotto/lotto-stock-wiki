@@ -71,11 +71,11 @@
    "x": 540,
    "w": 1000,
    "align": "center",
-   "y": 1231,
+   "y": 1220,
    "lines": 1,
    "font": "PretendardXBold",
-   "size": 63.7,
-   "line_h": 73,
+   "size": 90.0,
+   "line_h": 103,
    "rgb": [
     255,
     255,
@@ -83,7 +83,7 @@
    ],
    "line_rgb": null,
    "outline": {
-    "px": 6,
+    "px": 5,
     "rgb": [
      0,
      0,

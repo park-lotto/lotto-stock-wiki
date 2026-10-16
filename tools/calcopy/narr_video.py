@@ -44,7 +44,33 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
     if len(out) > 1 and len(out[-1].rstrip(",.?!").replace(" ", "")) <= 5:   # '있음.' 처럼 짧은 꼬리는 앞 조각에 붙인다(혼자 뜨면 어색 — 10-16 2판)
         tail = out.pop()
         out[-1] = out[-1] + " " + tail
+    out = _fix_dangling(out)
     return [o.rstrip(",") for o in out]
+
+
+# 뒤 낱말을 꾸미는 한 낱말(관형사·부사) — 조각 끝에 홀로 남으면 다음 조각으로 넘긴다
+# (10-16 3호: '처음엔 사양하던 그 / 팬은…' 이 '그 팬'을 갈랐고, '퍽을 또' 가 0.4초만 떴다)
+DANGLE = {"그", "이", "저", "또", "더", "한", "잘", "좀", "꼭", "딱", "다", "그런", "이런", "저런", "아주", "너무", "정말"}
+
+
+def _fix_dangling(out: list[str], short: int = 3) -> list[str]:
+    out = list(out)
+    for i in range(len(out) - 1):
+        ws = out[i].split()
+        while len(ws) > 1 and ws[-1] in DANGLE:
+            out[i + 1] = ws.pop() + " " + out[i + 1]
+        out[i] = " ".join(ws)
+    i = 0
+    while i < len(out) and len(out) > 1:   # 3자 이하 조각은 혼자 두지 않는다 — 다음(없으면 앞) 조각에 붙인다
+        if len(out[i].rstrip(",.?!").replace(" ", "")) <= short:
+            if i + 1 < len(out):
+                out[i + 1] = out[i] + " " + out[i + 1]
+            else:
+                out[i - 1] = out[i - 1] + " " + out[i]
+            out.pop(i)
+            continue
+        i += 1
+    return out
 
 
 def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> list[dict]:
@@ -118,7 +144,38 @@ def time_steps(steps: list[dict], audio: str, snap: float = 0.4) -> tuple[list[d
 
 
 # ── 재료(그림 칸) ──────────────────────────────────────────────────────────
-def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True):
+# ── 꾸밈 얹기(빨간 원·이모지 스티커) — 원본 자리·크기를 캔버스(1080×1920) 좌표로 받는다 (관제 097, 10-16 3호) ──
+def overlay_png(ov: dict, dst: Path) -> Path:
+    """ov.kind = red_circle(지름 size·두께 stroke·색 color) / emoji(글자 emoji, 한 변 size). 투명 PNG."""
+    from PIL import Image, ImageDraw, ImageFont
+    size = int(ov.get("size", 170))
+    if ov["kind"] == "red_circle":
+        sw = int(ov.get("stroke", 6)); pad = sw
+        im = Image.new("RGBA", (size + 2 * pad, size + 2 * pad), (0, 0, 0, 0))
+        ImageDraw.Draw(im).ellipse([pad, pad, pad + size, pad + size], outline=tuple(ov.get("color", (232, 22, 26))) + (255,), width=sw)
+    elif ov["kind"] == "emoji":
+        font = ImageFont.truetype(ov.get("font", "C:/Windows/Fonts/seguiemj.ttf"), size)   # Segoe UI Emoji = 색 벡터(COLR) — 제 크기로 그려 흐림 없음
+        im = Image.new("RGBA", (size * 2, size * 2), (0, 0, 0, 0))
+        ImageDraw.Draw(im).text((size, size), ov["emoji"], font=font, embedded_color=True, anchor="mm")
+        im = im.crop(im.getbbox()).resize((size, size), Image.LANCZOS)
+    else:
+        raise SystemExit(f"모르는 꾸밈 {ov['kind']}")
+    im.save(dst)
+    return dst
+
+
+def _lerp_expr(keys, idx):
+    """[(t, x, y)…] 시각별 중심 → ffmpeg 식(사이는 직선으로 잇고 끝은 멈춤). idx 1=x 2=y. 원본 빨간 원이 퍽을 따라 움직인다."""
+    if len(keys) == 1:
+        return f"{keys[0][idx]}"
+    e = f"{keys[-1][idx]}"
+    for (t0, *p0), (t1, *p1) in reversed(list(zip(keys, keys[1:]))):
+        v0, v1 = p0[idx - 1], p1[idx - 1]
+        e = f"if(lt(t,{t1}),{v0}+({v1}-{v0})*(t-{t0})/{t1 - t0},{e})"
+    return f"if(lt(t,{keys[0][0]}),{keys[0][idx]},{e})"
+
+
+def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True, overlays=None):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
@@ -149,7 +206,23 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     # loop = 짤처럼 짧은 소스가 컷보다 짧으면 되풀이(짤 3초 < 컷 3.9초 — 10-16 4판)
     inp = ["-loop", "1", "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
-    va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf + ",scale=out_range=tv,format=yuv420p", "-color_range", "tv", "-an",
+    tail = ",scale=out_range=tv,format=yuv420p"
+    if not overlays:
+        va._run_ffmpeg(["ffmpeg", "-y", *inp, "-t", f"{dur:.3f}", "-vf", pre + vf + tail, "-color_range", "tv", "-an",
+                        "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
+        return out
+    # 꾸밈: 캔버스 좌표 중심 at=[x,y] 또는 path=[[t,x,y]…](컷 안 시각), t=[보이기 시작, 끝](컷 안 시각)
+    fc, ins, last = f"[0:v]{pre}{vf}[b0]", [], "b0"
+    for k, ov in enumerate(overlays):
+        png = overlay_png(ov, Path(out).with_name(Path(out).stem + f"_ov{k}.png"))
+        ins += ["-loop", "1", "-i", str(png)]
+        keys = [tuple(p) for p in ov["path"]] if ov.get("path") else [(0.0, *ov["at"])]
+        a, b = ov.get("t", [0.0, dur])
+        fc += (f";[{k + 1}:v]format=rgba[o{k}];[{last}][o{k}]overlay=x='{_lerp_expr(keys, 1)}-overlay_w/2':y='{_lerp_expr(keys, 2)}-overlay_h/2'"
+               f":enable='between(t,{a},{b})':eval=frame[b{k + 1}]")
+        last = f"b{k + 1}"
+    fc += f";[{last}]{tail.lstrip(',')}[v]"
+    va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", "-t", f"{dur:.3f}", "-color_range", "tv", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
 
@@ -193,10 +266,15 @@ def build(plan: dict):
             a2, b2 = max(a, t_a), min(b, t_b)
             sh = mshots[k]
             box = sh.get("box") or (pboxes[k % len(pboxes)] if pboxes else None)   # 칸 크기 기본 = 뜯기 cuts.picture_boxes 같은 순번
+            if sh.get("full") and not sh.get("box"):
+                box = None   # ★full=꽉 채움이 이긴다(10-16 3호: 틀 한 장이면 뜯기 칸이 full 컷까지 덮어 창 아래 칸으로 밀렸다)
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
             parts.append(shot_clip(base / sh["src"], sh["ss"] + (a2 - a), b2 - a2, win, sh.get("box_w", 750), sh.get("full", fi == 0 and not one), p, sh.get("ar"),
                                     None if (fi == 0 and not one) else box, sh.get("fit", "cover"), min_y, sh.get("src_crop"),
-                                    sh.get("kind") == "짤", sh.get("anchor", True)))
+                                    sh.get("kind") == "짤", sh.get("anchor", True),
+                                    # 컷이 틀 경계로 잘려 늦게 시작하면 꾸밈 시각도 그만큼 당긴다
+                                    [dict(o, t=[x - (a2 - a) for x in o["t"]], **({"path": [[p[0] - (a2 - a), p[1], p[2]] for p in o["path"]]} if o.get("path") else {}))
+                                     if o.get("t") else o for o in sh.get("overlays") or []] or None))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"
