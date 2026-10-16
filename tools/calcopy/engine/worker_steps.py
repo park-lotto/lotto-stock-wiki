@@ -82,9 +82,14 @@ def _preset(TF, ctx: Ctx, topic: dict | None) -> dict:
         raise StepError(f"프리셋: {e}") from None
 
 
+def _cid(topic: dict) -> str:
+    """엔진 후보 id — topic_find 프롬프트 예시가 'c1' 꼴이라 숫자만 주면 모델이 'c1' 로 바꿔 답한다(10-16 실측: 점수 '응답에 이 후보 없음')."""
+    return f"c{topic['id']}"
+
+
 def _cand(topic: dict) -> dict:
     src = topic.get("source") or {}
-    return {"id": str(topic["id"]), "topic": topic.get("name") or "", "query": src.get("query") or topic.get("name") or "",
+    return {"id": _cid(topic), "topic": topic.get("name") or "", "query": src.get("query") or topic.get("name") or "",
             "key": src.get("key") or src.get("query") or "", "source": src}
 
 
@@ -120,7 +125,7 @@ def step_bench(topic, ctx: Ctx) -> dict:
     wd = ctx.workdir(topic)
     llm = TF.LLM(budget=ctx.llm_budget)
     b = TF.bench(_cand(topic), wd, TF.NET, llm, ctx.extra.get("bench_n", 6))
-    arts = _exists({"벤치.md": wd / "벤치" / f"{topic['id']}.md", "벤치.json": wd / "벤치" / f"{topic['id']}.json"})
+    arts = _exists({"벤치.md": wd / "벤치" / f"{_cid(topic)}.md", "벤치.json": wd / "벤치" / f"{_cid(topic)}.json"})
     cost = {"gemini": _llm_n(llm)}
     if not b["points"]:
         raise StepError("벤치 포인트 0 — " + "; ".join(b["failed"])[:300], arts, cost)
@@ -135,6 +140,8 @@ def step_score(topic, ctx: Ctx) -> dict:
     c = _cand(topic)
     rows, err = TF.score([c], {c["id"]: topic.get("bench") or {}}, P["slug"], llm)
     cost = {"gemini": _llm_n(llm)}
+    if not err and c["id"] not in rows and len(rows) == 1:   # 후보 1개만 보냈다 — 답 id 를 바꿔 적어도 그 한 줄이 이 후보
+        rows = {c["id"]: next(iter(rows.values()))}
     if err or c["id"] not in rows:
         raise StepError(f"점수 LLM 실패: {err or '응답에 이 후보 없음'}", cost=cost)
     cs = TF._clean_scores(rows[c["id"]])           # 근거 없는 점수는 None — 서버에 숫자로 속여 넣지 않는다
@@ -144,8 +151,7 @@ def step_score(topic, ctx: Ctx) -> dict:
     if len(crit) < 5:
         raise StepError(f"근거 있는 점수 {len(crit)}개 < 5 — {cs['flags']}", cost=cost)
     return {"cost": cost, "data": {"score": {"criteria": crit, "total": TF.total(cs["scores"], ov), "overlap": ov["score"],
-                                             "overlap_with": ov.get("with"), "showable": (cs["scores"].get("showable") or {}).get("score"),
-                                             "flags": cs["flags"], "angle": rows[c["id"]].get("angle") or ""}}}
+                                             "overlap_with": ov.get("with"), "flags": cs["flags"], "angle": rows[c["id"]].get("angle") or ""}}}
 
 
 def step_assign(topic, ctx: Ctx) -> dict:
@@ -157,12 +163,16 @@ def step_script(topic, ctx: Ctx) -> dict:
     SE = _engine("script_engine")
     TF = _engine("topic_find")
     wd = ctx.workdir(topic) / "대본"
-    bench_md = ctx.workdir(topic) / "벤치" / f"{topic['id']}.md"
+    bench_md = ctx.workdir(topic) / "벤치" / f"{_cid(topic)}.md"
     llm = TF.LLM(budget=ctx.llm_budget)
     wd.mkdir(parents=True, exist_ok=True)
     tj = wd / "소재.json"     # script_engine.load_topic 이 읽는 꼴({topic,…}) — 5기준·각도가 대본_계획.md 에 실린다
-    tj.write_text(json.dumps({"id": topic["id"], "topic": topic.get("name") or "", "scores": topic.get("score") or {},
-                              "angle": (topic.get("score") or {}).get("angle") or "", "source": topic.get("source") or {}},
+    sc = topic.get("score") or {}
+    eng = {name: k for k, name in TF.CRITERIA}     # 서버엔 한국어 기준 이름(criteria) — 엔진 소재.json 은 영문 키 {score, why}
+    tj.write_text(json.dumps({"id": topic["id"], "topic": topic.get("name") or "", "angle": sc.get("angle") or "",
+                              "scores": {eng[n]: v for n, v in (sc.get("criteria") or {}).items() if n in eng},
+                              "overlap": {"score": sc.get("overlap"), "with": sc.get("overlap_with")}, "total": sc.get("total"),
+                              "source": topic.get("source") or {}},
                              ensure_ascii=False, indent=1), encoding="utf-8")
     S = SE.run(ctx.preset_of(topic), str(tj), wd, str(bench_md) if bench_md.exists() else None, llm=llm, log=ctx.log)
     arts = _exists({"대본.json": wd / "대본.json", "대본_검사.md": wd / "대본_검사.md", "대본_계획.md": wd / "대본_계획.md"})

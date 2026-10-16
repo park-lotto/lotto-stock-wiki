@@ -312,6 +312,7 @@ def main(argv=None):
     ap.add_argument("--source-kind", help="find 단계 소재 출처 유형(프리셋 manifest 에 없을 때)")
     ap.add_argument("--keywords", default="", help="find 검색어 쉼표 구분")
     ap.add_argument("--heartbeat", type=float, default=60)
+    ap.add_argument("--llm-budget", type=int, default=6, help="한 단계 무료 제미나이 호출 상한(topic_find.LLM)")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--once", action="store_true")
     g.add_argument("--loop", action="store_true")
@@ -325,6 +326,7 @@ def main(argv=None):
     w = Worker(Api(a.server, cookie=a.cookie, cookie_fn=cookie_fn), a.category, a.track, a.channel, a.name,
                Path(a.out) if a.out else None, preset=a.preset, hb_interval=a.heartbeat, find_every=a.find_every * 60,
                allowed_steps=[s.strip() for s in a.steps.split(",") if s.strip()] or None, extra=extra)
+    w.ctx.llm_budget = a.llm_budget
     if a.once:
         w.start_heartbeat()
         try:
