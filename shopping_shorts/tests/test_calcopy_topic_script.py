@@ -343,6 +343,55 @@ def test_captions_product_name_only_warns(inputs):
     assert S["final"]["check"]["ok"] and tm["product_warn"] and not tm["product_missing"]
 
 
+def test_range_number_written_as_single_value_fails():
+    """(4) 바나나 편 실례: 근거 '6~8배'를 '8배'로 단정 → 실패. 범위 그대로·근거에 따로 있는 단일값은 통과."""
+    facts = {"f1": {"text": "수입 바나나 가격이 국산의 6~8배", "url": ""}, "f2": {"text": "하루 3번 수확", "url": ""}}
+    hit = E.number_ranges(["가격이 무려 8배임", "가격이 6~8배임", "하루 3번 딴다고"], facts)
+    assert hit == {0: ["6~8"]}
+
+
+def test_comment_promoted_to_fact_and_unsourced_hype_fail():
+    """(5) 리센느 편 실례: 댓글 '전설의 포켓몬 수준'을 '취급을 받고 있음'으로(사실 승격) · 근거 없는 '극락' → 실패.
+    '댓글에선 …라는 반응' 꼴은 통과, 감탄 칸(화자 감상)은 전언 표식 대상 아님."""
+    facts = {"c1": {"text": "댓글(좋아요 900): 전설의 포켓몬 수준", "url": ""}, "f1": {"text": "한정판 3천 장 판매", "url": ""}}
+    bench = {"points": {}, "texts": []}
+    lines = [{"text": "팬들 사이에서 전설의 포켓몬 취급을 받고 있음", "facts": ["c1"]},
+             {"text": "댓글에선 전설의 포켓몬 수준이라는 반응", "facts": ["c1"]},
+             {"text": "한정판이라 사면 극락 간다는 얘기", "facts": ["f1"]},
+             {"text": "이건 진짜 갖고 싶네", "facts": ["c1"]}]
+    roles = ["반응", "반응", "진짜 이유", "감탄"]
+    hit = E.comment_as_fact(lines, facts, bench, roles)
+    assert 0 in hit and "댓글을 사실처럼" in hit[0][0]
+    assert 1 not in hit and 3 not in hit
+    assert hit[2] == ["근거 없는 과장 ['극락']"]
+
+
+def test_channel_linter_is_called_banggu():
+    """(6) 방구석 rules.lint(주인) 를 부른다 — 마지막 본문 줄 어미·혼잣말 ㅋㅋ 반려가 줄 번호로 붙고, 문장 수는 전체 반려."""
+    P = T.load_preset("banggu")
+    if not P["tteutgi"]:
+        pytest.skip("방구석 뜯기 없음")
+    sk = E.skeleton(P, "narration", None)
+    lines = [{"text": t, "facts": ["f1"]} for t in ("코스트코에 가면 꼭 산다는 EMMI 티라미수", "근데 사는 이유는 맛 때문이 아니라는데",
+                                                   "컵을 살펴보니 유리로 돼 있고", "정작 꽂힌 포인트는 따로 있다는데", "그건 바로 이 유리컵이 튼튼해서임",
+                                                   "아니 컵 때문에 산다니")]
+    cl = E.channel_lint("banggu", lines, sk, {"f1": {"text": "EMMI 티라미수 유리컵", "url": ""}}, "유리컵 때문에 산다는 티라미수")
+    assert cl["linter"] == "banggu.rules.lint"
+    assert any("bg_close" in m for m in cl["by_line"].get(4, []))          # 본문 마지막 줄은 ~다고/~라고
+    assert any("bg_comment_kk" in m for m in cl["by_line"].get(5, []))     # 혼잣말은 ㅋㅋ
+    assert any("bg_lines" in m for m in cl["global"])                      # 본문 5문장 < 6
+    assert E.channel_lint("yummyknow", lines, sk, {}, None)["linter"] is None
+
+
+def test_channel_length_range_from_channel_bench():
+    """(7) 나레 길이 = 채널 뜯기 편 받아쓰기 중앙값 ±20% — 방구석 311자(35초) 초안은 범위 밖."""
+    P = T.load_preset("banggu")
+    if not P["tteutgi"]:
+        pytest.skip("방구석 뜯기 없음")
+    (lo, hi), basis = E.channel_length(P, {}, 999)
+    assert "채널 뜯기" in basis and hi < 311 and lo > 100
+
+
 def test_llm_budget_stops_calls():
     llm = T.LLM(fn=lambda p, t: ({"ok": 1}, None), budget=1)
     assert llm("a", "x")[0] and llm("b", "y") == (None, "budget")

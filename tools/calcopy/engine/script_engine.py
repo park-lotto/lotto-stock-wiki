@@ -110,6 +110,31 @@ def load_bench(path: str | None) -> dict:
     return {"points": pts, "texts": []}
 
 
+CH_LEN_TOL = 0.20   # 채널 길이 = 벤치(채널 편들) 받아쓰기 글자 수 중앙값 ±20%(조율자 10-16: 311자=35초 초과 실례)
+
+
+def channel_length(P: dict, R: dict, one: int) -> tuple[tuple[int, int], str]:
+    """나레 전체 글자 범위(판단 주인). ① 채널 뜯기 편들(channel/<slug>/뜯기/*/뜯기.json) 받아쓰기 합의 중앙값 ±20% (3편 이상)
+    ② 갈래 rules.json length_chars 중앙값 ±20% ③ 프리셋 원본 1편 ±15%."""
+    totals = []
+    for f in sorted((P["chdir"] / "뜯기").glob("*/뜯기.json")):
+        try:
+            tr = (json.loads(f.read_text(encoding="utf-8")).get("audio") or {}).get("transcript") or []
+        except (OSError, ValueError):
+            continue
+        tr = tr.get("segments") or [] if isinstance(tr, dict) else tr
+        n = sum(len((t.get("text") or "").replace(" ", "")) for t in tr if isinstance(t, dict) and t.get("lang", "ko") == "ko")
+        if n:
+            totals.append(n)
+    if len(totals) >= 3:
+        m = st.median(totals)
+        return (int(m * (1 - CH_LEN_TOL)), int(m * (1 + CH_LEN_TOL)) + 1), f"채널 뜯기 {len(totals)}편 받아쓰기 중앙 {m}자 ±20%"
+    med = (R.get("length_chars") or {}).get("median")
+    if med:
+        return (int(med * (1 - CH_LEN_TOL)), int(med * (1 + CH_LEN_TOL)) + 1), f"rules.json length_chars 중앙 {med}자 ±20%"
+    return (int(one * (1 - NARR_TOTAL_TOL)), int(one * (1 + NARR_TOTAL_TOL)) + 1), f"프리셋 원본 1편 {one}자 ±15%"
+
+
 def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
     """프리셋 → 칸 목록과 길이 규칙. 판단 주인: 줄 길이 범위는 style_writer.line_ranges/_cap_range, 나레 전체는 원본 받아쓰기 합 ±15%."""
     J = json.loads(Path(P["tteutgi"]).read_text(encoding="utf-8")) if P.get("tteutgi") else {}
@@ -144,7 +169,7 @@ def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
         tr = tr.get("segments") or [] if isinstance(tr, dict) else tr
         orig = [t["text"].strip() for t in tr if isinstance(t, dict) and t.get("lang", "ko") == "ko"]
         T = sum(len(t.replace(" ", "")) for t in orig) or (R.get("length_chars") or {}).get("median") or 200
-        sk["total"] = (int(T * (1 - NARR_TOTAL_TOL)), int(T * (1 + NARR_TOTAL_TOL)) + 1)
+        sk["total"], sk["total_basis"] = channel_length(P, R, T)
         per = T / n
         sk["ranges"] = [(max(6, int(per * 0.4)), int(per * 2.0) + 1)] * n   # 줄은 느슨하게 — 판정은 전체 길이
         sk["orig"] = orig
@@ -204,7 +229,98 @@ def topic_match(texts: list[str], topic: dict, facts: dict, mode: str) -> dict:
             "product_missing": bool(terms) and not named and required, "product_warn": bool(terms) and not named and not required}
 
 
-def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_roles: tuple = (), topic: dict | None = None) -> dict:
+_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:~|∼|〜|–|-|에서)\s*(\d+(?:[.,]\d+)?)")
+HEARSAY = ("댓글", "반응", "라는", "다는", "라며", "이라며", "냐는", "얘기", "후기", "평이")   # "팬들 사이에서 …취급"은 전언이 아니라 단정(리센느 실례) — 넣지 않는다
+# 근거 없으면 못 쓰는 단정형 과장(10-16 리센느 '전설의 포켓몬 취급'·'극락 간다는'). 감탄(미쳤네·소름)은 채널 말투라 빼지 않는다.
+OPINION_ROLES = ("감탄", "인정", "댓글유도", "혼잣말")   # 화자 자신의 감상 칸 — 사실 주장이 아니라 전언 표식 대상 아님(과장 검사는 그대로)
+CLAIM_HYPE = ("극락", "전설", "역대급", "국민", "대란", "품절", "1위", "최초", "유일", "세계 최고", "가장", "끝판왕", "신드롬", "난리")
+
+
+def number_ranges(lines_text: list[str], facts: dict) -> dict:
+    """(4) 근거 글의 범위(a~b)를 대본이 한쪽 값으로만 쓰면 그 줄 실패 — '6~8배'를 '8배'로(10-16 바나나 편)."""
+    ft = " ".join(v["text"] for v in facts.values())
+    ends = {}
+    for a, b in _RANGE.findall(ft):
+        ends.setdefault(a, f"{a}~{b}")
+        ends.setdefault(b, f"{a}~{b}")
+    alone = _RANGE.sub(" ", ft)
+    out = {}
+    for k, t in enumerate(lines_text):
+        if _RANGE.search(t):
+            continue
+        hit = [ends[x] for x in re.findall(r"\d+(?:[.,]\d+)?", t)
+               if x in ends and not re.search(r"(?<![\d.,])" + re.escape(x) + r"(?![\d.,])", alone)]
+        if hit:
+            out[k] = hit
+    return out
+
+
+def comment_facts(facts: dict, bench: dict) -> set:
+    """댓글·반응 근거 번호 — c* 번호, 글에 '댓글'이 든 사실, 벤치 반응 포인트."""
+    ids = {k for k, v in facts.items() if k.startswith("c") or "댓글" in (v.get("text") or "")}
+    return ids | {k for k, v in bench["points"].items() if v.get("kind") == "reaction" or "댓글" in (v.get("text") or "")}
+
+
+def comment_as_fact(lines: list[dict], facts: dict, bench: dict, roles: list[str] | None = None) -> dict:
+    """(5) 댓글을 사실로 승격 금지: 근거가 전부 댓글·반응이면 그 줄에 전언 표식('댓글에선·~라는 반응')이 있어야 한다.
+    + 근거 글에 없는 단정형 과장(CLAIM_HYPE)은 실패(10-16 리센느 편)."""
+    cids = comment_facts(facts, bench)
+    src = " ".join(v["text"] for v in facts.values())
+    out = {}
+    for k, l in enumerate(lines):
+        t, ids = l.get("text") or "", set(l.get("facts") or [])
+        why = []
+        opinion = any(o in ((roles or [""] * len(lines))[k] if k < len(roles or []) else "") for o in OPINION_ROLES)
+        if ids and ids <= cids and not opinion and not any(h in t for h in HEARSAY):
+            why.append("댓글을 사실처럼(전언 표식 없음)")
+        hype = [w for w in CLAIM_HYPE if w in t and w not in src]
+        if hype:
+            why.append(f"근거 없는 과장 {hype}")
+        if why:
+            out[k] = why
+    return out
+
+
+def _banggu_lint(lines: list[dict], sk: dict, facts: dict, title):
+    """방구석 채널 린터(주인 = shopping_shorts/channel_presets/banggu/rules.lint)를 부른다 — 판정을 여기 다시 적지 않는다."""
+    from shopping_shorts.channel_presets.banggu import rules as BR
+    last_is_comment = bool(sk["roles"]) and "혼잣말" in sk["roles"][-1]
+    body_lines = lines[:-1] if last_is_comment and lines else lines
+    script = {"kind": "hidden", "title": title or "", "lines": [{"role": _role_name(r), "text": l.get("text") or ""} for r, l in zip(sk["roles"], body_lines)],
+              "comment": (lines[-1].get("text") or "") if last_is_comment and lines else ""}
+    issues = BR.rejects(BR.lint(script, {"source_text": " ".join(v["text"] for v in facts.values())}))
+    return issues, (len(lines) - 1 if last_is_comment and lines else None)
+
+
+CHANNEL_LINTERS = {"banggu": _banggu_lint}   # 채널 rules.lint 가 있는 곳만 — 새 채널은 여기 이름만 잇는다
+
+
+def channel_lint(slug, lines: list[dict], sk: dict, facts: dict, title) -> dict:
+    """(6) 채널 린터 결과를 줄 번호로: 'lines[-1]' → 마지막 본문 줄, 'comment' → 혼잣말 줄, found 글이 든 줄, 나머지(제목·길이·문장 수) → 전체."""
+    fn = CHANNEL_LINTERS.get(slug)
+    if not fn:
+        return {"linter": None, "by_line": {}, "global": []}
+    issues, comment_i = fn(lines, sk, facts, title)
+    by, glob = {}, []
+    body_n = comment_i if comment_i is not None else len(lines)
+    for i in issues:
+        msg = f"채널 규칙 {i.rule}: {i.why}"
+        k = None
+        if i.where == "lines[-1]":
+            k = body_n - 1
+        elif i.where == "comment" and comment_i is not None:
+            k = comment_i
+        elif i.found and i.rule not in ("bg_length", "bg_lines"):
+            k = next((j for j, l in enumerate(lines) if i.found in (l.get("text") or "")), None)
+        if k is None:
+            glob.append(msg)
+        else:
+            by.setdefault(k, []).append(msg)
+    return {"linter": f"{slug}.rules.lint", "by_line": by, "global": glob}
+
+
+def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_roles: tuple = (), topic: dict | None = None,
+                 slug: str | None = None, title: str | None = None) -> dict:
     """한 곳에서 판정 — style_writer 검사 + 역할 칸·근거·말투 섞임·전체 길이·소재 일치. 줄 번호는 0부터."""
     n = len(sk["roles"])
     R = sk["rules"] or {"examples": []}
@@ -252,26 +368,35 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
         if not (sk["total"][0] <= tot <= sk["total"][1]):
             total_off = {"chars": tot, "range": list(sk["total"]), "fix_line": (max if tot > sk["total"][1] else min)(range(len(chars)), key=lambda k: chars[k]) if chars else None}
     tm = topic_match(texts[:n], topic or {}, facts, sk["mode"]) if topic else {"other_brand": {}, "product_missing": False}
-    per_line = {"off_topic_brand": sorted(tm["other_brand"]), "product_missing": [0] if tm["product_missing"] else [], "role_missing": role_missing, "no_ground": no_ground, "len_off": len_off, "copied_orig": copied, "copied_bench": copied_bench,
+    rng = number_ranges(texts[:n], facts)
+    cmt = comment_as_fact(lines[:n], facts, bench, sk["roles"])
+    cl = channel_lint(slug, lines[:n], sk, facts, title) if slug else {"linter": None, "by_line": {}, "global": []}
+    per_line = {"range_as_single": sorted(rng), "comment_as_fact": sorted(cmt), "channel_lint": sorted(cl["by_line"]),
+                "off_topic_brand": sorted(tm["other_brand"]), "product_missing": [0] if tm["product_missing"] else [], "role_missing": role_missing, "no_ground": no_ground, "len_off": len_off, "copied_orig": copied, "copied_bench": copied_bench,
                 "describe": describe, "ending_off": ending_off, "numbers_unsourced": num_lines, "tone_off": tone_off, "off_tone_words": off_tone_words}
     chk = {**per_line, "n_lines": len(lines), "n_roles": n, "extra_lines": extra_lines, "unknown_ids": unknown_ids, "total_off": total_off,
            "chars": chars, "ranges": [list(r) for r in sk["ranges"]], "sec_est": round(sum(chars) / sk["cps"], 1) if sk.get("cps") else None,
            "est_px": base.get("est_px"), "orig_px": base.get("orig_px"), "width_median_pct": base.get("width_median_pct"),
-           "copied_8grams_vs_examples": base.get("copied_8grams_vs_examples"), "topic_match": tm}
+           "copied_8grams_vs_examples": base.get("copied_8grams_vs_examples"), "topic_match": tm,
+           "ranges_hit": rng, "comment_hit": cmt, "channel_lint_detail": cl, "total_basis": sk.get("total_basis")}
     chk["bad"] = bad_lines(chk)
-    chk["ok"] = not chk["bad"] and not extra_lines and not unknown_ids and not total_off and len(lines) == n
+    chk["ok"] = not chk["bad"] and not extra_lines and not unknown_ids and not total_off and len(lines) == n and not cl["global"]
     return chk
 
 
 def bad_lines(chk: dict) -> dict:
     """다시 쓸 줄 → 이유 목록(판단 주인). 전체 길이 어긋남은 가장 긴/짧은 줄에 붙인다."""
     why = {}
-    names = {"off_topic_brand": "소재 밖 브랜드명(소재 이탈)", "product_missing": "소재 제품명이 대본에 없음", "role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
+    names = {"range_as_single": "근거의 범위를 한쪽 값으로 단정", "comment_as_fact": "댓글 승격·근거 없는 과장", "channel_lint": "채널 규칙 반려",
+             "off_topic_brand": "소재 밖 브랜드명(소재 이탈)", "product_missing": "소재 제품명이 대본에 없음", "role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
              "copied_bench": "벤치 영상 문장과 겹침", "describe": "화면 묘사", "ending_off": "정해진 말끝으로 안 끝남",
              "numbers_unsourced": "사실에 없는 숫자", "tone_off": "말투 섞임(채널 말투 밖)", "off_tone_words": "톤 밖 낱말"}
+    detail = {"range_as_single": chk.get("ranges_hit") or {}, "comment_as_fact": chk.get("comment_hit") or {},
+              "channel_lint": (chk.get("channel_lint_detail") or {}).get("by_line") or {}}
     for key, label in names.items():
         for k in chk.get(key) or []:
-            why.setdefault(k, []).append(label)
+            d = detail.get(key, {}).get(k)
+            why.setdefault(k, []).append(label + (f" {d}" if d else ""))
     t = chk.get("total_off")
     if t and t.get("fix_line") is not None:
         why.setdefault(t["fix_line"], []).append(f"전체 {t['chars']}자 → {t['range'][0]}~{t['range'][1]}자")
@@ -302,9 +427,9 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
     if not d:
         return {"error": f"초안 LLM 실패: {err}", "tries": [{"error": err}], "prompt": prompt}
     lines = [l for l in d.get("lines") or d.get("items") or [] if isinstance(l, dict)]
-    chk = check_script(lines, sk, facts, bench, free_roles, topic)
-    tries.append({"lines": lines, "check": chk, "model": d.get("_model")})
     meta = {k: d.get(k) for k in ("angle", "twist", "title")}
+    chk = check_script(lines, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
+    tries.append({"lines": lines, "check": chk, "model": d.get("_model")})
     log(f"[초안] {len(lines)}줄 · 다시 쓸 줄 {list(chk['bad'])}")
     for r in range(MAX_REWRITES):
         if chk["ok"]:
@@ -318,6 +443,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
                          + (f"(소재 제품명 {chk['topic_match']['product_terms']} 를 넣어라)" if "소재 제품명이 대본에 없음" in why else "") + f" · 목표 {lo}~{hi}자")
         if chk["unknown_ids"]:
             fixes.append(f"없는 근거 번호 {chk['unknown_ids']} → 위 목록 번호만")
+        fixes += [f"전체 — {m}" for m in (chk.get("channel_lint_detail") or {}).get("global") or []]
         cur = _merge(lines, [], len(sk["roles"]))
         d2, err = llm(prompt + "\n\n" + FIX_PROMPT.format(lines=json.dumps([{"i": i + 1, **l} for i, l in enumerate(cur)], ensure_ascii=False),
                                                          fixes="\n".join(fixes), honor=sk["honorific"]), f"rewrite{r + 1}")
@@ -326,7 +452,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
             log(f"[다시 쓰기 {r + 1}] LLM 실패 {err} — 멈춤")
             break
         lines = _merge(cur, d2.get("lines") or d2.get("items") or [], len(sk["roles"]))
-        chk = check_script(lines, sk, facts, bench, free_roles, topic)
+        chk = check_script(lines, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"))
         tries.append({"lines": lines, "check": chk, "model": d2.get("_model"), "round": r + 1, "asked": list(bad)})
         log(f"[다시 쓰기 {r + 1}] 남은 줄 {list(chk['bad'])}")
     return {"lines": lines, "check": chk, "tries": tries, "meta": meta}
@@ -357,6 +483,10 @@ def build_outputs(out: Path, P: dict, topic: dict, facts: dict, bench: dict, sk:
         md += [f"- ⚠ {res['error']}", ""]
     if c.get("total_off"):
         md.append(f"- ⚠ 전체 길이 {c['total_off']['chars']}자 → {c['total_off']['range']}")
+    for m in (c.get("channel_lint_detail") or {}).get("global") or []:
+        md.append(f"- ⚠ {m}")
+    if c.get("total_basis"):
+        md.append(f"- 길이 기준: {c['total_basis']}")
     if c.get("sec_est"):
         md.append(f"- 예상 길이 {c['sec_est']}초(cps {sk['cps']})")
     if c.get("unknown_ids"):
