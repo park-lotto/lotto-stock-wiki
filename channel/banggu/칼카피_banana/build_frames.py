@@ -14,7 +14,7 @@ from shopping_shorts.calcopy_frame import schema
 OUT = Path(sys.argv[1])
 BRAND = "골방"          # 원본 손글씨 로고 '방구석' 자리 — 남의 채널 이름은 그대로 안 쓴다(rGFX 선례 '맛잘알 친구들'). 바꾸려면 여기 한 곳
 POST = "50년째 모양을 못 바꾼다는 바나나맛우유"     # 게시글 제목 = 훅 띠 문장 = 나레 첫 문장
-HOOK = ("50년째 못 바꾼", "바나나맛우유 모양")   # 첫 줄은 짧게(≡·돋보기 안 덮게, 1편 조율자 지적)
+HOOK = ("바나나우유", "50년째 못 바꾼 모양")   # 첫 줄은 짧게(≡·돋보기 안 덮게, 1편 조율자 지적)
 # 돋보기(원본 x904~987 y128~211, 검정 선) — 텍스트 글꼴에 없는 모양이라 작은 SVG 그림 층(공백·따옴표 없는 data URI, 300자 제한)
 SEARCH = ("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2084%2084%27%20fill=%27none%27"
           "%20stroke=%27black%27%20stroke-width=%277%27%3E%3Ccircle%20cx=%2734%27%20cy=%2734%27%20r=%2728%27/%3E%3Cpath%20d=%27M54%2054L80%2080%27/%3E%3C/svg%3E")
