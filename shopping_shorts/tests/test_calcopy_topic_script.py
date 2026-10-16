@@ -240,18 +240,57 @@ def test_source_kind_from_manifest_or_required():
         T.run("yummyknow", Path("."), source_kind=None, keywords=["x"], net=_fake_net(), llm=FakeLLM({}), log=lambda *_: None)
 
 
-def test_concrete_nouns_and_why():
-    """검색어 = 구체 명사(해시태그·고유명사)만, 잡음·꾸밈 낱말 없음, 잘린 해시태그 없음, 검색어마다 '왜' 한 줄."""
-    top = [{"id": "a", "views": 8_800_000, "title": "Make sure #BoneConductionSpeaker #Household insane #BudgetFrie..."},
-           {"id": "b", "views": 1_000, "title": "Why Costco Korea felt so bad"}, {"id": "c", "views": 900, "title": "Costco Korea painting secret"}]
-    nouns = T.concrete_nouns(top)
-    names = [x["noun"] for x in nouns]
-    assert "bone conduction speaker" in names and "costco korea" in names
-    assert not {"household", "budget frie", "insane", "felt", "painting", "secret"} & set(names)
-    qs = T.target_queries("제품비하인드", nouns + ["편의점 신메뉴"], 6)
-    assert all(q["why"] for q in qs) and "해시태그" in qs[0]["why"]
-    assert {"q": "편의점 신메뉴", "why": "출처 유형 '제품비하인드' 틀 '{n} 신상' + 사람 지정(--keywords)"} in qs
-    assert "costco korea 신상" in [q["q"] for q in qs]
+def test_db_candidates_from_reference_db_not_our_titles(tmp_path):
+    """해외영상 = reference.db 해외 참고 채널 대표 영상 → 제목·날짜(메타) → 최근 60일만 → 제품 명사(LLM) → 후보는 그 히트 영상.
+    오래된 영상·제품 아닌 제목은 빠지고 이유가 남는다(10-16 실측 표본: Kaiping Austler 'LED Basin Faucet' 8,192만)."""
+    import datetime as dt
+    today = dt.date.today()
+    rows = [{"url": "https://www.youtube.com/shorts/h1", "id": "h1", "username": "Kaiping Austler", "views": 81_921_392, "keywords": ["gadgets"]},
+            {"url": "https://www.youtube.com/shorts/h2", "id": "h2", "username": "Nick", "views": 70_000_000, "keywords": ["gadget"]},
+            {"url": "https://www.youtube.com/shorts/h3", "id": "h3", "username": "Old", "views": 60_000_000, "keywords": ["gadget"]}]
+    meta = {"h1": {"date": today.strftime("%Y%m%d"), "duration": 8.0, "title": "LED Basin Faucet for wholesale buyer #faucet"},
+            "h2": {"date": today.strftime("%Y%m%d"), "duration": 29.0, "title": "1 Second vs 1 Hour Chicken"},
+            "h3": {"date": (today - dt.timedelta(days=400)).strftime("%Y%m%d"), "duration": 20.0, "title": "old gadget"}}
+    net = {**_fake_net(), "db_top": lambda n: rows, "yt_meta": lambda vid: meta[vid]}
+    llm = FakeLLM({"db_nouns": {"items": [{"i": 0, "noun": "led basin faucet", "why": "LED Basin Faucet"}, {"i": 1, "noun": "", "why": "요리"}]},
+                   "score": {"scores": []}})
+    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", bench_n=1, net=net, llm=llm, log=lambda *_: None, limits=T.Limits(sleep=lambda s: None))
+    assert [c["query"] for c in res["candidates"]] == ["led basin faucet"]
+    c = res["candidates"][0]
+    assert c["source"]["via"].startswith("reference.db") and c["source"]["url"].endswith("h1")
+    assert "reference.db" in res["queries"][0]["why"] and "Kaiping" in res["queries"][0]["why"]
+    assert "old gadget" not in llm.prompts["db_nouns"]   # 400일 전 영상은 명사 뽑기 전에 빠진다
+    assert any("오래됨 1" in f["why"] for f in res["failed"])
+
+
+def test_db_failure_recorded_no_fallback_to_our_titles(tmp_path):
+    def boom(n):
+        raise RuntimeError("ssh 막힘")
+    llm = FakeLLM({"db_nouns": {"items": [{"i": 0, "noun": "fallback noun", "why": "x"}]}})   # 뭔가로 되돌아가면 후보가 생기게
+    res = T.run(SSEOL, tmp_path, n=5, source_kind="해외영상", net={**_fake_net(), "db_top": boom, "yt_meta": lambda v: {}}, llm=llm, log=lambda *_: None,
+                limits=T.Limits(sleep=lambda s: None))
+    assert res["candidates"] == [] and any(f["where"] == "reference.db" for f in res["failed"])
+    assert "db_nouns" not in llm.tags
+
+
+def test_behind_queries_use_channel_angles_not_new_items():
+    qs = [q["q"] for q in T.target_queries("제품비하인드", ["코스트코", "맘스터치"], 6)]
+    assert qs == ["코스트코 억울", "맘스터치 영업비밀"] and not any("신상" in q for q in qs)
+    with pytest.raises(SystemExit):   # 제품비하인드는 구체 명사를 사람이 준다(과거 제목에서 뽑지 않는다)
+        T.run("yummyknow", Path("."), source_kind="제품비하인드", net=_fake_net(), llm=FakeLLM({}), log=lambda *_: None)
+
+
+def test_official_and_ad_videos_excluded(tmp_path):
+    """다이소 공식 채널 홍보·'광고' 표기 영상은 제품비하인드 후보에서 빠지고 이유가 남는다(10-16 실측: 후보 3개 전부 다이소 공식)."""
+    vids = [{"id": "o1", "duration": 30, "views": 9, "title": "다이소 신상 공개", "channel": "다이소", "url": "u/o1"},
+            {"id": "a1", "duration": 30, "views": 8, "title": "코스트코 신상 (유료광고)", "channel": "리뷰어", "url": "u/a1"},
+            {"id": "k1", "duration": 30, "views": 7, "title": "다이소 억울한 이유", "channel": "썰채널", "url": "u/k1"}]
+    net = {**_fake_net(), "yt_search": lambda q, n, m: vids}
+    cands, failed = T.gather("제품비하인드", ["다이소 억울"], 5, None, set(), net, lambda *_: None, T.Limits(sleep=lambda s: None), 5,
+                             brands=["다이소", "코스트코"])
+    assert [c["source"]["id"] for c in cands] == ["k1"]
+    why = " ".join(f["why"] for f in failed)
+    assert "공식 채널" in why and "광고 표기" in why
 
 
 def test_limit_exceeded_stops_and_records(tmp_path):

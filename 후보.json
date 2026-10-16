@@ -1,0 +1,42 @@
+{
+ "engine": "topic_find v1",
+ "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+ "slug": "sseolpulda",
+ "source_kind": "해외영상",
+ "keywords": [
+  "x"
+ ],
+ "queries": [
+  {
+   "q": "x",
+   "why": "출처 유형 '해외영상' 틀 '{n}' + 사람 지정(--keywords)"
+  }
+ ],
+ "months": 6,
+ "made_at": "2026-10-16T10:51:55",
+ "candidates": [],
+ "recommend": [],
+ "failed": [
+  {
+   "where": "yt_search x",
+   "why": "결과 0"
+  },
+  {
+   "where": "score",
+   "why": "후보 0"
+  }
+ ],
+ "llm_calls": [],
+ "limits": {
+  "meta": 10,
+  "requests": 1,
+  "max_meta": 100,
+  "max_queries": 6,
+  "per_query": 20,
+  "rate": 1.0,
+  "bench_top": 3,
+  "stopped": null
+ },
+ "stopped": null,
+ "note": "고르는 건 사람/오푸스 자리 — recommend 는 점수 순 추천일 뿐"
+}

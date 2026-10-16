@@ -20,6 +20,7 @@
         "outline":{"px":0,"rgb":[0,0,0]},           # 외곽선(없으면 null, px 0 도 '없음'으로 유효)
         "line_outline":[null,[6,255,255,255]],      # 줄마다 외곽선 [px,r,g,b]|null(없으면 null = 모든 줄 outline)
         "shadow":{"dx":0,"dy":4,"blur":6,"rgb":[0,0,0]},   # 그림자(없으면 null)
+        "glow":{"px":60,"rgb":[0,255,0]},            # 글로우 — 같은 색 번짐 빛(없으면 null)
         "box":{"rgb":[255,255,255],"pad":12,"radius":8},   # 글자 상자(없으면 null)
         "italic": false, "letter_spacing": 0,       # 자간 px(0·음수 유효) — 글자마다(공백 포함) 뒤에 붙는다(CSS)
         "valign": "center",                         # 여러 줄 칸 안 세로 자리: center | top(누적형 자막 — 1줄일 때도 첫 줄 자리)
@@ -174,6 +175,13 @@ def _text(layer, where, W, H):
                   "blur": _num(shadow.get("blur", 0), where + ".shadow.blur", 0, 200),
                   "rgb": _rgb(shadow.get("rgb"), where + ".shadow.rgb")}
     out["shadow"] = shadow
+    glow = _opt(layer, "glow")
+    if glow is not None:
+        # 글로우(글자 둘레 번짐 빛, 핫템 채널명 초록) — 렌더러가 같은 색 text-shadow 여러 겹(px/4·px/2·px)으로 그린다
+        if not isinstance(glow, dict):
+            raise FrameError(f"{where}.glow: {{px,rgb}} 이거나 null 이어야 합니다")
+        glow = {"px": _num(glow.get("px"), where + ".glow.px", 1, 200), "rgb": _rgb(glow.get("rgb"), where + ".glow.rgb")}
+    out["glow"] = glow
     box = _opt(layer, "box")
     if box is not None:
         if not isinstance(box, dict):

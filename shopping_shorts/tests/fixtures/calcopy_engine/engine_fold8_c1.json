@@ -1,0 +1,80 @@
+{
+ "name": "engine_fold8_c1",
+ "who": "engine",
+ "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
+ "slug": "sseolpulda",
+ "mode": "captions",
+ "topic": "All-new Unfolds Galaxy Z Fold8 Ultra and Fold8 Samsung",
+ "title": "삼성 폴드8 울트라\n역대급 실물 유출?",
+ "lines": [
+  {
+   "fn": "발견 맥락",
+   "text": "삼성 공식 쇼츠 조회수 삼천만 넘길래",
+   "facts": [
+    "f1"
+   ]
+  },
+  {
+   "fn": "의심",
+   "text": "울트라나온다길래안믿었는데",
+   "facts": [
+    "f1"
+   ]
+  },
+  {
+   "fn": "반전 시연",
+   "text": "두 가지 모양 나오면",
+   "facts": [
+    "f1"
+   ]
+  },
+  {
+   "fn": "결과 과장",
+   "text": "세상에서 제일 가벼운 폴드폰 탄생함;;",
+   "facts": [
+    "f2"
+   ]
+  },
+  {
+   "fn": "감탄",
+   "text": "댓글창안닫은거멋지네",
+   "facts": [
+    "f4"
+   ]
+  },
+  {
+   "fn": "인정·댓글유도",
+   "text": "언젠가 꼭 사고 싶다 인정?",
+   "facts": [
+    "f5"
+   ]
+  }
+ ],
+ "facts": {
+  "f1": {
+   "text": "삼성 공식 쇼츠(2026-07-22, 조회 3,205만): 갤럭시 Z 폴드8 울트라와 폴드8 두 가지 모양으로 나옴 — 'Two distinct shapes'",
+   "url": "https://www.youtube.com/shorts/3vvJeRHe3sk"
+  },
+  "f2": {
+   "text": "삼성 공식 설명: 폴드8은 'world's lightest fold'(삼성 주장: 세상에서 가장 가벼운 폴드), 'So flat, so smooth'",
+   "url": "https://www.youtube.com/shorts/3vvJeRHe3sk"
+  },
+  "f3": {
+   "text": "공식 쇼츠 댓글(좋아요 90): 'whos here after iphone duo?'",
+   "url": "https://www.youtube.com/shorts/3vvJeRHe3sk"
+  },
+  "f4": {
+   "text": "공식 쇼츠 댓글(좋아요 77): '댓글 창 안 닫아 줘서 고맙다 삼성'(THANKS SAMSUNG FOR NOT CLOSE THE COMMENT SECTION)",
+   "url": "https://www.youtube.com/shorts/3vvJeRHe3sk"
+  },
+  "f5": {
+   "text": "공식 쇼츠 댓글(좋아요 11): 'I can't really afford it... but someday I will!'(지금은 못 사지만 언젠가는)",
+   "url": "https://www.youtube.com/shorts/3vvJeRHe3sk"
+  }
+ },
+ "bench": {
+  "points": {},
+  "texts": []
+ },
+ "from": "C:/숏템_칼카피/sseolpulda/소재찾기_1016/대본_c1/대본.json"
+}

@@ -232,8 +232,8 @@ def topic_match(texts: list[str], topic: dict, facts: dict, mode: str) -> dict:
 _RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:~|∼|〜|–|-|에서)\s*(\d+(?:[.,]\d+)?)")
 HEARSAY = ("댓글", "반응", "라는", "다는", "라며", "이라며", "냐는", "얘기", "후기", "평이")   # "팬들 사이에서 …취급"은 전언이 아니라 단정(리센느 실례) — 넣지 않는다
 # 근거 없으면 못 쓰는 단정형 과장(10-16 리센느 '전설의 포켓몬 취급'·'극락 간다는'). 감탄(미쳤네·소름)은 채널 말투라 빼지 않는다.
-OPINION_ROLES = ("감탄", "인정", "댓글유도", "혼잣말")   # 화자 자신의 감상 칸 — 사실 주장이 아니라 전언 표식 대상 아님(과장 검사는 그대로)
-CLAIM_HYPE = ("극락", "전설", "역대급", "국민", "대란", "품절", "1위", "최초", "유일", "세계 최고", "가장", "끝판왕", "신드롬", "난리")
+OPINION_ROLES = ("감탄", "인정", "댓글유도", "혼잣말", "의심")   # 화자 자신의 감상 칸 — 사실 주장이 아니라 전언 표식 대상 아님(과장 검사는 그대로)
+CLAIM_HYPE = ("극락", "전설", "역대급", "국민", "대란", "품절", "1위", "최초", "유일", "세계 최고", "가장", "끝판왕", "신드롬")   # '난리'는 반응 묘사(LED 손 대본 '댓글이 …라고 난리길래')라 뺀다
 
 
 def number_ranges(lines_text: list[str], facts: dict) -> dict:
@@ -257,7 +257,7 @@ def number_ranges(lines_text: list[str], facts: dict) -> dict:
 
 def comment_facts(facts: dict, bench: dict) -> set:
     """댓글·반응 근거 번호 — c* 번호, 글에 '댓글'이 든 사실, 벤치 반응 포인트."""
-    ids = {k for k, v in facts.items() if k.startswith("c") or "댓글" in (v.get("text") or "")}
+    ids = {k for k, v in facts.items() if k.startswith("c") or "댓글" in (v.get("text") or "")[:20]}   # 글 머리가 댓글인 근거만(관찰 뒤에 댓글을 덧붙인 근거는 사실)
     return ids | {k for k, v in bench["points"].items() if v.get("kind") == "reaction" or "댓글" in (v.get("text") or "")}
 
 

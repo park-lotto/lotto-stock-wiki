@@ -137,88 +137,31 @@ def _tokens(title: str) -> list[str]:
     return [w.lower() for w in re.findall(r"[가-힣]{2,}|[A-Za-z][A-Za-z']{2,}", t) if w.lower() not in STOP]
 
 
-def _hashtags(title: str) -> list[str]:
-    """#BoneConductionSpeaker → 'bone conduction speaker' — 해시태그는 제품·종류 이름이라 검색어로 가장 쓸 만하다."""
-    out = []
-    for h in re.findall(r"#(\w+)", title or ""):
-        ph = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", h).lower().strip()
-        if len(ph) >= 3 and ph not in STOP:
-            out.append(ph)
-    return out
-
-
 # top50 n-gram 에서 나온 잡음(10-16 실측 'household'·'painting'·'seed'·'felt'·'causing' — 구체 명사가 아니다)
 NOISE = {"household", "painting", "seed", "felt", "causing", "surprisingly", "delicious", "trend", "brand", "cheese", "chicken", "budget",
          "double", "living", "room", "space", "must", "have", "camping", "hand", "hands", "home", "homehacks", "relatable", "asmr",
          "dessert", "menu", "snack", "korean", "korea's", "mr", "ms", "update", "신상", "신메뉴", "viral"}
 
 # 소재 출처 유형 + 구체 명사 = 검색어(사장님 10-16 "천천히 타겟 서칭, 무작위로 받지 말고"). 해시태그 피드 전체 긁기는 하지 않는다.
-QUERY_TEMPLATES = {"해외영상": "{n}", "제품비하인드": "{n} 신상", "커뮤니티": "{n}", "뉴스": "{n}", "고객제품": "{n}"}
+QUERY_TEMPLATES = {"해외영상": "{n}", "제품비하인드": "{n} {angle}", "커뮤니티": "{n}", "뉴스": "{n}", "고객제품": "{n}"}
+# 제품비하인드 각도 낱말 — 채널 rules.json 의 topic_angles 가 주인. 없을 때 기본(조율자 10-16: '{n} 신상'은 브랜드 공식 홍보를 물어왔다 —
+# yummyknow top50 제목 'felt misunderstood·flustered·trade secrets·mistake·wronged'의 결)
+DEFAULT_ANGLES = ("억울", "영업비밀", "실수", "숨은 이유", "논란")
 
 
-def _caps(title: str) -> list[str]:
-    """영어 제목의 고유명사 덩어리(대문자 낱말 연속, 꾸밈·잡음 낱말에서 끊는다) — 'Why Costco Korea felt' → 'costco korea'."""
-    t = re.sub(r"#\w+", " ", title or "")
-    out, cur = [], []
-    for w in re.findall(r"[A-Za-z][A-Za-z'’]*|[^A-Za-z\s]+", t):
-        lw = w.lower().replace("’", "'")
-        if w[:1].isupper() and len(w) >= 2 and lw not in STOP and lw not in NOISE:
-            cur.append(lw)
-        else:
-            if cur:
-                out.append(" ".join(cur))
-            cur = []
-    if cur:
-        out.append(" ".join(cur))
-    return out
-
-
-def concrete_nouns(top: list[dict], k: int = 6) -> list[str]:
-    """채널 top50 제목에서 구체 명사(제품명·브랜드)만: 해시태그(제품 이름) ×2 + 제목 2편 이상에 나온 고유명사 덩어리·한글 낱말.
-    잘린 제목('…' 끝)의 마지막 해시태그는 잘린 글자라 뺀다('budget frie')."""
-    sc, df, src = Counter(), Counter(), {}
-    tags = set()
-    for v in top:
-        title = v.get("title", "")
-        w = math.log10(max(int(v.get("views") or 0), 10))
-        hs = _hashtags(title)
-        if title.rstrip().endswith(("...", "…")) and hs:
-            hs = hs[:-1]
-        hs = [h for h in hs if not any(x in NOISE for x in h.split())]
-        tags |= set(hs)
-        ko = [x for x in re.findall(r"[가-힣]{2,}", re.sub(r"#\S+", " ", title)) if x not in STOP]
-        grams = set(_caps(title)) | set(ko)
-        for g in grams:
-            df[g] += 1
-        for g in grams | set(hs):
-            sc[g] += w * (2.0 if g in hs else 1.0)
-            if g not in src or (v.get("views") or 0) > src[g][1]:
-                src[g] = (v.get("id"), v.get("views") or 0, title[:40])
-    out = []
-    for g, _ in sc.most_common():
-        if g not in tags and df[g] < 2:
-            continue
-        if g in STOP or g in NOISE or any(g in o or o in g for o in out):
-            continue
-        out.append(g)
-        if len(out) >= k:
-            break
-    return [{"noun": g, "why": (f"해시태그(제품 이름)" if g in tags else f"고유명사·낱말 top50 {df[g]}편") +
-             f" · 최고 조회 {src[g][1]:,} {src[g][0]} '{src[g][2]}'"} for g in out]
-
-
-def target_queries(kind: str, nouns: list, max_queries: int) -> list[dict]:
+def target_queries(kind: str, nouns: list, max_queries: int, angles: tuple = DEFAULT_ANGLES) -> list[dict]:
     """검색어 = 출처 유형 틀 + 구체 명사 → [{q, why}]. why = 왜 이 검색어인가(후보표에 한 줄씩 — 무작위가 아님을 보인다).
-    nouns = 글(사람 지정 --keywords) 또는 concrete_nouns 의 {noun, why}. 두 낱말 이상 한글 지정어('편의점 신메뉴')는 그대로."""
+    nouns = 글(사람 지정 --keywords) 또는 {noun, why}(db_candidates). 두 낱말 이상 한글 지정어('편의점 신메뉴')는 그대로."""
     tpl = QUERY_TEMPLATES[kind]
     out, seen = [], set()
     for x in nouns:
         n, why = (x["noun"], x["why"]) if isinstance(x, dict) else (x.strip(), "사람 지정(--keywords)")
-        q = n if (" " in n and kind != "해외영상" and not n.isascii()) else tpl.format(n=n)
+        ang = angles[len(out) % len(angles)] if angles else ""
+        q = n if (" " in n and kind != "해외영상" and not n.isascii()) else tpl.format(n=n, angle=ang).strip()
         if q in seen:
             continue
         seen.add(q)
-        out.append({"q": q, "why": f"출처 유형 '{kind}' 틀 '{tpl}' + {why}"})
+        out.append({"q": q, "why": f"출처 유형 '{kind}' 틀 '{tpl}'" + (f"(각도 '{ang}')" if "{angle}" in tpl else "") + f" + {why}"})
     return out[:max_queries]
 
 
@@ -279,6 +222,7 @@ def _flat(cmd: list[str], timeout: int) -> tuple[list[dict], str | None]:
         if len(p) < 4 or p[1] in ("NA", "None", ""):
             continue
         out.append({"id": p[0], "duration": float(p[1]), "views": int(p[2]) if p[2].isdigit() else None, "title": p[3],
+                    "channel": p[4] if len(p) > 4 and p[4] not in ("NA", "None") else None,
                     "url": f"https://www.youtube.com/shorts/{p[0]}"})
     return out, (None if out else f"0건 rc={r.returncode} {(r.stderr or '')[-80:].strip()}")
 
@@ -287,7 +231,7 @@ def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
     """유튜브 쇼츠 후보 목록(flat: id·제목·조회·길이). 정렬·날짜 판정은 부르는 쪽(gather)이 로컬에서 한다.
     ① 검색 페이지 + sp(짧은·올린 날짜) 필터, 30초 ② 실패·0건이면 ytsearch{2n, ≤40}(관련도 순) 폴백 — 폴백 이유는 항목 'fallback' 에.
     쇼츠 길이 YT_SHORT(60초) 넘는 것은 뺀다."""
-    fmt = "%(id)s	%(duration)s	%(view_count)s	%(title)s"
+    fmt = "%(id)s	%(duration)s	%(view_count)s	%(title)s	%(channel)s"
     url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=" + _yt_sp(months)
     sp_cmd = ["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--flat-playlist", "-I", f"1:{n}", "--print", fmt, url]
     items, why = _flat(sp_cmd, 30)
@@ -337,8 +281,104 @@ def yt_detail(vid: str, n_comments: int = 50) -> dict:
         return {"id": vid, "failed": (r.stderr or "")[-200:].strip() or "빈 응답"}
     cm = sorted(d.get("comments") or [], key=lambda c: -(c.get("like_count") or 0))[:n_comments]
     return {"id": vid, "url": f"https://www.youtube.com/shorts/{vid}", "title": d.get("title"), "views": d.get("view_count"),
+            "channel": d.get("channel") or d.get("uploader"), "verified": bool(d.get("channel_is_verified")),
             "date": d.get("upload_date"), "description": (d.get("description") or "")[:600],
             "comments": [{"likes": c.get("like_count") or 0, "text": (c.get("text") or "")[:200], "id": c.get("id")} for c in cm]}
+
+
+# 라이브 발굴 DB(읽기 전용) — 해외 참고 채널 표 overseas_ref_channel(category '해외반응', 제품 쪽 키워드)의 대표 영상(top_video·top_views).
+# 10-16 실측: reel_history 제품 카테고리는 한글 캡션이 아닌 행이 거의 다 '빈 캡션 인스타'라 해외 계정 판별이 안 됐다 → 해외 표를 쓴다.
+REF_SSH = "ubuntu@3.35.251.172"
+REF_KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+REF_DB = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db"
+PRODUCT_KW = ("gadget", "gadgets", "innovative gadgets", "useful inventions", "cleaning tools", "outdoor tools", "home improvement",
+              "diy", "tech", "unboxing", "creative", "kitchen")   # overseas_ref_channel.keywords 10-16 실측 분포 중 제품 쪽
+_DB_PY = """
+import sqlite3, json, sys
+n, kws = int(sys.argv[1]), set(sys.argv[2].split(','))
+c = sqlite3.connect('file:' + 'DBPATH' + '?mode=ro', uri=True)
+rows = []
+for cid, title, subs, top, tv, kw, upd in c.execute("select channel_id, title, subs, top_video, top_views, keywords, updated_at from overseas_ref_channel "
+                                                  "where category='해외반응' and top_video is not null order by top_views desc"):
+    k = set(json.loads(kw or '[]'))
+    if not (k & kws):
+        continue
+    rows.append({'url': 'https://www.youtube.com/shorts/' + top, 'id': top, 'username': title, 'subs': subs, 'views': tv,
+                 'keywords': sorted(k), 'updated_at': upd, 'channel_id': cid})
+    if len(rows) >= n:
+        break
+print(json.dumps(rows, ensure_ascii=False))
+"""
+
+
+def db_top(n: int = 20) -> list[dict]:
+    """reference.db overseas_ref_channel — 해외반응·제품 키워드 채널의 대표 영상 n개(조회 순). ssh 로 읽기 전용(mode=ro)."""
+    r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", REF_KEY, REF_SSH, "python3", "-", str(n), ",".join(PRODUCT_KW)],
+                       input=_DB_PY.replace("DBPATH", REF_DB), capture_output=True, encoding="utf-8", errors="replace", timeout=90)
+    if r.returncode != 0:
+        raise RuntimeError(f"reference.db 읽기 실패 rc={r.returncode} {(r.stderr or '')[-160:]}")
+    return json.loads(r.stdout or "[]")
+
+
+def yt_meta(vid: str) -> dict:
+    """영상 1편 제목·올린 날짜(android 클라이언트, 상세 댓글 없이 가볍게)."""
+    try:
+        r = subprocess.run(["yt-dlp", "--socket-timeout", "15", "--skip-download", "--extractor-args", "youtube:player_client=android",
+                            "--print", "%(upload_date)s\t%(duration)s\t%(title)s", f"https://www.youtube.com/watch?v={vid}"],
+                           capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=40)
+    except subprocess.TimeoutExpired:
+        return {"failed": "시간 초과 40초"}
+    line = (r.stdout or "").strip().splitlines()
+    p = line[-1].split("\t") if line else []
+    if len(p) < 3 or not p[0].isdigit():
+        return {"failed": (r.stderr or "")[-120:].strip() or "빈 응답"}
+    return {"date": p[0], "duration": float(p[1]) if p[1].replace(".", "", 1).isdigit() else None, "title": p[2]}
+
+
+NOUN_PROMPT = """아래는 해외에서 조회수가 터진 쇼츠의 캡션들이다. 각 캡션에서 **제품 이름**을 유튜브 검색어(영어 2~4낱말, 일반 명사 — 예: 'bone conduction speaker', 'led basin faucet')로 하나씩 뽑아라.
+제품이 아니면(사람·동물·요리·풍경·춤·브이로그) noun 을 빈칸으로. 캡션에 없는 제품을 만들지 마라.
+출력 JSON만: {{"items":[{{"i":번호,"noun":"검색어 또는 빈칸","why":"캡션의 어느 말에서"}}]}}
+
+{caps}"""
+
+
+def db_nouns(rows: list[dict], llm, k: int = 6) -> tuple[list[dict], str | None]:
+    """DB 영상 캡션 → 제품 명사(LLM 1회). 같은 명사는 조회 높은 영상 하나로. 실패면 (빈 목록, 이유)."""
+    caps = "\n".join(f"{i}. ({r.get('category')}·조회 {r.get('views')}) {(r.get('caption') or '')[:160]}" for i, r in enumerate(rows))
+    d, err = llm(NOUN_PROMPT.format(caps=caps), "db_nouns")
+    if not d:
+        return [], f"명사 뽑기 LLM 실패: {err}"
+    out, seen = [], set()
+    for it in d.get("items") or []:
+        try:
+            r = rows[int(it.get("i"))]
+        except (TypeError, ValueError, IndexError):
+            continue
+        noun = (it.get("noun") or "").strip().lower()
+        if not noun or noun in seen or any(w in NOISE for w in noun.split()):
+            continue
+        seen.add(noun)
+        out.append({"noun": noun, "row": r, "why": f"reference.db 해외 참고 채널 '{r.get('username')}' 대표 영상 조회 {r.get('views') or 0:,} "
+                    f"{(r.get('upload_ts') or '')[:10]} '{(r.get('caption') or '')[:40]}' — {it.get('why') or ''}"})
+    out.sort(key=lambda x: -(x["row"].get("views") or 0))
+    return out[:k], None
+
+
+AD_WORDS = ("광고", "협찬", "유료 광고", "유료광고", "sponsored", "#ad", "paid partnership", "제작 지원")
+
+
+def official_or_ad(v: dict, brand_terms: list[str]) -> str | None:
+    """공식 채널·광고면 이유(아니면 None) — 채널 이름에 브랜드 낱말 / 제목·설명에 광고 표기 / 인증 채널+브랜드.
+    10-16 실측: yummyknow '{n} 신상' 후보 3개가 전부 다이소 공식 홍보였다."""
+    ch = (v.get("channel") or "").lower().replace(" ", "")
+    hit = [b for b in brand_terms if b and b.replace(" ", "").lower() in ch]
+    if hit:
+        return f"공식 채널(채널 이름 '{v.get('channel')}'에 {hit})"
+    txt = ((v.get("title") or "") + " " + (v.get("description") or "")).lower()
+    ad = [w for w in AD_WORDS if w.lower() in txt]
+    if ad:
+        return f"광고 표기 {ad}"
+    return None
 
 
 def news_search(q: str, n: int = 10) -> list[dict]:
@@ -366,7 +406,7 @@ def community_search(keywords: list[str], pages: int = 1) -> list[dict]:
     return sorted(rows, key=lambda x: -(x.get("recomm") or 0))
 
 
-NET = {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": yt_upload_date, "news_search": news_search, "community_search": community_search}
+NET = {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": yt_upload_date, "db_top": db_top, "yt_meta": yt_meta, "news_search": news_search, "community_search": community_search}
 
 
 # ── 겹침(이미 만든 소재) ────────────────────────────────────────────────────
@@ -465,11 +505,12 @@ def _clean_title(t: str) -> str:
 
 
 def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: set, net: dict, log=print, limits: "Limits | None" = None,
-           per_query: int = 10) -> tuple[list[dict], list[dict]]:
+           per_query: int = 10, brands: list[str] | None = None) -> tuple[list[dict], list[dict]]:
     """통로별 후보 목록 → [{id, topic, query, source}], 실패 목록. 네트워크는 limits.take 를 거친다(상한 넘으면 LimitHit — 모은 데까지 돌려준다)."""
     limits = limits or Limits()
     pq = min(per_query, limits.per_query)
     route = SOURCE_KINDS[kind]
+    brand_terms = brands or []
     cands, failed, seen = [], [], set()
     if route == "given":
         return [{"id": f"c{i + 1}", "topic": k, "query": k, "source": {"kind": kind}} for i, k in enumerate(keywords[:n])], failed
@@ -493,7 +534,12 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
             for v in got:
                 if v["id"] in own_ids or v["id"] in seen:
                     continue
-                seen.add(v["id"]); pool.append({**v, "query": q})
+                seen.add(v["id"])
+                why_off = official_or_ad(v, brand_terms) if kind == "제품비하인드" else None
+                if why_off:
+                    failed.append({"where": f"후보 제외 {v['id']}", "why": f"{why_off} · '{(v.get('title') or '')[:30]}'"})
+                    continue
+                pool.append({**v, "query": q})
         pool.sort(key=lambda v: -(v.get("views") or 0))
         pool = date_filter(pool, months, net, limits, failed)
         for v in pool:
@@ -566,6 +612,50 @@ def date_filter(pool: list[dict], months: int | None, net: dict, limits: "Limits
     return kept
 
 
+def db_candidates(net: dict, llm, n: int, log=print, days: int = 60, pool: int = 20, limits: "Limits | None" = None) -> tuple[list[dict], list[dict], list[dict]]:
+    """해외영상 통로: reference.db 해외 참고 채널 대표 영상(조회 순) → 제목·올린 날짜(메타, limits 안) → 최근 days 일만 → 제품 명사(LLM 1회)
+    → 후보 = 그 히트 영상 자체(명사가 벤치 검색어). 유튜브 '검색'은 벤치에만 쓴다(검색 들쭉날쭉 의존을 줄인다)."""
+    import datetime as dt
+    limits = limits or Limits()
+    failed = []
+    try:
+        rows = net["db_top"](pool)
+    except Exception as e:  # noqa: BLE001 — DB 못 읽으면 후보 0 + 이유(과거 제목으로 되돌아가지 않는다)
+        failed.append({"where": "reference.db", "why": f"{type(e).__name__}: {str(e)[:160]}"})
+        return [], failed, []
+    cut = (dt.date.today() - dt.timedelta(days=days)).strftime("%Y%m%d")
+    fresh, old, unknown = [], 0, 0
+    for r in rows:
+        if not r.get("caption"):
+            try:
+                limits.take(1, f"DB 영상 메타 {r.get('id')}")
+            except LimitHit:
+                break
+            m = net["yt_meta"](r["id"]) if net.get("yt_meta") else {"failed": "메타 통로 없음"}
+            if m.get("failed"):
+                unknown += 1
+                continue
+            r.update(caption=m["title"], upload_ts=m["date"], duration=m.get("duration"))
+        if (r.get("upload_ts") or "")[:8].replace("-", "") >= cut:
+            fresh.append(r)
+        else:
+            old += 1
+    failed.append({"where": "reference.db", "why": f"해외 참고 채널 대표 영상 {len(rows)}편 → 최근 {days}일 {len(fresh)} · 오래됨 {old} · 메타 실패 {unknown}"})
+    if not fresh:
+        return [], failed, []
+    nouns, err = db_nouns(fresh, llm, n)
+    if err:
+        failed.append({"where": "db_nouns", "why": err})
+    log(f"[DB] 해외 히트 {len(fresh)}편(최근 {days}일) → 제품 명사 {[x['noun'] for x in nouns]}")
+    cands = []
+    for x in nouns:
+        r = x["row"]
+        cands.append({"id": f"c{len(cands) + 1}", "topic": f"{x['noun']} — {(r.get('caption') or '')[:80]}", "query": x["noun"], "key": x["noun"],
+                      "source": {"kind": "해외영상", "via": "reference.db overseas_ref_channel", "url": r.get("url"), "id": r.get("id"),
+                                 "views": r.get("views"), "username": r.get("username"), "upload_ts": r.get("upload_ts"), "keywords": r.get("keywords")}})
+    return cands, failed, [{"q": x["noun"], "why": "출처 유형 '해외영상' 틀 '{n}' + " + x["why"]} for x in nouns]
+
+
 def bench_query(q: str, title: str, k: int = 2) -> str:
     """벤치 검색어 = 후보를 찾은 검색어 + 제목에서 검색어에 없는 낱말 k개.
     10-16 실측: 제목 앞 6낱말('I Can t Sleep Without Sound')로 찾으니 조회순 1·2위가 무관한 ASMR·pov 영상이었다."""
@@ -617,6 +707,10 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         d = net["yt_detail"](v["id"], n_comments)
         if d.get("failed"):
             failed.append(f"{v['id']}: {d['failed'][:100]}")
+            continue
+        off = official_or_ad(d, c.get("brands") or []) if c.get("brands") else None
+        if off:
+            failed.append(f"{v['id']}: 공식·광고 제외 — {off}")
             continue
         ok, why = relevance(d, c.get("key") or c["query"], c["topic"])
         if not ok:
@@ -684,14 +778,24 @@ def run(preset: str, out: Path, n: int = 10, source_kind: str | None = None, key
         raise SystemExit(f"소재 출처 유형이 없다/모름: {kind!r} — manifest.source_kind 또는 --source-kind {list(SOURCE_KINDS)}")
     top = _read_json(P["chdir"] / "원자료" / "top50.json") or []
     limits = limits or Limits()
-    nouns = keywords or concrete_nouns(top)
-    queries = target_queries(kind, nouns, limits.max_queries)
-    if len(nouns) > limits.max_queries:
-        log(f"[검색어] {len(nouns)}개 중 상한 {limits.max_queries}개만")
-    kws = [q["q"] for q in queries]
-    log(f"[검색어] {kws}")
     out.mkdir(parents=True, exist_ok=True)
-    cands, failed = gather(kind, kws, n, months, {v["id"] for v in top}, net, log, limits, per_query)
+    R = _read_json(Path(P["rules"])) if P.get("rules") else {}
+    angles = tuple((R or {}).get("topic_angles") or DEFAULT_ANGLES)
+    # 검색어 명사는 우리 과거 제목에서 뽑지 않는다(조율자 10-16: 이미 만든 소재로 돌아갔다 — 썰풀다 후보 3개 겹침 0.47~0.63)
+    if kind == "해외영상" and not keywords:
+        cands, failed, queries = db_candidates(net, llm, n, log, limits=limits)
+        kws = [q["q"] for q in queries]
+    else:
+        if not keywords:
+            raise SystemExit(f"'{kind}' 은 --keywords(구체 명사: 제품·브랜드·사건)가 필요하다 — 우리 채널 과거 제목에서 뽑지 않는다")
+        queries = target_queries(kind, keywords, limits.max_queries, angles)
+        if len(keywords) > limits.max_queries:
+            log(f"[검색어] {len(keywords)}개 중 상한 {limits.max_queries}개만")
+        kws = [q["q"] for q in queries]
+        log(f"[검색어] {kws}")
+        cands, failed = gather(kind, kws, n, months, {v["id"] for v in top}, net, log, limits, per_query, brands=list(keywords))
+        for c in cands:
+            c["brands"] = list(keywords)
     corpus = made_corpus(P["chdir"], made_extra)
     benches = {}
     for i, c in enumerate(cands):

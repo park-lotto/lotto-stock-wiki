@@ -1533,7 +1533,7 @@
         letterSpacing:l.letter_spacing*scale+'px',wordSpacing:(l.word_spacing||0)*scale+'px',lineHeight:l.line_h*scale+'px',color,textAlign:l.align,
         justifyContent:{left:'flex-start',center:'center',right:'flex-end'}[l.align],alignItems:l.valign==='top'?'flex-start':'center',whiteSpace:it.rows>1?'pre-line':'nowrap',wordBreak:'keep-all',
         webkitTextStroke:(o=>o&&o.px>0?`${2*o.px*scale}px ${specRgb(o.rgb)}`:'0px')(specOutline(l,it.n)),paintOrder:'stroke fill',
-        textShadow:l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'none'});
+        textShadow:[l.shadow?`${l.shadow.dx*scale}px ${l.shadow.dy*scale}px ${l.shadow.blur*scale}px ${specRgb(l.shadow.rgb)}`:'',...(l.glow?[.25,.5,1].map(k=>`0 0 ${l.glow.px*k*scale}px ${specRgb(l.glow.rgb)}`):[])].filter(Boolean).join(',')||'none'});
       let ink=el;
       if(l.box){ink=document.createElement('span');Object.assign(ink.style,{background:specRgb(l.box.rgb),padding:`0 ${l.box.pad*scale}px`,borderRadius:l.box.radius*scale+'px'});el.append(ink);}
       ink.textContent=it.text;

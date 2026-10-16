@@ -97,6 +97,11 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
                     last = "429"
                     _DEAD.add((ki, model))
                     gk.mark(names[ki], model, "429")
+                elif "API key not valid" in msg or "API_KEY_INVALID" in msg:
+                    last = "400 키 무효"
+                    for m_ in MODELS + tuple(plan):     # 키 자체가 무효 — 오늘 장부에 모든 모델로 끝 표시(42키 중 무효 키를 매번 다시 부르지 않게)
+                        _DEAD.add((ki, m_))
+                        gk.mark(names[ki], m_, "429")
                 elif "404" in msg or "NOT_FOUND" in msg:
                     last = "404 모델 없음"
                     _DEAD.add((ki, model))
