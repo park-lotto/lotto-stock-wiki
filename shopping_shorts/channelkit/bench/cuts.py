@@ -3,6 +3,9 @@
 
 컷 = ffmpeg select=gt(scene,SCENE_T) on **영상창 crop**(layout) → 첫 CUT_MIN_T 제외 → CUT_MERGE_S 병합
      → 앞뒤 프레임 상관 < CUT_VERIFY_CORR 인 것만(cut_verify, 창 위쪽 65%) — 설계 §1 "장면 컷".
+배경 밝기(layout bg_rgb)를 받으면 창 안 '바탕' 화소(앞뒤 프레임 다 배경색)를 빼고 잰다 — 가변 그림 칸(게시글형)은
+칸 밖 흰 바탕이 창의 20~40%라 점수를 희석·상관을 부풀려 소스가 다른 경계를 놓쳤다(2026-10-16 리센느 빵 4개).
+raw(scene>T 그대로)는 옛 자 그대로 둔다(기준선 재현용).
 자막 교체 시각은 captions 결과를 받는다(여기서 다시 재지 않는다).
 """
 from __future__ import annotations
@@ -14,13 +17,61 @@ import numpy as np
 import cv2
 
 from . import probe
-from .constants import (CUT_MERGE_S, CUT_MIN_T, CUT_VERIFY_CORR, CUT_VERIFY_TOP, CUT_SUB_TOL, ZOOM_FPS)
+from .constants import (CUT_MERGE_S, CUT_MIN_T, CUT_VERIFY_CORR, CUT_VERIFY_TOP, CUT_SUB_TOL, ZOOM_FPS,
+                        CUT_BG_TOL, CUT_ACTIVE_MIN, CUT_VERIFY_ACTIVE_MIN)
 from . import constants as C
 
 
-def scene_detect(path: str, window: list[int], threshold: float | None = None) -> list[float]:
-    """영상창 crop의 scene 점수 > T 시각(첫 CUT_MIN_T 제외). T 기본값 = constants.SCENE_T(호출 때 읽는다)."""
+def bg_gray(vl: dict) -> float | None:
+    """layout 결과의 배경 RGB → 회색 밝기(BT.601). 없으면 None(바탕 빼기 안 함)."""
+    b = vl.get("bg_rgb") if vl else None
+    return None if not b else float(0.299 * b[0] + 0.587 * b[1] + 0.114 * b[2])
+
+
+def scene_scores(path: str, window: list[int]) -> list[tuple[float, float]]:
+    """영상창 crop의 프레임별 ffmpeg scene 점수 [(pts_time, score)] — select=gt(scene,T)가 보는 값 그대로."""
+    x, y, w, h = window
+    log = probe.ffmpeg_log(["-i", path, "-an", "-vf", f"crop={w}:{h}:{x}:{y},select='gte(scene,0)',metadata=print",
+                            "-f", "null", "-"])
+    out, t = [], None
+    for line in log.splitlines():
+        m = re.search(r"pts_time:\s*([\d.]+)", line)
+        if m:
+            t = float(m.group(1))
+            continue
+        m = re.search(r"lavfi\.scene_score=([\d.]+)", line)
+        if m and t is not None:
+            out.append((t, float(m.group(1))))
+            t = None
+    return out
+
+
+def active_fracs(path: str, window: list[int], bg: float) -> np.ndarray:
+    """프레임 k마다 'k 또는 k−1 에서 배경색이 아닌' 창 화소 비율(64×64 회색). [0] = 프레임 0 자체."""
+    x, y, w, h = window
+    nb = np.array([np.abs(g.astype(np.float32) - bg) > CUT_BG_TOL
+                   for g in probe.frames(path, f"crop={w}:{h}:{x}:{y},scale=64:64", 64, 64, "gray")])
+    if not len(nb):
+        return np.zeros(0)
+    un = nb.copy()
+    un[1:] |= nb[:-1]
+    return un.mean(axis=(1, 2))
+
+
+def scene_detect(path: str, window: list[int], threshold: float | None = None,
+                 bg: float | None = None, fps: float | None = None) -> list[float]:
+    """영상창 crop의 scene 점수 > T 시각(첫 CUT_MIN_T 제외). T 기본값 = constants.SCENE_T(호출 때 읽는다).
+    bg(배경 회색)·fps 를 주면 점수를 '바탕 아닌 화소 비율'로 나눠 본다(희석 보정, 상한 1/CUT_ACTIVE_MIN 배)."""
     T = C.SCENE_T if threshold is None else threshold
+    if bg is not None and fps:
+        fr = active_fracs(path, window, bg)
+        out = []
+        for t, s in scene_scores(path, window):
+            k = int(round(t * fps))
+            a = float(fr[k]) if 0 <= k < len(fr) else 1.0
+            if t > CUT_MIN_T and s / max(a, CUT_ACTIVE_MIN) > T:
+                out.append(round(t, 3))
+        return out
     x, y, w, h = window
     log = probe.ffmpeg_log(["-i", path, "-an", "-vf", f"crop={w}:{h}:{x}:{y},select='gt(scene,{T})',showinfo",
                             "-f", "null", "-"])
@@ -36,23 +87,34 @@ def merge_close(ts: list[float]) -> list[float]:
     return out
 
 
-def cut_verify(path: str, window: list[int], cands: list[float], fps: float) -> tuple[list[float], list]:
-    """컷 앞(k−1)·뒤(k+1) 프레임의 창 위쪽 65% 64×64 z정규화 상관 < CUT_VERIFY_CORR 이면 진짜 컷."""
+def _zcorr(a: np.ndarray, b: np.ndarray) -> float:
+    a = (a - a.mean()) / (a.std() + 1e-6)
+    b = (b - b.mean()) / (b.std() + 1e-6)
+    return float((a * b).mean())
+
+
+def cut_verify(path: str, window: list[int], cands: list[float], fps: float,
+               bg: float | None = None) -> tuple[list[float], list]:
+    """컷 앞(k−1)·뒤(k+1) 프레임의 창 위쪽 65% 64×64 z정규화 상관 < CUT_VERIFY_CORR 이면 진짜 컷.
+    bg(배경 회색)를 주면 '두 프레임 다 배경색'인 화소를 빼고 잰다(남는 화소 < CUT_VERIFY_ACTIVE_MIN 이면 전체)."""
     if not cands:
         return [], []
     x, y, w, h = window
     hh = int(h * CUT_VERIFY_TOP)
-    sig = []
-    for g in probe.frames(path, f"crop={w}:{hh}:{x}:{y},scale=64:64", 64, 64, "gray"):
-        a = g.astype(np.float64).ravel()
-        sig.append((a - a.mean()) / (a.std() + 1e-6))
+    sig = [g.astype(np.float64).ravel() for g in probe.frames(path, f"crop={w}:{hh}:{x}:{y},scale=64:64", 64, 64, "gray")]
     keep, corr = [], []
     for t in cands:
         k = int(round(t * fps))
         if k - 1 < 0 or k + 1 >= len(sig):
             keep.append(t); corr.append(None)
             continue
-        c = float((sig[k - 1] * sig[k + 1]).mean())
+        A, B = sig[k - 1], sig[k + 1]
+        m = None
+        if bg is not None:
+            m = (np.abs(A - bg) > CUT_BG_TOL) | (np.abs(B - bg) > CUT_BG_TOL)
+            if m.mean() < CUT_VERIFY_ACTIVE_MIN:
+                m = None
+        c = _zcorr(A, B) if m is None else _zcorr(A[m], B[m])
         corr.append(round(c, 3))
         if c < CUT_VERIFY_CORR:
             keep.append(t)
@@ -115,9 +177,11 @@ def measure_video(path: str, vl: dict, meta: dict, sub_changes: list[float], zoo
     if not win:
         return {"cuts": None}
     dur = meta["duration"]
-    raw = scene_detect(path, win)
-    cands = merge_close(raw)
-    cuts, corr = cut_verify(path, win, cands, meta["fps"])
+    bg = bg_gray(vl)
+    raw = scene_detect(path, win)                      # 옛 자(희석 보정 없음) — raw_stats·기준선 재현용
+    det = scene_detect(path, win, bg=bg, fps=meta["fps"]) if bg is not None else raw
+    cands = merge_close(det)
+    cuts, corr = cut_verify(path, win, cands, meta["fps"], bg=bg)
     segs = shot_lengths(cuts, dur)
     eq, n = cut_eq_sub(cuts, sub_changes) if sub_changes else (None, len(cuts))
     gaps = still_gaps(cuts, sub_changes, dur)
@@ -126,7 +190,8 @@ def measure_video(path: str, vl: dict, meta: dict, sub_changes: list[float], zoo
     raw_stats = {"shots": len(raw) + 1, "first_cut": round(raw_segs[0], 2), "cut_std": round(st.pstdev(raw_segs), 2),
                  "cut_eq_sub": list(cut_eq_sub(raw, sub_changes)) if sub_changes else None}
     res = {"scene_t": C.SCENE_T, "raw": raw, "raw_stats": raw_stats, "candidates": cands, "corr": corr, "cuts": cuts,
-           "merged_out": [t for t in raw if t not in cands],
+           "bg_gray": None if bg is None else round(bg, 1), "detected": det,
+           "merged_out": [t for t in det if t not in cands],
            "rejected": [t for t, c in zip(cands, corr) if c is not None and c >= CUT_VERIFY_CORR],
            "shots": len(cuts) + 1,
            "shot_median": round(st.median(segs), 2), "shot_min": round(min(segs), 2), "shot_max": round(max(segs), 2),

@@ -111,6 +111,11 @@ CUT_MIN_T = 0.2           # 첫 0.2s 안 검출은 컷이 아니라 시작(옛 c
 CUT_VERIFY_CORR = 0.6     # 컷 앞뒤 64×64 z정규화 상관 < 0.6 이어야 진짜 컷(cut_verify CORR_MAX)
 CUT_VERIFY_TOP = 0.65     # 상관은 창 위쪽 65%만(창 안 자막 띠 제외, cut_verify)
 CUT_SUB_TOL = 0.2         # 컷 = 자막 교체 일치 ±0.2s (rhythm_stats)
+CUT_BG_TOL = 10           # 창 안 '바탕' 화소 = 편 배경 밝기(layout bg_rgb)와 회색 차 ≤ 10. 가변 그림 칸(게시글형)에서
+                          # 칸 밖 흰 바탕이 창 crop 의 20~40%를 차지해 scene 점수를 희석하고 상관을 부풀렸다
+                          # (2026-10-16 yummyknow 리센느 빵 final: 소스 다른 경계 4개 누락 — 4.63 점수 0.298, 7.53·23.4·25.37 상관 0.61~0.76)
+CUT_ACTIVE_MIN = 0.25     # scene 점수 ÷ max(앞뒤 프레임 중 하나라도 바탕 아닌 화소 비율, 0.25) — 보정 상한 4배
+CUT_VERIFY_ACTIVE_MIN = 0.1  # 상관은 '두 프레임 다 바탕'인 화소를 빼고 잰다. 남는 화소가 10% 미만이면 전체로(옛 방식)
 ZOOM_FPS = 5              # 줌 추적 fps(film zoom_track)
 
 # ── audio.py ───────────────────────────────────────────────────────────────
