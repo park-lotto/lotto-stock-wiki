@@ -567,11 +567,9 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
         describe = [k for k, t in enumerate(texts[:n]) if t.rstrip("?!.;~ ").endswith(SW.DESCRIBE_ENDS)]
         ending_off = [k for k, (t, e) in enumerate(zip(texts[:n], sk["ends"])) if e and not SW._core(t).endswith(SW._core(e))]
         if len(sk["orig"]) != n:   # 원본 문장 수가 칸 수와 다르면 베낌은 원본 전체와 8글자 겹침으로
-            o8 = set().union(*(SW._ngrams(t) for t in sk["orig"])) if sk["orig"] else set()
-            copied = [k for k, t in enumerate(texts[:n]) if SW._ngrams(t) & o8]
+            copied = sorted(SW.copied_from(texts[:n], sk["orig"]))
     # 벤치 영상 제목·댓글과 8글자 겹침(포인트는 가져오되 문장은 베끼지 않는다)
-    b8 = set().union(*(SW._ngrams(t) for t in bench.get("texts") or [])) if bench.get("texts") else set()
-    copied_bench = [k for k, t in enumerate(texts[:n]) if SW._ngrams(t) & b8]
+    copied_bench = sorted(SW.copied_from(texts[:n], bench.get("texts") or []))   # 베낌 판정 주인 = style_writer.copied_from
     # 근거: 줄마다 알려진 번호 1개 이상(free_roles 칸만 예외)
     no_ground = [k for k, l in enumerate(lines[:n]) if not (set(l.get("facts") or []) & ids)
                  and not any(fr and fr in (sk["roles"][k] if k < n else "") for fr in free_roles)]

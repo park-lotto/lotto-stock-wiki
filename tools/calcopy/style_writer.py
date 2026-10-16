@@ -190,6 +190,48 @@ def _ngrams(s: str, n: int = 8) -> set:
     return {s[i:i + n] for i in range(len(s) - n + 1)}
 
 
+# ── 베낌(원본·벤치와 겹침) 판정 — 주인 한 곳(10-16 조율자: 5글자 겹침은 관용구 '인 줄 알았는'까지 잡았다, 창고 sseolpulda/16) ──
+COPY_MIN_CHARS = 7        # 공백 뺀 연속 7자 이상 같으면 베낌
+COPY_MIN_WORDS = 3        # 또는 연속 어절 3개 이상 같으면 베낌
+COPY_IDIOMS = ("인 줄 알았는데", "알고 보니", "솔직히", "근데")   # 채널 공통 말버릇 — 겹침에서 뺀다
+
+
+def _copy_norm(t: str) -> str:
+    t = t or ""
+    for idm in COPY_IDIOMS:
+        t = t.replace(idm, " | ").replace(idm.replace(" ", ""), " | ")
+    return re.sub(r"[^\w|\s]", " ", t)
+
+
+def _copy_grams(t: str, n: int) -> set:
+    out = set()
+    for part in _copy_norm(t).split("|"):
+        z = re.sub(r"\s+", "", part)
+        out |= {z[i:i + n] for i in range(len(z) - n + 1)}
+    return out
+
+
+def _word_runs(t: str, n: int) -> set:
+    out = set()
+    for part in _copy_norm(t).split("|"):
+        w = part.split()
+        out |= {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
+    return out
+
+
+def copied_from(texts: list[str], sources: list[str]) -> dict:
+    """(판단 주인) 줄마다 원본·벤치 문장을 베꼈나 → {줄: 겹친 조각}. 연속 COPY_MIN_CHARS 자 또는 연속 COPY_MIN_WORDS 어절이 같으면 베낌.
+    COPY_IDIOMS(말버릇)는 양쪽에서 빼고 잰다."""
+    g = set().union(*(_copy_grams(t, COPY_MIN_CHARS) for t in sources)) if sources else set()
+    w = set().union(*(_word_runs(t, COPY_MIN_WORDS) for t in sources)) if sources else set()
+    out = {}
+    for k, t in enumerate(texts):
+        hit = sorted(_copy_grams(t, COPY_MIN_CHARS) & g) or [" ".join(x) for x in sorted(_word_runs(t, COPY_MIN_WORDS) & w)]
+        if hit:
+            out[k] = hit[0]
+    return out
+
+
 def check(d: dict, R: dict) -> dict:
     """같은 자로 잰다: 길이 범위 · 박자 순서 · 존댓말 · 예문 베낌(8글자 겹침)."""
     text = " ".join(l["text"] for l in d.get("lines", []))
@@ -349,7 +391,7 @@ def check_captions(lines: list[dict], orig: list[str], R: dict, ranges: list | N
     text = " ".join(l["text"] for l in lines)
     o5 = set().union(*(_ngrams_n(t, 5) for t in orig))
     copied5 = sorted({g for l in lines for g in _ngrams_n(l["text"], 5)} & o5)
-    copied_lines = [i for i, l in enumerate(lines) if _ngrams_n(l["text"], 5) & o5]   # 줄 단위로 고칠 수 있게
+    copied_lines = sorted(copied_from([l["text"] for l in lines], orig))   # 줄 단위 판정 = copied_from(5글자 집합 copied5 는 참고로만 남긴다)
     ex8 = set().union(*(_ngrams(e["script"]) for e in R["examples"]))
     lens = [len(l["text"].replace(" ", "")) for l in lines]
     olens = [len(t.replace(" ", "")) for t in orig]
@@ -496,8 +538,7 @@ JSON으로만: {{"lines":[{{"fn":"역할","text":"문장","facts":["f1"]}}, ...]
 def check_narration(lines: list[dict], orig: list[str], ranges: list, facts: str) -> dict:
     """나레이션 문장을 잰다 — 문장 수 · 글자 수(범위) · 존댓말 · 원본과 8글자 겹침 · 사실 밖 숫자."""
     text = " ".join(l["text"] for l in lines)
-    o8 = set().union(*(_ngrams(t) for t in orig))
-    copied = [i for i, l in enumerate(lines) if _ngrams(l["text"]) & o8]
+    copied = sorted(copied_from([l["text"] for l in lines], orig))
     lens = [len(l["text"].replace(" ", "")) for l in lines]
     off = [i for i, (a, r) in enumerate(zip(lens, ranges)) if not (r[0] <= a <= r[1])]
     polite = len(re.findall(r"(습니다|어요|아요|해요|세요)[.!?]?(\s|$)", text))

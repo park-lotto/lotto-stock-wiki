@@ -683,3 +683,16 @@ def test_run_fills_articles_then_writes(tmp_path):
     llm2 = FakeLLM({"draft": {"lines": []}})
     S2 = E.run("yummyknow", "바나나맛우유 단지 모양", tmp_path / "o2", None, None, llm=llm2, log=lambda *_: None, net=_art_net({}, daum=[]))
     assert S2["status"] == "facts_insufficient" and llm2.tags == []
+
+
+def test_copy_check_idiom_green_real_copy_red():
+    """베낌 판정 주인 style_writer.copied_from — 연속 7자 또는 어절 3개. 관용구(인 줄 알았는데·알고 보니·솔직히·근데)만 겹치면 초록
+    (창고 sseolpulda/16 '노트 팬들 뻥인 줄 알았는데'는 5글자 판정에서 '원본과 겹침'으로 반려됐다), 원본 10자를 그대로 쓰면 빨강."""
+    green = ["노트 팬들 뻥인 줄 알았는데", "근데 알고 보니 솔직히 별로", "솔직히 소리 좋다 인정?"]
+    red = ["해외 릴스에서 맨날 보이던 그 공", "그냥 진짜 아무 데나 대면 끝"]
+    assert SW.copied_from(green, SSEOL_ORIG) == {}
+    hit = SW.copied_from(red, SSEOL_ORIG)
+    assert sorted(hit) == [0, 1], hit
+    cc = SW.check_captions([{"text": t} for t in green + red], SSEOL_ORIG[:5], {"examples": []}, [(1, 99)] * 5)
+    assert cc["copied_lines"] == [3, 4]
+    assert SW.copied_from(["근데 알고 보니 솔직히 그냥 그럼"], ["근데 알고 보니 솔직히 별로였음"]) == {}   # 관용구 3개 연속(어절 4)만 겹침 → 초록
