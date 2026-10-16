@@ -1,3 +1,4 @@
+# ★10-16 1판 계획 시트용 생성기 — 렌더 뒤 재료.json·대본.json 시각·크롭은 make_render.py·손 수정이 정본. 다시 돌리면 덮어쓴다(돌리지 마라).
 import json, sys
 from pathlib import Path
 D = Path(sys.argv[1]); OE = D.parent / "칼카피_OE11"

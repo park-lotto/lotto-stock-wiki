@@ -44,9 +44,8 @@
     200,
     255
    ],
-   "t0": 3.64,
-   "dur": 3.0,
-   "est": true,
+   "t0": 3.455,
+   "dur": 3.164,
    "basis": "f1 stwt 댓글 1위 'At first, I thought it was another AI generated video 😂'(1,770) 번역 — 이 구간 원음은 새소리(받아쓰기 3회 사람 말 없음), 화면은 카메라 솟는 장면"
   },
   {
@@ -57,16 +56,14 @@
     200,
     255
    ],
-   "t0": 15.3,
-   "dur": 4.5,
-   "est": true,
+   "t0": 15.79,
+   "dur": 4.852,
    "basis": "f5 stwt 댓글 'If it drop while camera dancing 😮'(31) 번역 — 원음은 폰에서 나오는 노래(사람 말 없음), 다음 줄 내구성 논란으로 넘기는 다리"
   },
   {
    "kind": "blank",
-   "t0": 30.6,
+   "t0": 32.137,
    "dur": 1.0,
-   "est": true,
    "basis": "끝 1초 BGM 만(OE11 꼴)"
   }
  ],

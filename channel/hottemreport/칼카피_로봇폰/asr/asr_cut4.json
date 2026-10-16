@@ -1,0 +1,30 @@
+{
+ "span": [
+  12.879,
+  20.642
+ ],
+ "res": {
+  "items": [
+   {
+    "start": 0.0,
+    "end": 2.5,
+    "kind": "korean_narration",
+    "text": "말로 음악 틀고 춤추라고 하면 진짜 춤까지 춰요."
+   },
+   {
+    "start": 2.6,
+    "end": 3.2,
+    "kind": "english_speech",
+    "text": "What?"
+   },
+   {
+    "start": 3.2,
+    "end": 7.0,
+    "kind": "singing",
+    "text": "Why don't I hide inside each other"
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ },
+ "err": null
+}

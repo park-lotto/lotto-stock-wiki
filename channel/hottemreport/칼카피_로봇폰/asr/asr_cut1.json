@@ -1,0 +1,24 @@
+{
+ "span": [
+  1.875,
+  6.619
+ ],
+ "res": {
+  "items": [
+   {
+    "start": 0,
+    "end": 2,
+    "kind": "korean_narration",
+    "text": "카메라가 튀어나오는 진짜 본이에요."
+   },
+   {
+    "start": 0,
+    "end": 4,
+    "kind": "singing",
+    "text": "Say I do say I do, love me boy."
+   }
+  ],
+  "_model": "gemini-flash-lite-latest"
+ },
+ "err": null
+}
