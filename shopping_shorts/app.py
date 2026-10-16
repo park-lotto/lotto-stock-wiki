@@ -28045,6 +28045,66 @@ def _archive_page(request: Request):
 app.add_api_route("/archive", _archive_page, include_in_schema=False)
 
 
+# ── 숏템팩(관제 222, 2026-10-17 사장님 "숏템메이커 좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 관리자 전용 ──
+# 우리 팩 전부를 한 화면에서 본다. ★목록을 여기서 따로 적지 않는다 — 팩마다 주인 함수·파일을 그대로 읽는다
+#   (효과음팩 sfx_pack.list_packs · 효과음 서랍 mix_pipeline._sfx_bank · 배경음 bgm_lib.list_tracks · 성우 voice_presets ·
+#    감정짤 scene_assets meme · 글꼴 static/fonts · 효과 견본 data/fx_samples/manifest.json).
+#   자막 스타일·등장 효과팩·모션그래픽·스티커·템플릿은 화면이 그 팩의 JS 파일을 직접 읽는다(static/shortem_packs.html).
+def _shortem_packs_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "shortem_packs.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _count_by(values):
+    out = {}
+    for v in values:
+        out[v] = out.get(v, 0) + 1
+    return out
+
+
+def _shortem_packs_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import sfx_pack, bgm_lib, voice_presets
+    from shopping_shorts import storyboard as _sbm
+    st = Store(DB_PATH)
+    packs = [{"no": i + 1, "name": name, "slots": [{"slot": s_, "label": sfx_pack.SLOT_LABEL.get(s_, s_)} for s_ in sfx_pack.SLOTS]}
+             for i, (name, _d) in enumerate(sfx_pack.list_packs())]
+    bank = mix_pipeline._sfx_bank(st)
+    drawer = [{"cat": c, "count": len(bank.get(c) or []),
+               "items": [{"id": a["asset_id"], "title": a.get("title") or "", "dur": round(a["duration"], 2)} for a in (bank.get(c) or [])[:12]]}
+              for c in _sbm.SFX_CATS]
+    memes = {}
+    for a in st.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            memes.setdefault(emo, []).append(a["id"])
+    meme_rows = [{"emotion": k, "count": len(v), "sample": sorted(v)[:8]} for k, v in sorted(memes.items(), key=lambda kv: -len(kv[1]))]
+    try:
+        voices = voice_presets.load_presets_file()
+    except Exception as e:      # noqa: BLE001 — 성우 목록이 깨져도 다른 팩은 보여 준다(대신 한 줄)
+        print("[shortem_packs] 성우 목록 실패: %r" % (e,), file=sys.stderr)
+        voices = []
+    fonts = sorted(f.name for f in (_STATIC / "fonts").iterdir() if f.suffix.lower() in (".ttf", ".otf"))
+    fx = {"groups": 0, "items": 0}
+    manifest = _fx_samples_dir() / "manifest.json"
+    if manifest.exists():
+        groups = json.loads(manifest.read_text(encoding="utf-8")).get("groups") or []
+        fx = {"groups": len(groups), "items": sum(len(g.get("items") or []) for g in groups)}
+    return JSONResponse({"ok": True, "sfx_packs": packs, "sfx_drawer": drawer, "bgm": bgm_lib.list_tracks(),
+                         "voices": {"count": len(voices), "engines": _count_by(voice_presets.engine_of(v.get("model_id")) for v in voices)},
+                         "memes": {"total": sum(r["count"] for r in meme_rows), "emotions": meme_rows},
+                         "fonts": fonts, "fx_samples": fx}, headers=_NOCACHE)
+
+
+app.add_api_route("/shortem_packs", _shortem_packs_page, include_in_schema=False)
+app.add_api_route("/shortem_packs.html", _shortem_packs_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/shortem_packs", _shortem_packs_list, include_in_schema=False)
+
+
 # ── 효과 견본(2026-10-04, 관제 118) — 관리자 전용 ───────────────────────────
 # 에펙으로 만든 효과 견본 영상(스크립트 견본 + 에펙 기본 글자 프리셋)을 카테고리별로 본다.
 # 영상·목록(manifest.json)은 git 밖 data/fx_samples 에 둔다 — 견본이 늘어도 배포가 필요 없다
