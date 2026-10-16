@@ -136,10 +136,10 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                         for o in old_names:
                             L["text"] = L["text"].replace(o, new_name)
                         applied.append(f"{fid} 글 '{before}' → '{L['text']}'")
-                    if role == "title" and text.get("title_font"):
+                    if role == "title" and text.get("title_font") and L.get("font") != text["title_font"]:
                         applied.append(f"{fid} 제목 글꼴 {L.get('font')} → {text['title_font']}"); L["font"] = text["title_font"]
                     if role == "caption":
-                        if text.get("caption_font"):
+                        if text.get("caption_font") and L.get("font") != text["caption_font"]:
                             applied.append(f"{fid} 자막 글꼴 {L.get('font')} → {text['caption_font']}"); L["font"] = text["caption_font"]
                         if "outline_px" in cap:
                             L["outline"] = {"px": cap["outline_px"], "rgb": (L.get("outline") or {}).get("rgb") or [0, 0, 0]} if cap["outline_px"] else None
@@ -443,12 +443,13 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
 
 
 def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
-    rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored")]
+    rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]
     if len(rows) < N_CANDIDATES:                       # 모자라면 그 자리에서 찾기(검색만 — 제미나이 0, 유튜브는 장부 한도 뒤)
         w = _worker(S, data_dir, deps)
         w.find_every = 1
         w.find()
-        rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored")]
+        rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"]
+                if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]     # 멈춘(stalled) 소재는 골라도 못 돈다
     rows.sort(key=lambda t: -((t.get("score") or {}).get("total") or -1))
     made = made_counts(data_dir)
     return [{"n": i + 1, **_candidate(t, data_dir), "made": made.get(t["id"], 0)} for i, t in enumerate(rows[:N_CANDIDATES])]
