@@ -39,7 +39,7 @@ MAX_PREVIEWS = 30         # 미리보기 받는 편 상한(작품당)
 SECTION_FMT = ("270/614/bv*[height>=1080][protocol^=m3u8]/bv*[width>=1080][protocol^=m3u8]/bv*[height>=720][protocol^=m3u8]"
                "/137/bv*[height>=1080]/bv*[height>=720]")
 RATE = 1.0                # 유튜브 요청 간격(초)
-WORKERS = 4               # 무거운 일 동시 상한
+WORKERS = int(__import__("os").environ.get("MA_WORKERS", "4"))   # 무거운 일 동시 상한(연속 제작은 MA_WORKERS=2)
 MAX_429 = 10              # 제미나이 429 이 횟수 넘으면 멈춤
 REUSE_GAP = 3.0           # 같은 소스 ±3초 안 재사용 금지(사장님 10-17)
 MIN_LUMA = 45             # 칸 평균 밝기(0~255) 이 미만은 어두움(B9 첫·끝 컷 기준 60보다 느슨)
@@ -105,6 +105,16 @@ def norm_script(sj: dict) -> tuple[str, list[dict]]:
         lines = {l["i"]: l.get("text", "") for l in sj.get("lines") or []}
         toks = [{"i": t["i"], "text": t["text"], "t0": t.get("t0", 0.0), "dur": t.get("dur", 0.8), "line": t.get("line", 0),
                  "line_text": lines.get(t.get("line", 0), ""), "shot_query": t.get("shot_query")} for t in sj["tokens"]]
+        return topic, toks
+    if sj.get("lines") and all(l.get("shots") for l in sj["lines"]):   # 세 번째 꼴(10-17 확정 대본): lines[].shots[].piece = 자막 토막
+        cps = float(sj.get("cps_target") or 8.5)
+        toks, t0 = [], 0.0
+        for li, l in enumerate(sj["lines"]):
+            for s in l["shots"]:
+                dur = round(max(0.5, len(_plain(s["piece"])) / cps), 2)
+                toks.append({"i": len(toks), "text": s["piece"], "t0": round(t0, 2), "dur": dur, "line": li, "line_text": l.get("text", ""),
+                             "shot_query": f"{s.get('query', '')} ({s.get('kind', '')})"})
+                t0 += dur
         return topic, toks
     lines = [l.get("line", "") for l in sj.get("spine55") or []]
     if not topic and lines:
@@ -886,6 +896,29 @@ def _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, she
     return out
 
 
+def emit_material(auto: dict, wd, work_dir) -> list[str]:
+    """재료_auto.json → 작품 폴더 재료.json(preset_make 가 읽는 꼴). 빈 토막·구간 파일 없는 토막이 있으면 쓰지 않고 그 목록을 돌려준다."""
+    rows, bad = [], []
+    for s in auto["shots"]:
+        r = {"i": s["i"], "caption": s["caption"], "kind": s.get("kind"), "cont": bool(s.get("cont")), "seen": s.get("seen", ""),
+             "url": s.get("url"), "src_t0": s.get("src_t0"), "res": s.get("res")}
+        if s.get("none"):
+            bad.append(f"{s['i']} 빈칸({s.get('why', '')[:60]})")
+        elif str(s.get("src", "")).startswith("meme:"):
+            r.update({"src": s["src"], "ss": s.get("src_t0", 0.0)})
+        elif s.get("cont"):
+            r.update({"src": "+", "ss": 0.0})
+        elif s.get("section_file") and Path(s["section_file"]).exists():
+            r.update({"src": str(Path(s["section_file"]).resolve()), "ss": s["section_ss"]})
+        else:
+            bad.append(f"{s['i']} 구간 파일 없음")
+        rows.append(r)
+    if not bad:
+        Path(work_dir, "재료.json").write_text(json.dumps({"_note": f"material_auto {PROMPT_VER} emit — 재료_auto.json 에서", "cand_dir": str(Path(wd).resolve()),
+                                                        "shots": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
+    return bad
+
+
 VERIFY_PROMPT = """그림은 영상 컷 후보 프레임들이다(노란 번호 {lo}~{hi}). 각 번호마다 보이는 것만 적어라.
 - text: 화면에 글자(자막·캡션·설명 문구·로고·워터마크·손글씨·앱/UI 글자)가 조금이라도 보이면 true. 제품 본체에 새겨진 아주 작은 상표만 있으면 false.
 - dark: 거의 검정·암전이면 true   - what: 보이는 것 영어 6~10낱말
@@ -1099,6 +1132,7 @@ def main(argv=None):
     ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
     ap.add_argument("--replan", action="store_true", help="state.json 으로 선택부터 다시(검색·태깅 없음)")
     ap.add_argument("--rematch", action="store_true", help="--replan 때 짝짓기(글)도 다시")
+    ap.add_argument("--emit", help="작품 폴더 — 재료_auto.json 을 preset_make 가 읽는 재료.json 으로 쓴다(빈칸 있으면 안 씀)")
     a = ap.parse_args(argv)
     llm = LLM()
     if a.compare_only:
@@ -1108,6 +1142,9 @@ def main(argv=None):
     else:
         res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
     print(json.dumps(res["stats"], ensure_ascii=False))
+    if a.emit:
+        bad = emit_material(res, a.out, a.emit)
+        print("emit:", "재료.json 씀" if not bad else "안 씀 — " + "; ".join(bad))
     if a.human:
         human = json.loads(Path(a.human).read_text(encoding="utf-8"))
         cmp_ = compare_human(res, human, llm)
