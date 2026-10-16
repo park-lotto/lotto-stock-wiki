@@ -1,0 +1,32 @@
+{
+ "src": "v_stwtJyFQyKg.mp4",
+ "ss": 25.0,
+ "to": 34.25,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 3.58,
+   "text": "[music] 離開你之後 你說的",
+   "ko": "[음악] 너를 떠난 후 네가 말했던",
+   "abs_start": 25.0,
+   "abs_end": 28.58
+  },
+  {
+   "start": 3.58,
+   "end": 5.18,
+   "text": "Okay, bye!",
+   "ko": "좋아요, 안녕!",
+   "abs_start": 28.58,
+   "abs_end": 30.18
+  },
+  {
+   "start": 5.18,
+   "end": 9.16,
+   "text": "保持著同樣睡覺 [music]",
+   "ko": "여전히 같은 습관으로 잠에 들어 [음악]",
+   "abs_start": 30.18,
+   "abs_end": 34.16
+  }
+ ]
+}

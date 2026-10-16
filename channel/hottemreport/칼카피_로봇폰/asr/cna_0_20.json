@@ -1,0 +1,40 @@
+{
+ "src": "v_junnnF3cRuQ.mp4",
+ "ss": 0.0,
+ "to": 20.0,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.82,
+   "text": "Is that a phone, a camera, or a robot?",
+   "ko": "저것은 스마트폰일까요, 카메라일까요, 아니면 로봇일까요?",
+   "abs_start": 0.0,
+   "abs_end": 2.82
+  },
+  {
+   "start": 2.82,
+   "end": 7.48,
+   "text": "Chinese smart device maker Honor is betting its latest device can be all three.",
+   "ko": "중국의 스마트 기기 제조업체 아너는 자사의 최신 기기가 이 세 가지 모두가 될 수 있다고 확신하고 있습니다.",
+   "abs_start": 2.82,
+   "abs_end": 7.48
+  },
+  {
+   "start": 7.48,
+   "end": 15.0,
+   "text": "It has launched what it calls the world's first robot phone starting at around $1,500 or 10,000 yuan.",
+   "ko": "아너는 약 1,500달러(약 10,000위안)부터 시작하는 세계 최초의 '로봇폰'이라 불리는 제품을 출시했습니다.",
+   "abs_start": 7.48,
+   "abs_end": 15.0
+  },
+  {
+   "start": 15.0,
+   "end": 20.0,
+   "text": "Honor says 400,000 pre-orders have been made in just 2 weeks.",
+   "ko": "아너 측은 단 2주 만에 40만 대의 사전 주문이 이뤄졌다고 밝혔습니다.",
+   "abs_start": 15.0,
+   "abs_end": 20.0
+  }
+ ]
+}

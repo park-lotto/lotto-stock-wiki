@@ -1,0 +1,302 @@
+{
+ "_note": "HONOR 로봇 폰 칼카피 재료 계획(TTS·렌더 전 선검수). 시각은 OE11 말속도 7.965자/초(공백 뺀 글자)로 추정 — TTS 뒤 gap_src[0] − 그 문장 말 길이로 ss·audio_ss 를 다시 맞춘다. 원음 구간은 사람 말 없는 곳만(조율자 10-16).",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/칼카피_HONOR/cand",
+ "replaced": "없음(새 소재 — 같은 제품 실영상)",
+ "narration": "타입캐스트 필재(남성, copy_render.NARR 기본) · OE11 과 같은 템포 1.24(OE11 실측 7.965자/초) · 해요체 7줄 · 184자(공백·쉼표 뺌)",
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_junnnF3cRuQ.mp4",
+   "url": "https://www.youtube.com/watch?v=junnnF3cRuQ",
+   "ss": 34.3,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    900,
+    0,
+    682,
+    860
+   ],
+   "mute": true,
+   "res": "1920x1080",
+   "Y": 168,
+   "ours": "흰 벽 앞 받침대에 꽂힌 로봇 폰 — 짐벌 카메라가 위로 솟고 화면에 로봇 눈(CNA 34.2~36.6 한 장면)",
+   "why": "'이게 AI 영상이 아니라고요?' — 첫 1.6초에 '폰 위 로봇 머리' 그림",
+   "why_audio": "CNA 기자·폰 대화(29.8~40.3) → mute",
+   "crop_note": "아래 CNA 로고·뉴스띠(y≥885) 잘라 냄"
+  },
+  {
+   "i": 1,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 3.6,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    0,
+    120,
+    1080,
+    1361
+   ],
+   "res": "1080x1920",
+   "Y": 120,
+   "gap_src": [
+    5.6,
+    8.6
+   ],
+   "audio_src": "v_stwtJyFQyKg.mp4",
+   "audio_ss": 3.6,
+   "ours": "공원에서 손에 든 폰(옆모습 5.0) → 뒷면 카메라가 위로 솟아 짐벌로 섬(5.8~7.2)",
+   "why": "'카메라가 튀어나오는, 진짜 폰이에요.' 뒤 원음 3.0초 — 솟는 순간을 원음으로(OE11 원본 5.0~7.0 리액션 자리)",
+   "audio_check": "stwt 5.6~8.6 사람 말 없음 — 받아쓰기 3회(전체·0~9초·0.5초 창 분류) 모두 새소리·기차 경적만, 첫 사람 말은 9.1초 'Hello, dance karte phone dekha hai kabhi?'",
+   "overlays": [
+    {
+     "kind": "emoji",
+     "emoji": "😲",
+     "size": 170,
+     "at": [
+      210,
+      1180
+     ],
+     "t": [
+      2.3,
+      3.6
+     ],
+     "why": "카메라 솟는 소스 5.9~7.2"
+    }
+   ]
+  },
+  {
+   "i": 2,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 12.4,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    0,
+    120,
+    1080,
+    1361
+   ],
+   "mute": true,
+   "res": "1080x1920",
+   "Y": 118,
+   "ours": "폰 뒷면(12.5) → 앞으로 돌리자 짐벌 카메라가 솟아 있음(13.2~15.5)",
+   "why": "'아너가 만든, 로봇 폰인데, 뒷면 카메라가, 짐벌처럼 솟아올라요.'",
+   "why_audio": "12.0~15.0 말 없음(숨소리) · 15.6~ 영어 명령이 끝 0.3초 걸침 → mute"
+  },
+  {
+   "i": 3,
+   "src": "v_cNwj827V7WA.mp4",
+   "url": "https://www.youtube.com/watch?v=cNwj827V7WA",
+   "ss": 22.4,
+   "kind": "남의영상재편집(공식)",
+   "full": true,
+   "src_crop": [
+    790,
+    250,
+    659,
+    830
+   ],
+   "mute": true,
+   "res": "1920x1080",
+   "Y": 193,
+   "ours": "흰 배경 위 짐벌 카메라 머리가 좌우·위아래로 고개를 돌림(22.4~25.0 한 장면, 25.0부터 위쪽에 영어 글자 — y≥250 크롭으로 잘라 냄)",
+   "why": "'내가 움직이면, 카메라가 고개 돌려서, 계속 따라온대요.' — 고개 돌리는 움직임(말 근거는 CNA 기자 'It can track my movements')",
+   "why_audio": "공식 영상 음악 → mute",
+   "crop_note": "위 'Do I seem different to you?' 글자(y≈160) 잘라 냄 · 확대 1.64배",
+   "why_change": "1안 CNA 45.6(기자+폰)은 크롭 폭 674에 얼굴·폰이 같이 안 들어가 버림(시트 확인)"
+  },
+  {
+   "i": 4,
+   "src": "v_stwtJyFQyKg.mp4",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "ss": 15.99,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    0,
+    120,
+    1080,
+    1361
+   ],
+   "res": "1080x1920",
+   "Y": 105,
+   "gap_src": [
+    18.5,
+    23.0
+   ],
+   "audio_src": "v_stwtJyFQyKg.mp4",
+   "audio_ss": 15.99,
+   "ours": "짐벌 카메라 + 화면 로봇 얼굴(15.5~17.8) → 음악 틀자 화면에 음표·카메라 머리가 좌우로 흔들림(18.5~23.0)",
+   "why": "'말로 음악 틀고, 춤추라고 하면, 진짜 춤까지 춰요.' 뒤 원음 4.5초 — 폰이 노래 틀고 춤추는 소리(OE11 원본 12.5~15.0 자리)",
+   "audio_check": "stwt 18.5~23.0 사람 말 없음 — 받아쓰기 3회 모두 노래(폰 재생, 중국어 가사 '從此海闊天空…')만. ★조율자 받아쓰기(18~25 힌디어 말)와 다름 — 0.5초 창 분류에서 17.5~27.5 전부 'sing', 사람 말은 9.1~12.0·15.6~17.5·28.0~29.3 셋뿐. 앞 15.99~17.5 영어 명령 'Play music and dance.'는 나레 아래(덕킹 10dB)로 덮임",
+   "overlays": [
+    {
+     "kind": "emoji",
+     "emoji": "🕺",
+     "size": 170,
+     "at": [
+      210,
+      1180
+     ],
+     "t": [
+      3.0,
+      4.5
+     ],
+     "why": "카메라 머리 흔들림 소스 18.9~20.4"
+    }
+   ]
+  },
+  {
+   "i": 5,
+   "src": "v_junnnF3cRuQ.mp4",
+   "url": "https://www.youtube.com/watch?v=junnnF3cRuQ",
+   "ss": 104.3,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    800,
+    0,
+    682,
+    860
+   ],
+   "mute": true,
+   "res": "1920x1080",
+   "Y": 114,
+   "ours": "광저우 거리 인터뷰 — 청년이 '부서지기 쉬울 것 같아 안 산다, 짐벌 고장 나면 수리비가 비쌀 것'이라 말하는 장면(104.0~114.5 한 장면)",
+   "why": "'근데 반응은 엇갈렸어요, 고장 나면 수리비가, 걱정이라는 사람도 있었거든요.' — 그 말을 한 사람 얼굴",
+   "why_audio": "중국어 말 → mute(나레가 내용 전함)",
+   "crop_note": "아래 영어 자막·CNA 로고(y≥885) 잘라 냄"
+  },
+  {
+   "i": 6,
+   "src": "v_-vE6Nl0cILw.mp4",
+   "url": "https://www.youtube.com/watch?v=-vE6Nl0cILw",
+   "ss": 66.0,
+   "kind": "남의영상재편집",
+   "full": true,
+   "src_crop": [
+    440,
+    100,
+    778,
+    980
+   ],
+   "mute": true,
+   "res": "1920x1080",
+   "Y": 134,
+   "ours": "런던 거리 리뷰어가 짐벌 솟은 로봇 폰을 얼굴 옆에 들고 있음(65~78 한 장면)",
+   "why": "'그래서 중국에선, 사전 예약하면, 1년 동안 짐벌을, 세 번까지 공짜로 바꿔 준대요.' — 솟은 짐벌이 계속 보임",
+   "why_audio": "리뷰어 말 → mute",
+   "crop_note": "왼쪽 위 'Shot on Oppo Find X9 Ultra' 글자(y<90) 잘라 냄"
+  },
+  {
+   "i": 7,
+   "src": "v_uiaHf2j2b5g.mp4",
+   "url": "https://www.youtube.com/watch?v=uiaHf2j2b5g",
+   "ss": 57.4,
+   "kind": "남의영상재편집(공식)",
+   "full": true,
+   "src_crop": [
+    480,
+    0,
+    857,
+    1080
+   ],
+   "mute": true,
+   "res": "1920x1080",
+   "Y": 90,
+   "gap_src": "end 1.0",
+   "ours": "방에서 로봇 폰으로 셀카 브이로그 찍는 여성(57.5~59.2) → 짐벌 카메라 클로즈업(59.5~60.9)",
+   "why": "'브이로그 찍는 사람한텐 딱이라는 댓글도 있네요.' — 끝 1초는 BGM 만",
+   "why_audio": "공식 광고 음악 → mute",
+   "bright_note": "평균 밝기 Y80~107(다른 컷 105~168보다 어두운 편, 검정 아님)"
+  }
+ ],
+ "gaps": {
+  "plan": "문장 2('카메라가 튀어나오는, 진짜 폰이에요.') 뒤 3.0초 · 문장 5('…진짜 춤까지 춰요.') 뒤 4.5초 · 끝 1.0초",
+  "hottem_audio_gaps": "1:3.0,4:4.5,end:1.0"
+ },
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_29.mp3",
+   "t": 3.93,
+   "db": -6,
+   "why": "OE11 과 같은 팝 — 😲 등장(컷1 시작 1.63 + 2.3)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_29.mp3",
+   "t": 15.79,
+   "db": -6,
+   "why": "🕺 등장(컷4 시작 12.79 + 3.0)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_10.mp3",
+   "t": 23.82,
+   "db": -4,
+   "why": "반전 줄 시작(컷6)"
+  }
+ ],
+ "source_audio": {
+  "keep": true,
+  "volume": 1.0,
+  "duck_db": 10.0,
+  "why": "OE11 과 같음 — 원음 구간 크기는 TTS 뒤 hottem_audio measure 로 재서 gap_gain 정함(지금 미정)"
+ },
+ "caption_effects": {
+  "now": "OE11 과 같은 틀: 흰 글자 PretendardXBold 84 + 검정 외곽선 8px · 교체형(replace) · 한 줄 ≤13자",
+  "planned": "gap 두 곳 하늘색 강조 자막(caption_events emph) — narr_video 64827c81e 연결됨(OE11 통과)"
+ },
+ "timing_est": {
+  "shots": [
+   [
+    0.0,
+    1.63
+   ],
+   [
+    1.63,
+    6.64
+   ],
+   [
+    6.64,
+    9.91
+   ],
+   [
+    9.91,
+    12.79
+   ],
+   [
+    12.79,
+    19.8
+   ],
+   [
+    19.8,
+    23.82
+   ],
+   [
+    23.82,
+    27.96
+   ],
+   [
+    27.96,
+    31.6
+   ]
+  ],
+  "gaps": [
+   [
+    3.64,
+    6.64
+   ],
+   [
+    15.3,
+    19.8
+   ],
+   [
+    30.6,
+    31.6
+   ]
+  ],
+  "how": "공백 뺀 글자 ÷ 7.965(OE11 TTS 23.226초/185자) — 렌더 전 추정. 글자 = 쉼표·공백 뺀 184자"
+ }
+}

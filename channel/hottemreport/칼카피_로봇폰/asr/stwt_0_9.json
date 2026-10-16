@@ -1,0 +1,32 @@
+{
+ "src": "v_stwtJyFQyKg.mp4",
+ "ss": 0.0,
+ "to": 9.0,
+ "model": "gemini-3.5-flash",
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 1.8,
+   "text": "[birds chirping]",
+   "ko": "[새 지저귐]",
+   "abs_start": 0.0,
+   "abs_end": 1.8
+  },
+  {
+   "start": 1.8,
+   "end": 4.5,
+   "text": "[train horn]",
+   "ko": "[기차 경적 소리]",
+   "abs_start": 1.8,
+   "abs_end": 4.5
+  },
+  {
+   "start": 4.5,
+   "end": 8.2,
+   "text": "[birds chirping]",
+   "ko": "[새 지저귐]",
+   "abs_start": 4.5,
+   "abs_end": 8.2
+  }
+ ]
+}

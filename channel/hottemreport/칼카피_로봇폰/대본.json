@@ -1,0 +1,186 @@
+{
+ "topic": "AI 영상인 줄 알았던 아너(HONOR) 로봇 폰 — 카메라가 짐벌처럼 솟아 춤까지 추는데, 내구성 걱정 → 짐벌 무상 교체(중국 사전예약)",
+ "titles": {
+  "hook": "AI인 줄 알았던\n춤추는 로봇 폰"
+ },
+ "facts": {
+  "f1": {
+   "text": "stwtJyFQyKg(Gyan Therapy, 1,763,764회, 2026-08-25) 댓글 1위(좋아요 1,770) 'At first, I thought it was another AI generated video 😂' · 'Mujhe phle AI LGA 😅'(7) — PlayMCP 댓글 20개 실측 10-16",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg"
+  },
+  "f2": {
+   "text": "같은 쇼츠 화면: 뒷면 카메라 덩어리가 위로 솟아 짐벌처럼 섬(5.8~7.2초, 12.5~14.8초) — 0.75초 간격 시트 눈 확인",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "kind": "화면 관찰"
+  },
+  "f3": {
+   "text": "CNA 'Gimmick or game changer? Chinese smart device maker Honor launches robot phone'(2026-08-13): 'Chinese smart device maker Honor… launched what it calls the world's first robot phone'(0~15초) · 'You see the retractable gimbal here. It can track my movements wherever I go.'(45.3~51.5초, 제미나이 받아쓰기)",
+   "url": "https://www.youtube.com/watch?v=junnnF3cRuQ"
+  },
+  "f4": {
+   "text": "stwt 받아쓰기: 15.6~17.5초 'Play music and dance.'(영어 음성 명령) → 17.5~27.5초 폰에서 노래(가사만, 사람 말 없음) + 카메라 머리가 좌우로 움직임(18.5~25.2초 시트)",
+   "url": "https://www.youtube.com/shorts/stwtJyFQyKg",
+   "kind": "받아쓰기+화면"
+  },
+  "f5": {
+   "text": "CNA 'But reactions to this new concept were mixed.'(95.0~96.8초) + 거리 인터뷰(103.0~113.8초, 화면 영어 자막) 'I wouldn't consider it as I think it might be quite fragile. If you knock or drop it and the gimbal stops working, the repair cost would be high.' · 댓글 'If it drop while camera dancing 😮'(stwt, 31) · 'Afraid if after you accidentally drop it…'(CNA, 2)",
+   "url": "https://www.youtube.com/watch?v=junnnF3cRuQ"
+  },
+  "f6": {
+   "text": "Huawei Central(2026-07-18) 사전예약 혜택: 'a free 1-year gimbal replacement guarantee' · 'Users can replace the movable robotic camera arm up to three times in a year for free.' (중국 사전예약 기준 — 해외 판매 조건은 확인 안 됨)",
+   "url": "https://www.huaweicentral.com/honor-robot-phone-pre-order-begins/"
+  },
+  "f7": {
+   "text": "브이로그 반응 댓글: CNA 'This is a niche device that can appeal to vloggers and content creators…'(11) · Mrwhosetheboss(n3F996g8wjg, 5,119,492회) 'If it’s really that convenient, it would be incredibly useful for vlog users.'(13) · 'for a content creator this is probably highly rated'(552)",
+   "url": "https://www.youtube.com/watch?v=junnnF3cRuQ · https://www.youtube.com/watch?v=n3F996g8wjg"
+  }
+ },
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "처음엔 AI인 줄 ㅋㅋ",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 3.64,
+   "dur": 3.0,
+   "est": true,
+   "basis": "f1 stwt 댓글 1위 'At first, I thought it was another AI generated video 😂'(1,770) 번역 — 이 구간 원음은 새소리(받아쓰기 3회 사람 말 없음), 화면은 카메라 솟는 장면"
+  },
+  {
+   "kind": "emph",
+   "text": "춤추다 떨어지면…?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 15.3,
+   "dur": 4.5,
+   "est": true,
+   "basis": "f5 stwt 댓글 'If it drop while camera dancing 😮'(31) 번역 — 원음은 폰에서 나오는 노래(사람 말 없음), 다음 줄 내구성 논란으로 넘기는 다리"
+  },
+  {
+   "kind": "blank",
+   "t0": 30.6,
+   "dur": 1.0,
+   "est": true,
+   "basis": "끝 1초 BGM 만(OE11 꼴)"
+  }
+ ],
+ "final": {
+  "lines": [
+   {
+    "fn": "훅(AI 의심→진짜)",
+    "text": "이게 AI 영상이 아니라고요? 카메라가 튀어나오는, 진짜 폰이에요.",
+    "facts": [
+     "f1",
+     "f2"
+    ],
+    "sources": [
+     "https://www.youtube.com/shorts/stwtJyFQyKg"
+    ]
+   },
+   {
+    "fn": "정체(로봇 폰·짐벌)",
+    "text": "아너가 만든, 로봇 폰인데, 뒷면 카메라가, 짐벌처럼 솟아올라요.",
+    "facts": [
+     "f3",
+     "f2"
+    ],
+    "sources": [
+     "https://www.youtube.com/shorts/stwtJyFQyKg",
+     "https://www.youtube.com/watch?v=junnnF3cRuQ"
+    ]
+   },
+   {
+    "fn": "기능 1(따라오기)",
+    "text": "내가 움직이면, 카메라가 고개 돌려서, 계속 따라온대요.",
+    "facts": [
+     "f3"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=junnnF3cRuQ"
+    ]
+   },
+   {
+    "fn": "기능 2(춤)",
+    "text": "말로 음악 틀고, 춤추라고 하면, 진짜 춤까지 춰요.",
+    "facts": [
+     "f4"
+    ],
+    "sources": [
+     "https://www.youtube.com/shorts/stwtJyFQyKg"
+    ]
+   },
+   {
+    "fn": "논란(내구성)",
+    "text": "근데 반응은 엇갈렸어요, 고장 나면 수리비가, 걱정이라는 사람도 있었거든요.",
+    "facts": [
+     "f5"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=junnnF3cRuQ"
+    ]
+   },
+   {
+    "fn": "반전(무상 교체)",
+    "text": "그래서 중국에선, 사전 예약하면, 1년 동안 짐벌을, 세 번까지 공짜로 바꿔 준대요.",
+    "facts": [
+     "f6"
+    ],
+    "sources": [
+     "https://www.huaweicentral.com/honor-robot-phone-pre-order-begins/"
+    ]
+   },
+   {
+    "fn": "마무리(누구한테)",
+    "text": "브이로그 찍는 사람한텐 딱이라는 댓글도 있네요.",
+    "facts": [
+     "f7"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=junnnF3cRuQ · https://www.youtube.com/watch?v=n3F996g8wjg"
+    ]
+   }
+  ],
+  "model": "오푸스 손 작성(제미나이 안 씀) — OE11 꼴(훅 질문→정체→기능 2→논란→반전→마무리, 해요체 7줄). 평가는 전부 댓글·인터뷰 전언체('~대요','~사람도 있었거든요','~댓글도 있네요')",
+  "check": {
+   "chars_no_space": [
+    29,
+    26,
+    23,
+    20,
+    32,
+    33,
+    21
+   ],
+   "total_chars": 184,
+   "superlatives": [],
+   "range_numbers": [],
+   "numbers": [
+    "1년",
+    "세 번 — f6 원문 'up to three times in a year'"
+   ]
+  },
+  "caption_split_note": "TTS 는 쉼표를 뺀 원문으로 1회 합성(OE11 과 같음). 자막 조각 ≤13자 — 쉼표로 조각 경계(narr_video chunk_sentence 쉼표 규칙, 화면엔 쉼표 안 나옴)"
+ },
+ "gate": {
+  "scores": {
+   "우리(로봇 폰)": {
+    "아는 대상": 6,
+    "몰랐던": 8,
+    "재미": 8,
+    "이야기": 7,
+    "얻는 것": 6,
+    "보여줄 수 있나": 8
+   }
+  },
+  "score_note": "오푸스 판정(10-16). 아는 대상 6 = 스마트폰은 누구나 알지만 아너 브랜드는 국내 인지 낮음. 몰랐던 8 = 폰 카메라가 짐벌로 솟는 모양은 처음 봄. 이야기 7 = AI 의심→진짜→춤→고장 걱정→무상 교체. 얻는 것 6 = 고장 걱정에 대한 회사 답(1년 3회 교체)·누구에게 맞나. 보여줄 수 있나 8 = 실착 쇼츠(1080×1920)·뉴스 인터뷰 실영상, 단 따라오기 장면은 공식 영상의 고개 돌리는 짐벌(사람을 따라가는 실영상은 못 구함)",
+  "angle": "'AI 영상인 줄 알았던 춤추는 폰 — 근데 떨어뜨리면? → 회사가 짐벌을 공짜로 바꿔 준다'",
+  "twist": "6번 줄 '중국에선 사전 예약하면 1년 동안 짐벌을 세 번까지 공짜로 바꿔 준대요' — 5번 줄 내구성 논란에 대한 답",
+  "twist_orig": "OE11 원본은 반전 없음(기능 나열). OE11 칼카피는 6번 줄 '오토바이용 아님' 반전 — 같은 자리"
+ }
+}
