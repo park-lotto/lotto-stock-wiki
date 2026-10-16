@@ -257,3 +257,55 @@ def test_line_outline_none_when_ring_never_ends():
     d2.text((300, 150), "눈물 줄줄", font=T._pil_font("BMDOHYEON", 120), fill=(240, 198, 18), anchor="ms", stroke_width=5, stroke_fill=(255, 255, 255))
     m = T.line_outline_of(np.asarray(im2), [240, 198, 18], 0, None)
     assert m and 3 <= m[0] <= 7 and min(m[1:]) > 200                                                     # 영상 위 흰 외곽선 5px
+
+
+# ── 실제 뜯기 + 실제 원본 프레임(1초, fixtures/calcopy_to_frame) — 틀 B(mY)·핫템(OE11) 오판 재발 막기 (10-16) ──
+_FIX = __import__("pathlib").Path(__file__).resolve().parent / "fixtures" / "calcopy_to_frame"
+_ROOT = _FIX.parents[3]
+SERIF = ("RIDIBatang", "Batang", "Myeongjo", "Serif", "KoPubBatang", "NanumMyeongjo", "Gowun")
+
+
+def _real(vid_json: str, png: str, ocr: dict) -> dict:
+    import json
+    J = json.loads((_ROOT / vid_json).read_text(encoding="utf-8"))
+    img = np.asarray(Image.open(_FIX / png).convert("RGB"))
+    return to_frame.build(J, img, ocr)
+
+
+@pytest.fixture(scope="module")
+def real_mY():
+    return _real("channel/sseolpulda/뜯기/mYxuF1A74j4/뜯기.json", "mY_t1.png", {"title": ["퍽? 이게 뭐라고", "눈물 줄줄 ㅠㅠ"]})
+
+
+@pytest.fixture(scope="module")
+def real_OE11():
+    return _real("channel/hottemreport/뜯기/OE-11wb7vdY/뜯기.json", "OE11_t1.png",
+                 {"title": ["AI 주작 논란 터진", "아이언맨 헬멧"], "brand": "핫템리포트"})
+
+
+def test_real_mY_title_outline_not_background(real_mY):
+    """mY 노란 2줄은 검정 띠·어두운 공연장 영상 위 — 외곽선 없음(실측 0). 예전 판은 고리=바탕 색을 12px 외곽선으로 냈다."""
+    t = next(l for l in real_mY["layers"] if l.get("role") == "title")
+    assert not any(t.get("line_outline") or []), t.get("line_outline")
+    assert not t.get("outline"), t.get("outline")
+    assert t["line_rgb"] and t["line_rgb"][1][0] > 200 and t["line_rgb"][1][2] < 60   # 2줄 노랑(극성: 어두운 바탕 밝은 글자)
+
+
+def test_real_OE11_title_font_judged_on_title_lines(real_OE11):
+    """OE11 제목: 분석기 fonts.title 없음 → 제목 2줄(노랑·빨강, 검정 바탕)을 직접 판별해야 한다. bg 를 안 넘기면 빨강 줄을 극성 문턱으로
+    못 갈라 '잉크 줄 1 ≠ OCR 줄 2' → 자막 글꼴로 떨어졌다. 분석기 묶음 판별은 채널명 띠까지 섞어 명조(RIDIBatang)를 냈다."""
+    t = next(l for l in real_OE11["layers"] if l.get("role") == "title")
+    notes = real_OE11["made_from"]["notes"]
+    assert not any("제목 글꼴 = 자막 글꼴" in n for n in notes), [n for n in notes if "제목 글꼴" in n]
+    assert any("fontmatch.rank 를 제목 2줄에 직접" in n for n in notes)
+    assert not any(s.lower() in t["font"].lower() for s in SERIF), t["font"]
+    assert t["line_rgb"] and t["line_rgb"][0][2] < 60 and t["line_rgb"][1][0] > 200 and t["line_rgb"][1][1] < 80   # 노랑·빨강
+
+
+def test_real_OE11_caption_outline_measured(real_OE11):
+    """OE11 자막: 분석기 요약 외곽선 1px 회색(104) — 프레임 실측 검정 13px(고리 1~13px 검정 0.97~1.0, 14px 0.65)."""
+    c = next(l for l in real_OE11["layers"] if l.get("role") == "caption")
+    assert c["outline"] and 11 <= c["outline"]["px"] <= 15 and max(c["outline"]["rgb"]) < 60, c["outline"]
+    brand = next(l for l in real_OE11["layers"] if l.get("role") == "brand")
+    g = brand.get("glow")
+    assert g and g["rgb"][1] > 2 * max(g["rgb"][0], g["rgb"][2])                                              # 초록 글로우 채널명

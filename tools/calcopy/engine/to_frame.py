@@ -229,6 +229,7 @@ def caption_word_gap(src: str, J: dict, W: int, H: int, pol: str) -> float | Non
     return float(_q(out)) if out else None
 
 
+CAP_OL_TRUST = 2         # 분석기 자막 외곽선이 이 px 미만이면 못 믿고 프레임에서 직접 잰다(OE11 요약 1px · 실측 13px)
 OUTLINE_BG_TOL = 45      # 외곽선 바깥이 외곽선 색과 이 안이면 바탕(외곽선 아님)
 OUTLINE_MAX = 16        # 외곽선 두께 상한(px) — 여기까지 끝을 못 찾으면 외곽선 아님(OE11 자막 검정 12px 은 13px 에서 끝난다)
 OUTLINE_SHARE = 0.7     # 외곽선 고리: 이 비율 이상이 외곽선 색
@@ -579,7 +580,7 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
     title_ink_w = None
     if title_b and fam:
         tl = otext.get("title") or []
-        tfam, tsrc = (title_font_fixed, "고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)") if title_font_fixed else title_font(J, frame_img, title_b, tl, tpol)
+        tfam, tsrc = (title_font_fixed, "고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)") if title_font_fixed else title_font(J, frame_img, title_b, tl, tpol, bg)
         if not title_font_fixed and "신뢰 low" in tsrc and frame_img is not None and tl:
             # 분석기 판별 신뢰가 낮으면 제목 줄만(고정 문구 띠를 뺀) 같은 판별 함수로 다시 재 점수가 높은 쪽 — 분석기는 채널명 띠까지
             #   한 묶음으로 재 명조(RIDIBatang 0.448)를 냈다(OE11, 정답 TmonMonsori, 10-16)
@@ -684,9 +685,10 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
         ol = fxs.get("outline_px")
         ol_rgb = fxs.get("outline_rgb")
-        if not ol and frame_img is not None and fxs.get("fill_rgb"):
-            # 분석기 요약이 외곽선 0 이어도 프레임의 자막 줄에서 직접 잰다(창 안 자막은 영상 위라 고리가 보인다) — 판단은 line_outline_of
-            #   한 곳(제목 줄과 같은 함수). OE11: 요약 0 · 정답 검정 8px
+        if (ol or 0) < CAP_OL_TRUST and frame_img is not None and fxs.get("fill_rgb"):
+            # 분석기 요약이 외곽선 0~1px 이면 프레임의 자막 줄에서 직접 잰다(창 안 자막은 영상 위라 고리가 보인다) — 판단은 line_outline_of
+            #   한 곳(제목 줄과 같은 함수). OE11: 요약 1px 회색(104) · 프레임 실측 검정 13px(고리 1~13px 검정 비율 0.97~1.0, 14px 0.65).
+            #   크기 역산(위)은 분석기 줄 높이와 짝인 분석기 외곽선 값으로 한다 — OE11 줄 높이 75 = 채움 높이 실측 74(외곽선 미포함)
             y0 = int(max(0, top - 8)); y1 = int(min(frame_img.shape[0], top + ink_h + 20))
             m = line_outline_of(frame_img[y0:y1], fxs["fill_rgb"], 0, None)
             if m:
