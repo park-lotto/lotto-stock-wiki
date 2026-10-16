@@ -1,0 +1,125 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 347,
+   "w": 1080,
+   "h": 1573,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 100,
+   "lines": 2,
+   "font": "BlackHanSans",
+   "size": 148.3,
+   "line_h": 142,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     240,
+     198,
+     18
+    ]
+   ],
+   "outline": null,
+   "line_outline": [
+    null,
+    null
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -7.0,
+   "enter": null,
+   "text": "시구 받아준 포수가\n알고 보니 아빠 ㅠㅠ"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1225,
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 83.2,
+   "line_h": 95,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "mYxuF1A74j4",
+ "made_from": {
+  "tool": "tools/calcopy/engine/to_frame.py",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "Pretendard-ExtraBold.otf",
+   "top1_score": 0.343,
+   "picked_from": {
+    "file": "Pretendard-ExtraBold.otf",
+    "score": 0.343
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 853,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+   "글꼴 1위 Pretendard-ExtraBold.otf(0.343) < 0.5 — 확신 낮음. 쓴 글꼴 Pretendard({'file': 'Pretendard-ExtraBold.otf', 'score': 0.343})",
+   "제목 글꼴 BlackHanSans — 분석기 fonts.title 1위 BlackHanSans.ttf(0.5363), 신뢰 ok",
+   "제목 줄별 외곽선 [None, [12, 25, 19, 0]] (창 위로 걸친 고리만 잼)",
+   "제목 기울기 +0도(기둥 전단 투영) → 바름",
+   "자막 낱말 간격 -44.2px — 원본 낱말 틈 29.0px 에 맞춤(자간 26.6px 은 글자 사이만)",
+   "10-16 오푸스 손질: to_frame 자막 층이 align=right·x917·자간 +26.6·낱말 간격 −44.2 로 나와(원본은 가운데 정렬) 가운데·자간 0·낱말 0·PretendardXBold·외곽선 검정 6px 로 고침 — 틀 담당에 보고할 것"
+  ],
+  "ocr_model": "gemini-flash-lite-latest"
+ }
+}

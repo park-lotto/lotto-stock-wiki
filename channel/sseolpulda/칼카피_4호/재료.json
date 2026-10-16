@@ -1,0 +1,118 @@
+{
+ "_note": "4호 재료 계획(렌더 전): 같은 사건 두 각도(FOX Sports Iw8DR84GmIc 32초·자막 그래픽 없음 / MLB 공식 JmMUD5pRBgk 0~38초, 39초부터 광고·포옹 구간엔 이름 띠 그래픽 → 포옹은 FOX만). 둘 다 1280×720(web 136·원음 영어 original). 세로 창(1080×1573)에 꽉 채우면 494px 폭만 남아 약 2.2배 확대.",
+ "cand_dir": "C:/숏템_칼카피/sseolpulda/칼카피_4호/cand",
+ "replaced": false,
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_Iw8DR84GmIc.mp4",
+   "url": "https://www.youtube.com/watch?v=Iw8DR84GmIc",
+   "ss": 0.0,
+   "full": true,
+   "src_crop": [
+    330,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "회색 로열스 티셔츠 소년이 공을 들고 마운드로 걸어 나오는 장면(소스 0~4.5초, 소년 x 536~640)",
+   "why": "'열한 살 오스틴이 시구를 하러 마운드에 올랐어요'"
+  },
+  {
+   "i": 1,
+   "src": "v_JmMUD5pRBgk.mp4",
+   "url": "https://www.youtube.com/watch?v=JmMUD5pRBgk",
+   "ss": 3.0,
+   "full": true,
+   "src_crop": [
+    560,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "마스크·보호구를 다 쓴 포수가 홈에서 미트를 들고 서 있는 근접(MLB 3~6.5초, 포수 x 680~880)",
+   "why": "'포수는 마스크를 깊게 눌러쓰고 있었죠'"
+  },
+  {
+   "i": 2,
+   "src": "v_Iw8DR84GmIc.mp4",
+   "url": "https://www.youtube.com/watch?v=Iw8DR84GmIc",
+   "ss": 11.0,
+   "full": true,
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "소년이 공을 던지고(11초) 포수가 받은 뒤(12~14초) 마스크 벗은 얼굴이 드러나는(16초) 장면 — 가운데 창",
+   "why": "'포수가 마스크를 벗자 … 공군 아빠였어요'",
+   "overlays_plan": "빨간 원(지름 170·두께 6, 원본 규칙) — 마스크 벗은 아빠 얼굴(소스 16초 무렵) 둘레. 자리는 TTS 뒤 컷 길이가 정해지면 렌더 프레임에서 실측해 path 로"
+  },
+  {
+   "i": 3,
+   "src": "v_Iw8DR84GmIc.mp4",
+   "url": "https://www.youtube.com/watch?v=Iw8DR84GmIc",
+   "ss": 18.0,
+   "full": true,
+   "src_crop": [
+    330,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "아빠를 알아본 소년이 놀라 웃으며(18~19초) 달려가(20초) 아빠에게 안기는(21초) 장면",
+   "why": "'그대로 달려가 품에 안겼죠'"
+  },
+  {
+   "i": 4,
+   "src": "v_Iw8DR84GmIc.mp4",
+   "url": "https://www.youtube.com/watch?v=Iw8DR84GmIc",
+   "ss": 25.0,
+   "full": true,
+   "src_crop": [
+    460,
+    0,
+    494,
+    720
+   ],
+   "kind": "남의영상재편집(같은 사건)",
+   "ours": "아빠 품에 안긴 소년이 얼굴을 찡그리며 우는 근접(25~31초)",
+   "why": "'끌어안은 채 오스틴은 눈물을 쏟았답니다'",
+   "overlays_plan": "👍 스티커(원본 규칙: 끝 컷, 지름 약 260) — 얼굴을 가리지 않는 자리로 렌더 프레임 보고 정함"
+  }
+ ],
+ "sfx_plan": [
+  {
+   "pack_id": 1456,
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_10.mp3",
+   "category": "팝/띵",
+   "at": "3번 줄(반전) 시작 — 원본 3.46초 '한 여성이'(반전 자막 교체 직후) 자리"
+  },
+  {
+   "pack_id": 1474,
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "category": "팝/띵",
+   "at": "4번 줄(감동) 시작 — 원본 8.92초 감정 전환 자리"
+  }
+ ],
+ "sfx": [],
+ "bgm": {
+  "lib": "shopping_shorts/assets/bgm_lib",
+  "id": "here_with_me",
+  "ratio": 0.15,
+  "why": "3호와 같은 감동·잔잔(원본 BGM 감동)"
+ },
+ "source_audio": {
+  "keep": true,
+  "tool": "tools/calcopy/hottem_audio.py bed → shopping_shorts.video_assemble.source_audio_bed(mix=False)",
+  "volume": 0.9,
+  "duck_db": 8,
+  "why": "FOX 원음 = 장내 해설(0~13.6초, 영어) + 관중 환호(13.6~27.0초) + 해설 'He's been gone for a year.'(27.0~29.6초). 나레 아래로 덕킹 → 반전·포옹 구간엔 환호가 바탕으로 깔림",
+  "note": "원본 mY 자체는 원음 없음(BGM만) — 이번 편은 조율자 지시로 원음 유지+덕킹 실전 시험"
+ },
+ "memes": "안 씀(원본 mY 짤 0컷)",
+ "narration": "타입캐스트 문정 tc_68f9c6a72f0f04a417bb136f · 템포 1.36(3호 실측: 6.52자/초) · 존댓말 5줄",
+ "caption_effects": {
+  "now": "흰 글자(PretendardXBold 83.2)+검정 외곽선 5px · 교체형 약 1초(3호 틀 그대로)",
+  "planned": "자막 등장 효과 — 틀 담당 연결 뒤"
+ }
+}
