@@ -1026,7 +1026,7 @@ def emit_material(auto: dict, wd, work_dir) -> list[str]:
     bad += seq_report(auto["shots"])["B13"]
     if not bad:
         Path(work_dir, "재료.json").write_text(json.dumps({"_note": f"material_auto {PROMPT_VER} emit — 재료_auto.json 에서", "cand_dir": str(Path(wd).resolve()),
-                                                        "shots": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
+                                                        "shots": rows}, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     return bad
 
 
