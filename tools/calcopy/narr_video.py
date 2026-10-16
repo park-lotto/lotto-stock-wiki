@@ -217,6 +217,9 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
         png = overlay_png(ov, Path(out).with_name(Path(out).stem + f"_ov{k}.png"))
         ins += ["-loop", "1", "-i", str(png)]
         keys = [tuple(p) for p in ov["path"]] if ov.get("path") else [(0.0, *ov["at"])]
+        # ★좌표 = 완성본 캔버스(1080×1920). 이 컷 캔버스는 창을 가운데(top)에 두고, compose 가 가운데 창 높이만 잘라 창 y 에 놓는다
+        #   → 컷 y = 완성본 y − 창 y + top (10-16 시험: 바꾸기 전엔 얹은 것이 창 y−top = 173px 아래로 갔다)
+        keys = [(t, x, y - win["y"] + top) for t, x, y in keys]
         a, b = ov.get("t", [0.0, dur])
         fc += (f";[{k + 1}:v]format=rgba[o{k}];[{last}][o{k}]overlay=x='{_lerp_expr(keys, 1)}-overlay_w/2':y='{_lerp_expr(keys, 2)}-overlay_h/2'"
                f":enable='between(t,{a},{b})':eval=frame[b{k + 1}]")
@@ -225,6 +228,61 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", "-t", f"{dur:.3f}", "-color_range", "tv", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
+
+
+# ── 자막 사건(빈 자막·강조 자막) — 대본.json caption_events (관제 097, 10-16 핫템 담당 요청) ──────────────
+# 원음 리액션 구간 동안 앞 나레 자막이 계속 떠 있었다 → [{kind:"blank", t0, dur}] 그 구간 자막 없음
+# 원음 리액션에 맞춰 띄우는 색 자막 → [{kind:"emph", text, rgb, t0, dur}] 흰 자막 대신 그 색(같은 글꼴·크기·외곽선·자리)
+# 시각은 완성본 초. 컷 시각은 건드리지 않는다(자막만). 판단 주인 = apply_caption_events 한 곳.
+def apply_caption_events(steps: list[dict], events: list[dict], dur: float) -> list[dict]:
+    """steps(t0·t1·text) → 이어진 자막 조각 [{t0,t1,text}] — blank·emph 구간은 text "" (emph 글자는 emph_png 가 따로 얹는다)."""
+    holes = sorted((float(e["t0"]), float(e["t0"]) + float(e["dur"])) for e in events or [] if e.get("kind") in ("blank", "emph"))
+    out = []
+    for s in steps:
+        pieces = [(s["t0"], s["t1"])]
+        for a, b in holes:
+            nxt = []
+            for x, y in pieces:
+                if b <= x or a >= y:
+                    nxt.append((x, y)); continue
+                if x < a:
+                    nxt.append((x, a))
+                if b < y:
+                    nxt.append((b, y))
+            pieces = nxt
+        # 0.25초 미만 조각은 글자 없이(빈 구간 끝 0.1초에 앞 자막이 번쩍 — 10-16 시험)
+        out += [{"t0": x, "t1": y, "text": s["text"] if y - x >= 0.25 or not holes else ""} for x, y in pieces if y - x > 0.02]
+    out += [{"t0": a, "t1": min(b, dur), "text": ""} for a, b in holes if a < dur]
+    out.sort(key=lambda r: r["t0"])
+    return out
+
+
+def _font_file(family: str) -> str:
+    """틀의 글꼴 이름 → 파일. 렌더러(scene-style-ui-showcase.html @font-face)와 같은 이름표를 읽고, 같은 이름의 otf/ttf 가 있으면 그것(PIL 용)."""
+    html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8", errors="ignore")
+    m = re.search(r'font-family:"%s";src:url\("\.\./([^"]+)"' % re.escape(family), html)
+    if not m:
+        raise SystemExit(f"글꼴 {family} 을 @font-face 에서 못 찾음")
+    w2 = ROOT / m.group(1)
+    for ext in (".otf", ".ttf"):
+        c = w2.parent.parent / (w2.stem + ext)
+        if c.exists():
+            return str(c)
+    return str(w2)
+
+
+def emph_png(text: str, cap: dict, rgb, dst: Path, dy: int = 0) -> Path:
+    """강조 자막 한 장(1080×1920 투명) — 틀 자막 층(cap)과 같은 글꼴·크기·외곽선·자리, 채움색만 rgb."""
+    from PIL import Image, ImageDraw, ImageFont
+    font = ImageFont.truetype(_font_file(cap["font"]), int(round(cap["size"])))
+    im = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+    ol = cap.get("outline") or {}
+    anchor = {"left": "lm", "right": "rm"}.get(cap.get("align", "center"), "mm")   # schema: x 는 align 기준(가운데·왼쪽 끝·오른쪽 끝)
+    # dy = 완성본 좌표 → 재료 캔버스(창이 가운데 놓인 1080×1920) 좌표
+    ImageDraw.Draw(im).text((cap["x"], cap["y"] + cap["line_h"] / 2 + dy), text, font=font, fill=tuple(int(v) for v in rgb) + (255,),
+                            anchor=anchor, stroke_width=int(round(ol.get("px", 0))), stroke_fill=tuple(ol.get("rgb", (0, 0, 0))) + (255,))
+    im.save(dst)
+    return dst
 
 
 def build(plan: dict):
@@ -241,6 +299,8 @@ def build(plan: dict):
     cuts = [s["t0"] for s in steps if s["new_cut"] and s["t0"] >= hook_end - 1e-6]
     cuts = sorted(set([0.0, hook_end] + cuts)) + [dur]
     shots_t = [(a, b) for a, b in zip(cuts, cuts[1:]) if b - a > 0.05]
+    events = [dict(e, t0=float(e["t0"]), dur=float(e["dur"])) for e in S.get("caption_events") or []]
+    cap_steps = apply_caption_events(steps, events, dur)   # 컷은 위 steps 로 이미 정했다 — 자막만 비우거나 바꾼다
     mshots = M["shots"]
     if len(mshots) < len(shots_t):
         raise SystemExit(f"재료 컷 {len(mshots)}개 < 필요한 컷 {len(shots_t)}개 — 재료.json shots 를 늘려라(컷 시각: {shots_t})")
@@ -280,8 +340,21 @@ def build(plan: dict):
         mat = out / "work" / f"f{fi}_mat.mp4"
         va._run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
                         "-shortest", "-c:v", "copy", "-c:a", "aac", str(mat)])
+        emph = [e for e in events if e.get("kind") == "emph" and cap and e["t0"] < t_b and e["t0"] + e["dur"] > t_a]
+        if emph:   # 강조 자막 = 재료 영상 위(틀 층 아래)에 얹는다 — 자막 자리는 영상 창 안(틀 B)
+            ins, fc, last = [], "", "0:v"
+            for k, e in enumerate(emph):
+                png = emph_png(e["text"], cap, e.get("rgb", (120, 200, 255)), out / "work" / f"f{fi}_emph{k}.png", dy=(1920 - win["h"]) // 2 - win["y"])
+                ins += ["-loop", "1", "-i", str(png)]
+                a0, b0 = max(0.0, e["t0"] - t_a), min(t_b, e["t0"] + e["dur"]) - t_a
+                fc += f"{';' if fc else ''}[{last}][{k + 1}:v]overlay=0:0:enable='between(t,{a0:.3f},{b0:.3f})'[e{k}]"
+                last = f"e{k}"
+            mat2 = out / "work" / f"f{fi}_mat_emph.mp4"
+            va._run_ffmpeg(["ffmpeg", "-y", "-i", str(mat), *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-map", "0:a",
+                            "-t", f"{t_b - t_a:.3f}", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-color_range", "tv", "-c:a", "copy", str(mat2)])
+            mat = mat2
         tl, bi = [], 0
-        for s in steps:
+        for s in cap_steps:
             a, b = max(s["t0"], t_a), min(s["t1"], t_b)
             if b - a <= 0.02:
                 continue
