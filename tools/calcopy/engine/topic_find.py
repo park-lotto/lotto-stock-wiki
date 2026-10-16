@@ -392,6 +392,63 @@ def news_search(q: str, n: int = 10) -> list[dict]:
     return out[:n]
 
 
+def daum_news_search(q: str, n: int = 10) -> list[dict]:
+    """다음 뉴스 검색(키 없음) — 다음 뉴스 기사 주소(v.daum.net/v/…) 순서대로. 제목·날짜·발췌는 article_page 가 기사에서 읽는다.
+    10-16 실측: 네이버 검색 결과 페이지가 403(차단) — 다음은 통과."""
+    url = "https://search.daum.net/search?w=news&q=" + up.quote(q)
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=15) as r:
+        s = r.read().decode("utf-8", "ignore")
+    out, seen = [], set()
+    for m in re.finditer(r"https?://v\.daum\.net/v/\d+", s):
+        if m.group(0) not in seen:
+            seen.add(m.group(0)); out.append({"url": m.group(0), "title": ""})
+    return out[:n]
+
+
+def bing_news_search(q: str, n: int = 10) -> list[dict]:
+    """빙 뉴스 RSS(키 없음) — apiclick 주소의 url= 에서 기사 주소를 꺼낸다(제목·날짜 포함)."""
+    url = "https://www.bing.com/news/search?format=rss&mkt=ko-kr&q=" + up.quote(q)
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=15) as r:
+        s = r.read().decode("utf-8", "ignore")
+    out = []
+    for it in re.findall(r"<item>(.*?)</item>", s, re.S)[:n]:
+        g = lambda tag: _html.unescape((re.search(rf"<{tag}[^>]*>(.*?)</{tag}>", it, re.S) or [None, ""])[1]).strip()   # noqa: E731
+        link = g("link")
+        real = up.parse_qs(up.urlparse(link).query).get("url", [link])[0]
+        out.append({"url": real, "title": g("title"), "date": g("pubDate")})
+    return out
+
+
+_META = r'<meta[^>]+(?:property|name|itemprop)=["\']{}["\'][^>]*content=["\']([^"\']+)'
+_META_R = r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*(?:property|name|itemprop)=["\']{}["\']'
+
+
+def article_page(url: str) -> dict:
+    """기사 페이지 → {url(최종), title, date, excerpt} — og:description·description(발췌), article:published_time·datePublished·본문 날짜(날짜).
+    못 읽으면 빈 칸(부르는 쪽이 거른다)."""
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "ko"})
+    with urllib.request.urlopen(req, timeout=15) as r:
+        final = r.geturl()
+        raw = r.read(600_000)
+    s = raw.decode("utf-8", "ignore")
+    if "charset=euc-kr" in s[:3000].lower():
+        s = raw.decode("cp949", "ignore")
+
+    def meta(*names):
+        for nm in names:
+            for pat in (_META, _META_R):
+                m = re.search(pat.format(re.escape(nm)), s, re.I)
+                if m and m.group(1).strip():
+                    return _html.unescape(m.group(1)).strip()
+        return ""
+    date = meta("article:published_time", "og:regDate", "datePublished", "pubdate", "date")
+    if not date:
+        m = re.search(r'"datePublished"\s*:\s*"([^"]+)"', s) or re.search(r"((?:19|20)\d{2}[-.]\s?\d{1,2}[-.]\s?\d{1,2})", s)
+        date = m.group(1) if m else ""
+    return {"url": final, "title": meta("og:title", "twitter:title"), "date": date[:25],
+            "excerpt": meta("og:description", "description", "twitter:description")}
+
+
 def community_search(keywords: list[str], pages: int = 1) -> list[dict]:
     """community_mine(보배드림 베스트 제목 검색) 재사용 — 추천 순."""
     from tools.calcopy import community_mine as cm
@@ -406,7 +463,8 @@ def community_search(keywords: list[str], pages: int = 1) -> list[dict]:
     return sorted(rows, key=lambda x: -(x.get("recomm") or 0))
 
 
-NET = {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": yt_upload_date, "db_top": db_top, "yt_meta": yt_meta, "news_search": news_search, "community_search": community_search}
+NET = {"yt_search": yt_search, "yt_detail": yt_detail, "yt_upload_date": yt_upload_date, "db_top": db_top, "yt_meta": yt_meta, "news_search": news_search,
+       "daum_news_search": daum_news_search, "bing_news_search": bing_news_search, "article_page": article_page, "community_search": community_search}
 
 
 # ── 겹침(이미 만든 소재) ────────────────────────────────────────────────────

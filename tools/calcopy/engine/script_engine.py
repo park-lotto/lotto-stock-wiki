@@ -38,10 +38,26 @@ ROLES = {
     "sseolpulda": ["발견 맥락(어디서 보고 알게 됐나) · 말끝 ~길래", "의심(처음엔 안 믿음) · 말끝 ~는데", "반전 시연(그냥 대기만 하면) · 말끝 ~면",
                    "결과 과장(평범한 물건이 뭐로 변함) · 말끝 ~함;;", "감탄 · 말끝 ~네", "인정·댓글유도 · 말끝 ~인정?"],
     "yummyknow": ["상황(훅 질문+무슨 일)", "반응(사람들 반응)", "진짜 이유(전언 ~다는데)", "반전", "댓글 반응(마무리)"],
+    #  hottemreport = channel/hottemreport/칼카피_OE11/대본.json fns(10-16 통과편 7줄 그대로, 제품 고유 괄호만 일반화)
+    "hottemreport": ["훅(의심→진짜)", "기능 1", "기능 2", "기능 3", "기능 4", "반전", "마무리"],
     "banggu": ["소개(남들이 좋아한다는 수식+제품, 명사로 끝)", "의문(사는 이유는 단순히 OO 때문이 아니라는데)", "살펴봄(특징 1~2개)",
                "꺾음(정작 꽂힌 포인트는 따로 있다는데)", "진짜 이유(그건 바로 ~)", "혼잣말(말투 바꾼 한 줄)"],
 }
+# 채널 기본도 없을 때의 최후 칸(경보와 함께) — 4채널 통과편 공통 뼈대(훅→전개→반전→마무리)
+DEFAULT_ROLES = ["훅(질문·상황)", "전개", "반응", "반전", "마무리"]
 MAX_REWRITES = 2
+
+
+def pick_roles(P: dict, roles: list[str] | None = None) -> tuple[list[str], str]:
+    """(판단 주인) 역할 칸 — 인자 > 프리셋 manifest.roles > ROLES[채널] > DEFAULT_ROLES. 뒤 둘은 '경보' 근거를 돌려준다.
+    10-16 창고: 핫템리포트 프리셋에 roles 가 없어 script 단계가 SystemExit 로 죽었다(대본 통과 0/32의 원인 하나) → 멈추지 않고 폴백."""
+    if roles:
+        return list(roles), "인자"
+    if P["manifest"].get("roles"):
+        return list(P["manifest"]["roles"]), "프리셋 manifest.roles"
+    if ROLES.get(P["slug"]):
+        return list(ROLES[P["slug"]]), f"경보: 프리셋 manifest.roles 없음 → script_engine.ROLES[{P['slug']}] 채널 기본"
+    return list(DEFAULT_ROLES), f"경보: 프리셋 manifest.roles·채널 기본 둘 다 없음({P['slug']}) → DEFAULT_ROLES"
 # 소재 일치 검사용 브랜드·대표 제품명(10-16 실측 결함: 신라면 소재 대본이 벤치 영상 하나를 따라 '진라면 공장' 이야기가 됐는데 검사는 통과)
 BRANDS = ("신라면", "진라면", "너구리", "안성탕면", "짜파게티", "불닭", "삼양라면", "열라면", "육개장", "오뚜기", "농심", "삼양", "팔도", "빙그레",
           "롯데", "해태", "오리온", "크라운", "비비고", "풀무원", "동원", "맥도날드", "버거킹", "롯데리아", "맘스터치", "스타벅스", "이디야",
@@ -128,6 +144,59 @@ def article_gate(topic: dict, facts: dict, kind: str | None) -> tuple[bool, str]
     return False, f"{why_need} — 기사 근거(영상·SNS 아닌 URL + 날짜 + 발췌 {ARTICLE_MIN_CHARS}자↑) 0개. facts 에 기사를 넣어야 대본으로 넘어간다"
 
 
+ARTICLE_NEED = 2   # 자동 기사 찾기 목표 개수(조율자 10-16: 기사 2건 이상)
+NOT_ARTICLE_PAGE = ("news.google.com", "search.daum.net", "search.naver.com", "bing.com/news")   # 검색·중계 페이지(기사 아님)
+
+
+def find_articles(topic: dict, net: dict | None = None, need: int = ARTICLE_NEED, per_query: int = 8, log=print) -> tuple[dict, list[str]]:
+    """(판단 주인) 기사 근거 자동 찾기 — 네이버 뉴스 → 다음 뉴스 → 빙 뉴스 RSS 순으로 검색(검색어 = 소재 제품명 낱말, 없으면 소재 머리),
+    기사 페이지의 발췌(og:description)·날짜를 읽어 article_facts 꼴을 통과한 것만 {a1: {text, url, date}} 로 need 개까지.
+    돌려주는 값 (facts, 기록). 키 없는 무료 통로만 — 실패는 기록에 남기고 빈 dict(조용한 통과 없음: 부르는 쪽이 관문을 다시 잰다)."""
+    net = net or TF.NET
+    head = re.split(r"\s+—\s+|\(|\s+vs\s+|\s+-\s+", topic.get("product") or topic.get("topic") or "")[0]
+    q = " ".join(product_terms(topic)[:3]) or head.strip()
+    found, notes, seen = {}, [], set()
+    for chan in ("news_search", "daum_news_search", "bing_news_search"):   # 구글 뉴스 RSS 는 주소가 중계 페이지라 발췌가 'Google 뉴스…'로 와서 뺐다(10-16 실측)
+        if len(found) >= need or chan not in net:
+            continue
+        try:
+            rows = net[chan](q, per_query)
+        except Exception as e:  # noqa: BLE001 — 통로 하나가 죽어도 다음 통로로(이유는 남긴다)
+            notes.append(f"{chan}({q!r}) 실패: {type(e).__name__}: {str(e)[:80]}")
+            continue
+        notes.append(f"{chan}({q!r}) {len(rows)}건")
+        for r in rows:
+            if len(found) >= need:
+                break
+            url = r.get("url") or ""
+            if not url.startswith("http") or url in seen or any(d in url.lower() for d in NOT_ARTICLE):
+                continue
+            seen.add(url)
+            try:
+                pg = net["article_page"](url)
+            except Exception as e:  # noqa: BLE001
+                notes.append(f"  읽기 실패 {url[:60]}: {type(e).__name__}")
+                continue
+            exc = (pg.get("excerpt") or "").strip()
+            fact = {"text": f"{(pg.get('title') or r.get('title') or '').strip()} — {exc}", "url": pg.get("url") or url,
+                    "date": pg.get("date") or r.get("date") or ""}
+            if pg.get("url") and any(d in pg["url"].lower() for d in NOT_ARTICLE + NOT_ARTICLE_PAGE):
+                continue
+            if len(exc.replace(" ", "")) < ARTICLE_MIN_CHARS or not article_facts({"x": fact}):
+                notes.append(f"  거름 {url[:60]}: 발췌 {len(exc)}자·날짜 {fact['date'][:10] or '없음'}")
+                continue
+            # 그 소재 기사인가 — 판단 주인 topic_find.relevance(벤치 영상과 같은 자). 10-16 실측: '빅맥송' 검색에 KBS 라디오 전쟁 인터뷰가 걸렸다
+            rel, rwhy = TF.relevance({"title": pg.get("title") or r.get("title") or "", "description": exc}, q, topic.get("topic") or q)
+            if not rel:
+                notes.append(f"  관련 없음 {url[:60]}: {rwhy}")
+                continue
+            found[f"a{len(found) + 1}"] = fact
+    notes.append(f"기사 근거 {len(found)}건(목표 {need})")
+    for n_ in notes:
+        log(f"[기사 찾기] {n_}")
+    return found, notes
+
+
 def load_bench(path: str | None) -> dict:
     """벤치 md(topic_find 가 쓴 '- [b1] (kind) 글 — from') 또는 같은 이름 .json → {b1: {text,url,kind}} + 베낌 검사용 원문."""
     if not path:
@@ -180,14 +249,12 @@ def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
     R = json.loads(Path(P["rules"]).read_text(encoding="utf-8")) if P.get("rules") else {}
     vr = J.get("voice_rules") or {}
     mode = mode or ("captions" if vr.get("narration") == "none" else "narration")
-    roles = roles or P["manifest"].get("roles") or ROLES.get(P["slug"])
-    if not roles:
-        raise SystemExit(f"역할 칸 없음 — --roles '칸1,칸2,…' 로 주세요(채널 {P['slug']})")
+    roles, roles_basis = pick_roles(P, roles)
     n = len(roles)
     polite_ratio = (J.get("script_tone") or {}).get("polite_ratio")
     honor = "존댓말" if (polite_ratio or 0) > 0.5 else "반말"
     sk = {"mode": mode, "roles": roles, "ends": SW.ends_of(roles), "honorific": honor, "rules": R, "tteutgi": P.get("tteutgi"),
-          "width": None, "total": None, "cps": vr.get("cps") or (SW.CPS if mode == "narration" else None)}
+          "width": None, "total": None, "cps": vr.get("cps") or (SW.CPS if mode == "narration" else None), "roles_basis": roles_basis}
     if mode == "captions":
         items = {i["i"]: i for i in (J.get("captions") or {}).get("items") or []}
         orig = [" ".join(items[k].get("text") or []) for k in sorted(items)]
@@ -196,7 +263,14 @@ def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
             sk["ranges"] = SW.line_ranges(orig)
             if P.get("frame") and all(widths):
                 try:
-                    sk["width"] = {"est": SW.width_estimator(P["frame"]), "orig": widths}
+                    est = SW.width_estimator(P["frame"])
+                    sk["width"] = {"est": est, "orig": widths}
+                    # 판정이 폭(px)이면 쓰라고 주는 글자 수도 폭에서 — 원본 글자 수로 주면 '바이럴인 줄 알았는데...'(점 3개 = 좁음) 칸에
+                    # 12자를 쓰고 폭 686 vs 546px 로 반려됐다(10-16 창고 sseolpulda 13~16 넷 다 2번 줄). 한 글자 폭 = 공백 섞인 한글 표본.
+                    sample = "가나다 라마바 사아자 차카타"
+                    ppc = est(sample) / len(sample.replace(" ", ""))
+                    sk["ranges"] = SW.line_ranges(orig, widths, ppc)
+                    sk["px_per_char"] = round(ppc, 1)
                 except Exception as e:  # noqa: BLE001 — 폭 추정 못 하면 글자 수 기준으로(이유는 남긴다)
                     sk["width_failed"] = f"{type(e).__name__}: {str(e)[:100]}"
         else:   # 원본 줄 수와 역할 칸 수가 다르면 원본 줄 길이 중앙 ±30%
@@ -312,42 +386,46 @@ def comment_as_fact(lines: list[dict], facts: dict, bench: dict, roles: list[str
     return out
 
 
-SPACE_MIN_SHARE = 0.5     # 줄 공백 비율이 원문(채널 원본 줄) 평균의 이 배 미만이면 '띄어쓰기 지움'(10-16 폴드8 초안 '울트라나온다길래안믿었는데')
-SPACE_MIN_CHARS = 8       # 이보다 짧은 줄은 공백이 없어도 자연스럽다('두 가지' 등)
-SPACE_RUN_MAX = 9         # 띄어쓰기 없이 이어진 한글이 이보다 길면 지운 것(4채널 원본 줄 최장 어절 4~6자, 10-16 실측) — 공백 비율과 무관하게 실패
+SPACE_MIN_CHARS = 8       # 한글이 이보다 적은 줄은 재지 않는다('두 가지' 등)
+SPACE_RUN_MAX = 9         # 띄어쓰기 없이 이어진 한글이 이보다 길면 지운 것(4채널 원본 줄 최장 어절 4~6자, 10-16 실측)
+SPACE_MEAN_MULT = 1.6     # 줄의 한글 어절 평균 길이 > 원문 평균 × 이것(최소 SPACE_MEAN_MIN)이면 지운 것
+SPACE_MEAN_MIN = 4.5      #   실측(10-16): 원문 2.7~3.5 · 통과 손 대본 2.5~3.5 · 지운 줄 6.5('숨어있던호스 샤워기로변신함')~10
 _HANGUL_RUN = re.compile(r"[가-힣]+")
+# ★1판(공백 비율)은 숫자·영문이 든 줄을 잘못 잡았다(10-16 창고 sseolpulda/14 '8,262,695회나 조회됐길래' 0.06) → 한글 어절 길이로만 잰다
 
 
-def _space_ratio(t: str) -> float:
-    t = t.strip()
-    return t.count(" ") / len(t) if t else 0.0
+def _mean_run(t: str) -> float | None:
+    r = [len(x) for x in _HANGUL_RUN.findall(t or "")]
+    return sum(r) / len(r) if r else None
 
 
 def spacing_base(facts: dict, orig: list[str] | None = None) -> tuple[float, str]:
-    """띄어쓰기 기준 비율 — ① 원문(채널 원본 줄, 8자↑ 3줄 이상) 평균 ② 한글 위주(한글 50%↑) 근거 글 평균 ③ 0.15."""
-    o = [t for t in (orig or []) if len(t.strip()) >= SPACE_MIN_CHARS]
+    """띄어쓰기 기준 = 한글 어절 평균 길이 — ① 원문(채널 원본 줄, 8자↑ 3줄 이상) 평균 ② 한글 위주 근거 글 평균 ③ 3.0."""
+    o = [m for m in (_mean_run(t) for t in (orig or []) if len(t.strip()) >= SPACE_MIN_CHARS) if m]
     if len(o) >= 3:
-        return sum(map(_space_ratio, o)) / len(o), f"원문 {len(o)}줄"
-    ko = [t for t in (v["text"] for v in facts.values()) if len(t) >= 10 and len("".join(_HANGUL_RUN.findall(t))) >= len(t) * 0.5]
+        return sum(o) / len(o), f"원문 {len(o)}줄"
+    ko = [m for m in (_mean_run(v["text"]) for v in facts.values()
+                      if len("".join(_HANGUL_RUN.findall(v["text"]))) >= max(10, len(v["text"]) * 0.5)) if m]
     if ko:
-        return sum(map(_space_ratio, ko)) / len(ko), f"한글 근거 {len(ko)}개"
-    return 0.15, "기본값"
+        return sum(ko) / len(ko), f"한글 근거 {len(ko)}개"
+    return 3.0, "기본값"
 
 
 def spacing_off(texts: list[str], facts: dict, orig: list[str] | None = None) -> dict:
-    """(묶음4·판단 주인) 띄어쓰기 지움 — ① 띄어쓰기 없는 한글 덩어리 > SPACE_RUN_MAX 자 ② 줄 공백 비율 < 기준(spacing_base) × SPACE_MIN_SHARE."""
+    """(묶음4·판단 주인) 띄어쓰기 지움 — ① 띄어쓰기 없는 한글 덩어리 > SPACE_RUN_MAX 자 ② 한글 어절 평균 길이 > 기준(spacing_base) × SPACE_MEAN_MULT."""
     base, basis = spacing_base(facts, orig)
+    lim = max(SPACE_MEAN_MIN, base * SPACE_MEAN_MULT)
     out = {}
     for k, t in enumerate(texts):
         core = (t or "").strip()
-        if len(core.replace(" ", "")) < SPACE_MIN_CHARS:
+        if len("".join(_HANGUL_RUN.findall(core))) < SPACE_MIN_CHARS:
             continue
         run = max((len(m) for m in _HANGUL_RUN.findall(core)), default=0)
-        r = _space_ratio(core)
+        mean = _mean_run(core) or 0
         if run > SPACE_RUN_MAX:
             out[k] = f"띄어쓰기 없는 {run}자 덩어리(>{SPACE_RUN_MAX})"
-        elif r < base * SPACE_MIN_SHARE:
-            out[k] = f"공백 비율 {r:.2f} < {basis} 평균 {base:.2f}×{SPACE_MIN_SHARE}"
+        elif mean > lim:
+            out[k] = f"한글 어절 평균 {mean:.1f}자 > {basis} 평균 {base:.1f}×{SPACE_MEAN_MULT}"
     return out
 
 
@@ -391,19 +469,23 @@ def claim_off(lines: list[dict], facts: dict, bench: dict) -> dict:
 SUPPORT_PROMPT = """아래 대본 줄마다, 그 줄이 기댄 **근거 글**이 그 문장의 사실 내용을 뒷받침하는지 판정해라.
 - 근거에 없는 행동·경고·인용·이유·숫자를 지어 붙였으면 아니오(예: 근거는 '228만 원 썼다는 댓글'인데 줄은 '절대 먹지 말라고 경고'면 아니오).
 - 꾸밈 말투·감탄(미쳤다·대박)은 사실이 아니니 따지지 마라. 주장된 사실만 본다.
+- [감상 칸] 표시 줄은 화자 자신의 느낌·첫인상(의심했는데·싶었는데·인정?)이다 — 그 느낌은 따지지 말고 그 안에 든 사실 주장만 본다.
 - 근거의 주장(회사·댓글 주장)을 단정 사실처럼 바꿨으면 아니오.
 출력 JSON만: {{"items":[{{"i":번호,"ok":"예|아니오","why":"한 줄"}}]}}
 
 {rows}"""
 
 
-def support_check(lines: list[dict], facts: dict, bench: dict, llm) -> tuple[dict | None, str | None]:
-    """(묶음4) 줄↔근거 일치 — 제미나이 1회 묶음. 돌려주는 값 {줄: 이유}(아니오인 줄). 판정 실패면 (None, 이유) — 부르는 쪽이 통과시키지 않는다."""
+def support_check(lines: list[dict], facts: dict, bench: dict, llm, roles: list[str] | None = None) -> tuple[dict | None, str | None]:
+    """(묶음4) 줄↔근거 일치 — 제미나이 1회 묶음. 돌려주는 값 {줄: 이유}(아니오인 줄). 판정 실패면 (None, 이유) — 부르는 쪽이 통과시키지 않는다.
+    감상 칸(OPINION_ROLES)은 [감상 칸] 표시 — 10-16 창고 sseolpulda/13 '과장 광고 아닐까 의심했는데'(의심 칸)를 '근거에 의심 없음'으로 반려한 오탐."""
     allf = {**facts, **bench["points"]}
     rows = []
     for k, l in enumerate(lines):
         src = " / ".join(f"[{i}] {(allf.get(i) or {}).get('text', '(없는 번호)')}" for i in (l.get("facts") or [])) or "(근거 없음)"
-        rows.append(f"{k + 1}. 줄: {l.get('text')}\n   근거: {src}")
+        role = (roles or [])[k] if k < len(roles or []) else ""
+        tag = " [감상 칸]" if any(o in role for o in OPINION_ROLES) else ""
+        rows.append(f"{k + 1}. 줄{tag}: {l.get('text')}\n   근거: {src}")
     d, err = llm(SUPPORT_PROMPT.format(rows="\n".join(rows)), "support")
     if not d:
         return None, f"줄↔근거 판정 LLM 실패: {err}"
@@ -579,7 +661,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
     def judge(ls):
         """줄↔근거 판정(LLM 1회)을 결정 검사와 같은 판에 매번 — 다른 검사에 걸린 줄도 근거 어긋남을 같이 고쳐 쓰게(10-16 다이소 c3:
         '절대 먹지 말라고 경고' 줄이 댓글 승격에 먼저 걸려 근거 판정을 못 받았다). 판정 실패는 통과로 치지 않는다(조용한 통과 금지)."""
-        sup, serr = support_check(ls[:len(sk["roles"])], facts, bench, llm)
+        sup, serr = support_check(ls[:len(sk["roles"])], facts, bench, llm, sk["roles"])
         c = check_script(ls, sk, facts, bench, free_roles, topic, P["slug"], meta.get("title"), support=sup)
         if sup is None:
             c["ok"], c["support_error"] = False, serr
@@ -673,7 +755,7 @@ def build_outputs(out: Path, P: dict, topic: dict, facts: dict, bench: dict, sk:
 
 def run(preset: str, topic_arg: str, out: Path, bench_path: str | None = None, facts_path: str | None = None, mode: str | None = None,
         roles: list[str] | None = None, tteutgi: str | None = None, pick: str | None = None, free_roles: tuple = (), llm=None, log=print,
-        source_kind: str | None = None) -> dict:
+        source_kind: str | None = None, auto_articles: bool = True, net: dict | None = None) -> dict:
     llm = llm or TF.LLM()
     P = TF.load_preset(preset, tteutgi)
     topic = load_topic(topic_arg, pick)
@@ -682,8 +764,17 @@ def run(preset: str, topic_arg: str, out: Path, bench_path: str | None = None, f
     sk = skeleton(P, mode, roles)
     out.mkdir(parents=True, exist_ok=True)
     log(f"[규칙] {P['slug']} · {sk['mode']} · 칸 {len(sk['roles'])} · 말투 {sk['honorific']} · 사실 {len(facts)} · 벤치 포인트 {len(bench['points'])}")
+    if sk["roles_basis"].startswith("경보"):
+        log(f"[경보] 역할 칸 {sk['roles_basis']} — {sk['roles']}")
     kind = source_kind or (topic.get("source") or {}).get("kind") or P["manifest"].get("source_kind")
     ok, why = article_gate(topic, facts, kind)
+    if not ok and auto_articles:   # 10-16 창고: 제품비하인드 5건 전부 facts_insufficient — 워커가 기사를 넣는 단계가 없었다
+        got, notes = find_articles(topic, net, log=log)
+        if got:
+            facts = {**facts, **got}
+            (out / "facts_기사.json").write_text(json.dumps({"facts": got, "notes": notes}, ensure_ascii=False, indent=1), encoding="utf-8")
+            ok, why = article_gate(topic, facts, kind)
+            why += f" (자동 기사 찾기 {len(got)}건 → facts_기사.json)"
     log(f"[기사 대조] {'통과' if ok else '멈춤'} — {why}")
     if not ok:
         res = {"lines": [], "check": {"ok": False, "status": "facts_insufficient", "why": why, "bad": {}}, "tries": [],

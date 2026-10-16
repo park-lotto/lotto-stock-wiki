@@ -16,6 +16,13 @@ SSEOL = "channel/sseolpulda/preset/A_흰바탕창/창아래_검정"
 pytestmark = pytest.mark.skipif(not (ROOT / SSEOL / "manifest.json").exists(), reason="썰풀다 프리셋 없음")
 
 
+@pytest.fixture(autouse=True)
+def _no_news_network(monkeypatch):
+    """자동 기사 찾기(find_articles)가 시험 중 진짜 뉴스 검색을 하지 않게 — 기사 시험은 net 을 직접 넘긴다."""
+    for k in ("news_search", "daum_news_search", "bing_news_search"):
+        monkeypatch.setitem(T.NET, k, lambda *a, **kw: [])
+
+
 class FakeLLM:
     """tag → 답(dict 또는 함수(prompt)→dict). 부른 순서·프롬프트를 남긴다. TF.LLM 과 같은 꼴(.calls)."""
 
@@ -586,3 +593,93 @@ def test_support_judge_failure_is_not_a_pass(inputs):
 def test_llm_budget_stops_calls():
     llm = T.LLM(fn=lambda p, t: ({"ok": 1}, None), budget=1)
     assert llm("a", "x")[0] and llm("b", "y") == (None, "budget")
+
+
+# ── 창고 KPI 0/32 뿌리 수리(10-16 보드 담당 실측) ─────────────────────────
+def test_spacing_ignores_digits_line():
+    """창고 sseolpulda/14 '8,262,695회나 조회됐길래' — 1판(공백 비율)은 띄어쓰기 지움으로 잘못 잡았다(숫자 덩어리). 한글 어절은 2·5자로 정상."""
+    assert E.spacing_off(["8,262,695회나 조회됐길래"], {}, SSEOL_ORIG) == {}
+    assert 0 in E.spacing_off(["8,262,695회나조회됐다길래"], {}, SSEOL_ORIG)       # 한글을 붙여 쓰면(8자 덩어리·평균 7) 여전히 빨강
+
+
+def test_support_prompt_marks_opinion_rows():
+    """창고 sseolpulda/13 '과장 광고 아닐까 의심했는데'(의심 칸)를 '근거에 의심 없음'으로 반려 — 감상 칸은 표시해 느낌을 따지지 않게."""
+    seen = {}
+
+    def llm(prompt, tag):
+        seen["p"] = prompt
+        return {"items": [{"i": 1, "ok": "예"}, {"i": 2, "ok": "예"}]}, None
+    lines = [{"text": "과장 광고 아닐까 의심했는데", "facts": ["b1"]}, {"text": "공이 로켓처럼 튀어 오름", "facts": ["b1"]}]
+    out, err = E.support_check(lines, {}, {"points": {"b1": {"text": "(hook) 중력을 거스르는 문볼"}}}, llm, ["의심(처음엔 안 믿음) · 말끝 ~는데", "결과 과장"])
+    assert out == {} and err is None
+    assert "1. 줄 [감상 칸]: 과장 광고" in seen["p"] and "2. 줄: 공이" in seen["p"]
+
+
+def test_caption_ranges_follow_width_when_width_judged():
+    """창고 sseolpulda 13~16 넷 다 2번 줄 '글자 수·폭 범위 밖' — 프롬프트엔 원본 글자 수(11~13)를 주고 판정은 폭(546px±10%)이라
+    12자를 쓰면 686px 로 반려됐다. 폭으로 판정하면 칸 글자 수도 폭 ÷ 한 글자 폭에서 준다."""
+    P = T.load_preset(SSEOL, None)
+    sk = E.skeleton(P, None, None)
+    if not sk.get("width"):
+        pytest.skip(f"폭 추정 없음: {sk.get('width_failed')}")
+    lo, hi = sk["ranges"][1]
+    assert hi <= 10, sk["ranges"]                                     # 1판: (11, 13)
+    est, w = sk["width"]["est"], sk["width"]["orig"][1]
+    assert abs(est("그냥 장식인가 싶었는데") - w) / w <= 0.10          # 그 범위(10자) 손 대본 줄은 폭 판정도 통과(LED 통과편 2번 줄)
+
+
+def test_roles_fallback_instead_of_systemexit():
+    """창고: 핫템리포트 프리셋에 roles 없음 → script 단계 SystemExit. 이제 채널 기본 → 없으면 DEFAULT_ROLES, 둘 다 '경보' 근거."""
+    r, why = E.pick_roles({"slug": "hottemreport", "manifest": {}})
+    assert r == E.ROLES["hottemreport"] and why.startswith("경보")
+    r, why = E.pick_roles({"slug": "새채널", "manifest": {}})
+    assert r == E.DEFAULT_ROLES and why.startswith("경보")
+    assert E.pick_roles({"slug": "hottemreport", "manifest": {"roles": ["가", "나"]}}) == (["가", "나"], "프리셋 manifest.roles")
+    assert E.pick_roles({"slug": "x", "manifest": {}}, ["a"]) == (["a"], "인자")
+
+
+def _art_net(pages, daum=None, naver_fail=True):
+    def naver(q, n):
+        if naver_fail:
+            raise RuntimeError("HTTP Error 403")
+        return []
+    return {"news_search": naver, "daum_news_search": lambda q, n: list(daum or []), "bing_news_search": lambda q, n: [],
+            "article_page": lambda url: dict(pages[url])}
+
+
+STARBUCKS = {"https://v.daum.net/v/1": {"url": "https://v.daum.net/v/1", "title": "스타벅스 '탱크데이' 후폭풍 어디까지", "date": "20260521090738",
+                                        "excerpt": "스타벅스코리아가 탱크 데이 마케팅 논란의 여파로 여름철 프로모션을 잠정 연기했다"},
+             "https://v.daum.net/v/2": {"url": "https://v.daum.net/v/2", "title": "탈러시아 현상 가속화, 전쟁이 돈벌이를 바꾼다", "date": "20220316",
+                                        "excerpt": "인터뷰 자료의 저작권은 KBS 라디오에 있습니다. 인용보도 시 출처를 밝혀주시기 바랍니다"},
+             "https://v.daum.net/v/3": {"url": "https://v.daum.net/v/3", "title": "스타벅스 탱크데이 정용진 사과", "date": "2026-05-26T23:58:31+09:00",
+                                        "excerpt": "정용진 회장이 스타벅스코리아의 탱크데이 마케팅 논란 8일 만에 공개 사과했다"},
+             "https://www.youtube.com/watch?v=x": {"url": "https://www.youtube.com/watch?v=x", "title": "스타벅스 탱크데이", "date": "2026-05-20",
+                                                   "excerpt": "스타벅스 탱크데이 마케팅 논란 영상 정리 스타벅스 탱크데이"}}
+
+
+def test_find_articles_two_relevant_dated_articles():
+    """(묶음3 통로) 네이버 403 → 다음 뉴스. 영상 주소·무관 기사(빅맥송 검색에 걸린 KBS 라디오 인터뷰 꼴)는 거르고 관련 기사 2건."""
+    topic = {"topic": "스타벅스 탱크데이 후폭풍 — 미니 탱크 이벤트 논란"}
+    net = _art_net(STARBUCKS, daum=[{"url": u} for u in ("https://www.youtube.com/watch?v=x", "https://v.daum.net/v/2", "https://v.daum.net/v/1", "https://v.daum.net/v/3")])
+    got, notes = E.find_articles(topic, net, log=lambda *_: None)
+    assert [v["url"] for v in got.values()] == ["https://v.daum.net/v/1", "https://v.daum.net/v/3"], notes
+    assert len(E.article_facts(got)) == 2
+    assert any("news_search" in n and "실패" in n for n in notes) and any("관련 없음" in n for n in notes)
+    none, _ = E.find_articles(topic, _art_net(STARBUCKS, daum=[{"url": "https://v.daum.net/v/2"}]), log=lambda *_: None)
+    assert none == {}                                                   # 무관 기사만 → 0건(지어 넣지 않음)
+
+
+def test_run_fills_articles_then_writes(tmp_path):
+    """식품 소재 + facts 에 기사 없음 → 자동 기사 찾기 → 관문 통과 → 초안 LLM 호출. 찾기 0건이면 종전대로 facts_insufficient·LLM 안 부름."""
+    pages = {"https://v.daum.net/v/9": {"url": "https://v.daum.net/v/9", "title": "바나나맛우유 단지 모양 50년", "date": "2026-10-01",
+                                        "excerpt": "빙그레 바나나맛우유 단지 용기는 1974년 출시 뒤 모양을 바꾸지 않았다고 회사가 밝혔다"},
+             "https://v.daum.net/v/8": {"url": "https://v.daum.net/v/8", "title": "바나나맛우유 용기 상표 등록", "date": "2016-05-02",
+                                        "excerpt": "빙그레가 바나나맛우유 단지 모양 용기를 입체 상표로 등록했다고 2016년 밝혔다 바나나맛우유"}}
+    net = _art_net(pages, daum=[{"url": "https://v.daum.net/v/9"}, {"url": "https://v.daum.net/v/8"}])
+    llm = FakeLLM({"draft": {"lines": []}})
+    S = E.run("yummyknow", "바나나맛우유 단지 모양", tmp_path / "o", None, None, llm=llm, log=lambda *_: None, net=net)
+    assert S["status"] != "facts_insufficient" and "draft" in llm.tags, S.get("error")
+    assert (tmp_path / "o" / "facts_기사.json").exists() and "자동 기사 찾기 2건" in S["article_gate"]
+    llm2 = FakeLLM({"draft": {"lines": []}})
+    S2 = E.run("yummyknow", "바나나맛우유 단지 모양", tmp_path / "o2", None, None, llm=llm2, log=lambda *_: None, net=_art_net({}, daum=[]))
+    assert S2["status"] == "facts_insufficient" and llm2.tags == []
