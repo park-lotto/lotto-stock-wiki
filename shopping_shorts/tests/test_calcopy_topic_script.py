@@ -232,9 +232,12 @@ def test_score_without_reason_is_dropped(tmp_path):
     assert rm["total"] == 7 * 5                               # 근거 없는 9점은 합계에 안 들어간다
 
 
-def test_source_kind_required():
-    with pytest.raises(SystemExit):
-        T.run(SSEOL, Path("."), source_kind=None, keywords=["x"], net=_fake_net(), llm=FakeLLM({}), log=lambda *_: None)
+def test_source_kind_from_manifest_or_required():
+    P = T.load_preset(SSEOL)
+    assert P["manifest"].get("source_kind") == "해외영상" and P["rules"] and P["rules"].endswith("제품_이야기썰형.rules.json")
+    assert P["manifest"].get("roles") == E.ROLES["sseolpulda"]
+    with pytest.raises(SystemExit):   # manifest 없는 채널(slug)은 --source-kind 필수
+        T.run("yummyknow", Path("."), source_kind=None, keywords=["x"], net=_fake_net(), llm=FakeLLM({}), log=lambda *_: None)
 
 
 def test_concrete_nouns_and_why():
@@ -283,6 +286,61 @@ def test_date_filter_keeps_recent_sorted_and_logs(tmp_path):
     kept = T.date_filter(pool, 3, {"yt_upload_date": lambda vid: dates[vid]}, T.Limits(sleep=lambda s: None), failed)
     assert [v["id"] for v in kept] == ["a"]
     assert "오래됨 1" in failed[0]["why"] and "날짜 모름 1" in failed[0]["why"]
+
+
+def test_relevance_rejects_other_brand_same_place():
+    """10-16 실측 결함: 키 '신라면'만 보던 판정이 '오뚜기 진라면 구미 공장 신설'을 신라면 구미공장 벤치에 넣었다."""
+    topic = "신라면 구미공장 vs 안성공장 맛 차이"
+    assert not T.relevance({"title": "오뚜기 진라면 구미 공장 신설", "description": ""}, "신라면 신상", topic)[0]
+    assert T.relevance({"title": "신라면 구미공장 vs 안성공장 끓여 봄", "description": ""}, "신라면 신상", topic)[0]
+    # 검색어(신라면)는 맞아도 소재 핵심(구미공장·안성공장…)이 하나뿐이면 다른 이야기 — 뺀다
+    assert not T.relevance({"title": "신라면 먹방 리뷰", "description": ""}, "신라면 신상", topic)[0]
+
+
+def test_bench_skips_fallback_marker_without_detail(tmp_path):
+    seen = []
+    net = {"yt_search": lambda q, n, m: [{"id": None, "fallback": "sp 필터 시간 초과 30초 → ytsearch 폴백 · 60초 이하 0편"}],
+           "yt_detail": lambda vid, n: seen.append(vid) or {"id": vid, "failed": "x"}}
+    r = T.bench({"id": "c1", "topic": "신라면", "query": "신라면"}, tmp_path, net, FakeLLM({}), limits=T.Limits(sleep=lambda s: None))
+    assert seen == [] and any("폴백" in f for f in r["failed"])
+
+
+def _narr_lines(sk, text_for):
+    roles = [E._role_name(r) for r in sk["roles"]]
+    return [{"fn": roles[k], "text": text_for(k), "facts": ["f1"]} for k in range(len(roles))]
+
+
+def _filler(n, head=""):
+    base = "그래서사람들이그걸알게된뒤로분위기가싹바뀌었다는얘기가돌았음"
+    body = (base * (n // len(base) + 2))
+    return (head + body)[:n - 1] + "음"
+
+
+def test_off_topic_brand_and_missing_product_caught(tmp_path):
+    """소재 이탈: 소재·사실에 없는 브랜드(진라면) 줄 → 실패, 나레 꼴은 소재 제품명(신라면)이 한 번도 없으면 실패 → 그 줄만 다시."""
+    P = T.load_preset("yummyknow")
+    if not P["tteutgi"]:
+        pytest.skip("yummyknow 뜯기 없음")
+    sk = E.skeleton(P, None, None)
+    per = (sk["total"][0] + sk["total"][1]) // 2 // len(sk["roles"])
+    facts = tmp_path / "f.json"
+    facts.write_text(json.dumps({"f1": "구미공장은 국내 신라면 생산량의 약 75%"}, ensure_ascii=False), encoding="utf-8")
+    off = _narr_lines(sk, lambda k: _filler(per, "오뚜기진라면공장이" if k == 2 else ""))
+    good = _narr_lines(sk, lambda k: _filler(per, "신라면구미공장이" if k == 0 else ""))
+    llm = FakeLLM({"draft": {"lines": off}, "rewrite1": {"lines": [{"i": 1, **good[0]}, {"i": 3, **good[2]}]}})
+    S = E.run("yummyknow", "신라면 구미공장 vs 안성공장 맛 차이", tmp_path / "o", None, str(facts), llm=llm, log=lambda *_: None)
+    c0 = S["tries"][0]["check"]
+    assert c0["off_topic_brand"] == [2] and c0["topic_match"]["other_brand"][2] == ["오뚜기", "진라면"]
+    assert c0["product_missing"] == [0]
+    assert "빼야 할 이름" in llm.prompts["rewrite1"] and "신라면" in llm.prompts["rewrite1"]
+    assert S["final"]["check"]["ok"], S["final"]["check"]["bad"]
+
+
+def test_captions_product_name_only_warns(inputs):
+    """자막 꼴(썰풀다)은 제품명을 안 부르는 게 채널 꼴 — 없어도 실패 아님(경고만)."""
+    S = _run(inputs, FakeLLM({"draft": {"lines": GOOD}}))
+    tm = S["final"]["check"]["topic_match"]
+    assert S["final"]["check"]["ok"] and tm["product_warn"] and not tm["product_missing"]
 
 
 def test_llm_budget_stops_calls():

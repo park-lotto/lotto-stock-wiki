@@ -42,6 +42,12 @@ ROLES = {
                "꺾음(정작 꽂힌 포인트는 따로 있다는데)", "진짜 이유(그건 바로 ~)", "혼잣말(말투 바꾼 한 줄)"],
 }
 MAX_REWRITES = 2
+# 소재 일치 검사용 브랜드·대표 제품명(10-16 실측 결함: 신라면 소재 대본이 벤치 영상 하나를 따라 '진라면 공장' 이야기가 됐는데 검사는 통과)
+BRANDS = ("신라면", "진라면", "너구리", "안성탕면", "짜파게티", "불닭", "삼양라면", "열라면", "육개장", "오뚜기", "농심", "삼양", "팔도", "빙그레",
+          "롯데", "해태", "오리온", "크라운", "비비고", "풀무원", "동원", "맥도날드", "버거킹", "롯데리아", "맘스터치", "스타벅스", "이디야",
+          "메가커피", "컴포즈", "투썸", "다이소", "코스트코", "이케아", "이마트", "홈플러스", "트레이더스", "쿠팡", "올리브영", "무인양품",
+          "세븐일레븐", "노브랜드", "교촌", "굽네", "피자헛", "도미노", "삼성", "애플", "샤오미", "아마존", "테무", "알리",
+          "CU", "GS25", "KFC", "BBQ", "bhc", "CJ")
 NARR_TOTAL_TOL = 0.15        # 나레 전체 글자 수 = 원본 받아쓰기 합 ±15%
 BANMAL_END = r"(음|임|함|됨|짐|거|는데|다고|라고|던데|네|냐|지|야|다)[.!?~;]*$"
 POLITE_END = r"(습니다|니다|어요|아요|해요|세요|에요|예요|죠|네요)[.!?~;]*$"
@@ -146,35 +152,10 @@ def skeleton(P: dict, mode: str | None, roles: list[str] | None) -> dict:
 
 
 # ── 프롬프트 ──────────────────────────────────────────────────────────────
-DRAFT_PROMPT = """너는 한국 쇼츠 채널 '{slug}'의 {kind} 작가다. 소재 하나로 이 채널 틀 그대로 새 대본을 써라.
-
-소재: {topic}
-썰 각도(후보표): {angle}
-
-쓸 수 있는 근거(이것만 — 번호를 줄마다 facts 에 적는다):
-{grounds}
-
-칸(정확히 {n}줄, 순서대로, 칸마다 역할·말끝·글자 수(공백 제외)):
-{slots}
-
-규칙:
-- {honor}. {honor_rule}
-- 줄마다 facts 에 근거 번호(위 [f…]·[b…])를 1개 이상 적어라. 근거 없는 사실·숫자·이름·회사·연도를 지어내지 마라. 숫자는 [f…] 사실에 있는 그대로만.
-- 화면을 묘사하지 마라(×'…하는 중' ×'웃음이 남' ×'소리가 흘러나옴'). 시청자에게 썰 푸는 말.
-- 과장·꾸밈 말투는 괜찮다(이 채널 스타일). 단 근거 밖 사실은 금지.
-- 벤치 영상·원본 문장을 베끼지 마라 — 포인트(각도·반전·반응)만 가져오고 문장은 새로.
-- 말끝이 적힌 칸은 그 글자로 문장을 끝낸다(자르지 마라).
-원본(이 채널 실제 영상, 구조 참고 — 베끼지 마라):
-{orig}
-출력 JSON만: {{"angle":"이 대본의 썰 각도 한 줄","twist":"반전이 몇 번째 줄인지와 무엇인지","title":"영상 위 제목(줄바꿈 \\n)",
-"lines":[{{"fn":"칸 역할","text":"한 줄","facts":["f1"]}}, …]}}"""
-
-FIX_PROMPT = """방금 쓴 대본에서 틀린 줄만 고친다. 나머지 줄은 그대로 둔다.
-지금 대본: {lines}
-고칠 줄(번호는 1부터):
-{fixes}
-같은 규칙(근거 번호 필수·지어낸 사실 금지·화면 묘사 금지·{honor}·칸 말끝·글자 수)을 지켜라.
-출력 JSON만: {{"lines":[{{"i":번호,"fn":"칸 역할","text":"고친 줄","facts":["f1"]}}, …]}}  (고친 줄만)"""
+# 규칙 문장의 주인 = style_writer(0순위-B, 10-16 커밋 71bd08ac2) — 여기선 가져다 쓰기만(test_calcopy_prompt_owner 가 동일성을 지킨다).
+# 소재 이탈 금지 문장은 아직 SW 에 없다(요청) — 지금은 check_script 의 topic_match 가 잡고 FIX 단계에서 '빼야 할 이름'을 준다.
+DRAFT_PROMPT = SW.DRAFT_PROMPT
+FIX_PROMPT = SW.FIX_PROMPT
 
 
 def _grounds(facts: dict, bench: dict) -> str:
@@ -198,8 +179,33 @@ def _role_name(r: str) -> str:
     return re.split(r"[(·]", r)[0].strip()
 
 
-def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_roles: tuple = ()) -> dict:
-    """한 곳에서 판정 — style_writer 검사 + 역할 칸·근거·말투 섞임·전체 길이. 줄 번호는 0부터."""
+def _brands_in(text: str) -> set:
+    t = text or ""
+    return {b for b in BRANDS if (re.search(rf"(?<![A-Za-z]){re.escape(b)}(?![A-Za-z])", t, re.I) if b.isascii() else b in t)}
+
+
+def product_terms(topic: dict) -> list[str]:
+    """소재 제품명 낱말 — topic.product 가 있으면 그것, 없으면 소재 글 머리(' — '·'('·' vs ' 앞)의 핵심 낱말."""
+    head = topic.get("product") or re.split(r"\s+—\s+|\(|\s+vs\s+|\s+-\s+", topic.get("topic") or "")[0]
+    return TF.core_terms(head)
+
+
+def topic_match(texts: list[str], topic: dict, facts: dict, mode: str) -> dict:
+    """소재 일치(판단 주인): ① 소재·사실(f*)에 없는 브랜드명이 줄에 나오면 그 줄 실패 ② 나레 꼴(또는 topic.product 지정)이면
+    소재 제품명 낱말이 대본 어딘가에 1회 이상. 자막 꼴은 화면이 제품을 보여 줘 이름을 안 부르는 게 채널 꼴(ZdeZ·LED 수도꼭지) — ②는 경고만."""
+    allowed = _brands_in(topic.get("topic") or "") | _brands_in(topic.get("product") or "") | _brands_in(" ".join(v["text"] for v in facts.values()))
+    other = {k: sorted(_brands_in(t) - allowed) for k, t in enumerate(texts)}
+    other = {k: v for k, v in other.items() if v}
+    terms = product_terms(topic)
+    flat = re.sub(r"\s+", "", " ".join(texts)).lower()
+    named = [w for w in terms if w in flat]
+    required = mode == "narration" or bool(topic.get("product"))
+    return {"other_brand": other, "product_terms": terms, "product_named": named,
+            "product_missing": bool(terms) and not named and required, "product_warn": bool(terms) and not named and not required}
+
+
+def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_roles: tuple = (), topic: dict | None = None) -> dict:
+    """한 곳에서 판정 — style_writer 검사 + 역할 칸·근거·말투 섞임·전체 길이·소재 일치. 줄 번호는 0부터."""
     n = len(sk["roles"])
     R = sk["rules"] or {"examples": []}
     R.setdefault("examples", [])
@@ -245,12 +251,13 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
         tot = sum(chars)
         if not (sk["total"][0] <= tot <= sk["total"][1]):
             total_off = {"chars": tot, "range": list(sk["total"]), "fix_line": (max if tot > sk["total"][1] else min)(range(len(chars)), key=lambda k: chars[k]) if chars else None}
-    per_line = {"role_missing": role_missing, "no_ground": no_ground, "len_off": len_off, "copied_orig": copied, "copied_bench": copied_bench,
+    tm = topic_match(texts[:n], topic or {}, facts, sk["mode"]) if topic else {"other_brand": {}, "product_missing": False}
+    per_line = {"off_topic_brand": sorted(tm["other_brand"]), "product_missing": [0] if tm["product_missing"] else [], "role_missing": role_missing, "no_ground": no_ground, "len_off": len_off, "copied_orig": copied, "copied_bench": copied_bench,
                 "describe": describe, "ending_off": ending_off, "numbers_unsourced": num_lines, "tone_off": tone_off, "off_tone_words": off_tone_words}
     chk = {**per_line, "n_lines": len(lines), "n_roles": n, "extra_lines": extra_lines, "unknown_ids": unknown_ids, "total_off": total_off,
            "chars": chars, "ranges": [list(r) for r in sk["ranges"]], "sec_est": round(sum(chars) / sk["cps"], 1) if sk.get("cps") else None,
            "est_px": base.get("est_px"), "orig_px": base.get("orig_px"), "width_median_pct": base.get("width_median_pct"),
-           "copied_8grams_vs_examples": base.get("copied_8grams_vs_examples")}
+           "copied_8grams_vs_examples": base.get("copied_8grams_vs_examples"), "topic_match": tm}
     chk["bad"] = bad_lines(chk)
     chk["ok"] = not chk["bad"] and not extra_lines and not unknown_ids and not total_off and len(lines) == n
     return chk
@@ -259,7 +266,7 @@ def check_script(lines: list[dict], sk: dict, facts: dict, bench: dict, free_rol
 def bad_lines(chk: dict) -> dict:
     """다시 쓸 줄 → 이유 목록(판단 주인). 전체 길이 어긋남은 가장 긴/짧은 줄에 붙인다."""
     why = {}
-    names = {"role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
+    names = {"off_topic_brand": "소재 밖 브랜드명(소재 이탈)", "product_missing": "소재 제품명이 대본에 없음", "role_missing": "칸 역할 빠짐/어긋남", "no_ground": "근거 번호 없음", "len_off": "글자 수·폭 범위 밖", "copied_orig": "원본과 겹침",
              "copied_bench": "벤치 영상 문장과 겹침", "describe": "화면 묘사", "ending_off": "정해진 말끝으로 안 끝남",
              "numbers_unsourced": "사실에 없는 숫자", "tone_off": "말투 섞임(채널 말투 밖)", "off_tone_words": "톤 밖 낱말"}
     for key, label in names.items():
@@ -295,7 +302,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
     if not d:
         return {"error": f"초안 LLM 실패: {err}", "tries": [{"error": err}], "prompt": prompt}
     lines = [l for l in d.get("lines") or d.get("items") or [] if isinstance(l, dict)]
-    chk = check_script(lines, sk, facts, bench, free_roles)
+    chk = check_script(lines, sk, facts, bench, free_roles, topic)
     tries.append({"lines": lines, "check": chk, "model": d.get("_model")})
     meta = {k: d.get(k) for k in ("angle", "twist", "title")}
     log(f"[초안] {len(lines)}줄 · 다시 쓸 줄 {list(chk['bad'])}")
@@ -306,7 +313,9 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
         fixes = []
         for k, why in bad.items():
             lo, hi = sk["ranges"][k] if k < len(sk["ranges"]) else (0, 0)
-            fixes.append(f"{k + 1}번 칸(역할 {sk['roles'][k] if k < len(sk['roles']) else '-'}) — {', '.join(why)} · 목표 {lo}~{hi}자")
+            ob = (chk.get("topic_match") or {}).get("other_brand", {}).get(k)
+            fixes.append(f"{k + 1}번 칸(역할 {sk['roles'][k] if k < len(sk['roles']) else '-'}) — {', '.join(why)}" + (f"(빼야 할 이름: {ob})" if ob else "")
+                         + (f"(소재 제품명 {chk['topic_match']['product_terms']} 를 넣어라)" if "소재 제품명이 대본에 없음" in why else "") + f" · 목표 {lo}~{hi}자")
         if chk["unknown_ids"]:
             fixes.append(f"없는 근거 번호 {chk['unknown_ids']} → 위 목록 번호만")
         cur = _merge(lines, [], len(sk["roles"]))
@@ -317,7 +326,7 @@ def write(P: dict, topic: dict, facts: dict, bench: dict, sk: dict, llm, free_ro
             log(f"[다시 쓰기 {r + 1}] LLM 실패 {err} — 멈춤")
             break
         lines = _merge(cur, d2.get("lines") or d2.get("items") or [], len(sk["roles"]))
-        chk = check_script(lines, sk, facts, bench, free_roles)
+        chk = check_script(lines, sk, facts, bench, free_roles, topic)
         tries.append({"lines": lines, "check": chk, "model": d2.get("_model"), "round": r + 1, "asked": list(bad)})
         log(f"[다시 쓰기 {r + 1}] 남은 줄 {list(chk['bad'])}")
     return {"lines": lines, "check": chk, "tries": tries, "meta": meta}

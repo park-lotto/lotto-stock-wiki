@@ -102,7 +102,8 @@ def load_preset(preset: str, tteutgi: str | None = None) -> dict:
             c = ch / "뜯기" / v["id"] / "뜯기.json"
             if c.exists():
                 tj = str(c); break
-    rules = man.get("rules") if isinstance(man.get("rules"), str) and Path(man["rules"]).exists() else None   # manifest.rules 는 공식(dict)일 때가 있다
+    rp = man.get("rules_path")   # preset_save 가 저장(10-16) — 저장소 기준 상대 경로
+    rules = str(ROOT / rp) if rp and (ROOT / rp).exists() else None
     if not rules:
         rs = sorted(ch.glob("*.rules.json"))
         rules = str(rs[0]) if rs else None
@@ -149,7 +150,7 @@ def _hashtags(title: str) -> list[str]:
 # top50 n-gram 에서 나온 잡음(10-16 실측 'household'·'painting'·'seed'·'felt'·'causing' — 구체 명사가 아니다)
 NOISE = {"household", "painting", "seed", "felt", "causing", "surprisingly", "delicious", "trend", "brand", "cheese", "chicken", "budget",
          "double", "living", "room", "space", "must", "have", "camping", "hand", "hands", "home", "homehacks", "relatable", "asmr",
-         "dessert", "menu", "snack", "korean", "korea's", "mr", "ms", "update"}
+         "dessert", "menu", "snack", "korean", "korea's", "mr", "ms", "update", "신상", "신메뉴", "viral"}
 
 # 소재 출처 유형 + 구체 명사 = 검색어(사장님 10-16 "천천히 타겟 서칭, 무작위로 받지 말고"). 해시태그 피드 전체 긁기는 하지 않는다.
 QUERY_TEMPLATES = {"해외영상": "{n}", "제품비하인드": "{n} 신상", "커뮤니티": "{n}", "뉴스": "{n}", "고객제품": "{n}"}
@@ -573,11 +574,23 @@ def bench_query(q: str, title: str, k: int = 2) -> str:
     return " ".join([q] + extra).strip()
 
 
-def _relevant(d: dict, query: str) -> bool:
-    """벤치 영상이 소재와 관계있나 — 검색어 낱말(3글자↑, 꾸밈말 제외) 하나라도 제목·설명에 있어야 한다."""
-    words = [w for w in _tokens(query) if len(w) >= 3 or re.match(r"[가-힣]", w)] or query.lower().split()   # 한글은 두 글자('라면')도 뜻 낱말
-    hay = ((d.get("title") or "") + " " + (d.get("description") or "")).lower()
-    return any(w in hay for w in words)
+def core_terms(text: str) -> list[str]:
+    """소재 글의 핵심 낱말(꾸밈·흔한 낱말 뺀 한글 2자↑·영어 3자↑, 공백 없는 소문자) — 관련성·소재 일치 판정 공용."""
+    return list(dict.fromkeys(w.replace(" ", "") for w in _tokens(_clean_title(text)) if w not in NOISE))
+
+
+def relevance(d: dict, key: str | None, topic: str) -> tuple[bool, str]:
+    """벤치 영상이 그 소재인가(판단 주인). 조건 = 찾은 검색어(제품·브랜드) 낱말이 하나 이상 있고 **그리고**
+    소재 핵심 낱말이 min(2, 개수)개 이상 제목·설명에 있다(공백 무시).
+    10-16 실측 결함: 키 '신라면'만 보던 1판은 소재 '신라면 구미공장 vs 안성공장'에 '오뚜기 진라면 구미 공장 신설'을 넣었다."""
+    hay = re.sub(r"\s+", "", ((d.get("title") or "") + " " + (d.get("description") or "")).lower())
+    keys = core_terms(key or "") or [w.replace(" ", "") for w in (key or "").lower().split()]
+    core = core_terms(topic)
+    key_hit = [w for w in keys if w in hay]
+    core_hit = [w for w in core if w in hay]
+    need = min(2, len(core))
+    ok = (not keys or bool(key_hit)) and len(core_hit) >= need
+    return ok, f"검색어 낱말 {key_hit or '없음'} · 소재 낱말 {len(core_hit)}/{need} {core_hit}"
 
 
 def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments: int = 50, limits: "Limits | None" = None) -> dict:
@@ -591,6 +604,10 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         lst = []; failed.append(f"멈춤: {e}")
     except Exception as e:  # noqa: BLE001
         lst = []; failed.append(f"검색 {type(e).__name__}: {str(e)[:100]}")
+    fb = next((v.get("fallback") for v in lst if v.get("fallback")), None)
+    if fb:   # 검색 통로 기록 — '같은 검색어 1편/0편' 들쭉날쭉의 원인(sp 멈춤 → ytsearch 폴백)을 남긴다
+        failed.append(f"검색: {fb}")
+    lst = [v for v in lst if v.get("id")]   # 폴백 실패 표식({id: None})은 상세 조회하지 않는다(10-16 실측: yt_detail(None) 150초 대기)
     for v in lst[:n_videos]:
         try:
             limits.take(1, f"벤치 상세 {v['id']}")
@@ -601,9 +618,11 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         if d.get("failed"):
             failed.append(f"{v['id']}: {d['failed'][:100]}")
             continue
-        if not _relevant(d, c.get("key") or c["query"]):   # 관계 판정은 후보를 찾은 검색어(제품·종류) 기준 — 제목 낱말('sleep')은 무관 영상도 통과시킨다
-            failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]})")
+        ok, why = relevance(d, c.get("key") or c["query"], c["topic"])
+        if not ok:
+            failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]}) — {why}")
             continue
+        d["relevance"] = why
         vids.append(d)
     dump = "\n\n".join(f"[v_{d['id']}] 조회 {d.get('views')} · {d.get('title')}\n설명: {(d.get('description') or '')[:300]}\n댓글: " +
                        " / ".join(f"({x['likes']}) {x['text'][:80]}" for x in d.get("comments", [])[:15]) for d in vids)
