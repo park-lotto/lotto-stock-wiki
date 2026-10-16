@@ -19,9 +19,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -36,6 +38,9 @@ if str(ROOT) not in sys.path:
 from tools.calcopy.engine import worker_steps as WS  # noqa: E402
 
 PREFIX = "/api/admin/calcopy/topics"
+LLM_STEPS = ("bench", "score", "script")          # 제미나이를 쓰는 단계 — 시간당 한도에 걸리면 이 단계만 쉰다
+ENGINE_FILES = ("tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/worker_steps.py",
+                "tools/calcopy/engine/worker_ledger.py")
 DEFAULT_SERVER = "https://shoppingshorts.duckdns.org"
 
 
@@ -98,6 +103,9 @@ class Api:
         return self._req("post", f"/{tid}/advance", json={"worker": worker, "data": data or {}, "outputs": outputs or {},
                                                          "cost": cost or {}, "note": note})
 
+    def reject(self, tid, reason, back_to=None, by="worker"):
+        return self._req("post", f"/{tid}/reject", json={"reason": reason, "back_to": back_to, "by": by})
+
     def release(self, tid, worker, error):
         return self._req("post", f"/{tid}/release", json={"worker": worker, "error": error})
 
@@ -118,7 +126,7 @@ PRE_ASSIGN = ("bench", "score", "assign")
 class Worker:
     def __init__(self, api: Api, category: str, track: str, channel: str, name: str | None = None, out_root: Path | None = None,
                  steps=WS, preset: str | None = None, hb_interval: float = 60, find_every: float = 60 * 60,
-                 allowed_steps: list[str] | None = None, log=print, extra: dict | None = None):
+                 allowed_steps: list[str] | None = None, log=print, extra: dict | None = None, ledger: bool = False):
         self.api, self.category, self.track, self.channel = api, category, track, channel
         self.name = name or f"{socket.gethostname()}-{category}-{track}"
         self.steps, self.hb_interval, self.find_every, self.log = steps, hb_interval, find_every, log
@@ -126,6 +134,10 @@ class Worker:
         self.ctx = WS.Ctx(out_root=Path(out_root or Path.home() / "숏템_칼카피" / "worker" / category), channel=channel,
                           category=category, track=track, preset=preset, log=log, extra=extra or {})
         self.state = {"step": None, "topic_id": None, "idle_reason": None, "last_error": None}
+        self.ledger = ledger
+        if ledger:
+            self.ctx.worker = self.name                 # worker_steps 가 유튜브·제미나이를 장부 한도 뒤에서 쓴다
+        self._engine_rev = self._rev() if ledger else None
         self.done, self.last_find = 0, None
         self._stop = threading.Event()
         self._hb: threading.Thread | None = None
@@ -164,6 +176,101 @@ class Worker:
         with self._lock:
             self.state.update(kw)
 
+    # ── 장부·엔진 재로드 ──
+    def _note(self, kind, n=1, note=""):
+        if self.ledger:
+            from tools.calcopy.engine import worker_ledger as L
+            L.add(self.name, kind, n, note)
+
+    @staticmethod
+    def _rev(ref: str = "HEAD") -> str | None:
+        """ref 에서 엔진 파일들의 마지막 커밋. 워커는 창고 전용 체크아웃(warehouse.ps1 — 트랙 폴더와 분리)에서 돌아
+        다른 담당의 **커밋 안 된 편집**을 읽지 않는다(10-16 실측: 편집 중인 topic_find 에서 concrete_nouns 가 사라져 find 전멸)."""
+        try:
+            r = subprocess.run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", ref, "--", *ENGINE_FILES],
+                               capture_output=True, text=True, timeout=20)
+            return r.stdout.strip() or None
+        except (OSError, subprocess.SubprocessError) as e:
+            return f"err:{e}"
+
+    def _follow_branch(self):
+        """CALCOPY_FOLLOW_REF(예 track/칼카피숏템엔진)의 엔진 커밋이 이 체크아웃보다 새로우면 그 커밋으로 옮긴다(커밋된 것만 따라감)."""
+        ref = os.environ.get("CALCOPY_FOLLOW_REF")
+        if not ref:
+            return
+        tip, here = self._rev(ref), self._rev("HEAD")
+        if tip and here and tip != here and not tip.startswith("err:"):
+            r = subprocess.run(["git", "-C", str(ROOT), "checkout", "--detach", "-q", ref], capture_output=True, text=True, timeout=60)
+            self.log(f"[따라감] {ref} {here[:9]} → {tip[:9]} rc={r.returncode} {r.stderr.strip()[:150]}")
+
+    def _maybe_reload(self):
+        self._follow_branch()
+        rev = self._rev()
+        if not self.ledger or rev == self._engine_rev or not rev or rev.startswith("err:"):
+            return
+        names = ["tools.calcopy.engine.worker_ledger", "tools.calcopy.engine.topic_find", "tools.calcopy.engine.script_engine",
+                 "tools.calcopy.engine.worker_steps"]
+        done = []
+        for n in names:
+            m = sys.modules.get(n)
+            if m:
+                try:
+                    importlib.reload(m)
+                    done.append(n.rsplit(".", 1)[1])
+                except Exception as e:  # noqa: BLE001 — 새 코드가 깨졌으면 옛 코드로 계속 돌고 이유를 남긴다
+                    self.log(f"[재로드 실패] {n}: {type(e).__name__}: {e}")
+                    self._note("error", 1, f"재로드 실패 {n}: {e}")
+        self.log(f"[재로드] 엔진 커밋 {str(self._engine_rev)[:9]} → {rev[:9]} · {done}")
+        self._engine_rev = rev
+        self.requeue_old()
+
+    def requeue_old(self) -> list:
+        """엔진이 바뀌면 옛 엔진으로 점수 낸 scored 소재를 재점수 큐로(back_to=benched — 다음 score 단계가 새 엔진으로 다시 잰다).
+        scored 를 넘은 소재(배정·대본…)는 건드리지 않는다(사장님 10-16 'scored 이전 상태만')."""
+        if not self.ledger or not self._engine_rev:
+            return []
+        try:
+            have = self.api._req("get", "?category=" + quote(self.category) + "&state=scored&limit=2000").get("topics") or []
+        except Exception as e:  # noqa: BLE001
+            self.log(f"[재점수 큐 못 봄] {type(e).__name__}: {e}")
+            return []
+        moved = []
+        for t in have:
+            old = (t.get("score") or {}).get("engine_ver")
+            if old == self._engine_rev:
+                continue
+            try:
+                self.api.reject(t["id"], f"재점수: 엔진 {str(old)[:9]} → {self._engine_rev[:9]}", back_to="benched", by=f"worker@{self.name}")
+                moved.append(t["id"])
+            except ApiError as e:
+                self.log(f"[재점수 큐 거절] #{t['id']}: {e}")
+        if moved:
+            self.log(f"[재점수 큐] {len(moved)}건 {moved}")
+            self._note("rescore", len(moved), f"엔진 {self._engine_rev[:9]}: {moved}")
+        return moved
+
+    def _dedupe(self, rows: list[dict]) -> tuple[list[dict], list[str]]:
+        """같은 소재(제목 2-gram 포함률 ≥0.6 또는 같은 출처 URL)는 다시 안 쌓는다 — 판정은 topic_find.overlap(겹침 주인)."""
+        try:
+            TF = WS._engine("topic_find")
+            have = self.api._req("get", "?category=" + quote(self.category) + "&limit=2000").get("topics") or []
+        except Exception as e:  # noqa: BLE001
+            self.log(f"[중복 검사 못 함] {type(e).__name__}: {e} — 서버 이름 중복(409)만 믿는다")
+            return rows, []
+        corpus = [{"what": "창고", "text": t.get("name") or ""} for t in have]
+        urls = {(t.get("source") or {}).get("url") for t in have} - {None, ""}
+        keep, skip = [], []
+        for r in rows:
+            url = (r.get("source") or {}).get("url")
+            ov = TF.overlap(r["name"], corpus + [{"what": "이번 찾기", "text": k["name"]} for k in keep])
+            if url and url in urls:
+                skip.append(f"{r['name'][:30]}: 같은 출처 URL")
+            elif ov.get("score", 0) >= 0.6:
+                skip.append(f"{r['name'][:30]}: 제목 겹침 {ov.get('score')} ({str(ov.get('with'))[:30]})")
+            else:
+                keep.append(r)
+        return keep, skip
+
     # ── 소재 찾기(행이 없는 일 — claim 없이 add) ──
     def find(self) -> dict:
         self.last_find = time.time()
@@ -175,19 +282,24 @@ class Worker:
         except (WS.StepError, NotImplementedError, Exception) as e:  # noqa: BLE001 — 행이 없으니 워커 맥박 last_error 로 보드에
             why = e.reason if isinstance(e, WS.StepError) else f"{type(e).__name__}: {e}"
             self.log(f"[멈춤] find: {why}")
+            self._note("error", 1, f"find: {why}")
             self._set(step=None, idle_reason=f"find 실패: {why}"[:200], last_error=f"find: {why}"[:300])
             self.beat()
             return {"result": "error", "error": f"find: {why}"}
         self._set(step=None)
         ids, dup = [], []
-        for r in res.get("rows") or []:
+        rows, skipped = self._dedupe(res.get("rows") or [])
+        dup += skipped
+        for r in rows:
             try:
-                ids.append(self.api.add(r["name"], self.category, self.track, r.get("source"), by=f"worker@{self.name}")["topic"]["id"])
+                src = {**(r.get("source") or {}), "engine_ver": self._engine_rev}
+                ids.append(self.api.add(r["name"], self.category, self.track, src, by=f"worker@{self.name}")["topic"]["id"])
             except ApiError as e:
                 if e.status != 409:
                     raise
                 dup.append(f"{r['name'][:30]}: {e.msg}")
-        self.log(f"[찾음] 새 소재 {len(ids)}개 · 중복 {len(dup)}개")
+        self.log(f"[찾음] 새 소재 {len(ids)}개 · 중복 {len(dup)}개" + (f" — {dup[:3]}" if dup else ""))
+        self._note("topic", len(ids), f"찾기 {len(ids)} · 중복 {len(dup)}")
         self._set(idle_reason=None, last_error=None)
         return {"result": "found", "ids": ids, "dup": dup}
 
@@ -205,8 +317,13 @@ class Worker:
     # ── 한 바퀴 ──
     def _claim(self) -> dict:
         """배정 뒤 일(script~check)은 내 채널에 배정된 소재만, 배정까지(bench·score·assign)는 카테고리·트랙으로만 거른다."""
-        post = [s for s in self.allowed if s not in PRE_ASSIGN]
-        pre = [s for s in self.allowed if s in PRE_ASSIGN]
+        allowed = list(self.allowed)
+        if self.ledger:
+            from tools.calcopy.engine import worker_ledger as L
+            if L.count("gemini", worker=self.name) >= L.GEMINI_PER_HOUR:      # 시간당 제미나이 한도 — 제미나이 단계만 쉰다
+                allowed = [s for s in allowed if s not in LLM_STEPS]
+        post = [s for s in allowed if s not in PRE_ASSIGN]
+        pre = [s for s in allowed if s in PRE_ASSIGN]
         reasons = []
         for steps, ch in ((post, self.channel), (pre, None)):
             if not steps:
@@ -219,6 +336,18 @@ class Worker:
 
     def tick(self) -> dict:
         """claim 1회 → 단계 1개. 결과: idle|advanced|error|found|refused"""
+        if self.ledger:
+            self._maybe_reload()
+            if not getattr(self, "_requeued_once", False):     # 켤 때 한 번 — 꺼져 있던 사이 엔진이 바뀌었을 수 있다
+                self._requeued_once = True
+                self.requeue_old()
+            from tools.calcopy.engine import worker_ledger as L
+            until = L.pause_until(self.name)
+            if until > time.time():
+                why = f"제미나이 429 — {time.strftime('%H:%M', time.localtime(until))} 까지 쉼"
+                self._set(step=None, topic_id=None, idle_reason=why)
+                self.beat()
+                return {"result": "idle", "reasons": [why]}
         c = self._claim()
         topic, step = c.get("topic"), c.get("step")
         if not step:
@@ -254,14 +383,21 @@ class Worker:
                 if bad:
                     err += f" / 올리기 실패 {bad}"
                 self._set(last_error=f"#{tid} {step}: {err}"[:300])
+                self._note("error", 1, f"#{tid} {step}: {err}")
                 self.api.release(tid, self.name, err)
                 self.log(f"[멈춤] #{tid} {step}: {err}")
                 return {"result": "error", "error": err}
             outs = {k: v for k, v in (res.get("outputs") or {}).items() if v in ok}
             outs.update({Path(f).stem: f for f in ok if f not in outs.values()})
             cost = {**(res.get("cost") or {}), "seconds": round(time.time() - t0)}
-            r = self.api.advance(tid, self.name, res.get("data"), outs, _cost(cost),
-                                 note=("올리기 실패: " + "; ".join(bad)) if bad else "")
+            data = {k: ({**v, "engine_ver": self._engine_rev} if self._engine_rev and isinstance(v, dict) else v)
+                    for k, v in (res.get("data") or {}).items()}
+            rescore = step == "score" and (topic.get("rework_n") or 0) > 0 and "재점수" in str(topic.get("last_error") or "")
+            notes = ([f"engine_ver={self._engine_rev[:9]}"] if self._engine_rev else []) + (["재점수"] if rescore else []) + \
+                    (["올리기 실패: " + "; ".join(bad)] if bad else [])
+            r = self.api.advance(tid, self.name, data, outs, _cost(cost), note=" · ".join(notes))
+            if rescore:
+                self._note("rescore_done", 1, f"#{tid} gemini {cost.get('gemini', 0)} · {cost['seconds']}초")
         except ApiError as e:
             # 400(필수 자료 없음)·409(검수 자리·잠금) — 서버 이유 그대로. 잠금이 아직 내 것이면 release 로 이유를 남긴다
             self.log(f"[거절] #{tid} {step}: {e}")
@@ -274,6 +410,8 @@ class Worker:
         finally:
             self._set(step=None, topic_id=None)
         self.done += 1
+        if step == "script":
+            self._note("script", 1, f"#{tid}")
         self._set(last_error=None)
         self.log(f"[넘김] #{tid} {step} → {r['topic']['state']}")
         return {"result": "advanced", "topic": r["topic"]}
@@ -313,6 +451,8 @@ def main(argv=None):
     ap.add_argument("--keywords", default="", help="find 검색어 쉼표 구분")
     ap.add_argument("--heartbeat", type=float, default=60)
     ap.add_argument("--llm-budget", type=int, default=6, help="한 단계 무료 제미나이 호출 상한(topic_find.LLM)")
+    ap.add_argument("--no-ledger", action="store_true", help="장부 한도 끄기(시험용). 상시 가동은 장부 필수")
+    ap.add_argument("--idle-sleep", type=float, default=60)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--once", action="store_true")
     g.add_argument("--loop", action="store_true")
@@ -325,7 +465,7 @@ def main(argv=None):
                                "keywords": [k.strip() for k in a.keywords.split(",") if k.strip()] or None}.items() if v}
     w = Worker(Api(a.server, cookie=a.cookie, cookie_fn=cookie_fn), a.category, a.track, a.channel, a.name,
                Path(a.out) if a.out else None, preset=a.preset, hb_interval=a.heartbeat, find_every=a.find_every * 60,
-               allowed_steps=[s.strip() for s in a.steps.split(",") if s.strip()] or None, extra=extra)
+               allowed_steps=[s.strip() for s in a.steps.split(",") if s.strip()] or None, extra=extra, ledger=not a.no_ledger)
     w.ctx.llm_budget = a.llm_budget
     if a.once:
         w.start_heartbeat()
@@ -335,7 +475,7 @@ def main(argv=None):
             w.stop_heartbeat()
         print(json.dumps({k: v for k, v in r.items() if k != "topic"}, ensure_ascii=False))
         return 0 if r["result"] in ("advanced", "found", "idle") else 1
-    w.loop()
+    w.loop(idle_sleep=a.idle_sleep)
     return 0
 
 

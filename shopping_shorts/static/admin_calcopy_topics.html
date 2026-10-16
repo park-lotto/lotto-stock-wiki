@@ -79,6 +79,7 @@ select,input{padding:6px 8px;border:1px solid #cbd5e1;background:#fff;color:var(
 <div class="tabs" id="cats"></div>
 <div id="err" class="msg"></div>
 <h2>계기판</h2><div class="meter" id="meter"></div>
+<h2>최근 1시간 <span class="sub">— 워커가 창고에 쌓는 속도</span></h2><div class="meter" id="meter1h"></div>
 <h2>결정할 것 <span class="sub" id="decideN"></span></h2><div class="decide" id="decide"></div>
 <h2>워커</h2><div class="workers" id="workers"></div>
 <h2>멈춤(stalled) <span class="sub">— 같은 소재가 3번 실패해 워커가 더는 안 집는다. 원인을 고친 뒤 '다시 돌리기'</span></h2><div id="stalled"></div>
@@ -130,6 +131,24 @@ function drawMeter(k,c){
     tile("통과 1편 벽시계(중앙)",h.median!=null?num(h.median)+"시간":"–",`<span>추가→통과 · 검수 대기 포함</span>`),
     tile("통과 1편 글 AI 호출",cp.gemini!=null?`${num(cp.gemini)}<span style="font-size:14px">회</span>`:"–",`<span>나레 음성 ${num(cp.typecast)}회</span>`),
     capTile("gemini",c),capTile("typecast",c),
+  ].join("");
+}
+function drawHour(){
+  // 서버가 kpi.last_hour 를 주면 그 값(판정 주인 = 서버). 아직 없는 칸은 소재 목록(서버 행)에서 센 값 — 어디서 왔는지 같이 적는다.
+  const lh=(D.kpi||{}).last_hour||{},now=Date.parse(D.now||new Date().toISOString()),T=D.topics||[];
+  const recent=x=>x&&now-Date.parse(x)<=3600e3;
+  const vers=T.map(t=>({v:(t.score||{}).engine_ver||(t.bench||{}).engine_ver||(t.source||{}).engine_ver,u:t.updated_at})).filter(x=>x.v);
+  const newest=vers.sort((a,b)=>String(b.u).localeCompare(String(a.u)))[0];
+  const early=["found","benched","scored"];
+  const old=newest?T.filter(t=>early.includes(t.state)&&((t.score||{}).engine_ver||(t.bench||{}).engine_ver||(t.source||{}).engine_ver)!==newest.v).length:null;
+  const topics=lh.topics??T.filter(t=>recent(t.created_at)).length;
+  const scripts=lh.scripts??T.filter(t=>(t.outputs||{}).script&&recent(t.updated_at)).length;
+  $("#meter1h").innerHTML=[
+    tile("쌓인 소재",num(topics),`<span>${lh.topics!=null?"서버":"소재 목록 created_at"}</span>`),
+    tile("대본 초안",num(scripts),`<span>${lh.scripts!=null?"서버":"대본 있는 소재 중 1시간 안 갱신"}</span>`),
+    tile("글 AI 호출",lh.gemini!=null?num(lh.gemini):num(((D.caps||{}).used||{}).gemini),`<span>${lh.gemini!=null?"최근 1시간":"오늘 합(서버 하루 장부)"}</span>`),
+    tile("유튜브 조회",lh.youtube!=null?num(lh.youtube):"–",`<span>${lh.youtube!=null?"최근 1시간":"서버 칸 없음 — 워커 장부에만"}</span>`),
+    tile("엔진 수리 대기",old==null?"–":num(old),`<span>옛 engine_ver(발견~점수)${newest?" · 최신 "+esc(String(newest.v).slice(0,7)):""}</span>`,old?"red":""),
   ].join("");
 }
 function drawCats(){
@@ -228,7 +247,7 @@ async function load(){
     D=await api(API+(CAT?"?category="+encodeURIComponent(CAT):""));
     $("#err").className="msg";
     const topics=D.topics||[];
-    drawCats();drawMeter(D.kpi,D.caps);drawWorkers(D.workers);drawStops(D.errors,D.caps);
+    drawCats();drawMeter(D.kpi,D.caps);drawHour();drawWorkers(D.workers);drawStops(D.errors,D.caps);
     if(!document.activeElement||!document.activeElement.closest("#stalled"))drawStalled(D.stalled||[]);
     if(!document.activeElement||!document.activeElement.closest("#decide"))drawDecide(D.decide||[]);
     drawBoard(topics);drawGallery(topics);bindOpen();

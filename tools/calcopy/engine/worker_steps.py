@@ -57,6 +57,7 @@ class Ctx:
     run: Callable[[list[str], int], tuple[int, str]] = _run
     log: Callable[[str], None] = print
     extra: dict = field(default_factory=dict)
+    worker: str = ""                   # 장부(worker_ledger) 한도 — 비면 장부를 안 쓴다(시험)
 
     def workdir(self, topic: dict) -> Path:
         d = Path(self.out_root) / str(topic["id"])
@@ -65,6 +66,46 @@ class Ctx:
 
     def preset_of(self, topic: dict | None) -> str:
         return ((topic or {}).get("assign") or {}).get("preset") or self.preset or self.channel
+
+
+def _net(TF, ctx: Ctx) -> dict:
+    """유튜브 통로를 장부 한도(4워커 합 시간당 300편) 뒤에 둔다 — 조회 전에 take, 넘으면 LimitHit(이유)."""
+    if not ctx.worker:
+        return TF.NET
+    from tools.calcopy.engine import worker_ledger as L
+    net = dict(TF.NET)
+
+    def search(q, n=10, months=None, _f=TF.NET["yt_search"]):
+        L.take(ctx.worker, "yt", int(n), f"검색 {q}")
+        return _f(q, n, months)
+
+    def detail(vid, *a, _f=TF.NET["yt_detail"], **k):
+        L.take(ctx.worker, "yt", 1, f"상세 {vid}")
+        return _f(vid, *a, **k)
+    net["yt_search"], net["yt_detail"] = search, detail
+    if "yt_upload_date" in TF.NET:
+        def upload_date(vid, _f=TF.NET["yt_upload_date"]):
+            L.take(ctx.worker, "yt", 1, f"날짜 {vid}")
+            return _f(vid)
+        net["yt_upload_date"] = upload_date
+    return net
+
+
+def _llm(TF, ctx: Ctx):
+    """무료 제미나이 창구를 장부 한도(워커당 시간당 40회) 뒤에 둔다. 429·쿼터면 장부에 pause(30분 쉼)."""
+    if not ctx.worker:
+        return TF.LLM(budget=ctx.llm_budget)
+    from tools.calcopy.engine import worker_ledger as L
+
+    class Guarded(TF.LLM):
+        def __call__(self, prompt, tag):
+            if len(self.calls) < self.budget:
+                L.take(ctx.worker, "gemini", 1, tag)
+            d, err = super().__call__(prompt, tag)
+            if err and any(x in str(err) for x in ("429", "RESOURCE_EXHAUSTED", "quota", "쿼터")):
+                L.add(ctx.worker, "pause", 1, f"제미나이 {str(err)[:150]}")
+            return d, err
+    return Guarded(budget=ctx.llm_budget)
 
 
 def _engine(name: str):
@@ -111,8 +152,18 @@ def step_find(topic, ctx: Ctx) -> dict:
     if kind not in TF.SOURCE_KINDS:
         raise StepError(f"소재 출처 유형 없음/모름: {kind!r} (manifest.source_kind 또는 --source-kind)")
     top = TF._read_json(P["chdir"] / "원자료" / "top50.json") or []
-    kws = ctx.extra.get("keywords") or TF.keyword_bundles(top)
-    cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, TF.NET, ctx.log)
+    limits = TF.Limits()                                   # 검색어 ≤6 · 검색어당 ≤20 · 메타 ≤100 · 간격 ≥1초(엔진 주인)
+    nouns = ctx.extra.get("keywords") or TF.concrete_nouns(top)
+    kws = [q["q"] for q in TF.target_queries(kind, nouns, limits.max_queries)]
+    if not kws:
+        raise StepError("검색어 0 — 채널 top50 이 없고 --keywords 도 없다")
+    ctx.log(f"[검색어] {kws}")
+    try:
+        cands, failed = TF.gather(kind, kws, ctx.find_n, ctx.extra.get("months", 6), {v["id"] for v in top}, _net(TF, ctx), ctx.log, limits)
+    except Exception as e:  # noqa: BLE001 — 장부 한도(LimitHit) 등은 이유로
+        raise StepError(f"찾기 멈춤: {type(e).__name__}: {e}") from None
+    if limits.stopped:
+        failed.append({"where": "limits", "why": limits.stopped})
     if not cands:
         raise StepError("후보 0 — " + "; ".join(f"{f['where']}: {f['why']}" for f in failed)[:300])
     rows = [{"name": c["topic"], "source": {**c["source"], "via": c["source"].get("kind"), "query": c["query"], "key": c.get("key", ""),
@@ -123,8 +174,8 @@ def step_find(topic, ctx: Ctx) -> dict:
 def step_bench(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     wd = ctx.workdir(topic)
-    llm = TF.LLM(budget=ctx.llm_budget)
-    b = TF.bench(_cand(topic), wd, TF.NET, llm, ctx.extra.get("bench_n", 6))
+    llm = _llm(TF, ctx)
+    b = TF.bench(_cand(topic), wd, _net(TF, ctx), llm, ctx.extra.get("bench_n", 4), limits=TF.Limits())
     arts = _exists({"벤치.md": wd / "벤치" / f"{_cid(topic)}.md", "벤치.json": wd / "벤치" / f"{_cid(topic)}.json"})
     cost = {"gemini": _llm_n(llm)}
     if not b["points"]:
@@ -136,7 +187,7 @@ def step_bench(topic, ctx: Ctx) -> dict:
 def step_score(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     P = _preset(TF, ctx, topic)
-    llm = TF.LLM(budget=ctx.llm_budget)
+    llm = _llm(TF, ctx)
     c = _cand(topic)
     rows, err = TF.score([c], {c["id"]: topic.get("bench") or {}}, P["slug"], llm)
     cost = {"gemini": _llm_n(llm)}
@@ -164,7 +215,7 @@ def step_script(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     wd = ctx.workdir(topic) / "대본"
     bench_md = ctx.workdir(topic) / "벤치" / f"{_cid(topic)}.md"
-    llm = TF.LLM(budget=ctx.llm_budget)
+    llm = _llm(TF, ctx)
     wd.mkdir(parents=True, exist_ok=True)
     tj = wd / "소재.json"     # script_engine.load_topic 이 읽는 꼴({topic,…}) — 5기준·각도가 대본_계획.md 에 실린다
     sc = topic.get("score") or {}
@@ -197,6 +248,9 @@ def step_source(topic, ctx: Ctx) -> dict:
     _engine("remake")
     cmd, out = _remake_args(TF, ctx, topic)
     q = (topic.get("source") or {}).get("query") or topic.get("name") or ""
+    if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
+        from tools.calcopy.engine import worker_ledger as L
+        L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
     rc, tail = ctx.run(cmd + ["--queries", q], 1800)
     arts = _exists({"재료_뼈대.json": out / "재료_뼈대.json"})
     cand = out / "재료후보"
