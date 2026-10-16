@@ -60,7 +60,7 @@ FONT_B = "C:/Windows/Fonts/malgunbd.ttf"
 CHANNELS = {
     # 잇썸홈(두유노홈디노형) = 같은 제품 실영상만(비포 비교 토막만 같은 종류 다른 제품 허용), 짤 0
     "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before", "store"], "meme_ratio": (0.0, 0.0),
-              "min_res": 720, "pref_res": 1080, "allow_cg": False},
+              "min_res": 1080, "pref_res": 1080, "allow_cg": False},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
     # 재미썸홈(이븐쇼핑형) = 제품 + 유사·연상 + 짤 10~15%
     "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "similar", "meme"], "meme_ratio": (0.10, 0.15),
                "min_res": 720, "pref_res": 1080, "allow_cg": False},
@@ -896,6 +896,30 @@ def _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, she
     return out
 
 
+def add_queries(wd, channel_rules, queries: list[dict], llm=None, net=None, log=print) -> dict:
+    """보정용 검색어 추가(작품당 1~2개) — 검색·태깅·짝짓기만 하고 state.json 의 ranked 를 갱신한다(선택은 안 바꿈 → --fix pick 으로 고른다).
+    queries = [{"q":..,"purpose":..,"toks":[번호]}]. 돌려주는 값 = {토막: 상위 후보 6개}."""
+    wd = Path(wd)
+    rules = CHANNELS[channel_rules] if isinstance(channel_rules, str) else channel_rules
+    d = json.loads((wd / "state.json").read_text(encoding="utf-8"))
+    cells = {int(k): v for k, v in d["cells"].items()}
+    needs = {int(k): v for k, v in d["needs"].items()}
+    state = {"queries": d["queries"], "meta": d["meta"], "previews": d.get("previews", []), "tagged": set(d.get("previews", [])), "cells": cells}
+    net = net or Net(wd, log)
+    llm = llm if isinstance(llm, LLM) else LLM(llm)
+    before = set(state["previews"])
+    _gather(queries, net, state, log)
+    _tag_all([v for v in state["previews"] if v not in before], net, state, d["topic"], llm, wd, log)
+    want = {i for q in queries for i in q.get("toks") or []}
+    toks = [t for t in d["toks"] if t["i"] in want] or d["toks"]
+    ranked = {int(k): [tuple(x) for x in v] for k, v in d["ranked"].items()}
+    ranked.update(match_lines(toks, needs, cells, state["meta"], rules, llm, log))
+    save_state(wd, {**d, "cells": cells, "needs": needs, "memes": {int(k): v for k, v in (d.get("memes") or {}).items()}, "ranked": ranked,
+                    "meta": state["meta"], "queries": state["queries"], "previews": state["previews"]})
+    return {t["i"]: [(cells[c]["vid"], cells[c]["t"], s, state["meta"][cells[c]["vid"]].get("res"), cells[c]["what"][:60], cells[c]["product"])
+                     for c, s in ranked.get(t["i"], [])[:6]] for t in toks}
+
+
 def apply_fixes(wd, ops: list[dict], net=None, log=print) -> dict:
     """사람 보정(최소한) — 재료_auto.json 의 토막을 고친다. op: cont(앞 컷 이어 가기) · pick(vid,t0 새 컷) · meme(id).
     고친 뒤 이어 가기 줄기의 원본 시각을 다시 잇고, 구간 파일이 그 줄기를 못 덮으면 그 구간만 다시 받는다. 판단은 사람(시트 보고), 계산은 여기 한 곳."""
@@ -1215,10 +1239,16 @@ def main(argv=None):
     ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
     ap.add_argument("--replan", action="store_true", help="state.json 으로 선택부터 다시(검색·태깅 없음)")
     ap.add_argument("--rematch", action="store_true", help="--replan 때 짝짓기(글)도 다시")
+    ap.add_argument("--add-query", help="보정 검색어 json([{q,purpose,toks}]) — 검색·태깅·짝짓기만, 후보를 출력")
     ap.add_argument("--fix", help="보정 ops.json([{i,op:cont|pick|meme,vid,t0,id}]) — 재료_auto.json 을 고치고 필요한 구간만 다시 받는다")
     ap.add_argument("--emit", help="작품 폴더 — 재료_auto.json 을 preset_make 가 읽는 재료.json 으로 쓴다(빈칸 있으면 안 씀)")
     a = ap.parse_args(argv)
     llm = LLM()
+    if a.add_query:
+        r = add_queries(a.out, a.channel, json.loads(Path(a.add_query).read_text(encoding="utf-8")), llm=llm)
+        for k, v in r.items():
+            print(k, json.dumps(v, ensure_ascii=False))
+        return
     if a.fix:
         res = apply_fixes(a.out, json.loads(Path(a.fix).read_text(encoding="utf-8")))
     elif a.compare_only:
