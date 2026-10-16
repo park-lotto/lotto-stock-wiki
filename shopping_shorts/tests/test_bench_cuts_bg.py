@@ -47,7 +47,12 @@ def vids(tmp_path_factory):
                       "-filter_complex", "[2]trim=duration=1,setpts=PTS-STARTPTS+1/TB[b];[0][1]overlay=40:200:eof_action=pass[t];"
                                          "[t]drawbox=x=40:y=200:w=280:h=50:color=black:t=fill:enable='between(t,0.92,0.99)'[t2];"
                                          "[t2][b]overlay=40:200:enable='gte(t,1)':eof_action=pass,format=yuv420p"], d / "pre.mp4")
-    return {"syn": syn, "nocut": nocut, "fade": fade, "pre": pre}
+    # move: 같은 testsrc2 가 1초에 (40,200) 280×150 → (30,225) 300×160 으로 자리·크기만 바뀜(게시글형 자막 줄이 늘 때 칸이
+    #       밀리는 꼴, rGFX 원본 7.83·15.7·22.93 실측). 컷이 아니다 — 바탕 빼기 상관만 보면 0.28 로 컷이 된다
+    move = _ff(page + ["-f", "lavfi", "-i", "testsrc2=s=280x150:r=30:d=2",
+                       "-filter_complex", "[1]split[a][b];[b]scale=300:160[b2];[0][a]overlay=40:200:enable='lt(t,1)'[t];"
+                                          "[t][b2]overlay=30:225:enable='gte(t,1)',format=yuv420p"], d / "move.mp4")
+    return {"syn": syn, "nocut": nocut, "fade": fade, "pre": pre, "move": move}
 
 
 def _measure(path, vl):
@@ -84,3 +89,10 @@ def test_strongest_frame_wins_merge(vids):
     """보정으로 문턱을 넘은 약한 앞 프레임이 진짜 컷을 밀어내지 않는다 — 묶음마다 보정 점수 최대 프레임."""
     r = _measure(vids["pre"], VL)
     assert len(r["cuts"]) == 1 and abs(r["cuts"][0] - 1.0) <= 1 / 30 + 1e-6, (r["detected"], r["corr"], r["cuts"])
+
+
+def test_same_picture_moved_is_not_a_cut(vids):
+    """그림 칸이 자리·크기만 바뀐 것은 컷이 아니다 — 후보로는 잡히지만 moved 로 빠진다."""
+    r = _measure(vids["move"], VL)
+    assert r["cuts"] == [], (r["detected"], r["corr"], r.get("moved"))
+    assert len(r["moved"]) == 1 and abs(r["moved"][0][0] - 1.0) <= 1 / 30 + 1e-6, r["moved"]

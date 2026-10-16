@@ -18,7 +18,8 @@ import cv2
 
 from . import probe
 from .constants import (CUT_MERGE_S, CUT_MIN_T, CUT_VERIFY_CORR, CUT_VERIFY_TOP, CUT_SUB_TOL, ZOOM_FPS,
-                        CUT_BG_TOL, CUT_ACTIVE_MIN, CUT_VERIFY_ACTIVE_MIN)
+                        CUT_BG_TOL, CUT_ACTIVE_MIN, CUT_VERIFY_ACTIVE_MIN, CUT_MOVE_INLIERS, CUT_MOVE_SCALE,
+                        CUT_MOVE_W)
 from . import constants as C
 
 
@@ -103,15 +104,45 @@ def _zcorr(a: np.ndarray, b: np.ndarray) -> float:
     return float((a * b).mean())
 
 
+def same_picture_moved(a: np.ndarray, b: np.ndarray) -> tuple[int, float | None]:
+    """두 회색 프레임이 '같은 그림이 자리·크기만 바뀐 것'인가 — ORB 짝 + 부분 아핀(RANSAC) 일치점 수와 배율.
+    게시글형은 자막 줄이 늘면 그림 칸이 아래로 밀리거나 커진다(같은 장면). 바탕 빼기 상관은 이걸 컷으로 본다."""
+    orb = cv2.ORB_create(800)
+    ka, da = orb.detectAndCompute(a, None)
+    kb, db = orb.detectAndCompute(b, None)
+    if da is None or db is None or len(ka) < 10 or len(kb) < 10:
+        return 0, None
+    ms = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True).match(da, db)
+    if len(ms) < 8:
+        return 0, None
+    pa = np.float32([ka[m.queryIdx].pt for m in ms])
+    pb = np.float32([kb[m.trainIdx].pt for m in ms])
+    M, inl = cv2.estimateAffinePartial2D(pa, pb, method=cv2.RANSAC, ransacReprojThreshold=3.0)
+    if M is None:
+        return 0, None
+    return int(inl.sum()), round(float(np.hypot(M[0, 0], M[0, 1])), 3)
+
+
 def cut_verify(path: str, window: list[int], cands: list[float], fps: float,
-               bg: float | None = None) -> tuple[list[float], list]:
+               bg: float | None = None, info: dict | None = None) -> tuple[list[float], list]:
     """컷 앞(k−1)·뒤(k+1) 프레임의 창 위쪽 65% 64×64 z정규화 상관 < CUT_VERIFY_CORR 이면 진짜 컷.
-    bg(배경 회색)를 주면 '두 프레임 다 배경색'인 화소를 빼고 잰다(남는 화소 < CUT_VERIFY_ACTIVE_MIN 이면 전체)."""
+    bg(배경 회색)를 주면 '두 프레임 다 배경색'인 화소를 빼고 재고(남는 화소 < CUT_VERIFY_ACTIVE_MIN 이면 전체),
+    상관이 낮아도 같은 그림이 자리·크기만 바뀐 것(same_picture_moved 일치점 ≥ CUT_MOVE_INLIERS, 배율 CUT_MOVE_SCALE 안)이면
+    컷이 아니다 — 그 시각은 info["moved"] 에 [t, 일치점, 배율] 로 남긴다."""
     if not cands:
         return [], []
     x, y, w, h = window
     hh = int(h * CUT_VERIFY_TOP)
     sig = [g.astype(np.float64).ravel() for g in probe.frames(path, f"crop={w}:{hh}:{x}:{y},scale=64:64", 64, 64, "gray")]
+    big = {}
+    if bg is not None:
+        need = {int(round(t * fps)) + d for t in cands for d in (-1, 1)}
+        sw = CUT_MOVE_W
+        sh = max(2, int(round(sw * hh / w / 2) * 2))
+        for i, g in enumerate(probe.frames(path, f"crop={w}:{hh}:{x}:{y},scale={sw}:{sh}", sw, sh, "gray")):
+            if i in need:
+                big[i] = g.copy()
+    moved = []
     keep, corr = [], []
     for t in cands:
         k = int(round(t * fps))
@@ -126,8 +157,16 @@ def cut_verify(path: str, window: list[int], cands: list[float], fps: float,
                 m = None
         c = _zcorr(A, B) if m is None else _zcorr(A[m], B[m])
         corr.append(round(c, 3))
-        if c < CUT_VERIFY_CORR:
-            keep.append(t)
+        if c >= CUT_VERIFY_CORR:
+            continue
+        if bg is not None and k - 1 in big and k + 1 in big:
+            n, sc = same_picture_moved(big[k - 1], big[k + 1])
+            if n >= CUT_MOVE_INLIERS and sc is not None and CUT_MOVE_SCALE[0] <= sc <= CUT_MOVE_SCALE[1]:
+                moved.append([t, n, sc])
+                continue
+        keep.append(t)
+    if info is not None:
+        info["moved"] = moved
     return keep, corr
 
 
@@ -191,7 +230,8 @@ def measure_video(path: str, vl: dict, meta: dict, sub_changes: list[float], zoo
     raw = scene_detect(path, win)                      # 옛 자(희석 보정 없음) — raw_stats·기준선 재현용
     det = scene_detect(path, win, bg=bg, fps=meta["fps"]) if bg is not None else raw
     cands = merge_close(det)
-    cuts, corr = cut_verify(path, win, cands, meta["fps"], bg=bg)
+    vinfo: dict = {}
+    cuts, corr = cut_verify(path, win, cands, meta["fps"], bg=bg, info=vinfo)
     segs = shot_lengths(cuts, dur)
     eq, n = cut_eq_sub(cuts, sub_changes) if sub_changes else (None, len(cuts))
     gaps = still_gaps(cuts, sub_changes, dur)
@@ -200,7 +240,7 @@ def measure_video(path: str, vl: dict, meta: dict, sub_changes: list[float], zoo
     raw_stats = {"shots": len(raw) + 1, "first_cut": round(raw_segs[0], 2), "cut_std": round(st.pstdev(raw_segs), 2),
                  "cut_eq_sub": list(cut_eq_sub(raw, sub_changes)) if sub_changes else None}
     res = {"scene_t": C.SCENE_T, "raw": raw, "raw_stats": raw_stats, "candidates": cands, "corr": corr, "cuts": cuts,
-           "bg_gray": None if bg is None else round(bg, 1), "detected": det,
+           "bg_gray": None if bg is None else round(bg, 1), "detected": det, "moved": vinfo.get("moved", []),
            "merged_out": [t for t in det if t not in cands],
            "rejected": [t for t, c in zip(cands, corr) if c is not None and c >= CUT_VERIFY_CORR],
            "shots": len(cuts) + 1,
