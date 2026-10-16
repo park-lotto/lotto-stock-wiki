@@ -281,6 +281,20 @@
    "date": "2026-10-17",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 21,
+   "channel": "homedesignnote",
+   "channel_name": "잇썸홈",
+   "title": "작품5_옥수수커터",
+   "path": "C:/숏템_칼카피/homedesignnote/작품5_옥수수커터/auto/make/final.mp4",
+   "desktop": "칼카피_잇썸홈_옥수수커터.mp4",
+   "md5": "9dcdd9fa84cc28402cec4a1feaa24dd3",
+   "seconds": 26.66,
+   "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
