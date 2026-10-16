@@ -1,0 +1,220 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "ILIiqCJAOSI",
+ "made_from": {
+  "tool": "channel/banggu/칼카피_ILIi/build_frames.py",
+  "note": "원본 5.5·9.0초 실측: 바탕 253 · 머리띠 (42,161,253) y0~233 · 검은 줄 y236~239 · 로고 잉크 y120~219 · 제목 잉크 y275~342 x96~980 · 부제 회색(90) y373~411 x125~412 · 가로줄 y446~450 x60~1019 (70,70,70) · 자막 잉크 y502~551/580~630(줄 칸 79) · 그림 칸 자막 아래(뜯기2 picture_boxes)"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    253,
+    253,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 660,
+   "w": 1080,
+   "h": 1260,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 234,
+   "rgb": [
+    42,
+    161,
+    253
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 236,
+   "w": 1080,
+   "h": 4,
+   "rgb": [
+    36,
+    4,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 79,
+   "y": 130,
+   "w": 88,
+   "h": 10,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 79,
+   "y": 160,
+   "w": 88,
+   "h": 10,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 79,
+   "y": 193,
+   "w": 88,
+   "h": 10,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "image",
+   "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2084%2084%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%277%27%3E%3Ccircle%20cx=%2734%27%20cy=%2734%27%20r=%2728%27/%3E%3Cpath%20d=%27M54%2054L80%2080%27/%3E%3C/svg%3E",
+   "x": 904,
+   "y": 128,
+   "w": 84,
+   "h": 84
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 530,
+   "y": 115,
+   "w": 400,
+   "align": "center",
+   "lines": 1,
+   "font": "Kkubulim",
+   "size": 109.9,
+   "line_h": 126,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "골방"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 266,
+   "w": 960,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 75.6,
+   "line_h": 87,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "아웃백이 끝까지 안 내놓은 영업기밀"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 125,
+   "y": 371,
+   "w": 600,
+   "align": "left",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 36.3,
+   "line_h": 42,
+   "rgb": [
+    90,
+    88,
+    89
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 14,
+   "enter": null,
+   "text": "골방 | 14:25"
+  },
+  {
+   "kind": "band",
+   "x": 60,
+   "y": 446,
+   "w": 960,
+   "h": 5,
+   "rgb": [
+    70,
+    70,
+    70
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 488,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "CcPretendard-Bold",
+   "size": 55.6,
+   "line_h": 79,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "valign": "top"
+  }
+ ]
+}

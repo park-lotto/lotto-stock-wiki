@@ -1,0 +1,247 @@
+{
+ "_note": "ILIi(방구석 아웃백) 재료 계획(렌더 전): 같은 소재(아웃백 부시맨브레드·망고 스프레드) 남의 영상 재편집 11컷 + 제품/포장 1컷(삼립 ReadyB Bushman Bread 포장 영상) + 우리 짤 팩 1컷(원본 6.0~8.4초 애니 짤 자리). 소스는 전부 1080p(yt-dlp, 10-16 받음, 봇 확인으로 한때 360p만 됐다가 풀린 뒤 다시 받음). 남의 영상에 박힌 자막·로고·순위 그래픽은 src_crop 으로 창 밖으로. 칸 크기 = 뜯기2 cuts.picture_boxes 같은 순번(narr_video 기본), 자막 아래 붙임.",
+ "cand_dir": "C:/숏템_칼카피/banggu/칼카피_ILIi/make/hq",
+ "shots": [
+  {
+   "i": 0,
+   "src": "v_62yX4m7Xe5c.mp4",
+   "url": "https://www.youtube.com/watch?v=62yX4m7Xe5c",
+   "ss": 131.5,
+   "kind": "남의영상재편집",
+   "full": true,
+   "fit": "cover",
+   "src_crop": [
+    360,
+    0,
+    1200,
+    1080
+   ],
+   "ours": "썬 부시맨브레드 앞에서 '망고스프레드' 1회용 컵을 집어 드는 손(뒤에 아웃백 포장 빵 봉지)",
+   "why": "훅 '아웃백이 끝까지 안 내놓은 영업기밀' — 그 기밀(스프레드)을 처음부터 손에 쥐여 보여 줌"
+  },
+  {
+   "i": 1,
+   "src": "v_Lye8MXQd-FM.mp4",
+   "url": "https://www.youtube.com/watch?v=Lye8MXQd-FM",
+   "ss": 0.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    100,
+    0,
+    1200,
+    1080
+   ],
+   "ours": "아웃백 매장 테이블 — 나무 도마 위 부시맨브레드·칼·버터 컵",
+   "why": "'아웃백 하면 다들 떠올리는 부시맨브레드' — 매장에서 나오는 그 모습"
+  },
+  {
+   "i": 2,
+   "src": "v_4cYu-8SI-6w.mp4",
+   "url": "https://www.youtube.com/watch?v=4cYu-8SI-6w",
+   "ss": 24.8,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    240,
+    0,
+    1440,
+    900
+   ],
+   "ours": "전자레인지 안에 빵 접시와 물 컵을 같이 넣고 돌리는 장면(통밀빵)",
+   "why": "'물 한 컵 넣고 데우는 렌지 꿀팁' — 그 꿀팁 그대로(빵은 부시맨 아님: 통밀빵, 꿀팁 장면만 빌림)"
+  },
+  {
+   "i": 3,
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/gfr_7Bu1.mp4",
+   "asset_id": 617,
+   "url": "pack:meme/617",
+   "ss": 0.0,
+   "kind": "짤",
+   "fit": "cover",
+   "ours": "우리 짤 팩 617 '[GIFER] unbelievable mr bean disgust'(tone 의심_황당) — 미스터 빈 찡그림",
+   "why": "'집에선 그 맛이 안 난다는 사람이 많았는데' — 원본도 이 자리(6.0~8.4초)에 '노맛' 반응 짤 1개"
+  },
+  {
+   "i": 4,
+   "src": "v_v1hl-_mzObw.mp4",
+   "url": "https://www.youtube.com/watch?v=v1hl-_mzObw",
+   "ss": 7.0,
+   "kind": "제품/포장",
+   "fit": "cover",
+   "src_crop": [
+    380,
+    60,
+    1100,
+    524
+   ],
+   "ours": "삼립 ReadyB 'Bushman Bread' 포장 근접(봉지 글자 Bushman Bread)",
+   "why": "'사실 빵은 똑같고' — 마트에서 파는 바로 그 부시맨브레드 포장"
+  },
+  {
+   "i": 5,
+   "src": "v_62yX4m7Xe5c.mp4",
+   "url": "https://www.youtube.com/watch?v=62yX4m7Xe5c",
+   "ss": 175.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    240,
+    0,
+    1440,
+    1080
+   ],
+   "ours": "빵 조각을 망고 스프레드 컵에 푹 찍는 손",
+   "why": "'차이는 같이 나오는 망고 스프레드' — 스프레드에 빵을 찍는 순간"
+  },
+  {
+   "i": 6,
+   "src": "v_ukguU3mlVTw.mp4",
+   "url": "https://www.youtube.com/watch?v=ukguU3mlVTw",
+   "ss": 6.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    480,
+    120,
+    1200,
+    960
+   ],
+   "ours": "아웃백 매장에서 아이가 빵을 스프레드 컵에 찍어 먹음(테이블 위 아웃백 메뉴판)",
+   "why": "'문제는 아웃백이 이 스프레드를' — 매장에서만 찍어 먹는 그 스프레드"
+  },
+  {
+   "i": 7,
+   "src": "v_62yX4m7Xe5c.mp4",
+   "url": "https://www.youtube.com/watch?v=62yX4m7Xe5c",
+   "ss": 138.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    420,
+    0,
+    1080,
+    1080
+   ],
+   "ours": "포장 빵에 딸려 온 1회용 망고스프레드 컵 뚜껑을 뜯는 손",
+   "why": "'매장 밖에선 따로 팔지 않는다는 거' — 빵 살 때 딸려 오는 작은 컵이 전부"
+  },
+  {
+   "i": 8,
+   "src": "v_v0o9s9D_vmU.mp4",
+   "url": "https://www.youtube.com/watch?v=v0o9s9D_vmU",
+   "ss": 13.5,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    200,
+    0,
+    1500,
+    900
+   ],
+   "ours": "버터 덩이·연유 옆에서 망고를 믹서 통에 붓는 장면",
+   "why": "'버터에 망고랑 연유를' — 재료 셋이 한 화면에"
+  },
+  {
+   "i": 9,
+   "src": "v_v0o9s9D_vmU.mp4",
+   "url": "https://www.youtube.com/watch?v=v0o9s9D_vmU",
+   "ss": 21.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    200,
+    0,
+    1500,
+    900
+   ],
+   "ours": "믹서를 눌러 가는 장면(통 속 노란 반죽)",
+   "why": "'믹서에 갈아서 직접 만들어 버림'"
+  },
+  {
+   "i": 10,
+   "src": "v_pQ7atvqGZs4.mp4",
+   "url": "https://www.youtube.com/watch?v=pQ7atvqGZs4",
+   "ss": 21.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    300,
+    60,
+    1300,
+    880
+   ],
+   "ours": "녹인 버터를 거품기로 한참 푸는 손",
+   "why": "'심지어 만들다 지친 사람들은' — 손이 많이 가는 과정"
+  },
+  {
+   "i": 11,
+   "src": "v_YfiCYjfM-44.mp4",
+   "url": "https://www.youtube.com/watch?v=YfiCYjfM-44",
+   "ss": 27.0,
+   "kind": "제품/포장",
+   "fit": "cover",
+   "src_crop": [
+    190,
+    170,
+    770,
+    820
+   ],
+   "ours": "시판 망고 스프레드 병(SIMON STEAK BUTTER 망고 스프레드) — 그 채널 순위 그래픽·가격 글자는 잘라 냄",
+   "why": "'시판 스프레드로 갈아탔다는데' — 실제 시판 제품"
+  },
+  {
+   "i": 12,
+   "src": "v_pQ7atvqGZs4.mp4",
+   "url": "https://www.youtube.com/watch?v=pQ7atvqGZs4",
+   "ss": 51.0,
+   "kind": "남의영상재편집",
+   "fit": "cover",
+   "src_crop": [
+    300,
+    60,
+    1300,
+    1020
+   ],
+   "ours": "망고 스프레드를 듬뿍 얹은 부시맨브레드 조각을 들어 보임",
+   "why": "'결국 영업기밀은 빵 말고 버터였다고ㅋㅋ' — 결말 한 컷"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": 0.0,
+   "db": 0,
+   "why": "원본 0.1초 휙(훅 시작) — 팩 '002_휙(만화적)'"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤: 훅 끝(본문 시작)",
+   "db": 0,
+   "why": "원본 1.8초 띵(훅→본문) — 팩 '082_띵'"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "asset_id": 1473,
+   "t": "TTS 뒤: '사실 빵은 똑같고' 시작",
+   "db": 0,
+   "why": "원본 15.8초 띵(핵심 공개) — 우리 해답 자리"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "asset_id": 1459,
+   "t": "TTS 뒤: '빵돌이들은 결국' 시작",
+   "db": 0,
+   "why": "원본 11.2초 휙(빵돌이 무리 등장) — 같은 박자"
+  }
+ ],
+ "audio_plan": "원본 실측(뜯기2): 나레 1명 남성 TTS · 말속도 8.12자/초 · 원음 깔림 False · BGM 있음(경쾌·신나는) 덕킹 12.9dB · LUFS −14.3 → 우리: 타입캐스트 필재(남, 숏템 기본) 1회 · tempo 1.25(추정: rGFX 1.36→8.87자/초 비례) · BGM honwaka_puppu ratio 0.22(≈−13dB) · 목표 LUFS −14.3",
+ "watermark": "남의 영상 박힌 자막(4cYu '40초 돌려요~'·v0o9 레시피 자막·pQ7 자막)은 아래를 잘라 내고, pQ7 오른쪽 위 '만개의레시피' 로고·YfiC 순위 그래픽은 src_crop 으로 뺌 — 계획_시트로 확인",
+ "narration": "타입캐스트 필재(tc_68257f68bc6e3c161ab5078d, 남성 · 숏템 기본 — 원본도 남성 TTS) 1회 · tempo 1.25(추정: rGFX 1.36 → 8.87자/초에서 비례로 8.1자/초 겨냥) · 대본 215자(공백 제외) ÷ 8.1 = 약 26.5초(원본 26.5초) · 반말 전언체 그대로 읽힘(존댓말 0) · 쉼: 원본은 쉼 거의 없음(말 차지 0.981) — 우리 대본의 쉼표는 자막 조각 경계용이라 짧은 쉼이 생길 수 있음 → 렌더 뒤 규칙표에 말속도·쉼 전/후",
+ "caption_effects": {
+  "now": "누적형 2줄(첫 줄 y502 자리 고정 valign top · 줄 칸 79 · 검정 CcPretendard-Bold · 외곽선·그림자·상자 없음 · 등장 효과 없음 = 원본 실측 caption_motion '없음' 3/3, text_fx 외곽선 0px) · 페이지 12장(원본 11장) · 훅 카드 = 큰 제목 2줄 흰/파랑(JalnanGothic, 외곽선 6px (0,1,20)) + 흰 띠에 첫 문장 · 훅 동안 자막 없음(원본과 같음)",
+  "planned": "원본 3줄 페이지(10.0~11.1초 '…업소용 오븐에 있었음', 18.0~19.2초)는 narr_video 누적형이 2줄까지라 지금 못 그림 → 우리 대본은 3줄 페이지 없이 짬. frame.json enter/emphasis 연결돼도 원본에 등장·강조 효과가 없어 넣을 것 없음"
+ }
+}
