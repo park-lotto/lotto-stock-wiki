@@ -213,9 +213,11 @@
       const choices=previous.scenes.map((s,i)=>({s,i})).filter(x=>x.s.beat_idx===scene.beat_idx);
       return (choices.find(x=>x.s.caption===scene.caption&&x.s.start===scene.start)||choices.find(x=>x.s.start<=scene.start&&x.s.end>scene.start)||choices[0])?.i;
     });
-    for(const name of ['captionTexts','captionLayouts','captionDrags','captionPositions','fontScales','textOffsets']){
+    // 관제 219: [이 장면만] 제목·채널명(글=sceneTexts `칸:번호`, 크기·위치=`틀:화면:칸:번호`)도 장면 번호를 따라 옮긴다 — 안 옮기면 장면이 늘거나 줄 때 엉뚱한 장면에 붙는다
+    for(const name of ['captionTexts','captionLayouts','captionDrags','captionPositions','fontScales','textOffsets','textDrags','sceneTexts']){
+      if(!snapshot[name])continue;
       const output={};for(const [key,value] of Object.entries(snapshot[name]||{})){
-        const m=key.match(/^(.*:(?:story|continuous):)(\d+)(:caption)$/)||key.match(/^(.*:caption:)(\d+)()$/);
+        const m=key.match(/^(.*:(?:story|continuous):)(\d+)(:caption)$/)||key.match(/^(.*:caption:)(\d+)()$/)||key.match(/^((?:.*:)?(?:channel|hook1|hook2|bodyTitle):)(\d+)()$/);
         if(!m){output[key]=value;continue;}
         sources.forEach((source,i)=>{if(source===Number(m[2])&&!(name==='captionTexts'&&next.scenes[i].beat_idx===changedBeat))output[m[1]+i+m[3]]=value});
       }result[name]=output;

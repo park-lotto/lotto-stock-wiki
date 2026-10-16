@@ -279,7 +279,7 @@
       if(event.target.closest('[data-my-save]')){
         const snap=mineHooks.current?.();if(!snap){alert('먼저 템플릿을 고르세요');return}
         // 취향만 담는다 — 보던 장면번호·그때의 문구·장면별 자막 손질은 뺀다(딴 작업으로 새어 나간다)
-        delete snap.sceneIndex; delete snap.frameKind; delete snap.text;
+        delete snap.sceneIndex; delete snap.frameKind; delete snap.text; delete snap.sceneTexts;   // 관제 219: 장면별 제목 글도 그 작업 것
         // ★자막박스 '모양'은 담는다(2026-09-24 사장님) — 흰 띠를 좋아하면 모든 작업에서 흰 띠여야 한다.
         //   문장 길이와 무관한 취향이라 옮겨도 안전하다. 장면마다 다른 자리·크기(drag·offset·scale)는 그대로 뺀다.
         snap.captionLook=captionLookStyle();
@@ -438,6 +438,27 @@
     if(editScope!=='all')return [sceneKeyOf(bind)];
     const base=scaleKey(bind);for(const k of [...map.keys()])if(k.startsWith(base+':'))map.delete(k);return [base];
   };
+  // ★장면별 제목·채널명 글(관제 219, 2026-10-16 회원 힘 "앞장면 보조제목·뒷장면 본문제목에 다른 내용 — 이 장면만 저장해도 전체에 적용").
+  //   글은 원래 작업 하나에 한 벌(text)이라 [이 장면만]이 크기·위치만 따로 두고 글은 전 장면에 같이 썼다. 판단 주인 = 이 블록 하나:
+  //   sceneTexts(`칸:장면번호`) = [이 장면만]으로 쓴 글. 입력칸은 '지금 장면에 보이는 글'이고, 공통 글은 baseText()로만 읽는다.
+  //   그리기(value)·저장(snapshot.text=공통 / sceneTexts=덮어쓰기)·렌더·캡컷·썸네일(show(i)마다 paintSceneTexts)이 모두 여기를 거친다.
+  //   [모든 장면]으로 쓰면 그 칸의 장면별 글을 지운다 — writeKeys 와 같은 원리("모두 적용했는데 몇 개는 그대로" 방지).
+  const SCENE_TEXT_BINDS=['channel','hook1','hook2','bodyTitle'];
+  const sceneTexts=new Map(),shownBase={};let shownAt=-1;
+  const sceneTextKey=(bind,i=sceneIndex)=>`${bind}:${i}`;
+  // 덮어쓴 글이 보이는 중이면 숨겨 둔 공통 글. 다른 코드가 입력칸에 공통 글을 직접 넣었으면(값이 덮어쓴 글과 다르면) 그 값이 공통 글이다.
+  const showingOverride=bind=>bind in shownBase&&inputs[bind]?.value===sceneTexts.get(sceneTextKey(bind,shownAt));
+  const baseText=bind=>showingOverride(bind)?shownBase[bind]:(inputs[bind]?.value??'');
+  function paintSceneTexts(){
+    for(const bind of SCENE_TEXT_BINDS){
+      const input=inputs[bind];if(!input)continue;
+      const common=baseText(bind);delete shownBase[bind];
+      const own=sceneTexts.get(sceneTextKey(bind));
+      if(own!=null){shownBase[bind]=common;input.value=own;}else input.value=common;
+      updateCount(input);
+    }
+    shownAt=sceneIndex;
+  }
   const textScale=bind=>fontScales.get(readKey(fontScales,bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1)*(bind==='caption'&&CAPTION_PACKS[captionPack]?.size?CAPTION_PACKS[captionPack].size/100:1);   // 자막팩 기본 크기(관제 127) — 손으로 정한 크기가 있으면 그것
   const textOffset=bind=>textOffsets.get(readKey(textOffsets,bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
@@ -1263,6 +1284,12 @@
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
+    if(SCENE_TEXT_BINDS.includes(bind)&&editScope!=='all'){   // 관제 219: 이 장면만 [처음으로] = 이 장면 글을 공통 글로 되돌린다
+      const common=baseText(bind);sceneTexts.delete(sceneTextKey(bind));input.value=common;delete shownBase[bind];
+      for(const k of writeKeys(fontScales,bind))for(const m of [fontScales,textOffsets,textDrags])m.delete(k);
+      fittedText.clear();markDirty(bind);updateCount(input);updateSteppers();renderEdit();return;
+    }
+    if(SCENE_TEXT_BINDS.includes(bind)){delete shownBase[bind];for(const k of [...sceneTexts.keys()])if(k.startsWith(bind+':'))sceneTexts.delete(k);}
     input.value=presetValue(bind)||'';for(const m of [fontScales,textOffsets,textDrags])for(const k of writeKeys(m,bind))m.delete(k);   // 09-19: 마우스로 옮긴 자리도 되돌린다 / 09-28: 범위대로(이 장면만이면 그 장면 덮어쓰기만)
     fittedText.clear();
     if(bind==='caption'){captionLayouts.delete(captionKey());captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
@@ -1850,7 +1877,7 @@
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     syncFontSet();window.dispatchEvent(new Event('scene-style-fontset'));   // 훅↔본문을 오갈 때 그 틀의 글꼴로
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());
+    syncCaption();paintSceneTexts();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
@@ -1863,7 +1890,7 @@
     const p=rows[current],source=imageFor(p,sceneIndex);
     base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
+    syncCaption();paintSceneTexts();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
     cancelAnimationFrame(wordFxTimer);wordFxClock=0;if(wordFxOn()&&!qaMode&&!window.sceneStyleExporting)wordFxTimer=requestAnimationFrame(runWordFx);   // 렌더·검사에서는 예약하지 않는다 — 예약된 '따라가기'가 렌더러가 정한 단어를 첫 단어로 되돌렸다(실측: 완성본 28상태 중 4개)
   }
   function selectPreset(index){
@@ -1917,9 +1944,18 @@
     const button=event.target.closest('[data-scene-step]');if(!button)return;
     showScene(sceneIndex+Number(button.dataset.sceneStep));
   });
+  Object.values(inputs).forEach(input=>input.addEventListener('beforeinput',()=>{input._beforeText=input.value;}));
   Object.values(inputs).forEach(input=>input.addEventListener('input',()=>{
-    if(input.dataset.bind==='caption')captionTexts.set(captionKey(),input.value);
-    else if(sceneContext?.text)sceneContext.text[input.dataset.bind]=input.value;
+    const bind=input.dataset.bind;
+    if(bind==='caption')captionTexts.set(captionKey(),input.value);
+    else if(SCENE_TEXT_BINDS.includes(bind)&&editScope!=='all'){   // 관제 219: 이 장면만 — 공통 글은 그대로 두고 이 장면 글만
+      const common=showingOverride(bind)||(bind in shownBase&&shownAt===sceneIndex)?shownBase[bind]:(input._beforeText??input.value);
+      sceneTexts.set(sceneTextKey(bind),input.value);shownBase[bind]=common;shownAt=sceneIndex;
+    }
+    else{
+      if(SCENE_TEXT_BINDS.includes(bind)){delete shownBase[bind];for(const k of [...sceneTexts.keys()])if(k.startsWith(bind+':'))sceneTexts.delete(k);}
+      if(sceneContext?.text)sceneContext.text[bind]=input.value;
+    }
     updateCount(input);markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
   // 글자 크기 쓰기 — ＋/− 버튼·글자 설정 줄·화면에서 끌어 늘리기가 모두 이 함수 하나를 쓴다(값은 fontScales 한 벌).
@@ -2247,9 +2283,11 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(CAPTION_PACKS[captionPack]?{captionPack}:{}),...(motionPack==='off'?{motionPack:'off'}:motionPackNo()?{motionPack:String(motionPackNo())}:{}),...(fxPresetSel?{fxPreset:structuredClone(fxPresetSel)}:{}),...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:WORD_FX_GROWS[wordFx.grow]?wordFx.grow:''}}:{}),fontSet,fontSets:{...fontSets},...(Object.keys(fontPick).length?{fontPick:{...fontPick}}:{}),titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(CAPTION_PACKS[captionPack]?{captionPack}:{}),...(motionPack==='off'?{motionPack:'off'}:motionPackNo()?{motionPack:String(motionPackNo())}:{}),...(fxPresetSel?{fxPreset:structuredClone(fxPresetSel)}:{}),...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:WORD_FX_GROWS[wordFx.grow]?wordFx.grow:''}}:{}),fontSet,fontSets:{...fontSets},...(Object.keys(fontPick).length?{fontPick:{...fontPick}}:{}),titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,SCENE_TEXT_BINDS.includes(k)?baseText(k):v.value])),...(sceneTexts.size?{sceneTexts:Object.fromEntries(sceneTexts)}:{}),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
+      sceneTexts.clear();for(const k of Object.keys(shownBase))delete shownBase[k];shownAt=-1;   // 관제 219: 장면별 글은 이 작업 저장본 것만
+      for(const [key,value] of Object.entries(saved?.sceneTexts||{}))if(typeof value==='string')sceneTexts.set(key,value);
       frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
       {const oldShadow=saved&&(typeof saved.textShadow==='object'&&saved.textShadow?Object.values(saved.textShadow).some(Boolean):!!saved.textShadow);
@@ -2270,6 +2308,7 @@
       if(context?.text)for(const [key,value] of Object.entries(context.text))if(inputs[key])inputs[key].value=value;
       fillAutoTitles();
       if(context?.scenes?.length)showScene(Number.isInteger(saved?.sceneIndex)?saved.sceneIndex:0);
+      else paintSceneTexts();
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},

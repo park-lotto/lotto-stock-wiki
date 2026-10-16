@@ -19754,6 +19754,15 @@ function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의
   Object.keys(SB.ord).filter(o=>o.startsWith('mine#')).forEach(o=>delete SB.ord[o]); delete SB.edit['mine'];
   SB.view='mine'; sbRender(); }
 function sbMv(ek, i, j, d){ const a=SB.ord[ek+'#'+i]; const t=j+d; if(!a||t<0||t>=a.length) return; [a[j],a[t]]=[a[t],a[j]]; SB.play=null; sbResync(ek); }
+// ★장면을 위·아래 칸으로 옮기기(관제 221, 2026-10-16 회원 힘 "대본생성 단계에서 장면 위, 아래로 화면 옮기는 기능").
+//   칸 장면 목록(SB.ord)만 바꾼다 — ◀▶·✕와 같은 길(sbResync → 서버가 초·짤 다시 잼, 확정 때 sbLiveIds 로 3단계에 간다).
+//   아래 칸으로 가면 그 칸 맨 앞, 위 칸으로 가면 맨 뒤에 붙는다(문장 흐름상 가장 가까운 자리). 옮긴 장면은 '고른 장면'으로 표시.
+function sbMvRow(ek, i, j, d){ const bd=SB.made[ek]; const t=i+d; if(!bd||!bd.slots||t<0||t>=bd.slots.length) return;
+  const a=sbOrdOf(ek,i,bd.slots[i]), b=sbOrdOf(ek,t,bd.slots[t]); if(j<0||j>=a.length) return;
+  const id=a.splice(j,1)[0]; const at=b.indexOf(id); if(at>=0) b.splice(at,1);
+  if(d>0) b.unshift(id); else b.push(id);
+  const pk=bd.slots[t].picked=bd.slots[t].picked||[]; if(!pk.includes(id)) pk.unshift(id);
+  SB.play=null; if(typeof toast==='function') toast(`장면을 ${t+1}번 칸으로 옮겼어요`); sbResync(ek); }
 function sbRmCard(ek, i, j){ const a=SB.ord[ek+'#'+i]; if(a){ a.splice(j,1); SB.play=null; sbResync(ek); } }
 function sbResync(ek){ const bd=SB.made[ek]; if(bd && bd.slots) sbPicksSync(ek,bd); else sbRender(); }   // 카드 넣기·빼기·순서 → 초 다시 재기
 function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
@@ -19768,7 +19777,7 @@ function sbCellCards(ek, i, sl, ck){
     const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
     const pl=SB.play&&SB.play.ek===ek&&SB.play.i===i&&SB.play.j===j;
     return `<div class="sb-cc ${show?'':'off'}"><div class="sb-ccv" onclick="sbPlay('${sbA(ek)}',${i},${j})" title="${pl?'누르면 멈춤':'누르면 이 장면 재생(소리 없음)'}">${pl?sbClipV(id,120):sbTh(id,120)}</div><div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
-      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(p&&show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
+      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span>${i>0?`<span class="sb-mv" title="위 칸(${i}번)으로 옮기기" onclick="sbMvRow('${sbA(ek)}',${i},${j},-1)">▲</span>`:''}${(SB.made[ek]&&SB.made[ek].slots&&i<SB.made[ek].slots.length-1)?`<span class="sb-mv" title="아래 칸(${i+2}번)으로 옮기기" onclick="sbMvRow('${sbA(ek)}',${i},${j},1)">▼</span>`:''}<span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(p&&show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
 // 장면 카드 미리보기 — 누른 카드 하나만 그 조각 구간 영상(/storyboard/clip, 서버가 구간만 잘라 줌)을 소리 없이 반복
 function sbPlay(ek, i, j){ const p=SB.play; SB.play=(p&&p.ek===ek&&p.i===i&&p.j===j)?null:{ek,i,j}; sbRender(); }
 function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
