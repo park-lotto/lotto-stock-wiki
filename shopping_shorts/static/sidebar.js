@@ -57,6 +57,8 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 카드뉴스 제작소(관제 223, 2026-10-17) — 인스타 캐러셀 생성. 스위치 cardnews_enabled 열린 계정만(/api/me cardnews) 보인다.
+      { icon: "🗂", text: "카드뉴스 제작소", href: "/cardnews", cardnews: true },
       // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
@@ -219,8 +221,8 @@
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
-      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "") + (it.cardnews ? " ss-cardnews-only" : "");
+      var hide = (it.admin || it.meme || it.cardnews) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -495,6 +497,8 @@
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
     if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
+    // 카드뉴스 제작소 스위치(cardnews_enabled) — 서버 /api/me cardnews 가 정본(서버 입구 _cn_gate와 같은 판정)
+    if (d.cardnews === true) document.querySelectorAll(".ss-cardnews-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;
