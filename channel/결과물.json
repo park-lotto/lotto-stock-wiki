@@ -267,6 +267,20 @@
    "date": "2026-10-17",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 20,
+   "channel": "homedesignnote",
+   "channel_name": "잇썸홈",
+   "title": "작품4_아이스큐브",
+   "path": "C:/숏템_칼카피/homedesignnote/작품4_아이스큐브/auto/make/final.mp4",
+   "desktop": "칼카피_잇썸홈_아이스큐브.mp4",
+   "md5": "254134d5d16f919609411808738fe277",
+   "seconds": 26.16,
+   "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
