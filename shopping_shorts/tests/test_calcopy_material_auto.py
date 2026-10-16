@@ -239,3 +239,29 @@ def test_cut_centred_on_described_frame():
     ts = toks(1, dur=1.0)
     p = ma.select(ts, _needs(ts), {0: [(0, 9)]}, {0: cell("A", 10.0, interval=4.6)}, META, ITS)
     assert p[0]["src_t0"] <= 10.0 <= p[0]["src_t1"]           # 칸 간격 4.6초여도 설명한 프레임이 컷 안
+
+
+def test_same_line_neighbour_without_candidate_continues_previous_cut():
+    """같은 문장 이웃 토막에 새 장면이 없으면 앞 컷을 이어 간다(B4) — 다른 문장이면 이어 가지 않고 빈칸."""
+    ts = toks(2)
+    cells = {0: cell("A", 10.0)}
+    p = ma.select(ts, _needs(ts), {0: [(0, 9)], 1: []}, cells, META, ITS)
+    assert p[1]["cont"] and p[1]["vid"] == "A" and abs(p[1]["src_t0"] - p[0]["src_t1"]) < 1e-6
+    ts2 = [dict(ts[0]), dict(ts[1], line=1)]
+    p2 = ma.select(ts2, _needs(ts2), {0: [(0, 9)], 1: []}, cells, META, ITS)
+    assert p2[1].get("none") and "후보" in p2[1]["why"]
+
+
+def test_continuation_stops_far_from_described_frame():
+    ts = toks(5, dur=0.9)
+    p = ma.select(ts, _needs(ts), {0: [(0, 9)]}, {0: cell("A", 10.0)}, META, ITS)
+    assert any(x.get("none") for x in p)                     # 설명 프레임에서 2.5초 넘게 이어 가지 않는다
+
+
+def test_replan_from_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(ma, "plan_sheet", lambda picks, toks, wd: [])
+    ts = toks(2)
+    ma.save_state(tmp_path, {"topic": "x", "toks": ts, "needs": _needs(ts), "ranked": {0: [(0, 9)], 1: [(1, 8)]}, "memes": {},
+                             "cells": {0: cell("A", 10.0), 1: cell("B", 20.0)}, "meta": META, "queries": [{"q": "x"}], "rounds": 0})
+    out = ma.replan(tmp_path, "잇썸홈", net=FakeNet(tmp_path), llm=lambda p, q, t: ({}, None), sections=False)
+    assert [s["vid"] for s in out["shots"]] == ["A", "B"]

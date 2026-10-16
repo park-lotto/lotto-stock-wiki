@@ -250,9 +250,13 @@ class Net:
             return str(out)
         out.unlink(missing_ok=True)
         # 주소로 새로 받는다 — info 파일 재사용은 2/24편이 403(1판 실측: wqJZ·UNB6, 사람 정답의 핵심 소스)
-        self._gap()
-        r = _run(["yt-dlp", "--no-update", "-f", "bv*", "-S", "res:360,+size", "--download-sections",
-                  f"*0-{PREVIEW_HEAD}", "-o", str(out), f"https://www.youtube.com/watch?v={vid}"], timeout=600)
+        for _try in range(2):   # 10-17 실측: 새 주소로도 1/20편 403 — 한 번 더(다른 서명 주소가 나온다)
+            self._gap()
+            r = _run(["yt-dlp", "--no-update", "-f", "bv*", "-S", "res:360,+size", "--download-sections",
+                      f"*0-{PREVIEW_HEAD}", "-o", str(out), f"https://www.youtube.com/watch?v={vid}"], timeout=600)
+            if _valid_video(out):
+                break
+            out.unlink(missing_ok=True)
         if _valid_video(out):
             self.bytes += out.stat().st_size
             return str(out)
@@ -425,7 +429,7 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
     규칙: allowed · reuse_conflict · A12(같은 줄 안에서 앞 토막과 같은 영상 +2점) · B4(앞 컷을 이어 갈 수 있으면 이어 간다: 이웃 토막 한 컷)
     · 마지막 묶음 컷 ≥1.2초·끝 컷 ≥1.5초(못 채우면 앞 컷 이어 가기) · 1080 우선(+1점)."""
     picks, used = [], []
-    prev = None          # (vid, t0, t1, line)
+    prev = None          # (vid, t0, t1, line, cell)
     memes = memes or {}
     for k, t in enumerate(toks):
         i, kind = t["i"], needs[t["i"]]["kind"]
@@ -444,42 +448,53 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
             prev = None
             continue
         best, best_s = None, -1e9
-        # 이어 가기 후보(B4): 앞 컷과 같은 영상, 시작 = 앞 컷 끝, 같은 줄, 그 영상 칸이 이 토막 후보 안에 있거나 같은 칸이 계속됨
-        if prev and prev[3] == t["line"]:
-            pv, _, pe, _ = prev
+        why = {"후보": len(ranked.get(i, [])), "점수미달": 0, "규칙탈락": 0, "재사용": 0}
+        same_line = bool(prev and prev[3] == t["line"])
+        # 이어 가기 후보(B4): 앞 컷과 같은 영상·같은 줄, 이어 간 구간이 그 칸의 설명 프레임 곁
+        if same_line:
+            pv, _, pe, _, _ = prev
             for cid, s in ranked.get(i, []):
                 c = cells[cid]
-                if c["vid"] == pv and c["t"] - 1.5 <= pe <= c["t"] + 1.0 and s >= MIN_SCORE - 1:   # 이어 간 구간이 설명한 프레임 곁
+                if c["vid"] == pv and c["t"] - 2.5 <= pe <= c["t"] + 1.0 and s >= MIN_SCORE - 1:
                     if allowed(c, kind, rules, meta[pv]["res"]):
                         best, best_s = ("cont", c, pe), s + 3
                         break
         for cid, s in ranked.get(i, []):
             if s < MIN_SCORE:
+                why["점수미달"] += 1
                 continue
             c = cells[cid]
             res = meta.get(c["vid"], {}).get("res", 0)
             if not allowed(c, kind, rules, res):
+                why["규칙탈락"] += 1
                 continue
             a = max(0.0, c["t"] - dur / 2)   # 설명한 프레임(칸 시각 t)을 컷 가운데에 — 칸 간격이 4.6초면 칸 시작부터 자르면 2초 어긋난다(10-17 실측)
             if reuse_conflict(c["vid"], a, a + dur, used, prev[:3] if prev else None):
+                why["재사용"] += 1
                 continue
-            sc = s + (2 if prev and prev[0] == c["vid"] and prev[3] == t["line"] else 0) + (1 if res >= rules.get("pref_res", 1080) else 0)
+            sc = s + (2 if same_line and prev[0] == c["vid"] else 0) + (1 if res >= rules.get("pref_res", 1080) else 0)
             if sc > best_s:
                 best, best_s = ("new", c, a), sc
+        if best is None and same_line and prev[2] + dur - prev[4]["t"] <= 2.5:
+            # 같은 문장 이웃 토막인데 새 장면이 없으면 앞 컷을 이어 간다(B4 '자막 토막=컷 1:1 고집 금지', A12 같은 줄기) — 설명 프레임에서 2.5초 안까지만
+            best, best_s = ("cont", prev[4], prev[2]), None
+            why["앞컷이어감"] = 1
         if best is None:
-            picks.append({"i": i, "none": True, "kind": kind, "why": "규칙 통과 후보 없음"})
+            picks.append({"i": i, "none": True, "kind": kind, "why": "규칙 통과 후보 없음 " + json.dumps(why, ensure_ascii=False)})
             prev = None
             continue
         how, c, a = best
         p = {"i": i, "src": c["vid"], "vid": c["vid"], "src_t0": round(a, 2), "src_t1": round(a + dur, 2), "dur": dur, "kind": kind,
              "cont": how == "cont", "score": best_s, "seen": " / ".join(x for x in (c["what"], c["action"], c["people"]) if x),
              "cell_t": c["t"], "res": meta[c["vid"]]["res"]}
+        if why.get("앞컷이어감"):
+            p["fallback"] = "앞 컷 이어 감(새 장면 없음)"
         picks.append(p)
         if how == "cont" and used and used[-1][0] == c["vid"]:
             used[-1] = (c["vid"], used[-1][1], p["src_t1"])
         else:
             used.append((c["vid"], p["src_t0"], p["src_t1"]))
-        prev = (c["vid"], p["src_t0"], p["src_t1"], t["line"])
+        prev = (c["vid"], p["src_t0"], p["src_t1"], t["line"], c)
     _slow_ending(picks, toks)
     return picks
 
@@ -755,33 +770,74 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
             ranked = match_lines(toks, needs, state["cells"], state["meta"], rules, llm, log)
             picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
             T[f"5_재검색{rounds}"] = round(time.time() - t, 1)
-        for p in picks:
-            if p.get("none"):
-                p["tried"] = [q["q"] for q in state["queries"]]
-        if sections:
-            t = time.time()
-            fetch_sections(picks, state["meta"], net)
-            T["6_구간받기"] = round(time.time() - t, 1)
-            # 1080 컷 프레임 검사(남의 글자·어두움) — 360p 미리보기 설명이 놓친 작은 글자를 잡는다(1판: 'Click' 설명 자막 컷 통과)
-            t = time.time()
-            for vr in range(2):
-                flagged = verify_cuts(picks, wd, llm, only_new=vr > 0)
-                if not flagged:
-                    break
-                ban_cells(flagged, state["cells"])
-                picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
-                fetch_sections(picks, state["meta"], net)
-            for p in picks:
-                if p.get("verify") in ("text", "dark"):   # 두 바퀴 뒤에도 걸린 컷은 쓰지 않는다(A5 > 빈칸)
-                    p.update({"none": True, "why": f"1080 검사 {p['verify']}"})
-            T["6b_1080검사"] = round(time.time() - t, 1)
-        t = time.time()
-        sheets = plan_sheet(picks, toks, wd)
-        T["7_계획시트"] = round(time.time() - t, 1)
+        save_state(wd, {"topic": topic, "toks": toks, "needs": needs, "ranked": ranked, "memes": memes, "cells": state["cells"],
+                        "meta": state["meta"], "queries": state["queries"], "rounds": rounds, "previews": state["previews"]})
+        picks, sheets = finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections, T)
     except Stop as e:
         stopped, sheets = str(e), []
         log(f"[멈춤] {e}")
     T["전체"] = round(time.time() - t_all, 1)
+    return _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, sheets, T, llm, net)
+
+
+def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections, T):
+    """선택 → 1080 구간 받기 → 1080 글자 검사·재선택 → 계획 시트. plan_materials·replan 공용."""
+    picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
+    if sections:
+        t = time.time()
+        fetch_sections(picks, state["meta"], net)
+        T["6_구간받기"] = round(time.time() - t, 1)
+        # 1080 컷 프레임 검사(남의 글자·어두움) — 360p 미리보기 설명이 놓친 작은 글자를 잡는다(1판: 'Click' 설명 자막 컷 통과)
+        t = time.time()
+        for vr in range(2):
+            flagged = verify_cuts(picks, wd, llm, only_new=vr > 0)
+            if not flagged:
+                break
+            ban_cells(flagged, state["cells"])
+            picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
+            fetch_sections(picks, state["meta"], net)
+        for p in picks:
+            if p.get("verify") in ("text", "dark"):   # 두 바퀴 뒤에도 걸린 컷은 쓰지 않는다(A5 > 빈칸)
+                p.update({"none": True, "why": f"1080 검사 {p['verify']}"})
+        T["6b_1080검사"] = round(time.time() - t, 1)
+    for p in picks:
+        if p.get("none"):
+            p["tried"] = [q["q"] for q in state["queries"]]
+    t = time.time()
+    sheets = plan_sheet(picks, toks, wd)
+    T["7_계획시트"] = round(time.time() - t, 1)
+    return picks, sheets
+
+
+def save_state(wd: Path, st: dict):
+    """짝짓기까지의 결과(검색·태깅·순위)를 남긴다 — replan 이 모델·검색 없이 선택부터 다시 돈다."""
+    d = {**st, "cells": {str(k): v for k, v in st["cells"].items()}, "ranked": {str(k): v for k, v in st["ranked"].items()},
+         "needs": {str(k): v for k, v in st["needs"].items()}, "memes": {str(k): v for k, v in (st.get("memes") or {}).items()}}
+    (wd / "state.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+
+
+def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool = True) -> dict:
+    """state.json 으로 선택부터 다시(규칙만 바뀌었을 때) — 검색·태깅·짝짓기 모델 호출 없음(1080 검사만 호출)."""
+    wd = Path(workdir)
+    rules = CHANNELS[channel_rules] if isinstance(channel_rules, str) else channel_rules
+    d = json.loads((wd / "state.json").read_text(encoding="utf-8"))
+    cells = {int(k): v for k, v in d["cells"].items()}
+    ranked = {int(k): [tuple(x) for x in v] for k, v in d["ranked"].items()}
+    needs = {int(k): v for k, v in d["needs"].items()}
+    memes = {int(k): v for k, v in (d.get("memes") or {}).items()}
+    state = {"queries": d["queries"], "meta": d["meta"], "previews": d.get("previews", []), "tagged": set(), "cells": cells}
+    net = net or Net(wd, log)
+    llm = llm if isinstance(llm, LLM) else LLM(llm)
+    T, t0, stopped = {}, time.time(), None
+    try:
+        picks, sheets = finish_plan(d["toks"], needs, ranked, memes, state, rules, net, llm, wd, sections, T)
+    except Stop as e:
+        picks, sheets, stopped = [], [], str(e)
+    T["전체(replan)"] = round(time.time() - t0, 1)
+    return _write_out(wd, rules, d["topic"], d["toks"], needs, picks, state, d.get("rounds", 0), stopped, sheets, T, llm, net)
+
+
+def _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, sheets, T, llm, net):
     tokd = {x["i"]: x for x in toks}
     shots = []
     for p in picks:
@@ -1006,10 +1062,13 @@ def main(argv=None):
     ap.add_argument("--human", help="사람 재료.json — 대조표를 같이 만든다")
     ap.add_argument("--human-src", help="사람 재료 원본 폴더(src_<id>.mp4) — 다른 토막 대조 시트")
     ap.add_argument("--compare-only", action="store_true", help="이미 만든 재료_auto.json 으로 대조만")
+    ap.add_argument("--replan", action="store_true", help="state.json 으로 선택부터 다시(검색·태깅 없음)")
     a = ap.parse_args(argv)
     llm = LLM()
     if a.compare_only:
         res = json.loads(Path(a.out, "재료_auto.json").read_text(encoding="utf-8"))
+    elif a.replan:
+        res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections)
     else:
         res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
     print(json.dumps(res["stats"], ensure_ascii=False))
