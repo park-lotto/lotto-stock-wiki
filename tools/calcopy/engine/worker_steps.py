@@ -76,8 +76,12 @@ def _net(TF, ctx: Ctx) -> dict:
     net = dict(TF.NET)
 
     def search(q, n=10, months=None, _f=TF.NET["yt_search"]):
-        L.take(ctx.worker, "yt", int(n), f"검색 {q}")
-        return _f(q, n, months)
+        L.take(ctx.worker, "yt", int(n), f"검색 {q}")          # 요청 편수만큼 먼저 잡고(한도 보호)
+        res = _f(q, n, months)
+        got = len([x for x in res or [] if x.get("id")])
+        if got < int(n):                                       # 실제로 온 편수만 남긴다(10-16 실측: 0~4편 오는 검색이 10편씩 먹어 한도 300 이 몇 분에 찼다)
+            L.add(ctx.worker, "yt", got - int(n), f"검색 {q} 반환 — 실제 {got}편")
+        return res
 
     def detail(vid, *a, _f=TF.NET["yt_detail"], **k):
         L.take(ctx.worker, "yt", 1, f"상세 {vid}")
