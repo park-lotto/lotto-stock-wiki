@@ -752,14 +752,26 @@ def draft(product: dict, frame: dict | None, facts: dict, llm, slug: str | None 
         prompt = SW.FRAME_FALLBACK_PROMPT.format(slug=slug or "-", product=name, slots=" > ".join(roles), grounds=_facts_rows(facts))
         path, b = "fallback", None
     d, err = llm(prompt, "draft")
-    lines = [l for l in ((d or {}).get("lines") or (d or {}).get("items") or []) if isinstance(l, dict) and (l.get("text") or "").strip()]
+    raw = (d or {}).get("lines") or (d or {}).get("items") or next((v for v in (d or {}).values() if isinstance(v, list)), [])
+    lines = []
+    for l in raw:                                    # 줄 꼴이 흔들린다(10-16 밤 LOO3: 응답은 왔는데 0줄) — text·line·sentence·문장 · 그냥 글 모두 받는다
+        if isinstance(l, str):
+            l = {"text": l}
+        if not isinstance(l, dict):
+            continue
+        t = next((l.get(k) for k in ("text", "line", "sentence", "문장") if isinstance(l.get(k), str) and l.get(k).strip()), "")
+        if t:
+            lines.append({**l, "text": t})
+    if d and not lines:
+        err = f"초안 응답에 줄 없음(키 {sorted(d)[:8]})"
+        log(f"[경보] {err}")
     for l in lines:
         l["text"] = l["text"].strip()
         l["facts"] = [i for i in (l.get("facts") or []) if isinstance(i, str)]
         l.setdefault("fn", l.get("node") or "")
     for l, kind in zip(lines, shot_kinds_for(lines, frame)):
         l["shot_kind"] = kind
-    return {"path": path, "lines": lines, "title": (d or {}).get("title"), "brief": b, "roles": roles, "prompt": prompt, "error": None if d else err,
+    return {"path": path, "lines": lines, "title": (d or {}).get("title"), "brief": b, "roles": roles, "prompt": prompt, "error": None if lines else err, "raw": d,
             "model": (d or {}).get("_model")}
 
 
@@ -782,7 +794,11 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
     brand = {k: v for k, v in brand.items() if v}
     ga = SF.grounding_audit(texts)
     ungrounded = {k: a["tags"] for k, (a, l) in enumerate(zip(ga, lines)) if a["needs_ground"] and not (set(l.get("facts") or []) & ids)}
-    copy7 = {k: SF.copy_spans(t, list(examples), 7) for k, t in enumerate(texts)}
+    # 예문 베낌 — 채널 어미 자체('다고 하더라고요' = 공백 뺀 7자)는 베낌이 아니라 화법이라 뺀다(10-16 밤 LOO3 오탐)
+    sp = (frame or {}).get("4_speech") or {}
+    common = {SF._norm(e) for e in (sp.get("ending_char_set") or []) + (sp.get("ending_list") or [])}
+    copy7 = {k: [g for g in SF.copy_spans(t, list(examples), 7) if not any(g in c or c in g and len(g) - len(c) <= 1 for c in common)]
+             for k, t in enumerate(texts)}
     copy7 = {k: v for k, v in copy7.items() if v}
     judge = SF.judge_like(" ".join(texts), frame, tags=tags) if frame else None
     chk = {"superlative": sorted(sup), "superlative_hit": sup, "spacing_off": sorted(spc), "spacing_hit": spc,
@@ -834,6 +850,7 @@ def run_frame(slug: str, product: dict, facts: dict, out: Path, llm=None, frame:
          "facts": facts, "final": {"lines": [{**l, "sources": [facts[i].get("url", "") for i in l.get("facts") or [] if i in facts and facts[i].get("url")]}
                                              for l in lines], "check": chk},
          "brief_examples": [e["id"] for e in ((dr.get("brief") or {}).get("examples") or [])], "llm_calls": llm.calls, "error": dr.get("error"),
+         "draft_raw": dr.get("raw"), "prompt": dr.get("prompt"),
          "status": "ok" if chk["ok"] else "failed_checks"}
     (out / "대본.json").write_text(json.dumps(S, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     (out / "재료_계획.json").write_text(json.dumps(materials_plan(lines), ensure_ascii=False, indent=1), encoding="utf-8")

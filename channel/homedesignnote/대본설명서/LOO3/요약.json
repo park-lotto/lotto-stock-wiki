@@ -1,0 +1,23 @@
+{
+ "orBlWWhejtc": {
+  "ok": false,
+  "global": [
+   "판별기 반려 점수 0.0113 < 0.5005 · 필수 실패 ['polite_ratio', 'ending_char']",
+   "줄↔근거 판정 실패"
+  ],
+  "bad": {},
+  "judge": 0.0113,
+  "thr": 0.5005
+ },
+ "EINoAh8C9rQ": {
+  "ok": false,
+  "global": [],
+  "bad": {
+   "1": [
+    "예문과 7자 이상 겹침 ['다고하더라고요']"
+   ]
+  },
+  "judge": 0.8418,
+  "thr": 0.5043
+ }
+}

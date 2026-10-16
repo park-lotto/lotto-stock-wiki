@@ -1,0 +1,229 @@
+{
+ "engine": "script_engine v1 · 대본 설명서 경로",
+ "path": "frame",
+ "slug": "homedesignnote",
+ "product": {
+  "name": "수동 에스프레소 메이커(전기 없이 쓰는 커피 추출기)",
+  "kw": [
+   "캡슐 커피",
+   "에스프레소 메이커",
+   "커피 머신"
+  ],
+  "category": "주방",
+  "price_band": "중가",
+  "install": "설치없음"
+ },
+ "title": null,
+ "facts": {
+  "f1": {
+   "text": "콘센트 없이 전기 없이 쓰는 수동 커피 머신이다",
+   "url": ""
+  },
+  "f2": {
+   "text": "분쇄 원두를 담고 뜨거운 물을 부은 뒤 양옆 손잡이를 꾹 내려주면 추출된다",
+   "url": ""
+  },
+  "f3": {
+   "text": "안쪽 스프링이 압력을 걸어주는 방식이라 크레마까지 깔린 에스프레소가 나온다",
+   "url": ""
+  },
+  "f4": {
+   "text": "영국 브랜드가 20년 노하우를 담아 만든 제품이다",
+   "url": ""
+  },
+  "f5": {
+   "text": "보통 에스프레소는 위에서 아래로 떨어지는데 이건 밑에서부터 올라오면서 크레마가 차오른다",
+   "url": ""
+  },
+  "f6": {
+   "text": "뜨거운 물만 있으면 캠핑장이든 사무실이든 어디서든 쓸 수 있다",
+   "url": ""
+  },
+  "f7": {
+   "text": "캡슐을 살 일도 다 쓴 캡슐 쓰레기가 쌓일 일도 없다",
+   "url": ""
+  },
+  "f8": {
+   "text": "캡슐커피보다 맛 차이가 커서 커피 맛을 잘 몰라도 바로 느껴진다",
+   "url": ""
+  },
+  "f9": {
+   "text": "쓰기 쉬워서 초보도 설명서만 보고 따라 할 수 있다",
+   "url": ""
+  }
+ },
+ "final": {
+  "lines": [],
+  "check": {
+   "superlative": [],
+   "superlative_hit": {},
+   "spacing_off": [],
+   "spacing_hit": {},
+   "range_as_single": [],
+   "ranges_hit": {},
+   "numbers_unsourced": [],
+   "off_topic_brand": [],
+   "unsupported": [],
+   "support_hit": {},
+   "support_checked": false,
+   "ungrounded": [],
+   "ungrounded_hit": {},
+   "copied_examples": [],
+   "copy7_hit": {},
+   "unknown_ids": [],
+   "judge": {
+    "score": 0.0113,
+    "pass": false,
+    "hard_fail": [
+     "polite_ratio",
+     "ending_char"
+    ],
+    "threshold": 0.5005,
+    "parts": {
+     "polite_ratio": {
+      "v": 0.0,
+      "range": [
+       0.6,
+       1.0
+      ],
+      "ok": false,
+      "w": 0.666
+     },
+     "voice_ratio": {
+      "v": 0.0,
+      "range": [
+       0.0,
+       0.834
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "sent_len_mean": {
+      "v": 0.0,
+      "range": [
+       26,
+       74.2
+      ],
+      "ok": false,
+      "w": 0.36
+     },
+     "connect_per_sent": {
+      "v": 0.0,
+      "range": [
+       0.8,
+       2.0
+      ],
+      "ok": false,
+      "w": 0.42
+     },
+     "ending_char": {
+      "v": 0.0,
+      "range": [
+       0.282,
+       1.0
+      ],
+      "ok": false,
+      "w": 0.8
+     },
+     "ending_cos": {
+      "v": 0.1209,
+      "range": [
+       0.127,
+       0.904
+      ],
+      "ok": false,
+      "w": 0.648
+     },
+     "foreign_ending": {
+      "v": 0.0,
+      "range": [
+       0.0,
+       0.299
+      ],
+      "ok": true,
+      "w": 0.602
+     },
+     "axis_cos": {
+      "v": 0.0,
+      "range": [
+       0.476,
+       0.845
+      ],
+      "ok": false,
+      "w": 0.333
+     },
+     "node_cos": {
+      "v": 0.0,
+      "range": [
+       0.446,
+       0.713
+      ],
+      "ok": false,
+      "w": 0.187
+     },
+     "story_n": {
+      "v": 0,
+      "range": [
+       0,
+       4
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "principle_ratio": {
+      "v": 0.0,
+      "range": [
+       0.0,
+       0.75
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "feel_share": {
+      "v": 0.5,
+      "range": [
+       0.0,
+       1.0
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "creative_ratio": {
+      "v": 0.0,
+      "range": [
+       0.25,
+       1.0
+      ],
+      "ok": false,
+      "w": 0.436
+     }
+    },
+    "chain3": "",
+    "channel": "homedesignnote",
+    "story": null
+   },
+   "n_lines": 0,
+   "chars": [],
+   "bad": {},
+   "global": [
+    "판별기 반려 점수 0.0113 < 0.5005 · 필수 실패 ['polite_ratio', 'ending_char']"
+   ],
+   "ok": false
+  }
+ },
+ "brief_examples": [
+  "SU9YofB1IoI",
+  "EINoAh8C9rQ",
+  "zGHw-CfL_uI"
+ ],
+ "llm_calls": [
+  {
+   "tag": "draft",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-3.5-flash"
+  }
+ ],
+ "error": null,
+ "status": "failed_checks"
+}

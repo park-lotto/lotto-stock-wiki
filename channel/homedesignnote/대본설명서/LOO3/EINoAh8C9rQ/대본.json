@@ -1,0 +1,288 @@
+{
+ "engine": "script_engine v1 · 대본 설명서 경로",
+ "path": "frame",
+ "slug": "homedesignnote",
+ "product": {
+  "name": "빨래 접는 기계(폴드메이트)",
+  "kw": [
+   "빨래 접는 기계",
+   "빨래 개는 기계"
+  ],
+  "category": "가전",
+  "price_band": "고가",
+  "install": "설치없음"
+ },
+ "title": "빨래 지옥 탈출기",
+ "facts": {
+  "f1": {
+   "text": "미국 스타트업에서 개발한 빨래 접는 기계다",
+   "url": ""
+  },
+  "f2": {
+   "text": "출시되자마자 품절 대란이 났다",
+   "url": ""
+  },
+  "f3": {
+   "text": "빨래 25장을 5분 만에 접을 수 있다",
+   "url": ""
+  },
+  "f4": {
+   "text": "잘 펴서 넣어주기만 하면 알아서 접힌다",
+   "url": ""
+  },
+  "f5": {
+   "text": "SNS에서 화제가 됐다",
+   "url": ""
+  },
+  "f6": {
+   "text": "가격이 예상보다 저렴한 편이다",
+   "url": ""
+  },
+  "f7": {
+   "text": "제품 이름은 폴드메이트(Foldimate)다",
+   "url": ""
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "text": "친구가 자기 집에 놀러 오라면서 빨래 접는 기계를 보여주길래 당장 들고 도망칠 뻔했어요.",
+    "node": "계기",
+    "facts": [],
+    "creative": true,
+    "fn": "계기",
+    "shot_kind": "사용동작",
+    "sources": []
+   },
+   {
+    "text": "SNS에서 화제가 됐다고 하더라고요.",
+    "node": "사회반응",
+    "facts": [
+     "f5"
+    ],
+    "creative": false,
+    "fn": "사회반응",
+    "shot_kind": "디테일클로즈업",
+    "sources": []
+   },
+   {
+    "text": "잘 펴서 넣어주기만 하면 알아서 접히는데, 빨래 방앗간에 기계를 통째로 옮겨다 놓은 기분이에요.",
+    "node": "체감비유",
+    "facts": [
+     "f4"
+    ],
+    "creative": true,
+    "fn": "체감비유",
+    "shot_kind": "사용동작",
+    "sources": []
+   },
+   {
+    "text": "출시되자마자 품절 대란이 났대요.",
+    "node": "사회반응",
+    "facts": [
+     "f2"
+    ],
+    "creative": false,
+    "fn": "사회반응",
+    "shot_kind": "디테일클로즈업",
+    "sources": []
+   },
+   {
+    "text": "가격이 예상보다 저렴한 편이라서 저녁마다 빨래 쌓아놓고 산더미와 싸우던 전쟁터에서 드디어 영구 휴전을 맺었어요.",
+    "node": "결과과장",
+    "facts": [
+     "f6"
+    ],
+    "creative": true,
+    "fn": "결과과장",
+    "shot_kind": "사용동작",
+    "sources": []
+   }
+  ],
+  "check": {
+   "superlative": [],
+   "superlative_hit": {},
+   "spacing_off": [],
+   "spacing_hit": {},
+   "range_as_single": [],
+   "ranges_hit": {},
+   "numbers_unsourced": [],
+   "off_topic_brand": [],
+   "unsupported": [],
+   "support_hit": {},
+   "support_checked": true,
+   "ungrounded": [],
+   "ungrounded_hit": {},
+   "copied_examples": [],
+   "copy7_hit": {},
+   "unknown_ids": [],
+   "judge": {
+    "score": 0.8418,
+    "pass": true,
+    "hard_fail": [],
+    "threshold": 0.5043,
+    "parts": {
+     "polite_ratio": {
+      "v": 1.0,
+      "range": [
+       0.6,
+       1.0
+      ],
+      "ok": true,
+      "w": 0.666
+     },
+     "voice_ratio": {
+      "v": 0.6,
+      "range": [
+       0.0,
+       0.8
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "sent_len_mean": {
+      "v": 31.8,
+      "range": [
+       26,
+       74.2
+      ],
+      "ok": true,
+      "w": 0.36
+     },
+     "connect_per_sent": {
+      "v": 0.8,
+      "range": [
+       0.8,
+       2.0
+      ],
+      "ok": true,
+      "w": 0.42
+     },
+     "ending_char": {
+      "v": 1.0,
+      "range": [
+       0.282,
+       1.0
+      ],
+      "ok": true,
+      "w": 0.8
+     },
+     "ending_cos": {
+      "v": 0.5132,
+      "range": [
+       0.12,
+       0.91
+      ],
+      "ok": true,
+      "w": 0.607
+     },
+     "foreign_ending": {
+      "v": 0.0,
+      "range": [
+       0.0,
+       0.299
+      ],
+      "ok": true,
+      "w": 0.602
+     },
+     "axis_cos": {
+      "v": 0.6353,
+      "range": [
+       0.473,
+       0.844
+      ],
+      "ok": true,
+      "w": 0.375
+     },
+     "node_cos": {
+      "v": 0.5699,
+      "range": [
+       0.425,
+       0.703
+      ],
+      "ok": true,
+      "w": 0.204
+     },
+     "story_n": {
+      "v": 1,
+      "range": [
+       0,
+       5
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "principle_ratio": {
+      "v": 0.0,
+      "range": [
+       0.0,
+       0.75
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "feel_share": {
+      "v": 0.5,
+      "range": [
+       0.0,
+       1.0
+      ],
+      "ok": true,
+      "w": 0.05
+     },
+     "creative_ratio": {
+      "v": 0.2,
+      "range": [
+       0.25,
+       1.0
+      ],
+      "ok": false,
+      "w": 0.436
+     }
+    },
+    "chain3": "상황>불편>증거",
+    "channel": "homedesignnote",
+    "story": null
+   },
+   "n_lines": 5,
+   "chars": [
+    37,
+    17,
+    41,
+    15,
+    49
+   ],
+   "bad": {},
+   "global": [],
+   "ok": true
+  }
+ },
+ "brief_examples": [
+  "2Y20YAQmit0",
+  "SU9YofB1IoI",
+  "e15KZ_nO1_Y"
+ ],
+ "llm_calls": [
+  {
+   "tag": "draft",
+   "ok": false,
+   "failed": "503",
+   "model": null
+  },
+  {
+   "tag": "draft",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-lite-latest"
+  },
+  {
+   "tag": "support",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-lite-latest"
+  }
+ ],
+ "error": null,
+ "status": "ok",
+ "recheck_note": "예문 베낌 오탐(채널 어미) 수리 뒤 LLM 없이 재검사"
+}
