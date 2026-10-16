@@ -85,7 +85,7 @@ def validate_snapshot(value):
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
     walk(value)
-    for name in ("text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
+    for name in ("text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")
     for color in (value.get("colors") or {}).values():
@@ -118,9 +118,13 @@ def validate_snapshot(value):
         for key in ("background","color"):
             if key in caption and (not isinstance(caption[key],str) or len(caption[key])>500):
                 raise ValueError("자막 색상 형식이 올바르지 않습니다")
-    for texts in (value.get("text") or {},value.get("captionTexts") or {}):
+    for texts in (value.get("text") or {},value.get("sceneTexts") or {},value.get("captionTexts") or {}):
         if any(not isinstance(t,str) for t in texts.values()):
             raise ValueError("문구는 텍스트여야 합니다")
+    # 장면별 제목·채널명 글(관제 219, 회원 힘 10-16 "이 장면만 저장해도 전체 영상에 적용") — 키 = 칸:장면번호. 편집기 precision20-ui.js sceneTexts 와 짝
+    for key in (value.get("sceneTexts") or {}):
+        if not re.fullmatch(r"(channel|hook1|hook2|bodyTitle):\d{1,3}", str(key)):
+            raise ValueError("장면별 문구 형식이 올바르지 않습니다")
     for effect in (value.get("effects") or {}).values():
         if not isinstance(effect,dict):
             raise ValueError("효과 형식이 올바르지 않습니다")
@@ -260,7 +264,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
