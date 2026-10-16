@@ -245,26 +245,9 @@ def check_pack(pack: dict, assets: dict | None = None) -> dict:
 
 
 def draft_materials(skel: dict, defaults: dict, assets: dict | None = None) -> dict:
-    """뼈대 → 재료 자동 초안(선검수용): 컷마다 후보 영상 순서대로 + 팩 기본값(효과음 시작·끝, 짤 후보, BGM). 사람이 계획을 보고 고친다."""
-    assets = assets if assets is not None else _pack_assets()
-    M = copy.deepcopy(skel)
-    cand = sorted(Path(M.get("cand_dir") or ".").glob("v_*.mp4")) if M.get("cand_dir") else []
-    for k, s in enumerate(M.get("shots") or []):
-        if not s.get("src") and cand:
-            s.update(src=cand[k % len(cand)].name, ss=round(float(s.get("t0") or 0) % 20, 2), status="draft",
-                     why="자동 초안(만들기 입구) — 후보 순서대로, 선검수에서 사람이 고침")
-    pools = defaults.get("sfx_pool") or {}
-
-    def sfx(aid, t, why):
-        a = assets.get(aid) or {}
-        f = asset_file(a, pools.get("dir"), "sfx")
-        return {"file": f.as_posix() if f else None, "asset_id": aid, "title": a.get("title"), "t": t, "db": 0, "why": why}
-    M["sfx"] = ([sfx(pools["start"][0], 0.0, "팩 효과음(시작)")] if pools.get("start") else []) + \
-               ([sfx(pools["end"][0], "end-0.2", "팩 효과음(끝)")] if pools.get("end") else [])
-    M["sfx_pool"], M["meme_pool"] = pools, defaults.get("meme_pool") or {}
-    M["bgm"], M["tts"], M["caption_style"] = defaults.get("bgm") or {}, defaults.get("tts") or {}, defaults.get("caption") or {}
-    M["_note"] = "만들기 입구 자동 초안 — 팩 기본값(효과음·짤 후보·BGM·목소리) 주입, 컷 선택은 선검수에서 확정"
-    return M
+    """뼈대 → 재료 자동 초안 — 판단 주인은 remake.draft_materials(10-16 이관: 재료 조립 = remake 담당). 여기선 팩 자산 창구만 넘긴다."""
+    from tools.calcopy.engine import remake as RM
+    return RM.draft_materials(skel, defaults, assets if assets is not None else _pack_assets(), asset_file)
 
 
 RESULTS = ROOT / "channel" / "결과물.json"
