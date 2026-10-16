@@ -116,10 +116,10 @@ if(CAT){const stickers=CAT.emoji.reduce((n,c)=>n+c[1].length,0);section('deco','
 
 // ── 🖼 템플릿 ── (주인: out/precision20-data.js · out/continuous20-data.js)
 const P20=window.PRECISION20||[],C20=window.CONTINUOUS20||[];
-section('template','🖼 템플릿',`썰 스타일 ${P20.length} · 고정 스타일 ${C20.length}`,`<h3>썰 스타일</h3><div class="grid">${P20.map(t=>`<div class="card">${t.hook_image?`<img class="thumb" loading="lazy" src="${ASSET}${esc(t.hook_image)}" alt="">`:''}<b>${esc(t.name)}</b><small>${esc(t.hook?.design_label||'')}</small></div>`).join('')}</div><h3>고정 스타일</h3><div class="grid">${C20.map(t=>`<div class="card">${t.frame_image?`<img class="thumb" loading="lazy" src="${ASSET}${esc(t.frame_image)}" alt="">`:''}<b>${esc(t.name)}</b></div>`).join('')}</div>`);
+section('template','🖼 템플릿',`썰 스타일 ${P20.length} · 고정 스타일 ${C20.length}`,`<h3>썰 스타일</h3><div class="grid">${P20.map(t=>`<div class="card">${t.hook_image?`<img class="thumb" src="${ASSET}${esc(t.hook_image)}" alt="">`:''}<b>${esc(t.name)}</b><small>${esc(t.hook?.design_label||'')}</small></div>`).join('')}</div><h3>고정 스타일</h3><div class="grid">${C20.map(t=>`<div class="card">${t.frame_image?`<img class="thumb" src="${ASSET}${esc(t.frame_image)}" alt="">`:''}<b>${esc(t.name)}</b></div>`).join('')}</div>`);
 
 // ── 😂 짤 ──
-if(data.memes){section('meme','😂 감정짤팩',`${data.memes.emotions.length}감정 · ${data.memes.total}개`,`<p class="lead">감정별 앞 8개 표지. 전체·⭐ 우선 짤 고르기는 <a class="more" href="/meme_pack">밈팩 화면</a>.</p>`+data.memes.emotions.map(e=>`<h3>${esc(e.emotion)} <small style="color:var(--sub)">${e.count}개</small></h3><div class="posters">${e.sample.map(id=>`<img loading="lazy" src="/api/meme/${id}/poster" alt="">`).join('')}</div>`).join(''));}
+if(data.memes){section('meme','😂 감정짤팩',`${data.memes.emotions.length}감정 · ${data.memes.total}개`,`<p class="lead">감정별 앞 8개 표지. 전체·⭐ 우선 짤 고르기는 <a class="more" href="/meme_pack">밈팩 화면</a>.</p>`+data.memes.emotions.map(e=>`<h3>${esc(e.emotion)} <small style="color:var(--sub)">${e.count}개</small></h3><div class="posters">${e.sample.map(id=>`<img src="/api/meme/${id}/poster" alt="">`).join('')}</div>`).join(''));}
 
 // ── 🔤 글꼴 ── (파일: static/fonts · 이름: static/fonts.json)
 if(data.fonts){let names={};try{(await (await fetch('/fonts.json')).json()).forEach(f=>names[f.file]=f.name);}catch(e){}
