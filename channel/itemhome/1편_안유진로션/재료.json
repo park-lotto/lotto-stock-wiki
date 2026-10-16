@@ -41,14 +41,14 @@
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
    "ss": 99.9,
-   "dur": 0.85,
+   "dur": 0.95,
    "src_span": [
     99.9,
-    100.75
+    100.85
    ],
    "t_final": [
     0.0,
-    0.85
+    0.95
    ],
    "kind": "원본재편집",
    "full": true,
@@ -60,8 +60,8 @@
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "검은 후드 안유진이 빨간 TYLENOL 통을 카메라 앞에 내밂(대기실)",
-   "why": "'투어 중에 안유진이' — 화면 자막 '[투어 기간 동안만 사용할 약 구입 완료]'(1:39.6, 왼쪽 위 y50~90)는 y90부터 잘라 뺌",
+   "ours": "검은 후드 안유진이 빨간 TYLENOL 상자를 카메라 앞에 내밂(대기실)",
+   "why": "'투어 중에 안유진이' — 화면 자막 '[투어 기간 동안만 사용할 약 구입 완료]'(왼쪽 위 y50~90)는 y90부터 잘라 뺌",
    "mute": true,
    "Y": 102
   },
@@ -71,92 +71,92 @@
    "src": "ive_8o3M3DmY05E.mp4",
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 100.75,
-   "dur": 0.85,
+   "ss": 128.0,
+   "dur": 0.95,
    "src_span": [
-    100.75,
-    101.6
+    128.0,
+    128.95
    ],
    "t_final": [
-    0.85,
-    1.7
+    0.95,
+    1.9
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
     560,
-    150,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김 — TYLENOL 글자+얼굴",
-   "why": "'미국 타겟에서 산 게' — 2:00.6 'Target에서 제가 보다가…타이레놀 요걸 샀고요'",
-   "mute": true,
-   "Y": 100
-  },
-  {
-   "i": 2,
-   "line": "N1",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 101.6,
-   "dur": 0.85,
-   "src_span": [
-    101.6,
-    102.45
-   ],
-   "t_final": [
-    1.7,
-    2.55
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    470,
-    90,
+    0,
     645,
     860
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "타이레놀 통을 든 채 웃는 얼굴",
+   "ours": "작은 타이레놀 통을 얼굴 옆에 들고 말함(2:08)",
+   "why": "'미국 타겟에서 산 게' — 본인 말 2:08.3 '그래서 이 타이레놀 요걸 샀고요'(아래 자막 y≈960 밖)",
+   "mute": true,
+   "Y": 111
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "src": "eos_85AU_3DohFs.mp4",
+   "url": "https://www.youtube.com/watch?v=85AU_3DohFs",
+   "src_date": "eos Products 유튜브 2026.02.18",
+   "ss": 3.0,
+   "dur": 0.85,
+   "src_span": [
+    3.0,
+    3.85
+   ],
+   "t_final": [
+    1.9,
+    2.75
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    190,
+    60,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "보라 바탕 eos 펌프병(제품만 — 오른쪽 칸 'moisturize'·팔은 x≥960 밖)",
    "why": "'타이레놀만이'",
    "mute": true,
-   "Y": 94
+   "Y": 145
   },
   {
    "i": 3,
    "line": "N1",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 102.45,
-   "dur": 1.07,
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 0.3,
+   "dur": 0.87,
    "src_span": [
-    102.45,
-    103.52
+    0.3,
+    1.17
    ],
    "t_final": [
-    2.55,
+    2.75,
     3.62
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    522,
     130,
-    540,
-    720
+    110,
+    645,
+    860
    ],
    "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김",
-   "why": "'아니었대요' — 다음 컷(로션)으로 넘김",
+   "scale": 1.67,
+   "ours": "보라 바탕 eos 뚜껑 병(안유진 것과 같은 병)",
+   "why": "'아니었다고 해요' — 로션으로 넘김",
    "mute": true,
-   "Y": 96
+   "Y": 161
   },
   {
    "i": 4,
@@ -177,7 +177,7 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    560,
+    580,
     0,
     645,
     860
@@ -197,14 +197,14 @@
    "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
    "src_date": "eos Products 유튜브 2026.06.15",
    "ss": 7.05,
-   "dur": 1.2,
+   "dur": 0.9,
    "src_span": [
     7.05,
-    8.25
+    7.95
    ],
    "t_final": [
     4.67,
-    5.87
+    5.57
    ],
    "kind": "원본재편집",
    "full": true,
@@ -216,8 +216,8 @@
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "eos 광고 — 손바닥에 로션을 펌프로 짜는 근접(글자 없는 7.05~8.25 실측)",
-   "why": "원음 “SNS에서 많이 본” 계속(소리 IVE 570.15~, 쉼 0.9초 잘라 냄) — 'SNS에서 본' 제품 화면",
+   "ours": "eos 광고 — 병을 눌러 펌프로 짜는 근접(제품, 글자 없는 7.05~8.25)",
+   "why": "원음 “SNS에서 많이 본”(소리 IVE 570.15~, 쉼 0.9초 잘라 냄)",
    "audio_src": "ive_8o3M3DmY05E.mp4",
    "audio_ss": 570.15,
    "Y": 78
@@ -228,31 +228,31 @@
    "src": "ive_8o3M3DmY05E.mp4",
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 571.35,
-   "dur": 1.2,
+   "ss": 571.05,
+   "dur": 1.45,
    "src_span": [
-    571.35,
-    572.55
+    571.05,
+    572.5
    ],
    "t_final": [
-    5.87,
-    7.07
+    5.57,
+    7.02
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    640,
+    580,
     0,
     645,
     860
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "병을 기울여 든 채 눈 감고 말함",
-   "why": "원음 “아이거든요” ~572.55",
+   "ours": "병을 기울여 든 채 말함",
+   "why": "원음 “…아이거든요” ~572.50 (3판: 뒤 '바닐라 캐시미어 향' 572.7~573.8 은 받아쓰기 4회 모두 못 알아들어 뺌)",
    "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 571.35,
-   "Y": 159
+   "audio_ss": 571.05,
+   "Y": 166
   },
   {
    "i": 7,
@@ -261,14 +261,14 @@
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
    "ss": 536.3,
-   "dur": 1.3,
+   "dur": 0.95,
    "src_span": [
     536.3,
-    537.6
+    537.25
    ],
    "t_final": [
-    7.07,
-    8.37
+    7.02,
+    7.97
    ],
    "kind": "원본재편집",
    "full": true,
@@ -281,9 +281,9 @@
    "res": "1920x1080",
    "scale": 1.67,
    "ours": "대기실에서 양손 흔들며 마무리 인사(가방 소개 끝)",
-   "why": "'가방 공개를 마친 뒤' — 8:58 '[왓츠 인 마이 백 종료]' 직전 장면. 아래 큰 자막은 y860 밖",
+   "why": "'가방 공개를 마친 뒤' — 8:58 '[왓츠 인 마이 백 종료]' 직전 장면",
    "mute": true,
-   "Y": 109
+   "Y": 108
   },
   {
    "i": 8,
@@ -292,13 +292,13 @@
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
    "ss": 590.9,
-   "dur": 0.7,
+   "dur": 1.1,
    "src_span": [
     590.9,
-    591.6
+    592.0
    ],
    "t_final": [
-    8.37,
+    7.97,
     9.07
    ],
    "kind": "원본재편집",
@@ -314,7 +314,7 @@
    "ours": "호텔 흰 침대에 누운 얼굴",
    "why": "'호텔 방에서' — 9:19.7 '[호텔 도착]' 뒤 같은 호텔 침대",
    "mute": true,
-   "Y": 151
+   "Y": 150
   },
   {
    "i": 9,
@@ -322,30 +322,30 @@
    "src": "ive_8o3M3DmY05E.mp4",
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 591.6,
-   "dur": 0.7,
+   "ss": 566.05,
+   "dur": 0.95,
    "src_span": [
-    591.6,
-    592.3
+    566.05,
+    567.0
    ],
    "t_final": [
     9.07,
-    9.77
+    10.02
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    632,
-    40,
-    540,
-    720
+    300,
+    0,
+    645,
+    860
    ],
    "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김",
-   "why": "'하나 더 소개한'",
+   "scale": 1.67,
+   "ours": "호텔에서 보라색 eos 병을 카메라 쪽으로 듦(9:25.5 '이 바디로션이 있습니다' 장면, 소리 없음)",
+   "why": "'하나 더 소개한' — 병을 처음 꺼내는 순간. 566.0 원본 편집 확대(점프 줌 검사 걸림) 뒤 566.05부터",
    "mute": true,
-   "Y": 161
+   "Y": 144
   },
   {
    "i": 10,
@@ -353,15 +353,15 @@
    "src": "eos_HOGLbtiiFZE.mp4",
    "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
    "src_date": "eos Products 유튜브 2026.06.15",
-   "ss": 0.3,
-   "dur": 1.68,
+   "ss": 1.3,
+   "dur": 1.0,
    "src_span": [
-    0.3,
-    1.98
+    1.3,
+    2.3
    ],
    "t_final": [
-    9.77,
-    11.45
+    10.02,
+    11.02
    ],
    "kind": "원본재편집",
    "full": true,
@@ -373,42 +373,41 @@
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "보라 바탕 eos shea better 24H Moisture vanilla cashmere 병(안유진 것과 같은 뚜껑 병)",
-   "why": "'이오에스 바닐라 캐시미어 로션이에요' — 오른쪽 'Vanilla Cashmere' 글자(x≥890)는 잘라 냄",
+   "ours": "보라 바탕 eos shea better 24H Moisture vanilla cashmere 병",
+   "why": "'이오에스 바닐라' — 오른쪽 글자(x≥890) 밖, 2.45초 바닐라 콩 전환 전",
    "mute": true,
-   "Y": 163
+   "Y": 168
   },
   {
    "i": 11,
-   "line": "O2",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 576.1,
-   "dur": 0.75,
+   "line": "N2",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 13.6,
+   "dur": 0.38,
    "src_span": [
-    576.1,
-    576.85
+    13.6,
+    13.98
    ],
    "t_final": [
-    11.45,
-    12.2
+    11.02,
+    11.4
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    560,
-    0,
+    130,
+    110,
     645,
     860
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "병을 얼굴 옆에 세워 들고 말함",
-   "why": "원음 “바닐라 향이 처음엔” 576.10~ (앞 '근데 이게 뭔가' 잘라 냄)",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 576.1,
-   "Y": 146
+   "ours": "같은 병 정면(제품만, 오른쪽 'dessert for your skin' 밖)",
+   "why": "'캐시미어 로션이에요'",
+   "mute": true,
+   "Y": 166
   },
   {
    "i": 12,
@@ -416,206 +415,15 @@
    "src": "ive_8o3M3DmY05E.mp4",
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 576.85,
-   "dur": 0.75,
+   "ss": 574.8,
+   "dur": 0.95,
    "src_span": [
-    576.85,
-    577.6
+    574.8,
+    575.75
    ],
    "t_final": [
-    12.2,
-    12.95
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    612,
-    40,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김",
-   "why": "원음 계속",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 576.85,
-   "Y": 153
-  },
-  {
-   "i": 13,
-   "line": "O2",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 577.6,
-   "dur": 1.5,
-   "src_span": [
-    577.6,
-    579.1
-   ],
-   "t_final": [
-    12.95,
-    14.45
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    620,
-    0,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "얼굴 근접(눈 감았다 뜸)",
-   "why": "원음 “좀 과한가 싶다가도” ~579.10",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 577.6,
-   "Y": 149
-  },
-  {
-   "i": 14,
-   "line": "O2",
-   "src": "eos_85AU_3DohFs.mp4",
-   "url": "https://www.youtube.com/watch?v=85AU_3DohFs",
-   "src_date": "eos Products 유튜브 2026.02.18",
-   "ss": 3.0,
-   "dur": 0.85,
-   "src_span": [
-    3.0,
-    3.85
-   ],
-   "t_final": [
-    14.45,
-    15.3
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    1100,
-    300,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "eos 광고 — 팔에 흰 로션을 펴 바르는 손(오른쪽 칸, 위 'moisturize' 글자 y<260 은 잘라 냄)",
-   "why": "원음 “계속 바르다 보면”(소리 IVE 579.65~, 쉼 0.55초 잘라 냄) — 바르는 동작",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 579.65,
-   "Y": 72
-  },
-  {
-   "i": 15,
-   "line": "O2",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 580.5,
-   "dur": 1.1,
-   "src_span": [
-    580.5,
-    581.6
-   ],
-   "t_final": [
-    15.3,
-    16.4
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    600,
-    0,
-    645,
-    860
-   ],
-   "res": "1920x1080",
-   "scale": 1.67,
-   "ours": "병 들고 입 모양 보이는 얼굴",
-   "why": "원음 “묘하게 중독되는”",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 580.5,
-   "Y": 143
-  },
-  {
-   "i": 16,
-   "line": "O2",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 581.6,
-   "dur": 1.15,
-   "src_span": [
-    581.6,
-    582.75
-   ],
-   "t_final": [
-    16.4,
-    17.55
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    652,
-    40,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김",
-   "why": "원음 “그런 향” ~582.75",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 581.6,
-   "Y": 146
-  },
-  {
-   "i": 17,
-   "line": "N3",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 582.45,
-   "dur": 1.5,
-   "src_span": [
-    582.45,
-    583.95
-   ],
-   "t_final": [
-    17.55,
-    19.05
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    632,
-    40,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "병을 든 채 잠깐 멈춘 얼굴(말 없음 582.49~583.85)",
-   "why": "'향 소개 끝엔, 이렇게 권했대요' — 원본 말 사이 쉼 화면",
-   "mute": true,
-   "Y": 149
-  },
-  {
-   "i": 18,
-   "line": "O3",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 583.85,
-   "dur": 0.75,
-   "src_span": [
-    583.85,
-    584.6
-   ],
-   "t_final": [
-    19.05,
-    19.8
+    11.4,
+    12.35
    ],
    "kind": "원본재편집",
    "full": true,
@@ -627,144 +435,176 @@
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "병을 앞으로 기울여 들고 말함",
-   "why": "원음 “이거 뭔가 한번” 583.85~",
+   "ours": "병을 얼굴 옆에 세워 들고 말함",
+   "why": "원음 “근데 이게 뭔가” 574.80~",
    "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 583.85,
-   "Y": 137
+   "audio_ss": 574.8,
+   "Y": 154
   },
   {
-   "i": 19,
-   "line": "O3",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 584.6,
-   "dur": 0.75,
+   "i": 13,
+   "line": "O2",
+   "src": "eos_HOGLbtiiFZE.mp4",
+   "url": "https://www.youtube.com/watch?v=HOGLbtiiFZE",
+   "src_date": "eos Products 유튜브 2026.06.15",
+   "ss": 12.6,
+   "dur": 0.9,
    "src_span": [
-    584.6,
-    585.35
+    12.6,
+    13.5
    ],
    "t_final": [
-    19.8,
-    20.55
+    12.35,
+    13.25
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    632,
-    40,
-    540,
-    720
+    130,
+    110,
+    645,
+    860
    ],
    "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김",
-   "why": "원음 계속",
+   "scale": 1.67,
+   "ours": "eos 광고 — 같은 병 정면(제품만, 오른쪽 'dessert for your skin' 밖)",
+   "why": "원음 “바닐라 향이 처음엔”(소리 IVE 575.75~)",
    "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 584.6,
-   "Y": 134
+   "audio_ss": 575.75,
+   "Y": 167
   },
   {
-   "i": 20,
-   "line": "O3",
+   "i": 14,
+   "line": "O2",
    "src": "ive_8o3M3DmY05E.mp4",
    "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
    "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 585.35,
-   "dur": 1.7,
+   "ss": 576.65,
+   "dur": 0.85,
    "src_span": [
-    585.35,
-    587.05
+    576.65,
+    577.5
    ],
    "t_final": [
-    20.55,
-    22.25
+    13.25,
+    14.1
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    600,
-    0,
-    540,
-    720
-   ],
-   "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "얼굴·병 윗부분 근접",
-   "why": "원음 “맡아보시면 좋을 것 같습니다”",
-   "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 585.35,
-   "Y": 138
-  },
-  {
-   "i": 21,
-   "line": "O3",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 587.05,
-   "dur": 1.07,
-   "src_span": [
-    587.05,
-    588.12
-   ],
-   "t_final": [
-    22.25,
-    23.32
-   ],
-   "kind": "원본재편집",
-   "full": true,
-   "src_crop": [
-    440,
+    580,
     0,
     645,
     860
    ],
    "res": "1920x1080",
    "scale": 1.67,
-   "ours": "병을 볼에 붙이고 수줍게 말함",
-   "why": "원음 “이것도 타겟에서” — '[수줍]' 자막 y≈890 은 h860 밖",
+   "ours": "병 든 얼굴",
+   "why": "원음 계속",
    "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 587.05,
-   "Y": 140
+   "audio_ss": 576.65,
+   "Y": 144
   },
   {
-   "i": 22,
-   "line": "O3",
-   "src": "ive_8o3M3DmY05E.mp4",
-   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
-   "src_date": "IVE 유튜브 2026.09.17",
-   "ss": 588.12,
-   "dur": 1.08,
+   "i": 15,
+   "line": "O2",
+   "src": "eos_85AU_3DohFs.mp4",
+   "url": "https://www.youtube.com/watch?v=85AU_3DohFs",
+   "src_date": "eos Products 유튜브 2026.02.18",
+   "ss": 5.0,
+   "dur": 0.8,
    "src_span": [
-    588.12,
-    589.2
+    5.0,
+    5.8
    ],
    "t_final": [
-    23.32,
-    24.4
+    14.1,
+    14.9
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    492,
-    40,
-    540,
-    720
+    900,
+    220,
+    645,
+    860
    ],
    "res": "1920x1080",
-   "scale": 2.0,
-   "ours": "같은 장면 당김(끝 컷 밝음)",
-   "why": "원음 “샀어요” ~589.20",
+   "scale": 1.67,
+   "ours": "eos 광고 — 로션 펌프병·바닐라 캐시미어 미스트(제품만, 위 'layer on the vanilla' 글자 y<220 밖)",
+   "why": "원음 “좀 과한가”(소리 IVE 577.50~)",
    "audio_src": "ive_8o3M3DmY05E.mp4",
-   "audio_ss": 588.12,
-   "Y": 149
+   "audio_ss": 577.5,
+   "Y": 174
+  },
+  {
+   "i": 16,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 578.3,
+   "dur": 0.8,
+   "src_span": [
+    578.3,
+    579.1
+   ],
+   "t_final": [
+    14.9,
+    15.7
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "얼굴(눈 감았다 뜸)",
+   "why": "원음 “싶다가도” ~579.10",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 578.3,
+   "Y": 140
+  },
+  {
+   "i": 17,
+   "line": "O2",
+   "src": "ive_8o3M3DmY05E.mp4",
+   "url": "https://www.youtube.com/watch?v=8o3M3DmY05E",
+   "src_date": "IVE 유튜브 2026.09.17",
+   "ss": 579.65,
+   "dur": 2.62,
+   "src_span": [
+    579.65,
+    582.27
+   ],
+   "t_final": [
+    15.7,
+    18.32
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    580,
+    0,
+    645,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "병 들고 입 모양 보이는 얼굴(끝 컷 밝음)",
+   "why": "원음 “계속 바르다 보면 묘하게 중독되는 그런 향” 579.65~582.27(쉼 0.55초 잘라 냄)",
+   "audio_src": "ive_8o3M3DmY05E.mp4",
+   "audio_ss": 579.65,
+   "Y": 138
   }
  ],
  "gaps": {
-  "hottem_audio_gaps": "0:3.45,1:6.1,2:5.35",
-  "note": "대본 줄(final.lines) 번호 뒤 원음 초 — 줄0 뒤 O1 · 줄1 뒤 O2 · 줄2 뒤 O3(끝)"
+  "hottem_audio_gaps": "0:3.4,end:6.92",
+  "note": "3판: 줄0 뒤 O1 · 줄1 뒤 O2(끝). 2판 O3(타겟에서 샀어요) 원본 −36.5 LUFS 웅얼거림이라 뺌 → 나레 3번 줄도 뺌(TTS 재호출 없이 잘라 씀)"
  },
  "source_audio": {
   "keep": true,
@@ -775,14 +615,14 @@
   "planned": "원음_따옴표 하위 스타일(기울인 가는 고딕) · 강조어 부분 노랑 — 엔진 요청"
  },
  "check": {
-  "total": 24.4,
+  "total": 18.32,
   "bench": 21.84,
-  "ratio": 1.117,
-  "n_shots": 23,
-  "shot_median": 1.07,
+  "ratio": 0.839,
+  "n_shots": 18,
+  "shot_median": 0.95,
   "bench_cut_median": 0.87,
-  "max_scale": 2.0,
-  "orig_share": 0.611,
+  "max_scale": 1.67,
+  "orig_share": 0.563,
   "orig_share_rule": [
    0.46,
    0.65
