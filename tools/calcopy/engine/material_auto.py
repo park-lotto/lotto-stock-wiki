@@ -60,10 +60,10 @@ FONT_B = "C:/Windows/Fonts/malgunbd.ttf"
 CHANNELS = {
     # 잇썸홈(두유노홈디노형) = 같은 제품 실영상만(비포 비교 토막만 같은 종류 다른 제품 허용), 짤 0
     "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before", "store"], "meme_ratio": (0.0, 0.0),
-              "min_res": 1080, "pref_res": 1080, "allow_cg": False},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
+              "min_res": 1080, "pref_res": 1080, "allow_cg": False, "max_cut": 1.7},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
     # 재미썸홈(이븐쇼핑형) = 제품 + 유사·연상 + 짤 10~15%
     "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "similar", "meme"], "meme_ratio": (0.10, 0.15),
-               "min_res": 720, "pref_res": 1080, "allow_cg": False},
+               "min_res": 720, "pref_res": 1080, "allow_cg": False, "max_cut": 1.4},
 }
 
 
@@ -472,8 +472,11 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
         best, best_s = None, -1e9
         why = {"후보": len(ranked.get(i, [])), "점수미달": 0, "규칙탈락": 0, "재사용": 0}
         same_line = bool(prev and prev[3] == t["line"])
+        chain = cut_lengths(picks)[-1] if picks and not picks[-1].get("none") else 0.0
+        room = chain + dur <= rules.get("max_cut", 9e9)              # B4 컷 중앙 상한 — 이어 가기로 컷이 벤치보다 길어지지 않게(10-17 핸즈프리 2.47초 미달)
+        ext_ok = bool(prev) and not reuse_conflict(prev[0], prev[2], prev[2] + dur, used[:-1])   # 이어 간 끝이 다른 컷 ±3초에 닿으면 안 됨(B13)
         # 이어 가기 후보(B4): 앞 컷과 같은 영상·같은 줄, 이어 간 구간이 그 칸의 설명 프레임 곁
-        if same_line:
+        if same_line and room and ext_ok:
             pv, _, pe, _, _ = prev
             for cid, s in ranked.get(i, []):
                 c = cells[cid]
@@ -497,7 +500,7 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
             sc = s + (2 if same_line and prev[0] == c["vid"] else 0) + (1 if res >= rules.get("pref_res", 1080) else 0)
             if sc > best_s:
                 best, best_s = ("new", c, a), sc
-        if best is None and same_line and prev[2] + dur - prev[4]["t"] <= 2.5:
+        if best is None and same_line and ext_ok and prev[2] + dur - prev[4]["t"] <= 2.5:
             # 같은 문장 이웃 토막인데 새 장면이 없으면 앞 컷을 이어 간다(B4 '자막 토막=컷 1:1 고집 금지', A12 같은 줄기) — 설명 프레임에서 2.5초 안까지만
             best, best_s = ("cont", prev[4], prev[2]), None
             why["앞컷이어감"] = 1
@@ -999,7 +1002,8 @@ def seq_report(shots: list[dict]) -> dict:
     for k in range(1, len(cuts) - 1):
         if cuts[k - 1]["src"] == cuts[k + 1]["src"] != cuts[k]["src"] and not str(cuts[k]["src"]).startswith("meme:"):
             b16.append(f"토막 {cuts[k]['toks'][0]} A-B-A({cuts[k - 1]['src']}→{cuts[k]['src']}→)")
-    return {"B13": b13, "B16": b16, "cuts": len(cuts)}
+    ls = sorted(round(sum(x.get("dur", 0) for x in shots if x["i"] in c["toks"]), 2) for c in cuts)
+    return {"B13": b13, "B16": b16, "cuts": len(cuts), "cut_med": ls[len(ls) // 2] if ls else 0, "cut_max": ls[-1] if ls else 0}
 
 
 def emit_material(auto: dict, wd, work_dir) -> list[str]:

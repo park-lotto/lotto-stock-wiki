@@ -225,6 +225,20 @@
    "judge": "페이블 판정 통과 후보(16호, 재미썸홈 1호) — 사장님 귀 확인 뒤 확정",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 10-17 재미썸홈"
+  },
+  {
+   "n": 17,
+   "channel": "homedesignnote",
+   "channel_name": "잇썸홈",
+   "title": "작품2_나이키핸즈프리",
+   "path": "C:/숏템_칼카피/homedesignnote/작품2_나이키핸즈프리/auto/make/final.mp4",
+   "desktop": "칼카피_잇썸홈_나이키핸즈프리.mp4",
+   "md5": "0a4722a51923fc2cf710e8054e3beaa7",
+   "seconds": 27.26,
+   "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
+   "date": "2026-10-17",
+   "judge": "preset_make 자동 검사 통과(사람 판정 전)",
+   "from": "tools/calcopy/engine/preset_make.py"
   }
  ]
 }
