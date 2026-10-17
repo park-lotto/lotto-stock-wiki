@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT))
 
 PAUSE = {",": 0.22, ".": 0.30}
 XF_SEC = 0.015
+FILL_PEAK_MAX = 328          # −40 dBFS(16비트) — 이어 붙일 쉼 조각이 이보다 크면 말소리가 섞인 것
 PUNCT = {",": ",", ".": ".", "?": ".", "!": "."}
 
 
@@ -71,6 +72,17 @@ def _join(a, b, n):
     return a
 
 
+def room_tone(x, sr: int, win_sec: float = 0.04) -> array.array:
+    """TTS 전체에서 가장 조용한 40ms(방 잡음) — 쉼 자리 소리가 조용하지 않을 때 대신 이어 붙인다(디지털 무음 금지 규칙 유지)."""
+    w = max(1, int(win_sec * sr)); step = max(1, w // 4)
+    best, best_i = None, 0
+    for i in range(0, max(1, len(x) - w), step):
+        e = sum(s * s for s in x[i:i + w:8])
+        if best is None or e < best:
+            best, best_i = e, i
+    return array.array("h", x[best_i:best_i + w]) or array.array("h", [0])
+
+
 def shape(src_mp3: str, align: dict, out_mp3: str) -> list[dict]:
     """쉼표·마침표 자리만 PAUSE 길이로 맞춘다. 반환: 자리별 (종류, 원래, 결과)."""
     x, sr = _read(src_mp3)
@@ -84,6 +96,8 @@ def shape(src_mp3: str, align: dict, out_mp3: str) -> list[dict]:
         gap = x[i0:i1]
         if cur < want:
             need = int((want - cur) * sr); core = gap[len(gap) // 4: 3 * len(gap) // 4] or gap or array.array("h", [0])
+            if max(abs(s) for s in core) > FILL_PEAK_MAX:      # 짧은 틈에 말 꼬리가 섞임 → 반복하면 쉼이 사라진다(10-18 샥탬 4편 L7|L9 0.137초)
+                core = room_tone(x, sr)
             fill = array.array("h")
             while len(fill) < need:
                 fill.extend(core)
