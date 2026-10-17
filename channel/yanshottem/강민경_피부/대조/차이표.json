@@ -1,0 +1,845 @@
+{
+ "tool": "tools/calcopy/engine/compare.py",
+ "layout_mode": "single",
+ "orig": {
+  "path": "C:/숏템_칼카피/yanshottem/강민경_피부/bench/bench_v1MZ9s9kl0Y.mp4",
+  "probe": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.003,
+   "nb_frames": 560,
+   "duration": 18.665,
+   "duration_container": 18.68,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 48000,
+   "ach": 2
+  },
+  "vl": {
+   "window": [
+    0,
+    330,
+    1080,
+    1590
+   ],
+   "caption": {
+    "pos": "inside",
+    "band": [
+     1188,
+     1281
+    ],
+    "ink": "bright"
+   },
+   "bg_rgb": [
+    150,
+    142,
+    124
+   ],
+   "variant": "A",
+   "canvas": [
+    1080,
+    1920
+   ]
+  },
+  "errors": {},
+  "layout_method": "layout1.measure(layout._window(편 전체))",
+  "bands": [
+   {
+    "band": [
+     147,
+     192
+    ],
+    "crop": [
+     143,
+     196
+    ],
+    "ink": "dark",
+    "t": [
+     1.87,
+     4.67,
+     7.47,
+     10.27,
+     13.07
+    ],
+    "line_h": 41.0,
+    "stroke": 3.0,
+    "ink_ratio": 0.05632,
+    "ink_bottom": 189,
+    "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
+   },
+   {
+    "band": [
+     208,
+     330
+    ],
+    "crop": [
+     204,
+     334
+    ],
+    "ink": "dark",
+    "t": [
+     1.87,
+     4.67,
+     7.47,
+     10.27,
+     13.07
+    ],
+    "line_h": 125.0,
+    "stroke": 12.0,
+    "ink_ratio": 0.55592,
+    "ink_bottom": 329,
+    "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
+   }
+  ]
+ },
+ "ours": {
+  "path": "C:/숏템_칼카피/yanshottem/강민경_피부/render/final.mp4",
+  "probe": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 30.0,
+   "nb_frames": 537,
+   "duration": 17.9,
+   "duration_container": 17.984,
+   "vcodec": "h264",
+   "has_audio": true,
+   "asr": 48000,
+   "ach": 1
+  },
+  "vl": {
+   "window": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "caption": {
+    "pos": "inside",
+    "band": [
+     1214,
+     1270
+    ],
+    "ink": "bright",
+    "free": true,
+    "band_before_extend": [
+     1215,
+     1270
+    ]
+   },
+   "bg_rgb": [
+    0,
+    0,
+    0
+   ],
+   "variant": "A",
+   "canvas": [
+    1080,
+    1920
+   ]
+  },
+  "errors": {},
+  "layout_method": "layout1.measure(layout._window(편 전체))",
+  "bands": [
+   {
+    "band": [
+     158,
+     261
+    ],
+    "crop": [
+     154,
+     265
+    ],
+    "ink": "bright",
+    "t": [
+     1.79,
+     4.47,
+     7.16,
+     9.85,
+     12.53
+    ],
+    "line_h": 103.0,
+    "stroke": 17.0,
+    "ink_ratio": 0.07647,
+    "ink_bottom": 259,
+    "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
+   },
+   {
+    "band": [
+     285,
+     387
+    ],
+    "crop": [
+     281,
+     391
+    ],
+    "ink": "bright",
+    "t": [
+     1.79,
+     4.47,
+     7.16,
+     9.85,
+     12.53
+    ],
+    "line_h": 102.0,
+    "stroke": 17.0,
+    "ink_ratio": 0.06393,
+    "ink_bottom": 386,
+    "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "key": "frame.window",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "영상 창 [x,y,w,h]",
+   "method": "layout.measure_video",
+   "criterion": "영상 창 x,y,w,h 차 ≤ 4px",
+   "orig": [
+    0,
+    330,
+    1080,
+    1590
+   ],
+   "ours": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "diff": 510.0,
+   "status": "out"
+  },
+  {
+   "key": "frame.bg_rgb",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "배경 RGB",
+   "method": "layout.measure_video",
+   "criterion": "배경 RGB 채널 최대차 ≤ 8",
+   "orig": [
+    150,
+    142,
+    124
+   ],
+   "ours": [
+    0,
+    0,
+    0
+   ],
+   "diff": 150.0,
+   "status": "out"
+  },
+  {
+   "key": "frame.caption_pos",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "자막 자리",
+   "method": "layout._caption",
+   "criterion": "자막 자리(위/아래/안) 같음",
+   "orig": "inside",
+   "ours": "inside",
+   "diff": "같음",
+   "status": "in"
+  },
+  {
+   "key": "frame.caption_ink",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "자막 잉크 극성",
+   "method": "layout._caption",
+   "criterion": "자막 잉크 극성 같음",
+   "orig": "bright",
+   "ours": "bright",
+   "diff": "같음",
+   "status": "in"
+  },
+  {
+   "key": "frame.caption_band",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "자막 띠 [y0,y1)",
+   "method": "layout._caption",
+   "criterion": "자막 띠 y0,y1 차 ≤ 4px (틀 좌표 기준 §6-1)",
+   "orig": [
+    1188,
+    1281
+   ],
+   "ours": [
+    1214,
+    1270
+   ],
+   "diff": 26.0,
+   "status": "out"
+  },
+  {
+   "key": "frame.above_bands",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 고정 띠 [[y0,y1)…]",
+   "method": "layout.measure_video(above_bands)",
+   "criterion": null,
+   "orig": [
+    [
+     147,
+     192
+    ],
+    [
+     208,
+     330
+    ]
+   ],
+   "ours": [
+    [
+     158,
+     261
+    ],
+    [
+     285,
+     387
+    ]
+   ],
+   "diff": "다름",
+   "status": "참고"
+  },
+  {
+   "key": "frame.band_rgb",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "띠 색",
+   "method": "-",
+   "criterion": null,
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "참고(failed:원본: bench에 띠 색을 재는 자가 없음(layout은 창 밖 배경 RGB만 잰다) / 우리: bench에 띠 색을 재는 자가 없음(layout은 창 밖 배경 RGB만 잰다))"
+  },
+  {
+   "key": "frame.band_count",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 고정 글자 띠 개수",
+   "method": "bands.measure_video",
+   "criterion": "창 위 고정 글자 띠 개수 같음",
+   "orig": 2,
+   "ours": 2,
+   "diff": "같음",
+   "status": "in"
+  },
+  {
+   "key": "frame.title_gap",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "제목 블록 아래 끝~창 위 끝(px)",
+   "method": "layout.window − bands.ink_bottom",
+   "criterion": "제목 블록 아래 끝~창 위 끝 간격 차 ≤ 8px",
+   "orig": 1,
+   "ours": 34,
+   "diff": 33.0,
+   "status": "out"
+  },
+  {
+   "key": "band.line_h#0",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠1 [147,192) 글자 높이(px)",
+   "method": "bands.band_style(captions.glyph_style)",
+   "criterion": "띠 글자 높이 차 ≤ 6%",
+   "orig": 41.0,
+   "ours": 103.0,
+   "diff": "62.0 (151.2%)",
+   "status": "out"
+  },
+  {
+   "key": "band.stroke#0",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠1 [147,192) 획 두께(px)",
+   "method": "bands.band_style(captions.glyph_style)",
+   "criterion": "띠 획 두께 차 ≤ 1px",
+   "orig": 3.0,
+   "ours": 17.0,
+   "diff": 14.0,
+   "status": "out"
+  },
+  {
+   "key": "band.ink#0",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠1 [147,192) 잉크 비율",
+   "method": "bands.band_style(layout.ink_mask)",
+   "criterion": "띠 잉크 비율 차 ≤ 20%",
+   "orig": 0.05632,
+   "ours": 0.07647,
+   "diff": "0.02 (35.8%)",
+   "status": "out"
+  },
+  {
+   "key": "band.line_h#1",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠2 [208,330) 글자 높이(px)",
+   "method": "bands.band_style(captions.glyph_style)",
+   "criterion": "띠 글자 높이 차 ≤ 6%",
+   "orig": 125.0,
+   "ours": 103.0,
+   "diff": "-22.0 (17.6%)",
+   "status": "out"
+  },
+  {
+   "key": "band.stroke#1",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠2 [208,330) 획 두께(px)",
+   "method": "bands.band_style(captions.glyph_style)",
+   "criterion": "띠 획 두께 차 ≤ 1px",
+   "orig": 12.0,
+   "ours": 17.0,
+   "diff": 5.0,
+   "status": "out"
+  },
+  {
+   "key": "band.ink#1",
+   "layer": "pixel",
+   "group": "틀",
+   "name": "창 위 띠2 [208,330) 잉크 비율",
+   "method": "bands.band_style(layout.ink_mask)",
+   "criterion": "띠 잉크 비율 차 ≤ 20%",
+   "orig": 0.55592,
+   "ours": 0.07647,
+   "diff": "-0.479 (86.2%)",
+   "status": "out"
+  },
+  {
+   "key": "cap.top_y",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "첫 줄 y 중앙(px)",
+   "method": "captions.caption_lines",
+   "criterion": "첫 줄 y 중앙 차 ≤ 화면 높이의 6%",
+   "orig": 1188.0,
+   "ours": 1215.0,
+   "diff": "27.0px (1.4% of H1920)",
+   "status": "in"
+  },
+  {
+   "key": "cap.lines",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "줄 수 중앙",
+   "method": "captions.caption_lines",
+   "criterion": "줄 수(중앙) 같음",
+   "orig": 1.0,
+   "ours": 1.0,
+   "diff": "같음",
+   "status": "in"
+  },
+  {
+   "key": "cap.line_w",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "줄 폭 중앙(px)",
+   "method": "captions.caption_lines",
+   "criterion": "줄 폭 중앙 차 ≤ 6%",
+   "orig": 560.5,
+   "ours": 464.0,
+   "diff": "-96.5 (17.2%)",
+   "status": "out"
+  },
+  {
+   "key": "cap.size_px",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "첫 줄 높이 중앙(px)",
+   "method": "captions.glyph_style",
+   "criterion": "첫 줄 높이 중앙 차 ≤ 6%",
+   "orig": 92.5,
+   "ours": 55.0,
+   "diff": "-37.5 (40.5%)",
+   "status": "out"
+  },
+  {
+   "key": "cap.stroke",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "획 두께 중앙(px)",
+   "method": "captions.glyph_style",
+   "criterion": "획 두께 중앙 차 ≤ 1px",
+   "orig": 9.0,
+   "ours": 8.0,
+   "diff": 1.0,
+   "status": "in"
+  },
+  {
+   "key": "cap.outline",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "외곽선 있음(다수)",
+   "method": "captions.glyph_style",
+   "criterion": "외곽선 유무(다수) 같음 — bench는 굵기 px를 안 재고 유무만 잰다",
+   "orig": true,
+   "ours": true,
+   "diff": "같음",
+   "status": "in"
+  },
+  {
+   "key": "cap.shadow",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "그림자 있음(다수)",
+   "method": "captions.glyph_style",
+   "criterion": null,
+   "orig": false,
+   "ours": false,
+   "diff": "같음",
+   "status": "참고"
+  },
+  {
+   "key": "cap.anim",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "등장효과(최빈)",
+   "method": "captions.caption_anim",
+   "criterion": "등장효과 종류(최빈) 같음",
+   "orig": "확대/축소",
+   "ours": "없음",
+   "diff": "다름",
+   "status": "out"
+  },
+  {
+   "key": "cap.sub_sec",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "자막당 초 중앙",
+   "method": "captions.caption_track(흔들림 구간 제외)",
+   "criterion": "자막당 초 중앙 차 ≤ 15%",
+   "orig": 0.7,
+   "ours": 1.0,
+   "diff": "0.3 (42.9%)",
+   "status": "out"
+  },
+  {
+   "key": "cap.count",
+   "layer": "pixel",
+   "group": "자막",
+   "name": "자막 개수",
+   "method": "captions.caption_track(흔들림 구간 제외)",
+   "criterion": null,
+   "orig": 20,
+   "ours": 17,
+   "diff": -3,
+   "status": "참고"
+  },
+  {
+   "key": "cut.median",
+   "layer": "pixel",
+   "group": "컷",
+   "name": "컷 길이 중앙(초)",
+   "method": "cuts.shot_lengths",
+   "criterion": "컷 길이 중앙 차 ≤ 15%",
+   "orig": 1.2,
+   "ours": 1.466,
+   "diff": "0.266 (22.2%)",
+   "status": "out"
+  },
+  {
+   "key": "cut.p90",
+   "layer": "pixel",
+   "group": "컷",
+   "name": "컷 길이 p90(초)",
+   "method": "cuts.shot_lengths",
+   "criterion": "컷 길이 p90 차 ≤ 15%",
+   "orig": 1.817,
+   "ours": 2.054,
+   "diff": "0.237 (13.0%)",
+   "status": "in"
+  },
+  {
+   "key": "cut.first",
+   "layer": "pixel",
+   "group": "컷",
+   "name": "첫 컷 시각(초)",
+   "method": "cuts.shot_lengths",
+   "criterion": null,
+   "orig": 0.767,
+   "ours": 2.133,
+   "diff": 1.366,
+   "status": "참고"
+  },
+  {
+   "key": "cut.eq_sub",
+   "layer": "pixel",
+   "group": "컷",
+   "name": "자막=컷 일치율(%)",
+   "method": "cuts.cut_eq_sub",
+   "criterion": null,
+   "orig": 93.3,
+   "ours": 45.5,
+   "diff": -47.8,
+   "status": "참고"
+  },
+  {
+   "key": "cut.shots",
+   "layer": "pixel",
+   "group": "컷",
+   "name": "샷 수",
+   "method": "cuts.scene_detect+merge_close+cut_verify",
+   "criterion": null,
+   "orig": 16,
+   "ours": 12,
+   "diff": -4,
+   "status": "참고"
+  },
+  {
+   "key": "audio.tp",
+   "layer": "pixel",
+   "group": "소리",
+   "name": "True Peak(dBTP)",
+   "method": "audio.ebur128",
+   "criterion": null,
+   "orig": -4.3,
+   "ours": -3.3,
+   "diff": 1.0,
+   "status": "참고"
+  },
+  {
+   "key": "len.duration",
+   "layer": "pixel",
+   "group": "길이",
+   "name": "길이(초, 프레임÷fps)",
+   "method": "probe.info",
+   "criterion": "길이 차 ≤ 15%",
+   "orig": 18.665,
+   "ours": 17.9,
+   "diff": "-0.765 (4.1%)",
+   "status": "in"
+  },
+  {
+   "key": "sfx.per_sec",
+   "layer": "rule",
+   "group": "효과음",
+   "name": "효과음 발수/초",
+   "method": "뜯기.json audio.composition.sfx_per_sec(audio_comp.spikes)",
+   "criterion": "효과음 발수/초 차 ≤ 30%",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "sfx.after_event",
+   "layer": "rule",
+   "group": "효과음",
+   "name": "효과음 중 자막 교체·컷 ±0.2s 비율(%)",
+   "method": "뜯기.json sfx 시각 × bench captions.changes+cuts",
+   "criterion": "효과음 자리(자막 교체·컷 ±0.2s) 비율 차 ≤ 20%p",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "bgm.present",
+   "layer": "rule",
+   "group": "배경음",
+   "name": "배경음 있음",
+   "method": "뜯기.json rules.bgm.present",
+   "criterion": "배경음 있음/없음 같음",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "bgm.lufs",
+   "layer": "rule",
+   "group": "배경음",
+   "name": "배경음 LUFS",
+   "method": "뜯기.json rules.bgm.lufs",
+   "criterion": "배경음 LUFS 차 ≤ 1.5dB",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "mix.lufs",
+   "layer": "rule",
+   "group": "배경음",
+   "name": "통합 LUFS(믹스)",
+   "method": "audio.ebur128",
+   "criterion": "통합 LUFS(믹스) 차 ≤ 1.5dB — 배경음만 뗀 값 아님",
+   "orig": -18.7,
+   "ours": -18.2,
+   "diff": 0.5,
+   "status": "in"
+  },
+  {
+   "key": "bgm.duck",
+   "layer": "rule",
+   "group": "배경음",
+   "name": "덕킹 dB(나레 구간−말 없는 구간)",
+   "method": "뜯기.json audio.composition.duck_db",
+   "criterion": "덕킹 dB 차 ≤ 3dB",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "meme.count",
+   "layer": "rule",
+   "group": "짤",
+   "name": "짤 개수/편",
+   "method": "뜯기.json materials.per_shot(kind=짤·밈)",
+   "criterion": "짤 편당 개수 차 ≤ 1",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "meme.pos",
+   "layer": "rule",
+   "group": "짤",
+   "name": "짤 자리 {훅,중간,끝}",
+   "method": "뜯기.json materials.per_shot(kind=짤·밈) t 가운데",
+   "criterion": "짤 자리(훅/중간/끝) 칸마다 개수 차 ≤ 1",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "voice.gender",
+   "layer": "rule",
+   "group": "목소리",
+   "name": "화자 성별(정렬)",
+   "method": "뜯기.json audio.composition.speakers.gender",
+   "criterion": "목소리 성별 구성 같음",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "voice.roles",
+   "layer": "rule",
+   "group": "목소리",
+   "name": "화자 수",
+   "method": "뜯기.json audio.composition.speakers",
+   "criterion": "목소리 역할(화자) 수 같음",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(--rules-json 없음) / 우리: 미측정(--rules-json 없음)"
+  },
+  {
+   "key": "speech.cps",
+   "layer": "rule",
+   "group": "목소리",
+   "name": "말속도(글자/초)",
+   "method": "compare.asr_cps(speechmatics 단어 시각)",
+   "criterion": "말속도(글자/초) 차 ≤ 10%",
+   "orig": null,
+   "ours": null,
+   "diff": null,
+   "status": "failed:원본: 미측정(받아쓰기 --asr-orig/--asr-ours 없음) / 우리: 미측정(받아쓰기 --asr-orig/--asr-ours 없음)"
+  }
+ ],
+ "verdict": {
+  "verdict": "미달",
+  "out": [
+   "영상 창 [x,y,w,h]",
+   "배경 RGB",
+   "자막 띠 [y0,y1)",
+   "제목 블록 아래 끝~창 위 끝(px)",
+   "창 위 띠1 [147,192) 글자 높이(px)",
+   "창 위 띠1 [147,192) 획 두께(px)",
+   "창 위 띠1 [147,192) 잉크 비율",
+   "창 위 띠2 [208,330) 글자 높이(px)",
+   "창 위 띠2 [208,330) 획 두께(px)",
+   "창 위 띠2 [208,330) 잉크 비율",
+   "줄 폭 중앙(px)",
+   "첫 줄 높이 중앙(px)",
+   "등장효과(최빈)",
+   "자막당 초 중앙",
+   "컷 길이 중앙(초)"
+  ],
+  "failed": [],
+  "n_criteria": 24,
+  "n_in": 9,
+  "rules_note": "② 규칙 수준은 판정에 넣지 않음(표에만)",
+  "rules_in": [
+   "통합 LUFS(믹스)"
+  ],
+  "rules_out": [],
+  "rules_unmeasured": [
+   "효과음 발수/초",
+   "효과음 중 자막 교체·컷 ±0.2s 비율(%)",
+   "배경음 있음",
+   "배경음 LUFS",
+   "덕킹 dB(나레 구간−말 없는 구간)",
+   "짤 개수/편",
+   "짤 자리 {훅,중간,끝}",
+   "화자 성별(정렬)",
+   "화자 수",
+   "말속도(글자/초)"
+  ]
+ },
+ "side_by_side": {
+  "path": "channel/yanshottem/강민경_피부/대조\\side_by_side.jpg",
+  "rel_times": [
+   0.0625,
+   0.1875,
+   0.3125,
+   0.4375,
+   0.5625,
+   0.6875,
+   0.8125,
+   0.9375
+  ],
+  "missing": []
+ },
+ "rules_json": [
+  null,
+  null
+ ],
+ "criteria": {
+  "frame.window": "영상 창 x,y,w,h 차 ≤ 4px",
+  "frame.bg_rgb": "배경 RGB 채널 최대차 ≤ 8",
+  "frame.caption_band": "자막 띠 y0,y1 차 ≤ 4px (틀 좌표 기준 §6-1)",
+  "frame.caption_pos": "자막 자리(위/아래/안) 같음",
+  "frame.caption_ink": "자막 잉크 극성 같음",
+  "cap.top_y": "첫 줄 y 중앙 차 ≤ 화면 높이의 6%",
+  "cap.lines": "줄 수(중앙) 같음",
+  "cap.line_w": "줄 폭 중앙 차 ≤ 6%",
+  "cap.size_px": "첫 줄 높이 중앙 차 ≤ 6%",
+  "cap.stroke": "획 두께 중앙 차 ≤ 1px",
+  "cap.outline": "외곽선 유무(다수) 같음 — bench는 굵기 px를 안 재고 유무만 잰다",
+  "cap.anim": "등장효과 종류(최빈) 같음",
+  "cap.sub_sec": "자막당 초 중앙 차 ≤ 15%",
+  "cut.median": "컷 길이 중앙 차 ≤ 15%",
+  "cut.p90": "컷 길이 p90 차 ≤ 15%",
+  "len.duration": "길이 차 ≤ 15%",
+  "frame.band_count": "창 위 고정 글자 띠 개수 같음",
+  "band.line_h": "띠 글자 높이 차 ≤ 6%",
+  "band.stroke": "띠 획 두께 차 ≤ 1px",
+  "band.ink": "띠 잉크 비율 차 ≤ 20%",
+  "frame.title_gap": "제목 블록 아래 끝~창 위 끝 간격 차 ≤ 8px"
+ },
+ "rule_criteria": {
+  "sfx.per_sec": "효과음 발수/초 차 ≤ 30%",
+  "sfx.after_event": "효과음 자리(자막 교체·컷 ±0.2s) 비율 차 ≤ 20%p",
+  "bgm.present": "배경음 있음/없음 같음",
+  "bgm.lufs": "배경음 LUFS 차 ≤ 1.5dB",
+  "mix.lufs": "통합 LUFS(믹스) 차 ≤ 1.5dB — 배경음만 뗀 값 아님",
+  "bgm.duck": "덕킹 dB 차 ≤ 3dB",
+  "meme.count": "짤 편당 개수 차 ≤ 1",
+  "meme.pos": "짤 자리(훅/중간/끝) 칸마다 개수 차 ≤ 1",
+  "voice.gender": "목소리 성별 구성 같음",
+  "voice.roles": "목소리 역할(화자) 수 같음",
+  "speech.cps": "말속도(글자/초) 차 ≤ 10%"
+ }
+}
