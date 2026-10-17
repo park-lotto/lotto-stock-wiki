@@ -1,0 +1,206 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 559,
+   "w": 1080,
+   "h": 1361,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    232,
+    250,
+    255
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 200,
+    "rgb": [
+     0,
+     220,
+     255
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    232,
+    250,
+    255
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 200,
+    "rgb": [
+     0,
+     220,
+     255
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "text": "숏템리폿",
+   "x": 540,
+   "y": 166,
+   "w": 600,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 60,
+   "line_h": 62,
+   "rgb": [
+    232,
+    250,
+    255
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 0,
+    "blur": 120,
+    "rgb": [
+     0,
+     220,
+     255
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "text": "AI 주작 논란 터진\n아이언맨 헬멧",
+   "x": 540,
+   "y": 288,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "BlackHanSans",
+   "size": 125,
+   "line_h": 134,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     255,
+     138,
+     0
+    ]
+   ],
+   "line_scale": [
+    0.85,
+    1.16
+   ],
+   "outline": null,
+   "line_outline": [
+    [
+     4,
+     0,
+     0,
+     0
+    ],
+    [
+     4,
+     70,
+     30,
+     0
+    ]
+   ],
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1383,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 84,
+   "line_h": 104,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "outline": {
+    "px": 8,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "OE-11wb7vdY | 외관 숏템리폿판(10-17): 채널명 숏템리폿·GmarketSansBold 하늘 글로우(0,220,255), 제목 BlackHanSans 흰/주황(255,138,0)"
+}
