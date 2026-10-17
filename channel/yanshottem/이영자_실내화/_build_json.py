@@ -104,55 +104,86 @@ S = {
 }
 (D / "대본.json").write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
 
-# 재료 — 컷 6개(B4 컷 중앙 때문에 N1 을 자막 조각대로 3컷: 표지·주방·짐 정리)(원음 구간은 원본 시각 그대로 → 입 모양 맞음, 같은 테이크는 앞으로만)
+# 재료 — 컷 8개(10-17 수리: B4 새 기준 만템 1.40 ±30% ≤1.82). 원음 O2 는 소리를 안 끊고 화면만 이영자 본인 3.40초(≥50%) → 같은 제품 B롤 2컷(제품만, 손·얼굴 없음).
+#   표지(돌 'DREAM HOUSE')는 글자 y400~710 이 자막 자리(창 y749~823)와 어느 크롭으로도 겹쳐(원본 편집 자막 y≈890 때문에 아래로 못 내림) → 같은 영상 드림하우스 바깥(마당·데크) 26.66~27.72 로 바꿈.
+#   같은 테이크 안 크롭 바꾸기 0(점프 줌 금지) · B16 같은 장면 A-B-A 0 · B13 같은 소스 ±3초 재사용 0.
 bt = {b["block"]: b["t"] for b in blocks}
 n1a, n1b = bt["N1"]
-n1m = round(n1a + NCAPS["N1"][1][1], 3)   # '이사하던 날' 자막 조각 시작에서 컷
 n1s = round(n1a + NCAPS["N1"][2][1], 3)   # '짐 정리하다' 자막 조각 시작에서 컷(TTS 실측)
 o2a, o2b = bt["O2"]
+O2_SELF = 3.40                              # 원음 O2 본인 화면(6.70 의 50.7%) — 119.62~123.02 정면 말·신발 주머니
+o2m = round(o2a + O2_SELF, 3)
+o2n = round((o2m + o2b) / 2, 3)
+G_END = 27.72                               # 마당 샷 크로스페이드 시작(프레임 차 실측: 26.64 까지 들어옴·27.72 부터 나감)
+n1g = round(bt["O1"][1] + (G_END - 26.66), 3)
+fa = lambda t: int(t * 30 + 0.5 + 1e-9)    # narr_video.frame_at 과 같은 반올림 — 원음 O2 를 컷 3개에 이어 깔 때 소리 시작초는 '실제 컷 프레임' 차로(1판 11.10 경계 16.7ms 건너뜀 → 딸깍 0.41)
+o2ss = lambda t: round(119.62 + (fa(t) - fa(o2a)) / 30, 4)
+YJ = (SRC, URL, "이영자 TV 유튜브 2024.06.30", "1920x1080")
+BR = {"i": ("br_i_P-LZ6mhX0.mp4", "https://www.youtube.com/watch?v=i_P-LZ6mhX0", "내맘니맘리뷰 유튜브(쿠팡 상품 사진 모음)", "1920x1080"),
+      "l": ("br_lJbKVjunSr8.mp4", "https://www.youtube.com/watch?v=lJbKVjunSr8", "모두의 리뷰 유튜브(쿠팡 상품 사진 모음)", "1920x1080"),
+      "t": ("br_T8Maxl8-uP0.mp4", "https://www.youtube.com/watch?v=T8Maxl8-uP0", "똑똑한 구매리스트 유튜브(쿠팡 상품 사진 모음)", "1920x1080")}
+# (줄, 시작, 끝, 소스, ss, 크롭, 소리(None|원음 시작초), 화면, 왜)
 cuts = [
-    ("O1", 0.0, bt["O1"][1], 117.82, [700, 0, 820, 820], True,
+    ("O1", 0.0, bt["O1"][1], YJ, 117.82, [700, 0, 820, 820], 117.82,
      "짐 가방 위로 몸을 숙여 검은 신발 주머니를 꺼냄(이영자 본인, 흰 반바지·초록 셔츠)", "원음 'PD님 걸어 다니기 힘들죠?' 117.82~119.42 — 원본 편집 자막(y≈940) 밖. 117.80 원본 컷 뒤"),
-    ("N1", bt["O1"][1], n1m, 50.10, [560, 0, 880, 880], False,
-     "돌 표지 'DREAM 2024 HOUSE'(새 집 벽)", "'이영자가 드림하우스로' — f1 제목의 드림하우스 실물. 원본 샷 49.58~52.04 안. 편집 자막 '결국 이뤄낸 2024 드림하우스'(글자 윗끝 y≈890) 밖 — 크롭 y0~880, 글자 DREAM 2024 HOUSE 가로 540~1460 안"),
-    ("N1", n1m, n1s, 86.44, [450, 0, 820, 820], False,
+    ("N1", bt["O1"][1], n1g, YJ, 26.66, [60, 60, 960, 960], None,
+     "드림하우스 바깥 — 나무 사이 초록 집·나무 데크·자갈 마당(사람 없음)", "'이영자가 드림하우스로' — f1 같은 영상 26.66~27.72(앞뒤 크로스페이드 밖). 원본 파란 테두리(가장자리 ~55px) 밖 크롭. 편집 자막 '3도 4촌 오늘부터 1일'은 26.6 전에 끝남"),
+    ("N1", n1g, n1s, YJ, round(86.44 - (bt["O1"][1] + 1.17 - n1g), 3), [450, 0, 820, 820], None,
      "새 집 주방 조리대 앞에 선 이영자(창밖 나무)", "'이사하던 날' — f1 이사 날 화면. 자막 '[볼수록 그저 감탄]'(y≈950) 밖. 원본 샷 84.50~88.42 안"),
-    ("N1", n1s, o2a, 88.50, [640, 0, 760, 760], False,
+    ("N1", n1s, o2a, YJ, 88.50, [640, 0, 760, 760], None,
      "짐 상자(파란 통) 위로 숙여 짐을 꺼내는 이영자", "'짐 정리하다 피디에게 꺼내 준 요가 신발이라는데' — f2 '드디어 정리 시작!' 자막(왼쪽 아래 y≥760) 밖. 92.04 원본 컷 전"),
-    ("O2", o2a, o2b, 119.62, [450, 0, 820, 820], True,
-     "신발 주머니 들고 정면 보며 말하는 이영자 → 신발 꺼내 듦 → 그 신발 신은 이영자 다리(흰 반바지) → 바닥(한 테이크, 카메라가 따라감)",
-     "원음 '올해 또 만난 나의 NEW 슈즈 … 요가할 때 신는 건데 이거 신고 하세요 / 그럼 편하실 거예요' 119.62~126.32 한 테이크 그대로(자르면 같은 테이크 크롭이 바뀌어 점프 줌 → 크롭 하나). 자막(y≥840) 밖. 126.4~127.4 남의 손이 신발 바닥을 드는 장면은 A13 때문에 안 씀"),
-    ("N2", o2b, dur, 128.42, [600, 85, 820, 820], False,
+    ("O2", o2a, o2m, YJ, 119.62, [450, 0, 820, 820], 119.62,
+     "신발 주머니 들고 정면 보며 말하는 이영자 → 주머니에서 신발을 꺼냄", "원음 '올해 또 만난 나의 NEW 슈즈' 119.62~123.02 본인 화면(O2 의 50.7%). 자막(y≥840) 밖. 같은 테이크는 여기서 끝(되돌아오지 않음)"),
+    ("O2", o2m, o2n, BR["l"], 40.80, [290, 120, 670, 670], o2ss(o2m),
+     "검은 고렌샤크 요가 신발 한 켤레(흰 바탕 상품 사진, 오돌토돌 미끄럼방지 바닥)", "원음 '요가할 때 신는 건데'(소리는 이영자 원음 그대로) — 같은 제품(원본 편집 자막 f4 '고렌샤크 미끄럼방지 요가 신발') 상품 사진. 노란 칸·글자(4위·가격) 밖 흰 사진 칸만 크롭, 사진 정지(프레임 차 ≤0.21)"),
+    ("O2", o2n, o2b, BR["t"], 24.00, [100, 290, 760, 760], o2ss(o2n),
+     "검은 요가 신발 두 짝 — 오돌토돌한 바닥·발끝(상품 사진, 손가락은 크롭 밖)", "원음 '이거 신고 하세요 / 그럼 편하실 거예요' — 같은 제품 상품 사진. 사진 윗부분 손(y≤280)·오른쪽 글자(x≥1060) 밖 크롭, 사진 정지(프레임 차 0)"),
+    ("N2", o2b, dur, YJ, 128.42, [600, 85, 820, 820], None,
      "그 신발을 신고 걷는 사람의 발(카키 반바지·흰 양말 — 이영자와 다른 사람)", "'신어 본 피디도 편해서 놀랐다네요' — f5 '[진짜 편해서 놀랐다고 한다]' 자막(y≥910) 밖. 130.52 원본 컷 전. 끝 컷 ≥1.5초"),
 ]
 shots = []
-for i, (line, a, b, ss, crop, snd, ours, why) in enumerate(cuts):
+for i, (line, a, b, (src, url, sdate, res), ss, crop, aud, ours, why) in enumerate(cuts):
     d = round(b - a, 3)
-    sh = {"i": i, "line": line, "src": SRC, "url": URL, "src_date": "이영자 TV 유튜브 2024.06.30", "ss": ss, "dur": d,
-          "src_span": [ss, round(ss + d, 3)], "t_final": [round(a, 3), round(b, 3)], "kind": "원본재편집", "full": True,
-          "src_crop": crop, "res": "1920x1080", "scale": round(1080 / crop[2], 2), "ours": ours, "why": why}
-    if snd:
+    sh = {"i": i, "line": line, "src": src, "url": url, "src_date": sdate, "ss": ss, "dur": d,
+          "src_span": [ss, round(ss + d, 3)], "t_final": [round(a, 3), round(b, 3)], "kind": ("원본재편집" if src == SRC else "제품B롤"), "full": True,
+          "src_crop": crop, "res": res, "scale": round(1080 / crop[2], 2), "ours": ours, "why": why}
+    if aud is not None:
         sh["audio_src"] = SRC
-        sh["audio_ss"] = ss
+        sh["audio_ss"] = aud
     else:
         sh["mute"] = True
     shots.append(sh)
-LIMIT = {50.10: 52.04, 86.44: 88.42, 88.50: 92.04, 117.82: 119.45, 119.62: 126.40, 128.42: 130.52}   # 128.16~128.35 남의 손 근접(A13) → 128.42부터   # 원본 컷 경계(scene 실측) 넘으면 멈춤
+LIMIT = {(SRC, 26.66): (26.64, 27.72), (SRC, 84.50): (84.50, 88.42), (SRC, 88.50): (88.50, 92.04), (SRC, 117.82): (117.80, 119.45),
+         (SRC, 119.62): (119.62, 126.40), (SRC, 128.42): (128.42, 130.52)}   # 원본 컷 경계(scene 실측) — 128.16~128.35 남의 손 근접(A13) → 128.42부터
 for s in shots:
-    assert s["ss"] + s["dur"] <= LIMIT[s["ss"]] + 1e-6, f"컷 {s['i']} 원본 컷 경계 넘음: {s['ss']}+{s['dur']} > {LIMIT[s['ss']]}"
+    if s["src"] != SRC:
+        continue
+    k = next(k for k in LIMIT if k[1] <= s["ss"] + 1e-6 and s["ss"] < LIMIT[k][1])
+    assert LIMIT[k][0] - 1e-6 <= s["ss"] and s["ss"] + s["dur"] <= LIMIT[k][1] + 1e-6, f"컷 {s['i']} 원본 컷 경계 넘음: {s['ss']}+{s['dur']} vs {LIMIT[k]}"
+# 원음 O2 본인 화면 비율 · B13: 같은 소스는 화면 순서대로 원본 시각도 앞으로만(겹침·되돌아가기 0), 뒤로 가면 3초 넘게 떨어져야
+o2_self = sum(s["dur"] for s in shots if s["line"] == "O2" and s["src"] == SRC) / O[1]["dur"]
+assert o2_self >= 0.5, o2_self
+for x in shots:
+    for y in shots:
+        if x["i"] < y["i"] and x["src"] == y["src"]:
+            assert y["ss"] >= x["src_span"][1] - 1e-6 or x["ss"] >= y["src_span"][1] + 3.0, f"B13 {x['i']}·{y['i']}"
 lens = sorted(s["dur"] for s in shots)
 med = lens[len(lens) // 2] if len(lens) % 2 else round((lens[len(lens) // 2 - 1] + lens[len(lens) // 2]) / 2, 3)
 M = {"_note": "얜샷템 이영자 실내화 편(벤치 안나픽 nt6WIGFmILE) 재료. 원본 = 이영자 TV BHuue4ga-w0(1080p50 AV1 → h264 변환). 창 1080x1080(frame_얜샷템). _build_json.py 가 만든다.",
      "cand_dir": "C:/숏템_칼카피/yanshottem/이영자_실내화/src",
+     "_broll": "제품 B롤 소스는 broll/ 에서 받아 src/br_*.mp4 로 복사(yt-dlp web 1080p)",
      "narration": "일레븐랩스 미나(kr-mina, voice aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 통째 1회 합성 → 줄 사이 쉼에서 갈라 atempo N1 1.54·N2 1.45, 실측 8.01·8.33자/초) — 벤치 나레 여성 차분한 설명체 8.01자/초",
      "sources": {"BHuue4ga-w0": {"채널": "이영자 TV", "제목": "드디어 드림하우스로 이사하는 날❗️3도4촌 시작합니다🏠 (이효리 오징엇국)", "업로드": "2024-06-30",
-                                 "해상도": "1920x1080 50fps(AV1 webm → libx264 crf18 변환본 yj_BHuue4ga-w0.mp4)", "길이": 488.34, "조회": 2165422}},
+                                 "해상도": "1920x1080 50fps(AV1 webm → libx264 crf18 변환본 yj_BHuue4ga-w0.mp4)", "길이": 488.34, "조회": 2165422},
+                 "lJbKVjunSr8": {"채널": "모두의 리뷰", "제목": "고렌샤크 추천, 역대급 가성비 가성비 TOP5", "해상도": "1920x1080 30fps", "쓴 것": "40.80~ 4위 상품 사진(흰 칸만)"},
+                 "T8Maxl8-uP0": {"채널": "똑똑한 구매리스트", "제목": "고렌샤크 추천 | 이 가격에 득템 오늘만 특가 | 실구매자 추천템 | 쇼핑 랭킹템", "해상도": "1920x1080 24fps", "쓴 것": "24.00~ '전참시 실내화 고렌샤크' 검정 상품 사진(손·글자 밖)"},
+                 "후보(안 씀)": "i_P-LZ6mhX0 내맘니맘리뷰 — '영자 요가 신발 고런샤크 재즈 블랙' 착용 사진(맨발 피부 → 원음 A-B-A 피하려 나레 칸에도 안 넣음)"},
      "shots": shots,
      "source_audio": {"keep": True, "note": "원음 = 이영자 본인 말만(받아쓰기 2회+, 근거.md §2). 원본 구간 LUFS −13.2/−15.0/−18.0(웅얼거림 아님)."},
      "caption_effects": {"now": "나레 = 틀 caption(나레_노랑) · 원음 = caption_events emph 흰색(따옴표 없음)", "planned": "원음_흰글자(GmarketSansBold·y1320) 하위 스타일 — 엔진 요청"},
      "check": {"total": dur, "bench": 16.0, "ratio": round(dur / 16.0, 3), "n_shots": len(shots), "shot_median": med,
                "bench_cut_median": 0.77, "mantem_cut_median": 1.40, "max_scale": max(s["scale"] for s in shots), "orig_share": S["final"]["check"]["orig_share"],
-               "cap_max_chars": max(len(c["text"].replace(" ", "")) for c in caps), "sources_used": ["이영자 TV 유튜브 2024.06.30"]}}
+               "cap_max_chars": max(len(c["text"].replace(" ", "")) for c in caps), "sources_used": sorted({s["src_date"] for s in shots}), "o2_self_share": round(o2_self, 3)}}
 (D / "재료.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
 
 fr = json.loads((ROOT / "channel/mantem/frame_얜샷템.json").read_text(encoding="utf-8"))

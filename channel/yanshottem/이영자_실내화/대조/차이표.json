@@ -97,7 +97,7 @@
   ]
  },
  "ours": {
-  "path": "C:/숏템_칼카피/yanshottem/이영자_실내화/render/final.mp4",
+  "path": "C:/숏템_칼카피/yanshottem/이영자_실내화/render2/final.mp4",
   "probe": {
    "width": 1080,
    "height": 1920,
@@ -162,7 +162,7 @@
     ],
     "line_h": 103.0,
     "stroke": 17.0,
-    "ink_ratio": 0.08974,
+    "ink_ratio": 0.08969,
     "ink_bottom": 259,
     "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
    },
@@ -185,7 +185,7 @@
     ],
     "line_h": 103.0,
     "stroke": 16.0,
-    "ink_ratio": 0.07903,
+    "ink_ratio": 0.07911,
     "ink_bottom": 386,
     "method": "bands.band_style(captions.glyph_style+layout.ink_mask)"
    }
@@ -374,8 +374,8 @@
    "method": "bands.band_style(layout.ink_mask)",
    "criterion": "띠 잉크 비율 차 ≤ 20%",
    "orig": 0.06165,
-   "ours": 0.08974,
-   "diff": "0.028 (45.6%)",
+   "ours": 0.08969,
+   "diff": "0.028 (45.5%)",
    "status": "out"
   },
   {
@@ -410,8 +410,8 @@
    "method": "bands.band_style(layout.ink_mask)",
    "criterion": "띠 잉크 비율 차 ≤ 20%",
    "orig": 0.05731,
-   "ours": 0.07903,
-   "diff": "0.022 (37.9%)",
+   "ours": 0.07911,
+   "diff": "0.022 (38.0%)",
    "status": "out"
   },
   {
@@ -446,8 +446,8 @@
    "method": "captions.caption_lines",
    "criterion": "줄 폭 중앙 차 ≤ 6%",
    "orig": 663.0,
-   "ours": 436.0,
-   "diff": "-227.0 (34.2%)",
+   "ours": 442.0,
+   "diff": "-221.0 (33.3%)",
    "status": "out"
   },
   {
@@ -506,9 +506,9 @@
    "method": "captions.caption_anim",
    "criterion": "등장효과 종류(최빈) 같음",
    "orig": "확대/축소",
-   "ours": "없음",
-   "diff": "다름",
-   "status": "out"
+   "ours": "확대/축소",
+   "diff": "같음",
+   "status": "in"
   },
   {
    "key": "cap.sub_sec",
@@ -542,8 +542,8 @@
    "method": "cuts.shot_lengths",
    "criterion": "컷 길이 중앙 차 ≤ 15%",
    "orig": 0.766,
-   "ours": 2.533,
-   "diff": "1.767 (230.7%)",
+   "ours": 1.634,
+   "diff": "0.868 (113.3%)",
    "status": "out"
   },
   {
@@ -554,8 +554,8 @@
    "method": "cuts.shot_lengths",
    "criterion": "컷 길이 p90 차 ≤ 15%",
    "orig": 2.117,
-   "ours": 5.12,
-   "diff": "3.003 (141.9%)",
+   "ours": 2.793,
+   "diff": "0.676 (31.9%)",
    "status": "out"
   },
   {
@@ -566,8 +566,8 @@
    "method": "cuts.shot_lengths",
    "criterion": null,
    "orig": 1.6,
-   "ours": 2.8,
-   "diff": 1.2,
+   "ours": 1.633,
+   "diff": 0.033,
    "status": "참고"
   },
   {
@@ -578,8 +578,8 @@
    "method": "cuts.cut_eq_sub",
    "criterion": null,
    "orig": 63.6,
-   "ours": 100.0,
-   "diff": 36.4,
+   "ours": 71.4,
+   "diff": 7.8,
    "status": "참고"
   },
   {
@@ -590,8 +590,8 @@
    "method": "cuts.scene_detect+merge_close+cut_verify",
    "criterion": null,
    "orig": 12,
-   "ours": 5,
-   "diff": -7,
+   "ours": 8,
+   "diff": -4,
    "status": "참고"
   },
   {
@@ -765,13 +765,12 @@
    "줄 폭 중앙(px)",
    "첫 줄 높이 중앙(px)",
    "획 두께 중앙(px)",
-   "등장효과(최빈)",
    "컷 길이 중앙(초)",
    "컷 길이 p90(초)"
   ],
   "failed": [],
   "n_criteria": 24,
-  "n_in": 10,
+  "n_in": 11,
   "rules_note": "② 규칙 수준은 판정에 넣지 않음(표에만)",
   "rules_in": [
    "통합 LUFS(믹스)"

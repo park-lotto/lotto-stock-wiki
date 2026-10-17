@@ -8,7 +8,7 @@
   → 나레 2줄을 대본.json 시각표(원음 2구간 사이)에 끼운 narr_gapped.wav(처음 1.68초 = 원음 훅 자리 무음)
   → 재료.json 6컷을 shots[].cuts 로 묶은 재료_render.json
   → 자막 = captions_plan 전부 caption_events emph(나레 = 틀 자막색 노랑, 원음 = 흰) → narr_video.build(BGM 없음, line_asr=False)
-  → hottem_audio.add_source_bed(컷 단위 소리 시간표, 원음 = 이영자 말만) → BGM 원음 창 덕킹 섞기·LUFS → render/final.mp4
+  → hottem_audio.add_source_bed(컷 단위 소리 시간표, 원음 = 이영자 말만 — 원음 O2 위 B롤 컷도 이영자 원음을 이어 깐다) → BGM 원음 창 덕킹 섞기·LUFS → render2/final.mp4
 ★엔진과 다르게 한 것(보고 대상): ① line_asr=False ② 원음 소리 시간표를 컷 단위 파일로 ③ BGM 을 편 스크립트에서 덕킹해 섞음
   ④ 나레 무음 끼우기를 여기서(gap_tts 는 '맨 앞 무음'을 못 넣는다) ⑤ 원음 자막은 emph 같은 자리·색만 흰색
   ⑥ 렌더용 대본은 나레를 한 문장으로(narr_video line_starts 가 긴 무음 뒤 둘째 줄을 못 찾음 — 안나픽 1편 실측)
@@ -27,8 +27,8 @@ from shopping_shorts import bgm_lib  # noqa: E402
 D = Path(__file__).resolve().parent
 W = Path("C:/숏템_칼카피/yanshottem/이영자_실내화")
 SRC = W / "src"
-R = W / "render"
-MINA = R / "narr_mina.mp3"
+R = W / "render2"                 # 10-17 수리판(제품 B롤 2컷·마당 표지) — 1판은 render/ 그대로 둔다
+MINA = W / "render" / "narr_mina.mp3"   # TTS 재호출 0 — 1판 미나 원음 재사용
 NARR = R / "narr_tempo.wav"
 WAV = R / "narr_gapped.wav"
 VOICE = "yj_voice.wav"
