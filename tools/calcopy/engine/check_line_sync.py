@@ -60,7 +60,11 @@ def asr_segments(final: Path) -> list[tuple[float, float, str]]:
 
 
 def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
-    """줄 글(정규화)을 받아쓰기 구절 글 이어붙인 것에 차례로 맞춰, 줄 첫 글자가 놓인 구절 안 위치를 시각으로 옮긴다."""
+    """줄 글(정규화)을 받아쓰기 구절 글 이어붙인 것에 차례로 맞춰, 줄 첫 글자가 놓인 구절 안 위치를 시각으로 옮긴다.
+    lines = 줄마다 실제로 말하는 전문. 찾은 뒤(또는 못 찾아도) 그 줄 몫만큼 앞으로 넘긴다 — 10-18 작품1: 「성분표」를 「공분표」로
+    들어 5줄을 놓치자 6줄 「다크 초콜릿」이 5줄 안의 같은 낱말에 붙어 1.29초 어긋남으로 거짓 미달이 났다.
+    오탈자는 창(남은 줄 몫 안) 안에서 첫 6글자 비슷함(≥ 0.6)으로 찾는다 — 숫자 표기(1만 2천 ↔ 12,000) 차이 때문에 몫은 절반만 넘긴다."""
+    from difflib import SequenceMatcher
     chars = []                      # (글자, 시각)
     for a, b, t in segs:
         n = _norm(t)
@@ -69,21 +73,26 @@ def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
     stream = "".join(c for c, _ in chars)
     out, pos = [], 0
     for ln in lines:
-        key = _norm(ln)[:4]
-        if not key:
+        n = _norm(ln)
+        if not n:
             out.append(None); continue
-        j = stream.find(key, pos)
-        if j < 0:                   # 받아쓰기 오탈자 — 2글자로 다시
-            j = stream.find(key[:2], pos)
+        key = n[:6]
+        hi = min(len(stream), pos + len(n) + 12)
+        j = stream.find(key[:4], pos, hi + 4)
+        if j < 0:                   # 받아쓰기 오탈자 — 창 안에서 가장 비슷한 자리
+            best = max(((SequenceMatcher(None, key, stream[i:i + len(key)]).ratio(), i) for i in range(pos, max(pos + 1, hi))),
+                       default=(0, -1))
+            j = best[1] if best[0] >= 0.6 else -1
         if j < 0:
-            out.append(None); continue
-        out.append(round(chars[j][1], 2)); pos = j + 1
+            out.append(None); pos = min(len(stream), pos + len(n) // 2); continue
+        out.append(round(chars[j][1], 2)); pos = j + max(1, len(n) // 2)
     return out
 
 
 def check(make: Path) -> dict:
     tl = json.loads((make / "sfx_events.json").read_text(encoding="utf-8"))["timeline"]
-    lines = [re.sub(r"^[^:]{1,12}\s:\s", "", (b.get("caption_lines") or [b["narration"]])[0].replace("\n", " ")) for b in tl]
+    # 말하는 전문 = caption_lines 마지막(쌓이는 자막이면 앞은 그 일부) — 화자 표시('제조사 : ')는 소리에 없으니 뗀다
+    lines = [re.sub(r"^[^:]{1,12}\s:\s", "", (b.get("caption_lines") or [b["narration"]])[-1].replace("\n", " ")) for b in tl]
     segs = asr_segments(make / "final.mp4")
     heard = line_starts_from_asr(lines, segs)
     rows = []
