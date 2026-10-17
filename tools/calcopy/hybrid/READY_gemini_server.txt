@@ -1,0 +1,28 @@
+서버 풀 제미나이 받아쓰기/판독 도구 — 준비됨 (2026-10-18, 실측 통과)
+
+경로: tools/calcopy/hybrid/gemini_server.py   (트랙 .tracks/칼카피숏템엔진 안. main 에는 아직 없음 — 다른 트랙에서 쓰려면 이 파일 하나만 복사하면 된다: 의존은 ffmpeg·ssh 만)
+키: 서버(숏템 서비스) 회원 풀 + 운영자 풀을 shopping_shorts.keypool.resync_pools → pipeline.atoms.key_vault 가 고른다. 키 값은 PC 로 안 온다·출력 안 한다.
+실측: 클립 2개 × 모델 2개(gemini-3-flash-preview · gemini-flash-latest) = 9.9초(ssh 왕복 포함). 서버 쪽은 작업×모델을 스레드로 동시에 돈다.
+       gemini-2.5-flash 는 서버에서 404(모르는 모델) — 그 모델은 결과에 {"why":"model_404 …"} 로 남고 다른 모델은 그대로 돈다.
+
+CLI
+  PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py asr  <wav|mp3|mp4> [<파일2>…] [--spans "a-b,a-b"] [--models m1,m2] [--prompt "…"] [--json out.json]
+  PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py video <mp4> --spans "a-b" --prompt "이 장면에 보이는 사람·제품·글자를 적어라. JSON만: {…}"   # 480p 10fps 토막 판독
+  PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py text --prompt "…"
+    --spans 는 파일마다 같은 구간을 자른다(파일 1개 + 구간 여럿 = 클립 여럿). 없으면 통째. 기본 프롬프트 = 클립 단독 받아쓰기(들리는 그대로·화자 수).
+    기본 모델 2개(교차 확인). 출력 JSON: {"jobs":[{"file","span","runs":[{"model","json":{"text","speakers"},"sec","tries"} | {"model","why"}],"ok_models":[…]}],"sec"}
+
+파이썬
+  import sys; sys.path.insert(0, r"C:\Users\CH\Desktop\로또의 주식\.tracks\칼카피숏템엔진")
+  from tools.calcopy.hybrid.gemini_server import asr, ask_files, texts
+  r = asr([("final.mp4", 3.27, 11.01), "s_B1.wav"])          # (경로, a, b) 또는 경로
+  texts(r["jobs"][0])  → ['저는 수건 미치는 애거든요 …', '…']  (모델별 글, 성공한 것만)
+  r = ask_files([("src.mp4", 100, 106)], prompt="…", mode="video")   # 영상 판독
+  r = ask_files([], prompt="…", mode="text")                           # 글만
+
+규칙
+  · 모델 2개 이상 교차 확인이 기본 — ok_models 가 2개 미만이면 '교차 확인 모자람'으로 적고 한 모델로 조용히 줄이지 않는다.
+  · 한 요청에 클립 여러 개를 넣는 것보다 (파일, a, b) 작업 여러 개로 넣어라 — 작업마다 따로 호출돼 병렬로 돈다(클립 단독 받아쓰기 = 검수 규칙 B17).
+  · 영상 토막은 인라인 19MB 아래(480p 10fps 로 줄여 보낸다, 보통 60초 안쪽). 길면 구간을 나눠라.
+  · 받아쓰기 결과의 '장연정/장현정' 같은 이름 오인식은 모델별로 흔들린다 → 이름은 tools/calcopy/hybrid/name_dict.json 사전과 대조(name_check.py).
+  · 유튜브 Data API 검색(서버 키 풀 78개): PYTHONUTF8=1 py tools/calcopy/hybrid/server_ai.py yt "검색어" --n 10  (파이썬 server_ai.yt_search([...]))
