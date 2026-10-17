@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>칼카피 채널 보관함</title>
+<title>벤치 채널 보관함 · 숏템프리셋</title>
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e5e7eb;--acc:#2563eb;
   --done:#16a34a;--doing:#2563eb;--blocked:#dc2626}
@@ -59,8 +59,8 @@ async function list(){
   const d=await api("/api/admin/calcopy");
   const counts={};d.channels.forEach(c=>counts[c.status]=(counts[c.status]||0)+1);
   const shown=d.channels.filter(c=>FILTER==="전체"||c.status===FILTER);
-  $("#app").innerHTML=`<h1>🧬 칼카피 채널 보관함</h1>
-  <p class="lead">칼카피할 채널을 저장하고, 채널마다 갈래·분석·7단계 진행을 봅니다.</p>
+  $("#app").innerHTML=`<h1>📺 벤치 채널 보관함 <small style="font-size:14px;font-weight:400"><a href="/shortem_preset">← 숏템프리셋</a></small></h1>
+  <p class="lead">벤치할 채널을 저장하고, 채널마다 갈래·분석·7단계 진행을 봅니다.</p>
   <p><a href="/admin/calcopy/topics">🏭 소재창고(카테고리 워커·검수) →</a></p>
   <div class="card"><b>채널 추가</b>
     <div class="row" style="margin-top:8px">

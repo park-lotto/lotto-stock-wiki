@@ -281,3 +281,90 @@ def _median(xs):
     import statistics as _s
     xs = [x for x in xs if isinstance(x, (int, float))]
     return round(_s.median(xs), 1) if xs else None
+
+
+# ── 숏템프리셋 홈(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") ──
+#    판단 주인: preset_home() 하나. 주인 데이터는 장부 3장(channel/브랜드.json·스타일.json·결과물.json) —
+#    칼카피숏템엔진 트랙이 쓰고, 이 함수는 읽어서 브랜드·스타일·결과물을 서로 엮기만 한다.
+#    결과물 판정 상태(result_state)도 여기 한 곳 — 화면은 이 값을 그대로 띄운다.
+PRESET_LEDGERS = ("channel/브랜드.json", "channel/스타일.json", "channel/결과물.json")   # 페이지가 읽는 장부 = 엔진에서 옮길 장부(tools/calcopy/sync_preset_ledgers.py)
+PRESET_DOCS = (
+    ("channel/sseolpulda/스타일_전수분류.md", "썰풀다 스타일 전수분류"),
+    ("channel/sseolpulda/스타일_역할극/설명서.md", "대사썰(역할극) 설명서"),
+    ("channel/sseolpulda/동종채널_2026-10-17.md", "동종 채널 조사 10-17"),
+    ("channel/homedesignnote/대본설명서/설명서.md", "잇썸홈(두유노홈디노) 대본 설명서"),
+)
+RESULT_STATES = ("통과", "사장님 확인 대기", "자동 검사만", "검수 중")
+
+
+def result_state(judge: str) -> str:
+    """결과물 장부의 판정 글(judge) → 상태 4칸 중 하나. 사람 판정 전·확인 대기를 '통과'로 세지 않는다."""
+    j = str(judge or "")
+    if "자동 검사" in j:
+        return "자동 검사만"
+    if "후보" in j or "사장님" in j or "확인 전" in j or "재확인" in j:
+        return "사장님 확인 대기"
+    if "통과" in j:
+        return "통과"
+    return "검수 중"
+
+
+def preset_home(root: Path | None = None) -> dict:
+    """숏템프리셋 홈 — 브랜드(벤치 채널↔우리 이름)·스타일(채널 가로지름)·결과물을 한 번에. 깨진 장부는 errors 로 드러낸다."""
+    base = Path(root) if root else ROOT
+    errors = []
+
+    def _book(name, key):
+        p = base / "channel" / f"{name}.json"
+        d = _read_json(p)
+        if d is None or not isinstance(d.get(key), (dict, list)):
+            errors.append(f"channel/{name}.json 을 읽지 못했다" + ("" if p.exists() else "(파일 없음)"))
+            return {}
+        return d
+
+    bb, sb, rb = _book("브랜드", "brands"), _book("스타일", "styles"), _book("결과물", "items")
+    brand_of = {slug: (b or {}).get("brand") or slug for slug, b in (bb.get("brands") or {}).items()}
+    results = []
+    for it in rb.get("items") or []:
+        results.append({**it, "brand": brand_of.get(it.get("channel")) or it.get("channel_name") or it.get("channel"),
+                        "in_ledger": it.get("channel") in brand_of, "state": result_state(it.get("judge"))})
+    results.sort(key=lambda r: -(r.get("n") or 0))
+
+    styles = []
+    for name, st in sorted((sb.get("styles") or {}).items(), key=lambda kv: kv[1].get("priority", 99)):
+        bench = [{"slug": slug, "brand": brand_of.get(slug, slug), **{k: v for k, v in (b or {}).items()}}
+                 for slug, b in (st.get("bench") or {}).items()]
+        bench.sort(key=lambda b: -(b.get("n") or 0))
+        mine = [r for r in results if r.get("style") == name]
+        styles.append({"name": name, "old_name": st.get("old_name", ""), "priority": st.get("priority"),
+                       "desc": st.get("desc", ""), "why": st.get("why", ""), "audio_kinds": st.get("audio_kinds") or [],
+                       "strengths": st.get("strengths") or [], "bench": bench,
+                       "bench_videos": sum(b.get("n") or 0 for b in bench),
+                       "results": [r["n"] for r in mine]})
+
+    def _brand_row(slug, b, in_ledger):
+        mine = [r for r in results if r.get("channel") == slug]
+        cnt = {s: sum(1 for r in mine if r["state"] == s) for s in RESULT_STATES}
+        return {"slug": slug, "brand": b.get("brand") or slug, "bench": b.get("bench", ""),
+                "old_names": b.get("old_names") or [], "in_ledger": in_ledger,
+                "styles": [s["name"] for s in styles if any(x["slug"] == slug for x in s["bench"])],
+                "results": len(mine), "states": cnt, "latest": mine[0] if mine else None}
+
+    brands = [_brand_row(slug, b or {}, True) for slug, b in (bb.get("brands") or {}).items()]
+    for slug in sorted({r.get("channel") for r in results if not r["in_ledger"]} - {None}):
+        nm = next((r.get("channel_name") for r in results if r.get("channel") == slug), slug)
+        brands.append(_brand_row(slug, {"brand": nm}, False))
+
+    docs = [{"path": p, "title": t, "exists": (base / p).exists()} for p, t in PRESET_DOCS]
+    return {"brands": brands, "styles": styles, "results": results, "states": list(RESULT_STATES),
+            "docs": docs, "style_judge": sb.get("judge", ""), "not_measured": sb.get("not_measured", ""),
+            "summary": {"brands": len(bb.get("brands") or {}), "styles": len(styles), "results": len(results),
+                        "passed": sum(1 for r in results if r["state"] == "통과")},
+            "errors": errors}
+
+
+def preset_doc(path: str, root: Path | None = None) -> str:
+    """분석 문서 원문 — PRESET_DOCS 에 적힌 것만(아무 파일이나 읽히지 않게)."""
+    if path not in {p for p, _ in PRESET_DOCS}:
+        raise KeyError(path)
+    return ((Path(root) if root else ROOT) / path).read_text(encoding="utf-8")

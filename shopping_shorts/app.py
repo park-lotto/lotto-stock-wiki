@@ -27,7 +27,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse, PlainTextResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
@@ -18385,6 +18385,39 @@ def api_admin_calcopy(request: Request):
         return denied
     from shopping_shorts import calcopy_board as _cb
     return _cb.board()
+
+
+# ── 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용 ──
+#    브랜드·스타일·결과물 장부를 한 화면에서. 판단은 calcopy_board.preset_home 하나, 여기는 관리자 확인만.
+@app.get("/shortem_preset", response_class=HTMLResponse)
+def _shortem_preset_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "shortem_preset.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/shortem_preset")
+def api_admin_shortem_preset(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    return _cb.preset_home()
+
+
+@app.get("/api/admin/shortem_preset/doc")
+def api_admin_shortem_preset_doc(request: Request, path: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    try:
+        return PlainTextResponse(_cb.preset_doc(path), media_type="text/plain; charset=utf-8")
+    except KeyError:
+        return JSONResponse({"error": "목록에 없는 문서"}, status_code=404)
+    except OSError:
+        return JSONResponse({"error": "문서 파일이 서버에 없다"}, status_code=404)
 
 
 def _calcopy_resolve(url):

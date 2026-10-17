@@ -86,6 +86,16 @@
       // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다. (관제 222: 제작 묶음 → 숏템팩 묶음)
       { icon: "🔒", text: "효과 견본(에펙)", href: "/fx_samples", admin: true },
     ] },
+    // 🧬 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 벤치해 만든 브랜드·스타일·결과물 장부를 한 화면(/shortem_preset)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_preset_page)도 관리자만 연다. 세부 칸은 그 화면의 #id 로 바로 간다.
+    { label: "숏템프리셋", admin: true, items: [
+      { icon: "🧬", text: "전체 보기",       href: "/shortem_preset", admin: true },
+      { icon: "🏷", text: "브랜드",          href: "/shortem_preset#brand", admin: true },
+      { icon: "🎙", text: "스타일",          href: "/shortem_preset#style", admin: true },
+      { icon: "📦", text: "결과물",          href: "/shortem_preset#result", admin: true },
+      { icon: "📺", text: "벤치 채널 보관함", href: "/admin/calcopy", admin: true },
+      { icon: "📑", text: "분석 문서",       href: "/shortem_preset#docs", admin: true },
+    ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
       // 도움말(2026-08-23) — 반복 문의를 줄이는 자리. 로그인 없이도 열리므로 free.
