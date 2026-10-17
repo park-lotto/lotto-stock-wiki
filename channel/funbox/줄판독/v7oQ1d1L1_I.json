@@ -1,0 +1,309 @@
+{
+ "id": "v7oQ1d1L1_I",
+ "dur": 30.59,
+ "title_card": "이중가격제 논란 생긴 / 아이스크림",
+ "post_title": "이중가격제 논란 생긴 아이스크림",
+ "frame": {
+  "header": "y0~180 연노랑(#FDE7A8) 머리띠: 왼쪽 선물상자 로고+빨간 '펀박스' 글자, 오른쪽 돋보기 아이콘(가짜 웹 기사 앱 틀) / y230~310 검정 제목 1줄(=영상 제목) / y345~380 오른쪽 회색 메타 '펀박스 | 18:00' / y~406 주홍(#CC4E37) 가로줄",
+  "layout_y": "(1080x1920 기준) 자막칸 y430~610(검정 굵은 고딕 가운데, 최대 2줄 누적) / 그림칸 y640~1780(흰 바탕, 가로형 그림·영상 중앙, 위아래 흰 여백) / 고지 y1830~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 하단 y≈1855 가운데, 회색(#888) 굵은 글씨, 훅 카드 구간 뒤 본편 전 구간 상시",
+  "caption_style": "둥근 굵은 고딕, 2줄 누적"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.5,
+   "caption": "(훅 카드) 이중가격제 논란 생긴/아이스크림",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "아이스크림 케이크 앞에서 과장된 몸짓으로 먹는 남자 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "화면 어둡게+큰 제목"
+  },
+  {
+   "t0": 1.5,
+   "t1": 2.6,
+   "caption": "다들 이 아이스크림,",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "배스킨라빈스 컵 2개 + 과자 토핑 광고 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.6,
+   "t1": 4.0,
+   "caption": "다들 이 아이스크림,/원래 이름이 → '배스킨라빈스31'인",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "BR 로고(흰 바탕) 느린 줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.0,
+   "t1": 4.6,
+   "caption": "'배스킨라빈스31'인/줄 아는데.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "턱 괴고 능글맞게 웃는 페페(회색 배경)",
+   "infographic": null,
+   "emotion": {
+    "who": "밈",
+    "feeling": "능청·아는 척",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.6,
+   "t1": 6.3,
+   "caption": "사실 '31'은 → /나중에 붙은 마케팅 문구고.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "BR 콘 아이스크림 든 손 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.3,
+   "t1": 7.2,
+   "caption": "한 달 31일 동안",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "턱 괴고 위를 보는 빨간 티 소년 스톡사진, 0.3초 간격 펀치인 2번",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자 대역",
+    "feeling": "궁리",
+    "prop": null
+   },
+   "ai": null,
+   "effect": "연속 펀치인"
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.2,
+   "caption": "한 달 31일 동안/매일 다른 맛 → 먹으라는 뜻이었음.",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 소년이 검지 들고 '아하' 하는 사진 2장(입 벌림)",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자 대역",
+    "feeling": "깨달음·놀람",
+    "prop": "검지 들기"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.2,
+   "t1": 9.6,
+   "caption": "이 브랜드 만든 두 사람은",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "'...KIN-ROBBINS' 간판 앞 콘 든 정장 남자 2명 세피아 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "옛날 사진 재연(실사풍 세피아)",
+    "evidence": "실존 창업자 실사진과 다른 얼굴, 둘 다 활짝 웃는 매끈한 치아·피부, 같은 크기 콘 대칭 — 옛 사진에 없는 AI 연출 질감(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.7,
+   "caption": "이 브랜드 만든 두 사람은/처남 매부 사이였는데.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "턱 만지며 생각하는 흑인 남자 리액션 영상",
+   "infographic": null,
+   "emotion": {
+    "who": "밈 인물",
+    "feeling": "의외·생각",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.7,
+   "t1": 13.3,
+   "caption": "동업자 한 명은 은퇴하자마자 → /심장마비로 세상을 떠났고.",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "미국 KCAL9 뉴스 화면(IRVINE ROBBINS 1917-2008 사진 + 앵커)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 13.3,
+   "t1": 15.6,
+   "caption": "조카는 평생 먹은 → /아이스크림 때문이라고 → 말했을 정도임.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "통에서 아이스크림 퍼내는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.6,
+   "t1": 17.1,
+   "caption": "근데 한국은 → /2006년부터 이 숫자를",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "한국 BR 매장 개점 테이프커팅 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.1,
+   "t1": 18.9,
+   "caption": "2006년부터 이 숫자를 → 브랜드처럼 크게 → /내세우고 있고.",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "BR 로고, 줄마다 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.9,
+   "t1": 21.5,
+   "caption": "정작 요즘 미국 본토는 → /오히려 로고에서 → 숨기는 추세임.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "콘 위에 여러 색 스쿱 쌓는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.5,
+   "t1": 22.3,
+   "caption": "숨기는 추세임./근데 최근 한국에서",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "분홍 BR 매장 외관 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.3,
+   "t1": 23.9,
+   "caption": "이 아이스크림 논란이 → /하나 더 생겼는데.",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "BR 맛 목록(동그란 아이스크림 아이콘 격자) 화면이 위로 스크롤",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.9,
+   "t1": 26.3,
+   "caption": "배달 주문하면 → /매장보다 최대 13% → 더 비싸게 파는",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "서울경제 뉴스5 '배스킨라빈스, 배달전용 가격제 도입…최대 12.5%↑' 화면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.3,
+   "t1": 27.5,
+   "caption": "더 비싸게 파는/이중가격제까지 도입했음.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "뉴스 화면 위에 이 가는 분노 페페 짤 덧붙임",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자",
+    "feeling": "분노",
+    "prop": "이 갈기"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.5,
+   "t1": 28.7,
+   "caption": "그러니까 이름값 하나는",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "옛·새 BR 로고 4개 2x2 비교 격자",
+   "infographic": {
+    "type": "로고 비교 격자",
+    "motion": "정지 컷",
+    "value": "31 ICE CREAM / Baskin31Robbins / BR baskin robbins / BASKIN BR ROBBINS"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 28.7,
+   "t1": 29.9,
+   "caption": "그러니까 이름값 하나는/확실히 한국이 더 챙긴 셈인데.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "로고 격자 위에 능청 페페 덧붙임",
+   "infographic": {
+    "type": "로고 비교 격자",
+    "motion": "정지+페페 스티커",
+    "value": "4개 로고"
+   },
+   "emotion": {
+    "who": "화자",
+    "feeling": "능청·비꼼",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.9,
+   "t1": 30.59,
+   "caption": "가격좀 내려주소~~",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "훅의 아이스크림 먹는 남자 영상(수미상관)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅카드(실사) → 상식 뒤집기('31'의 진짜 뜻) → 창업자 비화(AI 재연 사진+뉴스) → 한국 vs 미국 로고 차이 → 최근 논란(뉴스 캡처+분노 밈) → 비꼬는 정리(로고 격자+페페) → 훅 영상 재사용+한마디",
+ "ratios": {
+  "infographic_sec": 2.4,
+  "character_sec": 0,
+  "ai_image_sec": 1.4,
+  "real_video_sec": 10.7,
+  "meme_sec": 4.1
+ }
+}

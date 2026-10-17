@@ -1,0 +1,409 @@
+{
+ "id": "7eiQobKYbH8",
+ "dur": 42.17,
+ "title_card": "진짜 육포 / 털어버린 농심",
+ "post_title": "진짜 육포 털어버린 농심",
+ "frame": {
+  "header": "y0~180 연노랑(#FDE7A8) 머리띠: 왼쪽 선물상자 로고+빨간 '펀박스' 글자, 오른쪽 돋보기 아이콘(가짜 웹 기사 앱 틀) / y230~310 검정 제목 1줄(=영상 제목) / y345~380 오른쪽 회색 메타 '펀박스 | 18:00' / y~406 주홍(#CC4E37) 가로줄",
+  "layout_y": "(1080x1920 기준) 자막칸 y430~610(검정 굵은 고딕 가운데, 최대 2줄 누적) / 그림칸 y640~1780(흰 바탕, 가로형 그림·영상 중앙, 위아래 흰 여백) / 고지 y1830~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 하단 y≈1855 가운데, 회색(#888) 굵은 글씨, 훅 카드 구간 뒤 본편 전 구간 상시",
+  "caption_style": "둥근 굵은 고딕, 2줄 누적. 이 편만 리모션식 모션그래픽 6장면(같은 디자인 체계)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.8,
+   "caption": "(훅 카드) 진짜 육포/털어버린 농심",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "에르메스풍 접시에 육포 과자 쏟는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "화면 어둡게+큰 제목"
+  },
+  {
+   "t0": 1.8,
+   "t1": 3.3,
+   "caption": "최근 농심이 사람들이 → /제안한 육포 과자를",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "농심 로고 흰 바탕",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.3,
+   "t1": 3.9,
+   "caption": "최근 농심이 사람들이/제안한 육포 과자를",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "과자 한 조각 손에 든 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.9,
+   "t1": 5.1,
+   "caption": "실제로 봉지에 → /담아 내놨는데.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "육포깡 봉지 든 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.1,
+   "t1": 7.3,
+   "caption": "풀린 지 일주일 만에 → /100만 봉이 나가버림.",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '풀린 지' / 빈 칸 7개(일주일) + 오른쪽 주황 숫자 '0만 봉'",
+   "infographic": {
+    "type": "기간 칸 채우기+숫자 카운트 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "5.4~6.6 칸 1→7이 차례로 노랗게 채워지며 숫자 0만→5만→71만→100만(≈7.0) 카운트업, 6.6 과자봉지 아이콘이 아래 팝",
+    "value": "일주일 100만 봉"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.3,
+   "t1": 8.5,
+   "caption": "\"이거 어디 가야 있어요?\"",
+   "kind": "따옴표인용",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "무표정 소년 머리 위 보라 물음표(이라스토야)",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자",
+    "feeling": "의문",
+    "prop": "물음표"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.5,
+   "t1": 10.1,
+   "caption": "\"이거 어디 가야 있어요?\"/\"자 공장 세 곳 → 돌리고 있습니다\"",
+   "kind": "따옴표인용",
+   "screen": "밈짤",
+   "screen_desc": "손가락 세 개 펴고 외치는 한국 배우 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "농심 대역",
+    "feeling": "호언장담",
+    "prop": "손가락 셋"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.2,
+   "caption": "돌리고 있습니다\"/농심몰은 한 사람당",
+   "kind": "따옴표인용",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '농심몰에서' · '한 사람당' + 과자봉지 아이콘",
+   "infographic": {
+    "type": "아이콘 쌓기 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "10.4→11.3 봉지 아이콘이 1→2→3→4개 옆으로 하나씩 팝, 아래 주황 '네 봉'",
+    "value": "한 사람당 네 봉"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 11.2,
+   "t1": 12.3,
+   "caption": "네 봉으로 묶어버렸고.",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "봉지 4개 + '네 봉' + 주황 알약 '여기까지'",
+   "infographic": {
+    "type": "제한 표시 알약 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "11.3~11.6 '여기까지' 알약이 기울어진 채 오른쪽에서 페이드·슬라이드 인",
+    "value": "네 봉 여기까지"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.3,
+   "t1": 13.8,
+   "caption": "네 봉으로 묶어버렸고./주당 생산량은 → 80만 봉까지",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '주당 생산량' + 큰 주황 숫자 + '봉'",
+   "infographic": {
+    "type": "숫자 카운트 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "12.35 0만 → 12.6 28만 → 12.9 75만 → 13.2 80만 카운트업 후 주황 화살표(↗) 그려짐",
+    "value": "주당 80만 봉"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.6,
+   "caption": "80만 봉까지/올려 붙였음.",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "그림칸 빈 흰 화면(그래픽 퇴장 뒤 0.8초 공백)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 14.6,
+   "t1": 16.2,
+   "caption": "\"과자를 왜 개수 제한을 해\"",
+   "kind": "따옴표인용",
+   "screen": "밈짤",
+   "screen_desc": "울부짖는 디카프리오(울프 오브 월스트리트) 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자",
+    "feeling": "분노·절규",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.2,
+   "t1": 18.4,
+   "caption": "\"과자를 왜 개수 제한을 해\"/알고 보니 이 봉지에 → 실제로 들어간 육포가",
+   "kind": "따옴표인용",
+   "screen": "제품영상",
+   "screen_desc": "봉지에서 쏟은 과자 클로즈업 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.4,
+   "t1": 19.6,
+   "caption": "실제로 들어간 육포가/0.1%임.",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '봉지에 든 육포' + 회색 막대 '후추·고추 양념' 왼쪽 끝 빨간 얇은 조각 '육포' + 큰 '0.1%'",
+   "infographic": {
+    "type": "비율 막대 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "막대 컷 등장, '0.1%' 글자가 18.45~19.0 연한색→진한 주황으로 페이드 인",
+    "value": "육포 0.1%"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.6,
+   "t1": 22.2,
+   "caption": "나머지는 후추랑 → /고추 양념으로 → 육포 흉내를 낸 거.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "과자를 치즈 소스에 찍는 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.2,
+   "t1": 23.4,
+   "caption": "육포 흉내를 낸 거./\"육포는 어디 갔어.\"",
+   "kind": "따옴표인용",
+   "screen": "밈짤",
+   "screen_desc": "물음표 셋과 어깨 으쓱 페페가 오른쪽에서 밀려 들어옴",
+   "infographic": null,
+   "emotion": {
+    "who": "소비자",
+    "feeling": "황당·의문",
+    "prop": "물음표"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.4,
+   "t1": 25.0,
+   "caption": "그래도 한 달에 → /300만 봉이 나갔음.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "과자 두 손으로 쪼개는 영상(수치 그래픽 없음)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.0,
+   "t1": 26.7,
+   "caption": "새우깡 포테토칩 다음으로",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "새우깡·포테토칩 봉지 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.7,
+   "t1": 28.2,
+   "caption": "새우깡 포테토칩 다음으로/농심 스낵 월매출 3위",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '농심 스낵 월매출' + 순위 카드 1 새우깡 / 2 포테토칩 / 3 이 봉지(주황 테두리 강조)",
+   "infographic": {
+    "type": "순위표 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "26.75 빈 화면 → 27.1 1위 카드 → 27.5 2위·3위(3위 연하게) → 28.1 3위 '이 봉지' 주황 테두리로 강조, 각 카드 위로 페이드 인",
+    "value": "월매출 3위"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 28.2,
+   "t1": 29.0,
+   "caption": "봉지를 뜯으면",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "과자 입에 쑤셔 넣으며 땀 흘리는 소년(이라스토야)",
+   "infographic": null,
+   "emotion": {
+    "who": "먹는 사람",
+    "feeling": "허겁지겁·맛있음",
+    "prop": "땀방울·튀는 과자"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.0,
+   "t1": 32.3,
+   "caption": "봉지를 뜯으면/후추 향이 먼저 올라오고. → 씹으면 먹태깡처럼 → /묵직하게 바삭함.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "과자 단면·집는 손 클로즈업 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.3,
+   "t1": 33.9,
+   "caption": "진짜 육포를 한 봉지 → /같이 뜯어",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "진짜 육포와 육포깡 과자 나란히, 어두운 돌판",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 음식 사진",
+    "evidence": "육포 표면 광택·과자 주름이 지나치게 균일, 실제 상품컷에 없는 연출 조합(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 33.9,
+   "t1": 35.2,
+   "caption": "번갈아 집는 후기도 돌고.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "두 손 휘저으며 설명하는 턱수염 남자 영상",
+   "infographic": null,
+   "emotion": {
+    "who": "밈 인물",
+    "feeling": "설명·강조",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.2,
+   "t1": 38.3,
+   "caption": "번갈아 집는 후기도 돌고./쉬지 않고 집으면 → 뒤로 갈수록 물린다는 → /말도 같이 붙음.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "얼굴 감싸며 질린 표정 마이클 스콧(오피스) 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "먹는 사람",
+    "feeling": "질림·피곤",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 38.3,
+   "t1": 40.0,
+   "caption": "결국 육포 → /0.1%를",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '들어간 육포' + 과자봉지 아이콘 + 주황 알약 '0.1%'",
+   "infographic": {
+    "type": "아이콘+수치 알약 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "38.35 빈 → 38.8 봉지 팝 → 39.15 '0.1%' 알약 연하게 → 39.5 진한 주황으로 페이드 인",
+    "value": "0.1%"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 40.0,
+   "t1": 40.7,
+   "caption": "넣은 봉지가",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "육포깡 공식 키비주얼(나무 판·고추·후추)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 40.7,
+   "t1": 42.17,
+   "caption": "넣은 봉지가/진짜 육포 자리에 → 앉아 있음.",
+   "kind": "나레",
+   "screen": "인포그래픽",
+   "screen_desc": "라벨 '매대에서' + 회색 선반 막대 + 'BEEF JERKY' 봉지 + 과자봉지, '자리 차지'",
+   "infographic": {
+    "type": "자리 뺏기 비유 애니메이션 모션그래픽(흰 바탕·주황 #E05A2B 강조·좌상단 회색 작은 맥락 라벨)",
+    "motion": "40.75 빈 선반 → 41.0 육포 봉지가 기울며 떨어짐 → 41.35 과자봉지가 선반 위로 내려앉고 육포 봉지 오른쪽 밖으로 밀려남 → 41.7 '자리 차지' 주황 글자",
+    "value": "과자가 육포 자리 차지"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅카드(실사) → 출시 사실(로고·실사) → 판매 폭발(카운트 그래픽) → 품귀·구매제한(캐릭터·밈+아이콘 그래픽) → 증산(카운트) → 분노 밈 → 반전 '육포 0.1%'(막대 그래픽) → 그래도 3위(순위표) → 맛 후기(실사·밈) → 정리 비유(선반 자리 뺏기 그래픽)",
+ "ratios": {
+  "infographic_sec": 11.8,
+  "character_sec": 2.0,
+  "ai_image_sec": 1.6,
+  "real_video_sec": 13.3,
+  "meme_sec": 8.8
+ }
+}

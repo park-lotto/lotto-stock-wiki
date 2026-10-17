@@ -1,0 +1,295 @@
+{
+ "id": "3G5VAwjqV48",
+ "dur": 28.31,
+ "title_card": "코카콜라가 실패한 / 유일한 나라",
+ "post_title": "코카콜라가 실패한 유일한 나라",
+ "frame": {
+  "header": "y0~180 연노랑(#FDE7A8) 머리띠: 왼쪽 선물상자 로고+빨간 '펀박스' 글자, 오른쪽 돋보기 아이콘(가짜 웹 기사 앱 틀) / y230~310 검정 제목 1줄(=영상 제목) / y345~380 오른쪽 회색 메타 '펀박스 | 18:00' / y~406 주홍(#CC4E37) 가로줄",
+  "layout_y": "(1080x1920 기준) 자막칸 y430~610(검정 굵은 고딕 가운데, 최대 2줄 누적) / 그림칸 y640~1780(흰 바탕, 가로형 그림·영상 중앙, 위아래 흰 여백) / 고지 y1830~1880",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 화면 하단 y≈1855 가운데, 회색(#888) 굵은 글씨, 훅 카드 구간 뒤 본편 전 구간 상시",
+  "caption_style": "둥근 굵은 고딕(펀박스 공통), 2줄 누적"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.8,
+   "caption": "(훅 카드) 코카콜라가 실패한/유일한 나라",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "잉카콜라 병 수백 개 생산라인 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "화면 어둡게+큰 제목"
+  },
+  {
+   "t0": 1.8,
+   "t1": 2.8,
+   "caption": "코카콜라가 못 이겨서",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "트럼프가 빨대로 코카콜라 캔 마시는 실사풍 사진 → 2.6s 흑백 전환",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 장면 재연 사진",
+    "evidence": "실존 정치인이 빨대로 캔을 무는 연출 사진 — 보도사진에 없는 구도, 피부·머리결이 매끈한 AI 질감(추정)"
+   },
+   "effect": "컬러→흑백 전환"
+  },
+  {
+   "t0": 2.8,
+   "t1": 3.9,
+   "caption": "코카콜라가 못 이겨서/결국 항복했다고 하는데.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "흑백 트럼프 위에 펄럭이는 백기 짤(주황 그라데이션 사각) 덧붙임",
+   "infographic": null,
+   "emotion": {
+    "who": "코카콜라",
+    "feeling": "항복",
+    "prop": "백기"
+   },
+   "ai": {
+    "kind": "실사풍 장면 재연 사진",
+    "evidence": "밑그림은 위 트럼프 AI 사진"
+   },
+   "effect": "흑백 배경+백기 스티커"
+  },
+  {
+   "t0": 3.9,
+   "t1": 5.2,
+   "caption": "페루에서 파는 노란색 콜라.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "잉카콜라 2.25L 병 생산라인 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.2,
+   "t1": 6.2,
+   "caption": "페루에서 파는 노란색 콜라./잉카콜라인데.",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "얼음 위 잉카콜라 병·캔 광고 사진",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.2,
+   "t1": 7.7,
+   "caption": "레몬버베나 허브향이 → /나는게 특징이고.",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "잉카콜라 들이켜는 여성 + 침대 가득 잉카콜라 병 영상(바이럴)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.7,
+   "t1": 9.3,
+   "caption": "1935년 영국계 이민자가",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "세피아 옛 단체 사진(가족 11명) 느린 줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "옛날 사진 재연(추정, 약함)",
+    "evidence": "일부 얼굴이 뭉개져 있음 — 실제 고사진 복원본일 수도 있어 미확정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 9.3,
+   "t1": 10.1,
+   "caption": "1935년 영국계 이민자가/페루서 만들었는데.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "백종원 '이... 이 맛은?' 방송 자막 캡처",
+   "infographic": null,
+   "emotion": {
+    "who": "밈 인물",
+    "feeling": "맛에 놀람",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.9,
+   "caption": "코카콜라랑 수십 년간 → /시장에서 경쟁했음.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "코카콜라 병과 잉카콜라 병 나란히 클로즈업",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 11.9,
+   "t1": 13.1,
+   "caption": "근데 페루에서만큼은",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "코카콜라 'GLOBAL EDITION' 음료 선택 화면, INCA KOLA에 빨간 원+화살표",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "빨간 원·화살표 강조"
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.2,
+   "caption": "근데 페루에서만큼은/코카콜라가 밀렸고.",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "흑백 처리한 코카콜라 병 사진(밀렸다=무채색)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "흑백"
+  },
+  {
+   "t0": 14.2,
+   "t1": 17.2,
+   "caption": "1999년엔 → /32.9% VS 32%로 앞섰고.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "옛 잉카콜라 공장 병입 라인 아카이브 영상(점유율 수치는 자막에만, 그래픽 없음)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.2,
+   "t1": 18.9,
+   "caption": "전 세계에서 → /유일하게 밀린 시장이 됐음.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "INCA KOLA 트럭에 상자 싣는 아카이브 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.9,
+   "t1": 20.8,
+   "caption": "결국 코카콜라가 → /택한 전략은 인수였고.",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "'R. LINDLEY E HIJOS S.A.' 현수막 앞 회의 아카이브 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 20.8,
+   "t1": 22.3,
+   "caption": "그해 린들리사 지분 → /절반을 사들이며.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "달러 지폐 쥔 페페",
+   "infographic": null,
+   "emotion": {
+    "who": "코카콜라",
+    "feeling": "흐뭇·돈 씀",
+    "prop": "지폐"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.3,
+   "t1": 23.9,
+   "caption": "무려 2억 달러라는 → /거금을 투자했음.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "돈더미 위 집게사장·스펀지밥",
+   "infographic": null,
+   "emotion": {
+    "who": "린들리사",
+    "feeling": "돈벼락 환희",
+    "prop": "지폐"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.9,
+   "t1": 25.7,
+   "caption": "그대신 페루 → /상표권은 → 린들리사에 남기며.",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "진열대 잉카콜라 병 클로즈업",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.7,
+   "t1": 26.3,
+   "caption": "린들리사에 남기며./적이 아니라",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "헐크가 바닥 내리치는 장면",
+   "infographic": null,
+   "emotion": {
+    "who": "밈",
+    "feeling": "적대·분노",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 26.3,
+   "t1": 27.1,
+   "caption": "동업자가 되버렸음.",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "'콜' 글자 + 잔 드는 디카프리오 만화 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "두 회사",
+    "feeling": "합의·건배",
+    "prop": "'콜' 글자"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.1,
+   "t1": 28.31,
+   "caption": "동업자가 되버렸음./잉카콜라 → 먹어본 사람 있음?",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "훅과 같은 잉카콜라 생산라인 영상(수미상관), 28.0~ 자막 없음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅카드(실사) → 결론 먼저(코카콜라 항복, AI사진+백기) → 정체(잉카콜라 실사) → 기원 → 경쟁·점유율 → 인수(밈 3연발) → 동업자 반전 → 훅 영상 재사용+질문형 댓글 유도",
+ "ratios": {
+  "infographic_sec": 0,
+  "character_sec": 0,
+  "ai_image_sec": 3.7,
+  "real_video_sec": 16.0,
+  "meme_sec": 6.4
+ }
+}
