@@ -6,8 +6,28 @@ from pathlib import Path
 H = Path(__file__).resolve().parent
 ROOT = H.parents[1]
 sys.path.insert(0, str(ROOT))
-YEL = [255, 230, 0]
+YEL = [205, 170, 110]
 which = sys.argv[1]
+
+from tools.calcopy import narr_video as _nv0
+
+
+def _emph_box(text, cap, rgb, dst, dy=0):
+    """강조 자막 v2: 틀 자막과 같은 박스 + 노랑 글자 + 노랑 밑줄(원본 '색만 바꾼 외곽선 글자'와 다른 꼴)."""
+    from PIL import Image, ImageDraw, ImageFont
+    font = ImageFont.truetype(_nv0._font_file(cap["font"]), int(round(cap["size"])))
+    im = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0)); dr = ImageDraw.Draw(im)
+    cx, cy = cap["x"], cap["y"] + cap["line_h"] / 2 + dy
+    l, t, r, b = dr.textbbox((cx, cy), text, font=font, anchor="mm")
+    bx = cap.get("box") or {"rgb": (18, 27, 52), "pad": 20, "radius": 14}; pad = bx["pad"]
+    dr.rounded_rectangle([l - pad, t - pad, r + pad, b + pad], radius=bx["radius"], fill=tuple(bx["rgb"]) + (255,))
+    dr.text((cx, cy), text, font=font, fill=tuple(int(v) for v in rgb) + (255,), anchor="mm")
+    dr.rectangle([l, b + 6, r, b + 9], fill=tuple(int(v) for v in rgb) + (255,))
+    im.save(dst)
+    return Path(dst)
+
+
+_nv0.emph_png = _emph_box
 base = H / ("칼카피_OE11" if which == "oe11" else "칼카피_로봇폰")
 OLD = Path("C:/숏템_칼카피/hottemreport") / base.name / "make"
 NEW = Path("C:/숏템_칼카피/hottemreport/숏템리폿") / which

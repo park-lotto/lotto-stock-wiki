@@ -3,204 +3,168 @@
   1080,
   1920
  ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1 · 숏템리폿 v2(10-17)",
+ "source": "칼카피_로봇폰/frame_로봇폰.json 의 제목 글만 · 나머지 새 설계(깊은 남색+중성+골드 1색·Pretendard 위계·왼쪽 라벨 채널명·박스 자막·가는 골드 선)",
  "layers": [
   {
    "kind": "bg",
    "rgb": [
-    0,
-    0,
-    0
+    13,
+    20,
+    40
    ]
   },
   {
    "kind": "video",
    "x": 0,
-   "y": 559,
+   "y": 340,
    "w": 1080,
-   "h": 1361,
+   "h": 1580,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 330,
+   "rgb": [
+    20,
+    31,
+    60
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 64,
+   "y": 330,
+   "w": 120,
+   "h": 3,
+   "rgb": [
+    205,
+    170,
+    110
+   ],
    "radius": 0
   },
   {
    "kind": "text",
    "role": "brand",
    "text": "숏템리폿",
-   "x": 540,
-   "y": 166,
-   "w": 600,
-   "align": "center",
+   "x": 64,
+   "y": 52,
+   "w": 360,
+   "align": "left",
    "lines": 1,
    "font": "GmarketSansBold",
-   "size": 60,
-   "line_h": 62,
+   "size": 34,
+   "line_h": 40,
    "rgb": [
-    232,
-    250,
-    255
+    205,
+    170,
+    110
    ],
    "outline": null,
-   "shadow": {
-    "dx": 0,
-    "dy": 0,
-    "blur": 200,
+   "shadow": null,
+   "glow": null,
+   "box": {
     "rgb": [
-     0,
-     220,
-     255
-    ]
+     18,
+     27,
+     52
+    ],
+    "pad": 12,
+    "radius": 14
    },
-   "box": null,
    "italic": false,
-   "letter_spacing": 0
-  },
-  {
-   "kind": "text",
-   "role": "brand",
-   "text": "숏템리폿",
-   "x": 540,
-   "y": 166,
-   "w": 600,
-   "align": "center",
-   "lines": 1,
-   "font": "GmarketSansBold",
-   "size": 60,
-   "line_h": 62,
-   "rgb": [
-    232,
-    250,
-    255
-   ],
-   "outline": null,
-   "shadow": {
-    "dx": 0,
-    "dy": 0,
-    "blur": 200,
-    "rgb": [
-     0,
-     220,
-     255
-    ]
-   },
-   "box": null,
-   "italic": false,
-   "letter_spacing": 0
-  },
-  {
-   "kind": "text",
-   "role": "brand",
-   "text": "숏템리폿",
-   "x": 540,
-   "y": 166,
-   "w": 600,
-   "align": "center",
-   "lines": 1,
-   "font": "GmarketSansBold",
-   "size": 60,
-   "line_h": 62,
-   "rgb": [
-    232,
-    250,
-    255
-   ],
-   "outline": null,
-   "shadow": {
-    "dx": 0,
-    "dy": 0,
-    "blur": 120,
-    "rgb": [
-     0,
-     220,
-     255
-    ]
-   },
-   "box": null,
-   "italic": false,
-   "letter_spacing": 0
+   "letter_spacing": 3
   },
   {
    "kind": "text",
    "role": "title",
    "text": "AI인 줄 알았던\n춤추는 로봇 폰",
-   "x": 540,
-   "y": 288,
-   "w": 1040,
-   "align": "center",
+   "x": 64,
+   "y": 96,
+   "w": 952,
+   "align": "left",
    "lines": 2,
-   "font": "BlackHanSans",
-   "size": 125,
-   "line_h": 134,
+   "font": "PretendardXBold",
+   "size": 100,
+   "line_h": 106,
    "rgb": [
-    255,
-    255,
-    255
+    244,
+    245,
+    248
    ],
    "line_rgb": [
     [
-     255,
-     255,
-     255
+     160,
+     171,
+     192
     ],
     [
-     255,
-     138,
-     0
+     244,
+     245,
+     248
     ]
    ],
    "line_scale": [
-    0.85,
-    1.16
+    0.46,
+    1.0
    ],
    "outline": null,
    "line_outline": [
     [
-     4,
+     0,
      0,
      0,
      0
     ],
     [
-     4,
-     70,
-     30,
+     0,
+     0,
+     0,
      0
     ]
    ],
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 0
+   "letter_spacing": 0,
+   "glow": null
   },
   {
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 1383,
+   "y": 1540,
    "w": 1000,
    "align": "center",
    "lines": 1,
-   "font": "PretendardXBold",
-   "size": 84,
-   "line_h": 104,
+   "font": "CcPretendard-Bold",
+   "size": 68,
+   "line_h": 96,
    "rgb": [
-    253,
-    252,
-    253
+    244,
+    245,
+    248
    ],
-   "outline": {
-    "px": 8,
-    "rgb": [
-     0,
-     0,
-     0
-    ]
-   },
+   "outline": null,
    "shadow": null,
-   "box": null,
+   "box": {
+    "rgb": [
+     18,
+     27,
+     52
+    ],
+    "pad": 20,
+    "radius": 14
+   },
    "italic": false,
    "letter_spacing": 0,
    "word_spacing": 0
   }
- ],
- "template_off": null,
- "made_by": "calcopy_frame v1",
- "source": "frame_OE11.json 복사(제목 글만 바꿈) — 핫템 채널 틀 | 외관 숏템리폿판(10-17): 채널명 숏템리폿·GmarketSansBold 하늘 글로우(0,220,255), 제목 BlackHanSans 흰/주황(255,138,0)"
+ ]
 }
