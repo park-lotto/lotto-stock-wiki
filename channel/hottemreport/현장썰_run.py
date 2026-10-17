@@ -51,7 +51,7 @@ def main():
         mr.D, mr.W, mr.SRC, mr.R = D, W, W / "src", R
         mr.RAW, mr.WAV = R / "narr_full.mp3", R / "narr_gapped.wav"
         # line_cuts 의 마침표 쉼 찾기 문턱(0.12초) — tts_pause 가 쉼을 숨소리로 채워 −40dB 아래가 0.10초뿐인 문장 끝이 있다
-        # (2편 실측: '부어 봤는데요.' 끝 9.25~9.35). 0.08초로 낮춰 같은 함수를 부른다(예상 ±0.3초 안 가장 가까운 쉼 규칙은 그대로).
+        # (2편 실측: '부어 봤는데요.' 끝 9.25~9.35). 0.05초로 낮춰 같은 함수를 부른다(3편: 쉼이 0.08+0.10초 두 조각으로 갈림)(예상 ±0.3초 안 가장 가까운 쉼 규칙은 그대로).
         _orig_sil = mr.ha._silences
 
         class _HA:
@@ -60,7 +60,7 @@ def main():
 
             @staticmethod
             def _silences(p, noise, d):
-                return _orig_sil(p, noise, min(d, 0.08))
+                return _orig_sil(p, "-40dB", min(d, 0.05))   # 3편: 숨소리 채운 쉼은 −45dB 아래로 안 내려감(14.73~14.91)
         mr.ha_real, mr.ha = mr.ha, _HA()
         # 편마다 다른 상수(재료.json "consts", 예: 원본이 끝 원음 바로 뒤에서 끝나면 TAIL 을 줄인다)
         M = json.loads((D / "재료.json").read_text(encoding="utf-8"))

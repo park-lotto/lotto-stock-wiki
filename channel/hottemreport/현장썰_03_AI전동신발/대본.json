@@ -1,0 +1,218 @@
+{
+ "topic": "AI 전동 신발 Shift Moonwalkers — 케이시 나이스탯(@casey)이 뉴욕 거리에서 직접 신고 시험, 친구도 신어 봄",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": {
+  "id": "cxhu_izMlik",
+  "channel": "핫템리포트",
+  "views": 143000,
+  "note": "첫 컷만 같은 원본(부분 일치). 벤치 = '강아지 덕에 대박' 몽타주 나레. 우리는 케이시 1인칭 시험기로 각색(원음 4구간). 원본 가격 말($1,400)·가격 글자 화면(16~19초 제목, 36~39초 기사)은 안 씀"
+ },
+ "sources": {
+  "main": {
+   "file": "34k7UI-DR_8.mp4",
+   "who": "유튜브 @casey",
+   "views": 3863303,
+   "dur": 319.0,
+   "res": "1920x1080(가로 → [x,0,858,1080] 크롭, 창 1080x1360 비율)",
+   "upload": "2023-02-22"
+  }
+ },
+ "titles": {
+  "hook": "걷기만 하면 굴러가는\nAI 전동 신발"
+ },
+ "facts": {
+  "f1": {
+   "text": "4~9초 책상 위 일반 운동화 옆 바퀴 달린 전동 신발(Shift 로고) · 0~9.4 'this is a … AI-powered motorized electric shoe'(가격 말은 안 씀)",
+   "kind": "화면+본인 말"
+  },
+  "f2": {
+   "text": "76.6~80.6 'To turn them on I have to like twist my foot like Dorothy in the Wizard of Oz' · 81~82 신발 근접",
+   "kind": "본인 말+화면"
+  },
+  "f3": {
+   "text": "89.45~92.05 'Oh my god, they're moving.' · 110.2~115.7 'It feels like you're riding roller skates on ice and like someone's pushing you.'",
+   "kind": "본인 말"
+  },
+  "f4": {
+   "text": "129~148 친구가 신고 걸음 · 140.9~143.5 (친구) 'Yeah, now they're going. Whoa.'",
+   "kind": "화면+말"
+  },
+  "f5": {
+   "text": "182.9~202.7 'there's no controller or anything. You make these things go by walking, and then the AI within the shoes figures out how fast you want to be going'",
+   "kind": "본인 말+화면(신발 손에 끼움)"
+  },
+  "f6": {
+   "text": "30.4~35 'They announced these things on Kickstarter six months ago and it went viral' · 40.5~45.5 기사 화면 'Walking With AI'·'These battery-powered shoes make you walk 2.5 times faster'·'Walk 250% Faster'",
+   "kind": "본인 말+화면 글자"
+  },
+  "f7": {
+   "text": "165.9~169.8 'I feel like I'm at least two and a half times faster.'(두 모델 받아쓰기, 앞 낱말만 'They're like'로 한 번 갈림)",
+   "kind": "본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2",
+   "N3",
+   "O3",
+   "N4",
+   "N5",
+   "N6",
+   "O4"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품+~있는데요)",
+    "text": "그냥 걷기만 해도, 바퀴가 알아서 굴러간다는 AI 전동 신발이 있는데요.",
+    "caps": [
+     "그냥 걷기만 해도",
+     "바퀴가 알아서 굴러간다는",
+     "AI 전동 신발이 있는데요"
+    ],
+    "facts": [
+     "f1",
+     "f5"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "사용법 → 원음 증거",
+    "text": "발을 살짝 비틀어서 켠 다음, 평소처럼 걸으면 된대요.",
+    "caps": [
+     "발을 살짝 비틀어서 켠 다음",
+     "평소처럼 걸으면 된대요"
+    ],
+    "facts": [
+     "f2",
+     "f5"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "불러냄 → 원음 증거(다른 사람)",
+    "text": "옆에 있던 친구도 직접 신어 봤더니.",
+    "caps": [
+     "옆에 있던 친구도",
+     "직접 신어 봤더니"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "note": "1차 \"친구한테도 신겨 봤더니\" — 받아쓰기 두 모델 신세를/신기해(발음 흐림)"
+   },
+   {
+    "id": "N4",
+    "fn": "장점 몰아치기1",
+    "text": "따로 리모컨도 없이, 신발 속 AI가 알아서 속도를 맞춰 주고.",
+    "caps": [
+     "따로 리모컨도 없이",
+     "신발 속 AI가",
+     "알아서 속도를 맞춰 주고"
+    ],
+    "facts": [
+     "f5"
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "장점 몰아치기2",
+    "text": "걷는 속도가 최대 두 배 반 빨라진다고, 출시 전부터 화제였대요.",
+    "caps": [
+     "걷는 속도가 최대 두 배 반",
+     "빨라진다고",
+     "출시 전부터 화제였대요"
+    ],
+    "facts": [
+     "f6"
+    ],
+    "note": "'2.5배'는 tts_pause 가 점을 마침표 쉼으로 읽어(10-18 실측 0.3초 쉼) 말로 '두 배 반' · 1차 \"걸음이\" — 받아쓰기 하루에/흐름이로 갈림"
+   },
+   {
+    "id": "N6",
+    "fn": "끝 전언(~다고 하네요)",
+    "text": "직접 걸어 본 소감은, 이랬다고 하네요.",
+    "caps": [
+     "직접 걸어 본 소감은",
+     "이랬다고 하네요"
+    ],
+    "facts": [
+     "f7"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "cs",
+    "span": [
+     89.45,
+     92.05
+    ],
+    "en": "Oh my god, they're moving.",
+    "caps": [
+     "헐 대박",
+     "진짜 움직여!!"
+    ],
+    "check": "89.4~92.0·89.6~92.3·89.0~92.3 단독 받아쓰기 두 모델 모두 'Oh my god, they're moving.'"
+   },
+   {
+    "id": "O2",
+    "src": "cs",
+    "span": [
+     110.2,
+     115.7
+    ],
+    "en": "It feels like you're riding roller skates on ice and like someone's pushing you.",
+    "caps": [
+     "얼음 위에서 롤러스케이트 타는데",
+     "누가 뒤에서 밀어주는 느낌!"
+    ],
+    "check": "110.2~115.6·115.8 두 모델 일치"
+   },
+   {
+    "id": "O3",
+    "src": "cs",
+    "span": [
+     140.9,
+     143.5
+    ],
+    "en": "(친구) Yeah, now they're going. Whoa.",
+    "caps": [
+     "어, 이제 간다!",
+     "우와!"
+    ],
+    "check": "140.9~143.5 단독 'Yeah, now they're going. Woah.'"
+   },
+   {
+    "id": "O4",
+    "src": "cs",
+    "span": [
+     165.9,
+     169.8
+    ],
+    "en": "I feel like I'm at least two and a half times faster.",
+    "caps": [
+     "최소 2.5배는",
+     "빨라진 것 같아!"
+    ],
+    "check": "165.9~169.8 두 모델: 'I feel like I'm…'/'Feel like I'm…' 일치"
+   }
+  ],
+  "dropped": {
+   "0~9.4 '$1400 AI-powered…'": "금액 언급 금지",
+   "16~19초 제목·36~39초 기사": "화면에 $1,400 글자",
+   "친구 이름(원음 Jordan)": "화면 글자로 확인 안 된 이름 — 안 씀",
+   "'요즘'": "2023년 영상이라 안 씀"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 필재 tc_68257f68bc6e3c161ab5078d · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0
+ }
+}

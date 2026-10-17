@@ -410,6 +410,22 @@
    "judge": "자동 검사만(사람 판정 전)",
    "date": "2026-10-18",
    "from": "channel/hottemreport/현장썰_01_가짜잠자리/make_render.py · checks.py"
+  },
+  {
+   "n": 32,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰",
+   "title": "현장썰_03_AI전동신발",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰_03_AI전동신발/render/final.mp4",
+   "desktop": "칼카피_숏템리폿_AI전동신발_1차.mp4",
+   "md5": "3e81bb8cbef515b55fe8b96c180c3626",
+   "seconds": 34.0,
+   "preset": "channel/hottemreport/현장썰_03_AI전동신발(1편 make_render 그대로 · 현장썰_run.py)",
+   "date": "2026-10-18",
+   "judge": "자동 검사만(사람 판정 전)",
+   "from": "channel/hottemreport/현장썰_run.py"
   }
  ]
 }
