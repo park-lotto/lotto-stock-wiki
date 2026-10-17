@@ -11,8 +11,10 @@ D = Path(__file__).resolve().parent
 SRC = "hge_LcQv9yOh3Wc.mp4"
 URL = "https://www.youtube.com/watch?v=LcQv9yOh3Wc"
 DATE = "고은언니 한고은 유튜브 2026.03.26"
-NARR_CPS = 9.0      # 벤치 나레 받아쓰기 8.2~11.5자/초(5편) — TTS 뒤 실측으로 바꾼다
-LEAD = 0.10         # 나레 끝 → 다음 원음
+NARR_CPS = 8.4      # 만템 나레 8.4자/초(얜샷템 결) — TTS 전 추정에만 씀
+LEAD = 0.10         # 블록 사이 쉼(나레↔원음)
+# TTS 실측(10-17): 미나 1회 narr_mina.mp3(7.76초, 1.0) → atempo 1.55 narr_t155.wav(5.00초). 말 구간 = N1 0.00~1.95 · N2 2.20~5.00
+NARR_SLICE = {"N1": [0.00, 1.95], "N2": [2.20, 5.00]}
 
 # 원음 조각: 원본 [시작, 끝] — 자동자막 낱말 시각 + silencedetect(−30dB) + 받아쓰기 3회(근거.md §2)
 # 캡션 조각: (원본 시각, 글) — 원본 자동자막 낱말 시작 시각
@@ -21,21 +23,21 @@ BLOCKS = [
      "caps": [(780.62, "정말 난 너무 놀랬어"), (781.95, "한 달, 두 달이 가도"), (783.05, "너무 신선해요")],
      "cuts": [dict(ss=751.06, crop=[520, 0, 840, 840], ours="검은 쟁반 위 상추·로메인 더미(한고은 손·노란 소매가 위에서 잎을 만짐)",
                    why="훅 원음 '한 달 두 달이 가도 너무 신선해요' ↔ 싱싱한 잎 더미. 원본 자막 '[푸릇푸릇]'(y861~)·아래 자막(y900~) 밖", audio_ss=780.62)]},
-    {"id": "N1", "kind": "나레", "text": "한고은은 샐러드 채소를, 한 번에 1킬로씩, 산다는데요.",
-     "tts": "한고은은 샐러드 채소를 한 번에 일 킬로씩 산다는데요.", "facts": ["f1"],
-     "caps": ["한고은은 샐러드 채소를", "한 번에 1킬로씩", "산다는데요"],
+    {"id": "N1", "kind": "나레", "text": "한고은의, 1킬로 채소 보관법이라는데.",
+     "tts": "한고은의 일 킬로 채소 보관법이라는데.", "facts": ["f1"],
+     "caps": ["한고은의 1킬로", "채소 보관법이라는데"],
      "cuts": [dict(ss=745.10, crop=[525, 0, 860, 860], ours="부엌에서 비닐봉지째 온 샐러드 채소를 꺼내 드는 한고은",
-                   why="'1킬로씩 산다는데요' — 본인 말 746.9 '유러피안 샐러드 1kg 하면 요렇게 와요'와 같은 샷. 아래 자막(y915~) 밖", mute=True)]},
+                   why="'1킬로 채소 보관법' — 본인 말 746.9 '유러피안 샐러드 1kg 하면 요렇게 와요'와 같은 샷. 아래 자막(y915~) 밖", mute=True)]},
     {"id": "O2", "kind": "원음", "span": [763.30, 771.90], "said": "이렇게 갑자기 많은 양을 구매를 하면 이거 금방 상하지 않나요라고 가장 걱정을 하시더라고요. 저도 그게 항상 가장 고민이었어요.",
      "caps": [(763.30, "이렇게 갑자기"), (764.72, "많은 양을 구매를 하면"), (766.28, "이거 금방 상하지 않나요"), (767.52, "라고 가장 걱정을"),
               (768.84, "하시더라고요"), (769.48, "저도 그게 항상"), (770.84, "가장 고민이었어요")],
      "cuts": [dict(ss=763.30, crop=[500, 0, 850, 850], ours="상추·로메인 근접(많은 양)", why="'갑자기 많은 양을 구매를 하면' 원음과 같은 샷(원본 컷 763.16~766.23). '[궁금할 수 있어]'(y864~) 밖", sync=True),
               dict(ss=766.23, crop=[675, 0, 690, 690], ours="부엌 카운터 뒤에서 말하는 한고은(허리 위)", why="'금방 상하지 않나요…걱정을 하시더라고요' 같은 샷. 왼쪽 아래 댓글 말풍선(y696~) 밖", sync=True),
               dict(ss=769.40, crop=[545, 0, 860, 860], ours="두 손을 펴며 말하는 한고은", why="'저도 그게 항상 가장 고민이었어요' 같은 샷. 주황 자막(y880~) 밖", sync=True)]},
-    {"id": "N2", "kind": "나레", "text": "TV 보다가, 우연히 알게 됐다는, 물 빠지는 채반이 달린, 보관통이래요.",
-     "tts": "티비 보다가 우연히 알게 됐다는 물 빠지는 채반이 달린 보관통이래요.", "facts": ["f2", "f3"],
-     "caps": ["TV 보다가 우연히", "알게 됐다는", "물 빠지는 채반이 달린", "보관통이래요"],
-     "cuts": [dict(ss=776.95, crop=[520, 0, 880, 880], ours="구멍 뚫린 스텐 채반을 기울여 보여주는 손(노란 소매)", why="'물 빠지는 채반이 달린' — 776.4 본인 말 '이렇게 보시면 배수구 물 안 닿게'와 같은 샷. 아래 자막(y924~) 밖", mute=True),
+    {"id": "N2", "kind": "나레", "text": "TV에서 우연히 알게 된, 물 빠지는 채반, 보관통이라네요.",
+     "tts": "티비에서 우연히 알게 된 물 빠지는 채반 보관통이라네요.", "facts": ["f2", "f3"],
+     "caps": ["TV에서 우연히 알게 된", "물 빠지는 채반", "보관통이라네요"],
+     "cuts": [dict(ss=776.95, crop=[520, 0, 880, 880], ours="구멍 뚫린 스텐 채반을 기울여 보여주는 손(노란 소매)", why="'물 빠지는 채반' — 776.4 본인 말 '이렇게 보시면 배수구 물 안 닿게'와 같은 샷. 아래 자막(y924~) 밖", mute=True),
               dict(ss=803.76, crop=[260, 0, 840, 840], ours="수돗물 아래 채반째 채소를 씻는 손(노란 소매)", why="'보관통이래요' — 채반에 담아 씻는 쓰임. 주황 자막(y870~) 밖", mute=True)]},
     {"id": "O5", "kind": "원음", "span": [788.18, 793.52], "said": "그냥 보관을 하셔서 먹고 싶을 때 씻어서 하셔도 되고. 저는 씻어서 보관해요. 귀찮으니까.",
      "caps": [(788.24, "그냥 보관을 하셔서"), (789.36, "먹고 싶을 때"), (790.40, "씻어서 하셔도 되고"), (791.72, "저는 씻어서 보관해요"), (792.80, "귀찮으니까")],
@@ -55,8 +57,9 @@ def main():
     for b in BLOCKS:
         if b["kind"] == "나레":
             n = len(b["tts"].replace(" ", "").replace(".", "").replace(",", ""))
-            dur = round(n / NARR_CPS + LEAD, 2)
-            lines.append({"fn": b["id"], "text": b["text"], "tts": b["tts"], "facts": b["facts"], "sources": [URL], "est_sec": round(n / NARR_CPS, 2)})
+            sl = NARR_SLICE.get(b["id"]); talk = round(sl[1] - sl[0], 2) if sl else round(n / NARR_CPS, 2)
+            dur = round(talk + LEAD, 2)
+            lines.append({"fn": b["id"], "text": b["text"], "tts": b["tts"], "facts": b["facts"], "sources": [URL], "est_sec": talk, "slice": sl, "cps": round(n / talk, 2)})
             w = [len(c.replace(" ", "")) for c in b["caps"]]
             a = t
             for c, k in zip(b["caps"], w):
@@ -64,15 +67,15 @@ def main():
                 caps.append({"t0": round(a, 2), "t1": round(a + d_, 2), "text": c, "kind": "나레"}); a += d_
             cut_d = [dur] if len(b["cuts"]) == 1 else None
         else:
-            a0, a1 = b["span"]; dur = round(a1 - a0, 2)
-            orig.append({"after_line": len(lines) - 1, "id": b["id"], "spans": [b["span"]], "dur": dur, "said": b["said"], "t_final": [round(t, 2), round(t + dur, 2)]})
+            a0, a1 = b["span"]; dur = round(a1 - a0 + (LEAD if b is not BLOCKS[-1] else 0), 2)
+            orig.append({"after_line": len(lines) - 1, "id": b["id"], "spans": [b["span"]], "dur": round(a1 - a0, 2), "said": b["said"], "t_final": [round(t, 2), round(t + a1 - a0, 2)]})
             for j, (at, c) in enumerate(b["caps"]):
                 e = b["caps"][j + 1][0] if j + 1 < len(b["caps"]) else a1
                 caps.append({"t0": round(t + max(0, at - a0), 2), "t1": round(t + e - a0, 2), "text": c, "kind": "원음"})
         # 컷 길이: 원음 sync 컷 = 다음 컷 ss 까지(원본 컷 경계), 마지막은 블록 끝 / 나레 컷 = 블록 길이를 계획 비율로
         cs = b["cuts"]
         if b["kind"] == "원음":
-            bounds = [c["ss"] for c in cs] + [b["span"][1]]
+            bounds = [c["ss"] for c in cs] + [round(b["span"][0] + dur, 2)]
             if cs[0].get("audio_ss") is not None:      # 화면 다른 곳(B롤) — 소리만 원음
                 lens = [dur]
             else:
@@ -106,7 +109,7 @@ def main():
          "final": {"lines": lines, "orig_audio": orig,
                    "model": "오푸스 손 작성(제미나이 안 씀). 벤치 꼴 = 원음으로 시작 → 4초 전후 나레 1줄(~다는데요) → 원음 … 원음으로 끝. 우리는 나레 2줄(채널 0~2줄 범위).",
                    "check": {"total_sec": total, "narr_chars": [len(l["tts"].replace(" ", "").replace(".", "").replace(",", "")) for l in lines],
-                             "orig_sec": round(sum(o["dur"] for o in orig), 2), "orig_share": round(sum(o["dur"] for o in orig) / total, 3),
+                             "orig_sec": round(sum(o["dur"] for o in orig), 2), "orig_share": round(sum(o["dur"] for o in orig) / total, 3), "narr_cps": [l["cps"] for l in lines],
                              "superlative": 0, "numbers": "1킬로(본인 말 1kg)", "english_in_tts": 0,
                              "bench_copy": "벤치 나레 '50대에도 동안을 유지하는 비결이 바로 채소라는 보도'와 겹치는 어절 0"}},
          "captions_plan": caps,

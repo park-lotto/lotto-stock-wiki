@@ -1,0 +1,133 @@
+{
+ "_note": "make_render.py — 자막 페이지 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/annapick/1편_한고은채소통/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "ss": 751.06,
+   "src_crop": [
+    520,
+    0,
+    840,
+    840
+   ],
+   "cuts": [
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 751.06,
+     "src_crop": [
+      520,
+      0,
+      840,
+      840
+     ],
+     "dur": 3.2,
+     "plan_i": 0
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 745.1,
+     "src_crop": [
+      525,
+      0,
+      860,
+      860
+     ],
+     "dur": 2.05,
+     "plan_i": 1
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 763.3,
+     "src_crop": [
+      500,
+      0,
+      850,
+      850
+     ],
+     "dur": 2.93,
+     "plan_i": 2
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 766.23,
+     "src_crop": [
+      675,
+      0,
+      690,
+      690
+     ],
+     "dur": 3.17,
+     "plan_i": 3
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 769.4,
+     "src_crop": [
+      545,
+      0,
+      860,
+      860
+     ],
+     "dur": 2.6,
+     "plan_i": 4
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 776.94,
+     "src_crop": [
+      520,
+      0,
+      880,
+      880
+     ],
+     "dur": 1.6,
+     "plan_i": 5
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 803.76,
+     "src_crop": [
+      260,
+      0,
+      840,
+      840
+     ],
+     "dur": 1.3,
+     "plan_i": 6
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 788.18,
+     "src_crop": [
+      560,
+      0,
+      840,
+      840
+     ],
+     "dur": 3.37,
+     "plan_i": 7
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 791.55,
+     "src_crop": [
+      710,
+      200,
+      715,
+      715
+     ],
+     "dur": 1.97,
+     "plan_i": 8
+    }
+   ],
+   "t_final": [
+    0.0,
+    22.19
+   ]
+  }
+ ]
+}
