@@ -773,6 +773,45 @@ def brief(product: dict, frame: dict, facts: list[str], k_examples: int = 3, exc
     }
 
 
+def load_hook_formula(frame_path) -> dict | None:
+    """설명서 옆 hook_formula.json(사장님이 정한 첫 문장 공식, 손 데이터 — build 가 덮지 않게 따로 둔다). 없으면 None."""
+    p = Path(frame_path).parent / "hook_formula.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def hook_formula_rule(hf: dict | None) -> str:
+    """초안 지시 한 줄(공식 없으면 빈 줄)."""
+    if not hf:
+        return ""
+    ex = " / ".join(hf.get("examples", [])[:2])
+    return f"[첫 문장 공식 — 반드시] {hf['shape']}. 뜻: {hf['plain']}. 말투: {hf['tone']}. 예: {ex}\n"
+
+
+def hook_formula_check(text: str, hf: dict | None, script: str = "") -> dict | None:
+    """(판단 주인) 첫 문장이 시작 공식(계기·감정어 → '~해버렸대요' 행동)을 따르나. 주체는 판정하지 않는다(hf.not_checked).
+    script = 대본 전체(감정어 남발 검사). 공식 없으면 None."""
+    if not hf:
+        return None
+    s = re.split(r"(?<=[.!?])\s", (text or "").strip())[0]
+    act = re.search(hf["action_re"], s)
+    trig_pos = [s.find(w) for w in hf["trigger_words"] if w in s]
+    m = re.search(hf["trigger_clause_re"], s)
+    if m:
+        trig_pos.append(m.start())
+    trig = min(trig_pos) if trig_pos else None
+    over = sum((script or text).count(w) for w in hf.get("overuse_words", []))
+    why = []
+    if trig is None:
+        why.append("계기·감정어(무엇이 불편했나) 없음")
+    if not act:
+        why.append("'~해버렸대요' 꼴 행동 결말 없음")
+    if trig is not None and act and trig > act.start():
+        why.append("계기가 행동 뒤에 옴")
+    if over > hf.get("overuse_max", 1):
+        why.append(f"감정어 남발 {over}회")
+    return {"ok": not why, "why": why, "sentence": s}
+
+
 def copy_spans(text: str, examples: list[str], n: int = 7) -> list[str]:
     """베낌 검사: 새 대본과 예문이 공백 뺀 n자 이상 그대로 겹치는 조각."""
     a = _norm(text)
