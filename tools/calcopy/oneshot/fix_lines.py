@@ -56,7 +56,9 @@ def apply(engine_json: Path, fixes: list[dict]) -> dict:
     if support is None:
         chk["ok"] = False
         chk["global"].append(f"줄↔근거 판정 실패 {serr}")
-    S["final"] = {"lines": lines, "check": chk, "hand_fixes": fixes}
+    # 교정 기록은 회차마다 쌓는다(10-18: 덮어써서 마지막 회차만 남던 것)
+    S["final"] = {"lines": lines, "check": chk, "hand_fixes": (S["final"].get("hand_fixes") or []) + ([{"round": len(S["final"].get("hand_fixes") or []) + 1,
+                                                                                                    "fixes": fixes}] if fixes else [])}
     S["status"] = "ok" if chk["ok"] else "failed_checks"
     S["hand_fixed"] = True
     p.write_text(json.dumps(S, ensure_ascii=False, indent=1, default=str), encoding="utf-8")

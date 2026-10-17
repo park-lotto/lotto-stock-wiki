@@ -819,6 +819,11 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
     eb = (((frame or {}).get("points") or {}).get("detail") or {}).get("end_buzz")
     if eb and lines and re.search(eb.get("cue_re", "난리"), texts[-1]):
         ungrounded.pop(len(lines) - 1, None)
+    # 가벼운 설명서가 '창작 칸'으로 적은 칸(재미썸홈 title·bait·land — 이븐쇼핑 과장 틀)도 같은 이유로 근거 필수에서 뺀다
+    creative = {r.split(" — ")[0].strip() for r in (((frame or {}).get("points") or {}).get("roles") or []) if "창작 칸" in r}
+    for k, l in enumerate(lines):
+        if (l.get("fn") or "").strip() in creative:
+            ungrounded.pop(k, None)
     # 예문 베낌 — 채널 어미 자체('다고 하더라고요' = 공백 뺀 7자)는 베낌이 아니라 화법이라 뺀다(10-16 밤 LOO3 오탐)
     sp = (frame or {}).get("4_speech") or {}
     common = {SF._norm(e) for e in (sp.get("ending_char_set") or []) + (sp.get("ending_list") or [])}

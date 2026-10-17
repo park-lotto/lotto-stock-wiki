@@ -314,9 +314,22 @@ def test_gather_shortens_zero_result_query(tmp_path):
     class N(FakeNet):
         def search(self, q, n):
             self.searched.append(q)
-            return [{"id": "A", "duration": 60}] if len(q.split()) <= 4 else []
+            if len(q.split()) > 4:
+                return []
+            return [{"id": "A", "duration": 60, "title": "GearOra travel toothbrush"}, {"id": "Z", "duration": 60, "title": "Car Seat Organizer"}]
     net, logs = N(tmp_path), []
     state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}}
     ma._gather([{"q": "GearOra M23 portable retractable sterilizing sonic toothbrush review", "purpose": "product"}], net, state, logs.append)
     assert net.searched == ["GearOra M23 portable retractable sterilizing sonic toothbrush review", "GearOra M23 portable retractable"]
-    assert state["previews"] == ["A"] and len(state["queries"]) == 1 and any("검색 줄임" in x for x in logs)
+    assert state["previews"] == ["A"] and len(state["queries"]) == 1 and any("검색 줄임" in x for x in logs)   # 브랜드 없는 Z 는 버림
+
+
+def test_run_timeout_is_one_failed_request(monkeypatch):
+    """10-18 실측: yt-dlp 검색 1개 시간 초과가 실행 전체를 죽였다 → 그 요청만 rc 124."""
+    import subprocess as sp
+
+    def boom(*a, **k):
+        raise sp.TimeoutExpired(a[0], k.get("timeout"))
+    monkeypatch.setattr(ma.subprocess, "run", boom)
+    r = ma._run(["yt-dlp", "x"], timeout=1)
+    assert r.returncode == 124 and r.stdout == ""

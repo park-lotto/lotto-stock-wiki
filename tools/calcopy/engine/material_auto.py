@@ -167,7 +167,7 @@ def _rule_text(rules: dict) -> str:
     return f"제품 실영상 + 유사·연상 영상 + 반응 짤 {int(lo * 100)}~{int(hi * 100)}%."
 
 
-def plan_queries(topic, toks, rules, llm) -> dict:
+def plan_queries(topic, toks, rules, llm, seed_queries=None) -> dict:
     lo, hi = rules.get("meme_ratio", (0, 0))
     meme_rule = (f"- meme 은 반응·감탄 토막(놀람·의심·충격)에만, 전체 토막의 {int(lo * 100)}~{int(hi * 100)}%({math.ceil(lo * len(toks))}~{int(hi * len(toks))}개)."
                  if hi else "- meme 금지.")
@@ -188,6 +188,9 @@ def plan_queries(topic, toks, rules, llm) -> dict:
         needs.setdefault(t["i"], {"need": t["text"], "keywords": [], "kind": rules["kinds"][0]})
     _cap_memes(toks, needs, rules)
     qs = [q for q in d.get("queries") or [] if isinstance(q, dict) and str(q.get("q") or "").strip()]
+    # 조사에서 실제 결과가 확인된 검색어(대본.json search_seed — 원샷링크딸깍 to_work 가 조사 queries 를 넣는다)를 앞에 — 같은 상한 안에서
+    seed = [{"q": s, "purpose": "product", "toks": [t["i"] for t in toks], "seed": True} for s in (seed_queries or []) if str(s).strip()]
+    qs = seed + [q for q in qs if q["q"] not in {s["q"] for s in seed}]
     return {"product": d.get("product") or topic, "product_terms": [str(x) for x in d.get("product_terms") or []],
             "needs": needs, "queries": qs[:MAX_QUERIES - 2]}
 
@@ -214,7 +217,13 @@ def _as_int(v):
 
 # ── 2. 통로(네트워크) — 주입 가능 ──────────────────────────────────────────
 def _run(argv, timeout=600):
-    return subprocess.run(argv, capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=timeout)
+    """시간 초과는 그 요청 하나의 실패(rc 124)로 돌려준다 — 10-18 실측: 보충 검색 1개가 120초 넘자 예외가 위로 올라가
+    1,180초 돈 실행 전체가 결과 파일 없이 죽었다. 부르는 쪽은 이미 rc·빈 출력을 실패로 다룬다."""
+    try:
+        return subprocess.run(argv, capture_output=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"[시간 초과] {timeout}초 — {' '.join(map(str, argv))[-120:]}", flush=True)
+        return subprocess.CompletedProcess(argv, 124, "", f"timeout {timeout}s")
 
 
 class Net:
@@ -716,7 +725,9 @@ def _gather(queries, net, state, log):
             if rows or len(words) <= keep:
                 continue
             short = " ".join(words[:keep])
-            rows = [r for r in net.search(short, PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800]
+            # 줄인 검색어는 엉뚱한 영상이 섞인다(10-18 실측 'GearOra GTM23BA portable' → 차량 시트 정리함·송풍기) — 제목에 첫 낱말(브랜드)이 있는 것만
+            brand = words[0].lower()
+            rows = [r for r in net.search(short, PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800 and brand in (r.get("title") or "").lower()]
             log(f"[검색 줄임] «{q['q']}» 0편 → «{short}» {len(rows)}편")
             if rows:
                 q["q_short"] = short
@@ -775,7 +786,7 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
     stopped, picks, rounds, needs = None, [], 0, {}
     try:
         t = time.time()
-        qp = plan_queries(topic, toks, rules, llm)
+        qp = plan_queries(topic, toks, rules, llm, sj.get("search_seed"))
         needs = qp["needs"]
         T["1_검색어"] = round(time.time() - t, 1)
         t = time.time()

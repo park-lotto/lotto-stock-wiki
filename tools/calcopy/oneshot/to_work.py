@@ -94,7 +94,9 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
     doc = {"채널": brand, "channel": B["channel"], "preset": B["preset"], "topic": product, "목소리": B["voice"], "voice": B["voice"],
            "cps_target": B["cps_target"], "재료_규칙": B["재료_규칙"], "from": f"원샷링크딸깍 엔진({S.get('engine')}) · {engine_json}",
            "lines": out_lines, "chars": chars, "est_sec": round(chars / B["cps_target"], 2),
-           "facts": {k: f"{v['text']} ({v.get('url', '')})" for k, v in S["facts"].items()}, "title_lines": [], "sfx": B["sfx"]}
+           "facts": {k: f"{v['text']} ({v.get('url', '')})" for k, v in S["facts"].items()}, "title_lines": [], "sfx": B["sfx"],
+           # 재료 찾기가 먼저 쓸 검색어 — 조사 단계에서 실제 결과가 확인된 것(research.seed) > 조사 영어 검색어 앞 2개
+           "search_seed": (R.get("seed") or []) + [q for q in (R.get("queries") or {}).get("en", [])[:2] if q not in (R.get("seed") or [])]}
     if brand == "재미썸홈":
         ts = sq.get("title_slots") or {}
         doc["title_slots"] = ts
