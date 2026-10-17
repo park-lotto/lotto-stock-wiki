@@ -1,27 +1,24 @@
 {
- "_note": "샥탬스토리 4편 Spikeball 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 QMJtjJz4M6w 창 [0,434,1080,1052]). 시각은 나레 8자/초 추정 — TTS 뒤 줄 끝에 맞춰 컷 길이 재조정. 원음 컷은 audio.ss(파일 기준)부터 원본 소리.",
+ "_note": "샥탬스토리 4편 Spikeball 재료 — shark/render.py 입력. 창 [0,434,1080,1052](대본 bench.window). ss·audio_span = 파일 시각(src_orig_span = 원본 클립 시각). 원음 컷은 화면=소리 같은 시각(sync 0).",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src",
  "sources": {
-  "vyvIN8J_vj0": {
-   "채널": "CNBC Ambition",
-   "제목": "The Sharks Couldn't Score With Spikeball | Shark Tank MISSES | CNBC Prime",
-   "업로드": "2022-12-08",
-   "해상도": "1920x1080",
-   "길이": 351,
-   "받은 구간": "15~125초(cnbc_vyvIN8J_vj0_15.mp4) · 170~337초(cnbc_vyvIN8J_vj0_170.mp4)",
-   "남의 글자": "왼쪽 아래 NBC 공작 로고(x<70, 크롭 밖) · 하단 이름/제안 자막(255~260·274~281·310~314초 등 — 그 구간 안 씀) · 35~50초 CNBC.COM 글자(안 씀) · 324~334초 결말 글자 카드(안 씀)"
+  "cnbc15a": {
+   "원본": "CNBC Ambition vyvIN8J_vj0 'The Sharks Couldn't Score With Spikeball | Shark Tank MISSES | CNBC Prime' 2022-12-08",
+   "구간": "원본 15~125초",
+   "해상도": "1920x1080"
   },
-  "6pC9CovZuBY": {
-   "채널": "Spikeball(공식)",
-   "제목": "Spikeball: Rally Anywhere",
-   "업로드": "2022-04-19",
+  "cnbc170a": {
+   "원본": "같은 클립",
+   "구간": "원본 170~337초",
+   "해상도": "1920x1080"
+  },
+  "demo76_6pC9CovZuBY": {
+   "원본": "Spikeball 공식 'Spikeball: Rally Anywhere' 2022-04-19",
    "해상도": "1920x1080",
-   "길이": 76,
-   "남의 글자": "0~2초·67~75초 'Rally ANYWHERE' 글자 — 안 씀"
+   "남의 글자": "0~2·67~75초 글자 안 씀"
   }
  },
  "window": [
-  0,
-  434,
   1080,
   1052
  ],
@@ -29,14 +26,14 @@
   {
    "i": 0,
    "line": "L1",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 50.45,
+   "dur": 1.75,
    "src_orig_span": [
     220.45,
     222.2
    ],
-   "ss": 50.45,
-   "dur": 1.75,
    "t_final_est": [
     0.0,
     1.75
@@ -49,29 +46,27 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "검은 정장 대머리 투자자(이름 자막 없음 — 이름 불명) 정면, 말하는 입",
-   "why": "원음 'a ball in a net'(받아쓰기 3/3) — 벤치 0초 투자자 반응 자리. 220.05 시작은 앞말 'for' 끝이 걸려 220.45 로 당김",
+   "ours": "검은 정장 대머리 투자자(이름 자막 없음 — 불명) 정면, 말하는 본인",
+   "why": "원음 'a ball in a net' — 같은 시각 말하는 본인(sync 0). 벤치 0초 투자자 반응 자리",
    "fx": "빨간 원(얼굴)",
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     220.45,
-     222.2
-    ],
-    "ss": 50.45
-   }
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    50.45,
+    52.2
+   ]
   },
   {
    "i": 1,
    "line": "L2",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 3.0,
+   "dur": 1.2,
    "src_orig_span": [
     3.0,
     4.2
    ],
-   "ss": 3.0,
-   "dur": 1.2,
    "t_final_est": [
     1.75,
     2.95
@@ -87,21 +82,19 @@
    "ours": "야자수 잔디밭에서 4명이 노란 그물 둘레로 경기",
    "why": "'공 하나랑 그물 하나로'",
    "fx": "초록 화살표(아래, 그물)",
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 2,
    "line": "L2",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 15.5,
+   "dur": 1.2,
    "src_orig_span": [
     15.5,
     16.7
    ],
-   "ss": 15.5,
-   "dur": 1.2,
    "t_final_est": [
     2.95,
     4.15
@@ -117,21 +110,19 @@
    "ours": "해변 모래 위 4명 경기, 공이 떠 있음",
    "why": "'한 해 140만 달러어치를'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 3,
    "line": "L2",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 31.6,
+   "dur": 1.2,
    "src_orig_span": [
     31.6,
     32.8
    ],
-   "ss": 31.6,
-   "dur": 1.2,
    "t_final_est": [
     4.15,
     5.35
@@ -147,24 +138,22 @@
    "ours": "넓은 잔디 운동장 4명 경기",
    "why": "'판 게임이 있는데'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 4,
    "line": "L3",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_15.mp4",
+   "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 17.6,
+   "dur": 1.42,
    "src_orig_span": [
     32.6,
-    34.0
+    34.02
    ],
-   "ss": 17.6,
-   "dur": 1.4,
    "t_final_est": [
     5.35,
-    6.75
+    6.77
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -174,32 +163,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "창업자가 노란 공을 두 손으로 들고 돌림(가슴 근접, 창업자 본인 손)",
-   "why": "원음 'All you need is this ball, that net,'(창업자 본인 말 — 화면도 본인)",
+   "ours": "창업자가 노란 공을 두 손으로 들고 돌림(말하는 본인의 손·가슴, 같은 시각)",
+   "why": "원음 'All you need is this ball, that net,' — 원본 편집 그대로 sync 0",
    "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     32.6,
-     34.0
-    ],
-    "ss": 17.6
-   }
+   "mute": false,
+   "audio_src": "cnbc15a.mp4",
+   "audio_span": [
+    17.6,
+    19.02
+   ]
   },
   {
    "i": 5,
    "line": "L3",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_15.mp4",
+   "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 19.02,
+   "dur": 3.08,
    "src_orig_span": [
-    34.05,
+    34.02,
     37.1
    ],
-   "ss": 19.05,
-   "dur": 3.05,
    "t_final_est": [
-    6.75,
-    9.8
+    6.77,
+    9.85
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -209,32 +196,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "무대 — 노란 유니폼 선수 2명·대형 Spikeball 로고 앞에서 말하는 창업자(오른쪽)",
-   "why": "원음 '…one of these backpacks, and you can take it absolutely anywhere'(받아쓰기 2모델 일치) — 왼쪽 아래 CNBC.COM 글자(x200~800)는 크롭 x811~ 로 뺌",
+   "ours": "무대 — 노란 유니폼 선수 2명·대형 로고 앞에서 말하는 창업자(오른쪽)",
+   "why": "원음 '…one of these backpacks, and you can take it absolutely anywhere' sync 0 — 왼쪽 아래 CNBC.COM 글자(x200~800) 크롭 x811~ 로 뺌",
    "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     34.05,
-     37.1
-    ],
-    "ss": 19.05
-   }
+   "mute": false,
+   "audio_src": "cnbc15a.mp4",
+   "audio_span": [
+    19.02,
+    22.1
+   ]
   },
   {
    "i": 6,
    "line": "L4",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 22.6,
+   "dur": 1.3,
    "src_orig_span": [
     22.6,
     23.9
    ],
-   "ss": 22.6,
-   "dur": 1.3,
    "t_final_est": [
-    9.8,
-    11.1
+    9.85,
+    11.15
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -247,24 +232,22 @@
    "ours": "흰 실내 코트, 4명이 그물에 공을 내리침",
    "why": "'그물에 공을 튕겨 서브하면'",
    "fx": "빨간 점선 원(그물)",
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 7,
    "line": "L4",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_15.mp4",
+   "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 68.0,
+   "dur": 1.2,
    "src_orig_span": [
     83.0,
     84.2
    ],
-   "ss": 68.0,
-   "dur": 1.2,
    "t_final_est": [
-    11.1,
-    12.3
+    11.15,
+    12.35
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -277,24 +260,22 @@
    "ours": "샤크탱크 무대 위 노란/검은 유니폼 4명 시범 경기(와이드)",
    "why": "'상대는 세 번 안에'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 8,
    "line": "L4",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 27.0,
+   "dur": 1.2,
    "src_orig_span": [
     27.0,
     28.2
    ],
-   "ss": 27.0,
-   "dur": 1.2,
    "t_final_est": [
-    12.3,
-    13.5
+    12.35,
+    13.55
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -307,24 +288,22 @@
    "ours": "흰 실내 코트, 선수가 공을 그물로 내리꽂음",
    "why": "'다시 내리꽂아야 하고'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 9,
    "line": "L5",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_15.mp4",
+   "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 5.95,
+   "dur": 3.25,
    "src_orig_span": [
     20.95,
     24.2
    ],
-   "ss": 5.95,
-   "dur": 3.25,
    "t_final_est": [
-    13.5,
-    16.75
+    13.55,
+    16.8
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -334,32 +313,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "검은 Spikeball 티셔츠 창업자(0:05 이름 자막 CHRIS RUDER) 정면, 노란 공 들고 말함",
-   "why": "원음 'very easy to learn, but really, really difficult to master'(받아쓰기 4/4)",
+   "ours": "창업자(0:05 이름 자막 CHRIS RUDER) 정면, 노란 공 들고 말하는 본인",
+   "why": "원음 'very easy to learn, but really, really difficult to master' sync 0",
    "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     20.95,
-     24.2
-    ],
-    "ss": 5.95
-   }
+   "mute": false,
+   "audio_src": "cnbc15a.mp4",
+   "audio_span": [
+    5.95,
+    9.2
+   ]
   },
   {
    "i": 10,
    "line": "L6",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 38.3,
+   "dur": 1.5,
    "src_orig_span": [
     38.3,
     39.8
    ],
-   "ss": 38.3,
-   "dur": 1.5,
    "t_final_est": [
-    16.75,
-    18.25
+    16.8,
+    18.3
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -372,24 +349,22 @@
    "ours": "눈 덮인 숲 속 4명이 경기",
    "why": "'편 가를 필요도 없어서, 눈밭이든'",
    "fx": "분홍 화살표(그물)",
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 11,
    "line": "L6",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 10.4,
+   "dur": 1.5,
    "src_orig_span": [
     10.4,
     11.9
    ],
-   "ss": 10.4,
-   "dur": 1.5,
    "t_final_est": [
-    18.25,
-    19.75
+    18.3,
+    19.8
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -402,164 +377,22 @@
    "ours": "분수대 물 속에서 4명이 경기",
    "why": "'물속이든 다 된다고'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
    "i": 12,
    "line": "L7",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "src_orig_span": [
-    192.4,
-    193.84
-   ],
-   "ss": 22.4,
-   "dur": 1.44,
-   "t_final_est": [
-    19.75,
-    21.19
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "금발 여성 투자자(이름 자막 없음) 듣는 얼굴 — 원본 방송 편집 그대로",
-   "why": "원음 'We've sold 29,000 units.'(창업자 목소리) — 소리 192.40~199.30 한 덩어리, 받아쓰기 2모델 화자 2명",
-   "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     192.4,
-     193.84
-    ],
-    "ss": 22.4
-   }
-  },
-  {
-   "i": 13,
-   "line": "L7",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
-   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "src_orig_span": [
-    193.9,
-    196.0
-   ],
-   "ss": 23.9,
-   "dur": 2.1,
-   "t_final_est": [
-    21.19,
-    23.29
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "Spikeball 상자·노란 공 근접",
-   "why": "원음 이어서 '…units. And how much did they cost to make?'",
-   "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     193.9,
-     196.0
-    ],
-    "ss": 23.9
-   }
-  },
-  {
-   "i": 14,
-   "line": "L7",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
-   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "src_orig_span": [
-    196.05,
-    197.45
-   ],
-   "ss": 26.05,
+   "ss": 6.0,
    "dur": 1.4,
-   "t_final_est": [
-    23.29,
-    24.69
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "갈색 양복 투자자(데이먼드 — 255초 화면 자막으로 확인) 앉아 있는 얼굴",
-   "why": "원음 질문 끝 — 질문한 사람 이름은 자막에 안 씀",
-   "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     196.05,
-     197.45
-    ],
-    "ss": 26.05
-   }
-  },
-  {
-   "i": 15,
-   "line": "L7",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
-   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "src_orig_span": [
-    197.5,
-    199.3
-   ],
-   "ss": 27.5,
-   "dur": 1.8,
-   "t_final_est": [
-    24.69,
-    26.49
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "창업자 정면 답함",
-   "why": "원음 'A little over fourteen'",
-   "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     197.5,
-     199.3
-    ],
-    "ss": 27.5
-   }
-  },
-  {
-   "i": 16,
-   "line": "L8",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
-   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
    "src_orig_span": [
     176.0,
-    177.3
+    177.4
    ],
-   "ss": 6.0,
-   "dur": 1.3,
    "t_final_est": [
-    26.49,
-    27.79
+    19.8,
+    21.2
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -570,26 +403,24 @@
    ],
    "scale": 0.974,
    "ours": "Spikeball 상자와 노란 공 2개 근접",
-   "why": "'그걸 59달러 99센트에'",
+   "why": "'올해만 2만 9천 개를 팔았다는데'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 17,
-   "line": "L8",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 13,
+   "line": "L7",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 15.4,
+   "dur": 1.45,
    "src_orig_span": [
     185.4,
     186.85
    ],
-   "ss": 15.4,
-   "dur": 1.45,
    "t_final_est": [
-    27.79,
-    29.24
+    21.2,
+    22.65
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -599,27 +430,114 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "갈색 양복 투자자(데이먼드) 듣는 얼굴",
-   "why": "'팔고 있었는데' — 창업자 컷(182)은 L7 끝 창업자 컷과 A-B-A 가 돼 교체",
+   "ours": "갈색 양복 투자자(데이먼드 — 255초 화면 자막) 듣는 얼굴",
+   "why": "'만드는 데 드는 돈은'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 18,
-   "line": "L9",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 14,
+   "line": "L8",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 27.5,
+   "dur": 1.8,
+   "src_orig_span": [
+    197.5,
+    199.3
+   ],
+   "t_final_est": [
+    22.65,
+    24.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 정면, 답하는 본인",
+   "why": "원음 'A little over fourteen' sync 0 — 앞 질문·'29,000 units'(화면이 투자자·상자)는 원음에서 빼고 나레로",
+   "fx": null,
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    27.5,
+    29.3
+   ]
+  },
+  {
+   "i": 15,
+   "line": "L9",
+   "src": "cnbc170a.mp4",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 22.4,
+   "dur": 1.4,
+   "src_orig_span": [
+    192.4,
+    193.8
+   ],
+   "t_final_est": [
+    24.45,
+    25.85
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 여성 투자자(이름 자막 없음) 듣는 얼굴",
+   "why": "'그걸 59달러 99센트에'",
+   "fx": null,
+   "mute": true
+  },
+  {
+   "i": 16,
+   "line": "L9",
+   "src": "demo76_6pC9CovZuBY.mp4",
+   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 52.0,
+   "dur": 1.3,
+   "src_orig_span": [
+    52.0,
+    53.3
+   ],
+   "t_final_est": [
+    25.85,
+    27.15
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "사막 급수탑 앞 4명 경기",
+   "why": "'팔고 있었는데'",
+   "fx": null,
+   "mute": true
+  },
+  {
+   "i": 17,
+   "line": "L10",
+   "src": "cnbc170a.mp4",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 70.0,
+   "dur": 2.3,
    "src_orig_span": [
     240.0,
     242.3
    ],
-   "ss": 70.0,
-   "dur": 2.3,
    "t_final_est": [
-    29.24,
-    31.54
+    27.15,
+    29.45
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -632,24 +550,55 @@
    "ours": "갈색 양복 투자자(데이먼드) 손 모으고 말함",
    "why": "'이때 데이먼드가 50만 달러를 내걸면서'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
+  },
+  {
+   "i": 18,
+   "line": "L11",
+   "src": "cnbc170a.mp4",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 79.37,
+   "dur": 4.38,
+   "src_orig_span": [
+    249.37,
+    253.75
+   ],
+   "t_final_est": [
+    29.45,
+    33.83
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 와이드 — 데이먼드가 손짓하며 말함(끝 0.4초 = 원본 편집 그대로 창업자 측면 컷)",
+   "why": "원음 '(I would be) interested in, for 25% of the whole company' sync 0 — 253.35 에서 자르면 'company' 가 잘려 원본 컷 경계를 0.4초 넘김",
+   "fx": "날개 돈다발 이모지",
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    79.37,
+    83.75
+   ]
   },
   {
    "i": 19,
-   "line": "L10",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "line": "L12",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 99.6,
+   "dur": 1.37,
    "src_orig_span": [
-    249.4,
-    253.35
+    269.6,
+    270.97
    ],
-   "ss": 79.4,
-   "dur": 3.95,
    "t_final_est": [
-    31.54,
-    35.49
+    33.83,
+    35.2
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -659,32 +608,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "투자자석 와이드 — 데이먼드가 손짓하며 말함",
-   "why": "원음 '(I would be) interested in, for 25% of the whole company' — 소리 249.40~253.80(253.35 에서 자르면 '...of the whole' 로 끊김, 받아쓰기 2/2). 소리 꼬리 0.45초는 다음 컷(L11 와이드) 위로 넘김",
-   "fx": "날개 돈다발 이모지",
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     249.3,
-     253.8
-    ],
-    "ss": 79.3
-   }
+   "ours": "무대 와이드 — 시범 선수 4명과 말하는 창업자(멀리)",
+   "why": "원음 'Would you consider 500k' sync 0",
+   "fx": null,
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    99.6,
+    100.97
+   ]
   },
   {
    "i": 20,
-   "line": "L11",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "line": "L12",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 100.97,
+   "dur": 2.63,
    "src_orig_span": [
-    269.15,
-    270.95
+    270.97,
+    273.6
    ],
-   "ss": 99.15,
-   "dur": 1.8,
    "t_final_est": [
-    35.49,
-    37.29
+    35.2,
+    37.83
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -694,67 +641,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "무대 와이드 — 시범 선수 4명과 창업자(멀리, 입 모양 작음)",
-   "why": "처음 0.45초 = L10 원음 꼬리 'company', 이어 원음 'Would you consider 500k'(창업자, 소리 269.60~)",
+   "ours": "창업자 정면, 말하는 본인",
+   "why": "원음 '…at 15 percent?' sync 0",
    "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     269.6,
-     270.95
-    ],
-    "ss": 99.6
-   }
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    100.97,
+    103.6
+   ]
   },
   {
    "i": 21,
-   "line": "L11",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "line": "L13",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "src_orig_span": [
-    271.0,
-    273.6
-   ],
-   "ss": 101.0,
-   "dur": 2.6,
-   "t_final_est": [
-    37.29,
-    39.89
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "창업자 정면 말함",
-   "why": "원음 '…at 15 percent?'(273.4 에서 자르면 'p-' 로 끊김 → 273.6)",
-   "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     271.0,
-     273.6
-    ],
-    "ss": 101.0
-   }
-  },
-  {
-   "i": 22,
-   "line": "L12",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
-   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 133.7,
+   "dur": 2.05,
    "src_orig_span": [
     303.7,
     305.75
    ],
-   "ss": 133.7,
-   "dur": 2.05,
    "t_final_est": [
-    39.89,
-    41.94
+    37.83,
+    39.88
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -764,32 +674,30 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "투자자석 와이드(데이먼드·대머리 투자자, 입 모양 작음)",
-   "why": "원음 '(is) one of those moments that you can lose it all'(받아쓰기 4/4)",
+   "ours": "투자자석 와이드(데이먼드·대머리 투자자)",
+   "why": "원음 '(is) one of those moments that you can lose it all' sync 0 — 화자 이름 자막 없음",
    "fx": null,
-   "audio": {
-    "kind": "원음",
-    "src_span": [
-     303.7,
-     305.75
-    ],
-    "ss": 133.7
-   }
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_span": [
+    133.7,
+    135.75
+   ]
   },
   {
-   "i": 23,
-   "line": "L13",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 22,
+   "line": "L14",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 149.7,
+   "dur": 2.6,
    "src_orig_span": [
     319.7,
     322.3
    ],
-   "ss": 149.7,
-   "dur": 2.6,
    "t_final_est": [
-    41.94,
-    44.54
+    39.88,
+    42.48
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -802,24 +710,22 @@
    "ours": "갈색 양복 투자자(데이먼드) 박수",
    "why": "'결국 20%에 손을 잡으면서 투자가 성사됐는데'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 24,
-   "line": "L14",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 23,
+   "line": "L15",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 45.75,
+   "dur": 1.45,
    "src_orig_span": [
     215.75,
     217.2
    ],
-   "ss": 45.75,
-   "dur": 1.45,
    "t_final_est": [
-    44.54,
-    45.99
+    42.48,
+    43.93
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -832,24 +738,22 @@
    "ours": "창업자 얼굴 근접, 고개 숙임",
    "why": "'알고 보니 방송이 나가기도 전에'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 25,
-   "line": "L14",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 24,
+   "line": "L15",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 121.4,
+   "dur": 1.5,
    "src_orig_span": [
     291.4,
     292.9
    ],
-   "ss": 121.4,
-   "dur": 1.5,
    "t_final_est": [
-    45.99,
-    47.49
+    43.93,
+    45.43
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -862,24 +766,22 @@
    "ours": "창업자 정면, 굳은 표정",
    "why": "'이 딜이 깨졌다고'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 26,
-   "line": "L15",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 25,
+   "line": "L16",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 94.0,
+   "dur": 1.4,
    "src_orig_span": [
     264.0,
     265.4
    ],
-   "ss": 94.0,
-   "dur": 1.4,
    "t_final_est": [
-    47.49,
-    48.89
+    45.43,
+    46.83
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -889,27 +791,25 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "창업자 정면 말함",
+   "ours": "창업자 정면",
    "why": "'스파이더맨 세트를 내자는 말에'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 27,
-   "line": "L15",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 26,
+   "line": "L16",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 112.0,
+   "dur": 1.4,
    "src_orig_span": [
     282.0,
     283.4
    ],
-   "ss": 112.0,
-   "dur": 1.4,
    "t_final_est": [
-    48.89,
-    50.29
+    46.83,
+    48.23
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -919,27 +819,25 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "창업자 정면 말함",
+   "ours": "창업자 정면",
    "why": "'장난감처럼 보일까 봐'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 28,
-   "line": "L15",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/cnbc_vyvIN8J_vj0_170.mp4",
+   "i": 27,
+   "line": "L16",
+   "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 117.0,
+   "dur": 1.3,
    "src_orig_span": [
     287.0,
     288.3
    ],
-   "ss": 117.0,
-   "dur": 1.3,
    "t_final_est": [
-    50.29,
-    51.59
+    48.23,
+    49.53
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -952,24 +850,22 @@
    "ours": "창업자 정면",
    "why": "'창업자가 반대했다는 거야'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 29,
-   "line": "L16",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "i": 28,
+   "line": "L17",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 44.0,
+   "dur": 1.3,
    "src_orig_span": [
     44.0,
     45.3
    ],
-   "ss": 44.0,
-   "dur": 1.3,
    "t_final_est": [
-    51.59,
-    52.89
+    49.53,
+    50.83
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -980,56 +876,24 @@
    ],
    "scale": 0.974,
    "ours": "호숫가 모래밭 4명 경기(산 배경)",
-   "why": "'그래도 2019년엔'",
+   "why": "'그래도 2019년엔 한 해'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   },
   {
-   "i": 30,
-   "line": "L16",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
+   "i": 29,
+   "line": "L17",
+   "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
-   "src_orig_span": [
-    51.5,
-    52.8
-   ],
-   "ss": 51.5,
-   "dur": 1.3,
-   "t_final_est": [
-    52.89,
-    54.19
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "사막 급수탑 앞 4명 경기",
-   "why": "'한 해 1,900만 달러를'",
-   "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
-  },
-  {
-   "i": 31,
-   "line": "L16",
-   "src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/src/demo76_6pC9CovZuBY.mp4",
-   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "ss": 58.6,
+   "dur": 1.8,
    "src_orig_span": [
     58.6,
     60.4
    ],
-   "ss": 58.6,
-   "dur": 1.8,
    "t_final_est": [
-    54.19,
-    55.99
+    50.83,
+    52.63
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -1040,15 +904,50 @@
    ],
    "scale": 0.974,
    "ours": "바위산 앞 사막 4명 경기(끝 컷 ≥1.5초)",
-   "why": "'버는 회사가 됐다고'",
+   "why": "'1,900만 달러를 버는 회사가 됐다고'",
    "fx": null,
-   "audio": {
-    "kind": "나레(원음 무음)"
-   }
+   "mute": true
   }
  ],
+ "effects": [
+  {
+   "line": "L1",
+   "kind": "red_circle",
+   "at": [
+    500,
+    734
+   ],
+   "size": 340,
+   "stroke": 8,
+   "t": [
+    0.0,
+    0.6
+   ],
+   "why": "벤치 0.0~0.6초 투자자 얼굴 빨간 원 — 대머리 투자자 얼굴 중심(창 500,300)"
+  },
+  {
+   "line": "L11",
+   "kind": "emoji",
+   "emoji": "💸",
+   "at": [
+    900,
+    1290
+   ],
+   "size": 220,
+   "t": [
+    0.3,
+    2.8
+   ],
+   "why": "벤치 38.6~41.1초 제안 순간 날개 돈다발 — 얼굴 안 가리는 오른쪽 아래(손 자리)"
+  }
+ ],
+ "effects_not_drawable": [
+  "L2 초록 화살표(아래) 그물",
+  "L4 빨간 점선 원 그물",
+  "L6 분홍 화살표(위) 그물 — 엔진 overlay_png 가 red_circle·emoji 만 그림(엔진 요청)"
+ ],
  "check": {
-  "shots": 32,
-  "est_total": 55.99
+  "shots": 30,
+  "est_total": 52.63
  }
 }

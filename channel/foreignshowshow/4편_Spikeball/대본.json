@@ -6,7 +6,13 @@
   "title": "홍수 막아주는 모래 주머니?!",
   "dur": 50.47,
   "views": 12000000,
-  "upload": "2026-08-29"
+  "upload": "2026-08-29",
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ]
  },
  "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막, 번갈아",
  "titles": {
@@ -41,7 +47,7 @@
    "kind": "방송 원음+공식 영상 화면"
   },
   "f7": {
-   "text": "CNBC 174.9~178.3초 'what does one cost — 59.99 plus shipping' · 192.4~199.3초 'We've sold 29,000 units. And how much did they cost to make? A little over fourteen'(받아쓰기 2모델, 화자 2명)",
+   "text": "CNBC 174.9~178.3초 'what does one cost — 59.99 plus shipping' · 192.4~195.4초 창업자 'We've sold 29,000 units'(화면 = 투자자·상자 → 원음 안 쓰고 나레) · 197.5~199.3초 창업자 'A little over fourteen'(원음, 화면 = 본인)",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
    "kind": "방송 원음"
   },
@@ -93,12 +99,19 @@
     "facts": [
      "f1"
     ],
-    "src_span": [
+    "est_sec": 1.75,
+    "asr": "받아쓰기 3/3 'a ball in a net'",
+    "orig_span_clip": [
      220.45,
      222.2
     ],
-    "est_sec": 1.75,
-    "asr": "받아쓰기 3/3 'a ball in a net'"
+    "orig_span": [
+     50.45,
+     52.2
+    ],
+    "caps": [
+     "공이랑 그물 하나에?!"
+    ]
    },
    {
     "id": "L2",
@@ -117,7 +130,12 @@
     "facts": [
      "f2"
     ],
-    "est_sec": 3.71
+    "est_sec": 3.71,
+    "caps": [
+     "공 하나랑 그물 하나로",
+     "한 해 140만 달러어치를",
+     "판 게임이 있는데"
+    ]
    },
    {
     "id": "L3",
@@ -137,12 +155,21 @@
     "facts": [
      "f5"
     ],
-    "src_span": [
+    "est_sec": 4.5,
+    "asr": "받아쓰기 4/4 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(v3)",
+    "orig_span_clip": [
      32.6,
      37.1
     ],
-    "est_sec": 4.5,
-    "asr": "받아쓰기 4/4 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(v3)"
+    "orig_span": [
+     17.6,
+     22.1
+    ],
+    "caps": [
+     "이 공이랑 그물,",
+     "가방 하나면 돼요",
+     "어디든 들고 갈 수 있어요"
+    ]
    },
    {
     "id": "L4",
@@ -162,7 +189,13 @@
     "facts": [
      "f4"
     ],
-    "est_sec": 3.71
+    "est_sec": 3.71,
+    "caps": [
+     "그물에 공을 튕겨",
+     "서브하면",
+     "상대는 세 번 안에",
+     "다시 내리꽂아야 하고"
+    ]
    },
    {
     "id": "L5",
@@ -181,12 +214,20 @@
     "facts": [
      "f3"
     ],
-    "src_span": [
+    "est_sec": 3.25,
+    "asr": "받아쓰기 4/4",
+    "orig_span_clip": [
      20.95,
      24.2
     ],
-    "est_sec": 3.25,
-    "asr": "받아쓰기 4/4"
+    "orig_span": [
+     5.95,
+     9.2
+    ],
+    "caps": [
+     "배우긴 쉬운데",
+     "마스터하긴 진짜 어려워요"
+    ]
    },
    {
     "id": "L6",
@@ -207,35 +248,67 @@
      "f4",
      "f5"
     ],
-    "est_sec": 2.93
+    "est_sec": 2.93,
+    "caps": [
+     "편 가를 필요도 없어서",
+     "눈밭이든 물속이든",
+     "다 된다고"
+    ]
    },
    {
     "id": "L7",
-    "kind": "원음",
-    "fn": "숫자(판매량·원가) — 문답",
-    "orig_en": "We've sold 29,000 units. / And how much did they cost to make? / A little over fourteen",
-    "text": "2만 9천 개 팔았어요 / 만드는 데 얼마예요? / 14달러 조금 넘어요",
+    "kind": "나레",
+    "fn": "숫자(판매량·원가 질문)",
+    "text": "올해만 2만 9천 개를 팔았다는데, 만드는 데 드는 돈은",
+    "tts": "올해만 이만 구천 개를 팔았다는데, 만드는 데 드는 돈은",
     "sub": [
-     "2만 9천 개 팔았어요",
-     "만드는 데 얼마예요?",
+     "올해만 2만 9천 개를",
+     "팔았다는데",
+     "만드는 데 드는 돈은"
+    ],
+    "caps": [
+     "올해만 2만 9천 개를",
+     "팔았다는데",
+     "만드는 데 드는 돈은"
+    ],
+    "hl": [
+     "2만 9천 개"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 3.06
+   },
+   {
+    "id": "L8",
+    "kind": "원음",
+    "fn": "숫자(원가) — 창업자 답",
+    "orig_en": "A little over fourteen",
+    "text": "14달러 조금 넘어요",
+    "sub": [
+     "14달러 조금 넘어요"
+    ],
+    "caps": [
      "14달러 조금 넘어요"
     ],
     "hl": [
-     "2만 9천 개",
      "14달러"
     ],
     "facts": [
      "f7"
     ],
-    "src_span": [
-     192.4,
+    "orig_span_clip": [
+     197.5,
      199.3
     ],
-    "est_sec": 6.9,
-    "asr": "받아쓰기 3/3 'We've sold 29,000 units. And how much did/do they cost to make? (Uh,) a little over $14' 화자 2명(v3)"
+    "orig_span": [
+     27.5,
+     29.3
+    ],
+    "est_sec": 1.8
    },
    {
-    "id": "L8",
+    "id": "L9",
     "kind": "나레",
     "fn": "숫자(가격)",
     "text": "그걸 59달러 99센트에 팔고 있었는데",
@@ -250,10 +323,14 @@
     "facts": [
      "f7"
     ],
-    "est_sec": 2.67
+    "est_sec": 2.67,
+    "caps": [
+     "그걸 59달러 99센트에",
+     "팔고 있었는데"
+    ]
    },
    {
-    "id": "L9",
+    "id": "L10",
     "kind": "나레",
     "fn": "지분 제안",
     "text": "이때 데이먼드가 50만 달러를 내걸면서",
@@ -268,10 +345,14 @@
     "facts": [
      "f8"
     ],
-    "est_sec": 2.41
+    "est_sec": 2.41,
+    "caps": [
+     "이때 데이먼드가",
+     "50만 달러를 내걸면서"
+    ]
    },
    {
-    "id": "L10",
+    "id": "L11",
     "kind": "원음",
     "fn": "지분 제안(원음)",
     "orig_en": "interested in, for 25% of the whole company",
@@ -286,15 +367,23 @@
     "facts": [
      "f8"
     ],
-    "src_span": [
-     249.3,
-     253.8
+    "est_sec": 4.38,
+    "asr": "받아쓰기 3/3 '…interested in, for 25% of the whole company'(v3, 1회는 첫머리 'rested' — 소리 시작 249.30 으로 0.1초 당김, 재확인은 TTS 뒤)",
+    "orig_span_clip": [
+     249.37,
+     253.75
     ],
-    "est_sec": 4.5,
-    "asr": "받아쓰기 3/3 '…interested in, for 25% of the whole company'(v3, 1회는 첫머리 'rested' — 소리 시작 249.30 으로 0.1초 당김, 재확인은 TTS 뒤)"
+    "orig_span": [
+     79.37,
+     83.75
+    ],
+    "caps": [
+     "회사 전체 지분",
+     "25%를 원해요"
+    ]
    },
    {
-    "id": "L11",
+    "id": "L12",
     "kind": "원음",
     "fn": "창업자 역제안",
     "orig_en": "Would you consider 500k at 15%?",
@@ -309,15 +398,23 @@
     "facts": [
      "f8"
     ],
-    "src_span": [
+    "est_sec": 4.0,
+    "asr": "받아쓰기 4/4 'Would you consider 500k at 15%'(v3)",
+    "orig_span_clip": [
      269.6,
      273.6
     ],
-    "est_sec": 4.0,
-    "asr": "받아쓰기 4/4 'Would you consider 500k at 15%'(v3)"
+    "orig_span": [
+     99.6,
+     103.6
+    ],
+    "caps": [
+     "50만 달러에 15%는",
+     "어떠세요?"
+    ]
    },
    {
-    "id": "L12",
+    "id": "L13",
     "kind": "원음",
     "fn": "투자자 압박",
     "orig_en": "(is) one of those moments that you can lose it all",
@@ -332,15 +429,23 @@
     "facts": [
      "f9"
     ],
-    "src_span": [
+    "est_sec": 2.05,
+    "asr": "받아쓰기 4/4",
+    "orig_span_clip": [
      303.7,
      305.75
     ],
-    "est_sec": 2.05,
-    "asr": "받아쓰기 4/4"
+    "orig_span": [
+     133.7,
+     135.75
+    ],
+    "caps": [
+     "다 잃을 수도 있는",
+     "순간이에요"
+    ]
    },
    {
-    "id": "L13",
+    "id": "L14",
     "kind": "나레",
     "fn": "딜 성사",
     "text": "결국 20%에 손을 잡으면서 투자가 성사됐는데",
@@ -357,10 +462,15 @@
     "facts": [
      "f10"
     ],
-    "est_sec": 3.06
+    "est_sec": 3.06,
+    "caps": [
+     "결국 20%에",
+     "손을 잡으면서",
+     "투자가 성사됐는데"
+    ]
    },
    {
-    "id": "L14",
+    "id": "L15",
     "kind": "나레",
     "fn": "반전(무산)",
     "text": "알고 보니 방송이 나가기도 전에 이 딜이 깨졌다고",
@@ -376,10 +486,15 @@
     "facts": [
      "f11"
     ],
-    "est_sec": 2.8
+    "est_sec": 2.8,
+    "caps": [
+     "알고 보니 방송이",
+     "나가기도 전에",
+     "이 딜이 깨졌다고"
+    ]
    },
    {
-    "id": "L15",
+    "id": "L16",
     "kind": "나레",
     "fn": "무산 이유(전언)",
     "text": "스파이더맨 세트를 내자는 말에, 장난감처럼 보일까 봐 창업자가 반대했다는 거야",
@@ -397,10 +512,16 @@
     "facts": [
      "f12"
     ],
-    "est_sec": 4.49
+    "est_sec": 4.49,
+    "caps": [
+     "스파이더맨 세트를",
+     "내자는 말에",
+     "장난감처럼 보일까 봐",
+     "창업자가 반대했다는 거야"
+    ]
    },
    {
-    "id": "L16",
+    "id": "L17",
     "kind": "나레",
     "fn": "후일담(2019년 기준)",
     "text": "그래도 2019년엔 한 해 1,900만 달러를 버는 회사가 됐다고",
@@ -417,18 +538,32 @@
     "facts": [
      "f13"
     ],
-    "est_sec": 3.58
+    "est_sec": 3.58,
+    "caps": [
+     "그래도 2019년엔",
+     "한 해 1,900만 달러를",
+     "버는 회사가 됐다고"
+    ]
    }
   ],
-  "est_total_sec": 56.31,
+  "est_total_sec": 54.15,
   "tts_rate_assumed": "7.7자/초(공백·쉼표 뺀 tts 글자) + 줄당 0.2초 — 벤치 4편 실측 7.71~8.78자/초(1편 plan/voice_measure.json). 실측 아님",
   "check": {
    "copy3": [],
    "sub_max_chars_nospace": 11,
-   "narr_chars": 212,
+   "narr_chars": 234,
    "narr_sec_est": 29.36,
-   "orig_sec": 26.85,
-   "lines": 16
-  }
+   "orig_sec": 21.73,
+   "lines": 17
+  },
+  "cps_target": 7.7,
+  "cps_note": "벤치 QMJtjJz4M6w 나레 7.71자/초(1편 plan/voice_measure.json)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "채널 공통 성우(페이블 10-18)"
  }
 }
