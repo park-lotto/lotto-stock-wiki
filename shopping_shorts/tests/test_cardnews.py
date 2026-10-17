@@ -149,3 +149,26 @@ def test_ai_failure_is_not_502(env, monkeypatch):
     r = c.post("/api/cardnews/outline", json={"src": {"kind": "topic", "topic": "주방"}, "opts": {}},
                cookies={"dash_auth": _cookie(0)})
     assert r.status_code == 422 and r.json()["ok"] is False
+
+
+def test_gen_background_uses_gemini_image_on_global_client(tmp_path, monkeypatch):
+    """Imagen 4는 사장님 프로젝트에 없다(2026-10-17 라이브 404) — 기본은 제미니 그림 모델, global 클라이언트."""
+    from types import SimpleNamespace as NS
+    from shopping_shorts import vertex_route
+    calls = {}
+
+    class _Models:
+        def generate_content(self, model, contents, config):
+            calls["model"] = model
+            part = NS(inline_data=NS(data=b"\xff\xd8jpg", mime_type="image/jpeg"))
+            return NS(candidates=[NS(content=NS(parts=[part]))])
+
+        def generate_images(self, **kw):
+            raise AssertionError("imagen 경로로 가면 안 된다")
+
+    monkeypatch.setattr(cn, "image_allowed", lambda cid: (True, ""))
+    monkeypatch.setattr(vertex_route, "client", lambda cid=None, location=None: NS(models=_Models()))
+    monkeypatch.setattr(vertex_route, "veo_client", lambda cid: None)
+    name, why = cn.gen_background(0, "kitchen", str(tmp_path))
+    assert why == "" and name.endswith(".jpg") and calls["model"] == cn.IMAGE_MODEL_DEFAULT
+    assert cn.asset_path(str(tmp_path), 0, name)
