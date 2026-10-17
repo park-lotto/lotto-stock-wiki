@@ -1,0 +1,622 @@
+{
+ "topic": "샤크탱크 Bala Bangles — 차기만 하면 되는 손목·발목 웨이트 팔찌, 투자자들이 서로 하겠다고 싸운 끝에 마크·마리아가 90만 달러/30% (벤치 그대로 칼카피, 방송 원음 위주)",
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.1,
+  "why": "채널 목소리(샥탬스토리_시작.md §1 — 6편 전부 같은 목소리)"
+ },
+ "brand": "샥탬스토리",
+ "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.467,
+  "views": 12470000,
+  "lufs": -7.8,
+  "tp": 1.0,
+  "cut_median": 1.27,
+  "first_cut": 0.57,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "title_bands": [
+   [
+    211,
+    304
+   ],
+   [
+    318,
+    407
+   ]
+  ]
+ },
+ "render": {
+  "gap": 0.0,
+  "why": "원음 컷 끝이 원본 장면 경계에 붙어 있어(O2 177.27/경계 177.28) 줄 사이 0.08초 늘임이 경계를 넘김 → 0"
+ },
+ "titles": {
+  "hook": "투자자 5명이 전부\n달려든 운동 팔찌?!",
+  "line1": "투자자 5명이 전부",
+  "line2": "달려든 운동 팔찌?!",
+  "rule": "벤치 그대로(사장님 10-18 ③) — 1줄 노랑 [211,304] / 2줄 흰 [318,407], 끝 '?!'. 벤치에 로고 없음 → 로고 넣지 않음(1편 페이블 판정 따름). 근거: Sony 클립 제목 'All Five Sharks Fight To Secure A Deal'"
+ },
+ "facts": {
+  "f1": {
+   "text": "원음 207.45~208.60 '1.2 million?' — 클립 단독 받아쓰기 2모델(clip_r9 '1.2 million.'·'One point two million', clip_r4: 3-flash 'One point two million.' · flash-latest '1.2 million.', 둘 다 1명). 207.25 시작은 앞 창업자 말 꼬리 'And' 가 들려(clip_r3) 207.45 로 당김. 앞 창업자 말 '…this year so far, we're at 1.2 million'(204.0~207.24)을 되물음. 207.04~208.78 원본 컷 = 이 투자자 근접",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=204"
+  },
+  "f2": {
+   "text": "창업자 94.7~101.2 'Adding our weights to your workout will increase heart rate, burn fat, and build muscle' · 149.6~151.3 'These are going to make it incrementally harder' · 142~145 'our first product is the 1-lb wrist and ankle weight'(full_60s 2모델)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=94"
+  },
+  "f3": {
+   "text": "창업자 26.0~39.8 'you remember the 80s, aerobics were all the rage … from leg warmers to … wrist and ankle weights' · 78.1~87.3 'the sweaty, loose, sand-filled wrist and ankle weight' · 89.4~94.5 'Introducing Bala Bangles, the world's first stylish, wearable weights'(창업자 주장 → '~라고' 전언)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=26"
+  },
+  "f4": {
+   "text": "원음 173.95~177.27 'I like the fact that you don't have to hold anything.'(clip_r4 2모델 일치·1명·잘림 없음). 173.75 시작은 앞말 꼬리 '~ce' 가 들리고(clip_r1), 177.10 끝은 'any~' 잘림(clip_r2) → 이 구간으로 확정. 173.71~177.28 원본 컷 = 말하는 투자자(여·금발) 2인 화면",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=172"
+  },
+  "f5": {
+   "text": "창업자(여) 177.4~190.4 'that's how it was designed … I'm a certified yoga instructor … it's hands-free so I can do yoga, all of my poses without having to pick up dumbbells'(full_60s 2모델)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=177"
+  },
+  "f6": {
+   "text": "창업자(여) 197.6~211.1 'last year, which were our first 6 months in business, we did 260,000 … this year so far, we're at 1.2 million … We'll end the year with 2.2 million'(full_60s 2모델 일치) — '찍는다고'는 창업자 예상의 전언",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=197"
+  },
+  "f7": {
+   "text": "창업자 17.7~25.6 'we're seeking $400,000 in exchange for 10% equity'(2모델) · 화면 띠 'Seeking $400k for a 10% stake'(25~27·247~251) · 191.4~195.2 투자자 '$400,000 for 10% of the company, correct?'",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=17"
+  },
+  "f8": {
+   "text": "원음 300.40~304.35 'I'll give you the $400,000 as debt for three years, okay?'(clip_r2 2모델 일치·1명, 앞 300.0~300.4 −50dB 쉼) · 305~311 '7.5% interest … 5% equity' · 화면 띠 'Kevin's offer: $400k as a loan at 7.5% interest for a 5% stake'(313~318, 이 투자자 화면 위)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=300"
+  },
+  "f9": {
+   "text": "원음 377.92~381.95 'I would take 30%.'(clip_r9 2모델 일치·1명, 뒤 381.1~381.95 말 없음 — 381.11 원본 컷 창업자(남) 근접까지 넣어 장면 경계 −0.2초) · 같은 투자자(여·갈색 정장) 349~362 'I'll give you 200,000 if you can get another 200 from another shark … But 10% is not enough for me'",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=349"
+  },
+  "f10": {
+   "text": "382.5~395 투자자들(받아쓰기 3명) 'I would match that. I would jump in there with her' · 'I would match that as well' · 'Maria, I will do it with you. $200,000 from me, $200,000 for you, for 30%'(clip_r7 2모델) · 403~410 'You now have two sharks fighting to be your partner' · Sony 클립 제목 'All Five Sharks Fight To Secure A Deal'",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=382"
+  },
+  "f11": {
+   "text": "원음 466.38~468.10 'I'm gonna make my own offer.'(clip_r6 2모델 일치·1명) · 469.5~475 'So, my offer is 500,000, 18%.'(clip_r7 2모델) · 화면 띠 'Lori's offer: $500k for an 18% stake'(476~480)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=463"
+  },
+  "f12": {
+   "text": "화면 띠 'Counter offer: $900k for a 30% stake, a $3M valuation'(441~445) · 505.2~513.1 'offer you the $900,000 for the 30%, just what you asked for'(full_60s 2모델) · 화면 띠 \"Maria & Mark's offer: $900k for a 30% stake\"(512.5~518) · 원음 518.60~520.60 'You've got a deal.' / 'Yes!'(clip_r2 2모델, 2명) · 552~554 창업자 'Having Maria and Mark is a dream come true' · CNBC 2020-03-01 기사 제목 'Mark Cuban and Maria Sharapova invest in bangle weights'",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=505"
+  },
+  "f13": {
+   "text": "원음 533.60~539.30 'Well, I must say, it's the first time in Shark Tank history (that) I've actually seen sharks fight to be a partner.'(clip_r5 2모델 — 끝까지 들림) · 535.3~537.3 다른 투자자(여) 'I love that' 겹침(2명). 539.05 끝은 'part~' 잘림(clip_r4), 539.6 끝은 다음 말 'What?/Well,' 섞임(clip_r3)",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k&t=533"
+  },
+  "f14": {
+   "text": "Glossy 2021-07-20(Sara Spruch-Feiner) 본문 'In 2020, the brand grew its earnings from $2 million to $20 million.' · 방송 시기 = CNBC 기사 2020-03-01 · 보조: Forbes 2020-11-30 지면(PressReader — 403 으로 본문 못 엶, 검색 요약만) '2020년 50만 개, 매출 1,900만 달러 예상(전년 200만)' — 루퍼(2차) 숫자는 안 씀",
+   "url": "https://www.glossy.co/fashion/how-bala-became-the-it-fitness-accessory-of-the-pandemic/"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "fn": "0초 반응(숫자)",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     207.45,
+     208.6
+    ],
+    "en": "1.2 million?",
+    "who": "투자자(남·검정 정장·초록 넥타이) — 이 사람 이름이 적힌 화면 글자 없음 → 불명",
+    "caps": [
+     "120만 달러?!"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "est_sec": 1.15,
+    "t_final": [
+     0.0,
+     1.15
+    ]
+   },
+   {
+    "id": "N1",
+    "fn": "시연(무엇)",
+    "kind": "tts",
+    "text": "손목 발목에 차기만 하면, 운동이 더 힘들어지는 팔찌가 있는데",
+    "tts": "손목 발목에 차기만 하면, 운동이 더 힘들어지는 팔찌가 있는데",
+    "caps": [
+     "손목 발목에",
+     "차기만 하면",
+     "운동이 더 힘들어지는",
+     "팔찌가 있는데"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 3.52,
+    "t_final": [
+     1.23,
+     4.75
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "기존 불편→차이",
+    "kind": "tts",
+    "text": "80년대 에어로빅 때 차던 모래 주머니를, 예쁜 팔찌로 바꾼 거라고",
+    "tts": "팔십 년대 에어로빅 때 차던 모래 주머니를, 예쁜 팔찌로 바꾼 거라고",
+    "caps": [
+     "80년대 에어로빅 때",
+     "차던 모래 주머니를",
+     "예쁜 팔찌로",
+     "바꾼 거라고"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "est_sec": 3.8,
+    "t_final": [
+     4.83,
+     8.63
+    ]
+   },
+   {
+    "id": "O2",
+    "fn": "시연(반응)",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     173.95,
+     177.27
+    ],
+    "en": "I like the fact that you don't have to hold anything.",
+    "who": "투자자(여·금발·남색 옷, 손목에 분홍 팔찌) — 화면에 말하는 본인. 이름 글자는 476초 'Lori's offer' 띠(같은 사람이 470초 제안)",
+    "caps": [
+     "손에 뭘 안 들어도",
+     "되는 게 좋네요"
+    ],
+    "cap_at": [
+     173.95,
+     175.3
+    ],
+    "facts": [
+     "f4"
+    ],
+    "est_sec": 3.32,
+    "t_final": [
+     8.71,
+     12.03
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "시연(쓰임)",
+    "kind": "tts",
+    "text": "그래서 덤벨 없이도, 요가 동작을 그대로 할 수 있다는데",
+    "tts": "그래서 덤벨 없이도, 요가 동작을 그대로 할 수 있다는데",
+    "caps": [
+     "그래서 덤벨 없이도",
+     "요가 동작을",
+     "그대로 할 수 있다는데"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "est_sec": 3.1,
+    "t_final": [
+     12.11,
+     15.21
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "숫자(매출)",
+    "kind": "tts",
+    "text": "첫 6개월에 26만 달러, 올해는 220만 달러를 찍는다고",
+    "tts": "첫 육 개월에 이십육만 달러, 올해는 이백이십만 달러를 찍는다고",
+    "caps": [
+     "첫 6개월에",
+     "26만 달러",
+     "올해는 220만 달러를",
+     "찍는다고"
+    ],
+    "facts": [
+     "f6"
+    ],
+    "est_sec": 3.66,
+    "t_final": [
+     15.29,
+     18.95
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "요구",
+    "kind": "tts",
+    "text": "40만 달러에 지분 10%를 내걸자",
+    "tts": "사십만 달러에 지분 십 퍼센트를 내걸자",
+    "caps": [
+     "40만 달러에",
+     "지분 10%를 내걸자"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 2.25,
+    "t_final": [
+     19.03,
+     21.28
+    ]
+   },
+   {
+    "id": "O4",
+    "fn": "제안 1(빚)",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     300.4,
+     304.35
+    ],
+    "en": "I'll give you the $400,000 as debt for three years, okay?",
+    "who": "투자자(남·민머리·검정 정장·빨간 행커치프) — 313~318초 화면 띠 'Kevin's offer'가 이 사람 말하는 화면 위",
+    "caps": [
+     "40만 달러를",
+     "3년짜리 빚으로 드리죠"
+    ],
+    "cap_at": [
+     300.45,
+     302.2
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 3.95,
+    "t_final": [
+     21.36,
+     25.31
+    ]
+   },
+   {
+    "id": "O5",
+    "fn": "제안 2(30%)",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     377.92,
+     381.95
+    ],
+    "en": "I would take 30%.",
+    "who": "투자자(여·갈색 정장) — 이름은 화면 띠 'Maria & Mark's offer'(512.5~518)·말 'Maria, you threw out an offer'(403~)",
+    "caps": [
+     "저는 30%를 원해요"
+    ],
+    "facts": [
+     "f9"
+    ],
+    "est_sec": 4.03,
+    "t_final": [
+     25.39,
+     29.42
+    ]
+   },
+   {
+    "id": "N7",
+    "fn": "지분 경쟁",
+    "kind": "tts",
+    "text": "다른 투자자들까지, 같은 조건으로 따라붙더니",
+    "tts": "다른 투자자들까지, 같은 조건으로 따라붙더니",
+    "caps": [
+     "다른 투자자들까지",
+     "같은 조건으로",
+     "따라붙더니"
+    ],
+    "facts": [
+     "f10"
+    ],
+    "est_sec": 2.68,
+    "t_final": [
+     29.5,
+     32.18
+    ]
+   },
+   {
+    "id": "O7",
+    "fn": "지분 경쟁(셋째)",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     466.38,
+     468.1
+    ],
+    "en": "I'm gonna make my own offer.",
+    "who": "투자자(여·금발) — 화면에 말하는 본인(466.37~467.57) → 467.57 원본 컷 창업자(남) 근접. 476~480초 화면 띠 'Lori's offer'",
+    "caps": [
+     "저는 따로",
+     "제안할게요"
+    ],
+    "cap_at": [
+     466.38,
+     467.0
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 1.72,
+    "t_final": [
+     32.26,
+     33.98
+    ]
+   },
+   {
+    "id": "N8",
+    "fn": "지분 경쟁(숫자)",
+    "kind": "tts",
+    "text": "로리는 50만 달러에 18%를 불렀는데",
+    "tts": "로리는 오십만 달러에 십팔 퍼센트를 불렀는데",
+    "caps": [
+     "로리는",
+     "50만 달러에",
+     "18%를 불렀는데"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 2.68,
+    "t_final": [
+     34.06,
+     36.74
+    ]
+   },
+   {
+    "id": "N9",
+    "fn": "결정타",
+    "kind": "tts",
+    "text": "결국 마크가 마리아와 손잡고, 90만 달러에 30%를 주겠다고 하자",
+    "tts": "결국 마크가 마리아와 손잡고, 구십만 달러에 삼십 퍼센트를 주겠다고 하자",
+    "caps": [
+     "결국 마크가",
+     "마리아와 손잡고",
+     "90만 달러에 30%를",
+     "주겠다고 하자"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 4.23,
+    "t_final": [
+     36.82,
+     41.05
+    ]
+   },
+   {
+    "id": "O8",
+    "fn": "성사",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     518.6,
+     520.6
+    ],
+    "en": "You've got a deal. / Yes!",
+    "who": "창업자(여) — 화면에 말하는 본인(두 창업자 2인 화면) → 'Yes!'는 다른 목소리(누구인지 불명)",
+    "caps": [
+     "계약할게요!",
+     "좋아요!"
+    ],
+    "cap_at": [
+     518.6,
+     519.85
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 2.0,
+    "t_final": [
+     41.13,
+     43.13
+    ]
+   },
+   {
+    "id": "O9",
+    "fn": "경쟁 정리",
+    "kind": "orig",
+    "src": "RAD",
+    "span": [
+     533.6,
+     539.3
+    ],
+    "en": "Well, I must say, it's the first time in Shark Tank history I've actually seen Sharks fight to be a partner.",
+    "who": "투자자(남) — 투자자석 와이드, 입 모양으로 누구인지는 불명",
+    "caps": [
+     "샤크탱크 역사상",
+     "투자자끼리 서로 하겠다고",
+     "싸우는 건 처음 봐요"
+    ],
+    "cap_at": [
+     533.6,
+     536.0,
+     537.6
+    ],
+    "facts": [
+     "f13"
+    ],
+    "est_sec": 5.7,
+    "t_final": [
+     43.21,
+     48.91
+    ]
+   },
+   {
+    "id": "N10",
+    "fn": "방송 후 결과",
+    "kind": "tts",
+    "text": "방송이 나간 그해, 매출이 200만 달러에서 2,000만 달러로 뛰었다고",
+    "tts": "방송이 나간 그해, 매출이 이백만 달러에서 이천만 달러로 뛰었다고",
+    "caps": [
+     "방송이 나간 그해",
+     "매출이 200만 달러에서",
+     "2,000만 달러로",
+     "뛰었다고"
+    ],
+    "facts": [
+     "f14"
+    ],
+    "est_sec": 3.8,
+    "t_final": [
+     48.99,
+     52.79
+    ]
+   }
+  ],
+  "est_total_sec": 52.79,
+  "cps_target": 7.1,
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     207.45,
+     208.6
+    ],
+    "en": "1.2 million?",
+    "ko_caps": [
+     "120만 달러?!"
+    ],
+    "who": "투자자(남·검정 정장·초록 넥타이) — 이 사람 이름이 적힌 화면 글자 없음 → 불명"
+   },
+   {
+    "id": "O2",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     173.95,
+     177.27
+    ],
+    "en": "I like the fact that you don't have to hold anything.",
+    "ko_caps": [
+     "손에 뭘 안 들어도",
+     "되는 게 좋네요"
+    ],
+    "who": "투자자(여·금발·남색 옷, 손목에 분홍 팔찌) — 화면에 말하는 본인. 이름 글자는 476초 'Lori's offer' 띠(같은 사람이 470초 제안)"
+   },
+   {
+    "id": "O4",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     300.4,
+     304.35
+    ],
+    "en": "I'll give you the $400,000 as debt for three years, okay?",
+    "ko_caps": [
+     "40만 달러를",
+     "3년짜리 빚으로 드리죠"
+    ],
+    "who": "투자자(남·민머리·검정 정장·빨간 행커치프) — 313~318초 화면 띠 'Kevin's offer'가 이 사람 말하는 화면 위"
+   },
+   {
+    "id": "O5",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     377.92,
+     381.95
+    ],
+    "en": "I would take 30%.",
+    "ko_caps": [
+     "저는 30%를 원해요"
+    ],
+    "who": "투자자(여·갈색 정장) — 이름은 화면 띠 'Maria & Mark's offer'(512.5~518)·말 'Maria, you threw out an offer'(403~)"
+   },
+   {
+    "id": "O7",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     466.38,
+     468.1
+    ],
+    "en": "I'm gonna make my own offer.",
+    "ko_caps": [
+     "저는 따로",
+     "제안할게요"
+    ],
+    "who": "투자자(여·금발) — 화면에 말하는 본인(466.37~467.57) → 467.57 원본 컷 창업자(남) 근접. 476~480초 화면 띠 'Lori's offer'"
+   },
+   {
+    "id": "O8",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     518.6,
+     520.6
+    ],
+    "en": "You've got a deal. / Yes!",
+    "ko_caps": [
+     "계약할게요!",
+     "좋아요!"
+    ],
+    "who": "창업자(여) — 화면에 말하는 본인(두 창업자 2인 화면) → 'Yes!'는 다른 목소리(누구인지 불명)"
+   },
+   {
+    "id": "O9",
+    "src": "RADCBcHJO_k.mp4",
+    "span": [
+     533.6,
+     539.3
+    ],
+    "en": "Well, I must say, it's the first time in Shark Tank history I've actually seen Sharks fight to be a partner.",
+    "ko_caps": [
+     "샤크탱크 역사상",
+     "투자자끼리 서로 하겠다고",
+     "싸우는 건 처음 봐요"
+    ],
+    "who": "투자자(남) — 투자자석 와이드, 입 모양으로 누구인지는 불명"
+   }
+  ],
+  "check": {
+   "copy3": [],
+   "max_cap_chars": 13,
+   "max_cap": "투자자끼리 서로 하겠다고"
+  }
+ },
+ "effects_record": [
+  {
+   "at": "O1",
+   "fx": "빨간 원(투자자 얼굴 — 벤치와 같은 0초)",
+   "bench": "0.0~0.6초"
+  },
+  {
+   "at": "N2 둘째 컷(흰 팔찌 근접)",
+   "fx": "빨간 점선 원(제품)",
+   "bench": "9.1~11.9초"
+  },
+  {
+   "at": "O2",
+   "fx": "분홍 화살표(투자자 손목 분홍 팔찌)",
+   "bench": "11.9~14.2초"
+  },
+  {
+   "at": "N9",
+   "fx": "날개 돈다발 이모지(90만 달러)",
+   "bench": "38.6~41.1초"
+  },
+  {
+   "at": "자막",
+   "fx": "흰 글자+검정 테두리, 핵심어 형광(민트·초록·빨강·분홍)",
+   "bench": "전 구간"
+  }
+ ],
+ "notes": [
+  "TTS·렌더 전. 효과·제목 띠는 기록만(좌표는 페이블 OK 뒤 재료 effects 에).",
+  "벤치 나레 연속 3어절 일치 — check_copy() 로 잰다(final.check.copy3).",
+  "★지시문의 '마크 큐반 단독 딜'은 원본과 다름: 화면 띠 \"Maria & Mark's offer: $900k for a 30% stake\" + 창업자 'Having Maria and Mark' + CNBC 2020-03-01 → 마크·마리아 공동. 대본은 공동으로 씀.",
+  "후일담: 루퍼(2차) 대신 Glossy 2021 기사 본문(1차 취재) — 2020년 200만→2,000만 달러. 포브스 지면은 PressReader 403 으로 본문 못 열어 보조로만."
+ ]
+}

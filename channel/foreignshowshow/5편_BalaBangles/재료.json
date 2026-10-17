@@ -1,0 +1,814 @@
+{
+ "_note": "샥탬스토리 5편 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 뜯기 layout). 시각은 말속도 7.1자/초 추정 — TTS 뒤 다시 맞춘다. 원음 줄은 audio_span 을 원본에서 그대로(쉼 자르기 없음).",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/5편_BalaBangles/src",
+ "window": [
+  1080,
+  1052
+ ],
+ "sources": {
+  "RAD": {
+   "file": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "채널": "Sony Pictures Television",
+   "제목": "Shark Tank US | All Five Sharks Fight To Secure A Deal With Bala Bangles",
+   "업로드": "2021-09-16",
+   "해상도": "1920x1080 29.97fps",
+   "길이": 583.6,
+   "받은 형식": "137+140(yt-dlp 기본 클라이언트 — web 클라이언트는 '이미지만' 응답이라 못 받음)",
+   "남의 글자": "하단 자막 띠(y≈905~1025): 이름 18~24 · Seeking 25~27·247~251 · Kevin's offer 313~318 · Counter offer 441~445 · Lori's offer 476~480 · Maria & Mark's offer 512.5~518 — 그 시각 컷은 h=880(위만). 화면 구석 워터마크 없음(프레임 확인). 끝 564~ 엔드카드(안 씀)"
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 207.45,
+   "dur": 1.15,
+   "src_span": [
+    207.45,
+    208.6
+   ],
+   "t_final": [
+    0.0,
+    1.15
+   ],
+   "src_crop": [
+    210,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉아 되묻는 투자자(남·검정 정장·초록 넥타이) — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    207.45,
+    208.6
+   ],
+   "Y": 47
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 95.3,
+   "dur": 1.8,
+   "src_span": [
+    95.3,
+    97.1
+   ],
+   "t_final": [
+    1.23,
+    3.03
+   ],
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "팔을 머리 위로 뻗은 두 사람 손목에 파랑·회색 팔찌(제품사 영상, 방송 안 삽입)",
+   "mute": true,
+   "Y": 90
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 109.2,
+   "dur": 1.7,
+   "src_span": [
+    109.2,
+    110.9
+   ],
+   "t_final": [
+    3.03,
+    4.73
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "손목에 회색 팔찌 찬 두 사람 → 110.94 전 팔찌 찬 손목 근접(제품사 영상)",
+   "mute": true,
+   "Y": 50
+  },
+  {
+   "i": 3,
+   "line": "N2",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 55.0,
+   "dur": 1.9,
+   "src_span": [
+    55.0,
+    56.9
+   ],
+   "t_final": [
+    4.83,
+    6.73
+   ],
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "80년대 에어로빅 차림(민소매·헤어밴드) 남자가 분홍 팔찌 찬 팔로 근육 자랑",
+   "mute": true,
+   "Y": 75
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 240.3,
+   "dur": 1.85,
+   "src_span": [
+    240.3,
+    242.15
+   ],
+   "t_final": [
+    6.73,
+    8.58
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "흰 팔찌 제품 근접(제품 위 bala 글자 = 제품 자체)",
+   "mute": true,
+   "Y": 93
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 173.95,
+   "dur": 3.32,
+   "src_span": [
+    173.95,
+    177.27
+   ],
+   "t_final": [
+    8.71,
+    12.03
+   ],
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "분홍 팔찌 찬 손목을 만지며 말하는 투자자(여·금발) + 옆 투자자(남) — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    173.95,
+    177.27
+   ],
+   "Y": 70
+  },
+  {
+   "i": 6,
+   "line": "N3",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 180.4,
+   "dur": 1.35,
+   "src_span": [
+    180.4,
+    181.75
+   ],
+   "t_final": [
+    12.11,
+    13.46
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "손목에 흰 팔찌 찬 창업자(여)가 요가 얘기하며 손짓(소리 끔)",
+   "mute": true,
+   "Y": 63
+  },
+  {
+   "i": 7,
+   "line": "N3",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 184.8,
+   "dur": 1.7,
+   "src_span": [
+    184.8,
+    186.5
+   ],
+   "t_final": [
+    13.46,
+    15.16
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "손목·발목 팔찌를 찬 채 한 발 들어 요가 자세 잡는 모델(무대 세움 사진)",
+   "mute": true,
+   "Y": 119
+  },
+  {
+   "i": 8,
+   "line": "N4",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 215.6,
+   "dur": 1.25,
+   "src_span": [
+    215.6,
+    216.85
+   ],
+   "t_final": [
+    15.29,
+    16.54
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "손목에 흰 팔찌 찬 두 창업자, 남자가 손짓하며 설명",
+   "mute": true,
+   "Y": 63
+  },
+  {
+   "i": 9,
+   "line": "N4",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 220.6,
+   "dur": 1.2,
+   "src_span": [
+    220.6,
+    221.8
+   ],
+   "t_final": [
+    16.54,
+    17.74
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "투자자석 와이드(다섯 명이 창업자 쪽을 봄)",
+   "mute": true,
+   "Y": 41
+  },
+  {
+   "i": 10,
+   "line": "N4",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 233.8,
+   "dur": 1.25,
+   "src_span": [
+    233.8,
+    235.05
+   ],
+   "t_final": [
+    17.74,
+    18.99
+   ],
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉아 듣는 투자자(남·남색 정장)",
+   "mute": true,
+   "Y": 57
+  },
+  {
+   "i": 11,
+   "line": "N5",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 13.0,
+   "dur": 1.2,
+   "src_span": [
+    13.0,
+    14.2
+   ],
+   "t_final": [
+    19.03,
+    20.23
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대에 선 두 창업자(남·회색 티 / 여·회색 재킷), 인사하며 말하는 중",
+   "mute": true,
+   "Y": 63
+  },
+  {
+   "i": 12,
+   "line": "N5",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 28.1,
+   "dur": 1.1,
+   "src_span": [
+    28.1,
+    29.2
+   ],
+   "t_final": [
+    20.23,
+    21.33
+   ],
+   "src_crop": [
+    700,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대 와이드 — 커튼 앞에 선 두 창업자(피치 시작)",
+   "mute": true,
+   "Y": 50
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 300.4,
+   "dur": 3.95,
+   "src_span": [
+    300.4,
+    304.35
+   ],
+   "t_final": [
+    21.36,
+    25.31
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "듣는 두 창업자(300.4~302.5) → 302.50 원본 컷 말하는 투자자(남·민머리) — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    300.4,
+    304.35
+   ],
+   "Y": 65
+  },
+  {
+   "i": 14,
+   "line": "O5",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 377.92,
+   "dur": 4.03,
+   "src_span": [
+    377.92,
+    381.95
+   ],
+   "t_final": [
+    25.39,
+    29.42
+   ],
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "투자자석 옆모습(남색 정장 남·갈색 정장 여·민머리 남) → 381.11 원본 컷 창업자(남) 근접 — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    377.92,
+    381.95
+   ],
+   "Y": 37
+  },
+  {
+   "i": 15,
+   "line": "N7",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 386.75,
+   "dur": 2.25,
+   "src_span": [
+    386.75,
+    389.0
+   ],
+   "t_final": [
+    29.5,
+    31.75
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "손짓하며 말하는 투자자(남·검정 정장·초록 넥타이) → 투자자(여·금발)",
+   "mute": true,
+   "Y": 39
+  },
+  {
+   "i": 16,
+   "line": "O7",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 466.38,
+   "dur": 1.72,
+   "src_span": [
+    466.38,
+    468.1
+   ],
+   "t_final": [
+    32.26,
+    33.98
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "말하는 투자자(여·금발) → 467.57 원본 컷 창업자(남) 근접 — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    466.38,
+    468.1
+   ],
+   "Y": 61
+  },
+  {
+   "i": 17,
+   "line": "N8",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 476.2,
+   "dur": 1.7,
+   "src_span": [
+    476.2,
+    477.9
+   ],
+   "t_final": [
+    34.06,
+    35.76
+   ],
+   "src_crop": [
+    508,
+    0,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "제안을 듣고 귓속말하는 두 창업자(하단 'Lori's offer' 띠는 위 880만 잘라 뺌)",
+   "mute": true,
+   "Y": 58
+  },
+  {
+   "i": 18,
+   "line": "N8",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 481.9,
+   "dur": 1.0,
+   "src_span": [
+    481.9,
+    482.9
+   ],
+   "t_final": [
+    35.76,
+    36.76
+   ],
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "나란히 앉은 투자자(남·남색 정장)와 투자자(여·갈색 정장)",
+   "mute": true,
+   "Y": 58
+  },
+  {
+   "i": 19,
+   "line": "N9",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 500.6,
+   "dur": 2.6,
+   "src_span": [
+    500.6,
+    503.2
+   ],
+   "t_final": [
+    36.82,
+    39.42
+   ],
+   "src_crop": [
+    150,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "말하는 투자자(남·남색 정장) → 501.67 원본 컷 투자자석 와이드",
+   "mute": true,
+   "Y": 41
+  },
+  {
+   "i": 20,
+   "line": "N9",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 507.3,
+   "dur": 2.05,
+   "src_span": [
+    507.3,
+    509.35
+   ],
+   "t_final": [
+    39.42,
+    41.47
+   ],
+   "src_crop": [
+    380,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "나란히 앉은 투자자(남·남색 정장)와 투자자(여·갈색 정장), 남자가 손짓하며 제안",
+   "mute": true,
+   "Y": 50
+  },
+  {
+   "i": 21,
+   "line": "O8",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 518.6,
+   "dur": 2.0,
+   "src_span": [
+    518.6,
+    520.6
+   ],
+   "t_final": [
+    41.13,
+    43.13
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "두 창업자 — 여자가 '계약'을 말하고 남자가 팔 벌려 환호 → 519.92 원본 컷 투자자석 와이드(일어서는 투자자) — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    518.6,
+    520.6
+   ],
+   "Y": 63
+  },
+  {
+   "i": 22,
+   "line": "O9",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 533.6,
+   "dur": 5.7,
+   "src_span": [
+    533.6,
+    539.3
+   ],
+   "t_final": [
+    43.21,
+    48.91
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "투자자석 와이드(다섯 명) → 538.40 원본 컷 투자자(여·갈색 정장) — 소리와 같은 원본 초",
+   "mute": false,
+   "audio_src": "RADCBcHJO_k.mp4",
+   "audio_span": [
+    533.6,
+    539.3
+   ],
+   "Y": 47
+  },
+  {
+   "i": 23,
+   "line": "N10",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 547.3,
+   "dur": 2.1,
+   "src_span": [
+    547.3,
+    549.4
+   ],
+   "t_final": [
+    48.99,
+    51.09
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대 뒤에서 두 팔 들고 기뻐하는 두 창업자",
+   "mute": true,
+   "Y": 36
+  },
+  {
+   "i": 24,
+   "line": "N10",
+   "src": "RADCBcHJO_k.mp4",
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "ss": 346.0,
+   "dur": 1.8,
+   "src_span": [
+    346.0,
+    347.8
+   ],
+   "t_final": [
+    51.09,
+    52.89
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "회색 팔찌 세트·bala 상자 제품 근접(끝 컷 ≥1.5초)",
+   "mute": true,
+   "Y": 66
+  }
+ ],
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    610,
+    684
+   ],
+   "size": 330,
+   "stroke": 8,
+   "t": [
+    0.0,
+    1.25
+   ],
+   "why": "벤치 0초 빨간 원(투자자 얼굴) — 207.9초 크롭 x=210 프레임에서 얼굴 중심(창 610,250 → 완성 610,684)"
+  },
+  {
+   "line": "N9",
+   "kind": "emoji",
+   "emoji": "💸",
+   "at": [
+    540,
+    640
+   ],
+   "size": 170,
+   "t": [
+    1.2,
+    3.4
+   ],
+   "why": "벤치 38.6~41.1초 날개 돈다발 — 마크(완성 x≈146)·마리아(x≈936) 얼굴 사이 배경 위, 얼굴 안 가림(B5)"
+  }
+ ],
+ "check": {
+  "cut_count": 25,
+  "cut_median_plan": 1.8,
+  "first_cut": 1.15,
+  "last_cut": 1.8,
+  "max_scale": 1.195,
+  "est_total_sec": 52.79,
+  "bench_total": 50.467,
+  "same_src_close_B13": [],
+  "gap_lt3_any_order": [],
+  "Y_min": 36,
+  "real_pieces": [
+   1.15,
+   1.8,
+   1.7,
+   1.9,
+   1.85,
+   3.32,
+   1.35,
+   1.7,
+   1.25,
+   1.2,
+   1.25,
+   1.2,
+   1.1,
+   2.1,
+   1.85,
+   3.19,
+   0.84,
+   1.47,
+   0.78,
+   1.19,
+   0.53,
+   0.91,
+   0.79,
+   1.0,
+   1.07,
+   1.53,
+   2.05,
+   1.32,
+   0.68,
+   4.8,
+   0.9,
+   2.1,
+   1.8
+  ],
+  "real_cut_median": 1.32,
+  "real_slivers_lt0.3": []
+ }
+}
