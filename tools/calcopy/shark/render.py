@@ -50,7 +50,8 @@ DEF = {
     "bgm": "sweets", "bgm_lufs": -24.5, "duck_db": -10.0,
     "target_lufs": -9.0, "peak_max": -0.5,
 }
-FX_KINDS = ("red_circle", "emoji")   # narr_video.overlay_png 가 그리는 것
+from tools.calcopy.shark import fx as FX  # noqa: E402  — 자막·꾸밈·번쩍·효과음 그림/자리 주인(값은 shark/rules.json)
+FX_KINDS = FX.KINDS
 
 
 def log(*a):
@@ -523,7 +524,7 @@ def title_fit(layer: dict, man: dict, video_top: float) -> tuple[dict, dict]:
     return out, {"sizes": sizes, "target_w": target_w, "ink_bottom_target": bottom, "line_h": lh, "y": out["y"]}
 
 
-REACT_MAX = 6   # 원음 짧은 반응(×1.25 꼴) = 자막 한 조각뿐인 원음 줄이고 글자 ≤ 이것(뭐라고?!·대박·와우 — 프리셋 원음반응_크게 notes)
+REACT_MAX = FX.R()["caption"]["react_max_chars"]   # 원음 짧은 반응(×1.25 꼴) — 값 주인 shark/rules.json
 
 
 def cap_style(c: dict, n_caps: int, FS: dict) -> tuple[str, dict]:
@@ -531,27 +532,6 @@ def cap_style(c: dict, n_caps: int, FS: dict) -> tuple[str, dict]:
     if c["kind"] == "O" and FS.get("react_style") and n_caps == 1 and nchar(c["text"]) <= REACT_MAX:
         return "원음반응", FS["react_style"]
     return ("원음" if c["kind"] == "O" else "나레"), (FS["orig_style"] if c["kind"] == "O" else FS["narr_style"])
-
-
-def cap_png(text: str, st: dict, dst: Path) -> Path:
-    """자막 한 장 = 엔진 emph_png(글꼴·크기·자리·외곽선). 층에 그림자(shadow dx·dy·blur)가 있으면 같은 글을 검정으로 그려
-    dx·dy 만큼 옮기고 흐려 밑에 깐다 — emph_png 가 shadow 를 안 그려서(엔진 요청) 프리셋 값 그대로 얹는 것."""
-    from PIL import Image, ImageFilter
-    from tools.calcopy import narr_video as nv
-    nv.emph_png(text, st, st.get("rgb") or (255, 255, 255), dst, dy=0)
-    sh = st.get("shadow")
-    if not sh:
-        return dst
-    tmp = dst.with_name(dst.stem + "_sh.png")
-    nv.emph_png(text, st, sh.get("rgb") or (0, 0, 0), tmp, dy=0)
-    s_im = Image.open(tmp).convert("RGBA")
-    base = Image.new("RGBA", s_im.size, (0, 0, 0, 0))
-    base.paste(s_im, (int(sh.get("dx", 0)), int(sh.get("dy", 0))), s_im)
-    base = base.filter(ImageFilter.GaussianBlur(max(0.1, float(sh.get("blur", 0)) / 2)))
-    base.alpha_composite(Image.open(dst).convert("RGBA"))
-    base.save(dst)
-    tmp.unlink()
-    return dst
 
 
 def effects(D, LT) -> tuple[list[dict], list[str]]:
@@ -653,31 +633,17 @@ def orig_gains(D, P, C) -> list[list]:
 
 
 def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
-    from tools.calcopy import narr_video as nv
-    pd = R / "ov"; shutil.rmtree(pd, ignore_errors=True); pd.mkdir(parents=True)
-    items = []
+    """자막(낱말 색·번짐·그림자·넘김 흐림)·꾸밈·번쩍 = shark/fx.build_layer 가 그린 RGBA 층 하나를 얹는다(판단은 fx·caption_style·rules.json)."""
     n_of = {}
     for c in P["captions"]:
         n_of[c["line"]] = n_of.get(c["line"], 0) + 1
-    for k, c in enumerate(P["captions"]):
-        c["style"], st = cap_style(c, n_of[c["line"]], FS)
-        png = cap_png(c["text"], st, pd / f"cap{k:03d}.png")
-        items.append((png, 0, 0, c["t0"], c["t1"]))
-    for k, e in enumerate(P["effects"]):
-        png = nv.overlay_png(e, pd / f"fx{k:02d}.png")
-        items.append((png, e["at"][0], e["at"][1], *e["T"]))
-    ins, fc, last = [], [], "0:v"
-    for k, (png, x, y, a, b) in enumerate(items):
-        ins += ["-i", png]
-        pos = "0:0" if png.name.startswith("cap") else f"{x}-overlay_w/2:{y}-overlay_h/2"
-        fc.append(f"[{last}][{k + 1}:v]overlay={pos}:enable='between(t,{a:.3f},{b - 0.001:.3f})'[v{k}]")
-        last = f"v{k}"
-    fc.append(f"[{last}]format=yuv420p[v]")
-    script = R / "overlay_fc.txt"
-    script.write_text(";".join(fc), encoding="utf-8")
+    for c in P["captions"]:
+        c["style"], _ = cap_style(c, n_of[c["line"]], FS)
+    layer = R / "fx_layer.mov"
+    P["fx_drawn"] = FX.build_layer(P, D["S"], layer, P["dur"])
     out = R / "video_cap.mp4"
-    run(["ffmpeg", "-y", "-i", src_mp4, *ins, "-filter_complex_script", script, "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "16",
-         "-preset", "veryfast", "-color_range", "tv", "-r", "30", out])
+    run(["ffmpeg", "-y", "-i", src_mp4, "-i", layer, "-filter_complex", f"[0:v][1:v]overlay=0:{FX.Y0}:format=auto,format=yuv420p[v]",
+         "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-color_range", "tv", "-r", "30", out])
     return out
 
 
@@ -768,8 +734,9 @@ def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_ta
     ha.add_source_bed(str(final_nv), str(R / "audio_timeline.json"), str(R / "audio_materials.json"), str(placed), str(bed), 1.0, 10.0,
                       work=str(R / "srcbed"), gap_gain=gg)
     video = overlay_pass(D, P, FS, bed, R)
-    A = audio_final(D, P, C, bed, video, R)
-    info = info_of(D, P, NM, mode, {**base, "final": str(R / "final.mp4"), "audio_mix": A, "orig_gain": gg})
+    sfx = FX.sfx_events(P)
+    A = audio_final(D, P, C, FX.add_sfx(bed, sfx, R), video, R)
+    info = info_of(D, P, NM, mode, {**base, "final": str(R / "final.mp4"), "audio_mix": A, "orig_gain": gg, "fx_drawn": P.get("fx_drawn"), "sfx": sfx})
     jsave(R / "render_info.json", info)
     (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
     return info

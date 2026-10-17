@@ -132,6 +132,17 @@
     "t_final": [
      0.0,
      0.5
+    ],
+    "emph": [
+     {
+      "cap": "뭐라고?!",
+      "span": "뭐라고?!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -151,6 +162,26 @@
     "t_final": [
      0.58,
      1.99
+    ],
+    "emph": [
+     {
+      "cap": "이 자루를",
+      "span": "이 자루를",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물에 담가 두면",
+      "span": "담가 두면",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -171,6 +202,35 @@
     "t_final": [
      2.07,
      5.45
+    ],
+    "emph": [
+     {
+      "cap": "3~5분이면",
+      "span": "3~5분이면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물 15리터쯤 먹고",
+      "span": "15리터쯤",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "빵빵하게 부푼다는데",
+      "span": "부푼다는데",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -191,6 +251,35 @@
     "t_final": [
      5.53,
      8.63
+    ],
+    "emph": [
+     {
+      "cap": "홍수 때마다 쌓던",
+      "span": "때마다 쌓던",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래주머니 대신",
+      "span": "모래주머니 대신",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쓰려고 만든 거라고",
+      "span": "만든 거라고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -216,6 +305,35 @@
     "t_final": [
      8.71,
      14.61
+    ],
+    "emph": [
+     {
+      "cap": "기존 모래주머니는",
+      "span": "모래주머니는",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "허리가 끊어지고",
+      "span": "허리가 끊어지고",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래만 수천 파운드죠",
+      "span": "수천 파운드죠",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -235,6 +353,26 @@
     "t_final": [
      14.69,
      17.51
+    ],
+    "emph": [
+     {
+      "cap": "하나하나 들어 옮겨 쌓던",
+      "span": "들어 옮겨 쌓던",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "모래주머니랑은 다르게",
+      "span": "다르게",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -260,6 +398,35 @@
     "t_final": [
      17.59,
      22.34
+    ],
+    "emph": [
+     {
+      "cap": "설치할 때",
+      "span": "설치할 때",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "힘이 거의 안 들고",
+      "span": "거의 안 들고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그냥 물만 부으면 돼요",
+      "span": "부으면 돼요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -280,6 +447,35 @@
     "t_final": [
      22.42,
      25.38
+    ],
+    "emph": [
+     {
+      "cap": "물길에 놓기만 하면",
+      "span": "놓기만 하면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "13kg 넘는 둑이",
+      "span": "13kg",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "된다고",
+      "span": "된다고",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -303,6 +499,17 @@
     "t_final": [
      25.46,
      27.11
+    ],
+    "emph": [
+     {
+      "cap": "다시 되돌릴 수 있어요?",
+      "span": "다시 되돌릴 수 있어요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -323,6 +530,35 @@
     "t_final": [
      27.19,
      30.43
+    ],
+    "emph": [
+     {
+      "cap": "햇볕에 두면",
+      "span": "햇볕에 두면",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다시 납작하게 마르고",
+      "span": "납작하게 마르고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "세 번까지 다시 쓴다고",
+      "span": "세 번까지",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -346,6 +582,17 @@
     "t_final": [
      30.51,
      31.61
+    ],
+    "emph": [
+     {
+      "cap": "그거 꽤 괜찮네요",
+      "span": "그거 꽤 괜찮네요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -369,6 +616,17 @@
     "t_final": [
      31.69,
      32.69
+    ],
+    "emph": [
+     {
+      "cap": "돈은 좀 벌고 있어요?",
+      "span": "돈은 좀 벌고 있어요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -392,6 +650,17 @@
     "t_final": [
      32.77,
      34.12
+    ],
+    "emph": [
+     {
+      "cap": "9만 달러 벌었어요",
+      "span": "9만 달러",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -415,6 +684,53 @@
     "t_final": [
      34.2,
      38.85
+    ],
+    "emph": [
+     {
+      "cap": "광고는 아직",
+      "span": "광고는 아직",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 번도 안 했다며",
+      "span": "한 번도",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "제대로만 하면",
+      "span": "제대로만 하면",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "수백만 달러도 노린다고",
+      "span": "수백만 달러도",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "자신하는데",
+      "span": "자신하는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -439,6 +755,26 @@
     "t_final": [
      38.93,
      41.72
+    ],
+    "emph": [
+     {
+      "cap": "20만 달러 드릴게요",
+      "span": "20만 달러",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "대신 지분은 30%로요",
+      "span": "30%로요",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -462,6 +798,17 @@
     "t_final": [
      41.8,
      43.82
+    ],
+    "emph": [
+     {
+      "cap": "우리도 30%로 할게요!",
+      "span": "우리도 30%로 할게요!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -483,6 +830,35 @@
     "t_final": [
      43.9,
      47.28
+    ],
+    "emph": [
+     {
+      "cap": "처음 두 명도",
+      "span": "처음 두 명도",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "30%로 내리면서",
+      "span": "30%로",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "네 명이 한판 붙었는데",
+      "span": "네 명이",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -507,6 +883,26 @@
     "t_final": [
      47.36,
      48.61
+    ],
+    "emph": [
+     {
+      "cap": "로리, 마크!",
+      "span": "로리, 마크!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 분이랑 할게요",
+      "span": "두 분이랑",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -527,6 +923,35 @@
     "t_final": [
      48.69,
      52.35
+    ],
+    "emph": [
+     {
+      "cap": "10%만 주려다",
+      "span": "10%만 주려다",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "결국 30%에",
+      "span": "결국 30%에",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 투자자와 손잡았다고",
+      "span": "두 투자자와",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    }
   ],

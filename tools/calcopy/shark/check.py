@@ -24,6 +24,48 @@ LUFS_TOL, PEAK_MAX, LEN_TOL, CUT_TOL = 0.5, -0.5, 0.15, 0.30
 CUT_MIN, END_MIN, CAP_MAX, SYNC_TOL = 1.2, 1.5, 13, 0.04
 
 
+EN_ASR_PROMPT = ('For each clip, transcribe the spoken English exactly as heard. Write the English words — do NOT translate or transliterate into '
+                 'Korean. Skip music and sound effects. Count the speakers. Empty text if there is no speech.\n'
+                 'JSON only: {"clips":[{"i":0,"text":"","speakers":1}]}')
+EN_MATCH_MIN = 0.5   # 대본 원문 낱말 중 받아쓰기(두 모델 중 나은 쪽)에 나온 비율 — 6편 영어 재받아쓰기 6줄 실측으로 정함
+
+
+def _words(t: str) -> list[str]:
+    import re
+    t = re.sub(r"(?<=\d),(?=\d)", "", (t or "").lower()).replace("%", " percent")
+    return [w for w in re.findall(r"[a-z0-9']+", t) if w not in ("the", "a", "an", "uh", "um")]
+
+
+def orig_match(ow: list[dict], res: dict) -> list[dict]:
+    """(판단 주인: 원음 들림) 원음 줄마다 대본 영어(en) 낱말 중 받아쓰기에 나온 비율(모델별 최고) · 한국어 섞임."""
+    import re
+    out = []
+    for i, x in enumerate(ow):
+        want = _words(x.get("en"))
+        heard = [c.get("text", "") for r in res.get("runs") or [] for c in r.get("clips") or [] if c.get("i") == i]
+        best = max((sum(1 for w in want if w in set(_words(h))) / max(1, len(want)) for h in heard), default=0.0)
+        ko = any(re.search(r"[가-힣]", h) for h in heard)
+        out.append({"id": x["id"], "recall": round(best, 2), "ko": ko, "heard": heard, "ok": best >= EN_MATCH_MIN and not ko})
+    return out
+
+
+def forward_runs(cuts: list[dict], gap_max: float = 3.0) -> list[dict]:
+    """B13 앞처리: 화면에서 바로 이어지는(t1≈다음 t0) 같은 소스 컷이 원본에서 앞으로만 가면(겹침 0·틈 ≤ gap_max초) 한 컷으로 묶는다.
+    방송 편집을 그대로 따라 이어 읽은 원음 줄들(2편 L1~L2·L6~L9)을 '±3초 재사용'으로 잡던 오탐 수리 — 되돌아가거나 겹치면 묶지 않아 여전히 잡힌다."""
+    out = []
+    for c in sorted(cuts, key=lambda c: c["t0"]):
+        c = {**c, "ss": float(c["ss"]), "dur": float(c["dur"])}
+        p = out[-1] if out else None
+        if p and p["src"] == c["src"] and abs(float(p["t1"]) - float(c["t0"])) < 0.06:
+            end = p["ss"] + p["dur"]
+            if end - 0.05 <= c["ss"] <= end + gap_max:
+                p["dur"] = round(c["ss"] + c["dur"] - p["ss"], 3); p["t1"] = c["t1"]
+                p["line"] = f"{str(p['line']).split('~')[0]}~{c['line']}"
+                continue
+        out.append(c)
+    return out
+
+
 def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> dict:
     R = work / stage
     info = jload(R / "render_info.json")
@@ -51,7 +93,7 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
         f"중앙 {med:.2f}(벤치 {bm}) · 끝 묶음 {[c['dur'] for c in last]} · 전체 최단 {ds[0]:.2f} · 1.2초 미만 {[(c['i'], c['dur']) for c in cuts if c['dur'] < CUT_MIN]}",
         all(c["dur"] >= CUT_MIN - 1e-6 for c in last) and cuts[-1]["dur"] >= END_MIN and (not bm or 1 - CUT_TOL <= med / bm <= 1 + CUT_TOL),
         (f"×{med / bm:.2f}" if bm else "") + " · 원음 컷은 재료 시각 그대로라 짧을 수 있음 — 컷표 참고")
-    b13 = reuse_violations([{**c, "src": c["src"]} for c in cuts])
+    b13 = reuse_violations(forward_runs(cuts))
     row("B13", "같은 장면 ±3초 재사용", b13 or "0", not b13)
     capmax = max(nchar(c["text"]) for c in info["captions"])
     row("A9", f"자막 조각 ≤{CAP_MAX}자", capmax, capmax <= CAP_MAX)
@@ -77,17 +119,21 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
             if covered < (b - a) - 0.05:
                 bad.append(f"{x['id']} 무음 {covered:.2f}/{b - a:.2f}초")
         row("O-NARR", "원음 창 안 나레 없음", bad or "0", not bad)
-        if asr:   # 완성본 원음 창만 잘라 서버 제미나이 2모델 단독 받아쓰기 — 한국어(나레)가 섞였나·영어 원음이 들리나
-            import re
+        if asr:   # 완성본 원음 창만 잘라 서버 제미나이 2모델 단독 받아쓰기(영어 요청문) — 대본 영어 원문과 낱말 일치율
             from tools.calcopy.hybrid import server_ai
             ow = [x for x in info["lines"] if x["kind"] == "O"]
-            res = server_ai.asr_clips(final, [tuple(x["speak"]) for x in ow])
-            heard = [server_ai.texts_of(res, i) for i in range(len(ow))]
-            ko = [f"{x['id']}:{t}" for x, ts in zip(ow, heard) for t in ts if re.search(r"[가-힣]", t)]
-            empty = [x["id"] for x, ts in zip(ow, heard) if not any(re.search(r"[A-Za-z]", t) for t in ts)]
-            jsave(R / "asr_orig.json", {"lines": [x["id"] for x in ow], "heard": heard, "ok_models": res.get("ok_models")})
-            row("ASR", "원음 창 받아쓰기(2모델): 한국어 섞임 0·영어 들림", f"모델 {res.get('ok_models')} · 한국어 {ko or 0} · 영어 안 들림 {empty or 0}",
-                len(res.get("ok_models") or []) >= 2 and not ko and not empty, f"{R / 'asr_orig.json'}")
+            spans = [list(x["speak"]) for x in ow]
+            cache = R / "asr_orig_en.json"
+            res = jload(cache) if cache.exists() and jload(cache).get("spans") == spans else None
+            if res is None:
+                res = server_ai.asr_clips(final, [tuple(s_) for s_ in spans], prompt=EN_ASR_PROMPT)
+                res["spans"] = spans
+                jsave(cache, res)
+            m = orig_match(ow, res)
+            bad = [f"{x['id']} {x['recall']:.0%}" + (" 한국어" if x["ko"] else "") for x in m if not x["ok"]]
+            row("ASR", f"원음 창 영어 받아쓰기(2모델) ↔ 대본 영어 원문 낱말 일치 ≥{EN_MATCH_MIN:.0%}",
+                f"모델 {res.get('ok_models')} · " + " · ".join(f"{x['id']} {x['recall']:.0%}" for x in m),
+                len(res.get("ok_models") or []) >= 2 and not bad, f"{cache}" + (f" · 미달 {bad}" if bad else ""))
         sheet = R / "final_sheet_1s.jpg"
         sheet_1s(final, sheet)
     L = [f"# 샥탬스토리 B표 초안 — {doc.name} · {stage} (tools/calcopy/shark/check.py)", "",
