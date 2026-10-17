@@ -1,0 +1,170 @@
+{
+ "id": "fgA7dgqwyRM",
+ "title_card": "미국 그릴계를/평정한 마법의 양념",
+ "post_title": "미국 그릴계를 평정한 마법의 양념",
+ "dur": 26.59,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.0,
+   "caption": "미국 그릴계를 평정한 마법의 양념(훅 카드)",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "굽힌 스테이크 표면 클로즈업",
+   "effect": null,
+   "ending": "~양념"
+  },
+  {
+   "t0": 2.0,
+   "t1": 4.2,
+   "caption": "죽은 고기도 살려낸다는/치트키로 유명한 이것",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "그릴 위 스테이크",
+   "effect": null,
+   "ending": "~이것"
+  },
+  {
+   "t0": 4.2,
+   "t1": 5.6,
+   "caption": "바로 몬트리올 스테이크 시즈닝",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "McCormick 몬트리올 스테이크 시즈닝 병, 'SEASONING' 글자",
+   "effect": null,
+   "ending": "~시즈닝"
+  },
+  {
+   "t0": 5.6,
+   "t1": 7.8,
+   "caption": "한국에서도 고기 좀 먹는다/하는 사람들 사이에선",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "생 스테이크에 시즈닝 뿌리는 장면",
+   "effect": null,
+   "ending": "~사이에선"
+  },
+  {
+   "t0": 7.8,
+   "t1": 9.8,
+   "caption": "이미 실패 없는/필수템으로 유명한데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "썰어놓은 미디엄레어 스테이크",
+   "effect": null,
+   "ending": "~한데"
+  },
+  {
+   "t0": 9.8,
+   "t1": 13.2,
+   "caption": "코스트코 22년 단골이라는 강주은도/마술의 양념이라고 극찬",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "방송화면(연예인·예능)",
+   "screen_desc": "주방에서 몬트리올 시즈닝 대용량 통을 들고 냄새 맡는 여성(자막 이름 '강주은'), 원본 자막 '마술의 양념이라고 제가 말씀드리고'",
+   "effect": "빨간 화살표(제품 통 가리킴)+반짝이 입자",
+   "ending": "~극찬"
+  },
+  {
+   "t0": 13.2,
+   "t1": 15.6,
+   "caption": "맛은 물론/잡내까지 싹 잡아줘서",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "그라인더에서 시즈닝 알갱이가 떨어지는 장면",
+   "effect": null,
+   "ending": "~줘서"
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.8,
+   "caption": "뿌려서 굽는 순간/집이 스테이크하우스됨",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "팬에서 구워지는 스테이크 두 덩이",
+   "effect": null,
+   "ending": "~됨"
+  },
+  {
+   "t0": 16.8,
+   "t1": 20.2,
+   "caption": "하지만 한국 먹보들은/이걸 고기에만 쓸리 없었음",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "방송화면(연예인·예능)",
+   "screen_desc": "젊은 여성이 파스타를 먹는 장면(화면에 이름 없음, 얼굴로 장원영 추정)",
+   "effect": "반짝이 입자·별 스티커",
+   "ending": "~없었음"
+  },
+  {
+   "t0": 20.2,
+   "t1": 22.0,
+   "caption": "야채 구울 때 뿌리거나/오일파스타에 넣어도 도른맛이라",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "브로콜리 판 위 McCormick 병 → 오일 파스타",
+   "effect": null,
+   "ending": "~이라"
+  },
+  {
+   "t0": 22.0,
+   "t1": 24.8,
+   "caption": "야채 헤이터들도/부담없이 식단 가능하다고 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "구운 채소 꼬치",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 24.8,
+   "t1": 26.6,
+   "caption": "아 이번주 캠핑 갈 때/너어는 1순위로 가져간다ㅋㅋ",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "한국인들(추정, 화자 표기 없음)",
+   "screen": "제품영상",
+   "screen_desc": "그릴 위 시즈닝 덮인 고기",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅카드(그릴계 평정 양념)→치트키 정체 공개(몬트리올 시즈닝)→국내 평판(필수템)→연예인 보증(강주은 극찬)→효과 2줄(잡내·스테이크하우스)→확장 용도(한국 먹보·야채·파스타)+연예인 먹방 컷→감탄 마무리 ㅋㅋ. 받아쓰기 없음",
+ "celeb_scenes": [
+  {
+   "t0": 9.8,
+   "t1": 13.2,
+   "who": "강주은(자막에 이름 명시)",
+   "program": "주방 촬영 영상(원본 자막 '마술의 양념이라고 제가 말씀드리고'), 프로그램·채널명 표기 없음",
+   "why_here": "자막 '코스트코 22년 단골 강주은도 극찬'의 증거 화면 — 연예인 실사용 보증, 제품 통에 빨간 화살표"
+  },
+  {
+   "t0": 16.8,
+   "t1": 20.2,
+   "who": "추정: 장원영(IVE) — 얼굴 근거만, 화면 글자 없음",
+   "program": null,
+   "why_here": "'한국 먹보들은' 줄에 파스타 먹는 연예인 컷을 붙여 다음 줄(오일파스타)로 연결"
+  }
+ ],
+ "kangjueun": "있음 — 9.8~13.2초. 근거: 화면 자막 '코스트코 22년 단골이라는 강주은도 / 마술의 양념이라고 극찬'(12.0초 프레임), 같은 컷 원본 자막 '마술의 양념이라고 제가 말씀드리고'(본인 발화 자막), 몬트리올 시즈닝 대용량 통을 들고 냄새 맡는 여성. 얼굴 대조는 하지 않음(이름은 자막 근거)"
+}

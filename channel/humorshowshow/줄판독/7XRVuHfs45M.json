@@ -1,0 +1,175 @@
+{
+ "id": "7XRVuHfs45M",
+ "title_card": "전세계 유일/한국만 낚였다는 꿀",
+ "post_title": "전세계 유일 한국만 낚였다는 꿀",
+ "dur": 29.69,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.0,
+   "caption": "전세계 유일 한국만 낚였다는 꿀(훅 카드)",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "스푼에서 흘러내리는 꿀",
+   "effect": null,
+   "ending": "~꿀"
+  },
+  {
+   "t0": 2.0,
+   "t1": 5.2,
+   "caption": "한국인 90%가 그동안/모르고 먹어온 꿀의 정체",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "벌집에서 흐르는 꿀",
+   "effect": null,
+   "ending": "~정체"
+  },
+  {
+   "t0": 5.2,
+   "t1": 6.6,
+   "caption": "바로 벌에게 설탕물을/먹여 만든 사양벌꿀",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "하트 모양 설탕물에 모인 벌들",
+   "effect": "빨간 화살표(설탕물 가리킴)",
+   "ending": "~사양벌꿀"
+  },
+  {
+   "t0": 6.6,
+   "t1": 9.4,
+   "caption": "미국, 유럽, 일본 모두/'가짜꿀' 취급인데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "기타",
+   "screen_desc": "미국·EU·일본 국기와 'FAKE' 글자가 꿀에 잠긴 합성",
+   "effect": null,
+   "ending": "~인데"
+  },
+  {
+   "t0": 9.4,
+   "t1": 10.8,
+   "caption": "유일하게 한국만/합법적으로 팔게해줌 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "캡처(댓글·성분표·기사·문의답변)",
+   "screen_desc": "쇼핑몰 사양벌꿀 상품 목록 캡처(가격 표기)",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 10.8,
+   "t1": 14.2,
+   "caption": "그럼 진짜 꿀은 뭔데?/탄소동위원소비 보라는데?",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "아카시아꿀 라벨 '탄소동위원소비 -25‰ 이하' 표시",
+   "effect": null,
+   "ending": "~는데?"
+  },
+  {
+   "t0": 14.2,
+   "t1": 15.6,
+   "caption": "이건 사실 표기의무도 아니라서/결국 또 낚이는 악순환",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "'사양벌꿀' 이름표 붙은 꿀 병들",
+   "effect": null,
+   "ending": "~악순환"
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.8,
+   "caption": "아 대체 어쩌라는겨",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "한국인들(추정, 화자 표기 없음)",
+   "screen": "밈짤",
+   "screen_desc": "안경 쓴 남성이 소리지르는 얼굴(미드 '오피스' 드와이트 추정 — 얼굴 근거, 화면 글자 없음)",
+   "effect": null,
+   "ending": "~는겨"
+  },
+  {
+   "t0": 16.8,
+   "t1": 19.2,
+   "caption": "아 대체 어쩌라는겨/장난질에 지친 꿀목민들이 결국 찾아낸건",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "방충복 입은 양봉가",
+   "effect": null,
+   "ending": "~찾아낸건"
+  },
+  {
+   "t0": 19.2,
+   "t1": 22.4,
+   "caption": "신뢰할 숫자/UMF가 찍힌 마누카 꿀",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "UMF 마누카꿀 병 뚜껑들",
+   "effect": null,
+   "ending": "~꿀"
+  },
+  {
+   "t0": 22.4,
+   "t1": 24.4,
+   "caption": "특히 숫자가 중요한데/10+이상이면 믿고 먹어도 된다고",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "양봉장 위 '10+ UMF' 육각 그래픽",
+   "effect": "'10+ UMF' 육각 배지 그래픽",
+   "ending": "~다고"
+  },
+  {
+   "t0": 24.4,
+   "t1": 28.8,
+   "caption": "심지어 인증받은 마누카꿀은/전세계 딱 0.1% 희귀템 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "꿀 디퍼에서 흐르는 꿀",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 28.8,
+   "t1": 29.6,
+   "caption": "아 공복에 모닝 루틴/하나 더 생기겠네 ㅋㅋ",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "한국인들(추정, 화자 표기 없음)",
+   "screen": "제품사진",
+   "screen_desc": "유리컵 꿀차를 스푼으로 젓는 모습",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅카드(한국만 낚인 꿀)→폭로(사양벌꿀)→대비(해외는 가짜 취급, 한국만 합법 ㄷㄷ)→해결 시도(탄소동위원소비)→좌절(표기의무 없음)→반응 밈(어쩌라는겨)→대안 제품(UMF 마누카)→기준·희소성→감탄 마무리 ㅋㅋ. 받아쓰기 없음",
+ "celeb_scenes": [
+  {
+   "t0": 15.6,
+   "t1": 16.8,
+   "who": "추정: 레인 윌슨(드와이트 슈르트 역) — 얼굴 근거만",
+   "program": "추정: 미드 '오피스'(화면 표기 없음)",
+   "why_here": "'대체 어쩌라는겨' 분노·절규 반응을 소리지르는 얼굴로"
+  }
+ ],
+ "kangjueun": "없음 — 13줄 확인, 이름 자막 없음. 인물 장면은 15.6 안경 남성·16.8 양봉가뿐"
+}
