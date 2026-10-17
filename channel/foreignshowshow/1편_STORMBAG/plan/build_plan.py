@@ -78,9 +78,9 @@ LINES = [
      "caps": ["물길에 놓기만 하면", "13kg 넘는 둑이", "된다고"], "facts": ["f8"],
      "shots": [("3s0", 168.40, 1.60, crop_x(SUB3, 468), "외바퀴 수레 물에서 불어난 자루를 꺼내 드는 남자"),
                ("3s0", 174.00, 1.50, crop_x(SUB3, 468), "땅에 줄지어 놓인 불은 자루 둑")]},
-    {"id": "O5", "fn": "질문(재사용)", "kind": "orig", "src": "8UW", "span": [110.65, 112.10], "en": "Is there any way to get it back?", "who": "투자자(남·민머리·검정 정장)",
+    {"id": "O5", "fn": "질문(재사용)", "kind": "orig", "src": "8UW", "span": [110.65, 112.30], "en": "Is there any way to get it back?", "who": "투자자(남·민머리·검정 정장)",
      "caps": ["다시 되돌릴 수 있어요?"], "facts": ["f9"],
-     "shots": [("8UW", 110.65, 1.45, crop_x(FULL, 560), "의자에서 손가락으로 가리키며 묻는 투자자(민머리·검정 정장)")]},
+     "shots": [("8UW", 110.65, 1.65, crop_x(FULL, 560), "의자에서 손가락으로 가리키며 묻는 투자자(민머리·검정 정장)")]},
     {"id": "N6", "fn": "재사용", "kind": "tts", "text": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
      "tts": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
      "caps": ["햇볕에 두면", "다시 납작하게 마르고", "세 번까지 다시 쓴다고"], "facts": ["f10"],
@@ -122,10 +122,10 @@ LINES = [
      "caps": ["로리, 마크!", "두 분이랑 할게요", "좋았어!"], "facts": ["f16"],
      "shots": [("8UW", 577.80, 1.25, crop_x(FULL, 500), "웃는 창업자(남·큰 체격) 클로즈업"),
                ("8UW", 579.05, 1.85, crop_x(FULL, 405), "벌떡 일어나 환호하는 투자자(여·연두 옷)(N9 첫머리까지 이어짐)")]},
-    {"id": "N9", "fn": "방송 후 결과", "kind": "tts", "text": "방송 나간 주말에 재고는 동났다는데, 정식 계약은 끝내 안 맺었다고",
-     "tts": "방송 나간 주말에 재고는 동났다는데, 정식 계약은 끝내 안 맺었다고",
-     "caps": ["방송 나간 주말에", "재고는 동났다는데", "정식 계약은", "끝내 안 맺었다고"], "facts": ["f17"],
-     "shots": [("8UW", 584.50, 1.60, crop_x(FULL, 405), "무대에서 투자자(여)와 창업자가 끌어안는 장면"),
+    {"id": "N9", "fn": "방송 안 결과(성사)", "kind": "tts", "text": "10%만 주려다, 결국 30%에 두 투자자와 손잡았다고",
+     "tts": "십 퍼센트만 주려다, 결국 삼십 퍼센트에 두 투자자와 손잡았다고",
+     "caps": ["10%만 주려다", "결국 30%에", "두 투자자와 손잡았다고"], "facts": ["f17"],
+     "shots": [("8UW", 584.50, 1.60, crop_x(FULL, 405), "무대에서 투자자(여)와 창업자가 끌어안는 장면(손잡음)"),
                ("8UW", 592.10, 1.60, crop_x(FULL, 405), "두 창업자가 웃으며 무대를 걸어 나감(끝 컷 ≥1.5초)")]},
 ]
 
@@ -139,7 +139,7 @@ FACTS = {
     "f6": ("제품사 3s0 3.8~11.1 'the last thing that you want to be doing is shoveling sand. Traditional sandbags require back-breaking labor' + 3s0 18~24초 삽질 화면", "https://www.youtube.com/watch?v=3s0CwrcqWCU"),
     "f7": ("8UW 45.25~50.00 원음 'almost takes no labor to deploy, all you simply do is add water.'(r2 2모델 일치, 1명)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=45"),
     "f8": ("8UW 62.7~66.8 '30 pounds'(=13.6kg → '13킬로그램 넘는') · 8UW 30.0~37.7 'build a wall like this' · 3s0 50.1~54.6 '1-lb bag into a fully usable 35-lb sandbag'", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=62"),
-    "f9": ("8UW 110.65~112.10 원음 'Is there any way to get it back'(r3 2모델 — 112.1 에서 자름, 뒤 'or is it a one-time deal' 제외)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=110"),
+    "f9": ("8UW 110.65~112.30 원음 'Is there any way to get it back?'(r4 2모델 일치 — 112.10 은 'back' 잘림, 112.30 에서 자름, 뒤 'or is it a one-time deal' 제외)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=110"),
     "f10": ("8UW 113.3~118.5 창업자 'if you have it out in the sun … it will dehydrate again flat' · 121.5 'Three times.' (★벤치 '2~3주 내로 건조'는 원본상 화분 물주기 주기(364.5~367.4) — 우리는 안 씀)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=113"),
     "f11": ("8UW 85.95~87.05 원음 'That's pretty cool.'(r1 2모델 일치) · 85.89~87.39 투자자(남·남색 셔츠) 화면", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=85"),
     "f12": ("8UW 243.15~244.15 투자자 'You making any money?' · 259.9~264.0 창업자 '(our fiscal year just closed,) and we did $90,000, but we have so far done absolutely zero marketing.'(r2·r3 2모델)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=240"),
@@ -147,8 +147,7 @@ FACTS = {
     "f14": ("8UW 410.9~426.8 투자자 2명(화면 띠 'Daymond & Daniel\'s offer: $200k for a 40% stake' 7:08~7:14) '$200,000 for 40%' · 463.0~466.6 투자자(여) '$200,000, but for 30%'(화면 띠 'Lori & Mark\'s offer: $200k for a 30% stake' 7:48~7:50)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=410"),
     "f15": ("8UW 550.6~553.1 투자자 'We'll do 30 also' · 다른 투자자 'We'll do 30, we'll match it' → 투자자 4명이 같은 30% 조건(553.2 'now they're equal' · 화면 띠 'Daymond & Daniel\'s revised offer: $200k for a 30% stake' 9:14~9:18)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=550"),
     "f16": ("8UW 577.8~579.9 'Lori, Mark, you got a deal.' + 투자자(여) 'Yes!'(r1·r3 2모델)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"),
-    "f17": ("stormbag.co 블로그(회사 글): 'They sold out their stock the weekend the episode premiered' · 'walked away from the formal close to keep building the company on their own terms' — ⚠ 같은 블로그가 인용한 투자자 Daniel Lubetzky 페이스북 'Lori and Mark closed it'(같은 블로그 인용)과 상충 → 전언체, 페이블 판단 대기",
-            "https://stormbag.co/blogs/stormbag-flood-protection-blog/stormbag-on-shark-tank-the-sandless-sandbag-that-won-a-200k-deal"),
+    "f17": ("화면 띠 'Seeking $200k for a 10% stake'(1:16~1:24·5:10) + 8UW 5.9~12.0 'seeking 200,000 … for 10%' · 화면 띠 'Lori & Mark\'s offer: $200k for a 30% stake'(7:48) · 577.8~579.9 'Lori, Mark, you got a deal.' + 584~588 무대 포옹 — 방송 안에서 확인된 결과만(방송 뒤 계약·판매는 출처 상충·회사 단독이라 안 씀)", "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"),
 }
 
 
@@ -253,7 +252,7 @@ def main():
         "topic": "샤크탱크 STORMBAG — 물에 담그면 부푸는 모래 없는 모래주머니, 투자자 넷이 같은 조건으로 붙은 편(벤치 그대로 칼카피, 방송 원음 위주)",
         "brand": "샥탬스토리", "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
         "bench": bench,
-        "titles": {"hook": "홍수를 막을 수 있는\n역대급 모래 주머니?!", "rule": "벤치 그대로(사장님 10-18 ③) — 1줄 노랑 [211,304] / 2줄 흰 [318,407], 끝 '?!'. 바꾸는 것은 로고 자리 브랜드 '샥탬스토리'뿐(벤치 시트 33컷에 로고 자리 없음 — 넣을 자리 페이블 결정). 기록만, 구현은 페이블 OK 뒤"},
+        "titles": {"hook": "홍수를 막을 수 있는\n역대급 모래 주머니?!", "rule": "벤치 그대로(사장님 10-18 ③) — 1줄 노랑 [211,304] / 2줄 흰 [318,407], 끝 '?!'. 벤치에 로고 없음 → 로고 넣지 않음(페이블 10-18). 기록만, 구현은 페이블 OK 뒤"},
         "facts": {k: {"text": v[0], "url": v[1]} for k, v in FACTS.items()},
         "final": {"lines": lines, "est_total_sec": total, "cps_target": CPS,
                   "orig_audio": [{"id": L["id"], "src": SOURCES[L["src"]]["file"], "span": L["span"], "en": L["en"], "ko_caps": L["caps"], "who": L["who"]}
@@ -266,7 +265,7 @@ def main():
             {"at": "자막", "fx": "흰 글자+검정 테두리, 핵심어 형광(민트·초록·빨강·분홍)", "bench": "전 구간"}],
         "notes": ["TTS·렌더 전. 효과·제목 띠는 기록만(구현 안 함).",
                   "벤치 나레 연속 3어절 일치 0 — check_copy() 로 잰다(대본.json check.copy3).",
-                  "★FEMA·국토안보부 '정부 인증' 줄은 뺐다(회사 주장 'FEMA & DHS Approved' vs 같은 회사 FAQ 'FEMA does not formally approve individual products') — 페이블 판단 대기."],
+                  "페이블 10-18 판정: 정부 인증·방송 뒤 계약/재고 줄 뺌(출처 상충·회사 단독), 끝은 방송 안 결과로 닫음. 로고 넣지 않음(벤치에 없음)."],
     }
     doc["final"]["check"] = check_copy(lines)
     (D / "대본.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
