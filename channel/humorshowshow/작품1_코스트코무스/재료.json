@@ -1,0 +1,188 @@
+{
+ "cand_dir": "C:/숏템_칼카피/humorshowshow/작품1_코스트코무스",
+ "shots": [
+  {
+   "src": "src_FN7_nPN7_ks.mp4",
+   "ss": 2.2,
+   "kind": "제품영상",
+   "seen": "유리병 초코 무스를 숟가락으로 뜸(마리모랭 광고)",
+   "src_crop": [
+    720,
+    200,
+    1009,
+    820
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_YAj2vmp_6LY.mp4",
+   "ss": 4.0,
+   "src_crop": [
+    600,
+    260,
+    984,
+    800
+   ],
+   "kind": "제품영상",
+   "seen": "코스트코 진열대 디저틴 무스 상자"
+  },
+  {
+   "src": "src_JmsJ9M_zsSQ.mp4",
+   "ss": 88.0,
+   "kind": "제품영상",
+   "seen": "마리모랭 공장 금색 뚜껑 유리병 판"
+  },
+  {
+   "src": "src_wJeWsv6asJw.mp4",
+   "ss": 8.0,
+   "src_crop": [
+    493,
+    100,
+    935,
+    760
+   ],
+   "kind": "제품영상",
+   "seen": "공장 큰 통 초코 무스 반죽"
+  },
+  {
+   "src": "meme:gfr_Xh3A",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "종이 읽다 인상 쓰는 할아버지"
+  },
+  {
+   "src": "src_JmsJ9M_zsSQ.mp4",
+   "ss": 103.5,
+   "kind": "제품영상",
+   "seen": "컨베이어 위 유리병 무스 줄줄이"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_wJeWsv6asJw.mp4",
+   "ss": 2.0,
+   "src_crop": [
+    493,
+    100,
+    935,
+    760
+   ],
+   "kind": "제품영상",
+   "seen": "초콜릿 반죽 섞는 통"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_JmsJ9M_zsSQ.mp4",
+   "ss": 43.0,
+   "kind": "제품영상",
+   "seen": "유리병에 초코 무스 붓는 기계"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_YAj2vmp_6LY.mp4",
+   "ss": 25.0,
+   "src_crop": [
+    400,
+    260,
+    984,
+    800
+   ],
+   "kind": "제품영상",
+   "seen": "디저틴 라무스 6개 상자"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_q3tCkINwV00.mp4",
+   "ss": 2.0,
+   "kind": "제품영상",
+   "seen": "유리병 무스 숟가락으로 뜨기"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "meme:fm_travolta",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "두리번거리는 트래볼타(엥?)"
+  },
+  {
+   "src": "meme:tnr_15513953591711340335",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "눈 굴리는 아기(시큰둥)"
+  },
+  {
+   "src": "src_YAj2vmp_6LY.mp4",
+   "ss": 32.5,
+   "src_crop": [
+    500,
+    260,
+    984,
+    800
+   ],
+   "kind": "제품영상",
+   "seen": "금색 뚜껑 유리병 무스"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_kGWKYG1jB2s.mp4",
+   "ss": 96.0,
+   "src_crop": [
+    350,
+    200,
+    1082,
+    880
+   ],
+   "kind": "제품영상",
+   "seen": "작은 유리컵에 디저트 덜어 담기"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_wJeWsv6asJw.mp4",
+   "ss": 71.0,
+   "src_crop": [
+    493,
+    100,
+    935,
+    760
+   ],
+   "kind": "제품사진",
+   "seen": "농업대회(Concours Général Agricole) 메달"
+  },
+  {
+   "src": "src_wJeWsv6asJw.mp4",
+   "ss": 41.8,
+   "src_crop": [
+    493,
+    100,
+    935,
+    760
+   ],
+   "kind": "제품영상",
+   "seen": "마리모랭 공장 포장 라인 위 제품(France 3 2026-03)"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_kGWKYG1jB2s.mp4",
+   "ss": 44.0,
+   "kind": "제품영상",
+   "seen": "유리컵에 초코 디저트를 덜어 담는 손(마리모랭 레시피 영상)"
+  }
+ ]
+}

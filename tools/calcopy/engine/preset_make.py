@@ -317,16 +317,33 @@ def timing(w: dict, narr: Path, log: dict) -> tuple[list, float]:
     """1순위 = 무음 구간 + 글자 비율(line_starts asr=False). 경계에 쉼이 없다는 경보가 나면 그때만 받아쓰기(캐시 먼저)."""
     from tools.calcopy import narr_video as N
     steps = [{"text": p["text"], "chars": p["chars"], "new_cut": True, "line": p["line"]} for p in w["pieces"]]
-    lines = [l["text"] for l in w["lines"]]
+    lines = [l["tts"] for l in w["lines"]]   # 받아쓰기와 맞출 글 = 실제로 읽은 글(자막과 다른 줄: 숫자 읽기·화자 이름 뺌)
     msgs = []
     timed, dur = N.time_steps(steps, str(narr), lines=lines, log=msgs.append, asr=False)
     log["line_timing"] = {"way": "무음+글자비율", "경보": msgs}
     if any("[경보]" in m for m in msgs):
         hit = find_asr_cache(narr, w["data"])
         m2 = []
-        timed, dur = N.time_steps(steps, str(narr), lines=lines, log=m2.append, asr=True)
-        log["line_timing"] = {"way": "받아쓰기(무음 방식 경보 뒤)", "asr_cache": hit or "새로 부름(무료 제미나이)", "경보_무음": msgs, "경보": m2}
+        t2, d2 = N.time_steps(steps, str(narr), lines=lines, log=m2.append, asr=True)
+        bad = timing_broken(t2, d2)
+        if bad:   # 받아쓰기 시각이 소리 길이와 안 맞으면(제미나이 시각 늘어남 — 썰템쇼 작품1 30.6초 > 25.7초) 무음 방식 그대로 + 경보
+            log["line_timing"] = {"way": "무음+글자비율(받아쓰기 시각 버림)", "asr_cache": hit or "새로 부름(무료 제미나이)", "경보": msgs + m2,
+                                  "버린 까닭": bad}
+            print(f"  [경보] 받아쓰기 시각 버림 — {bad}", flush=True)
+        else:
+            timed, dur = t2, d2
+            log["line_timing"] = {"way": "받아쓰기(무음 방식 경보 뒤)", "asr_cache": hit or "새로 부름(무료 제미나이)", "경보_무음": msgs, "경보": m2}
     return timed, dur
+
+
+def timing_broken(timed, dur) -> str:
+    """조각 시각이 말이 되나 — 앞으로만 가고, 조각마다 0.1초 넘고, 소리 길이 안. 아니면 까닭 글."""
+    for a, b in zip(timed, timed[1:]):
+        if b["t0"] - a["t0"] < 0.1:
+            return f"조각 '{b['text'][:10]}' 시작 {b['t0']} 이 앞 조각({a['t0']})과 0.1초 안"
+    if timed and timed[-1]["t0"] > dur - 0.1:
+        return f"마지막 조각 시작 {timed[-1]['t0']} ≥ 소리 길이 {dur:.2f}"
+    return ""
 
 
 def line_spans(timed, n_lines, dur):

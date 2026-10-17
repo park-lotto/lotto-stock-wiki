@@ -174,7 +174,8 @@ def tts_transcript(audio: str, ask=None) -> tuple[list[dict] | None, str]:
         try:
             c = json.loads(cache.read_text(encoding="utf-8"))
             if c.get("md5") == md5 and isinstance(c.get("segments"), list):
-                return c["segments"], f"캐시 {cache.name}"
+                seg, how = _fit_asr_len(c["segments"], audio)
+                return seg, f"캐시 {cache.name}{how}"
         except ValueError:
             pass
     if ask is None:
@@ -188,7 +189,20 @@ def tts_transcript(audio: str, ask=None) -> tuple[list[dict] | None, str]:
     if not seg:
         return None, f"받아쓰기 실패: {err or '빈 답'}"
     cache.write_text(json.dumps({"md5": md5, "model": (d or {}).get("_model"), "segments": seg}, ensure_ascii=False, indent=1), encoding="utf-8")
-    return seg, f"받아쓰기 {(d or {}).get('_model')}"
+    seg, how = _fit_asr_len(seg, audio)
+    return seg, f"받아쓰기 {(d or {}).get('_model')}{how}"
+
+
+def _fit_asr_len(seg: list[dict], audio: str) -> tuple[list[dict], str]:
+    """제미나이 받아쓰기 시각이 소리 길이보다 5% 넘게 길면(시각이 고르게 늘어남 — 썰템쇼 작품1 30.6초 vs 실제 25.7초, 줄 머리를
+    소리 길이 비율로 줄이면 쉼 자리와 ±0.3초 안) 소리 길이 비율로 줄인다. 캐시 원본은 그대로 둔다."""
+    end = max(float(x.get("end") or x.get("start") or 0) for x in seg)
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", audio], capture_output=True, text=True)
+    dur = float(r.stdout.strip() or 0)
+    if not dur or end <= dur * 1.05:
+        return seg, ""
+    k = dur / end
+    return [{**x, "start": round(float(x["start"]) * k, 3), **({"end": round(float(x["end"]) * k, 3)} if x.get("end") is not None else {})} for x in seg],         f" · 시각 ×{k:.3f}(받아쓰기 끝 {end:.1f}초 > 소리 {dur:.1f}초)"
 
 
 def _norm_ko(t: str) -> str:
@@ -216,6 +230,16 @@ def asr_line_starts(lines: list[str], segs: list[dict]) -> list[float | None]:
                 if k >= 0:
                     hit = k
                     break
+        if hit is None:   # 머리 1~2글자만 잘못 들은 줄(작품1 '후훗'→'푸훗', '까 보면'→'보면') — 그 글자를 건너뛴 5자로 한 번 더
+            for skip in (1, 2):
+                if len(z) >= skip + 5:
+                    k = text.find(z[skip:skip + 5], pos)
+                    if k >= 0 and (pos == 0 or k - skip >= pos - 1):
+                        hit = max(pos, k - skip)
+                        break
+        if hit is None and len(z) >= 3:   # 마지막: 머리 3자('성분표') — 앞 줄 머리 뒤 20자 안에서만(멀리 있는 같은 말에 붙지 않게)
+            k = text.find(z[:3], pos, pos + 20 + len(z))
+            hit = k if k >= 0 else None
         if hit is None:
             out.append(None)
             continue
@@ -251,13 +275,15 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
                 log(f"[경보] 받아쓰기에서 줄 {miss} 머리를 못 찾음 — 그 줄만 쉼 방식→글자 비례 ({why})")
         else:
             log(f"[경보] {why} — 전 줄 쉼 방식→글자 비례로")
-    pause_ends = [e for _, e in ha._silences(audio, "-38dB", 0.08)] if any(x is not None for x in A[1:]) else []
+    pauses = [(e, e - a) for a, e in ha._silences(audio, "-38dB", 0.08)] if any(x is not None for x in A[1:]) else []
     out = [0.0]
     for k, (mid, dist) in enumerate(ha.break_points(audio, lines)):
         if A[k + 1] is not None:
             t = A[k + 1]
-            ends = [e for e in pause_ends if e > out[-1] + 0.3]
-            near = min(ends, key=lambda e: abs(e - t), default=t)
+            # 가까운 쉼 끝 — 거리에서 쉼 길이를 빼서 고른다(줄 사이 쉼은 문장 안 쉼보다 길다. 10-18 작품1: 0.40 떨어진 0.22초 쉼(줄 경계)과
+            #   0.398 떨어진 0.16초 쉼('까 보면,' 안)이 거의 같아 안쪽 쉼에 붙어 자막이 0.8초 늦었다)
+            ends = [(e, ln) for e, ln in pauses if e > out[-1] + 0.3]
+            near = min(ends, key=lambda x: abs(x[0] - t) - x[1], default=(t, 0))[0]
             out.append(near if abs(near - t) <= ASR_SNAP else t)
             continue
         anchored = next((a for a, _ in segs if a >= mid - 1e-3), mid) if mid is not None else None
