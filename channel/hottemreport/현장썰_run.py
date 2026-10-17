@@ -61,7 +61,8 @@ def main():
             @staticmethod
             def _silences(p, noise, d):
                 # 3편: 숨소리 채운 쉼은 −45dB 아래로 안 내려감(14.73~14.91) · 4편: −35dB 에서만 잡힘(9.13~9.18) → 두 문턱 합집합
-                return sorted(set(_orig_sil(p, "-40dB", min(d, 0.05))) | set(_orig_sil(p, "-35dB", min(d, 0.05))))
+                # 5편: 문장 끝 쉼이 −35dB·0.05초뿐(13.09~13.14) → −40/−35/−30dB·0.03초 합집합
+                return sorted(set().union(*(_orig_sil(p, n, min(d, 0.03)) for n in ("-40dB", "-35dB", "-30dB"))))
         mr.ha_real, mr.ha = mr.ha, _HA()
         # 편마다 다른 상수(재료.json "consts", 예: 원본이 끝 원음 바로 뒤에서 끝나면 TAIL 을 줄인다)
         M = json.loads((D / "재료.json").read_text(encoding="utf-8"))

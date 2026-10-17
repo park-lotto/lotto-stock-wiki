@@ -1,0 +1,171 @@
+{
+ "topic": "고양이 모양 빵 봉지 집게 — 아빠(@theclawedjoker)가 사 와서 딸과 빵 봉지에 끼워 봄",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": null,
+ "bench_note": "벤치 없는 새 소재(2편과 같은 크리에이터)",
+ "sources": {
+  "main": {
+   "file": "tt_7667682859624238367.mp4",
+   "who": "틱톡 @theclawedjoker",
+   "views": 111500,
+   "dur": 59.0,
+   "res": "1080x1920"
+  }
+ },
+ "titles": {
+  "hook": "빵 봉지에 끼우는\n고양이 엉덩이 집게"
+ },
+ "facts": {
+  "f1": {
+   "text": "0~2초 딸이 회색 고양이 모양 집게(엉덩이 자리에 구멍)를 듦 · 1.45~3.35 'I know what these are. Get it.'(두 모델 일치) · 4~10초 아빠가 집게를 들어 보임",
+   "kind": "화면+말"
+  },
+  "f2": {
+   "text": "4.15~6.96 'You have a really bad problem of leaving all the bread open in this house.' · 7.3~8.6 'So I got these off the TikTok shop.'",
+   "kind": "본인 말(소재표 받아쓰기)"
+  },
+  "f3": {
+   "text": "11~24 첫 봉지 끼우기 씨름 · 31~37 두 번째 봉지 씨름 · 37.45~41.3 '…look, you just fish/stitch it in. You don't even have to spin it.'(두 모델: 끼우는 낱말·주어만 갈림, '돌릴 필요 없음' 일치)",
+   "kind": "화면+본인 말"
+  },
+  "f4": {
+   "text": "45~55 흰 고양이 집게를 봉지에 끼워 매단 화면 · 53.35~55.6 'I got little cat butt holes/buckles everywhere'(소재표=butt holes, 다시 받아쓰기 두 모델=buckles)",
+   "kind": "화면+본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "N3",
+   "O2",
+   "N4",
+   "N5",
+   "O3"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품+~있는데요)",
+    "text": "빵 봉지 끝을 고양이 엉덩이에 끼워 잠그는, 고양이 빵 봉지 집게가 있는데요.",
+    "caps": [
+     "빵 봉지 끝을",
+     "고양이 엉덩이에 끼워 잠그는",
+     "고양이 빵 봉지 집게가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "이유",
+    "text": "빵 봉지를 늘 열어 두는 가족 때문에, 아빠가 사 왔대요.",
+    "caps": [
+     "빵 봉지를 늘 열어 두는",
+     "가족 때문에",
+     "아빠가 사 왔대요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "불러냄 → 원음 증거",
+    "text": "처음엔 잘 안 들어가서, 한참을 씨름했는데요.",
+    "caps": [
+     "처음엔 잘 안 들어가서",
+     "한참을 씨름했는데요"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "note": "1차 \"끼우는 게\" — 받아쓰기 주 모델 2회 \"키우는 게\""
+   },
+   {
+    "id": "N4",
+    "fn": "장점 몰아치기",
+    "text": "봉지 끝을 모아서 구멍에 쏙 밀어 넣기만 하면, 그걸로 끝이래요.",
+    "caps": [
+     "봉지 끝을 모아서",
+     "구멍에 쏙 밀어 넣기만 하면",
+     "그걸로 끝이래요"
+    ],
+    "facts": [
+     "f3",
+     "f4"
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "끝 전언(~다고 하네요)",
+    "text": "그렇게 빵 봉지마다 하나씩 끼웠더니, 이런 말이 나왔다고 하네요.",
+    "caps": [
+     "그렇게 빵 봉지마다",
+     "하나씩 끼웠더니",
+     "이런 말이 나왔다고 하네요"
+    ],
+    "facts": [
+     "f4"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "ct",
+    "span": [
+     1.45,
+     3.35
+    ],
+    "en": "I know what these are. Get it.",
+    "caps": [
+     "나 이거 뭔지 알아!"
+    ],
+    "check": "1.45~3.35 두 모델 일치 · 소리 1.58~3.25"
+   },
+   {
+    "id": "O2",
+    "src": "ct",
+    "span": [
+     37.45,
+     41.3
+    ],
+    "en": "Oh, look, you just fish it in. You don't even have to spin it.",
+    "caps": [
+     "아, 그냥 쏙 끼우면 되네!",
+     "돌릴 필요도 없어!"
+    ],
+    "check": "두 모델: 'fish/stitch it in'·'he/you' 만 갈림, 'don't even have to spin it' 일치 · 소재표의 'you have to spin it' 은 반대 뜻이라 안 씀"
+   },
+   {
+    "id": "O3",
+    "src": "ct",
+    "span": [
+     53.35,
+     55.6
+    ],
+    "en": "I got little cat butt holes (buckles) everywhere.",
+    "caps": [
+     "이제 집 안이",
+     "고양이 천지야ㅋㅋ"
+    ],
+    "check": "두 모델 'cat buckles' / 소재표 'cat butt holes' — 자막은 둘 다에 맞는 순한 의역(사장님 지시: 원음 표현 순하게)"
+   }
+  ],
+  "dropped": {
+   "30.1~31.4 'they're tight'": "다시 받아쓰기 두 모델 'Yep. No time.' — 확인 안 됨",
+   "40.1~41.3 'you have to spin it'": "실제는 'don't even have to spin it'",
+   "TikTok shop": "구매 유도 0 — 나레엔 '사 왔대요'만",
+   "가격": "원본에 없음"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 필재 tc_68257f68bc6e3c161ab5078d · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0
+ }
+}

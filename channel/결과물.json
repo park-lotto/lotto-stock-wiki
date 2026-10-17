@@ -442,6 +442,22 @@
    "date": "2026-10-18",
    "judge": "자동 검사만(사람 판정 전) · 판매 연결 경계(고가 주문 제작품)",
    "from": "channel/hottemreport/현장썰_run.py"
+  },
+  {
+   "n": 36,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰",
+   "title": "현장썰_05_고양이빵봉지집게",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰_05_고양이빵봉지집게/render/final.mp4",
+   "desktop": "칼카피_숏템리폿_고양이빵봉지집게_1차.mp4",
+   "md5": "5b090a9c0b70ed5c537cc1391e281b94",
+   "seconds": 25.77,
+   "preset": "channel/hottemreport/현장썰_05_고양이빵봉지집게(1편 make_render 그대로 · 현장썰_run.py)",
+   "date": "2026-10-18",
+   "judge": "자동 검사만(사람 판정 전)",
+   "from": "channel/hottemreport/현장썰_run.py"
   }
  ]
 }
