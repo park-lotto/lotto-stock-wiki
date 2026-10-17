@@ -49,6 +49,19 @@ def orig_match(ow: list[dict], res: dict) -> list[dict]:
     return out
 
 
+SCENE_TH = 0.3   # 벤치 QMJ 를 이 자로 재면 컷 중앙 1.27(프리셋 cut_sec_median_ref 와 같음) — th 0.4 면 1.47 로 벤치 값이 안 나온다(10-18 실측)
+
+
+def scene_cuts(mp4: Path, win) -> list[float]:
+    """완성본 창만(1/4) ffmpeg scene 점수 > SCENE_TH 인 프레임 시각 = 장면 바뀜(B4 의 자 — 벤치 1.27 과 같은 방법)."""
+    import re
+    import subprocess
+    x, y, w, h = win
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(mp4), "-vf", f"crop={w}:{h}:{x}:{y},scale={w // 4}:{h // 4},select='gt(scene,{SCENE_TH})',showinfo",
+                        "-an", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    return [float(t) for t in re.findall(r"pts_time:([0-9.]+)", r.stderr)]
+
+
 def forward_runs(cuts: list[dict], gap_max: float = 3.0) -> list[dict]:
     """B13 앞처리: 화면에서 바로 이어지는(t1≈다음 t0) 같은 소스 컷이 원본에서 앞으로만 가면(겹침 0·틈 ≤ gap_max초) 한 컷으로 묶는다.
     방송 편집을 그대로 따라 이어 읽은 원음 줄들(2편 L1~L2·L6~L9)을 '±3초 재사용'으로 잡던 오탐 수리 — 되돌아가거나 겹치면 묶지 않아 여전히 잡힌다."""
@@ -88,9 +101,19 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
         I, pk = lufs(final)
         row("B2", "LUFS·최고점", f"{I} LUFS · {pk} dBFS (목표 {target})", abs(I - target) <= LUFS_TOL and pk <= PEAK_MAX)
     bm = info.get("bench_cut_median")
+    seams = None
+    if has_video:   # B4 는 벤치 컷 중앙(1.27, 완성본 장면 검출로 잰 값)과 같은 자 = 완성본 장면 검출(check_seams 컷)로 잰다 — 원음 컷 안 방송 편집 경계까지 센다(5편 25컷 1.73 vs 장면 31조각 1.30)
+        from tools.calcopy.engine import check_seams
+        fr = jload(R / "frame.json")
+        v = next(l for l in fr["layers"] if l["kind"] == "video")
+        seams = check_seams.check(str(final), (v["x"], v["y"], v["w"], v["h"]), None)
+        jsave(R / "seams.json", seams)
+        b = [0.0] + scene_cuts(final, (v["x"], v["y"], v["w"], v["h"])) + [dur]
+        sd = sorted(y - x for x, y in zip(b, b[1:]) if y - x > 0.05)
+        med = sd[len(sd) // 2]
     last = [c for c in cuts if c["line"] == cuts[-1]["line"]]   # 마지막 묶음(끝 줄) — 매뉴얼 B4: 컷 ≥1.2·끝 컷 ≥1.5
     row("B4", "컷 중앙(벤치 ±30%)·끝 묶음 ≥1.2·끝 컷 ≥1.5",
-        f"중앙 {med:.2f}(벤치 {bm}) · 끝 묶음 {[c['dur'] for c in last]} · 전체 최단 {ds[0]:.2f} · 1.2초 미만 {[(c['i'], c['dur']) for c in cuts if c['dur'] < CUT_MIN]}",
+        f"중앙 {med:.2f}({f'완성본 장면 검출 scene>{SCENE_TH} {len(sd)}조각' if seams else '컷표'}·벤치 {bm}) · 끝 묶음 {[c['dur'] for c in last]} · 전체 최단 {ds[0]:.2f} · 1.2초 미만 {[(c['i'], c['dur']) for c in cuts if c['dur'] < CUT_MIN]}",
         all(c["dur"] >= CUT_MIN - 1e-6 for c in last) and cuts[-1]["dur"] >= END_MIN and (not bm or 1 - CUT_TOL <= med / bm <= 1 + CUT_TOL),
         (f"×{med / bm:.2f}" if bm else "") + " · 원음 컷은 재료 시각 그대로라 짧을 수 있음 — 컷표 참고")
     b13 = reuse_violations(forward_runs(cuts))
@@ -100,12 +123,7 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
     off = [(c["i"], c["line"], c["sync"]) for c in cuts if abs(c.get("sync", 0)) > SYNC_TOL]
     row("SYNC", "원음 컷 화면↔소리 시각(화면초−소리초)", off or "0", not off, "재료 시각 그대로 — 어긋남은 재료(편 담당) 쪽")
     if has_video:
-        from tools.calcopy.engine import check_seams
         from tools.calcopy.engine.remake import sheet_1s
-        fr = jload(R / "frame.json")
-        v = next(l for l in fr["layers"] if l["kind"] == "video")
-        seams = check_seams.check(str(final), (v["x"], v["y"], v["w"], v["h"]), None)
-        jsave(R / "seams.json", seams)
         row("B16'", "되감김·점프줌(check_seams)", f"컷 {len(seams['컷'])} · 되감김 {len(seams['되감김'])} · 점프줌 {len(seams['점프줌'])}({seams['점프줌_판정'] or '드묾'})",
             seams["ok"])
         nar = Path(info["narr_placed"])

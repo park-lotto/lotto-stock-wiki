@@ -148,42 +148,27 @@ def pose(e: dict, t: float) -> dict | None:
 
 
 # ── 그리기(미리곱한 알파 numpy) ─────────────────────────────────────────
-def _pm(im):
-    a = np.asarray(im).astype(np.float32) / 255.0
-    a[..., :3] *= a[..., 3:4]
-    return a
-
-
-def _blit(dst, src_pm, cx, cy, alpha=1.0):
-    """미리곱한 src 를 dst(층 좌표) 가운데 (cx, cy) 에 덮어 그림."""
-    h, w = src_pm.shape[:2]
-    x0, y0 = int(round(cx - w / 2)), int(round(cy - h / 2))
-    X0, Y0_, X1, Y1_ = max(0, x0), max(0, y0), min(dst.shape[1], x0 + w), min(dst.shape[0], y0 + h)
-    if X1 <= X0 or Y1_ <= Y0_:
-        return
-    s = src_pm[Y0_ - y0:Y1_ - y0, X0 - x0:X1 - x0] * alpha
-    d = dst[Y0_:Y1_, X0:X1]
-    d *= (1 - s[..., 3:4]); d += s
-
-
-@lru_cache(maxsize=256)
-def _pm_sprite(kind, key, scale_q, deg_q):
+@lru_cache(maxsize=512)
+def _sprite_im(kind, key, scale_q, deg_q, alpha_q):
+    """그릴 모양 한 장(PIL RGBA, 곧은 알파) — 배율·회전·투명도 값마다 한 번만 만든다."""
     from PIL import Image
-    im = sprite(kind, key)
     if kind == "dashed_circle":
         o = {**R()["effects"]["dashed_circle"], **dict(key)}
         im = dashed(int(o["radius"]), int(o["stroke"]), int(o["dashes"]), float(o["duty"]), deg_q, o["color"])
+    else:
+        im = sprite(kind, key)
     if abs(scale_q - 1.0) > 1e-3:
         im = im.resize((max(1, int(im.size[0] * scale_q)), max(1, int(im.size[1] * scale_q))), Image.LANCZOS)
-    return _pm(im)
+    if alpha_q < 0.999:
+        im = im.copy(); im.putalpha(im.getchannel("A").point(lambda v: int(v * alpha_q)))
+    return im
 
 
 @lru_cache(maxsize=512)
-def _pm_caption(text, emph_key, big, blur):
-    im = CS.caption_image(text, [dict(x) for x in emph_key], big)
-    if blur:
-        im = CS.hblur(im, blur)
-    return _pm(im.crop((0, Y0, 1080, Y1)))
+def _cap_im(text, emph_key, big, blur):
+    """자막 띠 한 장(PIL RGBA, CS.BAND 높이)."""
+    im = CS.caption_image(text, [dict(x) for x in emph_key], big).crop((0, CS.BAND[0], 1080, CS.BAND[1]))
+    return CS.hblur(im, blur) if blur else im
 
 
 def emph_for(S: dict | None, line: str, text: str) -> tuple:
@@ -217,38 +202,37 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
     """완성본 길이 dur 의 RGBA 층(1080×(Y1−Y0), 30fps, qtrle mov) — 아래부터 번쩍 → 꾸밈 → 자막. 반환: 그린 사건 기록(검사·효과음용)."""
     E = R()["effects"]
     caps = sorted(P["captions"], key=lambda c: c["t0"])
-    fx = sorted(P["effects"], key=lambda e: e["T"][0])
+    fx = sorted(timed(P), key=lambda e: e["T"][0])
+    bad = outside(fx)
+    if bad:
+        raise ValueError(f"꾸밈이 창 밖으로 나감(rules effects.inside_window) — 재료 크롭/자리 고칠 것: {bad}")
     H = Y1 - Y0
     n = int(math.ceil(dur * FPS))
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"1080x{H}", "-r", str(FPS), "-i", "-",
            "-c:v", "qtrle", str(out)]
     pr = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     drawn = {"captions": 0, "effects": {}, "flash": []}
-    buf = np.zeros((H, 1080, 4), np.float32)
+    from PIL import Image
     for f in range(n):
         t = f / FPS
-        buf[:] = 0
+        cv = Image.new("RGBA", (1080, H), (0, 0, 0, 0))
         for e in fx:
             p = pose(e, t)
             if p is None:
                 continue
             if e["kind"] == "flash":
-                c = np.array(E["flash"]["colors"][e.get("color", "초록")], np.float32) / 255
-                a = p["alpha"]
-                buf[4:H - 4, :, :3] = buf[4:H - 4, :, :3] * (1 - a) + c * a
-                buf[4:H - 4, :, 3] = buf[4:H - 4, :, 3] * (1 - a) + a
+                col = tuple(E["flash"]["colors"][e.get("color", "초록")])
+                fl = Image.new("RGBA", (1080, H - 8), col + (int(round(p["alpha"] * 255)),))
+                cv.alpha_composite(fl, (0, 4))
                 continue
             key = tuple(sorted((k, v) for k, v in e.items() if k in ("size", "w", "h", "radius", "stroke")))
-            spr = _pm_sprite(e["kind"], key, round(p["scale"], 2), round(p["deg"] / 3) * 3.0)
-            _blit(buf, spr, e["at"][0] + p["dx"], e["at"][1] - Y0 + p["dy"], p["alpha"])
+            im = _sprite_im(e["kind"], key, round(p["scale"], 2), round(p["deg"] / 3) * 3.0, round(p["alpha"], 2))
+            x0 = int(round(e["at"][0] + p["dx"] - im.size[0] / 2)); y0 = int(round(e["at"][1] - Y0 + p["dy"] - im.size[1] / 2))
+            cv.alpha_composite(im, (max(0, x0), max(0, y0)), (max(0, -x0), max(0, -y0)))
         c, blur = caption_at(caps, t)
         if c is not None:
-            big = c.get("style") == "원음반응"
-            cap = _pm_caption(c["text"], emph_for(S, c["line"], c["text"]), big, blur)
-            d = buf; d *= (1 - cap[..., 3:4]); d += cap
-        a = buf[..., 3:4]
-        rgb = np.where(a > 1e-4, buf[..., :3] / np.maximum(a, 1e-4), 0)
-        pr.stdin.write((np.concatenate([rgb, a], axis=2) * 255 + 0.5).clip(0, 255).astype(np.uint8).tobytes())
+            cv.alpha_composite(_cap_im(c["text"], emph_for(S, c["line"], c["text"]), c.get("style") == "원음반응", blur), (0, CS.BAND[0] - Y0))
+        pr.stdin.write(cv.tobytes())
     pr.stdin.close()
     if pr.wait() != 0:
         raise RuntimeError(f"층 인코딩 실패 {out}")
@@ -261,12 +245,52 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
     return drawn
 
 
+def outside(effects: list[dict]) -> list[str]:
+    """(판단 주인: 꾸밈이 창 안에 온전한가) 번쩍 빼고 제 크기 모양 상자(움직임 폭 포함)가 rules effects.window 안이어야 한다."""
+    E = R()["effects"]
+    wx, wy, ww, wh = E["window"]
+    m = E["inside_window"]["margin_px"]
+    out = []
+    for e in effects:
+        if e["kind"] == "flash":
+            continue
+        key = tuple(sorted((k, v) for k, v in e.items() if k in ("size", "w", "h", "radius", "stroke")))
+        if e["kind"] == "dashed_circle":
+            o = {**E["dashed_circle"], **dict(key)}
+            w = h = 2 * (int(o["radius"]) + int(o["stroke"]))
+        else:
+            w, h = sprite(e["kind"], key).size
+        o = E.get(e["kind"], {})
+        mx = o.get("poke_px", 0) / math.sqrt(2)
+        my = o.get("bob_px", 0) + mx
+        x0, x1 = e["at"][0] - w / 2 - mx, e["at"][0] + w / 2 + mx
+        y0, y1 = e["at"][1] - h / 2 - my, e["at"][1] + h / 2 + my
+        if x0 < wx + m or x1 > wx + ww - m or y0 < wy + m or y1 > wy + wh - m:
+            out.append(f"{e.get('line')} {e['kind']} 상자 x{x0:.0f}~{x1:.0f} y{y0:.0f}~{y1:.0f}")
+    return out
+
+
+def timed(P: dict) -> list[dict]:
+    """(판단 주인: 번쩍 시각) 번쩍은 컷 프레임에 걸린다(벤치 QMJ 38.667·44.367·45.667 = 컷 첫 프레임) — 재료 t 가 컷 시작과 0.1초 안이면 컷 시작으로 붙인다.
+    층 그리기·효과음 자리가 둘 다 이 결과를 쓴다(따로 계산하지 않는다)."""
+    starts = [c["t0"] for c in P.get("cuts") or [] if not c.get("dropped")]
+    out = []
+    for e in P["effects"]:
+        if e["kind"] == "flash" and starts:
+            c = min(starts, key=lambda x: abs(x - e["T"][0]))
+            if 1e-6 < abs(c - e["T"][0]) <= 0.1:
+                d = c - e["T"][0]
+                e = {**e, "T": [round(c, 3), round(e["T"][1] + d, 3)], "snapped": round(d, 3)}
+        out.append(e)
+    return out
+
+
 # ── 효과음 ─────────────────────────────────────────────────────────────
 def sfx_events(P: dict) -> list[dict]:
     """(판단 주인: 효과음 자리) 꾸밈 사건 → [{t, slot, why}] (rules sfx.on·lead)."""
     Sx = R()["sfx"]
     out = []
-    for e in P["effects"]:
+    for e in timed(P):
         slot = Sx["on"].get(e["kind"])
         if slot:
             out.append({"t": round(max(0.0, e["T"][0] + Sx["lead"].get(slot, 0.0)), 3), "slot": slot, "why": e["kind"]})

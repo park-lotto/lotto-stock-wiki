@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 RULES = Path(__file__).with_name("rules.json")
+BAND = (760, 1200)   # 그리는 띠(두 줄 잉크 895~1022·크게 85px·번짐 30px 를 덮음) — 자리 판단 아님, 계산 범위(속도)
 
 
 @lru_cache(maxsize=1)
@@ -85,14 +86,14 @@ def caption_image(text: str, emph: list[dict] | None = None, big: bool = False):
         centers = [sum(R["one_line_ink"]) / 2]
     else:
         centers = [sum(r) / 2 for r in R["two_line_ink"]]
-    W, H = 1080, 1920
+    W, H = 1080, BAND[1] - BAND[0]
     white_m = Image.new("L", (W, H), 0)
     col_m = {}   # 색 이름 → 마스크
     for ln, cy in zip(lines, centers):
         full = "".join(s for s, _ in ln)
         # 잉크 세로 가운데를 cy 에: 한글 잉크 상자(전체 글)의 가운데를 맞춘다
         bx = font.getbbox(full, anchor="ls")
-        y_base = cy - (bx[1] + bx[3]) / 2
+        y_base = cy - BAND[0] - (bx[1] + bx[3]) / 2
         x = 540 - font.getlength(full) / 2
         for s, c in ln:
             m = white_m if c is None else col_m.setdefault(c, Image.new("L", (W, H), 0))
@@ -125,7 +126,9 @@ def caption_image(text: str, emph: list[dict] | None = None, big: bool = False):
     layer(white_m, R["white"], 1.0)
     for c, m in col_m.items():
         layer(m, pal[c], 1.0)
-    return out
+    full = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+    full.paste(out, (0, BAND[0]))
+    return full
 
 
 def hblur(im, px: int):
