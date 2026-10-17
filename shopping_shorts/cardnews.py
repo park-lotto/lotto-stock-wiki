@@ -31,7 +31,9 @@ COVER_MAX = 22          # 첫 장 제목 글자 수 상한({} 제외). aiCarouse
 TITLE_MAX = 30
 BODY_MAX = 90
 ITEM_MAX = 22
-IMAGE_MODEL_DEFAULT = "imagen-4.0-fast-generate-001"
+IMAGE_MODEL_DEFAULT = "gemini-3.1-flash-lite-image"   # ★Imagen 4는 사장님 프로젝트에서 404(2026-10-17 라이브 실측, 모델 목록에 없음).
+#   제미니 그림 모델은 location=global 에서만 된다(us-central1 404). lite 4.9초·142KB, 지시대로 글자 없는 사진이 나왔다
+#   (3.1-flash-image 는 9.2초·병에 영어 라벨을 그려 넣음). 설정 cardnews_image_model 로 바꿀 수 있다(imagen-* 도 받는다).
 FALLBACK_MODEL = "gemini-3.5-flash"   # 무료 키풀 기본 모델이 503 과부하일 때 마지막 한 번(버텍스 경로는 vertex_route.model 그대로)
 KST = timezone(timedelta(hours=9))
 
@@ -540,24 +542,40 @@ def image_allowed(cid):
 
 
 def gen_background(cid, prompt, data_dir, model=None):
-    """버텍스 Imagen으로 3:4 배경 1장 → 파일명. 실패하면 (None, 이유)."""
+    """버텍스 그림 모델(기본 제미니 lite 그림, imagen-* 도 받음)로 3:4 배경 1장 → 파일명. 실패하면 (None, 이유)."""
     from shopping_shorts import vertex_route
     ok, why = image_allowed(cid)
     if not ok:
         return None, why
-    cl = vertex_route.veo_client(cid)
+    imagen = (model or IMAGE_MODEL_DEFAULT).startswith("imagen")
+    # 허용은 위 image_allowed(회원 자기 버텍스 또는 관리자)가 정했다 — 클라이언트 고르기는 vertex_route 한 곳
+    cl = vertex_route.veo_client(cid) if imagen else vertex_route.client(cid)
     if cl is None:
         return None, "버텍스 연결을 찾지 못했어요"
     from google.genai import types
     p = (prompt or "").strip() or "minimal clean background, soft natural light, empty space for text"
     p = p[:600] + ". Photorealistic, no text, no letters, no logos, no watermark, editorial magazine photo."
     t0 = time.monotonic()
+    data, ext = None, "png"
     try:
-        resp = cl.models.generate_images(
-            model=model or IMAGE_MODEL_DEFAULT, prompt=p,
-            config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="3:4"))
-        imgs = getattr(resp, "generated_images", None) or []
-        data = imgs[0].image.image_bytes if imgs else None
+        if imagen:
+            resp = cl.models.generate_images(
+                model=model or IMAGE_MODEL_DEFAULT, prompt=p,
+                config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="3:4"))
+            imgs = getattr(resp, "generated_images", None) or []
+            data = imgs[0].image.image_bytes if imgs else None
+        else:
+            resp = cl.models.generate_content(
+                model=model or IMAGE_MODEL_DEFAULT, contents=p,
+                config=types.GenerateContentConfig(response_modalities=["IMAGE"],
+                                                   image_config=types.ImageConfig(aspect_ratio="3:4")))
+            for cand in (getattr(resp, "candidates", None) or [])[:1]:
+                for part in (getattr(cand.content, "parts", None) or []):
+                    inl = getattr(part, "inline_data", None)
+                    if inl is not None and inl.data:
+                        data = inl.data
+                        ext = "jpg" if "jpeg" in (inl.mime_type or "") else "png"
+                        break
     except Exception as e:      # noqa: BLE001
         log.warning("cardnews.gen_background 실패(%.1fs): %r", time.monotonic() - t0, e)
         msg = str(e)
@@ -566,7 +584,7 @@ def gen_background(cid, prompt, data_dir, model=None):
         return None, "그림을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요"
     if not data:
         return None, "그림이 비어서 왔어요(안전 필터에 걸렸을 수 있어요). 설명을 바꿔 다시 눌러 주세요"
-    name = "bg_%d_%s.png" % (int(time.time() * 1000), os.urandom(3).hex())
+    name = "bg_%d_%s.%s" % (int(time.time() * 1000), os.urandom(3).hex(), ext)
     with open(os.path.join(asset_dir(data_dir, cid), name), "wb") as fh:
         fh.write(data)
     log.info("cardnews.gen_background OK %.1fs %dKB", time.monotonic() - t0, len(data) // 1024)
