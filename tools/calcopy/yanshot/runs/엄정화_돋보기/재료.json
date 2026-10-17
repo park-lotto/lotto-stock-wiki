@@ -44,13 +44,13 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    271,
+    275,
     0,
-    802,
-    802
+    794,
+    794
    ],
    "res": "1920x1080",
-   "scale": 1.35,
+   "scale": 1.36,
    "ours": "다른 출연자가 옷을 고름",
    "why": "원음 싱크(본인 화면)",
    "who": "other",
@@ -63,11 +63,11 @@
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 1022.438,
+   "ss": 1029.111,
    "dur": 1.549,
    "src_span": [
-    1022.438,
-    1023.987
+    1029.111,
+    1030.66
    ],
    "t_final": [
     1.75,
@@ -76,15 +76,15 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
+    66,
     0,
-    0,
-    870,
-    870
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "엄정화가 돋보기를 건넴",
-   "why": "나레 '엄정화가 얼마 전에 장만했다는…' — 본인+제품 B롤",
+   "scale": 1.3,
+   "ours": "두 사람이 마주 보고 대화",
+   "why": "나레 '엄정화가 얼마 전에 장만했다는…' — 본인 B롤",
    "who": "both",
    "mute": true
   },
@@ -94,11 +94,11 @@
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 1029.111,
+   "ss": 954.27,
    "dur": 1.548,
    "src_span": [
-    1029.111,
-    1030.659
+    954.27,
+    955.818
    ],
    "t_final": [
     3.299,
@@ -107,16 +107,16 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    45,
+    91,
     0,
-    870,
-    870
+    645,
+    645
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "두 사람이 마주 보고 대화",
-   "why": "나레 '엄정화가 얼마 전에 장만했다는…' — 본인 B롤",
-   "who": "both",
+   "scale": 1.67,
+   "ours": "엄정화가 가구를 가리킴",
+   "why": "나레 '엄정화가 얼마 전에 장만했다는…' — 본인 B롤 · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
    "mute": true
   },
   {
@@ -125,29 +125,29 @@
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 954.27,
-   "dur": 2.92,
+   "ss": 1017.098,
+   "dur": 1.46,
    "src_span": [
-    954.27,
-    957.19
+    1017.098,
+    1018.558
    ],
    "t_final": [
     4.847,
-    7.767
+    6.307
    ],
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
     0,
     0,
-    870,
-    870
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "엄정화가 가구를 가리킴",
-   "why": "원음 화면 대체 — 크롭 검사에서 걸림(A5)(소리는 원음)",
-   "who": "main",
+   "scale": 1.3,
+   "ours": "돋보기에 대해 대화함",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 1005.0)과 같은 자리(B13)(소리는 원음)",
+   "who": "both",
    "audio_src": "src_P6MvI-qPE2U.mp4",
    "audio_ss": 1007.8
   },
@@ -157,11 +157,43 @@
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 957.19,
+   "ss": 960.71,
+   "dur": 1.46,
+   "src_span": [
+    960.71,
+    962.17
+   ],
+   "t_final": [
+    6.307,
+    7.767
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    91,
+    0,
+    645,
+    645
+   ],
+   "res": "1920x1080",
+   "scale": 1.67,
+   "ours": "두 사람이 가구 앞에 있음",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 1005.0)과 같은 자리(B13)(소리는 원음) · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "both",
+   "audio_src": "src_P6MvI-qPE2U.mp4",
+   "audio_ss": 1009.26
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "src": "src_P6MvI-qPE2U.mp4",
+   "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
+   "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
+   "ss": 962.17,
    "dur": 0.41,
    "src_span": [
-    957.19,
-    957.6
+    962.17,
+    962.58
    ],
    "t_final": [
     7.767,
@@ -172,28 +204,28 @@
    "src_crop": [
     0,
     0,
-    870,
-    870
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "엄정화가 가구를 가리킴",
+   "scale": 1.3,
+   "ours": "두 사람이 가구 앞에 있음",
    "why": "쉼 잘린 뒤 짧은 원음 조각 — 화면은 앞 컷 그대로 이어짐",
-   "who": "main",
+   "who": "both",
    "audio_src": "src_P6MvI-qPE2U.mp4",
    "audio_ss": 1011.0
   },
   {
-   "i": 5,
+   "i": 6,
    "line": "O2",
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 1011.41,
+   "ss": 1022.438,
    "dur": 1.86,
    "src_span": [
-    1011.41,
-    1013.27
+    1022.438,
+    1024.298
    ],
    "t_final": [
     8.177,
@@ -204,19 +236,19 @@
    "src_crop": [
     0,
     0,
-    870,
-    870
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "엄정화가 돋보기를 설명함",
-   "why": "원음 싱크(본인 화면)",
+   "scale": 1.3,
+   "ours": "엄정화가 돋보기를 건넴",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 1005.0)과 같은 자리(B13)(소리는 원음)",
    "who": "both",
    "audio_src": "src_P6MvI-qPE2U.mp4",
    "audio_ss": 1011.41
   },
   {
-   "i": 6,
+   "i": 7,
    "line": "O3",
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
@@ -234,21 +266,21 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    333,
+    445,
     0,
-    870,
-    870
+    645,
+    645
    ],
    "res": "1920x1080",
-   "scale": 1.24,
+   "scale": 1.67,
    "ours": "엄정화가 바지를 가리킴",
-   "why": "원음 싱크(본인 화면)",
+   "why": "원음 싱크(본인 화면) · 확대 1.28배(이웃 컷과 같은 자리)",
    "who": "main",
    "audio_src": "src_P6MvI-qPE2U.mp4",
    "audio_ss": 1037.01
   },
   {
-   "i": 7,
+   "i": 8,
    "line": "N2",
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
@@ -266,29 +298,29 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    446,
+    450,
     0,
-    836,
-    836
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.29,
+   "scale": 1.3,
    "ours": "엄정화가 돋보기를 써 봄",
    "why": "나레 '글씨가 작은 메뉴판을 볼 때,…' — 본인+제품 B롤",
    "who": "main",
    "mute": true
   },
   {
-   "i": 8,
+   "i": 9,
    "line": "N2",
    "src": "src_P6MvI-qPE2U.mp4",
    "url": "https://www.youtube.com/watch?v=P6MvI-qPE2U",
    "src_date": "김나영의 nofilterTV(노필터티비) 유튜브 2025.07.27",
-   "ss": 1048.564,
+   "ss": 975.524,
    "dur": 1.773,
    "src_span": [
-    1048.564,
-    1050.337
+    975.524,
+    977.297
    ],
    "t_final": [
     13.119,
@@ -297,14 +329,14 @@
    "kind": "원본재편집",
    "full": true,
    "src_crop": [
-    765,
     0,
-    870,
-    870
+    0,
+    828,
+    828
    ],
    "res": "1920x1080",
-   "scale": 1.24,
-   "ours": "주방에서 대화하는 두 사람",
+   "scale": 1.3,
+   "ours": "두 사람이 웃으며 대화함",
    "why": "나레 '글씨가 작은 메뉴판을 볼 때,…' — 본인 B롤",
    "who": "both",
    "mute": true

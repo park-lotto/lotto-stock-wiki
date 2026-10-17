@@ -1,0 +1,727 @@
+{
+ "_note": "yanshot plan.py 가 씀(손으로 고치지 않는다)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/정재형_후라이팬/src",
+ "blocks": {
+  "O1": [
+   0.0,
+   3.59
+  ],
+  "N1": [
+   3.59,
+   7.162
+  ],
+  "O2": [
+   7.162,
+   10.032
+  ],
+  "O3": [
+   10.032,
+   18.522
+  ],
+  "N2": [
+   18.522,
+   22.305
+  ]
+ },
+ "dur_est": 22.305,
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 453.44,
+   "dur": 0.313,
+   "src_span": [
+    453.44,
+    453.753
+   ],
+   "t_final": [
+    0.0,
+    0.313
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    418,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "팬을 든 정재형",
+   "why": "원음 싱크(본인 화면)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 453.44
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 453.753,
+   "dur": 1.867,
+   "src_span": [
+    453.753,
+    455.62
+   ],
+   "t_final": [
+    0.313,
+    2.18
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "설명하는 정재형",
+   "why": "원음 싱크(본인 화면)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 453.753
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 431.448,
+   "dur": 0.35,
+   "src_span": [
+    431.448,
+    431.798
+   ],
+   "t_final": [
+    2.18,
+    2.53
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    458,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "팬을 든 정재형",
+   "why": "원음 화면 대체 — 크롭 검사에서 걸림(A5)(소리는 원음) · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 456.1
+  },
+  {
+   "i": 3,
+   "line": "O1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 516.299,
+   "dur": 1.06,
+   "src_span": [
+    516.299,
+    517.359
+   ],
+   "t_final": [
+    2.53,
+    3.59
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "파란 손잡이 팬",
+   "why": "원음 화면 대체 — 크롭 검사에서 걸림(A5)(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 457.48
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 518.601,
+   "dur": 0.893,
+   "src_span": [
+    518.601,
+    519.494
+   ],
+   "t_final": [
+    3.59,
+    4.483
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    554,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "팬 두 개를 비교",
+   "why": "나레 '정재형이 프랑스, 주방용품점에…' — 본인+제품 B롤 · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "mute": true
+  },
+  {
+   "i": 5,
+   "line": "N1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 548.331,
+   "dur": 0.893,
+   "src_span": [
+    548.331,
+    549.224
+   ],
+   "t_final": [
+    4.483,
+    5.376
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "바닥의 팬 근접",
+   "why": "나레 '정재형이 프랑스, 주방용품점에…' — 제품 B롤",
+   "who": "none",
+   "mute": true
+  },
+  {
+   "i": 6,
+   "line": "N1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 522.638,
+   "dur": 0.893,
+   "src_span": [
+    522.638,
+    523.531
+   ],
+   "t_final": [
+    5.376,
+    6.269
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "팬 열전도 설명",
+   "why": "나레 '정재형이 프랑스, 주방용품점에…' — 본인+제품 B롤",
+   "who": "main",
+   "mute": true
+  },
+  {
+   "i": 7,
+   "line": "N1",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 552.331,
+   "dur": 0.893,
+   "src_span": [
+    552.331,
+    553.224
+   ],
+   "t_final": [
+    6.269,
+    7.162
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "바닥의 팬 근접",
+   "why": "나레 '정재형이 프랑스, 주방용품점에…' — 제품 B롤",
+   "who": "none",
+   "mute": true
+  },
+  {
+   "i": 8,
+   "line": "O2",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 526.608,
+   "dur": 0.957,
+   "src_span": [
+    526.608,
+    527.565
+   ],
+   "t_final": [
+    7.162,
+    8.119
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "테이블 위 팬",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음)",
+   "who": "none",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 446.12
+  },
+  {
+   "i": 9,
+   "line": "O2",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 556.331,
+   "dur": 0.957,
+   "src_span": [
+    556.331,
+    557.288
+   ],
+   "t_final": [
+    8.119,
+    9.076
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "바닥의 팬 근접",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음)",
+   "who": "none",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 447.077
+  },
+  {
+   "i": 10,
+   "line": "O2",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 180.829,
+   "dur": 0.956,
+   "src_span": [
+    180.829,
+    181.785
+   ],
+   "t_final": [
+    9.076,
+    10.032
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "냄비를 든 정재형",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 448.034
+  },
+  {
+   "i": 11,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 560.331,
+   "dur": 1.013,
+   "src_span": [
+    560.331,
+    561.344
+   ],
+   "t_final": [
+    10.032,
+    11.045
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "바닥의 팬 근접",
+   "why": "원음 화면 대체 — 판독: 사람 없음(소리는 원음)",
+   "who": "none",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 436.32
+  },
+  {
+   "i": 12,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 184.867,
+   "dur": 1.013,
+   "src_span": [
+    184.867,
+    185.88
+   ],
+   "t_final": [
+    11.045,
+    12.058
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "코팅 냄비 설명",
+   "why": "원음 화면 대체 — 판독: 사람 없음(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 437.333
+  },
+  {
+   "i": 13,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 565.331,
+   "dur": 1.013,
+   "src_span": [
+    565.331,
+    566.344
+   ],
+   "t_final": [
+    12.058,
+    13.071
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    562,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "바닥의 팬 근접",
+   "why": "원음 화면 대체 — 판독: 사람 없음(소리는 원음)",
+   "who": "none",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 438.346
+  },
+  {
+   "i": 14,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 241.224,
+   "dur": 1.014,
+   "src_span": [
+    241.224,
+    242.238
+   ],
+   "t_final": [
+    13.071,
+    14.085
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "요리 방식 설명",
+   "why": "원음 화면 대체 — 판독: 사람 없음(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 439.359
+  },
+  {
+   "i": 15,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 310.36,
+   "dur": 0.876,
+   "src_span": [
+    310.36,
+    311.236
+   ],
+   "t_final": [
+    14.085,
+    14.961
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    650,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "오징어 뭇국 언급",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음) · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 440.373
+  },
+  {
+   "i": 16,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 248.732,
+   "dur": 0.876,
+   "src_span": [
+    248.732,
+    249.608
+   ],
+   "t_final": [
+    14.961,
+    15.837
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    466,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "안 맞는다고 말함",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 441.249
+  },
+  {
+   "i": 17,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 314.563,
+   "dur": 0.876,
+   "src_span": [
+    314.563,
+    315.439
+   ],
+   "t_final": [
+    15.837,
+    16.713
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    482,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "냄비 특징 설명",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음) · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 442.125
+  },
+  {
+   "i": 18,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 253.436,
+   "dur": 0.876,
+   "src_span": [
+    253.436,
+    254.312
+   ],
+   "t_final": [
+    16.713,
+    17.589
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    418,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "냄비를 잡는 손",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 443.001
+  },
+  {
+   "i": 19,
+   "line": "O3",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 319.434,
+   "dur": 0.933,
+   "src_span": [
+    319.434,
+    320.367
+   ],
+   "t_final": [
+    17.589,
+    18.522
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    362,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "무게감 설명 중",
+   "why": "원음 화면 대체 — 다른 원음 블록 화면(원본 453.4)과 같은 자리(B13)(소리는 원음) · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "audio_src": "src_B2QIb4bBFO8.mp4",
+   "audio_ss": 443.877
+  },
+  {
+   "i": 20,
+   "line": "N2",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 370.453,
+   "dur": 1.892,
+   "src_span": [
+    370.453,
+    372.345
+   ],
+   "t_final": [
+    18.522,
+    20.414
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    394,
+    0,
+    796,
+    796
+   ],
+   "res": "3840x2160",
+   "scale": 1.36,
+   "ours": "고생담 이야기",
+   "why": "나레 '열 보존율이 좋아서, 재료를 …' — 본인 B롤",
+   "who": "main",
+   "mute": true
+  },
+  {
+   "i": 21,
+   "line": "N2",
+   "src": "src_B2QIb4bBFO8.mp4",
+   "url": "https://www.youtube.com/watch?v=B2QIb4bBFO8",
+   "src_date": "요정재형 유튜브 2025.08.17",
+   "ss": 324.607,
+   "dur": 1.891,
+   "src_span": [
+    324.607,
+    326.498
+   ],
+   "t_final": [
+    20.414,
+    22.305
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    554,
+    0,
+    620,
+    620
+   ],
+   "res": "3840x2160",
+   "scale": 1.74,
+   "ours": "익는 정도 설명",
+   "why": "나레 '열 보존율이 좋아서, 재료를 …' — 본인 B롤 · 확대 1.28배(이웃 컷과 같은 자리)",
+   "who": "main",
+   "mute": true
+  }
+ ]
+}

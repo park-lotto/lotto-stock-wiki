@@ -32,6 +32,10 @@ SCENE_T = 0.30
 FRAME = ROOT / "channel/mantem/frame_얜샷템.json"
 LAST_MIN, END_MIN = 1.2, 1.5               # B4: 마지막 묶음 컷 ≥1.2초, 끝 컷 ≥1.5초
 MAX_CANDS = 44
+SAME_SETUP_S = 20.0                        # 이웃 B롤 원본 시각 최소 간격(같은 촬영 자리 = 안 보이는 컷)
+ZOOM_ALT = 0.78                            # 이웃 본인 컷 확대 크롭 비율(1.28배)
+VERIFY_ROUNDS = 8                          # 크롭 검사 → 걸린 장면 빼고 다시 고르기 최대 횟수(자막 많은 원본 = 정재형 편 4회로 모자람)
+SHORT_S = 0.6                              # 이보다 짧은 원음 조각은 앞 컷 화면을 이어 쓴다(0.3초 깜빡 컷 금지)
 
 
 # ── 원본 장면(컷) 경계 ─────────────────────────────────────────────
@@ -139,11 +143,25 @@ def bench_gaps(T: dict, dur: float) -> list[tuple[float, float]]:
     return out
 
 
+CROP_CAP = {"s": CROP}      # 이 편 크롭 한 변 상한 — plan() 이 원본 아래 자막 띠 위쪽으로 정한다(subtitle_cap)
+
+
+def subtitle_cap(info: dict, H: int = 1080) -> int:
+    """(판단 주인) 원본 아래 자막 띠 맨 위 → 크롭 한 변 상한. 판독 글자 상자 중 화면 아래쪽(y0≥0.6) 것들의 하위 10% y0 − 14px.
+    10-17 정재형 원본: 큰 자막이 y0 0.72~0.78 — 870 크롭이면 '후기다되니까' 윗부분이 크롭 아래 끝에 걸렸다."""
+    ys = sorted(b[1] for v in info.values() if isinstance(v, dict) for b in (v.get("text") or [])
+                if isinstance(b, (list, tuple)) and len(b) == 4 and b[1] >= 0.6)
+    if len(ys) < 3:
+        return CROP
+    return int(max(CROP_MIN, min(CROP, ys[len(ys) // 10] * H - 14)))
+
+
 def crop_for(info: dict, W: int = 1920, H: int = 1080) -> list[int] | None:
     """(판단 주인) 판독 → 정사각 크롭 [x,y,s,s] — 위쪽에 붙이고(y=0) 주피사체 가운데, 덧씌운 글자는 피한다. 못 피하면 None."""
     boxes = [b for b in (info.get("text") or []) if isinstance(b, (list, tuple)) and len(b) == 4]
     cx = float(info.get("cx") if isinstance(info.get("cx"), (int, float)) else 0.5) * W
-    for s in range(CROP, CROP_MIN - 1, -34):
+    top = CROP_CAP["s"]
+    for s in list(range(top, CROP_MIN - 1, -34)):
         for dx in (0, -120, 120, -240, 240, -360, 360):
             x = int(min(max(0, cx - s / 2 + dx), W - s))
             hit = False
@@ -154,7 +172,7 @@ def crop_for(info: dict, W: int = 1920, H: int = 1080) -> list[int] | None:
             if not hit:
                 return [x, 0, s, s]
     # 판독 글자 상자가 크롭을 못 피하면(상자 좌표가 틀릴 때도 있다) 기본 크롭 — 실제 잘린 화면은 verify_crops 가 다시 본다
-    return [int(min(max(0, cx - CROP / 2), W - CROP)), 0, CROP, CROP]
+    return [int(min(max(0, cx - top / 2), W - top)), 0, top, top]
 
 
 # ── 블록·컷 ──────────────────────────────────────────────────────
@@ -212,7 +230,11 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
             return None, "판독: " + ("흐림" if not x.get("ok", True) else "남의 신체 근접(A13)" if x.get("other_body_close") else "사람 없음")
         return crop_for(x), ""
 
-    def pick(need: float, cont_from):
+    def pick(need: float, cont_from, prev_ss=None):
+        """같은 촬영 자리 피하기로 못 고르면 그 조건만 풀고 한 번 더(확대 번갈이 vary_zoom 이 컷을 보이게 한다)."""
+        return pick1(need, cont_from, prev_ss) or (pick1(need, cont_from, None) if prev_ss is not None else None)
+
+    def pick1(need: float, cont_from, prev_ss=None):
         """B롤 한 컷 — 점수 높은 순. 같은 원본 ±3초 재사용 0, 단 바로 앞 컷 끝에서 앞으로 3.5초 안 이어짐은 허용(정본 B13 '앞으로 이어짐')."""
         best = None
         for i, sc_ in enumerate(cands):
@@ -220,13 +242,22 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
             if round(sc_[0], 2) in banned or not x.get("ok", True) or x.get("other_body_close") or _score(x) == 0:
                 continue
             cont = cont_from is not None and cont_from - 0.05 <= sc_[0] <= cont_from + 3.5
-            lo = (max(sc_[0], cont_from) + 0.05) if cont else sc_[0] + 0.15
-            if sc_[1] - lo < need + 0.1:
+            lo0 = (max(sc_[0], cont_from) + 0.05) if cont else sc_[0] + 0.15
+            seg = None
+            lo = lo0
+            while sc_[1] - lo >= need + 0.1:     # 긴 장면은 앞에서부터 1초씩 밀며 빈 자리를 찾는다(장면 하나에서 ±3초 떨어진 컷 여럿)
+                cand = (round(lo, 3), round(lo + need, 3))
+                clash = [u for u in used if _overlap(cand, u)]
+                if not clash or (cont and lo == lo0 and all(u[1] <= cand[0] + 0.05 and abs(u[1] - cont_from) < 0.05 for u in clash)):
+                    seg = cand
+                    break
+                if cont:
+                    break
+                lo += 1.0
+            if seg is None:
                 continue
-            seg = (round(lo, 3), round(lo + need, 3))
-            clash = [u for u in used if _overlap(seg, u)]
-            if clash and not (cont and all(u[1] <= seg[0] + 0.05 and abs(u[1] - cont_from) < 0.05 for u in clash)):
-                continue
+            if prev_ss is not None and not cont and abs(seg[0] - prev_ss) < SAME_SETUP_S:
+                continue                     # 바로 앞 B롤과 같은 촬영 자리(20초 안) — 화면이 거의 같아 컷으로 안 보인다(정재형 편 B4 1.54배 실측)
             sc = _score(x) * 10 + (6 if cont else 0) - (min(5, abs(lo - cont_from) / 30) if cont_from is not None else 0)
             if best is None or sc > best[0]:
                 best = (sc, i, seg, x)
@@ -249,7 +280,10 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
                 c, why = ok_sync(k)
                 x = info.get(str(k)) or {}
                 prev = cuts[-1] if cuts else None
-                if prev is not None and prev["block"] == b["id"] and d < 0.8 and k > 0 and sync[k - 1][1] < s0 - 0.05                         and prev["ss"] + prev["dur"] + d <= prev.get("scene1", 1e9) + 0.01 and (c or not prev.get("sync")):
+                near = [q for q in cuts if q.get("sync") and q["block"] != b["id"] and abs(q["ss"] - s0) < SAME_SETUP_S]
+                if c and near:                   # 다른 원음 블록의 본인 화면과 같은 촬영 자리(20초 안) — B13 재사용·안 보이는 컷 → B롤로
+                    c, why = None, f"다른 원음 블록 화면(원본 {near[0]['ss']:.1f})과 같은 자리(B13)"
+                if prev is not None and prev["block"] == b["id"] and (d < SHORT_S or (d < 0.8 and k > 0 and sync[k - 1][1] < s0 - 0.05))                         and prev["ss"] + prev["dur"] + d <= prev.get("scene1", 1e9) + 0.01 and (c or not prev.get("sync")):
                     # 쉼을 잘라 낸 자리 뒤 짧은 조각 — 화면은 앞 컷을 그대로 이어 보인다(컷 안 생김), 소리만 원음 다음 조각
                     cuts.append({"block": b["id"], "dur": d, "ss": round(prev["ss"] + prev["dur"], 3), "audio_ss": s0, "crop": prev["crop"],
                                  "desc": prev["desc"], "who": prev["who"], "why": "쉼 잘린 뒤 짧은 원음 조각 — 화면은 앞 컷 그대로 이어짐", "sync": prev.get("sync"),
@@ -262,11 +296,18 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
                                  "why": "원음 싱크(본인 화면)", "sync": True, "scene0": s0, "scene1": s1 if k + 1 < len(sync) and sync[k + 1][0] != s1 else s1 + 1.0})
                     used.append((s0, s1))
                 else:
-                    br = pick(d, None)
-                    if not br:
-                        raise StageError(f"{b['id']} 원음 {s0}~{s1} 화면을 못 씀({why}) + 대신할 B롤 없음")
-                    cuts.append({"block": b["id"], "dur": d, "ss": br["ss"], "audio_ss": s0, "crop": br["crop"], "desc": br["desc"], "who": br["who"],
-                                 "why": f"원음 화면 대체 — {why}(소리는 원음)", "scene0": br["scene0"], "scene1": br["scene1"]})
+                    n = max(1, int(round(d / Lc)))          # 긴 대체는 컷 길이만큼 나눠 B롤 여러 장(4초 한 컷 금지 — B4)
+                    ds = [round(d / n, 3)] * n
+                    ds[-1] = round(d - sum(ds[:-1]), 3)
+                    off = 0.0
+                    for dd in ds:
+                        pv = cuts[-1] if cuts else None
+                        br = pick(dd, None, pv["ss"] if pv else None)
+                        if not br:
+                            raise StageError(f"{b['id']} 원음 {s0}~{s1} 화면을 못 씀({why}) + 대신할 B롤 없음")
+                        cuts.append({"block": b["id"], "dur": dd, "ss": br["ss"], "audio_ss": round(s0 + off, 3), "crop": br["crop"], "desc": br["desc"],
+                                     "who": br["who"], "why": f"원음 화면 대체 — {why}(소리는 원음)", "scene0": br["scene0"], "scene1": br["scene1"]})
+                        off += dd
         else:
             dur = a1 - a0
             lc = max(Lc, LAST_MIN) if last else Lc
@@ -277,12 +318,14 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
             ds[-1] = round(dur - sum(ds[:-1]), 3)
             for d in ds:
                 prev = cuts[-1] if cuts else None
-                br = pick(d, (prev["ss"] + prev["dur"]) if prev else None)
+                # 앞으로 이어짐은 원음 컷 바로 뒤에서만(B롤끼리 이어 붙이면 같은 촬영 자리라 컷이 안 보인다 — 정재형 편 B4 1.75배 실측)
+                br = pick(d, (prev["ss"] + prev["dur"]) if prev and not prev.get("mute") else None, prev["ss"] if prev else None)
                 if not br:
                     raise StageError(f"{b['id']} 나레 B롤 후보가 모자람(필요 {d:.2f}초)")
                 kind = "본인+제품" if br["product"] and br["who"] in ("main", "both") else "제품" if br["product"] else "본인"
                 cuts.append({"block": b["id"], "dur": d, "ss": br["ss"], "crop": br["crop"], "desc": br["desc"], "who": br["who"],
                              "why": f"나레 '{b['line']['text'][:16]}…' — {kind} B롤", "mute": True, "scene0": br["scene0"]})
+    vary_zoom(cuts)
     t = 0.0
     for i, c in enumerate(cuts):
         c["i"] = i
@@ -291,9 +334,27 @@ def _assign(blocks, sync, cands, info, Lc, banned: set) -> list[dict]:
     return cuts
 
 
+def vary_zoom(cuts: list[dict]):
+    """(판단 주인) 이웃 컷이 둘 다 본인 화면이고 원본에서 이어지지 않으면 하나 걸러 확대(×ZOOM_ALT) — 같은 촬영 자리(앉아서 말하는 원본)는
+    장면이 바뀌어도 그림이 거의 같아 컷으로 안 보인다(정재형 편 B4 1.8 vs 벤치 0.93, 만템도 확대 1.32~1.60 실측). 이어지는 컷·join 은 안 건드린다."""
+    flip = False
+    for a, b in zip(cuts, cuts[1:]):
+        if b.get("join") or abs(a["ss"] + a["dur"] - b["ss"]) < 0.05:
+            continue
+        if a.get("who") in ("main", "both") and b.get("who") in ("main", "both") and abs(a["crop"][2] - b["crop"][2]) < 0.1 * a["crop"][2]:
+            flip = not flip
+            if flip:
+                x, y, s, _ = b["crop"]
+                s2 = int(s * ZOOM_ALT)
+                b["crop"] = [int(x + (s - s2) / 2), 0, s2, s2]
+                b["why"] = b.get("why", "") + f" · 확대 {s / s2:.2f}배(이웃 컷과 같은 자리)"
+        else:
+            flip = False
+
+
 VERIFY_PROMPT = """R1~R4 는 경쟁 쇼츠 화면이다 — 가장 자주 나오는 사람이 주인공({person}, 이하 R). P 는 제품({product}) 예시다.
 아래 #번호 그림은 우리 쇼츠에 그대로 쓸 화면(정사각 크롭)이다. 그림마다:
-- text: 영상 위에 덧씌운 글자·자막·로고·워터마크·말풍선이 조금이라도 보이면 true(옷·물건에 원래 인쇄된 글자는 false)
+- text: 영상 위에 덧씌운 글자·자막·로고·워터마크·말풍선·스티커·이모지·불꽃 같은 편집 그래픽이 조금이라도 보이면 true(옷·물건에 원래 인쇄된 글자는 false)
 - main: R 의 얼굴 또는 몸이 화면에 또렷이 보이면 true
 - product: P 와 같은 제품이 보이면 true
 - desc: 한국어 10자 안팎
@@ -315,7 +376,7 @@ def verify_crops(mp4, cuts: list[dict], B: dict, refs: list, prod: bytes | None,
     for c in cuts:
         if c.get("join") or _vkey(c) in cache:          # 이미 본 컷(같은 원본 시각·크롭)은 다시 안 묻는다
             continue
-        for t in (c["ss"] + 0.08, c["ss"] + c["dur"] - 0.08):
+        for t in (c["ss"] + 0.08, c["ss"] + c["dur"] / 2, c["ss"] + c["dur"] - 0.08):    # 시작·가운데·끝(자막은 컷 안에서도 바뀐다)
             parts += [f"#{len(idx)}", frame_jpg(mp4, t, w=256, crop=c["crop"])]
             idx.append(c["i"])
     if not idx:
@@ -384,6 +445,8 @@ def plan(B: dict, T: dict, S: dict, W: Path, narr: dict | None = None, ask=None,
         jsave(cache, LK)
     info = {k: v for k, v in LK["info"].items() if k != "_model"}
     sync, cands = LK["sync"], LK["cands"]
+    CROP_CAP["s"] = subtitle_cap(info)
+    log(f"[plan] 크롭 한 변 상한 {CROP_CAP['s']}px(원본 아래 자막 띠 위)")
     win = (B.get("measure") or {}).get("window") or [0, 420, 1080, 1080]
     refs = [frame_jpg(B["mp4"], B["dur"] * f, w=320, crop=win) for f in (0.25, 0.42, 0.6, 0.85)]
     nar = [g for g in bench_gaps(T, B["dur"]) if g[1] - g[0] >= 0.8] or [(0.0, 1.0)]
@@ -391,7 +454,7 @@ def plan(B: dict, T: dict, S: dict, W: Path, narr: dict | None = None, ask=None,
     banned: set = set()
     checks_log = []
     vcache = jload(W / "verify_cache.json") if (W / "verify_cache.json").exists() else {}
-    for rnd in range(4):
+    for rnd in range(VERIFY_ROUNDS):
         cuts = _assign(blocks, sync, cands, info, Lc, banned)
         vc = verify_crops(mp4, cuts, B, refs, prod, ask=ask, cache=vcache)
         jsave(W / "verify_cache.json", vcache)
@@ -402,7 +465,7 @@ def plan(B: dict, T: dict, S: dict, W: Path, narr: dict | None = None, ask=None,
             banned.add(round(cuts[i]["scene0"], 2))
         log(f"[plan] 크롭 검사 {rnd + 1}회: 글자 걸린 컷 {sorted(vc['bad'])} → 그 장면 빼고 다시")
     else:
-        raise StageError(f"크롭 검사 4회 모두 걸림: {checks_log[-1]['bad']}")
+        raise StageError(f"크롭 검사 {VERIFY_ROUNDS}회 모두 걸림: {checks_log[-1]['bad']}")
     if abs(cuts[-1]["t_final"][1] - total) > 0.02:
         raise StageError(f"컷 합 {cuts[-1]['t_final'][1]:.3f} ≠ 블록 합 {total:.3f}")
     viol = rule_check(cuts, Lc)
@@ -447,6 +510,26 @@ def rule_check(cuts: list[dict], Lc: float) -> list[str]:
     return v
 
 
+def fix_words(words: list, heard: str) -> list:
+    """(판단 주인) 원음 자막 글 바로잡기 — 자동자막 낱말(시각 있음)을 확정 받아쓰기 낱말로 1:1 바꾼다(같은 수로 어긋난 자리만).
+    10-17 정재형: 자동자막 '얄서 화라당' → 받아쓰기 '얇아서 후라당'. 받아쓰기가 클립을 합쳐 답했으면(덮음 낮음) 그대로 둔다."""
+    from difflib import SequenceMatcher
+    hw = heard.split()
+    if not hw or not words:
+        return words
+    a = [norm(w) for _, w in words]
+    b = [norm(w) for w in hw]
+    if SequenceMatcher(None, "".join(a), "".join(b), autojunk=False).ratio() < 0.6:   # 글자로 재서 딴 말이면 그대로
+        return words
+    m = SequenceMatcher(None, a, b, autojunk=False)
+    out = list(words)
+    for op, i1, i2, j1, j2 in m.get_opcodes():
+        if op == "replace" and i2 - i1 == j2 - j1:
+            for k in range(i2 - i1):
+                out[i1 + k] = (words[i1 + k][0], hw[j1 + k])
+    return out
+
+
 def captions(blocks: list[dict], total: float) -> list[dict]:
     """(판단 주인) 자막 계획 — 나레 = 조각 글자 비례(노랑), 원음 = 원본 낱말 시각으로 ≤13자 조각(흰)."""
     caps = []
@@ -461,7 +544,7 @@ def captions(blocks: list[dict], total: float) -> list[dict]:
                 caps.append({"t0": round(x, 3), "t1": round(x + d, 3), "text": c, "kind": "나레"}); x += d
             continue
         spans = b["spans"]
-        words = [(t, w) for t, w in b["orig"]["words"]]
+        words = fix_words([(t, w) for t, w in b["orig"]["words"]], ((b["orig"].get("asr") or {}).get("text") or ""))
         groups, cur, ct = [], [], None
         for t, w in words:
             w2 = w.rstrip(".?!,")

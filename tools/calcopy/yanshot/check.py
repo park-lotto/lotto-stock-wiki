@@ -106,6 +106,8 @@ def check(B: dict, T: dict, S: dict, P: dict, R: dict, W: Path, slug: str, ask=N
     ok = all(r["ok"] for r in rows)
     dest = OUT_DIR / f"칼카피_얜샷템_{slug}.mp4"
     md = None
+    if not ok and dest.exists():
+        dest.unlink()                      # 걸린 판의 옛 완성본이 남아 통과본으로 오해되지 않게
     if ok:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         shutil.copy2(final, dest)

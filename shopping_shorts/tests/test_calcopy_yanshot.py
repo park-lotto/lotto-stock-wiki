@@ -165,3 +165,16 @@ def test_tempo_plan_even_and_bounded():
     tp2 = rd.tempo_plan([10, 30], [3.0, 3.0])            # 한 줄만 극단 → ±10% 로 묶임
     m2 = 6.0 / (40 / 8.4)
     assert all(abs(x / m2 - 1) <= 0.1 + 1e-6 for x in tp2)
+
+
+def test_fix_words_uses_confirm_asr():
+    w = [(0.0, "그니까"), (0.3, "얄서"), (0.6, "화라당"), (0.9, "타서"), (1.2, "막")]
+    out = pl.fix_words(w, "그러니까 얇아서 홀라당 타서 막")
+    assert [x for _, x in out] == ["그러니까", "얇아서", "홀라당", "타서", "막"] and [t for t, _ in out] == [t for t, _ in w]
+    assert pl.fix_words(w, "전혀 다른 말 입니다 여기") == w          # 받아쓰기가 딴 말이면 그대로
+
+
+def test_subtitle_cap_above_bottom_band():
+    info = {str(i): {"text": [[0.3, y, 0.7, y + 0.08]]} for i, y in enumerate([0.72, 0.75, 0.78, 0.78, 0.78])}
+    assert pl.subtitle_cap(info) == int(0.72 * 1080 - 14)
+    assert pl.subtitle_cap({}) == pl.CROP
