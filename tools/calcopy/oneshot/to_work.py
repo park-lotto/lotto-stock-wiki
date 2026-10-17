@@ -4,7 +4,7 @@
     PYTHONUTF8=1 py tools/calcopy/oneshot/to_work.py <엔진 대본.json> <조사.json> 잇썸홈|재미썸홈 <작품 폴더>
 
 판단 주인(여기서 새로 정하지 않고 부르기만):
-  자막 조각 = tools/calcopy/narr_video.chunk_sentence(13자) · TTS 숫자 읽기 = shopping_shorts.narration_naturalize.normalize_reading
+  자막 조각 = pieces_of(narr_video.chunk_sentence + 화면 글자 상한 = 프리셋 caption_max_chars) · TTS 숫자 읽기 = shopping_shorts.narration_naturalize.normalize_reading
   장면 검색어(조각마다 query·kind) = 이 파일 shot_queries() 한 곳 — 제미나이 1회(gemini_free.ask)
   채널 값(프리셋·목소리·말속도·재료 규칙) = BRANDS 한 곳(10-17 작품 1~5 대본.json 값 그대로)
 작품 대본.json 꼴 = 10-17 확정 대본(lines[].shots[].piece) — material_auto.norm_script 세 번째 꼴.
@@ -19,7 +19,58 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-PIECE_CHARS = 13          # 잇썸홈 자막 한 칸 ≤13자(10-17 확정 대본 규칙)
+def caption_max(brand: str) -> int:
+    """자막 한 칸 최대 글자(화면 글자 — 띄어쓰기·부호 포함). 주인 = 프리셋 manifest channel_rules.make.checks.caption_max_chars
+    (preset_make A9 가 같은 값으로 잰다). 여기선 읽기만."""
+    p = ROOT / BRANDS[brand]["preset"]
+    p = p if p.suffix == ".json" else p / "manifest.json"
+    return int(json.loads(p.read_text(encoding="utf-8"))["channel_rules"]["make"]["checks"]["caption_max_chars"])
+
+
+def _bad(ws_cut: list[list[str]]) -> tuple[int, int]:
+    """(숫자 낱말 바로 뒤 끊기 수 — '3만 / 1천', 4자 미만 조각 수 — '안에')"""
+    import re
+    num = sum(1 for c in ws_cut[:-1] if re.search(r"\d", c[-1]))
+    short = sum(1 for c in ws_cut if len(" ".join(c)) < 4)
+    return num, short
+
+
+def pieces_of(text: str, n: int) -> list[str]:
+    """한 줄 → 자막 조각(화면 글자 = 띄어쓰기·부호 포함 ≤ n). 쉼표 뒤에서 먼저 끊고(숏템 narr_video.chunk_sentence 와 같은 원칙),
+    한 마디 안은 앞에서부터 채우기(읽는 흐름 그대로)가 기본 — 그 결과에 숫자 뒤 끊기·4자 미만 조각이 있을 때만
+    (조각 수, 숫자 뒤 끊기, 짧은 조각) 이 가장 작은 끊기로 바꾼다. 10-18 실측: chunk_sentence(공백 뺀 기준)만 쓰니
+    '출장 갈 때 축축한 칫솔 챙기기'(17자)가 A9 에 걸렸다."""
+    import re
+    out = []
+    for clause in [c.strip() for c in re.split(r"(?<=,)\s+", text.strip()) if c.strip()]:
+        ws = clause.rstrip(".,").split()
+        greedy, cur = [], []
+        for w in ws:
+            if cur and len(" ".join(cur + [w])) > n:
+                greedy.append(cur)
+                cur = [w]
+            else:
+                cur.append(w)
+        if cur:
+            greedy.append(cur)
+        cut = greedy
+        if any(_bad(greedy)):
+            best = {0: ((0, 0, 0), [])}
+            for i in range(1, len(ws) + 1):
+                for j in range(i):
+                    if j not in best or (len(" ".join(ws[j:i])) > n and i - j > 1):
+                        continue
+                    path = best[j][1] + [ws[j:i]]
+                    num, short = _bad(path + ([["x" * 9]] if i < len(ws) else []))
+                    c = (len(path), num, short)
+                    if i not in best or c < best[i][0]:
+                        best[i] = (c, path)
+            if best[len(ws)][0] < (len(greedy),) + _bad(greedy):
+                cut = best[len(ws)][1]
+        out += [" ".join(c) for c in cut]
+    return out
+
+
 BRANDS = {
     "잇썸홈": {"channel": "homedesignnote", "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
              "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"}, "cps_target": 8.32,
@@ -70,17 +121,16 @@ def shot_queries(product: str, research: dict, brand: str, rows: list[dict], tit
 
 def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path:
     from shopping_shorts.narration_naturalize import normalize_reading
-    from tools.calcopy import narr_video as N
     S = json.loads(Path(engine_json).read_text(encoding="utf-8"))
     R = json.loads(Path(research_json).read_text(encoding="utf-8"))
     if S.get("status") != "ok":
         raise SystemExit(f"엔진 대본이 통과 전이다({S.get('status')}) — 남은 줄을 고친 뒤 옮긴다: {S['final']['check'].get('global')}")
     B = BRANDS[brand]
     lines = S["final"]["lines"]
-    rows = []
+    rows, cmax = [], caption_max(brand)
     for li, l in enumerate(lines):
-        for p in N.chunk_sentence(l["text"], PIECE_CHARS):
-            rows.append({"line": li, "piece": p.strip(" ,"), "line_text": l["text"]})
+        for p in pieces_of(l["text"], cmax):
+            rows.append({"line": li, "piece": p, "line_text": l["text"]})
     product = R.get("product") or S["product"].get("name")
     sq = shot_queries(product, R, brand, rows, lines[0]["text"])
     out_lines = []
