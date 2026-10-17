@@ -603,7 +603,9 @@ def sound(w, cfg, narr: Path, total: float, out: Path, log: dict) -> Path:
                         "caption_lines": [p["text"] for p in mine], "cap_durs": [round((p["f1"] - p["f0"]) / FPS, 3) for p in mine],
                         "cap_lead": 0.0, "cap_offset": 0.0, "role": rmap.get(line["slot"], line["slot"])})
         pname, pdir = SP.pack_for(sfx.get("pack_customer", 0))
-        pack = {"name": pname, "dir": pdir, "density": sfx.get("density", "normal"), "level": sfx.get("level", "normal"), "mute_beats": []}
+        ring = int(sfx.get("ring_every") or 1)   # 칸 n개마다 한 칸만 울림(나머지는 팩의 mute_beats 로) — 썰템쇼 벤치 밀도. 없으면 종전(전 칸)
+        mute = [li for li in range(len(stl)) if li % ring] if ring > 1 else []
+        pack = {"name": pname, "dir": pdir, "density": sfx.get("density", "normal"), "level": sfx.get("level", "normal"), "mute_beats": mute}
         evs = SP.events(stl, pack)
         (out / "sfx_events.json").write_text(json.dumps({"pack": pname, "density": pack["density"], "events": evs, "timeline": stl},
                                                         ensure_ascii=False, indent=1), encoding="utf-8")

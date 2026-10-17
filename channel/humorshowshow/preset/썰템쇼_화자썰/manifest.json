@@ -956,7 +956,8 @@
     "density": "low",
     "level": "normal",
     "role_of_slot": {},
-    "why": "벤치 휙·띵 6개/28초(NBdm 받아쓰기) — sfx_pack density low(칸 첫 줄만)"
+    "why": "벤치 NBdm 뜯기 0발·판독 6발, jECu 2발 — density low(칸 첫 줄)에 ring_every 2(칸 하나 걸러, 첫 칸 오프너 유지)",
+    "ring_every": 2
    },
    "meme_dir": "C:/숏템_칼카피/packs/meme/meme_pack",
    "master": {
@@ -1004,13 +1005,14 @@
     "meme_ratio_max": 0.3,
     "meme_why": "벤치 NBdm 짤 2컷 5.8초/28초=0.21, 21편 밈짤 51/356줄 — 화자 대사 줄마다 짤(최대 3줄)",
     "same_meme_max": 1,
-    "sfx_max_extra": 0,
-    "sfx_max": null,
+    "sfx_max_extra": null,
+    "sfx_max": 7,
     "caption_max_chars": 18,
     "caption_why": "21편 줄판독 화면 줄 669개 길이(공백 포함, '화자 : ' 뺌) p95 18 · 중앙 11 · 최대 25",
     "edge_y_min": 60,
     "aba_same_scene_s": 10.0,
-    "tts_no_jamo": true
+    "tts_no_jamo": true,
+    "sfx_why": "벤치 최대 6발(NBdm 판독) + 오프너 1"
    },
    "tts_split": {
     "max_chars": 35,
