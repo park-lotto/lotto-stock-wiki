@@ -1,0 +1,463 @@
+{
+ "id": "E_bX_lBLj5M",
+ "dur": 38.0,
+ "title_card": {
+  "t0": 0,
+  "t1": 1.4,
+  "text": "제발 그만 좀 / 털어가라는 커피콩",
+  "style": "머리띠·게시글이 어둡게 깔리고 위쪽 검정 띠 박스에 2줄(윗줄 흰색·아랫줄 시안, 굵은 고딕, 그림자), 아래 흰 띠에 게시글 제목, 그 아래 영상이 풀블리드",
+  "under": "편의점 진열대에서 틴 케이스 집기 → 손바닥 커피콩 캔디",
+  "voice": "훅 구간에도 소리 있음(평균 음량이 본문과 같은 수준) — 제목을 읽는지는 받아쓰기 안 해 미확인"
+ },
+ "post_title": "제발 그만 좀 털어가라는 커피콩",
+ "frame": {
+  "header": "노란 머리띠 #FABC15 y0~242(왼쪽 ≡ 메뉴 아이콘 + '앞 북 이' 검정 굵은 글자 + 북 치는 마스코트 캐릭터(가슴에 '앞북이'), 아래 회색 테두리) · 흰 게시글 바탕",
+  "layout_y": "1080x1920 기준: 머리띠 0~242 / 게시글 제목(검정 굵게, 가운데) 316~373 / 메타 줄 회색 'ㅅㄱ | 18:13' 421~442(5편 모두 같은 값) / 회색 구분선 453~458 / 자막 칸 1줄 500~549·2줄 약 470~585(검정 굵은 고딕, 가운데, 흰 바탕) / 그림 칸 670~1664(가로 약 46~1034, 거의 정사각) / 아래 흰 여백 1664~1920",
+  "ai_notice": null
+ },
+ "lines": [
+  {
+   "t0": 1.4,
+   "t1": 2.7,
+   "caption": "최근 한국을 찾은 외국인들이",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "광장시장 거리 실사 영상(간판 한글 정상)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 2.7,
+   "t1": 3.7,
+   "caption": "편의점마다 손바닥만한",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "편의점(Global Shop) 매장 입구 실사",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.7,
+   "t1": 4.5,
+   "caption": "틴 케이스를 찾아",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "매장 안 걷기 실사",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.4,
+   "caption": "보이는대로 여러 통씩",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "ESPRESSO 틴 여러 개 손에",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.4,
+   "t1": 6.4,
+   "caption": "쓸어가고 있다는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "만원권 건네기 → 6.3 AMERICANO 틴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.4,
+   "t1": 7.6,
+   "caption": "한국에 진한 커피 맛 뒤로",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "원두 스쿱으로 나무 그릇에 붓기 → 스쿱이 사라지고 'Aroma' 유리병이 생겨남",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 생성 영상(움직임)·실사풍 음식, 추정",
+    "evidence": "한 컷 안에서 스쿱이 유리병으로 바뀌는 형태 변형(6.6→7.0), 떨어지는 원두가 녹은 덩어리처럼 뭉개짐(7.2)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 7.6,
+   "t1": 8.8,
+   "caption": "목구멍까지 팡 뚫리는",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "남성이 캔디 입에 넣음(7.6) → 줌 블러 전환 → 고개 젖힌 남성 뒤로 커피 물보라 왕관, 손에 BOLD ESPRESSO 틴",
+   "infographic": null,
+   "emotion": {
+    "who": "실사풍 인물(AI 추정)",
+    "feeling": "짜릿함·시원함",
+    "prop": "커피 물보라"
+   },
+   "ai": {
+    "kind": "AI 생성 영상(움직임)·실사풍 인물 광고 연출, 추정",
+    "evidence": "머리 뒤 커피 물보라가 공중에 멈춘 채 모양만 일렁임(8.0~8.8 프레임), 창밖 벚꽃+몬스테라 과장 조명, 실사 촬영이 어려운 연출. 틴 글자는 또렷 — 제품 이미지를 넣어 만든 광고 영상 추정"
+   },
+   "effect": null
+  },
+  {
+   "t0": 8.8,
+   "t1": 10.0,
+   "caption": "미친 커피콩이 있습니다!",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 남성(~9.0) → 유리그릇에서 나무 트레이로 캔디 쏟기(9.1~9.8) → 9.9 편의점 진열대 실사",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 생성 영상(움직임), 추정",
+    "evidence": "쏟는 동안 그릇 속 양보다 트레이에 쌓이는 캔디가 많아짐, 배경 틴 글자 뭉개짐"
+   },
+   "effect": null,
+   "note": "일본 SNS 말을 따옴표 없이 존댓말로 인용 + 다음 줄 '라며'"
+  },
+  {
+   "t0": 10.0,
+   "t1": 11.3,
+   "caption": "라며 일본 SNS에서",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "편의점 진열대에서 틴 집기(실사, 한글 라벨)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 11.3,
+   "t1": 12.6,
+   "caption": "한국 여행 필수 간식으로 퍼져",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 손에 듦",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.6,
+   "t1": 13.7,
+   "caption": "찾는 순간부터 쟁이는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "가방에 틴 넣기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 13.7,
+   "t1": 14.6,
+   "caption": "캔디가 되버렸다는 거",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "AMERICANO 틴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 14.6,
+   "t1": 16.0,
+   "caption": "대체 사탕 하나가 뭐라고 싶지만",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "유리컵 속 커피콩 캔디 → 틴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.0,
+   "t1": 17.0,
+   "caption": "슬라이드 뚜껑을 밀면",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 슬라이드 열기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.0,
+   "t1": 18.5,
+   "caption": "진짜 커피콩처럼 생긴 캔디가 나오고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 열어 캔디 보이기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.5,
+   "t1": 19.3,
+   "caption": "입에 넣는 순간",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "차 안 여성 캔디 먹음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.3,
+   "t1": 20.4,
+   "caption": "에스프레소의 진한 향과",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "여성 → 차 안 틴(핸들)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 20.4,
+   "t1": 21.1,
+   "caption": "쌉싸름한 맛이",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 속 캔디 → 21.0 커피잔 컷",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.1,
+   "t1": 21.7,
+   "caption": "먼저 퍼진 뒤",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "은색 커피잔 위 민트잎, 검은 액체가 출렁",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 생성 영상(움직임)·실사풍 음료, 추정",
+    "evidence": "뜨거운 커피에 민트잎이 떠 있고 액체가 젤리처럼 뭉쳐 출렁, 잔 손잡이·받침 경계가 녹아 붙음, 카메라 고정·느린 움직임(그림칸 프레임차 평균 3.0 — 다른 실사 컷 17~36)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 21.7,
+   "t1": 22.6,
+   "caption": "자일리톨과 멘톨의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 커피잔",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 생성 영상, 추정",
+    "evidence": "위와 같은 컷"
+   },
+   "effect": null
+  },
+  {
+   "t0": 22.6,
+   "t1": 23.3,
+   "caption": "시원함이 올라와",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 커피잔 → 23.2 주황 그릇 컷",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 생성 영상, 추정",
+    "evidence": "위와 같은 컷"
+   },
+   "effect": null
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.5,
+   "caption": "일반 커피 사탕처럼 입안이",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "주황 그릇 속 캔디로 다가가기(실사인지 AI인지 판정 못 함)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.5,
+   "t1": 25.7,
+   "caption": "달고 텁텁하지 않다는 거",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "그릇 → 틴 든 손",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.7,
+   "t1": 27.3,
+   "caption": "무엇보다 커피가 미친듯이 당겨도",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴에서 캔디를 손바닥에 덜기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.3,
+   "t1": 28.5,
+   "caption": "당장 한 잔 마시기 어려울 때",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "손바닥 캔디 2알",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 28.5,
+   "t1": 29.1,
+   "caption": "한 알씩 꺼내",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "차 컵홀더의 틴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.1,
+   "t1": 30.0,
+   "caption": "급한 마음부터 달랠 수 있고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 30.0,
+   "t1": 31.1,
+   "caption": "당류는 0g인데다",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 라벨 근접(SUGAR-FREE·자일리톨 87.5%)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "빨간 손그림 동그라미가 SUGAR-FREE 둘레에 그려짐(30.1~30.7, 0.6초에 걸쳐 획이 늘어남 — 빨간 픽셀 82→780)"
+  },
+  {
+   "t0": 31.1,
+   "t1": 32.4,
+   "caption": "검은색 틴 케이스도 고급스러워",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "틴 슬라이드·손가락 톡톡",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.4,
+   "t1": 34.1,
+   "caption": "본인 몫에 선물할 것까지 챙기다 보면",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "서랍 → 편의점 진열 틴 여러 개",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.1,
+   "t1": 35.2,
+   "caption": "한두 통으로 끝날 수가 없다는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "진열 틴 집기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.2,
+   "t1": 36.1,
+   "caption": "아무리 맛있어도",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "흰 그릇(웃는 얼굴 그림)에 초코 커피콩 캔디 쏟기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.1,
+   "t1": 37.0,
+   "caption": "우리 먹을 건 남겨두고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 그릇",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 37.0,
+   "t1": 38.0,
+   "caption": "털어가야 하는 거 아니냐고ㅋㅋ",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 그릇",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드(금지형 '제발 그만 좀') → 외국인 싹쓸이 현상 → 맛 표현(AI 광고 컷) → 일본 SNS 화제 → '대체 뭐라고' 의문 → 제품 시연(뚜껑·모양·맛·0g) → 끝줄 1인칭 우리 '~아니냐고ㅋㅋ'",
+ "ratios": {
+  "infographic_sec": 0,
+  "character_sec": 0,
+  "ai_image_sec": 5.7,
+  "real_video_sec": 32.3,
+  "meme_sec": 0,
+  "capture_sec": 0,
+  "broadcast_sec": 0
+ },
+ "measure": "10fps 프레임 자막칸(540폭 y230~330)·그림칸 픽셀차로 변화 시각 0.1초 단위 검출 → 구간마다 원본 프레임 눈 판독. 2줄째 덧붙음 시각은 line2_t. 빨간 효과는 순빨강 픽셀 수 스캔",
+ "lines_n": 34
+}
