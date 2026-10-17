@@ -1,0 +1,133 @@
+{
+ "_note": "yanshot render — 페이지 1 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/엄정화_돋보기/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "src_P6MvI-qPE2U.mp4",
+   "ss": 1005.0,
+   "src_crop": [
+    271,
+    0,
+    802,
+    802
+   ],
+   "cuts": [
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1005.0,
+     "src_crop": [
+      271,
+      0,
+      802,
+      802
+     ],
+     "dur": 1.75,
+     "plan_i": 0
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1022.438,
+     "src_crop": [
+      0,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.549,
+     "plan_i": 1
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1029.111,
+     "src_crop": [
+      45,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.548,
+     "plan_i": 2
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 954.27,
+     "src_crop": [
+      0,
+      0,
+      870,
+      870
+     ],
+     "dur": 2.92,
+     "plan_i": 3
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 957.19,
+     "src_crop": [
+      0,
+      0,
+      870,
+      870
+     ],
+     "dur": 0.41,
+     "plan_i": 4
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1011.41,
+     "src_crop": [
+      0,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.86,
+     "plan_i": 5
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1037.01,
+     "src_crop": [
+      333,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.31,
+     "plan_i": 6
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1038.37,
+     "src_crop": [
+      446,
+      0,
+      836,
+      836
+     ],
+     "dur": 1.772,
+     "plan_i": 7
+    },
+    {
+     "src": "src_P6MvI-qPE2U.mp4",
+     "ss": 1048.564,
+     "src_crop": [
+      765,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.773,
+     "plan_i": 8
+    }
+   ],
+   "t_final": [
+    0.0,
+    14.892
+   ]
+  }
+ ]
+}

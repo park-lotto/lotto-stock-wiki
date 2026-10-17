@@ -1,0 +1,90 @@
+{
+ "runs": [
+  {
+   "started": "2026-10-17 12:38:59",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 294.7,
+     "note": ""
+    }
+   },
+   "url": "https://www.youtube.com/shorts/CU300rBQ4yk",
+   "slug": "엄정화_돋보기",
+   "until": "plan",
+   "redo": null,
+   "total_sec": 294.7
+  },
+  {
+   "started": "2026-10-17 12:44:43",
+   "stages": {
+    "bench": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "trace": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "script": {
+     "sec": 0.0,
+     "note": "캐시"
+    },
+    "plan": {
+     "sec": 66.4,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 22.8,
+       "ok": true,
+       "failed": null
+      },
+      {
+       "tag": "yanshot_plan_verify",
+       "model": "gemini-3-flash-preview",
+       "sec": 8.2,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    },
+    "make": {
+     "sec": 160.8,
+     "note": "",
+     "gemini": []
+    },
+    "check": {
+     "sec": 42.5,
+     "note": "",
+     "gemini": [
+      {
+       "tag": "yanshot_check_asr",
+       "model": "gemini-3-flash-preview",
+       "sec": 7.5,
+       "ok": true,
+       "failed": null
+      }
+     ]
+    }
+   },
+   "url": "https://www.youtube.com/shorts/CU300rBQ4yk",
+   "slug": "엄정화_돋보기",
+   "until": "check",
+   "redo": null,
+   "total_sec": 269.7
+  }
+ ]
+}
