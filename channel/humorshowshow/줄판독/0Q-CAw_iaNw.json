@@ -1,0 +1,164 @@
+{
+ "id": "0Q-CAw_iaNw",
+ "title_card": "한국인들이 유독 / 못 지킨다는 레시피",
+ "post_title": "한국인들이 유독 못 지킨다는 레시피",
+ "dur": 28.47,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.2,
+   "caption": "한국인들이 유독 못 지킨다는 디저트 레시피",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "크렘브륄레 캐러멜 표면 기포 클로즈업 — 훅 카드 아래",
+   "effect": null,
+   "ending": "명사 끝(레시피)"
+  },
+  {
+   "t0": 2.2,
+   "t1": 4.6,
+   "caption": "프랑스 현지에서도 / 고급 디저트로 유명한 Senoble",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "SENOBLE La Glacerie 매장 간판",
+   "effect": null,
+   "ending": "명사 끝(Senoble)"
+  },
+  {
+   "t0": 4.6,
+   "t1": 7.0,
+   "caption": "여기서 한국에 어렵게 / 들여왔다는 디저트가 있는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "크림 소스 붓기 + S 1921 로고",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 7.0,
+   "t1": 8.0,
+   "caption": "바로 크렘브륄레(Crème brûlée)",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "SENOBLE French Crème Brûlée 패키지",
+   "effect": null,
+   "ending": "명사 끝"
+  },
+  {
+   "t0": 8.0,
+   "t1": 10.8,
+   "caption": "공식 레시피는 초간단 / '설탕 뿌리고 3분 기다려' 인데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "설탕 봉지 뒷면 조리법(①②③, 3min) → 설탕 뿌린 유리병 크렘브륄레",
+   "effect": "빨간 화살표(3분 표시)",
+   "ending": "~인데"
+  },
+  {
+   "t0": 10.8,
+   "t1": 12.2,
+   "caption": "엥ㅋ 그걸 어케 기다림——",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "손목시계를 손가락으로 가리키는 남자(인물 불명)",
+   "effect": null,
+   "ending": "——"
+  },
+  {
+   "t0": 12.2,
+   "t1": 15.2,
+   "caption": "8282의 민족답게 바로 / 토치로 맛깔나게 지져버리거나",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "토치로 설탕 표면 지지는 영상",
+   "effect": null,
+   "ending": "~거나"
+  },
+  {
+   "t0": 15.2,
+   "t1": 17.4,
+   "caption": "토치가 없으면 / 숟가락을 데워서라도 녹인다고 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "데운 숟가락 뒷면으로 설탕 녹이는 클로즈업",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 17.4,
+   "t1": 20.0,
+   "caption": "하지만 한국인들이 / 진짜 노리는건 따로 있었는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "크렘브륄레 커스터드 표면 클로즈업",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 20.0,
+   "t1": 22.4,
+   "caption": "그건 소스나 쿠키 담기 / 딱 좋은 사이즈의 유리 용기",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "빈 유리병에 쿠키 담김 → 빈 유리병 2개",
+   "effect": null,
+   "ending": "명사 끝(용기)"
+  },
+  {
+   "t0": 22.4,
+   "t1": 25.8,
+   "caption": "튼튼한 유리가 8개나 들어있어서 / 디저트는 핑계로 먹기 좋다고",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "금박 뚜껑 병 쌓인 묶음 → 토치로 2병 지지기",
+   "effect": null,
+   "ending": "~다고"
+  },
+  {
+   "t0": 25.8,
+   "t1": 28.4,
+   "caption": "아 한국인들은 재활용까지 / 기깔나게 해야 만족한다고ㅋㅋ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "숟가락으로 캐러멜 깨서 뜨는 클로즈업",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅카드(규칙 위반 예고) → 브랜드 권위 → 수입 디저트 → 제품명 공개 → 공식 레시피 → 반응 밈(엥ㅋ) → 한국식 위반 2가지 → 반전(진짜 목적=용기) → 용기 활용 → ㅋㅋ 마무리",
+ "celeb_scenes": [
+  {
+   "t0": 10.8,
+   "t1": 12.2,
+   "who": "불명(이름 표기 없음)",
+   "program": null,
+   "why_here": "‘3분 기다려’ 다음 줄에서 손목시계를 가리키는 조급한 반응 밈 = 기다림을 못 참는 한국인 대변"
+  }
+ ],
+ "kangjueun": "없음 — 전 구간 자막 변화 지점 29개 프레임 확인, 한국 연예인·방송 장면 없음",
+ "_note": "판독=Claude 눈(5fps 프레임 자막띠 변화 분할 + cap 시트 대조). asr 파일 없음→narration 전부 null. t0=첫 줄이 뜬 시각(두 줄 자막은 한 줄씩 차례로 뜸)"
+}

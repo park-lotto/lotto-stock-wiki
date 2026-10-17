@@ -1,0 +1,183 @@
+{
+ "id": "xJvwMApZwnE",
+ "title_card": "프랑스 제조사도 / 기겁한 한국 디저트",
+ "post_title": "제조사도 기겁한 한국 디저트",
+ "dur": 30.07,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.2,
+   "caption": "프랑스 제조사도 기겁한 한국 디저트",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "노란 치즈케이크 바 클로즈업 — 훅 카드 아래",
+   "effect": null,
+   "ending": "명사 끝(디저트)"
+  },
+  {
+   "t0": 2.2,
+   "t1": 3.8,
+   "caption": "까먹는 치즈의 / 원조라는 치즈명가 벨(Bel)",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "벨 치즈 마스코트(빨간 원형 캐릭터)",
+   "effect": null,
+   "ending": "명사 끝"
+  },
+  {
+   "t0": 3.8,
+   "t1": 6.2,
+   "caption": "한국에 신규 케이크를 / 출시하려다 당황해버렸는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "치즈케이크를 포크로 자르는 영상",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 6.2,
+   "t1": 8.6,
+   "caption": "벨 : 치즈케이크 어떰? / 한국담당 : 코스트코꺼 사서 얼려먹던데?",
+   "narration": null,
+   "kind": "2인대화",
+   "speaker": "벨 / 한국담당",
+   "screen": "제품영상",
+   "screen_desc": "치즈케이크 단면 → 코스트코 냉장 진열대 치즈케이크",
+   "effect": null,
+   "ending": "?"
+  },
+  {
+   "t0": 8.6,
+   "t1": 9.8,
+   "caption": "벨 : 엥 치즈를 왜 얼려????????",
+   "narration": null,
+   "kind": "화자대사",
+   "speaker": "벨",
+   "screen": "밈짤",
+   "screen_desc": "안경 쓴 남자 당황 반응 짤(미드 ‘오피스’ 드와이트 역 배우로 추정, 이름 표기 없음)",
+   "effect": null,
+   "ending": "????????"
+  },
+  {
+   "t0": 9.8,
+   "t1": 12.4,
+   "caption": "한국인들은 한겨울에도 / 얼죽아를 먹는걸로도 모자라",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "밈짤",
+   "screen_desc": "얼음 뒤집어쓴 채 아이스커피 든 사람 → 얼어붙은 남자 + 자막 ‘아이스 아메리카노 하나요’",
+   "effect": null,
+   "ending": "~모자라"
+  },
+  {
+   "t0": 12.4,
+   "t1": 15.0,
+   "caption": "앵간한 디저트는 얼려먹는 / 얼먹파가 많았던것 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "얼린 젤리 → 지퍼백에 담긴 얼린 치즈케이크",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 15.0,
+   "t1": 17.2,
+   "caption": "한국담당 : 얼먹치케 도전 ㄱ? / 벨 : 하.. ㅇㅋ접수",
+   "narration": null,
+   "kind": "2인대화",
+   "speaker": "한국담당 / 벨",
+   "screen": "제품영상",
+   "screen_desc": "치즈케이크 단면 클로즈업",
+   "effect": null,
+   "ending": "ㅇㅋ접수"
+  },
+  {
+   "t0": 17.2,
+   "t1": 19.8,
+   "caption": "다른나라는 띨롱 종이에서 / 꺼내먹는 방식이었는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "세븐일레븐×Kiri 치즈케이크 바 포장을 손에 든 영상",
+   "effect": "빨간 화살표+반짝 표시",
+   "ending": "~는데"
+  },
+  {
+   "t0": 19.8,
+   "t1": 22.6,
+   "caption": "한국은 이걸 얼먹 전용으로 / 아예 단독 포장까지 만들어버림 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "Kiri 크림치즈 치즈케이크 단독 포장 꺼내는 영상",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 22.6,
+   "t1": 25.0,
+   "caption": "이게 살짝 녹여먹으면 / 꾸덕한 치케 그 자체인데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "치즈케이크 바를 칼로 자르는 클로즈업",
+   "effect": null,
+   "ending": "~인데"
+  },
+  {
+   "t0": 25.0,
+   "t1": 27.8,
+   "caption": "당 떨어질 때 딱 하나만 / 쑥 빼먹으면 입터짐방지 가능 ㅇㅇ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "칼로 자른 단면·부스러기",
+   "effect": null,
+   "ending": "ㅇㅇ"
+  },
+  {
+   "t0": 27.8,
+   "t1": 30.0,
+   "caption": "아 근데 난 3개는 먹어야 / 직성이 풀린다고 ㅋㅋ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "Kiri 포장째 든 치즈케이크 바 단면",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅카드(제조사 기겁) → 브랜드 권위(벨) → 당황 예고 → 2인대화(벨↔한국담당) → 벨 반응 밈 → 한국인 얼죽아·얼먹 설명(밈) → 2인대화 합의 → 해외 포장 vs 한국 단독 포장 → 먹는 법 → ㅋㅋ 마무리",
+ "celeb_scenes": [
+  {
+   "t0": 8.6,
+   "t1": 9.8,
+   "who": "추정: 미드 ‘오피스’ 드와이트 역 배우(얼굴 추정, 이름 표기 없음)",
+   "program": null,
+   "why_here": "벨의 ‘치즈를 왜 얼려??’ 대사에 당황 표정 짤 = 화자 벨의 얼굴 대역"
+  },
+  {
+   "t0": 11.0,
+   "t1": 12.4,
+   "who": "불명(얼어붙은 남자 짤, 자막 ‘아이스 아메리카노 하나요’)",
+   "program": null,
+   "why_here": "‘얼죽아’ 줄의 시각 개그"
+  }
+ ],
+ "kangjueun": "없음 — 자막 변화 27지점 프레임 확인, 한국 연예인·방송 장면 없음",
+ "_note": "판독=Claude 눈(5fps 프레임 자막띠 변화 분할 + cap 시트 대조). asr 파일 없음→narration 전부 null. t0=첫 줄이 뜬 시각(두 줄 자막은 한 줄씩 차례로 뜸)"
+}
