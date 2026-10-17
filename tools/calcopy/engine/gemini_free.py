@@ -30,7 +30,8 @@ PRIMARY = "gemini-3.5-flash"
 PRIMARY_ROUNDS = 3
 FALLBACK = "gemini-flash-lite-latest"
 MODELS = (PRIMARY, FALLBACK)
-TIMEOUT_MS = 180_000
+TIMEOUT_MS = 180_000            # 그림·영상이 붙은 호출
+TEXT_TIMEOUT_MS = 60_000        # 글만 보내는 호출(대본 등) — 10-18 옆 세션 순찰: 503·지연 때 키마다 180초씩 기다려 대본 1회 7분+ 멈춤
 BACKEND = os.environ.get("CALCOPY_GEMINI_BACKEND", "auto").strip().lower() or "auto"   # auto|local|server
 MANY_WORKERS = int(os.environ.get("CALCOPY_GEMINI_WORKERS") or 8)                      # 묶음 동시 상한(로컬 풀)
 SERVER_FALLBACK_REASONS = ("quota", "no_key", "429")
@@ -99,7 +100,8 @@ def _ask_local(parts: list, prompt: str, tag: str = "", models: tuple | None = N
                 continue
             t0 = time.time()
             try:
-                c = genai.Client(api_key=keys[ki], http_options=types.HttpOptions(timeout=TIMEOUT_MS))
+                tmo = TIMEOUT_MS if any(not isinstance(p, str) for p in parts) else TEXT_TIMEOUT_MS
+                c = genai.Client(api_key=keys[ki], http_options=types.HttpOptions(timeout=tmo))
                 r = c.models.generate_content(model=model, contents=contents,
                                               config=types.GenerateContentConfig(response_mime_type="application/json",
                                                                                  temperature=0, seed=SEED))
@@ -131,7 +133,7 @@ def _ask_local(parts: list, prompt: str, tag: str = "", models: tuple | None = N
                 elif "404" in msg or "NOT_FOUND" in msg:
                     last = "404 모델 없음"
                     _DEAD.add((ki, model))
-                elif "503" in msg or "UNAVAILABLE" in msg:
+                elif "503" in msg or "UNAVAILABLE" in msg or "timed out" in msg.lower() or "Timeout" in msg:
                     last = "503"
                     CALLS.append({"tag": tag, "model": model, "key": ki, "failed": last, "sec": round(time.time() - t0, 1)})
                     break                # 과부하는 모델 탓 — 다음 바퀴(잠깐 쉰 뒤 같은 모델)
