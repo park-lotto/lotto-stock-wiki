@@ -18,7 +18,8 @@
    되감김은 벤치 0 · 1판 2(17.77초, 0.37초) · 2판 0 으로 갈린다(시험 test_calcopy_check_seams).
 자막 띠는 --mask 로 가린다(자막 글자가 컷 너머까지 같아 일치점이 부풀기 때문). 영상 내내 안 변하는 줄(제목 띠)은 자동으로 가린다
 — 10-17 실측: 전체 화면 그대로 재면 제목 글자 때문에 1판 되감김을 놓쳤다(0건).
-종료코드: 되감김·점프 줌 있으면 1.
+종료코드: 되감김 있거나 점프 줌이 잦거나 몰리면 1.
+재보정 10-17: 사람 편집본 9편(만템 8·아이템홈 1) 전부 통과, 우리 1판(되감김)·2판(점프 줌 잦음·몰림) 걸림 — 표본이 9편뿐이라 새 채널은 그 벤치로 다시 확인할 것.
 """
 from __future__ import annotations
 
@@ -43,11 +44,14 @@ CUT_DIFF_X = 4.0         # 이웃 프레임 평균 절대차가 중앙값의 이
 CUT_DIFF_MIN = 6.0       # 그리고 절대값(0~255) 이 이상
 REWIND_LOOKBACK = 0.8    # 컷 앞 몇 초까지 대 보나
 REWIND_MIN_S = 0.12      # 가장 잘 맞는 앞 프레임이 마지막보다 이만큼 이상 앞이면 되감김
-REWIND_INLIERS = 40      # 그 일치점 하한
-REWIND_RATIO = 1.3       # 그 일치점이 마지막 프레임 일치점의 이 배수 이상
+REWIND_INLIERS = 100     # 그 일치점 하한 — 10-17 재보정: 사람 편집(만템 8·아이템홈 1)의 멀티캠 각도 전환은 최대 7.6배·일치점<100
+REWIND_RATIO = 5.0       # 마지막 프레임 일치점의 이 배수 이상(우리 1판 진짜 되감김 13~33배)
 STATIC_ROW_STD = 4.0     # 영상 내내 거의 안 변하는 줄(제목 띠·검은 여백)은 가린다 — 고정 글자가 일치점을 부풀려 되감김을 가림
 JUMP_ZOOM_INLIERS = 40    # 컷 앞뒤가 같은 그림(이어지는 한 장면)인데
 JUMP_ZOOM_SCALE = 0.06    # 배율만 이만큼 넘게 바뀌면 '점프 줌'(1.67배↔2.0배 = 1.19/0.84)
+JZ_MERGE_S = 0.15         # 이 안의 점프 줌은 한 번으로 센다(경계 이중 검출)
+JZ_RATE = 0.30            # 초당 점프 줌 상한 — 사람 편집 최대 0.25(만템 3Xb8 5회/20초), 우리 2판 0.46·1판 0.33
+JZ_BURST_N, JZ_BURST_S = 3, 3.0   # 3초 안에 3번 이상 몰리면 걸림 — 사람 편집 0편, 2판 12.3~15.27초·1판 0.9~2.63초
 RMS_WIN = 0.05
 JUMP_QUIET_DB = -22.0
 JUMP_DB = 12.0
@@ -162,7 +166,24 @@ def check(path: str, win=None, mask=None) -> dict:
     rw = rewinds(fr, cuts, fps)
     jz = jump_zooms(fr, cuts, fps)
     jp = jumps(rms_db(path), cut_ts)
-    return {"file": str(path), "fps": fps, "컷": cut_ts, "되감김": rw, "점프줌": jz, "소리급변_참고": jp, "ok": not rw and not jz}
+    dur = len(fr) / fps if fps else 0
+    jz_bad = jz_verdict(jz, dur)
+    return {"file": str(path), "fps": fps, "컷": cut_ts, "되감김": rw, "점프줌": jz, "점프줌_판정": jz_bad,
+            "소리급변_참고": jp, "ok": not rw and not jz_bad}
+
+
+def jz_verdict(jz: list[dict], dur: float) -> str:
+    """점프 줌은 사람 편집에도 있다(만템 0~5회) — 횟수 0이 아니라 '잦음·몰림'을 걸른다. 빈 문자열 = 통과."""
+    ts = []
+    for x in jz:
+        if not ts or x["t"] - ts[-1] > JZ_MERGE_S:
+            ts.append(x["t"])
+    if dur and len(ts) / dur > JZ_RATE:
+        return f"잦음 {len(ts)}회/{dur:.1f}초 > {JZ_RATE}/초"
+    for i in range(len(ts) - JZ_BURST_N + 1):
+        if ts[i + JZ_BURST_N - 1] - ts[i] <= JZ_BURST_S:
+            return f"몰림 {JZ_BURST_N}회가 {ts[i]:.2f}~{ts[i + JZ_BURST_N - 1]:.2f}초"
+    return ""
 
 
 def main() -> int:
@@ -179,7 +200,7 @@ def main() -> int:
     if mask is None:
         print("[경보] 자막 띠를 모름(--frame/--mask 없음) — 자막 글자가 컷 너머까지 같으면 되감김 오탐이 난다")
     r = check(a.mp4, win, mask)
-    print(f"컷 {len(r['컷'])} · 되감김 {len(r['되감김'])} · 점프줌 {len(r['점프줌'])} → {'통과' if r['ok'] else '걸림'} (소리급변 참고 {len(r['소리급변_참고'])})")
+    print(f"컷 {len(r['컷'])} · 되감김 {len(r['되감김'])} · 점프줌 {len(r['점프줌'])}({r['점프줌_판정'] or '드묾'}) → {'통과' if r['ok'] else '걸림'} (소리급변 참고 {len(r['소리급변_참고'])})")
     for x in r["점프줌"]:
         print("  점프줌", x)
     for x in r["되감김"]:

@@ -43,9 +43,27 @@ def test_2판은_되감김_없지만_점프줌_11곳():
     """2판: 되감김 0, 그러나 같은 장면 확대만 바꾼 컷 11곳(1.67↔2.0배) — 사장님 '19초부터 끊긴다'(19.37·20.13·22.90 포함)."""
     _need(V2)
     r = check_seams.check(str(V2), WIN, MASK)
-    assert r["되감김"] == [] and not r["ok"]
+    assert r["되감김"] == [] and not r["ok"] and r["점프줌_판정"]
     ts = [x["t"] for x in r["점프줌"]]
     assert len(ts) >= 8 and any(19.2 <= t <= 19.5 for t in ts)
+
+
+MANTEM = sorted(Path("C:/숏템_칼카피/mantem/원본").glob("*.mp4"))
+
+
+@pytest.mark.parametrize("mp4", MANTEM or [Path("없음.mp4")], ids=lambda p: p.stem)
+def test_사람편집_만템은_통과(mp4):
+    """만템(사람 편집본)은 멀티캠 각도 전환·가끔 줌을 쓴다 — 이걸 걸면 안 된다(10-17 1차 문턱이 6/8편을 오탐)."""
+    _need(mp4)
+    w, m = check_seams.from_frame(str(ROOT / "channel/mantem/frame_얜샷템.json"))
+    r = check_seams.check(str(mp4), w, m)
+    assert r["ok"], (r["되감김"], r["점프줌_판정"])
+
+
+def test_3판은_통과():
+    v3 = BASE / "1편_안유진로션/render3/final.mp4"
+    _need(v3)
+    assert check_seams.check(str(v3), WIN, MASK)["ok"]
 
 
 def test_벤치는_점프줌_없음():
