@@ -232,7 +232,13 @@ def a_shots(S, M, T):
     """A 구간 컷 시각(판단 주인: 이 함수) — H 제품 컷 2개가 H+쉼을 반씩, O 컷은 원음 상대 초 at 그대로."""
     out = []
     h = M["A"]["H"]
-    edges = [0.0, round(T["o0"] / 2, 3), T["o0"]]
+    if all("dur" in c for c in h[:-1]) and len(h) and "dur" in h[0]:   # 2026-10-18 얼굴 H 컷 — 앞 컷 길이 고정, 마지막이 O 앞까지
+        edges = [0.0]
+        for c in h[:-1]:
+            edges.append(round(edges[-1] + c["dur"], 3))
+        edges.append(T["o0"])
+    else:
+        edges = [0.0, round(T["o0"] / 2, 3), T["o0"]]
     for k, c in enumerate(h):
         out.append(dict(c, t0=edges[k], t1=edges[k + 1]))
     O = M["A"]["O"]

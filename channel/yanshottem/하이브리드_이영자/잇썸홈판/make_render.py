@@ -168,8 +168,16 @@ def timeline(S, M, sent):
         return o2 + s - O2["span"][0]
     A = M["A"]
     a_end = round(round(lines["O2"][1] * 30) / 30, 4)      # O2 끝(126.34) 바로 — 126.4부터 원본 화면에 남의 손
-    pieces = [
-        {"src": A["H_still"]["src"], "ss": 0.0, "t0": 0.0, "t1": o1, "crop": A["H_still"]["crop"], "who": "H 상품 사진"},
+    pieces = []
+    if A.get("H_shots"):    # 2026-10-18 첫 화면 = 이영자 얼굴(사장님 '썸네일·첫 화면은 무조건 연예인') — 마지막 샷이 O1 앞까지 채움
+        x = 0.0
+        for k, h in enumerate(A["H_shots"]):
+            y = o1 if k == len(A["H_shots"]) - 1 else x + h["dur"]
+            pieces.append({"src": h["src"], "ss": h["ss"], "t0": x, "t1": y, "crop": h["crop"], "who": f"H 얼굴 샷{k + 1}"})
+            x = y
+    else:
+        pieces.append({"src": A["H_still"]["src"], "ss": 0.0, "t0": 0.0, "t1": o1, "crop": A["H_still"]["crop"], "who": "H 상품 사진"})
+    pieces += [
         # O1 화면은 O2 시작까지 원본 그대로 이어 읽는다(같은 테이크 119.42~119.67 — 이영자 본인만)
         {"src": A["O1_shot"]["src"], "ss": O1["span"][0], "t0": o1, "t1": o2, "crop": A["O1_shot"]["crop"], "who": "O1 샷"},
         {"src": A["O2_shot"]["src"], "ss": O2["span"][0], "t0": o2, "t1": a_end, "crop": A["O2_shot"]["crop"], "who": "O2 샷"},

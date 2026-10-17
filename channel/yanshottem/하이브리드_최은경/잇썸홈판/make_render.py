@@ -176,7 +176,12 @@ def timeline(S, M, sent):
     h0, h1 = hs["shot"][0] + 0.03, s1[0]["shot"][0] - 0.1
     slow = max(1.0, t_o1v / (h1 - h0))
     assert slow <= 1.08, ("H 가 제품 컷보다 너무 길다", slow)
-    pieces.append({"src": hs["src"], "ss": max(h0, h1 - t_o1v), "t0": 0.0, "t1": t_o1v, "crop": hs["crop"], "who": "H 제품", "slow": round(slow, 4)})
+    if A.get("H_face"):     # 2026-10-18 첫 화면 = 최은경 얼굴(사장님 '썸네일·첫 화면은 무조건 연예인') — 제품 컷 대신 원본 얼굴 샷
+        hf = A["H_face"]
+        assert hf["ss"] + t_o1v <= hf["shot"][1] - 0.03, ("H 얼굴 샷이 짧다", hf, t_o1v)
+        pieces.append({"src": hf["src"], "ss": hf["ss"], "t0": 0.0, "t1": t_o1v, "crop": hf["crop"], "who": "H 얼굴"})
+    else:
+        pieces.append({"src": hs["src"], "ss": max(h0, h1 - t_o1v), "t0": 0.0, "t1": t_o1v, "crop": hs["crop"], "who": "H 제품", "slow": round(slow, 4)})
     t_o1end = f1(s1[-1]["shot"][1] - 0.08)          # O1 마지막 샷 끝(원본 컷 512.57) 직전까지
     for k, sh in enumerate(s1):
         t0 = f1(sh["shot"][0]) if k else t_o1v
