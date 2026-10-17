@@ -75,7 +75,27 @@ def prep(held: str) -> dict:
     fp.write_text(json.dumps(F, ensure_ascii=False, indent=1), encoding="utf-8")
     T = json.loads((HM.WORK / "measure" / f"{held}.json").read_text(encoding="utf-8"))["times"]
     times = [T["hook"]] + [T[k] for k in ("body1", "body2") if T.get(k) is not None]
-    return {"held": held, "frame": fp, "dir": d, "times": times, "T": T}
+    return {"held": held, "frame": fp, "dir": d, "times": times, "T": T, "tg": caption_filled(held, d)}
+
+
+def caption_filled(held: str, d: Path) -> Path:
+    """뜯기 자막 글이 비어 있으면(무료 키 quota 로 OCR 실패 — 6편) 줄판독(클로드 눈 판독) 줄 글로 채운 사본.
+    렌더 대조에서 자막 층이 그려지게 하려는 것뿐 — 자막 칸 자리·크기는 틀이 정하고, 글은 원본 화면 글과 같아야 폭 대조가 맞다."""
+    J = json.loads((HP.TG / held / "뜯기.json").read_text(encoding="utf-8"))
+    R = json.loads((HM.READ / f"{held}.json").read_text(encoding="utf-8"))["lines"]
+    n = 0
+    for it in (J.get("captions") or {}).get("items") or []:
+        if it.get("text"):
+            continue
+        mid = (it["t0"] + it["t1"]) / 2
+        ln = next((l for l in R if l["t0"] <= mid < l["t1"]), None)
+        if ln:
+            parts = [x.strip() for x in ln["caption"].split("/")]
+            it["text"] = parts[:max(1, it.get("lines") or 1)]
+            n += 1
+    p = d / "뜯기_자막채움.json"
+    p.write_text(json.dumps(J, ensure_ascii=False), encoding="utf-8")
+    return p
 
 
 def run_render(jobs: list[dict], par: int = 3):
@@ -83,7 +103,7 @@ def run_render(jobs: list[dict], par: int = 3):
     for j in jobs:
         while len([p for p in procs if p.poll() is None]) >= par:
             time.sleep(3)
-        tg = HP.TG / j["held"] / "뜯기.json"
+        tg = j.get("tg") or HP.TG / j["held"] / "뜯기.json"
         if not tg.exists():
             j["failed"] = "뜯기 없음"
             continue
@@ -117,6 +137,17 @@ def compare(j: dict) -> dict:
                     if r["ok"] is not None:
                         rows[name] = {**r, "at": k}
                         break
+    # 자막 폭 대조는 그린 글이 원본 화면 글과 같을 때만 — 줄판독 줄 경계(±0.5~1초)와 뜯기 자막 장면이 어긋나면 다른 글을 그린다(cj3·0Q-C)
+    chk = json.loads((rd / "check.json").read_text(encoding="utf-8"))
+    for name in ("자막 1줄 x",):
+        r = rows.get(name)
+        if r and r.get("at"):
+            k = r["at"]
+            want = (T["lines"]["two"] if k == "body2" else T["lines"]["one"]) or ""
+            want = chr(10).join(x.strip() for x in want.split("/"))
+            got = chk.get(str(T[k]), {}).get("caption", "")
+            if want.replace(" ", "") != got.replace(" ", ""):
+                rows[name] = {**r, "ok": None, "skip": f"그린 글 '{got}' ≠ 원본 화면 글 '{want}' — 폭 대조 제외"}
     res = {"times": j["times"], "rows": rows, "compare_png": [str(rd / f"compare_{t}.png") for t in j["times"]],
            "pass": all(r["ok"] for r in rows.values() if r.get("ok") is not None)}
     (j["dir"] / "cmp.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")

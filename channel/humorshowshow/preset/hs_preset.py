@@ -144,12 +144,15 @@ def text(role, fam, sample, ink_top, ink_h, x, w, align, rgb, lines=1, line_h=No
 
 
 LOGO_FONT = "BMJUA"           # fontmatch.pooled_rank 1위(재·밌·쇼 글자별 + 낱말, 4표 정규화 0.902) — preset_work/logo_fontmatch.json
-LOGO_CX = [466, 552, 623]     # 글자별 가운데 x — NBdm 채움 열 묶음 437~506 · 518~586 · 595~646 에서, 렌더 1차(try1) 채움 상자 435~655 가 원본 420~666 보다 좁아 양끝 글자를 5·3px 벌림(2차 loo NBdm 오른끝 +6 → 쇼 5px 당김)
-LOGO_FILL = [140, 84]         # 채움 잉크 위·높이 — 원본 채움 상자 138~227(기울어진 글자 포함). 1차 렌더 146/76 → 채움 147~222 로 작아 키움
+LOGO_CX = [460, 541, 622]     # 글자 가운데 x — 원본 로고 상자 419~665(외곽 포함, 8편 중앙)를 BMJUA 글자 셋(글자폭 77+외곽 8)이 4px 씩만 겹쳐 채우게 고르게 나눔.
+                              # 3차 렌더(jECu)에서 원본 글자별 가운데(471·552·620)를 그대로 쓰면 BMJUA '쇼'(81px)가 원본 '쇼'(51px)보다 넓어 템·쇼가 20px 겹쳤다
+LOGO_FILL = [145, 76]         # 채움 잉크 위·높이 → BMJUA 92.7px(위 145 = 4차 loo 로고 상자 위 −0/아래 −8~9 를 가운데로: 4px 내림). 원본 채움 상자 138~227(기울어진 글자 포함)보다 낮다 — 폭을 맞추면 높이가 모자람(글자 회전 없음, differences)
 LABEL_LS = -2.6                  # 렌더 보정: 2차 loo NBdm 라벨 폭 876(원본 821, +6.7%) → 글자 21개에 −2.6px
 LABEL_FONT = "CcPretendard-SemiBold"   # 훅 라벨 — 1차 렌더(Bold)가 원본보다 굵고 5% 넓음(preset_work/label_cmp.png) → 한 단계 가는 SemiBold
 CAP_FONT = "CcPretendard-Bold"   # 자막·훅 라벨 — 글자 맞는 줄(점수 0.6↑) 1위 Pretendard-Bold 4·NotoSansKR-Bold 3 (근소, fonts.json)
 HOOK_DY, HOOK_K = 8.5, 98 / 95   # 렌더 보정: 1차 렌더 흰 잉크 138~233(원본 146~244) — PIL 역산과 브라우저 자리 차이
+CAP_LINES = 3                    # ★우회(엔진 요청): 벤치 자막은 최대 2줄인데 렌더러 맞춤(precision20-ui.js specTexts, rows>1 이면 scrollHeight>clientHeight+1 로 넘침 판정)이
+                                 # 2줄 칸(line_h×2)에서 늘 넘침으로 봐 글자를 88%로 줄였다(loo GPeF 2줄 자막 잉크 46px·폭 −12%). 칸을 3줄로 두면(valign top 이라 1·2줄 자리 같음) 원본과 ±2px — preset_work/exp_lines3
 CAP_K, CAP_LS = 1.04, -1.0       # 렌더 보정: 1차 자막 잉크 500~550·폭 473(원본 498~552·483) — 높이 키우고 자간 −1
 META_FONT = "SUITBold"        # 메타 줄 — 낱말별 대조 조회 0.76·댓글 0.90·익명 0.78 1위
 
@@ -160,8 +163,14 @@ def meta_ws(size: float, txt: str, target_w: float) -> float:
     return round((target_w - w) / txt.count(" "), 1)
 
 
+TEXT_FIX = {"jECuoRljWj0": ("깨부셨다는", "깨부쉈다는")}   # 줄판독 오타 — 화면 글은 '깨부쉈다는'(loo 대조시트_훅·본문에서 눈으로 확인)
+
+
 def hand(vid: str, m: dict, A: dict) -> dict:
-    T = A[vid]["times"]
+    T = dict(A[vid]["times"])
+    if vid in TEXT_FIX:
+        a_, b_ = TEXT_FIX[vid]
+        T["title_card"], T["post_title"] = T["title_card"].replace(a_, b_), T["post_title"].replace(a_, b_)
     tc = [s.strip() for s in T["title_card"].split("/")]
     label = LABEL_FIX.get(vid, " ".join(tc))
     he = HM.hook_end(vid)
@@ -182,7 +191,7 @@ def hand(vid: str, m: dict, A: dict) -> dict:
     title = text("label", "PretendardXBold", T["post_title"], m["title_top"], m["title_bot"] - m["title_top"], round(m["title_cx"]), 980,
                  "center", [0, 0, 0], text=T["post_title"])
     cap = text("caption", CAP_FONT, "가나다라마바사", m["cap1_top"], (m["cap1_bot"] - m["cap1_top"]) * CAP_K, round(m["cap_cx"]), 1000, "center",
-               [0, 0, 0], lines=2, line_h=m["cap2_top"] - m["cap1_top"], valign="top", letter_spacing=CAP_LS)
+               [0, 0, 0], lines=CAP_LINES, line_h=m["cap2_top"] - m["cap1_top"], valign="top", letter_spacing=CAP_LS)
     body = [{"kind": "bg", "rgb": [255, 255, 255]},
             {"kind": "video", "x": 0, "y": W0, "w": 1080, "h": W1 - W0 + 1, "radius": 0},
             {"kind": "band", "x": 0, "y": 0, "w": 1080, "h": m["hdr_end"], "rgb": hdr, "radius": 0},
@@ -296,6 +305,10 @@ DIFFERENCES = [
     "훅 흰 칸 세로 그라데이션(254→226): 2단(253·237)으로, 위·아래 회색 그라데이션은 band fade(바탕 97 쪽으로 흐려짐)로 근사",
     "그림 창: 벤치는 컷마다 그림 높이가 489~933 로 바뀜(뜯기 picture_boxes) — 프리셋은 고정 창 본문 [0,673,1080,877]·훅 [0,748,1080,1172]",
     "자막 2줄째 '덧붙음'(누적형) 시각은 대본 장면 나누기 몫 — 틀은 valign top 2줄 칸만 정한다",
+    "벤치 틀이 2025→2026 사이 바뀜(loo 로 드러남): 2025편(GPeF·cHyn·BlA9·0Q-C, 메타 날짜 25.10~25.11) 훅 라벨이 굵고 넓다(원본 폭이 우리보다 7% 넓음, 글자 모양 Bold·자간 0) · "
+    "2026편(NBdm·jECu·cj3·xJvw, 26.01~26.03) 라벨은 가늘고 좁다 → 프리셋 = 최신 2026 꼴(CcPretendard-SemiBold 자간 −2.6). 2025 꼴로 바꾸려면 훅 라벨 font=CcPretendard-Bold·letter_spacing=0",
+    "자막 층 lines=3(우회): 렌더러 2줄 칸 넘침 판정이 2줄 자막을 88%로 줄여서 — 그림은 2줄 그대로(valign top), 엔진 수리 뒤 2로 되돌릴 것",
+    "BlA9·0Q-C 원본 훅 제목 1줄째가 가운데에서 16px 왼쪽(편집 차이) — 프리셋은 가운데 정렬",
 ]
 
 
