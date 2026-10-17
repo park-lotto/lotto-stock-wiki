@@ -170,7 +170,7 @@ def narr_beep(NM, R: Path) -> dict:
     on = "+".join(f"between(t,{x['start']:.3f},{x['end']:.3f})" for x in NM["lines"])
     end = NM["lines"][-1]["end"] + 0.5
     out = R / "narr_beep.wav"
-    run(["ffmpeg", "-y", "-f", "lavfi", "-i", f"aevalsrc=0.25*sin(2*PI*440*t)*({on}):s={SR}:d={end:.3f}", "-ac", "1", out])
+    run(["ffmpeg", "-y", "-f", "lavfi", "-i", f"aevalsrc='0.25*sin(2*PI*440*t)*({on})':s={SR}:d={end:.3f}", "-ac", "1", out])
     return {**NM, "wav": str(out), "how": NM["how"] + " · 나레 자리 삐 소리(미리보기)"}
 
 
@@ -550,7 +550,7 @@ def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
 
 
 def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
-    """BGM(원음 창 덕킹) 섞기 → 목표 LUFS·최고점 맞춤(alimiter, 재고 다시 — 최대 4번)."""
+    """BGM(원음 창 덕킹) 섞기 → 목표 LUFS·최고점 맞춤(alimiter, 재고 다시 — 최대 8번)."""
     from shopping_shorts import bgm_lib
     bgm = bgm_lib.path_of(C["bgm"])
     if not bgm or not Path(bgm).exists():
@@ -567,7 +567,7 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
     I0, _ = lufs(pre)
     g, lim, hist = C["target_lufs"] - I0, 10 ** ((C["peak_max"] - 0.7) / 20), []
     final = R / "final.mp4"
-    for it in range(4):
+    for it in range(8):
         run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex", f"[1:a]volume={g:.2f}dB,alimiter=limit={lim:.4f}:attack=3:release=60:level=false[a]",
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
         I, pk = lufs(final)
@@ -576,7 +576,7 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
             break
         if pk > C["peak_max"]:
             lim *= 10 ** ((C["peak_max"] - pk - 0.15) / 20)
-        g += C["target_lufs"] - I
+        g += (C["target_lufs"] - I) * (1.6 if I < C["target_lufs"] else 1.0)   # 리미터가 먹는 만큼 더 올린다
     else:
         raise StageError(f"소리 크기 못 맞춤 {hist}")
     return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "passes": hist, "final_I": I, "final_peak": pk}
