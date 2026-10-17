@@ -1,0 +1,503 @@
+{
+ "engine": "script_engine v1 · 대본 설명서 경로",
+ "path": "lite",
+ "slug": "evenshopping",
+ "product": {
+  "name": "GearOra M23 휴대용 UV 살균 음파 전동칫솔"
+ },
+ "title": "여행 가방 싸다 귀찮았던 미국 천재가 만들어 떼돈 번 칫솔의 정체.",
+ "facts": {
+  "f1": {
+   "text": "GearOra 공식몰 기준 M23은 분당 40,000회 음파(Sonic 40,000 VPM) 진동을 내세운다(브랜드 주장).",
+   "url": "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+  },
+  "f2": {
+   "text": "공식몰 표기: 하루 2분씩 2번 쓰면 완충 1회로 최대 15일, 충전은 USB-C 2~3시간. (아마존 상세는 '30일 배터리'로 표기가 달라 상충 — 공식몰 수치 사용)",
+   "url": "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+  },
+  "f3": {
+   "text": "공식몰은 밀폐형 UVC/UVA 살균 챔버가 칫솔모의 세균·바이러스 99.99%를 없앤다고 주장한다(브랜드 주장, 독립 검증 미확인).",
+   "url": "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+  },
+  "f4": {
+   "text": "방수 등급 IPX7, 모드 3개, 2분 타이머에 30초마다 구역 이동 알림.",
+   "url": "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+  },
+  "f5": {
+   "text": "칫솔모는 항균 그래핀 소재라고 소개된다(아마존 영국 UV 모델 목록 기준).",
+   "url": "https://www.amazon.co.uk/GearOra-Retractable-Rechargeable-ToothBrushes-Antibacterial/dp/B0DT3Y3KJ7"
+  },
+  "f6": {
+   "text": "미국 공식몰 가격 89.99달러(정가 99달러 표기), 2개 이상 구매 시 10% 추가 할인. 가격은 조사 시점 기준.",
+   "url": "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+  },
+  "f7": {
+   "text": "M23 일반 모델(미국 아마존 목록)은 알루미늄 몸체, 무게 4.6온스(약 130g), 접이식 여행 크기, IPX7, USB-C로 소개된다. UV 케이스는 모델별로 달라 변형마다 확인 필요.",
+   "url": "https://www.amazon.ca/GearOra-M23-Retractable-Ultra-Light-Rechargeable/dp/B0GD547GCG"
+  },
+  "f8": {
+   "text": "세계 최초 전동칫솔로 꼽히는 Broxodent는 1954년 스위스의 필리프-기 우그(Philippe-Guy Woog) 박사가 발명했고, 콘센트에 직접 꽂아 쓰는 방식이었다. 처음엔 손이 불편한 사람과 교정 환자용이었다.",
+   "url": "https://en.wikipedia.org/wiki/Electric_toothbrush"
+  },
+  "f9": {
+   "text": "그보다 앞선 전동칫솔 특허도 있다: 토믈린슨 모즐리(Tomlinson Moseley)의 Motodent는 1937년 12월 13일 출원, 1940년 4월 9일 등록.",
+   "url": "https://en.wikipedia.org/wiki/Electric_toothbrush"
+  },
+  "f10": {
+   "text": "1990년대 초 UL·CSA가 욕실용 가정 전압(콘센트 직결) 제품 인증을 중단해, 전동칫솔이 12·16·24V 저전압 변압기 방식으로 바뀌었다.",
+   "url": "https://en.wikipedia.org/wiki/Electric_toothbrush"
+  },
+  "f11": {
+   "text": "음파칫솔의 시작: 워싱턴대 연구진이 음향 에너지가 구강 세균의 치아 부착력을 약하게 만든다는 걸 발견했고, 1987년 기업가 데이비드 줄리아니가 워싱턴대 교수 둘과 GEMTech를 세워 개발 — 1992년 세계 최초 음파칫솔 Sonicare Advance(분당 31,000회 칫솔질)가 나왔다.",
+   "url": "https://dentistry.co.uk/2022/11/24/sonicaring-for-30-years/"
+  },
+  "f12": {
+   "text": "그 회사는 1995년 Optiva로 이름을 바꿨고, 2000년 10월 필립스가 인수, 2003년 '필립스 소니케어'로 브랜드가 바뀌었다.",
+   "url": "https://en.wikipedia.org/wiki/Sonicare"
+  },
+  "f13": {
+   "text": "최초의 초음파칫솔은 1992년 미국 특허를 받고 같은 해 FDA가 가정용 일상 사용을 승인했다(처음 이름 Ultima, 나중 Ultrasonex).",
+   "url": "https://en.wikipedia.org/wiki/Electric_toothbrush"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "text": "여행 가방 쌀 때마다 칫솔 때문에 현타 온 천재가 만들어 떼돈 번 칫솔의 정체.",
+    "node": "title",
+    "facts": [],
+    "point": "잉",
+    "answer_at": 2,
+    "fn": "title",
+    "shot_kind": "제품전체",
+    "sources": []
+   },
+   {
+    "text": "최근 출장러들 사이에서 바이럴이 터지며 논란인 물건이 있는데,",
+    "node": "bait",
+    "facts": [],
+    "point": "잉",
+    "answer_at": 2,
+    "fn": "bait",
+    "shot_kind": "사용동작",
+    "sources": []
+   },
+   {
+    "text": "이건 바로 UV 살균 케이스 달린 접이식 전동칫솔.",
+    "node": "reveal",
+    "facts": [
+     "f3",
+     "f7"
+    ],
+    "point": "",
+    "fn": "reveal",
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+    ]
+   },
+   {
+    "text": "이게 말도 안 되는 게 기존 첫 전동칫솔은 콘센트에 꽂아 썼지만 이건 반으로 접어 주머니에 쏙 넣는다는 거.",
+    "node": "solve",
+    "facts": [
+     "f7",
+     "f8"
+    ],
+    "point": "와우",
+    "fn": "solve",
+    "shot_kind": "사용동작",
+    "sources": [
+     "https://www.amazon.ca/GearOra-M23-Retractable-Ultra-Light-Rechargeable/dp/B0GD547GCG",
+     "https://en.wikipedia.org/wiki/Electric_toothbrush"
+    ]
+   },
+   {
+    "text": "심지어 분당 4만 번 음파 진동을 내세우는데,",
+    "node": "more",
+    "facts": [
+     "f1"
+    ],
+    "point": "와우",
+    "fn": "more",
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+    ]
+   },
+   {
+    "text": "한 번 충전하면 하루 두 번 써도 최대 15일 간다고.",
+    "node": "more2",
+    "facts": [
+     "f2"
+    ],
+    "point": "",
+    "fn": "more2",
+    "shot_kind": "사용동작",
+    "sources": [
+     "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+    ]
+   },
+   {
+    "text": "근데 진짜 충격적인 포인트는 쓰고 나서 통에 넣어두면 칫솔모 살균까지 알아서 끝난다고.",
+    "node": "twist",
+    "facts": [
+     "f3"
+    ],
+    "point": "와우",
+    "fn": "twist",
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://www.gearora.com/toothbrush/gearora-portable-retractable-sterilizing-sonic-electric-toothbrush-black-1.html"
+    ]
+   },
+   {
+    "text": "그래서 요즘엔 출장러들 사이에서 삶의 질 떡상템이라고 난리라고.",
+    "node": "land",
+    "facts": [],
+    "point": "",
+    "fn": "land",
+    "shot_kind": "사용동작",
+    "sources": []
+   }
+  ],
+  "check": {
+   "superlative": [],
+   "superlative_hit": {},
+   "spacing_off": [],
+   "spacing_hit": {},
+   "range_as_single": [],
+   "ranges_hit": {},
+   "numbers_unsourced": [],
+   "off_topic_brand": [],
+   "unsupported": [],
+   "support_hit": {},
+   "support_checked": true,
+   "ungrounded": [],
+   "ungrounded_hit": {},
+   "copied_examples": [],
+   "copy7_hit": {},
+   "unknown_ids": [],
+   "judge": null,
+   "hook_formula": null,
+   "points": {
+    "ok": true,
+    "why": [],
+    "bad": {},
+    "wow": [
+     [
+      3,
+      "이게 말도 안 되는게"
+     ],
+     [
+      4,
+      "심지어"
+     ],
+     [
+      6,
+      "근데 진짜 충격적인 포인트는"
+     ]
+    ],
+    "ing": [
+     0,
+     1
+    ],
+    "body_n": 8
+   },
+   "n_lines": 8,
+   "chars": [
+    31,
+    27,
+    21,
+    43,
+    19,
+    21,
+    37,
+    28
+   ],
+   "bad": {},
+   "global": [],
+   "ok": true
+  },
+  "hand_fixes": [
+   {
+    "round": 1,
+    "file": "fix_evn_toothbrush.json",
+    "fixes": [
+     {
+      "i": 0,
+      "text": "여행 가방 쌀 때마다 칫솔 때문에 현타 온 천재가 만들어 떼돈 번 칫솔의 정체.",
+      "facts": [],
+      "point": "잉",
+      "answer_at": 2,
+      "fn": "title",
+      "why": "근거 없는 '미국' 빼기(GearOra 나라 미확인)"
+     },
+     {
+      "i": 2,
+      "text": "이건 바로 UV 살균 케이스 달린 접이식 전동칫솔.",
+      "facts": [
+       "f3",
+       "f7"
+      ],
+      "point": "",
+      "fn": "reveal",
+      "why": "제품 정체를 쉬운 말로, 근거 맞추기"
+     },
+     {
+      "i": 3,
+      "text": "이게 말도 안 되는 게 1954년 첫 전동칫솔은 콘센트에 꽂아 썼는데 이건 반으로 접어 주머니에 쏙 넣는다는 거.",
+      "facts": [
+       "f7",
+       "f8"
+      ],
+      "point": "와우",
+      "fn": "solve",
+      "why": "기존 vs 이 제품 비교를 생활 말로"
+     },
+     {
+      "i": 4,
+      "text": "심지어 분당 4만 번 음파 진동을 내세우는데,",
+      "facts": [
+       "f1"
+      ],
+      "point": "와우",
+      "fn": "more",
+      "why": "'공식몰 기준' 군더더기 빼기"
+     },
+     {
+      "i": 5,
+      "text": "한 번 충전하면 하루 두 번 써도 최대 15일 간다고.",
+      "facts": [
+       "f2"
+      ],
+      "point": "",
+      "fn": "more2",
+      "why": "근거 없는 '충전기 안 챙겨도' 빼기"
+     },
+     {
+      "i": 6,
+      "text": "근데 진짜 충격적인 포인트는 케이스에 꽂아두기만 하면 자외선이 칫솔모를 알아서 살균해준다고.",
+      "facts": [
+       "f3"
+      ],
+      "point": "와우",
+      "fn": "twist",
+      "why": "브랜드 주장 99.99%를 사실처럼 쓰지 않기"
+     },
+     {
+      "i": 7,
+      "text": "그래서 요즘엔 출장러들 사이에서 삶의 질 떡상템이라고 난리라고.",
+      "facts": [],
+      "point": "",
+      "fn": "land",
+      "why": "끝 줄 다듬기"
+     }
+    ]
+   },
+   {
+    "round": 2,
+    "file": "fix_evn_toothbrush2.json",
+    "fixes": [
+     {
+      "i": 3,
+      "text": "이게 말도 안 되는 게 기존 전동칫솔은 1954년 처음 나올 때 콘센트에 꽂아 썼지만 이건 반으로 접어 주머니에 쏙 넣는다는 거.",
+      "facts": [
+       "f7",
+       "f8"
+      ],
+      "point": "와우",
+      "fn": "solve",
+      "why": "기존 vs 이 제품 비교 표지"
+     }
+    ]
+   },
+   {
+    "round": 3,
+    "file": "fix_evn_toothbrush3.json",
+    "fixes": [
+     {
+      "i": 3,
+      "text": "이게 말도 안 되는 게 기존 첫 전동칫솔은 콘센트에 꽂아 썼지만 이건 반으로 접어 주머니에 쏙 넣는다는 거.",
+      "facts": [
+       "f7",
+       "f8"
+      ],
+      "point": "와우",
+      "fn": "solve",
+      "why": "52자→줄이기"
+     }
+    ]
+   },
+   {
+    "round": 4,
+    "file": "fix_evn_toothbrush4.json",
+    "fixes": [
+     {
+      "i": 6,
+      "text": "근데 진짜 충격적인 포인트는 쓰고 나서 통에 넣어두면 칫솔모 살균까지 알아서 끝난다고.",
+      "facts": [
+       "f3"
+      ],
+      "point": "와우",
+      "fn": "twist",
+      "why": "잇썸홈판과 겹침(케이스에 꽂아두기만 하면 자외선) 없애기"
+     }
+    ]
+   }
+  ]
+ },
+ "brief_examples": [],
+ "llm_calls": [
+  {
+   "tag": "draft",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "support",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "rewrite1",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "support",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "rewrite2",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "support",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  }
+ ],
+ "error": null,
+ "tries": [
+  {
+   "round": 0,
+   "ok": false,
+   "global": [],
+   "bad": {
+    "1": [
+     "근거 필수 줄(제품 속성·효과·반응·가격)에 근거 번호 없음 ['사회반응']"
+    ],
+    "3": [
+     "근거가 문장을 뒷받침 안 함 공식몰의 일방적 살균 주장을 단정 사실처럼 표현했고 근거에 없는 기존 사용 행태가 붙었습니다."
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "ok": false,
+   "global": [],
+   "bad": {
+    "1": [
+     "근거 필수 줄(제품 속성·효과·반응·가격)에 근거 번호 없음 ['사회반응']"
+    ],
+    "6": [
+     "근거가 문장을 뒷받침 안 함 근거에는 방수 등급이 IPX7이라는 점만 있을 뿐 샤워 중 거칠게 써도 된다는 구체적인 행동이나 내용은 없습니다."
+    ]
+   }
+  },
+  {
+   "round": 2,
+   "ok": false,
+   "global": [],
+   "bad": {
+    "1": [
+     "근거 필수 줄(제품 속성·효과·반응·가격)에 근거 번호 없음 ['사회반응']"
+    ],
+    "2": [
+     "근거가 문장을 뒷받침 안 함 제시된 근거에는 M23이 '휴대용 음파 전동칫솔'이라는 제품 구분이 명시되어 있지 않습니다."
+    ],
+    "5": [
+     "근거가 문장을 뒷받침 안 함 여행 갈 때 충전기를 안 챙겨도 된다는 행동·내용은 근거 글에 없습니다."
+    ],
+    "6": [
+     "근거가 문장을 뒷받침 안 함 공식몰의 일방적인 브랜드 주장(독립 검증 미확인)을 출처 명시 없이 사실처럼 서술했습니다."
+    ]
+   }
+  }
+ ],
+ "draft_raw": {
+  "title": "여행 가방 싸다 귀찮았던 미국 천재가 만들어 떼돈 번 칫솔의 정체.",
+  "lines": [
+   {
+    "fn": "title",
+    "text": "여행 가방 싸다 귀찮았던 미국 천재가 만들어 떼돈 번 칫솔의 정체.",
+    "facts": [],
+    "point": "잉",
+    "answer_at": 2
+   },
+   {
+    "fn": "bait",
+    "text": "최근 출장러들 사이에서 바이럴이 터지며 논란인 휴대용 물건이 있는데,",
+    "facts": [],
+    "point": "잉",
+    "answer_at": 2
+   },
+   {
+    "fn": "reveal",
+    "text": "이건 바로 GearOra M23 휴대용 음파 전동칫솔.",
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "fn": "solve",
+    "text": "이게 미친 포인트인 게 기존엔 젖은 칫솔을 그냥 넣었지만 이건 케이스가 세균을 99.99% 없앤다는 거.",
+    "facts": [
+     "f3"
+    ],
+    "point": "와우"
+   },
+   {
+    "fn": "more",
+    "text": "심지어 GearOra 공식몰 기준 분당 40,000회 음파 진동을 때려박았는데,",
+    "facts": [
+     "f1"
+    ],
+    "point": "권위"
+   },
+   {
+    "fn": "more2",
+    "text": "하루 2분씩 두 번 써도 최대 15일을 버텨 여행 갈 때 충전기를 굳이 안 챙겨도 된다고.",
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "fn": "twist",
+    "text": "근데 진짜 충격적인 포인트는 IPX7 방수라 샤워하면서 거칠게 써도 끄떡없다고.",
+    "facts": [
+     "f4"
+    ],
+    "point": "와우"
+   },
+   {
+    "fn": "land",
+    "text": "그래서 요즘엔 프로출장러들 사이에서 삶의 질 떡상했다고 난리라고.",
+    "facts": []
+   }
+  ],
+  "_model": "gemini-flash-latest",
+  "_via": "server"
+ },
+ "prompt": "너는 한국 쇼츠 채널 'evenshopping'의 나레이션 작가다. 상품 하나로 대본을 써라(이 채널 대본 설명서가 아직 없다 — 역할 칸만 따른다).\n상품: GearOra M23 휴대용 UV 살균 음파 전동칫솔\n칸(순서대로 한 줄씩): title — '[누가]+[무엇을 하다가]+[생활 감정어] [나라] 천재가 만들어 떼돈 번 [물건]의 정체.' (잉?: 정체를 숨김) — 창작 칸(이븐쇼핑 과장 틀, 사장님 허용): facts 빈 목록 > bait — '최근 [집단] 사이에서 바이럴이 터지며 논란인 [물건]이 있는데,' (잉?) — 창작 칸: facts 빈 목록. '논란'은 화제라는 뜻 — 결함·불만·문제로 논란이라고 쓰지 마라(제품을 깎는 말 금지) > reveal — '이건 바로 [제품 쉬운 이름].' (짧게) > solve — 와우1: 줄 머리 '이게 말도 안 되는 게'·'이게 미친 포인트인 게' 계열 + 기존 것과 비교(기존엔 ~했지만 이건 ~다는 거) > more — 와우2: 줄 머리 '심지어' + 숫자·권위·유래(만든 회사·유명 브랜드·특허·방송·판매 수치) — 근거 번호 필수, 말끝 ~는데, > more2 — 디테일 한 줄(기능·스펙을 생활 말로, 말끝 ~다고.) — 스펙 나열 금지: 사실 하나를 생활 장면으로 바꿔 말한다 > twist — 와우3: 줄 머리 '근데 진짜 충격적인 포인트는'·'근데 진짜 미친 포인트는' 계열 + 가장 센 사실(말끝 ~다고.) > land — '그래서 요즘엔 [집단] 사이에서 [결과] 난리라고.' — 창작 칸(사회 반응 과장 허용): facts 빈 목록. 결과는 생활 변화로(스펙·펌웨어 같은 말 금지)\n[쓸 수 있는 근거]\n[f1] GearOra 공식몰 기준 M23은 분당 40,000회 음파(Sonic 40,000 VPM) 진동을 내세운다(브랜드 주장).\n[f2] 공식몰 표기: 하루 2분씩 2번 쓰면 완충 1회로 최대 15일, 충전은 USB-C 2~3시간. (아마존 상세는 '30일 배터리'로 표기가 달라 상충 — 공식몰 수치 사용)\n[f3] 공식몰은 밀폐형 UVC/UVA 살균 챔버가 칫솔모의 세균·바이러스 99.99%를 없앤다고 주장한다(브랜드 주장, 독립 검증 미확인).\n[f4] 방수 등급 IPX7, 모드 3개, 2분 타이머에 30초마다 구역 이동 알림.\n[f5] 칫솔모는 항균 그래핀 소재라고 소개된다(아마존 영국 UV 모델 목록 기준).\n[f6] 미국 공식몰 가격 89.99달러(정가 99달러 표기), 2개 이상 구매 시 10% 추가 할인. 가격은 조사 시점 기준.\n[f7] M23 일반 모델(미국 아마존 목록)은 알루미늄 몸체, 무게 4.6온스(약 130g), 접이식 여행 크기, IPX7, USB-C로 소개된다. UV 케이스는 모델별로 달라 변형마다 확인 필요.\n[f8] 세계 최초 전동칫솔로 꼽히는 Broxodent는 1954년 스위스의 필리프-기 우그(Philippe-Guy Woog) 박사가 발명했고, 콘센트에 직접 꽂아 쓰는 방식이었다. 처음엔 손이 불편한 사람과 교정 환자용이었다.\n[f9] 그보다 앞선 전동칫솔 특허도 있다: 토믈린슨 모즐리(Tomlinson Moseley)의 Motodent는 1937년 12월 13일 출원, 1940년 4월 9일 등록.\n[f10] 1990년대 초 UL·CSA가 욕실용 가정 전압(콘센트 직결) 제품 인증을 중단해, 전동칫솔이 12·16·24V 저전압 변압기 방식으로 바뀌었다.\n[f11] 음파칫솔의 시작: 워싱턴대 연구진이 음향 에너지가 구강 세균의 치아 부착력을 약하게 만든다는 걸 발견했고, 1987년 기업가 데이비드 줄리아니가 워싱턴대 교수 둘과 GEMTech를 세워 개발 — 1992년 세계 최초 음파칫솔 Sonicare Advance(분당 31,000회 칫솔질)가 나왔다.\n[f12] 그 회사는 1995년 Optiva로 이름을 바꿨고, 2000년 10월 필립스가 인수, 2003년 '필립스 소니케어'로 브랜드가 바뀌었다.\n[f13] 최초의 초음파칫솔은 1992년 미국 특허를 받고 같은 해 FDA가 가정용 일상 사용을 승인했다(처음 이름 Ultima, 나중 Ultrasonex).\n규칙:\n- 줄마다 facts 에 근거 번호(위 [f…])를 1개 이상 적어라. 근거 없는 사실·숫자·이름·회사·연도를 지어내지 마라. 숫자는 [f…] 사실에 있는 그대로만.\n- 화면을 묘사하지 마라(×'…하는 중' ×'웃음이 남' ×'소리가 흘러나옴'). 시청자에게 썰 푸는 말.\n- 소재·근거(f*)에 없는 브랜드·제품명을 쓰지 않는다.\n- 글자 수를 맞추려고 띄어쓰기를 지우지 않는다 — 폭이 넘치면 낱말을 줄인다.\n- 최상급·단정(가장·제일·최초·유일·세계에서·절대·역대급·1위·전설)은 그 줄 근거 글에 같은 주장이 있을 때만 쓴다.\n출력 JSON만: {\"title\":\"영상 위 제목\",\"lines\":[{\"fn\":\"칸 역할\",\"text\":\"한 줄\",\"facts\":[\"f1\"]}, …]}\n[말투] 반말 전언체(~다는 거 · ~는데 · ~다고 · ~라고). 존댓말(요·니다) 0. CTA 없음\n[잉? 포인트 — 반드시 1줄 이상, 앞쪽 1/3 안] 제목·미끼 줄에서 정체를 숨겨 '그게 뭔데?' 하게 만든다 — 답은 reveal 줄(이건 바로 ~)에서. 그 줄에 point:\"잉\", answer_at:(답이 나오는 뒤 줄 번호, 0부터). 예: 애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체. (→ 무슨 알람?) / 최근 등교 전쟁 겪는 엄마들 사이에서 바이럴이 터지며 논란인 알람이 있는데, (→ 뭔데?)\n[와우 포인트 — 반드시 3줄(solve 이게 말도 안 되는 게 · more 심지어 · twist 근데 진짜 충격적인 포인트는)] '와 대박이네'가 나오는 줄 — 강한 연결어로 시작해 귀에 꽂히고, 바로 뒤에 구체 내용(숫자·동작·기존 것과 비교)이 온다. 그 줄에 point:\"와우\". 줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 2줄 이상은 '미친 포인트·대박인·말도 안 되는·충격적인' 계열, 같은 뿌리 말 두 번 금지): 근데 진짜 충격적인 포인트는 · 하지만 진짜 미친 포인트는 · 근데 진짜 충격적인 사실은 · 이게 진짜 말도 안 되는게 · 이게 진짜 미친 포인트인게 · 근데 진짜 미친 포인트는 · 근데 더 미친 포인트는 · 무엇보다 미친 포인트는 · 진짜 충격적인 포인트는 · 근데 진짜는 여기서부터 · 이게 말도 안 되는게 · 진짜 말도 안 되는게 · 진짜 미친 포인트인게 · 이게 미친 포인트인게 · 진짜 미친 포인트는 · 근데 더 대박인 건 · 이게 진짜 대박인게 · 진짜 소름 돋는 건 · 근데 미친 포인트는 · 근데 진짜 반전은 · 진짜는 여기서부터 · 진짜 충격적인 건 · 더 충격적인 건 · 진짜 대박인 건 · 미친 포인트인게 · 말도 안 되는게 · 미친 포인트는 · 이게 대박인게. 연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: 이게 말도 안 되는 게 알람이 울리면 버튼이 아니라 과녁을 맞혀야만 꺼진다는 거. / 근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고.\n[디테일 — 반드시] ① more 줄 = 숫자·권위·유래(만든 회사·브랜드·특허·방송·판매 수치)를 근거 번호와 함께 — 그 줄에 point:\"권위\"(와우 3칸 중 첫 칸과 같은 줄이어도 된다). ② 비교 1개 이상 — 기존 것과 맞대기(기존엔 ~했지만 이건 ~). ③ land 줄 = '그래서 요즘엔 ~ 사이에서 ~ 난리라고'. ④ 제목 감정어는 하나만(현타 온·답답했던·귀찮았던 중 하나). ⑤ 센 감정어(빡친·열받은·짜증) 한 편 1회 이하 — 와우 연결어는 제외. ⑥ 첫 문장의 주체·계기는 근거에 있는 개발 비화·유래가 있으면 그것으로(번호 적기), 없을 때만 생활 상황으로 — 회사·인물·숫자는 지어내지 마라.\n[길이 — 반드시] 줄 8~8개, 전체 203~289자(공백 빼고), 한 줄 50자 이하(한 호흡). 사실을 한 줄에 몰아넣지 말고 가장 센 것만 골라라.\n- [창작 허용선] 화자 설정·지인·가족·계기·극단 행동·자기 위치·감상·체감 비유·결과 과장은 지어내도 된다(이 채널의 결). 제품 속성·원리·수치·쓰면 생기는 효과·사회적 반응(인기·품절·유행)·가격을 말하는 줄은 근거 번호 필수 — 근거 글에 없는 효과·속도·가격 표현을 덧붙이지 마라.\n- 칸 하나 = 한 줄. 줄마다 fn 에 칸 이름(title·bait…)을 그대로 적고, point·answer_at 을 [잉?·와우] 규칙대로 단다.\n",
+ "status": "ok",
+ "hand_fixed": true
+}

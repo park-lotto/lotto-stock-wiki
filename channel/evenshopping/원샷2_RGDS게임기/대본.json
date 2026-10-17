@@ -1,0 +1,350 @@
+{
+ "채널": "재미썸홈",
+ "channel": "재미썸홈",
+ "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
+ "topic": "Anbernic RG DS (원조, 2025-12 출시, 4인치 640x480 x2, RK3568, 3GB, 안드로이드 14, 약 $94~100)",
+ "목소리": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "voice": {
+  "name": "필재",
+  "voice_id": "tc_68257f68bc6e3c161ab5078d"
+ },
+ "cps_target": 8.8,
+ "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤",
+ "from": "원샷링크딸깍 엔진(script_engine v1 · 대본 설명서 경로) · C:\\calcopy_link\\work\\evn_rgds\\대본.json",
+ "lines": [
+  {
+   "i": 0,
+   "text": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체.",
+   "role": "title",
+   "point": "잉",
+   "shot_query": [
+    "Anbernic RG DS holding in hand",
+    "frustrated gamer playing small handheld console",
+    "chinese hardware engineer tech lab soldering",
+    "Anbernic RG DS unboxing first look"
+   ],
+   "shots": [
+    {
+     "piece": "게임기 들고",
+     "query": "Anbernic RG DS holding in hand",
+     "kind": "제품"
+    },
+    {
+     "piece": "다니다 답답했던",
+     "query": "frustrated gamer playing small handheld console",
+     "kind": "유사"
+    },
+    {
+     "piece": "중국 천재가 만들어",
+     "query": "chinese hardware engineer tech lab soldering",
+     "kind": "유사"
+    },
+    {
+     "piece": "떼돈 번 게임기의 정체",
+     "query": "Anbernic RG DS unboxing first look",
+     "kind": "제품"
+    }
+   ],
+   "kind": "제품",
+   "tts": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체."
+  },
+  {
+   "i": 1,
+   "text": "최근 레트로 게이머들 사이에서 바이럴이 터지며 논란인 게임기가 있는데,",
+   "role": "bait",
+   "point": "잉",
+   "shot_query": [
+    "retro gaming community gathering hype",
+    "mind blown reaction meme",
+    "Anbernic RG DS hands on review"
+   ],
+   "shots": [
+    {
+     "piece": "최근 레트로 게이머들",
+     "query": "retro gaming community gathering hype",
+     "kind": "유사"
+    },
+    {
+     "piece": "사이에서 바이럴이 터지며",
+     "query": "mind blown reaction meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "논란인 게임기가 있는데",
+     "query": "Anbernic RG DS hands on review",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사",
+   "tts": "최근 레트로 게이머들 사이에서 바이럴이 터지며 논란인 게임기가 있는데,"
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 앤버닉 RG DS.",
+   "role": "reveal",
+   "point": "",
+   "shot_query": [
+    "dramatic reveal shock reaction meme",
+    "Anbernic RG DS dual screen showcase"
+   ],
+   "shots": [
+    {
+     "piece": "이건 바로",
+     "query": "dramatic reveal shock reaction meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "앤버닉 RG DS",
+     "query": "Anbernic RG DS dual screen showcase",
+     "kind": "제품"
+    }
+   ],
+   "kind": "짤",
+   "tts": "이건 바로 앤버닉 RG DS."
+  },
+  {
+   "i": 3,
+   "text": "이게 진짜 말도 안 되는 게 위아래 화면이 진짜 따로 두 장이라 닌텐도 DS 시절 명작들이 거의 그대로 돌아간다는 거.",
+   "role": "solve",
+   "point": "와우",
+   "shot_query": [
+    "shocked reaction face meme",
+    "Anbernic RG DS top and bottom dual screen close up",
+    "Anbernic RG DS vs original Nintendo DS comparison",
+    "Nintendo DS gameplay classics Pokemon Mario",
+    "Anbernic RG DS dual screen gameplay DS games"
+   ],
+   "shots": [
+    {
+     "piece": "이게 진짜 말도 안 되는",
+     "query": "shocked reaction face meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "게 위아래 화면이 진짜",
+     "query": "Anbernic RG DS top and bottom dual screen close up",
+     "kind": "제품"
+    },
+    {
+     "piece": "따로 두 장이라 닌텐도",
+     "query": "Anbernic RG DS vs original Nintendo DS comparison",
+     "kind": "제품"
+    },
+    {
+     "piece": "DS 시절 명작들이 거의",
+     "query": "Nintendo DS gameplay classics Pokemon Mario",
+     "kind": "유사"
+    },
+    {
+     "piece": "그대로 돌아간다는 거",
+     "query": "Anbernic RG DS dual screen gameplay DS games",
+     "kind": "제품"
+    }
+   ],
+   "kind": "짤",
+   "tts": "이게 진짜 말도 안 되는 게, 위아래 화면이 진짜 따로 두 장이라, 닌텐도 DS 시절 명작들이 거의 그대로 돌아간다는 거."
+  },
+  {
+   "i": 4,
+   "text": "심지어 모델만 30개 넘게 낸 대표 브랜드 앤버닉이 정가 99.99달러에 내놨는데,",
+   "role": "more",
+   "point": "권위",
+   "shot_query": [
+    "stack of various retro handheld gaming devices",
+    "Anbernic handheld consoles collection RG series",
+    "Anbernic RG DS price tag box release",
+    "100 dollar bills cash money counting"
+   ],
+   "shots": [
+    {
+     "piece": "심지어 모델만",
+     "query": "stack of various retro handheld gaming devices",
+     "kind": "유사"
+    },
+    {
+     "piece": "30개 넘게 낸 대표",
+     "query": "Anbernic handheld consoles collection RG series",
+     "kind": "제품"
+    },
+    {
+     "piece": "브랜드 앤버닉이 정가",
+     "query": "Anbernic RG DS price tag box release",
+     "kind": "제품"
+    },
+    {
+     "piece": "99.99달러에 내놨는데",
+     "query": "100 dollar bills cash money counting",
+     "kind": "유사"
+    }
+   ],
+   "kind": "유사",
+   "tts": "심지어 모델만 30개 넘게 낸 대표 브랜드 앤버닉이 정가 99.99달러에 내놨는데,"
+  },
+  {
+   "i": 5,
+   "text": "배터리도 4000mAh라 밖에서 충전기 없이 6시간 동안 진득하게 달린다고.",
+   "role": "more2",
+   "point": "",
+   "shot_query": [
+    "Anbernic RG DS battery capacity specs review",
+    "person playing handheld console outside park bench",
+    "clock hands spinning fast time lapse 6 hours",
+    "gamer playing happily focused on screen"
+   ],
+   "shots": [
+    {
+     "piece": "배터리도",
+     "query": "Anbernic RG DS battery capacity specs review",
+     "kind": "제품"
+    },
+    {
+     "piece": "4000mAh라 밖에서",
+     "query": "person playing handheld console outside park bench",
+     "kind": "유사"
+    },
+    {
+     "piece": "충전기 없이 6시간 동안",
+     "query": "clock hands spinning fast time lapse 6 hours",
+     "kind": "유사"
+    },
+    {
+     "piece": "진득하게 달린다고",
+     "query": "gamer playing happily focused on screen",
+     "kind": "유사"
+    }
+   ],
+   "kind": "제품",
+   "tts": "배터리도 사천 밀리암페어시라 밖에서 충전기 없이 6시간 동안 진득하게 달린다고."
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 다들 흔한 칩일 줄 알았는데 레트로 게임기엔 안 쓰던 RK3568을 박아버렸다고.",
+   "role": "twist",
+   "point": "와우",
+   "shot_query": [
+    "surprised gasp reaction video meme",
+    "computer processor CPU microchip close up",
+    "retro handheld console internal circuit board",
+    "head shake no disapproval reaction meme",
+    "Anbernic RG DS RK3568 chipset performance test",
+    "table slam powerful impact reaction meme"
+   ],
+   "shots": [
+    {
+     "piece": "근데 진짜 충격적인",
+     "query": "surprised gasp reaction video meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "포인트는 다들 흔한 칩일",
+     "query": "computer processor CPU microchip close up",
+     "kind": "유사"
+    },
+    {
+     "piece": "줄 알았는데 레트로",
+     "query": "retro handheld console internal circuit board",
+     "kind": "유사"
+    },
+    {
+     "piece": "게임기엔 안 쓰던",
+     "query": "head shake no disapproval reaction meme",
+     "kind": "짤"
+    },
+    {
+     "piece": "RK3568을",
+     "query": "Anbernic RG DS RK3568 chipset performance test",
+     "kind": "제품"
+    },
+    {
+     "piece": "박아버렸다고",
+     "query": "table slam powerful impact reaction meme",
+     "kind": "짤"
+    }
+   ],
+   "kind": "짤",
+   "tts": "근데 진짜 충격적인 포인트는, 다들 흔한 칩일 줄 알았는데, 레트로 게임기엔 안 쓰던 알케이 삼오육팔을 박아버렸다고."
+  },
+  {
+   "i": 7,
+   "text": "그래서 요즘엔 직장인들 사이에서 출퇴근길에 초등학생 때처럼 몰래 게임한다고 난리라고.",
+   "role": "land",
+   "point": "",
+   "shot_query": [
+    "office worker sitting at desk wearing suit working",
+    "person commuting on subway train holding device",
+    "child secretly playing Game Boy under blanket night",
+    "Anbernic RG DS portable gameplay on train commute"
+   ],
+   "shots": [
+    {
+     "piece": "그래서 요즘엔 직장인들",
+     "query": "office worker sitting at desk wearing suit working",
+     "kind": "유사"
+    },
+    {
+     "piece": "사이에서 출퇴근길에",
+     "query": "person commuting on subway train holding device",
+     "kind": "유사"
+    },
+    {
+     "piece": "초등학생 때처럼 몰래",
+     "query": "child secretly playing Game Boy under blanket night",
+     "kind": "유사"
+    },
+    {
+     "piece": "게임한다고 난리라고",
+     "query": "Anbernic RG DS portable gameplay on train commute",
+     "kind": "제품"
+    }
+   ],
+   "kind": "유사",
+   "tts": "그래서 요즘엔, 직장인들 사이에서 출퇴근길에 초등학생 때처럼 몰래 게임한다고 난리라고."
+  }
+ ],
+ "chars": 275,
+ "est_sec": 31.25,
+ "facts": {
+  "f1": "Anbernic RG DS는 DS형 접이식(클램쉘) 듀얼스크린 안드로이드 게임기로, 2025년 12월(12/7경 출하 예정)에 나왔다. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f2": "화면은 4인치 IPS 두 장, 장당 640x480(4:3), 둘 다 터치 되고 정전식 스타일러스도 지원한다. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f3": "칩셋은 록칩 RK3568(쿼드코어 Cortex-A55 최대 2.0GHz, Mali-G52 2EE), 램 3GB, 저장 32GB + microSD 최대 2TB. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f4": "OS는 안드로이드 14(리눅스 구성도 있음), 배터리 4000mAh로 약 6시간, 완충 약 3.5시간. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f5": "무게 321g, 크기 160x91x21.5mm, 아날로그 스틱 2개, 6축 자이로, 진동, 스테레오 스피커. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f6": "정가 99.99달러, 사전주문 12/9까지 93.99달러. 리뷰 매체는 실거래가 94~100달러로 정리. 원화 가격은 미확인. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f7": "두 화면이 터치되는 진짜 위/아래 구성이라 DS 게임은 melonDS로 대부분 잘 돈다. PS1·PSP 일부·N64도 가능, PS2·GameCube·3DS는 실사용상 어렵다(Heldgames 평가 3.5/5). (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f8": "위아래 화면에 서로 다른 앱을 동시에 띄우는 것이 가능한지는 이 출처들에서 미확인(영상 자막 주장은 별도 검증 필요). 비DS 앱에서 둘째 화면은 메뉴·박스아트·컨트롤 오버레이로 쓰이고 앱마다 지원이 다르다. (https://heldgames.com/reviews/anbernic-rg-ds)",
+  "f9": "흥미: 일부 리뷰어 샘플에서 듀얼스크린 게임 때 두 화면이 어긋나는(비동기) 문제가 나왔고, 앤버닉이 출하 전 펌웨어 1.4 업데이트로 위 화면 주사율 저하 등을 고쳤다. (https://www.notebookcheck.net/Anbernic-rolls-out-an-update-to-fix-the-RG-DS-ahead-of-shipping.1179922.0.html)",
+  "f10": "흥미: 칩 예상은 H700·Unisoc T618이었지만 실제는 RK3568 — 레트로 핸드헬드로는 처음 쓴 칩으로 소개됐다. (https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/)",
+  "f11": "흥미: 앤버닉 최초의 완전 투명 모델(투명 화이트, '얼음 같다')이 있고, 공식 공개는 유출 몇 주 뒤 앤버닉 유튜브에서 먼저 했다. (https://retrododo.com/anbernic-officially-reveals-sub-100-rg-ds-handheld-emulator/)",
+  "f12": "권위: 앤버닉은 2017년 중국 선전에서 Shenzhen YangLiMing Electronic Technology가 상표를 등록해 시작, 첫 제품 RG. RG351P·RG353V·RG35XX로 레트로 핸드헬드 대표 브랜드가 됐고 자체 사이트는 30개+ 모델을 냈다고 밝힌다. (https://en.wikipedia.org/wiki/Anbernic)",
+  "f13": "흥미: 2018년 래퍼 술자보이(Soulja Boy)의 'SouljaGame 콘솔'이 앤버닉 기기를 리브랜딩한 것으로 알려졌고 출시 한 달도 안 돼 중단됐다(위키 기준). (https://en.wikipedia.org/wiki/Anbernic)",
+  "f14": "후속작 RG DS Plus(2026-09-15 판매, 첫 72시간 84.99달러·이후 94.99달러)는 4.3인치 1024x768 화면, 같은 RK3568 칩. 영상 속 기기는 640x480 원조 RG DS(검은색, 스틱 있음)로 보임. Plus 정보는 단일 출처(retrohandhelds)라 재확인 필요. (https://retrohandhelds.gg/tag/anbernic-rg-ds-plus/)"
+ },
+ "title_lines": [
+  "답답해서 만든",
+  "중국 천재의 대박 신작"
+ ],
+ "sfx": "shopping_shorts/sfx_pack density=low",
+ "search_seed": [
+  "Anbernic RG DS",
+  "Anbernic RG DS review",
+  "RG DS anbernic gameplay",
+  "Anbernic RG DS unboxing",
+  "Anbernic RG DS dual screen gameplay DS games"
+ ],
+ "exclude_title": [
+  "RG DS Plus",
+  "DS Plus",
+  "RG DDS",
+  "Retroid",
+  "RGLauncher"
+ ],
+ "title_slots": {
+  "hook1": "답답해서 만든",
+  "hook2": "중국 천재의 대박 신작",
+  "bodyTitle": "진짜 DS 게임 잘 돌아갈까?"
+ },
+ "bgm": null
+}

@@ -4,7 +4,7 @@
     PYTHONUTF8=1 py tools/calcopy/oneshot/to_work.py <엔진 대본.json> <조사.json> 잇썸홈|재미썸홈 <작품 폴더>
 
 판단 주인(여기서 새로 정하지 않고 부르기만):
-  자막 조각 = pieces_of(narr_video.chunk_sentence + 화면 글자 상한 = 프리셋 caption_max_chars) · TTS 숫자 읽기 = shopping_shorts.narration_naturalize.normalize_reading
+  자막 조각 = pieces_of(narr_video.chunk_sentence + 화면 글자 상한 = 프리셋 caption_max_chars) · TTS 글 = 화면 글 그대로('tts' 칸 — 숫자는 타입캐스트가 읽는다, 10-18 받아쓰기 실측)
   장면 검색어(조각마다 query·kind) = 이 파일 shot_queries() 한 곳 — 제미나이 1회(gemini_free.ask)
   채널 값(프리셋·목소리·말속도·재료 규칙) = BRANDS 한 곳(10-17 작품 1~5 대본.json 값 그대로)
 작품 대본.json 꼴 = 10-17 확정 대본(lines[].shots[].piece) — material_auto.norm_script 세 번째 꼴.
@@ -120,7 +120,6 @@ def shot_queries(product: str, research: dict, brand: str, rows: list[dict], tit
 
 
 def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path:
-    from shopping_shorts.narration_naturalize import normalize_reading
     S = json.loads(Path(engine_json).read_text(encoding="utf-8"))
     R = json.loads(Path(research_json).read_text(encoding="utf-8"))
     if S.get("status") != "ok":
@@ -137,7 +136,9 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
     for li, l in enumerate(lines):
         mine = [(k, r) for k, r in enumerate(rows) if r["line"] == li]
         shots = [{"piece": r["piece"], "query": sq["shots"][k]["query"], "kind": sq["shots"][k]["kind"]} for k, r in mine]
-        out_lines.append({"i": li, "text": l["text"], "tts_text": normalize_reading(l["text"])[0], "role": l.get("fn") or l.get("node") or "",
+        # 제작기(preset_make.load_work)는 'tts' 칸을 읽는다. 숫자는 화면 글 그대로 타입캐스트에 — 10-18 실측: narration_naturalize.normalize_reading 은
+        # '4000mAh'→'사천 미터Ah'·'RK3568'→'RK삼천오백육십팔'로 틀리고, 화면 글 그대로 보낸 칫솔 편은 받아쓰기 2모델이 숫자를 전부 맞게 들었다.
+        out_lines.append({"i": li, "text": l["text"], "tts": l["text"], "role": l.get("fn") or l.get("node") or "",
                           "point": l.get("point") or "", "shot_query": [s["query"] for s in shots], "shots": shots,
                           "kind": shots[0]["kind"] if shots else B["kinds"][0]})
     chars = sum(len(x["text"].replace(" ", "")) for x in out_lines)
@@ -170,7 +171,6 @@ if __name__ == "__main__":
 def sync_line(work: Path, brand: str, li: int, new_text: str, material_dir: Path | None = None) -> list[str]:
     """재료를 찾은 뒤 대사 한 줄만 고칠 때(예: B15 TTS 덩어리 35자) — 작품 대본.json 그 줄(글·TTS 글·조각)과 재료.json 그 줄 행의 caption 을
     같이 바꾼다. 장면은 그대로라 조각 수가 같아야 한다(다르면 멈춘다 — 재료 찾기를 다시 해야 함). 엔진 검사는 fix_lines 로 먼저 통과시킨다."""
-    from shopping_shorts.narration_naturalize import normalize_reading
     work = Path(work)
     S = json.loads((work / "대본.json").read_text(encoding="utf-8"))
     R = json.loads((work / "재료.json").read_text(encoding="utf-8"))
@@ -183,7 +183,8 @@ def sync_line(work: Path, brand: str, li: int, new_text: str, material_dir: Path
     for k, (s, p) in enumerate(zip(L["shots"], ps)):
         s["piece"] = p
         rows[start + k]["caption"] = p
-    L["text"], L["tts_text"] = new_text, normalize_reading(new_text)[0]
+    L["text"], L["tts"] = new_text, new_text
+    L.pop("tts_text", None)
     S["chars"] = sum(len(x["text"].replace(" ", "")) for x in S["lines"])
     for name, doc in (("대본.json", S), ("재료.json", R)):
         (work / name).write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")

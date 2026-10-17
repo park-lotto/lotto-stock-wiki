@@ -1,0 +1,159 @@
+[
+ {
+  "i": 0,
+  "op": "pick",
+  "vid": "k5qaOfX4RdM",
+  "t0": 84.6,
+  "seen": "펼친 흰 RG DS(밝은 첫 컷)"
+ },
+ {
+  "i": 1,
+  "op": "cont",
+  "why": "B4 첫 컷 0.57초 — 이어 감"
+ },
+ {
+  "i": 2,
+  "op": "pick",
+  "vid": "fKFE_YqIYik",
+  "t0": 22.0,
+  "seen": "장갑 낀 손이 상자에서 부속 꺼냄(제조 느낌)"
+ },
+ {
+  "i": 4,
+  "op": "pick",
+  "vid": "XubOE1iOckU",
+  "t0": 47.0,
+  "seen": "선반 위 레트로 게임기들(연상)"
+ },
+ {
+  "i": 6,
+  "op": "pick",
+  "vid": "-gbPXfVezs0",
+  "t0": 62.0,
+  "seen": "흰 RG DS 가까이(후속작 비교 영상 교체)"
+ },
+ {
+  "i": 7,
+  "op": "cont",
+  "why": "짤 0.45초(B4) 대신 앞 제품 컷 이어 감"
+ },
+ {
+  "i": 8,
+  "op": "pick",
+  "vid": "fKFE_YqIYik",
+  "t0": 62.0,
+  "seen": "장갑 낀 손에 든 흰 RG DS(다른 채널 자막 '블랙애플' 컷 교체, A5)"
+ },
+ {
+  "i": 10,
+  "op": "pick",
+  "vid": "i5RrFhPYNqI",
+  "t0": 52.0,
+  "seen": "두 화면 켜진 RG DS(무지개)"
+ },
+ {
+  "i": 11,
+  "op": "cont"
+ },
+ {
+  "i": 12,
+  "op": "pick",
+  "vid": "IPUtVosNepU",
+  "t0": 62.0,
+  "seen": "두 손에 든 RG DS(글자 없음)"
+ },
+ {
+  "i": 13,
+  "op": "cont"
+ },
+ {
+  "i": 14,
+  "op": "pick",
+  "vid": "E33ZdLwtaAM",
+  "t0": 42.0,
+  "seen": "매트 위 RG DS 두 대"
+ },
+ {
+  "i": 15,
+  "op": "cont"
+ },
+ {
+  "i": 16,
+  "op": "pick",
+  "vid": "MFu4goCqEko",
+  "t0": 52.0,
+  "seen": "민트 RG DS(복제품 상자 컷 교체)"
+ },
+ {
+  "i": 17,
+  "op": "cont"
+ },
+ {
+  "i": 18,
+  "op": "pick",
+  "vid": "uxxHwjfLR1w",
+  "t0": 212.0,
+  "seen": "흰 RG DS 든 손"
+ },
+ {
+  "i": 19,
+  "op": "cont"
+ },
+ {
+  "i": 20,
+  "op": "pick",
+  "vid": "kChsG2GFB3M",
+  "t0": 122.0,
+  "seen": "민트 RG DS 든 손(Ow4 구간 받기 실패 교체)"
+ },
+ {
+  "i": 21,
+  "op": "cont",
+  "why": "복제품 영상 교체 — 앞 컷 이어 감"
+ },
+ {
+  "i": 23,
+  "op": "pick",
+  "vid": "kChsG2GFB3M",
+  "t0": 146.0,
+  "seen": "민트 RG DS 옆면"
+ },
+ {
+  "i": 24,
+  "op": "pick",
+  "vid": "E33ZdLwtaAM",
+  "t0": 162.0,
+  "seen": "매트 위 진회색 RG DS"
+ },
+ {
+  "i": 25,
+  "op": "cont"
+ },
+ {
+  "i": 26,
+  "op": "cont"
+ },
+ {
+  "i": 27,
+  "op": "cont"
+ },
+ {
+  "i": 28,
+  "op": "pick",
+  "vid": "x5sbGCcQwQI",
+  "t0": 2.0,
+  "seen": "빨간 RG DS 든 남자 — 끝 줄 한 컷"
+ },
+ {
+  "i": 29,
+  "op": "cont"
+ },
+ {
+  "i": 30,
+  "op": "cont"
+ },
+ {
+  "i": 31,
+  "op": "cont"
+ }
+]

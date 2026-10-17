@@ -1,0 +1,340 @@
+{
+ "engine": "script_engine v1 · 대본 설명서 경로",
+ "path": "lite",
+ "slug": "evenshopping",
+ "product": {
+  "name": "앤버닉 RG DS 듀얼스크린 안드로이드 게임기"
+ },
+ "title": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체.",
+ "facts": {
+  "f1": {
+   "text": "Anbernic RG DS는 DS형 접이식(클램쉘) 듀얼스크린 안드로이드 게임기로, 2025년 12월(12/7경 출하 예정)에 나왔다.",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  "f2": {
+   "text": "화면은 4인치 IPS 두 장, 장당 640x480(4:3), 둘 다 터치 되고 정전식 스타일러스도 지원한다.",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f3": {
+   "text": "칩셋은 록칩 RK3568(쿼드코어 Cortex-A55 최대 2.0GHz, Mali-G52 2EE), 램 3GB, 저장 32GB + microSD 최대 2TB.",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f4": {
+   "text": "OS는 안드로이드 14(리눅스 구성도 있음), 배터리 4000mAh로 약 6시간, 완충 약 3.5시간.",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f5": {
+   "text": "무게 321g, 크기 160x91x21.5mm, 아날로그 스틱 2개, 6축 자이로, 진동, 스테레오 스피커.",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  "f6": {
+   "text": "정가 99.99달러, 사전주문 12/9까지 93.99달러. 리뷰 매체는 실거래가 94~100달러로 정리. 원화 가격은 미확인.",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f7": {
+   "text": "두 화면이 터치되는 진짜 위/아래 구성이라 DS 게임은 melonDS로 대부분 잘 돈다. PS1·PSP 일부·N64도 가능, PS2·GameCube·3DS는 실사용상 어렵다(Heldgames 평가 3.5/5).",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f8": {
+   "text": "위아래 화면에 서로 다른 앱을 동시에 띄우는 것이 가능한지는 이 출처들에서 미확인(영상 자막 주장은 별도 검증 필요). 비DS 앱에서 둘째 화면은 메뉴·박스아트·컨트롤 오버레이로 쓰이고 앱마다 지원이 다르다.",
+   "url": "https://heldgames.com/reviews/anbernic-rg-ds"
+  },
+  "f9": {
+   "text": "흥미: 일부 리뷰어 샘플에서 듀얼스크린 게임 때 두 화면이 어긋나는(비동기) 문제가 나왔고, 앤버닉이 출하 전 펌웨어 1.4 업데이트로 위 화면 주사율 저하 등을 고쳤다.",
+   "url": "https://www.notebookcheck.net/Anbernic-rolls-out-an-update-to-fix-the-RG-DS-ahead-of-shipping.1179922.0.html"
+  },
+  "f10": {
+   "text": "흥미: 칩 예상은 H700·Unisoc T618이었지만 실제는 RK3568 — 레트로 핸드헬드로는 처음 쓴 칩으로 소개됐다.",
+   "url": "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+  },
+  "f11": {
+   "text": "흥미: 앤버닉 최초의 완전 투명 모델(투명 화이트, '얼음 같다')이 있고, 공식 공개는 유출 몇 주 뒤 앤버닉 유튜브에서 먼저 했다.",
+   "url": "https://retrododo.com/anbernic-officially-reveals-sub-100-rg-ds-handheld-emulator/"
+  },
+  "f12": {
+   "text": "권위: 앤버닉은 2017년 중국 선전에서 Shenzhen YangLiMing Electronic Technology가 상표를 등록해 시작, 첫 제품 RG. RG351P·RG353V·RG35XX로 레트로 핸드헬드 대표 브랜드가 됐고 자체 사이트는 30개+ 모델을 냈다고 밝힌다.",
+   "url": "https://en.wikipedia.org/wiki/Anbernic"
+  },
+  "f13": {
+   "text": "흥미: 2018년 래퍼 술자보이(Soulja Boy)의 'SouljaGame 콘솔'이 앤버닉 기기를 리브랜딩한 것으로 알려졌고 출시 한 달도 안 돼 중단됐다(위키 기준).",
+   "url": "https://en.wikipedia.org/wiki/Anbernic"
+  },
+  "f14": {
+   "text": "후속작 RG DS Plus(2026-09-15 판매, 첫 72시간 84.99달러·이후 94.99달러)는 4.3인치 1024x768 화면, 같은 RK3568 칩. 영상 속 기기는 640x480 원조 RG DS(검은색, 스틱 있음)로 보임. Plus 정보는 단일 출처(retrohandhelds)라 재확인 필요.",
+   "url": "https://retrohandhelds.gg/tag/anbernic-rg-ds-plus/"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "title",
+    "text": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체.",
+    "point": "잉",
+    "answer_at": 2,
+    "facts": [],
+    "shot_kind": "제품전체",
+    "sources": []
+   },
+   {
+    "fn": "bait",
+    "text": "최근 레트로 게이머들 사이에서 바이럴이 터지며 논란인 게임기가 있는데,",
+    "point": "잉",
+    "answer_at": 2,
+    "facts": [],
+    "shot_kind": "사용동작",
+    "sources": []
+   },
+   {
+    "fn": "reveal",
+    "text": "이건 바로 앤버닉 RG DS.",
+    "facts": [
+     "f1"
+    ],
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://www.recalbox.com/blog/2025-09-29-anbernic-console-portable-nintendo-ds-retrogaming/"
+    ]
+   },
+   {
+    "fn": "solve",
+    "text": "이게 진짜 말도 안 되는 게 기존엔 화면 하나로 쪼갰지만 이건 위아래 두 화면으로 시원하게 즐긴다는 거.",
+    "point": "와우",
+    "facts": [
+     "f2",
+     "f7"
+    ],
+    "shot_kind": "사용동작",
+    "sources": [
+     "https://heldgames.com/reviews/anbernic-rg-ds",
+     "https://heldgames.com/reviews/anbernic-rg-ds"
+    ]
+   },
+   {
+    "fn": "more",
+    "text": "심지어 모델만 30개 넘게 낸 대표 브랜드 앤버닉이 정가 99.99달러에 내놨는데,",
+    "point": "권위",
+    "facts": [
+     "f6",
+     "f12"
+    ],
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://heldgames.com/reviews/anbernic-rg-ds",
+     "https://en.wikipedia.org/wiki/Anbernic"
+    ]
+   },
+   {
+    "fn": "more2",
+    "text": "배터리도 4000mAh라 밖에서 충전기 없이 6시간 동안 진득하게 달린다고.",
+    "facts": [
+     "f4"
+    ],
+    "shot_kind": "사용동작",
+    "sources": [
+     "https://heldgames.com/reviews/anbernic-rg-ds"
+    ]
+   },
+   {
+    "fn": "twist",
+    "text": "근데 진짜 충격적인 포인트는 두 화면 다 스타일러스 터치 지원이라 펜으로 콕콕 찍으며 논다고.",
+    "point": "와우",
+    "facts": [
+     "f2"
+    ],
+    "shot_kind": "제품전체",
+    "sources": [
+     "https://heldgames.com/reviews/anbernic-rg-ds"
+    ]
+   },
+   {
+    "fn": "land",
+    "text": "그래서 요즘엔 3040 사이에서 가방에 챙겨 넣고 출퇴근길마다 추억 소환하느라 난리라고.",
+    "facts": [],
+    "shot_kind": "사용동작",
+    "sources": []
+   }
+  ],
+  "check": {
+   "superlative": [],
+   "superlative_hit": {},
+   "spacing_off": [],
+   "spacing_hit": {},
+   "range_as_single": [],
+   "ranges_hit": {},
+   "numbers_unsourced": [
+    7
+   ],
+   "off_topic_brand": [],
+   "unsupported": [],
+   "support_hit": {},
+   "support_checked": true,
+   "ungrounded": [
+    1
+   ],
+   "ungrounded_hit": {
+    "1": [
+     "사회반응"
+    ]
+   },
+   "copied_examples": [],
+   "copy7_hit": {},
+   "unknown_ids": [],
+   "judge": null,
+   "hook_formula": null,
+   "points": {
+    "ok": true,
+    "why": [],
+    "bad": {},
+    "wow": [
+     [
+      3,
+      "이게 진짜 말도 안 되는게"
+     ],
+     [
+      4,
+      "심지어"
+     ],
+     [
+      6,
+      "근데 진짜 충격적인 포인트는"
+     ]
+    ],
+    "ing": [
+     0,
+     1
+    ],
+    "body_n": 8
+   },
+   "n_lines": 8,
+   "chars": [
+    30,
+    31,
+    12,
+    42,
+    36,
+    34,
+    39,
+    39
+   ],
+   "bad": {
+    "1": [
+     "근거 필수 줄(제품 속성·효과·반응·가격)에 근거 번호 없음 ['사회반응']"
+    ],
+    "7": [
+     "사실에 없는 숫자"
+    ]
+   },
+   "global": [],
+   "ok": false
+  }
+ },
+ "brief_examples": [],
+ "llm_calls": [
+  {
+   "tag": "draft",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "support",
+   "ok": true,
+   "failed": null,
+   "model": "gemini-flash-latest"
+  },
+  {
+   "tag": "rewrite1",
+   "ok": false,
+   "failed": "server RuntimeError: 서버 실행 실패 rc=124:  ",
+   "model": null
+  }
+ ],
+ "error": null,
+ "tries": [
+  {
+   "round": 0,
+   "ok": false,
+   "global": [],
+   "bad": {
+    "1": [
+     "근거 필수 줄(제품 속성·효과·반응·가격)에 근거 번호 없음 ['사회반응']"
+    ],
+    "7": [
+     "사실에 없는 숫자"
+    ]
+   }
+  },
+  {
+   "round": 1,
+   "error": "server RuntimeError: 서버 실행 실패 rc=124:  "
+  }
+ ],
+ "draft_raw": {
+  "title": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체.",
+  "lines": [
+   {
+    "fn": "title",
+    "text": "게임기 들고 다니다 답답했던 중국 천재가 만들어 떼돈 번 게임기의 정체.",
+    "point": "잉",
+    "answer_at": 2,
+    "facts": []
+   },
+   {
+    "fn": "bait",
+    "text": "최근 레트로 게이머들 사이에서 바이럴이 터지며 논란인 게임기가 있는데,",
+    "point": "잉",
+    "answer_at": 2,
+    "facts": []
+   },
+   {
+    "fn": "reveal",
+    "text": "이건 바로 앤버닉 RG DS.",
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "fn": "solve",
+    "text": "이게 진짜 말도 안 되는 게 기존엔 화면 하나로 쪼갰지만 이건 위아래 두 화면으로 시원하게 즐긴다는 거.",
+    "point": "와우",
+    "facts": [
+     "f2",
+     "f7"
+    ]
+   },
+   {
+    "fn": "more",
+    "text": "심지어 모델만 30개 넘게 낸 대표 브랜드 앤버닉이 정가 99.99달러에 내놨는데,",
+    "point": "권위",
+    "facts": [
+     "f6",
+     "f12"
+    ]
+   },
+   {
+    "fn": "more2",
+    "text": "배터리도 4000mAh라 밖에서 충전기 없이 6시간 동안 진득하게 달린다고.",
+    "facts": [
+     "f4"
+    ]
+   },
+   {
+    "fn": "twist",
+    "text": "근데 진짜 충격적인 포인트는 두 화면 다 스타일러스 터치 지원이라 펜으로 콕콕 찍으며 논다고.",
+    "point": "와우",
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "fn": "land",
+    "text": "그래서 요즘엔 3040 사이에서 가방에 챙겨 넣고 출퇴근길마다 추억 소환하느라 난리라고.",
+    "facts": []
+   }
+  ],
+  "_model": "gemini-flash-latest",
+  "_via": "server"
+ },
+ "prompt": "너는 한국 쇼츠 채널 'evenshopping'의 나레이션 작가다. 상품 하나로 대본을 써라(이 채널 대본 설명서가 아직 없다 — 역할 칸만 따른다).\n상품: 앤버닉 RG DS 듀얼스크린 안드로이드 게임기\n칸(순서대로 한 줄씩): title — '[누가]+[무엇을 하다가]+[생활 감정어] [나라] 천재가 만들어 떼돈 번 [물건]의 정체.' (잉?: 정체를 숨김) — 창작 칸(이븐쇼핑 과장 틀, 사장님 허용): facts 빈 목록 > bait — '최근 [집단] 사이에서 바이럴이 터지며 논란인 [물건]이 있는데,' (잉?) — 창작 칸: facts 빈 목록. '논란'은 화제라는 뜻 — 결함·불만·문제로 논란이라고 쓰지 마라(제품을 깎는 말 금지) > reveal — '이건 바로 [제품 쉬운 이름].' (짧게) > solve — 와우1: 줄 머리 '이게 말도 안 되는 게'·'이게 미친 포인트인 게' 계열 + 기존 것과 비교(기존엔 ~했지만 이건 ~다는 거) > more — 와우2: 줄 머리 '심지어' + 숫자·권위·유래(만든 회사·유명 브랜드·특허·방송·판매 수치) — 근거 번호 필수, 말끝 ~는데, > more2 — 디테일 한 줄(기능·스펙을 생활 말로, 말끝 ~다고.) — 스펙 나열 금지: 사실 하나를 생활 장면으로 바꿔 말한다 > twist — 와우3: 줄 머리 '근데 진짜 충격적인 포인트는'·'근데 진짜 미친 포인트는' 계열 + 가장 센 사실(말끝 ~다고.) > land — '그래서 요즘엔 [집단] 사이에서 [결과] 난리라고.' — 창작 칸(사회 반응 과장 허용): facts 빈 목록. 결과는 생활 변화로(스펙·펌웨어 같은 말 금지)\n[쓸 수 있는 근거]\n[f1] Anbernic RG DS는 DS형 접이식(클램쉘) 듀얼스크린 안드로이드 게임기로, 2025년 12월(12/7경 출하 예정)에 나왔다.\n[f2] 화면은 4인치 IPS 두 장, 장당 640x480(4:3), 둘 다 터치 되고 정전식 스타일러스도 지원한다.\n[f3] 칩셋은 록칩 RK3568(쿼드코어 Cortex-A55 최대 2.0GHz, Mali-G52 2EE), 램 3GB, 저장 32GB + microSD 최대 2TB.\n[f4] OS는 안드로이드 14(리눅스 구성도 있음), 배터리 4000mAh로 약 6시간, 완충 약 3.5시간.\n[f5] 무게 321g, 크기 160x91x21.5mm, 아날로그 스틱 2개, 6축 자이로, 진동, 스테레오 스피커.\n[f6] 정가 99.99달러, 사전주문 12/9까지 93.99달러. 리뷰 매체는 실거래가 94~100달러로 정리. 원화 가격은 미확인.\n[f7] 두 화면이 터치되는 진짜 위/아래 구성이라 DS 게임은 melonDS로 대부분 잘 돈다. PS1·PSP 일부·N64도 가능, PS2·GameCube·3DS는 실사용상 어렵다(Heldgames 평가 3.5/5).\n[f8] 위아래 화면에 서로 다른 앱을 동시에 띄우는 것이 가능한지는 이 출처들에서 미확인(영상 자막 주장은 별도 검증 필요). 비DS 앱에서 둘째 화면은 메뉴·박스아트·컨트롤 오버레이로 쓰이고 앱마다 지원이 다르다.\n[f9] 흥미: 일부 리뷰어 샘플에서 듀얼스크린 게임 때 두 화면이 어긋나는(비동기) 문제가 나왔고, 앤버닉이 출하 전 펌웨어 1.4 업데이트로 위 화면 주사율 저하 등을 고쳤다.\n[f10] 흥미: 칩 예상은 H700·Unisoc T618이었지만 실제는 RK3568 — 레트로 핸드헬드로는 처음 쓴 칩으로 소개됐다.\n[f11] 흥미: 앤버닉 최초의 완전 투명 모델(투명 화이트, '얼음 같다')이 있고, 공식 공개는 유출 몇 주 뒤 앤버닉 유튜브에서 먼저 했다.\n[f12] 권위: 앤버닉은 2017년 중국 선전에서 Shenzhen YangLiMing Electronic Technology가 상표를 등록해 시작, 첫 제품 RG. RG351P·RG353V·RG35XX로 레트로 핸드헬드 대표 브랜드가 됐고 자체 사이트는 30개+ 모델을 냈다고 밝힌다.\n[f13] 흥미: 2018년 래퍼 술자보이(Soulja Boy)의 'SouljaGame 콘솔'이 앤버닉 기기를 리브랜딩한 것으로 알려졌고 출시 한 달도 안 돼 중단됐다(위키 기준).\n[f14] 후속작 RG DS Plus(2026-09-15 판매, 첫 72시간 84.99달러·이후 94.99달러)는 4.3인치 1024x768 화면, 같은 RK3568 칩. 영상 속 기기는 640x480 원조 RG DS(검은색, 스틱 있음)로 보임. Plus 정보는 단일 출처(retrohandhelds)라 재확인 필요.\n규칙:\n- 줄마다 facts 에 근거 번호(위 [f…])를 1개 이상 적어라. 근거 없는 사실·숫자·이름·회사·연도를 지어내지 마라. 숫자는 [f…] 사실에 있는 그대로만.\n- 화면을 묘사하지 마라(×'…하는 중' ×'웃음이 남' ×'소리가 흘러나옴'). 시청자에게 썰 푸는 말.\n- 소재·근거(f*)에 없는 브랜드·제품명을 쓰지 않는다.\n- 글자 수를 맞추려고 띄어쓰기를 지우지 않는다 — 폭이 넘치면 낱말을 줄인다.\n- 최상급·단정(가장·제일·최초·유일·세계에서·절대·역대급·1위·전설)은 그 줄 근거 글에 같은 주장이 있을 때만 쓴다.\n출력 JSON만: {\"title\":\"영상 위 제목\",\"lines\":[{\"fn\":\"칸 역할\",\"text\":\"한 줄\",\"facts\":[\"f1\"]}, …]}\n[말투] 반말 전언체(~다는 거 · ~는데 · ~다고 · ~라고). 존댓말(요·니다) 0. CTA 없음\n[잉? 포인트 — 반드시 1줄 이상, 앞쪽 1/3 안] 제목·미끼 줄에서 정체를 숨겨 '그게 뭔데?' 하게 만든다 — 답은 reveal 줄(이건 바로 ~)에서. 그 줄에 point:\"잉\", answer_at:(답이 나오는 뒤 줄 번호, 0부터). 예: 애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체. (→ 무슨 알람?) / 최근 등교 전쟁 겪는 엄마들 사이에서 바이럴이 터지며 논란인 알람이 있는데, (→ 뭔데?)\n[와우 포인트 — 반드시 3줄(solve 이게 말도 안 되는 게 · more 심지어 · twist 근데 진짜 충격적인 포인트는)] '와 대박이네'가 나오는 줄 — 강한 연결어로 시작해 귀에 꽂히고, 바로 뒤에 구체 내용(숫자·동작·기존 것과 비교)이 온다. 그 줄에 point:\"와우\". 줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 2줄 이상은 '미친 포인트·대박인·말도 안 되는·충격적인' 계열, 같은 뿌리 말 두 번 금지): 근데 진짜 충격적인 포인트는 · 근데 진짜 충격적인 사실은 · 하지만 진짜 미친 포인트는 · 이게 진짜 말도 안 되는게 · 이게 진짜 미친 포인트인게 · 근데 진짜 미친 포인트는 · 근데 진짜는 여기서부터 · 근데 더 미친 포인트는 · 진짜 충격적인 포인트는 · 무엇보다 미친 포인트는 · 이게 말도 안 되는게 · 진짜 미친 포인트인게 · 이게 미친 포인트인게 · 진짜 말도 안 되는게 · 진짜 미친 포인트는 · 근데 미친 포인트는 · 근데 더 대박인 건 · 이게 진짜 대박인게 · 진짜 소름 돋는 건 · 진짜는 여기서부터 · 근데 진짜 반전은 · 진짜 충격적인 건 · 말도 안 되는게 · 더 충격적인 건 · 미친 포인트인게 · 진짜 대박인 건 · 더 대박인 건 · 더 놀라운 건. 연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: 이게 말도 안 되는 게 알람이 울리면 버튼이 아니라 과녁을 맞혀야만 꺼진다는 거. / 근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고.\n[디테일 — 반드시] ① more 줄 = 숫자·권위·유래(만든 회사·브랜드·특허·방송·판매 수치)를 근거 번호와 함께 — 그 줄에 point:\"권위\"(와우 3칸 중 첫 칸과 같은 줄이어도 된다). ② 비교 1개 이상 — 기존 것과 맞대기(기존엔 ~했지만 이건 ~). ③ land 줄 = '그래서 요즘엔 ~ 사이에서 ~ 난리라고'. ④ 제목 감정어는 하나만(현타 온·답답했던·귀찮았던 중 하나). ⑤ 센 감정어(빡친·열받은·짜증) 한 편 1회 이하 — 와우 연결어는 제외. ⑥ 첫 문장의 주체·계기는 근거에 있는 개발 비화·유래가 있으면 그것으로(번호 적기), 없을 때만 생활 상황으로 — 회사·인물·숫자는 지어내지 마라.\n[길이 — 반드시] 줄 8~8개, 전체 203~289자(공백 빼고), 한 줄 50자 이하(한 호흡). 사실을 한 줄에 몰아넣지 말고 가장 센 것만 골라라.\n- [창작 허용선] 화자 설정·지인·가족·계기·극단 행동·자기 위치·감상·체감 비유·결과 과장은 지어내도 된다(이 채널의 결). 제품 속성·원리·수치·쓰면 생기는 효과·사회적 반응(인기·품절·유행)·가격을 말하는 줄은 근거 번호 필수 — 근거 글에 없는 효과·속도·가격 표현을 덧붙이지 마라.\n- 칸 하나 = 한 줄. 줄마다 fn 에 칸 이름(title·bait…)을 그대로 적고, point·answer_at 을 [잉?·와우] 규칙대로 단다.\n",
+ "status": "failed_checks"
+}
