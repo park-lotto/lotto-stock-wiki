@@ -4,7 +4,7 @@
   {
    "n": 1,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "완전 칼카피 1호 ZdeZ(초대형 우퍼 스피커) 2판",
    "path": "C:/숏템_칼카피/sseolpulda/칼카피_ZdeZ/final_v2.mp4",
    "seconds": 23.87,
@@ -12,12 +12,13 @@
    "rules": "역할 6칸 대본 재작성 · 띄어쓰기 수리(word_spacing +6.8) · 효과음 1발(원본 자리) · compare ① 26/26 · 재료 5/6 대체 · 비용 0",
    "judge": "페이블 판정 통과",
    "date": "2026-10-16",
-   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
+   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
+   "style": "자막만"
   },
   {
    "n": 2,
    "channel": "yummyknow",
-   "channel_name": "yummyknow",
+   "channel_name": "맛템썰템",
    "title": "완전 칼카피 2호 rGFX 4판-b",
    "path": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/render_맛템썰템_E/final.mp4",
    "비고": "외관 맛템썰템으로 교체·카피 흔적 제거(10-17)",
@@ -31,7 +32,7 @@
   {
    "n": 3,
    "channel": "yummyknow",
-   "channel_name": "yummyknow",
+   "channel_name": "맛템썰템",
    "title": "새 소재 1호 신라면 구미공장",
    "path": "C:/숏템_칼카피/yummyknow/새소재_shinramyun_gumi/render_맛템썰템_E/final.mp4",
    "비고": "외관 맛템썰템으로 교체·카피 흔적 제거(10-17)",
@@ -45,7 +46,7 @@
   {
    "n": 4,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "새 소재 2호 LED 수도꼭지(틀 A)",
    "path": "C:/숏템_칼카피/sseolpulda/새소재_ledfaucet/render/final.mp4",
    "seconds": 23.87,
@@ -53,12 +54,13 @@
    "rules": "원테이크 1080p 6컷 · 역할 6칸 · 원음+BGM · 효과음 원본 자리 · 비용 0",
    "judge": "페이블 판정 통과",
    "date": "2026-10-16",
-   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
+   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
+   "style": "자막만"
   },
   {
    "n": 5,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "3호 하키 퍽(틀 B)",
    "path": "C:/숏템_칼카피/sseolpulda/칼카피_mY/make/final.mp4",
    "seconds": 20.07,
@@ -66,12 +68,13 @@
    "rules": "검정 띠·여성 나레 문정·흰 자막+외곽선 · 재료 3컷 교체 뒤 줄↔장면 일치 · 자막 83.2px",
    "judge": "페이블 판정 통과",
    "date": "2026-10-16",
-   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
+   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
+   "style": "나레만"
   },
   {
    "n": 6,
    "channel": "banggu",
-   "channel_name": "방구석",
+   "channel_name": "썸템홈샷",
    "title": "1편 아웃백 영업기밀(ILIi)",
    "path": "C:/숏템_칼카피/banggu/칼카피_ILIi/render2/final.mp4",
    "seconds": 26.25,
@@ -85,7 +88,7 @@
   {
    "n": 7,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "4호 시구 받아준 포수가 아빠(틀 B)",
    "path": "C:/숏템_칼카피/sseolpulda/칼카피_4호/make/final_bed.mp4",
    "seconds": 18.94,
@@ -93,12 +96,13 @@
    "rules": "원음 깔기(3~5줄 관중 소리, 나레보다 17 LU 아래) · 문정 6.52자/초=원본 · 남은 흠 자막 조각 9자·길이 18.9 vs 22.4",
    "judge": "페이블 판정 통과",
    "date": "2026-10-16",
-   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록"
+   "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
+   "style": "나레+원음"
   },
   {
    "n": 8,
    "channel": "hottemreport",
-   "channel_name": "핫템리포트",
+   "channel_name": "숏템리폿",
    "title": "1편 AI 주작 논란 아이언맨 헬멧(OE11)",
    "path": "C:/숏템_칼카피/hottemreport/칼카피_OE11/make/final_src.mp4",
    "seconds": 31.8,
@@ -113,7 +117,7 @@
   {
    "n": 9,
    "channel": "banggu",
-   "channel_name": "방구석",
+   "channel_name": "썸템홈샷",
    "title": "새 소재 2편 바나나맛우유(50년째 모양)",
    "path": "C:/숏템_칼카피/banggu/칼카피_banana/render2/final.mp4",
    "seconds": 29.44,
@@ -127,7 +131,7 @@
   {
    "n": 10,
    "channel": "yummyknow",
-   "channel_name": "yummyknow",
+   "channel_name": "맛템썰템",
    "title": "새 소재 2편 리센느 빵(30대 남성 반전)",
    "path": "C:/숏템_칼카피/yummyknow/새소재_rescene_bread/render_맛템썰템_E/final.mp4",
    "비고": "외관 맛템썰템으로 교체·카피 흔적 제거(10-17)",
@@ -141,7 +145,7 @@
   {
    "n": 11,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "틀 B 새 소재 5호 딸 안고 한 손으로 파울볼 잡은 아빠",
    "path": "C:/숏템_칼카피/sseolpulda/칼카피_5호/make/final_v4.mp4",
    "seconds": 21.2,
@@ -150,12 +154,13 @@
    "judge": "페이블 판정 통과(👍 자리 고친 뒤)",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
-   "비고": "4호(시구 포수 아빠)와 같은 결(야구장·아빠·딸) — 올릴 땐 간격 둘 것"
+   "비고": "4호(시구 포수 아빠)와 같은 결(야구장·아빠·딸) — 올릴 땐 간격 둘 것",
+   "style": "나레만"
   },
   {
    "n": 12,
    "channel": "hottemreport",
-   "channel_name": "핫템리포트(채널명 숏템메이커 판)",
+   "channel_name": "숏템리폿",
    "title": "AI인 줄 알았던 춤추는 로봇 폰(HONOR 로봇 폰)",
    "path": "C:/숏템_칼카피/hottemreport/칼카피_로봇폰/make/final_shortem.mp4",
    "desktop": "칼카피_핫템_HONOR로봇폰_숏템메이커.mp4",
@@ -172,7 +177,7 @@
   {
    "n": 13,
    "channel": "sseolpulda",
-   "channel_name": "썰풀다",
+   "channel_name": "도파민썰템",
    "title": "틀 A 새 소재 벗겨 쓰는 종이접시",
    "path": "C:/숏템_칼카피/sseolpulda/새소재4/render/final.mp4",
    "seconds": 23.87,
@@ -181,12 +186,13 @@
    "judge": "페이블 판정 통과",
    "date": "2026-10-16",
    "from": "handoff/칼카피숏템엔진.md 10-16 통과 기록",
-   "비고": "틀 A 소리 변형(원음 없음·효과음 원본 자리 1발, 소재 특성) · compare 20/27(제목 글 차이)"
+   "비고": "틀 A 소리 변형(원음 없음·효과음 원본 자리 1발, 소재 특성) · compare 20/27(제목 글 차이)",
+   "style": "자막만"
   },
   {
    "n": 14,
    "channel": "banggu",
-   "channel_name": "방구석(브랜드 골방)",
+   "channel_name": "썸템홈샷",
    "title": "새 소재 3편 코스트코가 가격표에 숨겨 둔 암호",
    "path": "C:/숏템_칼카피/banggu/칼카피_3편/render/final.mp4",
    "desktop": "칼카피_방구석_코스트코가격표암호.mp4",
@@ -202,7 +208,7 @@
   {
    "n": 15,
    "channel": "homedesignnote",
-   "channel_name": "잇썸홈(두유노홈디노 결)",
+   "channel_name": "잇썸홈",
    "title": "작품1 싱크대 매립형 식기세척기",
    "path": "C:/숏템_칼카피/homedesignnote/작품1_식기세척기/render/final.mp4",
    "desktop": "칼카피_잇썸홈_싱크대식기세척기.mp4",
@@ -220,7 +226,7 @@
   {
    "n": 16,
    "channel": "evenshopping",
-   "channel_name": "재미썸홈(이븐쇼핑 결)",
+   "channel_name": "재미썸홈",
    "title": "작품1 총 쏘는 알람시계",
    "path": "C:/숏템_칼카피/evenshopping/작품1_총알람/render_v4/final.mp4",
    "desktop": "칼카피_재미썸홈_총쏘는알람시계_수정3.mp4",

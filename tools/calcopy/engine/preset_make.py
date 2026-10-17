@@ -793,7 +793,8 @@ def register(path: Path, M, w, final, fm, desk_name, pdir) -> str:
     """통과작만 결과물 목록에 한 줄(같은 완성본 경로면 그 줄을 갱신)."""
     D = json.loads(path.read_text(encoding="utf-8"))
     items = D.setdefault("items", [])
-    row = {"channel": M.get("slug"), "channel_name": (M.get("brand") or {}).get("channel_name") or M.get("channel_rules", {}).get("brand"),
+    from tools.calcopy import brands as BR          # 목록 이름 = 브랜드 장부(channel/브랜드.json) 한 곳
+    row = {"channel": M.get("slug"), "channel_name": BR.brand(M.get("slug")) or (M.get("brand") or {}).get("channel_name") or M.get("channel_rules", {}).get("brand"),
            "title": w["name"], "path": final.as_posix(), "desktop": desk_name, "md5": fm, "seconds": round(dur_of(final), 2),
            "preset": pdir.relative_to(ROOT).as_posix() if pdir.is_relative_to(ROOT) else str(pdir), "date": time.strftime("%Y-%m-%d"),
            "judge": "preset_make 자동 검사 통과(사람 판정 전)", "from": "tools/calcopy/engine/preset_make.py"}

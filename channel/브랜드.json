@@ -1,0 +1,21 @@
+{
+ "_about": "칼카피 우리 브랜드 장부(주인 데이터) — 벤치 채널(slug) ↔ 우리 브랜드 이름 ↔ 스타일. 사장님 2026-10-17. 읽는 곳: tools/calcopy/brands.py",
+ "brands": {
+  "evenshopping":   {"brand": "재미썸홈",   "bench": "이븐쇼핑"},
+  "homedesignnote": {"brand": "잇썸홈",     "bench": "두유노홈디노"},
+  "hottemreport":   {"brand": "숏템리폿",   "bench": "핫템리포트"},
+  "banggu":         {"brand": "썸템홈샷",   "bench": "방구석 친구들", "old_names": ["썰템홈샷", "방구석(브랜드 골방)"]},
+  "yummyknow":      {"brand": "맛템썰템",   "bench": "yummyknow"},
+  "sseolpulda":     {"brand": "도파민썰템", "bench": "썰풀다", "old_names": ["썰풀다"],
+   "styles": {
+    "나레만":    {"desc": "해외 원작에 한국어 나레이션만(원음 끔)", "audio_kinds": ["나레 1명", "나레+역할 2명"], "source_audio_kept": false,
+                 "bench_ids": ["mYxuF1A74j4", "1_VtwOkbbVE", "6iW_aMG_-L0", "7DYbxVNz5q8", "D3Pc6HZ6t6c", "GqSkDhM_bV0", "ho5GSd-4To0", "oJZDImhYdXw"]},
+    "나레+원음": {"desc": "한국어 나레이션 + 해외 원음(현장 소리·대사)을 같이 깐다", "audio_kinds": ["해외 원음+한국어 나레+자막"], "source_audio_kept": true,
+                 "bench_ids": ["w-Ygny1f8O8"]},
+    "자막만":    {"desc": "나레이션 없는 원작에 대본(자막)만 얹는다 — 원음 또는 BGM", "audio_kinds": ["원음만+자막", "나레 없음"],
+                 "bench_ids": ["ZdeZRtCeAC4"]}
+   },
+   "style_rule": "벤치 영상은 뜯기 audio.composition.kind 로 가른다(tools/calcopy/engine/audio_comp.py). 실측 10편: 나레만 8 · 나레+원음 1 · 자막만 1 — 나머지 40편은 뜯기 전이라 미분류"
+  }
+ }
+}
