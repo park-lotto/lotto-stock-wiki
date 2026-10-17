@@ -1,0 +1,115 @@
+{
+ "items": [
+  {
+   "segments": [
+    {
+     "start": 1.458,
+     "end": 2.218,
+     "speaker": "S1",
+     "text": "I know what these are.",
+     "kind": "speech"
+    },
+    {
+     "start": 2.458,
+     "end": 3.018,
+     "speaker": "S2",
+     "text": "Get it.",
+     "kind": "speech"
+    },
+    {
+     "start": 3.998,
+     "end": 6.838,
+     "speaker": "S1",
+     "text": "You have a really bad problem of leaving all the bread open in this house.",
+     "kind": "speech"
+    },
+    {
+     "start": 7.318,
+     "end": 8.618,
+     "speaker": "S1",
+     "text": "So I got these off the Tik Tok shop.",
+     "kind": "speech"
+    },
+    {
+     "start": 9.358,
+     "end": 10.958,
+     "speaker": "S1",
+     "text": "The little bread holder closers.",
+     "kind": "speech"
+    },
+    {
+     "start": 30.078,
+     "end": 31.438,
+     "speaker": "S1",
+     "text": "Yeah, look, they're tight.",
+     "kind": "speech"
+    },
+    {
+     "start": 31.978,
+     "end": 33.718,
+     "speaker": "S1",
+     "text": "Why do we have two bags of these open?",
+     "kind": "speech"
+    },
+    {
+     "start": 35.158,
+     "end": 35.658,
+     "speaker": "S2",
+     "text": "You ask me.",
+     "kind": "speech"
+    },
+    {
+     "start": 36.998,
+     "end": 37.958,
+     "speaker": "S1",
+     "text": "Maybe you're just supposed to fish it in?",
+     "kind": "speech"
+    },
+    {
+     "start": 37.958,
+     "end": 39.478,
+     "speaker": "S1",
+     "text": "Oh, look, you just fish it in.",
+     "kind": "speech"
+    },
+    {
+     "start": 40.098,
+     "end": 41.298,
+     "speaker": "S1",
+     "text": "So I mean you have to spin it.",
+     "kind": "speech"
+    },
+    {
+     "start": 43.118,
+     "end": 44.038,
+     "speaker": "S1",
+     "text": "Ah, that's how you do it.",
+     "kind": "speech"
+    },
+    {
+     "start": 46.258,
+     "end": 46.598,
+     "speaker": "S1",
+     "text": "Good.",
+     "kind": "speech"
+    },
+    {
+     "start": 53.638,
+     "end": 55.458,
+     "speaker": "S1",
+     "text": "Now I got little cat butt holes everywhere.",
+     "kind": "speech"
+    },
+    {
+     "start": 57.398,
+     "end": 58.238,
+     "speaker": "S1",
+     "text": "You'll get you some.",
+     "kind": "speech"
+    }
+   ],
+   "music_bed": true
+  }
+ ],
+ "_model": "gemini-flash-lite-latest"
+}

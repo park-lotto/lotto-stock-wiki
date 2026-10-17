@@ -1,6 +1,6 @@
 {
  "_about": "현장썰 5편(+예비 2) 소재·해외 원본 확정표 — 브랜드 숏템리폿(핫템리포트 스타일), 화면엔 우리 채널명만·원본 출처 표기 없음. 관제 097, 2026-10-18. 숫자는 실측(yt-dlp 메타·ffprobe·무료 제미나이 받아쓰기 gemini_free, 버텍스 안 씀). 원음 시각은 받아쓰기 기준(±0.5초 오차 가능) — 제작 때 파형으로 다듬는다.",
- "status": "1편 확정(중간 커밋). 2~5편·예비 진행 중",
+ "status": "5편+예비 2 확정(2026-10-18). 1편 먼저 커밋(c88e2f5df) 뒤 전체 반영",
  "output_rule": "완성 영상 저장 위치(사장님 10-18) = 바탕화면 C:/Users/CH/Desktop/칼카피영상/숏템리폿/ — 만들면 바로 넣고 MD5 원본=사본 확인. 판정 전 시안은 파일 이름에 _1차 표시. 원본 소재는 C:/숏템_칼카피/hottemreport/현장썰_<번호>_<제품>/src/",
  "items": [
   {
@@ -8,26 +8,100 @@
    "slug": "현장썰_01_가짜잠자리",
    "product": "모자·가방에 끼우는 가짜 잠자리 모기 퇴치 장식(클립/스틱형, 3개입). 원본 말: 'These come in a three pack' · '16 bucks for all three' · 'TikTok sold out'. 정식 상품명은 화면·설명란에서 확인 못 함",
    "sell": "예 — 틱톡샵 3개입 $16(원본 화자 말, 구매처 페이지는 안 열어 봄)",
-   "bench": {"id": "PIHCaioKSp4", "channel": "핫템리포트", "views": 2200000, "title": "모기 잡는 잠자리로 20억 번 초등학생", "style": "나레만(원음 0) — 여러 원본 몽타주"},
+   "bench": {
+    "id": "PIHCaioKSp4",
+    "channel": "핫템리포트",
+    "views": 2200000,
+    "title": "모기 잡는 잠자리로 20억 번 초등학생",
+    "style": "나레만(원음 0) — 여러 원본 몽타주"
+   },
    "same_as_bench": "예(프레임 대조): 벤치 8~9번 구간 호숫가 낚시 모자 남성·파란 티 청년 장면이 원본과 같은 장면(담당 3 대조). 벤치의 '초등학생 발명·10만 개·20억' 이야기는 원본·웹검색에서 확인 못 함 → 우리 대본에 쓰지 말 것",
    "src": [
     {
      "role": "주 원본",
      "url": "https://www.tiktok.com/@prepperpress/video/7504767860275727658",
-     "platform": "틱톡", "channel": "@prepperpress", "views": 2200000, "upload": "2025-05-15",
-     "duration_s": 50.7, "res": "1080x1920", "music": "없음(받아쓰기 music_bed 없음)",
+     "platform": "틱톡",
+     "channel": "@prepperpress",
+     "views": 2200000,
+     "upload": "2025-05-15",
+     "duration_s": 50.7,
+     "res": "1080x1920",
+     "music": "없음(받아쓰기 music_bed 없음)",
      "file": "C:/숏템_칼카피/hottemreport/현장썰_01_가짜잠자리/src/prepperpress_7504767860275727658.mp4",
      "asr": "channel/hottemreport/현장썰5편/asr/01_prepperpress_7504767860275727658.json",
      "source_audio": [
-      {"t": [0.0, 1.3], "text": "I know. I know.", "use": "첫 원음 후보(혼잣말)"},
-      {"t": [1.3, 5.2], "text": "What's that idiot doing still wearing a dragonfly on his hat?", "use": "★0~5초 첫 원음 — 남들 시선 자조(감탄 자리)"},
-      {"t": [5.2, 11.8], "text": "Well, everyone's wondering whether it works, whether it keeps the bugs away. Said I didn't know, I said I'd try it.", "use": "궁금증 제기"},
-      {"t": [11.8, 15.4], "text": "Again, bugs were out earlier, now they're gone. So does it work?", "use": "★증거 원음 1(낚시 시연)"},
-      {"t": [20.1, 30.4], "text": "Dragonflies are carnivorous insects and excellent hunters. ... Dragonflies eat mosquitoes, flies, gnats, midges, bees, young horse flies, mayflies, and wasps.", "use": "원리(종이 목록 화면 26~31초) — 나레로 대체 가능"},
-      {"t": [30.4, 35.0], "text": "These come in a three pack. I keep one on my hat, I keep one on my pack. My son wears one.", "use": "제품 구성"},
-      {"t": [35.0, 36.7], "text": "I don't I don't believe this.", "use": "★반응(아들 등장) — 끝 원음 후보"},
-      {"t": [36.7, 42.5], "text": "Look at my son wearing one. He's the one that told me about them in the first place. He said get these things, they're awesome.", "use": "아들 장면"},
-      {"t": [42.5, 50.1], "text": "Last year, they were all the rage. TikTok sold out. 16 bucks for all three. ...", "use": "판매 멘트 — 구매 유도라 우리 영상엔 빼거나 '품절'만"}
+      {
+       "t": [
+        0.0,
+        1.3
+       ],
+       "text": "I know. I know.",
+       "use": "첫 원음 후보(혼잣말)"
+      },
+      {
+       "t": [
+        1.3,
+        5.2
+       ],
+       "text": "What's that idiot doing still wearing a dragonfly on his hat?",
+       "use": "★0~5초 첫 원음 — 남들 시선 자조(감탄 자리)"
+      },
+      {
+       "t": [
+        5.2,
+        11.8
+       ],
+       "text": "Well, everyone's wondering whether it works, whether it keeps the bugs away. Said I didn't know, I said I'd try it.",
+       "use": "궁금증 제기"
+      },
+      {
+       "t": [
+        11.8,
+        15.4
+       ],
+       "text": "Again, bugs were out earlier, now they're gone. So does it work?",
+       "use": "★증거 원음 1(낚시 시연)"
+      },
+      {
+       "t": [
+        20.1,
+        30.4
+       ],
+       "text": "Dragonflies are carnivorous insects and excellent hunters. ... Dragonflies eat mosquitoes, flies, gnats, midges, bees, young horse flies, mayflies, and wasps.",
+       "use": "원리(종이 목록 화면 26~31초) — 나레로 대체 가능"
+      },
+      {
+       "t": [
+        30.4,
+        35.0
+       ],
+       "text": "These come in a three pack. I keep one on my hat, I keep one on my pack. My son wears one.",
+       "use": "제품 구성"
+      },
+      {
+       "t": [
+        35.0,
+        36.7
+       ],
+       "text": "I don't I don't believe this.",
+       "use": "★반응(아들 등장) — 끝 원음 후보"
+      },
+      {
+       "t": [
+        36.7,
+        42.5
+       ],
+       "text": "Look at my son wearing one. He's the one that told me about them in the first place. He said get these things, they're awesome.",
+       "use": "아들 장면"
+      },
+      {
+       "t": [
+        42.5,
+        50.1
+       ],
+       "text": "Last year, they were all the rage. TikTok sold out. 16 bucks for all three. ...",
+       "use": "판매 멘트 — 구매 유도라 우리 영상엔 빼거나 '품절'만"
+      }
      ],
      "product_first_s": 0.0,
      "product_note": "0초 첫 프레임에 모자 위 파란 잠자리(셀카)",
@@ -37,14 +111,38 @@
     {
      "role": "보조 원본(같은 제품, 다른 사람) — 시연 증거 원음",
      "url": "https://www.tiktok.com/@mack.topa/video/7505881760635407621",
-     "platform": "틱톡", "channel": "@mack.topa", "views": 1700000, "upload": "2025-05-18",
-     "duration_s": 45.1, "res": "1080x1920",
+     "platform": "틱톡",
+     "channel": "@mack.topa",
+     "views": 1700000,
+     "upload": "2025-05-18",
+     "duration_s": 45.1,
+     "res": "1080x1920",
      "file": "C:/숏템_칼카피/hottemreport/현장썰_01_가짜잠자리/src/mack.topa_7505881760635407621.mp4",
      "asr": "channel/hottemreport/현장썰5편/asr/01_mack.topa_7505881760635407621.json",
      "source_audio": [
-      {"t": [0.0, 4.2], "text": "I'm going to test to see if this works for mosquitoes, since the mosquitoes were everywhere."},
-      {"t": [14.2, 17.4], "text": "I see a bunch of mosquitoes, but they're not coming near me. Oh, there's one.", "use": "★증거 원음 2"},
-      {"t": [34.2, 35.2], "text": "It's working.", "use": "★끝 원음 후보('~다고 하네요' 뒤 한 마디)"}
+      {
+       "t": [
+        0.0,
+        4.2
+       ],
+       "text": "I'm going to test to see if this works for mosquitoes, since the mosquitoes were everywhere."
+      },
+      {
+       "t": [
+        14.2,
+        17.4
+       ],
+       "text": "I see a bunch of mosquitoes, but they're not coming near me. Oh, there's one.",
+       "use": "★증거 원음 2"
+      },
+      {
+       "t": [
+        34.2,
+        35.2
+       ],
+       "text": "It's working.",
+       "use": "★끝 원음 후보('~다고 하네요' 뒤 한 마디)"
+      }
      ],
      "overlay": "번인 영어 자막 + 노란 자막 있음(담당 3 판독, 위치 미측정) — 쓸 구간만 하단 크롭/우리 자막으로 덮기, 제작 전 프레임으로 위치 재확인 필요"
     }
@@ -52,6 +150,646 @@
    "adapt": "벤치는 '초등학생이 20억 벌었다'(확인 안 되는 이야기)+여러 원본 나레만. 우리는 원음 현장썰로: 0초 모자 위 잠자리+나레 훅 → 1.3초 'What's that idiot doing…' 자조 원음 → 나레 '근데 진짜 모기가 안 온다는데' → 11.8초 'now they're gone' + 보조 원본 'they're not coming near me' 증거 → 장점(3개입·모자·가방·아이) 몰아치기 → '아들이 먼저 알려준 거라고 하네요' + 'It's working.'(또는 'I don't believe this.')로 끝. 벤치의 미확인 수치(10만 개·20억)는 쓰지 않는다",
    "verdict": "채택",
    "why_first": "5편 중 제일 확실: 원본 1080x1920 9:16(크롭 불필요)·음악 없이 사람 말소리 전편·제품이 0초 첫 프레임·판매 연결(3개입 $16)·벤치와 같은 원본 확정·같은 제품 보조 원본(170만)까지 확보"
+  },
+  {
+   "no": 2,
+   "slug": "현장썰_02_대용량물병",
+   "product": "Manna Titan 4L(1갤런) 대용량 스테인리스 물병 — 설명란 '@Manna Hydration #titan', 화면 라벨 '1 REFILL PER DAY CAN SAVE OVER 2920 PLASTIC BOTTLES EACH YEAR'(8~11초)·몸통 'MANNA' 로고(41초)",
+   "sell": "예 — 설명란 'Grab it on discount, bunch of colors'(틱톡샵 판매 글). 가격은 확인 안 함",
+   "bench": {
+    "id": "Mp6LPm9qbLo",
+    "channel": "썰풀다",
+    "views": 30040,
+    "title": "(기준 편) 딸 물병 검사하다가 아빠가 더 신나 버렸다는데",
+    "style": "현장썰(나레+원음 6구절)"
+   },
+   "same_as_bench": "예(대사 대조): 벤치 원음 'That box is massive'·'We're gonna see how much it actually holds'·'I still got room for another'·'That's my water bottle!' 이 원본 받아쓰기에 그대로 나옴 + 1초 시트(아빠·흰 물병·딸 빨간 옷)",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.tiktok.com/@theclawedjoker/video/7665448745386970398",
+     "platform": "틱톡",
+     "channel": "@theclawedjoker",
+     "views": 2200000,
+     "likes": 30200,
+     "upload": "2026-07-22",
+     "duration_s": 49.2,
+     "res": "720x1280(틱톡 최고 화질 — 1080 없음, yt-dlp -F 실측)",
+     "music": "있음(받아쓰기 music_bed true) — 말소리 위에 깔림",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_02_대용량물병/src/tt_7665448745386970398.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/02_tt_7665448745386970398.json",
+     "source_audio": [
+      {
+       "t": [
+        0.2,
+        5.0
+       ],
+       "text": "There's supposed to be a water bottle in that box. That box is massive.",
+       "use": "★첫 원음(상자 크기 감탄)"
+      },
+      {
+       "t": [
+        5.0,
+        8.0
+       ],
+       "text": "[웃음]"
+      },
+      {
+       "t": [
+        8.0,
+        11.6
+       ],
+       "text": "If you fill this up once a day, you save 2900 water bottles.",
+       "use": "라벨 근접과 짝"
+      },
+      {
+       "t": [
+        11.6,
+        14.5
+       ],
+       "text": "We're going to see how much this actually holds.",
+       "use": "★시연 시작"
+      },
+      {
+       "t": [
+        14.5,
+        16.5
+       ],
+       "text": "Owala.",
+       "use": "붓기 1(다른 회사 물병 이름)"
+      },
+      {
+       "t": [
+        18.2,
+        20.2
+       ],
+       "text": "Stanley.",
+       "use": "붓기 2"
+      },
+      {
+       "t": [
+        20.2,
+        22.8
+       ],
+       "text": "[딸 웃음]"
+      },
+      {
+       "t": [
+        23.9,
+        26.6
+       ],
+       "text": "Hydro Jug.",
+       "use": "붓기 3"
+      },
+      {
+       "t": [
+        28.1,
+        31.0
+       ],
+       "text": "I still got room for another one.",
+       "use": "★증거(아직 남음)"
+      },
+      {
+       "t": [
+        40.8,
+        42.6
+       ],
+       "text": "Fit in."
+      },
+      {
+       "t": [
+        43.6,
+        47.1
+       ],
+       "text": "That's my water bottle!",
+       "use": "★딸 반응"
+      },
+      {
+       "t": [
+        47.1,
+        49.3
+       ],
+       "text": "Not anymore.",
+       "use": "★끝 원음(벤치가 안 쓴 한 마디)"
+      }
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초 아빠가 흰 물병을 들어 마심(1초 시트)",
+     "overlay": "1초 시트 50장에서 번인 글자·틱톡 워터마크 안 보임(받은 형식은 h264_720p)",
+     "crop": "9:16 그대로. 단 720p라 1080 출력 시 1.5배 확대"
+    }
+   ],
+   "adapt": "벤치(썰풀다 3만)는 '아빠가 더 신남' 부녀 갈등 + 단계 자막. 우리는 제품 쪽으로: 0초 '물병 하나에 페트병 2,920개'(라벨) 훅 → 'That box is massive' → 남의 물병을 차례로 부어도 'I still got room' 증거 → 딸 'That's my water bottle!' → 아빠 'Not anymore.'(벤치에 없는 끝 한 마디)로 반전 끝. 다른 회사 물병 이름(Owala·Stanley·Hydro Jug)은 원음 그대로 두되 우리 자막·나레엔 안 씀",
+   "risk": "720p(틱톡 한계). 썰풀다가 이미 같은 원본으로 만든 소재(조회 3만) — 각도를 달리할 것",
+   "verdict": "채택"
+  },
+  {
+   "no": 3,
+   "slug": "현장썰_03_AI전동신발",
+   "product": "Shift Robotics Moonwalkers(AI 전동 신발) — 담당 4가 화면 'Shift' 로고로 확인, 원본 40초 기사 화면 '…obotics Releases \"The World's Fastest Shoes\"'(5초 시트로 내가 확인)",
+   "sell": "예(고가) — 원본 말 '$1,400'(2023). 지금 판매가·재고는 확인 안 함",
+   "bench": {
+    "id": "cxhu_izMlik",
+    "channel": "핫템리포트",
+    "views": 143000,
+    "title": "강아지 덕에 대박 난 AI 킥보드 신발",
+    "style": "여러 클립 몽타주"
+   },
+   "same_as_bench": "부분 일치(담당 4 프레임 대조): 벤치 첫 컷(파란 재킷·렉서스·노란 스쿨버스)이 원본 14~15초 장면. 벤치의 개·캠퍼스·숲길 컷은 다른 출처(못 찾음)",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.youtube.com/watch?v=34k7UI-DR_8",
+     "platform": "유튜브(가로 롱폼)",
+     "channel": "@casey (Casey Neistat)",
+     "views": 3863303,
+     "upload": "2023-02-22",
+     "duration_s": 319.0,
+     "res": "1920x1080(가로)",
+     "music": "있음(말 사이 음악 구간 많음)",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_03_AI전동신발/src/34k7UI-DR_8.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/03_34k7UI-DR_8_from{0,80,160,240}s.json",
+     "source_audio": [
+      {
+       "t": [
+        0.0,
+        9.4
+       ],
+       "text": "This, this is a regular shoe, and this, this is a $1400 AI-powered motorized electric shoe.",
+       "use": "★0초 제품+첫 원음"
+      },
+      {
+       "t": [
+        20.1,
+        22.3
+       ],
+       "text": "Yeah, I've seen it on Instagram.",
+       "use": "행인 반응"
+      },
+      {
+       "t": [
+        83.0,
+        85.2
+       ],
+       "text": "Okay, this is it. Ready?"
+      },
+      {
+       "t": [
+        88.0,
+        89.2
+       ],
+       "text": "Nothing."
+      },
+      {
+       "t": [
+        89.2,
+        92.2
+       ],
+       "text": "Oh my god, they're moving.",
+       "use": "★감탄(첫 작동)"
+      },
+      {
+       "t": [
+        92.2,
+        98.2
+       ],
+       "text": "It feels like awkward. It feels like you're walking on ice. Like really slippery ice.",
+       "use": "★시연 느낌"
+      },
+      {
+       "t": [
+        110.2,
+        115.8
+       ],
+       "text": "It feels like you're riding roller skates on ice, and like someone's pushing you.",
+       "use": "★증거"
+      },
+      {
+       "t": [
+        126.9,
+        128.7
+       ],
+       "text": "The stopping's a little awkward. You want to try them?"
+      },
+      {
+       "t": [
+        137.2,
+        143.7
+       ],
+       "text": "(친구) woah, wait … Yeah, now they're going. Woah.",
+       "use": "★친구 반응(시각 ±1초, mm:ss 보정값)"
+      },
+      {
+       "t": [
+        148.6,
+        152.5
+       ],
+       "text": "They're weird to get used to. Like it takes a second, but it's fun."
+      },
+      {
+       "t": [
+        166.2,
+        169.6
+       ],
+       "text": "I feel like I'm at least 2 and a half times faster.",
+       "use": "★끝 원음 후보"
+      },
+      {
+       "t": [
+        182.9,
+        202.7
+       ],
+       "text": "So, there's no controller … the AI within the shoes figures out how fast you want to be going …",
+       "use": "원리 — 나레로 대체"
+      }
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초 손에 든 일반 신발 vs 전동 신발(5초 시트)",
+     "overlay": "약 15~20초 큰 흰 제목 글자 'TESTING $1400 ai powered motorized shoes'(왼쪽 위), 끝 크레딧(315초~). 그 밖 번인 글자·워터마크는 5초 간격 시트 64장에서 안 보임",
+     "crop": "가로 원본 → 9:16 크롭 필요(1080 높이 기준 폭 608px — OE11 도 가로 원본을 [x,0,w,1080] 으로 잘라 씀). 컷마다 x 위치는 제작 때 확인"
+    }
+   ],
+   "adapt": "벤치(핫템 14.3만)는 '강아지 덕에 대박' 몽타주 나레. 우리는 Casey 1인칭 시험기로: 0초 '일반 신발 vs 1,400달러 AI 신발' → 'Oh my god, they're moving' → '빙판 위 롤러스케이트 같다' → 친구 'Woah' → '2.5배 빠른 느낌'으로 끝. 지하철·계단 장면(벤치 안 씀)",
+   "risk": "가로 크롭(폭 608px→확대). 2023년 영상 — '요즘' 표현 주의",
+   "verdict": "채택"
+  },
+  {
+   "no": 4,
+   "slug": "현장썰_04_미니포르쉐",
+   "product": "포르쉐 911(964) 마티니 오마주 미니 전기차 — 원본 말 '$15,000 fully drivable mini Porsche', 담당 3: 제작사 End of S.T.A.Y.(endofstaystudio.com, Sur Ronster 영상 설명란)",
+   "sell": "경계 — 1,500만 원대 주문 제작품(원본 말). 구매 페이지는 안 열어 봄. 판매 연결 기준에 걸리면 예비로 내린다",
+   "bench": {
+    "id": "IRFN5B_2LMo",
+    "channel": "핫템리포트",
+    "views": 1300000,
+    "title": "요즘 미국에서 환장하는 전기차 정체",
+    "style": "현장썰(원음 1구절+리액션 자막)"
+   },
+   "same_as_bench": "예: 벤치 원음 'This is fun. I want one.'이 원본 받아쓰기·화면 자막에 그대로, 80km/h·벽돌 주차장 주행 프레임 일치(담당 3)",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.youtube.com/watch?v=zkzGEiHqJRQ",
+     "platform": "유튜브 쇼츠",
+     "channel": "@SupercarBlondie",
+     "views": 644444,
+     "upload": "2026-07-03",
+     "duration_s": 83.9,
+     "res": "1080x1920",
+     "music": "없음(받아쓰기 기준)",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_04_미니포르쉐/src/zkzGEiHqJRQ.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/04_zkzGEiHqJRQ_full.json(0~52초 유효) · 04_zkzGEiHqJRQ_from45s.json(45초부터 상대 시각)",
+     "source_audio": [
+      {
+       "t": [
+        7.3,
+        13.1
+       ],
+       "text": "This is a $15,000, fully drivable mini Porsche.",
+       "use": "★첫 원음(가격)"
+      },
+      {
+       "t": [
+        13.1,
+        15.5
+       ],
+       "text": "Now, check this out. Come around here."
+      },
+      {
+       "t": [
+        15.8,
+        23.7
+       ],
+       "text": "You press this button right here, and the engine goes on, all right?",
+       "use": "시동 시연"
+      },
+      {
+       "t": [
+        29.8,
+        37.0
+       ],
+       "text": "Look at this! It is made for drifting, so you've got your drift brake because this goes up to 80 km/h. Can you imagine?",
+       "use": "★기능 시연"
+      },
+      {
+       "t": [
+        42.2,
+        45.3
+       ],
+       "text": "Got it in mode 3, the fastest mode."
+      },
+      {
+       "t": [
+        45.0,
+        46.0
+       ],
+       "text": "Woo!",
+       "use": "★감탄(출발)"
+      },
+      {
+       "t": [
+        48.1,
+        49.9
+       ],
+       "text": "[웃음]"
+      },
+      {
+       "t": [
+        63.9,
+        67.4
+       ],
+       "text": "I love this sound. So awesome.",
+       "use": "★배기음 감탄"
+      },
+      {
+       "t": [
+        68.2,
+        69.6
+       ],
+       "text": "Sweet!"
+      },
+      {
+       "t": [
+        73.9,
+        76.4
+       ],
+       "text": "This is fun. I want one.",
+       "use": "★끝 원음(벤치도 씀)"
+      },
+      {
+       "t": [
+        80.3,
+        83.1
+       ],
+       "text": "Oh, this is awesome. What do you think?",
+       "use": "끝 원음 대안(벤치 안 씀)"
+      }
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초 흰 쇼룸에 마티니 미니 포르쉐(2초 시트)",
+     "overlay": "영어 대사 자막 번인 — 화면 세로 약 65~70% 높이 가운데 흰 글자(전 구간, 2초 시트 눈 판독). 우리 하단 자막 띠로 덮어야 함 — 정확한 y 범위는 제작 때 재기",
+     "crop": "9:16 그대로"
+    }
+   ],
+   "adapt": "벤치는 '두바이 금수저 장난감·구독자 2,200만 블론디' 나레 위주(원음 1구절). 우리는 원음 현장썰로: 0초 차+'1,500만 원짜리 장난감 차' 훅 → '$15,000 fully drivable' → 버튼 시동·드리프트 브레이크 시연 → 'Woo!' 출발 → 'I love this sound' → 'What do you think?'(벤치가 안 쓴 끝)",
+   "risk": "판매 연결 약함(고가 주문 제작). 번인 영어 자막 가리기",
+   "verdict": "채택(판매 경계 — 사장님 판단)"
+  },
+  {
+   "no": 5,
+   "slug": "현장썰_05_고양이빵봉지집게",
+   "product": "고양이 모양 빵 봉지 클립(봉지 끝을 고양이 엉덩이 구멍에 끼워 돌려 잠금) — 설명란 '#catbreadclip', 원본 말 'got these off the Tik Tok shop'. 정식 상품명 확인 안 함",
+   "sell": "예(저가 생활용품, 틱톡샵 — 원본 말). 국내 판매처는 확인 안 함",
+   "bench": null,
+   "same_as_bench": "벤치 없음 — 새 소재(2편 물병과 같은 크리에이터 @theclawedjoker, 계정 목록에서 조회순으로 골라 확인)",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.tiktok.com/@theclawedjoker/video/7667682859624238367",
+     "platform": "틱톡",
+     "channel": "@theclawedjoker",
+     "views": 111500,
+     "likes": 709,
+     "upload": "2026-07-28",
+     "duration_s": 59.0,
+     "res": "1080x1920",
+     "music": "없음(받아쓰기 기준)",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_05_고양이빵봉지집게/src/tt_7667682859624238367.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/05_tt_7667682859624238367.json",
+     "source_audio": [
+      {
+       "t": [
+        1.5,
+        2.2
+       ],
+       "text": "I know what these are.",
+       "use": "★첫 원음(딸)"
+      },
+      {
+       "t": [
+        4.0,
+        6.8
+       ],
+       "text": "You have a really bad problem of leaving all the bread open in this house.",
+       "use": "문제 제기"
+      },
+      {
+       "t": [
+        7.3,
+        11.0
+       ],
+       "text": "So I got these off the Tik Tok shop. The little bread holder closers."
+      },
+      {
+       "t": [
+        30.1,
+        31.4
+       ],
+       "text": "Yeah, look, they're tight.",
+       "use": "★증거"
+      },
+      {
+       "t": [
+        37.0,
+        44.0
+       ],
+       "text": "Maybe you're just supposed to fish it in? Oh, look, you just fish it in. So I mean you have to spin it. Ah, that's how you do it.",
+       "use": "★사용법 시연"
+      },
+      {
+       "t": [
+        53.6,
+        55.5
+       ],
+       "text": "Now I got little cat butt holes everywhere.",
+       "use": "★끝 원음(웃음 포인트)"
+      },
+      {
+       "t": [
+        57.4,
+        58.2
+       ],
+       "text": "You'll get you some."
+      }
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초 딸이 회색 고양이 클립을 들고 있음(1초 시트)",
+     "overlay": "1초 시트 60장에서 번인 글자·워터마크 안 보임",
+     "crop": "9:16 그대로"
+    }
+   ],
+   "adapt": "벤치가 없으니 현장썰 흐름 그대로: 0초 고양이 클립+'빵 봉지 안 닫는 집에 아빠가 사 온 것' 훅 → 딸 'I know what these are' → 끼우고 돌리는 시연('fish it in…spin it') → 'they're tight' → '집 안이 고양이 엉덩이 구멍 천지가 됐다고 하네요' + 'cat butt holes everywhere'",
+   "risk": "조회 11.15만 — '해외에서 터진' 기준으론 5편 중 가장 약함. 표현('butt holes') 자막 수위 판단 필요",
+   "verdict": "채택(5번째 — 대체 필요하면 예비 A/B)"
   }
- ]
+ ],
+ "asr_caveat": "제미나이 받아쓰기는 60초 넘는 시각을 mm:ss 꼴로 섞어 낸다(예: 100.1 = 1분 0.1초). 03(Casey)·04(포르쉐)는 구간을 잘라 다시 받아써 시각을 바로잡았다(asr/*_from<초>s.json = 그 초부터 상대 시각). 제작 때 파형으로 다시 다듬을 것",
+ "reserve": [
+  {
+   "id": "예비A",
+   "slug": "현장썰_예비A_엠멧오터장식",
+   "product": "Emmet Otter 'Riverbottom Nightmare Band' 크리스마스 장식(움직이며 노래, 원본 말 '$50')",
+   "url": "https://www.tiktok.com/@theclawedjoker/video/7693308948039896350",
+   "channel": "@theclawedjoker",
+   "views": 334300,
+   "upload": "2026-10-05",
+   "duration_s": 38.8,
+   "res": "1080x1920",
+   "music": "있음(장식이 노래, 받아쓰기 빈 구간 17~25초)",
+   "file": "C:/숏템_칼카피/hottemreport/현장썰_예비A_엠멧오터장식/src/tt_7693308948039896350.mp4",
+   "asr": "channel/hottemreport/현장썰5편/asr/예비A_tt_7693308948039896350.json",
+   "source_audio": [
+    {
+     "t": [
+      0.0,
+      2.1
+     ],
+     "text": "Do you remember the Riverbottom Nightmare Band?"
+    },
+    {
+     "t": [
+      8.6,
+      11.5
+     ],
+     "text": "When I saw this, I instantly clicked the buy now button."
+    },
+    {
+     "t": [
+      11.5,
+      17.3
+     ],
+     "text": "You are either going to instantly know what this is or have no f*** clue.",
+     "use": "욕설 — 쓰지 말 것"
+    },
+    {
+     "t": [
+      25.3,
+      26.0
+     ],
+     "text": "A-ha-ha-ha!",
+     "use": "★감탄"
+    },
+    {
+     "t": [
+      26.0,
+      32.3
+     ],
+     "text": "It was $50, guys. This is now my new favorite Christmas decoration."
+    }
+   ],
+   "product_first_s": "확인 안 함",
+   "why_reserve": "12월(크리스마스)용. 짐 헨슨 1977년 TV 영화 향수라 한국 시청자엔 약함 + 욕설 구간. 판매처 확인 안 함"
+  },
+  {
+   "id": "예비B",
+   "slug": "현장썰_예비B_미루미로봇",
+   "product": "Mirumi(유카이 엔지니어링) 가방에 매다는 수줍은 털 로봇 — 원본 말 129파운드·해로즈·9월 공식 판매",
+   "url": "https://www.youtube.com/watch?v=O2BmGq9pfKc",
+   "channel": "Rachel Louise",
+   "views": 215639,
+   "upload": "2026-08-08",
+   "duration_s": 481,
+   "res": "1920x1080(가로)",
+   "file": "C:/숏템_칼카피/hottemreport/현장썰_예비B_미루미로봇/src/O2BmGq9pfKc.mp4",
+   "asr": "channel/hottemreport/현장썰5편/asr/예비B_O2BmGq9pfKc.json",
+   "source_audio": [
+    {
+     "t": [
+      0.0,
+      1.0
+     ],
+     "text": "Oh, can you look at me? This is the cutest thing I've ever seen.",
+     "use": "감탄 — 2초 시트상 왼쪽 해설자+오른쪽 인셋 클립 화면이라 인셋 클립 소리일 수 있음(확인 안 함)"
+    },
+    {
+     "t": [
+      29.8,
+      31.0
+     ],
+     "text": "How cute is that?"
+    },
+    {
+     "t": [
+      122.9,
+      125.0
+     ],
+     "text": "Oh my god, it's really moving."
+    },
+    {
+     "t": [
+      139.0,
+      145.0
+     ],
+     "text": "Hi Mirumi. Oh are you shy?",
+     "use": "수줍음 시연"
+    }
+   ],
+   "bench": "y2JFXIjCHrM 핫템(4.3만, 합성물 — 이 영상과 같은 원본 아님)",
+   "why_reserve": "약함: 8분 트렌드 해설 영상(화면 반은 해설자, 제품 장면은 남의 틱톡 인셋) — 쓰려면 인셋에 나온 원본 틱톡을 따로 찾아야 한다"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "a06yYTgpa_c",
+   "what": "세로 2단 터치 모니터(박스 'MP' — Mobile Pixels Geminos 계열 추정)",
+   "why": "벤치가 5개+ 촬영 합본. 영어 원음('preview up here'·'bottom screen is also a touchscreen')을 유튜브 자막 51편과 대조 0건, MobilePixels 공식 쇼츠 목록은 2편뿐. 틱톡·인스타 원본 추정 — 못 찾음"
+  },
+  {
+   "id": "ZqVgAg99gRI",
+   "what": "분리 헤드 실리콘 주걱",
+   "why": "원본 못 찾음. 단서: Blue Bosti 'Adaptchula'(유튜브 @BlueBosti h6LuKWHynAI 2.8만 설치 영상) — 쇼츠 PvHX6XgLxHI 는 'not available'. 2,600만 뷰 원본은 틱톡/인스타 추정, 계정 목록 읽기 실패(bluebosti·blue.bosti)"
+  },
+  {
+   "id": "01ilCC0jZHk",
+   "what": "KINJO JAPAN 실리콘 유리컵(1936 창업 확인)",
+   "why": "공식 영상(rPteEbn2Myg·nXtM3R_CAgM)은 음악·인터뷰뿐 — 사람 감탄 원음 아님. 던지기 반응 원본 못 찾음"
+  },
+  {
+   "id": "8ogCjxMJsYo",
+   "what": "Kingii 팽창식 구명 팔찌",
+   "why": "Insider T08DBU455jw·GiGadgets dqx-SmDpaoM = 음악만. 발명가 인터뷰판 WIMvwUELlYo 는 가로 720p(9:16 크롭 시 폭 405px) + 반응 아닌 홍보 인터뷰"
+  },
+  {
+   "id": "jnMWUEGpdro",
+   "what": "LiberNovo Omni 계열 의자",
+   "why": "벤치 6개+ 합본, 원본 말소리 없음, 리뷰 영상들은 설명형"
+  },
+  {
+   "id": "FC6fms_7K5U",
+   "what": "NTT nwm ONE 헤드폰",
+   "why": "MKBHD EFiHm6WjhNA(211만, 879초)를 받아 받아쓰기 — 여러 오픈형 헤드폰 비교 리뷰 해설뿐, 감탄·시연 원음 아님 → 탈락, 받은 파일 지움"
+  },
+  {
+   "id": "gBalgjWMRfQ",
+   "what": "The Office Oasis 롤러블레이드 의자 바퀴",
+   "why": "벤치 합본, 공식 숏츠 11편 시트 대조 불일치·글자+음악 위주(소리 안 들어봄)"
+  },
+  {
+   "id": "2uVnjUu-RLE / 0o3Uh12bM00 / LDR6_hdpza8 / ZvOrDpPunAI / E0GV3_1JRDk / 3aWB9obyTgU",
+   "what": "우산 걸이·자동 교반 컵·6mm 이어폰·마우스건·코카콜라 병뚜껑 이어폰·ASUS 노트북",
+   "why": "벤치가 일본/틱톡 컷 모음·홍보컷 — 단일 원본 못 찾음(뒤 3개는 시도 안 함)"
+  },
+  {
+   "id": "a3HLqd4gsfo / R2C5yUZ3nKY",
+   "what": "Enabot EBO 계열 홈캠 로봇(추정) / Hypershell X 외골격(설명란)",
+   "why": "벤치 8개+·30개+ 클립 합성물, 단일 원본 없음"
+  },
+  {
+   "id": "rMXGuFJEWDE(썰풀다)",
+   "what": "VR 장비 세트",
+   "why": "벤치에 원본 영어 원음은 있으나 원본 URL 못 찾음(유튜브 25회·웹 3회)"
+  },
+  {
+   "id": "썰풀다 9편(CRDg·-cDi·_zLL·D3Pc·1_Vt·v6Mr·fnZN·GnPA·Mkf6)",
+   "what": "빵 슬라이서·파스타 쿠커·산소탱크·접이식 식탁·아일렛 타공기·방진 마스크·샌드위치 메이커·쿨링 젤·전자종이 태블릿",
+   "why": "벤치가 여러 클립 합본이고 출처 표기 없음 — 단일 원본 못 찾음"
+  },
+  {
+   "id": "예비소재.json christmas_ceiling_projector",
+   "what": "크리스마스 천장 투사 조명",
+   "why": "이번엔 안 봄(12월용 메모)"
+  }
+ ],
+ "excluded_by_rule": "샤크탱크(다른 세션)·아이언맨 헬멧(8호)·HONOR 로봇폰(12호)·결과물 장부의 총알람·나이키 핸즈프리·아이스큐브·옥수수커터·식기세척기·골전도 스피커는 처음부터 뺐다",
+ "method": "후보 6조 병렬(소넷 담당 w1~w6, 지시문 scratch BRIEF) + 확정 편은 내가 원본 받아쓰기·시트를 다시 돌려 확인(01~05·예비A). 틱톡 원본은 yt-dlp 로 받힘(계정 목록은 될 때와 안 될 때가 있음)"
 }

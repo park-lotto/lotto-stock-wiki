@@ -1,0 +1,62 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 0.99,
+   "speaker": "S1",
+   "text": "Woo!",
+   "kind": "reaction"
+  },
+  {
+   "start": 3.12,
+   "end": 4.88,
+   "speaker": "S1",
+   "text": "(laughter)",
+   "kind": "reaction"
+  },
+  {
+   "start": 17.51,
+   "end": 18.92,
+   "speaker": "S1",
+   "text": "(laughter)",
+   "kind": "reaction"
+  },
+  {
+   "start": 18.92,
+   "end": 22.37,
+   "speaker": "S1",
+   "text": "I love this sound. So awesome.",
+   "kind": "speech"
+  },
+  {
+   "start": 23.23,
+   "end": 24.62,
+   "speaker": "S1",
+   "text": "Sweet!",
+   "kind": "speech"
+  },
+  {
+   "start": 27.56,
+   "end": 28.93,
+   "speaker": "S1",
+   "text": "(laughter)",
+   "kind": "reaction"
+  },
+  {
+   "start": 28.93,
+   "end": 31.41,
+   "speaker": "S1",
+   "text": "This is fun. I want one.",
+   "kind": "speech"
+  },
+  {
+   "start": 35.34,
+   "end": 38.1,
+   "speaker": "S1",
+   "text": "Oh, this is awesome. What do you think?",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": false,
+ "_model": "gemini-3.5-flash"
+}

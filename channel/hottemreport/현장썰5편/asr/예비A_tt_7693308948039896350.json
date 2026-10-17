@@ -1,0 +1,62 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.09,
+   "speaker": "S1",
+   "text": "Do you remember the Riverbottom Nightmare Band?",
+   "kind": "speech"
+  },
+  {
+   "start": 2.09,
+   "end": 4.53,
+   "speaker": "S1",
+   "text": "Riverbottom Nightmare Band!",
+   "kind": "speech"
+  },
+  {
+   "start": 4.53,
+   "end": 8.57,
+   "speaker": "S1",
+   "text": "I always thought that they were just a tad better than Emmet Otter and the Jug Band.",
+   "kind": "speech"
+  },
+  {
+   "start": 8.57,
+   "end": 11.5,
+   "speaker": "S1",
+   "text": "When I saw this, I instantly clicked the buy now button.",
+   "kind": "speech"
+  },
+  {
+   "start": 11.5,
+   "end": 17.33,
+   "speaker": "S1",
+   "text": "You are either going to instantly know what this is or have no fucking clue.",
+   "kind": "speech"
+  },
+  {
+   "start": 25.26,
+   "end": 26.04,
+   "speaker": "S1",
+   "text": "A-ha-ha-ha!",
+   "kind": "reaction"
+  },
+  {
+   "start": 26.04,
+   "end": 28.01,
+   "speaker": "S1",
+   "text": "It was $50, guys.",
+   "kind": "speech"
+  },
+  {
+   "start": 28.01,
+   "end": 32.32,
+   "speaker": "S1",
+   "text": "This is now my new favorite Christmas decoration.",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}

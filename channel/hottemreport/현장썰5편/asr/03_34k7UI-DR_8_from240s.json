@@ -1,0 +1,48 @@
+{
+ "segments": [
+  {
+   "start": 13.11,
+   "end": 18.57,
+   "speaker": "S1",
+   "text": "I don't know that the I don't know if the subway is the best place to to test these things.",
+   "kind": "speech"
+  },
+  {
+   "start": 34.2,
+   "end": 37.38,
+   "speaker": "S1",
+   "text": "So, what is the verdict? Uh",
+   "kind": "speech"
+  },
+  {
+   "start": 37.38,
+   "end": 44.2,
+   "speaker": "S1",
+   "text": "in the letter they sent me, they said, \"Thank you for believing in the future of urban mobility.\"",
+   "kind": "speech"
+  },
+  {
+   "start": 44.82,
+   "end": 54.67,
+   "speaker": "S1",
+   "text": "Do I foresee a future where everybody is kind of sliding around New York City wearing AI-powered electric shoes?",
+   "kind": "speech"
+  },
+  {
+   "start": 54.91,
+   "end": 60.67,
+   "speaker": "S1",
+   "text": "I mean, it sounds cool. Um, are they going to be these electric AI-powered shoes?",
+   "kind": "speech"
+  },
+  {
+   "start": 61.07,
+   "end": 110.98,
+   "speaker": "S1",
+   "text": "Who knows? But thank you so much for sending these along. I had a lot of fun testing them out and uh and uh yeah, I'm excited to see how these things perform when they're not prototypes.",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}

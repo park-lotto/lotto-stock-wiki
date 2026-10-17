@@ -1,0 +1,125 @@
+{
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.1,
+   "speaker": "S1",
+   "text": "This, this is a regular shoe,",
+   "kind": "speech"
+  },
+  {
+   "start": 2.1,
+   "end": 9.4,
+   "speaker": "S1",
+   "text": "and this, this is a $1400 AI-powered motorized electric shoe.",
+   "kind": "speech"
+  },
+  {
+   "start": 20.1,
+   "end": 22.3,
+   "speaker": "S2",
+   "text": "Yeah, I've seen it on Instagram.",
+   "kind": "speech"
+  },
+  {
+   "start": 22.3,
+   "end": 23.7,
+   "speaker": "S1",
+   "text": "You want to come try them?",
+   "kind": "speech"
+  },
+  {
+   "start": 30.4,
+   "end": 35.3,
+   "speaker": "S1",
+   "text": "They announced these things on like Kickstarter like six months ago and it went viral. Like look at",
+   "kind": "speech"
+  },
+  {
+   "start": 35.3,
+   "end": 39.1,
+   "speaker": "S1",
+   "text": "World's fastest shoes increase walking speed by 250%.",
+   "kind": "speech"
+  },
+  {
+   "start": 39.1,
+   "end": 40.8,
+   "speaker": "S1",
+   "text": "Walking with AI.",
+   "kind": "speech"
+  },
+  {
+   "start": 40.8,
+   "end": 42.5,
+   "speaker": "S1",
+   "text": "Hypebeast, the world's fastest shoes.",
+   "kind": "speech"
+  },
+  {
+   "start": 42.5,
+   "end": 43.7,
+   "speaker": "S1",
+   "text": "CNN,",
+   "kind": "speech"
+  },
+  {
+   "start": 43.7,
+   "end": 44.8,
+   "speaker": "S1",
+   "text": "New York Post,",
+   "kind": "speech"
+  },
+  {
+   "start": 44.8,
+   "end": 46.0,
+   "speaker": "S1",
+   "text": "ESPN.",
+   "kind": "speech"
+  },
+  {
+   "start": 46.0,
+   "end": 51.9,
+   "speaker": "S1",
+   "text": "That was a little while ago. I gave them a $50 deposit and then yesterday I got this random email saying,",
+   "kind": "speech"
+  },
+  {
+   "start": 51.9,
+   "end": 56.1,
+   "speaker": "S1",
+   "text": "You have been selected as one of four individuals to receive a fast-tracked prototype from our factory.",
+   "kind": "speech"
+  },
+  {
+   "start": 57.2,
+   "end": 58.7,
+   "speaker": "S1",
+   "text": "Thank you very much.",
+   "kind": "speech"
+  },
+  {
+   "start": 114.6,
+   "end": 115.9,
+   "speaker": "S1",
+   "text": "Yo, help me film something?",
+   "kind": "speech"
+  },
+  {
+   "start": 116.0,
+   "end": 117.0,
+   "speaker": "S2",
+   "text": "All right.",
+   "kind": "speech"
+  },
+  {
+   "start": 117.0,
+   "end": 120.0,
+   "speaker": "S1",
+   "text": "To turn them on, I have to like twist my foot like a door",
+   "kind": "speech"
+  }
+ ],
+ "music_bed": true,
+ "_model": "gemini-3.5-flash"
+}
