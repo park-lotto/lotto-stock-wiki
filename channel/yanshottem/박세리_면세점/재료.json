@@ -1,5 +1,5 @@
 {
- "_note": "얜샷템 박세리 면세점 스킨 — 재료 계획(TTS·렌더 전). 원본 = 박세리의 속사정 WHzwVWvEvQ8(1080p 29.97). 창 1080x1080(frame_얜샷템). 원본 편집 자막(흰=박세리, 노랑=제작진, 괄호 손글씨)은 전부 src_crop 으로 뺌. 시각은 미나 말속도 8.4자/초 추정 — TTS 뒤 맞춘다.",
+ "_note": "얜샷템 박세리 면세점 스킨 — 재료 계획(TTS·렌더 전). 원본 = 박세리의 속사정 WHzwVWvEvQ8(1080p 29.97). 창 1080x1080(frame_얜샷템). 원본 편집 자막(흰=박세리, 노랑=제작진, 괄호 손글씨)은 전부 src_crop 으로 뺌. 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정).",
  "cand_dir": "C:/숏템_칼카피/yanshottem/박세리_면세점/src",
  "narration": "일레븐랩스 미나(kr-mina-stable, aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 합성 + atempo 1.35) — 벤치 만템 나레 여성",
  "sources": {
@@ -19,10 +19,10 @@
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
    "ss": 130.86,
-   "dur": 3.5,
+   "dur": 1.82,
    "src_span": [
     130.86,
-    134.36
+    132.68
    ],
    "kind": "원본재편집",
    "box": [
@@ -32,22 +32,64 @@
     1080
    ],
    "src_crop": [
-    555,
+    560,
     0,
-    870,
-    870
+    850,
+    850
    ],
    "res": "1920x1080",
-   "scale": 1.24,
+   "scale": 1.27,
    "ours": "흰 티 박세리가 분홍빛 스킨 병을 들고 카메라 보며 말함(초록 블라인드 앞)",
    "why": "원음 '꼭 나갈 때마다 한 여섯 개씩 기본 사고' — 말하는 본인 입 모양(소리·화면 같은 시각). 아래 편집 자막(y≥900) 밖",
    "mute": false,
-   "audio_src": "seri_WHzwVWvEvQ8.mp4",
+   "audio_src": "seri_voice.wav",
    "audio_ss": 130.86,
-   "audio_dur": 3.5
+   "audio_dur": 3.5,
+   "t_final": [
+    0.0,
+    1.82
+   ]
   },
   {
    "i": 1,
+   "line": "O1",
+   "src": "seri_WHzwVWvEvQ8.mp4",
+   "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
+   "src_date": "박세리의 속사정 유튜브 2025.08.15",
+   "ss": 132.68,
+   "dur": 1.83,
+   "src_span": [
+    132.68,
+    134.51
+   ],
+   "kind": "원본재편집",
+   "box": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "src_crop": [
+    620,
+    60,
+    720,
+    720
+   ],
+   "res": "1920x1080",
+   "scale": 1.5,
+   "ours": "같은 자리 박세리 가까이(얼굴+병) — 원음 '한 여섯 개씩 기본 사고' 뒷부분",
+   "why": "원음 3.65초 한 컷을 둘로(B4 컷 중앙) — 소리·화면 같은 시각, 앞으로만 이어짐(되감김 0). 아래 편집 자막(y≥900) 밖",
+   "mute": false,
+   "audio_src": "seri_voice.wav",
+   "audio_ss": 132.68,
+   "audio_dur": 3.5,
+   "t_final": [
+    1.82,
+    3.65
+   ]
+  },
+  {
+   "i": 2,
    "line": "O1",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
@@ -66,31 +108,35 @@
     1080
    ],
    "src_crop": [
-    555,
-    0,
-    870,
-    870
+    620,
+    60,
+    720,
+    720
    ],
    "res": "1920x1080",
-   "scale": 1.24,
+   "scale": 1.5,
    "ours": "같은 자리 박세리(0.46초 쉼을 잘라 앞으로 건너뜀) → 135.97 원본 컷에서 확대 장면",
    "why": "원음 '또 틈만 나면 사는 거야' — 소리·화면 같은 시각. 쉼(134.36~134.82)만 잘라 냄(되감김 0, 같은 크롭). 아래 '(스킨 과소비형)' 밖",
    "mute": false,
-   "audio_src": "seri_WHzwVWvEvQ8.mp4",
+   "audio_src": "seri_voice.wav",
    "audio_ss": 134.82,
-   "audio_dur": 1.28
+   "audio_dur": 1.28,
+   "t_final": [
+    3.65,
+    4.93
+   ]
   },
   {
-   "i": 2,
+   "i": 3,
    "line": "N1",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
    "ss": 136.1,
-   "dur": 0.94,
+   "dur": 0.937,
    "src_span": [
     136.1,
-    137.04
+    137.037
    ],
    "kind": "원본재편집",
    "box": [
@@ -109,19 +155,23 @@
    "scale": 1.27,
    "ours": "병을 든 박세리 가까이(원본 확대 장면)",
    "why": "'박세리가 출국길 면세점에서' — 본인+병. 아래 '(스킨 과소비형)'(y 860~980) 밖, 원본 소리 끔",
-   "mute": true
+   "mute": true,
+   "t_final": [
+    4.93,
+    5.867
+   ]
   },
   {
-   "i": 3,
+   "i": 4,
    "line": "N1",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 137.04,
-   "dur": 1.7,
+   "ss": 137.037,
+   "dur": 1.702,
    "src_span": [
-    137.04,
-    138.74
+    137.037,
+    138.739
    ],
    "kind": "원본재편집",
    "box": [
@@ -140,19 +190,23 @@
    "scale": 1.26,
    "ours": "병을 든 박세리가 카메라 쪽을 보며 들음",
    "why": "'쟁여 온다는 분홍빛 스킨이라는데' — 분홍빛 병이 보임. 제작진 노랑 자막(y≥900) 밖, 원본 소리(제작진 말) 끔",
-   "mute": true
+   "mute": true,
+   "t_final": [
+    5.867,
+    7.569
+   ]
   },
   {
-   "i": 4,
+   "i": 5,
    "line": "N2",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 138.74,
-   "dur": 1.33,
+   "ss": 138.739,
+   "dur": 1.291,
    "src_span": [
-    138.74,
-    140.07
+    138.739,
+    140.03
    ],
    "kind": "원본재편집",
    "box": [
@@ -171,19 +225,23 @@
    "scale": 1.26,
    "ours": "병을 든 채 웃는 박세리",
    "why": "'제작진이 한 번만 발라 보자니까' — 부탁에 웃는 반응. 오른쪽 '(싫은뎅?)'(x≥1240) 밖",
-   "mute": true
+   "mute": true,
+   "t_final": [
+    7.569,
+    8.86
+   ]
   },
   {
-   "i": 5,
+   "i": 6,
    "line": "N2",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 141.45,
-   "dur": 2.05,
+   "ss": 141.203,
+   "dur": 0.977,
    "src_span": [
-    141.45,
-    143.5
+    141.203,
+    142.18
    ],
    "kind": "원본재편집",
    "box": [
@@ -193,28 +251,67 @@
     1080
    ],
    "src_crop": [
-    720,
+    730,
     0,
-    600,
-    600
+    580,
+    580
    ],
    "res": "1920x1080",
-   "scale": 1.8,
-   "ours": "박세리가 은색 뚜껑 병을 수납장 맨 안쪽 칸에 밀어 넣음(검은 구슬 팔찌 = 본인 손) → 위 칸",
-   "why": "'웃으며 제일 안쪽에 넣어 버렸대요' — '(급하게 감추는 손)'(y≈655~760)은 창 높이 600 으로 뺌. 아래 노랑 자막 밖",
-   "mute": true
+   "scale": 1.86,
+   "ours": "박세리가 은색 뚜껑 병을 수납장 칸 안쪽으로 미는 손(검은 구슬 팔찌 = 본인 손) — 위쪽만(아래 '(급하게 감추는 손)' 자막 밖)",
+   "why": "'웃으며 제일 안쪽에' — '(급하게 감추는 손)'(y≈595~740)은 창 높이 580 으로 뺌",
+   "mute": true,
+   "t_final": [
+    8.86,
+    9.837
+   ]
   },
   {
-   "i": 6,
+   "i": 7,
+   "line": "N2",
+   "src": "seri_WHzwVWvEvQ8.mp4",
+   "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
+   "src_date": "박세리의 속사정 유튜브 2025.08.15",
+   "ss": 142.18,
+   "dur": 1.325,
+   "src_span": [
+    142.18,
+    143.505
+   ],
+   "kind": "원본재편집",
+   "box": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "src_crop": [
+    560,
+    0,
+    860,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.26,
+   "ours": "같은 손이 병을 맨 안쪽에 밀어 넣음(넓게) — 위 칸 초록 튜브",
+   "why": "'넣어 버렸대요' — 142.18 원본 자막이 아래 노랑 '아 그래서 제일 안쪽에'(y≥900)로 바뀐 뒤라 넓게 잡아 손·병이 보이게. 오른쪽 아래 제작진 얼굴(x≥1725)·노랑 자막 밖",
+   "mute": true,
+   "t_final": [
+    9.837,
+    11.162
+   ]
+  },
+  {
+   "i": 8,
    "line": "O3",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 143.55,
+   "ss": 143.51,
    "dur": 2.7,
    "src_span": [
-    143.55,
-    146.25
+    143.51,
+    146.21
    ],
    "kind": "원본재편집",
    "box": [
@@ -234,12 +331,17 @@
    "ours": "수납장 앞 박세리 뒷머리 가까이 → 옆 칸 화장품",
    "why": "원음 '솔직히 쟁여 놓고 쓰거든'(143.55~144.80, 소리·화면 같은 시각) → 나레 '여분까지 따로 챙겨 뒀다네요' 앞부분(본인이 '여기 또 엑스트라 하나 있잖아' 하는 장면, 원본 소리 144.80 에서 끔). 아래 흰 편집 자막 밖",
    "mute": false,
-   "audio_src": "seri_WHzwVWvEvQ8.mp4",
-   "audio_ss": 143.55,
-   "audio_dur": 1.25
+   "audio_src": "seri_voice.wav",
+   "audio_ss": 143.51,
+   "audio_dur": 1.25,
+   "t_final": [
+    11.162,
+    13.862
+   ],
+   "audio_note": "소리 = 11.377초부터 143.51~(말 143.55~145.95), 앞 0.215초 무음 — 나레가 길어 화면(뒷머리, 입 안 보임)을 먼저 띄움"
   },
   {
-   "i": 7,
+   "i": 9,
    "line": "N3",
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
@@ -267,7 +369,11 @@
    "scale": 1.23,
    "ours": "박세리 욕실 수납장 안 — 화장품 병·상자가 칸마다 쌓임(제작진 말로 '보물창고')",
    "why": "끝 컷 '여분까지 따로 챙겨 뒀다네요' — 쌓아 둔 수납장. '(보물창고 공개)'(~123.9) 뒤, 노랑 '보물창고가 여기 있었네~'(y≈900~960) 밖. 다른 장면(19초 앞, 다른 컷과 3초+ 떨어짐)",
-   "mute": true
+   "mute": true,
+   "t_final": [
+    13.862,
+    15.502
+   ]
   }
  ],
  "caption_effects": {

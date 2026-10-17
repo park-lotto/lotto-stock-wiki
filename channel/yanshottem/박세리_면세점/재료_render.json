@@ -1,0 +1,145 @@
+{
+ "_note": "make_render.py — 페이지 1개 × shots[].cuts(PLAN 시각 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/박세리_면세점/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "seri_WHzwVWvEvQ8.mp4",
+   "ss": 130.86,
+   "src_crop": [
+    560,
+    0,
+    850,
+    850
+   ],
+   "cuts": [
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 130.86,
+     "src_crop": [
+      560,
+      0,
+      850,
+      850
+     ],
+     "dur": 1.82,
+     "plan_i": 0
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 132.68,
+     "src_crop": [
+      620,
+      60,
+      720,
+      720
+     ],
+     "dur": 1.83,
+     "plan_i": 1
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 134.82,
+     "src_crop": [
+      620,
+      60,
+      720,
+      720
+     ],
+     "dur": 1.28,
+     "plan_i": 2
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 136.1,
+     "src_crop": [
+      560,
+      0,
+      850,
+      850
+     ],
+     "dur": 0.937,
+     "plan_i": 3
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 137.037,
+     "src_crop": [
+      520,
+      0,
+      860,
+      860
+     ],
+     "dur": 1.702,
+     "plan_i": 4
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 138.739,
+     "src_crop": [
+      370,
+      0,
+      860,
+      860
+     ],
+     "dur": 1.291,
+     "plan_i": 5
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 141.203,
+     "src_crop": [
+      730,
+      0,
+      580,
+      580
+     ],
+     "dur": 0.977,
+     "plan_i": 6
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 142.18,
+     "src_crop": [
+      560,
+      0,
+      860,
+      860
+     ],
+     "dur": 1.325,
+     "plan_i": 7
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 143.51,
+     "src_crop": [
+      760,
+      0,
+      880,
+      880
+     ],
+     "dur": 2.7,
+     "plan_i": 8
+    },
+    {
+     "src": "seri_WHzwVWvEvQ8.mp4",
+     "ss": 123.98,
+     "src_crop": [
+      480,
+      0,
+      880,
+      880
+     ],
+     "dur": 1.64,
+     "plan_i": 9
+    }
+   ],
+   "t_final": [
+    0.0,
+    15.502
+   ]
+  }
+ ]
+}
