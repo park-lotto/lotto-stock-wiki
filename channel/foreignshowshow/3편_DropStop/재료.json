@@ -1,7 +1,7 @@
 {
  "_note": "샥탬스토리 3편 Drop Stop — 재료 계획(TTS·렌더 전). 창 1080x1052 y434(벤치 뜯기 layout). src_crop 965x940(위 0~940) = 아래 CNBC 로고·'SHARK TANK SUN-THU 8P ET'·'CNBC.COM/CHANNELFINDER'·'SEASON 9 UPDATE' 띠(y≥950) 제외. 이름띠(5~16·205~211·234~238·288~289·293~294초) 구간은 안 씀.",
  "cand_dir": "C:/숏템_칼카피/foreignshowshow/3편_DropStop/src",
- "narration": "한국어 TTS 반말 전언체 — 목소리 미정(페이블 OK 뒤)",
+ "narration": "타입캐스트 지훈 tc_61f0859907085fc68561c9a1 반말 전언체(페이블 OK 뒤 1회)",
  "sources": {
   "ME64bRiQi24": {
    "채널": "CNBC Ambition",
@@ -66,11 +66,11 @@
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 65.35,
-   "dur": 1.4,
+   "ss": 65.75,
+   "dur": 1.6,
    "src_span": [
-    65.35,
-    66.75
+    65.75,
+    67.35
    ],
    "kind": "원본재편집",
    "box": [
@@ -92,7 +92,7 @@
    "mute": true,
    "t_final": [
     1.55,
-    2.95
+    3.15
    ]
   },
   {
@@ -101,46 +101,11 @@
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 34.0,
-   "dur": 1.4,
+   "ss": 70.5,
+   "dur": 2.0,
    "src_span": [
-    34.0,
-    35.4
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    477,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "같은 틈에 손이 들어가는 근접",
-   "why": "나레 '운전석이랑 콘솔 사이 틈을 막아서, 폰이 안' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    2.95,
-    4.35
-   ]
-  },
-  {
-   "i": 3,
-   "line": "N1",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 69.9,
-   "dur": 1.85,
-   "src_span": [
-    69.9,
-    71.75
+    70.5,
+    72.5
    ],
    "kind": "원본재편집",
    "box": [
@@ -161,21 +126,21 @@
    "why": "나레 '운전석이랑 콘솔 사이 틈을 막아서, 폰이 안' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    4.35,
-    6.2
+    3.15,
+    5.15
    ]
   },
   {
-   "i": 4,
+   "i": 3,
    "line": "O2",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 24.0,
-   "dur": 3.45,
+   "ss": 24.5,
+   "dur": 2.45,
    "src_span": [
-    24.0,
-    27.45
+    24.5,
+    26.95
    ],
    "kind": "원본재편집",
    "box": [
@@ -192,64 +157,29 @@
    ],
    "res": "1920x1080",
    "scale": 1.119,
-   "ours": "틈 근접(손이 틈을 누름) — 말하는 사람 화면 밖(피치 해설), 그림 0.5초 앞당김",
-   "why": "원음 'That black hole, that dark abyss, the pit of doom' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
+   "ours": "틈 근접(손이 틈을 누름) — 말하는 사람 화면 밖(피치 해설), 화면=소리 같은 원본 시각",
+   "why": "원음 'That black hole, that dark abyss' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    6.2,
-    9.65
+    5.15,
+    7.6
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 24.5,
-   "audio_dur": 3.45,
+   "audio_dur": 2.45,
    "fx": "빨간 점선 원(틈) — 벤치 10~12초 자리"
   },
   {
-   "i": 5,
+   "i": 4,
    "line": "N2",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 54.08,
-   "dur": 1.45,
+   "ss": 59.9,
+   "dur": 2.7,
    "src_span": [
-    54.08,
-    55.53
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    600,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "투자자(이름 화면 글자 없음) 크게 웃음",
-   "why": "나레 '폰이며 열쇠며 감자튀김까지, 삼켜 버리는 그' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    9.65,
-    11.1
-   ]
-  },
-  {
-   "i": 6,
-   "line": "N2",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 59.95,
-   "dur": 1.95,
-   "src_span": [
-    59.95,
-    61.9
+    59.9,
+    62.6
    ],
    "kind": "원본재편집",
    "box": [
@@ -266,16 +196,16 @@
    ],
    "res": "1920x1080",
    "scale": 1.119,
-   "ours": "무대 좌석 세트 옆 창업자",
+   "ours": "무대 좌석 세트 옆 창업자 둘",
    "why": "나레 '폰이며 열쇠며 감자튀김까지, 삼켜 버리는 그' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    11.1,
-    13.05
+    7.6,
+    10.3
    ]
   },
   {
-   "i": 7,
+   "i": 5,
    "line": "O3",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
@@ -305,24 +235,24 @@
    "why": "원음 'Gotten on their hands and knees, butt up in the air' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    13.05,
-    15.3
+    10.3,
+    12.55
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 45.45,
    "audio_dur": 2.25
   },
   {
-   "i": 8,
+   "i": 6,
    "line": "N3",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 75.1,
+   "ss": 75.6,
    "dur": 1.5,
    "src_span": [
-    75.1,
-    76.6
+    75.6,
+    77.1
    ],
    "kind": "원본재편집",
    "box": [
@@ -343,22 +273,22 @@
    "why": "나레 '벨트 꽂는 자리 홈에 끼워 두기만 하면, 바' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    15.3,
-    16.8
+    12.55,
+    14.05
    ],
    "fx": "분홍 화살표(벨트 홈) — 벤치 14초 자리"
   },
   {
-   "i": 9,
+   "i": 7,
    "line": "N3",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 79.6,
-   "dur": 2.35,
+   "ss": 80.2,
+   "dur": 1.5,
    "src_span": [
-    79.6,
-    81.95
+    80.2,
+    81.7
    ],
    "kind": "원본재편집",
    "box": [
@@ -379,12 +309,12 @@
    "why": "나레 '벨트 꽂는 자리 홈에 끼워 두기만 하면, 바' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    16.8,
-    19.15
+    14.05,
+    15.55
    ]
   },
   {
-   "i": 10,
+   "i": 8,
    "line": "O4",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
@@ -414,24 +344,24 @@
    "why": "원음 'Wherever your seat goes, Drop Stop follows' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    19.15,
-    22.35
+    15.55,
+    18.75
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 86.9,
    "audio_dur": 3.2
   },
   {
-   "i": 11,
+   "i": 9,
    "line": "O5",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 111.15,
-   "dur": 2.3,
+   "dur": 2.22,
    "src_span": [
     111.15,
-    113.45
+    113.37
    ],
    "kind": "원본재편집",
    "box": [
@@ -448,28 +378,28 @@
    ],
    "res": "1920x1080",
    "scale": 1.119,
-   "ours": "창업자 둘(말하는 본인) — 113.5초 컷 전까지, 원음 꼬리 0.35초는 다음 컷 위로(J컷)",
+   "ours": "창업자 둘(말하는 본인) — 113.5초 컷 전까지(원음도 113.45에서 끊음, 'units' 뺌)",
    "why": "원음 'We've actually sold over 260,000 units' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    22.35,
-    24.65
+    18.75,
+    20.97
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 111.15,
-   "audio_dur": 2.65
+   "audio_dur": 2.22
   },
   {
-   "i": 12,
+   "i": 10,
    "line": "N4",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 134.2,
-   "dur": 1.9,
+   "dur": 1.5,
    "src_span": [
     134.2,
-    136.1
+    135.7
    ],
    "kind": "원본재편집",
    "box": [
@@ -490,21 +420,21 @@
    "why": "나레 '만드는 데 4달러 드는 걸, 20달러 가까이' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    24.65,
-    26.55
+    20.97,
+    22.47
    ]
   },
   {
-   "i": 13,
+   "i": 11,
    "line": "N4",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 142.2,
-   "dur": 2.0,
+   "dur": 1.5,
    "src_span": [
     142.2,
-    144.2
+    143.7
    ],
    "kind": "원본재편집",
    "box": [
@@ -525,21 +455,21 @@
    "why": "나레 '만드는 데 4달러 드는 걸, 20달러 가까이' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    26.55,
-    28.55
+    22.47,
+    23.97
    ]
   },
   {
-   "i": 14,
+   "i": 12,
    "line": "N5",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 168.3,
-   "dur": 1.4,
+   "ss": 187.0,
+   "dur": 2.0,
    "src_span": [
-    168.3,
-    169.7
+    187.0,
+    189.0
    ],
    "kind": "원본재편집",
    "box": [
@@ -556,51 +486,16 @@
    ],
    "res": "1920x1080",
    "scale": 1.119,
-   "ours": "하차한 투자자 1(이름 화면 글자 없음)",
+   "ours": "하차한 투자자(이름 화면 글자 없음, 하차 발언 장면)",
    "why": "나레 '투자자 둘은 빠졌는데, 케빈은 지분 말고' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    28.55,
-    29.95
+    23.97,
+    25.97
    ]
   },
   {
-   "i": 15,
-   "line": "N5",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 187.2,
-   "dur": 1.4,
-   "src_span": [
-    187.2,
-    188.6
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    477,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "하차한 투자자 2(이름 화면 글자 없음)",
-   "why": "나레 '투자자 둘은 빠졌는데, 케빈은 지분 말고' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    29.95,
-    31.35
-   ]
-  },
-  {
-   "i": 16,
+   "i": 13,
    "line": "O6",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
@@ -630,24 +525,24 @@
    "why": "원음 'Every time you sell one of these foam weenies, I get two dollars back' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    31.35,
-    36.65
+    25.97,
+    31.27
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 198.3,
    "audio_dur": 5.3
   },
   {
-   "i": 17,
+   "i": 14,
    "line": "N6",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 217.05,
-   "dur": 1.9,
+   "dur": 2.0,
    "src_span": [
     217.05,
-    218.95
+    219.05
    ],
    "kind": "원본재편집",
    "box": [
@@ -668,22 +563,22 @@
    "why": "나레 '로리는 백만장자로 만들어 주겠다며, 30만 ' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    36.65,
-    38.55
+    31.27,
+    33.27
    ],
    "fx": "날개 돈다발 이모지 — 벤치 40초 자리"
   },
   {
-   "i": 18,
+   "i": 15,
    "line": "N6",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 240.0,
-   "dur": 1.4,
+   "dur": 2.0,
    "src_span": [
     240.0,
-    241.4
+    242.0
    ],
    "kind": "원본재편집",
    "box": [
@@ -704,91 +599,21 @@
    "why": "나레 '로리는 백만장자로 만들어 주겠다며, 30만 ' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    38.55,
-    39.95
+    33.27,
+    35.27
    ]
   },
   {
-   "i": 19,
-   "line": "N6",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 251.35,
-   "dur": 1.65,
-   "src_span": [
-    251.35,
-    253.0
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    300,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "로리 얼굴(다른 장면)",
-   "why": "나레 '로리는 백만장자로 만들어 주겠다며, 30만 ' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    39.95,
-    41.6
-   ]
-  },
-  {
-   "i": 20,
+   "i": 16,
    "line": "N7",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 268.7,
-   "dur": 1.4,
+   "ss": 275.9,
+   "dur": 2.1,
    "src_span": [
-    268.7,
-    270.1
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    300,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "로리 환호(박수·웃음, 269.9초 같은 로리 다른 각도로 이어짐)",
-   "why": "나레 '결국 로리 손을 잡았고' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    41.6,
-    43.0
-   ]
-  },
-  {
-   "i": 21,
-   "line": "N8",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 276.3,
-   "dur": 1.6,
-   "src_span": [
-    276.3,
-    277.9
+    275.9,
+    278.0
    ],
    "kind": "원본재편집",
    "box": [
@@ -806,24 +631,24 @@
    "res": "1920x1080",
    "scale": 1.119,
    "ours": "로리와 창업자 둘이 걸어 들어옴(시즌9 후일담)",
-   "why": "나레 '5년 뒤 매출이 얼마냐면' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
+   "why": "나레 '결국 로리 손을 잡았고, 5년 뒤 매출은' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    43.0,
-    44.6
+    35.27,
+    37.37
    ]
   },
   {
-   "i": 22,
+   "i": 17,
    "line": "O8",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
    "ss": 316.5,
-   "dur": 1.9,
+   "dur": 1.83,
    "src_span": [
     316.5,
-    318.4
+    318.33
    ],
    "kind": "원본재편집",
    "box": [
@@ -844,24 +669,24 @@
    "why": "원음 'We've hit 28 million' — 소리·화면 같은 시각 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": false,
    "t_final": [
-    44.6,
-    46.5
+    37.37,
+    39.2
    ],
    "audio_src": "ME64bRiQi24.mp4",
    "audio_ss": 316.5,
-   "audio_dur": 1.9
+   "audio_dur": 1.83
   },
   {
-   "i": 23,
+   "i": 18,
    "line": "N9",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 297.2,
-   "dur": 1.6,
+   "ss": 297.0,
+   "dur": 2.3,
    "src_span": [
-    297.2,
-    298.8
+    297.0,
+    299.3
    ],
    "kind": "원본재편집",
    "box": [
@@ -882,21 +707,21 @@
    "why": "나레 'LA 경찰이 석 달간 사고 0건이라며, 순찰' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    46.5,
-    48.1
+    39.2,
+    41.5
    ]
   },
   {
-   "i": 24,
+   "i": 19,
    "line": "N9",
    "src": "ME64bRiQi24.mp4",
    "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
    "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 310.5,
-   "dur": 1.6,
+   "ss": 310.4,
+   "dur": 1.75,
    "src_span": [
-    310.5,
-    312.1
+    310.4,
+    312.15
    ],
    "kind": "원본재편집",
    "box": [
@@ -913,47 +738,12 @@
    ],
    "res": "1920x1080",
    "scale": 1.119,
-   "ours": "경찰들과 본부 밖으로 걸어 나옴",
+   "ours": "경찰들과 본부 밖으로 걸어 나옴(끝 컷)",
    "why": "나레 'LA 경찰이 석 달간 사고 0건이라며, 순찰' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
    "mute": true,
    "t_final": [
-    48.1,
-    49.7
-   ]
-  },
-  {
-   "i": 25,
-   "line": "N9",
-   "src": "ME64bRiQi24.mp4",
-   "url": "https://www.youtube.com/watch?v=ME64bRiQi24",
-   "src_date": "CNBC Ambition 유튜브(Shark Tank 시즌4 2013 + 시즌9 후일담)",
-   "ss": 323.35,
-   "dur": 1.45,
-   "src_span": [
-    323.35,
-    324.8
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    434,
-    1080,
-    1052
-   ],
-   "src_crop": [
-    477,
-    0,
-    965,
-    940
-   ],
-   "res": "1920x1080",
-   "scale": 1.119,
-   "ours": "경찰들과 하이파이브(로리 포함)",
-   "why": "나레 'LA 경찰이 석 달간 사고 0건이라며, 순찰' — 원본 소리 끔 · 아래 CNBC 띠(y≥950) 크롭 밖",
-   "mute": true,
-   "t_final": [
-    49.7,
-    51.15
+    41.5,
+    43.25
    ]
   }
  ]
