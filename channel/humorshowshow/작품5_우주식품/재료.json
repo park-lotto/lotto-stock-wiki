@@ -1,0 +1,156 @@
+{
+ "cand_dir": "C:/숏템_칼카피/humorshowshow/작품5_우주식품",
+ "_note": "행 = 자막 조각(줄마다 '/' 앞뒤 2조각). 원음 안 씀. 출처: shin_pack·shin_boil=2tLk-NmYLw0(신라면, 1080) · iss_soyuz=l0lyUpFrF0A 0~4초(KASSTA, ISS+소유스, 왼쪽 아래 이름 글상자 크롭으로 뺌) · iss_water·iss_eat=onm7P_iFueE(NASA VideoFromSpace 720p, 30~46·50~82초) · ramen_boil·ramen_lift=lOrzpy4am3A(2160→1080, 68~92·122~131초) · sh_space=8aJ-UEvRWCc 55~92초(한화 스페이스허브 1080, 아래 자막 크롭으로 뺌) · ottogi_rice=8X1JOYVKGog(오뚜기밥 1080) · 짤 4개(meme_pack). 같은 소스는 ±3초 밖·A-B-A 10초 밖으로 고름",
+ "shots": [
+  {
+   "src": "shin_pack.mp4",
+   "ss": 0.0,
+   "kind": "제품사진",
+   "seen": "신라면 봉지(농심) — 훅 카드 (아래 원본 자막 크롭으로 뺌)",
+   "src_crop": [
+    320,
+    0,
+    1082,
+    880
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "iss_soyuz.mp4",
+   "ss": 0.0,
+   "kind": "방송화면",
+   "seen": "지구 위 국제우주정거장에 붙은 소유스 우주선",
+   "src_crop": [
+    940,
+    0,
+    980,
+    796
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "iss_water.mp4",
+   "ss": 8.3,
+   "kind": "방송화면",
+   "seen": "ISS 물 공급기에 꽂힌 음식 봉지(물 넣는 장치)"
+  },
+  {
+   "src": "ramen_boil.mp4",
+   "ss": 0.6,
+   "kind": "제품영상",
+   "seen": "냄비에 막 넣은 굳은 면 덩어리"
+  },
+  {
+   "src": "meme:fm_squidsad",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "창밖을 그리운 듯 보는 징징이 — '열흘 동안 라면 없이'"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "meme:fm_sadalla",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "오케이 사딸라 김두한 — '만들어줌 ㄱㄱ'"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "shin_boil.mp4",
+   "ss": 1.0,
+   "kind": "제품영상",
+   "seen": "냄비에서 끓는 신라면 면"
+  },
+  {
+   "src": "sh_space.mp4",
+   "ss": 22.5,
+   "kind": "제품사진",
+   "seen": "손에 든 우주라면 봉지(분홍 라벨, 면 보임)",
+   "src_crop": [
+    560,
+    0,
+    820,
+    667
+   ]
+  },
+  {
+   "src": "sh_space.mp4",
+   "ss": 6.8,
+   "kind": "제품영상",
+   "seen": "원터치 캔 뚜껑 따기 → 캔에서 김치 들어올림(우주김치)",
+   "src_crop": [
+    468,
+    0,
+    984,
+    800
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "ottogi_rice.mp4",
+   "ss": 2.0,
+   "kind": "제품영상",
+   "seen": "끓는 물에 데우는 오뚜기밥"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "iss_eat.mp4",
+   "ss": 3.0,
+   "kind": "방송화면",
+   "seen": "ISS 식탁에서 음식 봉지를 들고 뜯는 우주인"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "sh_space.mp4",
+   "ss": 26.4,
+   "kind": "제품사진",
+   "seen": "한국 우주식품 봉지들(생식바·수정과·홍삼차)",
+   "src_crop": [
+    530,
+    0,
+    861,
+    700
+   ]
+  },
+  {
+   "src": "iss_eat.mp4",
+   "ss": 25.5,
+   "kind": "방송화면",
+   "seen": "ISS 안에서 포크로 떠먹는 우주인(무중력)"
+  },
+  {
+   "src": "meme:fm_travolta",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "두리번거리는 트래볼타 — '원래 먹기로 한 사람은?'"
+  },
+  {
+   "src": "meme:fm_monkeypuppet",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "눈치 보며 시선 돌리는 원숭이 인형 — '바뀌었다고'"
+  },
+  {
+   "src": "ramen_lift.mp4",
+   "ss": 4.0,
+   "kind": "제품영상",
+   "seen": "젓가락으로 라면 면발 들어올림"
+  },
+  {
+   "cont": true
+  }
+ ]
+}
