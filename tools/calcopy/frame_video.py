@@ -47,7 +47,8 @@ def timeline_from(J: dict, tail_start: float | None) -> list[dict]:
 def material(src: str, spec: dict, tail_start: float | None, dur: float, out: pathlib.Path, src_window=None) -> pathlib.Path:
     """src_window = 원본의 실제 영상 창 [x,y,w,h](뜯기 layout.window). 주면 그 부분을 우리 창 크기로 cover 맞춤
     (새 소재 시험: 프리셋 창이 원본 창과 다를 때 원본의 제목·자막 띠가 재료에 섞이지 않게). 안 주면 우리 창 자리 그대로 오린다."""
-    v = next(l for l in spec["layers"] if l["kind"] == "video")
+    # 틀 여러 장(훅+본문)이면 영상 한가운데 시각의 틀(본문)의 영상 칸 — 틀 고르기는 schema.layers_at 한 곳
+    v = next(l for l in schema.layers_at(spec, t=dur / 2) if l["kind"] == "video")
     W, H = spec["canvas"]
     top = (H - v["h"]) // 2
     if src_window:
@@ -78,7 +79,7 @@ def main():
     tail = (spec.get("template_off") or {}).get("tail_sec")
     tail_start = round(dur - tail, 3) if tail else None
     tl = timeline_from(J, tail_start)
-    title = next((l for l in spec["layers"] if l["kind"] == "text" and l["role"] == "title"), None)
+    title = next((l for l in schema.all_layers(spec) if l["kind"] == "text" and l["role"] == "title"), None)
     head = {"text": (title or {}).get("text") or ""}
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
     mat = material(J["source"], spec, tail_start, dur, out / "material.mp4",
