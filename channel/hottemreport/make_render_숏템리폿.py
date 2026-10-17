@@ -6,7 +6,7 @@ from pathlib import Path
 H = Path(__file__).resolve().parent
 ROOT = H.parents[1]
 sys.path.insert(0, str(ROOT))
-YEL = [205, 170, 110]
+YEL = [255, 130, 195]
 which = sys.argv[1]
 
 from tools.calcopy import narr_video as _nv0
@@ -19,10 +19,9 @@ def _emph_box(text, cap, rgb, dst, dy=0):
     im = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0)); dr = ImageDraw.Draw(im)
     cx, cy = cap["x"], cap["y"] + cap["line_h"] / 2 + dy
     l, t, r, b = dr.textbbox((cx, cy), text, font=font, anchor="mm")
-    bx = cap.get("box") or {"rgb": (18, 27, 52), "pad": 20, "radius": 14}; pad = bx["pad"]
+    bx = cap.get("box") or {"rgb": (10, 10, 14), "pad": 30, "radius": 22}; pad = bx["pad"]
     dr.rounded_rectangle([l - pad, t - pad, r + pad, b + pad], radius=bx["radius"], fill=tuple(bx["rgb"]) + (255,))
     dr.text((cx, cy), text, font=font, fill=tuple(int(v) for v in rgb) + (255,), anchor="mm")
-    dr.rectangle([l, b + 6, r, b + 9], fill=tuple(int(v) for v in rgb) + (255,))
     im.save(dst)
     return Path(dst)
 
