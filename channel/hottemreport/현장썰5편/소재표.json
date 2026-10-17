@@ -1,0 +1,57 @@
+{
+ "_about": "현장썰 5편(+예비 2) 소재·해외 원본 확정표 — 브랜드 숏템리폿(핫템리포트 스타일), 화면엔 우리 채널명만·원본 출처 표기 없음. 관제 097, 2026-10-18. 숫자는 실측(yt-dlp 메타·ffprobe·무료 제미나이 받아쓰기 gemini_free, 버텍스 안 씀). 원음 시각은 받아쓰기 기준(±0.5초 오차 가능) — 제작 때 파형으로 다듬는다.",
+ "status": "1편 확정(중간 커밋). 2~5편·예비 진행 중",
+ "output_rule": "완성 영상 저장 위치(사장님 10-18) = 바탕화면 C:/Users/CH/Desktop/칼카피영상/숏템리폿/ — 만들면 바로 넣고 MD5 원본=사본 확인. 판정 전 시안은 파일 이름에 _1차 표시. 원본 소재는 C:/숏템_칼카피/hottemreport/현장썰_<번호>_<제품>/src/",
+ "items": [
+  {
+   "no": 1,
+   "slug": "현장썰_01_가짜잠자리",
+   "product": "모자·가방에 끼우는 가짜 잠자리 모기 퇴치 장식(클립/스틱형, 3개입). 원본 말: 'These come in a three pack' · '16 bucks for all three' · 'TikTok sold out'. 정식 상품명은 화면·설명란에서 확인 못 함",
+   "sell": "예 — 틱톡샵 3개입 $16(원본 화자 말, 구매처 페이지는 안 열어 봄)",
+   "bench": {"id": "PIHCaioKSp4", "channel": "핫템리포트", "views": 2200000, "title": "모기 잡는 잠자리로 20억 번 초등학생", "style": "나레만(원음 0) — 여러 원본 몽타주"},
+   "same_as_bench": "예(프레임 대조): 벤치 8~9번 구간 호숫가 낚시 모자 남성·파란 티 청년 장면이 원본과 같은 장면(담당 3 대조). 벤치의 '초등학생 발명·10만 개·20억' 이야기는 원본·웹검색에서 확인 못 함 → 우리 대본에 쓰지 말 것",
+   "src": [
+    {
+     "role": "주 원본",
+     "url": "https://www.tiktok.com/@prepperpress/video/7504767860275727658",
+     "platform": "틱톡", "channel": "@prepperpress", "views": 2200000, "upload": "2025-05-15",
+     "duration_s": 50.7, "res": "1080x1920", "music": "없음(받아쓰기 music_bed 없음)",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_01_가짜잠자리/src/prepperpress_7504767860275727658.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/01_prepperpress_7504767860275727658.json",
+     "source_audio": [
+      {"t": [0.0, 1.3], "text": "I know. I know.", "use": "첫 원음 후보(혼잣말)"},
+      {"t": [1.3, 5.2], "text": "What's that idiot doing still wearing a dragonfly on his hat?", "use": "★0~5초 첫 원음 — 남들 시선 자조(감탄 자리)"},
+      {"t": [5.2, 11.8], "text": "Well, everyone's wondering whether it works, whether it keeps the bugs away. Said I didn't know, I said I'd try it.", "use": "궁금증 제기"},
+      {"t": [11.8, 15.4], "text": "Again, bugs were out earlier, now they're gone. So does it work?", "use": "★증거 원음 1(낚시 시연)"},
+      {"t": [20.1, 30.4], "text": "Dragonflies are carnivorous insects and excellent hunters. ... Dragonflies eat mosquitoes, flies, gnats, midges, bees, young horse flies, mayflies, and wasps.", "use": "원리(종이 목록 화면 26~31초) — 나레로 대체 가능"},
+      {"t": [30.4, 35.0], "text": "These come in a three pack. I keep one on my hat, I keep one on my pack. My son wears one.", "use": "제품 구성"},
+      {"t": [35.0, 36.7], "text": "I don't I don't believe this.", "use": "★반응(아들 등장) — 끝 원음 후보"},
+      {"t": [36.7, 42.5], "text": "Look at my son wearing one. He's the one that told me about them in the first place. He said get these things, they're awesome.", "use": "아들 장면"},
+      {"t": [42.5, 50.1], "text": "Last year, they were all the rage. TikTok sold out. 16 bucks for all three. ...", "use": "판매 멘트 — 구매 유도라 우리 영상엔 빼거나 '품절'만"}
+     ],
+     "product_first_s": 0.0,
+     "product_note": "0초 첫 프레임에 모자 위 파란 잠자리(셀카)",
+     "overlay": "0~5초 상단 흰 글자 'Keeps Bugs Away?'(화면 위 약 8~13% 높이 띠). 그 뒤 번인 글자 없음. 틱톡 워터마크 = 시트(1초 간격 51장)에서 안 보임",
+     "crop": "원본이 9:16 1080x1920 — 크롭 불필요. 0~5초 상단 글자는 우리 제목 띠가 덮는 자리(OE11 틀: 위 검정 띠)"
+    },
+    {
+     "role": "보조 원본(같은 제품, 다른 사람) — 시연 증거 원음",
+     "url": "https://www.tiktok.com/@mack.topa/video/7505881760635407621",
+     "platform": "틱톡", "channel": "@mack.topa", "views": 1700000, "upload": "2025-05-18",
+     "duration_s": 45.1, "res": "1080x1920",
+     "file": "C:/숏템_칼카피/hottemreport/현장썰_01_가짜잠자리/src/mack.topa_7505881760635407621.mp4",
+     "asr": "channel/hottemreport/현장썰5편/asr/01_mack.topa_7505881760635407621.json",
+     "source_audio": [
+      {"t": [0.0, 4.2], "text": "I'm going to test to see if this works for mosquitoes, since the mosquitoes were everywhere."},
+      {"t": [14.2, 17.4], "text": "I see a bunch of mosquitoes, but they're not coming near me. Oh, there's one.", "use": "★증거 원음 2"},
+      {"t": [34.2, 35.2], "text": "It's working.", "use": "★끝 원음 후보('~다고 하네요' 뒤 한 마디)"}
+     ],
+     "overlay": "번인 영어 자막 + 노란 자막 있음(담당 3 판독, 위치 미측정) — 쓸 구간만 하단 크롭/우리 자막으로 덮기, 제작 전 프레임으로 위치 재확인 필요"
+    }
+   ],
+   "adapt": "벤치는 '초등학생이 20억 벌었다'(확인 안 되는 이야기)+여러 원본 나레만. 우리는 원음 현장썰로: 0초 모자 위 잠자리+나레 훅 → 1.3초 'What's that idiot doing…' 자조 원음 → 나레 '근데 진짜 모기가 안 온다는데' → 11.8초 'now they're gone' + 보조 원본 'they're not coming near me' 증거 → 장점(3개입·모자·가방·아이) 몰아치기 → '아들이 먼저 알려준 거라고 하네요' + 'It's working.'(또는 'I don't believe this.')로 끝. 벤치의 미확인 수치(10만 개·20억)는 쓰지 않는다",
+   "verdict": "채택",
+   "why_first": "5편 중 제일 확실: 원본 1080x1920 9:16(크롭 불필요)·음악 없이 사람 말소리 전편·제품이 0초 첫 프레임·판매 연결(3개입 $16)·벤치와 같은 원본 확정·같은 제품 보조 원본(170만)까지 확보"
+  }
+ ]
+}
