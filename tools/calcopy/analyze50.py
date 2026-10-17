@@ -22,7 +22,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-MODEL = "gemini-2.5-flash"
 PROMPT = """너는 한국어 유튜브 쇼츠를 칼같이 복제하려는 편집자다. 이 영상(소리 포함)을 처음부터 끝까지 보고 아래 JSON만 출력하라.
 시각은 초(소수 1자리). 보이지/들리지 않은 것은 지어내지 말고 null·빈 목록.
 {
@@ -44,40 +43,33 @@ PROMPT = """너는 한국어 유튜브 쇼츠를 칼같이 복제하려는 편�
 alone = 그 효과음이 목소리·배경음악 없이(또는 거의 없이) 단독으로 깨끗하게 들리면 true."""
 
 
-def _client():
-    from shopping_shorts.channelkit.providers import _gemini_client
-    return _gemini_client(None, str(ROOT / ".env"))
-
-
-def judge_one(client, mp4: Path, out: Path) -> str:
+def judge_one(mp4: Path, out: Path, ask=None) -> str:
+    """영상 1편 통째 판독 — 제미나이 창구는 gemini_free.ask 한 곳(무료 공용 풀·429 장부·서버 대체. 10-18: 옛 providers._gemini_client 는
+    버텍스 우선 + gemini-2.5-flash(새 키 404)라 깨져 있었다). 20MB 넘는 영상은 video_part 가 480p 로 줄인다."""
     if out.exists():
         return "skip"
-    from google.genai import types
-    data = mp4.read_bytes()
-    last = None
-    for wait in (0, 15, 45, 90):
-        if wait:
-            time.sleep(wait)
-        try:
-            r = client.models.generate_content(
-                model=MODEL,
-                contents=[types.Part.from_bytes(data=data, mime_type="video/mp4"), PROMPT],
-                config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.0))
-            j = json.loads(r.text)
-            out.write_text(json.dumps(j, ensure_ascii=False, indent=1), encoding="utf-8")
-            return "ok"
-        except Exception as e:  # 429·파싱 실패는 쉬고 다시 — 끝내 실패하면 실패로 남긴다
-            last = e
-    (out.with_suffix(".err")).write_text(f"{type(last).__name__}: {last}", encoding="utf-8")
-    return "fail"
+    from tools.calcopy.engine import gemini_free
+    ask = ask or gemini_free.ask
+    t0 = time.time()
+    try:
+        part = gemini_free.video_part(str(mp4))
+    except Exception as e:  # noqa: BLE001 — 줄이기 실패는 실패로 남긴다
+        out.with_suffix(".err").write_text(f"{type(e).__name__}: {e}", encoding="utf-8")
+        return "fail"
+    d, err = ask([part], PROMPT, f"judge:{mp4.stem}")
+    if err or not d:
+        out.with_suffix(".err").write_text(f"gemini: {err}", encoding="utf-8")
+        return "fail"
+    d["_sec"] = round(time.time() - t0, 1)
+    out.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    return "ok"
 
 
 def run_judge(base: Path, workers: int = 4):
     os.makedirs(base / "judge", exist_ok=True)
-    client = _client()
     vids = sorted((base / "mp4").glob("*.mp4"))
     with ThreadPoolExecutor(workers) as ex:
-        res = list(ex.map(lambda p: judge_one(client, p, base / "judge" / f"{p.stem}.json"), vids))
+        res = list(ex.map(lambda p: judge_one(p, base / "judge" / f"{p.stem}.json"), vids))
     print("judge", {k: res.count(k) for k in set(res)})
 
 

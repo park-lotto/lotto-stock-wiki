@@ -175,8 +175,17 @@ def screen(work: Path, keywords: list[str], top: int = 12, ids: list[str] | None
     sd = work / "screen"
     cands = jload(sd / "candidates.json")["candidates"] if (sd / "candidates.json").exists() else []
     ids = ids or [c["id"] for c in cands][:top]
+    def safe(v):
+        """후보 하나가 실패해도(yt-dlp 토막 오류 등) 그 후보만 error 로 적고 계속 — 10-18 손태영 편은 후보 1개 오류로 648초 뒤 단계가 통째로 죽었다."""
+        try:
+            return screen_one(sd, v, keywords, log)
+        except Exception as e:  # noqa: BLE001 — 이유를 행에 남긴다(조용히 삼키지 않는다)
+            log(f"[screen] {v} 실패: {type(e).__name__}: {str(e)[:160]}")
+            return {"id": v, "error": f"{type(e).__name__}: {str(e)[:300]}", "ok_quality": False, "hit_n": 0, "title_hit": False}
     with ThreadPoolExecutor(max_workers=2) as ex:      # 3개 동시엔 자막 429(10-18 실측)
-        rows = list(ex.map(lambda v: screen_one(sd, v, keywords, log), ids))
+        rows = list(ex.map(safe, ids))
+    if rows and all(r.get("error") for r in rows):
+        raise StageError("후보 전부 실패: " + "; ".join(f"{r['id']} {r['error'][:80]}" for r in rows[:3]))
     rows = rank(rows)
     res = {"keywords": keywords, "rows": rows, "chosen": [], "_how": "소넷 워커: 시트(<id>_sheet.jpg)를 보고 같은 제품(라벨·포장)이 보이는 영상 id 를 chosen 에 적는다. 다른 브랜드·모음집은 뺀다"}
     jsave(work / "screen.json", res)

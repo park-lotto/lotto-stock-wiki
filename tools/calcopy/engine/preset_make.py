@@ -240,9 +240,12 @@ def tts_chunks(lines: list[str], rule: dict | None) -> list[str]:
 
 def tts(w: dict, cfg: dict, cache: Path, adopt: str | None, allow: bool, log: dict, synth=None) -> Path:
     """덩어리마다 (목소리|속도|글) 캐시 — 한 덩어리만 고치면 그것만 다시 받는다. 덩어리 사이 0.25초 쉼으로 잇는다."""
-    chunks = tts_chunks([l["tts"] for l in w["lines"]], cfg.get("tts_split"))
+    from tools.calcopy.engine import name_dict as ND       # 사람 이름 발음 표기(주인 engine/name_dict.json) — 사전에 없는 글은 그대로
+    chunks = [ND.apply_all(c, w["voice"]) for c in tts_chunks([l["tts"] for l in w["lines"]], cfg.get("tts_split"))]
     tempo = cfg.get("tts_tempo")
     whole = " ".join(l["tts"] for l in w["lines"])
+    if ND.names_in(whole):
+        log["tts_name_dict"] = {n: ND.spelling(n, w["voice"]) for n in ND.names_in(whole)}
     adopted = cache / "tts" / f"{sha([w['voice'], 'adopted', whole])}.mp3"
     joined = cache / "tts" / f"{sha([w['voice'], tempo, chunks])}.wav"
     if adopt:
@@ -843,6 +846,10 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     log["checks"] = rows
     log["steps_s"] = clk.steps
     log["total_s"] = round(sum(clk.steps.values()), 1)
+    from tools.calcopy.engine.stage_log import Timer           # 단계 초를 공용 장부 꼴로도(stage_log.json, 하이브리드와 같은 꼴 — 모아 보기용)
+    _tm = Timer(out / "stage_log.json")
+    for _k, _v in clk.steps.items():
+        _tm.done(_k, _v, work=w["name"])
     (out / "run_log.json").write_text(json.dumps(log, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     print_table(w["name"], rows)
     fails = [f"{r['B']} {r['항목']} {r['값']}" for r in rows if not r["ok"]]

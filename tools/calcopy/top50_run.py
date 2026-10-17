@@ -21,8 +21,22 @@ E = sorted([e for e in d["entries"] if e.get("view_count")], key=lambda e: -e["v
 B.set_step(slug, "1", "done", f"전체 {len(d['entries'])}편 중 조회 상위 50편({E[0]['view_count']:,}~{E[-1]['view_count']:,})", [],
            name=d.get("channel"), url=url, stats={"subs": d.get("channel_follower_count"), "total": len(d["entries"])})
 (base / "top50.txt").write_text("\n".join("https://www.youtube.com/shorts/" + e["id"] for e in E))
-subprocess.run(["yt-dlp", "--encoding", "utf-8", "-q", "--ignore-errors", "-a", str(base / "top50.txt"), "-f", "bv*[height<=1920][ext=mp4]+ba/b[ext=mp4]/b",
-                "--merge-output-format", "mp4", "--no-overwrites", "-o", str(base / "mp4" / "%(id)s.%(ext)s")])
+# 받기: 50편을 yt-dlp 프로세스 DL_PAR 개로 나눠 동시에(10-18 — 옛 1프로세스 순차). 단계 초는 top50_time.json 에 자동 기록.
+DL_PAR = int(os.environ.get("TOP50_DL_PAR") or 4)
+import time
+from concurrent.futures import ThreadPoolExecutor
+t_dl = time.time()
+urls = (base / "top50.txt").read_text().splitlines()
+lists = [base / f"top50_part{i}.txt" for i in range(DL_PAR)]
+for i, lp in enumerate(lists):
+    lp.write_text("\n".join(urls[i::DL_PAR]))
+def _dl(lp):
+    return subprocess.run(["yt-dlp", "--encoding", "utf-8", "-q", "--ignore-errors", "-a", str(lp), "-f", "bv*[height<=1920][ext=mp4]+ba/b[ext=mp4]/b",
+                           "--merge-output-format", "mp4", "--no-overwrites", "-o", str(base / "mp4" / "%(id)s.%(ext)s")]).returncode
+with ThreadPoolExecutor(DL_PAR) as ex:
+    rcs = list(ex.map(_dl, lists))
+n_mp4 = len(list((base / "mp4").glob("*.mp4")))
+(base / "top50_time.json").write_text(json.dumps({"download_sec": round(time.time() - t_dl, 1), "dl_par": DL_PAR, "mp4": n_mp4, "rcs": rcs}, ensure_ascii=False), encoding="utf-8")
 B.set_step(slug, "2", "doing", "1차 분석 중(판독·받아쓰기·bench)", [])
 subprocess.run([sys.executable, str(ROOT / "tools/calcopy/analyze50.py"), str(base)])
 subprocess.run([sys.executable, str(ROOT / "tools/calcopy/summarize50.py"), str(base), str(ROOT / "channel" / slug)])

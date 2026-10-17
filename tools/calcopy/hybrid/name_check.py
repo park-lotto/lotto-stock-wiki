@@ -7,7 +7,7 @@
     PYTHONUTF8=1 py tools/calcopy/hybrid/name_check.py apply "<tts 글>" 최은경          # 사전 표기로 바꾼 글
     PYTHONUTF8=1 py tools/calcopy/hybrid/name_check.py check 최은경 --voice tc_… [--work 폴더]   # 후보 합성(Typecast, 후보당 1회) → 받아쓰기 → 사전 갱신
 
-판단 주인: name_dict.json(표기) · pick()(어느 후보가 맞는가 = 받아쓰기 글에 이름이 그대로 들어 있는 모델 수).
+판단 주인: 표기 = tools/calcopy/engine/name_dict.json + name_dict.py(10-18 엔진으로 옮김 — preset_make 등 모든 TTS 가 읽는다) · pick()(어느 후보가 맞는가 = 받아쓰기 글에 이름이 그대로 들어 있는 모델 수).
 """
 from __future__ import annotations
 
@@ -18,28 +18,17 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from tools.calcopy.hybrid.common import StageError, jload, jsave  # noqa: E402
+from tools.calcopy.hybrid.common import StageError, jsave  # noqa: E402
+from tools.calcopy.engine import name_dict as ND  # noqa: E402
 
-DICT = Path(__file__).with_name("name_dict.json")
+DICT = ND.DICT
 CANDIDATES = ["{n}", "{n} 씨", "방송인 {n} 씨", "{s}, {g}", "방송인, {s}, {g} 씨", "{s}, {g}이"]   # 최은경 편에서 통한 꼴 순서
 PHRASE = "{c}가 직접 산 거예요."       # 이름 뒤에 조사·문장을 붙여 자연스럽게 읽히게(홑 낱말 합성은 억양이 다르다)
 
 
-def load() -> dict:
-    return jload(DICT) if DICT.exists() else {"names": {}}
-
-
-def spelling(name: str, voice_id: str | None = None) -> str:
-    d = load()["names"].get(name)
-    if not d:
-        return name
-    return (d.get("voices") or {}).get(voice_id or "", None) or d.get("tts") or name
-
-
-def apply(text: str, name: str, voice_id: str | None = None) -> str:
-    """읽는 글(tts)에서 이름을 사전 표기로. 자막(text)은 건드리지 않는다 — 부르는 쪽이 tts 칸에만 쓴다."""
-    sp = spelling(name, voice_id)
-    return text if sp == name else text.replace(name, sp)
+load = ND.load
+spelling = ND.spelling
+apply = ND.apply            # 읽는 글(tts)에서 이름을 사전 표기로. 자막(text)은 건드리지 않는다.
 
 
 def _norm(t: str) -> str:
@@ -89,14 +78,14 @@ def check(name: str, voice_id: str, work: Path, tempo: float | None = None, log=
             ent["bad"].append(b)
     ent["candidates_tried"] = sorted(set(ent.get("candidates_tried", []) + cands[:len(results)]))
     if best is None:
-        jsave(DICT, d)
+        ND.save(d)
         raise StageError(f"이름 {name} 을 또렷하게 읽는 표기를 못 찾았다: {results}")
     ent.setdefault("voices", {})[voice_id] = best["cand"]
     if ent.get("tts", name) == name:
         ent["tts"] = best["cand"]
     import time
     ent["verified"] = f"{time.strftime('%Y-%m-%d')} name_check {voice_id} 후보 {len(results)}개 → {best['cand']!r} {best['texts']}"
-    jsave(DICT, d)
+    ND.save(d)
     jsave(work / "name_check.json", {"name": name, "voice": voice_id, "results": results, "picked": best})
     return {"name": name, "tts": best["cand"], "results": results}
 

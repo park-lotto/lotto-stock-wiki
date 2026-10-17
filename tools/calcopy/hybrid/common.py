@@ -105,33 +105,5 @@ def frame_png(src, t: float, crop, size) -> "Image":
     return Image.open(io.BytesIO(b)).convert("RGB")
 
 
-class Timer:
-    """단계별 소요 초 장부(stage_log.json) — 사장님께 '어디서 시간이 가나'를 숫자로 보인다."""
-
-    def __init__(self, path: Path):
-        self.path = Path(path)
-        self.cur: dict = jload(self.path) if self.path.exists() else {"stages": []}
-
-    def done(self, stage: str, sec: float, note: str = "", **extra):
-        self.cur["stages"].append({"stage": stage, "sec": round(sec, 1), "note": note, "at": time.strftime("%Y-%m-%d %H:%M:%S"), **extra})
-        jsave(self.path, self.cur)
-
-    def __enter__(self):
-        self._t0 = time.time()
-        return self
-
-    def __exit__(self, *a):
-        pass
-
-
-def timed(timer: Timer, stage: str):
-    """with timed(tm, "render"): … — 끝나면 장부에 적는다(예외도 적는다)."""
-    class _T:
-        def __enter__(self_):
-            self_.t0 = time.time()
-            return self_
-
-        def __exit__(self_, et, ev, tb):
-            timer.done(stage, time.time() - self_.t0, "실패: " + str(ev)[:200] if ev else "")
-            return False
-    return _T()
+# 단계 시간 장부 — 주인은 tools/calcopy/engine/stage_log.py (10-18 엔진으로 옮김). 꼴·경로(stage_log.json) 그대로.
+from tools.calcopy.engine.stage_log import Timer, timed  # noqa: E402,F401

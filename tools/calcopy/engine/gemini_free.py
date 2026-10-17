@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
-"""뜯기용 무료 제미나이 창구 — 키는 gemini_keys.keys() 한 곳(GEMINI_API_KEY*·SHORTS_GEMINI_KEY*), transcribe_free.py 와 같은 방식(버텍스·유료 API 금지, BRAINBULB_VERTEX=0).
+"""칼카피 제미나이 창구 **한 곳** — 모든 도구(analyze·material_auto·topic_find·script_frame·yanshot·style_writer·narr_video…)가 ask() 를 부른다.
+키는 gemini_keys.keys() 한 곳(GEMINI_API_KEY*·SHORTS_GEMINI_KEY* = pull_pool_keys 로 받은 공용 풀), 버텍스·유료 API 금지(BRAINBULB_VERTEX=0).
 
-ask(parts, prompt) → (dict|None, 실패이유|None). 429·한도면 다음 키 → 다음 모델로 넘기고, 다 막히면 "429" 를
-돌려준다(멈추지 않는다 — 부르는 쪽이 그 항목을 failed:429 로 적는다).
+ask(parts, prompt) → (dict|None, 실패이유|None). 429·한도면 다음 키 → 다음 모델로 넘기고, 다 막히면 "quota" 를
+돌려준다(멈추지 않는다 — 부르는 쪽이 그 항목을 failed 로 적는다).
+
+★2026-10-18 뿌리 수리(사장님 "제미나이는 최대한 다 활용해" · "시간부터 줄여라") — 부르는 쪽은 아무것도 안 바꿔도 된다:
+  · 서버 대체: 로컬 풀이 오늘 다 막혔거나(quota/no_key) 키가 0개면 **서버 풀**(engine/gemini_server — 회원 풀·key_vault, 키 값은 PC 로 안 옴)로
+    같은 모델·같은 프롬프트를 보낸다. 답에 _via="server" 표식. CALCOPY_GEMINI_BACKEND=auto(기본)|local|server.
+    실측 10-18: 서버는 요청 1건당 SSH+기동 12~17초 고정비 → 글 1회짜리는 로컬이 빠르다(4~9초). 그래서 기본은 로컬 먼저.
+  · ask_many(jobs, workers≤8): 묶음 동시 호출의 주인(analyze._batched 가 쓴다). 8개 동시 13.8초 vs 순차 4개 25.3초(10-18 실측).
+  · ask_cross(parts, prompt, models): 모델 교차 — 모델별 답을 그대로 돌려준다(조용히 한 모델로 줄이지 않는다).
+  · video_part(path): 영상을 인라인 상한(19MB) 아래로 줄여 (bytes, "video/mp4") 파트로.
 시험에서는 analyze(..., llm=가짜함수) 로 이 창구 자체를 바꿔 끼운다.
 """
 from __future__ import annotations
@@ -22,6 +31,9 @@ PRIMARY_ROUNDS = 3
 FALLBACK = "gemini-flash-lite-latest"
 MODELS = (PRIMARY, FALLBACK)
 TIMEOUT_MS = 180_000
+BACKEND = os.environ.get("CALCOPY_GEMINI_BACKEND", "auto").strip().lower() or "auto"   # auto|local|server
+MANY_WORKERS = int(os.environ.get("CALCOPY_GEMINI_WORKERS") or 8)                      # 묶음 동시 상한(로컬 풀)
+SERVER_FALLBACK_REASONS = ("quota", "no_key", "429")
 SEED = 7               # 같은 입력 → 같은 답에 가깝게(temperature 0 + 고정 seed)
 _DEAD: set = set()      # (키번호, 모델) — 404/429
 _CURSOR = {"i": 0}      # 키 라운드로빈 시작점
@@ -38,8 +50,8 @@ def _names() -> list[str]:
     return key_names()
 
 
-def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
-    """parts = [bytes(jpeg)|str, ...] 순서대로 붙인다. JSON 응답을 dict 로."""
+def _ask_local(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
+    """로컬 무료 풀(.env 키)로 1회. parts = [bytes(jpeg)|str|(bytes, mime), ...] 순서대로 붙인다. JSON 응답을 dict 로."""
     from google import genai
     from google.genai import types
     keys = _keys()
@@ -115,3 +127,111 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
     if last == "429" and all(gk.is_dead(nm, m) for nm in names for m in plan):
         last = "quota"
     return None, last
+
+
+# ── 서버 대체·묶음·교차 (10-18) ───────────────────────────────────────────
+def _server_parts(parts: list) -> list[dict]:
+    import base64
+    out = []
+    for p in parts:
+        if isinstance(p, (bytes, bytearray)):
+            out.append({"mime": "image/jpeg", "b64": base64.b64encode(bytes(p)).decode()})
+        elif isinstance(p, tuple):
+            out.append({"mime": p[1], "b64": base64.b64encode(bytes(p[0])).decode()})
+        else:
+            out.append({"text": str(p)})
+    return out
+
+
+def _ask_server(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
+    """서버 풀로 1회(모델은 요청한 순서대로 시도 — 첫 성공 모델의 답). 실패 이유는 모델별로 모아 돌려준다."""
+    from tools.calcopy.engine import gemini_server as GS
+    plan = list(models) if models else [PRIMARY, FALLBACK]
+    t0 = time.time()
+    try:
+        r = GS.ask_raw([{"parts": _server_parts(parts), "prompt": prompt, "json": True}], models=plan)
+    except Exception as e:  # noqa: BLE001 — SSH·서버 실패는 이유를 돌려준다(조용히 삼키지 않는다)
+        why = f"server {type(e).__name__}: {str(e)[:120]}"
+        CALLS.append({"tag": tag, "via": "server", "failed": why, "sec": round(time.time() - t0, 1)})
+        return None, why
+    runs = r["runs"][0]
+    for model in plan:
+        m = next((x for x in runs if x.get("model") == model and "why" not in x), None)
+        if m is None:
+            continue
+        d = m.get("json")
+        if d is None:
+            try:
+                d = json.loads(m.get("text") or "")
+            except Exception:  # noqa: BLE001
+                d = {"text": m.get("text")}
+        if isinstance(d, list):
+            d = {"items": d}
+        if not isinstance(d, dict):
+            d = {"value": d}
+        d["_model"] = model
+        d["_via"] = "server"
+        CALLS.append({"tag": tag, "via": "server", "model": model, "ok": True, "sec": round(time.time() - t0, 1), "tries": m.get("tries")})
+        return d, None
+    why = "server " + "; ".join(f"{x.get('model')}: {x.get('why', '?')[:60]}" for x in runs)
+    CALLS.append({"tag": tag, "via": "server", "failed": why, "sec": round(time.time() - t0, 1)})
+    return None, why
+
+
+def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
+    """창구 하나. BACKEND=local → 로컬만 / server → 서버만 / auto(기본) → 로컬 먼저, 오늘 로컬 풀이 다 막히면(quota·no_key·429) 서버 풀로."""
+    if BACKEND == "server":
+        return _ask_server(parts, prompt, tag, models)
+    d, err = _ask_local(parts, prompt, tag, models)
+    if d is not None or BACKEND == "local" or err not in SERVER_FALLBACK_REASONS:
+        return d, err
+    d2, err2 = _ask_server(parts, prompt, tag, models)
+    if d2 is not None:
+        d2["_local_err"] = err
+        return d2, None
+    return None, f"{err} → {err2}"
+
+
+def ask_many(jobs: list[tuple], workers: int | None = None) -> list[tuple[dict | None, str | None]]:
+    """여러 (parts, prompt[, tag[, models]]) 를 **동시에**. 순서대로 (dict|None, err) 목록. 주인: 묶음 동시 호출은 여기 한 곳.
+    상한 MANY_WORKERS(기본 8) — 로컬 풀 키 수(161)와 무관하게 유튜브·서버 과부하를 막는 값(10-18 실측 8개 13.8초)."""
+    from concurrent.futures import ThreadPoolExecutor
+    if not jobs:
+        return []
+    n = max(1, min(int(workers or MANY_WORKERS), MANY_WORKERS, len(jobs)))
+
+    def one(j):
+        parts, prompt = j[0], j[1]
+        tag = j[2] if len(j) > 2 else ""
+        models = j[3] if len(j) > 3 else None
+        return ask(parts, prompt, tag=tag, models=models)
+    if n == 1:
+        return [one(j) for j in jobs]
+    with ThreadPoolExecutor(max_workers=n) as ex:
+        return list(ex.map(one, jobs))
+
+
+def ask_cross(parts: list, prompt: str, models: tuple, tag: str = "") -> list[dict]:
+    """모델 교차 확인 — 모델마다 1회(동시), [{"model", "json"|"why"}]. 받아쓰기 검증처럼 '두 모델이 같은가'를 볼 때.
+    모델 하나가 끝까지 실패해도 그 자리에 why 를 남긴다(조용히 한 모델로 줄이지 않는다)."""
+    res = ask_many([(parts, prompt, f"{tag}@{m}", (m,)) for m in models])
+    return [{"model": m, **({"json": d} if d is not None else {"why": err})} for m, (d, err) in zip(models, res)]
+
+
+def video_part(path: str, max_bytes: int = 19_000_000, height: int = 480) -> tuple[bytes, str]:
+    """영상 파일 → (bytes, "video/mp4") 파트. 인라인 상한을 넘으면 480p·10fps 로 줄인 임시본을 쓴다(gemini_server._video_b64 와 같은 규칙)."""
+    import subprocess
+    import tempfile
+    p = Path(path)
+    data = p.read_bytes()
+    if len(data) <= max_bytes:
+        return data, "video/mp4"
+    with tempfile.TemporaryDirectory() as td:
+        small = Path(td) / "v.mp4"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(p), "-vf", f"scale=-2:{height},fps=10", "-c:v", "libx264", "-crf", "30",
+                        "-preset", "veryfast", "-c:a", "aac", "-b:a", "48k", "-movflags", "+faststart", str(small)],
+                       check=True, stdin=subprocess.DEVNULL, capture_output=True)
+        data = small.read_bytes()
+    if len(data) > max_bytes:
+        raise RuntimeError(f"영상이 줄여도 너무 크다({len(data) // 1_000_000}MB): {path} — 구간을 나눠라")
+    return data, "video/mp4"

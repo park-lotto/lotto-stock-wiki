@@ -58,11 +58,18 @@ def _jpeg(img: np.ndarray, w: int | None = None, q: int = 85) -> bytes:
 def _batched(llm, items: list[tuple[str, bytes]], prompt: str, tag: str) -> tuple[dict, list[str]]:
     """[(라벨, jpeg)] → {라벨: 답 dict}. 묶음마다 [라벨 글, 그림] 순서로 보낸다. 실패 묶음은 이유 목록."""
     got, errs = {}, []
+    jobs = []
     for k in range(0, len(items), BATCH):
         part = []
         for lab, jpg in items[k:k + BATCH]:
             part += [lab, jpg]
-        d, err = llm(part, prompt, f"{tag}{k // BATCH}")
+        jobs.append((part, prompt, f"{tag}{k // BATCH}"))
+    # 묶음은 서로 독립 → 동시에(10-18 뿌리 수리). 주입된 가짜 llm(시험)은 순차로, 진짜 창구는 gemini_free.ask_many(상한 8).
+    if llm is gemini_free.ask and len(jobs) > 1:
+        results = gemini_free.ask_many(jobs)
+    else:
+        results = [llm(p_, q_, t_) for p_, q_, t_ in jobs]
+    for d, err in results:
         if err:
             errs.append(err)
             continue

@@ -185,6 +185,7 @@ def test_gemini_quota_ledger_fails_fast(tmp_path, monkeypatch):
     from tools.calcopy.engine import gemini_keys as gk, gemini_free as g
     monkeypatch.setattr(gk, "QUOTA_FILE", tmp_path / "q.json")
     monkeypatch.setattr(gk, "_pairs", lambda env_file=None: [("K1", "v1"), ("K2", "v2")])
+    monkeypatch.setattr(g, "BACKEND", "local")      # 10-18: 기본 auto 는 quota 면 서버 풀로 넘어간다(그 시험은 test_calcopy_gemini_owner) — 여기선 로컬 장부만
     for nm in ("K1", "K2"):
         for m in g.MODELS:
             gk.mark(nm, m, "429")

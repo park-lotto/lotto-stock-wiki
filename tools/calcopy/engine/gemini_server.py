@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""서버 제미나이 창구 — 오디오/영상 파일 여러 개 + 프롬프트 → 서버(숏템 서비스)로 보내 **서비스 키 풀**(회원 풀 합류 + key_vault 로테이션)로
+"""서버 제미나이 창구(주인: tools/calcopy/engine — 10-18 hybrid 에서 옮김, hybrid/gemini_server.py 는 재수출) — 오디오/영상 파일 여러 개 + 프롬프트 → 서버(숏템 서비스)로 보내 **서비스 키 풀**(회원 풀 합류 + key_vault 로테이션)로
 병렬 호출, 모델 2개 이상 교차 → JSON 결과만 받아 온다 (사장님 승인 2026-10-18 "제미니는 최대한 다 활용해", 관제 097).
 
 ★키 값은 PC로 오지 않는다·출력하지 않는다(mina_tts 꼴). 서버에서 shopping_shorts.keypool.resync_pools → pipeline.atoms.key_vault 가 키를 고른다.
 
 CLI
-    PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py asr  <파일1> [<파일2>…] [--spans "a-b,a-b"] [--models m1,m2] [--prompt …] [--json out.json]
-    PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py video <mp4> [--spans "a-b,a-b"] --prompt "…" [--models …]      # 영상 토막(480p) 판독
-    PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py text --prompt "…" [--models …]
-    PYTHONUTF8=1 py tools/calcopy/hybrid/gemini_server.py ping
+    PYTHONUTF8=1 py tools/calcopy/engine/gemini_server.py asr  <파일1> [<파일2>…] [--spans "a-b,a-b"] [--models m1,m2] [--prompt …] [--json out.json]
+    PYTHONUTF8=1 py tools/calcopy/engine/gemini_server.py video <mp4> [--spans "a-b,a-b"] --prompt "…" [--models …]      # 영상 토막(480p) 판독
+    PYTHONUTF8=1 py tools/calcopy/engine/gemini_server.py text --prompt "…" [--models …]
+    PYTHONUTF8=1 py tools/calcopy/engine/gemini_server.py ping
   --spans 는 파일마다 같은 구간을 자른다(파일 1개 + 구간 여럿 = 클립 여럿). 없으면 파일 통째.
   결과: {"jobs":[{"file","span","runs":[{"model","text"|"json","sec","tries"}|{"model","why"}]}], "sec"}  — runs 는 모델별(교차 확인).
 
 파이썬
-    from tools.calcopy.hybrid.gemini_server import ask_files, asr, texts
+    from tools.calcopy.engine.gemini_server import ask_files, asr, texts
     r = asr(["a.wav", ("b.mp4", 3.2, 11.0)], prompt=None)        # (경로) 또는 (경로, a, b)
     texts(r["jobs"][0])  → 모델별 글 목록
 
@@ -39,6 +39,7 @@ MODELS = ("gemini-3-flash-preview", "gemini-flash-latest")
 ASR_PROMPT = ('이 오디오의 한국어 말소리를 들리는 그대로 받아써라(배경음악·효과음은 빼고, 고치거나 보태지 마라). 말하는 사람 수도 세라. '
               '말이 없으면 text 는 빈 문자열.\nJSON만: {"text":"","speakers":1}')
 MAX_INLINE = 19_000_000      # 제미나이 인라인 바이트 상한(20MB) 아래
+WORKERS = 12                 # 서버 스레드 상한 — 유료 고객과 같은 풀이라 요청당 12 를 넘기지 않는다(10-18)
 
 REMOTE = r'''
 import json, sys, time, base64
@@ -79,7 +80,7 @@ def call(job, model):
                 return {"model": model, "why": "model_404 " + last, "tries": tries}
     return {"model": model, "why": last or "no_key", "tries": tries}
 tasks = [(ji, m) for ji in range(len(a["jobs"])) for m in a["models"]]
-with ThreadPoolExecutor(max_workers=min(12, max(1, len(tasks)))) as ex:
+with ThreadPoolExecutor(max_workers=min(int(a.get("workers") or 12), 12, max(1, len(tasks)))) as ex:
     res = list(ex.map(lambda t: (t[0], call(a["jobs"][t[0]], t[1])), tasks))
 runs = [[] for _ in a["jobs"]]
 for ji, r in res:
@@ -125,7 +126,7 @@ def _video_b64(src, a, b, td: Path, k: int, height: int = 480) -> str:
     return base64.b64encode(p.read_bytes()).decode()
 
 
-def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: bool = True, max_tries: int = 8) -> dict:
+def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: bool = True, max_tries: int = 8, workers: int = WORKERS) -> dict:
     """files = [경로 | (경로, a, b) …] → 작업마다(파일·구간) 모델별 응답. mode audio(16k mp3) / video(480p 10fps mp4) / text(파일 없음)."""
     if mode not in ("audio", "video", "text"):
         raise ValueError(f"mode 는 audio|video|text: {mode}")
@@ -143,12 +144,20 @@ def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: 
                 parts.append({"mime": "video/mp4", "b64": _video_b64(src, a, b, td, k)})
             jobs.append({"parts": parts, "prompt": prompt, "json": json_out})
     t0 = time.time()
-    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries})
+    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS)})
     out = {"jobs": [{"file": src, "span": [a, b] if a is not None else None, "runs": runs} for (src, a, b), runs in zip(jobs_in, res["runs"])],
            "sec": round(time.time() - t0, 1), "models": list(models)}
     for j in out["jobs"]:
         j["ok_models"] = [r["model"] for r in j["runs"] if "why" not in r]
     return out
+
+
+def ask_raw(jobs: list[dict], models=MODELS, max_tries: int = 8, workers: int = WORKERS) -> dict:
+    """미리 만든 작업 목록을 그대로 서버로 — jobs = [{"parts":[{"mime","b64"}|{"text"}…], "prompt", "json":bool}].
+    gemini_free.ask 의 서버 대체 경로가 쓴다(그림·소리·영상·글 전부). 반환 {"runs":[[모델별 응답…]…], "sec"}."""
+    t0 = time.time()
+    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS)})
+    return {"runs": res["runs"], "sec": round(time.time() - t0, 1), "models": list(models)}
 
 
 def asr(files, prompt: str | None = None, models=MODELS) -> dict:
