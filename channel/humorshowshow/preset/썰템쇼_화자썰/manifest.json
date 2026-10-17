@@ -1012,7 +1012,8 @@
     "edge_y_min": 60,
     "aba_same_scene_s": 10.0,
     "tts_no_jamo": true,
-    "sfx_why": "벤치 최대 6발(NBdm 판독) + 오프너 1"
+    "sfx_why": "벤치 최대 6발(NBdm 판독) + 오프너 1",
+    "line_sync": true
    },
    "tts_split": {
     "max_chars": 35,

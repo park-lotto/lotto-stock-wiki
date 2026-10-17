@@ -313,14 +313,79 @@ def find_asr_cache(narr: Path, data: Path) -> str:
     return ""
 
 
-def timing(w: dict, narr: Path, log: dict) -> tuple[list, float]:
+CHUNK_WHY: list = []   # chunk_line_starts 가 종전 방식으로 넘긴 까닭(로그용)
+
+
+def chunk_line_starts(w: dict, cfg: dict, cache: Path, tempo: float, narr: Path) -> list[float] | None:
+    """줄 시작 = TTS 덩어리 실제 길이로 계산(추정 아님). tts() 가 덩어리를 0.25초 쉼으로 잇고 narration() 이 앞뒤 무음 자르기·긴 쉼 0.1초로
+    줄이기·atempo 를 하므로, 덩어리마다 같은 처리를 해 길이를 재고 '덩어리 길이 + 0.1초 쉼' 을 쌓은 뒤 tempo 로 나눈다.
+    덩어리↔줄 짝이 안 맞거나(쉼표 나누기 등) 합이 실제 나레 길이와 0.3초 넘게 다르면 None(종전 방식으로) — 10-18 썰템쇼 작품3."""
+    from tools.calcopy.engine import name_dict as ND
+    lines = [l["tts"] for l in w["lines"]]
+    if tts_chunks(lines, cfg.get("tts_split")) != lines:
+        CHUNK_WHY.append("덩어리≠줄(쉼표 나누기)"); return None
+    t = cfg.get("tts_tempo")
+    f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
+    mid = "silenceremove=stop_periods=-1:stop_duration=0.15:stop_threshold=-45dB:stop_silence=0.1"
+    ds = []
+    for ln in lines:
+        src = cache / "tts" / "chunk" / f"{sha([w['voice'], t, ND.apply_all(ln, w['voice'])])}.mp3"
+        if not src.exists():
+            CHUNK_WHY.append(f"덩어리 캐시 없음 {src.name}"); return None
+        tmp = narr.with_name(f"_chunk_{len(ds)}.wav")
+        run(["ffmpeg", "-y", "-i", src, "-af", f"aformat=sample_rates=44100:channel_layouts=mono,{f},areverse,{f},areverse,{mid}", tmp])
+        ds.append(dur_of(tmp)); tmp.unlink()
+    starts, acc = [], 0.0
+    for d in ds:
+        starts.append(acc / tempo); acc += d + 0.1
+    total, real = (acc - 0.1) / tempo, dur_of(narr)
+    if abs(total - real) > 0.12 * len(ds):          # 덩어리 사이 쉼이 덜 줄어든 만큼(실측 작품3 쉼당 0.12초)보다 크면 짝이 안 맞는 것
+        CHUNK_WHY.append(f"덩어리 합 {total:.2f}초 ≠ 나레 {real:.2f}초"); return None
+    from tools.calcopy import narr_video as N
+    segs, _ = N.speech_segments(str(narr))
+    on = [a for a, _b in segs]
+    out = [0.0]
+    for st in starts[1:]:
+        x = st * real / total                       # 남은 쉼 차이를 고르게 나눠 늘림
+        near = min(on, key=lambda o: abs(o - x)) if on else x
+        out.append(round(near if abs(near - x) <= 0.4 else x, 3))   # 가장 가까운 실제 말 시작(0.4초 안)에 붙임
+    for i in range(1, len(out)):
+        if out[i] <= out[i - 1] + 0.3:
+            CHUNK_WHY.append(f"줄 {i} 시작이 앞 줄과 0.3초 안"); return None
+    return out
+
+
+def timing(w: dict, narr: Path, log: dict, cfg: dict | None = None, cache: Path | None = None) -> tuple[list, float]:
     """1순위 = 무음 구간 + 글자 비율(line_starts asr=False). 경계에 쉼이 없다는 경보가 나면 그때만 받아쓰기(캐시 먼저)."""
     from tools.calcopy import narr_video as N
     steps = [{"text": p["text"], "chars": p["chars"], "new_cut": True, "line": p["line"]} for p in w["pieces"]]
     lines = [l["tts"] for l in w["lines"]]   # 받아쓰기와 맞출 글 = 실제로 읽은 글(자막과 다른 줄: 숫자 읽기·화자 이름 뺌)
     msgs = []
+    W = chunk_line_starts(w, cfg, cache or w["data"] / "_make_cache", log.get("atempo") or 1.0, narr) if ((cfg or {}).get("checks") or {}).get("line_sync") else None
+    if W:
+        segs, dur = N.speech_segments(str(narr))
+        W = W + [dur]
+        starts = []
+        for li in range(len(lines)):
+            starts += N._place([s for s in steps if s["line"] == li], segs, 0.4, W[li], W[li + 1])
+        order = [s for li in range(len(lines)) for s in steps if s["line"] == li]
+        starts[0] = 0.0
+        timed = [{**s, "t0": round(starts[i], 3), "t1": round(starts[i + 1] if i + 1 < len(starts) else dur, 3)} for i, s in enumerate(order)]
+        log["line_timing"] = {"way": "TTS 덩어리 길이(줄 시작 계산)", "line_starts": W[:-1]}
+        return timed, dur
     timed, dur = N.time_steps(steps, str(narr), lines=lines, log=msgs.append, asr=False)
-    log["line_timing"] = {"way": "무음+글자비율", "경보": msgs}
+    log["line_timing"] = {"way": "무음+글자비율", "경보": msgs, **({"덩어리 방식 안 씀": CHUNK_WHY[-1]} if CHUNK_WHY else {})}
+    if not any("[경보]" in m for m in msgs) and ((cfg or {}).get("checks") or {}).get("line_sync"):
+        # 경보 없이도 쉼표 쉼을 줄 경계로 잡는다(10-18 썰템쇼 작품3 '엥,') — line_sync 켠 프리셋은 받아쓰기 시각과 대조해 0.6초 넘게 다르면 받아쓰기로
+        t2, d2 = N.time_steps(steps, str(narr), lines=lines, log=[].append, asr=True)
+        if not timing_broken(t2, d2):
+            st1 = {s["line"]: s["t0"] for s in reversed(timed)}
+            st2 = {s["line"]: s["t0"] for s in reversed(t2)}
+            gap = max((abs(st1[k] - st2[k]) for k in st1 if k in st2), default=0.0)
+            if gap > 0.6:
+                log["line_timing"] = {"way": "받아쓰기(무음 방식과 줄 시작 최대 %.2f초 차)" % gap, "경보": msgs}
+                print(f"  [경보] 무음 방식 줄 시작이 받아쓰기와 {gap:.2f}초 달라 받아쓰기 시각을 쓴다", flush=True)
+                return t2, d2
     if any("[경보]" in m for m in msgs):
         hit = find_asr_cache(narr, w["data"])
         m2 = []
@@ -735,6 +800,14 @@ def checks(w, cfg, final: Path, narr: Path, sfx_n: int, out: Path, work: Path, p
     win, mask = seam_area(work)
     sm = check_seams.check(str(final), win, mask)
     add("B16", "되감김·점프줌", f"{len(sm['되감김'])}·{len(sm['점프줌'])}", sm["ok"], "0·0 (check_seams)")
+    if C.get("line_sync"):   # 자막 줄 시작 ↔ 완성본 소리(따로 받아쓰기) — 켠 프리셋만(10-18 썰템쇼 작품3 가운데 4줄 0.6~2.5초 늦음, B 표는 못 잡음)
+        from tools.calcopy.engine import check_line_sync as LS
+        try:
+            ls = LS.check(out)
+            add("B17", "자막↔소리 줄 시작(받아쓰기)", f"어긋남 {ls['bad']}줄 · 최대 {max((abs(r['diff']) for r in ls['rows'] if r['diff'] is not None), default='?')}초",
+                ls["ok"], f"모든 줄 |차| ≤ {LS.LIMIT}초·못 찾은 줄 0 (check_line_sync)")
+        except Exception as e:  # noqa: BLE001 — 못 쟀으면 통과로 치지 않는다
+            add("B17", "자막↔소리 줄 시작(받아쓰기)", f"못 잼: {e}", False, f"≤ {LS.LIMIT}초 (check_line_sync)")
     return rows + plan_rules(w, cfg, plan)
 
 
@@ -819,7 +892,7 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     clk.lap("TTS")
     narr, tempo = narration(full, w, cfg, out)
     log["atempo"] = tempo
-    timed, dur = timing(w, narr, log)
+    timed, dur = timing(w, narr, log, cfg, cache)
     timed, dur, narr = fix_line_rates(timed, dur, w, cfg, narr, plan)
     log["line_rate"] = plan["line_rate"]
     clk.lap("나레·줄 시각·줄별 말속도")
