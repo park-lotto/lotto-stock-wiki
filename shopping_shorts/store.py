@@ -3344,12 +3344,14 @@ class Store:
     # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
     #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
     FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
+    FAV_CHANNEL_CAP_ADMIN = 100   # 관리자 상한(사장님 2026-10-18) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
 
     def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
                         followers=None, last_video_thumb="", last_video_url="",
-                        customer_id=LEGACY_CUSTOMER_ID):
+                        customer_id=LEGACY_CUSTOMER_ID, cap=None):
         """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
-        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다."""
+        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다.
+        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한."""
         platform = (platform or "").strip().lower()
         channel_id = (channel_id or "").strip().lstrip("@")
         if not platform or not channel_id:
@@ -3373,7 +3375,7 @@ class Store:
                 return False
             n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
                           (customer_id,)).fetchone()[0]
-            if n >= self.FAV_CHANNEL_CAP:
+            if n >= (cap or self.FAV_CHANNEL_CAP):
                 return None
             c.execute(
                 "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
