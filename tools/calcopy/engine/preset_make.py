@@ -115,6 +115,30 @@ def load_preset(pdir: Path) -> tuple[dict, dict]:
     return M, cfg
 
 
+def accumulate_pieces(raw_lines: list, cfg: dict) -> list:
+    """2줄 누적 자막(게시글형 — 맛템썰템·썰템쇼): 줄마다 [1줄] → [1줄\n2줄] 단계. 판단 주인 = narr_video.steps_of(accumulate) — 여기선 부르기만.
+    대본 줄 text 의 '/' = 화면 줄바꿈 자리(벤치 줄 그대로 — 있으면 그 자리, 없으면 chunk_sentence 가 자른다).
+    줄의 speaker 가 있으면 그 줄 첫 짝(1줄·1줄+2줄)의 화면 1줄 앞에 '화자 : '(나레는 안 읽는다 — 글자 수·말속도에서 뺀다).
+    반환 조각 = {text(화면 글, 2줄이면 \n), read(새로 읽는 조각), chars, line, new_cut}."""
+    from tools.calcopy import narr_video as N
+
+    def chunks_of(s, n):
+        return [c.strip() for c in s.split("/") if c.strip()] if "/" in s else N.chunk_sentence(s, n)
+    steps = N.steps_of([l.get("text") or l.get("line") for l in raw_lines], int(cfg.get("chunk") or 14), "accumulate", chunks_of=chunks_of)
+    out, cur, pair = [], None, 0
+    for st in steps:
+        li = st["line"]
+        if li != cur:
+            cur, pair = li, 0
+        elif st["new_cut"]:
+            pair += 1
+        spk = (raw_lines[li].get("speaker") or "").strip()
+        text = f"{spk} : {st['text']}" if spk and pair == 0 else st["text"]
+        read = st["text"].split("\n")[-1]
+        out.append({"text": text, "read": read, "chars": nchar(read), "line": li, "new_cut": st["new_cut"]})
+    return out
+
+
 def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
     S = json.loads((wdir / "대본.json").read_text(encoding="utf-8"))
     R = json.loads((wdir / "재료.json").read_text(encoding="utf-8"))
@@ -123,12 +147,20 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
     raw_lines = S.get("lines") or S.get("spine55") or []
     lines = [{"text": l.get("text") or l.get("line"), "tts": l.get("tts") or l.get("text") or l.get("line"),
               "slot": l.get("slot") or l.get("role")} for l in raw_lines]
+    acc = cfg.get("caption_mode") == "accumulate"
+    if acc:   # 화면 줄바꿈 '/' 는 줄 글에서 뺀다(맞춤 검사·줄 시각용). 읽는 글은 tts 칸(없으면 줄 글)
+        for l, r in zip(lines, raw_lines):
+            l["text"] = " ".join(x.strip() for x in l["text"].split("/"))
+            l["tts"] = r.get("tts") or l["text"]
     rows = R.get("shots") or R.get("cuts") or []
     toks = S.get("tokens")
     if toks and len(toks) != len(rows):
         raise ValueError(f"토막 {len(toks)}개 ≠ 재료 {len(rows)}개")
-    pieces = []
-    for k, r in enumerate(rows):
+    pieces = accumulate_pieces(raw_lines, cfg) if acc else []
+    if acc and len(pieces) != len(rows):
+        raise ValueError(f"누적 자막 조각 {len(pieces)}개 ≠ 재료 행 {len(rows)}개 — 재료.json shots 를 조각마다 한 행(같은 컷이면 cont): "
+                         + " | ".join(p["text"].replace("\n", "/") for p in pieces))
+    for k, r in enumerate(rows if not acc else []):
         t = toks[k] if toks else None
         cap = (t or {}).get("text") or r.get("caption")
         pieces.append({"text": cap, "chars": (t or {}).get("chars", nchar(cap)), "line": (t or {}).get("line")})
@@ -139,7 +171,7 @@ def load_work(wdir: Path, M: dict, cfg: dict) -> dict:
                 li, used = li + 1, 0
             p["line"] = li
             used += nchar(p["text"])
-    if norm(" ".join(p["text"] for p in pieces)) != norm(" ".join(l["text"] for l in lines)):
+    if norm(" ".join(p.get("read", p["text"]) for p in pieces)) != norm(" ".join(l["text"] for l in lines)):
         raise ValueError("자막 토막을 이으면 대본 줄과 다르다(빠짐·순서)")
     W, H = cfg["window"]
     meme_dir = Path(cfg.get("meme_dir") or data)
@@ -395,16 +427,42 @@ def _renderer_sig() -> str:
     return sha([md5(p) for p in files])
 
 
+def hook_pieces(w, cfg) -> int:
+    """훅 박자에 드는 조각 수 — first_line = 첫 줄 조각 전부, 그 밖 = 첫 조각 하나. 판단 한 곳(박자·틀 경계가 같이 쓴다)."""
+    return sum(1 for p in w["pieces"] if p["line"] == 0) if cfg["hook"] == "first_line" else 1
+
+
+def hook_end_s(w, cfg) -> float:
+    """훅 카드 끝 = 본문 첫 박자 시작(훅 박자 끝). narr_video 의 hook_end(둘째 문장 시작)와 같은 자리 — 훅 줄이 한 문장이면 같다."""
+    n = hook_pieces(w, cfg)
+    return round(w["pieces"][n]["f0"] / FPS, 3) if n < len(w["pieces"]) else round(w["pieces"][-1]["f1"] / FPS, 3)
+
+
+def frame_spans(pre: dict, t: float) -> dict:
+    """틀 2장(훅+본문) 프리셋의 span 변수 = [0, t] · [t, 끝]. span 이 고정값이면 손대지 않는다(프리셋이 이긴다)."""
+    from tools.calcopy.engine import preset_save as P
+    fr = pre["frames"]
+    if len(fr) != 2:
+        raise ValueError(f"틀 {len(fr)}장 — 제작기는 훅+본문 2장만 안다(경계를 정할 규칙을 manifest 에 먼저 적어라)")
+    want = {f"frames[{fr[0]['id']}].span": [0, t], f"frames[{fr[1]['id']}].span": [t, None]}
+    return {k: v for k, v in want.items() if P.flat(pre).get(k) == P.VAR}
+
+
 def snapshot_and_timeline(w, M, cfg, pdir: Path):
     from shopping_shorts import scene_style
     fr = cfg["frame"]["kind"]
     if fr == "preset_save":
         from tools.calcopy.engine import preset_save as P
         from shopping_shorts.calcopy_frame import to_snapshot
+        from shopping_shorts.calcopy_frame import schema
         pre, Mf = P.load(pdir)
-        F = P.apply(pre, None, None, Mf["variable_stats"], None, Mf["rules"])
+        over = dict(w["S"].get("frame_vars") or {})   # 작품마다 바꾸는 틀 글(훅 제목·게시글 제목·조회수 줄 — manifest variables 자리)
+        if pre.get("frames"):
+            over.update(frame_spans(pre, hook_end_s(w, cfg)))
+        F = P.apply(pre, None, over or None, Mf["variable_stats"], None, Mf["rules"])
         snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(F))
-        head = {"text": ""}
+        title = next((l for l in schema.all_layers(F) if l["kind"] == "text" and l["role"] == "title"), None)
+        head = {"text": (title or {}).get("text") or ""}   # 틀 제목 글(narr_video·frame_video 와 같은 꼴 — 렌더러가 hook1·hook2 로 나눔)
     elif fr == "template":
         T = w["title"]
         snap = scene_style.validate_snapshot({"mode": "story", "presetId": M["template"]["preset_id"],
@@ -414,7 +472,7 @@ def snapshot_and_timeline(w, M, cfg, pdir: Path):
         raise ValueError(f"frame.kind 모름: {fr}")
     P_ = w["pieces"]
     beats = []
-    hook_n = sum(1 for p in P_ if p["line"] == 0) if cfg["hook"] == "first_line" else 1
+    hook_n = hook_pieces(w, cfg)
     a, b = P_[0]["f0"] / FPS, P_[hook_n - 1]["f1"] / FPS
     cap0 = w["lines"][0]["text"] if cfg["hook"] == "first_line" else P_[0]["text"]
     beats.append({"beat_idx": 0, "t0": a, "dur": round(b - a, 3), "narration": cap0, "caption_lines": [cap0], "role": "hook",
@@ -669,8 +727,11 @@ def plan_rules(w, cfg, plan) -> list:
            if cs[i - 1]["src"] == cs[i + 1]["src"] != cs[i]["src"] and abs(cs[i + 1]["ss"] - cs[i - 1]["ss"]) <= near]
     rows.append({"B": "A12", "항목": f"A-B-A 끼움(같은 소스 ±{near:g}초 사이 다른 컷 하나)", "값": aba or 0, "ok": not aba,
                  "기준": "0 — 같은 인물은 이어 붙이고 끼운 컷은 묶음 앞·뒤로(표시만, 자동 재배치 안 함)"})
-    mc = max(len(p["text"]) for p in w["pieces"])
+    mc = max(len(re.sub(r"^[^:\n]{1,10} : ", "", x)) for p in w["pieces"] for x in p["text"].split("\n"))   # 화면 줄마다(누적 2줄은 줄별, '화자 : ' 머리 뺌)
     rows.append({"B": "A9", "항목": "자막 최대 자수", "값": mc, "기준": f"≤ {C['caption_max_chars']}", "ok": mc <= C["caption_max_chars"]})
+    if C.get("tts_no_jamo"):   # A11: 읽는 글에 ㅋㅋ·ㄷㄷ 같은 낱자 금지(자막엔 둔다)
+        jamo = [l["tts"] for l in w["lines"] if re.search(r"[ㄱ-ㅎㅏ-ㅣ]", l["tts"])]
+        rows.append({"B": "A11", "항목": "TTS 글 낱자(ㅋㅋ·ㄷㄷ) 없음", "값": jamo or 0, "ok": not jamo, "기준": "0 — 대본 줄 tts 칸에서 뺄 것"})
     rule = cfg.get("tts_split")
     if rule:
         long = [f"{nchar(c)}자 '{c[:14]}…'" for c in tts_chunks([l["tts"] for l in w["lines"]], rule) if nchar(c) > int(rule["max_chars"])]

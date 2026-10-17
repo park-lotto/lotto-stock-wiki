@@ -92,8 +92,9 @@ def _fix_dangling(out: list[str], short: int = 3, cap: int | None = None) -> lis
     return out
 
 
-def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> list[dict]:
-    """mode=replace(교체형: 조각마다 새 1줄, 컷=새 문장 — 썰풀다 틀 B 1초 교체) 이면 아래 누적형 대신 이것."""
+def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate", chunks_of=None) -> list[dict]:
+    """mode=replace(교체형: 조각마다 새 1줄, 컷=새 문장 — 썰풀다 틀 B 1초 교체) 이면 아래 누적형 대신 이것.
+    chunks_of(문장, n) = 문장 → 한 줄 조각들(기본 chunk_sentence). preset_make 가 대본의 '/' 줄바꿈(벤치 줄 그대로)을 쓰려고 넘긴다."""
     if mode == "replace":
         out = []
         subs = [(li, x) for li, line in enumerate(sentences) for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]
@@ -101,15 +102,15 @@ def steps_of(sentences: list[str], n: int = 14, mode: str = "accumulate") -> lis
             for k, c in enumerate(chunk_sentence(s, n)):
                 out.append({"text": c, "chars": len(c.replace(" ", "")), "new_cut": k == 0, "sent": si, "line": li})
         return out
-    return _steps_accumulate(sentences, n)
+    return _steps_accumulate(sentences, n, chunks_of)
 
 
-def _steps_accumulate(sentences: list[str], n: int = 14) -> list[dict]:
+def _steps_accumulate(sentences: list[str], n: int = 14, chunks_of=None) -> list[dict]:
     """누적형 단계: 조각 짝마다 [1줄] → [1줄\\n2줄]. 문장이 바뀌면 새로. 반환 [{text, chars(새로 읽는 글자), new_cut}]"""
     steps = []
     subs = [(li, x) for li, line in enumerate(sentences) for x in re.split(r"(?<=[?.!])\s+", line.strip()) if x]   # 한 줄에 문장 여럿이면 문장마다 새로
     for si, (li, s) in enumerate(subs):
-        ch = chunk_sentence(s, n)
+        ch = (chunks_of or chunk_sentence)(s, n)
         for k in range(0, len(ch), 2):
             a = ch[k]
             steps.append({"text": a, "chars": len(a.replace(" ", "")), "new_cut": True, "sent": si, "line": li})
