@@ -703,9 +703,11 @@ def find_frame(slug: str | None) -> dict | None:
     if not slug:
         return None
     p = ROOT / "channel" / slug / "대본설명서" / "script_frame.json"
-    if not p.exists():
-        return None
     from tools.calcopy.engine import script_frame as SF
+    if not p.exists():
+        # 50편 설명서는 없지만 사장님 손 데이터(칸 순서·잉?·와우)가 있으면 가벼운 설명서 — 재미썸홈(이븐쇼핑 결) 10-18
+        pts = SF.load_points(p)
+        return {"channel": slug, "lite": True, "points": pts} if pts and pts.get("lite") else None
     fr = json.loads(p.read_text(encoding="utf-8"))
     hf = SF.load_hook_formula(p)          # 사장님 첫 문장 공식(손 데이터, 옆 파일) — draft 지시·check_frame 검사가 같이 쓴다
     if hf:
@@ -743,7 +745,14 @@ def draft(product: dict, frame: dict | None, facts: dict, llm, slug: str | None 
     로 쓰고, 없으면 ROLES[slug]/DEFAULT_ROLES 역할 칸 폴백(경보 로그). 문장은 모델이 통째로 쓴다(빈칸 끼우기 금지)."""
     from tools.calcopy.engine import script_frame as SF
     name = product.get("name") or product.get("topic") or ""
-    if frame:
+    if frame and frame.get("lite"):
+        pc = frame["points"]
+        roles = list(pc["roles"])
+        prompt = SW.FRAME_FALLBACK_PROMPT.format(slug=slug or frame.get("channel"), product=name, slots=" > ".join(roles), grounds=_facts_rows(facts))
+        prompt += (f"\n[말투] {pc.get('tone', '')}\n" + SF.points_rule(pc) + SW.RULE_CREATIVE_LINE + "\n"
+                   "- 칸 하나 = 한 줄. 줄마다 fn 에 칸 이름(title·bait…)을 그대로 적고, point·answer_at 을 [잉?·와우] 규칙대로 단다.\n")
+        path, b = "lite", None
+    elif frame:
         b = SF.brief(product, frame, [v["text"] for v in facts.values()], exclude=exclude)
         ids = list(facts)
         f1 = frame["1_skeleton"]["formulas"][0]
@@ -811,7 +820,7 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
     copy7 = {k: [g for g in SF.copy_spans(t, list(examples), 7) if not any(g in c or c in g and len(g) - len(c) <= 1 for c in common)]
              for k, t in enumerate(texts)}
     copy7 = {k: v for k, v in copy7.items() if v}
-    judge = SF.judge_like(" ".join(texts), frame, tags=tags) if frame else None
+    judge = SF.judge_like(" ".join(texts), frame, tags=tags) if frame and frame.get("judge") else None   # 가벼운 설명서엔 판별기 없음
     hook = SF.hook_formula_check(texts[0], (frame or {}).get("hook_formula"), " ".join(texts)) if texts else None
     pts = SF.points_check(lines, (frame or {}).get("points"), ids)
     chk = {"superlative": sorted(sup), "superlative_hit": sup, "spacing_off": sorted(spc), "spacing_hit": spc,
@@ -845,30 +854,60 @@ def materials_plan(lines: list[dict]) -> dict:
 
 def run_frame(slug: str, product: dict, facts: dict, out: Path, llm=None, frame: dict | None = None, exclude: tuple = (),
               tagger=None, with_support: bool = True, log=print) -> dict:
-    """설명서 경로 한 편 — draft → (줄↔근거 판정 1회) → check_frame → 대본.json·재료_계획.json·대본_검사.md. 다시 쓰기는 하지 않는다(판정 결과만)."""
-    llm = llm or TF.LLM(budget=4)
+    """설명서 경로 한 편 — draft → (줄↔근거 판정) → check_frame → 떨어지면 이유를 붙여 다시 쓰기(최대 MAX_REWRITES, 사장님 10-18
+    "탈락하면 교정 — 버리지 말고") → 대본.json·재료_계획.json·대본_검사.md. 끝까지 남은 줄은 반려로 남겨 사람이 그 줄만 고친다."""
+    llm = llm or TF.LLM(budget=4 + 2 * MAX_REWRITES)
     frame = frame if frame is not None else find_frame(slug)
     out.mkdir(parents=True, exist_ok=True)
     dr = draft(product, frame, facts, llm, slug, exclude, log)
-    lines = dr["lines"]
-    support = None
-    if with_support and lines:
-        need = [k for k, l in enumerate(lines) if l.get("facts")]
-        sub = [lines[k] for k in need]
-        sup, serr = support_check(sub, facts, {"points": {}}, llm) if sub else ({}, None)
-        support = {need[i]: why for i, why in (sup or {}).items()} if sup is not None else None
-        if sup is None:
-            log(f"[줄↔근거] 판정 실패 {serr} — 통과로 치지 않는다")
-    tags = tagger(lines) if (tagger and frame) else None
     ex = [e["text"] for e in ((dr.get("brief") or {}).get("examples") or [])]
-    chk = check_frame(lines, frame, facts, ex, support, tags, product)
-    if with_support and support is None:
-        chk["ok"] = False
-        chk["global"].append("줄↔근거 판정 실패")
+
+    def judge(lines):
+        support = None
+        if with_support and lines:
+            need = [k for k, l in enumerate(lines) if l.get("facts")]
+            sub = [lines[k] for k in need]
+            sup, serr = support_check(sub, facts, {"points": {}}, llm) if sub else ({}, None)
+            support = {need[i]: why for i, why in (sup or {}).items()} if sup is not None else None
+            if sup is None:
+                log(f"[줄↔근거] 판정 실패 {serr} — 통과로 치지 않는다")
+        tags = tagger(lines) if (tagger and frame) else None
+        c = check_frame(lines, frame, facts, ex, support, tags, product)
+        if with_support and support is None:
+            c["ok"] = False
+            c["global"].append("줄↔근거 판정 실패")
+        return c
+
+    lines = dr["lines"]
+    chk = judge(lines)
+    tries = [{"round": 0, "ok": chk["ok"], "global": chk["global"], "bad": {str(k): v for k, v in chk["bad"].items()}}]
+    for r in range(MAX_REWRITES if lines else 0):
+        if chk["ok"]:
+            break
+        fix = SW.FRAME_FIX_PROMPT.format(lines=json.dumps([{"i": k, **{x: l.get(x) for x in ("text", "node", "facts", "point", "answer_at")}}
+                                                           for k, l in enumerate(lines)], ensure_ascii=False),
+                                         glob="\n".join(f"- {g}" for g in chk["global"]) or "- 없음",
+                                         bad="\n".join(f"- {k}: {', '.join(v)}" for k, v in chk["bad"].items()) or "- 없음")
+        d2, err = llm(dr["prompt"] + "\n\n" + fix, f"rewrite{r + 1}")
+        new = [l if isinstance(l, dict) else {"text": l} for l in ((d2 or {}).get("lines") or [])]
+        new = [{**l, "text": l["text"].strip(), "facts": [i for i in (l.get("facts") or []) if isinstance(i, str)]}
+               for l in new if isinstance(l.get("text"), str) and l["text"].strip()]
+        if not new:
+            log(f"[다시 쓰기 {r + 1}] 실패 {err or '줄 없음'} — 멈춤")
+            tries.append({"round": r + 1, "error": err or "줄 없음"})
+            break
+        for l in new:
+            l.setdefault("fn", l.get("node") or "")
+        for l, kind in zip(new, shot_kinds_for(new, frame)):
+            l["shot_kind"] = kind
+        lines, chk = new, judge(new)
+        tries.append({"round": r + 1, "ok": chk["ok"], "global": chk["global"], "bad": {str(k): v for k, v in chk["bad"].items()}})
+        log(f"[다시 쓰기 {r + 1}] {'통과' if chk['ok'] else '남음 ' + str(chk['global']) + str(list(chk['bad']))}")
     S = {"engine": "script_engine v1 · 대본 설명서 경로", "path": dr["path"], "slug": slug, "product": product, "title": dr.get("title"),
          "facts": facts, "final": {"lines": [{**l, "sources": [facts[i].get("url", "") for i in l.get("facts") or [] if i in facts and facts[i].get("url")]}
                                              for l in lines], "check": chk},
          "brief_examples": [e["id"] for e in ((dr.get("brief") or {}).get("examples") or [])], "llm_calls": llm.calls, "error": dr.get("error"),
+         "tries": tries,
          "draft_raw": dr.get("raw"), "prompt": dr.get("prompt"),
          "status": "ok" if chk["ok"] else "failed_checks"}
     (out / "대본.json").write_text(json.dumps(S, ensure_ascii=False, indent=1, default=str), encoding="utf-8")

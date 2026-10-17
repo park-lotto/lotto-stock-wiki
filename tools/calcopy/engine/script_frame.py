@@ -871,6 +871,15 @@ def points_rule(pc: dict | None) -> str:
          f"[와우 포인트 — 반드시 {wow.get('count', 3)}줄({' · '.join(wow.get('slots', []))})] {wow.get('plain')}. 그 줄에 point:\"와우\". "
          f"줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 {wow.get('strong_min', 2)}줄 이상은 '미친 포인트·대박인·말도 안 되는·충격적인' 계열, 같은 뿌리 말 두 번 금지): {pool}. "
          f"연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: {' / '.join(wow.get('examples', [])[:2])}\n")
+    dt = pc.get("detail") or {}
+    if dt:
+        s += (f"[디테일 — 반드시] ① {dt['authority']['plain']} — 그 줄에 point:\"권위\"(와우 3칸 중 첫 칸과 같은 줄이어도 된다). "
+              f"② {dt['analogy']['plain']}. ③ {dt['end_buzz']['plain']}. ④ {dt['hook_one_emotion']['plain']}. ⑤ {dt['harsh_words']['plain']}. "
+              "⑥ 첫 문장의 주체·계기는 근거에 있는 개발 비화·유래가 있으면 그것으로(번호 적기), 없을 때만 생활 상황으로 — 회사·인물·숫자는 지어내지 마라.\n")
+    lg = pc.get("length") or {}
+    if lg:
+        s += (f"[길이 — 반드시] 줄 {lg['lines'][0]}~{lg['lines'][1]}개, 전체 {lg['chars'][0]}~{lg['chars'][1]}자(공백 빼고), "
+              f"한 줄 {lg['line_chars_max']}자 이하(한 호흡). 사실을 한 줄에 몰아넣지 말고 가장 센 것만 골라라.\n")
     if cta.get("required"):
         s += f"[끝 CTA — 반드시] 결과과장 줄 다음, 맨 끝 한 줄 = {cta.get('form')} (node:\"권유\", point:\"CTA\")\n"
     return s
@@ -919,6 +928,45 @@ def points_check(lines: list[dict], pc: dict | None, facts_ids: set | None = Non
     ok_ing = [k for k in ings if isinstance(lines[k].get("answer_at"), int) and k < lines[k]["answer_at"] < n]
     if len(ok_ing) < int(ing.get("min", 1)):
         why.append("잉? 포인트 없음(앞 1/3 안에 궁금하게 만드는 줄 + 뒤 줄에서 답)" if not ings else "잉? 줄의 답(answer_at)이 뒤 줄에 없음")
+    # 디테일(10-16 밤 사장님 규칙): ②권위·수치 줄 · 결과 비유 · 끝 줄 사회 반응 · 첫 문장 감정어 하나 · 센 감정어 상한
+    dt = pc.get("detail") or {}
+    if dt and body:
+        idf = facts_ids if facts_ids is not None else None
+        def _has_fact(l):
+            return bool(set(l.get("facts") or []) & idf) if idf is not None else bool(l.get("facts"))
+        au = dt.get("authority") or {}
+        auth = [k for k in range(1, max(1, body - 1)) if _has_fact(lines[k]) and re.search(au.get("cue_re", r"\d"), texts[k])]
+        if len(auth) < int(au.get("min", 1)):
+            why.append("②숫자·권위·유래 줄 없음(만든 회사·브랜드·방송·특허·유래·수치를 근거와 함께)")
+        an = dt.get("analogy") or {}
+        if sum(1 for t in texts[:body] if re.search(an.get("cue_re", "처럼"), t)) < int(an.get("min", 1)):
+            why.append("결과 비유 없음(~처럼·~같아·A vs B)")
+        eb = dt.get("end_buzz") or {}
+        if eb and not re.search(eb.get("cue_re", "난리"), texts[body - 1]):
+            why.append("끝 줄이 사회 반응 과장(~사이에서 ~난리래요)이 아님")
+        if dt.get("hook_one_emotion"):
+            hf_words = ["귀찮", "답답", "불편", "열받", "빡", "서러", "서럽", "짜증", "힘들", "현타", "지쳐", "지친", "속상", "고생"]
+            first = re.split(r"(?<=[.!?])\s", texts[0].strip())[0]
+            emo = [w for w in hf_words if w in first]
+            if len(emo) > 1:
+                per[0] = per.get(0, []) + [f"첫 문장 감정어 겹침 {emo}"]
+        hw = dt.get("harsh_words") or {}
+        harsh = sum(" ".join(texts).count(w) for w in hw.get("words", []))
+        if harsh > int(hw.get("max", 1)):
+            why.append(f"센 감정어 {harsh}회(> {hw.get('max', 1)})")
+    # 길이(편·줄 수·한 줄) — 10-18 엔진 실측: 4줄에 한 줄 90자짜리가 나와도 아무도 안 걸렀다
+    lg = pc.get("length") or {}
+    if lg:
+        tot = sum(len(t.replace(" ", "")) for t in texts)
+        lo, hi = lg.get("chars", [0, 10 ** 6])
+        if not lo <= tot <= hi:
+            why.append(f"편 길이 {tot}자(기준 {lo}~{hi}자)")
+        nlo, nhi = lg.get("lines", [1, 99])
+        if not nlo <= n <= nhi:
+            why.append(f"줄 수 {n}(기준 {nlo}~{nhi})")
+        for k, t in enumerate(texts):
+            if len(t.replace(" ", "")) > int(lg.get("line_chars_max", 999)):
+                per[k] = per.get(k, []) + [f"한 줄 {len(t.replace(' ', ''))}자(> {lg['line_chars_max']}) — 두 줄로 나누거나 줄여라"]
     # 끝 CTA
     if cta.get("required"):
         if not n or not re.search(cta.get("pattern", "댓글"), texts[-1]):
