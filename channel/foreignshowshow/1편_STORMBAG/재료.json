@@ -89,38 +89,6 @@
   },
   {
    "i": 2,
-   "line": "O2",
-   "src": "8UW-es-eTl0.mp4",
-   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
-   "ss": 52.93,
-   "dur": 0.98,
-   "src_span": [
-    52.93,
-    53.91
-   ],
-   "t_final": [
-    2.07,
-    3.05
-   ],
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "res": "1920x1080",
-   "scale": 0.974,
-   "ours": "의자에 앉은 투자자(남·남색 재킷)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    52.42,
-    53.4
-   ],
-   "Y": 49
-  },
-  {
-   "i": 3,
    "line": "N2",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -131,8 +99,8 @@
     59.9
    ],
    "t_final": [
-    3.13,
-    5.03
+    2.07,
+    3.97
    ],
    "src_crop": [
     508,
@@ -147,7 +115,7 @@
    "Y": 110
   },
   {
-   "i": 4,
+   "i": 3,
    "line": "N2",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -158,8 +126,8 @@
     63.47
    ],
    "t_final": [
-    5.03,
-    6.65
+    3.97,
+    5.59
    ],
    "src_crop": [
     508,
@@ -174,7 +142,7 @@
    "Y": 111
   },
   {
-   "i": 5,
+   "i": 4,
    "line": "N3",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
@@ -185,8 +153,8 @@
     35.8
    ],
    "t_final": [
-    6.59,
-    8.49
+    5.53,
+    7.43
    ],
    "src_crop": [
     468,
@@ -201,7 +169,7 @@
    "Y": 138
   },
   {
-   "i": 6,
+   "i": 5,
    "line": "N3",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -212,8 +180,8 @@
     39.86
    ],
    "t_final": [
-    8.49,
-    9.55
+    7.43,
+    8.49
    ],
    "src_crop": [
     405,
@@ -228,19 +196,19 @@
    "Y": 77
   },
   {
-   "i": 7,
+   "i": 6,
    "line": "O3",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 17.95,
-   "dur": 3.0,
+   "dur": 5.9,
    "src_span": [
     17.95,
-    20.95
+    23.85
    ],
    "t_final": [
-    9.77,
-    12.77
+    8.71,
+    14.61
    ],
    "src_crop": [
     405,
@@ -250,61 +218,29 @@
    ],
    "res": "1920x1080",
    "scale": 0.974,
-   "ours": "화면 가득 모래주머니 더미",
+   "ours": "화면 가득 모래주머니 더미(방송 원본 같은 시각 — 소리·화면 같은 원본 초)",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
-    17.85,
-    23.6
+    17.95,
+    23.85
    ],
-   "Y": 74
+   "Y": 71
   },
   {
-   "i": 8,
-   "line": "O3",
-   "src": "3s0CwrcqWCU.mp4",
-   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
-   "ss": 18.25,
-   "dur": 2.75,
-   "src_span": [
-    18.25,
-    21.0
-   ],
-   "t_final": [
-    12.77,
-    15.52
-   ],
-   "src_crop": [
-    468,
-    0,
-    985,
-    960
-   ],
-   "res": "1920x1080",
-   "scale": 1.096,
-   "ours": "모래주머니를 던져 쌓고 들어 옮기는 사람(손·다리만)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    17.85,
-    23.6
-   ],
-   "Y": 154
-  },
-  {
-   "i": 9,
+   "i": 7,
    "line": "N4",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
-   "ss": 21.05,
+   "ss": 18.25,
    "dur": 2.82,
    "src_span": [
-    21.05,
-    23.87
+    18.25,
+    21.07
    ],
    "t_final": [
-    15.6,
-    18.42
+    14.69,
+    17.51
    ],
    "src_crop": [
     468,
@@ -314,24 +250,24 @@
    ],
    "res": "1920x1080",
    "scale": 1.096,
-   "ours": "모래주머니를 한 개씩 들어 쌓는 손(같은 장면 이어감)",
+   "ours": "모래주머니를 던져 쌓고 한 개씩 들어 옮기는 손·다리",
    "mute": true,
-   "Y": 115
+   "Y": 152
   },
   {
-   "i": 10,
+   "i": 8,
    "line": "O4",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 45.25,
-   "dur": 2.36,
+   "dur": 4.75,
    "src_span": [
     45.25,
-    47.61
+    50.0
    ],
    "t_final": [
-    18.5,
-    20.86
+    17.59,
+    22.34
    ],
    "src_crop": [
     560,
@@ -341,49 +277,17 @@
    ],
    "res": "1920x1080",
    "scale": 0.974,
-   "ours": "STORMBAG 자루를 들고 설명하는 창업자",
+   "ours": "자루 든 창업자(45.25~47.61) → 47.61 원본 컷 무대 와이드 두 창업자 — 소리와 같은 원본 초",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
     45.25,
     50.0
    ],
-   "Y": 63
+   "Y": 76
   },
   {
-   "i": 11,
-   "line": "O4",
-   "src": "3s0CwrcqWCU.mp4",
-   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
-   "ss": 69.75,
-   "dur": 2.39,
-   "src_span": [
-    69.75,
-    72.14
-   ],
-   "t_final": [
-    20.86,
-    23.25
-   ],
-   "src_crop": [
-    468,
-    0,
-    985,
-    960
-   ],
-   "res": "1920x1080",
-   "scale": 1.096,
-   "ours": "물을 받아 둔 파란 외바퀴 수레(물만 붓는 장면)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    45.25,
-    50.0
-   ],
-   "Y": 63
-  },
-  {
-   "i": 12,
+   "i": 9,
    "line": "N5",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
@@ -394,8 +298,8 @@
     170.0
    ],
    "t_final": [
-    23.33,
-    24.93
+    22.42,
+    24.02
    ],
    "src_crop": [
     468,
@@ -410,7 +314,7 @@
    "Y": 133
   },
   {
-   "i": 13,
+   "i": 10,
    "line": "N5",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
@@ -421,8 +325,8 @@
     175.5
    ],
    "t_final": [
-    24.93,
-    26.43
+    24.02,
+    25.52
    ],
    "src_crop": [
     468,
@@ -437,7 +341,7 @@
    "Y": 139
   },
   {
-   "i": 14,
+   "i": 11,
    "line": "O5",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -448,8 +352,8 @@
     112.3
    ],
    "t_final": [
-    26.37,
-    28.02
+    25.46,
+    27.11
    ],
    "src_crop": [
     560,
@@ -469,7 +373,7 @@
    "Y": 36
   },
   {
-   "i": 15,
+   "i": 12,
    "line": "N6",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
@@ -480,8 +384,8 @@
     44.66
    ],
    "t_final": [
-    28.1,
-    30.34
+    27.19,
+    29.43
    ],
    "src_crop": [
     600,
@@ -496,7 +400,7 @@
    "Y": 174
   },
   {
-   "i": 16,
+   "i": 13,
    "line": "N6",
    "src": "3s0CwrcqWCU.mp4",
    "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
@@ -507,8 +411,8 @@
     51.35
    ],
    "t_final": [
-    30.34,
-    31.34
+    29.43,
+    30.43
    ],
    "src_crop": [
     468,
@@ -523,7 +427,7 @@
    "Y": 159
   },
   {
-   "i": 17,
+   "i": 14,
    "line": "O6",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -534,8 +438,8 @@
     87.05
    ],
    "t_final": [
-    31.42,
-    32.52
+    30.51,
+    31.61
    ],
    "src_crop": [
     650,
@@ -555,7 +459,7 @@
    "Y": 37
   },
   {
-   "i": 18,
+   "i": 15,
    "line": "O7",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -566,8 +470,8 @@
     244.15
    ],
    "t_final": [
-    32.6,
-    33.6
+    31.69,
+    32.69
    ],
    "src_crop": [
     560,
@@ -587,19 +491,19 @@
    "Y": 43
   },
   {
-   "i": 19,
+   "i": 16,
    "line": "O8",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
-   "ss": 258.45,
-   "dur": 2.75,
+   "ss": 259.9,
+   "dur": 1.35,
    "src_span": [
-    258.45,
-    261.2
+    259.9,
+    261.25
    ],
    "t_final": [
-    33.68,
-    36.43
+    32.77,
+    34.12
    ],
    "src_crop": [
     700,
@@ -609,29 +513,29 @@
    ],
    "res": "1920x1080",
    "scale": 0.974,
-   "ours": "무대 와이드 — 두 창업자(말하는 중)",
+   "ours": "무대 와이드 — 두 창업자(말하는 중, 소리와 같은 원본 초)",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
     259.9,
-    264.0
+    261.25
    ],
-   "Y": 49
+   "Y": 48
   },
   {
-   "i": 20,
-   "line": "O8",
+   "i": 17,
+   "line": "N7",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 263.05,
-   "dur": 1.35,
+   "dur": 1.3,
    "src_span": [
     263.05,
-    264.4
+    264.35
    ],
    "t_final": [
-    36.43,
-    37.78
+    34.2,
+    35.5
    ],
    "src_crop": [
     405,
@@ -642,16 +546,11 @@
    "res": "1920x1080",
    "scale": 0.974,
    "ours": "듣고 있는 투자자(여·연두 옷)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    259.9,
-    264.0
-   ],
+   "mute": true,
    "Y": 86
   },
   {
-   "i": 21,
+   "i": 18,
    "line": "N7",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -662,8 +561,8 @@
     268.98
    ],
    "t_final": [
-    37.86,
-    39.92
+    35.5,
+    37.56
    ],
    "src_crop": [
     405,
@@ -678,7 +577,7 @@
    "Y": 32
   },
   {
-   "i": 22,
+   "i": 19,
    "line": "N7",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -689,8 +588,8 @@
     270.51
    ],
    "t_final": [
-    39.92,
-    41.38
+    37.56,
+    39.02
    ],
    "src_crop": [
     405,
@@ -705,51 +604,19 @@
    "Y": 63
   },
   {
-   "i": 23,
-   "line": "O9",
-   "src": "8UW-es-eTl0.mp4",
-   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
-   "ss": 462.95,
-   "dur": 1.11,
-   "src_span": [
-    462.95,
-    464.06
-   ],
-   "t_final": [
-    41.18,
-    42.29
-   ],
-   "src_crop": [
-    380,
-    0,
-    904,
-    880
-   ],
-   "res": "1920x1080",
-   "scale": 1.195,
-   "ours": "무대에 선 두 창업자(듣는 중)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    462.95,
-    466.6
-   ],
-   "Y": 33
-  },
-  {
-   "i": 24,
+   "i": 20,
    "line": "O9",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 464.06,
-   "dur": 2.54,
+   "dur": 2.79,
    "src_span": [
     464.06,
-    466.6
+    466.85
    ],
    "t_final": [
-    42.29,
-    44.83
+    38.93,
+    41.72
    ],
    "src_crop": [
     380,
@@ -759,29 +626,29 @@
    ],
    "res": "1920x1080",
    "scale": 1.195,
-   "ours": "제안하는 투자자(여·연두 옷)",
+   "ours": "제안하는 투자자(여·연두 옷) — 소리와 같은 원본 초",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
-    462.95,
-    466.6
+    464.06,
+    466.85
    ],
    "Y": 89
   },
   {
-   "i": 25,
+   "i": 21,
    "line": "O10",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 550.6,
-   "dur": 2.09,
+   "dur": 2.02,
    "src_span": [
     550.6,
-    552.69
+    552.62
    ],
    "t_final": [
-    44.91,
-    47.0
+    41.8,
+    43.82
    ],
    "src_crop": [
     560,
@@ -791,18 +658,18 @@
    ],
    "res": "1920x1080",
    "scale": 0.974,
-   "ours": "웃으며 말하는 투자자(남·남색 재킷)",
+   "ours": "웃으며 말하는 투자자(남·남색 재킷) — 소리와 같은 원본 초",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
     550.6,
-    553.1
+    552.62
    ],
    "Y": 36
   },
   {
-   "i": 26,
-   "line": "O10",
+   "i": 22,
+   "line": "N8",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 552.69,
@@ -812,8 +679,8 @@
     553.72
    ],
    "t_final": [
-    47.0,
-    48.03
+    43.9,
+    44.93
    ],
    "src_crop": [
     508,
@@ -823,17 +690,12 @@
    ],
    "res": "1920x1080",
    "scale": 1.195,
-   "ours": "투자자석 와이드(N8 첫머리까지 이어짐)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    550.6,
-    553.1
-   ],
+   "ours": "투자자석 와이드(남 두 명)",
+   "mute": true,
    "Y": 38
   },
   {
-   "i": 27,
+   "i": 23,
    "line": "N8",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -844,8 +706,8 @@
     543.8
    ],
    "t_final": [
-    47.49,
-    48.94
+    44.93,
+    46.38
    ],
    "src_crop": [
     405,
@@ -860,7 +722,7 @@
    "Y": 43
   },
   {
-   "i": 28,
+   "i": 24,
    "line": "N8",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -871,8 +733,8 @@
     545.35
    ],
    "t_final": [
-    48.94,
-    50.44
+    46.38,
+    47.88
    ],
    "src_crop": [
     405,
@@ -887,7 +749,7 @@
    "Y": 84
   },
   {
-   "i": 29,
+   "i": 25,
    "line": "O11",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
@@ -898,8 +760,8 @@
     579.05
    ],
    "t_final": [
-    50.95,
-    52.2
+    47.36,
+    48.61
    ],
    "src_crop": [
     500,
@@ -909,61 +771,29 @@
    ],
    "res": "1920x1080",
    "scale": 0.974,
-   "ours": "웃는 창업자(남·큰 체격) 클로즈업",
+   "ours": "웃는 창업자(남·큰 체격) 클로즈업 — 소리와 같은 원본 초",
    "mute": false,
    "audio_src": "8UW-es-eTl0.mp4",
    "audio_span": [
     577.8,
-    579.9
+    579.05
    ],
    "Y": 46
   },
   {
-   "i": 30,
-   "line": "O11",
-   "src": "8UW-es-eTl0.mp4",
-   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
-   "ss": 579.05,
-   "dur": 1.85,
-   "src_span": [
-    579.05,
-    580.9
-   ],
-   "t_final": [
-    52.2,
-    54.05
-   ],
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "res": "1920x1080",
-   "scale": 0.974,
-   "ours": "벌떡 일어나 환호하는 투자자(여·연두 옷)(N9 첫머리까지 이어짐)",
-   "mute": false,
-   "audio_src": "8UW-es-eTl0.mp4",
-   "audio_span": [
-    577.8,
-    579.9
-   ],
-   "Y": 35
-  },
-  {
-   "i": 31,
+   "i": 26,
    "line": "N9",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 584.5,
-   "dur": 1.6,
+   "dur": 1.9,
    "src_span": [
     584.5,
-    586.1
+    586.4
    ],
    "t_final": [
-    53.13,
-    54.73
+    48.69,
+    50.59
    ],
    "src_crop": [
     405,
@@ -975,22 +805,22 @@
    "scale": 0.974,
    "ours": "무대에서 투자자(여)와 창업자가 끌어안는 장면(손잡음)",
    "mute": true,
-   "Y": 58
+   "Y": 60
   },
   {
-   "i": 32,
+   "i": 27,
    "line": "N9",
    "src": "8UW-es-eTl0.mp4",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
    "ss": 592.1,
-   "dur": 1.6,
+   "dur": 1.8,
    "src_span": [
     592.1,
-    593.7
+    593.9
    ],
    "t_final": [
-    54.73,
-    56.33
+    50.59,
+    52.39
    ],
    "src_crop": [
     405,
@@ -1006,13 +836,13 @@
   }
  ],
  "check": {
-  "cut_count": 33,
-  "cut_median": 1.6,
+  "cut_count": 28,
+  "cut_median": 1.55,
   "first_cut": 0.5,
-  "last_cut": 1.6,
+  "last_cut": 1.8,
   "min_scale_res": 0.974,
   "max_scale": 1.195,
-  "est_total_sec": 56.79,
+  "est_total_sec": 52.35,
   "bench_total": 50.467,
   "same_src_within3s": []
  }

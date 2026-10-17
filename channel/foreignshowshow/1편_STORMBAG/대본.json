@@ -1,5 +1,11 @@
 {
  "topic": "샤크탱크 STORMBAG — 물에 담그면 부푸는 모래 없는 모래주머니, 투자자 넷이 같은 조건으로 붙은 편(벤치 그대로 칼카피, 방송 원음 위주)",
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "why": "벤치 나레 4편 f0 중앙 116.4Hz(남) — 지훈 견본 129.0Hz 1.79반음, 후보 중 가장 가까움(plan/voice_measure.json)"
+ },
  "brand": "샥탬스토리",
  "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
  "bench": {
@@ -51,7 +57,7 @@
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=12"
   },
   "f5": {
-   "text": "8UW 17.85~23.60 원음 'Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.'(r1 2모델 일치, 1명)",
+   "text": "8UW 17.95~23.85 원음(r6 2모델) 'Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.'(r1 2모델 일치, 1명)",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=17"
   },
   "f6": {
@@ -79,7 +85,7 @@
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=85"
   },
   "f12": {
-   "text": "8UW 243.15~244.15 투자자 'You making any money?' · 259.9~264.0 창업자 '(our fiscal year just closed,) and we did $90,000, but we have so far done absolutely zero marketing.'(r2·r3 2모델)",
+   "text": "8UW 243.15~244.15 투자자 'You making any money?' · 원음 259.90~261.25 '…and we did $90,000,'(r5 2모델) · 261.6~263.6 'but we have so far done absolutely zero marketing'(r2·r3 2모델 — 나레 N7 근거, 화면이 듣는 투자자라 원음으로는 안 씀)",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=240"
   },
   "f13": {
@@ -87,15 +93,15 @@
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=264"
   },
   "f14": {
-   "text": "8UW 410.9~426.8 투자자 2명(화면 띠 'Daymond & Daniel's offer: $200k for a 40% stake' 7:08~7:14) '$200,000 for 40%' · 463.0~466.6 투자자(여) '$200,000, but for 30%'(화면 띠 'Lori & Mark's offer: $200k for a 30% stake' 7:48~7:50)",
+   "text": "원음 464.06~466.85 '…the 200,000, but for 30%'(r6 2모델) · 8UW 410.9~426.8 투자자 2명(화면 띠 'Daymond & Daniel's offer: $200k for a 40% stake' 7:08~7:14) '$200,000 for 40%' · 463.0~466.6 투자자(여) '$200,000, but for 30%'(화면 띠 'Lori & Mark's offer: $200k for a 30% stake' 7:48~7:50)",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=410"
   },
   "f15": {
-   "text": "8UW 550.6~553.1 투자자 'We'll do 30 also' · 다른 투자자 'We'll do 30, we'll match it' → 투자자 4명이 같은 30% 조건(553.2 'now they're equal' · 화면 띠 'Daymond & Daniel's revised offer: $200k for a 30% stake' 9:14~9:18)",
+   "text": "원음 550.60~552.62 'We'll do thirty also'(r7) · 8UW 550.6~553.1 투자자 'We'll do 30 also' · 다른 투자자 'We'll do 30, we'll match it' → 투자자 4명이 같은 30% 조건(553.2 'now they're equal' · 화면 띠 'Daymond & Daniel's revised offer: $200k for a 30% stake' 9:14~9:18)",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=550"
   },
   "f16": {
-   "text": "8UW 577.8~579.9 'Lori, Mark, you got a deal.' + 투자자(여) 'Yes!'(r1·r3 2모델)",
+   "text": "8UW 577.80~579.05 'Lori, Mark, you got a deal.'(r5 2모델)",
    "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"
   },
   "f17": {
@@ -148,29 +154,6 @@
     ]
    },
    {
-    "id": "O2",
-    "fn": "반응",
-    "kind": "orig",
-    "src": "8UW",
-    "span": [
-     52.42,
-     53.4
-    ],
-    "en": "Pretty cool.",
-    "who": "투자자(남·남색 재킷) 화면 — 화자 불명",
-    "caps": [
-     "오, 멋진데요"
-    ],
-    "facts": [
-     "f2"
-    ],
-    "est_sec": 0.98,
-    "t_final": [
-     2.07,
-     3.05
-    ]
-   },
-   {
     "id": "N2",
     "fn": "시연(숫자)",
     "kind": "tts",
@@ -186,8 +169,8 @@
     ],
     "est_sec": 3.38,
     "t_final": [
-     3.13,
-     6.51
+     2.07,
+     5.45
     ]
    },
    {
@@ -206,8 +189,8 @@
     ],
     "est_sec": 3.1,
     "t_final": [
-     6.59,
-     9.69
+     5.53,
+     8.63
     ]
    },
    {
@@ -216,11 +199,11 @@
     "kind": "orig",
     "src": "8UW",
     "span": [
-     17.85,
-     23.6
+     17.95,
+     23.85
     ],
     "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
-    "who": "창업자(남) — 화면은 모래주머니 자료, 어느 창업자인지 불명",
+    "who": "창업자(남) — 방송 원본도 이 시각엔 모래주머니 자료화면(말하는 사람 안 나옴)",
     "caps": [
      "기존 모래주머니는",
      "허리가 끊어지고",
@@ -229,10 +212,10 @@
     "facts": [
      "f5"
     ],
-    "est_sec": 5.75,
+    "est_sec": 5.9,
     "t_final": [
-     9.77,
-     15.52
+     8.71,
+     14.61
     ]
    },
    {
@@ -250,8 +233,8 @@
     ],
     "est_sec": 2.82,
     "t_final": [
-     15.6,
-     18.42
+     14.69,
+     17.51
     ]
    },
    {
@@ -275,8 +258,8 @@
     ],
     "est_sec": 4.75,
     "t_final": [
-     18.5,
-     23.25
+     17.59,
+     22.34
     ]
    },
    {
@@ -295,8 +278,8 @@
     ],
     "est_sec": 2.96,
     "t_final": [
-     23.33,
-     26.29
+     22.42,
+     25.38
     ]
    },
    {
@@ -318,8 +301,8 @@
     ],
     "est_sec": 1.65,
     "t_final": [
-     26.37,
-     28.02
+     25.46,
+     27.11
     ]
    },
    {
@@ -338,8 +321,8 @@
     ],
     "est_sec": 3.24,
     "t_final": [
-     28.1,
-     31.34
+     27.19,
+     30.43
     ]
    },
    {
@@ -361,8 +344,8 @@
     ],
     "est_sec": 1.1,
     "t_final": [
-     31.42,
-     32.52
+     30.51,
+     31.61
     ]
    },
    {
@@ -384,8 +367,8 @@
     ],
     "est_sec": 1.0,
     "t_final": [
-     32.6,
-     33.6
+     31.69,
+     32.69
     ]
    },
    {
@@ -395,42 +378,43 @@
     "src": "8UW",
     "span": [
      259.9,
-     264.0
+     261.25
     ],
-    "en": "…and we did $90,000, but we have so far done absolutely zero marketing.",
-    "who": "창업자(남) — 무대 와이드라 화자 불명",
+    "en": "…and we did $90,000,",
+    "who": "창업자(남) — 무대 와이드에 두 창업자, 입 모양으로 누구인지는 불명",
     "caps": [
-     "9만 달러 벌었어요",
-     "마케팅은 아직",
-     "하나도 안 했어요"
+     "9만 달러 벌었어요"
     ],
     "facts": [
      "f12"
     ],
-    "est_sec": 4.1,
+    "est_sec": 1.35,
     "t_final": [
-     33.68,
-     37.78
+     32.77,
+     34.12
     ]
    },
    {
     "id": "N7",
     "fn": "자신감",
     "kind": "tts",
-    "text": "광고만 제대로 하면, 수백만 달러도 노린다고 자신하는데",
-    "tts": "광고만 제대로 하면, 수백만 달러도 노린다고 자신하는데",
+    "text": "광고는 아직 한 번도 안 했다며, 제대로만 하면 수백만 달러도 노린다고 자신하는데",
+    "tts": "광고는 아직 한 번도 안 했다며, 제대로만 하면 수백만 달러도 노린다고 자신하는데",
     "caps": [
-     "광고만 제대로 하면",
+     "광고는 아직",
+     "한 번도 안 했다며",
+     "제대로만 하면",
      "수백만 달러도 노린다고",
      "자신하는데"
     ],
     "facts": [
+     "f12",
      "f13"
     ],
-    "est_sec": 3.24,
+    "est_sec": 4.65,
     "t_final": [
-     37.86,
-     41.1
+     34.2,
+     38.85
     ]
    },
    {
@@ -439,11 +423,11 @@
     "kind": "orig",
     "src": "8UW",
     "span": [
-     462.95,
-     466.6
+     464.06,
+     466.85
     ],
-    "en": "So we're going to offer the $200,000, but for 30%.",
-    "who": "투자자(여·연두 옷)",
+    "en": "…the $200,000, but for 30%.",
+    "who": "투자자(여·연두 옷) — 화면에 말하는 본인",
     "caps": [
      "20만 달러 드릴게요",
      "대신 지분은 30%로요"
@@ -451,10 +435,10 @@
     "facts": [
      "f14"
     ],
-    "est_sec": 3.65,
+    "est_sec": 2.79,
     "t_final": [
-     41.18,
-     44.83
+     38.93,
+     41.72
     ]
    },
    {
@@ -464,21 +448,20 @@
     "src": "8UW",
     "span": [
      550.6,
-     553.1
+     552.62
     ],
-    "en": "We'll do 30 also. / We'll do 30, we'll match it.",
-    "who": "투자자(남·남색 재킷) → 둘째 투자자(남, 불명)",
+    "en": "We'll do 30 also.",
+    "who": "투자자(남·남색 재킷) — 화면에 말하는 본인",
     "caps": [
-     "우리도 30%로 할게요!",
      "우리도 30%로 할게요!"
     ],
     "facts": [
      "f15"
     ],
-    "est_sec": 2.5,
+    "est_sec": 2.02,
     "t_final": [
-     44.91,
-     47.41
+     41.8,
+     43.82
     ]
    },
    {
@@ -498,8 +481,8 @@
     ],
     "est_sec": 3.38,
     "t_final": [
-     47.49,
-     50.87
+     43.9,
+     47.28
     ]
    },
    {
@@ -509,22 +492,21 @@
     "src": "8UW",
     "span": [
      577.8,
-     579.9
+     579.05
     ],
-    "en": "Lori, Mark, you got a deal. / Yes!",
-    "who": "창업자(남) → 투자자(여·연두 옷)",
+    "en": "Lori, Mark, you got a deal.",
+    "who": "창업자(남) — 화면 창업자 클로즈업, 둘 중 누구 말인지는 불명",
     "caps": [
      "로리, 마크!",
-     "두 분이랑 할게요",
-     "좋았어!"
+     "두 분이랑 할게요"
     ],
     "facts": [
      "f16"
     ],
-    "est_sec": 2.1,
+    "est_sec": 1.25,
     "t_final": [
-     50.95,
-     53.05
+     47.36,
+     48.61
     ]
    },
    {
@@ -543,12 +525,12 @@
     ],
     "est_sec": 3.66,
     "t_final": [
-     53.13,
-     56.79
+     48.69,
+     52.35
     ]
    }
   ],
-  "est_total_sec": 56.79,
+  "est_total_sec": 52.35,
   "cps_target": 7.1,
   "orig_audio": [
    {
@@ -565,24 +547,11 @@
     "who": "투자자(남·남색 셔츠) — 이름 불명(화면 글자 없음)"
    },
    {
-    "id": "O2",
-    "src": "8UW-es-eTl0.mp4",
-    "span": [
-     52.42,
-     53.4
-    ],
-    "en": "Pretty cool.",
-    "ko_caps": [
-     "오, 멋진데요"
-    ],
-    "who": "투자자(남·남색 재킷) 화면 — 화자 불명"
-   },
-   {
     "id": "O3",
     "src": "8UW-es-eTl0.mp4",
     "span": [
-     17.85,
-     23.6
+     17.95,
+     23.85
     ],
     "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
     "ko_caps": [
@@ -590,7 +559,7 @@
      "허리가 끊어지고",
      "모래만 수천 파운드죠"
     ],
-    "who": "창업자(남) — 화면은 모래주머니 자료, 어느 창업자인지 불명"
+    "who": "창업자(남) — 방송 원본도 이 시각엔 모래주머니 자료화면(말하는 사람 안 나옴)"
    },
    {
     "id": "O4",
@@ -651,58 +620,54 @@
     "src": "8UW-es-eTl0.mp4",
     "span": [
      259.9,
-     264.0
+     261.25
     ],
-    "en": "…and we did $90,000, but we have so far done absolutely zero marketing.",
+    "en": "…and we did $90,000,",
     "ko_caps": [
-     "9만 달러 벌었어요",
-     "마케팅은 아직",
-     "하나도 안 했어요"
+     "9만 달러 벌었어요"
     ],
-    "who": "창업자(남) — 무대 와이드라 화자 불명"
+    "who": "창업자(남) — 무대 와이드에 두 창업자, 입 모양으로 누구인지는 불명"
    },
    {
     "id": "O9",
     "src": "8UW-es-eTl0.mp4",
     "span": [
-     462.95,
-     466.6
+     464.06,
+     466.85
     ],
-    "en": "So we're going to offer the $200,000, but for 30%.",
+    "en": "…the $200,000, but for 30%.",
     "ko_caps": [
      "20만 달러 드릴게요",
      "대신 지분은 30%로요"
     ],
-    "who": "투자자(여·연두 옷)"
+    "who": "투자자(여·연두 옷) — 화면에 말하는 본인"
    },
    {
     "id": "O10",
     "src": "8UW-es-eTl0.mp4",
     "span": [
      550.6,
-     553.1
+     552.62
     ],
-    "en": "We'll do 30 also. / We'll do 30, we'll match it.",
+    "en": "We'll do 30 also.",
     "ko_caps": [
-     "우리도 30%로 할게요!",
      "우리도 30%로 할게요!"
     ],
-    "who": "투자자(남·남색 재킷) → 둘째 투자자(남, 불명)"
+    "who": "투자자(남·남색 재킷) — 화면에 말하는 본인"
    },
    {
     "id": "O11",
     "src": "8UW-es-eTl0.mp4",
     "span": [
      577.8,
-     579.9
+     579.05
     ],
-    "en": "Lori, Mark, you got a deal. / Yes!",
+    "en": "Lori, Mark, you got a deal.",
     "ko_caps": [
      "로리, 마크!",
-     "두 분이랑 할게요",
-     "좋았어!"
+     "두 분이랑 할게요"
     ],
-    "who": "창업자(남) → 투자자(여·연두 옷)"
+    "who": "창업자(남) — 화면 창업자 클로즈업, 둘 중 누구 말인지는 불명"
    }
   ],
   "check": {
