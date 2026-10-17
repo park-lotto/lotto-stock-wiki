@@ -1,0 +1,21 @@
+{
+ "tteutgi": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/뜯기2/뜯기.json",
+ "frames": [
+  {
+   "frame": "channel/yummyknow/칼카피_rGFX/frame_rGFX_hook_맛템썰템.json",
+   "t_end": null
+  },
+  {
+   "frame": "channel/yummyknow/칼카피_rGFX/frame_rGFX_body_맛템썰템.json",
+   "t_end": null
+  }
+ ],
+ "script": "channel/yummyknow/칼카피_rGFX/대본.json",
+ "tts": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/tts/narr_full.mp3",
+ "materials": "channel/yummyknow/칼카피_rGFX/재료.json",
+ "out": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/render_맛템썰템",
+ "bgm": "qiuqiu",
+ "bgm_ratio": 0.12,
+ "lufs": -16.2,
+ "chunk": 10
+}

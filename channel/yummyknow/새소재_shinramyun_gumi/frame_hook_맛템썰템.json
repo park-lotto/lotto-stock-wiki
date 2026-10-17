@@ -1,0 +1,142 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "rGFXQlS9Cp4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    22,
+    52,
+    50
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 690,
+   "w": 1080,
+   "h": 1008,
+   "radius": 44
+  },
+  {
+   "kind": "band",
+   "x": 66,
+   "y": 84,
+   "w": 262,
+   "h": 70,
+   "rgb": [
+    243,
+    241,
+    237
+   ],
+   "radius": 35
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 197,
+   "y": 97,
+   "w": 250,
+   "align": "center",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 36,
+   "line_h": 42,
+   "rgb": [
+    22,
+    52,
+    50
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "🥢 맛템썰템"
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 66,
+   "y": 196,
+   "w": 948,
+   "align": "left",
+   "lines": 2,
+   "font": "GmarketSansBold",
+   "size": 112,
+   "line_h": 130,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     228,
+     190,
+     130
+    ]
+   ],
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "구미공장 신라면만\n찾는 이유"
+  },
+  {
+   "kind": "band",
+   "x": 66,
+   "y": 508,
+   "w": 72,
+   "h": 6,
+   "rgb": [
+    201,
+    138,
+    62
+   ],
+   "radius": 3
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 66,
+   "y": 548,
+   "w": 948,
+   "align": "left",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 44,
+   "line_h": 52,
+   "rgb": [
+    178,
+    192,
+    188
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "같은 신라면인데 요즘 구미공장 것만 찾는 이유"
+  }
+ ],
+ "_note": "맛템썰템 외관(10-17): 훅 카드 — 좌측 정렬 제목·채널 알약·둥근 영상 창. 영상 창 크기·자리 그대로"
+}

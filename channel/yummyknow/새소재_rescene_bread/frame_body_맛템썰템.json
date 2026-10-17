@@ -1,0 +1,229 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "rGFXQlS9Cp4",
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    255,
+    255,
+    255
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 660,
+   "w": 1080,
+   "h": 1260,
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 30,
+   "y": 44,
+   "w": 1020,
+   "h": 470,
+   "rgb": [
+    231,
+    229,
+    224
+   ],
+   "radius": 44
+  },
+  {
+   "kind": "band",
+   "x": 30,
+   "y": 36,
+   "w": 1020,
+   "h": 470,
+   "rgb": [
+    243,
+    241,
+    237
+   ],
+   "radius": 44
+  },
+  {
+   "kind": "band",
+   "x": 66,
+   "y": 72,
+   "w": 84,
+   "h": 84,
+   "rgb": [
+    22,
+    52,
+    50
+   ],
+   "radius": 42
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 108,
+   "y": 83,
+   "w": 84,
+   "align": "center",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 46,
+   "line_h": 54,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "맛"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 172,
+   "y": 88,
+   "w": 520,
+   "align": "left",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 44,
+   "line_h": 52,
+   "rgb": [
+    22,
+    52,
+    50
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "맛템썰템 🥢"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 1014,
+   "y": 96,
+   "w": 520,
+   "align": "right",
+   "lines": 1,
+   "font": "CcPretendard-SemiBold",
+   "size": 30,
+   "line_h": 35,
+   "rgb": [
+    112,
+    122,
+    118
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "11.6만 읽음 · 297 공감"
+  },
+  {
+   "kind": "band",
+   "x": 66,
+   "y": 184,
+   "w": 948,
+   "h": 2,
+   "rgb": [
+    214,
+    211,
+    205
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 66,
+   "y": 224,
+   "w": 948,
+   "align": "left",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 66,
+   "line_h": 88,
+   "rgb": [
+    22,
+    52,
+    50
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "하루 만에 품절된 CU 리센느\n빵, 제일 많이 산 사람"
+  },
+  {
+   "kind": "band",
+   "x": 66,
+   "y": 428,
+   "w": 72,
+   "h": 6,
+   "rgb": [
+    201,
+    138,
+    62
+   ],
+   "radius": 3
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 555,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 62,
+   "line_h": 93,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": {
+    "rgb": [
+     22,
+     52,
+     50
+    ],
+    "pad": 14,
+    "radius": 22
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null
+  }
+ ],
+ "_note": "맛템썰템 외관(10-17): 원본 채널 틀(상단 띠·프로필 칸·구분선) 폐기 — 둥근 카드·로고 원·조회 줄·진녹 자막 칸. 영상 창 자리는 그대로"
+}
