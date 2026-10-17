@@ -906,7 +906,9 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     total = sum(c["n"] for c in w["cuts"]) / FPS
     mix, sfx_n = sound(w, cfg, narr, total, out, log)
     final = out / "final.mp4"
-    run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
+    # 완성본 인코딩·진짜 최고점 지킴은 engine/master_guard 한 곳(10-18 원샷1_전동칫솔: mix −0.9 → AAC 뒤 +6.3 dBFS)
+    from tools.calcopy.engine.master_guard import encode_final
+    log["master_guard"] = encode_final(vid, mix, final, float(cfg["checks"]["peak_max_dbfs"]))
     clk.lap("소리·완성본")
     groups, t = [], 0.0
     for c in w["cuts"]:

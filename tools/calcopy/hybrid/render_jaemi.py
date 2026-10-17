@@ -587,14 +587,15 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
             break
         gain += (C["target_lufs"] - oI) * 0.9
     final = R / "final.mp4"
-    run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
+    from tools.calcopy.engine.master_guard import encode_final      # 완성본 인코딩·진짜 최고점 지킴 = engine/master_guard 한 곳
+    guard = encode_final(vid, mix, final, -0.5, log=log)
     fI, fpk = lufs(final)
     starts = [next(s["t0"] for s in T["timed"] if s["line"] == li) for li in range(len(S["lines"]))] + [T["ndur"]]
     rates = [round(nchar(S["lines"][i]["tts"]) / (starts[i + 1] - starts[i]), 2) for i in range(len(S["lines"]))]
     rep = {"made_by": "tools/calcopy/hybrid/render_jaemi.py", "version": "재미썸홈판", "final": str(final), "dur": dur_of(final), "lufs": fI, "peak_dbfs": fpk,
            "atempo": tempo, "cps_out": round(chars / dn, 2), "line_rates": rates, "A_end": A_end, "orig_sec": round(o_len, 2), "b_cuts": len(gs),
            "b_cut_median": sorted(g["dur"] for g in gs)[len(gs) // 2], "end_cut": gs[-1]["dur"], "sfx": len(evs), "ngain": round(ngain, 2), "ogain": round(ogain, 2),
-           "mix_gain": round(gain, 2), "max_caption": max(len(p["caption"]) for p in S["pieces"])}
+           "mix_gain": round(gain, 2), "max_caption": max(len(p["caption"]) for p in S["pieces"]), "master_guard": guard}
     cuts_flat = [{"src": g["src"], "ss": g["ss"], "t0": g["t0_final"], "t1": g["t1_final"], "dur": g["dur"], "seg": "B", "line": pl[g["pieces"][0]], "see": g.get("seen", "")} for g in gs]
     cuts_flat += [{"src": s["src"], "ss": s["ss"], "t0": s["t0"], "t1": s["t1"], "dur": s["dur"], "seg": "A", "line": s["who"], "see": s.get("see", "")} for s in T["a_shots"]]
     info = {"report": rep, "pieces": T["pieces"], "a_shots": T["a_shots"], "a_caps": ev, "b_groups": gs, "timed": T["timed"], "cut": cut, "cuts_flat": cuts_flat,

@@ -525,17 +525,9 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     T["end"] = round((na + nb) / FPS, 3)
     mix, A = audio(S, M, T, sent, R)
     final = R / "final.mp4"
-    run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
-    # 최고점 ≤ −0.5 dBFS(B2): alimiter 는 표본 최고점만 막아 AAC 인코딩 뒤 진짜 최고점이 넘친다(10-18 김가연 −0.8 → 완성본 +0.4).
-    # 넘치면 리미터 한계를 1dB씩 내려 소리만 다시 섞는다(최대 3회, 영상은 그대로).
-    for _ in range(3):
-        fl = lufs(final)
-        if fl[1] <= -0.5:
-            break
-        S = {**S, "render": {**(S.get("render") or {}), "tp": cfg(S)["tp"] - 1.0}}
-        log(f"최고점 {fl[1]} dBFS > −0.5 → 리미터 {cfg(S)['tp']} dB 로 다시 섞음")
-        mix, A = audio(S, M, T, sent, R)
-        run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
+    # 완성본 인코딩·진짜 최고점(B2 ≤ −0.5) 지킴은 engine/master_guard 한 곳 — 예전 '리미터 1dB씩 내려 다시 섞기' 루프(10-18 김가연 −0.8 → +0.4)를 대신한다
+    from tools.calcopy.engine.master_guard import encode_final
+    A = {**A, "master_guard": encode_final(vid, mix, final, -0.5, log=log)}
     info = {"made_by": "tools/calcopy/hybrid/render_itssum.py", "version": "잇썸홈판", "tempo": tempo, "sentences": sent, "inner_silences": inner,
             "split_how": sent[0].get("split_how"), "tts_align": bool(align),
             "timeline": T, "audio": A, "final": str(final), "final_dur": dur_of(final), "final_lufs": lufs(final),
