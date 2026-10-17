@@ -91,8 +91,15 @@ print("@@JSON@@" + json.dumps({"runs": runs}, ensure_ascii=False))
 
 def _ssh_py(code: str, payload: dict, timeout: int = 420):
     cmd = (f"cd {REPO} && set -a && . <(sudo cat /etc/shopping-shorts.env) && set +a && timeout {timeout} python3 -c {shlex.quote(code)}")
-    r = subprocess.run(["ssh", "-o", "ConnectTimeout=20", "-i", KEY, HOST, cmd], input=json.dumps(payload, ensure_ascii=False),
-                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout + 60)
+    # 10-18 03:20 옆 세션 순찰: rc=255·빈 출력(순간 SSH 끊김 — 동시 ssh 여럿·MaxStartups) → 5초 쉬고 다시(최대 2회).
+    #   서버 쪽에서 돈 뒤 끊긴 게 아니라 접속 단계 실패(rc 255 + stdout 빔)일 때만 — 같은 작업을 두 번 돌리지 않게.
+    for attempt in range(3):
+        r = subprocess.run(["ssh", "-o", "ConnectTimeout=20", "-o", "ServerAliveInterval=15", "-i", KEY, HOST, cmd],
+                           input=json.dumps(payload, ensure_ascii=False),
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout + 60)
+        if not (r.returncode == 255 and not r.stdout.strip()) or attempt == 2:
+            break
+        time.sleep(5)
     m = [ln for ln in r.stdout.splitlines() if ln.startswith("@@JSON@@")]
     if not m:
         raise RuntimeError(f"서버 실행 실패 rc={r.returncode}: {r.stdout[-400:]} {r.stderr[-800:]}")
