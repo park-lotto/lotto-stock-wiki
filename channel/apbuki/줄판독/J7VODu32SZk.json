@@ -1,0 +1,488 @@
+{
+ "id": "J7VODu32SZk",
+ "dur": 37.9,
+ "title_card": "고소공포증 실험까지 한 / 광기의 초콜릿 (2줄째 빨강, 0~1.9초)",
+ "post_title": "고소공포증 실험까지 한 광기의 초콜릿",
+ "frame": {
+  "header": "노란 머리띠(y0~240, #FABC15 계열) 왼쪽 햄버거 메뉴 + 검정 굵은 '앞 북 이' + 오른쪽 마스코트 로고(노란 동그란 얼굴 캐릭터가 북·북채 든 클립아트, 전 구간 상시)",
+  "layout_y": "머리띠 0~240 / 게시글 제목(검정 굵은 고딕) 약 320~375 / 메타줄 'ㅅㄱ | 18:13'(회색, 5편 동일)+가로선 약 420~450 / 자막 칸 약 480~665(흰 바탕 검정 굵은 고딕, 1줄이면 y560~600) / 그림 칸 약 670~1660(x 약 45~1035) / 아래 1664~1920 흰 여백(글자 0, 전 프레임 실측)",
+  "ai_notice": null,
+  "hook_card": "훅 카드: 머리띠까지 검게 어둡힘 + 검정 제목 상자 2줄(한 줄 흰색, 강조 줄 빨강 또는 하늘색, 굵은 외곽) + 아래 흰 띠에 같은 제목 한 줄 + 그 아래 꽉 찬 영상(y 약 800~1920). 1.3~2.3초",
+  "caption_style": "흰 바탕 검정 굵은 고딕 가운데 정렬, 따옴표·화자표 0. EXhp2OhAM1o만 1줄 뜨고 0.4~1.0초 뒤 2줄째가 덧붙는 누적형, 나머지 4편은 한 장 1줄(0.5~1.9초)"
+ },
+ "lines": [
+  {
+   "t0": 0,
+   "t1": 1.9,
+   "caption": "(훅 카드) 고소공포증 실험까지 한 / 광기의 초콜릿",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "현수교 난간 잡고 겁에 질린 여성, 뒤에 흰 가운 연구원이 클립보드 들고 따라옴",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(실험 참가자 역)",
+    "feeling": "공포·긴장",
+    "prop": "현수교·클립보드 든 연구원"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "0.5→1.5초 사이 표정이 바뀌며 움직임(영상), 매끈한 광고풍 피부, 다리 위에서 가운 입고 클립보드 든 연구원 — 대본 그대로의 연출로 실제 실험 기록일 수 없는 구도"
+   },
+   "effect": null
+  },
+  {
+   "t0": 1.9,
+   "t1": 3.3,
+   "caption": "20년 넘게 일본 직장인들의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "옛 사무실(CRT 모니터)에서 유선전화 받는 지친 남성 회사원, 책상 위 초콜릿 조각",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(일본 회사원 역)",
+    "feeling": "피곤·스트레스",
+    "prop": "유선전화·초콜릿 조각"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "4.7초 초콜릿을 입에 넣는 동작까지 생성, 상표 없는 초콜릿, 90년대풍 사무실 재연"
+   },
+   "effect": null
+  },
+  {
+   "t0": 3.3,
+   "t1": 4.1,
+   "caption": "책상 서랍을 지킨",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 회사원 통화",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "앞 컷 이어짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 4.1,
+   "t1": 5.4,
+   "caption": "멘탈관리 초콜릿이 있다는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "통화하며 초콜릿 먹는 회사원",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "손·전화선 움직임이 생성 영상 특유로 부드럽게 흐름"
+   },
+   "effect": null
+  },
+  {
+   "t0": 5.4,
+   "t1": 6.1,
+   "caption": "초콜릿을 먹으면",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "줄무늬 티 여성이 GABA 상자에서 초콜릿 꺼내 먹음(실사, 중국 SNS풍)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.1,
+   "t1": 6.8,
+   "caption": "왜 마음이 놓이는지",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.8,
+   "t1": 7.9,
+   "caption": "궁금했던 이 제과회사는",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 주먹 쥐어 보임",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.9,
+   "t1": 9.0,
+   "caption": "카카오 속 GABA에 주목했고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "파란 투명 머리 속 뇌가 어둡다가 붉게 빛남(3D 의학 그래픽)",
+   "infographic": {
+    "type": "개념 그래픽(3D 뇌, 스톡 추정) — 수치·글자 없음",
+    "motion": "어두운 파랑 뇌(8.0초) → 대뇌가 붉게 발광(8.6초), 약 0.6초 페이드",
+    "value": "GABA(뇌 작용)"
+   },
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 9.0,
+   "t1": 10.6,
+   "caption": "실제 연구에서는 GABA를 섭취한",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "현수교 위 여성 참가자 + 뒤 연구원",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물",
+    "feeling": "긴장",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "훅과 같은 인물·장소, 카메라가 다가오며 인물 걸음 생성"
+   },
+   "effect": null
+  },
+  {
+   "t0": 10.6,
+   "t1": 11.7,
+   "caption": "고소공포증 참가자들을",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 장면 여성 얼굴 근접",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물",
+    "feeling": "불안",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "같은 생성 영상 이어짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 11.7,
+   "t1": 13.1,
+   "caption": "높이 54m 현수교에 올려",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 장면(여성 화면 오른쪽으로 빠짐)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "같은 생성 영상"
+   },
+   "effect": null
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.4,
+   "caption": "침속 변화까지 측정했다는 거",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "클립보드에 기록하며 걷는 연구원",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "같은 생성 영상"
+   },
+   "effect": null
+  },
+  {
+   "t0": 14.4,
+   "t1": 15.3,
+   "caption": "가능성을 본 회사는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "믹서에 초코 반죽 쏟기(공장 범용 영상, Tk_uj_vaXHw 26.7초와 같은 영상)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.3,
+   "caption": "직장인용 GABA 초콜릿",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 반죽에 흰 덩어리 넣기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.3,
+   "t1": 17.1,
+   "caption": "개발에 들어갔지만",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 영상",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.1,
+   "t1": 18.2,
+   "caption": "막상 GABA 분말을 넣자",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "초코 가루 더미에 분말 쏟기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.2,
+   "t1": 19.6,
+   "caption": "발효치즈 같은 맛과 떫은 맛이",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "실험실 가운 입은 여성 연구원이 초콜릿 맛보고 인상 찌푸림",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(개발 연구원 역)",
+    "feeling": "역겨움·찡그림",
+    "prop": "초콜릿·카카오콩·분말 그릇"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "19.0→20.5초 눈동자·눈썹만 미세하게 움직임(정지 그림 생성 영상), 카카오콩·분말·초콜릿이 대본 재료대로 배치, 상표 없음"
+   },
+   "effect": "18.2초 방사형 줌 블러로 등장(위아래 검은 띠)"
+  },
+  {
+   "t0": 19.6,
+   "t1": 20.9,
+   "caption": "달콤함을 망쳐버리고 말았는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 연구원 찡그림 유지",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물",
+    "feeling": "실망·역겨움",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "같은 생성 영상"
+   },
+   "effect": null
+  },
+  {
+   "t0": 20.9,
+   "t1": 21.7,
+   "caption": "진짜는 여기서부터",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "검은 화면(그림 칸 전체 검정)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "검은 화면 0.8초 — 2차 반전 전 숨 고르기"
+  },
+  {
+   "t0": 21.7,
+   "t1": 23.1,
+   "caption": "맛 때문에 더 빡치게 할 수는 없다며",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "밤 실험실, 접시 수십 개 앞에서 초콜릿 두 개 비교하는 같은 연구원, 머리 위 홀로그램 글자",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물",
+    "feeling": "집중·결의",
+    "prop": "머리 위 청록 홀로그램 띠"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "머리 위 홀로그램 글자가 읽을 수 없는 엉터리 글자(22.0초) — 생성 모델 글자 뭉개짐의 전형, 같은 접시가 수십 개 복제"
+   },
+   "effect": null
+  },
+  {
+   "t0": 23.1,
+   "t1": 24.2,
+   "caption": "2년간 연구를 불태워",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 연구원 근접 + 붉은 빛·불티",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물",
+    "feeling": "열정(불태움)",
+    "prop": "불꽃·불티"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 영상(이미지→영상, 추정)",
+    "evidence": "앞 컷 인물 근접본, 붉은 색조·불티 덧입힘"
+   },
+   "effect": "붉은 색조 + 불티 입자(wDgtC5hXBbQ '불매' 컷과 같은 효과)"
+  },
+  {
+   "t0": 24.2,
+   "t1": 25.7,
+   "caption": "직장인 맞춤 초콜릿을 완성했고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "금속 링에 초코 쏟아짐(Tk_uj_vaXHw 24.4초와 같은 공장 영상)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.7,
+   "t1": 27.3,
+   "caption": "출시 후에도 수백 번 맛을 손보며",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "글리코 GABA 비터·밀크 봉지 사진이 번갈아 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 27.3,
+   "t1": 28.2,
+   "caption": "계속 진화시켰다는 거",
+   "kind": "나레",
+   "screen": "제품사진",
+   "screen_desc": "GABA 밀크 봉지 사진 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 28.2,
+   "t1": 29.8,
+   "caption": "게다가 잠 못 드는 직장인들을 위해",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 침대에 털썩 엎어짐(실사 폰 영상)",
+   "infographic": null,
+   "emotion": {
+    "who": "실제 인물 영상",
+    "feeling": "지침·피곤",
+    "prop": "베개"
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 29.8,
+   "t1": 31.2,
+   "caption": "3알에 GABA 100mg을 넣은",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 베개로 머리 덮음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 31.2,
+   "t1": 31.9,
+   "caption": "잠들기 전 먹는",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "비행기 창가에서 GABA for Sleep 상자 열기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 31.9,
+   "t1": 33.0,
+   "caption": "for sleep 초콜릿까지 만들며",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "GABA for Sleep 패키지·초콜릿",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 33.0,
+   "t1": 34.0,
+   "caption": "낮에는 멘탈을 챙기고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 상자",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 34.0,
+   "t1": 35.4,
+   "caption": "밤에는 수면의 질까지 챙긴다는데",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 GABA for Sleep 먹기(실사)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.4,
+   "t1": 36.9,
+   "caption": "이쯤 되면 제과 회사가 아니라",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "차 안 여성 눈 감고 졸음",
+   "infographic": null,
+   "emotion": {
+    "who": "실제 인물 영상",
+    "feeling": "나른함·졸음",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.9,
+   "t1": 37.9,
+   "caption": "멘탈 트레이너 아니냐고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 팔에 엎드려 잠듦",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드(광기·실험) → 대상(일본 직장인 20년, AI 재연) → 궁금증('왜 ~인지') → 원리(GABA, 뇌 그래픽) → 실험 재연(현수교 54m, AI) → 개발 → 실패(맛, AI 찡그림) → 검은 화면 '진짜는 여기서부터' → 집념(2년·불태움, AI+불 효과) → 완성·개량 → 확장(수면용) → 끝줄 비유('~아니냐고')",
+ "ratios": {
+  "infographic_sec": 1.1,
+  "character_sec": 0,
+  "ai_image_sec": 16.0,
+  "real_video_sec": 17.5,
+  "meme_sec": 0
+ },
+ "method": "10fps 프레임 자막 칸(y480~666)·그림 칸(y672~1660) 픽셀 차로 바뀜 시각 검출(0.1초) → 구간별 자막 크롭+그림 3장 시트 눈 판독, AI 후보는 540px 원본 프레임 3장 이상 대조. 화면 내 AI 고지 문구 없음(아래 여백 y1664~1920 글자 0, 전 프레임). 유튜브 설명란 '변경·합성 콘텐츠' 라벨은 미확인. ratios.real_video_sec = AI 아님으로 본 제품영상·인물 합"
+}

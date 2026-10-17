@@ -1,0 +1,522 @@
+{
+ "id": "wDgtC5hXBbQ",
+ "dur": 41.9,
+ "title_card": "팜유 한 번에 / 1등 바뀐 초콜릿 (1줄째 빨강, 0~1.3초)",
+ "post_title": "팜유 한 번에 1등 바뀐 초콜릿",
+ "frame": {
+  "header": "노란 머리띠(y0~240, #FABC15 계열) 왼쪽 햄버거 메뉴 + 검정 굵은 '앞 북 이' + 오른쪽 마스코트 로고(노란 동그란 얼굴 캐릭터가 북·북채 든 클립아트, 전 구간 상시)",
+  "layout_y": "머리띠 0~240 / 게시글 제목(검정 굵은 고딕) 약 320~375 / 메타줄 'ㅅㄱ | 18:13'(회색, 5편 동일)+가로선 약 420~450 / 자막 칸 약 480~665(흰 바탕 검정 굵은 고딕, 1줄이면 y560~600) / 그림 칸 약 670~1660(x 약 45~1035) / 아래 1664~1920 흰 여백(글자 0, 전 프레임 실측)",
+  "ai_notice": null,
+  "hook_card": "훅 카드: 머리띠까지 검게 어둡힘 + 검정 제목 상자 2줄(한 줄 흰색, 강조 줄 빨강 또는 하늘색, 굵은 외곽) + 아래 흰 띠에 같은 제목 한 줄 + 그 아래 꽉 찬 영상(y 약 800~1920). 1.3~2.3초",
+  "caption_style": "흰 바탕 검정 굵은 고딕 가운데 정렬, 따옴표·화자표 0. EXhp2OhAM1o만 1줄 뜨고 0.4~1.0초 뒤 2줄째가 덧붙는 누적형, 나머지 4편은 한 장 1줄(0.5~1.9초)"
+ },
+ "lines": [
+  {
+   "t0": 0,
+   "t1": 1.3,
+   "caption": "(훅 카드) 팜유 한 번에 / 1등 바뀐 초콜릿",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "장갑 낀 손이 두꺼운 초코 덩어리를 칼로 썲(실사 영상)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.3,
+   "t1": 3.1,
+   "caption": "어차피 국민 초콜릿인데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "Cadbury Dairy Milk 박스 진열대에 넣기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 3.1,
+   "t1": 4.4,
+   "caption": "50g쯤 줄이고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "Cadbury 스프레드 통에 초코 담고 뚜껑",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 4.4,
+   "t1": 6.1,
+   "caption": "카카오 버터 대신 팜유를 넣어도",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 통 뚜껑 닫기 → 유리컵 Cadbury",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.1,
+   "t1": 7.9,
+   "caption": "계속 사 먹겠지? 후후",
+   "kind": "화자대사",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "정장 중년 남성이 무상표 판초콜릿 두 개 들고 음흉하게 웃음, 옆에 기름병·카카오콩",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(회사 임원 역, 화자표 없이 속마음 대사)",
+    "feeling": "음흉한 비웃음",
+    "prop": "기름병(팜유)·카카오콩"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 이미지(정지)",
+    "evidence": "초콜릿·기름병에 상표 없음, 광고 사진처럼 매끈한 피부·조명, 팜유=기름병이라는 대본 그대로의 소품 배치. 6.2→7.6초 자세 동일(정지) + 천천히 확대"
+   },
+   "effect": "6.1~7.5초 RGB 갈라짐 글리치 + 모서리 하프톤 망점 + 줌인"
+  },
+  {
+   "t0": 7.9,
+   "t1": 8.8,
+   "caption": "2009년 뉴질랜드",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "마트 Cadbury 진열대에서 제품 집는 여성(실사)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.8,
+   "t1": 9.9,
+   "caption": "국민 초콜릿인 캐드버리가",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 진열대 클로즈업",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 9.9,
+   "t1": 10.5,
+   "caption": "양은 줄이고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "검은 배경 투명 물컵에 초코 조각이 떨어짐",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "제품 개념 재연 AI 영상(추정)",
+    "evidence": "물속에 세로 줄무늬가 겹치고, 초코 조각·은박이 컵 안에서 갑자기 생겨나며 겹침이 물리적으로 어색(10.0→10.8초)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 10.5,
+   "t1": 11.4,
+   "caption": "원료까지 바꾸자",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "같은 컵에 초코 조각이 차오름",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "제품 개념 재연 AI 영상(추정)",
+    "evidence": "앞 컷과 같은 생성 영상 이어짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 11.4,
+   "t1": 12.8,
+   "caption": "사람들이 단체로 등을 돌리며",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "마트 통로에서 보라 포장 초코바를 노려보는 여성, 뒤로 손님들이 걸어감",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(소비자 역)",
+    "feeling": "황당·불쾌(찡그림)",
+    "prop": "보라 초코바"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 이미지(정지)",
+    "evidence": "보라 포장·진열대 상자에 상표·글자 없음, 11.6초와 12.4초 배경 인물 위치가 같음(정지 그림에 확대만), 조명 균일"
+   },
+   "effect": "검은 집중선(만화 속도선) 화면 가장자리"
+  },
+  {
+   "t0": 12.8,
+   "t1": 14.1,
+   "caption": "불매 움직임까지 벌였다는 거",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 여성 얼굴로 확대 + 붉은 빛·불티",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(소비자 역)",
+    "feeling": "분노",
+    "prop": "붉은 빛·날리는 불티"
+   },
+   "ai": {
+    "kind": "실사풍 인물 장면 재연 AI 이미지(정지)",
+    "evidence": "앞 컷 같은 그림 확대본, 붉은 조명과 불티는 덧입힌 효과"
+   },
+   "effect": "줌인 + 붉은 색조 + 불티 입자"
+  },
+  {
+   "t0": 14.1,
+   "t1": 15.8,
+   "caption": "그때도 250g을 그대로 지키고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "갈라진 초코 덩어리 매크로(움직임) — 실사/AI 판별 못 함",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.8,
+   "t1": 17.1,
+   "caption": "팜유 대신 카카오 버터를 고집하던",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "공장 컨베이어 위 판초콜릿 행렬",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.1,
+   "t1": 18.6,
+   "caption": "초콜릿 회사가 주목을 받았는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 컨베이어 넓게",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.6,
+   "t1": 19.4,
+   "caption": "이건 바로 휘태커스",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "마트 Whittaker's 진열대, 손이 제품 가리킴",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.4,
+   "t1": 20.2,
+   "caption": "사람들이 하나둘",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "진열대에서 제품 집기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 20.2,
+   "t1": 21.1,
+   "caption": "휘태커스로 갈아타면서",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "Jelly Tip 제품 꺼내 들기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.1,
+   "t1": 22.6,
+   "caption": "시장 점유율까지 떡상했다는 거",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "휘태커스 여러 개 손에 쥐고 넘김",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.6,
+   "t1": 23.3,
+   "caption": "그런데 이 인기가",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 휘태커스 여러 색 제품 한아름 들고 보여줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.6,
+   "caption": "반짝하고 사라지지 않았던 건",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.6,
+   "t1": 25.8,
+   "caption": "카카오 원두를 직접 들여와 볶고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "카카오콩 더미 얕은 초점 매크로(움직임)",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "공정 재연 AI 영상(추정, 약함)",
+    "evidence": "초점 흐린 콩 더미뿐이라 단서 적음 — 뒤 두 컷과 같은 결의 공정 영상"
+   },
+   "effect": null
+  },
+  {
+   "t0": 25.8,
+   "t1": 27.0,
+   "caption": "다섯 개의 롤러로 곱게 갈아",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "계단처럼 겹친 롤러 위 초코 가루",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "공정 재연 AI 영상(추정)",
+    "evidence": "'롤러 5개'를 계단 모양 금속판으로 그린 비현실 구조, 표면 질감이 균일하게 뭉개짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 27.0,
+   "t1": 28.4,
+   "caption": "초콜릿 한 판까지 직접 만드는",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "컨베이어 위 파랑·노랑 포장 판초콜릿 행렬",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "공정 재연 AI 영상(추정)",
+    "evidence": "포장지 글자가 읽히지 않게 뭉개짐, 휘태커스 포장과 닮았지만 상표 없음"
+   },
+   "effect": null
+  },
+  {
+   "t0": 28.4,
+   "t1": 29.4,
+   "caption": "100년 넘은 가족회사의",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "옛날 공방의 노인 장인이 카카오콩 쟁반을 현대 공장의 위생모 직원에게 건넴",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(장인·후계자)",
+    "feeling": "흐뭇함·계승",
+    "prop": "카카오콩 쟁반·옛 저울"
+   },
+   "ai": {
+    "kind": "실사풍 역사·계승 장면 재연 AI 이미지(정지, 가로로 긴 그림)",
+    "evidence": "한 장 안에 옛 공방(왼쪽)과 현대 스테인리스 공장(오른쪽)이 이어붙은 불가능한 구도, 매끈한 광고 조명. 정지 그림을 왼→오 가로 패닝(28.5→30.3초)"
+   },
+   "effect": "왼→오 패닝"
+  },
+  {
+   "t0": 29.4,
+   "t1": 30.4,
+   "caption": "고집정신이 숨어있었던 거",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 그림 오른쪽(위생모 직원)으로 패닝",
+   "infographic": null,
+   "emotion": {
+    "who": "AI 실사풍 인물(후계자)",
+    "feeling": "미소",
+    "prop": null
+   },
+   "ai": {
+    "kind": "실사풍 역사·계승 장면 재연 AI 이미지(정지)",
+    "evidence": "앞 컷 같은 그림 패닝 계속"
+   },
+   "effect": "패닝"
+  },
+  {
+   "t0": 30.4,
+   "t1": 31.2,
+   "caption": "한입 베어물면",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 휘태커스 Peanut Butter 먹기(실사)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 31.2,
+   "t1": 32.3,
+   "caption": "진한 카카오 맛 뒤로",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.3,
+   "t1": 32.9,
+   "caption": "부드럽고 고소한",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 제품 흔듦",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 32.9,
+   "t1": 33.6,
+   "caption": "우유 맛이 퍼지고",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 33.6,
+   "t1": 35.2,
+   "caption": "상큼한 베리와 바삭한 비스킷부터",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "베리 필링 단면 → 차 안 여성 먹방",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 35.2,
+   "t1": 36.0,
+   "caption": "고소한 아몬드까지",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "차 안 여성 먹기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.0,
+   "t1": 36.7,
+   "caption": "다양한 토핑으로",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성 표정",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 36.7,
+   "t1": 37.7,
+   "caption": "고르는 재미까지 더해",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "휘태커스 여러 종 쌓은 더미",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 37.7,
+   "t1": 39.1,
+   "caption": "초코 덕후들을 제대로 홀린다는데",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 판초콜릿 들고 먹음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 39.1,
+   "t1": 40.0,
+   "caption": "우리도 팜유 없는 초콜릿 좀",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 Dark Salted Caramel 포장 들고 얼굴 가림",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 40.0,
+   "t1": 40.6,
+   "caption": "적당한 가격에",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 카메라 정면 봄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 40.6,
+   "t1": 41.9,
+   "caption": "먹게 해주면 안 되겠냐?",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "여성이 이마 짚고 고개 숙임(답답 반응)",
+   "infographic": null,
+   "emotion": {
+    "who": "실제 인물 영상(해외 리뷰어)",
+    "feeling": "답답·한탄(이마 짚기)",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드(원인→결과) → 악역 회사 행동(용량↓·팜유) → 악역 속마음 대사('~겠지? 후후', AI 인물) → 연도·나라로 사건 진입 → 소비자 분노(AI 인물+불 효과) → 대비 회사 등장 → 제품명 공개('이건 바로') → 갈아타기·점유율 → '그런데' 인기 비결(공정 3단, AI 공정 영상) → 100년 가족회사(AI 계승 장면) → 맛 묘사 7장 → 끝줄 집단 요구('우리도 ~ 안 되겠냐?')",
+ "ratios": {
+  "infographic_sec": 0,
+  "character_sec": 0,
+  "ai_image_sec": 11.8,
+  "real_video_sec": 28.4,
+  "meme_sec": 0
+ },
+ "method": "10fps 프레임 자막 칸(y480~666)·그림 칸(y672~1660) 픽셀 차로 바뀜 시각 검출(0.1초) → 구간별 자막 크롭+그림 3장 시트 눈 판독, AI 후보는 540px 원본 프레임 3장 이상 대조. 화면 내 AI 고지 문구 없음(아래 여백 y1664~1920 글자 0, 전 프레임). 유튜브 설명란 '변경·합성 콘텐츠' 라벨은 미확인. ratios.real_video_sec = AI 아님으로 본 제품영상·인물 합"
+}
