@@ -1,0 +1,135 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰_02_대용량물병/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "tt_7665448745386970398.mp4",
+   "ss": 15.0,
+   "cuts": [
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 15.0,
+     "dur": 3.47,
+     "block": "N1"
+    },
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 2.08,
+     "dur": 2.79,
+     "block": "O1"
+    },
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 5.23,
+     "dur": 6.52,
+     "block": "O2"
+    },
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 23.122,
+     "dur": 7.478,
+     "block": "O3"
+    },
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 34.0,
+     "dur": 2.001,
+     "block": "N5"
+    },
+    {
+     "src": "tt_7665448745386970398.mp4",
+     "ss": 43.758,
+     "dur": 5.482,
+     "block": "O4"
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "mn",
+   "ss": 15.0,
+   "vs": 0.0,
+   "src_crop": null,
+   "why": "첫 프레임 = 제품: 흰 초대형 물병 옆에서 분홍 물병을 들고(15~16) 붓기(17~18) — B13(O2 끝 11.75와 3초 이상) 때문에 13초 줄 선 화면 대신",
+   "ve": 3.47,
+   "src_end": 18.47
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "mn",
+   "ss": 2.08,
+   "vs": 3.47,
+   "src_crop": null,
+   "why": "물병 들고 마심(2초)→ 아빠 얼굴 'That box is massive'(3~4.6, 입 맞춤)",
+   "ve": 6.26,
+   "src_end": 4.87
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "N2",
+    "O2"
+   ],
+   "src": "mn",
+   "ss": 5.23,
+   "vs": 6.26,
+   "src_crop": null,
+   "why": "라벨 근접 '1 REFILL PER DAY … 2920 PLASTIC BOTTLES EACH YEAR'(9~12) + 'If you fill this up once a day…'",
+   "ve": 12.78,
+   "src_end": 11.75
+  },
+  {
+   "block": "O3",
+   "covers": [
+    "N3",
+    "N4",
+    "O3"
+   ],
+   "src": "mn",
+   "ss": 23.122,
+   "vs": 12.78,
+   "src_crop": null,
+   "why": "보라 물병 붓는 중 'I still got room for another one.'(28.7~30.3)",
+   "ve": 20.258,
+   "src_end": 30.6
+  },
+  {
+   "block": "N5",
+   "covers": [
+    "N5"
+   ],
+   "src": "mn",
+   "ss": 34.0,
+   "vs": 20.258,
+   "src_crop": null,
+   "why": "네 번째 분홍 물병을 콸콸 붓는 근접 얼굴(34~36) — O3 끝 30.6과 3초 이상",
+   "ve": 22.259,
+   "src_end": 36.001
+  },
+  {
+   "block": "O4",
+   "covers": [
+    "N6",
+    "O4"
+   ],
+   "src": "mn",
+   "ss": 43.758,
+   "vs": 22.259,
+   "src_crop": null,
+   "why": "딸 근접 'That's my water bottle!' + 아빠 대답(47.1~48.95)",
+   "ve": 27.741,
+   "src_end": 49.24
+  }
+ ]
+}

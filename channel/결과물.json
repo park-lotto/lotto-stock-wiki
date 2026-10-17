@@ -378,6 +378,22 @@
    "judge": "사장님 지적 반영판 — 재확인 전",
    "date": "2026-10-17",
    "from": "handoff/칼카피숏템엔진.md 얜샷템 절"
+  },
+  {
+   "n": 30,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰",
+   "title": "현장썰_02_대용량물병",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰_02_대용량물병/render/final.mp4",
+   "desktop": "칼카피_숏템리폿_대용량물병_1차.mp4",
+   "md5": "4e3f0ef809f8c836def45b210358d481",
+   "seconds": 27.7,
+   "preset": "channel/hottemreport/현장썰_02_대용량물병(1편 make_render 그대로 · 현장썰_run.py)",
+   "date": "2026-10-18",
+   "judge": "자동 검사만(사람 판정 전)",
+   "from": "channel/hottemreport/현장썰_run.py"
   }
  ]
 }
