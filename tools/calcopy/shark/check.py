@@ -24,9 +24,9 @@ LUFS_TOL, PEAK_MAX, LEN_TOL, CUT_TOL = 0.5, -0.5, 0.15, 0.30
 CUT_MIN, END_MIN, CAP_MAX, SYNC_TOL = 1.2, 1.5, 13, 0.04
 
 
-EN_ASR_PROMPT = ('For each clip, transcribe the spoken English exactly as heard. Write the English words — do NOT translate or transliterate into '
+EN_ASR_PROMPT = ('Transcribe the spoken English exactly as heard. Write the English words — do NOT translate or transliterate into '
                  'Korean. Skip music and sound effects. Count the speakers. Empty text if there is no speech.\n'
-                 'JSON only: {"clips":[{"i":0,"text":"","speakers":1}]}')
+                 'JSON only: {"text":"","speakers":1}')
 EN_MATCH_MIN = 0.5   # 대본 원문 낱말 중 받아쓰기(두 모델 중 나은 쪽)에 나온 비율 — 6편 영어 재받아쓰기 6줄 실측으로 정함
 
 

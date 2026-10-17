@@ -30,8 +30,7 @@ KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
 HOST = "ubuntu@3.35.251.172"
 REPO = "/home/ubuntu/lotto-stock-wiki"
 from tools.calcopy.engine.gemini_server import MODELS as ASR_MODELS, FALLBACK_MODELS as ASR_FALLBACK  # noqa: E402  — 모델 목록 주인은 엔진 한 곳(10-18 실측 표는 거기)
-ASR_PROMPT = ('클립마다 한국어 말소리를 들리는 그대로 받아써라(배경음악·효과음은 빼고, 고치거나 보태지 마라). 말하는 사람 수도 세라. '
-              '말이 없으면 text 는 빈 문자열.\nJSON만: {"clips":[{"i":0,"text":"","speakers":1}]}')
+from tools.calcopy.engine.gemini_server import ASR_PROMPT  # noqa: E402  — 받아쓰기 프롬프트 주인도 엔진 한 곳({"text","speakers"} 모양). 10-18 여기 옛 {"clips"} 모양 두 벌째가 CLI 빈 글의 뿌리였다
 
 # 서버에서 도는 코드 — 서비스 모듈만 부른다. 키는 key_vault 안에서만 돈다(여기서 print 하지 않는다).
 REMOTE_ASR = r'''
@@ -109,6 +108,17 @@ def _clip_mp3(src, a: float | None, b: float | None, dst: Path):
     subprocess.run(cmd, check=True, stdin=subprocess.DEVNULL, capture_output=True)
 
 
+def _clip_json(m: dict) -> dict:
+    """응답 한 건 → {"text","speakers"}. 엔진 프롬프트 모양({"text"})과 옛 묶음 모양({"clips":[{…}]}) 둘 다 읽는다 —
+    호출자가 넘긴 프롬프트가 어느 모양이든 글이 빈칸으로 둔갑하지 않게(10-18 CLI·shark 영어 받아쓰기 빈 글 사고)."""
+    j = m.get("json")
+    if isinstance(j, dict) and "text" not in j and isinstance(j.get("clips"), list):
+        j = j["clips"][0] if j["clips"] and isinstance(j["clips"][0], dict) else {"text": ""}
+    if isinstance(j, list):
+        j = j[0] if j and isinstance(j[0], dict) else {"text": ""}
+    return j if isinstance(j, dict) else {"text": m.get("text", "")}
+
+
 def asr_clips(src, spans: list[tuple[float, float]] | None, models=ASR_MODELS, prompt: str | None = None, max_tries: int = 8) -> dict:
     """소리 파일(또는 영상)의 구간들을 서버 제미나이로 받아쓴다 — 클립마다 **단독** 작업(병렬), 모델마다 1회(교차 확인).
     실제 호출은 gemini_server.ask_files 한 벌(0순위-B). 반환 {"spans", "runs":[{model, clips:[{i,text,speakers}]}|{model, why}], "ok_models", "sec"}."""
@@ -124,7 +134,7 @@ def asr_clips(src, spans: list[tuple[float, float]] | None, models=ASR_MODELS, p
             m = next((x for x in job["runs"] if x["model"] == model and "why" not in x), None) or next((x for x in job["runs"] if x["model"] == model), None)
             if m is None or "why" in m:
                 why = (m or {}).get("why", "no_run"); continue
-            j = m.get("json") if isinstance(m.get("json"), dict) else {"text": m.get("text", "")}
+            j = _clip_json(m)
             clips.append({"i": i, "text": j.get("text", ""), "speakers": j.get("speakers")})
         runs.append({"model": model, "clips": clips} if clips and why is None else {"model": model, "why": why or "partial", "clips": clips or None})
     cross = [len(job.get("ok_models") or []) for job in r["jobs"]]
