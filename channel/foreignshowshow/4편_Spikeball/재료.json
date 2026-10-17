@@ -28,15 +28,15 @@
    "line": "L1",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "ss": 50.45,
-   "dur": 1.75,
+   "ss": 50.4,
+   "dur": 1.77,
    "src_orig_span": [
-    220.45,
-    222.2
+    220.4,
+    222.17
    ],
    "t_final_est": [
     0.0,
-    1.75
+    1.77
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -52,8 +52,8 @@
    "mute": false,
    "audio_src": "cnbc170a.mp4",
    "audio_span": [
-    50.45,
-    52.2
+    50.4,
+    52.17
    ]
   },
   {
@@ -68,8 +68,8 @@
     4.2
    ],
    "t_final_est": [
-    1.75,
-    2.95
+    1.77,
+    2.97
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -96,8 +96,8 @@
     16.7
    ],
    "t_final_est": [
-    2.95,
-    4.15
+    2.97,
+    4.17
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -108,40 +108,12 @@
    ],
    "scale": 0.974,
    "ours": "해변 모래 위 4명 경기, 공이 떠 있음",
-   "why": "'한 해 140만 달러어치를'",
+   "why": "'한 해 140만 달러어치를 판 게임이 있는데'",
    "fx": null,
    "mute": true
   },
   {
    "i": 3,
-   "line": "L2",
-   "src": "demo76_6pC9CovZuBY.mp4",
-   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
-   "ss": 31.6,
-   "dur": 1.2,
-   "src_orig_span": [
-    31.6,
-    32.8
-   ],
-   "t_final_est": [
-    4.15,
-    5.35
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "넓은 잔디 운동장 4명 경기",
-   "why": "'판 게임이 있는데'",
-   "fx": null,
-   "mute": true
-  },
-  {
-   "i": 4,
    "line": "L3",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -152,8 +124,8 @@
     34.02
    ],
    "t_final_est": [
-    5.35,
-    6.77
+    4.17,
+    5.59
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -174,7 +146,7 @@
    ]
   },
   {
-   "i": 5,
+   "i": 4,
    "line": "L3",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -185,8 +157,8 @@
     37.1
    ],
    "t_final_est": [
-    6.77,
-    9.85
+    5.59,
+    8.67
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -207,7 +179,7 @@
    ]
   },
   {
-   "i": 6,
+   "i": 5,
    "line": "L4",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -218,8 +190,8 @@
     23.9
    ],
    "t_final_est": [
-    9.85,
-    11.15
+    8.67,
+    9.97
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -235,7 +207,7 @@
    "mute": true
   },
   {
-   "i": 7,
+   "i": 6,
    "line": "L4",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -246,8 +218,8 @@
     84.2
    ],
    "t_final_est": [
-    11.15,
-    12.35
+    9.97,
+    11.17
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -258,40 +230,12 @@
    ],
    "scale": 0.974,
    "ours": "샤크탱크 무대 위 노란/검은 유니폼 4명 시범 경기(와이드)",
-   "why": "'상대는 세 번 안에'",
+   "why": "'상대는 세 번 안에 다시 내리꽂아야 하고'",
    "fx": null,
    "mute": true
   },
   {
-   "i": 8,
-   "line": "L4",
-   "src": "demo76_6pC9CovZuBY.mp4",
-   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
-   "ss": 27.0,
-   "dur": 1.2,
-   "src_orig_span": [
-    27.0,
-    28.2
-   ],
-   "t_final_est": [
-    12.35,
-    13.55
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    406,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "흰 실내 코트, 선수가 공을 그물로 내리꽂음",
-   "why": "'다시 내리꽂아야 하고'",
-   "fx": null,
-   "mute": true
-  },
-  {
-   "i": 9,
+   "i": 7,
    "line": "L5",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -302,8 +246,8 @@
     24.2
    ],
    "t_final_est": [
-    13.55,
-    16.8
+    11.17,
+    14.42
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -324,7 +268,7 @@
    ]
   },
   {
-   "i": 10,
+   "i": 8,
    "line": "L6",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -335,8 +279,8 @@
     39.8
    ],
    "t_final_est": [
-    16.8,
-    18.3
+    14.42,
+    15.92
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -352,7 +296,7 @@
    "mute": true
   },
   {
-   "i": 11,
+   "i": 9,
    "line": "L6",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -363,8 +307,8 @@
     11.9
    ],
    "t_final_est": [
-    18.3,
-    19.8
+    15.92,
+    17.42
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -380,7 +324,7 @@
    "mute": true
   },
   {
-   "i": 12,
+   "i": 10,
    "line": "L7",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -391,8 +335,8 @@
     177.4
    ],
    "t_final_est": [
-    19.8,
-    21.2
+    17.42,
+    18.82
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -408,7 +352,7 @@
    "mute": true
   },
   {
-   "i": 13,
+   "i": 11,
    "line": "L7",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -419,8 +363,8 @@
     186.85
    ],
    "t_final_est": [
-    21.2,
-    22.65
+    18.82,
+    20.27
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -436,7 +380,7 @@
    "mute": true
   },
   {
-   "i": 14,
+   "i": 12,
    "line": "L8",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -447,8 +391,8 @@
     199.3
    ],
    "t_final_est": [
-    22.65,
-    24.45
+    20.27,
+    22.07
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -469,7 +413,7 @@
    ]
   },
   {
-   "i": 15,
+   "i": 13,
    "line": "L9",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -480,8 +424,8 @@
     193.8
    ],
    "t_final_est": [
-    24.45,
-    25.85
+    22.07,
+    23.47
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -497,7 +441,7 @@
    "mute": true
   },
   {
-   "i": 16,
+   "i": 14,
    "line": "L9",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -508,8 +452,8 @@
     53.3
    ],
    "t_final_est": [
-    25.85,
-    27.15
+    23.47,
+    24.77
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -525,7 +469,7 @@
    "mute": true
   },
   {
-   "i": 17,
+   "i": 15,
    "line": "L10",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -536,8 +480,8 @@
     242.3
    ],
    "t_final_est": [
-    27.15,
-    29.45
+    24.77,
+    27.07
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -553,19 +497,19 @@
    "mute": true
   },
   {
-   "i": 18,
+   "i": 16,
    "line": "L11",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
    "ss": 79.37,
-   "dur": 4.38,
+   "dur": 4.51,
    "src_orig_span": [
     249.37,
-    253.75
+    253.88
    ],
    "t_final_est": [
-    29.45,
-    33.83
+    27.07,
+    31.58
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -582,11 +526,11 @@
    "audio_src": "cnbc170a.mp4",
    "audio_span": [
     79.37,
-    83.75
+    83.88
    ]
   },
   {
-   "i": 19,
+   "i": 17,
    "line": "L12",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -597,8 +541,8 @@
     270.97
    ],
    "t_final_est": [
-    33.83,
-    35.2
+    31.58,
+    32.95
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -619,7 +563,7 @@
    ]
   },
   {
-   "i": 20,
+   "i": 18,
    "line": "L12",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -630,8 +574,8 @@
     273.6
    ],
    "t_final_est": [
-    35.2,
-    37.83
+    32.95,
+    35.58
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -652,7 +596,7 @@
    ]
   },
   {
-   "i": 21,
+   "i": 19,
    "line": "L13",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -663,8 +607,8 @@
     305.75
    ],
    "t_final_est": [
-    37.83,
-    39.88
+    35.58,
+    37.63
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -685,19 +629,47 @@
    ]
   },
   {
-   "i": 22,
+   "i": 20,
+   "line": "L14",
+   "src": "cnbc170a.mp4",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 148.1,
+   "dur": 1.45,
+   "src_orig_span": [
+    318.1,
+    319.55
+   ],
+   "t_final_est": [
+    37.63,
+    39.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    406,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자(이름 자막 없음) 앉아 있음",
+   "why": "'결국 20%에 손을 잡으면서'",
+   "fx": null,
+   "mute": true
+  },
+  {
+   "i": 21,
    "line": "L14",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
    "ss": 149.7,
-   "dur": 2.6,
+   "dur": 1.6,
    "src_orig_span": [
     319.7,
-    322.3
+    321.3
    ],
    "t_final_est": [
-    39.88,
-    42.48
+    39.08,
+    40.68
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -708,12 +680,12 @@
    ],
    "scale": 0.974,
    "ours": "갈색 양복 투자자(데이먼드) 박수",
-   "why": "'결국 20%에 손을 잡으면서 투자가 성사됐는데'",
+   "why": "'투자가 성사됐는데' — 늘어나도 원본 컷 끝(322.32) 안",
    "fx": null,
    "mute": true
   },
   {
-   "i": 23,
+   "i": 22,
    "line": "L15",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -724,8 +696,8 @@
     217.2
    ],
    "t_final_est": [
-    42.48,
-    43.93
+    40.68,
+    42.13
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -741,7 +713,7 @@
    "mute": true
   },
   {
-   "i": 24,
+   "i": 23,
    "line": "L15",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -752,8 +724,8 @@
     292.9
    ],
    "t_final_est": [
-    43.93,
-    45.43
+    42.13,
+    43.63
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -769,7 +741,7 @@
    "mute": true
   },
   {
-   "i": 25,
+   "i": 24,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -780,8 +752,8 @@
     265.4
    ],
    "t_final_est": [
-    45.43,
-    46.83
+    43.63,
+    45.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -797,7 +769,7 @@
    "mute": true
   },
   {
-   "i": 26,
+   "i": 25,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -808,8 +780,8 @@
     283.4
    ],
    "t_final_est": [
-    46.83,
-    48.23
+    45.03,
+    46.43
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -825,7 +797,7 @@
    "mute": true
   },
   {
-   "i": 27,
+   "i": 26,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -836,8 +808,8 @@
     288.3
    ],
    "t_final_est": [
-    48.23,
-    49.53
+    46.43,
+    47.73
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -853,7 +825,7 @@
    "mute": true
   },
   {
-   "i": 28,
+   "i": 27,
    "line": "L17",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -864,8 +836,8 @@
     45.3
    ],
    "t_final_est": [
-    49.53,
-    50.83
+    47.73,
+    49.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -881,7 +853,7 @@
    "mute": true
   },
   {
-   "i": 29,
+   "i": 28,
    "line": "L17",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -892,8 +864,8 @@
     60.4
    ],
    "t_final_est": [
-    50.83,
-    52.63
+    49.03,
+    50.83
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -947,7 +919,7 @@
   "L6 분홍 화살표(위) 그물 — 엔진 overlay_png 가 red_circle·emoji 만 그림(엔진 요청)"
  ],
  "check": {
-  "shots": 30,
-  "est_total": 52.63
+  "shots": 29,
+  "est_total": 50.83
  }
 }

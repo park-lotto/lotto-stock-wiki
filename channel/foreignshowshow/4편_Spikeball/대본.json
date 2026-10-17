@@ -99,15 +99,15 @@
     "facts": [
      "f1"
     ],
-    "est_sec": 1.75,
+    "est_sec": 1.77,
     "asr": "받아쓰기 3/3 'a ball in a net'",
     "orig_span_clip": [
-     220.45,
-     222.2
+     220.4,
+     222.17
     ],
     "orig_span": [
-     50.45,
-     52.2
+     50.4,
+     52.17
     ],
     "caps": [
      "공이랑 그물 하나에?!"
@@ -367,15 +367,15 @@
     "facts": [
      "f8"
     ],
-    "est_sec": 4.38,
+    "est_sec": 4.51,
     "asr": "받아쓰기 3/3 '…interested in, for 25% of the whole company'(v3, 1회는 첫머리 'rested' — 소리 시작 249.30 으로 0.1초 당김, 재확인은 TTS 뒤)",
     "orig_span_clip": [
      249.37,
-     253.75
+     253.88
     ],
     "orig_span": [
      79.37,
-     83.75
+     83.88
     ],
     "caps": [
      "회사 전체 지분",
