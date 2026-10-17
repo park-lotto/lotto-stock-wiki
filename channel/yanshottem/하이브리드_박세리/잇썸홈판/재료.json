@@ -1,0 +1,373 @@
+{
+ "_note": "줄↔컷 표. cand_dir 아래 상대 경로(박세리 원본은 절대 경로). crop=[x,y,w,h](원본 1920×1080 좌표). toks=그 줄 자막 조각 번호(컷 경계=조각 경계). max=원본 샷 경계·내용 바뀜까지 남은 초(scdet 6~8 실측 + 시트 눈 확인). A 구간 = 박세리 원본(1080×1080 창) H 컷 3개 + 원음 컷. 소스 순서 겹침·±3초 재사용 없게 골랐다(B13·B16).",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_박세리/src",
+ "src_urls": {
+  "C:/숏템_칼카피/yanshottem/박세리_면세점/src/seri_WHzwVWvEvQ8.mp4": "박세리의 속사정 WHzwVWvEvQ8 1080p",
+  "lp/RZnIG6hNFkA.mp4": "Everyday Luxe Beauty RZnIG6hNFkA 'La Prairie Brand Review/My La Prairie Skincare Routine' 1080p — 10:20~ 'next is the cellular softening and balancing lotion this is my toner'",
+  "lp/NsQAvi8zxkk.mp4": "Everyday Luxe Beauty NsQAvi8zxkk 'La Prairie Facial/Daily Vlog' 1080p — 5:04~ 'this is the cellular softening and balancing lotion … Leave My Skin So Soft'",
+  "lp/Wk-Z_e_K2nM.mp4": "프롬베이지 Wk-Z_e_K2nM 1080p — 4:33~ '리치 언니가 여섯 개를 쟁여 놓고 사용한다는 바로 그 토너 라프레리 셀룰러 소프트닝 앤 밸런싱 로션'(화면 왼쪽 위 가격 글자 x<480·y<560, 아래 자막 y≥980 → 크롭 밖)"
+ },
+ "A": {
+  "src": "C:/숏템_칼카피/yanshottem/박세리_면세점/src/seri_WHzwVWvEvQ8.mp4",
+  "H_shots": [
+   {
+    "ss": 123.98,
+    "max": 1.64,
+    "crop": [
+     480,
+     0,
+     880,
+     880
+    ],
+    "see": "박세리 수납장 칸칸이 쌓인 화장품('보물창고') — 아래 노랑 자막(y≥900) 밖, 원본 컷 125.66 앞"
+   },
+   {
+    "ss": 125.7,
+    "max": 1.25,
+    "crop": [
+     480,
+     0,
+     880,
+     880
+    ],
+    "see": "수납장 위 칸으로 손을 뻗는 박세리(원본 컷 125.66 뒤, 127.0 '(애장템♥)' 손글씨 전)"
+   },
+   {
+    "dur": 1.0,
+    "crop": [
+     560,
+     0,
+     850,
+     850
+    ],
+    "see": "병 든 박세리(넓게, 129.5 '(애장템♥)' 겹침 사라진 뒤) — 이어서 O1 이 같은 줄기로 시작"
+   }
+  ],
+  "O_shots": [
+   {
+    "piece": "O1a",
+    "src_t": 130.86,
+    "crop": [
+     560,
+     0,
+     850,
+     850
+    ],
+    "see": "병 든 박세리가 말함(입 모양 그대로)"
+   },
+   {
+    "piece": "O1a",
+    "src_t": 132.68,
+    "crop": [
+     620,
+     60,
+     720,
+     720
+    ],
+    "see": "같은 장면 확대(얼굴+병)"
+   },
+   {
+    "piece": "O1b",
+    "src_t": 134.82,
+    "crop": [
+     620,
+     60,
+     720,
+     720
+    ],
+    "see": "같은 장면(쉼 0.31초 잘라 이어 붙임)"
+   },
+   {
+    "piece": "O1b",
+    "src_t": 136.1,
+    "crop": [
+     560,
+     0,
+     850,
+     850
+    ],
+    "see": "원본 확대 컷 135.97 뒤 — '(스킨 과소비형)'(y 860~980) 밖"
+   },
+   {
+    "piece": "O3",
+    "src_t": 143.9,
+    "crop": [
+     760,
+     0,
+     880,
+     880
+    ],
+    "see": "수납장 앞 박세리 뒷머리(원본 그 말을 하는 장면, 원본 컷 143.51 뒤)"
+   }
+  ],
+  "face": "박세리 본인만(원음 구간) — 남의 신체 0"
+ },
+ "B": [
+  {
+   "line": "B1",
+   "toks": [
+    0,
+    0
+   ],
+   "src": "C:/숏템_칼카피/yanshottem/박세리_면세점/src/seri_WHzwVWvEvQ8.mp4",
+   "ss": 138.78,
+   "max": 1.28,
+   "crop": [
+    590,
+    0,
+    608,
+    1080
+   ],
+   "see": "병을 든 채 웃는 박세리('저 영상') — 오른쪽 '(싫은뎅?)'(x≥1200) 밖",
+   "face": "박세리(말 안 함·웃음)",
+   "text": "없음"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    1,
+    1
+   ],
+   "src": "lp/RZnIG6hNFkA.mp4",
+   "ss": 624.45,
+   "max": 1.5,
+   "crop": [
+    150,
+    0,
+    608,
+    1080
+   ],
+   "see": "은 뚜껑 젖빛 병(분홍 액) — 병 글자 'CELLULAR SOFTENING AND BALANCING LOTION'",
+   "face": "리뷰어 얼굴 일부",
+   "text": "제품 병 글자만"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    2,
+    2
+   ],
+   "src": "lp/RZnIG6hNFkA.mp4",
+   "ss": 630.45,
+   "max": 2.2,
+   "crop": [
+    355,
+    0,
+    608,
+    1080
+   ],
+   "see": "뚜껑 연 병을 크게 — 아래 분홍 액·'la prairie' 글자",
+   "face": "리뷰어 얼굴 일부",
+   "text": "제품 병 글자만"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    0,
+    0
+   ],
+   "src": "lp/RZnIG6hNFkA.mp4",
+   "ss": 645.42,
+   "max": 1.38,
+   "crop": [
+    520,
+    0,
+    608,
+    1080
+   ],
+   "see": "토너 적신 화장솜을 들어 보임",
+   "face": "리뷰어",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    1,
+    1
+   ],
+   "src": "lp/RZnIG6hNFkA.mp4",
+   "ss": 647.3,
+   "max": 5.0,
+   "crop": [
+    450,
+    0,
+    608,
+    1080
+   ],
+   "see": "화장솜으로 이마를 닦아 냄(눈 감음)",
+   "face": "리뷰어(눈 감음)",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    2,
+    2
+   ],
+   "src": "lp/NsQAvi8zxkk.mp4",
+   "ss": 320.3,
+   "max": 2.2,
+   "crop": [
+    560,
+    0,
+    608,
+    1080
+   ],
+   "see": "다른 리뷰어가 같은 토너 화장솜으로 볼을 닦음",
+   "face": "리뷰어",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "lp/NsQAvi8zxkk.mp4",
+   "ss": 328.9,
+   "max": 2.0,
+   "crop": [
+    500,
+    0,
+    608,
+    1080
+   ],
+   "see": "화장솜으로 볼을 꾹꾹 누르며 닦음",
+   "face": "리뷰어",
+   "text": "없음"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "lp/Wk-Z_e_K2nM.mp4",
+   "ss": 310.85,
+   "max": 2.7,
+   "crop": [
+    700,
+    0,
+    490,
+    870
+   ],
+   "see": "손바닥에 덜어 손가락으로 펴 바르는 묽은 토너(제형)",
+   "face": "없음(손)",
+   "text": "없음(가격 글자·자막 크롭 밖)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "lp/Wk-Z_e_K2nM.mp4",
+   "ss": 315.4,
+   "max": 7.3,
+   "crop": [
+    790,
+    0,
+    506,
+    900
+   ],
+   "see": "토너 바른 뒤 촉촉하게 윤기 도는 얼굴을 손끝으로 만짐",
+   "face": "리뷰어(입 다묾)",
+   "text": "없음(가격 글자·자막 크롭 밖)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "lp/RZnIG6hNFkA.mp4",
+   "ss": 639.4,
+   "max": 1.88,
+   "crop": [
+    520,
+    0,
+    608,
+    1080
+   ],
+   "see": "뚜껑 연 분홍 토너 병을 기울여 보임(원본 컷 641.29 앞)",
+   "face": "리뷰어 얼굴 일부",
+   "text": "제품 병 글자"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    2,
+    2
+   ],
+   "src": "lp/NsQAvi8zxkk.mp4",
+   "ss": 304.62,
+   "max": 1.4,
+   "crop": [
+    230,
+    0,
+    608,
+    1080
+   ],
+   "see": "다른 리뷰어가 같은 병을 들어 보임('la prairie' 글자)",
+   "face": "리뷰어(말하는 중)",
+   "text": "제품 병 글자"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    0,
+    2
+   ],
+   "src": "lp/NCDOo6quRg8.mp4",
+   "ss": 1771.9,
+   "max": 3.6,
+   "crop": [
+    330,
+    0,
+    608,
+    1080
+   ],
+   "see": "매장에서 사 온 이 토너의 은색 상자를 들어 보임('la prairie' 상자 — 영상 속 말 'i also picked up a toner … cellular softening and balancing lotion')",
+   "face": "리뷰어 얼굴 일부",
+   "text": "제품 상자 글자만"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "C:/숏템_칼카피/yanshottem/박세리_면세점/src/seri_WHzwVWvEvQ8.mp4",
+   "ss": 142.2,
+   "max": 1.27,
+   "crop": [
+    700,
+    0,
+    484,
+    860
+   ],
+   "see": "박세리가 그 병을 수납장 안쪽 칸에 넣는 손(쟁여 둠) — 아래 노랑 자막(y≥900)·오른쪽 제작진(x≥1700) 밖",
+   "face": "박세리 뒷머리",
+   "text": "수납장 실물 포장"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    4,
+    4
+   ],
+   "src": "lp/Wk-Z_e_K2nM.mp4",
+   "ss": 277.1,
+   "max": 3.8,
+   "crop": [
+    230,
+    60,
+    574,
+    1020
+   ],
+   "see": "분홍 토너 병을 든 손(끝 컷) — 오른쪽 제품 딱지(x≥1440)·281초부터 뜨는 가격 글자 전",
+   "face": "리뷰어 얼굴 가장자리",
+   "text": "없음"
+  }
+ ]
+}

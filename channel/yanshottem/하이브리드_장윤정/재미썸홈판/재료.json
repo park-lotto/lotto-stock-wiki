@@ -1,0 +1,326 @@
+{
+ "A": [
+  {
+   "id": "O0",
+   "at": 0.0,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 224.8,
+   "crop_xywh": [
+    500,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "원음(본인 말)",
+   "see": "거실, 노란 의자 위 줄무늬 수건을 펼치는 장윤정"
+  },
+  {
+   "id": "O1",
+   "at": 1.18,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 226.4,
+   "crop_xywh": [
+    455,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "원음(본인 말)",
+   "see": "두 손을 들며 말하는 장윤정(입 모양 맞음)"
+  },
+  {
+   "id": "O2",
+   "at": 3.98,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 132.0,
+   "crop_xywh": [
+    450,
+    0,
+    860,
+    860
+   ],
+   "zoom": 1.26,
+   "audio": "원음(본인 말)",
+   "see": "노란 탁자 위 접힌 파랑 줄무늬 TEKLA 수건(제품만)"
+  },
+  {
+   "id": "O3",
+   "at": 4.88,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 153.0,
+   "crop_xywh": [
+    560,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "원음(본인 말)",
+   "see": "TEKLA 라벨 근접(제품만)"
+  },
+  {
+   "id": "O4",
+   "at": 5.78,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 261.95,
+   "crop_xywh": [
+    590,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "원음(본인 말)",
+   "see": "수건을 쥐어 보는 본인 손"
+  },
+  {
+   "id": "O5",
+   "at": 6.85,
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 264.56,
+   "crop_xywh": [
+    455,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "원음(본인 말)",
+   "see": "수건 덮고 말하는 장윤정(입 모양 맞음)"
+  },
+  {
+   "id": "F1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 127.0,
+   "crop_xywh": [
+    430,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "무음(나레)"
+  },
+  {
+   "id": "F1b",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 147.2,
+   "crop_xywh": [
+    330,
+    0,
+    870,
+    870
+   ],
+   "zoom": 1.24,
+   "audio": "무음(나레)"
+  }
+ ],
+ "B": [
+  {
+   "src": "tekla/K-1Hwjo6N2U.mp4",
+   "ss": 104.0,
+   "crop": [
+    520,
+    300,
+    780
+   ],
+   "kind": "제품",
+   "t0": 0.03999999999999915,
+   "t1": 1.6709999999999994,
+   "pieces": [
+    3,
+    4
+   ],
+   "seen": "TEKLA 로고 포장 봉투째 든 새 수건(언박싱)",
+   "frames": 49,
+   "dur": 1.633,
+   "src_end": 105.633,
+   "t0_final": 10.54,
+   "t1_final": 12.171
+  },
+  {
+   "src": "tekla/K-1Hwjo6N2U.mp4",
+   "ss": 117.0,
+   "crop": [
+    680,
+    380,
+    700
+   ],
+   "kind": "제품",
+   "t0": 1.6709999999999994,
+   "t1": 2.9670000000000005,
+   "pieces": [
+    5,
+    6
+   ],
+   "seen": "TEKLA 택 달린 네이비 수건 결 근접(손으로 만짐)",
+   "frames": 39,
+   "dur": 1.3,
+   "src_end": 118.3,
+   "t0_final": 12.171,
+   "t1_final": 13.467
+  },
+  {
+   "src": "tekla/K-1Hwjo6N2U.mp4",
+   "ss": 209.5,
+   "crop": [
+    450,
+    0,
+    1080
+   ],
+   "kind": "제품",
+   "t0": 2.9670000000000005,
+   "t1": 4.167999999999999,
+   "pieces": [
+    7
+   ],
+   "seen": "도톰한 네이비 TEKLA 배스 시트를 허리에 감싸 두름",
+   "frames": 36,
+   "dur": 1.2,
+   "src_end": 210.7,
+   "t0_final": 13.467,
+   "t1_final": 14.668
+  },
+  {
+   "src": "tekla/K-1Hwjo6N2U.mp4",
+   "ss": 227.35,
+   "crop": [
+    650,
+    150,
+    924
+   ],
+   "kind": "제품",
+   "t0": 4.167999999999999,
+   "t1": 6.52,
+   "pieces": [
+    8,
+    9
+   ],
+   "seen": "수건에 얼굴을 묻어 닦음",
+   "frames": 71,
+   "dur": 2.367,
+   "src_end": 229.717,
+   "t0_final": 14.668,
+   "t1_final": 17.02
+  },
+  {
+   "src": "tekla/qATfuOQLprQ.mp4",
+   "ss": 354.3,
+   "crop": [
+    650,
+    0,
+    950
+   ],
+   "kind": "제품",
+   "t0": 6.52,
+   "t1": 7.827000000000002,
+   "pieces": [
+    10
+   ],
+   "seen": "TEKLA 라벨 붙은 파랑 줄무늬 수건을 돌돌 만 것",
+   "frames": 39,
+   "dur": 1.3,
+   "src_end": 355.6,
+   "t0_final": 17.02,
+   "t1_final": 18.327
+  },
+  {
+   "src": "tekla/qATfuOQLprQ.mp4",
+   "ss": 374.6,
+   "crop": [
+    350,
+    0,
+    950
+   ],
+   "kind": "제품",
+   "t0": 7.827000000000002,
+   "t1": 10.139,
+   "pieces": [
+    11,
+    12,
+    13
+   ],
+   "seen": "TEKLA 라벨 수건이 가득한 수건장",
+   "frames": 69,
+   "dur": 2.3,
+   "src_end": 376.9,
+   "t0_final": 18.327,
+   "t1_final": 20.639
+  },
+  {
+   "src": "tekla/qATfuOQLprQ.mp4",
+   "ss": 19.7,
+   "crop": [
+    650,
+    0,
+    950
+   ],
+   "kind": "제품",
+   "t0": 10.139,
+   "t1": 11.942,
+   "pieces": [
+    14,
+    15
+   ],
+   "seen": "파랑 줄무늬 수건 가운데 TEKLA 라벨 근접",
+   "frames": 54,
+   "dur": 1.8,
+   "src_end": 21.5,
+   "t0_final": 20.639,
+   "t1_final": 22.442
+  },
+  {
+   "src": "tekla/qATfuOQLprQ.mp4",
+   "ss": 383.6,
+   "crop": [
+    450,
+    0,
+    880
+   ],
+   "kind": "제품",
+   "t0": 11.942,
+   "t1": 13.870000000000001,
+   "pieces": [
+    16,
+    17
+   ],
+   "seen": "욕실 수건걸이에 걸린 네이비 줄무늬 TEKLA 수건",
+   "frames": 58,
+   "dur": 1.933,
+   "src_end": 385.533,
+   "t0_final": 22.442,
+   "t1_final": 24.37
+  },
+  {
+   "src": "tekla/qATfuOQLprQ.mp4",
+   "ss": 8.0,
+   "crop": [
+    650,
+    0,
+    950
+   ],
+   "kind": "제품",
+   "t0": 13.870000000000001,
+   "t1": 16.776,
+   "pieces": [
+    18,
+    19,
+    20
+   ],
+   "seen": "파랑 줄무늬 수건 위 TEKLA 라벨(끝 컷)",
+   "frames": 87,
+   "dur": 2.9,
+   "src_end": 10.9,
+   "t0_final": 24.37,
+   "t1_final": 27.276
+  }
+ ],
+ "src_urls": {
+  "jyj_XzCEZtLDV-A.mp4": "https://www.youtube.com/watch?v=XzCEZtLDV-A (장공장장윤정, 2026-03-18, 1080p)",
+  "tekla/qATfuOQLprQ.mp4": "https://youtu.be/qATfuOQLprQ (하눅hanuk '수건정리 … 테클라 TEKLA 리뷰', 2024-04-13, 1080p)",
+  "tekla/K-1Hwjo6N2U.mp4": "https://youtu.be/K-1Hwjo6N2U (Liam Stanley 'Tekla Towel Unbagging', 1080p 24fps)"
+ },
+ "audio_rule": "B 재료 원음 전부 끔(-an). A 원음 = 장윤정 말만(쉼 두 곳 잘라 냄, 조각 단독 받아쓰기 화자 1)."
+}
