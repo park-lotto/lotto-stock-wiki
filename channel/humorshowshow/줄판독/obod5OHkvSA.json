@@ -1,0 +1,195 @@
+{
+ "id": "obod5OHkvSA",
+ "title_card": "한국인들이 결국 / 뚫어버렸다는 이것",
+ "post_title": "한국인들이 결국 뚫어버렸다는 이것",
+ "dur": 30.99,
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.77,
+   "caption": "한국인들이 결국 뚫어버렸다는 이것",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "훅 카드 아래: 빵 위에 녹는 버터",
+   "effect": null,
+   "ending": "이것"
+  },
+  {
+   "t0": 1.77,
+   "t1": 4.53,
+   "caption": "한국인의 마늘 '약간'과 같은/버터 '약간'의 나라 프랑스",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "팬에 버터 녹이며 토스트 굽기",
+   "effect": null,
+   "ending": "명사 끝"
+  },
+  {
+   "t0": 4.53,
+   "t1": 6.9,
+   "caption": "여기서 한국에 들여올/버터를 찾던 한 수입사가",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "큰 버터 블록을 기계로 자르는 공장 장면",
+   "effect": null,
+   "ending": "~가"
+  },
+  {
+   "t0": 6.9,
+   "t1": 8.87,
+   "caption": "군침이 싹 도는/아이템을 찾아버렸는데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "방송화면(연예인·예능)",
+   "screen_desc": "버터 절단 → 분홍 셔츠·스카프 남성이 스튜디오에서 손 흔드는 방송 장면(7.8초~, 이름 글자 없음)",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 8.87,
+   "t1": 10.03,
+   "caption": "한국수입사 : 이 버터/우리한테 팔아줘!!",
+   "narration": null,
+   "kind": "2인대화",
+   "speaker": "한국수입사",
+   "screen": "제품영상",
+   "screen_desc": "방송 남성 장면 끝 → 칼로 버터를 빵에 바름",
+   "effect": null,
+   "ending": "!!"
+  },
+  {
+   "t0": 10.03,
+   "t1": 13.2,
+   "caption": "프랑스 : ㄴㄴ 안됨!!! 이거 호텔/조식용으로 나가는 개 작은거임",
+   "narration": null,
+   "kind": "2인대화",
+   "speaker": "프랑스",
+   "screen": "제품영상",
+   "screen_desc": "작은 버터 스틱을 칼로 자름",
+   "effect": null,
+   "ending": "~임"
+  },
+  {
+   "t0": 13.2,
+   "t1": 14.9,
+   "caption": "한국수입사 : 엥 뭔소리여/이 사이즈가 딱인디?",
+   "narration": null,
+   "kind": "2인대화",
+   "speaker": "한국수입사",
+   "screen": "제품사진",
+   "screen_desc": "은박 포장된 라 콩비에뜨(La Conviette) 버터 스틱들",
+   "effect": null,
+   "ending": "?(사투리 ~인디)"
+  },
+  {
+   "t0": 14.9,
+   "t1": 17.5,
+   "caption": "너무 작아서 안팔릴거라던/프랑스의 우려와는 달리",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "은박 벗긴 버터 스틱",
+   "effect": null,
+   "ending": "~달리"
+  },
+  {
+   "t0": 17.5,
+   "t1": 20.3,
+   "caption": "한국에 런칭하자마자/20분만에 물량을 싹 털어버리며",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "방송화면(연예인·예능)",
+   "screen_desc": "버터 스틱 → 홈쇼핑 세트로 보이는 무대(라 콩비에뜨 버터 상자 진열·꽃) 앞 검은 옷 단발 중년 여성(18.6~20.3초, 이름·방송사 글자 없음)",
+   "effect": null,
+   "ending": "~며"
+  },
+  {
+   "t0": 20.3,
+   "t1": 22.43,
+   "caption": "결국 공식 수입까지/한방에 뚫어버리게 됨 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "라 콩비에뜨 버터 포장(AOP·CHARENTES-POITOU 라벨) 더미",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 22.43,
+   "t1": 24.73,
+   "caption": "이게 개별포장이라/하나씩 까먹기 딱 좋은데",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "은박을 벗겨 놓은 개별포장 버터",
+   "effect": null,
+   "ending": "~는데"
+  },
+  {
+   "t0": 24.73,
+   "t1": 26.73,
+   "caption": "뜨끈한 군고구마에/넣어먹으면 극락행 ㄷㄷ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "반 가른 군고구마에 꽂은 버터 스틱",
+   "effect": null,
+   "ending": "ㄷㄷ"
+  },
+  {
+   "t0": 26.73,
+   "t1": 29.1,
+   "caption": "특히 장조림과 만나면/걍 도른놈 수준이라고",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품사진",
+   "screen_desc": "계란 스크램블·장조림 덮밥 위 버터와 숟가락",
+   "effect": "빨간 화살표(버터 가리킴)",
+   "ending": "~라고"
+  },
+  {
+   "t0": 29.1,
+   "t1": 30.99,
+   "caption": "아 한동안 끊었던 빵/다시먹게 생겼네 ㅋㅋ",
+   "narration": null,
+   "kind": "나레",
+   "speaker": null,
+   "screen": "제품영상",
+   "screen_desc": "토스트 위에 버터를 칼로 펴 바름",
+   "effect": null,
+   "ending": "ㅋㅋ"
+  }
+ ],
+ "structure": "훅(뚫어버린 이것) → 배경(버터의 나라) → 수입사 등장 + 방송 리액션 → 수입사↔프랑스 2인대화 3줄 → 반전(20분 완판, 방송 장면) → 정식 수입 → 먹는 법 3단(개별포장·군고구마·장조림+화살표) → 나도 먹겠다(ㅋㅋ)",
+ "celeb_scenes": [
+  {
+   "t0": 7.8,
+   "t1": 9.0,
+   "who": "불명(분홍 셔츠·스카프 남성, 이름 글자 없음 — 얼굴만으로 특정 안 함)",
+   "program": "예능·요리 방송 스튜디오로 보임(프로그램명 글자 없음)",
+   "why_here": "'군침이 싹 도는 아이템을 찾아버렸는데' — 군침·흥분 리액션"
+  },
+  {
+   "t0": 18.6,
+   "t1": 20.3,
+   "who": "불명(검은 옷 단발 중년 여성, 이름 글자 없음)",
+   "program": "홈쇼핑 판매 세트로 보임(방송사 로고·자막 없음)",
+   "why_here": "'런칭하자마자 20분만에 물량을 털어버리며' — 완판 판매 방송의 증거 장면"
+  }
+ ],
+ "kangjueun": "불확실 — 18.6~20.3초 홈쇼핑 세트(라 콩비에뜨 버터 진열) 앞 단발 중년 여성 1명. 화면·자막에 이름 없음, 방송사 로고 없음. 얼굴만으로는 강주은이라 판정 못 함(후보로만 표시). 웹 검색 '라꽁비에뜨 버터 홈쇼핑 강주은' 1회 — 연결 근거 못 찾음. 사장님 눈 확인 필요: C:/숏템_칼카피/humorshowshow/tmp_B/obod_woman.jpg",
+ "_note": "t0/t1 = 자막 칸(y480~680) 픽셀 변화 프레임 실측(30fps). 같은 칸에 줄이 덧붙는 누적형은 한 줄(lines 1개)로 묶음. narration=제미나이 받아쓰기(asr/) 해당 구간, 받아쓰기 없는 편은 null."
+}
