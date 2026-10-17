@@ -1,0 +1,245 @@
+# -*- coding: utf-8 -*-
+"""나레 TTS 와 글자 시각 맞춤의 주인 한 곳 (관제 097, 2026-10-18) — ① 합성 캐시(글·목소리·배속 해시) ② 타입캐스트 글자별 시각(align) 보관
+③ align 없는 옛 합성본은 문장부호 ↔ 소리 틈 짝짓기(여러 문턱 틈 후보 + 동적 계획)로 어림.
+
+왜: 10-18 손태영 편 — 잇썸 문장 자르기가 쉼표 쉼을 문장 끝으로 골라 B2 4.7자/초·B4 23.9자/초, 재미썸 문장부호 쉼 찾기가 세 번 멈춤(Typecast 가
+마침표 뒤에 안 쉬고 구절 가운데서 쉼 — −40dB 무음만으론 못 찾음), auto_tempo 가 끝 문장 시작을 '마지막 말 구간'으로 잡아 rate_last 14.3.
+또 줄 tts 를 고쳐도 narr_full.mp3 가 있으면 옛 소리를 그대로 썼다(파일 유무로만 재합성 판단).
+→ 합성은 **타임스탬프 엔드포인트**(typecast_tts.synthesize, 추가 과금 없음)로 글자 시각을 받아 두고, 문장 경계·문장부호 자리·끝 문장 시작을
+  소리 짐작이 아니라 **글자 시각**으로 정한다. 캐시 열쇠 = md5(글|목소리|배속|모델) — 글이 바뀌면 다시 합성(사이드카 <mp3>.tts.json).
+  align 이 없을 때(옛 합성본·403)만 dips()+match_punct() 로 어림하고, 그 사실을 결과에 적는다.
+
+    from tools.calcopy.engine import narr_align as NA
+    align = NA.synth_cached(text, voice_id, tempo, out_mp3)          # dict|None (None = 타임스탬프 못 받음 — 옛 방식으로)
+    NA.punct_slots(text, align)   → [(kind, a, b)]  문장부호마다 앞 글자 끝·뒤 글자 시작(초, 합성본 기준) — 마지막 마침표 포함
+    NA.dips(audio)                → [(a, b)]  여러 문턱(−40/−32/−26dB)의 틈 후보 합집합
+    NA.match_punct(marks, before, total, dips, t0, t1) → [(kind, (a,b)|None)]  차례를 지키는 짝짓기 중 말속도가 가장 고른 것
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+import time
+from functools import lru_cache
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+TTS_MODEL = "ssfm-v30"
+TTS_CONCURRENCY = int(os.environ.get("CALCOPY_TTS_CONCURRENCY", "2"))   # Typecast 동시 합성 상한 — 10-18 한혜진: 6개 동시 → 429
+_TTS_SEM = threading.BoundedSemaphore(TTS_CONCURRENCY)
+_LOCK_DIR = Path(os.environ.get("TEMP") or "/tmp") / "calcopy_tts_lock"
+PUNCT_RE = re.compile(r"[,.?!]")
+NORM = {"?": ".", "!": ".", ",": ",", ".": "."}
+
+
+# ── 합성 캐시 ────────────────────────────────────────────────────────────
+def cache_key(text: str, voice_id: str, tempo: float | None, model: str = TTS_MODEL) -> str:
+    return hashlib.md5(f"{text}|{voice_id}|{tempo}|{model}".encode("utf-8")).hexdigest()
+
+
+def sidecar_of(mp3) -> Path:
+    return Path(str(mp3) + ".tts.json")
+
+
+def load_align(mp3) -> dict | None:
+    sc = sidecar_of(mp3)
+    if not sc.exists():
+        return None
+    try:
+        return json.loads(sc.read_text(encoding="utf-8")).get("align")
+    except ValueError:
+        return None
+
+
+def _proc_slots() -> list:
+    """프로세스끼리도 동시 합성 상한을 지킨다 — 디렉터리 안 잠금 파일(O_EXCL) 슬롯. 60초 넘은 잠금은 죽은 것으로 보고 치운다."""
+    _LOCK_DIR.mkdir(parents=True, exist_ok=True)
+    while True:
+        for k in range(TTS_CONCURRENCY):
+            lk = _LOCK_DIR / f"slot{k}.lock"
+            try:
+                if lk.exists() and time.time() - lk.stat().st_mtime > 600:
+                    lk.unlink()
+                fd = os.open(str(lk), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.write(fd, str(os.getpid()).encode()); os.close(fd)
+                return [lk]
+            except FileExistsError:
+                continue
+        time.sleep(1.0)
+
+
+def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: str = TTS_MODEL, log=print) -> dict | None:
+    """합성 1회(캐시) → align|None. 캐시 열쇠가 다르면(글·목소리·배속 바뀜) 다시 합성하고 그 사실을 로그에 적는다.
+    사이드카 없는 옛 mp3 는 '그 글로 만든 것'으로 받아들여 사이드카만 적는다(유료 재합성 금지 — 10-18 진행 중인 편들)."""
+    out = Path(out_mp3)
+    key = cache_key(text, voice_id, tempo, model)
+    sc = sidecar_of(out)
+    if out.exists() and out.stat().st_size > 1000:
+        if sc.exists():
+            try:
+                meta = json.loads(sc.read_text(encoding="utf-8"))
+            except ValueError:
+                meta = {}
+            if meta.get("key") == key:
+                return meta.get("align")
+            log(f"[tts] 글·목소리·배속이 바뀌어 다시 합성: {out.name} (옛 {meta.get('key', '')[:8]} → {key[:8]})")
+            bak = out.with_name(out.stem + f"_old_{meta.get('key', 'x')[:8]}.mp3")
+            try:
+                out.replace(bak)
+            except OSError:
+                pass
+        else:
+            meta = {"key": key, "text": text, "voice": voice_id, "tempo": tempo, "model": model, "align": None, "legacy": True,
+                    "at": time.strftime("%Y-%m-%d %H:%M:%S"), "note": "사이드카 없는 옛 합성본을 그대로 받아들임(글자 시각 없음 → 소리 틈 어림)"}
+            sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+            log(f"[tts] 옛 합성본 재사용(글자 시각 없음): {out.name}")
+            return None
+    from shopping_shorts import typecast_tts
+    from shopping_shorts.channelkit import providers
+    key_tc = providers.typecast_key(None)
+    if not key_tc:
+        raise RuntimeError("Typecast 키가 없다(~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+    typecast_tts.api_key = lambda *a, **k: key_tc
+    locks = _proc_slots()
+    try:
+        with _TTS_SEM:
+            t0 = time.time()
+            align = typecast_tts.synthesize(text, str(out), voice_id=voice_id, speed=tempo, model_id=model)
+    finally:
+        for lk in locks:
+            try:
+                lk.unlink()
+            except OSError:
+                pass
+    meta = {"key": key, "text": text, "voice": voice_id, "tempo": tempo, "model": model, "align": align, "legacy": False,
+            "at": time.strftime("%Y-%m-%d %H:%M:%S"), "sec": round(time.time() - t0, 1)}
+    sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    log(f"[tts] Typecast 1회 {meta['sec']}초 → {out.name} (글자 시각 {'있음' if align else '없음'})")
+    return align
+
+
+# ── 글자 시각 → 문장부호 자리 ───────────────────────────────────────────
+def punct_marks(text: str) -> list[tuple[str, int]]:
+    """글의 문장부호 순서대로 (종류, 앞까지 읽는 글자 수). ?·! 은 마침표."""
+    out = []
+    for m in PUNCT_RE.finditer(text):
+        out.append((NORM[m.group()], len(re.findall(r"[가-힣A-Za-z0-9]", text[:m.start()]))))
+    return out
+
+
+def punct_slots(text: str, align: dict) -> list[tuple[str, float, float]]:
+    """align(characters·start·end) 에서 문장부호마다 (종류, 앞 글자 끝, 뒤 글자 시작). 주인은 engine/tts_pause.pause_slots — 글 끝 마침표는 (끝, 끝)."""
+    from tools.calcopy.engine import tts_pause as TP
+    ch = align["characters"]; e = align["character_end_times_seconds"]
+    slots = list(TP.pause_slots(align))
+    marks = punct_marks(text)
+    if len(slots) == len(marks) - 1 and marks and marks[-1][0] == ".":       # 글 끝 마침표(뒤 글자 없음)
+        last = max(float(x) for x in e)
+        slots.append((".", last, last))
+    if len(slots) != len(marks):
+        raise ValueError(f"글자 시각의 문장부호 수({len(slots)})와 글({len(marks)})이 다르다")
+    return slots
+
+
+def speech_bounds(align: dict) -> tuple[float, float]:
+    """첫 글자 시작·마지막 글자 끝(초)."""
+    ch = align["characters"]; s = align["character_start_times_seconds"]; e = align["character_end_times_seconds"]
+    idx = [i for i, c in enumerate(ch) if not c.isspace() and c not in ",.?!"]
+    return float(s[idx[0]]), float(e[idx[-1]])
+
+
+# ── align 없을 때: 소리 틈 후보 + 짝짓기 ──────────────────────────────────
+def _silences(audio, noise: str, d: float) -> list[tuple[float, float]]:
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(audio), "-af", f"silencedetect=n={noise}:d={d}", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL).stderr
+    st = [float(x) for x in re.findall(r"silence_start: (-?[\d.]+)", r)]
+    en = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r)]
+    dur = duration(audio)
+    return list(zip(st, en + [dur] * (len(st) - len(en))))
+
+
+def duration(audio) -> float:
+    return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(audio)],
+                                capture_output=True, text=True, stdin=subprocess.DEVNULL).stdout.strip() or 0)
+
+
+DIP_PENALTY = 0.35       # 얕은 문턱(−32·−26dB) 틈 하나당 짝짓기 비용 가산(단계마다) — 10-18 손태영: 가산 없이 섞으면 −26dB 잔틈(0.04초)을 진짜 쉼(0.26초) 대신 골랐다
+
+
+def dips(audio, d: float = 0.06, levels=(("-40dB", None), ("-32dB", 0.05), ("-26dB", 0.04))) -> list[tuple[float, float, int]]:
+    """틈 후보 = 여러 문턱의 무음 합집합 (a, b, 깊이 단계 0=−40dB·1=−32·2=−26 — 겹치면 가장 깊은 문턱 것으로).
+    10-18 손태영 재미썸: '거.|한국' 사이가 −25dB 에서만 0.07초 — −40dB 만으론 못 찾았다. 얕은 틈은 DIP_PENALTY 로 뒤로 민다."""
+    out: list[tuple[float, float, int]] = []
+    for lv, (noise, dd) in enumerate(levels):
+        for a, b in _silences(audio, noise, dd if dd is not None else d):
+            if any(x[0] - 0.02 <= a <= x[1] + 0.02 or x[0] - 0.02 <= b <= x[1] + 0.02 or (a <= x[0] and b >= x[1]) for x in out):
+                continue
+            out.append((a, b, lv))
+    return sorted(out)
+
+
+def dip_level(s) -> int:
+    return int(s[2]) if len(s) > 2 else 0
+
+
+def match_punct(marks: list[str], before: list[int], total: int, dips_: list[tuple[float, float]], t_start: float, t_end: float,
+                skip_cost=None) -> tuple[list[tuple[str, tuple[float, float] | None]], float]:
+    """문장부호 ↔ 틈 짝짓기(차례 유지, 동적 계획). 비용 = 부호 사이 구간마다 (말한 시간당 글자 ÷ 평균 − 1)² + 건너뜀(쉼표 0.15 · 마침표 0.6).
+    반환 ([(종류, (a,b)|None)…], 평균 말속도). None = 그 자리에 쉼이 없다(글자 수 비례로 어림한 시각은 predict() 로)."""
+    skip_cost = skip_cost or {",": 0.15, ".": 0.6}
+    sil = sorted(s for s in dips_ if s[0] > t_start + 0.05 and s[1] < t_end - 0.05)
+
+    def talk(a, b):
+        return (b - a) - sum(max(0.0, min(e, b) - max(s, a)) for s, e in sil)
+    mean = total / max(talk(t_start, t_end), 0.1)
+
+    def cost(c0, t0, c1, t1):
+        tk = talk(t0, t1)
+        if tk <= 0.05:
+            return 9e9
+        return (((c1 - c0) / tk) / mean - 1) ** 2
+    M, K = len(marks), len(sil)
+    INF = 9e18
+    sys.setrecursionlimit(max(10000, sys.getrecursionlimit()))
+
+    @lru_cache(None)
+    def go(i, last_j, c0):
+        t0 = sil[last_j][1] if last_j >= 0 else t_start
+        if i == M:
+            return cost(c0, t0, total, t_end), ()
+        best = (INF, ())
+        v, path = go(i + 1, last_j, c0)
+        best = min(best, (v + skip_cost[marks[i]], (None,) + path))
+        for j in range(last_j + 1, K):
+            cv = cost(c0, t0, before[i], sil[j][0])
+            if cv >= 9e9:
+                continue
+            v, path = go(i + 1, j, before[i])
+            best = min(best, (v + cv, (j,) + path))
+        return best
+    v, path = go(0, -1, 0)
+    if v >= INF or len(path) != M:
+        raise ValueError("문장부호 짝짓기 실패(틈 후보 없음)")
+    return [(k, (sil[j] if j is not None else None)) for k, j in zip(marks, path)], mean
+
+
+def predict_none(pairs: list, before: list[int], total: int, t_start: float, t_end: float) -> list[tuple[str, tuple[float, float]]]:
+    """None 자리(쉼 없는 부호)를 이웃 짝 사이 글자 수 비례로 어림해 (t, t) 로 채운다 — 쉼을 거기에 새로 넣기 위해."""
+    out = []
+    for i, (k, sl) in enumerate(pairs):
+        if sl is not None:
+            out.append((k, sl)); continue
+        pa = next(((pairs[j][1][1], before[j]) for j in range(i - 1, -1, -1) if pairs[j][1] is not None), (t_start, 0))
+        pb = next(((pairs[j][1][0], before[j]) for j in range(i + 1, len(pairs)) if pairs[j][1] is not None), (t_end, total))
+        frac = (before[i] - pa[1]) / max(1, pb[1] - pa[1])
+        t = pa[0] + (pb[0] - pa[0]) * frac
+        out.append((k, (t, t)))
+    return out

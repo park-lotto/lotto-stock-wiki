@@ -90,13 +90,14 @@ def shape(src_mp3: str, align: dict, out_mp3: str) -> list[dict]:
     out = array.array("h"); last = 0; log = []
     for kind, a, b in pause_slots(align):
         i0, i1 = int(a * sr), int(b * sr)
-        if i1 <= i0 or i0 < last:
+        if i1 < i0 or i0 < last:
             continue
         cur = (i1 - i0) / sr; want = PAUSE[kind]
         gap = x[i0:i1]
         if cur < want:
             need = int((want - cur) * sr); core = gap[len(gap) // 4: 3 * len(gap) // 4] or gap or array.array("h", [0])
-            if max(abs(s) for s in core) > FILL_PEAK_MAX:      # 짧은 틈에 말 꼬리가 섞임 → 반복하면 쉼이 사라진다(10-18 샥탬 4편 L7|L9 0.137초)
+            # 틈이 없거나(쉼 안 쉰 마침표 — 10-18 손태영 재미썸 '거.|한국') 20ms 미만이면 방 잡음으로(디지털 무음 금지)
+            if len(core) < int(0.02 * sr) or max(abs(s) for s in core) > FILL_PEAK_MAX:      # 짧은 틈에 말 꼬리가 섞임 → 반복하면 쉼이 사라진다(10-18 샥탬 4편 L7|L9 0.137초)
                 core = room_tone(x, sr)
             fill = array.array("h")
             while len(fill) < need:

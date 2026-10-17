@@ -31,6 +31,7 @@ from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_ITSSUM_B, 
 
 DEF = {"gap": 0.20, "gap_ab": 0.20, "gap_oo": 0.25, "tail": 0.50, "target_lufs": -8.6, "tp": -3.2, "orig_af": "highpass=f=90",
        "a_end_pad": 0.0, "orig_fade": 0.015, "bgm_dir": "shopping_shorts/assets/bgm_lib", "preset_b": str(PRESET_ITSSUM_B)}
+PLAN_MARGIN = 1.15      # 계획(어림) 컷 길이 × 이 배수가 max 를 넘으면 '빠듯' — 10-18 손태영 어림 대비 실제 TTS 줄 길이 최대 +12%
 
 
 def cfg(S: dict) -> dict:
@@ -74,35 +75,86 @@ def orig_pieces(S) -> list[dict]:
 
 
 # ── TTS ────────────────────────────────────────────────────────────────
-def tts_once(S, R: Path, log=print) -> Path:
+def tts_text(S) -> str:
+    return " ".join(l["tts"] for l in tts_lines(S))
+
+
+def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
+    """Typecast 1회(캐시 열쇠 = 글·목소리·배속 — 글이 바뀌면 다시 합성) → (narr_full.mp3, 글자 시각 align|None). 주인 engine/narr_align."""
+    from tools.calcopy.engine import narr_align as NA
     full = R / "narr_full.mp3"
-    if not full.exists():
-        from shopping_shorts.channelkit import providers
-        text = " ".join(l["tts"] for l in tts_lines(S))
-        providers.typecast_synth(S["voice"]["voice_id"], tempo=S["voice"].get("tempo"))(text, str(full))
-        log(f"Typecast 1회: {full} ({dur_of(full):.2f}초)")
-    return full
+    align = NA.synth_cached(tts_text(S), S["voice"]["voice_id"], S["voice"].get("tempo"), full, log=log)
+    return full, align
 
 
-def split_sentences(full, n):
-    """무음 -40dB ≥0.16초 중 긴 것 n-1개 = 문장 경계(자동). 손으로 확인한 tts_spans 가 있으면 그것이 이긴다."""
-    sil = silences(full, "-40dB", 0.16)
+def split_by_align(S, align) -> list[tuple[float, float]]:
+    """글자 시각으로 문장 경계 — 줄마다 마지막 문장부호의 (앞 글자 끝)까지, 다음 줄은 (뒤 글자 시작)부터. 소리 짐작 없음."""
+    from tools.calcopy.engine import narr_align as NA
+    L = tts_lines(S)
+    slots = NA.punct_slots(tts_text(S), align)
+    head, tail = NA.speech_bounds(align)
+    spans, i, start = [], 0, head
+    for k, l in enumerate(L):
+        i += len(NA.punct_marks(l["tts"]))
+        if k == len(L) - 1:
+            spans.append((start, tail)); break
+        if i == 0:
+            raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표로")
+        a, b = slots[i - 1][1], slots[i - 1][2]
+        spans.append((start, a)); start = b
+    return spans
+
+
+def split_sentences(full, n, chars: list[int] | None = None):
+    """문장 경계(자동, align 없을 때). 손으로 확인한 tts_spans 가 있으면 그것이, 글자 시각(align)이 있으면 split_by_align 이 이긴다.
+    10-18 김가연 편: '긴 무음 n-1개' 방식은 쉼표 쉼(0.42초 '최강 동안,')이 문장 끝 쉼보다 길어 H 를 '최강 동안' 으로 자르고도 조용히 렌더했다.
+    → 짧은 쉼(≥0.08, 0.06 안 붙은 쉼 합침)까지 후보로, n-1개 조합 전수 중 '줄마다 말한 시간당 글자'가 가장 고른(+긴 쉼 가산) 조합. 줄 말속도가 평균 ±35% 밖이면 멈춘다."""
+    sil = silences(full, "-40dB", 0.16) if not chars else silences(full, "-40dB", 0.08, merge=0.06)   # 글자 수 기준 고르기는 짧은 쉼(0.08~0.15, 김가연 B4|B5 0.14초)도 후보로
     total = dur_of(full)
     head = sil[0][1] if sil and sil[0][0] <= 0.02 else 0.0
     tail = sil[-1][0] if sil and sil[-1][1] >= total - 0.02 else total
     inner = [s for s in sil if s[0] > head + 0.05 and s[1] < tail - 0.05]
-    cut = sorted(sorted(inner, key=lambda s: s[1] - s[0], reverse=True)[:n - 1])
+    if not chars:
+        cut = sorted(sorted(inner, key=lambda s: s[1] - s[0], reverse=True)[:n - 1])
+    else:                                   # 무음 n-1개 고르기 전수(조합 수 작음): 줄마다 '말한 시간(안쪽 쉼 뺌) 당 글자'가 가장 고른 조합
+        from itertools import combinations
+        if len(inner) < n - 1:
+            raise StageError(f"문장 경계 무음이 모자란다({len(inner)} < {n - 1}) — 대본 tts_spans 를 손으로")
+
+        def score(cut):
+            edges = [head] + [x for s in cut for x in s] + [tail]
+            rs = []
+            for i in range(n):
+                a, b = edges[2 * i], edges[2 * i + 1]
+                talk = (b - a) - sum(min(e, b) - max(s, a) for s, e in inner if s < b and e > a)
+                rs.append(chars[i] / max(talk, 0.1))
+            m = sum(rs) / n
+            return sum((r / m - 1) ** 2 for r in rs) - 0.3 * sum(min(e - s, 0.5) for s, e in cut)   # 같은 고르기면 긴 쉼(문장 끝) 쪽
+        cut = list(min(combinations(inner, n - 1), key=score))
     edges = [head] + [x for s in cut for x in s] + [tail]
-    return [(edges[2 * i], edges[2 * i + 1]) for i in range(n)], inner
+    spans = [(edges[2 * i], edges[2 * i + 1]) for i in range(n)]
+    if chars:
+        rates = [c / max(b - a, 0.1) for c, (a, b) in zip(chars, spans)]
+        mean = sum(chars) / sum(b - a for a, b in spans)
+        bad = [(i, round(r, 2)) for i, r in enumerate(rates) if not (0.65 * mean <= r <= 1.35 * mean)]
+        if bad:
+            raise StageError(f"문장 자르기 의심(줄 말속도 평균 {mean:.2f}자/초의 ±35% 밖: {bad}) — tts_spans 를 손으로 확인")
+    return spans, inner
 
 
-def make_sentences(S, full: Path, R: Path, log=print):
-    """문장 자르기 → 쉼 고치기(tts_pauses) → atempo. atempo 는 전체 한 값(B17), 빠른 줄은 평균까지 늦추고(≤10%)
+def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None):
+    """문장 자르기(손 tts_spans > 글자 시각 align > 소리 틈 어림) → 쉼 고치기(tts_pauses) → atempo. atempo 는 전체 한 값(B17), 빠른 줄은 평균까지 늦추고(≤10%)
     느린 줄(평균의 90% 미만)은 ≤10% 당긴다(장윤정 편). 줄별 tts_override 가 있으면 그 파일을 그 줄 소스로(최은경 이름 발음)."""
     L = tts_lines(S)
-    spans, inner = split_sentences(full, len(L))
     if S.get("tts_spans"):
-        spans = [tuple(S["tts_spans"][l["id"]]) for l in L]
+        spans, inner = [tuple(S["tts_spans"][l["id"]]) for l in L], split_sentences(full, len(L))[1]
+        how = "hand"
+    elif align:
+        spans, inner, how = split_by_align(S, align), split_sentences(full, len(L))[1], "align"
+    else:
+        spans, inner = split_sentences(full, len(L), [nchar(l["tts"]) for l in L])
+        how = "silence_guess"
+    log(f"문장 경계({how}): " + " ".join(f"{l['id']}:{a:.2f}~{b:.2f}" for l, (a, b) in zip(L, spans)))
     P = S.get("tts_pauses") or {}
     OV = S.get("tts_override") or {}
     chars = [nchar(l["tts"]) for l in L]
@@ -119,9 +171,9 @@ def make_sentences(S, full: Path, R: Path, log=print):
     for l, (a, b), c, d in zip(L, spans, chars, durs):
         tl = tempo
         if c / d > mean * 1.03:
-            tl = round(max(tempo * 0.9, tempo * mean / (c / d)), 4)
+            tl = round(max(tempo * 0.9001, tempo * mean / (c / d)), 4)   # ±10% 경계는 반올림이 넘지 않게(10-18 김가연 1.3713/1.2466=+10.003% → B17 ×)
         elif c / d < mean * 0.9:
-            tl = round(min(tempo * 1.1, tempo * mean * 0.95 / (c / d)), 4)
+            tl = round(min(tempo * 1.0999, tempo * mean * 0.95 / (c / d)), 4)
         x = max(0, a - 0.02)
         cuts = sorted(P.get(l["id"], []))
         fc, lab = [], []
@@ -137,6 +189,7 @@ def make_sentences(S, full: Path, R: Path, log=print):
         out.append({"id": l["id"], "wav": str(p), "dur": round(dur_of(p), 3), "chars": c, "raw": [round(a, 3), round(b, 3)], "tempo": tl, "pauses": cuts,
                     "override": str(src_l) if src_l is not full else None})
     log(f"atempo 기본 {tempo} · 평균 {mean:.2f}자/초 · " + " ".join(f"{o['id']}:{o['chars'] / o['dur']:.2f}@{o['tempo']}" for o in out))
+    out[0]["split_how"] = how
     return out, tempo, inner
 
 
@@ -449,9 +502,16 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
         for c in T["cuts"]:
             log(f"  {c['line']} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c['max']} over {c['over']} {c['src']}@{c['ss']}")
         log(f"A 끝 {T['a_end']} 전체 {T['end']} → {doc / 'plan/계획_시트.jpg'}")
-        return {"plan": str(doc / "plan/계획_시트.jpg"), "timeline": T}
-    full = tts_once(S, R, log)
-    sent, tempo, inner = make_sentences(S, full, R, log)
+        # ★계획 단계에서 컷 길이 검사(10-18 손태영: 렌더 뒤에야 '컷이 원본 샷보다 길다' 4곳) — 어림(글자÷목표 자/초)이라 15% 여유까지 '빠듯'으로 적는다
+        over = [c for c in T["cuts"] if c["over"] > 0]
+        tight = [c for c in T["cuts"] if c["over"] <= 0 and c["dur"] * PLAN_MARGIN > c["max"]]
+        for c in tight:
+            log(f"  [빠듯] {c['line']} {c['src']}@{c['ss']} {c['dur']:.2f}s × {PLAN_MARGIN} > max {c['max']} — TTS 가 어림보다 길면 넘친다")
+        if over:
+            raise StageError("계획에서 컷이 원본 샷보다 길다(어림): " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over]))
+        return {"plan": str(doc / "plan/계획_시트.jpg"), "timeline": T, "tight": [(c["line"], c["src"], c["dur"], c["max"]) for c in tight]}
+    full, align = tts_once(S, R, log)
+    sent, tempo, inner = make_sentences(S, full, R, log, align=align)
     T = timeline(S, M, {s["id"]: s["dur"] for s in sent})
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
@@ -466,7 +526,18 @@ def render(doc: Path, work: Path, plan_only: bool = False, desktop: Path | None 
     mix, A = audio(S, M, T, sent, R)
     final = R / "final.mp4"
     run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
+    # 최고점 ≤ −0.5 dBFS(B2): alimiter 는 표본 최고점만 막아 AAC 인코딩 뒤 진짜 최고점이 넘친다(10-18 김가연 −0.8 → 완성본 +0.4).
+    # 넘치면 리미터 한계를 1dB씩 내려 소리만 다시 섞는다(최대 3회, 영상은 그대로).
+    for _ in range(3):
+        fl = lufs(final)
+        if fl[1] <= -0.5:
+            break
+        S = {**S, "render": {**(S.get("render") or {}), "tp": cfg(S)["tp"] - 1.0}}
+        log(f"최고점 {fl[1]} dBFS > −0.5 → 리미터 {cfg(S)['tp']} dB 로 다시 섞음")
+        mix, A = audio(S, M, T, sent, R)
+        run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
     info = {"made_by": "tools/calcopy/hybrid/render_itssum.py", "version": "잇썸홈판", "tempo": tempo, "sentences": sent, "inner_silences": inner,
+            "split_how": sent[0].get("split_how"), "tts_align": bool(align),
             "timeline": T, "audio": A, "final": str(final), "final_dur": dur_of(final), "final_lufs": lufs(final),
             "cuts_flat": [{"src": c["src"], "ss": c["ss"], "t0": c["t0"], "t1": c["t1"], "dur": c["dur"], "seg": "B", "line": c["line"], "see": c.get("see", "")} for c in T["cuts"]]
             + [{"src": a["src"], "ss": a["ss"], "t0": a["t0"], "t1": a["t1"], "dur": a["dur"], "seg": "A", "line": a["who"], "see": a.get("see", "")} for a in T["a_shots"]]}

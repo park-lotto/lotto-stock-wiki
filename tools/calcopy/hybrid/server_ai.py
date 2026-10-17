@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
 HOST = "ubuntu@3.35.251.172"
 REPO = "/home/ubuntu/lotto-stock-wiki"
-ASR_MODELS = ("gemini-3-flash-preview", "gemini-flash-latest")      # 10-18 서버 실측 둘 다 4초 안에 답(gemini-2.5-flash 는 404)
+from tools.calcopy.engine.gemini_server import MODELS as ASR_MODELS, FALLBACK_MODELS as ASR_FALLBACK  # noqa: E402  — 모델 목록 주인은 엔진 한 곳(10-18 실측 표는 거기)
 ASR_PROMPT = ('클립마다 한국어 말소리를 들리는 그대로 받아써라(배경음악·효과음은 빼고, 고치거나 보태지 마라). 말하는 사람 수도 세라. '
               '말이 없으면 text 는 빈 문자열.\nJSON만: {"clips":[{"i":0,"text":"","speakers":1}]}')
 
@@ -116,18 +116,22 @@ def asr_clips(src, spans: list[tuple[float, float]] | None, models=ASR_MODELS, p
     spans = spans or [(None, None)]
     files = [(str(src), a, b) if a is not None else str(src) for a, b in spans]
     r = G.ask_files(files, prompt or G.ASR_PROMPT, "audio", models, max_tries=max_tries)
+    seen = list(models) + [x["model"] for job in r["jobs"] for x in job["runs"] if x["model"] not in models]
     runs = []
-    for model in models:
+    for model in dict.fromkeys(seen):                   # 기본 모델 + 대체(fallback) 모델 — 성공한 클립만 싣는다
         clips, why = [], None
         for i, job in enumerate(r["jobs"]):
-            m = next((x for x in job["runs"] if x["model"] == model), None)
+            m = next((x for x in job["runs"] if x["model"] == model and "why" not in x), None) or next((x for x in job["runs"] if x["model"] == model), None)
             if m is None or "why" in m:
                 why = (m or {}).get("why", "no_run"); continue
             j = m.get("json") if isinstance(m.get("json"), dict) else {"text": m.get("text", "")}
             clips.append({"i": i, "text": j.get("text", ""), "speakers": j.get("speakers")})
         runs.append({"model": model, "clips": clips} if clips and why is None else {"model": model, "why": why or "partial", "clips": clips or None})
+    cross = [len(job.get("ok_models") or []) for job in r["jobs"]]
     return {"spans": [list(s) if s[0] is not None else None for s in spans], "runs": runs, "sec": r["sec"],
-            "ok_models": [x["model"] for x in runs if x.get("clips") and "why" not in x]}
+            "ok_models": [x["model"] for x in runs if x.get("clips") and "why" not in x],
+            "cross_per_clip": cross, "min_cross": min(cross) if cross else 0,      # ★교차 확인 = 클립마다 성공 모델 수(대체 모델 포함) ≥ 2
+            "failed": [f for job in r["jobs"] for f in job.get("failed") or []]}
 
 
 def asr_many(jobs: list[tuple], models=ASR_MODELS, workers: int = 3) -> list[dict]:

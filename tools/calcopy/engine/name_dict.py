@@ -16,9 +16,33 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 DICT = Path(__file__).with_name("name_dict.json")
+
+
+def josa(word: str, pair: str = "이/가") -> str:
+    """받침으로 조사 고르기 — '손태영'+'이' / '손태영 씨'+'가'. 10-18 손태영: 시험 문장이 '손태영가'로 비문이었다."""
+    a, b = pair.split("/")
+    w = (word or "").rstrip()
+    if not w:
+        return b
+    ch = w[-1]
+    if "가" <= ch <= "힣":
+        return a if (ord(ch) - 0xAC00) % 28 else b
+    if ch.isdigit():
+        return a if ch in "013678" else b
+    return b
+
+
+def heard_ok(name: str, text: str, d: dict | None = None) -> bool:
+    """받아쓰기 글에 이름이 들렸나 — 사전 heard_ok(연음·오인식 허용 표기, 예 '한혜진'→'한예진')도 이름으로 친다. 10-18 한혜진 편 A11' 거짓 ×."""
+    t = re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")
+    if name in t:
+        return True
+    ent = (d or load())["names"].get(name) or {}
+    return any(a and a in t for a in ent.get("heard_ok") or [])
 
 
 def load() -> dict:
@@ -33,6 +57,17 @@ def save(d: dict) -> None:
     os.replace(tmp, DICT)
 
 
+def update(name: str, fn) -> dict:
+    """잠금 아래 읽기-수정-쓰기: fn(entry) 가 그 이름 항목을 고친다 — 두 세션이 동시에 돌려도 서로 덮어쓰지 않는다(10-18 한혜진 두 목소리 동시)."""
+    from tools.calcopy.engine.filelock import locked
+    with locked(DICT):
+        d = load()
+        ent = d["names"].setdefault(name, {"tts": name, "bad": [], "voices": {}})
+        fn(ent)
+        save(d)
+        return ent
+
+
 def spelling(name: str, voice_id: str | None = None, d: dict | None = None) -> str:
     """이름 → TTS 표기. 성우별 표기가 있으면 그것, 없으면 공통 tts, 둘 다 없으면 원문."""
     ent = (d or load())["names"].get(name)
@@ -42,9 +77,15 @@ def spelling(name: str, voice_id: str | None = None, d: dict | None = None) -> s
 
 
 def apply(text: str, name: str, voice_id: str | None = None, d: dict | None = None) -> str:
-    """읽는 글에서 이름 하나를 표기로."""
+    """읽는 글에서 이름 하나를 표기로. 이미 표기로 적힌 자리는 다시 바꾸지 않는다(10-18 한혜진: '한혜진 씨가' + 표기 '한혜진 씨' → '씨 씨가')."""
     sp = spelling(name, voice_id, d)
-    return text if sp == name or not text else text.replace(name, sp)
+    if sp == name or not text:
+        return text
+    if sp.startswith(name):
+        suf = sp[len(name):]
+        alts = "|".join(re.escape(x) for x in {suf, suf.strip(), suf.lstrip()} if x)
+        return re.sub(re.escape(name) + (f"(?!{alts})" if alts else ""), sp, text)
+    return text.replace(name, sp)
 
 
 def apply_all(text: str, voice_id: str | None = None) -> str:

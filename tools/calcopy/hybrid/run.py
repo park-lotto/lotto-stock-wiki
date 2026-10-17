@@ -125,7 +125,8 @@ def st_asr(ctx: Ctx, a):
         raise StageError(f"받아쓰기 구간 파일이 없다: {sp} — [{{\"src\": \"src/xxx.mp4\", \"a\": 224.8, \"b\": 231.0, \"tag\": \"O1\"}}] 꼴로 적어라")
     spans = jload(sp)
     files = [(str(ctx.W / s["src"]), s["a"], s["b"]) for s in spans]
-    r = G.asr(files)
+    from tools.calcopy.hybrid.server_ai import ASR_MODELS   # flash-latest 서버 멈춤(10-18) — 하이브리드 받아쓰기 모델은 server_ai 한 곳
+    r = G.asr(files, models=ASR_MODELS)
     for s, job in zip(spans, r["jobs"]):
         s["heard"] = G.texts(job); s["ok_models"] = job["ok_models"]
     jsave(ctx.W / "asr" / "result.json", {"sec": r["sec"], "spans": spans})
@@ -166,9 +167,12 @@ def st_name_check(ctx: Ctx, a):
         r = name_check.check(ctx.celeb, voice, ctx.W / "name_check" / voice, S["voice"].get("tempo"))
         sp = r["tts"]
         changed = 0
+        from tools.calcopy.engine import name_dict as ND
         for l in S["lines"]:
             if l.get("tts") and ctx.celeb in l["tts"] and sp != ctx.celeb:
-                l["tts"] = l["tts"].replace(ctx.celeb, sp); changed += 1
+                new = ND.apply(l["tts"], ctx.celeb, voice)   # 이미 표기면 그대로(10-18 한혜진 '씨 씨가')
+                if new != l["tts"]:
+                    l["tts"] = new; changed += 1
         if changed:
             jsave(ctx.D / v / "대본.json", S)
         out[v] = {"tts": sp, "lines_changed": changed}

@@ -23,7 +23,7 @@ from tools.calcopy.engine import name_dict as ND  # noqa: E402
 
 DICT = ND.DICT
 CANDIDATES = ["{n}", "{n} 씨", "방송인 {n} 씨", "{s}, {g}", "방송인, {s}, {g} 씨", "{s}, {g}이"]   # 최은경 편에서 통한 꼴 순서
-PHRASE = "{c}가 직접 산 거예요."       # 이름 뒤에 조사·문장을 붙여 자연스럽게 읽히게(홑 낱말 합성은 억양이 다르다)
+PHRASE = "{c}{j} 직접 산 거예요."       # 이름 뒤에 조사(이/가 — 받침, ND.josa)·문장을 붙여 자연스럽게 읽히게(홑 낱말 합성은 억양이 다르다)
 
 
 load = ND.load
@@ -50,7 +50,7 @@ def check(name: str, voice_id: str, work: Path, tempo: float | None = None, log=
     """후보 표기마다 이름 구절 1회 합성(Typecast) → 서버 받아쓰기(모델 2개) → 맞는 표기를 사전에 적는다. 사전에 그 성우 표기가 이미 있으면 안 부른다."""
     from tools.calcopy.hybrid import server_ai
     d = load()
-    ent = d["names"].setdefault(name, {"tts": name, "bad": [], "voices": {}})
+    ent = dict(d["names"].get(name) or {"tts": name, "bad": [], "voices": {}})
     if voice_id in (ent.get("voices") or {}):
         log(f"[name_check] 사전에 있음: {name} → {ent['voices'][voice_id]} ({voice_id})")
         return {"name": name, "tts": ent["voices"][voice_id], "from": "dict"}
@@ -63,29 +63,34 @@ def check(name: str, voice_id: str, work: Path, tempo: float | None = None, log=
     for k, c in enumerate(cands):
         mp3 = work / f"name_{k}.mp3"
         if not mp3.exists():
-            synth(PHRASE.format(c=c), str(mp3))
-        res = server_ai.asr_clips(mp3, None)
+            synth(PHRASE.format(c=c, j=ND.josa(c)), str(mp3))
+        res = server_ai.asr_clips(mp3, None, max_tries=16)
         texts = server_ai.texts_of(res, 0)
+        if not texts:                                         # 받아쓰기 실패(429 등)는 '이름이 틀렸다'가 아니다 — 다음 후보를 합성(유료)하지 말고 멈춘다
+            raise StageError(f"이름 받아쓰기 실패(후보 {c!r}, 합성 파일은 남김·다시 돌리면 재사용): "
+                             + "; ".join(f"{x.get('model')}: {str(x.get('why'))[:80]}" for x in res.get("runs", [])))   # 10-18 김가연: 서버 풀 429 로 6후보 전부 합성·'못 찾았다' 오판
         results.append({"cand": c, "texts": texts, "models": res.get("ok_models")})
         log(f"[name_check] {c!r} → {texts}")
         if len(texts) >= 2 and all(name in _norm(t) for t in texts):
             break                                             # 첫 후보가 전 모델 일치면 그만(싼 쪽)
     best = pick(name, results)
     bad = sorted({_norm(t)[:len(name) + 1] for r in results for t in r["texts"] if name not in _norm(t) and _norm(t)})
-    ent.setdefault("bad", [])
-    for b in bad:
-        if b and b not in ent["bad"]:
-            ent["bad"].append(b)
-    ent["candidates_tried"] = sorted(set(ent.get("candidates_tried", []) + cands[:len(results)]))
-    if best is None:
-        ND.save(d)
-        raise StageError(f"이름 {name} 을 또렷하게 읽는 표기를 못 찾았다: {results}")
-    ent.setdefault("voices", {})[voice_id] = best["cand"]
-    if ent.get("tts", name) == name:
-        ent["tts"] = best["cand"]
     import time
-    ent["verified"] = f"{time.strftime('%Y-%m-%d')} name_check {voice_id} 후보 {len(results)}개 → {best['cand']!r} {best['texts']}"
-    ND.save(d)
+
+    def upd(ent):                                         # 사전 갱신은 잠금 아래 읽기-수정-쓰기(10-18 한혜진: 두 목소리 동시 → 서로 덮어씀)
+        ent.setdefault("bad", [])
+        for b in bad:
+            if b and b not in ent["bad"]:
+                ent["bad"].append(b)
+        ent["candidates_tried"] = sorted(set(ent.get("candidates_tried", []) + cands[:len(results)]))
+        if best is not None:
+            ent.setdefault("voices", {})[voice_id] = best["cand"]
+            if ent.get("tts", name) == name:
+                ent["tts"] = best["cand"]
+            ent["verified"] = f"{time.strftime('%Y-%m-%d')} name_check {voice_id} 후보 {len(results)}개 → {best['cand']!r} {best['texts']}"
+    ND.update(name, upd)
+    if best is None:
+        raise StageError(f"이름 {name} 을 또렷하게 읽는 표기를 못 찾았다: {results}")
     jsave(work / "name_check.json", {"name": name, "voice": voice_id, "results": results, "picked": best})
     return {"name": name, "tts": best["cand"], "results": results}
 

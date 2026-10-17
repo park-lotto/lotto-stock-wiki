@@ -17,8 +17,15 @@ CLI
     r = asr(["a.wav", ("b.mp4", 3.2, 11.0)], prompt=None)        # (경로) 또는 (경로, a, b)
     texts(r["jobs"][0])  → 모델별 글 목록
 
-받아쓰기 기본 프롬프트는 클립 단독·들리는 그대로·화자 수. 모델 기본 ("gemini-3-flash-preview", "gemini-flash-latest") — 10-18 서버 실측 둘 다 응답(2.5-flash 는 404).
-한 모델이 끝까지 실패하면 그 자리에 {"why"} 가 남는다 — 조용히 한 모델로 줄이지 않는다. 서버 한 번 호출 = 작업 여러 개 × 모델 여러 개를 스레드로 동시에.
+받아쓰기 기본 프롬프트는 클립 단독·들리는 그대로·화자 수. 모델 기본 MODELS(측정으로 고른 빠른 2개) · 대체 FALLBACK_MODELS.
+한 모델이 실패(429 끝까지·시간초과 REQ_TIMEOUT_SEC·404)하면 그 자리에 {"why"} 가 남고, 같은 작업에 **대체 모델을 차례로** 더 불러 성공 모델이 CROSS_N 개가
+되게 한다. 그래도 모자라면 jobs[i].cross_ok=False — 조용히 한 모델로 줄이지 않는다(부르는 쪽이 '교차 확인 모자람'으로 적는다).
+서버 한 번 호출 = 작업 여러 개 × 모델 여러 개를 스레드로 동시에(1차) → 모자란 작업만 대체 모델(2차).
+
+모델 실측(2026-10-18 손태영 원음 2~3초 클립 3개, 서버 풀, 요청 상한 45초 — _hybrid_pipeline_test/손태영/asr/model_bench.json):
+  gemini-3-flash-preview 3.8·9.6·4.2초(tries 1·4·1) 글 정상 / gemini-3.5-flash 4.1·4.6초 + 1클립 429(키 9개) · '금가루'→'콩가루' 1회
+  gemini-flash-latest 8.5·8.5·4.3초(같은 날 새벽엔 177~304초 — 키 하나가 매달린 것, 그래서 상한) / gemini-3.5-flash-lite 2.5~2.8초, 짧은 클립 1개 빈 글
+  gemini-2.5-flash 404. 15회 합계 12.5초(옛 2모델 3클립 215초).
 """
 from __future__ import annotations
 
@@ -35,7 +42,10 @@ from pathlib import Path
 KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
 HOST = "ubuntu@3.35.251.172"
 REPO = "/home/ubuntu/lotto-stock-wiki"
-MODELS = ("gemini-3-flash-preview", "gemini-flash-latest")
+MODELS = ("gemini-3-flash-preview", "gemini-3.5-flash")          # 기본 2개(교차) — 10-18 서버 실측(아래 표) 3.8~9.6초 / 4.1~4.6초
+FALLBACK_MODELS = ("gemini-flash-latest", "gemini-3.5-flash-lite")   # 기본 모델이 429·시간초과·404 면 이 순서로 대체(작업마다 성공 모델 CROSS_N 개가 될 때까지). 2.5-flash 는 404
+REQ_TIMEOUT_SEC = 45         # 모델 1회 호출 상한 — 10-18 손태영: gemini-flash-latest 가 2초 클립에 177~304초(상한 없이 매달림)
+CROSS_N = 2                  # '교차 확인' = 서로 다른 모델 이 개수 이상 성공. 못 채우면 jobs[i].cross_ok=False (조용히 1모델로 줄이지 않는다)
 ASR_PROMPT = ('이 오디오의 한국어 말소리를 들리는 그대로 받아써라(배경음악·효과음은 빼고, 고치거나 보태지 마라). 말하는 사람 수도 세라. '
               '말이 없으면 text 는 빈 문자열.\nJSON만: {"text":"","speakers":1}')
 MAX_INLINE = 19_000_000      # 제미나이 인라인 바이트 상한(20MB) 아래
@@ -61,7 +71,8 @@ def call(job, model):
         if tries > a.get("max_tries", 8):
             break
         try:
-            cfg = types.GenerateContentConfig(response_mime_type="application/json" if job.get("json", True) else None, temperature=0, seed=7)
+            cfg = types.GenerateContentConfig(response_mime_type="application/json" if job.get("json", True) else None, temperature=0, seed=7,
+                                              http_options=types.HttpOptions(timeout=int(float(a.get("req_timeout", 45)) * 1000)))
             r = kv.get_client_for_key(key).models.generate_content(model=model, contents=parts, config=cfg)
             kv.note_success(key)
             out = {"model": model, "tries": tries, "sec": round(time.time() - t0, 1)}
@@ -75,16 +86,27 @@ def call(job, model):
             return out
         except Exception as e:
             last = f"{type(e).__name__}: {str(e)[:140]}"
-            kv.note_failure(key, e)
             if "404" in str(e) or "NOT_FOUND" in str(e):
                 return {"model": model, "why": "model_404 " + last, "tries": tries}
+            if "imeout" in type(e).__name__ or "timed out" in str(e).lower() or "ReadTimeout" in str(e):
+                return {"model": model, "why": "timeout " + last, "tries": tries, "sec": round(time.time() - t0, 1)}   # 느린 모델은 키를 바꿔도 느리다 — 바로 대체 모델로
+            kv.note_failure(key, e)
     return {"model": model, "why": last or "no_key", "tries": tries}
-tasks = [(ji, m) for ji in range(len(a["jobs"])) for m in a["models"]]
-with ThreadPoolExecutor(max_workers=min(int(a.get("workers") or 12), 12, max(1, len(tasks)))) as ex:
-    res = list(ex.map(lambda t: (t[0], call(a["jobs"][t[0]], t[1])), tasks))
+def batch(tasks):
+    with ThreadPoolExecutor(max_workers=min(int(a.get("workers") or 12), 12, max(1, len(tasks)))) as ex:
+        return list(ex.map(lambda t: (t[0], call(a["jobs"][t[0]], t[1])), tasks))
 runs = [[] for _ in a["jobs"]]
-for ji, r in res:
+for ji, r in batch([(ji, m) for ji in range(len(a["jobs"])) for m in a["models"]]):
     runs[ji].append(r)
+need = int(a.get("cross_n", 2))
+for fb in a.get("fallback") or []:                      # 2차: 성공 모델이 need 개 안 되는 작업만 대체 모델 하나씩(차례로)
+    short = [ji for ji in range(len(a["jobs"])) if len({r["model"] for r in runs[ji] if "why" not in r}) < need
+             and fb not in {r["model"] for r in runs[ji]}]
+    if not short:
+        break
+    for ji, r in batch([(ji, fb) for ji in short]):
+        r["fallback"] = True
+        runs[ji].append(r)
 print("@@JSON@@" + json.dumps({"runs": runs}, ensure_ascii=False))
 '''
 
@@ -133,7 +155,8 @@ def _video_b64(src, a, b, td: Path, k: int, height: int = 480) -> str:
     return base64.b64encode(p.read_bytes()).decode()
 
 
-def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: bool = True, max_tries: int = 8, workers: int = WORKERS) -> dict:
+def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: bool = True, max_tries: int = 8, workers: int = WORKERS,
+              fallback=FALLBACK_MODELS, cross_n: int = CROSS_N, req_timeout: float = REQ_TIMEOUT_SEC) -> dict:
     """files = [경로 | (경로, a, b) …] → 작업마다(파일·구간) 모델별 응답. mode audio(16k mp3) / video(480p 10fps mp4) / text(파일 없음)."""
     if mode not in ("audio", "video", "text"):
         raise ValueError(f"mode 는 audio|video|text: {mode}")
@@ -151,19 +174,24 @@ def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: 
                 parts.append({"mime": "video/mp4", "b64": _video_b64(src, a, b, td, k)})
             jobs.append({"parts": parts, "prompt": prompt, "json": json_out})
     t0 = time.time()
-    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS)})
+    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS),
+                           "fallback": list(fallback or ()), "cross_n": cross_n, "req_timeout": req_timeout})
     out = {"jobs": [{"file": src, "span": [a, b] if a is not None else None, "runs": runs} for (src, a, b), runs in zip(jobs_in, res["runs"])],
-           "sec": round(time.time() - t0, 1), "models": list(models)}
+           "sec": round(time.time() - t0, 1), "models": list(models), "fallback": list(fallback or ()), "cross_n": cross_n}
     for j in out["jobs"]:
-        j["ok_models"] = [r["model"] for r in j["runs"] if "why" not in r]
+        j["ok_models"] = sorted({r["model"] for r in j["runs"] if "why" not in r})
+        j["cross_ok"] = len(j["ok_models"]) >= cross_n           # ★교차 확인 됐나 — 부르는 쪽은 이 표식으로만 판단한다
+        j["failed"] = [{"model": r["model"], "why": r["why"]} for r in j["runs"] if "why" in r]
     return out
 
 
-def ask_raw(jobs: list[dict], models=MODELS, max_tries: int = 8, workers: int = WORKERS) -> dict:
+def ask_raw(jobs: list[dict], models=MODELS, max_tries: int = 8, workers: int = WORKERS, fallback=FALLBACK_MODELS, cross_n: int = 1,
+            req_timeout: float = REQ_TIMEOUT_SEC) -> dict:
     """미리 만든 작업 목록을 그대로 서버로 — jobs = [{"parts":[{"mime","b64"}|{"text"}…], "prompt", "json":bool}].
-    gemini_free.ask 의 서버 대체 경로가 쓴다(그림·소리·영상·글 전부). 반환 {"runs":[[모델별 응답…]…], "sec"}."""
+    gemini_free.ask 의 서버 대체 경로가 쓴다(그림·소리·영상·글 전부, 첫 성공 모델 하나면 되므로 cross_n=1). 반환 {"runs":[[모델별 응답…]…], "sec"}."""
     t0 = time.time()
-    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS)})
+    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS),
+                           "fallback": list(fallback or ()), "cross_n": cross_n, "req_timeout": req_timeout})
     return {"runs": res["runs"], "sec": round(time.time() - t0, 1), "models": list(models)}
 
 
@@ -192,6 +220,7 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("asr", "video"):
         p = sub.add_parser(name); p.add_argument("files", nargs="+"); p.add_argument("--spans", default=""); p.add_argument("--models", default=",".join(MODELS)); p.add_argument("--prompt"); p.add_argument("--json"); p.add_argument("--raw-text", action="store_true")
+        p.add_argument("--no-fallback", action="store_true"); p.add_argument("--timeout", type=float, default=REQ_TIMEOUT_SEC)
     t = sub.add_parser("text"); t.add_argument("--prompt", required=True); t.add_argument("--models", default=",".join(MODELS)); t.add_argument("--json"); t.add_argument("--raw-text", action="store_true")
     sub.add_parser("ping")
     a = ap.parse_args()
@@ -204,7 +233,8 @@ def main():
     else:
         sp = _spans(a.spans)
         files = [(f, s[0], s[1]) for f in a.files for s in sp] if sp else list(a.files)
-        r = ask_files(files, a.prompt or ASR_PROMPT, "audio" if a.cmd == "asr" else "video", models, json_out=not a.raw_text)
+        r = ask_files(files, a.prompt or ASR_PROMPT, "audio" if a.cmd == "asr" else "video", models, json_out=not a.raw_text,
+                      fallback=() if a.no_fallback else FALLBACK_MODELS, req_timeout=a.timeout)
     s = json.dumps(r, ensure_ascii=False, indent=1)
     if a.json:
         Path(a.json).write_text(s, encoding="utf-8")

@@ -44,8 +44,15 @@ class Timer:
             self.cur = {"stages": [], "note": "이전 장부 깨짐 — 새로 시작"}
 
     def done(self, stage: str, sec: float, note: str = "", **extra):
-        self.cur["stages"].append({"stage": stage, "sec": round(float(sec), 1), "note": note, "at": time.strftime("%Y-%m-%d %H:%M:%S"), **extra})
-        _jsave(self.path, self.cur)
+        from tools.calcopy.engine.filelock import locked
+        row = {"stage": stage, "sec": round(float(sec), 1), "note": note, "at": time.strftime("%Y-%m-%d %H:%M:%S"), **extra}
+        with locked(self.path):                      # 두 판을 동시에 돌려도(--parallel · 세션 둘) 줄이 사라지지 않게 — 다시 읽고 덧붙인다(10-18 한혜진)
+            try:
+                self.cur = _jload(self.path) if self.path.exists() else self.cur
+            except Exception:  # noqa: BLE001
+                pass
+            self.cur.setdefault("stages", []).append(row)
+            _jsave(self.path, self.cur)
 
     def summary(self, last: int = 12) -> str:
         return " · ".join(f"{r['stage']} {r['sec']}" for r in self.cur["stages"][-last:])

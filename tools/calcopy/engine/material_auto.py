@@ -310,10 +310,12 @@ class Net:
         if _valid_video(out, b - a - SECTION_PAD):
             return str(out)
         out.unlink(missing_ok=True)
+        from tools.calcopy.engine import yt_fetch as YF
         for fmt in (SECTION_FMT, "137/bv*[height>=1080]/bv*[width>=1080]/bv*[height>=720]"):   # HLS 가 빈 파일이면(10-17 qTWg) DASH 로 한 번 더
             self._gap()
-            r = _run(["yt-dlp", "--no-update", "-f", fmt, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
-                      f"https://www.youtube.com/watch?v={vid}"], timeout=900)
+            # 진행 없음 감시(60초 0B 면 이 yt-dlp 만 끊고 다음 형식) — 10-18 한혜진: DASH 구간이 25분+ 0B 로 매달림. 주인 engine/yt_fetch
+            r = YF.ytdlp(["--no-update", "-f", fmt, "--download-sections", f"*{a:.2f}-{b:.2f}", "-o", str(out),
+                          f"https://www.youtube.com/watch?v={vid}"], timeout=900, stall_sec=YF.STALL_SEC, watch=out.with_suffix(""), log=self.log)
             if _valid_video(out, b - a - SECTION_PAD):
                 break
             out.unlink(missing_ok=True)

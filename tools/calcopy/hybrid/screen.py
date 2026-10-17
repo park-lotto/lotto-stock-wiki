@@ -26,11 +26,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import StageError, jload, jsave, run  # noqa: E402
+from tools.calcopy.engine import yt_fetch as YF  # noqa: E402
 
+# 받기·자막·키워드 적중의 주인은 engine/yt_fetch (10-18: 구간은 HLS 먼저 + 진행 없음 감시, 자막은 영상과 따로, 제목 NFC·띄어쓰기 무시)
 YT_FMT_FULL = "137+ba[ext=m4a]/bv*[height>=1080]+ba/bv*[height>=720]+ba/b"
-YT_FMT_PREVIEW = "bv*[height<=360][ext=mp4]/bv*[height<=360]/wv*"
+YT_FMT_PREVIEW = YF.FMT_PREVIEW_360
+YT_FMT_SECTION = YF.FMT_SECTION_1080
 PREVIEW_SEC = 6.0
 PREVIEW_MAX = 3
+PREVIEW_TIMEOUT = 120       # 토막 하나 상한(초) — 10-18 손태영: 300초 × 토막 3개 × 후보 1개(a3y5wANirWY)로 648초·1639초 두 번 죽었다
+PREVIEW_STALL = 40          # 토막 파일이 이만큼 안 자라면 끊고 그 후보의 나머지 토막은 건너뛴다
 MIN_HEIGHT = 720
 
 
@@ -83,11 +88,9 @@ def search(work: Path, queries: list[str], n: int = 12, exclude: list[str] | Non
 def _vtt_hits(vtt: Path, keywords: list[str]) -> list[dict]:
     from tools.calcopy.yanshot.common import vtt_words
     words = vtt_words(vtt)
-    kws = [k.lower() for k in keywords]
     hits = []
     for t, w in words:
-        wl = w.lower()
-        if any(k in wl for k in kws):
+        if YF.kw_hit(w, keywords):
             if hits and t - hits[-1]["t"] < 2.0:
                 hits[-1]["n"] += 1
             else:
@@ -135,13 +138,7 @@ def screen_one(sd: Path, vid: str, keywords: list[str], log=print) -> dict:
         r = _ytdlp(["--skip-download", "--write-info-json", "-o", str(sd / vid), url])
         if not info.exists():
             return {"id": vid, "error": "메타 못 받음: " + r.stderr[-200:]}
-    if not list(sd.glob(f"{vid}*.vtt")):
-        for attempt in range(3):                                # 자막은 유튜브가 429 를 자주 준다 — 쉬었다 다시, 그래도 없으면 자막 없이 간다
-            r = _ytdlp(["--skip-download", "--write-auto-subs", "--write-subs", "--sub-langs", "ko,ko-orig", "--sub-format", "vtt", "--ignore-errors",
-                        "--sleep-subtitles", "3", "-o", str(sd / vid), url])
-            if list(sd.glob(f"{vid}*.vtt")) or "429" not in r.stderr:
-                break
-            time.sleep(10 * (attempt + 1))
+    YF.fetch_subs(url, sd / vid, log=log)                      # 자막은 최선 노력(429 면 자막 없이 간다)
     j = jload(info)
     heights = [f.get("height") or 0 for f in j.get("formats") or [] if f.get("vcodec") not in (None, "none")]
     out = {"id": vid, "title": j.get("title"), "channel": j.get("channel") or j.get("uploader"), "upload_date": j.get("upload_date"), "duration": j.get("duration"),
@@ -150,16 +147,22 @@ def screen_one(sd: Path, vid: str, keywords: list[str], log=print) -> dict:
     out["vtt"] = str(vtts[0]) if vtts else None
     out["hits"] = _vtt_hits(vtts[0], keywords) if vtts else []
     out["hit_n"] = sum(h["n"] for h in out["hits"])
-    out["title_hit"] = any(k.lower() in (out["title"] or "").lower() for k in keywords)
+    out["title_hit"] = YF.kw_hit(out["title"] or "", keywords)
     wins = _windows(out["hits"], out["duration"])
-    clips = []
+    clips, slow = [], None
     for k, (a, b) in enumerate(wins):
         p = sd / f"{vid}_{k}.mp4"
-        if not p.exists():
-            _ytdlp(["-f", YT_FMT_PREVIEW, "--download-sections", f"*{a:.1f}-{b:.1f}", "--force-keyframes-at-cuts", "-o", str(p), url], timeout=300)
+        if not p.exists() and slow is None:
+            r = YF.ytdlp(["-f", YT_FMT_PREVIEW, "--download-sections", f"*{a:.1f}-{b:.1f}", "--force-keyframes-at-cuts", "-o", str(p), url],
+                         timeout=PREVIEW_TIMEOUT, stall_sec=PREVIEW_STALL, watch=p.with_suffix(""), log=log)
+            if r.stalled or r.timed_out:                        # 이 후보는 느리다 — 나머지 토막은 받지 않는다(시트는 받은 것만으로)
+                slow = f"{'멈춤' if r.stalled else '시간초과'} {r.sec}초(토막 {k})"
+                for q in sd.glob(f"{vid}_{k}*"):
+                    q.unlink(missing_ok=True)
         if p.exists():
             clips.append(p)
     out["preview_windows"] = [[round(a, 1), round(b, 1)] for a, b in wins]
+    out["slow"] = slow
     out["sheet"] = str(_sheet(clips, sd / f"{vid}_sheet.jpg")) if clips else None
     out["ok_quality"] = bool(out["max_height"] and out["max_height"] >= MIN_HEIGHT)
     log(f"[screen] {vid} {out['max_height']}p {out['duration']}s 적중 {out['hit_n']} 제목 {'○' if out['title_hit'] else '×'} {out['title'][:40] if out['title'] else ''}")
@@ -184,11 +187,13 @@ def screen(work: Path, keywords: list[str], top: int = 12, ids: list[str] | None
             return {"id": v, "error": f"{type(e).__name__}: {str(e)[:300]}", "ok_quality": False, "hit_n": 0, "title_hit": False}
     with ThreadPoolExecutor(max_workers=2) as ex:      # 3개 동시엔 자막 429(10-18 실측)
         rows = list(ex.map(safe, ids))
-    if rows and all(r.get("error") for r in rows):
-        raise StageError("후보 전부 실패: " + "; ".join(f"{r['id']} {r['error'][:80]}" for r in rows[:3]))
     rows = rank(rows)
-    res = {"keywords": keywords, "rows": rows, "chosen": [], "_how": "소넷 워커: 시트(<id>_sheet.jpg)를 보고 같은 제품(라벨·포장)이 보이는 영상 id 를 chosen 에 적는다. 다른 브랜드·모음집은 뺀다"}
-    jsave(work / "screen.json", res)
+    prev = jload(work / "screen.json") if (work / "screen.json").exists() else {}
+    res = {"keywords": keywords, "rows": rows, "chosen": prev.get("chosen") or [], "_how": "소넷 워커: 시트(<id>_sheet.jpg)를 보고 같은 제품(라벨·포장)이 보이는 영상 id 를 chosen 에 적는다. 다른 브랜드·모음집은 뺀다",
+           "errors": [{"id": r["id"], "error": r["error"]} for r in rows if r.get("error")], "slow": [{"id": r["id"], "slow": r["slow"]} for r in rows if r.get("slow")]}
+    jsave(work / "screen.json", res)                    # ★부분 결과라도 항상 쓴다(10-18: 후보 1개 시간초과로 screen.json 자체가 안 나와 손으로 골랐다)
+    if rows and all(r.get("error") for r in rows):
+        raise StageError("후보 전부 실패(screen.json 에 사유 적음): " + "; ".join(f"{r['id']} {r['error'][:80]}" for r in rows[:3]))
     log(f"[screen] {len(rows)}개 가려냄 → {work / 'screen.json'} (화질 통과 {sum(1 for r in rows if r.get('ok_quality'))})")
     return res
 
@@ -201,17 +206,18 @@ def download(work: Path, ids: list[str], sections: list[tuple[float, float]] | N
     for vid in ids:
         url = f"https://www.youtube.com/watch?v={vid}"
         dst = src / f"{vid}.mp4"
-        if dst.exists():
-            out.append(dst); continue
-        args = ["-f", YT_FMT_FULL, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko", "--sub-format", "vtt", "-o", str(src / f"{vid}.%(ext)s"), url]
-        if sections:
-            for a, b in sections:
-                args += ["--download-sections", f"*{max(0, a - pad):.1f}-{b + pad:.1f}"]
-            args += ["--force-keyframes-at-cuts"]
-        r = _ytdlp(args, timeout=1800)
-        if r.returncode != 0 or not dst.exists():
-            raise StageError(f"받기 실패 {vid}: {r.stderr[-400:]}")
-        log(f"[download] {dst} {dst.stat().st_size // 1_000_000}MB")
+        if not dst.exists():
+            # 자막은 영상과 **다른 호출**(10-18 김가연: 자막 429 로 download 단계 통째 실패) · 구간은 HLS 먼저+멈춤 감시(한혜진: 137 구간 25분+ 0B) — 주인 engine/yt_fetch
+            if sections:
+                r = YF.download_sections(url, sections, dst, fmts=(YT_FMT_SECTION, YT_FMT_FULL), pad=pad, timeout=1800, extra=["--write-info-json"], log=log)
+                err = r.stderr[-400:] if r else "형식 전부 실패(멈춤·시간초과)"
+            else:
+                r = YF.download_full(url, dst, fmt=YT_FMT_FULL, timeout=1800, log=log)
+                err = r.stderr[-400:]
+            if not dst.exists():
+                raise StageError(f"받기 실패 {vid}: {err}")
+            log(f"[download] {dst} {dst.stat().st_size // 1_000_000}MB")
+        YF.fetch_subs(url, src / vid, langs="ko", log=log)      # 자막은 따로·최선 노력(없어도 영상은 성공)
         out.append(dst)
     return out
 
