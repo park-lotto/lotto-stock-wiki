@@ -1,0 +1,932 @@
+{
+ "slug": "humorshowshow",
+ "style": "썰템쇼_화자썰",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-18T01:25:40+09:00",
+ "sources": [
+  {
+   "id": "NBdmq90aJus",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/NBdmq90aJus/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 22:47",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.967초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 26.01.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 2.0]] — 창 다수결에서 뺌",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "frames[hook].span",
+    "frames[hook].layers[text:title].text",
+    "frames[body].span"
+   ],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "HakgyoansimBunpil.ttf",
+      "score": 0.1321
+     },
+     {
+      "font": "PoorStory.ttf",
+      "score": 0.1228
+     },
+     {
+      "font": "Orbit-Regular.ttf",
+      "score": 0.12
+     }
+    ],
+    "top5": [
+     {
+      "font": "HakgyoansimBunpil.ttf",
+      "score": 0.1321
+     },
+     {
+      "font": "PoorStory.ttf",
+      "score": 0.1228
+     },
+     {
+      "font": "Orbit-Regular.ttf",
+      "score": 0.12
+     },
+     {
+      "font": "SUIT-Regular.otf",
+      "score": 0.1145
+     },
+     {
+      "font": "IBMPlexSansKR-Regular.otf",
+      "score": 0.1144
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "c1f971c2c0b2"
+  },
+  {
+   "id": "jECuoRljWj0",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/jECuoRljWj0/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-17 22:47",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.833초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 26.03.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 1.8]] — 창 다수결에서 뺌",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 16개: [0, 1, 2, 3, 4, 5, 8, 9, 10, 11]",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "frames[hook].layers[text:label].text",
+    "frames[body].layers[text:label].text",
+    "frames[body].layers[text:label#3].text"
+   ],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.9097
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7009
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6948
+     }
+    ],
+    "top5": [
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.9097
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7009
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.6948
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.691
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.6795
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "30d85744ffa3"
+  },
+  {
+   "id": "GPeF16iUHNo",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/GPeF16iUHNo/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:37",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.9초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 25.10.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 1.9]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota', 'quota']",
+    "자막 글자 못 읽음 16/16개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "372cbd2bd2a2"
+  },
+  {
+   "id": "cHynO-CRdYE",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/cHynO-CRdYE/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:37",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 2.2초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 25.10.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 눈으로 읽은 화면 글 · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 2.2]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota', 'quota']",
+    "자막 글자 못 읽음 19/19개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "e5b0009ac401"
+  },
+  {
+   "id": "BlA9f8rBPuc",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/BlA9f8rBPuc/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:58",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.967초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 25.10.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 눈으로 읽은 화면 글 · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 2.0]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota']",
+    "자막 글자 못 읽음 21/21개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "6c26bdadbe14"
+  },
+  {
+   "id": "cj3-wcltAao",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/cj3-wcltAao/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:58",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.9초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 26.03.31",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 1.9]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [0]",
+    "자막 글자 못 읽음 2/2개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "7d1ae38d468c"
+  },
+  {
+   "id": "xJvwMApZwnE",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/xJvwMApZwnE/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 01:12",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 1.933초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 26.02.28",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 1.9]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [0]",
+    "자막 글자 못 읽음 23/23개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "9d0156e633e9"
+  },
+  {
+   "id": "0Q-CAw_iaNw",
+   "tteutgi": "C:/숏템_칼카피/humorshowshow/뜯기/0Q-CAw_iaNw/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 01:12",
+   "frame_tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+   "font": "CcPretendard-Bold",
+   "font_confidence": null,
+   "notes": [
+    "훅 길이 2.167초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+    "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+    "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [466, 552, 623], 채움 위 140 높이 84) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+    "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+    "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 25.11.30",
+    "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+    "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+    "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+    "훅 라벨 = 눈으로 읽은 화면 글 · 잉크 [585, 638]"
+   ],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 2.2]] — 창 다수결에서 뺌",
+    "자막 OCR 일부 실패: ['quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [0]",
+    "자막 글자 못 읽음 2/2개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota; quota; quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "썰템쇼_화자썰",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "02a3ddec984b"
+  }
+ ],
+ "updated_at": "2026-10-18T01:25:41+09:00",
+ "variables": [
+  "frames[hook].span",
+  "frames[hook].layers[text:title].text",
+  "frames[hook].layers[text:label].text",
+  "frames[body].span",
+  "frames[body].layers[text:label].text",
+  "frames[body].layers[text:label#3].text",
+  "frames[body].layers[text:label#4].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "썰템쇼_화자썰",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 549,
+    "y": 488,
+    "w": 1000,
+    "align": "center",
+    "lines": 2,
+    "font": "CcPretendard-Bold",
+    "size": 60.1,
+    "line_h": 76,
+    "rgb": [
+     0,
+     0,
+     0
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": -1,
+    "word_spacing": 0,
+    "valign": "top",
+    "enter": null,
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 NBdmq90aJus",
+   "sources": [
+    "NBdmq90aJus",
+    "jECuoRljWj0",
+    "GPeF16iUHNo",
+    "cHynO-CRdYE",
+    "BlA9f8rBPuc",
+    "cj3-wcltAao",
+    "xJvwMApZwnE",
+    "0Q-CAw_iaNw"
+   ],
+   "notes": [
+    "NBdmq90aJus: 손질본(틀 2장, hs_measure 실측)",
+    "jECuoRljWj0: 손질본(틀 2장, hs_measure 실측)",
+    "GPeF16iUHNo: 손질본(틀 2장, hs_measure 실측)",
+    "cHynO-CRdYE: 손질본(틀 2장, hs_measure 실측)",
+    "BlA9f8rBPuc: 손질본(틀 2장, hs_measure 실측)",
+    "cj3-wcltAao: 손질본(틀 2장, hs_measure 실측)",
+    "xJvwMApZwnE: 손질본(틀 2장, hs_measure 실측)",
+    "0Q-CAw_iaNw: 손질본(틀 2장, hs_measure 실측)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "frames[hook].span": {
+   "values": {
+    "NBdmq90aJus": [
+     0,
+     1.967
+    ],
+    "jECuoRljWj0": [
+     0,
+     1.833
+    ],
+    "GPeF16iUHNo": [
+     0,
+     1.9
+    ],
+    "cHynO-CRdYE": [
+     0,
+     2.2
+    ],
+    "BlA9f8rBPuc": [
+     0,
+     1.967
+    ],
+    "cj3-wcltAao": [
+     0,
+     1.9
+    ],
+    "xJvwMApZwnE": [
+     0,
+     1.933
+    ],
+    "0Q-CAw_iaNw": [
+     0,
+     2.167
+    ]
+   },
+   "default": [
+    0,
+    1.95
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "frames[hook].layers[text:title].text": {
+   "values": {
+    "NBdmq90aJus": "한국 코스트코만\n대놓고 차별한 디저트",
+    "jECuoRljWj0": "한국인들이 공식\n깨부셨다는 디저트",
+    "GPeF16iUHNo": "미국 소스시장을\n씹어먹은 마법의 소스",
+    "cHynO-CRdYE": "한국인을\n낚아버린 와사비",
+    "BlA9f8rBPuc": "오뚜기에서\n절대 안 파는 이것",
+    "cj3-wcltAao": "한국인들의 편견\n박살냈다는 디저트",
+    "xJvwMApZwnE": "프랑스 제조사도\n기겁한 한국 디저트",
+    "0Q-CAw_iaNw": "한국인들이 유독\n못 지킨다는 레시피"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "frames[hook].layers[text:label].text": {
+   "values": {
+    "NBdmq90aJus": "한국 코스트코만 대놓고 차별한 디저트",
+    "jECuoRljWj0": "한국인들이 공식 깨부셨다는 디저트",
+    "GPeF16iUHNo": "미국 소스시장을 씹어먹은 마법의 소스",
+    "cHynO-CRdYE": "한국인들을 완전히 낚아버린 와사비의 정체",
+    "BlA9f8rBPuc": "오뚜기가 일반인한테는 절대 안 파는 것",
+    "cj3-wcltAao": "한국인들의 편견 박살냈다는 디저트",
+    "xJvwMApZwnE": "프랑스 제조사도 기겁한 한국 디저트",
+    "0Q-CAw_iaNw": "한국인들이 유독 못 지킨다는 디저트 레시피"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "frames[body].span": {
+   "values": {
+    "NBdmq90aJus": [
+     1.967,
+     null
+    ],
+    "jECuoRljWj0": [
+     1.833,
+     null
+    ],
+    "GPeF16iUHNo": [
+     1.9,
+     null
+    ],
+    "cHynO-CRdYE": [
+     2.2,
+     null
+    ],
+    "BlA9f8rBPuc": [
+     1.967,
+     null
+    ],
+    "cj3-wcltAao": [
+     1.9,
+     null
+    ],
+    "xJvwMApZwnE": [
+     1.933,
+     null
+    ],
+    "0Q-CAw_iaNw": [
+     2.167,
+     null
+    ]
+   },
+   "default": [
+    1.95,
+    null
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "frames[body].layers[text:label].text": {
+   "values": {
+    "NBdmq90aJus": "한국 코스트코만 차별한 디저트",
+    "jECuoRljWj0": "한국인들이 공식 깨부셨다는 디저트",
+    "GPeF16iUHNo": "소스계를 씹어먹은 마법의 소스",
+    "cHynO-CRdYE": "한국인들을 낚아버린 와사비",
+    "BlA9f8rBPuc": "오뚜기가 절대 안파는 이것",
+    "cj3-wcltAao": "한국인들의 편견 박살냈다는 디저트",
+    "xJvwMApZwnE": "제조사도 기겁한 한국 디저트",
+    "0Q-CAw_iaNw": "한국인들이 유독 못 지킨다는 레시피"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "frames[body].layers[text:label#3].text": {
+   "values": {
+    "NBdmq90aJus": "추천891 조회 1,954,556 26.01.31 09:18 댓글",
+    "jECuoRljWj0": "추천891 조회 1,954,556 26.03.31 09:18 댓글",
+    "GPeF16iUHNo": "추천891 조회 1,954,556 25.10.31 09:18 댓글",
+    "cHynO-CRdYE": "추천891 조회 1,954,556 25.10.31 09:18 댓글",
+    "BlA9f8rBPuc": "추천891 조회 1,954,556 25.10.31 09:18 댓글",
+    "cj3-wcltAao": "추천891 조회 1,954,556 26.03.31 09:18 댓글",
+    "xJvwMApZwnE": "추천891 조회 1,954,556 26.02.28 09:18 댓글",
+    "0Q-CAw_iaNw": "추천891 조회 1,954,556 25.11.30 09:18 댓글"
+   },
+   "default": "추천891 조회 1,954,556 25.10.31 09:18 댓글",
+   "range": null,
+   "how": "조회수 줄 숫자 — 편마다 바꿀 수 있는 변수, 기본값 = 벤치 실측 꼴(사장님 10-18 '벤치처럼 켜 둔다')"
+  },
+  "frames[body].layers[text:label#4].text": {
+   "values": {
+    "NBdmq90aJus": "7544",
+    "jECuoRljWj0": "7544",
+    "GPeF16iUHNo": "7544",
+    "cHynO-CRdYE": "7544",
+    "BlA9f8rBPuc": "7544",
+    "cj3-wcltAao": "7544",
+    "xJvwMApZwnE": "7544",
+    "0Q-CAw_iaNw": "7544"
+   },
+   "default": "7544",
+   "range": null,
+   "how": "조회수 줄 숫자 — 편마다 바꿀 수 있는 변수, 기본값 = 벤치 실측 꼴(사장님 10-18 '벤치처럼 켜 둔다')"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {}
+ },
+ "roles": [
+  "훅 카드(0~2초): [주체] + [센 동사] + [정체 숨긴 대상]? — 2줄째 연두, 아래 띠에 같은 문장",
+  "대상 소개·배경(회사·시장·문제, ~는데로 넘김)",
+  "충격 사실·장애물(숫자·ㄷㄷ)",
+  "화자 대사 1~3줄(「화자 : 대사」 + 반응 짤)",
+  "정체 공개·해결(바로 ○○ / 대체품·먹는 법)",
+  "근거(성분표·문의답변·댓글·인터뷰 캡처 + 빨간 화살표·밑줄)",
+  "맛·이득 묘사 2~4줄(꾸덕·도른 조합·쟁여두기)",
+  "끝줄 = 1인칭 혼잣말 드립 + ㅋㅋ(아/하 ~ 로 시작)"
+ ],
+ "source_kind": "제품비하인드",
+ "brand": {
+  "name": "썰템쇼",
+  "bench_logo": "재밌쇼",
+  "layers": "frames[body] text:brand ×3(글자마다 — 가운데 글자만 흰 채움)"
+ },
+ "channel_rules": {
+  "_why": "사장님 10-18(벤치 재밌쇼 그대로 칼카피, 로고만 썰템쇼, 조회수 줄 켬) + 21편 줄판독 + 뜯기 실측(값마다 출처)",
+  "style": "화자썰",
+  "style_ref": "channel/스타일.json 화자썰",
+  "script_ref": "channel/humorshowshow/대본스타일_줄판독_2026-10-17.md",
+  "brand": "썰템쇼",
+  "bench": "재밌쇼(@humorshowshow)",
+  "speaker_lines": {
+   "rule": "「화자 : 대사」 자막 줄 0~3개/편 — 화자 = 의인화한 집단·회사·나라(한국인들·제조사·벨·코스트코·프랑스…)",
+   "narration_reads": "나레는 화자 이름을 빼고 대사만 읽는다(78p9·jECu 받아쓰기 대조)",
+   "count_from": "21편 356줄: 화자대사 48 · 2인대화 8 (15/21편에 있음)",
+   "max_per_video": 3
+  },
+  "speaker_line_picture": "반응 짤(해외 드라마·영화 표정·예능 장면) — 짤 속 원래 자막과 대사 말장난(21편 중 밈짤 있는 편 17/21)",
+  "last_line": {
+   "rule": "1인칭 혼잣말 드립 + ㅋㅋ 로 끝",
+   "from": "훅 카드 꼴 16/16편 ㅋㅋ 끝, 그중 12편 '아/하 ~' 시작"
+  },
+  "caption_endings": {
+   "from": "21편 자막 끝 판독",
+   "ㄷㄷ": 27,
+   "~는데": 17,
+   "ㅋㅋ": 16,
+   "명사 끝": 10,
+   "~인데": 7,
+   "~다고": 6,
+   "~함/~임/~보임": 11
+  },
+  "tone": "반말 전언체(존댓말 0 — 뜯기 script_tone polite_ratio 0.0 NBdm)",
+  "hook_formula": "[주체(한국인들/코스트코/오뚜기)] + [센 동사(대놓고 차별한·낚아버린·깨부셨다는)] + [정체 숨긴 대상(디저트·소스)]?",
+  "sound": {
+   "narration": "나레 1명 — 뜯기 audio.composition kind 판정된 2편 {나레 1명: 2}, 나머지 6편은 무료 키 quota 로 받아쓰기 실패(미판정)",
+   "speech_rate_cps": 8.6,
+   "speech_rate_from": "뜯기 voice_rules.cps 중앙(받아쓰기 된 편만 2편)",
+   "master_lufs": -13.8,
+   "true_peak": 0.25,
+   "lufs_from": "뜯기 audio.bench.I 중앙(8편)",
+   "bgm": "있음·경쾌(NBdm 판독 '경쾌한·신나는·정보전달')",
+   "sfx": "휙·띵(NBdm 받아쓰기 sfx 6개/28초)",
+   "voice_tone": "빠르고 위트 있는 20대 남성 TTS 해설 톤(NBdm 제미나이 판독) — 목소리는 따라가지 않는다(사장님 10-17)"
+  },
+  "shot_contract": {
+   "cut_sec_median": 1.655,
+   "first_cut_sec": 1.95,
+   "cut_eq_sub_rate": 0.75,
+   "cut_per_min": 33.65,
+   "sub_sec_median": 1.4,
+   "zoomin_frac": 0.368,
+   "duration_sec_median": 28.392,
+   "from": "뜯기 cuts·captions 중앙(8편: NBdmq90aJus, jECuoRljWj0, GPeF16iUHNo, cHynO-CRdYE, BlA9f8rBPuc, cj3-wcltAao, xJvwMApZwnE, 0Q-CAw_iaNw)",
+   "rows": [
+    {
+     "id": "NBdmq90aJus",
+     "dur": 28.0,
+     "lufs": -13.7,
+     "tp": 0.5,
+     "cps": 8.92,
+     "kind": "나레 1명",
+     "shot_med": 1.6,
+     "first_cut": 1.97,
+     "cut_eq_sub": 0.75,
+     "cut_per_min": 34.3,
+     "zoomin": 0.481,
+     "sub_med": 1.0999999999999996
+    },
+    {
+     "id": "jECuoRljWj0",
+     "dur": 28.317,
+     "lufs": -16.4,
+     "tp": 0.7,
+     "cps": 8.28,
+     "kind": "나레 1명",
+     "shot_med": 1.93,
+     "first_cut": 1.83,
+     "cut_eq_sub": 0.75,
+     "cut_per_min": 33.9,
+     "zoomin": 0.524,
+     "sub_med": 1.1999999999999993
+    },
+    {
+     "id": "GPeF16iUHNo",
+     "dur": 26.333,
+     "lufs": -13.7,
+     "tp": 0.2,
+     "cps": null,
+     "kind": null,
+     "shot_med": 1.15,
+     "first_cut": 1.9,
+     "cut_eq_sub": 0.588,
+     "cut_per_min": 38.7,
+     "zoomin": 0.348,
+     "sub_med": 1.5
+    },
+    {
+     "id": "cHynO-CRdYE",
+     "dur": 28.7,
+     "lufs": -13.9,
+     "tp": 0.2,
+     "cps": null,
+     "kind": null,
+     "shot_med": 1.63,
+     "first_cut": 2.2,
+     "cut_eq_sub": 0.875,
+     "cut_per_min": 33.4,
+     "zoomin": 0.343,
+     "sub_med": 1.5
+    },
+    {
+     "id": "BlA9f8rBPuc",
+     "dur": 27.933,
+     "lufs": -13.8,
+     "tp": 0.1,
+     "cps": null,
+     "kind": null,
+     "shot_med": 1.78,
+     "first_cut": 1.97,
+     "cut_eq_sub": 0.824,
+     "cut_per_min": 36.5,
+     "zoomin": 0.346,
+     "sub_med": 1.1999999999999993
+    },
+    {
+     "id": "cj3-wcltAao",
+     "dur": 32.333,
+     "lufs": -13.9,
+     "tp": 0.2,
+     "cps": null,
+     "kind": null,
+     "shot_med": 2.27,
+     "first_cut": 1.9,
+     "cut_eq_sub": 0.071,
+     "cut_per_min": 26.0,
+     "zoomin": 0.388,
+     "sub_med": 16.165
+    },
+    {
+     "id": "xJvwMApZwnE",
+     "dur": 30.067,
+     "lufs": -13.8,
+     "tp": 0.3,
+     "cps": null,
+     "kind": null,
+     "shot_med": 1.43,
+     "first_cut": 1.93,
+     "cut_eq_sub": 0.929,
+     "cut_per_min": 27.9,
+     "zoomin": 0.613,
+     "sub_med": 1.299999999999999
+    },
+    {
+     "id": "0Q-CAw_iaNw",
+     "dur": 28.467,
+     "lufs": -13.6,
+     "tp": 0.3,
+     "cps": null,
+     "kind": null,
+     "shot_med": 1.68,
+     "first_cut": 2.17,
+     "cut_eq_sub": 0.067,
+     "cut_per_min": 31.6,
+     "zoomin": 0.346,
+     "sub_med": 14.235
+    }
+   ]
+  },
+  "meta_line": {
+   "status": "켬(사장님 10-18 '벤치처럼 켜 둔다') — 숫자는 변수, 기본값 = 벤치 실측 꼴",
+   "bench_value": "익명 추천891 조회 1,954,556 <날짜> 09:18 댓글 7544 (8편 같은 값, 날짜만 다름)",
+   "caution": "21편 전부 같은 꾸민 값 — 우리 금지선(가짜지표)과 부딪칠 수 있어 사장님 확인 기록용"
+  },
+  "materials": "남의 영상 재편집 0.85 · 짤·밈 0.15 (NBdm 뜯기 materials)"
+ },
+ "meta_line": {
+  "status": "켬(사장님 10-18 '벤치처럼 켜 둔다') — 숫자는 변수, 기본값 = 벤치 실측 꼴",
+  "bench_value": "익명 추천891 조회 1,954,556 <날짜> 09:18 댓글 7544 (8편 같은 값, 날짜만 다름)",
+  "caution": "21편 전부 같은 꾸민 값 — 우리 금지선(가짜지표)과 부딪칠 수 있어 사장님 확인 기록용"
+ },
+ "differences": [
+  "로고: 벤치는 글자마다 기울인 손글씨 레터링 — 렌더러에 글자 회전 칸이 없어 BMJUA 바로 선 글자 3개(같은 자리·크기·색·외곽·그림자)로 둠(엔진 요청)",
+  "로고 글꼴: 창고에 같은 레터링 없음 — fontmatch 묶음 1위 BMJUA(정규화 0.90, 원점수 0.44 = 낮은 확신)",
+  "훅 카드 위 칸: 벤치는 본문 틀을 어둡게 깐 것이라 로고·아이콘이 희미하게 비침 — 우리는 단색(머리띠 자리 [87,93,80]·아래 [97,97,97])만, 희미한 비침은 안 그림",
+  "훅 띠 검정 선 2줄(529~533·703~708): 벤치는 4px 기울어짐 — 렌더러에 기운 선이 없어 가로 3px 선(가운데 y)으로",
+  "훅 흰 칸 세로 그라데이션(254→226): 2단(253·237)으로, 위·아래 회색 그라데이션은 band fade(바탕 97 쪽으로 흐려짐)로 근사",
+  "그림 창: 벤치는 컷마다 그림 높이가 489~933 로 바뀜(뜯기 picture_boxes) — 프리셋은 고정 창 본문 [0,673,1080,877]·훅 [0,748,1080,1172]",
+  "자막 2줄째 '덧붙음'(누적형) 시각은 대본 장면 나누기 몫 — 틀은 valign top 2줄 칸만 정한다"
+ ],
+ "measure_tool": "channel/humorshowshow/preset/hs_measure.py (8편 실측 → preset_work/measure/all.json·fonts.json·medians.json)"
+}
