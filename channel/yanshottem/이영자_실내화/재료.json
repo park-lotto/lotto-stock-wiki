@@ -1,0 +1,192 @@
+{
+ "_note": "얜샷템 이영자 실내화 편(벤치 안나픽 nt6WIGFmILE) 재료. 원본 = 이영자 TV BHuue4ga-w0(1080p50 AV1 → h264 변환). 창 1080x1080(frame_얜샷템). _build_json.py 가 만든다.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/이영자_실내화/src",
+ "narration": "일레븐랩스 미나(kr-mina, voice aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 합성 + atempo 1.35) — 벤치 나레 여성 차분한 설명체 8.01자/초",
+ "sources": {
+  "BHuue4ga-w0": {
+   "채널": "이영자 TV",
+   "제목": "드디어 드림하우스로 이사하는 날❗️3도4촌 시작합니다🏠 (이효리 오징엇국)",
+   "업로드": "2024-06-30",
+   "해상도": "1920x1080 50fps(AV1 webm → libx264 crf18 변환본 yj_BHuue4ga-w0.mp4)",
+   "길이": 488.34,
+   "조회": 2165422
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "url": "https://www.youtube.com/watch?v=BHuue4ga-w0",
+   "src_date": "이영자 TV 유튜브 2024.06.30",
+   "ss": 117.82,
+   "dur": 1.6,
+   "src_span": [
+    117.82,
+    119.42
+   ],
+   "t_final": [
+    0.0,
+    1.6
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    700,
+    0,
+    820,
+    820
+   ],
+   "res": "1920x1080",
+   "scale": 1.32,
+   "ours": "짐 가방 위로 몸을 숙여 검은 신발 주머니를 꺼냄(이영자 본인, 흰 반바지·초록 셔츠)",
+   "why": "원음 'PD님 걸어 다니기 힘들죠?' 117.82~119.42 — 원본 편집 자막(y≈940) 밖. 117.80 원본 컷 뒤",
+   "audio_src": "yj_BHuue4ga-w0.mp4",
+   "audio_ss": 117.82
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "url": "https://www.youtube.com/watch?v=BHuue4ga-w0",
+   "src_date": "이영자 TV 유튜브 2024.06.30",
+   "ss": 86.55,
+   "dur": 1.851,
+   "src_span": [
+    86.55,
+    88.401
+   ],
+   "t_final": [
+    1.6,
+    3.451
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    450,
+    0,
+    820,
+    820
+   ],
+   "res": "1920x1080",
+   "scale": 1.32,
+   "ours": "새 집 주방 조리대 앞에 선 이영자(창밖 나무)",
+   "why": "'이영자가 드림하우스로 이사하던 날' — f1 제목·이사 날 화면. 자막 '[볼수록 그저 감탄]'(y≈950) 밖. 88.42 원본 컷 전에 끊음",
+   "mute": true
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "url": "https://www.youtube.com/watch?v=BHuue4ga-w0",
+   "src_date": "이영자 TV 유튜브 2024.06.30",
+   "ss": 88.5,
+   "dur": 2.446,
+   "src_span": [
+    88.5,
+    90.946
+   ],
+   "t_final": [
+    3.451,
+    5.897
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    640,
+    0,
+    760,
+    760
+   ],
+   "res": "1920x1080",
+   "scale": 1.42,
+   "ours": "짐 상자(파란 통) 위로 숙여 짐을 꺼내는 이영자",
+   "why": "'짐 정리하다 피디에게 꺼내 준 요가 신발이라는데' — f2 '드디어 정리 시작!' 자막(왼쪽 아래 y≥760) 밖. 92.04 원본 컷 전",
+   "mute": true
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "url": "https://www.youtube.com/watch?v=BHuue4ga-w0",
+   "src_date": "이영자 TV 유튜브 2024.06.30",
+   "ss": 119.62,
+   "dur": 6.7,
+   "src_span": [
+    119.62,
+    126.32
+   ],
+   "t_final": [
+    5.897,
+    12.597
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    450,
+    0,
+    820,
+    820
+   ],
+   "res": "1920x1080",
+   "scale": 1.32,
+   "ours": "신발 주머니 들고 정면 보며 말하는 이영자 → 신발 꺼내 듦 → 그 신발 신은 이영자 다리(흰 반바지) → 바닥(한 테이크, 카메라가 따라감)",
+   "why": "원음 '올해 또 만난 나의 NEW 슈즈 … 요가할 때 신는 건데 이거 신고 하세요 / 그럼 편하실 거예요' 119.62~126.32 한 테이크 그대로(자르면 같은 테이크 크롭이 바뀌어 점프 줌 → 크롭 하나). 자막(y≥840) 밖. 126.4~127.4 남의 손이 신발 바닥을 드는 장면은 A13 때문에 안 씀",
+   "audio_src": "yj_BHuue4ga-w0.mp4",
+   "audio_ss": 119.62
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "src": "yj_BHuue4ga-w0.mp4",
+   "url": "https://www.youtube.com/watch?v=BHuue4ga-w0",
+   "src_date": "이영자 TV 유튜브 2024.06.30",
+   "ss": 128.42,
+   "dur": 2.067,
+   "src_span": [
+    128.42,
+    130.487
+   ],
+   "t_final": [
+    12.597,
+    14.664
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    600,
+    85,
+    820,
+    820
+   ],
+   "res": "1920x1080",
+   "scale": 1.32,
+   "ours": "그 신발을 신고 걷는 사람의 발(카키 반바지·흰 양말 — 이영자와 다른 사람)",
+   "why": "'신어 본 피디도 편해서 놀랐다네요' — f5 '[진짜 편해서 놀랐다고 한다]' 자막(y≥910) 밖. 130.52 원본 컷 전. 끝 컷 ≥1.5초",
+   "mute": true
+  }
+ ],
+ "source_audio": {
+  "keep": true,
+  "note": "원음 = 이영자 본인 말만(받아쓰기 2회+, 근거.md §2). 원본 구간 LUFS −13.2/−15.0/−18.0(웅얼거림 아님)."
+ },
+ "caption_effects": {
+  "now": "나레 = 틀 caption(나레_노랑) · 원음 = caption_events emph 흰색(따옴표 없음)",
+  "planned": "원음_흰글자(GmarketSansBold·y1320) 하위 스타일 — 엔진 요청"
+ },
+ "check": {
+  "total": 14.664,
+  "bench": 16.0,
+  "ratio": 0.916,
+  "n_shots": 5,
+  "shot_median": 2.067,
+  "bench_cut_median": 0.77,
+  "mantem_cut_median": 1.4,
+  "max_scale": 1.42,
+  "orig_share": 0.566,
+  "cap_max_chars": 8,
+  "sources_used": [
+   "이영자 TV 유튜브 2024.06.30"
+  ]
+ }
+}
