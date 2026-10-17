@@ -38,7 +38,11 @@ def tp_filter(limit_db: float) -> str:
 
 
 def _mux(video, audio, final):
-    _run(["ffmpeg", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", final])
+    # -shortest 는 쓰지 않는다 — 영상 복사(-c:v copy)와 같이 쓰면 끝 프레임이 잘린다(10-18 원샷2_RGDS게임기 838→834프레임,
+    # 소리 27.933·영상 27.800초 → preset_make 끝 밝기 검사(B9)가 프레임을 못 꺼내 멈춤). 대신 -t 영상 길이로 소리만 맞춘다
+    # (소리가 더 길어도 멈춘 화면 꼬리가 안 생기게 — 하이브리드 렌더러도 이걸 부른다).
+    vd = float(_run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration", "-of", "csv=p=0", video]).stdout.strip())
+    _run(["ffmpeg", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{vd:.3f}", final])
 
 
 def encode_final(video, mix, final, peak_max_db: float = -0.5, log=print) -> dict:

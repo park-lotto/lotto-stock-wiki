@@ -28,3 +28,12 @@ def test_encode_final_keeps_peak(tmp_path):
     r = MG.encode_final(vid, wav, tmp_path / "final.mp4", -0.5, log=lambda *a: None)
     assert r["ok"] and r["tp"] <= -0.5 and len(r["tries"]) >= 2 and Path(r["mix_used"]).exists()
     assert wav.exists()                                              # 원래 mix 는 그대로
+
+
+def test_final_keeps_all_video_frames(tmp_path):
+    """10-18 실측: -shortest + 영상 복사로 끝 4프레임이 잘려 B9 끝 밝기 검사가 멈췄다."""
+    vid, wav = _media(tmp_path)
+    MG.encode_final(vid, wav, tmp_path / "final.mp4", -0.5, log=lambda *a: None)
+    n = lambda p: subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_frames", "-show_entries", "stream=nb_read_frames",
+                                  "-of", "csv=p=0", str(p)], capture_output=True, text=True).stdout.strip()
+    assert n(tmp_path / "final.mp4") == n(vid)

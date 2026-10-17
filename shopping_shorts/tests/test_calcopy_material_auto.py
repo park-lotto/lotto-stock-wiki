@@ -341,3 +341,14 @@ def test_run_timeout_is_one_failed_request(monkeypatch):
     monkeypatch.setattr(ma.subprocess, "run", boom)
     r = ma._run(["yt-dlp", "x"], timeout=1)
     assert r.returncode == 124 and r.stdout == ""
+
+
+def test_gather_excludes_sibling_models(tmp_path):
+    """10-18 실측: RG DS 재료에 RG DS Plus·RG DDS·Retroid 비교 영상이 같은 제품으로 태깅돼 섞였다 → 조사 단계 exclude_title 로 검색에서 거름."""
+    class N(FakeNet):
+        def search(self, q, n):
+            return [{"id": "A", "duration": 60, "title": "Anbernic RG DS Review"}, {"id": "P", "duration": 60, "title": "Anbernic RG DS Plus Review"},
+                    {"id": "D", "duration": 60, "title": "ANBERNIC RG DDS First Look"}]
+    state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}}
+    ma._gather([{"q": "Anbernic RG DS", "purpose": "product"}], N(tmp_path), state, lambda *a: None, ["RG DS Plus", "RG DDS"])
+    assert state["previews"] == ["A"]

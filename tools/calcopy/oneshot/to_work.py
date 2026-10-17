@@ -146,7 +146,9 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
            "lines": out_lines, "chars": chars, "est_sec": round(chars / B["cps_target"], 2),
            "facts": {k: f"{v['text']} ({v.get('url', '')})" for k, v in S["facts"].items()}, "title_lines": [], "sfx": B["sfx"],
            # 재료 찾기가 먼저 쓸 검색어 — 조사 단계에서 실제 결과가 확인된 것(research.seed) > 조사 영어 검색어 앞 2개
-           "search_seed": (R.get("seed") or []) + [q for q in (R.get("queries") or {}).get("en", [])[:2] if q not in (R.get("seed") or [])]}
+           "search_seed": (R.get("seed") or []) + [q for q in (R.get("queries") or {}).get("en", [])[:2] if q not in (R.get("seed") or [])],
+           # 제목에 이 낱말이 있으면 다른 모델(후속작·형제 모델·경쟁 비교) — 재료 찾기가 검색 단계에서 거른다(조사 단계가 정함)
+           "exclude_title": R.get("exclude_title") or []}
     if brand == "재미썸홈":
         ts = sq.get("title_slots") or {}
         doc["title_slots"] = ts
@@ -163,3 +165,33 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
 
 if __name__ == "__main__":
     build(Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4]))
+
+
+def sync_line(work: Path, brand: str, li: int, new_text: str, material_dir: Path | None = None) -> list[str]:
+    """재료를 찾은 뒤 대사 한 줄만 고칠 때(예: B15 TTS 덩어리 35자) — 작품 대본.json 그 줄(글·TTS 글·조각)과 재료.json 그 줄 행의 caption 을
+    같이 바꾼다. 장면은 그대로라 조각 수가 같아야 한다(다르면 멈춘다 — 재료 찾기를 다시 해야 함). 엔진 검사는 fix_lines 로 먼저 통과시킨다."""
+    from shopping_shorts.narration_naturalize import normalize_reading
+    work = Path(work)
+    S = json.loads((work / "대본.json").read_text(encoding="utf-8"))
+    R = json.loads((work / "재료.json").read_text(encoding="utf-8"))
+    ps = pieces_of(new_text, caption_max(brand))
+    L = S["lines"][li]
+    if len(ps) != len(L["shots"]):
+        raise SystemExit(f"조각 수 {len(L['shots'])} → {len(ps)} — 장면 수가 달라져 재료 찾기를 다시 해야 한다")
+    start = sum(len(x["shots"]) for x in S["lines"][:li])
+    rows = R.get("shots") or R.get("cuts")
+    for k, (s, p) in enumerate(zip(L["shots"], ps)):
+        s["piece"] = p
+        rows[start + k]["caption"] = p
+    L["text"], L["tts_text"] = new_text, normalize_reading(new_text)[0]
+    S["chars"] = sum(len(x["text"].replace(" ", "")) for x in S["lines"])
+    for name, doc in (("대본.json", S), ("재료.json", R)):
+        (work / name).write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+    # 재료 찾기 원본(재료_auto.json)도 — 안 고치면 다음 --emit 이 옛 자막으로 되돌린다(10-18 실측)
+    if material_dir:
+        ap = Path(material_dir) / "재료_auto.json"
+        A = json.loads(ap.read_text(encoding="utf-8"))
+        for k, p in enumerate(ps):
+            A["shots"][start + k]["caption"] = p
+        ap.write_text(json.dumps(A, ensure_ascii=False, indent=1), encoding="utf-8")
+    return ps

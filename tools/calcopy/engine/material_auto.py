@@ -733,24 +733,29 @@ def reupload_of(m: dict, accepted: list[dict]) -> str | None:
     return None
 
 
-def _gather(queries, net, state, log):
-    """검색 → 메타(해상도) → 미리보기 대상 고르기. state 에 누적."""
+def _gather(queries, net, state, log, exclude_title=()):
+    """검색 → 메타(해상도) → 미리보기 대상 고르기. state 에 누적. exclude_title = 제목에 있으면 다른 모델(대본.json — 조사 단계가 정함)."""
+    ex = [x.lower() for x in exclude_title or [] if x]
+
+    def keep(r):
+        t = (r.get("title") or "").lower()
+        return not any(x in t for x in ex)
     for q in queries:
         if len(state["queries"]) >= MAX_QUERIES:
             log(f"[상한] 검색어 {MAX_QUERIES}개 — '{q['q']}' 안 씀")
             break
         state["queries"].append(q)
-        rows = [r for r in net.search(q["q"], PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800]
+        rows = [r for r in net.search(q["q"], PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800 and keep(r)]
         # 0편이면 앞 낱말만 남겨 한 번 더(10-18 실측: 'GearOra M23 portable retractable sterilizing sonic … review' 같은 긴 검색어 8개 중 7개가 0편,
         # 'GearOra toothbrush' 는 10편+) — 같은 검색어 칸 안에서 하는 재시도라 상한(MAX_QUERIES)은 그대로
         words = q["q"].split()
-        for keep in (4, 3):
-            if rows or len(words) <= keep:
+        for n_keep in (4, 3):
+            if rows or len(words) <= n_keep:
                 continue
-            short = " ".join(words[:keep])
+            short = " ".join(words[:n_keep])
             # 줄인 검색어는 엉뚱한 영상이 섞인다(10-18 실측 'GearOra GTM23BA portable' → 차량 시트 정리함·송풍기) — 제목에 첫 낱말(브랜드)이 있는 것만
             brand = words[0].lower()
-            rows = [r for r in net.search(short, PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800 and brand in (r.get("title") or "").lower()]
+            rows = [r for r in net.search(short, PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800 and brand in (r.get("title") or "").lower() and keep(r)]
             log(f"[검색 줄임] «{q['q']}» 0편 → «{short}» {len(rows)}편")
             if rows:
                 q["q_short"] = short
@@ -813,7 +818,7 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
         needs = qp["needs"]
         T["1_검색어"] = round(time.time() - t, 1)
         t = time.time()
-        _gather(qp["queries"], net, state, log)
+        _gather(qp["queries"], net, state, log, sj.get("exclude_title"))
         T["2_검색·메타"] = round(time.time() - t, 1)
         t = time.time()
         _tag_all(state["previews"], net, state, qp["product"], llm, wd, log)
@@ -836,7 +841,7 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
             if not newq:
                 break
             before = set(state["previews"])
-            _gather(newq, net, state, log)
+            _gather(newq, net, state, log, sj.get("exclude_title"))
             _tag_all([v for v in state["previews"] if v not in before], net, state, qp["product"], llm, wd, log)
             ranked = match_lines(toks, needs, state["cells"], state["meta"], rules, llm, log)
             picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
