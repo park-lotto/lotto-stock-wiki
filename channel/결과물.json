@@ -337,6 +337,32 @@
    "date": "2026-10-17",
    "judge": "preset_make 자동 검사 통과(사람 판정 전)",
    "from": "tools/calcopy/engine/preset_make.py"
+  },
+  {
+   "n": 25,
+   "channel": "yanshottem",
+   "channel_name": "얜샷템",
+   "title": "얜샷템 1편 한고은 채소 보관통(벤치 안나픽 itYwQVyuCcc 107만 → 원본 고은언니 한고은 LcQv9yOh3Wc)",
+   "path": "C:/숏템_칼카피/annapick/1편_한고은채소통/render/final.mp4",
+   "seconds": 22.2,
+   "commit": "ad9794cf8",
+   "rules": "만템 색톤 얜샷템 틀·출처 표기 · 원음 시작·나레 2줄(미나 1회+atempo) · 원음 77% · check_seams 통과(되감김 0·점프줌 드묾) · B표 전부 ○ · compare① 12/24(틀을 만템으로 바꾼 탓)",
+   "judge": "오푸스 검수(B표)+1초 시트 눈 확인 — 사장님 확인 전",
+   "date": "2026-10-17",
+   "from": "handoff/칼카피숏템엔진.md 얜샷템 절"
+  },
+  {
+   "n": 26,
+   "channel": "yanshottem",
+   "channel_name": "얜샷템",
+   "title": "얜샷템 0편 안유진 eos 로션 3판(벤치 아이템홈 MfptnwqlGKs → 원본 IVE 8o3M3DmY05E, 아이템홈 틀)",
+   "path": "C:/숏템_칼카피/itemhome/1편_안유진로션/render3/final.mp4",
+   "seconds": 18.9,
+   "commit": "1553a96fa",
+   "rules": "1판 사장님 지적(15초 남의 팔·17초 되감김)·2판 지적(19초 점프줌·웅얼 원음) 수리 · check_seams 통과 · 원음 2구간 받아쓰기 일치 · compare① 17/24",
+   "judge": "사장님 지적 반영판 — 재확인 전",
+   "date": "2026-10-17",
+   "from": "handoff/칼카피숏템엔진.md 얜샷템 절"
   }
  ]
 }
