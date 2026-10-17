@@ -24,6 +24,7 @@ D = Path(__file__).resolve().parent
 W = Path("C:/숏템_칼카피/yanshottem/하이브리드_한고은/잇썸홈판")
 SRC = Path("C:/숏템_칼카피/yanshottem/하이브리드_한고은/src")
 SRCV = "hge_LcQv9yOh3Wc.mp4"
+CACHE = Path("C:/숏템_칼카피/yanshottem/하이브리드_한고은/src/_make_cache")
 FW, BW, R = W / "front", W / "back", W / "render"
 PRESET = ROOT / "channel/homedesignnote/preset/전체화면_가운데자막"
 FRAME = ROOT / "channel/mantem/frame_얜샷템.json"
@@ -117,8 +118,9 @@ def front_video():
 
 
 def back_video():
-    # TTS 캐시 — 호출 0. 종료코드 1 = 자동 검사 미달(B4 컷 중앙 1.7 vs ≤1.667 — 한 소스 ±3초 규칙 때문, B표에 적음) → 영상은 만들어진다
-    r = subprocess.run([sys.executable, str(ROOT / "tools/calcopy/engine/preset_make.py"), str(PRESET), str(D / "back"), "--test", "--out", str(BW)],
+    # TTS 캐시(덩어리마다) — 2판은 바뀐 줄(반응) 1덩어리만 새로 받는다(--allow-tts). 캐시는 1판 자리(src/_make_cache)를 그대로 쓴다.
+    r = subprocess.run([sys.executable, str(ROOT / "tools/calcopy/engine/preset_make.py"), str(PRESET), str(D / "back"), "--test", "--out", str(BW),
+                        "--allow-tts", "--cache", str(CACHE)],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     (BW / "preset_make_stdout.txt").write_text(r.stdout, encoding="utf-8")
     if not (BW / "video.mp4").exists() or "실패" in r.stdout.split("요약")[-1]:
@@ -165,7 +167,7 @@ def master(voice, total):
         run(["ffmpeg", "-y", "-i", raw, "-af", f"{MASTER_PRE},volume={gain:.2f}dB,alimiter=limit={10 ** (TP_DB / 20):.4f}:level=false:attack=1:release=30",
              "-ar", "44100", mix])
         oI, _ = lufs(mix)
-        if oI >= TARGET_LUFS - 0.4 or gain >= 22:
+        if oI >= TARGET_LUFS - 0.05 or gain >= 24:   # 2판: 1판 상한 22(−9.8) → 24(−9.4). 26·28 은 AAC 뒤 최고점 −0.1 이라 안 씀
             break
         gain += 2.0
     return mix, {"bgm_gain_db": g, "master_gain_db": gain, "mix_lufs": oI}

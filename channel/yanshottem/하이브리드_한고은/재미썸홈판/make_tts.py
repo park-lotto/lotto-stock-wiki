@@ -129,8 +129,67 @@ def fix_lines():
     print(json.dumps(J["fix"], ensure_ascii=False))
 
 
+# ── 2판(관제 097, 10-17): 줄 갈아 끼우기 — 바뀐 줄만 새로 받고 나머지는 1판 back_narr_fix.wav 의 줄 구간을 그대로 쓴다 ──
+OLD_LINES = ["한고은이 저렇게까지 말하길래 반신반의하고 직접 사 봤는데,", "이건 바로 물 빠지는 채반 보관통.",
+             "근데 진짜 충격적인 포인트는, 씻은 채소를 그냥 넣었는데 물이 바닥으로 쫙 빠진다는 거.", "그래서 잎이 하나도 안 무르고 멀쩡함.",
+             "심지어 일주일 지나도 아삭해서 채소를 처음으로 안 버림.", "이거 진짜 미쳤음.", "버리는 채소값이면 이미 본전이라,",
+             "이거 본 사람들은 어디서 사냐고 댓글로 줄줄이 묻는 중."]
+
+
+def patch2():
+    """MP.LINES 를 차례로: 1판에 같은 글이 있으면 그 줄 구간(1판 fix.spans)을, 없으면 필재 1회 합성(줄 하나) → 앞뒤 무음 정리 → 다른 줄 말속도에 맞춘다.
+    쉼 = PAUSE(쉼표 0.22·마침표 0.26). 결과 back_narr_fix.wav·tts.json fix 를 새 줄 기준으로 다시 쓴다(1판 파일은 _v1 로 남김)."""
+    src1 = R / "back_narr_fix_v1.wav"
+    if not src1.exists():
+        import shutil
+        shutil.copyfile(R / "back_narr_fix.wav", src1)
+        shutil.copyfile(R / "tts.json", R / "tts_v1.json")
+    J1 = json.loads((R / "tts_v1.json").read_text(encoding="utf-8"))
+    sp1 = J1["fix"]["spans"]
+    lines = [s for _, s in MP.LINES]
+    old_rate = [MP.nchar(OLD_LINES[k]) / (b - a) for k, (a, b) in enumerate(sp1)]
+    target = sorted(old_rate)[len(old_rate) // 2]
+    parts, labs, new, t, calls = [], [], [], 0.0, []
+    ins = ["-i", str(src1)]
+    for i, line in enumerate(lines):
+        if line in OLD_LINES:
+            a, b = sp1[OLD_LINES.index(line)]
+            parts.append(f"[0:a]atrim={a:.3f}:{b:.3f},asetpts=PTS-STARTPTS[l{i}]")
+            L = b - a
+        else:
+            raw = R / f"line2_{i}.mp3"
+            if not raw.exists():
+                from shopping_shorts.channelkit import providers
+                providers.typecast_synth(VOICE, tempo=TTS_TEMPO)(line, str(raw))
+                calls.append(line)
+            tr = R / f"line2_{i}_trim.wav"
+            run(["ffmpeg", "-y", "-i", str(raw), "-af", f"{TRIM},areverse,{TRIM},areverse,{MID}", "-ar", "44100", "-ac", "1", str(tr)])
+            d0 = dur_of(tr)
+            tempo = round(min(1.1, max(0.9, target / (MP.nchar(line) / d0))), 4)   # 다른 줄 말속도(1판 중앙)에 맞춤, ±10% 안(B17)
+            ins += ["-i", str(tr)]
+            k = len(ins) // 2 - 1
+            parts.append(f"[{k}:a]aresample=44100,aformat=channel_layouts=mono,atempo={tempo}[l{i}]")
+            L = d0 / tempo
+            calls.append({"line": line, "raw_s": round(d0, 3), "atempo": tempo})
+        labs.append(f"[l{i}]")
+        new.append([round(t, 3), round(t + L, 3)]); t += L
+        if i < len(lines) - 1:
+            pz = PAUSE[line.strip()[-1]]
+            parts.append(f"anullsrc=r=44100:cl=mono,atrim=0:{pz}[z{i}]"); labs.append(f"[z{i}]"); t += pz
+    out = R / "back_narr_fix.wav"
+    run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(parts) + ";" + "".join(labs) + f"concat=n={len(labs)}:v=0:a=1[o]",
+         "-map", "[o]", "-ar", "44100", "-ac", "1", str(out)])
+    J = dict(J1)
+    J["fix"] = {"v2_from": "1판 줄 구간 + 바뀐 줄 새 합성(patch2)", "spans": new, "dur": round(dur_of(out), 3),
+                "rate_after": [round(MP.nchar(l) / (b - a), 2) for l, (a, b) in zip(lines, new)], "target_rate": round(target, 2), "new_lines": calls}
+    (R / "tts.json").write_text(json.dumps(J, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(J["fix"], ensure_ascii=False))
+
+
 if __name__ == "__main__":
-    if "--fix" in sys.argv:
+    if "--patch2" in sys.argv:
+        patch2()
+    elif "--fix" in sys.argv:
         fix_lines()
     else:
         main()
