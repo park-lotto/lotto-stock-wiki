@@ -1,0 +1,73 @@
+{
+ "_note": "make_render.py front() — 앞 4컷(얜샷템 틀)",
+ "cand_dir": "C:\\숏템_칼카피\\yanshottem\\하이브리드_한고은\\재미썸홈판\\src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "hge_LcQv9yOh3Wc.mp4",
+   "ss": 780.62,
+   "src_crop": [
+    640,
+    60,
+    720,
+    720
+   ],
+   "cuts": [
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 780.62,
+     "src_crop": [
+      640,
+      60,
+      720,
+      720
+     ],
+     "dur": 3.28,
+     "plan_i": 0
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 751.1,
+     "src_crop": [
+      520,
+      0,
+      820,
+      820
+     ],
+     "dur": 2.541,
+     "plan_i": 1
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 788.18,
+     "src_crop": [
+      560,
+      0,
+      840,
+      840
+     ],
+     "dur": 3.37,
+     "plan_i": 2
+    },
+    {
+     "src": "hge_LcQv9yOh3Wc.mp4",
+     "ss": 791.55,
+     "src_crop": [
+      710,
+      200,
+      715,
+      715
+     ],
+     "dur": 1.97,
+     "plan_i": 3
+    }
+   ],
+   "t_final": [
+    0.0,
+    11.161
+   ]
+  }
+ ]
+}
