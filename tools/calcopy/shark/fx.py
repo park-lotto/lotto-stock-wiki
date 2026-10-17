@@ -216,7 +216,7 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
     for f in range(n):
         t = f / FPS
         cv = Image.new("RGBA", (1080, H), (0, 0, 0, 0))
-        for e in fx:
+        for e in sorted(fx, key=lambda e: e["kind"] == "flash"):   # 겹침 순서 = 꾸밈 → 번쩍 → 자막(rules effects.flash.order)
             p = pose(e, t)
             if p is None:
                 continue
@@ -317,7 +317,7 @@ def add_sfx(bed_mp4: Path, events: list[dict], R_: Path) -> Path:
     fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=mono[b];[b]{''.join(lab)}amix=inputs={len(lab) + 1}:normalize=0:duration=first[a]")
     out = R_ / "final_src_sfx.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(bed_mp4), *ins, "-filter_complex", ";".join(fc), "-map", "0:v", "-map", "[a]",
-                    "-c:v", "copy", "-c:a", "pcm_s16le", str(out.with_suffix(".mov"))], check=True)
+                    "-c:v", "copy", "-c:a", "pcm_f32le", str(out.with_suffix(".mov"))], check=True)
     return out.with_suffix(".mov")
 
 

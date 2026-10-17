@@ -116,6 +116,13 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
         f"중앙 {med:.2f}({f'완성본 장면 검출 scene>{SCENE_TH} {len(sd)}조각' if seams else '컷표'}·벤치 {bm}) · 끝 묶음 {[c['dur'] for c in last]} · 전체 최단 {ds[0]:.2f} · 1.2초 미만 {[(c['i'], c['dur']) for c in cuts if c['dur'] < CUT_MIN]}",
         all(c["dur"] >= CUT_MIN - 1e-6 for c in last) and cuts[-1]["dur"] >= END_MIN and (not bm or 1 - CUT_TOL <= med / bm <= 1 + CUT_TOL),
         (f"×{med / bm:.2f}" if bm else "") + " · 원음 컷은 재료 시각 그대로라 짧을 수 있음 — 컷표 참고")
+    from tools.calcopy.shark.caption_style import rules as _rules
+    tmax = _rules()["title"]["line_chars_max"]
+    tl = [x for x in ((S.get("titles") or {}).get("hook") or "
+".join(x for x in ((S.get("titles") or {}).get("line1"), (S.get("titles") or {}).get("line2")) if x)).split("
+") if x]
+    row("TITLE", f"제목 줄당 글자 ≤{tmax}(공백 포함 — 넘으면 글자가 벤치 100~135px 보다 작아짐)", [(t, len(t)) for t in tl], all(len(t) <= tmax for t in tl),
+        "규칙 shark/rules.json title.line_chars_max(벤치 8편 긴 줄 12자=100.5px)")
     b13 = reuse_violations(forward_runs(cuts))
     row("B13", "같은 장면 ±3초 재사용", b13 or "0", not b13)
     capmax = max(nchar(c["text"]) for c in info["captions"])
