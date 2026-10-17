@@ -7,82 +7,95 @@
  "source": "ILIiqCJAOSI",
  "made_from": {
   "tool": "channel/banggu/make_썰템홈샷.py",
-  "note": "훅 카드: 깊은 잉크 바탕 · 왼쪽 정렬 큰 제목(포인트색 둘째 줄) · 포인트 막대 + 문장 · 둥근 그림 창"
+  "note": "훅 카드: 샘플 B 팔레트 — 차콜 바탕·민트 네온 채널명·흰 큰 제목(둘째 줄 민트) 가운데 정렬"
  },
  "layers": [
   {
    "kind": "bg",
    "rgb": [
-    38,
-    34,
-    31
+    28,
+    30,
+    34
    ]
   },
   {
    "kind": "video",
    "x": 0,
-   "y": 740,
+   "y": 780,
    "w": 1080,
-   "h": 1180,
-   "radius": 36
+   "h": 1140,
+   "radius": 28
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 0,
+   "w": 1080,
+   "h": 210,
+   "rgb": [
+    28,
+    30,
+    34
+   ],
+   "radius": 0
   },
   {
    "kind": "text",
    "role": "brand",
-   "x": 70,
-   "y": 48,
-   "w": 600,
-   "align": "left",
+   "x": 540,
+   "y": 64,
+   "w": 900,
+   "align": "center",
    "lines": 1,
    "font": "GmarketSansBold",
-   "size": 44.0,
-   "line_h": 51,
+   "size": 68.1,
+   "line_h": 78,
    "rgb": [
-    200,
-    194,
-    186
+    220,
+    255,
+    244
    ],
    "line_rgb": null,
    "outline": null,
    "shadow": null,
    "box": null,
    "italic": false,
-   "letter_spacing": 1,
+   "letter_spacing": 0,
    "word_spacing": 0,
    "enter": null,
-   "text": "썰템홈샷"
-  },
-  {
-   "kind": "image",
-   "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%23C8C2BA%27%3E%3Cpath%20d=%27M12%2020s-7-4.500-7-10a4%204%200%200%201%207-2.500A4%204%200%200%201%2019%2010c0%205.500-7%2010-7%2010z%27/%3E%3C/svg%3E",
-   "x": 920,
-   "y": 40,
-   "w": 80,
-   "h": 80
+   "text": "썰템홈샷",
+   "glow": {
+    "px": 28,
+    "rgb": [
+     40,
+     230,
+     180
+    ]
+   }
   },
   {
    "kind": "band",
-   "x": 70,
-   "y": 132,
-   "w": 940,
-   "h": 2,
+   "x": 480,
+   "y": 170,
+   "w": 120,
+   "h": 3,
    "rgb": [
-    78,
-    70,
-    64
+    40,
+    230,
+    180
    ],
    "radius": 0
   },
   {
    "kind": "text",
    "role": "title",
-   "x": 70,
-   "y": 185,
-   "w": 940,
-   "align": "left",
+   "x": 540,
+   "y": 261,
+   "w": 1000,
+   "align": "center",
    "lines": 2,
-   "font": "PretendardXBold",
-   "size": 101.1,
+   "font": "SUITBold",
+   "size": 102.2,
    "line_h": 150,
    "rgb": [
     255,
@@ -96,22 +109,13 @@
      255
     ],
     [
-     232,
-     128,
-     102
+     90,
+     240,
+     200
     ]
    ],
    "outline": null,
-   "shadow": {
-    "dx": 0,
-    "dy": 4,
-    "blur": 10,
-    "rgb": [
-     20,
-     17,
-     15
-    ]
-   },
+   "shadow": null,
    "box": null,
    "italic": false,
    "letter_spacing": 0,
@@ -120,33 +124,20 @@
    "text": "끝까지 안 내놓은\n아웃백 영업기밀"
   },
   {
-   "kind": "band",
-   "x": 70,
-   "y": 548,
-   "w": 96,
-   "h": 8,
-   "rgb": [
-    214,
-    106,
-    80
-   ],
-   "radius": 4
-  },
-  {
    "kind": "text",
    "role": "label",
-   "x": 70,
-   "y": 584,
-   "w": 940,
-   "align": "left",
+   "x": 540,
+   "y": 644,
+   "w": 960,
+   "align": "center",
    "lines": 1,
-   "font": "CcPretendard-Regular",
-   "size": 45.5,
-   "line_h": 52,
+   "font": "CcPretendard-SemiBold",
+   "size": 40.4,
+   "line_h": 47,
    "rgb": [
-    200,
-    194,
-    186
+    168,
+    180,
+    184
    ],
    "line_rgb": null,
    "outline": null,

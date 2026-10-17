@@ -11,15 +11,12 @@ from tools.calcopy.engine import to_frame as T
 from shopping_shorts.calcopy_frame import schema
 
 BRAND = "썰템홈샷"
-# 팔레트 3색: 깊은 잉크(저채도 갈색 검정) · 중성 바탕(웜 그레이지) · 포인트 1색(저채도 테라코타 코랄)
-INK, BG, ACC, WHITE, TINT, SOFT = [38, 34, 31], [246, 242, 236], [214, 106, 80], [255, 255, 255], [236, 228, 218], [200, 194, 186]
-R = 36   # 모서리 반경 통일
-L = 70   # 왼쪽 기준선 통일
-def heart(hexcol):
-    return ("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%23" + hexcol +
-            "%27%3E%3Cpath%20d=%27M12%2020s-7-4.500-7-10a4%204%200%200%201%207-2.500A4%204%200%200%201%2019%2010c0%205.500-7%2010-7%2010z%27/%3E%3C/svg%3E")
-
-
+# 샘플 B 차콜·민트네온(사장님 10-17): 차콜 머리·페이지 (238,240,242)·흰 카드·민트 네온 채널명
+CHAR, PAGE, WHITE, MINT, MINT_CORE, MINT_DK, INK = [28, 30, 34], [238, 240, 242], [255, 255, 255], [40, 230, 180], [220, 255, 244], [30, 170, 140], [26, 28, 32]
+R = 28
+# 그림 창 모서리 마스크: 페이지색 바깥 사각 − 둥근 안쪽(evenodd) 한 장. 엔진 창이 가로 1080 고정이라 안쪽 가로 984 둥근 카드는 이 마스크+양옆 띠로 만든다
+CORNER = ("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20246%20325%27%3E%3Cpath%20fill-rule=%27evenodd%27%20fill=%27%23EEF0F2%27%20d=%27"
+          "M0,0h246v325H0z%20M7,0h232a7,7,0,0,1,7,7v311a7,7,0,0,1-7,7H7a7,7,0,0,1-7-7V7a7,7,0,0,1,7-7z%27/%3E%3C/svg%3E")
 PIECES = {
     "ilii":   dict(dir="칼카피_ILIi",   win="칼카피_ILIi/render2", name="아웃백영업기밀", bgm_ratio=0.22),
     "banana": dict(dir="칼카피_banana", win="칼카피_banana/render2", name="바나나맛우유단지", bgm_ratio=0.22),
@@ -40,12 +37,16 @@ def band(x, y, w, h, rgb, radius=0, **kw):
     return dict({"kind": "band", "x": x, "y": y, "w": w, "h": h, "rgb": rgb, "radius": radius}, **kw)
 
 
-def header(dark):
-    """슬림 머리줄(띠 없음) — 채널명 작게 왼쪽 기준선 · 오른쪽 단색 라인 하트 · 가는 구분선. ≡·돋보기 없음."""
-    col = SOFT if dark else INK
-    return [text("brand", "GmarketSansBold", BRAND, 52, 40, L, 600, "left", col, text=BRAND, letter_spacing=1),
-            {"kind": "image", "src": heart("C8C2BA" if dark else "D66A50"), "x": 920, "y": 40, "w": 80, "h": 80},
-            band(L, 132, 1080 - 2 * L, 2, [78, 70, 64] if dark else [222, 216, 208], 0)]
+def header():
+    """차콜 머리(높이 210) · 채널명 가운데 GmarketSansBold 72 + 민트 네온 글로우 · 아래 민트 선 120x3(y170)."""
+    return [band(0, 0, 1080, 210, CHAR, 0),
+            text("brand", "GmarketSansBold", BRAND, 70, 62, 540, 900, "center", MINT_CORE, text=BRAND, glow={"px": 28, "rgb": MINT}),
+            band(480, 170, 120, 3, MINT, 0)]
+
+
+def split2(t):
+    w = t.split(" "); best = min(range(1, len(w)), key=lambda i: abs(len(" ".join(w[:i])) - len(" ".join(w[i:]))))
+    return " ".join(w[:best]) + chr(10) + " ".join(w[best:])
 
 
 def frames(key):
@@ -54,31 +55,32 @@ def frames(key):
     ob = json.loads((d / "frame_body.json").read_text(encoding="utf-8"))
     oh = json.loads((d / "frame_hook.json").read_text(encoding="utf-8"))
     post = [l for l in ob["layers"] if l["kind"] == "text" and l["role"] == "label"][0]["text"]
-    hook = [l for l in oh["layers"] if l["kind"] == "text" and l["role"] == "title"][0]["text"].split("\n")
+    hook = [l for l in oh["layers"] if l["kind"] == "text" and l["role"] == "title"][0]["text"].split(chr(10))
     meta = BRAND + " · 14:25"
+    post2 = split2(post)
     body = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": ob.get("source"),
-            "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "방구석 틀 외관 변형(10-17): 슬림 머리줄·저채도 팔레트·왼쪽 정렬 카드·SUIT 자막 박스. 내용은 그대로"},
+            "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "샘플 B 차콜·민트네온 — 그림 칸 가로 전체·자막 그림 아래 박스(v2 배치 유지)"},
             "layers": [
-                {"kind": "bg", "rgb": BG},
-                {"kind": "video", "x": 0, "y": 410, "w": 1080, "h": 1400, "radius": R},
-                *header(False),
-                band(L - 6, 176, 1080 - 2 * L + 12, 196, [228, 221, 211], R),      # 아주 옅은 그림자(밑으로 6px 비껴 깐 한 장)
-                band(L - 10, 164, 1080 - 2 * L + 20, 198, WHITE, R),
-                text("label", "CcPretendard-Regular", meta, 198, 26, L + 30, 700, "left", ACC, text=meta),
-                text("label", "PretendardXBold", post, 262, 54, L + 30, 1080 - 2 * L - 20, "left", INK, text=post),
-                text("caption", "SUITBold", "아웃백에서 사람들이", 1560, 48, 540, 900, "center", WHITE, lines=2, line_h=82, valign="top",
-                     box={"rgb": [52, 46, 42], "pad": 22, "radius": R}),
+                {"kind": "bg", "rgb": PAGE},
+                {"kind": "video", "x": 0, "y": 510, "w": 1080, "h": 1300, "radius": 0},
+                band(0, 510, 48, 1300, PAGE, 0), band(1032, 510, 48, 1300, PAGE, 0),
+                {"kind": "image", "src": CORNER, "x": 48, "y": 510, "w": 984, "h": 1300},
+                *header(),
+                band(48, 250, 984, 220, WHITE, R),
+                text("label", "CcPretendard-SemiBold", meta, 284, 24, 540, 900, "center", MINT_DK, text=meta),
+                text("label", "SUITBold", post2, 336, 50, 540, 920, "center", INK, lines=2, line_h=70, text=post2),
+                text("caption", "CcPretendard-Bold", "아웃백에서 사람들이", 1604, 50, 540, 900, "center", WHITE, lines=2, line_h=82, valign="top",
+                     box={"rgb": CHAR, "pad": 22, "radius": 22}),
             ]}
     hookf = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": ob.get("source"),
-             "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "훅 카드: 깊은 잉크 바탕 · 왼쪽 정렬 큰 제목(포인트색 둘째 줄) · 포인트 막대 + 문장 · 둥근 그림 창"},
+             "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "훅 카드: 샘플 B 팔레트 — 차콜 바탕·민트 네온 채널명·흰 큰 제목(둘째 줄 민트) 가운데 정렬"},
              "layers": [
-                 {"kind": "bg", "rgb": INK},
-                 {"kind": "video", "x": 0, "y": 740, "w": 1080, "h": 1180, "radius": R},
-                 *header(True),
-                 text("title", "PretendardXBold", hook[0], 214, 92, L, 1080 - 2 * L, "left", WHITE, lines=2, line_h=150,
-                      text="\n".join(hook), line_rgb=[WHITE, [232, 128, 102]], shadow={"dx": 0, "dy": 4, "blur": 10, "rgb": [20, 17, 15]}),
-                 band(L, 548, 96, 8, ACC, 4),
-                 text("label", "CcPretendard-Regular", post, 590, 40, L, 1080 - 2 * L, "left", SOFT, text=post),
+                 {"kind": "bg", "rgb": CHAR},
+                 {"kind": "video", "x": 0, "y": 780, "w": 1080, "h": 1140, "radius": R},
+                 *header(),
+                 text("title", "SUITBold", hook[0], 290, 92, 540, 1000, "center", WHITE, lines=2, line_h=150,
+                      text=chr(10).join(hook), line_rgb=[WHITE, [90, 240, 200]]),
+                 text("label", "CcPretendard-SemiBold", post, 650, 36, 540, 960, "center", [168, 180, 184], text=post),
              ]}
     for name, f in (("frame_hook_썰템홈샷.json", hookf), ("frame_body_썰템홈샷.json", body)):
         schema.validate(f)
@@ -103,7 +105,7 @@ def render(key):
     def _wide(*a, **k):   # v2: 그림 칸 = 창 전체(가로 1080·세로 창 높이, cover) — 오른쪽 치우침·흰 빈칸 없음, 자막은 그림 위 아래쪽(min_y 해제)
         b = inspect.signature(_orig).bind(*a, **k); b.apply_defaults(); g = b.arguments
         if not g["full"]:
-            g["box"] = [0, 0, 1080, g["win"]["h"]]; g["min_y"] = 0; g["anchor"] = True; g["fit"] = "cover"
+            g["box"] = [48, 0, 984, g["win"]["h"]]; g["min_y"] = 0; g["anchor"] = True; g["fit"] = "cover"
         return _orig(*b.args, **b.kwargs)
     nv.shot_clip = _wide
     old = json.loads((WIN / "timeline.json").read_text(encoding="utf-8"))["steps"]
