@@ -203,6 +203,43 @@
      "source": "channel/sseolpulda/스타일_전수분류.md (style_classify.py, 피치 보정 R2 포함)"
     }
    }
+  },
+  "화자썰": {
+   "priority": 2,
+   "desc": "게시글형 틀 위 반말 전언체 나레 사이에 '화자 : 대사' 자막 줄(의인화한 집단·회사·나라 — 한국인들·제조사·벨 …)을 끼우고, 그 줄 그림은 반응 짤(짤 속 원래 자막과 말장난). 나레는 화자 이름을 빼고 대사만 읽는다. 끝줄은 1인칭 혼잣말 ㅋㅋ",
+   "why": "사장님 2026-10-18 새 스타일 지정. 재밌쇼 조회 중앙 24.6만(쇼츠 134편), 우리 벤치 뜯기 자막에 '화자 :' 0편. 대사썰(목소리 2명 이상)과 달리 판정 근거는 자막 화자표 — 목소리 수는 미측정",
+   "judge": "자막 OCR/눈 판독의 '화자 : ' 줄 (channel/humorshowshow/줄판독/*.json kind=화자대사|2인대화)",
+   "audio_kinds": [],
+   "strengths": [
+    "끝줄 1인칭 혼잣말 ㅋㅋ(훅 카드 꼴 16/16)",
+    "반응 짤 원래 자막과 대사 말장난",
+    "연예인 실사용 영상 보증 컷(강주은 fgA7)"
+   ],
+   "bench": {
+    "humorshowshow": {
+     "n": 15,
+     "of": 21,
+     "views_median": 2500000,
+     "ids": [
+      "NBdmq90aJus",
+      "pY2zNE5A1m4",
+      "jECuoRljWj0",
+      "bfKkNmVTGPs",
+      "obod5OHkvSA",
+      "UlljlEyhOio",
+      "kZOQNHpqlQE",
+      "xJvwMApZwnE",
+      "31fg67aKMjA",
+      "MhZkmqCTC74",
+      "cj3-wcltAao",
+      "kxAf4wZiB_g",
+      "7XRVuHfs45M",
+      "fgA7dgqwyRM",
+      "78p9VfCEbM4"
+     ],
+     "source": "channel/humorshowshow/대본스타일_줄판독_2026-10-17.md"
+    }
+   }
   }
  }
 }

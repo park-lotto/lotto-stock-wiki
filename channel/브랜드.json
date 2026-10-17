@@ -35,6 +35,12 @@
   "foreignshowshow": {
    "brand": "샥탬스토리",
    "bench": "해외쇼츠(@foreignshowshow) 샤크탱크 쇼핑 편"
+  },
+  "humorshowshow": {
+   "brand": "썰템쇼",
+   "bench": "재밌쇼(@humorshowshow)",
+   "style": "화자썰",
+   "since": "2026-10-18"
   }
  }
 }
