@@ -709,6 +709,17 @@ def _gather(queries, net, state, log):
             break
         state["queries"].append(q)
         rows = [r for r in net.search(q["q"], PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800]
+        # 0편이면 앞 낱말만 남겨 한 번 더(10-18 실측: 'GearOra M23 portable retractable sterilizing sonic … review' 같은 긴 검색어 8개 중 7개가 0편,
+        # 'GearOra toothbrush' 는 10편+) — 같은 검색어 칸 안에서 하는 재시도라 상한(MAX_QUERIES)은 그대로
+        words = q["q"].split()
+        for keep in (4, 3):
+            if rows or len(words) <= keep:
+                continue
+            short = " ".join(words[:keep])
+            rows = [r for r in net.search(short, PER_QUERY) if 5 <= (r.get("duration") or 0) <= 1800]
+            log(f"[검색 줄임] «{q['q']}» 0편 → «{short}» {len(rows)}편")
+            if rows:
+                q["q_short"] = short
         n_meta = n_prev = 0
         for r in rows:
             if n_meta >= META_PER_QUERY or n_prev >= PREVIEW_PER_QUERY or len(state["previews"]) >= MAX_PREVIEWS:

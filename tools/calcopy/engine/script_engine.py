@@ -814,6 +814,11 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
     brand = {k: v for k, v in brand.items() if v}
     ga = SF.grounding_audit(texts)
     ungrounded = {k: a["tags"] for k, (a, l) in enumerate(zip(ga, lines)) if a["needs_ground"] and not (set(l.get("facts") or []) & ids)}
+    # 끝 줄 사회 반응 과장(⑤ '~사이에서 ~난리래요')은 사장님 허용 창작 칸(10-16 밤 '과장 허용') — points.detail.end_buzz 가 요구하는 칸을
+    # 근거 필수로 다시 반려하면 두 규칙이 서로를 막는다(10-18 실측: 다시 쓰기 2회 내내 이 한 줄만 남음)
+    eb = (((frame or {}).get("points") or {}).get("detail") or {}).get("end_buzz")
+    if eb and lines and re.search(eb.get("cue_re", "난리"), texts[-1]):
+        ungrounded.pop(len(lines) - 1, None)
     # 예문 베낌 — 채널 어미 자체('다고 하더라고요' = 공백 뺀 7자)는 베낌이 아니라 화법이라 뺀다(10-16 밤 LOO3 오탐)
     sp = (frame or {}).get("4_speech") or {}
     common = {SF._norm(e) for e in (sp.get("ending_char_set") or []) + (sp.get("ending_list") or [])}

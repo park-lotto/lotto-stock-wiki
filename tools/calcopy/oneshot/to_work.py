@@ -52,9 +52,14 @@ def shot_queries(product: str, research: dict, brand: str, rows: list[dict], tit
     prompt = SHOT_PROMPT.format(product=product, queries=" · ".join((q.get("en") or [])[:4]), rule=B["재료_규칙"], kinds="·".join(B["kinds"]),
                                 pieces="\n".join(f"{k}: {r['line']} | {r['piece']} | {r['line_text']}" for k, r in enumerate(rows)),
                                 title_req=title_req)
-    d, err = G.ask([], prompt, tag="oneshot_shots")
-    shots = {int(s["i"]): s for s in (d or {}).get("shots") or [] if isinstance(s, dict) and str(s.get("i", "")).isdigit()}
-    miss = [k for k in range(len(rows)) if not (shots.get(k) or {}).get("query")]
+    for attempt in range(2):     # 10-18 실측: 응답이 shots 가 아닌 꼴(items·글)로 와 22조각 전부 빈칸 — 꼴을 넓혀 받고 1회 더
+        d, err = G.ask([], prompt, tag="oneshot_shots")
+        raw = (d or {}).get("shots") or (d or {}).get("items") or next((v for v in (d or {}).values() if isinstance(v, list)), [])
+        shots = {int(s["i"]): s for s in raw if isinstance(s, dict) and str(s.get("i", "")).strip().isdigit()}
+        miss = [k for k in range(len(rows)) if not (shots.get(k) or {}).get("query")]
+        if d is not None and not miss:
+            break
+        print(f"[경보] 장면 검색어 {attempt + 1}회째 실패 {err or ''} · 빈 조각 {len(miss)}개 · 응답 키 {sorted(d)[:6] if isinstance(d, dict) else type(d)}")
     if d is None or miss:
         raise SystemExit(f"장면 검색어 실패 {err or ''} · 빈 조각 {miss}")
     for s in shots.values():

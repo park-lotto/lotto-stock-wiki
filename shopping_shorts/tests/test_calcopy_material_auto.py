@@ -307,3 +307,16 @@ def test_valid_video_rejects_short_section(tmp_path, monkeypatch):
     monkeypatch.setattr(ma, "_probe_dur", lambda p: 1.04)
     assert not ma._valid_video(f, 2.9)          # 2.9초 요청에 1.04초(실사례)
     assert ma._valid_video(f, 1.2)
+
+
+def test_gather_shortens_zero_result_query(tmp_path):
+    """10-18 실측: 긴 검색어('GearOra M23 portable retractable … review')는 유튜브가 0편 → 앞 낱말로 한 번 더."""
+    class N(FakeNet):
+        def search(self, q, n):
+            self.searched.append(q)
+            return [{"id": "A", "duration": 60}] if len(q.split()) <= 4 else []
+    net, logs = N(tmp_path), []
+    state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}}
+    ma._gather([{"q": "GearOra M23 portable retractable sterilizing sonic toothbrush review", "purpose": "product"}], net, state, logs.append)
+    assert net.searched == ["GearOra M23 portable retractable sterilizing sonic toothbrush review", "GearOra M23 portable retractable"]
+    assert state["previews"] == ["A"] and len(state["queries"]) == 1 and any("검색 줄임" in x for x in logs)
