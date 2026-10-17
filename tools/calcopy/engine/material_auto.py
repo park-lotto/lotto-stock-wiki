@@ -60,11 +60,26 @@ FONT_B = "C:/Windows/Fonts/malgunbd.ttf"
 CHANNELS = {
     # 잇썸홈(두유노홈디노형) = 같은 제품 실영상만(비포 비교 토막만 같은 종류 다른 제품 허용), 짤 0
     "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before", "store"], "meme_ratio": (0.0, 0.0),
-              "min_res": 1080, "pref_res": 1080, "allow_cg": False, "max_cut": 1.7},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
+              "min_res": 1080, "pref_res": 1080, "allow_cg": False, "max_cut": 1.7,
+              "preset": "channel/homedesignnote/preset/전체화면_가운데자막/manifest.json"},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
     # 재미썸홈(이븐쇼핑형) = 제품 + 유사·연상 + 짤 10~15%
     "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "similar", "meme"], "meme_ratio": (0.10, 0.15),
-               "min_res": 720, "pref_res": 1080, "allow_cg": False, "max_cut": 1.4},
+               "min_res": 720, "pref_res": 1080, "allow_cg": False, "max_cut": 1.4,
+               "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json"},
 }
+
+
+def window_of(rules: dict) -> tuple[int, int] | None:
+    """화면 창(가로, 세로) — 주인은 프리셋 manifest channel_rules.make.window(preset_make.plan_check 가 그 비율로 가운데를 자른다).
+    여기선 읽기만 한다. 없으면 None(잘라 보기 없이 예전처럼 전체 화면으로 검사)."""
+    p = rules.get("preset")
+    if not p:
+        return None
+    try:
+        w = json.loads((ROOT / p).read_text(encoding="utf-8"))["channel_rules"]["make"]["window"]
+        return int(w[0]), int(w[1])
+    except (OSError, KeyError, ValueError, TypeError):
+        return None
 
 
 class Stop(Exception):
@@ -419,7 +434,9 @@ def tag_video(cells: list[dict], product: str, llm, wd: Path, vid: str) -> list[
 # ── 4. 판정 주인 ───────────────────────────────────────────────────────────
 def allowed(cell: dict, kind: str, rules: dict, res: int) -> bool:
     """후보 칸 하나를 이 종류 토막에 써도 되나 — 유일한 판단 자리."""
-    if cell.get("text") or cell.get("dark"):          # A5 남의 글자 · 어두운 칸
+    if cell.get("dark") or cell.get("banned"):        # 어두운 칸 · 1080 잘라 본 검사에서 걸린 칸(ban_cells)
+        return False
+    if cell.get("text") and not window_of(rules):     # A5 남의 글자 — 창이 있으면 실제로 쓰는 픽셀(가운데 자른 화면)로 verify_cuts 가 판정
         return False
     if cell.get("luma") is not None and cell["luma"] < MIN_LUMA:   # 모델이 dark=false 라 해도 실제로 어두운 칸(1판 '중국 주방가전 회사가' 검정 컷)
         return False
@@ -653,8 +670,12 @@ def pick_memes(toks, needs, llm) -> dict:
 
 
 # ── 5. 계획 시트 ───────────────────────────────────────────────────────────
-def _grab(src: str, t: float, out: Path) -> Path | None:
-    _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{max(0, t):.2f}", "-i", src, "-frames:v", "1", "-vf", "scale=-2:180", str(out)], timeout=60)
+def _grab(src: str, t: float, out: Path, window: tuple[int, int] | None = None) -> Path | None:
+    vf = "scale=-2:180"
+    if window:
+        r = window[0] / window[1]
+        vf = f"crop='min(iw,trunc(ih*{r:.5f}/2)*2)':ih:'(iw-min(iw,trunc(ih*{r:.5f}/2)*2))/2':0," + vf
+    _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{max(0, t):.2f}", "-i", src, "-frames:v", "1", "-vf", vf, str(out)], timeout=60)
     return out if out.exists() else None
 
 
@@ -843,7 +864,7 @@ def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections
                 k = (p.get("vid"), p.get("src_t0"), p.get("src_t1"))
                 if k in seen:
                     p["verify"] = seen[k]
-            flagged = verify_cuts(picks, wd, llm, only_new=True)
+            flagged = verify_cuts(picks, wd, llm, only_new=True, window=window_of(rules))
             for p in picks:
                 if "verify" in p:
                     seen[(p.get("vid"), p.get("src_t0"), p.get("src_t1"))] = p["verify"]
@@ -1061,7 +1082,7 @@ VERIFY_PROMPT = """그림은 영상 컷 후보 프레임들이다(노란 번호 
 번호를 빠짐없이. 출력 JSON만: {{"cells":[{{"n":번호,"text":false,"dark":false,"what":"..."}}]}}"""
 
 
-def verify_cuts(picks, wd: Path, llm, only_new: bool = False) -> list[dict]:
+def verify_cuts(picks, wd: Path, llm, only_new: bool = False, window: tuple[int, int] | None = None) -> list[dict]:
     """고른 컷마다 1080 구간의 가운데 프레임을 시트(20칸)로 모아 남의 글자·어두움 검사 → 걸린 컷 목록(p['verify'] 표시)."""
     from PIL import Image, ImageDraw, ImageFont
     todo = [p for p in picks if p.get("section_file") and not p.get("none") and (not only_new or "verify" not in p)]
@@ -1072,7 +1093,8 @@ def verify_cuts(picks, wd: Path, llm, only_new: bool = False) -> list[dict]:
     for c0 in range(0, len(todo), 20):
         chunk, ims = todo[c0:c0 + 20], []
         for p in chunk:
-            g = _grab(p["section_file"], p["section_ss"] + p["dur"] / 2, vdir / f"{p['i']}.jpg")
+            args = (p["section_file"], p["section_ss"] + p["dur"] / 2, vdir / f"{p['i']}.jpg")
+            g = _grab(*args, window) if window else _grab(*args)
             ims.append(g)
             if not g:
                 p["verify"] = "프레임 없음"   # 빈 칸을 모델에 보여 'ok'를 받지 않는다(5판: 잘린 구간이 ok 로 통과)
@@ -1110,6 +1132,7 @@ def ban_cells(flagged, cells: dict):
         for c in cells.values():
             if c["vid"] == p.get("vid") and abs(c["t"] - p.get("cell_t", -99)) <= c["interval"] + 0.01:
                 c["text" if p["verify"] == "text" else "dark"] = True
+                c["banned"] = p["verify"]          # 실제로 쓰는 픽셀에서 걸림 — 창 규칙과 무관하게 다시 안 고른다
 
 
 def fetch_sections(picks, meta, net, pad: float = None, join_gap: float = 8.0):

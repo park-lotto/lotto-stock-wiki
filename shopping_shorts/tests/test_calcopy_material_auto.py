@@ -27,9 +27,17 @@ META = {"A": {"res": 1080}, "B": {"res": 1080}, "LOW": {"res": 480}}
 
 
 # ── allowed ────────────────────────────────────────────────────────────────
+NOWIN = {k: v for k, v in ITS.items() if k != "preset"}
+
+
+def test_window_from_preset_manifest():
+    assert ma.window_of(ITS) == (1080, 1920) and ma.window_of(JAE) == (1080, 1407) and ma.window_of(NOWIN) is None
+
+
 def test_allowed_rejects_foreign_text_dark_and_lowres():
     assert ma.allowed(cell("A", 3), "product", ITS, 1080)
-    assert not ma.allowed(cell("A", 3, text=True), "product", ITS, 1080)      # A5
+    assert not ma.allowed(cell("A", 3, text=True), "product", NOWIN, 1080)    # A5 — 창(프리셋) 모르면 미리보기 글자로 버린다
+    assert ma.allowed(cell("A", 3, text=True), "product", ITS, 1080)          # 창이 있으면 잘라 본 1080 검사(verify_cuts)가 판정(10-18 구석 로고)
     assert not ma.allowed(cell("A", 3, dark=True), "product", ITS, 1080)
     assert not ma.allowed(cell("A", 3), "product", ITS, 480)                  # A4
 
@@ -102,7 +110,7 @@ def test_select_continuation_merges_neighbours_B4():
 def test_select_rejects_text_and_lowres_then_none():
     ts = toks(1)
     cells = {0: cell("A", 5.0, text=True), 1: cell("LOW", 5.0)}
-    p = ma.select(ts, _needs(ts), {0: [(0, 9), (1, 9)]}, cells, META, ITS)
+    p = ma.select(ts, _needs(ts), {0: [(0, 9), (1, 9)]}, cells, META, NOWIN)
     assert p[0].get("none")
 
 
@@ -273,7 +281,7 @@ def test_verify_loop_final_picks_all_checked(tmp_path, monkeypatch):
     from PIL import Image
     img = tmp_path / "f.jpg"
     Image.new("RGB", (32, 18), "gray").save(img)
-    monkeypatch.setattr(ma, "_grab", lambda src, t, out: img)
+    monkeypatch.setattr(ma, "_grab", lambda src, t, out, *win: img)
 
     class N(FakeNet):
         def section(self, vid, info, a, b):
