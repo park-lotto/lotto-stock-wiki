@@ -4,7 +4,7 @@
   "evenshopping":   {"brand": "재미썸홈",   "bench": "이븐쇼핑"},
   "homedesignnote": {"brand": "잇썸홈",     "bench": "두유노홈디노"},
   "hottemreport":   {"brand": "숏템리폿",   "bench": "핫템리포트"},
-  "banggu":         {"brand": "썸템홈샷",   "bench": "방구석 친구들", "old_names": ["썰템홈샷", "방구석(브랜드 골방)"]},
+  "banggu":         {"brand": "썰템홈샷",   "bench": "방구석 친구들", "old_names": ["방구석(브랜드 골방)"]},
   "yummyknow":      {"brand": "맛템썰템",   "bench": "yummyknow"},
   "sseolpulda":     {"brand": "도파민썰템", "bench": "썰풀다", "old_names": ["썰풀다"],
    "styles": {
