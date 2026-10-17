@@ -1,27 +1,36 @@
 {
- "_about": "칼카피 우리 브랜드 장부(주인 데이터) — 벤치 채널(slug) ↔ 우리 브랜드 이름 ↔ 스타일. 사장님 2026-10-17. 읽는 곳: tools/calcopy/brands.py",
+ "_about": "칼카피 우리 브랜드 장부(주인 데이터) — 벤치 채널(slug) ↔ 우리 브랜드 이름 (스타일은 channel/스타일.json). 사장님 2026-10-17. 읽는 곳: tools/calcopy/brands.py",
  "brands": {
-  "evenshopping":   {"brand": "재미썸홈",   "bench": "이븐쇼핑"},
-  "homedesignnote": {"brand": "잇썸홈",     "bench": "두유노홈디노"},
-  "hottemreport":   {"brand": "숏템리폿",   "bench": "핫템리포트"},
-  "banggu":         {"brand": "썰템홈샷",   "bench": "방구석 친구들", "old_names": ["방구석(브랜드 골방)"]},
-  "yummyknow":      {"brand": "맛템썰템",   "bench": "yummyknow"},
-  "sseolpulda":     {"brand": "도파민썰템", "bench": "썰풀다", "old_names": ["썰풀다"],
-   "styles": {
-    "나레만":    {"desc": "해외 원작에 한국어 나레이션만(원음 끔)", "audio_kinds": ["나레 1명"], "source_audio_kept": false,
-                 "n": 25, "views_median": 372000, "views_max": 3700000,
-                 "bench_ids": ["D3Pc6HZ6t6c", "mYxuF1A74j4", "GqSkDhM_bV0", "1_VtwOkbbVE", "6iW_aMG_-L0", "s9RVpN6MzX4", "qcR1cpdR-eA", "L1mZz4riyZE", "Wu8vTQLkY_E", "_zLL14jbrdc", "RfbD3Yf9t3E", "L4Y90sbL-3A", "Mkf664rnZKA", "w7-TjvF93yw", "JM3MtB0CHS4", "sZzoHbDirfA", "GFpMl6gVMI0", "2OTU-cK0M5Y", "SSwmHxNgWtU", "9XWX-ZMbxlo", "4RKsl0caOFw", "6t5rlyFU1iA", "Q9w-kd3AIdE", "5NzKJp0LbBc", "H5ie-Ah1gGY"]},
-    "나레+원음": {"desc": "한국어 나레이션 + 해외 원음(현장 소리·대사)을 같이 깐다", "audio_kinds": ["해외 원음+한국어 나레+자막"], "source_audio_kept": true,
-                 "n": 5, "views_median": 1300000, "views_max": 2200000,
-                 "bench_ids": ["w-Ygny1f8O8", "t-xMApVctB0", "m4nffB05HNU", "LqPm7k1Aqek", "rMXGuFJEWDE"]},
-    "자막만":    {"desc": "나레이션 없는 원작에 대본(자막)만 얹는다 — 원음 또는 BGM", "audio_kinds": ["원음만+자막", "나레 없음"],
-                 "n": 3, "views_median": 205000, "views_max": 8800000,
-                 "bench_ids": ["ZdeZRtCeAC4", "fnZNougO6NQ", "iZ-TprLYezA"]},
-    "역할극":    {"desc": "한국어 목소리 2명 이상이 역할을 나눠 말한다(나레+인물 대사, 인물 대사는 목소리를 바꿔서)", "audio_kinds": ["나레+역할 2명", "역할극만"],
-                 "n": 16, "views_median": 846000, "views_max": 3000000,
-                 "bench_ids": ["ho5GSd-4To0", "7DYbxVNz5q8", "oJZDImhYdXw", "v6Mrf2LDqS0", "CRDgWgy4PA4", "-cDiMofZWyo", "sOGg5ySFBDo", "eLYn_4Nckvw", "WA5rBxExyP8", "6KlP1xkSKnE", "KWKNY4Vjguc", "GnPAhXFxSV4", "GqV__fVDMkk", "mlaiX-U7Wgk", "OksMoXVSN5M", "tLuDcq_3zW4"]}
-   },
-   "style_rule": "2026-10-17 상위 50편 전수(channel/sseolpulda/style_classify.py → 스타일_전수분류.md): 나레만 25(조회 중앙 37.2만) · 역할극 16(84.6만) · 나레+원음 5(130만) · 자막만 3(20.5만) · 미분류 1(C7jHq_emrXU 원음 못 잼). audio_comp kind 만으로는 역할극을 놓친다(oJZD·ho5G 가 '나레 1명' — 대사가 나레 구절에 묻힘) → 역할 구간 피치가 나레와 4반음 이상 차이면 역할극(보정 R2). 역할극 16편 중 12편 피치로 확인, 4편은 제미나이 화자 분리만 근거"
+  "evenshopping": {
+   "brand": "재미썸홈",
+   "bench": "이븐쇼핑"
+  },
+  "homedesignnote": {
+   "brand": "잇썸홈",
+   "bench": "두유노홈디노"
+  },
+  "hottemreport": {
+   "brand": "숏템리폿",
+   "bench": "핫템리포트"
+  },
+  "banggu": {
+   "brand": "썰템홈샷",
+   "bench": "방구석 친구들",
+   "old_names": [
+    "방구석(브랜드 골방)"
+   ]
+  },
+  "yummyknow": {
+   "brand": "맛템썰템",
+   "bench": "yummyknow"
+  },
+  "sseolpulda": {
+   "brand": "도파민썰템",
+   "bench": "썰풀다",
+   "old_names": [
+    "썰풀다"
+   ],
+   "styles_ref": "channel/스타일.json"
   }
  }
 }
