@@ -1,0 +1,575 @@
+{
+ "_note": "얜샷템 장윤정 덴마크 수건 재료 계획 — TTS·렌더 전. 원본 = 장공장장윤정 XzCEZtLDV-A 1080p 한 편만. 창 1080x1080(frame_얜샷템). 원본 화면 자막·편집 글자는 전부 y≥865(아래 자막 y≈905~955) 또는 왼쪽 위('아 나 너무 행복하다' 265.5~) → 크롭 y 0~870 로 뺌. 원음 블록 안 제품 컷은 audio_src/audio_ss 로 소리만 원음.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/장윤정_덴마크수건/src",
+ "narration": "일레븐랩스 미나 kr-mina(voice aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 합성 + atempo 1.35) — 원본(만템) 나레 여성·해요체",
+ "sources": {
+  "XzCEZtLDV-A": {
+   "채널": "장공장장윤정",
+   "제목": "장공장장윤정이 픽한 내돈내산 북유럽 쇼핑템🛍️ l 북유럽 보따리 장수",
+   "업로드": "2026-03-18",
+   "해상도": "1920x1080 29.97fps",
+   "길이": 931.5
+  }
+ },
+ "blocks": {
+  "O1": [
+   0.0,
+   5.78
+  ],
+  "N1": [
+   5.78,
+   8.875
+  ],
+  "O4": [
+   8.875,
+   12.195
+  ],
+  "O5": [
+   12.195,
+   18.455
+  ],
+  "O3": [
+   18.455,
+   20.415
+  ],
+  "N2": [
+   20.415,
+   23.629
+  ]
+ },
+ "dur_est": 23.629,
+ "source_shot_cuts": [
+  109.01,
+  114.35,
+  122.69,
+  133.03,
+  146.05,
+  147.15,
+  155.96,
+  159.13,
+  161.03,
+  162.26,
+  195.7,
+  200.3,
+  202.9,
+  212.61,
+  216.65,
+  224.76,
+  226.23,
+  237.7,
+  240.04,
+  243.61,
+  261.83,
+  263.96,
+  267.43
+ ],
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 224.8,
+   "dur": 1.18,
+   "src_span": [
+    224.8,
+    225.98
+   ],
+   "t_final": [
+    0.0,
+    1.18
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    500,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "넓은 거실, 노란 의자 위 줄무늬 수건을 펼치는 장윤정(오른쪽 위 촬영자 손 x≥1680 은 크롭 밖)",
+   "why": "원음 '저는 수건' — 원음 첫 마디로 연다(만템 7/8)",
+   "Y": 148,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 224.8
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 226.4,
+   "dur": 2.8,
+   "src_span": [
+    226.4,
+    229.2
+   ],
+   "t_final": [
+    1.18,
+    3.98
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    455,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "소파에서 두 손을 머리 위로 들며 말하는 장윤정(편집 자막 '수건에 미친 자' y≈930 은 크롭 밖)",
+   "why": "원음 '미치는 애거든요 / 수건을 저희 집에 보면' — 입 모양 맞음",
+   "Y": 158,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 226.4
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 127.0,
+   "dur": 0.9,
+   "src_span": [
+    127.0,
+    127.9
+   ],
+   "t_final": [
+    3.98,
+    4.88
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    430,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "무릎 위에서 포장을 벗겨 파랑 줄무늬 수건을 꺼내는 본인 손",
+   "why": "원음 '수건이 수십 개씩' — 수건 더미(본인 손·제품만, 얼굴 없음)",
+   "Y": 134,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 229.2
+  },
+  {
+   "i": 3,
+   "line": "O1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 147.2,
+   "dur": 0.9,
+   "src_span": [
+    147.2,
+    148.1
+   ],
+   "t_final": [
+    4.88,
+    5.78
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    330,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "TEKLA 라벨이 달린 빨강·분홍 줄무늬 수건 근접(제품만)",
+   "why": "원음 '…있어요' — 제품 라벨",
+   "Y": 150,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 230.1
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 111.7,
+   "dur": 1.03,
+   "src_span": [
+    111.7,
+    112.73
+   ],
+   "t_final": [
+    5.78,
+    6.81
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    560,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "TEKLA 로고 포장지를 들어 보이는 장윤정(편집 자막 '[북유럽 감성의 로고 디자인]' y≈930 크롭 밖)",
+   "why": "'장윤정이 덴마크에서' — 사 온 포장 그대로",
+   "Y": 161,
+   "mute": true
+  },
+  {
+   "i": 5,
+   "line": "N1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 115.0,
+   "dur": 1.03,
+   "src_span": [
+    115.0,
+    116.03
+   ],
+   "t_final": [
+    6.81,
+    7.84
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    470,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "소파에 수건 더미를 안고 앉은 장윤정(원본 자막 '여기를 물어 물어 걸어 걸어가지고 사 왔어요' y≈930 크롭 밖)",
+   "why": "'물어물어 사 왔다는' — 바로 그 말을 한 장면",
+   "Y": 168,
+   "mute": true
+  },
+  {
+   "i": 6,
+   "line": "N1",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 197.7,
+   "dur": 1.035,
+   "src_span": [
+    197.7,
+    198.735
+   ],
+   "t_final": [
+    7.84,
+    8.875
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    535,
+    0,
+    860,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.26,
+   "ours": "TEKLA 라벨 달린 버건디 줄무늬 수건을 펼쳐 든 장윤정('우리집은 도연우 수건' 자막 y≥893 크롭 밖)",
+   "why": "'테클라 수건이라는데' — 라벨이 보이는 제품",
+   "Y": 143,
+   "mute": true
+  },
+  {
+   "i": 7,
+   "line": "O4",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 204.92,
+   "dur": 3.32,
+   "src_span": [
+    204.92,
+    208.24
+   ],
+   "t_final": [
+    8.875,
+    12.195
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    500,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "큰 줄무늬 수건을 양손으로 펼쳐 든 장윤정",
+   "why": "원음 '엄청 크지? … 수건보다 크죠' — 입 모양 맞음",
+   "Y": 162,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 204.92
+  },
+  {
+   "i": 8,
+   "line": "O5",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 216.8,
+   "dur": 3.15,
+   "src_span": [
+    216.8,
+    219.95
+   ],
+   "t_final": [
+    12.195,
+    15.345
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    520,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "수건을 카메라 쪽으로 내미는 장윤정",
+   "why": "원음 '이거 만져 봐 / 만져 봐야 돼 / 왜 비싼지를' — 입 모양 맞음",
+   "Y": 177,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 216.8
+  },
+  {
+   "i": 9,
+   "line": "O5",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 161.1,
+   "dur": 1.04,
+   "src_span": [
+    161.1,
+    162.14
+   ],
+   "t_final": [
+    15.345,
+    16.385
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    300,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "노란 탁자 위 TEKLA 라벨 수건 묶음(제품만, 자막 '잘 모르겠는데 이쁘지?' y≈930 크롭 밖)",
+   "why": "원음 '엄청 도톰하지?' — 원본 221.6~224.7 은 촬영자 손이 수건을 잡아(224.6) A13 → 제품 컷",
+   "Y": 133,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 221.55
+  },
+  {
+   "i": 10,
+   "line": "O5",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 132.0,
+   "dur": 1.0,
+   "src_span": [
+    132.0,
+    133.0
+   ],
+   "t_final": [
+    16.385,
+    17.385
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    450,
+    0,
+    860,
+    860
+   ],
+   "res": "1920x1080",
+   "scale": 1.26,
+   "ours": "노란 탁자 위 접힌 파랑 줄무늬 수건(제품만, '✨수건✨' y≥865 크롭 밖)",
+   "why": "원음 '우리 그 샤워가운' — 두께 보이는 접힌 수건",
+   "Y": 145,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 222.59
+  },
+  {
+   "i": 11,
+   "line": "O5",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 151.25,
+   "dur": 1.07,
+   "src_span": [
+    151.25,
+    152.32
+   ],
+   "t_final": [
+    17.385,
+    18.455
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    560,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "TEKLA 라벨 근접(제품만, 자막 '아유 이게 이게 뭐라고' y≈930 크롭 밖)",
+   "why": "원음 '수준이에요'",
+   "Y": 125,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 223.59
+  },
+  {
+   "i": 12,
+   "line": "O3",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 261.95,
+   "dur": 1.07,
+   "src_span": [
+    261.95,
+    263.02
+   ],
+   "t_final": [
+    18.455,
+    19.525
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    590,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "위에서 본 줄무늬 수건을 손으로 쥐어 보는 장면(본인 손)",
+   "why": "원음 '확실히 짱짱하다' — 입 모양 없는 손 컷(원본 그대로)",
+   "Y": 139,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 261.95
+  },
+  {
+   "i": 13,
+   "line": "O3",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 264.56,
+   "dur": 0.89,
+   "src_span": [
+    264.56,
+    265.45
+   ],
+   "t_final": [
+    19.525,
+    20.415
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    455,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "수건을 무릎에 덮고 말하는 장윤정('아 나 너무 행복하다' 자막은 265.5 부터라 이 컷엔 없음)",
+   "why": "원음 '확실히 도톰하다' — 입 모양 맞음",
+   "Y": 168,
+   "audio_src": "jyj_XzCEZtLDV-A.mp4",
+   "audio_ss": 264.56
+  },
+  {
+   "i": 14,
+   "line": "N2",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 241.0,
+   "dur": 1.6,
+   "src_span": [
+    241.0,
+    242.6
+   ],
+   "t_final": [
+    20.415,
+    22.015
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    410,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "파랑 세로 줄무늬 수건을 펼쳐 보는 장윤정(자막 y≈930 크롭 밖)",
+   "why": "'매장이 없다 보니 / 비슷한 디자인까지' — 줄무늬 디자인",
+   "Y": 165,
+   "mute": true
+  },
+  {
+   "i": 15,
+   "line": "N2",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "url": "https://www.youtube.com/watch?v=XzCEZtLDV-A",
+   "src_date": "장공장장윤정 유튜브 2026.03.18",
+   "ss": 248.6,
+   "dur": 1.614,
+   "src_span": [
+    248.6,
+    250.214
+   ],
+   "t_final": [
+    22.015,
+    23.629
+   ],
+   "kind": "원본재편집",
+   "full": true,
+   "src_crop": [
+    470,
+    0,
+    870,
+    870
+   ],
+   "res": "1920x1080",
+   "scale": 1.24,
+   "ours": "빨강 줄무늬 TEKLA 수건을 펼쳐 든 장윤정(자막 'TEKLA 수건이 워낙에' y≈930 크롭 밖)",
+   "why": "'많이 나온다는 수건이라네요' — 끝 컷 ≥1.5초",
+   "Y": 164,
+   "mute": true
+  }
+ ]
+}
