@@ -330,17 +330,28 @@ def preset_home(root: Path | None = None) -> dict:
                         "in_ledger": it.get("channel") in brand_of, "state": result_state(it.get("judge"))})
     results.sort(key=lambda r: -(r.get("n") or 0))
 
+    def _bench(raw):
+        rows = [{"slug": slug, "brand": brand_of.get(slug, slug), **{k: v for k, v in (b or {}).items()}}
+                for slug, b in (raw or {}).items()]
+        return sorted(rows, key=lambda b: -(b.get("n") or 0))
+
+    def _strengths(raw):    # 장부 꼴은 dict(what·evidence·strength·channel·source·date) — 옛 글 한 줄도 what 으로 받는다
+        return [x if isinstance(x, dict) else {"what": str(x)} for x in (raw or [])]
+
     styles = []
     for name, st in sorted((sb.get("styles") or {}).items(), key=lambda kv: kv[1].get("priority", 99)):
-        bench = [{"slug": slug, "brand": brand_of.get(slug, slug), **{k: v for k, v in (b or {}).items()}}
-                 for slug, b in (st.get("bench") or {}).items()]
-        bench.sort(key=lambda b: -(b.get("n") or 0))
+        bench = _bench(st.get("bench"))
         mine = [r for r in results if r.get("style") == name]
         styles.append({"name": name, "old_name": st.get("old_name", ""), "priority": st.get("priority"),
                        "desc": st.get("desc", ""), "why": st.get("why", ""), "audio_kinds": st.get("audio_kinds") or [],
-                       "strengths": st.get("strengths") or [], "bench": bench,
-                       "bench_videos": sum(b.get("n") or 0 for b in bench),
+                       "must": st.get("must") or [], "exclude": st.get("exclude", ""), "how": st.get("how", ""),
+                       "example": st.get("example", ""), "flow": st.get("flow") or None,
+                       "strengths": _strengths(st.get("strengths")), "strengths_keys": st.get("strengths_keys", ""),
+                       "bench": bench, "bench_videos": sum(b.get("n") or 0 for b in bench),
                        "results": [r["n"] for r in mine]})
+    options = [{"name": name, **{k: v for k, v in (o or {}).items() if k not in ("bench", "strengths")},
+                "strengths": _strengths((o or {}).get("strengths")), "bench": _bench((o or {}).get("bench"))}
+               for name, o in (sb.get("options") or {}).items()]
 
     def _brand_row(slug, b, in_ledger):
         mine = [r for r in results if r.get("channel") == slug]
@@ -358,13 +369,37 @@ def preset_home(root: Path | None = None) -> dict:
     docs = [{"path": p, "title": t, "exists": (base / p).exists()} for p, t in PRESET_DOCS]
     return {"brands": brands, "styles": styles, "results": results, "states": list(RESULT_STATES),
             "docs": docs, "style_judge": sb.get("judge", ""), "not_measured": sb.get("not_measured", ""),
+            "root": sb.get("root") or None, "options": options, "doc_paths": sorted(doc_paths(base)),
             "summary": {"brands": len(bb.get("brands") or {}), "styles": len(styles), "results": len(results),
                         "passed": sum(1 for r in results if r["state"] == "통과")},
             "errors": errors}
 
 
+def referenced_docs(style_book: dict) -> set[str]:
+    """스타일 장부가 근거로 가리키는 분석 문서(channel/…md) — flow·strengths·bench·options 의 source 어디에 적혀 있든."""
+    found = set()
+
+    def _walk(v):
+        if isinstance(v, dict):
+            for x in v.values():
+                _walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                _walk(x)
+        elif isinstance(v, str):
+            found.update(m for m in _re.findall(r"channel/[^\s()'\",·]+?\.md", v) if ".." not in m)
+    _walk(style_book)
+    return found
+
+
+def doc_paths(root: Path | None = None) -> set[str]:
+    """화면에서 열 수 있는 문서 = PRESET_DOCS + 스타일 장부가 가리키는 문서. 이 밖은 안 열린다."""
+    base = Path(root) if root else ROOT
+    return {p for p, _ in PRESET_DOCS} | referenced_docs(_read_json(base / "channel" / "스타일.json") or {})
+
+
 def preset_doc(path: str, root: Path | None = None) -> str:
-    """분석 문서 원문 — PRESET_DOCS 에 적힌 것만(아무 파일이나 읽히지 않게)."""
-    if path not in {p for p, _ in PRESET_DOCS}:
+    """분석 문서 원문 — doc_paths 에 든 것만(아무 파일이나 읽히지 않게)."""
+    if path not in doc_paths(root):
         raise KeyError(path)
     return ((Path(root) if root else ROOT) / path).read_text(encoding="utf-8")
