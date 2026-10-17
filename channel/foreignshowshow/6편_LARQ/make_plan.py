@@ -250,6 +250,10 @@ ATABLE = [
 ]
 
 
+# 원음 자막 조각 시작(원본 초) — 받아쓰기 낱말 시각(asr_words·asr_sub, 조각=샷마다 단독 받아쓰기)을 소리 쉼(silencedetect −26dB) 경계에 맞춤
+CAP_AT = {'L1': [94.75, 96.26, 97.64, 98.59, 99.42, 100.54], 'L4': [35.15], 'L6': [172.45, 174.24, 175.23, 177.41], 'L9': [377.47], 'L11': [438.4], 'L13': [653.36, 654.65, 655.65, 656.6]}
+
+
 def doc_update():
     """대본.json final.lines 를 LINES 에서 다시 씀(facts·dropped 는 그대로) — render.py load_doc 꼴(kind 나레/원음, caps, span)."""
     p = HERE / "대본.json"
@@ -259,6 +263,8 @@ def doc_update():
     for L in LINES:
         x = {"id": L["id"], "kind": L["kind"], "fn": L["beat"], "facts": old.get(L["id"], {}).get("facts", []), "caps": L["sub"]}
         if L["kind"] == "원음":
+            if L["id"] in CAP_AT:
+                x["cap_at"] = CAP_AT[L["id"]]
             x.update({"span": list(L["audio"]), "orig_en": L["en"], "text": " ".join(L["sub"]), "style": L.get("style", "보통")})
         else:
             x.update({"text": L["text"], "tts": L["tts"]})
