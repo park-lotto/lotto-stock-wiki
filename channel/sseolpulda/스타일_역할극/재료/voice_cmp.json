@@ -1,0 +1,96 @@
+{
+ "oJZDImhYdXw": {
+  "나레": {
+   "sec": 22.75,
+   "f0_med_hz": 151.1,
+   "f0_p10": 101.4,
+   "f0_p90": 209.4,
+   "semitone_std": 4.7,
+   "centroid_hz": 1677.0,
+   "rms_db": -10.3,
+   "mfcc_dist_vs_narr": 0.0,
+   "f0_semitone_vs_narr": 0.0
+  },
+  "개발팀": {
+   "sec": 1.72,
+   "f0_med_hz": 204.6,
+   "f0_p10": 143.4,
+   "f0_p90": 238.4,
+   "semitone_std": 3.6,
+   "centroid_hz": 1473.0,
+   "rms_db": -7.9,
+   "mfcc_dist_vs_narr": 23.4,
+   "f0_semitone_vs_narr": 5.25
+  }
+ },
+ "7DYbxVNz5q8": {
+  "나레": {
+   "sec": 17.72,
+   "f0_med_hz": 144.2,
+   "f0_p10": 108.7,
+   "f0_p90": 186.0,
+   "semitone_std": 3.54,
+   "centroid_hz": 1545.0,
+   "rms_db": -10.0,
+   "mfcc_dist_vs_narr": 0.0,
+   "f0_semitone_vs_narr": 0.0
+  },
+  "엔지니어": {
+   "sec": 8.56,
+   "f0_med_hz": 255.5,
+   "f0_p10": 227.9,
+   "f0_p90": 288.5,
+   "semitone_std": 1.66,
+   "centroid_hz": 1888.0,
+   "rms_db": -10.5,
+   "mfcc_dist_vs_narr": 49.23,
+   "f0_semitone_vs_narr": 9.9
+  },
+  "경영진": {
+   "sec": 2.22,
+   "f0_med_hz": 197.0,
+   "f0_p10": 124.9,
+   "f0_p90": 223.7,
+   "semitone_std": 4.27,
+   "centroid_hz": 1343.0,
+   "rms_db": -9.4,
+   "mfcc_dist_vs_narr": 29.58,
+   "f0_semitone_vs_narr": 5.4
+  }
+ },
+ "6KlP1xkSKnE": {
+  "나레": {
+   "sec": 21.46,
+   "f0_med_hz": 160.0,
+   "f0_p10": 116.3,
+   "f0_p90": 204.0,
+   "semitone_std": 3.89,
+   "centroid_hz": 1721.0,
+   "rms_db": -12.4,
+   "mfcc_dist_vs_narr": 0.0,
+   "f0_semitone_vs_narr": 0.0
+  },
+  "삼성": {
+   "sec": 4.21,
+   "f0_med_hz": 264.5,
+   "f0_p10": 133.7,
+   "f0_p90": 294.6,
+   "semitone_std": 5.11,
+   "centroid_hz": 1802.0,
+   "rms_db": -12.7,
+   "mfcc_dist_vs_narr": 36.22,
+   "f0_semitone_vs_narr": 8.7
+  },
+  "애플": {
+   "sec": 3.35,
+   "f0_med_hz": 254.1,
+   "f0_p10": 205.2,
+   "f0_p90": 303.4,
+   "semitone_std": 2.73,
+   "centroid_hz": 1698.0,
+   "rms_db": -11.8,
+   "mfcc_dist_vs_narr": 33.66,
+   "f0_semitone_vs_narr": 8.01
+  }
+ }
+}
