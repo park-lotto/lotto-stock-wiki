@@ -244,7 +244,9 @@ def narr_tts(D, R: Path, confirm: bool) -> dict:
         if abs(near - o["start"]) > 0.12:
             raise StageError(f"줄 {o['id']} 머리: 정렬 {o['start']}초 근처(0.12)에 말 시작 없음(가장 가까운 {near:.3f}) — 정렬·쉼 확인")
         o["start"] = round(near, 3) if near <= o["start"] + 0.05 else o["start"]
-    return {"lines": out, "wav": str(narr), "tempo": tempo, "raw_cps": round(rate, 2), "target_cps": tgt, "voice": m,
+    sp = sum(o["end"] - o["start"] for o in out)
+    return {"lines": out, "wav": str(narr), "tempo": tempo, "cps_out": round(nchar(text) / max(sp, 0.1), 2),
+            "line_cps": {o["id"]: round(nchar(l["tts"]) / max(o["end"] - o["start"], 0.1), 2) for o, l in zip(out, NL)}, "raw_cps": round(rate, 2), "target_cps": tgt, "voice": m,
             "pauses": plog, "how": "타입캐스트 정렬 + tts_pause.shape"}
 
 
@@ -385,24 +387,46 @@ def caption_times(D, LT, segs=None) -> list[dict]:
 
 
 # ── 틀 ─────────────────────────────────────────────────────────────────
-def preset_dir(doc: Path) -> tuple[Path, bool]:
+def preset_dir(doc: Path) -> tuple[Path, bool, str]:
     ch = doc.parent / "preset"
-    c = sorted(p for p in ch.glob("*/manifest.json") if not p.parent.name.startswith("_")) if ch.exists() else []
-    return (c[0].parent, True) if c else (FALLBACK_PRESET, False)
+    for m in sorted(ch.glob("*/manifest.json")) if ch.exists() else []:
+        if not m.parent.name.startswith("_") and (m.parent / "frame.json").exists():
+            return m.parent, True, ""
+    return FALLBACK_PRESET, False, "채널 프리셋 없음"
+
+
+def _one_line(layer: dict) -> dict:
+    """자막 층(lines 칸·valign) → 한 줄 글자의 자리. emph_png 는 y + line_h/2 에 한 줄을 그리므로(lines·valign 안 봄)
+    valign center 인 n줄 칸이면 칸 가운데로 옮긴다(샥탬 프리셋: y 897·2줄·68 → 한 줄 가운데 965, 벤치 잉크 929~988)."""
+    n = int(layer.get("lines") or 1)
+    if n > 1 and layer.get("valign", "center") == "center":
+        return {**layer, "y": layer["y"] + (n - 1) * layer["line_h"] / 2}
+    return layer
 
 
 def frame_and_styles(D, doc: Path, R: Path) -> dict:
-    """틀(frame.json: 창·제목) + 자막 두 꼴(manifest caption_styles 의 '나레*'·'원음*'). 틀의 자막·$per_video 층은 빼고(자막은 완성본에 얹음)."""
-    pdir, own = preset_dir(doc)
+    """틀 + 자막 꼴. 채널 프리셋이 있으면 engine/preset_save.apply(제목 글 = 대본, 나머지 변수 = manifest variable_stats 기본값·rules).
+    자막 꼴: 프리셋 자막 층(나레·번역 같은 꼴 — channel_rules.captions.narration_and_quote_same_style) + 원음 짧은 반응 꼴('원음반응*').
+    틀의 자막 층은 빼고(자막은 완성본에 얹음) 틀 frame.json 을 작업 폴더에 남긴다."""
+    pdir, own, why = preset_dir(doc)
     fr = jload(pdir / "frame.json")
     man = jload(pdir / "manifest.json")
     styles = {s["name"]: s["layer"] for s in man.get("caption_styles") or []}
+    notes = []
+    if own:
+        from tools.calcopy.engine import preset_save
+        try:
+            fr = preset_save.apply(fr, overrides={"layers[text:title].text": D["title"]}, defaults=man.get("variable_stats"), rules=man.get("rules"))
+        except ValueError as e:
+            raise StageError(f"프리셋 {pdir.name} 변수 못 채움: {e}")
+        notes.append(f"프리셋 {pdir.name} (preset_save.apply · 제목 크기 {next(l['size'] for l in fr['layers'] if l.get('role') == 'title')})")
     cap_frame = next((l for l in fr["layers"] if l.get("role") == "caption"), None)
-    narr = next((v for k, v in styles.items() if k.startswith("나레")), cap_frame)
-    orig = next((v for k, v in styles.items() if k.startswith("원음")), narr)
+    same = (((man.get("channel_rules") or {}).get("captions") or {}).get("narration_and_quote_same_style"))
+    narr = cap_frame if own else next((v for k, v in styles.items() if k.startswith("나레")), cap_frame)
+    orig = narr if same else next((v for k, v in styles.items() if k.startswith("원음") and "반응" not in k), narr)
+    react = next((v for k, v in styles.items() if "반응" in k), None)
     if not narr:
         raise StageError(f"틀 {pdir} 에 자막 꼴이 없다")
-    notes = []
     layers = []
     for l in fr["layers"]:
         if l.get("kind") == "text" and l.get("role") == "caption":
@@ -421,9 +445,40 @@ def frame_and_styles(D, doc: Path, R: Path) -> dict:
     R.mkdir(parents=True, exist_ok=True)
     jsave(R / "frame.json", fr)
     if not own:
-        notes.insert(0, f"★채널 프리셋 없음 → 임시 {pdir.relative_to(ROOT)} (자막 꼴 나레={'나레_노랑' if '나레_노랑' in styles else '틀'}·원음={'원음_흰글자' if '원음_흰글자' in styles else '나레와 같음'})")
-    return {"preset": str(pdir), "own": own, "frame": str(R / "frame.json"), "narr_style": narr, "orig_style": orig, "notes": notes,
-            "win": next(l for l in layers if l["kind"] == "video")}
+        notes.insert(0, f"★{why} → 임시 {pdir.relative_to(ROOT)}")
+    return {"preset": str(pdir), "own": own, "frame": str(R / "frame.json"), "narr_style": _one_line(narr), "orig_style": _one_line(orig),
+            "react_style": _one_line(react) if react else None, "notes": notes, "win": next(l for l in layers if l["kind"] == "video")}
+
+
+REACT_MAX = 6   # 원음 짧은 반응(×1.25 꼴) = 자막 한 조각뿐인 원음 줄이고 글자 ≤ 이것(뭐라고?!·대박·와우 — 프리셋 원음반응_크게 notes)
+
+
+def cap_style(c: dict, n_caps: int, FS: dict) -> tuple[str, dict]:
+    """(판단 주인: 자막 꼴) 자막 조각 → (꼴 이름, 층)."""
+    if c["kind"] == "O" and FS.get("react_style") and n_caps == 1 and nchar(c["text"]) <= REACT_MAX:
+        return "원음반응", FS["react_style"]
+    return ("원음" if c["kind"] == "O" else "나레"), (FS["orig_style"] if c["kind"] == "O" else FS["narr_style"])
+
+
+def cap_png(text: str, st: dict, dst: Path) -> Path:
+    """자막 한 장 = 엔진 emph_png(글꼴·크기·자리·외곽선). 층에 그림자(shadow dx·dy·blur)가 있으면 같은 글을 검정으로 그려
+    dx·dy 만큼 옮기고 흐려 밑에 깐다 — emph_png 가 shadow 를 안 그려서(엔진 요청) 프리셋 값 그대로 얹는 것."""
+    from PIL import Image, ImageFilter
+    from tools.calcopy import narr_video as nv
+    nv.emph_png(text, st, st.get("rgb") or (255, 255, 255), dst, dy=0)
+    sh = st.get("shadow")
+    if not sh:
+        return dst
+    tmp = dst.with_name(dst.stem + "_sh.png")
+    nv.emph_png(text, st, sh.get("rgb") or (0, 0, 0), tmp, dy=0)
+    s_im = Image.open(tmp).convert("RGBA")
+    base = Image.new("RGBA", s_im.size, (0, 0, 0, 0))
+    base.paste(s_im, (int(sh.get("dx", 0)), int(sh.get("dy", 0))), s_im)
+    base = base.filter(ImageFilter.GaussianBlur(max(0.1, float(sh.get("blur", 0)) / 2)))
+    base.alpha_composite(Image.open(dst).convert("RGBA"))
+    base.save(dst)
+    tmp.unlink()
+    return dst
 
 
 def effects(D, LT) -> tuple[list[dict], list[str]]:
@@ -439,7 +494,8 @@ def effects(D, LT) -> tuple[list[dict], list[str]]:
         x = lt[e["line"]]
         a, b = e.get("t") or [0.0, x["t1"] - x["t0"]]
         out.append({**e, "T": [round(x["t0"] + a, 3), round(min(x["t1"], x["t0"] + b), 3)]})
-    not_drawn = [] if D["effects"] else [f"좌표 없음(안 그림) — {n}" for n in D["fx_notes"]]
+    drawn = {e["line"] for e in out}
+    not_drawn = [f"안 그림(좌표 없음·엔진에 없는 꼴) — {n}" for n in D["fx_notes"] if n.split(":")[0].split(" ")[0] not in drawn]
     return out, not_drawn
 
 
@@ -527,9 +583,12 @@ def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
     from tools.calcopy import narr_video as nv
     pd = R / "ov"; shutil.rmtree(pd, ignore_errors=True); pd.mkdir(parents=True)
     items = []
+    n_of = {}
+    for c in P["captions"]:
+        n_of[c["line"]] = n_of.get(c["line"], 0) + 1
     for k, c in enumerate(P["captions"]):
-        st = FS["orig_style"] if c["kind"] == "O" else FS["narr_style"]
-        png = nv.emph_png(c["text"], st, st.get("rgb") or (255, 255, 255), pd / f"cap{k:03d}.png", dy=0)
+        c["style"], st = cap_style(c, n_of[c["line"]], FS)
+        png = cap_png(c["text"], st, pd / f"cap{k:03d}.png")
         items.append((png, 0, 0, c["t0"], c["t1"]))
     for k, e in enumerate(P["effects"]):
         png = nv.overlay_png(e, pd / f"fx{k:02d}.png")
@@ -550,7 +609,7 @@ def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
 
 
 def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
-    """BGM(원음 창 덕킹) 섞기 → 목표 LUFS·최고점 맞춤(alimiter, 재고 다시 — 최대 8번)."""
+    """BGM(원음 창 덕킹) 섞기 → 목표 LUFS·최고점 맞춤(압축·tanh 깎기, 재고 다시 — 최대 8번)."""
     from shopping_shorts import bgm_lib
     bgm = bgm_lib.path_of(C["bgm"])
     if not bgm or not Path(bgm).exists():
@@ -565,27 +624,33 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
          f"loudnorm=I={C['bgm_lufs']}:TP=-6:LRA=11,aresample={SR},volume='{terms}':eval=frame[b];[m][b]amix=inputs=2:normalize=0:duration=first[a]",
          "-map", "[a]", "-t", f"{P['dur']:.3f}", "-c:a", "pcm_f32le", pre])
     I0, _ = lufs(pre)
-    g, lim, hist = C["target_lufs"] - I0, 10 ** ((C["peak_max"] - 0.7) / 20), []
+    # 나레(타입캐스트) 마루비 ~18dB 라 리미터만으로는 −9 LUFS 가 안 된다(10-18 실측: alimiter 로 +23dB 넣어도 −9.6, 소리 뭉갬)
+    # → 압축(−18dB·3:1·+6dB) → 이득 g → 부드러운 깎기(tanh, 벤치도 깎임 +1.0 TP) → 끝 낮춤 trim. g·trim 을 재며 맞춘다(최대 8번).
+    comp = "acompressor=threshold=0.125:ratio=3:attack=5:release=120:knee=4:makeup=2"
+    g, trim, hist = C["target_lufs"] - I0 - 2.0, -1.5, []
     final = R / "final.mp4"
     for it in range(8):
-        run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex", f"[1:a]volume={g:.2f}dB,alimiter=limit={lim:.4f}:attack=3:release=60:level=false[a]",
+        run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex", f"[1:a]{comp},volume={g:.2f}dB,asoftclip=type=tanh,volume={trim:.2f}dB[a]",
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
         I, pk = lufs(final)
-        hist.append({"gain": round(g, 2), "limit": round(lim, 4), "I": I, "peak": pk})
+        hist.append({"gain": round(g, 2), "trim": round(trim, 2), "I": I, "peak": pk})
         if abs(I - C["target_lufs"]) <= 0.3 and pk <= C["peak_max"]:
             break
         if pk > C["peak_max"]:
-            lim *= 10 ** ((C["peak_max"] - pk - 0.15) / 20)
-        g += (C["target_lufs"] - I) * (1.6 if I < C["target_lufs"] else 1.0)   # 리미터가 먹는 만큼 더 올린다
+            trim += C["peak_max"] - pk - 0.1
+        else:
+            g += (C["target_lufs"] - I) * 1.5
     else:
         raise StageError(f"소리 크기 못 맞춤 {hist}")
-    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "passes": hist, "final_I": I, "final_peak": pk}
+    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → trim", "passes": hist, "final_I": I, "final_peak": pk}
 
 
-def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None) -> dict:
+def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_target=None) -> dict:
     D = load_doc(doc)
     if cps:
         D["C"]["cps_plan"] = cps
+    if cps_target:   # 페이블 지시 말속도(대본 cps_target 보다 앞선다) — render_info.narr.target_cps 에 남는다
+        D["cps_target"] = cps_target
     src_notes = check_sources(D)
     R = work / {"plan": "plan", "preview": "preview"}.get(mode, "render")
     R.mkdir(parents=True, exist_ok=True)
@@ -640,10 +705,11 @@ def main():
     ap.add_argument("doc"); ap.add_argument("work")
     ap.add_argument("--plan", action="store_true"); ap.add_argument("--tts-only", action="store_true")
     ap.add_argument("--preview", action="store_true"); ap.add_argument("--confirm-tts", action="store_true"); ap.add_argument("--cps", type=float)
+    ap.add_argument("--cps-target", type=float, help="TTS atempo 목표 자/초(없으면 대본 final.cps_target)")
     a = ap.parse_args()
     mode = "plan" if a.plan else ("preview" if a.preview else ("tts" if a.tts_only else "render"))
     try:
-        info = render(Path(a.doc).resolve(), Path(a.work).resolve(), mode, a.confirm_tts, a.cps)
+        info = render(Path(a.doc).resolve(), Path(a.work).resolve(), mode, a.confirm_tts, a.cps, a.cps_target)
     except StageError as e:
         print(f"[멈춤] {e}", file=sys.stderr)
         sys.exit(2)

@@ -24,7 +24,7 @@ LUFS_TOL, PEAK_MAX, LEN_TOL, CUT_TOL = 0.5, -0.5, 0.15, 0.30
 CUT_MIN, END_MIN, CAP_MAX, SYNC_TOL = 1.2, 1.5, 13, 0.04
 
 
-def check(doc: Path, work: Path, stage: str = "render") -> dict:
+def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> dict:
     R = work / stage
     info = jload(R / "render_info.json")
     S = jload(doc / "대본.json")
@@ -77,6 +77,17 @@ def check(doc: Path, work: Path, stage: str = "render") -> dict:
             if covered < (b - a) - 0.05:
                 bad.append(f"{x['id']} 무음 {covered:.2f}/{b - a:.2f}초")
         row("O-NARR", "원음 창 안 나레 없음", bad or "0", not bad)
+        if asr:   # 완성본 원음 창만 잘라 서버 제미나이 2모델 단독 받아쓰기 — 한국어(나레)가 섞였나·영어 원음이 들리나
+            import re
+            from tools.calcopy.hybrid import server_ai
+            ow = [x for x in info["lines"] if x["kind"] == "O"]
+            res = server_ai.asr_clips(final, [tuple(x["speak"]) for x in ow])
+            heard = [server_ai.texts_of(res, i) for i in range(len(ow))]
+            ko = [f"{x['id']}:{t}" for x, ts in zip(ow, heard) for t in ts if re.search(r"[가-힣]", t)]
+            empty = [x["id"] for x, ts in zip(ow, heard) if not any(re.search(r"[A-Za-z]", t) for t in ts)]
+            jsave(R / "asr_orig.json", {"lines": [x["id"] for x in ow], "heard": heard, "ok_models": res.get("ok_models")})
+            row("ASR", "원음 창 받아쓰기(2모델): 한국어 섞임 0·영어 들림", f"모델 {res.get('ok_models')} · 한국어 {ko or 0} · 영어 안 들림 {empty or 0}",
+                len(res.get("ok_models") or []) >= 2 and not ko and not empty, f"{R / 'asr_orig.json'}")
         sheet = R / "final_sheet_1s.jpg"
         sheet_1s(final, sheet)
     L = [f"# 샥탬스토리 B표 초안 — {doc.name} · {stage} (tools/calcopy/shark/check.py)", "",
@@ -98,8 +109,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("doc"); ap.add_argument("work")
     ap.add_argument("--stage", default="render", choices=["plan", "preview", "render"])
+    ap.add_argument("--asr", action="store_true")
     a = ap.parse_args()
-    check(Path(a.doc).resolve(), Path(a.work).resolve(), a.stage)
+    check(Path(a.doc).resolve(), Path(a.work).resolve(), a.stage, a.asr)
 
 
 if __name__ == "__main__":
