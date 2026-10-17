@@ -5,7 +5,7 @@
 
 왜: 썰템쇼 작품3 에서 B 표가 통과(B15 만 미달)했는데 실제로는 가운데 줄 자막이 소리보다 1~2초 늦게 떴다(줄 시각 = sfx_events.timeline,
 소리 = 받아쓰기). 자막 시각은 렌더 쪽 계산이라 렌더 결과물(소리)로 대조해야 잡힌다.
-재는 법: final.mp4 소리를 받아쓰기(asr_segments, 구절 단위) → 줄마다 '그 줄 첫 낱말이 처음 들리는 구절 시작'과
+재는 법: final.mp4 소리를 받아쓰기(asr_segments — whisper 낱말 단위) → 줄마다 '그 줄 첫 낱말이 처음 들리는 구절 시작'과
 자막 줄 시작의 차. 구절이 여러 줄을 묶으면 그 구절 안 글자 비율로 줄 시작을 나눠 추정한다.
 판정: |차| > 0.6초 줄 또는 받아쓰기에서 못 찾은 줄이 하나라도 있으면 미달(못 잰 걸 통과로 치지 않는다 — 10-18 첫 판이 전부 '?'로 ○를 냈다). 결과 = <make>/line_sync.json + 표 출력.
 """
@@ -34,8 +34,35 @@ def _sec(v) -> float:
 
 
 def asr_segments(final: Path) -> list[tuple[float, float, str]]:
-    """받아쓰기 = 엔진 제미나이 창구(gemini_free.ask — 로컬 키 → 막히면 서버 공용 풀) + 지시문 transcribe_free.P 한 벌.
-    소리만(mp3) + gemini-2.5-flash — 영상째·기본 모델은 2초 단위 시각만 돌려줘 0.6초 판정에 못 쓴다(10-18 실측)."""
+    """받아쓰기 = 이 PC 의 faster-whisper(small·낱말 시각) — 무료·한도 없음·같은 소리면 같은 답.
+    10-18 실측: 제미나이 2.5-flash 는 로컬 161키 한도 끝·서버 풀 404(신규 사용자 중단), 3-flash 는 시각이 늘어지고 flash-lite 는 빈 답 →
+    B17 이 4편을 '못 잼'으로 남겼다. whisper 가 없으면 예전 제미나이 창구(_asr_gemini)."""
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        return _asr_gemini(final)
+    import subprocess
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(final), "-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True).stdout     # 소리는 ffmpeg 로 풀어 넘긴다(faster_whisper 의 av 해독은 설치된 av 판과 안 맞음)
+    audio = np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+    if _WHISPER.get("m") is None:
+        # 받아 둔 폴더가 있으면 그 경로로 — 허깅페이스 내려받기 길은 engine/filelock.py 가 같은 이름 라이브러리를 가려 깨진다(10-18)
+        snap = sorted((Path.home() / ".cache/huggingface/hub/models--Systran--faster-whisper-small/snapshots").glob("*/model.bin"))
+        _WHISPER["m"] = WhisperModel(str(snap[-1].parent) if snap else "small", device="cpu", compute_type="int8")
+    segs, _ = _WHISPER["m"].transcribe(audio, language="ko", word_timestamps=True)
+    # 구절 시작은 앞 구절 끝에 붙어 0.2~0.4초 이르다(작품1 실측) — 낱말 단위로 쓴다
+    out = [(float(w.start), float(w.end), w.word) for s in segs for w in (s.words or []) if w.word.strip()]
+    if not out:
+        raise RuntimeError("받아쓰기 빈 답(whisper)")
+    return out
+
+
+_WHISPER: dict = {}
+
+
+def _asr_gemini(final: Path) -> list[tuple[float, float, str]]:
+    """제미나이 창구(gemini_free.ask) + transcribe_free.P, 소리만(mp3)·gemini-2.5-flash — 기본 모델은 2초 단위 시각뿐(10-18)."""
     import subprocess
     sys.path.insert(0, str(ROOT))
     from tools.calcopy.engine import gemini_free as G
@@ -81,6 +108,10 @@ def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
         j = stream.find(key[:4], pos, hi + 4)
         if j < 0:                   # 받아쓰기 오탈자 — 창 안에서 가장 비슷한 자리
             best = max(((SequenceMatcher(None, key, stream[i:i + len(key)]).ratio(), i) for i in range(pos, max(pos + 1, hi))),
+                       default=(0, -1))
+            j = best[1] if best[0] >= 0.6 else -1
+        if j < 0:                   # 첫머리가 통째로 틀리게 들린 줄(작품5 「국물 튈까 봐」→「공을 칠까 봐」) — 줄 전문 비슷함
+            best = max(((SequenceMatcher(None, n, stream[i:i + len(n)]).ratio(), i) for i in range(pos, max(pos + 1, hi))),
                        default=(0, -1))
             j = best[1] if best[0] >= 0.6 else -1
         if j < 0:
