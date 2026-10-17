@@ -1,0 +1,37 @@
+{
+ "_about": "원작에 '팔 수 있는 제품'이 나오나 — Claude 판독(2026-10-18). 근거: 썰풀다 50편은 channel/sseolpulda/원자료/judge/<id>.json 의 script + 제목, 나머지는 1초 프레임 시트·받아쓰기를 눈으로. 판매 가능 여부는 이름으로만 판단(쿠팡·알리 실제 검색 안 함). sell: 예=같은/유사 제품 판매 가능해 보임, 경계=고가·의료·브랜드폰·빈티지 등 연결 어려움, 아니오=제품 없음/판매 불가. first_s=원작 화면에 제품이 처음 보이는 초(시트로 확인한 편만)",
+ "sseolpulda50": {
+  "ZdeZRtCeAC4": ["골전도 스피커", "예"], "D3Pc6HZ6t6c": ["접이식 확장 식탁", "예"], "mYxuF1A74j4": ["(하키 퍽 사연)", "아니오"],
+  "ho5GSd-4To0": ["씨앗 연필", "예"], "GqSkDhM_bV0": ["VR 무한 보행 바닥", "경계"], "7DYbxVNz5q8": ["삼성 폴더블폰", "경계"],
+  "w-Ygny1f8O8": ["(원통 축음기 녹음 — 앤티크)", "아니오"], "1_VtwOkbbVE": ["자석 아일렛 타공기", "예"], "oJZDImhYdXw": ["하이엔드 오피스체어", "예"],
+  "6iW_aMG_-L0": ["(카약 생존법)", "아니오"], "t-xMApVctB0": ["1930년대 빈티지 컴팩트(판매품 아님)", "아니오"], "s9RVpN6MzX4": ["(불명 — '믿음직한 조수')", "경계"],
+  "v6Mrf2LDqS0": ["전동 방진 마스크", "예"], "m4nffB05HNU": ["(크라우드 스포터 직업)", "아니오"], "CRDgWgy4PA4": ["빵 슬라이서", "예"],
+  "qcR1cpdR-eA": ["(레고 식당)", "아니오"], "-cDiMofZWyo": ["전자레인지 파스타 쿠커", "예"], "L1mZz4riyZE": ["압축 파우더 프라이머", "예"],
+  "Wu8vTQLkY_E": ["음성인식 아이언맨 피규어", "예"], "LqPm7k1Aqek": ["자율주행·사족보행 휠체어", "경계"], "_zLL14jbrdc": ["미니 산소탱크", "예"],
+  "sOGg5ySFBDo": ["베트남 스틱커피", "예"], "eLYn_4Nckvw": ["단열 실리콘 얼음틀", "예"], "WA5rBxExyP8": ["화웨이 폴더블폰", "경계"],
+  "6KlP1xkSKnE": ["(미출시 아이폰 폴드)", "아니오"], "rMXGuFJEWDE": ["VR 장비 세트(메타 퀘스트3·트래커·햅틱 조끼·VR 트레드밀)", "예"],
+  "RfbD3Yf9t3E": ["(빈병 집)", "아니오"], "C7jHq_emrXU": ["압축랩(신발 보관)", "예"], "L4Y90sbL-3A": ["코 모양 디스펜서 등 생활 소품", "예"],
+  "Mkf664rnZKA": ["흑백 전자종이 태블릿", "예"], "w7-TjvF93yw": ["페인트 도구(부리·트레이 비닐)", "예"], "KWKNY4Vjguc": ["삼성 폴더블폰", "경계"],
+  "JM3MtB0CHS4": ["(몽골 기마궁술)", "아니오"], "sZzoHbDirfA": ["(무향실)", "아니오"], "GnPAhXFxSV4": ["쿨링 젤", "예"],
+  "GFpMl6gVMI0": ["(컵라면 뚜껑 활용)", "아니오"], "GqV__fVDMkk": ["비누 샴푸통", "예"], "mlaiX-U7Wgk": ["귀이개", "예"],
+  "fnZNougO6NQ": ["샌드위치 메이커", "예"], "2OTU-cK0M5Y": ["벽걸이 빨래건조대", "예"], "SSwmHxNgWtU": ["(트럼프 골프)", "아니오"],
+  "iZ-TprLYezA": ["인터로킹 커플링", "예"], "OksMoXVSN5M": ["중소기업 케첩", "예"], "9XWX-ZMbxlo": ["보라색 치아 패치", "예"],
+  "4RKsl0caOFw": ["스퀴시 후드티", "예"], "6t5rlyFU1iA": ["강화 보호필름", "예"], "Q9w-kd3AIdE": ["단백질 헤어팩", "예"],
+  "5NzKJp0LbBc": ["(어탁 예술)", "아니오"], "H5ie-Ah1gGY": ["(경기장 기술)", "아니오"], "tLuDcq_3zW4": ["맥 립스틱", "예"]
+ },
+ "flow_set": {
+  "Mp6LPm9qbLo": {"product": "Manna Titan 4L 대용량 물병(설명란 표기)", "sell": "예", "first_s": 0, "origin": "@theclawedjoker(화면 하단 표기)", "channel": "썰풀다"},
+  "OE-11wb7vdY": {"product": "음성인식 아이언맨 헬멧(AutoKing MK5 — 칼카피_OE11 대본.json topic)", "sell": "예", "first_s": 0, "origin": "원작 여러 편(칼카피_OE11 재료: 8ys8LRey7_w·cYMA_0i3-ds 등)", "channel": "핫템리포트"},
+  "ZqVgAg99gRI": {"product": "실리콘 주걱(제조사 본인 영상)", "sell": "예", "first_s": 0, "origin": "제조사 본인 영상", "channel": "핫템리포트"},
+  "IRFN5B_2LMo": {"product": "포르쉐 911 마티니 오마주 미니 전기차", "sell": "경계", "first_s": 0, "origin": "여러 편(장면이 7곳 이상 바뀜)", "channel": "핫템리포트"},
+  "a06yYTgpa_c": {"product": "듀얼 세로 모니터(박스 'MP' 표기)", "sell": "예", "first_s": 0, "origin": "언박싱 유튜버 + 사용 영상 여러 편", "channel": "핫템리포트"},
+  "rMXGuFJEWDE": {"product": "VR 장비 세트", "sell": "예", "first_s": 0, "origin": "1편(본인 방 촬영)", "channel": "썰풀다"},
+  "LqPm7k1Aqek": {"product": "자율주행·사족보행 휠체어", "sell": "경계", "first_s": 0, "origin": "여러 편(5곳 이상)", "channel": "썰풀다"}
+ },
+ "excluded": {
+  "w-Ygny1f8O8": "제외: 제품 없음(앤티크 축음기 녹음 시연)", "t-xMApVctB0": "제외: 제품 없음(빈티지 소장품)", "m4nffB05HNU": "제외: 제품 없음(직업 소개)",
+  "hqGynmRWxpY": "제외: 제품 없음(피자 반죽 요리)", "i1Xj1A73zFI": "제외: 해외 원작 아님(국내 롯데리아 메뉴)",
+  "yummyknow_전체": "제외: 해외 원작 아님(국내 식품 브랜드 썰)",
+  "hottemreport vLcKevaKfNI·eALs7BdBCQ0": "핫템 조회 1·2위(820만·780만) — 받아쓰기 두 모델 모두 말소리 0(자막+음악, 자막썰). 현장썰 아님"
+ }
+}

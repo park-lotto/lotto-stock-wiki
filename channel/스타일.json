@@ -31,6 +31,62 @@
       "channel/foreignshowshow/뜯기/요약_8편.md"
      ],
      "날짜": "2026-10-18"
+    },
+    {
+     "what": "원음 구간엔 나레를 끈다(교대) — 나레가 원음을 덮지 않는다",
+     "evidence": "원음 시간 중 나레 겹침 Mp6LPm9qbLo 0·OE-11wb7vdY 0.007·ZqVgAg99gRI 0.013·a06yYTgpa_c 0.053·IRFN5B_2LMo 0·rMXGuFJEWDE 0(6/6). 나레 없는 구간 비율 현장썰 0.205~0.804(중앙 0.521) vs 제품 나레썰 핫템 4편 0~0.178·그래서리뷰 6편 0~0.072",
+     "strength": "강",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "나레 한 줄이 기능·궁금증을 말하고 끊으면 원음이 바로 그것을 시연한다(원음 = 제품 증거)",
+     "evidence": "OE-11wb7vdY '말 한마디에…자동 개폐되고'→0.0초 뒤 'JARVIS, close helmet' · ZqVgAg99gRI '괜히 하나 필요할 것 같은데'→시연 9구절 · a06yYTgpa_c '이유가 있는데'→사용자 시연 12.5초 · Mp6LPm9qbLo 붓기 시연 · rMXGuFJEWDE 이름+가격 나열 16.4초(5/6, IRFN 은 반응뿐). 제품 나레썰엔 없음",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "원음 대사는 의역 감탄형 한국어 자막, 나레 자막과 색을 달리한다(원음 하늘색 / 나레 흰색)",
+     "evidence": "핫템 4/4 시트 눈 판독: '진짜 갖고싶네!!'·'자비스~ 쏠~!!'·'와 진짜 미쳤다'·'갖고 싶어~!!!'. rMXGuFJEWDE 는 원음 자막 = 제품명+가격 큰 컬러 글자. Mp6LPm9qbLo 는 색 구분 약함",
+     "strength": "중",
+     "channel": "핫템리포트",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "원음 크기를 나레와 비슷하게 올린다(덕킹으로 묻지 않음)",
+     "evidence": "원음만−나레만 dB(50ms 힘 평균): Mp6 −2.5·OE11 −5.1·Zq −0.2·a06y −1.6·IRFN +7.1·rMXG −3.9(중앙 −2.05). 우리 칼카피_OE11 audio.json 원본 원음 −14.1 vs 나레 −14.2 LUFS",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "제품은 첫 프레임에, 제품 범주어는 훅(0~4.5초) 안에",
+     "evidence": "제품 첫 등장 0초 6/6 · 범주어 발화 0~4.5초 5/6(a06yYTgpa_c 만 19초). 제품 나레썰 대조는 시트 안 봐서 고유 강점인지 미확인",
+     "strength": "약",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "끝은 전언 '~다고(하네요)' 뒤 원음 한 마디로 닫는다, 구매 유도 문장은 없다",
+     "evidence": "전언 4/6 · 원음으로 끝 3/6(Mp6 딸 대사·OE11 '이 살아있네'·Zq 제조사 판매 멘트) · 구매 유도 0/6. 전언 끝은 나레썰에도 있어 고유한 것은 '원음으로 끝'뿐",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "제조사·사용자 본인 영상이면 원음을 판매 멘트로 그대로 살린다",
+     "evidence": "ZqVgAg99gRI(390만) 마지막 7.7초 = 제조사 스펙 멘트 원음('무독성에 논스틱…식기세척기에 넣고 돌리세요'). 1편뿐",
+     "strength": "약",
+     "channel": "핫템리포트",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
     }
    ],
    "bench": {
@@ -75,7 +131,84 @@
    ],
    "exclude": "제품 없는 일반 해외 바이럴(사건·사고·동물·웃긴 영상)은 현장썰이 아니다 — 분석·벤치에서 뺀다",
    "how": "이 꼴(must 4가지)을 기준으로 새 채널을 볼 때마다 그 채널의 강점을 strengths 에 추가한다(근거 편·숫자·출처 채널·날짜). 사장님 2026-10-18",
-   "example": "https://www.youtube.com/shorts/Mp6LPm9qbLo (사장님 기준 예시)"
+   "example": "https://www.youtube.com/shorts/Mp6LPm9qbLo (사장님 기준 예시)",
+   "flow": {
+    "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+    "date": "2026-10-18",
+    "n": 6,
+    "ids": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c",
+     "rMXGuFJEWDE",
+     "Mp6LPm9qbLo"
+    ],
+    "warning": "표본 6편, 잘되는 편만의 차이는 못 찾음 — 6편 공통 뼈대. 조회로는 제품 나레썰(그래서리뷰 8편 중앙 405만)보다 낫다는 근거 없음(흐름 6편 중앙 120만)",
+    "beats": [
+     {
+      "beat": "①제품 첫 프레임 + 나레 훅",
+      "t": "제품 0초(6/6), 훅 0.0~3.7초",
+      "rule": "훅에 제품 범주어, '~가 있는데요/~했다는데'로 끊음",
+      "ids": [
+       "OE-11wb7vdY",
+       "IRFN5B_2LMo",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo",
+       "rMXGuFJEWDE",
+       "ZqVgAg99gRI"
+      ]
+     },
+     {
+      "beat": "②첫 원음 = 반응·상황 한 마디",
+      "t": "1.8~5.0초(5/6)",
+      "rule": "감탄·상황 원음 0.7~2.5초, 나레 멈춤",
+      "ids": [
+       "a06yYTgpa_c",
+       "rMXGuFJEWDE",
+       "ZqVgAg99gRI",
+       "Mp6LPm9qbLo",
+       "OE-11wb7vdY"
+      ]
+     },
+     {
+      "beat": "③나레 한 줄 → 원음 증거 시연",
+      "t": "시연 시작 6.5~13초",
+      "rule": "나레가 기능·궁금증을 말하고 끊으면 원음이 시연(음성명령·사용·용량·가격)",
+      "ids": [
+       "OE-11wb7vdY",
+       "ZqVgAg99gRI",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo",
+       "rMXGuFJEWDE"
+      ]
+     },
+     {
+      "beat": "④장점 연타",
+      "t": "17~32초",
+      "rule": "나레 스펙 연타 또는 원음 시연 연타",
+      "ids": [
+       "OE-11wb7vdY",
+       "IRFN5B_2LMo",
+       "a06yYTgpa_c",
+       "ZqVgAg99gRI",
+       "rMXGuFJEWDE",
+       "Mp6LPm9qbLo"
+      ]
+     },
+     {
+      "beat": "⑤마무리",
+      "t": "마지막 2~8초",
+      "rule": "전언 '~다고 하네요'(4/6) + 원음 한 마디로 끝(3/6), 구매 유도 0/6",
+      "ids": [
+       "OE-11wb7vdY",
+       "ZqVgAg99gRI",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo"
+      ]
+     }
+    ]
+   }
   },
   "대사썰": {
    "old_name": "역할극",

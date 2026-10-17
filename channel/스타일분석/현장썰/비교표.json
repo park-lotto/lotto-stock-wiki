@@ -1,0 +1,2622 @@
+{
+ "made": "2026-10-18",
+ "by": "channel/스타일분석/현장썰/재는법/measure.py",
+ "rows": [
+  {
+   "id": "w-Ygny1f8O8",
+   "channel": "sseolpulda",
+   "group": "현장썰",
+   "views": 2200000,
+   "dur": 31.93,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 2,
+   "src_sec": 3.95,
+   "src_share": 0.124,
+   "src_first_t": 1.8,
+   "src_hook_le3s": true,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    2.3,
+    1.6
+   ],
+   "ambient": "LP판 지직거리는 잡음 소리",
+   "narr_n": 4,
+   "narr_sec": 15.5,
+   "narr_share": 0.485,
+   "narr_over_src_sec": 2.2,
+   "narr_over_src_frac": 0.557,
+   "no_narr_gaps": [
+    [
+     4.0,
+     14.1
+    ],
+    [
+     17.8,
+     20.0
+    ],
+    [
+     24.1,
+     28.1
+    ]
+   ],
+   "no_narr_sec": 16.3,
+   "no_narr_share": 0.51,
+   "db_narr_only": -11.4,
+   "db_src_only": -14.4,
+   "db_no_speech": -12.8,
+   "src_minus_narr_db": -3.0,
+   "duck_db_engine": 2.38,
+   "hook_text": "전기도 마이크도 없는데 음악을 저장합니다.",
+   "hook_t0": 0.0,
+   "last_text": "디지털 없던 시절엔 소리를 그냥 긁어서 저장했어요.",
+   "callers": [
+    {
+     "src_t": 1.8,
+     "src": "Bayside Records",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": null
+    },
+    {
+     "src_t": 18.2,
+     "src": "All right, let's play it back.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "소리가 바늘을 흔들면 회전하는 왁스에 홈이 새겨지고",
+     "gap_s": 0.4
+    }
+   ],
+   "cps": 5.42,
+   "ko_chars": 84,
+   "cap_n": 11,
+   "cap_in_src_n": 1,
+   "cap_in_src_text": [
+    "음악을 저장합니다."
+   ],
+   "cap_in_gap_n": 2,
+   "cap_in_gap_text": [
+    "",
+    ""
+   ],
+   "cap_ocr_ok": true,
+   "shots": 6,
+   "shot_med": 3.78,
+   "cut_per_min": 9.4,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -10.0,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "레트로",
+     "신기한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": null,
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음(앤티크 축음기 녹음 시연)"
+  },
+  {
+   "id": "t-xMApVctB0",
+   "channel": "sseolpulda",
+   "group": "현장썰",
+   "views": 1500000,
+   "dur": 41.43,
+   "audio_from": "style50",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 5,
+   "src_sec": 32.45,
+   "src_share": 0.783,
+   "src_first_t": 4.1,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    7.1,
+    6.8,
+    8.2,
+    4.8,
+    5.5
+   ],
+   "ambient": "",
+   "narr_n": 2,
+   "narr_sec": 8.8,
+   "narr_share": 0.212,
+   "narr_over_src_sec": 0.05,
+   "narr_over_src_frac": 0.002,
+   "no_narr_gaps": [
+    [
+     4.1,
+     36.5
+    ]
+   ],
+   "no_narr_sec": 32.4,
+   "no_narr_share": 0.782,
+   "db_narr_only": -12.0,
+   "db_src_only": -17.1,
+   "db_no_speech": null,
+   "src_minus_narr_db": -5.1,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+   "hook_t0": 0.0,
+   "last_text": "정작 주인은 너무 아껴 쓰느라 100년 동안 파우더도 안 채우고 세상을 떠났다고.",
+   "callers": [
+    {
+     "src_t": 4.1,
+     "src": "This is a 1930s Mondaine vanity compact, and she is full of ",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 11.2,
+     "src": "This side is for face powder. This has never been filled.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+     "gap_s": 7.1
+    },
+    {
+     "src_t": 18.0,
+     "src": "At some point, they did fill the rouge, but the real surpris",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+     "gap_s": 13.9
+    },
+    {
+     "src_t": 26.2,
+     "src": "And isn't it so fascinating that this pencil is flat on one ",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+     "gap_s": 22.1
+    },
+    {
+     "src_t": 31.0,
+     "src": "And then we have a raspberry cheek lip and a brown shadow.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "100년 전 할머니들은 차원이 다른 미친 갓생을 살았다는데",
+     "gap_s": 26.9
+    }
+   ],
+   "cps": 6.7,
+   "ko_chars": 59,
+   "cap_n": 16,
+   "cap_in_src_n": 11,
+   "cap_in_src_text": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "cap_in_gap_n": 11,
+   "cap_in_gap_text": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "cap_ocr_ok": false,
+   "shots": 4,
+   "shot_med": 8.62,
+   "cut_per_min": 4.3,
+   "materials": {},
+   "lufs_I": -12.4,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "차분한",
+     "클래식",
+     "잔잔한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": null,
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음(빈티지 소장품)"
+  },
+  {
+   "id": "m4nffB05HNU",
+   "channel": "sseolpulda",
+   "group": "현장썰",
+   "views": 1300000,
+   "dur": 20.83,
+   "audio_from": "style50",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "관중 함성 소리",
+   "narr_n": 8,
+   "narr_sec": 19.82,
+   "narr_share": 0.951,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     19.82,
+     20.83
+    ]
+   ],
+   "no_narr_sec": 1.01,
+   "no_narr_share": 0.048,
+   "db_narr_only": -13.6,
+   "db_src_only": null,
+   "db_no_speech": -17.4,
+   "src_minus_narr_db": null,
+   "duck_db_engine": 8.47,
+   "hook_text": "진짜 충격적인 거 알려드림",
+   "hook_t0": 0.0,
+   "last_text": "진짜 몰랐던 사람들 좋아요 눌러주세요",
+   "callers": [],
+   "cps": 7.67,
+   "ko_chars": 152,
+   "cap_n": 20,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 1,
+   "cap_in_gap_text": [
+    ""
+   ],
+   "cap_ocr_ok": false,
+   "shots": 7,
+   "shot_med": 3.2,
+   "cut_per_min": 17.3,
+   "materials": {},
+   "lufs_I": -10.9,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "신남",
+     "트렌디"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": null,
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음(직업 소개)"
+  },
+  {
+   "id": "LqPm7k1Aqek",
+   "channel": "sseolpulda",
+   "group": "현장썰",
+   "views": 970000,
+   "dur": 30.7,
+   "audio_from": "style50",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 1,
+   "src_sec": 0.8,
+   "src_share": 0.026,
+   "src_first_t": 26.8,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    0.8
+   ],
+   "ambient": "",
+   "narr_n": 7,
+   "narr_sec": 29.3,
+   "narr_share": 0.954,
+   "narr_over_src_sec": 0.6,
+   "narr_over_src_frac": 0.75,
+   "no_narr_gaps": [
+    [
+     29.5,
+     30.7
+    ]
+   ],
+   "no_narr_sec": 1.2,
+   "no_narr_share": 0.039,
+   "db_narr_only": -9.8,
+   "db_src_only": -9.5,
+   "db_no_speech": -10.5,
+   "src_minus_narr_db": 0.3,
+   "duck_db_engine": 0.75,
+   "hook_text": "최근 해외에서 사족보행 로봇과 자율주행 라이다 센서를 때려박았다며 난리난 기기가 있는데",
+   "hook_t0": 0.0,
+   "last_text": "와 진짜 세상엔 따뜻한 능력자들이 너무 많네요",
+   "callers": [
+    {
+     "src_t": 26.8,
+     "src": "Woah!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "안 대고 음성명령으로 엘리베이터 탑승까지 끝내서 아내가 감동받았다는 건데",
+     "gap_s": 0.0
+    }
+   ],
+   "cps": 7.61,
+   "ko_chars": 223,
+   "cap_n": 28,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 1,
+   "cap_in_gap_text": [
+    ""
+   ],
+   "cap_ocr_ok": false,
+   "shots": 20,
+   "shot_med": 1.4,
+   "cut_per_min": 37.1,
+   "materials": {},
+   "lufs_I": -6.8,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "감동적인",
+     "따뜻한",
+     "잔잔한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "자율주행·사족보행 휠체어",
+   "sell": "경계",
+   "excluded": null
+  },
+  {
+   "id": "rMXGuFJEWDE",
+   "channel": "sseolpulda",
+   "group": "현장썰",
+   "views": 623000,
+   "dur": 20.4,
+   "audio_from": "style50",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 4,
+   "src_sec": 16.4,
+   "src_share": 0.804,
+   "src_first_t": 2.1,
+   "src_hook_le3s": true,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    4.4,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ambient": "",
+   "narr_n": 2,
+   "narr_sec": 3.7,
+   "narr_share": 0.181,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": 0.0,
+   "no_narr_gaps": [
+    [
+     2.1,
+     18.5
+    ]
+   ],
+   "no_narr_sec": 16.4,
+   "no_narr_share": 0.804,
+   "db_narr_only": -12.7,
+   "db_src_only": -16.6,
+   "db_no_speech": -15.7,
+   "src_minus_narr_db": -3.9,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "방구석의 월세보다 비싼 VR 세팅을 수셔넣었다는데",
+   "hook_t0": 0.0,
+   "last_text": "대체 얼마를 쓴 거야?",
+   "callers": [
+    {
+     "src_t": 2.1,
+     "src": "My Quest 3 in a 5-tracker for tracking $300, my Hybrid Shell",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "방구석의 월세보다 비싼 VR 세팅을 수셔넣었다는데",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 6.5,
+     "src": "my bHaptics suit $730, my Unico VR controller gloves $700,",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "방구석의 월세보다 비싼 VR 세팅을 수셔넣었다는데",
+     "gap_s": 4.4
+    },
+    {
+     "src_t": 10.5,
+     "src": "gaming PC $6100, and last but not least,",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "방구석의 월세보다 비싼 VR 세팅을 수셔넣었다는데",
+     "gap_s": 8.4
+    },
+    {
+     "src_t": 14.5,
+     "src": "my SlimeVR. You're not gaming to your full potential, bro.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "방구석의 월세보다 비싼 VR 세팅을 수셔넣었다는데",
+     "gap_s": 12.4
+    }
+   ],
+   "cps": 8.38,
+   "ko_chars": 31,
+   "cap_n": 15,
+   "cap_in_src_n": 13,
+   "cap_in_src_text": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "cap_in_gap_n": 13,
+   "cap_in_gap_text": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "cap_ocr_ok": false,
+   "shots": 8,
+   "shot_med": 2.2,
+   "cut_per_min": 20.6,
+   "materials": {},
+   "lufs_I": -13.1,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "VR 장비 세트",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "a06yYTgpa_c",
+   "channel": "hottemreport",
+   "group": "현장썰",
+   "views": 1100000,
+   "dur": 29.23,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 6,
+   "src_sec": 14.1,
+   "src_share": 0.482,
+   "src_first_t": 1.8,
+   "src_hook_le3s": true,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    0.7,
+    1.1,
+    1.9,
+    2.4,
+    6.0,
+    2.0
+   ],
+   "ambient": "",
+   "narr_n": 5,
+   "narr_sec": 15.2,
+   "narr_share": 0.52,
+   "narr_over_src_sec": 0.75,
+   "narr_over_src_frac": 0.053,
+   "no_narr_gaps": [
+    [
+     4.0,
+     4.8
+    ],
+    [
+     6.5,
+     19.0
+    ]
+   ],
+   "no_narr_sec": 13.3,
+   "no_narr_share": 0.455,
+   "db_narr_only": -20.2,
+   "db_src_only": -21.8,
+   "db_no_speech": -21.0,
+   "src_minus_narr_db": -1.6,
+   "duck_db_engine": 2.47,
+   "hook_text": "여기 월 천 찍는 유튜버가",
+   "hook_t0": 0.0,
+   "last_text": "사실 스마트폰 스크롤에 길들여져서 크리에이터뿐만 아니라 모두에게 세로형이 더 편하다고 하네요.",
+   "callers": [
+    {
+     "src_t": 1.8,
+     "src": "Oh, shoot!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "여기 월 천 찍는 유튜버가",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 3.5,
+     "src": "That is sick.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "여기 월 천 찍는 유튜버가",
+     "gap_s": 1.7
+    },
+    {
+     "src_t": 6.5,
+     "src": "This is a game changer. I can have my whole preview up here,",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "유튜버들이 환장하는 이유가 있는데,",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 8.4,
+     "src": "my timeline down here.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "유튜버들이 환장하는 이유가 있는데,",
+     "gap_s": 1.9
+    },
+    {
+     "src_t": 10.8,
+     "src": "This bottom screen is also a touchscreen, so I can drag medi",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "유튜버들이 환장하는 이유가 있는데,",
+     "gap_s": 4.3
+    },
+    {
+     "src_t": 16.8,
+     "src": "Ah, that is awesome!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "유튜버들이 환장하는 이유가 있는데,",
+     "gap_s": 10.3
+    }
+   ],
+   "cps": 7.7,
+   "ko_chars": 117,
+   "cap_n": 25,
+   "cap_in_src_n": 9,
+   "cap_in_src_text": [
+    "완전 신세계네~",
+    "위에는 프리뷰 화면",
+    "타임라인 아래 두고",
+    "심지어 터치도 돼서",
+    "소스 드래그해서",
+    "타임라인에 넣고",
+    "손으로 넘기면서",
+    "트리밍까지",
+    "와 진짜 미쳤다"
+   ],
+   "cap_in_gap_n": 10,
+   "cap_in_gap_text": [
+    "완전 신세계네~",
+    "위에는 프리뷰 화면",
+    "타임라인 아래 두고",
+    "심지어 터치도 돼서",
+    "소스 드래그해서",
+    "타임라인에 넣고",
+    "손으로 넘기면서",
+    "트리밍까지",
+    "와 진짜 미쳤다",
+    "와 진짜 미쳤다!"
+   ],
+   "cap_ocr_ok": true,
+   "shots": 12,
+   "shot_med": 1.13,
+   "cut_per_min": 22.6,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -18.8,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "트렌디한",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "듀얼 세로 모니터(박스 'MP' 표기)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "IRFN5B_2LMo",
+   "channel": "hottemreport",
+   "group": "현장썰",
+   "views": 1300000,
+   "dur": 33.73,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-flash-lite-latest",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 1,
+   "src_sec": 2.0,
+   "src_share": 0.059,
+   "src_first_t": 14.5,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    2.0
+   ],
+   "ambient": "engine, tire sound, wind sound",
+   "narr_n": 9,
+   "narr_sec": 26.8,
+   "narr_share": 0.794,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": 0.0,
+   "no_narr_gaps": [
+    [
+     0.0,
+     1.0
+    ],
+    [
+     14.0,
+     17.0
+    ],
+    [
+     30.8,
+     33.73
+    ]
+   ],
+   "no_narr_sec": 6.93,
+   "no_narr_share": 0.205,
+   "db_narr_only": -20.7,
+   "db_src_only": -13.6,
+   "db_no_speech": -23.4,
+   "src_minus_narr_db": 7.1,
+   "duck_db_engine": 5.37,
+   "hook_text": "요즘 미국에서",
+   "hook_t0": 1.0,
+   "last_text": "어디 가도 시선 강탈이라 소문자 아이는 절대 못 하겠네요.",
+   "callers": [
+    {
+     "src_t": 14.5,
+     "src": "This is fun. I want one.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "구독자 2,200만 슈퍼카 블론디에 소개되며 미국에서 인기 폭발.",
+     "gap_s": 0.5
+    }
+   ],
+   "cps": 6.6,
+   "ko_chars": 177,
+   "cap_n": 24,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 15,
+   "shot_med": 2.4,
+   "cut_per_min": 24.9,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -17.5,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "fast",
+     "energetic",
+     "stylish"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "포르쉐 911 마티니 오마주 미니 전기차",
+   "sell": "경계",
+   "excluded": null
+  },
+  {
+   "id": "OE-11wb7vdY",
+   "channel": "hottemreport",
+   "group": "현장썰",
+   "views": 4600000,
+   "dur": 34.03,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 4,
+   "src_sec": 6.85,
+   "src_share": 0.201,
+   "src_first_t": 5.0,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "en:source",
+    "ko:source"
+   ],
+   "src_lens": [
+    1.7,
+    2.0,
+    1.4,
+    1.7
+   ],
+   "ambient": "헬멧 기계 작동음, 감탄 및 비명 소리",
+   "narr_n": 8,
+   "narr_sec": 17.73,
+   "narr_share": 0.521,
+   "narr_over_src_sec": 0.05,
+   "narr_over_src_frac": 0.007,
+   "no_narr_gaps": [
+    [
+     3.7,
+     10.5
+    ],
+    [
+     12.8,
+     20.3
+    ],
+    [
+     32.3,
+     34.03
+    ]
+   ],
+   "no_narr_sec": 16.03,
+   "no_narr_share": 0.471,
+   "db_narr_only": -17.6,
+   "db_src_only": -22.7,
+   "db_no_speech": -19.3,
+   "src_minus_narr_db": -5.1,
+   "duck_db_engine": 3.93,
+   "hook_text": "요즘 미국에서 난리 난",
+   "hook_t0": 0.0,
+   "last_text": "사실 집에서 그냥 이러고만 있어도 도파민이 터진다고 하네요.",
+   "callers": [
+    {
+     "src_t": 5.0,
+     "src": "Oh, I love it!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "사람들이 환장하는 이유가 있는데요.",
+     "gap_s": 1.3
+    },
+    {
+     "src_t": 12.8,
+     "src": "JARVIS, close helmet.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "말 한마디에 페이스 플레이트가 자동 개폐되고",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 18.8,
+     "src": "It's so cool!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "말 한마디에 페이스 플레이트가 자동 개폐되고",
+     "gap_s": 6.0
+    },
+    {
+     "src_t": 32.3,
+     "src": "이 살아있네.",
+     "src_lang": "ko",
+     "src_kind": "source",
+     "before": "사실 집에서 그냥 이러고만 있어도 도파민이 터진다고 하네요.",
+     "gap_s": 0.0
+    }
+   ],
+   "cps": 8.46,
+   "ko_chars": 150,
+   "cap_n": 28,
+   "cap_in_src_n": 5,
+   "cap_in_src_text": [
+    "진짜 갖고싶네!!",
+    "진짜 갖고싶네!!",
+    "자비스~",
+    "쏠~!!",
+    "너무 멋져~!!!!"
+   ],
+   "cap_in_gap_n": 10,
+   "cap_in_gap_text": [
+    "사람들이 환장하는",
+    "이유가 있는데요",
+    "진짜 갖고싶네!!",
+    "진짜 갖고싶네!!",
+    "",
+    "아!!!!!!!!!!",
+    "자비스~",
+    "쏠~!!",
+    "캬아~!!!!",
+    "너무 멋져~!!!!"
+   ],
+   "cap_ocr_ok": true,
+   "shots": 11,
+   "shot_med": 2.67,
+   "cut_per_min": 17.6,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -15.3,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "트렌디한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "음성인식 아이언맨 헬멧(AutoKing MK5 — 칼카피_OE11 대본.json topic)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "ZqVgAg99gRI",
+   "channel": "hottemreport",
+   "group": "현장썰",
+   "views": 3900000,
+   "dur": 36.17,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 13,
+   "src_sec": 26.3,
+   "src_share": 0.727,
+   "src_first_t": 2.21,
+   "src_hook_le3s": true,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    2.88,
+    3.03,
+    1.95,
+    1.02,
+    1.03,
+    1.51,
+    0.93,
+    0.75,
+    0.8,
+    1.75,
+    1.5,
+    1.56,
+    7.48
+   ],
+   "ambient": "",
+   "narr_n": 4,
+   "narr_sec": 9.81,
+   "narr_share": 0.271,
+   "narr_over_src_sec": 0.35,
+   "narr_over_src_frac": 0.013,
+   "no_narr_gaps": [
+    [
+     2.21,
+     5.09
+    ],
+    [
+     7.42,
+     10.45
+    ],
+    [
+     13.06,
+     25.86
+    ],
+    [
+     28.52,
+     36.17
+    ]
+   ],
+   "no_narr_sec": 26.36,
+   "no_narr_share": 0.729,
+   "db_narr_only": -20.3,
+   "db_src_only": -20.5,
+   "db_no_speech": -26.4,
+   "src_minus_narr_db": -0.2,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "인스타에 올린 주걱이 테무 제품으로 오해받자",
+   "hook_t0": 0.0,
+   "last_text": "이 영상 하나로 샤크 탱크 안 나가도 될 만큼 벌었다고 하네요.",
+   "callers": [
+    {
+     "src_t": 2.2,
+     "src": "cheap Temu dropship product",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "인스타에 올린 주걱이 테무 제품으로 오해받자",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 7.4,
+     "src": "No issue. Look at that blade. Perfect.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "빡쳐서 만든 영상이 대박을 쳤는데요.",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 13.1,
+     "src": "So you can do this.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 15.0,
+     "src": "This.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 1.95
+    },
+    {
+     "src_t": 16.0,
+     "src": "This.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 2.97
+    },
+    {
+     "src_t": 17.1,
+     "src": "Set it flat.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 4.0
+    },
+    {
+     "src_t": 18.6,
+     "src": "This.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 5.51
+    },
+    {
+     "src_t": 19.5,
+     "src": "This.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 6.44
+    },
+    {
+     "src_t": 20.2,
+     "src": "This.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 7.19
+    },
+    {
+     "src_t": 21.1,
+     "src": "Set it in reverse.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 7.99
+    },
+    {
+     "src_t": 22.8,
+     "src": "Check this out.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 9.74
+    },
+    {
+     "src_t": 24.3,
+     "src": "Remove the blade, this,",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "설명을 듣다보면 괜히 하나 필요할 것 같은데",
+     "gap_s": 11.24
+    },
+    {
+     "src_t": 28.5,
+     "src": "and the blade's BPA, BPS, PFAS-free, non-toxic, completely n",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "이 영상 하나로 샤크 탱크 안 나가도 될 만큼 벌었다고 하네요.",
+     "gap_s": 0.0
+    }
+   ],
+   "cps": 7.95,
+   "ko_chars": 78,
+   "cap_n": 19,
+   "cap_in_src_n": 9,
+   "cap_in_src_text": [
+    "의심하던데요",
+    "날도 엄청 튼튼하죠!",
+    "이렇게 쓰고",
+    "이것도 하고",
+    "뒤집기도 하죠",
+    "저희 제품은",
+    "BPA, BPS, PFAS 프리",
+    "무독성에 논스틱 코팅이라 안전해요.",
+    "무독성에 논스틱 코팅이라 안전해요."
+   ],
+   "cap_in_gap_n": 9,
+   "cap_in_gap_text": [
+    "의심하던데요",
+    "날도 엄청 튼튼하죠!",
+    "이렇게 쓰고",
+    "이것도 하고",
+    "뒤집기도 하죠",
+    "저희 제품은",
+    "BPA, BPS, PFAS 프리",
+    "무독성에 논스틱 코팅이라 안전해요.",
+    "무독성에 논스틱 코팅이라 안전해요."
+   ],
+   "cap_ocr_ok": true,
+   "shots": 21,
+   "shot_med": 1.07,
+   "cut_per_min": 33.2,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -18.4,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "에너제틱"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "실리콘 주걱(제조사 본인 영상)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "i1Xj1A73zFI",
+   "channel": "yummyknow",
+   "group": "현장썰",
+   "views": 3400000,
+   "dur": 38.63,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 1,
+   "src_sec": 1.4,
+   "src_share": 0.036,
+   "src_first_t": 22.0,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "ko:source"
+   ],
+   "src_lens": [
+    1.4
+   ],
+   "ambient": "",
+   "narr_n": 13,
+   "narr_sec": 36.7,
+   "narr_share": 0.95,
+   "narr_over_src_sec": 0.05,
+   "narr_over_src_frac": 0.036,
+   "no_narr_gaps": [
+    [
+     22.0,
+     23.4
+    ],
+    [
+     38.1,
+     38.63
+    ]
+   ],
+   "no_narr_sec": 1.93,
+   "no_narr_share": 0.05,
+   "db_narr_only": -18.9,
+   "db_src_only": -18.8,
+   "db_no_speech": -21.0,
+   "src_minus_narr_db": 0.1,
+   "duck_db_engine": 3.57,
+   "hook_text": "핵건강에 버린 롯데리아 신메뉴,",
+   "hook_t0": 0.0,
+   "last_text": "롯데리아를 뛰어넘었다며 극찬을 받는 중이라고.",
+   "callers": [
+    {
+     "src_t": 22.0,
+     "src": "다 좋은데 브라질산이네?",
+     "src_lang": "ko",
+     "src_kind": "source",
+     "before": "기존 롯데리아 하바네로는",
+     "gap_s": 0.0
+    }
+   ],
+   "cps": 8.69,
+   "ko_chars": 319,
+   "cap_n": 21,
+   "cap_in_src_n": 1,
+   "cap_in_src_text": [
+    "\"다 좋은데 브라질산이네\""
+   ],
+   "cap_in_gap_n": 1,
+   "cap_in_gap_text": [
+    "\"다 좋은데 브라질산이네\""
+   ],
+   "cap_ocr_ok": true,
+   "shots": 19,
+   "shot_med": 2.3,
+   "cut_per_min": 28.0,
+   "materials": {
+    "기사·화면캡처": 0.485,
+    "남의영상재편집": 0.298,
+    "짤·밈": 0.116,
+    "글자만": 0.053,
+    "사진+움직임": 0.049
+   },
+   "lufs_I": -16.2,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "트렌디한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": null,
+   "sell": "아니오",
+   "excluded": "제외: 해외 원작 아님(국내 롯데리아 메뉴)"
+  },
+  {
+   "id": "hqGynmRWxpY",
+   "channel": "땅콩쿠키",
+   "group": "현장썰",
+   "views": 5644437,
+   "dur": 59.07,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "해외 원음+한국어 나레+자막",
+   "src_n": 5,
+   "src_sec": 10.35,
+   "src_share": 0.175,
+   "src_first_t": 17.0,
+   "src_hook_le3s": false,
+   "src_kinds": [
+    "it:source",
+    "ko:source"
+   ],
+   "src_lens": [
+    1.9,
+    2.0,
+    1.6,
+    1.3,
+    3.5
+   ],
+   "ambient": "",
+   "narr_n": 12,
+   "narr_sec": 33.87,
+   "narr_share": 0.573,
+   "narr_over_src_sec": 0.05,
+   "narr_over_src_frac": 0.005,
+   "no_narr_gaps": [
+    [
+     13.0,
+     18.9
+    ],
+    [
+     21.0,
+     23.5
+    ],
+    [
+     26.0,
+     29.5
+    ],
+    [
+     32.2,
+     36.5
+    ],
+    [
+     39.0,
+     39.5
+    ],
+    [
+     43.5,
+     47.0
+    ],
+    [
+     52.0,
+     57.0
+    ]
+   ],
+   "no_narr_sec": 25.2,
+   "no_narr_share": 0.427,
+   "db_narr_only": -17.3,
+   "db_src_only": -16.7,
+   "db_no_speech": -22.2,
+   "src_minus_narr_db": 0.6,
+   "duck_db_engine": 5.21,
+   "hook_text": "이탈리아인들이 환장한다는 이 반죽으로",
+   "hook_t0": 0.0,
+   "last_text": "와 진짜 맛있겠는데요?",
+   "callers": [
+    {
+     "src_t": 17.0,
+     "src": "Contemporaneo!",
+     "src_lang": "it",
+     "src_kind": "source",
+     "before": "동글동글하게 빚어준 뒤",
+     "gap_s": 4.0
+    },
+    {
+     "src_t": 32.8,
+     "src": "Provola di Napoli!",
+     "src_lang": "it",
+     "src_kind": "source",
+     "before": "진한 토마토소스부터 슥슥",
+     "gap_s": 0.6
+    },
+    {
+     "src_t": 44.0,
+     "src": "Vai! Vai!",
+     "src_lang": "it",
+     "src_kind": "source",
+     "before": "각종 재료 넣어 화덕에 들어갔다 나오면",
+     "gap_s": 0.5
+    },
+    {
+     "src_t": 45.7,
+     "src": "짜잔",
+     "src_lang": "ko",
+     "src_kind": "source",
+     "before": "각종 재료 넣어 화덕에 들어갔다 나오면",
+     "gap_s": 2.2
+    },
+    {
+     "src_t": 52.0,
+     "src": "Americano! Capuano!",
+     "src_lang": "it",
+     "src_kind": "source",
+     "before": "마지막 마무리해주면 진짜 끝!",
+     "gap_s": 0.0
+    }
+   ],
+   "cps": 4.43,
+   "ko_chars": 150,
+   "cap_n": 27,
+   "cap_in_src_n": 4,
+   "cap_in_src_text": [
+    "이제 뭐가 필요할까?",
+    "나폴리 전통 치즈 프로볼라~",
+    "그건 미국식이고",
+    "가위로 잘라야해"
+   ],
+   "cap_in_gap_n": 6,
+   "cap_in_gap_text": [
+    "(으 으 으)",
+    "동글동글하게 빚어준 뒤",
+    "이제 뭐가 필요할까?",
+    "나폴리 전통 치즈 프로볼라~",
+    "그건 미국식이고",
+    "가위로 잘라야해"
+   ],
+   "cap_ocr_ok": true,
+   "shots": 33,
+   "shot_med": 1.47,
+   "cut_per_min": 32.5,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -14.4,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "신나는",
+     "경쾌한",
+     "유쾌한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": null,
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음(피자 반죽 요리)"
+  },
+  {
+   "id": "Mp6LPm9qbLo",
+   "channel": "hyunjang_ref",
+   "group": "현장썰",
+   "views": 30040,
+   "dur": 34.25,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 6,
+   "src_sec": 11.5,
+   "src_share": 0.336,
+   "src_first_t": 3.0,
+   "src_hook_le3s": true,
+   "src_kinds": [
+    "en:source"
+   ],
+   "src_lens": [
+    2.0,
+    1.5,
+    1.5,
+    2.0,
+    2.5,
+    2.0
+   ],
+   "ambient": "물 붓는 소리",
+   "narr_n": 5,
+   "narr_sec": 14.7,
+   "narr_share": 0.429,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": 0.0,
+   "no_narr_gaps": [
+    [
+     3.0,
+     5.0
+    ],
+    [
+     7.7,
+     12.5
+    ],
+    [
+     15.0,
+     23.0
+    ],
+    [
+     29.5,
+     34.25
+    ]
+   ],
+   "no_narr_sec": 19.55,
+   "no_narr_share": 0.571,
+   "db_narr_only": -9.4,
+   "db_src_only": -11.9,
+   "db_no_speech": -10.9,
+   "src_minus_narr_db": -2.5,
+   "duck_db_engine": null,
+   "hook_text": "아빠 물병 검사하다가 아빠가 더 신나 버렸다는 데",
+   "hook_t0": 0.0,
+   "last_text": "의견을 합쳤는데 부녀 의견은 끝까지 안 합쳐졌다고.",
+   "callers": [
+    {
+     "src_t": 3.0,
+     "src": "How much water bottle in that box? That box is massive.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "아빠 물병 검사하다가 아빠가 더 신나 버렸다는 데",
+     "gap_s": 0.0
+    },
+    {
+     "src_t": 8.0,
+     "src": "We're gonna see how much it actually holds.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "얼마나 들어가나 보더니 집에 있는 물병을 주세요.",
+     "gap_s": 0.3
+    },
+    {
+     "src_t": 9.5,
+     "src": "Whoa!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "얼마나 들어가나 보더니 집에 있는 물병을 주세요.",
+     "gap_s": 1.8
+    },
+    {
+     "src_t": 16.5,
+     "src": "Oh, hydro jump.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "근데 붓는 쪽만 바쁘고 받는 쪽은 여유로움.",
+     "gap_s": 1.5
+    },
+    {
+     "src_t": 19.5,
+     "src": "I still got room for another water bottle.",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "근데 붓는 쪽만 바쁘고 받는 쪽은 여유로움.",
+     "gap_s": 4.5
+    },
+    {
+     "src_t": 32.0,
+     "src": "That's my water bottle!",
+     "src_lang": "en",
+     "src_kind": "source",
+     "before": "의견을 합쳤는데 부녀 의견은 끝까지 안 합쳐졌다고.",
+     "gap_s": 2.5
+    }
+   ],
+   "cps": 6.46,
+   "ko_chars": 95,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "밝은",
+     "유쾌한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "Manna Titan 4L 대용량 물병(설명란 표기)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "1_VtwOkbbVE",
+   "channel": "sseolpulda",
+   "group": "나레썰",
+   "views": 1900000,
+   "dur": 21.8,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 4,
+   "narr_sec": 21.8,
+   "narr_share": 1.0,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -11.7,
+   "db_src_only": null,
+   "db_no_speech": null,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "미국 공고 제조사도 당황했던 역대급 실수 원래는 가죽이나 천막 구멍 뚫을 때나 쓰던 아일렛 타공기였음",
+   "hook_t0": 0.0,
+   "last_text": "심지어 별도로 구멍을 안 뚫어도 찍는 순간 절단과 압착이 동시에 완벽하게 끝난다고",
+   "callers": [],
+   "cps": 7.29,
+   "ko_chars": 159,
+   "cap_n": 20,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 10,
+   "shot_med": 2.13,
+   "cut_per_min": 24.8,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -8.5,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "정보전달"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "자석 아일렛 타공기",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "6iW_aMG_-L0",
+   "channel": "sseolpulda",
+   "group": "나레썰",
+   "views": 1600000,
+   "dur": 19.73,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 6,
+   "narr_sec": 11.2,
+   "narr_share": 0.568,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     1.8,
+     3.0
+    ],
+    [
+     9.0,
+     11.2
+    ],
+    [
+     13.0,
+     13.7
+    ],
+    [
+     15.3,
+     19.73
+    ]
+   ],
+   "no_narr_sec": 8.53,
+   "no_narr_share": 0.432,
+   "db_narr_only": -14.4,
+   "db_src_only": null,
+   "db_no_speech": -13.8,
+   "src_minus_narr_db": null,
+   "duck_db_engine": -1.54,
+   "hook_text": "카약이 전복되고 패들까지 떠내려간다면",
+   "hook_t0": 0.0,
+   "last_text": "빠른 동작으로 카약이 제자리로 돌아옵니다.",
+   "callers": [],
+   "cps": 11.52,
+   "ko_chars": 129,
+   "cap_n": 16,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 5,
+   "cap_in_gap_text": [
+    "많은 분들이",
+    "침착하게 조립하는 것이",
+    "핵심입니다",
+    "빠른 동작으로 카약이",
+    "제자리로 돌아옵니다"
+   ],
+   "cap_ocr_ok": true,
+   "shots": 4,
+   "shot_med": 2.17,
+   "cut_per_min": 9.1,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -11.5,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "박진감있는",
+     "재미있는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(카약 생존법)",
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음"
+  },
+  {
+   "id": "D3Pc6HZ6t6c",
+   "channel": "sseolpulda",
+   "group": "나레썰",
+   "views": 3700000,
+   "dur": 9.7,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 4,
+   "narr_sec": 9.5,
+   "narr_share": 0.979,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -14.1,
+   "db_src_only": null,
+   "db_no_speech": -21.2,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "이게 식탁이라고? 미쳤다 진짜.",
+   "hook_t0": 0.0,
+   "last_text": "디자인까지 예뻐서 인스타 감성 뿜뿜이야!",
+   "callers": [],
+   "cps": 7.26,
+   "ko_chars": 69,
+   "cap_n": 11,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 5,
+   "shot_med": 2.07,
+   "cut_per_min": 24.7,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -11.3,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "빠른"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "접이식 확장 식탁",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "GqSkDhM_bV0",
+   "channel": "sseolpulda",
+   "group": "나레썰",
+   "views": 2900000,
+   "dur": 19.07,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 6,
+   "narr_sec": 18.35,
+   "narr_share": 0.962,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -13.7,
+   "db_src_only": null,
+   "db_no_speech": -17.7,
+   "src_minus_narr_db": null,
+   "duck_db_engine": 7.16,
+   "hook_text": "이거 보고 소름 돋았습니다.",
+   "hook_t0": 0.0,
+   "last_text": "게임 덕후들 지갑 열 준비하세요.",
+   "callers": [],
+   "cps": 7.63,
+   "ko_chars": 140,
+   "cap_n": 18,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 13,
+   "shot_med": 1.07,
+   "cut_per_min": 37.8,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -11.2,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "트렌디한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "VR 무한 보행 바닥",
+   "sell": "경계",
+   "excluded": null
+  },
+  {
+   "id": "mYxuF1A74j4",
+   "channel": "sseolpulda",
+   "group": "나레썰",
+   "views": 3300000,
+   "dur": 22.43,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 5,
+   "narr_sec": 22.3,
+   "narr_share": 0.994,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -20.3,
+   "db_src_only": null,
+   "db_no_speech": -23.1,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "하키 경기 중 선수가 퍽을 관중석으로 던졌어요.",
+   "hook_t0": 0.0,
+   "last_text": "모두를 놀라게 한 다음 동작입니다. 선수의 아내는 망설임 없이 울고 있는 소녀에게 퍽을 건넸습니다.",
+   "callers": [],
+   "cps": 6.28,
+   "ko_chars": 140,
+   "cap_n": 19,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 6,
+   "shot_med": 4.23,
+   "cut_per_min": 13.4,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -17.9,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "감동적인",
+     "잔잔한",
+     "따뜻한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(하키 퍽 사연)",
+   "sell": "아니오",
+   "excluded": "제외: 제품 없음"
+  },
+  {
+   "id": "01ilCC0jZHk",
+   "channel": "hottemreport",
+   "group": "나레썰",
+   "views": 1500000,
+   "dur": 34.07,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 13,
+   "narr_sec": 28.0,
+   "narr_share": 0.822,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     28.0,
+     34.07
+    ]
+   ],
+   "no_narr_sec": 6.07,
+   "no_narr_share": 0.178,
+   "db_narr_only": -17.3,
+   "db_src_only": null,
+   "db_no_speech": -17.9,
+   "src_minus_narr_db": null,
+   "duck_db_engine": 2.03,
+   "hook_text": "일본 장인이 만든 안 깨지는 유리컵",
+   "hook_t0": 0.0,
+   "last_text": "아이 핑계로 사지만 결국 엄마 인싸템이라는 거",
+   "callers": [],
+   "cps": 8.36,
+   "ko_chars": 234,
+   "cap_n": 23,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 4,
+   "cap_in_gap_text": [
+    "와인잔, 위스키잔까지 출시",
+    "근데 진짜 반전은",
+    "아이 핑계로 사지만",
+    "결국 엄마 인싸템이라는 거"
+   ],
+   "cap_ocr_ok": true,
+   "shots": 24,
+   "shot_med": 1.2,
+   "cut_per_min": 40.5,
+   "materials": {
+    "남의영상재편집": 0.738,
+    "짤·밈": 0.221,
+    "사진+움직임": 0.041
+   },
+   "lufs_I": -14.8,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "신나는",
+     "유쾌한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "8ogCjxMJsYo",
+   "channel": "hottemreport",
+   "group": "나레썰",
+   "views": 1500000,
+   "dur": 37.53,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "물소리",
+   "narr_n": 9,
+   "narr_sec": 37.15,
+   "narr_share": 0.99,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -19.2,
+   "db_src_only": null,
+   "db_no_speech": -16.5,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "절친 익사 충격에 만든 미국 천재 발명품!",
+   "hook_t0": 0.0,
+   "last_text": "내 목숨값 생각하면 이건 진짜 다이소급 혜자템 아님?",
+   "callers": [],
+   "cps": 6.49,
+   "ko_chars": 241,
+   "cap_n": 27,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 18,
+   "shot_med": 1.87,
+   "cut_per_min": 27.2,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -16.4,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "흥미진진한",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "PIHCaioKSp4",
+   "channel": "hottemreport",
+   "group": "나레썰",
+   "views": 2200000,
+   "dur": 35.2,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 13,
+   "narr_sec": 35.0,
+   "narr_share": 0.994,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -17.0,
+   "db_src_only": null,
+   "db_no_speech": -36.5,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "모기 잡는 잠자리로 20억 번 초등학생",
+   "hook_t0": 0.0,
+   "last_text": "올 여름 침대 옆은 잠자리로 확정!",
+   "callers": [],
+   "cps": 7.06,
+   "ko_chars": 247,
+   "cap_n": 27,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 23,
+   "shot_med": 1.17,
+   "cut_per_min": 37.5,
+   "materials": {
+    "남의영상재편집": 0.906,
+    "짤·밈": 0.068,
+    "스톡영상": 0.026
+   },
+   "lufs_I": -14.1,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "유쾌한",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "RWS43GF1A_U",
+   "channel": "hottemreport",
+   "group": "나레썰",
+   "views": 2100000,
+   "dur": 25.17,
+   "audio_from": "뜯기",
+   "asr_model": "gemini-3.5-flash",
+   "kind_engine": "나레 1명",
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 7,
+   "narr_sec": 25.04,
+   "narr_share": 0.995,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -18.6,
+   "db_src_only": null,
+   "db_no_speech": null,
+   "src_minus_narr_db": null,
+   "duck_db_engine": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "hook_text": "미국에서 난리난 전기자전거가 있는데요.",
+   "hook_t0": 0.0,
+   "last_text": "무채색 일색인 한국 도로에서 이거 타고 다니면 제대로 시선 강탈이겠네요.",
+   "callers": [],
+   "cps": 7.03,
+   "ko_chars": 176,
+   "cap_n": 23,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": true,
+   "shots": 14,
+   "shot_med": 1.67,
+   "cut_per_min": 31.0,
+   "materials": {
+    "남의영상재편집": 1.0
+   },
+   "lufs_I": -16.5,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌한",
+     "힙합",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "2DKE5Pu9oi0",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 3600000,
+   "dur": 36.45,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 10,
+   "narr_sec": 36.4,
+   "narr_share": 0.999,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -15.3,
+   "db_src_only": null,
+   "db_no_speech": null,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "아니 영상에서 이제 오토바이도 헤드업 디스플레이가 가능하다는데 너무 몸에서 바로 가졌습니다.",
+   "hook_t0": 0.0,
+   "last_text": "세상 진짜 좋아졌네.",
+   "callers": [],
+   "cps": 8.41,
+   "ko_chars": 306,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "3jv9knv1WQE",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 4100000,
+   "dur": 36.75,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 9,
+   "narr_sec": 34.02,
+   "narr_share": 0.926,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -14.5,
+   "db_src_only": null,
+   "db_no_speech": -13.3,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "이번 주에 쿠팡 주문하신 분들 이거 모르면 돈 날리는 건 시간 문제인데.",
+   "hook_t0": 0.0,
+   "last_text": "핫딜에 들어가면 매일 최저가 상품들이 나열돼 있으니까 쿠팡 이용할 땐 필수인.",
+   "callers": [],
+   "cps": 8.67,
+   "ko_chars": 295,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "75cbOgovN3k",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 6800000,
+   "dur": 32.17,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 9,
+   "narr_sec": 29.68,
+   "narr_share": 0.922,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     24.0,
+     26.32
+    ]
+   ],
+   "no_narr_sec": 2.32,
+   "no_narr_share": 0.072,
+   "db_narr_only": -14.3,
+   "db_src_only": null,
+   "db_no_speech": -18.9,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "아니 영상에서 요즘 나오는 덤벨그랑이 장난이 아닌데 너무 궁금해서 바로 가져왔습니다.",
+   "hook_t0": 0.0,
+   "last_text": "여기에 실린더까지 돌려주면 그냥 극락 가는 겁니다.",
+   "callers": [],
+   "cps": 8.22,
+   "ko_chars": 244,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "EvBVY74J7Wc",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 8700000,
+   "dur": 35.49,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 9,
+   "narr_sec": 35.4,
+   "narr_share": 0.997,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -14.5,
+   "db_src_only": null,
+   "db_no_speech": null,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "아니 영상에서 공중에 있는 수박도 단번에 썰어버리는 무적이 칼이 있다는데 너무 궁금해서 바로 꽂았습니다.",
+   "hook_t0": 0.0,
+   "last_text": "근데 이건 어떤 칼이든 되는 거 아닌가?",
+   "callers": [],
+   "cps": 7.82,
+   "ko_chars": 277,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "gnVKcHjyzZo",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 3900000,
+   "dur": 41.31,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 9,
+   "narr_sec": 39.9,
+   "narr_share": 0.966,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     9.6,
+     10.2
+    ],
+    [
+     13.4,
+     14.0
+    ]
+   ],
+   "no_narr_sec": 1.2,
+   "no_narr_share": 0.029,
+   "db_narr_only": -14.4,
+   "db_src_only": null,
+   "db_no_speech": -13.1,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "모습하질은데 M4 들고 출동해야 됩니다.",
+   "hook_t0": 0.0,
+   "last_text": "이제 조종관을 연말에 설정해 준 다음 싸 보면 와, 이 맛이",
+   "callers": [],
+   "cps": 8.42,
+   "ko_chars": 336,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "신나는",
+     "미래적인"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "mtIkLs8gREM",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 7000000,
+   "dur": 43.99,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 16,
+   "narr_sec": 43.99,
+   "narr_share": 1.0,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [],
+   "no_narr_sec": 0,
+   "no_narr_share": 0.0,
+   "db_narr_only": -14.5,
+   "db_src_only": null,
+   "db_no_speech": null,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "아니 영상에서 자동으로 장전되고 연사까지 가능한 현재 판세총이 있다는데",
+   "hook_t0": 0.01,
+   "last_text": "와, 진짜 살벌하네.",
+   "callers": [],
+   "cps": 8.02,
+   "ko_chars": 353,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "신나는"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "WXu_DmWJUbs",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 3000000,
+   "dur": 41.11,
+   "audio_from": "screen",
+   "asr_model": "gemini-2.5-flash",
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 9,
+   "narr_sec": 0.38,
+   "narr_share": 0.009,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     0.41,
+     41.11
+    ]
+   ],
+   "no_narr_sec": 40.7,
+   "no_narr_share": 0.99,
+   "db_narr_only": -14.1,
+   "db_src_only": null,
+   "db_no_speech": -14.1,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": "아니 영상에서 요즘은 변기도 스마트로 나온다는데 너무 궁금해서 바로 가졌습니다.",
+   "hook_t0": 0.0,
+   "last_text": "추가로 냉온수 비대 기능이 기본에 따뜻한 바람으로 건조까지 시켜 주는데 여기에 자동 세척 기능까지 있으니까 너무 좋은 거 같아요.",
+   "callers": [],
+   "cps": 848.96,
+   "ko_chars": 326,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": {
+    "present": true,
+    "mood": [
+     "경쾌",
+     "밝음",
+     "설명"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  },
+  {
+   "id": "Z7B36tfra9M",
+   "channel": "geuraeseo",
+   "group": "나레썰",
+   "views": 4000000,
+   "dur": 44.79,
+   "audio_from": "screen",
+   "asr_model": null,
+   "kind_engine": null,
+   "src_n": 0,
+   "src_sec": 0.0,
+   "src_share": 0.0,
+   "src_first_t": null,
+   "src_hook_le3s": false,
+   "src_kinds": [],
+   "src_lens": [],
+   "ambient": "",
+   "narr_n": 0,
+   "narr_sec": 0,
+   "narr_share": 0.0,
+   "narr_over_src_sec": 0.0,
+   "narr_over_src_frac": null,
+   "no_narr_gaps": [
+    [
+     0.0,
+     44.79
+    ]
+   ],
+   "no_narr_sec": 44.79,
+   "no_narr_share": 1.0,
+   "db_narr_only": null,
+   "db_src_only": null,
+   "db_no_speech": -15.7,
+   "src_minus_narr_db": null,
+   "duck_db_engine": null,
+   "hook_text": null,
+   "hook_t0": null,
+   "last_text": null,
+   "callers": [],
+   "cps": null,
+   "ko_chars": 0,
+   "cap_n": 0,
+   "cap_in_src_n": 0,
+   "cap_in_src_text": [],
+   "cap_in_gap_n": 0,
+   "cap_in_gap_text": [],
+   "cap_ocr_ok": false,
+   "shots": null,
+   "shot_med": null,
+   "cut_per_min": null,
+   "materials": null,
+   "lufs_I": null,
+   "bgm": null,
+   "product": "(제목상 제품 — 시트 확인 안 함)",
+   "sell": "예",
+   "excluded": null
+  }
+ ]
+}
