@@ -1,0 +1,387 @@
+{
+ "id": "W9dPRePc5ng",
+ "dur": 32.4,
+ "title_card": "한국인 인내심 깨부순 / 초콜릿의 정체",
+ "post_title": "한국인 인내심 깨부순 초콜릿의 정체",
+ "frame": {
+  "header": "0~240px 노랑(#FABE17 근처) 띠 — 왼쪽 회색 ≡ 메뉴, 가운데 검은 굵은 '앞북이' 로고 + 북 치는 마스코트(전 구간 고정, 업스케일로 약간 흐림)",
+  "layout_y": "1080x1920 · 머리띠 0~240 / 제목 줄 약 300~380(검정 고딕 1줄, 전 구간 고정) / 메타 줄 약 420~445 'ㅅㄱ | 18:13'(회색, 5편 모두 같은 글자) + 455 가로선 / 자막 칸 약 490~640(검정 고딕 가운데 정렬, 1~2줄 누적) / 그림 칸 약 672~1668, x 45~1035(정사각 990) / 아래 1668~1920 흰 여백(oTY 2.6~4.9초만 출처 표기)",
+  "ai_notice": null,
+  "hook_card": "0~1.9초: 머리띠 어둡게 + 검정 반투명 띠(약 240~600px)에 큰 2줄 제목(1줄 흰색 / 2줄 하늘색(시안), 검은 외곽선) + 아래 흰 제목 줄 + 영상 전체폭(약 800px~) — 이후 정규 틀로 전환"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.9,
+   "caption": "한국인 인내심 깨부순 / 초콜릿의 정체",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "훅: 검은 장갑 손이 초콜릿 시리얼 볼에 초콜릿 조각 부어 섞음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 1.9,
+   "t1": 3.1,
+   "caption": "전세계에서 식후 디저트로",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "분홍 입술 초근접, 얇은 초콜릿 여러 장 겹쳐 물고 있음",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "윗입술 보라 점이 프레임마다 생겼다 사라짐 · 입술 주름 반복 무늬 · 이 사이 붉은 얼룩(3.9초) — 실사 먹방으로 보기 어려운 질감"
+   },
+   "effect": null
+  },
+  {
+   "t0": 3.1,
+   "t1": 3.8,
+   "caption": "사랑받고 있지만",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 입술, 초콜릿 문 채 다물기",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "위와 같음"
+   },
+   "effect": null
+  },
+  {
+   "t0": 3.8,
+   "t1": 4.6,
+   "caption": "유독 한국인들은",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "입 벌려 치아 보이다 다묾",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "같은 클립"
+   },
+   "effect": null
+  },
+  {
+   "t0": 4.6,
+   "t1": 5.7,
+   "caption": "8시까지 기다려야 하냐며",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "스테인리스 작업대, 검은 장갑 손이 애프터에이트 상자 꺼내 쌓음(1인칭)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 5.7,
+   "t1": 6.6,
+   "caption": "괜히 안달나게 만든",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "같은 1인칭, 상자 던지듯 펼침",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 6.6,
+   "t1": 7.3,
+   "caption": "초콜릿이 있다는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "상자 여러 개 모아 쥠",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 7.3,
+   "t1": 8.8,
+   "caption": "이건 바로 애프터에이트 민트초콜릿",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "After Eight 상자 열고 개별 봉투 하나 뽑기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 8.8,
+   "t1": 9.6,
+   "caption": "이게 말도 안되는게",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "검은 봉투에서 초콜릿 꺼냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 9.6,
+   "t1": 10.6,
+   "caption": "영국의 디너파티에서는",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "흑백 옛 영상풍: 파티장 손이 초콜릿 집음",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 10.6,
+   "t1": 12.0,
+   "caption": "식사 뒤 무거운 디저트는 부담스럽고",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "흑백, 여성이 초콜릿 베어 묾(옛 광고 영상인지 생성인지 불명 — 손가락 뭉개짐 약간)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 12.0,
+   "t1": 13.6,
+   "caption": "입가심 없이 끝내기는 아쉬웠는데",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "잔 속 초콜릿 위로 크림·커피 붓기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 13.6,
+   "t1": 15.3,
+   "caption": "얇은 민트초콜릿이 한 장씩 포장돼",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "상자 속 봉투 줄 손가락으로 훑고 한 장 뽑기",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 15.3,
+   "t1": 16.3,
+   "caption": "테이블에서 쏙쏙 뽑아",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "봉투에서 초콜릿 반쯤 꺼냄",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 16.3,
+   "t1": 17.0,
+   "caption": "나눠먹기 좋았고",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "초콜릿 반으로 쪼갬",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 17.0,
+   "t1": 18.3,
+   "caption": "늦은 저녁에 즐긴다는 의미로",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "쪼갠 단면에 흰 민트 필링",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 18.3,
+   "t1": 19.8,
+   "caption": "이름도 8시 이후라는 뜻을 담아",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "After Eight 상자 로고 근접",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.5,
+   "caption": "실제 영국의",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "빨간 매니큐어 여성이 초콜릿 벌려 필링 보여줌",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 20.5,
+   "t1": 21.6,
+   "caption": "식후문화까지 녹여냈다는거",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 21.6,
+   "t1": 22.5,
+   "caption": "근데 진짜는 여기서부터",
+   "kind": "나레",
+   "screen": "인물",
+   "screen_desc": "같은 여성, 필링 늘어남",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 22.5,
+   "t1": 24.0,
+   "caption": "처음에는 단단했던 민트 필링이",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "손가락으로 초콜릿 구부리기(부엌)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 24.0,
+   "t1": 25.1,
+   "caption": "효소 때문에 포장된 뒤",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "쪼갠 단면 흰 필링",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null
+  },
+  {
+   "t0": 25.1,
+   "t1": 26.5,
+   "caption": "서서히 부드러워져 먹을 때쯤",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "초근접, 초콜릿이 고무처럼 늘어나며 필링이 실처럼 당겨짐",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "초콜릿 껍질이 천처럼 휘어짐 · 손가락이 서로 녹아 붙음(27.0초 프레임) · 손톱 모양 흐트러짐"
+   },
+   "effect": null
+  },
+  {
+   "t0": 26.5,
+   "t1": 27.8,
+   "caption": "촉촉한 민트크림처럼 완성되는데",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 늘어남 장면",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "위와 같음"
+   },
+   "effect": null
+  },
+  {
+   "t0": 27.8,
+   "t1": 29.2,
+   "caption": "얇고 쌉싸름한 다크초콜릿이",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "쪼갠 초콜릿 단면, 필링에 둥근 구멍들",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "필링 구멍·표면 요철이 규칙적이고 초콜릿 두께가 실물보다 두꺼움(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 29.2,
+   "t1": 30.1,
+   "caption": "달콤 시원한 민트 맛을",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "같은 단면 근접",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "같은 클립"
+   },
+   "effect": null
+  },
+  {
+   "t0": 30.1,
+   "t1": 30.8,
+   "caption": "균형있게 잡아줘",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "손바닥만 한 거대 초콜릿 판에 금이 감",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "실물보다 수십 배 큰 판·표면 무늬 반복(추정)"
+   },
+   "effect": null
+  },
+  {
+   "t0": 30.8,
+   "t1": 32.4,
+   "caption": "반민초파도 도전을 하게 만든다고?!",
+   "kind": "나레",
+   "screen": "AI생성이미지(추정)",
+   "screen_desc": "거대 판이 찢어지며 흰·분홍 필링 층",
+   "infographic": null,
+   "emotion": null,
+   "ai": {
+    "kind": "AI 영상(이미지→영상 생성 추정, 정지 사진 아님)",
+    "evidence": "필링 색이 장면 중 분홍으로 바뀜 · 질감 비현실(추정)"
+   },
+   "effect": null
+  }
+ ],
+ "structure": "훅 카드 → 세계적 인기 vs '한국인은 안달' → '이건 바로' 제품명 → '이게 말도 안되는게' 탄생 배경(영국 디너파티, 흑백) → 포장·이름 뜻 → 실제 영국 식후문화 → '근데 진짜는 여기서부터' 숨은 기술(효소로 필링 부드러워짐) → 맛 균형 → 의문형 마무리 '~만든다고?!'",
+ "ratios": {
+  "infographic_sec": 0.0,
+  "character_sec": 0.0,
+  "ai_image_sec": 10.0,
+  "real_video_sec": 22.4,
+  "meme_sec": 0.0
+ },
+ "measure": "10fps 자막칸(y≈472~660)·그림칸(y≈680~1660) 픽셀차로 변화 시각 0.1초 측정, 자막 상태마다 시작·중간·끝 3프레임 판독(Claude 눈). 소리(TTS·효과음)는 이번 판독 범위 밖",
+ "source": "C:/숏템_칼카피/apbuki/mp4/W9dPRePc5ng.mp4"
+}
