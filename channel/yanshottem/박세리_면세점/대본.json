@@ -189,7 +189,7 @@
    "numbers_in_tts": 0,
    "english_in_tts": 0,
    "bench_copy": "벤치 나레와 2어절 연속 겹침 0(만템 '박세리가 면세점에서 꼭 사오는 애정템이라는데' — 우리 '박세리가 출국길 면세점에서'로 떨어뜨림 / 안나픽 '슈퍼리치 박세리도 아끼느라 못 나눠준다는 스킨이라는데' — 겹침 '스킨이라는데' 1어절)",
-   "total_sec": 15.502,
+   "total_sec": 15.5,
    "narr_cps": [
     8.52,
     8.47,
@@ -285,13 +285,16 @@
   },
   {
    "t0": 14.636,
-   "t1": 15.502,
+   "t1": 15.5,
    "text": "챙겨 뒀다네요",
    "kind": "나레"
   }
  ],
  "notes": [
   "자막 꼴(만템): 나레 = 노랑 Cafe24Ohsquare 기울임 / 원음 = 흰 글자, 따옴표 없음. 원음 자막 자리 100px 아래·강조 낱말 민트는 엔진 칸 없음(1편과 같은 엔진 요청).",
+  "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",
+  "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",
+  "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",
   "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",
   "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",
   "TTS = 일레븐랩스 미나 expressive 1회(14.16초) → 줄별 atempo 1.70/1.70/1.84 (make_render.py PLAN 이 시각의 주인).",

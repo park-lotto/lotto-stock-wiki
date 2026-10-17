@@ -123,11 +123,7 @@
      1209,
      1277
     ],
-    "ink": "bright",
-    "band_before_tighten": [
-     1208,
-     1277
-    ]
+    "ink": "bright"
    },
    "bg_rgb": [
     0,
@@ -446,8 +442,8 @@
    "method": "captions.caption_lines",
    "criterion": "줄 폭 중앙 차 ≤ 6%",
    "orig": 555.0,
-   "ours": 438.0,
-   "diff": "-117.0 (21.1%)",
+   "ours": 414.0,
+   "diff": "-141.0 (25.4%)",
    "status": "out"
   },
   {
@@ -542,8 +538,8 @@
    "method": "cuts.shot_lengths",
    "criterion": "컷 길이 중앙 차 ≤ 15%",
    "orig": 1.117,
-   "ours": 1.7,
-   "diff": "0.583 (52.2%)",
+   "ours": 1.633,
+   "diff": "0.516 (46.2%)",
    "status": "out"
   },
   {
@@ -578,8 +574,8 @@
    "method": "cuts.cut_eq_sub",
    "criterion": null,
    "orig": 90.9,
-   "ours": 83.3,
-   "diff": -7.6,
+   "ours": 66.7,
+   "diff": -24.2,
    "status": "참고"
   },
   {
@@ -674,8 +670,8 @@
    "method": "audio.ebur128",
    "criterion": "통합 LUFS(믹스) 차 ≤ 1.5dB — 배경음만 뗀 값 아님",
    "orig": -15.9,
-   "ours": -16.0,
-   "diff": 0.1,
+   "ours": -16.1,
+   "diff": 0.2,
    "status": "in"
   },
   {

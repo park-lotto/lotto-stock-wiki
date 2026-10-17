@@ -1,5 +1,5 @@
 {
- "_note": "얜샷템 박세리 면세점 스킨 — 재료 계획(TTS·렌더 전). 원본 = 박세리의 속사정 WHzwVWvEvQ8(1080p 29.97). 창 1080x1080(frame_얜샷템). 원본 편집 자막(흰=박세리, 노랑=제작진, 괄호 손글씨)은 전부 src_crop 으로 뺌. 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정).",
+ "_note": "얜샷템 박세리 면세점 스킨 — 재료 계획(TTS·렌더 전). 원본 = 박세리의 속사정 WHzwVWvEvQ8(1080p 29.97). 창 1080x1080(frame_얜샷템). 원본 편집 자막(흰=박세리, 노랑=제작진, 괄호 손글씨)은 전부 src_crop 으로 뺌. 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정). 시각 = make_render.py PLAN(미나 TTS 뒤 확정).",
  "cand_dir": "C:/숏템_칼카피/yanshottem/박세리_면세점/src",
  "narration": "일레븐랩스 미나(kr-mina-stable, aiUUgjHa4mpHf6UenZuf, eleven_v3, 1.0 합성 + atempo 1.35) — 벤치 만템 나레 여성",
  "sources": {
@@ -237,10 +237,10 @@
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 141.203,
-   "dur": 0.977,
+   "ss": 141.168,
+   "dur": 1.012,
    "src_span": [
-    141.203,
+    141.168,
     142.18
    ],
    "kind": "원본재편집",
@@ -263,7 +263,7 @@
    "mute": true,
    "t_final": [
     8.86,
-    9.837
+    9.872
    ]
   },
   {
@@ -273,10 +273,10 @@
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
    "ss": 142.18,
-   "dur": 1.325,
+   "dur": 1.29,
    "src_span": [
     142.18,
-    143.505
+    143.47
    ],
    "kind": "원본재편집",
    "box": [
@@ -297,7 +297,7 @@
    "why": "'넣어 버렸대요' — 142.18 원본 자막이 아래 노랑 '아 그래서 제일 안쪽에'(y≥900)로 바뀐 뒤라 넓게 잡아 손·병이 보이게. 오른쪽 아래 제작진 얼굴(x≥1725)·노랑 자막 밖",
    "mute": true,
    "t_final": [
-    9.837,
+    9.872,
     11.162
    ]
   },
@@ -307,50 +307,11 @@
    "src": "seri_WHzwVWvEvQ8.mp4",
    "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
    "src_date": "박세리의 속사정 유튜브 2025.08.15",
-   "ss": 143.51,
-   "dur": 2.7,
-   "src_span": [
-    143.51,
-    146.21
-   ],
-   "kind": "원본재편집",
-   "box": [
-    0,
-    420,
-    1080,
-    1080
-   ],
-   "src_crop": [
-    760,
-    0,
-    880,
-    880
-   ],
-   "res": "1920x1080",
-   "scale": 1.23,
-   "ours": "수납장 앞 박세리 뒷머리 가까이 → 옆 칸 화장품",
-   "why": "원음 '솔직히 쟁여 놓고 쓰거든'(143.55~144.80, 소리·화면 같은 시각) → 나레 '여분까지 따로 챙겨 뒀다네요' 앞부분(본인이 '여기 또 엑스트라 하나 있잖아' 하는 장면, 원본 소리 144.80 에서 끔). 아래 흰 편집 자막 밖",
-   "mute": false,
-   "audio_src": "seri_voice.wav",
-   "audio_ss": 143.51,
-   "audio_dur": 1.25,
-   "t_final": [
-    11.162,
-    13.862
-   ],
-   "audio_note": "소리 = 11.377초부터 143.51~(말 143.55~145.95), 앞 0.215초 무음 — 나레가 길어 화면(뒷머리, 입 안 보임)을 먼저 띄움"
-  },
-  {
-   "i": 9,
-   "line": "N3",
-   "src": "seri_WHzwVWvEvQ8.mp4",
-   "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
-   "src_date": "박세리의 속사정 유튜브 2025.08.15",
    "ss": 123.98,
-   "dur": 1.64,
+   "dur": 1.638,
    "src_span": [
     123.98,
-    125.62
+    125.618
    ],
    "kind": "원본재편집",
    "box": [
@@ -367,12 +328,88 @@
    ],
    "res": "1920x1080",
    "scale": 1.23,
-   "ours": "박세리 욕실 수납장 안 — 화장품 병·상자가 칸마다 쌓임(제작진 말로 '보물창고')",
-   "why": "끝 컷 '여분까지 따로 챙겨 뒀다네요' — 쌓아 둔 수납장. '(보물창고 공개)'(~123.9) 뒤, 노랑 '보물창고가 여기 있었네~'(y≈900~960) 밖. 다른 장면(19초 앞, 다른 컷과 3초+ 떨어짐)",
+   "ours": "박세리 욕실 수납장 안 — 화장품 병·상자가 칸마다 쌓임(보물창고)",
+   "why": "원음 '솔직히 쟁여 놓고 쓰거든' ↔ 쟁여 둔 수납장(3판: 1·2판 흐린 뒷머리는 말과 안 맞음). '(보물창고 공개)'(~123.9) 뒤, 노랑 자막(y≈900~) 밖",
+   "audio_src": "seri_voice.wav",
+   "audio_ss": "O3",
+   "audio_dur": 1.25,
+   "t_final": [
+    11.162,
+    12.8
+   ],
+   "audio_note": "소리 = O3 원음 143.51~ 이 11.377초부터 두 컷(보물창고·수납장 앞)에 걸쳐 이어짐(말 143.55~145.95) — 화면은 원음과 다른 장면(말과 맞는 화면)"
+  },
+  {
+   "i": 9,
+   "line": "O3",
+   "src": "seri_WHzwVWvEvQ8.mp4",
+   "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
+   "src_date": "박세리의 속사정 유튜브 2025.08.15",
+   "ss": 145.15,
+   "dur": 1.06,
+   "src_span": [
+    145.15,
+    146.21
+   ],
+   "kind": "원본재편집",
+   "box": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "src_crop": [
+    1040,
+    0,
+    880,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.23,
+   "ours": "수납장 앞 박세리(뒷머리 → 옆 칸 화장품)",
+   "why": "원음 '여기 또 엑스트라 하나 있잖아' — 그 말을 하는 장면(145.0~), 흰 편집 자막(y≈920~) 밖, 원본 컷 146.246 앞",
+   "audio_src": "seri_voice.wav",
+   "audio_ss": "O3",
+   "audio_dur": 1.25,
+   "t_final": [
+    12.8,
+    13.86
+   ],
+   "audio_note": "소리 = O3 원음 143.51~ 이 11.377초부터 두 컷(보물창고·수납장 앞)에 걸쳐 이어짐(말 143.55~145.95) — 화면은 원음과 다른 장면(말과 맞는 화면)"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "src": "seri_WHzwVWvEvQ8.mp4",
+   "url": "https://www.youtube.com/watch?v=WHzwVWvEvQ8",
+   "src_date": "박세리의 속사정 유튜브 2025.08.15",
+   "ss": 146.28,
+   "dur": 1.64,
+   "src_span": [
+    146.28,
+    147.92
+   ],
+   "kind": "원본재편집",
+   "box": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "src_crop": [
+    960,
+    0,
+    880,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.23,
+   "ours": "같은 수납장 칸칸이 쌓인 화장품(병을 꺼내는 본인 손)",
+   "why": "끝 나레 '여분까지 따로 챙겨 뒀다네요' — 여분이 쌓인 칸. 원본 컷 146.246 뒤~148.715 앞, 아래 노랑 'AHC 저거…' 자막(y≈925~) 밖. 앞 컷과 같은 장면 앞으로만",
    "mute": true,
    "t_final": [
-    13.862,
-    15.502
+    13.86,
+    15.5
    ]
   }
  ],
