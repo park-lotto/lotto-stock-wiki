@@ -1,0 +1,1019 @@
+{
+ "_note": "샥탬스토리 1편 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 뜯기 layout). 시각은 말속도 7.1자/초 추정 — TTS 뒤 다시 맞춘다. 원음 줄은 audio_span 을 원본에서 그대로(쉼 자르기 없음).",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/src_stormbag",
+ "window": [
+  1080,
+  1052
+ ],
+ "sources": {
+  "8UW": {
+   "file": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "채널": "Sony Pictures Television",
+   "제목": "Shark Tank US | Stormbag's Entrepreneur Gets Emotional In The Tank",
+   "업로드": "2025-04-21",
+   "해상도": "1920x1080 29.97fps",
+   "길이": 642,
+   "남의 글자": "하단 자막 띠(Seeking $200k… / 이름 / 제안 조건, y≈900~965) 85.8~86.4·310~312·416~434·468~470·554~558초 — 그 컷은 h=880으로 위만 씀"
+  },
+  "3s0": {
+   "file": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "채널": "Swiss Link(제품 판매사)",
+   "제목": "StormBag Overview: The Sandless Sandbag as Seen on Shark Tank",
+   "업로드": "2024-09-03",
+   "해상도": "1920x1080 24fps",
+   "길이": 177,
+   "남의 글자": "영어 자막 burn-in(y≈990~1030) — 모든 컷 h=960으로 위만 씀"
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 67.25,
+   "dur": 0.5,
+   "src_span": [
+    67.25,
+    67.75
+   ],
+   "t_final": [
+    0.0,
+    0.5
+   ],
+   "src_crop": [
+    640,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉은 투자자(남·남색 셔츠), 놀란 얼굴",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    67.25,
+    67.75
+   ],
+   "Y": 39
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 133.0,
+   "dur": 1.41,
+   "src_span": [
+    133.0,
+    134.41
+   ],
+   "t_final": [
+    0.58,
+    1.99
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "외바퀴 수레 물에 잠긴 STORMBAG 자루들",
+   "mute": true,
+   "Y": 67
+  },
+  {
+   "i": 2,
+   "line": "O2",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 52.93,
+   "dur": 0.98,
+   "src_span": [
+    52.93,
+    53.91
+   ],
+   "t_final": [
+    2.07,
+    3.05
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉은 투자자(남·남색 재킷)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    52.42,
+    53.4
+   ],
+   "Y": 49
+  },
+  {
+   "i": 3,
+   "line": "N2",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 58.0,
+   "dur": 1.9,
+   "src_span": [
+    58.0,
+    59.9
+   ],
+   "t_final": [
+    3.13,
+    5.03
+   ],
+   "src_crop": [
+    508,
+    90,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "잔디 위 STORMBAG 자루가 부푸는 타임랩스(스튜디오 화면 속)",
+   "mute": true,
+   "Y": 110
+  },
+  {
+   "i": 4,
+   "line": "N2",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 61.85,
+   "dur": 1.62,
+   "src_span": [
+    61.85,
+    63.47
+   ],
+   "t_final": [
+    5.03,
+    6.65
+   ],
+   "src_crop": [
+    508,
+    90,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "같은 타임랩스 — 자루가 더 부풂",
+   "mute": true,
+   "Y": 111
+  },
+  {
+   "i": 5,
+   "line": "N3",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 33.9,
+   "dur": 1.9,
+   "src_span": [
+    33.9,
+    35.8
+   ],
+   "t_final": [
+    6.59,
+    8.49
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "마른 땅에 쌓인 모래주머니 더미",
+   "mute": true,
+   "Y": 138
+  },
+  {
+   "i": 6,
+   "line": "N3",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 38.8,
+   "dur": 1.06,
+   "src_span": [
+    38.8,
+    39.86
+   ],
+   "t_final": [
+    8.49,
+    9.55
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대 와이드 — STORMBAG 로고 화면·모래주머니 벽 앞 두 창업자(제품 소개 순간)",
+   "mute": true,
+   "Y": 77
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 17.95,
+   "dur": 3.0,
+   "src_span": [
+    17.95,
+    20.95
+   ],
+   "t_final": [
+    9.77,
+    12.77
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "화면 가득 모래주머니 더미",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    17.85,
+    23.6
+   ],
+   "Y": 74
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 18.25,
+   "dur": 2.75,
+   "src_span": [
+    18.25,
+    21.0
+   ],
+   "t_final": [
+    12.77,
+    15.52
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "모래주머니를 던져 쌓고 들어 옮기는 사람(손·다리만)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    17.85,
+    23.6
+   ],
+   "Y": 154
+  },
+  {
+   "i": 9,
+   "line": "N4",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 21.05,
+   "dur": 2.82,
+   "src_span": [
+    21.05,
+    23.87
+   ],
+   "t_final": [
+    15.6,
+    18.42
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "모래주머니를 한 개씩 들어 쌓는 손(같은 장면 이어감)",
+   "mute": true,
+   "Y": 115
+  },
+  {
+   "i": 10,
+   "line": "O4",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 45.25,
+   "dur": 2.36,
+   "src_span": [
+    45.25,
+    47.61
+   ],
+   "t_final": [
+    18.5,
+    20.86
+   ],
+   "src_crop": [
+    560,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "STORMBAG 자루를 들고 설명하는 창업자",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    45.25,
+    50.0
+   ],
+   "Y": 63
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 69.75,
+   "dur": 2.39,
+   "src_span": [
+    69.75,
+    72.14
+   ],
+   "t_final": [
+    20.86,
+    23.25
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "물을 받아 둔 파란 외바퀴 수레(물만 붓는 장면)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    45.25,
+    50.0
+   ],
+   "Y": 63
+  },
+  {
+   "i": 12,
+   "line": "N5",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 168.4,
+   "dur": 1.6,
+   "src_span": [
+    168.4,
+    170.0
+   ],
+   "t_final": [
+    23.33,
+    24.93
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "외바퀴 수레 물에서 불어난 자루를 꺼내 드는 남자",
+   "mute": true,
+   "Y": 133
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 174.0,
+   "dur": 1.5,
+   "src_span": [
+    174.0,
+    175.5
+   ],
+   "t_final": [
+    24.93,
+    26.43
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "땅에 줄지어 놓인 불은 자루 둑",
+   "mute": true,
+   "Y": 139
+  },
+  {
+   "i": 14,
+   "line": "O5",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 110.65,
+   "dur": 1.45,
+   "src_span": [
+    110.65,
+    112.1
+   ],
+   "t_final": [
+    26.37,
+    27.82
+   ],
+   "src_crop": [
+    560,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에서 손가락으로 가리키며 묻는 투자자(민머리·검정 정장)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    110.65,
+    112.1
+   ],
+   "Y": 36
+  },
+  {
+   "i": 15,
+   "line": "N6",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 42.42,
+   "dur": 2.24,
+   "src_span": [
+    42.42,
+    44.66
+   ],
+   "t_final": [
+    27.9,
+    30.14
+   ],
+   "src_crop": [
+    600,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "납작한 마른 자루를 펼쳐 보이는 남자(제품사 영상)",
+   "mute": true,
+   "Y": 174
+  },
+  {
+   "i": 16,
+   "line": "N6",
+   "src": "3s0CwrcqWCU.mp4",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU",
+   "ss": 50.35,
+   "dur": 1.0,
+   "src_span": [
+    50.35,
+    51.35
+   ],
+   "t_final": [
+    30.14,
+    31.14
+   ],
+   "src_crop": [
+    468,
+    0,
+    985,
+    960
+   ],
+   "res": "1920x1080",
+   "scale": 1.096,
+   "ours": "납작한 자루를 다시 드는 남자(제품사 영상)",
+   "mute": true,
+   "Y": 159
+  },
+  {
+   "i": 17,
+   "line": "O6",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 85.95,
+   "dur": 1.1,
+   "src_span": [
+    85.95,
+    87.05
+   ],
+   "t_final": [
+    31.22,
+    32.32
+   ],
+   "src_crop": [
+    650,
+    0,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "의자에 앉은 투자자(남·남색 셔츠)(하단 자막 띠 위만)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    85.95,
+    87.05
+   ],
+   "Y": 37
+  },
+  {
+   "i": 18,
+   "line": "O7",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 243.15,
+   "dur": 1.0,
+   "src_span": [
+    243.15,
+    244.15
+   ],
+   "t_final": [
+    32.4,
+    33.4
+   ],
+   "src_crop": [
+    560,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "투자자(민머리·검정 정장) 상반신",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    243.15,
+    244.15
+   ],
+   "Y": 43
+  },
+  {
+   "i": 19,
+   "line": "O8",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 258.45,
+   "dur": 2.75,
+   "src_span": [
+    258.45,
+    261.2
+   ],
+   "t_final": [
+    33.48,
+    36.23
+   ],
+   "src_crop": [
+    700,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대 와이드 — 두 창업자(말하는 중)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    259.9,
+    264.0
+   ],
+   "Y": 49
+  },
+  {
+   "i": 20,
+   "line": "O8",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 263.05,
+   "dur": 1.35,
+   "src_span": [
+    263.05,
+    264.4
+   ],
+   "t_final": [
+    36.23,
+    37.58
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "듣고 있는 투자자(여·연두 옷)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    259.9,
+    264.0
+   ],
+   "Y": 86
+  },
+  {
+   "i": 21,
+   "line": "N7",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 266.92,
+   "dur": 2.06,
+   "src_span": [
+    266.92,
+    268.98
+   ],
+   "t_final": [
+    37.66,
+    39.72
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "안경 쓴 창업자 클로즈업(말하는 중)",
+   "mute": true,
+   "Y": 32
+  },
+  {
+   "i": 22,
+   "line": "N7",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 269.05,
+   "dur": 1.46,
+   "src_span": [
+    269.05,
+    270.51
+   ],
+   "t_final": [
+    39.72,
+    41.18
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "물 수조 속 부푼 STORMBAG 자루",
+   "mute": true,
+   "Y": 63
+  },
+  {
+   "i": 23,
+   "line": "O9",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 462.95,
+   "dur": 1.11,
+   "src_span": [
+    462.95,
+    464.06
+   ],
+   "t_final": [
+    40.98,
+    42.09
+   ],
+   "src_crop": [
+    380,
+    0,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "무대에 선 두 창업자(듣는 중)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    462.95,
+    466.6
+   ],
+   "Y": 33
+  },
+  {
+   "i": 24,
+   "line": "O9",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 464.06,
+   "dur": 2.54,
+   "src_span": [
+    464.06,
+    466.6
+   ],
+   "t_final": [
+    42.09,
+    44.63
+   ],
+   "src_crop": [
+    380,
+    0,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "제안하는 투자자(여·연두 옷)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    462.95,
+    466.6
+   ],
+   "Y": 89
+  },
+  {
+   "i": 25,
+   "line": "O10",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 550.6,
+   "dur": 2.09,
+   "src_span": [
+    550.6,
+    552.69
+   ],
+   "t_final": [
+    44.71,
+    46.8
+   ],
+   "src_crop": [
+    560,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "웃으며 말하는 투자자(남·남색 재킷)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    550.6,
+    553.1
+   ],
+   "Y": 36
+  },
+  {
+   "i": 26,
+   "line": "O10",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 552.69,
+   "dur": 1.03,
+   "src_span": [
+    552.69,
+    553.72
+   ],
+   "t_final": [
+    46.8,
+    47.83
+   ],
+   "src_crop": [
+    508,
+    0,
+    904,
+    880
+   ],
+   "res": "1920x1080",
+   "scale": 1.195,
+   "ours": "투자자석 와이드(N8 첫머리까지 이어짐)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    550.6,
+    553.1
+   ],
+   "Y": 38
+  },
+  {
+   "i": 27,
+   "line": "N8",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 542.35,
+   "dur": 1.45,
+   "src_span": [
+    542.35,
+    543.8
+   ],
+   "t_final": [
+    47.29,
+    48.74
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉은 투자자(남·자주색 정장)",
+   "mute": true,
+   "Y": 43
+  },
+  {
+   "i": 28,
+   "line": "N8",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 543.85,
+   "dur": 1.5,
+   "src_span": [
+    543.85,
+    545.35
+   ],
+   "t_final": [
+    48.74,
+    50.24
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "의자에 앉은 투자자(여·연두 옷)",
+   "mute": true,
+   "Y": 84
+  },
+  {
+   "i": 29,
+   "line": "O11",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 577.8,
+   "dur": 1.25,
+   "src_span": [
+    577.8,
+    579.05
+   ],
+   "t_final": [
+    50.75,
+    52.0
+   ],
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "웃는 창업자(남·큰 체격) 클로즈업",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    577.8,
+    579.9
+   ],
+   "Y": 46
+  },
+  {
+   "i": 30,
+   "line": "O11",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 579.05,
+   "dur": 1.85,
+   "src_span": [
+    579.05,
+    580.9
+   ],
+   "t_final": [
+    52.0,
+    53.85
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "벌떡 일어나 환호하는 투자자(여·연두 옷)(N9 첫머리까지 이어짐)",
+   "mute": false,
+   "audio_src": "8UW-es-eTl0.mp4",
+   "audio_span": [
+    577.8,
+    579.9
+   ],
+   "Y": 35
+  },
+  {
+   "i": 31,
+   "line": "N9",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 584.5,
+   "dur": 1.6,
+   "src_span": [
+    584.5,
+    586.1
+   ],
+   "t_final": [
+    52.93,
+    54.53
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "무대에서 투자자(여)와 창업자가 끌어안는 장면",
+   "mute": true,
+   "Y": 58
+  },
+  {
+   "i": 32,
+   "line": "N9",
+   "src": "8UW-es-eTl0.mp4",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0",
+   "ss": 592.1,
+   "dur": 1.6,
+   "src_span": [
+    592.1,
+    593.7
+   ],
+   "t_final": [
+    54.53,
+    56.13
+   ],
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "res": "1920x1080",
+   "scale": 0.974,
+   "ours": "두 창업자가 웃으며 무대를 걸어 나감(끝 컷 ≥1.5초)",
+   "mute": true,
+   "Y": 32
+  }
+ ],
+ "check": {
+  "cut_count": 33,
+  "cut_median": 1.6,
+  "first_cut": 0.5,
+  "last_cut": 1.6,
+  "min_scale_res": 0.974,
+  "max_scale": 1.195,
+  "est_total_sec": 56.73,
+  "bench_total": 50.467,
+  "same_src_within3s": []
+ }
+}

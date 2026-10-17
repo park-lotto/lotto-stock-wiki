@@ -1,0 +1,746 @@
+{
+ "topic": "샤크탱크 STORMBAG — 물에 담그면 부푸는 모래 없는 모래주머니, 투자자 넷이 같은 조건으로 붙은 편(벤치 그대로 칼카피, 방송 원음 위주)",
+ "brand": "샥탬스토리",
+ "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.467,
+  "views": 12470000,
+  "lufs": -7.8,
+  "tp": 1.0,
+  "cut_median": 1.27,
+  "first_cut": 0.57,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "title_bands": [
+   [
+    211,
+    304
+   ],
+   [
+    318,
+    407
+   ]
+  ]
+ },
+ "titles": {
+  "hook": "홍수를 막을 수 있는\n역대급 모래 주머니?!",
+  "rule": "벤치 그대로(사장님 10-18 ③) — 1줄 노랑 [211,304] / 2줄 흰 [318,407], 끝 '?!'. 바꾸는 것은 로고 자리 브랜드 '샥탬스토리'뿐(벤치 시트 33컷에 로고 자리 없음 — 넣을 자리 페이블 결정). 기록만, 구현은 페이블 OK 뒤"
+ },
+ "facts": {
+  "f1": {
+   "text": "8UW 66.8~67.75 'What?'(받아쓰기 2모델 r3 67.25~67.75 일치) · 67.23 컷부터 투자자(남·남색 셔츠) 화면",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=66"
+  },
+  "f2": {
+   "text": "제품사 3s0 60.0~64.7 'fill this wheelbarrow with a little bit of water and submerge the StormBags' + 132.9~140.6 수레 물 속 자루 화면 · 8UW 53.9~57.6 창업자 'You can see the time-lapse right there' · 52.42~53.40 'Pretty cool'(2모델)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=50"
+  },
+  "f3": {
+   "text": "8UW 62.7~66.8 창업자 'in three to five minutes, it weighs a whopping 30 pounds' · 제품사 3s0 45.3~50.1 'absorb between four and five gallons' · stormbag.co 블로그 'absorbs roughly four gallons of fresh water in three to five minutes'(4갤런=15.1L)",
+   "url": "https://stormbag.co/blogs/stormbag-flood-protection-blog/stormbag-on-shark-tank-the-sandless-sandbag-that-won-a-200k-deal"
+  },
+  "f4": {
+   "text": "8UW 12.8~17.6 창업자 'when a flood is on the way, the last thing you want to be doing is shoveling sand' · 30.0~37.7 'build a wall like this with no shoveling and no sand'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=12"
+  },
+  "f5": {
+   "text": "8UW 17.85~23.60 원음 'Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.'(r1 2모델 일치, 1명)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=17"
+  },
+  "f6": {
+   "text": "제품사 3s0 3.8~11.1 'the last thing that you want to be doing is shoveling sand. Traditional sandbags require back-breaking labor' + 3s0 18~24초 삽질 화면",
+   "url": "https://www.youtube.com/watch?v=3s0CwrcqWCU"
+  },
+  "f7": {
+   "text": "8UW 45.25~50.00 원음 'almost takes no labor to deploy, all you simply do is add water.'(r2 2모델 일치, 1명)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=45"
+  },
+  "f8": {
+   "text": "8UW 62.7~66.8 '30 pounds'(=13.6kg → '13킬로그램 넘는') · 8UW 30.0~37.7 'build a wall like this' · 3s0 50.1~54.6 '1-lb bag into a fully usable 35-lb sandbag'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=62"
+  },
+  "f9": {
+   "text": "8UW 110.65~112.10 원음 'Is there any way to get it back'(r3 2모델 — 112.1 에서 자름, 뒤 'or is it a one-time deal' 제외)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=110"
+  },
+  "f10": {
+   "text": "8UW 113.3~118.5 창업자 'if you have it out in the sun … it will dehydrate again flat' · 121.5 'Three times.' (★벤치 '2~3주 내로 건조'는 원본상 화분 물주기 주기(364.5~367.4) — 우리는 안 씀)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=113"
+  },
+  "f11": {
+   "text": "8UW 85.95~87.05 원음 'That's pretty cool.'(r1 2모델 일치) · 85.89~87.39 투자자(남·남색 셔츠) 화면",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=85"
+  },
+  "f12": {
+   "text": "8UW 243.15~244.15 투자자 'You making any money?' · 259.9~264.0 창업자 '(our fiscal year just closed,) and we did $90,000, but we have so far done absolutely zero marketing.'(r2·r3 2모델)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=240"
+  },
+  "f13": {
+   "text": "8UW 264.6~269.8 창업자 'there's a huge untapped potential to make millions'",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=264"
+  },
+  "f14": {
+   "text": "8UW 410.9~426.8 투자자 2명(화면 띠 'Daymond & Daniel's offer: $200k for a 40% stake' 7:08~7:14) '$200,000 for 40%' · 463.0~466.6 투자자(여) '$200,000, but for 30%'(화면 띠 'Lori & Mark's offer: $200k for a 30% stake' 7:48~7:50)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=410"
+  },
+  "f15": {
+   "text": "8UW 550.6~553.1 투자자 'We'll do 30 also' · 다른 투자자 'We'll do 30, we'll match it' → 투자자 4명이 같은 30% 조건(553.2 'now they're equal' · 화면 띠 'Daymond & Daniel's revised offer: $200k for a 30% stake' 9:14~9:18)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=550"
+  },
+  "f16": {
+   "text": "8UW 577.8~579.9 'Lori, Mark, you got a deal.' + 투자자(여) 'Yes!'(r1·r3 2모델)",
+   "url": "https://www.youtube.com/watch?v=8UW-es-eTl0&t=577"
+  },
+  "f17": {
+   "text": "stormbag.co 블로그(회사 글): 'They sold out their stock the weekend the episode premiered' · 'walked away from the formal close to keep building the company on their own terms' — ⚠ 같은 블로그가 인용한 투자자 Daniel Lubetzky 페이스북 'Lori and Mark closed it'(같은 블로그 인용)과 상충 → 전언체, 페이블 판단 대기",
+   "url": "https://stormbag.co/blogs/stormbag-flood-protection-blog/stormbag-on-shark-tank-the-sandless-sandbag-that-won-a-200k-deal"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "fn": "0초 결말 반응",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     67.25,
+     67.75
+    ],
+    "en": "What?",
+    "who": "투자자(남·남색 셔츠) — 이름 불명(화면 글자 없음)",
+    "caps": [
+     "뭐라고?!"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "est_sec": 0.5,
+    "t_final": [
+     0.0,
+     0.5
+    ]
+   },
+   {
+    "id": "N1",
+    "fn": "시연",
+    "kind": "tts",
+    "text": "이 자루를 물에 담가 두면",
+    "tts": "이 자루를 물에 담가 두면",
+    "caps": [
+     "이 자루를",
+     "물에 담가 두면"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 1.41,
+    "t_final": [
+     0.58,
+     1.99
+    ]
+   },
+   {
+    "id": "O2",
+    "fn": "반응",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     52.42,
+     53.4
+    ],
+    "en": "Pretty cool.",
+    "who": "투자자(남·남색 재킷) 화면 — 화자 불명",
+    "caps": [
+     "오, 멋진데요"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 0.98,
+    "t_final": [
+     2.07,
+     3.05
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "시연(숫자)",
+    "kind": "tts",
+    "text": "3~5분이면 물 15리터쯤 먹고, 빵빵하게 부푼다는데",
+    "tts": "삼에서 오 분이면 물 십오 리터쯤 먹고, 빵빵하게 부푼다는데",
+    "caps": [
+     "3~5분이면",
+     "물 15리터쯤 먹고",
+     "빵빵하게 부푼다는데"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "est_sec": 3.38,
+    "t_final": [
+     3.13,
+     6.51
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "기존 불편(대체)",
+    "kind": "tts",
+    "text": "홍수 때마다 쌓던 모래주머니, 대신 쓰려고 만든 거라고",
+    "tts": "홍수 때마다 쌓던 모래주머니, 대신 쓰려고 만든 거라고",
+    "caps": [
+     "홍수 때마다 쌓던",
+     "모래주머니 대신",
+     "쓰려고 만든 거라고"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "est_sec": 3.1,
+    "t_final": [
+     6.59,
+     9.69
+    ]
+   },
+   {
+    "id": "O3",
+    "fn": "기존 불편",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     17.85,
+     23.6
+    ],
+    "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
+    "who": "창업자(남) — 화면은 모래주머니 자료, 어느 창업자인지 불명",
+    "caps": [
+     "기존 모래주머니는",
+     "허리가 끊어지고",
+     "모래만 수천 파운드죠"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "est_sec": 5.75,
+    "t_final": [
+     9.77,
+     15.52
+    ]
+   },
+   {
+    "id": "N4",
+    "fn": "기존 불편→차이",
+    "kind": "tts",
+    "text": "하나하나 들어 옮겨 쌓던 모래주머니랑은 다르게",
+    "tts": "하나하나 들어 옮겨 쌓던 모래주머니랑은 다르게",
+    "caps": [
+     "하나하나 들어 옮겨 쌓던",
+     "모래주머니랑은 다르게"
+    ],
+    "facts": [
+     "f6"
+    ],
+    "est_sec": 2.82,
+    "t_final": [
+     15.6,
+     18.42
+    ]
+   },
+   {
+    "id": "O4",
+    "fn": "해결",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     45.25,
+     50.0
+    ],
+    "en": "Almost takes no labor to deploy, all you simply do is add water.",
+    "who": "창업자(남·자루 든 사람)",
+    "caps": [
+     "설치할 때",
+     "힘이 거의 안 들고",
+     "그냥 물만 부으면 돼요"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 4.75,
+    "t_final": [
+     18.5,
+     23.25
+    ]
+   },
+   {
+    "id": "N5",
+    "fn": "숫자(무게)",
+    "kind": "tts",
+    "text": "물길에 놓기만 하면, 13킬로그램 넘는 둑이 된다고",
+    "tts": "물길에 놓기만 하면, 십삼 킬로그램 넘는 둑이 된다고",
+    "caps": [
+     "물길에 놓기만 하면",
+     "13kg 넘는 둑이",
+     "된다고"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 2.96,
+    "t_final": [
+     23.33,
+     26.29
+    ]
+   },
+   {
+    "id": "O5",
+    "fn": "질문(재사용)",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     110.65,
+     112.1
+    ],
+    "en": "Is there any way to get it back?",
+    "who": "투자자(남·민머리·검정 정장)",
+    "caps": [
+     "다시 되돌릴 수 있어요?"
+    ],
+    "facts": [
+     "f9"
+    ],
+    "est_sec": 1.45,
+    "t_final": [
+     26.37,
+     27.82
+    ]
+   },
+   {
+    "id": "N6",
+    "fn": "재사용",
+    "kind": "tts",
+    "text": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
+    "tts": "햇볕에 두면 다시 납작하게 마르고, 세 번까지 다시 쓴다고",
+    "caps": [
+     "햇볕에 두면",
+     "다시 납작하게 마르고",
+     "세 번까지 다시 쓴다고"
+    ],
+    "facts": [
+     "f10"
+    ],
+    "est_sec": 3.24,
+    "t_final": [
+     27.9,
+     31.14
+    ]
+   },
+   {
+    "id": "O6",
+    "fn": "반응",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     85.95,
+     87.05
+    ],
+    "en": "That's pretty cool.",
+    "who": "투자자(남·남색 셔츠)",
+    "caps": [
+     "그거 꽤 괜찮네요"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 1.1,
+    "t_final": [
+     31.22,
+     32.32
+    ]
+   },
+   {
+    "id": "O7",
+    "fn": "숫자 질문",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     243.15,
+     244.15
+    ],
+    "en": "You making any money?",
+    "who": "투자자(남·민머리·검정 정장)",
+    "caps": [
+     "돈은 좀 벌고 있어요?"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 1.0,
+    "t_final": [
+     32.4,
+     33.4
+    ]
+   },
+   {
+    "id": "O8",
+    "fn": "숫자(매출)",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     259.9,
+     264.0
+    ],
+    "en": "…and we did $90,000, but we have so far done absolutely zero marketing.",
+    "who": "창업자(남) — 무대 와이드라 화자 불명",
+    "caps": [
+     "9만 달러 벌었어요",
+     "마케팅은 아직",
+     "하나도 안 했어요"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 4.1,
+    "t_final": [
+     33.48,
+     37.58
+    ]
+   },
+   {
+    "id": "N7",
+    "fn": "자신감",
+    "kind": "tts",
+    "text": "광고만 제대로 하면, 수백만 달러도 노린다고 자신하는데",
+    "tts": "광고만 제대로 하면, 수백만 달러도 노린다고 자신하는데",
+    "caps": [
+     "광고만 제대로 하면",
+     "수백만 달러도 노린다고",
+     "자신하는데"
+    ],
+    "facts": [
+     "f13"
+    ],
+    "est_sec": 3.24,
+    "t_final": [
+     37.66,
+     40.9
+    ]
+   },
+   {
+    "id": "O9",
+    "fn": "지분 제안",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     462.95,
+     466.6
+    ],
+    "en": "So we're going to offer the $200,000, but for 30%.",
+    "who": "투자자(여·연두 옷)",
+    "caps": [
+     "20만 달러 드릴게요",
+     "대신 지분은 30%로요"
+    ],
+    "facts": [
+     "f14"
+    ],
+    "est_sec": 3.65,
+    "t_final": [
+     40.98,
+     44.63
+    ]
+   },
+   {
+    "id": "O10",
+    "fn": "지분 경쟁",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     550.6,
+     553.1
+    ],
+    "en": "We'll do 30 also. / We'll do 30, we'll match it.",
+    "who": "투자자(남·남색 재킷) → 둘째 투자자(남, 불명)",
+    "caps": [
+     "우리도 30%로 할게요!",
+     "우리도 30%로 할게요!"
+    ],
+    "facts": [
+     "f15"
+    ],
+    "est_sec": 2.5,
+    "t_final": [
+     44.71,
+     47.21
+    ]
+   },
+   {
+    "id": "N8",
+    "fn": "지분 경쟁",
+    "kind": "tts",
+    "text": "처음 두 명도 30%로 내리면서, 네 명이 한판 붙었는데",
+    "tts": "처음 두 명도 삼십 퍼센트로 내리면서, 네 명이 한판 붙었는데",
+    "caps": [
+     "처음 두 명도",
+     "30%로 내리면서",
+     "네 명이 한판 붙었는데"
+    ],
+    "facts": [
+     "f14",
+     "f15"
+    ],
+    "est_sec": 3.38,
+    "t_final": [
+     47.29,
+     50.67
+    ]
+   },
+   {
+    "id": "O11",
+    "fn": "결정",
+    "kind": "orig",
+    "src": "8UW",
+    "span": [
+     577.8,
+     579.9
+    ],
+    "en": "Lori, Mark, you got a deal. / Yes!",
+    "who": "창업자(남) → 투자자(여·연두 옷)",
+    "caps": [
+     "로리, 마크!",
+     "두 분이랑 할게요",
+     "좋았어!"
+    ],
+    "facts": [
+     "f16"
+    ],
+    "est_sec": 2.1,
+    "t_final": [
+     50.75,
+     52.85
+    ]
+   },
+   {
+    "id": "N9",
+    "fn": "방송 후 결과",
+    "kind": "tts",
+    "text": "방송 나간 주말에 재고는 동났다는데, 정식 계약은 끝내 안 맺었다고",
+    "tts": "방송 나간 주말에 재고는 동났다는데, 정식 계약은 끝내 안 맺었다고",
+    "caps": [
+     "방송 나간 주말에",
+     "재고는 동났다는데",
+     "정식 계약은",
+     "끝내 안 맺었다고"
+    ],
+    "facts": [
+     "f17"
+    ],
+    "est_sec": 3.8,
+    "t_final": [
+     52.93,
+     56.73
+    ]
+   }
+  ],
+  "est_total_sec": 56.73,
+  "cps_target": 7.1,
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     67.25,
+     67.75
+    ],
+    "en": "What?",
+    "ko_caps": [
+     "뭐라고?!"
+    ],
+    "who": "투자자(남·남색 셔츠) — 이름 불명(화면 글자 없음)"
+   },
+   {
+    "id": "O2",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     52.42,
+     53.4
+    ],
+    "en": "Pretty cool.",
+    "ko_caps": [
+     "오, 멋진데요"
+    ],
+    "who": "투자자(남·남색 재킷) 화면 — 화자 불명"
+   },
+   {
+    "id": "O3",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     17.85,
+     23.6
+    ],
+    "en": "Traditional sandbags require back-breaking labor, not to mention thousands of pounds of sand.",
+    "ko_caps": [
+     "기존 모래주머니는",
+     "허리가 끊어지고",
+     "모래만 수천 파운드죠"
+    ],
+    "who": "창업자(남) — 화면은 모래주머니 자료, 어느 창업자인지 불명"
+   },
+   {
+    "id": "O4",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     45.25,
+     50.0
+    ],
+    "en": "Almost takes no labor to deploy, all you simply do is add water.",
+    "ko_caps": [
+     "설치할 때",
+     "힘이 거의 안 들고",
+     "그냥 물만 부으면 돼요"
+    ],
+    "who": "창업자(남·자루 든 사람)"
+   },
+   {
+    "id": "O5",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     110.65,
+     112.1
+    ],
+    "en": "Is there any way to get it back?",
+    "ko_caps": [
+     "다시 되돌릴 수 있어요?"
+    ],
+    "who": "투자자(남·민머리·검정 정장)"
+   },
+   {
+    "id": "O6",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     85.95,
+     87.05
+    ],
+    "en": "That's pretty cool.",
+    "ko_caps": [
+     "그거 꽤 괜찮네요"
+    ],
+    "who": "투자자(남·남색 셔츠)"
+   },
+   {
+    "id": "O7",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     243.15,
+     244.15
+    ],
+    "en": "You making any money?",
+    "ko_caps": [
+     "돈은 좀 벌고 있어요?"
+    ],
+    "who": "투자자(남·민머리·검정 정장)"
+   },
+   {
+    "id": "O8",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     259.9,
+     264.0
+    ],
+    "en": "…and we did $90,000, but we have so far done absolutely zero marketing.",
+    "ko_caps": [
+     "9만 달러 벌었어요",
+     "마케팅은 아직",
+     "하나도 안 했어요"
+    ],
+    "who": "창업자(남) — 무대 와이드라 화자 불명"
+   },
+   {
+    "id": "O9",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     462.95,
+     466.6
+    ],
+    "en": "So we're going to offer the $200,000, but for 30%.",
+    "ko_caps": [
+     "20만 달러 드릴게요",
+     "대신 지분은 30%로요"
+    ],
+    "who": "투자자(여·연두 옷)"
+   },
+   {
+    "id": "O10",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     550.6,
+     553.1
+    ],
+    "en": "We'll do 30 also. / We'll do 30, we'll match it.",
+    "ko_caps": [
+     "우리도 30%로 할게요!",
+     "우리도 30%로 할게요!"
+    ],
+    "who": "투자자(남·남색 재킷) → 둘째 투자자(남, 불명)"
+   },
+   {
+    "id": "O11",
+    "src": "8UW-es-eTl0.mp4",
+    "span": [
+     577.8,
+     579.9
+    ],
+    "en": "Lori, Mark, you got a deal. / Yes!",
+    "ko_caps": [
+     "로리, 마크!",
+     "두 분이랑 할게요",
+     "좋았어!"
+    ],
+    "who": "창업자(남) → 투자자(여·연두 옷)"
+   }
+  ],
+  "check": {
+   "copy3": [],
+   "max_cap_chars": 13
+  }
+ },
+ "effects_record": [
+  {
+   "at": "O1",
+   "fx": "빨간 원(투자자 얼굴 — 벤치와 같은 자리·같은 0초)",
+   "bench": "0.0~0.6초"
+  },
+  {
+   "at": "O3",
+   "fx": "빨간 점선 원(삽질 장면)",
+   "bench": "9.1~11.9초"
+  },
+  {
+   "at": "O3 둘째 조각",
+   "fx": "분홍 위 화살표",
+   "bench": "11.9~14.2초"
+  },
+  {
+   "at": "O9",
+   "fx": "날개 돈다발 이모지",
+   "bench": "38.6~41.1초"
+  },
+  {
+   "at": "자막",
+   "fx": "흰 글자+검정 테두리, 핵심어 형광(민트·초록·빨강·분홍)",
+   "bench": "전 구간"
+  }
+ ],
+ "notes": [
+  "TTS·렌더 전. 효과·제목 띠는 기록만(구현 안 함).",
+  "벤치 나레 연속 3어절 일치 0 — check_copy() 로 잰다(대본.json check.copy3).",
+  "★FEMA·국토안보부 '정부 인증' 줄은 뺐다(회사 주장 'FEMA & DHS Approved' vs 같은 회사 FAQ 'FEMA does not formally approve individual products') — 페이블 판단 대기."
+ ]
+}
