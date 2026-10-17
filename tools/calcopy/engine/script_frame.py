@@ -812,6 +812,120 @@ def hook_formula_check(text: str, hf: dict | None, script: str = "") -> dict | N
     return {"ok": not why, "why": why, "sentence": s}
 
 
+# ── 잉?·와우 포인트 + 끝 CTA (사장님 2026-10-18) ─────────────────────────────
+# 잉? = 궁금하게 만드는 줄(답은 뒤 줄에서) · 와우 = '와 대박이네' 줄(강한 연결어로 귀에 꽂히고 + 구체 내용) · 기본 와우 3칸.
+# 강한 연결어의 주인 = shopping_shorts/story_writer.py YT_POOLS·IG_POOL(썰 히트작 자막 2,051편 실측). 그 모듈은 import 가 32초라
+# (10-18 실측) 소스의 글자 그대로 값만 ast 로 읽는다 — 목록을 여기 베끼지 않는다(0순위-B).
+_SIGNAL_CACHE: dict = {}
+
+
+def signal_words() -> list[str]:
+    """숏템 신호어(story_writer.YT_POOLS 1·2·3 자리 + IG_POOL) — 긴 것부터."""
+    if "w" not in _SIGNAL_CACHE:
+        import ast
+        src = (ROOT / "shopping_shorts" / "story_writer.py").read_text(encoding="utf-8")
+        vals = {}
+        for node in ast.parse(src).body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1 and getattr(node.targets[0], "id", "") in ("YT_POOLS", "IG_POOL"):
+                vals[node.targets[0].id] = ast.literal_eval(node.value)
+        words = {w for pool in (vals.get("YT_POOLS") or {}).values() for w, _ in pool} | {w for w, _ in vals.get("IG_POOL") or []}
+        if not words:
+            raise RuntimeError("story_writer.py 에서 YT_POOLS·IG_POOL 을 못 읽었다 — 신호어 주인이 바뀌었나 확인")
+        _SIGNAL_CACHE["w"] = sorted(words, key=len, reverse=True)
+    return _SIGNAL_CACHE["w"]
+
+
+def load_points(frame_path) -> dict | None:
+    """설명서 옆 points.json(잉?·와우·CTA, 사장님 손 데이터). 없으면 None."""
+    p = Path(frame_path).parent / "points.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def _connectors(pc: dict) -> list[str]:
+    return sorted(set(signal_words()) | set((pc.get("wow") or {}).get("channel_connectors") or []), key=len, reverse=True)
+
+
+def _norm_sp(s: str) -> str:
+    return re.sub(r"[\s,.!?~…'\"]", "", s or "")
+
+
+def wow_head(text: str, pc: dict) -> str | None:
+    """줄 머리(head_chars 자 안)에 강한 연결어가 있으면 그 말 — 귀에 먼저 들어와야 와우로 친다."""
+    n = int((pc.get("wow") or {}).get("head_chars", 14))
+    head = _norm_sp(text)[: n + 4]
+    for w in _connectors(pc):
+        k = _norm_sp(w)
+        if k and k in head[: max(n, len(k))]:
+            return w
+    return None
+
+
+def points_rule(pc: dict | None) -> str:
+    """초안 지시(points 없으면 빈 줄). 줄마다 point·answer_at 을 달게 한다."""
+    if not pc:
+        return ""
+    ing, wow, cta = pc.get("ing") or {}, pc.get("wow") or {}, pc.get("cta") or {}
+    pool = " · ".join(_connectors(pc)[:28])
+    s = (f"[잉? 포인트 — 반드시 {ing.get('min', 1)}줄 이상, 앞쪽 1/3 안] {ing.get('plain')}. 그 줄에 point:\"잉\", answer_at:(답이 나오는 뒤 줄 번호, 0부터). "
+         f"예: {' / '.join(ing.get('examples', [])[:2])}\n"
+         f"[와우 포인트 — 반드시 {wow.get('count', 3)}줄({' · '.join(wow.get('slots', []))})] {wow.get('plain')}. 그 줄에 point:\"와우\". "
+         f"줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 {wow.get('strong_min', 2)}줄 이상은 '미친 포인트·대박인·말도 안 되는·충격적인' 계열, 같은 뿌리 말 두 번 금지): {pool}. "
+         f"연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: {' / '.join(wow.get('examples', [])[:2])}\n")
+    if cta.get("required"):
+        s += f"[끝 CTA — 반드시] 결과과장 줄 다음, 맨 끝 한 줄 = {cta.get('form')} (node:\"권유\", point:\"CTA\")\n"
+    return s
+
+
+_STRONG_ROOTS = ("미친", "미쳐", "대박", "말도 안", "충격", "놀라", "소름", "반전", "핵심", "열광")
+
+
+def points_check(lines: list[dict], pc: dict | None, facts_ids: set | None = None) -> dict | None:
+    """(판단 주인) 잉?·와우·끝 CTA 검사. 표시(point)만 믿지 않고 글로 잰다 — 와우 = 줄 머리 강한 연결어 + 근거 번호,
+    잉? = 앞 1/3 안 표시 줄 + 답 줄(answer_at)이 뒤에 있음, CTA = 끝 줄 꼴. points 없으면 None."""
+    if not pc:
+        return None
+    ing, wow, cta = pc.get("ing") or {}, pc.get("wow") or {}, pc.get("cta") or {}
+    texts = [l.get("text") or "" for l in lines]
+    n = len(lines)
+    body = n - 1 if (cta.get("required") and n) else n
+    why, per = [], {}
+    # 와우: 머리 연결어가 있는 본문 줄
+    wows = []
+    for k in range(body):
+        w = wow_head(texts[k], pc)
+        if not w:
+            continue
+        has_fact = bool(set(lines[k].get("facts") or []) & (facts_ids or set())) if facts_ids is not None else bool(lines[k].get("facts"))
+        rest = _norm_sp(texts[k])[len(_norm_sp(w)):]
+        if len(rest) < 8:
+            per[k] = per.get(k, []) + ["와우 연결어 뒤 내용 없음"]
+        elif not has_fact:
+            per[k] = per.get(k, []) + ["와우 줄 근거 번호 없음(새 사실이어야)"]
+        else:
+            wows.append((k, w))
+    need = int(wow.get("count", 3))
+    if len(wows) < need:
+        why.append(f"와우 포인트 {len(wows)}/{need}줄(줄 머리 강한 연결어 + 근거 있는 새 사실)")
+    strong = [w for _, w in wows if any(r in w for r in _STRONG_ROOTS)]
+    if len(strong) < int(wow.get("strong_min", 2)):
+        why.append(f"강한 연결어(미친·대박·말도 안 되는·충격·핵심…) {len(strong)}/{wow.get('strong_min', 2)}줄")
+    roots = [next((r for r in _STRONG_ROOTS if r in w), w) for _, w in wows]
+    dup = sorted({r for r in roots if roots.count(r) > 1 and r != "심지어"})
+    if dup:
+        why.append(f"같은 뿌리 연결어 반복 {dup}")
+    # 잉?: 표시 줄이 앞 1/3 안 + 답 줄이 뒤에
+    front = max(1, math.ceil(body * float(ing.get("front_frac", 0.34))))
+    ings = [k for k, l in enumerate(lines[:front]) if str(l.get("point") or "").strip() in ("잉", "잉?")]
+    ok_ing = [k for k in ings if isinstance(lines[k].get("answer_at"), int) and k < lines[k]["answer_at"] < n]
+    if len(ok_ing) < int(ing.get("min", 1)):
+        why.append("잉? 포인트 없음(앞 1/3 안에 궁금하게 만드는 줄 + 뒤 줄에서 답)" if not ings else "잉? 줄의 답(answer_at)이 뒤 줄에 없음")
+    # 끝 CTA
+    if cta.get("required"):
+        if not n or not re.search(cta.get("pattern", "댓글"), texts[-1]):
+            why.append(f"끝 CTA 없음(꼴: {cta.get('form')})")
+    return {"ok": not why and not per, "why": why, "bad": per, "wow": wows, "ing": ok_ing, "body_n": body}
+
+
 def copy_spans(text: str, examples: list[str], n: int = 7) -> list[str]:
     """베낌 검사: 새 대본과 예문이 공백 뺀 n자 이상 그대로 겹치는 조각."""
     a = _norm(text)

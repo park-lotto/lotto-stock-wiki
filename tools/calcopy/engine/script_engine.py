@@ -710,6 +710,9 @@ def find_frame(slug: str | None) -> dict | None:
     hf = SF.load_hook_formula(p)          # 사장님 첫 문장 공식(손 데이터, 옆 파일) — draft 지시·check_frame 검사가 같이 쓴다
     if hf:
         fr["hook_formula"] = hf
+    pts = SF.load_points(p)               # 사장님 잉?·와우 포인트(손 데이터, 옆 파일) — draft 지시·check_frame 검사가 같이 쓴다
+    if pts:
+        fr["points"] = pts
     return fr
 
 
@@ -752,7 +755,7 @@ def draft(product: dict, frame: dict | None, facts: dict, llm, slug: str | None 
             endings="·".join(b["endings"]), foreign="·".join(b.get("foreign_endings") or []) or "없음", conn="·".join(b.get("connectives") or []),
             cps=b.get("connect_per_sent", 1), chars=int(b["length"]["chars_median"]), nsent=int(b["length"]["n_sent_median"]),
             examples="\n\n".join(f"({i + 1}) {e['text']}" for i, e in enumerate(b["examples"])),
-            hook_rule=SF.hook_formula_rule(frame.get("hook_formula")))
+            hook_rule=SF.hook_formula_rule(frame.get("hook_formula")) + SF.points_rule(frame.get("points")))
         path, roles = "frame", None
     else:
         roles = ROLES.get(slug or "") or DEFAULT_ROLES
@@ -810,12 +813,15 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
     copy7 = {k: v for k, v in copy7.items() if v}
     judge = SF.judge_like(" ".join(texts), frame, tags=tags) if frame else None
     hook = SF.hook_formula_check(texts[0], (frame or {}).get("hook_formula"), " ".join(texts)) if texts else None
+    pts = SF.points_check(lines, (frame or {}).get("points"), ids)
     chk = {"superlative": sorted(sup), "superlative_hit": sup, "spacing_off": sorted(spc), "spacing_hit": spc,
            "range_as_single": sorted(rng), "ranges_hit": rng, "numbers_unsourced": nums, "off_topic_brand": sorted(brand),
            "unsupported": sorted(support or {}), "support_hit": support or {}, "support_checked": support is not None,
            "ungrounded": sorted(ungrounded), "ungrounded_hit": ungrounded, "copied_examples": sorted(copy7), "copy7_hit": copy7,
-           "unknown_ids": unknown, "judge": judge, "hook_formula": hook, "n_lines": len(lines), "chars": [len(t.replace(" ", "")) for t in texts]}
+           "unknown_ids": unknown, "judge": judge, "hook_formula": hook, "points": pts, "n_lines": len(lines), "chars": [len(t.replace(" ", "")) for t in texts]}
     chk["bad"] = bad_lines(chk)
+    for k, w in ((pts or {}).get("bad") or {}).items():
+        chk["bad"].setdefault(k, []).extend(w)
     glob = []
     if unknown:
         glob.append(f"없는 근거 번호 {unknown}")
@@ -823,6 +829,8 @@ def check_frame(lines: list[dict], frame: dict | None, facts: dict, examples: li
         glob.append(f"판별기 반려 점수 {judge['score']} < {judge['threshold']}" + (f" · 필수 실패 {judge['hard_fail']}" if judge["hard_fail"] else ""))
     if hook and not hook["ok"]:
         glob.append(f"첫 문장 공식 미달: {' · '.join(hook['why'])}")
+    if pts and pts["why"]:
+        glob.append(f"잉?·와우 포인트 미달: {' · '.join(pts['why'])}")
     chk["global"] = glob
     chk["ok"] = not chk["bad"] and not glob and bool(lines)
     return chk
