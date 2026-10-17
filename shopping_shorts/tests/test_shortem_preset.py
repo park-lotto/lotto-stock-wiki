@@ -51,3 +51,26 @@ def test_preset_doc_only_whitelisted(tmp_path):
     import pytest
     with pytest.raises(KeyError):
         cb.preset_doc("../.env", tmp_path)
+
+
+def test_style_fields_options_and_referenced_docs(tmp_path):
+    root = _books(tmp_path, brands={"fs": {"brand": "샥탬스토리"}},
+                  styles={"현장썰": {"priority": 1, "must": ["나레", "원음"], "exclude": "제품 없는 바이럴",
+                                    "strengths": [{"what": "0초 반응", "strength": "강", "source": ["channel/fs/a.md"]}, "옛 글"],
+                                    "flow": {"source": "channel/스타일분석/현장썰/흐름.md (6편)", "beats": [{"beat": "①"}]},
+                                    "bench": {"fs": {"n": 2, "source": "channel/fs/b.md 와 ../x.md"}}}})
+    sb = json.loads((root / "channel" / "스타일.json").read_text(encoding="utf-8"))
+    sb["options"] = {"화자대사줄": {"desc": "d", "strengths": ["끝줄"], "bench": {"fs": {"n": 1}}}}
+    (root / "channel" / "스타일.json").write_text(json.dumps(sb, ensure_ascii=False), encoding="utf-8")
+    d = cb.preset_home(root)
+    st = d["styles"][0]
+    assert st["must"] == ["나레", "원음"] and st["flow"]["beats"][0]["beat"] == "①"
+    assert st["strengths"][1] == {"what": "옛 글"}                         # 글 한 줄도 같은 꼴로
+    assert d["options"][0]["name"] == "화자대사줄" and d["options"][0]["bench"][0]["brand"] == "샥탬스토리"
+    assert cb.referenced_docs(sb) == {"channel/fs/a.md", "channel/스타일분석/현장썰/흐름.md", "channel/fs/b.md"}
+    (root / "channel" / "fs").mkdir()
+    (root / "channel" / "fs" / "a.md").write_text("근거", encoding="utf-8")
+    assert cb.preset_doc("channel/fs/a.md", root) == "근거"              # 장부가 가리키는 문서는 열린다
+    import pytest
+    with pytest.raises(KeyError):
+        cb.preset_doc("channel/fs/c.md", root)                          # 안 가리키는 문서는 안 열린다

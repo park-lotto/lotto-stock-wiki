@@ -39,6 +39,9 @@
   .kv{display:grid;grid-template-columns:72px 1fr;gap:3px 10px;margin:8px 0 0}.kv dt{color:var(--sub)}.kv dd{margin:0}
   .empty{color:var(--warn)}
   pre.doc{white-space:pre-wrap;background:#0b1210;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px;max-height:70vh;overflow:auto}
+  .str{border-left:3px solid var(--line);padding:4px 0 4px 8px;margin:6px 0}
+  .str.s강{border-left-color:var(--ok)} .str.s중{border-left-color:var(--warn)} .str.s약{border-left-color:#555}
+  ul.plain{margin:0;padding-left:18px}
   .err{color:var(--bad);display:none;margin:8px 0} .err.on{display:block}
   a{color:var(--accent)}
 </style>
@@ -66,8 +69,11 @@
 
   <section id="style">
     <h2>스타일 <small>채널을 가로지르는 소리·화자 스타일 · 우선순위 순 · 강점은 계속 보강</small></h2>
+    <div class="card" id="root" hidden></div>
     <p class="sub" id="style-judge"></p>
     <div class="grid" id="styles"></div>
+    <h2 style="margin-top:18px">옵션 <small>뿌리에 얹는 채널별 차이 — 새 스타일이 아니라 옵션으로 쌓는다</small></h2>
+    <div class="grid" id="options"></div>
   </section>
 
   <section id="result">
@@ -95,6 +101,29 @@ const man=v=>v==null?"–":v>=10000?(Math.round(v/1000)/10)+"만":String(v);
 const STATE_CLS={"통과":"ok","사장님 확인 대기":"warn","자동 검사만":"acc","검수 중":""};
 function fail(m){const e=$("#err");e.classList.add("on");e.textContent+=(e.textContent?" / ":"")+m}
 let D=null,RF="전체";
+// 근거 글 안의 channel/…md 는 화면에서 여는 링크로(서버가 허락한 문서 D.doc_paths 만)
+function srcHtml(src){
+  const arr=Array.isArray(src)?src:(src?[src]:[]);
+  return arr.map(x=>esc(x).replace(/channel\/[^\s()'",·]+?\.md/g,m=>(D.doc_paths||[]).includes(m)?`<a href="#docs" data-doc="${m}">${m}</a>`:m)).join(" · ");
+}
+function strengthsHtml(list){
+  if(!list.length)return '<span class="empty">아직 비었음 — 벤치에서 찾아 보강할 칸</span>';
+  return list.map(x=>`<div class="str s${esc(x.strength||"")}">${x.strength?`<span class="chip ${x.strength==="강"?"ok":x.strength==="중"?"warn":""}">${esc(x.strength)}</span>`:""}<b>${esc(x.what)}</b>
+    ${x.evidence?`<div class="sub">근거: ${esc(x.evidence)}</div>`:""}${x.channel||x.date?`<div class="sub">${esc(x.channel||"")} ${esc(x.date||"")}</div>`:""}${x.source?`<div class="sub">${srcHtml(x.source)}</div>`:""}</div>`).join("");
+}
+function benchTable(bench){
+  return `<div class="tw"><table><thead><tr><th>벤치</th><th>편수</th><th>조회 중앙</th><th>최고</th></tr></thead><tbody>${bench.map(b=>`<tr><td>${esc(b.brand)}<div class="mono">${esc(b.slug)}</div></td><td>${esc(b.n)}${b.of?" / "+esc(b.of):""}</td><td>${man(b.views_median)}</td><td>${man(b.views_max)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function vidsHtml(bench,total){
+  return `<details style="margin-top:6px"><summary class="sub">편 목록 ${total}편</summary>${bench.map(b=>`<div style="margin-top:4px"><b>${esc(b.brand)}</b> ${(b.ids||[]).map(i=>`<a href="https://www.youtube.com/shorts/${encodeURIComponent(i)}" target="_blank" rel="noopener" class="mono">${esc(i)}</a>`).join(" ")}<div class="sub">${srcHtml(b.source||"")}</div></div>`).join("")}</details>`;
+}
+function flowHtml(f){
+  if(!f)return "";
+  return `<details style="margin-top:6px"><summary>흐름 ${(f.beats||[]).length}박자 <span class="sub">표본 ${esc(f.n)}편 · ${esc(f.date||"")}</span></summary>
+    ${f.warning?`<div class="sub" style="color:var(--warn);margin:4px 0">⚠ ${esc(f.warning)}</div>`:""}
+    <div class="tw"><table><thead><tr><th>박자</th><th>시점</th><th>규칙</th></tr></thead><tbody>${(f.beats||[]).map(b=>`<tr><td><b>${esc(b.beat)}</b></td><td>${esc(b.t||"")}</td><td>${esc(b.rule||"")}</td></tr>`).join("")}</tbody></table></div>
+    <div class="sub">${srcHtml(f.source)}</div></details>`;
+}
 
 function renderResults(){
   const rows=D.results.filter(r=>RF==="전체"||r.state===RF);
@@ -122,25 +151,35 @@ function render(){
     <dt>최근</dt><dd>${b.latest?`#${esc(b.latest.n)} ${esc(b.latest.title)} <span class="sub">${esc(b.latest.date)}</span>`:'<span class="empty">아직 없음</span>'}</dd></dl></div>`).join("");
 
   $("#style-judge").textContent=[D.style_judge&&("판정: "+D.style_judge),D.not_measured].filter(Boolean).join(" · ");
+  if(D.root){$("#root").hidden=false;$("#root").innerHTML=`<div class="nm">뿌리: ${esc(D.root.name)}</div><div>${esc(D.root.desc)}</div><div class="sub" style="margin-top:4px">${esc(D.root.rule)}</div>`}
   $("#styles").innerHTML=D.styles.map(st=>`<div class="card"><div class="nm">${esc(st.priority)}. ${esc(st.name)} <small>(옛 이름 ${esc(st.old_name)})</small></div>
     <div style="margin-top:4px">${esc(st.desc)}</div><div class="sub" style="margin-top:4px">왜: ${esc(st.why)}</div>
-    <dl class="kv"><dt>소리 구성</dt><dd>${st.audio_kinds.map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</dd>
-    <dt>강점</dt><dd>${st.strengths.length?"<ul style='margin:0;padding-left:18px'>"+st.strengths.map(x=>`<li>${esc(typeof x==="string"?x:JSON.stringify(x))}</li>`).join("")+"</ul>":'<span class="empty">아직 비었음 — 벤치에서 찾아 보강할 칸</span>'}</dd>
+    <dl class="kv">${st.must.length?`<dt>꼭 있을 것</dt><dd><ul class="plain">${st.must.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></dd>`:""}
+    ${st.exclude?`<dt>뺄 것</dt><dd>${esc(st.exclude)}</dd>`:""}
+    ${st.example?`<dt>기준 예시</dt><dd>${esc(st.example).replace(/(https:\/\/\S+)/,'<a href="$1" target="_blank" rel="noopener">$1</a>')}</dd>`:""}
+    <dt>소리 구성</dt><dd>${st.audio_kinds.map(a=>`<span class="chip">${esc(a)}</span>`).join("")||'<span class="sub">–</span>'}</dd>
     <dt>결과물</dt><dd>${st.results.length?st.results.map(n=>`<span class="chip ok">#${n}</span>`).join(""):'<span class="sub">없음</span>'}</dd></dl>
-    <div class="tw"><table><thead><tr><th>벤치</th><th>편수</th><th>조회 중앙</th><th>최고</th></tr></thead><tbody>${st.bench.map(b=>`<tr><td>${esc(b.brand)}<div class="mono">${esc(b.slug)}</div></td><td>${esc(b.n)}${b.of?" / "+esc(b.of):""}</td><td>${man(b.views_median)}</td><td>${man(b.views_max)}</td></tr>`).join("")}</tbody></table></div>
-    <details style="margin-top:6px"><summary class="sub">편 목록 ${st.bench_videos}편</summary>${st.bench.map(b=>`<div style="margin-top:4px"><b>${esc(b.brand)}</b> ${(b.ids||[]).map(i=>`<a href="https://www.youtube.com/shorts/${encodeURIComponent(i)}" target="_blank" rel="noopener" class="mono">${esc(i)}</a>`).join(" ")}<div class="sub">${esc(b.source||"")}</div></div>`).join("")}</details></div>`).join("");
+    <div style="margin-top:8px"><b>강점 ${st.strengths.length}</b> ${st.how?`<div class="sub">${esc(st.how)}</div>`:""}${strengthsHtml(st.strengths)}</div>
+    ${flowHtml(st.flow)}
+    ${benchTable(st.bench)}${vidsHtml(st.bench,st.bench_videos)}</div>`).join("");
+  $("#options").innerHTML=(D.options||[]).map(o=>`<div class="card"><div class="nm">${esc(o.name)}</div><div style="margin-top:4px">${esc(o.desc||"")}</div>
+    ${o.why?`<div class="sub" style="margin-top:4px">왜: ${esc(o.why)}</div>`:""}${o.judge?`<div class="sub">판정: ${srcHtml(o.judge)}</div>`:""}
+    <div style="margin-top:8px"><b>강점 ${o.strengths.length}</b>${strengthsHtml(o.strengths)}</div>
+    ${o.bench.length?benchTable(o.bench)+vidsHtml(o.bench,o.bench.reduce((n,b)=>n+(b.n||0),0)):""}</div>`).join("")||'<p class="sub">옵션 없음</p>';
 
   $("#rfilter").innerHTML=["전체",...D.states].map(st=>`<button data-s="${esc(st)}">${esc(st)} ${st==="전체"?D.results.length:cnt(st)}</button>`).join("");
   $("#rfilter").onclick=e=>{const b=e.target.closest("button");if(b){RF=b.dataset.s;renderResults()}};
   renderResults();
 
-  $("#doclist").innerHTML=D.docs.map(d=>`<div class="card"><b>${esc(d.title)}</b><div class="mono">${esc(d.path)}</div>${d.exists?`<a href="#docs" data-doc="${esc(d.path)}">열기</a>`:'<span class="empty">서버에 파일 없음</span>'}</div>`).join("");
-  $("#doclist").onclick=async e=>{const a=e.target.closest("a[data-doc]");if(!a)return;e.preventDefault();
-    const p=$("#doc");p.hidden=false;p.textContent="불러오는 중…";
-    const r=await fetch("/api/admin/shortem_preset/doc?path="+encodeURIComponent(a.dataset.doc),{credentials:"same-origin"});
-    p.textContent=r.ok?await r.text():"열지 못했다 (HTTP "+r.status+")";p.scrollIntoView({block:"start"})};
+  const fixed=new Set(D.docs.map(d=>d.path));
+  $("#doclist").innerHTML=D.docs.map(d=>`<div class="card"><b>${esc(d.title)}</b><div class="mono">${esc(d.path)}</div>${d.exists?`<a href="#docs" data-doc="${esc(d.path)}">열기</a>`:'<span class="empty">서버에 파일 없음</span>'}</div>`).join("")
+    +(D.doc_paths||[]).filter(p=>!fixed.has(p)).map(p=>`<div class="card"><b>${esc(p.split("/").pop().replace(/\.md$/,""))}</b><div class="mono">${esc(p)}</div><span class="sub">스타일 장부 근거</span> <a href="#docs" data-doc="${esc(p)}">열기</a></div>`).join("");
 }
 
+document.addEventListener("click",async e=>{const a=e.target.closest("a[data-doc]");if(!a)return;e.preventDefault();
+  const p=$("#doc");p.hidden=false;p.textContent="불러오는 중…";
+  const r=await fetch("/api/admin/shortem_preset/doc?path="+encodeURIComponent(a.dataset.doc),{credentials:"same-origin"});
+  p.textContent=r.ok?a.dataset.doc+" —\n\n"+await r.text():"열지 못했다 (HTTP "+r.status+")";p.scrollIntoView({block:"start"})});
 (async()=>{
   try{
     const r=await fetch("/api/admin/shortem_preset",{credentials:"same-origin"});

@@ -7,7 +7,7 @@
   py tools/calcopy/sync_preset_ledgers.py --check   # main(origin) 과 엔진 마지막 커밋이 다른 파일만 보여 준다(바꾸지 않음)
   py tools/calcopy/sync_preset_ledgers.py           # 다른 파일을 .tracks/숏템프리셋 에 복사·커밋 → 이어서 track.py finish 숏템프리셋
 
-옮길 목록은 shopping_shorts/calcopy_board.py 의 PRESET_LEDGERS·PRESET_DOCS 한 곳(페이지가 읽는 것 = 옮기는 것).
+옮길 목록은 shopping_shorts/calcopy_board.py 의 PRESET_LEDGERS·PRESET_DOCS·referenced_docs 한 곳(페이지가 읽는 것 = 옮기는 것).
 """
 from __future__ import annotations
 
@@ -25,9 +25,13 @@ def _git(*a, cwd=ROOT, check=True) -> subprocess.CompletedProcess:
 
 
 def _files() -> list[str]:
+    """장부 3장 + 고정 문서 + 엔진 판 스타일 장부가 근거로 가리키는 문서(페이지에서 열리게)."""
+    import json
     sys.path.insert(0, str(ROOT))
-    from shopping_shorts.calcopy_board import PRESET_LEDGERS, PRESET_DOCS
-    return list(PRESET_LEDGERS) + [p for p, _ in PRESET_DOCS]
+    from shopping_shorts.calcopy_board import PRESET_LEDGERS, PRESET_DOCS, referenced_docs
+    st = _blob(SRC_BRANCH, "channel/스타일.json")
+    refs = sorted(referenced_docs(json.loads(st.decode("utf-8")))) if st else []
+    return list(dict.fromkeys(list(PRESET_LEDGERS) + [p for p, _ in PRESET_DOCS] + refs))
 
 
 def _blob(ref: str, path: str) -> bytes | None:
@@ -59,7 +63,9 @@ def main(argv: list[str]) -> int:
     if "--check" in argv:
         print(f"⚠️ {len(diff)}개가 페이지(main)에 아직 안 올라갔다 → py tools/calcopy/sync_preset_ledgers.py")
         return 1
-    wt = ROOT / ".tracks" / DST
+    # 트랙 폴더 안에서 돌려도 본 저장소(main 폴더) 기준으로 찾는다 — git 공용 폴더의 부모가 본 저장소
+    common = Path(_git("rev-parse", "--path-format=absolute", "--git-common-dir").stdout.decode("utf-8").strip())
+    wt = common.parent / ".tracks" / DST
     if not wt.exists():
         print(f"❌ {wt} 가 없다 → py tools/track.py use {DST} (없으면 start {DST} --card 224)")
         return 2
