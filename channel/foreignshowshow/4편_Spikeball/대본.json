@@ -1,0 +1,434 @@
+{
+ "topic": "Spikeball(스파이크볼) — 샤크탱크에서 데이먼드와 50만 달러/20% 딜을 맺었지만 방송 전 무산, 그런데도 2019년 연 1,900만 달러 회사로 성장",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.47,
+  "views": 12000000,
+  "upload": "2026-08-29"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막, 번갈아",
+ "titles": {
+  "line1": "샤크탱크 딜 깨지고",
+  "line2": "오히려 대박 난 공놀이?!",
+  "rule": "벤치 틀 그대로: 위 검정 띠 2줄, 1줄 노랑·2줄 흰, 끝 '~?!'. 벤치 '홍수를 막을 수 있는 / 역대급 모래 주머니?!'와 겹치는 말 없음"
+ },
+ "facts": {
+  "f1": {
+   "text": "CNBC 클립 220.0~222.2초 투자자(화면 이름 자막 없음 — 이름 불명) 'a ball and a net'(vtt) — 받아쓰기 3/3 'a ball in a net' (앞 216.1 'you're asking me to pay 20 times your cash flow for')",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음(영어 자막 vtt)"
+  },
+  "f2": {
+   "text": "CNBC 199.9~203.6초 'so last year your total gross sales 1.4 million dollars' · 위키 'by 2013 the company was earning more than $1 million in annual revenue'",
+   "url": "https://en.wikipedia.org/wiki/Spikeball_(company)",
+   "kind": "방송 원음+위키"
+  },
+  "f3": {
+   "text": "CNBC 20.9~24.2초 창업자(5초 화면 이름 자막 'CHRIS RUDER · SPIKEBALL') 'very easy to learn, but really, really difficult to master'(받아쓰기 4/4)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "CNBC 53.0~70.0초 'serve the ball basically just by bouncing it off the net … has up to three hits … before they have to spike it back on the net' · 72~77초 'once the ball is in play there are no sides, all four players can run absolutely anywhere'",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "CNBC 32.6~37.1초 창업자 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(받아쓰기 2모델) · 72~77초 'there are no sides' · 공식 'Spikeball: Rally Anywhere' 6pC9CovZuBY 화면 = 눈밭(38~42초)·분수대 물 속(10~14초)에서 경기",
+   "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
+   "kind": "방송 원음+공식 영상 화면"
+  },
+  "f7": {
+   "text": "CNBC 174.9~178.3초 'what does one cost — 59.99 plus shipping' · 192.4~199.3초 'We've sold 29,000 units. And how much did they cost to make? A little over fourteen'(받아쓰기 2모델, 화자 2명)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f8": {
+   "text": "CNBC 234.8~237.2초 'I'll give you the 500,000' · 249.4~253.8초 'interested in, for 25% of the whole company' · 화면 자막 255~260초 'Daymond's offer: $500k for a 25% stake' · 275~281초 'Counter offer: $500k for a 15% stake' · 269.6~273.6초 창업자 'Would you consider 500k at 15%?'(받아쓰기 2모델) — 데이먼드 이름 = 화면 자막으로 확인",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 화면 자막"
+  },
+  "f9": {
+   "text": "CNBC 303.7~305.75초 '(is) one of those moments that you can lose it all'(받아쓰기 4/4, 화자 이름 자막 없음 — 자막·나레에 이름 안 씀)",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 원음"
+  },
+  "f10": {
+   "text": "CNBC 313.3~314.2초 'call it even at 20' · 321.6초 'we're done' · 루퍼 'settling with John at 20%' · 위키 'Daymond John offered him $500,000 but wanted 20% … Ruder accepted'",
+   "url": "https://www.looper.com/860212/whatever-happened-to-spikeball",
+   "kind": "방송 원음+기사"
+  },
+  "f11": {
+   "text": "위키 'the deal fell apart before the episode aired due to differences in strategy' · 루퍼(2017 포브스 인터뷰 인용) Ruder 'our deal was dead before the show aired'",
+   "url": "https://en.wikipedia.org/wiki/Spikeball_(company)",
+   "kind": "기사(전언체)"
+  },
+  "f12": {
+   "text": "CNBC 324~334초 결말 글자 카드 'the deal did not close due to creative differences involving a Spider-Man Spikeball set, which CEO Chris Ruder was against. Ruder wanted Spikeball to be seen as a sport, not a toy.' · 루퍼 'John and Marvel Comics wanted to make a Spider-Man Spikeball set' · Ruder 'my fear was that people would think it was a toy'",
+   "url": "https://www.looper.com/860212/whatever-happened-to-spikeball",
+   "kind": "방송 글자 카드+기사(전언체)"
+  },
+  "f13": {
+   "text": "CNBC 329~334초 글자 카드 'As of 2019, the company brought in $19 million per year' · 루퍼 'As of 2019, Forbes reported that the company brings in $19 million per year'",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "kind": "방송 글자 카드+기사"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "L1",
+    "kind": "원음",
+    "fn": "0초 투자자 반응(벤치 '뭐라고?!' 자리)",
+    "orig_en": "a ball in a net",
+    "text": "공이랑 그물 하나에?!",
+    "sub": [
+     "공이랑 그물 하나에?!"
+    ],
+    "hl": [
+     "그물 하나"
+    ],
+    "facts": [
+     "f1"
+    ],
+    "src_span": [
+     220.45,
+     222.2
+    ],
+    "est_sec": 1.75,
+    "asr": "받아쓰기 3/3 'a ball in a net'"
+   },
+   {
+    "id": "L2",
+    "kind": "나레",
+    "fn": "정체+숫자",
+    "text": "공 하나랑 그물 하나로, 한 해 140만 달러어치를 판 게임이 있는데",
+    "tts": "공 하나랑 그물 하나로, 한 해 백사십만 달러어치를 판 게임이 있는데",
+    "sub": [
+     "공 하나랑 그물 하나로",
+     "한 해 140만 달러어치를",
+     "판 게임이 있는데"
+    ],
+    "hl": [
+     "140만 달러"
+    ],
+    "facts": [
+     "f2"
+    ],
+    "est_sec": 3.71
+   },
+   {
+    "id": "L3",
+    "kind": "원음",
+    "fn": "시연 말(어디든 들고 감)",
+    "orig_en": "All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere",
+    "text": "공이랑 그물, 가방 하나면 어디든 들고 갈 수 있어요",
+    "sub": [
+     "이 공이랑 그물,",
+     "가방 하나면 돼요",
+     "어디든 들고 갈 수 있어요"
+    ],
+    "hl": [
+     "가방 하나",
+     "어디든"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "src_span": [
+     32.6,
+     37.1
+    ],
+    "est_sec": 4.5,
+    "asr": "받아쓰기 4/4 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'(v3)"
+   },
+   {
+    "id": "L4",
+    "kind": "나레",
+    "fn": "시연(규칙)",
+    "text": "그물에 공을 튕겨 서브하면, 상대는 세 번 안에 다시 내리꽂아야 하고",
+    "tts": "그물에 공을 튕겨 서브하면, 상대는 세 번 안에 다시 내리꽂아야 하고",
+    "sub": [
+     "그물에 공을 튕겨",
+     "서브하면",
+     "상대는 세 번 안에",
+     "다시 내리꽂아야 하고"
+    ],
+    "hl": [
+     "세 번"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "est_sec": 3.71
+   },
+   {
+    "id": "L5",
+    "kind": "원음",
+    "fn": "창업자 한마디(쉽지만 어렵다)",
+    "orig_en": "very easy to learn, but really, really difficult to master",
+    "text": "배우긴 쉬운데 마스터하긴 진짜 어려워요",
+    "sub": [
+     "배우긴 쉬운데",
+     "마스터하긴 진짜 어려워요"
+    ],
+    "hl": [
+     "쉬운데",
+     "어려워요"
+    ],
+    "facts": [
+     "f3"
+    ],
+    "src_span": [
+     20.95,
+     24.2
+    ],
+    "est_sec": 3.25,
+    "asr": "받아쓰기 4/4"
+   },
+   {
+    "id": "L6",
+    "kind": "나레",
+    "fn": "기존 경기와 다른 점(편 없음·어디서나)",
+    "text": "편 가를 필요도 없어서, 눈밭이든 물속이든 다 된다고",
+    "tts": "편 가를 필요도 없어서, 눈밭이든 물속이든 다 된다고",
+    "sub": [
+     "편 가를 필요도 없어서",
+     "눈밭이든 물속이든",
+     "다 된다고"
+    ],
+    "hl": [
+     "눈밭",
+     "물속"
+    ],
+    "facts": [
+     "f4",
+     "f5"
+    ],
+    "est_sec": 2.93
+   },
+   {
+    "id": "L7",
+    "kind": "원음",
+    "fn": "숫자(판매량·원가) — 문답",
+    "orig_en": "We've sold 29,000 units. / And how much did they cost to make? / A little over fourteen",
+    "text": "2만 9천 개 팔았어요 / 만드는 데 얼마예요? / 14달러 조금 넘어요",
+    "sub": [
+     "2만 9천 개 팔았어요",
+     "만드는 데 얼마예요?",
+     "14달러 조금 넘어요"
+    ],
+    "hl": [
+     "2만 9천 개",
+     "14달러"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "src_span": [
+     192.4,
+     199.3
+    ],
+    "est_sec": 6.9,
+    "asr": "받아쓰기 3/3 'We've sold 29,000 units. And how much did/do they cost to make? (Uh,) a little over $14' 화자 2명(v3)"
+   },
+   {
+    "id": "L8",
+    "kind": "나레",
+    "fn": "숫자(가격)",
+    "text": "그걸 59달러 99센트에 팔고 있었는데",
+    "tts": "그걸 오십구 달러 구십구 센트에 팔고 있었는데",
+    "sub": [
+     "그걸 59달러 99센트에",
+     "팔고 있었는데"
+    ],
+    "hl": [
+     "59달러 99센트"
+    ],
+    "facts": [
+     "f7"
+    ],
+    "est_sec": 2.67
+   },
+   {
+    "id": "L9",
+    "kind": "나레",
+    "fn": "지분 제안",
+    "text": "이때 데이먼드가 50만 달러를 내걸면서",
+    "tts": "이때 데이먼드가 오십만 달러를 내걸면서",
+    "sub": [
+     "이때 데이먼드가",
+     "50만 달러를 내걸면서"
+    ],
+    "hl": [
+     "50만 달러"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "est_sec": 2.41
+   },
+   {
+    "id": "L10",
+    "kind": "원음",
+    "fn": "지분 제안(원음)",
+    "orig_en": "interested in, for 25% of the whole company",
+    "text": "회사 전체 지분 25%를 원해요",
+    "sub": [
+     "회사 전체 지분",
+     "25%를 원해요"
+    ],
+    "hl": [
+     "25%"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "src_span": [
+     249.3,
+     253.8
+    ],
+    "est_sec": 4.5,
+    "asr": "받아쓰기 3/3 '…interested in, for 25% of the whole company'(v3, 1회는 첫머리 'rested' — 소리 시작 249.30 으로 0.1초 당김, 재확인은 TTS 뒤)"
+   },
+   {
+    "id": "L11",
+    "kind": "원음",
+    "fn": "창업자 역제안",
+    "orig_en": "Would you consider 500k at 15%?",
+    "text": "50만 달러에 15%는 어떠세요?",
+    "sub": [
+     "50만 달러에 15%는",
+     "어떠세요?"
+    ],
+    "hl": [
+     "15%"
+    ],
+    "facts": [
+     "f8"
+    ],
+    "src_span": [
+     269.6,
+     273.6
+    ],
+    "est_sec": 4.0,
+    "asr": "받아쓰기 4/4 'Would you consider 500k at 15%'(v3)"
+   },
+   {
+    "id": "L12",
+    "kind": "원음",
+    "fn": "투자자 압박",
+    "orig_en": "(is) one of those moments that you can lose it all",
+    "text": "다 잃을 수도 있는 순간이에요",
+    "sub": [
+     "다 잃을 수도 있는",
+     "순간이에요"
+    ],
+    "hl": [
+     "다 잃을"
+    ],
+    "facts": [
+     "f9"
+    ],
+    "src_span": [
+     303.7,
+     305.75
+    ],
+    "est_sec": 2.05,
+    "asr": "받아쓰기 4/4"
+   },
+   {
+    "id": "L13",
+    "kind": "나레",
+    "fn": "딜 성사",
+    "text": "결국 20%에 손을 잡으면서 투자가 성사됐는데",
+    "tts": "결국 이십 퍼센트에 손을 잡으면서 투자가 성사됐는데",
+    "sub": [
+     "결국 20%에",
+     "손을 잡으면서",
+     "투자가 성사됐는데"
+    ],
+    "hl": [
+     "20%",
+     "성사"
+    ],
+    "facts": [
+     "f10"
+    ],
+    "est_sec": 3.06
+   },
+   {
+    "id": "L14",
+    "kind": "나레",
+    "fn": "반전(무산)",
+    "text": "알고 보니 방송이 나가기도 전에 이 딜이 깨졌다고",
+    "tts": "알고 보니 방송이 나가기도 전에 이 딜이 깨졌다고",
+    "sub": [
+     "알고 보니 방송이",
+     "나가기도 전에",
+     "이 딜이 깨졌다고"
+    ],
+    "hl": [
+     "딜이 깨졌다고"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "est_sec": 2.8
+   },
+   {
+    "id": "L15",
+    "kind": "나레",
+    "fn": "무산 이유(전언)",
+    "text": "스파이더맨 세트를 내자는 말에, 장난감처럼 보일까 봐 창업자가 반대했다는 거야",
+    "tts": "스파이더맨 세트를 내자는 말에, 장난감처럼 보일까 봐 창업자가 반대했다는 거야",
+    "sub": [
+     "스파이더맨 세트를",
+     "내자는 말에",
+     "장난감처럼 보일까 봐",
+     "창업자가 반대했다는 거야"
+    ],
+    "hl": [
+     "스파이더맨",
+     "장난감"
+    ],
+    "facts": [
+     "f12"
+    ],
+    "est_sec": 4.49
+   },
+   {
+    "id": "L16",
+    "kind": "나레",
+    "fn": "후일담(2019년 기준)",
+    "text": "그래도 2019년엔 한 해 1,900만 달러를 버는 회사가 됐다고",
+    "tts": "그래도 이천십구 년엔 한 해 천구백만 달러를 버는 회사가 됐다고",
+    "sub": [
+     "그래도 2019년엔",
+     "한 해 1,900만 달러를",
+     "버는 회사가 됐다고"
+    ],
+    "hl": [
+     "2019년",
+     "1,900만 달러"
+    ],
+    "facts": [
+     "f13"
+    ],
+    "est_sec": 3.58
+   }
+  ],
+  "est_total_sec": 56.31,
+  "tts_rate_assumed": "7.7자/초(공백·쉼표 뺀 tts 글자) + 줄당 0.2초 — 벤치 4편 실측 7.71~8.78자/초(1편 plan/voice_measure.json). 실측 아님",
+  "check": {
+   "copy3": [],
+   "sub_max_chars_nospace": 11,
+   "narr_chars": 212,
+   "narr_sec_est": 29.36,
+   "orig_sec": 26.85,
+   "lines": 16
+  }
+ }
+}
