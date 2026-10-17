@@ -1,0 +1,659 @@
+# -*- coding: utf-8 -*-
+"""샥탬스토리(벤치 해외쇼츠 샤크탱크) 채널 렌더러 한 벌 — 나레↔원음 N회 교대 + 원음 번역 자막 + 원음 밑 B롤 컷 (관제 097, 2026-10-18).
+
+    PYTHONUTF8=1 py tools/calcopy/shark/render.py <편 doc 폴더> <작업 폴더> [--plan] [--tts-only] [--confirm-tts] [--cps 8.4]
+
+  --plan        TTS 없이 나레 말속도 추정(기본 8.4자/초)으로 줄표·컷표·자막표만 → <작업>/plan/render_info.json·컷표.md
+  --tts-only    TTS(1회, 이미 있으면 재사용) + 실제 줄 시각까지만 → <작업>/render/render_info.json
+  --preview     TTS 없이 --plan 시각 그대로 끝까지 렌더(나레 자리 = 삐 소리) → <작업>/preview/final.mp4 — 컷·자막·원음·크롭 눈 확인용(비용 0)
+  (없음)        렌더 끝까지 → <작업>/render/final.mp4 (+ check.py 로 B표)
+  --confirm-tts 타입캐스트를 **처음** 부를 때만 필요(페이블 OK 뒤 1회 — 비용). 이미 narr_raw.mp3 가 있으면 다시 안 부른다.
+
+선례 channel/itemhome/1편_안유진로션/make_render.py(편 전용)를 채널 한 벌로. 엔진은 부르기만 한다:
+  TTS = engine/tts_pause.synth(통째 1회, 성우 속도 voice_presets) → atempo(상한 1.27) → tts_pause.shape(쉼표 0.22·마침표 0.30)
+  화면 = narr_video.build(틀 한 장·자막 페이지 1개 × shots[0].cuts = 컷 전부, 판단 주인 shot_pieces) — 자막은 build 에서 안 그림
+  원음 = hottem_audio.add_source_bed(줄 단위 원음 시간표, gap_gain = 원음 창 올림) — 원음 창엔 나레 없음(J컷 꼬리만 덕킹)
+  자막·꾸밈 = narr_video.emph_png(나레 꼴 / 원음 꼴 두 층)·overlay_png 을 완성본 좌표로 얹음
+  BGM = bgm_lib 곡, 원음 창에서 덕킹 → 목표 −9.0 LUFS · 최고점 ≤ −0.5 dBFS(검수 B2, 사장님 10-18)
+
+판단 주인(한 함수씩) — 렌더·검사(check.py)는 render_info.json 의 같은 값을 읽는다:
+  줄 시각   line_times()    · 컷 시각   cut_times()    · 자막 시각  caption_times()    · 원음 소리 시간표  audio_pieces()
+입력 꼴 두 가지를 load_doc() 한 곳에서 같은 꼴로 바꾼다:
+  1편꼴 lines[{id, kind:tts|orig, tts, caps[], span, en}] · shots[{line, src, ss, dur, src_crop, mute, audio_span}] · 재료.window
+  3편꼴 lines[{id, kind:나레|원음, text, tts, orig_span, orig_en}](caps 없음 → 엔진 chunk_sentence) · shots[{…, audio_ss, audio_dur(J컷)}]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT))
+from tools.calcopy.hybrid.common import SR, StageError, dur_of, jload, jsave, lufs, nchar, run  # noqa: E402
+
+FALLBACK_PRESET = ROOT / "channel/mantem/preset/얜샷템"
+DEF = {
+    "gap": 0.08,            # 줄과 줄 사이(원음 뒤·원음 앞) — 1편 대본 t_final 간격
+    "end_pad": 0.6,         # 끝 줄 뒤 여유
+    "cps_plan": 8.4,        # --plan 나레 말속도 추정(자/초, 공백·부호 뺀 글자)
+    "comma_pause": 0.22, "period_pause": 0.30,   # tts_pause.PAUSE 와 같은 값(추정용)
+    "cap_chunk": 10,        # caps 가 없는 줄의 자막 조각 n(엔진 chunk_sentence, 상한 n+3)
+    "tempo_max": 1.27, "tempo_min": 0.85,
+    "narr_lufs": -15.0,     # narr_video 나레 목표
+    "orig_rel_db": 0.0,     # 원음 창 크기 = 나레 LUFS + 이것
+    "orig_gain_clamp": [-6.0, 18.0],
+    "bgm": "sweets", "bgm_lufs": -24.5, "duck_db": -10.0,
+    "target_lufs": -9.0, "peak_max": -0.5,
+}
+FX_KINDS = ("red_circle", "emoji")   # narr_video.overlay_png 가 그리는 것
+
+
+def log(*a):
+    print(*a, flush=True)
+
+
+# ── 입력: 편 폴더 → 한 꼴 ─────────────────────────────────────────────
+def _kind(l) -> str:
+    k = l.get("kind")
+    if k in ("tts", "나레"):
+        return "N"
+    if k in ("orig", "원음"):
+        return "O"
+    raise StageError(f"줄 {l.get('id')} kind '{k}' 모름(tts|orig|나레|원음)")
+
+
+def load_doc(doc: Path) -> dict:
+    S = jload(doc / "대본.json")
+    M = jload(doc / "재료.json")
+    F = S["final"]
+    C = {**DEF, **(S.get("render") or {})}
+    lines = []
+    for l in F["lines"]:
+        k = _kind(l)
+        x = {"id": l["id"], "kind": k, "fx": l.get("fx")}
+        if k == "N":
+            x["tts"] = l.get("tts") or l.get("text")
+            x["show"] = l.get("text") or x["tts"]
+        else:
+            sp = l.get("span") or l.get("orig_span")
+            if not sp:
+                raise StageError(f"원음 줄 {l['id']} 에 span/orig_span 없음")
+            x["span"] = [float(sp[0]), float(sp[1])]
+            x["en"] = l.get("en") or l.get("orig_en")
+            x["show"] = l.get("text") or " ".join(l.get("caps") or [])
+            x["src"] = l.get("src")
+        if l.get("caps"):
+            x["caps"], x["caps_from"] = list(l["caps"]), "대본 caps"
+        else:
+            from tools.calcopy import narr_video as nv
+            x["caps"], x["caps_from"] = nv.chunk_sentence(x["show"], C["cap_chunk"]), f"chunk_sentence(n={C['cap_chunk']})"
+        lines.append(x)
+    ids = [l["id"] for l in lines]
+    if len(set(ids)) != len(ids):
+        raise StageError(f"줄 id 중복 {ids}")
+    shots = []
+    for s in M["shots"]:
+        if s["line"] not in ids:
+            raise StageError(f"재료 컷 {s.get('i')} 의 줄 {s['line']} 이 대본에 없음")
+        a = {"i": s.get("i", len(shots)), "line": s["line"], "src": s["src"], "ss": float(s["ss"]), "dur": float(s["dur"]),
+             "src_crop": s.get("src_crop"), "mute": bool(s.get("mute")), "see": s.get("ours") or s.get("why", "")}
+        if not s.get("mute"):
+            a["audio_src"] = s.get("audio_src") or s["src"]
+            if s.get("audio_ss") is not None:
+                a["audio_ss"] = float(s["audio_ss"])
+                if s.get("audio_dur") is not None:
+                    a["audio_dur"] = float(s["audio_dur"])
+            elif s.get("audio_span"):
+                a["audio_ss"], a["audio_dur"] = float(s["audio_span"][0]), float(s["audio_span"][1]) - float(s["audio_span"][0])
+        shots.append(a)
+    for l in lines:
+        if not any(s["line"] == l["id"] for s in shots):
+            raise StageError(f"줄 {l['id']} 에 재료 컷이 없음")
+    win = M.get("window")
+    bw = (S.get("bench") or {}).get("window")
+    box = next((s["box"] for s in M["shots"] if s.get("box")), None)
+    window = bw or box or ([0, 434, win[0], win[1]] if win else None)
+    T = S.get("titles") or {}
+    title = T.get("hook") or "\n".join(x for x in (T.get("line1"), T.get("line2")) if x)
+    voice = S.get("voice") or (F.get("voice") if isinstance(F.get("voice"), dict) else None)
+    return {"S": S, "M": M, "C": C, "lines": lines, "shots": shots, "cand_dir": Path(M["cand_dir"]), "window": window, "title": title,
+            "voice": voice, "cps_target": F.get("cps_target") or F.get("narr_cps_assumed"), "bench": S.get("bench") or {},
+            "effects": M.get("effects") or [], "sources": M.get("sources") or {},
+            "fx_notes": [f"{e.get('at')}: {e.get('fx')}" for e in S.get("effects_record") or []]
+                        + [f"{l['id']}: {l['fx']}" for l in lines if l.get("fx")]
+                        + [f"컷{s.get('i')}({s['line']}): {s['fx']}" for s in M["shots"] if s.get("fx")]}
+
+
+def check_sources(D) -> list[str]:
+    """소스 파일·원음 트랙 확인. 재료 sources 에 '140-7' 같은 오디오 형식 번호가 적혀 있으면 info.json format_id 에 그 번호가 있어야 한다
+    (3편 ME64bRiQi24 = 더빙 트랙 섞임 → 영어 원음 140-7 만, 근거.md 10줄)."""
+    notes = []
+    for f in sorted({s["src"] for s in D["shots"]} | {s["audio_src"] for s in D["shots"] if s.get("audio_src")}):
+        p = D["cand_dir"] / f
+        if not p.exists():
+            raise StageError(f"소스 없음 {p}")
+        stem = Path(f).stem
+        want = re.findall(r"\b(\d{3}-\d+)\b", json.dumps(D["sources"].get(stem) or {}, ensure_ascii=False))
+        info = p.with_suffix(".info.json")
+        if want:
+            if not info.exists():
+                raise StageError(f"{f}: 원음 트랙 {want} 지정인데 info.json 없음 — 받은 트랙을 확인 못 함")
+            fid = jload(info).get("format_id", "")
+            if not all(w in fid.split("+") for w in want):
+                raise StageError(f"{f}: 원음 트랙 {want} 이어야 하는데 받은 것 {fid} (더빙 트랙일 수 있음)")
+            notes.append(f"{f}: 원음 트랙 {fid} ⊇ {want} 확인")
+    return notes
+
+
+# ── 나레 재기: 줄마다 말 시작·끝(나레 파일 시각) ─────────────────────────────
+def _end_punct(t: str) -> str:
+    t = t.strip()
+    return t if re.search(r"[.?!]$", t) else t + "."
+
+
+def narr_plan(D) -> dict:
+    """--plan: 말속도 추정 cps 로 나레 줄마다 [start, end] 를 가상 나레 파일 시각으로(줄 사이 마침표 쉼)."""
+    C, t, out = D["C"], 0.0, []
+    for l in [x for x in D["lines"] if x["kind"] == "N"]:
+        d = nchar(l["tts"]) / C["cps_plan"] + C["comma_pause"] * l["tts"].count(",")
+        out.append({"id": l["id"], "start": round(t, 3), "end": round(t + d, 3)})
+        t += d + C["period_pause"]
+    return {"lines": out, "wav": None, "how": f"추정 {C['cps_plan']}자/초 + 쉼표 {C['comma_pause']}초"}
+
+
+def narr_beep(NM, R: Path) -> dict:
+    """--preview: 추정 시각의 나레 자리에 삐 소리(440Hz)를 넣은 가짜 나레 파일."""
+    on = "+".join(f"between(t,{x['start']:.3f},{x['end']:.3f})" for x in NM["lines"])
+    end = NM["lines"][-1]["end"] + 0.5
+    out = R / "narr_beep.wav"
+    run(["ffmpeg", "-y", "-f", "lavfi", "-i", f"aevalsrc=0.25*sin(2*PI*440*t)*({on}):s={SR}:d={end:.3f}", "-ac", "1", out])
+    return {**NM, "wav": str(out), "how": NM["how"] + " · 나레 자리 삐 소리(미리보기)"}
+
+
+def narr_tts(D, R: Path, confirm: bool) -> dict:
+    """나레 줄만 TTS 1회 통째(엔진 tts_pause.synth) → atempo(목표 cps, 0.85~1.27) → tts_pause.shape → 줄마다 [start,end](정렬 글자 시각을 shape 이음매로 옮김).
+    옮긴 줄 머리가 실제 말 구간 시작과 0.12초 넘게 다르면 멈춘다(조용히 어긋나지 않게)."""
+    from tools.calcopy import narr_video as nv
+    from tools.calcopy.engine import tts_pause as TP
+    C = D["C"]
+    NL = [x for x in D["lines"] if x["kind"] == "N"]
+    parts = [_end_punct(l["tts"]) for l in NL]
+    text = " ".join(parts)
+    raw, alf, meta = R / "narr_raw.mp3", R / "narr_raw.align.json", R / "narr_raw.meta.json"
+    voice = D["voice"] or {}
+    vid = voice.get("voice_id") or "tc_68257f68bc6e3c161ab5078d"   # tts_pause 기본(필재) — 대본 voice 가 없을 때
+    if not raw.exists():
+        if not confirm:
+            raise StageError("TTS 를 처음 부르려면 --confirm-tts (페이블 OK 뒤 1회 — 비용)")
+        align, sp = TP.synth(text, str(raw), vid, voice.get("emotion"), voice.get("speed"))
+        if not align:
+            raise StageError("타임스탬프가 안 왔다 — 줄 시각을 정렬로 못 잼(소리 짐작으로 되돌아가지 않는다)")
+        jsave(alf, align)
+        jsave(meta, {"text": text, "voice_id": vid, "speed": sp, "emotion": voice.get("emotion")})
+        log(f"TTS 1회: {raw} {dur_of(raw):.2f}초")
+    align, m = jload(alf), jload(meta)
+    if m["text"] != text:
+        raise StageError("narr_raw.mp3 를 만든 글이 지금 대본과 다르다 — 지우고 다시(비용) 또는 대본 확인")
+    # 글자 ↔ 정렬 글자(공백 무시 순서 대조)
+    ch = align["characters"]
+    pos, j = [], 0
+    for i, c in enumerate(text):
+        if c.isspace():
+            pos.append(None); continue
+        while j < len(ch) and ch[j].isspace():
+            j += 1
+        if j >= len(ch) or ch[j] != c:
+            raise StageError(f"정렬 글자가 대본과 다름(글 {i} '{c}' vs 정렬 {j} '{ch[j] if j < len(ch) else '끝'}')")
+        pos.append(j); j += 1
+    # atempo
+    segs0, _ = nv.speech_segments(str(raw), "-40dB", 0.1)
+    rate = nchar(text) / max(sum(b - a for a, b in segs0), 0.1)
+    tgt = D["cps_target"] or rate
+    tempo = round(min(C["tempo_max"], max(C["tempo_min"], tgt / rate)), 3)
+    tw = R / "narr_tempo.wav"
+    run(["ffmpeg", "-y", "-i", raw, "-af", f"atempo={tempo}", "-ar", SR, "-ac", "1", tw])
+    al = {"characters": ch, "character_start_times_seconds": [x / tempo for x in align["character_start_times_seconds"]],
+          "character_end_times_seconds": [x / tempo for x in align["character_end_times_seconds"]]}
+    plog = TP.shape(str(tw), al, str(R / "narr_shaped.mp3"))
+    narr = R / "narr.wav"
+    run(["ffmpeg", "-y", "-i", R / "narr_shaped.mp3", "-ar", SR, "-ac", "1", narr])
+    # shape 이 처리한 쉼(log 순서) ↔ pause_slots
+    done, k = [], 0
+    for kind, a, b in TP.pause_slots(al):
+        if k < len(plog) and abs(plog[k]["at"] - round(a, 2)) < 0.006:
+            done.append((b, plog[k]["now"] - plog[k]["was"])); k += 1
+    if k != len(plog):
+        raise StageError("shape 기록과 쉼 자리를 못 맞춤")
+
+    def moved(t):   # 원래(atempo 뒤) 시각 → shape 뒤 시각: 지난 쉼의 길이 변화 + 이음매 겹침(쉼 하나에 2번, XF_SEC)
+        n = [d for b, d in done if b <= t + 1e-6]
+        return t + sum(n) - TP.XF_SEC * 2 * len(n)
+    st, en = al["character_start_times_seconds"], al["character_end_times_seconds"]
+    out, off = [], 0
+    for l, p in zip(NL, parts):
+        idx = [pos[off + i] for i, c in enumerate(p) if pos[off + i] is not None and re.match(r"[0-9A-Za-z가-힣]", c)]
+        off += len(p) + 1
+        out.append({"id": l["id"], "start": round(moved(st[idx[0]]), 3), "end": round(moved(en[idx[-1]]), 3)})
+    segs, _ = nv.speech_segments(str(narr), "-40dB", 0.06)
+    for o in out:
+        near = min((a for a, _ in segs), key=lambda a: abs(a - o["start"]))
+        if abs(near - o["start"]) > 0.12:
+            raise StageError(f"줄 {o['id']} 머리: 정렬 {o['start']}초 근처(0.12)에 말 시작 없음(가장 가까운 {near:.3f}) — 정렬·쉼 확인")
+        o["start"] = round(near, 3) if near <= o["start"] + 0.05 else o["start"]
+    return {"lines": out, "wav": str(narr), "tempo": tempo, "raw_cps": round(rate, 2), "target_cps": tgt, "voice": m,
+            "pauses": plog, "how": "타입캐스트 정렬 + tts_pause.shape"}
+
+
+# ── 판단 주인 ─────────────────────────────────────────────────────────
+def line_times(D, NM) -> dict:
+    """(판단 주인: 줄 시각) 대본 순서대로 놓는다. 원음 줄 = 원본 span 길이 그대로(나레 없음), 나레 줄 = 말 시작이 줄 시작.
+    줄 끝(t1) = 다음 줄 시작. 나레→나레는 TTS 의 자연 쉼(다음 줄 말 시작 − 이 줄 말 시작) 그대로, 원음 앞뒤는 gap.
+    반환 lines[{id,kind,t0,t1, narr:[nar_start,nar_end](나레 파일 시각) | span}], dur."""
+    C = D["C"]
+    nm = {x["id"]: x for x in NM["lines"]}
+    L, t = [], 0.0
+    seq = D["lines"]
+    for k, l in enumerate(seq):
+        nxt = seq[k + 1] if k + 1 < len(seq) else None
+        x = {"id": l["id"], "kind": l["kind"], "t0": round(t, 3)}
+        if l["kind"] == "O":
+            d = l["span"][1] - l["span"][0]
+            x["span"] = l["span"]
+            x["speak"] = [x["t0"], round(t + d, 3)]
+            t += d + C["gap"]
+        else:
+            m = nm[l["id"]]
+            x["narr"] = [m["start"], m["end"]]
+            x["speak"] = [x["t0"], round(t + m["end"] - m["start"], 3)]
+            if nxt is not None and nxt["kind"] == "N":
+                t += nm[nxt["id"]]["start"] - m["start"]
+            else:
+                t += (m["end"] - m["start"]) + (C["gap"] if nxt is not None else C["end_pad"])
+        L.append(x)
+    for a, b in zip(L, L[1:]):
+        a["t1"] = b["t0"]
+    L[-1]["t1"] = round(t, 3)
+    return {"lines": L, "dur": round(t, 3)}
+
+
+def cut_times(D, LT) -> list[dict]:
+    """(판단 주인: 컷 시각) 줄 창 [t0,t1) 을 그 줄의 재료 컷으로 채운다.
+    원음 줄 = 재료 시각 그대로(컷 길이 그대로 이어 붙이고 끝 컷만 줄 끝까지, 넘치면 자름 → 입 모양·소리 시각 유지).
+    나레 줄 = 재료 컷 길이 비례로 늘이고 줄임(나레 실제 길이에 맞춤). sync = 화면 소스=소리 소스인 원음 컷의 (화면초 − 그때 소리초)."""
+    by = {}
+    for s in D["shots"]:
+        by.setdefault(s["line"], []).append(s)
+    LD = {l["id"]: l for l in D["lines"]}
+    out = []
+    for x in LT["lines"]:
+        sh, a, b = by[x["id"]], x["t0"], x["t1"]
+        if x["kind"] == "O":
+            t, bounds = a, []
+            for k, s in enumerate(sh):
+                e = b if k == len(sh) - 1 else min(b, t + s["dur"])
+                if e - t > 1e-3:
+                    bounds.append((s, t, e))
+                t = e
+        else:
+            tot = sum(s["dur"] for s in sh)
+            bounds, t = [], a
+            for s in sh:
+                e = t + (b - a) * s["dur"] / tot
+                bounds.append((s, t, e)); t = e
+        prev = None
+        for s, t0, t1 in bounds:
+            ss = s["ss"]
+            # 나레 줄을 늘이면 같은 소스 다음 컷과 겹친다(되감김) → 무음 컷은 앞 컷 끝으로 당겨 잇는다(선례 make_render 와 같은 규칙, 5초 안)
+            if x["kind"] == "N" and prev and prev["src"] == s["src"] and s["mute"]:
+                pend = prev["ss"] + prev["dur"]
+                if ss < pend - 1e-3 and pend - ss < 5:
+                    ss = round(pend, 3)
+            c = {"i": s["i"], "line": x["id"], "kind": x["kind"], "src": s["src"], "ss": round(ss, 3), "src_crop": s["src_crop"],
+                 "t0": round(t0, 3), "t1": round(t1, 3), "dur": round(t1 - t0, 3), "plan_dur": s["dur"], "see": s["see"]}
+            if ss != s["ss"]:
+                c["ss_moved"] = s["ss"]
+            if x["kind"] == "O":
+                ad = audio_of(D, LD[x["id"]])
+                if ad["src"] == s["src"]:
+                    c["sync"] = round(s["ss"] - (ad["ss"] + (t0 - a)), 3)
+            out.append(c); prev = c
+        if x["kind"] == "O":
+            used = {c["i"] for c in out if c["line"] == x["id"]}
+            for s in sh:
+                if s["i"] not in used:
+                    out.append({"i": s["i"], "line": x["id"], "dropped": True, "why": f"원음 창 {b - a:.2f}초 안에 안 들어감"})
+    return out
+
+
+def audio_of(D, l) -> dict:
+    """원음 줄의 소리: 그 줄 첫 원음 컷의 audio_src/audio_ss/audio_dur(J컷 꼬리 포함), 없으면 줄 span."""
+    s = next((s for s in D["shots"] if s["line"] == l["id"] and s.get("audio_src")), None)
+    if s is None:
+        raise StageError(f"원음 줄 {l['id']} 에 소리 있는 컷(mute=false)이 없음")
+    ss = s.get("audio_ss", l["span"][0])
+    d = max(s.get("audio_dur") or 0.0, l["span"][1] - l["span"][0])
+    if abs(ss - l["span"][0]) > 0.02:
+        raise StageError(f"원음 줄 {l['id']}: 컷 소리 시작 {ss} ≠ 대본 span {l['span'][0]}")
+    return {"src": s["audio_src"], "ss": ss, "dur": round(d, 3)}
+
+
+def audio_pieces(D, LT) -> list[dict]:
+    """(판단 주인: 원음 소리 시간표) 0~dur 를 빈틈없이: 원음 줄 = [t0, t0+소리 길이](J컷이면 다음 줄 위로 꼬리), 나머지 = 끔."""
+    LD = {l["id"]: l for l in D["lines"]}
+    on = []
+    for x in LT["lines"]:
+        if x["kind"] == "O":
+            a = audio_of(D, LD[x["id"]])
+            on.append({"line": x["id"], "a": x["t0"], "b": round(min(LT["dur"], x["t0"] + a["dur"]), 3), **a})
+    out, t = [], 0.0
+    for p in on:
+        if p["a"] < t - 1e-6:
+            raise StageError(f"원음 {p['line']} 이 앞 원음 꼬리와 겹침")
+        if p["a"] > t + 1e-6:
+            out.append({"a": round(t, 3), "b": p["a"], "mute": True})
+        out.append(p); t = p["b"]
+    if LT["dur"] > t + 1e-6:
+        out.append({"a": round(t, 3), "b": LT["dur"], "mute": True})
+    return out
+
+
+def caption_times(D, LT, segs=None) -> list[dict]:
+    """(판단 주인: 자막 시각) 나레 줄 = 엔진 narr_video._place(말 구간에 글자 비례, 말 시작 붙임), 원음 줄 = 원음 창에 글자 비례.
+    줄의 마지막 조각은 줄 끝(t1)까지. segs = 완성본 시각 나레 말 구간(없으면 줄마다 [말 시작, 말 끝] 한 덩어리)."""
+    from tools.calcopy import narr_video as nv
+    LD = {l["id"]: l for l in D["lines"]}
+    out = []
+    for x in LT["lines"]:
+        l = LD[x["id"]]
+        steps = [{"text": c, "chars": max(1, nchar(c))} for c in l["caps"]]
+        a, e = x["speak"]
+        if x["kind"] == "N":
+            sg = [(p, q) for p, q in (segs or [(a, e)]) if q > a and p < e] or [(a, e)]
+            st = nv._place(steps, sg, 0.4, a, e)
+        else:
+            tot, c, st = sum(s["chars"] for s in steps), 0, []
+            for s in steps:
+                st.append(a + (e - a) * c / tot); c += s["chars"]
+        for k, s in enumerate(steps):
+            t1 = st[k + 1] if k + 1 < len(st) else x["t1"]
+            out.append({"line": x["id"], "kind": x["kind"], "text": s["text"], "t0": round(st[k], 3), "t1": round(t1, 3)})
+    return out
+
+
+# ── 틀 ─────────────────────────────────────────────────────────────────
+def preset_dir(doc: Path) -> tuple[Path, bool]:
+    ch = doc.parent / "preset"
+    c = sorted(p for p in ch.glob("*/manifest.json") if not p.parent.name.startswith("_")) if ch.exists() else []
+    return (c[0].parent, True) if c else (FALLBACK_PRESET, False)
+
+
+def frame_and_styles(D, doc: Path, R: Path) -> dict:
+    """틀(frame.json: 창·제목) + 자막 두 꼴(manifest caption_styles 의 '나레*'·'원음*'). 틀의 자막·$per_video 층은 빼고(자막은 완성본에 얹음)."""
+    pdir, own = preset_dir(doc)
+    fr = jload(pdir / "frame.json")
+    man = jload(pdir / "manifest.json")
+    styles = {s["name"]: s["layer"] for s in man.get("caption_styles") or []}
+    cap_frame = next((l for l in fr["layers"] if l.get("role") == "caption"), None)
+    narr = next((v for k, v in styles.items() if k.startswith("나레")), cap_frame)
+    orig = next((v for k, v in styles.items() if k.startswith("원음")), narr)
+    if not narr:
+        raise StageError(f"틀 {pdir} 에 자막 꼴이 없다")
+    notes = []
+    layers = []
+    for l in fr["layers"]:
+        if l.get("kind") == "text" and l.get("role") == "caption":
+            continue
+        if l.get("kind") == "text" and l.get("role") == "title":
+            l = {**l, "text": D["title"]}
+        elif l.get("kind") == "text" and l.get("text") == "$per_video":
+            notes.append(f"층 {l.get('role')} 뺌($per_video, 이 채널엔 출처·라벨 없음)")
+            continue
+        if l.get("kind") == "video" and not own and D["window"]:
+            x, y, w, h = D["window"]
+            l = {**l, "x": x, "y": y, "w": w, "h": h}
+            notes.append(f"임시 틀: 창을 벤치 {D['window']} 로")
+        layers.append(l)
+    fr = {**fr, "layers": layers}
+    R.mkdir(parents=True, exist_ok=True)
+    jsave(R / "frame.json", fr)
+    if not own:
+        notes.insert(0, f"★채널 프리셋 없음 → 임시 {pdir.relative_to(ROOT)} (자막 꼴 나레={'나레_노랑' if '나레_노랑' in styles else '틀'}·원음={'원음_흰글자' if '원음_흰글자' in styles else '나레와 같음'})")
+    return {"preset": str(pdir), "own": own, "frame": str(R / "frame.json"), "narr_style": narr, "orig_style": orig, "notes": notes,
+            "win": next(l for l in layers if l["kind"] == "video")}
+
+
+def effects(D, LT) -> tuple[list[dict], list[str]]:
+    """재료.effects[{line, kind:red_circle|emoji, at:[x,y](완성본 좌표), size, t:[줄 안 시작,끝], emoji, color}] → 완성본 시각.
+    좌표 없는 메모(effects_record·fx)는 못 그림으로 남긴다."""
+    lt = {x["id"]: x for x in LT["lines"]}
+    out = []
+    for e in D["effects"]:
+        if e.get("kind") not in FX_KINDS:
+            raise StageError(f"꾸밈 '{e.get('kind')}' 은 엔진(overlay_png)이 못 그린다 — 엔진 요청: {e}")
+        if e.get("line") not in lt or not e.get("at"):
+            raise StageError(f"꾸밈에 line·at 필요: {e}")
+        x = lt[e["line"]]
+        a, b = e.get("t") or [0.0, x["t1"] - x["t0"]]
+        out.append({**e, "T": [round(x["t0"] + a, 3), round(min(x["t1"], x["t0"] + b), 3)]})
+    not_drawn = [] if D["effects"] else [f"좌표 없음(안 그림) — {n}" for n in D["fx_notes"]]
+    return out, not_drawn
+
+
+# ── 계획(공통) ───────────────────────────────────────────────────────────
+def plan_all(D, NM, segs=None) -> dict:
+    LT = line_times(D, NM)
+    cuts = cut_times(D, LT)
+    caps = caption_times(D, LT, segs)
+    aud = audio_pieces(D, LT)
+    fx, nd = effects(D, LT)
+    return {"lines": LT["lines"], "dur": LT["dur"], "cuts": cuts, "captions": caps, "audio": aud, "effects": fx, "fx_not_drawn": nd}
+
+
+def info_of(D, P, NM, mode, extra=None) -> dict:
+    live = [c for c in P["cuts"] if not c.get("dropped")]
+    ds = sorted(c["dur"] for c in live)
+    LD = {l["id"]: l for l in D["lines"]}
+    return {"mode": mode, "dur": P["dur"], "bench_dur": D["bench"].get("dur"), "bench_cut_median": D["bench"].get("cut_median"),
+            "narr": {k: v for k, v in NM.items() if k != "lines"}, "narr_lines": NM["lines"],
+            "lines": [{**x, "caps_from": LD[x["id"]]["caps_from"], "tts": LD[x["id"]].get("tts"), "en": LD[x["id"]].get("en")} for x in P["lines"]],
+            "cuts": P["cuts"], "captions": P["captions"], "audio": P["audio"], "effects": P["effects"], "fx_not_drawn": P["fx_not_drawn"],
+            "summary": {"cuts": len(live), "dropped": [c["i"] for c in P["cuts"] if c.get("dropped")], "cut_median": ds[len(ds) // 2],
+                        "cut_min": ds[0], "end_cut": live[-1]["dur"], "short_cuts": [(c["i"], c["dur"]) for c in live if c["dur"] < 1.2],
+                        "caps": len(P["captions"]), "cap_max_chars": max(nchar(c["text"]) for c in P["captions"]),
+                        "sync_off": [(c["i"], c["line"], c["sync"]) for c in live if abs(c.get("sync", 0)) > 0.04],
+                        "orig_sec": round(sum(x["speak"][1] - x["speak"][0] for x in P["lines"] if x["kind"] == "O"), 2)},
+            **(extra or {})}
+
+
+def table_md(info) -> str:
+    L = [f"# 샥탬스토리 렌더 계획 — {info['mode']} · {info['dur']:.2f}초(벤치 {info['bench_dur']}) · 컷 {info['summary']['cuts']} 중앙 {info['summary']['cut_median']:.2f}",
+         "", "## 줄", "| 줄 | 종류 | 시각 | 말/원음 | 자막 |", "|---|---|---|---|---|"]
+    caps = info["captions"]
+    for x in info["lines"]:
+        cs = " / ".join(f"{c['t0']:.2f} {c['text']}" for c in caps if c["line"] == x["id"])
+        L.append(f"| {x['id']} | {'원음' if x['kind'] == 'O' else '나레'} | {x['t0']:.2f}–{x['t1']:.2f} | {x['speak'][0]:.2f}–{x['speak'][1]:.2f} | {cs} |")
+    L += ["", "## 컷", "| # | 줄 | 시각 | 길이(재료) | 소스@초 | sync | 화면 |", "|---|---|---|---|---|---|---|"]
+    for c in info["cuts"]:
+        if c.get("dropped"):
+            L.append(f"| {c['i']} | {c['line']} | — | 빠짐 | — | — | {c['why']} |"); continue
+        L.append(f"| {c['i']} | {c['line']} | {c['t0']:.2f}–{c['t1']:.2f} | {c['dur']:.2f}({c['plan_dur']}) | {Path(c['src']).stem[:6]}@{c['ss']} | "
+                 f"{c.get('sync', '')} | {c['see'][:40]} |")
+    L += ["", "## 원음 소리", *[f"- {p['a']:.2f}–{p['b']:.2f} " + ("끔" if p.get("mute") else f"{p['line']} {Path(p['src']).stem}@{p['ss']}+{p['dur']}") for p in info["audio"]],
+          "", "## 못 그림", *([f"- {n}" for n in info["fx_not_drawn"]] or ["- 없음"])]
+    return "\n".join(L) + "\n"
+
+
+# ── 렌더 ─────────────────────────────────────────────────────────────────
+def place_narr(D, P, NM, R: Path) -> Path:
+    """나레 줄마다 [말 시작−0.03, 말 끝+0.10] 을 줄 시작에 놓은 한 파일(길이 = dur)."""
+    src = NM["wav"]
+    ins, fc, lab = [], [], []
+    k = 0
+    for x in P["lines"]:
+        if x["kind"] != "N":
+            continue
+        a, b = x["narr"]
+        pre = min(0.03, a)
+        d_ms = int(round((x["t0"] - pre) * 1000))
+        fc.append(f"[0:a]atrim={a - pre:.3f}:{b + 0.10:.3f},asetpts=PTS-STARTPTS,afade=t=out:st={b - a + pre + 0.05:.3f}:d=0.05,adelay={d_ms}:all=1[n{k}]")
+        lab.append(f"[n{k}]"); k += 1
+    fc.append("".join(lab) + f"amix=inputs={len(lab)}:normalize=0:duration=longest,apad,atrim=0:{P['dur']:.3f}[a]")
+    out = R / "narr_placed.wav"
+    run(["ffmpeg", "-y", "-i", src, "-filter_complex", ";".join(fc), "-map", "[a]", "-ar", SR, "-ac", "1", out])
+    return out
+
+
+def orig_gains(D, P, C) -> list[list]:
+    """원음 창 올림(dB) = (나레 LUFS + orig_rel_db) − 그 원본 구간 LUFS, clamp."""
+    gg = []
+    lo, hi = C["orig_gain_clamp"]
+    for p in P["audio"]:
+        if p.get("mute"):
+            continue
+        I, _ = lufs(D["cand_dir"] / p["src"], ["-ss", f"{p['ss']:.3f}", "-t", f"{p['dur']:.3f}"])
+        if I != I or I < -60:
+            raise StageError(f"원음 {p['line']} 구간 소리 크기 못 잼({I})")
+        g = round(min(hi, max(lo, C["narr_lufs"] + C["orig_rel_db"] - I)), 2)
+        p["src_lufs"], p["gain_db"] = I, g
+        gg.append([p["a"], p["b"], g])
+    return gg
+
+
+def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
+    from tools.calcopy import narr_video as nv
+    pd = R / "ov"; shutil.rmtree(pd, ignore_errors=True); pd.mkdir(parents=True)
+    items = []
+    for k, c in enumerate(P["captions"]):
+        st = FS["orig_style"] if c["kind"] == "O" else FS["narr_style"]
+        png = nv.emph_png(c["text"], st, st.get("rgb") or (255, 255, 255), pd / f"cap{k:03d}.png", dy=0)
+        items.append((png, 0, 0, c["t0"], c["t1"]))
+    for k, e in enumerate(P["effects"]):
+        png = nv.overlay_png(e, pd / f"fx{k:02d}.png")
+        items.append((png, e["at"][0], e["at"][1], *e["T"]))
+    ins, fc, last = [], [], "0:v"
+    for k, (png, x, y, a, b) in enumerate(items):
+        ins += ["-i", png]
+        pos = "0:0" if png.name.startswith("cap") else f"{x}-overlay_w/2:{y}-overlay_h/2"
+        fc.append(f"[{last}][{k + 1}:v]overlay={pos}:enable='between(t,{a:.3f},{b - 0.001:.3f})'[v{k}]")
+        last = f"v{k}"
+    fc.append(f"[{last}]format=yuv420p[v]")
+    script = R / "overlay_fc.txt"
+    script.write_text(";".join(fc), encoding="utf-8")
+    out = R / "video_cap.mp4"
+    run(["ffmpeg", "-y", "-i", src_mp4, *ins, "-filter_complex_script", script, "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "16",
+         "-preset", "veryfast", "-color_range", "tv", "-r", "30", out])
+    return out
+
+
+def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
+    """BGM(원음 창 덕킹) 섞기 → 목표 LUFS·최고점 맞춤(alimiter, 재고 다시 — 최대 4번)."""
+    from shopping_shorts import bgm_lib
+    bgm = bgm_lib.path_of(C["bgm"])
+    if not bgm or not Path(bgm).exists():
+        raise StageError(f"BGM '{C['bgm']}' 없음")
+    k = 10 ** (C["duck_db"] / 20)
+    win = [(p["a"], p["b"]) for p in P["audio"] if not p.get("mute")]
+    terms = "*".join(f"(1-{1 - k:.4f}*clip(min((t-{a - 0.15:.3f})/0.15,({b + 0.15:.3f}-t)/0.15),0,1))" for a, b in win) or "1"
+    pre = R / "mix_pre.wav"
+    run(["ffmpeg", "-y", "-i", src_mp4, "-stream_loop", "-1", "-i", bgm, "-filter_complex",
+         f"[0:a]aresample={SR},aformat=sample_fmts=fltp:channel_layouts=mono[m];"
+         f"[1:a]atrim=0:{P['dur']:.3f},asetpts=PTS-STARTPTS,aresample={SR},aformat=sample_fmts=fltp:channel_layouts=mono,"
+         f"loudnorm=I={C['bgm_lufs']}:TP=-6:LRA=11,aresample={SR},volume='{terms}':eval=frame[b];[m][b]amix=inputs=2:normalize=0:duration=first[a]",
+         "-map", "[a]", "-t", f"{P['dur']:.3f}", "-c:a", "pcm_f32le", pre])
+    I0, _ = lufs(pre)
+    g, lim, hist = C["target_lufs"] - I0, 10 ** ((C["peak_max"] - 0.7) / 20), []
+    final = R / "final.mp4"
+    for it in range(4):
+        run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex", f"[1:a]volume={g:.2f}dB,alimiter=limit={lim:.4f}:attack=3:release=60:level=false[a]",
+             "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
+        I, pk = lufs(final)
+        hist.append({"gain": round(g, 2), "limit": round(lim, 4), "I": I, "peak": pk})
+        if abs(I - C["target_lufs"]) <= 0.3 and pk <= C["peak_max"]:
+            break
+        if pk > C["peak_max"]:
+            lim *= 10 ** ((C["peak_max"] - pk - 0.15) / 20)
+        g += C["target_lufs"] - I
+    else:
+        raise StageError(f"소리 크기 못 맞춤 {hist}")
+    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "passes": hist, "final_I": I, "final_peak": pk}
+
+
+def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None) -> dict:
+    D = load_doc(doc)
+    if cps:
+        D["C"]["cps_plan"] = cps
+    src_notes = check_sources(D)
+    R = work / {"plan": "plan", "preview": "preview"}.get(mode, "render")
+    R.mkdir(parents=True, exist_ok=True)
+    FS = frame_and_styles(D, doc, R)
+    if mode == "plan":
+        NM = narr_plan(D)
+        P = plan_all(D, NM)
+        info = info_of(D, P, NM, "plan", {"frame": FS["frame"], "preset": FS["preset"], "frame_notes": FS["notes"], "sources": src_notes})
+        jsave(R / "render_info.json", info)
+        (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
+        return info
+    from tools.calcopy import narr_video as nv, hottem_audio as ha
+    NM = narr_beep(narr_plan(D), R) if mode == "preview" else narr_tts(D, R, confirm_tts)
+    P0 = plan_all(D, NM)
+    placed = place_narr(D, P0, NM, R)
+    segs, _ = nv.speech_segments(str(placed), "-40dB", 0.06)
+    P = plan_all(D, NM, segs)
+    base = {"frame": FS["frame"], "preset": FS["preset"], "frame_notes": FS["notes"], "sources": src_notes, "narr_placed": str(placed)}
+    if mode == "tts":
+        info = info_of(D, P, NM, "tts-only", base)
+        jsave(R / "render_info.json", info)
+        (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
+        return info
+    C = D["C"]
+    live = [c for c in P["cuts"] if not c.get("dropped")]
+    jsave(R / "script_render.json", {"_note": "shark/render.py — narr_video 용(자막은 완성본에 따로 얹음)", "final": {"lines": [{"text": "가"}]}})
+    jsave(R / "materials_render.json", {"cand_dir": str(D["cand_dir"]), "shots": [{
+        "i": 0, "full": True, "src": live[0]["src"], "ss": live[0]["ss"],
+        "cuts": [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], **({"src_crop": c["src_crop"]} if c.get("src_crop") else {})} for c in live]}]})
+    nvout = R / "nv"
+    final_nv = nv.build({"tteutgi": None, "frames": [{"frame": FS["frame"], "t_end": None}], "script": str(R / "script_render.json"), "tts": str(placed),
+                         "materials": str(R / "materials_render.json"), "out": str(nvout), "bgm": None, "lufs": C["narr_lufs"], "chunk": 14,
+                         "caption_mode": "replace", "line_asr": False})
+    gg = orig_gains(D, P, C)
+    jsave(R / "audio_timeline.json", {"shots": [[p["a"], p["b"]] for p in P["audio"]], "dur": P["dur"]})
+    jsave(R / "audio_materials.json", {"cand_dir": str(D["cand_dir"]), "shots": [
+        {"src": p.get("src") or live[0]["src"], "ss": p.get("ss", 0.0), **({"mute": True} if p.get("mute") else {"audio_src": p["src"], "audio_ss": p["ss"]})}
+        for p in P["audio"]]})
+    bed = R / "final_src.mp4"
+    ha.add_source_bed(str(final_nv), str(R / "audio_timeline.json"), str(R / "audio_materials.json"), str(placed), str(bed), 1.0, 10.0,
+                      work=str(R / "srcbed"), gap_gain=gg)
+    video = overlay_pass(D, P, FS, bed, R)
+    A = audio_final(D, P, C, bed, video, R)
+    info = info_of(D, P, NM, mode, {**base, "final": str(R / "final.mp4"), "audio_mix": A, "orig_gain": gg})
+    jsave(R / "render_info.json", info)
+    (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
+    return info
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("doc"); ap.add_argument("work")
+    ap.add_argument("--plan", action="store_true"); ap.add_argument("--tts-only", action="store_true")
+    ap.add_argument("--preview", action="store_true"); ap.add_argument("--confirm-tts", action="store_true"); ap.add_argument("--cps", type=float)
+    a = ap.parse_args()
+    mode = "plan" if a.plan else ("preview" if a.preview else ("tts" if a.tts_only else "render"))
+    try:
+        info = render(Path(a.doc).resolve(), Path(a.work).resolve(), mode, a.confirm_tts, a.cps)
+    except StageError as e:
+        print(f"[멈춤] {e}", file=sys.stderr)
+        sys.exit(2)
+    s = info["summary"]
+    log(f"[{info['mode']}] 길이 {info['dur']:.2f}초(벤치 {info['bench_dur']}) · 컷 {s['cuts']} 중앙 {s['cut_median']:.2f} 최단 {s['cut_min']:.2f} 끝 {s['end_cut']:.2f}"
+        f" · 1.2초 미만 {s['short_cuts']} · 빠진 컷 {s['dropped']} · 자막 {s['caps']}조각 최대 {s['cap_max_chars']}자 · 원음 {s['orig_sec']}초"
+        f" · 화면≠소리 시각 {s['sync_off']} · 못 그림 {len(info['fx_not_drawn'])}")
+    for n in info.get("frame_notes", []) + info.get("sources", []):
+        log("  ", n)
+
+
+if __name__ == "__main__":
+    main()
