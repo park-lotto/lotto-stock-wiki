@@ -28,10 +28,10 @@ FRAME_SRC = ROOT / "channel/mantem/frame_얜샷템.json"
 FRAME_A = D / "frame_함익병.json"
 PRESET_B = ROOT / "channel/homedesignnote/preset/전체화면_가운데자막"
 BGM = ROOT / "shopping_shorts/assets/bgm_lib/honwaka_puppu.mp3"
-GAP = 0.28           # 문장 사이 쉼(B18 0.22~0.30)
+GAP = 0.20           # 문장 사이 넣는 무음 — 앞뒤 TTS 숨 꼬리 포함 실측 쉼 0.26~0.31(B18)
 GAP_AB = 0.20        # 원음 끝(샷 경계) → B1 첫 말
 TAIL = 0.50
-TARGET_LUFS, TP = -9.0, -2.0
+TARGET_LUFS, TP = -8.6, -3.2
 O_HP = "highpass=f=90"
 
 
@@ -99,22 +99,44 @@ def split_sentences(full, n):
 
 
 def make_sentences(S, full):
+    """문장 자르기 → 쉼 고치기(tts_pauses: 원본 초 구간 → 늘림 뒤 목표 초, B18) → atempo.
+    atempo 는 전체 한 값(B17), 평균보다 3% 넘게 빠른 줄만 그 줄을 평균까지 늦춘다(B15, 늦춤 ≤10%)."""
     L = tts_lines(S)
     spans, inner = split_sentences(full, len(L))
+    if S.get("tts_spans"):          # 손으로 확인한 문장 구간이 있으면 그것(자동 분할은 쉼표 쉼이 문장 끝보다 길 때 틀린다)
+        spans = [tuple(S["tts_spans"][l["id"]]) for l in L]
+    P = S.get("tts_pauses") or {}
     chars = [nchar(l["tts"]) for l in L]
-    speech = sum(b - a for a, b in spans)
-    cps0 = sum(chars) / speech
-    tempo = round(min(1.25, max(0.85, S["cps_target"] / cps0)), 4)
+
+    def eff(l, a, b, tempo):     # 쉼 고친 뒤 원본 길이
+        return (b - a) - sum(e - s for s, e, _ in P.get(l["id"], [])) + sum(t * tempo for _, _, t in P.get(l["id"], []))
+    tempo = 1.1
+    for _ in range(5):
+        speech = sum(eff(l, a, b, tempo) for l, (a, b) in zip(L, spans))
+        tempo = round(min(1.25, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
+    durs = [eff(l, a, b, tempo) / tempo for l, (a, b) in zip(L, spans)]
+    mean = sum(chars) / sum(durs)
     out = []
-    for l, (a, b), c in zip(L, spans, chars):
+    for l, (a, b), c, d in zip(L, spans, chars, durs):
+        tl = tempo
+        if c / d > mean * 1.03:
+            tl = round(max(tempo * 0.9, tempo * mean / (c / d)), 4)
+        pts = [max(0, a - 0.02)]
+        cuts = sorted(P.get(l["id"], []))
+        fc, lab, x = [], [], pts[0]
+        for k, (s0, e0, tg) in enumerate(cuts):
+            fc.append(f"[0:a]atrim={x:.3f}:{s0:.3f},asetpts=PTS-STARTPTS,aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=mono[a{k}]"); lab.append(f"[a{k}]")
+            fc.append(f"anullsrc=r=48000:cl=mono,atrim=0:{tg * tl:.3f},aformat=sample_fmts=fltp[z{k}]"); lab.append(f"[z{k}]")
+            x = e0
+        fc.append(f"[0:a]atrim={x:.3f}:{b + 0.03:.3f},asetpts=PTS-STARTPTS,aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=mono[aE]"); lab.append("[aE]")
+        fc.append("".join(lab) + f"concat=n={len(lab)}:v=0:a=1,atempo={tl}[o]")
         p = R / f"s_{l['id']}.wav"
-        run(["ffmpeg", "-y", "-i", full, "-af", f"atrim={max(0, a - 0.03):.3f}:{b + 0.05:.3f},asetpts=PTS-STARTPTS,atempo={tempo},aresample=48000",
-             "-ac", "1", p])
-        out.append({"id": l["id"], "wav": str(p), "dur": round(dur_of(p), 3), "chars": c, "raw": [round(a, 3), round(b, 3)],
-                    "cps_raw": round(c / (b - a), 2)})
-    print(f"TTS 원 말속도 {cps0:.2f}자/초 → atempo {tempo}")
+        run(["ffmpeg", "-y", "-i", full, "-filter_complex", ";".join(fc), "-map", "[o]", "-ar", "48000", "-ac", "1", p])
+        out.append({"id": l["id"], "wav": str(p), "dur": round(dur_of(p), 3), "chars": c, "raw": [round(a, 3), round(b, 3)], "tempo": tl,
+                    "pauses": cuts})
+    print(f"atempo 기본 {tempo} · 평균 {mean:.2f}자/초")
     for o in out:
-        print(f"  {o['id']}: raw {o['raw']} {o['chars']}자 → {o['dur']}초 ({o['chars'] / o['dur']:.2f}자/초)")
+        print(f"  {o['id']}: {o['chars']}자 → {o['dur']}초 ({o['chars'] / o['dur']:.2f}자/초) tempo {o['tempo']}")
     return out, tempo, inner
 
 
@@ -273,13 +295,22 @@ def render_b(S, M, T):
     return seg, nb
 
 
+def mute_af(O):
+    """원음 안 남의 소리 구간(대본 O.mute, 원본 초)을 끈다 — 20ms 경사."""
+    f = ""
+    for a, b, *_ in O.get("mute") or []:
+        a, b = a - O["span"][0], b - O["span"][0]
+        f += f",volume='if(between(t,{a:.3f},{b:.3f}),max(0,1-min(t-{a:.3f},{b:.3f}-t)/0.02),1)':eval=frame"
+    return f
+
+
 def audio(S, T, sent):
     """나레(H·B) + 원음 O + BGM → mix.wav (TARGET_LUFS)."""
     O = next(l for l in S["lines"] if l["id"] == "O")
     ham = Path(json.loads((D / "재료.json").read_text(encoding="utf-8"))["cand_dir"]) / O["src"]
     o_wav = R / "o_raw.wav"
     run(["ffmpeg", "-y", "-ss", f"{O['span'][0]:.3f}", "-to", f"{O['span'][1]:.3f}", "-i", ham, "-vn", "-ac", "1", "-ar", "48000",
-         "-af", f"{O_HP},afade=t=in:d=0.02,areverse,afade=t=in:d=0.04,areverse", o_wav])
+         "-af", f"{O_HP}{mute_af(O)},afade=t=in:d=0.02,areverse,afade=t=in:d=0.04,areverse", o_wav])
     # 원음 크기 = 나레 크기(같은 LUFS)
     narr_cat = R / "narr_only.wav"
     lst = "".join(f"file '{Path(s['wav']).as_posix()}'\n" for s in sent)
@@ -310,11 +341,11 @@ def audio(S, T, sent):
          f"afade=t=out:st={end - 0.6:.3f}:d=0.6[b];[0:a][b]amix=inputs=2:normalize=0:duration=first[o]", "-map", "[o]", "-ar", "48000", mix_raw])
     mix = R / "mix.wav"
     gain, res = 16.0, None
-    for _ in range(6):
+    for _ in range(14):
         run(["ffmpeg", "-y", "-i", mix_raw, "-af", f"dynaudnorm=f=100:g=9:p=0.9:m=20,acompressor=threshold=0.125:ratio=8:attack=1:release=40,"
              f"volume={gain:.2f}dB,alimiter=limit={10 ** (TP / 20):.4f}:level=false:attack=1:release=30", "-ar", "48000", mix])
         res = lufs(mix)
-        if res[0] >= TARGET_LUFS - 0.4 or gain >= 22:
+        if res[0] >= TARGET_LUFS - 0.4 or gain >= 40:
             break
         gain += 2.0
     return mix, {"narr_lufs": nI, "orig_raw_lufs": oI, "orig_gain": og, "bgm_gain": g, "master_gain": gain, "mix": res}
