@@ -1,0 +1,217 @@
+{
+ "_note": "make_render.py — 페이지 1 × shots[].cuts(재료.json t_final 그대로)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/장윤정_덴마크수건/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "jyj_XzCEZtLDV-A.mp4",
+   "ss": 224.8,
+   "src_crop": [
+    500,
+    0,
+    870,
+    870
+   ],
+   "cuts": [
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 224.8,
+     "src_crop": [
+      500,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.18,
+     "plan_i": 0
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 226.4,
+     "src_crop": [
+      455,
+      0,
+      870,
+      870
+     ],
+     "dur": 2.8,
+     "plan_i": 1
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 127.0,
+     "src_crop": [
+      430,
+      0,
+      870,
+      870
+     ],
+     "dur": 0.9,
+     "plan_i": 2
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 147.2,
+     "src_crop": [
+      330,
+      0,
+      870,
+      870
+     ],
+     "dur": 0.9,
+     "plan_i": 3
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 111.7,
+     "src_crop": [
+      560,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.03,
+     "plan_i": 4
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 115.0,
+     "src_crop": [
+      470,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.03,
+     "plan_i": 5
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 197.7,
+     "src_crop": [
+      535,
+      0,
+      860,
+      860
+     ],
+     "dur": 1.32,
+     "plan_i": 6
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 204.92,
+     "src_crop": [
+      500,
+      0,
+      870,
+      870
+     ],
+     "dur": 3.32,
+     "plan_i": 7
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 216.8,
+     "src_crop": [
+      520,
+      0,
+      870,
+      870
+     ],
+     "dur": 3.15,
+     "plan_i": 8
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 161.1,
+     "src_crop": [
+      300,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.04,
+     "plan_i": 9
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 132.0,
+     "src_crop": [
+      450,
+      0,
+      860,
+      860
+     ],
+     "dur": 1.0,
+     "plan_i": 10
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 151.25,
+     "src_crop": [
+      560,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.07,
+     "plan_i": 11
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 261.95,
+     "src_crop": [
+      590,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.07,
+     "plan_i": 12
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 264.56,
+     "src_crop": [
+      455,
+      0,
+      870,
+      870
+     ],
+     "dur": 0.89,
+     "plan_i": 13
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 241.0,
+     "src_crop": [
+      410,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.6,
+     "plan_i": 14
+    },
+    {
+     "src": "jyj_XzCEZtLDV-A.mp4",
+     "ss": 248.1,
+     "src_crop": [
+      470,
+      0,
+      870,
+      870
+     ],
+     "dur": 1.98,
+     "plan_i": 15
+    }
+   ],
+   "t_final": [
+    0.0,
+    24.279
+   ]
+  }
+ ]
+}

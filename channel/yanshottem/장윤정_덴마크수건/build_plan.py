@@ -22,6 +22,9 @@ SDATE = "장공장장윤정 유튜브 2026.03.18"
 TITLE = "수건에 미친 장윤정이\n덴마크서 사 온 수건"
 LABEL = "출처 : 장공장장윤정"
 CPS = 8.4
+# TTS 실측(10-17): 미나 1회 narr_mina.mp3(10.08초, 1.0) → atempo 1.44 narr_t144.wav(7.01초). 말 구간 = N1 0.00~3.24(26자 8.0자/초) · N2 3.90~7.01(27자 8.7자/초)
+NARR_SLICE = {"N1": [0.00, 3.26], "N2": [3.88, 7.01]}
+NARR_PAD = {"N1": 0.12, "N2": 0.45}   # 나레 끝 뒤 쉼(N1 → 원음 O4) · 끝 여유(N2 = 마지막 컷 ≥1.5초)
 
 # 블록: (id, 종류, 길이 또는 None) — 원음은 spans 합, 나레는 글자/CPS
 NARR = {
@@ -66,7 +69,7 @@ CUTS = [
     ("O3", 261.95, 1.07, [590, 0, 870, 870], "위에서 본 줄무늬 수건을 손으로 쥐어 보는 장면(본인 손)", "원음 '확실히 짱짱하다' — 입 모양 없는 손 컷(원본 그대로)"),
     ("O3", 264.56, None, [455, 0, 870, 870], "수건을 무릎에 덮고 말하는 장윤정('아 나 너무 행복하다' 자막은 265.5 부터라 이 컷엔 없음)", "원음 '확실히 도톰하다' — 입 모양 맞음"),
     ("N2", 241.00, 1.60, [410, 0, 870, 870], "파랑 세로 줄무늬 수건을 펼쳐 보는 장윤정(자막 y≈930 크롭 밖)", "'매장이 없다 보니 / 비슷한 디자인까지' — 줄무늬 디자인"),
-    ("N2", 248.60, None, [470, 0, 870, 870], "빨강 줄무늬 TEKLA 수건을 펼쳐 든 장윤정(자막 'TEKLA 수건이 워낙에' y≈930 크롭 밖)", "'많이 나온다는 수건이라네요' — 끝 컷 ≥1.5초"),
+    ("N2", 248.10, None, [470, 0, 870, 870], "빨강 줄무늬 TEKLA 수건을 펼쳐 든 장윤정(자막 'TEKLA 수건이 워낙에' y≈930 크롭 밖 · 250.25 부터 얼굴 옆 '여자분들이 막'(y≈400, 크롭 안) → 248.10 시작해 250.08 에 끝)", "'많이 나온다는 수건이라네요' — 끝 컷 ≥1.5초"),
 ]
 
 FACTS = {
@@ -94,7 +97,7 @@ def main():
         if b in ORIG:
             d = round(sum(e - s for s, e in ORIG[b]["spans"]), 3)
         else:
-            d = round(len(NARR[b]["tts"].replace(" ", "").rstrip(".")) / CPS, 3)
+            sl = NARR_SLICE[b]; d = round(sl[1] - sl[0] + NARR_PAD[b], 3)
         blk[b] = (round(t, 3), round(t + d, 3)); t += d
     dur = round(t, 3)
     # 컷 시각 + 원음 소리 위치(블록 안 상대 시각 → 원본 spans)
@@ -126,8 +129,9 @@ def main():
         a0, a1 = blk[b]
         if b in NARR:
             cs = NARR[b]["caps"]; n = sum(len(c.replace(" ", "")) for c in cs); x = a0
-            for c in cs:
-                d = (a1 - a0) * len(c.replace(" ", "")) / n
+            talk = NARR_SLICE[b][1] - NARR_SLICE[b][0]
+            for k, c in enumerate(cs):
+                d = talk * len(c.replace(" ", "")) / n + (NARR_PAD[b] if k == len(cs) - 1 else 0)
                 caps.append({"t0": round(x, 3), "t1": round(x + d, 3), "text": c, "kind": "나레"}); x += d
         else:
             O = ORIG[b]
@@ -145,7 +149,8 @@ def main():
     for b in ("N1", "N2"):
         N = NARR[b]
         lines.append({"fn": N["fn"], "text": N["text"], "tts": N["tts"], "facts": N["facts"], "sources": [URL],
-                      "est_sec": round(blk[b][1] - blk[b][0], 2), "block": b})
+                      "est_sec": round(NARR_SLICE[b][1] - NARR_SLICE[b][0], 2), "block": b, "slice": NARR_SLICE[b], "t_final": list(blk[b]),
+                      "cps": round(len(N["tts"].replace(" ", "").rstrip(".")) / (NARR_SLICE[b][1] - NARR_SLICE[b][0]), 2)})
     orig = []
     for b in ORDER:
         if b in ORIG:
