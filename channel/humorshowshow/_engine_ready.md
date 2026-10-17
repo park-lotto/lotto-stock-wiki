@@ -11,7 +11,8 @@ PYTHONUTF8=1 py tools/calcopy/engine/preset_make.py channel/humorshowshow/preset
 PYTHONUTF8=1 py tools/calcopy/engine/preset_make.py channel/humorshowshow/preset/썰템쇼_화자썰 channel/humorshowshow/<작품폴더> --allow-tts   # 완성(TTS 1회, 캐시되면 재호출 0)
 ```
 - 완성본 = `<cand_dir>/make/final.mp4` · 1초 시트 `make/sheet_1s.jpg` · 검사표 `make/run_log.json`. 검사 전부 ○일 때만 바탕화면 `칼카피_썰템쇼_<제목>.mp4` 복사·`channel/결과물.json` 등록.
-- 바탕화면 하위 폴더(`칼카피영상/썰템쇼/`)로 보내려면 `--desktop-dir "C:/Users/CH/Desktop/칼카피영상/썰템쇼"`.
+- ★**완성 명령은 반드시 이 두 옵션을 붙인다(사장님 10-18)**: `--desktop-dir "C:/Users/CH/Desktop/칼카피영상/썰템쇼" --tag 1차`
+  → 바탕화면 `칼카피영상/썰템쇼/칼카피_썰템쇼_<제목>_1차.mp4`(원본과 MD5 같음). 판정 전 시안은 이름에 `_1차`. 기본값(바탕화면 루트)은 쓰지 않는다 — 이미 루트에 나간 편은 담당이 이 폴더로 옮긴다.
 
 ## 2. 작품 폴더 꼴
 `channel/humorshowshow/작품N_<소재>/{대본.json, 근거.md, 재료.json, plan/}`
