@@ -1,0 +1,314 @@
+{
+ "topic": "LARQ(UV 자가세척 물병) — 샤크탱크 시즌12에서 지분 1%에 50만 달러(가치 5,000만 달러) 요구 → 투자자 하차·4%/5% 역제안 → 케빈·로리와 100만 달러/4%로 방송 안 합의 → 2024년 브리타가 인수",
+ "bench": {
+  "id": "QMJtjJz4M6w",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "홍수 막아주는 모래 주머니?!",
+  "dur": 50.47,
+  "views": 12000000,
+  "upload": "2026-08-29"
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」(브랜드 글자 자리 없음 — 벤치 그대로)",
+ "titles": {
+  "line1": "지분 1%에 50만 달러 부른",
+  "line2": "스스로 씻는 물병?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '~?!' — 벤치 '홍수를 막을 수 있는 / 역대급 모래 주머니?!'와 겹치는 어절 없음"
+ },
+ "voice": "벤치 나레 받아쓰기 7.84자/초(189자/24.1초) — TTS 목소리는 페이블 OK 뒤 정함",
+ "facts": {
+  "f1": {
+   "text": "클립 94.6~101.99초 원음 'Five hundred thousand for one percent. / That's correct, Robert. / Congratulations, highest valuation ever requested in the Shark Tank.'(받아쓰기 2모델 일치, asr_spans3) · 화면 그래픽 98~101초 'Seeking $500k for a 1% stake, a $50M valuation'(1080p 프레임 눈 판독)",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음+화면 그래픽"
+  },
+  "f2": {
+   "text": "클립 52~54초 이름 그래픽 'JUSTIN WANG · LARQ'(창업자 이름 확인) · 60.0~85.1초 창업자 'the world's first self-cleaning water bottle … With a simple press of a button, and in just 60 seconds … UVC LED … to eradicate 99.99% of harmful and odor-causing bacteria, viruses, and mold'(받아쓰기 2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음(창업자 주장 — 전언체)"
+  },
+  "f3": {
+   "text": "클립 24.4~36.0초 창업자 'Have you ever noticed that funky smell coming from your reusable water bottle? … you do what we call the sniff test. Ooh-wee!'(2모델 일치) · 33.4~34.4초 화면: 창업자가 파란 물병 입구에 코를 댐",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "클립 172.4~177.9초 'Is that safer than boiling water? / It would be the equivalent of boiling your water for like 20 minutes. / Really?'(asr_spans2 2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음"
+  },
+  "f5": {
+   "text": "클립 199~219초 창업자 'we launched this product in 2018 … a little under two years … first full year in 2019 … a little over $5.5 million in sales. In the last 12 months, we've done over $9 million'(2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음(창업자 말)"
+  },
+  "f6": {
+   "text": "클립 240.0~246.6초 'How much do you have in the bank? / I have about 6.5 / so you really haven't had to spend anything, right? / Yeah' · 360~378.75초 하차 투자자(이름 그래픽 없음 — 불명) '…with 6.5 million in the bank. I just could not do this … but I'm out'(2모델 일치, 377.0~378.75 단독 받아쓰기 '…I'm out')",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음"
+  },
+  "f7": {
+   "text": "클립 391.7~401.2초 'I'm not doing it for 1% … I'll do it for 4%' + 화면 그래픽 401~409초 \"Kevin's offer: $500k for a 4% stake, a $12.5M valuation\" · 438.37~440.47초 '500,000 for 5%'(2모델 일치) + 그래픽 440~446초 \"Lori's offer: $500k for a 5% stake, a $10M valuation\"(1080p 눈 판독) — 이름 '케빈·로리'는 이 그래픽으로만 확인",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 원음+화면 그래픽"
+  },
+  "f8": {
+   "text": "클립 648~652초 그래픽 \"Kevin & Lori's counter offer: $1M for a 4% stake\"(저화질 판독, 1080p 재확인 = 계획.md) · 610.8~614.1초 창업자 'I'll do a million dollars for 4%, split between you and Lori' · 653.25~658.1초 'Done. Done. All right. Yes!'(2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "kind": "방송 화면 그래픽+원음"
+  },
+  "f9": {
+   "text": "BRITA SE 보도자료 'Taunusstein, GER / Feb 8, 2024' — BRITA SE 'has acquired LARQ, Inc.' · 'LARQ co-founder Justin Wang will continue to lead the company'",
+   "url": "https://insider.fitt.co/press-release/brita-se-germany-acquires-innovative-hydration-company-larq-inc/",
+   "kind": "회사 보도자료(1차)"
+  },
+  "f10": {
+   "text": "공식 영상 85Dy9RIAvmo(LARQ, 2018-06-01) 화면: 79~81초 뚜껑 안 UV 빛 근접 · 135~137초 물 마심 · 140~142초 색깔별 병 줄지음 — 화면 자료(사실 문장 근거 아님)",
+   "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
+   "kind": "공식 영상 화면"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "id": "L1",
+    "kind": "원음",
+    "fn": "의문(반응 먼저)",
+    "facts": [
+     "f1"
+    ],
+    "sub": [
+     "50만 달러에 1%요?!",
+     "맞습니다",
+     "축하해요!",
+     "샤크탱크 역대 최고 몸값이네요"
+    ],
+    "audio_orig": [
+     94.6,
+     101.99
+    ],
+    "en": "500,000 for 1%? / That's correct. / Congratulations. Highest valuation ever requested in the Shark Tank.",
+    "style": "보통",
+    "fx": "0초 빨간 원(묻는 투자자 얼굴) — 벤치 0초 빨간 원 그대로"
+   },
+   {
+    "id": "L2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f2"
+    ],
+    "sub": [
+     "버튼 한 번만 누르면",
+     "60초 만에 물병 속",
+     "세균을 없애 준다는",
+     "물병이 있는데"
+    ],
+    "text": "버튼 한 번만 누르면 60초 만에 물병 속 세균을 없애 준다는 물병이 있는데",
+    "tts": "버튼 한 번만 누르면 육십 초 만에 물병 속 세균을 없애 준다는 물병이 있는데"
+   },
+   {
+    "id": "L3",
+    "kind": "나레",
+    "fn": "문제(기존 불편)",
+    "facts": [
+     "f3"
+    ],
+    "sub": [
+     "오래 쓴 물병은",
+     "냄새부터 맡아 보고",
+     "마신다는데"
+    ],
+    "text": "오래 쓴 물병은 냄새부터 맡아 보고 마신다는데",
+    "tts": "오래 쓴 물병은 냄새부터 맡아 보고 마신다는데"
+   },
+   {
+    "id": "L4",
+    "kind": "원음",
+    "fn": "문제(반응)",
+    "facts": [
+     "f3"
+    ],
+    "sub": [
+     "우웩!"
+    ],
+    "audio_orig": [
+     34.6,
+     35.95
+    ],
+    "en": "Ooh-wee!",
+    "style": "원음반응_크게"
+   },
+   {
+    "id": "L5",
+    "kind": "나레",
+    "fn": "해답(원리)",
+    "facts": [
+     "f2",
+     "f10"
+    ],
+    "sub": [
+     "뚜껑 속 UV 빛이",
+     "세균이랑 곰팡이를",
+     "99.99% 잡아 준다고"
+    ],
+    "text": "뚜껑 속 UV 빛이 세균이랑 곰팡이를 99.99% 잡아 준다고",
+    "tts": "뚜껑 속 유브이 빛이 세균이랑 곰팡이를 구십구 점 구구 퍼센트 잡아 준다고"
+   },
+   {
+    "id": "L6",
+    "kind": "원음",
+    "fn": "전개(질문)",
+    "facts": [
+     "f4"
+    ],
+    "sub": [
+     "끓인 물보다 안전해요?",
+     "물을 20분쯤 끓인 것과",
+     "같은 수준이에요",
+     "정말?"
+    ],
+    "audio_orig": [
+     172.4,
+     177.9
+    ],
+    "en": "Is that safer than boiling water? / It would be the equivalent of boiling your water for like 20 minutes. / Really?",
+    "style": "보통"
+   },
+   {
+    "id": "L7",
+    "kind": "나레",
+    "fn": "숫자",
+    "facts": [
+     "f5"
+    ],
+    "sub": [
+     "출시 2년도 안 돼서",
+     "최근 1년 매출만",
+     "900만 달러가 넘는다는데"
+    ],
+    "text": "출시 2년도 안 돼서 최근 1년 매출만 900만 달러가 넘는다는데",
+    "tts": "출시 이 년도 안 돼서 최근 일 년 매출만 구백만 달러가 넘는다는데"
+   },
+   {
+    "id": "L8",
+    "kind": "나레",
+    "fn": "반전",
+    "facts": [
+     "f6"
+    ],
+    "sub": [
+     "그런데 통장에",
+     "650만 달러가",
+     "그대로 있다는 말에"
+    ],
+    "text": "그런데 통장에 650만 달러가 그대로 있다는 말에",
+    "tts": "그런데 통장에 육백오십만 달러가 그대로 있다는 말에"
+   },
+   {
+    "id": "L9",
+    "kind": "원음",
+    "fn": "반전(하차)",
+    "facts": [
+     "f6"
+    ],
+    "sub": [
+     "전 빠질게요"
+    ],
+    "audio_orig": [
+     377.0,
+     378.75
+    ],
+    "en": "…but I'm out.",
+    "style": "원음반응_크게"
+   },
+   {
+    "id": "L10",
+    "kind": "나레",
+    "fn": "투자자 경쟁",
+    "facts": [
+     "f7"
+    ],
+    "sub": [
+     "케빈은 4%,",
+     "로리는 5%는",
+     "받아야겠다고 하는데"
+    ],
+    "text": "케빈은 4%, 로리는 5%는 받아야겠다고 하는데",
+    "tts": "케빈은 사 퍼센트, 로리는 오 퍼센트는 받아야겠다고 하는데"
+   },
+   {
+    "id": "L11",
+    "kind": "원음",
+    "fn": "투자자 경쟁",
+    "facts": [
+     "f7"
+    ],
+    "sub": [
+     "50만 달러에 5%요"
+    ],
+    "audio_orig": [
+     438.37,
+     440.47
+    ],
+    "en": "500,000 for 5%.",
+    "style": "보통"
+   },
+   {
+    "id": "L12",
+    "kind": "나레",
+    "fn": "결말",
+    "facts": [
+     "f8"
+    ],
+    "sub": [
+     "결국 케빈과 로리가",
+     "100만 달러에",
+     "지분 4%를 받기로 하고"
+    ],
+    "text": "결국 케빈과 로리가 100만 달러에 지분 4%를 받기로 하고",
+    "tts": "결국 케빈과 로리가 백만 달러에 지분 사 퍼센트를 받기로 하고"
+   },
+   {
+    "id": "L13",
+    "kind": "원음",
+    "fn": "결말(악수)",
+    "facts": [
+     "f8"
+    ],
+    "sub": [
+     "좋아요!",
+     "좋아요!",
+     "좋습니다",
+     "예스!"
+    ],
+    "audio_orig": [
+     653.25,
+     658.1
+    ],
+    "en": "Done. / Done. / All right. / Yes!",
+    "style": "원음반응_크게",
+    "fx": "날개 돈다발 이모지 — 벤치 40초 자리(투자 성사)"
+   },
+   {
+    "id": "L14",
+    "kind": "나레",
+    "fn": "후일담",
+    "facts": [
+     "f9"
+    ],
+    "sub": [
+     "2024년엔 독일 정수 필터",
+     "회사 브리타가",
+     "이 회사를 인수했다고"
+    ],
+    "text": "2024년엔 독일 정수 필터 회사 브리타가 이 회사를 인수했다고",
+    "tts": "이천이십사 년엔 독일 정수 필터 회사 브리타가 이 회사를 인수했다고"
+   }
+  ]
+ },
+ "dropped": [
+  "방송 뒤 딜 최종 성사 여부 — LaunchBoom 사례글은 '성사 안 됨', 다른 글은 '성사' 식으로 엇갈리고 1차 출처 못 찾음(검색 2회) → 넣지 않음",
+  "가격 95달러·원가 40달러(250~259초) — 길이 때문에 뺌",
+  "정수 피처(268~310초) — 물병 한 제품에 집중"
+ ]
+}
