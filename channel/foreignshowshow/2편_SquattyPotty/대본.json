@@ -344,7 +344,18 @@
      155.96,
      157.04
     ],
-    "asr": "155.96~157.12 'Holy crap!' 2모델 일치(asr_clips.json, 말 끝 157.06)"
+    "asr": "155.96~157.12 'Holy crap!' 2모델 일치(asr_clips.json, 말 끝 157.06)",
+    "emph": [
+     {
+      "cap": "헐 대박!",
+      "span": "헐 대박!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L2",
@@ -361,7 +372,36 @@
      157.12,
      160.3
     ],
-    "asr": "157.12~157.9 'You're selling' 2모델(asr_clips2.json, 겹친 말) · 157.9~160.3 'Holy crap, right? There's a crap load of money in squa…' 2모델(끝 단어 갈림 — 60초 묶음 3-flash 'Squatty Potty')"
+    "asr": "157.12~157.9 'You're selling' 2모델(asr_clips2.json, 겹친 말) · 157.9~160.3 'Holy crap, right? There's a crap load of money in squa…' 2모델(끝 단어 갈림 — 60초 묶음 3-flash 'Squatty Potty')",
+    "emph": [
+     {
+      "cap": "그걸 판다고?",
+      "span": "그걸 판다고?",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "대박이죠? 이 발판에",
+      "span": "대박이죠? 이 발판에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "돈이 똥더미로 쌓여요",
+      "span": "똥더미로 쌓여요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L3",
@@ -375,6 +415,53 @@
      "두 발을 올리면",
      "쪼그려 앉은 자세가",
      "된다는데"
+    ],
+    "emph": [
+     {
+      "cap": "변기 앞에",
+      "span": "변기 앞에",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이 발판 하나만 놓고",
+      "span": "하나만 놓고",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두 발을 올리면",
+      "span": "두 발을",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쪼그려 앉은 자세가",
+      "span": "앉은 자세가",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "된다는데",
+      "span": "된다는데",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -389,6 +476,53 @@
      "잘 안 나오는데",
      "쪼그려 앉으면",
      "쭉 펴진다고"
+    ],
+    "emph": [
+     {
+      "cap": "그냥 앉으면",
+      "span": "그냥 앉으면",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "장 끝 근육이 꺾여서",
+      "span": "근육이 꺾여서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "잘 안 나오는데",
+      "span": "나오는데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쪼그려 앉으면",
+      "span": "쪼그려 앉으면",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쭉 펴진다고",
+      "span": "쭉 펴진다고",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -401,6 +535,35 @@
      "엄마랑 아들이",
      "35만 달러에",
      "지분 5%를 걸었는데"
+    ],
+    "emph": [
+     {
+      "cap": "엄마랑 아들이",
+      "span": "엄마랑 아들이",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "35만 달러에",
+      "span": "35만 달러에",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "지분 5%를 걸었는데",
+      "span": "5%를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -417,7 +580,27 @@
      136.74,
      139.26
     ],
-    "asr": "136.74~139.34 2모델 'First year in business, we sold $1 million in Squa-'(장면 경계에서 단어 끝 잘림)"
+    "asr": "136.74~139.34 2모델 'First year in business, we sold $1 million in Squa-'(장면 경계에서 단어 끝 잘림)",
+    "emph": [
+     {
+      "cap": "첫해에만 100만",
+      "span": "100만",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "달러어치 팔았어요",
+      "span": "팔았어요",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L7",
@@ -432,7 +615,18 @@
      139.34,
      140.83
     ],
-    "asr": "139.34~140.0 웅얼거림(모델마다 'Hey everybody'/'party party' — 번역 안 함) · 140.0~140.7 'Come on' 4회 중 3회(클립 3-flash 1회 'Mama, I'm on TV!')"
+    "asr": "139.34~140.0 웅얼거림(모델마다 'Hey everybody'/'party party' — 번역 안 함) · 140.0~140.7 'Come on' 4회 중 3회(클립 3-flash 1회 'Mama, I'm on TV!')",
+    "emph": [
+     {
+      "cap": "말도 안 돼!",
+      "span": "말도 안 돼!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L8",
@@ -449,7 +643,36 @@
      140.91,
      143.53
     ],
-    "asr": "140.91~143.61 2모델 'The year after that / (The year after) we did 2.7 million'(말 끝 143.41~143.63)"
+    "asr": "140.91~143.61 2모델 'The year after that / (The year after) we did 2.7 million'(말 끝 143.41~143.63)",
+    "emph": [
+     {
+      "cap": "그다음 해는요?",
+      "span": "그다음 해는요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다음 해엔",
+      "span": "다음 해엔",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "270만 달러요",
+      "span": "270만 달러요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L9",
@@ -464,7 +687,18 @@
      143.61,
      144.34
     ],
-    "asr": "143.61~144.44 2모델 'Yes, I like it.'"
+    "asr": "143.61~144.44 2모델 'Yes, I like it.'",
+    "emph": [
+     {
+      "cap": "좋아, 맘에 드네",
+      "span": "맘에 드네",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L10",
@@ -475,6 +709,26 @@
     "caps": [
      "케빈이 같은 돈에",
      "10%를 달라는데"
+    ],
+    "emph": [
+     {
+      "cap": "케빈이 같은 돈에",
+      "span": "같은 돈에",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%를 달라는데",
+      "span": "10%를",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -491,7 +745,27 @@
      381.75,
      383.62
     ],
-    "asr": "381.75~384.0 2모델 'Yeah, 700,000 for 10%.'(끝 383.55~384.05 → 컷 끝 383.72 = 장면 바뀜)"
+    "asr": "381.75~384.0 2모델 'Yeah, 700,000 for 10%.'(끝 383.55~384.05 → 컷 끝 383.72 = 장면 바뀜)",
+    "emph": [
+     {
+      "cap": "그럼 70만 달러에",
+      "span": "70만 달러에",
+      "color": "주황",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%로 하죠",
+      "span": "10%로 하죠",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L12",
@@ -502,6 +776,26 @@
     "caps": [
      "로리도 35만 달러에",
      "10%를 고집하자"
+    ],
+    "emph": [
+     {
+      "cap": "로리도 35만 달러에",
+      "span": "35만 달러에",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%를 고집하자",
+      "span": "10%를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -518,7 +812,27 @@
      416.45,
      418.82
     ],
-    "asr": "416.45~418.92 2모델 'How about 10% for 500,000?'"
+    "asr": "416.45~418.92 2모델 'How about 10% for 500,000?'",
+    "emph": [
+     {
+      "cap": "50만 달러에",
+      "span": "50만 달러에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "10%는 어때요?",
+      "span": "10%는 어때요?",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L14",
@@ -533,7 +847,18 @@
      425.81,
      426.93
     ],
-    "asr": "425.75~427.4 2모델 'I don't accept that.'(끝 426.95~427.19 → 컷 끝 427.0 = 장면 바뀜)"
+    "asr": "425.75~427.4 2모델 'I don't accept that.'(끝 426.95~427.19 → 컷 끝 427.0 = 장면 바뀜)",
+    "emph": [
+     {
+      "cap": "그건 안 받아요",
+      "span": "받아요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L15",
@@ -549,7 +874,27 @@
      513.45,
      517.1
     ],
-    "asr": "513.45~515.25 2모델 'Actually, we're going to take Lori's offer.' · 515.25~517.0 3-flash 'There you go. / Great.'(60초 묶음 2모델도 516.2 'There you go' 517.1 'Great')"
+    "asr": "513.45~515.25 2모델 'Actually, we're going to take Lori's offer.' · 515.25~517.0 3-flash 'There you go. / Great.'(60초 묶음 2모델도 516.2 'There you go' 517.1 'Great')",
+    "emph": [
+     {
+      "cap": "로리 제안 받을게요",
+      "span": "받을게요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "좋았어!",
+      "span": "좋았어!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L16",
@@ -562,6 +907,44 @@
      "방송 뒤 20개 나라에",
      "진출해서",
      "450만 개 넘게 팔렸고"
+    ],
+    "emph": [
+     {
+      "cap": "그렇게 손을 잡고",
+      "span": "손을 잡고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "방송 뒤 20개 나라에",
+      "span": "20개",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "진출해서",
+      "span": "진출해서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "450만 개 넘게 팔렸고",
+      "span": "450만 개",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -574,6 +957,35 @@
      "방송 이후 매출만",
      "1억 7,500만 달러를",
      "찍었다고"
+    ],
+    "emph": [
+     {
+      "cap": "방송 이후 매출만",
+      "span": "이후 매출만",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "1억 7,500만 달러를",
+      "span": "1억 7,500만 달러를",
+      "color": "노랑",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "찍었다고",
+      "span": "찍었다고",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    }
   ],

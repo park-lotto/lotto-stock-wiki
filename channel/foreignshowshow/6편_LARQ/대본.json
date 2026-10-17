@@ -109,7 +109,63 @@
     "orig_en": "500,000 for 1%? / That's correct. / Congratulations. Highest valuation ever requested in the Shark Tank.",
     "text": "50만 달러에 지분 1%요?! 맞습니다 축하해요! 샤크탱크 역대 최고 몸값이네요",
     "style": "보통",
-    "fx": "0초 빨간 원(묻는 투자자 얼굴) — 벤치 0초 빨간 원 그대로"
+    "fx": "0초 빨간 원(묻는 투자자 얼굴) — 벤치 0초 빨간 원 그대로",
+    "emph": [
+     {
+      "cap": "50만 달러에",
+      "span": "50만 달러에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "지분 1%요?!",
+      "span": "지분 1%요?!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "맞습니다",
+      "span": "맞습니다",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "축하해요!",
+      "span": "축하해요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "샤크탱크 역대",
+      "span": "샤크탱크 역대",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "최고 몸값이네요",
+      "span": "최고 몸값이네요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L2",
@@ -125,7 +181,45 @@
      "물병이 있는데"
     ],
     "text": "버튼 한 번만 누르면 60초 만에 물병 안의 세균을 없애 준다는 물병이 있는데",
-    "tts": "버튼 한 번만 누르면 육십 초 만에 물병 안의 세균을 없애 준다는 물병이 있는데"
+    "tts": "버튼 한 번만 누르면 육십 초 만에 물병 안의 세균을 없애 준다는 물병이 있는데",
+    "emph": [
+     {
+      "cap": "버튼 한 번만 누르면",
+      "span": "한 번만",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "60초 만에 물병 안의",
+      "span": "60초",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "세균을 없애 준다는",
+      "span": "없애 준다는",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물병이 있는데",
+      "span": "물병이 있는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L3",
@@ -141,7 +235,36 @@
     ],
     "text": "오래 쓴 물병은 냄새부터 맡아 보고 마신다는데",
     "tts": "오래 쓴 물병은 냄새부터 맡아 보고 마신다는데",
-    "fx": "빨간 점선 원(물병 입구·코) — 벤치 10~12초 빨간 점선 원 자리"
+    "fx": "빨간 점선 원(물병 입구·코) — 벤치 10~12초 빨간 점선 원 자리",
+    "emph": [
+     {
+      "cap": "오래 쓴 물병은",
+      "span": "물병은",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "냄새부터 맡아 보고",
+      "span": "맡아 보고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "마신다는데",
+      "span": "마신다는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L4",
@@ -162,7 +285,18 @@
     ],
     "orig_en": "Ooh-wee!",
     "text": "우웩!",
-    "style": "원음반응_크게"
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "우웩!",
+      "span": "우웩!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L5",
@@ -180,7 +314,45 @@
     ],
     "text": "뚜껑에서 나오는 UV 빛이 세균이랑 곰팡이를 99.99% 잡아 준다고",
     "tts": "뚜껑에서 나오는 유브이 빛이 세균이랑 곰팡이를 구십구 점 구구 퍼센트 잡아 준다고",
-    "fx": "분홍 화살표(UV 빛 가리킴) — 벤치 14초 분홍 화살표 자리"
+    "fx": "분홍 화살표(UV 빛 가리킴) — 벤치 14초 분홍 화살표 자리",
+    "emph": [
+     {
+      "cap": "뚜껑에서 나오는",
+      "span": "뚜껑에서 나오는",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "UV 빛이 세균이랑",
+      "span": "세균이랑",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "곰팡이를",
+      "span": "곰팡이를",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "99.99% 잡아 준다고",
+      "span": "99.99%",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L6",
@@ -207,7 +379,45 @@
     ],
     "orig_en": "Is that safer than boiling water? / It would be the equivalent of boiling your water for like 20 minutes. / Really?",
     "text": "끓인 물보다 안전해요? 물을 20분쯤 끓인 것과 같은 수준이에요 정말?",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "끓인 물보다 안전해요?",
+      "span": "끓인 물보다 안전해요?",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물을 20분쯤 끓인 것과",
+      "span": "20분쯤",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "같은 수준이에요",
+      "span": "같은 수준이에요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "정말?",
+      "span": "정말?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L7",
@@ -223,7 +433,45 @@
      "넘는다는데"
     ],
     "text": "출시 2년도 안 돼서 최근 1년 매출만 900만 달러가 넘는다는데",
-    "tts": "출시 이 년도 안 돼서 최근 일 년 매출만 구백만 달러가 넘는다는데"
+    "tts": "출시 이 년도 안 돼서 최근 일 년 매출만 구백만 달러가 넘는다는데",
+    "emph": [
+     {
+      "cap": "출시 2년도 안 돼서",
+      "span": "2년도",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "최근 1년 매출만",
+      "span": "1년",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "900만 달러가",
+      "span": "900만 달러가",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "넘는다는데",
+      "span": "넘는다는데",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L8",
@@ -238,7 +486,36 @@
      "그대로 있다는 말에"
     ],
     "text": "그런데 통장에 650만 달러가 그대로 있다는 말에",
-    "tts": "그런데 통장에 육백오십만 달러가 그대로 있다는 말에"
+    "tts": "그런데 통장에 육백오십만 달러가 그대로 있다는 말에",
+    "emph": [
+     {
+      "cap": "그런데 통장에",
+      "span": "그런데 통장에",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "650만 달러가",
+      "span": "650만 달러가",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그대로 있다는 말에",
+      "span": "있다는 말에",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L9",
@@ -259,7 +536,18 @@
     ],
     "orig_en": "I'm, I'm out.",
     "text": "전 빠질게요",
-    "style": "원음반응_크게"
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "전 빠질게요",
+      "span": "전 빠질게요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L10",
@@ -274,7 +562,36 @@
      "받아야겠다고 하는데"
     ],
     "text": "케빈은 4%, 로리는 5%는 받아야겠다고 하는데",
-    "tts": "케빈은 사 퍼센트, 로리는 오 퍼센트는 받아야겠다고 하는데"
+    "tts": "케빈은 사 퍼센트, 로리는 오 퍼센트는 받아야겠다고 하는데",
+    "emph": [
+     {
+      "cap": "케빈은 4%,",
+      "span": "케빈은 4%,",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "로리는 5%는",
+      "span": "로리는 5%는",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "받아야겠다고 하는데",
+      "span": "하는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L11",
@@ -295,7 +612,18 @@
     ],
     "orig_en": "500,000 for 5%.",
     "text": "50만 달러에 5%요",
-    "style": "보통"
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "50만 달러에 5%요",
+      "span": "50만 달러에 5%요",
+      "color": "민트",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L12",
@@ -310,7 +638,36 @@
      "지분 4%를 받기로 하고"
     ],
     "text": "결국 케빈과 로리가 100만 달러에 지분 4%를 받기로 하고",
-    "tts": "결국 케빈과 로리가 백만 달러에 지분 사 퍼센트를 받기로 하고"
+    "tts": "결국 케빈과 로리가 백만 달러에 지분 사 퍼센트를 받기로 하고",
+    "emph": [
+     {
+      "cap": "결국 케빈과 로리가",
+      "span": "케빈과 로리가",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "100만 달러에",
+      "span": "100만 달러에",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "지분 4%를 받기로 하고",
+      "span": "4%를",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L13",
@@ -338,7 +695,45 @@
     "orig_en": "Done. / Done. / All right. / Yes!",
     "text": "좋아요! 좋아요! 좋습니다 예스!",
     "style": "원음반응_크게",
-    "fx": "날개 돈다발 이모지 — 벤치 40초 자리(투자 성사)"
+    "fx": "날개 돈다발 이모지 — 벤치 40초 자리(투자 성사)",
+    "emph": [
+     {
+      "cap": "좋아요!",
+      "span": "좋아요!",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "좋아요!",
+      "span": "좋아요!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "좋습니다",
+      "span": "좋습니다",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "예스!",
+      "span": "예스!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L14",
@@ -353,7 +748,36 @@
      "이 회사를 인수했다고"
     ],
     "text": "2024년엔 정수 필터를 만드는 독일의 브리타가 이 회사를 인수했다고",
-    "tts": "이천이십사 년엔 정수 필터를 만드는 독일의 브리타가 이 회사를 인수했다고"
+    "tts": "이천이십사 년엔 정수 필터를 만드는 독일의 브리타가 이 회사를 인수했다고",
+    "emph": [
+     {
+      "cap": "2024년엔 정수 필터를",
+      "span": "2024년엔",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "만드는 독일의 브리타가",
+      "span": "독일의 브리타가",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이 회사를 인수했다고",
+      "span": "인수했다고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    }
   ]
  },

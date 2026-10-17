@@ -111,6 +111,17 @@
     ],
     "caps": [
      "공이랑 그물 하나에?!"
+    ],
+    "emph": [
+     {
+      "cap": "공이랑 그물 하나에?!",
+      "span": "공이랑 그물 하나에?!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -135,6 +146,35 @@
      "공 하나랑 그물 하나로",
      "한 해 140만 달러어치를",
      "판 게임이 있는데"
+    ],
+    "emph": [
+     {
+      "cap": "공 하나랑 그물 하나로",
+      "span": "그물 하나로",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 해 140만 달러어치를",
+      "span": "한 해 140만 달러어치를",
+      "color": "빨강",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "판 게임이 있는데",
+      "span": "판 게임이",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -169,6 +209,35 @@
      "이 공이랑 그물,",
      "가방 하나면 돼요",
      "어디든 들고 갈 수 있어요"
+    ],
+    "emph": [
+     {
+      "cap": "이 공이랑 그물,",
+      "span": "공이랑 그물,",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "가방 하나면 돼요",
+      "span": "하나면 돼요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "어디든 들고 갈 수 있어요",
+      "span": "갈 수 있어요",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -195,6 +264,44 @@
      "서브하면",
      "상대는 세 번 안에",
      "다시 내리꽂아야 하고"
+    ],
+    "emph": [
+     {
+      "cap": "그물에 공을 튕겨",
+      "span": "공을 튕겨",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "서브하면",
+      "span": "서브하면",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "상대는 세 번 안에",
+      "span": "세 번",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다시 내리꽂아야 하고",
+      "span": "내리꽂아야 하고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -227,6 +334,26 @@
     "caps": [
      "배우긴 쉬운데",
      "마스터하긴 진짜 어려워요"
+    ],
+    "emph": [
+     {
+      "cap": "배우긴 쉬운데",
+      "span": "배우긴 쉬운데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "마스터하긴 진짜 어려워요",
+      "span": "진짜 어려워요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -253,6 +380,35 @@
      "편 가를 필요도 없어서",
      "눈밭이든 물속이든",
      "다 된다고"
+    ],
+    "emph": [
+     {
+      "cap": "편 가를 필요도 없어서",
+      "span": "필요도 없어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "눈밭이든 물속이든",
+      "span": "물속이든",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "다 된다고",
+      "span": "다 된다고",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -277,7 +433,36 @@
     "facts": [
      "f7"
     ],
-    "est_sec": 3.06
+    "est_sec": 3.06,
+    "emph": [
+     {
+      "cap": "올해만 2만 9천 개를",
+      "span": "2만 9천 개를",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "팔았다는데",
+      "span": "팔았다는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "만드는 데 드는 돈은",
+      "span": "드는 돈은",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L8",
@@ -305,7 +490,18 @@
      27.5,
      29.3
     ],
-    "est_sec": 1.8
+    "est_sec": 1.8,
+    "emph": [
+     {
+      "cap": "14달러 조금 넘어요",
+      "span": "14달러",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "L9",
@@ -327,6 +523,26 @@
     "caps": [
      "그걸 59달러 99센트에",
      "팔고 있었는데"
+    ],
+    "emph": [
+     {
+      "cap": "그걸 59달러 99센트에",
+      "span": "59달러 99센트에",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "팔고 있었는데",
+      "span": "팔고 있었는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -349,6 +565,26 @@
     "caps": [
      "이때 데이먼드가",
      "50만 달러를 내걸면서"
+    ],
+    "emph": [
+     {
+      "cap": "이때 데이먼드가",
+      "span": "이때 데이먼드가",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "50만 달러를 내걸면서",
+      "span": "50만 달러를",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -380,6 +616,26 @@
     "caps": [
      "회사 전체 지분",
      "25%를 원해요"
+    ],
+    "emph": [
+     {
+      "cap": "회사 전체 지분",
+      "span": "전체 지분",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "25%를 원해요",
+      "span": "25%를 원해요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -411,6 +667,26 @@
     "caps": [
      "50만 달러에 15%는",
      "어떠세요?"
+    ],
+    "emph": [
+     {
+      "cap": "50만 달러에 15%는",
+      "span": "50만 달러에 15%는",
+      "color": "주황",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "어떠세요?",
+      "span": "어떠세요?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -442,6 +718,26 @@
     "caps": [
      "다 잃을 수도 있는",
      "순간이에요"
+    ],
+    "emph": [
+     {
+      "cap": "다 잃을 수도 있는",
+      "span": "수도 있는",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "순간이에요",
+      "span": "순간이에요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -467,6 +763,35 @@
      "결국 20%에",
      "손을 잡으면서",
      "투자가 성사됐는데"
+    ],
+    "emph": [
+     {
+      "cap": "결국 20%에",
+      "span": "결국 20%에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "손을 잡으면서",
+      "span": "손을 잡으면서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "투자가 성사됐는데",
+      "span": "성사됐는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -491,6 +816,35 @@
      "알고 보니 방송이",
      "나가기도 전에",
      "이 딜이 깨졌다고"
+    ],
+    "emph": [
+     {
+      "cap": "알고 보니 방송이",
+      "span": "보니 방송이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "나가기도 전에",
+      "span": "나가기도 전에",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이 딜이 깨졌다고",
+      "span": "깨졌다고",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -518,6 +872,44 @@
      "내자는 말에",
      "장난감처럼 보일까 봐",
      "창업자가 반대했다는 거야"
+    ],
+    "emph": [
+     {
+      "cap": "스파이더맨 세트를",
+      "span": "세트를",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "내자는 말에",
+      "span": "내자는 말에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "장난감처럼 보일까 봐",
+      "span": "장난감처럼",
+      "color": "초록",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "창업자가 반대했다는 거야",
+      "span": "반대했다는 거야",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -543,6 +935,35 @@
      "그래도 2019년엔",
      "한 해 1,900만 달러를",
      "버는 회사가 됐다고"
+    ],
+    "emph": [
+     {
+      "cap": "그래도 2019년엔",
+      "span": "2019년엔",
+      "color": "노랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "한 해 1,900만 달러를",
+      "span": "한 해 1,900만 달러를",
+      "color": "분홍",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "버는 회사가 됐다고",
+      "span": "회사가 됐다고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    }
   ],

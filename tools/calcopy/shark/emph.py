@@ -99,8 +99,9 @@ def fill(doc: Path, dry=False) -> list[list[dict]]:
     p = doc / "대본.json"
     S = json.loads(p.read_text(encoding="utf-8"))
     L = S["final"]["lines"]
-    norm = [{"kind": "O" if l.get("kind") in ("orig", "원음") else "N",
-             "caps": l.get("caps") or [l.get("text") or l.get("tts")]} for l in L]
+    from tools.calcopy.shark import render as RD   # 자막 조각 주인 = render.load_doc(caps 없는 꼴은 엔진 chunk_sentence) — 같은 조각에 칠한다
+    caps = {x["id"]: (x["kind"], x["caps"]) for x in RD.load_doc(doc)["lines"]}
+    norm = [{"kind": caps[l["id"]][0], "caps": caps[l["id"]][1]} for l in L]
     res = pick(norm)
     for l, r in zip(L, res):
         old = l.get("emph") or []

@@ -84,7 +84,18 @@
      0.0,
      1.55
     ],
-    "fx": "빨간 원(로리 얼굴) 0초 — 벤치 그대로"
+    "fx": "빨간 원(로리 얼굴) 0초 — 벤치 그대로",
+    "emph": [
+     {
+      "cap": "대신 지분 20%는 받을게요",
+      "span": "20%는",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "N1",
@@ -100,6 +111,44 @@
     "t_est": [
      1.55,
      5.15
+    ],
+    "emph": [
+     {
+      "cap": "운전석이랑 콘솔 사이",
+      "span": "콘솔 사이",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "틈을 막아서",
+      "span": "틈을 막아서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "폰이 안 빠지게 해 준다는",
+      "span": "빠지게 해 준다는",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "물건이 있는데",
+      "span": "물건이 있는데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -120,7 +169,18 @@
      5.15,
      7.6
     ],
-    "fx": "빨간 점선 원(틈) — 벤치 10~12초 자리"
+    "fx": "빨간 점선 원(틈) — 벤치 10~12초 자리",
+    "emph": [
+     {
+      "cap": "그 블랙홀, 그 어두운 구렁",
+      "span": "그 어두운 구렁",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "N2",
@@ -135,6 +195,35 @@
     "t_est": [
      7.6,
      10.6
+    ],
+    "emph": [
+     {
+      "cap": "폰이며 열쇠며",
+      "span": "폰이며 열쇠며",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "감자튀김까지",
+      "span": "감자튀김까지",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "삼켜 버리는 그 틈 때문에",
+      "span": "그 틈 때문에",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -154,6 +243,17 @@
     "t_est": [
      10.6,
      12.85
+    ],
+    "emph": [
+     {
+      "cap": "무릎 꿇고, 엉덩이 치켜들고",
+      "span": "엉덩이 치켜들고",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -170,7 +270,36 @@
      12.85,
      15.85
     ],
-    "fx": "분홍 화살표(벨트 홈) — 벤치 14초 자리"
+    "fx": "분홍 화살표(벨트 홈) — 벤치 14초 자리",
+    "emph": [
+     {
+      "cap": "벨트 꽂는 자리 홈에 끼워",
+      "span": "자리 홈에 끼워",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "두기만 하면",
+      "span": "두기만 하면",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "바닥으로 안 빠진다는데",
+      "span": "빠진다는데",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "O4",
@@ -189,6 +318,26 @@
     "t_est": [
      15.85,
      19.05
+    ],
+    "emph": [
+     {
+      "cap": "의자가 어디로 가든",
+      "span": "어디로 가든",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "드롭스탑이 따라가요",
+      "span": "따라가요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -208,6 +357,17 @@
     "t_est": [
      19.05,
      21.27
+    ],
+    "emph": [
+     {
+      "cap": "26만 개 넘게 팔았어요",
+      "span": "26만 개",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -223,6 +383,35 @@
     "t_est": [
      21.27,
      24.27
+    ],
+    "emph": [
+     {
+      "cap": "만드는 데 4달러 드는",
+      "span": "4달러",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "걸, 20달러 가까이",
+      "span": "20달러",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "받고 판다는데",
+      "span": "받고 판다는데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -239,6 +428,26 @@
     "t_est": [
      24.27,
      26.27
+    ],
+    "emph": [
+     {
+      "cap": "투자자 둘은 빠졌는데",
+      "span": "둘은 빠졌는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "케빈은 지분 말고",
+      "span": "지분 말고",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -258,6 +467,26 @@
     "t_est": [
      26.27,
      31.57
+    ],
+    "emph": [
+     {
+      "cap": "이거 하나 팔릴 때마다",
+      "span": "팔릴 때마다",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "2달러씩 받을게요",
+      "span": "2달러씩",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -274,7 +503,45 @@
      31.57,
      35.47
     ],
-    "fx": "날개 돈다발 이모지 — 벤치 40초 자리"
+    "fx": "날개 돈다발 이모지 — 벤치 40초 자리",
+    "emph": [
+     {
+      "cap": "로리는 백만장자로",
+      "span": "백만장자로",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "만들어 주겠다며",
+      "span": "만들어 주겠다며",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "30만 달러에 지분",
+      "span": "30만 달러에",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "20%를 불렀고",
+      "span": "20%를 불렀고",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
    },
    {
     "id": "N7",
@@ -289,6 +556,26 @@
     "t_est": [
      35.47,
      37.57
+    ],
+    "emph": [
+     {
+      "cap": "결국 로리 손을 잡았고",
+      "span": "손을 잡았고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "5년 뒤 매출은",
+      "span": "5년",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -308,6 +595,17 @@
     "t_est": [
      37.57,
      39.4
+    ],
+    "emph": [
+     {
+      "cap": "2,800만 달러 찍었어요",
+      "span": "2,800만 달러",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    },
    {
@@ -323,6 +621,35 @@
     "t_est": [
      39.4,
      43.7
+    ],
+    "emph": [
+     {
+      "cap": "LA 경찰이 석 달간 사고",
+      "span": "석 달간 사고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "0건이라며",
+      "span": "0건이라며",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "순찰차 3천 대에 달기로 했다고",
+      "span": "3천",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
     ]
    }
   ],
