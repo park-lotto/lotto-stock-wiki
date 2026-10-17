@@ -1,0 +1,162 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "ILIiqCJAOSI",
+ "made_from": {
+  "tool": "channel/banggu/make_썰템홈샷.py",
+  "note": "훅 카드: 깊은 잉크 바탕 · 왼쪽 정렬 큰 제목(포인트색 둘째 줄) · 포인트 막대 + 문장 · 둥근 그림 창"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    38,
+    34,
+    31
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 740,
+   "w": 1080,
+   "h": 1180,
+   "radius": 36
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 70,
+   "y": 48,
+   "w": 600,
+   "align": "left",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 44.0,
+   "line_h": 51,
+   "rgb": [
+    200,
+    194,
+    186
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 1,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷"
+  },
+  {
+   "kind": "image",
+   "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%23C8C2BA%27%3E%3Cpath%20d=%27M12%2020s-7-4.500-7-10a4%204%200%200%201%207-2.500A4%204%200%200%201%2019%2010c0%205.500-7%2010-7%2010z%27/%3E%3C/svg%3E",
+   "x": 920,
+   "y": 40,
+   "w": 80,
+   "h": 80
+  },
+  {
+   "kind": "band",
+   "x": 70,
+   "y": 132,
+   "w": 940,
+   "h": 2,
+   "rgb": [
+    78,
+    70,
+    64
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 70,
+   "y": 185,
+   "w": 940,
+   "align": "left",
+   "lines": 2,
+   "font": "PretendardXBold",
+   "size": 101.1,
+   "line_h": 150,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     232,
+     128,
+     102
+    ]
+   ],
+   "outline": null,
+   "shadow": {
+    "dx": 0,
+    "dy": 4,
+    "blur": 10,
+    "rgb": [
+     20,
+     17,
+     15
+    ]
+   },
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "끝까지 안 내놓은\n아웃백 영업기밀"
+  },
+  {
+   "kind": "band",
+   "x": 70,
+   "y": 548,
+   "w": 96,
+   "h": 8,
+   "rgb": [
+    214,
+    106,
+    80
+   ],
+   "radius": 4
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 70,
+   "y": 584,
+   "w": 940,
+   "align": "left",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 45.5,
+   "line_h": 52,
+   "rgb": [
+    200,
+    194,
+    186
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "아웃백이 끝까지 안 내놓은 영업기밀"
+  }
+ ]
+}

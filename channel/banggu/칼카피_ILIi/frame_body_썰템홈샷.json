@@ -1,0 +1,189 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "made_by": "calcopy_frame v1",
+ "source": "ILIiqCJAOSI",
+ "made_from": {
+  "tool": "channel/banggu/make_썰템홈샷.py",
+  "note": "방구석 틀 외관 변형(10-17): 슬림 머리줄·저채도 팔레트·왼쪽 정렬 카드·SUIT 자막 박스. 내용은 그대로"
+ },
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    246,
+    242,
+    236
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 660,
+   "w": 1080,
+   "h": 1260,
+   "radius": 36
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 70,
+   "y": 48,
+   "w": 600,
+   "align": "left",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 44.0,
+   "line_h": 51,
+   "rgb": [
+    38,
+    34,
+    31
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 1,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷"
+  },
+  {
+   "kind": "image",
+   "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%23D66A50%27%3E%3Cpath%20d=%27M12%2020s-7-4.500-7-10a4%204%200%200%201%207-2.500A4%204%200%200%201%2019%2010c0%205.500-7%2010-7%2010z%27/%3E%3C/svg%3E",
+   "x": 920,
+   "y": 40,
+   "w": 80,
+   "h": 80
+  },
+  {
+   "kind": "band",
+   "x": 70,
+   "y": 132,
+   "w": 940,
+   "h": 2,
+   "rgb": [
+    222,
+    216,
+    208
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 64,
+   "y": 176,
+   "w": 952,
+   "h": 196,
+   "rgb": [
+    228,
+    221,
+    211
+   ],
+   "radius": 36
+  },
+  {
+   "kind": "band",
+   "x": 60,
+   "y": 164,
+   "w": 960,
+   "h": 198,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "radius": 36
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 100,
+   "y": 194,
+   "w": 700,
+   "align": "left",
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 29.2,
+   "line_h": 34,
+   "rgb": [
+    214,
+    106,
+    80
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "썰템홈샷 · 14:25"
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 100,
+   "y": 255,
+   "w": 920,
+   "align": "left",
+   "lines": 1,
+   "font": "PretendardXBold",
+   "size": 59.3,
+   "line_h": 68,
+   "rgb": [
+    38,
+    34,
+    31
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "text": "아웃백이 끝까지 안 내놓은 영업기밀"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 414,
+   "w": 940,
+   "align": "center",
+   "lines": 2,
+   "font": "SUITBold",
+   "size": 52.7,
+   "line_h": 82,
+   "rgb": [
+    38,
+    34,
+    31
+   ],
+   "line_rgb": null,
+   "outline": null,
+   "shadow": null,
+   "box": {
+    "rgb": [
+     236,
+     228,
+     218
+    ],
+    "pad": 20,
+    "radius": 36
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": null,
+   "valign": "top"
+  }
+ ]
+}
