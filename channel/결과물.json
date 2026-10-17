@@ -426,6 +426,22 @@
    "date": "2026-10-18",
    "judge": "자동 검사만(사람 판정 전)",
    "from": "channel/hottemreport/현장썰_run.py"
+  },
+  {
+   "n": 35,
+   "channel": "hottemreport",
+   "channel_name": "숏템리폿",
+   "brand": "숏템리폿",
+   "style": "현장썰",
+   "title": "현장썰_04_미니포르쉐",
+   "path": "C:/숏템_칼카피/hottemreport/현장썰_04_미니포르쉐/render/final.mp4",
+   "desktop": "칼카피_숏템리폿_미니포르쉐_1차.mp4",
+   "md5": "ff34c742f46f36e66d80cc13d1eeb2f6",
+   "seconds": 28.17,
+   "preset": "channel/hottemreport/현장썰_04_미니포르쉐(1편 make_render 그대로 · 현장썰_run.py)",
+   "date": "2026-10-18",
+   "judge": "자동 검사만(사람 판정 전) · 판매 연결 경계(고가 주문 제작품)",
+   "from": "channel/hottemreport/현장썰_run.py"
   }
  ]
 }
