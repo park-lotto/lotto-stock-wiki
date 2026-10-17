@@ -39,8 +39,13 @@
   "humorshowshow": {
    "brand": "썰템쇼",
    "bench": "재밌쇼(@humorshowshow)",
-   "style": "화자썰",
-   "since": "2026-10-18"
+   "since": "2026-10-18",
+   "options": [
+    "화자대사줄",
+    "조회수줄",
+    "끝줄혼잣말ㅋㅋ",
+    "연예인보증컷"
+   ]
   }
  }
 }
