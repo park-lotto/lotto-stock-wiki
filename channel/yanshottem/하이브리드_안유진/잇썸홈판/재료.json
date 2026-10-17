@@ -1,0 +1,354 @@
+{
+ "_note": "줄↔컷 표. cand_dir 아래 상대 경로(IVE 원본은 절대 경로). crop=[x,y,w,h](원본 좌표, B 는 9:16). toks=그 줄 자막 조각 번호. max=원본 샷 경계까지 남은 초(scdet 실측 + 시트 눈 확인). A = IVE 원본(1080×1080 창) H 컷 2개 + 원음 컷 — 화면 = 안유진 본인만. B = 이 제품(eos 바닐라 캐시미어 24H 바디로션)만 나오는 영상만.",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_안유진/src",
+ "src_urls": {
+  "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4": "IVE 8o3M3DmY05E '[IVE LOG] 강아지 가방 최초(?) 공개 in WORLD TOUR | 윶 LOG' 2026-09-17 1080p",
+  "rv/OBp8bB4AEvo.mp4": "TerraTested OBp8bB4AEvo 'I was seriously surprised by this EOS body lotion.' 1080p — 병 라벨 'shea better 24H Moisture BODY LOTION vanilla cashmere 16 FL OZ(473mL)'",
+  "eos/eos_JugmExyy4Qg.mp4": "eos Products JugmExyy4Qg 'the eos body lotion you NEED!' 720×1270 — 라벨 'vanilla cashmere', 화면 글자 없음",
+  "eos/eos_HOGLbtiiFZE.mp4": "eos Products HOGLbtiiFZE 'That OG Vanilla' 2026-06 1080p — 오른쪽 'Vanilla Cashmere' 글자 크롭 밖",
+  "eos/eos_85AU_3DohFs.mp4": "eos Products 85AU_3DohFs 'Vanilla Cashmere Trifecta' 1080p — 왼쪽 로션 병, 오른쪽 'moisturize' 글자 크롭 밖",
+  "rv/DA9gTpGjyJE.mp4": "Khan Product Reviews DA9gTpGjyJE 'EOS Vanilla Cashmere Lotion Review' 1440p — 탁자 위 병(캐나다 2언어 라벨 vanilla cashmere)",
+  "rv/05DTFG-e_CU.mp4": "That vivian 05DTFG-e_CU 'EOS vanilla cashmere Body Lotion Review … 1 YEAR USE' 1440p — 제형·바르기"
+ },
+ "A": {
+  "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+  "H_shots": [
+   {
+    "ss": 591.15,
+    "max": 1.6,
+    "crop": [
+     600,
+     40,
+     800,
+     800
+    ],
+    "see": "★첫 프레임 = 안유진 얼굴 크게(사장님 10-18 썸네일 규칙) — 침대에 누운 얼굴(원본 컷 590.88 뒤, 아래 'ANYUJIN' 자막 y≈945 밖)"
+   },
+   {
+    "dur": 2.3,
+    "crop": [
+     640,
+     0,
+     820,
+     820
+    ],
+    "see": "eos 병을 들고 소개 시작하는 얼굴(565.90~, 원본 컷 565.50 뒤) — 이어서 O1 이 같은 줄기로 시작"
+   }
+  ],
+  "O_shots": [
+   {
+    "piece": "O1a",
+    "src_t": 568.2,
+    "crop": [
+     400,
+     0,
+     900,
+     900
+    ],
+    "see": "병 든 안유진이 말함(입 모양 그대로)"
+   },
+   {
+    "piece": "O1b",
+    "src_t": 570.17,
+    "crop": [
+     300,
+     0,
+     820,
+     820
+    ],
+    "see": "같은 장면(쉼 0.92초 잘라 이어 붙임 — 크기 바꿔 이음매 가림)"
+   },
+   {
+    "piece": "O2a",
+    "src_t": 576.22,
+    "crop": [
+     300,
+     0,
+     900,
+     900
+    ],
+    "see": "병을 볼에 대고 향 설명"
+   },
+   {
+    "piece": "O2b",
+    "src_t": 579.66,
+    "crop": [
+     330,
+     40,
+     820,
+     820
+    ],
+    "see": "같은 장면(쉼 0.58초 잘라 이어 붙임)"
+   }
+  ],
+  "face": "안유진 본인만(원음 구간) — 남의 신체 0"
+ },
+ "B": [
+  {
+   "line": "B1",
+   "toks": [
+    0,
+    0
+   ],
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 0.1,
+   "max": 1.75,
+   "crop": [
+    0,
+    0,
+    714,
+    1270
+   ],
+   "see": "바닐라 캐시미어 로션 병을 들고 얘기하는 여성(eos 공식 UGC)",
+   "face": "여성",
+   "text": "제품 라벨만"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    1,
+    2
+   ],
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 15.0,
+   "max": 2.35,
+   "crop": [
+    500,
+    0,
+    608,
+    1080
+   ],
+   "see": "라벨 근접 'shea better 24H Moisture BODY LOTION vanilla cashmere'(15.0~ 글자 또렷한 구간)",
+   "face": "없음(손)",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "eos/eos_HOGLbtiiFZE.mp4",
+   "ss": 0.8,
+   "max": 1.5,
+   "crop": [
+    330,
+    0,
+    608,
+    1080
+   ],
+   "see": "eos 공식 — 병 정면(오른쪽 'Vanilla Cashmere' 글자 x≥1000 밖)",
+   "face": "없음",
+   "text": "제품 라벨"
+  },
+  {
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 19.8,
+   "max": 1.8,
+   "crop": [
+    0,
+    0,
+    714,
+    1270
+   ],
+   "see": "팔꿈치에 로션을 문질러 펴 바름",
+   "face": "없음(팔)",
+   "text": "없음",
+   "line": "B2",
+   "toks": [
+    0,
+    0
+   ]
+  },
+  {
+   "line": "B2",
+   "toks": [
+    1,
+    2
+   ],
+   "src": "rv/05DTFG-e_CU.mp4",
+   "ss": 218.3,
+   "max": 3.5,
+   "crop": [
+    900,
+    0,
+    810,
+    1440
+   ],
+   "see": "손가락에 묻은 로션을 문질러 펴 바름(제형)",
+   "face": "없음(손)",
+   "text": "없음"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "eos/eos_HOGLbtiiFZE.mp4",
+   "ss": 10.97,
+   "max": 1.32,
+   "crop": [
+    700,
+    0,
+    608,
+    1080
+   ],
+   "see": "로션 바른 뒤 어깨를 드러내고 웃음(eos 공식, 글자 없는 샷)",
+   "face": "모델",
+   "text": "없음"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 7.6,
+   "max": 4.25,
+   "crop": [
+    700,
+    0,
+    608,
+    1080
+   ],
+   "see": "로션 바른 손을 코에 대고 향 맡기 → 눈 감고 손 비빔",
+   "face": "리뷰어",
+   "text": "없음"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 7.1,
+   "max": 7.8,
+   "crop": [
+    0,
+    0,
+    714,
+    1270
+   ],
+   "see": "병을 든 채 눈 감고 웃음",
+   "face": "여성",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    0,
+    0
+   ],
+   "src": "eos/eos_JugmExyy4Qg.mp4",
+   "ss": 15.0,
+   "max": 2.6,
+   "crop": [
+    0,
+    0,
+    714,
+    1270
+   ],
+   "see": "병 근접('vanilla cashmere' 라벨)",
+   "face": "없음(손)",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    1,
+    1
+   ],
+   "src": "rv/DA9gTpGjyJE.mp4",
+   "ss": 164.2,
+   "max": 5.5,
+   "crop": [
+    1000,
+    200,
+    698,
+    1240
+   ],
+   "see": "탁자 위 같은 병(펌프) — 왼쪽 위 노란 딱지(y<130) 밖",
+   "face": "없음",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    2,
+    2
+   ],
+   "src": "eos/eos_HOGLbtiiFZE.mp4",
+   "ss": 12.95,
+   "max": 2.0,
+   "crop": [
+    260,
+    0,
+    608,
+    1080
+   ],
+   "see": "eos 공식 — 병 정면(오른쪽 'dessert for your skin' 글자 x≥930 밖)",
+   "face": "없음",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "C:/숏템_칼카피/itemhome/1편_안유진로션/src/ive_8o3M3DmY05E.mp4",
+   "ss": 586.0,
+   "max": 3.0,
+   "crop": [
+    420,
+    0,
+    506,
+    900
+   ],
+   "see": "안유진이 병을 볼에 붙이고 웃음(아래 편집 자막 y≈945 밖)",
+   "face": "안유진(B 구간, 소리 없음)",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    2,
+    2
+   ],
+   "src": "eos/eos_85AU_3DohFs.mp4",
+   "ss": 3.1,
+   "max": 1.0,
+   "crop": [
+    260,
+    0,
+    608,
+    1080
+   ],
+   "see": "eos 공식 — 펌프병 정면(오른쪽 'moisturize' 글자 x≥1036 밖)",
+   "face": "없음",
+   "text": "제품 라벨"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    3,
+    3
+   ],
+   "src": "rv/OBp8bB4AEvo.mp4",
+   "ss": 1.5,
+   "max": 3.0,
+   "crop": [
+    300,
+    0,
+    608,
+    1080
+   ],
+   "see": "병을 들어 보임(끝 컷)",
+   "face": "리뷰어 가장자리",
+   "text": "제품 라벨"
+  }
+ ]
+}
