@@ -5,19 +5,18 @@ import json
 from pathlib import Path
 
 R = Path(__file__).resolve().parent
-DEEP = [22, 52, 50]        # 깊은 청록 먹색(채도 낮춤)
-PAPER = [243, 241, 237]    # 중성 웜 그레이 카드
-SHADE = [231, 229, 224]    # 아주 옅은 그림자
+ESP = [44, 30, 24]         # 샘플 E 에스프레소
+PAGE = [247, 243, 238]
+CREAM = [255, 246, 224]
+GOLD = [240, 200, 120]     # 크림골드(네온 글로우·둘째 줄·선)
+BRONZE = [170, 120, 60]    # 메타 글자
 WHITE = [255, 255, 255]
-ACC = [201, 138, 62]       # 포인트 1색: 낮춘 앰버
-ACC_L = [228, 190, 130]    # 훅 제목 2줄(앰버 밝은 톤)
-MUTE = [112, 122, 118]
-SOFT = [178, 192, 188]
-RAD = 44
+SOFT = [222, 205, 180]
+RAD = 28
 JOBS = {   # 폴더: (hook, body, 새 hook, 새 body, 조회수 줄)
-    "칼카피_rGFX": ("frame_rGFX_hook.json", "frame_rGFX_body.json", "frame_rGFX_hook_맛템썰템.json", "frame_rGFX_body_맛템썰템.json", "8.7만 읽음 · 412 공감"),
-    "새소재_shinramyun_gumi": ("frame_hook.json", "frame_body.json", "frame_hook_맛템썰템.json", "frame_body_맛템썰템.json", "15.2만 읽음 · 538 공감"),
-    "새소재_rescene_bread": ("frame_hook.json", "frame_body.json", "frame_hook_맛템썰템.json", "frame_body_맛템썰템.json", "11.6만 읽음 · 297 공감"),
+    "칼카피_rGFX": ("frame_rGFX_hook.json", "frame_rGFX_body.json", "frame_rGFX_hook_맛템썰템.json", "frame_rGFX_body_맛템썰템.json", "맛템썰템 · 8.7만 읽음"),
+    "새소재_shinramyun_gumi": ("frame_hook.json", "frame_body.json", "frame_hook_맛템썰템.json", "frame_body_맛템썰템.json", "맛템썰템 · 15.2만 읽음"),
+    "새소재_rescene_bread": ("frame_hook.json", "frame_body.json", "frame_hook_맛템썰템.json", "frame_body_맛템썰템.json", "맛템썰템 · 11.6만 읽음"),
 }
 
 
@@ -47,22 +46,21 @@ def body(d, stats):
     title = next(l["text"] for l in L if l.get("role") == "label" and l["y"] == 412)
     cap = dict(next(l for l in L if l.get("role") == "caption"))
     vid = dict(next(l for l in L if l["kind"] == "video"))
-    cap.update(font="SUITBold", size=62, line_h=93, rgb=WHITE, align="center",
-               box={"rgb": DEEP, "pad": 14, "radius": 22})
+    vid.update(x=0, y=510, w=1080, h=1300, radius=0)   # 엔진 shot_clip 은 창 x=0·폭 1080 만 받는다 — 좌우 48px 은 바탕색 띠로 덮어 카드처럼 보이게
+    cap.update(font="CcPretendard-Bold", size=60, line_h=82, rgb=WHITE, align="center", x=540, y=1620, w=900, lines=2, valign="top",
+               box={"rgb": ESP, "pad": 22, "radius": 22})
     d["layers"] = [
-        {"kind": "bg", "rgb": WHITE[:]}, vid,
-        B(30, 44, 1020, 470, SHADE, RAD),                       # 아주 옅은 그림자
-        B(30, 36, 1020, 470, PAPER, RAD),                       # 카드
-        B(66, 72, 84, 84, DEEP, 42),                            # 로고 원
-        T("brand", "맛", 108, 83, 84, 46, "PretendardXBold", WHITE, align="center"),
-        T("brand", "맛템썰템 🥢", 172, 88, 520, 44, "PretendardXBold", DEEP),
-        T("label", stats, 1014, 96, 520, 30, "CcPretendard-SemiBold", MUTE, align="right"),
-        B(66, 184, 948, 2, [214, 211, 205]),
-        T("title", split2(title), 66, 224, 948, 66, "SUITBold", DEEP, lines=2, line_h=88),
-        B(66, 428, 72, 6, ACC, 3),
+        {"kind": "bg", "rgb": PAGE[:]}, vid,
+        B(0, 510, 48, 1300, PAGE), B(1032, 510, 48, 1300, PAGE),
+        B(0, 0, 1080, 210, ESP),
+        T("brand", "맛템썰템", 540, 52, 900, 72, "GmarketSansBold", CREAM, align="center", glow={"px": 28, "rgb": GOLD[:]}),
+        B(480, 170, 120, 3, GOLD),
+        B(48, 250, 984, 220, WHITE, RAD),
+        T("label", stats, 540, 278, 900, 30, "CcPretendard-SemiBold", BRONZE, align="center"),
+        T("title", split2(title), 540, 326, 920, 58, "SUITBold", ESP, align="center", lines=2, line_h=70),
         cap,
     ]
-    d["_note"] = "맛템썰템 외관(10-17): 원본 채널 틀(상단 띠·프로필 칸·구분선) 폐기 — 둥근 카드·로고 원·조회 줄·진녹 자막 칸. 영상 창 자리는 그대로"
+    d["_note"] = "맛템썰템 E 에스프레소·크림골드(사장님 선택 10-17): 에스프레소 헤더·네온 채널명·흰 제목 카드·큰 둥근 그림 칸·그림 아래 자막 박스"
     d.pop("made_from", None)
     return d
 
@@ -71,19 +69,19 @@ def hook(d):
     L = d["layers"]
     title = next(l for l in L if l.get("role") == "title")
     label = next(l["text"] for l in L if l.get("role") == "label" and l["y"] == 581)
-    vid = dict(next(l for l in L if l["kind"] == "video")); vid["radius"] = RAD
+    vid = dict(next(l for l in L if l["kind"] == "video")); vid.update(x=0, y=690, w=1080, h=1130, radius=0)
     tl = dict(title)
-    tl.update(x=66, y=196, w=948, align="left", size=112, line_h=130, font="GmarketSansBold", rgb=WHITE,
-              line_rgb=[WHITE[:], ACC_L[:]], shadow=None, outline=None, lines=2)
+    tl.update(x=540, y=250, w=960, align="center", size=118, line_h=140, font="SUITBold", rgb=WHITE,
+              line_rgb=[WHITE[:], GOLD[:]], shadow=None, outline=None, lines=2)
     d["layers"] = [
-        {"kind": "bg", "rgb": DEEP[:]}, vid,
-        B(66, 84, 262, 70, PAPER, 35),
-        T("brand", "🥢 맛템썰템", 197, 97, 250, 36, "PretendardXBold", DEEP, align="center"),
+        {"kind": "bg", "rgb": ESP[:]}, vid,
+        B(0, 690, 48, 1130, ESP), B(1032, 690, 48, 1130, ESP),
+        T("brand", "맛템썰템", 540, 70, 900, 64, "GmarketSansBold", CREAM, align="center", glow={"px": 28, "rgb": GOLD[:]}),
+        B(480, 170, 120, 3, GOLD),
         tl,
-        B(66, 508, 72, 6, ACC, 3),
-        T("label", label, 66, 548, 948, 44, "CcPretendard-SemiBold", SOFT),
+        T("label", label, 540, 580, 960, 40, "CcPretendard-SemiBold", SOFT, align="center"),
     ]
-    d["_note"] = "맛템썰템 외관(10-17): 훅 카드 — 좌측 정렬 제목·채널 알약·둥근 영상 창. 영상 창 크기·자리 그대로"
+    d["_note"] = "맛템썰템 E 훅 카드: 에스프레소 바탕·네온 채널명·흰 큰 제목(둘째 줄 크림골드)·둥근 그림 창"
     d.pop("made_from", None)
     return d
 
