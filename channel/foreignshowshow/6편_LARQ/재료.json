@@ -40,17 +40,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 94.6,
-   "audio_dur": 2.69,
+   "audio_dur": 2.655,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     94.6,
-    97.29
+    97.25
    ],
    "ss": 84.6,
-   "dur": 2.69,
+   "dur": 2.655,
    "t_final_est": [
     0.0,
-    2.69
+    2.65
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -70,18 +70,18 @@
    "src": "fuM1_10.mp4",
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
-   "audio_ss": 97.29,
-   "audio_dur": 2.31,
+   "audio_ss": 97.28,
+   "audio_dur": 2.375,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    97.29,
-    99.6
+    97.28,
+    99.66
    ],
-   "ss": 87.29,
-   "dur": 2.31,
+   "ss": 87.28,
+   "dur": 2.375,
    "t_final_est": [
-    2.69,
-    5.0
+    2.65,
+    5.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -101,18 +101,18 @@
    "src": "fuM1_10.mp4",
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
-   "audio_ss": 99.6,
-   "audio_dur": 2.39,
+   "audio_ss": 99.68,
+   "audio_dur": 2.22,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    99.6,
-    101.99
+    99.68,
+    101.9
    ],
-   "ss": 89.6,
-   "dur": 2.39,
+   "ss": 89.68,
+   "dur": 2.22,
    "t_final_est": [
-    5.0,
-    7.39
+    5.03,
+    7.25
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -133,14 +133,14 @@
    "mute": true,
    "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
    "src_orig_span": [
-    86.05,
-    87.44
+    86.02,
+    87.4
    ],
-   "ss": 86.05,
-   "dur": 1.39,
+   "ss": 86.02,
+   "dur": 1.377,
    "t_final_est": [
-    7.39,
-    8.78
+    7.25,
+    8.63
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -162,13 +162,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     73.4,
-    75.98
+    76.09
    ],
    "ss": 63.4,
-   "dur": 2.58,
+   "dur": 2.69,
    "t_final_est": [
-    8.78,
-    11.36
+    8.63,
+    11.32
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -190,13 +190,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     24.4,
-    25.66
+    25.53
    ],
    "ss": 14.4,
-   "dur": 1.26,
+   "dur": 1.13,
    "t_final_est": [
-    11.36,
-    12.62
+    11.32,
+    12.45
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -217,14 +217,14 @@
    "mute": true,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    33.42,
+    33.54,
     34.6
    ],
-   "ss": 23.42,
-   "dur": 1.18,
+   "ss": 23.54,
+   "dur": 1.058,
    "t_final_est": [
-    12.62,
-    13.8
+    12.45,
+    13.5
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -254,8 +254,8 @@
    "ss": 24.6,
    "dur": 1.7,
    "t_final_est": [
-    13.8,
-    15.5
+    13.5,
+    15.2
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -277,13 +277,13 @@
    "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
    "src_orig_span": [
     79.7,
-    81.68
+    81.72
    ],
    "ss": 79.7,
-   "dur": 1.98,
+   "dur": 2.024,
    "t_final_est": [
-    15.5,
-    17.48
+    15.2,
+    17.23
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -305,13 +305,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     152.2,
-    154.58
+    154.63
    ],
    "ss": 142.2,
-   "dur": 2.38,
+   "dur": 2.429,
    "t_final_est": [
-    17.48,
-    19.86
+    17.23,
+    19.66
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -332,17 +332,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 172.4,
-   "audio_dur": 1.7,
+   "audio_dur": 1.655,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     172.4,
-    174.1
+    174.06
    ],
    "ss": 162.4,
-   "dur": 1.7,
+   "dur": 1.655,
    "t_final_est": [
-    19.86,
-    21.56
+    19.66,
+    21.31
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -362,18 +362,18 @@
    "src": "fuM1_10.mp4",
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
-   "audio_ss": 174.1,
-   "audio_dur": 2.53,
+   "audio_ss": 174.08,
+   "audio_dur": 2.525,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    174.1,
-    176.63
+    174.08,
+    176.61
    ],
-   "ss": 164.1,
-   "dur": 2.53,
+   "ss": 164.08,
+   "dur": 2.525,
    "t_final_est": [
-    21.56,
-    24.09
+    21.31,
+    23.84
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -394,17 +394,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 176.63,
-   "audio_dur": 1.27,
+   "audio_dur": 1.17,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     176.63,
-    177.9
+    177.8
    ],
    "ss": 166.63,
-   "dur": 1.27,
+   "dur": 1.17,
    "t_final_est": [
-    24.09,
-    25.36
+    23.84,
+    25.01
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -426,13 +426,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     207.6,
-    209.24
+    209.46
    ],
    "ss": 197.6,
-   "dur": 1.64,
+   "dur": 1.857,
    "t_final_est": [
-    25.36,
-    27.0
+    25.01,
+    26.86
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -454,13 +454,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     212.85,
-    214.54
+    214.75
    ],
    "ss": 202.85,
-   "dur": 1.69,
+   "dur": 1.903,
    "t_final_est": [
-    27.0,
-    28.69
+    26.86,
+    28.77
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -482,13 +482,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     239.35,
-    240.85
+    240.73
    ],
    "ss": 229.35,
-   "dur": 1.5,
+   "dur": 1.376,
    "t_final_est": [
-    28.69,
-    30.19
+    28.77,
+    30.14
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -510,13 +510,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     240.95,
-    242.27
+    242.16
    ],
    "ss": 230.95,
-   "dur": 1.32,
+   "dur": 1.21,
    "t_final_est": [
-    30.19,
-    31.51
+    30.14,
+    31.35
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -537,17 +537,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 377.42,
-   "audio_dur": 1.53,
+   "audio_dur": 1.28,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     377.42,
-    378.95
+    378.7
    ],
    "ss": 17.42,
-   "dur": 1.53,
+   "dur": 1.28,
    "t_final_est": [
-    31.51,
-    33.04
+    31.35,
+    32.63
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -569,13 +569,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     391.6,
-    393.23
+    393.0
    ],
    "ss": 31.6,
-   "dur": 1.63,
+   "dur": 1.401,
    "t_final_est": [
-    33.04,
-    34.67
+    32.63,
+    34.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -597,13 +597,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     418.2,
-    419.78
+    419.56
    ],
    "ss": 58.2,
-   "dur": 1.58,
+   "dur": 1.363,
    "t_final_est": [
-    34.67,
-    36.25
+    34.03,
+    35.4
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -624,17 +624,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 438.37,
-   "audio_dur": 2.1,
+   "audio_dur": 2.0,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     438.37,
-    440.47
+    440.37
    ],
    "ss": 78.37,
-   "dur": 2.1,
+   "dur": 2.0,
    "t_final_est": [
-    36.25,
-    38.35
+    35.4,
+    37.4
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -656,13 +656,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     610.4,
-    612.05
+    612.03
    ],
    "ss": 15.4,
-   "dur": 1.65,
+   "dur": 1.628,
    "t_final_est": [
-    38.35,
-    40.0
+    37.4,
+    39.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -684,13 +684,13 @@
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     637.2,
-    638.76
+    638.74
    ],
    "ss": 42.2,
-   "dur": 1.56,
+   "dur": 1.543,
    "t_final_est": [
-    40.0,
-    41.56
+    39.03,
+    40.57
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -711,17 +711,17 @@
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
    "audio_ss": 653.25,
-   "audio_dur": 1.37,
+   "audio_dur": 1.325,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
     653.25,
-    654.62
+    654.58
    ],
    "ss": 58.25,
-   "dur": 1.37,
+   "dur": 1.325,
    "t_final_est": [
-    41.56,
-    42.93
+    40.57,
+    41.89
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -741,18 +741,18 @@
    "src": "fuM1_595.mp4",
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
-   "audio_ss": 654.62,
-   "audio_dur": 1.94,
+   "audio_ss": 654.6,
+   "audio_dur": 1.89,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    654.62,
-    656.56
+    654.6,
+    656.49
    ],
-   "ss": 59.62,
-   "dur": 1.94,
+   "ss": 59.6,
+   "dur": 1.89,
    "t_final_est": [
-    42.93,
-    44.87
+    41.89,
+    43.78
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -772,18 +772,18 @@
    "src": "fuM1_595.mp4",
    "mute": false,
    "audio_src": "fuM1Vh7OgfY_audio.m4a",
-   "audio_ss": 656.56,
-   "audio_dur": 1.54,
+   "audio_ss": 656.515,
+   "audio_dur": 1.585,
    "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
    "src_orig_span": [
-    656.56,
+    656.515,
     658.1
    ],
-   "ss": 61.56,
-   "dur": 1.54,
+   "ss": 61.515,
+   "dur": 1.585,
    "t_final_est": [
-    44.87,
-    46.41
+    43.78,
+    45.37
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -805,13 +805,13 @@
    "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
    "src_orig_span": [
     135.2,
-    136.85
+    137.1
    ],
    "ss": 135.2,
-   "dur": 1.65,
+   "dur": 1.897,
    "t_final_est": [
-    46.41,
-    48.06
+    45.37,
+    47.27
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -833,13 +833,13 @@
    "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
    "src_orig_span": [
     140.0,
-    142.32
+    142.66
    ],
    "ss": 140.0,
-   "dur": 2.32,
+   "dur": 2.655,
    "t_final_est": [
-    48.06,
-    50.38
+    47.27,
+    49.92
    ],
    "res": "1920x1080",
    "src_crop": [

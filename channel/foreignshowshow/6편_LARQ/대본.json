@@ -22,7 +22,8 @@
  },
  "voice": {
   "voice_id": "tc_61f0859907085fc68561c9a1",
-  "name": "지훈"
+  "name": "지훈",
+  "speed": 1.25
  },
  "facts": {
   "f1": {
@@ -95,7 +96,7 @@
     ],
     "span": [
      94.6,
-     101.99
+     101.9
     ],
     "orig_en": "500,000 for 1%? / That's correct. / Congratulations. Highest valuation ever requested in the Shark Tank.",
     "text": "50만 달러에 지분 1%요?! 맞습니다 축하해요! 샤크탱크 역대 최고 몸값이네요",
@@ -185,7 +186,7 @@
     ],
     "span": [
      172.4,
-     177.9
+     177.8
     ],
     "orig_en": "Is that safer than boiling water? / It would be the equivalent of boiling your water for like 20 minutes. / Really?",
     "text": "끓인 물보다 안전해요? 물을 20분쯤 끓인 것과 같은 수준이에요 정말?",
@@ -234,7 +235,7 @@
     ],
     "span": [
      377.42,
-     378.95
+     378.7
     ],
     "orig_en": "I'm, I'm out.",
     "text": "전 빠질게요",
@@ -267,7 +268,7 @@
     ],
     "span": [
      438.37,
-     440.47
+     440.37
     ],
     "orig_en": "500,000 for 5%.",
     "text": "50만 달러에 5%요",
@@ -331,5 +332,8 @@
   "방송 뒤 딜 최종 성사 여부 — LaunchBoom 사례글은 '성사 안 됨', 다른 글은 '성사' 식으로 엇갈리고 1차 출처 못 찾음(검색 2회) → 넣지 않음",
   "가격 95달러·원가 40달러(250~259초) — 길이 때문에 뺌",
   "정수 피처(268~310초) — 물병 한 제품에 집중"
- ]
+ ],
+ "render": {
+  "gap": 0.03
+ }
 }
