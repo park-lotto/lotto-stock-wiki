@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -86,6 +87,8 @@ def load_doc(doc: Path) -> dict:
             x["en"] = l.get("en") or l.get("orig_en")
             x["show"] = l.get("text") or " ".join(l.get("caps") or [])
             x["src"] = l.get("src")
+            if l.get("cap_at"):           # 원음 자막 조각 시작(원본 초 — 받아쓰기 낱말 시각) — 있으면 이것이 이긴다
+                x["cap_at"] = [float(v) for v in l["cap_at"]]
         if l.get("caps"):
             x["caps"], x["caps_from"] = list(l["caps"]), "대본 caps"
         else:
@@ -116,7 +119,9 @@ def load_doc(doc: Path) -> dict:
     win = M.get("window")
     bw = (S.get("bench") or {}).get("window")
     box = next((s["box"] for s in M["shots"] if s.get("box")), None)
-    window = bw or box or ([0, 434, win[0], win[1]] if win else None)
+    if win and len(win) == 2:          # 1편꼴 [가로, 세로] / 4·6편꼴 [x, y, w, h] — 둘 다(프리셋이 있으면 창은 프리셋 것)
+        win = [0, 434, win[0], win[1]]
+    window = bw or box or win
     T = S.get("titles") or {}
     title = T.get("hook") or "\n".join(x for x in (T.get("line1"), T.get("line2")) if x)
     voice = S.get("voice") or (F.get("voice") if isinstance(F.get("voice"), dict) else None)
@@ -363,8 +368,27 @@ def audio_pieces(D, LT) -> list[dict]:
     return out
 
 
+_OSPEECH: dict = {}
+
+
+def orig_speech(D, l) -> list[tuple[float, float]]:
+    """원음 줄 span 안 말 구간(원본 초) — 원본 소리를 잘라 엔진 speech_segments(−38dB·0.12초)."""
+    key = (l["id"], tuple(l["span"]))
+    if key not in _OSPEECH:
+        from tools.calcopy import narr_video as nv
+        a = audio_of(D, l)
+        tmp = Path(__file__).resolve().parent / f"_os_{abs(hash(key))}.wav"
+        run(["ffmpeg", "-y", "-ss", f"{l['span'][0]:.3f}", "-t", f"{l['span'][1] - l['span'][0]:.3f}", "-i", D["cand_dir"] / a["src"], "-vn", "-ac", "1", "-ar", SR, tmp])
+        try:
+            segs, _ = nv.speech_segments(str(tmp))
+        finally:
+            tmp.unlink(missing_ok=True)
+        _OSPEECH[key] = [(l["span"][0] + p, l["span"][0] + q) for p, q in segs]
+    return _OSPEECH[key]
+
+
 def caption_times(D, LT, segs=None) -> list[dict]:
-    """(판단 주인: 자막 시각) 나레 줄 = 엔진 narr_video._place(말 구간에 글자 비례, 말 시작 붙임), 원음 줄 = 원음 창에 글자 비례.
+    """(판단 주인: 자막 시각) 나레 줄 = 엔진 narr_video._place(말 구간에 글자 비례, 말 시작 붙임), 원음 줄 = cap_at(받아쓰기 낱말 시각) 또는 원본 소리 말 구간에 _place(첫 조각 = 실제 말 시작).
     줄의 마지막 조각은 줄 끝(t1)까지. segs = 완성본 시각 나레 말 구간(없으면 줄마다 [말 시작, 말 끝] 한 덩어리)."""
     from tools.calcopy import narr_video as nv
     LD = {l["id"]: l for l in D["lines"]}
@@ -376,10 +400,13 @@ def caption_times(D, LT, segs=None) -> list[dict]:
         if x["kind"] == "N":
             sg = [(p, q) for p, q in (segs or [(a, e)]) if q > a and p < e] or [(a, e)]
             st = nv._place(steps, sg, 0.4, a, e)
-        else:
-            tot, c, st = sum(s["chars"] for s in steps), 0, []
-            for s in steps:
-                st.append(a + (e - a) * c / tot); c += s["chars"]
+        elif l.get("cap_at"):
+            if len(l["cap_at"]) != len(steps):
+                raise StageError(f"{l['id']} cap_at {len(l['cap_at'])}개 ≠ 자막 {len(steps)}조각")
+            st = [a + (v - l["span"][0]) for v in l["cap_at"]]
+        else:   # 원음 말 구간(원본 소리 무음 검출)에 글자 비례 — 엔진 _place 그대로, 첫 조각 = 실제 말 시작(6편 L1: 창 시작에 띄우면 0.5초 일찍)
+            sg = [(a + p - l["span"][0], a + q - l["span"][0]) for p, q in orig_speech(D, l)] or [(a, e)]
+            st = nv._place(steps, sg, 0.4, max(a, sg[0][0]), e)
         for k, s in enumerate(steps):
             t1 = st[k + 1] if k + 1 < len(st) else x["t1"]
             out.append({"line": x["id"], "kind": x["kind"], "text": s["text"], "t0": round(st[k], 3), "t1": round(t1, 3)})
@@ -392,7 +419,9 @@ def preset_dir(doc: Path) -> tuple[Path, bool, str]:
     for m in sorted(ch.glob("*/manifest.json")) if ch.exists() else []:
         if not m.parent.name.startswith("_") and (m.parent / "frame.json").exists():
             return m.parent, True, ""
-    return FALLBACK_PRESET, False, "채널 프리셋 없음"
+    if os.environ.get("SHARK_TEMP_FRAME") != "1":
+        raise StageError(f"채널 프리셋 없음({ch}) — 임시 틀로 조용히 내려가지 않는다(시험만 SHARK_TEMP_FRAME=1)")
+    return FALLBACK_PRESET, False, "채널 프리셋 없음(SHARK_TEMP_FRAME=1)"
 
 
 def _one_line(layer: dict) -> dict:
@@ -419,7 +448,12 @@ def frame_and_styles(D, doc: Path, R: Path) -> dict:
             fr = preset_save.apply(fr, overrides={"layers[text:title].text": D["title"]}, defaults=man.get("variable_stats"), rules=man.get("rules"))
         except ValueError as e:
             raise StageError(f"프리셋 {pdir.name} 변수 못 채움: {e}")
-        notes.append(f"프리셋 {pdir.name} (preset_save.apply · 제목 크기 {next(l['size'] for l in fr['layers'] if l.get('role') == 'title')})")
+        vtop = next(l["y"] for l in fr["layers"] if l["kind"] == "video")
+        fit = None
+        for i, l in enumerate(fr["layers"]):
+            if l.get("role") == "title":
+                fr["layers"][i], fit = title_fit({**l, "text": D["title"]}, man, vtop)
+        notes.append(f"프리셋 {pdir.name} (preset_save.apply) · 제목 title_fit {fit}")
     cap_frame = next((l for l in fr["layers"] if l.get("role") == "caption"), None)
     same = (((man.get("channel_rules") or {}).get("captions") or {}).get("narration_and_quote_same_style"))
     narr = cap_frame if own else next((v for k, v in styles.items() if k.startswith("나레")), cap_frame)
@@ -448,6 +482,45 @@ def frame_and_styles(D, doc: Path, R: Path) -> dict:
         notes.insert(0, f"★{why} → 임시 {pdir.relative_to(ROOT)}")
     return {"preset": str(pdir), "own": own, "frame": str(R / "frame.json"), "narr_style": _one_line(narr), "orig_style": _one_line(orig),
             "react_style": _one_line(react) if react else None, "notes": notes, "win": next(l for l in layers if l["kind"] == "video")}
+
+
+def _rule(man: dict, key: str, how="default"):
+    k = ((man.get("rules") or {}).get("keys") or {}).get(key) or {}
+    if how == "median":
+        v = sorted(x for x in (k.get("values") or {}).values() if isinstance(x, (int, float)))
+        return v[len(v) // 2] if v else None
+    return k.get("default")
+
+
+TITLE_RENDER_DY = 10   # 모형(PIL 줄 칸 가운데) 대비 렌더러(scene_style.compose) 실측 차 — 10-18 회색 1초 합성: 아래 끝 398 vs 모형 408(두 번 같음)
+
+
+def title_fit(layer: dict, man: dict, video_top: float) -> tuple[dict, dict]:
+    """(판단 주인: 제목 크기·자리) 프리셋 title_rule — 줄마다 크기를 그 줄 잉크 폭이 벤치 폭(rules.fill_w 8편 중앙)에 맞게(상한 size_cap),
+    2줄 잉크 아래 끝 = 창 위 − gap_ink(8편 중앙 27px → 벤치 404~416). 기본값 그대로 두면 긴 줄이 칸 폭(1000)을 넘어 렌더러가 줄여
+    잉크가 위로 뜬다(10-18 1차 실측: 아래 끝 389, 줄 크기 줄어듦). 색·글꼴은 프리셋(apply) 값 그대로."""
+    from tools.calcopy.engine import to_frame as tf
+    fam, text = layer["font"], layer["text"].split(chr(10))
+    cap, lhr, gap = _rule(man, "size_cap") or layer["size"], _rule(man, "lh_ratio") or 1.035, _rule(man, "gap_ink") or 27
+    target_w = _rule(man, "fill_w", "median") or 906
+    sizes = []
+    for t in text:
+        b = tf._pil_font(fam, 100).getbbox(t, anchor="ls")
+        sizes.append(round(min(cap, 100 * target_w / max(1, b[2] - b[0])), 1))
+    # 한 크기(가장 긴 줄이 벤치 폭에 맞는 크기) — 벤치 QMJ 와 같은 방식(두 줄 100.5 한 크기, line_scale 없음).
+    # 줄마다 다른 크기(line_scale)는 렌더러 줄 칸 배치가 모형과 10px 어긋났다(10-18 시험: 아래 끝 398 vs 408) → 안 씀.
+    base = min(sizes)
+    sizes = [base] * len(sizes)
+    lh = round(base * lhr)
+    s_last = base
+    f = tf._pil_font(fam, s_last)
+    asc, desc = f.getmetrics()
+    b = f.getbbox(text[-1], anchor="ls")
+    bottom = video_top - gap
+    y_last = bottom - ((lh - (asc + desc)) / 2 + asc + b[3])     # 줄 칸 안 세로 가운데(to_frame.size_and_top 과 같은 모형)
+    out = {**layer, "size": base, "line_h": lh, "y": round(y_last - (len(text) - 1) * lh + TITLE_RENDER_DY),
+           "line_scale": [round(x / base, 3) for x in sizes] if len(set(sizes)) > 1 else None}
+    return out, {"sizes": sizes, "target_w": target_w, "ink_bottom_target": bottom, "line_h": lh, "y": out["y"]}
 
 
 REACT_MAX = 6   # 원음 짧은 반응(×1.25 꼴) = 자막 한 조각뿐인 원음 줄이고 글자 ≤ 이것(뭐라고?!·대박·와우 — 프리셋 원음반응_크게 notes)
@@ -625,24 +698,26 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
          "-map", "[a]", "-t", f"{P['dur']:.3f}", "-c:a", "pcm_f32le", pre])
     I0, _ = lufs(pre)
     # 나레(타입캐스트) 마루비 ~18dB 라 리미터만으로는 −9 LUFS 가 안 된다(10-18 실측: alimiter 로 +23dB 넣어도 −9.6, 소리 뭉갬)
-    # → 압축(−18dB·3:1·+6dB) → 이득 g → 부드러운 깎기(tanh, 벤치도 깎임 +1.0 TP) → 끝 낮춤 trim. g·trim 을 재며 맞춘다(최대 8번).
+    # → 압축(−18dB·3:1·+6dB) → 이득 g → 부드러운 깎기(tanh, 벤치도 깎임 +1.0 TP) → 리미터(−3dB, AAC 넘침 몫) → 16kHz 위 자름.
+    #   g 만 재며 맞추고(최대 8번), 최고점이 넘으면 리미터를 낮춘다(10-18 1차: tanh 뒤 trim 으로 맞추니 AAC 넘침이 −1.4~+1.9 로 흔들려 못 맞춤).
     comp = "acompressor=threshold=0.125:ratio=3:attack=5:release=120:knee=4:makeup=2"
-    g, trim, hist = C["target_lufs"] - I0 - 2.0, -1.5, []
+    g, lim, hist = C["target_lufs"] - I0 + 1.0, 0.71, []
     final = R / "final.mp4"
     for it in range(8):
-        run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex", f"[1:a]{comp},volume={g:.2f}dB,asoftclip=type=tanh,volume={trim:.2f}dB[a]",
+        run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex",
+             f"[1:a]{comp},volume={g:.2f}dB,asoftclip=type=tanh,alimiter=limit={lim:.3f}:attack=2:release=40:level=false,lowpass=f=16000[a]",
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
         I, pk = lufs(final)
-        hist.append({"gain": round(g, 2), "trim": round(trim, 2), "I": I, "peak": pk})
+        hist.append({"gain": round(g, 2), "limit": round(lim, 3), "I": I, "peak": pk})
         if abs(I - C["target_lufs"]) <= 0.3 and pk <= C["peak_max"]:
             break
         if pk > C["peak_max"]:
-            trim += C["peak_max"] - pk - 0.1
+            lim *= 10 ** ((C["peak_max"] - pk - 0.2) / 20)
         else:
-            g += (C["target_lufs"] - I) * 1.5
+            g += (C["target_lufs"] - I) * 2.0
     else:
         raise StageError(f"소리 크기 못 맞춤 {hist}")
-    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → trim", "passes": hist, "final_I": I, "final_peak": pk}
+    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → alimiter → lowpass 16k", "passes": hist, "final_I": I, "final_peak": pk}
 
 
 def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_target=None) -> dict:
