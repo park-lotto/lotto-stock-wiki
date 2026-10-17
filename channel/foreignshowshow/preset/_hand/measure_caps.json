@@ -1,0 +1,261 @@
+{
+ "_how": "fs_measure.py caps/scan(10fps 자막 띠 마스크 IoU 변화점 → +0.15초 프레임) · 종류 셈 = 한 줄 잉크 52~63=보통, 66~80=크게, 두 줄 각 52~66=2줄, 나머지=배경 섞임 등 미판정",
+ "one_line_ink": "929~988 (가운데 958.5, 8/8)",
+ "two_line_ink": "895~953 / 963~1022 (표본 QMJ 12.15·32.55, 2jJ 10.65·26.85, hZg 13.75, mVz 12.75)",
+ "per_video": {
+  "QMJtjJz4M6w": {
+   "summary": {
+    "n": 40,
+    "one": 14,
+    "two": 12,
+    "one_center_y": 958.25,
+    "one_h": 60.0,
+    "one_white_h": 59.0,
+    "one_x_center": 540.0,
+    "two_top": 809.0,
+    "two_bottom": 1137.0,
+    "two_h": 91.5,
+    "two_pitch": 115.5
+   },
+   "kinds": {
+    "normal": 16,
+    "big": 7,
+    "two": 2,
+    "other": 15
+   },
+   "big_samples": [
+    [
+     0.25,
+     74
+    ],
+    [
+     1.95,
+     72
+    ],
+    [
+     5.35,
+     74
+    ],
+    [
+     29.65,
+     75
+    ],
+    [
+     30.45,
+     75
+    ],
+    [
+     31.25,
+     76
+    ],
+    [
+     45.95,
+     75
+    ]
+   ]
+  },
+  "kmQGQNJgSVo": {
+   "summary": {
+    "n": 33,
+    "one": 3,
+    "two": 12,
+    "one_center_y": 948.5,
+    "one_h": 79,
+    "one_white_h": 60,
+    "one_x_center": 637.5,
+    "two_top": 886.5,
+    "two_bottom": 1058.0,
+    "two_h": 56.0,
+    "two_pitch": 124.5
+   },
+   "kinds": {
+    "normal": 12,
+    "big": 1,
+    "two": 2,
+    "other": 18
+   },
+   "big_samples": [
+    [
+     38.65,
+     70
+    ]
+   ]
+  },
+  "2jJoIbdciDY": {
+   "summary": {
+    "n": 39,
+    "one": 11,
+    "two": 11,
+    "one_center_y": 958.5,
+    "one_h": 59,
+    "one_white_h": 59,
+    "one_x_center": 540.0,
+    "two_top": 872,
+    "two_bottom": 1091,
+    "two_h": 64.0,
+    "two_pitch": 111
+   },
+   "kinds": {
+    "normal": 16,
+    "big": 3,
+    "two": 5,
+    "other": 15
+   },
+   "big_samples": [
+    [
+     2.15,
+     75
+    ],
+    [
+     34.05,
+     72
+    ],
+    [
+     47.75,
+     72
+    ]
+   ]
+  },
+  "vbxJ_v132ao": {
+   "summary": {
+    "n": 37,
+    "one": 5,
+    "two": 17,
+    "one_center_y": 959.0,
+    "one_h": 60,
+    "one_white_h": 57.5,
+    "one_x_center": 539.5,
+    "two_top": 895,
+    "two_bottom": 1130,
+    "two_h": 79.5,
+    "two_pitch": 94
+   },
+   "kinds": {
+    "normal": 14,
+    "big": 2,
+    "two": 5,
+    "other": 16
+   },
+   "big_samples": [
+    [
+     20.65,
+     74
+    ],
+    [
+     34.75,
+     76
+    ]
+   ]
+  },
+  "hZgCO9PEnO8": {
+   "summary": {
+    "n": 31,
+    "one": 6,
+    "two": 8,
+    "one_center_y": 958.5,
+    "one_h": 58.5,
+    "one_white_h": 57,
+    "one_x_center": 539.5,
+    "two_top": 895.0,
+    "two_bottom": 1150.0,
+    "two_h": 73.5,
+    "two_pitch": 135.5
+   },
+   "kinds": {
+    "normal": 10,
+    "big": 3,
+    "two": 5,
+    "other": 13
+   },
+   "big_samples": [
+    [
+     0.15,
+     75
+    ],
+    [
+     28.55,
+     76
+    ],
+    [
+     31.65,
+     75
+    ]
+   ]
+  },
+  "mVzrvBpMu3E": {
+   "summary": {
+    "n": 52,
+    "one": 1,
+    "two": 22,
+    "one_center_y": 958.5,
+    "one_h": 59,
+    "one_white_h": 58,
+    "one_x_center": 540.5,
+    "two_top": 800.0,
+    "two_bottom": 1147.0,
+    "two_h": 120.0,
+    "two_pitch": 129.0
+   },
+   "kinds": {
+    "normal": 12,
+    "big": 0,
+    "two": 7,
+    "other": 33
+   },
+   "big_samples": []
+  },
+  "aFqKN8s2cA8": {
+   "summary": {
+    "n": 39,
+    "one": 6,
+    "two": 17,
+    "one_center_y": 958.25,
+    "one_h": 69.5,
+    "one_white_h": 59.5,
+    "one_x_center": 539.0,
+    "two_top": 824,
+    "two_bottom": 1151,
+    "two_h": 122.5,
+    "two_pitch": 104
+   },
+   "kinds": {
+    "normal": 14,
+    "big": 2,
+    "two": 0,
+    "other": 23
+   },
+   "big_samples": [
+    [
+     38.45,
+     67
+    ],
+    [
+     41.25,
+     78
+    ]
+   ]
+  },
+  "HI--3fL7nt4": {
+   "summary": {
+    "n": 24,
+    "one": 3,
+    "two": 10,
+    "one_center_y": 958.5,
+    "one_h": 57,
+    "one_white_h": 57,
+    "one_x_center": 541.0,
+    "two_top": 800.0,
+    "two_bottom": 1161.5,
+    "two_h": 118.25,
+    "two_pitch": 132.5
+   },
+   "kinds": {
+    "normal": 6,
+    "big": 0,
+    "two": 0,
+    "other": 18
+   },
+   "big_samples": []
+  }
+ }
+}
