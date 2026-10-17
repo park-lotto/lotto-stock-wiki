@@ -1914,13 +1914,18 @@ def _fav_channel_decorate(items):
     return items
 
 
+def _fav_channel_cap(cid) -> int:
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
+
+
 @app.get("/api/fav_channel/list")
 def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
     items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
-    return {"ok": True, "items": items, "cap": store.FAV_CHANNEL_CAP}
+    return {"ok": True, "items": items, "cap": _fav_channel_cap(_cid(request))}
 
 
 @app.post("/api/fav_channel/add")
@@ -1951,10 +1956,10 @@ def api_fav_channel_add(request: Request, body: dict):
         avatar=(body.get("avatar") or ""),
         last_video_thumb=(body.get("thumb") or ""),
         last_video_url=(body.get("video_url") or ""),
-        customer_id=cid,
+        customer_id=cid, cap=_fav_channel_cap(cid),
     )
     if added is None:
-        return {"ok": False, "error": f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
+        return {"ok": False, "error": f"나만의 채널은 최대 {_fav_channel_cap(cid)}개까지예요"}
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -2453,11 +2458,12 @@ def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") ->
     if not plat or not chid or chid.isdigit():
         return {"status": "notfound", "platform": plat, "channel_id": ""}
     store = Store(DB_PATH)
+    cap = _fav_channel_cap(cid)
     added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
-                                  last_video_thumb=thumb, customer_id=cid)
+                                  last_video_thumb=thumb, customer_id=cid, cap=cap)
     status = "full" if added is None else ("added" if added else "exists")
     return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
-            "cap": store.FAV_CHANNEL_CAP}
+            "cap": cap}
 
 
 @app.get("/api/fav_channel/grab", response_class=HTMLResponse)
