@@ -1,0 +1,109 @@
+{
+ "_note": "make_render.py — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/최은경_자라슈즈/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "ceg_5ublOh8gB4o.mp4",
+   "ss": 508.35,
+   "src_crop": [
+    620,
+    0,
+    840,
+    840
+   ],
+   "cuts": [
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 508.35,
+     "src_crop": [
+      620,
+      0,
+      840,
+      840
+     ],
+     "dur": 2.88,
+     "plan_i": 0
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 580.0,
+     "src_crop": [
+      570,
+      0,
+      840,
+      840
+     ],
+     "dur": 2.662,
+     "plan_i": 1
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 516.52,
+     "src_crop": [
+      540,
+      0,
+      840,
+      840
+     ],
+     "dur": 2.9,
+     "plan_i": 2
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 546.3,
+     "src_crop": [
+      500,
+      0,
+      840,
+      840
+     ],
+     "dur": 3.064,
+     "plan_i": 3
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 524.45,
+     "src_crop": [
+      580,
+      0,
+      840,
+      840
+     ],
+     "dur": 2.7,
+     "plan_i": 4
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 556.4,
+     "src_crop": [
+      460,
+      0,
+      840,
+      840
+     ],
+     "dur": 1.733,
+     "plan_i": 5
+    },
+    {
+     "src": "ceg_5ublOh8gB4o.mp4",
+     "ss": 571.72,
+     "src_crop": [
+      600,
+      0,
+      840,
+      840
+     ],
+     "dur": 4.7,
+     "plan_i": 6
+    }
+   ],
+   "t_final": [
+    0.0,
+    20.639
+   ]
+  }
+ ]
+}
