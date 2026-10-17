@@ -1,0 +1,893 @@
+{
+ "_note": "샥탬스토리 6편 LARQ 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 QMJtjJz4M6w 창 [0,434,1080,1052]). 나레 시각은 7.8자/초 추정 — TTS 뒤 줄 끝에 맞춰 컷 끝점만 다시 잰다. 원음 컷은 src_orig_span 그대로 원본 소리. make_plan.py LINES 가 정본(이 파일은 생성물).",
+ "sources": {
+  "fuM1Vh7OgfY": {
+   "채널": "Shark Tank Global",
+   "제목": "Larq Has The Highest Valuation Ever On Shark Tank! | Shark Tank US | Shark Tank Global",
+   "업로드": "2022-08-18",
+   "해상도": "1920x1080 (format 137)",
+   "길이": 678,
+   "받은 구간": "10~262초 fuM1_10.mp4 · 360~447초 fuM1_360.mp4 · 595~660초 fuM1_595.mp4 (+소리 전체 fuM1Vh7OgfY_audio.m4a)",
+   "남의 글자": "아래 방송 그래픽(이름·제안 자막, y 870~1010): 52~60·98~101·401~409·440~446·448~452·628~634·648~652초 — L1 #1·#2 는 SAFE 크롭(y<864), 나머지 구간은 안 씀. 창업자 티셔츠 'LARQ Drink Brilliantly' = 제품 브랜드(남의 자막 아님). 660초~ 'SHARK TANK WATCH MORE' 엔드카드 안 씀"
+  },
+  "85Dy9RIAvmo": {
+   "채널": "LARQ(공식)",
+   "제목": "LARQ – The World's First Self-Cleaning Water Bottle",
+   "업로드": "2018-06-01",
+   "해상도": "1920x1080 (format 137, 24fps)",
+   "길이": 147,
+   "받은 구간": "0~147초 demo_0.mp4(영상만, 소리 안 씀)",
+   "남의 글자": "43~46·79~81(오른쪽)·95~102초 노란 글자, 61~64·143~147초 LARQ 글자 — 79~81 은 크롭으로 뺌, 나머지 안 씀"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "지분 1%에 50만 달러 부른",
+  "line2": "스스로 씻는 물병?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "L1",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 94.6,
+   "audio_dur": 2.69,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    94.6,
+    97.29
+   ],
+   "ss": 84.6,
+   "dur": 2.69,
+   "t_final_est": [
+    0.0,
+    2.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    315,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자가 수첩 든 채 되묻는 얼굴(이름 자막 없음 — 이름 불명)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "L1",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 97.29,
+   "audio_dur": 2.31,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    97.29,
+    99.6
+   ],
+   "ss": 87.29,
+   "dur": 2.31,
+   "t_final_est": [
+    2.69,
+    5.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    531,
+    0,
+    887,
+    864
+   ],
+   "scale": 1.218,
+   "ours": "창업자 정면(아래 'Seeking $500k…' 그래픽 y≥870 은 크롭으로 뺌)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "L1",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 99.6,
+   "audio_dur": 2.39,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    99.6,
+    101.99
+   ],
+   "ss": 89.6,
+   "dur": 2.39,
+   "t_final_est": [
+    5.0,
+    7.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    636,
+    0,
+    887,
+    864
+   ],
+   "scale": 1.218,
+   "ours": "대머리 검은 정장 투자자가 손가락으로 가리키며 말함(아래 그래픽 크롭으로 뺌)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "L2",
+   "kind": "나레",
+   "src": "demo_0.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
+   "src_orig_span": [
+    86.05,
+    87.44
+   ],
+   "ss": 86.05,
+   "dur": 1.39,
+   "t_final_est": [
+    7.39,
+    8.78
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 영상: 손가락(분홍 장갑 소품)이 흰 뚜껑 윗면 버튼을 누름 → 뚜껑이 파랗게 빛남",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "L2",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    73.4,
+    75.98
+   ],
+   "ss": 63.4,
+   "dur": 2.58,
+   "t_final_est": [
+    8.78,
+    11.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    795,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "방송: 창업자 손의 흰 물병 뚜껑 — 파란 빛 고리가 켜진 근접",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "L3",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    24.4,
+    25.66
+   ],
+   "ss": 14.4,
+   "dur": 1.26,
+   "t_final_est": [
+    11.36,
+    12.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    275,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 파란 물병을 들고 말함",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "L3",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    33.42,
+    34.6
+   ],
+   "ss": 23.42,
+   "dur": 1.18,
+   "t_final_est": [
+    12.62,
+    13.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 파란 물병 입구에 코를 대고 냄새 맡음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "L4",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 34.6,
+   "audio_dur": 1.7,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    34.6,
+    36.3
+   ],
+   "ss": 24.6,
+   "dur": 1.7,
+   "t_final_est": [
+    13.8,
+    15.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    395,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "냄새 맡고 고개를 젖히며 뚜껑을 흔드는 창업자(앞 컷과 같은 샷 이어짐)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "L5",
+   "kind": "나레",
+   "src": "demo_0.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
+   "src_orig_span": [
+    79.7,
+    81.68
+   ],
+   "ss": 79.7,
+   "dur": 1.98,
+   "t_final_est": [
+    15.5,
+    17.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    332,
+    108,
+    887,
+    864
+   ],
+   "scale": 1.218,
+   "ours": "공식 영상: 뚜껑 안쪽 UV 빛(보라) 근접 — 오른쪽 노란 글자(x≥1230)는 크롭 밖, 분홍 장갑 손(소품)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "L5",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    152.2,
+    154.58
+   ],
+   "ss": 142.2,
+   "dur": 2.38,
+   "t_final_est": [
+    17.48,
+    19.86
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    305,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "방송: 투자자 손(파란 재킷)이 검은 뚜껑을 돌려 보는 근접 — 아래 파란 빛 고리",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "L6",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 172.4,
+   "audio_dur": 1.7,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    172.4,
+    174.1
+   ],
+   "ss": 162.4,
+   "dur": 1.7,
+   "t_final_est": [
+    19.86,
+    21.56
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자 질문",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "L6",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 174.1,
+   "audio_dur": 2.53,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    174.1,
+    176.63
+   ],
+   "ss": 164.1,
+   "dur": 2.53,
+   "t_final_est": [
+    21.56,
+    24.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    435,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 답",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "L6",
+   "kind": "원음",
+   "src": "fuM1_10.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 176.63,
+   "audio_dur": 1.27,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    176.63,
+    177.9
+   ],
+   "ss": 166.63,
+   "dur": 1.27,
+   "t_final_est": [
+    24.09,
+    25.36
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자 '정말?'(원본 대화 그대로 이어짐 — 우리 끼움 아님)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "L7",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    207.6,
+    209.24
+   ],
+   "ss": 197.6,
+   "dur": 1.64,
+   "t_final_est": [
+    25.36,
+    27.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 근접, 매출 설명",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "L7",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    212.85,
+    214.54
+   ],
+   "ss": 202.85,
+   "dur": 1.69,
+   "t_final_est": [
+    27.0,
+    28.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 넥타이 투자자가 받아 적음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "L8",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    239.35,
+    240.85
+   ],
+   "ss": 229.35,
+   "dur": 1.5,
+   "t_final_est": [
+    28.69,
+    30.19
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "회색 재킷 투자자가 묻는 얼굴",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "L8",
+   "kind": "나레",
+   "src": "fuM1_10.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    240.95,
+    242.27
+   ],
+   "ss": 230.95,
+   "dur": 1.32,
+   "t_final_est": [
+    30.19,
+    31.51
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 답",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "L9",
+   "kind": "원음",
+   "src": "fuM1_360.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 377.42,
+   "audio_dur": 1.53,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    377.42,
+    378.95
+   ],
+   "ss": 17.42,
+   "dur": 1.53,
+   "t_final_est": [
+    31.51,
+    33.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    435,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 넥타이 투자자가 손짓하며 하차 선언",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "L10",
+   "kind": "나레",
+   "src": "fuM1_360.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    391.6,
+    393.23
+   ],
+   "ss": 31.6,
+   "dur": 1.63,
+   "t_final_est": [
+    33.04,
+    34.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 검은 정장 투자자(=401~409초 'Kevin's offer' 화면 그래픽 붙은 사람)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "L10",
+   "kind": "나레",
+   "src": "fuM1_360.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    418.2,
+    419.78
+   ],
+   "ss": 58.2,
+   "dur": 1.58,
+   "t_final_est": [
+    34.67,
+    36.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 와이드(움직이는 카메라) — 로리 제안 직전",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "L11",
+   "kind": "원음",
+   "src": "fuM1_360.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 438.37,
+   "audio_dur": 2.1,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    438.37,
+    440.47
+   ],
+   "ss": 78.37,
+   "dur": 2.1,
+   "t_final_est": [
+    36.25,
+    38.35
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자 제안 말함",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "L12",
+   "kind": "나레",
+   "src": "fuM1_595.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    610.4,
+    612.05
+   ],
+   "ss": 15.4,
+   "dur": 1.65,
+   "t_final_est": [
+    38.35,
+    40.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    435,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 손을 펴며 제안",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 22,
+   "line": "L12",
+   "kind": "나레",
+   "src": "fuM1_595.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    637.2,
+    638.76
+   ],
+   "ss": 42.2,
+   "dur": 1.56,
+   "t_final_est": [
+    40.0,
+    41.56
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 와이드 — 합의 직전",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 23,
+   "line": "L13",
+   "kind": "원음",
+   "src": "fuM1_595.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 653.25,
+   "audio_dur": 1.37,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    653.25,
+    654.62
+   ],
+   "ss": 58.25,
+   "dur": 1.37,
+   "t_final_est": [
+    41.56,
+    42.93
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자 '좋아요'",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "L13",
+   "kind": "원음",
+   "src": "fuM1_595.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 654.62,
+   "audio_dur": 1.94,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    654.62,
+    656.56
+   ],
+   "ss": 59.62,
+   "dur": 1.94,
+   "t_final_est": [
+    42.93,
+    44.87
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자 '좋아요'",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "L13",
+   "kind": "원음",
+   "src": "fuM1_595.mp4",
+   "mute": false,
+   "audio_src": "fuM1Vh7OgfY_audio.m4a",
+   "audio_ss": 656.56,
+   "audio_dur": 1.54,
+   "url": "https://www.youtube.com/watch?v=fuM1Vh7OgfY",
+   "src_orig_span": [
+    656.56,
+    658.1
+   ],
+   "ss": 61.56,
+   "dur": 1.54,
+   "t_final_est": [
+    44.87,
+    46.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    525,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 무대에서 주먹 쥐고 환호(와이드)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "L14",
+   "kind": "나레",
+   "src": "demo_0.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
+   "src_orig_span": [
+    135.2,
+    136.85
+   ],
+   "ss": 135.2,
+   "dur": 1.65,
+   "t_final_est": [
+    46.41,
+    48.06
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 영상: 남자가 LARQ 물병으로 물 마심",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 27,
+   "line": "L14",
+   "kind": "나레",
+   "src": "demo_0.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=85Dy9RIAvmo",
+   "src_orig_span": [
+    140.0,
+    142.32
+   ],
+   "ss": 140.0,
+   "dur": 2.32,
+   "t_final_est": [
+    48.06,
+    50.38
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    435,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 영상: 색깔별 물병 5개 줄지어 선 테이블(LARQ 글자 뜨기 전)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/6편_LARQ/src",
+ "effects": [
+  {
+   "line": "L1",
+   "kind": "red_circle",
+   "at": [
+    541,
+    653
+   ],
+   "size": 260,
+   "stroke": 8,
+   "t": [
+    0.0,
+    1.8
+   ],
+   "why": "벤치 0초 빨간 원(투자자 얼굴)"
+  },
+  {
+   "line": "L13",
+   "kind": "emoji",
+   "emoji": "💸",
+   "at": [
+    850,
+    1250
+   ],
+   "size": 200,
+   "t": [
+    0.0,
+    1.4
+   ],
+   "why": "벤치 40초 날개 돈다발 — 케빈 얼굴(완성본 (385,609)) 피해 오른쪽 아래"
+  }
+ ],
+ "effects_not_drawn": [
+  "L3 빨간 점선 원(벤치 10~12초) — overlay_png 에 점선 원 없음(엔진 요청)",
+  "L5 분홍 화살표(벤치 14초) — overlay_png 에 화살표 없음(엔진 요청)"
+ ]
+}
