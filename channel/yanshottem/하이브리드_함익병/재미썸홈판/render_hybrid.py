@@ -28,12 +28,12 @@ def fr(t):
     return round(t * FPS)
 
 
-# ── 나레: 앞뒤 무음 자르기 + 0.26초 넘는 쉼만 0.26초로(atempo 뒤 ≈0.21~0.26)(쉼 자리는 안 만든다·안 없앤다) → atempo ─────────
+# ── 나레: 앞뒤 무음 자르기 + 0.28초 넘는 쉼만 0.28초로(atempo 1.27 뒤 0.22 = B18 하한)(atempo 뒤 ≈0.21~0.26)(쉼 자리는 안 만든다·안 없앤다) → atempo ─────────
 def narr_prep():
-    """앞뒤 무음 자르기 + 0.26초 넘는 쉼만 0.26초로 → atempo. 끝 문장(L7)은 TTS가 빨리 읽어(원속 9.1자/초) 1.27 대신 TEMPO_LAST(B15 끝 문장만)."""
+    """앞뒤 무음 자르기 + 0.28초 넘는 쉼만 0.28초로(atempo 1.27 뒤 0.22 = B18 하한) → atempo. 끝 문장(L7)은 TTS가 빨리 읽어(원속 9.1자/초) 1.27 대신 TEMPO_LAST(B15 끝 문장만)."""
     full, tight, narr = R / "narr_full.mp3", R / "narr_tight.wav", R / "narr.wav"
     f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
-    mid = "silenceremove=stop_periods=-1:stop_duration=0.26:stop_threshold=-40dB:stop_silence=0.26"
+    mid = "silenceremove=stop_periods=-1:stop_duration=0.28:stop_threshold=-40dB:stop_silence=0.28"
     run(["ffmpeg", "-y", "-i", str(full), "-af", f"{f},areverse,{f},areverse,{mid}", "-ar", str(SR), "-ac", "1", str(tight)])
     chars = sum(M.nchar(l[2]) for l in M.LINES)
     d0 = M.dur_of(tight)
@@ -42,14 +42,38 @@ def narr_prep():
     p1, p2 = R / "narr_p1.wav", R / "narr_p2.wav"
     run(["ffmpeg", "-y", "-i", str(tight), "-af", f"atrim=0:{split:.3f},atempo={M.TEMPO}", "-ar", str(SR), str(p1)])
     run(["ffmpeg", "-y", "-i", str(tight), "-af", f"atrim={split:.3f},asetpts=PTS-STARTPTS,atempo={M.TEMPO_LAST}", "-ar", str(SR), str(p2)])
-    run(["ffmpeg", "-y", "-i", str(p1), "-i", str(p2), "-filter_complex", "[0:a][1:a]concat=n=2:v=0:a=1[a]", "-map", "[a]", "-ar", str(SR), "-ac", "1", str(narr)])
-    return narr, {"all": M.TEMPO, "last": M.TEMPO_LAST, "split_raw": round(split, 3)}, chars, d0
+    pre = R / "narr_pre.wav"
+    run(["ffmpeg", "-y", "-i", str(p1), "-i", str(p2), "-filter_complex", "[0:a][1:a]concat=n=2:v=0:a=1[a]", "-map", "[a]", "-ar", str(SR), "-ac", "1", str(pre)])
+    # 쉼 모양 = 엔진 tts_pause.shape(쉼표 0.22·마침표 0.30). 글자 시각 대신 문장부호 자리의 쉼(make.PUNCT_AT 근처 무음)을 넘긴다
+    from tools.calcopy.engine import tts_pause as TP
+    TP.PAUSE = {",": 0.235, ".": 0.315}   # 이음매 겹침 15ms 만큼 짧게 나와(실측 0.205/0.285) 그만큼 더 줌 → 0.22/0.30
+    sil = [(a_, b_) for a_, b_ in _silences(pre)]
+    ch, st, en, slots = [], [], [], []
+    for kind, at in M.PUNCT_AT:
+        a_, b_ = min(sil, key=lambda x: abs((x[0] + x[1]) / 2 - at))
+        assert abs((a_ + b_) / 2 - at) < 0.2, (kind, at, a_, b_)
+        ch += ["가", kind, "가"]; st += [a_ - 0.05, a_, b_]; en += [a_, b_, b_ + 0.05]; slots.append((a_, b_))
+    log = TP.shape(str(pre), {"characters": ch, "character_start_times_seconds": st, "character_end_times_seconds": en}, str(R / "narr_shaped.mp3"))
+    run(["ffmpeg", "-y", "-i", str(R / "narr_shaped.mp3"), "-ar", str(SR), "-ac", "1", str(narr)])
+    # 줄 머리 = 문장부호 쉼 끝(옮긴 뒤 시각) — PUNCT_AT 1~7 이 줄 0~6 의 끝
+    shift, ends = 0.0, []
+    for k, ((a_, b_), lg) in enumerate(zip(slots, log)):   # 이음매(15ms 겹침)마다 그만큼 앞당겨진다: 쉼 k 끝까지 이음매 2k+1개
+        shift += lg["now"] - lg["was"]
+        ends.append(round(b_ + shift - TP.XF_SEC * (2 * k + 1), 3))
+    return narr, {"all": M.TEMPO, "last": M.TEMPO_LAST, "split_raw": round(split, 3), "pauses": log}, chars, d0, [0.0] + ends[1:]
+
+
+def _silences(p):
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(p), "-af", "silencedetect=n=-40dB:d=0.1", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    import re
+    return list(zip(map(float, re.findall(r"silence_start: ([\d.]+)", r)), map(float, re.findall(r"silence_end: ([\d.]+)", r))))
 
 
 def main():
     R.mkdir(parents=True, exist_ok=True)
     work = R / "work"; shutil.rmtree(work, ignore_errors=True); work.mkdir()
-    narr, tempo, chars, d0 = narr_prep()
+    narr, tempo, chars, d0, line_heads = narr_prep()
     dn = M.dur_of(narr)
     print(f"TTS {chars / d0:.2f}자/초 → atempo {tempo} → {chars / dn:.2f}자/초 ({dn:.2f}초)")
     lines = [l[2] for l in M.LINES]
@@ -58,11 +82,8 @@ def main():
     # 줄 시작 = make.LINE_STARTS(나레 쉼 끝 실측 + 받아쓰기 2초 토막으로 줄 머리 확인) — 엔진 줄 시작 받아쓰기가 빈 답·약한 모델로
     # 0.3~0.5초 어긋나 이 편만 고정값(엔진 요청 기록). 줄 안 조각은 엔진 _place(말 구간 글자 비례) 그대로.
     segs, ndur = N.speech_segments(str(narr))
-    W = list(M.LINE_STARTS) + [ndur]
-    for k in range(1, len(M.LINE_STARTS)):
-        near = min((x[0] for x in segs), key=lambda a: abs(a - W[k]))
-        assert abs(near - W[k]) <= 0.08, (k, W[k], near)
-        W[k] = near
+    W = list(line_heads) + [ndur]
+    assert len(W) == len(lines) + 1, W
     timed = []
     for li in range(len(lines)):
         st = [s_ for s_ in steps if s_["line"] == li]
