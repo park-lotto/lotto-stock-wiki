@@ -118,9 +118,8 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
         (f"×{med / bm:.2f}" if bm else "") + " · 원음 컷은 재료 시각 그대로라 짧을 수 있음 — 컷표 참고")
     from tools.calcopy.shark.caption_style import rules as _rules
     tmax = _rules()["title"]["line_chars_max"]
-    tl = [x for x in ((S.get("titles") or {}).get("hook") or "
-".join(x for x in ((S.get("titles") or {}).get("line1"), (S.get("titles") or {}).get("line2")) if x)).split("
-") if x]
+    _T = S.get("titles") or {}
+    tl = [x for x in (_T.get("hook") or "\n".join(x for x in (_T.get("line1"), _T.get("line2")) if x)).split("\n") if x]
     row("TITLE", f"제목 줄당 글자 ≤{tmax}(공백 포함 — 넘으면 글자가 벤치 100~135px 보다 작아짐)", [(t, len(t)) for t in tl], all(len(t) <= tmax for t in tl),
         "규칙 shark/rules.json title.line_chars_max(벤치 8편 긴 줄 12자=100.5px)")
     b13 = reuse_violations(forward_runs(cuts))
