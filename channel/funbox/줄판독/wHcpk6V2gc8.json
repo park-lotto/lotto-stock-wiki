@@ -1,0 +1,938 @@
+{
+ "id": "wHcpk6V2gc8",
+ "dur": 38.79,
+ "title_card": "단종시켜도 재출시 / 할 수 밖에 없었던 간식",
+ "post_title": "단종시켜도 재출시 할 수 밖에 없었던 간식",
+ "frame": {
+  "header": "0~180px 연노랑(#FFF0B5 계열) 머리띠, 가운데 '펀박스' 빨간 글자+웃는 상자 로고, 오른쪽 주황 돋보기 아이콘(게시판 앱 흉내)",
+  "layout_y": "1080x1920 기준: 머리띠 0~180 / 제목(검정, 게시글 제목) 190~320 / 메타 '펀박스 | 18:00' 오른쪽 330~380 / 빨간 가로줄 ~405 / 자막 칸 420~620(검정 굵은 고딕 가운데, 최대 2줄) / 그림 칸 약 640~1790(가로 꽉 참, 세로는 소재 비율대로, 남는 곳 흰색) / AI 고지 1830~1890",
+  "ai_notice": "'이해를 돕기 위해 AI가 사용되었습니다' — 맨 아래(약 y 1830~1890) 회색 굵은 글자, 훅 카드(첫 1.7~2.3초)를 뺀 전 구간 상시",
+  "hook_card": "첫 1.7~2.3초 훅 카드: 머리띠·제목을 어둡게 덮고(반투명 검정) 큰 2줄 제목(1줄 흰색, 2줄 연두 #8CFF5A 계열, 검정 테두리) + 그 아래 흰 띠에 게시글 제목 한 줄, 뒤에 소재 영상 재생",
+  "caption_note": "이 편은 자막이 1줄씩 갈아끼움(누적 2줄 아님), 글자가 다른 편보다 약간 큼 — 25.7~27.8만 2줄"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.3,
+   "t_line2": null,
+   "caption": "단종시켜도 재출시 / 할 수 밖에 없었던 간식",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "0.0~2.3 그릇에 담긴 비29 과자 손 촬영",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 0.0,
+     "t1": 2.3,
+     "screen": "제품영상",
+     "desc": "그릇에 담긴 비29 과자 손 촬영"
+    }
+   ]
+  },
+  {
+   "t0": 2.3,
+   "t1": 2.9,
+   "t_line2": null,
+   "caption": "소비자들이",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "2.3~2.9 다음 카페 'B29 다시먹고싶어요' 화면, 상단 흐림",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 2.3,
+     "t1": 2.9,
+     "screen": "캡처",
+     "desc": "다음 카페 'B29 다시먹고싶어요' 화면, 상단 흐림"
+    }
+   ]
+  },
+  {
+   "t0": 2.9,
+   "t1": 3.9,
+   "t_line2": null,
+   "caption": "직접 팬카페를 만들어",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "2.9~3.9 같은 카페 화면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 2.9,
+     "t1": 3.9,
+     "screen": "캡처",
+     "desc": "같은 카페 화면"
+    }
+   ]
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.5,
+   "t_line2": null,
+   "caption": "재출시를 요구한",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "3.9~4.5 물음표 3개 둘러싼 햄스터(노란 바탕)",
+   "infographic": null,
+   "emotion": {
+    "who": "햄스터 캐릭터",
+    "feeling": "의문",
+    "prop": "물음표"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 3.9,
+     "t1": 4.5,
+     "screen": "캐릭터일러스트",
+     "desc": "물음표 3개 둘러싼 햄스터(노란 바탕)"
+    }
+   ]
+  },
+  {
+   "t0": 4.5,
+   "t1": 5.6,
+   "t_line2": null,
+   "caption": "제품이 있다고 하는데,",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "4.5~5.6 햄스터 확대(줌인)",
+   "infographic": null,
+   "emotion": {
+    "who": "햄스터 캐릭터",
+    "feeling": "의문",
+    "prop": "물음표"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 4.5,
+     "t1": 5.6,
+     "screen": "캐릭터일러스트",
+     "desc": "햄스터 확대(줌인)"
+    }
+   ]
+  },
+  {
+   "t0": 5.6,
+   "t1": 7.2,
+   "t_line2": null,
+   "caption": "1991년 단종 이후",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "5.6~7.2 '1991 1월' 달력에 빨간 X 든 소녀",
+   "infographic": null,
+   "emotion": {
+    "who": "소녀(이라스토야풍)",
+    "feeling": "덤덤",
+    "prop": "X 친 달력"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: '1991 1월'(한국어 '월'), 달력 날짜 숫자 중복·뒤죽박죽"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 5.6,
+     "t1": 7.2,
+     "screen": "캐릭터일러스트",
+     "desc": "'1991 1월' 달력에 빨간 X 든 소녀"
+    }
+   ]
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.0,
+   "t_line2": null,
+   "caption": "농심은 수년째",
+   "kind": "나레",
+   "screen": "기타",
+   "screen_desc": "7.2~8.0 농심 로고 카드",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 7.2,
+     "t1": 8.0,
+     "screen": "기타",
+     "desc": "농심 로고 카드"
+    }
+   ]
+  },
+  {
+   "t0": 8.0,
+   "t1": 9.2,
+   "t_line2": null,
+   "caption": "재출시 요청을 묵살하며",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "8.0~9.2 전화 안 연결돼 짜증난 여성, 일본어 말풍선 '繋がらない'",
+   "infographic": null,
+   "emotion": {
+    "who": "여성(이라스토야)",
+    "feeling": "짜증·답답",
+    "prop": "땀·말풍선·소용돌이"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 8.0,
+     "t1": 9.2,
+     "screen": "캐릭터일러스트",
+     "desc": "전화 안 연결돼 짜증난 여성, 일본어 말풍선 '繋がらない'"
+    }
+   ]
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.1,
+   "t_line2": null,
+   "caption": "꿈쩍도 안했음",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "9.2~10.1 눈보라 속 얼어붙은 채 앉은 사람(드라마 짤)",
+   "infographic": null,
+   "emotion": {
+    "who": "드라마 인물",
+    "feeling": "꿈쩍 않음(얼어붙음)",
+    "prop": "눈·얼음"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 9.2,
+     "t1": 10.1,
+     "screen": "밈짤",
+     "desc": "눈보라 속 얼어붙은 채 앉은 사람(드라마 짤)"
+    }
+   ]
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.1,
+   "t_line2": null,
+   "caption": "소비자들이 고객센터를",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "10.1~11.1 헤드셋 낀 상담원 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "상담원",
+    "feeling": "무덤덤",
+    "prop": "헤드셋"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 10.1,
+     "t1": 11.1,
+     "screen": "캐릭터일러스트",
+     "desc": "헤드셋 낀 상담원 여성"
+    }
+   ]
+  },
+  {
+   "t0": 11.1,
+   "t1": 12.5,
+   "t_line2": null,
+   "caption": "두들겨 패도 \"검토하겠습니다\"",
+   "kind": "따옴표인용",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "11.1~11.7 상담원(이어짐) / 11.7~12.5 '自動応答 Re:ご連絡ありがとうございます' 메일 더미 속 웃는 직원",
+   "infographic": null,
+   "emotion": {
+    "who": "회사원",
+    "feeling": "기계적 웃음",
+    "prop": "자동응답 메일 더미"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: '自動応答' 메일 카드가 수십 장 반복, 이야기 맞춤 소품"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 11.1,
+     "t1": 11.7,
+     "screen": "캐릭터일러스트",
+     "desc": "상담원(이어짐)"
+    },
+    {
+     "t0": 11.7,
+     "t1": 12.5,
+     "screen": "캐릭터일러스트",
+     "desc": "'自動応答 Re:ご連絡ありがとうございます' 메일 더미 속 웃는 직원"
+    }
+   ]
+  },
+  {
+   "t0": 12.5,
+   "t1": 13.1,
+   "t_line2": null,
+   "caption": "앵무새 답변만",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "12.5~13.1 헤드셋 낀 앵무새 'おはよう!' 말풍선 3개",
+   "infographic": null,
+   "emotion": {
+    "who": "앵무새",
+    "feeling": "같은 말 반복",
+    "prop": "말풍선 3개"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: '앵무새 답변'을 그대로 그림(헤드셋 앵무새+같은 말 3번)"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 12.5,
+     "t1": 13.1,
+     "screen": "캐릭터일러스트",
+     "desc": "헤드셋 낀 앵무새 'おはよう!' 말풍선 3개"
+    }
+   ]
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.0,
+   "t_line2": null,
+   "caption": "돌아오기 일쑤였음",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "13.1~14.0 팔짱 끼고 찡그린 정장 남성",
+   "infographic": null,
+   "emotion": {
+    "who": "정장 남성",
+    "feeling": "불만·거절",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 13.1,
+     "t1": 14.0,
+     "screen": "캐릭터일러스트",
+     "desc": "팔짱 끼고 찡그린 정장 남성"
+    }
+   ]
+  },
+  {
+   "t0": 14.0,
+   "t1": 15.5,
+   "t_line2": null,
+   "caption": "근데 여기서 끝이 아님?",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "14.0~15.5 손바닥 내밀며 놀란 소년",
+   "infographic": null,
+   "emotion": {
+    "who": "소년",
+    "feeling": "놀람·잠깐",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 14.0,
+     "t1": 15.5,
+     "screen": "캐릭터일러스트",
+     "desc": "손바닥 내밀며 놀란 소년"
+    }
+   ]
+  },
+  {
+   "t0": 15.5,
+   "t1": 16.6,
+   "t_line2": null,
+   "caption": "독기가 오른 소비자들은",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "15.5~16.6 주먹 쥔 결의 여성(15.5~15.8 흐림→선명 등장)",
+   "infographic": null,
+   "emotion": {
+    "who": "여성",
+    "feeling": "결의·독기",
+    "prop": "불타는 눈"
+   },
+   "ai": null,
+   "effect": "흐림에서 선명해지는 등장 0.3초",
+   "shots": [
+    {
+     "t0": 15.5,
+     "t1": 16.6,
+     "screen": "캐릭터일러스트",
+     "desc": "주먹 쥔 결의 여성(15.5~15.8 흐림→선명 등장)"
+    }
+   ]
+  },
+  {
+   "t0": 16.6,
+   "t1": 17.3,
+   "t_line2": null,
+   "caption": "이 과자의 재생산을",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "16.6~17.3 'カレースナック せんべい 昭和のおいしさ 懐かしい' 봉지 든 노란 빛 캐릭터",
+   "infographic": null,
+   "emotion": {
+    "who": "과자 의인화 캐릭터",
+    "feeling": "그리움",
+    "prop": "빛나는 과자 봉지"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: 비29(카레 과자)에 맞춘 'カレースナック' 봉지, 노란 발광 처리"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 16.6,
+     "t1": 17.3,
+     "screen": "캐릭터일러스트",
+     "desc": "'カレースナック せんべい 昭和のおいしさ 懐かしい' 봉지 든 노란 빛 캐릭터"
+    }
+   ]
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.0,
+   "t_line2": null,
+   "caption": "바라는 카페를",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "17.3~18.0 카페 대문 'B29 다시먹고싶어요' 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 17.3,
+     "t1": 18.0,
+     "screen": "캡처",
+     "desc": "카페 대문 'B29 다시먹고싶어요' 확대"
+    }
+   ]
+  },
+  {
+   "t0": 18.0,
+   "t1": 18.9,
+   "t_line2": null,
+   "caption": "직접 만들어",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "18.0~18.9 카페 대문(이어짐, 다른 크롭)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 18.0,
+     "t1": 18.9,
+     "screen": "캡처",
+     "desc": "카페 대문(이어짐, 다른 크롭)"
+    }
+   ]
+  },
+  {
+   "t0": 18.9,
+   "t1": 20.2,
+   "t_line2": null,
+   "caption": "회원 천명을 긁어모아",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "18.9~20.2 '1,000' 표시 계수기 든 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "여성",
+    "feeling": "뿌듯",
+    "prop": "계수기 1,000"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: 계수기에 이야기 숫자 '1,000'"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 18.9,
+     "t1": 20.2,
+     "screen": "캐릭터일러스트",
+     "desc": "'1,000' 표시 계수기 든 여성"
+    }
+   ]
+  },
+  {
+   "t0": 20.2,
+   "t1": 20.6,
+   "t_line2": null,
+   "caption": "조직적으로",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "20.2~20.6 카페 전체 화면",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 20.2,
+     "t1": 20.6,
+     "screen": "캡처",
+     "desc": "카페 전체 화면"
+    }
+   ]
+  },
+  {
+   "t0": 20.6,
+   "t1": 21.7,
+   "t_line2": null,
+   "caption": "재발매를 요구했음",
+   "kind": "나레",
+   "screen": "캡처",
+   "screen_desc": "20.6~21.7 카페 정보 칸 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "회원수 3,127에 빨간 손그림 원+화살표",
+   "shots": [
+    {
+     "t0": 20.6,
+     "t1": 21.7,
+     "screen": "캡처",
+     "desc": "카페 정보 칸 확대"
+    }
+   ]
+  },
+  {
+   "t0": 21.7,
+   "t1": 22.8,
+   "t_line2": null,
+   "caption": "농심은 결국 옛 맛을",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "21.7~22.8 'はい!' 손 드는 아이들 무리",
+   "infographic": null,
+   "emotion": {
+    "who": "아이들 무리",
+    "feeling": "적극 참여",
+    "prop": "はい! 말풍선"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 21.7,
+     "t1": 22.8,
+     "screen": "캐릭터일러스트",
+     "desc": "'はい!' 손 드는 아이들 무리"
+    }
+   ]
+  },
+  {
+   "t0": 22.8,
+   "t1": 23.6,
+   "t_line2": null,
+   "caption": "기억하는 소비자들을",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "22.8~23.6 클립보드에 적는 남성",
+   "infographic": null,
+   "emotion": {
+    "who": "직원",
+    "feeling": "조사",
+    "prop": "클립보드"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 22.8,
+     "t1": 23.6,
+     "screen": "캐릭터일러스트",
+     "desc": "클립보드에 적는 남성"
+    }
+   ]
+  },
+  {
+   "t0": 23.6,
+   "t1": 24.5,
+   "t_line2": null,
+   "caption": "직접 찾아다니며",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "23.6~24.5 눈 감고 회상하는 할머니",
+   "infographic": null,
+   "emotion": {
+    "who": "할머니",
+    "feeling": "회상·그리움",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 23.6,
+     "t1": 24.5,
+     "screen": "캐릭터일러스트",
+     "desc": "눈 감고 회상하는 할머니"
+    }
+   ]
+  },
+  {
+   "t0": 24.5,
+   "t1": 25.7,
+   "t_line2": null,
+   "caption": "시식 테스트를 돌리고",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "24.5~24.6 검정 / 24.6~25.7 쟁반에 과자 든 시식 직원 여성(어둠→밝게 페이드인)",
+   "infographic": null,
+   "emotion": {
+    "who": "시식 직원",
+    "feeling": "웃음",
+    "prop": "과자 쟁반"
+   },
+   "ai": null,
+   "effect": "검정에서 페이드인",
+   "shots": [
+    {
+     "t0": 24.5,
+     "t1": 24.6,
+     "screen": "기타",
+     "desc": "검정"
+    },
+    {
+     "t0": 24.6,
+     "t1": 25.7,
+     "screen": "캐릭터일러스트",
+     "desc": "쟁반에 과자 든 시식 직원 여성(어둠→밝게 페이드인)"
+    }
+   ]
+  },
+  {
+   "t0": 25.7,
+   "t1": 27.8,
+   "t_line2": null,
+   "caption": "포장 디자인까지 / 팬 일러스트레이터 작품으로 채워",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "25.7~27.8 PC로 과자 봉지('ポテトチップス') 디자인하는 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "디자이너",
+    "feeling": "작업 몰두",
+    "prop": "모니터 속 과자 봉지"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 25.7,
+     "t1": 27.8,
+     "screen": "캐릭터일러스트",
+     "desc": "PC로 과자 봉지('ポテトチップス') 디자인하는 여성"
+    }
+   ]
+  },
+  {
+   "t0": 27.8,
+   "t1": 28.7,
+   "t_line2": null,
+   "caption": "혀를 사르르 녹이는",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "27.8~28.7 눈 감고 침 흘리는 여성",
+   "infographic": null,
+   "emotion": {
+    "who": "여성",
+    "feeling": "황홀(맛)",
+    "prop": "침"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 27.8,
+     "t1": 28.7,
+     "screen": "캐릭터일러스트",
+     "desc": "눈 감고 침 흘리는 여성"
+    }
+   ]
+  },
+  {
+   "t0": 28.7,
+   "t1": 29.5,
+   "t_line2": null,
+   "caption": "진한 카레향으로",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "28.7~29.5 카레 그릇 냄새 맡는 아이(김 곡선)",
+   "infographic": null,
+   "emotion": {
+    "who": "아이",
+    "feeling": "행복",
+    "prop": "냄새 곡선"
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 28.7,
+     "t1": 29.5,
+     "screen": "캐릭터일러스트",
+     "desc": "카레 그릇 냄새 맡는 아이(김 곡선)"
+    }
+   ]
+  },
+  {
+   "t0": 29.5,
+   "t1": 30.7,
+   "t_line2": null,
+   "caption": "업계 기강을 잡아버림",
+   "kind": "나레",
+   "screen": "밈짤",
+   "screen_desc": "29.5~30.7 디카프리오(울프오브월스트리트) 박수 짤",
+   "infographic": null,
+   "emotion": {
+    "who": "디카프리오 짤",
+    "feeling": "칭찬·감탄",
+    "prop": null
+   },
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 29.5,
+     "t1": 30.7,
+     "screen": "밈짤",
+     "desc": "디카프리오(울프오브월스트리트) 박수 짤"
+    }
+   ]
+  },
+  {
+   "t0": 30.7,
+   "t1": 31.8,
+   "t_line2": null,
+   "caption": "농심이 결국 두 손 들고",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "30.7~31.8 두 손 든 정장 남성(30.7~30.9 흐림→선명)",
+   "infographic": null,
+   "emotion": {
+    "who": "회사 임원",
+    "feeling": "항복(웃음)",
+    "prop": null
+   },
+   "ai": null,
+   "effect": "흐림 등장",
+   "shots": [
+    {
+     "t0": 30.7,
+     "t1": 31.8,
+     "screen": "캐릭터일러스트",
+     "desc": "두 손 든 정장 남성(30.7~30.9 흐림→선명)"
+    }
+   ]
+  },
+  {
+   "t0": 31.8,
+   "t1": 33.1,
+   "t_line2": null,
+   "caption": "18년 만에 재출시를 했고",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "31.8~33.1 '18年ぶりに復刻!' 현수막 든 점원과 과자들",
+   "infographic": null,
+   "emotion": {
+    "who": "점원",
+    "feeling": "축하",
+    "prop": "현수막·꽃가루"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: '18年ぶりに復刻!' — 이 이야기 숫자(18년)가 그대로 들어간 현수막"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 31.8,
+     "t1": 33.1,
+     "screen": "캐릭터일러스트",
+     "desc": "'18年ぶりに復刻!' 현수막 든 점원과 과자들"
+    }
+   ]
+  },
+  {
+   "t0": 33.1,
+   "t1": 34.5,
+   "t_line2": null,
+   "caption": "3개월치 물량을 단 1개월 만에",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "33.1~34.5 과자 진열대 앞 미소 점원(과자 머리띠)",
+   "infographic": null,
+   "emotion": {
+    "who": "점원",
+    "feeling": "기쁨",
+    "prop": "과자 진열"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: ポテチ·ニラ 봉지 진열, 머리 위 과자 장식 — 이야기 맞춤 구성"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 33.1,
+     "t1": 34.5,
+     "screen": "캐릭터일러스트",
+     "desc": "과자 진열대 앞 미소 점원(과자 머리띠)"
+    }
+   ]
+  },
+  {
+   "t0": 34.5,
+   "t1": 35.7,
+   "t_line2": null,
+   "caption": "완판시켜버렸던 거임",
+   "kind": "나레",
+   "screen": "캐릭터일러스트",
+   "screen_desc": "34.5~35.7 '3ヶ月分' 과자 상자 더미를 든 소녀",
+   "infographic": null,
+   "emotion": {
+    "who": "소녀",
+    "feeling": "뿌듯",
+    "prop": "과자 더미"
+   },
+   "ai": {
+    "kind": "AI 이미지(추정)",
+    "evidence": "이라스토야 그림체인데 이야기 전용 글자·숫자가 들어감: '3ヶ月分'(3개월치) 라벨이 이야기 숫자 그대로"
+   },
+   "effect": null,
+   "shots": [
+    {
+     "t0": 34.5,
+     "t1": 35.7,
+     "screen": "캐릭터일러스트",
+     "desc": "'3ヶ月分' 과자 상자 더미를 든 소녀"
+    }
+   ]
+  },
+  {
+   "t0": 35.7,
+   "t1": 36.5,
+   "t_line2": null,
+   "caption": "그 제품이 바로",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "35.7~36.5 흐림→비29 봉지 확대",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": "흐림에서 선명",
+   "shots": [
+    {
+     "t0": 35.7,
+     "t1": 36.5,
+     "screen": "제품영상",
+     "desc": "흐림→비29 봉지 확대"
+    }
+   ]
+  },
+  {
+   "t0": 36.5,
+   "t1": 37.3,
+   "t_line2": null,
+   "caption": "농심 비29임",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "36.5~37.3 비29 봉지와 과자 손 촬영",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 36.5,
+     "t1": 37.3,
+     "screen": "제품영상",
+     "desc": "비29 봉지와 과자 손 촬영"
+    }
+   ]
+  },
+  {
+   "t0": 37.3,
+   "t1": 38.2,
+   "t_line2": null,
+   "caption": "이거 먹어본 사람들은",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "37.3~38.2 과자 한 알 손가락에",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 37.3,
+     "t1": 38.2,
+     "screen": "제품영상",
+     "desc": "과자 한 알 손가락에"
+    }
+   ]
+  },
+  {
+   "t0": 38.2,
+   "t1": 38.8,
+   "t_line2": null,
+   "caption": "댓글에 후기ㄱㄱ",
+   "kind": "나레",
+   "screen": "제품영상",
+   "screen_desc": "38.2~38.8 과자 한 알(이어짐)",
+   "infographic": null,
+   "emotion": null,
+   "ai": null,
+   "effect": null,
+   "shots": [
+    {
+     "t0": 38.2,
+     "t1": 38.8,
+     "screen": "제품영상",
+     "desc": "과자 한 알(이어짐)"
+    }
+   ]
+  }
+ ],
+ "structure": "훅(결과 먼저)→팬카페 소개→단종·회사 무시(고객센터 앵무새)→소비자 반격(카페 천명·조직적 요구)→회사 굴복 과정(시식·팬 디자인)→재출시 성과(18년·3개월치 1개월 완판)→정체 공개(비29)→댓글 유도",
+ "ratios": {
+  "infographic_sec": 0,
+  "character_sec": 25.7,
+  "ai_image_sec": 8.9,
+  "real_video_sec": 5.4,
+  "meme_sec": 2.1
+ },
+ "method": "10fps 자막칸(420~620)·그림칸(650~1790) 픽셀차로 변화 시각 → 변화 구간마다 프레임 눈 판독(540·300px), 1초 타일, 의심 컷은 원본 해상도 크롭",
+ "measured": "2026-10-18 클로드 눈 판독(제미나이 미사용)"
+}
