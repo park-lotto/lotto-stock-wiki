@@ -709,6 +709,28 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 
 ---
 
+## 🧬 칼카피숏템엔진 → 숏템프리셋 페이지 반영 (2026-10-17 사장님)
+
+사장님: **"칼카피 숏템엔진에서 계속 업데이트되는 내용은 마지막 커밋 후 이곳(숏템프리셋 페이지)에 업데이트를 한다."**
+화면 이름은 **"숏템프리셋"**이다 — 사장님께 보이는 글에 "칼카피"라고 쓰지 마라(같은 날 사장님 "칼카피라고 하지 말고").
+
+페이지(`/shortem_preset`, 관리자 사이드바 '숏템프리셋')는 **main 에 있는 장부만** 읽는다(`calcopy_board.preset_home`).
+엔진 트랙에서 커밋만 하고 끝내면 페이지는 옛 숫자다. 그래서:
+
+```
+□ 칼카피숏템엔진 트랙에서 장부(channel/브랜드.json·스타일.json·결과물.json)나 분석 문서를 바꿔 커밋했으면, 그 세션 끝에 반드시:
+    py tools/calcopy/sync_preset_ledgers.py --check   # 페이지(main)와 엔진 마지막 커밋이 다른 파일
+    py tools/calcopy/sync_preset_ledgers.py           # 다른 것만 .tracks/숏템프리셋 으로 옮겨 커밋(코드는 안 옮긴다)
+    py tools/track.py finish 숏템프리셋                # 장부만 main 으로
+    py tools/live_admin.py shot shortem_preset out.png   # 라이브 숫자가 장부와 같은지 눈으로 확인
+□ 새 결과물·새 브랜드·스타일 강점(strengths)은 장부 파일에 적는다 — 페이지 HTML 에 직접 적지 마라(주인 = 장부)
+□ 옮길 목록은 calcopy_board.PRESET_LEDGERS·PRESET_DOCS 한 곳. 새 분석 문서를 페이지에 걸려면 거기 한 줄 추가
+```
+
+> ⚠️ 엔진 트랙을 통째로 finish 하지 마라 — 고객 영상 라인(video_assemble·mix_pipeline 등) 코드가 같이 간다. 장부만 이 도구로 옮긴다.
+
+---
+
 ## 운영자 프로필
 
 - **역할**: 휴대폰 수출 사업자 + 주식 트레이더, 주식 유튜브 채널 운영자

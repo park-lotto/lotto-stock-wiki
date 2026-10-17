@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏템프리셋 · 숏템메이커</title>
+<!-- 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용.
+     ★여기엔 브랜드·스타일·결과물 목록을 적지 않는다. /api/admin/shortem_preset 이 주인 함수(calcopy_board.preset_home)에서
+       장부 3장(channel/브랜드.json·스타일.json·결과물.json)을 읽어 엮어 준다. 결과물 상태(통과·확인 대기…)도 그 함수가 정한다. -->
+<style>
+  :root{--bg:#0a0f0d;--panel:#0f1512;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#37e0bd;--warn:#e0b23a;--bad:#ff8a8a;--ok:#5fd68a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5;word-break:keep-all}
+  .wrap{max-width:1500px;margin:0 auto;padding:28px 20px 90px;min-width:0;width:100%}  /* body 가 flex(sidebar.js, 폰에선 세로) + margin auto 면 표 너비로 늘어난다 — 폭을 화면에 묶는다 */
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 12px}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;display:flex;gap:7px;flex-wrap:wrap}
+  nav a{color:var(--txt);text-decoration:none;font-size:13px;padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+  nav a:hover{border-color:var(--accent)} nav a b{color:var(--accent);font-weight:700;margin-left:4px}
+  section{padding:24px 0 6px;scroll-margin-top:64px}
+  h2{margin:0 0 4px;font-size:19px} h2 small{color:var(--sub);font-weight:400;font-size:13px;margin-left:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:10px;margin-top:10px}
+  .grid>*,.kv>*{min-width:0}  /* 칸 안의 표가 칸을 밀어 화면 밖으로 넘치지 않게(표는 .tw 안에서 옆으로 스크롤) */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .tile span{display:block;color:var(--sub);font-size:12px} .tile b{font-size:24px;color:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;overflow-wrap:anywhere}
+  .card .nm{font-size:17px;font-weight:800} .card small,.sub{color:var(--sub)}
+  .chip{display:inline-block;border:1px solid var(--line);background:#0b1210;border-radius:99px;padding:2px 9px;font-size:12px;margin:2px 4px 2px 0}
+  .chip.ok{border-color:#245c3a;color:var(--ok)} .chip.warn{border-color:#5c4a1e;color:var(--warn)} .chip.bad{border-color:#5c2a2a;color:var(--bad)} .chip.acc{border-color:#1f5a4d;color:var(--accent)}
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{color:var(--sub);font-weight:600;background:#0c1311;white-space:nowrap}
+  .mono{font-family:Consolas,monospace;font-size:12px;color:var(--sub)}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .filters button{font:inherit;font-size:12px;padding:4px 11px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer}
+  .filters button.on{background:var(--accent);color:#06221b;border-color:var(--accent)}
+  .kv{display:grid;grid-template-columns:72px 1fr;gap:3px 10px;margin:8px 0 0}.kv dt{color:var(--sub)}.kv dd{margin:0}
+  .empty{color:var(--warn)}
+  pre.doc{white-space:pre-wrap;background:#0b1210;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px;max-height:70vh;overflow:auto}
+  .err{color:var(--bad);display:none;margin:8px 0} .err.on{display:block}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧬 숏템프리셋</h1>
+  <p class="lead">잘된 채널을 벤치해 만든 우리 브랜드·스타일·결과물을 한 화면에서 본다. 숫자는 장부 3장(<span class="mono">channel/브랜드.json · 스타일.json · 결과물.json</span>)을 서버가 그대로 읽은 값이다. <span id="stamp"></span></p>
+  <nav id="nav">
+    <a href="#home">요약</a><a href="#brand">브랜드<b id="n-brand"></b></a><a href="#style">스타일<b id="n-style"></b></a>
+    <a href="#result">결과물<b id="n-result"></b></a><a href="#bench">벤치 채널</a><a href="#docs">분석 문서</a>
+  </nav>
+  <div class="err" id="err"></div>
+
+  <section id="home">
+    <h2>요약</h2>
+    <div class="tiles" id="tiles"></div>
+    <p class="sub">소재창고·엔진(워커)은 지금 사장님 PC의 로컬 창고(<span class="mono">tools/calcopy/engine/warehouse.ps1</span>)에서만 돈다 — 이 화면에는 장부에 올라온 결과만 뜬다.</p>
+  </section>
+
+  <section id="brand">
+    <h2>브랜드 <small>벤치 채널 → 우리 브랜드 이름 · 결과물 수 · 최근 결과물</small></h2>
+    <div class="grid" id="brands"></div>
+  </section>
+
+  <section id="style">
+    <h2>스타일 <small>채널을 가로지르는 소리·화자 스타일 · 우선순위 순 · 강점은 계속 보강</small></h2>
+    <p class="sub" id="style-judge"></p>
+    <div class="grid" id="styles"></div>
+  </section>
+
+  <section id="result">
+    <h2>결과물 <small>새 것이 위 · 상태는 판정 글에서 나눈다(사람 판정 전은 통과로 안 센다)</small></h2>
+    <div class="filters" id="rfilter"></div>
+    <div class="tw"><table><thead><tr><th>#</th><th>브랜드</th><th>스타일</th><th>제목</th><th>상태</th><th>길이</th><th>날짜</th><th>파일</th></tr></thead><tbody id="results"></tbody></table></div>
+  </section>
+
+  <section id="bench">
+    <h2>벤치 채널 <small>채널별 7단계 진행·스타일 갈래</small></h2>
+    <div class="card">벤치 채널 보관함(채널 등록·단계 막대·편 목록)은 따로 열린다 → <a href="/admin/calcopy" target="_blank" rel="noopener">벤치 채널 보관함 열기</a></div>
+  </section>
+
+  <section id="docs">
+    <h2>분석 문서</h2>
+    <div class="grid" id="doclist"></div>
+    <pre class="doc" id="doc" hidden></pre>
+  </section>
+</div>
+<script src="/sidebar.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const man=v=>v==null?"–":v>=10000?(Math.round(v/1000)/10)+"만":String(v);
+const STATE_CLS={"통과":"ok","사장님 확인 대기":"warn","자동 검사만":"acc","검수 중":""};
+function fail(m){const e=$("#err");e.classList.add("on");e.textContent+=(e.textContent?" / ":"")+m}
+let D=null,RF="전체";
+
+function renderResults(){
+  const rows=D.results.filter(r=>RF==="전체"||r.state===RF);
+  $("#results").innerHTML=rows.map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(r.brand)}${r.in_ledger?"":' <span class="chip bad">장부에 없음</span>'}</td>
+    <td>${r.style?`<span class="chip">${esc(r.style)}</span>`:'<span class="sub">–</span>'}</td>
+    <td><b>${esc(r.title)}</b>${r.rules?`<div class="sub">${esc(r.rules)}</div>`:""}${r["비고"]?`<div class="sub">${esc(r["비고"])}</div>`:""}</td>
+    <td><span class="chip ${STATE_CLS[r.state]||""}">${esc(r.state)}</span><div class="sub">${esc(r.judge)}</div></td>
+    <td>${r.seconds!=null?esc(r.seconds)+"초":"–"}</td><td>${esc(r.date)}</td><td class="mono">${esc(r.path)}</td></tr>`).join("")
+    ||'<tr><td colspan="8" class="sub">없음</td></tr>';
+  document.querySelectorAll("#rfilter button").forEach(b=>b.classList.toggle("on",b.dataset.s===RF));
+}
+
+function render(){
+  const s=D.summary;
+  $("#n-brand").textContent=s.brands;$("#n-style").textContent=s.styles;$("#n-result").textContent=s.results;
+  const cnt=st=>D.results.filter(r=>r.state===st).length;
+  $("#tiles").innerHTML=[["브랜드",s.brands],["스타일",s.styles],["결과물",s.results],...D.states.map(st=>[st,cnt(st)])]
+    .map(([k,v])=>`<div class="tile"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
+  if(D.errors.length)fail("장부 오류: "+D.errors.join(" · "));
+
+  $("#brands").innerHTML=D.brands.map(b=>`<div class="card"><div class="nm">${esc(b.brand)}${b.in_ledger?"":' <span class="chip bad">브랜드 장부에 없음</span>'}</div>
+    <small>벤치 ${esc(b.bench||"–")}${b.old_names.length?` · 옛 이름 ${esc(b.old_names.join(", "))}`:""} · <span class="mono">${esc(b.slug)}</span></small>
+    <dl class="kv"><dt>스타일</dt><dd>${b.styles.length?b.styles.map(x=>`<span class="chip">${esc(x)}</span>`).join(""):'<span class="sub">스타일 장부에 벤치 측정 없음</span>'}</dd>
+    <dt>결과물</dt><dd><b>${b.results}</b>편 ${D.states.filter(st=>b.states[st]).map(st=>`<span class="chip ${STATE_CLS[st]||""}">${esc(st)} ${b.states[st]}</span>`).join("")}</dd>
+    <dt>최근</dt><dd>${b.latest?`#${esc(b.latest.n)} ${esc(b.latest.title)} <span class="sub">${esc(b.latest.date)}</span>`:'<span class="empty">아직 없음</span>'}</dd></dl></div>`).join("");
+
+  $("#style-judge").textContent=[D.style_judge&&("판정: "+D.style_judge),D.not_measured].filter(Boolean).join(" · ");
+  $("#styles").innerHTML=D.styles.map(st=>`<div class="card"><div class="nm">${esc(st.priority)}. ${esc(st.name)} <small>(옛 이름 ${esc(st.old_name)})</small></div>
+    <div style="margin-top:4px">${esc(st.desc)}</div><div class="sub" style="margin-top:4px">왜: ${esc(st.why)}</div>
+    <dl class="kv"><dt>소리 구성</dt><dd>${st.audio_kinds.map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</dd>
+    <dt>강점</dt><dd>${st.strengths.length?"<ul style='margin:0;padding-left:18px'>"+st.strengths.map(x=>`<li>${esc(typeof x==="string"?x:JSON.stringify(x))}</li>`).join("")+"</ul>":'<span class="empty">아직 비었음 — 벤치에서 찾아 보강할 칸</span>'}</dd>
+    <dt>결과물</dt><dd>${st.results.length?st.results.map(n=>`<span class="chip ok">#${n}</span>`).join(""):'<span class="sub">없음</span>'}</dd></dl>
+    <div class="tw"><table><thead><tr><th>벤치</th><th>편수</th><th>조회 중앙</th><th>최고</th></tr></thead><tbody>${st.bench.map(b=>`<tr><td>${esc(b.brand)}<div class="mono">${esc(b.slug)}</div></td><td>${esc(b.n)}${b.of?" / "+esc(b.of):""}</td><td>${man(b.views_median)}</td><td>${man(b.views_max)}</td></tr>`).join("")}</tbody></table></div>
+    <details style="margin-top:6px"><summary class="sub">편 목록 ${st.bench_videos}편</summary>${st.bench.map(b=>`<div style="margin-top:4px"><b>${esc(b.brand)}</b> ${(b.ids||[]).map(i=>`<a href="https://www.youtube.com/shorts/${encodeURIComponent(i)}" target="_blank" rel="noopener" class="mono">${esc(i)}</a>`).join(" ")}<div class="sub">${esc(b.source||"")}</div></div>`).join("")}</details></div>`).join("");
+
+  $("#rfilter").innerHTML=["전체",...D.states].map(st=>`<button data-s="${esc(st)}">${esc(st)} ${st==="전체"?D.results.length:cnt(st)}</button>`).join("");
+  $("#rfilter").onclick=e=>{const b=e.target.closest("button");if(b){RF=b.dataset.s;renderResults()}};
+  renderResults();
+
+  $("#doclist").innerHTML=D.docs.map(d=>`<div class="card"><b>${esc(d.title)}</b><div class="mono">${esc(d.path)}</div>${d.exists?`<a href="#docs" data-doc="${esc(d.path)}">열기</a>`:'<span class="empty">서버에 파일 없음</span>'}</div>`).join("");
+  $("#doclist").onclick=async e=>{const a=e.target.closest("a[data-doc]");if(!a)return;e.preventDefault();
+    const p=$("#doc");p.hidden=false;p.textContent="불러오는 중…";
+    const r=await fetch("/api/admin/shortem_preset/doc?path="+encodeURIComponent(a.dataset.doc),{credentials:"same-origin"});
+    p.textContent=r.ok?await r.text():"열지 못했다 (HTTP "+r.status+")";p.scrollIntoView({block:"start"})};
+}
+
+(async()=>{
+  try{
+    const r=await fetch("/api/admin/shortem_preset",{credentials:"same-origin"});
+    const j=await r.json().catch(()=>({error:"응답을 읽지 못했다 (HTTP "+r.status+")"}));
+    if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+    D=j;render();
+    $("#stamp").textContent="· "+new Date().toLocaleString("ko-KR");
+    if(location.hash){const t=document.querySelector(location.hash);if(t)t.scrollIntoView()}
+  }catch(e){fail(e.message)}
+})();
+</script>
+</body>
+</html>
