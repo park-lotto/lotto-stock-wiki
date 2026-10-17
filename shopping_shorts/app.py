@@ -16849,6 +16849,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
+            "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -16994,6 +16996,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체
+                       "cardnews_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
                        "signal_pool_enabled",
                        # 감정짤(관제 139, 2026-10-06) — 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤. ""끔(종전 그대로) · "admin" · "11,42" · "1" 전체
@@ -28741,6 +28745,335 @@ class _NoCacheStaticFiles(StaticFiles):
         if self.is_not_modified(response.headers, request_headers):
             return NotModifiedResponse(response.headers)
         return response
+
+
+# -- 🗂 카드뉴스 제작소(관제 223, 2026-10-17) ──────────────────────────────────
+# 판단은 cardnews.py 한 곳 — 여기는 입구·저장·권한만. 스위치 cardnews_enabled(""끔·"admin"·"11,42"·"1")는
+# 사이드바 메뉴(/api/me "cardnews")와 이 입구가 같은 _setting_gate 하나를 본다(0순위-B).
+# 결제 등급: /cardnews·/api/cardnews/* 는 무료 화이트리스트에 넣지 않는다 — 랭킹 전용은 미들웨어가 402로 막는다.
+from shopping_shorts import cardnews as _cn
+from shopping_shorts import usage_meter
+
+_CN_DATA = str(Path(DB_PATH).parent)
+
+
+def _cn_gate(request):
+    """(cid, None) 또는 (cid, 막는 응답)."""
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "cardnews_enabled", cid):
+        return cid, JSONResponse({"ok": False, "error": "카드뉴스 제작소가 아직 열리지 않았어요"}, status_code=403)
+    return cid, None
+
+
+def _cn_page(request: Request):
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "cardnews_enabled", cid):
+        return RedirectResponse("/produce", status_code=302)
+    return FileResponse(_STATIC / "cardnews.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/cardnews", _cn_page, include_in_schema=False)
+app.add_api_route("/cardnews.html", _cn_page, include_in_schema=False)
+
+
+def _cn_err(why, code=400):
+    return JSONResponse({"ok": False, "error": why}, status_code=code)
+
+
+def _cn_ai_err(note):
+    r = (note or {}).get("reason")
+    if r in ("no_keys", "exhausted"):
+        return "지금 AI 사용량이 몰렸어요. 잠시 뒤 다시 눌러 주세요(버텍스를 등록하면 끊김 없이 돌아요)"
+    if r == "rate_limit":
+        return "잠깐 사용량이 몰렸어요. 10초 뒤 다시 눌러 주세요"
+    if _cn._busy(note):
+        return "구글 AI 서버가 지금 붐벼요(세 번 다시 시도했어요). 1분쯤 뒤 다시 눌러 주세요"
+    return None
+
+
+@app.get("/api/cardnews/boot")
+def api_cardnews_boot(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    from shopping_shorts import vertex_route
+    st = Store(DB_PATH)
+    ok_img, why_img = _cn.image_allowed(cid)
+    pend = st.cardnews_list(cid, statuses=("pending",), limit=100)
+    return {"ok": True, "brand": _cn.brand_of(st, cid), "image_allowed": ok_img, "image_why": why_img,
+            "ai_plan": vertex_route.plan(cid), "pending": len(pend),
+            "limits": {"min": _cn.MIN_SLIDES, "max": _cn.MAX_SLIDES, "cover_max": _cn.COVER_MAX,
+                       "title_max": _cn.TITLE_MAX, "body_max": _cn.BODY_MAX, "item_max": _cn.ITEM_MAX},
+            "checks": [{"code": c, "label": l} for c, l in _cn.CHECK_LIST],
+            "tones": list(_cn.TONES), "purposes": _cn.PURPOSES}
+
+
+@app.post("/api/cardnews/link")
+def api_cardnews_link(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return _cn.read_link(body.get("url"))
+
+
+@app.post("/api/cardnews/outline")
+def api_cardnews_outline(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    src, opts = body.get("src") or {}, body.get("opts") or {}
+    if not _cn.source_text(src):
+        return _cn_err("무엇으로 만들지 넣어 주세요")
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.plan_outline(src, opts, _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/build")
+def api_cardnews_build(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    st = Store(DB_PATH)
+    src, opts, outline = body.get("src") or {}, body.get("opts") or {}, body.get("outline") or []
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.build_carousel(src, outline, opts, _cn.brand_of(st, cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    car = got["carousel"]
+    # 링크 사진은 회원 폴더로 받아 같은 주소로 — 남의 사이트 사진은 다운로드(이미지 변환) 때 막힌다
+    ext_urls = {sl["bg"]["url"] for sl in car["slides"] if sl["bg"]["url"].startswith("https://")}
+    for u in ext_urls:
+        name, _why = _cn.fetch_remote_image(cid, u, _CN_DATA)
+        for sl in car["slides"]:
+            if sl["bg"]["url"] == u:
+                sl["bg"] = {"kind": "link", "url": "/api/cardnews/asset/" + name} if name else {"kind": "none", "url": ""}
+    title = str(body.get("title") or car.get("topic") or "카드뉴스")[:60]
+    wid = st.cardnews_save(body.get("work_id") or None, cid, car, status="draft", title=title)
+    if not wid:
+        return _cn_err("이 작품을 저장할 수 없어요", 403)
+    return {"ok": True, "work_id": wid, "carousel": car, "title": title}
+
+
+@app.post("/api/cardnews/check")
+def api_cardnews_check(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    car = _cn.normalize_carousel(body.get("carousel"))
+    issues = _cn.check_carousel(car, _cn.brand_of(Store(DB_PATH), cid))
+    return {"ok": True, "issues": issues, "report": _cn._check_report(issues, [])}
+
+
+@app.post("/api/cardnews/rewrite")
+def api_cardnews_rewrite(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.rewrite_text(str(body.get("text") or "")[:300], body.get("field") or "body", body.get("mode"),
+                               _cn.normalize_carousel(body.get("carousel")),
+                               _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/restyle")
+def api_cardnews_restyle(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    ins = str(body.get("instruction") or "").strip()
+    if not ins:
+        return _cn_err("어떻게 바꿀지 한 줄 적어 주세요")
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.restyle_all(_cn.normalize_carousel(body.get("carousel")), ins,
+                              _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/bg")
+def api_cardnews_bg(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    model = Store(DB_PATH).get_setting("cardnews_image_model", "") or None
+    with usage_meter.track(op="카드뉴스그림", customer_id=cid):
+        name, why = _cn.gen_background(cid, str(body.get("prompt") or ""), _CN_DATA, model=model)
+    if not name:
+        return _cn_err(why, 422)
+    return {"ok": True, "url": "/api/cardnews/asset/" + name}
+
+
+@app.post("/api/cardnews/upload")
+async def api_cardnews_upload(request: Request, file: UploadFile = File(...)):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    raw = await file.read()
+    fn = file.filename or ""
+    ext = fn.rsplit(".", 1)[-1] if "." in fn else ""
+    name, why = _cn.save_upload(cid, raw, _CN_DATA, ext)
+    if not name:
+        return _cn_err(why)
+    return {"ok": True, "url": "/api/cardnews/asset/" + name}
+
+
+@app.get("/api/cardnews/asset/{name}")
+def api_cardnews_asset(request: Request, name: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    p = _cn.asset_path(_CN_DATA, cid, name)
+    if not p:
+        return _cn_err("파일이 없어요", 404)
+    return FileResponse(p, headers={"Cache-Control": "private, max-age=86400"})
+
+
+def _cn_summary(w):
+    return {"work_id": w["work_id"], "title": w["title"], "status": w["status"], "updated_at": w["updated_at"],
+            "created_at": w["created_at"], "rule_id": w.get("rule_id"), "carousel": w.get("state") or {}}
+
+
+@app.get("/api/cardnews/works")
+def api_cardnews_works(request: Request, status: str = "saved"):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    sts = ("pending",) if status == "pending" else ("draft", "approved")
+    return {"ok": True, "works": [_cn_summary(w) for w in Store(DB_PATH).cardnews_list(cid, statuses=sts)]}
+
+
+@app.get("/api/cardnews/works/{work_id}")
+def api_cardnews_work_get(request: Request, work_id: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    w = Store(DB_PATH).cardnews_get(work_id, cid)
+    if not w:
+        return _cn_err("작품을 찾지 못했어요", 404)
+    return {"ok": True, "work": _cn_summary(w)}
+
+
+@app.post("/api/cardnews/works/{work_id}")
+def api_cardnews_work_save(request: Request, work_id: str, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    car = _cn.normalize_carousel(body.get("carousel"))
+    status = body.get("status") if body.get("status") in ("draft", "approved") else None
+    title = str(body.get("title"))[:60] if body.get("title") else None
+    wid = Store(DB_PATH).cardnews_save(None if work_id == "new" else work_id, cid, car, status=status, title=title)
+    if not wid:
+        return _cn_err("이 작품을 저장할 수 없어요", 403)
+    return {"ok": True, "work_id": wid}
+
+
+@app.post("/api/cardnews/works/{work_id}/delete")
+def api_cardnews_work_delete(request: Request, work_id: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": Store(DB_PATH).cardnews_delete(work_id, cid)}
+
+
+@app.get("/api/cardnews/brand")
+def api_cardnews_brand_get(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": True, "brand": _cn.brand_of(Store(DB_PATH), cid)}
+
+
+@app.post("/api/cardnews/brand")
+def api_cardnews_brand_set(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    b = _cn.clean_brand(body.get("brand"))
+    Store(DB_PATH).cardnews_brand_set(cid, b)
+    return {"ok": True, "brand": b}
+
+
+@app.get("/api/cardnews/rules")
+def api_cardnews_rules(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    rows = Store(DB_PATH).cardnews_rules(cid)
+    return {"ok": True, "rules": [{**r, "rule": _cn.clean_rule(r["rule"])} for r in rows]}
+
+
+@app.post("/api/cardnews/rules")
+def api_cardnews_rule_save(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    rule = _cn.clean_rule(body.get("rule"))
+    if not rule["topics"]:
+        return _cn_err("자동으로 만들 주제를 한 줄에 하나씩 넣어 주세요")
+    enabled = bool(body.get("enabled", True))
+    rid = Store(DB_PATH).cardnews_rule_save(cid, rule, _cn.next_run_at(rule) if enabled else 0,
+                                            rule_id=body.get("rule_id") or None, enabled=enabled)
+    if not rid:
+        return _cn_err("이 규칙을 저장할 수 없어요", 403)
+    return {"ok": True, "rule_id": rid}
+
+
+@app.post("/api/cardnews/rules/{rule_id}/delete")
+def api_cardnews_rule_delete(request: Request, rule_id: int):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": Store(DB_PATH).cardnews_rule_delete(cid, rule_id)}
+
+
+@app.post("/api/cardnews/rules/{rule_id}/run")
+def api_cardnews_rule_run(request: Request, rule_id: int):
+    """'지금 한 편 만들기' — 예약을 기다리지 않고 승인 대기함에 하나 넣는다."""
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    st = Store(DB_PATH)
+    row = next((r for r in st.cardnews_rules(cid) if r["rule_id"] == rule_id), None)
+    if not row:
+        return _cn_err("규칙을 찾지 못했어요", 404)
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        wid = _cn.run_rule_once(st, {"rule_id": rule_id, "customer_id": cid, "rule": row["rule"]}, _CN_DATA)
+    if not wid:
+        return _cn_err("만들지 못했어요. 잠시 뒤 다시 눌러 주세요", 422)
+    return {"ok": True, "work_id": wid}
+
+
+@app.on_event("startup")
+def _start_cardnews_rule_loop():
+    """카드뉴스 자동 규칙 루프 — 2분마다 시간이 된 규칙을 돈다. 스위치가 꺼져 있으면 아무것도 안 한다.
+    웹 프로세스가 여럿이어도 규칙 하나는 한 번만(store.cardnews_rule_claim)."""
+    import threading
+    import time as _t
+
+    def _loop():
+        while True:
+            _t.sleep(120)
+            try:
+                st = Store(DB_PATH)
+                if (st.get_setting("cardnews_enabled", "") or "").strip().lower() in ("", "0", "off", "false"):
+                    continue
+                n = _cn.run_due_rules(st, _CN_DATA)
+                if n:
+                    logging.warning("[cardnews] 자동 규칙 %d편 승인 대기함에 넣음", n)
+            except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
+                logging.warning("[cardnews] 자동 규칙 루프 오류: %r", e)
+    threading.Thread(target=_loop, daemon=True, name="cardnews-rules").start()
 
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")

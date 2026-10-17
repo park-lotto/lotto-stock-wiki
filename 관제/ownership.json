@@ -804,6 +804,61 @@
    "검사도구": "tools/mograph/check_countdown.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "카드뉴스 장 구성·문구(개요→장별 문구→검사→한 번 다시 쓰기)",
+   "주인": [
+    "shopping_shorts/cardnews.py:build_carousel",
+    "shopping_shorts/cardnews.py:plan_outline"
+   ],
+   "시그니처": [
+    "def build_carousel\\b",
+    "def plan_outline\\b",
+    "_WRITE_RULES\\s*="
+   ],
+   "소비처": [
+    "/api/cardnews/build·outline·restyle",
+    "자동 규칙 run_rule_once"
+   ],
+   "검사도구": "tools/check_cardnews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "카드뉴스 글 검사 12가지(지어낸 날짜·빈 장·중복·길이·금지어·말투·마무리)",
+   "주인": [
+    "shopping_shorts/cardnews.py:check_carousel"
+   ],
+   "시그니처": [
+    "def check_carousel\\b",
+    "CHECK_LIST\\s*="
+   ],
+   "소비처": [
+    "build_carousel",
+    "/api/cardnews/check",
+    "편집기 검사 탭"
+   ],
+   "검사도구": "shopping_shorts/tests/test_cardnews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "카드뉴스 카드 그리기·글자 넘침 맞춤(미리보기·썸네일·다운로드 공용)",
+   "주인": [
+    "shopping_shorts/static/cardnews-render.js:render",
+    "shopping_shorts/static/cardnews-render.js:fit"
+   ],
+   "시그니처": [
+    "function render\\(s, i, total, ctx\\)",
+    "function fit\\(card\\)"
+   ],
+   "소비처": [
+    "cardnews.html 편집 캔버스·장 목록·보관함·자동 대기함·브랜드 미리보기",
+    "ZIP/JPEG 다운로드(exportZip·snapshot)"
+   ],
+   "검사도구": "tools/check_cardnews.py",
+   "과금": false,
+   "예외": {}
   }
  ]
 }

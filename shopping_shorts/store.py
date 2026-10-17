@@ -1119,6 +1119,43 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🗂 카드뉴스 제작소(관제 223, 2026-10-17) — 회원별 카드뉴스 작품·브랜드·자동 규칙.
+            # ★customer_id를 WHERE에 항상 끼운다(produce_works와 같은 관례) — 남의 것은 못 읽고 못 지운다.
+            # status: draft(수동 작업) · pending(자동 생성, 승인 대기) · approved(승인) — 보관함은 draft+approved.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    state_json TEXT NOT NULL,
+                    rule_id INTEGER,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_works_customer "
+                      "ON cardnews_works(customer_id, status, updated_at DESC)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_brand (
+                    customer_id INTEGER PRIMARY KEY,
+                    brand_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_rules (
+                    rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    rule_json TEXT NOT NULL,
+                    enabled INTEGER NOT NULL DEFAULT 1,
+                    next_run INTEGER NOT NULL DEFAULT 0,
+                    last_run INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_rules_due "
+                      "ON cardnews_rules(enabled, next_run)")
             # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
             # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
             # 일을 딸깍 한 번으로 끝낸다.
@@ -5968,6 +6005,121 @@ class Store:
         with self._conn() as c:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
+
+    # ── 🗂 카드뉴스 제작소(관제 223) ──
+    # 판단(문구·검사·장 구성)은 cardnews.py 한 곳. 여기는 저장만 한다.
+    def cardnews_save(self, work_id, customer_id, state, status=None, title=None, rule_id=None):
+        """작품 저장. work_id가 없으면 새로 만든다. 남의 work_id면 None(produce_works와 같은 결).
+        status·title을 안 주면 기존 값 보존. 돌려주는 값 = work_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                row = c.execute("SELECT customer_id FROM cardnews_works WHERE work_id=?",
+                                (work_id,)).fetchone()
+                if row and row[0] != customer_id:
+                    return None
+                if row:
+                    cols, vals = ["state_json=?", "updated_at=?"], [payload, now]
+                    if status is not None:
+                        cols.append("status=?"); vals.append(status)
+                    if title is not None:
+                        cols.append("title=?"); vals.append(title)
+                    vals.append(work_id)
+                    c.execute(f"UPDATE cardnews_works SET {', '.join(cols)} WHERE work_id=?", tuple(vals))
+                    return work_id
+            work_id = work_id or ("cn_" + secrets.token_hex(6))
+            c.execute("INSERT INTO cardnews_works(work_id, customer_id, title, status, state_json, rule_id, "
+                      "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                      (work_id, customer_id, title or "", status or "draft", payload, rule_id, now, now))
+            return work_id
+
+    def cardnews_get(self, work_id, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                          "FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                          (work_id, customer_id)).fetchone()
+        if not r:
+            return None
+        return {"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                "rule_id": r[4], "created_at": r[5], "updated_at": r[6]}
+
+    def cardnews_list(self, customer_id, statuses=("draft", "approved"), limit=60):
+        qs = ",".join("?" * len(statuses))
+        with self._conn() as c:
+            rows = c.execute(f"SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                             f"FROM cardnews_works WHERE customer_id=? AND status IN ({qs}) "
+                             f"ORDER BY updated_at DESC LIMIT ?",
+                             (customer_id, *statuses, int(limit))).fetchall()
+        return [{"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                 "rule_id": r[4], "created_at": r[5], "updated_at": r[6]} for r in rows]
+
+    def cardnews_delete(self, work_id, customer_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
+
+    def cardnews_count_since(self, customer_id, since_iso, rule_id=None):
+        """자동 규칙의 '하루 몇 편' 상한 판정용 — since 이후 만든 작품 수."""
+        sql = "SELECT COUNT(*) FROM cardnews_works WHERE customer_id=? AND created_at>=?"
+        args = [customer_id, since_iso]
+        if rule_id is not None:
+            sql += " AND rule_id=?"; args.append(rule_id)
+        with self._conn() as c:
+            return c.execute(sql, tuple(args)).fetchone()[0]
+
+    def cardnews_brand_get(self, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT brand_json FROM cardnews_brand WHERE customer_id=?",
+                          (customer_id,)).fetchone()
+        return json.loads(r[0]) if r else None
+
+    def cardnews_brand_set(self, customer_id, brand):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO cardnews_brand(customer_id, brand_json, updated_at) VALUES (?,?,?) "
+                      "ON CONFLICT(customer_id) DO UPDATE SET brand_json=excluded.brand_json, "
+                      "updated_at=excluded.updated_at",
+                      (customer_id, json.dumps(brand, ensure_ascii=False), now))
+
+    def cardnews_rules(self, customer_id):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, rule_json, enabled, next_run, last_run FROM cardnews_rules "
+                             "WHERE customer_id=? ORDER BY rule_id", (customer_id,)).fetchall()
+        return [{"rule_id": r[0], "rule": json.loads(r[1]), "enabled": bool(r[2]),
+                 "next_run": r[3], "last_run": r[4]} for r in rows]
+
+    def cardnews_rule_save(self, customer_id, rule, next_run, rule_id=None, enabled=True):
+        """규칙 저장. 남의 rule_id면 None. 돌려주는 값 = rule_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(rule, ensure_ascii=False)
+        with self._conn() as c:
+            if rule_id:
+                n = c.execute("UPDATE cardnews_rules SET rule_json=?, enabled=?, next_run=? "
+                              "WHERE rule_id=? AND customer_id=?",
+                              (payload, 1 if enabled else 0, int(next_run), rule_id, customer_id)).rowcount
+                return rule_id if n else None
+            cur = c.execute("INSERT INTO cardnews_rules(customer_id, rule_json, enabled, next_run, created_at) "
+                            "VALUES (?,?,?,?,?)", (customer_id, payload, 1 if enabled else 0, int(next_run), now))
+            return cur.lastrowid
+
+    def cardnews_rule_delete(self, customer_id, rule_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_rules WHERE rule_id=? AND customer_id=?",
+                             (rule_id, customer_id)).rowcount > 0
+
+    def cardnews_rules_due(self, now_epoch):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, customer_id, rule_json, next_run FROM cardnews_rules "
+                             "WHERE enabled=1 AND next_run>0 AND next_run<=?", (int(now_epoch),)).fetchall()
+        return [{"rule_id": r[0], "customer_id": r[1], "rule": json.loads(r[2]), "next_run": r[3]} for r in rows]
+
+    def cardnews_rule_claim(self, rule_id, expect_next, new_next, now_epoch):
+        """자동 실행 1회를 **한 프로세스만** 가져간다 — next_run이 아직 expect_next일 때만 넘긴다.
+        웹 프로세스가 여럿이어도 같은 규칙이 두 번 돌지 않는다(SQL 한 문장 비교·갱신)."""
+        with self._conn() as c:
+            return c.execute("UPDATE cardnews_rules SET next_run=?, last_run=? WHERE rule_id=? AND next_run=?",
+                             (int(new_next), int(now_epoch), rule_id, int(expect_next))).rowcount == 1
 
     # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
     # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.

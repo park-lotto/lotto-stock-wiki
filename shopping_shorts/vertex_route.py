@@ -20,7 +20,9 @@ import time
 OPS = ("script_extract", "frame_script", "ai_match", "script_generate",
        # 2026-10-08(관제 159) 사장님 "내꺼 1단계부터 3단계 모두 버텍스로" — 종전엔 키풀로만 가던 호출들.
        #   vertex_ops 설정엔 안 넣는다(고객이 13시 전까지 사장님 프로젝트로 새지 않게) — 관리자·등록 회원만 탄다.
-       "story", "structure", "edit_plan", "script_aux")
+       "story", "structure", "edit_plan", "script_aux",
+       # 카드뉴스 제작소(관제 223) — 문구·개요·다시쓰기. 등록 회원은 자기 Vertex, 관리자는 사장님 프로젝트, 그 외 키풀
+       "cardnews")
 # script_generate = script_generate._call_json 깔때기(이야기 작가·백본·옛 생성기·판정 전부) — 2026-09-26 사장님
 #   "태깅은 무료로, 대본작성과 장면매칭이 얼마나 잘되는지 해보자" → 설정 vertex_ops=script_generate,ai_match
 LOCATION = "global"                 # ★us-central1은 3.6-flash 404(2026-09-25 실측) — 글로벌만
