@@ -60,14 +60,14 @@ def frames(key):
             "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "방구석 틀 외관 변형(10-17): 슬림 머리줄·저채도 팔레트·왼쪽 정렬 카드·SUIT 자막 박스. 내용은 그대로"},
             "layers": [
                 {"kind": "bg", "rgb": BG},
-                {"kind": "video", "x": 0, "y": 660, "w": 1080, "h": 1260, "radius": R},
+                {"kind": "video", "x": 0, "y": 410, "w": 1080, "h": 1400, "radius": R},
                 *header(False),
                 band(L - 6, 176, 1080 - 2 * L + 12, 196, [228, 221, 211], R),      # 아주 옅은 그림자(밑으로 6px 비껴 깐 한 장)
                 band(L - 10, 164, 1080 - 2 * L + 20, 198, WHITE, R),
                 text("label", "CcPretendard-Regular", meta, 198, 26, L + 30, 700, "left", ACC, text=meta),
                 text("label", "PretendardXBold", post, 262, 54, L + 30, 1080 - 2 * L - 20, "left", INK, text=post),
-                text("caption", "SUITBold", "아웃백에서 사람들이", 432, 48, 540, 940, "center", INK, lines=2, line_h=82, valign="top",
-                     box={"rgb": TINT, "pad": 20, "radius": R}),
+                text("caption", "SUITBold", "아웃백에서 사람들이", 1560, 48, 540, 900, "center", WHITE, lines=2, line_h=82, valign="top",
+                     box={"rgb": [52, 46, 42], "pad": 22, "radius": R}),
             ]}
     hookf = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": ob.get("source"),
              "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "훅 카드: 깊은 잉크 바탕 · 왼쪽 정렬 큰 제목(포인트색 둘째 줄) · 포인트 막대 + 문장 · 둥근 그림 창"},
@@ -98,6 +98,14 @@ def render(key):
             "frames": [{"frame": str(d / "frame_hook_썰템홈샷.json"), "t_end": None}, {"frame": str(d / "frame_body_썰템홈샷.json"), "t_end": None}],
             "script": str(d / "대본.json"), "tts": au["tts"], "materials": str(d / "재료.json"), "out": str(OUT),
             "bgm": au["bgm"], "bgm_ratio": au["bgm_ratio"], "lufs": au["target_lufs"], "chunk": 13}
+    import inspect
+    _orig = nv.shot_clip
+    def _wide(*a, **k):   # v2: 그림 칸 = 창 전체(가로 1080·세로 창 높이, cover) — 오른쪽 치우침·흰 빈칸 없음, 자막은 그림 위 아래쪽(min_y 해제)
+        b = inspect.signature(_orig).bind(*a, **k); b.apply_defaults(); g = b.arguments
+        if not g["full"]:
+            g["box"] = [0, 0, 1080, g["win"]["h"]]; g["min_y"] = 0; g["anchor"] = True; g["fit"] = "cover"
+        return _orig(*b.args, **b.kwargs)
+    nv.shot_clip = _wide
     old = json.loads((WIN / "timeline.json").read_text(encoding="utf-8"))["steps"]
     nv.time_steps = lambda st, audio, snap=0.4, **kw: ([dict(s) for s in old], nv.speech_segments(audio)[1])
     print("final", nv.build(plan))

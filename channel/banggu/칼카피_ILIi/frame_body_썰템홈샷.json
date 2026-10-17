@@ -21,9 +21,9 @@
   {
    "kind": "video",
    "x": 0,
-   "y": 660,
+   "y": 410,
    "w": 1080,
-   "h": 1260,
+   "h": 1400,
    "radius": 36
   },
   {
@@ -155,28 +155,28 @@
    "kind": "text",
    "role": "caption",
    "x": 540,
-   "y": 414,
-   "w": 940,
+   "y": 1542,
+   "w": 900,
    "align": "center",
    "lines": 2,
    "font": "SUITBold",
    "size": 52.7,
    "line_h": 82,
    "rgb": [
-    38,
-    34,
-    31
+    255,
+    255,
+    255
    ],
    "line_rgb": null,
    "outline": null,
    "shadow": null,
    "box": {
     "rgb": [
-     236,
-     228,
-     218
+     52,
+     46,
+     42
     ],
-    "pad": 20,
+    "pad": 22,
     "radius": 36
    },
    "italic": false,
