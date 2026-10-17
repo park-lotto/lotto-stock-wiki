@@ -36,7 +36,10 @@ MANY_WORKERS = int(os.environ.get("CALCOPY_GEMINI_WORKERS") or 8)               
 SERVER_FALLBACK_REASONS = ("quota", "no_key", "429")
 SEED = 7               # 같은 입력 → 같은 답에 가깝게(temperature 0 + 고정 seed)
 _DEAD: set = set()      # (키번호, 모델) — 404/429
-_CURSOR = {"i": 0}      # 키 라운드로빈 시작점
+# 키 라운드로빈 시작점 — ★프로세스마다 다른 자리에서 시작(10-18). 예전엔 모든 세션·워커가 0번 키부터 돌아
+# 같은 키에 동시에 몰려 분당 429 → 그 429 를 '오늘 끝'으로 적어 공용 장부(~/.calcopy_gemini_quota.json, 모든 세션이 같이 씀)에서
+# 161키가 전부 '죽음'이 됐다(실제로는 151키 정상, 10-18 161키 동시 1회 실측).
+_CURSOR = {"i": int.from_bytes(os.urandom(2), "big")}
 CALLS: list[dict] = []   # 이번 실행의 호출 장부(모델·키번호·결과) — 뜯기.json 에 남긴다
 
 
@@ -81,12 +84,18 @@ def _ask_local(parts: list, prompt: str, tag: str = "", models: tuple | None = N
     if not plan:
         CALLS.append({"tag": tag, "failed": "quota", "day": led["day"]})
         return None, "quota"
+    # 죽은 키 바로 넘기기(10-18): 모델마다 프로세스당 한 번 키를 동시에 미리 확인(models.get, 생성 한도 안 씀) →
+    # 무효·권한·정지 키와 그 모델이 없는 키는 고장 장부(날 넘어 남음)에 적히고, 아래 루프는 부르지 않고 건너뛴다.
+    #   ★본 호출을 기다리게 하지 않는다 — 뒤에서(데몬 스레드) 돈다. 10-18 실측: 161키 앞에서 막고 확인 = 54초 → 첫 호출 80초(더 느림).
+    for m_ in dict.fromkeys(plan):
+        gk.probe_bg(m_, keys)
+    bled = gk._bload()
     for rnd, model in enumerate(plan):
         if rnd and model == plan[0]:
             time.sleep(5 * rnd)          # 503(과부하)면 잠깐 쉬고 같은 모델로 다시
         for step in range(n):
             ki = (start + step) % n
-            if (ki, model) in _DEAD or gk.is_dead(names[ki], model):
+            if (ki, model) in _DEAD or gk.is_dead(names[ki], model) or gk.is_broken(keys[ki], model, bled):
                 continue
             t0 = time.time()
             try:
@@ -105,10 +114,15 @@ def _ask_local(parts: list, prompt: str, tag: str = "", models: tuple | None = N
                 return d, None
             except Exception as e:  # noqa: BLE001 — 한도·없는 모델·일시 장애면 다음 키, 끝까지 막히면 이유를 돌려준다
                 msg = str(e)
+                kind = gk.broken_reason(msg)
+                if kind:                     # 키 자체가 죽음(무효·권한·정지) / 그 모델 없음 → 고장 장부(날 넘어 남음), 다시 안 부른다
+                    gk.mark_broken(keys[ki], model, kind, msg)
+                    bled = gk._bload()
                 if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
                     last = "429"
-                    _DEAD.add((ki, model))
-                    gk.mark(names[ki], model, "429")
+                    if gk.rate_scope(msg) == "day":      # 분당 한도는 장부가 65초 뒤 풀어 준다 — 프로세스 메모리에 영구로 막지 않는다
+                        _DEAD.add((ki, model))
+                    gk.mark(names[ki], model, "429", msg)
                 elif "API key not valid" in msg or "API_KEY_INVALID" in msg:
                     last = "400 키 무효"
                     for m_ in MODELS + tuple(plan):     # 키 자체가 무효 — 오늘 장부에 모든 모델로 끝 표시(42키 중 무효 키를 매번 다시 부르지 않게)
