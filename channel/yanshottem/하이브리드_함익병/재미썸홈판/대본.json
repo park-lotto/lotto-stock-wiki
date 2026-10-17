@@ -362,12 +362,12 @@
   "final": "C:\\숏템_칼카피\\yanshottem\\하이브리드_함익병\\재미썸홈판\\render\\final.mp4",
   "desktop": "C:\\Users\\CH\\Desktop\\칼카피영상\\얜샷템\\칼카피_얜샷템_함익병도브_재미썸홈판.mp4",
   "md5": [
-   "6a2c00585d3e4146d44d05bfe7d3db4c",
-   "6a2c00585d3e4146d44d05bfe7d3db4c"
+   "531ae3d63589253a9ad9ecf92e58fa73",
+   "531ae3d63589253a9ad9ecf92e58fa73"
   ],
   "dur": 28.933,
   "lufs": -14.1,
-  "peak_dbfs": -3.5,
+  "peak_dbfs": -3.7,
   "atempo": {
    "all": 1.27,
    "last": 1.15,
@@ -442,7 +442,7 @@
   "sfx": 8,
   "ngain": 1.27,
   "ogain": 14.74,
-  "mix_gain": 8.86,
+  "mix_gain": 8.77,
   "max_caption": 13
  }
 }

@@ -54,7 +54,8 @@ ORIG_CAPS = [(1272.93, "그럼 내가 특정 제품을"), (1273.84, "얘기를 �
 # A 화면: (원본 시작, 크롭 [x,y,w,h]) — 왼쪽 위 채널 글자(x<600,y<275)·아래 편집 자막(y≥920) 밖. 이음매마다 크기를 바꿔 점프컷을 가린다
 A_SHOTS = [(1272.93, [640, 0, 720, 720]), (1275.18, [690, 40, 560, 560]), (1280.42, [640, 0, 720, 720])]
 GAP_O_F1 = 0.12                            # 원음 끝 → TTS 한마디
-F1_SHOT = ("src_l20qnFWsxzQ.mp4", 8.00, [560, 60, 740, 740])   # 도브 공식(한국) 우유 속 도브 바 회전 — 오른쪽 '저자극으로' 글자(x≥1450) 밖
+F1_SHOT = ("src_cSzFp63NmwY.mp4", 23.45, [490, 0, 860, 860])   # 도브 광고(PH) 바에 크림이 부어지는 장면(23.42~25.65 한 샷) — 아래 'After 7-day usage'(y≈940) 밖
+F1_SHOT2 = ("src_l20qnFWsxzQ.mp4", 8.30, [560, 60, 740, 740])  # '바로 이 도브' = 도브 공식(한국) 바 윗면 새 무늬 — 오른쪽 '저자극으로'(x≥1470)·아래 알약 칸(y≥865) 밖, 10.1초 '¼' 글자 전
 
 LINES = [   # (칸, 화면 글 text, 읽는 글 tts) — 0 = A 끝 한마디(F1), 1~ = B
     ("f1", "함익병 원장이 주로 쓴다는 비누, 바로 이 도브.", "함익병 원장이 주로 쓴다는 비누, 바로 이 도브."),
@@ -70,9 +71,9 @@ LINES = [   # (칸, 화면 글 text, 읽는 글 tts) — 0 = A 끝 한마디(F1)
 #   "+" = 앞 컷을 끊지 않고 이어감(같은 묶음 이웃 토막은 한 컷 — 재미썸홈 수정2 규칙)
 PIECES = [
     # F1 (A 틀, 컷은 F1_SHOT 한 컷)
-    ("함익병 원장이", None, None, None, "제품", "(A) 우유 속 하얀 도브 바가 돈다"),
+    ("함익병 원장이", None, None, None, "제품", "(A) 도브 바에 크림이 부어짐"),
     ("주로 쓴다는 비누", None, None, None, "제품", "(A) 〃"),
-    ("바로 이 도브", None, None, None, "제품", "(A) 〃 바 윗면 새 무늬"),
+    ("바로 이 도브", None, None, None, "제품", "(A) 도브 바 윗면 새 무늬"),
     # L1 다리
     ("저 영상 보고 나도", "src_cSzFp63NmwY.mp4", 27.70, [40, 0, 1080], "제품", "하얀 도브 상자 위 도브 바(포장째 산 제품)"),
     ("당장 따라 샀는데", "+", None, None, "제품", "(이어감)"),
@@ -204,8 +205,11 @@ def plan():
                      "caps": " / ".join(c for t_, c in ORIG_CAPS if a - 0.01 <= t_ < b), "seen": "함익병 본인(말하는 사람) 단독 화면", "kind": "원음"})
         o_t += b - a
     f1d = sum(nchar(p[0]) for p in PIECES[:3]) / CPS
-    rows.append({"label": f"A F1 TTS {o_t + GAP_O_F1:.2f}+{f1d:.2f}", "src": F1_SHOT[0], "a": F1_SHOT[1], "b": F1_SHOT[1] + f1d, "crop": F1_SHOT[2],
-                 "size": (300, 300), "caps": " / ".join(p[0] for p in PIECES[:3]), "seen": PIECES[0][5], "kind": "제품"})
+    f1a = sum(nchar(p[0]) for p in PIECES[:2]) / CPS + GAP_O_F1
+    rows.append({"label": f"A F1 TTS {o_t:.2f}+{f1a:.2f}", "src": F1_SHOT[0], "a": F1_SHOT[1], "b": F1_SHOT[1] + f1a, "crop": F1_SHOT[2],
+                 "size": (300, 300), "caps": " / ".join(p[0] for p in PIECES[:2]), "seen": "도브 바에 크림이 부어짐(제품만)", "kind": "제품"})
+    rows.append({"label": f"A F1 TTS {o_t + f1a:.2f}+{f1d + GAP_O_F1 - f1a:.2f}", "src": F1_SHOT2[0], "a": F1_SHOT2[1], "b": F1_SHOT2[1] + f1d + GAP_O_F1 - f1a,
+                 "crop": F1_SHOT2[2], "size": (300, 300), "caps": PIECES[2][0], "seen": "도브 바 윗면 새 무늬(제품만)", "kind": "제품"})
     for g in gs:
         rows.append({"label": f"B {g['t0']:.2f}+{g['t1'] - g['t0']:.2f} {g['kind']}", "src": g["src"], "a": g["ss"], "b": g["ss"] + g["t1"] - g["t0"],
                      "crop": g["crop"], "size": (230, 300), "caps": " / ".join(PIECES[k][0] for k in g["pieces"]), "seen": g["seen"], "kind": g["kind"]})
@@ -253,7 +257,9 @@ def write_docs(times, gs, est, extra=None):
     (D / "재료.json").write_text(json.dumps({
         "A": [{"id": n, "src": HAM, "ss": a, "dur": round(b - a, 3), "crop_xywh": cr, "zoom": round(WIN_A / cr[2], 2), "audio": "원음(본인 말)"}
               for (n, a, b), (_, cr) in zip(ORIG, A_SHOTS)] + [{"id": "F1", "src": F1_SHOT[0], "ss": F1_SHOT[1], "crop_xywh": F1_SHOT[2],
-                                                                 "zoom": round(WIN_A / F1_SHOT[2][2], 2), "audio": "무음(나레)"}],
+                                                                 "zoom": round(WIN_A / F1_SHOT[2][2], 2), "audio": "무음(나레)"},
+                                                                {"id": "F1b", "src": F1_SHOT2[0], "ss": F1_SHOT2[1], "crop_xywh": F1_SHOT2[2],
+                                                                 "zoom": round(WIN_A / F1_SHOT2[2][2], 2), "audio": "무음(나레)"}],
         "B": [{k: v for k, v in g.items()} for g in gs],
         "src_urls": {"ham_A8Q.mp4": "https://youtu.be/A8Q-vnrpOr4 (제철건강, 1080p)", "src_l20qnFWsxzQ.mp4": "Dove 공식 한국 l20qnFWsxzQ 1080p",
                      "src_cSzFp63NmwY.mp4": "Dove PH cSzFp63NmwY 1080p", "src_sYdJEYWmfMg.mp4": "Dove South Africa sYdJEYWmfMg 1080p",

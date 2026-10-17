@@ -44,8 +44,21 @@
   },
   {
    "id": "F1",
+   "src": "src_cSzFp63NmwY.mp4",
+   "ss": 23.45,
+   "crop_xywh": [
+    490,
+    0,
+    860,
+    860
+   ],
+   "zoom": 1.26,
+   "audio": "무음(나레)"
+  },
+  {
+   "id": "F1b",
    "src": "src_l20qnFWsxzQ.mp4",
-   "ss": 8.0,
+   "ss": 8.3,
    "crop_xywh": [
     560,
     60,

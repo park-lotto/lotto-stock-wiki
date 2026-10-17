@@ -121,7 +121,8 @@ def main():
     a_shots, t = [], 0.0
     for (name, a, b), (ss, crop) in zip(M.ORIG, M.A_SHOTS):
         a_shots.append({"t0": t, "t1": t + (b - a), "src": M.HAM, "ss": ss, "crop": crop}); t += b - a
-    a_shots.append({"t0": t, "t1": A_end, "src": M.F1_SHOT[0], "ss": M.F1_SHOT[1], "crop": M.F1_SHOT[2]})
+    a_shots.append({"t0": t, "t1": T[2][0], "src": M.F1_SHOT[0], "ss": M.F1_SHOT[1], "crop": M.F1_SHOT[2]})
+    a_shots.append({"t0": T[2][0], "t1": A_end, "src": M.F1_SHOT2[0], "ss": M.F1_SHOT2[1], "crop": M.F1_SHOT2[2]})
     parts = []
     for k, s in enumerate(a_shots):
         nf = fr(s["t1"]) - fr(s["t0"])
@@ -234,6 +235,8 @@ def main():
     pname, pdir = SP.pack_for(0)
     pack = {"name": pname, "dir": pdir, "density": "low", "level": "normal", "mute_beats": []}
     evs = SP.events(stl, pack)
+    # 오프너(B 시작 +0.06초)가 다리 첫 말 '저 영상'을 덮어 받아쓰기가 '정말 보고'로 들림(10-17 실측, 나레 단독은 '저 영상') → 틀이 바뀌는 쉼 안(−0.25초)으로 당긴다
+    evs = [(pth, (-0.25 if Path(pth).stem == "opener" else tt), mul) for pth, tt, mul in evs]
     (R / "sfx_events.json").write_text(json.dumps({"pack": pname, "plan": SP.plan_events(stl, density="low"), "events": evs, "timeline": stl, "offset": A_end},
                                                   ensure_ascii=False, indent=1), encoding="utf-8")
     # BGM(A만): 나레 중앙보다 11dB 아래(박세리 편 −16 대비 −27), 원음 창 덕킹, A 끝 0.5초 페이드아웃
