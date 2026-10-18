@@ -136,10 +136,12 @@ def test_ask_files_marks_cross_ok_and_fallback(monkeypatch, tmp_path):
                           {"model": "gemini-flash-latest", "why": "timeout", "tries": 1}, {"model": "gemini-3.5-flash-lite", "why": "ClientError: 429", "tries": 9}]]}
     monkeypatch.setattr(GS, "_ssh_py", fake_ssh)
     monkeypatch.setattr(GS, "_audio_b64", lambda *a, **k: "AAAA")
+    from tools.calcopy.engine import gemini_free as GF
+    monkeypatch.setattr(GF, "_ask_local", lambda *a, **k: (None, "quota"))   # 로컬 대체도 막힌 경우 — 교차 모자람이 그대로 남아야 한다
     r = GS.ask_files([("x.mp3", 0, 1), ("x.mp3", 1, 2)], "p")
     assert sent["fallback"] == list(GS.FALLBACK_MODELS) and sent["cross_n"] == 2 and sent["req_timeout"] == GS.REQ_TIMEOUT_SEC
     assert r["jobs"][0]["cross_ok"] is True and r["jobs"][0]["ok_models"] == ["gemini-3-flash-preview", "gemini-flash-latest"]
-    assert r["jobs"][1]["cross_ok"] is False and r["jobs"][1]["ok_models"] == [] and len(r["jobs"][1]["failed"]) == 4
+    assert r["jobs"][1]["cross_ok"] is False and r["jobs"][1]["ok_models"] == [] and len(r["jobs"][1]["failed"]) == 6   # 서버 4 + 로컬 대체 2
     assert GS.texts(r["jobs"][0]) == ["a", "a"]
     assert "gemini-2.5-flash" not in GS.MODELS + GS.FALLBACK_MODELS    # 서버 404
 
