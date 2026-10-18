@@ -26,6 +26,7 @@ CHANNELS = YDIR / "소재채널.json"
 OUTDIR = YDIR / "소재"
 FEED = "https://www.youtube.com/feeds/videos.xml?channel_id={}"
 RETRY_ROUNDS, RETRY_WAIT = 3, 20      # 실패 채널 다시 받기(라운드마다 20·40·60초 쉼)
+RETRY_BUDGET = 300                   # 재시도 포함 전체 상한(초)
 MIN_OK_FRAC = 0.5                    # 응답 채널이 이 비율 밑이면 최신.md 를 덮지 않는다
 MIN_GAP = 0.5            # 요청 시작 간격(초)
 NO_PERSON_W = 0.3        # 제목에서 인물을 못 뽑은 영상의 점수 가중(연예인템이 아닌 클립이 위로 오는 걸 막는다)
@@ -250,14 +251,14 @@ def run(days: int = 7, top: int = 30, limit: int | None = None, feeds: dict[str,
     got: dict[str, dict] = {}
     lock, last = threading.Lock(), [0.0]
 
-    def work(cid):
+    def work(cid, timeout=20):
         with lock:                               # 요청 시작 간격 ≥ MIN_GAP
             wait = last[0] + MIN_GAP - time.time()
             last[0] = max(time.time(), last[0] + MIN_GAP)
         if wait > 0:
             time.sleep(wait)
         try:
-            xml = feeds[cid] if feeds is not None else fetch_feed(cid)
+            xml = feeds[cid] if feeds is not None else fetch_feed(cid, timeout)
             got[cid] = parse_feed(xml, now)
         except Exception as e:
             got[cid] = {"error": str(e)[:80], "videos": []}
@@ -273,9 +274,11 @@ def run(days: int = 7, top: int = 30, limit: int | None = None, feeds: dict[str,
             bad = [c for c, g in got.items() if "error" in g]
             if not bad:
                 break
+            if time.time() - t0 + RETRY_WAIT * (rnd + 1) > RETRY_BUDGET:   # 10-18 실측: 차례 재시도가 55분 — 총 시간 상한
+                break
             time.sleep(RETRY_WAIT * (rnd + 1))
-            for c in bad:
-                work(c)
+            with ThreadPoolExecutor(8) as ex:
+                list(ex.map(lambda c: work(c, timeout=8), bad))
     vids, titles = [], []
     cut = now - timedelta(days=days)
     for cid, g in got.items():
