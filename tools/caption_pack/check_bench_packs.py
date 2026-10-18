@@ -264,6 +264,9 @@ def run(pack, out, compose, fails):
         th = img(p); st = still(k); h = hard_diff(th, st) + hard_diff(st, th)
         need(h == 0, f"⑤ 썸네일 '{rows[k]['text']}' = 정지 그림(진한 차이 {h}점)")
 
+    # ⑥ 편집기: 팩 카드를 누르면 장면마다 계획대로 움직인다(돌고 있는 애니메이션 > 0 / 컷인 장면은 0) · 오류 0
+    editor_check(pack, ctx, need)
+
     # 완성본(하이브리드 미리보기) + 벤치 나란히 시트
     final = None
     base = pathlib.Path(table["video"])
@@ -273,6 +276,37 @@ def run(pack, out, compose, fails):
         need(final.exists() and final.stat().st_size > 100_000, f"완성본 {final.name} {final.stat().st_size if final.exists() else 0}바이트")
     sheet(pack, rows, ctx, idx, layers, L, final, out, report)
     (out / f"{pack}_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+RUNNING = """()=>{const t=document.querySelector('.precision-text[data-edit-bind="caption"]');if(!t)return -1;
+  return [t,...t.querySelectorAll('.cap-u')].reduce((n,e)=>n+e.getAnimations().filter(a=>a.playState==='running').length,0)}"""
+
+
+def editor_check(pack, ctx, need):
+    from playwright.sync_api import sync_playwright
+    snap = {**snapshot(pack)}; snap.pop("captionPack"); snap["wordFx"] = {"style": "", "color": "", "grow": ""}
+    caps = [i for i, s in enumerate(ctx["scenes"]) if s["caption"]][:12]
+    with sync_playwright() as p:
+        b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1500, "height": 1100}); errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.goto((ROOT / "out/scene-style-ui-showcase.html").as_uri()); pg.wait_for_timeout(1200)
+        pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(1500)
+        pg.evaluate("([c,s])=>window.sceneStyle.load(c,s)", [ctx, snap]); pg.wait_for_timeout(300)
+        pg.evaluate("()=>window.sceneStyle.show(1)"); pg.wait_for_timeout(300)
+        pg.evaluate(f"()=>document.querySelector('[data-caption-pack=\"{pack}\"]').click()"); pg.wait_for_timeout(500)
+        saved = pg.evaluate("()=>window.sceneStyle.snapshot()")
+        plan = pg.evaluate("()=>window.sceneStyle.motionPlan()"); bad = []; moved = 0
+        for i in caps:
+            run = pg.evaluate("""i=>new Promise(res=>{const f=%s;window.sceneStyle.show(i);let m=0;const t0=performance.now();
+              const tick=()=>{m=Math.max(m,f());performance.now()-t0<400?requestAnimationFrame(tick):res(m)};requestAnimationFrame(tick)})""" % RUNNING, i)
+            moved += run > 0   # 400ms 동안 프레임마다 재서 최댓값(반투명 툭 66ms 처럼 짧은 등장도 잡는다)
+            if (run > 0) != bool(plan[i]): bad.append((i, ctx["scenes"][i]["caption"], plan[i], run))
+            pg.wait_for_timeout(250)
+        need(saved.get("captionPack") == pack and saved.get("wordFx", {}).get("style") == "mark",
+             f"⑥ 편집기 카드 누름 → 저장 captionPack={saved.get('captionPack')} · 단어 강조 {saved.get('wordFx', {}).get('style')}")
+        need(not bad and moved > 0, f"⑥ 편집기 {len(caps)}장면 넘기며 계획대로 움직임(움직인 장면 {moved}, 계획 {[plan[i] for i in caps]}, 어긋남 {bad[:3]})")
+        need(not errs, f"⑥ 편집기 페이지 오류 {len(errs)}건 {errs[:2]}")
+        b.close()
 
 
 # 벤치 프레임(편·초·자막 줄 세로 가운데) — 스타일분석.md·보강안 근거 그대로

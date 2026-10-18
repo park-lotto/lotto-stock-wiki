@@ -16,6 +16,7 @@ import json, pathlib, re, sys
 from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT / "tools/caption_pack"))
 import _plan
+WORDFX = __import__("json").loads(_plan.TEXT.split("/*WORDFX*/")[1])   # hide = 장면 자료로만 쓰는 방식(핵심 단어 색칠) — 버튼이 없다
 out = pathlib.Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
 fails = []
 def need(ok, msg):
@@ -47,7 +48,7 @@ with sync_playwright() as p:
         snap = pg.evaluate("()=>window.sceneStyle.snapshot()")
         active = pg.eval_on_selector_all("[data-word-fx].active", "bs=>bs.map(b=>b.dataset.wordFx)")
         font = pg.evaluate(CAPFONT)
-        need(pg.locator(f'[data-caption-pack="{key}"].active').count() == 1 and font.startswith(st["font"]) and active == [st["wordFx"].get("style", "")]
+        need(pg.locator(f'[data-caption-pack="{key}"].active').count() == 1 and font.startswith(st["font"]) and active == ([] if WORDFX.get(st["wordFx"].get("style", ""), {}).get("hide") else [st["wordFx"].get("style", "")])
              and snap.get("captionPack") == key and snap.get("motionPack") == "7",
              f"① [{key}] 카드 켜짐 · 글꼴 {font[:16]} · 단어 강조 {active} · 저장 captionPack={snap.get('captionPack')} · 움직임 그대로 motionPack={snap.get('motionPack')}")
     # ⑦ 상자를 먼저 고른 작업(흰 띠 look 0)에 예능 텐션(상자 없음·흰 글씨·어그로체)
