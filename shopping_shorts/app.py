@@ -5838,6 +5838,27 @@ def api_coupang_identify(body: dict):
     return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used or ["썸네일"]}
 
 
+def _link_hub_key(cid) -> str:
+    return f"link_hub::{int(cid or 0)}"
+
+
+def _get_link_hub(cid) -> str:
+    """회원이 고른 링크 서비스 키(inpock/moneying). 안 골랐으면 inpock."""
+    v = (Store(DB_PATH).get_setting(_link_hub_key(cid), "") or "").strip()
+    return v if v in coupang_partners.LINK_HUBS else "inpock"
+
+
+@app.post("/api/link_hub")
+async def api_link_hub(request: Request):
+    """링크 서비스 고르기(인포크/머닝) — 회원마다 하나, 다음 작업에도 그대로."""
+    body = await request.json()
+    hub = str((body or {}).get("hub") or "")
+    if hub not in coupang_partners.LINK_HUBS:
+        return {"ok": False, "error": "모르는 링크 서비스입니다"}
+    Store(DB_PATH).set_setting(_link_hub_key(_cid(request)), hub)
+    return {"ok": True, "link_hub": coupang_partners.link_hub(hub)}
+
+
 def _inpock_next_number(store, customer_id):
     """이 회원이 쓴 인포크 번호의 최댓값 + 1. 하나도 없으면 1. 판단은 여기 한 곳(0순위-B)."""
     try:
@@ -6247,6 +6268,8 @@ def api_mix_product_get(job_id: str):
             "description_block": coupang_partners.description_block(product),
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
             "inpock_page": coupang_partners.INPOCK_PAGE,
+            # 회원이 고른 링크 서비스(인포크/머닝) — 등록 상자의 이름·여는 화면이 이걸 따른다
+            "link_hub": coupang_partners.link_hub(_get_link_hub(job.get("customer_id"))),
             # 회원 파트너스 키 유무 — 화면이 "파트너스에서 링크 만들기" 안내를 낼지 정한다(2026-09-04)
             "has_partner_key": bool(_coupang_member_key()[0]),
             "affiliate_target": target,

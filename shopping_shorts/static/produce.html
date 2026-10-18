@@ -9297,6 +9297,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  if(d.link_hub) window._linkHub=d.link_hub;   // 회원이 고른 링크 서비스(인포크/머닝) — 문구 이름이 따른다
   COUPANG.suggestNo=d.suggest_number||0;   // ★내 마지막 번호+1 제안(2026-09-04)
   if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
@@ -9373,11 +9374,12 @@ function coupangInner(){
 // 이름은 지어내지 않는다 — 쿠팡 검색 카드를 고를 때 들어온 **실제 상품명**을 쓴다.
 function coupangDmSet(){
   const d=COUPANG.dm_set; if(!d) return '';
+  const HN=esc((window._linkHub||{}).name||'인포크');
   const p=COUPANG.product||{};
   // 파트너스 링크가 없으면 올려봐야 수수료가 안 붙는다 → 먼저 만들라고 안내한다.
   if(!p.partner_url){
     return `<div class="hint" style="margin-top:10px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px">
-      📦 인포크 등록 문구는 <b>파트너스 링크를 넣은 뒤</b> 나옵니다 — 지금 올리면 수수료가 안 붙습니다.</div>`;
+      📦 ${HN} 등록 문구는 <b>파트너스 링크를 넣은 뒤</b> 나옵니다 — 지금 올리면 수수료가 안 붙습니다.</div>`;
   }
   const row=(label,val)=>`<div style="display:flex;gap:6px;align-items:center;margin-top:5px">
       <span class="hint" style="min-width:74px">${label}</span>
@@ -9391,7 +9393,7 @@ function coupangDmSet(){
   //   카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을 받았다.
   const numTxt = (d.number || '').trim();
   return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--inset)">
-    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구
+    <div style="font-weight:600;font-size:13px">📦 ${HN}에 넣을 문구
       ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
       <span class="hint" style="min-width:74px">번호</span>
@@ -9407,14 +9409,14 @@ function coupangDmSet(){
       ${p.image?`<img src="${esc(p.image)}" alt="" style="width:64px;height:64px;object-fit:contain;background:#fff;border-radius:6px">`:''}
       <a class="btn-prev" style="padding:5px 11px;font-size:11px;text-decoration:none"
          href="/api/mix/product/${encodeURIComponent(MIX_JOB||'')}/image" download
-         title="인포크에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
+         title="${HN}에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
     </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
     ${row('설명(고지)', d.dm_desc)}
     <div class="hint" style="margin-top:8px">${numTxt
-      ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
+      ? `${HN}에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
       : (COUPANG.suggestNo
           ? `내 마지막 번호 다음인 <b>${COUPANG.suggestNo}</b>번을 넣어뒀습니다 — <b>번호 저장</b>을 누르면 위 문구에 붙습니다(고쳐도 됩니다).`
           : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.')}</div>
@@ -15237,8 +15239,15 @@ async function refreshInpock(){
     el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('seo')+' 「'+COUPANG_UI+'」에서 상품을 정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
+  // 링크 서비스(인포크/머닝)는 회원이 고른다 — 이름·여는 화면의 주인은 서버(coupang_partners.link_hub)
+  const H = d.link_hub || {key:'inpock', name:'인포크', page:'https://link.inpock.co.kr', admin:'https://link.inpock.co.kr/admin'};
+  window._linkHub = H;
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
-    <div style="font-weight:600;margin-bottom:6px">📦 인포크링크 등록 대기</div>
+    <div style="font-weight:600;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">📦 ${esc(H.name)} 등록 대기
+      <select onchange="setLinkHub(this.value)" title="쓰는 링크 서비스를 고르세요 — 다음 영상에도 그대로" style="font-size:12px;padding:3px 6px">
+        <option value="inpock" ${H.key==='inpock'?'selected':''}>인포크</option>
+        <option value="moneying" ${H.key==='moneying'?'selected':''}>머닝</option>
+      </select></div>
     <div style="font-size:13px">${esc(p.name||p.keyword||'상품')}
       ${p.partner_url
         ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
@@ -15248,22 +15257,26 @@ async function refreshInpock(){
       <!-- ★새 탭으로 연다(2026-08-18). 창 안 iframe은 폐기 — 인포크 쿠키가 전부 SameSite=Lax라
            크로스사이트 틀에는 안 실려 "로그인 만료"로만 보인다(실측). 대신 누르면 링크를
            복사하고 창까지 한 번에 열어준다. -->
-      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 링크 복사 + 인포크 열기 ↗</button>
+      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 링크 복사 + ${esc(H.name)} 열기 ↗</button>
       <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크만 복사</button>
       <!-- ★<a>는 인라인이라 옆 <button>과 baseline이 어긋나 혼자 위아래로 틀어져 보였다
            (2026-08-18 사장님 캡처). inline-flex+align-items:center+line-height로 버튼과
            같은 상자로 만든다. 글자 크기·패딩은 옆 버튼과 동일하게 유지. -->
       <a class="btn-prev" style="display:inline-flex;align-items:center;padding:7px 13px;font-size:12px;line-height:1.2;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener"
-         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크만 열기 ↗</a>
+         href="${esc(H.page)}">${esc(H.name)}만 열기 ↗</a>
       <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
         <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
       </label>
     </div>
     <div id="inpockOpenMsg" class="hint" style="margin-top:6px"></div>
-    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 인포크 프로필 링크 하나만 넣고, 상품은 인포크 안에서 관리합니다.
+    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 ${esc(H.name)} 프로필 링크 하나만 넣고, 상품은 ${esc(H.name)} 안에서 관리합니다.
       대가성 고지문구는 ${stepName('seo')} 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
   </div>`;
   window._inpockLink=d.final_link||'';
+}
+async function setLinkHub(hub){
+  try{ await fetch('/api/link_hub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hub})}); }catch(e){}
+  refreshInpock();
 }
 function inpockCopy(){ try{ navigator.clipboard.writeText(window._inpockLink||''); }catch(e){} }
 
@@ -15309,13 +15322,14 @@ async function inpockModalOpen(){
   //   않는다. 대신 rel=noopener를 단 <a>를 만들어 클릭한다 — 보안(opener 차단)은 그대로 두고
   //   차단 여부는 브라우저가 알아서 사장님에게 알린다.
   const a=document.createElement('a');
-  a.href='https://link.inpock.co.kr/admin'; a.target='_blank'; a.rel='noopener';
+  const H = window._linkHub || {name:'인포크', admin:'https://link.inpock.co.kr/admin'};
+  a.href=H.admin; a.target='_blank'; a.rel='noopener';
   document.body.appendChild(a); a.click(); a.remove();
   const el = document.getElementById('inpockOpenMsg');
   if(el){
     el.textContent = copied
-      ? '📋 링크를 복사했습니다 — 새로 열린 인포크 창에서 붙여넣기(Ctrl+V)'
-      : '⚠️ 자동복사 실패 — 위 링크를 직접 복사해 인포크에 붙여넣으세요.';
+      ? '📋 링크를 복사했습니다 — 새로 열린 '+H.name+' 창에서 붙여넣기(Ctrl+V)'
+      : '⚠️ 자동복사 실패 — 위 링크를 직접 복사해 '+H.name+'에 붙여넣으세요.';
     el.style.color = copied ? 'var(--ok)' : 'var(--fire)';
   }
 }
