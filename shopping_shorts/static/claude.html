@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🤖 클로드형 · 숏템메이커</title>
+<!-- 클로드형(관제 234, 숏템MCP) — 고객 페이지. 내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만든다.
+     ★여기엔 프리셋·팩 목록을 적지 않는다. /api/claude/me/home 이 주인 함수(claude_portal.home)에서 엮어 준다.
+     ★원본 자산 다운로드 링크는 없다 — 팩은 **견본만**(저해상도·짧게·워터마크, /api/claude/me/preview). 원본은 영상 한 편마다
+       고객 PC 가 그 편에 필요한 것만 받는다(claude_portal.assets_for).
+     ★견본은 누를 때만 연다(소리는 미리 받지 않는다) — 한꺼번에 열면 속도 제한(탐지 A4·A10)에 걸린다. -->
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 90px;min-width:0;width:100%}
+h1{font-size:26px;margin:0 0 4px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--sub);font-size:14px;margin:0 0 12px}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:9px 0;display:flex;gap:6px;flex-wrap:wrap}
+nav a{color:var(--txt);text-decoration:none;font-size:13px;padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+nav a:hover{border-color:var(--accent)}
+section{padding:22px 0 4px;scroll-margin-top:60px}
+h2{margin:0 0 4px;font-size:19px} h2 small{color:var(--sub);font-weight:400;font-size:13px;margin-left:6px}
+h3{font-size:15px;margin:16px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px;margin-top:10px}
+.grid>*{min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;overflow-wrap:anywhere}
+.card .nm{font-size:17px;font-weight:800}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.sub,small{color:var(--sub)}
+.chip{display:inline-block;border:1px solid var(--line);background:var(--inset);border-radius:99px;padding:2px 9px;font-size:12px;margin:2px 4px 2px 0}
+.btn{font:inherit;font-size:14px;padding:7px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer}
+.btn:hover{border-color:var(--accent)} .btn.pri{background:var(--accent);color:#06221b;border-color:var(--accent);font-weight:800}
+.btn.sm{font-size:12.5px;padding:4px 10px;border-radius:8px} .btn.warn{border-color:#6a4a10;color:var(--gold)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 16px}
+.form>label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub);min-width:0}
+.form>label.full{grid-column:1/-1}
+input[type=text],select,input[type=number]{font:inherit;font-size:14px;color:var(--txt);background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;min-width:0}
+input[type=color]{width:48px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--inset);padding:2px}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:8px;margin-top:6px;max-height:232px;overflow-y:auto;padding-right:4px}
+.form>label>.chip{align-self:flex-start}
+.pick button{font:inherit;font-size:13px;text-align:left;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer;overflow-wrap:anywhere}
+.pick button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.fontpv{background:#fff;border-radius:10px;border:1px solid var(--line);margin-top:8px;min-height:60px;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;overflow:hidden}
+.fontpv img{max-width:100%;height:auto;display:block}
+.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(110px,45%),1fr));gap:8px;margin-top:8px}
+.tpl figure{margin:0;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/16px 16px;border:2px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer}
+.tpl figure.on{border-color:var(--accent)}
+.tpl img{width:100%;height:auto;display:block}
+.tpl figcaption{font-size:12px;background:var(--panel);color:var(--txt);padding:4px 6px}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.list.scroll{max-height:340px;overflow-y:auto;padding-right:4px}
+.li{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13.5px;min-width:0}
+.li>span{min-width:0;overflow-wrap:anywhere}
+.keybox{font-family:Consolas,monospace;font-size:13px;background:var(--inset);border:1px dashed var(--accent);border-radius:10px;padding:10px;word-break:break-all;margin-top:8px}
+.mono{font-family:Consolas,monospace;font-size:12px;color:var(--sub);word-break:break-all}
+.msg{font-size:13px;margin-left:6px} .msg.ok{color:var(--ok)} .msg.bad{color:var(--fire)}
+.notice{border:1px solid #6a4a10;background:#171205;color:#f6efe0;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:13.5px}
+:root[data-theme="light"] .notice{background:#fff7e0;color:#4a3800}
+.err{color:var(--fire);display:none;margin:10px 0} .err.on{display:block}
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;background:var(--panel)}
+.steps li::before{content:counter(s) ". ";color:var(--accent);font-weight:700}
+code{font-family:Consolas,monospace;background:var(--inset);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px;word-break:break-all}
+video{width:100%;max-height:420px;background:#000;border-radius:10px;display:block;margin-top:8px}
+.empty{color:var(--sub);font-size:13px}
+@media (max-width:560px){.form{grid-template-columns:minmax(0,1fr)} h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 클로드형</h1>
+  <p class="lead">내 PC 의 Claude(데스크탑·코드)로 숏템 프리셋 영상을 만듭니다. 렌더는 전부 내 PC 에서 돌고, 여기서는 <b>프리셋 고르기 · 내 채널 옵션 저장 · 라이선스 · 설치팩</b>만 합니다.</p>
+  <nav>
+    <a href="#preset">① 프리셋</a><a href="#option">② 내 채널 옵션</a><a href="#packs">팩 둘러보기</a>
+    <a href="#license">③ 라이선스·기기</a><a href="#install">④ 설치</a><a href="#how">⑤ Claude 에서 쓰기</a>
+  </nav>
+  <div class="err" id="err"></div>
+  <div id="notices"></div>
+
+  <section id="preset">
+    <h2>① 프리셋 고르기 <small>틀(구조)은 프리셋이, 겉모습은 ② 내 채널 옵션이 정합니다</small></h2>
+    <div class="grid" id="presetCards"><div class="empty">불러오는 중…</div></div>
+    <h3>스타일</h3>
+    <div class="grid" id="styleCards"></div>
+    <h3>통과작 미리보기 <small>워터마크 견본 · 다운로드 없음</small></h3>
+    <div class="grid" id="resultCards"></div>
+  </section>
+
+  <section id="option">
+    <h2>② 내 채널 옵션 <small>프리셋 이름을 보고 내 채널만의 겉모습을 정해 두면 매 편이 통일됩니다</small></h2>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <select id="profSel" style="max-width:320px"></select>
+        <button class="btn sm" id="profNew">＋ 새 프로필</button>
+      </div>
+      <div class="form">
+        <label>프로필 이름<input type="text" id="oName" maxlength="30" placeholder="예: 내 채널 · 썰"></label>
+        <label>프리셋<select id="oPreset"></select></label>
+        <label>채널명(화면에 찍히는 이름)<input type="text" id="oChannel" maxlength="20" placeholder="예: 우리집살림"></label>
+        <label>색<span class="row"><span>강조</span><input type="color" id="oAccent" value="#37e0bd"><span>머리 띠</span><input type="color" id="oHeader" value="#0f3b5f"><label class="row" style="color:var(--sub)"><input type="checkbox" id="oColorOn">색 바꾸기</label></span></label>
+        <label class="full">제목 글꼴 <span id="oTitleFontNm" class="chip">틀 그대로</span>
+          <div class="pick" id="oTitleFont"></div><div class="fontpv" id="oTitleFontPv">글꼴 이름을 누르면 견본이 보입니다</div></label>
+        <label class="full">자막 글꼴 <span id="oCapFontNm" class="chip">틀 그대로</span>
+          <div class="pick" id="oCapFont"></div><div class="fontpv" id="oCapFontPv">글꼴 이름을 누르면 견본이 보입니다</div></label>
+        <label>자막 쌓기<select id="oCapMode"><option value="">틀 그대로</option><option value="accumulate">쌓기(줄이 이어 붙음)</option><option value="replace">바꾸기(한 줄씩 교체)</option></select></label>
+        <label>자막 등장 효과<select id="oCapEnter"></select></label>
+        <label>단어 강조<select id="oCapEmph"></select></label>
+        <label>자막 외곽선(px)<input type="number" id="oCapOutline" min="0" max="12" placeholder="틀 그대로"></label>
+        <label>자막팩<select id="oCapPack"></select></label>
+        <label>장면 효과 자동<select id="oSceneFx"><option value="">기본(끔)</option><option value="1">켬</option><option value="0">끔</option></select></label>
+        <label>목소리<span class="row" style="flex-wrap:nowrap"><select id="oVoice"></select><button class="btn sm" id="oVoicePlay" type="button">▶</button></span></label>
+        <label>말 빠르기<input type="number" id="oTempo" min="0.8" max="1.8" step="0.01" placeholder="기본 1.36"></label>
+        <label>효과음 팩<span class="row" style="flex-wrap:nowrap"><select id="oSfx"></select><button class="btn sm" id="oSfxPlay" type="button">▶</button></span></label>
+        <label>배경음<span class="row" style="flex-wrap:nowrap"><select id="oBgm"></select><button class="btn sm" id="oBgmPlay" type="button">▶</button></span></label>
+        <label>배경음 크기(dB)<input type="number" id="oBgmGain" min="-30" max="-6" placeholder="기본 -18"></label>
+        <label>짤 종류<span id="oMeme" class="row"></span></label>
+        <label class="full">꾸미기 템플릿 <span id="oTplNm" class="chip">없음</span><div class="tpl" id="oTpl"></div></label>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="profSave">저장</button><span class="msg" id="profMsg"></span></div>
+    </div>
+  </section>
+
+  <section id="packs">
+    <h2>팩 둘러보기 <small>전부 견본입니다(짧게·저음질·워터마크). 원본은 영상 만들 때 그 편에 필요한 것만 내 PC 로 갑니다</small></h2>
+    <h3>효과음 팩 <small id="nSfx"></small></h3><div class="list scroll" id="pkSfx"></div>
+    <h3>배경음 <small id="nBgm"></small></h3><div class="list scroll" id="pkBgm"></div>
+    <h3>목소리 <small id="nVoice"></small></h3><div class="list scroll" id="pkVoice"></div>
+    <h3>짤 <small id="nMeme"></small></h3><div class="list" id="pkMeme"></div>
+    <h3>자막팩·자막 효과</h3><div class="grid" id="pkCap"></div>
+  </section>
+
+  <section id="license">
+    <h2>③ 라이선스·기기 <small>키 1개 = 기기 2대 · 동시에 1편만</small></h2>
+    <div class="grid">
+      <div class="card"><div class="nm">라이선스 키</div><div id="licState" class="sub">불러오는 중…</div>
+        <div class="row" style="margin-top:10px"><button class="btn pri" id="licIssue">키 발급</button><span class="msg" id="licMsg"></span></div>
+        <div id="licKey"></div></div>
+      <div class="card"><div class="nm">등록 기기 <small id="devCount"></small></div><div class="list" id="devList"></div>
+        <div class="sub" style="margin-top:8px">3대째 기기는 막힙니다 — 여기서 한 대를 빼면 새 기기가 들어갑니다.</div></div>
+      <div class="card"><div class="nm">지금 작업 중</div><div id="leaseState" class="sub"></div>
+        <div class="row" style="margin-top:10px"><button class="btn sm warn" id="leaseFree">강제 해제</button><span class="msg" id="leaseMsg"></span></div>
+        <div class="sub" style="margin-top:6px">다른 기기에서 시작이 막히면 앞 작업이 끝나거나 3분 뒤 됩니다. 급하면 강제 해제 — 앞 기기는 그 단계에서 멈추고 나중에 이어집니다.</div></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>④ 설치팩 <small>실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)가 전부 들어 있습니다</small></h2>
+    <div class="grid" id="instCards"></div>
+  </section>
+
+  <section id="how">
+    <h2>⑤ Claude 에서 쓰기</h2>
+    <div class="grid">
+      <div class="card"><div class="nm">Claude 데스크탑</div>
+        <ol style="padding-left:18px;margin:6px 0">
+          <li>설치팩 실행 → 끝에 뜨는 Claude 설치 화면에서 <b>라이선스 키</b> 붙여넣기</li>
+          <li>채팅에 <code>숏템 준비 점검해줘</code></li>
+          <li><code>내 채널(프로필 이름)로 이 영상 만들어줘 &lt;유튜브 주소&gt;</code></li>
+        </ol></div>
+      <div class="card"><div class="nm">Claude Code</div>
+        <ol style="padding-left:18px;margin:6px 0">
+          <li>같은 설치팩 실행</li>
+          <li>설치 폴더의 <code>시작.md</code> 를 Claude Code 입력창에 끌어다 놓고 엔터</li>
+          <li><code>/shortem:setup</code> → <code>/shortem:make &lt;프로필&gt; &lt;소재&gt;</code></li>
+        </ol></div>
+    </div>
+    <h3>진행 순서 <small>Claude 화면에는 이 순서만 보입니다</small></h3>
+    <ul class="steps" id="steps"></ul>
+    <p class="sub">사람이 정하는 자리는 3곳 — 소재 고르기 · 대본 확인 · 완성본 확인. <span id="guideLink"></span></p>
+  </section>
+</div>
+<script src="/sidebar.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=v=>(v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let H=null, TOK=null, TOKEXP=0, CUR=null, AUD=null;
+const OPT={title_font:'',caption_font:'',template:''};
+
+async function token(){
+  const now=Date.now()/1000;
+  if(TOK && TOKEXP-now>60) return TOK;
+  const r=await fetch('/api/claude/me/preview_token'); const d=await r.json();
+  TOK=d.t; TOKEXP=d.exp; return TOK;
+}
+async function pv(kind,id){ return '/api/claude/me/preview/'+kind+'/'+encodeURIComponent(id)+'?t='+encodeURIComponent(await token()); }
+async function play(kind,id,btn){
+  if(AUD){ AUD.pause(); if(AUD._btn) AUD._btn.textContent='▶'; if(AUD._id===kind+id){ AUD=null; return; } }
+  if(!id){ return; }
+  const a=new Audio(await pv(kind,id)); a._id=kind+id; a._btn=btn; AUD=a;
+  if(btn) btn.textContent='■';
+  a.onended=()=>{ if(btn) btn.textContent='▶'; AUD=null; };
+  a.play().catch(()=>{ if(btn) btn.textContent='▶'; showErr('견본을 열지 못했습니다(잠시 뒤 다시)'); });
+}
+function showErr(m){ const e=$('err'); e.textContent=m; e.classList.add('on'); }
+async function api(url,opt){
+  const r=await fetch(url,opt); let d={}; try{ d=await r.json(); }catch(e){}
+  if(!r.ok) throw new Error(d.msg||('오류 '+r.status));
+  return d;
+}
+
+function renderPresets(){
+  const box=$('presetCards');
+  if(!H.presets.length){ box.innerHTML='<div class="empty">지금 고를 수 있는 프리셋이 없습니다</div>'; return; }
+  box.innerHTML=H.presets.map(p=>'<div class="card'+(CUR&&CUR.preset_id===p.id?' sel':'')+'"><div class="nm">'+esc(p.brand)+'</div>'
+    +'<div class="sub">'+esc(p.label)+'</div>'
+    +'<div style="margin-top:6px">'+(p.results.length?'<span class="chip">통과작 '+p.results.length+'편</span>':'<span class="chip">통과작 준비 중</span>')+'</div>'
+    +'<div class="row" style="margin-top:8px"><button class="btn sm" data-pick="'+esc(p.id)+'">이 프리셋으로</button></div></div>').join('');
+  box.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ $('oPreset').value=b.dataset.pick; location.hash='#option'; });
+  $('styleCards').innerHTML=H.styles.map(s=>'<div class="card"><div class="nm">'+esc(s.name)+'</div><div>'+esc(s.desc)+'</div>'
+    +(s.audio_kinds.length?'<div style="margin-top:6px">'+s.audio_kinds.map(a=>'<span class="chip">'+esc(a)+'</span>').join('')+'</div>':'')
+    +(s.example?'<div style="margin-top:6px"><a href="'+esc(s.example)+'" target="_blank" rel="noopener" style="color:var(--accent)">예시 보기</a></div>':'')+'</div>').join('')||'<div class="empty">스타일 준비 중</div>';
+  $('resultCards').innerHTML=H.results.map(r=>'<div class="card"><div class="nm">'+esc(r.brand)+' <small>'+esc(r.style||'')+'</small></div>'
+    +'<div class="sub">'+(r.seconds?esc(Math.round(r.seconds))+'초 · ':'')+esc(r.date||'')+'</div>'
+    +(r.preview?'<button class="btn sm" style="margin-top:8px" data-res="'+esc(r.preview)+'">▶ 견본 보기</button><div data-slot="'+esc(r.preview)+'"></div>':'<div class="empty" style="margin-top:6px">견본 준비 중</div>')+'</div>').join('')||'<div class="empty">통과작 준비 중</div>';
+  $('resultCards').querySelectorAll('[data-res]').forEach(b=>b.onclick=async()=>{
+    const slot=$('resultCards').querySelector('[data-slot="'+b.dataset.res+'"]');
+    slot.innerHTML='<video controls playsinline controlsList="nodownload" disablePictureInPicture oncontextmenu="return false" src="'+esc(await pv('result',b.dataset.res))+'"></video>';
+    b.remove();
+  });
+}
+
+function fontPicker(boxId,pvId,nmId,key){
+  const box=$(boxId);
+  const items=[{id:'',name:'틀 그대로'}].concat(H.packs.fonts);
+  box.innerHTML=items.map(f=>'<button type="button" data-f="'+esc(f.id)+'" class="'+(OPT[key]===f.id?'on':'')+'">'+esc(f.name)+'</button>').join('');
+  box.querySelectorAll('button').forEach(b=>b.onclick=async()=>{
+    OPT[key]=b.dataset.f; box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    $(nmId).textContent=b.dataset.f?b.textContent:'틀 그대로';
+    const f=H.packs.fonts.find(x=>x.id===b.dataset.f);
+    const pvBox=$(pvId);
+    if(!f){ pvBox.textContent='틀에 적힌 글꼴을 그대로 씁니다'; return; }
+    if(!f.preview){ pvBox.textContent='견본 준비 중'; return; }
+    pvBox.innerHTML='<img alt="'+esc(f.name)+' 견본" src="'+esc(await pv('font',f.preview))+'">';
+  });
+  const cur=H.packs.fonts.find(x=>x.id===OPT[key]); $(nmId).textContent=cur?cur.name:(OPT[key]||'틀 그대로');
+}
+
+async function renderTemplates(){
+  const box=$('oTpl');
+  const items=[{id:'none',name:'없음',preview:null}].concat(H.packs.templates);
+  const html=[];
+  for(const t of items){
+    html.push('<figure data-t="'+esc(t.id)+'" class="'+((OPT.template||'none')===t.id?'on':'')+'">'
+      +(t.preview?'<img loading="lazy" alt="'+esc(t.name)+'" src="'+esc(await pv('template',t.preview))+'">':'<div style="aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;color:#666;font-size:12px">'+(t.id==='none'?'없음':'견본 준비 중')+'</div>')
+      +'<figcaption>'+esc(t.name)+'</figcaption></figure>');
+  }
+  box.innerHTML=html.join('');
+  box.querySelectorAll('figure').forEach(f=>f.onclick=()=>{ OPT.template=f.dataset.t; box.querySelectorAll('figure').forEach(x=>x.classList.toggle('on',x===f)); $('oTplNm').textContent=f.querySelector('figcaption').textContent; });
+  const cur=items.find(x=>x.id===(OPT.template||'none')); $('oTplNm').textContent=cur?cur.name:'없음';
+}
+
+function opt(sel,list,cur,first){
+  $(sel).innerHTML=(first?'<option value="">'+esc(first)+'</option>':'')+list.map(o=>'<option value="'+esc(o[0])+'"'+(o[0]===cur?' selected':'')+'>'+esc(o[1])+'</option>').join('');
+}
+
+function fillForm(p){
+  CUR=p||null;
+  const o=(p&&p.options)||{}; const b=o.brand||{}, t=o.text||{}, c=t.caption||{}, ts=o.tts||{}, bg=o.bgm||{};
+  $('oName').value=p?p.name:'';
+  opt('oPreset',H.presets.map(x=>[x.id,x.brand+' · '+x.label]),p?p.preset_id:(H.presets[0]||{}).id);
+  $('oChannel').value=b.channel_name||'';
+  $('oColorOn').checked=!!(b.colors&&(b.colors.accent||b.colors.header));
+  if(b.colors&&b.colors.accent) $('oAccent').value=b.colors.accent; if(b.colors&&b.colors.header) $('oHeader').value=b.colors.header;
+  OPT.title_font=t.title_font||''; OPT.caption_font=t.caption_font||''; OPT.template=o.template||'none';
+  fontPicker('oTitleFont','oTitleFontPv','oTitleFontNm','title_font'); fontPicker('oCapFont','oCapFontPv','oCapFontNm','caption_font');
+  $('oCapMode').value=c.mode||'';
+  const mot=[['none','없음']].concat(H.packs.caption_motions.map(m=>[m,m]));
+  opt('oCapEnter',mot,c.enter||'','틀 그대로'); opt('oCapEmph',mot,c.emphasis||'','틀 그대로');
+  $('oCapOutline').value=(c.outline_px!=null?c.outline_px:'');
+  opt('oCapPack',[['none','쓰지 않음']].concat(H.packs.caption_packs.map(x=>[x.id,x.label+' — '+x.desc])),o.caption_pack||'','기본');
+  $('oSceneFx').value=(o.scene_fx&&o.scene_fx.auto!=null)?(o.scene_fx.auto?'1':'0'):'';
+  opt('oVoice',H.packs.voices.map(v=>[v.id,v.name+(v.variant?' ('+v.variant+')':'')+' — '+v.desc]),ts.voice||'','기본(필재)');
+  $('oTempo').value=ts.tempo||'';
+  opt('oSfx',H.packs.sfx.map(s=>[s.id,s.id+' · '+s.files.join(' ')]),o.sfx_pack||'','기본(팩01)');
+  opt('oBgm',[['none','배경음 없음']].concat(H.packs.bgm.map(x=>[x.id,x.title+(x.artist?' — '+x.artist:'')])),bg.track||'','기본');
+  $('oBgmGain').value=(bg.gain_db!=null?bg.gain_db:'');
+  const kinds=(o.meme_pool&&o.meme_pool.kinds)||[];
+  $('oMeme').innerHTML=H.packs.memes.length?H.packs.memes.map(m=>'<label class="row" style="color:var(--txt);font-size:13px"><input type="checkbox" value="'+esc(m.kind)+'"'+(kinds.includes(m.kind)?' checked':'')+'>'+esc(m.kind)+' <small>'+m.count+'</small></label>').join(''):'<span class="empty">짤 팩 준비 중</span>';
+  renderTemplates(); renderPresets();
+}
+
+function collect(){
+  const o={};
+  const ch=$('oChannel').value.trim(); const brand={};
+  if(ch) brand.channel_name=ch;
+  if($('oColorOn').checked) brand.colors={accent:$('oAccent').value,header:$('oHeader').value};
+  if(Object.keys(brand).length) o.brand=brand;
+  const text={}; if(OPT.title_font) text.title_font=OPT.title_font; if(OPT.caption_font) text.caption_font=OPT.caption_font;
+  const cap={}; if($('oCapMode').value) cap.mode=$('oCapMode').value; if($('oCapEnter').value) cap.enter=$('oCapEnter').value;
+  if($('oCapEmph').value) cap.emphasis=$('oCapEmph').value; if($('oCapOutline').value!=='') cap.outline_px=Number($('oCapOutline').value);
+  if(Object.keys(cap).length) text.caption=cap; if(Object.keys(text).length) o.text=text;
+  const tts={}; if($('oVoice').value) tts.voice=$('oVoice').value; if($('oTempo').value) tts.tempo=Number($('oTempo').value);
+  if(Object.keys(tts).length) o.tts=tts;
+  if($('oSfx').value) o.sfx_pack=$('oSfx').value;
+  const bg={}; if($('oBgm').value) bg.track=$('oBgm').value; if($('oBgmGain').value!=='') bg.gain_db=Number($('oBgmGain').value);
+  if(Object.keys(bg).length) o.bgm=bg;
+  const kinds=[...$('oMeme').querySelectorAll('input:checked')].map(x=>x.value); if(kinds.length) o.meme_pool={kinds};
+  if(OPT.template && OPT.template!=='none') o.template=OPT.template;
+  if($('oCapPack').value) o.caption_pack=$('oCapPack').value;
+  if($('oSceneFx').value) o.scene_fx={auto:$('oSceneFx').value==='1'};
+  return o;
+}
+
+function renderProfiles(selId){
+  const ps=H.profiles;
+  $('profSel').innerHTML=(ps.length?'':'<option value="">저장된 프로필 없음</option>')+ps.map(p=>'<option value="'+esc(p.profile_id)+'">'+esc(p.name)+' · v'+p.version+'</option>').join('');
+  const cur=ps.find(p=>p.profile_id===selId)||ps[0]||null;
+  if(cur) $('profSel').value=cur.profile_id;
+  fillForm(cur);
+}
+
+function renderPacks(){
+  const P=H.packs;
+  $('nSfx').textContent=P.sfx.length+'팩'; $('nBgm').textContent=P.bgm.length+'곡'; $('nVoice').textContent=P.voices.length+'개'; $('nMeme').textContent=P.memes.reduce((a,m)=>a+m.count,0)+'개';
+  $('pkSfx').innerHTML=P.sfx.map(s=>'<div class="li"><span><b>'+esc(s.id)+'</b> <small>'+esc(s.files.join(' · '))+'</small></span>'+(s.preview?'<button class="btn sm" data-k="sfx" data-i="'+esc(s.preview)+'">▶</button>':'<small>준비 중</small>')+'</div>').join('')||'<div class="empty">준비 중</div>';
+  $('pkBgm').innerHTML=P.bgm.map(s=>'<div class="li"><span>'+esc(s.title)+' <small>'+esc(s.artist)+'</small></span>'+(s.preview?'<button class="btn sm" data-k="bgm" data-i="'+esc(s.preview)+'">▶</button>':'<small>준비 중</small>')+'</div>').join('')||'<div class="empty">준비 중</div>';
+  $('pkVoice').innerHTML=P.voices.map(s=>'<div class="li"><span>'+esc(s.name)+(s.variant?' <small>'+esc(s.variant)+'</small>':'')+' <small>'+esc(s.desc)+'</small></span>'+(s.preview?'<button class="btn sm" data-k="voice" data-i="'+esc(s.preview)+'">▶</button>':'<small>준비 중</small>')+'</div>').join('')||'<div class="empty">준비 중</div>';
+  $('pkMeme').innerHTML=P.memes.length?P.memes.map(m=>'<div class="li" style="flex-wrap:wrap"><span>'+esc(m.kind)+' <small>'+m.count+'개</small></span>'+(m.sprites.length?'<button class="btn sm" data-meme="'+esc(m.kind)+'">견본 보기</button>':'<small>준비 중</small>')+'<div data-ms="'+esc(m.kind)+'" style="width:100%"></div></div>').join(''):'<div class="empty">짤 팩 준비 중</div>';
+  $('pkCap').innerHTML=P.caption_packs.map(c=>'<div class="card"><div class="nm">'+esc(c.label)+'</div><div class="sub">'+esc(c.desc)+'</div></div>').join('')
+    +'<div class="card"><div class="nm">등장 효과 '+P.caption_motions.length+'종</div><div>'+P.caption_motions.map(m=>'<span class="chip">'+esc(m)+'</span>').join('')+'</div></div>';
+  document.querySelectorAll('#packs [data-k]').forEach(b=>b.onclick=()=>play(b.dataset.k,b.dataset.i,b));
+  document.querySelectorAll('#packs [data-meme]').forEach(b=>b.onclick=async()=>{
+    const m=P.memes.find(x=>x.kind===b.dataset.meme); const slot=document.querySelector('[data-ms="'+CSS.escape(b.dataset.meme)+'"]');
+    const imgs=[]; for(const s of m.sprites.slice(0,2)) imgs.push('<img style="max-width:100%;border-radius:8px;margin-top:6px" alt="짤 견본" src="'+esc(await pv('meme',s))+'">');
+    slot.innerHTML=imgs.join(''); b.remove();
+  });
+}
+
+function fmtDate(t){ if(!t) return '-'; const d=new Date(t*1000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+function renderLicense(){
+  const L=H.license;
+  $('licState').innerHTML=L.has_key?('발급됨 · 만료 '+esc(fmtDate(L.expires))+(L.revoked?' · <b style="color:var(--fire)">회수됨</b>':'')+(L.suspended?' · <b style="color:var(--fire)">일시 정지</b>':'')+'<br><small>키는 발급할 때 한 번만 보입니다. 잃어버리면 새로 발급하세요(옛 키는 바로 못 씁니다).</small>'):'아직 발급 안 됨';
+  $('licIssue').textContent=L.has_key?'새 키 발급':'키 발급';
+  $('devCount').textContent=H.devices.length+' / '+H.devices_max;
+  $('devList').innerHTML=H.devices.length?H.devices.map(d=>'<div class="li"><span><b>'+esc(d.name||'이름 없음')+'</b> <small>'+d.slot+'번 칸 · 마지막 '+esc(fmtDate(d.last_seen))+'</small></span><button class="btn sm warn" data-dev="'+esc(d.id)+'">빼기</button></div>').join(''):'<div class="empty">등록된 기기 없음 — 설치팩에서 키를 넣으면 등록됩니다</div>';
+  $('devList').querySelectorAll('[data-dev]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('이 기기를 뺄까요? 그 기기에서는 다시 등록해야 쓸 수 있습니다.')) return;
+    try{ await api('/api/claude/me/device/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device_id:b.dataset.dev})}); await load(); }
+    catch(e){ showErr(e.message); }
+  });
+  $('leaseState').textContent=H.lease?('작업 중: '+(H.lease.device||'기기')+(H.lease.step?' · '+H.lease.step:'')):'지금 작업 중인 기기 없음';
+  $('leaseFree').disabled=!H.lease;
+}
+
+function renderInstall(){
+  const ua=navigator.userAgent||''; const isMac=/Mac/i.test(ua);
+  const names={'win-x64':'윈도 (64비트)','mac-arm64':'맥 (애플 실리콘 M1~)','mac-x64':'맥 (인텔)'};
+  const want=['win-x64','mac-arm64','mac-x64'];
+  const by={}; (H.installers||[]).forEach(i=>by[i.os]=i);
+  $('instCards').innerHTML=want.map(os=>{ const i=by[os]; const mine=(isMac&&os.startsWith('mac'))||(!isMac&&os==='win-x64');
+    return '<div class="card'+(mine?' sel':'')+'"><div class="nm">'+names[os]+(mine?' <small>내 컴퓨터</small>':'')+'</div>'
+      +(i&&i.ready?('<div class="sub">버전 '+esc(i.version||'')+(i.size?' · '+Math.round(i.size/1048576)+'MB':'')+'</div>'
+        +'<div class="mono" style="margin-top:6px">sha256 '+esc(i.sha256||'')+'</div>'
+        +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
+       :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');
+}
+
+async function load(selId){
+  try{ H=await api('/api/claude/me/home'); }
+  catch(e){ showErr(e.message||'불러오지 못했습니다'); $('presetCards').innerHTML='<div class="empty">'+esc(e.message||'')+'</div>'; return; }
+  $('err').classList.remove('on');
+  $('notices').innerHTML=(H.notices||[]).map(n=>'<div class="notice">⚠️ '+esc(n.title)+(n.level==='suspend'?' — 사용이 잠시 멈췄습니다. 관리자 확인 뒤 풀립니다':' — 평소와 다른 사용이 보였습니다')+'</div>').join('');
+  renderProfiles(selId||(CUR&&CUR.profile_id)); renderPacks(); renderLicense(); renderInstall();
+  $('steps').innerHTML=H.steps.map(s=>'<li>'+esc(s)+'</li>').join('');
+  $('guideLink').innerHTML=H.guide?'<a href="'+esc(H.guide)+'" target="_blank" rel="noopener" style="color:var(--accent)">그림 안내 보기</a>':'그림 안내는 준비 중입니다.';
+}
+
+$('profSel').onchange=()=>fillForm(H.profiles.find(p=>p.profile_id===$('profSel').value));
+$('profNew').onclick=()=>{ $('profSel').value=''; fillForm(null); $('oName').focus(); };
+$('profSave').onclick=async()=>{
+  const m=$('profMsg'); m.className='msg'; m.textContent='저장 중…';
+  const body={name:$('oName').value.trim(),preset_id:$('oPreset').value,options:collect()};
+  if(CUR) body.profile_id=CUR.profile_id;
+  try{ const d=await api('/api/claude/me/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+       m.className='msg ok'; m.textContent='저장했습니다(v'+d.version+')'; await load(d.profile_id); }
+  catch(e){ m.className='msg bad'; m.textContent=e.message; }
+};
+$('licIssue').onclick=async()=>{
+  if(H.license.has_key && !confirm('새 키를 발급하면 지금 키는 바로 못 쓰게 됩니다. 계속할까요?')) return;
+  const m=$('licMsg'); m.className='msg'; m.textContent='';
+  try{ const d=await api('/api/claude/me/license/issue',{method:'POST'});
+       $('licKey').innerHTML='<div class="keybox" id="keyTxt">'+esc(d.key)+'</div><div class="row" style="margin-top:6px"><button class="btn sm" id="keyCopy">복사</button><small>이 창을 닫으면 다시 볼 수 없습니다</small></div>';
+       $('keyCopy').onclick=()=>{ navigator.clipboard.writeText(d.key).then(()=>{ $('keyCopy').textContent='복사됨'; }); };
+       H.license.has_key=true; m.className='msg ok'; m.textContent='발급했습니다'; }
+  catch(e){ m.className='msg bad'; m.textContent=e.message; }
+};
+$('leaseFree').onclick=async()=>{
+  if(!confirm('작업 중인 기기를 강제로 멈출까요? 그 기기는 지금 단계에서 멈추고 나중에 이어집니다.')) return;
+  try{ await api('/api/claude/me/lease/force_release',{method:'POST'}); $('leaseMsg').className='msg ok'; $('leaseMsg').textContent='해제했습니다'; await load(); }
+  catch(e){ $('leaseMsg').className='msg bad'; $('leaseMsg').textContent=e.message; }
+};
+$('oVoicePlay').onclick=()=>{ const v=H.packs.voices.find(x=>x.id===($('oVoice').value||'tc-piljae-stable')); play('voice',v&&v.preview,$('oVoicePlay')); };
+$('oSfxPlay').onclick=()=>{ const s=H.packs.sfx.find(x=>x.id===($('oSfx').value||'팩01')); play('sfx',s&&s.preview,$('oSfxPlay')); };
+$('oBgmPlay').onclick=()=>{ const s=H.packs.bgm.find(x=>x.id===$('oBgm').value)||H.packs.bgm.find(x=>x.id==='qiuqiu'); play('bgm',s&&s.preview,$('oBgmPlay')); };
+load();
+</script>
+</body>
+</html>

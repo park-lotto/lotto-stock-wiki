@@ -13872,7 +13872,9 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
             or path.startswith("/api/find/frame/")
-            or path.startswith("/api/help/media/")):
+            or path.startswith("/api/help/media/")
+            # 클로드형 고객 PC 경로(관제 234) — 등급은 라이선스 키로 판정한다(claude_portal). 미들웨어 공개 접두사와 짝
+            or (path.startswith("/api/claude/") and not path.startswith("/api/claude/me/"))):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
     #   위 submit·mine과 같은 이유로 등급 게이트에서 빼야 한다 — 권한은 핸들러가
@@ -16286,7 +16288,10 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
             or path.startswith("/api/share/seo/")   # 제목·설명·태그(폰에서 복사·카톡, 2026-10-18)
-            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
+            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")
+            # 클로드형(관제 234): 고객 PC 로컬 MCP 가 쿠키 없이 라이선스 키(Bearer)로 부른다 — 라우트(claude_portal)가 키를 직접 검사.
+            #   /api/claude/me/* 는 페이지용이라 여기서 빼고 로그인 세션을 그대로 요구한다.
+            or (path.startswith("/api/claude/") and not path.startswith("/api/claude/me/"))):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
@@ -17154,7 +17159,19 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 모션그래픽팩(관제 222, 2026-10-17) — 효과 탭 '🎞 모션그래픽' 칸. ""끔 · "admin" · "11,42" · "1" 전체
                        "mograph_enabled",
                        # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
-                       "bgm_lib_enabled"}
+                       "bgm_lib_enabled",
+                       # 클로드형(관제 234, 숏템MCP) — 고객 PC 라이선스·자산·/claude 페이지. ""끔(기본) · "admin" 관리자만 · "11,42" · "1" 전체
+                       "claude_portal_enabled",
+                       # 클로드형 자산 내려받기 킬스위치 — ""켬(포털 스위치를 따른다) · "0" 전부 멈춤
+                       "claude_assets_enabled",
+                       # 라이선스 전역 판(kv) — 숫자를 올리면 전 고객 키가 무효(재발급 필요)
+                       "license_kv",
+                       # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
+                       "claude_presets_off",
+                       # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
+                       "claude_min_engine", "claude_min_installer",
+                       # 클로드형 이상 행동 임계값(JSON, 설계 §7-9 초기안을 덮어쓴다)
+                       "claude_anomaly_thresholds"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -18559,6 +18576,211 @@ def api_admin_shortem_preset_doc(request: Request, path: str = ""):
         return JSONResponse({"error": "목록에 없는 문서"}, status_code=404)
     except OSError:
         return JSONResponse({"error": "문서 파일이 서버에 없다"}, status_code=404)
+
+
+# ── 클로드형(관제 234, 숏템MCP) — 고객 PC(로컬 MCP) REST + 고객 페이지 /claude + 관리자 경보 ──
+#    판단은 전부 shopping_shorts/claude_portal.py(라이선스·기기·임대·자산·견본·탐지 각 주인 하나). 여기는 부르기만 한다.
+#    ★claude_portal 은 함수 안에서 import 한다(모듈 수준 import·호출을 늘리지 않는다 — 영상 관문 규약).
+#    ★고객 PC 경로(/api/claude/*, me 제외)는 미들웨어 공개 접두사 — 쿠키 대신 라이선스 키를 claude_portal 이 직접 본다.
+def _claude_json(st_body):
+    st, body = st_body
+    return JSONResponse(body, status_code=st, headers={"Cache-Control": "no-store"})
+
+
+def _claude_me(request):
+    """페이지 라우트 공통 — (cid, store, 거절응답|None). 로그인 세션 + claude_portal_enabled 스위치."""
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None:
+        return None, None, JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
+    st = Store(DB_PATH)
+    if not _setting_gate(st, "claude_portal_enabled", cid):
+        return cid, st, JSONResponse({"ok": False, "code": "disabled", "msg": "클로드형은 아직 열리지 않았습니다"}, status_code=503)
+    return cid, st, None
+
+
+async def _claude_body(request):
+    try:
+        b = await request.json()
+    except Exception:      # noqa: BLE001 — 본문이 JSON 이 아니면 빈 본문(판단 함수가 bad_request 로 거절한다)
+        return {}
+    return b if isinstance(b, dict) else {}
+
+
+@app.get("/api/claude/license")
+def api_claude_license(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.license, _cp.ctx_from_request(request, _client_ip(request)), Store(DB_PATH)))
+
+
+@app.post("/api/claude/lease")
+async def api_claude_lease(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.lease, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/api/claude/assets")
+def api_claude_assets(request: Request, profile: str = "", job: str = "", lease: str = "", extra: str = ""):
+    from shopping_shorts import claude_portal as _cp
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(_cp.call(_cp.assets, ctx, profile, job, lease or None, extra or None, Store(DB_PATH)))
+
+
+@app.get("/api/claude/pack/{asset_id:path}")
+def api_claude_pack(request: Request, asset_id: str, job: str = ""):
+    from shopping_shorts import claude_portal as _cp
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(_cp.call(_cp.pack_route, ctx, asset_id, job, Store(DB_PATH)))
+
+
+@app.post("/api/claude/feedback")
+async def api_claude_feedback(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.feedback, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/api/claude/blob/{token}")
+def api_claude_blob(token: str):
+    """원본 서명 URL(6h) — Range 허용. 견본(/api/claude/me/preview)과 다른 길·다른 저장소 접두사."""
+    from shopping_shorts import claude_portal as _cp
+    st, got = _cp.call(_cp.blob, token)
+    if st != 200:
+        return JSONResponse(got, status_code=st)
+    return FileResponse(str(got["file"]), media_type=got["media_type"], filename=got["name"],
+                        headers={"Cache-Control": "private, no-store"})
+
+
+@app.get("/claude", response_class=HTMLResponse)
+def _claude_page(request: Request):
+    return FileResponse(Path(__file__).parent / "static" / "claude.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/claude/me/home")
+def api_claude_me_home(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.home, cid, st))
+
+
+@app.post("/api/claude/me/profile")
+async def api_claude_me_profile(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.save_profile, cid, body, st))
+
+
+@app.post("/api/claude/me/license/issue")
+def api_claude_me_license_issue(request: Request):
+    """새 키(kv+1, 옛 키 즉시 무효). 키 원문은 이 응답에만 — 서버엔 해시만 남는다."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.issue_license, cid, st)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    return JSONResponse({"ok": True, "key": got["key"], "expires": got["expires"]}, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/claude/me/device/remove")
+async def api_claude_me_device_remove(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.remove_device, cid, body.get("device_id"), st))
+
+
+@app.post("/api/claude/me/lease/force_release")
+def api_claude_me_force_release(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.force_release, cid, st))
+
+
+@app.get("/api/claude/me/preview_token")
+def api_claude_me_preview_token(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.preview_token, cid))
+
+
+@app.get("/api/claude/me/preview/{kind}/{pid}")
+def api_claude_me_preview(request: Request, kind: str, pid: str, t: str = ""):
+    """견본만(저해상도·짧게·워터마크) — 세션 + 10분 토큰, Range 거부. 원본은 여기로 안 나간다."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.preview, cid, kind, pid, t, dict(request.headers), st)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    # FileResponse 는 Range 를 보고 206 조각으로 답한다 — 견본은 늘 통째 200(Accept-Ranges: none)으로만 보낸다
+    return Response(content=Path(got["file"]).read_bytes(), media_type=got["media_type"], headers=got["headers"])
+
+
+@app.get("/api/claude/me/installer/{os_id}")
+def api_claude_me_installer(request: Request, os_id: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.installer_file, os_id)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    return FileResponse(str(got["file"]), media_type="application/octet-stream", filename=got["name"])
+
+
+@app.get("/api/admin/claude/alerts")
+def api_admin_claude_alerts(request: Request, all: int = 0):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "alerts": _cp.list_alerts(Store(DB_PATH), include_resolved=bool(all))}
+
+
+@app.post("/api/admin/claude/alerts/resolve")
+async def api_admin_claude_alerts_resolve(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        aid = int(body.get("id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
+    return _cp.resolve_alert(aid, Store(DB_PATH))
+
+
+@app.post("/api/admin/claude/license/revoke")
+async def api_admin_claude_license_revoke(request: Request):
+    """cid 별 라이선스 회수(킬스위치 ③) — {cid, revoked: true|false}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _cp.set_revoked(cid, body.get("revoked", True) is not False, Store(DB_PATH))
 
 
 def _calcopy_resolve(url):
