@@ -49,6 +49,15 @@ def test_allowed_same_product_only_channel():
     assert not ma.allowed(cell("A", 3, product="similar"), "product", ITS, 1080)
 
 
+def test_demo_and_situation_kinds_10_18():
+    """10-18 사장님 '대사에 맞는 영상매칭이 안됐다' — 잇썸홈도 같은 종류 시연(demo)·문제 상황(situation) 칸을 받는다(짤·연상은 여전히 금지)."""
+    assert ma.allowed(cell("A", 3, product="similar"), "demo", ITS, 1080)     # 다른 브랜드 같은 종류 시연(물컵 진동 등)
+    assert not ma.allowed(cell("A", 3, product="no"), "demo", ITS, 1080)      # 시연인데 제품 종류가 안 보이면 아님
+    assert ma.allowed(cell("A", 3, product="no"), "situation", ITS, 1080)     # 출장 가방·호텔 욕실
+    assert not ma.allowed(cell("A", 3, product="no"), "meme", ITS, 1080)
+    assert not ma.allowed(cell("A", 3, product="no"), "situation", JAE, 1080)  # 재미썸홈은 similar 로 받는다
+
+
 # ── reuse_conflict (사장님 10-17) ──────────────────────────────────────────
 def test_reuse_conflict_red_within_3s():
     used = [("A", 10.0, 10.8)]
@@ -352,3 +361,58 @@ def test_gather_excludes_sibling_models(tmp_path):
     state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}}
     ma._gather([{"q": "Anbernic RG DS", "purpose": "product"}], N(tmp_path), state, lambda *a: None, ["RG DS Plus", "RG DDS"])
     assert state["previews"] == ["A"]
+
+
+# ── 대사↔장면 검수(fit) — 10-18 사장님 "대사에 맞는 편집포인트의 영상매칭이 안됐다" ──
+def test_select_fit_ban_drops_cell_for_that_token_only():
+    """검수에서 토막 0에 안 맞는다고 나온 칸(0)은 토막 0 후보에서만 빠지고 다음 후보(2)를 고른다. 이어 가기 대체로도 되살리지 않는다."""
+    ts = toks(2)
+    cells = {0: cell("A", 11.0), 1: cell("A", 13.0), 2: cell("B", 50.0)}
+    ranked = {0: [(0, 9), (2, 8)], 1: [(1, 8)]}
+    p0 = ma.select(ts, _needs(ts), ranked, cells, META, ITS)
+    assert p0[0]["cid"] == 0
+    p1 = ma.select(ts, _needs(ts), ranked, cells, META, ITS, fit_ban={0: {0}})
+    assert p1[0]["cid"] == 2 and p1[0]["vid"] == "B"
+    p2 = ma.select(toks(2), _needs(ts), {0: [(0, 9)], 1: []}, cells, META, ITS, fit_ban={1: {0}})
+    assert p2[1].get("none")          # 토막 1 은 새 후보가 없고, 앞 컷(칸 0) 이어 가기도 금지 → 빈칸(사람이 고른다)
+
+
+def test_fit_judge_retries_missing_numbers(tmp_path):
+    """첫 답에 번호가 빠지면 한 번 더 묻는다(10-18 기준선: 10칸 묶음이 통째로 답 없음)."""
+    calls = []
+
+    def fake(parts, prompt, tag):
+        calls.append(tag)
+        if len(calls) == 1:
+            return {"fits": [{"n": 0, "score": 9, "seen": "a", "want": "a"}]}, None
+        return {"fits": [{"n": 1, "score": 3, "seen": "b", "want": "c"}]}, None
+    r = ma.fit_judge([{"img": "", "piece": "x", "line": "x"}, {"img": "", "piece": "y", "line": "y"}], tmp_path, ma.LLM(fake))
+    assert len(calls) == 2 and r[0]["score"] == 9 and r[1]["score"] == 3
+
+
+def test_match_lines_retries_empty_answer():
+    """짝짓기 답이 비면 한 번 더 묻는다(10-18 첫 줄 4토막 후보 0 → 빈칸)."""
+    ts = toks(2)
+    cells = {0: cell("A", 11.0), 1: cell("B", 20.0)}
+    calls = []
+
+    def fake(parts, prompt, tag):
+        calls.append(tag)
+        return ({"picks": [{"tok": 0, "cands": [[0, 9]]}, {"tok": 1, "cands": [[1, 8]]}]}, None) if len(calls) > 1 else ({}, None)
+    r = ma.match_lines(ts, _needs(ts), cells, META, ITS, ma.LLM(fake), log=lambda *a: None)
+    assert len(calls) == 2 and r[0][0][0] == 0 and r[1][0][0] == 1
+
+
+def test_eye_rescue_reranks_by_picture(tmp_path):
+    """빈칸·미달 토막은 후보 칸 그림을 대사와 직접 채점해 맞는 칸(≥FIT_MIN)을 앞으로, 안 맞는 칸은 그 토막에서 뺀다."""
+    ts = toks(1)
+    cells = {0: cell("A", 11.0), 1: cell("B", 20.0), 2: cell("A", 40.0)}
+    ranked = {0: [(0, 9), (1, 6), (2, 5)]}
+
+    def fake(parts, prompt, tag):
+        return {"fits": [{"n": 0, "score": 3}, {"n": 1, "score": 9}, {"n": 2, "score": 2}]}, None
+    ban = {}
+    r = ma.eye_rescue([{"i": 0}], ts, _needs(ts), ranked, cells, META, ITS, ban, tmp_path, ma.LLM(fake), log=lambda *a: None)
+    assert r[0][0] == (1, 9) and ban[0] == {0, 2}
+    p = ma.select(ts, _needs(ts), r, cells, META, ITS, fit_ban=ban)
+    assert p[0]["cid"] == 1

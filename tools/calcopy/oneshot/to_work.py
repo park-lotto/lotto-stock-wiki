@@ -74,49 +74,30 @@ def pieces_of(text: str, n: int) -> list[str]:
 BRANDS = {
     "잇썸홈": {"channel": "homedesignnote", "preset": "channel/homedesignnote/preset/전체화면_가운데자막",
              "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f"}, "cps_target": 8.32,
-             "재료_규칙": "재료 = 같은 제품 실영상만(짤·유사 0)", "kinds": ["제품"], "sfx": 0, "meme": 0},
+             "재료_규칙": "재료 = material_auto.CHANNELS[잇썸홈](제품·시연·상황, 짤 0)", "sfx": 0, "meme": 0},
     "재미썸홈": {"channel": "재미썸홈", "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json",
               "voice": {"name": "필재", "voice_id": "tc_68257f68bc6e3c161ab5078d"}, "cps_target": 8.8,
-              "재료_규칙": "재료 = 제품 실영상 + 유사·연상 영상 + 짤", "kinds": ["제품", "유사", "짤"],
+              "재료_규칙": "재료 = material_auto.CHANNELS[재미썸홈](제품·시연·연상·짤)",
               "sfx": "shopping_shorts/sfx_pack density=low", "bgm": None},
 }
 
-SHOT_PROMPT = """너는 쇼츠 영상 편집자다. 나레이션 자막 조각마다 화면에 깔 영상을 유튜브에서 찾을 **영어 검색어**를 정한다.
-제품: {product}
-제품 영상 검색어 예(조사): {queries}
-채널 규칙: {rule}. 조각 종류(kind)는 {kinds} 중에서만.
-- 원칙(사장님): 장면과 대사가 맞는 게 핵심 — 조각의 명사·동작이 화면에 그대로 보이게(예: '알람 끄고' → 'turning off alarm clock in bed').
-- kind=제품: 그 제품이 나오는 실사용·리뷰·언박싱 장면 검색어(제품명 영어 포함). kind=유사: 말 내용을 보여주는 연상 장면(제품 아님). kind=짤: 감정 반응 짤.
-- 이웃 조각은 검색어가 달라야 한다. 제목 줄(첫 줄)은 제품이 보이는 장면으로.
-조각(번호: 줄번호 | 조각 | 그 줄 전체):
-{pieces}
-출력 JSON만: {{"shots":[{{"i":번호,"query":"영어 검색어","kind":"제품|유사|짤"}}, …]{title_req}}}"""
+TITLE_PROMPT = """너는 쇼츠 제목 편집자다. 제품: {product}
+대본 첫 줄(제목 원문): {title_line}
+출력 JSON만: {{"title_slots":{{"hook1":"제목 1줄(≤11자, 계기·감정)","hook2":"제목 2줄(≤11자, ~의 발명품/정체)","bodyTitle":"본문 제목(≤20자, ?로 끝)"}}}}"""
 
 
-def shot_queries(product: str, research: dict, brand: str, rows: list[dict], title_line: str) -> dict:
-    """(판단 주인) 조각마다 장면 검색어·종류 + 재미썸홈이면 제목 칸 2줄. 실패하면 멈춘다(조용히 빈 검색어로 넘기지 않는다)."""
-    from tools.calcopy.engine import gemini_free as G
-    B = BRANDS[brand]
-    q = research.get("queries") or {}
-    title_req = (', "title_slots":{"hook1":"제목 1줄(≤11자, 계기·감정)","hook2":"제목 2줄(≤11자, ~의 발명품/정체)","bodyTitle":"본문 제목(≤20자, ?로 끝)"}'
-                 + f"  — 제목 원문: {title_line}") if brand == "재미썸홈" else ""
-    prompt = SHOT_PROMPT.format(product=product, queries=" · ".join((q.get("en") or [])[:4]), rule=B["재료_규칙"], kinds="·".join(B["kinds"]),
-                                pieces="\n".join(f"{k}: {r['line']} | {r['piece']} | {r['line_text']}" for k, r in enumerate(rows)),
-                                title_req=title_req)
-    for attempt in range(2):     # 10-18 실측: 응답이 shots 가 아닌 꼴(items·글)로 와 22조각 전부 빈칸 — 꼴을 넓혀 받고 1회 더
-        d, err = G.ask([], prompt, tag="oneshot_shots")
-        raw = (d or {}).get("shots") or (d or {}).get("items") or next((v for v in (d or {}).values() if isinstance(v, list)), [])
-        shots = {int(s["i"]): s for s in raw if isinstance(s, dict) and str(s.get("i", "")).strip().isdigit()}
-        miss = [k for k in range(len(rows)) if not (shots.get(k) or {}).get("query")]
-        if d is not None and not miss:
-            break
-        print(f"[경보] 장면 검색어 {attempt + 1}회째 실패 {err or ''} · 빈 조각 {len(miss)}개 · 응답 키 {sorted(d)[:6] if isinstance(d, dict) else type(d)}")
-    if d is None or miss:
-        raise SystemExit(f"장면 검색어 실패 {err or ''} · 빈 조각 {miss}")
-    for s in shots.values():
-        if s.get("kind") not in B["kinds"]:
-            s["kind"] = B["kinds"][0]
-    return {"shots": shots, "title_slots": (d or {}).get("title_slots")}
+def title_slots(product: str, title_line: str) -> dict:
+    """(판단 주인) 재미썸홈 제목 칸 2줄 + 본문 제목. 실패하면 멈춘다.
+    조각별 장면(검색어·종류)은 여기서 정하지 않는다 — 10-18: 여기서 한 번, material_auto.plan_queries 에서 또 한 번 정해(두 벌)
+    두 번째가 대사 뜻을 '제품 들고 있는 장면'으로 평평하게 만들었다. 장면 판단 주인 = material_auto.plan_queries 한 곳."""
+    from tools.calcopy.engine import claude_cli as C       # 제미나이 금지(사장님 10-18 밤) — 하이쿠
+    for attempt in range(2):
+        d, err = C.ask([], TITLE_PROMPT.format(product=product, title_line=title_line), tag="oneshot_title")
+        ts = (d or {}).get("title_slots") or {}
+        if ts.get("hook1") and ts.get("hook2"):
+            return ts
+        print(f"[경보] 제목 칸 {attempt + 1}회째 실패 {err or ''}")
+    raise SystemExit(f"제목 칸 실패 {err or ''}")
 
 
 def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path:
@@ -131,16 +112,14 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
         for p in pieces_of(l["text"], cmax):
             rows.append({"line": li, "piece": p, "line_text": l["text"]})
     product = R.get("product") or S["product"].get("name")
-    sq = shot_queries(product, R, brand, rows, lines[0]["text"])
     out_lines = []
     for li, l in enumerate(lines):
         mine = [(k, r) for k, r in enumerate(rows) if r["line"] == li]
-        shots = [{"piece": r["piece"], "query": sq["shots"][k]["query"], "kind": sq["shots"][k]["kind"]} for k, r in mine]
+        shots = [{"piece": r["piece"]} for _k, r in mine]
         # 제작기(preset_make.load_work)는 'tts' 칸을 읽는다. 숫자는 화면 글 그대로 타입캐스트에 — 10-18 실측: narration_naturalize.normalize_reading 은
         # '4000mAh'→'사천 미터Ah'·'RK3568'→'RK삼천오백육십팔'로 틀리고, 화면 글 그대로 보낸 칫솔 편은 받아쓰기 2모델이 숫자를 전부 맞게 들었다.
         out_lines.append({"i": li, "text": l["text"], "tts": l["text"], "role": l.get("fn") or l.get("node") or "",
-                          "point": l.get("point") or "", "shot_query": [s["query"] for s in shots], "shots": shots,
-                          "kind": shots[0]["kind"] if shots else B["kinds"][0]})
+                          "point": l.get("point") or "", "shots": shots})
     chars = sum(len(x["text"].replace(" ", "")) for x in out_lines)
     doc = {"채널": brand, "channel": B["channel"], "preset": B["preset"], "topic": product, "목소리": B["voice"], "voice": B["voice"],
            "cps_target": B["cps_target"], "재료_규칙": B["재료_규칙"], "from": f"원샷링크딸깍 엔진({S.get('engine')}) · {engine_json}",
@@ -148,10 +127,12 @@ def build(engine_json: Path, research_json: Path, brand: str, out: Path) -> Path
            "facts": {k: f"{v['text']} ({v.get('url', '')})" for k, v in S["facts"].items()}, "title_lines": [], "sfx": B["sfx"],
            # 재료 찾기가 먼저 쓸 검색어 — 조사 단계에서 실제 결과가 확인된 것(research.seed) > 조사 영어 검색어 앞 2개
            "search_seed": (R.get("seed") or []) + [q for q in (R.get("queries") or {}).get("en", [])[:2] if q not in (R.get("seed") or [])],
+           # 참고 쇼츠(입력 링크 영상) — 재료로 쓰지 않고 '이 말엔 이 시연' 본보기로만(material_auto.ref_scenes)
+           "ref_video": R.get("ref_video") or "",
            # 제목에 이 낱말이 있으면 다른 모델(후속작·형제 모델·경쟁 비교) — 재료 찾기가 검색 단계에서 거른다(조사 단계가 정함)
            "exclude_title": R.get("exclude_title") or []}
     if brand == "재미썸홈":
-        ts = sq.get("title_slots") or {}
+        ts = title_slots(product, lines[0]["text"])
         doc["title_slots"] = ts
         doc["title_lines"] = [ts.get("hook1", ""), ts.get("hook2", "")]
         doc["bgm"] = None

@@ -48,7 +48,7 @@ VERIFY_ROUNDS = 2         # 1080 검사 → 재선택 바퀴 수(마지막 바�
 MIN_SCORE = 5             # 짝짓기 점수(0~10) 이 미만은 안 쓴다
 PREVIEW_HEAD = 300        # 미리보기는 앞 300초까지
 SHEET_N = 30              # 시트 한 장 칸 수(6×5)
-MAX_FRAMES = 60           # 영상 하나 최대 칸 수
+MAX_FRAMES = 120          # 영상 하나 최대 칸 수 — 300초면 2.5초 간격(10-18: 60칸=5초 간격은 1초 컷을 대사에 맞춰 고르기엔 성겼다)
 CELL = 200
 MEME_DIR = Path("C:/숏템_칼카피/packs/meme/meme_pack")
 MEME_INDEX = ROOT / "research/meme_pack/extra_memes.json"
@@ -58,12 +58,15 @@ FONT = "C:/Windows/Fonts/malgun.ttf"
 FONT_B = "C:/Windows/Fonts/malgunbd.ttf"
 
 CHANNELS = {
-    # 잇썸홈(두유노홈디노형) = 같은 제품 실영상만(비포 비교 토막만 같은 종류 다른 제품 허용), 짤 0
-    "잇썸홈": {"channel": "잇썸홈", "same_product_only": True, "kinds": ["product", "before", "store"], "meme_ratio": (0.0, 0.0),
+    # 잇썸홈(두유노홈디노형) = 제품 실영상 + 같은 종류 시연(demo)·문제 상황(situation), 짤 0.
+    # 10-18 사장님 "대사에 맞는 편집포인트의 영상매칭이 안됐다" — '같은 제품 실영상만'이면 리뷰 영상 8편에서 손에 든 제품만 나와
+    # 숫자·권위·불편 줄을 보여줄 장면이 없었다(완성본 대사↔장면 7점 미만 9/18·14/26). 원본 쇼츠(UTXdSqlxFYQ)도 줄마다 여러 브랜드의
+    # 시연 컷(물컵 진동·치아 모형·파우치)을 깐다. 설명서 §5 줄↔장면 계약의 '비포·문제상황'·'공간전경' 칸도 제품 실영상이 아니다.
+    "잇썸홈": {"channel": "잇썸홈", "same_product_only": False, "kinds": ["product", "demo", "situation", "before", "store"], "meme_ratio": (0.0, 0.0),
               "min_res": 1080, "pref_res": 1080, "allow_cg": False, "max_cut": 1.7,
               "preset": "channel/homedesignnote/preset/전체화면_가운데자막/manifest.json"},   # 창이 1080×1920 전체 — 720p 는 확대 2.67배로 preset_make A4(≤2.3) 미달(10-17 핸즈프리)
-    # 재미썸홈(이븐쇼핑형) = 제품 + 유사·연상 + 짤 10~15%
-    "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "similar", "meme"], "meme_ratio": (0.10, 0.15),
+    # 재미썸홈(이븐쇼핑형) = 제품 + 같은 종류 시연 + 유사·연상 + 짤 10~15%
+    "재미썸홈": {"channel": "재미썸홈", "same_product_only": False, "kinds": ["product", "demo", "similar", "meme"], "meme_ratio": (0.10, 0.15),
                "min_res": 720, "pref_res": 1080, "allow_cg": False, "max_cut": 1.4,
                "preset": "channel/evenshopping/preset/숏템템플릿/manifest.json"},
 }
@@ -88,7 +91,9 @@ class Stop(Exception):
 
 # ── 모델 창구 ──────────────────────────────────────────────────────────────
 class LLM:
-    """fn(parts, prompt, tag) -> (dict|None, err). 기본 = gemini_free.ask(무료 키 장부). 429 가 MAX_429 넘으면 Stop."""
+    """fn(parts, prompt, tag) -> (dict|None, err). 기본 = claude_cli.ask(Claude 헤드리스 — 판정 소넷·잡일 하이쿠).
+    사장님 10-18 밤 "제미나이 쓰지 말고"(공용 키 분당 천장을 고객 서비스와 같이 씀) — CALCOPY_LLM=gemini 일 때만 gemini_free.
+    429 가 MAX_429 넘으면 Stop."""
 
     def __init__(self, fn=None):
         self.fn, self.calls, self.n429 = fn, [], 0
@@ -96,8 +101,12 @@ class LLM:
     def __call__(self, parts, prompt, tag):
         fn = self.fn
         if fn is None:
-            from tools.calcopy.engine import gemini_free
-            fn = lambda p, q, t: gemini_free.ask(p, q, tag=t)  # noqa: E731
+            if __import__("os").environ.get("CALCOPY_LLM") == "gemini":
+                from tools.calcopy.engine import gemini_free
+                fn = lambda p, q, t: gemini_free.ask(p, q, tag=t)  # noqa: E731
+            else:
+                from tools.calcopy.engine import claude_cli
+                fn = claude_cli.ask
         t0 = time.time()
         d, err = fn(parts, prompt, tag)
         if err in ("429", "quota"):
@@ -128,7 +137,7 @@ def norm_script(sj: dict) -> tuple[str, list[dict]]:
             for s in l["shots"]:
                 dur = round(max(0.5, len(_plain(s["piece"])) / cps), 2)
                 toks.append({"i": len(toks), "text": s["piece"], "t0": round(t0, 2), "dur": dur, "line": li, "line_text": l.get("text", ""),
-                             "shot_query": f"{s.get('query', '')} ({s.get('kind', '')})"})
+                             "shot_query": f"{s['query']} ({s.get('kind', '')})" if s.get("query") else None})   # 원샷 대본은 장면을 안 적는다(주인 = plan_queries)
                 t0 += dur
         return topic, toks
     lines = [l.get("line", "") for l in sj.get("spine55") or []]
@@ -154,21 +163,28 @@ def norm_script(sj: dict) -> tuple[str, list[dict]]:
 QUERY_PROMPT = """숏폼 재료 담당이다. 주제: {topic}
 채널 규칙: {rule_text}
 아래 토막(자막 조각)마다 화면에 보여야 할 장면을 정하고, 그 장면을 찾을 유튜브 검색어를 만들어라.
-- need: 그 토막이 **문장 안에서** 말하는 순간을 보여줄 장면(영어 6~12낱말, 구체적으로 — 예 'hand puts plates into sink dishwasher basket').
-  토막은 문장의 조각이다 — 문장 전체 뜻을 따른다(예: '설거지하다 허리 / 굽히는 게 귀찮았던' = 허리 굽혀 설거지하는 불편한 모습, 제품 자랑 장면 아님).
-  같은 문장의 이웃 토막은 같은 장면이 이어져도 된다(인물·장소를 바꾸지 마라). 로고·글자 클로즈업은 장면으로 쓰지 않는다(회사·브랜드 얘기 = 매장·공장·진열·사용하는 사람).
+★핵심(사장님): 대사와 장면이 맞아야 한다 — 시청자가 그 말을 듣는 순간 **화면이 그 말을 증명**해야 한다.
+- need: 그 토막이 **문장 안에서** 말하는 것을 눈으로 보여 줄 장면(영어 6~12낱말, 구체적으로).
+  · 기능·성능·숫자·권위·역사 문장 = 그 말이 증명하는 **시연 장면**(예 '분당 4만 번 진동' → 'sonic toothbrush head splashing water in glass',
+    '세균 99.99% 살균' → 'blue UV light glowing inside toothbrush case', '치석이 싹' → 'toothbrush removing plaque on dental model').
+  · 불편·계기 문장 = 그 **문제 상황**(예 '출장 갈 때 축축한 칫솔' → 'wet toothbrush wrapped in tissue in travel bag').
+  · 결과·인기 문장 = 쓰는 사람·장소(예 '직장인들 사이에서 난리' → 'office worker brushing teeth in hotel bathroom').
+  · 'holding the product'·'product shot' 같은 그냥 들고 있는 장면은 제품 이름을 처음 밝히는 토막에만.
+  같은 문장의 이웃 토막은 같은 시연을 다른 각도로 이어도 된다. 로고·글자 클로즈업은 장면으로 쓰지 않는다.
 - keywords: need 의 핵심 영어 낱말 3~6개(소문자)
-- kind: {kinds}  (product=이 제품 실영상, before=비교 대상 일반 제품, store=이 제품 브랜드 매장·쇼룸 진열(회사·브랜드·인기 얘기 토막), similar=제품이 아닌 연상·상황 영상, meme=반응 짤)
+- kind: {kinds}  (product=이 제품 실영상, demo=같은 종류 제품의 시연(브랜드 달라도 됨), situation=문제 상황·쓰는 사람·장소(제품 없어도 됨),
+  before=비교 대상 일반 제품, store=이 제품 브랜드 매장·쇼룸 진열, similar=제품이 아닌 연상 영상, meme=반응 짤)
 {meme_rule}
-- queries: 검색어 최대 {nq}개. 영어 위주 + 제품 원산지 언어(일본어·중국어 등) 1~2개. 제품명·브랜드·모델명·'review'·'unboxing'·'stock footage' 등을 섞어 서로 다르게.
-  각 검색어에 purpose(product/before/store/similar)와 그 검색어가 채울 토막 번호 목록(toks).
+{ref}- queries: 검색어 최대 {nq}개. **절반 이상은 시연·상황 검색어**(브랜드 없이 제품 종류 이름 + 시연 동작, 예 'sonic toothbrush water test',
+  'electric toothbrush plaque demo', 'packing toiletries travel bag'), 나머지는 제품명·리뷰. 영어 위주 + 제품 원산지 언어 1~2개. 서로 다르게.
+  각 검색어에 purpose(product/demo/situation/before/store/similar)와 그 검색어가 채울 토막 번호 목록(toks).
 - product: 이 제품을 화면에서 알아볼 영어 설명 1문장(모양·색·브랜드). product_terms: 제목에서 이 제품을 알아볼 낱말(브랜드·모델명·영어/현지어).
 토막:
 {toks}
 출력 JSON만: {{"product":"...","product_terms":["..."],"needs":[{{"i":토막번호,"need":"...","keywords":["..."],"kind":"..."}}],"queries":[{{"q":"...","purpose":"...","toks":[번호]}}]}}"""
 
 REQUERY_PROMPT = """숏폼 재료 담당이다. 주제: {topic}. 아래 토막은 장면을 못 찾았다. 이미 쓴 검색어와 **다른** 유튜브 검색어를 최대 {nq}개 만들어라
-(동의어·다른 언어·공식/리뷰 채널·'stock footage'·더 일반적인 상황어). 채널 규칙: {rule_text}
+(동의어·다른 언어·공식/리뷰 채널·'stock footage'·브랜드 없는 종류 이름 + 시연 동작·더 일반적인 상황어). 채널 규칙: {rule_text}
 못 찾은 토막: {toks}
 이미 쓴 검색어: {tried}
 출력 JSON만: {{"queries":[{{"q":"...","purpose":"product|before|store|similar","toks":[번호]}}]}}"""
@@ -179,17 +195,64 @@ def _rule_text(rules: dict) -> str:
         return ("같은 제품 실영상만(짤·연상 영상 금지). '보통 제품은~' 같은 비교 토막만 before(같은 종류 다른 제품)."
                 + (" 회사·브랜드·인기 토막은 store(같은 제품의 브랜드 매장·쇼룸 진열)도 된다." if "store" in rules.get("kinds", []) else ""))
     lo, hi = rules.get("meme_ratio", (0, 0))
-    return f"제품 실영상 + 유사·연상 영상 + 반응 짤 {int(lo * 100)}~{int(hi * 100)}%."
+    kinds = rules.get("kinds", [])
+    return ("제품 실영상 + 같은 종류 제품의 시연 영상"
+            + (" + 문제 상황·쓰는 사람·장소 영상" if "situation" in kinds else "")
+            + (" + 유사·연상 영상" if "similar" in kinds else "")
+            + (f" + 반응 짤 {int(lo * 100)}~{int(hi * 100)}%." if hi else ". 짤 금지."))
 
 
-def plan_queries(topic, toks, rules, llm, seed_queries=None) -> dict:
+REF_PROMPT = """그림은 참고 쇼츠의 1초 간격 프레임(노란 번호)이다. 각 번호마다:
+- caption: 그 프레임에 보이는 한국어 자막 글(나레이션 자막·없으면 "")  - scene: 자막 글을 뺀 영상 부분에 보이는 장면 영어 6~12낱말(동작 포함)
+번호를 빠짐없이. 출력 JSON만: {{"frames":[{{"n":번호,"caption":"...","scene":"..."}}]}}"""
+
+
+def ref_scenes(ref_video, wd: Path, llm) -> list[dict]:
+    """(판단 주인) 참고 쇼츠(원샷링크딸깍 입력 영상)가 어떤 말에 어떤 장면을 깔았나 → [{caption, scene}](이어진 같은 자막은 하나로).
+    재료로 쓰지 않는다 — 검색할 시연 장면의 본보기로 plan_queries 에 준다. 캐시 = ref/ref_scenes.json."""
+    if not ref_video or not Path(ref_video).exists():
+        return []
+    rd = wd / "ref"
+    rd.mkdir(parents=True, exist_ok=True)
+    cache = rd / "ref_scenes.json"
+    if cache.exists():
+        return json.loads(cache.read_text(encoding="utf-8"))
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(ref_video), "-vf", f"fps=1,scale={CELL}:{CELL}:force_original_aspect_ratio=decrease",
+          str(rd / "%04d.jpg")], timeout=300)
+    cells = [{"img": str(f)} for f in sorted(rd.glob("*.jpg"))]
+    got = {}
+    for s0 in range(0, len(cells), SHEET_N):
+        chunk = cells[s0:s0 + SHEET_N]
+        sp = make_sheet(chunk, s0, rd / f"sheet_{s0 // SHEET_N}.jpg")
+        d, _ = llm([sp.read_bytes()], REF_PROMPT, "ma_ref")
+        for r in (d or {}).get("frames") or []:
+            n = _as_int(r.get("n")) if isinstance(r, dict) else None
+            if n is not None:
+                got[n] = r
+    out = []
+    for n in sorted(got):
+        cap, sc = str(got[n].get("caption") or "").strip(), str(got[n].get("scene") or "").strip()
+        if not sc:
+            continue
+        if out and out[-1]["caption"] == cap:
+            if sc not in out[-1]["scene"]:
+                out[-1]["scene"] += " / " + sc
+            continue
+        out.append({"caption": cap, "scene": sc})
+    cache.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    return out
+
+
+def plan_queries(topic, toks, rules, llm, seed_queries=None, ref=None) -> dict:
     lo, hi = rules.get("meme_ratio", (0, 0))
     meme_rule = (f"- meme 은 반응·감탄 토막(놀람·의심·충격)에만, 전체 토막의 {int(lo * 100)}~{int(hi * 100)}%({math.ceil(lo * len(toks))}~{int(hi * len(toks))}개)."
                  if hi else "- meme 금지.")
     lines = "\n".join(f"{t['i']}. «{t['text']}» (문장: {t['line_text']})" + (f" [원하는 장면: {t['shot_query']}]" if t.get("shot_query") else "")
                       for t in toks)
+    ref_txt = ("- 참고: 같은 제품을 다룬 원본 쇼츠가 이런 말에 이런 장면을 깔았다(본보기 — 같은 말이면 같은 종류 시연을 찾아라):\n"
+               + "\n".join(f"  «{r['caption']}» → {r['scene']}" for r in ref if r.get("caption")) + "\n") if ref else ""
     d, err = llm([], QUERY_PROMPT.format(topic=topic, rule_text=_rule_text(rules), kinds="/".join(rules["kinds"]), meme_rule=meme_rule,
-                                         nq=MAX_QUERIES - 2, toks=lines), "ma_queries")
+                                         nq=MAX_QUERIES - 2, toks=lines, ref=ref_txt), "ma_queries")
     if not d:
         raise Stop(f"검색어 만들기 실패: {err}")
     needs = {}
@@ -204,7 +267,9 @@ def plan_queries(topic, toks, rules, llm, seed_queries=None) -> dict:
     _cap_memes(toks, needs, rules)
     qs = [q for q in d.get("queries") or [] if isinstance(q, dict) and str(q.get("q") or "").strip()]
     # 조사에서 실제 결과가 확인된 검색어(대본.json search_seed — 원샷링크딸깍 to_work 가 조사 queries 를 넣는다)를 앞에 — 같은 상한 안에서
-    seed = [{"q": s, "purpose": "product", "toks": [t["i"] for t in toks], "seed": True} for s in (seed_queries or []) if str(s).strip()]
+    # 씨앗은 2개까지·제품 토막만 — 10-18: 씨앗 5개가 전 토막에 붙어 검색 상한 8개 중 5개가 브랜드 리뷰 검색이 됐다(재료가 리뷰 영상뿐)
+    ptoks = [i for i, n in needs.items() if n["kind"] == "product"] or [t["i"] for t in toks]
+    seed = [{"q": s, "purpose": "product", "toks": ptoks, "seed": True} for s in (seed_queries or [])[:2] if str(s).strip()]
     qs = seed + [q for q in qs if q["q"] not in {s["q"] for s in seed}]
     return {"product": d.get("product") or topic, "product_terms": [str(x) for x in d.get("product_terms") or []],
             "needs": needs, "queries": qs[:MAX_QUERIES - 2]}
@@ -349,7 +414,7 @@ def frame_cells(preview: str, vid: str, wd: Path) -> list[dict]:
     if dur <= 0:
         return []
     step = max(2.0, round(dur / MAX_FRAMES, 1))
-    fdir = wd / "frames" / vid
+    fdir = wd / "frames" / f"{vid}_{step:g}"     # 간격을 폴더 이름에 — 간격이 바뀌면(MAX_FRAMES) 옛 칸 그림에 새 시각을 붙이지 않게
     fdir.mkdir(parents=True, exist_ok=True)
     if not list(fdir.glob("*.jpg")):
         _run(["ffmpeg", "-v", "error", "-y", "-i", preview, "-vf", f"fps=1/{step},scale={CELL}:{CELL}:force_original_aspect_ratio=decrease",
@@ -444,18 +509,20 @@ def allowed(cell: dict, kind: str, rules: dict, res: int) -> bool:
         return False
     if cell.get("cg") and not rules.get("allow_cg"):
         return False
+    if rules.get("kinds") and kind not in rules["kinds"]:   # 채널에 없는 종류(잇썸홈 similar·meme)는 받지 않는다
+        return False
     if res < rules.get("min_res", 720):               # A4
         return False
     p = cell.get("product")
     if kind == "product":
         return p == "same"
-    if kind == "before":
+    if kind in ("before", "demo"):                    # demo = 같은 종류 제품의 시연(남의 상표 글자는 위 text·verify_cuts 가 막는다)
         return p in ("similar", "same")
     if kind == "store":                               # 같은 제품의 브랜드 매장·쇼룸 진열(페이블 10-17) — 제품이 보이거나, 매장·진열 칸의 같은 종류
         return p == "same" or (p == "similar" and bool(STORE_RE.search(cell.get("what") or "")))
     if rules.get("same_product_only"):
         return p == "same"
-    return True                                       # similar(연상) — 재미썸홈만 여기까지 온다
+    return True                                       # similar(연상)·situation(문제 상황·장소·사람) — 제품이 안 보여도 된다
 
 
 def reuse_conflict(vid: str, t0: float, t1: float, used: list[tuple], prev: tuple | None = None) -> str | None:
@@ -474,12 +541,15 @@ def reuse_conflict(vid: str, t0: float, t1: float, used: list[tuple], prev: tupl
     return None
 
 
-def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict, rules: dict, memes: dict | None = None) -> list[dict]:
+def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict, rules: dict, memes: dict | None = None,
+           fit_ban: dict | None = None) -> list[dict]:
     """토막별 최종 선택. ranked[i] = [(cell_id, score)] 높은 순. cells[cell_id] = 칸. meta[vid] = {res,...}. memes[i] = 짤 id.
     규칙: allowed · reuse_conflict · A12(같은 줄 안에서 앞 토막과 같은 영상 +2점) · B4(앞 컷을 이어 갈 수 있으면 이어 간다: 이웃 토막 한 컷)
     · 마지막 묶음 컷 ≥1.2초·끝 컷 ≥1.5초(못 채우면 앞 컷 이어 가기) · 1080 우선(+1점)."""
     picks, used = [], []
-    prev = None          # (vid, t0, t1, line, cell)
+    if fit_ban:          # 대사↔장면 검수(fit_judge)에서 이 토막에 안 맞는다고 나온 칸은 그 토막 후보에서 뺀다(다른 토막엔 맞을 수 있다)
+        ranked = {i: [(c, s) for c, s in r if c not in fit_ban.get(i, ())] for i, r in ranked.items()}
+    prev = None          # (vid, t0, t1, line, cell, cell_id)
     memes = memes or {}
     for k, t in enumerate(toks):
         i, kind = t["i"], needs[t["i"]]["kind"]
@@ -505,12 +575,12 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
         ext_ok = bool(prev) and not reuse_conflict(prev[0], prev[2], prev[2] + dur, used[:-1])   # 이어 간 끝이 다른 컷 ±3초에 닿으면 안 됨(B13)
         # 이어 가기 후보(B4): 앞 컷과 같은 영상·같은 줄, 이어 간 구간이 그 칸의 설명 프레임 곁
         if same_line and room and ext_ok:
-            pv, _, pe, _, _ = prev
+            pv, _, pe = prev[:3]
             for cid, s in ranked.get(i, []):
                 c = cells[cid]
                 if c["vid"] == pv and c["t"] - 2.5 <= pe <= c["t"] + 1.0 and s >= MIN_SCORE - 1:
                     if allowed(c, kind, rules, meta[pv]["res"]):
-                        best, best_s = ("cont", c, pe), s + 3
+                        best, best_s = ("cont", c, pe, cid), s + 3
                         break
         for cid, s in ranked.get(i, []):
             if s < MIN_SCORE:
@@ -527,17 +597,18 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
                 continue
             sc = s + (2 if same_line and prev[0] == c["vid"] else 0) + (1 if res >= rules.get("pref_res", 1080) else 0)
             if sc > best_s:
-                best, best_s = ("new", c, a), sc
-        if best is None and same_line and ext_ok and prev[2] + dur - prev[4]["t"] <= 2.5:
+                best, best_s = ("new", c, a, cid), sc
+        if (best is None and same_line and ext_ok and prev[2] + dur - prev[4]["t"] <= 2.5
+                and prev[5] not in (fit_ban or {}).get(i, ())):     # 대사 검수에서 이 토막엔 안 맞는다고 나온 앞 컷은 이어 가지 않는다
             # 같은 문장 이웃 토막인데 새 장면이 없으면 앞 컷을 이어 간다(B4 '자막 토막=컷 1:1 고집 금지', A12 같은 줄기) — 설명 프레임에서 2.5초 안까지만
-            best, best_s = ("cont", prev[4], prev[2]), None
+            best, best_s = ("cont", prev[4], prev[2], prev[5]), None
             why["앞컷이어감"] = 1
         if best is None:
             picks.append({"i": i, "none": True, "kind": kind, "why": "규칙 통과 후보 없음 " + json.dumps(why, ensure_ascii=False)})
             prev = None
             continue
-        how, c, a = best
-        p = {"i": i, "src": c["vid"], "vid": c["vid"], "src_t0": round(a, 2), "src_t1": round(a + dur, 2), "dur": dur, "kind": kind,
+        how, c, a, cid = best
+        p = {"i": i, "src": c["vid"], "vid": c["vid"], "cid": cid, "src_t0": round(a, 2), "src_t1": round(a + dur, 2), "dur": dur, "kind": kind,
              "cont": how == "cont", "score": best_s, "seen": " / ".join(x for x in (c["what"], c["action"], c["people"]) if x),
              "cell_t": c["t"], "res": meta[c["vid"]]["res"]}
         if why.get("앞컷이어감"):
@@ -547,7 +618,7 @@ def select(toks: list[dict], needs: dict, ranked: dict, cells: dict, meta: dict,
             used[-1] = (c["vid"], used[-1][1], p["src_t1"])
         else:
             used.append((c["vid"], p["src_t0"], p["src_t1"]))
-        prev = (c["vid"], p["src_t0"], p["src_t1"], t["line"], c)
+        prev = (c["vid"], p["src_t0"], p["src_t1"], t["line"], c, cid)
     _slow_ending(picks, toks)
     return picks
 
@@ -622,7 +693,11 @@ def match_lines(toks, needs, cells, meta, rules, llm, log=print) -> dict:
 
     def run(job):
         li, ts, ids, prompt = job
-        d, err = llm([], prompt, f"ma_match:{li}")
+        for _try in range(2):     # 10-18 실측: 첫 줄 짝짓기 답이 비어 토막 4개가 후보 0 → 조용히 빈칸이 됐다 — 빈 답이면 한 번 더
+            d, err = llm([], prompt, f"ma_match:{li}")
+            if (d or {}).get("picks"):
+                break
+            log(f"[경보] 줄 {li} 짝짓기 답 없음({err or '빈 picks'}) — {'다시 묻는다' if _try == 0 else '이 줄 후보 0'}")
         return li, ts, ids, d, err
     with cf.ThreadPoolExecutor(WORKERS) as ex:
         for li, ts, ids, d, err in ex.map(run, jobs):
@@ -814,7 +889,8 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
     stopped, picks, rounds, needs = None, [], 0, {}
     try:
         t = time.time()
-        qp = plan_queries(topic, toks, rules, llm, sj.get("search_seed"))
+        ref = ref_scenes(sj.get("ref_video"), wd, llm)
+        qp = plan_queries(topic, toks, rules, llm, sj.get("search_seed"), ref)
         needs = qp["needs"]
         T["1_검색어"] = round(time.time() - t, 1)
         t = time.time()
@@ -856,17 +932,87 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
     return _write_out(wd, rules, topic, toks, needs, picks, state, rounds, stopped, sheets, T, llm, net)
 
 
+FIT_ROUNDS = 2            # 대사↔장면 검수 → 다시 고르기 바퀴 수
+
+
+def fit_cuts(picks, toks, wd: Path, llm, window=None, seen: dict | None = None) -> list[dict]:
+    """고른 컷(1080 구간 가운데 프레임)을 fit_judge 로 채점 → p['fit'] 표시, FIT_MIN 미만 컷 목록. 짤·빈칸은 안 본다.
+    seen[(vid, t0, t1, i)] = 점수 — 다시 고른 뒤 그대로인 컷은 다시 안 묻는다."""
+    seen = {} if seen is None else seen
+    tok = {t["i"]: t for t in toks}
+    todo, items = [], []
+    fdir = wd / "fit"
+    fdir.mkdir(parents=True, exist_ok=True)
+    for p in picks:
+        if p.get("none") or p.get("kind") == "meme" or not p.get("section_file"):
+            continue
+        k = (p.get("vid"), p.get("src_t0"), p.get("src_t1"), p["i"])
+        if k in seen:
+            p["fit"] = seen[k]
+            continue
+        args = (p["section_file"], p["section_ss"] + p["dur"] / 2, fdir / f"cut_{p['i']}.jpg")
+        g = _grab(*args, window) if window else _grab(*args)
+        todo.append(p)
+        items.append({"img": str(g) if g else "", "piece": tok[p["i"]]["text"], "line": tok[p["i"]]["line_text"]})
+    for p, r in zip(todo, fit_judge(items, wd, llm, tag="cut") if items else []):
+        p["fit"] = r.get("score")
+        p["fit_seen"], p["fit_want"] = r.get("seen", ""), r.get("want", "")
+        seen[(p.get("vid"), p.get("src_t0"), p.get("src_t1"), p["i"])] = p["fit"]
+    return [p for p in picks if p.get("fit") is not None and p["fit"] < FIT_MIN]
+
+
+EYE_K = 10                # 눈 고르기 — 토막당 후보 그림 수(시트 1장)
+
+
+def eye_rescue(bad: list[dict], toks, needs, ranked, cells, meta, rules, fit_ban, wd: Path, llm, log=print) -> dict:
+    """빈칸·검수 미달 토막 → 후보 칸 **그림**을 fit_judge 로 대사와 직접 채점해 순위를 다시 매긴다(새 ranked 반환).
+    글 설명 짝짓기 1등이 그림으로 보면 틀린 경우가 많았다(10-18 칫솔 v2: 빈칸 6·미달 7 — 사람이 시트 보고 고르던 일).
+    판정은 fit_judge 한 곳. 후보 = 글 짝짓기 순위 + 낱말 겹침 shortlist, 이 토막에서 이미 빠진 칸(fit_ban) 제외."""
+    tok = {t["i"]: t for t in toks}
+    out = dict(ranked)
+    jobs = []
+    for p in bad:
+        i = p["i"]
+        nd = needs.get(i) or {}
+        if nd.get("kind") == "meme":
+            continue
+        ban = fit_ban.get(i, set())
+        ids = [c for c, _ in ranked.get(i, []) if c not in ban]
+        ids += [c for c in shortlist(nd, nd.get("kind", "product"), cells, meta, rules, k=EYE_K * 2) if c not in ban and c not in ids]
+        if ids[:EYE_K]:
+            jobs.append((i, ids[:EYE_K]))
+
+    def judge(job):
+        i, ids = job
+        return i, ids, fit_judge([{"img": cells[c]["img"], "piece": tok[i]["text"], "line": tok[i]["line_text"]} for c in ids], wd, llm, tag=f"eye_{i}")
+    with cf.ThreadPoolExecutor(WORKERS) as ex:     # 토막끼리 동시
+        done = list(ex.map(judge, jobs))
+    for i, ids, res in done:
+        sc = sorted(((r.get("score") or 0, c) for r, c in zip(res, ids)), reverse=True)
+        good = [(c, s) for s, c in sc if s >= FIT_MIN]
+        for s, c in sc:
+            if s < FIT_MIN:
+                fit_ban.setdefault(i, set()).add(c)
+        log(f"[눈 고르기] 토막 {i} «{tok[i]['text']}» 후보 {len(ids)} → 맞음 {len(good)} (최고 {sc[0][0] if sc else '-'})")
+        if good:
+            out[i] = good + [(c, s) for c, s in ranked.get(i, []) if c not in {g for g, _ in good}]
+    return out
+
+
 def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections, T):
-    """선택 → 1080 구간 받기 → 1080 글자 검사·재선택 → 계획 시트. plan_materials·replan 공용."""
-    picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
+    """선택 → 1080 구간 받기 → 1080 글자 검사 + 대사↔장면 검수 → 걸린 컷 다시 고르기 → 계획 시트. plan_materials·replan 공용."""
+    fb_path = wd / "fit_ban.json"      # replan 이 이어 받는다(검수에서 빠진 칸을 다시 고르지 않게)
+    fit_ban = {int(k): set(v) for k, v in (json.loads(fb_path.read_text(encoding="utf-8")) if fb_path.exists() else {}).items()}
+    picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes, fit_ban)
     if sections:
         t = time.time()
         fetch_sections(picks, state["meta"], net)
         T["6_구간받기"] = round(time.time() - t, 1)
         # 1080 컷 프레임 검사(남의 글자·어두움) — 360p 미리보기 설명이 놓친 작은 글자를 잡는다(1판: 'Click' 설명 자막 컷 통과)
+        # + 대사↔장면 검수(10-18 사장님 "대사에 맞는 편집포인트의 영상매칭이 안됐다") — 안 맞는 칸은 그 토막 후보에서 빼고 다시 고른다
         t = time.time()
-        seen = {}            # (vid, src_t0, src_t1) → 검사 결과 — 다시 고른 뒤 그대로인 컷은 다시 안 묻는다
-        for vr in range(VERIFY_ROUNDS + 1):
+        seen, seen_fit, eyed = {}, {}, set()
+        for vr in range(max(VERIFY_ROUNDS, FIT_ROUNDS) + 1):
             for p in picks:
                 k = (p.get("vid"), p.get("src_t0"), p.get("src_t1"))
                 if k in seen:
@@ -875,18 +1021,29 @@ def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections
             for p in picks:
                 if "verify" in p:
                     seen[(p.get("vid"), p.get("src_t0"), p.get("src_t1"))] = p["verify"]
-            if not flagged or vr == VERIFY_ROUNDS:
+            low = fit_cuts([p for p in picks if p not in flagged], toks, wd, llm, window_of(rules), seen_fit)
+            # 눈 고르기 대상 = 미달 + 빈칸(짤 제외), 토막마다 한 번만
+            bad = [p for p in low + [q for q in picks if q.get("none") and q.get("kind") != "meme"] if p["i"] not in eyed]
+            last = vr == max(VERIFY_ROUNDS, FIT_ROUNDS)
+            if (not flagged and not low and not bad) or last:
                 break
             ban_cells(flagged, state["cells"])
-            picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes)
+            for p in low:
+                if p.get("cid") is not None:
+                    fit_ban.setdefault(p["i"], set()).add(p["cid"])
+            if bad:
+                ranked = eye_rescue(bad, toks, needs, ranked, state["cells"], state["meta"], rules, fit_ban, wd, llm)
+                eyed.update(p["i"] for p in bad)
+            picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes, fit_ban)
             fetch_sections(picks, state["meta"], net)
+        fb_path.write_text(json.dumps({str(k): sorted(v) for k, v in fit_ban.items()}), encoding="utf-8")
         # 마지막 검사에도 걸린 컷은 쓰지 않는다(A5 > 빈칸) — 1판 4: 두 바퀴 재선택 뒤 최종 컷이 검사 없이 나갔다
         for p in picks:
             if p.get("verify") in ("text", "dark"):
                 p.update({"none": True, "why": f"1080 검사 {p['verify']}"})
             elif p.get("vid") and not p.get("section_file"):
                 p["verify"] = "구간 못 받음"
-        T["6b_1080검사"] = round(time.time() - t, 1)
+        T["6b_1080·대사검수"] = round(time.time() - t, 1)
     for p in picks:
         if p.get("none"):
             p["tried"] = [q["q"] for q in state["queries"]]
@@ -1131,6 +1288,57 @@ def verify_cuts(picks, wd: Path, llm, only_new: bool = False, window: tuple[int,
             else:
                 p["verify"] = "ok"
     return flagged
+
+
+FIT_PROMPT = """숏폼 편집 검수다. 그림의 노란 번호 칸 = 그 번호 대사가 나올 때 화면에 깔린 장면(위에 얹힌 자막 글자는 무시).
+각 번호마다 **화면이 그 대사(문장 전체 뜻 포함)를 보여주나** 점수를 매겨라.
+10 = 대사가 말하는 사물·동작·결과·상황이 화면에 그대로 보임(예 '물속에서 진동' ↔ 물컵 속 칫솔이 물을 튀김)
+7 = 대사 내용과 이어지는 장면(같은 문장이 말하는 동작·결과의 다른 각도)
+4 = 제품만 나오고 대사가 말하는 동작·결과·상황은 안 보임(그냥 들고 있음·책상에 놓임)
+1 = 대사와 무관하거나 다른 제품
+[대사] (번호: «자막 조각» / 문장: 그 줄 전체)
+{rows}
+출력 JSON만: {{"fits":[{{"n":번호,"score":0~10,"seen":"화면에 보이는 것 한국어 한 줄","want":"대사에 맞으려면 보여야 할 장면 한국어 한 줄"}}]}}"""
+FIT_MIN = 7               # 대사↔장면 맞음 하한 — 미만은 다시 고른다(사장님 10-18 "대사에 맞는 편집포인트의 영상매칭이 안됐다")
+
+
+def fit_judge(items: list[dict], wd: Path, llm, tag: str = "fit") -> list[dict]:
+    """(판단 주인) 대사↔장면 맞음 — items[{img, piece, line}] → 같은 순서로 {score, seen, want}. 시트 10칸씩 1회.
+    material_auto 선택 뒤 검사와 완성본 측정(oneshot/scene_fit.py)이 둘 다 이것을 부른다."""
+    from PIL import Image, ImageDraw, ImageFont
+    fdir = wd / "fit"
+    fdir.mkdir(parents=True, exist_ok=True)
+    font = ImageFont.truetype(FONT_B, 30)
+    out = [None] * len(items)
+    W, H, cols, per = 300, 400, 5, 10
+    def one(c0):
+        chunk = items[c0:c0 + per]
+        sh = Image.new("RGB", (cols * (W + 6), math.ceil(len(chunk) / cols) * (H + 6)), "white")
+        d = ImageDraw.Draw(sh)
+        for j, it in enumerate(chunk):
+            x, y = (j % cols) * (W + 6), (j // cols) * (H + 6)
+            if it.get("img") and Path(it["img"]).exists():
+                im = Image.open(it["img"]).convert("RGB")
+                im.thumbnail((W, H))
+                sh.paste(im, (x + (W - im.width) // 2, y + (H - im.height) // 2))
+            d.rectangle([x, y, x + 52, y + 38], fill="black")
+            d.text((x + 6, y + 2), str(j), font=font, fill="yellow")
+        sp = fdir / f"{tag}_{c0 // per}.jpg"
+        sh.save(sp, quality=88)
+        rows = "\n".join(f"{j}: «{it['piece']}» / 문장: {it['line']}" for j, it in enumerate(chunk))
+        got, err = {}, None
+        for _try in range(2):          # 10-18 실측: 첫 묶음 10칸이 답 없이 와 기준선에서 빠졌다 — 빠진 번호가 있으면 한 번 더
+            r, err = llm([sp.read_bytes()], FIT_PROMPT.format(rows=rows), f"ma_fit:{tag}")
+            got.update({_as_int(x.get("n")): x for x in (r or {}).get("fits") or [] if isinstance(x, dict) and _as_int(x.get("score")) is not None})
+            if all(j in got for j in range(len(chunk))):
+                break
+        for j in range(len(chunk)):
+            x = got.get(j)
+            out[c0 + j] = ({"score": _as_int(x.get("score")), "seen": str(x.get("seen") or ""), "want": str(x.get("want") or "")}
+                           if x and _as_int(x.get("score")) is not None else {"score": None, "why": err or "답 없음"})
+    with cf.ThreadPoolExecutor(WORKERS) as ex:     # 묶음끼리 동시(Claude 판정 1회 ≈30초 — 10-18 실측 28.5초)
+        list(ex.map(one, range(0, len(items), per)))
+    return out
 
 
 def ban_cells(flagged, cells: dict):
