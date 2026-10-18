@@ -883,6 +883,104 @@ TRUTH_PROBE = {   # 정답 검사용(channel_find_check 와 같은 표 — 이�
 }
 
 
+# ------------------------------------------------------------------ 엔진 channels → 확정 판정 (2026-10-18 누락 재판정, 관제 097)
+CONFIRMED_JSON = ROOT / "channel" / "스타일분석" / "현장썰" / "채널수집" / "같은결_채널.json"
+
+
+def engine_candidates(engine: dict, confirmed: dict) -> list[dict]:
+    """엔진 channels 중 '같은 결(same_kind) 이거나 갈래가 현장썰이거나 표본에 나레+원음이 있는' 채널 가운데
+    확정 목록(channels)에도, 아님 목록(rejected)에도 아직 없는 것. 확정 목록을 엔진 결과에서 만들지 않아 누락이 났다 — 그 구멍을 막는 한 곳."""
+    known = {c.get("channel_id") for c in confirmed.get("channels", [])} | {c.get("channel_id") for c in confirmed.get("rejected", [])}
+
+    def hit(c):
+        return bool(c.get("same_kind")) or c.get("style") == "현장썰" or any(
+            x.get("ok") and x.get("original_audio") and x.get("korean_narration") for x in (c.get("samples") or []))
+    return [c for c in engine.get("channels", []) if hit(c) and c.get("channel_id") not in known]
+
+
+def pick_samples(videos: list[dict], k: int = 5) -> list[dict]:
+    """조회 상위 3 + 중간 (k-3)편. 표본은 한 곳에서 고른다."""
+    vs = sorted([v for v in videos if v.get("id") and v.get("views")], key=lambda v: -v["views"])
+    if len(vs) <= k:
+        return vs
+    top = vs[:3]
+    mid0 = len(vs) // 2 - (k - 3) // 2
+    return top + vs[mid0:mid0 + (k - 3)]
+
+
+def judge_channel_samples(rows: list[dict]) -> tuple[str, str]:
+    """표본 판독 rows(sample_check 결과 + views) → (확정/후보/아님, 이유). 판정 문턱의 주인."""
+    ok = [r for r in rows if r.get("ok")]
+    if len(ok) < 2:
+        return "후보", f"판독된 표본 {len(ok)}편뿐 — 판정 보류"
+    four = [r for r in ok if r["korean_narration"] and r["original_audio"] and r["foreign_original"] and r["product"]]
+    live = [r for r in ok if r["style"] == "현장썰"]
+    prod = [r for r in ok if r["product"]]
+    tag = f"4요건 {len(four)}/{len(ok)} · 현장썰 {len(live)}/{len(ok)} · 제품 {len(prod)}/{len(ok)}"
+    if len(four) * 2 >= len(ok) and len(ok) >= 3:
+        return "확정", tag
+    if four:
+        return "후보", tag
+    if live and not prod:
+        return "아님", tag + " — 현장썰이지만 제품 없음(제품 없는 바이럴)"
+    if not live:
+        return "아님", tag + " — 원음 섞인 현장썰 편이 없음(나레만/자막만)"
+    return "아님", tag
+
+
+def confirm_from_engine(engine_path=None, confirmed_path=None, k: int = 5, workers: int = 3, apply: bool = False) -> dict:
+    """엔진 결과 channels → 확정 판정까지 바로 잇는다. 확정 목록에 없는 채널만 표본 k편(조회 상위+중간) 4요건 판독(sample_check, 무료 풀).
+    apply=True 면 같은결_채널.json 의 channels(확정·후보)와 rejected(아님)에 이어 쓴다(기존 행 유지). 눈 확인은 사람 몫 — checked_by='제미나이만'으로 남긴다."""
+    engine_path = Path(engine_path or ROOT / "channel/스타일분석/현장썰/채널수집/결과_엔진_1차.json")
+    confirmed_path = Path(confirmed_path or CONFIRMED_JSON)
+    engine = json.loads(engine_path.read_text(encoding="utf-8"))
+    confirmed = json.loads(confirmed_path.read_text(encoding="utf-8"))
+    todo = engine_candidates(engine, confirmed)
+
+    def one(c):
+        st = channel_stats(c["channel_id"])
+        if not st:
+            return {"engine": c, "verdict": "후보", "reason": "채널 실측 실패 — 판정 보류", "rows": []}
+        rows = []
+        for v in pick_samples(st["videos"], k):
+            r = sample_check(v["id"])
+            r.update(views=v["views"], title=v["title"])
+            rows.append(r)
+        verdict, reason = judge_channel_samples(rows)
+        return {"engine": c, "stats": {x: st.get(x) for x in ("name", "handle", "channel_id", "url", "subs", "median_views", "max_views", "n", "per_week", "last_upload")},
+                "rows": rows, "verdict": verdict, "reason": reason}
+    with ThreadPoolExecutor(workers) as ex:
+        out = list(ex.map(one, todo))
+    if apply:
+        _apply_confirm(confirmed, out, confirmed_path)
+    return {"todo": len(todo), "results": out}
+
+
+def _apply_confirm(confirmed: dict, out: list[dict], path: Path) -> None:
+    today = datetime.now().date().isoformat()
+    for o in out:
+        st = o.get("stats") or {}
+        e = o["engine"]
+        ok = [r for r in o["rows"] if r.get("ok")]
+        four = [r for r in ok if r["korean_narration"] and r["original_audio"] and r["foreign_original"] and r["product"]]
+        live = [r for r in ok if r["style"] == "현장썰"]
+        rep = [{"views": r["views"], "id": r["video_id"], "title": r["title"], "product": r.get("note"), "origin_audio_lang": r.get("original_lang"),
+                "url": f"https://www.youtube.com/shorts/{r['video_id']}"} for r in sorted(four or ok, key=lambda r: -r["views"])[:3]]
+        row = {"handle": st.get("handle") or e.get("handle"), "name": st.get("name") or e.get("name"), "channel_id": e["channel_id"],
+               "url": e.get("url"), "verdict": o["verdict"], "checked_by": "제미나이만", "note": "누락 재판정 2026-10-18 · " + o["reason"],
+               "subs": st.get("subs") or e.get("subs"), "median30": st.get("median_views") or e.get("median_views"), "max30": st.get("max_views") or e.get("max_views"),
+               "n30": st.get("n"), "per_week": st.get("per_week"), "last_upload": st.get("last_upload"),
+               "samples": len(ok), "four_ok": len(four), "style_ratio": {"현장썰(나레+원음)": f"{len(live)}/{len(ok)}"}, "rep": rep,
+               "relabeled": "누락 재판정 2026-10-18"}
+        if o["verdict"] == "아님":
+            confirmed.setdefault("rejected", []).append(row)
+        else:
+            confirmed.setdefault("channels", []).append(row)
+    confirmed["made"] = today
+    confirmed["method"] = confirmed.get("method", "") + f" / 누락 재판정 {today}: 엔진 결과 channels 중 확정 목록에 없는 것을 confirm_from_engine 으로 표본 5편(조회 상위 3+중간 2) 판독"
+    path.write_text(json.dumps(confirmed, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", default="channel/스타일분석/현장썰/채널수집/seeds.json")
@@ -895,7 +993,14 @@ def main(argv=None):
     ap.add_argument("--gemini", type=int, default=300)
     ap.add_argument("--audio", type=int, default=40)
     ap.add_argument("--ytsearch", type=int, default=400)
+    ap.add_argument("--confirm-from-engine", action="store_true", help="엔진 channels → 확정 목록에 없는 채널 재판정")
+    ap.add_argument("--apply", action="store_true")
     a = ap.parse_args(argv)
+    if a.confirm_from_engine:
+        r = confirm_from_engine(apply=a.apply)
+        for o in r["results"]:
+            print(o["verdict"], o["engine"]["name"], o["reason"])
+        return
     if a.lens_import:
         print("렌즈 캐시 들임", lens_import(a.lens_import))
     seeds = load_seeds(ROOT / a.seeds if not Path(a.seeds).is_absolute() else a.seeds)

@@ -1,6 +1,6 @@
 {
  "made": "2026-10-18",
- "method": "후보 ~330채널 → 최근 쇼츠 30편 제목 → 표본 2~6편(조회 상위+중간) 앞 30초를 yt-dlp 480p로 받아 제미나이 무료풀로 4요건(한국어 나레·원음·해외 원본·제품) 판독 → 확정 채널은 프레임 시트를 사람(클로드) 눈으로 대조",
+ "method": "후보 ~330채널 → 최근 쇼츠 30편 제목 → 표본 2~6편(조회 상위+중간) 앞 30초를 yt-dlp 480p로 받아 제미나이 무료풀로 4요건(한국어 나레·원음·해외 원본·제품) 판독 → 확정 채널은 프레임 시트를 사람(클로드) 눈으로 대조 / 누락 재판정 2026-10-18: 엔진 결과 channels 중 확정 목록에 없는 것을 confirm_from_engine 으로 표본 5편(조회 상위 3+중간 2) 판독",
  "four": "①한국어 나레 ②원음(외국어 말·현장반응) ③해외 영상 ④제품",
  "channels": [
   {
@@ -401,6 +401,1478 @@
      "url": "https://www.youtube.com/shorts/aRrzqPO9GB0"
     }
    ]
+  },
+  {
+   "handle": "@SSoooc4",
+   "name": "쑈옷",
+   "channel_id": "UC2PCyP-r5Lw3eCXHjhSthLA",
+   "url": "https://www.youtube.com/channel/UC2PCyP-r5Lw3eCXHjhSthLA",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 5/5 · 제품 1/5",
+   "subs": 470000,
+   "median30": 84000.0,
+   "max30": 863000,
+   "n30": 30,
+   "per_week": 17.1,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "5/5"
+   },
+   "rep": [
+    {
+     "views": 863000,
+     "id": "qhOJ7fAk32g",
+     "title": "동결건조로 가장 맛있는 조합 찾기",
+     "product": "해외 유튜브 채널(@spaceagesnacks)의 동결건조 젤리 시식 영상에 한국어 나레이션을 덧입혔으며 원본의 현장음과 영어 감탄사가 포함되어 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/qhOJ7fAk32g"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@숏마블팬",
+   "name": "숏마블팬",
+   "channel_id": "UCA8gMQRQzUAANM_OM-9UItg",
+   "url": "https://www.youtube.com/channel/UCA8gMQRQzUAANM_OM-9UItg",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 2/5 · 제품 3/5",
+   "subs": 6980,
+   "median30": 57500.0,
+   "max30": 2000000,
+   "n30": 30,
+   "per_week": 6.7,
+   "last_upload": "2026-09-29",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "2/5"
+   },
+   "rep": [
+    {
+     "views": 57000,
+     "id": "3RW2drJoz-M",
+     "title": "영화 속 헬멧들하나만 고른다면 #마블 #마블팬",
+     "product": "한국어 안내 멘트 이후 외국인의 영화 캐릭터 헬멧 제품 착용 영상과 영어 원음이 주로 재생됩니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/3RW2drJoz-M"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@HGTVS",
+   "name": "HGTV [생활의 발견]",
+   "channel_id": "UCq88DcgGj7J9JmEF1H1bEtQ",
+   "url": "https://www.youtube.com/channel/UCq88DcgGj7J9JmEF1H1bEtQ",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 2/5 · 제품 2/5",
+   "subs": 21200,
+   "median30": 38500.0,
+   "max30": 2400000,
+   "n30": 30,
+   "per_week": 7.5,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "2/5"
+   },
+   "rep": [
+    {
+     "views": 1000000,
+     "id": "INIFGgDXzzg",
+     "title": "예초기에 바퀴를 달면 일어나는 일 #예초기 #제초작업 #정원관리",
+     "product": "한국어 나레이션과 함께 바퀴를 부착한 예초기 장비를 소개하는 해외 원본 영상이다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/INIFGgDXzzg"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@humor_mansae",
+   "name": "유머만세",
+   "channel_id": "UCGNqjCSLV7XoyMZjUtiIm0g",
+   "url": "https://www.youtube.com/channel/UCGNqjCSLV7XoyMZjUtiIm0g",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 1/5 · 제품 5/5",
+   "subs": 52700,
+   "median30": 21000.0,
+   "max30": 2900000,
+   "n30": 30,
+   "per_week": 1.5,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 21000,
+     "id": "kjQO_PBUJUw",
+     "title": "세상에서 가장 귀여운 악기의 정체",
+     "product": "한국어 나레이션이 진행된 후 외국인이 전자 악기 오타마톤을 연주하는 원본 소리가 포함되어 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/kjQO_PBUJUw"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@긍정템",
+   "name": "긍정템",
+   "channel_id": "UCo5ENVMKRcuYNV6jubsD_7g",
+   "url": "https://www.youtube.com/channel/UCo5ENVMKRcuYNV6jubsD_7g",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 1/5 · 제품 5/5",
+   "subs": 4660,
+   "median30": 16500.0,
+   "max30": 1800000,
+   "n30": 30,
+   "per_week": 6.5,
+   "last_upload": "2026-08-27",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 16000,
+     "id": "NOBo9qa3J3Q",
+     "title": "천재적 설계로 업계 박살낸 제품",
+     "product": "해외 원본 영상에 한국어 나레이션을 입혀 프로젝터 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/NOBo9qa3J3Q"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@잼잼다이어리",
+   "name": "잼잼다이어리",
+   "channel_id": "UCKzS9clApB_hRvfsM3qDqAA",
+   "url": "https://www.youtube.com/channel/UCKzS9clApB_hRvfsM3qDqAA",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 1/5 · 제품 4/5",
+   "subs": 37900,
+   "median30": 11500.0,
+   "max30": 79000,
+   "n30": 30,
+   "per_week": 10.5,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 11000,
+     "id": "rE34JtjOZ7w",
+     "title": "일부러 안 들어가게 만든 공구 구멍",
+     "product": "해외 공구 가공 영상을 바탕으로 한국어 나레이션과 함께 특정 공구 제품을 설명하고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/rE34JtjOZ7w"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@꾸밈비서",
+   "name": "꾸밈비서",
+   "channel_id": "UCFnAEPRoSzGsMXqWyHN_8rA",
+   "url": "https://www.youtube.com/channel/UCFnAEPRoSzGsMXqWyHN_8rA",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 2/5 · 현장썰 2/5 · 제품 4/5",
+   "subs": 344,
+   "median30": 9200,
+   "max30": 696000,
+   "n30": 19,
+   "per_week": 3.5,
+   "last_upload": "2026-09-29",
+   "samples": 5,
+   "four_ok": 2,
+   "style_ratio": {
+    "현장썰(나레+원음)": "2/5"
+   },
+   "rep": [
+    {
+     "views": 9500,
+     "id": "2p__7up6jw8",
+     "title": "100년 전 화장품 열어봤다가 충격 먹은 이유",
+     "product": "해외 100년 전 빈티지 화장품 리뷰 영상을 바탕으로 한국어 나레이션과 배경 음악을 입힌 유튜브 쇼츠 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/2p__7up6jw8"
+    },
+    {
+     "views": 9200,
+     "id": "cm6HCDVzzxo",
+     "title": "형광펜을 입술에?! 한국화장품에 당황한 외국인",
+     "product": "외국인 인플루언서의 영어 리뷰 원본 영상 위에 한국어 자막과 내레이션이 삽입된 뷰티 제품 쇼츠입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/cm6HCDVzzxo"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@housetem-Sp",
+   "name": "하우스템",
+   "channel_id": "UCtQ09a1d3C0Kc6KtQtt56fA",
+   "url": "https://www.youtube.com/channel/UCtQ09a1d3C0Kc6KtQtt56fA",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 1/5 · 현장썰 1/5 · 제품 5/5",
+   "subs": 727,
+   "median30": 1650.0,
+   "max30": 198000,
+   "n30": 30,
+   "per_week": 0.4,
+   "last_upload": "2026-06-21",
+   "samples": 5,
+   "four_ok": 1,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 198000,
+     "id": "Ap041UBSVwo",
+     "title": "2만원에 고급 대리석삘이 나네 #바닥페인트 #에폭시페인트 #셀프시공",
+     "product": "해외 인테리어 자재 홍보 영상에 한국어 TTS 나레이션이 입혀져 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/Ap041UBSVwo"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@국뽕터짐",
+   "name": "국뽕터짐",
+   "channel_id": "UCrbqlr-QsPuEKVjOesl87fw",
+   "url": "https://www.youtube.com/channel/UCrbqlr-QsPuEKVjOesl87fw",
+   "verdict": "후보",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 2/5 · 현장썰 3/5 · 제품 4/5",
+   "subs": 3610,
+   "median30": 17000.0,
+   "max30": 1200000,
+   "n30": 30,
+   "per_week": 6.2,
+   "last_upload": "2026-09-08",
+   "samples": 5,
+   "four_ok": 2,
+   "style_ratio": {
+    "현장썰(나레+원음)": "3/5"
+   },
+   "rep": [
+    {
+     "views": 444000,
+     "id": "GMYt6GQefGo",
+     "title": "수천만 조회수 터진 미국천재의 발명품",
+     "product": "해외 인물이 등장하여 제품을 직접 소개하는 외국 원본 영상에 한국어 나레이션이 입혀져 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/GMYt6GQefGo"
+    },
+    {
+     "views": 18000,
+     "id": "rauRLmAuvjo",
+     "title": "새벽에 몰래 K-컵라면 먹다가 부모님한테 걸린 결과 ㅋㅋㅋㅋ",
+     "product": "한국어 나레이션과 외국인 부모님의 스페인어 원음이 섞여 있으며, 컵라면이라는 한국 음식을 다룬 영상이다.",
+     "origin_audio_lang": "스페인어",
+     "url": "https://www.youtube.com/shorts/rauRLmAuvjo"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  }
+ ],
+ "rejected": [
+  {
+   "handle": "@ho_shop",
+   "name": "활용정점.",
+   "channel_id": "UCROt8NdotNMXavh3clMIMCw",
+   "url": "https://www.youtube.com/channel/UCROt8NdotNMXavh3clMIMCw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 8270,
+   "median30": 241500.0,
+   "max30": 14000000,
+   "n30": 30,
+   "per_week": 0.6,
+   "last_upload": "2026-10-03",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 14000000,
+     "id": "azDE6caCwjU",
+     "title": "코스트코 본사도 몰랐던 천재 아이디어 #코스트코 #살림꿀팁 #육아꿀템",
+     "product": "영문 나레이션으로 코스트코 매직랩 제품의 다양한 활용법을 설명하는 해외 원본 영상 재가공 콘텐츠입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/azDE6caCwjU"
+    },
+    {
+     "views": 10000000,
+     "id": "8hOimn7dr1A",
+     "title": "다이소도 예상못한 천재 아이디어 #다이소꿀템 #육아꿀템 #살림노하우 #가전보관 #정리정돈",
+     "product": "한국어 나레이션으로 다이소 커버링 테이프 활용법을 설명하며, 화면은 일본어 라벨이 부착된 난방기구를 포장하는 해외 원본 영상을 사용했습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/8hOimn7dr1A"
+    },
+    {
+     "views": 5500000,
+     "id": "-Z-6Iqkf5Vw",
+     "title": "엄마가 감탄한 천재 아이디어 #물놀이 #흉터커버 #타투가리기",
+     "product": "영문 나레이션이 삽입되어 있으며, 흉터·문신 커버 패치라는 제품을 소개하는 해외 시연 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/-Z-6Iqkf5Vw"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@HermesPM",
+   "name": "헤르메스",
+   "channel_id": "UCfbLerNLxyxmtmwPDmB6yFg",
+   "url": "https://www.youtube.com/channel/UCfbLerNLxyxmtmwPDmB6yFg",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 5810,
+   "median30": 68000,
+   "max30": 6800000,
+   "n30": 25,
+   "per_week": 0.3,
+   "last_upload": "2024-04-24",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 6800000,
+     "id": "yGuhOMOtEIg",
+     "title": "신기한 수세미 팔아서 천억번 이 남자",
+     "product": "한국어 나레이션으로 미국의 수세미 제품 '스크럽 대디'의 특징과 성공 사례를 소개하는 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/yGuhOMOtEIg"
+    },
+    {
+     "views": 4500000,
+     "id": "vS2fGSwh0As",
+     "title": "편의점 의자의 역사",
+     "product": "한국어 나레이션으로 전 세계에서 가장 많이 팔린 모노블록 플라스틱 의자 제품의 역사와 제조 과정을 설명하는 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/vS2fGSwh0As"
+    },
+    {
+     "views": 3500000,
+     "id": "5t-dTzC-g6o",
+     "title": "크리스피 크림 도넛 되팔이 논란",
+     "product": "한국어 나레이션이 전개되며 미국에서 크리스피 크림 도넛을 재판매했던 인물의 뉴스·영상을 활용한 스토리형 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/5t-dTzC-g6o"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@ggultem_lab1",
+   "name": "꿀템연구소 lab",
+   "channel_id": "UCPRlwh8A2UomQMLBC7hdemQ",
+   "url": "https://www.youtube.com/channel/UCPRlwh8A2UomQMLBC7hdemQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 37600,
+   "median30": 44500.0,
+   "max30": 6100000,
+   "n30": 30,
+   "per_week": 6.6,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 6100000,
+     "id": "cO66RnH3CE4",
+     "title": "호신용 반지? 구조가 진짜 독특하네",
+     "product": "음성 나레이션 없이 초소형 반지 칼 도구를 조작하는 현장음만 포함된 해외 제품 시연 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/cO66RnH3CE4"
+    },
+    {
+     "views": 4100000,
+     "id": "ULOCXRKmZq8",
+     "title": "테니스 리턴볼, 혼자 쳐도 공이 계속 돌아오네ㅋㅋ",
+     "product": "한국어 나레이션 없이 배경음악만 나오며, 해외 영상 속 테니스 혼자 연습용 도구를 시연하는 제품 중심 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/ULOCXRKmZq8"
+    },
+    {
+     "views": 2100000,
+     "id": "e0BJzVGXd_0",
+     "title": "호신용 반지? 이게 이렇게 접힌다고? 구조가 진짜 독특하네",
+     "product": "별도의 나레이션 없이 금속 피젯 토이를 만지는 현장 소리만 포함되어 있으며, 해외 제작 제품 관련 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/e0BJzVGXd_0"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@mangongbang",
+   "name": "만공방",
+   "channel_id": "UCicAPJlU41oKjdXWWcsZoxA",
+   "url": "https://www.youtube.com/channel/UCicAPJlU41oKjdXWWcsZoxA",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 1/5 · 제품 1/5",
+   "subs": 77200,
+   "median30": 39500.0,
+   "max30": 7500000,
+   "n30": 30,
+   "per_week": 1.6,
+   "last_upload": "2026-10-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 7500000,
+     "id": "SCnM7k_hYV0",
+     "title": "목수 고인물들의 미친 호흡 - 지붕 시공편",
+     "product": "해외 목수들이 현장에서 빠르게 치수를 전달하며 작업하는 해외 원본 영상으로, 한국어 나레이션 없이 현장음과 음악이 재생됩니다.",
+     "origin_audio_lang": "기타",
+     "url": "https://www.youtube.com/shorts/SCnM7k_hYV0"
+    },
+    {
+     "views": 4600000,
+     "id": "X3my3mRVpMw",
+     "title": "30년 반장이 바퀴를 일부러 넘어뜨린 이유",
+     "product": "해외 지게차 작업 영상에 한국어 자막과 음악을 입힌 영상으로, 한국어 나레이션과 현장음은 없습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/X3my3mRVpMw"
+    },
+    {
+     "views": 2200000,
+     "id": "EG_Utyk6RKA",
+     "title": "거대한 돌 사이에 작은 돌을 끼운 이유ㄷㄷ",
+     "product": "해외 석산 공사 현장 원본 영상과 효과음이 이어지다 후반부에 한국어 나레이션이 삽입된 영상입니다.",
+     "origin_audio_lang": "기타",
+     "url": "https://www.youtube.com/shorts/EG_Utyk6RKA"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@sshortchang",
+   "name": "숏창",
+   "channel_id": "UCZ2eeZKPJQ62Ji5ecNtV-AA",
+   "url": "https://www.youtube.com/channel/UCZ2eeZKPJQ62Ji5ecNtV-AA",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 3/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 48700,
+   "median30": 36000.0,
+   "max30": 266000,
+   "n30": 30,
+   "per_week": 15.0,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 266000,
+     "id": "Vt7zXHQLd4U",
+     "title": "상대를 실명시키는 촛불 방패의 비밀",
+     "product": "영어 나레이션과 외국인이 랜턴 실드(특수 무기/도구)를 설명 및 시연하는 해외 원본 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/Vt7zXHQLd4U"
+    },
+    {
+     "views": 242000,
+     "id": "ZOFER65rcss",
+     "title": "네이비씰이 무른 칼을 고집하는 진짜 이유",
+     "product": "음성은 영어로 설명하는 해외 원본 나레이션이며, 특수부대 및 탄통을 뚫는 나이프 제품을 다루고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/ZOFER65rcss"
+    },
+    {
+     "views": 189000,
+     "id": "q593aXao8sk",
+     "title": "바다에 수직으로 꽂히는 108m 선박의 비밀",
+     "product": "영어 나레이션이 들어간 해외 해양 연구선 RP FLIP 관련 영상으로, 판매 목적의 상품 영상이 아닙니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/q593aXao8sk"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@shopping_flavor",
+   "name": "쇼맛",
+   "channel_id": "UCP4DH3uz8-pyIj51pM-XbwQ",
+   "url": "https://www.youtube.com/channel/UCP4DH3uz8-pyIj51pM-XbwQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 288000,
+   "median30": 35000.0,
+   "max30": 777000,
+   "n30": 30,
+   "per_week": 31.0,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 777000,
+     "id": "uPtkYHLwjpo",
+     "title": "대리석 시공 하지마세요",
+     "product": "외국인이 접착식 타일을 시공하는 해외 원본 영상과 영어 음성이 사용되며 제품 소개가 중심입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/uPtkYHLwjpo"
+    },
+    {
+     "views": 272000,
+     "id": "WfQbyP4-4TY",
+     "title": "옆집 트랙터보다 나은 경작기",
+     "product": "영어 AI 나레이션과 기계 현장음이 포함된 소형 경작 도구 상품 소개 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/WfQbyP4-4TY"
+    },
+    {
+     "views": 176000,
+     "id": "M_gsEmC_ePY",
+     "title": "나무 베지 말고 압축 장작으로 불 붙히기",
+     "product": "한국어 오디오 없이 영어 나레이션으로 진행되는 해외 압축 장작 제품 소개 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/M_gsEmC_ePY"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@신박발견",
+   "name": "신박발견",
+   "channel_id": "UC9SnR_zj0wRj59NSBrWdI2g",
+   "url": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 2/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 52900,
+   "median30": 30500.0,
+   "max30": 1900000,
+   "n30": 30,
+   "per_week": 5.9,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 1900000,
+     "id": "ebr5TjGidn0",
+     "title": "뻔한 용돈을 더 가치있게 만드는 방법",
+     "product": "한국어 나레이션 없이 일본어 노래가 배경음악으로 흐르며, 용돈 봉투를 만드는 해외 종이접기 DIY 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/ebr5TjGidn0"
+    },
+    {
+     "views": 1100000,
+     "id": "DhGqRlNScuY",
+     "title": "테이프 딱! 한 장만 필요한 원통형 포장 방법",
+     "product": "한국어 나레이션 없이 배경음악만 재생되며, 원통형 포장 꿀팁을 소개하는 해외 수집 영상이다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/DhGqRlNScuY"
+    },
+    {
+     "views": 905000,
+     "id": "83GR9zeNRJ8",
+     "title": "샤워기에 고객 후기가 스며들면 생기는 일",
+     "product": "한국어 나레이션 없이 배경음악과 샤워기 물소리만 재생되며, 해외 샤워기 헤드 제품 홍보 영상을 재가공한 콘텐츠입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/83GR9zeNRJ8"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@쇼핑남자",
+   "name": "쇼핑남자",
+   "channel_id": "UC9CPf1vJxWkndwY1JvVDZVw",
+   "url": "https://www.youtube.com/channel/UC9CPf1vJxWkndwY1JvVDZVw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 7320,
+   "median30": 29000.0,
+   "max30": 2600000,
+   "n30": 28,
+   "per_week": 3.7,
+   "last_upload": "2026-09-28",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 2600000,
+     "id": "ZkwtNGTL3hQ",
+     "title": "써보면 반한다는 천재의 발명품",
+     "product": "한국어 나레이션이 전면에 적용된 해외 원본 재가공 영상으로 온열 담요 가운 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/ZkwtNGTL3hQ"
+    },
+    {
+     "views": 1000000,
+     "id": "0a4pcIrw4YY",
+     "title": "다이소도 놀란 한국 천재의 발명품",
+     "product": "한국어 나레이션으로 해외의 반려견 급수캡 제품 활용 영상을 소개하는 콘텐츠입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/0a4pcIrw4YY"
+    },
+    {
+     "views": 285000,
+     "id": "BoNFu3XlKrc",
+     "title": "다이소도 당황한 천재의 발명품",
+     "product": "해외에서 바이럴된 지퍼형 케이블 정리 튜브 제품 영상을 한국어 나레이션으로 소개해주는 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/BoNFu3XlKrc"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@알파뷰v",
+   "name": "알파뷰",
+   "channel_id": "UCUdSifvAIDr4V8kn6h2lUoQ",
+   "url": "https://www.youtube.com/channel/UCUdSifvAIDr4V8kn6h2lUoQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 1/5 · 제품 1/5",
+   "subs": 40600,
+   "median30": 21000.0,
+   "max30": 699000,
+   "n30": 30,
+   "per_week": 15.4,
+   "last_upload": "2026-10-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 699000,
+     "id": "VY3NqLRHXWo",
+     "title": "세상에서 제일 비싼 건초의 정체",
+     "product": "알프스 산비탈에서 헬리콥터와 산악 차량으로 건초를 수확하는 해외 영상에 한국어 나레이션이 가미되어 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/VY3NqLRHXWo"
+    },
+    {
+     "views": 186000,
+     "id": "XjHuL5_xOHo",
+     "title": "멀쩡한 호박을 밭에 그냥 버리는 이유",
+     "product": "한국어 나레이션이 전 구간에 적용되어 있고 이스라엘 농장의 서양호박 선별 과정을 보여주는 해외 원본 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/XjHuL5_xOHo"
+    },
+    {
+     "views": 132000,
+     "id": "6eij3GMFlWc",
+     "title": "옥수수 줄기를 버리지 않는 태국 농부들의 비밀",
+     "product": "태국 농부들의 옥수수와 고추 공생 재배 농법을 소개하는 한국어 나레이션 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/6eij3GMFlWc"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@좋아요눌러주면카리나",
+   "name": "햄숏핑",
+   "channel_id": "UCNadm-sC6fP_GNgTMXtl5BQ",
+   "url": "https://www.youtube.com/channel/UCNadm-sC6fP_GNgTMXtl5BQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 716,
+   "median30": 19000.0,
+   "max30": 3500000,
+   "n30": 30,
+   "per_week": 5.3,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 3500000,
+     "id": "w2P21oMDa60",
+     "title": "15도 바다에서 11시간 헤엄친 사람의 몸",
+     "product": "한국어 나레이션 없이 영어 원본 해설 및 음성이 그대로 재생되는 해외 도전 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/w2P21oMDa60"
+    },
+    {
+     "views": 537000,
+     "id": "7ZxiCSieZrc",
+     "title": "원두에 롤러코스터를 태워버림ㄷㄷ",
+     "product": "한국어 나레이션과 배경음악이 입혀진 해외 카페의 공기압 원두 이송 장치(설비·제품) 소개 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/7ZxiCSieZrc"
+    },
+    {
+     "views": 272000,
+     "id": "FvON9RZ_rSk",
+     "title": "10년 AS해주는 커피머신이 있음ㄷㄷ",
+     "product": "한국어 자막만 삽입되어 있으며 영어 나레이션이 나오는 해외 원본 영상으로 10년 보증 수동 커피머신 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/FvON9RZ_rSk"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@리뷰연구소임",
+   "name": "리뷰 연구소",
+   "channel_id": "UCZUMfoxa6PELaWTjHyGV5sQ",
+   "url": "https://www.youtube.com/channel/UCZUMfoxa6PELaWTjHyGV5sQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 3/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 2440,
+   "median30": 16500.0,
+   "max30": 2500000,
+   "n30": 30,
+   "per_week": 3.0,
+   "last_upload": "2026-09-20",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 2500000,
+     "id": "xBX9kUojN8U",
+     "title": "이대로 오븐에 넣는다고?",
+     "product": "해외에서 제작된 요리용 특수 종이 제품을 영어 음성과 함께 소개하는 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/xBX9kUojN8U"
+    },
+    {
+     "views": 1500000,
+     "id": "BbyOnqD4y1g",
+     "title": "샤넬 매장 직원도 물어봄",
+     "product": "영상의 중심이 명품 가방 제품이며, 영어 원음이 처음부터 끝까지 흐르고 한국어 나레이션은 없다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/BbyOnqD4y1g"
+    },
+    {
+     "views": 91000,
+     "id": "FpIeYAfEO0s",
+     "title": "이과들 나와서 설명 좀",
+     "product": "전 구간 영어 오디오가 재생되며, 해외의 슬라임 자동차 트랙 장난감 제품을 소개하는 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/FpIeYAfEO0s"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@shopping_genius1206",
+   "name": "쇼핑천재",
+   "channel_id": "UCJBXdaAibb0Uk1ZdEpjjA6w",
+   "url": "https://www.youtube.com/channel/UCJBXdaAibb0Uk1ZdEpjjA6w",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 42200,
+   "median30": 15000.0,
+   "max30": 1900000,
+   "n30": 30,
+   "per_week": 4.6,
+   "last_upload": "2026-10-07",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 1900000,
+     "id": "5v1dk0wF50I",
+     "title": "역발상으로 돈방석앉은 육아천재의 발명품",
+     "product": "한국어 나레이션이 전면에 깔려 있으며 해외 아이디어 육아 용품(바구니형 이동식 침대)을 소개하는 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/5v1dk0wF50I"
+    },
+    {
+     "views": 646000,
+     "id": "bQ7IDcJwAFE",
+     "title": "개발자도 예상못한 육아천재의 활용법",
+     "product": "소형 웨어러블 카메라 제품의 육아 활용법을 설명하는 한국어 나레이션 광고 영상이다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/bQ7IDcJwAFE"
+    },
+    {
+     "views": 628000,
+     "id": "Is1bwCs2nmE",
+     "title": "미국부모들 육퇴를 앞당겼다는 통잠인형의 비밀",
+     "product": "수면 인형 제품을 소개하는 한국어 나레이션 기반의 광고 영상이다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/Is1bwCs2nmE"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@아하지식",
+   "name": "아하",
+   "channel_id": "UC_nQ3Hs6enQwYoUndXhlEnw",
+   "url": "https://www.youtube.com/channel/UC_nQ3Hs6enQwYoUndXhlEnw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 2/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 11900,
+   "median30": 15000.0,
+   "max30": 1700000,
+   "n30": 30,
+   "per_week": 25.1,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 1700000,
+     "id": "FHhCruyGeLg",
+     "title": "쌓인 명함을 한 번에 모서리 둥글게 깎는 기계",
+     "product": "한국어 나레이션 없이 원본 기계 현장음만 나오며, 명함 모서리를 둥글게 깎는 가공 기계를 소개합니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/FHhCruyGeLg"
+    },
+    {
+     "views": 739000,
+     "id": "nK_AIGT_uEU",
+     "title": "다이얼만 돌리면 조여지는 끈 없는 운동화",
+     "product": "다이얼 운동화 제품을 시연하는 영상으로 별도의 나레이션 없이 다이얼 조이는 현장음만 들립니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/nK_AIGT_uEU"
+    },
+    {
+     "views": 227000,
+     "id": "1kAdAFhQN38",
+     "title": "끝없이 쏟아지는 것 같은 야곱의 사다리 장난감",
+     "product": null,
+     "origin_audio_lang": null,
+     "url": "https://www.youtube.com/shorts/1kAdAFhQN38"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@먹바구니",
+   "name": "먹바구니",
+   "channel_id": "UC0P5qHydiuDSgkFk-mTyu3w",
+   "url": "https://www.youtube.com/channel/UC0P5qHydiuDSgkFk-mTyu3w",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 1760,
+   "median30": 13000,
+   "max30": 31000,
+   "n30": 15,
+   "per_week": 0.9,
+   "last_upload": "2026-07-15",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 31000,
+     "id": "hjJlz47Q8_U",
+     "title": "해가 지날수록 맛이 변하고 있다는 라면?",
+     "product": "한국어 나레이션이 포함되어 있으며 국내 인기 라면 제품의 맛 변화에 대해 설명하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/hjJlz47Q8_U"
+    },
+    {
+     "views": 23000,
+     "id": "4b3PrEY8mBk",
+     "title": "일본 다이소에서 품절 대란 났다는 제품의 정체",
+     "product": "한국어 나레이션이 지속적으로 나오며, 해외 스톡 영상과 일본 다이소의 실리콘 뚜껑 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/4b3PrEY8mBk"
+    },
+    {
+     "views": 23000,
+     "id": "hnVbmHpKCrA",
+     "title": "일본 천재가 만들어 대박난 제품의 정체",
+     "product": "한국어 나레이션이 진행되며 일회용 종이 접시라는 특정 제품의 특징을 설명하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/hnVbmHpKCrA"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@밍니홈",
+   "name": "밍니홈",
+   "channel_id": "UCjDLN_B3byC8FVu-JkKkHDQ",
+   "url": "https://www.youtube.com/channel/UCjDLN_B3byC8FVu-JkKkHDQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 3/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 10500,
+   "median30": 11500.0,
+   "max30": 231000,
+   "n30": 30,
+   "per_week": 0.6,
+   "last_upload": "2026-09-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 231000,
+     "id": "hNoZP647_p8",
+     "title": "세탁소 사장님 기름때 빼는 방법! #다이소",
+     "product": "해외 세탁 관련 도구(스프레이)를 사용하여 기름때를 지우는 원본 영상에 한국어 자막이 합성된 형태입니다.",
+     "origin_audio_lang": "기타",
+     "url": "https://www.youtube.com/shorts/hNoZP647_p8"
+    },
+    {
+     "views": 215000,
+     "id": "V4QhARmL-IU",
+     "title": "코치 여름가방 추천은 이걸로 끝! #가방",
+     "product": null,
+     "origin_audio_lang": null,
+     "url": "https://www.youtube.com/shorts/V4QhARmL-IU"
+    },
+    {
+     "views": 152000,
+     "id": "jixI66UXMjM",
+     "title": "촌스럽지 않은 핑크립! 맥 1위 립스틱",
+     "product": "한국어 나레이션이 립스틱 제품을 설명하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/jixI66UXMjM"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@smallissue",
+   "name": "Small Issue",
+   "channel_id": "UCha0VF6RzszaH-i0HDm4mOw",
+   "url": "https://www.youtube.com/channel/UCha0VF6RzszaH-i0HDm4mOw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 3/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 31200,
+   "median30": 11000.0,
+   "max30": 942000,
+   "n30": 30,
+   "per_week": 7.0,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 942000,
+     "id": "Lur6FLf1EHw",
+     "title": "통조림 좋아하는 지구인의 발명품 #주방도구 #캠핑용품 #생활꿀팁",
+     "product": "영어 음성 나레이션으로 다양한 비주얼의 해외 통조림 오프너 제품을 소개하고 설명하는 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/Lur6FLf1EHw"
+    },
+    {
+     "views": 689000,
+     "id": "aNEo8vAdFXg",
+     "title": "자연에서 불씨를 만드는 가장 보편적인 방법 #생활꿀팁 #삶의지혜 #불피우기",
+     "product": "영어 음성과 현장음이 수록되고 한국어 자막이 탑재된 해외 마찰 발화 시연 영상으로, 한국어 나레이션이 없으며 상업 제품 소개가 아닙니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/aNEo8vAdFXg"
+    },
+    {
+     "views": 410000,
+     "id": "XPCalTpOogQ",
+     "title": "캥거루 된 집사 애착 후드티 #강아지고양이 #반려동물용품 #고양이집사",
+     "product": "영어 원어민 음성이 계속 들리며, 반려동물을 넣을 수 있는 포켓 후드티라는 제품을 소개하는 해외 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/XPCalTpOogQ"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@지식록",
+   "name": "지식록",
+   "channel_id": "UCshdaVZpKEyYNb3h7nINw-w",
+   "url": "https://www.youtube.com/channel/UCshdaVZpKEyYNb3h7nINw-w",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 3/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 42700,
+   "median30": 10950.0,
+   "max30": 186000,
+   "n30": 30,
+   "per_week": 21.5,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 186000,
+     "id": "bFcS042fd4c",
+     "title": "모서리를 감싸는 사포",
+     "product": "나레이션과 현장 소리 없이 배경음악만 재생되며, 용접 부위를 연마하는 파이프 연마기 제품을 보여주는 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/bFcS042fd4c"
+    },
+    {
+     "views": 116000,
+     "id": "uzQMBbrOQ5w",
+     "title": "현대의 기술이 녹아든 봉인",
+     "product": "음성 나레이션 없이 배경음악만 재생되며 해외 계정(@slvara.official)의 왁스 실링 도구 제품 영상을 사용하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/uzQMBbrOQ5w"
+    },
+    {
+     "views": 31000,
+     "id": "ecPaK_9LpHM",
+     "title": "블루치즈에 구멍을 뚫는 이유",
+     "product": null,
+     "origin_audio_lang": null,
+     "url": "https://www.youtube.com/shorts/ecPaK_9LpHM"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@살림장착",
+   "name": "살림장착",
+   "channel_id": "UCWWUXE1dfKgYhF5eUHsITZw",
+   "url": "https://www.youtube.com/channel/UCWWUXE1dfKgYhF5eUHsITZw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 5/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 9320,
+   "median30": 10700.0,
+   "max30": 1400000,
+   "n30": 30,
+   "per_week": 2.7,
+   "last_upload": "2026-10-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 1400000,
+     "id": "9M4njaWF1gQ",
+     "title": "샤넬도 예상못한 천재 주부의 활용법?!",
+     "product": "한국어 나레이션이 흐르는 명품 더스트백 리폼 파우치 프레임 제품 소개 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/9M4njaWF1gQ"
+    },
+    {
+     "views": 367000,
+     "id": "AJe5yIDcvmM",
+     "title": "\"진짜 안 잘릴까?\" 어린이용 가위의 실체",
+     "product": "영어 음성이 재생되는 해외 원본 영상으로, 종이만 잘리고 피부나 머리카락은 자르지 못하는 어린이용 안전 가위 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/AJe5yIDcvmM"
+    },
+    {
+     "views": 35000,
+     "id": "adZc04GpsNs",
+     "title": "로마 소매치기 박살낸 천재의 발명품",
+     "product": "해외 인플루언서가 영어로 제품을 소개하는 원본 영상이며, 한국어 나레이션 없이 외국어 현장음만 포함되어 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/adZc04GpsNs"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@숏템s",
+   "name": "숏템",
+   "channel_id": "UCnNR1q93YHMYlpePQw0uOcA",
+   "url": "https://www.youtube.com/channel/UCnNR1q93YHMYlpePQw0uOcA",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 30200,
+   "median30": 7950.0,
+   "max30": 855000,
+   "n30": 30,
+   "per_week": 5.5,
+   "last_upload": "2026-09-22",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 855000,
+     "id": "mu5ZAJsh0Ho",
+     "title": "이케아도 놀랄 한국 천재 발명품",
+     "product": "이케아도 놀랄 한국 천재 발명품이라는 주제로 식탁 겸용 캠핑용 올인원 그릴 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/mu5ZAJsh0Ho"
+    },
+    {
+     "views": 146000,
+     "id": "lZJ_m3XbCwU",
+     "title": "유럽 소매치기 밥줄 끊은 천재의 발명품",
+     "product": "한국어 나레이션이 지속되며 해외 원본 영상에서 도난방지 여권 파우치 제품을 소개하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/lZJ_m3XbCwU"
+    },
+    {
+     "views": 84000,
+     "id": "X704A1_ElDo",
+     "title": "돈방석에 앉은 일본 천재 발명품",
+     "product": null,
+     "origin_audio_lang": null,
+     "url": "https://www.youtube.com/shorts/X704A1_ElDo"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@모든지식7",
+   "name": "모든지식",
+   "channel_id": "UCKWVaeDC6tK_ars0ePjnSmg",
+   "url": "https://www.youtube.com/channel/UCKWVaeDC6tK_ars0ePjnSmg",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 9210,
+   "median30": 7850.0,
+   "max30": 137000,
+   "n30": 30,
+   "per_week": 5.5,
+   "last_upload": "2026-10-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 137000,
+     "id": "IeK67xR0cLQ",
+     "title": "🎨마스킹 없이 페인트 경계선 칼같이 따는 방법🖌️ #페인트엣저 #셀프페인팅 #셀프인테리어 #페인트꿀팁 #쇼츠",
+     "product": "영어 음성과 함께 해외 페인팅 패드 도구의 사용 모습을 보여주는 해외 원본 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/IeK67xR0cLQ"
+    },
+    {
+     "views": 37000,
+     "id": "hqjjEJJ2ams",
+     "title": "📜위조가 판치던 시대 완벽한 계약서 작성법💡 #역사상식 #고대계약서 #위조방지 #쇼츠",
+     "product": "한국어 나레이션 대신 영어 설명 음성이 사용되었으며, 고대 계약서 위조 방지 기술에 대한 역사적 내용을 설명하는 영상입니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/hqjjEJJ2ams"
+    },
+    {
+     "views": 31000,
+     "id": "FmmTUKoHafs",
+     "title": "🖌️페인트 작업 시간 5배 줄여버린 네덜란드 발명품😱 #마스킹마스터 #마스킹테이프 #셀프페인팅 #셀프인테리어 #쇼츠",
+     "product": "영상의 중심이 페인팅 마스킹 테이프 디스펜서라는 발명품 제품이며, 영어 원음과 해외 영상이 사용되었습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/FmmTUKoHafs"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@정보빔",
+   "name": "정보빔",
+   "channel_id": "UCLp5SLfzUiQDsTNd57C2Niw",
+   "url": "https://www.youtube.com/channel/UCLp5SLfzUiQDsTNd57C2Niw",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 2/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 13900,
+   "median30": 7700.0,
+   "max30": 511000,
+   "n30": 30,
+   "per_week": 16.6,
+   "last_upload": "2026-10-17",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 511000,
+     "id": "9btH30Vy6KY",
+     "title": "장인이 뽑은 반죽의 차이",
+     "product": "한국어 나레이션 없이 배경 음악만 나오며, 외국인 셰프가 반죽/음식을 시연하는 해외 원본 영상입니다.",
+     "origin_audio_lang": "기타",
+     "url": "https://www.youtube.com/shorts/9btH30Vy6KY"
+    },
+    {
+     "views": 171000,
+     "id": "TnhxCgZqyDM",
+     "title": "주스 공장이 오해 받는 이유",
+     "product": "한국어 나레이션 없이 해외 기계 작업 영상(@bioplantsk)의 현장 기계음만 나오며 음료 포장 기계 및 제품을 보여줍니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/TnhxCgZqyDM"
+    },
+    {
+     "views": 56000,
+     "id": "d6-pni0IHDo",
+     "title": "요리를 뚜껑에 구웠나?",
+     "product": null,
+     "origin_audio_lang": null,
+     "url": "https://www.youtube.com/shorts/d6-pni0IHDo"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@요고꿀템",
+   "name": "요고꿀템",
+   "channel_id": "UCtGEQBlfLMNNX2Wj2lH9uJQ",
+   "url": "https://www.youtube.com/channel/UCtGEQBlfLMNNX2Wj2lH9uJQ",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 35,
+   "median30": 1850.0,
+   "max30": 20000,
+   "n30": 30,
+   "per_week": 12.2,
+   "last_upload": "2026-06-15",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 20000,
+     "id": "0YAAYCEp3SA",
+     "title": "✨캠핑 종결템! 1분 만에 숯불 완성🔥 성냥/라이터 NO! Fire Gril 원터치 그릴  #FireGril #원터치그릴 #일회용그릴 #캠핑필수템 #캠핑용품 #캠핑꿀템",
+     "product": "해외에서 제작된 일회용 그릴 제품을 한국어 TTS 나레이션으로 소개하고 있습니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/0YAAYCEp3SA"
+    },
+    {
+     "views": 5500,
+     "id": "WMf2soo17DI",
+     "title": "신기방기 대리석 효과! 곰팡이 싹, 흠집 싹~ 셀프 인테리어 필수템",
+     "product": "인테리어용 특수 페인트와 도구를 소개하는 한국어 나레이션 중심의 쇼츠 영상입니다.",
+     "origin_audio_lang": "한국어",
+     "url": "https://www.youtube.com/shorts/WMf2soo17DI"
+    },
+    {
+     "views": 4300,
+     "id": "JIW73hKeZLY",
+     "title": "스마트 보안의 시작! 자석 설치 1초! 설치 걱정 끝 홈캠 #무선보안카메라 #홈캠 #CCTV #스마트홈 #가정용카메라 #보안카메라 #무선홈캠 #가정용cctv",
+     "product": "해외 영상에 한국어 나레이션을 입혀 홈 카메라 제품을 소개하는 쇼츠입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/JIW73hKeZLY"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@long_things",
+   "name": "오래쓰는것",
+   "channel_id": "UCV6QQmqKcb34ATGYV0c2bMA",
+   "url": "https://www.youtube.com/channel/UCV6QQmqKcb34ATGYV0c2bMA",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 0/5 · 제품 4/5 — 원음 섞인 현장썰 편이 없음(나레만/자막만)",
+   "subs": 142,
+   "median30": 1000.0,
+   "max30": 1500,
+   "n30": 30,
+   "per_week": 3.4,
+   "last_upload": "2026-09-29",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "0/5"
+   },
+   "rep": [
+    {
+     "views": 1500,
+     "id": "XOG3a4NqNzA",
+     "title": "집에서 15분 만에 시원한 슬러시 만드는 법",
+     "product": "영어 음성이 영상 전체에 흐르며, 슬러시 제조 기계 제품을 시연하는 해외 영상에 한국어 자막이 부착되어 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/XOG3a4NqNzA"
+    },
+    {
+     "views": 1300,
+     "id": "9mweuBPCkck",
+     "title": "지저분한 책상 밑 선들 1초 만에 싹 깔끔해지는 법",
+     "product": "영어 나레이션으로 선 정리 튜브 제품을 소개하는 해외 출처 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/9mweuBPCkck"
+    },
+    {
+     "views": 1300,
+     "id": "fH7iN9UMh2A",
+     "title": "여행 갈 때 짐 싸기 꿀팁 이거 하나면 끝나요",
+     "product": "영어 원본 오디오가 흐르며 외국인이 화장품 캡슐 오일 제품을 직접 시연 및 설명하고 있습니다.",
+     "origin_audio_lang": "영어",
+     "url": "https://www.youtube.com/shorts/fH7iN9UMh2A"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@SoyASMR",
+   "name": "Soy ASMR",
+   "channel_id": "UCPpYonu8HMQCvNVcG2xYgwA",
+   "url": "https://www.youtube.com/channel/UCPpYonu8HMQCvNVcG2xYgwA",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 2/5 · 제품 1/5",
+   "subs": 943000,
+   "median30": 114500.0,
+   "max30": 1700000,
+   "n30": 22,
+   "per_week": null,
+   "last_upload": "2023-11-14",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "2/5"
+   },
+   "rep": [
+    {
+     "views": 1700000,
+     "id": "diCoVAmcA-0",
+     "title": "[ASMR] Beautiful Toilet Cleanser Flower Jelly 이쁜 변기 꽃이 피었습니다🌸",
+     "product": "직접 촬영한 영상에서 꽃 모양 장식을 두드리는 ASMR 효과음과 한국어 속삭임이 전 구간 수록되어 있습니다.",
+     "origin_audio_lang": "한국어",
+     "url": "https://www.youtube.com/shorts/diCoVAmcA-0"
+    },
+    {
+     "views": 250000,
+     "id": "g_tHZXU34Og",
+     "title": "가까이 빨려 들어가는 시각적 ASMR Close-up Visual ASMR",
+     "product": "크리에이터가 직접 한국어 속삭임과 다양한 도구 소리로 시각·청각 ASMR을 진행하는 자체 제작 영상입니다.",
+     "origin_audio_lang": "한국어",
+     "url": "https://www.youtube.com/shorts/g_tHZXU34Og"
+    },
+    {
+     "views": 249000,
+     "id": "Oeg9bPUlT0k",
+     "title": "Underwater visual ASMR 전지적 물고기 시점🐟",
+     "product": "수중 ASMR 환경 소리만 포함되어 있으며 언어 나레이션이 없다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/Oeg9bPUlT0k"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
+  },
+  {
+   "handle": "@갓성비스토리",
+   "name": "갓성비스토리",
+   "channel_id": "UCyqiNyt44mK8U06nlz5N2-g",
+   "url": "https://www.youtube.com/channel/UCyqiNyt44mK8U06nlz5N2-g",
+   "verdict": "아님",
+   "checked_by": "제미나이만",
+   "note": "누락 재판정 2026-10-18 · 4요건 0/5 · 현장썰 1/5 · 제품 5/5",
+   "subs": 12100,
+   "median30": 14000.0,
+   "max30": 2000000,
+   "n30": 30,
+   "per_week": 5.2,
+   "last_upload": "2026-10-16",
+   "samples": 5,
+   "four_ok": 0,
+   "style_ratio": {
+    "현장썰(나레+원음)": "1/5"
+   },
+   "rep": [
+    {
+     "views": 2000000,
+     "id": "cgJB-1xnh8s",
+     "title": "최강록 때문에 멘붕 온 CJ",
+     "product": "한국어 나레이션과 최강록 셰프의 실제 음성 클립이 포함되어 있으며, CJ와 협업한 우동 밀키트 제품 정보를 다룹니다.",
+     "origin_audio_lang": "한국어",
+     "url": "https://www.youtube.com/shorts/cgJB-1xnh8s"
+    },
+    {
+     "views": 1300000,
+     "id": "3Rq2OQi9L3A",
+     "title": "노브랜드가 개빡쳐버린 이유",
+     "product": "노브랜드 포기김치 제품을 소개하는 한국어 나레이션 중심의 영상입니다.",
+     "origin_audio_lang": "말없음",
+     "url": "https://www.youtube.com/shorts/3Rq2OQi9L3A"
+    },
+    {
+     "views": 591000,
+     "id": "Y1o5VWbJfeQ",
+     "title": "코스트코가 개빡쳐버린 이유?",
+     "product": "한국어 나레이션이 진행되며 그릭 요거트 제품과 관련된 내용을 설명하고 있습니다.",
+     "origin_audio_lang": "한국어",
+     "url": "https://www.youtube.com/shorts/Y1o5VWbJfeQ"
+    }
+   ],
+   "relabeled": "누락 재판정 2026-10-18"
   }
  ]
 }

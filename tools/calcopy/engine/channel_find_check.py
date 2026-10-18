@@ -81,14 +81,21 @@ def check(res: dict) -> list[str]:
         by = {c.get("channel_id"): c for c in ch}
         miss = []
         for r in rows:
-            if r.get("same_kind") is False:
-                continue
+            if r.get("same_kind") is False or str(r.get("verdict", "")).startswith("후보"):
+                continue    # 후보는 엔진 판정과 달라도 된다(엔진이 아님으로 본 것을 표본 실측이 뒤집은 경우)
             c = by.get(r.get("channel_id"))
             if c is not None and c.get("same_kind") is not True:
                 errs.append(f"확정 같은 결 '{r.get('name')}' 을 엔진이 {c.get('same_kind')} 로 판정 ({c.get('reason')})")
             elif c is None:
                 miss.append(r.get("name"))
         res["_confirmed_missing"] = miss    # 못 찾은 확정 채널(빨강은 아님 — 수확률로 보고)
+        # 6) 거꾸로: 엔진이 같은 결/현장썰로 본 채널이 확정 목록(channels·rejected)에 없으면 경고 — 누락의 뿌리(2026-10-18)
+        from tools.calcopy.engine.channel_find import engine_candidates
+        try:
+            conf_d = d if isinstance(d, dict) else {"channels": rows}
+            res["_engine_unreviewed"] = [c.get("name") for c in engine_candidates(res, conf_d)]
+        except Exception as e:  # noqa: BLE001
+            res["_engine_unreviewed"] = [f"검사 실패 {e}"]
     seeds = {s["id"] for s in res.get("seeds") or []}
     got = {o["seed"] for o in res.get("originals") or []}
     if seeds - got:
@@ -142,6 +149,10 @@ def main(argv=None):
     print(f"초록 — {label}: 정답 6채널 대조·근거·비용·원본 칸 통과")
     if "_confirmed_missing" in res:
         print(f"  확정 같은 결(같은결_채널.json) 중 엔진 결과에 없는 채널 {len(res['_confirmed_missing'])}: {', '.join(map(str, res['_confirmed_missing'][:20]))}")
+    un = res.get("_engine_unreviewed")
+    if un:
+        print(f"  경고: 엔진은 같은 결/현장썰로 봤는데 확정·아님 목록에 없는 채널 {len(un)}: {', '.join(map(str, un[:20]))}"
+              " → py -m tools.calcopy.engine.channel_find --confirm-from-engine --apply")
     return 0
 
 
