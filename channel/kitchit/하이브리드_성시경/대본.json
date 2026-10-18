@@ -1,0 +1,336 @@
+{
+ "_note": "얜샷템 하이브리드 키치잇판 — 성시경 신라면(2026-10-18, 관제 097). 박자 = 키치잇: 나레 훅(전언 ~다네요?) → 원음 → 나레 질문 → 원음 답 → 원음 한마디 → (하이브리드) 나레 체험·와우·권위 전언·사회반응. 정직 선: 성시경은 '1등 레시피를 따라 해 보고 고급스러워진다'고 했을 뿐, 1등이라 인정하지 않았다. 근거 = 근거.md · 조사 = channel/yanshottem/하이브리드_성시경/조사/조사.md.",
+ "brand": "얜샷템",
+ "pan": "키치잇판",
+ "product": "농심 신라면(봉지면) — 일반식품(유탕면)",
+ "title": [
+  "성시경 신라면 1등 레시피!",
+  "면을 따로 비빈다고?"
+ ],
+ "title_style": "kitchit_box",
+ "logo": "얜샷템",
+ "source_label": "출처: 성시경 SUNG SI KYUNG",
+ "voice": {
+  "engine": "elevenlabs",
+  "preset": "kr-mina-expressive",
+  "tool": "tools/calcopy/mina_tts.py (서버 합성)",
+  "atempo": 1.35
+ },
+ "narr_file": "C:/숏템_칼카피/kitchit/sinramen/tts/narr_all3.mp3",
+ "bgm": {
+  "id": "qiuqiu",
+  "db": -25.0,
+  "duck_orig_db": -6.0
+ },
+ "lufs": -16.0,
+ "gap": 0.1,
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(전언)",
+   "text": "가수 성시경이 신라면 1등 레시피를 따라 해 봤다네요?",
+   "tts_span": [
+    0.0,
+    4.8
+   ],
+   "facts": [
+    "f1"
+   ],
+   "caps": [
+    {
+     "text": "가수 성시경이",
+     "emph": "성시경",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "신라면 1등 레시피를",
+     "emph": "1등",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "따라 해 봤다네요?",
+     "emph": "따라",
+     "sticker": null,
+     "typing": false
+    }
+   ],
+   "note": "1·2차 받아쓰기에서 '성시경이'를 '농심 경영진이·백종원 씨 겸·성식영이'로 오독(1/2모델) → '가수 성시경이,'(3차)"
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(계기)",
+   "src": "Wy9--jw0ZsM_10.mp4",
+   "span": [
+    1.8,
+    4.82
+   ],
+   "said": "근데 신라면 제일 맛있게 끓이기 1등한 레시피가 있길래",
+   "facts": [
+    "f2"
+   ],
+   "caps": [
+    {
+     "text": "신라면 제일 맛있게",
+     "emph": "맛있게",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "끓이기 1등한 레시피가",
+     "emph": "1등",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "있길래",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    }
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 질문",
+   "text": "대체 어떻게 끓이길래?",
+   "tts_span": [
+    4.92,
+    6.64
+   ],
+   "caps": [
+    {
+     "text": "대체 어떻게 끓이길래?",
+     "emph": "어떻게",
+     "sticker": null,
+     "typing": false
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 답(레시피)",
+   "src": "Wy9--jw0ZsM_10.mp4",
+   "span": [
+    5.85,
+    9.35
+   ],
+   "said": "끓이다가 면 빼서 그 면을 참기름 다진 마늘에다 비벼요",
+   "facts": [
+    "f3"
+   ],
+   "caps": [
+    {
+     "text": "끓이다가 면 빼서",
+     "emph": "면",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "그 면을",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "참기름 다진 마늘에다",
+     "emph": "참기름",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "비벼요",
+     "emph": "비벼요",
+     "sticker": "heart",
+     "typing": true
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 한마디(평)",
+   "src": "Wy9--jw0ZsM_255.mp4",
+   "span": [
+    2.2,
+    4.1
+   ],
+   "said": "분명히 되게 고급스러워집니다",
+   "facts": [
+    "f2"
+   ],
+   "caps": [
+    {
+     "text": "분명히 되게",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "고급스러워집니다",
+     "emph": "고급",
+     "sticker": "gem",
+     "typing": true
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "하이브리드 이음(1인칭)",
+   "text": "저도 보자마자 따라 끓여 봤는데요,",
+   "tts_span": [
+    7.08,
+    10.4
+   ],
+   "caps": [
+    {
+     "text": "저도 보자마자",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "따라 끓여 봤는데요",
+     "emph": "따라",
+     "sticker": null,
+     "typing": false
+    }
+   ],
+   "note_sticker": "빨간 원+화살표(벤치 1/8편)는 안 씀 — 봉지가 창을 꽉 채운 컷이거나(N3) 작은 봉지가 자막 자리(y1351)와 겹쳐(N2) 벤치처럼 '넓은 화면 속 작은 제품'이 없다"
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "와우·비유(감상)",
+   "text": "참기름 마늘 향이 확 올라오는 게 진짜 중국집 요리 같더라고요.",
+   "tts_span": [
+    10.52,
+    16.48
+   ],
+   "facts": [
+    "f3"
+   ],
+   "caps": [
+    {
+     "text": "참기름 마늘 향이",
+     "emph": "향",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "확 올라오는 게",
+     "emph": "확",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "진짜 중국집 요리",
+     "emph": "중국집",
+     "sticker": "spark_lines",
+     "typing": false
+    },
+    {
+     "text": "같더라고요",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    }
+   ],
+   "note": "2차 받아쓰기 2모델 모두 '중식당'을 '정식당'으로 → '중국집'(3차)"
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "권위 전언",
+   "text": "게다가 신라면은 1991년부터 한 번도 1위를 안 놓쳤대요.",
+   "tts_span": [
+    16.6,
+    21.28
+   ],
+   "facts": [
+    "f4"
+   ],
+   "caps": [
+    {
+     "text": "게다가 신라면은",
+     "emph": "신라면",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "1991년부터",
+     "emph": "1991년",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "한 번도 1위를",
+     "emph": "1위",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "안 놓쳤대요",
+     "emph": "안 놓쳤대요",
+     "sticker": null,
+     "typing": false
+    }
+   ],
+   "note": "1차 '심지어'는 받아쓰기 2모델 모두 '유재석 씨라면은/인기 1위' 로 오독 → '게다가'로 바꿈(10-18)"
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "사회반응(끝)",
+   "text": "그래서 요즘 라면 좋아하는 사람들 사이에서 이 레시피가 난리래요.",
+   "tts_span": [
+    21.56,
+    26.64
+   ],
+   "facts": [
+    "f5"
+   ],
+   "caps": [
+    {
+     "text": "그래서 요즘",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "라면 좋아하는 사람들",
+     "emph": "라면",
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "사이에서",
+     "emph": null,
+     "sticker": null,
+     "typing": false
+    },
+    {
+     "text": "이 레시피가 난리래요",
+     "emph": "난리",
+     "sticker": null,
+     "typing": false
+    }
+   ]
+  }
+ ],
+ "facts": {
+  "f1": "원본 Wy9--jw0ZsM '[성시경 레시피] 신라면 1등 레시피'(성시경 SUNG SI KYUNG, 2026-10-15) — 본인이 그 레시피대로 끓임(원본 40~210초 조리 장면)",
+  "f2": "원본 11.72~14.82 '신라면 제일 맛있게 끓이기 1등한 레시피가 있길래' · 257.3~259.0 '분명히 되게 고급스러워집니다'(원본 박힌 자막) — 서버 2모델 받아쓰기",
+  "f3": "원본 15.85~19.35 '끓이다가 면 빼서 그 면을 참기름 다진 마늘에다 비벼요'(서버 2모델, 10-18 asr1.json) · 원본 편집 자막 '다진 마늘과 참기름이 면에 골고루 섞이도록 비벼주세요'",
+  "f4": "머니투데이 2026-05-13 https://www.mt.co.kr/living/2026/05/13/2026051310415730134 — '1991년 국내 시장 1위에 오른 뒤 35년 간 정상'",
+  "f5": "원본 2026-10-15 업로드 → 10-18 조회 767,343회 · 벤치 쇼츠(굿레터 sMx9RWuifCA) 61,263회 · 따라 한 쇼츠 다수"
+ },
+ "_tts_log": "narr_all(1차)→narr_all2(2차: 심지어→게다가)→narr_all3(3차: 가수 성시경이·중국집) — 일레븐랩스 미나 서버 합성 3회. atempo 1.35(서비스 미나 규칙)"
+}
