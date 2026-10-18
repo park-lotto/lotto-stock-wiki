@@ -89,6 +89,71 @@ def audio_b(S, T, sent, R: Path, target: float) -> tuple[Path, dict]:
     return mix, {"narr_lufs": nI, "bgm_gain": g, "gain": gain, "mix_lufs": lufs(mix)}
 
 
+# ── 뒤를 '앞과 같은 옷'으로(10-18 사장님 "앞과 뒤가 자연스럽게 전환이 안 된다") ─────────────────────────
+# 1차 실측 차이 셋: 목소리(앞 필재 / 뒤 박창수) · 화면 틀(앞 숏템리폿 제목 띠+박스 자막 / 뒤 잇썸홈 전체화면 가운데 자막) · BGM(앞 passo_bem_solto / 뒤 honwaka_puppu).
+# back_style:"front" 이면 뒤도 앞 편과 같은 길(1편 make_render 의 nv.build + emph_box + 같은 틀 json)로 굽고, BGM 은 앞 곡을 cut 초부터 이어 튼다.
+def _front_mod():
+    import importlib.util
+    one = ROOT / "channel/hottemreport/현장썰_01_가짜잠자리/make_render.py"
+    spec = importlib.util.spec_from_file_location("hj_make_render_front", one)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def render_back_front(S, M, T, sent, R: Path) -> Path:
+    from tools.calcopy import narr_video as nv
+    mr = _front_mod()
+    fs = S["front_style"]
+    voice = R / "voice_only.wav"
+    ins, fc = [], []
+    for k, s in enumerate(sent):
+        ins += ["-i", s["wav"]]
+        fc.append(f"[{k}:a]aresample={SR},aformat=channel_layouts=mono,adelay={int(round(T['lines'][s['id']][0] * 1000))}[p{k}]")
+    fc.append("".join(f"[p{k}]" for k in range(len(sent))) + f"amix=inputs={len(sent)}:normalize=0,apad,atrim=0:{T['end']:.3f}[n]")
+    run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(fc), "-map", "[n]", "-ar", SR, voice])
+    ev = []
+    for c in T["caps"]:
+        a, b = c["show"]
+        ev.append({"kind": "emph", "text": c["text"], "rgb": mr.NARR_RGB, "t0": a, "dur": round(b - a, 3), "who": "나레"})
+    line = " ".join(l["tts"].replace(",", "").rstrip(".") for l in RI.tts_lines(S)) + "."
+    script = R / "back_script.json"
+    jsave(script, {"final": {"lines": [{"text": line}]}, "caption_events": ev, "titles": {"hook": fs.get("title", "")}})
+    cuts = [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], "block": c["line"], "src_crop": c["crop"]} for c in T["cuts"]]
+    mats = R / "back_materials.json"
+    jsave(mats, {"cand_dir": M["cand_dir"], "shots": [{"i": 0, "full": True, "kind": "원본재편집", "src": cuts[0]["src"], "ss": cuts[0]["ss"], "cuts": cuts}]})
+    nv.emph_png = mr.emph_box
+    out = R / "back_nv"
+    plan = {"tteutgi": None, "frames": [{"frame": str(ROOT / fs["frame"]), "t_end": None}], "script": str(script), "tts": str(voice),
+            "materials": str(mats), "out": str(out), "bgm": None, "lufs": mr.LUFS_NARR, "chunk": 10, "caption_mode": "replace", "line_asr": False}
+    return Path(nv.build(plan))
+
+
+def bgm_continue(S, vid: Path, R: Path, start: float, target: float) -> Path:
+    """앞 편 BGM 곡을 start 초부터 이어 튼다(앞 make_render.bgm_mix 와 같은 loudnorm 값) → 앞과 같은 LUFS 로."""
+    mr = _front_mod()
+    from shopping_shorts import bgm_lib
+    dur = dur_of(vid)
+    tmp = R / "back_bgm.wav"
+    run(["ffmpeg", "-y", "-stream_loop", "-1", "-i", bgm_lib.path_of(mr.BGM), "-t", f"{start + dur:.3f}", "-af",
+         f"aresample=48000,aformat=channel_layouts=mono,loudnorm=I={mr.BGM_DB}:TP=-6:LRA=11,atrim={start:.3f},asetpts=PTS-STARTPTS,afade=t=out:st={dur - 0.5:.3f}:d=0.5",
+         "-c:a", "pcm_s16le", tmp])
+    mixed = R / "back_mix.wav"
+    run(["ffmpeg", "-y", "-i", vid, "-i", tmp, "-filter_complex",
+         "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono[m];[1:a]aformat=sample_fmts=fltp:channel_layouts=mono[b];[m][b]amix=inputs=2:normalize=0:duration=first[a]",
+         "-map", "[a]", "-c:a", "pcm_s24le", mixed])
+    out = R / "back.mp4"
+    g = round(target - lufs(mixed)[0], 2)
+    for _ in range(6):
+        run(["ffmpeg", "-y", "-i", vid, "-i", mixed, "-filter_complex", f"[1:a]volume={g}dB,alimiter=limit={mr.LIMIT}:attack=3:release=40:level=false[a]",
+             "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out])
+        got = lufs(out)[0]
+        if abs(got - target) <= 0.3:
+            break
+        g = round(g + (target - got), 2)
+    return out
+
+
 def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, log=print) -> dict:
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
     R = work / "render"
@@ -105,14 +170,18 @@ def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, 
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
         raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c["ss"], c["dur"], c["max"]) for c in over]))
-    b_vid, nb = RI.render_b(S, M, T, R)
-    T["end"] = round(nb / FPS, 3)
     fr = S["front"]
-    mix, A = audio_b(S, T, sent, R, float(fr.get("target_lufs", -15.5)))
-    back = R / "back.mp4"
-    run(["ffmpeg", "-y", "-i", b_vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", "-shortest", back])
     nf = int(float(fr["cut"]) * FPS)                       # 앞은 프레임 단위로 자른다(cut 안쪽)
     fdur = nf / FPS
+    if S.get("front_style"):
+        back = bgm_continue(S, render_back_front(S, M, T, sent, R), R, fdur, float(fr.get("target_lufs", -15.5)))
+        A = {"back_style": "front", "bgm_from": fdur}
+    else:
+        b_vid, nb = RI.render_b(S, M, T, R)
+        T["end"] = round(nb / FPS, 3)
+        mix, A = audio_b(S, T, sent, R, float(fr.get("target_lufs", -15.5)))
+        back = R / "back.mp4"
+        run(["ffmpeg", "-y", "-i", b_vid, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", "-shortest", back])
     front = R / "front.mp4"
     run(["ffmpeg", "-y", "-i", fr["src"], "-frames:v", nf, "-af", f"atrim=0:{fdur:.4f},afade=t=out:st={fdur - 0.03:.4f}:d=0.03",
          "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", front])
@@ -120,10 +189,21 @@ def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, 
     back_cfr = R / "back_cfr.mp4"
     run(["ffmpeg", "-y", "-i", back, "-vf", f"fps={FPS}", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p",
          "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", back_cfr])
-    (R / "fb.txt").write_text(f"file '{front.as_posix()}'\nfile '{back_cfr.as_posix()}'\n", encoding="utf-8")
     final = R / "final.mp4"
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "fb.txt", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-         "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", final])
+    tr = S.get("transition")
+    if tr:
+        # 전환 효과: 앞 마지막 프레임을 tr.dur 만큼 늘려(tpad) 뒤 첫 tr.dur 와 xfade — 소리는 그대로 이어 붙여 길이·입 맞춤이 안 바뀐다
+        d = float(tr.get("dur", 0.3))
+        band = int(tr.get("keep_top", 560))   # 위 제목 띠(앞·뒤 같은 틀)는 넘기지 않고 그대로 — 1차 시험에서 띠까지 옆으로 밀려 어색(눈 확인)
+        run(["ffmpeg", "-y", "-i", front, "-i", back_cfr, "-filter_complex",
+             f"[0:v]tpad=stop_mode=clone:stop_duration={d:.3f},settb=AVTB,fps={FPS},split[f][fb];[fb]crop=1080:{band}:0:0[band];[1:v]settb=AVTB,fps={FPS}[b];"
+             f"[f][b]xfade=transition={tr.get('kind', 'zoomin')}:duration={d:.3f}:offset={fdur:.4f}[x];[x][band]overlay=0:0:eof_action=pass,format=yuv420p[v];"
+             "[0:a][1:a]concat=n=2:v=0:a=1[a]",
+             "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", final])
+    else:
+        (R / "fb.txt").write_text(f"file '{front.as_posix()}'\nfile '{back_cfr.as_posix()}'\n", encoding="utf-8")
+        run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", R / "fb.txt", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+             "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", "1", final])
     info = {"made_by": "channel/hottemreport/현장썰하이브리드/render_front.py", "front_cut": fdur, "tempo": tempo, "sentences": sent, "timeline": T,
             "audio": A, "front_lufs": lufs(front), "back_lufs": lufs(back), "final": str(final), "final_dur": dur_of(final), "final_lufs": lufs(final)}
     jsave(R / "render_info.json", info)
