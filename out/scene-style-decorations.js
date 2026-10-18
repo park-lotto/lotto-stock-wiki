@@ -327,13 +327,20 @@
    selected=-1;controls();draw();
    box.querySelector('[data-myset-status]').textContent=(done.length?`「${st.name}」 ${done.join('·')}장에 넣었어요`:'넣을 장면이 없어요')+(full.length?` (${full.join('·')}장은 항목이 12개를 넘어 못 넣음)`:'');
  }
+ // 세트 항목인가 — set 표식이 1순위. ★표식 없는 옛 저장본(2026-10-18 전엔 서버가 set 을 버렸다)은 세트 모양
+ //   (같은 자리의 같은 화살표·같은 문구 배지)으로 알아본다. 안 그러면 '세트 빼기/다시 넣기'가 옛 세트를 못 지워 겹친다.
+ function isShopSetItem(m){
+   if(m.set)return m.set===SHOPSET;
+   const near=(a,b)=>Math.abs((+a||0)-(+b||0))<0.6;
+   return ['sticker','link'].some(t=>['arrow','finger','ticket'].some(d=>shopSetItems(t,d).some(x=>x.kind===m.kind&&(x.graphic||'')===(m.graphic||'')&&(x.text||'')===(m.text||'')&&(x.ch||'')===(m.ch||'')&&near(x.l,m.l)&&near(x.t,m.t))));
+ }
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
    const items=shopSetItems(guideOn()?box.querySelector('[data-shopset-target]').value:'sticker',box.querySelector('[data-shopset-design].active')?.dataset.shopsetDesign);
    let done=0,full=[];
    for(const i of targets){
-     const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==SHOPSET);
+     const keep=(api.effectAt(i).masks||[]).filter(m=>!isShopSetItem(m));
      if(scope!=='clear'&&keep.length+items.length>12){full.push(i+1);continue;}
      api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...items]});done++;
    }
