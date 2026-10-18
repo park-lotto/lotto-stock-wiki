@@ -931,12 +931,12 @@
    "voice_id": "tc_6059dad0b83880769a50502f",
    "voice_name": "박창수",
    "voice_why": "사장님 10-18 오후: \"필재 목소리가 너무 빠르고 안좋아서 박창수로 모두\" — 칼카피_시작.md §12 필재 금지와 같음",
-   "tts_tempo": null,
-   "tts_tempo_why": "박창수 tempo 기본(null) — 1.6 같은 빠른 값 금지(칼카피_시작.md §12). 목표 8.32 까지 atempo",
+   "tts_tempo": 1.2,
+   "tts_tempo_why": "박창수 tempo 1.2 = 잇썸홈 박창수 프리셋과 같은 값(15호 실측). 시작 문서 §5 확정 atempo 상한 1.27 — tempo 기본(null)이면 썰템쇼 대본 원속도 5.70~6.47자/초라 atempo 1.29~1.46 으로 넘었다(10-18 밤, 일지 368줄 atempo 1.55 사고와 같은 꼴)",
    "cps": 8.32,
    "atempo_range": [
     0.8,
-    1.5
+    1.27
    ],
    "line_rate": {
     "max_ratio": 1.05,
@@ -1020,7 +1020,7 @@
     "at": ",",
     "why": "공통 — 35자 넘는 문장은 쉼표에서 나눠 넣는다"
    },
-   "atempo_range_why": "10-18 오후 박창수 tempo 기본 실측: 10편 원속도 5.70~6.47자/초 → 8.32 까지 atempo 1.29~1.46(1.27 상한에 9편, 1.45 에 작품3 멈춤)",
+   "atempo_range_why": "시작 문서 §5 확정 규칙 atempo 상한 1.27(페이블 c4277f182)",
    "fit_shot": {
     "enabled": true,
     "min_speed": 0.75,
