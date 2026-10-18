@@ -737,7 +737,8 @@ def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_ta
     video = overlay_pass(D, P, FS, bed, R)
     sfx = FX.sfx_events(P)
     A = audio_final(D, P, C, FX.add_sfx(bed, sfx, R), video, R)
-    info = info_of(D, P, NM, mode, {**base, "final": str(R / "final.mp4"), "audio_mix": A, "orig_gain": gg, "fx_drawn": P.get("fx_drawn"), "sfx": sfx})
+    info = info_of(D, P, NM, mode, {**base, "final": str(R / "final.mp4"), "audio_mix": A, "orig_gain": gg, "fx_drawn": P.get("fx_drawn"), "sfx": sfx,
+                                         "fx_timed": [{k: e.get(k) for k in ("line", "kind", "T", "color", "moved_into_dashed", "snapped", "cut_end") if e.get(k) is not None} for e in FX.timed(P)]})   # 실제 그린 시각(effects 는 옮기기 전 계획 값)
     jsave(R / "render_info.json", info)
     (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
     return info
