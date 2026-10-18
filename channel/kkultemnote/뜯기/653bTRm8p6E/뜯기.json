@@ -1,0 +1,2775 @@
+{
+ "engine": "뜯기 1판 2026-10-15",
+ "source": "C:/숏템_칼카피/kkultemnote/src/653bTRm8p6E.mp4",
+ "measured_at": "2026-10-18 21:58",
+ "probe": {
+  "ok": true,
+  "method": "bench.probe.info",
+  "w": 1080,
+  "h": 1920,
+  "fps": 60.0,
+  "duration": 16.2,
+  "has_audio": true,
+  "raw": {
+   "width": 1080,
+   "height": 1920,
+   "fps": 60.0,
+   "nb_frames": 972,
+   "duration": 16.2,
+   "duration_container": 16.214,
+   "vcodec": "av1",
+   "has_audio": true,
+   "asr": 48000,
+   "ach": 2
+  }
+ },
+ "layout": {
+  "ok": true,
+  "method": "bench.layout.measure_video(+window_vote) + bench.captions.choose_caption (입구 layout1.measure)",
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "window_method": "layout._window(편 전체)",
+  "bg_rgb": [
+   0,
+   0,
+   0
+  ],
+  "ink_polarity": "bright",
+  "caption_pos": "inside",
+  "caption_band": [
+   1242,
+   1323
+  ],
+  "other_frame_segments": [],
+  "above_bands": [
+   [
+    184,
+    271
+   ],
+   [
+    288,
+    386
+   ]
+  ],
+  "bench_full_single": {
+   "window": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "bg_rgb": [
+    0,
+    0,
+    0
+   ],
+   "bg_lum": 0.0,
+   "caption": {
+    "pos": "inside",
+    "band": [
+     1238,
+     1328
+    ],
+    "ink": "bright"
+   },
+   "above_bands": [
+    [
+     184,
+     271
+    ],
+    [
+     288,
+     386
+    ]
+   ],
+   "n_samples": 32,
+   "window_method": "layout._window(편 전체)"
+  },
+  "chunks": [],
+  "caption_candidates": [
+   {
+    "pos": "inside",
+    "band": [
+     1238,
+     1328
+    ],
+    "ink": "bright",
+    "score": 13.21,
+    "spans": 18,
+    "persist": 0.743,
+    "coverage": 0.988,
+    "change": 0.9,
+    "static": 0.0
+   },
+   {
+    "pos": "above",
+    "band": [
+     186,
+     385
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0,
+    "change": 0.0,
+    "static": 0.995
+   },
+   {
+    "pos": "below",
+    "band": [
+     1616,
+     1650
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 1.0,
+    "coverage": 1.0,
+    "change": 0.0,
+    "static": 0.994
+   },
+   {
+    "pos": "inside",
+    "band": [
+     420,
+     503
+    ],
+    "ink": "dark",
+    "score": 2.62,
+    "spans": 4,
+    "persist": 0.668,
+    "coverage": 0.981,
+    "change": 0.809,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     898,
+     952
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 0,
+    "persist": 0.006,
+    "coverage": 0.79,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1154,
+     1201
+    ],
+    "ink": "bright",
+    "score": 0.08,
+    "spans": 3,
+    "persist": 0.049,
+    "coverage": 0.846,
+    "change": 0.707,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1154,
+     1328
+    ],
+    "ink": "bright",
+    "score": 14.28,
+    "spans": 20,
+    "persist": 0.756,
+    "coverage": 0.994,
+    "change": 0.882,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     886,
+     955
+    ],
+    "ink": "bright",
+    "score": 0.0,
+    "spans": 1,
+    "persist": 0.005,
+    "coverage": 0.79,
+    "change": 0.0,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1099,
+     1124
+    ],
+    "ink": "bright",
+    "score": 0.01,
+    "spans": 2,
+    "persist": 0.011,
+    "coverage": 0.79,
+    "change": 0.992,
+    "static": 0.0
+   },
+   {
+    "pos": "inside",
+    "band": [
+     1146,
+     1220
+    ],
+    "ink": "bright",
+    "score": 3.41,
+    "spans": 15,
+    "persist": 0.58,
+    "coverage": 0.981,
+    "change": 0.942,
+    "static": 0.0
+   }
+  ]
+ },
+ "captions": {
+  "ok": true,
+  "method": "bench.captions.measure_video + gemini_free.ask(OCR)",
+  "region": [
+   1202,
+   1363
+  ],
+  "changes": [
+   0.8,
+   1.5,
+   2.6,
+   3.2,
+   4.4,
+   4.9,
+   6.9,
+   7.9,
+   8.3,
+   8.8,
+   10.0,
+   10.8,
+   12.3,
+   12.9,
+   13.5,
+   14.3,
+   15.4
+  ],
+  "spans": [
+   [
+    0.0,
+    0.8
+   ],
+   [
+    0.8,
+    1.5
+   ],
+   [
+    1.5,
+    2.6
+   ],
+   [
+    2.6,
+    3.2
+   ],
+   [
+    3.2,
+    4.4
+   ],
+   [
+    4.4,
+    4.9
+   ],
+   [
+    4.9,
+    6.9
+   ],
+   [
+    6.9,
+    7.9
+   ],
+   [
+    7.9,
+    8.3
+   ],
+   [
+    8.3,
+    8.8
+   ],
+   [
+    8.8,
+    10.0
+   ],
+   [
+    10.0,
+    10.8
+   ],
+   [
+    10.8,
+    12.3
+   ],
+   [
+    12.3,
+    12.9
+   ],
+   [
+    12.9,
+    13.5
+   ],
+   [
+    13.5,
+    14.3
+   ],
+   [
+    14.3,
+    15.4
+   ],
+   [
+    15.4,
+    16.2
+   ]
+  ],
+  "n_spans": 18,
+  "items": [
+   {
+    "i": 0,
+    "t0": 0.0,
+    "t1": 0.8,
+    "lines": 1,
+    "widths": [
+     490
+    ],
+    "top_y": 1252,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "어머 이거 이쁘다"
+    ]
+   },
+   {
+    "i": 1,
+    "t0": 0.8,
+    "t1": 1.5,
+    "lines": 1,
+    "widths": [
+     641
+    ],
+    "top_y": 1247,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "언니 이거 하나 사가자"
+    ]
+   },
+   {
+    "i": 2,
+    "t0": 1.5,
+    "t1": 2.6,
+    "lines": 1,
+    "widths": [
+     852
+    ],
+    "top_y": 1242,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "이미숙이 보자마자 첫눈에 반한"
+    ]
+   },
+   {
+    "i": 3,
+    "t0": 2.6,
+    "t1": 3.2,
+    "lines": 1,
+    "widths": [
+     819
+    ],
+    "top_y": 1245,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "이케아 조리대인데"
+    ]
+   },
+   {
+    "i": 4,
+    "t0": 3.2,
+    "t1": 4.4,
+    "lines": 1,
+    "widths": [
+     797
+    ],
+    "top_y": 1242,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "촬영도가 미쳤다네요"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 5,
+    "t0": 4.4,
+    "t1": 4.9,
+    "lines": 1,
+    "widths": [
+     824
+    ],
+    "top_y": 1247,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "이동으로(하면서)"
+    ]
+   },
+   {
+    "i": 6,
+    "t0": 4.9,
+    "t1": 6.9,
+    "lines": 2,
+    "widths": [
+     583,
+     853
+    ],
+    "top_y": 1202,
+    "leading": 40,
+    "mark": true,
+    "text": [
+     "밀고 다니면서?"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 7,
+    "t0": 6.9,
+    "t1": 7.9,
+    "lines": 1,
+    "widths": [
+     1029
+    ],
+    "top_y": 1246,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "바퀴가 달려서 이동이 되니까"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 8,
+    "t0": 7.9,
+    "t1": 8.3,
+    "lines": 2,
+    "widths": [
+     932,
+     1042
+    ],
+    "top_y": 1203,
+    "leading": 41,
+    "mark": true,
+    "text": [
+     "옮겨다니면서"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 9,
+    "t0": 8.3,
+    "t1": 8.8,
+    "lines": 2,
+    "widths": [
+     1019,
+     1059
+    ],
+    "top_y": 1203,
+    "leading": 48,
+    "mark": true,
+    "text": [
+     "쓸 수 있는데"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 10,
+    "t0": 8.8,
+    "t1": 10.0,
+    "lines": 1,
+    "widths": [
+     706
+    ],
+    "top_y": 1249,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "외국에서는 홈 카페존으로"
+    ]
+   },
+   {
+    "i": 11,
+    "t0": 10.0,
+    "t1": 10.8,
+    "lines": 1,
+    "widths": [
+     620
+    ],
+    "top_y": 1242,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "만드는게 유행이라네요"
+    ]
+   },
+   {
+    "i": 12,
+    "t0": 10.8,
+    "t1": 12.3,
+    "lines": 1,
+    "widths": [
+     848
+    ],
+    "top_y": 1237,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "가격도 싼데 활용도도 좋아서"
+    ]
+   },
+   {
+    "i": 13,
+    "t0": 12.3,
+    "t1": 12.9,
+    "lines": 1,
+    "widths": [
+     382
+    ],
+    "top_y": 1244,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "결국 샀다네요"
+    ]
+   },
+   {
+    "i": 14,
+    "t0": 12.9,
+    "t1": 13.5,
+    "lines": 1,
+    "widths": [
+     603
+    ],
+    "top_y": 1238,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "흐!! 와 이쁘다"
+    ]
+   },
+   {
+    "i": 15,
+    "t0": 13.5,
+    "t1": 14.3,
+    "lines": 1,
+    "widths": [
+     603
+    ],
+    "top_y": 1238,
+    "leading": null,
+    "mark": true,
+    "text": [
+     "흐!! 와 이쁘다"
+    ]
+   },
+   {
+    "i": 16,
+    "t0": 14.3,
+    "t1": 15.4,
+    "lines": 1,
+    "widths": [
+     688
+    ],
+    "top_y": 1254,
+    "leading": null,
+    "mark": false,
+    "text": [
+     "사이드 트레일러 같은거로"
+    ],
+    "truncated": true
+   },
+   {
+    "i": 17,
+    "t0": 15.4,
+    "t1": 16.2,
+    "lines": 2,
+    "widths": [
+     698,
+     572
+    ],
+    "top_y": 1202,
+    "leading": 48,
+    "mark": true,
+    "text": [
+     "사용하는거야"
+    ],
+    "truncated": true
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 62,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 6,
+    "shadow": null,
+    "i": 0,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 70,
+    "stroke": 9.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 3,
+    "anim": "이동"
+   },
+   {
+    "line_h": 161,
+    "stroke": 6.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 6,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 61,
+    "stroke": 8.0,
+    "outline": true,
+    "outline_px": 5,
+    "shadow": null,
+    "i": 10,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 66,
+    "stroke": 8.0,
+    "outline": true,
+    "outline_px": 6,
+    "shadow": null,
+    "i": 13,
+    "anim": "이동"
+   },
+   {
+    "line_h": 26,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 5,
+    "shadow": null,
+    "i": 17,
+    "anim": "확대/축소"
+   }
+  ],
+  "unstable": [],
+  "ocr": {
+   "asked": 18,
+   "read": 18,
+   "errors": [],
+   "models": [
+    "gemini-3.5-flash"
+   ]
+  }
+ },
+ "fonts": {
+  "ok": true,
+  "method": "fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density), 합산 = 크롭별 점수 평균",
+  "n_fonts": 61,
+  "usable": 17,
+  "per_crop": [
+   {
+    "caption": 0,
+    "text": "어머 이거 이쁘다",
+    "top5": [
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.1046
+     },
+     {
+      "font": "GBatang.otf",
+      "score": 0.1006
+     },
+     {
+      "font": "GowunBatang.ttf",
+      "score": 0.0987
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0579
+     },
+     {
+      "font": "GowunDodum-Regular.ttf",
+      "score": 0.0563
+     }
+    ],
+    "grid": "fonts/c00.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 거다머쁘어"
+     }
+    ]
+   },
+   {
+    "caption": 3,
+    "text": "이케아 조리대인데",
+    "top5": [
+     {
+      "font": "Binggrae-Bold.otf",
+      "score": 0.1967
+     },
+     {
+      "font": "Pretendard-SemiBold.otf",
+      "score": 0.1847
+     },
+     {
+      "font": "SpoqaHanSansNeo-Bold.otf",
+      "score": 0.1837
+     },
+     {
+      "font": "Gugi-Regular.ttf",
+      "score": 0.1835
+     },
+     {
+      "font": "NotoSansKR-Bold.otf",
+      "score": 0.1812
+     }
+    ],
+    "grid": "fonts/c03.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 대데리아이"
+     }
+    ]
+   },
+   {
+    "caption": 6,
+    "text": "밀고 다니면서?",
+    "top5": [
+     {
+      "font": "Gaegu-Bold.ttf",
+      "score": 0.1685
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.1376
+     },
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.136
+     },
+     {
+      "font": "Sunflower-Medium.ttf",
+      "score": 0.1268
+     },
+     {
+      "font": "YeonSung-Regular.ttf",
+      "score": 0.1257
+     }
+    ],
+    "grid": "fonts/c06.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 고니다면밀"
+     }
+    ]
+   },
+   {
+    "caption": 11,
+    "text": "만드는게 유행이라네요",
+    "top5": [
+     {
+      "font": "S-CoreDream-6Bold.ttf",
+      "score": 0.2835
+     },
+     {
+      "font": "Cafe24Danjunghae.ttf",
+      "score": 0.2666
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.2633
+     },
+     {
+      "font": "NotoSansKR-Bold.otf",
+      "score": 0.2612
+     },
+     {
+      "font": "SpoqaHanSansNeo-Bold.otf",
+      "score": 0.2559
+     }
+    ],
+    "grid": "fonts/c11.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 게네는드라"
+     }
+    ]
+   },
+   {
+    "caption": 14,
+    "text": "흐!! 와 이쁘다",
+    "top5": [
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.3528
+     },
+     {
+      "font": "SpoqaHanSansNeo-Bold.otf",
+      "score": 0.3359
+     },
+     {
+      "font": "IBMPlexSansKR-Bold.otf",
+      "score": 0.3329
+     },
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.331
+     },
+     {
+      "font": "KCCGanpan.otf",
+      "score": 0.3281
+     }
+    ],
+    "grid": "fonts/c14.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 다쁘와이흐"
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "text": "사용하는거야",
+    "top5": [
+     {
+      "font": "CuteFont.ttf",
+      "score": 0.273
+     },
+     {
+      "font": "BlackAndWhitePicture.ttf",
+      "score": 0.2172
+     },
+     {
+      "font": "YeonSung-Regular.ttf",
+      "score": 0.2022
+     },
+     {
+      "font": "Stylish-Regular.ttf",
+      "score": 0.1969
+     },
+     {
+      "font": "EastSeaDokdo.ttf",
+      "score": 0.1885
+     }
+    ],
+    "grid": "fonts/c17.png",
+    "failed_fonts": [
+     {
+      "font": "OkMallangW.ttf",
+      "why": "글자 빠짐 거는사야용"
+     }
+    ]
+   }
+  ],
+  "top3": [
+   {
+    "font": "Dongle-Bold.ttf",
+    "score": 0.1415
+   },
+   {
+    "font": "Dokdo-Regular.ttf",
+    "score": 0.1401
+   },
+   {
+    "font": "SpoqaHanSansNeo-Bold.otf",
+    "score": 0.1356
+   }
+  ],
+  "title": {
+   "pooled_in_video": {
+    "top": [
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.5572,
+      "wins": 1,
+      "raw": 0.0432
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.5,
+      "wins": 1,
+      "raw": 0.3673
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.4941,
+      "wins": 0,
+      "raw": 0.3629
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.4924,
+      "wins": 0,
+      "raw": 0.3617
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.4682,
+      "wins": 0,
+      "raw": 0.3439
+     }
+    ],
+    "n": 2,
+    "per_sample_top1": [
+     "JalnanGothic.ttf",
+     "Dongle-Bold.ttf"
+    ],
+    "agree": 0.5,
+    "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+   },
+   "top3": [
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.3673
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.3629
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.3617
+    }
+   ],
+   "top5": [
+    {
+     "font": "JalnanGothic.ttf",
+     "score": 0.3673
+    },
+    {
+     "font": "yg-jalnan.ttf",
+     "score": 0.3629
+    },
+    {
+     "font": "Jalnan2.ttf",
+     "score": 0.3617
+    },
+    {
+     "font": "Cafe24Ohsquare.ttf",
+     "score": 0.3439
+    },
+    {
+     "font": "BlackHanSans.ttf",
+     "score": 0.2776
+    }
+   ],
+   "n_bands": 2,
+   "slant_deg": 0.0,
+   "italic": false
+  },
+  "brand": {
+   "failed": "브랜드 띠 없음"
+  },
+  "title_bands": {
+   "method": "layout above_bands 크롭 → gemini OCR → fontmatch.rank (gap_collapse+bbox_fit_iou×aspect×density) + fontmatch.slant_deg",
+   "frame_t": 0.4,
+   "bands": [
+    {
+     "k": 0,
+     "band": [
+      184,
+      271
+     ],
+     "role": "title",
+     "ink": "bright",
+     "text": [
+      "이미숙이 첫눈에 반해"
+     ],
+     "color": {
+      "fill_rgb": [
+       252,
+       185,
+       206
+      ],
+      "outline_px": 0,
+      "outline_rgb": null,
+      "shadow": null
+     },
+     "top5": [
+      {
+       "font": "JalnanGothic.ttf",
+       "score": 0.7346
+      },
+      {
+       "font": "yg-jalnan.ttf",
+       "score": 0.7259
+      },
+      {
+       "font": "Jalnan2.ttf",
+       "score": 0.7234
+      },
+      {
+       "font": "Cafe24Ohsquare.ttf",
+       "score": 0.6879
+      },
+      {
+       "font": "BlackHanSans.ttf",
+       "score": 0.5551
+      }
+     ],
+     "slant_deg": 0.0,
+     "grid": "fonts/title0.png"
+    },
+    {
+     "k": 1,
+     "band": [
+      288,
+      386
+     ],
+     "role": "title",
+     "ink": "bright",
+     "text": [
+      "결국 사버린 이것"
+     ],
+     "color": {
+      "fill_rgb": [
+       254,
+       253,
+       255
+      ],
+      "outline_px": 0,
+      "outline_rgb": null,
+      "shadow": null
+     },
+     "top5": [
+      {
+       "font": "Dongle-Bold.ttf",
+       "score": 0.0023
+      },
+      {
+       "font": "BMDOHYEON.ttf",
+       "score": 0.0
+      },
+      {
+       "font": "BMJUA.ttf",
+       "score": 0.0
+      },
+      {
+       "font": "BagelFatOne-Regular.ttf",
+       "score": 0.0
+      },
+      {
+       "font": "Binggrae-Bold.otf",
+       "score": 0.0
+      }
+     ],
+     "slant_deg": 0.0,
+     "grid": "fonts/title1.png"
+    }
+   ],
+   "models": [
+    "gemini-3.5-flash"
+   ],
+   "title": {
+    "pooled_in_video": {
+     "top": [
+      {
+       "font": "Dongle-Bold.ttf",
+       "score": 0.5572,
+       "wins": 1,
+       "raw": 0.0432
+      },
+      {
+       "font": "JalnanGothic.ttf",
+       "score": 0.5,
+       "wins": 1,
+       "raw": 0.3673
+      },
+      {
+       "font": "yg-jalnan.ttf",
+       "score": 0.4941,
+       "wins": 0,
+       "raw": 0.3629
+      },
+      {
+       "font": "Jalnan2.ttf",
+       "score": 0.4924,
+       "wins": 0,
+       "raw": 0.3617
+      },
+      {
+       "font": "Cafe24Ohsquare.ttf",
+       "score": 0.4682,
+       "wins": 0,
+       "raw": 0.3439
+      }
+     ],
+     "n": 2,
+     "per_sample_top1": [
+      "JalnanGothic.ttf",
+      "Dongle-Bold.ttf"
+     ],
+     "agree": 0.5,
+     "method": "fontmatch.pooled_rank(줄별 1위 대비 정규화 평균)"
+    },
+    "top3": [
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3673
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.3629
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3617
+     }
+    ],
+    "top5": [
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.3673
+     },
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.3629
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.3617
+     },
+     {
+      "font": "Cafe24Ohsquare.ttf",
+      "score": 0.3439
+     },
+     {
+      "font": "BlackHanSans.ttf",
+      "score": 0.2776
+     }
+    ],
+    "n_bands": 2,
+    "slant_deg": 0.0,
+    "italic": false
+   },
+   "channel_name_ocr": {
+    "text": null,
+    "color": null,
+    "source": "브랜드 띠 없음"
+   },
+   "ok": true
+  }
+ },
+ "text_fx": {
+  "method": "engine.text_fx_one(링 색) + bench captions.glyph_style(획·외곽선·그림자)",
+  "per_crop": [
+   {
+    "caption": 0,
+    "fill_rgb": [
+     255,
+     226,
+     36
+    ],
+    "ring_rgb": [
+     203,
+     176,
+     26
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 3,
+    "fill_rgb": [
+     253,
+     246,
+     29
+    ],
+    "ring_rgb": [
+     153,
+     146,
+     51
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 6,
+    "fill_rgb": [
+     192,
+     204,
+     236
+    ],
+    "ring_rgb": [
+     65,
+     53,
+     5
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 11,
+    "fill_rgb": [
+     254,
+     252,
+     252
+    ],
+    "ring_rgb": [
+     104,
+     102,
+     100
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 14,
+    "fill_rgb": [
+     253,
+     202,
+     226
+    ],
+    "ring_rgb": [
+     162,
+     144,
+     151
+    ],
+    "box": null,
+    "box_note": null
+   },
+   {
+    "caption": 17,
+    "fill_rgb": [
+     255,
+     251,
+     248
+    ],
+    "ring_rgb": [
+     154,
+     146,
+     107
+    ],
+    "box": null,
+    "box_note": null
+   }
+  ],
+  "glyph": [
+   {
+    "line_h": 62,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 6,
+    "shadow": null,
+    "i": 0,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 70,
+    "stroke": 9.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 3,
+    "anim": "이동"
+   },
+   {
+    "line_h": 161,
+    "stroke": 6.0,
+    "outline": false,
+    "outline_px": 0,
+    "shadow": null,
+    "i": 6,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 61,
+    "stroke": 8.0,
+    "outline": true,
+    "outline_px": 5,
+    "shadow": null,
+    "i": 10,
+    "anim": "확대/축소"
+   },
+   {
+    "line_h": 66,
+    "stroke": 8.0,
+    "outline": true,
+    "outline_px": 6,
+    "shadow": null,
+    "i": 13,
+    "anim": "이동"
+   },
+   {
+    "line_h": 26,
+    "stroke": 2.0,
+    "outline": true,
+    "outline_px": 5,
+    "shadow": null,
+    "i": 17,
+    "anim": "확대/축소"
+   }
+  ],
+  "glyph_used_for_summary": [
+   0,
+   3,
+   6,
+   10,
+   13,
+   17
+  ],
+  "ok": true,
+  "summary": {
+   "fill_rgb": [
+    253,
+    236,
+    231
+   ],
+   "outline_px": 5,
+   "outline_rgb": [
+    203,
+    176,
+    26
+   ],
+   "box": null,
+   "shadow": null,
+   "stroke_px": 7.0,
+   "line_h_px": 64.0
+  }
+ },
+ "caption_motion": {
+  "ok": true,
+  "method": "layout.ink_mask bbox·잉크량 (원 fps ±9프레임) + captions.caption_anim",
+  "starts": [
+   {
+    "caption": 1,
+    "t0": 0.8,
+    "anim": "없음",
+    "curve": [
+     {
+      "t": 0.65,
+      "bbox": [
+       292,
+       1249,
+       601,
+       99
+      ],
+      "ink": 2863
+     },
+     {
+      "t": 0.667,
+      "bbox": [
+       292,
+       1251,
+       601,
+       97
+      ],
+      "ink": 2881
+     },
+     {
+      "t": 0.683,
+      "bbox": [
+       292,
+       1251,
+       601,
+       97
+      ],
+      "ink": 2881
+     },
+     {
+      "t": 0.7,
+      "bbox": [
+       238,
+       1235,
+       655,
+       120
+      ],
+      "ink": 2926
+     },
+     {
+      "t": 0.717,
+      "bbox": [
+       238,
+       1235,
+       655,
+       120
+      ],
+      "ink": 2926
+     },
+     {
+      "t": 0.733,
+      "bbox": [
+       238,
+       1241,
+       545,
+       82
+      ],
+      "ink": 2884
+     },
+     {
+      "t": 0.75,
+      "bbox": [
+       300,
+       1252,
+       593,
+       111
+      ],
+      "ink": 2933
+     },
+     {
+      "t": 0.767,
+      "bbox": [
+       300,
+       1252,
+       593,
+       111
+      ],
+      "ink": 2933
+     },
+     {
+      "t": 0.783,
+      "bbox": [
+       300,
+       1251,
+       483,
+       101
+      ],
+      "ink": 2988
+     },
+     {
+      "t": 0.8,
+      "bbox": [
+       300,
+       1251,
+       483,
+       101
+      ],
+      "ink": 2988
+     },
+     {
+      "t": 0.817,
+      "bbox": [
+       300,
+       1249,
+       483,
+       107
+      ],
+      "ink": 2990
+     },
+     {
+      "t": 0.833,
+      "bbox": [
+       722,
+       1295,
+       35,
+       61
+      ],
+      "ink": 11
+     },
+     {
+      "t": 0.85,
+      "bbox": [
+       222,
+       1296,
+       639,
+       64
+      ],
+      "ink": 2219
+     },
+     {
+      "t": 0.867,
+      "bbox": [
+       222,
+       1287,
+       639,
+       73
+      ],
+      "ink": 2696
+     },
+     {
+      "t": 0.883,
+      "bbox": [
+       146,
+       1270,
+       715,
+       92
+      ],
+      "ink": 2806
+     },
+     {
+      "t": 0.9,
+      "bbox": [
+       145,
+       1260,
+       716,
+       102
+      ],
+      "ink": 2727
+     },
+     {
+      "t": 0.917,
+      "bbox": [
+       145,
+       1249,
+       716,
+       113
+      ],
+      "ink": 2518
+     },
+     {
+      "t": 0.933,
+      "bbox": [
+       145,
+       1239,
+       716,
+       123
+      ],
+      "ink": 2685
+     },
+     {
+      "t": 0.95,
+      "bbox": [
+       145,
+       1233,
+       716,
+       129
+      ],
+      "ink": 2904
+     },
+     {
+      "t": 0.967,
+      "bbox": [
+       222,
+       1240,
+       639,
+       121
+      ],
+      "ink": 3061
+     }
+    ]
+   },
+   {
+    "caption": 10,
+    "t0": 8.8,
+    "anim": "확대/축소",
+    "curve": [
+     {
+      "t": 8.65,
+      "bbox": [
+       19,
+       1202,
+       1061,
+       161
+      ],
+      "ink": 4340
+     },
+     {
+      "t": 8.667,
+      "bbox": [
+       19,
+       1202,
+       1061,
+       161
+      ],
+      "ink": 4340
+     },
+     {
+      "t": 8.683,
+      "bbox": [
+       19,
+       1202,
+       1061,
+       161
+      ],
+      "ink": 4415
+     },
+     {
+      "t": 8.7,
+      "bbox": [
+       19,
+       1202,
+       1061,
+       161
+      ],
+      "ink": 4415
+     },
+     {
+      "t": 8.717,
+      "bbox": [
+       18,
+       1202,
+       1062,
+       161
+      ],
+      "ink": 4461
+     },
+     {
+      "t": 8.733,
+      "bbox": [
+       18,
+       1202,
+       1062,
+       161
+      ],
+      "ink": 4461
+     },
+     {
+      "t": 8.75,
+      "bbox": [
+       17,
+       1202,
+       1063,
+       161
+      ],
+      "ink": 4464
+     },
+     {
+      "t": 8.767,
+      "bbox": [
+       16,
+       1202,
+       1064,
+       157
+      ],
+      "ink": 4490
+     },
+     {
+      "t": 8.783,
+      "bbox": [
+       16,
+       1202,
+       1064,
+       157
+      ],
+      "ink": 4490
+     },
+     {
+      "t": 8.8,
+      "bbox": [
+       13,
+       1202,
+       1067,
+       160
+      ],
+      "ink": 4542
+     },
+     {
+      "t": 8.817,
+      "bbox": [
+       13,
+       1202,
+       1067,
+       160
+      ],
+      "ink": 4542
+     },
+     {
+      "t": 8.833,
+      "bbox": [
+       10,
+       1202,
+       1070,
+       161
+      ],
+      "ink": 4647
+     },
+     {
+      "t": 8.85,
+      "bbox": [
+       10,
+       1202,
+       1070,
+       161
+      ],
+      "ink": 4651
+     },
+     {
+      "t": 8.867,
+      "bbox": [
+       6,
+       1202,
+       1074,
+       161
+      ],
+      "ink": 4612
+     },
+     {
+      "t": 8.883,
+      "bbox": [
+       6,
+       1202,
+       1074,
+       161
+      ],
+      "ink": 4612
+     },
+     {
+      "t": 8.9,
+      "bbox": [
+       2,
+       1202,
+       1076,
+       161
+      ],
+      "ink": 4703
+     },
+     {
+      "t": 8.917,
+      "bbox": [
+       2,
+       1202,
+       1076,
+       161
+      ],
+      "ink": 4703
+     },
+     {
+      "t": 8.933,
+      "bbox": [
+       184,
+       1246,
+       707,
+       64
+      ],
+      "ink": 7073
+     },
+     {
+      "t": 8.95,
+      "bbox": [
+       184,
+       1246,
+       707,
+       64
+      ],
+      "ink": 7072
+     },
+     {
+      "t": 8.967,
+      "bbox": [
+       184,
+       1244,
+       707,
+       66
+      ],
+      "ink": 7078
+     }
+    ]
+   },
+   {
+    "caption": 17,
+    "t0": 15.4,
+    "anim": "확대/축소",
+    "curve": [
+     {
+      "t": 15.25,
+      "bbox": [
+       188,
+       1202,
+       761,
+       160
+      ],
+      "ink": 7500
+     },
+     {
+      "t": 15.267,
+      "bbox": [
+       188,
+       1202,
+       762,
+       161
+      ],
+      "ink": 7540
+     },
+     {
+      "t": 15.283,
+      "bbox": [
+       188,
+       1202,
+       762,
+       161
+      ],
+      "ink": 7540
+     },
+     {
+      "t": 15.3,
+      "bbox": [
+       188,
+       1202,
+       762,
+       159
+      ],
+      "ink": 7526
+     },
+     {
+      "t": 15.317,
+      "bbox": [
+       188,
+       1202,
+       761,
+       159
+      ],
+      "ink": 7571
+     },
+     {
+      "t": 15.333,
+      "bbox": [
+       188,
+       1202,
+       761,
+       159
+      ],
+      "ink": 7571
+     },
+     {
+      "t": 15.35,
+      "bbox": [
+       188,
+       1202,
+       761,
+       159
+      ],
+      "ink": 7598
+     },
+     {
+      "t": 15.367,
+      "bbox": [
+       189,
+       1202,
+       759,
+       161
+      ],
+      "ink": 7595
+     },
+     {
+      "t": 15.383,
+      "bbox": [
+       189,
+       1202,
+       759,
+       161
+      ],
+      "ink": 7595
+     },
+     {
+      "t": 15.4,
+      "bbox": [
+       189,
+       1202,
+       760,
+       159
+      ],
+      "ink": 7590
+     },
+     {
+      "t": 15.417,
+      "bbox": [
+       189,
+       1202,
+       760,
+       159
+      ],
+      "ink": 7590
+     },
+     {
+      "t": 15.433,
+      "bbox": [
+       194,
+       1202,
+       755,
+       157
+      ],
+      "ink": 7735
+     },
+     {
+      "t": 15.45,
+      "bbox": [
+       194,
+       1202,
+       755,
+       157
+      ],
+      "ink": 7735
+     },
+     {
+      "t": 15.467,
+      "bbox": [
+       196,
+       1202,
+       753,
+       153
+      ],
+      "ink": 7862
+     },
+     {
+      "t": 15.483,
+      "bbox": [
+       196,
+       1202,
+       753,
+       153
+      ],
+      "ink": 7862
+     },
+     {
+      "t": 15.5,
+      "bbox": [
+       196,
+       1202,
+       753,
+       126
+      ],
+      "ink": 7859
+     },
+     {
+      "t": 15.517,
+      "bbox": [
+       196,
+       1202,
+       753,
+       126
+      ],
+      "ink": 7859
+     },
+     {
+      "t": 15.533,
+      "bbox": [
+       196,
+       1202,
+       753,
+       126
+      ],
+      "ink": 7891
+     },
+     {
+      "t": 15.55,
+      "bbox": [
+       196,
+       1202,
+       753,
+       157
+      ],
+      "ink": 7988
+     },
+     {
+      "t": 15.567,
+      "bbox": [
+       253,
+       1202,
+       696,
+       157
+      ],
+      "ink": 4467
+     }
+    ]
+   }
+  ]
+ },
+ "audio": {
+  "method": "bench.audio.measure_video + gemini_free.ask 받아쓰기 + audio_comp.composition",
+  "bench": {
+   "has_audio": true,
+   "I": -16.9,
+   "LRA": 2.7,
+   "TP": -4.0,
+   "S_spread": 2.5,
+   "S_n": 133,
+   "open3s_M": -15.9,
+   "rest_M": -17.7,
+   "hf_8k16k_dbfs": -49.38,
+   "openvoice": {
+    "floor_db": -34.82,
+    "open": 20.99,
+    "body": 19.32
+   }
+  },
+  "ok": true,
+  "asr_extra": {
+   "sfx": [],
+   "bgm": {
+    "present": true,
+    "mood": [
+     "밝은",
+     "경쾌한"
+    ],
+    "start": 0.0,
+    "fade_out": false
+   },
+   "voice_tone": "빠르고 들뜬 톤의 정보 전달형 여성 나레이션과 자연스러운 수다체",
+   "speakers": [
+    {
+     "id": "S1",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S2",
+     "gender": "female",
+     "voice": "human"
+    },
+    {
+     "id": "S3",
+     "gender": "female",
+     "voice": "human"
+    }
+   ]
+  },
+  "transcript": {
+   "model": "gemini-3.5-flash",
+   "warnings": [
+    "길이 초과 13.1~16.8"
+   ],
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 1.4,
+     "text": "어머 이거 예쁘다. 언니 가서 사자.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "source"
+    },
+    {
+     "start": 1.4,
+     "end": 5.1,
+     "text": "이미 인스타에서 보자마자 첫눈에 반한 이케아 조리대인데 활용도가 미쳤다네요.",
+     "speaker": "S2",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 5.1,
+     "end": 6.8,
+     "text": "이동으로 끌고 다니면서 옮겨 다니면서",
+     "speaker": "S3",
+     "lang": "ko",
+     "kind": "source"
+    },
+    {
+     "start": 6.8,
+     "end": 13.1,
+     "text": "바퀴가 달려서 이동이 되니까 옮겨 다니면서 쓸 수 있는데 외국에서는 홈카페존으로 만드는 게 유행이라네요. 가격도 싼데 활용도도 좋아서 결국 샀다네요.",
+     "speaker": "S2",
+     "lang": "ko",
+     "kind": "narration"
+    },
+    {
+     "start": 13.1,
+     "end": 16.2,
+     "text": "어! 와 예쁘다. 사이드 트레일러 같은 걸로 사용하는 거야.",
+     "speaker": "S1",
+     "lang": "ko",
+     "kind": "source"
+    }
+   ],
+   "n": 5,
+   "langs": [
+    "ko"
+   ],
+   "ambient": "",
+   "speech_sec_all": 16.2,
+   "ko_speech_sec": 16.2,
+   "speech_share_ko": 1.0,
+   "chars_nospace_ko": 154,
+   "cps": 9.51,
+   "pause_median": null,
+   "pauses": 0,
+   "narration": "한국어 말소리 있음",
+   "method": "한국어 구절만: cps = 공백 뺀 글자 ÷ 구절 길이 합, 쉼 = 이웃 구절 사이 >0.05s"
+  },
+  "composition": {
+   "method": "받아쓰기(제미나이 speaker·lang·kind) + bench audio.mono 20ms RMS(분리 없음)",
+   "dict": [
+    "나레 1명",
+    "나레+역할 2명",
+    "역할극만",
+    "해외 원음+한국어 나레+자막",
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "speakers": [
+    {
+     "n": "S2",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.617,
+     "kinds": [
+      "narration"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S1",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.278,
+     "kinds": [
+      "source"
+     ],
+     "langs": [
+      "ko"
+     ]
+    },
+    {
+     "n": "S3",
+     "gender": "female",
+     "voice_guess": "human",
+     "share": 0.105,
+     "kinds": [
+      "source"
+     ],
+     "langs": [
+      "ko"
+     ]
+    }
+   ],
+   "narration": "human",
+   "narration_metrics": {
+    "pitch": {
+     "voiced_frames": 315,
+     "f0_median_hz": 148.1,
+     "semitone_std": 5.4
+    },
+    "pause_cv": null,
+    "method": "narration = 제미나이 귀 추정(tts/human). 피치 반음 표준편차·쉼 변동계수는 참고 지표(문턱 미검증)"
+   },
+   "source_audio_kept": true,
+   "source_evidence": {
+    "foreign_or_source_segments": 3,
+    "ambient": ""
+   },
+   "duck_db": {
+    "failed": "말 없는 구간 0.5초 미만"
+   },
+   "caption_eq_narration": 0.595,
+   "caption_eq_method": "자막 글자(공백·부호 뺌) 중 한국어 말소리 글자와 겹치는 비율(difflib 일치 블록)",
+   "sfx_per_sec": 0.062,
+   "sfx": {
+    "count": 1,
+    "outside_speech": 0,
+    "outside_per_sec": 0.0,
+    "times": [
+     [
+      0.1,
+      0.12
+     ]
+    ],
+    "method": "20ms RMS가 1.5s 이동중앙값+10.0dB 넘고 길이 (0.05, 1.5)s (문턱 미검증, 말소리 음절도 섞일 수 있음)"
+   },
+   "kind": "해외 원음+한국어 나레+자막"
+  }
+ },
+ "script_tone": {
+  "ok": true,
+  "method": "tools/calcopy/script_text_stats.tone (한국어 받아쓰기 구절 단위)",
+  "n": 5,
+  "endings": {
+   "그 밖": 1.0
+  },
+  "polite_ratio": 0.4,
+  "hearsay": 0,
+  "person_1st": 0,
+  "person_2nd": 0
+ },
+ "cuts": {
+  "ok": true,
+  "method": "bench.cuts.measure_video (scene_detect+merge_close+cut_verify)",
+  "times": [
+   1.533,
+   3.433,
+   4.367,
+   5.0,
+   6.767,
+   8.933,
+   9.633,
+   10.8,
+   12.933,
+   14.3
+  ],
+  "shots": 11,
+  "shot_len": {
+   "median": 1.53,
+   "p10": 0.7,
+   "p90": 2.13
+  },
+  "first_cut": 1.53,
+  "cut_per_min": 37.0,
+  "cut_eq_sub": [
+   8,
+   10
+  ],
+  "cut_eq_sub_rate": 0.8,
+  "zoom": {
+   "n": 65,
+   "median_rate_pct_s": 0.04,
+   "p90_abs_rate_pct_s": 5.53,
+   "zoomin_frac": 0.231,
+   "zoomout_frac": 0.138
+  },
+  "bench": {
+   "scene_t": 0.3,
+   "raw": [
+    1.533,
+    3.433,
+    4.367,
+    5.0,
+    6.767,
+    8.933,
+    9.633,
+    10.8,
+    12.933,
+    14.3
+   ],
+   "raw_stats": {
+    "shots": 11,
+    "first_cut": 1.53,
+    "cut_std": 0.53,
+    "cut_eq_sub": [
+     8,
+     10
+    ]
+   },
+   "candidates": [
+    1.533,
+    3.433,
+    4.367,
+    5.0,
+    6.767,
+    8.933,
+    9.633,
+    10.8,
+    12.933,
+    14.3
+   ],
+   "corr": [
+    -0.022,
+    0.287,
+    0.223,
+    0.266,
+    0.125,
+    0.103,
+    0.185,
+    -0.299,
+    0.155,
+    0.011
+   ],
+   "cuts": [
+    1.533,
+    3.433,
+    4.367,
+    5.0,
+    6.767,
+    8.933,
+    9.633,
+    10.8,
+    12.933,
+    14.3
+   ],
+   "bg_gray": null,
+   "detected": [
+    1.533,
+    3.433,
+    4.367,
+    5.0,
+    6.767,
+    8.933,
+    9.633,
+    10.8,
+    12.933,
+    14.3
+   ],
+   "moved": [],
+   "merged_out": [],
+   "rejected": [],
+   "shots": 11,
+   "shot_median": 1.53,
+   "shot_min": 0.63,
+   "shot_max": 2.17,
+   "first_cut": 1.53,
+   "cut_std": 0.53,
+   "cut_per_min": 37.0,
+   "cut_eq_sub": [
+    8,
+    10
+   ],
+   "longest_still": 1.8,
+   "event_gap_med": 0.7,
+   "zoom": {
+    "n": 65,
+    "median_rate_pct_s": 0.04,
+    "p90_abs_rate_pct_s": 5.53,
+    "zoomin_frac": 0.231,
+    "zoomout_frac": 0.138
+   }
+  },
+  "picture_boxes": {
+   "per_shot": [
+    {
+     "shot": 0,
+     "t": [
+      0.0,
+      1.53
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 1,
+     "t": [
+      1.53,
+      3.43
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      681
+     ]
+    },
+    {
+     "shot": 2,
+     "t": [
+      3.43,
+      4.37
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 3,
+     "t": [
+      4.37,
+      5.0
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 4,
+     "t": [
+      5.0,
+      6.77
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      711
+     ]
+    },
+    {
+     "shot": 5,
+     "t": [
+      6.77,
+      8.93
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 6,
+     "t": [
+      8.93,
+      9.63
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 7,
+     "t": [
+      9.63,
+      10.8
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 8,
+     "t": [
+      10.8,
+      12.93
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 9,
+     "t": [
+      12.93,
+      14.3
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    },
+    {
+     "shot": 10,
+     "t": [
+      14.3,
+      16.2
+     ],
+     "box": [
+      0,
+      420,
+      1080,
+      1080
+     ]
+    }
+   ],
+   "mode": [
+    0,
+    420,
+    1080,
+    1080
+   ],
+   "mode_share": 0.818,
+   "range": {
+    "x": [
+     0,
+     0
+    ],
+    "y": [
+     420,
+     420
+    ],
+    "w": [
+     1080,
+     1080
+    ],
+    "h": [
+     681,
+     1080
+    ]
+   },
+   "kinds": 3,
+   "method": "bench.layout.picture_box(컷 가운데 프레임, 바탕색과 다른 화소 행·열 50%)"
+  }
+ },
+ "materials": {
+  "method": "gemini_free.ask (컷 가운데 프레임 → 제작법 사전 분류)",
+  "dict": [
+   "남의영상재편집",
+   "스톡영상",
+   "사진+움직임",
+   "기사·화면캡처",
+   "AI그림",
+   "AI영상",
+   "짤·밈",
+   "역할극·인물컷",
+   "화면녹화",
+   "글자만",
+   "직접촬영",
+   "모름"
+  ],
+  "per_shot": [
+   {
+    "shot": 0,
+    "t": [
+     0.0,
+     1.53
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 유튜브 채널의 이케아 매장 진열대 영상을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 1,
+    "t": [
+     1.53,
+     3.43
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 이케아 가구 안내판을 바라보는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 2,
+    "t": [
+     3.43,
+     4.37
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 매장 내 주방용품을 들고 설명하는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 3,
+    "t": [
+     4.37,
+     5.0
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 매장 통로를 이동하는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 4,
+    "t": [
+     5.0,
+     6.77
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 동행인과 대화하는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 5,
+    "t": [
+     6.77,
+     8.93
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 바퀴 달린 조리대를 가리키며 말하는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 6,
+    "t": [
+     8.93,
+     9.63
+    ],
+    "kind": "남의영상재편집",
+    "why": "원목 카트를 밀며 이동시키는 자료 영상을 가져와 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 7,
+    "t": [
+     9.63,
+     10.8
+    ],
+    "kind": "남의영상재편집",
+    "why": "원목 카트 위에 커피 머신 등을 놓아 홈카페존으로 꾸민 자료 영상을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 8,
+    "t": [
+     10.8,
+     12.93
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 채널에서 이미숙이 집에서 구매한 가구 박스를 개봉하는 장면을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 9,
+    "t": [
+     12.93,
+     14.3
+    ],
+    "kind": "남의영상재편집",
+    "why": "조립이 완료된 원목 카트 제품을 찍은 영상을 재편집함.",
+    "model": "gemini-3.5-flash"
+   },
+   {
+    "shot": 10,
+    "t": [
+     14.3,
+     16.2
+    ],
+    "kind": "남의영상재편집",
+    "why": "'숙스러운 미숙씨' 유튜브 채널 영상에서 선글라스를 낀 이미숙이 이동식 조리대를 둘러보는 장면을 가져와 상하 자막 틀과 함께 재편집함.",
+    "model": "gemini-3.5-flash"
+   }
+  ],
+  "share_by_time": {
+   "남의영상재편집": 1.0
+  },
+  "share_by_count": {
+   "남의영상재편집": 11
+  },
+  "models": [
+   "gemini-3.5-flash"
+  ],
+  "ok": true
+ },
+ "sfx_rules": {
+  "ok": true,
+  "per_sec": 0.062,
+  "count": 1,
+  "position": {
+   "자막교체_직후": 0.0,
+   "컷_직후": 0.0,
+   "둘다": 0.0,
+   "둘다_아님": 1.0
+  },
+  "method": "audio_comp.spikes 시각 vs 자막 교체·컷 시각 ±0.15s (솟음 문턱 미검증)"
+ },
+ "bgm_rules": {
+  "ok": true,
+  "present": true,
+  "mood": [
+   "밝은",
+   "경쾌한"
+  ],
+  "start_s": 0.0,
+  "fade_out_said": false,
+  "duck_db": {
+   "failed": "말 없는 구간 0.5초 미만"
+  },
+  "end": {
+   "fade": true,
+   "last0.5s_db": -26.0,
+   "prev_db": -18.7,
+   "method": "마지막 0.5초 RMS가 끝 2~1초 전보다 6dB 넘게 낮으면 페이드(전체 섞인 소리, 미검증)"
+  },
+  "method": "있음·분위기·시작 = 제미나이 오디오 판독 / 덕킹 = audio.composition.duck_db 재사용 / 끝 페이드 = RMS 실측"
+ },
+ "voice_rules": {
+  "ok": true,
+  "genders": [
+   "female",
+   "female",
+   "female"
+  ],
+  "roles": 3,
+  "speakers_all": 3,
+  "cps": 9.51,
+  "narration": "human",
+  "tone": "빠르고 들뜬 톤의 정보 전달형 여성 나레이션과 자연스러운 수다체",
+  "method": "audio.composition 화자(한국어 화자 = 역할) + 받아쓰기 cps + 제미나이 톤 한 줄"
+ },
+ "overlay_rules": {
+  "ok": true,
+  "count": 0,
+  "per_min": 0.0,
+  "kind_share": {},
+  "slot_share": {},
+  "appearances": [],
+  "errors": [],
+  "method": "gemini_free.ask 1초 프레임(얹힌 그림·종류·상자) → 이웃 초 묶기 → 양끝 0.1초 간격 '보이나' 판독으로 구간. 자리: 훅<3.0s / 끝≥85% / 그 시각 자막이 전환어로 시작=전환어 뒤 / 강조 표지=강조어 / 그 밖 중간"
+ },
+ "unknown": [
+  "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [4, 6, 7, 8, 9, 16, 17]",
+  "글꼴 1위 점수 0.1415 < 0.5 — 창고에 없는 글꼴일 수 있음",
+  "받아쓰기: 길이 초과 13.1~16.8",
+  "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+  "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+ ],
+ "llm_calls": [
+  {
+   "tag": "ocr1",
+   "model": "gemini-3.5-flash",
+   "key": 115,
+   "ok": true,
+   "sec": 12.7
+  },
+  {
+   "tag": "ocr0",
+   "model": "gemini-3.5-flash",
+   "key": 116,
+   "ok": true,
+   "sec": 17.1
+  },
+  {
+   "tag": "title0",
+   "model": "gemini-3.5-flash",
+   "key": 117,
+   "ok": true,
+   "sec": 13.0
+  },
+  {
+   "tag": "asr",
+   "model": "gemini-3.5-flash",
+   "key": 118,
+   "ok": true,
+   "sec": 16.6
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-3.5-flash",
+   "key": 125,
+   "failed": "503",
+   "sec": 5.6
+  },
+  {
+   "tag": "mat1",
+   "model": "gemini-3.5-flash",
+   "key": 125,
+   "ok": true,
+   "sec": 6.5
+  },
+  {
+   "tag": "mat0",
+   "model": "gemini-3.5-flash",
+   "key": 125,
+   "ok": true,
+   "sec": 18.1
+  },
+  {
+   "tag": "ov0",
+   "model": "gemini-3.5-flash",
+   "key": 125,
+   "ok": true,
+   "sec": 21.3
+  },
+  {
+   "tag": "ov1",
+   "model": "gemini-3.5-flash",
+   "key": 125,
+   "ok": true,
+   "sec": 13.9
+  }
+ ],
+ "timing_sec": {
+  "probe": 1.2,
+  "layout": 695.8,
+  "captions": 65.4,
+  "fonts_fx": 28.0,
+  "caption_motion": 19.7,
+  "audio_tone": 22.8,
+  "cuts_materials": 57.2,
+  "rules": 58.9,
+  "total": 948.9
+ }
+}

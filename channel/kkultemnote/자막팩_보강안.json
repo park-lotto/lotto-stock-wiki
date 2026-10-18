@@ -1,0 +1,61 @@
+{
+ "_note": "꿀템노트(@꿀템노트-g1z) 자막을 자막팩 한 벌로 — shopping_shorts/static/caption-motions.js CAPTION_PACKS 꼴(font·size·look·text{color,style}·wordFx{style,color,grow}·emph) + 이 채널에만 있는 칸(speakers: 나레/원음 두 벌)과 새 효과 사양(new_*). 근거 = channel/kkultemnote/자막팩_보강안.md (편·초·크롭 경로). 실측 2026-10-18, 원본 1080×1920 기준 px. ★공용 코드는 고치지 않았다 — 구현은 자막팩 쪽.",
+ "pack_key": "kkultemnote",
+ "CAPTION_PACKS_entry": {
+  "kkultemnote": {
+   "label": "꿀템노트 수다",
+   "desc": "원음은 꾸불림 손글씨·흰 글자 검은 테, 나레는 굵은 고딕·흰 글자+노랑 강조 — 말한 사람마다 글꼴이 바뀐다",
+   "font": "Kkubulim",
+   "size": 90,
+   "look": "none",
+   "text": {"color": "#FFFFFF", "style": {"WebkitTextStroke": "0.11em #000", "paintOrder": "stroke fill", "textShadow": "none"}},
+   "wordFx": {"style": "color", "color": "#FDF60E", "grow": ""},
+   "emph": {"font": "Kkubulim", "size": 120, "color": "#FFFFFF", "style": {"WebkitTextStroke": "0.12em #000", "paintOrder": "stroke fill", "textShadow": "0 0 0.12em rgba(255,255,255,.9)"}},
+   "speakers": {
+    "_why": "★새로 — 지금 팩은 자막 한 벌. 꿀템노트는 화자(나레/원음)마다 글꼴·크기가 다르다(BpU 0~15초 18자막 전부 실측: 원음 11개 꾸불림, 나레 7개 굵은 고딕). 자막 줄에 who('narr'|'orig')가 있으면 그 칸 값이 위 font/size/text 를 덮는다.",
+    "narr": {"font": "Scene1369", "font_alt": ["Pretendard(ExtraBold)", "Scene223"], "size": 83, "scaleX": 1.0,
+             "text": {"color": "#FFFFFF", "style": {"WebkitTextStroke": "0.13em #000", "paintOrder": "stroke fill", "textShadow": "0 0 0.06em rgba(0,0,0,.6)"}},
+             "wordFx": {"style": "color", "color": "#FDF60E", "grow": ""}, "enter": "flashIn"},
+    "orig": {"font": "Kkubulim", "size": 90,
+             "text": {"color": "#FFFFFF", "style": {"WebkitTextStroke": "0.11em #000", "paintOrder": "stroke fill"}},
+             "wordFx": {"style": "color", "color": "#FDF60E", "grow": ""}, "enter": "none"}
+   },
+   "variants": {
+    "_why": "★새로 — 한 줄 전체 모양을 바꾸는 원음 변형 3종(편마다 1~3번). 줄에 variant 를 달면 그 값으로 그린다.",
+    "orig_pop": {"font": "Kkubulim", "size": 108, "text": {"color": "#FFFFFF", "style": {"WebkitTextStroke": "0.16em #6E6E6E", "paintOrder": "stroke fill", "textShadow": "0 0 0 #000"}}, "enter": "popOvershoot",
+                 "where": "BpU 5.83~6.40 '앉아보면' · 원음 감탄·핵심 한 마디(1~4자)"},
+    "orig_red": {"font": "Kkubulim", "size": 100, "text": {"color": "#F51814", "style": {"WebkitTextStroke": "0.10em #000", "paintOrder": "stroke fill"}}, "enter": "none", "letterSpacing": "0.18em",
+                 "where": "BpU 9.02~10.0 '혹 하는 거지' · m0E 16.0 '안 들어가는 게 없어!' · 원음 펀치라인(편당 0~1)"},
+    "orig_append": {"rule": "같은 원음 자막에 다음 말을 이어 붙인다(앞 글은 그대로, 새 어절만 컷인). 붙는 어절은 굵은 손글씨(BMDOHYEON 근사) 1.15배", "font_appended": "BMDOHYEON", "size_appended": 104, "enter": "none",
+                    "where": "BpU 0.10 '되게 가벼워' → 0.60 '되게 가벼워 맞아!' · 12.1 '가격은 사나워요' → '… 아아아아악~'"}
+   },
+   "slots": {"first": "none", "body": "none", "price": "none", "end": "none", "problem": "none", "reveal": "none", "emph": "popOvershoot",
+             "_why": "벤치는 자막 대부분이 컷인(등장 효과 없음, 30fps 실측 BpU 1.70·2.60·3.90·5.00 / m0E 2.05·2.08). 나레만 1~2프레임 깜빡 들어옴(flashIn)."}
+  }
+ },
+ "new_motions": {
+  "flashIn": {"_why": "★새로(CAPTION_MOTIONS 에 없음 — fade 는 700ms·블러라 벤치보다 10배 길다)", "label": "툭 들어오기", "ms": 66, "easing": "linear",
+              "frames": [{"opacity": 0.45}, {"opacity": 1}],
+              "measured": "BpU 1.70 반투명→1.73 완전(30fps 2프레임) · 2.60→2.63 · m0E 2.05→2.08. 위치 이동·크기 변화 없음."},
+  "popOvershoot": {"_why": "★새로(pop 은 0→1.3→0.92→1.04→1, 480ms 로 비슷하나 벤치는 시작이 작은 글자에서·넘침 후 바로 1.0, 380ms, 큰 회색 테)", "label": "꿀템 톡 튀어나오기", "origin": true, "ms": 380, "easing": "linear",
+                   "frames": [{"opacity": 1, "scale": "0.3", "offset": 0.0}, {"opacity": 1, "scale": "0.75", "offset": 0.1}, {"opacity": 1, "scale": "1.35", "offset": 0.4}, {"opacity": 1, "scale": "1.15", "offset": 0.6}, {"opacity": 1, "scale": "1.0", "offset": 1.0}],
+                   "measured": "BpU '앉아보면' 5.83 작음(폭 ~25%) · 5.90 ~80% · 5.97~6.03 최대(~135%, 회색 두꺼운 테) · 6.10~6.20 정상 크기. 6.40 다음 자막으로 컷. 단위 = 자막 통째(글자별 아님)."},
+  "none": {"label": "효과 없음(컷인)", "measured": "벤치 원음 자막 기본값 — 등장·퇴장 모두 컷(30fps 중간 프레임 없음)"}
+ },
+ "new_stickers": {
+  "_why": "★새로 — 자막팩에 스티커 층이 없다. 꿀템노트 8편 중 7편에 하나 이상(BpU 만 없음).",
+  "comment_card": {"what": "유튜브 댓글 캡처 카드(흰 상자·검정 글 ~30px Pretendard Regular·아래 줄 윤곽 엄지·숫자·윤곽 엄지아래·'답글')", "where": "창 아래 끝에 걸침 — 상자 아래변 ≈ y1500~1540, 가운데 정렬, 폭 = 글 길이+44px(최대 960)", "motion": "컷인, 한 번 뜨면 2~6초 유지(여러 자막에 걸침)",
+                   "count": "5/8편(m0E·KCx·znH·2wJ·cLk — BpU·653b·_dz 없음, 2fps 시트 눈 확인) · 편당 1~2장", "measured": "m0E 2.05~5.6 x60~1020 y1425~1540 / KCx 3.0~16 x165~915 y1360~1502 좋아요 380 / znH 6.5~15"},
+  "hearts": {"what": "빨강·분홍 하트 여러 개가 인물 둘레에서 떠오름(반투명 번짐)", "where": "창 안 얼굴 주위", "motion": "0.5초 동안 아래→위로 떠오르며 커짐·사라짐", "measured": "KCx 0.0~1.5(정재형 '너무 예쁘다')"},
+  "sound_word": {"what": "효과음 글자(빨강 굵은 붓글씨 '쿵'·'직' 따로)", "where": "창 안 좌·우", "motion": "컷인, 1.5초", "measured": "cLk 5.5~7.0 '쿵 직'"},
+  "product_cutout": {"what": "제품 누끼 사진(잔·크래커)을 창 위에 얹음", "where": "창 안 왼쪽 중앙", "motion": "컷인 또는 여러 장 흩뿌림", "measured": "KCx 11.5~12.4 잔 2개 · cLk 2.0~2.5 크래커 여러 장"},
+  "small_text": {"what": "작은 장식 글('WOW'·'✦' 반짝)", "where": "자막 위·옆", "motion": "컷인", "measured": "m0E 4.5 'WOW' · 11.5 '✦'"},
+  "aside_line": {"what": "자막 위 괄호 보충 줄 '(난리가 났음)'·'(이동식 보조 조리대)' — 노랑 작은 손글씨", "where": "본 자막 바로 위 한 줄, 크기 ~0.7배", "motion": "컷인", "measured": "_dz 9.0~10.5 · 653 14.5~16.5"}
+ },
+ "older_era": {
+  "_why": "08~09월 초 편(KCx·m0E·cLk·2wJ, 여자 나레)은 나레 자막이 다르다 — 지금(09-25~, 남자 나레)은 위 speakers.narr. 둘 다 팩 하나로 묶지 말고 변형으로.",
+  "narr": {"font": "SBAggroB", "size": 88, "text": {"color": "#FFFFFF", "style": {"WebkitTextStroke": "0.12em #000", "paintOrder": "stroke fill", "textShadow": "0 0.05em 0.08em rgba(0,0,0,.6)"}},
+           "wordFx": {"style": "color", "color": "#FDE21E", "alt_colors": ["#FF9A1E"], "grow": ""},
+           "measured": "KCx 11.6 '엄청 비싸다'(노랑)+'고 하네요'(흰) · m0E 3.0 '가방 잘 안사는'(노랑)+'장윤정도'(흰) · KCx 4.5 '미안해 한 이유'(주황)"}
+ }
+}
