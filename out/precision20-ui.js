@@ -1153,7 +1153,8 @@
   let stickerSeq=0;
   const STICKER_SVG={
     gem:id=>`<svg viewBox="0 0 100 90" width="100%" height="100%" style="overflow:visible"><defs><clipPath id="${id}"><polygon points="20,0 80,0 100,30 50,90 0,30"/></clipPath></defs><polygon points="20,0 50,30 0,30" fill="#B3E5FC"/><polygon points="20,0 80,0 50,30" fill="#E1F5FE"/><polygon points="80,0 100,30 50,30" fill="#81D4FA"/><polygon points="0,30 50,30 50,90" fill="#29B6F6"/><polygon points="50,30 100,30 50,90" fill="#0288D1"/><g clip-path="url(#${id})"><g transform="rotate(-35 50 45)"><rect class="stk-shine cap-u" x="-60" y="-40" width="18" height="170" fill="#FFFFFF"/></g></g><polygon points="20,0 80,0 100,30 50,90 0,30" fill="none" stroke="#0D47A1" stroke-width="3" stroke-linejoin="round"/></svg>`,
-    spark_lines:()=>{const L='<line x1="6" y1="20" x2="40" y2="6"/><line x1="8" y1="32" x2="48" y2="32"/><line x1="6" y1="44" x2="40" y2="58"/>';return `<svg viewBox="0 0 60 64" width="100%" height="100%" style="overflow:visible"><g stroke-linecap="round"><g stroke="#111" stroke-width="10">${L}</g><g stroke="#FFFFFF" stroke-width="5">${L}</g></g></svg>`},
+    // 선 셋(벤치 Cs-Ka 10.2 실측): 가로선 멀리·길게, 가파른 선 가깝게. 크기는 글자 채움 높이 F 의 배수로 상자를 잡는다(아래 renderStickers)
+    spark_lines:()=>{const L='<line x1="95" y1="0" x2="210" y2="0"/><line x1="57" y1="40" x2="119" y2="83"/><line x1="19" y1="41" x2="61" y2="131"/>';return `<svg viewBox="-12 -12 234 155" width="100%" height="100%" preserveAspectRatio="none" style="overflow:visible"><g stroke-linecap="round"><g stroke="#111" stroke-width="22">${L}</g><g stroke="#FFFFFF" stroke-width="16">${L}</g></g></svg>`},
     thumb:down=>`<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" style="vertical-align:-.25em${down?';transform:scaleY(-1)':''}"><path d="M7 10v11H3V10h4zm2 11h8.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 19 10h-5l.8-4.2A1.6 1.6 0 0 0 13.2 4L9 10v11z" fill="none" stroke="#0F0F0F" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
   };
   function renderStickers(text){
@@ -1166,16 +1167,13 @@
     [...list.filter(s=>s.cont),...list.filter(s=>!s.cont)].forEach(s=>{
       const el=document.createElement('div');el.className='cap-stk cap-u';el.dataset.kind=s.kind;if(s.cont)el.dataset.cont='1';
       const wr=Number.isInteger(s.w)&&words[s.w]?words[s.w].getBoundingClientRect():ink,wx=wr.left-L.left,wy=wr.top-L.top;
-      if(s.kind==='gem'){   // 하늘 다이아(키치잇 BRa 15.9) — 글자 1.5배, 강조 낱말 옆 세로 가운데
-        //   낱말이 줄 가운데에 있으면 옆 글자를 덮으므로 자막 줄 바깥 끝(낱말이 있는 쪽)에 붙인다 — 벤치 BRa '너~무 부내나💎'도 줄 끝
-        const h=fs*1.5,w=h*100/90,ix=ink.left-L.left,iw=ink.width,onRight=wx+wr.width/2>=ix+iw/2||ix-fs*.12-w<4,right=onRight&&ix+iw+fs*.12+w<=L.width-4;
-        box(el,right?ix+iw+fs*.12:ix-fs*.12-w,wy+wr.height/2-h/2,w,h);el.innerHTML=STICKER_SVG.gem(`stkgem${++stickerSeq}`);
-      }else if(s.kind==='spark_lines'){   // 흰 짧은 선 셋(키치잇 Cs-Ka 9.9) — 낱말 오른쪽 위 45°
-        //   줄 끝 낱말이면 오른쪽으로 뻗고(벤치 Cs-Ka 10.2 '똑'), 뒤에 글자가 있으면 그 글자를 덮지 않게 낱말 오른쪽 위로 45° 세운다(보강안 '오른쪽 위 45°')
-        const z=fs*1.0,last=!Number.isInteger(s.w)||s.w>=words.length-1;
-        if(last)box(el,wx+wr.width+fs*.06,wy+wr.height/2-z*.53,z,z*64/60);
-        else{box(el,wx+wr.width-z*.35,wy-z*.95,z,z*64/60);el.style.rotate='-45deg';el.style.transformOrigin='0% 50%';}
-        el.innerHTML=STICKER_SVG.spark_lines();
+      // 글자 채움 높이 F(=0.93fs, 키치잇 실측 68px/73px) — 벤치 수치는 전부 벤치 글자 채움 높이(69px)의 배수로 옮긴다. 낱말이 줄 끝이 아니면 뒤 글자를 덮지 않게 자막 줄 끝 기준.
+      const H=fs*.93,last=!Number.isInteger(s.w)||s.w>=words.length-1,ax=(last?wr.right:ink.right)-L.left,acy=wy+wr.height/2;
+      if(s.kind==='gem'){   // 하늘 다이아(키치잇 BRa 16.3 실측): 잉크 높이 187px = 글자 채움 69px 의 2.71배, 폭 = 높이의 0.96, 낱말 끝에 폭 0.27 겹쳐 붙고 아래끝 = 글자 아래끝
+        const h=H*2.71,w=h*.96,bottom=acy+H*.5;
+        box(el,Math.min(ax-w*.27,L.width-w-6),bottom-h,w,h);el.innerHTML=STICKER_SVG.gem(`stkgem${++stickerSeq}`);el.querySelector('svg').setAttribute('preserveAspectRatio','none');
+      }else if(s.kind==='spark_lines'){   // 흰 선 셋(키치잇 Cs-Ka 10.2 실측): 낱말 오른쪽 아래로 뻗음, 글자 높이 기준 크기(위 STICKER_SVG)
+        const w=H*3.14,h=H*2.22;box(el,Math.min(ax+H*.15,L.width-w-6),acy+H*.25,w,h);el.innerHTML=STICKER_SVG.spark_lines();   // 화면 밖으로 안 나가게 ·   // 벤치 선 상자 217×153px = 글자 채움 69px 의 3.14×2.22배, 낱말 오른쪽 아래
       }else if(s.kind==='kk_doodle'){   // 'ㅋㅋㅋ' 흰 손글씨 + 초록 짧은 선(키치잇 _Wa 12.5) — 자막 왼쪽 위
         box(el,ink.left-L.left-fs*.6,ink.top-L.top-fs*1.6,fs*4,null);
         el.innerHTML=`<span style="display:inline-block;font:400 ${fs*1.8}px 'BMJUA',sans-serif;color:#FFFFFF;-webkit-text-stroke:${fs*.05}px #111;paint-order:stroke fill;transform:rotate(-10deg);white-space:nowrap">ㅋㅋㅋ</span><svg viewBox="0 0 30 30" style="position:absolute;left:-${fs*.45}px;top:${fs*.05}px;width:${fs*.45}px;height:${fs*.45}px;overflow:visible"><g stroke="#2ED15A" stroke-width="4" stroke-linecap="round"><line x1="22" y1="6" x2="10" y2="0"/><line x1="22" y1="15" x2="4" y2="15"/><line x1="22" y1="24" x2="10" y2="30"/></g></svg>`;
@@ -1188,9 +1186,9 @@
         Object.assign(el.style,{position:'absolute',left:'50%',top:((1505*k-H)/L.height*100)+'%',translate:'-50% 0',maxWidth:(960*k)+'px',height:H+'px',boxSizing:'border-box',padding:`${22*k}px ${22*k}px`,background:'#FFFFFF',borderRadius:(14*k)+'px',pointerEvents:'none',font:`400 ${30*k}px 'Pretendard',sans-serif`,color:'#0F0F0F',whiteSpace:'nowrap',overflow:'hidden'});
         const likes=Number.isFinite(s.likes)?String(Math.round(s.likes)):'';
         el.innerHTML=`<div style="overflow:hidden;text-overflow:ellipsis">${String(s.text||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div><div style="margin-top:${14*k}px;color:#606060;font-size:${26*k}px;display:flex;gap:${18*k}px;align-items:center">${STICKER_SVG.thumb(false)}<span>${likes}</span>${STICKER_SVG.thumb(true)}<span style="color:#0F0F0F">답글</span></div>`;
-      }else if(s.kind==='object_pop'&&s.src){   // 3D 재료 누끼(스타픽룸 VbpdN 18.5) — 자막 왼쪽 아래 창 안, 폭 280, 둘째부터 옆으로 겹쳐 쌓임
+      }else if(s.kind==='object_pop'&&s.src){   // 3D 재료 누끼(스타픽룸 VbpdN 18.5) — 자막 왼쪽 아래 창 안, 폭 ≤280·높이 ≤300(벤치 y1200~1460), 둘째부터 옆으로 겹쳐 쌓임
         const w=280*k,x=(s.x!=null?s.x/100*L.width:180*k)+pops*150*k,y=(s.y!=null?s.y/100*L.height:ink.bottom-L.top+40*k)+pops*30*k;pops++;   // 기본 = x180 · 자막 아래 +40(스타픽룸 실측 '자막 아래 +40~+300')
-        box(el,x,y,w,null);el.innerHTML=`<img src="${s.src}" style="display:block;width:100%;height:auto;filter:drop-shadow(0 ${6*k}px ${8*k}px rgba(0,0,0,.45))">`;
+        box(el,x,y,w,null);el.innerHTML=`<img src="${s.src}" style="display:block;max-width:100%;max-height:${300*k}px;width:auto;height:auto;filter:drop-shadow(0 ${6*k}px ${8*k}px rgba(0,0,0,.45))">`;
       }else return;
       layer.insertBefore(el,badge);
     });

@@ -36,6 +36,11 @@ def tables_dir():
 
 
 # ── 자막표(채널마다 열 이름이 다르다) → 공통 줄 ─────────────────────────────────────
+# 스타픽룸 3D 재료 누끼(관제 235, 2026-10-19): 신라면 재료 영상(kitchit/sinramen/src)에서 rembg(u2net, 로컬)로 오린 PNG.
+#   -o8gedIaYmA_5 1.6초 봉지 / Wy9--jw0ZsM_182 3.0초 참기름 병·계란판. 하이브리드는 자막표 sticker 에 이 경로를 src 로 싣는다.
+STAR_OBJ = {k: BENCH / "starpickroom/hybrid_sungsikyung/stickers" / v for k, v in {"B2": "참기름.png", "B3": "계란.png", "B5": "신라면봉지.png"}.items()}
+
+
 def norm_rows(pack, table):
     out = []
     for r in table["rows"]:
@@ -57,7 +62,9 @@ def norm_rows(pack, table):
             narr = str(r.get("speaker", "")).startswith("나레")
             row = {"line": f'{r["line"]}', "t0": r["t0"], "t1": r["t1"], "text": r["text"], "speaker": "narr" if narr else "orig",
                    "emph": [{"word": e["word"], "color": e["hex"], **({"grow": e["grow"]} if e.get("grow") else {})} for e in r.get("emph") or []],
-                   "want_hex": [e["hex"] for e in r.get("emph") or []], "variant": "", "sticker": "", "typing": bool(r.get("typing"))}
+                   "want_hex": [e["hex"] for e in r.get("emph") or []], "variant": "", "sticker": "", "typing": bool(r.get("typing")),
+                   "stickers": [{"kind": "object_pop", "src": str(STAR_OBJ[r["line"]]), "hold": "beat"}
+                                for s_ in (r.get("sticker") or []) if isinstance(s_, dict) and s_.get("kind") == "sprObjectPop" and STAR_OBJ.get(r["line"], pathlib.Path("-")).exists()]}
             if row["typing"] and r.get("type_cps"):
                 n = len(row["text"].replace(" ", "")); row["chars"] = [round(r["t0"] + k / float(r["type_cps"]), 3) for k in range(n)]
         out.append(row)
@@ -344,8 +351,8 @@ def sticker_check(out, need, tts):
     dr.rounded_rectangle((70, 60, 230, 350), 40, fill=(170, 110, 40, 255), outline=(90, 50, 10, 255), width=8); dr.rectangle((110, 10, 190, 70), fill=(40, 120, 40, 255))
     im.save(src)
     R = lambda line, t0, t1, text, **kw: {"line": line, "t0": t0, "t1": t1, "text": text, "speaker": "narr", "variant": "", "sticker": "", "emph": [], **kw}
-    rows = [R("A", 0, 1.5, "고급 그 자체", stickers=[{"kind": "gem", "word": "고급"}]),
-            R("B", 1.5, 3.0, "진짜 중국집 요리", stickers=[{"kind": "spark_lines", "word": "중국집"}]),
+    rows = [R("A", 0, 1.5, "보기만 해도 고급", stickers=[{"kind": "gem", "word": "고급"}]),
+            R("B", 1.5, 3.0, "이렇게 똑", stickers=[{"kind": "spark_lines", "word": "똑"}]),
             R("C", 3.0, 4.5, "이 가방 하나로 끝", stickers=[{"kind": "circle_arrow", "x": 50, "y": 45, "r": 20}]),
             R("D", 4.5, 6.0, "오 마이 갓", stickers=[{"kind": "kk_doodle"}]),
             R("E", 6.0, 7.5, "댓글 반응이 난리", stickers=[{"kind": "comment_card", "text": "표고에 어묵에 바지락살 들어간 순간 이미 다른 요리임", "likes": 286, "hold": 2.2}]),
@@ -365,10 +372,10 @@ def sticker_check(out, need, tts):
         b = cap_box(k); return (b[0], b[1] + 1300, b[2], b[3] + 1300)
     # 💎 다이아: 글자 1.5배 · 낱말 옆 · 팝 곡선 · 반짝 띠가 0.4초마다
     b, n = cbox(still(0), STK["gem_edge"], 30); cb, _ = cbox(still(0), ["#FFFFFF"], 8)   # 자막 = 흰 글자 점(다이아는 흰색이 아니다)   # 다이아 테두리 색(반짝 띠가 덮어도 늘 보인다)
-    fs = 93.6 * PACKS["kitchit"]["size"] / 100   # 자막 글자 크기(plain 본문 93.6px × 팩 크기)
-    h_ratio = (b[3] - b[1]) / fs if b else 0
-    need(bool(b) and 1.25 <= h_ratio <= 1.65 and (b[0] >= cb[2] - 10 or b[2] <= cb[0] + 10) and abs((b[1] + b[3]) / 2 - (cb[1] + cb[3]) / 2) < 30,
-         f"⑦ 💎 다이아: 상자 {b} · 높이/자막 줄 잉크 {h_ratio:.2f}· 글자 {fs:.0f}px 의 {h_ratio:.2f}배(보강안 1.5) · 자막 {cb} 바깥 끝(옆 글자 안 덮음)·세로 가운데")
+    BENCH_GEM_H, BENCH_FILL = 187, 69   # BRa 16.3 다이아 잉크 높이 / 키치잇 글자 채움 높이(우리 68)
+    h_ratio = (b[3] - b[1]) / BENCH_GEM_H if b else 0
+    need(bool(b) and .87 <= h_ratio <= 1.15 and b[0] >= cb[2] - (b[2] - b[0]) * .45 and b[0] <= cb[2] and abs(b[3] - cb[3]) <= 25,
+         f"⑦ 💎 다이아: 상자 {b} 높이 {b and b[3] - b[1]}px = 벤치 {BENCH_GEM_H}px 의 {h_ratio:.2f}배 · 낱말 끝에 겹쳐 붙음(자막 흰 글자 {cb}) · 아래끝 맞춤")
     hs = []
     for f in range(10):
         bb, _ = cbox(frame(0, f), STK["gem_edge"], 30); hs.append(round(((bb[3] - bb[1]) / (b[3] - b[1])) if bb else 0, 3))
@@ -383,9 +390,12 @@ def sticker_check(out, need, tts):
     need(None not in sh[:3] and len(set(sh[:3])) == 3 and sh[3] is not None and abs(sh[0] - sh[3]) <= 3,
          f"⑦ 💎 흰 반짝 띠가 움직이고 0.4초(12프레임)마다 같은 자리(프레임 15·17·19·27 띠 가운데 x {sh})")
     # 강조선: 낱말 오른쪽 위 · 2프레임 번쩍
-    cb = cap_abs(1); top = lambda im: im.crop((cb[0], cb[1] - 110, cb[2], cb[1] - 20))   # '중국집' 뒤에 글자가 있어 선은 자막 줄 위로(오른쪽 위 45°) — 자막 줄 위 띠만 잰다
-    bb = ink_box(top(still(1))); a0, a2 = alpha_sum(top(frame(1, 0))), alpha_sum(top(frame(1, 2)))
-    need(bool(bb) and a0 < a2 * .2, f"⑦ 강조선: 낱말 오른쪽에 그려짐 {bb} · 첫 프레임 잉크 {a0} → 2프레임 {a2}")
+    cb, _ = cbox(still(1).crop((0, 1290, 1080, 1360)), ["#FFFFFF"], 8); cb = (cb[0], cb[1] + 1290, cb[2], cb[3] + 1290)   # 글자 윗부분 띠만(선은 낱말 가운데 아래에서 시작)
+    sp = lambda im: cbox(im.crop((cb[2] + 2, cb[1] - 20, 1080, 1700)), ["#FFFFFF"], 12)
+    bb, _ = sp(still(1)); w_, h_ = (bb[2] - bb[0], bb[3] - bb[1]) if bb else (0, 0)
+    a0, a2 = sp(frame(1, 0))[1], sp(frame(1, 2))[1]
+    need(bool(bb) and abs(w_ / 217 - 1) <= .15 and abs(h_ / 153 - 1) <= .15 and a0 < max(1, a2) * .2,
+         f"⑦ 강조선: 낱말 오른쪽 상자 {w_}×{h_}px = 벤치 Cs-Ka 10.2 217×153px ±15% · 첫 프레임 흰 점 {a0} → 2프레임 {a2}")
     # 빨간 원 + 화살표: 원 자리·반지름(x50% y45% r20%) · 0.2초 그려짐
     b, n = cbox(still(2), STK["red"])
     reds = [cbox(frame(2, f), STK["red"])[1] for f in range(8)]
@@ -415,8 +425,8 @@ def sticker_check(out, need, tts):
     ws = []
     for f in range(11):
         bb = obj(frame(6, f)); ws.append(round((bb[2] - bb[0]) / (o6[2] - o6[0]), 3) if bb and o6 else 0)
-    need(bool(o6) and abs(o6[0] - (180 + 70 * 280 / 300)) <= 30 and o6[1] >= cap_abs(6)[3] and abs((o6[2] - o6[0]) - 160 * 280 / 300) <= 20 and max(ws) >= 1.04 and ws[1] < .8,
-         f"⑦ 3D 재료: 병 상자 {o6}(그림 x180·폭280 안 병 x≈245·폭≈150) · 팝 폭 비율 {ws}")
+    need(bool(o6) and abs(o6[0] - (180 + 70 * 300 / 360)) <= 30 and o6[1] >= cap_abs(6)[3] and abs((o6[2] - o6[0]) - 160 * 300 / 360) <= 20 and max(ws) >= 1.04 and ws[1] < .8,
+         f"⑦ 3D 재료: 병 상자 {o6}(그림 x180·폭≤280·높이≤300 → 견본 300×360 은 0.83배, 병 x≈238·폭≈133) · 팝 폭 비율 {ws}")
     need(bool(o7) and (o7[2] - o7[0]) >= (o6[2] - o6[0]) + 120, f"⑦ 3D 재료: 같은 줄 다음 장면에 이어지고 둘째가 옆에 쌓임(병 폭 {o6 and o6[2] - o6[0]} → {o7 and o7[2] - o7[0]})")
     # 캡컷·썸네일
     spans = scene_style.overlay_spans(ctx["scenes"], lay, L); bad = []
@@ -429,25 +439,32 @@ def sticker_check(out, need, tts):
         p = scene_style.render_layer_one(tl, snap, d / f"t{k}", idx[k], {"text": "x"}, "bench"); th = img(p); st = still(k)
         h = hard_diff(th, st) + hard_diff(st, th); need(h == 0, f"⑦ 썸네일 장면 {k}({rows[k]['stickers'][0]['kind']}) = 정지 그림(진한 차이 {h})")
     # 시트: 정지 8장 + 다이아·원·3D 등장 프레임
-    bench = []
-    for rel, t in (("kitchit/src/BRa5Iv4A3Y8.mp4", 16.3), ("kitchit/src/Cs-Ka_S8nDM.mp4", 10.2), ("kitchit/src/Cs-Ka_S8nDM.mp4", 0.5), ("kitchit/src/_Wa4IehA6yE.mp4", 12.5),
-                   ("kkultemnote/src/m0Ex0y1DN5s.mp4", 3.0), ("starpickroom/src/VbpdNba182M.mp4", 19.5)):
-        if (BENCH / rel).exists():
-            va._run_ffmpeg(["ffmpeg", "-y", "-ss", str(t), "-i", str(BENCH / rel), "-frames:v", "1", str(d / "_b.png")])
-            bench.append(Image.open(d / "_b.png").convert("RGBA").resize((1080, 1920)))
-    shots = [("벤치: 💎 BRa 16.3 · 강조선 Cs-Ka 10.2 · 빨간 원 Cs-Ka 0.5 · ㅋㅋㅋ _Wa 12.5(이 프레임엔 안 보임) · 댓글 카드 m0E 3.0 · 3D 재료 VbpdN 19.5", bench),
-             ("우리 정지: 💎 · 강조선 · 빨간 원 · ㅋㅋㅋ · 댓글 카드 · (이어짐) · 3D 재료 · (쌓임)", [still(k) for k in range(8)]), ("💎 0·2·4·8·12·14프레임", [frame(0, f) for f in (0, 2, 4, 8, 12, 14)]),
-             ("빨간 원 0·2·4·6 / 3D 0·3·7·10", [frame(2, f) for f in (0, 2, 4, 6)] + [frame(6, f) for f in (0, 3, 7, 10)])]
+    # 시트: 벤치 · 우리를 **같은 배율·같은 칸**에(두 쪽 다 1080×1920 원본에서 같은 상자를 잘라 0.5배)
+    PAIRS = [("💎 다이아", "kitchit/src/BRa5Iv4A3Y8.mp4", 16.3, 0, (200, 1100, 1000, 1500)),
+             ("강조선", "kitchit/src/Cs-Ka_S8nDM.mp4", 10.2, 1, (150, 1150, 1050, 1550)),
+             ("빨간 원+화살표", "kitchit/src/Cs-Ka_S8nDM.mp4", 0.5, 2, (100, 500, 1000, 1450)),
+             ("ㅋㅋㅋ(벤치 프레임 없음)", None, 0, 3, (150, 1100, 1050, 1500)),
+             ("댓글 카드", "kkultemnote/src/m0Ex0y1DN5s.mp4", 3.0, 4, (0, 1200, 1080, 1600)),
+             ("3D 재료", "starpickroom/src/VbpdNba182M.mp4", 19.5, 6, (0, 1000, 1080, 1800))]
     try:
         font = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 22)
     except OSError:
         font = ImageFont.load_default()
-    W = 270 * 8; sheet = Image.new("RGB", (W, (480 + 30) * len(shots)), (16, 18, 22)); dr = ImageDraw.Draw(sheet); y = 0
-    for title, ims in shots:
-        dr.text((8, y + 3), title, fill=(240, 240, 240), font=font); y += 30
-        for j, im in enumerate(ims):
-            bg = Image.new("RGBA", (1080, 1920), (70, 90, 110, 255)); bg.alpha_composite(im); sheet.paste(bg.convert("RGB").resize((270, 480)), (j * 270, y))
-        y += 480
+    cells = []
+    for title, rel, t, k, box in PAIRS:
+        w, h = (box[2] - box[0]) // 2, (box[3] - box[1]) // 2
+        if rel and (BENCH / rel).exists():
+            va._run_ffmpeg(["ffmpeg", "-y", "-ss", str(t), "-i", str(BENCH / rel), "-frames:v", "1", str(d / "_b.png")])
+            bimg = Image.open(d / "_b.png").convert("RGB").resize((1080, 1920)).crop(box).resize((w, h))
+        else:
+            bimg = Image.new("RGB", (w, h), (30, 30, 30))
+        bg = Image.new("RGBA", (1080, 1920), (70, 90, 110, 255)); bg.alpha_composite(still(k))
+        cells.append((title, rel and f"{pathlib.Path(rel).stem} {t}초", bimg, bg.convert("RGB").crop(box).resize((w, h))))
+    W = max(c[2].width for c in cells) * 2 + 30; H = sum(c[2].height + 34 for c in cells)
+    sheet = Image.new("RGB", (W, H), (16, 18, 22)); dr = ImageDraw.Draw(sheet); y = 0
+    for title, src_, b_, o_ in cells:
+        dr.text((8, y + 5), f"{title} — 왼쪽 벤치({src_ or '-'}) · 오른쪽 우리 · 같은 배율(0.5)·같은 칸", fill=(240, 240, 240), font=font); y += 34
+        sheet.paste(b_, (0, y)); sheet.paste(o_, (b_.width + 30, y)); y += b_.height
     sheet.save(out / "stickers_시트.jpg", quality=88); print(f"  시트 {out / 'stickers_시트.jpg'}")
 
 
