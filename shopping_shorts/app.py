@@ -9174,14 +9174,11 @@ def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
     d = typecast_tts.list_voices()
     if not d.get("ok"):
         return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
-    key = (q or "").strip().lower()
-    out = []
-    for v in d.get("voices") or []:
-        if key and key not in str(v.get("name", "")).lower():
-            continue
-        out.append(v)
-        if len(out) >= max(1, min(int(limit or 60), 200)):
-            break
+    # 한글로 쳐도 찾는다 — API 이름은 영문 표기뿐(이현=Leehyun). 판단 주인 = typecast_tts.name_matches
+    hit = [v for v in d.get("voices") or [] if typecast_tts.name_matches(q, v.get("name", ""))]
+    forms = typecast_tts.query_forms(q)
+    hit.sort(key=lambda v: not any(str(v.get("name", "")).lower().startswith(f) for f in forms))
+    out = hit[:max(1, min(int(limit or 60), 200))]
     return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
 
 

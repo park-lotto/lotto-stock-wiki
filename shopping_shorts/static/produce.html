@@ -14156,7 +14156,7 @@ async function searchTypecastVoices(){
   if(!d || !d.ok){
     box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
   TCV_RESULTS = d.voices||[];
-  if(!TCV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다.</div>'; return; }
+  if(!TCV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다. 타입캐스트 앱에 있는 성우라도 API로 열려 있지 않은 성우는 여기 나오지 않아요.</div>'; return; }
   box.innerHTML = '<div class="hint" style="margin-bottom:6px">전체 '+(d.total||TCV_RESULTS.length)
     +'명 중 '+TCV_RESULTS.length+'명</div>'
     + TCV_RESULTS.map(function(v,i){
