@@ -10443,11 +10443,14 @@ def api_mix_video_longform(job_id: str, request: Request, dl: int = 0, where: st
 # 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
 #       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.
 @app.get("/api/share/link/{job_id}")
-def api_share_link(job_id: str, request: Request):
-    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
+def api_share_link(job_id: str, request: Request, seo: int = 0):
+    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달).
+    seo=1(2026-10-18 '제목·태그를 폰 카톡으로'): 영상이 아직 없어도 발급 — 폰 페이지가 제목·설명·태그만 보여 준다."""
     job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
     _gone = _video_gone_reason(job)
-    if _gone:
+    if _gone and not seo:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     sid = _share_put(job_id)
     if PUBLIC_BASE_URL:
@@ -10549,6 +10552,28 @@ def api_share_t(sid: str, dl: int = 0):
     return FileResponse(str(p), media_type="image/png")
 
 
+@app.get("/api/share/seo/{sid}")
+def api_share_seo(sid: str):
+    """단축 id로 제목·설명·태그(8단계 저장값) — 폰 페이지가 복사·카톡 보내기에 쓴다(로그인 불필요, 2026-10-18).
+    값의 주인은 job.seo(8단계 화면이 저장). 여기서 새로 만들지 않는다."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    seo = (Store(DB_PATH).get_mix_job(job_id) or {}).get("seo") or {}
+    if isinstance(seo, str):
+        try:
+            seo = json.loads(seo)
+        except Exception:      # noqa: BLE001
+            seo = {}
+    if not isinstance(seo, dict):
+        seo = {}
+    tags = [str(t).strip().lstrip("#") for t in (seo.get("tags") or []) if str(t).strip()]
+    hs = seo.get("hashtags") if isinstance(seo.get("hashtags"), dict) else {}
+    return {"ok": True, "title": str(seo.get("title") or ""), "description": str(seo.get("description") or ""),
+            "tags": tags, "hashtags": {k: [str(x) for x in (v or [])] for k, v in hs.items()},
+            "insta_caption": str(seo.get("insta_caption") or ""), "comment_bait": str(seo.get("comment_bait") or "")}
+
+
 @app.get("/s/{sid}", response_class=HTMLResponse)
 def share_page(sid: str):
     """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송.
@@ -10558,9 +10583,12 @@ def share_page(sid: str):
     job_id = _share_get(sid)
     if not job_id:
         return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
-    has_thumb = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id)) is not None
+    _job = Store(DB_PATH).get_mix_job(job_id)
+    has_thumb = _selected_thumb_path(_job) is not None
+    has_video = not _video_gone_reason(_job)
     return HTMLResponse(_SHARE_PAGE_HTML
-                        .replace("__VID__", f"/api/share/v/{sid}")
+                        .replace("__SEO__", f"/api/share/seo/{sid}")
+                        .replace("__VID__", f"/api/share/v/{sid}" if has_video else "")
                         .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
@@ -13960,6 +13988,13 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
  a.dl{background:#1c2740;color:#dfe7f5}
  a.dl.sm{font-size:15px;padding:13px}
  .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
+ .seo{width:100%;max-width:420px;margin-top:22px;display:none}
+ .seo h2{font-size:17px;font-weight:800;margin-bottom:10px}
+ .fld{background:#161b24;border-radius:12px;padding:12px;margin-bottom:10px}
+ .fld .lb{display:flex;justify-content:space-between;align-items:center;color:#8b93a7;font-size:13px;font-weight:700;margin-bottom:6px}
+ .fld .tx{white-space:pre-wrap;word-break:break-all;font-size:15px;line-height:1.55;color:#eef2f6}
+ .fld button{font-size:14px;padding:8px 12px;border-radius:10px;background:#2b3547;color:#fff}
+ #seoShare{width:100%;background:#fee500;color:#191600;margin-top:4px}
 </style></head><body>
  <h1>완성 영상 📱</h1>
  <div class="sub" id="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
@@ -13976,8 +14011,42 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
    <a class="dl sm" id="thumbDl" href="#" download style="display:none">🖼 썸네일 저장(PNG)</a>
  </div>
  <div class="tip" id="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+ <!-- 📝 제목·설명·태그(2026-10-18 사장님 "폰으로 올리는 사람들 편하게") — 칸마다 복사, 한 번에 카톡 보내기 -->
+ <div class="seo" id="seoBox"><h2>📝 제목 · 설명 · 태그</h2><div id="seoList"></div>
+   <button id="seoShare">📤 제목·설명·태그 카톡으로 보내기</button>
+   <div class="tip">칸마다 ‘복사’를 누르고 유튜브·인스타 앱에 붙여 넣으세요.</div></div>
+<script>
+ // 제목·태그 — 값은 서버(8단계 저장값). 없으면 칸을 안 보인다.
+ (async()=>{
+   try{
+     const d=await (await fetch("__SEO__")).json(); if(!d||!d.ok) return;
+     const H=d.hashtags||{}, tagLine=(d.tags||[]).map(t=>'#'+t).join(' ');
+     const F=[["제목",d.title],["설명",d.description],["태그",tagLine],["인스타 본문",d.insta_caption],
+              ["인스타 해시태그",(H.instagram||[]).join(' ')],["댓글 유도",d.comment_bait]].filter(x=>x[1]);
+     if(!F.length) return;
+     const L=document.getElementById('seoList');
+     F.forEach(([k,v])=>{ const w=document.createElement('div'); w.className='fld';
+       w.innerHTML='<div class="lb"><span></span><button>복사</button></div><div class="tx"></div>';
+       w.querySelector('span').textContent=k; w.querySelector('.tx').textContent=v;
+       const b=w.querySelector('button');
+       b.onclick=async()=>{ try{ await navigator.clipboard.writeText(v); b.textContent='복사됨 ✓'; }
+         catch(e){ const r=document.createRange(); r.selectNodeContents(w.querySelector('.tx')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='길게 눌러 복사'; } };
+       L.appendChild(w); });
+     const NL=String.fromCharCode(10), all=F.map(([k,v])=>'['+k+']'+NL+v).join(NL+NL);
+     document.getElementById('seoShare').onclick=async()=>{
+       try{ if(navigator.share){ await navigator.share({text:all}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+       try{ await navigator.clipboard.writeText(all); alert('전체를 복사했어요 — 카톡에 붙여 넣으세요'); }catch(e){} };
+     document.getElementById('seoBox').style.display='block';
+   }catch(e){}
+ })();
+</script>
 <script>
  const V="__VID__", T="__THUMB__";
+ if(!V){   // 영상 없이 제목·태그만 보낸 링크(seo=1) — 영상 칸·버튼을 감춘다
+   document.querySelector('.media').style.display='none'; document.querySelector('.btns').style.display='none';
+   document.getElementById('tip').style.display='none';
+   document.querySelector('h1').textContent='제목 · 태그 📱'; document.getElementById('sub').textContent='복사해서 앱에 붙여 넣으세요';
+ }
  // 썸네일은 '있으면 얹는다'. 없거나(선택 안 함) 404면 예전 그대로 영상만 보낸다 —
  // 썸네일 때문에 공유 자체가 막히는 일은 없어야 한다.
  let THUMB_OK=false;
@@ -16216,6 +16285,7 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
+            or path.startswith("/api/share/seo/")   # 제목·설명·태그(폰에서 복사·카톡, 2026-10-18)
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))

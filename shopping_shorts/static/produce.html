@@ -2600,6 +2600,8 @@
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
         <button class="btn" onclick="seoCopyYoutube()">유튜브 전체 복사</button>
         <button class="btn" onclick="seoCopyInsta()">인스타 캡션 복사</button>
+        <!-- 📱 폰으로(2026-10-18 사장님 "폰으로 올리는 사람들 편하게") — QR → 폰 페이지에서 칸마다 복사·카톡 보내기 -->
+        <button class="btn" style="background:#fee500;color:#191600" onclick="seoToPhone()">📱 폰으로 보내기(카톡)</button>
         <span class="seoMsg" id="seoMsg"></span>
       </div>
       <!-- 🛒 쿠팡 상품 확정 (2026-08-18 3단계에서 이사) — 링크를 붙일 설명란과 같은 화면에 둔다.
@@ -4017,6 +4019,12 @@ async function seoGenerate(only){
   finally{ if(btn) btn.disabled = false; }
 }
 
+// 📱 제목·태그를 폰으로 — 먼저 저장(폰 페이지는 서버 저장값을 읽는다), 그다음 영상 QR 과 같은 창(영상 없으면 제목·태그만)
+async function seoToPhone(){
+  if(!MIX_JOB){ alert('작업을 먼저 열어 주세요'); return; }
+  try{ await seoSave(); }catch(e){}
+  showShareQr(MIX_JOB, {seo:true});
+}
 async function seoSave(){
   if(!MIX_JOB || !SEO) return;
   try{
@@ -15458,7 +15466,7 @@ function qrAfterRender(){
   renderFinal();
 }
 // ── QR '폰으로 보내기' 모달 (2026-07-23) — PC에서 완성영상을 폰으로 넘겨 폰 카톡 네이티브 공유 ──
-async function showShareQr(job){
+async function showShareQr(job, opts){
   let ov=document.getElementById('qrOverlay');
   if(!ov){
     ov=document.createElement('div'); ov.id='qrOverlay';
@@ -15470,7 +15478,7 @@ async function showShareQr(job){
   const box=ov.querySelector('#qrBox');
   box.innerHTML='<div style="padding:40px 0;color:#888">QR 만드는 중…</div>';
   try{
-    const r=await fetch('/api/share/link/'+encodeURIComponent(job));
+    const r=await fetch('/api/share/link/'+encodeURIComponent(job)+((opts&&opts.seo)?'?seo=1':''));
     const d=await r.json();
     if(!d || !d.ok){ box.innerHTML='<div style="padding:24px">'+((d&&d.error)||'만들지 못했어요')+'</div>'; return; }
     box.innerHTML=
