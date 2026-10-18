@@ -977,7 +977,9 @@ def _apply_confirm(confirmed: dict, out: list[dict], path: Path) -> None:
         else:
             confirmed.setdefault("channels", []).append(row)
     confirmed["made"] = today
-    confirmed["method"] = confirmed.get("method", "") + f" / 누락 재판정 {today}: 엔진 결과 channels 중 확정 목록에 없는 것을 confirm_from_engine 으로 표본 5편(조회 상위 3+중간 2) 판독"
+    note = f"누락 재판정 {today}: 엔진 결과 channels 중 확정 목록에 없는 것을 confirm_from_engine 으로 표본 5편(조회 상위 3+중간 2) 판독"
+    if note not in confirmed.get("method", ""):          # 같은 날 두 번 --apply 해도 한 번만 적는다
+        confirmed["method"] = confirmed.get("method", "") + " / " + note
     path.write_text(json.dumps(confirmed, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
