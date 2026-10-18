@@ -55,13 +55,13 @@
    "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
    "src_orig_span": [
     19.95,
-    21.62
+    21.463
    ],
    "ss": 19.95,
-   "dur": 1.67,
+   "dur": 1.513,
    "t_final_est": [
     0.0,
-    1.67
+    1.51
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -76,37 +76,6 @@
   },
   {
    "i": 1,
-   "line": "O1",
-   "kind": "원음",
-   "src": "h99r2Xmp-Xg.mp4",
-   "mute": false,
-   "audio_src": "h99r2Xmp-Xg_audio.m4a",
-   "audio_ss": 80.8,
-   "audio_dur": 0.75,
-   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
-   "src_orig_span": [
-    80.8,
-    81.55
-   ],
-   "ss": 80.8,
-   "dur": 0.75,
-   "t_final_est": [
-    1.67,
-    2.42
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    397,
-    0,
-    965,
-    940
-   ],
-   "scale": 1.119,
-   "ours": "회색 정장·빨간 넥타이 투자자가 '와우'(샷 80.75~81.58, 말하는 본인)",
-   "audio": "원본 소리(원음)"
-  },
-  {
-   "i": 2,
    "line": "O2",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -122,8 +91,8 @@
    "ss": 23.0,
    "dur": 0.583,
    "t_final_est": [
-    2.42,
-    3.0
+    1.51,
+    2.1
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -137,7 +106,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 3,
+   "i": 2,
    "line": "O2",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -153,8 +122,8 @@
    "ss": 23.583,
    "dur": 1.542,
    "t_final_est": [
-    3.0,
-    4.54
+    2.1,
+    3.64
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -168,7 +137,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 4,
+   "i": 3,
    "line": "O2",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -184,8 +153,8 @@
    "ss": 25.125,
    "dur": 0.425,
    "t_final_est": [
-    4.54,
-    4.97
+    3.64,
+    4.06
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -199,6 +168,37 @@
    "audio": "원본 소리(원음)"
   },
   {
+   "i": 4,
+   "line": "O1",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 80.8,
+   "audio_dur": 0.75,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    80.8,
+    81.55
+   ],
+   "ss": 80.8,
+   "dur": 0.75,
+   "t_final_est": [
+    4.06,
+    4.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    397,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "회색 정장·빨간 넥타이 투자자가 '와우'(샷 80.75~81.58, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
    "i": 5,
    "line": "N2",
    "kind": "나레",
@@ -207,13 +207,13 @@
    "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
    "src_orig_span": [
     38.7,
-    39.685
+    39.587
    ],
    "ss": 38.7,
-   "dur": 0.985,
+   "dur": 0.887,
    "t_final_est": [
-    4.97,
-    5.96
+    4.81,
+    5.7
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -235,13 +235,13 @@
    "url": "https://www.youtube.com/watch?v=dupCFG4B4CM",
    "src_orig_span": [
     24.45,
-    25.385
+    25.293
    ],
    "ss": 24.45,
-   "dur": 0.935,
+   "dur": 0.843,
    "t_final_est": [
-    5.96,
-    6.89
+    5.7,
+    6.54
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -271,8 +271,8 @@
    "ss": 53.0,
    "dur": 1.875,
    "t_final_est": [
-    6.89,
-    8.77
+    6.54,
+    8.42
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -302,8 +302,8 @@
    "ss": 54.875,
    "dur": 0.575,
    "t_final_est": [
-    8.77,
-    9.34
+    8.42,
+    8.99
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -325,13 +325,13 @@
    "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
    "src_orig_span": [
     19.3,
-    20.97
+    20.763
    ],
    "ss": 19.3,
-   "dur": 1.67,
+   "dur": 1.463,
    "t_final_est": [
-    9.34,
-    11.01
+    8.99,
+    10.46
    ],
    "res": "1280x720",
    "src_crop": [
@@ -361,8 +361,8 @@
    "ss": 59.62,
    "dur": 1.68,
    "t_final_est": [
-    11.01,
-    12.69
+    10.46,
+    12.14
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -384,13 +384,13 @@
    "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
    "src_orig_span": [
     47.5,
-    48.574
+    48.896
    ],
    "ss": 47.5,
-   "dur": 1.074,
+   "dur": 1.396,
    "t_final_est": [
-    12.69,
-    13.76
+    12.14,
+    13.53
    ],
    "res": "1280x720",
    "src_crop": [
@@ -412,13 +412,13 @@
    "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
    "src_orig_span": [
     64.4,
-    65.376
+    65.669
    ],
    "ss": 64.4,
-   "dur": 0.976,
+   "dur": 1.269,
    "t_final_est": [
-    13.76,
-    14.74
+    13.53,
+    14.8
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -440,13 +440,13 @@
    "url": "https://www.youtube.com/watch?v=dupCFG4B4CM",
    "src_orig_span": [
     59.3,
-    60.496
+    60.405
    ],
    "ss": 59.3,
-   "dur": 1.196,
+   "dur": 1.105,
    "t_final_est": [
-    14.74,
-    15.94
+    14.8,
+    15.91
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -468,13 +468,13 @@
    "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
    "src_orig_span": [
     113.0,
-    114.244
+    114.149
    ],
    "ss": 113.0,
-   "dur": 1.244,
+   "dur": 1.149,
    "t_final_est": [
-    15.94,
-    17.18
+    15.91,
+    17.05
    ],
    "res": "1280x720",
    "src_crop": [
@@ -504,8 +504,8 @@
    "ss": 70.75,
    "dur": 0.8,
    "t_final_est": [
-    17.18,
-    17.98
+    17.05,
+    17.86
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -520,37 +520,6 @@
   },
   {
    "i": 16,
-   "line": "O6",
-   "kind": "원음",
-   "src": "h99r2Xmp-Xg.mp4",
-   "mute": false,
-   "audio_src": "h99r2Xmp-Xg_audio.m4a",
-   "audio_ss": 82.54,
-   "audio_dur": 1.02,
-   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
-   "src_orig_span": [
-    82.54,
-    83.56
-   ],
-   "ss": 82.54,
-   "dur": 1.02,
-   "t_final_est": [
-    17.98,
-    19.0
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    417,
-    0,
-    965,
-    940
-   ],
-   "scale": 1.119,
-   "ours": "파란 재킷 투자자(샷 82.54~83.58)",
-   "audio": "원본 소리(원음)"
-  },
-  {
-   "i": 17,
    "line": "N6",
    "kind": "나레",
    "src": "8MZ_160.mp4",
@@ -558,13 +527,13 @@
    "url": "https://www.youtube.com/watch?v=8MZUyVissao",
    "src_orig_span": [
     162.5,
-    164.04
+    164.016
    ],
    "ss": 2.5,
-   "dur": 1.54,
+   "dur": 1.516,
    "t_final_est": [
-    19.0,
-    20.54
+    17.86,
+    19.37
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -578,7 +547,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 18,
+   "i": 17,
    "line": "N6",
    "kind": "나레",
    "src": "8MZ_160.mp4",
@@ -586,13 +555,13 @@
    "url": "https://www.youtube.com/watch?v=8MZUyVissao",
    "src_orig_span": [
     210.2,
-    211.74
+    211.717
    ],
    "ss": 50.2,
-   "dur": 1.54,
+   "dur": 1.517,
    "t_final_est": [
-    20.54,
-    22.08
+    19.37,
+    20.89
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -606,7 +575,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 19,
+   "i": 18,
    "line": "O7",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -622,8 +591,8 @@
    "ss": 86.85,
    "dur": 0.817,
    "t_final_est": [
-    22.08,
-    22.9
+    20.89,
+    21.71
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -637,7 +606,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 20,
+   "i": 19,
    "line": "O7",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -653,8 +622,8 @@
    "ss": 87.667,
    "dur": 0.883,
    "t_final_est": [
-    22.9,
-    23.78
+    21.71,
+    22.59
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -668,7 +637,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 21,
+   "i": 20,
    "line": "O8",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -684,8 +653,8 @@
    "ss": 93.97,
    "dur": 3.68,
    "t_final_est": [
-    23.78,
-    27.46
+    22.59,
+    26.27
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -699,7 +668,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 22,
+   "i": 21,
    "line": "O9",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -715,8 +684,8 @@
    "ss": 101.05,
    "dur": 2.35,
    "t_final_est": [
-    27.46,
-    29.81
+    26.27,
+    28.62
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -730,7 +699,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 23,
+   "i": 22,
    "line": "O10",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -746,8 +715,8 @@
    "ss": 108.67,
    "dur": 3.33,
    "t_final_est": [
-    29.81,
-    33.14
+    28.62,
+    31.95
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -761,7 +730,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 24,
+   "i": 23,
    "line": "O10",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -777,8 +746,8 @@
    "ss": 112.0,
    "dur": 1.4,
    "t_final_est": [
-    33.14,
-    34.54
+    31.95,
+    33.35
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -792,7 +761,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 25,
+   "i": 24,
    "line": "O11",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -808,8 +777,8 @@
    "ss": 206.3,
    "dur": 1.85,
    "t_final_est": [
-    34.54,
-    36.39
+    33.35,
+    35.2
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -823,7 +792,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 26,
+   "i": 25,
    "line": "O12",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
@@ -839,8 +808,8 @@
    "ss": 303.67,
    "dur": 1.455,
    "t_final_est": [
-    36.39,
-    37.84
+    35.2,
+    36.65
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -854,24 +823,24 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 27,
+   "i": 26,
    "line": "O12",
    "kind": "원음",
    "src": "h99r2Xmp-Xg.mp4",
    "mute": false,
    "audio_src": "h99r2Xmp-Xg_audio.m4a",
    "audio_ss": 305.125,
-   "audio_dur": 1.425,
+   "audio_dur": 1.575,
    "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
    "src_orig_span": [
     305.125,
-    306.55
+    306.7
    ],
    "ss": 305.125,
-   "dur": 1.425,
+   "dur": 1.575,
    "t_final_est": [
-    37.84,
-    39.27
+    36.65,
+    38.23
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -883,37 +852,6 @@
    "scale": 1.119,
    "ours": "파란 재킷 투자자가 일어서며 확인",
    "audio": "원본 소리(원음)"
-  },
-  {
-   "i": 28,
-   "line": "O13",
-   "kind": "원음",
-   "src": "h99r2Xmp-Xg.mp4",
-   "mute": false,
-   "audio_src": "h99r2Xmp-Xg_audio.m4a",
-   "audio_ss": 307.04,
-   "audio_dur": 1.21,
-   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
-   "src_orig_span": [
-    307.04,
-    308.25
-   ],
-   "ss": 307.04,
-   "dur": 1.21,
-   "t_final_est": [
-    39.27,
-    40.48
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    477,
-    0,
-    965,
-    940
-   ],
-   "scale": 1.119,
-   "ours": "창업자가 두 팔을 휘저으며 환호(말하는 본인, 샷 307.04~)",
-   "audio": "원본 소리(원음)"
   }
  ],
  "cand_dir": "C:/숏템_칼카피/foreignshowshow/7편_WallDoctor/src",
@@ -922,19 +860,20 @@
    "line": "N1",
    "kind": "red_circle",
    "at": [
-    126,
+    171,
     937
    ],
-   "size": 260,
+   "size": 247,
+   "stroke": 5,
    "t": [
-    0.25,
-    1.6
+    0.0,
+    1.5
    ],
    "how": "target",
    "target": "object",
-   "target_what": "망치 머리가 벽을 치는 자리(원본 20.6초 (340,460) → 크롭 [230,20,945,920] ×1.143 → 완성본 (126,937))",
-   "why": "벤치 0.0~1.43 빨간 실선 원 r121·선 4.5(망치 머리, 447px 따라감) — 우리 = 망치가 계속 같은 자리를 쳐서 그 자리 고정(엔진에 물건 원·따라가기 없음)",
-   "engine": "fx_place.fix 는 red_circle 을 얼굴(hook_circle)로 바꿔 버림 — 7편은 fix 돌리지 말 것(엔진 요청: red_circle target=object·track)"
+   "target_what": "망치가 치는 자리(=뚫린 구멍) — 원본 19.95~21.6 0.15초 격자(sheet/hammer_grid.jpg) 20.55~21.6 망치 머리·구멍 (370~390,460) 중앙값 (380,460) → 크롭 [230,20,945,920] ×1.143 → 완성본 (171,937)",
+   "why": "벤치 0.0~1.43 빨간 실선 원(망치 머리) 선 가운데 반지름 121(바깥 123.3·안 118.8)·선 4.5 → size 247(=2×(121+5/2), PIL 선은 상자 안쪽으로 그림)·stroke 5. 벤치는 망치를 447px 따라감 — 엔진에 따라가기 없어 고정(페이블 10-19)",
+   "engine": "fx_place.fix 금지(red_circle 을 얼굴로 덮어씀) — 엔진 요청: red_circle target=object·track"
   },
   {
    "line": "O2",
