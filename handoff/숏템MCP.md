@@ -30,8 +30,19 @@
 - rules.formula(공식 문장 원문)가 PC 로 내려감 → 안 보냄
 - 라이선스 키를 채팅에 쓰라던 안내 → 설정 칸(.mcpb sensitive / 플러그인 옵션)으로
 
+## 2026-10-19 02:20~03:00 라이브 실측 (TheRose PC)
+- 배포: 8b633ed 는 10-18 22:31 재시작으로 반영. 스위치 `claude_portal_enabled=admin` · `claude_assets_enabled=admin`(관리자만, 고객 공개는 사장님 결정)
+- 서버 `sync_assets.py --db shopping_shorts/data/reference.db`: font 88 · sfx 147 · bgm 24 · template 12 · **meme 1283** → 저장소 1,438 파일(`shopping_shorts/data/claude_store`, 570MB, 서버 디스크 여유 26GB)
+- 견본: font 87 · sfx 21 · bgm 24 · template 12 · voice 79 · **짤 시트 32장(칸 합계 1,283 = 전부)** · `check_previews` 기준 밖 0
+- **라이브에서 잡은 결함 2 → 고쳐 병합(dc0e5f770, 관문 통과)**
+  1. `/claude` 프리셋 0개 — 틀(`channel/*/preset/**`, 148파일 2.8MB)이 칼카피숏템엔진 트랙에만 있었다(로컬 시험은 CLAUDE_CHANNEL_ROOT 를 엔진 트랙에 붙여 안 보였다). 엔진 같은 내용을 main 으로 + `tools/calcopy/sync_preset_ledgers.py:_preset_frames` 가 앞으로 틀 폴더도 옮긴다(엔진에서 지운 틀은 안 지움)
+  2. `build_previews.meme_sprites` — 0.5초보다 짧은 짤은 ffmpeg rc 0 인데 그림이 없어 FileNotFoundError 로 전체 중단 → 0초로 다시 + OSError 건너뜀. 0.3초 시험 클립으로 고치기 전 실패·후 2칸 대조
+- 라이선스: `/claude` 의 키 발급 API 를 관리자 세션으로 눌러 발급(58자, 만료 2027-10-18, 원문은 세션 임시 파일에만). 서버 `issue_key.py` 는 서비스 env 읽기가 권한 분류기에 막혀 안 씀
+- 프로필: 라이브 `/claude` 에서 프리셋(banggu 게시글형 p_850f616631) 고르고 채널명 '썰풀다실측' 저장 → v1
+- **e2e 라이브 1편**(`SHORTEM_E2E_BASE=https://shoppingshorts.duckdns.org`, 개발 도구 모드): 9/9 완료, 12.174초 1080x1920 h264+aac -14.3 LUFS, comment `shortem:e41635236030:j_…`. 프레임 3장 눈으로: 머리띠·작성자 줄에 '썰풀다실측', 게시글 제목 자리 = 이 편 제목, 자막 줄마다 바뀜. 경보 0 · 기기 1/2 · lease 해제됨
+- 못 한 것: 통과작 견본 15편 — 원본 mp4 가 이 PC `C:/숏템_칼카피/…` 에 없고 외장 D 미연결(서버에도 없음) → D 연결 뒤 이 PC 에서 `build_previews.py --kinds result --store <임시>` 로 굽고 서버 `claude_store/preview/result/` 로 올림 · 설치팩 파일은 서버에 안 올림(페이지 '준비 중', 미서명 203MB — 배포 여부 사장님 결정)
+
 ## ⏭ 다음
-- 라이브: 병합 뒤 서버에서 `py tools/claude_portal/sync_assets.py` · `build_previews.py` 를 돌려 저장소 채우기(서버엔 짤 1,283·통과작 mp4 있음) → `claude_portal_enabled=admin` 으로 관리자 실측
 - **타입캐스트 실제 합성 미실측**(이 PC 에 키 없음) — 키 있는 PC 에서 shortem_setup selftest 로 시험 목소리
 - 미구현: 고객 채널명 PNG 견본 · 캐시 틀 ±1px 지터 · 자막 효과 2초 견본 · 대본 뒤 extra(짤·효과음) 요청 · 원음 깔기 · 템플릿 자산 사용
 - A1 국가 조건은 nginx 에 GeoIP 가 없어 라이브에선 미발동(미등록 기기 조건은 됨)
