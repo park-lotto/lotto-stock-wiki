@@ -1,0 +1,1004 @@
+{
+ "_note": "샥탬스토리 7편 Wall Doctor Rx 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 vbxJ_v132ao 창 [0,435,1080,1050] ≒ 채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(영어 원음 트랙 h99r2Xmp-Xg_audio.m4a).",
+ "sources": {
+  "h99r2Xmp-Xg": {
+   "채널": "CNBC Ambition(공식)",
+   "제목": "Two Sharks Make Quick Offers For The Wall Doctor Rx. | Shark Tank | CNBC Prime",
+   "해상도": "1920x1080 24fps (137 + 140-7 영어 원음)",
+   "길이": 329.6,
+   "받은 구간": "전체",
+   "남의 글자": "왼쪽 아래 CNBC 공작 로고 + 'SHARK TANK TONIGHT 10P ET'/'TO FIND CNBC…' 띠(y≥950) — 모든 컷 크롭 h≤940 로 뺌. 이름·제안 띠(31~35·112~117·122~126초, y≥800) — 112~113.4 컷만 쓰고 h 795 로 뺌. 창업자 가운 'The WallDoctor' 자수 = 제품 브랜드"
+  },
+  "dupCFG4B4CM": {
+   "채널": "BulbHead(판매사 공식)",
+   "제목": "Learn how to fix a hole in the wall with Wall Doctor",
+   "업로드": "2016-10-17",
+   "해상도": "1920x1080 (137, 영상만)",
+   "길이": 71.4,
+   "남의 글자": "26~28초 'Support Disc'·'Frame with Compound'·48~56초 'NO …' 글자 — 안 씀. 쓴 24.2~25.1·59.3~60.6 은 글자 없음(포장 글자 = 제품)"
+  },
+  "oivPxlXroNU": {
+   "채널": "FIX IT Home Improvement Channel(실사용 리뷰)",
+   "제목": "Repairing Drywall Without Tools - Wall Doctor",
+   "업로드": "2016-05-23",
+   "해상도": "1280x720 (136, 최대 화질 — 1080p 없음)",
+   "길이": 118.6,
+   "남의 글자": "없음(시트 0.5~2초 간격 눈 확인)"
+  },
+  "8MZUyVissao": {
+   "채널": "Life Uncontained(집 고치는 부부 브이로그)",
+   "제목": "Hanging DRYWALL!",
+   "업로드": "2021-01-07",
+   "해상도": "1920x1080 (137)",
+   "받은 구간": "160~245초 8MZ_160.mp4",
+   "남의 글자": "없음"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "공구 없이 벽 구멍",
+  "line2": "메워 준다는 제품?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "N1",
+   "kind": "나레",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    19.95,
+    21.62
+   ],
+   "ss": 19.95,
+   "dur": 1.67,
+   "t_final_est": [
+    0.0,
+    1.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    230,
+    20,
+    945,
+    920
+   ],
+   "scale": 1.143,
+   "ours": "창업자가 팔을 뻗어 망치로 하얀 벽을 침(벤치 0초 컷과 같은 원본 샷 19.5~21.83)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 80.8,
+   "audio_dur": 0.75,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    80.8,
+    81.55
+   ],
+   "ss": 80.8,
+   "dur": 0.75,
+   "t_final_est": [
+    1.67,
+    2.42
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    397,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "회색 정장·빨간 넥타이 투자자가 '와우'(샷 80.75~81.58, 말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O2",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 23.0,
+   "audio_dur": 0.583,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    23.0,
+    23.583
+   ],
+   "ss": 23.0,
+   "dur": 0.583,
+   "t_final_est": [
+    2.42,
+    3.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    517,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자가 웃으며 봄(원본 반응 컷 — 벤치도 같은 자리)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "O2",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 23.583,
+   "audio_dur": 1.542,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    23.583,
+    25.125
+   ],
+   "ss": 23.583,
+   "dur": 1.542,
+   "t_final_est": [
+    3.0,
+    4.54
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    567,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 벽을 가리키며 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 25.125,
+   "audio_dur": 0.425,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    25.125,
+    25.55
+   ],
+   "ss": 25.125,
+   "dur": 0.425,
+   "t_final_est": [
+    4.54,
+    4.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "벽에 난 구멍 근접",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N2",
+   "kind": "나레",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    38.7,
+    39.685
+   ],
+   "ss": 38.7,
+   "dur": 0.985,
+   "t_final_est": [
+    4.97,
+    5.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    497,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 빨간 'WALL Rx' 봉지를 들어 보임",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N2",
+   "kind": "나레",
+   "src": "dupCFG4B4CM.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=dupCFG4B4CM",
+   "src_orig_span": [
+    24.45,
+    25.385
+   ],
+   "ss": 24.45,
+   "dur": 0.935,
+   "t_final_est": [
+    5.96,
+    6.89
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    425,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 광고(BulbHead): 봉지 + 받침판 + 줄무늬 틀 구성품(포장 글자 = 제품 브랜드)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O3",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 53.0,
+   "audio_dur": 1.875,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    53.0,
+    54.875
+   ],
+   "ss": 53.0,
+   "dur": 1.875,
+   "t_final_est": [
+    6.89,
+    8.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    567,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 'WALL Rx' 진열대 옆 벽에서 시연(말하는 본인, 와이드)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O3",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 54.875,
+   "audio_dur": 0.575,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    54.875,
+    55.45
+   ],
+   "ss": 54.875,
+   "dur": 0.575,
+   "t_final_est": [
+    8.77,
+    9.34
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "손이 벽 구멍 위에 받침판을 댐(근접)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "oivPxlXroNU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
+   "src_orig_span": [
+    19.3,
+    20.97
+   ],
+   "ss": 19.3,
+   "dur": 1.67,
+   "t_final_est": [
+    9.34,
+    11.01
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    350,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "실사용(집 벽, 720p): 남자가 민트색 벽 구멍에 톱니 모양 받침판을 붙임",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "O4",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 59.62,
+   "audio_dur": 1.68,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    59.62,
+    61.3
+   ],
+   "ss": 59.62,
+   "dur": 1.68,
+   "t_final_est": [
+    11.01,
+    12.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 줄무늬 틀(반죽)을 들어 보임(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "N4",
+   "kind": "나레",
+   "src": "oivPxlXroNU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
+   "src_orig_span": [
+    47.5,
+    48.574
+   ],
+   "ss": 47.5,
+   "dur": 1.074,
+   "t_final_est": [
+    12.69,
+    13.76
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    430,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "실사용: 줄무늬 틀을 벽에 대고 두 손으로 누름",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N4",
+   "kind": "나레",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    64.4,
+    65.376
+   ],
+   "ss": 64.4,
+   "dur": 0.976,
+   "t_final_est": [
+    13.76,
+    14.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "방송: 줄무늬 틀 위를 손바닥으로 문질러 폄(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "kind": "나레",
+   "src": "dupCFG4B4CM.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=dupCFG4B4CM",
+   "src_orig_span": [
+    59.3,
+    60.496
+   ],
+   "ss": 59.3,
+   "dur": 1.196,
+   "t_final_est": [
+    14.74,
+    15.94
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "공식 광고: 마른 흰 반죽을 사포 블록으로 갊(벤치 16~19초와 같은 광고 장면)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N5",
+   "kind": "나레",
+   "src": "oivPxlXroNU.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
+   "src_orig_span": [
+    113.0,
+    114.244
+   ],
+   "ss": 113.0,
+   "dur": 1.244,
+   "t_final_est": [
+    15.94,
+    17.18
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    150,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "실사용: 틀을 뗀 벽에 메워진 흰 자국을 가리키는 남자",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O5",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 70.75,
+   "audio_dur": 0.8,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    70.75,
+    71.55
+   ],
+   "ss": 70.75,
+   "dur": 0.8,
+   "t_final_est": [
+    17.18,
+    17.98
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 두 팔을 벌림(말하는 본인, 샷 70.17~71.79)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O6",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 82.54,
+   "audio_dur": 1.02,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    82.54,
+    83.56
+   ],
+   "ss": 82.54,
+   "dur": 1.02,
+   "t_final_est": [
+    17.98,
+    19.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자(샷 82.54~83.58)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "N6",
+   "kind": "나레",
+   "src": "8MZ_160.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8MZUyVissao",
+   "src_orig_span": [
+    162.5,
+    164.04
+   ],
+   "ss": 2.5,
+   "dur": 1.54,
+   "t_final_est": [
+    19.0,
+    20.54
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "현장(집 고치는 부부, 1080p): 두 사람이 석고보드 판을 같이 들어 올림",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "N6",
+   "kind": "나레",
+   "src": "8MZ_160.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=8MZUyVissao",
+   "src_orig_span": [
+    210.2,
+    211.74
+   ],
+   "ss": 50.2,
+   "dur": 1.54,
+   "t_final_est": [
+    20.54,
+    22.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "현장: 둘이 석고보드를 천장에 밀어 붙임(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "O7",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 86.85,
+   "audio_dur": 0.817,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    86.85,
+    87.667
+   ],
+   "ss": 86.85,
+   "dur": 0.817,
+   "t_final_est": [
+    22.08,
+    22.9
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    517,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "대머리 검은 정장 투자자(원본 반응 컷 — 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O7",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 87.667,
+   "audio_dur": 0.883,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    87.667,
+    88.55
+   ],
+   "ss": 87.667,
+   "dur": 0.883,
+   "t_final_est": [
+    22.9,
+    23.78
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자가 턱을 괴고 제안(말하는 본인, 샷 87.667~88.583)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O8",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 93.97,
+   "audio_dur": 3.68,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    93.97,
+    97.65
+   ],
+   "ss": 93.97,
+   "dur": 3.68,
+   "t_final_est": [
+    23.78,
+    27.46
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "투자자석 와이드(제안하는 투자자 포함)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O9",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 101.05,
+   "audio_dur": 2.35,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    101.05,
+    103.4
+   ],
+   "ss": 101.05,
+   "dur": 2.35,
+   "t_final_est": [
+    27.46,
+    29.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자가 두 손을 모으며 제안(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O10",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 108.67,
+   "audio_dur": 3.33,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    108.67,
+    112.0
+   ],
+   "ss": 108.67,
+   "dur": 3.33,
+   "t_final_est": [
+    29.81,
+    33.14
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자 제안(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "O10",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 112.0,
+   "audio_dur": 1.4,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    112.0,
+    113.4
+   ],
+   "ss": 112.0,
+   "dur": 1.4,
+   "t_final_est": [
+    33.14,
+    34.54
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    572,
+    0,
+    816,
+    795
+   ],
+   "scale": 1.324,
+   "ours": "창업자 '와우'(아래 이름 띠 'Robert's offer…' y≥800 은 크롭으로 뺌)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "O11",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 206.3,
+   "audio_dur": 1.85,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    206.3,
+    208.15
+   ],
+   "ss": 206.3,
+   "dur": 1.85,
+   "t_final_est": [
+    34.54,
+    36.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    767,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 손뼉 치며 말함(말하는 본인, 샷 206.29~208.21)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O12",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 303.67,
+   "audio_dur": 1.455,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    303.67,
+    305.125
+   ],
+   "ss": 303.67,
+   "dur": 1.455,
+   "t_final_est": [
+    36.39,
+    37.84
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자 정면 근접",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O12",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 305.125,
+   "audio_dur": 1.425,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    305.125,
+    306.55
+   ],
+   "ss": 305.125,
+   "dur": 1.425,
+   "t_final_est": [
+    37.84,
+    39.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "파란 재킷 투자자가 일어서며 확인",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 28,
+   "line": "O13",
+   "kind": "원음",
+   "src": "h99r2Xmp-Xg.mp4",
+   "mute": false,
+   "audio_src": "h99r2Xmp-Xg_audio.m4a",
+   "audio_ss": 307.04,
+   "audio_dur": 1.21,
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "src_orig_span": [
+    307.04,
+    308.25
+   ],
+   "ss": 307.04,
+   "dur": 1.21,
+   "t_final_est": [
+    39.27,
+    40.48
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    477,
+    0,
+    965,
+    940
+   ],
+   "scale": 1.119,
+   "ours": "창업자가 두 팔을 휘저으며 환호(말하는 본인, 샷 307.04~)",
+   "audio": "원본 소리(원음)"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/7편_WallDoctor/src",
+ "effects": [
+  {
+   "line": "N1",
+   "kind": "red_circle",
+   "at": [
+    126,
+    937
+   ],
+   "size": 260,
+   "t": [
+    0.25,
+    1.6
+   ],
+   "how": "target",
+   "target": "object",
+   "target_what": "망치 머리가 벽을 치는 자리(원본 20.6초 (340,460) → 크롭 [230,20,945,920] ×1.143 → 완성본 (126,937))",
+   "why": "벤치 0.0~1.43 빨간 실선 원 r121·선 4.5(망치 머리, 447px 따라감) — 우리 = 망치가 계속 같은 자리를 쳐서 그 자리 고정(엔진에 물건 원·따라가기 없음)",
+   "engine": "fx_place.fix 는 red_circle 을 얼굴(hook_circle)로 바꿔 버림 — 7편은 fix 돌리지 말 것(엔진 요청: red_circle target=object·track)"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 2.20 빨강 번쩍(+띠링 낮은 두 음 1.57·2.10kHz)"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 11.87 초록 번쩍(+띠링 9.7·5.46kHz 12.12)"
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 16.07 초록 번쩍(+띠링 2.64kHz 16.14)"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 20.43 빨강 번쩍(벤치는 뒤 띠링 없음)"
+  }
+ ],
+ "sfx_not_drawn": [
+  "O1 '와우' 컷 첫머리 '띠용' 스프링 소리(벤치 1.44~1.86, 2.2→1.5→3.1kHz 휘는 줄) — 팩21 칸(두둥·뽁·둥·띠링·휙·틱·딸깍)에 없음",
+  "N6 첫머리 띠링(번쩍 없이, 벤치 22.04) · O8 '15만 달러' 띠링(번쩍 없이, 벤치 27.50) — rules sfx.on 은 번쩍·곡선화살표에만 소리를 붙임"
+ ]
+}

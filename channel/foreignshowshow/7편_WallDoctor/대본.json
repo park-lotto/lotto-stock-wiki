@@ -1,0 +1,875 @@
+{
+ "topic": "Wall Doctor Rx(공구 없이 벽 구멍 메우는 키트) — 샤크탱크에서 15만 달러/10% 요청 → 로버트가 지분 없이 15만 달러 + 해외 독점권(개당 2달러 매입) 제안 → 창업자 수락(방송 안 결과)",
+ "bench": {
+  "id": "vbxJ_v132ao",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "A product that easily repairs holes in walls (화면 제목: 구멍난 벽을 쉽게 / 고쳐준다는 제품)",
+  "dur": 39.13,
+  "views": 8900000,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ]
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "facts": {
+  "f1": {
+   "text": "클립 19.12~21.6 'Let's see what I've got. First, you need a hole.'(유튜브 영어 자막 낱말 시각) · 화면 19.5~21.83 창업자가 망치로 벽을 침(1080p 0.1초 시트 sheet/f19.jpg)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음+화면"
+  },
+  "f2": {
+   "text": "클립 80.80~81.55 'Wow'(구간 단독 받아쓰기 2모델 일치 asr/span_v1.json) · 화면 샷 80.75~81.58 회색 정장 투자자(이름 글자 없음 → 이름 안 씀)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음"
+  },
+  "f3": {
+   "text": "클립 23.00~25.55 'Now, in order to fix that hole'(2모델 일치 asr/span_v2.json)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "클립 37.92~40 'Or you simply need this. Wall Rx'(자막) — 앞 27~37초 'you need all of this … spackle'(기존 도구 여럿)과 대비 · 판매사 광고 dupCFG4B4CM 26~28초 화면 글자 'Support Disc'·'Frame with Compound'(구성 2가지)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음+광고 화면 글자"
+  },
+  "f5": {
+   "text": "클립 50.56 'Now take your disc' + 53.00~55.45 'and place it over your hole'(2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "클립 57.6 'Now take your frame' + 59.62~61.30 'with your special compound'(2모델) + 63.1~69 'and place it over the disc, press and spread to desired smoothness'(자막)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음(창업자 시연 — 전언체)"
+  },
+  "f7": {
+   "text": "클립 70.75~71.55 'Done'(2모델) · 70.9~76 'In 24 to 48 hours it will look like this' · 77.1 'remove your frame' · 81.36 'and sand'(자막)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음(창업자 주장 — 전언체)"
+  },
+  "f8": {
+   "text": "클립 82.54~83.56 투자자 말 — 유튜브 자막 'we have to sand it'(82.48~83.2) · 받아쓰기 79.8~84 창 3.5-flash 'Well, you have to sand it' / 단독 구간 2모델 'We have the sand'·'Oh, yeah, it's standard' — ★갈림(교차 확인 모자람, 페이블 판단: 뺄지) · 83.5~86.4 창업자 'no tools, no skills, and no mess'(자막) · 광고 dupCFG4B4CM 49~56초 화면 'NO TOOLS'·'NO SKILLS'·'NO MESS'",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음(창업자 주장 — 전언체)"
+  },
+  "f9": {
+   "text": "클립 86.85~88.55 'I'd like to make you an interesting offer'(2모델) · 93.97~97.65 'I'll give you the 150,000, no equity'(1모델+자막) · 101.05~103.40 'you give me exclusive rights for this product'(2모델) · 108.67~113.40 'I'll buy it at two dollars from you and sell to the rest of the world. Wow.'(2모델) · 화면 띠 112~114 'Robert's offer: $150k for the exclusive international rights to the product'(1080p 눈 판독 sheet/low_113.0.jpg)",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음+화면 그래픽"
+  },
+  "f10": {
+   "text": "클립 206.30~208.15 'Robert, your deal is phenomenal'(2모델) · 303.67~306.35 'I'm there. Let's do it. I'm there, man. Do I hear a (yes)'(2모델, 첫 낱말 'I'm there'/'On air' 갈림 — 유튜브 자막 'on there … i'm there man do i hear a') · 307.04~308.3 창업자 'Yes!'(2모델) · 308~313 'He said yes … Thank you so much'(자막) = 방송 안 성사",
+   "url": "https://www.youtube.com/watch?v=h99r2Xmp-Xg",
+   "kind": "방송 원음"
+  },
+  "f11": {
+   "text": "실사용 영상 oivPxlXroNU(FIX IT Home Improvement Channel 2016-05-23, 720p) 0~118초: 남자가 자기 집 민트색 벽 구멍에 Wall Doctor 받침판(19~26초)·줄무늬 틀(46~104초)을 붙이고 뗀 뒤 메워진 자국(112~118초)을 보임",
+   "url": "https://www.youtube.com/watch?v=oivPxlXroNU",
+   "kind": "실사용 영상 화면"
+  }
+ },
+ "dropped": [
+  "방송 뒤 결과(실제 계약·매출) — 벤치도 안 다룸(방송 안 'yes'로 끝남), 근거 조사 안 함 → 넣지 않음",
+  "로리 30만 달러/20%(QVC)·데이먼드 30만/15% 경쟁(112~180초) — 벤치가 뺀 구간, 길이 때문에 뺌",
+  "벤치 '미국은 집을 직접 고치는 문화라 대박 가능성이 보였는데' — 근거 없는 해석 → 창업자 말 'no tools, no skills'(f8)로 바꿈"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "의문(행동 먼저)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "망치로 벽부터",
+     "부숴 버리는 남자"
+    ],
+    "text": "망치로 벽부터 부숴 버리는 남자",
+    "tts": "망치로 벽부터 부숴 버리는 남자",
+    "fx": "0초 빨간 원(망치가 벽을 치는 자리) — 벤치 0~1.43 빨간 실선 원(망치 따라감, r121)",
+    "emph": [
+     {
+      "cap": "망치로 벽부터",
+      "span": "망치로 벽부터",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "부숴 버리는 남자",
+      "span": "버리는 남자",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "와우!"
+    ],
+    "span": [
+     80.8,
+     81.55
+    ],
+    "orig_en": "Wow.",
+    "text": "와우!",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "와우!",
+      "span": "와우!",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "의문(해결 예고)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "자, 이 구멍을",
+     "고쳐 볼게요"
+    ],
+    "cap_at": [
+     23.25,
+     24.15
+    ],
+    "span": [
+     23.0,
+     25.55
+    ],
+    "orig_en": "Now, in order to fix that hole,",
+    "text": "자, 이 구멍을 고쳐 볼게요",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 2.20(같은 원음 줄 첫 컷)",
+    "emph": [
+     {
+      "cap": "자, 이 구멍을",
+      "span": "구멍을",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고쳐 볼게요",
+      "span": "고쳐 볼게요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "해답(제품)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "근데 필요한 건",
+     "딱 두 가지뿐이라는데"
+    ],
+    "text": "근데 필요한 건 딱 두 가지뿐이라는데",
+    "tts": "근데 필요한 건 딱 두 가지뿐이라는데",
+    "emph": [
+     {
+      "cap": "근데 필요한 건",
+      "span": "근데 필요한",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "딱 두 가지뿐이라는데",
+      "span": "두 가지뿐이라는데",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "시연",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "구멍 위에",
+     "딱 올려 주세요"
+    ],
+    "cap_at": [
+     53.1,
+     54.05
+    ],
+    "span": [
+     53.0,
+     55.45
+    ],
+    "orig_en": "and place it over your hole.",
+    "text": "구멍 위에 딱 올려 주세요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "구멍 위에",
+      "span": "구멍 위에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "딱 올려 주세요",
+      "span": "주세요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "시연(실사용)",
+    "facts": [
+     "f5",
+     "f11"
+    ],
+    "caps": [
+     "구멍 위에",
+     "받침 판을 먼저 대 주고"
+    ],
+    "text": "구멍 위에 받침 판을 먼저 대 주고",
+    "tts": "구멍 위에 받침 판을 먼저 대 주고",
+    "emph": [
+     {
+      "cap": "구멍 위에",
+      "span": "구멍 위에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "받침 판을 먼저 대 주고",
+      "span": "받침 판을 먼저",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "시연",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "특수 반죽이",
+     "담긴 틀이에요"
+    ],
+    "cap_at": [
+     59.7,
+     60.4
+    ],
+    "span": [
+     59.62,
+     61.3
+    ],
+    "orig_en": "with your special compound",
+    "text": "특수 반죽이 담긴 틀이에요",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 11.87(창업자가 틀 든 컷 첫 프레임)",
+    "emph": [
+     {
+      "cap": "특수 반죽이",
+      "span": "특수 반죽이",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "담긴 틀이에요",
+      "span": "담긴 틀이에요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "시연(실사용)",
+    "facts": [
+     "f6",
+     "f11"
+    ],
+    "caps": [
+     "반죽 든 틀을 덮고",
+     "손으로 쓱 펴 바른 다음"
+    ],
+    "text": "반죽 든 틀을 덮고 손으로 쓱 펴 바른 다음",
+    "tts": "반죽 든 틀을 덮고 손으로 쓱 펴 바른 다음",
+    "emph": [
+     {
+      "cap": "반죽 든 틀을 덮고",
+      "span": "틀을 덮고",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "손으로 쓱 펴 바른 다음",
+      "span": "펴 바른 다음",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "해답(결과)",
+    "facts": [
+     "f7",
+     "f11"
+    ],
+    "caps": [
+     "하루 이틀 말려서",
+     "사포로 갈면",
+     "감쪽같아진다고"
+    ],
+    "text": "하루 이틀 말려서 사포로 갈면 감쪽같아진다고",
+    "tts": "하루 이틀 말려서 사포로 갈면 감쪽같아진다고",
+    "fx": "초록 번쩍 — 벤치 16.07(마른 반죽 근접 첫 프레임)",
+    "emph": [
+     {
+      "cap": "하루 이틀 말려서",
+      "span": "이틀 말려서",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "사포로 갈면",
+      "span": "사포로 갈면",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "감쪽같아진다고",
+      "span": "감쪽같아진다고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "해답(반응)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "끝!"
+    ],
+    "span": [
+     70.75,
+     71.55
+    ],
+    "orig_en": "Done.",
+    "text": "끝!",
+    "style": "원음반응_크게",
+    "fx": "빨강 번쩍 — 벤치 20.43('끝이야!')",
+    "emph": [
+     {
+      "cap": "끝!",
+      "span": "끝!",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "반응",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "사포질은",
+     "해야겠네요"
+    ],
+    "span": [
+     82.54,
+     83.56
+    ],
+    "orig_en": "We have to sand it.",
+    "text": "사포질은 해야겠네요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "사포질은",
+      "span": "사포질은",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "해야겠네요",
+      "span": "해야겠네요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N6",
+    "kind": "나레",
+    "fn": "전개(현장)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "공구도 기술도",
+     "필요 없어서",
+     "누구나 집에서",
+     "고칠 수 있다는데"
+    ],
+    "text": "공구도 기술도 필요 없어서 누구나 집에서 고칠 수 있다는데",
+    "tts": "공구도 기술도 필요 없어서 누구나 집에서 고칠 수 있다는데",
+    "fx": "띠링(번쩍 없이) — 벤치 22.04 현장 컷 첫머리",
+    "emph": [
+     {
+      "cap": "공구도 기술도",
+      "span": "공구도 기술도",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "필요 없어서",
+      "span": "필요 없어서",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "누구나 집에서",
+      "span": "누구나 집에서",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "고칠 수 있다는데",
+      "span": "있다는데",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "지분 경쟁(제안)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "흥미로운 제안을",
+     "하나 할게요"
+    ],
+    "cap_at": [
+     86.9,
+     87.75
+    ],
+    "span": [
+     86.85,
+     88.55
+    ],
+    "orig_en": "I'd like to make you an interesting offer.",
+    "text": "흥미로운 제안을 하나 할게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "흥미로운 제안을",
+      "span": "흥미로운 제안을",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "하나 할게요",
+      "span": "하나 할게요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O8",
+    "kind": "원음",
+    "fn": "지분 경쟁(금액)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "15만 달러 줄게요",
+     "지분은 필요 없어요"
+    ],
+    "cap_at": [
+     94.0,
+     96.8
+    ],
+    "span": [
+     93.97,
+     97.65
+    ],
+    "orig_en": "I'll give you the 150,000, no equity,",
+    "text": "15만 달러 줄게요 지분은 필요 없어요",
+    "style": "보통",
+    "fx": "띠링(번쩍 없이) — 벤치 27.50 '2억 3천만원 줄게'",
+    "emph": [
+     {
+      "cap": "15만 달러 줄게요",
+      "span": "15만 달러",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지분은 필요 없어요",
+      "span": "필요 없어요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "지분 경쟁(조건)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "대신 이 제품",
+     "해외 독점권을 줘요"
+    ],
+    "cap_at": [
+     101.1,
+     101.68
+    ],
+    "span": [
+     101.05,
+     103.4
+    ],
+    "orig_en": "you give me exclusive rights for this product,",
+    "text": "대신 이 제품 해외 독점권을 줘요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "대신 이 제품",
+      "span": "대신 이 제품",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "해외 독점권을 줘요",
+      "span": "독점권을 줘요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O10",
+    "kind": "원음",
+    "fn": "지분 경쟁(조건)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "개당 2달러에 사서",
+     "전 세계에 팔게요",
+     "와우"
+    ],
+    "cap_at": [
+     108.7,
+     110.4,
+     112.75
+    ],
+    "span": [
+     108.67,
+     113.4
+    ],
+    "orig_en": "I'll buy it at two dollars from you and sell to the rest of the world. / Wow.",
+    "text": "개당 2달러에 사서 전 세계에 팔게요 와우",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "개당 2달러에 사서",
+      "span": "2달러에",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "전 세계에 팔게요",
+      "span": "세계에 팔게요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "와우",
+      "span": "와우",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O11",
+    "kind": "원음",
+    "fn": "결정",
+    "facts": [
+     "f10"
+    ],
+    "caps": [
+     "로버트,",
+     "제안이 정말 최고예요"
+    ],
+    "cap_at": [
+     206.32,
+     206.8
+    ],
+    "span": [
+     206.3,
+     208.15
+    ],
+    "orig_en": "Robert, your deal is phenomenal.",
+    "text": "로버트, 제안이 정말 최고예요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "로버트,",
+      "span": "로버트,",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "제안이 정말 최고예요",
+      "span": "제안이 정말 최고예요",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O12",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f10"
+    ],
+    "caps": [
+     "좋아요, 합시다!",
+     "콜이에요!",
+     "'예스' 맞죠?"
+    ],
+    "cap_at": [
+     303.75,
+     304.95,
+     305.68
+    ],
+    "span": [
+     303.67,
+     306.55
+    ],
+    "orig_en": "I'm there. Let's do it. I'm there, man. / Do I hear a yes?",
+    "text": "좋아요, 합시다! 콜이에요! '예스' 맞죠?",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "좋아요, 합시다!",
+      "span": "좋아요, 합시다!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "콜이에요!",
+      "span": "콜이에요!",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "'예스' 맞죠?",
+      "span": "'예스' 맞죠?",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O13",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f10"
+    ],
+    "caps": [
+     "예스!"
+    ],
+    "span": [
+     307.04,
+     308.25
+    ],
+    "orig_en": "Yes! (Get it, get it!)",
+    "text": "예스!",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "예스!",
+      "span": "예스!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ]
+ },
+ "titles": {
+  "line1": "공구 없이 벽 구멍",
+  "line2": "메워 준다는 제품?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — 벤치 '구멍난 벽을 쉽게 / 고쳐준다는 제품'과 3어절 연속 겹침 0, 줄당 ≤12자(rules title.line_chars_max)"
+ },
+ "render": {
+  "gap": 0.03
+ }
+}
