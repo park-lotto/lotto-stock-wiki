@@ -323,3 +323,49 @@ def list_voices(timeout=30, customer_id=0):
             "emotions": v.get("emotions") or [],
         })
     return {"ok": True, "voices": out, "error": None}
+
+
+# ── 성우 이름 검색(2026-10-18 관제 226) ──────────────────────────────────────
+# 타입캐스트 API 는 이름을 영문 표기로만 준다(이현=Leehyun, 나은=Naeun, 실측 1143명 중 한글 0).
+# 고객은 앱에서 본 한글 이름으로 찾으므로, 한글 검색어를 흔한 영문 표기 후보로 펼쳐 맞춘다.
+_CHO = ["g", "kk", "n", "d", "tt", "r", "m", "b", "pp", "s", "ss", "", "j", "jj", "ch", "k", "t", "p", "h"]
+_JUNG = ["a", "ae", "ya", "yae", "eo", "e", "yeo", "ye", "o", "wa", "wae", "oe", "yo", "u", "wo", "we", "wi",
+         "yu", "eu", "ui", "i"]
+_JONG = ["", "k", "k", "k", "n", "n", "n", "t", "l", "k", "m", "l", "l", "l", "p", "l", "m", "p", "p", "t", "t",
+         "ng", "t", "t", "k", "t", "p", "t"]
+# 같은 소리를 다르게 적는 흔한 표기(Hyun/Hyeon, Lee/Yi, Kyung/Gyeong …)
+_ALT = {"eo": ["eo", "u", "o"], "yeo": ["yeo", "yu", "yo"], "g": ["g", "k"], "k": ["k", "g"],
+        "d": ["d", "t"], "b": ["b", "p"], "j": ["j", "ch"], "r": ["r", "l"], "s": ["s", "sh"],
+        "eu": ["eu", "u"], "oe": ["oe", "oi"], "wo": ["wo", "o"], "i": ["i", "ee", "y"], "u": ["u", "oo"]}
+_FIRST_I = {"이": ["i", "lee", "yi", "ee", "y"], "리": ["ri", "lee", "li"]}
+
+
+def _syllable_forms(ch):
+    code = ord(ch) - 0xAC00
+    if not 0 <= code < 11172:
+        return [ch.lower()]
+    c, j, t = code // 588, (code % 588) // 28, code % 28
+    out = set()
+    for a in _ALT.get(_CHO[c], [_CHO[c]]):
+        for b in _ALT.get(_JUNG[j], [_JUNG[j]]):
+            out.add(a + b + _JONG[t])
+    return sorted(out)
+
+
+def query_forms(q, cap=400):
+    """검색어 → 비교할 소문자 표기 후보들. 한글이 없으면 그대로 1개."""
+    q = (q or "").strip().lower().replace(" ", "")
+    if not q:
+        return [""]
+    forms = [""]
+    for i, ch in enumerate(q):
+        opts = _FIRST_I.get(ch) if i == 0 and ch in _FIRST_I else None
+        opts = sorted(set((opts or []) + _syllable_forms(ch)))
+        forms = [f + o for f in forms for o in opts][:cap]
+    return forms
+
+
+def name_matches(q, name):
+    """성우 이름 검색의 주인 함수 — 영문 그대로·한글(로마자 후보) 둘 다 받는다."""
+    n = str(name or "").lower().replace(" ", "")
+    return any(f in n for f in query_forms(q))
