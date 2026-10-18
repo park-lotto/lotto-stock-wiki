@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import re
 import threading
 import time
@@ -24,6 +25,8 @@ YDIR = ROOT / "channel" / "yanshottem"
 CHANNELS = YDIR / "소재채널.json"
 OUTDIR = YDIR / "소재"
 FEED = "https://www.youtube.com/feeds/videos.xml?channel_id={}"
+RETRY_ROUNDS, RETRY_WAIT = 3, 20      # 실패 채널 다시 받기(라운드마다 20·40·60초 쉼)
+MIN_OK_FRAC = 0.5                    # 응답 채널이 이 비율 밑이면 최신.md 를 덮지 않는다
 MIN_GAP = 0.5            # 요청 시작 간격(초)
 NO_PERSON_W = 0.3        # 제목에서 인물을 못 뽑은 영상의 점수 가중(연예인템이 아닌 클립이 위로 오는 걸 막는다)
 MIN_HOURS = 2.0          # 속도 계산 때 올린 뒤 시간 하한
@@ -266,6 +269,13 @@ def run(days: int = 7, top: int = 30, limit: int | None = None, feeds: dict[str,
         from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(work, list(cmap)))
+        for rnd in range(RETRY_ROUNDS):           # 10-18 12:30 유튜브 RSS 가 404·500 을 번갈아 냄(같은 채널 curl 3회 404/500/404) — 실패만 쉬었다 다시
+            bad = [c for c, g in got.items() if "error" in g]
+            if not bad:
+                break
+            time.sleep(RETRY_WAIT * (rnd + 1))
+            for c in bad:
+                work(c)
     vids, titles = [], []
     cut = now - timedelta(days=days)
     for cid, g in got.items():
@@ -291,6 +301,11 @@ def run(days: int = 7, top: int = 30, limit: int | None = None, feeds: dict[str,
     res = {"meta": meta, "순위": rows, "snapshot": {v["id"]: [now.timestamp(), v["views"]] for v in vids}}
     if write:
         OUTDIR.mkdir(parents=True, exist_ok=True)
+        if ok < len(cmap) * MIN_OK_FRAC:            # 응답 채널이 모자라면 최신.md·이전 기록(다음 실행의 증가량 기준)을 덮지 않는다
+            meta["kept_previous"] = True
+            json.dump(res, open(OUTDIR / f"_실패_{stamp}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+            print(f"[경고] 응답 채널 {ok}/{len(cmap)} < {MIN_OK_FRAC:.0%} — 최신.md 를 그대로 둔다(실패 기록 _실패_{stamp}.json)", file=sys.stderr)
+            return res
         json.dump(res, open(OUTDIR / f"{stamp}.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         (OUTDIR / "최신.md").write_text(render_md(rows, top, meta), encoding="utf-8")
     return res
