@@ -73,7 +73,12 @@ def main():
                 time.sleep(random.uniform(6, 10))        # 몰아치면 쿠팡이 막는다(검색 실측: 연달아 4/10 막힘)
         ctx.close()
     dst = Path(__file__).with_name("쿠팡상품_2026-10-18.json")
-    dst.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+    # 다시 돌려도 앞서 받은 페이지를 잃지 않는다 — 이번에 200 으로 받은 것만 바꾼다(10-18 두 번째 실행이 403 두 개로 덮은 일)
+    old = json.loads(dst.read_text(encoding="utf-8")) if dst.exists() else {}
+    for pid, v in res.items():
+        if v.get("status") == 200 or pid not in old:
+            old[pid] = v
+    dst.write_text(json.dumps(old, ensure_ascii=False, indent=1), encoding="utf-8")
     print("저장:", dst)
 
 
