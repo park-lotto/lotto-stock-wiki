@@ -655,11 +655,12 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
         raise StageError(f"BGM '{C['bgm']}' 없음")
     k = 10 ** (C["duck_db"] / 20)
     win = [(p["a"], p["b"]) for p in P["audio"] if not p.get("mute")]
+    bss = float(C.get("bgm_ss") or 0.0)   # 하이브리드 뒤: 앞 편 BGM 을 앞이 끊긴 초부터 이어 튼다(대본 render.bgm_ss, 기본 0)
     terms = "*".join(f"(1-{1 - k:.4f}*clip(min((t-{a - 0.15:.3f})/0.15,({b + 0.15:.3f}-t)/0.15),0,1))" for a, b in win) or "1"
     pre = R / "mix_pre.wav"
     run(["ffmpeg", "-y", "-i", src_mp4, "-stream_loop", "-1", "-i", bgm, "-filter_complex",
          f"[0:a]aresample={SR},aformat=sample_fmts=fltp:channel_layouts=mono[m];"
-         f"[1:a]atrim=0:{P['dur']:.3f},asetpts=PTS-STARTPTS,aresample={SR},aformat=sample_fmts=fltp:channel_layouts=mono,"
+         f"[1:a]atrim={bss:.3f}:{bss + P['dur']:.3f},asetpts=PTS-STARTPTS,aresample={SR},aformat=sample_fmts=fltp:channel_layouts=mono,"
          f"loudnorm=I={C['bgm_lufs']}:TP=-6:LRA=11,aresample={SR},volume='{terms}':eval=frame[b];[m][b]amix=inputs=2:normalize=0:duration=first[a]",
          "-map", "[a]", "-t", f"{P['dur']:.3f}", "-c:a", "pcm_f32le", pre])
     I0, _ = lufs(pre)
@@ -683,7 +684,7 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
             g += (C["target_lufs"] - I) * 2.0
     else:
         raise StageError(f"소리 크기 못 맞춤 {hist}")
-    return {"bgm": C["bgm"], "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → alimiter → lowpass 16k", "passes": hist, "final_I": I, "final_peak": pk}
+    return {"bgm": C["bgm"], "bgm_ss": bss, "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → alimiter → lowpass 16k", "passes": hist, "final_I": I, "final_peak": pk}
 
 
 def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_target=None) -> dict:
