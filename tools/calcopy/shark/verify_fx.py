@@ -111,12 +111,13 @@ def main():
             continue
         k = e["kind"]
         if k == "flash":
-            on = frame(a.mp4, T0 + 0.05); off = frame(a.mp4, max(0, T0 - 0.1))
+            on = frame(a.mp4, T0 + 0.05); off = frame(a.mp4, max(0, T0 - 0.1)); aft = frame(a.mp4, T1 + 0.15)
             c = np.array(FLASH_RGB[e["color"]], float)
-            m_on, m_off = on.reshape(-1, 3).mean(0), off.reshape(-1, 3).mean(0)
-            d_on, d_off = np.linalg.norm(m_on - c), np.linalg.norm(m_off - c)
-            ok = d_on < d_off - 15
-            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "moved": bool(e.get("moved_into_dashed")), "color": e["color"], "dist_off": round(d_off, 1), "dist_on": round(d_on, 1), "ok": bool(ok)})
+            win = lambda f: f[434:434 + 1052].reshape(-1, 3).mean(0)        # 창 안만(위아래 검정·제목 띠 빼고)
+            d_on, d_off, d_aft = (float(np.linalg.norm(win(f) - c)) for f in (on, off, aft))
+            # 앞 프레임이 다른 컷(밝은 벽 등)이면 번쩍 전이 오히려 색에 가까울 수 있다(7편 O2 실측) → 번쩍 뒤 같은 샷과도 비교
+            ok = d_on < d_off - 15 or d_on < d_aft - 15
+            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "moved": bool(e.get("moved_into_dashed")), "color": e["color"], "dist_off": round(d_off, 1), "dist_on": round(d_on, 1), "dist_after": round(d_aft, 1), "ok": bool(ok)})
             box = (0, 434, W, 434 + 1052)
         else:
             cands = [(T0 + T1) / 2] if k == "red_circle" else [T0 + min(0.6, (T1 - T0) / 2), T1 - 0.25, T0 + 0.45]
