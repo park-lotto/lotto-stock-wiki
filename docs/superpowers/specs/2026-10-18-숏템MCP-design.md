@@ -141,7 +141,7 @@ API 키: 고객 키를 `~/.volcano/keys/<서비스>`에 값만, 서버는 키를
 shortem-setup-win-x64.exe (코드서명 — 구매 인증서, SmartScreen 평판)   ≈360~370MB
   %LOCALAPPDATA%\Shortem\tools\   node\ · chrome-headless-shell\ · ffmpeg\ · python\(+Pillow·numpy) · (2차) models\
   %LOCALAPPDATA%\Shortem\server\  index.js(MCP stdio) · engine\ · assets.js(서명 URL·영수증·캐시) · lease.js(§7-10)
-  %LOCALAPPDATA%\Shortem\tools.manifest.json   바이너리마다 sha256·버전 — 시작 때 대조, 틀리면 "설치팩 다시"
+  %LOCALAPPDATA%\Shortem\tools\tools.manifest.json   (구현 2026-10-18: tools\ 아래) 바이너리마다 sha256·버전 — 시작 때 대조, 틀리면 "설치팩 다시"
   끝: shortem.mcpb 실행(Claude Desktop 설치 UI) · Claude Code 있으면 플러그인 안내
 shortem.mcpb (≈1MB, 등록·설정만)
   manifest.json  server.type "node" · entry_point launcher.js · mcp_config {command:"node", args:["${__dirname}/launcher.js"],

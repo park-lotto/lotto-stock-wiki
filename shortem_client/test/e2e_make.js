@@ -12,7 +12,9 @@ import { startFakeServer, makeKey, TRACK } from './fake_server.js';
 import { TMP_ROOT, synthVideo } from './helpers.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SERVER = path.resolve(HERE, '..', 'server', 'index.js');
+// 설치본 시험: SHORTEM_E2E_SERVER=<설치>/server/index.js · SHORTEM_E2E_TOOLS=<설치>/tools → 개발 도구 허용을 끈다(고객 PC 와 같은 길)
+const SERVER = process.env.SHORTEM_E2E_SERVER || path.resolve(HERE, '..', 'server', 'index.js');
+const INSTALLED = process.env.SHORTEM_E2E_TOOLS ? { SHORTEM_TOOLS: process.env.SHORTEM_E2E_TOOLS, SHORTEM_DEV_TOOLS: '' } : { SHORTEM_DEV_TOOLS: '1' };
 const arg = process.argv[2] || '';
 const profileArg = process.argv[3] || '';
 const root = path.join(TMP_ROOT, process.env.SHORTEM_E2E_BASE ? 'e2e_real' : 'e2e');
@@ -37,7 +39,7 @@ const devEnv = process.env.SHORTEM_E2E_MACHINE ? { SHORTEM_MACHINE_ID: process.e
 const source = /^https:\/\//.test(arg) ? { kind: 'youtube', url: arg } : { kind: 'local_video', path: arg || synthVideo() };
 const transport = new StdioClientTransport({
   command: process.execPath, args: [SERVER],
-  env: { ...process.env, SHORTEM_BASE: baseUrl, SHORTEM_LICENSE: licenseKey, ...devEnv, SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_DEV_TOOLS: '1', SHORTEM_WAIT_SEC: '40', SHORTEM_DEVICE_NAME: '시험 PC' },
+  env: { ...process.env, SHORTEM_BASE: baseUrl, SHORTEM_LICENSE: licenseKey, ...devEnv, SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, ...INSTALLED, SHORTEM_WAIT_SEC: '40', SHORTEM_DEVICE_NAME: '시험 PC' },
   stderr: 'inherit',
 });
 const client = new Client({ name: 'e2e', version: '1.0.0' });
@@ -82,15 +84,18 @@ await client.close();
 if (fake) await fake.close();
 
 // 완성본 재기
-const pj = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:format_tags=comment:stream=codec_type,codec_name,width,height', '-of', 'json', final]).toString());
+// 재는 도구도 설치본 시험이면 동봉본(PATH 에 기대지 않는다)
+const FFDIR = process.env.SHORTEM_E2E_TOOLS ? path.join(process.env.SHORTEM_E2E_TOOLS, 'ffmpeg') : '';
+const FFPROBE = FFDIR ? path.join(FFDIR, 'ffprobe.exe') : 'ffprobe', FFMPEG = FFDIR ? path.join(FFDIR, 'ffmpeg.exe') : 'ffmpeg';
+const pj = JSON.parse(execFileSync(FFPROBE, ['-v', 'error', '-show_entries', 'format=duration:format_tags=comment:stream=codec_type,codec_name,width,height', '-of', 'json', final]).toString());
 const dur = Number(pj.format.duration);
-const eb = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', final, '-af', 'ebur128=framelog=quiet', '-f', 'null', '-'], { encoding: 'utf8' });
+const eb = spawnSync(FFMPEG, ['-hide_banner', '-nostats', '-i', final, '-af', 'ebur128=framelog=quiet', '-f', 'null', '-'], { encoding: 'utf8' });
 const lm = String(eb.stderr || "").split("Summary:").pop().match(/I:\s*(-?[\d.]+)\s*LUFS/);
 const lufs = lm ? Number(lm[1]) : null;
 const frames = [];
 for (const [tag, t] of [['처음', 0.6], ['중간', dur / 2], ['끝', Math.max(0, dur - 0.4)]]) {
   const png = path.join(root, `frame_${tag}.png`);
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(t.toFixed(2)), '-i', final, '-frames:v', '1', png]);
+  execFileSync(FFMPEG, ['-v', 'error', '-y', '-ss', String(t.toFixed(2)), '-i', final, '-frames:v', '1', png]);
   frames.push({ tag, t: Number(t.toFixed(2)), png });
 }
 const v = pj.streams.find(s => s.codec_type === 'video');

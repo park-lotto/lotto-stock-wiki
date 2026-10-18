@@ -40,7 +40,7 @@ function saveProfiles(lic) {
 const presetLabel = id => String(id || '').split('/').slice(1).join(' · ') || String(id || '');
 
 async function licenseInfo() {
-  if (!readLicense()) return { ok: false, why: '라이선스 키가 없습니다', fix: '숏템 페이지에서 키를 복사해 shortem_setup 의 license_key 로 주세요' };
+  if (!readLicense()) return { ok: false, why: '라이선스 키가 없습니다', fix: '키는 채팅에 쓰지 마세요. 숏템 페이지에서 키를 복사해 Claude Desktop 은 설정 ▸ 확장 프로그램 ▸ 숏템 ▸ 라이선스 키 칸에, Claude Code 는 /plugin 의 숏템 설정 칸에 붙여 넣은 뒤 다시 점검하세요' };
   try {
     resetLicenseCache();
     const lic = await api.license();

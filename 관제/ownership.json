@@ -859,6 +859,99 @@
    "검사도구": "tools/check_cardnews.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "클로드형 이번 편 원본 자산 고르기(참조분만·서명 URL)",
+   "주인": [
+    "shopping_shorts/claude_portal.py:assets_for"
+   ],
+   "시그니처": [
+    "def assets_for\b",
+    "def asset_url\b"
+   ],
+   "소비처": [
+    "고객 PC 로컬 MCP"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 견본 규격·토큰·거절",
+   "주인": [
+    "shopping_shorts/claude_portal.py:preview"
+   ],
+   "시그니처": [
+    "def preview\b"
+   ],
+   "소비처": [
+    "/claude 페이지"
+   ],
+   "검사도구": "tools/claude_portal/check_previews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 동시 실행 1(임대·하트비트·강제 해제)",
+   "주인": [
+    "shopping_shorts/claude_portal.py:lease"
+   ],
+   "시그니처": [
+    "def lease\b",
+    "def force_release\b"
+   ],
+   "소비처": [
+    "고객 PC 로컬 MCP"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 이상 행동 탐지 A1~A10",
+   "주인": [
+    "shopping_shorts/claude_portal.py:anomaly_check"
+   ],
+   "시그니처": [
+    "def anomaly_check\b"
+   ],
+   "소비처": [
+    "관리자 경보"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "채널 프로필 합치기(프리셋+팩+고객 옵션)",
+   "주인": [
+    "shopping_shorts/channel_profile.py:merge"
+   ],
+   "시그니처": [
+    "def merge\\(preset\b"
+   ],
+   "소비처": [
+    "assets_for 합본",
+    "고객 PC 렌더"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "고객 PC 제작 단계 전이·판정",
+   "주인": [
+    "shortem_client/server/engine/next_step.js:nextStep"
+   ],
+   "시그니처": [
+    "function nextStep\b"
+   ],
+   "소비처": [
+    "shortem_make"
+   ],
+   "검사도구": "shortem_client/test/e2e_make.js",
+   "과금": false,
+   "예외": {}
   }
  ]
 }
