@@ -1,0 +1,507 @@
+{
+ "id": "onmwSxfco-A",
+ "dur": 43.7,
+ "title_lines": [
+  {
+   "text": "잘 익은 바나나 하나로 만든",
+   "colors": [
+    {
+     "word": "잘 익은 바나나 하나",
+     "hex": "#F3DD01"
+    },
+    {
+     "word": "로 만든",
+     "hex": "#FFFFFA"
+    }
+   ]
+  },
+  {
+   "text": "오연수의 초간단 건강빵",
+   "colors": [
+    {
+     "word": "오연수의",
+     "hex": "#FFFFF8"
+    },
+    {
+     "word": "초간단 건강빵",
+     "hex": "#CA00FF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 오연수 Yun Soo Oh (회색 약 #7D7D7D)",
+ "layout": {
+  "title_y": [
+   243,
+   428
+  ],
+  "window": [
+   0,
+   483,
+   1080,
+   1540
+  ],
+  "source_y": [
+   1605,
+   1650
+  ],
+  "logo_y": [
+   1655,
+   1900
+  ],
+  "watermark": "창 오른쪽 위 x≈790~1030 y≈520~580 반투명 흰 '스타픽룸'"
+ },
+ "lines": [
+  {
+   "t0": 0.9,
+   "t1": 3.2,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "그냥 빵 사먹는 것보다 훨씬",
+   "layer": "스타픽룸",
+   "enter": "기타: 좌→우 슬라이드인(최종 글상자 왼쪽 끝에서 잘려 나오며 0.9~1.75초에 제자리, 타이핑 아님)",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 3.2,
+   "t1": 4.7,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "영양가도 좋고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 4.7,
+   "t1": 6.5,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "진짜 빵 먹는 거 같아서",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 6.5,
+   "t1": 8.1,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "너무 좋아요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 8.1,
+   "t1": 9.6,
+   "speaker": "나레(추정: 타이핑+자막이 원음 받아쓰기('다이어트 때 바나나…')와 다름+음량 0.06~0.08로 앞뒤 0.02~0.03의 2.5~4배)",
+   "text": "잘 익은 바나나 하나만 있으면",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [
+    8.1
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": "짙은 초록 약 #2B5C2B 번짐(9.1초부터 보임)",
+   "type_cps": 12.0
+  },
+  {
+   "t0": 9.6,
+   "t1": 11.2,
+   "speaker": "나레(추정, 위와 같은 근거)",
+   "text": "맛있는 빵을 먹을 수 있다는데..?",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": "짙은 초록 약 #2B5C2B 번짐",
+   "type_cps": 13.6
+  },
+  {
+   "t0": 11.2,
+   "t1": 12.4,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "바나나 하나하고요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    11.23
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 12.4,
+   "t1": 14.2,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "계란 하나",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    12.4
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 14.2,
+   "t1": 15.9,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "마구 으깨볼게요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    14.23
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 15.9,
+   "t1": 18.5,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "으깬 견과류",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    15.9,
+    16.83,
+    17.6
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 18.5,
+   "t1": 19.6,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "땅콩버터 한 스푼",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    18.5
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 24.6,
+   "t1": 25.4,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "전자레인지 3분 30초",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 26.4,
+   "t1": 27.5,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "음...바나나 냄새",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 35.9,
+   "t1": 37.1,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "이렇게 맛있고 보슬보슬한 빵이",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    35.93
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 37.1,
+   "t1": 38.4,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "갑자기 완성이 됐어요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 38.4,
+   "t1": 40.8,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "아침에 돌려놓고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    38.27
+   ],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 40.8,
+   "t1": 41.4,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "준비하고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 41.4,
+   "t1": 43.7,
+   "speaker": "원음:오연수(출처 라벨·제목 근거, 얼굴 대조 아님)",
+   "text": "딱 먹고 나가면 좋아요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "y": [
+    1112,
+    1169
+   ],
+   "fill_hex": "#FDF9F8",
+   "outline": "검정 약 8px",
+   "glow": null
+  },
+  {
+   "t0": 30.4,
+   "t1": 33.6,
+   "speaker": "불명",
+   "text": "바나나 하나, 계란 한알, 견과류 (반투명 얇은 손글씨체가 가로로 흘러 화면 폭을 넘김)",
+   "layer": "원본박힘",
+   "enter": "확인 못 함(시트 0.5초 칸 기준)",
+   "y": [
+    1395,
+    1460
+   ],
+   "scene": "-",
+   "note": "스타픽룸 자막과 글꼴·굵기·외곽선 다름, 반투명"
+  },
+  {
+   "t0": 33.5,
+   "t1": 34.0,
+   "speaker": "불명",
+   "text": "땅콩 버터 한큰술",
+   "layer": "원본박힘",
+   "enter": "확인 못 함(시트 0.5초 칸 기준)",
+   "y": [
+    1450,
+    1510
+   ],
+   "scene": "-",
+   "note": "반투명 페이드, 얇은 손글씨체"
+  },
+  {
+   "t0": 34.0,
+   "t1": 35.9,
+   "speaker": "불명",
+   "text": "전자렌지 3분30초",
+   "layer": "원본박힘",
+   "enter": "확인 못 함(시트 0.5초 칸 기준)",
+   "y": [
+    1450,
+    1510
+   ],
+   "scene": "-",
+   "note": "왼쪽 아래, 얇은 글씨, 맞춤법이 스타픽룸 줄('전자레인지 3분 30초')과 다름"
+  }
+ ],
+ "beats": "훅(0~8.1초 얼굴 원음 4줄: 빵 대신 먹는 영양가 좋은 빵) → 나레(8.1~11.2초 타이핑 2줄, 바나나 접사 b-roll '…있다는데..?') → 원음 조리 설명(11.2~19.6초 얼굴·요리 컷, 줄마다 컷) → 소리 있는 요리 과정(19.6~29초 자막 거의 없음, 24.6·26.4 두 줄만) → 원본 박힌 글씨만 나오는 얼굴(29~35.9초) → 원음 마무리(35.9~43.7초 5줄) → 끝: 웃는 얼굴",
+ "narr_share": "나레 줄 2/17(스타픽룸 층 줄 기준 전체 17, 원본박힘 3줄 제외), 나레 초 3.1/43.7=7%(추정)",
+ "notes": [
+  "나레(8.1~11.2)는 음량·글 불일치 근거의 추정일 뿐, 목소리가 같은 사람인지는 귀로 확인 못 함",
+  "지휘자 관찰과 다름: 타이핑 줄에 '_' 커서 없음·흐릿한 흰 덩어리 시작 없음(0.1초 띠 확인), 초록 빛번짐은 두 타이핑 줄 모두 있음, 0.9초 첫 줄은 타이핑이 아니라 슬라이드인",
+  "강조색 단어·스티커 없음(전 줄 흰 채움+검정 외곽)",
+  "19.6~24.6·27.5~35.9 구간 스타픽룸 자막 없음(29.5~35.9는 원본 박힌 글씨만)",
+  "효과음은 귀로 확인 못 함(뜯기 sfx 목록도 비어 있음)",
+  "컷 시각은 프레임 차이 감지(자막 변화 섞임) — 16.83·17.6 등은 눈 확인 못 함",
+  "dur 43.7은 뜯기 기록(ffprobe)"
+ ]
+}

@@ -1,0 +1,812 @@
+{
+ "id": "j5D30T2n0-w",
+ "dur": 30.3,
+ "title_lines": [
+  {
+   "text": "\"이건 역대급이야!\"",
+   "colors": [
+    {
+     "word": "전체",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "최화정도 반한 SNS 레시피",
+   "colors": [
+    {
+     "word": "최화정도 반한",
+     "hex": "#FDF702"
+    },
+    {
+     "word": "SNS 레시피",
+     "hex": "#D104FD"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 안녕하세요 최화정이에요",
+ "layout": {
+  "title_y": [
+   [
+    250,
+    310
+   ],
+   [
+    370,
+    420
+   ]
+  ],
+  "window": [
+   0,
+   484,
+   1080,
+   1540
+  ],
+  "source_y": [
+   1600,
+   1650
+  ],
+  "logo_y": [
+   1700,
+   1900
+  ],
+  "watermark": "창 오른쪽 위 반투명 흰 '스타픽룸'(ASqF 와 같은 자리)",
+  "sub_y": [
+   1105,
+   1175
+  ]
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.15,
+   "speaker": "나레",
+   "text": "최화정이 만들자마자",
+   "layer": "스타픽룸",
+   "enter": "기타(타이핑 아님: 첫 프레임부터 전체, 글자색이 순환)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "무지개(주황·파랑·노랑·빨강·흰이 글자마다 돌아가며 0.1~0.3초마다 바뀜)",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "글자마다 다른 색",
+     "hex": "주황/파랑/노랑/빨강/흰 순환",
+     "outline": "검정 두꺼운"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접(젓가락 시식)",
+   "cut_at": []
+  },
+  {
+   "t0": 1.2,
+   "t1": 1.65,
+   "speaker": "나레",
+   "text": "스태프들이",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에+색 순환)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "무지개(주황·파랑·노랑·빨강·흰이 글자마다 돌아가며 0.1~0.3초마다 바뀜)",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 1.7,
+   "t1": 2.55,
+   "speaker": "나레",
+   "text": "난리가 났다는데..?",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에+색 순환, '..'은 색 있는 점 두 개)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "무지개(주황·파랑·노랑·빨강·흰이 글자마다 돌아가며 0.1~0.3초마다 바뀜)",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴(먹는 여성)",
+   "cut_at": [],
+   "note": "vtt 0.04~2.7 '최화정이 만들자마자 스태프들이 난리가 났다는데' 와 일치"
+  },
+  {
+   "t0": 2.7,
+   "t1": 5.4,
+   "speaker": "원음:여러 명(스태프)",
+   "text": "역대급이야. 진짜 너무 맛있어요.",
+   "layer": "원본박힘",
+   "enter": "기타(노랑 '역대급이야' 3.0~3.4, 분홍 네온 글로우 '진짜 너무 맛있어요' 3.5~4.2)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1520
+   ],
+   "fill_hex": "노랑 / 분홍(미측정)",
+   "outline": null,
+   "glow": "분홍 네온",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체 와이드)",
+   "cut_at": [],
+   "note": "스타픽룸 자막 y 에는 이 구간 자막 없음"
+  },
+  {
+   "t0": 4.4,
+   "t1": 5.1,
+   "speaker": "불명",
+   "text": "(노란 번쩍 이펙트)",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "type_cps": null,
+   "cursor": false,
+   "y": null,
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "노란 번쩍(안경 남자 머리 옆)",
+     "x": "오른쪽 위",
+     "w": "약 150px",
+     "t_in": 4.4,
+     "t_out": 5.0,
+     "anim": "깜빡"
+    }
+   ],
+   "sfx": null,
+   "scene": "얼굴(손으로 입 가림)",
+   "cut_at": []
+  },
+  {
+   "t0": 5.15,
+   "t1": 5.95,
+   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "text": "아니 이거는",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "cut_at": []
+  },
+  {
+   "t0": 6.0,
+   "t1": 6.9,
+   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "text": "밀키트로 팔아야 돼요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "cut_at": [],
+   "note": "vtt 는 '링키로 팔아야 돼요' 로 받아쓴 것, 화면은 '밀키트'"
+  },
+  {
+   "t0": 6.9,
+   "t1": 7.95,
+   "speaker": "나레",
+   "text": "알고 보니 요즘",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에, 타이핑 없음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "만화식 번쩍·별·느낌표 이펙트(빨강·노랑·분홍·초록, 여러 개)",
+     "x": "글자 위·옆",
+     "w": "20~100px",
+     "t_in": 6.9,
+     "t_out": 9.6,
+     "anim": "0.1~0.2초마다 자리 바뀌며 깜빡; 7.0·7.4·7.7초에 글자가 커졌다 돌아오는 팝"
+    }
+   ],
+   "sfx": null,
+   "scene": "요리 완성(오징어전 클로즈업)",
+   "cut_at": []
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.45,
+   "speaker": "나레",
+   "text": "SNS에서",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 번쩍",
+     "x": "글자 위",
+     "w": "약 70px",
+     "t_in": 8.2,
+     "t_out": 8.45,
+     "anim": "깜빡"
+    }
+   ],
+   "sfx": null,
+   "scene": "요리 완성",
+   "cut_at": []
+  },
+  {
+   "t0": 8.5,
+   "t1": 9.6,
+   "speaker": "나레",
+   "text": "난리난 레시피라는데..?",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에, 9.0초 글자 확대 팝)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨강 큰 번쩍 2개",
+     "x": "글자 위",
+     "w": "약 120px",
+     "t_in": 8.9,
+     "t_out": 9.3,
+     "anim": "팝"
+    }
+   ],
+   "sfx": null,
+   "scene": "요리 완성에서 와이드로(9.2초 컷)",
+   "cut_at": []
+  },
+  {
+   "t0": 9.5,
+   "t1": 9.9,
+   "speaker": "불명",
+   "text": "고마워",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "type_cps": null,
+   "cursor": false,
+   "y": null,
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "주방 와이드",
+   "cut_at": []
+  },
+  {
+   "t0": 9.7,
+   "t1": 11.2,
+   "speaker": "원음",
+   "text": "맞아. 나도 인스타 보고 배웠어",
+   "layer": "원본박힘",
+   "enter": "기타(하단 흰 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1480
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정(와이드)",
+   "cut_at": []
+  },
+  {
+   "t0": 11.2,
+   "t1": 13.1,
+   "speaker": "원음",
+   "text": "[ 잘게 썬 감자를 씻고 ]",
+   "layer": "원본박힘",
+   "enter": "기타(대괄호, 하단 노란 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1500
+   ],
+   "fill_hex": "노랑(미측정)",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 11.4,
+   "t1": 22.0,
+   "speaker": "불명",
+   "text": "오징어전 레시피",
+   "layer": "원본박힘",
+   "enter": "기타(왼쪽 위 노란 박스 라벨, 계속 떠 있음)",
+   "type_cps": null,
+   "cursor": false,
+   "y": null,
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 13.2,
+   "t1": 14.4,
+   "speaker": "원음",
+   "text": "오징어도 똑같은 크기로",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 13.4,
+   "t1": 14.9,
+   "speaker": "원음",
+   "text": "잘게 썬 오징어",
+   "layer": "원본박힘",
+   "enter": "기타(하단 하늘색 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1500
+   ],
+   "fill_hex": "하늘색(미측정)",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 14.5,
+   "t1": 15.0,
+   "speaker": "원음",
+   "text": "썰었어요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "cut_at": []
+  },
+  {
+   "t0": 15.0,
+   "t1": 15.7,
+   "speaker": "원음",
+   "text": "그리고 여기다가",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정(상반신)",
+   "cut_at": []
+  },
+  {
+   "t0": 16.0,
+   "t1": 17.0,
+   "speaker": "원음",
+   "text": "청양고추 · 홍고추",
+   "layer": "원본박힘",
+   "enter": "기타(초록 화살표+초록/빨강 글씨, 하단)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1540
+   ],
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "초록 화살표",
+     "x": "하단",
+     "w": "약 330px",
+     "t_in": 16.0,
+     "t_out": 17.0,
+     "anim": "미확인"
+    }
+   ],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 17.4,
+   "t1": 18.1,
+   "speaker": "원음",
+   "text": "녹말가루",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간 고추 조각 이펙트",
+     "x": "왼쪽",
+     "w": "소형",
+     "t_in": 17.0,
+     "t_out": 17.4,
+     "anim": "흩날림"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 18.5,
+   "t1": 19.6,
+   "speaker": "원음",
+   "text": "조개 액젓을 살짝 넣을게",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "'조개액젓' 라벨+노란 화살표",
+     "x": "오른쪽",
+     "w": "약 200px",
+     "t_in": 18.5,
+     "t_out": 19.6,
+     "anim": "미확인"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 20.5,
+   "t1": 21.0,
+   "speaker": "원음",
+   "text": "찰기 도는 반죽",
+   "layer": "원본박힘",
+   "enter": "기타(하단 분홍 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1450,
+    1540
+   ],
+   "fill_hex": "분홍(미측정)",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 22.2,
+   "t1": 23.1,
+   "speaker": "나레",
+   "text": "그리고 최화정만의",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에, 글자색 무지개 그라데이션이 돌며 바뀜)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "무지개(주황·파랑·노랑·빨강·흰이 글자마다 돌아가며 0.1~0.3초마다 바뀜)",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체 뒷모습)",
+   "cut_at": []
+  },
+  {
+   "t0": 23.2,
+   "t1": 24.1,
+   "speaker": "나레",
+   "text": "킥이 있다는데...?",
+   "layer": "스타픽룸",
+   "enter": "기타(전체 한 번에+무지개)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "무지개(주황·파랑·노랑·빨강·흰이 글자마다 돌아가며 0.1~0.3초마다 바뀜)",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체 뒷모습)",
+   "cut_at": [],
+   "note": "vtt 22.16~24.31 '그리고 최화정만의 킥이 있다는데' 와 일치"
+  },
+  {
+   "t0": 24.2,
+   "t1": 25.3,
+   "speaker": "원음:연예인(화면 글자로 이름 확인 안 됨)",
+   "text": "자~이거 한번 뿌려보자",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체)",
+   "cut_at": []
+  },
+  {
+   "t0": 24.5,
+   "t1": 25.2,
+   "speaker": "불명",
+   "text": "아직 안 끝났어~",
+   "layer": "원본박힘",
+   "enter": "기타(상단 노란 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": null,
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체)",
+   "cut_at": []
+  },
+  {
+   "t0": 25.5,
+   "t1": 27.0,
+   "speaker": "원음",
+   "text": "진짜 센베에 묻은 김 맛이 나요",
+   "layer": "원본박힘",
+   "enter": "기타(하단 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1500
+   ],
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체)",
+   "cut_at": []
+  },
+  {
+   "t0": 25.7,
+   "t1": 27.1,
+   "speaker": "불명",
+   "text": "그치?",
+   "layer": "원본박힘",
+   "enter": "기타(상단 하늘색 글씨)",
+   "type_cps": null,
+   "cursor": false,
+   "y": null,
+   "fill_hex": null,
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(단체)",
+   "cut_at": []
+  },
+  {
+   "t0": 27.4,
+   "t1": 28.7,
+   "speaker": "불명",
+   "text": "올해의 발견",
+   "layer": "원본박힘",
+   "enter": "기타(금색 큰 글씨, 하단)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1400,
+    1500
+   ],
+   "fill_hex": "금색(미측정)",
+   "outline": null,
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(식사 장면)",
+   "cut_at": []
+  },
+  {
+   "t0": 28.8,
+   "t1": 30.3,
+   "speaker": "원음/나레 불명",
+   "text": "썰어만 놓으면 할 일이 없어",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1105,
+    1175
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 두꺼운 외곽선(px 미측정)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접(오징어)",
+   "cut_at": [],
+   "note": "말한 사람 불명"
+  }
+ ],
+ "beats": "훅(0~2.6초 나레 무지개 3줄 '최화정이 만들자마자 스태프들이 난리가 났다는데..?') → 원음 반응 2.7~6.9 → 나레 6.9~9.6(요리 완성샷+번쩍 이펙트) → 원음 요리 과정 9.7~22(타이핑 없음, 원본 라벨 다수) → 나레 22.2~24.1(무지개) → 원음 시식·재료 → 끝('썰어만 놓으면 할 일이 없어'에서 끊김)",
+ "narr_share": "스타픽룸 줄 17 중 나레 8줄(원본박힘 포함 전체 줄 30), 나레 약 6.4초/30.3초(21%)",
+ "notes": [
+  "ASqF 와 달리 이 편 나레 줄은 타이핑·'_' 커서가 없다: 첫 프레임부터 전체가 뜨고 글자색이 무지개로 순환(0~2.5초, 22~24초) 또는 흰색+만화 이펙트(6.9~9.6초)",
+  "스타픽룸/원본박힘 구분 근거: 흰 굵은 고딕+검정 외곽이 y 1105~1175 이면 스타픽룸, 그 밖의 자리·색·글꼴(노랑 박스 라벨·하늘색·분홍 네온·금색·초록 화살표)은 원본",
+  "목소리 성별·느낌은 소리를 직접 못 들어 미확인(vtt '>>' 만 근거)",
+  "프레임 속 인물 이름은 화면 글자로 확인된 것 없음",
+  "색 hex 는 제목 줄만 cv2 실측, 스티커 크기·외곽선 px 는 눈대중",
+  "19.6~20.4 구간과 20.9~22초는 자막 유무 미판독, 컷·줄 시각 ±0.25초",
+  "효과음 sfx 미기재"
+ ],
+ "cuts_approx": [
+  1.9,
+  2.7,
+  4.4,
+  5.2,
+  6.9,
+  9.2,
+  9.8,
+  11.1,
+  13.1,
+  15.0,
+  16.9,
+  18.2,
+  19.8,
+  22.1,
+  24.1,
+  25.4,
+  27.1,
+  28.8
+ ]
+}

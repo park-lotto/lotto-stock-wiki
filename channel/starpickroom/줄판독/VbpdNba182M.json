@@ -1,0 +1,673 @@
+{
+ "id": "VbpdNba182M",
+ "dur": 38.01,
+ "title_lines": [
+  {
+   "text": "땅콩버터에 푹 빠진",
+   "colors": [
+    {
+     "word": "땅콩버터",
+     "hex": "#fbfd02"
+    }
+   ]
+  },
+  {
+   "text": "공효진이 찾아낸 최강 조합",
+   "colors": [
+    {
+     "word": "최강 조합",
+     "hex": "#cf05fc"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 당분간 공효진",
+ "layout": {
+  "title_y": [
+   [
+    245,
+    323
+   ],
+   [
+    348,
+    429
+   ]
+  ],
+  "window": [
+   0,
+   484,
+   1080,
+   1540
+  ],
+  "source_y": [
+   1607,
+   1650
+  ],
+  "logo_y": [
+   1660,
+   1920
+  ],
+  "watermark": "창 오른쪽 위 반투명 '스타픽룸'(약 x 790~1040, y 500~560)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.35,
+   "speaker": "원음:공효진",
+   "text": "요즘에 그거에 꽂혔어요 또!",
+   "layer": "스타픽룸",
+   "enter": "instant(클립 첫 프레임에 이미 완성)",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 1.4,
+   "t1": 2.45,
+   "speaker": "원음:공효진",
+   "text": "땅콩버터에...",
+   "layer": "스타픽룸",
+   "enter": "instant + RGB 분리(파랑/빨강 번짐) 글리치 0.1~0.2초",
+   "notes": "자막 글은 말('또 땅콩에')과 다름 = 덧붙인 훅 글자",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 2.5,
+   "t1": 3.45,
+   "speaker": "원음:공효진",
+   "text": "그래서 저 요즘",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 3.5,
+   "t1": 4.95,
+   "speaker": "원음:공효진",
+   "text": "땅콩버터 파기를 시작했어요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 5.0,
+   "t1": 6.45,
+   "speaker": "원음:공효진",
+   "text": "대체 무엇이 제일 맛있는지",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 6.5,
+   "t1": 6.6,
+   "speaker": "원음:공효진",
+   "text": "확인해 보자",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "notes": "0.5초 칸 1개에서만 보임(끝 시각은 6.65 직전)",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 6.65,
+   "t1": 7.8,
+   "speaker": "나레",
+   "text": "땅콩버터에 푹 빠진",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "type_cps": 11.4,
+   "glow": "초록 빛번짐(외곽선 바깥, 7.3초부터 뚜렷)",
+   "cut_at": [
+    6.95
+   ],
+   "scene": "손·제품 근접",
+   "notes": "글자 8개, 첫 글자 6.7~마지막 7.4(0.1초/글자 안팎), 7.8까지 정지. 타이핑 중 '_' 커서는 0.1초 띠에서 안 보임",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "sticker": []
+  },
+  {
+   "t0": 7.85,
+   "t1": 9.15,
+   "speaker": "나레",
+   "text": "공효진이 아주 특별하게",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "type_cps": 13.0,
+   "glow": "초록 빛번짐(8.5~9.1 뚜렷)",
+   "scene": "손·제품 근접",
+   "notes": "글자 11개, 7.9 '공효'~8.7 완성, 9.1까지 정지",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": []
+  },
+  {
+   "t0": 9.2,
+   "t1": 10.35,
+   "speaker": "나레",
+   "text": "먹는 방법이 있다는데...?",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "type_cps": 15.0,
+   "glow": "초록 빛번짐 약함(9.2~9.8)",
+   "scene": "손·제품 근접",
+   "notes": "글자 9개 9.2~9.8 + '...' 9.9 + '?' 10.0, 10.35까지 정지",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": []
+  },
+  {
+   "t0": 10.4,
+   "t1": 12.45,
+   "speaker": "원음:공효진",
+   "text": "달고 짜고 한국스러운",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 12.5,
+   "t1": 14.45,
+   "speaker": "원음:공효진",
+   "text": "단짠을 먹고 싶어서",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 14.5,
+   "t1": 15.45,
+   "speaker": "원음:공효진",
+   "text": "저는 새로운 방법의",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 15.5,
+   "t1": 17.3,
+   "speaker": "원음:공효진",
+   "text": "땅콩버터를 제조해서 먹어요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 17.4,
+   "t1": 18.15,
+   "speaker": "원음:공효진",
+   "text": "가르쳐 드려요?",
+   "layer": "스타픽룸",
+   "enter": "기타: 오른쪽에서 왼쪽으로 닦아 나오는 와이프(17.4 '려요?'→17.7 완성, 0.3초) + 살짝 커지는 팝",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 18.2,
+   "t1": 20.35,
+   "speaker": "원음:공효진",
+   "text": "땅콩버터 한스푼을 덜고요",
+   "layer": "스타픽룸",
+   "enter": "기타: 작게 시작(18.2)→18.4 풀사이즈로 팝 확대 0.2초",
+   "emph": [
+    {
+     "word": "땅콩버터",
+     "hex": "#ad4406(채움 중앙값, 주황~적갈 느낌)",
+     "outline": "검정 두꺼움"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "땅콩버터 병+숟가락 3D 그림",
+     "x": "약 190~560",
+     "y": "약 1230~1520",
+     "w": "약 370",
+     "t_in": 18.5,
+     "t_out": 23.95,
+     "anim": "작게 튀어나옴(18.5)→풀사이즈, 이후 고정"
+    }
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "type_cps": null
+  },
+  {
+   "t0": 20.5,
+   "t1": 23.95,
+   "speaker": "원음:공효진",
+   "text": "바나나를 넣어요",
+   "layer": "스타픽룸",
+   "enter": "기타: 작게 시작(20.5)→20.7 풀사이즈 팝",
+   "emph": [
+    {
+     "word": "바나나",
+     "hex": "#fbe20c(노랑)",
+     "outline": "검정 두꺼움"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "바나나(껍질 반쯤 벗김) 3D 그림",
+     "x": "약 640~790",
+     "y": "약 1230~1400",
+     "w": "약 150",
+     "t_in": 21.0,
+     "t_out": 23.95,
+     "anim": "작게 튀어나옴(21.0)→풀사이즈(21.5)"
+    }
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "type_cps": null
+  },
+  {
+   "t0": 24.0,
+   "t1": 25.45,
+   "speaker": "원음:공효진",
+   "text": "하나 정도. 얘가 좀 작아가지고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "손·제품 근접",
+   "cut_at": [
+    24.0
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 25.5,
+   "t1": 25.95,
+   "speaker": "원음:공효진",
+   "text": "하나를 넣고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "요리 과정",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 26.0,
+   "t1": 27.95,
+   "speaker": "원음:공효진",
+   "text": "으깨고 그리고 거기다가",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "요리 과정",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 28.0,
+   "t1": 29.45,
+   "speaker": "원음:공효진",
+   "text": "이제 그런 입자가 굵은 그런",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "요리 과정",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 29.5,
+   "t1": 30.95,
+   "speaker": "원음:공효진",
+   "text": "말돈 소금 같은 거 있잖아요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "emph": [
+    {
+     "word": "말돈",
+     "hex": "#30a7fb(파랑)",
+     "outline": "검정 두꺼움"
+    }
+   ],
+   "cut_at": [
+    29.45
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cursor": false,
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 31.0,
+   "t1": 32.95,
+   "speaker": "원음:공효진",
+   "text": "크기가 좀 정제되지 않은 상태로",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 33.0,
+   "t1": 33.95,
+   "speaker": "원음:공효진",
+   "text": "집어넣고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 34.0,
+   "t1": 35.45,
+   "speaker": "원음:공효진",
+   "text": "꿀도 이렇게",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "emph": [
+    {
+     "word": "꿀",
+     "hex": "#fb862b(주황)",
+     "outline": "검정 두꺼움"
+    }
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 35.5,
+   "t1": 38.0,
+   "speaker": "원음:공효진",
+   "text": "그래서 아침에 이걸 먹었어요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cut_at": [
+    35.45
+   ],
+   "scene": "얼굴(먹는 장면)",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  }
+ ],
+ "beats": "훅(0~6.6초 공효진 원음 6줄: 땅콩에 꽂혔다·땅콩버터 파기 시작·무엇이 제일 맛있나) → 나레 3줄 타이핑(6.65~10.35초: 땅콩버터에 푹 빠진 공효진이 아주 특별하게 먹는 방법이 있다는데...?) → 원음 레시피(10.4~35.4초: 한스푼·바나나·으깨기·말돈 소금·꿀, 18.2~23.95 스티커 2개) → 끝(35.5~38.0 '그래서 아침에 이걸 먹었어요' 먹는 얼굴, 맺음 나레 없음)",
+ "narr_share": "나레 줄 3/25(12%), 나레 3.7초/38.0초(약 9.6%)",
+ "notes": [
+  "소리를 귀로 듣지 못함: 나레 목소리 성별·느낌, 효과음(sfx) 전부 미확인 — vtt 시각만 근거(나레 구간 vtt '>> 땅콩버터에 푹 빠진 공유진이 아주 특별하게 먹는 방법이 있다는데' 6.76~10.9). 말 줄은 공효진 얼굴 컷의 입 모양·vtt로 원음 판정, 화면 글자로 이름이 확인된 건 나레 문구 '공효진이'와 출처 라벨 '당분간 공효진'",
+  "원음 줄은 0.5초 칸 기준 시각(±0.1~0.2초). 타이핑 3줄·가르쳐 드려요·한스푼·바나나는 0.1초 띠로 확인",
+  "0.0~1.35 줄은 클립 첫 프레임에 이미 완성이라 등장 방식 미확인",
+  "원본박힘 층 없음으로 봄: 모든 글자가 같은 흰 굵은 고딕+검정 외곽선 한 벌(원본 채널 자막은 못 봄)",
+  "지휘자 관찰과 다름: 깜빡이는 흰 '_' 커서는 나레 3줄 어느 0.1초 칸에서도 안 보임. 초록 빛번짐은 확인(7.3~9.8). 새 글자의 '흐릿한 덩어리로 시작' 도 0.1초 띠에서 뚜렷하지 않음",
+  "타이핑 cps 는 글자(공백·부호 제외) 수 / 첫~마지막 글자 시각",
+  "컷 위치 cut_at 은 시트 기준 추정",
+  "외곽선 두께·스티커 좌표는 눈대중(픽셀 측정은 색만)"
+ ]
+}

@@ -1,0 +1,840 @@
+{
+ "id": "EZQlWvvnKPI",
+ "dur": 48.948,
+ "fps": 30,
+ "size": "1080x1920",
+ "title_lines": [
+  {
+   "text": "된장도 커피도 필요 없다!",
+   "colors": [
+    {
+     "word": "된장도 커피도",
+     "hex": "#FCFC02"
+    }
+   ]
+  },
+  {
+   "text": "백지영, 이원일의 초간단 수육",
+   "colors": [
+    {
+     "word": "초간단 수육",
+     "hex": "#D303FD"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 백지영, 셰프이원일",
+ "layout": {
+  "title_y": [
+   [
+    242,
+    320
+   ],
+   [
+    348,
+    431
+   ]
+  ],
+  "window": [
+   0,
+   483,
+   1079,
+   1538
+  ],
+  "source_y": [
+   1607,
+   1645
+  ],
+  "logo_y": [
+   1680,
+   1919
+  ],
+  "watermark": "창 오른쪽 위 반투명 '스타픽룸'",
+  "caption_y": [
+   1112,
+   1168
+  ]
+ },
+ "lines": [
+  {
+   "t0": 2.0,
+   "t1": 3.2,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "너무 맛있어",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1103,
+    1177
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    1.93,
+    2.0
+   ],
+   "effect": "RGB 색분리 글리치(2.5초 프레임 확대에서 확인)"
+  },
+  {
+   "t0": 3.3,
+   "t1": 5.3,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "보쌈 식당인데요 완전",
+   "layer": "스타픽룸",
+   "enter": "기타(오른쪽 끝 '완전'부터 왼쪽으로 늘어나듯 나타남 3.3→3.9초, 0.6초)",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [
+    3.27,
+    5.17
+   ]
+  },
+  {
+   "t0": 5.5,
+   "t1": 6.8,
+   "speaker": "나레",
+   "text": "수육에 이것저것 넣을 필요 없이",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFEFD",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [
+    5.37
+   ],
+   "type_cps": 10.0,
+   "type_note": "5.5 '수' → 6.8 '이', 13자/1.3초"
+  },
+  {
+   "t0": 7.0,
+   "t1": 7.95,
+   "speaker": "나레",
+   "text": "백지영도 이원일 셰프도",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [],
+   "type_cps": 10.0,
+   "type_note": "7.0 '백' → 7.9 '도', 11자/0.9초"
+  },
+  {
+   "t0": 8.1,
+   "t1": 9.45,
+   "speaker": "나레",
+   "text": "이거 하나로 맛을 낸다는데...?",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": [
+    8.57,
+    9.53
+   ],
+   "type_cps": 10.0,
+   "type_note": "8.1 '이' → 9.5 '?', 15자/1.4초; 8.0 은 빈 칸"
+  },
+  {
+   "t0": 13.4,
+   "t1": 15.8,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "근데 오늘 준비한 재료는",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    13.13
+   ]
+  },
+  {
+   "t0": 15.8,
+   "t1": 18.3,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "고기랑 딱 요거야",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    18.27
+   ]
+  },
+  {
+   "t0": 18.4,
+   "t1": 20.3,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "고기 1kg~1.2kg 정도를",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 20.4,
+   "t1": 21.5,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "팩 하나만 넣으면 돼",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    21.47
+   ]
+  },
+  {
+   "t0": 21.6,
+   "t1": 24.2,
+   "speaker": "나레",
+   "text": "그리고 이원일 셰프만 더 맛있게 먹는 팁이 있다는데...?",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "type_cps": 10.4,
+   "type_note": "21.6 '그' → 24.0 '?', 25자/2.4초; 중간 한 줄 안에 계속 늘어남"
+  },
+  {
+   "t0": 24.2,
+   "t1": 24.7,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "구수한 수육을",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    24.1
+   ]
+  },
+  {
+   "t0": 24.8,
+   "t1": 25.9,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "드시고 싶으신 분들은",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 26.0,
+   "t1": 27.7,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "센불에서 노릇노릇",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    26.07
+   ]
+  },
+  {
+   "t0": 27.8,
+   "t1": 29.1,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "한번 기름 부분만 지져주면 돼요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 29.2,
+   "t1": 30.5,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "맛있게 구워지면",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    29.2,
+    30.57
+   ]
+  },
+  {
+   "t0": 30.6,
+   "t1": 31.7,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "부워주고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    31.77
+   ],
+   "note": "화면 글자 그대로('부워주고', 맞춤법 '부어주고')"
+  },
+  {
+   "t0": 33.9,
+   "t1": 34.7,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "30분 끓인 다음에",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [
+    34.77
+   ]
+  },
+  {
+   "t0": 45.8,
+   "t1": 47.3,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "수육에 정성을 안 들였는데",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1104,
+    1196
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    45.7
+   ]
+  },
+  {
+   "t0": 47.4,
+   "t1": 48.6,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "정성 드린 맛이 나지",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "cursor": false,
+   "y": [
+    1112,
+    1168
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    48.67
+   ]
+  }
+ ],
+ "original_layer_lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.6,
+   "speaker": "원음:연예인",
+   "text": "어디 한번",
+   "layer": "원본박힘",
+   "enter": "기타(분홍 방송 글꼴)",
+   "cursor": false,
+   "y": [
+    1140,
+    1220
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 0.6,
+   "t1": 2.0,
+   "speaker": "원음:연예인",
+   "text": "진짜 맛있당~",
+   "layer": "원본박힘",
+   "enter": "기타(초록 둥근 손글씨 글꼴)",
+   "cursor": false,
+   "y": [
+    1440,
+    1520
+   ],
+   "fill_hex": "#46FCA2(초록)",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 3.3,
+   "t1": 5.4,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "식당급 퀄리티...!",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "cursor": false,
+   "y": [
+    1440,
+    1520
+   ],
+   "fill_hex": "#46FCA2(초록)",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "cut_at": []
+  },
+  {
+   "t0": 10.2,
+   "t1": 13.0,
+   "speaker": "나레 아님",
+   "text": "(일반적인 재료들)",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "cursor": false,
+   "y": [
+    1425,
+    1539
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "흰 채움+회색 링+검정 외곽선 이중, 글꼴 둥근 직립(스타픽룸 자막보다 둥글다)",
+   "glow": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "양파 3D 스티커",
+     "x": "약 400~520(1080기준)",
+     "t_in": 10.0,
+     "t_out": 10.4,
+     "anim": "위에서 내려옴"
+    },
+    {
+     "what": "청록 물방울",
+     "t_in": 10.4,
+     "t_out": 12.3,
+     "anim": "여러 방울 튐"
+    },
+    {
+     "what": "통후추 알갱이",
+     "t_in": 11.0,
+     "t_out": 11.4,
+     "anim": "떨어짐"
+    },
+    {
+     "what": "주황 반투명 덩어리(양념 추정)",
+     "t_in": 11.9,
+     "t_out": 12.2,
+     "anim": "번짐"
+    }
+   ],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": [],
+   "note": "층 판정 어려움: 글꼴 외곽이 이중이라 스타픽룸 자막 글꼴과 달라 원본박힘 추정. 스티커가 방송/원본 것인지 스타픽룸 것인지 확정 못 함"
+  },
+  {
+   "t0": 18.3,
+   "t1": 21.5,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "1.2kg에 소스 한 팩",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "cursor": false,
+   "y": [
+    1440,
+    1540
+   ],
+   "fill_hex": "#46FCA2(초록)",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 31.0,
+   "t1": 31.7,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "수육보쌈 소스 + 물 1L",
+   "layer": "원본박힘",
+   "enter": "기타(초록 박스)",
+   "cursor": false,
+   "y": [
+    1380,
+    1440
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 32.0,
+   "t1": 33.0,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "팔팔팔팔~",
+   "layer": "원본박힘",
+   "enter": "기타(흰 곡선 글꼴)",
+   "cursor": false,
+   "y": [
+    1280,
+    1400
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 34.8,
+   "t1": 36.3,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "10분 뜸",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "cursor": false,
+   "y": [
+    1380,
+    1540
+   ],
+   "fill_hex": "#F0F0F0",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 36.3,
+   "t1": 37.9,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "라면처럼 간단하...",
+   "layer": "원본박힘",
+   "enter": "기타(분홍 이탤릭+글리치)",
+   "cursor": false,
+   "y": [
+    1380,
+    1540
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 37.0,
+   "t1": 37.8,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "...만 넣고 끓이네(왼쪽이 화면 밖으로 잘림)",
+   "layer": "원본박힘",
+   "enter": "기타",
+   "cursor": false,
+   "y": [
+    1100,
+    1200
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 38.0,
+   "t1": 39.6,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "보쌈이 이렇게 간단하다니...",
+   "layer": "원본박힘",
+   "enter": "기타(초록 작은 글씨, 갑자기 나타남)",
+   "cursor": false,
+   "y": [
+    1410,
+    1480
+   ],
+   "fill_hex": "#45F29F(초록)",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "note": "끝이 '...'이지만 초록 글꼴이라 원본 추정; 타이핑 아님(37.8→38.1 사이에 통째로 뜸)"
+  },
+  {
+   "t0": 39.8,
+   "t1": 41.8,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "수 육",
+   "layer": "원본박힘",
+   "enter": "기타(초록)",
+   "cursor": false,
+   "y": [
+    1000,
+    1150
+   ],
+   "fill_hex": "초록",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "요리 과정",
+   "cut_at": []
+  },
+  {
+   "t0": 42.6,
+   "t1": 43.9,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "존 맛",
+   "layer": "원본박힘",
+   "enter": "기타(빨강)",
+   "cursor": false,
+   "y": [
+    900,
+    1000
+   ],
+   "fill_hex": "#9E353C~빨강",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  },
+  {
+   "t0": 44.9,
+   "t1": 45.8,
+   "speaker": "원음:연예인(이름표 없음)",
+   "text": "잡내 하나도 안 나",
+   "layer": "원본박힘",
+   "enter": "기타(분홍 이탤릭+글리치)",
+   "cursor": false,
+   "y": [
+    1380,
+    1500
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 약 5px(1080기준)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": []
+  }
+ ],
+ "beats": "훅 0~5.4초(원본 방송 자막 '어디 한번'·'진짜 맛있당~' 초록·식당급 퀄리티 + 스타픽룸 원음 자막 '너무 맛있어'·'보쌈 식당인데요 완전') → 나레 5.5~9.45초(3칸 타이핑 '수육에 이것저것 넣을 필요 없이 / 백지영도 이원일 셰프도 / 이거 하나로 맛을 낸다는데...?') → 원음(백지영 등) 13.4~21.5(재료 소개) → 나레 21.6~24.2('그리고 이원일 셰프만 … 팁이 있다는데...?') → 원음(셰프) 24.2~34.7(조리법) → 원본 그래픽 위주 34.8~45.8 → 원음 45.8~48.6 끝(정성 드린 맛이 나지), 끝 나레·CTA 없음",
+ "narr_share": "스타픽룸 자막 줄 19 중 나레 4줄(21%), 나레 시간 1.3+0.95+1.35+2.6=6.2초/48.95초(12.7%). 방송 원본 박힌 줄 14줄은 original_layer_lines",
+ "notes": [
+  "시각은 cv2 프레임 읽기(30fps) 기준 ±0.1초. 줄 끝은 다음 줄 첫 프레임 직전.",
+  "타이핑 속도 전부 약 10cps(0.1초/글자) — 21VoGAEK 줄3(19.7cps)와 다름. 외곽선 바깥 초록 빛번짐은 이 편 나레(6.4초·23.0초 확대)에서 못 봄 → 편마다/줄마다 다름",
+  "'_' 커서 못 봄(나레 유지 구간 0.1초 간격)",
+  "스타픽룸 층 판정 근거: 흰 굵은 고딕+검정 외곽선 y1112~1168 은 줄마다 같음. 초록·분홍·빨강 효과 글꼴은 원본 층",
+  "'(일반적인 재료들)'+스티커는 층 판정 확정 못 함(원본박힘 추정, 스티커 주체 불명)",
+  "원음 화자 이름 확정 못 함(화면 이름표 없음): 얼굴 컷 여성(앞치마)·남성(검정 후드/검정 셰프복) 모두 '연예인'으로 표기. 나레 글자에 '백지영','이원일 셰프' 이름만 있음",
+  "스타픽룸이 얹은 확정 스티커 0개",
+  "sfx 는 뜯기 자료 없어 안 봄(null)",
+  "오른쪽부터 늘어나는 등장은 이 편 3.3초 줄에서만 확인",
+  "cut_at 은 창 장면 전환 감지(scene>0.3) 근사, 자막·그래픽 교체 섞임",
+  "전체 컷 후보: 1.93,2.0,3.27,5.17,5.37,8.57,9.53,13.13,18.27,21.47,24.1,26.07,29.2,30.57,31.77,34.77,36.2,39.67,43.77,45.7,48.67"
+ ]
+}

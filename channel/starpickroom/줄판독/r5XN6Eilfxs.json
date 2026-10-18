@@ -1,0 +1,580 @@
+{
+ "id": "r5XN6Eilfxs",
+ "dur": 24.13,
+ "title_lines": [
+  {
+   "text": "국밥 마니아 차예련이 찾은",
+   "colors": [
+    {
+     "word": "국밥 마니아",
+     "hex": "#fdfd01"
+    }
+   ]
+  },
+  {
+   "text": "코스트코 최애 국밥 3가지",
+   "colors": [
+    {
+     "word": "최애 국밥 3가지",
+     "hex": "#cf04fc"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 차장금 차예련",
+ "layout": {
+  "title_y": [
+   [
+    242,
+    317
+   ],
+   [
+    346,
+    430
+   ]
+  ],
+  "window": [
+   0,
+   484,
+   1080,
+   1540
+  ],
+  "source_y": [
+   1607,
+   1650
+  ],
+  "logo_y": [
+   1660,
+   1920
+  ],
+  "watermark": "창 오른쪽 위 반투명 '스타픽룸'(VbpdN와 같은 자리)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.45,
+   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "text": "강남에 모든 순댓국집",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "y": [
+    1090,
+    1160
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 1.5,
+   "t1": 1.95,
+   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "text": "다~~~단골집!",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "y": [
+    1090,
+    1160
+   ],
+   "notes": "자막 글('단골집')과 vtt('다 담고')가 다름",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 2.0,
+   "t1": 2.95,
+   "speaker": "원음:연예인(남성·검정 셔츠, 화면 이름 없음)",
+   "text": "단골 부심",
+   "layer": "원본박힘(추정)",
+   "enter": "instant + 파랑 글로우, 글자가 좌우 가장자리로 벌어져 화면 밖으로 잘림",
+   "fill_hex": "#ffffff~연회색",
+   "outline": "없음(파랑 빛번짐)",
+   "glow": "파랑 글로우",
+   "y": [
+    1000,
+    1120
+   ],
+   "notes": "굵기·크기·글로우가 스타픽룸 자막과 다름. 바닥 자막 없음",
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 3.0,
+   "t1": 3.95,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "순댓국 제일 좋아해",
+   "layer": "원본박힘(추정)",
+   "enter": "instant + 핑크 파편 폭발 가림(3.0~3.2)",
+   "fill_hex": "#fa3ca9",
+   "outline": "흰 글로우 얇음",
+   "glow": "핑크 글로우",
+   "y": [
+    1090,
+    1180
+   ],
+   "cut_at": [
+    3.0,
+    3.95
+   ],
+   "notes": "마젠타 채움+글로우+핑크 효과는 스타픽룸 자막 규격과 다름",
+   "scene": "얼굴",
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 4.0,
+   "t1": 5.15,
+   "speaker": "나레",
+   "text": "순댓국에 진심인",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "type_cps": 10.0,
+   "scene": "손·제품 근접",
+   "cut_at": [
+    3.95
+   ],
+   "notes": "글자 7개 4.0~4.7, 5.15까지 정지, 초록 빛번짐 없음",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "sticker": []
+  },
+  {
+   "t0": 5.2,
+   "t1": 6.55,
+   "speaker": "나레",
+   "text": "주상욱.차혜련 부부",
+   "layer": "스타픽룸",
+   "enter": "typing",
+   "type_cps": 10.5,
+   "scene": "손·제품 근접",
+   "notes": "화면 글자 그대로 '차혜련'(제목·출처 라벨은 '차예련'). 글자 8+'.' 5.2~6.0, 6.55까지 정지, 초록 빛번짐 없음",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": []
+  },
+  {
+   "t0": 6.6,
+   "t1": 7.95,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "아침에 딱 이거",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "손·제품 근접",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.45,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "밥에다가 말아서",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "scene": "손·제품 근접",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 8.5,
+   "t1": 9.25,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "딱 먹고가면 든든하고",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 9.3,
+   "t1": 10.25,
+   "speaker": "나레",
+   "text": "코스트코에 가서도",
+   "layer": "스타픽룸",
+   "enter": "instant(타이핑 아님) + 만화 폭발·별 스티커, 글자 일부 기울임·흔들림",
+   "cut_at": [
+    9.25
+   ],
+   "notes": "vtt상 나레('>> 코스트코에 가서도 이것부터 찾는다는데')인데 타이핑이 아님. 만화 폭발·기울임이 스타픽룸이 얹은 건지 원본박힘인지 미확정",
+   "sticker": [
+    {
+     "what": "만화풍 폭발·별·반짝 조각(빨강·노랑·흰)",
+     "x": "글자 주변 산재",
+     "y": "약 1040~1230",
+     "w": "작음",
+     "t_in": 9.3,
+     "t_out": 11.35,
+     "anim": "튀어나왔다 사라짐 반복"
+    }
+   ],
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cursor": false,
+   "emph": [],
+   "type_cps": null
+  },
+  {
+   "t0": 10.3,
+   "t1": 11.35,
+   "speaker": "나레",
+   "text": "이것부터 찾는다는데?",
+   "layer": "스타픽룸",
+   "enter": "instant + 만화 폭발 반복, '다는데' 기울임 흔들림",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 11.4,
+   "t1": 12.95,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "내가 제일 좋아하는 건",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 13.0,
+   "t1": 13.7,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "순댓국이야!!",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 14.0,
+   "t1": 14.95,
+   "speaker": "불명",
+   "text": "+ 부추 고기 순댓국 🛍",
+   "layer": "원본박힘(추정)",
+   "enter": "instant",
+   "y": [
+    1000,
+    1040
+   ],
+   "notes": "화면 왼쪽 위 작은 상품 태그, 글꼴·자리가 스타픽룸 자막과 다름. 상품 이름 칩이라 말줄 아님",
+   "scene": "손·제품 근접",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 15.0,
+   "t1": 15.95,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "국밥이 너무 좋아",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 16.0,
+   "t1": 17.45,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "이 갈비탕도 되게 많이 먹던데",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 16.0,
+   "t1": 18.45,
+   "speaker": "해당없음(덧붙인 설명 글)",
+   "text": "(폭주하는 국밥 러버..)",
+   "layer": "원본박힘(추정)",
+   "enter": "instant",
+   "fill_hex": "노랑(채움 중앙값 #ac8939는 저표본이라 신뢰 낮음)",
+   "outline": "어두운 외곽선, 굵은 둥근 글꼴",
+   "y": [
+    1280,
+    1330
+   ],
+   "notes": "노란 괄호 설명 글, 글꼴·색이 스타픽룸 자막과 다름",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 17.5,
+   "t1": 18.45,
+   "speaker": "불명",
+   "text": "+ 왕 갈비탕 🛍",
+   "layer": "원본박힘(추정)",
+   "enter": "instant",
+   "y": [
+    1000,
+    1040
+   ],
+   "notes": "상품 태그",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 19.5,
+   "t1": 19.95,
+   "speaker": "원음:연예인(여성, 화면 이름 없음)",
+   "text": "국밥이 너무 좋아",
+   "layer": "스타픽룸",
+   "enter": "instant(화면 오른쪽 아래, 자막 자리가 다름)",
+   "y": [
+    1450,
+    1500
+   ],
+   "notes": "0.5초 칸 1개에서만 확인, 자리 불확실",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 20.0,
+   "t1": 21.45,
+   "speaker": "불명",
+   "text": "안동식 한우 국밥",
+   "layer": "원본박힘(추정)",
+   "enter": "instant",
+   "y": [
+    1000,
+    1040
+   ],
+   "notes": "상품 태그(화면 왼쪽 위)",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 21.5,
+   "t1": 22.95,
+   "speaker": "불명",
+   "text": "다 사도 될 거 같지?",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "notes": "입 모양·화자 미확인(vtt에 '>>' 화자 전환)",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  },
+  {
+   "t0": 23.0,
+   "t1": 24.1,
+   "speaker": "불명",
+   "text": "네 다 잘드실것 같아요",
+   "layer": "스타픽룸",
+   "enter": "instant",
+   "notes": "화자 전환(vtt '>>'), 입 모양 미확인",
+   "fill_hex": "#ffffff",
+   "outline": "검정 외곽선(두께 눈대중 5~6px, 미측정)",
+   "glow": null,
+   "y": [
+    1112,
+    1168
+   ],
+   "scene": "얼굴",
+   "sfx": null,
+   "cut_at": [],
+   "cursor": false,
+   "emph": [],
+   "sticker": [],
+   "type_cps": null
+  }
+ ],
+ "beats": "훅(0~3.95초 원음: 강남 순댓국집·단골 부심·순댓국 제일 좋아해, 원본박힘 효과 2개) → 나레 타이핑 2줄(4.0~6.55: 순댓국에 진심인 주상욱.차혜련 부부) → 원음 3줄(6.6~9.25) → 나레 2줄 즉시표시+만화 효과(9.3~11.35: 코스트코에 가서도 이것부터 찾는다는데?) → 코스트코 원음(11.4~24.1, 상품 태그 3개·노란 설명 글 1개) → 끝('네 다 잘드실것 같아요' 얼굴 컷, 맺음 나레 없음). 제목은 '3가지'인데 화면 상품 태그는 순댓국(부추 고기)·왕 갈비탕·안동식 한우 국밥 3개",
+ "narr_share": "나레 줄 4/22(18%), 나레 4.6초/24.13초(약 19%)",
+ "notes": [
+  "소리를 귀로 듣지 못함: 나레 목소리 성별·느낌, 효과음 전부 미확인. 나레 판정은 vtt '>>'(3.99~6.67, 9.36~11.5)와 말투(~는데)·타이핑 근거",
+  "원음 인물 이름은 화면 글자로 확인 불가: 나레 글 '주상욱.차혜련 부부'가 부부 이름을 주지만 누가 말하는지 라벨 없음 → 연예인. 출처 라벨·제목은 '차예련', 나레 글은 '차혜련'(글자 그대로 기록, 철자 어긋남)",
+  "지휘자 관찰과 다름 1: 나레인데 타이핑이 아닌 줄 있음(9.3 '코스트코에 가서도'~11.35). 만화 폭발·기울임 흔들림 동반, 스타픽룸 층인지 원본박힘인지 미확정",
+  "지휘자 관찰과 다름 2: 초록 빛번짐은 이 편 나레엔 없음(VbpdN엔 있음); 커서 '_' 는 0.1초 띠에서 안 보임",
+  "원본박힘(추정) 근거 = 글꼴·색·자리가 스타픽룸 자막(흰 굵은 고딕+검정 외곽선, y 1112~1168)과 다름: 단골 부심·순댓국 제일 좋아해(핑크)·폭주하는 국밥 러버(노랑)·상품 태그(왼쪽 위 + 🛍). 원본 영상을 못 봐 확정 못 함",
+  "원음 줄 시각은 0.5초 칸 기준 ±0.1~0.2초; 나레 타이핑 2줄과 8.9~11.8은 0.1초 띠 확인",
+  "y 좌표 중 원본박힘·태그 자리는 눈대중. 19.5 '국밥이 너무 좋아' 위치 불확실, 13.7~14.0 사이 자막 없는 칸 있음",
+  "'다 사도 될 거 같지?' '네 다 잘드실것 같아요' 화자·입 모양 미확인"
+ ]
+}

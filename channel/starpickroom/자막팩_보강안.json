@@ -1,0 +1,289 @@
+{
+ "_doc": "channel/starpickroom/자막팩_보강안.md",
+ "_made": "2026-10-18 관제 097 — 스타픽룸 8편 눈 판독",
+ "CAPTION_PACKS": {
+  "starpick": {
+   "label": "스타픽룸 타이핑",
+   "desc": "흰 G마켓 굵은 글씨 + 두꺼운 검정 테 · 나레 줄만 타닥 타이핑(초록 번짐) · 원음 줄은 즉시 · 재료 낱말은 사물 색",
+   "font": "GmarketSansBold",
+   "size": 100,
+   "size_px_1080": 62,
+   "look": "none",
+   "text": {
+    "color": "#FFFFFF",
+    "style": {
+     "WebkitTextStroke": "0.22em #000",
+     "paintOrder": "stroke fill",
+     "textShadow": "none"
+    }
+   },
+   "wordFx": {
+    "style": "color",
+    "color": "object",
+    "grow": "pop"
+   },
+   "emph": {
+    "font": "GmarketSansBold",
+    "size": 130,
+    "color": "#FFFFFF",
+    "style": {
+     "WebkitTextStroke": "0.22em #000",
+     "paintOrder": "stroke fill"
+    }
+   },
+   "slots": {
+    "first": "",
+    "body": "",
+    "price": "",
+    "end": "",
+    "problem": "",
+    "reveal": "",
+    "emph": "pop",
+    "narr": "sprTypeGlow"
+   },
+   "variants": {
+    "narr": [
+     "sprTypeGlow",
+     "sprTypeCursor",
+     "sprTypeHeart"
+    ],
+    "hook_first": [
+     "rgbGlitch",
+     ""
+    ],
+    "accent": [
+     "wipeRTL",
+     "slide",
+     "pop",
+     "rainbowCycle"
+    ]
+   },
+   "stickers": {
+    "object3d": "sprObjectPop",
+    "burst": "comicBurst"
+   },
+   "_need": "slots.narr · wordFx.color='object' · 아래 new_motions 6개 · stickers 2개 — 계약 파일에 아직 없는 키(자막팩_보강안.md 표)"
+  }
+ },
+ "CAPTION_MOTIONS_new": {
+  "sprTypeGlow": {
+   "label": "타닥 타이핑 + 초록 번짐",
+   "unit": "char",
+   "stagger": 80,
+   "spread": 1400,
+   "ms": 33,
+   "easing": "steps(1,end)",
+   "frames": [
+    {
+     "opacity": 0
+    },
+    {
+     "opacity": 1
+    }
+   ],
+   "line_glow": {
+    "color": "#2B5C2B",
+    "blur_em": [
+     0.12,
+     0.28
+    ],
+    "keys": [
+     [
+      0,
+      0
+     ],
+     [
+      0.35,
+      1
+     ],
+     [
+      0.8,
+      1
+     ],
+     [
+      1.0,
+      0.35
+     ]
+    ]
+   },
+   "anchor": "final_center_left_fixed",
+   "gap_after_ms": 100,
+   "evidence": "VbpdN 6.7~10.3 0.1초 띠: 11.4·13.0·15.0자/초, 외곽선 밖 초록 번짐(7.3~9.8 뚜렷) · 21Vo 5.5·8.0 · onmw 8.1·9.6"
+  },
+  "sprTypeCursor": {
+   "label": "타이핑 + _ 커서",
+   "unit": "char",
+   "stagger": 85,
+   "spread": 1400,
+   "ms": 100,
+   "easing": "ease-out",
+   "frames": [
+    {
+     "opacity": 0.6,
+     "filter": "blur(0.08em)",
+     "scale": "1.15"
+    },
+    {
+     "opacity": 1,
+     "filter": "blur(0)",
+     "scale": "1"
+    }
+   ],
+   "cursor": {
+    "char": "_",
+    "color": "#FFFFFF",
+    "blink_ms": 400,
+    "gap_em": 0.15,
+    "hide_with_line": true
+   },
+   "anchor": "final_center_left_fixed",
+   "evidence": "ASqF 3.6~6.0 0.1초 띠: 새 글자 흐린 흰 덩어리 → 또렷, 끝에 '_' 깜빡, 줄 끝나면 커서까지 같이 사라짐(10·13자/초)"
+  },
+  "sprTypeHeart": {
+   "label": "분홍 새 글자 + 하트",
+   "unit": "char",
+   "stagger": 100,
+   "spread": 1400,
+   "ms": 150,
+   "easing": "cubic-bezier(.2,.9,.3,1)",
+   "frames": [
+    {
+     "opacity": 1,
+     "scale": "0.55",
+     "color": "#F40059"
+    },
+    {
+     "opacity": 1,
+     "scale": "1",
+     "color": "#FFFFFF"
+    }
+   ],
+   "heart": {
+    "char": "♥",
+    "color": "#F40059",
+    "outline": "#FFFFFF",
+    "size_em": 0.55,
+    "dy_em": 0.95,
+    "follow": "newest_char",
+    "life_ms": 200
+   },
+   "evidence": "dKcz 5.9~6.6 0.1초 띠: 새 글자 분홍 작게 → 흰 원크기, 그 글자 밑 분홍 하트(8·10·12.5자/초)"
+  },
+  "rgbGlitch": {
+   "label": "RGB 글리치 등장",
+   "ms": 450,
+   "easing": "steps(6,end)",
+   "layers": [
+    {
+     "color": "#00E5FF",
+     "dx_em": [
+      -0.08,
+      0.05,
+      -0.04,
+      0.02,
+      0
+     ]
+    },
+    {
+     "color": "#FF2D55",
+     "dx_em": [
+      0.08,
+      -0.05,
+      0.04,
+      -0.02,
+      0
+     ]
+    }
+   ],
+   "frames": [
+    {
+     "opacity": 0.7,
+     "translate": "0.04em 0"
+    },
+    {
+     "opacity": 1,
+     "translate": "-0.03em 0",
+     "offset": 0.4
+    },
+    {
+     "opacity": 1,
+     "translate": "0 0"
+    }
+   ],
+   "evidence": "VbpdN 1.4~2.45 · dKcz 0.2~0.8 · 21Vo 7.2~7.8 · EZQl 2.5 — 파랑/빨강 분리 상이 좌우로 흔들림"
+  },
+  "wipeRTL": {
+   "label": "오른쪽에서 닦아 나오기",
+   "ms": 600,
+   "easing": "cubic-bezier(.2,.9,.3,1)",
+   "frames": [
+    {
+     "clipPath": "inset(0 0 0 100%)"
+    },
+    {
+     "clipPath": "inset(0 0 0 0)"
+    }
+   ],
+   "evidence": "VbpdN 17.4 '가르쳐 드려요?' · EZQl 3.3 '보쌈 식당인데요 완전'(오른쪽 끝 글자부터 0.6초)"
+  },
+  "rainbowCycle": {
+   "label": "글자마다 무지개 색 돌림",
+   "unit": "char",
+   "ms": 0,
+   "cycle": {
+    "colors": [
+     "#2F8CFF",
+     "#FFFFFF",
+     "#FF4A1C",
+     "#FFE600"
+    ],
+    "step_ms": [
+     100,
+     300
+    ],
+    "phase": "char_index"
+   },
+   "font_hint": "둥근 굵은 글꼴(BMJUA 후보 — 미확정)",
+   "evidence": "j5D 0~2.55·22.2~24.1 나레 줄: 첫 프레임부터 전체, 글자색이 0.1~0.3초마다 돌아감(0.3~1.0 직접 확인)"
+  }
+ },
+ "STICKERS_new": {
+  "sprObjectPop": {
+   "label": "재료 3D 스티커",
+   "what": "강조 낱말(재료·제품)의 누끼 그림",
+   "place": "자막 왼쪽 아래 창 안 — x 캡션 왼끝 −40~+80px, y 캡션 아래 +40~+300px, 폭 약 260~300px",
+   "anim": {
+    "ms": 350,
+    "frames": [
+     {
+      "scale": "0.4",
+      "opacity": 0
+     },
+     {
+      "scale": "1.08",
+      "opacity": 1,
+      "offset": 0.7
+     },
+     {
+      "scale": "1"
+     }
+    ]
+   },
+   "life": "그 낱말 자막부터 같은 재료 이야기가 끝날 때까지(VbpdN 5.45초)",
+   "evidence": "VbpdN 18.5~23.95 땅콩버터 병+숟가락 · 21.0~23.95 바나나(2개 겹쳐 남음) · ASqF 17.9 비빔면 병"
+  },
+  "comicBurst": {
+   "label": "만화 번쩍·별",
+   "what": "빨강·노랑·분홍·흰 번쩍/별/느낌표 조각 3~6개",
+   "place": "자막 둘레 무작위",
+   "anim": "0.1~0.2초마다 자리 바꾸며 깜빡, 글자는 0.3초 간격 1.0→1.12→1.0 팝",
+   "evidence": "j5D 6.9~9.6 · r5XN 9.3~11.35"
+  }
+ },
+ "rules": {
+  "narr_vs_orig": "자막 줄의 화자가 나레면 slots.narr(타이핑), 원음이면 즉시 — 판정 주인은 대본(줄 kind)",
+  "emph_color": "강조 낱말 색 = 그 사물 색(땅콩버터 #AD4406 · 바나나 #FBE20C · 말돈 #30A7FB · 꿀 #FB862B · 숫자 '20개씩' #FEFD02) — 돌림 규칙 아님",
+  "piece_chars": "한 조각 공백 빼고 ≤15자",
+  "gap_between_pieces_ms": 100
+ }
+}
