@@ -465,7 +465,8 @@ def scene_marks(beat, piece, caption):
       beat["emph"]          핵심 단어 [문자열 | {"word","color"?,"grow"?}] — 구절마다 그 낱말이 있으면 칠한다.
       beat["caption_marks"] 구절별(caption_lines 순서) [{"speaker"?,"variant"?,"emph"?,"sticker"?}] — 있으면 비트 값보다 이긴다.
       beat["chars"]         글자 정렬 [{"char","start"}] — _attach_scene_chars 가 장면 글자 시각으로 옮긴다.
-    장면에 붙는 값: speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
+      beat["stickers"] / caption_marks[k]["stickers"]  2단계 스티커 [{kind, word?, x?,y?,r?, text?, likes?, src?, hold?}] — _sticker 가 정리.
+    장면에 붙는 값: stickers=[{kind,w?,x?,y?,r?,text?,likes?,src?,hold?,cont?}] · speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
     어절 번호 = 자막 글을 띄어쓰기로 나눈 순서(편집기 splitCaptionWords 와 같다). 낱말은 어절 안에 들어 있으면 맞는다('성시경' ⊂ '성시경이').
     자료가 없으면 빈 dict — 고객 작업 장면은 종전과 글자 하나 다르지 않다."""
     marks = beat.get("caption_marks")
@@ -498,7 +499,66 @@ def scene_marks(beat, piece, caption):
         group += 1
     if emph:
         out["emph"] = sorted(emph, key=lambda m: m["w"])
+    stickers = [st for st in (_sticker(item, tokens) for item in (own.get("stickers", beat.get("stickers")) or [])) if st]
+    if stickers:
+        out["stickers"] = stickers
     return out
+
+
+STICKER_KINDS = ("gem", "spark_lines", "circle_arrow", "kk_doodle", "comment_card", "object_pop")   # 2단계 스티커(관제 235) — 그림은 편집기 renderStickers
+_DATA_URI_CACHE = {}
+
+
+def _sticker(item, tokens):
+    """스티커 한 개 정리. {"kind", "word"?(붙을 낱말), "x","y","r"?(화면 %, circle_arrow), "text","likes"?(comment_card),
+    "src"?(object_pop 누끼 그림 — 로컬 파일이면 data: 주소로 바꿔 싣는다), "hold"?(초 | "beat")}. 모르는 kind 는 버린다."""
+    if not isinstance(item, dict) or item.get("kind") not in STICKER_KINDS:
+        return None
+    st = {"kind": item["kind"]}
+    want = [_word_key(p) for p in str(item.get("word") or "").split() if _word_key(p)]
+    if want:
+        at = next((i for i in range(len(tokens) - len(want) + 1) if all(w and w in tokens[i + j] for j, w in enumerate(want))), None)
+        if at is not None:
+            st["w"] = at + len(want) - 1          # 여러 어절 낱말이면 마지막 어절 옆
+    for key in ("x", "y", "r", "likes"):
+        if isinstance(item.get(key), (int, float)):
+            st[key] = float(item[key])
+    if item.get("text"):
+        st["text"] = str(item["text"])[:120]
+    hold = item.get("hold")
+    if hold == "beat" or isinstance(hold, (int, float)):
+        st["hold"] = hold
+    src = str(item.get("src") or "")
+    if src and not src.startswith(("data:", "http://", "https://", "/")):
+        path = Path(src)
+        if path.exists():
+            if src not in _DATA_URI_CACHE:
+                import base64, mimetypes
+                mime = mimetypes.guess_type(path.name)[0] or "image/png"
+                _DATA_URI_CACHE[src] = f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
+            src = _DATA_URI_CACHE[src]
+        else:
+            print(f"[scene_style] 스티커 그림 없음: {src}", file=sys.stderr); src = ""
+    if src:
+        st["src"] = src
+    if st["kind"] == "object_pop" and not src:
+        return None
+    return st
+
+
+def _spread_stickers(scenes):
+    """오래 머무는 스티커(hold: 초 | 'beat')를 뒤 장면에도 싣는다 — 등장은 처음 장면에서만(cont=True 면 등장 없이 처음부터 보인다).
+    장면 레이어는 장면마다 따로 그리므로, 걸쳐 있는 장면마다 같은 스티커가 있어야 끊기지 않는다(댓글 카드 2~6초 · 3D 재료 '그 재료 이야기 끝까지')."""
+    for i, sc in enumerate(scenes):
+        for st in [x for x in sc.get("stickers") or [] if not x.get("cont") and "hold" in x]:
+            until = None if st["hold"] == "beat" else float(sc["start"]) + float(st["hold"])
+            for nxt in scenes[i + 1:]:
+                if (until is None and nxt.get("beat_idx") != sc.get("beat_idx")) or (until is not None and float(nxt["start"]) >= until - 1e-6):
+                    break
+                copy = {k: v for k, v in st.items() if k not in ("w", "hold")}
+                copy["cont"] = True
+                nxt.setdefault("stickers", []).append(copy)
+    return scenes
 
 
 def overlay_spans(scenes, layers, folder):
@@ -578,7 +638,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
-    scenes = attach_scene_words(_absorb_tiny_gaps(scenes), timeline)
+    scenes = _spread_stickers(attach_scene_words(_absorb_tiny_gaps(scenes), timeline))
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
         # ★제목이 비면 **대본의 제목 줄(첫 문장)**을 쓴다. AI 후보(ai_copy)는 그 줄이

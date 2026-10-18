@@ -1147,7 +1147,77 @@
     });
     return [...el.querySelectorAll('.cap-c')];
   }
-  function runCaptionEnter(options){
+  // ── 2단계 스티커(관제 235) — 장면 자료 scene.stickers(주인 서버 scene_style._sticker·_spread_stickers)를 그린다.
+  //   renderStickers = 다 나온 그림(정지·캡컷·썸네일이 이 그림) / runStickers = 등장·반짝임(렌더러가 captionEnterAt 으로 프레임마다 찍는다).
+  //   크기·자리는 1080 폭 기준 px(벤치 실측) × 지금 화면 배율. cont = 앞 장면에서 이어지는 스티커(등장 없이 처음부터).
+  let stickerSeq=0;
+  const STICKER_SVG={
+    gem:id=>`<svg viewBox="0 0 100 90" width="100%" height="100%" style="overflow:visible"><defs><clipPath id="${id}"><polygon points="20,0 80,0 100,30 50,90 0,30"/></clipPath></defs><polygon points="20,0 50,30 0,30" fill="#B3E5FC"/><polygon points="20,0 80,0 50,30" fill="#E1F5FE"/><polygon points="80,0 100,30 50,30" fill="#81D4FA"/><polygon points="0,30 50,30 50,90" fill="#29B6F6"/><polygon points="50,30 100,30 50,90" fill="#0288D1"/><g clip-path="url(#${id})"><g transform="rotate(-35 50 45)"><rect class="stk-shine cap-u" x="-60" y="-40" width="18" height="170" fill="#FFFFFF"/></g></g><polygon points="20,0 80,0 100,30 50,90 0,30" fill="none" stroke="#0D47A1" stroke-width="3" stroke-linejoin="round"/></svg>`,
+    spark_lines:()=>{const L='<line x1="6" y1="20" x2="40" y2="6"/><line x1="8" y1="32" x2="48" y2="32"/><line x1="6" y1="44" x2="40" y2="58"/>';return `<svg viewBox="0 0 60 64" width="100%" height="100%" style="overflow:visible"><g stroke-linecap="round"><g stroke="#111" stroke-width="10">${L}</g><g stroke="#FFFFFF" stroke-width="5">${L}</g></g></svg>`},
+    thumb:down=>`<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" style="vertical-align:-.25em${down?';transform:scaleY(-1)':''}"><path d="M7 10v11H3V10h4zm2 11h8.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 19 10h-5l.8-4.2A1.6 1.6 0 0 0 13.2 4L9 10v11z" fill="none" stroke="#0F0F0F" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  };
+  function renderStickers(text){
+    layer.querySelectorAll('.cap-stk').forEach(e=>e.remove());
+    const sc=sceneContext?.scenes?.[sceneIndex],list=(sc?.stickers||[]).filter(s=>s&&s.kind);if(!list.length||!text||text.hidden)return;
+    const L=layer.getBoundingClientRect(),k=L.width/1080||1,fs=parseFloat(getComputedStyle(text).fontSize)||40;
+    splitCaptionWords(text);const words=[...text.querySelectorAll('.wfx-w')],range=document.createRange();range.selectNodeContents(text);const ink=range.getBoundingClientRect();
+    const box=(el,x,y,w,h)=>Object.assign(el.style,{position:'absolute',left:(x/L.width*100)+'%',top:(y/L.height*100)+'%',width:(w/L.width*100)+'%',height:h==null?'auto':(h/L.height*100)+'%',pointerEvents:'none',zIndex:'3'});
+    let pops=0;
+    [...list.filter(s=>s.cont),...list.filter(s=>!s.cont)].forEach(s=>{
+      const el=document.createElement('div');el.className='cap-stk cap-u';el.dataset.kind=s.kind;if(s.cont)el.dataset.cont='1';
+      const wr=Number.isInteger(s.w)&&words[s.w]?words[s.w].getBoundingClientRect():ink,wx=wr.left-L.left,wy=wr.top-L.top;
+      if(s.kind==='gem'){   // 하늘 다이아(키치잇 BRa 15.9) — 글자 1.5배, 강조 낱말 옆 세로 가운데
+        //   낱말이 줄 가운데에 있으면 옆 글자를 덮으므로 자막 줄 바깥 끝(낱말이 있는 쪽)에 붙인다 — 벤치 BRa '너~무 부내나💎'도 줄 끝
+        const h=fs*1.5,w=h*100/90,ix=ink.left-L.left,iw=ink.width,onRight=wx+wr.width/2>=ix+iw/2||ix-fs*.12-w<4,right=onRight&&ix+iw+fs*.12+w<=L.width-4;
+        box(el,right?ix+iw+fs*.12:ix-fs*.12-w,wy+wr.height/2-h/2,w,h);el.innerHTML=STICKER_SVG.gem(`stkgem${++stickerSeq}`);
+      }else if(s.kind==='spark_lines'){   // 흰 짧은 선 셋(키치잇 Cs-Ka 9.9) — 낱말 오른쪽 위 45°
+        //   줄 끝 낱말이면 오른쪽으로 뻗고(벤치 Cs-Ka 10.2 '똑'), 뒤에 글자가 있으면 그 글자를 덮지 않게 낱말 오른쪽 위로 45° 세운다(보강안 '오른쪽 위 45°')
+        const z=fs*1.0,last=!Number.isInteger(s.w)||s.w>=words.length-1;
+        if(last)box(el,wx+wr.width+fs*.06,wy+wr.height/2-z*.53,z,z*64/60);
+        else{box(el,wx+wr.width-z*.35,wy-z*.95,z,z*64/60);el.style.rotate='-45deg';el.style.transformOrigin='0% 50%';}
+        el.innerHTML=STICKER_SVG.spark_lines();
+      }else if(s.kind==='kk_doodle'){   // 'ㅋㅋㅋ' 흰 손글씨 + 초록 짧은 선(키치잇 _Wa 12.5) — 자막 왼쪽 위
+        box(el,ink.left-L.left-fs*.6,ink.top-L.top-fs*1.6,fs*4,null);
+        el.innerHTML=`<span style="display:inline-block;font:400 ${fs*1.8}px 'BMJUA',sans-serif;color:#FFFFFF;-webkit-text-stroke:${fs*.05}px #111;paint-order:stroke fill;transform:rotate(-10deg);white-space:nowrap">ㅋㅋㅋ</span><svg viewBox="0 0 30 30" style="position:absolute;left:-${fs*.45}px;top:${fs*.05}px;width:${fs*.45}px;height:${fs*.45}px;overflow:visible"><g stroke="#2ED15A" stroke-width="4" stroke-linecap="round"><line x1="22" y1="6" x2="10" y2="0"/><line x1="22" y1="15" x2="4" y2="15"/><line x1="22" y1="24" x2="10" y2="30"/></g></svg>`;
+      }else if(s.kind==='circle_arrow'){   // 빨간 원 + 화살표(키치잇 Cs-Ka 0.47) — 영상 속 제품 둘레, 자리는 장면 자료(화면 %)
+        const cx=(s.x??50)/100*1080,cy=(s.y??50)/100*1920,r=(s.r??12)/100*1080,ax=cx-r*.72,ay=cy-r*.72;
+        box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        el.innerHTML=`<svg viewBox="0 0 1080 1920" width="100%" height="100%" preserveAspectRatio="none"><circle class="stk-ring cap-u" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#FF1E1E" stroke-width="8" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/><g class="stk-arrow cap-u"><g transform="translate(${ax} ${ay}) rotate(-45) scale(1.5)"><polygon points="0,0 -34,-30 -12,-30 -12,-110 12,-110 12,-30 34,-30" fill="#FF1E1E"/></g></g></svg>`;
+      }else if(s.kind==='comment_card'){   // 유튜브 댓글 카드(꿀템노트 m0E·KCx) — 아래변 y≈1505, 가운데, 폭 = 글+44(≤960), 높이 142
+        const H=142*k;el.style.zIndex='2';
+        Object.assign(el.style,{position:'absolute',left:'50%',top:((1505*k-H)/L.height*100)+'%',translate:'-50% 0',maxWidth:(960*k)+'px',height:H+'px',boxSizing:'border-box',padding:`${22*k}px ${22*k}px`,background:'#FFFFFF',borderRadius:(14*k)+'px',pointerEvents:'none',font:`400 ${30*k}px 'Pretendard',sans-serif`,color:'#0F0F0F',whiteSpace:'nowrap',overflow:'hidden'});
+        const likes=Number.isFinite(s.likes)?String(Math.round(s.likes)):'';
+        el.innerHTML=`<div style="overflow:hidden;text-overflow:ellipsis">${String(s.text||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div><div style="margin-top:${14*k}px;color:#606060;font-size:${26*k}px;display:flex;gap:${18*k}px;align-items:center">${STICKER_SVG.thumb(false)}<span>${likes}</span>${STICKER_SVG.thumb(true)}<span style="color:#0F0F0F">답글</span></div>`;
+      }else if(s.kind==='object_pop'&&s.src){   // 3D 재료 누끼(스타픽룸 VbpdN 18.5) — 자막 왼쪽 아래 창 안, 폭 280, 둘째부터 옆으로 겹쳐 쌓임
+        const w=280*k,x=(s.x!=null?s.x/100*L.width:180*k)+pops*150*k,y=(s.y!=null?s.y/100*L.height:ink.bottom-L.top+40*k)+pops*30*k;pops++;   // 기본 = x180 · 자막 아래 +40(스타픽룸 실측 '자막 아래 +40~+300')
+        box(el,x,y,w,null);el.innerHTML=`<img src="${s.src}" style="display:block;width:100%;height:auto;filter:drop-shadow(0 ${6*k}px ${8*k}px rgba(0,0,0,.45))">`;
+      }else return;
+      layer.insertBefore(el,badge);
+    });
+  }
+  function runStickers(options){
+    const seeking=options&&typeof options==='object'&&Number.isFinite(options.time),els=[...layer.querySelectorAll('.cap-stk')];
+    els.forEach(el=>[el,...el.querySelectorAll('.cap-u')].forEach(e=>e.getAnimations().forEach(a=>a.cancel())));
+    if(!els.length||(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches)))return 0;
+    const sc=sceneContext?.scenes?.[sceneIndex],sceneMs=sc?Math.max(1,(sc.end-sc.start)*1000):3000,go=(a,loop)=>{if(seeking){a.pause();a.currentTime=options.time;}else if(!loop)a.finished.then(()=>a.cancel()).catch(()=>{});return a};
+    let total=0;
+    const POP=(window.CAPTION_MOTIONS?.overPop?.frames||[]).map(f=>({offset:f.offset,scale:f.scale}));
+    els.forEach(el=>{
+      const kind=el.dataset.kind,fresh=el.dataset.cont!=='1';
+      if(kind==='gem'){const shine=el.querySelector('.stk-shine');if(shine){go(shine.animate([{transform:'translateX(0px)'},{transform:'translateX(200px)'}],{duration:400,iterations:Infinity,easing:'linear'}),true);total=Math.max(total,sceneMs-1);}
+        if(fresh){el.style.transformOrigin='50% 50%';go(el.animate(POP.length?POP:[{scale:'0'},{scale:'1'}],{duration:300,easing:'linear',fill:'both'}));total=Math.max(total,300);}}
+      else if(!fresh)return;
+      else if(kind==='spark_lines'||kind==='kk_doodle'){go(el.animate([{opacity:0},{opacity:.5,offset:.5},{opacity:1}],{duration:66,easing:'linear',fill:'both'}));total=Math.max(total,66);}
+      else if(kind==='circle_arrow'){const ring=el.querySelector('.stk-ring'),arrow=el.querySelector('.stk-arrow');
+        if(ring)go(ring.animate([{strokeDashoffset:'100'},{strokeDashoffset:'0'}],{duration:200,easing:'linear',fill:'both'}));
+        if(arrow)go(arrow.animate([{opacity:0,transform:'translate(-90px,-90px)'},{opacity:1,transform:'translate(0px,0px)'}],{duration:250,easing:'cubic-bezier(.2,.9,.3,1)',fill:'both'}));total=Math.max(total,250);}
+      else if(kind==='object_pop'){el.style.transformOrigin='50% 50%';go(el.animate([{scale:'0.4',opacity:0},{scale:'1.08',opacity:1,offset:.7},{scale:'1',opacity:1}],{duration:350,easing:'linear',fill:'both'}));total=Math.max(total,350);}
+    });
+    return Math.ceil(total);
+  }
+  // 자막 등장 + 스티커 등장(관제 235) — 렌더러·편집기는 이 하나를 부른다. 스티커가 없으면 자막 등장 그대로(종전 값).
+  function runCaptionEnter(options){const a=captionEnterCore(options),b=runStickers(options);return b?Math.max(a,b):a}
+  function captionEnterCore(options){
     const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
     const motion=captionMotionNow();if(!motion)return 0;
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
@@ -1932,6 +2002,7 @@
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
     emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
+    renderStickers(layer.querySelector('.precision-text[data-edit-bind="caption"]'));   // 2단계 스티커(관제 235) — 다 나온 그림. 장면 자료에 스티커가 없으면 아무것도 안 그린다
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
   //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고

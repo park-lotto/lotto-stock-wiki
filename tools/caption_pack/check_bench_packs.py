@@ -43,7 +43,8 @@ def norm_rows(pack, table):
             row = {"line": r["line"], "t0": r["t0"], "t1": r["t1"], "text": r["text"], "speaker": "narr" if r["kind"] == "나레" else "orig",
                    "emph": [{"word": r["emph"]}] if r.get("emph") else [],     # ★색은 안 싣는다 — 팩의 5색 돌림이 자막표와 같은 색을 내는지 잰다
                    "want_hex": [r["emph_hex"]] if r.get("emph_hex") else [], "variant": "typing" if r.get("typing") else "",
-                   "sticker": r.get("sticker") or "", "enter_pop": r.get("enter") == "pop", "typing": bool(r.get("typing"))}
+                   "sticker": r.get("sticker") if r.get("sticker") == "heart" else "", "enter_pop": r.get("enter") == "pop", "typing": bool(r.get("typing")),
+                   "stickers": [{"kind": r["sticker"], "word": r.get("emph") or ""}] if r.get("sticker") in ("gem", "spark_lines") else []}
             if row["typing"]:   # 원음 타이핑 = 0.1초마다 한 글자(벤치 BRa 8.0~8.9 실측), 줄이 짧으면 줄 안에 들어오게
                 n = len(row["text"].replace(" ", "")); step = min(.1, (r["t1"] - r["t0"]) * .8 / max(1, n))
                 row["chars"] = [round(r["t0"] + k * step, 3) for k in range(n)]
@@ -87,7 +88,7 @@ def rows_to_timeline(rows, tts, total=None):
         beats.append({"beat_idx": i, "t0": t0, "dur": round(t1 - t0, 3), "narration": " ".join(r["text"] for r in ln),
                       "caption_lines": [r["text"] for r in ln], "cap_durs": durs, "cap_lead": round(lead, 3), "tts_path": str(tts),
                       "target_seconds": round(t1 - t0, 3), "role": "body", "primary": {"video_id": "s0", "start": t0, "end": t1},
-                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"])) if v}
+                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"]), ("stickers", r.get("stickers"))) if v}
                                         for r in ln],
                       **({"chars": chars} if chars else {})})
     return beats
@@ -318,6 +319,136 @@ RUNNING = """()=>{const t=document.querySelector('.precision-text[data-edit-bind
   return [t,...t.querySelectorAll('.cap-u')].reduce((n,e)=>n+e.getAnimations().filter(a=>a.playState==='running').length,0)}"""
 
 
+STK = {"gem": ["#29B6F6", "#0288D1", "#81D4FA"], "gem_edge": ["#0D47A1"], "red": ["#FF1E1E"], "green": ["#2ED15A"]}
+
+
+def cbox(im, hexes, tol=18):
+    """그 색(±tol) 점들의 상자와 개수(2px 간격 표본)."""
+    px = im.load(); want = [tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)) for h in hexes]
+    xs, ys = [], []
+    for y in range(0, im.size[1], 2):
+        for x in range(0, im.size[0], 2):
+            c = px[x, y]
+            if c[3] > 200 and any(all(abs(c[j] - w[j]) <= tol for j in range(3)) for w in want):
+                xs.append(x); ys.append(y)
+    return ((min(xs), min(ys), max(xs) + 2, max(ys) + 2) if xs else None), len(xs)
+
+
+def sticker_check(out, need, tts):
+    """⑦ 2단계 스티커 — 키치잇 팩 장면에 스티커 6종을 실어 렌더하고 자리·크기·움직임·이어짐·캡컷·썸네일을 잰다(수치 = 세 보강안)."""
+    d = out / "_stickers"; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True, exist_ok=True)
+    src = d / "obj.png"   # 누끼 견본(하이브리드는 실제 누끼 PNG 를 src 로 준다)
+    im = Image.new("RGBA", (300, 360), (0, 0, 0, 0)); dr = ImageDraw.Draw(im)
+    dr.rounded_rectangle((70, 60, 230, 350), 40, fill=(170, 110, 40, 255), outline=(90, 50, 10, 255), width=8); dr.rectangle((110, 10, 190, 70), fill=(40, 120, 40, 255))
+    im.save(src)
+    R = lambda line, t0, t1, text, **kw: {"line": line, "t0": t0, "t1": t1, "text": text, "speaker": "narr", "variant": "", "sticker": "", "emph": [], **kw}
+    rows = [R("A", 0, 1.5, "고급 그 자체", stickers=[{"kind": "gem", "word": "고급"}]),
+            R("B", 1.5, 3.0, "진짜 중국집 요리", stickers=[{"kind": "spark_lines", "word": "중국집"}]),
+            R("C", 3.0, 4.5, "이 가방 하나로 끝", stickers=[{"kind": "circle_arrow", "x": 50, "y": 45, "r": 20}]),
+            R("D", 4.5, 6.0, "오 마이 갓", stickers=[{"kind": "kk_doodle"}]),
+            R("E", 6.0, 7.5, "댓글 반응이 난리", stickers=[{"kind": "comment_card", "text": "표고에 어묵에 바지락살 들어간 순간 이미 다른 요리임", "likes": 286, "hold": 2.2}]),
+            R("E", 7.5, 9.0, "다음 줄도 카드 그대로"),
+            R("F", 9.0, 10.5, "땅콩버터 한 스푼", stickers=[{"kind": "object_pop", "src": str(src), "hold": "beat"}]),
+            R("F", 10.5, 12.0, "바나나도 넣어요", stickers=[{"kind": "object_pop", "src": str(src), "hold": "beat"}]),
+            R("G", 12.0, 13.5, "끝 장면")]
+    tl = rows_to_timeline(rows, tts, 13.5); snap = snapshot("kitchit")
+    ctx = scene_style.context_for(tl, {"text": "x"}, snap, None); idx = [i for i, s in enumerate(ctx["scenes"]) if s["caption"]]
+    lay = scene_style.render_layers(tl, snap, d / "L", {"text": "x"}, "bench"); L = d / "L"
+    still = lambda k: img(L / lay[idx[k]]["file"])
+    def frame(k, f):
+        a = lay[idx[k]]["animation"]
+        return img(L / a["pattern"].replace("%04d", str(min(f, a["count"] - 1)).zfill(4)))
+    cap_box = lambda k: ink_box(still(k).crop((0, 1300, 1080, 1405)))   # 자막 줄(키치잇 자리 y1351 ±50)만 — 스티커는 빼고
+    def cap_abs(k):
+        b = cap_box(k); return (b[0], b[1] + 1300, b[2], b[3] + 1300)
+    # 💎 다이아: 글자 1.5배 · 낱말 옆 · 팝 곡선 · 반짝 띠가 0.4초마다
+    b, n = cbox(still(0), STK["gem_edge"], 30); cb, _ = cbox(still(0), ["#FFFFFF"], 8)   # 자막 = 흰 글자 점(다이아는 흰색이 아니다)   # 다이아 테두리 색(반짝 띠가 덮어도 늘 보인다)
+    fs = 93.6 * PACKS["kitchit"]["size"] / 100   # 자막 글자 크기(plain 본문 93.6px × 팩 크기)
+    h_ratio = (b[3] - b[1]) / fs if b else 0
+    need(bool(b) and 1.25 <= h_ratio <= 1.65 and (b[0] >= cb[2] - 10 or b[2] <= cb[0] + 10) and abs((b[1] + b[3]) / 2 - (cb[1] + cb[3]) / 2) < 30,
+         f"⑦ 💎 다이아: 상자 {b} · 높이/자막 줄 잉크 {h_ratio:.2f}· 글자 {fs:.0f}px 의 {h_ratio:.2f}배(보강안 1.5) · 자막 {cb} 바깥 끝(옆 글자 안 덮음)·세로 가운데")
+    hs = []
+    for f in range(10):
+        bb, _ = cbox(frame(0, f), STK["gem_edge"], 30); hs.append(round(((bb[3] - bb[1]) / (b[3] - b[1])) if bb else 0, 3))
+    exp = [round(curve("overPop", f / 30 * 1000 * 433 / 300), 3) for f in range(10)]
+    bad = [(f, hs[f], exp[f]) for f in range(10) if exp[f] > .15 and abs(hs[f] - exp[f]) > .07]
+    need(not bad, f"⑦ 💎 등장 팝 0.3초 크기 {hs} vs 곡선 {exp} (어긋남 {bad})")
+    def shine(f):
+        im = frame(0, f).crop(b); px = im.load()
+        xs = [x for y in range(im.size[1]) for x in range(im.size[0]) if px[x, y][3] > 200 and min(px[x, y][:3]) > 245]
+        return round(sum(xs) / len(xs)) if len(xs) > 20 else None
+    sh = [shine(f) for f in (15, 17, 19, 27)]
+    need(None not in sh[:3] and len(set(sh[:3])) == 3 and sh[3] is not None and abs(sh[0] - sh[3]) <= 3,
+         f"⑦ 💎 흰 반짝 띠가 움직이고 0.4초(12프레임)마다 같은 자리(프레임 15·17·19·27 띠 가운데 x {sh})")
+    # 강조선: 낱말 오른쪽 위 · 2프레임 번쩍
+    cb = cap_abs(1); top = lambda im: im.crop((cb[0], cb[1] - 110, cb[2], cb[1] - 20))   # '중국집' 뒤에 글자가 있어 선은 자막 줄 위로(오른쪽 위 45°) — 자막 줄 위 띠만 잰다
+    bb = ink_box(top(still(1))); a0, a2 = alpha_sum(top(frame(1, 0))), alpha_sum(top(frame(1, 2)))
+    need(bool(bb) and a0 < a2 * .2, f"⑦ 강조선: 낱말 오른쪽에 그려짐 {bb} · 첫 프레임 잉크 {a0} → 2프레임 {a2}")
+    # 빨간 원 + 화살표: 원 자리·반지름(x50% y45% r20%) · 0.2초 그려짐
+    b, n = cbox(still(2), STK["red"])
+    reds = [cbox(frame(2, f), STK["red"])[1] for f in range(8)]
+    need(bool(b) and abs(b[2] - 756) <= 14 and abs(b[3] - 1080) <= 14 and reds[1] < reds[3] < reds[6],
+         f"⑦ 빨간 원: 오른쪽·아래 끝 ({b and b[2]},{b and b[3]}) = 원 (760,1084) ±14 · 빨간 점 프레임별 {reds}")
+    # ㅋㅋㅋ: 자막 왼쪽 위 초록 선 · 번쩍
+    cb = cap_abs(3); b, n = cbox(still(3), STK["green"]); g0 = cbox(frame(3, 0), STK["green"])[1]
+    need(bool(b) and b[2] <= cb[0] + 80 and b[3] <= cb[1] + 30 and g0 < max(1, n) * .3, f"⑦ ㅋㅋㅋ: 초록 선 {b} · 자막 {cb} 왼쪽 위 · 첫 프레임 {g0}/{n}")
+    # 댓글 카드: 아래변 1505 · 높이 142 · 가운데 · 다음 장면도 · 2.2초 뒤엔 없음
+    def card(im):   # 아래 여백 줄(y1500)에서 가로 끝을 찾고, 왼쪽 여백 세로줄로 위끝을 잰다(글자에 안 걸리게)
+        px = im.load(); W = lambda x, y: px[x, y][3] > 250 and min(px[x, y][:3]) > 245
+        xs = [x for x in range(1080) if W(x, 1500)]
+        if not xs: return None
+        x0, x1 = min(xs), max(xs); y1 = 1500
+        while y1 + 1 < 1920 and W(x0 + 6, y1 + 1): y1 += 1
+        y0 = 1500
+        while y0 - 1 > 0 and W(x0 + 6, y0 - 1): y0 -= 1
+        return (x0, y0, x1, y1)
+    c4, c5, c6 = card(still(4)), card(still(5)), card(still(6))
+    need(bool(c4) and abs(c4[3] - 1505) <= 6 and abs((c4[3] - c4[1] + 1) - 142) <= 8 and abs((c4[0] + c4[2]) / 2 - 540) <= 6 and bool(c5) and all(abs(a - b_) <= 3 for a, b_ in zip(c4, c5)) and not c6,
+         f"⑦ 댓글 카드: {c4} 아래변 1505·높이 142·가운데 · 다음 장면 {c5} · 2.2초 뒤 없음 {not c6}")
+    # 3D 재료: x≈180 · 폭 280 · 팝 .4→1.08→1 · 같은 줄 다음 장면에 이어지고 둘째는 옆으로
+    zone = lambda im: im.crop((0, 1150, 1080, 1919))
+    def obj(im):   # 갈색 병 그림(자막 글자 빼고)
+        bb, _ = cbox(im, ["#AA6E28"], 20); return bb
+    o6, o7 = obj(still(6)), obj(still(7))
+    ws = []
+    for f in range(11):
+        bb = obj(frame(6, f)); ws.append(round((bb[2] - bb[0]) / (o6[2] - o6[0]), 3) if bb and o6 else 0)
+    need(bool(o6) and abs(o6[0] - (180 + 70 * 280 / 300)) <= 30 and o6[1] >= cap_abs(6)[3] and abs((o6[2] - o6[0]) - 160 * 280 / 300) <= 20 and max(ws) >= 1.04 and ws[1] < .8,
+         f"⑦ 3D 재료: 병 상자 {o6}(그림 x180·폭280 안 병 x≈245·폭≈150) · 팝 폭 비율 {ws}")
+    need(bool(o7) and (o7[2] - o7[0]) >= (o6[2] - o6[0]) + 120, f"⑦ 3D 재료: 같은 줄 다음 장면에 이어지고 둘째가 옆에 쌓임(병 폭 {o6 and o6[2] - o6[0]} → {o7 and o7[2] - o7[0]})")
+    # 캡컷·썸네일
+    spans = scene_style.overlay_spans(ctx["scenes"], lay, L); bad = []
+    for k in range(8):
+        sc = ctx["scenes"][idx[k]]; sp = [s for s in spans if sc["start"] - 1e-6 <= s["start"] < sc["end"] - 1e-6]
+        a = lay[idx[k]].get("animation"); ref = frame(k, a["count"] - 1) if a else still(k)
+        if not sp or alpha_sum(img(sp[-1]["path"])) < alpha_sum(ref) * .97: bad.append(k)
+    need(not bad, f"⑦ 캡컷 그림에 스티커까지 다 나옴(어긋남 장면 {bad})")
+    for k in (0, 2, 4, 6):
+        p = scene_style.render_layer_one(tl, snap, d / f"t{k}", idx[k], {"text": "x"}, "bench"); th = img(p); st = still(k)
+        h = hard_diff(th, st) + hard_diff(st, th); need(h == 0, f"⑦ 썸네일 장면 {k}({rows[k]['stickers'][0]['kind']}) = 정지 그림(진한 차이 {h})")
+    # 시트: 정지 8장 + 다이아·원·3D 등장 프레임
+    bench = []
+    for rel, t in (("kitchit/src/BRa5Iv4A3Y8.mp4", 16.3), ("kitchit/src/Cs-Ka_S8nDM.mp4", 10.2), ("kitchit/src/Cs-Ka_S8nDM.mp4", 0.5), ("kitchit/src/_Wa4IehA6yE.mp4", 12.5),
+                   ("kkultemnote/src/m0Ex0y1DN5s.mp4", 3.0), ("starpickroom/src/VbpdNba182M.mp4", 19.5)):
+        if (BENCH / rel).exists():
+            va._run_ffmpeg(["ffmpeg", "-y", "-ss", str(t), "-i", str(BENCH / rel), "-frames:v", "1", str(d / "_b.png")])
+            bench.append(Image.open(d / "_b.png").convert("RGBA").resize((1080, 1920)))
+    shots = [("벤치: 💎 BRa 16.3 · 강조선 Cs-Ka 10.2 · 빨간 원 Cs-Ka 0.5 · ㅋㅋㅋ _Wa 12.5(이 프레임엔 안 보임) · 댓글 카드 m0E 3.0 · 3D 재료 VbpdN 19.5", bench),
+             ("우리 정지: 💎 · 강조선 · 빨간 원 · ㅋㅋㅋ · 댓글 카드 · (이어짐) · 3D 재료 · (쌓임)", [still(k) for k in range(8)]), ("💎 0·2·4·8·12·14프레임", [frame(0, f) for f in (0, 2, 4, 8, 12, 14)]),
+             ("빨간 원 0·2·4·6 / 3D 0·3·7·10", [frame(2, f) for f in (0, 2, 4, 6)] + [frame(6, f) for f in (0, 3, 7, 10)])]
+    try:
+        font = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 22)
+    except OSError:
+        font = ImageFont.load_default()
+    W = 270 * 8; sheet = Image.new("RGB", (W, (480 + 30) * len(shots)), (16, 18, 22)); dr = ImageDraw.Draw(sheet); y = 0
+    for title, ims in shots:
+        dr.text((8, y + 3), title, fill=(240, 240, 240), font=font); y += 30
+        for j, im in enumerate(ims):
+            bg = Image.new("RGBA", (1080, 1920), (70, 90, 110, 255)); bg.alpha_composite(im); sheet.paste(bg.convert("RGB").resize((270, 480)), (j * 270, y))
+        y += 480
+    sheet.save(out / "stickers_시트.jpg", quality=88); print(f"  시트 {out / 'stickers_시트.jpg'}")
+
+
 def editor_check(pack, ctx, need):
     from playwright.sync_api import sync_playwright
     snap = {**snapshot(pack)}; snap.pop("captionPack"); snap["wordFx"] = {"style": "", "color": "", "grow": ""}
@@ -437,11 +568,19 @@ def sheet(pack, rows, ctx, idx, layers, L, final, out, report):
 if __name__ == "__main__":
     args = sys.argv[1:]
     compose = "--no-compose" not in args; args = [a for a in args if a != "--no-compose"]
-    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
+    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick", "stickers") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
     OUT.mkdir(parents=True, exist_ok=True)
-    packs = args[0].split(",") if args else ["kitchit", "kkultemnote", "starpick"]
+    packs = args[0].split(",") if args else ["kitchit", "kkultemnote", "starpick", "stickers"]
     fails = []
     for p in packs:
+        if p == "stickers":   # ⑦ 2단계 스티커
+            def need(ok, msg):
+                print(("  통과  " if ok else "★ 실패  ") + "[스티커] " + msg)
+                if not ok: fails.append("[스티커] " + msg)
+            tts = OUT / "v.wav"
+            if not tts.exists():
+                va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
+            sticker_check(OUT, need, tts); continue
         if p not in PACKS:
             fails.append(f"계약 파일에 팩 {p} 없음"); print("★ 실패  계약 파일에 팩", p, "없음"); continue
         run(p, OUT, compose, fails)
