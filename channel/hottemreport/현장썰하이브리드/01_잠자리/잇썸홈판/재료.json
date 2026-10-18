@@ -1,0 +1,172 @@
+{
+ "_note": "1편 잠자리 뒤 화면 = 쿠팡 8639986165 상품평 사진만(coupang_media/8639986165/rv1080 → cp_rv_NN). 사진은 move(확대·이동)로 움직인다 — 사장님 10-18 '정지 장면이 많다, 이미지를 쓰려면 확대 효과든 계속 움직이는 걸'. 창 1080x1360(앞 틀 frame_render.json video 층).",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰하이브리드_01/src",
+ "B": [
+  {
+   "line": "B1",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_18.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "손에 든 잠자리 두 개(나무 배경)",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    2
+   ],
+   "src": "cp_rv_33.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "left",
+   "see": "포장 4개 + 손에 든 잠자리(받은 날)",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    3,
+    4
+   ],
+   "src": "cp_rv_62.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "매트 위 잠자리 한 마리 전체",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_04.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "손가락으로 옷핀 쪽을 든 잠자리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "cp_rv_29.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "right",
+   "see": "끈 고리를 손가락에 걸어 든 잠자리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    0,
+    1,
+    2
+   ],
+   "src": "cp_rv_66.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "out",
+   "see": "아이 텐트 앞에서 손에 든 두 마리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    3,
+    4
+   ],
+   "src": "cp_rv_47.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "아이 손으로 꽃나무에 단 잠자리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_10.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "빛 받아 반짝이는 날개",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    2
+   ],
+   "src": "cp_rv_19.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "right",
+   "see": "풀잎 위에 앉은 잠자리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    3
+   ],
+   "src": "cp_rv_23.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "풀숲에 섞여 진짜처럼 보이는 잠자리",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_48.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "아이 손에 든 잠자리(꽃 배경)",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "cp_rv_53.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "out",
+   "see": "꽃 위에 옷핀으로 단 잠자리 근접",
+   "face": "없음(손만)"
+  }
+ ]
+}

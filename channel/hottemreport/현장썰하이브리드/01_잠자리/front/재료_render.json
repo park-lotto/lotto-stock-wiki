@@ -1,0 +1,185 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰하이브리드/01_잠자리/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "prepperpress_7504767860275727658.mp4",
+   "ss": 20.36,
+   "cuts": [
+    {
+     "src": "prepperpress_7504767860275727658.mp4",
+     "ss": 20.36,
+     "dur": 2.834,
+     "block": "N1"
+    },
+    {
+     "src": "prepperpress_7504767860275727658.mp4",
+     "ss": 2.02,
+     "dur": 2.947,
+     "block": "O1",
+     "src_crop": [
+      0,
+      435,
+      1080,
+      1360
+     ]
+    },
+    {
+     "src": "prepperpress_7504767860275727658.mp4",
+     "ss": 8.688,
+     "dur": 7.062,
+     "block": "O2"
+    },
+    {
+     "src": "prepperpress_7504767860275727658.mp4",
+     "ss": 24.1,
+     "dur": 4.007,
+     "block": "N3"
+    },
+    {
+     "src": "mack.topa_7505881760635407621.mp4",
+     "ss": 2.01,
+     "dur": 5.558,
+     "block": "N4a",
+     "src_crop": [
+      131,
+      460,
+      818,
+      1030
+     ]
+    },
+    {
+     "src": "mack.topa_7505881760635407621.mp4",
+     "ss": 14.15,
+     "dur": 2.7,
+     "block": "O3",
+     "src_crop": [
+      131,
+      460,
+      818,
+      1030
+     ]
+    },
+    {
+     "src": "prepperpress_7504767860275727658.mp4",
+     "ss": 30.8,
+     "dur": 8.921,
+     "block": "N5"
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "pp",
+   "ss": 20.36,
+   "vs": 0.0,
+   "src_crop": null,
+   "why": "첫 프레임 = 제품: 풀밭 위 빨간 가짜 잠자리(20.3~22.5) → 가방에 꽂은 파란 잠자리들(22.53~)",
+   "ve": 2.834,
+   "src_end": 23.194
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "pp",
+   "ss": 2.02,
+   "vs": 2.834,
+   "src_crop": [
+    0,
+    435,
+    1080,
+    1360
+   ],
+   "why": "모자에 파란 잠자리 단 셀카 — 원음 'What's that idiot…'(자조)",
+   "ve": 5.781,
+   "src_end": 4.967,
+   "guard": "원본 컷 5.0 앞에서 끊음(−0.103초)"
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "N2",
+    "O2"
+   ],
+   "src": "pp",
+   "ss": 8.688,
+   "vs": 5.781,
+   "src_crop": null,
+   "why": "낚시 중 'bugs were out earlier, now they're gone'",
+   "ve": 12.843,
+   "src_end": 15.75
+  },
+  {
+   "block": "N3",
+   "covers": [
+    "N3"
+   ],
+   "src": "pp",
+   "ss": 24.1,
+   "vs": 12.843,
+   "src_crop": null,
+   "why": "본인이 찾아 인쇄한 종이 'Dragon Flies … Mosquitoes – one of their favorite'(23.5~30.17) — 나레 '모기를 잡아먹는 게 잠자리'의 근거 화면 · ss 24.1 = 종이가 화면에 다 들어온 뒤(23.6 이면 가방+종이 끝 0.5초, 2판 계획 시트)",
+   "ve": 16.85,
+   "src_end": 28.107
+  },
+  {
+   "block": "N4a",
+   "covers": [
+    "N4a"
+   ],
+   "src": "mt",
+   "ss": 2.01,
+   "vs": 16.85,
+   "src_crop": [
+    131,
+    460,
+    818,
+    1030
+   ],
+   "why": "다른 사람(@mack.topa) 집 앞(2.0~4.37) — N4 '숲길에서' 시작(19.235)에 숲길 장면(4.37~)이 오도록 맞춤(1판 시트: 숲길 말에 집 앞이 1.6초 보임)",
+   "ve": 22.408,
+   "src_end": 7.568
+  },
+  {
+   "block": "O3",
+   "covers": [
+    "O3"
+   ],
+   "src": "mt",
+   "ss": 14.15,
+   "vs": 22.408,
+   "src_crop": [
+    131,
+    460,
+    818,
+    1030
+   ],
+   "why": "'I see a bunch of mosquitoes, but they're not coming near me.'",
+   "ve": 25.108,
+   "src_end": 16.85
+  },
+  {
+   "block": "N5",
+   "covers": [
+    "N5"
+   ],
+   "src": "pp",
+   "ss": 30.8,
+   "vs": 25.108,
+   "src_crop": null,
+   "why": "셀카(모자 잠자리 가리킴) → 가방 초록 잠자리(32.57~) → 아들(33.7~)이 '아들도 하나 달았대요'(≈28.0)에 오도록 맞춤(1판: 아들 줄에 가방 화면)",
+   "ve": 34.029,
+   "src_end": 39.721
+  }
+ ]
+}

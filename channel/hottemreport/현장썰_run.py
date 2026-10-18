@@ -39,7 +39,7 @@ def main():
         (R / "narr.txt").write_text(txt, encoding="utf-8")
         root = H.parents[1]
         r = subprocess.run(["py", str(root / "tools/calcopy/engine/tts_pause.py"), str(R / "narr.txt"), str(R / "narr_full.mp3"),
-                            "--speed", str(S["voice"]["speed"])], cwd=str(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+                            "--speed", str(S["voice"]["speed"])] + (["--voice", S["voice"]["id"]] if S["voice"].get("id") else []), cwd=str(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
         print(r.stdout[-3000:], r.stderr[-1500:])
         js = [ln for ln in r.stdout.splitlines() if ln.strip().startswith("{") and '"pauses"' in ln]
         if r.returncode or not js:

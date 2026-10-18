@@ -349,8 +349,28 @@ def _lerp_expr(keys, idx):
     return f"if(lt(t,{keys[0][0]}),{keys[0][idx]},{e})"
 
 
+def still_move(src, src_crop, ar, dur: float, move) -> str:
+    """(판단 주인) 그림 파일 컷의 움직임 — 사장님 10-18 "정지 장면이 많다, 이미지를 쓰려면 확대 효과를 주든지 계속 움직이게".
+    move = "in"(천천히 다가감) · "out"(물러남) · "left"/"right"(살짝 확대한 채 옆으로 흐름) 또는 {"kind":…, "zoom":1.2}.
+    src_crop·ar 로 자른 뒤의 그림 크기 그대로 내보내므로 뒤 채우기(cover·box·contain)는 그대로 돈다. 2배로 키운 뒤 움직여 픽셀 떨림을 줄인다."""
+    from PIL import Image
+    mv = move if isinstance(move, dict) else {"kind": move}
+    kind, z1 = mv.get("kind", "in"), float(mv.get("zoom", 1.2))
+    iw, ih = Image.open(src).size
+    if src_crop:
+        iw, ih = src_crop[2], src_crop[3]
+    if ar:
+        iw, ih = min(iw, ih * ar), min(ih, iw / ar)
+    ow, oh = int(iw) // 2 * 2, int(ih) // 2 * 2
+    n = max(1, round(dur * FPS))
+    p = f"min(on/{n},1)"
+    z = {"in": f"1+{z1 - 1:.4f}*{p}", "out": f"{z1:.4f}-{z1 - 1:.4f}*{p}"}.get(kind, f"{z1:.4f}")
+    x = {"left": f"(iw-iw/zoom)*(1-{p})", "right": f"(iw-iw/zoom)*{p}"}.get(kind, "(iw-iw/zoom)/2")
+    return f"scale={ow * 2}:{oh * 2},zoompan=z='{z}':x='{x}':y='(ih-ih/zoom)/2':d=1:s={ow}x{oh}:fps={FPS},"
+
+
 def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True, overlays=None,
-              frames=None):
+              frames=None, move=None):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
@@ -378,8 +398,10 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
         vf = (f"scale={box_w}:{bh}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:8:white,"
               f"pad={W}:{H}:0:{top}:white,setsar=1,fps=30")
     still = Path(src).suffix.lower() in (".png", ".jpg", ".jpeg")
+    if still and move:
+        pre += still_move(src, src_crop, ar, frames / FPS if frames else dur, move)
     # loop = 짤처럼 짧은 소스가 컷보다 짧으면 되풀이(짤 3초 < 컷 3.9초 — 10-16 4판)
-    inp = ["-loop", "1", "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
+    inp = ["-loop", "1", "-framerate", str(FPS), "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
     tail = ",scale=out_range=tv,format=yuv420p"
     if not overlays:
@@ -409,7 +431,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
 # shots[i].cuts = [{src, ss, dur, (src_crop·ar·fit·kind 덮어쓰기)}, …] — 그 컷(자막 페이지) 안에서 순서대로 이어 붙인다.
 # 칸(box·box_w·full·anchor)은 컷 하나 = 그 shot 값을 같이 쓴다. 마지막 토막은 페이지 끝까지 늘어난다(dur 은 최소 길이가 아니라 '여기서 바꾼다').
 FPS = 30
-CUT_KEYS = ("src", "ss", "src_crop", "ar", "fit", "kind")
+CUT_KEYS = ("src", "ss", "src_crop", "ar", "fit", "kind", "move")
 
 
 def shot_pieces(sh: dict, off: float, dur: float) -> list[dict]:
@@ -472,7 +494,7 @@ def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: b
             if nf <= 0:
                 continue
         shot_clip(base / p["src"], pc["ss"], pc["dur"], win, p.get("box_w", 750), full, f, p.get("ar"), box, p.get("fit", "cover"), min_y,
-                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]), nf)
+                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]), nf, p.get("move"))
         files.append(f)
     if len(files) > 1:
         lst = out.with_suffix(".txt")

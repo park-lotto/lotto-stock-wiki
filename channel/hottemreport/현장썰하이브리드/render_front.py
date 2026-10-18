@@ -119,7 +119,8 @@ def render_back_front(S, M, T, sent, R: Path) -> Path:
     line = " ".join(l["tts"].replace(",", "").rstrip(".") for l in RI.tts_lines(S)) + "."
     script = R / "back_script.json"
     jsave(script, {"final": {"lines": [{"text": line}]}, "caption_events": ev, "titles": {"hook": fs.get("title", "")}})
-    cuts = [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], "block": c["line"], "src_crop": c["crop"]} for c in T["cuts"]]
+    cuts = [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], "block": c["line"], "src_crop": c["crop"], **({"move": c["move"]} if c.get("move") else {})}
+            for c in T["cuts"]]   # move = 그림 파일 컷 확대·이동(narr_video.still_move)
     mats = R / "back_materials.json"
     jsave(mats, {"cand_dir": M["cand_dir"], "shots": [{"i": 0, "full": True, "kind": "원본재편집", "src": cuts[0]["src"], "ss": cuts[0]["ss"], "cuts": cuts}]})
     nv.emph_png = mr.emph_box

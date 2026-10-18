@@ -1,0 +1,160 @@
+{
+ "_note": "2편 물병 뒤 화면 = 쿠팡 7598299509 상품평 사진만(coupang_media/7598299509/rv1080 → cp_rv_NN, 02 와 25 는 같은 사진이라 02 만). 사진은 move(확대·이동). 창 1080x1360.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰하이브리드_02/src",
+ "B": [
+  {
+   "line": "B1",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_17.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "집 거실 장식장 위 물통",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    2
+   ],
+   "src": "cp_rv_22.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "left",
+   "see": "받은 날 바닥에 둔 물통(상자 옆)",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B1",
+   "toks": [
+    3,
+    4
+   ],
+   "src": "cp_rv_30.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "물통 전체 정면(ICE & HOT WATER JUG)",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_08.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "야외 수영장 수박 옆 물통",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B2",
+   "toks": [
+    2,
+    3,
+    4
+   ],
+   "src": "cp_rv_16.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "out",
+   "see": "스테인리스 안쪽",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_01.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "PULL 꼭지 근접",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B3",
+   "toks": [
+    2,
+    3
+   ],
+   "src": "cp_rv_14.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "right",
+   "see": "꼭지 당겨 컵에 따르는 손",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_19.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "물통 몸통 로고 근접",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B4",
+   "toks": [
+    2,
+    3,
+    4
+   ],
+   "src": "cp_rv_02.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "갈색 차를 컵에 따르는 장면",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    0,
+    1
+   ],
+   "src": "cp_rv_27.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "out",
+   "see": "현관 매트 위 물통",
+   "face": "없음(손만)"
+  },
+  {
+   "line": "B5",
+   "toks": [
+    2
+   ],
+   "src": "cp_rv_03.jpg",
+   "ss": 0.0,
+   "max": 9.0,
+   "crop": null,
+   "move": "in",
+   "see": "물통 정면 로고·꼭지",
+   "face": "없음(손만)"
+  }
+ ]
+}
