@@ -16810,9 +16810,11 @@ function renderThumbHandles(){
 function _thumbSizeRange(L){
   if (!L) return {min: 2, max: 60};
   if (L.kind === 'sticker') return {min: 5, max: 60};
-  if (L.kind === 'shape')   return {min: 5, max: 60};
+  if (L.kind === 'shape')   return {min: 5, max: 70};
   if (L.kind === 'badge')   return {min: 2, max: 14};
-  return {min: 2, max: 30};                      // 글자
+  // ★글자는 L.size 가 500분율이라(기본 90) 30~200 이다. 종전 2~30 으로 막혀 손잡이를 잡는 순간
+  //   글자가 30 이하로 쪼그라들고 다시 못 키웠다(2026-10-18 고객 제보 · 관제 226 트랙).
+  return {min: 30, max: 200, dflt: 90};          // 글자
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
@@ -16837,7 +16839,7 @@ function initThumbHandleDrag(){
     const p0 = pt(e);
     const d0 = Math.hypot(p0.clientX - cx, p0.clientY - cy);
     const a0 = Math.atan2(p0.clientY - cy, p0.clientX - cx);
-    const size0 = +L.size || 1, rot0 = +L.rot || 0;
+    const size0 = +L.size || _thumbSizeRange(L).dflt || 1, rot0 = +L.rot || 0;
     const {min, max} = _thumbSizeRange(L);
     const move = ev => {
       const p = pt(ev);
@@ -17238,7 +17240,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="5" max="70" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}° — 화살표 방향을 여기서 돌려요</label>
       <input type="range" min="-180" max="180" value="${L.rot}"
@@ -17291,7 +17293,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="2" max="14" step="0.5" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" step="0.5" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}°</label>
       <input type="range" min="-30" max="30" value="${L.rot}"
@@ -17312,7 +17314,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="5" max="60" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
       <input type="range" min="-180" max="180" value="${L.rot}"
@@ -17348,7 +17350,7 @@ function renderThumbLayers(){
          슬라이더만으로는 지금 값이 몇인지 안 보이고 1씩 맞추기 어렵다. 값의 주인은 그대로 L.size/L.shadow —
          버튼·슬라이더 둘 다 thumbNumSet 한 곳을 거쳐 setThumbField로 간다. -->
     <label style="font-size:11px;color:var(--sub)">글자 크기 <span style="color:var(--sub);opacity:.7">(고정 · 문구가 달라도 같은 숫자는 같은 크기)</span></label>
-    ${thumbNumRow('size', L.size, 30, 200, 5)}
+    ${thumbNumRow('size', L.size, _thumbSizeRange(L).min, _thumbSizeRange(L).max, 5)}
     <label style="font-size:11px;color:var(--sub)">그림자 <span style="color:var(--sub);opacity:.7">(글자 뒤에 깔리는 검은 그림자 · 0이면 없음)</span></label>
     ${thumbNumRow('shadow', Number(L.shadow || 0), 0, 100, 10)}
     <label style="font-size:11px;color:var(--sub)">자간 ${Number(L.tracking || 0) > 0 ? '+' : ''}${Number(L.tracking || 0)}
