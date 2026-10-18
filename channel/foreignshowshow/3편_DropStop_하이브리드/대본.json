@@ -35,14 +35,14 @@
     "id": "B1",
     "kind": "나레",
     "fn": "이음+잉?(비슷한 제품)",
-    "text": "근데 저 틈 막는 게 되나 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고 비슷한 틈새 쿠션이 있더라고요",
-    "tts": "근데 저 틈 막는 게 되나 궁금해서 쿠팡에 쳐 봤더니, 똑같은 건 없고 비슷한 틈새 쿠션이 있더라고요",
+    "text": "근데 저 틈 막는 게 되나 궁금해서 쿠팡에 쳐 봤더니 똑같은 건 없고 비슷한 쿠션이 있더라고요",
+    "tts": "근데 저 틈 막는 게 되나 궁금해서 쿠팡에 쳐 봤더니 똑같은 건 없고 비슷한 쿠션이 있더라고요",
     "caps": [
      "근데 저 틈 막는 게",
      "되나 궁금해서",
      "쿠팡에 쳐 봤더니",
      "똑같은 건 없고",
-     "비슷한 틈새 쿠션이",
+     "비슷한 쿠션이",
      "있더라고요"
     ],
     "facts": [
@@ -58,7 +58,7 @@
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "되나 궁금해서",
@@ -67,7 +67,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "쿠팡에 쳐 봤더니",
@@ -76,7 +76,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "똑같은 건 없고",
@@ -85,16 +85,16 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
-      "cap": "비슷한 틈새 쿠션이",
-      "span": "틈새 쿠션이",
+      "cap": "비슷한 쿠션이",
+      "span": "비슷한 쿠션이",
       "color": "주황",
-      "whole": false,
-      "why": "서술 꼬리",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "있더라고요",
@@ -103,7 +103,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -111,12 +111,11 @@
     "id": "B2",
     "kind": "나레",
     "fn": "②수치(와우1)",
-    "text": "이게 말도 안 되는 게 쿠팡 판매 페이지 후기만 9천 개가 넘더라고요",
-    "tts": "이게 말도 안 되는 게 쿠팡 판매 페이지 후기만 구천 개가 넘더라고요",
+    "text": "이게 말도 안 되는 게 판매 후기만 9천 개가 넘더라고요",
+    "tts": "이게 말도 안 되는 게 판매 후기만 구천 개가 넘더라고요",
     "caps": [
      "이게 말도 안 되는 게",
-     "쿠팡 판매 페이지",
-     "후기만",
+     "판매 후기만",
      "9천 개가 넘더라고요"
     ],
     "facts": [
@@ -130,34 +129,25 @@
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
-      "cap": "쿠팡 판매 페이지",
-      "span": "판매 페이지",
+      "cap": "판매 후기만",
+      "span": "판매 후기만",
       "color": "초록",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "후기만",
-      "span": "후기만",
-      "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "9천 개가 넘더라고요",
       "span": "9천 개가",
-      "color": "빨강",
+      "color": "노랑",
       "whole": false,
       "why": "숫자 덩어리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -165,13 +155,12 @@
     "id": "B3",
     "kind": "나레",
     "fn": "③핵심(와우2, 잉 답)",
-    "text": "진짜 핵심은 이건데, 시트랑 콘솔 사이에 쑥 밀어 넣기만 하면 틈이 막혀서 폰이 안 빠져요",
-    "tts": "진짜 핵심은 이건데, 시트랑 콘솔 사이에 쑥 밀어 넣기만 하면 틈이 막혀서 폰이 안 빠져요",
+    "text": "진짜 핵심은 이건데, 시트랑 콘솔 사이에 밀어 넣기만 하면 폰이 안 빠져요",
+    "tts": "진짜 핵심은 이건데, 시트랑 콘솔 사이에 밀어 넣기만 하면 폰이 안 빠져요",
     "caps": [
      "진짜 핵심은 이건데",
      "시트랑 콘솔 사이에",
-     "쑥 밀어 넣기만 하면",
-     "틈이 막혀서",
+     "밀어 넣기만 하면",
      "폰이 안 빠져요"
     ],
     "facts": [
@@ -181,47 +170,38 @@
      {
       "cap": "진짜 핵심은 이건데",
       "span": "핵심은 이건데",
-      "color": "민트",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "시트랑 콘솔 사이에",
-      "span": "콘솔 사이에",
-      "color": "주황",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "쑥 밀어 넣기만 하면",
-      "span": "넣기만 하면",
-      "color": "초록",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "틈이 막혀서",
-      "span": "틈이 막혀서",
-      "color": "노랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "폰이 안 빠져요",
-      "span": "빠져요",
       "color": "빨강",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "시트랑 콘솔 사이에",
+      "span": "콘솔 사이에",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "밀어 넣기만 하면",
+      "span": "넣기만 하면",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "폰이 안 빠져요",
+      "span": "빠져요",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -229,15 +209,14 @@
     "id": "B4",
     "kind": "나레",
     "fn": "④심지어(와우3)+비유",
-    "text": "심지어 이게 대박인 게 옆에 주머니가 있어서, 서랍처럼 동전이랑 카드를 넣으니까 콘솔이 깔끔해요",
-    "tts": "심지어 이게 대박인 게 옆에 주머니가 있어서, 서랍처럼 동전이랑 카드를 넣으니까 콘솔이 깔끔해요",
+    "text": "심지어 이게 대박인 게 옆 주머니가 서랍처럼 돼서 동전이랑 카드까지 다 들어가요",
+    "tts": "심지어 이게 대박인 게 옆 주머니가 서랍처럼 돼서 동전이랑 카드까지 다 들어가요",
     "caps": [
      "심지어 이게 대박인 게",
-     "옆에 주머니가 있어서",
-     "서랍처럼",
-     "동전이랑 카드를",
-     "넣으니까",
-     "콘솔이 깔끔해요"
+     "옆 주머니가",
+     "서랍처럼 돼서",
+     "동전이랑 카드까지",
+     "다 들어가요"
     ],
     "facts": [
      "c1",
@@ -247,56 +226,47 @@
      {
       "cap": "심지어 이게 대박인 게",
       "span": "심지어 이게",
-      "color": "민트",
+      "color": "노랑",
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
-      "cap": "옆에 주머니가 있어서",
-      "span": "주머니가 있어서",
-      "color": "분홍",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "서랍처럼",
-      "span": "서랍처럼",
-      "color": "초록",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "동전이랑 카드를",
-      "span": "동전이랑 카드를",
-      "color": "주황",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "넣으니까",
-      "span": "넣으니까",
-      "color": "노랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "콘솔이 깔끔해요",
-      "span": "콘솔이 깔끔해요",
+      "cap": "옆 주머니가",
+      "span": "옆 주머니가",
       "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "서랍처럼 돼서",
+      "span": "서랍처럼 돼서",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "동전이랑 카드까지",
+      "span": "카드까지",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다 들어가요",
+      "span": "다 들어가요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -317,42 +287,43 @@
      {
       "cap": "요즘 운전하는",
       "span": "요즘 운전하는",
-      "color": "민트",
+      "color": "주황",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "친구들 사이에서",
       "span": "친구들 사이에서",
-      "color": "파랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "하나씩 달자고",
-      "span": "하나씩 달자고",
-      "color": "초록",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v1"
-     },
-     {
-      "cap": "난리예요",
-      "span": "난리예요",
       "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "하나씩 달자고",
+      "span": "하나씩 달자고",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
      }
     ]
    }
-  ]
+  ],
+  "len_note": "페이블 10-18 '뒤 20초 이하' — 군더더기 어절·쉼표를 덜어 추정 19.x초(뜻·근거 그대로)"
  },
  "facts": {
   "c1": "쿠팡 검색 '자동차 시트 틈새 쿠션'(2026-10-18 이 PC 회선) → 8428979691 '헤인느 전차종 호환 차량 틈새 쿠션 자동차 사이드 포켓, 2개, 블랙' 리뷰 (9,538)·5,800원(광고 표시). '드롭스탑' 검색엔 같은 이름을 쓴 다른 회사 틈새 쿠션만(원본 Drop Stop 없음). 상품 페이지는 403이라 검색 결과까지. 쿠팡검색_2026-10-18.json",

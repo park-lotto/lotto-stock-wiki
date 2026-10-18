@@ -35,8 +35,8 @@
     "id": "B1",
     "kind": "나레",
     "fn": "이음(연결어)+잉?",
-    "text": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 라크 물병이 있더라고요",
-    "tts": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니, 방송에 나온 그 라크 물병이 있더라고요",
+    "text": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니 방송에 나온 그 라크 물병이 있더라고요",
+    "tts": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니 방송에 나온 그 라크 물병이 있더라고요",
     "caps": [
      "근데 저 냄새가",
      "진짜 없어지나",
@@ -59,7 +59,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "진짜 없어지나",
@@ -68,7 +68,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "궁금해서",
@@ -77,7 +77,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "쿠팡에 쳐 봤더니",
@@ -86,7 +86,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "방송에 나온",
@@ -95,7 +95,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "그 라크 물병이",
@@ -104,7 +104,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "있더라고요",
@@ -113,7 +113,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -141,7 +141,7 @@
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "정수 필터로 유명한",
@@ -150,7 +150,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "독일 브리타가",
@@ -159,7 +159,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "이 회사를",
@@ -168,7 +168,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "통째로 샀다더라고요",
@@ -177,7 +177,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -185,13 +185,13 @@
     "id": "B3",
     "kind": "나레",
     "fn": "③핵심(와우2, 잉 답)",
-    "text": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 안에서 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
-    "tts": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 안에서 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
+    "text": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
+    "tts": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
     "caps": [
      "진짜 핵심은 이건데",
      "뚜껑 버튼",
      "한 번 누르면",
-     "안에서 파란 불이 켜지고",
+     "파란 불이 켜지고",
      "입구 냄새가",
      "싹 없어졌어요"
     ],
@@ -207,7 +207,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "뚜껑 버튼",
@@ -216,7 +216,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "한 번 누르면",
@@ -225,16 +225,16 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
-      "cap": "안에서 파란 불이 켜지고",
+      "cap": "파란 불이 켜지고",
       "span": "불이 켜지고",
       "color": "민트",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "입구 냄새가",
@@ -243,7 +243,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "싹 없어졌어요",
@@ -252,7 +252,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -260,8 +260,8 @@
     "id": "B4",
     "kind": "나레",
     "fn": "④심지어(와우3)+비유",
-    "text": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서, 그냥 텀블러처럼 들고만 다녀요",
-    "tts": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서, 그냥 텀블러처럼 들고만 다녀요",
+    "text": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서 그냥 텀블러처럼 들고만 다녀요",
+    "tts": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서 그냥 텀블러처럼 들고만 다녀요",
     "caps": [
      "심지어 이게 대박인 게",
      "충전 한 번에",
@@ -280,7 +280,7 @@
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "충전 한 번에",
@@ -289,7 +289,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "두 달은 간다고 해서",
@@ -298,7 +298,7 @@
       "whole": false,
       "why": "숫자 덩어리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "그냥 텀블러처럼",
@@ -307,7 +307,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "들고만 다녀요",
@@ -316,7 +316,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    },
@@ -341,7 +341,7 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "뚜껑 불빛 보면",
@@ -350,7 +350,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "다들 어디 거냐고",
@@ -359,7 +359,7 @@
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      },
      {
       "cap": "난리예요",
@@ -368,11 +368,12 @@
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
-      "rules": "shark/rules.json v1"
+      "rules": "shark/rules.json v2"
      }
     ]
    }
-  ]
+  ],
+  "len_note": "페이블 10-18 '뒤 20초 이하' — 군더더기 어절·쉼표를 덜어 추정 19.x초(뜻·근거 그대로)"
  },
  "facts": {
   "c1": "쿠팡 검색 'LARQ UV'·'LARQ 퓨어비스'(2026-10-18 이 PC 회선) → 9120520253·8030597129·8862213784·8814077381 'LARQ Bottle PureVis 17온스 - UV 정수기…자가 청소 및 단열 스테인리스 스틸', 9774366170 'LARQ 라크 퓨어비스 25온스'. 상품 페이지는 403(쿠팡 차단)이라 검색 결과까지만 확인. 쿠팡검색_2026-10-18.json",
