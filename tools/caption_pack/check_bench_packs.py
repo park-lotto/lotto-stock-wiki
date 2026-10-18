@@ -63,8 +63,10 @@ def norm_rows(pack, table):
     return out
 
 
-def rows_to_timeline(rows, tts):
+def rows_to_timeline(rows, tts, total=None):
     """공통 줄 → 비트(줄 하나 = 비트 하나, 덩어리 = caption_lines). 장면 창 = 자막표 시각 그대로(cap_durs = 다음 덩어리 시작까지).
+    ★비트는 빈틈 없이 잇는다(다음 줄 시작까지, 마지막 줄은 영상 끝 total 까지) — compose 는 장면들을 이어 붙여 영상을 만들므로
+      줄 사이 틈을 비워 두면 그만큼 영상이 잘린다(실측: 키치잇 28.47→28.26초). 첫 줄이 0초가 아니면 첫 비트를 0초부터 시작한다.
     하이브리드 쪽 견본: 화자·줄 변형·핵심 단어·스티커는 caption_marks(덩어리별), 글자 시각은 chars(비트 t0 부터 영상 초)."""
     lines = []
     for r in rows:
@@ -74,14 +76,16 @@ def rows_to_timeline(rows, tts):
             lines.append([r])
     beats = []
     for i, ln in enumerate(lines):
-        t0, t1 = ln[0]["t0"], ln[-1]["t1"]
-        durs = [(ln[k + 1]["t0"] if k + 1 < len(ln) else r["t1"]) - r["t0"] for k, r in enumerate(ln)]
+        t0 = 0.0 if i == 0 else ln[0]["t0"]
+        t1 = lines[i + 1][0]["t0"] if i + 1 < len(lines) else max(ln[-1]["t1"], total or 0)
+        lead = ln[0]["t0"] - t0
+        durs = [(ln[k + 1]["t0"] if k + 1 < len(ln) else t1) - r["t0"] for k, r in enumerate(ln)]
         chars = []
         for r in ln:
             for ch, t in zip(r["text"].replace(" ", ""), r.get("chars") or []):
                 chars.append({"char": ch, "start": round(t - t0, 3)})
         beats.append({"beat_idx": i, "t0": t0, "dur": round(t1 - t0, 3), "narration": " ".join(r["text"] for r in ln),
-                      "caption_lines": [r["text"] for r in ln], "cap_durs": durs, "cap_lead": 0.0, "tts_path": str(tts),
+                      "caption_lines": [r["text"] for r in ln], "cap_durs": durs, "cap_lead": round(lead, 3), "tts_path": str(tts),
                       "target_seconds": round(t1 - t0, 3), "role": "body", "primary": {"video_id": "s0", "start": t0, "end": t1},
                       "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"])) if v}
                                         for r in ln],
@@ -147,7 +151,10 @@ def run(pack, out, compose, fails):
     tts = out / "v.wav"
     if not tts.exists():
         va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
-    timeline = rows_to_timeline(rows, tts); snap = snapshot(pack)
+    base_video = pathlib.Path(table["video"])
+    total = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(base_video)],
+                                 capture_output=True, text=True).stdout.strip() or 0) if base_video.exists() else None
+    timeline = rows_to_timeline(rows, tts, total); snap = snapshot(pack)
     ctx = scene_style.context_for(timeline, {"text": "x"}, snap, None)
     scenes = [s for s in ctx["scenes"] if s["caption"]]
     need(len(scenes) == len(rows) and all(s["caption"] == r["text"] for s, r in zip(scenes, rows)),
@@ -239,6 +246,16 @@ def run(pack, out, compose, fails):
         need(h > 2000 and ba != bb, f"④ 같은 글 나레/원음 그림이 다르다(진한 차이 {h}점, 잉크 상자 {ba} / {bb})")
         report["speaker_box"] = {"narr": ba, "orig": bb}
 
+    # ⑧ 자리: 정지 그림 자막 잉크 가운데 y = 팩 자리(place.y, 줄 변형이 있으면 그 자리) ±20px
+    off = []
+    for k, r in enumerate(rows):
+        pl = (pk.get("variants", {}).get(r["variant"], {}).get("place") or pk.get("place") or {}).get("y")
+        b = ink_box(still(k))
+        if pl is None or not b: continue
+        cy = (b[1] + b[3]) / 2; want = pl / 100 * 1920
+        if abs(cy - want) > 20: off.append((r["text"], round(cy), round(want)))
+    need(not off, f"⑧ 자막 자리 = 벤치 자리(팩 place) ±20px (어긋남 {off[:4]})")
+
     # ⑤ 캡컷(overlay_spans)·썸네일(render_layer_one) = 다 나온 자막 + 강조
     spans = scene_style.overlay_spans(ctx["scenes"], layers, L)
     by_scene = {}
@@ -274,8 +291,27 @@ def run(pack, out, compose, fails):
         final = out / f"{pack}_hybrid.mp4"
         scene_style.compose(str(base), timeline, snap, str(final), d / "cw", {"text": "x"})
         need(final.exists() and final.stat().st_size > 100_000, f"완성본 {final.name} {final.stat().st_size if final.exists() else 0}바이트")
+        dur = lambda p: float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)], capture_output=True, text=True).stdout.strip() or 0)
+        need(abs(dur(final) - total) <= 1 / 30 + .01, f"완성본 길이 {dur(final):.3f}초 = 바탕 영상 {total:.3f}초(±1프레임)")
+        report["final"] = str(loud(final, out / f"{pack}_final.mp4", need))
     sheet(pack, rows, ctx, idx, layers, L, final, out, report)
     (out / f"{pack}_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def loud(src, dst, need, target=-14.0):
+    """음량 −14 LUFS(사장님 결정, 2단 loudnorm) · 영상은 그대로 복사 · 길이 그대로(-t)."""
+    import json as _j
+    D = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(src)], capture_output=True, text=True).stdout.strip()
+    m = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(src), "-af", f"loudnorm=I={target}:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    j = _j.loads(m[m.rindex("{"):m.rindex("}") + 1])
+    af = (f"loudnorm=I={target}:TP=-1.5:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:"
+          f"measured_thresh={j['input_thresh']}:offset={j['target_offset']}:linear=true,aresample=48000")
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(src), "-t", D, "-c:v", "copy", "-af", af, "-c:a", "aac", "-b:a", "192k", str(dst)])
+    e = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(dst), "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    got = float(re.findall(r"I:\s+(-?[\d.]+) LUFS", e)[-1])
+    need(abs(got - target) <= .5, f"음량 {dst.name} {got} LUFS (목표 {target})")
+    return dst
 
 
 RUNNING = """()=>{const t=document.querySelector('.precision-text[data-edit-bind="caption"]');if(!t)return -1;
@@ -372,6 +408,20 @@ def sheet(pack, rows, ctx, idx, layers, L, final, out, report):
             va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{t:.3f}", "-i", str(final), "-frames:v", "1", str(grab)])
             shots.append(Image.open(grab).convert("RGB").resize((270, 480)))
         tiles.append(("우리 완성본(하이브리드 영상 위) 4장면", shots))
+        # 자리 대조: 벤치 원본 한 장면 vs 우리 완성본, 같은 빨간 선 = 팩 자리(place.y)
+        y = PACKS[pack].get("place", {}).get("y")
+        if y is not None:
+            pair = []
+            rel, t = BENCH_SHOTS[pack][0][1], BENCH_SHOTS[pack][0][2][-1]
+            va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{t:.3f}", "-i", str(BENCH / rel), "-frames:v", "1", str(grab)])
+            frames_full = [Image.open(grab).convert("RGB")]
+            k = 0; tt = (rows[k]["t0"] + rows[k]["t1"]) / 2
+            va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{tt:.3f}", "-i", str(final), "-frames:v", "1", str(grab)])
+            frames_full.append(Image.open(grab).convert("RGB"))
+            for im in frames_full:
+                d_ = ImageDraw.Draw(im); yy = int(y / 100 * 1920); d_.line([(0, yy), (1080, yy)], fill=(255, 0, 0), width=4)
+                pair.append(im.resize((270, 480)))
+            tiles.append((f"자리 대조 — 왼쪽 벤치 · 오른쪽 우리 · 빨간 선 y{int(y / 100 * 1920)}", pair))
     W = 540 * 6; y = 0; H = sum((30 + max(t.height for t in ims)) for _, ims in tiles)
     sh = Image.new("RGB", (W, H), (16, 18, 22)); dr = ImageDraw.Draw(sh)
     for title, ims in tiles:

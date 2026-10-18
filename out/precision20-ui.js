@@ -1910,7 +1910,10 @@
     //   제 줄 자리가 기본이고, 그려진 제목 끝이 그보다 아래면 그 밑으로 민다. 제목이 없으면 종전 자리 그대로.
     const plainTitleEnd=()=>{const box=preview.getBoundingClientRect();let end=0;layer.querySelectorAll('.precision-text[data-edit-bind="hook1"],.precision-text[data-edit-bind="hook2"],.precision-text[data-edit-bind="bodyTitle"]').forEach(el=>{if(el.hidden||!el.textContent.trim())return;const range=document.createRange();range.selectNodeContents(el);const r=range.getBoundingClientRect();if(r.height)end=Math.max(end,(r.bottom-box.top)/Math.max(1,box.height)*100);});return end;};
     const plainLine=source.ln?source.ln.y0/frame.height*100:80;
-    const capBase=rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:Math.max(plainLine,plainTitleEnd()+1)):titleHeight(frame);
+    // 자막팩 기본 자리(관제 235): 팩(화자·줄 변형 포함)이 place.y(자막 한 줄 가운데, 화면 높이 %)를 가지면 그 자리가 기준선 — 벤치 채널은 8편 내내 자막 자리가 같다(채널 모양의 일부).
+    //   고객이 끌어 옮긴 양(drag)·↑↓(textOffset)은 그 위에 그대로 더해진다(고객 값이 이긴다). 팩에 자리가 없으면 종전(틀 자리) 그대로.
+    const packPlace=captionPackAt(sceneIndex)?.place;
+    const capBase=Number.isFinite(packPlace?.y)?packPlace.y-h/2:rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:Math.max(plainLine,plainTitleEnd()+1)):titleHeight(frame);
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);

@@ -1011,7 +1011,12 @@
   },
   "variants": {
    "typing": {
-    "enter": "typeFlash"
+    "enter": "typeFlash",
+    "place": {
+     "y": 67.71,
+     "bench": "BRa 8.5초 원음 타이핑 줄 가운데 y≈1300"
+    },
+    "size": 100
    }
   },
   "stickers": {
@@ -1027,7 +1032,11 @@
     }
    }
   },
-  "bench": "channel/kitchit/자막팩_보강안.json · 스타일분석.md §1"
+  "bench": "channel/kitchit/자막팩_보강안.json · 스타일분석.md §1",
+  "place": {
+   "y": 70.36,
+   "bench": "y1351/1920 — 스타일분석 §1 8편 같음"
+  }
  },
  "kkultemnote": {
   "label": "꿀템노트 수다",
@@ -1116,7 +1125,11 @@
     "enter": ""
    }
   },
-  "bench": "channel/kkultemnote/자막팩_보강안.json"
+  "bench": "channel/kkultemnote/자막팩_보강안.json",
+  "place": {
+   "y": 66.98,
+   "bench": "y1245~1328 가운데 1286/1920 — 8편 중 7편"
+  }
  },
  "starpick": {
   "label": "스타픽룸 타이핑",
@@ -1192,7 +1205,11 @@
     }
    }
   },
-  "bench": "channel/starpickroom/자막팩_보강안.json"
+  "bench": "channel/starpickroom/자막팩_보강안.json",
+  "place": {
+   "y": 59.38,
+   "bench": "y1105~1175 가운데 1140/1920 — 8편 같음, 나레·원음 같은 자리"
+  }
  }
 }/*PACKS*/;
   root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조"};
