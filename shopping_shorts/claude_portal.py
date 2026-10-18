@@ -586,7 +586,8 @@ def _strip_internal(x):
 
 
 def _rules_of(pdir: Path, man: dict) -> dict:
-    rules = {"formula": _strip_internal(man.get("rules")), "roles": man.get("roles") or [],
+    # 공식 문장(man["rules"])은 PC 가 쓰지 않는다 — 노하우 최소 노출(설계 §7-4)이라 보내지 않는다. 칸 역할·고정값만 간다.
+    rules = {"roles": man.get("roles") or [],
              "fixed": {k: (v or {}).get("value") for k, v in (man.get("fixed") or {}).items() if isinstance(v, dict)}}
     rp = man.get("rules_path")
     if isinstance(rp, str) and rp.startswith("channel/") and ".." not in rp:

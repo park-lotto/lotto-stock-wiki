@@ -257,6 +257,11 @@ def merge(preset: dict, pack_defaults: dict, options: dict) -> dict:
                             if o:
                                 L["text"] = L["text"].replace(o, new_name)
                         applied.append(f"{fid} 글 속 채널명 → '{new_name}'")
+                    if role == "label" and isinstance(L.get("text"), str) and re.search(r"\w", L["text"])                             and not _is_disclosure(L["text"]) and not any(o and o in L["text"] for o in old_names)                             and not (new_name and new_name in L["text"]):
+                        # 벤치 영상에서 읽어 온 고정 글(게시글 제목 등)은 그 영상의 내용이다 — 고객 편에 그대로 나오면 안 된다.
+                        #   글 자리는 편마다 정하는 자리로 비우고, PC 는 fill 표식대로 그 편 제목으로 채운다(2026-10-18 실측: banggu 틀).
+                        L["text"], L["fill"] = None, "title"
+                        per_video.append(f"{fid}.layers[text:label].text")
                     if role == "title" and text.get("title_font") and L.get("font") != text["title_font"]:
                         applied.append(f"{fid} 제목 글꼴 {L.get('font')} → {text['title_font']}")
                         L["font"] = text["title_font"]

@@ -466,3 +466,19 @@ def test_merge_keeps_ad_disclosure():
     assert texts[0] == "[광고]"
     assert texts[1] == "내채널"
     assert texts[2] == "내채널 구독"
+
+
+def test_merge_blanks_bench_label_text():
+    """벤치 영상에서 읽은 고정 글(게시글 제목)은 비우고 fill=title 표식 — 채널명 든 글은 채널명만 바뀐다."""
+    from shopping_shorts import channel_profile
+    frame = {"canvas": [1080, 1920], "frames": [{"id": "body", "layers": [
+        {"kind": "text", "role": "brand", "text": "방구"},
+        {"kind": "text", "role": "label", "text": "아웃백이 끝까지 안 내놓은 영업기밀"},
+        {"kind": "text", "role": "label", "text": "방구 | 14:25"},
+        {"kind": "text", "role": "label", "text": "»"}]}]}
+    out = channel_profile.merge({"frame": frame}, {}, {"brand": {"channel_name": "내채널"}})
+    L = out["frame"]["frames"][0]["layers"]
+    assert L[1]["text"] is None and L[1]["fill"] == "title"
+    assert L[2]["text"] == "내채널 | 14:25"
+    assert L[3]["text"] == "»"
+    assert any("label" in p for p in out["per_video"])
