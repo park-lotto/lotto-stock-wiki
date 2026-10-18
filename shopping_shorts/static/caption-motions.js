@@ -522,6 +522,270 @@
   ],
   "boxAt": 0.05,
   "pack": true
+ },
+ "overPop": {
+  "label": "톡 넘쳤다 안착",
+  "origin": true,
+  "ms": 433,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.22",
+    "offset": 0.077
+   },
+   {
+    "opacity": 1,
+    "scale": "0.42",
+    "offset": 0.154
+   },
+   {
+    "opacity": 1,
+    "scale": "0.59",
+    "offset": 0.231
+   },
+   {
+    "opacity": 1,
+    "scale": "0.75",
+    "offset": 0.308
+   },
+   {
+    "opacity": 1,
+    "scale": "0.88",
+    "offset": 0.385
+   },
+   {
+    "opacity": 1,
+    "scale": "0.97",
+    "offset": 0.462
+   },
+   {
+    "opacity": 1,
+    "scale": "1.05",
+    "offset": 0.538
+   },
+   {
+    "opacity": 1,
+    "scale": "1.09",
+    "offset": 0.615
+   },
+   {
+    "opacity": 1,
+    "scale": "1.09",
+    "offset": 0.692
+   },
+   {
+    "opacity": 1,
+    "scale": "1.05",
+    "offset": 0.769
+   },
+   {
+    "opacity": 1,
+    "scale": "1.02",
+    "offset": 0.846
+   },
+   {
+    "opacity": 1,
+    "scale": "1.007",
+    "offset": 0.923
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "키치잇 Cs-Ka_S8nDM 0~0.433초 '1년 내내' 잉크 폭 30fps 13프레임(22%→109%→100%) — 스타일분석 §1"
+ },
+ "overPopBig": {
+  "label": "크게 넘쳤다 안착",
+  "origin": true,
+  "ms": 380,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.3",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.75",
+    "offset": 0.1
+   },
+   {
+    "opacity": 1,
+    "scale": "1.35",
+    "offset": 0.4
+   },
+   {
+    "opacity": 1,
+    "scale": "1.15",
+    "offset": 0.6
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "꿀템노트 BpU 5.83~6.20초 '앉아보면' 0.3→1.35→1.0"
+ },
+ "flashIn": {
+  "label": "반투명 툭",
+  "ms": 66,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 0.45
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "pack": true,
+  "bench": "꿀템노트 나레 BpU 1.70→1.73 · 2.60→2.63(30fps 1~2프레임)"
+ },
+ "typeFlash": {
+  "label": "말 맞춰 타이핑(분홍 번쩍)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 100,
+  "spread": 1600,
+  "ms": 1,
+  "easing": "steps(1,start)",
+  "frames": [
+   {
+    "opacity": 0
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "flash": {
+   "color": "#FD6B7B",
+   "ms": 33
+  },
+  "pack": true,
+  "bench": "키치잇 BRa 8.0~8.9초 0.1초마다 한 글자 · 새 글자 첫 프레임 분홍"
+ },
+ "typeGlow": {
+  "label": "말 맞춰 타이핑(초록 번짐)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 80,
+  "spread": 1400,
+  "ms": 33,
+  "easing": "steps(1,start)",
+  "frames": [
+   {
+    "opacity": 0
+   },
+   {
+    "opacity": 1
+   }
+  ],
+  "glow": {
+   "color": "#2B5C2B",
+   "blur": [
+    0.12,
+    0.28
+   ],
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.35,
+     1
+    ],
+    [
+     0.8,
+     1
+    ]
+   ]
+  },
+  "pack": true,
+  "bench": "스타픽룸 VbpdN 6.7~10.3초 12.5자/초 · 외곽선 밖 초록 번짐(끝 세기 0.35 = 팩 나레 글자 그림자)"
+ },
+ "typeCursor": {
+  "label": "말 맞춰 타이핑(_ 커서)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 85,
+  "spread": 1400,
+  "ms": 100,
+  "easing": "ease-out",
+  "frames": [
+   {
+    "opacity": 0.6,
+    "filter": "blur(0.08em)",
+    "scale": "1.15"
+   },
+   {
+    "opacity": 1,
+    "filter": "blur(0em)",
+    "scale": "1"
+   }
+  ],
+  "follow": {
+   "char": "_",
+   "color": "#FFFFFF",
+   "at": "after",
+   "gap": 0.15,
+   "size": 1,
+   "blink": 400,
+   "until": "scene"
+  },
+  "pack": true,
+  "bench": "스타픽룸 ASqF 3.6~6.0초 새 글자 흐림→또렷 · 끝에 '_' 400ms 깜빡"
+ },
+ "typeHeart": {
+  "label": "말 맞춰 타이핑(분홍 하트)",
+  "unit": "char",
+  "sync": "speech",
+  "stagger": 100,
+  "spread": 1400,
+  "ms": 150,
+  "easing": "cubic-bezier(.2,.9,.3,1)",
+  "frames": [
+   {
+    "opacity": 0,
+    "scale": "0.55",
+    "color": "#F40059",
+    "offset": 0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "color": "#F40059",
+    "offset": 0.01
+   },
+   {
+    "opacity": 1,
+    "scale": "1"
+   }
+  ],
+  "follow": {
+   "char": "♥",
+   "color": "#F40059",
+   "outline": "#FFFFFF",
+   "at": "below",
+   "gap": 0.95,
+   "size": 0.55,
+   "until": "typed",
+   "hold": 200
+  },
+  "pack": true,
+  "bench": "스타픽룸 dKcz 5.9~6.6초 새 글자 분홍 작게→흰 원크기 · 그 글자 밑 분홍 하트"
  }
 }/*JSON*/;
   // 자막 스타일(관제 127 → 144) — 자막 모양 한 벌. 움직임은 아래 등장 효과팩(CAPTION_MOTION_PACKS)이 맡는다(10-06 사장님 '폰트나 설정 그대로 두고 효과만').
@@ -692,9 +956,246 @@
     "textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"
    }
   }
+ },
+ "kitchit": {
+  "label": "키치잇 연예인템",
+  "desc": "흰 둥근 굵은 글 + 검정·흰 두 겹 테 · 핵심 단어 5색 돌림 · 줄 첫 덩어리만 톡",
+  "font": "Jalnan2",
+  "size": 78,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2em #151618",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   },
+   "ring": {
+    "color": "#FFFFFF",
+    "width": 0.03
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#FEDD00",
+    "#00FD0B",
+    "#65FEFB",
+    "#FD6B7B",
+    "#BDB4FC"
+   ]
+  },
+  "emph": {
+   "font": "Jalnan2",
+   "size": 120,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.2em #151618",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "overPop",
+   "body": "overPop",
+   "cont": "",
+   "price": "overPop",
+   "problem": "overPop",
+   "reveal": "overPop",
+   "end": "overPop",
+   "emph": "overPop"
+  },
+  "variants": {
+   "typing": {
+    "enter": "typeFlash"
+   }
+  },
+  "stickers": {
+   "heart": {
+    "follow": {
+     "char": "♥",
+     "color": "#E8195E",
+     "at": "below",
+     "gap": 0.95,
+     "size": 0.8,
+     "until": "typed",
+     "hold": 300
+    }
+   }
+  },
+  "bench": "channel/kitchit/자막팩_보강안.json · 스타일분석.md §1"
+ },
+ "kkultemnote": {
+  "label": "꿀템노트 수다",
+  "desc": "원음 꾸불림 손글씨 · 나레 굵은 고딕 + 노랑 강조 · 말한 사람마다 글꼴이 바뀐다",
+  "font": "Kkubulim",
+  "size": 96,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.11em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#FDF60E"
+   ]
+  },
+  "emph": {
+   "font": "Kkubulim",
+   "size": 120,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.12em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0 0.12em rgba(255,255,255,.9)"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": "overPopBig"
+  },
+  "speakers": {
+   "narr": {
+    "font": "Scene1369",
+    "size": 89,
+    "text": {
+     "color": "#FFFFFF",
+     "style": {
+      "WebkitTextStroke": "0.13em #000",
+      "paintOrder": "stroke fill",
+      "textShadow": "0 0 0.06em rgba(0,0,0,.6)"
+     }
+    },
+    "enter": "flashIn"
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {
+   "orig_pop": {
+    "size": 115,
+    "text": {
+     "color": "#FFFFFF",
+     "style": {
+      "WebkitTextStroke": "0.16em #6E6E6E",
+      "paintOrder": "stroke fill"
+     }
+    },
+    "enter": "overPopBig"
+   },
+   "orig_red": {
+    "size": 107,
+    "text": {
+     "color": "#F51814",
+     "style": {
+      "WebkitTextStroke": "0.1em #000",
+      "paintOrder": "stroke fill",
+      "letterSpacing": "0.18em"
+     }
+    },
+    "enter": ""
+   }
+  },
+  "bench": "channel/kkultemnote/자막팩_보강안.json"
+ },
+ "starpick": {
+  "label": "스타픽룸 타이핑",
+  "desc": "흰 G마켓 굵은 글 + 두꺼운 검정 테 · 나레만 타닥 타이핑(초록 번짐) · 원음은 즉시 · 재료 낱말은 사물 색",
+  "font": "GmarketSansBold",
+  "size": 72,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.22em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#FEFD02"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 130,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.22em #000",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": "pop"
+  },
+  "speakers": {
+   "narr": {
+    "text": {
+     "style": {
+      "textShadow": "0 0 0.12em rgba(43,92,43,.35),0 0 0.28em rgba(43,92,43,.35)"
+     }
+    },
+    "enter": "typeGlow"
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {
+   "cursor": {
+    "enter": "typeCursor",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   },
+   "heart": {
+    "enter": "typeHeart",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   }
+  },
+  "bench": "channel/starpickroom/자막팩_보강안.json"
  }
 }/*PACKS*/;
-  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조"};
+  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조", "cont": "같은 줄 다음 덩어리"};
   // 단어 강조 방식(관제 102 → 127) — 지금 말하는 단어를 어떻게 짚나. 편집기 WORD_FX_STYLES·서버 검증(scene_style.caption_word_fx_keys)이 여기를 읽는다.
   //   draw: 그 단어가 켜진 뒤 이 초 동안 그려진다(밑줄·형광펜·동그라미). 모양은 precision20-ui.css .wfx-<키>.
   //   ★서버는 WORDFX 표식 두 개 사이를 json 으로 읽는다 — 그 안에는 JSON 만.
@@ -723,6 +1224,12 @@
  "glow": {
   "label": "번쩍 글로우",
   "pack": true
+ },
+ "mark": {
+  "label": "핵심 단어 색칠",
+  "fixed": true,
+  "pack": true,
+  "hide": true
  }
 }/*WORDFX*/;
   root.CAPTION_EMPH_DEFAULT = {"size": 150, "color": "#FFFFFF", "style": {"textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"}, "motion": "pop"};

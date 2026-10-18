@@ -409,7 +409,96 @@ def attach_scene_words(scenes, timeline):
         span = max(1e-6, float(tail) - float(head))
         a, b = float(scene["start"]), float(scene["end"])
         scene["words"] = [round(a + (b - a) * max(0.0, min(1.0, (float(s) - float(head)) / span)), 3) for s in starts]
+    _attach_scene_chars(scenes, timeline)
     return scenes
+
+
+def _attach_scene_chars(scenes, timeline):
+    """글자가 나오는 시각(초, 영상 기준)을 scene["chars"] 에 붙인다 — 말 맞춘 타이핑(관제 235)이 읽는다.
+
+    비트에 글자 시각(beat["chars"] = [{"char","start"}], start = **그 비트 시작(t0)부터 영상 초** — 배속·앞자르기를 이미 갚은 값)이
+    있을 때만. 구절의 글자(띄어쓰기 뺀 글자 하나하나)를 정렬 글자와 **순서대로** 맞춰 t0+start 를 그대로 쓴다(구절 창 안으로만 자른다).
+    ★어절 시각(attach_scene_words)처럼 구절 창에 비율로 늘리지 않는다 — 늘리면 말 빠르기가 아니라 자막 길이에 맞춰 쳐진다.
+    글자가 안 맞으면 안 붙인다 → 편집기가 어절 시각을 글자로 나누고, 그것도 없으면 일정 간격(효과의 stagger)으로 친다.
+    값 개수 = 편집기가 쪼갠 글자 수(.cap-c, 띄어쓰기 뺀 글자) — 기호도 한 글자로 센다(정렬에 없으면 앞 글자와 같은 시각)."""
+    chars_of = {}
+    for beat in timeline:
+        al = [c for c in (beat.get("chars") or []) if isinstance(c, dict) and str(c.get("char") or "").strip() and c.get("start") is not None]
+        if al:
+            chars_of[beat["beat_idx"]] = (float(beat.get("t0") or 0.0), al)
+    cursor = {}
+    for scene in scenes:
+        t0, al = chars_of.get(scene.get("beat_idx"), (0.0, None))
+        text = [ch for ch in (scene.get("caption") or "") if not ch.isspace()]
+        if not al or not text:
+            continue
+        k, starts = cursor.get(scene["beat_idx"], 0), []
+        for ch in text:
+            if not _word_key(ch):              # 기호 — 앞 글자와 같이 나온다(정렬에도 있으면 하나 건너뛴다)
+                if k < len(al) and al[k]["char"] == ch:
+                    k += 1
+                starts.append(starts[-1] if starts else None)
+                continue
+            while k < len(al) and not _word_key(al[k]["char"]):
+                k += 1
+            if k >= len(al) or _word_key(al[k]["char"]) != _word_key(ch):
+                starts = None
+                break
+            starts.append(t0 + float(al[k]["start"])); k += 1
+        if not starts or all(s is None for s in starts):
+            continue
+        cursor[scene["beat_idx"]] = k
+        head = next(s for s in starts if s is not None)
+        a, b = float(scene["start"]), float(scene["end"])
+        scene["chars"] = [round(max(a, min(b, head if s is None else s)), 3) for s in starts]
+
+
+_HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+def scene_marks(beat, piece, caption):
+    """비트 자료 → 장면(자막 구절) 하나에 실을 표시 — **판단의 주인은 이 함수 하나**(관제 235 자막팩 보강).
+
+    편집기(out/precision20-ui.js)·렌더·캡컷·썸네일은 장면에 실린 값만 읽는다. 하이브리드(칼카피 엔진) 쪽은 비트에 이렇게 실어 넘긴다:
+      beat["speaker"]       'narr'(나레) | 'orig'(원음) — 비트 전체. 팩의 speakers 칸이 그 화자의 글꼴·크기·색·등장을 정한다.
+      beat["variant"]       팩의 variants 키(예: 'orig_pop'·'orig_red'·'typing') — 한 줄 모양을 통째로 바꾼다.
+      beat["emph"]          핵심 단어 [문자열 | {"word","color"?,"grow"?}] — 구절마다 그 낱말이 있으면 칠한다.
+      beat["caption_marks"] 구절별(caption_lines 순서) [{"speaker"?,"variant"?,"emph"?,"sticker"?}] — 있으면 비트 값보다 이긴다.
+      beat["chars"]         글자 정렬 [{"char","start"}] — _attach_scene_chars 가 장면 글자 시각으로 옮긴다.
+    장면에 붙는 값: speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
+    어절 번호 = 자막 글을 띄어쓰기로 나눈 순서(편집기 splitCaptionWords 와 같다). 낱말은 어절 안에 들어 있으면 맞는다('성시경' ⊂ '성시경이').
+    자료가 없으면 빈 dict — 고객 작업 장면은 종전과 글자 하나 다르지 않다."""
+    marks = beat.get("caption_marks")
+    own = marks[piece] if isinstance(marks, list) and piece < len(marks) and isinstance(marks[piece], dict) else {}
+    out = {}
+    for key in ("speaker", "variant", "sticker"):
+        value = own.get(key, beat.get(key))
+        if isinstance(value, str) and value.strip():
+            out[key] = value.strip()
+    tokens = [_word_key(t) for t in (caption or "").split()]
+    emph, group = [], 0
+    for item in own.get("emph", beat.get("emph")) or []:
+        item = {"word": item} if isinstance(item, str) else item if isinstance(item, dict) else {}
+        want = [_word_key(p) for p in str(item.get("word") or "").split() if _word_key(p)]
+        if not want:
+            continue
+        at = next((i for i in range(len(tokens) - len(want) + 1)
+                   if all(w and w in tokens[i + j] for j, w in enumerate(want))), None)
+        if at is None:
+            continue
+        for i in range(at, at + len(want)):
+            if any(m["w"] == i for m in emph):
+                continue
+            mark = {"w": i, "g": group}           # g = 낱말 묶음 번호 — 여러 어절 낱말('1등 레시피')은 한 색
+            if _HEX.match(str(item.get("color") or "")):
+                mark["color"] = str(item["color"]).upper()
+            if item.get("grow") in ("pop", "hold"):
+                mark["grow"] = item["grow"]
+            emph.append(mark)
+        group += 1
+    if emph:
+        out["emph"] = sorted(emph, key=lambda m: m["w"])
+    return out
 
 
 def overlay_spans(scenes, layers, folder):
@@ -478,13 +567,14 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
         moment = moment_of(beat.get("role"), beat.get("meme"))   # 중요 장면 종류(관제 124·158) — 편집기 자동 배치·강조효과 프리셋이 쓴다
         caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
-        for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
+        for piece, (caption, t0, t1) in enumerate(caption_schedule(beat, absorb_lead=_absorb)):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
             if a > cursor + .001:
                 scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
-            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
+            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment,
+                           **scene_marks(beat, piece, caption)})   # 화자·줄 변형·핵심 단어(관제 235) — 비트에 자료가 있을 때만 붙는다
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
