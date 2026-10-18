@@ -1,0 +1,328 @@
+{
+ "갤런 물병": {
+  "ep": "2 물병_재검색",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8422860170",
+    "name": "갤런통 3.78L (1gal), 1개",
+    "url": "https://www.coupang.com/vp/products/8422860170?itemId=24364418575&vendorItemId=91379717258",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/0eee/4d873602003aa49cb916dfcb0c7f97a1638337b2e37aa8049856f872e988.jpg",
+    "price": "11,870원",
+    "rating": "(4)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7598299509",
+    "name": "필하이 대용량 보온보냉물통 스테인리스 워터저그 B타입 4L(실용량 3.8L), 1개, 오리지널, 4L",
+    "url": "https://www.coupang.com/vp/products/7598299509?itemId=25312323876&vendorItemId=91929979990",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/2f2110a37fa4e0adddf853701d01a6170c40815263b7ccc8175b0c26964f_1782106671098.jpg",
+    "price": "25,800원",
+    "rating": "(251)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "2313447536",
+    "name": "퀸센스 해피아워 진공에어포트 보온 보냉병, 3L, 1개",
+    "url": "https://www.coupang.com/vp/products/2313447536?itemId=3991100737&vendorItemId=91163633951",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2024/09/23/15/4/987bd7b2-afa7-4cce-b14b-68d56c4aae3b.jpg",
+    "price": "40,450원",
+    "rating": "(192)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8308428656",
+    "name": "브리즈문 택티컬 스테인리스 워터저그 3.8L, 블랙, 1개",
+    "url": "https://www.coupang.com/vp/products/8308428656?itemId=23972115077&vendorItemId=90993464992",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/1061574201230033-7546faa1-29d7-45d1-9c04-30d4668490ae.jpg",
+    "price": "5,460원",
+    "rating": "(194)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "6487165122",
+    "name": "여름 뉴 갤런 피트니스 포트 플라스틱 스포츠 물통, 15000ml, 블랙, 1개",
+    "url": "https://www.coupang.com/vp/products/6487165122?itemId=14225789091&vendorItemId=81471104540",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/e239/51b781e80d84e7d280a6bde51bbac71633cc5e21ecb0977771eacae84859.jpg",
+    "price": "19,800원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7675097532",
+    "name": "BPA Free PET 미니무지보틀350ml 500ml 물병 물통 기념품 답례품 졸업 입학 체육대회 운동회 개업 집들이 선물, 미니무지보틀350ml 1개 (세트 아님), 350ml, 1개",
+    "url": "https://www.coupang.com/vp/products/7675097532?itemId=24030796121&vendorItemId=82473582340",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/f326/62c70a46383da5fd965664d3a23aa6e69200410c0e722a6032d955263766.jpg",
+    "price": "770원",
+    "rating": "(133)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "1149607871",
+    "name": "빅베어 쉐이커 보틀, 블랙, 2.5L, 1개",
+    "url": "https://www.coupang.com/vp/products/1149607871?itemId=2123227475&vendorItemId=70121825929",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/1836122516694245-79237b21-3cfe-4141-bdec-3cdca378b5a7.jpg",
+    "price": "11,400원",
+    "rating": "(2,372)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9749598078",
+    "name": "카운터탑 증류용 1갤런 플라스틱 물병 증류기용 대용량 인체공학적 손잡이 용기, 1개, 상세 지침을 확인해 주십시오",
+    "url": "https://www.coupang.com/vp/products/9749598078?itemId=29192485473&vendorItemId=96164912942",
+    "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/6779/be1b98272ea4fa1c8f8817e69844ba300572763eaa11812960f0ec51c699.jpg",
+    "price": "15,370원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EA%B0%A4%EB%9F%B0%20%EB%AC%BC%EB%B3%91",
+  "source": "crawl",
+  "notice": ""
+ },
+ "대용량 물병 3.8L": {
+  "ep": "2 물병_재검색",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "8371023949",
+    "name": "카고컨테이너 3.8L 대용량 캠핑 워터 저그 휴대용 물통 보냉 보온 물통, 1개, 실버",
+    "url": "https://www.coupang.com/vp/products/8371023949?itemId=25408847832&vendorItemId=92402293664",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/4b9f/8f94fc3428dd912535a6800112fec4aab161300fa62eb0b66c0adf0720f9.jpg",
+    "price": "119,000원",
+    "rating": "(36)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "7405470324",
+    "name": "쿠스포츠 대용량 헬스 물통 메가보틀, 혼합색상, 2.4L, 2개",
+    "url": "https://www.coupang.com/vp/products/7405470324?itemId=29202970335&vendorItemId=96123232811",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/997f8281-a082-47e2-a129-d3649e6b97734915795065563710442.png",
+    "price": "200원",
+    "rating": "(86)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8308428656",
+    "name": "브리즈문 택티컬 스테인리스 워터저그 3.8L, 블랙, 1개",
+    "url": "https://www.coupang.com/vp/products/8308428656?itemId=23972115077&vendorItemId=90993464992",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/1061574201230033-7546faa1-29d7-45d1-9c04-30d4668490ae.jpg",
+    "price": "5,460원",
+    "rating": "(194)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7598299509",
+    "name": "필하이 대용량 보온보냉물통 스테인리스 워터저그 B타입 4L(실용량 3.8L), 1개, 오리지널, 4L",
+    "url": "https://www.coupang.com/vp/products/7598299509?itemId=25312323876&vendorItemId=91929979990",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/2f2110a37fa4e0adddf853701d01a6170c40815263b7ccc8175b0c26964f_1782106671098.jpg",
+    "price": "25,800원",
+    "rating": "(251)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9710514606",
+    "name": "2L 대용량 대형 스텐316 강력 보온 보냉 병 텀블러 물통 헬스 캠핑 등산 물병, 1개, 2000ml, 대용량텀블러 블랙",
+    "url": "https://www.coupang.com/vp/products/9710514606?itemId=29053413306&vendorItemId=95980118540",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/8fa6/1d86aa885622d43b04d0ad7da5285140c4f154f9fb9cdd299af75aab0f46.jpg",
+    "price": "24,500원",
+    "rating": "(227)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9687065459",
+    "name": "식품급 PC 대용량 스포츠 물병 인체공학 손잡이 360도 이중 누수방지 빨대 분리형 내한내열 운동 워터보틀, 3개, 1.2L, black",
+    "url": "https://www.coupang.com/vp/products/9687065459?itemId=28969852552&vendorItemId=95899596569",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/images/8f80a706-1e80-48d2-b1b4-858f7f7ca7568199538159608274579.jpg",
+    "price": "32,380원",
+    "rating": "",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "8074786850",
+    "name": "다잡 워터저그, 실버, 3.8L, 1개",
+    "url": "https://www.coupang.com/vp/products/8074786850?itemId=22744239167&vendorItemId=90783874227",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2024/07/24/16/3/0030ddbe-04c2-4c1d-9008-320d4ffcf464.jpg",
+    "price": "41,300원",
+    "rating": "(74)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EB%8C%80%EC%9A%A9%EB%9F%89%20%EB%AC%BC%EB%B3%91%203.8L",
+  "source": "crawl",
+  "notice": ""
+ },
+ "2리터 물병 빨대 손잡이": {
+  "ep": "2 물병_재검색",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "5391275736",
+    "name": "10도씨 트라이탄 빨대물통, 블랙그린, 2L, 1개",
+    "url": "https://www.coupang.com/vp/products/5391275736?itemId=1096240175&vendorItemId=5617008195",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2019/11/27/18/2/a91fc6b2-ae7a-463e-a8f6-d05444a18b76.jpg",
+    "price": "12,290원",
+    "rating": "(789)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9278307562",
+    "name": "ChillX 완전밀폐 텀블러 + 빨대 + 세척제 + 세척솔 + 빨대솔 + 미끄럼방지캡, 1개, 749ml, 블러쉬 핑크",
+    "url": "https://www.coupang.com/vp/products/9278307562?itemId=27467631248&vendorItemId=94432860534",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/31da/be5b020c854569a8e613814bf7ad8d9b6d47592790cb7b34408a7692f9d9.jpg",
+    "price": "19,900원",
+    "rating": "(575)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9686228752",
+    "name": "대용량 스포츠 물병 원터치 2WAY 빨대 물통 헬스 운동용 손잡이 텀블러, 1개, 2L, 블랙",
+    "url": "https://www.coupang.com/vp/products/9686228752?itemId=28967226997&vendorItemId=95931908382",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/225f/175b87a856967752a64b427ee855b5d05527386e26a0ac14113de01ec719.png",
+    "price": "10,800원",
+    "rating": "(32)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "7599396201",
+    "name": "어쉐어 그라데이션 대용량 텀블러, 퍼플, 2L, 1개",
+    "url": "https://www.coupang.com/vp/products/7599396201?itemId=17945138325&vendorItemId=85102968238",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/347199419869871-a4b931e8-43fc-447d-ba3d-96e6869bb0e8.jpg",
+    "price": "10,000원",
+    "rating": "(2,753)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "9681912778",
+    "name": "리베룸 대용량 스텐 텀블러 빨대 손잡이, 1개, 1.18L, 스톤 그레이",
+    "url": "https://www.coupang.com/vp/products/9681912778?itemId=28952072747&vendorItemId=95884261100",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/3b72/9a5cee0ff37be534cc3129369dbf9396a113ac9266946da01dbc488f30e2.png",
+    "price": "19,700원",
+    "rating": "(19)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "19145327",
+    "name": "10도씨 빨대물통 + 빨대 2p, 블랙베리, 1L, 1세트",
+    "url": "https://www.coupang.com/vp/products/19145327?itemId=76852985&vendorItemId=3129391927",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/4443056029500999-3b8f2643-9470-4e6d-ac43-4380dd31530a.jpg",
+    "price": "15,070원",
+    "rating": "(2,419)",
+    "rocket": false,
+    "is_ad": true
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=2%EB%A6%AC%ED%84%B0%20%EB%AC%BC%EB%B3%91%20%EB%B9%A8%EB%8C%80%20%EC%86%90%EC%9E%A1%EC%9D%B4",
+  "source": "crawl",
+  "notice": ""
+ },
+ "초대형 물병": {
+  "ep": "2 물병_재검색",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "6071248959",
+    "name": "키친왕 보온보냉 물통 워터저그, 블랙+실버, 10L, 1개",
+    "url": "https://www.coupang.com/vp/products/6071248959?itemId=22316589512&vendorItemId=89361989836",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/9fc7/713b3aea9100bbe5020ddaf57f0b4abd9ef80597b41fe41aa5945c5beb22.jpg",
+    "price": "74,000원",
+    "rating": "(126)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "9710514606",
+    "name": "2L 대용량 대형 스텐316 강력 보온 보냉 병 텀블러 물통 헬스 캠핑 등산 물병, 1개, 2000ml, 대용량텀블러 블랙",
+    "url": "https://www.coupang.com/vp/products/9710514606?itemId=29053413306&vendorItemId=95980118540",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/8fa6/1d86aa885622d43b04d0ad7da5285140c4f154f9fb9cdd299af75aab0f46.jpg",
+    "price": "24,500원",
+    "rating": "(227)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "7598299509",
+    "name": "필하이 대용량 보온보냉물통 스테인리스 워터저그 B타입 4L(실용량 3.8L), 1개, 오리지널, 4L",
+    "url": "https://www.coupang.com/vp/products/7598299509?itemId=25312323876&vendorItemId=91929979990",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/image_audit/stage/manual/2f2110a37fa4e0adddf853701d01a6170c40815263b7ccc8175b0c26964f_1782106671098.jpg",
+    "price": "25,800원",
+    "rating": "(251)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8897530869",
+    "name": "코코리브 초대용량 보냉보온병, 1개, 4000ml, 블랙",
+    "url": "https://www.coupang.com/vp/products/8897530869?itemId=27182592772&vendorItemId=94394142556",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/1a30/19b30d7cec8439e842b1e773fe9e0c954fb617ca1f1ef865e4f26458bd27.png",
+    "price": "45,800원",
+    "rating": "(743)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8308428656",
+    "name": "브리즈문 택티컬 스테인리스 워터저그 3.8L, 블랙, 1개",
+    "url": "https://www.coupang.com/vp/products/8308428656?itemId=23972115077&vendorItemId=90993464992",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/1061574201230033-7546faa1-29d7-45d1-9c04-30d4668490ae.jpg",
+    "price": "5,460원",
+    "rating": "(194)",
+    "rocket": false,
+    "is_ad": false
+   },
+   {
+    "product_id": "8575081503",
+    "name": "3리터 대용량 강력 보온병 스테인리스 텀블러 3L 대형 물통 보냉 보온 캠핑 운동 등산 용 물병 헬스 다이어트 워터 보틀, 본품+전용 스트랩+전용 세척솔, 1개",
+    "url": "https://www.coupang.com/vp/products/8575081503?itemId=24848210277&vendorItemId=91044762803",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/vendor_inventory/0416/9613055d3c50a5c00ca7b139b4463664d7bfda9a256f5e5706a51f1027e8.jpg",
+    "price": "33,000원",
+    "rating": "(102)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "1149607871",
+    "name": "빅베어 쉐이커 보틀, 퍼플, 2.5L, 1개",
+    "url": "https://www.coupang.com/vp/products/1149607871?itemId=2123227478&vendorItemId=70121825950",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/3666372914598446-259d1844-0e7a-4790-ae02-22f004b7a4fc.jpg",
+    "price": "11,400원",
+    "rating": "(2,372)",
+    "rocket": false,
+    "is_ad": true
+   },
+   {
+    "product_id": "2313447536",
+    "name": "퀸센스 해피아워 진공에어포트 보온 보냉병, 3L, 1개",
+    "url": "https://www.coupang.com/vp/products/2313447536?itemId=3991100737&vendorItemId=91163633951",
+    "image": "//thumbnail.coupangcdn.com/thumbnails/remote/657x657q90trim/image/retail/images/2024/09/23/15/4/987bd7b2-afa7-4cce-b14b-68d56c4aae3b.jpg",
+    "price": "40,450원",
+    "rating": "(192)",
+    "rocket": false,
+    "is_ad": false
+   }
+  ],
+  "search_url": "https://www.coupang.com/np/search?q=%EC%B4%88%EB%8C%80%ED%98%95%20%EB%AC%BC%EB%B3%91",
+  "source": "crawl",
+  "notice": ""
+ }
+}

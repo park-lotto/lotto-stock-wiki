@@ -155,8 +155,19 @@ def bgm_continue(S, vid: Path, R: Path, start: float, target: float) -> Path:
     return out
 
 
+def interest_gate(S: dict) -> None:
+    """(판단 주인) 흥미 이음 — 사장님 10-18 "물병 만든 영상 보면 원본 해외 영상이랑 완전 다른, 흥미롭지 못한 물건이야. 이 기준을 세워야겠다".
+    앞 원본이 사람을 붙잡은 바로 그 점(원본흥미)이 뒤 쿠팡 제품에도 눈에 보여야 한다(뒤흥미). 판정 '같음'만 굽는다.
+    대본.json 흥미이음 = {원본흥미, 뒤흥미, 판정: 같음|약함|없음, 근거}. 설명서 대본설명서.md §0."""
+    h = S.get("흥미이음") or {}
+    if h.get("판정") != "같음" and not h.get("사장님허락"):
+        raise StageError(f"흥미 이음 미달(판정 {h.get('판정', '없음 — 칸을 안 채움')}): 원본흥미 {h.get('원본흥미')!r} / 뒤흥미 {h.get('뒤흥미')!r}"
+                         " — 원본의 신기한 점을 가진 쿠팡 제품을 다시 찾는다")
+
+
 def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, log=print) -> dict:
     S, M = jload(doc / "대본.json"), jload(doc / "재료.json")
+    interest_gate(S)
     R = work / "render"
     R.mkdir(parents=True, exist_ok=True)
     if plan_only:

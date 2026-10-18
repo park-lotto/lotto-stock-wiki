@@ -25,6 +25,8 @@ QUERIES = {
     "5 고양이집게": ["고양이 빵 봉지 클립", "고양이 봉지 집게"],
 }
 
+if len(sys.argv) > 2:   # py 쿠팡검색.py <편 이름> <검색어> [<검색어> …] — 편 하나만 다시 찾기(10-18 흥미 이음 미달 편)
+    QUERIES = {sys.argv[1]: sys.argv[2:]}
 out = {}
 for ep, qs in QUERIES.items():
     for q in qs:
@@ -34,6 +36,6 @@ for ep, qs in QUERIES.items():
         for it in (r.get("items") or [])[:6]:
             print("   ", it.get("product_id"), "|", (it.get("name") or "")[:60], "|",
                   it.get("rating", ""), it.get("review_count", it.get("rating_count", "")))
-dst = Path(__file__).with_name("쿠팡검색_2026-10-18.json")
+dst = Path(__file__).with_name("쿠팡검색_2026-10-18.json" if len(sys.argv) <= 2 else f"쿠팡검색_{sys.argv[1].replace(' ', '_')}.json")
 dst.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 print("저장:", dst)
