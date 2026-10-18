@@ -291,8 +291,8 @@ def run(pack, out, compose, fails):
         final = out / f"{pack}_hybrid.mp4"
         scene_style.compose(str(base), timeline, snap, str(final), d / "cw", {"text": "x"})
         need(final.exists() and final.stat().st_size > 100_000, f"완성본 {final.name} {final.stat().st_size if final.exists() else 0}바이트")
-        dur = lambda p: float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)], capture_output=True, text=True).stdout.strip() or 0)
-        need(abs(dur(final) - total) <= 1 / 30 + .01, f"완성본 길이 {dur(final):.3f}초 = 바탕 영상 {total:.3f}초(±1프레임)")
+        vdur = lambda p: float(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration", "-of", "csv=p=0", str(p)], capture_output=True, text=True).stdout.strip() or 0)
+        need(abs(vdur(final) - vdur(base_video)) <= 1 / 30 + .01, f"완성본 화면 길이 {vdur(final):.3f}초 = 바탕 영상 화면 {vdur(base_video):.3f}초(±1프레임)")
         report["final"] = str(loud(final, out / f"{pack}_final.mp4", need))
     sheet(pack, rows, ctx, idx, layers, L, final, out, report)
     (out / f"{pack}_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
