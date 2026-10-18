@@ -24,9 +24,10 @@ REPO = "/home/ubuntu/lotto-stock-wiki"
 
 REMOTE = r'''
 import json, sys
-from shopping_shorts import tts
+from shopping_shorts import tts, tts_timestamps
 a = json.loads(sys.stdin.read())
 tts.synthesize_tts(a["text"], a["out"], voice_id=a["voice_id"], voice_settings=a["settings"], model_id=a["model_id"])
+print("ALIGN " + json.dumps(tts_timestamps.load(a["out"]), ensure_ascii=False))
 print("OK", a["out"])
 '''
 
@@ -39,6 +40,11 @@ def preset(tone: str) -> dict:
 
 
 def synth(text: str, out: str, tone: str = "expressive") -> str:
+    return synth_align(text, out, tone)[0]
+
+
+def synth_align(text: str, out: str, tone: str = "expressive") -> tuple[str, dict | None]:
+    """합성 + 글자 시각(일레븐랩스 /with-timestamps alignment — 타입캐스트 to_alignment 와 같은 꼴). 하이브리드 렌더러는 narr_align 이 부른다."""
     p = preset(tone)
     remote_out = f"/tmp/calcopy_mina_{abs(hash((text, tone))) % 10**10}.mp3"
     arg = json.dumps({"text": text, "out": remote_out, **p}, ensure_ascii=False)
@@ -53,7 +59,8 @@ def synth(text: str, out: str, tone: str = "expressive") -> str:
     subprocess.run(["ssh", "-i", KEY, HOST, f"rm -f {remote_out}"], capture_output=True)
     if Path(out).stat().st_size < 5000:
         raise RuntimeError(f"받은 파일이 너무 작다(무음 mock 의심): {out}")
-    return out
+    line = next((x for x in r.stdout.splitlines() if x.startswith("ALIGN ")), "ALIGN null")
+    return out, json.loads(line[6:])
 
 
 def main() -> int:

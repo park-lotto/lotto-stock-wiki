@@ -145,6 +145,7 @@ def split_sentences(full, n, chars: list[int] | None = None):
 def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None):
     """문장 자르기(손 tts_spans > 글자 시각 align > 소리 틈 어림) → 쉼 고치기(tts_pauses) → atempo. atempo 는 전체 한 값(B17), 빠른 줄은 평균까지 늦추고(≤10%)
     느린 줄(평균의 90% 미만)은 ≤10% 당긴다(장윤정 편). 줄별 tts_override 가 있으면 그 파일을 그 줄 소스로(최은경 이름 발음)."""
+    from tools.calcopy.engine import narr_align as NA
     L = tts_lines(S)
     if S.get("tts_spans"):
         spans, inner = [tuple(S["tts_spans"][l["id"]]) for l in L], split_sentences(full, len(L))[1]
@@ -161,10 +162,12 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
 
     def eff(l, a, b, tempo):
         return (b - a) - sum(e - s for s, e, _ in P.get(l["id"], [])) + sum(t * tempo for _, _, t in P.get(l["id"], []))
-    tempo = 1.1
-    for _ in range(5):
-        speech = sum(eff(l, a, b, tempo) for l, (a, b) in zip(L, spans))
-        tempo = round(min(1.25, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
+    tempo = NA.fixed_tempo(S["voice"]["voice_id"])   # 일레븐랩스(미나)는 서비스 배속 그대로(1.35) — 10-18 사장님 '잇썸홈판은 미나'
+    if not tempo:
+        tempo = 1.1
+        for _ in range(5):
+            speech = sum(eff(l, a, b, tempo) for l, (a, b) in zip(L, spans))
+            tempo = round(min(1.25, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
     durs = [eff(l, a, b, tempo) / tempo for l, (a, b) in zip(L, spans)]
     mean = sum(chars) / sum(durs)
     out = []

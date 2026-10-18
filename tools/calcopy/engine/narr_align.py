@@ -102,6 +102,8 @@ def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: 
             sc.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
             log(f"[tts] 옛 합성본 재사용(글자 시각 없음): {out.name}")
             return None
+    if is_eleven(voice_id):
+        return _synth_eleven(text, voice_id, tempo, out, key, model, log)
     from shopping_shorts import typecast_tts
     from shopping_shorts.channelkit import providers
     key_tc = providers.typecast_key(None)
@@ -127,6 +129,48 @@ def synth_cached(text: str, voice_id: str, tempo: float | None, out_mp3, model: 
 
 
 # ── 글자 시각 → 문장부호 자리 ───────────────────────────────────────────
+def is_eleven(voice_id: str) -> bool:
+    """일레븐랩스 목소리 = voice_presets 의 프리셋 id('kr-mina-expressive' 꼴). 타입캐스트는 'tc_…' 성우 id — 10-18 사장님 '잇썸홈판은 일레븐랩스 미나'."""
+    return str(voice_id or "").startswith("kr-")
+
+
+def fixed_tempo(voice_id: str) -> float | None:
+    """일레븐랩스 프리셋의 배속 = 서비스 규칙 voice_presets.json default_speed(미나 1.35) 그대로 — 자/초로 재보정하지 않는다
+    (shopping_shorts/voice_presets.py: '미나 1.35 = 6.87자/초, 귀에는 다른 목소리 1.25 와 같다. 숫자로 재보정하지 마라'). 타입캐스트는 None(목표 자/초로 맞춘다)."""
+    if not is_eleven(voice_id):
+        return None
+    d = json.loads((ROOT / "shopping_shorts/assets/voice_presets.json").read_text(encoding="utf-8"))
+    rows = d if isinstance(d, list) else next(iter(d.values()))
+    p = next((x for x in rows if x.get("preset_id") == voice_id), None)
+    if not p or not p.get("default_speed"):
+        raise RuntimeError(f"voice_presets 에 배속이 없다: {voice_id}")
+    return float(p["default_speed"])
+
+
+def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: str, log) -> dict | None:
+    """일레븐랩스는 서버에서 합성하고 mp3·글자 시각만 받는다(키 반출 금지 — 주인 tools/calcopy/mina_tts). 배속은 렌더러 atempo 가 맞춘다."""
+    from tools.calcopy import mina_tts
+    tone = preset_id.rsplit("-", 1)[-1]
+    if not preset_id.startswith("kr-mina-"):
+        raise RuntimeError(f"서버 합성 도구는 미나만 받는다: {preset_id}")
+    locks = _proc_slots()
+    try:
+        with _TTS_SEM:
+            t0 = time.time()
+            _, align = mina_tts.synth_align(text, str(out), tone)
+    finally:
+        for lk in locks:
+            try:
+                lk.unlink()
+            except OSError:
+                pass
+    meta = {"key": key, "text": text, "voice": preset_id, "tempo": tempo, "model": model, "align": align, "legacy": False,
+            "at": time.strftime("%Y-%m-%d %H:%M:%S"), "sec": round(time.time() - t0, 1), "engine": "elevenlabs(서버)"}
+    sidecar_of(out).write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    log(f"[tts] 일레븐랩스 {preset_id} 1회 {meta['sec']}초 → {out.name} (글자 시각 {'있음' if align else '없음'})")
+    return align
+
+
 def punct_marks(text: str) -> list[tuple[str, int]]:
     """글의 문장부호 순서대로 (종류, 앞까지 읽는 글자 수). ?·! 은 마침표."""
     out = []
