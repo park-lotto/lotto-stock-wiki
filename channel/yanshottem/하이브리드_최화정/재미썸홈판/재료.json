@@ -1,0 +1,248 @@
+{
+ "_note": "재미썸홈판. A = 원음 밑 화면(잇썸홈판 O 와 같음). F1 = 박창수 한마디 밑 최화정 얼굴 두 컷(썸네일 규칙). B crop=[x,y,h](창 1080×1407, w=0.7676h). 박힌 자막·상단 자막·워터마크·남의 얼굴은 크롭 밖. max = 원본 샷 경계(scdet).",
+ "cand_dir": "C:/숏템_칼카피/yanshottem/하이브리드_최화정/src",
+ "src_main": "RPuDFaMmpJI_375_450.mp4",
+ "A": [
+  {
+   "at": 0.0,
+   "src": "RPuDFaMmpJI_375_450.mp4",
+   "ss": 44.62,
+   "crop": [
+    740,
+    110,
+    470,
+    470
+   ],
+   "see": "최화정 상반신 근접 — '평범한 김인 거야'(원본 화면, 첫 프레임 얼굴 크게)"
+  },
+  {
+   "at": 1.6,
+   "src": "RPuDFaMmpJI_375_450.mp4",
+   "ss": 46.36,
+   "crop": [
+    600,
+    100,
+    640,
+    640
+   ],
+   "see": "최화정 손 — 밥에 김 싸서 젓가락(원본 화면)"
+  }
+ ],
+ "F1": [
+  {
+   "src": "RPuDFaMmpJI_1100_1160.mp4",
+   "ss": 51.8,
+   "max": 4.1,
+   "crop": [
+    680,
+    0,
+    620,
+    620
+   ],
+   "from_piece": 0,
+   "see": "최화정 정면 근접 — 눈·입 보임"
+  },
+  {
+   "src": "RPuDFaMmpJI_375_450.mp4",
+   "ss": 37.35,
+   "max": 2.3,
+   "crop": [
+    420,
+    0,
+    850,
+    850
+   ],
+   "from_piece": 1,
+   "see": "최화정 근접 — 손에 할아버지김 한 장('그 김의 정체')"
+  }
+ ],
+ "B": [
+  {
+   "src": "RPuDFaMmpJI_15_60.mp4",
+   "ss": 32.45,
+   "max": 2.55,
+   "crop": [
+    870,
+    0,
+    850
+   ],
+   "kind": "제품",
+   "pieces": [
+    3,
+    4
+   ],
+   "seen": "최화정 손에 든 할아버지김 봉지 근접(한 사람당 네 봉)"
+  },
+  {
+   "src": "gim/j08pRrQoBzI.mp4",
+   "ss": 1.0,
+   "max": 2.45,
+   "crop": [
+    480,
+    1680,
+    1880
+   ],
+   "kind": "제품",
+   "pieces": [
+    5,
+    6
+   ],
+   "seen": "택배 상자 여는 손(따라 사 봤는데) · 상단 자막·CapCut 로고 밖 · CapCut 표식(오른쪽 아래)·상단 자막 밖"
+  },
+  {
+   "src": "gim/j08pRrQoBzI.mp4",
+   "ss": 7.4,
+   "max": 2.3,
+   "crop": [
+    50,
+    1040,
+    2600
+   ],
+   "kind": "제품",
+   "pieces": [
+    7,
+    8
+   ],
+   "seen": "할아버지김 봉지 앞면을 들어 보임(이건 바로 소문난 할아버지 김) · CapCut 표식(오른쪽 아래)·상단 자막 밖"
+  },
+  {
+   "src": "gim/jU1wz02jJC8.mp4",
+   "ss": 28.4,
+   "max": 4.7,
+   "crop": [
+    140,
+    150,
+    755
+   ],
+   "kind": "제품",
+   "pieces": [
+    9,
+    10,
+    11
+   ],
+   "seen": "봉지에서 꺼낸 돌김 한 묶음(보기엔 평범한 김 · 밥 싸 먹으면)"
+  },
+  {
+   "src": "gim/jU1wz02jJC8.mp4",
+   "ss": 42.5,
+   "max": 14.0,
+   "crop": [
+    140,
+    250,
+    755
+   ],
+   "kind": "제품",
+   "pieces": [
+    12,
+    13
+   ],
+   "seen": "김에 싼 밥을 손에 듦(바삭바삭 · 과자)"
+  },
+  {
+   "src": "gim/VN8eFlPgjeA.mp4",
+   "ss": 10.0,
+   "max": 3.5,
+   "crop": [
+    0,
+    250,
+    1407
+   ],
+   "kind": "제품",
+   "pieces": [
+    14,
+    15
+   ],
+   "seen": "봉지 라벨 '역사 1982년~ 즉석구이 자연산 돌김'"
+  },
+  {
+   "src": "RPuDFaMmpJI_375_450.mp4",
+   "ss": 26.3,
+   "max": 2.9,
+   "crop": [
+    700,
+    0,
+    850
+   ],
+   "kind": "제품",
+   "pieces": [
+    16,
+    17
+   ],
+   "seen": "최화정이 할아버지김 봉지를 꺼냄(즉석에서 구워 온 돌김)"
+  },
+  {
+   "src": "gim/jU1wz02jJC8.mp4",
+   "ss": 17.06,
+   "max": 2.98,
+   "crop": [
+    140,
+    100,
+    755
+   ],
+   "kind": "제품",
+   "pieces": [
+    18,
+    19,
+    20
+   ],
+   "seen": "상자 속 안내문 '인터넷 주문 · 네이버 검색'(인터넷은)"
+  },
+  {
+   "src": "gim/j08pRrQoBzI.mp4",
+   "ss": 13.0,
+   "max": 3.4,
+   "crop": [
+    50,
+    1115,
+    2500
+   ],
+   "kind": "제품",
+   "pieces": [
+    21,
+    22
+   ],
+   "seen": "상자 속 할아버지김 봉지를 꺼내는 손 · CapCut 표식(오른쪽 아래)·상단 자막 밖"
+  },
+  {
+   "src": "RPuDFaMmpJI_15_60.mp4",
+   "ss": 24.0,
+   "max": 2.6,
+   "crop": [
+    870,
+    0,
+    850
+   ],
+   "kind": "제품",
+   "pieces": [
+    23,
+    24
+   ],
+   "seen": "할아버지김을 받고 놀라는 최화정(반한 그 김) · 가게 사진 인서트(x<720)·제작진 손 밖"
+  },
+  {
+   "src": "gim/jU1wz02jJC8.mp4",
+   "ss": 34.6,
+   "max": 4.9,
+   "crop": [
+    140,
+    150,
+    755
+   ],
+   "kind": "제품",
+   "pieces": [
+    25,
+    26,
+    27
+   ],
+   "seen": "돌김 한 장을 들어 보임(끝 컷)"
+  }
+ ],
+ "src_urls": {
+  "RPuDFaMmpJI_375_450.mp4": "https://www.youtube.com/watch?v=RPuDFaMmpJI 375~450초(안녕하세요 최화정이에요, 1080p)",
+  "RPuDFaMmpJI_1100_1160.mp4": "https://www.youtube.com/watch?v=RPuDFaMmpJI 1100~1160초",
+  "RPuDFaMmpJI_15_60.mp4": "https://www.youtube.com/watch?v=RPuDFaMmpJI 15~60초",
+  "gim/jU1wz02jJC8.mp4": "https://youtu.be/jU1wz02jJC8 (유일한TV 할아버지김 언박싱 쇼츠, 720p)",
+  "gim/j08pRrQoBzI.mp4": "https://youtu.be/j08pRrQoBzI (소문난 품절템 언박싱 쇼츠, 2160p)",
+  "gim/VN8eFlPgjeA.mp4": "https://youtu.be/VN8eFlPgjeA (할아버지김 언박싱 쇼츠, 1080p)"
+ }
+}
