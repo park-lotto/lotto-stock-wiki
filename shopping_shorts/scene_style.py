@@ -651,6 +651,13 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0, skip=0
             f":d=1:s={width}x{height}:fps=30")
 
 
+# 장면 조각 비트레이트 상한(2026-10-18 고객 제보 "흑백+강조 장면에서 목소리에 버퍼가 걸리고 떨림").
+#   흑백 충격의 필름 잡티(noise c0f=t)+흔들림은 매 프레임이 새 그림이라 crf 만으로는 그 장면이 초당 70~100Mb까지 치솟았다
+#   (실측 fd561d143f44·8eb2c0982f5a·383ac5b29649, 평소 5~12Mb). 재생기가 그 구간에서 버벅여 소리가 끊겨 들린다.
+#   상한 20Mb(1초 버퍼) — 같은 구간 재인코딩 실측 75→20Mb, 평소 구간은 그대로.
+SCENE_PART_VBV = ("-maxrate", "20M", "-bufsize", "20M")
+
+
 def shock_vf(effect, width, height):
     """흑백 충격(관제 124, 사장님 2026-10-05 "흑백은 충격·잘못된 비포 장면에, 흑백과 지지직 효과·약간 흔들리는 느낌") — 영상 칸에만.
     흑백+대비 · 필름 잡티(noise) · 흔들림(프레임마다 ±1.2% 이동) · 지지직(13프레임마다 2프레임 크게 찢기듯 밀림+번쩍).
@@ -781,7 +788,7 @@ def capcut_bake_spans(scenes, snapshot, layers, folder, final_video):
                 continue
         path=folder/f"scene-style-bake-{i:04d}.mp4"
         va._run_ffmpeg(["ffmpeg","-y","-ss",f"{shift+start:.3f}","-i",str(final_video),"-t",f"{end-start:.3f}","-an",
-                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),"-pix_fmt","yuv420p","-r","30",str(path)])
+                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,"-pix_fmt","yuv420p","-r","30",str(path)])
         out.append({"path":str(path),"start":start,"end":end,"scene":i})
     return out
 
@@ -953,7 +960,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         else:
             graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
         parts.append(part)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")
