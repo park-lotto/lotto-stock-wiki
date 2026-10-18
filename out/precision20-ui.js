@@ -1169,9 +1169,9 @@
       else if(typeof motion.origin==='string')el.style.transformOrigin=motion.origin;
       // spreadX: 가운데에서 (번호-가운데)×값×spreadK(em) 벌어진 자리(translate) — spreadK 없는 키프레임은 제자리
       const frames=motion.spreadX?motion.frames.map(({spreadK,...f})=>({...f,translate:`${((k-mid)*motion.spreadX*(spreadK||0)).toFixed(3)}em 0`})):motion.frames;
-      drive(el.animate(frames,{duration:ms,delay:delays[k],easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'}));
+      drive(el.animate(frames,{duration:ms,delay:delays[k]-(motion.sync==='speech'?1:0),easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'}));
       // 새 글자 첫 프레임 번쩍(관제 235 키치잇 분홍) — 그 글자가 나온 순간 flash.ms 동안만 그 색, 끝나면 제 색(강조 색이면 강조 색)
-      if(motion.flash?.color)drive(el.animate([{color:motion.flash.color},{color:motion.flash.color}],{duration:motion.flash.ms||33,delay:delays[k],fill:'none'}));
+      if(motion.flash?.color)drive(el.animate([{color:motion.flash.color},{color:motion.flash.color}],{duration:motion.flash.ms||33,delay:delays[k]-1,fill:'none'}));
     });
     // 글자 단위일 때 어절은 첫 글자가 나올 때 같이 켠다 — 어절에 붙은 단어 강조 상자(::before)가 빈 채로 먼저 뜨지 않게
     if(motion.unit==='char')text.querySelectorAll('.wfx-w').forEach(w=>{
@@ -1190,6 +1190,7 @@
   }
   // 말 맞춘 타이핑(관제 235) — 글자 k 가 나오는 시각(장면 시작 기준 ms). 주인 = 장면 자료(서버 scene_style):
   //   scene.chars(글자 시각) > scene.words(어절 시각을 그 어절 글자 수로 나눔) > 효과의 일정 간격(stagger·spread).
+  //   글자 움직임은 1ms 앞당겨 건다 — 시각 그 프레임에 이미 보이게(관제 235 실측: 안 당기면 1프레임 늦었다).
   function captionCharDelays(els,motion,text){
     const n=els.length,step=n>1?Math.min(motion.stagger||100,(motion.spread??Infinity)/(n-1)):0,even=els.map((_,k)=>k*step);
     const sc=sceneContext?.scenes?.[sceneIndex];if(!sc)return even;

@@ -143,7 +143,7 @@ def run(pack, out, compose, fails):
         if not ok: fails.append(f"[{pack}] {msg}")
     table = json.loads((tables_dir() / CHANNEL[pack] / "하이브리드_성시경/자막표.json").read_text(encoding="utf-8"))
     rows = norm_rows(pack, table)
-    d = out / pack; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True)
+    d = out / pack; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True, exist_ok=True)
     tts = out / "v.wav"
     if not tts.exists():
         va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
