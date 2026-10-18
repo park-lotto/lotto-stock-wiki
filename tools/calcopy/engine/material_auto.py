@@ -962,6 +962,7 @@ def fit_cuts(picks, toks, wd: Path, llm, window=None, seen: dict | None = None) 
 
 
 EYE_K = 10                # 눈 고르기 — 토막당 후보 그림 수(시트 1장)
+EYE_FLOOR = 4             # 맞는 칸(FIT_MIN)이 없을 때 남기는 최고점 칸의 하한(제품은 나오는 칸) — 미달 표시는 그대로 남는다
 
 
 def eye_rescue(bad: list[dict], toks, needs, ranked, cells, meta, rules, fit_ban, wd: Path, llm, log=print) -> dict:
@@ -990,8 +991,11 @@ def eye_rescue(bad: list[dict], toks, needs, ranked, cells, meta, rules, fit_ban
     for i, ids, res in done:
         sc = sorted(((r.get("score") or 0, c) for r, c in zip(res, ids)), reverse=True)
         good = [(c, s) for s, c in sc if s >= FIT_MIN]
+        if not good and sc and sc[0][0] >= EYE_FLOOR:
+            # 맞는 칸이 없으면 최고점 칸을 남긴다(빈칸 < 대체로 맞는 컷) — 10-18 소넷 판정: 다 빼니 28칸 중 12칸이 빈칸
+            good = [(sc[0][1], MIN_SCORE)]
         for s, c in sc:
-            if s < FIT_MIN:
+            if s < FIT_MIN and (not good or c != good[0][0]):
                 fit_ban.setdefault(i, set()).add(c)
         log(f"[눈 고르기] 토막 {i} «{tok[i]['text']}» 후보 {len(ids)} → 맞음 {len(good)} (최고 {sc[0][0] if sc else '-'})")
         if good:
@@ -1029,7 +1033,8 @@ def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections
                 break
             ban_cells(flagged, state["cells"])
             for p in low:
-                if p.get("cid") is not None:
+                # 눈 고르기를 마친 토막은 그림 채점으로 남긴 최고점 칸이다 — 다시 빼면 후보가 바닥나 빈칸(10-18 재미썸홈 칫솔 13칸)
+                if p.get("cid") is not None and p["i"] not in eyed:
                     fit_ban.setdefault(p["i"], set()).add(p["cid"])
             if bad:
                 ranked = eye_rescue(bad, toks, needs, ranked, state["cells"], state["meta"], rules, fit_ban, wd, llm)

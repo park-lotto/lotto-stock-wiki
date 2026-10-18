@@ -416,3 +416,16 @@ def test_eye_rescue_reranks_by_picture(tmp_path):
     assert r[0][0] == (1, 9) and ban[0] == {0, 2}
     p = ma.select(ts, _needs(ts), r, cells, META, ITS, fit_ban=ban)
     assert p[0]["cid"] == 1
+
+
+def test_eye_rescue_keeps_best_when_none_fit(tmp_path):
+    """맞는 칸(≥FIT_MIN)이 하나도 없으면 최고점(≥EYE_FLOOR) 칸을 남긴다 — 다 빼면 빈칸이 된다(10-18 소넷 판정 12칸 빈칸)."""
+    ts = toks(1)
+    cells = {0: cell("A", 11.0), 1: cell("B", 20.0)}
+
+    def fake(parts, prompt, tag):
+        return {"fits": [{"n": 0, "score": 3}, {"n": 1, "score": 5}]}, None
+    ban = {}
+    r = ma.eye_rescue([{"i": 0}], ts, _needs(ts), {0: [(0, 9), (1, 6)]}, cells, META, ITS, ban, tmp_path, ma.LLM(fake), log=lambda *a: None)
+    assert r[0][0][0] == 1 and ban[0] == {0}
+    assert ma.select(ts, _needs(ts), r, cells, META, ITS, fit_ban=ban)[0]["cid"] == 1
