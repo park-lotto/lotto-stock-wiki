@@ -47,19 +47,19 @@
    "seen": "반죽 통·관이 줄줄이 돌아가는 공장 라인"
   },
   {
-   "src": "meme:fm_crycat",
+   "src": "meme:fm_squidsad",
    "ss": 0.0,
    "kind": "짤",
-   "seen": "눈물 그렁한 고양이 — '또 다 태웠음..'"
+   "seen": "고개 숙인 징징이 — '또 다 태웠음..'"
   },
   {
    "cont": true
   },
   {
-   "src": "meme:fm_frysquint",
+   "src": "meme:fm_rockeyebrow",
    "ss": 0.0,
    "kind": "짤",
-   "seen": "눈 가늘게 뜬 프라이 — '이름이 영 별론데..'"
+   "seen": "눈썹 올리는 드웨인 존슨 — '이름이 영 별론데..'"
   },
   {
    "cont": true
@@ -77,10 +77,10 @@
    ]
   },
   {
-   "src": "meme:fm_carlton",
+   "src": "meme:fm_shaqshimmy",
    "ss": 0.0,
    "kind": "짤",
-   "seen": "신나게 춤추는 칼튼 — '아리깡 아리깡 부르는 걸'"
+   "seen": "어깨 들썩이는 샤킬 오닐 — '아리깡 아리깡 부르는 걸'"
   },
   {
    "src": "src_FVeP1RngGzw.mp4",
@@ -176,5 +176,5 @@
    "cont": true
   }
  ],
- "_note": "행 = 자막 조각 24행. 원음 안 씀. 샷 경계 = ffmpeg scene>0.25(일부 0.12) 실측. 남의 글자: hdq 위 'ASMR'·KINEMASTER 워터마크, PQHi 연도 표시, 1mjJ '연인 손' → src_crop"
+ "_note": "행 = 자막 조각 24행. 원음 안 씀. 샷 경계 = ffmpeg scene>0.25(일부 0.12) 실측. 남의 글자: hdq 위 'ASMR'·KINEMASTER 워터마크, PQHi 연도 표시, 1mjJ '연인 손' → src_crop · 10-18 초록 배경 짤(crycat·frysquint·carlton) 교체 — 엔진이 초록을 안 빼 화면에 초록 바탕이 그대로 나옴(완성본 프레임 실측)"
 }
