@@ -1,0 +1,155 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 420,
+   "w": 1080,
+   "h": 1080,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 201,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 99.5,
+   "line_h": 103,
+   "rgb": [
+    251,
+    252,
+    251
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -5.1,
+   "enter": null,
+   "text": "허연~ 발뒤꿈치\n5천원으로 아기발 되기"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1324,
+   "lines": 1,
+   "font": "CcNanumGothic-Bold",
+   "size": 70.3,
+   "line_h": 81,
+   "rgb": [
+    252,
+    252,
+    251
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 5,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "label",
+   "x": 540,
+   "y": 1515,
+   "lines": 1,
+   "font": "CcPretendard-Regular",
+   "size": 34.0,
+   "line_h": 40,
+   "rgb": [
+    125,
+    125,
+    125
+   ],
+   "text": "출처 : 백지영 Baek Z Young"
+  },
+  {
+   "kind": "text",
+   "w": 960,
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "role": "brand",
+   "x": 540,
+   "y": 1745,
+   "lines": 2,
+   "font": "CcPretendard-Regular",
+   "size": 36.0,
+   "line_h": 44,
+   "rgb": [
+    140,
+    140,
+    140
+   ],
+   "text": "anna\npick"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "hj9O7LmPZjo",
+ "made_from": {
+  "tool": "ap_preset.hand",
+  "from": "hj9O7LmPZjo_auto.json",
+  "notes": [
+   "출처 줄(label)·로고(brand) 층 손으로 추가 — 3초 프레임 실측 자리"
+  ]
+ }
+}

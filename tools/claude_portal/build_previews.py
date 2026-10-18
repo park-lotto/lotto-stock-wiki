@@ -150,10 +150,13 @@ def meme_sprites(rows, out_dir: Path, blob_dir: Path):
                 for i, r in enumerate(chunk):
                     png = Path(td) / f"{i}.png"
                     try:
-                        _ff(["-ss", "0.5", "-i", str(blob_dir / r["sha256"]), "-frames:v", "1",
-                             "-vf", "scale='if(gt(iw,ih),240,-2)':'if(gt(iw,ih),-2,240)'", str(png)])
+                        for ss in ("0.5", "0"):   # 0.5초보다 짧은 짤은 ffmpeg 가 rc 0 인데 그림을 안 만든다 → 첫 장면으로
+                            _ff(["-ss", ss, "-i", str(blob_dir / r["sha256"]), "-frames:v", "1",
+                                 "-vf", "scale='if(gt(iw,ih),240,-2)':'if(gt(iw,ih),-2,240)'", str(png)])
+                            if png.exists():
+                                break
                         cells.append(Image.open(png).convert("RGB"))
-                    except RuntimeError:
+                    except (RuntimeError, OSError):
                         try:
                             im = Image.open(blob_dir / r["sha256"]).convert("RGB")
                             im.thumbnail((240, 240))

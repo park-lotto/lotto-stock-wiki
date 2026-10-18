@@ -1,0 +1,186 @@
+{
+ "slug": "sseolpulda",
+ "style": "B_검정띠",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T18:23:09+09:00",
+ "sources": [
+  {
+   "id": "mYxuF1A74j4",
+   "tteutgi": "channel/sseolpulda/뜯기/mYxuF1A74j4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:32",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "Pretendard-ExtraBold.otf",
+    "top1_score": 0.3976,
+    "picked_from": {
+     "file": "Pretendard-ExtraBold.otf",
+     "score": 0.3976
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 1위 Pretendard-ExtraBold.otf(0.3976) < 0.5 — 확신 낮음. 쓴 글꼴 Pretendard({'file': 'Pretendard-ExtraBold.otf', 'score': 0.3976})",
+    "제목 글꼴 BlackHanSans — 분석기 fonts.title 없음 → fontmatch.rank 를 제목 2줄에 직접(1위 BlackHanSans.ttf 0.5409, 신뢰 ok)",
+    "제목 줄 아래 끝을 창 안까지 이어 잼: [(347, 364)]",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "자막 잰 높이 80.0px 에서 외곽선 3px×2 를 빼고 크기 역산",
+    "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.38 > 0.15, 8개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+    "자막 외곽선 4px [0, 0, 0] — 프레임 자막 줄 열 (355, 721) 에서 직접 잼(분석기 요약 3px [110, 106, 104])",
+    "자막 등장 rise — 뜯기 등장 표본 2개 중 '이동' 1개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "자막 그림자 [[-6, 2]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.3976 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "등장효과 판정불가: 자막 5 (18.1s)",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": null,
+   "title_ink_w": 853,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "525d3a66324b"
+  }
+ ],
+ "updated_at": "2026-10-16T18:23:09+09:00",
+ "variables": [
+  "layers[text:title].text"
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "mYxuF1A74j4": "퍽? 이게 뭐라고\n눈물 줄줄 ㅠㅠ"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "mYxuF1A74j4": 106
+    },
+    "default": 106,
+    "range": [
+     106,
+     106
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap": {
+    "values": {
+     "mYxuF1A74j4": -43
+    },
+    "default": -43,
+    "range": [
+     -43,
+     -43
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "mYxuF1A74j4": 0.891
+    },
+    "default": 0.891,
+    "range": [
+     0.891,
+     0.891
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "size_cap": {
+    "values": {
+     "mYxuF1A74j4": 159.4
+    },
+    "default": 159.4,
+    "range": [
+     159.4,
+     159.4
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_bottom": {
+    "values": {
+     "mYxuF1A74j4": 1920
+    },
+    "default": 1920,
+    "range": [
+     1920,
+     1920
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_top": {
+    "values": {
+     "mYxuF1A74j4": 347
+    },
+    "default": 347,
+    "range": [
+     347,
+     347
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap_ink": {
+    "values": {
+     "mYxuF1A74j4": -19
+    },
+    "default": -19,
+    "range": [
+     -19,
+     -19
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "mYxuF1A74j4": 853
+    },
+    "default": 1032,
+    "range": [
+     853,
+     853
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "mYxuF1A74j4": -698
+    },
+    "default": -698,
+    "range": [
+     -698,
+     -698
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "상황",
+  "반전",
+  "감동",
+  "반응",
+  "덤"
+ ]
+}

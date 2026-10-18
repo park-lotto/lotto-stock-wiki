@@ -1,0 +1,166 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 322,
+   "w": 1080,
+   "h": 1300,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 122,
+   "w": 1000,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 106.3,
+   "line_h": 109,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     253,
+     1,
+     81
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": [
+    null,
+    [
+     8,
+     255,
+     244,
+     255
+    ]
+   ],
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -0.6,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "전 세계 매출 폭발시킨\n덴마크 회사의 실수"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1138,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 103.9,
+   "line_h": 119,
+   "rgb": [
+    253,
+    252,
+    253
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": {
+    "rgb": [
+     62,
+     58,
+     52
+    ],
+    "pad": 0,
+    "radius": 0
+   },
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 14,
+   "w": 180,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 47.1,
+   "line_h": 54,
+   "rgb": [
+    190,
+    188,
+    191
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     96,
+     96,
+     99
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1.7,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "[광고]"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "ho5GSd-4To0"
+}
