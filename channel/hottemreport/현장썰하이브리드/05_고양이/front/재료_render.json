@@ -1,0 +1,115 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰하이브리드/05_고양이/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "tt_7667682859624238367.mp4",
+   "ss": 6.7,
+   "cuts": [
+    {
+     "src": "tt_7667682859624238367.mp4",
+     "ss": 6.7,
+     "dur": 3.986,
+     "block": "N1"
+    },
+    {
+     "src": "tt_7667682859624238367.mp4",
+     "ss": 1.35,
+     "dur": 2.25,
+     "block": "O1"
+    },
+    {
+     "src": "tt_7667682859624238367.mp4",
+     "ss": 14.6,
+     "dur": 2.984,
+     "block": "N2"
+    },
+    {
+     "src": "tt_7667682859624238367.mp4",
+     "ss": 34.906,
+     "dur": 6.644,
+     "block": "O2"
+    },
+    {
+     "src": "tt_7667682859624238367.mp4",
+     "ss": 46.393,
+     "dur": 9.807,
+     "block": "O3"
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "ct",
+   "ss": 6.7,
+   "vs": 0.0,
+   "src_crop": null,
+   "why": "첫 프레임 = 제품: 아빠가 회색 고양이 집게를 들어 보임(6.7~10.6) — B13: O1(1.35~3.6)과 3초 이상",
+   "ve": 3.986,
+   "src_end": 10.686
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "ct",
+   "ss": 1.35,
+   "vs": 3.986,
+   "src_crop": null,
+   "why": "딸이 집게를 들고 웃음 'I know what these are'",
+   "ve": 6.236,
+   "src_end": 3.6
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "ct",
+   "ss": 14.6,
+   "vs": 6.236,
+   "src_crop": null,
+   "why": "빵 봉지 끝을 집게에 끼우려 씨름(14.6~17.6) — B13: N1 끝 10.6 과 3초 이상",
+   "ve": 9.22,
+   "src_end": 17.584
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "N3",
+    "O2"
+   ],
+   "src": "ct",
+   "ss": 34.906,
+   "vs": 9.22,
+   "src_crop": null,
+   "why": "봉지 끝을 집게에 밀어 넣음 'you just fish it in'",
+   "ve": 15.864,
+   "src_end": 41.55
+  },
+  {
+   "block": "O3",
+   "covers": [
+    "N4",
+    "N5",
+    "O3"
+   ],
+   "src": "ct",
+   "ss": 46.393,
+   "vs": 15.864,
+   "src_crop": null,
+   "why": "잠긴 봉지 → 'cat … everywhere'",
+   "ve": 25.671,
+   "src_end": 56.2
+  }
+ ]
+}

@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -177,6 +178,11 @@ def back_material(M, T, R: Path, W: int, H: int) -> Path:
         n = max(1, round(c["t1"] * FPS) - round(c["t0"] * FPS))
         src = base / c["src"]
         crop = c.get("crop")
+        if crop:   # 자를 영역이 원본 밖이면 ffmpeg 가 늦게 죽는다 — 원본 크기로 먼저 잰다(10-19 5편: 1080x1920 가정 → 720·1440 소스에서 실패)
+            sw, sh = (int(x) for x in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries", "stream=width,height",
+                                                       "-of", "csv=p=0", str(src)], capture_output=True, text=True).stdout.split(",")[:2])                 if src.suffix.lower() not in (".jpg", ".jpeg", ".png") else __import__("PIL.Image", fromlist=["Image"]).open(src).size
+            if crop[0] + crop[2] > sw or crop[1] + crop[3] > sh:
+                raise StageError(f"{c['line']} {c['src']} crop {crop} 이 원본 {sw}x{sh} 밖 — 재료.json crop 은 소스 픽셀")
         pre = f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else ""
         cover = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1,fps={FPS}"
         dst = R / f"mat_{i:02d}.mp4"
