@@ -2,10 +2,6 @@
  "title": "한국 코스트코만 대놓고 차별했다는 디저트",
  "desktop_title": "코스트코무스",
  "bench": "NBdmq90aJus (재밌쇼, 줄판독 channel/humorshowshow/줄판독/NBdmq90aJus.json)",
- "voice": {
-  "voice_id": "tc_68257f68bc6e3c161ab5078d",
-  "name": "필재"
- },
  "frame_vars": {
   "frames[hook].layers[text:title].text": "한국 코스트코만\n대놓고 차별했다는 디저트",
   "frames[hook].layers[text:label].text": "한국 코스트코만 대놓고 차별했다는 디저트",

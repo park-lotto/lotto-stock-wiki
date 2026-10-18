@@ -2,10 +2,6 @@
  "채널": "썰템쇼",
  "topic": "2008 한국 최초 우주인 전용 우주식품(농심 우주라면·CJ 우주김치·오뚜기 밥)",
  "desktop_title": "우주라면",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "frame_vars": {
   "frames[hook].layers[text:title].text": "한국 대기업들이\n딱 한 명 위해 만든 라면",

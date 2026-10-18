@@ -3,10 +3,6 @@
  "channel": "썰템쇼",
  "preset": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json",
  "topic": "초코파이 — 개성공단 북측 근로자 간식이 북한 장마당에서 현금처럼 거래된 이야기(보도된 사실만, 전언체)",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "desktop_title": "초코파이",
  "frame_vars": {

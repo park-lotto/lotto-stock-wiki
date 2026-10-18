@@ -928,15 +928,15 @@
    "caption_mode": "accumulate",
    "caption_mode_why": "벤치 누적형 2줄(1줄 뜨고 0.6~1.4초 뒤 2줄째 덧붙음, 틀숫자_뜯기 2026-10-18) — 판단 주인 narr_video.steps_of",
    "chunk": 14,
-   "voice_id": "tc_68257f68bc6e3c161ab5078d",
-   "voice_name": "필재",
-   "voice_why": "사장님 10-18: 벤치 목소리 따라갈 필요 없음, 필재",
-   "tts_tempo": 1.6,
-   "tts_tempo_why": "재미썸홈 필재 1.6(원속도 ≈8자/초) — 목표 8.6 에 atempo ≈1.07",
-   "cps": 8.6,
+   "voice_id": "tc_6059dad0b83880769a50502f",
+   "voice_name": "박창수",
+   "voice_why": "사장님 10-18 오후: \"필재 목소리가 너무 빠르고 안좋아서 박창수로 모두\" — 칼카피_시작.md §12 필재 금지와 같음",
+   "tts_tempo": null,
+   "tts_tempo_why": "박창수 tempo 기본(null) — 1.6 같은 빠른 값 금지(칼카피_시작.md §12). 목표 8.32 까지 atempo",
+   "cps": 8.32,
    "atempo_range": [
     0.8,
-    1.27
+    1.5
    ],
    "line_rate": {
     "max_ratio": 1.05,
@@ -986,10 +986,10 @@
     "peak_max_dbfs": -0.5,
     "cps": {
      "allow": [
-      8.17,
-      9.03
+      7.9,
+      8.74
      ],
-     "from": "8.6 ±5%(B3)"
+     "from": "8.32 ±5%(B3) — 박창수 잇썸홈과 같은 속도(10-18 오후, 벤치 8.6 에서 낮춤)"
     },
     "cut_median_s": {
      "allow": [
@@ -1019,6 +1019,13 @@
     "max_chars": 35,
     "at": ",",
     "why": "공통 — 35자 넘는 문장은 쉼표에서 나눠 넣는다"
+   },
+   "atempo_range_why": "10-18 오후 박창수 tempo 기본 실측: 10편 원속도 5.70~6.47자/초 → 8.32 까지 atempo 1.29~1.46(1.27 상한에 9편, 1.45 에 작품3 멈춤)",
+   "fit_shot": {
+    "enabled": true,
+    "min_speed": 0.75,
+    "flash_s": 0.4,
+    "why": "10-18 박창수로 말이 느려져 컷이 원본 샷보다 길어짐 → 그 샷만 0.75배까지 늘려 채움(preset_make.fit_shot, 경계 판단 check_shot_cross.shot_cuts)"
    }
   }
  },

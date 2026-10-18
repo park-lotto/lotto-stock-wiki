@@ -461,12 +461,39 @@ def build_cuts(w, timed, dur, cfg):
     for p, t in zip(w["pieces"], timed):
         p["t0"], p["t1"] = t["t0"], t["t1"]
         p["f0"], p["f1"] = round(t["t0"] * FPS), round(t["t1"] * FPS)
+    fit = cfg.get("fit_shot") or {}
     for c in w["cuts"]:
         c["f0"], c["f1"] = w["pieces"][c["pieces"][0]]["f0"], w["pieces"][c["pieces"][-1]]["f1"]
         c["n"] = max(1, c["f1"] - c["f0"])
-        if c["ss"] + c["n"] / FPS > c["src_dur"] + 1e-3:
-            raise ValueError(f"소스 길이 부족 {c['src']} {c['ss']}+{c['n'] / FPS:.2f}>{c['src_dur']:.2f}")
+        c["speed"] = 1.0
+        if fit.get("enabled"):
+            fit_shot(c, fit)
+        if c["ss"] + c["n"] / FPS * c["speed"] > c["src_dur"] + 1e-3:
+            raise ValueError(f"소스 길이 부족 {c['src']} {c['ss']}+{c['n'] / FPS * c['speed']:.2f}>{c['src_dur']:.2f}")
     return timed
+
+
+def fit_shot(c: dict, fit: dict):
+    """컷이 원본 샷(또는 짤 길이)보다 조금 길면 그 샷만 살짝 느리게 늘려 채운다 — 옆 샷이 앞머리·꼬리에 번쩍 끼지 않게(관제 097, 10-18).
+    왜: 썰템쇼를 박창수(느린 말)로 바꾸자 컷이 길어져 원본 샷에 맞춰 고른 컷 16개가 옆 샷 0.06~0.4초를 끌고 들어왔고(check_shot_cross),
+    2초짜리 짤 둘이 0.01~0.1초 모자라 멈췄다. 샷 경계 판단은 check_shot_cross.shot_cuts 한 곳. 늘림은 min_speed(기본 0.75배)까지만 —
+    더 모자라면 그대로 두고(번쩍은 검사가 잡는다) 재료를 사람이 고친다. 결과 = c['ss']·c['speed'](렌더가 setpts 로 늘림)."""
+    from tools.calcopy.engine.check_shot_cross import shot_cuts
+    flash, lo, edge = float(fit.get("flash_s", 0.4)), float(fit.get("min_speed", 0.75)), 0.04
+    need = c["n"] / FPS
+    end = c["src_dur"]
+    if not c["meme"]:
+        b = [t for t in shot_cuts(c["path"], c["ss"], c["ss"] + need) if c["ss"] + edge < t < c["ss"] + need - edge]
+        hb = [t for t in b if t - c["ss"] < flash]
+        if hb:                                              # 앞머리 번쩍 → 앞 묶음 마지막 경계 뒤에서 시작
+            c["ss"] = round(hb[-1] + edge, 3)
+            b = [t for t in b if t > c["ss"] + edge]
+        tb = [t for t in b if c["ss"] + need - t < flash]
+        if tb:                                              # 꼬리 번쩍 → 꼬리 묶음 첫 경계 앞까지만(10-18 작품8 31.46·31.53·31.63)
+            end = min(end, tb[0] - edge)
+    have = end - c["ss"]
+    if have < need - 1e-3 and have / need >= lo:
+        c["speed"] = round(have / need, 4)
 
 
 def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]:
@@ -477,7 +504,8 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
     jobs, mat_map = [], []
     for c in w["cuts"]:
         st = c["path"].stat()
-        key = sha([str(c["path"]), st.st_size, int(st.st_mtime), round(c["ss"], 3), c["box"], W, H2, c["n"], FPS, ENC])
+        sp = c.get("speed", 1.0)
+        key = sha([str(c["path"]), st.st_size, int(st.st_mtime), round(c["ss"], 3), c["box"], W, H2, c["n"], FPS, ENC] + ([sp] if sp != 1.0 else []))
         c["part_key"] = key
         mat_map.append((key, c["n"]))
         dst = pdir / f"{key}.mp4"
@@ -489,11 +517,13 @@ def render_parts(w, cfg, cache: Path, out: Path, log: dict) -> tuple[Path, list]
         x, y, cw, ch = c["box"]
         tmp = dst.with_name(dst.stem + ".part.mp4")
         run(["ffmpeg", "-y", "-ss", f"{c['ss']:.3f}", "-i", c["path"], "-an", "-vf",
+             (f"setpts=PTS/{c['speed']}," if c.get("speed", 1.0) != 1.0 else "") +
              f"crop={cw}:{ch}:{x}:{y},scale={W}:{H2}:flags=lanczos,setsar=1,fps={FPS}", "-frames:v", c["n"], *ENC, tmp])
         tmp.replace(dst)
     with cf.ThreadPoolExecutor(FF_PAR) as ex:
         list(ex.map(one, jobs))
-    log["parts"] = {"total": len(w["cuts"]), "rendered": len(jobs), "cached": len(w["cuts"]) - len(jobs)}
+    log["parts"] = {"total": len(w["cuts"]), "rendered": len(jobs), "cached": len(w["cuts"]) - len(jobs),
+                    "fit_shot": [{"src": c["src"], "ss": c["ss"], "speed": c["speed"]} for c in w["cuts"] if c.get("speed", 1.0) != 1.0]}
     lst = out / "parts_list.txt"
     lst.write_text("\n".join(f"file '{(pdir / (k + '.mp4')).as_posix()}'" for k, _ in mat_map), encoding="utf-8")
     mat = out / "material.mp4"
@@ -913,7 +943,8 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     groups, t = [], 0.0
     for c in w["cuts"]:
         groups.append({"src": c["src"], "ss": round(c["ss"], 3), "dur": round(c["n"] / FPS, 3), "t0": round(c["f0"] / FPS, 3),
-                       "pieces": [i + 1 for i in c["pieces"]], "kind": c["kind"], "part_key": c["part_key"]})
+                       "pieces": [i + 1 for i in c["pieces"]], "kind": c["kind"], "part_key": c["part_key"],
+                       "speed": c.get("speed", 1.0), "src_span": round(c["n"] / FPS * c.get("speed", 1.0), 3)})
     (out / "timeline.json").write_text(json.dumps({"groups": groups, "pieces": [{k: p[k] for k in ("text", "line", "t0", "t1", "f0", "f1")} for p in w["pieces"]],
                                                    "tl": tl}, ensure_ascii=False, indent=1), encoding="utf-8")
     rows = checks(w, cfg, final, narr, sfx_n, out, work, plan)

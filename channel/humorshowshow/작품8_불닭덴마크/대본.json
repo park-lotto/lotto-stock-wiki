@@ -3,10 +3,6 @@
  "channel": "썰템쇼",
  "preset": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json",
  "topic": "삼양 불닭볶음면 — 2024년 덴마크 식품청이 '너무 매워서' 3종 회수, 한 달 뒤 2종 해제(해외 × 한국)",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "desktop_title": "불닭덴마크",
  "frame_vars": {

@@ -7,7 +7,7 @@ from pathlib import Path
 
 GAP = 3.0
 d = json.loads((Path(sys.argv[1]) / "timeline.json").read_text(encoding="utf-8"))
-rows = [(g["src"], g["ss"], round(g["ss"] + g["dur"], 2), g["t0"], g["pieces"]) for g in d["groups"]]
+rows = [(g["src"], g["ss"], round(g["ss"] + (g.get("src_span") or g["dur"]), 2), g["t0"], g["pieces"]) for g in d["groups"]]
 bad = []
 for i, a in enumerate(rows):
     for b in rows[i + 1:]:

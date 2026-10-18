@@ -55,6 +55,13 @@ def asr_segments(final: Path) -> list[tuple[float, float, str]]:
     out = [(float(w.start), float(w.end), w.word) for s in segs for w in (s.words or []) if w.word.strip()]
     if not out:
         raise RuntimeError("받아쓰기 빈 답(whisper)")
+    # whisper 는 파일 끝 구절을 통째로 빠뜨릴 때가 있다(10-18 작품1: 끝줄 24.56~26.2초 소리 있음, 전체 받아쓰기엔 없음 → 끝만 다시 하면 나옴)
+    last, total = out[-1][1], len(audio) / 16000
+    if total - last > 1.0:
+        t0 = max(0.0, last - 1.0)
+        tail, _ = _WHISPER["m"].transcribe(audio[int(t0 * 16000):], language="ko", word_timestamps=True)
+        out += [(t0 + float(w.start), t0 + float(w.end), w.word) for s in tail for w in (s.words or [])
+                if w.word.strip() and t0 + float(w.start) > last - 0.05]
     return out
 
 
@@ -107,13 +114,16 @@ def line_starts_from_asr(lines: list[str], segs) -> list[float | None]:
         hi = min(len(stream), pos + len(n) + 12)
         j = stream.find(key[:4], pos, hi + 4)
         if j < 0:                   # 받아쓰기 오탈자 — 창 안에서 가장 비슷한 자리
-            best = max(((SequenceMatcher(None, key, stream[i:i + len(key)]).ratio(), i) for i in range(pos, max(pos + 1, hi))),
-                       default=(0, -1))
-            j = best[1] if best[0] >= 0.6 else -1
+            # 같은 점수면 앞자리(-i) — 10-18 작품6: 「달항아리」를 「다랑알이」로 들어 동점 뒷자리를 골라 1.01초 거짓 미달
+            best = max(((SequenceMatcher(None, key, stream[i:i + len(key)]).ratio(), -i) for i in range(pos, max(pos + 1, hi))),
+                       default=(0, 1))
+            j = -best[1] if best[0] >= 0.6 else -1
         if j < 0:                   # 첫머리가 통째로 틀리게 들린 줄(작품5 「국물 튈까 봐」→「공을 칠까 봐」) — 줄 전문 비슷함
-            best = max(((SequenceMatcher(None, n, stream[i:i + len(n)]).ratio(), i) for i in range(pos, max(pos + 1, hi))),
-                       default=(0, -1))
-            j = best[1] if best[0] >= 0.6 else -1
+            # 맞은 글자 / 줄 글자 — ratio() 는 받아쓰기 끝에서 잘린 짧은 창을 더 쳐줘서 줄 가운데에 붙었다(10-18 작품6 끝줄)
+            best = max(((sum(m.size for m in SequenceMatcher(None, n, stream[i:i + len(n)]).get_matching_blocks()) / len(n), -i)
+                        for i in range(pos, max(pos + 1, hi))),
+                       default=(0, 1))
+            j = -best[1] if best[0] >= 0.6 else -1
         if j < 0:
             out.append(None); pos = min(len(stream), pos + len(n) // 2); continue
         out.append(round(chars[j][1], 2)); pos = j + max(1, len(n) // 2)

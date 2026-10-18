@@ -3,10 +3,6 @@
  "channel": "썰템쇼",
  "preset": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json",
  "topic": "해태 허니버터칩 — 2014년 출시 뒤 품귀 대란(웃돈 중고거래·끼워팔기·박스 바꿔 배송)과 원주 2공장 증설",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "desktop_title": "허니버터칩",
  "frame_vars": {

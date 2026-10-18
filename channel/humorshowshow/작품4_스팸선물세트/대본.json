@@ -3,10 +3,6 @@
  "channel": "썰템쇼",
  "preset": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json",
  "topic": "스팸 선물세트 — 미국 호멜의 서민 통조림이 한국에선 명절 선물(해외 회사 × 한국)",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "desktop_title": "스팸선물세트",
  "frame_vars": {

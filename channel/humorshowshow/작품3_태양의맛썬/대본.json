@@ -3,10 +3,6 @@
  "channel": "썰템쇼",
  "preset": "channel/humorshowshow/preset/썰템쇼_화자썰/manifest.json",
  "topic": "오리온 태양의 맛 썬 — 2016 공장 화재로 판매 중단 → 소비자 요청으로 2018.4 재출시",
- "voice": {
-  "name": "필재",
-  "voice_id": "tc_68257f68bc6e3c161ab5078d"
- },
  "from": "근거.md(줄마다 출처) · 대본스타일_줄판독_2026-10-17.md 순서 8칸 · _engine_ready.md 꼴",
  "desktop_title": "태양의맛썬",
  "frame_vars": {
