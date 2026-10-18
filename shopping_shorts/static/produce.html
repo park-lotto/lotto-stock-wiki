@@ -15647,6 +15647,8 @@ function renderExport(opts){
     //   CTA 칸이 있는지는 서버가 판단한다(대본마다 다르다) — 눌렀을 때 사유를 말해준다.
     + (rendered?`<button id="btnTrimCta" class="btn-next" style="${big};border:0;cursor:pointer" onclick="trimCta('${j}')">✂ 유튜브용 — CTA 잘라낸 영상</button>`:'')
     + (rendered?'<div class="hint" id="trimCtaHint" style="margin:2px 0 8px">유튜브엔 <b>댓글 유도(CTA)를 뺀 판</b>을 올릴 때 쓰세요. 인스타·틱톡엔 위 「완성 영상」 그대로.</div>':'')
+    // 📣 플랫폼별 CTA 판(2026-10-18 F1) — 렌더 전에 고르면 렌더 한 번에 같이 만들어진다(추가 차감 없음). 판단 주인 = 서버 cta_variants
+    + `<div id="ctaVarBox" data-job="${j}" style="margin:6px 0 10px"></div>`
     // ★완성본을 받은 뒤 바로 예약으로(2026-08-29 사장님 "완성본도 만든 뒤 다운을 누르면
     //   예약발행에도 들어가게"). 파일을 어디에 다시 올릴 필요가 없다 — 예약 단계가
     //   **같은 작업(MIX_JOB)의 완성본**을 그대로 쓴다.
@@ -15669,12 +15671,59 @@ function renderExport(opts){
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=srt" download>📝 SRT 자막</a>`
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=script" download>📄 스크립트</a>`
     + '</div>';
+  loadCtaVariants();
 }
 
 // ── 캡컷으로 보내기 (File System Access API, Chrome/Edge) — 설계 2026-07-20 T2 ──
 // 서버가 draft_content.json+에셋을 조립해 매니페스트로 주면, 브라우저가 사용자 캡컷 폴더에 직접 쓴다.
 // 폴더 핸들을 IndexedDB에 기억 → 2회차부터 폴더 선택 없이 원클릭. draft는 base 절대경로로 에셋을
 // 참조하므로 그 폴더에 파일을 함께 써야 캡컷이 찾는다(설계 부록A).
+// ── 📣 플랫폼별 CTA 판(2026-10-18 F1) ── 설정·상태는 서버(cta_variants)가 정한다. 화면은 그리고 저장만 한다.
+let CTAV=null, _ctavTimer=null;
+async function loadCtaVariants(){
+  const box=document.getElementById('ctaVarBox'); if(!box) return;
+  const j=box.dataset.job; if(!j){ box.innerHTML=''; return; }
+  let d; try{ d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(j))).json(); }catch(e){ return; }
+  if(!d||!d.ok){ box.innerHTML=''; return; }
+  CTAV=d; drawCtaVariants();
+  const busy=Object.values((d.status||{}).items||{}).some(x=>x.status==='rendering'||x.status==='waiting');
+  clearTimeout(_ctavTimer); if(busy) _ctavTimer=setTimeout(loadCtaVariants,5000);
+}
+function drawCtaVariants(){
+  const box=document.getElementById('ctaVarBox'); if(!box||!CTAV) return;
+  const j=box.dataset.job, cfg=CTAV.config, st=(CTAV.status||{}).items||{};
+  const n=Math.max(1, cfg.items.filter(x=>x.on).length);
+  const rows=cfg.items.map((it,i)=>{
+    const r=st[it.key]; let tail='';
+    if(r&&r.status==='done'&&!r.stale) tail=`<a class="btn-next" style="padding:5px 10px;font-size:12px" href="/api/mix/cta_video/${j}/${it.key}?dl=1" download>⬇ ${esc(it.label)} 판</a>`;
+    else if(r&&(r.status==='rendering'||r.status==='waiting')) tail='<span class="hint">만드는 중…</span>';
+    else if(r&&r.status==='failed') tail='<span class="hint" style="color:var(--fire)">실패: '+esc(r.error||'')+'</span>';
+    else if(r&&r.stale) tail='<span class="hint">옛 판 — 다시 렌더하면 새로 만들어져요</span>';
+    return `<div style="display:flex;gap:8px;align-items:center;margin:5px 0;flex-wrap:wrap">
+      <label style="display:flex;gap:6px;align-items:center;min-width:130px;cursor:pointer"><input type="checkbox" ${it.on?'checked':''} onchange="ctavSet(${i},'on',this.checked)"> <b>${esc(it.label)}</b></label>
+      <input type="text" maxlength="80" value="${esc(it.text)}" onchange="ctavSet(${i},'text',this.value)" style="flex:1;min-width:200px;padding:6px 8px">
+      ${tail}</div>`;}).join('');
+  box.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
+    <div style="font-weight:600;margin-bottom:4px">📣 플랫폼별 CTA 판 <span class="hint">— 고른 판은 다음 렌더 때 같이 만들어져요 (추가 차감 없음)</span></div>
+    ${CTAV.has_cta?'':'<div class="hint" style="color:var(--fire)">이 대본엔 CTA 칸이 없어 판을 만들 수 없어요</div>'}
+    ${rows}
+    <div style="margin:8px 0 4px;display:flex;gap:14px;flex-wrap:wrap;font-size:13px"><b>🎙 CTA 목소리</b>
+      <label style="cursor:pointer"><input type="radio" name="ctavTts" ${cfg.tts_mode!=='full'?'checked':''} onchange="ctavMode('cta')"> CTA 칸만 새로 굽기 (빠름)</label>
+      <label style="cursor:pointer"><input type="radio" name="ctavTts" ${cfg.tts_mode==='full'?'checked':''} onchange="ctavMode('full')"> 판마다 전체 목소리 다시 굽기 (느림)</label></div>
+    <div class="hint" style="line-height:1.7">⏱ <b>시간</b>: 판마다 영상을 다시 조립해요 — 판 ${n}개면 렌더 시간이 약 ${n+1}배가 됩니다.<br>
+      🎙 <b>목소리</b>: ‘CTA 칸만’은 그 부분만 새로 구워 앞말과 이어지는 곳의 톤이 살짝 다를 수 있어요. 자연스럽게 이어지길 원하면 ‘전체 다시 굽기’를 고르세요 — 대신 시간이 더 들어요.<br>
+      💳 판을 몇 개 골라도 렌더 1회만 차감돼요. 고른 뒤 <b>최종 렌더</b>를 누르면 본편이 먼저 나오고 판이 이어서 만들어져요.</div>
+    <div id="ctavMsg" class="hint"></div></div>`;
+}
+async function ctavSave(){
+  const box=document.getElementById('ctaVarBox'); if(!box||!CTAV) return;
+  try{
+    const d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(box.dataset.job),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(CTAV.config)})).json();
+    if(d&&d.ok){ CTAV.config=d.config; drawCtaVariants(); const m=document.getElementById('ctavMsg'); if(m) m.textContent='저장했어요 ✓'; }
+  }catch(e){ const m=document.getElementById('ctavMsg'); if(m) m.textContent='저장하지 못했어요 — 다시 시도해 주세요'; }
+}
+function ctavSet(i,k,v){ if(!CTAV) return; CTAV.config.items[i][k]=v; ctavSave(); }
+function ctavMode(m){ if(!CTAV) return; CTAV.config.tts_mode=m; ctavSave(); }
 const CAPCUT_DEFAULT_PATH = 'C:\\capcutproject\\CapCut Drafts';
 function _ccIdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ss_capcut',1);
   r.onupgradeneeded=()=>r.result.createObjectStore('h'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }

@@ -10270,6 +10270,51 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
     return _range_mp4_response(str(out_p), request)
 
 
+# ── 📣 플랫폼별 CTA 판(2026-10-18 고객 제보 F1) ─────────────────────────────────────
+#   판단(설정·대본·렌더·상태)의 주인은 cta_variants 한 곳. 여기는 부르기만 한다. 판은 본편 렌더 때 같이 굽힌다(과금 없음).
+@app.get("/api/mix/cta_variants/{job_id}")
+def api_mix_cta_variants(job_id: str, request: Request):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    cfg = _cv.load_config(Store(DB_PATH), job_id, job.get("customer_id", 0))
+    st = _cv.read_status(_MIX_WORK_DIR / job_id)
+    # 본편보다 오래된 판은 옛 영상이다 — 화면이 '다시 렌더하면 새로 만들어져요'로 보인다
+    src = job.get("video_path")
+    for key, rec in (st.get("items") or {}).items():
+        f = _MIX_WORK_DIR / job_id / str(rec.get("file") or "")
+        rec["stale"] = bool(rec.get("file") and src and Path(src).exists() and f.exists()
+                            and f.stat().st_mtime + 1 < Path(src).stat().st_mtime)
+    has_cta = bool(_cv.cta_beat_indexes(job.get("edit_plan") or {}))
+    return {"ok": True, "config": cfg, "status": st, "has_cta": has_cta}
+
+
+@app.post("/api/mix/cta_variants/{job_id}")
+async def api_mix_cta_variants_save(job_id: str, request: Request):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    cfg = _cv.save_config(Store(DB_PATH), job_id, job.get("customer_id", 0), await request.json())
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/api/mix/cta_video/{job_id}/{key}")
+def api_mix_cta_video(job_id: str, key: str, request: Request, dl: int = 0):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id) or key not in _cv._KEYS:
+        return JSONResponse(status_code=404, content={"ok": False})
+    out_p = _cv.out_path(_MIX_WORK_DIR / job_id, key)
+    if not out_p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    if dl:
+        label = next((p["label"] for p in _cv.PLATFORMS if p["key"] == key), key)
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + f"_{label}.mp4")
+    return _range_mp4_response(str(out_p), request)
+
+
 # ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05 고객 황선희 → 사장님 "오른쪽에 롱폼으로 렌더를 활성화해줘", 관제 132) ──
 #   쇼츠엔 누르는 구매링크를 못 달아서, 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 건다.
 #   ★구도·문구·"지금 것이 최신인가"는 link_longform 한 곳이 정한다(0순위-C). 여기는 부르기만 한다.
