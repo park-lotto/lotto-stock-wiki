@@ -1,90 +1,93 @@
 # -*- coding: utf-8 -*-
 """현장썰 하이브리드 — 원본 영상 속 제품과 '같은 제품'을 찾는다(사장님 10-18 "최선은 같은 제품을 찾는 거야").
 
-구글 렌즈(PC, 로그인된 tools/google_browser 프로필, 무료 — SerpApi 는 유료라 안 씀)에 사진을 올려
-  ① 렌즈가 보여 주는 제품 이름·쇼핑 결과(어느 가게든) 를 모으고
-  ② 그 안의 coupang.com 링크를 바로 뽑는다.
-쿠팡 링크가 없으면 ①의 제품 이름(브랜드·모델)으로 쿠팡검색.py 를 다시 돌린다(테무·알리 등에서 이름 알아내기).
+구글 렌즈(PC, 무료·로그인 불필요 — SerpApi 는 유료라 안 씀)에 원본 장면 여러 장을 차례로 올려
+  ① 렌즈가 보여 주는 제품 이름·쇼핑 결과(어느 가게든)를 모으고
+  ② 여러 장에서 겹쳐 나온 것(hits)을 위로 — 한 장만 보면 배경 소품을 잡는다
+  ③ 그 안의 coupang.com 상품을 따로 뽑는다.
+쿠팡 상품이 없으면 ①의 정식 이름(브랜드·모델)으로 쿠팡검색.py 를 다시 돌린다.
+★사진은 제품 **전체 모양**이 보이게 자른다(사장님 10-18 "너무 작게 부분을 잡는 거 아닌가, 여러 개 전체 모양 나오게").
 쿠팡 모바일 렌즈는 PC 브라우저에서 m.coupang.com 이 Access Denied(10-18 실측)라 이 길로 간다.
 
-실행: py channel/hottemreport/현장썰하이브리드/렌즈쿠팡.py <사진.jpg> <이름> [<더할 글자>]
-결과: 같은 폴더 렌즈_<이름>.json (+ 화면 렌즈_<이름>.png)
+실행: py channel/hottemreport/현장썰하이브리드/렌즈쿠팡.py <이름> <사진1> [<사진2> …]
+결과: 같은 폴더 렌즈_<이름>.json (+ 마지막 화면 렌즈_<이름>.png)
 """
+import html as H
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-PROFILE = os.path.expanduser(r"~\.claude\google_browser_profile")
 HERE = Path(__file__).resolve().parent
-
-_JS_UNUSED = r"""()=>{
-  const out=[];
-  for(const a of document.querySelectorAll('a[href]')){
-    const h=a.href; if(!h||h.startsWith('https://www.google.')&&!h.includes('/url?')) continue;
-    const t=(a.innerText||a.getAttribute('aria-label')||'').replace(/\s+/g,' ').trim();
-    if(t) out.push({href:h,text:t.slice(0,200)});
-  }
-  return out;
-}"""
+PROFILE = str(HERE.parents[2] / ".lens_profile")   # 렌즈는 로그인이 필요 없다 — 다른 도구 프로필과 안 겹치게 따로
+_SKIP = re.compile(r"google|gstatic|coupangcdn|youtube|googleusercontent|instagram|blog\.naver|zdnet")
 
 
-def main(img, name, extra=""):
+def lens_rows(pg, img: str) -> list[dict]:
+    """사진 한 장 → [{href, text, shop}]. 결과는 <a href> 가 아니라 페이지 속 데이터에 "주소","제목" 쌍으로 들어 있다(10-18 실측)."""
+    pg.goto("https://www.google.com/?hl=ko", wait_until="domcontentloaded", timeout=40000)
+    pg.wait_for_timeout(1500)
+    for sel in ['div[aria-label="이미지로 검색"]', 'div[aria-label="Search by image"]']:
+        if pg.locator(sel).count():
+            pg.locator(sel).first.click()
+            break
+    pg.wait_for_timeout(1500)
+    # 페이지에 file 칸이 여럿이라 첫 칸에 넣으면 안 올라간다(10-18 실측) → '파일을 업로드'를 눌러 뜨는 선택 창으로
+    with pg.expect_file_chooser(timeout=15000) as fc:
+        pg.get_by_text(re.compile("파일을 업로드|upload a file", re.I)).first.click()
+    fc.value.set_files(img)
+    pg.wait_for_url(re.compile(r"(lens|search)"), timeout=40000)
+    pg.wait_for_timeout(7000)
+    for _ in range(6):
+        pg.mouse.wheel(0, 1500)
+        pg.wait_for_timeout(700)
+    raw = H.unescape(pg.content())
+    seen, rows = set(), []
+    for m in re.finditer(r'"(https?://[^"\s]+)","([^"]{4,200})"', raw):
+        h, t = m.group(1).split("\\u0026")[0].replace("\\u003d", "="), m.group(2)
+        shop = re.sub(r"^https?://(www\.|m\.)?", "", h).split("/")[0]
+        if h in seen or _SKIP.search(shop) or t.startswith("http"):
+            continue
+        seen.add(h)
+        rows.append({"href": h, "text": t, "shop": shop})
+    return rows
+
+
+def main(name: str, imgs: list[str]):
     from playwright.sync_api import sync_playwright
-    img = str(Path(img).resolve())
+    per = {}
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(PROFILE, headless=False, channel="chrome", locale="ko-KR",
                                                    viewport={"width": 1366, "height": 900},
                                                    args=["--disable-blink-features=AutomationControlled"])
         pg = ctx.pages[0] if ctx.pages else ctx.new_page()
-        pg.goto("https://www.google.com/?hl=ko", wait_until="domcontentloaded", timeout=40000)
-        pg.wait_for_timeout(1500)
-        # 렌즈 버튼(이미지로 검색) → 파일 올리기 칸
-        for sel in ['div[aria-label="이미지로 검색"]', 'div[aria-label="Search by image"]', '[aria-label*="렌즈"]', '[aria-label*="Lens"]']:
-            if pg.locator(sel).count():
-                pg.locator(sel).first.click()
-                break
-        pg.wait_for_timeout(1500)
-        # 페이지에 file 칸이 여럿이라 첫 칸에 넣으면 안 올라간다(10-18 실측) → '파일을 업로드'를 눌러 뜨는 선택 창으로
-        with pg.expect_file_chooser(timeout=15000) as fc:
-            pg.get_by_text(re.compile("파일을 업로드|upload a file", re.I)).first.click()
-        fc.value.set_files(img)
-        pg.wait_for_url(re.compile(r"(lens|search)"), timeout=40000)
-        pg.wait_for_timeout(7000)
-        if extra:   # 렌즈 결과에 글자 더하기(예: 쿠팡) — 검색칸에 넣고 엔터
-            box = pg.locator('textarea, input[type=text]').first
-            box.fill(extra)
-            box.press("Enter")
-            pg.wait_for_timeout(6000)
-        for _ in range(6):
-            pg.mouse.wheel(0, 1500)
-            pg.wait_for_timeout(700)
-        html = pg.content()
-        (HERE / f"렌즈_{name}.html").write_text(html, encoding="utf-8")
-        pg.screenshot(path=str(HERE / f"렌즈_{name}.png"), full_page=False)
+        for img in imgs:
+            img = str(Path(img).resolve())
+            try:
+                per[img] = lens_rows(pg, img)
+            except Exception as e:  # noqa: BLE001 — 한 장 실패가 나머지를 막지 않게(실패는 결과에 남긴다)
+                per[img] = []
+                print("실패", Path(img).name, type(e).__name__, str(e)[:80])
+            print(f"  {Path(img).name}: {len(per[img])}개")
+        pg.screenshot(path=str(HERE / f"렌즈_{name}.png"))
         ctx.close()
-    # 렌즈 결과는 <a href> 가 아니라 페이지 속 데이터(JSON)에 "주소","제목" 쌍으로 들어 있다(10-18 실측 — 링크 읽기는 0개)
-    import html as H
-    raw = H.unescape(html)
-    seen, rows = set(), []
-    for m in re.finditer(r'"(https?://[^"\s]+)","([^"]{4,200})"', raw):
-        h, t = m.group(1), m.group(2)
-        shop = re.sub(r"^https?://(www\.)?", "", h).split("/")[0]
-        if h in seen or re.search(r"google|gstatic|coupangcdn|youtube|googleusercontent", shop) or t.startswith("http"):
-            continue
-        seen.add(h)
-        rows.append({"href": h, "text": t, "shop": shop})
-    cp = [r for r in rows if "coupang.com" in r["shop"]]
-    res = {"img": img, "extra": extra, "n": len(rows), "coupang": cp, "all": rows}
-    (HERE / f"렌즈_{name}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"결과 {len(rows)}개 · 쿠팡 {len(cp)}개")
+    agg = {}
+    for img, rows in per.items():
+        for r in rows:
+            k = re.sub(r"[?#].*$", "", r["href"]) if "coupang.com/vp/products" in r["href"] else r["href"]
+            a = agg.setdefault(k, {**r, "href": k, "hits": 0})
+            a["hits"] += 1
+    rows = sorted(agg.values(), key=lambda r: -r["hits"])
+    cp = [r for r in rows if "coupang.com/vp/products" in r["href"]]
+    (HERE / f"렌즈_{name}.json").write_text(json.dumps({"imgs": imgs, "coupang": cp, "all": rows, "per": per}, ensure_ascii=False, indent=1),
+                                           encoding="utf-8")
+    print(f"사진 {len(imgs)}장 · 결과 {len(rows)}개 · 쿠팡 상품 {len(cp)}개")
     for r in cp[:10]:
-        print("  [쿠팡]", r["text"][:80], r["href"][:100])
-    for r in rows[:25]:
-        print("  ", r["shop"][:28].ljust(28), r["text"][:80])
+        print(f"  [쿠팡 {r['hits']}장] {r['text'][:70]}  {r['href']}")
+    for r in rows[:20]:
+        print(f"  {r['hits']}장 {r['shop'][:24].ljust(24)} {r['text'][:70]}")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "")
+    main(sys.argv[1], sys.argv[2:])

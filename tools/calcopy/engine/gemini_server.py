@@ -39,7 +39,9 @@ import tempfile
 import time
 from pathlib import Path
 
-KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))   # 서버가 모자라 로컬 풀로 채울 때 tools.* 를 부른다 — 스크립트로 바로 돌리면 ModuleNotFoundError 였다(10-19)
+
+KEY ="C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
 HOST = "ubuntu@3.35.251.172"
 REPO = "/home/ubuntu/lotto-stock-wiki"
 MODELS = ("gemini-3-flash-preview", "gemini-3.5-flash")          # 기본 2개(교차) — 10-18 서버 실측(아래 표) 3.8~9.6초 / 4.1~4.6초

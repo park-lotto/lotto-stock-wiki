@@ -1,249 +1,1596 @@
 {
- "img": "C:\\Users\\CH\\AppData\\Local\\Temp\\claude\\C--Users-CH-Desktop-------\\cf6f4b35-f842-4066-83c6-8d788aa2f7ff\\scratchpad\\titan_q.jpg",
- "extra": "",
- "n": 44,
+ "imgs": [
+  "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/cf6f4b35-f842-4066-83c6-8d788aa2f7ff/scratchpad/titan_w1.jpg",
+  "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/cf6f4b35-f842-4066-83c6-8d788aa2f7ff/scratchpad/titan_w2.jpg",
+  "C:/Users/CH/AppData/Local/Temp/claude/C--Users-CH-Desktop-------/cf6f4b35-f842-4066-83c6-8d788aa2f7ff/scratchpad/titan_w3.jpg"
+ ],
  "coupang": [
+  {
+   "href": "https://www.coupang.com/vp/products/8670783345",
+   "text": "사구리빙 베란다 배수구 소음 악취 해충 차단 우수관커버 덮개 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/9175651827",
+   "text": "Mochae 대용량 보온병 텀블러 손잡이 접이식 316 스텐 보온보냉 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
   {
    "href": "https://www.coupang.com/vp/products/9572527710",
    "text": "대용량 텀블러 스테인리스 초대형 48시간 보온보냉병 휴대용 ...",
-   "shop": "coupang.com"
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/7899289271",
+   "text": "대용량 강력 보온 보냉병 스텐 텀블러 대형 물통 보냉 보온병 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/8442118231",
+   "text": "대용량 보온병 보온보냉 텀블러 휴대용 316 스텐 원터치 보냉병 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/7899153127",
+   "text": "2L 대용량 강력 모던 보온 보냉병 2리터 스텐 텀블러 물통 보냉 ...",
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
    "href": "https://www.coupang.com/vp/products/9228151495",
    "text": "제드 워터저그 15L 컵홀더 뚜껑 대용량 물통 보냉 유지 - 식기 ...",
-   "shop": "coupang.com"
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
-   "href": "https://pages.coupang.com/p/150126",
-   "text": "쿠팡이 추천하는 브랜드 텀블러 관련 혜택과 특가",
-   "shop": "pages.coupang.com"
+   "href": "https://www.coupang.com/vp/products/8989759663",
+   "text": "모던스토리 베란다 우수관 개폐기 고급형 - 배수구/역류방지트랩 ...",
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
-   "href": "https://www.coupang.com/vp/products/8665604175",
-   "text": "스탠리 에어로라이트 스테인리스 스틸 휴대용 보온병 아이스 ...",
-   "shop": "coupang.com"
+   "href": "https://www.coupang.com/vp/products/8352989549",
+   "text": "아쿠아메이드 프리미엄 자동 환수 세트 자동 물보충 세트 어항 ...",
+   "shop": "coupang.com",
+   "hits": 1
   }
  ],
  "all": [
   {
    "href": "https://mannahydration.com/products/135-oz-titan-bottle-tweedia",
    "text": "LIMITED EDITION 4L Titan Bottle With Bonus Straw Lid",
-   "shop": "mannahydration.com"
+   "shop": "mannahydration.com",
+   "hits": 3
   },
   {
-   "href": "https://www.coupang.com/vp/products/9572527710",
-   "text": "대용량 텀블러 스테인리스 초대형 48시간 보온보냉병 휴대용 ...",
-   "shop": "coupang.com"
+   "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288",
+   "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
+   "shop": "modernhouse.elandmall.co.kr",
+   "hits": 3
   },
   {
-   "href": "https://www.coupang.com/vp/products/9228151495",
-   "text": "제드 워터저그 15L 컵홀더 뚜껑 대용량 물통 보냉 유지 - 식기 ...",
-   "shop": "coupang.com"
+   "href": "https://www.amazon.fr/-/en/Garronda-Liter-Barrel-Bottle-GD-0078/dp/B0DGXZVZ4Y",
+   "text": "Garronda 30 Liter Water Tank Food Barrel Water Bottle GD ...",
+   "shop": "amazon.fr",
+   "hits": 2
   },
   {
-   "href": "https://m.yami.com/zht/p/stainless-cool-bottle-sd-ka100hwm/1029335121?track=category-29-15-1029335121&scene=item_category.item&bu_type=activity&module_name=category_main&index=15&content=pgzQpwPyk&st_bu_type=category&st_module_name=29",
-   "text": "ZOJIRUSHI像印日本ZOJIRUSHI象印不鏽鋼運動冷水壺SD-KA100H 1L ...",
-   "shop": "m.yami.com"
+   "href": "https://global.gmarket.co.kr/item?goodsCode=1875588609",
+   "text": "Global Gmarket Mobile",
+   "shop": "global.gmarket.co.kr",
+   "hits": 2
   },
   {
-   "href": "https://m.yami.com/zht/p/stainless-cool-bottle-sd-ka100hwm/1029335121?track\\u003dcategory-29-15-1029335121\\u0026scene\\u003ditem_category.item\\u0026bu_type\\u003dactivity\\u0026module_name\\u003dcategory_main\\u0026index\\u003d15\\u0026content\\u003dpgzQpwPyk\\u0026st_bu_type\\u003dcategory\\u0026st_module_name\\u003d29",
-   "text": "ZOJIRUSHI像印日本ZOJIRUSHI象印不鏽鋼運動冷水壺SD-KA100H 1L ...",
-   "shop": "m.yami.com"
+   "href": "https://shsigma.co.kr/shop/PDNN18071900003",
+   "text": "RO \\u0026 UP Water Purification / 순수 / 초순수 제조장치, NEW ...",
+   "shop": "shsigma.co.kr",
+   "hits": 2
+  },
+  {
+   "href": "https://m.lotteimall.com/goods/viewGoodsDetail.lotte?goods_no=3159654960",
+   "text": "상품상세 - 롯데홈쇼핑",
+   "shop": "lotteimall.com",
+   "hits": 2
+  },
+  {
+   "href": "https://m.gsshop.com/prd/prd.gs?prdid=12417934",
+   "text": "베란다 화장실 세탁기 우수관커버 배수구 캡 대형 고급형 하수구 ...",
+   "shop": "gsshop.com",
+   "hits": 2
+  },
+  {
+   "href": "https://m.tools24.co.kr/product/테슬론-컴프레샤-유수분분리기-ha03-플로터타입/6536/",
+   "text": "테슬론 컴프레샤 유수분분리기 HA03 플로터타입 ... - 툴스24",
+   "shop": "tools24.co.kr",
+   "hits": 2
   },
   {
    "href": "https://zigzag.kr/catalog/products/170955524",
    "text": "든해상점 [스탠리호환] 실리콘 텀블러 건조대 물빠짐 트레이 ...",
-   "shop": "zigzag.kr"
+   "shop": "zigzag.kr",
+   "hits": 2
   },
   {
-   "href": "https://search.11st.co.kr/pc/total-search?kwd\\u003d대용량텀블러",
-   "text": "대용량텀블러 - 11번가 추천",
-   "shop": "search.11st.co.kr"
+   "href": "https://www.trekkeressentials.com/collections/appplaza-best-sellers/products/1-2l-1-9l-stainless-steel-thermal-tumbler-48-hour-vacuum-insulated-sports-water-bottle-for-outdoor-use?variant=51358036001050",
+   "text": "48-Hour Vacuum Insulated Thermal Tumbler 1.2L–1.9L – 304 SS ...",
+   "shop": "trekkeressentials.com",
+   "hits": 2
   },
   {
-   "href": "https://www.instagram.com/popular/다이소-다라이/",
-   "text": "다이소 다라이",
-   "shop": "instagram.com"
+   "href": "https://www.mercadolibre.com.mx/tarro-de-plastico-grande-de-boca-ancha-de-68-onzas-recipien/up/MLMU4025039145",
+   "text": "Tarro De Plástico Grande De Boca Ancha De 68 Onzas, Recipien ...",
+   "shop": "mercadolibre.com.mx",
+   "hits": 1
   },
   {
-   "href": "https://prdm.daisomall.co.kr/pd/pdl/SCR_PDL_0001?pdNo\\u003d1073440\\u0026recmYn\\u003dN",
-   "text": "대용량 핸들 텀블러 1200 ml 베이지 - 다이소몰",
-   "shop": "prdm.daisomall.co.kr"
+   "href": "https://www.amazon.com/NeoPure-Everpure-System-Cartridge-Compatible/dp/B0G8QVM5YR",
+   "text": "Amazon.com: NeoPure 4FC Everpure High Flow System Filter ...",
+   "shop": "amazon.com",
+   "hits": 1
   },
   {
-   "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo\\u003d2204595288\\u0026lowerVendNo\\u003dLV19018120",
+   "href": "https://btech.com/en/p/generic-water-filter-tank-white",
+   "text": "Generic Water Filter Tank , White",
+   "shop": "btech.com",
+   "hits": 1
+  },
+  {
+   "href": "https://ingenesys.co.kr/product_categories/biobased-wide-neck-drums/",
+   "text": "Biobased Wide Neck Drums - 제네시스 바이오",
+   "shop": "ingenesys.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://www.merckmillipore.com/KR/ko/product/mm/tankpe060",
+   "text": "60 L Polyethylene Storage Tank TANKPE060",
+   "shop": "merckmillipore.com",
+   "hits": 1
+  },
+  {
+   "href": "https://kenzz.com/en/product/YPPP82WE347J/Generic-Water-Filter-Tank-5-Gallon-Capacity-White",
+   "text": "Generic Water Filter Tank - 5 Gallon Capacity - White",
+   "shop": "kenzz.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.tiktok.com/@theclawedjoker/video/7580894390088977694",
+   "text": "Replying to @TeflonDonDan actually it does, just not all at ...",
+   "shop": "tiktok.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.webstaurantstore.com/choice-round-3-gallon-white-beverage-dispenser-with-white-base/176BDW3WHKIT.html",
+   "text": "Choice Round 3 Gallon White Beverage Dispenser with White Base",
+   "shop": "webstaurantstore.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.saint-tropez.com.br/496461/Kit-0-2-Micron-1000-Gallon-Emergency-Gravity-System-With",
+   "text": "Ceramic Bucket Water Filter Kit – 0.2 Micron, 1000+ Gallon ...",
+   "shop": "saint-tropez.com.br",
+   "hits": 1
+  },
+  {
+   "href": "https://www.amazon.co.uk/Browin-340565-Fermentation-Container-Fermenting/dp/B094QVP3JH",
+   "text": "Browin 340565 Fermentation Container 65 L, Barrel with Lid ...",
+   "shop": "amazon.co.uk",
+   "hits": 1
+  },
+  {
+   "href": "https://ingenesys.co.kr/product/20-liter-recycled-wide-neck-drum/",
+   "text": "20 Liter Recycled Wide Neck Drum - 제네시스 바이오",
+   "shop": "ingenesys.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://www.saco.sa/en/product/manna-push-non-slip-silicone-grip-stainless-steel-water-bottle-summit-powder-1-2-liter-ac55314-p-000000000000092956",
+   "text": "Manna Push Non-Slip Silicone Grip Stainless Steel Water ...",
+   "shop": "saco.sa",
+   "hits": 1
+  },
+  {
+   "href": "https://www.mercadolivre.com.br/lixeira-verona-4-litros-nitron-com-tampa-plastico-branco-compacta-ideal-banheiro-cozinha-escritorio-cesto-de-lixo-pequeno-organizador-domestico-resistente-bpa-free-facil-limpeza-design-moderno/p/MLB21715943",
+   "text": "Lixeira Verona 4 Litros Nitron Com Tampa Plástico Branco ...",
+   "shop": "mercadolivre.com.br",
+   "hits": 1
+  },
+  {
+   "href": "https://starwaterfilter.com/de/wasserfilter-swf/2-wasserfilter-mini-star-6-l-cremefarben.html",
+   "text": "Wasserfilter cremefarben matt, MINI STAR 5,6 l",
+   "shop": "starwaterfilter.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.mercadolivre.com.br/refil-filtro-agua-polar-basic-wp100-wp200-e-wp300-original/up/MLBU2801301221",
+   "text": "Refil Filtro Água Polar Basic Wp100, Wp200 E Wp300 Original ...",
+   "shop": "mercadolivre.com.br",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/8670783345",
+   "text": "사구리빙 베란다 배수구 소음 악취 해충 차단 우수관커버 덮개 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.curtec.com/en/products/drums/wide-neck-drums",
+   "text": "Wide neck drums - Products - CurTec",
+   "shop": "curtec.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.merckmillipore.com/TW/zh/product/60-Liter-Polyethylene-Storage-Tank,MM_NF-TANKPE060",
+   "text": "60 Liter Polyethylene Storage Tank | TANKPE060",
+   "shop": "merckmillipore.com",
+   "hits": 1
+  },
+  {
+   "href": "https://scandrums.dk/vare/wide-neck-drum-20l-biobaseret/",
+   "text": "Plasttønde wide Neck 20L Biobaseret - ScanDrums A/S",
+   "shop": "scandrums.dk",
+   "hits": 1
+  },
+  {
+   "href": "https://qualitywaterfilters4you.com/products/aquacera-lp5-gravity-water-filter-with-fluoride-option",
+   "text": "Aquacera LP4 Gravity Water Filter System with 2 Imperial ...",
+   "shop": "qualitywaterfilters4you.com",
+   "hits": 1
+  },
+  {
+   "href": "https://starwaterfilter.com/en/water-filter-swf/2-mini-star-6l-stainless-steel-water-filter.html",
+   "text": "Cream matte water filter, MINI STAR 5.6L",
+   "shop": "starwaterfilter.com",
+   "hits": 1
+  },
+  {
+   "href": "https://itppackaging.com/product/curtec-10-litre-wide-neck-drum",
+   "text": "CurTec 10 Litre Wide Neck Drum - ITP Packaging",
+   "shop": "itppackaging.com",
+   "hits": 1
+  },
+  {
+   "href": "https://boroux.com/products/boroux-legacy-compact-pitcher-bundle?variant=43153560076366",
+   "text": "BOROUX 1.8-Gallon Portable Water Filter System",
+   "shop": "boroux.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.awesomewater.com/products/winter-giveaway-pack",
+   "text": "Winter Giveaway Pack | Awesome Water®",
+   "shop": "awesomewater.com",
+   "hits": 1
+  },
+  {
+   "href": "https://hubplastics.com/product/qsp6338128/",
+   "text": "QSP6338128 | Hub Plastics",
+   "shop": "hubplastics.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.ebay.com.au/itm/226333896895",
+   "text": "Fermenting 30L Kit HDPE Food Grade Barrel Brewing | eBay ...",
+   "shop": "ebay.com.au",
+   "hits": 1
+  },
+  {
+   "href": "https://m.bion-techmall.com/goods/goods_view.php?goodsNo=1000000014",
+   "text": "바이온텍 공식몰",
+   "shop": "bion-techmall.com",
+   "hits": 1
+  },
+  {
+   "href": "https://almuftahpolymer.com/products/water-tank-50l-50lwt",
+   "text": "Water Tank 50L– Al Muftah Polymer",
+   "shop": "almuftahpolymer.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.flickr.com/photos/42057847@N04/3913960274",
+   "text": "Original Diaper Genie w/refill $10 | lexw1lson | Flickr",
+   "shop": "flickr.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.walmart.com/ip/Great-Value-GE-MWF-Smartwater-MWFA-MWFP-GWF-GWFA-Kenmore-999146-9991-469991-Refrigerator-Water-Filter-Replacement-1-Pack/5195359346",
+   "text": "Great Value Refrigerator Water Filter Replacement Cartridge ...",
+   "shop": "walmart.com",
+   "hits": 1
+  },
+  {
+   "href": "https://studio.tripo3d.ai/3d-model/nikken-pimag-water-filtration-bottle-with-filter-chamber-rocks-inside-2e542f8d-6ead-44d7-a8aa-dc2ca551a711",
+   "text": "Water Filtration Bottle 3d Model: NIKKEN PiMag Water ...",
+   "shop": "studio.tripo3d.ai",
+   "hits": 1
+  },
+  {
+   "href": "https://www.magnific.com/free-photos-vectors/blank-containers",
+   "text": "Blank containers Images - Free Download on Magnific ...",
+   "shop": "magnific.com",
+   "hits": 1
+  },
+  {
+   "href": "https://vattenfilterhuset.se/products/katadyn-drip-ceradyn-gravitationsfilter",
+   "text": "Katadyn Drip Ceradyn - Gravitationsfilter",
+   "shop": "vattenfilterhuset.se",
+   "hits": 1
+  },
+  {
+   "href": "https://www.amazon.ca/ZAICOLER-Dehydrator-Portable-Apartment-Traveling/dp/B0GY2KMP6Y",
+   "text": "ZAICOLER Manual Clothes Dryer, 3.17 Gallons Mini Clothes ...",
+   "shop": "amazon.ca",
+   "hits": 1
+  },
+  {
+   "href": "https://en.muanyagflakonok.hu/550-ml-hp/",
+   "text": "550 ml HP HDPE",
+   "shop": "en.muanyagflakonok.hu",
+   "hits": 1
+  },
+  {
+   "href": "https://1000angebote.de/FIXKRAFT-Weithalsfass-Futtertonne-30L-mit-Deckel-Weiss/036248V2",
+   "text": "FIXKRAFT Weithalsfass als Futtertonne mit Deckel inklusive",
+   "shop": "1000angebote.de",
+   "hits": 1
+  },
+  {
+   "href": "https://www.indiamart.com/proddetail/paint-bucket-2851839140991.html",
+   "text": "Paint Bucket at ₹ 155/piece | Drums in Indore | ID ...",
+   "shop": "indiamart.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.industrybuying.com/bottles-wkm-LAB.BOT.320347571",
+   "text": "Buy WKM 20 L Polypropylene Aspirator Bottle for Chemistry ...",
+   "shop": "industrybuying.com",
+   "hits": 1
+  },
+  {
+   "href": "http://www.aquacera.com/filter-systems.html",
+   "text": "Filter Systems",
+   "shop": "aquacera.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.labelmaster.com/shop/curtec-drums-and-jars/wide-opening-drums/",
+   "text": "Std Wide Neck Drums | Labelmaster",
+   "shop": "labelmaster.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.usplastic.com/catalog/item.aspx?itemid=154446",
+   "text": "1 Gallon White HDPE Flat Top Cylindrical Container with 38 ...",
+   "shop": "usplastic.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.cphi-online.com/product/recycled-wide-neck-drums-click-pack-pails/",
+   "text": "Recycled Wide neck drums \\u0026 Click Pack pails | CPHI Online",
+   "shop": "cphi-online.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.sandhurstbutchersupplies.com.au/product-category/home-brew-supplies/fermenters-starter-kits/",
+   "text": "Fermenters \\u0026 Starter Kits – Sandhurst Butchers Supplies ...",
+   "shop": "sandhurstbutchersupplies.com.au",
+   "hits": 1
+  },
+  {
+   "href": "https://www.oleole.pl/wklady-do-dzbankow-filtrujacych/tapp-tapp-1-duopak.bhtml",
+   "text": "Tapp Water Tapp 1 / Essential 2szt., Wkład filtrujący - cena ...",
+   "shop": "oleole.pl",
+   "hits": 1
+  },
+  {
+   "href": "https://www.bobleisure-canada.com/katadyn-drip-filter-ceradyn",
+   "text": "Katadyn Drip Filter Ceradyn online bobleisure - Canada",
+   "shop": "bobleisure-canada.com",
+   "hits": 1
+  },
+  {
+   "href": "https://novita.co.kr/product/20000000059",
+   "text": "이온정수 비데필터(BF-100A) | PRODUCT | 노비타(NOVITA)",
+   "shop": "novita.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://flaviatygel.com.br/Alimenti-50-Litri-In-Polietilene-Atossico-Con-Rubinetto-E-571938",
+   "text": "Fustino Per Alimenti 50 Litri In Polietilene Atossico – Con ...",
+   "shop": "flaviatygel.com.br",
+   "hits": 1
+  },
+  {
+   "href": "https://ingenesys.co.kr/product_categories/recycled-wide-neck-drums/",
+   "text": "Recycled Wide Neck Drums - 제네시스 바이오",
+   "shop": "ingenesys.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/9175651827",
+   "text": "Mochae 대용량 보온병 텀블러 손잡이 접이식 316 스텐 보온보냉 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/9572527710",
+   "text": "대용량 텀블러 스테인리스 초대형 48시간 보온보냉병 휴대용 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.kurly.com/goods/1001503369",
+   "text": "스칸디나비안 포레스트] 아웃도어 보온 보냉 텀블러 보온병 ...",
+   "shop": "kurly.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.amazon.eg/-/en/Manna-Titan-Stainless-Vacuum-Insulated/dp/B0DTJF7G6V",
+   "text": "Manna Titan Stainless Steel Vacuum Insulated Jug - 4L - Soft ...",
+   "shop": "amazon.eg",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/7899289271",
+   "text": "대용량 강력 보온 보냉병 스텐 텀블러 대형 물통 보냉 보온병 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://m.gmarket.co.kr/vi/product/4708261540",
+   "text": "Mochae 대용량 보온병 보온보냉 텀블러 휴대용 316 스텐 원터치 ...",
+   "shop": "gmarket.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://www.costco.co.kr/HomeKitchen/Dining/Thermal/Thermoflask-Thermal-Bottle-2PK-950ml/p/1901817",
+   "text": "써모플라스크 보온보냉병 2PK (950ml) | 코스트코 코리아",
+   "shop": "costco.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288&lowerVendNo=LV19018120",
    "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
-   "shop": "modernhouse.elandmall.co.kr"
+   "shop": "modernhouse.elandmall.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://m.blog.naver.com/cookbad/222583360612",
-   "text": "캠핑 물통 제드 워터저그 15리터 대용량 : 네이버 블로그",
-   "shop": "m.blog.naver.com"
+   "href": "https://golmate.com/ko/drinkware/custom-1l-large-capacity-thermos-with-2-cups-glass-lined-flask-for-hiking/",
+   "text": "하이킹용 맞춤형 1리터 대용량 보온병 (컵 2개 포함, 유리 내피 ...",
+   "shop": "golmate.com",
+   "hits": 1
   },
   {
-   "href": "https://prod.danawa.com/info/?pcode\\u003d15415901",
+   "href": "https://www.mercadolivre.com.br/garrafa-termica-2l-inox-para-agua-cafe-cha-viagem-caneca-bpa/up/MLBU4514146469",
+   "text": "Garrafa Térmica 2l Inox Para Água Café Chá Viagem Caneca Bpa ...",
+   "shop": "mercadolivre.com.br",
+   "hits": 1
+  },
+  {
+   "href": "https://www.shopping-on.co.kr/goods/goods_view.php?goodsNo=1000001545",
+   "text": "마미센스 스테인리스 24시간 보온병 3L 대용량 스텐 텀블러 ...",
+   "shop": "shopping-on.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://ko.aliexpress.com/item/1005012374556306.html",
+   "text": "1200ML 트로카페 세라믹 텀블러 초대형 텀블러 세라믹 음료 용기 ...",
+   "shop": "ko.aliexpress.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.shutterstock.com/ko/image-vector/gray-tumbler-mug-isolated-on-white-2761352971",
+   "text": "흰색 배경에 고립 된 회색 텀블러 스톡 벡터(로열티 프리 ...",
+   "shop": "shutterstock.com",
+   "hits": 1
+  },
+  {
+   "href": "https://prdm.daisomall.co.kr/pd/pdl/SCR_PDL_0001?pdNo=1073440&recmYn=Y",
+   "text": "대용량 핸들 텀블러 1200 ml 베이지 - 다이소몰",
+   "shop": "prdm.daisomall.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://prdm.daisomall.co.kr/pd/pdl/SCR_PDL_0001?pdNo=1073440",
+   "text": "대용량 핸들 텀블러 1200 ml 베이지 - 다이소몰",
+   "shop": "prdm.daisomall.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://home.zudua.co.tz/p/thermos-flask-traditional-1800ml/",
+   "text": "Thermos Flask Traditional 1800ml | Zudua Home Store",
+   "shop": "home.zudua.co.tz",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/8442118231",
+   "text": "대용량 보온병 보온보냉 텀블러 휴대용 316 스텐 원터치 보냉병 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.lowes.com/pd/Lukvuzo-128oz-Stainless-Steel-Insulated-Water-Bottle-Bottle-Dual-Handle-Leakproof-2-in-1-Straw-Spout-Lid-Keeps-Drinks-Cold-for-48-Hours-or-Hot/9625516",
+   "text": "Lukvuzo 128oz Stainless Steel Insulated Water Bottle Bottle ...",
+   "shop": "lowes.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.amazon.in/Insulated-Insulation-Temperature-Retention-Stainless/dp/B0H6XL9P3H",
+   "text": "Travel Insulated Bottle Jug Hot and Cold Insulation Large ...",
+   "shop": "amazon.in",
+   "hits": 1
+  },
+  {
+   "href": "https://m.thermosshop.kr/category/컵-타입/75/",
+   "text": "써모스 온라인 공식몰-컵 타입",
+   "shop": "thermosshop.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://www.kurly.com/goods/1002139532",
+   "text": "텀스] 디노 대용량 보온보냉병 1.3L - 마켓컬리",
+   "shop": "kurly.com",
+   "hits": 1
+  },
+  {
+   "href": "https://ko.mucrgroup.com/Travel-amp-Food-Flask?d=1.92",
+   "text": "여행 및 보온병 | MUCR | 중국 전문 보온병 및 텀블러 제조업체",
+   "shop": "ko.mucrgroup.com",
+   "hits": 1
+  },
+  {
+   "href": "https://prod.danawa.com/info/?pcode=102104663",
+   "text": "스탠리 클래식 보온병 1.9L : 다나와 가격비교",
+   "shop": "prod.danawa.com",
+   "hits": 1
+  },
+  {
+   "href": "https://ko.nawasbottle.com/thermos-flask/stainless-steel-portable-car-vacuum-thermos.html",
+   "text": "중국 스테인레스 스틸 휴대용 자동차 진공 보온병 플라스크 제조 ...",
+   "shop": "ko.nawasbottle.com",
+   "hits": 1
+  },
+  {
+   "href": "https://m.thermosshop.kr/article/상품-사용후기/4/98215/",
+   "text": "써모스 온라인 공식몰-스탠리 텀블러 바닥커버로 딱이에요 바닥 ...",
+   "shop": "thermosshop.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://mg.gmarket.co.kr/Item?goodscode=2477725306",
+   "text": "[National geographic] 내셔널지오그래픽키즈 에어터치 이중 ...",
+   "shop": "mg.gmarket.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://ko.gintflask.com/drinkware/bottle/stainless-steel-water-bottle/1-25l-stainless-steel-vacuum-insulated-water.html",
+   "text": "중국 야외 활동을위한 1.25L 물 플라스크 보온병 제조 업체 ...",
+   "shop": "ko.gintflask.com",
+   "hits": 1
+  },
+  {
+   "href": "https://kaif.co/products/camouflage-travel-thermos-pot-flask-2l-white-copy",
+   "text": "CAMOUFLAGE - TRAVEL THERMOS POT FLASK 2L WHITE — Kaif",
+   "shop": "kaif.co",
+   "hits": 1
+  },
+  {
+   "href": "https://catalog.11st.co.kr/pc/507146931",
+   "text": "스탠리 아이스플로우 플립 칼사이트 칼라카타 887ml 1개 - 가격 ...",
+   "shop": "catalog.11st.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://impala.co.tz/gj/T8C7EA2A8E/thermos-flask-traditional-violet-500ml-light-mondial-glass-vacuum-insulated-flask-32-50vt",
+   "text": "Thermos Flask Traditional Violet 500ml Light Mondial Glass ...",
+   "shop": "impala.co.tz",
+   "hits": 1
+  },
+  {
+   "href": "https://www.nidadanish.com/thermos-flask-traditional-green-1000ml-light-mondial-glass-vacuum-insulated-flask-32-100gr/",
+   "text": "Thermos Flask Traditional Green 1000ml Light Mondial Glass ...",
+   "shop": "nidadanish.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/7899153127",
+   "text": "2L 대용량 강력 모던 보온 보냉병 2리터 스텐 텀블러 물통 보냉 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://kr.made-in-china.com/video-channel/ahyoto_NxqrAQdKEyUw_Custom-1300ml-Large-Capacity-Thermo-Tea-Vacuum-Flasks-Stainless-Steel-Double-Wall-Insulated-Water-Bottle-Travel-Thermo-Vacuum-Tumbler-with-Spoon.html",
+   "text": "대용량 스테인리스 스틸 진공 플라스크 여행용 무엇입니까에 ...",
+   "shop": "kr.made-in-china.com",
+   "hits": 1
+  },
+  {
+   "href": "https://mainoo.co.kr/product/마이누-trim-텀블러-887ml/40/",
+   "text": "마이누 TRIM 텀블러 887",
+   "shop": "mainoo.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://performanceequinevs.com/review/4793494508",
+   "text": "1 litre thermos flask with 2 cups 1 Litre Insulated Vacuum ...",
+   "shop": "performanceequinevs.com",
+   "hits": 1
+  },
+  {
+   "href": "https://m.shoppinghow.kakao.com/m/search/q/서모플라스크",
+   "text": "서모플라스크 - 검색결과 | 쇼핑하우",
+   "shop": "shoppinghow.kakao.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.megamart.com/product/12669516",
+   "text": "써모스 대용량 보온병 (쿨그레이) - 메가마트몰",
+   "shop": "megamart.com",
+   "hits": 1
+  },
+  {
+   "href": "https://ko.gintflask.com/drinkware/bottle/plastic-water-bottle/thermos-vacuum-flask-with-cup.html",
+   "text": "중국 보온병 진공 플라스크 제조 업체, 공급 업체, 공장 - 도매 ...",
+   "shop": "ko.gintflask.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.coupang.com/vp/products/9228151495",
+   "text": "제드 워터저그 15L 컵홀더 뚜껑 대용량 물통 보냉 유지 - 식기 ...",
+   "shop": "coupang.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.amazon.in/STANLEY-IceFlow-Fast-Flow-Frost/dp/B0DTMXMCYX",
+   "text": "STANLEY IceFlow Fast Flow Jug, 64 oz, Frost 2.0 | Angled ...",
+   "shop": "amazon.in",
+   "hits": 1
+  },
+  {
+   "href": "https://prod.danawa.com/info/?pcode=15415901",
    "text": "제드코리아 워터저그 15L : 다나와 가격비교",
-   "shop": "prod.danawa.com"
+   "shop": "prod.danawa.com",
+   "hits": 1
   },
   {
-   "href": "https://m.gsshop.com/prd/prd.gs?prdid\\u003d1104164980\\u0026mseq\\u003d401139\\u0026gsid\\u003dsrcheshop-result\\u0026srp_ab\\u003dsrchMA_df\\u0026rank\\u003d5\\u0026ispre\\u003dY\\u0026kwd\\u003d스텐물통",
-   "text": "온도유지 대용량 텀블러 2L 워터저그 보냉병 스텐 304 보냉물통 ...",
-   "shop": "m.gsshop.com"
+   "href": "https://www.facebook.com/zedkorea/posts/water-jug-intro제드-워터저그15l15l의-대용량-사이즈로-2박-3일-캠핑도-가능합니다정수기-수도밸브-형으로-물-배출이-매우-쉽습니다/2927739754108694/",
+   "text": "Water Jug Intro(제드 워터저그15L) 15L의 대용량 사이즈로 2박 ...",
+   "shop": "facebook.com",
+   "hits": 1
   },
   {
-   "href": "https://per.auction.co.kr/recommend/recommendbridge.aspx?itemno\\u003dE480645991",
-   "text": "온누리/키친업 위생백 중 (25 x 35) 100매 X 1개/일회용 투명 ...",
-   "shop": "per.auction.co.kr"
+   "href": "https://www.coupang.com/vp/products/8989759663",
+   "text": "모던스토리 베란다 우수관 개폐기 고급형 - 배수구/역류방지트랩 ...",
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
-   "href": "https://store.ohou.se/goods/3416604",
-   "text": "텀블러·빨대·컵소품 \\u003e 감성캠핑 워터저그 1L 보냉병 휴대용 스텐 ...",
-   "shop": "store.ohou.se"
+   "href": "https://m.brunecamping.co.kr/product/오버플로우-토르-워터저그-12l-파운틴-캠핑-물통-워터탱크-워터컨테이너/4051/",
+   "text": "오버플로우 토르 워터저그 12L 파운틴 캠핑 물통 워터탱크 워터 ...",
+   "shop": "brunecamping.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://pages.coupang.com/p/150126",
-   "text": "쿠팡이 추천하는 브랜드 텀블러 관련 혜택과 특가",
-   "shop": "pages.coupang.com"
+   "href": "https://prod.danawa.com/info/?pcode=17202149",
+   "text": "캥거 워터저그 (4L) : 다나와 가격비교",
+   "shop": "prod.danawa.com",
+   "hits": 1
   },
   {
-   "href": "https://www.instagram.com/reel/DW0tei9DVVU/",
-   "text": "넉넉한 용량으로 하루 음료 보관이 가능한 빨대 텀블러 ...",
-   "shop": "instagram.com"
+   "href": "https://m.gsshop.com/prd/prd.gs?prdid=12417937",
+   "text": "베란다 화장실 세탁기 우수관커버 배수구 캡 중형 하수구 냄새 ...",
+   "shop": "gsshop.com",
+   "hits": 1
   },
   {
-   "href": "https://m.odenseofficial.com/category/tumblers/584/",
-   "text": "PRODUCT - TUMBLERS - 오덴세 온라인 스토어",
-   "shop": "m.odenseofficial.com"
+   "href": "https://www.coupang.com/vp/products/8352989549",
+   "text": "아쿠아메이드 프리미엄 자동 환수 세트 자동 물보충 세트 어항 ...",
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
-   "href": "https://store.ohou.se/goods/1689602",
-   "text": "텀블러·빨대·컵소품 \\u003e 갬성 워터저그 화이트 2L 대용량 보온보냉 ...",
-   "shop": "store.ohou.se"
+   "href": "https://www.10x10.co.kr/shopping/category_prd.asp?itemid=6701351",
+   "text": "워터저그 9.5L 캠핑 차박 휴가 낚시 휴대용 물통 생수통 정수기 ...",
+   "shop": "10x10.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://zdnet.co.kr/view/?no\\u003d20250826090530",
-   "text": "신일전자, 무선 텀블러 믹서 출시 - 지디넷코리아",
-   "shop": "zdnet.co.kr"
+   "href": "https://www.amazon.in/Stanley-Iceflow-Flip-Straw-Frost/dp/B0DR9PXHLP",
+   "text": "STANLEY IceFlow Flip Straw 2.0 Jug, 96 oz, Frost | Easy ...",
+   "shop": "amazon.in",
+   "hits": 1
   },
   {
-   "href": "https://www.bamkel.com/tumbler/?idx\\u003d717",
-   "text": "밤켈 대용량 보틀 텀블러 2L : BAMKEL 밤켈 | 프리미엄 아웃 ...",
-   "shop": "bamkel.com"
-  },
-  {
-   "href": "https://tigerbottles.co.kr/",
-   "text": "타이거 텀블러",
-   "shop": "tigerbottles.co.kr"
-  },
-  {
-   "href": "https://oneroommaking.com/product/새지-않는-빨대텀블러-1l/8773/",
-   "text": "새지 않는 빨대텀블러 1L",
-   "shop": "oneroommaking.com"
-  },
-  {
-   "href": "https://www.marpple.com/kr/product/detail?bp_id\\u003d8965",
-   "text": "3-WAY 올인원 텀블러 제작 | 마플",
-   "shop": "marpple.com"
-  },
-  {
-   "href": "https://giftinfo.co.kr/shop/webcart.php?cate1\\u003d199\\u0026cate2\\u003d1873",
-   "text": "텀블러 보온보냉병 판촉물 - 판촉물구매 최저가 보장 세종기프트",
-   "shop": "giftinfo.co.kr"
-  },
-  {
-   "href": "https://m.thermosshop.kr/category/1000ml-초과/86/",
-   "text": "써모스 온라인 공식몰-1000ml 초과",
-   "shop": "m.thermosshop.kr"
-  },
-  {
-   "href": "https://m.lotteimall.com/goods/viewGoodsDetail.lotte?goods_no\\u003d3159654960\\u0026rccode\\u003dmo_r_detail5\\u0026t\\u003d1771484117453",
-   "text": "상품상세 - 롯데홈쇼핑",
-   "shop": "m.lotteimall.com"
-  },
-  {
-   "href": "https://m.thelivingstory.co.kr/product/네오플램-대용량-스텐-텀블러-이중진공-보온-보냉-손잡이-빨대-900ml-화이트/2367/",
-   "text": "리빙스토리 :::",
-   "shop": "m.thelivingstory.co.kr"
-  },
-  {
-   "href": "https://mideum.kr/category/보온보냉-텀블러/24/",
-   "text": "물병공장 보온보냉 텀블러",
-   "shop": "mideum.kr"
-  },
-  {
-   "href": "https://www.ecovesselkorea.com/",
-   "text": "에코베슬(Ecovessel)",
-   "shop": "ecovesselkorea.com"
-  },
-  {
-   "href": "https://www.kurly.com/goods/1001060680",
-   "text": "에지리] 블레이저 보온보냉 텀블러 5종 (택1) - 마켓컬리",
-   "shop": "kurly.com"
+   "href": "https://m.bion-techmall.com/goods/goods_view.php?goodsNo=1000000013",
+   "text": "바이온텍 공식몰",
+   "shop": "bion-techmall.com",
+   "hits": 1
   },
   {
    "href": "https://ocamp.co.kr/category/물병워터저그/91/",
    "text": "물병/워터저그 - 오캠프",
-   "shop": "ocamp.co.kr"
+   "shop": "ocamp.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://m.bunjang.co.kr/products/441098806",
-   "text": "오덴세 투웨이 루프 텀블러 화이트 450ml | 텀블러/물병 | 번개 ...",
-   "shop": "m.bunjang.co.kr"
+   "href": "https://produto.mercadolivre.com.br/MLB-4034521319-pote-para-capsulas-35ml-c-tampa-presso-1000-unidades-_JM",
+   "text": "Pote Para Cápsulas 35ml C/ Tampa Pressão - 1000 Unidades ...",
+   "shop": "produto.mercadolivre.com.br",
+   "hits": 1
   },
   {
-   "href": "https://search.11st.co.kr/pc/total-search?kwd\\u003d1리터텀블러",
-   "text": "1리터텀블러 - 11번가 추천",
-   "shop": "search.11st.co.kr"
+   "href": "https://oneroommaking.com/product/청정스테이션-무선-청소기/9157/",
+   "text": "청정스테이션 무선 청소기",
+   "shop": "oneroommaking.com",
+   "hits": 1
   },
   {
-   "href": "https://m.gsshop.com/prd/prd.gs?prdid\\u003d1124574526",
-   "text": "보온보냉물통 온도유지 대용량텀블러 워터저그 보냉병 스텐304 ...",
-   "shop": "m.gsshop.com"
+   "href": "https://www.promotionsnow.com/products/koozie-challenge-jug-half-gallon-64-oz_1000972",
+   "text": "Koozie® Challenge Jug - Half Gallon, 64 oz. | Promotions Now",
+   "shop": "promotionsnow.com",
+   "hits": 1
   },
   {
-   "href": "https://inthea.kr/category/워터저그/89/",
-   "text": "워터저그 | 인디에이",
-   "shop": "inthea.kr"
+   "href": "https://mopani.co.za/products/lizzard-hydrant-flask-1-8l-assorted",
+   "text": "Lizzard Hydrant Flask 1.8L, Assorted",
+   "shop": "mopani.co.za",
+   "hits": 1
   },
   {
-   "href": "https://m.odenseofficial.com/category/tumblers/155/",
-   "text": "PRODUCT(구) - TUMBLERS - 오덴세 온라인 스토어",
-   "shop": "m.odenseofficial.com"
+   "href": "https://the-earth.co.kr/category/워터저그/157/",
+   "text": "디얼스(the-Earth) 온라인 쇼핑몰",
+   "shop": "the-earth.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://m.gmarket.co.kr/n/list?category\\u003d300029191",
-   "text": "G마켓 - 텀블러",
-   "shop": "m.gmarket.co.kr"
+   "href": "https://raraaqua.com/product/라라-자동환수-세트-심플버전-배관직결용/5658/",
+   "text": "라라 자동환수 세트 심플버전 배관직결용 - 라라아쿠아",
+   "shop": "raraaqua.com",
+   "hits": 1
   },
   {
-   "href": "https://www.coupang.com/vp/products/8665604175",
-   "text": "스탠리 에어로라이트 스테인리스 스틸 휴대용 보온병 아이스 ...",
-   "shop": "coupang.com"
+   "href": "https://ecotrade.com.co/filtro-purificador-de-agua-para-cocina-plegable/",
+   "text": "Filtro Purificador De Agua Para Cocina Plegable - Ecotrade",
+   "shop": "ecotrade.com.co",
+   "hits": 1
   },
   {
-   "href": "https://mfront.homeplus.co.kr/item?itemNo\\u003d071302883\\u0026storeType\\u003dHYPER",
-   "text": "simplus 스텐 핸디 텀블러 1100ML 베이지 | 홈플러스",
-   "shop": "mfront.homeplus.co.kr"
+   "href": "https://store.hanssem.com/goods/1082463",
+   "text": "이글루 400S 워터저그 캠핑 물통 7.6L/11.4L 택1 | 한샘몰",
+   "shop": "store.hanssem.com",
+   "hits": 1
   },
   {
-   "href": "https://m.theresoutdoor.co/product/다잡-38l-캠핑-워터저그-휴대용-텀블러-보냉-물통-스테인레스/1622/",
-   "text": "다잡 3.8L 캠핑 워터저그 휴대용 텀블러 보냉 물통 스테인레스 ...",
-   "shop": "m.theresoutdoor.co"
+   "href": "https://www.11st.co.kr/products/1278512566",
+   "text": "우수관 커버 베란다 개폐기 하수구 냄새차단 트랩 냄새제거 소음 ...",
+   "shop": "11st.co.kr",
+   "hits": 1
   },
   {
-   "href": "https://tumsmall.com/category/보온보냉-텀블러/131/",
-   "text": "텀스 텀블러 브랜드 공식 쇼핑몰!",
-   "shop": "tumsmall.com"
+   "href": "https://www.coupang.com/np/categories/185969",
+   "text": "아이스물통/워터저그 - 보온/보냉용품 | 쿠팡",
+   "shop": "coupang.com",
+   "hits": 1
   },
   {
-   "href": "https://m.thermosshop.kr/category/보온·보냉/87/",
-   "text": "써모스 온라인 공식몰",
-   "shop": "m.thermosshop.kr"
+   "href": "https://www.ebay.com/itm/202969044696",
+   "text": "Wow Bacon Microwave Cooker -P10 Model - No Splatter - Easy ...",
+   "shop": "ebay.com",
+   "hits": 1
   },
   {
-   "href": "https://m.ssfshop.com/ASOBU/GQW424101044489/good",
-   "text": "ASOBU｜캐나다 아소부 세라믹 스텐 진공 보온보냉 텀블러 아스펜 ...",
-   "shop": "m.ssfshop.com"
+   "href": "https://www.amazon.com.be/-/en/GJV-Stainless-Steel-Water-Adjustable/dp/B0DFWJGJQ6",
+   "text": "GJV Tumbler with Top Handle, Leakproof Stainless Steel Water ...",
+   "shop": "amazon.com.be",
+   "hits": 1
+  },
+  {
+   "href": "https://www.saveyourink.com/shakers",
+   "text": "Branded Shaker Bottles with Your Logo | Save Your Ink",
+   "shop": "saveyourink.com",
+   "hits": 1
+  },
+  {
+   "href": "http://www.rtck.co.kr/product/heater/",
+   "text": "히터 | (주)알티씨케이",
+   "shop": "rtck.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "http://foto-rozman.si/578471/Food-Grade-Airtight-With-Locking-Ring-Stackable-White",
+   "text": "60L Plastic Storage Barrel – Food Grade, Airtight With ...",
+   "shop": "foto-rozman.si",
+   "hits": 1
+  },
+  {
+   "href": "https://www.tiktok.com/@theclawedjoker/video/7593463420184235295",
+   "text": "What's a gigantic water bottle without ice, I'll tell ya a ...",
+   "shop": "tiktok.com",
+   "hits": 1
+  },
+  {
+   "href": "https://pwt.co.kr/goods/catalog?code=00060009",
+   "text": "RO멀티하우징 - (주)퓨어워터텍",
+   "shop": "pwt.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://store.ohou.se/goods/484668",
+   "text": "욕실청소용품 \\u003e 베란다 우수관 커버 개폐기 하수구트랩 냄새차단 ...",
+   "shop": "store.ohou.se",
+   "hits": 1
+  },
+  {
+   "href": "https://kr.made-in-china.com/co_boentes/product_Desktop-Popup-Power-Outlet-Socket-with-USB-Ports-16A-220V-IP44-Level-for-Office-Use-Recessed-Installation_yunoierong.html",
+   "text": "데스크탑 팝업 전원 콘센트 소켓 USB 포트 16A 220V IP44 사무실 ...",
+   "shop": "kr.made-in-china.com",
+   "hits": 1
+  },
+  {
+   "href": "https://m.xn--zb0bw3ko5fvvifii.com/product/해수여과기-업소용수족관-uv살균정수기-대게-킹크랩-거품-제거-활어-횟집수조-고기똥-제거기-조개-녹조-이끼-스키머/73/",
+   "text": "업소용수족관 해수여과기 활어 수조 정수기 UV 살균 스키머 고기 ...",
+   "shop": "xn--zb0bw3ko5fvvifii.com",
+   "hits": 1
+  },
+  {
+   "href": "https://m.clzero.co.kr/article/best-real-review/3001/442/",
+   "text": "씨엘제로(CLZERO) | 대용량 샤워기·싱크대·세탁기 녹물제거 필터 ...",
+   "shop": "clzero.co.kr",
+   "hits": 1
+  },
+  {
+   "href": "https://store.ohou.se/goods/2669441",
+   "text": "물병·저그·디스펜서 \\u003e S.O.K 클리어 워터저그 물통 | 오늘의집 쇼핑",
+   "shop": "store.ohou.se",
+   "hits": 1
+  },
+  {
+   "href": "https://m.pluslife24.com/product/우수관개폐기-소/531/",
+   "text": "행복을 더하는 플러스생활",
+   "shop": "pluslife24.com",
+   "hits": 1
+  },
+  {
+   "href": "https://www.indiamart.com/proddetail/1l-ss-kettle-water-bottle-2857298338562.html",
+   "text": "1L SS Kettle Water Bottle, 1 Litre at best price in Noida ...",
+   "shop": "indiamart.com",
+   "hits": 1
   }
- ]
+ ],
+ "per": {
+  "C:\\Users\\CH\\AppData\\Local\\Temp\\claude\\C--Users-CH-Desktop-------\\cf6f4b35-f842-4066-83c6-8d788aa2f7ff\\scratchpad\\titan_w1.jpg": [
+   {
+    "href": "https://www.mercadolibre.com.mx/tarro-de-plastico-grande-de-boca-ancha-de-68-onzas-recipien/up/MLMU4025039145",
+    "text": "Tarro De Plástico Grande De Boca Ancha De 68 Onzas, Recipien ...",
+    "shop": "mercadolibre.com.mx"
+   },
+   {
+    "href": "https://www.amazon.com/NeoPure-Everpure-System-Cartridge-Compatible/dp/B0G8QVM5YR",
+    "text": "Amazon.com: NeoPure 4FC Everpure High Flow System Filter ...",
+    "shop": "amazon.com"
+   },
+   {
+    "href": "https://www.amazon.fr/-/en/Garronda-Liter-Barrel-Bottle-GD-0078/dp/B0DGXZVZ4Y",
+    "text": "Garronda 30 Liter Water Tank Food Barrel Water Bottle GD ...",
+    "shop": "amazon.fr"
+   },
+   {
+    "href": "https://mannahydration.com/products/135-oz-titan-bottle-tweedia",
+    "text": "LIMITED EDITION 4L Titan Bottle With Bonus Straw Lid",
+    "shop": "mannahydration.com"
+   },
+   {
+    "href": "https://btech.com/en/p/generic-water-filter-tank-white",
+    "text": "Generic Water Filter Tank , White",
+    "shop": "btech.com"
+   },
+   {
+    "href": "https://ingenesys.co.kr/product_categories/biobased-wide-neck-drums/",
+    "text": "Biobased Wide Neck Drums - 제네시스 바이오",
+    "shop": "ingenesys.co.kr"
+   },
+   {
+    "href": "https://www.merckmillipore.com/KR/ko/product/mm/tankpe060",
+    "text": "60 L Polyethylene Storage Tank TANKPE060",
+    "shop": "merckmillipore.com"
+   },
+   {
+    "href": "https://kenzz.com/en/product/YPPP82WE347J/Generic-Water-Filter-Tank-5-Gallon-Capacity-White",
+    "text": "Generic Water Filter Tank - 5 Gallon Capacity - White",
+    "shop": "kenzz.com"
+   },
+   {
+    "href": "https://www.tiktok.com/@theclawedjoker/video/7580894390088977694",
+    "text": "Replying to @TeflonDonDan actually it does, just not all at ...",
+    "shop": "tiktok.com"
+   },
+   {
+    "href": "https://www.webstaurantstore.com/choice-round-3-gallon-white-beverage-dispenser-with-white-base/176BDW3WHKIT.html",
+    "text": "Choice Round 3 Gallon White Beverage Dispenser with White Base",
+    "shop": "webstaurantstore.com"
+   },
+   {
+    "href": "https://www.saint-tropez.com.br/496461/Kit-0-2-Micron-1000-Gallon-Emergency-Gravity-System-With",
+    "text": "Ceramic Bucket Water Filter Kit – 0.2 Micron, 1000+ Gallon ...",
+    "shop": "saint-tropez.com.br"
+   },
+   {
+    "href": "https://www.amazon.co.uk/Browin-340565-Fermentation-Container-Fermenting/dp/B094QVP3JH",
+    "text": "Browin 340565 Fermentation Container 65 L, Barrel with Lid ...",
+    "shop": "amazon.co.uk"
+   },
+   {
+    "href": "https://ingenesys.co.kr/product/20-liter-recycled-wide-neck-drum/",
+    "text": "20 Liter Recycled Wide Neck Drum - 제네시스 바이오",
+    "shop": "ingenesys.co.kr"
+   },
+   {
+    "href": "https://www.saco.sa/en/product/manna-push-non-slip-silicone-grip-stainless-steel-water-bottle-summit-powder-1-2-liter-ac55314-p-000000000000092956",
+    "text": "Manna Push Non-Slip Silicone Grip Stainless Steel Water ...",
+    "shop": "saco.sa"
+   },
+   {
+    "href": "https://www.mercadolivre.com.br/lixeira-verona-4-litros-nitron-com-tampa-plastico-branco-compacta-ideal-banheiro-cozinha-escritorio-cesto-de-lixo-pequeno-organizador-domestico-resistente-bpa-free-facil-limpeza-design-moderno/p/MLB21715943",
+    "text": "Lixeira Verona 4 Litros Nitron Com Tampa Plástico Branco ...",
+    "shop": "mercadolivre.com.br"
+   },
+   {
+    "href": "https://starwaterfilter.com/de/wasserfilter-swf/2-wasserfilter-mini-star-6-l-cremefarben.html",
+    "text": "Wasserfilter cremefarben matt, MINI STAR 5,6 l",
+    "shop": "starwaterfilter.com"
+   },
+   {
+    "href": "https://www.mercadolivre.com.br/refil-filtro-agua-polar-basic-wp100-wp200-e-wp300-original/up/MLBU2801301221",
+    "text": "Refil Filtro Água Polar Basic Wp100, Wp200 E Wp300 Original ...",
+    "shop": "mercadolivre.com.br"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/8670783345",
+    "text": "사구리빙 베란다 배수구 소음 악취 해충 차단 우수관커버 덮개 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.curtec.com/en/products/drums/wide-neck-drums",
+    "text": "Wide neck drums - Products - CurTec",
+    "shop": "curtec.com"
+   },
+   {
+    "href": "https://www.merckmillipore.com/TW/zh/product/60-Liter-Polyethylene-Storage-Tank,MM_NF-TANKPE060",
+    "text": "60 Liter Polyethylene Storage Tank | TANKPE060",
+    "shop": "merckmillipore.com"
+   },
+   {
+    "href": "https://scandrums.dk/vare/wide-neck-drum-20l-biobaseret/",
+    "text": "Plasttønde wide Neck 20L Biobaseret - ScanDrums A/S",
+    "shop": "scandrums.dk"
+   },
+   {
+    "href": "https://qualitywaterfilters4you.com/products/aquacera-lp5-gravity-water-filter-with-fluoride-option",
+    "text": "Aquacera LP4 Gravity Water Filter System with 2 Imperial ...",
+    "shop": "qualitywaterfilters4you.com"
+   },
+   {
+    "href": "https://starwaterfilter.com/en/water-filter-swf/2-mini-star-6l-stainless-steel-water-filter.html",
+    "text": "Cream matte water filter, MINI STAR 5.6L",
+    "shop": "starwaterfilter.com"
+   },
+   {
+    "href": "https://itppackaging.com/product/curtec-10-litre-wide-neck-drum",
+    "text": "CurTec 10 Litre Wide Neck Drum - ITP Packaging",
+    "shop": "itppackaging.com"
+   },
+   {
+    "href": "https://boroux.com/products/boroux-legacy-compact-pitcher-bundle?variant=43153560076366",
+    "text": "BOROUX 1.8-Gallon Portable Water Filter System",
+    "shop": "boroux.com"
+   },
+   {
+    "href": "https://global.gmarket.co.kr/item?goodsCode=1875588609",
+    "text": "Global Gmarket Mobile",
+    "shop": "global.gmarket.co.kr"
+   },
+   {
+    "href": "https://www.awesomewater.com/products/winter-giveaway-pack",
+    "text": "Winter Giveaway Pack | Awesome Water®",
+    "shop": "awesomewater.com"
+   },
+   {
+    "href": "https://hubplastics.com/product/qsp6338128/",
+    "text": "QSP6338128 | Hub Plastics",
+    "shop": "hubplastics.com"
+   },
+   {
+    "href": "https://shsigma.co.kr/shop/PDNN18071900003",
+    "text": "RO \\u0026 UP Water Purification / 순수 / 초순수 제조장치, NEW ...",
+    "shop": "shsigma.co.kr"
+   },
+   {
+    "href": "https://www.ebay.com.au/itm/226333896895",
+    "text": "Fermenting 30L Kit HDPE Food Grade Barrel Brewing | eBay ...",
+    "shop": "ebay.com.au"
+   },
+   {
+    "href": "https://m.bion-techmall.com/goods/goods_view.php?goodsNo=1000000014",
+    "text": "바이온텍 공식몰",
+    "shop": "bion-techmall.com"
+   },
+   {
+    "href": "https://almuftahpolymer.com/products/water-tank-50l-50lwt",
+    "text": "Water Tank 50L– Al Muftah Polymer",
+    "shop": "almuftahpolymer.com"
+   },
+   {
+    "href": "https://www.flickr.com/photos/42057847@N04/3913960274",
+    "text": "Original Diaper Genie w/refill $10 | lexw1lson | Flickr",
+    "shop": "flickr.com"
+   },
+   {
+    "href": "https://www.walmart.com/ip/Great-Value-GE-MWF-Smartwater-MWFA-MWFP-GWF-GWFA-Kenmore-999146-9991-469991-Refrigerator-Water-Filter-Replacement-1-Pack/5195359346",
+    "text": "Great Value Refrigerator Water Filter Replacement Cartridge ...",
+    "shop": "walmart.com"
+   },
+   {
+    "href": "https://studio.tripo3d.ai/3d-model/nikken-pimag-water-filtration-bottle-with-filter-chamber-rocks-inside-2e542f8d-6ead-44d7-a8aa-dc2ca551a711",
+    "text": "Water Filtration Bottle 3d Model: NIKKEN PiMag Water ...",
+    "shop": "studio.tripo3d.ai"
+   },
+   {
+    "href": "https://www.magnific.com/free-photos-vectors/blank-containers",
+    "text": "Blank containers Images - Free Download on Magnific ...",
+    "shop": "magnific.com"
+   },
+   {
+    "href": "https://vattenfilterhuset.se/products/katadyn-drip-ceradyn-gravitationsfilter",
+    "text": "Katadyn Drip Ceradyn - Gravitationsfilter",
+    "shop": "vattenfilterhuset.se"
+   },
+   {
+    "href": "https://m.lotteimall.com/goods/viewGoodsDetail.lotte?goods_no=3159654960",
+    "text": "상품상세 - 롯데홈쇼핑",
+    "shop": "lotteimall.com"
+   },
+   {
+    "href": "https://www.amazon.ca/ZAICOLER-Dehydrator-Portable-Apartment-Traveling/dp/B0GY2KMP6Y",
+    "text": "ZAICOLER Manual Clothes Dryer, 3.17 Gallons Mini Clothes ...",
+    "shop": "amazon.ca"
+   },
+   {
+    "href": "https://en.muanyagflakonok.hu/550-ml-hp/",
+    "text": "550 ml HP HDPE",
+    "shop": "en.muanyagflakonok.hu"
+   },
+   {
+    "href": "https://1000angebote.de/FIXKRAFT-Weithalsfass-Futtertonne-30L-mit-Deckel-Weiss/036248V2",
+    "text": "FIXKRAFT Weithalsfass als Futtertonne mit Deckel inklusive",
+    "shop": "1000angebote.de"
+   },
+   {
+    "href": "https://www.indiamart.com/proddetail/paint-bucket-2851839140991.html",
+    "text": "Paint Bucket at ₹ 155/piece | Drums in Indore | ID ...",
+    "shop": "indiamart.com"
+   },
+   {
+    "href": "https://www.industrybuying.com/bottles-wkm-LAB.BOT.320347571",
+    "text": "Buy WKM 20 L Polypropylene Aspirator Bottle for Chemistry ...",
+    "shop": "industrybuying.com"
+   },
+   {
+    "href": "http://www.aquacera.com/filter-systems.html",
+    "text": "Filter Systems",
+    "shop": "aquacera.com"
+   },
+   {
+    "href": "https://m.gsshop.com/prd/prd.gs?prdid=12417934",
+    "text": "베란다 화장실 세탁기 우수관커버 배수구 캡 대형 고급형 하수구 ...",
+    "shop": "gsshop.com"
+   },
+   {
+    "href": "https://www.labelmaster.com/shop/curtec-drums-and-jars/wide-opening-drums/",
+    "text": "Std Wide Neck Drums | Labelmaster",
+    "shop": "labelmaster.com"
+   },
+   {
+    "href": "https://www.usplastic.com/catalog/item.aspx?itemid=154446",
+    "text": "1 Gallon White HDPE Flat Top Cylindrical Container with 38 ...",
+    "shop": "usplastic.com"
+   },
+   {
+    "href": "https://www.cphi-online.com/product/recycled-wide-neck-drums-click-pack-pails/",
+    "text": "Recycled Wide neck drums \\u0026 Click Pack pails | CPHI Online",
+    "shop": "cphi-online.com"
+   },
+   {
+    "href": "https://www.sandhurstbutchersupplies.com.au/product-category/home-brew-supplies/fermenters-starter-kits/",
+    "text": "Fermenters \\u0026 Starter Kits – Sandhurst Butchers Supplies ...",
+    "shop": "sandhurstbutchersupplies.com.au"
+   },
+   {
+    "href": "https://m.tools24.co.kr/product/테슬론-컴프레샤-유수분분리기-ha03-플로터타입/6536/",
+    "text": "테슬론 컴프레샤 유수분분리기 HA03 플로터타입 ... - 툴스24",
+    "shop": "tools24.co.kr"
+   },
+   {
+    "href": "https://www.oleole.pl/wklady-do-dzbankow-filtrujacych/tapp-tapp-1-duopak.bhtml",
+    "text": "Tapp Water Tapp 1 / Essential 2szt., Wkład filtrujący - cena ...",
+    "shop": "oleole.pl"
+   },
+   {
+    "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288",
+    "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
+    "shop": "modernhouse.elandmall.co.kr"
+   },
+   {
+    "href": "https://www.bobleisure-canada.com/katadyn-drip-filter-ceradyn",
+    "text": "Katadyn Drip Filter Ceradyn online bobleisure - Canada",
+    "shop": "bobleisure-canada.com"
+   },
+   {
+    "href": "https://novita.co.kr/product/20000000059",
+    "text": "이온정수 비데필터(BF-100A) | PRODUCT | 노비타(NOVITA)",
+    "shop": "novita.co.kr"
+   },
+   {
+    "href": "https://flaviatygel.com.br/Alimenti-50-Litri-In-Polietilene-Atossico-Con-Rubinetto-E-571938",
+    "text": "Fustino Per Alimenti 50 Litri In Polietilene Atossico – Con ...",
+    "shop": "flaviatygel.com.br"
+   },
+   {
+    "href": "https://zigzag.kr/catalog/products/170955524",
+    "text": "든해상점 [스탠리호환] 실리콘 텀블러 건조대 물빠짐 트레이 ...",
+    "shop": "zigzag.kr"
+   },
+   {
+    "href": "https://ingenesys.co.kr/product_categories/recycled-wide-neck-drums/",
+    "text": "Recycled Wide Neck Drums - 제네시스 바이오",
+    "shop": "ingenesys.co.kr"
+   }
+  ],
+  "C:\\Users\\CH\\AppData\\Local\\Temp\\claude\\C--Users-CH-Desktop-------\\cf6f4b35-f842-4066-83c6-8d788aa2f7ff\\scratchpad\\titan_w2.jpg": [
+   {
+    "href": "https://www.coupang.com/vp/products/9175651827",
+    "text": "Mochae 대용량 보온병 텀블러 손잡이 접이식 316 스텐 보온보냉 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/9572527710",
+    "text": "대용량 텀블러 스테인리스 초대형 48시간 보온보냉병 휴대용 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.kurly.com/goods/1001503369",
+    "text": "스칸디나비안 포레스트] 아웃도어 보온 보냉 텀블러 보온병 ...",
+    "shop": "kurly.com"
+   },
+   {
+    "href": "https://mannahydration.com/products/135-oz-titan-bottle-tweedia",
+    "text": "LIMITED EDITION 4L Titan Bottle With Bonus Straw Lid",
+    "shop": "mannahydration.com"
+   },
+   {
+    "href": "https://www.amazon.eg/-/en/Manna-Titan-Stainless-Vacuum-Insulated/dp/B0DTJF7G6V",
+    "text": "Manna Titan Stainless Steel Vacuum Insulated Jug - 4L - Soft ...",
+    "shop": "amazon.eg"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/7899289271",
+    "text": "대용량 강력 보온 보냉병 스텐 텀블러 대형 물통 보냉 보온병 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://m.gmarket.co.kr/vi/product/4708261540",
+    "text": "Mochae 대용량 보온병 보온보냉 텀블러 휴대용 316 스텐 원터치 ...",
+    "shop": "gmarket.co.kr"
+   },
+   {
+    "href": "https://www.costco.co.kr/HomeKitchen/Dining/Thermal/Thermoflask-Thermal-Bottle-2PK-950ml/p/1901817",
+    "text": "써모플라스크 보온보냉병 2PK (950ml) | 코스트코 코리아",
+    "shop": "costco.co.kr"
+   },
+   {
+    "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288&lowerVendNo=LV19018120",
+    "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
+    "shop": "modernhouse.elandmall.co.kr"
+   },
+   {
+    "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288",
+    "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
+    "shop": "modernhouse.elandmall.co.kr"
+   },
+   {
+    "href": "https://golmate.com/ko/drinkware/custom-1l-large-capacity-thermos-with-2-cups-glass-lined-flask-for-hiking/",
+    "text": "하이킹용 맞춤형 1리터 대용량 보온병 (컵 2개 포함, 유리 내피 ...",
+    "shop": "golmate.com"
+   },
+   {
+    "href": "https://www.mercadolivre.com.br/garrafa-termica-2l-inox-para-agua-cafe-cha-viagem-caneca-bpa/up/MLBU4514146469",
+    "text": "Garrafa Térmica 2l Inox Para Água Café Chá Viagem Caneca Bpa ...",
+    "shop": "mercadolivre.com.br"
+   },
+   {
+    "href": "https://www.shopping-on.co.kr/goods/goods_view.php?goodsNo=1000001545",
+    "text": "마미센스 스테인리스 24시간 보온병 3L 대용량 스텐 텀블러 ...",
+    "shop": "shopping-on.co.kr"
+   },
+   {
+    "href": "https://ko.aliexpress.com/item/1005012374556306.html",
+    "text": "1200ML 트로카페 세라믹 텀블러 초대형 텀블러 세라믹 음료 용기 ...",
+    "shop": "ko.aliexpress.com"
+   },
+   {
+    "href": "https://www.shutterstock.com/ko/image-vector/gray-tumbler-mug-isolated-on-white-2761352971",
+    "text": "흰색 배경에 고립 된 회색 텀블러 스톡 벡터(로열티 프리 ...",
+    "shop": "shutterstock.com"
+   },
+   {
+    "href": "https://prdm.daisomall.co.kr/pd/pdl/SCR_PDL_0001?pdNo=1073440&recmYn=Y",
+    "text": "대용량 핸들 텀블러 1200 ml 베이지 - 다이소몰",
+    "shop": "prdm.daisomall.co.kr"
+   },
+   {
+    "href": "https://prdm.daisomall.co.kr/pd/pdl/SCR_PDL_0001?pdNo=1073440",
+    "text": "대용량 핸들 텀블러 1200 ml 베이지 - 다이소몰",
+    "shop": "prdm.daisomall.co.kr"
+   },
+   {
+    "href": "https://home.zudua.co.tz/p/thermos-flask-traditional-1800ml/",
+    "text": "Thermos Flask Traditional 1800ml | Zudua Home Store",
+    "shop": "home.zudua.co.tz"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/8442118231",
+    "text": "대용량 보온병 보온보냉 텀블러 휴대용 316 스텐 원터치 보냉병 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.lowes.com/pd/Lukvuzo-128oz-Stainless-Steel-Insulated-Water-Bottle-Bottle-Dual-Handle-Leakproof-2-in-1-Straw-Spout-Lid-Keeps-Drinks-Cold-for-48-Hours-or-Hot/9625516",
+    "text": "Lukvuzo 128oz Stainless Steel Insulated Water Bottle Bottle ...",
+    "shop": "lowes.com"
+   },
+   {
+    "href": "https://www.amazon.in/Insulated-Insulation-Temperature-Retention-Stainless/dp/B0H6XL9P3H",
+    "text": "Travel Insulated Bottle Jug Hot and Cold Insulation Large ...",
+    "shop": "amazon.in"
+   },
+   {
+    "href": "https://m.thermosshop.kr/category/컵-타입/75/",
+    "text": "써모스 온라인 공식몰-컵 타입",
+    "shop": "thermosshop.kr"
+   },
+   {
+    "href": "https://www.kurly.com/goods/1002139532",
+    "text": "텀스] 디노 대용량 보온보냉병 1.3L - 마켓컬리",
+    "shop": "kurly.com"
+   },
+   {
+    "href": "https://ko.mucrgroup.com/Travel-amp-Food-Flask?d=1.92",
+    "text": "여행 및 보온병 | MUCR | 중국 전문 보온병 및 텀블러 제조업체",
+    "shop": "ko.mucrgroup.com"
+   },
+   {
+    "href": "https://m.lotteimall.com/goods/viewGoodsDetail.lotte?goods_no=3159654960",
+    "text": "상품상세 - 롯데홈쇼핑",
+    "shop": "lotteimall.com"
+   },
+   {
+    "href": "https://prod.danawa.com/info/?pcode=102104663",
+    "text": "스탠리 클래식 보온병 1.9L : 다나와 가격비교",
+    "shop": "prod.danawa.com"
+   },
+   {
+    "href": "https://ko.nawasbottle.com/thermos-flask/stainless-steel-portable-car-vacuum-thermos.html",
+    "text": "중국 스테인레스 스틸 휴대용 자동차 진공 보온병 플라스크 제조 ...",
+    "shop": "ko.nawasbottle.com"
+   },
+   {
+    "href": "https://m.thermosshop.kr/article/상품-사용후기/4/98215/",
+    "text": "써모스 온라인 공식몰-스탠리 텀블러 바닥커버로 딱이에요 바닥 ...",
+    "shop": "thermosshop.kr"
+   },
+   {
+    "href": "https://mg.gmarket.co.kr/Item?goodscode=2477725306",
+    "text": "[National geographic] 내셔널지오그래픽키즈 에어터치 이중 ...",
+    "shop": "mg.gmarket.co.kr"
+   },
+   {
+    "href": "https://ko.gintflask.com/drinkware/bottle/stainless-steel-water-bottle/1-25l-stainless-steel-vacuum-insulated-water.html",
+    "text": "중국 야외 활동을위한 1.25L 물 플라스크 보온병 제조 업체 ...",
+    "shop": "ko.gintflask.com"
+   },
+   {
+    "href": "https://kaif.co/products/camouflage-travel-thermos-pot-flask-2l-white-copy",
+    "text": "CAMOUFLAGE - TRAVEL THERMOS POT FLASK 2L WHITE — Kaif",
+    "shop": "kaif.co"
+   },
+   {
+    "href": "https://catalog.11st.co.kr/pc/507146931",
+    "text": "스탠리 아이스플로우 플립 칼사이트 칼라카타 887ml 1개 - 가격 ...",
+    "shop": "catalog.11st.co.kr"
+   },
+   {
+    "href": "https://impala.co.tz/gj/T8C7EA2A8E/thermos-flask-traditional-violet-500ml-light-mondial-glass-vacuum-insulated-flask-32-50vt",
+    "text": "Thermos Flask Traditional Violet 500ml Light Mondial Glass ...",
+    "shop": "impala.co.tz"
+   },
+   {
+    "href": "https://www.nidadanish.com/thermos-flask-traditional-green-1000ml-light-mondial-glass-vacuum-insulated-flask-32-100gr/",
+    "text": "Thermos Flask Traditional Green 1000ml Light Mondial Glass ...",
+    "shop": "nidadanish.com"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/7899153127",
+    "text": "2L 대용량 강력 모던 보온 보냉병 2리터 스텐 텀블러 물통 보냉 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://kr.made-in-china.com/video-channel/ahyoto_NxqrAQdKEyUw_Custom-1300ml-Large-Capacity-Thermo-Tea-Vacuum-Flasks-Stainless-Steel-Double-Wall-Insulated-Water-Bottle-Travel-Thermo-Vacuum-Tumbler-with-Spoon.html",
+    "text": "대용량 스테인리스 스틸 진공 플라스크 여행용 무엇입니까에 ...",
+    "shop": "kr.made-in-china.com"
+   },
+   {
+    "href": "https://www.trekkeressentials.com/collections/appplaza-best-sellers/products/1-2l-1-9l-stainless-steel-thermal-tumbler-48-hour-vacuum-insulated-sports-water-bottle-for-outdoor-use?variant=51358036001050",
+    "text": "48-Hour Vacuum Insulated Thermal Tumbler 1.2L–1.9L – 304 SS ...",
+    "shop": "trekkeressentials.com"
+   },
+   {
+    "href": "https://zigzag.kr/catalog/products/170955524",
+    "text": "든해상점 [스탠리호환] 실리콘 텀블러 건조대 물빠짐 트레이 ...",
+    "shop": "zigzag.kr"
+   },
+   {
+    "href": "https://mainoo.co.kr/product/마이누-trim-텀블러-887ml/40/",
+    "text": "마이누 TRIM 텀블러 887",
+    "shop": "mainoo.co.kr"
+   },
+   {
+    "href": "https://performanceequinevs.com/review/4793494508",
+    "text": "1 litre thermos flask with 2 cups 1 Litre Insulated Vacuum ...",
+    "shop": "performanceequinevs.com"
+   },
+   {
+    "href": "https://m.shoppinghow.kakao.com/m/search/q/서모플라스크",
+    "text": "서모플라스크 - 검색결과 | 쇼핑하우",
+    "shop": "shoppinghow.kakao.com"
+   },
+   {
+    "href": "https://www.megamart.com/product/12669516",
+    "text": "써모스 대용량 보온병 (쿨그레이) - 메가마트몰",
+    "shop": "megamart.com"
+   },
+   {
+    "href": "https://ko.gintflask.com/drinkware/bottle/plastic-water-bottle/thermos-vacuum-flask-with-cup.html",
+    "text": "중국 보온병 진공 플라스크 제조 업체, 공급 업체, 공장 - 도매 ...",
+    "shop": "ko.gintflask.com"
+   }
+  ],
+  "C:\\Users\\CH\\AppData\\Local\\Temp\\claude\\C--Users-CH-Desktop-------\\cf6f4b35-f842-4066-83c6-8d788aa2f7ff\\scratchpad\\titan_w3.jpg": [
+   {
+    "href": "https://mannahydration.com/products/135-oz-titan-bottle-tweedia",
+    "text": "LIMITED EDITION 4L Titan Bottle With Bonus Straw Lid",
+    "shop": "mannahydration.com"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/9228151495",
+    "text": "제드 워터저그 15L 컵홀더 뚜껑 대용량 물통 보냉 유지 - 식기 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.amazon.in/STANLEY-IceFlow-Fast-Flow-Frost/dp/B0DTMXMCYX",
+    "text": "STANLEY IceFlow Fast Flow Jug, 64 oz, Frost 2.0 | Angled ...",
+    "shop": "amazon.in"
+   },
+   {
+    "href": "https://prod.danawa.com/info/?pcode=15415901",
+    "text": "제드코리아 워터저그 15L : 다나와 가격비교",
+    "shop": "prod.danawa.com"
+   },
+   {
+    "href": "https://www.facebook.com/zedkorea/posts/water-jug-intro제드-워터저그15l15l의-대용량-사이즈로-2박-3일-캠핑도-가능합니다정수기-수도밸브-형으로-물-배출이-매우-쉽습니다/2927739754108694/",
+    "text": "Water Jug Intro(제드 워터저그15L) 15L의 대용량 사이즈로 2박 ...",
+    "shop": "facebook.com"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/8989759663",
+    "text": "모던스토리 베란다 우수관 개폐기 고급형 - 배수구/역류방지트랩 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://modernhouse.elandmall.co.kr/i/item?itemNo=2204595288",
+    "text": "12HOURS 뉴 투고 보온보냉텀블러 700ml 크림_KC0322003- 모던하우스",
+    "shop": "modernhouse.elandmall.co.kr"
+   },
+   {
+    "href": "https://m.brunecamping.co.kr/product/오버플로우-토르-워터저그-12l-파운틴-캠핑-물통-워터탱크-워터컨테이너/4051/",
+    "text": "오버플로우 토르 워터저그 12L 파운틴 캠핑 물통 워터탱크 워터 ...",
+    "shop": "brunecamping.co.kr"
+   },
+   {
+    "href": "https://prod.danawa.com/info/?pcode=17202149",
+    "text": "캥거 워터저그 (4L) : 다나와 가격비교",
+    "shop": "prod.danawa.com"
+   },
+   {
+    "href": "https://www.amazon.fr/-/en/Garronda-Liter-Barrel-Bottle-GD-0078/dp/B0DGXZVZ4Y",
+    "text": "Garronda 30 Liter Water Tank Food Barrel Water Bottle GD ...",
+    "shop": "amazon.fr"
+   },
+   {
+    "href": "https://global.gmarket.co.kr/item?goodsCode=1875588609",
+    "text": "Global Gmarket Mobile",
+    "shop": "global.gmarket.co.kr"
+   },
+   {
+    "href": "https://m.gsshop.com/prd/prd.gs?prdid=12417937",
+    "text": "베란다 화장실 세탁기 우수관커버 배수구 캡 중형 하수구 냄새 ...",
+    "shop": "gsshop.com"
+   },
+   {
+    "href": "https://www.coupang.com/vp/products/8352989549",
+    "text": "아쿠아메이드 프리미엄 자동 환수 세트 자동 물보충 세트 어항 ...",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.10x10.co.kr/shopping/category_prd.asp?itemid=6701351",
+    "text": "워터저그 9.5L 캠핑 차박 휴가 낚시 휴대용 물통 생수통 정수기 ...",
+    "shop": "10x10.co.kr"
+   },
+   {
+    "href": "https://www.amazon.in/Stanley-Iceflow-Flip-Straw-Frost/dp/B0DR9PXHLP",
+    "text": "STANLEY IceFlow Flip Straw 2.0 Jug, 96 oz, Frost | Easy ...",
+    "shop": "amazon.in"
+   },
+   {
+    "href": "https://m.bion-techmall.com/goods/goods_view.php?goodsNo=1000000013",
+    "text": "바이온텍 공식몰",
+    "shop": "bion-techmall.com"
+   },
+   {
+    "href": "https://ocamp.co.kr/category/물병워터저그/91/",
+    "text": "물병/워터저그 - 오캠프",
+    "shop": "ocamp.co.kr"
+   },
+   {
+    "href": "https://m.gsshop.com/prd/prd.gs?prdid=12417934",
+    "text": "베란다 화장실 세탁기 우수관커버 배수구 캡 대형 고급형 하수구 ...",
+    "shop": "gsshop.com"
+   },
+   {
+    "href": "https://produto.mercadolivre.com.br/MLB-4034521319-pote-para-capsulas-35ml-c-tampa-presso-1000-unidades-_JM",
+    "text": "Pote Para Cápsulas 35ml C/ Tampa Pressão - 1000 Unidades ...",
+    "shop": "produto.mercadolivre.com.br"
+   },
+   {
+    "href": "https://oneroommaking.com/product/청정스테이션-무선-청소기/9157/",
+    "text": "청정스테이션 무선 청소기",
+    "shop": "oneroommaking.com"
+   },
+   {
+    "href": "https://www.promotionsnow.com/products/koozie-challenge-jug-half-gallon-64-oz_1000972",
+    "text": "Koozie® Challenge Jug - Half Gallon, 64 oz. | Promotions Now",
+    "shop": "promotionsnow.com"
+   },
+   {
+    "href": "https://www.trekkeressentials.com/collections/appplaza-best-sellers/products/1-2l-1-9l-stainless-steel-thermal-tumbler-48-hour-vacuum-insulated-sports-water-bottle-for-outdoor-use?variant=51358036001050",
+    "text": "48-Hour Vacuum Insulated Thermal Tumbler 1.2L–1.9L – 304 SS ...",
+    "shop": "trekkeressentials.com"
+   },
+   {
+    "href": "https://mopani.co.za/products/lizzard-hydrant-flask-1-8l-assorted",
+    "text": "Lizzard Hydrant Flask 1.8L, Assorted",
+    "shop": "mopani.co.za"
+   },
+   {
+    "href": "https://the-earth.co.kr/category/워터저그/157/",
+    "text": "디얼스(the-Earth) 온라인 쇼핑몰",
+    "shop": "the-earth.co.kr"
+   },
+   {
+    "href": "https://raraaqua.com/product/라라-자동환수-세트-심플버전-배관직결용/5658/",
+    "text": "라라 자동환수 세트 심플버전 배관직결용 - 라라아쿠아",
+    "shop": "raraaqua.com"
+   },
+   {
+    "href": "https://ecotrade.com.co/filtro-purificador-de-agua-para-cocina-plegable/",
+    "text": "Filtro Purificador De Agua Para Cocina Plegable - Ecotrade",
+    "shop": "ecotrade.com.co"
+   },
+   {
+    "href": "https://store.hanssem.com/goods/1082463",
+    "text": "이글루 400S 워터저그 캠핑 물통 7.6L/11.4L 택1 | 한샘몰",
+    "shop": "store.hanssem.com"
+   },
+   {
+    "href": "https://www.11st.co.kr/products/1278512566",
+    "text": "우수관 커버 베란다 개폐기 하수구 냄새차단 트랩 냄새제거 소음 ...",
+    "shop": "11st.co.kr"
+   },
+   {
+    "href": "https://www.coupang.com/np/categories/185969",
+    "text": "아이스물통/워터저그 - 보온/보냉용품 | 쿠팡",
+    "shop": "coupang.com"
+   },
+   {
+    "href": "https://www.ebay.com/itm/202969044696",
+    "text": "Wow Bacon Microwave Cooker -P10 Model - No Splatter - Easy ...",
+    "shop": "ebay.com"
+   },
+   {
+    "href": "https://www.amazon.com.be/-/en/GJV-Stainless-Steel-Water-Adjustable/dp/B0DFWJGJQ6",
+    "text": "GJV Tumbler with Top Handle, Leakproof Stainless Steel Water ...",
+    "shop": "amazon.com.be"
+   },
+   {
+    "href": "https://www.saveyourink.com/shakers",
+    "text": "Branded Shaker Bottles with Your Logo | Save Your Ink",
+    "shop": "saveyourink.com"
+   },
+   {
+    "href": "https://m.tools24.co.kr/product/테슬론-컴프레샤-유수분분리기-ha03-플로터타입/6536/",
+    "text": "테슬론 컴프레샤 유수분분리기 HA03 플로터타입 ... - 툴스24",
+    "shop": "tools24.co.kr"
+   },
+   {
+    "href": "http://www.rtck.co.kr/product/heater/",
+    "text": "히터 | (주)알티씨케이",
+    "shop": "rtck.co.kr"
+   },
+   {
+    "href": "http://foto-rozman.si/578471/Food-Grade-Airtight-With-Locking-Ring-Stackable-White",
+    "text": "60L Plastic Storage Barrel – Food Grade, Airtight With ...",
+    "shop": "foto-rozman.si"
+   },
+   {
+    "href": "https://www.tiktok.com/@theclawedjoker/video/7593463420184235295",
+    "text": "What's a gigantic water bottle without ice, I'll tell ya a ...",
+    "shop": "tiktok.com"
+   },
+   {
+    "href": "https://pwt.co.kr/goods/catalog?code=00060009",
+    "text": "RO멀티하우징 - (주)퓨어워터텍",
+    "shop": "pwt.co.kr"
+   },
+   {
+    "href": "https://shsigma.co.kr/shop/PDNN18071900003",
+    "text": "RO \\u0026 UP Water Purification / 순수 / 초순수 제조장치, NEW ...",
+    "shop": "shsigma.co.kr"
+   },
+   {
+    "href": "https://store.ohou.se/goods/484668",
+    "text": "욕실청소용품 \\u003e 베란다 우수관 커버 개폐기 하수구트랩 냄새차단 ...",
+    "shop": "store.ohou.se"
+   },
+   {
+    "href": "https://kr.made-in-china.com/co_boentes/product_Desktop-Popup-Power-Outlet-Socket-with-USB-Ports-16A-220V-IP44-Level-for-Office-Use-Recessed-Installation_yunoierong.html",
+    "text": "데스크탑 팝업 전원 콘센트 소켓 USB 포트 16A 220V IP44 사무실 ...",
+    "shop": "kr.made-in-china.com"
+   },
+   {
+    "href": "https://m.xn--zb0bw3ko5fvvifii.com/product/해수여과기-업소용수족관-uv살균정수기-대게-킹크랩-거품-제거-활어-횟집수조-고기똥-제거기-조개-녹조-이끼-스키머/73/",
+    "text": "업소용수족관 해수여과기 활어 수조 정수기 UV 살균 스키머 고기 ...",
+    "shop": "xn--zb0bw3ko5fvvifii.com"
+   },
+   {
+    "href": "https://m.clzero.co.kr/article/best-real-review/3001/442/",
+    "text": "씨엘제로(CLZERO) | 대용량 샤워기·싱크대·세탁기 녹물제거 필터 ...",
+    "shop": "clzero.co.kr"
+   },
+   {
+    "href": "https://store.ohou.se/goods/2669441",
+    "text": "물병·저그·디스펜서 \\u003e S.O.K 클리어 워터저그 물통 | 오늘의집 쇼핑",
+    "shop": "store.ohou.se"
+   },
+   {
+    "href": "https://m.pluslife24.com/product/우수관개폐기-소/531/",
+    "text": "행복을 더하는 플러스생활",
+    "shop": "pluslife24.com"
+   },
+   {
+    "href": "https://www.indiamart.com/proddetail/1l-ss-kettle-water-bottle-2857298338562.html",
+    "text": "1L SS Kettle Water Bottle, 1 Litre at best price in Noida ...",
+    "shop": "indiamart.com"
+   }
+  ]
+ }
 }
