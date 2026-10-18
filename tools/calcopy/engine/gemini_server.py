@@ -174,15 +174,52 @@ def ask_files(files, prompt: str, mode: str = "audio", models=MODELS, json_out: 
                 parts.append({"mime": "video/mp4", "b64": _video_b64(src, a, b, td, k)})
             jobs.append({"parts": parts, "prompt": prompt, "json": json_out})
     t0 = time.time()
-    res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS),
-                           "fallback": list(fallback or ()), "cross_n": cross_n, "req_timeout": req_timeout})
-    out = {"jobs": [{"file": src, "span": [a, b] if a is not None else None, "runs": runs} for (src, a, b), runs in zip(jobs_in, res["runs"])],
+    try:
+        res = _ssh_py(REMOTE, {"jobs": jobs, "models": list(models), "max_tries": max_tries, "workers": min(int(workers), WORKERS),
+                               "fallback": list(fallback or ()), "cross_n": cross_n, "req_timeout": req_timeout})
+        runs_all = res["runs"]
+    except Exception as e:  # noqa: BLE001 — 서버가 통째로 막혀도 로컬 풀로 채운다(이유는 runs 에 남긴다)
+        runs_all = [[{"model": "server", "why": f"server {type(e).__name__}: {str(e)[:160]}"}] for _ in jobs]
+    out = {"jobs": [{"file": src, "span": [a, b] if a is not None else None, "runs": runs} for (src, a, b), runs in zip(jobs_in, runs_all)],
            "sec": round(time.time() - t0, 1), "models": list(models), "fallback": list(fallback or ()), "cross_n": cross_n}
+    if json_out:
+        _local_fill(jobs, out["jobs"], list(models) + list(fallback or ()), cross_n)
     for j in out["jobs"]:
         j["ok_models"] = sorted({r["model"] for r in j["runs"] if "why" not in r})
         j["cross_ok"] = len(j["ok_models"]) >= cross_n           # ★교차 확인 됐나 — 부르는 쪽은 이 표식으로만 판단한다
         j["failed"] = [{"model": r["model"], "why": r["why"]} for r in j["runs"] if "why" in r]
+    out["sec"] = round(time.time() - t0, 1)
     return out
+
+
+def _local_fill(jobs: list[dict], outs: list[dict], plan: list[str], cross_n: int) -> None:
+    """서버 풀이 429·SSH 로 교차 확인을 못 채운 작업만 로컬 공용 풀(gemini_free._ask_local, 161키 장부)로 모자란 모델을 채운다.
+    10-18 다섯 편 동시 제작: 서버 4모델 전부 429 → 작업자들이 손으로 로컬 풀을 불러 우회했다(김나영·서인영·스타픽룸). 이제 여기 한 곳에서."""
+    import base64
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.calcopy.engine import gemini_free as GF
+    todo = []
+    for job, o in zip(jobs, outs):
+        ok = {r["model"] for r in o["runs"] if "why" not in r}
+        if len(ok) >= cross_n:
+            continue
+        parts = [(base64.b64decode(p["b64"]), p["mime"]) if p.get("b64") else p["text"] for p in job["parts"]]
+        miss = [m for m in plan if m not in ok][: cross_n - len(ok)]
+        todo += [(o, parts, job["prompt"], m) for m in miss]
+    if not todo:
+        return
+
+    def one(t):
+        o, parts, prompt, m = t
+        t0 = time.time()
+        d, err = GF._ask_local(parts, prompt, tag=f"server_fill@{m}", models=(m,))
+        if d is None:
+            return o, {"model": m, "why": f"local {err}", "via": "local"}
+        d.pop("_model", None)
+        return o, {"model": m, "json": d, "sec": round(time.time() - t0, 1), "via": "local"}
+    with ThreadPoolExecutor(max_workers=min(8, len(todo))) as ex:
+        for o, r in ex.map(one, todo):
+            o["runs"].append(r)
 
 
 def ask_raw(jobs: list[dict], models=MODELS, max_tries: int = 8, workers: int = WORKERS, fallback=FALLBACK_MODELS, cross_n: int = 1,
