@@ -130,6 +130,8 @@ tbody tr:hover{background:#1b1b22}
 <!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
      끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
 <div class=alertBoard id=alertBoard></div>
+<!-- 클로드형 경보(관제 234, 숏템MCP 설계 §7-9) — 고객 PC 라이선스·임대·자산 이상 행동. 판정은 claude_portal.anomaly_check 하나, 여기는 그리기·해제만. -->
+<div class=alertBoard id=claudeAlertBoard></div>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -451,6 +453,24 @@ async function closeAlert(id){
   try{ await fetch('/api/admin/alerts/resolve',{method:'POST',
         headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
   renderAlertBoard();
+}
+// 클로드형 경보(관제 234) — 미해제만. 해제 = 확인함(정지 경보면 그 고객 정지도 풀린다 — 서버 resolve_alert).
+async function renderClaudeAlerts(){
+  const box=document.getElementById('claudeAlertBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/alerts'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const open=(d&&d.alerts)||[];
+  if(!open.length){ box.innerHTML=''; return; }
+  const LV={warn:'경고',throttle:'속도 제한',suspend:'일시 정지',alert:'관리자 확인'};
+  box.innerHTML=open.map(a=>'<div class="ab '+(a.level==='suspend'||a.level==='alert'?'cust':'ops')+'"><div style="flex:1;min-width:0">'
+    + '<div class=abl>🛡 클로드형 경보 · '+_abEsc(a.rule)+' '+_abEsc(LV[a.level]||a.level)+'</div>'
+    + '<div class=abt>'+_abEsc(a.title)+' · 고객 '+_abEsc(a.cid)+' · '+_abEsc(a.count)+'회</div>'
+    + '<div class=abm>'+_abEsc(a.detail)+' · '+_abEsc(new Date((a.ts||0)*1000).toLocaleString())+'</div></div>'
+    + '<button class=abx onclick="closeClaudeAlert('+JSON.stringify(a.id)+')">'+(a.level==='suspend'?'정지 풀기':'해제')+'</button></div>').join('');
+}
+async function closeClaudeAlert(id){
+  try{ await fetch('/api/admin/claude/alerts/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
+  renderClaudeAlerts();
 }
 async function load(){
   const r=await fetch('/api/admin/customers');
@@ -1283,6 +1303,9 @@ else loadBugs();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderAlertBoard);
 else renderAlertBoard();
 setInterval(renderAlertBoard, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeAlerts);
+else renderClaudeAlerts();
+setInterval(renderClaudeAlerts, 30000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;
