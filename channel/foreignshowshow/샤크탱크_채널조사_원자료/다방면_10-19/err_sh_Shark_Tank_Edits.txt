@@ -1,0 +1,1 @@
+ERROR: [youtube:tab] UC0sqUhBRITreZ1cOsMEkGeA: This channel does not have a shorts tab
