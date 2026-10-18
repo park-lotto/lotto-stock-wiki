@@ -429,3 +429,13 @@ def test_eye_rescue_keeps_best_when_none_fit(tmp_path):
     r = ma.eye_rescue([{"i": 0}], ts, _needs(ts), {0: [(0, 9), (1, 6)]}, cells, META, ITS, ban, tmp_path, ma.LLM(fake), log=lambda *a: None)
     assert r[0][0][0] == 1 and ban[0] == {0}
     assert ma.select(ts, _needs(ts), r, cells, META, ITS, fit_ban=ban)[0]["cid"] == 1
+
+
+def test_ban_excluded_blocks_sibling_model_cells():
+    """제목에 다른 모델 낱말이 있으면 그 영상 칸은 고르지 않는다(10-18 잇썸홈 RG DS v2 — RG DS Plus 리뷰가 시연 칸으로 들어옴)."""
+    ts = toks(1)
+    cells = {0: cell("A", 11.0), 1: cell("B", 20.0)}
+    meta = {"A": {"res": 1080, "title": "Anbernic RG DS Plus Review"}, "B": {"res": 1080, "title": "Anbernic RG DS Review"}}
+    assert ma.ban_excluded(cells, meta, ["RG DS Plus"]) == 1
+    p = ma.select(ts, _needs(ts), {0: [(0, 9), (1, 7)]}, cells, meta, ITS)
+    assert p[0]["vid"] == "B"

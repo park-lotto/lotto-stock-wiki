@@ -885,7 +885,7 @@ def plan_materials(script_json, channel_rules, workdir=None, net=None, llm=None,
     net = net or Net(wd, log)
     llm = llm if isinstance(llm, LLM) else LLM(llm)
     topic, toks = norm_script(sj)
-    state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}}
+    state = {"queries": [], "meta": {}, "previews": [], "tagged": set(), "cells": {}, "exclude_title": sj.get("exclude_title")}
     stopped, picks, rounds, needs = None, [], 0, {}
     try:
         t = time.time()
@@ -1003,8 +1003,24 @@ def eye_rescue(bad: list[dict], toks, needs, ranked, cells, meta, rules, fit_ban
     return out
 
 
+def ban_excluded(cells: dict, meta: dict, exclude_title) -> int:
+    """제목에 다른 모델 낱말(exclude_title)이 있는 영상의 칸을 막는다 — 검색 때(_gather keep)만 거르면 state 에 남은 옛 후보·
+    다른 검색어로 들어온 영상이 그대로 고려된다(10-18 잇썸홈 RG DS v2: 'RG DS Plus Review' 2편이 시연 칸으로 들어옴). 막은 칸 수."""
+    ex = [x.lower() for x in exclude_title or [] if x]
+    if not ex:
+        return 0
+    bad = {v for v, m in meta.items() if any(x in str(m.get("title") or "").lower() for x in ex)}
+    n = 0
+    for c in cells.values():
+        if c["vid"] in bad and c.get("banned") != "exclude_title":
+            c["banned"] = "exclude_title"
+            n += 1
+    return n
+
+
 def finish_plan(toks, needs, ranked, memes, state, rules, net, llm, wd, sections, T):
     """선택 → 1080 구간 받기 → 1080 글자 검사 + 대사↔장면 검수 → 걸린 컷 다시 고르기 → 계획 시트. plan_materials·replan 공용."""
+    ban_excluded(state["cells"], state["meta"], state.get("exclude_title"))
     fb_path = wd / "fit_ban.json"      # replan 이 이어 받는다(검수에서 빠진 칸을 다시 고르지 않게)
     fit_ban = {int(k): set(v) for k, v in (json.loads(fb_path.read_text(encoding="utf-8")) if fb_path.exists() else {}).items()}
     picks = select(toks, needs, ranked, state["cells"], state["meta"], rules, memes, fit_ban)
@@ -1065,7 +1081,7 @@ def save_state(wd: Path, st: dict):
     (wd / "state.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
 
 
-def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool = True, rematch: bool = False) -> dict:
+def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool = True, rematch: bool = False, script_json=None) -> dict:
     """state.json 으로 선택부터 다시(규칙만 바뀌었을 때) — 검색·태깅·짝짓기 모델 호출 없음(1080 검사만 호출)."""
     wd = Path(workdir)
     rules = CHANNELS[channel_rules] if isinstance(channel_rules, str) else channel_rules
@@ -1074,7 +1090,9 @@ def replan(workdir, channel_rules, net=None, llm=None, log=print, sections: bool
     ranked = {int(k): [tuple(x) for x in v] for k, v in d["ranked"].items()}
     needs = {int(k): v for k, v in d["needs"].items()}
     memes = {int(k): v for k, v in (d.get("memes") or {}).items()}
-    state = {"queries": d["queries"], "meta": d["meta"], "previews": d.get("previews", []), "tagged": set(), "cells": cells}
+    sj = json.loads(Path(script_json).read_text(encoding="utf-8")) if script_json else {}
+    state = {"queries": d["queries"], "meta": d["meta"], "previews": d.get("previews", []), "tagged": set(), "cells": cells,
+             "exclude_title": sj.get("exclude_title")}
     net = net or Net(wd, log)
     llm = llm if isinstance(llm, LLM) else LLM(llm)
     T, t0, stopped = {}, time.time(), None
@@ -1526,7 +1544,7 @@ def main(argv=None):
     elif a.compare_only:
         res = json.loads(Path(a.out, "재료_auto.json").read_text(encoding="utf-8"))
     elif a.replan:
-        res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections, rematch=a.rematch)
+        res = replan(a.out, a.channel, llm=llm, sections=not a.no_sections, rematch=a.rematch, script_json=a.script)
     else:
         res = plan_materials(a.script, a.channel, a.out, llm=llm, sections=not a.no_sections)
     print(json.dumps(res["stats"], ensure_ascii=False))
