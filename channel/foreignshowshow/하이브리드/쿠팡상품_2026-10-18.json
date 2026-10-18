@@ -1,0 +1,118 @@
+{
+ "9572008898": {
+  "ep": "4 Spikeball",
+  "url": "https://www.coupang.com/vp/products/9572008898",
+  "status": 200,
+  "title": "Spikeball 스파이크볼 3볼 게임 세트 야외 실내 스포츠",
+  "rating": "",
+  "review_count": "(172)",
+  "reviews": [
+   "장바구니0최근본상품/prevnext",
+   "최고\n0%\n좋음\n0%\n보통\n0%\n별로\n0%\n나쁨\n0%"
+  ]
+ },
+ "5329056323": {
+  "ep": "4 Spikeball",
+  "url": "https://www.coupang.com/vp/products/5329056323",
+  "status": 200,
+  "title": "스파이크볼 세트 뉴스포츠 실내 단체 게임 체육교구 야외 캠핑 놀거리",
+  "rating": "",
+  "review_count": "",
+  "reviews": [
+   "장바구니최근본상품0/prevnext"
+  ]
+ },
+ "8277288137": {
+  "ep": "4 Spikeball",
+  "url": "https://www.coupang.com/vp/products/8277288137",
+  "status": 200,
+  "title": "스파이크볼 바운드볼 비치스포츠 캠핑스포츠 학교체육 팀게임스포츠",
+  "rating": "",
+  "review_count": "",
+  "reviews": [
+   "장바구니최근본상품/prevnext"
+  ]
+ },
+ "9532009187": {
+  "ep": "5 Bala Bangles",
+  "url": "https://www.coupang.com/vp/products/9532009187",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "9140455573": {
+  "ep": "5 Bala Bangles",
+  "url": "https://www.coupang.com/vp/products/9140455573",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "9120520253": {
+  "ep": "6 LARQ",
+  "url": "https://www.coupang.com/vp/products/9120520253",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "9774366170": {
+  "ep": "6 LARQ",
+  "url": "https://www.coupang.com/vp/products/9774366170",
+  "error": "TimeoutError: Page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://www.coupang.com/vp/products/9774366170\", waiting until \"domcontentloaded\"\n"
+ },
+ "100936605": {
+  "ep": "2 Squatty Potty",
+  "url": "https://www.coupang.com/vp/products/100936605",
+  "error": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://www.coupang.com/vp/products/100936605\nCall log:\n  - navigating to \"https://www.coupang.com/vp/products/100936605\", waiting until \"domcontentload"
+ },
+ "1675980473": {
+  "ep": "2 Squatty Potty",
+  "url": "https://www.coupang.com/vp/products/1675980473",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "8428979691": {
+  "ep": "3 Drop Stop",
+  "url": "https://www.coupang.com/vp/products/8428979691",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "9600273291": {
+  "ep": "3 Drop Stop",
+  "url": "https://www.coupang.com/vp/products/9600273291",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "8173850803": {
+  "ep": "1 STORMBAG",
+  "url": "https://www.coupang.com/vp/products/8173850803",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ },
+ "9658499964": {
+  "ep": "1 STORMBAG",
+  "url": "https://www.coupang.com/vp/products/9658499964",
+  "status": 403,
+  "title": "Access Denied",
+  "rating": "",
+  "review_count": "",
+  "reviews": []
+ }
+}

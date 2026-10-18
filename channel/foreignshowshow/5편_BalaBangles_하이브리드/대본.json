@@ -1,0 +1,364 @@
+{
+ "_note": "샥탬스토리 하이브리드 5편 Bala Bangles — 앞 0~11.57초(O1~O2) = 완성 칼카피 그대로(끝 원음 '손에 뭘 안 들어도 되는 게 좋네요'), 뒤 = 같은 옷 1인칭 체험 나레. CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Bala 발라 뱅글 손목 발목 웨이트 실리콘 밴드 1파운드(쿠팡 9532009187 등, 방송 제품과 같은 브랜드 — 리뷰 1)",
+ "hybrid": {
+  "front_doc": "../5편_BalaBangles",
+  "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_5편_BalaBangles.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/5편_BalaBangles/work/render/render_info.json",
+  "cut_after": "O2",
+  "cut_why": "O2 원음(투자자) '손에 뭘 안 들어도 되는 게 좋네요' 끝(11.57) — 다음 N3 나레 전",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "현장썰 하이브리드 4편 2차와 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "hook": "투자자 5명이 전부\n달려든 운동 팔찌?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.1,
+  "why": "앞 편과 같은 목소리·같은 speed"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 7.62,
+  "cps_note": "앞 편 완성본 나레 실측 cps_out",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음+잉?",
+    "text": "근데 저걸 차면 진짜 다른가 궁금해서 쿠팡에 쳐 봤더니, 그 발라 뱅글이 있더라고요",
+    "tts": "근데 저걸 차면 진짜 다른가 궁금해서 쿠팡에 쳐 봤더니, 그 발라 뱅글이 있더라고요",
+    "caps": [
+     "근데 저걸 차면",
+     "진짜 다른가",
+     "궁금해서",
+     "쿠팡에 쳐 봤더니",
+     "그 발라 뱅글이",
+     "있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph": [
+     {
+      "cap": "근데 저걸 차면",
+      "span": "저걸 차면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "진짜 다른가",
+      "span": "진짜 다른가",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "궁금해서",
+      "span": "궁금해서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그 발라 뱅글이",
+      "span": "뱅글이",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "있더라고요",
+      "span": "있더라고요",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게 방송 나가고 그해 매출이 열 배로 뛰었다더라고요",
+    "tts": "이게 말도 안 되는 게 방송 나가고 그해 매출이 열 배로 뛰었다더라고요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "방송 나가고 그해",
+     "매출이",
+     "열 배로 뛰었다더라고요"
+    ],
+    "facts": [
+     "f14"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "방송 나가고 그해",
+      "span": "나가고 그해",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "매출이",
+      "span": "매출이",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "열 배로 뛰었다더라고요",
+      "span": "열 배로",
+      "color": "빨강",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 손목에 차기만 하니까 빈손으로 요가 동작을 그대로 하게 되더라고요",
+    "tts": "진짜 핵심은 이건데, 손목에 차기만 하니까 빈손으로 요가 동작을 그대로 하게 되더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "손목에 차기만 하니까",
+     "빈손으로",
+     "요가 동작을",
+     "그대로 하게 되더라고요"
+    ],
+    "facts": [
+     "f4",
+     "f5"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "손목에 차기만 하니까",
+      "span": "차기만 하니까",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "빈손으로",
+      "span": "빈손으로",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "요가 동작을",
+      "span": "요가 동작을",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그대로 하게 되더라고요",
+      "span": "되더라고요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)+비유",
+    "text": "심지어 이게 대박인 게 겉이 말랑한 실리콘이라, 팔찌처럼 차고 다녀도 티가 안 나요",
+    "tts": "심지어 이게 대박인 게 겉이 말랑한 실리콘이라, 팔찌처럼 차고 다녀도 티가 안 나요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "겉이 말랑한",
+     "실리콘이라",
+     "팔찌처럼",
+     "차고 다녀도",
+     "티가 안 나요"
+    ],
+    "facts": [
+     "c1",
+     "f3"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "겉이 말랑한",
+      "span": "겉이 말랑한",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "실리콘이라",
+      "span": "실리콘이라",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "팔찌처럼",
+      "span": "팔찌처럼",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "차고 다녀도",
+      "span": "차고 다녀도",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "티가 안 나요",
+      "span": "티가 안 나요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "요즘 필라테스 언니들 사이에서 어디 거냐고 난리예요",
+    "tts": "요즘 필라테스 언니들 사이에서 어디 거냐고 난리예요",
+    "caps": [
+     "요즘 필라테스",
+     "언니들 사이에서",
+     "어디 거냐고",
+     "난리예요"
+    ],
+    "facts": [],
+    "emph": [
+     {
+      "cap": "요즘 필라테스",
+      "span": "요즘 필라테스",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "언니들 사이에서",
+      "span": "언니들 사이에서",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "어디 거냐고",
+      "span": "어디 거냐고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 검색 '발라 뱅글'(2026-10-18 이 PC 회선) → 9532009187 'Bala 발라 뱅글 손목 발목 웨이트 실리콘 밴드 1파운드'(리뷰 1)·9532008949 2파운드·9692331130. 상품 페이지는 403(쿠팡 차단)이라 검색 결과까지. 쿠팡검색_2026-10-18.json",
+  "f3": "앞 편 근거 f3: 80년대 에어로빅 모래 주머니를 예쁜 팔찌로 바꿨다는 창업자 피치(방송 원음)",
+  "f4": "앞 편 근거 f4: 원음 173.95~177.27 'I like the fact that you don't have to hold anything.'",
+  "f5": "앞 편 근거 f5: 덤벨 없이 요가 동작(창업자 피치·시연)",
+  "f14": "앞 편 근거 f14(N10): 방송 나간 그해 매출 200만 달러 → 2,000만 달러(열 배)"
+ }
+}

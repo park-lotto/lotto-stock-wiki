@@ -1,0 +1,165 @@
+{
+ "_note": "뒤 화면 = 유튜브 riZ5prN4T90 'I Tried Bala Bangles'(개봉·착용, 원본 110~205초 구간, 720p, 한 컷짜리 탁자 위 영상) + 방송 클립 RADCBcHJO_k 두 토막(59.06~61.63 단체 운동·184.65~187.59 광고 요가, bala_shark_58/183.mp4 로 잘라 둠). 오른쪽 흰 글자 카드(x≥1150)는 크롭 [270,0,739,720] 밖. 앞 0~11.57초가 쓴 방송 207.45·95.3·109.2·55.0·240.3·173.95초(±3초) 피함.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/src3",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "sources": {
+  "bala_riZ5_110": {
+   "url": "https://www.youtube.com/watch?v=riZ5prN4T90",
+   "구간": "원본 110~205초",
+   "해상도": "1280x720"
+  },
+  "bala_shark_58": {
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "구간": "원본 58~64초",
+   "해상도": "1920x1080"
+  },
+  "bala_shark_183": {
+   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
+   "구간": "원본 183.5~188.5초",
+   "해상도": "1920x1080"
+  }
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "B1",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 2.0,
+   "dur": 2.4,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "초록 발라 뱅글을 펼쳐 손에 듦(개봉 영상)"
+  },
+  {
+   "i": 1,
+   "line": "B1",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 21.5,
+   "dur": 2.4,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "뱅글을 손목에 감는 손"
+  },
+  {
+   "i": 2,
+   "line": "B2",
+   "src": "bala_shark_58.mp4",
+   "ss": 1.2,
+   "dur": 2.3,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "방송 무대 — 손목·발목에 뱅글 찬 사람들 단체 운동(원본 59.2초)"
+  },
+  {
+   "i": 3,
+   "line": "B2",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 27.5,
+   "dur": 2.0,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "손목에 찬 뱅글 근접"
+  },
+  {
+   "i": 4,
+   "line": "B3",
+   "src": "bala_shark_183.mp4",
+   "ss": 1.3,
+   "dur": 2.4,
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "광고 — 손목·발목에 뱅글 차고 요가 동작(원본 184.8초)"
+  },
+  {
+   "i": 5,
+   "line": "B3",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 33.5,
+   "dur": 2.2,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "찬 뱅글을 손으로 감싸 보임"
+  },
+  {
+   "i": 6,
+   "line": "B4",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 38.8,
+   "dur": 2.2,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "말랑한 뱅글을 손으로 누름"
+  },
+  {
+   "i": 7,
+   "line": "B4",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 63.0,
+   "dur": 2.2,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "두 손목에 뱅글을 팔찌처럼 참"
+  },
+  {
+   "i": 8,
+   "line": "B5",
+   "src": "bala_riZ5_110.mp4",
+   "ss": 68.6,
+   "dur": 3.0,
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "mute": true,
+   "ours": "뱅글 찬 손목을 흔들어 보임"
+  }
+ ],
+ "effects": []
+}

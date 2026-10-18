@@ -1,0 +1,353 @@
+{
+ "_note": "샥탬스토리 하이브리드 4편 Spikeball — 앞 0~16.41초(L1~L5) = 완성 칼카피 그대로(끝 원음 '배우긴 쉬운데 마스터하긴 진짜 어려워요'), 뒤 = 같은 옷(지훈·샥탬 프리셋 검정띠 제목 그대로·BGM sweets 이어서) 1인칭 체험 나레. 설명서 channel/hottemreport/현장썰하이브리드/대본설명서.md. CTA 없음(끝=사회 반응). 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Spikeball 스파이크볼 3볼 게임 세트(쿠팡 9572008898, 방송 제품과 같은 브랜드 — 해외 판매자 at_shop_12·EMS, 리뷰 0)",
+ "hybrid": {
+  "front_doc": "../4편_Spikeball",
+  "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_4편_Spikeball.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/shark/render/render_info.json",
+  "cut_after": "L5",
+  "cut_why": "L5 원음 '배우긴 쉬운데 / 마스터하긴 진짜 어려워요' 끝(16.41) — 다음 줄 L6 나레 전. 원음으로 끝나 '그 말 듣고'로 잇기 좋다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "현장썰 하이브리드 4편 2차와 같은 이음(제목 띠 고정, 창만 옆으로) — 사장님 10-18 '전환될 때 화면 효과 하나'"
+  }
+ },
+ "titles": {
+  "line1": "딜 깨지고 오히려",
+  "line2": "대박 난 공놀이?!",
+  "rule": "앞과 같은 제목(띠 고정 — 이음에서 바뀌면 다른 영상처럼 보인다)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 8.44,
+  "cps_note": "앞 4편 완성본 나레 실측 cps_out 8.44 — 뒤가 빨라지거나 느려지면 이음에서 티 난다",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 저게 왜 그렇게 팔렸나 궁금해서 쿠팡에 쳐 봤더니, 그 스파이크볼이 그대로 있더라고요",
+    "tts": "근데 저게 왜 그렇게 팔렸나 궁금해서 쿠팡에 쳐 봤더니, 그 스파이크볼이 그대로 있더라고요",
+    "caps": [
+     "근데 저게",
+     "왜 그렇게 팔렸나",
+     "궁금해서",
+     "쿠팡에 쳐 봤더니",
+     "그 스파이크볼이",
+     "그대로 있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph": [
+     {
+      "cap": "근데 저게",
+      "span": "근데 저게",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "왜 그렇게 팔렸나",
+      "span": "그렇게 팔렸나",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "궁금해서",
+      "span": "궁금해서",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그 스파이크볼이",
+      "span": "그 스파이크볼이",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그대로 있더라고요",
+      "span": "있더라고요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위(와우1)",
+    "text": "이게 말도 안 되는 게 공식 영상 보면 눈밭이든 물속이든 펴 놓고 하더라고요",
+    "tts": "이게 말도 안 되는 게 공식 영상 보면 눈밭이든 물속이든 펴 놓고 하더라고요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "공식 영상 보면",
+     "눈밭이든 물속이든",
+     "펴 놓고 하더라고요"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "파랑",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "공식 영상 보면",
+      "span": "영상 보면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "눈밭이든 물속이든",
+      "span": "물속이든",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "펴 놓고 하더라고요",
+      "span": "하더라고요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 그물에 공 튕기는 게 규칙 전부라 처음 해도 금방 따라 해요",
+    "tts": "진짜 핵심은 이건데, 그물에 공 튕기는 게 규칙 전부라 처음 해도 금방 따라 해요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "그물에 공 튕기는 게",
+     "규칙 전부라",
+     "처음 해도",
+     "금방 따라 해요"
+    ],
+    "facts": [
+     "f4",
+     "f6"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "그물에 공 튕기는 게",
+      "span": "그물에 공",
+      "color": "주황",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "규칙 전부라",
+      "span": "규칙 전부라",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "처음 해도",
+      "span": "처음 해도",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "금방 따라 해요",
+      "span": "따라 해요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)+비유",
+    "text": "심지어 이게 대박인 게 편이 없어서 사방으로 뛰니까, 배드민턴보다 땀이 더 나요",
+    "tts": "심지어 이게 대박인 게 편이 없어서 사방으로 뛰니까, 배드민턴보다 땀이 더 나요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "편이 없어서",
+     "사방으로 뛰니까",
+     "배드민턴보다",
+     "땀이 더 나요"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "편이 없어서",
+      "span": "편이 없어서",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "사방으로 뛰니까",
+      "span": "사방으로 뛰니까",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "배드민턴보다",
+      "span": "배드민턴보다",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "땀이 더 나요",
+      "span": "땀이 더 나요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "공원에서 하면 지나가던 사람들이 이거 뭐냐고 난리예요",
+    "tts": "공원에서 하면 지나가던 사람들이 이거 뭐냐고 난리예요",
+    "caps": [
+     "공원에서 하면",
+     "지나가던 사람들이",
+     "이거 뭐냐고",
+     "난리예요"
+    ],
+    "facts": [],
+    "emph": [
+     {
+      "cap": "공원에서 하면",
+      "span": "공원에서 하면",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "지나가던 사람들이",
+      "span": "사람들이",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "이거 뭐냐고",
+      "span": "이거 뭐냐고",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v1"
+     }
+    ]
+   }
+  ]
+ },
+ "facts": {
+  "c1": "쿠팡 검색 '스파이크볼'(2026-10-18 이 PC 회선) → 9572008898 'Spikeball 스파이크볼 3볼 게임 세트 야외 실내 스포츠' — 상품 페이지 200(판매자 at_shop_12·배송 우체국 EMS·상품평 0). 쿠팡검색_2026-10-18.json · 쿠팡상품/9572008898.txt",
+  "f4": "앞 편 근거.md L4: 그물에 공을 튕겨 서브, 세 번 안에 다시 내리꽂는 규칙(CNBC 클립 창업자 설명)",
+  "f5": "앞 편 근거.md f5: 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere' · 'there are no sides'(CNBC 32.6~37.1·72~77초) · 공식 'Spikeball: Rally Anywhere'(6pC9CovZuBY) 화면 = 눈밭 38~42초·분수대 물속 10~14초 경기, 끝 'Rally ANYWHERE'",
+  "f6": "앞 편 L5 원음 'easy to learn, hard to master'(배우긴 쉬운데 마스터하긴 어려워요)"
+ }
+}
