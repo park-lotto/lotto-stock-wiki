@@ -85,8 +85,13 @@ def call(job, model):
                 out["text"] = r.text
             return out
         except Exception as e:
-            last = f"{type(e).__name__}: {str(e)[:140]}"
-            if "404" in str(e) or "NOT_FOUND" in str(e):
+            msg = str(e); code = getattr(e, "code", None)
+            # 10-18: 140자로 잘라 어떤 한도(분당·하루·모델 혼잡)인지 안 남았다 → 한도 이름(quotaId)·다시 시도 초를 따로 남긴다
+            import re as _re
+            qid = ",".join(sorted(set(_re.findall(r"'quotaId': '([^']+)'", msg))))
+            rd = (_re.findall(r"'retryDelay': '([^']+)'", msg) or [""])[0]
+            last = f"{type(e).__name__}: {msg[:140]}" + (f" | quota={qid}" if qid else "") + (f" | retry={rd}" if rd else "")
+            if code == 404 or (code is None and ("404 NOT_FOUND" in msg or msg.startswith("404"))):   # 10-18: 429 글 속 숫자 '404' 로 모델을 버린 오판 3건
                 return {"model": model, "why": "model_404 " + last, "tries": tries}
             if "imeout" in type(e).__name__ or "timed out" in str(e).lower() or "ReadTimeout" in str(e):
                 return {"model": model, "why": "timeout " + last, "tries": tries, "sec": round(time.time() - t0, 1)}   # 느린 모델은 키를 바꿔도 느리다 — 바로 대체 모델로
