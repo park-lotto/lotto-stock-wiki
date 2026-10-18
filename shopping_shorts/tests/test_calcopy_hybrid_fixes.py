@@ -356,8 +356,21 @@ def test_josa_and_phrase():
 def test_apply_does_not_double_insert_spelling():
     d = {"names": {"한혜진": {"tts": "한혜진 씨"}}}
     assert ND.apply("한혜진 씨가 산 거예요.", "한혜진", d=d) == "한혜진 씨가 산 거예요."
-    assert ND.apply("한혜진이 산 것, 한혜진 씨도", "한혜진", d=d) == "한혜진 씨이 산 것, 한혜진 씨도"
+    assert ND.apply("한혜진이 산 것, 한혜진 씨도", "한혜진", d=d) == "한혜진 씨가 산 것, 한혜진 씨도"
     assert ND.apply("최은경 씨가", "최은경", d={"names": {"최은경": {"tts": "최, 은경"}}}) == "최, 은경 씨가"
+
+
+def test_apply_reattaches_josa_after_prefixed_spelling():
+    """10-18 최화정·서인영·채정안: 표기 '방송인 OO 씨'가 '최화정이'→'방송인 최화정 씨이'로 비문 — 다섯 편이 손으로 고쳤다."""
+    d = {"names": {"최화정": {"tts": "방송인 최화정 씨"}}}
+    ap = lambda t: ND.apply(t, "최화정", d=d)
+    assert ap("먹천재로 소문난 최화정이 고른 김") == "먹천재로 소문난 방송인 최화정 씨가 고른 김"
+    assert ap("최화정은 말했다") == "방송인 최화정 씨는 말했다"
+    assert ap("최화정을 따라") == "방송인 최화정 씨를 따라"
+    assert ap("최화정이랑 같이") == "방송인 최화정 씨랑 같이"
+    assert ap("최화정 씨가 산") == "방송인 최화정 씨가 산"          # '씨 씨가' 안 됨
+    assert ap("방송인 최화정 씨가 산") == "방송인 최화정 씨가 산"    # 이미 표기 — 그대로
+    assert ap("최화정") == "방송인 최화정 씨"
 
 
 def test_heard_ok_uses_alias_list():

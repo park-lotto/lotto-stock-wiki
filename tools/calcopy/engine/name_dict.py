@@ -81,11 +81,31 @@ def apply(text: str, name: str, voice_id: str | None = None, d: dict | None = No
     sp = spelling(name, voice_id, d)
     if sp == name or not text:
         return text
-    if sp.startswith(name):
-        suf = sp[len(name):]
-        alts = "|".join(re.escape(x) for x in {suf, suf.strip(), suf.lstrip()} if x)
-        return re.sub(re.escape(name) + (f"(?!{alts})" if alts else ""), sp, text)
-    return text.replace(name, sp)
+    # 이미 표기로 적힌 자리는 잠가 둔다(접두 '방송인 ' 이 붙은 표기도 — 10-18 최화정·서인영·채정안 '방송인 OO 씨 씨').
+    keep: list[str] = []
+
+    def _lock(m):
+        keep.append(m.group(0))
+        return f"\x00{len(keep) - 1}\x00"
+
+    out = re.sub(re.escape(sp), _lock, text)
+    ssi = sp.rstrip().endswith("씨")
+    pat = re.escape(name) + (r"(?:\s?씨)?" if ssi else "") + _JOSA_RE
+
+    def _sub(m):
+        j = m.group("j")
+        if not j:
+            return sp
+        return sp + (josa(sp, _JOSA[j]) if j in _JOSA else j)
+
+    out = re.sub(pat, _sub, out)
+    return re.sub("\x00(\\d+)\x00", lambda m: keep[int(m.group(1))], out)
+
+
+# 이름 뒤 조사 → 받침 짝. 표기가 '… 씨'(받침 없음)로 바뀌면 '최화정이'→'… 씨가'로 다시 고른다(10-18 다섯 편이 손으로 고침).
+_PAIRS = ["이랑/랑", "이에요/예요", "이었/였", "이야/야", "으로/로", "과/와", "은/는", "을/를", "이/가"]
+_JOSA = {w: p for p in _PAIRS for w in p.split("/")}
+_JOSA_RE = "(?P<j>" + "|".join(sorted(map(re.escape, _JOSA), key=len, reverse=True)) + ")?"
 
 
 def apply_all(text: str, voice_id: str | None = None) -> str:
