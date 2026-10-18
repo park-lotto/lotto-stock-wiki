@@ -84,7 +84,7 @@ def join(F: dict, cut: dict, back_mp4: Path, tr: dict, R: Path) -> Path:
     run(["ffmpeg", "-y", "-i", front, "-i", back, "-filter_complex",
          f"[0:v]tpad=stop_mode=clone:stop_duration={d:.3f},settb=AVTB,fps={FPS},split[f][fb];[fb]crop=1080:{band}:0:0[band];[1:v]settb=AVTB,fps={FPS}[b];"
          f"[f][b]xfade=transition={tr.get('kind', 'slideleft')}:duration={d:.3f}:offset={fdur:.4f}[x];[x][band]overlay=0:0:eof_action=pass,format=yuv420p[v];"
-         "[0:a][1:a]concat=n=2:v=0:a=1,alimiter=limit=0.84:attack=2:release=40:level=false[a]",   # 이어 붙여 AAC 다시 구우면 최고점이 +0.3 까지 튐(10-18 4편 미리보기) → −1.5 dBFS 로 막음
+         "[0:a][1:a]concat=n=2:v=0:a=1,alimiter=limit=0.84:attack=2:release=40:level=false,afade=t=in:d=0.03[a]",   # 이어 붙여 AAC 다시 구우면 최고점이 +0.3 까지 튐(10-18 4편 미리보기) → −1.5 dBFS 로 막음 · 리미터는 첫 몇 ms 를 못 잡아 0초에 +1.3(3편) → 첫 30ms 페이드(10ms 는 12ms 지점이 여전히 깎임)
          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "1", final])
     return final
 
