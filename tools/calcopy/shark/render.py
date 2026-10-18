@@ -606,7 +606,7 @@ def place_narr(D, P, NM, R: Path) -> Path:
         if x["kind"] != "N":
             continue
         a, b = x["narr"]
-        pre = min(0.03, a)
+        pre = min(0.03, a, x["t0"])   # 첫 줄이 나레(t0=0)면 앞당길 자리가 없다 — adelay 음수로 ffmpeg 실패(10-18 하이브리드 5편)
         d_ms = int(round((x["t0"] - pre) * 1000))
         fc.append(f"[0:a]atrim={a - pre:.3f}:{b + 0.10:.3f},asetpts=PTS-STARTPTS,afade=t=out:st={b - a + pre + 0.05:.3f}:d=0.05,adelay={d_ms}:all=1[n{k}]")
         lab.append(f"[n{k}]"); k += 1
