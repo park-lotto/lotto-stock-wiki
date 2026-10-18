@@ -1,0 +1,95 @@
+{
+  "card": "097",
+  "date": "2026-10-18",
+  "method_note": "쿠팡/네이버쇼핑 직접 접속 차단. 상품 정보는 웹검색 결과 문구뿐, 상품 페이지 직접 확인 0건. 영상은 yt-dlp 메타만(구간 미확인).",
+  "items": [
+    {
+      "no": 1, "topic": "가짜 잠자리 모기 퇴치 장식",
+      "verdict": "비슷한 제품으로 진행(조건부)",
+      "same_product_found": false,
+      "domestic": [{"name": "[일본정품] 모기퇴치용 해충기피 벌레퇴치 잠자리 모형", "shop": "쿠팡(한섬코리아)", "url": "https://www.coupang.com/vp/products/8962753405", "price_krw": 9000, "reviews": "상품평 없음(검색 결과 문구)", "verified_page": false}],
+      "search_terms": ["잠자리 모형 모기퇴치", "잠자리 클립"],
+      "videos": [
+        {"id": "qCc7gGQo848", "sec": 74, "views": 31438, "channel": "Leo Woods", "product_span": null},
+        {"id": "HmA-BE-2FOs", "sec": 79, "views": 1595, "channel": "Hecks Review Ranch", "product_span": null},
+        {"id": "oWjyRVUMRAA", "sec": 92, "views": 512, "channel": "FOCUSED on FIRE", "product_span": null},
+        {"id": "_a3zEMOAt08", "sec": 97, "views": 2254, "channel": "Reviewing Literally Everything", "product_span": null}
+      ],
+      "bridge_lines": ["저 영상 보고 쿠팡에 잠자리 모형을 쳐 봤더니 비슷한 게 있더라고요", "유튜브 보다가 혹해서 저도 이번에 한번 사봤는데요", "저거 보고 찾아봤더니 쿠팡에도 잠자리 모형이 있더라고요"],
+      "benefits": [{"text": "상품명에 모기퇴치용 해충기피 표기", "source": "쿠팡 검색 결과", "kind": "판매처 문구"}, {"text": "화학 성분·소리 없이 옷·모자에 다는 방식", "source": "insight.co.kr/news/401023", "kind": "판매처 문구"}],
+      "ban": "효과 단정 금지(판매처 문구로만). 의약·의료기기 아님."
+    },
+    {
+      "no": 2, "topic": "Manna Titan 4L 대용량 물병",
+      "verdict": "확정 못 함(국내 판매 미확인)",
+      "same_product_found": false,
+      "domestic": [
+        {"name": "3.3L 손잡이 대용량 물통(보냉통형)", "shop": "쿠팡(마켓소리)", "url": "https://www.coupang.com/vp/products/9215858019", "price_krw": 17370, "reviews": null, "note": "취소되었습니다 문구, 4L 아님", "verified_page": false},
+        {"name": "쿠스포츠 2L 헬스 물통", "shop": "쿠팡", "url": "https://www.coupang.com/vp/products/8422596303", "price_krw": 6950, "reviews": "판매자 평가 93%(190건)", "verified_page": false},
+        {"name": "빨대 대용량 스텐 텀블러(용량 미표기)", "shop": "쿠팡(단물)", "url": "https://www.coupang.com/vp/products/9432988500", "price_krw": 19000, "reviews": null, "verified_page": false}
+      ],
+      "search_terms": ["4L 물통", "1갤런 물통", "3.8L 물병", "4리터 스텐 보온 물병"],
+      "videos": [
+        {"id": "_iX0QF0hB58", "sec": 36, "views": 19898, "channel": "Manna Hydration(공식)", "product_span": null},
+        {"id": "miqgxASmEL8", "sec": 51, "views": 5140, "channel": "Logomark Inc", "product_span": null},
+        {"id": "ioDNktSCgnM", "sec": 57, "views": 8524, "channel": "4imprint", "product_span": null},
+        {"id": "AiSx92KR-Bg", "sec": 147, "views": 2274, "channel": "Life Tested", "product_span": null}
+      ],
+      "bridge_lines": ["(국내 4L 제품 확정 시) 저 영상 보고 쿠팡에 4리터 물통을 쳐 봤더니 진짜 있더라고요"],
+      "benefits": [],
+      "ban": "해당 없음. 국내 근거 0건."
+    },
+    {
+      "no": 3, "topic": "Shift Moonwalkers AI 전동 신발",
+      "verdict": "중단 권고(국내 판매·대체품 못 찾음, 안전)",
+      "same_product_found": false,
+      "domestic": [],
+      "search_terms": ["전동 롤러 신발", "전동 스케이트 신발", "전동 보행 신발"],
+      "videos": [
+        {"id": "w3X688ML8Bw", "sec": 60, "views": 21079, "channel": "Shift Robotics(공식)", "product_span": null},
+        {"id": "M-S1j3-rfnc", "sec": 316, "views": 98004, "channel": "gizmochina", "product_span": null},
+        {"id": "qe4CHWulnDs", "sec": 564, "views": 5732159, "channel": "WIRED", "product_span": null},
+        {"id": "-oC-YQs2JiA", "sec": 708, "views": 485625, "channel": "ShortCircuit", "product_span": null}
+      ],
+      "bridge_lines": [],
+      "benefits": [],
+      "ban": "국내 구매 불가 상태에서 '쿠팡에서 찾았다' 문장은 거짓. 안전(모터 신발 부상 위험, KC 불명). 재활·치료 표현 금지."
+    },
+    {
+      "no": 4, "topic": "포르쉐 911 마티니 미니 전기차",
+      "verdict": "비슷한 제품으로 진행(조건부: 라이선스 포르쉐+KC 확인 시)",
+      "same_product_found": false,
+      "domestic": [{"name": "전동차 포르쉐 유아 카이엔 어린이 아기 자동차", "shop": "11번가(검색 결과)", "url": null, "price_krw": 143000, "reviews": null, "note": "라이선스·KC 미확인, 911 아님", "verified_page": false}],
+      "search_terms": ["포르쉐 911 유아 전동차", "포르쉐 라이센스 승용완구"],
+      "videos": [
+        {"id": "TCM2ylV78lw", "sec": 1084, "views": 120521, "channel": "Ride Pro", "product_span": null, "note": "해외 911 GT3 모델, 국내 제품과 같은 모델 아님"},
+        {"id": "Y1iMATKSpBQ", "sec": 68, "views": 1718, "channel": "RiiRoo", "product_span": null, "note": "푸시카"}
+      ],
+      "bridge_lines": ["저 영상 보고 아이 타는 포르쉐를 찾아봤더니, 이런 게 있더라고요(제품 확정 후)"],
+      "benefits": [],
+      "ban": "유아 전동차 KC 안전확인·연령·체중·속도 표기 확인 필수. 아이 혼자 도로·경사 주행 장면 금지. 최상급 금지."
+    },
+    {
+      "no": 5, "topic": "고양이 모양 빵 봉지 클립",
+      "verdict": "확정 못 함(국내 판매 미확인)",
+      "same_product_found": false,
+      "domestic": [],
+      "search_terms": ["동물 엉덩이 빵클립", "고양이 빵끈", "고양이 밀봉 클립", "cat butt bag clip"],
+      "videos": [
+        {"id": "RAYQC5U_dh8", "sec": 2022, "views": 145, "channel": "Divine Designz24", "product_span": null, "note": "DIY 레진 몰드, 부적합"},
+        {"id": "W1hFVmUzmyI", "sec": 2778, "views": 6976, "channel": "Glitz N' Glitter", "product_span": null, "note": "DIY, 부적합"},
+        {"id": "ogXdj-NB4IE", "sec": 1716, "views": 9255, "channel": "Rose Requin Crafts", "product_span": null, "note": "DIY, 부적합"}
+      ],
+      "bridge_lines": [],
+      "benefits": [],
+      "ban": "의약·안전 문제 없음. 'butt holes' 자막 수위 판단 필요."
+    }
+  ],
+  "not_confirmed": [
+    "쿠팡·네이버쇼핑 상품 페이지 직접 열람 0건(접속 차단)",
+    "5편 모두 같은 제품의 국내 판매 미확인",
+    "영상 후보의 제품 등장 구간·같은 모델 여부·다른 브랜드 혼입 미확인(메타만)",
+    "알리익스프레스 직접 검색, 틱톡·릴스 후보 조사 못 함",
+    "영상 재사용 허락, 리뷰 본문 근거 미확보"
+  ]
+}
