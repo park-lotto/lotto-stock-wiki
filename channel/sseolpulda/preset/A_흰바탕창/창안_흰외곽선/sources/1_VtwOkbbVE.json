@@ -1,0 +1,161 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    252,
+    249,
+    253
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 323,
+   "w": 1080,
+   "h": 1298,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 137,
+   "w": 1072,
+   "align": "center",
+   "lines": 2,
+   "font": "BlackHanSans",
+   "size": 124.8,
+   "line_h": 110,
+   "rgb": [
+    0,
+    0,
+    0
+   ],
+   "line_rgb": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     186,
+     0,
+     121
+    ]
+   ],
+   "line_scale": [
+    0.955,
+    1.045
+   ],
+   "outline": null,
+   "line_outline": [
+    null,
+    [
+     7,
+     255,
+     254,
+     255
+    ]
+   ],
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": -2.9,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "다이소 기획자도 감탄한\n공간 활용 끝판왕"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1086,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "BMDOHYEON",
+   "size": 87.7,
+   "line_h": 101,
+   "rgb": [
+    250,
+    254,
+    246
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 1052,
+   "y": 14,
+   "w": 179,
+   "align": "right",
+   "lines": 1,
+   "font": "TmonMonsori",
+   "size": 47.1,
+   "line_h": 54,
+   "rgb": [
+    188,
+    186,
+    190
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     110,
+     108,
+     112
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -2,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "[광고]"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "1_VtwOkbbVE"
+}

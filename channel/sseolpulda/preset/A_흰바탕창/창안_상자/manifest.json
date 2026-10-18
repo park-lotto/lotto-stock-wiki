@@ -1,0 +1,294 @@
+{
+ "slug": "sseolpulda",
+ "style": "A_흰바탕창/창안_상자",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T04:18:00+09:00",
+ "sources": [
+  {
+   "id": "w-Ygny1f8O8",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/sseolpulda/뜯기/w-Ygny1f8O8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 01:59",
+   "frame_tool": "tools/calcopy/engine/to_frame.py",
+   "font": {
+    "top1": "GasoekOne-Regular.ttf",
+    "top1_score": 0.1655,
+    "picked_from": {
+     "file": "GasoekOne-Regular.ttf",
+     "score": 0.1655
+    },
+    "font_confidence": "low",
+    "skipped": []
+   },
+   "font_confidence": "low",
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [252, 249, 253] (뜯기 잰 값 [252, 249, 253])",
+    "글꼴 1위 GasoekOne-Regular.ttf(0.1655) < 0.5 — 확신 낮음. 쓴 글꼴 GasoekOne({'file': 'GasoekOne-Regular.ttf', 'score': 0.1655})",
+    "제목 글꼴 Cafe24Ohsquare — 고정(--title-font: 하위 스타일에서 확정한 제목 글꼴)",
+    "제목 기울기 +0도(기둥 전단 투영) → 바름",
+    "자막 자간·낱말 간격 0 — 폭 ≥400px 자막 2/3개(3개 미만)",
+    "자막 외곽선 8px [254, 245, 222] — 프레임 자막 줄 열 (76, 198) 에서 직접 잼(분석기 요약 0px [93, 124, 110])",
+    "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 1개",
+    "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+    "자막 그림자 [[-6, 2]] — 뜯기 값 모양을 설명서 그림자로 옮기는 규칙 없음(미반영)",
+    "고정 문구 기울기 +10도(기둥 전단 투영) → 기울임",
+    "고정 문구 글꼴 TmonMonsori·외곽선 4px — fontmatch.rank 직접(채움+외곽선 모양, 1위 TmonMonsori.ttf 0.5352)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.1655 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "창안_상자",
+   "title_ink_w": 678,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "19ac63fe6eb4"
+  }
+ ],
+ "updated_at": "2026-10-16T18:33:53+09:00",
+ "variables": [
+  "layers[text:title].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "창안_상자",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 482,
+    "w": 1000,
+    "align": "center",
+    "lines": 1,
+    "font": "GasoekOne",
+    "size": 36.4,
+    "line_h": 42,
+    "rgb": [
+     209,
+     222,
+     154
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 8,
+     "rgb": [
+      254,
+      245,
+      222
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "pop",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 w-Ygny1f8O8",
+   "sources": [
+    "w-Ygny1f8O8"
+   ],
+   "notes": [
+    "w-Ygny1f8O8: 워커 점검.md: 반투명 검정 상자+흰 작은 글씨(상자는 임시 층에 없음)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].text": {
+   "values": {
+    "w-Ygny1f8O8": "전기 없던 시절\n음악 저장법 ㄷㄷ"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "w-Ygny1f8O8": 166
+    },
+    "default": 166,
+    "range": [
+     166,
+     166
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap": {
+    "values": {
+     "w-Ygny1f8O8": 4
+    },
+    "default": 4,
+    "range": [
+     4,
+     4
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "w-Ygny1f8O8": 1.006
+    },
+    "default": 1.006,
+    "range": [
+     1.006,
+     1.006
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "size_cap": {
+    "values": {
+     "w-Ygny1f8O8": 103.4
+    },
+    "default": 103.4,
+    "range": [
+     103.4,
+     103.4
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_bottom": {
+    "values": {
+     "w-Ygny1f8O8": 1827
+    },
+    "default": 1827,
+    "range": [
+     1827,
+     1827
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_top": {
+    "values": {
+     "w-Ygny1f8O8": 378
+    },
+    "default": 378,
+    "range": [
+     378,
+     378
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "gap_ink": {
+    "values": {
+     "w-Ygny1f8O8": 11
+    },
+    "default": 11,
+    "range": [
+     11,
+     11
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "fill_w": {
+    "values": {
+     "w-Ygny1f8O8": 678
+    },
+    "default": 1032,
+    "range": [
+     678,
+     678
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "w-Ygny1f8O8": -1345
+    },
+    "default": -1345,
+    "range": [
+     -1345,
+     -1345
+    ],
+    "how": "중앙값(1/1편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "fixed": {
+  "layers[text:brand].outline": {
+   "value": {
+    "px": 3,
+    "rgb": [
+     96,
+     95,
+     98
+    ]
+   },
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:53+09:00"
+  },
+  "layers[text:brand].size": {
+   "value": 48.0,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:54+09:00"
+  },
+  "layers[text:brand].y": {
+   "value": 15,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:54+09:00"
+  },
+  "layers[text:brand].line_h": {
+   "value": 55,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:55+09:00"
+  },
+  "layers[text:brand].x": {
+   "value": 1052,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:55+09:00"
+  },
+  "layers[text:brand].letter_spacing": {
+   "value": -2.3,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:55+09:00"
+  },
+  "layers[text:brand].font": {
+   "value": "TmonMonsori",
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:55+09:00"
+  },
+  "layers[text:brand].italic": {
+   "value": true,
+   "why": "렌더 대조(2026-10-16 brand_grid): 외곽선 2px 높이 37(띠 끊김)·잉크 0.0125 / 3px 높이 55·잉크 0.0233 / 4px 높이 54·잉크 0.0315(+25% 밖). 원본 ZdeZ 52·0.0251(영상 표본), 1_V 52·0.0183. 크기는 3px 몸 높이에서 역산. 5편 [광고] 띠 좌표 모두 [10,65)",
+   "at": "2026-10-16T18:33:55+09:00"
+  }
+ },
+ "roles": [
+  "발견 맥락(어디서 보고 알게 됐나) · 말끝 ~길래",
+  "의심(처음엔 안 믿음) · 말끝 ~는데",
+  "반전 시연(그냥 대기만 하면) · 말끝 ~면",
+  "결과 과장(평범한 물건이 뭐로 변함) · 말끝 ~함;;",
+  "감탄 · 말끝 ~네",
+  "인정·댓글유도 · 말끝 ~인정?"
+ ],
+ "source_kind": "해외영상",
+ "rules_path": "channel/sseolpulda/제품_이야기썰형.rules.json",
+ "rebuilt": {
+  "at": "2026-10-16T18:33:56+09:00",
+  "from": "tools/calcopy/engine/to_frame.py",
+  "why": "고정값 == 자동본(출처 설명서를 지금 to_frame 으로 다시 만듦)"
+ }
+}
