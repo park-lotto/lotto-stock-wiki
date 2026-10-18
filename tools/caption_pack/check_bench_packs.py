@@ -172,7 +172,7 @@ def run(pack, out, compose, fails):
         report["rows"].append({"text": r["text"], "enterMs": e})
     pk = PACKS[pack]
     if pack == "kitchit":
-        want = [r["enter_pop"] or r["typing"] for r in rows]; got = [bool(layers[i].get("enterMs")) for i in idx]
+        want = [r["enter_pop"] or r["typing"] or bool(r.get("stickers")) for r in rows]; got = [bool(layers[i].get("enterMs")) for i in idx]   # 스티커 등장도 같은 장면 등장 길이에 든다
         need(want == got, f"① 등장 있는 줄 = 자막표 pop·타이핑 줄 ({sum(got)}/{len(rows)}, 어긋남 {[rows[k]['text'] for k in range(len(rows)) if want[k] != got[k]]})")
     def measure_curve(k, motion):
         lay = layers[idx[k]]; a = lay.get("animation")
@@ -218,7 +218,7 @@ def run(pack, out, compose, fails):
         miss = [w for w in want if not any(abs(w - s) <= 1 for s in steps)]
         need(sc.get("chars") and not miss, f"② '{rows[k]['text']}' 글자 나온 프레임 {steps} = 글자 시각 {want} ±1 (빗나감 {miss})")
         flash = MOTIONS.get(pk.get("variants", {}).get(rows[k]["variant"], {}).get("enter") or pk.get("speakers", {}).get(rows[k]["speaker"], {}).get("enter") or "", {}).get("flash")
-        if flash and flash["color"].upper() in [h.upper() for h in rows[k]["want_hex"]]:
+        if flash and (flash["color"].upper() in [h.upper() for h in rows[k]["want_hex"]] or rows[k].get("stickers")):
             print(f"  (건너뜀) '{rows[k]['text']}' 강조 색이 번쩍 색과 같아 번쩍을 따로 못 잰다")
         elif flash and steps:
             f = steps[min(1, len(steps) - 1)]
@@ -251,7 +251,9 @@ def run(pack, out, compose, fails):
     off = []
     for k, r in enumerate(rows):
         pl = (pk.get("variants", {}).get(r["variant"], {}).get("place") or pk.get("place") or {}).get("y")
-        b = ink_box(still(k))
+        want_y = None if pl is None else pl / 100 * 1920
+        b = ink_box(still(k).crop((0, int(want_y - 62), 1080, int(want_y + 62)))) if want_y else None   # 자막 줄 ±62px 만(스티커 빼고)
+        if b: b = (b[0], b[1] + int(want_y - 62), b[2], b[3] + int(want_y - 62))
         if pl is None or not b: continue
         cy = (b[1] + b[3]) / 2; want = pl / 100 * 1920
         if abs(cy - want) > 20: off.append((r["text"], round(cy), round(want)))
