@@ -130,6 +130,186 @@ def render_back_front(S, M, T, sent, R: Path) -> Path:
     return Path(nv.build(plan))
 
 
+# ── 뒤를 숏템 렌더러로(사장님 10-19 "자막이 너무 심심해 — 자막팩 써서 효과 다양하게 · 효과음도 알맞게 적재적소에") ──────────
+# 같은 틀(앞 편 frame_render.json → calcopy_frame.to_snapshot)에 자막팩(snapshot.captionPack)을 얹어 scene_style.compose 로 굽는다.
+# 자막 등장·단어 강조·칸별 효과 = 숏템 자막팩(계약 파일 static/caption-motions.js) / 효과음 = sfx_pack.events — 여기선 부르기만.
+# 대본.json back_style:"shortem" · caption_pack(tension|clean|premium|story|deal|soft) · sfx{density, pack_customer} · line_role{B1:"공개",…}
+# 뒤 자막 기본 모양 = 자막팩 '예능 텐션'(caption-motions.js tension: 어그로체·흰 글씨·검은 테두리·상자 없음)을 설명서 칸으로 옮긴 것
+BACK_CAPTION = {"font": "SBAggroB", "size": 80, "line_h": 104, "rgb": [255, 255, 255], "outline": {"px": 5, "rgb": [0, 0, 0]}, "box": None,
+                "shadow": {"dx": 0, "dy": 4, "blur": 10, "rgb": [0, 0, 0]}}
+# 줄 성격 → 등장 효과·강조 방식(10-19 물병 시험에서 눈으로 고른 짝). 같은 성격이 이어지면 등장을 번갈아(고조 3줄이 다 같은 효과가 아니게)
+BACK_FX = {"공개": [("typewriter", 400, "grow", [255, 230, 0])],
+           "고조": [("pop", 300, "grow", [255, 230, 0]), ("rise", 350, "underline", [0, 230, 255])],
+           "문제": [("fade", 300, "color", [255, 80, 80])],
+           "cta": [("fade", 300, "grow", [255, 80, 120])],
+           "body": [("rise", 350, "color", [255, 230, 0])]}
+
+
+def caption_plan(S: dict) -> tuple[dict, dict]:
+    """(판단 주인) 뒤 자막 모양·줄별 효과 — (기본 자막 층, {줄: 덮어쓰기}). 대본.json 이 back_caption·back_caption_lines 를 직접 적으면 그게 이긴다.
+    강조 낱말 = 대본 줄의 emph(목록) — 없으면 강조 없음. 판단은 여기 한 곳(대본마다 손으로 적지 않는다)."""
+    base = {**BACK_CAPTION, **(S.get("back_caption") or {})}
+    roles, seen, per = S.get("line_role") or {}, {}, {}
+    for l in RI.tts_lines(S):
+        r = roles.get(l["id"], "body")
+        opts = BACK_FX.get(r) or BACK_FX["body"]
+        kind, ms, style, rgb = opts[seen.get(r, 0) % len(opts)]
+        seen[r] = seen.get(r, 0) + 1
+        o = {"enter": {"kind": kind, "ms": ms}}
+        if l.get("emph"):
+            o["emphasis"] = {"words": list(l["emph"]), "rgb": rgb, "style": style}
+        per[l["id"]] = o
+    per.update(S.get("back_caption_lines") or {})
+    return base, per
+
+
+def _window(F: dict) -> tuple[int, int]:
+    v = next(l for l in F["layers"] if l["kind"] == "video")
+    return int(v["w"]), int(v["h"])
+
+
+def back_material(M, T, R: Path, W: int, H: int) -> Path:
+    """컷 → 창 크기 재료 영상(소리 없음). 그림 컷은 move(확대·이동, narr_video.still_move)로 움직인다."""
+    from tools.calcopy import narr_video as nv
+    base = Path(M["cand_dir"])
+    parts = []
+    for i, c in enumerate(T["cuts"]):
+        n = max(1, round(c["t1"] * FPS) - round(c["t0"] * FPS))
+        src = base / c["src"]
+        crop = c.get("crop")
+        pre = f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}," if crop else ""
+        cover = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1,fps={FPS}"
+        dst = R / f"mat_{i:02d}.mp4"
+        if src.suffix.lower() in (".jpg", ".jpeg", ".png"):
+            mv = nv.still_move(src, crop, None, n / FPS, c.get("move") or "in")
+            inp = ["-loop", "1", "-framerate", str(FPS), "-i", src]
+            vf = pre + mv + cover
+        else:
+            inp = ["-ss", f"{c['ss']:.3f}", "-i", src]
+            vf = pre + cover
+        run(["ffmpeg", "-y", *inp, "-an", "-vf", vf + ",scale=out_range=tv,format=yuv420p", "-frames:v", n, "-c:v", "libx264", "-crf", "16",
+             "-preset", "veryfast", "-pix_fmt", "yuv420p", "-r", FPS, dst])
+        parts.append(dst)
+    lst = R / "mat_list.txt"
+    lst.write_text("\n".join(f"file '{p.as_posix()}'" for p in parts), encoding="utf-8")
+    mat = R / "material.mp4"
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", mat])
+    return mat
+
+
+def back_beats(S, T) -> list[dict]:
+    """자막 칸마다 박자 1개. role = 줄의 성격(line_role) — 숏템 자막팩이 칸(first·problem·reveal·emph·end)을 이 이름으로 고른다
+    (scene_style.moment_of). 줄 첫 칸에만 그 줄 성격, 나머지 칸은 본문."""
+    roles = S.get("line_role") or {}
+    out, seen = [], set()
+    for c in T["caps"]:
+        a, b = c["show"]
+        r = roles.get(c["line"], "body") if c["line"] not in seen else "body"
+        seen.add(c["line"])
+        # 띄어쓰기 → 안 접히는 공백(U+00A0): 설명서 모드 자막은 flex 칸이라 강조 낱말 span 앞뒤 공백이 접혀 "진짜똑같이있더라고요"가 됐다(10-19 눈 확인)
+        cap = c["text"].replace(" ", " ")
+        out.append({"beat_idx": len(out), "t0": round(a, 3), "dur": round(b - a, 3), "narration": c["text"], "caption_lines": [cap],
+                    "role": r, "primary": {"video_id": "s0", "start": round(a, 3), "end": round(b, 3)}})
+    return out
+
+
+def back_sfx(S, T, voice: Path, R: Path) -> tuple[Path, list]:
+    """나레 + 효과음팩(sfx_pack.events — 줄마다 칸 성격·첫 칸 오프너는 팩이 정한다)."""
+    from shopping_shorts import sfx_pack as SP
+    cfg = S.get("sfx") or {}
+    roles = S.get("line_role") or {}
+    stl = []
+    for li, k in enumerate(T["b_ids"]):
+        mine = [c for c in T["caps"] if c["line"] == k]
+        t0, t1 = mine[0]["show"][0], mine[-1]["show"][1]
+        stl.append({"beat_idx": li, "t0": round(t0, 3), "dur": round(t1 - t0, 3), "narration": " ".join(c["text"] for c in mine),
+                    "caption_lines": [c["text"] for c in mine], "cap_durs": [round(c["show"][1] - c["show"][0], 3) for c in mine],
+                    "cap_lead": 0.0, "cap_offset": 0.0, "role": roles.get(k, "body")})
+    pname, pdir = SP.pack_for(cfg.get("pack_customer", 0))
+    pack = {"name": pname, "dir": pdir, "density": cfg.get("density", "low"), "level": cfg.get("level", "normal"), "mute_beats": []}
+    evs = SP.events(stl, pack)   # low = 줄 첫 칸(연결어 '이게 말도 안 되는 게'·'심지어' 자리)마다 — normal 은 20초에 20발로 너무 촘촘(10-19 실측)
+    # 강조 낱말이 뜨는 칸에 한 발 더(사장님 10-19 "효과음도 알맞게 적재적소에") — 끝 줄은 ding, 나머지는 pop. 팩 폴더의 같은 소리를 쓴다
+    emph = {l["id"]: l.get("emph") or [] for l in RI.tts_lines(S)}
+    snd = {n: next(iter(Path(pdir).rglob(n)), None) for n in ("pop.wav", "ding.wav")}
+    last = T["b_ids"][-1]
+    for c in T["caps"]:
+        if any(w in c["text"] for w in emph.get(c["line"], [])):
+            f = snd["ding.wav" if c["line"] == last else "pop.wav"] or snd["pop.wav"]
+            if f:
+                evs.append((str(f), round(c["show"][0] + 0.05, 3), 1.0))
+    evs.sort(key=lambda e: e[1])
+    keep = []
+    for e in evs:   # 0.3초 안에 겹치면 앞 것만(10-19 low 에서도 whoosh·tick 이 0.11초 간격으로 겹쳤다)
+        if not keep or e[1] - keep[-1][1] >= 0.3:
+            keep.append(e)
+    evs = keep
+    jsave(R / "sfx_events.json", {"pack": pname, "events": evs, "timeline": stl})
+    ins, flt, lab = ["-i", voice], ["[0:a]aresample=48000,aformat=channel_layouts=mono[n]"], []
+    for j, (path, t, mul) in enumerate(evs):
+        ins += ["-i", path]
+        ms = int(round(t * 1000))
+        flt.append(f"[{j + 1}:a]aresample=48000,aformat=channel_layouts=mono,volume={mul:.4f},adelay={ms}|{ms}[s{j}]")
+        lab.append(f"[s{j}]")
+    # 효과음 순간 큰 소리가 최종 aac 에서 0 dBTP 를 넘었다(10-19 실측 +1.9) → 섞은 뒤 한 번 눌러 둔다(목소리 크기는 bgm_continue 가 맞춘다)
+    flt.append(f"[n]{''.join(lab)}amix=inputs={1 + len(lab)}:normalize=0:duration=first,alimiter=limit=0.5:attack=1:release=40:level=false[o]")
+    out = R / "voice_sfx.wav"
+    run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(flt), "-map", "[o]", "-ar", "48000", out])
+    return out, evs
+
+
+def render_back_shortem(S, M, T, sent, R: Path) -> Path:
+    from shopping_shorts import scene_style
+    from shopping_shorts.calcopy_frame import to_snapshot
+    fs = S["front_style"]
+    F = jload(ROOT / fs["frame"])
+    # ★칼카피 틀은 편집기 '설명서 모드'(precision20-ui.js renderSpec)로 그려져 snapshot.captionPack 의 모양·단어 강조·등장이
+    #   하나도 안 먹는다(10-19 실측: 레이어 20칸 애니메이션 0). 고객 편집기 코드는 안 건드리고, 뒤 틀 사본의 자막 층을
+    #   자막팩 모양으로 바꾼다 — back_caption = 자막 층 덮어쓰기(font·size·outline·box·shadow·enter·emphasis, schema 그대로).
+    base, per = caption_plan(S)
+    next(l for l in F["layers"] if l["kind"] == "text" and l["role"] == "caption").update(base)
+    W, H = _window(F)
+    voice = R / "voice_only.wav"
+    ins, fc = [], []
+    for k, s in enumerate(sent):
+        ins += ["-i", s["wav"]]
+        fc.append(f"[{k}:a]aresample={SR},aformat=channel_layouts=mono,adelay={int(round(T['lines'][s['id']][0] * 1000))}[p{k}]")
+    fc.append("".join(f"[p{k}]" for k in range(len(sent))) + f"amix=inputs={len(sent)}:normalize=0,apad,atrim=0:{T['end']:.3f}[n]")
+    run(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(fc), "-map", "[n]", "-ar", SR, voice])
+    mat = back_material(M, T, R, W, H)
+    beats = back_beats(S, T)
+    # 줄마다 자막 효과를 바꾼다(사장님 10-19 "효과 다양하게") — 설명서 모드는 틀 하나에 자막 등장·강조가 하나뿐이라
+    #   줄(B1…)마다 틀 사본(back_caption_lines[줄] 덮어쓰기)으로 그 줄 장면만 굽고 잇는다. 장면 시각은 절대초 그대로(재료 -ss 가 맞는다).
+    import copy
+    import shutil
+    groups, line_of = [], [c["line"] for c in T["caps"]]
+    for k in T["b_ids"]:
+        groups.append((k, [i for i, ln in enumerate(line_of) if ln == k]))
+    vids, used = [], []
+    for gi, (k, idx) in enumerate(groups):
+        Fk = copy.deepcopy(F)
+        if per.get(k):
+            next(l for l in Fk["layers"] if l["kind"] == "text" and l["role"] == "caption").update(per[k])
+        snap = to_snapshot.to_snapshot(Fk)
+        snap["captionPack"] = S.get("caption_pack") or "story"
+        snap = scene_style.validate_snapshot(snap)
+        work = R / f"ss_work_{gi}"
+        shutil.rmtree(work, ignore_errors=True)
+        work.mkdir(parents=True)
+        v = R / f"back_ss_{gi}.mp4"
+        scene_style.compose(str(mat), [beats[i] for i in idx], snap, str(v), work, {"text": fs.get("title", "")})
+        vids.append(v)
+        used.append({"line": k, "enter": snap.get("bodyCaptionMotion"), "wordFx": per.get(k, {}).get("emphasis", {}).get("style")})
+    jsave(R / "back_beats.json", {"captionPack": S.get("caption_pack"), "beats": beats, "per_line": used})
+    lst = R / "back_ss_list.txt"
+    lst.write_text("\n".join(f"file '{v.as_posix()}'" for v in vids), encoding="utf-8")
+    vid = R / "back_ss.mp4"
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", vid])
+    vs, evs = back_sfx(S, T, voice, R)
+    out = R / "back_shortem.mp4"
+    run(["ffmpeg", "-y", "-i", vid, "-i", vs, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out])
+    return out
+
+
 def bgm_continue(S, vid: Path, R: Path, start: float, target: float) -> Path:
     """앞 편 BGM 곡을 start 초부터 이어 튼다(앞 make_render.bgm_mix 와 같은 loudnorm 값) → 앞과 같은 LUFS 로."""
     mr = _front_mod()
@@ -186,8 +366,10 @@ def render(doc: Path, work: Path, plan_only=False, desktop: Path | None = None, 
     nf = int(float(fr["cut"]) * FPS)                       # 앞은 프레임 단위로 자른다(cut 안쪽)
     fdur = nf / FPS
     if S.get("front_style"):
-        back = bgm_continue(S, render_back_front(S, M, T, sent, R), R, fdur, float(fr.get("target_lufs", -15.5)))
-        A = {"back_style": "front", "bgm_from": fdur}
+        shortem = S.get("back_style") == "shortem"
+        bvid = render_back_shortem(S, M, T, sent, R) if shortem else render_back_front(S, M, T, sent, R)
+        back = bgm_continue(S, bvid, R, fdur, float(fr.get("target_lufs", -15.5)))
+        A = {"back_style": "shortem" if shortem else "front", "bgm_from": fdur, "caption_pack": S.get("caption_pack") if shortem else None}
     else:
         b_vid, nb = RI.render_b(S, M, T, R)
         T["end"] = round(nb / FPS, 3)
