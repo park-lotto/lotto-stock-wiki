@@ -15682,15 +15682,16 @@ function renderExport(opts){
 let CTAV=null, _ctavTimer=null;
 async function loadCtaVariants(){
   const box=document.getElementById('ctaVarBox'); if(!box) return;
-  const j=box.dataset.job; if(!j){ box.innerHTML=''; return; }
-  let d; try{ d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(j))).json(); }catch(e){ return; }
-  if(!d||!d.ok){ box.innerHTML=''; return; }
-  CTAV=d; drawCtaVariants();
+  const j=box.dataset.job; let d=null;
+  if(j){ try{ d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(j))).json(); }catch(e){ return; } }
+  CTAV=(d&&d.ok)?d:null; drawCtaVariants();   // ★그리는 곳은 drawCtaVariants 하나(test_dom_owner_budget)
+  if(!CTAV) return;
   const busy=Object.values((d.status||{}).items||{}).some(x=>x.status==='rendering'||x.status==='waiting');
   clearTimeout(_ctavTimer); if(busy) _ctavTimer=setTimeout(loadCtaVariants,5000);
 }
 function drawCtaVariants(){
-  const box=document.getElementById('ctaVarBox'); if(!box||!CTAV) return;
+  const box=document.getElementById('ctaVarBox'); if(!box) return;
+  if(!CTAV){ box.innerHTML=''; return; }
   const j=box.dataset.job, cfg=CTAV.config, st=(CTAV.status||{}).items||{};
   const n=Math.max(1, cfg.items.filter(x=>x.on).length);
   const rows=cfg.items.map((it,i)=>{
