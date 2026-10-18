@@ -13,6 +13,7 @@
   번쩍(§5)       색 번쩍 횟수·분당
   효과음(§6)     번쩍 직후 0.45초 안 높이 있는 소리(띠링) 시작 비율
   와우(§0)       번쩍 + 꾸밈 등장(0.5초 안 묶음) 분당
+  원-얼굴(§2)    0~3초 빨간 실선 원 ↔ 같은 프레임 얼굴(YuNet): 중심 어긋남·반지름/얼굴 높이·얼굴이 원 안·원 크기·얼굴/창 폭(fx_measure)
 """
 from __future__ import annotations
 
@@ -79,12 +80,25 @@ def captions(src) -> dict:
             continue
         out.append({"t": round(c["f"] / 30, 2), "fs": fs})
     # 칸 프레임 다시 뽑아 색 재기(띠 전체 해상도)
+    nxt = {id(c): (out[i + 1]["t"] * 30 if i + 1 < len(out) else 1e9) for i, c in enumerate(out)}
     for c in out:
-        r = subprocess.run(["ffmpeg", "-loglevel", "error", "-ss", f"{c['fs'] / 30:.3f}", "-i", str(src), "-frames:v", "1", "-vf",
-                            f"crop=1080:{H}:0:{BAND[0]}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True)
-        if len(r.stdout) < 1080 * H * 3:
+        # 색 번쩍이 칸에 걸리면 바탕이 빨강·초록으로 물들어 '색 글자'로 잘못 센다(5편 10-18) → 칸 안 프레임 셋 중 바탕(글자 밖) 채도가 가장 낮은 것으로 잰다
+        best = None
+        for f in (c["fs"], c["fs"] + 10, c["fs"] + 20):
+            if f >= nxt[id(c)] - 2 and f != c["fs"]:
+                continue
+            r = subprocess.run(["ffmpeg", "-loglevel", "error", "-ss", f"{f / 30:.3f}", "-i", str(src), "-frames:v", "1", "-vf",
+                                f"crop=1080:{H}:0:{BAND[0]}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True)
+            if len(r.stdout) < 1080 * H * 3:
+                continue
+            a_ = np.frombuffer(r.stdout, np.uint8).reshape(H, 1080, 3).astype(int)[:, 30:1050]
+            bg = np.median(a_[~cap_mask(a_)], axis=0)
+            sat = float(bg.max() - bg.min())
+            if best is None or sat < best[0] - 15:
+                best = (sat, a_)
+        if best is None:
             continue
-        a = np.frombuffer(r.stdout, np.uint8).reshape(H, 1080, 3).astype(int)[:, 30:1050]
+        a = best[1]
         white = int((a.min(axis=2) > 225).sum())
         cols = {n: int((np.abs(a - v).sum(axis=2) < 60).sum()) for n, v in pal.items()}
         colored = sum(v for v in cols.values() if v > 250)
@@ -156,7 +170,7 @@ def ding_after(src, times) -> list[bool]:
     return out
 
 
-MEASURE_VER = 2   # 잣대가 바뀌면 올린다(벤치 재기 저장본을 버리게)
+MEASURE_VER = 4   # 잣대가 바뀌면 올린다(벤치 재기 저장본을 버리게)
 
 
 def measure(src, cache: Path | None = None) -> dict:
@@ -172,6 +186,44 @@ def measure(src, cache: Path | None = None) -> dict:
     if cache:
         cache.write_text(json.dumps(d, ensure_ascii=False, default=str), encoding="utf-8")
     return d
+
+
+def hook_face(src) -> dict | None:
+    """0~3초 첫 빨간 실선 원 구간의 원·얼굴 관계(프레임 중앙값) — fx_measure.scan/summarize."""
+    from tools.calcopy.shark import fx_measure as FM
+    segs = [FM.summarize(s) for s in FM.segments(FM.scan(src, to=3.0)) if s["kind"] == "solid"]
+    segs = [s for s in segs if s.get("rel")]
+    return segs[0] if segs else None
+
+
+def hook_face_ok(h: dict | None) -> tuple[bool, str]:
+    """(판단 주인: 원-얼굴 관계 통과) rules effects.red_circle.face.check 범위."""
+    K = rules()["effects"]["red_circle"]["face"]
+    c = K["check"]
+    if not h:
+        return False, "0~3초 얼굴 원 없음"
+    r = h["rel"]
+    bad = []
+    if r["off_fh"] > c["off_fh_max"]:
+        bad.append(f"중심 어긋남 {r['off_fh']}>{c['off_fh_max']}")
+    if not c["r_fh"][0] <= r["r_fh"] <= c["r_fh"][1]:
+        bad.append(f"반지름/얼굴 {r['r_fh']}∉{c['r_fh']}")
+    if r["face_inside"] < c["inside_min"]:
+        bad.append(f"얼굴 원 안 {r['face_inside']}<{c['inside_min']}")
+    if not c["r_px"][0] <= h["r"] <= c["r_px"][1]:
+        bad.append(f"원 반지름 {h['r']}∉{c['r_px']}")
+    if not K["fh_win_range"][0] <= r["face_h_win"] <= K["fh_win_range"][1]:
+        bad.append(f"얼굴/창 {r['face_h_win']}∉{K['fh_win_range']}")
+    if not c["eye_dy_fh"][0] <= r["eye_dy_fh"] <= c["eye_dy_fh"][1]:
+        bad.append(f"눈 높이 차 {r['eye_dy_fh']}∉{c['eye_dy_fh']}")
+    return (not bad), " · ".join(bad)
+
+
+def _hf(h):
+    if not h:
+        return None
+    r = h["rel"]
+    return f"r{h['r']:.0f} 어긋남{r['off_fh']:.2f} r/얼굴{r['r_fh']:.2f} 안{r['face_inside']:.2f} 얼굴/창{r['face_h_win']:.2f} 눈차{r['eye_dy_fh']:.2f}"
 
 
 def _measure(src) -> dict:
@@ -193,7 +245,7 @@ def _measure(src) -> dict:
             "blur_ratio": round(sum(1 for c in cells if c.get("blur")) / max(1, len(cells)), 2),
             "flashes": Wn["flashes"], "flash_per_min": round(len(Wn["flashes"]) / dur * 60, 1), "objects": Wn["objects"],
             "hook_red_px": Wn["hook_red"], "ding_ratio": round(sum(d) / max(1, len(d)), 2), "wow_per_min": round(len(wow) / dur * 60, 1),
-            "cells_detail": cells}
+            "cells_detail": cells, "hook_face": hook_face(src)}
 
 
 def judge(b: dict, o: dict) -> list[tuple]:
@@ -213,6 +265,8 @@ def judge(b: dict, o: dict) -> list[tuple]:
         ("효과음: 번쩍 뒤 띠링 비율", b["ding_ratio"], o["ding_ratio"], o["ding_ratio"] >= K["ding_after_flash_min"]),
         ("와우: 번쩍+꾸밈 분당", b["wow_per_min"], o["wow_per_min"], o["wow_per_min"] >= 0.6 * b["wow_per_min"]),
     ]
+    ok, why = hook_face_ok(o.get("hook_face"))
+    rows.append(("원-얼굴: 0초 빨간 원이 얼굴(머리) 전체를 감싸나", _hf(b.get("hook_face")), (_hf(o.get("hook_face")) or "없음") + (f" ✗ {why}" if why else ""), ok))
     return rows
 
 

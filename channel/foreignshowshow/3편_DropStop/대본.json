@@ -68,34 +68,34 @@
   "lines": [
    {
     "id": "O1",
-    "fn": "0~3초 결말 반응(로리 제안, 빨간 원)",
+    "fn": "0~3초 결말 반응(투자자 감탄, 빨간 원)",
     "kind": "원음",
-    "text": "대신 지분 20%는 받을게요",
-    "orig_en": "But I'm going to ask for 20",
+    "text": "대단한 제품이에요!",
+    "orig_en": "(I think it's a) phenomenal pro-",
     "orig_span": [
-     225.95,
-     227.5
+     178.58,
+     179.32
     ],
-    "facts": [
-     "f8"
-    ],
-    "est_sec": 1.55,
+    "facts": [],
+    "est_sec": 0.74,
     "t_est": [
      0.0,
-     1.55
+     0.74
     ],
-    "fx": "빨간 원(로리 얼굴) 0초 — 벤치 그대로",
+    "fx": "빨간 원(감탄하는 투자자 얼굴) 0초 — 자리는 fx_place.hook_circle 얼굴 검출",
     "emph": [
      {
-      "cap": "대신 지분 20%는 받을게요",
-      "span": "20%는",
-      "color": "초록",
-      "whole": false,
-      "why": "숫자 덩어리",
+      "cap": "대단한 제품이에요!",
+      "span": "대단한 제품이에요!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
       "how": "auto",
       "rules": "shark/rules.json v1"
      }
-    ]
+    ],
+    "asr": "178.58~179.32 단독 클립 2모델: gemini-3-flash 'this phenomenal pro-' · gemini-flash-latest 'is phenomenal, probably' / 177.4~179.32 넓게: 'I'm out. Guys, I think it's a phenomenal product.'(3-flash)·'I'm out. Guys, I think it's phenomenal'(3.5-flash). 화면 = 같은 원본 시각 말하는 본인(컷 178.567~179.334, 입 모양 178.78·178.87·179.23 = 소리 마루 178.75~179.0·179.2~179.3), 이름 화면 글자 없음=불명",
+    "why_change": "효과 정밀(10-18, 페이블 B): 옛 0초 줄 로리 'But I'm going to ask for 20'(225.95) 컷은 얼굴 432~459px 초근접 — 크롭을 넓혀도 얼굴/창 0.42(벤치 0.29~0.36)라 벤치 크기 원(r209)이 얼굴을 못 감쌈 → 같은 원본 중간 샷(얼굴 346~389px) 투자자 감탄 원음으로"
    },
    {
     "id": "N1",
@@ -669,5 +669,9 @@
   "원음 줄(O*) = 영어 원음 + 한국어 번역 자막(받아쓰기 근거 근거.md §2)",
   "사람 이름은 화면 글자로 확인된 케빈·로리만(창업자 이름띠는 누가 누군지 갈리지 않아 안 씀)",
   "시각은 추정 — TTS 뒤 확정"
- ]
+ ],
+ "render": {
+  "end_pad": 0.9,
+  "_why": "효과 정밀 10-18: 0초 줄을 0.74초 원음으로 바꿔 전체 42.77초(B1 벤치 −15.3%) → 끝 컷 여유 0.6→0.9초(끝 컷 길이만 늘어남)"
+ }
 }
