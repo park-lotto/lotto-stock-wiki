@@ -6,781 +6,1348 @@
   1080,
   1920
  ],
- "title_lines": [],
+ "title_lines": [
+  {
+   "text": "한국 콜라겐 마스크",
+   "colors": [
+    {
+     "word": "한국 콜라겐 마스크",
+     "hex": "#FFFDFD"
+    }
+   ]
+  },
+  {
+   "text": "쓰고 충격받은 외국인",
+   "colors": [
+    {
+     "word": "쓰고 충격받은 외국인",
+     "hex": "#FDDE00"
+    }
+   ]
+  }
+ ],
  "source_label": null,
  "layout": {
   "window": [
    0,
    486,
    1080,
-   1434
+   1920
   ],
   "caption_band": [
    1246,
    1342
   ],
-  "title_y": null,
+  "title_y": [
+   [
+    207,
+    335
+   ],
+   [
+    350,
+    466
+   ]
+  ],
+  "title_font": "뜯기 후보 TmonMonsori(0.93)",
+  "bg_hex": "#000000",
   "source_y": null,
   "logo_y": null,
-  "watermark": null
+  "watermark": null,
+  "source_hex": null,
+  "note": "창이 y486~1920 화면 바닥까지 — 출처 줄·로고·워터마크 없음(0·9·22초 전체 프레임 확인)"
  },
  "lines": [
   {
-   "t0": 3.0,
-   "t1": 3.8,
-   "speaker": null,
+   "t0": 0.0,
+   "t1": 0.067,
+   "speaker": "불명",
+   "text": "이거 맞아??!",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "기타(첫 2프레임만 보이는 표지 글 — 0~0.067초, 약간 기울어진 큰 빨강 글자+흐린 검정 그림자, 다음 프레임 컷)",
+   "enter_ms": 0,
+   "variant": "기타(크게·기울임·번진 그림자, 자리 y≈1440~1560)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1440,
+    1560
+   ],
+   "fill_hex": "#E30004",
+   "outline": "외곽선 대신 흐린 검정 그림자(번짐)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "금발 여성 얼굴(마스크 뗀 붉은 피부)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 0.067,
+   "t1": 1.267,
+   "speaker": "나레",
+   "text": "한국 콜라겐 마스크를 쓰고",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "빨강",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#E30004",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 0.12,
+    "basis": "파형 솟음"
+   },
+   "scene": "얼굴",
+   "scene_desc": "금발 여성 얼굴에서 콜라겐 마스크를 떼는 중",
+   "fit": 8,
+   "cut_at": [
+    0.067
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 1.267,
+   "t1": 2.633,
+   "speaker": "나레",
+   "text": "충격 받은 외국인이 있는데요",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "pop+glitch(작게→크게 넘침 1.267~1.433 5프레임, 1.467~1.533 3프레임 사라짐, 1.567부터 가로 빨강 잔상 글리치 ~1.70)",
+   "enter_ms": 433,
+   "variant": "빨강",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#E30004",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "휙",
+    "t": 1.34,
+    "basis": "파형 솟음"
+   },
+   "scene": "얼굴",
+   "scene_desc": "눈 감은 금발 여성이 마스크를 끌어내림",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 2.633,
+   "t1": 3.033,
+   "speaker": "불명",
+   "text": "!!!!!!!!!!",
+   "layer": "잇템로그",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "빨강",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1312,
+    1415
+   ],
+   "fill_hex": "#E30004",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 뗀 붉은 얼굴(놀란 표정)",
+   "fit": 7,
+   "cut_at": [
+    2.633
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 3.033,
+   "t1": 3.833,
+   "speaker": "나레",
    "text": "3시간이 아니라",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1258,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "금발 여성 얼굴 근접, 말하는 중",
+   "fit": 5,
    "cut_at": [],
-   "_asr": [
-    "외국인이 있는데요. 세시간이 아니라"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 3.8,
-   "t1": 5.1,
-   "speaker": null,
+   "t0": 3.833,
+   "t1": 5.067,
+   "speaker": "나레",
    "text": "3일을 붙여 놓은 것 같은데요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1256,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    5.07
-   ],
-   "_asr": [
-    "외국인이 있는데요. 세시간이 아니라",
-    "3일에 붙여 놓은 것 같은데요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 5.1,
-   "t1": 5.8,
-   "speaker": null,
-   "text": "콜라겐 마스크를",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    5.07
-   ],
-   "_asr": [
-    "3일에 붙여 놓은 것 같은데요.",
-    "콜라겐 마스크를 처음 써 본 여성은"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 5.8,
-   "t1": 6.7,
-   "speaker": null,
-   "text": "처음 써본 이 여성은",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1245,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "금발 여성 얼굴, 붉게 자국 난 피부",
+   "fit": 6,
    "cut_at": [],
-   "_asr": [
-    "콜라겐 마스크를 처음 써 본 여성은"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 5.067,
+   "t1": 5.767,
+   "speaker": "나레",
+   "text": "콜라겐 마스크를",
+   "layer": "잇템로그",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "갈색 머리 여성이 콜라겐 마스크를 쓴 얼굴",
+   "fit": 7,
+   "cut_at": [
+    5.067
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 5.767,
+   "t1": 6.7,
+   "speaker": "나레",
+   "text": "처음 써본 이 여성은",
+   "layer": "잇템로그",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 갈색 머리 여성 얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
    "t0": 6.7,
-   "t1": 7.9,
-   "speaker": null,
+   "t1": 7.867,
+   "speaker": "원음",
    "text": "한시간 정도 붙여놓으면",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [],
-   "_asr": [
-    "콜라겐 마스크를 처음 써 본 여성은"
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성이 카메라에 말함(입 움직임)",
+   "fit": 7,
+   "cut_at": [
+    6.7
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 7.9,
-   "t1": 9.7,
-   "speaker": null,
+   "t0": 7.867,
+   "t1": 9.733,
+   "speaker": "원음",
    "text": "원래 투명해져야 하는거 아님?",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1244,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    9.73
-   ],
-   "_asr": [
-    "콜라겐 마스크를 처음 써 본 여성은",
-    "[음악]"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 9.7,
-   "t1": 10.8,
-   "speaker": null,
-   "text": "2시간을 붙여놨는데도",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    9.73
-   ],
-   "_asr": [
-    "[음악]",
-    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 10.8,
-   "t1": 11.4,
-   "speaker": null,
-   "text": "그대로라며",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1258,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    11.43
-   ],
-   "_asr": [
-    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 11.4,
-   "t1": 12.3,
-   "speaker": null,
-   "text": "계속 그대로야..",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1254,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    11.43,
-    12.33
-   ],
-   "_asr": [
-    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 12.3,
-   "t1": 13.6,
-   "speaker": null,
-   "text": "뭔가 잘못된것 같다는데",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1258,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    12.33,
-    13.57
-   ],
-   "_asr": [
-    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면",
-    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 13.6,
-   "t1": 14.6,
-   "speaker": null,
-   "text": "부드러운 부분을",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1258,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    13.57
-   ],
-   "_asr": [
-    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 14.6,
-   "t1": 15.6,
-   "speaker": null,
-   "text": "얼굴에 붙이는거지(??)",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성이 말함, 마스크는 불투명 분홍",
+   "fit": 8,
    "cut_at": [],
-   "_asr": [
-    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 15.6,
-   "t1": 16.1,
-   "speaker": null,
+   "t0": 9.733,
+   "t1": 10.833,
+   "speaker": "나레",
+   "text": "2시간을 붙여놨는데도",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 얼굴 근접",
+   "fit": 6,
+   "cut_at": [
+    9.733
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 10.833,
+   "t1": 11.433,
+   "speaker": "나레",
+   "text": "그대로라며",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 그대로인 얼굴(눈 위쪽 봄)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 11.433,
+   "t1": 12.333,
+   "speaker": "원음",
+   "text": "계속 그대로야..",
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성이 관자놀이 짚고 말함",
+   "fit": 7,
+   "cut_at": [
+    11.433
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 12.333,
+   "t1": 13.567,
+   "speaker": "나레",
+   "text": "뭔가 잘못된것 같다는데",
+   "layer": "잇템로그",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 이마 초근접",
+   "fit": 5,
+   "cut_at": [
+    12.333
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 13.567,
+   "t1": 14.567,
+   "speaker": "원음",
+   "text": "부드러운 부분을",
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성이 머리 짚고 말함",
+   "fit": 5,
+   "cut_at": [
+    13.567
+   ],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 14.567,
+   "t1": 15.567,
+   "speaker": "원음",
+   "text": "얼굴에 붙이는거지(??)",
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1255,
+    1331
+   ],
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 얼굴, 손으로 머리 짚음",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
+  },
+  {
+   "t0": 15.567,
+   "t1": 16.067,
+   "speaker": "원음",
    "text": "아니면",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1258,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 얼굴",
+   "fit": 4,
    "cut_at": [
-    16.07
+    15.567
    ],
-   "_asr": [
-    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 16.1,
-   "t1": 17.4,
-   "speaker": null,
+   "t0": 16.067,
+   "t1": 17.367,
+   "speaker": "원음",
    "text": "오돌토돌한 부분을..",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기타(흰 채움 = 원음 번역 줄)",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#FDFCFD",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 얼굴 근접",
+   "fit": 5,
    "cut_at": [
-    16.07,
-    17.37
+    16.067
    ],
-   "_asr": [
-    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]",
-    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 17.4,
-   "t1": 17.8,
-   "speaker": null,
+   "t0": 17.367,
+   "t1": 17.767,
+   "speaker": "나레",
    "text": "알고보니",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "반전",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1258,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 눈 감음",
+   "fit": 5,
    "cut_at": [
-    17.37
+    17.367
    ],
-   "_asr": [
-    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 17.8,
-   "t1": 19.0,
-   "speaker": null,
+   "t0": 17.767,
+   "t1": 19.033,
+   "speaker": "나레",
    "text": "거꾸로 붙여 놨던 것인데요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    19.03
-   ],
-   "_asr": [
-    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던",
-    "것인데요. 사실 이건 한국 연예인들도"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 여성 얼굴(뒤집혀 붙은 마스크)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 19.0,
+   "t0": 19.033,
    "t1": 20.3,
-   "speaker": null,
+   "speaker": "나레",
    "text": "사실 이건 한국 연예인들도",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "머리띠 두른 한국 여성이 볼에 마스크를 대는 장면",
+   "fit": 6,
    "cut_at": [
-    19.03,
-    20.3
+    19.033
    ],
-   "_asr": [
-    "것인데요. 사실 이건 한국 연예인들도"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
    "t0": 20.3,
-   "t1": 20.8,
-   "speaker": null,
+   "t1": 21.0,
+   "speaker": "나레",
    "text": "중요한 촬영전날",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1245,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "한국 여성이 얼굴에 마스크를 손으로 눌러 붙임",
+   "fit": 6,
    "cut_at": [
     20.3
    ],
-   "_asr": [
-    "것인데요. 사실 이건 한국 연예인들도",
-    "중요한 촬영 전날 꼭 쓴다는 콜라겐"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 20.8,
-   "t1": 21.5,
-   "speaker": null,
+   "t0": 21.0,
+   "t1": 21.533,
+   "speaker": "나레",
    "text": "꼭 쓴다는",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1258,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    21.53
-   ],
-   "_asr": [
-    "중요한 촬영 전날 꼭 쓴다는 콜라겐"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "손·제품 근접",
+   "scene_desc": "마스크 붙인 눈가를 손가락으로 누름",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 21.5,
-   "t1": 22.4,
-   "speaker": null,
+   "t0": 21.533,
+   "t1": 22.433,
+   "speaker": "나레",
    "text": "콜라겐 마스크인데",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1240,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
-   "emph": [],
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
+   "emph": [
+    {
+     "word": "콜라겐 마스크",
+     "hex": "#F07A09",
+     "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)"
+    }
+   ],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "마스크 쓴 얼굴을 손으로 정돈",
+   "fit": 8,
    "cut_at": [
-    21.53,
-    22.43
+    21.533
    ],
-   "_asr": [
-    "중요한 촬영 전날 꼭 쓴다는 콜라겐",
-    "마스크인데 피부의 소분을 전달하면서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 22.4,
-   "t1": 23.3,
-   "speaker": null,
+   "t0": 22.433,
+   "t1": 23.633,
+   "speaker": "나레",
    "text": "피부에 수분을 전달하면서",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1245,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "다른 여성이 흰 마스크를 양손으로 붙임",
+   "fit": 6,
    "cut_at": [
-    22.43
+    22.433,
+    23.5
    ],
-   "_asr": [
-    "마스크인데 피부의 소분을 전달하면서"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 23.3,
-   "t1": 24.3,
-   "speaker": null,
+   "t0": 23.633,
+   "t1": 24.333,
+   "speaker": "나레",
    "text": "시간이 갈수록",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    23.5,
-    24.33
-   ],
-   "_asr": [
-    "마스크인데 피부의 소분을 전달하면서",
-    "시간이 갈수록 투명해진다는데요. 최소"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "마스크 쓴 얼굴 정면",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 24.3,
+   "t0": 24.333,
    "t1": 25.2,
-   "speaker": null,
+   "speaker": "나레",
    "text": "투명해진다는데요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "증거",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1245,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "마스크 뗀 윤기 나는 얼굴을 손으로 받침",
+   "fit": 8,
    "cut_at": [
-    24.33,
-    25.2
+    24.333
    ],
-   "_asr": [
-    "시간이 갈수록 투명해진다는데요. 최소"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
    "t0": 25.2,
-   "t1": 26.4,
-   "speaker": null,
+   "t1": 26.367,
+   "speaker": "나레",
    "text": "최소 3시간은 붙여놔야",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
     1255,
-    null
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "윤기 나는 얼굴 근접, 손가락으로 볼 만짐",
+   "fit": 5,
    "cut_at": [
     25.2
    ],
-   "_asr": [
-    "시간이 갈수록 투명해진다는데요. 최소",
-    "시간을 붙여 놔야 효과를 제대로 볼"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 26.4,
+   "t0": 26.367,
    "t1": 27.5,
-   "speaker": null,
+   "speaker": "나레",
    "text": "효과를 재대로 볼 수 있고",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1257,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    27.5
-   ],
-   "_asr": [
-    "시간을 붙여 놔야 효과를 제대로 볼",
-    "수 있고 잠들기 전 수면팩처럼 붙여"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "scene": "얼굴",
+   "scene_desc": "윤기 나는 얼굴 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
    "t0": 27.5,
-   "t1": 28.0,
-   "speaker": null,
+   "t1": 27.967,
+   "speaker": "나레",
    "text": "잠들기",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1258,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "투명해진 마스크 쓴 여성 눈 감음",
+   "fit": 6,
    "cut_at": [
     27.5
    ],
-   "_asr": [
-    "수 있고 잠들기 전 수면팩처럼 붙여"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 28.0,
-   "t1": 29.1,
-   "speaker": null,
+   "t0": 27.967,
+   "t1": 29.067,
+   "speaker": "나레",
    "text": "수면팩처럼 붙여놓는게",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1246,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "투명 마스크를 손으로 매만짐",
+   "fit": 7,
    "cut_at": [
-    28.27
+    28.267
    ],
-   "_asr": [
-    "수 있고 잠들기 전 수면팩처럼 붙여",
-    "놓는게 제일 좋다고 하네요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   },
   {
-   "t0": 29.1,
-   "t1": 29.97,
-   "speaker": null,
+   "t0": 29.067,
+   "t1": 29.967,
+   "speaker": "나레",
    "text": "제일 좋다고 하네요",
-   "layer": null,
-   "role": null,
-   "enter": null,
+   "layer": "잇템로그",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "기본",
+   "type_cps": null,
+   "cursor": false,
    "y": [
-    1257,
-    null
+    1255,
+    1331
    ],
-   "fill_hex": null,
+   "fill_hex": "#F7EB0E",
+   "outline": "검정 #000000 약 9~10px(행 스캔 중앙값)",
+   "glow": null,
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
+   "scene": "얼굴",
+   "scene_desc": "투명 마스크 쓴 얼굴 정면",
+   "fit": 6,
    "cut_at": [],
-   "_asr": [
-    "놓는게 제일 좋다고 하네요."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "font": {
+    "name": "미확정(뜯기 후보 S-CoreDream-7ExtraBold·Cafe24Ohsquare·BMDOHYEON, 각진 굵은 고딕)",
+    "basis": "뜯기 fontmatch 0.30대 — 눈 대조 안 함"
+   },
+   "letter_gap_px": "채움 열 빈칸 중앙 약 5~6px(낱말 사이 24~34px)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": null,
+   "confidence": "픽셀(색·y·시각)/눈(화자·역할·fit)"
   }
  ],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "beats": "훅(0~3.0초 빨강 자막: 표지 '이거 맞아??!' 2프레임 → 나레 '한국 콜라겐 마스크를 쓰고 / 충격 받은 외국인이 있는데요'(팝+글리치) → '!!!!!!!!!!') → 나레 상황(3.0~6.7 '3시간이 아니라 3일을 붙여 놓은 것 같은데요 / 처음 써본 이 여성은') → 원음 의문(6.7~9.7 흰 자막 '원래 투명해져야 하는거 아님?') → 나레·원음 교차(9.7~13.6 '그대로라며'/'계속 그대로야..'/'뭔가 잘못된것 같다는데') → 원음 질문(13.6~17.4 '부드러운 부분을…오돌토돌한 부분을..') → 반전·공개(17.4~19.0 '알고보니 거꾸로 붙여 놨던 것인데요') → 정보(19.0~25.2 한국 연예인 촬영 전날·콜라겐 마스크(주황 강조)·투명해진다는데요) → 끝(25.2~30.0 사용 팁 '최소 3시간'·'수면팩처럼 붙여놓는게 제일 좋다고 하네요', CTA 없음)",
+ "narr_share": "나레 줄 23/32, 나레 21.8초/30.0초 (원음 7줄 7.7초, 불명 2줄 0.5초)",
+ "notes": [
+  "브리프와 다름: 이 편 나레 줄은 타이핑이 아니다 — 32줄 모두 첫 프레임부터 글자가 다 보임(자막 띠 채움 픽셀 수가 줄 시작 프레임부터 일정, 30fps 전 프레임 스캔). 커서 '_'·초록 빛번짐 없음. type_cps 해당 없음.",
+  "브리프와 다름: 자막 색 체계 — 나레=노랑 #F7EB0E, 원음(외국인 여성 말 번역)=흰 #FDFCFD, 훅 0~3초=빨강 #E30004. 외곽선은 셋 다 검정 약 9~10px. 자리 y1255~1331(채움) 한 줄 가운데.",
+  "브리프와 다름: 제목 2줄은 있으나 낱말별 색이 아니라 줄별 색(1줄 흰 #FFFDFD, 2줄 노랑 #FDDE00). 창이 y486~1920(바닥까지)이라 '출처:' 줄·금색 로고·워터마크 없음.",
+  "브리프와 다름: 스티커·3D 그림 0개. 강조색은 1줄뿐(21.53초 '콜라겐 마스크' 주황 #F07A09, 뒤 '인데'는 노랑).",
+  "원본 화면의 원래 자막 자리(입 근처 가로 띠)가 흐림 처리돼 있다(0~19초 외국인 원본 구간) — 원본 글자는 가려져 안 보여 원본박힘 층 줄 없음.",
+  "'이거 맞아??!'(0~0.067초, 2프레임)는 표지용 글로 보인다 — 다른 줄과 자리(y≈1440~1560)·기울임·그림자(번짐)가 다르다. 잇템로그 층으로 적었으나 원본 층일 가능성은 배제 못 함.",
+  "화자 근거: vtt 자동자막이 노랑 줄만 받아씀(흰 줄 구간은 [음악]·'>>' 화자 바뀜), 흰 줄 구간 소리가 -15~-20dB로 작고 f0 약 200~370Hz(원본 여성 목소리 추정). 직접 청취 못 함. 나레 목소리 성별 미확인(f0 추정 100~250Hz 혼재).",
+  "'!!!!!!!!!!'(2.633~3.033)·'이거 맞아??!' 는 말이 아니라 반응 표시라 화자 '불명'.",
+  "효과음: 귀로 확인 불가. 5kHz 이상 에너지 솟음 0.12초(+39dB)·1.34초(+30dB, 팝+글리치 줄 등장과 겹침)만 후보. 나머지 솟음은 말소리 자음과 못 가려 null.",
+  "글꼴 이름·크기 px 미확정(채움 잉크 높이 74~76px). 자간은 채움 열 빈칸 중앙값 근사. 한 줄 자막뿐이라 행간 없음.",
+  "컷: 뜯기 컷 16개 + 프레임 차로 찾은 0.067·2.633·6.7·15.567 추가. 자막 교체가 거의 모두 컷과 같은 프레임(자막 단위 편집)."
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "name_evidence": [],
+ "_made_by": "줄판독 워커(눈+픽셀 실측) 2026-10-20",
+ "frame0": {
+  "what": "금발 외국인 여성 얼굴(마스크 뗀 붉은 피부)+빨강 '이거 맞아??!'",
+  "face_frac": "약 0.5(창 대비, 눈 추정)",
+  "text": "이거 맞아??!"
+ },
+ "no_caption": []
 }

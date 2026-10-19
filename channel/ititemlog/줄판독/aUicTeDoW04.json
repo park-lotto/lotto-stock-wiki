@@ -6,731 +6,1786 @@
   1080,
   1920
  ],
- "title_lines": [],
+ "title_lines": [
+  {
+   "text": "한국 화장품 쓰고",
+   "colors": [
+    {
+     "word": "한국 화장품 쓰고",
+     "hex": "#FDFDFD"
+    }
+   ],
+   "y": [
+    233,
+    343
+   ]
+  },
+  {
+   "text": "커버력에 당황한 외국인",
+   "colors": [
+    {
+     "word": "커버력에 당황한 외국인",
+     "hex": "#FDDE01"
+    }
+   ],
+   "y": [
+    353,
+    458
+   ]
+  }
+ ],
  "source_label": null,
  "layout": {
   "window": [
    0,
    486,
    1080,
-   1434
+   1920
   ],
   "caption_band": [
-   1245,
-   1342
+   1249,
+   1338
   ],
-  "title_y": null,
+  "title_y": [
+   233,
+   458
+  ],
   "source_y": null,
+  "source_hex": null,
   "logo_y": null,
-  "watermark": null
+  "watermark": {
+   "present": false,
+   "alpha": null
+  },
+  "bg_hex": "#000000"
  },
  "lines": [
   {
-   "t0": 2.1,
-   "t1": 2.6,
-   "speaker": null,
+   "font": {
+    "name": "미측정(굵은 고딕, Cafe24Ohsquare 아님)",
+    "basis": "눈"
+   },
+   "size_px": null,
+   "x": 548,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "번진 어두운 그림자"
+   },
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "썸네일 첫 2프레임(빨강 채움+검정 굵은 외곽+번진 그림자, 굵은 고딕·흐림), 창 왼쪽 아래",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "빨간원",
+     "x": 120,
+     "y": 486,
+     "w": 330,
+     "t_in": 0.0,
+     "t_out": 0.067,
+     "anim": "정지(썸네일 그림)"
+    }
+   ],
+   "sfx": null,
+   "y": [
+    1350,
+    1527
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "눈",
+   "notes": "0~2프레임만 보이는 썸네일 그림 — 말 아님. 글자 bbox x176~919 y1350~1527 픽셀, 빨간 원 자리는 눈(±20px)",
+   "t0": 0.0,
+   "t1": 0.067,
+   "text": "이거 맞아..??!",
+   "speaker": "불명",
+   "layer": "잇템로그",
+   "role": "훅",
+   "fill_hex": "#E60004",
+   "scene": "손·제품 근접",
+   "scene_desc": "썸네일 프레임: 남자 가슴 문신 위 여자 손+빨간 원",
+   "fit": 8,
+   "max_w": 744,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "빨강(훅 전용, 채움 잉크 80px ≈ 92px)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "y": [
+    1243,
+    1342
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 0.067,
+   "t1": 0.7,
+   "text": "한국 화장품을",
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "훅",
+   "fill_hex": "#DA0009",
+   "scene": "손·제품 근접",
+   "scene_desc": "문신 가슴에 화장품 바르는 손",
+   "fit": 8,
+   "max_w": 520,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "pop",
+   "enter_ms": 370,
+   "enter_curve": [
+    [
+     0.0,
+     15,
+     100,
+     0
+    ],
+    [
+     0.033,
+     40,
+     100,
+     0
+    ],
+    [
+     0.067,
+     65,
+     100,
+     0
+    ],
+    [
+     0.1,
+     87,
+     100,
+     0
+    ],
+    [
+     0.133,
+     103,
+     100,
+     0
+    ],
+    [
+     0.167,
+     110,
+     100,
+     0
+    ],
+    [
+     0.2,
+     107,
+     "글리치",
+     0
+    ],
+    [
+     0.233,
+     107,
+     "글리치",
+     0
+    ],
+    [
+     0.267,
+     105,
+     "글리치",
+     0
+    ],
+    [
+     0.3,
+     103,
+     "글리치",
+     0
+    ],
+    [
+     0.333,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "빨강+팝+글리치",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "y": [
+    1243,
+    1342
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "0.70 점 크기→0.867 110% 넘침→0.90~1.07 빨간 가로띠 글리치(RGB 번짐)→1.10 정착. 폭 px 실측 89·242·396·526·623·667→607",
+   "t0": 0.7,
+   "t1": 1.5,
+   "text": "타투위에 바르자",
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "훅",
+   "fill_hex": "#DA0009",
+   "scene": "손·제품 근접",
+   "scene_desc": "휴지·손으로 문신 위를 두드려 바름",
+   "fit": 9,
+   "max_w": 608,
+   "cut_at": [
+    0.733
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "y": [
+    1249,
+    1338
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 2.2,
+   "t1": 2.967,
    "text": "마법처럼 타투가",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1230,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "공개",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "바른 자리 문신이 지워져 살색",
+   "fit": 9,
+   "max_w": 548,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [],
-   "_asr": [
-    "한국 화장품을 타투 위에 바르자",
-    "마법처럼 타투가 사라졌는데요. 남은"
+   "y": [
+    1249,
+    1338
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 3.3,
-   "t1": 3.7,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 2.967,
+   "t1": 3.733,
    "text": "사라졌는데요",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1211,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "공개",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "가슴 중앙 문신이 사라진 살색 근접",
+   "fit": 10,
+   "max_w": 446,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    3.73
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "마법처럼 타투가 사라졌는데요. 남은"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 3.7,
-   "t1": 4.7,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 3.733,
+   "t1": 4.9,
    "text": "남은 부분도 발라주더니",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "나머지 몸통에 브러시로 바름",
+   "fit": 9,
+   "max_w": 776,
+   "cut_at": [
+    4.5
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": null,
+   "x": 332,
+   "align": "left",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "빨강 물음표 반응(창 왼쪽 위, 가운데 아님)",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    3.73,
-    4.5
+   "y": [
+    1163,
+    1254
    ],
-   "_asr": [
-    "마법처럼 타투가 사라졌는데요. 남은",
-    "부분도 발라주다니. 미친 커버력에"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "말 아님 — 놀람 표시. bbox x182~482 y1172~1245 픽셀",
+   "t0": 5.1,
+   "t1": 5.7,
+   "text": "??????",
+   "speaker": "불명",
+   "layer": "잇템로그",
+   "role": "고조",
+   "fill_hex": "#DA0009",
+   "scene": "손·제품 근접",
+   "scene_desc": "문신이 다 사라진 매끈한 상체",
+   "fit": 7,
+   "max_w": 301,
+   "cut_at": []
   },
   {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "y": [
+    1249,
+    1338
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
    "t0": 5.7,
    "t1": 6.4,
-   "speaker": null,
    "text": "미친 커버력에",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1245,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "고조",
+   "fill_hex": "#F8F017",
+   "scene": "얼굴",
+   "scene_desc": "문신 없어진 남자 상체+옆 여자",
+   "fit": 8,
+   "max_w": 469,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    5.7,
-    6.4
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "부분도 발라주다니. 미친 커버력에"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
    "t0": 6.4,
-   "t1": 7.5,
-   "speaker": null,
+   "t1": 7.53,
    "text": "감탄해버리고 마는데",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1245,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "고조",
+   "fill_hex": "#F8F017",
+   "scene": "얼굴",
+   "scene_desc": "남자·여자 웃는 2인 샷(7.5 흔들림 블러로 전환)",
+   "fit": 8,
+   "max_w": 691,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    6.4
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "부분도 발라주다니. 미친 커버력에",
-    "감탄해 버리고 마는데 이걸 보니"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 7.5,
-   "t1": 8.3,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "zoomblur",
+   "confidence": "픽셀",
+   "notes": "7.5 블러 전환으로 2번째 소재 시작",
+   "t0": 7.53,
+   "t1": 8.267,
    "text": "이걸 본 이 여성은",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1245,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "이음",
+   "fill_hex": "#F8F017",
+   "scene": "얼굴",
+   "scene_desc": "2번째 소재: 얼굴·목 문신 많은 여성 정면",
+   "fit": 9,
+   "max_w": 587,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [],
-   "_asr": [
-    "감탄해 버리고 마는데 이걸 보니",
-    "여성은 믿을 수가 없다며"
+   "y": [
+    1249,
+    1338
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 8.3,
-   "t1": 9.1,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 8.267,
+   "t1": 9.067,
    "text": "믿을수가 없다며",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "다리",
+   "fill_hex": "#F8F017",
+   "scene": "얼굴",
+   "scene_desc": "여성이 손을 얼굴에 대고 말함",
+   "fit": 8,
+   "max_w": 536,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    9.07
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "여성은 믿을 수가 없다며"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 9.1,
-   "t1": 10.1,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "원음 대사 번역 자막=흰 채움(나레 노랑과 색으로 가름). 원음은 외국어로 보임(vtt 에 이 줄 없음)",
+   "t0": 9.067,
+   "t1": 10.133,
    "text": "내 타투 가려볼게",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1258,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#FFFFFF",
+   "scene": "얼굴",
+   "scene_desc": "여성이 카메라 보고 말함(입 움직임)",
+   "fit": 9,
+   "max_w": 572,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    9.07,
-    10.13
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "여성은 믿을 수가 없다며"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 10.1,
-   "t1": 11.2,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 10.133,
+   "t1": 11.267,
    "text": "직접 실험해보기로 하고",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 뚜껑 파운데이션 병 여러 개",
+   "fit": 9,
+   "max_w": 792,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "미측정(손글씨체)",
+    "basis": "눈"
+   },
+   "size_px": null,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 3,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "손글씨체(흰 채움+얇은 검정 외곽 ~3px)",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    10.13,
-    11.27
+   "y": [
+    1255,
+    1335
    ],
-   "_asr": [
-    "여성은 믿을 수가 없다며",
-    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 11.2,
-   "t1": 12.1,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "눈",
+   "notes": "입이 거의 안 움직임 → 속마음 자막으로 추정. 한글 손글씨라 잇템로그 층으로 봤으나 원본 박힘 가능성 배제 못 함",
+   "t0": 11.267,
+   "t1": 12.333,
    "text": "커버 안되기만 해바..",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1252,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#FFFFFF",
+   "scene": "얼굴",
+   "scene_desc": "여성이 퍼프 들고 입 다문 채 웃음",
+   "fit": 6,
+   "max_w": 664,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    11.27
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 12.1,
-   "t1": 13.1,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 12.333,
+   "t1": 13.267,
    "text": "일단 한번 발라보더니",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "빨간 퍼프로 목·어깨 문신에 바름",
+   "fit": 9,
+   "max_w": 715,
+   "cut_at": [
+    13.1
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    13.1
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번",
-    "발라보더니 좀 부족해 보였는지"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 13.1,
-   "t1": 14.3,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 13.267,
+   "t1": 14.367,
    "text": "좀 부족해 보였는지",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1245,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "어깨 문신이 옅게 비침",
+   "fit": 8,
+   "max_w": 626,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    13.1
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "발라보더니 좀 부족해 보였는지"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 14.3,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "눈",
+   "notes": "흰 채움 측정 프레임에 배경 흰색이 섞여 폭은 띠 눈 추정",
+   "t0": 14.367,
    "t1": 15.4,
-   "speaker": null,
    "text": "한겹 더 발라보자",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "본문",
+   "fill_hex": "#FFFFFF",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔레트에 파운데이션 덜어냄",
+   "fit": 8,
+   "max_w": 600,
+   "cut_at": [
+    14.433
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    14.43,
-    15.4
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "발라보더니 좀 부족해 보였는지"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
    "t0": 15.4,
    "t1": 16.9,
-   "speaker": null,
    "text": "바로 두겹째 시도해보는데",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "고조",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "퍼프로 어깨·쇄골 문신 위 두드림",
+   "fit": 9,
+   "max_w": 854,
+   "cut_at": [
+    16.233
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": null,
+   "x": null,
+   "align": "퍼프 옆",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "의성어 '톡' 한 글자가 퍼프 따라 0.1~0.2초마다 자리 바꿔 9번 튐(가운데 자막 아님)",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 168,
+     "y": 1207,
+     "w": 76,
+     "t_in": 16.9,
+     "t_out": 17.1,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 278,
+     "y": 1230,
+     "w": 86,
+     "t_in": 17.1,
+     "t_out": 17.2,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 539,
+     "y": 1164,
+     "w": 86,
+     "t_in": 17.2,
+     "t_out": 17.3,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 582,
+     "y": 1323,
+     "w": 86,
+     "t_in": 17.3,
+     "t_out": 17.5,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 638,
+     "y": 1332,
+     "w": 86,
+     "t_in": 17.5,
+     "t_out": 17.6,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 579,
+     "y": 1171,
+     "w": 86,
+     "t_in": 17.6,
+     "t_out": 17.7,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 679,
+     "y": 1344,
+     "w": 86,
+     "t_in": 17.7,
+     "t_out": 17.8,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 781,
+     "y": 1162,
+     "w": 94,
+     "t_in": 17.8,
+     "t_out": 18.0,
+     "anim": "자리 순간이동(cut)"
+    },
+    {
+     "what": "기타(의성어 '톡' 흰 글자)",
+     "x": 874,
+     "y": 1332,
+     "w": 86,
+     "t_in": 18.0,
+     "t_out": 18.033,
+     "anim": "자리 순간이동(cut)"
+    }
    ],
-   "fill_hex": null,
+   "sfx": {
+    "kind": "기타(퍼프 두드림 '톡')",
+    "t": 17.09,
+    "basis": "파형 솟음(17.09·17.26·17.39·17.53 20~30ms 짧은 솟음, 원음 두드림 소리일 수 있음)"
+   },
+   "y": [
+    1162,
+    1434
+   ],
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "sticker x,y = 흰 글자+외곽 묶음 bbox 왼쪽 위(9px 팽창 포함) 픽셀",
+   "t0": 16.9,
+   "t1": 18.033,
+   "text": "톡",
+   "speaker": "불명",
+   "layer": "잇템로그",
+   "role": "증거",
+   "fill_hex": "#FFFFFF",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔 문신 위를 퍼프로 톡톡 두드림",
+   "fit": 9,
+   "max_w": 94,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    15.4,
-    16.23
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "발라보더니 좀 부족해 보였는지",
-    "&gt;&gt; 바로 두 겹제 시도해 보는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 17.8,
-   "t1": 19.8,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 18.033,
+   "t1": 19.833,
    "text": "맨살 보니까 어색하다ㅎㅎ",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "공개",
+   "fill_hex": "#FFFFFF",
+   "scene": "손·제품 근접",
+   "scene_desc": "문신 가려진 맨살 어깨·쇄골",
+   "fit": 9,
+   "max_w": 882,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    18.03,
-    19.83
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 바로 두 겹제 시도해 보는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 19.8,
+   "motion": "cam",
+   "transition": "zoomblur",
+   "confidence": "픽셀",
+   "notes": "19.8 블러 전환으로 3번째 소재",
+   "t0": 19.833,
    "t1": 20.6,
-   "speaker": null,
    "text": "더 충격적인건",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1257,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "이음",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "3번째 소재: 다른 여성이 팔 문신에 브러시",
+   "fit": 8,
+   "max_w": 463,
+   "cut_at": [
+    20.467
+   ]
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    19.83,
-    20.47
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 더 충격적인 건"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "3번째 소재 원음은 색이 화자별: 분홍=화면 속 여성, 초록=찍는 사람(엄마 추정)",
    "t0": 20.6,
-   "t1": 21.3,
-   "speaker": null,
+   "t1": 21.333,
    "text": "진짜 사라지네?",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1254,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "증거",
+   "fill_hex": "#F283CA",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔 문신을 브러시로 지우는 중",
+   "fit": 9,
+   "max_w": 525,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    21.33
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 더 충격적인 건"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 21.3,
-   "t1": 22.3,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 21.333,
+   "t1": 22.167,
    "text": "타투를 다 가리고",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "다리",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "팔 전체 문신 가림",
+   "fit": 9,
+   "max_w": 561,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    21.33
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 더 충격적인 건",
-    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 22.3,
-   "t1": 22.9,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 22.167,
+   "t1": 22.933,
    "text": "엄마한테 보여주자",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "다리",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "브러시로 팔 마무리",
+   "fit": 6,
+   "max_w": 619,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [],
-   "_asr": [
-    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자"
+   "y": [
+    1249,
+    1338
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 22.9,
-   "t1": 23.9,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 22.933,
+   "t1": 23.933,
    "text": "나온 반응이라는데",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "다리",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "브러시로 팔 마무리",
+   "fit": 5,
+   "max_w": 609,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    23.93
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자",
-    "나온 반응이라는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 23.9,
-   "t1": 25.2,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 23.933,
+   "t1": 25.167,
    "text": "엄마 리액션 한번보자 ㅋㅋ",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1256,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "다리",
+   "fill_hex": "#F283CA",
+   "scene": "얼굴",
+   "scene_desc": "여성 얼굴 초근접, 입 움직임",
+   "fit": 9,
+   "max_w": 891,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    23.93,
-    25.17
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "나온 반응이라는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 25.2,
-   "t1": 26.2,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "초록=찍는 사람(엄마 추정) 말",
+   "t0": 25.167,
+   "t1": 26.167,
    "text": "너 너무 심심해보인다",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1257,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "반전",
+   "fill_hex": "#9BFF8A",
+   "scene": "얼굴",
+   "scene_desc": "다른 방의 여성(찍는 사람 시점)",
+   "fit": 8,
+   "max_w": 716,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    25.17,
-    26.17
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "나온 반응이라는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 26.167,
+   "t1": 27.067,
+   "text": "타투 있는게 더 예뻐?",
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "질문",
+   "fill_hex": "#F283CA",
+   "scene": "얼굴",
+   "scene_desc": "여성 옆얼굴, 웃으며 말함",
+   "fit": 9,
+   "max_w": 712,
+   "cut_at": []
   },
   {
-   "t0": 26.2,
-   "t1": 27.1,
-   "speaker": null,
-   "text": "타투 있는게 더 예쁘?",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    26.17
+   "y": [
+    1248,
+    1350
    ],
-   "_asr": [
-    "나온 반응이라는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 27.1,
-   "t1": 27.7,
-   "speaker": null,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "흰 채움 — 화자 불확실(질문에 답하는 엄마로 추정하나 엄마 줄 초록과 색이 다름)",
+   "t0": 27.067,
+   "t1": 27.667,
    "text": "당연하지",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1257,
-    null
-   ],
-   "fill_hex": null,
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "답",
+   "fill_hex": "#FFFFFF",
+   "scene": "얼굴",
+   "scene_desc": "여성 웃는 입 근접",
+   "fit": 7,
+   "max_w": 304,
+   "cut_at": []
+  },
+  {
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [],
-   "_asr": [
-    "나온 반응이라는데"
+   "y": [
+    1249,
+    1338
    ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
-  },
-  {
-   "t0": 27.7,
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 27.667,
    "t1": 28.1,
-   "speaker": null,
-   "text": "오키;",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1258,
-    null
-   ],
-   "fill_hex": null,
-   "emph": [],
-   "sticker": [],
-   "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    28.1
-   ],
-   "_asr": [
-    "나온 반응이라는데"
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "text": "오키;;",
+   "speaker": "원음",
+   "layer": "잇템로그",
+   "role": "답",
+   "fill_hex": "#F283CA",
+   "scene": "얼굴",
+   "scene_desc": "여성 웃는 얼굴 흐림",
+   "fit": 8,
+   "max_w": 209,
+   "cut_at": []
   },
   {
-   "t0": 28.1,
-   "t1": 29.37,
-   "speaker": null,
-   "text": "바로 지웠다고 하네요",
-   "layer": null,
-   "role": null,
-   "enter": null,
-   "y": [
-    1246,
-    null
-   ],
-   "fill_hex": null,
+   "font": {
+    "name": "Cafe24Ohsquare",
+    "basis": "뜯기 fontmatch 0.630(c15 '더 충격적인건' 1위)+눈 대조 · 100px 잉크높이 87 → 채움 잉크 72px ≈ 83px · 폭 대조 '미친 커버력에' 469 vs 예측 462"
+   },
+   "size_px": 83,
+   "x": 540,
+   "align": "center",
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#070000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
    "emph": [],
    "sticker": [],
    "sfx": null,
-   "scene": null,
-   "fit": null,
-   "cut_at": [
-    28.1
+   "y": [
+    1249,
+    1338
    ],
-   "_asr": [
-    "나온 반응이라는데",
-    "&gt;&gt; 바로 지어버렸다고 하네요. Yeah."
-   ],
-   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+   "motion": "cam",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": null,
+   "t0": 28.1,
+   "t1": 29.367,
+   "text": "바로 지웠다고 하네요",
+   "speaker": "나레",
+   "layer": "잇템로그",
+   "role": "끝",
+   "fill_hex": "#F8F017",
+   "scene": "손·제품 근접",
+   "scene_desc": "다시 문신 보이는 팔(지운 뒤)",
+   "fit": 9,
+   "max_w": 713,
+   "cut_at": []
   }
  ],
- "beats": null,
- "narr_share": null,
- "notes": [],
- "name_evidence": [],
- "_todo": [
-  "speaker",
-  "layer",
-  "role",
-  "enter",
-  "fill_hex",
-  "emph",
-  "sticker",
-  "sfx",
-  "scene",
-  "fit",
-  "beats",
-  "narr_share"
+ "beats": "훅(0~0.07 썸네일 프레임 '이거 맞아..??!' → 0.07~1.5 빨강 나레 '한국 화장품을/타투위에 바르자', 팝+글리치) → 소재1 공개(2.2~4.9 노랑 나레) → '??????' 반응(5.1) → 고조 나레(5.7~7.5) → 블러 전환 소재2(7.5~19.8: 나레 노랑+원음 흰, 손글씨 속마음, '톡' 의성어 9번, 맨살 공개) → 블러 전환 소재3(19.8~: '더 충격적인건' 이음, 원음 분홍/초록/흰 대화) → 반전(찍는 사람 '심심해보인다'·'당연하지') → 끝(나레 후일담 '바로 지웠다고 하네요', CTA 없음)",
+ "narr_share": "18/31줄, 16.80/28.47초(자막 있는 시간) · 영상 29.367초 대비 57%",
+ "notes": [
+  "자막 등장은 전부 instant(30fps 띠로 줄 시작 28곳 확인) — 예외 1줄 '타투위에 바르자'(팝 0.70→0.867 110% + 0.90~1.07 글리치). 타이핑·커서 없음 → type_cps 없음",
+  "브리프 관찰과 다름: ① 자막 채움이 흰색 고정이 아니라 화자별 색 — 나레=노랑 #F8F017, 원음=흰 #FFFFFF/분홍 #F283CA/초록 #9BFF8A, 훅 나레=빨강 #DA0009 ② 타이핑·'_' 커서·초록 빛번짐 없음 ③ 워터마크·'출처:' 줄·금색 로고 없음 — 창이 y486~1920 바닥까지 ④ 자막 y≈1249~1338(브리프 1100~1200 아님) ⑤ 제목 2줄 = 1줄 흰·2줄 전체 노랑(낱말 강조 아님) ⑥ 3D 스티커 없음",
+  "강조 낱말(줄 안 다른 색) 0줄 — 색은 줄 단위로 화자를 가른다",
+  "외곽선 = 검정 약 9px(행 스캔 중앙값 8~13), 채움 잉크 72px(Cafe24Ohsquare ≈83px 추정), 자간은 기본(폭 대조 오차 ≤2%) — 자간 열 스캔은 안 함",
+  "원음은 외국어로 보임: 자동자막 vtt 에는 한국어 나레만 잡힘. 소리를 직접 듣지 못해 목소리 성별·느낌 미확인",
+  "효과음: 뜯기 audio 받아쓰기·sfx 후보 실패 — 10ms RMS 파형만 봄. '톡' 구간 외에는 말소리와 섞여 고립 판정 못 함 → sfx null",
+  "사람 이름: 화면 글자에 이름 없음 → speaker 에 이름 미기입. '당연하지'·'??????'·'톡' 화자는 확정 못 함",
+  "font: 훅 썸네일·손글씨 줄 글꼴은 미측정(눈 판정만). '커버 안되기만 해바..' 층(잇템로그/원본박힘)은 확정 못 함",
+  "cut_at = 뜯기 cuts.times + 눈으로 본 0.067(썸네일→영상)·7.53(블러 전환)·12.333·16.9 합침"
  ],
- "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+ "name_evidence": [],
+ "_made_by": "칼카피 줄판독 워커(눈+cv2 실측, 2026-10-20)",
+ "no_caption": [
+  [
+   1.5,
+   2.2
+  ],
+  [
+   4.9,
+   5.1
+  ]
+ ],
+ "frame0": {
+  "what": "썸네일 그림 2프레임: 문신 남자 가슴+여자 손+빨간 원+'이거 맞아..??!'",
+  "face_frac": 0.1,
+  "text": "이거 맞아..??!"
+ }
 }

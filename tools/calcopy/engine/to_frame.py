@@ -703,7 +703,9 @@ def build(J: dict, frame_img: np.ndarray | None, ocr: dict | None, tail_probe=No
         lines = max(lc, key=lambda k: (lc[k], k))
         if len(lc) > 1:
             notes.append(f"자막 줄 수 {dict(lc)} → 최빈 {lines}줄 칸")
-        boxes = [c["curve"][0]["bbox"] for c in (J.get("caption_motion") or {}).get("starts") or [] if c.get("curve")]
+        # 곡선 첫 칸은 글자가 아직 안 떠 bbox None 일 수 있다(팝 등장 첫 프레임 — 스타픽룸·잇템로그 ro1l) → 첫 실측 칸을 쓴다
+        boxes = [b for c in (J.get("caption_motion") or {}).get("starts") or []
+                 for b in [next((k.get("bbox") for k in c.get("curve") or [] if k.get("bbox")), None)] if b]
         al = align_of([(b[0], b[0] + b[2]) for b in boxes], W) if boxes else {"x": W // 2, "w": W - 2 * SIDE_PAD, "align": "center"}
         ol = fxs.get("outline_px")
         ol_rgb = fxs.get("outline_rgb")

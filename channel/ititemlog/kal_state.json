@@ -64,33 +64,46 @@
    "note": "뼈대 2편 새로, 묶음 2편"
   },
   "readlines": {
-   "state": "waiting_human",
+   "state": "done",
    "sec": 0.0,
-   "at": "2026-10-20 01:11",
+   "at": "2026-10-20 08:17",
    "outputs": {
-    "pending": {
-     "ro1l3u734v4": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(3.0~3.8) speaker 미기입",
-      "줄0(3.0~3.8) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(3.8~5.1) speaker 미기입",
-      "줄1(3.8~5.1) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "aUicTeDoW04": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(2.1~2.6) speaker 미기입",
-      "줄0(2.1~2.6) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(3.3~3.7) speaker 미기입",
-      "줄1(3.3~3.7) enter 미기입(꾸밈 없으면 'instant')"
-     ]
-    }
+    "ids": [
+     "ro1l3u734v4",
+     "aUicTeDoW04"
+    ]
    },
-   "note": "줄판독 미완 2/2편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+   "note": "줄판독 2편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:18",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\ititemlog판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "waiting_human",
+   "sec": 19.2,
+   "at": "2026-10-20 08:19",
+   "outputs": {
+    "frames": [
+     "aUicTeDoW04"
+    ],
+    "errs": [
+     "ro1l3u734v4:  in boxes], W) if boxes else {\"x\": W // 2, \"w\": W - 2 * SIDE_PAD, \"align\": \"center\"}\n                    ~^^^\nTypeError: 'NoneType' object is not subscriptable\n"
+    ]
+   },
+   "note": "프리셋 손질 — frames/frame_<id>.json 을 _hand/ 로 손질(실측 근거 notes) → preset_save → 다시 실행 (견본 channel/starpickroom/preset/spr_preset.py · 자동본 C:\\숏템_칼카피\\ititemlog\\frames)"
   }
  },
  "asked": {},
  "brand": "숏템리폿",
- "n": 2,
+ "n": 6,
  "hybrid": "아니오",
  "channel": {
   "name": "잇템로그",

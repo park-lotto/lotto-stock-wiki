@@ -283,6 +283,16 @@ def real_OE11():
                  {"title": ["AI 주작 논란 터진", "아이언맨 헬멧"], "brand": "핫템리포트"})
 
 
+def test_real_ro1l_caption_curve_first_bbox_none():
+    """잇템로그 ro1l 팝 등장: 자막 곡선 첫 칸 bbox None(글자 아직 안 뜸) — 예전 판은 None[0] TypeError 로 설명서를 못 만들었다(10-20 kal copy)."""
+    import json
+    J = json.loads((_ROOT / "channel/ititemlog/뜯기/ro1l3u734v4/뜯기.json").read_text(encoding="utf-8"))
+    starts = (J.get("caption_motion") or {}).get("starts") or []
+    assert any(c.get("curve") and not c["curve"][0].get("bbox") for c in starts)   # 결함 조건이 픽스처에 실제로 있다
+    f = to_frame.build(J, None, {})
+    assert any(l.get("role") == "caption" for l in f["layers"])
+
+
 def test_real_mY_title_outline_not_background(real_mY):
     """mY 노란 2줄은 검정 띠·어두운 공연장 영상 위 — 외곽선 없음(실측 0). 예전 판은 고리=바탕 색을 12px 외곽선으로 냈다."""
     t = next(l for l in real_mY["layers"] if l.get("role") == "title")

@@ -1,0 +1,110 @@
+{
+ "name": "ititemlog판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-20) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "잇템로그",
+  "channel": "@it_item_log",
+  "analysis": "channel/ititemlog/스타일분석.md",
+  "line_reads": "channel/ititemlog/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\ititemlog\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/ititemlog/팔레트.json",
+  "rules_counted": "channel/ititemlog/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": 8.63,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 29.4,
+  "max": 30.0
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 는데요, 네요, 데요, 지 · 존댓말 0.78 · 전언 0.33 · 자수 중앙 8",
+   "원음: 어미 해바, 지네, 다, 예뻐 · 존댓말 0.0 · 전언 0.0 · 자수 중앙 9"
+  ],
+  "example": [],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 8.66
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": "instant",
+   "fx_rate": {
+    "불명": 0.6,
+    "나레": 0.1,
+    "원음": 0.0
+   },
+   "plain_rate": 0.89,
+   "by_pos": {
+    "훅": 0.62,
+    "본문": 0.04,
+    "끝": 0.0
+   },
+   "strong": [
+    "자리=본문 → enter=instant 45/45",
+    "화자=나레 → enter=instant 39/41",
+    "화자=원음 → enter=instant 17/17",
+    "역할=본문 → enter=instant 14/14",
+    "화자전환 첫 덩어리=나레 → enter=instant 13/13",
+    "자리=끝 → enter=instant 10/10",
+    "화자전환 첫 덩어리=원음 → enter=instant 9/9",
+    "자리=훅 → enter=instant 5/8",
+    "역할=다리 → enter=instant 7/7",
+    "역할=질문 → enter=instant 7/7",
+    "역할=공개 → enter=instant 5/5",
+    "역할=고조 → enter=instant 5/5",
+    "역할=이음 → enter=instant 5/5",
+    "역할=증거 → enter=instant 5/5",
+    "화자=불명 → enter=instant 4/5",
+    "화자전환 첫 덩어리=불명 → enter=instant 4/5"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
