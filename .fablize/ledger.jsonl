@@ -51,3 +51,4 @@
 {"ts": "2026-10-01T15:33:35.052788+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-10-01T15:33:35.233353+00:00", "event": "story_started", "id": "G003", "title": "기존실패분류"}
 {"ts": "2026-10-01T15:33:56.005238+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "단위 2갈래 + 실제 재실행", "verify_cmd": "py -m pytest shopping_shorts/tests/test_control_repair.py -q", "verify_evidence": "9 passed, 1 warning in 1.70s; _rerun_on_main 실제 실행 104초로 test_auto_deploy_pending을 origin/main 기존 실패로 분류"}
+{"ts": "2026-10-19T09:59:29.591871+00:00", "event": "plan_created", "brief": "관제239 여행쇼핑쇼츠", "count": 6}
