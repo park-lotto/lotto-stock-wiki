@@ -560,3 +560,24 @@ def test_rent_로컬설정은_프리셋id로_빌리고_이름목록은_관리자
     assert r.status_code == 200 and r.json()["sha256"], r.text
     assert c.post("/api/claude/rent", headers=_h(k), json={"preset": "p_0000000000", "job": "j1", "lease": lid}).json()["code"] == "not_entitled"
     assert c.post("/api/claude/rent", headers=_h(k), json={"job": "j1", "lease": lid}).json()["code"] == "bad_request"
+
+
+def test_update_새판이면_서명주소_오래된엔진도_받는다(env, tmp_path):
+    """켤 때 자동 업데이트(관제 234 5판) — 더 새 판만 주고, 엔진이 최소 판보다 낮아도 업데이트 창구는 열린다."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    assert c.get("/api/claude/update?have=1.0.0", headers=_h(k)).json()["update"] is False   # 올린 판 없음
+    z = tmp_path / "u.zip"
+    z.write_bytes(b"PK-update")
+    sha, size = cp.put_blob(z)
+    cp.update_path().parent.mkdir(parents=True, exist_ok=True)
+    cp.update_path().write_text(_json.dumps({"version": "1.0.2", "sha256": sha, "size": size}), encoding="utf-8")
+    assert c.get("/api/claude/update?have=1.0.2", headers=_h(k)).json()["update"] is False
+    env["store"].set_setting("claude_min_engine", "1.0.1")
+    old = c.get("/api/claude/update?have=1.0.0", headers=_h(k, engine="1.0.0"))
+    d = old.json()
+    assert old.status_code == 200 and d["update"] is True and d["sha256"] == sha, d
+    assert c.get("/api/claude/license", headers=_h(k, engine="1.0.0")).json()["code"] == "engine_old", "다른 창구는 그대로 막힌다"
+    got = c.get(d["url"])
+    assert got.status_code == 200 and got.content == b"PK-update"

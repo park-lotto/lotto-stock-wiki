@@ -52,7 +52,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 
 function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f.layers; }
 
-export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent } = {}) {
+export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update } = {}) {
   const FT = fontTable();
   const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
@@ -194,6 +194,14 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
         state.feedback.push(b); return send(res, 200, { ok: true, id: state.feedback.length });
       }
       // 시험 손잡이
+      // 켤 때 자동 업데이트(관제 234) — 서버 claude_portal.update_info 와 같은 꼴
+      if (u.pathname === '/api/claude/update' && req.method === 'GET') {
+        const a = auth(req, res); if (!a) return;
+        const have = u.searchParams.get('have') || '';
+        if (!update || have === update.version) return send(res, 200, { ok: true, update: false });
+        return send(res, 200, { ok: true, update: true, version: update.version, sha256: crypto.createHash('sha256').update(update.zip).digest('hex'), size: update.zip.length, url: '/__blob/update' });
+      }
+      if (u.pathname === '/__blob/update' && update) { res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': update.zip.length }); return res.end(update.zip); }
       if (u.pathname === '/__test/force_release') { for (const c of state.customers.values()) c.lease = null; return send(res, 200, { ok: true }); }
       if (u.pathname === '/__test/revoke') { const cid = +u.searchParams.get('cid'); cust(cid).revoked = true; return send(res, 200, { ok: true }); }
       return fail(res, 404, 'bad_request', '없는 경로');

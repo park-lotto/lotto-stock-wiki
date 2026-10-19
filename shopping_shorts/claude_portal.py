@@ -385,7 +385,7 @@ def _front(store, ctx, route, need_device=True):
         raise PortalError("bad_request", "기기 지문이 올바르지 않습니다 — 설치팩을 다시 확인하세요")
     want = _semver(str(_setting(store, "claude_min_engine", "1.0.0")))
     have = _semver(ctx.get("engine"))
-    if have is None or (want and have < want):
+    if route != "update" and (have is None or (want and have < want)):   # 업데이트 창구는 오래된 엔진도 들어와야 새 판을 받는다
         anomaly_check(cid, {"type": "engine_old", "route": route, **_ev(ctx)}, store=store)
         raise PortalError("engine_old", "숏템 엔진이 오래됐습니다 — 설치팩을 새로 받아 주세요")
     dev = None
@@ -819,6 +819,31 @@ def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=Non
     cid, _, dev = _front(store, ctx, "rent")
     return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store,
                        preset_id=preset_id or None)
+
+
+# ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────
+def update_path() -> Path:
+    """최신 앱(서버+엔진) 묶음 표 — tools/claude_portal/publish_update.py 가 쓴다. {version, sha256, size, notes}"""
+    return store_dir() / "updates" / "latest.json"
+
+
+def update_info(ctx: dict, have: str, store=None) -> dict:
+    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 더 새 판이 있으면 서명 받기 주소. 판단은 이 함수 하나."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, _ = _front(store, ctx, "update")
+    p = update_path()
+    if not p.is_file():
+        return {"ok": True, "update": False}
+    d = json.loads(p.read_text(encoding="utf-8"))
+    if not re.fullmatch(r"\d+\.\d+\.\d+", str(have or "")) or _semver(d["version"]) <= _semver(have):
+        return {"ok": True, "update": False, "latest": d["version"]}
+    if not (store_dir() / "assets" / d["sha256"]).is_file():
+        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", d["version"])
+        return {"ok": True, "update": False}
+    url, exp = asset_url({"sha256": d["sha256"], "id": f"update:shortem-app-{d['version']}.zip"}, cid, "update")
+    return {"ok": True, "update": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url,
+            "expires": exp, "notes": str(d.get("notes") or "")[:200]}
 
 
 def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:

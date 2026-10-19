@@ -18614,6 +18614,13 @@ def api_claude_license(request: Request):
     return _claude_json(_cp.call(_cp.license, _cp.ctx_from_request(request, _client_ip(request)), Store(DB_PATH)))
 
 
+@app.get("/api/claude/update")
+def api_claude_update(request: Request, have: str = ""):
+    """켤 때 자동 업데이트(관제 234 5판) — 판단은 claude_portal.update_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.update_info, _cp.ctx_from_request(request, _client_ip(request)), have, Store(DB_PATH)))
+
+
 @app.post("/api/claude/lease")
 async def api_claude_lease(request: Request):
     from shopping_shorts import claude_portal as _cp

@@ -21,6 +21,7 @@ import { selftest } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
+import { checkUpdate } from './updater.js';
 import { startUi, openBrowser } from './local_ui.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { readSettings, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
@@ -229,6 +230,8 @@ async function main() {
   try { sweepRented(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋 — 다음에 */ }
   const server = buildServer();
   await server.connect(new StdioServerTransport());
+  // 켤 때 새 판을 뒤에서 받아 둔다 — 바꾸기는 다음에 켤 때 연결기가(돌고 있는 파일을 안 건드린다)
+  setTimeout(() => { checkUpdate().catch(e => audit('update_fail', { result: String(e && e.message || e).slice(0, 80) })); }, 5000).unref();
 }
 
 let isMain = false;

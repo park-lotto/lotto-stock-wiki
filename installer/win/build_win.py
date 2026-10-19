@@ -465,6 +465,7 @@ def main() -> None:
     shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
     build_plugin(stage, report)
     build_mcpb(out, dist, stage, report)
+    (stage / "app_version.json").write_text(json.dumps({"version": a.version}), encoding="utf-8")   # 켤 때 자동 업데이트가 비교하는 판(관제 234)
     man = write_manifest(stage, a.version)
     report["manifest_files"] = len(man["files"])
     stage_bytes = sum(p.stat().st_size for p in stage.rglob("*") if p.is_file())

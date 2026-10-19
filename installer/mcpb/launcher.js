@@ -146,8 +146,43 @@ function runFallback(reason, home) {
   process.stdin.on('end', () => process.exit(0));
 }
 
+// 켤 때 자동 업데이트 — 바꾸기 쪽(관제 234 5판). 받기는 서버(server/updater.js)가 지난번에 <설치>/_update/<판>/ 에 풀어 두었다.
+//   서버를 띄우기 전에 server·engine 을 새 판으로 바꾼다. 하나라도 실패하면 되돌리고 그대로 예전 판으로 뜬다.
+function applyPending(home) {
+  const up = path.join(home, '_update');
+  const pend = path.join(up, 'pending.json');
+  let p;
+  try { p = JSON.parse(fs.readFileSync(pend, 'utf8')); } catch (_) { return null; }
+  if (!/^\d+\.\d+\.\d+$/.test(String(p.version)) || p.dir !== p.version) { try { fs.unlinkSync(pend); } catch (_) {} return null; }
+  const src = path.join(up, p.dir);
+  const old = path.join(up, 'old-' + Date.now());
+  const moved = [];
+  try {
+    fs.mkdirSync(old, { recursive: true });
+    for (const d of ['server', 'engine']) {
+      if (!fs.existsSync(path.join(src, d))) throw new Error('덜 찬 업데이트: ' + d);
+      if (fs.existsSync(path.join(home, d))) { fs.renameSync(path.join(home, d), path.join(old, d)); moved.push(d); }
+      // 서버 node_modules 는 묶음에 있다(빌드가 만든 server/ 통째)
+      fs.renameSync(path.join(src, d), path.join(home, d));
+    }
+    fs.copyFileSync(path.join(src, 'app_version.json'), path.join(home, 'app_version.json'));
+    fs.unlinkSync(pend);
+    fs.rmSync(src, { recursive: true, force: true });
+    try { fs.rmSync(old, { recursive: true, force: true }); } catch (_) { /* 다음에 */ }
+    return p.version;
+  } catch (e) {
+    for (const d of moved) {                      // 되돌리기
+      try { fs.rmSync(path.join(home, d), { recursive: true, force: true }); fs.renameSync(path.join(old, d), path.join(home, d)); } catch (_) {}
+    }
+    try { fs.unlinkSync(pend); } catch (_) {}
+    process.stderr.write('[숏템] 업데이트 적용 실패 — 예전 판으로 시작합니다: ' + e.message + '\n');
+    return null;
+  }
+}
+
 function main() {
   const home = installHome();
+  if (!process.argv.includes('--where') && fs.existsSync(path.join(home, '_update', 'pending.json'))) applyPending(home);
   if (process.argv.includes('--where')) {
     process.stdout.write(JSON.stringify({ home, node: nodeExe(home), problem: problem(home) }) + '\n');
     return;
@@ -157,4 +192,5 @@ function main() {
   else runServer(home);
 }
 
-main();
+if (require.main === module) main();
+else module.exports = { applyPending, installHome };   // 시험(shortem_client/test/update.test.js)이 바꾸기만 부른다
