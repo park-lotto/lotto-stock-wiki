@@ -276,6 +276,8 @@ def step_source(topic, ctx: Ctx) -> dict:
         q = " ".join(TF.core_terms(topic.get("name") or "")[:3]) or q
     elif src.get("kind") == "해외원본" and src.get("id"):   # 해외 원본 채널에서 터진 편 = 그 편이 곧 재료(자막 없는 원본, 관제 234)
         q = f"id:{src['id']}"
+    elif src.get("kind") == "참고영상" and src.get("url"):  # 고객이 준 인스타·틱톡 등 영상 = 그 영상이 재료(받기는 media_download, 관제 234)
+        q = f"url:{src['url']}"
     if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
         from tools.calcopy.engine import worker_ledger as L
         L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
@@ -288,7 +290,7 @@ def step_source(topic, ctx: Ctx) -> dict:
     if rc != 2 or "재료_뼈대.json" not in arts:
         raise StepError(f"재료 후보 모드 rc={rc}(기대 2) — {tail[-300:]}", arts)
     vids = sorted(cand.glob("v_*.mp4")) + sorted(out.glob("v_*.mp4"))
-    rights = {v.name: "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)" for v in vids}
+    rights = {v.name: ("고객이 준 참고 영상(사용 전 사람 확인)" if q.startswith("url:") else "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)") for v in vids}
     if not rights:   # ★초안보다 먼저 — 10-19 실측: 후보 0 시도가 빈 재료.json 을 남겨, 다음 시도가 원본을 받아도 빈 초안으로 계획이 죽었다
         raise StepError("재료 후보 영상 0개 — 출처(rights)를 적을 재료가 없다", arts)
     hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)

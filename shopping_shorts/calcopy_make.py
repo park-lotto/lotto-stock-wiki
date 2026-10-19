@@ -433,6 +433,8 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
             f2, title = (deps.get("ref_facts") or ref_facts)(ref_url)
             facts = {**f2, **facts}
             src = {"via": "참고 URL", "url": ref_url}
+            if not is_youtube(ref_url):
+                src["kind"] = "참고영상"      # 유튜브 밖은 검색할 곳이 없다 — 그 영상이 곧 재료(worker_steps.step_source)
             topic = topic or title
         if facts:
             src["facts_n"] = len(facts)
@@ -622,12 +624,29 @@ def _start_reuse(S: dict, src_id: int, data_dir, deps) -> dict:
     return choose(S["sid"], 1, data_dir=data_dir, deps=deps)
 
 
+def is_youtube(url: str) -> bool:
+    return bool(re.search(r"(?:youtube\.com/(?:shorts/|watch\?v=)|youtu\.be/)[\w-]{11}", url or ""))
+
+
+def _ref_facts_other(url: str) -> tuple[dict, str]:
+    """유튜브 밖 참고 영상 → 근거(제목·채널·통계). 읽기 = media_download.probe_grab_meta(고객 PC 는 고객 로그인 쿠키)."""
+    from shopping_shorts import media_download as MD
+    d = MD.probe_grab_meta(url)
+    if not d.get("title"):
+        raise MakeError(f"참고 영상을 못 읽음(계정 연결이 필요할 수 있다): {url}")
+    facts = {"r1": {"text": f"(참고 영상 글) {str(d['title'])[:300]}", "url": url}}
+    stats = ", ".join(f"{k} {d[k]}" for k in ("views", "likes", "comments") if d.get(k) is not None)
+    if d.get("channel") or stats:
+        facts["r2"] = {"text": f"(참고 영상 정보) 올린 곳 {d.get('channel') or '-'} · {stats}".strip(" ·"), "url": url}
+    return facts, str(d["title"]).splitlines()[0][:80]
+
+
 def ref_facts(url: str) -> tuple[dict, str]:
     """참고 영상 → 근거(제목·설명·댓글 상위). 받아쓰기는 아직 안 붙였다(무료 받아쓰기 도구 연결은 다음 단계)."""
     from tools.calcopy.engine import topic_find as TF
     vid = re.search(r"(?:shorts/|v=|youtu\.be/)([\w-]{11})", url)
-    if not vid:
-        raise MakeError(f"유튜브 영상 주소가 아니다: {url}")
+    if not vid:                                         # 인스타·틱톡·쓰레드 등 — 숏템메이커와 같은 받기 주인(media_download)이 읽는다(관제 234)
+        return _ref_facts_other(url)
     d = TF.yt_detail(vid.group(1), 30)
     if d.get("failed"):
         raise MakeError(f"참고 영상 못 읽음: {d['failed'][:200]}")

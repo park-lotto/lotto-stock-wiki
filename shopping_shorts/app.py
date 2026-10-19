@@ -19286,30 +19286,7 @@ def _serve_grab_extension():
 # (2026-07-18) 렌즈 Apify 검색은 유료·개수제한, 네이티브 검색은 무료·무제한이지만 담을 때
 # 번거롭다는 제보. 해결=플랫폼 영상 페이지에서 북마클릿(무설치) 또는 유저스크립트(카드버튼)로
 # 한 번 눌러 URL·썸네일·제목을 우리 서버로 보내 담는다. 다운로드는 제작소에서 yt-dlp(무료).
-_GRAB_DOMAINS = [
-    ("youtube", ("youtube.com", "youtu.be")),
-    ("tiktok", ("tiktok.com",)),
-    ("instagram", ("instagram.com",)),
-    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote.com")),
-    ("douyin", ("douyin.com", "iesdouyin.com")),
-    ("threads", ("threads.com", "threads.net")),
-    # 핀터레스트(2026-09-11 고객 "담기 버튼이 없다") — 다운로드는 media_download._download_pinterest
-    # ★2026-09-24 고객 "담기가 안 된다": `pinterest.com`만 알아봐서 **앱 공유 링크(pin.it)**와
-    #   나라별 주소(pinterest.co.kr·.jp 등)가 통째로 막혔다. 휴대폰 공유 버튼이 주는 기본 주소가 pin.it이다.
-    ("pinterest", ("pinterest.com", "pin.it", "pinterest.co.kr", "pinterest.co.uk",
-                   "pinterest.jp", "pinterest.ca", "pinterest.de", "pinterest.fr",
-                   "pinterest.es", "pinterest.it", "pinterest.ph", "pinterest.at",
-                   "pinterest.ch", "pinterest.cl", "pinterest.dk", "pinterest.ie",
-                   "pinterest.nz", "pinterest.pt", "pinterest.se", "pinterest.ru")),
-]
-
-
-def _grab_platform(url):
-    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
-    for name, doms in _GRAB_DOMAINS:
-        if any(host == d or host.endswith("." + d) for d in doms):
-            return name
-    return ""
+from shopping_shorts.grab_domains import _GRAB_DOMAINS, _grab_platform  # noqa: E402  ★목록 주인은 grab_domains 한 곳(관제 234)
 
 
 def _grab_platform_of(url):
