@@ -1,0 +1,2952 @@
+{
+ "url": "https://www.yeogi.com/domestic-accommodations/7061",
+ "detail": {
+  "site": "yeogi",
+  "site_name": "여기어때",
+  "kind": "stay",
+  "id": "7061",
+  "url": "https://www.yeogi.com/domestic-accommodations/7061",
+  "name": "네스트호텔 인천",
+  "grade": "5성급",
+  "address": "인천 영종구 운서동 2877",
+  "price_from": 183000,
+  "rating": 9.6,
+  "review_count": 4226,
+  "facilities": [
+   "피트니스",
+   "수영장",
+   "미니바",
+   "사우나",
+   "무선인터넷",
+   "욕실용품",
+   "레스토랑",
+   "금연",
+   "TV",
+   "라운지",
+   "무료주차",
+   "카페",
+   "드라이기",
+   "장애인편의",
+   "스프링클러",
+   "야외수영장"
+  ],
+  "photos": [
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/e1/e12d29cca9674c69a6b3054329f10c4b.jpg",
+    "label": "대표 사진"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/38/3808bf05fc7b4e8681b9aabae93dd11f.jpg",
+    "label": null
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/79/79253f83613641868b2486d6db280e68.jpg",
+    "label": null
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/bb/bbf18b879a5c407c91509113f16d9b15.jpg",
+    "label": null
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/cd/cd7d95e9c7db47eab10aa99ca07e0a75.jpg",
+    "label": null
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/09/18/97/97852a71bc194d3486973c32f0b83767.jpg",
+    "label": null
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/02/26/f9/f944e8c5b04d485e964cc2eb6abd1720.JPG",
+    "label": "전경"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/05/20/6d/6d6c8c14043b486eb2c4637f7c0bc2c1.jpg",
+    "label": "전경"
+   },
+   {
+    "url": "https://image.withstatic.com/297/451/158/5e3f7605d682490ca4d960abc2f2df39.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/145/336/281/e88b2a51a46441908011e81a81e93dca.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/400/30/97/33c41ba018cb4f9f9b9d88a83f4abef9.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/228/273/50/9717e3045cd844caaa5adc5dec2b3de1.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/483/167/246/585d6463cb57455c8f8f6e931f42d1bb.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/120/52/396/fd5bbd1dc52441ad97068160802d032f.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/36/400/166/4dce9cf8ba4543ad9890384b4102eeba.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/59/212/222/d1bb3c7c5d044b30a043d121efbb8c10.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/341/232/145/a68b52e9879a44bd8cae825f7cf589c0.jpg",
+    "label": "레스토랑"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/05/20/d8/d886e5996ce849f498be50332c5322b8.jpg",
+    "label": "레스토랑"
+   },
+   {
+    "url": "https://image.withstatic.com/148/491/40/6b422f9d86574f03be50f975c25864f2.jpg",
+    "label": "라운지"
+   },
+   {
+    "url": "https://image.withstatic.com/405/358/324/a238be2971b04d1f85d9e94b6aa083fc.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/20/125/220/fa7b1b507f9446aea33e79cec2cd3478.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/177/240/373/f006220ae37f4208a60721d899a9d442.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/284/20/277/d157f63d04a446b4bf6d77ed44b181a4.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/219/313/285/192fca1301bb419a9a37b6685cb57378.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/483/118/490/be90f39c51ff4d9ba896fa5842d24d0b.jpg",
+    "label": "로비"
+   },
+   {
+    "url": "https://image.withstatic.com/209/378/231/43c28fbea3a0413b8c79753a04ec6756.jpg",
+    "label": "로비"
+   },
+   {
+    "url": "https://image.withstatic.com/472/467/93/2d1119e47f5a4513b5d69be503ba0e8b.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/22/296/65/08728d7fbb62462db59ddb85a6b1b19b.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/120/220/371/57528928b6654d948d01422031374e1f.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/41/150/1/6bedd73a29924992aeba1b4082c13911.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/60/193/104/c21fe00069074c8aaa62155761b07bf0.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/362/53/458/4e80da7b899742de8f41862d9a4f3e32.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/432/494/278/09827d6494814edfb5439701ddc2b126.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/469/382/195/b785c69a6e54460bae1ad0ea7203eee9.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/336/350/336/a66383bd95cb408fa4011af2a278c483.jpg",
+    "label": "객실",
+    "room": "스탠다드 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/66/144/112/896c9db257ca416d910d6eeb491d240b.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/135/25/137/b38e4b031916439e9930f7172d694aa9.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/384/254/47/d7742030c61b4922a7da36cc44d73790.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/99/3/171/86f5f157c4084b1c84f4d822066c99d9.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/265/321/320/d5b4218994ee4761ac73422414dd1037.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/232/316/75/aeebff146e3447009913fa93d617e184.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/103/369/101/916cb97c138640d1b4acf7aca539a1ea.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/451/427/390/e7593703507543c38521bca539bf9e48.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/156/105/176/a2e46ab4864e444eb17f99168a003d2c.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/374/279/241/8ea988cff3d4402c95ea6a65f90ee9b6.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (마운틴뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/245/343/453/3ed709ea6f964be7a15db5d8ae9ee6d7.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (마운틴뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/199/278/50/f90ff077e7f3497291cfa20f01a60d47.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (마운틴뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/406/65/36/c7ca57db5e8644d9b96676a82398e637.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (마운틴뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/102/376/303/ea3207fb03374b6490fb2cd9829c1c1f.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/439/127/421/43bfc283b9c149c3a1da40d3ff41e66f.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/332/242/21/a1545a8d02894352bf15f0acf1be1c27.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/231/352/270/e1226607046247c4a7d33baac0d2a7a1.jpg",
+    "label": "객실",
+    "room": "스탠다드 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/499/401/429/a44c8a2318fb411eaff87136806a80af.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/382/372/42/216132ff0e9a4d4d83bfd3589bcb1311.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/178/175/300/b6750f5213964b6784316d9641cd4279.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/498/452/457/89890cab708d4994bf78495a7c3559c0.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/393/484/458/b49f1f6164794578977cbd3c701b3472.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/292/200/230/239b60e06bd04f3d8659539b75b2c32c.jpg",
+    "label": "객실",
+    "room": "슈페리어 [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/388/18/252/0ecbfa20a78f4f128ae1962f4dd4857c.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/453/140/182/055bd4d1a9b444e8bd4001d2cebf7296.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/142/163/152/591f640f20bc4ed7be00e0e2eab8f327.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/22/462/53/aad02d0f96c2456baa578577959ad3d9.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/161/128/329/5bffc45a80f541a8a049d4732dca1adb.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/40/419/108/814e17f833084a7c8b89251a1cd8ba86.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/340/238/143/af5f253494ed453fbe7e5072018cb323.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/56/45/468/63b4e6286bb648aebe26b165fe009275.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (오션뷰) [9~10월] [수영장 2인+애프터눈티세트]"
+   },
+   {
+    "url": "https://image.withstatic.com/371/72/181/2aa82f5387364f38bcdda97dd779766b.jpg",
+    "label": "객실",
+    "room": "리드 스위트"
+   },
+   {
+    "url": "https://image.withstatic.com/78/339/397/6bfc67965aff44d3b888e223310a364e.jpg",
+    "label": "객실",
+    "room": "리드 스위트"
+   },
+   {
+    "url": "https://image.withstatic.com/493/466/471/877efa2a979b4652bcb676f33f738cc9.jpg",
+    "label": "객실",
+    "room": "리드 스위트"
+   },
+   {
+    "url": "https://image.withstatic.com/346/377/149/c1d4c12b6ac640ae8a683178db815e33.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/400/31/261/561ca69492fc42878cf414c4ec9a4f6f.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/250/464/309/3961d0828fc04094970cf4ba866e3be3.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(마운틴뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/142/17/413/8f2618ab1d5c4ac5a21cbe3f64593a9e.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/317/373/183/31cc22fa4c8540d5a50e6768ecdc169c.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/300/223/217/f23c0f346ff2402791b50dcc6ae1b422.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/77/492/364/a522e7550daf4e74b7ca66a7c2f00c12.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/483/17/45/d26d7c77a3344005b487ff3169452125.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 벙커룸(오션뷰)"
+   }
+  ],
+  "source_label": "출처: 여기어때",
+  "fetched_at": 1792405667,
+  "story_facts": {
+   "intro": "국내 최초 Design Hotels 멤버로서 국내에서 보기 드문 독창적인 디자인 호텔입니다 사계절 인피니티 풀이 운영되며, 계절에 따른 온수 풀 운영으로 인피니트 풀에서 최고의 저녁노을을 감상할 수 있습니다 일출, 일몰을 감상할 수 있는 전 객실 발코니 객실, 파노라믹 뷰를 자랑하는 레스토랑과 로비에서 서해의 아름다운 자연경관을 감상할 수 있습니다",
+   "faq": [
+    {
+     "q": "네스트호텔 인천 조식 시간과 가격이 궁금해요.",
+     "a": "조식은 플라츠 레스토랑에서 06:30부터 10:30까지 이용 가능합니다. 사전 예약 시 성인 45,000원이며, 36개월 미만 영유아는 무료로 제공됩니다."
+    },
+    {
+     "q": "네스트호텔 인천 수영장은 사계절 온수풀인가요?",
+     "a": "네, 네스트호텔 인천의 스트란트 야외 수영장은 365일 온수풀로 운영됩니다. 계절에 따라 온도가 조절되어 사계절 내내 따뜻하게 물놀이를 즐길 수 있습니다."
+    },
+    {
+     "q": "네스트호텔 인천에 반려동물과 함께 투숙할 수 있나요?",
+     "a": "아니요, 불가능합니다. 네스트호텔 인천은 고객의 편안하고 위생적인 휴식을 위해 반려동물의 출입 및 동반 투숙을 허용하지 않고 있습니다."
+    },
+    {
+     "q": "네스트호텔 인천 수영장 이용 시간은 어떻게 되나요?",
+     "a": "네스트호텔 인천 스트란트 야외 수영장은 시즌별로 운영 시간이 다릅니다. 예를 들어 블루시즌(9~10월)은 평일 14:00~22:00, 주말 및 공휴일은 09:00~13:00 및 14:00~22:00에 운영됩니다."
+    },
+    {
+     "q": "네스트호텔 인천은 공항 셔틀버스를 운행하나요?",
+     "a": "네, 운행합니다. 네스트호텔 인천은 인천국제공항 제1여객터미널 1층 14C, 제2여객터미널 1층 8A 게이트에서 무료 셔틀버스를 이용할 수 있습니다."
+    },
+    {
+     "q": "네스트호텔 인천 주차는 무료인가요?",
+     "a": "네, 네스트호텔 인천은 투숙객에게 무료 주차를 제공합니다. 주차 공간은 호텔 사정에 따라 변동될 수 있으니 참고 바랍니다."
+    },
+    {
+     "q": "네스트호텔 인천에서 가까운 해변이 있나요?",
+     "a": "네, 있습니다. 네스트호텔 인천에서 마시안해변은 차량으로 5분, 을왕리해수욕장은 차량으로 15분 거리에 위치해 있어 바다를 즐기기 좋습니다."
+    },
+    {
+     "q": "네스트호텔 인천에 오션뷰 객실이 있나요?",
+     "a": "네, 오션뷰 객실이 있습니다. 네스트호텔 인천은 서해의 아름다운 전망을 감상할 수 있는 오션뷰 객실과 마운틴뷰 객실을 모두 보유하고 있습니다."
+    },
+    {
+     "q": "네스트호텔 인천 체크인, 체크아웃 시간은 언제인가요?",
+     "a": "네스트호텔 인천의 체크인 시간은 15:00, 체크아웃 시간은 11:00입니다. 얼리 체크인과 레이트 체크아웃은 규정에 따라 추가 요금 발생 시 가능합니다."
+    },
+    {
+     "q": "네스트호텔 인천 객실에 엑스트라 베드 추가가 가능한가요?",
+     "a": "네, 일부 객실에 한해 가능합니다. 네스트호텔 인천의 엑스트라 베드 추가 비용은 1인 60,000원이며, 객실 타입에 따라 추가 가능 여부가 다릅니다."
+    }
+   ],
+   "reviews": [
+    "'국내 최초 디자인 호텔스 멤버 5성급 호텔에서 호캉스' [정보] • 체크인 : 15:00 • 체크아웃 : 11:00 • 주차 : 야외 주차장 (주말엔 협소) [위치] 인천 영종도 용유역 근처에 위치해 있으나 자차나 셔틀버스를 이용해 방문하기 편한 곳으로 근처에 자기부상열차역과 산책로가 있어 바다 풍경을 즐기며 휴식하기 좋습니다. [가격] 성수기 여름휴가 시즌이라 30-40만원이었지만 평일 얼리버드나 패키지 상품을 잘 활용하면 5성급 디자인 호텔 대비 합리적인 ",
+    "무더운 여름에 지쳐 호캉스를 위해 서울과 가깝고 평이 좋았던 네스트호텔에 드디어 가봤습니다. 호텔 들어가는 도로변부터 차량들이 있던데 네스트 호텔은 주차장이 지하에는 없고 모두 야외 주차장이었습니다. 도로변에 두신 분들은 정해진 주자장보다 호텔 정문과 가까워서 그곳에 하신 걸까요? 아무튼 지정 주차장이 여러 곳에 있었는데 제가 도착한 오후 4시에 이미 거의 만차였습니다. 그래도 빠지는 차량도 많아 주차하는데 오래 걸리지는 않았습니다. 로비층에 체크인을 위해 웨이",
+    "올해 4월에 방문했을때 너무잘지냈던 기억이남아서 다시한번방문했네요 1박만하려고했다가 아쉬울거같아서 1박더했네요 디럭스 더블 오션뷰로 예약했습니다 침대에 누워서 바다를바라볼수있는 오션뷰 방도 넓고 들어오자마자 확트인 바다를볼수있어서 너무좋습니다 신상호텔은 아니지만 관리를 잘해서 깨끗하고 직원들도 친절해서 불편한것없이 잘쉬고왔습니다 산책로도 잘되어있어 신책하기좋았고 수영장은 유명이유가있습니다 수영장은 필수인거같아요^^ 다음에 쉼이 필요할때 재방문 예정입니다",
+    "🏨버블타임의 즐거움과 직원들의 친절이 기억에 남는 네스트호텔 ⭐️⭐️⭐️⭐️ 5성급 호텔 중 비교적 부담 없이 머물 수 있는 가격대와 감각적인 공간이 마음에 들어, 오래전부터 방문하고 싶었던 네스트호텔에 드디어 다녀왔습니다! 직접 머물러본 소감은 ‘완벽한 럭셔리보다는, 합리적인 가격으로 수영과 객실에서의 휴식을 함께 즐기기 좋은 호텔’이었습니다. 🙇‍♂️첫인상은 체크인 때부터 좋았습니다. 직원분들이 아주 친절하게 맞아주셨고, 토요일 입실이었는데도 예약한 스탠다드",
+    "✏️가족단위의 한국스러운 호캉스에 적합한 호텔 🚗4월 25~26일, 자차를 이용하여 1박한 후기입니다. 🏷️ 스탠다드더블(오션뷰타입), 쿠폰사용하여 29만원->16만원대 예약 #영종도호텔 #인천호캉스 #영종도호캉스 ✅ 위치 - 인천공항 1터미널까지 차량15분(*버스20분) - 인스파이어리조트 15분/파라다이스시티 8분 티원홈그라운드가 인스파이어 아레나에서 열렸으나, 인스파이어에 비해 숙소가 1/2가격이라 선택했습니다. 자차이용객이라면 꽤 가성비 있는 선택. 지하"
+   ]
+  }
+ },
+ "judged": [
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\00.jpg",
+   "kind": "exterior",
+   "has_text": true,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "해 질 녘 노을이 비치는 호텔 건물 외관",
+   "desc_en": "Exterior view of the hotel building during sunset",
+   "no": 1
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\01.jpg",
+   "kind": "exterior",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "넓은 잔디밭과 함께 보이는 호텔 외관",
+   "desc_en": "Hotel exterior with a wide lawn",
+   "no": 2
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\02.jpg",
+   "kind": "view",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "통창 너머로 보이는 정원과 바닷가 풍경",
+   "desc_en": "View of the garden and seaside through floor-to-ceiling windows",
+   "no": 3
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\03.jpg",
+   "kind": "view",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "큰 창문을 통해 내려다보는 탁 트인 바다 전망",
+   "desc_en": "Open sea view through large windows",
+   "no": 4
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\04.jpg",
+   "kind": "exterior",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "노을 지는 하늘 아래 갈대밭과 호텔 외관",
+   "desc_en": "Reeds and hotel exterior under the sunset sky",
+   "no": 5
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\05.jpg",
+   "kind": "water",
+   "has_text": true,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "노을이 반사되는 인피니티 풀과 수변 풍경",
+   "desc_en": "Infinity pool reflecting the sunset and surrounding landscape",
+   "no": 6
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\06.jpg",
+   "kind": "view",
+   "has_text": true,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "바닷가로 이어지는 산책로와 이정표",
+   "desc_en": "Walking path leading to the beach with signage",
+   "no": 7
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\07.jpg",
+   "kind": "exterior",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "밤에 조명이 켜진 야외 잔디밭과 통유리 건물의 모습입니다.",
+   "desc_en": "An outdoor lawn illuminated at night next to a building with floor-to-ceiling windows.",
+   "no": 8,
+   "visible": [
+    "잔디밭",
+    "조명",
+    "통유리 건물",
+    "콘크리트 건물",
+    "계단",
+    "나무",
+    "도로",
+    "하늘"
+   ],
+   "time_of_day": "밤",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\08.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "창밖 전망이 보이는 호텔 조식당 실내",
+   "desc_en": "Interior of the hotel breakfast restaurant with a view",
+   "no": 9
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\09.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "정면으로 큰 창이 나 있는 식당 내부",
+   "desc_en": "Inside the restaurant with large front windows",
+   "no": 10
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\10.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "바 좌석과 선반이 있는 식당 내부",
+   "desc_en": "Interior of the restaurant with a bar and shelves",
+   "no": 11
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\11.jpg",
+   "kind": "water",
+   "has_text": true,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "야외 수영장과 더 스트랜드 로고",
+   "desc_en": "Outdoor pool and The Strand logo",
+   "no": 12
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\12.jpg",
+   "kind": "water",
+   "has_text": true,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "야외 수영장과 바다 풍경 그리고 더 스트랜드 로고",
+   "desc_en": "Outdoor swimming pool with ocean view and The Strand logo",
+   "no": 13
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\13.jpg",
+   "kind": "water",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "바다와 맞닿은 듯한 인피니티 풀과 작은 온수 풀이 있는 야외 수영장입니다.",
+   "desc_en": "An outdoor swimming pool featuring an infinity pool overlooking the sea and a smaller hot spring pool.",
+   "no": 14,
+   "visible": [
+    "인피니티 풀",
+    "온수 풀",
+    "수영장 사다리",
+    "안전요원 의자",
+    "선베드",
+    "나무",
+    "바다",
+    "해안가",
+    "건물"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\14.jpg",
+   "kind": "water",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "바다를 마주하고 있는 야외 수영장과 선베드가 일렬로 배치되어 있습니다.",
+   "desc_en": "An outdoor swimming pool facing the sea with sun loungers arranged in a row.",
+   "no": 15,
+   "visible": [
+    "수영장",
+    "선베드",
+    "건물",
+    "유리창",
+    "바다",
+    "나무",
+    "난간",
+    "하늘",
+    "태양"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\15.jpg",
+   "kind": "onsen",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "나무로 마감된 실내 사우나 공간",
+   "desc_en": "Wooden-finished indoor sauna area",
+   "no": 16
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\16.jpg",
+   "kind": "view",
+   "has_text": false,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "통창 너머로 호수와 정원이 보이는 넓고 현대적인 로비 공간입니다.",
+   "desc_en": "A spacious, modern lobby area with a view of a lake and garden through floor-to-ceiling windows.",
+   "no": 17,
+   "visible": [
+    "통창",
+    "소파",
+    "테이블",
+    "화분",
+    "이젤",
+    "선반",
+    "카펫",
+    "안내판"
+   ],
+   "time_of_day": "해질녘",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\17.jpg",
+   "kind": "lobby",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "높은 층고의 현대적인 로비와 라운지",
+   "desc_en": "Modern lobby and lounge with high ceilings",
+   "no": 18
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\18.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "바다가 보이는 창문 옆에 침대가 배치된 객실입니다.",
+   "desc_en": "A room with a bed placed next to a window overlooking the sea.",
+   "no": 19,
+   "visible": [
+    "침대",
+    "이불",
+    "베개",
+    "창문",
+    "커튼",
+    "조명",
+    "벽",
+    "바다",
+    "나무",
+    "테이블",
+    "티슈 케이스"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\19.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "창가에 침대가 배치되어 있고, 책상과 일체형으로 연결된 소파가 놓여 있는 현대적인 객실이다.",
+   "desc_en": "A modern guest room with a bed placed by the window and a sofa integrated with a desk.",
+   "no": 20,
+   "visible": [
+    "침대",
+    "소파",
+    "책상",
+    "의자",
+    "탁자",
+    "커튼",
+    "텔레비전",
+    "조명",
+    "전화기",
+    "휴지통",
+    "카펫"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\20.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "넓은 창이 있는 더블 침대 객실",
+   "desc_en": "Double bed room with a large window",
+   "no": 21
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\21.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "트윈 베드가 놓인 밝은 객실",
+   "desc_en": "Bright guest room with twin beds",
+   "no": 22
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\22.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "거실과 침실이 분리된 구조의 객실",
+   "desc_en": "Guest room with a separate living and sleeping area",
+   "no": 23
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\23.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "침대와 식탁이 있는 객실 구조",
+   "desc_en": "Guest room layout with a bed and dining table",
+   "no": 24
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\24.jpg",
+   "kind": "bath",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "창밖으로 풍경이 보이는 욕조와 거울이 설치된 현대적인 인테리어의 욕실 겸 거실 공간입니다.",
+   "desc_en": "A modern bathroom and living space featuring a bathtub with a scenic view through the window and a large mirror.",
+   "no": 25,
+   "visible": [
+    "욕조",
+    "거울",
+    "세면대 선반",
+    "수건",
+    "스툴",
+    "소파",
+    "창문",
+    "커튼",
+    "욕조 트레이",
+    "욕실 용품"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\25.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "거실 공간의 소파와 수납장이 있는 객실 내부",
+   "desc_en": "Room interior featuring a sofa and storage cabinet",
+   "no": 26
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\26.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "트윈 베드가 놓인 깔끔한 호텔 객실과 창밖 풍경",
+   "desc_en": "Neat hotel room with twin beds and a view out the window",
+   "no": 27
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\27.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "저녁 시간에 조명이 켜진 트윈 베드 객실",
+   "desc_en": "Twin bed room illuminated with lighting in the evening",
+   "no": 28
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\28.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "침대 옆 통유리 창으로 보이는 풍경",
+   "desc_en": "View through the floor-to-ceiling window next to the bed",
+   "no": 29
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\photos\\29.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "침대와 벽걸이 TV가 있는 객실 내부",
+   "desc_en": "Room interior with bed and wall-mounted TV",
+   "no": 30
+  }
+ ],
+ "picks": [
+  14,
+  15,
+  17,
+  19,
+  8,
+  20,
+  25
+ ],
+ "short": {},
+ "rep": {
+  "url": "https://www.yeogi.com/domestic-accommodations/7061",
+  "steps": {
+   "상세": 0.5,
+   "사진 받기 30장": 5.7,
+   "사진 판정": 48.4,
+   "세로 화면": 0.8,
+   "대본": 106.2,
+   "원본 재설명": 32.6
+  }
+ },
+ "frames": [
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_0.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_1.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_2.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_3.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_4.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_5.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\b932b66b-0406-4ca3-9a6a-97c15e091324\\scratchpad\\tv_nest\\start_6.png",
+   "mode": "crop"
+  }
+ ],
+ "script": {
+  "chosen": {
+   "type": "오해형 (고쳐 씀)",
+   "lines": [
+    "엄마가 풀 보자마자 여기 해외냐고 묻는데",
+    "예전엔 창밖이 주차장이라 커튼도 안 열던 엄마가",
+    "통창 너머 비행기 뜨니까 여권부터 찾아요.",
+    "근데 여기가 온수라 엄마가 먼저 들어갔는데",
+    "여기가 대박인 게 밤 잔디가 환해서 산책 나가요.",
+    "심지어 욕조에 누운 엄마가 비행기 값 굳었다니까",
+    "엄마처럼 속고 싶으면 댓글에 '해외아님' 남겨요."
+   ],
+   "order": [
+    2,
+    4,
+    3,
+    1,
+    5,
+    7,
+    6
+   ]
+  },
+  "versions": [
+   {
+    "type": "혼남 사건형",
+    "story": "남편이 새벽마다 선베드 맡는 데 질려서 호캉스라면 질색하는 사람이라, 바다 앞 수영장 있는 숙소를 몰래 예약했다가 등짝 맞을 뻔했어요. 근데 로비 들어서자마자 말이 없어지더니 누워도 바다가 보이는 방에서는 폰을 내려놓고, 창가 욕조에 들어가서는 나올 생각을 안 하는 거 있죠. 심지어 밤 잔디밭에서는 남편이 먼저 또 오자고 하더라고요.",
+    "lines": [
+     "이 수영장 때문에 남편한테 등짝 맞을 뻔했어요.",
+     "남편이 새벽 선베드 맡기에 질린 사람이라",
+     "로비 들어서자마자 말이 없어지더라고요.",
+     "근데 이 방이 누워도 바다라 폰을 놓는 거예요.",
+     "여기가 대박인 게 창가 욕조라 안 나오는 거 있죠.",
+     "심지어 밤 잔디밭에서 먼저 또 오자잖아요.",
+     "이 방 궁금하면 댓글에 '등짝' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     3,
+     4,
+     7,
+     5,
+     6
+    ]
+   },
+   {
+    "type": "오해형",
+    "story": "엄마가 이 풀을 보더니 여기 해외냐고 묻는 거예요. 여행만 가면 방에서 눕기만 하던 엄마가 로비 통창 너머 비행기를 보고 또 해외냐고 하더니, 늘 온수라 먼저 물에 들어가고 밤에는 환한 잔디밭으로 산책까지 나가요. 심지어 욕조에 앉아서는 해외 갈 필요 없다는 거 있죠.",
+    "lines": [
+     "엄마가 이 풀 보더니 해외냐고 묻는 거예요.",
+     "엄마는 여행 가면 방에서 눕기만 했는데",
+     "통창 너머 비행기 보고 또 해외냐는 거 있죠.",
+     "근데 여기가 늘 온수라 엄마가 먼저 들어가요.",
+     "여기가 대박인 게 밤 잔디가 환해서 산책 나가요.",
+     "심지어 욕조에서 엄마가 해외 필요 없대요.",
+     "이 방 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ],
+    "order": [
+     2,
+     4,
+     3,
+     1,
+     5,
+     7,
+     6
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "story": "애들이랑 여행 가면 방에서도 수영장 선베드에서도 폰만 봐서 고생했거든요. 근데 여기서는 로비 통창에 붙어서 비행기를 세고, 늘 온수인 풀에서 폰을 잊고, 발코니로 일출 보겠다고 스스로 일어나더라고요. 심지어 밤 잔디밭에서는 폰 없이 뛰어다니는 거 있죠.",
+    "lines": [
+     "애들이랑 여행 가면 방에서 폰만 봐서 고생했는데",
+     "수영장에서도 선베드에 누워 폰만 봤거든요.",
+     "로비 통창에 붙어 비행기를 세는 거예요.",
+     "근데 여기가 온수 풀이라 애들이 폰을 잊더라고요.",
+     "여기가 대박인 게 발코니라 일출 보러 깨요.",
+     "심지어 밤 잔디밭에선 폰 없이 뛰는 거 있죠.",
+     "이 욕조 궁금하면 '폰내려놔' 남겨 주세요."
+    ],
+    "order": [
+     6,
+     2,
+     3,
+     1,
+     4,
+     5,
+     7
+    ]
+   },
+   {
+    "type": "오해형 (고쳐 씀)",
+    "lines": [
+     "엄마가 풀 보자마자 여기 해외냐고 묻는데",
+     "예전엔 창밖이 주차장이라 커튼도 안 열던 엄마가",
+     "통창 너머 비행기 뜨니까 여권부터 찾아요.",
+     "근데 여기가 온수라 엄마가 먼저 들어갔는데",
+     "여기가 대박인 게 밤 잔디가 환해서 산책 나가요.",
+     "심지어 욕조에 누운 엄마가 비행기 값 굳었다니까",
+     "엄마처럼 속고 싶으면 댓글에 '해외아님' 남겨요."
+    ],
+    "order": [
+     2,
+     4,
+     3,
+     1,
+     5,
+     7,
+     6
+    ]
+   }
+  ],
+  "issues": {
+   "혼남 사건형": [
+    "말투: 문장 평균 28.7자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 1: '이 수영장 때문에 등짝 맞을 뻔'의 이유가 끝까지 풀리지 않아요. 혼날 뻔한 사건이 무엇인지 비어 있어 훅의 약속이 회수되지 않아요",
+    "사진 대조: 2: '새벽 선베드 맡기에 질린' 불편을 꺼내 놓고, 화면 2의 넉넉한 선베드로 그 불편이 사라졌다는 말이 없어요. 바로 로비 이야기로 넘어가 불편→해결 연결이 끊겨요",
+    "사진 대조: 4: '누워도 바다라'는 이점을 거의 대놓고 말한 셈이에요. 다만 뒤에 붙은 '폰을 놓는' 행동 변화가 이를 일부 만회해요"
+   ],
+   "오해형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 60%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 28.8자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 2: '방에서 눕기만 했는데'는 불편이 한 순간의 장면이 아니라 막연한 습관이에요. 해결과 맞서는 힘이 약해요",
+    "사진 대조: 3: 1줄의 '해외냐'를 그대로 되풀이해서 이야기가 앞으로 나가지 않아요. 비행기와 통창은 사진 3에 보이지만 고조가 평평해져요",
+    "사진 대조: 7: '이 방 궁금하면'은 어디에나 붙는 상투적인 마무리예요. '해외아님'은 이야기의 말이지만 엄마 이야기와 바로 이어지지 않아요"
+   ],
+   "불편 고백형": [
+    "말투: 문장 평균 28.7자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 3: '근데' 전환보다 먼저 해결 장면(통창에 붙어 비행기 세기)이 나와 흐름이 꼬이고, 누가 세는지 주어가 없어 2줄의 과거 불편과 이어지지 않음(사진 3의 로비 통창과 비행기는 맞음)",
+    "사진 대조: 5: 사진 5는 낮 침실이라 일출이 화면에 없음. 전 객실 발코니·일출은 숙소 사실이라 감점은 작지만, 발코니라 깬다는 인과가 약함",
+    "사진 대조: 7: 앞에서 폰 얘기를 해 놓고 마지막에 갑자기 '이 욕조 궁금하면'으로 넘어가 이야기와 이어지지 않음. 키워드 '폰내려놔'는 이야기에 맞음"
+   ],
+   "오해형 (고쳐 씀)": [
+    "사진 대조: 3: 1줄 '해외냐고 묻는다'와 '여권부터 찾는다'가 같은 해외 착각을 되풀이해서 새 정보 없이 제자리걸음함",
+    "사진 대조: 4: '근데 여기가 온수라'에 반전이 없어 시설 정보를 하나 더 늘어놓는 데 그침. '근데'를 써도 이야기가 세지지 않음",
+    "사진 대조: 5: '밤 잔디가 환해서 산책 나가요'는 누가 나가는지 빠져 있고, 엄마의 행동 변화로 이어지지 않아 이점을 직접 말하는 투에 가까움",
+    "사진 대조: 2→3: 주차장 창밖 때문에 커튼을 안 열던 불편이 객실 창(2번 사진)에서 해결되지 않고 로비 통창(3번 사진)으로 넘어가 장면 연결이 흐림"
+   ]
+  },
+  "scores": {
+   "혼남 사건형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 7,
+    "고조": 7,
+    "화면 일치": 9,
+    "댓글 유도": 6,
+    "total": 41,
+    "bad_lines": [
+     "1: '이 수영장 때문에 등짝 맞을 뻔'의 이유가 끝까지 풀리지 않아요. 혼날 뻔한 사건이 무엇인지 비어 있어 훅의 약속이 회수되지 않아요",
+     "2: '새벽 선베드 맡기에 질린' 불편을 꺼내 놓고, 화면 2의 넉넉한 선베드로 그 불편이 사라졌다는 말이 없어요. 바로 로비 이야기로 넘어가 불편→해결 연결이 끊겨요",
+     "4: '누워도 바다라'는 이점을 거의 대놓고 말한 셈이에요. 다만 뒤에 붙은 '폰을 놓는' 행동 변화가 이를 일부 만회해요"
+    ],
+    "one_line": "인물 행동 변화(말 없어짐→폰 놓음→안 나옴→먼저 또 오자)로 쌓아 가는 고조와 사진 일치는 좋아요. 하지만 훅의 '등짝' 사건과 선베드 불편이 해결 없이 버려져 이야기 뼈대가 헐거워요."
+   },
+   "오해형": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 6,
+    "total": 42,
+    "bad_lines": [
+     "2: '방에서 눕기만 했는데'는 불편이 한 순간의 장면이 아니라 막연한 습관이에요. 해결과 맞서는 힘이 약해요",
+     "3: 1줄의 '해외냐'를 그대로 되풀이해서 이야기가 앞으로 나가지 않아요. 비행기와 통창은 사진 3에 보이지만 고조가 평평해져요",
+     "7: '이 방 궁금하면'은 어디에나 붙는 상투적인 마무리예요. '해외아님'은 이야기의 말이지만 엄마 이야기와 바로 이어지지 않아요"
+    ],
+    "one_line": "엄마의 오해(해외냐) → 방에만 있던 엄마가 풀·산책·욕조로 움직이는 변화가 간접적으로 잘 보이고 사진도 줄마다 맞아요. 다만 3줄에서 오해를 반복해 고조가 꺾이고, 불편이 한 장면으로 잡히지 않아 이야기 뼈대가 약해요."
+   },
+   "불편 고백형": {
+    "훅": 6,
+    "불편→해결": 7,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 8,
+    "댓글 유도": 6,
+    "total": 41,
+    "bad_lines": [
+     "3: '근데' 전환보다 먼저 해결 장면(통창에 붙어 비행기 세기)이 나와 흐름이 꼬이고, 누가 세는지 주어가 없어 2줄의 과거 불편과 이어지지 않음(사진 3의 로비 통창과 비행기는 맞음)",
+     "5: 사진 5는 낮 침실이라 일출이 화면에 없음. 전 객실 발코니·일출은 숙소 사실이라 감점은 작지만, 발코니라 깬다는 인과가 약함",
+     "7: 앞에서 폰 얘기를 해 놓고 마지막에 갑자기 '이 욕조 궁금하면'으로 넘어가 이야기와 이어지지 않음. 키워드 '폰내려놔'는 이야기에 맞음"
+    ],
+    "one_line": "'애들이 폰을 잊는다'는 행동 변화로 이점을 간접적으로 보여 주는 뼈대는 좋음. 다만 3줄의 해결이 전환보다 먼저 나오고, 마지막 줄이 욕조로 새면서 고조와 댓글 유도가 약해짐"
+   },
+   "오해형 (고쳐 씀)": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "3: 1줄 '해외냐고 묻는다'와 '여권부터 찾는다'가 같은 해외 착각을 되풀이해서 새 정보 없이 제자리걸음함",
+     "4: '근데 여기가 온수라'에 반전이 없어 시설 정보를 하나 더 늘어놓는 데 그침. '근데'를 써도 이야기가 세지지 않음",
+     "5: '밤 잔디가 환해서 산책 나가요'는 누가 나가는지 빠져 있고, 엄마의 행동 변화로 이어지지 않아 이점을 직접 말하는 투에 가까움",
+     "2→3: 주차장 창밖 때문에 커튼을 안 열던 불편이 객실 창(2번 사진)에서 해결되지 않고 로비 통창(3번 사진)으로 넘어가 장면 연결이 흐림"
+    ],
+    "one_line": "엄마의 해외 착각과 비행기 값 굳었다는 마무리가 살아 있고 화면도 잘 맞지만, 해외 착각이 반복되고 4·5줄이 정보 나열로 처져 고조가 약함"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": {
+   "version": {
+    "type": "오해형 (고쳐 씀)",
+    "lines": [
+     "엄마가 풀 보자마자 여기 해외냐고 묻는데",
+     "예전엔 창밖이 주차장이라 커튼도 안 열던 엄마가",
+     "통창 너머 비행기 뜨니까 여권부터 찾아요.",
+     "근데 여기가 온수라 엄마가 먼저 들어갔는데",
+     "여기가 대박인 게 밤 잔디가 환해서 산책 나가요.",
+     "심지어 욕조에 누운 엄마가 비행기 값 굳었다니까",
+     "엄마처럼 속고 싶으면 댓글에 '해외아님' 남겨요."
+    ],
+    "order": [
+     2,
+     4,
+     3,
+     1,
+     5,
+     7,
+     6
+    ]
+   },
+   "issues": [
+    "사진 대조: 3: 1줄 '해외냐고 묻는다'와 '여권부터 찾는다'가 같은 해외 착각을 되풀이해서 새 정보 없이 제자리걸음함",
+    "사진 대조: 4: '근데 여기가 온수라'에 반전이 없어 시설 정보를 하나 더 늘어놓는 데 그침. '근데'를 써도 이야기가 세지지 않음",
+    "사진 대조: 5: '밤 잔디가 환해서 산책 나가요'는 누가 나가는지 빠져 있고, 엄마의 행동 변화로 이어지지 않아 이점을 직접 말하는 투에 가까움",
+    "사진 대조: 2→3: 주차장 창밖 때문에 커튼을 안 열던 불편이 객실 창(2번 사진)에서 해결되지 않고 로비 통창(3번 사진)으로 넘어가 장면 연결이 흐림"
+   ],
+   "score": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "3: 1줄 '해외냐고 묻는다'와 '여권부터 찾는다'가 같은 해외 착각을 되풀이해서 새 정보 없이 제자리걸음함",
+     "4: '근데 여기가 온수라'에 반전이 없어 시설 정보를 하나 더 늘어놓는 데 그침. '근데'를 써도 이야기가 세지지 않음",
+     "5: '밤 잔디가 환해서 산책 나가요'는 누가 나가는지 빠져 있고, 엄마의 행동 변화로 이어지지 않아 이점을 직접 말하는 투에 가까움",
+     "2→3: 주차장 창밖 때문에 커튼을 안 열던 불편이 객실 창(2번 사진)에서 해결되지 않고 로비 통창(3번 사진)으로 넘어가 장면 연결이 흐림"
+    ],
+    "one_line": "엄마의 해외 착각과 비행기 값 굳었다는 마무리가 살아 있고 화면도 잘 맞지만, 해외 착각이 반복되고 4·5줄이 정보 나열로 처져 고조가 약함"
+   }
+  },
+  "style": "여행 숙소 인스타"
+ },
+ "script_gemini": {
+  "chosen": {
+   "type": "타깃 결핍/혜택형",
+   "lines": [
+    "지친 일상을 벗어날 숙소가 필요한 분들.",
+    "바다 보며 야외 수영장에서 힐링하세요.",
+    "통창 너머 정원 보며 라운지에서 쉬고.",
+    "객실 침대에 누워 탁 트인 뷰를 즐겨요.",
+    "밤에는 빛나는 야외 공간을 산책해요.",
+    "욕조에서 편히 쉬며 재충전해보세요.",
+    "저장해두고 궁금한 점 댓글로 남겨주세요."
+   ]
+  },
+  "versions": [
+   {
+    "type": "안티/반전형",
+    "lines": [
+     "해외 휴양지 비행기 표 당장 취소하세요.",
+     "여기 바다 앞 인피니티 풀 보면 놀라요.",
+     "해질녘 호수가 보이는 로비는 환상이죠.",
+     "침대 옆 창으로 바다가 바로 펼쳐져요.",
+     "밤엔 조명 켜진 통유리 건물이 빛나요.",
+     "현대적인 객실 가격 들으면 소름 돋죠.",
+     "어딘지 궁금하면 댓글에 정보 남겨주세요."
+    ]
+   },
+   {
+    "type": "감각/공간 몰입형",
+    "lines": [
+     "찰랑거리는 바닷물 소리 들으러 가요.",
+     "따스한 햇살 가득한 수영장에 누워요.",
+     "은은한 노을빛 물든 로비에 머물러요.",
+     "침대 맡 창가로 바다 내음이 밀려와요.",
+     "밤하늘 아래 조명 켜진 잔디를 걸어요.",
+     "아늑한 소파에 앉아 멍하니 쉬어가요.",
+     "숙소 이름 궁금하면 댓글로 물어보세요."
+    ]
+   },
+   {
+    "type": "타깃 결핍/혜택형",
+    "lines": [
+     "지친 일상을 벗어날 숙소가 필요한 분들.",
+     "바다 보며 야외 수영장에서 힐링하세요.",
+     "통창 너머 정원 보며 라운지에서 쉬고.",
+     "객실 침대에 누워 탁 트인 뷰를 즐겨요.",
+     "밤에는 빛나는 야외 공간을 산책해요.",
+     "욕조에서 편히 쉬며 재충전해보세요.",
+     "저장해두고 궁금한 점 댓글로 남겨주세요."
+    ]
+   }
+  ],
+  "issues": {
+   "안티/반전형": [
+    "길이 156자 ≈ 22.7초(권장 120~144자)",
+    "2줄: 사진 속 수영장은 수면과 바다가 직접적으로 연결되어 보이는 인피니티 풀 구조가 아니라, 바다와 분리된 일반적인 사각형 수영장입니다.",
+    "3줄: 사진 속 외부 풍경은 강이나 바다에 가까워 보이며, 호수라는 사실은 확인되지 않습니다."
+   ],
+   "감각/공간 몰입형": [
+    "1줄: 사진 속의 바다는 파도가 치지 않고 잔잔하여 찰랑거리는 소리가 들린다는 것은 사실과 다릅니다.",
+    "4줄: 사진에는 바다 내음이라는 후각적 요소가 나타나지 않으며, 창가 쪽은 바다가 아니라 육지(나무와 갯벌)가 먼저 보입니다."
+   ],
+   "타깃 결핍/혜택형": [
+    "6줄: 사진에는 욕조가 보이지 않습니다."
+   ]
+  },
+  "attempts": 2,
+  "clean": false
+ },
+ "script_opus_basic": {
+  "chosen": {
+   "type": "안티/반전형",
+   "lines": [
+    "해외 예약 멈추세요, 이 풀 보면요",
+    "바다 앞 선베드, 해외 안 부러워요",
+    "노을 드는 통창 로비가 미술관 같아요",
+    "침대에 누우면 창밖이 통째로 바다예요",
+    "밤엔 잔디밭이 조명으로 빛나요",
+    "소파 딸린 객실, 가격 들으면 놀라요",
+    "욕조 궁금하면 댓글에 '정보' 남겨요"
+   ]
+  },
+  "versions": [
+   {
+    "type": "안티/반전형",
+    "lines": [
+     "해외 예약 멈추세요, 이 풀 보면요",
+     "바다 앞 선베드, 해외 안 부러워요",
+     "노을 드는 통창 로비가 미술관 같아요",
+     "침대에 누우면 창밖이 통째로 바다예요",
+     "밤엔 잔디밭이 조명으로 빛나요",
+     "소파 딸린 객실, 가격 들으면 놀라요",
+     "욕조 궁금하면 댓글에 '정보' 남겨요"
+    ]
+   },
+   {
+    "type": "감각/공간 몰입형",
+    "lines": [
+     "윤슬 보며 멍때리고 싶은 분들 여기예요",
+     "쏟아지는 햇살 아래 파란 물결이 반짝여요",
+     "노을이 통창 가득 번지는 로비예요",
+     "포근한 이불 너머로 바다가 펼쳐져요",
+     "밤엔 잔디 위로 조명이 내려앉아요",
+     "얇은 커튼 너머 빛이 스며들어요",
+     "욕조 궁금하면 댓글에 '욕조' 남겨요"
+    ]
+   },
+   {
+    "type": "타깃 결핍/혜택형",
+    "lines": [
+     "쉼이 고픈 직장인, 이 풀이면 돼요",
+     "선베드에 누워 바다만 보면 돼요",
+     "통창 로비 소파에서 노을 보며 쉬어가요",
+     "눈 뜨면 창밖 바다가 먼저 인사해요",
+     "밤엔 조명 켜진 잔디밭이 기다려요",
+     "책상 딸린 방이라 몸만 가면 일도 쉼도 돼요",
+     "창가 욕조 궁금하면 댓글에 '정보' 남겨요"
+    ]
+   }
+  ],
+  "issues": {
+   "안티/반전형": [
+    "사진 대조: 6: 화면엔 L자 소파·책상만 보이고 가격 정보는 없음. '가격 들으면 놀라요'는 근거 없는 낚시 문구",
+    "사진 대조: 2: '해외 안 부러워요'가 1줄 '해외 예약 멈추세요'와 겹쳐 같은 말을 반복함"
+   ],
+   "감각/공간 몰입형": [
+    "사진 대조: 1: '윤슬 보며 멍때리고 싶은 분'은 어느 바다 숙소에나 붙는 말이고, 사진 1의 수면은 잔잔해 윤슬이 거의 보이지 않음",
+    "사진 대조: 2: '파란 물결이 반짝여요'는 1줄과 같은 물 묘사의 반복이고, 사진 2의 핵심인 줄지은 흰 선베드를 놓침",
+    "사진 대조: 6: 사진 6의 핵심인 L자 소파와 원목 책상을 버리고 커튼 빛만 말함",
+    "사진 대조: 4: '포근한 이불'은 촉감을 말한 것이라 화면으로 확인되지 않음"
+   ],
+   "타깃 결핍/혜택형": [
+    "사진 대조: 1: '쉼이 고픈 직장인'은 흔한 타깃 문구라 이 풀만의 특징(바다로 이어지는 인피니티 엣지)이 없음",
+    "사진 대조: 2: '바다만 보면 돼요'는 1줄의 '~면 돼요'와 같은 꼴을 반복하고 내용도 일반적임",
+    "사진 대조: 5: '기다려요'는 의인화일 뿐 조명 큐브·잔디라는 구체 정보가 약함",
+    "사진 대조: 6: 줄이 길어 호흡이 늘어짐"
+   ]
+  },
+  "scores": {
+   "안티/반전형": {
+    "훅": 8,
+    "화면 일치": 8,
+    "구체성": 7,
+    "리듬": 8,
+    "댓글 유도": 7,
+    "total": 38,
+    "bad_lines": [
+     "6: 화면엔 L자 소파·책상만 보이고 가격 정보는 없음. '가격 들으면 놀라요'는 근거 없는 낚시 문구",
+     "2: '해외 안 부러워요'가 1줄 '해외 예약 멈추세요'와 겹쳐 같은 말을 반복함"
+    ],
+    "one_line": "인피니티풀→선베드→이젤 놓인 통창 로비→바다 침실→조명 잔디→소파 객실→욕조까지 화면 흐름이 잘 맞고 훅도 셈. 다만 가격 언급은 사진 근거가 없고 '해외'가 두 번 나옴"
+   },
+   "감각/공간 몰입형": {
+    "훅": 5,
+    "화면 일치": 7,
+    "구체성": 4,
+    "리듬": 6,
+    "댓글 유도": 6,
+    "total": 28,
+    "bad_lines": [
+     "1: '윤슬 보며 멍때리고 싶은 분'은 어느 바다 숙소에나 붙는 말이고, 사진 1의 수면은 잔잔해 윤슬이 거의 보이지 않음",
+     "2: '파란 물결이 반짝여요'는 1줄과 같은 물 묘사의 반복이고, 사진 2의 핵심인 줄지은 흰 선베드를 놓침",
+     "6: 사진 6의 핵심인 L자 소파와 원목 책상을 버리고 커튼 빛만 말함",
+     "4: '포근한 이불'은 촉감을 말한 것이라 화면으로 확인되지 않음"
+    ],
+    "one_line": "분위기 묘사는 무난하지만 이 숙소만의 디테일(인피니티풀, 이젤 놓인 로비, L자 소파)이 빠져 아무 숙소에나 붙는 감성 대본이 됨. 훅도 약함"
+   },
+   "타깃 결핍/혜택형": {
+    "훅": 6,
+    "화면 일치": 8,
+    "구체성": 6,
+    "리듬": 6,
+    "댓글 유도": 7,
+    "total": 33,
+    "bad_lines": [
+     "1: '쉼이 고픈 직장인'은 흔한 타깃 문구라 이 풀만의 특징(바다로 이어지는 인피니티 엣지)이 없음",
+     "2: '바다만 보면 돼요'는 1줄의 '~면 돼요'와 같은 꼴을 반복하고 내용도 일반적임",
+     "5: '기다려요'는 의인화일 뿐 조명 큐브·잔디라는 구체 정보가 약함",
+     "6: 줄이 길어 호흡이 늘어짐"
+    ],
+    "one_line": "화면 일치는 정확하고 6줄 책상, 7줄 창가 욕조처럼 사진에 맞는 디테일이 있지만, 훅과 2줄이 흔한 혜택 문구라 손가락을 멈추는 힘이 약함"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1
+ },
+ "script_hdn": {
+  "chosen": {
+   "type": "고백·체험단정형",
+   "lines": [
+    "해외 가려다 이 풀 보고 취소했어요",
+    "바다 앞 선베드라 비교가 안 되고",
+    "해 질 녘 로비 통창이 그림 같더라고요",
+    "심지어 이게 침대에서 보는 바다거든요",
+    "밤엔 잔디밭 조명이 은은하게 켜지고",
+    "책상이랑 이어진 소파가 너무 좋아서",
+    "창가 욕조는 못 잊어요, 댓글에 '정보' 주세요"
+   ]
+  },
+  "versions": [
+   {
+    "type": "지인사건형",
+    "lines": [
+     "회사 언니가 바다 앞 풀을 보여줬는데",
+     "선베드 너머가 전부 바다라서",
+     "해 질 녘 통창 로비는 미술관 같고",
+     "침대에 누우면 창밖이 다 바다더라고요",
+     "밤 잔디밭 조명은 보는 사람마다 묻고",
+     "소파랑 책상이 한 몸이라 넓더라고요",
+     "창가 욕조 궁금하면 댓글에 '정보' 주세요"
+    ]
+   },
+   {
+    "type": "고백·체험단정형",
+    "lines": [
+     "해외 가려다 이 풀 보고 취소했어요",
+     "바다 앞 선베드라 비교가 안 되고",
+     "해 질 녘 로비 통창이 그림 같더라고요",
+     "심지어 이게 침대에서 보는 바다거든요",
+     "밤엔 잔디밭 조명이 은은하게 켜지고",
+     "책상이랑 이어진 소파가 너무 좋아서",
+     "창가 욕조는 못 잊어요, 댓글에 '정보' 주세요"
+    ]
+   },
+   {
+    "type": "발견·반응형",
+    "lines": [
+     "피드 넘기다 바다랑 이어진 풀을 봤는데",
+     "선베드 줄 보자마자 저장했거든요",
+     "로비엔 이젤이 있어서 미술관 같고",
+     "통창 바다에 남편이 말을 잃더라고요",
+     "밤 잔디밭은 조명 켜지니까 또 다르고",
+     "소파가 책상이랑 이어져서 넓더라고요",
+     "욕조 창밖까지 바다라니까 댓글에 '정보' 주세요"
+    ]
+   }
+  ],
+  "issues": {
+   "지인사건형": [
+    "사진 대조: 1: 회사 언니라는 계기는 채널 결에 맞지만 '바다 앞 풀'만으로는 첫 줄에서 손가락을 멈추게 할 한 방이 약함",
+    "사진 대조: 3: 사진 속 빛이 해 질 녘인지 동틀 녘인지 애매하고 '미술관 같고'는 흔한 비유이며, 화면에 이젤이 보이는데도 쓰지 않음"
+   ],
+   "고백·체험단정형": [
+    "사진 대조: 1: 해외 취소라는 결과 과장은 세지만 주변 사람 계기로 여는 채널 문법에서 벗어남",
+    "사진 대조: 5: '은은하게 켜지고'는 어느 숙소에나 붙는 말이라 사진 속 큐브 조명과 넓은 잔디의 개성을 못 살림",
+    "사진 대조: 6: '너무 좋아서'는 감상만 있고 디테일이 없음"
+   ],
+   "발견·반응형": [
+    "사진 대조: 1: '피드 넘기다'는 주변 사람 계기가 아니라 혼자 발견한 설정이라 채널 첫 줄 문법에서 조금 벗어남",
+    "사진 대조: 5: '또 다르고'는 무엇이 다른지 말하지 않아 비어 보임"
+   ]
+  },
+  "scores": {
+   "지인사건형": {
+    "훅": 6,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 7,
+    "댓글 유도": 7,
+    "total": 36,
+    "bad_lines": [
+     "1: 회사 언니라는 계기는 채널 결에 맞지만 '바다 앞 풀'만으로는 첫 줄에서 손가락을 멈추게 할 한 방이 약함",
+     "3: 사진 속 빛이 해 질 녘인지 동틀 녘인지 애매하고 '미술관 같고'는 흔한 비유이며, 화면에 이젤이 보이는데도 쓰지 않음"
+    ],
+    "one_line": "줄마다 화면과 잘 맞고 지인 계기로 여는 결도 지켰지만, 훅과 디테일이 무난한 수준이라 확 꽂히진 않음"
+   },
+   "고백·체험단정형": {
+    "훅": 8,
+    "화면 일치": 9,
+    "구체성": 6,
+    "리듬": 8,
+    "댓글 유도": 7,
+    "total": 38,
+    "bad_lines": [
+     "1: 해외 취소라는 결과 과장은 세지만 주변 사람 계기로 여는 채널 문법에서 벗어남",
+     "5: '은은하게 켜지고'는 어느 숙소에나 붙는 말이라 사진 속 큐브 조명과 넓은 잔디의 개성을 못 살림",
+     "6: '너무 좋아서'는 감상만 있고 디테일이 없음"
+    ],
+    "one_line": "본보기에 가장 가까운 센 훅과 호흡이 좋지만, 중반부가 아무 데나 붙는 말로 흐려짐"
+   },
+   "발견·반응형": {
+    "훅": 7,
+    "화면 일치": 9,
+    "구체성": 8,
+    "리듬": 7,
+    "댓글 유도": 7,
+    "total": 38,
+    "bad_lines": [
+     "1: '피드 넘기다'는 주변 사람 계기가 아니라 혼자 발견한 설정이라 채널 첫 줄 문법에서 조금 벗어남",
+     "5: '또 다르고'는 무엇이 다른지 말하지 않아 비어 보임"
+    ],
+    "one_line": "로비 이젤, 선베드 줄, 바다가 보이는 창가 욕조처럼 사진에만 있는 디테일을 가장 잘 잡았고, '남편이 말을 잃더라고요'로 반응까지 살아 있음"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "style": "두유노홈디노"
+ },
+ "script_story1": {
+  "chosen": {
+   "type": "커플 갈등·반전형",
+   "lines": [
+    "남편이 이 풀 사진 합성이라 우기길래",
+    "와 보니 선베드 앞이 진짜 바다더라고요",
+    "로비 통창 보곤 남편이 사진부터 찍고",
+    "침대 옆 바다 보더니 말이 없어지고",
+    "밤엔 불 켜진 잔디밭에서 손까지 잡더니",
+    "소파에 눕더니 내가 졌다고 하더라고요",
+    "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+   ]
+  },
+  "versions": [
+   {
+    "type": "가족체험형",
+    "lines": [
+     "엄마 생신이라 바다 앞 풀 잡았는데",
+     "선베드 보자마자 해외냐고 묻더라고요",
+     "로비 이젤 앞에선 미술관 같다 하시고",
+     "창밖 바다 보며 침대에서 안 나오시고",
+     "밤엔 불 켜진 잔디밭도 거니시더니",
+     "소파에 앉아 내년에도 오자 하시더라고요",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+    ]
+   },
+   {
+    "type": "후회형",
+    "lines": [
+     "해외 간 거 이 풀 보고 후회했어요",
+     "선베드 앞이 바로 바다라 억울하더라고요",
+     "해질녘 로비 통창 너머 정원까지 보이고",
+     "침대 누우면 창 가득 바다가 들어오고",
+     "밤엔 잔디밭에 불까지 들어오고",
+     "심지어 소파 딸린 방이라 진작 올걸 했어요",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+    ]
+   },
+   {
+    "type": "커플 갈등·반전형",
+    "lines": [
+     "남편이 이 풀 사진 합성이라 우기길래",
+     "와 보니 선베드 앞이 진짜 바다더라고요",
+     "로비 통창 보곤 남편이 사진부터 찍고",
+     "침대 옆 바다 보더니 말이 없어지고",
+     "밤엔 불 켜진 잔디밭에서 손까지 잡더니",
+     "소파에 눕더니 내가 졌다고 하더라고요",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+    ]
+   },
+   {
+    "type": "깜짝선물형",
+    "lines": [
+     "와이프 몰래 바다 앞 풀 예약했는데",
+     "선베드 보자마자 소리부터 지르고",
+     "해질녘 로비 통창 앞에선 눈이 동그래지고",
+     "침대 창밖 바다 보고 저를 꽉 안더라고요",
+     "밤엔 불 켜진 잔디밭에서 춤까지 추고",
+     "소파에 앉아 결혼 잘했다고 울더라고요",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+    ]
+   },
+   {
+    "type": "친구 내기형",
+    "lines": [
+     "친구들이랑 숙소 내기 이 풀로 이겼어요",
+     "선베드에 일렬로 누워 다들 말이 없고",
+     "로비 이젤 앞에선 사진 찍느라 줄 서고",
+     "바다 뷰 침대는 가위바위보로 정했는데",
+     "밤엔 불 켜진 잔디밭에서 벌칙하고",
+     "소파 방 차지한 애가 다음에도 여기래요",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요"
+    ]
+   }
+  ],
+  "issues": {
+   "가족체험형": [],
+   "후회형": [
+    "사진 대조: 2: 사진 2에서 선베드와 바다 사이에 수영장이 있어 '바로 바다'는 조금 과장"
+   ],
+   "커플 갈등·반전형": [
+    "사진 대조: 2: 사진 2의 선베드 바로 앞은 수영장이고 바다는 그 너머라 '선베드 앞이 진짜 바다'는 약간 과장이지만 큰 문제는 아님"
+   ],
+   "깜짝선물형": [],
+   "친구 내기형": [
+    "사진 대조: 1: '숙소 내기 이 풀로 이겼어요'는 무엇을 겨룬 내기인지 한 번에 들어오지 않음"
+   ]
+  },
+  "scores": {
+   "커플 갈등·반전형": {
+    "훅": 8,
+    "이야기": 8,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 8,
+    "댓글 유도": 6,
+    "total": 46,
+    "bad_lines": [
+     "2: 사진 2의 선베드 바로 앞은 수영장이고 바다는 그 너머라 '선베드 앞이 진짜 바다'는 약간 과장이지만 큰 문제는 아님"
+    ],
+    "one_line": "'합성이라 우기길래'로 시작해 '내가 졌다'로 끝나는 의심→인정 흐름이 일곱 장면을 하나로 꿰어서 다섯 개 중 다음 줄이 가장 궁금함"
+   },
+   "깜짝선물형": {
+    "훅": 7,
+    "이야기": 7,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 8,
+    "댓글 유도": 6,
+    "total": 44,
+    "bad_lines": [],
+    "one_line": "아내 반응이 줄마다 커지면서 감정이 쌓이는 구조는 좋지만 첫 줄 '몰래 예약'은 흔한 계기라 훅 힘이 조금 약함"
+   },
+   "가족체험형": {
+    "훅": 6,
+    "이야기": 7,
+    "화면 일치": 9,
+    "구체성": 8,
+    "리듬": 7,
+    "댓글 유도": 6,
+    "total": 43,
+    "bad_lines": [],
+    "one_line": "이젤·불 켜진 잔디밭·소파를 엄마 반응으로 정확히 엮었고 장면도 잘 맞지만 '엄마 생신' 첫 줄이 손가락을 세울 만큼 세지는 않음"
+   },
+   "친구 내기형": {
+    "훅": 6,
+    "이야기": 6,
+    "화면 일치": 9,
+    "구체성": 8,
+    "리듬": 6,
+    "댓글 유도": 6,
+    "total": 41,
+    "bad_lines": [
+     "1: '숙소 내기 이 풀로 이겼어요'는 무엇을 겨룬 내기인지 한 번에 들어오지 않음"
+    ],
+    "one_line": "줄 서기·가위바위보·벌칙처럼 친구끼리의 사건은 재미있지만 첫 줄의 내기 설정이 모호해서 앞부분 호흡이 끊김"
+   },
+   "후회형": {
+    "훅": 7,
+    "이야기": 4,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 7,
+    "댓글 유도": 6,
+    "total": 40,
+    "bad_lines": [
+     "2: 사진 2에서 선베드와 바다 사이에 수영장이 있어 '바로 바다'는 조금 과장"
+    ],
+    "one_line": "'해외 간 거 후회' 훅은 괜찮지만 그 뒤로 인물·사건 없이 '~고' 나열이 이어져 시설 소개처럼 들림"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "style": "인스타 스토리형"
+ },
+ "script_story2": {
+  "chosen": {
+   "type": "커플 갈등·반전형",
+   "lines": [
+    "남편이 이 풀 보정이라고 의심했는데",
+    "선베드 눕더니 바다만 보더라고요.",
+    "로비 통창 노을 앞에선 먼저 찍자 하고",
+    "창밖 바다 보자 커튼부터 열었어요.",
+    "밤 잔디밭 산책도 먼저 가자 했거든요.",
+    "결국 소파에 누워서 자기가 졌대요.",
+    "욕조 궁금하면 댓글에 '정보' 남겨 주세요."
+   ]
+  },
+  "versions": [
+   {
+    "type": "가족체험형",
+    "lines": [
+     "엄마 환갑이라 바다 앞 풀로 왔는데",
+     "선베드 보고 외국이냐 하시더라고요.",
+     "로비 통창 노을 앞에서 사진 찍으시고",
+     "창밖 바다 보시니까 한참 서 계셨어요.",
+     "밤엔 조명 켜진 잔디밭도 걸었는데",
+     "소파 방 보고 집보다 낫다 하시더라고요.",
+     "욕조 방 궁금하면 댓글에 '정보' 주세요."
+    ]
+   },
+   {
+    "type": "후회형",
+    "lines": [
+     "이 풀 모르고 해외부터 간 거 후회했어요.",
+     "선베드에 누우니 해외 부럽지 않더라고요.",
+     "통창 너머 노을 로비가 미술관 같았고",
+     "침대에 누워도 창밖이 바다였는데",
+     "밤 잔디밭 조명까지 보고 나니까",
+     "소파에서 진작 올걸 소리 나오더라고요.",
+     "창가 욕조 궁금하면 댓글에 '정보' 주세요."
+    ]
+   },
+   {
+    "type": "커플 갈등·반전형",
+    "lines": [
+     "남편이 이 풀 보정이라고 의심했는데",
+     "선베드 눕더니 바다만 보더라고요.",
+     "로비 통창 노을 앞에선 먼저 찍자 하고",
+     "창밖 바다 보자 커튼부터 열었어요.",
+     "밤 잔디밭 산책도 먼저 가자 했거든요.",
+     "결국 소파에 누워서 자기가 졌대요.",
+     "욕조 궁금하면 댓글에 '정보' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "깜짝선물형",
+    "lines": [
+     "와이프 몰래 잡았는데 풀 보자마자",
+     "선베드 앞에서 입을 못 다물더라고요.",
+     "노을 진 로비 통창 앞에선 말이 없길래",
+     "방 창밖 바다 보고 소리 지르는 거 있죠.",
+     "밤 잔디밭 조명 아래 걷다가",
+     "소파에 앉아 결국 눈물 보이더라고요.",
+     "욕조 방 궁금하면 댓글에 '정보' 주세요."
+    ]
+   },
+   {
+    "type": "친구 내기형",
+    "lines": [
+     "친구들이랑 숙소 내기해서 이 풀로 이겼거든요.",
+     "선베드 보자마자 자리 잡더라고요.",
+     "노을 로비 이젤 앞에서 사진 찍었고",
+     "바다 보이는 침대는 가위바위보로 정했어요.",
+     "밤엔 잔디밭 조명 아래서 놀았는데",
+     "소파에 모여서 다음에도 여기래요.",
+     "욕조 방도 궁금하면 댓글에 '정보' 주세요."
+    ]
+   }
+  ],
+  "issues": {
+   "가족체험형": [
+    "말투: 문장 평균 36.2자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 1: '엄마 환갑'으로 시작하지만 손가락을 멈출 갈등이나 반전 없이 상황 설명에 머묾",
+    "사진 대조: 3: '사진 찍으시고'처럼 나열형 '고'로 이어져 앞뒤 줄의 인과가 약함"
+   ],
+   "후회형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 60%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 36.8자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 2: 1줄의 '해외'를 바로 반복해 비교 포인트가 늘지 않음",
+    "사진 대조: 3~5: 인물도 사건도 없이 시설을 차례로 소개하는 나열 구조",
+    "사진 대조: 5: '보고 나니까'로 끝나 6줄 소파 화면과 이어지는 힘이 약함"
+   ],
+   "커플 갈등·반전형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 75%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 28.6자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 7: '욕조'만 써서 창가 바다뷰 욕조라는 이 숙소만의 디테일을 살리지 못함"
+   ],
+   "깜짝선물형": [
+    "말투: 문장 평균 35.8자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 3: '말이 없길래' 다음 4줄이 '소리 지르는'으로 이어져 감정 흐름이 엇갈림",
+    "사진 대조: 4: '~거 있죠'는 채널 어미 결에서 벗어남",
+    "사진 대조: 5: '걷다가'로 끊겨 화면 한 장이 문장 중간에서 소비됨"
+   ],
+   "친구 내기형": [
+    "말투: 문장 평균 29.4자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 1: 화면 한 장에 읽기에는 너무 긴 첫 줄이고, '이겼거든요'로 결과를 먼저 밝혀 궁금증이 줄어듦",
+    "사진 대조: 3: '사진 찍었고'처럼 나열형 '고'로 이어짐"
+   ]
+  },
+  "scores": {
+   "가족체험형": {
+    "훅": 6,
+    "이야기": 6,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 7,
+    "댓글 유도": 7,
+    "total": 42,
+    "bad_lines": [
+     "1: '엄마 환갑'으로 시작하지만 손가락을 멈출 갈등이나 반전 없이 상황 설명에 머묾",
+     "3: '사진 찍으시고'처럼 나열형 '고'로 이어져 앞뒤 줄의 인과가 약함"
+    ],
+    "one_line": "화면과 정확히 맞고 가족 감정선도 따뜻하지만, 반응만 이어져 긴장감이 부족한 무난한 체험담"
+   },
+   "후회형": {
+    "훅": 7,
+    "이야기": 4,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 6,
+    "댓글 유도": 7,
+    "total": 40,
+    "bad_lines": [
+     "2: 1줄의 '해외'를 바로 반복해 비교 포인트가 늘지 않음",
+     "3~5: 인물도 사건도 없이 시설을 차례로 소개하는 나열 구조",
+     "5: '보고 나니까'로 끝나 6줄 소파 화면과 이어지는 힘이 약함"
+    ],
+    "one_line": "첫 줄 후회 훅은 좋지만 그 뒤는 시설 소개 나열이라 이야기가 굴러가지 않음"
+   },
+   "커플 갈등·반전형": {
+    "훅": 8,
+    "이야기": 8,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 8,
+    "댓글 유도": 7,
+    "total": 47,
+    "bad_lines": [
+     "7: '욕조'만 써서 창가 바다뷰 욕조라는 이 숙소만의 디테일을 살리지 못함"
+    ],
+    "one_line": "'보정 의심'에서 시작해 '자기가 졌대요'로 끝나는 반전 구조가 7장 사진을 하나의 이야기로 엮어 가장 완성도가 높음"
+   },
+   "깜짝선물형": {
+    "훅": 7,
+    "이야기": 7,
+    "화면 일치": 9,
+    "구체성": 6,
+    "리듬": 6,
+    "댓글 유도": 7,
+    "total": 42,
+    "bad_lines": [
+     "3: '말이 없길래' 다음 4줄이 '소리 지르는'으로 이어져 감정 흐름이 엇갈림",
+     "4: '~거 있죠'는 채널 어미 결에서 벗어남",
+     "5: '걷다가'로 끊겨 화면 한 장이 문장 중간에서 소비됨"
+    ],
+    "one_line": "깜짝선물에서 눈물까지 가는 감정선은 분명하지만, 감정이 오르내리는 순서가 어색하고 숙소만의 디테일이 적음"
+   },
+   "친구 내기형": {
+    "훅": 7,
+    "이야기": 7,
+    "화면 일치": 10,
+    "구체성": 8,
+    "리듬": 6,
+    "댓글 유도": 7,
+    "total": 45,
+    "bad_lines": [
+     "1: 화면 한 장에 읽기에는 너무 긴 첫 줄이고, '이겼거든요'로 결과를 먼저 밝혀 궁금증이 줄어듦",
+     "3: '사진 찍었고'처럼 나열형 '고'로 이어짐"
+    ],
+    "one_line": "로비 이젤과 바다 보이는 침대 가위바위보처럼 화면 디테일을 놀이로 바꾼 점이 좋지만, 첫 줄에서 결과를 먼저 말해 긴장감이 빠짐"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "style": "인스타 스토리형"
+ },
+ "script_card1": {
+  "chosen": {
+   "type": "커플 반전형",
+   "lines": [
+    "남편이 바다랑 붙은 풀 합성이라고 우기길래",
+    "데려갔더니 선베드에 눕자마자 조용해지는 거예요.",
+    "로비 노을 보고는 이게 실화냐고 묻더니",
+    "객실 들어가니까 침대 바로 옆이 바다라서",
+    "심지어 밤엔 잔디밭 산책 가자고 조르는 거 있죠.",
+    "결국 소파에 누워서 내가 졌다고 하더라고요.",
+    "욕조 뷰 궁금하면 댓글에 '내가졌다' 남겨 주세요."
+   ]
+  },
+  "versions": [
+   {
+    "type": "가족 반응형",
+    "lines": [
+     "엄마랑 바다 끝 수영장 갔다가 진짜 충격 받았어요.",
+     "처음엔 엄마가 선베드 보고 별거 없다더니",
+     "로비 노을 보더니 이게 그림이냐고 묻는 거예요.",
+     "침대에 누워 보니까 창밖이 전부 바다인데",
+     "심지어 밤엔 잔디밭 조명 보던 엄마가",
+     "소파에 앉아 딸 덕에 호강한다 하시더라고요.",
+     "창가 욕조 궁금하면 댓글에 '효도' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "커플 반전형",
+    "lines": [
+     "남편이 바다랑 붙은 풀 합성이라고 우기길래",
+     "데려갔더니 선베드에 눕자마자 조용해지는 거예요.",
+     "로비 노을 보고는 이게 실화냐고 묻더니",
+     "객실 들어가니까 침대 바로 옆이 바다라서",
+     "심지어 밤엔 잔디밭 산책 가자고 조르는 거 있죠.",
+     "결국 소파에 누워서 내가 졌다고 하더라고요.",
+     "욕조 뷰 궁금하면 댓글에 '내가졌다' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "후회형",
+    "lines": [
+     "저 이 풀 모르고 해외 간 거 후회했어요.",
+     "바다 앞 선베드 누우니까 해외 갈 이유가 없더라고요.",
+     "로비 통창 노을 보며 여길 왜 몰랐나 싶었는데",
+     "침대에 누우니까 창 너머로 섬까지 보여서",
+     "심지어 밤엔 잔디밭이 반짝이는데",
+     "소파 붙은 책상에서 진작 올 걸 싶었어요.",
+     "욕조 뷰 궁금하면 댓글에 '진작' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "커플 반전형 (고쳐 씀)",
+    "lines": [
+     "남편이 바다랑 붙은 풀 합성이라고 우기길래",
+     "데려갔는데 선베드에 눕자마자 조용해진 거예요.",
+     "로비 통창 노을 보니까 실화냐고 하는데",
+     "침대에 누우니 창 너머로 섬까지 보이는 거 있죠.",
+     "심지어 밤엔 조명 반짝이는 잔디밭 산책 가자고 해서",
+     "결국 소파에 누워서 내가 졌다고 하더라고요.",
+     "욕조 뷰 궁금하면 댓글에 '내가졌다' 남겨 주세요."
+    ]
+   }
+  ],
+  "issues": {
+   "가족 반응형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 67%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "사진 대조: 1: '진짜 충격 받았어요'는 무엇에 놀랐는지 빠진 막연한 훅이라, 바다와 맞닿은 수영장(사진1)의 그림이 첫 줄에서 살지 않음",
+    "사진 대조: 4: 사진4 창밖에는 바다 말고도 소나무 숲·돌 둑·물길이 절반이라 '창밖이 전부 바다'는 화면보다 부풀린 말",
+    "사진 대조: 6: 첫 줄의 '충격'을 엄마 한마디로 되받지 못하고 '호강' 감사로 끝나, 의심이 백기로 바뀌는 맛이 약함"
+   ],
+   "커플 반전형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 75%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "사진 대조: 4: 사진4에서 침대와 바다 사이에는 창·난간·숲이 있어 '침대 바로 옆이 바다'는 조금 과장임. '창 너머로 섬까지'처럼 보이는 걸 말하는 게 나음",
+    "사진 대조: 5: 사진5는 밤 잔디밭과 조명뿐이라, '조명'을 빼고 '산책'만 말하면 이 화면만의 디테일(반짝이는 조명)을 놓침"
+   ],
+   "후회형": [
+    "사진 대조: 1: 인물·사건 없이 화자의 후회만 있어 첫 3초에 붙잡을 장면이 없음",
+    "사진 대조: 2: '해외 갈 이유가 없더라고요'가 1줄의 '해외 후회'를 되풀이해 이야기가 앞으로 나가지 않음",
+    "사진 대조: 3: '여길 왜 몰랐나'가 같은 후회 감정의 세 번째 반복",
+    "사진 대조: 6: '진작 올 걸'이 또 같은 후회라, 반응이 바뀌지 않는 감상 나열이 됨"
+   ],
+   "커플 반전형 (고쳐 씀)": [
+    "사진 대조: 3: 3번 사진의 주황빛 하늘이 노을인지 새벽인지 확실하지 않음(경미). '조용해졌다' 바로 다음에 '실화냐'고 말하는 흐름도 조금 어긋남",
+    "사진 대조: 4~5: '~거 있죠 / 심지어 ~해서'로 시설을 하나씩 나열하는 느낌이 남아 반응 변화가 약해짐",
+    "사진 대조: 7: 욕조 뷰는 이미 7번 화면에 다 보여서 '궁금하면 댓글' 동기가 약함. 가격·위치처럼 화면에 없는 정보를 걸면 더 강함"
+   ]
+  },
+  "scores": {
+   "가족 반응형": {
+    "훅": 7,
+    "이야기": 7,
+    "화면 일치": 8,
+    "구체성": 7,
+    "리듬": 7,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "1: '진짜 충격 받았어요'는 무엇에 놀랐는지 빠진 막연한 훅이라, 바다와 맞닿은 수영장(사진1)의 그림이 첫 줄에서 살지 않음",
+     "4: 사진4 창밖에는 바다 말고도 소나무 숲·돌 둑·물길이 절반이라 '창밖이 전부 바다'는 화면보다 부풀린 말",
+     "6: 첫 줄의 '충격'을 엄마 한마디로 되받지 못하고 '호강' 감사로 끝나, 의심이 백기로 바뀌는 맛이 약함"
+    ],
+    "one_line": "엄마 반응(별거 없다 → 그림이냐 → 호강)이 이어지고 줄마다 화면과도 대체로 맞지만, 첫 줄과 끝 줄이 한 사건으로 묶이지 않아 펀치가 흐림"
+   },
+   "커플 반전형": {
+    "훅": 9,
+    "이야기": 9,
+    "화면 일치": 8,
+    "구체성": 7,
+    "리듬": 8,
+    "댓글 유도": 9,
+    "total": 50,
+    "bad_lines": [
+     "4: 사진4에서 침대와 바다 사이에는 창·난간·숲이 있어 '침대 바로 옆이 바다'는 조금 과장임. '창 너머로 섬까지'처럼 보이는 걸 말하는 게 나음",
+     "5: 사진5는 밤 잔디밭과 조명뿐이라, '조명'을 빼고 '산책'만 말하면 이 화면만의 디테일(반짝이는 조명)을 놓침"
+    ],
+    "one_line": "'합성이라 우기던 남편'이 '내가 졌다'로 회수되고 댓글 키워드까지 이어지는, 의심에서 백기로 가는 구조가 가장 완성된 대본"
+   },
+   "후회형": {
+    "훅": 6,
+    "이야기": 4,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 6,
+    "댓글 유도": 6,
+    "total": 38,
+    "bad_lines": [
+     "1: 인물·사건 없이 화자의 후회만 있어 첫 3초에 붙잡을 장면이 없음",
+     "2: '해외 갈 이유가 없더라고요'가 1줄의 '해외 후회'를 되풀이해 이야기가 앞으로 나가지 않음",
+     "3: '여길 왜 몰랐나'가 같은 후회 감정의 세 번째 반복",
+     "6: '진작 올 걸'이 또 같은 후회라, 반응이 바뀌지 않는 감상 나열이 됨"
+    ],
+    "one_line": "섬·반짝이는 잔디·소파에 붙은 책상처럼 화면 일치는 가장 정확하지만, 인물 없이 같은 후회만 네 번 되풀이해 소개 나열에 가까움"
+   },
+   "커플 반전형 (고쳐 씀)": {
+    "훅": 8,
+    "이야기": 8,
+    "화면 일치": 9,
+    "구체성": 7,
+    "리듬": 7,
+    "댓글 유도": 7,
+    "total": 46,
+    "bad_lines": [
+     "3: 3번 사진의 주황빛 하늘이 노을인지 새벽인지 확실하지 않음(경미). '조용해졌다' 바로 다음에 '실화냐'고 말하는 흐름도 조금 어긋남",
+     "4~5: '~거 있죠 / 심지어 ~해서'로 시설을 하나씩 나열하는 느낌이 남아 반응 변화가 약해짐",
+     "7: 욕조 뷰는 이미 7번 화면에 다 보여서 '궁금하면 댓글' 동기가 약함. 가격·위치처럼 화면에 없는 정보를 걸면 더 강함"
+    ],
+    "one_line": "줄마다 사진과 정확히 맞고, 남편이 합성이라고 의심하다가 '내가 졌다'로 백기 드는 회수가 깔끔함. 다만 중간이 시설 나열로 처지고 마지막 댓글 유도가 약함"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "style": "여행 숙소 인스타"
+ },
+ "script_card2": {
+  "chosen": {
+   "type": "불편 고백형",
+   "lines": [
+    "애들이랑 수영장 갈 때마다 자리싸움 때문에 고생했는데",
+    "늘 선베드 없어서 바닥에 앉아 있었거든요.",
+    "애들이 이젤 보더니 여기 미술관이냐고 해요.",
+    "근데 이게 눕자마자 다들 창밖만 보는 거예요.",
+    "이게 대박인 게 밤엔 잔디밭이 애들 차지거든요.",
+    "심지어 소파에 뻗은 남편이 또 오자더라고요.",
+    "욕조 궁금하면 댓글에 '자리싸움' 남겨 주세요."
+   ]
+  },
+  "versions": [
+   {
+    "type": "오해형",
+    "lines": [
+     "친구가 수영장 보고 해외냐고 묻는 거예요.",
+     "예전엔 선베드 맡으려고 새벽부터 줄 섰는데",
+     "여긴 노을 진 로비부터 해외 느낌이 나요.",
+     "근데 이게 누우면 창밖이 섬이라 폰을 놓게 돼요.",
+     "이게 대박인 게 밤엔 불 켜진 잔디밭을 걷거든요.",
+     "심지어 친구가 소파에 앉더니 국내 맞냐고 해요.",
+     "욕조 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "lines": [
+     "애들이랑 수영장 갈 때마다 자리싸움 때문에 고생했는데",
+     "늘 선베드 없어서 바닥에 앉아 있었거든요.",
+     "애들이 이젤 보더니 여기 미술관이냐고 해요.",
+     "근데 이게 눕자마자 다들 창밖만 보는 거예요.",
+     "이게 대박인 게 밤엔 잔디밭이 애들 차지거든요.",
+     "심지어 소파에 뻗은 남편이 또 오자더라고요.",
+     "욕조 궁금하면 댓글에 '자리싸움' 남겨 주세요."
+    ]
+   },
+   {
+    "type": "의심 반전형",
+    "lines": [
+     "동생이 이 수영장 사진 합성이라고 우기길래",
+     "선베드 쭉 깔린 데서 직접 찍어 보냈거든요.",
+     "노을 진 로비는 보정이냐고 묻는 거예요.",
+     "근데 이게 누워서 창밖 보여 주니까 조용해져요.",
+     "이게 대박인 게 밤 잔디밭 보곤 짐부터 싸더라고요.",
+     "심지어 다음 날 와서 소파에 눕더니 내가 졌대요.",
+     "욕조 궁금하면 댓글에 '내가졌다' 남겨 주세요."
+    ]
+   }
+  ],
+  "issues": {
+   "오해형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 83%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 29.3자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "간접성: 이점을 대놓고 말함 ['수영장 보고 해외냐고 묻는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 2: 새벽 선베드 줄서기라는 불편을 꺼냈지만 바로 3줄 로비로 넘어갑니다. 화면 2에 선베드가 넉넉히 깔린 모습이 보이는데도 '여긴 줄 설 필요가 없다'는 해결 줄이 없어 불편 이야기가 끊깁니다",
+    "사진 대조: 3: '해외 느낌이 나요'가 이점을 대놓고 말하는 꼴입니다. 1줄 오해와도 겹칩니다",
+    "사진 대조: 7: '해외아님'은 1·6줄의 오해와 이어지지만 앞부분 '욕조 궁금하면'과는 연결되지 않습니다"
+   ],
+   "불편 고백형": [
+    "말투: 문장 평균 29.7자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 1: 첫 줄이 길고 '고생했는데'로 끝나 사건 장면보다 설명처럼 들립니다. 손가락을 멈추게 하는 힘이 약합니다",
+    "사진 대조: 3: 자리싸움 이야기 도중에 이젤·미술관으로 갑자기 화제를 돌려 불편→해결 흐름이 끊깁니다",
+    "사진 대조: 5: '잔디밭이 애들 차지'는 자리싸움이 해결됐다는 좋은 대구지만 3·4줄에서 이야기 줄기가 흐려진 뒤에 나옵니다"
+   ],
+   "의심 반전형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 60%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 29.5자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "간접성: 이점을 대놓고 말함 ['로비는 보정이냐고 묻는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 2: 합성 의심을 직접 찍어 반박하는 사건은 있지만 여행의 구체적 불편이 아니어서 불편→해결 뼈대에서 벗어납니다",
+    "사진 대조: 3: '노을 진 로비는 보정이냐고'는 1줄 의심의 반복이라 새 정보가 적습니다"
+   ]
+  },
+  "scores": {
+   "오해형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 7,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 6,
+    "total": 40,
+    "bad_lines": [
+     "2: 새벽 선베드 줄서기라는 불편을 꺼냈지만 바로 3줄 로비로 넘어갑니다. 화면 2에 선베드가 넉넉히 깔린 모습이 보이는데도 '여긴 줄 설 필요가 없다'는 해결 줄이 없어 불편 이야기가 끊깁니다",
+     "3: '해외 느낌이 나요'가 이점을 대놓고 말하는 꼴입니다. 1줄 오해와도 겹칩니다",
+     "7: '해외아님'은 1·6줄의 오해와 이어지지만 앞부분 '욕조 궁금하면'과는 연결되지 않습니다"
+    ],
+    "one_line": "오해로 여는 훅과 화면 일치는 좋지만, 선베드 불편이 해결 없이 버려지고 '해외 같다'가 세 번 되풀이돼 고조가 약합니다"
+   },
+   "불편 고백형": {
+    "훅": 6,
+    "불편→해결": 7,
+    "간접성": 8,
+    "고조": 7,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 44,
+    "bad_lines": [
+     "1: 첫 줄이 길고 '고생했는데'로 끝나 사건 장면보다 설명처럼 들립니다. 손가락을 멈추게 하는 힘이 약합니다",
+     "3: 자리싸움 이야기 도중에 이젤·미술관으로 갑자기 화제를 돌려 불편→해결 흐름이 끊깁니다",
+     "5: '잔디밭이 애들 차지'는 자리싸움이 해결됐다는 좋은 대구지만 3·4줄에서 이야기 줄기가 흐려진 뒤에 나옵니다"
+    ],
+    "one_line": "자리싸움→선베드 넉넉함(화면 2)→밤 잔디밭이 애들 차지로 이어지는 불편→해결 뼈대가 가장 분명하고, 인물 행동으로 이점을 보여 줘 간접성도 좋습니다"
+   },
+   "의심 반전형": {
+    "훅": 8,
+    "불편→해결": 4,
+    "간접성": 8,
+    "고조": 8,
+    "화면 일치": 9,
+    "댓글 유도": 8,
+    "total": 45,
+    "bad_lines": [
+     "2: 합성 의심을 직접 찍어 반박하는 사건은 있지만 여행의 구체적 불편이 아니어서 불편→해결 뼈대에서 벗어납니다",
+     "3: '노을 진 로비는 보정이냐고'는 1줄 의심의 반복이라 새 정보가 적습니다"
+    ],
+    "one_line": "'합성이라고 우기길래'로 여는 훅, 조용해짐→짐 싸기→'내가 졌대요'로 세지는 고조, '내가졌다' 댓글까지 이야기가 하나로 이어지지만, 불편이 사라지는 이야기는 아닙니다"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": {
+   "version": {
+    "type": "불편 고백형 (고쳐 씀)",
+    "lines": [
+     "애들이랑 수영장만 가면 자리싸움에 울었는데",
+     "새벽 6시에 수건 깔던 선베드가 여긴 넘쳐요",
+     "애들이 통창 보더니 여기도 자리 맡냐고 해요",
+     "근데 이게 눕자마자 다들 창밖만 보고 조용해요",
+     "이게 대박인 게 밤엔 잔디밭이 통째로 애들 거예요",
+     "심지어 자리싸움에 질린 남편이 소파에서 또 오재요",
+     "욕조 쟁탈전은 댓글에 '자리싸움' 남겨 주세요"
+    ]
+   },
+   "issues": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 75%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 30.3자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 2: '선베드가 여긴 넘쳐요'는 이점을 거의 대놓고 말한다. 사진 2의 선베드 줄은 맞지만, 사람이 나와서 자리를 맡지 않는 모습 같은 행동으로 보여 주는 편이 더 간접적이다",
+    "사진 대조: 3: 사진 3은 수영장이 아니라 로비 통창, 소파, 이젤이 있는 공간이다. '여기도 자리 맡냐'의 '여기'가 어디인지 흐려져 수영장 이야기가 끊긴다",
+    "사진 대조: 4: '근데 이게'로 꺾었는데 뒤에 나오는 내용이 반전이 아니라 평범한 감상이라 고조의 첫 계단이 약하다. '눕자마자'는 사진 4의 침대와 창밖 풍경에 맞는다",
+    "사진 대조: 6: '심지어'로 가장 센 마지막 한 방이어야 하는데, 남편이 소파에서 또 오자고 하는 말은 5줄의 '밤 잔디밭이 통째로 애들 거'보다 약해서 고조가 꺾인다",
+    "사진 대조: 7: 욕조는 사진 7에 보이고 '자리싸움' 키워드도 이야기와 이어진다. 다만 '욕조 쟁탈전'이 갑자기 등장해서 불편이 해결되는 결말이 흐려진다"
+   ],
+   "score": {
+    "훅": 8,
+    "불편→해결": 8,
+    "간접성": 7,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 45,
+    "bad_lines": [
+     "2: '선베드가 여긴 넘쳐요'는 이점을 거의 대놓고 말한다. 사진 2의 선베드 줄은 맞지만, 사람이 나와서 자리를 맡지 않는 모습 같은 행동으로 보여 주는 편이 더 간접적이다",
+     "3: 사진 3은 수영장이 아니라 로비 통창, 소파, 이젤이 있는 공간이다. '여기도 자리 맡냐'의 '여기'가 어디인지 흐려져 수영장 이야기가 끊긴다",
+     "4: '근데 이게'로 꺾었는데 뒤에 나오는 내용이 반전이 아니라 평범한 감상이라 고조의 첫 계단이 약하다. '눕자마자'는 사진 4의 침대와 창밖 풍경에 맞는다",
+     "6: '심지어'로 가장 센 마지막 한 방이어야 하는데, 남편이 소파에서 또 오자고 하는 말은 5줄의 '밤 잔디밭이 통째로 애들 거'보다 약해서 고조가 꺾인다",
+     "7: 욕조는 사진 7에 보이고 '자리싸움' 키워드도 이야기와 이어진다. 다만 '욕조 쟁탈전'이 갑자기 등장해서 불편이 해결되는 결말이 흐려진다"
+    ],
+    "one_line": "'수영장 자리싸움 → 넘치는 선베드 → 밤 잔디밭 독차지'로 이어지는 불편→해결 뼈대가 탄탄하고, 시설 사진과도 다 맞는다. 다만 3·4·6줄에서 고조가 평평해지거나 꺾여 8점대 문턱에 못 미친다"
+   }
+  },
+  "style": "여행 숙소 인스타"
+ },
+ "script_card3": {
+  "chosen": {
+   "type": "후회형",
+   "story": "저 이 풀 모르고 해외 간 거 진짜 후회했어요. 비행기 값 들여 가서 선베드도 못 잡았는데 여긴 남편이 짐도 안 풀고 커튼부터 열더라고요. 근데 이게 욕조에 누워서도 바다가 보이니까 이게 대박인 게 해외 갈 비행기를 통창으로 보는데 심지어 남편이 밤 잔디밭에서 진작 올걸 해요. 소파 방 궁금하면 댓글에 '진작' 남겨 주세요.",
+   "lines": [
+    "저 이 풀 모르고 해외 간 거 진짜 후회했어요.",
+    "비행기 값 들여 가서 선베드도 못 잡았는데",
+    "여긴 남편이 짐도 안 풀고 커튼부터 열더라고요.",
+    "근데 이게 욕조에 누워서도 바다가 보이니까",
+    "이게 대박인 게 해외 갈 비행기를 통창으로 보는데",
+    "심지어 남편이 밤 잔디밭에서 진작 올걸 해요.",
+    "소파 방 궁금하면 댓글에 '진작' 남겨 주세요."
+   ],
+   "order": [
+    1,
+    2,
+    4,
+    7,
+    3,
+    5,
+    6
+   ]
+  },
+  "versions": [
+   {
+    "type": "오해형",
+    "story": "친구가 이 풀 보고 해외냐고 묻는 거예요. 예전엔 새벽 6시에 선베드 맡느라 졸았는데 여긴 누워서 창밖 섬만 봐도 되더라고요. 근데 이게 셋이 소파에 앉아도 자리가 남는데 이게 대박인 게 욕조에서도 창밖이 바다인 거 있죠. 심지어 해외냐던 친구도 밤 잔디밭에 반했는데 통창 노을 궁금하면 댓글에 '해외아님' 남겨 주세요.",
+    "lines": [
+     "친구가 이 풀 보고 해외냐고 묻는 거예요.",
+     "예전엔 새벽 6시에 선베드 맡느라 졸았는데",
+     "여긴 누워서 창밖 섬만 봐도 되더라고요.",
+     "근데 이게 셋이 소파에 앉아도 자리가 남는데",
+     "이게 대박인 게 욕조에서도 창밖이 바다인 거 있죠.",
+     "심지어 해외냐던 친구도 밤 잔디밭에 반했는데",
+     "통창 노을 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     4,
+     6,
+     7,
+     5,
+     3
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "story": "애들이랑 물놀이 갈 때마다 선베드로 고생했는데 새벽 6시부터 수건 깔고 찬물에 떨었거든요. 여긴 체크인부터 애들이 통창에 붙더라고요. 근데 이게 셋이 소파에 다 누워도 남는데 이게 대박인 게 욕조에서도 창밖만 보더니 심지어 폰만 보던 애들이 밤 잔디밭을 뛰더라고요. 섬 보이는 방 궁금하면 댓글에 '새벽6시' 남겨 주세요.",
+    "lines": [
+     "애들이랑 물놀이 갈 때마다 선베드로 고생했는데",
+     "새벽 6시부터 수건 깔고 찬물에 떨었거든요.",
+     "여긴 체크인부터 애들이 통창에 붙더라고요.",
+     "근데 이게 셋이 소파에 다 누워도 남는데",
+     "이게 대박인 게 욕조에서도 창밖만 보더니",
+     "심지어 폰만 보던 애들이 밤 잔디밭을 뛰더라고요.",
+     "섬 보이는 방 궁금하면 댓글에 '새벽6시' 남겨 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     3,
+     6,
+     7,
+     5,
+     4
+    ]
+   },
+   {
+    "type": "후회형",
+    "story": "저 이 풀 모르고 해외 간 거 진짜 후회했어요. 비행기 값 들여 가서 선베드도 못 잡았는데 여긴 남편이 짐도 안 풀고 커튼부터 열더라고요. 근데 이게 욕조에 누워서도 바다가 보이니까 이게 대박인 게 해외 갈 비행기를 통창으로 보는데 심지어 남편이 밤 잔디밭에서 진작 올걸 해요. 소파 방 궁금하면 댓글에 '진작' 남겨 주세요.",
+    "lines": [
+     "저 이 풀 모르고 해외 간 거 진짜 후회했어요.",
+     "비행기 값 들여 가서 선베드도 못 잡았는데",
+     "여긴 남편이 짐도 안 풀고 커튼부터 열더라고요.",
+     "근데 이게 욕조에 누워서도 바다가 보이니까",
+     "이게 대박인 게 해외 갈 비행기를 통창으로 보는데",
+     "심지어 남편이 밤 잔디밭에서 진작 올걸 해요.",
+     "소파 방 궁금하면 댓글에 '진작' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     4,
+     7,
+     3,
+     5,
+     6
+    ]
+   }
+  ],
+  "issues": {
+   "오해형": [
+    "사진 대조: 4: '근데 이게'로 고조를 시작하는데 정작 소파 자리가 남는다는 가장 약한 이점이 오고, '남는데'로 문장이 끊겨 흐름이 꺾임",
+    "사진 대조: 5: '창밖이 바다인 거 있죠'는 바다 뷰를 대놓고 말한 것이라 간접성이 떨어짐. 사진 5 창밖은 강과 숲이 대부분이고 바다는 멀리 조금만 보임",
+    "사진 대조: 6: '심지어'를 붙였지만 밤 잔디밭은 앞의 뷰 이야기와 결이 달라 더 세지지 않음. 친구 오해를 다시 불러온 건 좋음",
+    "사진 대조: 7: '통창 노을 궁금하면'과 키워드 '해외아님'의 연결이 어색하고, 노을은 마지막 줄에서야 처음 나와 이야기의 말이 아님"
+   ],
+   "불편 고백형": [
+    "사진 대조: 3: 1~2줄은 '새벽 6시 선베드·찬물' 불편으로 열었는데, 3줄부터 통창 이야기로 넘어가 화면 1~2의 빈 선베드와 인피니티풀로 그 불편이 풀리는 장면이 끝내 나오지 않음",
+    "사진 대조: 4: '근데 이게'가 앞 줄과 이어지지 않고, '셋이 누워도 남는데'는 넓다는 걸 사실상 대놓고 말함. 화면 4의 L자 소파와는 맞음",
+    "사진 대조: 6: '폰만 보던 애들'이라는 새 불편이 마지막 직전에야 나와 1~2줄 선베드 불편과 따로 놂. 화면 6의 밤 잔디밭과는 맞음"
+   ],
+   "후회형": [
+    "사진 대조: 2: '선베드도 못 잡았는데'라는 불편을 꺼냈지만 바로 3줄의 커튼 이야기로 넘어가요. 사진 2에 빈 선베드가 줄지어 있는데도 '여긴 선베드가 남아돌더라' 같은 해결로 이어지지 않아, 불편과 해결이 끊겨요",
+    "사진 대조: 4: '욕조에 누워서도 바다가 보이니까'는 이점을 대놓고 말한 문장에 가까워요. 고조 단계의 '근데 이게'도 힘이 약해요",
+    "사진 대조: 7: '소파 방 궁금하면'은 사진 7의 소파 방과는 맞아요. 하지만 이야기의 결말인 '진작'과 이어지지 않아, 댓글을 남길 이유가 흐려져요"
+   ]
+  },
+  "scores": {
+   "오해형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 5,
+    "고조": 5,
+    "화면 일치": 8,
+    "댓글 유도": 6,
+    "total": 36,
+    "bad_lines": [
+     "4: '근데 이게'로 고조를 시작하는데 정작 소파 자리가 남는다는 가장 약한 이점이 오고, '남는데'로 문장이 끊겨 흐름이 꺾임",
+     "5: '창밖이 바다인 거 있죠'는 바다 뷰를 대놓고 말한 것이라 간접성이 떨어짐. 사진 5 창밖은 강과 숲이 대부분이고 바다는 멀리 조금만 보임",
+     "6: '심지어'를 붙였지만 밤 잔디밭은 앞의 뷰 이야기와 결이 달라 더 세지지 않음. 친구 오해를 다시 불러온 건 좋음",
+     "7: '통창 노을 궁금하면'과 키워드 '해외아님'의 연결이 어색하고, 노을은 마지막 줄에서야 처음 나와 이야기의 말이 아님"
+    ],
+    "one_line": "'해외냐' 오해 훅과 새벽 6시 선베드 불편은 좋지만, 4줄부터 소파·욕조·잔디밭을 나열하는 소개로 흘러 고조와 간접성이 약함"
+   },
+   "불편 고백형": {
+    "훅": 7,
+    "불편→해결": 4,
+    "간접성": 7,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 40,
+    "bad_lines": [
+     "3: 1~2줄은 '새벽 6시 선베드·찬물' 불편으로 열었는데, 3줄부터 통창 이야기로 넘어가 화면 1~2의 빈 선베드와 인피니티풀로 그 불편이 풀리는 장면이 끝내 나오지 않음",
+     "4: '근데 이게'가 앞 줄과 이어지지 않고, '셋이 누워도 남는데'는 넓다는 걸 사실상 대놓고 말함. 화면 4의 L자 소파와는 맞음",
+     "6: '폰만 보던 애들'이라는 새 불편이 마지막 직전에야 나와 1~2줄 선베드 불편과 따로 놂. 화면 6의 밤 잔디밭과는 맞음"
+    ],
+    "one_line": "화면 일치는 줄마다 정확하고 아이들 행동으로 보여 주는 방식도 좋지만, 첫 줄에 연 선베드 불편이 끝내 풀리지 않아 3줄부터는 시설을 나열하는 것처럼 들림. 2줄 다음에 '여긴 선베드가 남아돌더라고요' 같은 해결 한 줄이 필요함"
+   },
+   "후회형": {
+    "훅": 8,
+    "불편→해결": 6,
+    "간접성": 7,
+    "고조": 7,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 44,
+    "bad_lines": [
+     "2: '선베드도 못 잡았는데'라는 불편을 꺼냈지만 바로 3줄의 커튼 이야기로 넘어가요. 사진 2에 빈 선베드가 줄지어 있는데도 '여긴 선베드가 남아돌더라' 같은 해결로 이어지지 않아, 불편과 해결이 끊겨요",
+     "4: '욕조에 누워서도 바다가 보이니까'는 이점을 대놓고 말한 문장에 가까워요. 고조 단계의 '근데 이게'도 힘이 약해요",
+     "7: '소파 방 궁금하면'은 사진 7의 소파 방과는 맞아요. 하지만 이야기의 결말인 '진작'과 이어지지 않아, 댓글을 남길 이유가 흐려져요"
+    ],
+    "one_line": "'해외 후회'로 여는 훅이 좋고, '해외 갈 비행기를 통창으로 본다'는 줄이 간접 표현으로 빛나요(사진 5에 실제로 비행기가 보여요). 다만 2줄에서 꺼낸 선베드 불편이 끝까지 풀리지 않아 불편→해결의 뼈대가 느슨해요"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": {
+   "version": {
+    "type": "후회형 (고쳐 씀)",
+    "lines": [
+     "저 이 풀 모르고 해외 간 거 후회했어요.",
+     "거기선 선베드 전쟁인데 여긴 남아돌아요.",
+     "폰만 보던 남편이 커튼부터 열더라고요.",
+     "근데 이게 욕조 들어가자마자 둘 다 조용해요.",
+     "이게 대박인 게 타려던 비행기를 창으로 봐요.",
+     "심지어 남편이 밤 잔디밭에서 진작 올걸 해요.",
+     "진작 올걸 하기 싫으면 댓글에 '진작' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     4,
+     7,
+     3,
+     5,
+     6
+    ]
+   },
+   "issues": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 100%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 7.0개(원본 4개 안팎)",
+    "말투: 문장 평균 24.3자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 4: '근데 이게 욕조 들어가자마자'에서 '이게'가 받는 말이 없어 문장이 어색하다. 고조의 첫 단계인데도 '둘 다 조용해요'는 반전보다 감상에 가깝다",
+    "사진 대조: 6: '심지어'가 붙은 마지막 고조인데, 5줄의 '타려던 비행기를 창으로 봐요'(사진 5에 비행기가 실제로 보임)보다 약하다. 7줄의 '진작'을 미리 써 버려서 마무리 키워드의 힘도 줄었다"
+   ],
+   "score": {
+    "훅": 7,
+    "불편→해결": 7,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 44,
+    "bad_lines": [
+     "4: '근데 이게 욕조 들어가자마자'에서 '이게'가 받는 말이 없어 문장이 어색하다. 고조의 첫 단계인데도 '둘 다 조용해요'는 반전보다 감상에 가깝다",
+     "6: '심지어'가 붙은 마지막 고조인데, 5줄의 '타려던 비행기를 창으로 봐요'(사진 5에 비행기가 실제로 보임)보다 약하다. 7줄의 '진작'을 미리 써 버려서 마무리 키워드의 힘도 줄었다"
+    ],
+    "one_line": "해외 선베드 전쟁에서 남편의 행동 변화로 이어지는 흐름과 사진 대응(빈 선베드·욕조·창밖 비행기·밤 잔디밭)은 좋다. 다만 6줄의 '심지어'가 5줄의 비행기 장면보다 약해서 고조가 끝에서 꺾인다."
+   }
+  },
+  "style": "여행 숙소 인스타"
+ },
+ "script_card4": {
+  "chosen": {
+   "type": "오해형 (고쳐 씀)",
+   "lines": [
+    "친구가 이 풀 보고 해외냐고 물어보는 거예요,",
+    "작년엔 이런 풀 보려고 밤 비행기에 허리 나갔는데",
+    "이번엔 비행기 없이 허리 펴고 창밖만 봤어요.",
+    "근데 이게 로비 통창으로 보니까 다 멈춰요.",
+    "이게 대박인 게 욕조 사진엔 엄마까지 속았는데",
+    "심지어 밤 잔디밭 사진엔 친구가 시차 묻길래",
+    "이 방 궁금하면 댓글에 '해외아님' 주세요."
+   ],
+   "order": [
+    2,
+    1,
+    4,
+    3,
+    7,
+    5,
+    6
+   ]
+  },
+  "versions": [
+   {
+    "type": "혼남 사건형",
+    "story": "이 풀 때문에 남편한테 등짝 맞을 뻔했는데, 여행 가면 소파에서 TV만 보던 사람이라 선베드 보자마자 또 돈 쓴다고 한숨부터 쉬었거든요. 근데 통창 앞 침대에 눕더니 바다만 보고, 창가 욕조 물까지 먼저 받더라고요. 심지어 밤엔 불 켜진 잔디밭에서 또 오자고 하길래 이 통창 있는 곳을 다시 예약했어요.",
+    "lines": [
+     "이 풀 때문에 남편한테 등짝 맞을 뻔했어요.",
+     "여행 가면 소파에서 TV만 보던 사람이라",
+     "선베드 보더니 또 돈 쓴다고 한숨이었거든요.",
+     "근데 이게 침대 눕더니 바다만 보는 거예요.",
+     "이게 대박인 게 욕조 물을 먼저 받더라고요.",
+     "심지어 밤엔 잔디밭 조명 아래서 또 오자더라고요.",
+     "이 통창 어딘지 궁금하면 댓글에 '등짝' 주세요."
+    ],
+    "order": [
+     1,
+     6,
+     2,
+     4,
+     7,
+     5,
+     3
+    ]
+   },
+   {
+    "type": "오해형",
+    "story": "친구가 이 풀 사진을 보고 해외냐고 물어봤는데, 작년엔 이런 풀 보려고 밤 비행기를 탔던 제가 이번엔 창밖 바다를 보며 바로 누웠거든요. 근데 로비 통창 앞에선 다들 걸음을 멈추고, 욕조 사진에는 엄마까지 외국인 줄 알고 속았어요. 심지어 밤 잔디밭 사진을 보고는 친구가 시차가 얼마냐고 묻더라고요.",
+    "lines": [
+     "친구가 이 풀 보고 해외냐고 물어보는 거예요.",
+     "작년엔 이런 풀 보려고 밤 비행기 탔는데",
+     "이번엔 창밖 바다 보며 바로 누웠거든요.",
+     "근데 이게 로비 통창 앞에서 다들 멈추더라고요.",
+     "이게 대박인 게 욕조 사진엔 엄마까지 속았어요.",
+     "심지어 밤 잔디밭 사진엔 친구가 시차 묻더라고요.",
+     "이 방 궁금하면 댓글에 '해외아님' 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     4,
+     3,
+     7,
+     5,
+     6
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "story": "엄마랑 물놀이 갈 때마다 진짜 고생했는데, 선베드 찾다가 지친 엄마는 늘 방에만 있었거든요. 이번엔 창가 침대에 앉자마자 엄마가 커튼부터 열고, 욕조에선 콧노래를 부르고, 통창 앞에선 먼저 사진을 찍자고 하더라고요. 심지어 밤엔 피곤하다던 엄마가 잔디밭을 한 바퀴 더 돌자고 했어요.",
+    "lines": [
+     "엄마랑 물놀이 갈 때마다 진짜 고생했는데",
+     "선베드 찾다 지친 엄마가 방에만 있었거든요.",
+     "이번엔 창가 침대 앉자마자 커튼부터 여는 거예요.",
+     "근데 이게 욕조에서 콧노래가 나오는 거예요.",
+     "이게 대박인 게 통창 앞에서 먼저 사진 찍재요.",
+     "심지어 밤엔 엄마가 잔디밭 한 바퀴 더 돌재요.",
+     "이 방 궁금하면 댓글에 '엄마효도' 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     4,
+     7,
+     3,
+     5,
+     6
+    ]
+   },
+   {
+    "type": "오해형 (고쳐 씀)",
+    "lines": [
+     "친구가 이 풀 보고 해외냐고 물어보는 거예요,",
+     "작년엔 이런 풀 보려고 밤 비행기에 허리 나갔는데",
+     "이번엔 비행기 없이 허리 펴고 창밖만 봤어요.",
+     "근데 이게 로비 통창으로 보니까 다 멈춰요.",
+     "이게 대박인 게 욕조 사진엔 엄마까지 속았는데",
+     "심지어 밤 잔디밭 사진엔 친구가 시차 묻길래",
+     "이 방 궁금하면 댓글에 '해외아님' 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     4,
+     3,
+     7,
+     5,
+     6
+    ]
+   }
+  ],
+  "issues": {
+   "혼남 사건형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 100%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 28.8자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "간접성: 이점을 대놓고 말함 ['침대 눕더니 바다만 보는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 3: 선베드는 풀에 딸린 시설이라 '또 돈 쓴다'는 한숨과 잘 맞지 않음. 불편이 한 장면으로 꽂히지 않고 남편 성격 설명에 머묾",
+    "사진 대조: 5: '욕조 물을 먼저 받더라'는 4줄(바다만 봄)보다 세지 않아 '대박인 게' 자리의 힘이 약함",
+    "사진 대조: 7: '통창'은 사진 7의 로비 통창과 맞지만 이야기의 중심(등짝·남편 변화)과 따로 놀아 궁금증이 '어딘지'로만 흐름"
+   ],
+   "오해형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 80%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "말투: 문장 평균 28.8자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 2: '밤 비행기'라는 불편이 장면 하나로 짧게 스쳐 지나가고, 3줄에서 해결된 뒤로는 더 이어지지 않아 불편→해결 줄기가 약함",
+    "사진 대조: 4: '근데 이게 로비 통창 앞에서 다들 멈추더라고요'는 주어 '이게'가 가리키는 것이 불분명해 문장이 어색함",
+    "사진 대조: 3: '창밖 바다 보며'는 사진과 맞지만 바다 뷰를 대놓고 말하는 쪽에 가까움"
+   ],
+   "불편 고백형": [
+    "말투: 문장 평균 29.0자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "간접성: 이점을 대놓고 말함 ['욕조에서 콧노래가 나오는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 1: '진짜 고생했는데'는 어떤 고생인지 장면이 없어 첫 줄에서 손가락을 멈추게 하는 힘이 약함",
+    "사진 대조: 2: 선베드 찾기라는 불편을 꺼냈는데, 이후 줄에서 선베드나 수영장 자리 문제가 풀리는 장면이 없음. 해결이 방·욕조로 옮겨 가 불편과 해결이 이어지지 않음",
+    "사진 대조: 4: '근데 이게 욕조에서 콧노래가 나오는 거예요'는 주어가 꼬였음('이게'가 가리키는 대상이 없음). 반전 연결어가 내용과 맞지 않아 고조가 끊김",
+    "사진 대조: 5: '이게 대박인 게' 뒤에 대박인 이유가 없고 행동만 나열돼 앞 줄보다 세지지 않음"
+   ],
+   "오해형 (고쳐 씀)": [
+    "사진 대조: 4: '다 멈춰요'는 무엇이 멈추는지 말하지 않아 막연합니다. 사진 4의 통창 너머 새벽 노을과 비행기라는 실제 장면을 살리지 못했습니다",
+    "사진 대조: 5: '엄마까지 속았는데'로 끝나 말이 마무리되지 않습니다. 무엇에 속았는지 결과가 없어 '대박인 게'의 한 방이 터지지 않습니다",
+    "사진 대조: 6: '시차 묻길래'로 또 말이 끊겨, 가장 세야 할 '심지어' 줄에서 결말 없이 다음 줄로 넘어갑니다",
+    "사진 대조: 2: 밤 비행기를 타고 허리가 아팠다는 불편은 좋습니다. 다만 '이런 풀 보려고'라는 계기가 약해, 불편 장면이 한 순간으로 또렷하게 보이지 않습니다"
+   ]
+  },
+  "scores": {
+   "혼남 사건형": {
+    "훅": 8,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 7,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 45,
+    "bad_lines": [
+     "3: 선베드는 풀에 딸린 시설이라 '또 돈 쓴다'는 한숨과 잘 맞지 않음. 불편이 한 장면으로 꽂히지 않고 남편 성격 설명에 머묾",
+     "5: '욕조 물을 먼저 받더라'는 4줄(바다만 봄)보다 세지 않아 '대박인 게' 자리의 힘이 약함",
+     "7: '통창'은 사진 7의 로비 통창과 맞지만 이야기의 중심(등짝·남편 변화)과 따로 놀아 궁금증이 '어딘지'로만 흐름"
+    ],
+    "one_line": "'등짝' 사건 훅과 남편 행동 변화로 이점을 간접적으로 보여 주는 결은 좋은데, 불편이 '돈 쓴다는 한숨' 정도라 해결 쾌감이 약하고 5줄에서 고조가 한 번 꺾임"
+   },
+   "오해형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 8,
+    "고조": 7,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "2: '밤 비행기'라는 불편이 장면 하나로 짧게 스쳐 지나가고, 3줄에서 해결된 뒤로는 더 이어지지 않아 불편→해결 줄기가 약함",
+     "4: '근데 이게 로비 통창 앞에서 다들 멈추더라고요'는 주어 '이게'가 가리키는 것이 불분명해 문장이 어색함",
+     "3: '창밖 바다 보며'는 사진과 맞지만 바다 뷰를 대놓고 말하는 쪽에 가까움"
+    ],
+    "one_line": "'해외냐'는 오해 하나로 풀(1)·통창 로비(4)·욕조(5)·밤 잔디밭(6)을 이어 사진과 잘 맞고 간접성이 좋음. 다만 밤 비행기 불편이 두 줄 만에 끝나 이야기가 오해 모음처럼 평평해짐"
+   },
+   "불편 고백형": {
+    "훅": 6,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 42,
+    "bad_lines": [
+     "1: '진짜 고생했는데'는 어떤 고생인지 장면이 없어 첫 줄에서 손가락을 멈추게 하는 힘이 약함",
+     "2: 선베드 찾기라는 불편을 꺼냈는데, 이후 줄에서 선베드나 수영장 자리 문제가 풀리는 장면이 없음. 해결이 방·욕조로 옮겨 가 불편과 해결이 이어지지 않음",
+     "4: '근데 이게 욕조에서 콧노래가 나오는 거예요'는 주어가 꼬였음('이게'가 가리키는 대상이 없음). 반전 연결어가 내용과 맞지 않아 고조가 끊김",
+     "5: '이게 대박인 게' 뒤에 대박인 이유가 없고 행동만 나열돼 앞 줄보다 세지지 않음"
+    ],
+    "one_line": "엄마의 행동이 바뀌는 흐름으로 이점을 돌려 말한 점과 사진 일치(창가 침대·욕조·통창 로비·밤 잔디밭)는 좋지만, 선베드 불편이 해결되지 않고 4~5줄 연결어가 헛돌아 고조가 평평함"
+   },
+   "오해형 (고쳐 씀)": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 7,
+    "고조": 5,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 41,
+    "bad_lines": [
+     "4: '다 멈춰요'는 무엇이 멈추는지 말하지 않아 막연합니다. 사진 4의 통창 너머 새벽 노을과 비행기라는 실제 장면을 살리지 못했습니다",
+     "5: '엄마까지 속았는데'로 끝나 말이 마무리되지 않습니다. 무엇에 속았는지 결과가 없어 '대박인 게'의 한 방이 터지지 않습니다",
+     "6: '시차 묻길래'로 또 말이 끊겨, 가장 세야 할 '심지어' 줄에서 결말 없이 다음 줄로 넘어갑니다",
+     "2: 밤 비행기를 타고 허리가 아팠다는 불편은 좋습니다. 다만 '이런 풀 보려고'라는 계기가 약해, 불편 장면이 한 순간으로 또렷하게 보이지 않습니다"
+    ],
+    "one_line": "'해외냐'는 오해 하나로 풀→창밖→로비→욕조→밤 잔디밭을 꿰었고, 줄마다 사진과 잘 맞습니다. 다만 4~6줄이 막연한 말이나 끊긴 말로 끝나 '근데→대박→심지어'로 올라가는 힘이 중간에 샙니다."
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": {
+   "version": {
+    "type": "오해형 (고쳐 씀)",
+    "lines": [
+     "친구가 이 풀 보고 해외냐고 물어보는 거예요,",
+     "작년엔 이런 풀 보려고 밤 비행기에 허리 나갔는데",
+     "이번엔 비행기 없이 허리 펴고 창밖만 봤어요.",
+     "근데 이게 로비 통창으로 보니까 다 멈춰요.",
+     "이게 대박인 게 욕조 사진엔 엄마까지 속았는데",
+     "심지어 밤 잔디밭 사진엔 친구가 시차 묻길래",
+     "이 방 궁금하면 댓글에 '해외아님' 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     4,
+     3,
+     7,
+     5,
+     6
+    ]
+   },
+   "issues": [
+    "사진 대조: 4: '다 멈춰요'는 무엇이 멈추는지 말하지 않아 막연합니다. 사진 4의 통창 너머 새벽 노을과 비행기라는 실제 장면을 살리지 못했습니다",
+    "사진 대조: 5: '엄마까지 속았는데'로 끝나 말이 마무리되지 않습니다. 무엇에 속았는지 결과가 없어 '대박인 게'의 한 방이 터지지 않습니다",
+    "사진 대조: 6: '시차 묻길래'로 또 말이 끊겨, 가장 세야 할 '심지어' 줄에서 결말 없이 다음 줄로 넘어갑니다",
+    "사진 대조: 2: 밤 비행기를 타고 허리가 아팠다는 불편은 좋습니다. 다만 '이런 풀 보려고'라는 계기가 약해, 불편 장면이 한 순간으로 또렷하게 보이지 않습니다"
+   ],
+   "score": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 7,
+    "고조": 5,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 41,
+    "bad_lines": [
+     "4: '다 멈춰요'는 무엇이 멈추는지 말하지 않아 막연합니다. 사진 4의 통창 너머 새벽 노을과 비행기라는 실제 장면을 살리지 못했습니다",
+     "5: '엄마까지 속았는데'로 끝나 말이 마무리되지 않습니다. 무엇에 속았는지 결과가 없어 '대박인 게'의 한 방이 터지지 않습니다",
+     "6: '시차 묻길래'로 또 말이 끊겨, 가장 세야 할 '심지어' 줄에서 결말 없이 다음 줄로 넘어갑니다",
+     "2: 밤 비행기를 타고 허리가 아팠다는 불편은 좋습니다. 다만 '이런 풀 보려고'라는 계기가 약해, 불편 장면이 한 순간으로 또렷하게 보이지 않습니다"
+    ],
+    "one_line": "'해외냐'는 오해 하나로 풀→창밖→로비→욕조→밤 잔디밭을 꿰었고, 줄마다 사진과 잘 맞습니다. 다만 4~6줄이 막연한 말이나 끊긴 말로 끝나 '근데→대박→심지어'로 올라가는 힘이 중간에 샙니다."
+   }
+  },
+  "style": "여행 숙소 인스타"
+ },
+ "script_long": {
+  "chosen": {
+   "type": "불편 고백형",
+   "story": "애들이랑 여행 갈 때마다 선베드에서도 폰만 봐서 고생했는데 이번엔 애들이 바다 끝에 걸린 물을 보자마자 뛰어들었거든요. 로비 이젤 앞에선 폰 대신 연필을 잡길래 남편이 눈을 의심하더라고요. 근데 이 방이 창밖에 섬이 떠 있어서 애들이 창에 붙어 있는데 여기가 대박인 게 소파가 책상까지 이어져서 다 같이 뒹굴다가 심지어 폰 없인 못 살던 애들이 창가 욕조에 물 받자고 조르더라고요. 밤 잔디밭도 폰 없이 뛴 곳, 궁금하면 댓글에 '폰압수' 남겨 주세요.",
+   "lines": [
+    "애들이랑 여행 갈 때마다 선베드에서도 폰만 봐서 고생했는데",
+    "이번엔 애들이 바다 끝에 걸린 물을 보자마자 뛰어들었거든요.",
+    "로비 이젤 앞에선 폰 대신 연필을 잡길래 남편이 눈을 의심하더라고요.",
+    "근데 이 방이 창밖에 섬이 떠 있어서 애들이 창에 붙어 있는데",
+    "여기가 대박인 게 소파가 책상까지 이어져서 다 같이 뒹굴다가",
+    "심지어 폰 없인 못 살던 애들이 창가 욕조에 물 받자고 조르더라고요.",
+    "밤 잔디밭도 폰 없이 뛴 곳, 궁금하면 댓글에 '폰압수' 남겨 주세요."
+   ],
+   "order": [
+    2,
+    1,
+    3,
+    4,
+    6,
+    7,
+    5
+   ]
+  },
+  "versions": [
+   {
+    "type": "오해형",
+    "story": "엄마랑 찍은 수영장 사진 보고 친구가 여기 해외냐고 물어보는 거예요. 비행기만 타면 뻗던 엄마가 바다 끝 물에 발부터 담그시더니 통창 로비에선 외국 미술관 같다고 한참 앉아 계셨거든요. 근데 이 방이 누우면 섬이 보여서 엄마가 폰부터 내려놓으시는데 여기가 대박인 게 소파가 책상까지 이어져서 그대로 누워 계시다가 심지어 피곤하다던 엄마가 창가 욕조에 먼저 물을 받으시더라고요. 밤 잔디밭까지 걸은 그곳, 궁금하면 댓글에 '해외아님' 남겨 주세요.",
+    "lines": [
+     "엄마랑 찍은 수영장 사진 보고 친구가 여기 해외냐고 물어보는 거예요.",
+     "비행기만 타면 뻗던 엄마가 바다 끝 물에 발부터 담그시더니",
+     "통창 로비에선 외국 미술관 같다고 한참 앉아 계셨거든요.",
+     "근데 이 방이 누우면 섬이 보여서 엄마가 폰부터 내려놓으시는데",
+     "여기가 대박인 게 소파가 책상까지 이어져서 그대로 누워 계시다가",
+     "심지어 피곤하다던 엄마가 창가 욕조에 먼저 물을 받으시더라고요.",
+     "밤 잔디밭까지 걸은 그곳, 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     3,
+     4,
+     6,
+     7,
+     5
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "story": "애들이랑 여행 갈 때마다 선베드에서도 폰만 봐서 고생했는데 이번엔 애들이 바다 끝에 걸린 물을 보자마자 뛰어들었거든요. 로비 이젤 앞에선 폰 대신 연필을 잡길래 남편이 눈을 의심하더라고요. 근데 이 방이 창밖에 섬이 떠 있어서 애들이 창에 붙어 있는데 여기가 대박인 게 소파가 책상까지 이어져서 다 같이 뒹굴다가 심지어 폰 없인 못 살던 애들이 창가 욕조에 물 받자고 조르더라고요. 밤 잔디밭도 폰 없이 뛴 곳, 궁금하면 댓글에 '폰압수' 남겨 주세요.",
+    "lines": [
+     "애들이랑 여행 갈 때마다 선베드에서도 폰만 봐서 고생했는데",
+     "이번엔 애들이 바다 끝에 걸린 물을 보자마자 뛰어들었거든요.",
+     "로비 이젤 앞에선 폰 대신 연필을 잡길래 남편이 눈을 의심하더라고요.",
+     "근데 이 방이 창밖에 섬이 떠 있어서 애들이 창에 붙어 있는데",
+     "여기가 대박인 게 소파가 책상까지 이어져서 다 같이 뒹굴다가",
+     "심지어 폰 없인 못 살던 애들이 창가 욕조에 물 받자고 조르더라고요.",
+     "밤 잔디밭도 폰 없이 뛴 곳, 궁금하면 댓글에 '폰압수' 남겨 주세요."
+    ],
+    "order": [
+     2,
+     1,
+     3,
+     4,
+     6,
+     7,
+     5
+    ]
+   },
+   {
+    "type": "의심 반전형",
+    "story": "남편이 이 수영장 사진 합성이라고 우기길래 그냥 데려갔는데 호캉스 가면 TV만 보던 사람이 선베드부터 맡는 거예요. 해질녘 로비 통창 보더니 공항 라운지냐고 묻더라고요. 근데 이 방이 창이 침대 바로 옆이라서 남편이 섬 사진만 계속 찍는데 여기가 대박인 게 소파에서도 창이 보이니까 TV는 켜지도 않다가 심지어 합성이라던 남편이 창가 욕조 앞에서 내가 졌다고 하더라고요. 밤 잔디밭까지 걷자던 곳, 궁금하면 댓글에 '내가졌다' 남겨 주세요.",
+    "lines": [
+     "남편이 이 수영장 사진 합성이라고 우기길래 그냥 데려갔는데",
+     "호캉스 가면 TV만 보던 사람이 선베드부터 맡는 거예요.",
+     "해질녘 로비 통창 보더니 공항 라운지냐고 묻더라고요.",
+     "근데 이 방이 창이 침대 바로 옆이라서 남편이 섬 사진만 계속 찍는데",
+     "여기가 대박인 게 소파에서도 창이 보이니까 TV는 켜지도 않다가",
+     "심지어 합성이라던 남편이 창가 욕조 앞에서 내가 졌다고 하더라고요.",
+     "밤 잔디밭까지 걷자던 곳, 궁금하면 댓글에 '내가졌다' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     3,
+     4,
+     6,
+     7,
+     5
+    ]
+   }
+  ],
+  "issues": {
+   "오해형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 67%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "사진 대조: 2: '비행기만 타면 뻗던 엄마'라는 불편이 한 순간의 장면으로 그려지지 않고 스쳐 지나가요. 이 숙소에서 그 불편이 사라졌다는 마무리도 없어서 불편→해결 뼈대가 약해요",
+    "사진 대조: 4: '누우면 섬이 보여서'는 바다 뷰 자랑에 가까워 간접성이 떨어져요. 사진 속 섬이 보이니 화면은 맞아요",
+    "사진 대조: 5: '여기가 대박인 게' 다음에 소파와 책상이 이어진 가구 설명이 나와 줄 4보다 힘이 약해요. 고조가 꺾이는 지점이에요. 사진 5의 L자 소파와 책상이 이어진 모습은 맞아요"
+   ],
+   "불편 고백형": [
+    "사진 대조: 1: '선베드에서도 폰만 봐서 고생'은 불편이 한 장면으로 그려지지 않는다. 언제·어디서 무슨 일이 있었는지 없어 손가락을 세게 붙잡지 못한다",
+    "사진 대조: 4: '이 방이 창밖에 섬이 떠 있어서'는 주어가 겹쳐 문장이 어색하다. '근데'로 꺾는 힘도 2~3줄의 변화보다 약하다",
+    "사진 대조: 5: '다 같이 뒹굴다가'로 끝나서 '대박인 게'가 무엇이 대박인지 알려 주지 않는다. 고조가 중간에서 김이 빠진다",
+    "사진 대조: 6: '심지어' 줄이 '물 받자고 조르더라'에 그쳐 2~3줄의 행동 변화보다 세지 않다. 소름 포인트가 약하다"
+   ],
+   "의심 반전형": [
+    "간접성: 이점을 대놓고 말함 ['선베드부터 맡는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 2: '호캉스 가면 TV만 보던 사람'은 불편이라기보다 인물 습관이에요. 불편이 한 순간의 장면으로 그려지지 않아서 불편→해결 뼈대가 약해요",
+    "사진 대조: 5: 사진 속 창은 커튼에 반쯤 가려져 있어요. '소파에서도 창이 보인다'는 말이 화면에서 약하게만 확인돼요",
+    "사진 대조: 6: 사진에서 욕조는 창 바로 옆이 아니라 세면대 앞에 있고, 창은 소파 쪽에 있어요. '창가 욕조'는 조금 과해요",
+    "사진 대조: 7: '밤 잔디밭까지 걷자던 곳'은 앞 이야기와 연결이 없어서, 댓글 줄 앞에 새 정보가 갑자기 들어온 느낌이에요"
+   ]
+  },
+  "scores": {
+   "오해형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 7,
+    "고조": 5,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 40,
+    "bad_lines": [
+     "2: '비행기만 타면 뻗던 엄마'라는 불편이 한 순간의 장면으로 그려지지 않고 스쳐 지나가요. 이 숙소에서 그 불편이 사라졌다는 마무리도 없어서 불편→해결 뼈대가 약해요",
+     "4: '누우면 섬이 보여서'는 바다 뷰 자랑에 가까워 간접성이 떨어져요. 사진 속 섬이 보이니 화면은 맞아요",
+     "5: '여기가 대박인 게' 다음에 소파와 책상이 이어진 가구 설명이 나와 줄 4보다 힘이 약해요. 고조가 꺾이는 지점이에요. 사진 5의 L자 소파와 책상이 이어진 모습은 맞아요"
+    ],
+    "one_line": "해외로 오해받는 훅과 엄마 행동 변화로 보여 주는 방식은 좋고, 수영장·로비·섬·창가 욕조·밤 잔디밭까지 화면과도 거의 다 맞아요. 다만 과거 불편이 한 장면으로 서지 않고, 5번 줄 가구 설명에서 고조가 꺾여요."
+   },
+   "불편 고백형": {
+    "훅": 7,
+    "불편→해결": 7,
+    "간접성": 8,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 44,
+    "bad_lines": [
+     "1: '선베드에서도 폰만 봐서 고생'은 불편이 한 장면으로 그려지지 않는다. 언제·어디서 무슨 일이 있었는지 없어 손가락을 세게 붙잡지 못한다",
+     "4: '이 방이 창밖에 섬이 떠 있어서'는 주어가 겹쳐 문장이 어색하다. '근데'로 꺾는 힘도 2~3줄의 변화보다 약하다",
+     "5: '다 같이 뒹굴다가'로 끝나서 '대박인 게'가 무엇이 대박인지 알려 주지 않는다. 고조가 중간에서 김이 빠진다",
+     "6: '심지어' 줄이 '물 받자고 조르더라'에 그쳐 2~3줄의 행동 변화보다 세지 않다. 소름 포인트가 약하다"
+    ],
+    "one_line": "'폰만 보던 애들이 폰을 놓는다'는 축으로 인물 행동 변화를 보여 줘 간접성이 좋고, 수영장·이젤·섬·소파 책상·창가 욕조·밤 잔디밭이 모두 사진과 맞는다. 다만 첫 줄 불편이 장면으로 안 그려지고, 4~6줄의 고조가 평평해져 8점대 바로 아래다."
+   },
+   "의심 반전형": {
+    "훅": 8,
+    "불편→해결": 5,
+    "간접성": 8,
+    "고조": 7,
+    "화면 일치": 8,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "2: '호캉스 가면 TV만 보던 사람'은 불편이라기보다 인물 습관이에요. 불편이 한 순간의 장면으로 그려지지 않아서 불편→해결 뼈대가 약해요",
+     "5: 사진 속 창은 커튼에 반쯤 가려져 있어요. '소파에서도 창이 보인다'는 말이 화면에서 약하게만 확인돼요",
+     "6: 사진에서 욕조는 창 바로 옆이 아니라 세면대 앞에 있고, 창은 소파 쪽에 있어요. '창가 욕조'는 조금 과해요",
+     "7: '밤 잔디밭까지 걷자던 곳'은 앞 이야기와 연결이 없어서, 댓글 줄 앞에 새 정보가 갑자기 들어온 느낌이에요"
+    ],
+    "one_line": "'합성이라고 우기던 남편'이 '내가 졌다'고 말하는 의심→인정 흐름이 첫 줄부터 마지막 줄까지 이어져서 훅과 댓글 키워드가 맞물려요. 3번 줄 공항 라운지는 사진 속 비행기와도 맞아요. 다만 구체적인 과거 불편이 없어서 불편→해결 뼈대가 약해요"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": null,
+  "style": "여행 숙소 인스타",
+  "test": "길이 시험 33~37초"
+ },
+ "script_card5": {
+  "chosen": {
+   "type": "오해형",
+   "story": "엄마가 이 풀 보고 해외냐고 물어보는 거예요. 해외선 지쳐서 선베드에서 잠만 주무셨는데 여긴 국내라 노을부터 보자시는 거예요. 근데 이 방이 섬이 보여서 낮잠을 거르셨어요. 여기가 대박인 게 욕조가 창가라 피곤이 풀리시는데 심지어 밤엔 엄마가 먼저 잔디밭 걷자시더라고요. 이 방 궁금하면 댓글에 '해외아님' 남겨 주세요.",
+   "lines": [
+    "엄마가 이 풀 보고 해외냐고 물어보는 거예요.",
+    "해외선 지쳐서 선베드에서 잠만 주무셨는데",
+    "여긴 국내라 노을부터 보자시는 거예요.",
+    "근데 이 방이 섬이 보여서 낮잠을 거르셨어요.",
+    "여기가 대박인 게 욕조가 창가라 피곤이 풀리시는데",
+    "심지어 밤엔 엄마가 먼저 잔디밭 걷자시더라고요.",
+    "이 방 궁금하면 댓글에 '해외아님' 남겨 주세요."
+   ],
+   "order": [
+    1,
+    2,
+    3,
+    4,
+    7,
+    5,
+    6
+   ]
+  },
+  "versions": [
+   {
+    "type": "혼남 사건형",
+    "story": "저 이 풀 때문에 남편한테 등짝 맞을 뻔했는데 호캉스는 낭비라며 소파에서 폰만 보던 사람이 통창 노을 보더니 어디냐고 묻는 거예요. 근데 이 방이 창 가득 바다라 폰을 놓더라고요. 여기가 대박인 게 선베드가 남아 바로 눕는데 심지어 욕조 보더니 하루 더 자자는 거 있죠. 밤 정원 궁금하면 댓글에 '등짝' 남겨 주세요.",
+    "lines": [
+     "저 이 풀 때문에 남편한테 등짝 맞을 뻔했는데",
+     "호캉스는 낭비라며 소파에서 폰만 보던 사람이",
+     "통창 노을 보더니 어디냐고 묻는 거예요.",
+     "근데 이 방이 창 가득 바다라 폰을 놓더라고요.",
+     "여기가 대박인 게 선베드가 남아 바로 눕는데",
+     "심지어 욕조 보더니 하루 더 자자는 거 있죠.",
+     "밤 정원 궁금하면 댓글에 '등짝' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     6,
+     3,
+     4,
+     2,
+     7,
+     5
+    ]
+   },
+   {
+    "type": "오해형",
+    "story": "엄마가 이 풀 보고 해외냐고 물어보는 거예요. 해외선 지쳐서 선베드에서 잠만 주무셨는데 여긴 국내라 노을부터 보자시는 거예요. 근데 이 방이 섬이 보여서 낮잠을 거르셨어요. 여기가 대박인 게 욕조가 창가라 피곤이 풀리시는데 심지어 밤엔 엄마가 먼저 잔디밭 걷자시더라고요. 이 방 궁금하면 댓글에 '해외아님' 남겨 주세요.",
+    "lines": [
+     "엄마가 이 풀 보고 해외냐고 물어보는 거예요.",
+     "해외선 지쳐서 선베드에서 잠만 주무셨는데",
+     "여긴 국내라 노을부터 보자시는 거예요.",
+     "근데 이 방이 섬이 보여서 낮잠을 거르셨어요.",
+     "여기가 대박인 게 욕조가 창가라 피곤이 풀리시는데",
+     "심지어 밤엔 엄마가 먼저 잔디밭 걷자시더라고요.",
+     "이 방 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     3,
+     4,
+     7,
+     5,
+     6
+    ]
+   },
+   {
+    "type": "불편 고백형",
+    "story": "애들이랑 물놀이 갈 때마다 폰 뺏느라 고생했는데 방에 오자마자 소파에서 게임만 하던 애들이 여기선 폰 두고 풀로 가는 거예요. 근데 이 방이 섬이 보여서 섬부터 세더라고요. 여기가 대박인 게 이젤이 있어서 안 떠나는데 심지어 밤엔 폰 놓고 잔디밭만 뛰는 거 있죠. 욕조 방 궁금하면 댓글에 '폰압수' 남겨 주세요.",
+    "lines": [
+     "애들이랑 물놀이 갈 때마다 폰 뺏느라 고생했는데",
+     "방에 오자마자 소파에서 게임만 하던 애들이",
+     "여기선 폰 두고 풀로 가는 거예요.",
+     "근데 이 방이 섬이 보여서 섬부터 세더라고요.",
+     "여기가 대박인 게 이젤이 있어서 안 떠나는데",
+     "심지어 밤엔 폰 놓고 잔디밭만 뛰는 거 있죠.",
+     "욕조 방 궁금하면 댓글에 '폰압수' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     6,
+     2,
+     4,
+     3,
+     5,
+     7
+    ]
+   }
+  ],
+  "issues": {
+   "혼남 사건형": [
+    "말투: 나열체 — '~고·~더니·~며' 이음 67%(원본 36%) → '~는데·~니까·~어서'로 이유를 이어라",
+    "사진 대조: 1: '등짝 맞을 뻔'한 사건이 뒤에서 풀리지 않아요. 2~6줄은 남편이 숙소에 반하는 이야기라서 왜 혼날 뻔했는지 앞뒤가 맞지 않아요",
+    "사진 대조: 3→4: 3줄에서 이미 '어디냐'고 물어 마음이 넘어갔는데, 4줄에서 다시 '폰을 놓더라'고 해요. 같은 반응이 두 번 나와 고조가 꺾여요",
+    "사진 대조: 4: '창 가득 바다라'는 이점을 대놓고 말하는 표현이에요. 간접성이 떨어져요",
+    "사진 대조: 5: '선베드가 남아'는 자리싸움을 했던 과거 불편이 앞에 깔리지 않아서 해결의 힘이 약해요",
+    "사진 대조: 7: '밤 정원'은 남편 이야기와 상관없이 갑자기 나와요. 댓글 키워드 '등짝'은 이야기 속 말이지만 '궁금하면'과 이어지지 않아요"
+   ],
+   "오해형": [
+    "말투: 문장 평균 35.0자 — 짧게 끊김(원본 58자, 길게 이어 말한다)",
+    "사진 대조: 3: '국내라 노을부터 보자신다'는 인과가 어색함. 국내라서 노을을 먼저 볼 이유가 없어 2줄의 불편(지쳐서 잠만 잠)과 이어지는 고리가 약함",
+    "사진 대조: 4: '섬이 보여서'는 풍경을 거의 대놓고 말함. 사진4에 섬이 보여 화면은 맞지만 간접성이 떨어짐",
+    "사진 대조: 5: '욕조가 창가라'는 시설을 직접 설명하는 문장. 사진5와는 맞지만 엄마의 행동 변화로 보여 주지 못하고 '피곤이 풀리시는데'로 끝나 결과가 흐려짐"
+   ],
+   "불편 고백형": [
+    "간접성: 이점을 대놓고 말함 ['풀로 가는 거예요'] — 오해·과거 불편 대비·인물 행동 변화로 보여 줘라",
+    "사진 대조: 2: 예전 여행에서 겪은 불편(소파에서 게임만 하던 애들)인데 이 숙소의 소파 사진 위에서 읽혀서, 이 방에서도 게임만 했다는 뜻으로 오해할 수 있어요",
+    "사진 대조: 3: 3줄째에서 벌써 '폰 두고 풀로'라고 해결이 끝나 버려서 뒤쪽 줄이 힘을 잃어요",
+    "사진 대조: 4: '근데'가 앞의 해결을 뒤집지도 키우지도 못하고 섬 세기로 옆길로 새요. 고조로 이어지지 않아요",
+    "사진 대조: 5: '대박인 게 이젤이 있어서'는 시설을 대놓고 말한 거라 세기가 약해요. 여기서 '대박'이 나올 만큼 사건이 크지 않아요",
+    "사진 대조: 6: '심지어'를 썼지만 '폰 놓고'만 3줄과 똑같이 되풀이해서 더 세지는 느낌이 없어요",
+    "사진 대조: 7: 앞에서는 폰 이야기를 하다가 갑자기 '욕조 방 궁금하면'으로 넘어가서 이야기와 이어지지 않아요. 키워드 '폰압수'는 이야기에 맞아요"
+   ]
+  },
+  "scores": {
+   "혼남 사건형": {
+    "훅": 7,
+    "불편→해결": 5,
+    "간접성": 7,
+    "고조": 6,
+    "화면 일치": 9,
+    "댓글 유도": 6,
+    "total": 40,
+    "bad_lines": [
+     "1: '등짝 맞을 뻔'한 사건이 뒤에서 풀리지 않아요. 2~6줄은 남편이 숙소에 반하는 이야기라서 왜 혼날 뻔했는지 앞뒤가 맞지 않아요",
+     "3→4: 3줄에서 이미 '어디냐'고 물어 마음이 넘어갔는데, 4줄에서 다시 '폰을 놓더라'고 해요. 같은 반응이 두 번 나와 고조가 꺾여요",
+     "4: '창 가득 바다라'는 이점을 대놓고 말하는 표현이에요. 간접성이 떨어져요",
+     "5: '선베드가 남아'는 자리싸움을 했던 과거 불편이 앞에 깔리지 않아서 해결의 힘이 약해요",
+     "7: '밤 정원'은 남편 이야기와 상관없이 갑자기 나와요. 댓글 키워드 '등짝'은 이야기 속 말이지만 '궁금하면'과 이어지지 않아요"
+    ],
+    "one_line": "호캉스를 낭비라던 남편이 달라지는 행동 변화 뼈대는 좋고 화면도 1~7줄 모두 사진과 맞아요. 다만 훅인 '등짝' 사건이 풀리지 않고, 구체적인 불편 장면 없이 3·4줄 반응이 겹쳐 고조가 평평해요."
+   },
+   "오해형": {
+    "훅": 8,
+    "불편→해결": 7,
+    "간접성": 6,
+    "고조": 7,
+    "화면 일치": 8,
+    "댓글 유도": 7,
+    "total": 43,
+    "bad_lines": [
+     "3: '국내라 노을부터 보자신다'는 인과가 어색함. 국내라서 노을을 먼저 볼 이유가 없어 2줄의 불편(지쳐서 잠만 잠)과 이어지는 고리가 약함",
+     "4: '섬이 보여서'는 풍경을 거의 대놓고 말함. 사진4에 섬이 보여 화면은 맞지만 간접성이 떨어짐",
+     "5: '욕조가 창가라'는 시설을 직접 설명하는 문장. 사진5와는 맞지만 엄마의 행동 변화로 보여 주지 못하고 '피곤이 풀리시는데'로 끝나 결과가 흐려짐"
+    ],
+    "one_line": "'엄마가 해외냐고 묻는' 오해형 훅에, 해외에서는 잠만 자던 엄마가 낮잠도 거르고 밤 잔디밭 산책까지 먼저 하자는 변화가 살아 있는 좋은 뼈대임. 다만 3줄 인과가 어색하고 4·5줄은 섬·창가 욕조를 대놓고 말해 간접성이 떨어지며, 마지막 키워드 '해외아님'은 훅과 맞물려 남기고 싶게 만듦."
+   },
+   "불편 고백형": {
+    "훅": 7,
+    "불편→해결": 7,
+    "간접성": 7,
+    "고조": 5,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 42,
+    "bad_lines": [
+     "2: 예전 여행에서 겪은 불편(소파에서 게임만 하던 애들)인데 이 숙소의 소파 사진 위에서 읽혀서, 이 방에서도 게임만 했다는 뜻으로 오해할 수 있어요",
+     "3: 3줄째에서 벌써 '폰 두고 풀로'라고 해결이 끝나 버려서 뒤쪽 줄이 힘을 잃어요",
+     "4: '근데'가 앞의 해결을 뒤집지도 키우지도 못하고 섬 세기로 옆길로 새요. 고조로 이어지지 않아요",
+     "5: '대박인 게 이젤이 있어서'는 시설을 대놓고 말한 거라 세기가 약해요. 여기서 '대박'이 나올 만큼 사건이 크지 않아요",
+     "6: '심지어'를 썼지만 '폰 놓고'만 3줄과 똑같이 되풀이해서 더 세지는 느낌이 없어요",
+     "7: 앞에서는 폰 이야기를 하다가 갑자기 '욕조 방 궁금하면'으로 넘어가서 이야기와 이어지지 않아요. 키워드 '폰압수'는 이야기에 맞아요"
+    ],
+    "one_line": "애들 폰 문제가 사라진다는 불편→해결 뼈대와 화면 일치는 좋지만, 3줄에서 해결이 끝나고 섬·이젤·잔디가 나열처럼 평평하게 이어지며 끝 줄의 욕조 연결도 어색해요"
+   }
+  },
+  "writer": "claude-opus",
+  "clean": false,
+  "attempts": 1,
+  "revised": {
+   "version": {
+    "type": "오해형 (고쳐 씀)",
+    "lines": [
+     "엄마가 이 풀 보고 해외냐고 물어보시는데",
+     "예전 해외선 지쳐서 선베드서 잠만 주무시더니",
+     "여긴 안 지치시니까 새벽 창가부터 가시더라고요.",
+     "근데 이 방은 창가만 지키시다 낮잠을 거르셨는데",
+     "여기가 대박인 게 창밖 보며 반신욕만 한참 하셨어요.",
+     "심지어 밤엔 먼저 잔디밭 걷자셨으니까",
+     "이 방 궁금하면 댓글에 '해외아님' 남겨 주세요."
+    ],
+    "order": [
+     1,
+     2,
+     3,
+     4,
+     7,
+     5,
+     6
+    ]
+   },
+   "issues": [
+    "사진 대조: 2: '해외선 지쳐서 잠만'은 불편이 막연하고, 한 순간의 장면(어디서 무엇 때문에 지쳤는지)이 없음",
+    "사진 대조: 4: '근데'로 꺾어 놓고 '낮잠을 거르셨다'로 이어져 반전도 상승도 아님. 3줄의 '창가'를 되풀이해 흐름이 제자리걸음",
+    "사진 대조: 5: '대박인 게' 다음에 오는 반신욕이 4줄보다 센 사건이 아니라서 고조가 평평함",
+    "사진 대조: 6: '심지어'가 붙었지만 '잔디밭 걷자셨다'는 앞의 줄보다 약한 결과라 클라이맥스가 되지 못함"
+   ],
+   "score": {
+    "훅": 7,
+    "불편→해결": 6,
+    "간접성": 8,
+    "고조": 5,
+    "화면 일치": 9,
+    "댓글 유도": 7,
+    "total": 42,
+    "bad_lines": [
+     "2: '해외선 지쳐서 잠만'은 불편이 막연하고, 한 순간의 장면(어디서 무엇 때문에 지쳤는지)이 없음",
+     "4: '근데'로 꺾어 놓고 '낮잠을 거르셨다'로 이어져 반전도 상승도 아님. 3줄의 '창가'를 되풀이해 흐름이 제자리걸음",
+     "5: '대박인 게' 다음에 오는 반신욕이 4줄보다 센 사건이 아니라서 고조가 평평함",
+     "6: '심지어'가 붙었지만 '잔디밭 걷자셨다'는 앞의 줄보다 약한 결과라 클라이맥스가 되지 못함"
+    ],
+    "one_line": "엄마의 오해와 행동 변화로 이점을 간접적으로 보여 주고 화면도 줄마다 맞지만, 과거 불편이 막연하고 4~6줄이 세지지 않아 끝으로 갈수록 힘이 빠짐"
+   }
+  },
+  "style": "여행 숙소 인스타"
+ }
+}
