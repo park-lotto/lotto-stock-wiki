@@ -14,11 +14,11 @@ if _ROOT and _OUT:
 
     def _rel(p):
         try:
-            a = os.path.normcase(os.path.abspath(os.fsdecode(p)))
+            raw = os.path.abspath(os.fsdecode(p))
         except Exception:
             return None
-        if a.startswith(_root + os.sep):
-            return a[len(_root) + 1:].replace("\\", "/")
+        if os.path.normcase(raw).startswith(_root + os.sep):   # 비교만 대소문자 무시 — 적는 이름은 원래 대소문자(10-19: 소문자로 적혀 ZdeZRtCeAC4 가 망가짐)
+            return raw[len(_root) + 1:].replace("\\", "/")
         return None
 
     def _hook(ev, args):

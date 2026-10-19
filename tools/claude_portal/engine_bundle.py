@@ -25,8 +25,9 @@ FORBIDDEN = (
     "tools/calcopy/engine/to_frame*.py",          # 틀 설명서 만들기
     "tools/calcopy/engine/preset_*.py", "tools/calcopy/engine/loo_preset.py",
     "tools/calcopy/engine/channel_find*.py",      # 채널 찾기·판정
-    "tools/calcopy/engine/recheck.py", "tools/calcopy/engine/fontmatch.py", "tools/calcopy/engine/layout1.py",
+    "tools/calcopy/engine/recheck.py", "tools/calcopy/engine/fontmatch.py",   # layout1 = 완성본 대조(check 단계)가 쓰는 자 — 묶음에 둔다
     "tools/calcopy/engine/gemini_server.py", "tools/calcopy/engine/gemini_keys.py", "tools/calcopy/pull_pool_keys.py",
+    "tools/calcopy/engine/_server_access.py",     # 우리 서버 SSH 정보
     "tools/calcopy/analyze*.py", "tools/calcopy/summarize*.py", "tools/calcopy/try_*.py", "tools/calcopy/check_*.py",
     "tools/calcopy/hybrid/*", "tools/calcopy/yanshot/*", "tools/calcopy/oneshot/*", "tools/calcopy/community_*.py",
     "tools/calcopy/transcribe_free.py", "tools/calcopy/*/README.md", "tools/calcopy/*.md",
@@ -34,7 +35,8 @@ FORBIDDEN = (
     ".env*", "*.pem", "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
 )
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
-SECRETS = (r"3\.35\.251\.172", r"duckdns\.org", r"LightsailDefaultKey", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
+#   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
+SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA |OPENSSH )?PRIVATE KEY",
            r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=")
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
@@ -65,17 +67,32 @@ def showcase_deps(engine: Path) -> list[str]:
     return sorted(set(out))
 
 
-def traced(traces: Path) -> tuple[set[str], set[str]]:
+def _true_case(engine: Path) -> dict:
+    """소문자 경로 → 실제 경로(옛 추적은 윈도우 normcase 로 소문자였다)."""
+    out = {}
+    for p in engine.rglob("*"):
+        if ".git" in p.parts or not p.is_file():
+            continue
+        rel = p.relative_to(engine).as_posix()
+        out[rel.lower()] = rel
+    return out
+
+
+def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]]:
     mods, data = set(), set()
     for f in traces.glob("*.json"):
         d = json.loads(f.read_text(encoding="utf-8"))
         mods |= set(d.get("modules") or [])
         data |= {x for x in d.get("opened") or [] if "__pycache__" not in x}
+    if engine is not None:
+        tc = _true_case(engine)
+        mods = {tc.get(x.lower(), x) for x in mods}
+        data = {tc.get(x.lower(), x) for x in data}
     return mods, data
 
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
-    mods, data = traced(traces)
+    mods, data = traced(traces, engine)
     want = sorted(mods | data | set(RENDERER_EXTRA) | set(showcase_deps(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
