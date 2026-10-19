@@ -28,6 +28,23 @@ from tools.calcopy.engine import kal_analyze as K  # noqa: E402
 
 DATA = Path("C:/숏템_칼카피")
 YTDLP_F = "137+ba[ext=m4a]/bv*[height>=1080]+ba/b"       # 담당_공통규칙 (web 클라이언트, android 금지)
+YTDLP_LITE = "bv*[height<=720]+ba/b[height<=720]/b"       # 시운전·디스크 부족 때(--lite): 720p 까지만
+DISK_WARN_GB, DISK_STOP_GB = 15, 3                        # 루트 CLAUDE.md 디스크 병목 규칙 + 사장님 10-20 "3GB 밑이면 즉시 멈춤"
+
+
+def disk_free_gb(path: str = "C:/") -> float:
+    import shutil
+    return round(shutil.disk_usage(path).free / 1e9, 1)
+
+
+def disk_gate(what: str) -> str | None:
+    """받기·렌더 전 관문 — 3GB 미만이면 이유 문자열(거절), 15GB 미만이면 경고만 출력."""
+    g = disk_free_gb()
+    if g < DISK_STOP_GB:
+        return f"C 여유 {g}GB < {DISK_STOP_GB}GB — {what} 시작 거절(사장님 10-20). 남의 파일은 지우지 말고 보고"
+    if g < DISK_WARN_GB:
+        print(f"[경고] C 여유 {g}GB < {DISK_WARN_GB}GB — {what} 는 최소로(표본 2편·720p·렌더 1편)")
+    return None
 STEPS = ["select", "collect", "tteutgi", "frames", "skeleton", "readlines", "rules", "copy", "make", "verify", "apply"]
 HUMAN = {"readlines": "줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행",
          "rules": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행",
@@ -108,7 +125,7 @@ def stage_upgrade(S) -> dict:
     kd.mkdir(parents=True, exist_ok=True)
     base = kd / f"{S.d['slug']}판_초안.json"
     plan = json.loads(base.read_text(encoding="utf-8")) if base.exists() else {"name": f"{S.d['slug']}판", "_note": "1차 판 초안 없음 — rules 단계 먼저"}
-    up = {**plan, "name": f"{S.d['slug']}_업그레이드판", "_base": plan.get("name"),
+    up = {"name": f"{S.d['slug']}_업그레이드판", "base": plan.get("name"),   # styles.py 가 base 판을 상속(관제 235 6fcdcef89, 예 styles/연예인레시피판.json) — 바꾼 칸만 아래에 덮어쓴다
           "_rule": "뼈대 칸(placement·script·cuts·timing·caption.typing_cps·variant_for·length·sfx_key)은 1차 값 그대로. 겉모양 칸만 근거 있는 장점으로 — 기록 필수(업그레이드_기록.md)",
           "upgrades": [], "_upgrade_item": {"axis": "", "what": "", "why": "수치·채널·편", "source": "스타일.json strengths/options 키 또는 사고 기록", "expect": "나아질 측정값", "verify": "측정값|사람 판정"},
           "menu": menu("all")}
@@ -175,13 +192,17 @@ def step_select(S: State):
 
 
 def step_collect(S: State):
+    why = disk_gate("받기")
+    if why:
+        return "failed", {}, why
     base = DATA / S.d["slug"] / "src"
     base.mkdir(parents=True, exist_ok=True)
     ids = S.d["channel"]["top_ids"]
+    fmt = YTDLP_LITE if S.d.get("lite") else YTDLP_F
     todo = [i for i in ids if not (base / f"{i}.mp4").exists()]
 
     def dl(vid):
-        r = _run(["yt-dlp", "--encoding", "utf-8", "-f", YTDLP_F, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+        r = _run(["yt-dlp", "--encoding", "utf-8", "-f", fmt, "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
                   "-o", str(base / "%(id)s.%(ext)s"), f"https://www.youtube.com/shorts/{vid}"], timeout=900)
         return vid, r.returncode, r.stderr[-200:]
     errs = []
@@ -192,7 +213,7 @@ def step_collect(S: State):
     have = [i for i in ids if (base / f"{i}.mp4").exists()]
     if len(have) < max(2, len(ids) // 2):
         return "failed", {"have": have}, "받은 편이 절반 미만: " + " | ".join(errs)
-    return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}" + (f" 실패 {errs}" if errs else "")
+    return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)" + (f" 실패 {errs}" if errs else "")
 
 
 def _claude_llm(parts: list, prompt: str, tag: str = ""):
@@ -378,6 +399,9 @@ def step_copy(S: State):
 
 
 def step_make(S: State):
+    why = disk_gate("렌더")
+    if why:
+        return "failed", {}, why
     om, ol = S.d.get("ours_mp4"), S.d.get("ours_lines")
     if om and ol and Path(om).exists() and Path(ol).exists():
         return "done", {"ours_mp4": om, "ours_lines": ol}, "시험편 있음"
@@ -444,6 +468,7 @@ def main(argv=None) -> int:
     ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--voice", help="TTS voice_id(사장님이 고른 것 — 판 파일 voice 한 곳에 적힌다)")
     ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
     ap.add_argument("--menu", help="장점 카탈로그만 보기: 축 이름 또는 all (채널 분석 없이)")
+    ap.add_argument("--lite", action="store_true", help="시운전·디스크 부족: 720p 까지만 받기")
     ap.add_argument("--stage", choices=["upgrade"], help="upgrade = 업그레이드 단계 자리(1차 판 초안 복사 + 메뉴 + 기록 파일)")
     A = ap.parse_args(argv)
     slug = A.slug or _slug_of(A.ref)
@@ -452,6 +477,9 @@ def main(argv=None) -> int:
             print(f"[{r['axis']}({r['axis_src']})] {r['kind']} | {str(r['what'])[:90]} | 출처 {r['channel']} | 엔진 {r['engine']} | 판 칸 {r['style_cell']}")
         return 0
     S = State(slug, A.ref, A.brand, A.n, A.hybrid, A.voice)
+    if A.lite:
+        S.d["lite"] = True
+    print(f"C 여유 {disk_free_gb()}GB (경고 {DISK_WARN_GB} · 거절 {DISK_STOP_GB})")
     if A.ours_mp4:
         S.d["ours_mp4"] = A.ours_mp4
     if A.ours_lines:

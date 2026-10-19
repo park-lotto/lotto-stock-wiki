@@ -1,0 +1,108 @@
+{
+ "slug": "ititemlog",
+ "ref": "@it_item_log",
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 19.6,
+   "at": "2026-10-20 00:30",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\ititemlog\\top.json"
+   },
+   "note": "잇템로그 구독 35800 편 149 조회중앙 87,000 최대 20,000,000 (구독 대비 중앙 2.43)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 42.9,
+   "at": "2026-10-20 00:30",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\ititemlog\\src",
+    "ids": [
+     "ro1l3u734v4",
+     "aUicTeDoW04"
+    ]
+   },
+   "note": "받음 2/2"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 1047.3,
+   "at": "2026-10-20 01:08",
+   "outputs": {
+    "ids": [
+     "ro1l3u734v4",
+     "aUicTeDoW04"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\뜯기"
+   },
+   "note": "뜯기 2편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 174.4,
+   "at": "2026-10-20 01:11",
+   "outputs": {
+    "dirs": {
+     "ro1l3u734v4": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_ro1l3u734v4",
+     "aUicTeDoW04": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_aUicTeDoW04"
+    }
+   },
+   "note": "시트·0.1초 띠 2편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-20 01:11",
+   "outputs": {
+    "skeletons": [
+     "ro1l3u734v4",
+     "aUicTeDoW04"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 2편 새로, 묶음 2편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-20 01:11",
+   "outputs": {
+    "pending": {
+     "ro1l3u734v4": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(3.0~3.8) speaker 미기입",
+      "줄0(3.0~3.8) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(3.8~5.1) speaker 미기입",
+      "줄1(3.8~5.1) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "aUicTeDoW04": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(2.1~2.6) speaker 미기입",
+      "줄0(2.1~2.6) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(3.3~3.7) speaker 미기입",
+      "줄1(3.3~3.7) enter 미기입(꾸밈 없으면 'instant')"
+     ]
+    }
+   },
+   "note": "줄판독 미완 2/2편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "숏템리폿",
+ "n": 2,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "잇템로그",
+  "url": "https://www.youtube.com/@it_item_log/shorts",
+  "subs": 35800,
+  "total": 149,
+  "view_median": 87000,
+  "view_max": 20000000,
+  "top_ids": [
+   "ro1l3u734v4",
+   "aUicTeDoW04"
+  ],
+  "views_per_sub": 2.43
+ }
+}

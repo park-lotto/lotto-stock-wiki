@@ -1,0 +1,736 @@
+{
+ "id": "aUicTeDoW04",
+ "dur": 29.367,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "caption_band": [
+   1245,
+   1342
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 2.1,
+   "t1": 2.6,
+   "speaker": null,
+   "text": "마법처럼 타투가",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1230,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "한국 화장품을 타투 위에 바르자",
+    "마법처럼 타투가 사라졌는데요. 남은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.3,
+   "t1": 3.7,
+   "speaker": null,
+   "text": "사라졌는데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1211,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.73
+   ],
+   "_asr": [
+    "마법처럼 타투가 사라졌는데요. 남은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.7,
+   "t1": 4.7,
+   "speaker": null,
+   "text": "남은 부분도 발라주더니",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    3.73,
+    4.5
+   ],
+   "_asr": [
+    "마법처럼 타투가 사라졌는데요. 남은",
+    "부분도 발라주다니. 미친 커버력에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.7,
+   "t1": 6.4,
+   "speaker": null,
+   "text": "미친 커버력에",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.7,
+    6.4
+   ],
+   "_asr": [
+    "부분도 발라주다니. 미친 커버력에"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.4,
+   "t1": 7.5,
+   "speaker": null,
+   "text": "감탄해버리고 마는데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    6.4
+   ],
+   "_asr": [
+    "부분도 발라주다니. 미친 커버력에",
+    "감탄해 버리고 마는데 이걸 보니"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.5,
+   "t1": 8.3,
+   "speaker": null,
+   "text": "이걸 본 이 여성은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "감탄해 버리고 마는데 이걸 보니",
+    "여성은 믿을 수가 없다며"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 9.1,
+   "speaker": null,
+   "text": "믿을수가 없다며",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.07
+   ],
+   "_asr": [
+    "여성은 믿을 수가 없다며"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.1,
+   "t1": 10.1,
+   "speaker": null,
+   "text": "내 타투 가려볼게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.07,
+    10.13
+   ],
+   "_asr": [
+    "여성은 믿을 수가 없다며"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.1,
+   "t1": 11.2,
+   "speaker": null,
+   "text": "직접 실험해보기로 하고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    10.13,
+    11.27
+   ],
+   "_asr": [
+    "여성은 믿을 수가 없다며",
+    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.2,
+   "t1": 12.1,
+   "speaker": null,
+   "text": "커버 안되기만 해바..",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1252,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.27
+   ],
+   "_asr": [
+    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.1,
+   "t1": 13.1,
+   "speaker": null,
+   "text": "일단 한번 발라보더니",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.1
+   ],
+   "_asr": [
+    "&gt;&gt; 직접 실험해 보기로 하고 일단 한번",
+    "발라보더니 좀 부족해 보였는지"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.1,
+   "t1": 14.3,
+   "speaker": null,
+   "text": "좀 부족해 보였는지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.1
+   ],
+   "_asr": [
+    "발라보더니 좀 부족해 보였는지"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.3,
+   "t1": 15.4,
+   "speaker": null,
+   "text": "한겹 더 발라보자",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    14.43,
+    15.4
+   ],
+   "_asr": [
+    "발라보더니 좀 부족해 보였는지"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.4,
+   "t1": 16.9,
+   "speaker": null,
+   "text": "바로 두겹째 시도해보는데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    15.4,
+    16.23
+   ],
+   "_asr": [
+    "발라보더니 좀 부족해 보였는지",
+    "&gt;&gt; 바로 두 겹제 시도해 보는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.8,
+   "t1": 19.8,
+   "speaker": null,
+   "text": "맨살 보니까 어색하다ㅎㅎ",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    18.03,
+    19.83
+   ],
+   "_asr": [
+    "&gt;&gt; 바로 두 겹제 시도해 보는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.6,
+   "speaker": null,
+   "text": "더 충격적인건",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    19.83,
+    20.47
+   ],
+   "_asr": [
+    "&gt;&gt; 더 충격적인 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.6,
+   "t1": 21.3,
+   "speaker": null,
+   "text": "진짜 사라지네?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1254,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.33
+   ],
+   "_asr": [
+    "&gt;&gt; 더 충격적인 건"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.3,
+   "t1": 22.3,
+   "speaker": null,
+   "text": "타투를 다 가리고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.33
+   ],
+   "_asr": [
+    "&gt;&gt; 더 충격적인 건",
+    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.3,
+   "t1": 22.9,
+   "speaker": null,
+   "text": "엄마한테 보여주자",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.9,
+   "t1": 23.9,
+   "speaker": null,
+   "text": "나온 반응이라는데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    23.93
+   ],
+   "_asr": [
+    "&gt;&gt; 타투를 다 가리고 엄마한테 보여주자",
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 23.9,
+   "t1": 25.2,
+   "speaker": null,
+   "text": "엄마 리액션 한번보자 ㅋㅋ",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    23.93,
+    25.17
+   ],
+   "_asr": [
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.2,
+   "t1": 26.2,
+   "speaker": null,
+   "text": "너 너무 심심해보인다",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    25.17,
+    26.17
+   ],
+   "_asr": [
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 26.2,
+   "t1": 27.1,
+   "speaker": null,
+   "text": "타투 있는게 더 예쁘?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    26.17
+   ],
+   "_asr": [
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.1,
+   "t1": 27.7,
+   "speaker": null,
+   "text": "당연하지",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.7,
+   "t1": 28.1,
+   "speaker": null,
+   "text": "오키;",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    28.1
+   ],
+   "_asr": [
+    "나온 반응이라는데"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 28.1,
+   "t1": 29.37,
+   "speaker": null,
+   "text": "바로 지웠다고 하네요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    28.1
+   ],
+   "_asr": [
+    "나온 반응이라는데",
+    "&gt;&gt; 바로 지어버렸다고 하네요. Yeah."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

@@ -1,0 +1,786 @@
+{
+ "id": "ro1l3u734v4",
+ "dur": 29.967,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "caption_band": [
+   1246,
+   1342
+  ],
+  "title_y": null,
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null
+ },
+ "lines": [
+  {
+   "t0": 3.0,
+   "t1": 3.8,
+   "speaker": null,
+   "text": "3시간이 아니라",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "외국인이 있는데요. 세시간이 아니라"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 3.8,
+   "t1": 5.1,
+   "speaker": null,
+   "text": "3일을 붙여 놓은 것 같은데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.07
+   ],
+   "_asr": [
+    "외국인이 있는데요. 세시간이 아니라",
+    "3일에 붙여 놓은 것 같은데요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.8,
+   "speaker": null,
+   "text": "콜라겐 마스크를",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1256,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    5.07
+   ],
+   "_asr": [
+    "3일에 붙여 놓은 것 같은데요.",
+    "콜라겐 마스크를 처음 써 본 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 5.8,
+   "t1": 6.7,
+   "speaker": null,
+   "text": "처음 써본 이 여성은",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "콜라겐 마스크를 처음 써 본 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 6.7,
+   "t1": 7.9,
+   "speaker": null,
+   "text": "한시간 정도 붙여놓으면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "콜라겐 마스크를 처음 써 본 여성은"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 7.9,
+   "t1": 9.7,
+   "speaker": null,
+   "text": "원래 투명해져야 하는거 아님?",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1244,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.73
+   ],
+   "_asr": [
+    "콜라겐 마스크를 처음 써 본 여성은",
+    "[음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 9.7,
+   "t1": 10.8,
+   "speaker": null,
+   "text": "2시간을 붙여놨는데도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    9.73
+   ],
+   "_asr": [
+    "[음악]",
+    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 10.8,
+   "t1": 11.4,
+   "speaker": null,
+   "text": "그대로라며",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.43
+   ],
+   "_asr": [
+    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 11.4,
+   "t1": 12.3,
+   "speaker": null,
+   "text": "계속 그대로야..",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1254,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    11.43,
+    12.33
+   ],
+   "_asr": [
+    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 12.3,
+   "t1": 13.6,
+   "speaker": null,
+   "text": "뭔가 잘못된것 같다는데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    12.33,
+    13.57
+   ],
+   "_asr": [
+    "&gt;&gt; 두 시간에 붙여 넣는데도 그대로라면",
+    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 13.6,
+   "t1": 14.6,
+   "speaker": null,
+   "text": "부드러운 부분을",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    13.57
+   ],
+   "_asr": [
+    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 14.6,
+   "t1": 15.6,
+   "speaker": null,
+   "text": "얼굴에 붙이는거지(??)",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.1,
+   "speaker": null,
+   "text": "아니면",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.07
+   ],
+   "_asr": [
+    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 16.1,
+   "t1": 17.4,
+   "speaker": null,
+   "text": "오돌토돌한 부분을..",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    16.07,
+    17.37
+   ],
+   "_asr": [
+    "&gt;&gt; 뭔가 잘못된 것 같다는데 [음악]",
+    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.4,
+   "t1": 17.8,
+   "speaker": null,
+   "text": "알고보니",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    17.37
+   ],
+   "_asr": [
+    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 17.8,
+   "t1": 19.0,
+   "speaker": null,
+   "text": "거꾸로 붙여 놨던 것인데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    19.03
+   ],
+   "_asr": [
+    "&gt;&gt; 알고 보니 거꾸로 붙여 놨던",
+    "것인데요. 사실 이건 한국 연예인들도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 19.0,
+   "t1": 20.3,
+   "speaker": null,
+   "text": "사실 이건 한국 연예인들도",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    19.03,
+    20.3
+   ],
+   "_asr": [
+    "것인데요. 사실 이건 한국 연예인들도"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.3,
+   "t1": 20.8,
+   "speaker": null,
+   "text": "중요한 촬영전날",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    20.3
+   ],
+   "_asr": [
+    "것인데요. 사실 이건 한국 연예인들도",
+    "중요한 촬영 전날 꼭 쓴다는 콜라겐"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 20.8,
+   "t1": 21.5,
+   "speaker": null,
+   "text": "꼭 쓴다는",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.53
+   ],
+   "_asr": [
+    "중요한 촬영 전날 꼭 쓴다는 콜라겐"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 21.5,
+   "t1": 22.4,
+   "speaker": null,
+   "text": "콜라겐 마스크인데",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1240,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    21.53,
+    22.43
+   ],
+   "_asr": [
+    "중요한 촬영 전날 꼭 쓴다는 콜라겐",
+    "마스크인데 피부의 소분을 전달하면서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 22.4,
+   "t1": 23.3,
+   "speaker": null,
+   "text": "피부에 수분을 전달하면서",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    22.43
+   ],
+   "_asr": [
+    "마스크인데 피부의 소분을 전달하면서"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 23.3,
+   "t1": 24.3,
+   "speaker": null,
+   "text": "시간이 갈수록",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    23.5,
+    24.33
+   ],
+   "_asr": [
+    "마스크인데 피부의 소분을 전달하면서",
+    "시간이 갈수록 투명해진다는데요. 최소"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 24.3,
+   "t1": 25.2,
+   "speaker": null,
+   "text": "투명해진다는데요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1245,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    24.33,
+    25.2
+   ],
+   "_asr": [
+    "시간이 갈수록 투명해진다는데요. 최소"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 25.2,
+   "t1": 26.4,
+   "speaker": null,
+   "text": "최소 3시간은 붙여놔야",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1255,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    25.2
+   ],
+   "_asr": [
+    "시간이 갈수록 투명해진다는데요. 최소",
+    "시간을 붙여 놔야 효과를 제대로 볼"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 26.4,
+   "t1": 27.5,
+   "speaker": null,
+   "text": "효과를 재대로 볼 수 있고",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    27.5
+   ],
+   "_asr": [
+    "시간을 붙여 놔야 효과를 제대로 볼",
+    "수 있고 잠들기 전 수면팩처럼 붙여"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 27.5,
+   "t1": 28.0,
+   "speaker": null,
+   "text": "잠들기",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1258,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    27.5
+   ],
+   "_asr": [
+    "수 있고 잠들기 전 수면팩처럼 붙여"
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 28.0,
+   "t1": 29.1,
+   "speaker": null,
+   "text": "수면팩처럼 붙여놓는게",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1246,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [
+    28.27
+   ],
+   "_asr": [
+    "수 있고 잠들기 전 수면팩처럼 붙여",
+    "놓는게 제일 좋다고 하네요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  },
+  {
+   "t0": 29.1,
+   "t1": 29.97,
+   "speaker": null,
+   "text": "제일 좋다고 하네요",
+   "layer": null,
+   "role": null,
+   "enter": null,
+   "y": [
+    1257,
+    null
+   ],
+   "fill_hex": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": null,
+   "fit": null,
+   "cut_at": [],
+   "_asr": [
+    "놓는게 제일 좋다고 하네요."
+   ],
+   "_src": "뜯기 OCR(기계값 — 눈으로 확인)"
+  }
+ ],
+ "beats": null,
+ "narr_share": null,
+ "notes": [],
+ "name_evidence": [],
+ "_todo": [
+  "speaker",
+  "layer",
+  "role",
+  "enter",
+  "fill_hex",
+  "emph",
+  "sticker",
+  "sfx",
+  "scene",
+  "fit",
+  "beats",
+  "narr_share"
+ ],
+ "_made_by": "kal_analyze.skeleton(기계값 뼈대 — 판독 전)"
+}

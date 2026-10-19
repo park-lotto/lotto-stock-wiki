@@ -1,0 +1,23 @@
+{
+ "slug": "ititemlog",
+ "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "ro1l3u734v4",
+   "mp4": "C:\\숏템_칼카피\\ititemlog\\src\\ro1l3u734v4.mp4",
+   "frames": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_ro1l3u734v4",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\뜯기\\ro1l3u734v4\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\줄판독\\ro1l3u734v4.json"
+  },
+  {
+   "id": "aUicTeDoW04",
+   "mp4": "C:\\숏템_칼카피\\ititemlog\\src\\aUicTeDoW04.mp4",
+   "frames": "C:\\숏템_칼카피\\ititemlog\\kal\\frames_aUicTeDoW04",
+   "tteutgi": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\뜯기\\aUicTeDoW04\\뜯기.json",
+   "skeleton": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\ititemlog\\줄판독\\aUicTeDoW04.json"
+  }
+ ],
+ "workers": 1,
+ "per_worker": 2
+}
