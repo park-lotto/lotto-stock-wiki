@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """얜샷템 하이브리드 — 단계 실행기(다시 이어 돌릴 수 있음 · 단계별 소요 초 장부) (관제 097, 2026-10-18).
 
-    PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> status                       # 어디까지 됐나 · 다음 할 일(누가: 도구/소넷/오푸스)
+    PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인>[@편] status                       # 어디까지 됐나 · 다음 할 일(누가: 도구/소넷/오푸스)
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> init --source <원본 유튜브 URL> --product "테클라 수건" --keywords 테클라,tekla --queries "tekla towel" "테클라 수건"
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> candidates                   # 검색(yt-dlp + 서버 유튜브 API) → screen/candidates.json
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> screen                       # 메타·자동자막·360p 토막 시트 → screen.json (소넷이 chosen 적음)
@@ -44,12 +44,13 @@ BRIEFS = Path(__file__).with_name("briefs")
 
 class Ctx:
     def __init__(self, celeb: str):
-        self.celeb = celeb
-        self.W = WORK_BASE / f"하이브리드_{celeb}"
-        self.D = DOC_BASE / f"하이브리드_{celeb}"
+        key = celeb.replace("@", "_")       # '김가연@레시피' = 같은 연예인 다른 편(폴더만 가른다) — 이름 점검·대본 이름은 @ 앞
+        self.celeb = celeb.split("@")[0]
+        self.W = WORK_BASE / f"하이브리드_{key}"
+        self.D = DOC_BASE / f"하이브리드_{key}"
         self.W.mkdir(parents=True, exist_ok=True)
         self.state_p = self.W / "pipeline.json"
-        self.state = jload(self.state_p) if self.state_p.exists() else {"celeb": celeb, "done": {}, "cfg": {}}
+        self.state = jload(self.state_p) if self.state_p.exists() else {"celeb": self.celeb, "key": key, "done": {}, "cfg": {}}
         self.tm = Timer(self.W / "stage_log.json")
 
     def save(self):
