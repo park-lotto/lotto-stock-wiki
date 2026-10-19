@@ -5,7 +5,7 @@
 
 판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
   issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
-  license                         기기 지문 2대·회수·정지·엔진 버전
+  license                         기기 지문 DEVICES_MAX(1)대·회수·정지·엔진 버전
   lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
   assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
   pack                            그 job 의 발급 목록 안 자산만 재발급
@@ -47,7 +47,7 @@ LEASE_TTL = 180
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-DEVICES_MAX = 2
+DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -601,7 +601,7 @@ def _rules_of(pdir: Path, man: dict) -> dict:
 
 # ── license ─────────────────────────────────────────────────────────────
 def license(ctx: dict, store=None) -> dict:
-    """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, 2대 차면 거절·자동 교체 없음)."""
+    """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, DEVICES_MAX 차면 거절·자동 교체 없음)."""
     store = _store(store)
     ensure_schema(store)
     cid, info, _ = _front(store, ctx, "license", need_device=False)
@@ -625,7 +625,7 @@ def license(ctx: dict, store=None) -> dict:
             live.append({"slot": slot})
     if not dev:
         _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
-        raise PortalError("device_limit", "기기 2대가 이미 등록돼 있습니다 — 마이페이지에서 기기 교체 후 다시 시도하세요")
+        raise PortalError("device_limit", f"기기 {DEVICES_MAX}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
     return {"ok": True, "cid": cid, "plan": row.get("plan") or "claude", "expires": info["exp"],
@@ -737,13 +737,9 @@ def _profile_row(c, cid, profile_id):
     return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
 
 
-def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
-    """이번 작업에 필요한 것만 — 합본(channel_profile.merge) → 합본이 참조하는 자산만 서명 URL(6h).
-
-    job_request = {"job_id", "lease_id"?, "extra"?, "device_hash"}. 유효 lease(job 일치) 필수."""
-    store = _store(store)
-    ensure_schema(store)
-    cid = int(cid)
+def _job_gate(store, cid, profile_id, job_request: dict) -> tuple:
+    """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
+    스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필 → 구매(등급)한 프리셋. 반환 (프로필 행, 프리셋, 라이선스 행)."""
     job_id = str(job_request.get("job_id") or "")
     if not _JOB_RE.match(job_id):
         raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
@@ -763,6 +759,55 @@ def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
     p = _preset_by_id(store, prof["preset_id"])
     if not p:
         raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
+    return prof, p, lic
+
+
+def preset_pack_path(pid: str) -> Path:
+    """서버가 보관하는 프리셋 꾸러미(tools/claude_portal/preset_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 preset_rent 로만 나간다."""
+    return store_dir() / "preset_packs" / f"{pid}.zip"
+
+
+def preset_rent(cid, profile_id, job_request: dict, store=None) -> dict:
+    """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
+    이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, _ = _job_gate(store, cid, profile_id, job_request)
+    f = preset_pack_path(p["id"])
+    if not f.is_file():
+        log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
+        raise PortalError("not_ready", "이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    data = f.read_bytes()
+    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
+    aad = f"{cid}|{job_id}".encode()
+    sealed = AESGCM(key).encrypt(nonce, data, aad)
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, job_request.get("device_hash"), "rent", job_id, job_request.get("lease_id"), None, p["id"])
+    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", "aad": aad.decode(),
+            "pack": base64.b64encode(nonce + sealed).decode(), "key": base64.b64encode(key).decode(),
+            "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None) -> dict:
+    """POST /api/claude/rent — 관문 뒤 preset_rent."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "rent")
+    return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store)
+
+
+def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
+    """이번 작업에 필요한 것만 — 합본(channel_profile.merge) → 합본이 참조하는 자산만 서명 URL(6h).
+
+    job_request = {"job_id", "lease_id"?, "extra"?, "device_hash"}. 유효 lease(job 일치) 필수."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, lic = _job_gate(store, cid, profile_id, job_request)
     try:
         frame = json.loads((p["dir"] / "frame.json").read_text(encoding="utf-8"))
         man = json.loads((p["dir"] / "manifest.json").read_text(encoding="utf-8"))
@@ -1026,7 +1071,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
         elif typ in ("license", "device_limit"):
             hit, detail = False, ""
             if typ == "device_limit":
-                hit, detail = True, "등록 안 된 기기에서 키 사용(기기 2대 찬 상태)"
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {DEVICES_MAX}대 찬 상태)"
             else:
                 n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
                               "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]

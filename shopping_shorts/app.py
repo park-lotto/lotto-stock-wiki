@@ -18627,6 +18627,16 @@ def api_claude_assets(request: Request, profile: str = "", job: str = "", lease:
     return _claude_json(_cp.call(_cp.assets, ctx, profile, job, lease or None, extra or None, Store(DB_PATH)))
 
 
+@app.post("/api/claude/rent")
+async def api_claude_rent(request: Request):
+    """편마다 프리셋 빌려주기(관제 234 5판) — 판단은 claude_portal.preset_rent(관문 _job_gate)."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.rent, ctx, str(body.get("profile") or ""), str(body.get("job") or ""),
+                                                body.get("lease") or None, Store(DB_PATH)))
+
+
 @app.get("/api/claude/pack/{asset_id:path}")
 def api_claude_pack(request: Request, asset_id: str, job: str = ""):
     from shopping_shorts import claude_portal as _cp

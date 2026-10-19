@@ -44,6 +44,14 @@ def files_for(engine: Path, preset: str) -> list[str]:
     return [x for x in dict.fromkeys(out) if (engine / x).is_file()]
 
 
+def pack_name(preset: str) -> str:
+    """서버가 찾는 이름(claude_portal.preset_pack_path) — 고객용 프리셋 id 는 claude_portal._public_preset_id 한 곳에서 정한다."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from shopping_shorts.claude_portal import _public_preset_id
+    slug, _, style = preset.removeprefix("channel/").partition("/preset/")
+    return _public_preset_id(f"{slug}/{style}") + ".zip"
+
+
 def build(engine: Path, preset: str) -> tuple[bytes, dict]:
     files = files_for(engine, preset)
     buf = io.BytesIO()
@@ -51,7 +59,7 @@ def build(engine: Path, preset: str) -> tuple[bytes, dict]:
         for rel in files:
             z.write(engine / rel, rel)
     data = buf.getvalue()
-    meta = {"preset": preset, "files": len(files), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+    meta = {"preset": preset, "name": pack_name(preset), "files": len(files), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
     return data, meta
 
 
@@ -69,7 +77,7 @@ def main(argv: list[str]) -> int:
         data, meta = build(engine, preset)
         out = Path(a["--out"])
         out.mkdir(parents=True, exist_ok=True)
-        name = hashlib.sha256(preset.encode()).hexdigest()[:12] + ".zip"
+        name = pack_name(preset)
         (out / name).write_bytes(data)
         (out / (name + ".json")).write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
         print(json.dumps(meta, ensure_ascii=False))
