@@ -1,0 +1,992 @@
+{
+ "_note": "샥탬스토리 9편 P-Nuff Crunch 재료 계획 — TTS·렌더 전. 창 1080x1052(벤치 MIlHlQ1Wdg4 창 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(영어 원음 트랙 wp45o5i7zhE_audio.m4a = 140-5 original).",
+ "sources": {
+  "wp45o5i7zhE": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Mark Makes P-Nuff Crunch An Amazing Offer!",
+   "해상도": "1280x720 29.97fps (136 = 최대 화질, 1080p 없음 — -F 실측 src/wp45_formats.txt) + 140-5 영어 원음(더빙 de·es·fr·hi·pt 트랙 따로 있음)",
+   "길이": 549.5,
+   "받은 구간": "전체",
+   "남의 글자": "방송 로고·띠 없음(시트 눈 확인). 49~52초 성분 그래픽 글자 — 안 씀. 43.8~46.3 봉지 그래픽 글자 = 제품 포장"
+  },
+  "vr3dPT0wnrY": {
+   "채널": "Pnuff Crunch(판매사 공식 채널 UCrkkoW3thYojWWEMNIbjTiw)",
+   "제목": "Fans All Over Love Pnuff!",
+   "업로드": "2025-03-23",
+   "해상도": "1080x1920 (세로 쇼츠)",
+   "길이": 40.3,
+   "남의 글자": "0~2.6초 위·아래 두 칸 화면 — 위 칸(y 0~960)만 씀. 영어 자막 y≈1490~1520(0~1.1·20~23초) — 크롭으로 뺌. 24.5~27.5 는 자막이 y≈1020 이라 안 씀"
+  },
+  "IozegR4FmTA": {
+   "채널": "Pnuff Crunch(판매사 공식)",
+   "제목": "Snack Smart with Pnuff",
+   "업로드": "2025-03-19",
+   "해상도": "1080x1920 (세로 쇼츠)",
+   "길이": 41.0,
+   "남의 글자": "30.7~31.2 아래 자막 'and nutritious ingredients' y≈1500 — 크롭 y 250~1302 로 뺌"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "보디빌더 박사의",
+  "line2": "땅콩 과자 사? 말아?"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 384.45,
+   "audio_dur": 2.35,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    384.45,
+    386.8
+   ],
+   "ss": 384.45,
+   "dur": 2.35,
+   "t_final_est": [
+    0.0,
+    2.35
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    291,
+    17,
+    722,
+    703
+   ],
+   "scale": 1.496,
+   "ours": "봉지를 든 투자자가 '한 봉지를 다 먹었다'고 말함(말하는 본인, 샷 384.40~386.84) — 벤치 0초 컷과 같은 원본 샷",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "N1",
+   "kind": "나레",
+   "src": "vr3dPT0wnrY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vr3dPT0wnrY",
+   "src_orig_span": [
+    0.1,
+    0.928
+   ],
+   "ss": 0.1,
+   "dur": 0.828,
+   "t_final_est": [
+    2.35,
+    3.18
+   ],
+   "res": "1080x1920",
+   "src_crop": [
+    47,
+    0,
+    986,
+    960
+   ],
+   "scale": 1.096,
+   "ours": "현장(판매사 길거리 시식 쇼츠 위 절반, 1080p 세로): 여학생들이 P-Nuff 봉지에서 꺼내 맛봄(아래 절반·자막 y≈1500 은 크롭으로 뺌)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "vr3dPT0wnrY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=vr3dPT0wnrY",
+   "src_orig_span": [
+    20.45,
+    20.929
+   ],
+   "ss": 20.45,
+   "dur": 0.479,
+   "t_final_est": [
+    3.18,
+    3.66
+   ],
+   "res": "1080x1920",
+   "src_crop": [
+    0,
+    230,
+    1080,
+    1052
+   ],
+   "scale": 1.0,
+   "ours": "현장(같은 쇼츠): 분홍 머리 여성이 P-Nuff 를 씹으며 맛봄(장면 20.43~21.03)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    69.3,
+    70.433
+   ],
+   "ss": 69.3,
+   "dur": 1.133,
+   "t_final_est": [
+    3.66,
+    4.79
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    60,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자가 고개를 젖히고 크게 웃음(원본 샷 69.07~71.10, 소리 끔) — 벤치 4.0~5.17 같은 투자자 웃음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "O2",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 43.05,
+   "audio_dur": 0.7,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    43.05,
+    43.75
+   ],
+   "ss": 43.05,
+   "dur": 0.7,
+   "t_final_est": [
+    4.79,
+    5.49
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "무대 와이드(P-Nuff 간판 — 원본 편집 그대로, 말하는 창업자는 화면 밖)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 43.78,
+   "audio_dur": 2.47,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    43.78,
+    46.25
+   ],
+   "ss": 43.78,
+   "dur": 2.47,
+   "t_final_est": [
+    5.49,
+    7.96
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "방송 그래픽: P-Nuff Crunch 봉지(벤치 5.2~6.9 와 같은 원본 그래픽 — 포장 글자 = 제품)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O2",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 46.28,
+   "audio_dur": 0.52,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    46.28,
+    46.8
+   ],
+   "ss": 46.28,
+   "dur": 0.52,
+   "t_final_est": [
+    7.96,
+    8.48
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "방송: 그릇에 담긴 땅콩 퍼프",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    59.9,
+    61.158
+   ],
+   "ss": 59.9,
+   "dur": 1.258,
+   "t_final_est": [
+    8.48,
+    9.74
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    266,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자가 흰 가운을 활짝 열어 근육을 보여 줌(원본 샷 58.99~63.07, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    61.45,
+    62.75
+   ],
+   "ss": 61.45,
+   "dur": 1.3,
+   "t_final_est": [
+    9.74,
+    11.04
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    339,
+    0,
+    616,
+    600
+   ],
+   "scale": 1.753,
+   "ours": "상의 벗은 창업자가 웃음(같은 샷 확대 크롭)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N2",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    63.12,
+    63.892
+   ],
+   "ss": 63.12,
+   "dur": 0.772,
+   "t_final_est": [
+    11.04,
+    11.81
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    234,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "빨간 블라우스 투자자가 웃으며 반응(원본 샷 63.10~64.06)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "O4",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 83.1,
+   "audio_dur": 0.82,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    83.1,
+    83.92
+   ],
+   "ss": 83.1,
+   "dur": 0.82,
+   "t_final_est": [
+    11.81,
+    12.63
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    279,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "초록 옷 투자자가 듣고 있음(원본 반응 컷 — 원본 편집 그대로, 벤치 11.7~13.1 같음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O4",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 83.95,
+   "audio_dur": 1.87,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    83.95,
+    85.82
+   ],
+   "ss": 83.95,
+   "dur": 1.87,
+   "t_final_est": [
+    12.63,
+    14.5
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    278,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자가 팔을 접어 알통을 보여 주며 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O4",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 85.85,
+   "audio_dur": 1.01,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    85.85,
+    86.86
+   ],
+   "ss": 85.85,
+   "dur": 1.01,
+   "t_final_est": [
+    14.5,
+    15.51
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    218,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "빨간 블라우스 투자자가 손을 저으며 'Cut it out!'(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "O4",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 86.89,
+   "audio_dur": 1.17,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    86.89,
+    88.06
+   ],
+   "ss": 86.89,
+   "dur": 1.17,
+   "t_final_est": [
+    15.51,
+    16.68
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    320,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "초록 옷 투자자 반응(원본 반응 컷 — 벤치 14.77 같음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "O4",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 88.09,
+   "audio_dur": 0.86,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    88.09,
+    88.95
+   ],
+   "ss": 88.09,
+   "dur": 0.86,
+   "t_final_est": [
+    16.68,
+    17.54
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자 복근 근접('오! 오!' 탄성)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "N3",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    74.95,
+    76.955
+   ],
+   "ss": 74.95,
+   "dur": 2.005,
+   "t_final_est": [
+    17.54,
+    19.54
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "방송: 나무 탁자 위 그릇 가득 담긴 땅콩 퍼프(원본 샷 74.87~77.10, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N3",
+   "kind": "나레",
+   "src": "IozegR4FmTA.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=IozegR4FmTA",
+   "src_orig_span": [
+    30.72,
+    31.181
+   ],
+   "ss": 30.72,
+   "dur": 0.461,
+   "t_final_est": [
+    19.54,
+    20.01
+   ],
+   "res": "1080x1920",
+   "src_crop": [
+    0,
+    250,
+    1080,
+    1052
+   ],
+   "scale": 1.0,
+   "ours": "판매사 광고(1080p 세로): 땅콩 퍼프 근접(장면 30.70~31.20, 아래 자막 y≈1500 크롭으로 뺌)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "N3",
+   "kind": "나레",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    77.15,
+    78.403
+   ],
+   "ss": 77.15,
+   "dur": 1.253,
+   "t_final_est": [
+    20.01,
+    21.26
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    0,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자가 퍼프를 집어 먹어 봄(원본 샷 77.10~78.98, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "O5",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 376.4,
+   "audio_dur": 2.35,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    376.4,
+    378.75
+   ],
+   "ss": 376.4,
+   "dur": 2.35,
+   "t_final_est": [
+    21.26,
+    23.61
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    270,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자석 와이드(말하는 투자자 앞쪽, 원본 샷 376.17~379.90) — 벤치 19.4~21.8 같은 샷",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "O6",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 392.9,
+   "audio_dur": 0.85,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    392.9,
+    393.75
+   ],
+   "ss": 392.9,
+   "dur": 0.85,
+   "t_final_est": [
+    23.61,
+    24.46
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    394,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자가 웃으며 듣는 얼굴(원본 반응 컷, 샷 392.60~393.84) — 벤치 24.0 같음",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O7",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 397.25,
+   "audio_dur": 1.6,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    397.25,
+    398.85
+   ],
+   "ss": 397.25,
+   "dur": 1.6,
+   "t_final_est": [
+    24.46,
+    26.06
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    258,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자가 의자에 앉아 제안(말하는 본인, 샷 396.93~399.94)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O7",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 398.88,
+   "audio_dur": 1.04,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    398.88,
+    399.92
+   ],
+   "ss": 398.88,
+   "dur": 1.04,
+   "t_final_est": [
+    26.06,
+    27.1
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    356,
+    0,
+    575,
+    560
+   ],
+   "scale": 1.879,
+   "ours": "같은 샷 확대 크롭 — '25%'(벤치 27.0 확대 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O7",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 399.95,
+   "audio_dur": 0.9,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    399.95,
+    400.85
+   ],
+   "ss": 399.95,
+   "dur": 0.9,
+   "t_final_est": [
+    27.1,
+    28.0
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    273,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "초록 옷 투자자 반응(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O7",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 400.89,
+   "audio_dur": 0.79,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    400.89,
+    401.68
+   ],
+   "ss": 400.89,
+   "dur": 0.79,
+   "t_final_est": [
+    28.0,
+    28.79
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    247,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "대머리 투자자 'Woo!'(말하는 본인, 샷 400.87~401.84)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "O9",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 403.19,
+   "audio_dur": 1.33,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    403.19,
+    404.52
+   ],
+   "ss": 403.19,
+   "dur": 1.33,
+   "t_final_est": [
+    28.79,
+    30.12
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    275,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자가 몸을 앞으로 기울여 말함(말하는 본인, 샷 403.17~404.57)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "O10",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 411.5,
+   "audio_dur": 3.35,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    411.5,
+    414.85
+   ],
+   "ss": 411.5,
+   "dur": 3.35,
+   "t_final_est": [
+    30.12,
+    33.47
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    300,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자가 투자자 쪽을 보며 말함(말하는 본인, 샷 410.67~415.27)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O11",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 415.29,
+   "audio_dur": 1.27,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    415.29,
+    416.56
+   ],
+   "ss": 415.29,
+   "dur": 1.27,
+   "t_final_est": [
+    33.47,
+    34.74
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    306,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "투자자가 바로 받아침(말하는 본인, 샷 415.27~416.57)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O11",
+   "kind": "원음",
+   "src": "wp45o5i7zhE.mp4",
+   "mute": false,
+   "audio_src": "wp45o5i7zhE_audio.m4a",
+   "audio_ss": 416.59,
+   "audio_dur": 1.21,
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "src_orig_span": [
+    416.59,
+    417.8
+   ],
+   "ss": 416.59,
+   "dur": 1.21,
+   "t_final_est": [
+    34.74,
+    35.95
+   ],
+   "res": "1280x720",
+   "src_crop": [
+    169,
+    0,
+    739,
+    720
+   ],
+   "scale": 1.461,
+   "ours": "창업자 정면 근접 — 말없이 생각하는 얼굴(벤치 끝 34.0~34.7 같은 샷)",
+   "audio": "원본 소리(원음)"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/9편_PNuffCrunch/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    510,
+    735
+   ],
+   "size": 430,
+   "t": [
+    0.0,
+    2.35
+   ],
+   "how": "face",
+   "fh_win": 0.312,
+   "why": "벤치 0.0~2.2 빨간 실선 원 = 같은 투자자 얼굴(첫 컷 내내 고정). 얼굴 검출(YuNet 3프레임) 얼굴 높이 225px×1.496 = 창 폭 0.31 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.73,
+    1.18
+   ],
+   "color": "노랑",
+   "how": "auto",
+   "why": "벤치 5.17 노랑 번쩍(봉지 그래픽 첫 프레임) — 원본 봉지 컷 43.78 = 줄 안 0.73"
+  },
+  {
+   "line": "N2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "노랑",
+   "how": "auto",
+   "why": "벤치 8.70 노랑 번쩍(창업자 가운 여는 컷 첫 프레임)"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    3.79,
+    4.24
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 14.77 초록 번쩍(초록 옷 투자자 반응 컷 첫 프레임) — 원본 86.89 = 줄 안 3.79"
+  },
+  {
+   "line": "O7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 24.90 초록 번쩍('투자할게' 첫 프레임)"
+  },
+  {
+   "line": "O7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.63,
+    2.08
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 27.00 빨강 번쩍('25%' 확대 컷) — 원본 398.88 = 줄 안 1.63"
+  },
+  {
+   "line": "O11",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.3,
+    1.75
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 33.83 빨강 번쩍(끝 창업자 얼굴 컷) — 원본 416.59 = 줄 안 1.30"
+  }
+ ]
+}

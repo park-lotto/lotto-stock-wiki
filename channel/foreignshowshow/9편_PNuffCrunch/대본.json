@@ -1,0 +1,677 @@
+{
+ "topic": "P-Nuff Crunch(식물성 단백질 땅콩 퍼프 과자) — 식품과학 박사·보디빌더 출신 창업자가 30만 달러/10% 요청 → 한 봉지를 다 먹었다는 투자자가 30만 달러/25% 제안, '1억 달러 브랜드' 공방(벤치는 여기서 끝)",
+ "bench": {
+  "id": "MIlHlQ1Wdg4",
+  "channel": "해외쇼츠 @foreignshowshow",
+  "title": "살 안찌는 땅콩 과자 (화면 제목: 살 안찌는 땅콩과자 / 산다 vs 안산다)",
+  "dur": 34.8,
+  "views": 340870,
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ],
+  "flow_bench": {
+   "id": "sVsPbjTr55Y",
+   "channel": "BIG BAG HUSTLE",
+   "title": "No One Negotiates Like Mark Cuban",
+   "dur": 55.4,
+   "views": 36044675
+  }
+ },
+ "form": "벤치 그대로 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "dropped": [
+  "벤치 2.2~4.0 남(인플루언서·먹방)이 과자 먹는 컷 — P-Nuff 와 무관한 남의 영상 → 판매사 길거리 시식 컷(vr3dPT0wnrY)으로 바꿈",
+  "벤치 6.9~8.3 투자자가 과자 먹는 컷(원음 줄 밑, 원본 시각 아님) → 원음 줄 화면은 원본 시각(봉지 그래픽·그릇)으로",
+  "벤치 8.3 초록 옷 투자자 '음~'(0.4초) — 짧아 뺌",
+  "벤치 18~19.4 AI 근육 남자 그림 — 근거·출처 없는 그림 → 판매사 광고 퍼프 근접으로",
+  "벤치 21.8 'I ate the whole freaking bag' 두 번째(0초와 같은 원본 순간 재사용) — B13 재사용 → 뺌",
+  "벤치 나레 '살이 찌지 않는다' — 원본에 근거 없음(투자자 '130 calories'·'gluten-free'만) → '130칼로리밖에 안 된다는데'",
+  "BBH 뒤 20초(15% 역제안 → 40만 달러/25% 성사, 원본 431~488초) — 줄 단위 벤치(해외쇼츠)가 안 다룸 → 넣지 않음(페이블께 물음)"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "반응(결말 반응 0초)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "한 봉지를",
+     "통째로 다 먹었어요"
+    ],
+    "cap_at": [
+     384.64,
+     385.16
+    ],
+    "span": [
+     384.45,
+     386.8
+    ],
+    "orig_en": "I ate the whole freaking bag.",
+    "text": "한 봉지를 통째로 다 먹었어요",
+    "style": "보통",
+    "fx": "0초 빨간 원(말하는 투자자 얼굴, hook_circle) — 벤치 0.0~2.2 빨간 실선 원(같은 투자자 얼굴)",
+    "emph": [
+     {
+      "cap": "한 봉지를",
+      "span": "한 봉지를",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "통째로 다 먹었어요",
+      "span": "먹었어요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "의문(소개)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "맛도 잡고 건강도",
+     "잡았다는",
+     "땅콩 과자가 있는데"
+    ],
+    "text": "맛도 잡고 건강도 잡았다는 땅콩 과자가 있는데",
+    "tts": "맛도 잡고 건강도 잡았다는 땅콩 과자가 있는데",
+    "emph": [
+     {
+      "cap": "맛도 잡고 건강도",
+      "span": "잡고 건강도",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잡았다는",
+      "span": "잡았다는",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "땅콩 과자가 있는데",
+      "span": "땅콩 과자가",
+      "color": "주황",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "해답(제품 정체)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "영양까지 챙긴",
+     "최초의 바삭한 땅콩 과자"
+    ],
+    "cap_at": [
+     43.12,
+     44.86
+    ],
+    "span": [
+     43.05,
+     46.8
+    ],
+    "orig_en": "It's the first nutrition-based crunchy peanut puff snack.",
+    "text": "영양까지 챙긴 최초의 바삭한 땅콩 과자",
+    "style": "보통",
+    "fx": "노랑 번쩍 — 벤치 5.17(봉지 그래픽 첫 프레임)",
+    "emph": [
+     {
+      "cap": "영양까지 챙긴",
+      "span": "영양까지 챙긴",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "최초의 바삭한 땅콩 과자",
+      "span": "바삭한 땅콩 과자",
+      "color": "파랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "전개(창업자)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "식품과학 박사에",
+     "보디빌더 출신인 창업자가",
+     "직접 만들었다는데"
+    ],
+    "text": "식품과학 박사에 보디빌더 출신인 창업자가 직접 만들었다는데",
+    "tts": "식품과학 박사에 보디빌더 출신인 창업자가 직접 만들었다는데",
+    "fx": "노랑 번쩍 — 벤치 8.7(창업자가 가운을 여는 컷 첫 프레임)",
+    "emph": [
+     {
+      "cap": "식품과학 박사에",
+      "span": "식품과학 박사에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "보디빌더 출신인 창업자가",
+      "span": "출신인 창업자가",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "직접 만들었다는데",
+      "span": "만들었다는데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "시연(장점·반응)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "근육 만드는 데도",
+     "좋아요",
+     "그만해요!",
+     "몸매 유지까지요",
+     "오우~ 오우~"
+    ],
+    "cap_at": [
+     83.18,
+     84.62,
+     85.84,
+     87.04,
+     88.09
+    ],
+    "span": [
+     83.1,
+     88.95
+    ],
+    "orig_en": "But they're also good for building muscle. / Cut it out! / (and) staying fit. / Oh! Oh!",
+    "text": "근육 만드는 데도 좋아요 그만해요! 몸매 유지까지요 오우~ 오우~",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 14.77(초록 옷 투자자 반응 컷 첫 프레임 = 원본 86.871 샷 경계)",
+    "emph": [
+     {
+      "cap": "근육 만드는 데도",
+      "span": "만드는 데도",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "좋아요",
+      "span": "좋아요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그만해요!",
+      "span": "그만해요!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "몸매 유지까지요",
+      "span": "몸매 유지까지요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "오우~ 오우~",
+      "span": "오우~ 오우~",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "해답(성분)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "글루텐 프리에",
+     "식물성 단백질로 만들고",
+     "130칼로리밖에",
+     "안 된다는데"
+    ],
+    "text": "글루텐 프리에 식물성 단백질로 만들고 130칼로리밖에 안 된다는데",
+    "tts": "글루텐 프리에 식물성 단백질로 만들고 백삼십 칼로리밖에 안 된다는데",
+    "emph": [
+     {
+      "cap": "글루텐 프리에",
+      "span": "글루텐 프리에",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "식물성 단백질로 만들고",
+      "span": "단백질로 만들고",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "130칼로리밖에",
+      "span": "130칼로리밖에",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 된다는데",
+      "span": "안 된다는데",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "계기(투자자 경험)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "집 찬장에",
+     "이 과자가 있었는데"
+    ],
+    "cap_at": [
+     376.48,
+     377.46
+    ],
+    "span": [
+     376.4,
+     378.75
+    ],
+    "orig_en": "And these things are in the pantry.",
+    "text": "집 찬장에 이 과자가 있었는데",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "집 찬장에",
+      "span": "집 찬장에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "이 과자가 있었는데",
+      "span": "있었는데",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "계기(반응)",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "더 먹고 싶더라고요"
+    ],
+    "cap_at": [
+     393.0
+    ],
+    "span": [
+     392.9,
+     393.75
+    ],
+    "orig_en": "I wanted more.",
+    "text": "더 먹고 싶더라고요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "더 먹고 싶더라고요",
+      "span": "싶더라고요",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "지분 경쟁(제안)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "30만 달러 줄게요",
+     "지분은 25% 주세요",
+     "우~!"
+    ],
+    "cap_at": [
+     397.3,
+     398.9,
+     401.12
+    ],
+    "span": [
+     397.25,
+     401.68
+    ],
+    "orig_en": "So I'll give you the 300K. I want 25%. / Woo!",
+    "text": "30만 달러 줄게요 지분은 25% 주세요 우~!",
+    "style": "보통",
+    "fx": "초록 번쩍(줄 첫 컷, 벤치 24.9 '투자할게') + 빨강 번쩍(398.85 확대 컷, 벤치 27.0 '25%')",
+    "emph": [
+     {
+      "cap": "30만 달러 줄게요",
+      "span": "30만 달러",
+      "color": "파랑",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "지분은 25% 주세요",
+      "span": "25%",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "우~!",
+      "span": "우~!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "지분 경쟁(설득)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "당신 인생을",
+     "바꿔 줄게요"
+    ],
+    "cap_at": [
+     403.19,
+     403.82
+    ],
+    "span": [
+     403.19,
+     404.52
+    ],
+    "orig_en": "I'm going to change your life.",
+    "text": "당신 인생을 바꿔 줄게요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "당신 인생을",
+      "span": "당신 인생을",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "바꿔 줄게요",
+      "span": "바꿔 줄게요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O10",
+    "kind": "원음",
+    "fn": "지분 경쟁(창업자)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "아시잖아요,",
+     "5~6년 뒤엔",
+     "1억 달러 브랜드예요"
+    ],
+    "cap_at": [
+     411.56,
+     412.36,
+     413.08
+    ],
+    "span": [
+     411.5,
+     414.85
+    ],
+    "orig_en": "I know you know this is going to be $100 million brand in five, six years.",
+    "text": "아시잖아요, 5~6년 뒤엔 1억 달러 브랜드예요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "아시잖아요,",
+      "span": "아시잖아요,",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "5~6년 뒤엔",
+      "span": "5~6년 뒤엔",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "1억 달러 브랜드예요",
+      "span": "1억 달러",
+      "color": "분홍",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O11",
+    "kind": "원음",
+    "fn": "지분 경쟁(반박·끝)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "근데 당신 혼자선",
+     "안 되죠"
+    ],
+    "cap_at": [
+     415.32,
+     415.88
+    ],
+    "span": [
+     415.29,
+     417.8
+    ],
+    "orig_en": "But not just with you.",
+    "text": "근데 당신 혼자선 안 되죠",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 33.83(끝 창업자 얼굴 컷 첫 프레임)",
+    "emph": [
+     {
+      "cap": "근데 당신 혼자선",
+      "span": "당신 혼자선",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 되죠",
+      "span": "안 되죠",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "보디빌더 박사의",
+  "line2": "땅콩 과자 사? 말아?",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?' — 벤치 '살 안찌는 땅콩과자 / 산다 vs 안산다'와 3어절 연속 겹침 0, 줄당 ≤12자(rules title.line_chars_max)"
+ },
+ "render": {
+  "gap": 0.03
+ },
+ "facts": {
+  "f1": {
+   "text": "원본 384.64~386.68 'I ate the whole freaking bag.'(구간 단독 2모델 asr/span_v1 + 로컬 whisper small 낱말 시각) · 화면 샷 384.40~386.84 봉지 든 투자자",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 46.88~50.14 창업자 'It's not only delicious, but it's also healthy and nutritious.'(whisper·30초 창 2모델) — 창업자 주장 → 전언체",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음(창업자 주장)"
+  },
+  "f3": {
+   "text": "원본 43.12~46.52 'It's the first nutrition-based crunchy peanut puff snack.'(span_v1 2모델 일치) · 화면 43.77~46.27 봉지 그래픽",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음+화면"
+  },
+  "f4": {
+   "text": "원본 21.20~23.48 'I'm a PhD in food science'(whisper·30초 창 2모델 'I have a PhD in food science') · 58.20~60.82 'I'm also a former competitor bodybuilder'(whisper·2모델) · 35.22~38.94 'I decided to make something better' · 화면 60.0~62.9 가운을 엶",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음+화면"
+  },
+  "f5": {
+   "text": "원본 83.18~85.84 'But they're also good for building muscle'(span_v1 2모델) · 85.84~86.80 'Cut it out!'(2모델) · 87.04~87.80 'I'm staying fit'(whisper)/'and staying fit'(30초 창 2모델)/'Stay fit'·'And stay in fit'(단독 v3 2모델) / 'Stay fair'·'And stay in bed'(단독 v1) — 'stay·fit' 4/6 △ · 88.1~88.9 'Oh! Oh!'(30초 창·v1 3.5-flash, v3 3-flash 는 헛들림)",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음"
+  },
+  "f6": {
+   "text": "원본 73.36~76.06 창업자 'It's made from high-quality, plant-based protein' · 381.80~384.06 투자자 'Gluten-free, 130 calories'(봉지를 읽음) · 162.87~168.25 투자자 'Calories aren't bad, 130 calories' · 49~52초 방송 그래픽 'Gluten-Free'·'Complete Plant Protein'(whisper·30초 창 2모델)",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음+그래픽"
+  },
+  "f7": {
+   "text": "원본 376.48~378.62 'And these things are in the pantry.'(span_v1 2모델) · 393.00~393.60 'I wanted more.'(2모델) — 투자자가 집에서 아내가 사 둔 과자를 먹은 이야기(372.9~393.6)",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음"
+  },
+  "f8": {
+   "text": "원본 397.30~400.12 'So I'll give you the 300K. I want 25%.'(span_v1 2모델 일치) · 401.12~401.48 'Woo!'(2모델) · 403.10~404.34 'I'm going to change your life.'(span_v3 2모델 + whisper + BBH 쇼츠 유튜브 자막 일치) · 앞 97.80~102.42 창업자 요청 '$300,000 for 10% equity'",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음"
+  },
+  "f9": {
+   "text": "원본 411.56~414.76 'I know you know this is going to be $100 million brand in five, six years.'(whisper + BBH 유튜브 자막) · 415.32~416.20 'But not just with you.'(whisper + BBH 자막) (span_v3 2모델 'I know, you know, this is gonna be a hundred million dollar brand…' / 'Not just with you'·'Now just with you')",
+   "url": "https://www.youtube.com/watch?v=wp45o5i7zhE",
+   "kind": "방송 원음"
+  }
+ }
+}
