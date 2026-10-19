@@ -319,6 +319,78 @@ def verify_lines(versions, picks, call=None):
     return bad
 
 
+# ── Claude(오푸스) 창구 — 대본은 사진을 직접 보며 쓰고, 다른 호출이 채점한다 ─────────────────────────
+#   왜: 제미나이 대본이 밋밋했고(2026-10-19 네스트호텔 3안: '힐링하세요'·'쉬어가요' 같은 아무 데나 붙는 말) 키 다수 소진.
+#   사장님 10-18 "제미나이 쓰지 말고"(칼카피 엔진 claude_cli.py). 방식은 그 파일과 같다: `claude -p`, 표준입력,
+#   빈 임시 폴더(프로젝트 폴더면 CLAUDE.md·훅이 붙는다), 그림은 파일로 두고 Read 로 열게 한다.
+def claude_call(images, prompt, model="opus", timeout=600):
+    """그림 경로 목록 + 프롬프트 → JSON dict(실패하면 RuntimeError, 이유 포함)."""
+    import shutil
+    import subprocess
+    import tempfile
+    d = Path(tempfile.mkdtemp(prefix="travel_claude_"))
+    try:
+        names = []
+        for k, p in enumerate(images or []):
+            f = d / ("photo_%d.jpg" % (k + 1))
+            _load(p).save(f, quality=90)
+            names.append(f.name)
+        head = ("먼저 Read 도구로 이 폴더의 사진을 순서대로 연다: " + ", ".join(names) + ". 사진에 실제로 보이는 것만 근거로 쓴다.\n\n") if names else ""
+        full = head + prompt + "\n\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지."
+        r = subprocess.run(["claude", "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
+                           input=full, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=timeout, cwd=str(d))
+        t = re.sub(r"^```(?:json)?\s*|\s*```$", "", (r.stdout or "").strip())
+        m = re.search(r"\{.*\}", t, re.S)
+        if not m:
+            raise RuntimeError("claude 빈/깨진 답 rc=%s: %s" % (r.returncode, (r.stdout or r.stderr or "")[:200]))
+        return json.loads(m.group(0))
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+JUDGE_CRITERIA = ("훅", "화면 일치", "구체성", "리듬", "댓글 유도")
+_JUDGE_PROMPT_SCRIPT = (
+    "여행 숙소 쇼츠 대본 후보들을 채점한다. 사진은 화면 1~%d 순서이고, 대본의 줄 i 는 화면 i 위에서 읽힌다.\n"
+    "기준(각 1~10): 훅 = 첫 줄에서 손가락이 멈추나 / 화면 일치 = 줄마다 그 사진에 보이는 것만 말하나(없는 소리·냄새·시설은 감점) / "
+    "구체성 = 이 숙소에만 있는 디테일인가('힐링하세요' 같은 아무 데나 붙는 말은 감점) / 리듬 = 짧고 센 호흡, 읽는 맛 / "
+    "댓글 유도 = 마지막 줄이 댓글을 남기고 싶게 만드나.\n"
+    "본보기(실제로 터진 대본 수준 = 8점대): %s\n\n후보:\n%s\n\n"
+    "JSON: {\"scores\": [{\"v\": 후보번호, \"훅\": n, \"화면 일치\": n, \"구체성\": n, \"리듬\": n, \"댓글 유도\": n, "
+    "\"bad_lines\": [\"줄번호: 이유\"], \"one_line\": \"한 줄 평\"}]}")
+
+
+def judge_scripts(versions, picks, call=None):
+    """오푸스 채점(5기준) — 쓴 것과 다른 호출이 본다. 반환: {유형: {점수…, total, bad_lines, one_line}}."""
+    call = call or claude_call
+    cand = "\n\n".join("%d) [%s]\n%s" % (k + 1, v.get("type", ""), "\n".join("%d. %s" % (i + 1, l) for i, l in enumerate(v["lines"])))
+                       for k, v in enumerate(versions))
+    got = call([p["path"] for p in picks], _JUDGE_PROMPT_SCRIPT % (len(picks), REFERENCE_SCRIPTS[1][1], cand)) or {}
+    out = {}
+    for s in got.get("scores") or []:
+        k = int(s.get("v", 0)) - 1
+        if 0 <= k < len(versions):
+            sc = {c: int(s.get(c) or 0) for c in JUDGE_CRITERIA}
+            sc.update(total=sum(sc.values()), bad_lines=s.get("bad_lines") or [], one_line=s.get("one_line") or "")
+            out[versions[k].get("type", "?")] = sc
+    return out
+
+
+def write_script_claude(picks, detail, model="opus"):
+    """오푸스가 사진 7장을 직접 보며 3유형을 쓰고 → 금지 검사 → 다른 오푸스 호출이 채점 → 최고점 + 금지 통과를 추천."""
+    p = script_prompt(picks, detail).replace("아래 화면이 이 순서로", "열어 본 사진(photo_1~)이 이 순서로")
+    got = claude_call([q["path"] for q in picks], p + '\n\nJSON: {"versions": [{"type": "유형", "lines": ["줄1", ...]}]}', model=model)
+    versions = [v for v in got.get("versions") or [] if isinstance(v, dict) and v.get("lines")]
+    issues = {v.get("type", "?"): script_issues(v["lines"], detail, len(picks)) for v in versions}
+    scores = judge_scripts(versions, picks) if versions else {}
+    for t, sc in scores.items():
+        issues.setdefault(t, []).extend("사진 대조: " + b for b in sc.get("bad_lines") or [])
+    hard_ok = [v for v in versions if not [x for x in script_issues(v["lines"], detail, len(picks)) if not x.startswith("길이")]]
+    chosen = max(hard_ok or versions, key=lambda v: (scores.get(v.get("type", "?")) or {}).get("total", 0)) if versions else None
+    return {"chosen": chosen, "versions": versions, "issues": issues, "scores": scores, "writer": "claude-" + model,
+            "clean": bool(chosen) and not issues.get(chosen.get("type", "?")), "attempts": 1}
+
+
 def write_script(picks, detail, call=None, verify=None, tries=2):
     """→ {"chosen", "versions", "issues": {유형: [문제]}, "attempts"}. 문제 없는 첫 유형을 고른다.
     관문 두 겹: ① script_issues(이름·가격·지역·가 본 척·길이) ② verify_lines(사진에 없는 말). 모두 탈락이면 한 번 더 쓴다."""
