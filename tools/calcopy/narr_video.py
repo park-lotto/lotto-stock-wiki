@@ -403,9 +403,12 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
     # loop = 짤처럼 짧은 소스가 컷보다 짧으면 되풀이(짤 3초 < 컷 3.9초 — 10-16 4판)
     inp = ["-loop", "1", "-framerate", str(FPS), "-i", str(src)] if still else ([*(["-stream_loop", "-1"] if loop else []), "-ss", f"{ss:.3f}", "-i", str(src)])
     # ★색 범위 통일: 그림 파일(png=rgb·jpg=yuvj pc)·영상(tv)이 섞여 이으면 장면 통째가 회색(흰 255→235)이 됐다(10-16 2판) → 전부 tv
-    tail = ",scale=out_range=tv,format=yuv420p"
+    # ★색 표식 통일(10-20 샥탬 9편): 컷마다 표식이 다르면(bt709 / 없음 / smpte170m) -c copy 로 이은 재료에서 compose 가 컷 경계에
+    #   제목·자막 층을 몇 프레임 빠뜨리고 프레임도 줄었다(시험 90→87장·제목 빠짐 1장) → 컷 클립은 전부 bt709·tv 표식(픽셀 값은 그대로 — 표식만,
+    #   완성본은 원래 bt709 로 나가 옛 픽셀과 같다). 판단 한 곳 = 이 tail(컷 클립을 만드는 곳은 shot_clip 하나).
+    tail = ",scale=out_range=tv,format=yuv420p,setparams=range=tv:color_primaries=bt709:color_trc=bt709:colorspace=bt709"
     if not overlays:
-        va._run_ffmpeg(["ffmpeg", "-y", *inp, *_len_args(dur, frames), "-vf", pre + vf + tail, "-color_range", "tv", "-an",
+        va._run_ffmpeg(["ffmpeg", "-y", *inp, *_len_args(dur, frames), "-vf", pre + vf + tail, "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-an",
                         "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
         return out
     # 꾸밈: 캔버스 좌표 중심 at=[x,y] 또는 path=[[t,x,y]…](컷 안 시각), t=[보이기 시작, 끝](컷 안 시각)
@@ -422,7 +425,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
                f":enable='between(t,{a},{b})':eval=frame[b{k + 1}]")
         last = f"b{k + 1}"
     fc += f";[{last}]{tail.lstrip(',')}[v]"
-    va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", *_len_args(dur, frames), "-color_range", "tv", "-an",
+    va._run_ffmpeg(["ffmpeg", "-y", *inp, *ins, "-filter_complex", fc, "-map", "[v]", *_len_args(dur, frames), "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-an",
                     "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
     return out
 
