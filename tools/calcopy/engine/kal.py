@@ -6,7 +6,7 @@
 사람(Claude 눈) 단계에서는 멈추지 않고 **할 일 묶음**(판독 프레임 목록·줄판독 뼈대·워커 브리프)을 만들어 두고 state=waiting_human 으로 끝낸다.
 세션은 지침서 `tools/calcopy/칼카피_분석지침서.md` §실행 대본 순서로 묶음을 워커에 나눠 주고, 결과가 들어오면 같은 명령을 다시 돌린다.
 판단 주인: 단계 순서·건너뛰기·멈춤 = 이 파일 STEPS/run 한 곳. 각 단계의 판단은 기존 주인 함수(analyze.analyze·kal_analyze.*·to_frame.build·calcopy_board.set_step)를 부른다.
-제미나이 금지(사장님 10-18): 뜯기의 LLM 창구 = _claude_llm(claude_cli.ask 어댑터 · 소리 받아쓰기는 못 하므로 실패로 기록된다 — 받아쓰기는 vtt·스피치매틱스).
+제미나이 금지(사장님 10-18): 뜯기의 LLM 창구 = analyze 기본값 claude_cli.analyze_llm(주인 한 곳 · 소리 받아쓰기는 못 하므로 실패로 기록된다 — 받아쓰기는 vtt·스피치매틱스).
 경계(관제 235 합의 10-20): kal.py = 분석 입구(~판 설정 초안 `_kal/판설정_초안.json`). 제작은 렌더러를 만들지 않고 preset_make / hybrid/run.py 를 부른다. 소리 도구 = tools/calcopy/engine/sound/.
 """
 from __future__ import annotations
@@ -229,22 +229,6 @@ def step_collect(S: State):
     return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}({'720p lite' if S.d.get('lite') else '1080p'}, C 여유 {disk_free_gb()}GB)" + (f" 실패 {errs}" if errs else "")
 
 
-def _claude_llm(parts: list, prompt: str, tag: str = ""):
-    """analyze 가 넘기는 제미나이 꼴 parts([라벨 str, jpg bytes, …] 또는 [(경로, 'audio/mp3')]) → claude_cli.ask(그림 bytes 만) 어댑터.
-    라벨은 프롬프트 앞에 번호로 접어 넣는다. 소리는 Claude 창구가 못 받으므로 실패로 돌려준다(조용히 건너뛰지 않는다 — 받아쓰기는 vtt·스피치매틱스)."""
-    from tools.calcopy.engine import claude_cli
-    imgs, labels = [], []
-    for x in parts or []:
-        if isinstance(x, (bytes, bytearray)):
-            imgs.append(bytes(x))
-        elif isinstance(x, str):
-            labels.append(x)
-        elif isinstance(x, tuple):
-            return None, f"소리 판독({x[1] if len(x) > 1 else '?'})은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
-    head = ("그림 순서(Read 로 연 파일 순서)와 라벨: " + " / ".join(f"{i + 1}={lab}" for i, lab in enumerate(labels)) + "\n") if labels else ""
-    return claude_cli.ask(imgs, head + prompt, tag)
-
-
 def step_tteutgi(S: State):
     from tools.calcopy.engine import analyze
     base = DATA / S.d["slug"] / "src"
@@ -256,7 +240,7 @@ def step_tteutgi(S: State):
             done.append(vid)
             continue
         try:
-            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=_claude_llm, materials=False)
+            analyze.analyze(str(base / f"{vid}.mp4"), str(out), materials=False)  # 기본 창구 = claude_cli.analyze_llm
             done.append(vid)
         except Exception as e:  # 조용한 실패 금지 — 편별로 기록
             errs.append(f"{vid}: {type(e).__name__} {str(e)[:120]}")

@@ -69,3 +69,19 @@ def ask(parts: list, prompt: str, tag: str = "", model: str | None = None) -> tu
         return out, None
     finally:
         shutil.rmtree(d, ignore_errors=True)
+
+
+def analyze_llm(parts: list, prompt: str, tag: str = ""):
+    """뜯기(analyze.py)가 넘기는 제미나이 꼴 parts([라벨 str, jpg bytes, …] 또는 [(경로, 'audio/mp3')]) → ask(그림 bytes 만) 어댑터.
+    analyze 의 기본 창구(사장님 10-18 제미나이 금지 — 관제 235·097 합의 10-20, 주인 한 곳). 라벨은 프롬프트 앞에 번호로 접어 넣는다.
+    소리는 이 창구가 못 받으므로 실패로 돌려준다(조용히 건너뛰지 않는다 — 받아쓰기는 vtt·스피치매틱스)."""
+    imgs, labels = [], []
+    for x in parts or []:
+        if isinstance(x, (bytes, bytearray)):
+            imgs.append(bytes(x))
+        elif isinstance(x, str):
+            labels.append(x)
+        elif isinstance(x, tuple):
+            return None, f"소리 판독({x[1] if len(x) > 1 else '?'})은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+    head = ("그림 순서(Read 로 연 파일 순서)와 라벨: " + " / ".join(f"{i + 1}={lab}" for i, lab in enumerate(labels)) + "\n") if labels else ""
+    return ask(imgs, head + prompt, tag)

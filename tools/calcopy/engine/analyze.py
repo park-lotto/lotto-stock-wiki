@@ -9,7 +9,8 @@
 재는 자는 전부 남의 것을 부른다(같은 판단 두 벌 금지):
   배치·자막·컷·소리 = shopping_shorts.channelkit.bench (편 하나 창 = layout.measure_video·window_vote, 자막 띠 = captions.choose_caption; layout1 은 부르기만)
   글꼴 = fontmatch(hotpeople font.py·font4.py 원리) · 말투 = tools/calcopy/script_text_stats.tone
-  글자 읽기·제작법·받아쓰기 = 무료 제미나이(gemini_free.ask, 버텍스·유료 금지). 시험은 llm= 로 가짜를 끼운다.
+  글자 읽기·제작법 = Claude(claude_cli.analyze_llm — 기본 창구, 사장님 10-18 제미나이 금지·10-20 기본값 전환). 받아쓰기(소리)는 이 창구가 못 받아 실패로 남는다(vtt·스피치매틱스).
+  제미나이로 돌려야 하면 llm=gemini_free.ask 를 명시한다. 시험은 llm= 로 가짜를 끼운다.
 항목마다 ok / failed:이유 와 method(잰 함수 이름)를 남긴다. 실패는 멈추지 않고 표에 적는다.
 """
 from __future__ import annotations
@@ -501,7 +502,9 @@ def _context(R: dict) -> str:
 
 # ── 묶기 ─────────────────────────────────────────────────────────────────
 def analyze(mp4: str, out_dir: str, llm=None, materials: bool = True) -> dict:
-    llm = llm or gemini_free.ask
+    if llm is None:
+        from tools.calcopy.engine import claude_cli
+        llm = claude_cli.analyze_llm
     os.makedirs(out_dir, exist_ok=True)
     gemini_free.CALLS.clear()
     T = {}
