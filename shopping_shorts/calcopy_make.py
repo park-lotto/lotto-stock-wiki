@@ -38,6 +38,9 @@ AI_WORDS = re.compile(r"(\bai\b|에이아이|인공지능|합성|딥페이크|�
 N_CANDIDATES = 10
 STEPS_TO_PLAN = ["bench", "score", "assign", "script", "source", "plan"]
 ADMINS = ("페이블", "사장님", "관리자")            # approve(TTS·렌더 = 돈·시간) 는 이 이름만 — API 는 관리자 세션이 "관리자"로 부른다
+# 고객 PC 모드(관제 234): 고객 설치팩이 CALCOPY_CUSTOMER_MODE=1 로 띄운다 — TTS·렌더 비용이 고객 본인 키·PC 라 고객("고객")이 사인한다.
+CUSTOMER_MODE = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
+CUSTOMER = "고객"
 PACK_ROOT = Path("C:/숏템_칼카피/packs")
 VOICES = ROOT / "shopping_shorts" / "assets" / "voice_presets.json"
 CUT_DIFF_MIN = 0.5                                 # 응용: 컷(재료 영상·초)이 이 비율 이상 달라야 '컷 다름'
@@ -52,7 +55,9 @@ class MakeError(Exception):
 
 # ── 팩·프리셋 ──────────────────────────────────────────────────────────────
 def packs_path() -> Path:
-    """실파일: 로컬 C:/숏템_칼카피/packs(있으면) → 데이터 폴더(서버) → 저장소 기본값(읽기만)."""
+    """실파일: CALCOPY_PACKS(고객 PC — 숏템 웹 프로필에서 만든 팩) → 로컬 C:/숏템_칼카피/packs(있으면) → 데이터 폴더(서버) → 저장소 기본값(읽기만)."""
+    if os.environ.get("CALCOPY_PACKS"):
+        return Path(os.environ["CALCOPY_PACKS"])
     if LOCAL_PACKS.parent.is_dir():
         return LOCAL_PACKS
     return CT.base_dir() / "my_packs.json"
@@ -651,7 +656,7 @@ def choose(sid: str, n: int, data_dir=None, deps: dict | None = None) -> dict:
 
 def approve(sid: str, by: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
     """OK → TTS 1회·렌더. 관리자(ADMINS)만 — 돈(타입캐스트)·시간이 드는 첫 자리. 응용이면 형제 제작물과 실제로 다른지 다시 판다."""
-    if by not in ADMINS:
+    if by not in ADMINS and not (CUSTOMER_MODE and by == CUSTOMER):
         raise MakeError(f"승인은 관리자({'/'.join(ADMINS[:2])})만 — by={by!r}", 403)
     S = _load(sid, data_dir)
     t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"]
