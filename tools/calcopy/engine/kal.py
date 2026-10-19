@@ -53,14 +53,27 @@ HUMAN = {"readlines": "줄판독(눈) — 묶음 _kal/워커묶음.json 을 워�
 
 
 KNOWN_VOICES = [  # 지금까지 쓴 목소리(필재 금지 — 시작 문서 §12). 주인 칸은 판 파일 voice 한 곳(여기는 후보 표만)
-    {"name": "미나", "voice_id": "kr-mina-expressive", "engine": "일레븐랩스", "tempo": 1.35, "note": "잇썸홈판·키치잇판·스타픽룸판, 배속 1.35 고정"},
-    {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "engine": "타입캐스트", "tempo": 1.2, "note": "재미썸홈판·꿀템노트판·썰템쇼, 남자면 박창수"},
-    {"name": "지훈", "voice_id": "tc_61f0859907085fc68561c9a1", "engine": "타입캐스트", "tempo": 1.25, "note": "샥탬스토리(남, f0 129Hz)"},
+    {"name": "미나", "voice_id": "kr-mina-expressive", "engine": "일레븐랩스", "note": "잇썸홈판·키치잇판·스타픽룸판, 배속 1.35 고정"},
+    {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "engine": "타입캐스트", "note": "재미썸홈판·꿀템노트판·썰템쇼, 남자면 박창수"},
+    {"name": "지훈", "voice_id": "tc_61f0859907085fc68561c9a1", "engine": "타입캐스트", "note": "샥탬스토리(남, f0 129Hz)"},
 ]
 AXES = ("자막", "틀", "장면전환", "장면대사", "스토리", "대본", "소리", "스티커", "썸네일", "소재", "채널")
 _AXIS_KW = {"자막": ("자막", "타이핑", "팝", "글꼴", "강조"), "틀": ("틀", "제목", "로고", "창", "출처"), "장면전환": ("컷", "전환", "줌", "정지"), "장면대사": ("장면", "매칭", "시연"),
             "스토리": ("박자", "훅", "반전", "끝", "결말", "흐름"), "대본": ("어미", "전언", "말투", "대본", "나레는", "반말"), "소리": ("효과음", "BGM", "목소리", "LUFS", "덕킹"),
             "스티커": ("스티커", "짤", "빨간 원", "화살표", "이모지"), "썸네일": ("썸네일", "0초", "첫 프레임"), "소재": ("제품", "소재", "해외 원본"), "채널": ("조회", "업로드", "구독")}
+
+
+def tempo_of(voice_id: str) -> str:
+    """말속도는 판 파일에 적지 않는다(관제 235 합의 10-20, 두 벌 금지) — 주인을 부른다:
+    일레븐랩스 = voice_presets.json default_speed(narr_align.fixed_tempo) / 타입캐스트 = 판의 cps_target(렌더러가 atempo 계산)."""
+    if not voice_id:
+        return "-"
+    try:
+        from tools.calcopy.engine.narr_align import fixed_tempo
+        t = fixed_tempo(voice_id)
+    except Exception as e:
+        return f"확인 실패({e.__class__.__name__})"
+    return f"{t} 고정(voice_presets)" if t else "판 cps_target 로 맞춤(타입캐스트)"
 
 
 def voice_candidates() -> list[dict]:
@@ -73,14 +86,14 @@ def voice_candidates() -> list[dict]:
             continue
         v = d.get("voice") or {}
         if v.get("voice_id"):
-            rows.setdefault(v["voice_id"], {"name": v.get("name"), "voice_id": v["voice_id"], "engine": "타입캐스트" if v["voice_id"].startswith("tc_") else "일레븐랩스", "tempo": None, "note": "", "used_in": []})
+            rows.setdefault(v["voice_id"], {"name": v.get("name"), "voice_id": v["voice_id"], "engine": "타입캐스트" if v["voice_id"].startswith("tc_") else "일레븐랩스", "note": "", "used_in": []})
             rows[v["voice_id"]]["used_in"].append(d.get("name") or f.stem)
         for c in v.get("candidates") or []:
-            rows.setdefault(c, {"name": c, "voice_id": c, "engine": "타입캐스트" if c.startswith("tc") else "일레븐랩스", "tempo": None, "note": f"{d.get('name')} 후보(사장님 귀 확인 전)", "used_in": []})
+            rows.setdefault(c, {"name": c, "voice_id": c, "engine": "타입캐스트" if c.startswith("tc") else "일레븐랩스", "note": f"{d.get('name')} 후보(사장님 귀 확인 전)", "used_in": []})
     vp = ROOT / "shopping_shorts/assets/voice_presets.json"
     n_el = len(json.loads(vp.read_text(encoding="utf-8"))) if vp.exists() else 0
     out = list(rows.values())
-    out.append({"name": f"(일레븐랩스 프리셋 {n_el}종 더 — shopping_shorts/assets/voice_presets.json)", "voice_id": "", "engine": "일레븐랩스", "tempo": None, "note": "", "used_in": []})
+    out.append({"name": f"(일레븐랩스 프리셋 {n_el}종 더 — shopping_shorts/assets/voice_presets.json)", "voice_id": "", "engine": "일레븐랩스", "note": "", "used_in": []})
     return out
 
 
@@ -356,9 +369,9 @@ def step_rules(S: State):
                       "line_reads": f"channel/{S.d['slug']}/줄판독/", "src_dir": str(DATA / S.d["slug"] / "src"), "sfx_events": None, "sfx_key": None,
                       "palette": f"channel/{S.d['slug']}/팔레트.json", "rules_counted": f"channel/{S.d['slug']}/_kal/규칙빈도.json"},
             "voice": ({"name": next((v["name"] for v in KNOWN_VOICES if v["voice_id"] == S.d["voice"]), S.d["voice"]), "voice_id": S.d["voice"],
-                       "tempo": next((v["tempo"] for v in KNOWN_VOICES if v["voice_id"] == S.d["voice"]), None), "candidates": [], "why": "사장님이 시작할 때 고름(kal.py --voice)"}
+                       "candidates": [], "why": "사장님이 시작할 때 고름(kal.py --voice)"}
                       if S.d.get("voice") else
-                      {"name": None, "voice_id": None, "tempo": None, "candidates": [], "why": "미정 — 사장님께(kal.py 시작 질문, 추천: " + voice_recommend(S) + ")"}),
+                      {"name": None, "voice_id": None, "candidates": [], "why": "미정 — 사장님께(kal.py 시작 질문, 추천: " + voice_recommend(S) + ")"}),
             "cps_target": round(statistics.median(narr_cps), 2) if narr_cps else None,
             "bgm": {"id": None, "db_below_voice": None, "duck_orig_db": None, "fade_out": None, "why": "engine/sound/bgm_fp.py·뜯기 audio"},
             "loudness": {"lufs": -14, "tp": -1.5},
@@ -490,7 +503,7 @@ def main(argv=None) -> int:
         if not S.d.get("voice"):
             print("  쓸 수 있는 목소리(필재 금지) — 추천 1순위: " + voice_recommend(S))
             for v in voice_candidates():
-                print(f"   - {v['name']} {v['voice_id']} [{v['engine']}] tempo {v['tempo']} 쓰는 판 {','.join(v['used_in']) or '-'} {v['note']}")
+                print(f"   - {v['name']} {v['voice_id']} [{v['engine']}] 배속 {tempo_of(v['voice_id'])} 쓰는 판 {','.join(v['used_in']) or '-'} {v['note']}")
     if A.stage == "upgrade":
         S.save()
         r = stage_upgrade(S)
