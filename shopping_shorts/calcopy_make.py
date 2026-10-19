@@ -430,6 +430,44 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
     return _save(S, data_dir)
 
 
+PRESCORE_N = int(os.environ.get("CALCOPY_PRESCORE_N") or 5)
+PRESCORE_MIN = int(os.environ.get("CALCOPY_PRESCORE_MIN") or 3)     # 이만큼 점수 난 후보가 모일 때까지
+PRESCORE_ROUNDS = int(os.environ.get("CALCOPY_PRESCORE_ROUNDS") or 3)  # 찾기를 더 돌리는 상한(바퀴)
+
+
+def _prescore(S: dict, rows: list[dict], data_dir=None, deps=None) -> list[dict]:
+    """고객 PC 모드(관제 234): 고객 PC 창고에는 미리 돌아 둔 워커가 없다 — 찾기만 된(found) 후보를 그대로 보이면
+    점수 없는 시사 뉴스가 섞인다(10-19 실측: 빈 창고에서 '스벅 일베놀이 근황'·KNN 뉴스가 점수 없이 후보로).
+    그래서 같은 워커 단계(bench→score)로 점수를 매기고, **점수가 난 것만** 보여 준다(bench 가 '무관 영상'으로 거른 것은 뺀다).
+    모자라면 찾기를 PRESCORE_ROUNDS 바퀴까지 더 돈다. AI 는 후보당 2건(고객 Claude)."""
+    failed: set = set()
+    log = S.setdefault("log", [])
+
+    def live():
+        return [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"]
+                if t["state"] in ("found", "benched", "scored") and not t.get("stalled") and t["id"] not in failed]
+    for rnd in range(PRESCORE_ROUNDS + 1):
+        cur = live()
+        if sum(1 for t in cur if t["state"] == "scored") >= PRESCORE_MIN:
+            break
+        todo = [t for t in cur if t["state"] in ("found", "benched")][:PRESCORE_N]
+        if not todo:
+            if rnd == PRESCORE_ROUNDS:
+                break
+            w = _worker(S, data_dir, deps)
+            w.find_every = 1
+            w.find()
+            log.append(f"[후보 점수] {rnd + 1}바퀴: 점수 난 후보가 {PRESCORE_MIN}개 미만 — 소재를 더 찾았다")
+            continue
+        for t in todo:
+            S2 = {**S, "topic_id": t["id"], "log": log}
+            t2, err = _run_until(S2, ("scored",), data_dir, deps, max_ticks=3)
+            if err or t2["state"] != "scored":
+                failed.add(t["id"])
+                log.append(f"[후보 점수] #{t['id']} 뺌: {str(err)[:160]}")
+    return [t for t in live() if t["state"] == "scored"]
+
+
 def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
     rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]
     if len(rows) < N_CANDIDATES:                       # 모자라면 그 자리에서 찾기(검색만 — 제미나이 0, 유튜브는 장부 한도 뒤)
@@ -438,6 +476,8 @@ def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
         w.find()
         rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"]
                 if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]     # 멈춘(stalled) 소재는 골라도 못 돈다
+    if CUSTOMER_MODE:
+        rows = _prescore(S, rows, data_dir, deps)
     rows.sort(key=lambda t: -((t.get("score") or {}).get("total") or -1))
     made = made_counts(data_dir)
     return [{"n": i + 1, **_candidate(t, data_dir), "made": made.get(t["id"], 0)} for i, t in enumerate(rows[:N_CANDIDATES])]
