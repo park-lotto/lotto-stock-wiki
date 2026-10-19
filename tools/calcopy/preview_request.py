@@ -3,7 +3,8 @@
 "보여주기식 하지 말고 / PC 에서 수정을 볼 수 있게").
 
     py tools/calcopy/preview_request.py preview   (stdin JSON: {preset, pack, title?, captions?, topic_dir?})
-    py tools/calcopy/preview_request.py catalog   (고를 수 있는 값 — 렌더러·틀 규칙이 아는 이름만)
+    py tools/calcopy/preview_request.py catalog   (고를 수 있는 값 — 렌더러·틀 규칙이 아는 이름만 + 기본 팩)
+    py tools/calcopy/preview_request.py check     (stdin JSON: {pack} → 고객이 바꾼 값이 목록 안에 있나 — 저장 전 관문)
 
 판단 주인(새로 적지 않는다 — 부르기만):
   팩 합치기 = calcopy_make.merge_preset_pack · 제목 글 = remake_video.title_text · 스냅샷 = calcopy_frame.to_snapshot +
@@ -69,7 +70,67 @@ def catalog() -> dict:
             seen.add(vid)
             voices.append({"voice_id": vid, "name": v["name"], "preset_id": v.get("preset_id"), "about": v.get("one_liner") or ""})
     return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
-            "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks()}
+            "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack()}
+
+
+def default_pack() -> dict:
+    """고객 PC 첫 설정 = 엔진 기본 팩(my_packs.json "1") — 우리 PC 경로(dir·manifest)·설명 칸은 빼서 설치 폴더 자산(CALCOPY_PACK_ROOT)을 쓰게."""
+    from shopping_shorts import calcopy_make as MK
+    p = json.loads(MK.REPO_PACKS.read_text(encoding="utf-8"))["1"]
+    out = {k: v for k, v in p.items() if not k.startswith("_") and k not in ("name", "base_preset")}
+    for pool in ("sfx_pool", "meme_pool"):
+        out[pool] = {k: v for k, v in (out.get(pool) or {}).items() if k not in ("dir", "manifest")}
+    out["bgm"] = {k: v for k, v in (out.get("bgm") or {}).items() if k != "lib"}
+    out["brand"] = {k: v for k, v in (out.get("brand") or {}).items() if not k.startswith("_")}
+    out["tts"] = {k: v for k, v in (out.get("tts") or {}).items() if not k.startswith("_")}
+    return out
+
+
+EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption"),
+            "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates"), "bgm": ("candidates", "gain"),
+            "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids")}
+
+
+def check(pack: dict, cat: dict | None = None) -> list:
+    """저장 전 관문 — 모르는 칸·목록 밖 값은 거절한다(조용히 버리면 '저장했는데 안 바뀐다', channel_profile.validate 와 같은 원칙)."""
+    cat = cat or catalog()
+    err = []
+    for k, v in pack.items():
+        if k not in EDITABLE:
+            err.append(f"모르는 칸: {k}")
+        elif not isinstance(v, dict) or any(x not in EDITABLE[k] for x in v):
+            err.append(f"모르는 칸: {k}.{sorted(set(v) - set(EDITABLE[k])) if isinstance(v, dict) else v}")
+    b, tx, tts, bgm = pack.get("brand") or {}, pack.get("text") or {}, pack.get("tts") or {}, pack.get("bgm") or {}
+    if not isinstance(b.get("channel_name", ""), str) or len(b.get("channel_name", "")) > 30 or re.search(r"[<>{}$\\]", b.get("channel_name", "")):
+        err.append("채널명은 30자 이하 글자여야 합니다")
+    for key in ("title_font", "caption_font"):
+        if tx.get(key) and tx[key] not in cat["fonts"]:
+            err.append(f"모르는 글꼴: {tx[key]}")
+    cap = tx.get("caption") or {}
+    if set(cap) - {"mode", "enter", "emphasis", "outline_px"}:
+        err.append(f"모르는 자막 칸: {sorted(set(cap) - {'mode', 'enter', 'emphasis', 'outline_px'})}")
+    if cap.get("mode") and cap["mode"] not in cat["caption_mode"]:
+        err.append(f"모르는 자막 쌓기: {cap['mode']}")
+    e = cap.get("enter")
+    if e not in (None, "none") and not (isinstance(e, dict) and e.get("kind") in cat["caption_enter"] and 0 <= float(e.get("ms", 300)) <= 5000):
+        err.append(f"모르는 자막 등장: {e}")
+    m = cap.get("emphasis")
+    if m not in (None, "none") and not (isinstance(m, dict) and m.get("words") == "auto" and m.get("style") in cat["emphasis"]
+                                         and isinstance(m.get("rgb"), list) and len(m["rgb"]) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in m["rgb"])):
+        err.append(f"모르는 낱말 강조: {m}")
+    if "outline_px" in cap and not (isinstance(cap["outline_px"], (int, float)) and 0 <= cap["outline_px"] <= 20):
+        err.append("자막 외곽선은 0~20px")
+    if tts.get("voice_id") and tts["voice_id"] not in {v["voice_id"] for v in cat["voices"]}:
+        err.append(f"모르는 목소리: {tts.get('name') or tts['voice_id']}")
+    if tts.get("tempo") is not None and not (isinstance(tts["tempo"], (int, float)) and 0.8 <= tts["tempo"] <= 1.8):
+        err.append("말 빠르기는 0.8~1.8")
+    ids = {x["id"] for x in cat["bgm"]}
+    for x in bgm.get("candidates") or []:
+        if x not in ids:
+            err.append(f"모르는 배경음악: {x}")
+    if bgm.get("gain") is not None and not (isinstance(bgm["gain"], (int, float)) and 0 <= bgm["gain"] <= 0.5):
+        err.append("배경음악 크기는 0~0.5")
+    return err
 
 
 def main(argv):
@@ -77,6 +138,8 @@ def main(argv):
     try:
         if argv[:1] == ["catalog"]:
             out = {"catalog": catalog()}
+        elif argv[:1] == ["check"]:
+            out = {"errors": check((json.loads(sys.stdin.buffer.read().decode("utf-8")) or {}).get("pack") or {})}
         elif argv[:1] == ["preview"]:
             out = preview(json.loads(sys.stdin.buffer.read().decode("utf-8")))
         else:
