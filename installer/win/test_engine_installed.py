@@ -96,7 +96,7 @@ print(json.dumps({{'file': str(p) if p else None, 'bytes': p.stat().st_size if p
 import json
 from tools.calcopy.engine import asr_local as A
 r=A.transcribe({out['download']['file']!r})
-print(json.dumps({{'phrases': len(r.get('segments') or []), 'text': ' '.join(str(s.get('text','')) for s in r.get('segments') or [])[:60], 'dur': r.get('dur')}}, ensure_ascii=False))
+print(json.dumps({{'phrases': len(r.get('segments') or []), 'text': ' '.join(str(s.get('text','')) for s in r.get('segments') or [])[:60], 'dur': r.get('dur')}}))   # -I 는 PYTHONIOENCODING 을 무시한다 — 글은  꼴로
 """, timeout=1800)
     ok = (out["catalog"].get("fonts", 0) > 0 and out.get("render", {}).get("ink", 0) > 0.01
           and out["download"].get("bytes", 0) > 100000 and out.get("asr", {}).get("phrases", 0) > 0)
