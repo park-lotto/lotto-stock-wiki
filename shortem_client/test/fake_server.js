@@ -118,6 +118,7 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         }
         return send(res, 200, { ok: true, cid: a.cid, plan: 'claude', expires: a.exp, device: { id: a.fp.slice(0, 12), name: dev.name, slot: dev.slot, registered_now: now },
           devices_used: a.c.devices.length, devices_max: devicesMax, entitled_presets: PROFILES.map(p => p.preset_id),
+          presets: rent && rent.pid ? [{ id: rent.pid, name: rent.name || '제품비하인드썰형', desc: '' }] : [],
           profiles: PROFILES.map(({ frame, ...p }) => p), min_engine: '1.0.0', min_installer: '1.0.0', server_time: Math.floor(Date.now() / 1000) });
       }
       if (u.pathname === '/api/claude/lease' && req.method === 'POST') {
@@ -214,7 +215,9 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const port = Number(process.argv[2] || 18849);
-  startFakeServer({ port }).then(s => {
+  // 하이쿠 1편 시험(관제 234): FAKE_RENT_ZIP(실물 프리셋 꾸러미)·FAKE_RENT_PRESET(엔진 프리셋 경로)·FAKE_RENT_PID(고객용 id)
+  const rent = process.env.FAKE_RENT_ZIP ? { zip: fs.readFileSync(process.env.FAKE_RENT_ZIP), preset_path: process.env.FAKE_RENT_PRESET, pid: process.env.FAKE_RENT_PID } : undefined;
+  startFakeServer({ port, rent }).then(s => {
     console.log(JSON.stringify({ url: s.url, key: makeKey(12, Math.floor(Date.now() / 1000) + 86400 * 30, 1) }));
   });
 }
