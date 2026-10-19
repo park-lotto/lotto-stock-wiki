@@ -1,0 +1,884 @@
+{
+ "topic": "Flipstik(폰 뒤에 붙이는 초박형 접착 덮개) — 샤크탱크 S12E4, 10만 달러/20% 요청 → 케빈이 그대로 제안 → 창업자가 바로 안 받고 설명을 이어가자 케빈이 제안 취소 → 로리 10만 달러/25% 수락(방송 안 결과)",
+ "bench": {
+  "id": "ec6-kas1jVs",
+  "channel": "BIG BAG HUSTLE @BIGBAGHUSTLE(소재·원음 순간)",
+  "title": "Phone Gadget That Changes Everything",
+  "dur": 45.81,
+  "views": 23283041,
+  "form_bench": "해외쇼츠 @foreignshowshow 공식 6박자(0초 결말 반응 빨간 원·효과·자막 꼴) — 같은 제품 판 없음(채널 4곳 쇼츠 목록 검색, 근거.md §0)",
+  "window": [
+   0,
+   434,
+   1080,
+   1052
+  ]
+ },
+ "form": "방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」",
+ "facts": {
+  "f1": {
+   "text": "원본 88.86~90.30 'This is Flipstick.'(faster-whisper 낱말 시각 + 구간 2모델 span_v4 앞부분 'This is') · BBH 벤치 0.16초 같은 말",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음"
+  },
+  "f2": {
+   "text": "원본 90.80~93.74 'Flipstick is a paper-thin device that goes on the back of your phone'(whisper·span_v2 2모델 일치) · 화면 91~97 폰 뒷면 근접",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음(창업자 설명 — 전언체)"
+  },
+  "f3": {
+   "text": "원본 107.28~109.84 'essentially it lets you stick your phone anywhere' · 110.20 'Cool.'(마크 샷 110.18~110.81) · 110.78~113.54 'And when I say stick, I mean it really sticks'(whisper·span_v3 2모델)",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음"
+  },
+  "f4": {
+   "text": "원본 113.54~119.16 'this is not going anywhere until you give it a little twist and it comes off'(whisper·span_v2 2모델 일치). 뒤 낱말은 갈림(whisper·BBH 자막 'without damaging the surface' / 30초 창 1모델 'without residue') → 나레에 안 씀",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음(창업자 주장 — 전언체)"
+  },
+  "f5": {
+   "text": "원본 140.0~145.6 'I have hair, I got sand, and I got my mama's homemade spaghetti' · 146.2~159.8 'get this Flipstick really dirty … hair … sand … spaghetti' · 162.18~164.46 'This ain't sticking to nothing, all right?'(whisper + 30초 창 2모델 'isn't/ain't')",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음+화면"
+  },
+  "f6": {
+   "text": "원본 167.3~175.1 'Watch as we wipe away all the dirt and grit and sand … Nice and clean' · 175.88~177.78 'And so, who thinks it's gonna stick? / I do.'(whisper·span_v4 1모델) · 178.88~181.2 'I have a lot of believers here. Hey!'(whisper·span_v3 2모델) · 화면 181.0~181.98 범벅 폰이 판에 붙음",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음+화면"
+  },
+  "f7": {
+   "text": "원본 315.72~318.88 'On average, it costs us 58 cents to make. We sell these for $15'(whisper·span_v1·v3 2모델 일치)",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음(창업자 숫자)"
+  },
+  "f8": {
+   "text": "원본 386.46~389.52 케빈 'I'll give you a hundred thousand for twenty percent, exactly what you want'(whisper·span_v3 2모델) · 화면 띠 390~392 'Kevin's offer: $100k for a 20% stake'(이름 확인)",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음+화면 글자"
+  },
+  "f9": {
+   "text": "원본 371.2~381.2 'I really want to tell you about competition'(30초 창) · 391.8~413.4 'tell me about your competition … PopSocket … I made you an offer'(30초 창 2모델) — 제안에 바로 답하지 않고 경쟁사 설명",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음(해석 — 전언체)"
+  },
+  "f10": {
+   "text": "원본 484.60~489.60 케빈 'I made you an offer exactly what you wanted before you told me that you only sold $1,500'(whisper·span_v3 2모델) · 456~460 창업자 'last month … $1,500'(span_v2 2모델)",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음"
+  },
+  "f11": {
+   "text": "원본 512.62~518.94 로리 'So, here's my offer. I'm gonna give you the $100,000, but I want 25%'(whisper·span_v5 2모델) · 화면 띠 528~530 'Lori's offer: $100k for a 25% stake' · 처음 요청 74.6~78.4 '$100,000 for 20%'(30초 창) — 5%p 차이",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음+화면 글자"
+  },
+  "f12": {
+   "text": "원본 492.8~504.7 케빈 'When I make an offer on Shark Tank, I am the only Mr. Wonderful … You should have taken it. Now you only have one shark.'(whisper·span_v2 2모델) · 공식 제목 'Kevin Retracts His Offer After Flipstik Entrepreneur Hesitates'",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음+공식 제목"
+  },
+  "f13": {
+   "text": "원본 597.50~598.70 'So I'm taking a deal with Lori.'(whisper·span_v3 2모델) · 599.6~601.4 'Hey, guys! … Yes!'",
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "kind": "방송 원음"
+  }
+ },
+ "dropped": [
+  "BBH 1.0~6.4 'paper thin device … on the back of your phone' 원음 → 나레 N1 로(같은 사실, 컷 길이 맞춤)",
+  "BBH 16.7~22 'It's not just glass … textured tile surface' 원음 — 길이 때문에 뺌",
+  "'comes off without damaging the surface' — 받아쓰기 갈림('without residue') → 나레 N2 는 '쏙 떨어진다'까지만",
+  "케빈 'Now you only have one shark. I'm out.'(503.68~) — 0초 훅(501.85~503.30)과 3초 안 → 재사용 검사(B13) 때문에 뺌, 끝 나레 N7 '케빈 제안은 날아가고'로",
+  "바바라·데이먼드 빠짐(경쟁사 Love Handle, 420~452초)·로리 설득(457~480)·마크 침묵 — 길이 때문에 뺌",
+  "방송 뒤 결과(실제 계약·매출) — 벤치도 안 다룸, 조사 안 함 → 넣지 않음"
+ ],
+ "final": {
+  "lines": [
+   {
+    "id": "O1",
+    "kind": "원음",
+    "fn": "결말 반응(0초 훅)",
+    "facts": [
+     "f12"
+    ],
+    "caps": [
+     "그냥 받았어야지!"
+    ],
+    "span": [
+     501.85,
+     503.3
+    ],
+    "orig_en": "You should have taken it.",
+    "text": "그냥 받았어야지!",
+    "style": "원음반응_크게",
+    "fx": "0초 빨간 실선 원(케빈 얼굴, fx_place.hook_circle) — 벤치 foreignshowshow 공식 6박자 0초 결말 반응 + BBH 0초도 케빈 얼굴",
+    "emph": [
+     {
+      "cap": "그냥 받았어야지!",
+      "span": "그냥 받았어야지!",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O2",
+    "kind": "원음",
+    "fn": "소개(BBH 0초 원음)",
+    "facts": [
+     "f1"
+    ],
+    "caps": [
+     "이게 플립스틱이에요"
+    ],
+    "span": [
+     88.7,
+     90.45
+    ],
+    "orig_en": "This is Flipstick.",
+    "text": "이게 플립스틱이에요",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "이게 플립스틱이에요",
+      "span": "플립스틱이에요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N1",
+    "kind": "나레",
+    "fn": "시연(제품)",
+    "facts": [
+     "f2"
+    ],
+    "caps": [
+     "종이처럼 얇은 걸",
+     "폰 뒤에 붙였는데"
+    ],
+    "text": "종이처럼 얇은 걸 폰 뒤에 붙였는데",
+    "tts": "종이처럼 얇은 걸 폰 뒤에 붙였는데",
+    "emph": [
+     {
+      "cap": "종이처럼 얇은 걸",
+      "span": "종이처럼",
+      "color": "빨강",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "폰 뒤에 붙였는데",
+      "span": "붙였는데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O3",
+    "kind": "원음",
+    "fn": "시연(핵심)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "폰을 어디든",
+     "붙일 수 있어요"
+    ],
+    "cap_at": [
+     107.28,
+     108.58
+    ],
+    "span": [
+     107.2,
+     109.95
+    ],
+    "orig_en": "Essentially, it lets you stick your phone anywhere.",
+    "text": "폰을 어디든 붙일 수 있어요",
+    "style": "보통",
+    "fx": "초록 아래 화살표(판에 붙은 폰) — 벤치 QMJ 0.567~1.267 첫 시연 제품",
+    "emph": [
+     {
+      "cap": "폰을 어디든",
+      "span": "폰을 어디든",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "붙일 수 있어요",
+      "span": "있어요",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O4",
+    "kind": "원음",
+    "fn": "반응",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "멋지네"
+    ],
+    "span": [
+     110.18,
+     110.75
+    ],
+    "orig_en": "Cool.",
+    "text": "멋지네",
+    "style": "원음반응_크게",
+    "emph": [
+     {
+      "cap": "멋지네",
+      "span": "멋지네",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O5",
+    "kind": "원음",
+    "fn": "시연(핵심)",
+    "facts": [
+     "f3"
+    ],
+    "caps": [
+     "붙는다는 건",
+     "진짜 딱 붙는다는 거예요"
+    ],
+    "cap_at": [
+     110.78,
+     112.08
+    ],
+    "span": [
+     110.75,
+     113.7
+    ],
+    "orig_en": "And when I say stick, I mean it really sticks.",
+    "text": "붙는다는 건 진짜 딱 붙는다는 거예요",
+    "style": "보통",
+    "fx": "초록 번쩍(장면 넘김) — 판 근접 컷 첫 프레임",
+    "emph": [
+     {
+      "cap": "붙는다는 건",
+      "span": "붙는다는 건",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "진짜 딱 붙는다는 거예요",
+      "span": "붙는다는 거예요",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "fn": "시연(떼기)",
+    "facts": [
+     "f4"
+    ],
+    "caps": [
+     "살짝 비틀기만 하면",
+     "쏙 떨어진다는데"
+    ],
+    "text": "살짝 비틀기만 하면 쏙 떨어진다는데",
+    "tts": "살짝 비틀기만 하면 쏙 떨어진다는데",
+    "emph": [
+     {
+      "cap": "살짝 비틀기만 하면",
+      "span": "비틀기만 하면",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쏙 떨어진다는데",
+      "span": "쏙 떨어진다는데",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "fn": "기존 불편(더러움 시험)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "근데 머리카락에 모래",
+     "스파게티까지",
+     "잔뜩 묻히는데"
+    ],
+    "text": "근데 머리카락에 모래, 스파게티까지 잔뜩 묻히는데",
+    "tts": "근데 머리카락에 모래, 스파게티까지 잔뜩 묻히는데",
+    "fx": "빨간 점선 원(머리카락 묻히는 창업자, 사람) + 빨강 번쩍 — 벤치 QMJ 9.3~11.5 불편 장면 점선 원·11.2 빨강",
+    "emph": [
+     {
+      "cap": "근데 머리카락에 모래",
+      "span": "머리카락에 모래",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "스파게티까지",
+      "span": "스파게티까지",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "잔뜩 묻히는데",
+      "span": "잔뜩 묻히는데",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O6",
+    "kind": "원음",
+    "fn": "기존 불편(의문)",
+    "facts": [
+     "f5"
+    ],
+    "caps": [
+     "이제 아무 데도",
+     "안 붙겠죠?"
+    ],
+    "cap_at": [
+     162.18,
+     163.46
+    ],
+    "span": [
+     162.1,
+     164.5
+    ],
+    "orig_en": "This ain't sticking to nothing, all right?",
+    "text": "이제 아무 데도 안 붙겠죠?",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "이제 아무 데도",
+      "span": "아무 데도",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 붙겠죠?",
+      "span": "안 붙겠죠?",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N4",
+    "kind": "나레",
+    "fn": "해답(닦기)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "쓱 닦아 내고",
+     "다시 붙여 보면"
+    ],
+    "text": "쓱 닦아 내고 다시 붙여 보면",
+    "tts": "쓱 닦아 내고 다시 붙여 보면",
+    "emph": [
+     {
+      "cap": "쓱 닦아 내고",
+      "span": "쓱 닦아 내고",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "다시 붙여 보면",
+      "span": "붙여 보면",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O7",
+    "kind": "원음",
+    "fn": "해답(예고)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "붙을 것 같은 사람?",
+     "저요!"
+    ],
+    "cap_at": [
+     175.88,
+     177.44
+    ],
+    "span": [
+     175.8,
+     179.08
+    ],
+    "orig_en": "And so, who thinks it's gonna stick? / I do.",
+    "text": "붙을 것 같은 사람? 저요!",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "붙을 것 같은 사람?",
+      "span": "붙을 것 같은 사람?",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "저요!",
+      "span": "저요!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O8",
+    "kind": "원음",
+    "fn": "해답(성공)",
+    "facts": [
+     "f6"
+    ],
+    "caps": [
+     "믿는 분이 많네요",
+     "짠!"
+    ],
+    "cap_at": [
+     179.1,
+     180.68
+    ],
+    "span": [
+     179.08,
+     181.95
+    ],
+    "orig_en": "I have a lot of believers here. Hey!",
+    "text": "믿는 분이 많네요 짠!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 더러운 폰이 판에 붙은 컷 첫 프레임(BBH 끝 44.5~45.8 같은 장면)",
+    "emph": [
+     {
+      "cap": "믿는 분이 많네요",
+      "span": "분이 많네요",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "짠!",
+      "span": "짠!",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O9",
+    "kind": "원음",
+    "fn": "숫자",
+    "facts": [
+     "f7"
+    ],
+    "caps": [
+     "원가는 58센트",
+     "15달러에 팔아요"
+    ],
+    "cap_at": [
+     315.72,
+     317.88
+    ],
+    "span": [
+     315.7,
+     318.92
+    ],
+    "orig_en": "On average, it costs us 58 cents to make. We sell these for $15,",
+    "text": "원가는 58센트 15달러에 팔아요",
+    "style": "보통",
+    "fx": "분홍 위 화살표(숫자 조각 '58센트') — 벤치 QMJ 12.0 숫자 조각",
+    "emph": [
+     {
+      "cap": "원가는 58센트",
+      "span": "원가는 58센트",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "15달러에 팔아요",
+      "span": "15달러에",
+      "color": "초록",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O10",
+    "kind": "원음",
+    "fn": "지분 경쟁(제안)",
+    "facts": [
+     "f8"
+    ],
+    "caps": [
+     "10만 달러에 20%",
+     "원하는 그대로 줄게"
+    ],
+    "cap_at": [
+     386.46,
+     388.46
+    ],
+    "span": [
+     386.45,
+     389.39
+    ],
+    "orig_en": "I'll give you a hundred thousand for twenty percent, exactly what you want",
+    "text": "10만 달러에 20% 원하는 그대로 줄게",
+    "style": "보통",
+    "fx": "초록 번쩍 + 날개 돈다발 — 벤치 QMJ 38.7 제안 금액 줄",
+    "emph": [
+     {
+      "cap": "10만 달러에 20%",
+      "span": "10만 달러에 20%",
+      "color": "노랑",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "원하는 그대로 줄게",
+      "span": "그대로 줄게",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N5",
+    "kind": "나레",
+    "fn": "전개(망설임)",
+    "facts": [
+     "f9"
+    ],
+    "caps": [
+     "근데 바로 안 받고",
+     "경쟁사 얘기만",
+     "늘어놓는데"
+    ],
+    "text": "근데 바로 안 받고 경쟁사 얘기만 늘어놓는데",
+    "tts": "근데 바로 안 받고 경쟁사 얘기만 늘어놓는데",
+    "emph": [
+     {
+      "cap": "근데 바로 안 받고",
+      "span": "바로 안 받고",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "경쟁사 얘기만",
+      "span": "경쟁사 얘기만",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "늘어놓는데",
+      "span": "늘어놓는데",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O11",
+    "kind": "원음",
+    "fn": "결정(취소)",
+    "facts": [
+     "f10"
+    ],
+    "caps": [
+     "딱 원하는 걸 줬잖아",
+     "1,500달러밖에",
+     "못 팔았단 말 전엔!"
+    ],
+    "cap_at": [
+     484.65,
+     487.12,
+     488.58
+    ],
+    "span": [
+     484.65,
+     489.6
+    ],
+    "orig_en": "I made you an offer exactly what you wanted before you told me that you only sold $1,500",
+    "text": "딱 원하는 걸 줬잖아 1,500달러밖에 못 팔았단 말 전엔!",
+    "style": "보통",
+    "fx": "빨강 번쩍 — 벤치 QMJ 44.4 결정 빨강",
+    "emph": [
+     {
+      "cap": "딱 원하는 걸 줬잖아",
+      "span": "걸 줬잖아",
+      "color": "분홍",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "1,500달러밖에",
+      "span": "1,500달러밖에",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "못 팔았단 말 전엔!",
+      "span": "못 팔았단 말 전엔!",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O12",
+    "kind": "원음",
+    "fn": "지분 경쟁(다른 제안)",
+    "facts": [
+     "f11"
+    ],
+    "caps": [
+     "내 제안은 이거야",
+     "10만 달러 줄게",
+     "대신 25%야"
+    ],
+    "cap_at": [
+     512.62,
+     514.32,
+     516.72
+    ],
+    "span": [
+     512.62,
+     518.95
+    ],
+    "orig_en": "So, here's my offer. I'm gonna give you the $100,000, but I want 25%.",
+    "text": "내 제안은 이거야 10만 달러 줄게 대신 25%야",
+    "style": "보통",
+    "emph": [
+     {
+      "cap": "내 제안은 이거야",
+      "span": "제안은 이거야",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "10만 달러 줄게",
+      "span": "10만 달러",
+      "color": "민트",
+      "whole": false,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "대신 25%야",
+      "span": "대신 25%야",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "O13",
+    "kind": "원음",
+    "fn": "결정(성사)",
+    "facts": [
+     "f13"
+    ],
+    "caps": [
+     "로리랑 할게요!",
+     "예스!"
+    ],
+    "cap_at": [
+     597.5,
+     600.95
+    ],
+    "span": [
+     597.45,
+     601.6
+    ],
+    "orig_en": "So I'm taking a deal with Lori. / Hey, guys! Yes!",
+    "text": "로리랑 할게요! 예스!",
+    "style": "보통",
+    "fx": "초록 번쩍 — 벤치 QMJ 45.7 거래 성공(두 팔 든 컷 첫 프레임)",
+    "emph": [
+     {
+      "cap": "로리랑 할게요!",
+      "span": "로리랑 할게요!",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "예스!",
+      "span": "예스!",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(반응)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "N7",
+    "kind": "나레",
+    "fn": "방송 결과",
+    "facts": [
+     "f12",
+     "f13"
+    ],
+    "caps": [
+     "결국 케빈 제안은 날아가고",
+     "로리 손을 잡았다고"
+    ],
+    "text": "결국 케빈 제안은 날아가고 로리 손을 잡았다고",
+    "tts": "결국 케빈 제안은 날아가고 로리 손을 잡았다고",
+    "emph": [
+     {
+      "cap": "결국 케빈 제안은 날아가고",
+      "span": "제안은 날아가고",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "로리 손을 잡았다고",
+      "span": "잡았다고",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "cps_target": 7.8
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "speed": 1.25
+ },
+ "titles": {
+  "line1": "어디든 폰 붙이는",
+  "line2": "스티커의 반전?!",
+  "rule": "1줄 노랑·2줄 흰, 끝 '?!' — BBH 제목 'Phone Gadget That Changes Everything'·해외쇼츠 꼴, 줄당 ≤12자(rules title.line_chars_max)"
+ },
+ "render": {
+  "gap": 0.03
+ }
+}

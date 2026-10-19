@@ -1,0 +1,1235 @@
+{
+ "_note": "샥탬스토리 8편 Flipstik 재료 계획 — TTS·렌더 전. 창 1080x1052(채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(MJO3kI8D974_audio.m4a).",
+ "sources": {
+  "MJO3kI8D974": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Kevin Retracts His Offer After Flipstik Entrepreneur Hesitates",
+   "업로드": "2021-06-07",
+   "해상도": "1920x1080 29.97fps (137 + 140 영어 단일 트랙)",
+   "길이": 635.8,
+   "받은 구간": "전체",
+   "남의 글자": "방송 이름·제안 띠(72~77·79~81·380~382·390~392·528~548초) — 그 구간 안 씀. 로고·워터마크 없음(시트 확인). 화면의 'flipstik DEFY GRAVITY' 무대 화면·'STICK YOUR PHONE HERE' 시연 판·티셔츠·포장 = 제품 자체 글자"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "어디든 폰 붙이는",
+  "line2": "스티커의 반전?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 501.85,
+   "audio_dur": 1.45,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    501.85,
+    503.3
+   ],
+   "ss": 501.85,
+   "dur": 1.45,
+   "t_final_est": [
+    0.0,
+    1.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    370,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 손가락질하며 '받았어야지'(말하는 본인, 샷 499.90~505.94 상반신)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O2",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 88.7,
+   "audio_dur": 0.522,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    88.7,
+    89.222
+   ],
+   "ss": 88.7,
+   "dur": 0.522,
+   "t_final_est": [
+    1.45,
+    1.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    325,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 웃으며 봄(원본 반응 컷 — BBH 0초 컷과 같은 샷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O2",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 89.222,
+   "audio_dur": 1.228,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    89.222,
+    90.45
+   ],
+   "ss": 89.222,
+   "dur": 1.228,
+   "t_final_est": [
+    1.97,
+    3.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    505,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 와이드: 창업자가 폰 뒤를 들어 보임 + 뒤 화면 제품 로고 'flipstik DEFY GRAVITY'(제품 글자)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    93.3,
+    94.156
+   ],
+   "ss": 93.3,
+   "dur": 0.856,
+   "t_final_est": [
+    3.2,
+    4.06
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    145,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "폰 뒷면 근접: 파란 플립스틱 덮개를 손가락으로 젖힘",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    95.6,
+    96.534
+   ],
+   "ss": 95.6,
+   "dur": 0.934,
+   "t_final_est": [
+    4.06,
+    4.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    495,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "폰 뒷면 근접: 플립스틱 붙은 금색 폰을 돌려 보임",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "O3",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 107.2,
+   "audio_dur": 1.809,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    107.2,
+    109.009
+   ],
+   "ss": 107.2,
+   "dur": 1.809,
+   "t_final_est": [
+    4.99,
+    6.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "'STICK YOUR PHONE HERE' 판(제품 시연 소품)에 폰을 탁 붙임(근접)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O3",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 109.009,
+   "audio_dur": 0.941,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    109.009,
+    109.95
+   ],
+   "ss": 109.009,
+   "dur": 0.941,
+   "t_final_est": [
+    6.8,
+    7.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 블라우스 투자자가 봄(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "O4",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 110.18,
+   "audio_dur": 0.57,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    110.18,
+    110.75
+   ],
+   "ss": 110.18,
+   "dur": 0.57,
+   "t_final_est": [
+    7.74,
+    8.31
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    325,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "마크가 웃으며 '쿨'(말하는 본인, 샷 110.18~110.81 — BBH 6.4초와 같은 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O5",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 110.75,
+   "audio_dur": 1.595,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    110.75,
+    112.345
+   ],
+   "ss": 110.75,
+   "dur": 1.595,
+   "t_final_est": [
+    8.31,
+    9.91
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 판을 두드리며 말함(말하는 본인, 무대)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O5",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 112.345,
+   "audio_dur": 1.355,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    112.345,
+    113.7
+   ],
+   "ss": 112.345,
+   "dur": 1.355,
+   "t_final_est": [
+    9.91,
+    11.26
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    485,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "판에 붙은 폰 근접(안 떨어짐)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "N2",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    116.3,
+    117.214
+   ],
+   "ss": 116.3,
+   "dur": 0.914,
+   "t_final_est": [
+    11.26,
+    12.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "판에 붙은 폰 근접",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N2",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    117.4,
+    118.406
+   ],
+   "ss": 117.4,
+   "dur": 1.006,
+   "t_final_est": [
+    12.17,
+    13.18
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "손가락으로 폰을 비틀어 떼어냄(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N3",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    148.2,
+    149.191
+   ],
+   "ss": 148.2,
+   "dur": 0.991,
+   "t_final_est": [
+    13.18,
+    14.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 폰 뒤 플립스틱에 머리카락을 문지름(무대)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N3",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    154.0,
+    154.915
+   ],
+   "ss": 154.0,
+   "dur": 0.915,
+   "t_final_est": [
+    14.17,
+    15.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "모래 그릇에 폰 뒤를 비빔(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N3",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    156.7,
+    157.615
+   ],
+   "ss": 156.7,
+   "dur": 0.915,
+   "t_final_est": [
+    15.09,
+    16.0
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "스파게티 그릇에 폰 뒤를 담금(근접, 아래 제품 포장 'flipstik' = 제품 글자)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "O6",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 162.1,
+   "audio_dur": 2.4,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    162.1,
+    164.5
+   ],
+   "ss": 162.1,
+   "dur": 2.4,
+   "t_final_est": [
+    16.0,
+    18.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 손을 들며 말함(말하는 본인, 샷 161.03~164.50)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "N4",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    171.0,
+    172.41
+   ],
+   "ss": 171.0,
+   "dur": 1.41,
+   "t_final_est": [
+    18.4,
+    19.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "흰 천으로 플립스틱 면을 닦음(근접, 샷 170.90~173.21)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "O7",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 175.8,
+   "audio_dur": 1.711,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    175.8,
+    177.511
+   ],
+   "ss": 175.8,
+   "dur": 1.711,
+   "t_final_est": [
+    19.81,
+    21.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 판 쪽으로 몸을 숙이며 물음(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O7",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 177.511,
+   "audio_dur": 1.569,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    177.511,
+    179.08
+   ],
+   "ss": 177.511,
+   "dur": 1.569,
+   "t_final_est": [
+    21.52,
+    23.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 웃으며 봄(원본 반응 컷 — BBH 42.5초 '저요' 컷과 같은 샷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "O8",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 179.08,
+   "audio_dur": 1.601,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    179.08,
+    180.681
+   ],
+   "ss": 179.08,
+   "dur": 1.601,
+   "t_final_est": [
+    23.09,
+    24.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 더러운 폰을 판에 댐(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O8",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 180.681,
+   "audio_dur": 1.269,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    180.681,
+    181.95
+   ],
+   "ss": 180.681,
+   "dur": 1.269,
+   "t_final_est": [
+    24.69,
+    25.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "스파게티 범벅 폰이 판에 그대로 붙어 있음(근접)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O9",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 315.7,
+   "audio_dur": 3.22,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    315.7,
+    318.92
+   ],
+   "ss": 315.7,
+   "dur": 3.22,
+   "t_final_est": [
+    25.96,
+    29.18
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 말함(말하는 본인, 샷 315.68~318.92)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O10",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 386.45,
+   "audio_dur": 2.939,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    386.45,
+    389.389
+   ],
+   "ss": 386.45,
+   "dur": 2.939,
+   "t_final_est": [
+    29.18,
+    32.12
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    325,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 제안(말하는 본인, 샷 384.82~389.39)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "N5",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    398.0,
+    399.155
+   ],
+   "ss": 398.0,
+   "dur": 1.155,
+   "t_final_est": [
+    32.12,
+    33.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 두 손을 모으고 말함(무대 정면)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 24,
+   "line": "N5",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    402.0,
+    403.155
+   ],
+   "ss": 402.0,
+   "dur": 1.155,
+   "t_final_est": [
+    33.27,
+    34.43
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    485,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 손뼉 치며 설명",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 25,
+   "line": "O11",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 484.65,
+   "audio_dur": 4.95,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    484.65,
+    489.6
+   ],
+   "ss": 484.65,
+   "dur": 4.95,
+   "t_final_est": [
+    34.43,
+    39.38
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈이 손짓하며 말함(말하는 본인, 샷 484.65~490.92)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O12",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 512.62,
+   "audio_dur": 1.93,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    512.62,
+    514.55
+   ],
+   "ss": 512.62,
+   "dur": 1.93,
+   "t_final_est": [
+    39.38,
+    41.31
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 듣는 얼굴(원본 반응 컷 — 원본 편집 그대로, 샷 512.08~514.55)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O12",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 514.55,
+   "audio_dur": 4.4,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    514.55,
+    518.95
+   ],
+   "ss": 514.55,
+   "dur": 4.4,
+   "t_final_est": [
+    41.31,
+    45.71
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 손짓하며 제안(말하는 본인, 샷 514.55~519.39)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 28,
+   "line": "O13",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 597.45,
+   "audio_dur": 0.748,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    597.45,
+    598.198
+   ],
+   "ss": 597.45,
+   "dur": 0.748,
+   "t_final_est": [
+    45.71,
+    46.46
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "마크가 봄(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 29,
+   "line": "O13",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 598.198,
+   "audio_dur": 0.7,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    598.198,
+    598.898
+   ],
+   "ss": 598.198,
+   "dur": 0.7,
+   "t_final_est": [
+    46.46,
+    47.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 웃으며 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 30,
+   "line": "O13",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 598.898,
+   "audio_dur": 0.868,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    598.898,
+    599.766
+   ],
+   "ss": 598.898,
+   "dur": 0.868,
+   "t_final_est": [
+    47.16,
+    48.03
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "케빈 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 31,
+   "line": "O13",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 599.766,
+   "audio_dur": 1.034,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    599.766,
+    600.8
+   ],
+   "ss": 599.766,
+   "dur": 1.034,
+   "t_final_est": [
+    48.03,
+    49.06
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    325,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 손뼉 침",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 32,
+   "line": "O13",
+   "kind": "원음",
+   "src": "MJO3kI8D974.mp4",
+   "mute": false,
+   "audio_src": "MJO3kI8D974_audio.m4a",
+   "audio_ss": 600.8,
+   "audio_dur": 0.8,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    600.8,
+    601.6
+   ],
+   "ss": 600.8,
+   "dur": 0.8,
+   "t_final_est": [
+    49.06,
+    49.86
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    765,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 두 팔을 들고 환호",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 33,
+   "line": "N7",
+   "kind": "나레",
+   "src": "MJO3kI8D974.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=MJO3kI8D974",
+   "src_orig_span": [
+    607.95,
+    610.39
+   ],
+   "ss": 607.95,
+   "dur": 2.44,
+   "t_final_est": [
+    49.86,
+    52.3
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    810,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 활짝 웃으며 팔을 듦(근접, 샷 607.91~611.88)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/8편_Flipstik/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    510,
+    782
+   ],
+   "size": 430,
+   "t": [
+    0.0,
+    1.45
+   ],
+   "how": "face",
+   "face_src": {
+    "cx": 893.7,
+    "eye_y": 338.0,
+    "h": 374.7,
+    "n": 3
+   },
+   "fh_win": 0.338,
+   "why": "해외쇼츠 공식 0초 결말 반응 얼굴 빨간 실선 원(QMJ 0.0~0.533, r209 고정) — 얼굴 검출(YuNet 3프레임) 얼굴 높이 375px×0.974 = 창 폭 0.34 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+  },
+  {
+   "line": "O3",
+   "kind": "arrow_green_down",
+   "at": [
+    598,
+    572
+   ],
+   "t": [
+    0.0,
+    0.7
+   ],
+   "how": "target",
+   "target": [
+    189,
+    589,
+    1008,
+    998
+   ],
+   "target_what": "'STICK YOUR PHONE HERE' 판에 붙는 폰",
+   "why": "벤치 QMJ 0.567~1.267 첫 시연 제품 위 초록 아래 화살표(위아래 ±9px)"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.595,
+    2.045
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 7.1·28.1 장면 넘김 초록 번쩍 — 판에 붙은 폰 근접 컷 첫 프레임"
+  },
+  {
+   "line": "N3",
+   "kind": "dashed_circle",
+   "t": [
+    0.2,
+    1.3
+   ],
+   "how": "target",
+   "target": "person",
+   "target_what": "폰에 머리카락을 문지르는 창업자(첫 컷)",
+   "at": [
+    442,
+    1108
+   ],
+   "radius": 330,
+   "target_box": [
+    131,
+    784,
+    754,
+    1486
+   ],
+   "why": "벤치 QMJ 9.27~11.53 기존 불편을 겪는 사람 빨간 점선 원(중심 고정·150°/초)"
+  },
+  {
+   "line": "N3",
+   "kind": "flash",
+   "color": "빨강",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 11.2 불편 줄 빨강 번쩍"
+  },
+  {
+   "line": "O8",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.601,
+    2.051
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 45.7 성공 초록 번쩍 — 범벅 폰이 판에 붙은 컷 첫 프레임"
+  },
+  {
+   "line": "O9",
+   "kind": "arrow_pink_up",
+   "at": [
+    533,
+    1230
+   ],
+   "t": [
+    0.0,
+    1.5
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 12.017~13.82 숫자 조각 분홍 위 화살표 — '원가는 58센트'"
+  },
+  {
+   "line": "O10",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 38.667 투자 제안 컷 초록 번쩍(돈다발과 같은 프레임)"
+  },
+  {
+   "line": "O10",
+   "kind": "money_emoji",
+   "at": [
+    537,
+    1189
+   ],
+   "t": [
+    0.033,
+    1.333
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 38.7~40.0 날개 돈다발(제안 금액 줄)"
+  },
+  {
+   "line": "O11",
+   "kind": "flash",
+   "color": "빨강",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 44.367 결정 빨강 번쩍 — 케빈 취소"
+  },
+  {
+   "line": "O13",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    3.35,
+    3.8
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 45.667 거래 성공 초록 번쩍 — 두 팔 든 컷 첫 프레임"
+  }
+ ]
+}
