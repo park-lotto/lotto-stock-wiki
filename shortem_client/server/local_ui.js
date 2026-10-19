@@ -12,6 +12,7 @@ import { homeDir, workDir, jail } from './paths.js';
 import { engineRoot, engineTool } from './engine_bridge.js';
 import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE } from './local_settings.js';
 import { rentPreset } from './preset_rent.js';
+import { makeStep } from './make_flow.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -135,6 +136,13 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/save') return send(res, 200, await savePack(body.preset, body.patch));
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
+  if (u.pathname === '/api/restyle') {   // 완성본을 지금 설정으로 다시(엔진 calcopy_make.restyle) — AI 판독이 필요하면 Claude 가 이어 받는다
+    const v = videos().find(x => x.name === body.video);
+    if (!v || !v.sid) return send(res, 200, { error: '이 영상은 다시 만들 수 없습니다(옛 영상)' });
+    const o = await makeStep({ step: 'restyle', sid: v.sid, preset: v.preset || readSettings().current });
+    return send(res, 200, o.need === 'done' ? { ok: true, done: true } : o.need === 'ai' || o.need === 'wait' ? { ok: true, running: true, need: o.need }
+      : { error: (o.fail && o.fail.why) || (o.hints || []).join(' ') || '다시 만들지 못했습니다' });
+  }
   return send(res, 404, { error: '없음' });
 }
 

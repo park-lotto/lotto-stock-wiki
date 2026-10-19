@@ -34,13 +34,18 @@ page.on('response', r => { if (r.status() >= 400 && !/\/thumbnails\/|favicon/.te
 await page.goto(ui.url, { waitUntil: 'networkidle0' });
 
 const settings = () => JSON.parse(fs.readFileSync(path.join(process.env.SHORTEM_HOME, 'settings.json'), 'utf8'));
-const idle = async () => { await page.waitForFunction(() => document.getElementById('busy').hidden, { timeout: 90000 }); await new Promise(r => setTimeout(r, 900)); };
+const drawn = () => page.evaluate(() => window.__drawn || 0);
+// 다시 그림이 실제로 끝날 때까지(그린 횟수가 늘 때까지) — '그리는 중' 표시만 보면 저장→그리기 시작 전에 통과해 옛 그림을 찍는다(10-19 거짓 통과 2번째)
+const idle = async (d0) => {
+  if (d0 !== undefined) await page.waitForFunction(d => (window.__drawn || 0) > d, { timeout: 90000 }, d0);
+  await page.waitForFunction(() => document.getElementById('busy').hidden, { timeout: 90000 }); await new Promise(r => setTimeout(r, 700)); };
 const shot = async name => { const el = await page.$('#phone'); const f = path.join(OUT, name + '.png'); await el.screenshot({ path: f }); return crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex'); };
 const rows = [];
 async function check(name, act, saved) {
   const before = await shot(name + '_전');
+  const d0 = await drawn();
   await act();
-  await idle();
+  await idle(d0);
   const after = await shot(name + '_후');
   let ok = true, why = '';
   try { ok = saved(settings()); } catch (e) { ok = false; why = String(e.message); }
@@ -49,8 +54,7 @@ async function check(name, act, saved) {
 
 // 1) 프리셋 카드 → 화면 탭으로 넘어간다
 await page.waitForSelector('[data-preset]');
-await page.click(`[data-preset="${PID}"]`);
-await idle();
+{ const d = await drawn(); await page.click(`[data-preset="${PID}"]`); await idle(d); }
 const step = await page.$eval('.step.on span:last-child', e => e.textContent);
 rows.push({ 단추: '프리셋 카드', 그림바뀜: null, 저장됨: settings().current === PID, why: `넘어간 탭=${step}` });
 await shot('0_처음');
@@ -64,49 +68,59 @@ await page.click('[data-k="cap"]');
 await check('자막 글꼴', () => page.click('[data-font="caption_font"][data-v="BlackHanSans"]'), s => s.channels[PID].pack.text.caption_font === 'BlackHanSans');
 await check('외곽선', () => page.$eval('#outline', e => { e.value = '10'; e.dispatchEvent(new Event('change', { bubbles: true })); }), s => s.channels[PID].pack.text.caption.outline_px === 10);
 await check('낱말 강조 색', () => page.click('[data-emph="color"]'), s => s.channels[PID].pack.text.caption.emphasis.style === 'color');
+await check('외곽선 색 흰색', () => page.$eval('#olcolor', e => { e.value = '#ffffff'; e.dispatchEvent(new Event('change', { bubbles: true })); }), s => s.channels[PID].pack.text.caption.outline_rgb.join() === '255,255,255');
 await check('자막 등장 톡', () => page.click('[data-enter="pop"]'), s => s.channels[PID].pack.text.caption.enter.kind === 'pop');
 // 장면 단추
 const nScenes = await page.$$eval('#scenes button', b => b.length);
 await check('장면 2', () => page.click('#scenes button:nth-child(2)'), () => true);
 // 소리 탭(그림은 안 바뀌는 게 맞다 — 저장만 잰다)
 await page.click('[data-k="sound"]');
-await page.click('[data-voice]:not(.on)');
-await idle();
+{ const d = await drawn(); await page.click('[data-voice]:not(.on)'); await idle(d); }
 rows.push({ 단추: '목소리', 그림바뀜: null, 저장됨: !!settings().channels[PID].pack.tts.voice_id, why: '소리는 그림 대신 저장으로 잰다' });
 // Claude 가 같은 파일을 바꾸면 화면도 따라오나(3초 주기)
 const { savePack } = await import('../server/local_settings.js');
 const b4 = await shot('9_claude_전');
+const d9 = await drawn();
 await savePack(PID, { text: { title_font: 'JalnanGothic' } });
-await new Promise(r => setTimeout(r, 4000));
-await idle();
+await idle(d9);
 rows.push({ 단추: 'Claude 가 바꿈(제목 글꼴)', 그림바뀜: b4 !== await shot('9_claude_후'), 저장됨: settings().channels[PID].pack.text.title_font === 'JalnanGothic', why: '' });
 // 기본값으로
-await page.click('#reset');
-await idle();
+{ const d = await drawn(); await page.click('#reset'); await idle(d); }
 rows.push({ 단추: '프리셋 기본값으로', 그림바뀜: null, 저장됨: !settings().channels[PID], why: '' });
 
 // 미리보기 = 완성본 렌더인가: 화면을 1080 폭(배율 1)로 키워 찍고, 같은 팩으로 공식 렌더 경로가 찍은 장면과 겹친다
 await page.click('[data-k="cap"]');
-await page.click('[data-font="caption_font"][data-v="BMJUA"]');
-await idle();
+{ const d = await drawn(); await page.click('[data-font="caption_font"][data-v="BMJUA"]'); await idle(d); }
 await page.setViewport({ width: 1500, height: 2100 });
 await page.addStyleTag({ content: '.main{grid-template-columns:minmax(0,1fr) 1080px!important}.phone{width:1080px!important;border-radius:0!important;border:0!important}' });
 await page.evaluate(() => dispatchEvent(new Event('resize')));
-for (const idx of [0, 1]) {
-  await page.click(`#scenes button:nth-child(${idx + 1})`);
-  await new Promise(r => setTimeout(r, 800));
+async function compare(label, idxs) {
+for (const idx of idxs) {
+  { const d = await drawn(); await page.click(`#scenes button:nth-child(${idx + 1})`); await idle(d); }
   const el = await page.$('#phone');
-  const uiPng = path.join(OUT, `대조_화면_${idx}.png`);
+  const uiPng = path.join(OUT, `대조_${label}_${idx}.png`);
   await el.screenshot({ path: uiPng });
   const packJson = path.join(OUT, 'pack.json');
   const { packFor } = await import('../server/local_settings.js');
   fs.writeFileSync(packJson, JSON.stringify(await packFor(PID)));
-  const work = path.join(OUT, `render_${idx}`);
+  const work = path.join(OUT, `render_${label}_${idx}`);
   const { execFileSync } = await import('node:child_process');
   const r = JSON.parse(execFileSync('py', [fileURLToPath(new URL('./ui_vs_render.py', import.meta.url)), ENGINE, process.env.SHORTEM_DEV_PRESET, packJson, String(idx), uiPng, work],
     { env: { ...process.env, PYTHONUTF8: '1' } }).toString().trim().split(/\r?\n/).pop());
-  rows.push({ 단추: `화면=렌더 대조 장면${idx + 1}`, 그림바뀜: r.diff_ratio < 0.01, 저장됨: r.ui_ink > 0.01, why: `차이 ${(r.diff_ratio * 100).toFixed(2)}% · 잉크 화면 ${r.ui_ink} / 렌더 ${r.render_ink}` });
+  rows.push({ 단추: `화면=렌더 ${label} 장면${idx + 1}`, 그림바뀜: r.diff_ratio < 0.01, 저장됨: r.ui_ink > 0.01, why: `차이 ${(r.diff_ratio * 100).toFixed(2)}% · 잉크 화면 ${r.ui_ink} / 렌더 ${r.render_ink}` });
 }
+}
+await compare('프리셋틀', [0, 1]);
+// 숏템메이커 템플릿으로 바꾸고 같은 대조(템플릿 그림 = 공식 렌더 경로)
+await page.click('[data-k="screen"]');
+const b5 = await shot('템플릿_전');
+const d5 = await drawn();
+await page.click('[data-tpl="story:t11"]');
+await idle(d5);
+rows.push({ 단추: '템플릿 썰 스타일 01', 그림바뀜: b5 !== await shot('템플릿_후'), 저장됨: settings().channels[PID].pack.template.id === 't11', why: '' });
+await compare('템플릿', [0]);
+{ const d = await drawn(); await page.click('[data-tpl="none"]'); await idle(d); }
+rows.push({ 단추: '프리셋 틀 그대로', 그림바뀜: null, 저장됨: settings().channels[PID].pack.template === 'none', why: '' });
 // 화면 스타일이 렌더러 스타일과 같은 글인가(두 벌 어긋남 방지)
 const rjs = fs.readFileSync(path.join(ENGINE, 'tools', 'render_scene_style.js'), 'utf8');
 const css = await page.evaluate(() => [EXPORT_CSS, EXPORT_CSS2]);

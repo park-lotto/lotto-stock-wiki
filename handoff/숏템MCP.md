@@ -80,3 +80,10 @@
 - `mix_pipeline.py` Store 참조 113건(진행·과금·공용 추출 캐시) → 가장 어려움.
 - 막는 것 3: ①인스타 다운로드가 서버 로그인 세션·유튜브 서버 프록시에 묶임(media_download.py:439·:258) ②Gemini 가 회원 키도 공용 풀로 서버에서 돎(config.refresh_member_gemini_keys :218, keyroute :511) ③진행·과금이 서버 DB·공용 캐시에 붙음.
 - 서버에 남아야 하는 것: 화면·로그인/등급·프리셋 임대·상태 기록·랭킹 DB와 수집기(공용).
+
+## 2026-10-19 (저녁) — 남은 4건 처리
+- 프리셋 이름 5개: `shopping_shorts/claude_preset_names.json`(짝 근거 브랜드.json·결과물.json) — 제품비하인드썰형=banggu/게시글형 · 샤크탱크+리뷰형=foreignshowshow/샤크탱크_검정띠2줄 · 해외핫영상+리뷰형=hottemreport/검정띠 · 연예인상품+후기형=mantem/얜샷템 · 연예인레시피+후기형=yummyknow/게시글형(★짝 확인 필요). 관리자 설정 claude_preset_names 가 칸 단위로 덮는다.
+- 숏템메이커 템플릿(썰20·고정20): 엔진 `to_snapshot.template_snapshot` 한 곳(merge_preset_pack 이 frame.shortem_template 표식). 채널명·[광고] 표시 유지(첫 렌더에서 '숏템메이커'·광고 사라짐 실측 → 고침). 견본 그림은 벤치 화면이라 고객에게 안 보냄.
+- 외곽선: 색 칸(outline_rgb) 추가, 화면 막대 0~12.
+- 완성본 다시 만들기: 엔진 `calcopy_make.restyle` + make.py restyle + MCP step=restyle + 화면 버튼. 실측: 원음형 1편 209초, AI 요청 0, 템플릿·채널명·[광고]·글꼴 반영 확인(프레임 대조).
+- 점검 도구: ui_check.js 18칸 전부 통과(템플릿 화면=렌더 0.03%). ★거짓 통과 2번째를 잡음 — '그리는 중' 표시만 기다려 저장 전 그림을 찍었다 → 다 그린 횟수(__drawn)로 기다리게. template_render_check.py(compose 경로).

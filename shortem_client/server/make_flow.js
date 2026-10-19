@@ -45,11 +45,11 @@ export function shapeSession(S) {
     if (src && fs.existsSync(src)) {
       const name = `${String((t.name || 'shortem')).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${S.sid}.mp4`;
       video = path.join(ensureDir(workDir(), '완성본'), name);
-      if (!fs.existsSync(video)) fs.copyFileSync(src, video);
+      if (!fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(src, video);   // 다시 만들기(restyle) 뒤엔 새 완성본으로
       try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: S.sid, title: String(t.name || ''), preset: S.preset_id || null, topic_dir: path.dirname(src) })); } catch { /* 표식 없이도 영상은 본다 */ }
     }
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
-    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)'] };
+    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };
   }
   return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
 }
@@ -112,6 +112,7 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
     return go(['choose', sid, String(n)], { packFile: await packFileFor(preset) }, devPathOr(preset));
   }
   if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
+  if (step === 'restyle') return go(['restyle', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
   if (step === 'status') return go(['status', sid], { packFile: await packFileFor(preset) });
   return { hints: ['모르는 단계입니다'] };
 }

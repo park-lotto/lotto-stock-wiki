@@ -448,13 +448,13 @@ def _style_label(style: str) -> str:
 
 
 def preset_names(store, ids) -> list:
-    """고객에게 보이는 프리셋 이름(관제 234 5판 — PC 로컬 설정 화면이 쓴다). 이름은 관리자 설정 claude_preset_names
-    (JSON {고객용 id 또는 내부 slug/틀: {name, desc}})가 주인, 없으면 틀 설명(_style_label). 벤치 slug 는 내보내지 않는다."""
+    """고객에게 보이는 프리셋 이름(관제 234 5판 — PC 로컬 설정 화면이 쓴다). 이름표 = shopping_shorts/claude_preset_names.json
+    ({내부 slug/틀 또는 고객용 id: {name, desc}}), 관리자 설정 claude_preset_names 가 칸 단위로 덮는다. 없으면 틀 설명. 벤치 slug 는 안 내보낸다."""
+    names = json.loads((Path(__file__).resolve().parent / "claude_preset_names.json").read_text(encoding="utf-8"))
     try:
-        names = json.loads(str(_setting(store, "claude_preset_names", "") or "{}"))
+        names.update(json.loads(str(_setting(store, "claude_preset_names", "") or "{}")))
     except ValueError:
-        log.warning("claude_portal: claude_preset_names 가 깨졌다 — 틀 설명으로 보인다")
-        names = {}
+        log.warning("claude_portal: 관리자 설정 claude_preset_names 가 깨졌다 — 기본 이름표만 쓴다")
     out = []
     for pid in ids:
         p = _preset_by_id(store, pid)
