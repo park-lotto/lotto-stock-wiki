@@ -373,7 +373,21 @@ _JUDGE_PROMPT_SCRIPT = (
     "\"bad_lines\": [\"줄번호: 이유\"], \"one_line\": \"한 줄 평\"}]}")
 
 
-def judge_scripts(versions, picks, call=None, style=None):
+def story_facts_text(detail, limit=2200):
+    """숙소 이야기 재료(소개·자주 묻는 질문·리뷰)를 작가·채점자에게 같은 글로 준다 — 한 곳에서 만든다(쓰는 쪽=재는 쪽).
+    사진에 없어도 말해도 되는 사실(2026-10-19 사장님 허락). 이름·지역·가격 숫자는 여전히 대본에 쓰지 않는다."""
+    f = (detail or {}).get("story_facts") or {}
+    parts = []
+    if f.get("intro"):
+        parts.append("[숙소 소개] " + f["intro"])
+    for x in f.get("faq") or []:
+        parts.append("[문답] %s → %s" % (x.get("q", ""), x.get("a", "")))
+    for r in f.get("reviews") or []:
+        parts.append("[실제 후기] " + r)
+    return "\n".join(parts)[:limit]
+
+
+def judge_scripts(versions, picks, call=None, style=None, facts=""):
     """오푸스 채점(5기준) — 쓴 것과 다른 호출이 본다. 반환: {유형: {점수…, total, bad_lines, one_line}}.
     style 이 화자 창작을 허용하는 말투면 그 허용선을 채점자에게도 알린다(쓰는 쪽과 재는 쪽이 다른 규칙이면 안 된다)."""
     call = call or claude_call
@@ -385,6 +399,9 @@ def judge_scripts(versions, picks, call=None, style=None):
         prompt += ("\n\n[이 채널의 창작 허용선] 화자 설정·지인·가족·계기·감상·체감 비유·결과 과장('와이프가 보여줬는데', "
                    "'보는 사람마다 묻더라고요', '말을 잃더라고요')은 이 채널의 결이라 감점하지 마라. 감점은 시설·물건·풍경·시간대가 "
                    "그 화면 사진과 안 맞을 때만. 말투 기준: " + st["guide"][:300])
+    if facts:
+        prompt += ("\n\n[숙소 사실 — 사진에 없어도 말해도 되는 것] 아래에 있는 사실(사계절 온수 풀·전 객실 발코니·조식·셔틀 등)은 "
+                   "그 줄 사진에 안 보여도 화면 일치에서 감점하지 마라. 아래에도 사진에도 없는 사실을 지어내면 감점.\n" + facts)
     got = call([p["path"] for p in picks], prompt) or {}
     out = {}
     for s in got.get("scores") or []:
@@ -677,6 +694,9 @@ def revise_claude(version, issues, picks, detail, style=None, model="opus"):
               "[말투 기준]\n%s\n\nJSON: {\"lines\": [\"줄1\", ...]}"
               % (len(picks), len(picks), version.get("type", ""), "\n".join("%d. %s" % (i + 1, l) for i, l in enumerate(version["lines"])),
                  "\n".join("- " + x for x in issues), lo, hi, lmin, lmax, (st.get("guide") or "")[:1800]))
+    facts = story_facts_text(detail) if st.get("story_gate") else ""
+    if facts:
+        prompt += "\n\n[숙소 사실 — 사진에 없어도 써도 되는 재료, 지어내기 금지·이름·지역·가격 숫자 금지]\n" + facts
     got = claude_call([q["path"] for q in picks], prompt, model=model)
     lines = got.get("lines")
     return lines if isinstance(lines, list) and len(lines) == len(picks) else None
@@ -711,6 +731,13 @@ def write_script_claude(picks, detail, model="opus", style=None, revise=True):
               "② story 를 7조각(lines)으로 나눈다. ③ 조각마다 가장 맞는 사진 번호를 order 에 적는다(1~7 을 한 번씩, 조각 i 는 사진 order[i] 위에서 읽힌다). "
               "과거 불편 조각에는 그 불편과 대비되는 사진(예: 선베드가 넉넉한 풀)을 붙인다.")
         want = '\n\nJSON: {"versions": [{"type": "유형", "story": "긴 문장 3개", "lines": ["조각1", ...], "order": [사진번호 7개]}]}'
+    facts = story_facts_text(detail) if st and st.get("story_gate") else ""
+    if facts:
+        # 사진 밖 사실도 이야기 재료(2026-10-19 사장님 "풀어도 된다, 사진 이외에도 스토리성이라 좋다")
+        p += ("\n\n[숙소 사실 — 사진에 없어도 써도 되는 이야기 재료] 고조 칸('근데 여기가'·'여기가 대박인 게'·'심지어')의 센 카드는 "
+              "사진의 예쁜 풍경보다 **아래 사실 중 사람들이 놀랄 것**(계절·시간·아이·서비스처럼 이야기의 불편을 직접 없애는 것)으로 채운다. "
+              "실제 후기에 나온 불편·감탄은 인물의 이야기로 옮겨도 된다. 아래에도 사진에도 없는 사실은 지어내지 마라. "
+              "숙소 이름·지역명·가격 숫자는 여전히 쓰지 않는다(재료에 있어도).\n" + facts)
     got = claude_call([q["path"] for q in picks], p + want, model=model)
     versions = [v for v in got.get("versions") or [] if isinstance(v, dict) and v.get("lines")]
     for v in versions:
@@ -719,7 +746,7 @@ def write_script_claude(picks, detail, model="opus", style=None, revise=True):
     issues = {v.get("type", "?"): script_issues(v["lines"], detail, len(picks), style=style) for v in versions}
     scores = {}
     for v in versions:        # 안마다 사진 순서가 달라서 채점도 안마다 그 순서로
-        scores.update(judge_scripts([v], ordered_picks(picks, v), style=style))
+        scores.update(judge_scripts([v], ordered_picks(picks, v), style=style, facts=facts))
     for t, sc in scores.items():
         issues.setdefault(t, []).extend("사진 대조: " + b for b in sc.get("bad_lines") or [])
     hard_ok = [v for v in versions if not [x for x in script_issues(v["lines"], detail, len(picks), style=style)
@@ -732,7 +759,7 @@ def write_script_claude(picks, detail, model="opus", style=None, revise=True):
         if new_lines:
             nv = {"type": chosen["type"] + " (고쳐 씀)", "lines": new_lines, "order": chosen.get("order")}
             n_iss = script_issues(new_lines, detail, len(picks), style=style)
-            n_sc = judge_scripts([nv], ordered_picks(picks, nv), style=style).get(nv["type"]) or {}
+            n_sc = judge_scripts([nv], ordered_picks(picks, nv), style=style, facts=facts).get(nv["type"]) or {}
             n_iss += ["사진 대조: " + b for b in n_sc.get("bad_lines") or []]
             revised = {"version": nv, "issues": n_iss, "score": n_sc}
             if len(n_iss) < len(issues[chosen["type"]]) and n_sc.get("total", 0) >= (scores.get(chosen["type"]) or {}).get("total", 0) - 2:

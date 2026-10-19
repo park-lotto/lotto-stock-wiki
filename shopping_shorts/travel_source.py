@@ -123,12 +123,35 @@ def _next_data(html):
     return json.loads(m.group(1))
 
 
+def _plain(t):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t or "")).strip()
+
+
+def _yeogi_story_facts(pp, info):
+    """대본 이야기 재료 — 숙소가 쓴 소개글·자주 묻는 질문·실제 리뷰(사진에 없어도 말해도 되는 사실, 2026-10-19 사장님 허락).
+    실측: accommodationInfo.manager.comment(소개) / dehydratedState…faq_list(질문·답) / initialReviewInfo.reviews[].content."""
+    intro = _plain((info.get("manager") or {}).get("comment"))
+    faq, reviews = [], []
+    for q in ((pp.get("dehydratedState") or {}).get("queries") or []):
+        data = ((q or {}).get("state") or {}).get("data") or {}
+        for f in (data.get("faq_list") or []) if isinstance(data, dict) else []:
+            a = _plain((f or {}).get("answer"))
+            if a:
+                faq.append({"q": _plain((f or {}).get("question")), "a": a[:220]})
+    for r in ((pp.get("initialReviewInfo") or {}).get("reviews") or []):
+        c = _plain((r or {}).get("content"))
+        if len(c) >= 20:
+            reviews.append(c[:260])
+    return {"intro": intro[:900], "faq": faq[:12], "reviews": reviews[:10]}
+
+
 def _yeogi_stay(pid, html=None):
     """여기어때 숙소 상세 — 실측 2026-10-19: 일반 HTTP 200, __NEXT_DATA__.pageProps.accommodationInfo.
     meta.newImages = 숙소가 올린 사진(title 이 분류: '객실'·'야외 수영장'·'전경'·'레스토랑'… 없으면 None)."""
     url = "https://www.yeogi.com/domestic-accommodations/%s" % pid
     html = html if html is not None else _get(url)
-    info = _next_data(html)["props"]["pageProps"]["accommodationInfo"]
+    pp = _next_data(html)["props"]["pageProps"]
+    info = pp["accommodationInfo"]
     meta = info.get("meta") or {}
     photos, seen = [], set()
     for im in meta.get("newImages") or []:
@@ -161,6 +184,7 @@ def _yeogi_stay(pid, html=None):
         "review_count": review.get("count") if isinstance(review, dict) else None,
         "facilities": [i.get("name") for i in ((info.get("theme") or {}).get("items") or []) if i.get("name")],
         "photos": photos,
+        "story_facts": _yeogi_story_facts(pp, info),
         "source_label": source_label("yeogi"),
         "fetched_at": int(time.time()),
     }
