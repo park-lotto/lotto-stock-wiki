@@ -150,7 +150,7 @@ def start_frame(src, out_png, size=(720, 1280)):
 # ── 대본 ─────────────────────────────────────────────────────────────────────
 TYPES = ("안티/반전형", "감각/공간 몰입형", "타깃 결핍/혜택형")       # 강의 3유형
 # 길이 목표 — 강의 완성본 18~20초. 글자 수는 목소리 속도에서 정한다(미나 1.35배 = 초당 6.87자, voice_presets 주석 실측).
-TARGET_SEC = (17.5, 21.0)
+TARGET_SEC = (20.0, 25.5)      # 여행 스타일 카드 '길이': 140~175자 ≈ 20~25초(미나 1.35배)
 CHARS_PER_SEC = 6.87
 
 
@@ -340,8 +340,12 @@ def claude_call(images, prompt, model="opus", timeout=600):
             _load(p).save(f, quality=90)
             names.append(f.name)
         head = ("먼저 Read 도구로 이 폴더의 사진을 순서대로 연다: " + ", ".join(names) + ". 사진에 실제로 보이는 것만 근거로 쓴다.\n\n") if names else ""
-        full = head + prompt + "\n\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지."
-        r = subprocess.run(["claude", "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read"],
+        # ★스크립트를 돌리려 하면 승인이 막혀 JSON 대신 설명문이 돌아온다(실측 2026-10-19 "check.py 실행 승인 필요") —
+        #   Read 말고는 막고, 글자 수는 머릿속으로 세게 한다.
+        full = (head + prompt + "\n\n도구는 Read(사진 열기)만 쓴다. 스크립트 실행·파일 쓰기 금지 — 글자 수는 직접 세라."
+                "\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지.")
+        r = subprocess.run(["claude", "-p", "--model", model, "--output-format", "text", "--allowedTools", "Read",
+                            "--disallowedTools", "Bash", "Write", "Edit", "NotebookEdit"],
                            input=full, capture_output=True, text=True, encoding="utf-8", errors="replace",
                            timeout=timeout, cwd=str(d))
         t = re.sub(r"^```(?:json)?\s*|\s*```$", "", (r.stdout or "").strip())
@@ -400,8 +404,18 @@ STYLES = {
         "guide": (
             "말투 = 인스타 '두유노홈디노' 채널. 존댓말 체험담. 어미는 ~더라고요(가장 많이)·~어요·~대요·~잖아요·~거든요·~세요. "
             "~네요·~는데요·~음/임/함 으로 끝내지 마라(남의 어미).\n"
-            "문장은 '~했는데 ~라서 ~하니까 ~더라고요' 처럼 길게 이어 붙인다(문장 4~5개). 7줄은 그 긴 문장의 마디다 — "
-            "줄 끝이 '~는데', '~고', '~니까', '~어서' 로 다음 줄에 이어져도 된다(자막은 줄 단위로 끊긴다).\n"
+            "★쓰는 순서: ① 먼저 원본처럼 **긴 문장 3개**(문장당 45~55자, 전체 약 150자 — 이 길이에 문장을 4개 넘게 넣으면 짧게 끊긴다)로 이야기를 다 쓴다. 문장 안은 "
+            "'~했는데 ~니까 ~어서 ~더라고요'처럼 **이유·계기로** 잇는다. '~하고 ~하고 ~하고', '~하더니 ~하더니' 처럼 줄줄이 나열하지 마라"
+            "(원본 이음: 는데 20%·니까 11%·어서 19%, 나열 '고'는 36%뿐). 문장 끝은 더라고요·어요·대요·잖아요·거든요·는 거 있죠를 섞는다. "
+            "② 그 글을 자연스러운 쉼에서 정확히 7조각으로 나눠 줄로 낸다 — 조각은 문장 중간에서 끊겨도 되고, 조각 i 가 화면 i 위에서 읽힌다. "
+            "문장이 끝나는 조각에는 마침표를 찍는다.\n"
+            "[원본 실물 — 말투만 배워라]\n"
+            "· 저희 와이프가 벽 코너에 이런걸 해놨는데 보는 사람마다 깜짝 놀라더라구요. 평소에 미니어처 하우스 만들기를 너무 좋아하는데 "
+            "그게 세로로 쌓으면 이렇게 할 수 있다면서. 조명까지 달아서 설치해두니까 너무 예쁘더라구요. (600만)\n"
+            "· 스탠바이미 사려고 했다가 와이프한테 혼났어요. 전셋집에 집주인이 벽걸이티비 못하게해서 고민했는데 와이프가 이걸로 하면 되지 "
+            "왜 돈쓰냐면서 한 소리 하더라고요. … 이거 한번 써보니까 오히려 벽걸이티비보다 편하더라구요. (400만)\n"
+            "· 결혼하는 친구가 결혼선물로 이거 사달라고 하더라고요. 요즘 SNS에서 난리 났다는데 가격도 예상보다는 저렴해서 좀 놀랐어요. "
+            "… 애기 있는 집들은 빨래하다가 하루 다 가잖아요. (260만)\n"
             "첫 문장 = 주변 사람 계기로 연다: '저희 와이프가 ~ 보여줬는데', '여행 좋아하는 친구가 ~ 하더라고요', "
             "'회사 언니가 ~ 다녀와서 자랑을 하는데'. 또는 고백형('~하려다가 와이프한테 혼났어요').\n"
             "가운데 = 화면마다 보이는 것 + 체감 비유('호텔인데 미술관 같더라고요') + 사회적 반응('보는 사람마다 어디냐고 물어보더라고요'). "
@@ -435,6 +449,138 @@ STYLES["인스타 스토리형"] = dict(
 )
 
 
+# ── 말투 실측 자 — 레퍼런스(두유노홈디노 원본 49편 받아쓰기)와 같은 자로 우리 대본을 잰다 ─────────────────
+#   실측 2026-10-19(tools/travel/ending_profile.py): 원본 = 문장 4.1개·평균 58자·연결어미/문장 1.71,
+#   이음 '고' 36%·'는데' 20%·'니까' 11%·'어서/아서/해서' 19%, 끝 '더라고요/구요' 28%·'어요' 19%·'요' 11%·'세요' 7%·'대요' 5%·'잖아요' 4%.
+#   우리 스토리형 첫 5안 = 이음 '고·더니' 75~83%(나열체) · 끝 2종뿐 — 사장님 "어미 자체가 다르잖아"(2026-10-19).
+SPEECH_ENDS = ["는 거 있죠", "더라고요", "더라구요", "거든요", "잖아요", "대요", "래요", "세요", "네요", "는데요", "예요", "에요",
+               "어요", "아요", "해요", "죠", "요", "다", "음", "임"]
+SPEECH_CONNS = ["는데", "은데", "니까", "어서", "아서", "해서", "면서", "다가", "더니", "길래", "고", "며", "지만"]
+SPEECH_REF = {"sent_per": 4.1, "sent_len": 57.9, "conn_per_sent": 1.71, "go_deoni_max": 0.5}
+
+
+def _sentences(text):
+    return [s.strip(" '\"") for s in re.split(r"(?<=[.!?])\s+|\n", text or "") if s.strip()]
+
+
+def _end_of(s):
+    t = re.sub(r"[^가-힣 ]+$", "", s).strip()
+    return next((e for e in SPEECH_ENDS if t.endswith(e)), "기타")
+
+
+def _conns_in(s):
+    out = []
+    for w in re.findall(r"[가-힣]+", s)[:-1]:
+        c = next((c for c in SPEECH_CONNS if w.endswith(c) and len(w) > len(c)), None)
+        if c:
+            out.append(c)
+    return out
+
+
+def lines_text(lines):
+    """대본 줄 → 한 글. 줄이 '요·다·죠'로 끝나면 문장 끝(마침표를 안 찍은 대본도 공정하게), 아니면 이어지는 마디."""
+    return " ".join((l.strip() + ".") if re.search(r"(요|다|죠)$", l.strip()) else l.strip() for l in lines or [])
+
+
+def speech_profile(text):
+    """한 글(또는 여러 편을 이은 글 목록)의 말투 수치. 레퍼런스와 같은 자."""
+    import collections
+    texts = text if isinstance(text, list) else [text]
+    ends, conns, nsent, lens = collections.Counter(), collections.Counter(), [], []
+    for t in texts:
+        ss = _sentences(t)
+        nsent.append(len(ss))
+        for s in ss:
+            ends[_end_of(s)] += 1
+            lens.append(len(s))
+            conns.update(_conns_in(s))
+    te, tc, ns = sum(ends.values()) or 1, sum(conns.values()) or 1, sum(nsent) or 1
+    return {"sent_per": round(ns / max(1, len(texts)), 2), "sent_len": round(sum(lens) / max(1, len(lens)), 1),
+            "conn_per_sent": round(sum(conns.values()) / ns, 2),
+            "ends": {k: round(v / te, 3) for k, v in ends.most_common()},
+            "conns": {k: round(v / tc, 3) for k, v in conns.most_common()},
+            "go_deoni": round((conns["고"] + conns["더니"] + conns["며"]) / tc, 3) if conns else 0.0}
+
+
+def speech_issues(lines):
+    """레퍼런스와 어긋나는 말투 꼴 — 나열체('~고·~더니' 잇기)·문장이 너무 짧음/적음·끝 어미 단조로움."""
+    p = speech_profile(lines_text(lines))
+    out = []
+    if p["go_deoni"] > SPEECH_REF["go_deoni_max"]:
+        out.append("말투: 나열체 — '~고·~더니·~며' 이음 %d%%(원본 36%%) → '~는데·~니까·~어서'로 이유를 이어라" % round(p["go_deoni"] * 100))
+    if p["sent_per"] < 3 or p["sent_per"] > 6:
+        out.append("말투: 문장 %s개(원본 4개 안팎)" % p["sent_per"])
+    if p["sent_len"] < 38:
+        out.append("말투: 문장 평균 %s자 — 짧게 끊김(원본 58자, 길게 이어 말한다)" % p["sent_len"])
+    if len([e for e in p["ends"] if e not in ("세요", "기타")]) < 2:
+        out.append("말투: 문장 끝이 단조로움 %s(원본: 더라고요·어요·대요·잖아요·거든요 섞임)" % list(p["ends"]))
+    return out
+
+
+# ── 여행 숙소 인스타형 스타일 카드 — 문서 channel/strategy/여행_대본스타일_카드.md 와 같은 값(문서 = 사람용, 이것 = 기계용) ──
+TRAVEL_CARD = {
+    "hooks": {   # 제목(첫 줄) 틀 사전 — 출처는 문서 표
+        "H1": "{인물}이랑 {장소} 갔다가 진짜 충격 받았어요", "H2": "저 {장소}에서 기절할 뻔했어요",
+        "H3": "{인물} 때문에 진짜 충격먹었어요", "H4": "저 여기 모르고 {다른 선택} 한 거 진짜 후회했어요",
+        "H5": "{인물}이 이 {시설} 사진 합성이라고 우기길래", "H6": "여러분 {상황}이면 비행기 표 당장 취소하세요",
+        "H7": "대한민국에 하나뿐인 {특징} 숙소인데요", "H8": "{인원}이 방 잡고 놀기에 가장 완벽한 숙소가 있어요",
+        "H9": "{전문가} 친구가 여기만은 꼭 가 보라고 하더라고요", "H10": "제가 {여행 종류} 갈 때마다 숙소는 진짜 {기준}으로 고르는데",
+    },
+    "types": {   # 후킹 유형 = 인물·사건 설계
+        "가족 반응형": ("H1·H3", "엄마·아이·시어머니 — 반응이 커지다가 끝에 한마디"),
+        "커플 반전형": ("H5", "남편·남친이 의심/반대 → 먼저 반함 → 백기"),
+        "후회형": ("H4·H6", "화자 자신 — '이걸 몰랐다니' 근거가 화면마다"),
+        "지인 추천형": ("H9", "전문가 지인(승무원·호텔리어 친구)의 추천 → 직접 가 보니"),
+        "깜짝선물형": ("H1·H2", "몰래 예약 → 들어서는 순간부터 반응 → 눈물·환호"),
+        "친구 내기형": ("H8", "친구들 방 배정·내기 → 반응 → '다음에도 여기'"),
+    },
+    "slots": [   # 칸 = 사진(줄 i = 사진 i)
+        ("훅", "인물·사건을 던진다 + 화면 1의 핵심", "H 사전"),
+        ("상황·의심", "처음엔 반신반의·인물의 첫 반응", "처음엔 그냥 ~인 줄 알았는데"),
+        ("발견", "'이게 뭐야' 한 순간(물어봄/알고 보니)", "~보더니 이게 뭐냐고 묻는 거예요"),
+        ("들어가 봄", "직접 누워 보니·문 열어 보니", "직접 누워 보니까 ~더라고요"),
+        ("심지어", "최강 카드(뒤로 아낀 것)", "심지어 ~거 있죠"),
+        ("반응·결과", "인물의 한마디·결과 과장(첫 줄 사건 회수)", "결국 ~가 먼저 또 오자고 하더라고요"),
+        ("댓글 유도", "이야기 키워드 + 받는 것", "궁금하면 댓글에 '{키워드}' 남겨 주세요"),
+    ],
+    "refs": [   # 참고 대본(대본창고 실물·강의) — 말투·구조만
+        "저 입주청소 알바 갔다가 기절할 뻔했어요 신혼부부가 잠깐 살고 나온 집이래서 갔더니 바닥에 묵은 때가 노답인 거예요? "
+        "갑자기 제 물통에 이상한 걸 넣으시더니 그걸로 슥슥 닦아봐 하시는 거예요 … 깜짝 놀라서 이거 뭐냐고 물어보니까 이게 5성급 호텔에서 "
+        "쓰는 거라고 … 저도 바로 장바구니 담아놨어요 대박 남겨주세요 (235만·댓글 6.9만)",
+        "엄마 때문에 진짜 충격먹었어요 얼마전에 김치 가지러 친정 집에 갔는데 화장실이 호텔처럼 럭셔리해진 거예요 … "
+        "남편도 새 집 같다고 좋아하길래 주방 타일까지 칠해봤는데 칠해볼만하죠? (81만)",
+        "독일 살던 친구네 갔다가 진짜 충격 받았어요 30년된 아파트라길래 낡았을 줄 알았는데 호텔처럼 너무 깨끗한 거예요 … "
+        "엄마집도 보내 드렸더니 다음날 전화로 여지껏 받은 선물중에 최고라고 하시네요 최고 남겨주세요 (73만)",
+        "저 이거 사고 진짜 후회했어요 얼마 전에 일 때문에 일본에 다녀와야 했는데 친구가 이 가방 좀 꼭 사다달라고 부탁을 하길래 "
+        "별생각 없이 하나 사왔거든요? … 궁금하신 분들은 나도 남겨주세요 (68만·댓글 3.5만)",
+    ],
+}
+
+
+def _travel_card_guide():
+    c = TRAVEL_CARD
+    hooks = " / ".join("%s %s" % kv for kv in c["hooks"].items())
+    types = "\n".join("- %s: 첫 줄 %s · %s" % (k, v[0], v[1]) for k, v in c["types"].items())
+    slots = "\n".join("%d. %s — %s (예: %s)" % (i + 1, s[0], s[1], s[2]) for i, s in enumerate(c["slots"]))
+    refs = "\n".join("· " + r for r in c["refs"])
+    return (
+        "말투 = 우리 숏템 인스타 상위 릴스(대본창고 실측). 1인칭 존댓말 수다체 — 친구에게 '나 거기 갔다가 진짜 놀랐잖아' 하듯.\n"
+        "[원칙] ① 설명 말고 사건: 첫 3초에 인물(엄마·남편·친구)과 작은 사건. 숙소 칭찬이 아니라 인물의 반응이 바뀌는 것(의심→놀람→백기/감동). "
+        "② 인물·계기·감정·반응은 지어내도 되지만 시설·풍경·시간대는 그 줄의 사진에 보여야 한다. ③ 첫 줄 사건은 끝(6줄)에서 그 인물의 한마디로 회수. "
+        "④ 나열체 금지 — '~하고 ~하고', '~하더니 ~하더니'로 시설을 줄 세우지 말고 '~했는데 ~니까 ~어서'로 이유를 이어라.\n"
+        "[첫 줄 틀 사전] " + hooks + "\n[유형]\n" + types + "\n"
+        "[7칸 — 줄 i = 화면 i]\n" + slots + "\n"
+        "[댓글 키워드] 그 이야기의 말로 정한다(실측: '대박'·'최고'·'촉촉'·'뽀송'). 예) 커플 반전→'내가졌다', 가족→'효도', 후회→'진작', "
+        "물멍 숙소→'물멍'. '정보'로 고정하지 마라.\n"
+        "[어미] 끝은 더라고요·거든요·어요·예요·거 있죠·잖아요를 섞는다(실측: 세요18%·더라고요13%·어요10%·예요8%·거든요5%·거 있죠4%). "
+        "~네요·~는데요·~음/임/함 금지. 문장 3~4개, 줄은 그 문장의 마디(줄 끝이 '~는데/~니까/~어서'여도 된다), 문장이 끝나는 줄에만 마침표.\n"
+        "[참고 대본 실물 — 말투·구조만, 문장 베끼기 금지]\n" + refs)
+
+
+STYLES["여행 숙소 인스타"] = dict(STYLES["두유노홈디노"], types=tuple(TRAVEL_CARD["types"]), guide=_travel_card_guide(),
+                              pick_types=3)
+
+
 def style_ending_issues(lines, style):
     """채널 말투 검사 — 문장 끝 어미(마침표·물음표·느낌표·마지막 줄)가 그 채널 어미인가. 남의 어미면 지적."""
     st = STYLES.get(style or "")
@@ -450,16 +596,36 @@ def style_ending_issues(lines, style):
     own = sum(1 for s in sents if any(re.sub(r"[^가-힣]+$", "", s).endswith(e) for e in st["endings_own"]))
     if sents and own / len(sents) < 0.75:
         issues.append("말투: 채널 어미 문장 %d/%d" % (own, len(sents)))
+    issues += speech_issues(lines)
     return issues
 
 
-def write_script_claude(picks, detail, model="opus", style=None):
+def revise_claude(version, issues, picks, detail, style=None, model="opus"):
+    """관문 지적을 그대로 주고 그 안 하나를 고쳐 쓰게 한다(같은 사진을 다시 보며). 반환: 새 lines 또는 None."""
+    st = STYLES.get(style or "") or {}
+    lo, hi, lmin, lmax = char_range(len(picks))
+    prompt = ("여행 숙소 쇼츠 대본 한 편을 고친다. 사진 photo_1~%d 순서이고 줄 i 는 화면 i 위에서 읽힌다(정확히 %d줄 유지).\n"
+              "[지금 대본 — %s]\n%s\n\n[고칠 지적 — 전부 고쳐라]\n%s\n\n"
+              "[유지할 것] 인물·사건·반전·댓글 키워드는 살린다. 전체 %d~%d자, 줄 %d~%d자. 숙소 이름·지역·가격 숫자 금지.\n"
+              "[말투 기준]\n%s\n\nJSON: {\"lines\": [\"줄1\", ...]}"
+              % (len(picks), len(picks), version.get("type", ""), "\n".join("%d. %s" % (i + 1, l) for i, l in enumerate(version["lines"])),
+                 "\n".join("- " + x for x in issues), lo, hi, lmin, lmax, (st.get("guide") or "")[:1800]))
+    got = claude_call([q["path"] for q in picks], prompt, model=model)
+    lines = got.get("lines")
+    return lines if isinstance(lines, list) and len(lines) == len(picks) else None
+
+
+def write_script_claude(picks, detail, model="opus", style=None, revise=True):
     """오푸스가 사진 7장을 직접 보며 3유형을 쓰고 → 금지 검사 → 다른 오푸스 호출이 채점 → 최고점 + 금지 통과를 추천.
     style = STYLES 의 채널 말투(예: '두유노홈디노') — 말투·유형만 바꾸고 화면 짝·근거 규칙은 그대로."""
     p = script_prompt(picks, detail).replace("아래 화면이 이 순서로", "열어 본 사진(photo_1~)이 이 순서로")
     st = STYLES.get(style or "")
     if st:
-        p = p.replace("대본 3개(유형마다 1개)를 써라.", "대본 %d개를 써라(유형마다 1개) — 유형: " % len(st["types"]) + " / ".join(st["types"]) + ".")
+        if st.get("pick_types"):     # 유형이 많으면 이 사진에 맞는 것 몇 개만 골라 쓰게 한다(스타일 카드 '시안' 규칙)
+            p = p.replace("대본 3개(유형마다 1개)를 써라.", "아래 유형 중 이 사진들에 가장 맞는 %d개를 골라 유형마다 대본 1개씩 써라 — 유형: "
+                          % st["pick_types"] + " / ".join(st["types"]) + ".")
+        else:
+            p = p.replace("대본 3개(유형마다 1개)를 써라.", "대본 %d개를 써라(유형마다 1개) — 유형: " % len(st["types"]) + " / ".join(st["types"]) + ".")
         p = p.replace("3. 직접 다녀온 척하지 마라('다녀왔는데', '좋았고요', '먹어봤는데' 금지). 보이는 것을 생생하게 소개하는 말투.",
                       "3. [말투] " + st["guide"])
         p = p.replace("짧고 센 문장, 해요체, 한 줄 = 한 호흡.", "줄은 긴 문장의 마디(이어지는 연결어미 허용).")
@@ -472,8 +638,22 @@ def write_script_claude(picks, detail, model="opus", style=None):
     hard_ok = [v for v in versions if not [x for x in script_issues(v["lines"], detail, len(picks), style=style)
                                             if not x.startswith(("길이", "말투"))]]
     chosen = max(hard_ok or versions, key=lambda v: (scores.get(v.get("type", "?")) or {}).get("total", 0)) if versions else None
+    revised = None
+    if revise and chosen and issues.get(chosen.get("type", "?")):
+        # 1등 안만 지적을 주고 한 번 고쳐 쓴다 → 같은 관문·같은 채점을 다시 돌려 나아졌을 때만 바꾼다(나빠지면 원래 안 유지)
+        new_lines = revise_claude(chosen, issues[chosen["type"]], picks, detail, style=style, model=model)
+        if new_lines:
+            nv = {"type": chosen["type"] + " (고쳐 씀)", "lines": new_lines}
+            n_iss = script_issues(new_lines, detail, len(picks), style=style)
+            n_sc = judge_scripts([nv], picks, style=style).get(nv["type"]) or {}
+            n_iss += ["사진 대조: " + b for b in n_sc.get("bad_lines") or []]
+            revised = {"version": nv, "issues": n_iss, "score": n_sc}
+            if len(n_iss) < len(issues[chosen["type"]]) and n_sc.get("total", 0) >= (scores.get(chosen["type"]) or {}).get("total", 0) - 2:
+                versions.append(nv)
+                issues[nv["type"]], scores[nv["type"]] = n_iss, n_sc
+                chosen = nv
     return {"chosen": chosen, "versions": versions, "issues": issues, "scores": scores, "writer": "claude-" + model,
-            "clean": bool(chosen) and not issues.get(chosen.get("type", "?")), "attempts": 1}
+            "clean": bool(chosen) and not issues.get(chosen.get("type", "?")), "attempts": 1, "revised": revised}
 
 
 def write_script(picks, detail, call=None, verify=None, tries=2):

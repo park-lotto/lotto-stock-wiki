@@ -70,10 +70,16 @@ def test_write_script_picks_clean_version_and_retries_with_feedback():
 
 
 def test_style_hdn_endings_and_persona_allowed():
-    good = ["와이프가 바다 앞 풀을 보여줬는데", "선베드 너머가 전부 바다라서", "로비가 미술관 같더라고요.",
-            "심지어 침대에서도 바다가 보이거든요.", "밤엔 잔디밭이 빛나고", "소파가 넓더라고요.", "궁금하면 댓글 주세요."]
+    good = ["와이프가 바다 앞 풀을 보여줬는데 처음엔 합성인 줄 알았거든요", "막상 가 보니까 선베드 너머가 전부 바다라서",
+            "로비 통창 앞에서 둘 다 한참 서 있었는데", "직접 누워 보니까 침대에서도 바다가 보이는데",
+            "심지어 밤엔 잔디밭에 조명이 켜져서 산책하기 좋더라고요.", "결국 와이프가 먼저 또 오자고 하더라고요.",
+            "궁금하면 댓글에 '물멍' 남겨 주세요."]
     iss = tb.script_issues(good, {}, 7, style="두유노홈디노")
     assert not [x for x in iss if x.startswith(("말투", "가 본 척"))], iss
+    # 나열체는 말투 관문이 잡는다(사장님 '어미가 다르다' 2026-10-19 실측 꼴)
+    listy = ["남편이 풀 보더니 놀라고", "선베드에 눕고", "로비에서 사진 찍고", "침대에 눕더니 말이 없고",
+             "밤엔 잔디밭 걷고", "소파에 눕더니 졌다고 하더라고요.", "댓글에 '정보' 남겨 주세요."]
+    assert [x for x in tb.script_issues(listy, {}, 7, style="두유노홈디노") if "나열체" in x]
     bad = ["풀이 정말 좋네요.", "바다가 보임.", "로비 최고임.", "침대 넓음.", "정원 예쁨.", "소파 좋음.", "댓글 주세요."]
     assert [x for x in tb.script_issues(bad, {}, 7, style="두유노홈디노") if x.startswith("말투")]
     assert [x for x in tb.script_issues(["다녀왔는데 좋았고요"] * 7, {}, 7) if x.startswith("가 본 척")]     # 기본 말투는 막는다
