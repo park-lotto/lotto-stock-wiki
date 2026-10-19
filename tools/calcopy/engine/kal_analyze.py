@@ -758,10 +758,24 @@ def frame_metrics(png: str, band: tuple) -> dict:
             "line_gap_px": statistics.median(gaps_r) if gaps_r else 0, "letter_gap_px": statistics.median([g for g in gaps_c if g <= 40]) if gaps_c else 0}
 
 
-def frame_compare(bench_png: str, ours_png: str, band: tuple) -> dict:
+SKIN_DIFF = {"y_px": 12, "dE": 10.0}   # 업그레이드 뒤 "얼마나 달라졌나" 측정 기준(지침서 §2-6-1 — 목표·합격선이 아니다)
+
+
+def frame_compare(bench_png: str, ours_png: str, band: tuple, skin: bool = False) -> dict:
+    """skin=False: 1차 칼카피 — 같아야 통과(FRAME_PASS). skin=True: 업그레이드 뒤 달라진 정도 측정(SKIN_DIFF 넘으면 '달라짐' 표시, 판정 아님)."""
     import numpy as np
     a, b = frame_metrics(bench_png, band), frame_metrics(ours_png, band)
     rows = []
+    if skin:
+        if not (a.get("box") and b.get("box")):
+            return {"bench": a, "ours": b, "rows": [{"key": "ink", "bench": a.get("ink"), "ours": b.get("ink"), "diff": "글자 못 찾음", "pass": False}], "verdict": "측정 불가", "pass_rule": SKIN_DIFF}
+        dy = abs(b["box"][1] - a["box"][1])
+        rows.append({"key": "y0 차(≥12 달라짐)", "bench": a["box"][1], "ours": b["box"][1], "diff": dy, "pass": dy >= SKIN_DIFF["y_px"]})
+        for k in ("fill_hex", "outline_hex"):
+            if a.get(k) and b.get(k):
+                dE = float(np.linalg.norm(_lab([int(a[k][i:i + 2], 16) for i in (1, 3, 5)]) - _lab([int(b[k][i:i + 2], 16) for i in (1, 3, 5)])))
+                rows.append({"key": f"{k} ΔE(≥10 달라짐)", "bench": a[k], "ours": b[k], "diff": round(dE, 1), "pass": dE >= SKIN_DIFF["dE"]})
+        return {"bench": a, "ours": b, "rows": rows, "verdict": "달라짐" if any(r["pass"] for r in rows) else "벤치와 같음(업그레이드 개선 없음)", "pass_rule": SKIN_DIFF}
     if a.get("box") and b.get("box"):
         rows.append({"key": "cx(가운데 x)", "bench": a["cx"], "ours": b["cx"], "diff": b["cx"] - a["cx"], "pass": abs(b["cx"] - a["cx"]) <= FRAME_PASS["xy_px"]})
         rows.append({"key": "y0(잉크 위)", "bench": a["box"][1], "ours": b["box"][1], "diff": b["box"][1] - a["box"][1], "pass": abs(b["box"][1] - a["box"][1]) <= FRAME_PASS["xy_px"]})
@@ -795,7 +809,7 @@ def main(argv=None) -> int:
     r = sub.add_parser("rules"); r.add_argument("paths", nargs="+"); r.add_argument("--out"); r.add_argument("--json")
     pa = sub.add_parser("palette"); pa.add_argument("paths", nargs="+"); pa.add_argument("--out", required=True)
     sc = sub.add_parser("script"); sc.add_argument("paths", nargs="+"); sc.add_argument("--out"); sc.add_argument("--json")
-    fc = sub.add_parser("framecmp"); fc.add_argument("bench_png"); fc.add_argument("ours_png"); fc.add_argument("--band", required=True, help="y0,y1"); fc.add_argument("--out")
+    fc = sub.add_parser("framecmp"); fc.add_argument("bench_png"); fc.add_argument("ours_png"); fc.add_argument("--band", required=True, help="y0,y1"); fc.add_argument("--out"); fc.add_argument("--skin", action="store_true", help="업그레이드 뒤 달라진 정도 측정(판정 아님)")
     m = sub.add_parser("match"); m.add_argument("--bench", required=True); m.add_argument("--ours", required=True)
     m.add_argument("--ours-mp4"); m.add_argument("--bench-src", help="벤치 원본 mp4 폴더(같은 자로 컷·LUFS)"); m.add_argument("--bench-tteutgi", help="(대안) 뜯기 값 — 자가 다름")
     m.add_argument("--win", help="영상 창 x,y,w,h (없으면 줄판독 layout.window)"); m.add_argument("--out"); m.add_argument("--title", default="")
@@ -854,7 +868,7 @@ def main(argv=None) -> int:
         return 0
     if A.cmd == "framecmp":
         y0, y1 = [int(v) for v in A.band.split(",")]
-        T = frame_compare(A.bench_png, A.ours_png, (y0, y1))
+        T = frame_compare(A.bench_png, A.ours_png, (y0, y1), skin=A.skin)
         if A.out:
             Path(A.out).write_text(json.dumps(T, ensure_ascii=False, indent=1), encoding="utf-8")
         for r in T["rows"]:

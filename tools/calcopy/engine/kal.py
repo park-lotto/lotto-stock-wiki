@@ -35,17 +35,101 @@ HUMAN = {"readlines": "줄판독(눈) — 묶음 _kal/워커묶음.json 을 워�
          "make": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"}
 
 
+KNOWN_VOICES = [  # 지금까지 쓴 목소리(필재 금지 — 시작 문서 §12). 주인 칸은 판 파일 voice 한 곳(여기는 후보 표만)
+    {"name": "미나", "voice_id": "kr-mina-expressive", "engine": "일레븐랩스", "tempo": 1.35, "note": "잇썸홈판·키치잇판·스타픽룸판, 배속 1.35 고정"},
+    {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "engine": "타입캐스트", "tempo": 1.2, "note": "재미썸홈판·꿀템노트판·썰템쇼, 남자면 박창수"},
+    {"name": "지훈", "voice_id": "tc_61f0859907085fc68561c9a1", "engine": "타입캐스트", "tempo": 1.25, "note": "샥탬스토리(남, f0 129Hz)"},
+]
+AXES = ("자막", "틀", "장면전환", "장면대사", "스토리", "대본", "소리", "스티커", "썸네일", "소재", "채널")
+_AXIS_KW = {"자막": ("자막", "타이핑", "팝", "글꼴", "강조"), "틀": ("틀", "제목", "로고", "창", "출처"), "장면전환": ("컷", "전환", "줌", "정지"), "장면대사": ("장면", "매칭", "시연"),
+            "스토리": ("박자", "훅", "반전", "끝", "결말", "흐름"), "대본": ("어미", "전언", "말투", "대본", "나레는", "반말"), "소리": ("효과음", "BGM", "목소리", "LUFS", "덕킹"),
+            "스티커": ("스티커", "짤", "빨간 원", "화살표", "이모지"), "썸네일": ("썸네일", "0초", "첫 프레임"), "소재": ("제품", "소재", "해외 원본"), "채널": ("조회", "업로드", "구독")}
+
+
+def voice_candidates() -> list[dict]:
+    """쓸 수 있는 목소리 표 — 판 파일(styles/*.json voice·candidates) + KNOWN_VOICES + 일레븐랩스 프리셋 수. 값은 저장소에서 읽는다(추측 금지)."""
+    rows = {v["voice_id"]: dict(v, used_in=[]) for v in KNOWN_VOICES}
+    for f in sorted((ROOT / "tools/calcopy/hybrid/styles").glob("*.json")):
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        v = d.get("voice") or {}
+        if v.get("voice_id"):
+            rows.setdefault(v["voice_id"], {"name": v.get("name"), "voice_id": v["voice_id"], "engine": "타입캐스트" if v["voice_id"].startswith("tc_") else "일레븐랩스", "tempo": None, "note": "", "used_in": []})
+            rows[v["voice_id"]]["used_in"].append(d.get("name") or f.stem)
+        for c in v.get("candidates") or []:
+            rows.setdefault(c, {"name": c, "voice_id": c, "engine": "타입캐스트" if c.startswith("tc") else "일레븐랩스", "tempo": None, "note": f"{d.get('name')} 후보(사장님 귀 확인 전)", "used_in": []})
+    vp = ROOT / "shopping_shorts/assets/voice_presets.json"
+    n_el = len(json.loads(vp.read_text(encoding="utf-8"))) if vp.exists() else 0
+    out = list(rows.values())
+    out.append({"name": f"(일레븐랩스 프리셋 {n_el}종 더 — shopping_shorts/assets/voice_presets.json)", "voice_id": "", "engine": "일레븐랩스", "tempo": None, "note": "", "used_in": []})
+    return out
+
+
+def voice_recommend(S) -> str:
+    """추천 1순위 — 뜯기 소리 칸의 화자 성별(있으면)로: 남 → 박창수, 여 → 미나(시작 문서 §12 확정 규칙). 없으면 '미측정'."""
+    genders = []
+    for vid in (S.step("tteutgi").get("outputs") or {}).get("ids") or []:
+        p = S.dir / "뜯기" / vid / "뜯기.json"
+        if p.exists():
+            a = json.loads(p.read_text(encoding="utf-8")).get("audio") or {}
+            for sp in ((a.get("asr_extra") or {}).get("speakers") or (a.get("composition") or {}).get("speakers") or []):
+                if isinstance(sp, dict) and sp.get("gender"):
+                    genders.append(sp["gender"])
+    if not genders:
+        return "미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로)"
+    g = max(set(genders), key=genders.count)
+    return ("박창수 tc_6059dad0b83880769a50502f" if g == "male" else "미나 kr-mina-expressive") + f" (벤치 화자 {'남' if g == 'male' else '여'} {genders.count(g)}/{len(genders)})"
+
+
+def menu(axis: str = "all") -> list[dict]:
+    """장점 카탈로그 — 주인 channel/스타일.json strengths·options 를 읽어 축별로(새 장부 없음). axis·engine·style_cell 키가 없으면 '미기입'(장부에 채울 일)."""
+    d = json.loads((ROOT / "channel/스타일.json").read_text(encoding="utf-8"))
+    rows = []
+    for st, v in (d.get("styles") or {}).items():
+        for x in v.get("strengths") or []:
+            txt = json.dumps(x, ensure_ascii=False)
+            ax = x.get("axis") or next((a for a, kws in _AXIS_KW.items() if any(k in txt for k in kws)), "미기입")
+            rows.append({"axis": ax, "axis_src": "장부" if x.get("axis") else "추정", "kind": f"strength/{st}", "what": x.get("what"), "channel": x.get("channel"),
+                         "evidence": x.get("evidence") or x.get("strength"), "source": x.get("source"), "engine": x.get("engine") or "미기입", "style_cell": x.get("style_cell") or "미기입"})
+    for name, o in (d.get("options") or {}).items():
+        if isinstance(o, dict):
+            txt = o.get("desc") or ""
+            ax = o.get("axis") or next((a for a, kws in _AXIS_KW.items() if any(k in txt for k in kws)), "미기입")
+            rows.append({"axis": ax, "axis_src": "장부" if o.get("axis") else "추정", "kind": f"option/{name}", "what": txt, "channel": o.get("bench") or o.get("source"),
+                         "evidence": o.get("why"), "source": o.get("judge"), "engine": o.get("engine") or "미기입", "style_cell": o.get("style_cell") or "미기입"})
+    return [r for r in rows if axis == "all" or r["axis"] == axis]
+
+
+def stage_upgrade(S) -> dict:
+    """업그레이드 단계 자리(지침서 §2-6-1) — 1차 판 초안을 복사해 upgrades 빈 칸 + 카탈로그 메뉴. 추천 알고리즘·판 반영은 계획(§7 P1)."""
+    kd = S.dir / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)
+    base = kd / f"{S.d['slug']}판_초안.json"
+    plan = json.loads(base.read_text(encoding="utf-8")) if base.exists() else {"name": f"{S.d['slug']}판", "_note": "1차 판 초안 없음 — rules 단계 먼저"}
+    up = {**plan, "name": f"{S.d['slug']}_업그레이드판", "_base": plan.get("name"),
+          "_rule": "뼈대 칸(placement·script·cuts·timing·caption.typing_cps·variant_for·length·sfx_key)은 1차 값 그대로. 겉모양 칸만 근거 있는 장점으로 — 기록 필수(업그레이드_기록.md)",
+          "upgrades": [], "_upgrade_item": {"axis": "", "what": "", "why": "수치·채널·편", "source": "스타일.json strengths/options 키 또는 사고 기록", "expect": "나아질 측정값", "verify": "측정값|사람 판정"},
+          "menu": menu("all")}
+    (kd / f"{S.d['slug']}_업그레이드판_초안.json").write_text(json.dumps(up, ensure_ascii=False, indent=1), encoding="utf-8")
+    rec = kd / "업그레이드_기록.md"
+    if not rec.exists():
+        rec.write_text(f"# {S.d['slug']} 업그레이드 기록 — 무엇을 → 왜(수치·채널·편) → 예상 효과 → 검증(측정값|사람 판정)\n(근거 없이 바꾸는 것 금지 — 지침서 §2-6-1)\n", encoding="utf-8")
+    return {"draft": str(kd / f"{S.d['slug']}_업그레이드판_초안.json"), "record": str(rec), "menu_n": len(up["menu"])}
+
+
 def _slug_of(ref: str) -> str:
     h = re.sub(r"^https?://(www\.)?youtube\.com/", "", ref.strip()).split("/")[0].lstrip("@")
     return re.sub(r"[^0-9a-zA-Z가-힣]+", "_", h).strip("_").lower() or "channel"
 
 
 class State:
-    def __init__(self, slug: str, ref: str, brand: str | None, n: int, hybrid: str | None):
+    def __init__(self, slug: str, ref: str, brand: str | None, n: int, hybrid: str | None, voice: str | None = None):
         self.dir = ROOT / "channel" / slug
         self.path = self.dir / "kal_state.json"
         self.d = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {"slug": slug, "ref": ref, "steps": {}, "asked": {}}
-        self.d.update({k: v for k, v in (("brand", brand), ("n", n), ("hybrid", hybrid)) if v is not None})
+        self.d.update({k: v for k, v in (("brand", brand), ("n", n), ("hybrid", hybrid), ("voice", voice)) if v is not None})
         self.d.setdefault("n", n)
 
     def save(self):
@@ -250,7 +334,10 @@ def step_rules(S: State):
             "bench": {"ko": (S.d.get("channel") or {}).get("name"), "channel": S.d["ref"], "analysis": f"channel/{S.d['slug']}/스타일분석.md",
                       "line_reads": f"channel/{S.d['slug']}/줄판독/", "src_dir": str(DATA / S.d["slug"] / "src"), "sfx_events": None, "sfx_key": None,
                       "palette": f"channel/{S.d['slug']}/팔레트.json", "rules_counted": f"channel/{S.d['slug']}/_kal/규칙빈도.json"},
-            "voice": {"name": None, "voice_id": None, "candidates": [], "why": "engine/sound/narr_report.py 닮은 목소리 순위로 채움"},
+            "voice": ({"name": next((v["name"] for v in KNOWN_VOICES if v["voice_id"] == S.d["voice"]), S.d["voice"]), "voice_id": S.d["voice"],
+                       "tempo": next((v["tempo"] for v in KNOWN_VOICES if v["voice_id"] == S.d["voice"]), None), "candidates": [], "why": "사장님이 시작할 때 고름(kal.py --voice)"}
+                      if S.d.get("voice") else
+                      {"name": None, "voice_id": None, "tempo": None, "candidates": [], "why": "미정 — 사장님께(kal.py 시작 질문, 추천: " + voice_recommend(S) + ")"}),
             "cps_target": round(statistics.median(narr_cps), 2) if narr_cps else None,
             "bgm": {"id": None, "db_below_voice": None, "duck_orig_db": None, "fade_out": None, "why": "engine/sound/bgm_fp.py·뜯기 audio"},
             "loudness": {"lufs": -14, "tp": -1.5},
@@ -354,17 +441,33 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ref", help="채널 주소 또는 @핸들")
     ap.add_argument("--slug"); ap.add_argument("--brand"); ap.add_argument("--n", type=int, default=6); ap.add_argument("--from", dest="start", choices=STEPS)
-    ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
+    ap.add_argument("--hybrid", choices=["예", "아니오"]); ap.add_argument("--voice", help="TTS voice_id(사장님이 고른 것 — 판 파일 voice 한 곳에 적힌다)")
+    ap.add_argument("--ours-mp4"); ap.add_argument("--ours-lines")
+    ap.add_argument("--menu", help="장점 카탈로그만 보기: 축 이름 또는 all (채널 분석 없이)")
+    ap.add_argument("--stage", choices=["upgrade"], help="upgrade = 업그레이드 단계 자리(1차 판 초안 복사 + 메뉴 + 기록 파일)")
     A = ap.parse_args(argv)
     slug = A.slug or _slug_of(A.ref)
-    S = State(slug, A.ref, A.brand, A.n, A.hybrid)
+    if A.menu:
+        for r in menu(A.menu):
+            print(f"[{r['axis']}({r['axis_src']})] {r['kind']} | {str(r['what'])[:90]} | 출처 {r['channel']} | 엔진 {r['engine']} | 판 칸 {r['style_cell']}")
+        return 0
+    S = State(slug, A.ref, A.brand, A.n, A.hybrid, A.voice)
     if A.ours_mp4:
         S.d["ours_mp4"] = A.ours_mp4
     if A.ours_lines:
         S.d["ours_lines"] = A.ours_lines
-    ask = [q for q, v in (("우리 브랜드 이름(--brand)", S.d.get("brand")), ("하이브리드 여부(--hybrid)", S.d.get("hybrid"))) if not v]
+    ask = [q for q, v in (("우리 브랜드 이름(--brand)", S.d.get("brand")), ("하이브리드 여부(--hybrid)", S.d.get("hybrid")), ("TTS 누구로(--voice <voice_id>)", S.d.get("voice"))) if not v]
     if ask:
         print("사장님께 시작할 때 한 번에 물을 것(답을 받으면 같은 명령에 옵션으로): " + " · ".join(ask) + " · 과금 단계(TTS)는 허락됨")
+        if not S.d.get("voice"):
+            print("  쓸 수 있는 목소리(필재 금지) — 추천 1순위: " + voice_recommend(S))
+            for v in voice_candidates():
+                print(f"   - {v['name']} {v['voice_id']} [{v['engine']}] tempo {v['tempo']} 쓰는 판 {','.join(v['used_in']) or '-'} {v['note']}")
+    if A.stage == "upgrade":
+        S.save()
+        r = stage_upgrade(S)
+        print(f"업그레이드 단계 자리: 초안 {r['draft']} · 기록 {r['record']} · 메뉴 {r['menu_n']}건 (추천·판 반영은 계획 — 지침서 §2-6-1)")
+        return 0
     S.save()
     run(S, A.start)
     times = {k: v.get("sec") for k, v in S.d["steps"].items()}
