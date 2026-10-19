@@ -1,0 +1,162 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 6,
+   "y": 478,
+   "w": 1068,
+   "h": 1066,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     240,
+     113,
+     6
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "title",
+   "x": 540,
+   "y": 168,
+   "w": 1040,
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 96.0,
+   "line_h": 124,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "text": "밥 한 그릇 뚝딱\n김가연 새우젓무침"
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 9,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 170
+   },
+   "emphasis": null,
+   "role": "caption",
+   "x": 540,
+   "y": 1356,
+   "w": 1020,
+   "lines": 1,
+   "font": "BinggraeBold",
+   "size": 70.0,
+   "line_h": 80,
+   "rgb": [
+    253,
+    253,
+    253
+   ]
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "label",
+   "x": 540,
+   "y": 1790,
+   "w": 1000,
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 40.0,
+   "line_h": 48,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "text": "출처: A급 장영란"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "m4m5oajgQFo",
+ "made_from": {
+  "tool": "gl_preset.hand",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": null,
+   "top1_score": null,
+   "picked_from": null,
+   "font_confidence": null,
+   "skipped": [],
+   "why": "OCR 글자가 없음"
+  },
+  "title_ink_w": null,
+  "font_confidence": null,
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+   "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+   "to_frame --no-ocr(제미나이 금지)라 글자·띠 층은 손으로 — 실측 근거는 gl_preset.py 머리",
+   "자막 강조색(새 틀 호박 #FCB53F 한 색 / 옛 틀 주황·노랑·민트 3색)·P.S. 줄·제품 꼬리표·끝 제품 이름 자막은 스키마 밖 → 판 설정 굿레터판.json + 자막팩_보강안",
+   "자막 등장 = 말 조각마다 팝(약 30%→110~115%@0.1초→100%@0.15~0.18초, 60fps 실측) — 스키마 pop 170ms 로 근사"
+  ],
+  "from": "m4m5oajgQFo_auto.json"
+ }
+}
