@@ -133,7 +133,7 @@ INPOCK_PAGE = "https://link.inpock.co.kr"
 #   둘 다 공개 등록 API 가 없어 하는 일은 같다: 최종 링크를 복사하고 그 서비스 관리 화면을 연다.
 LINK_HUBS = {
     "inpock":   {"key": "inpock",   "name": "인포크", "page": INPOCK_PAGE, "admin": "https://link.inpock.co.kr/admin"},
-    "moneying": {"key": "moneying", "name": "머닝",   "page": "https://moneying.biz", "admin": "https://moneying.biz/"},
+    "moneying": {"key": "moneying", "name": "머닝",   "page": "https://moneying.biz", "admin": "https://moneying.biz/my/multilink"},
 }
 
 
