@@ -113,3 +113,4 @@
 - 인스타 로그인 실측(사장님 계정, 숏템 전용 프로필 scratchpad/login_home): 연결됨 true. yt-dlp -F 에 쿠키 넣으면 1080x1920 형식이 보인다(없으면 최대 720). ★그런데 media_download 경로는 쿠키를 넘기는데도(564B) 720p 를 받는다 → 원인 후보: _download_ytdlp 형식 고르기(1080 이 vp9 이라 h264 선호에서 밀리나?) — 다음에 형식 문자열·고른 format_id 를 찍어 확인.
 - 최종 설치 exe 빌드 = 이번에 압축까지 끝났는지 확인 필요(scratchpad/installer_build/build_final.log). 끝났으면: test_install.py(/SANDBOX) → 설치 폴더에 _engine_test 섞였는지 확인(섞였으면 재빌드 — 점검 도구는 이미 밖으로 옮김) → test_engine_installed.py → 하이쿠 1편(scratchpad/haiku/prompt.txt, 시험 서버 FAKE_RENT_*).
 - 그 뒤: 짤 팩 동봉, 숏템메이커 서버 부담 0(결정 3 사장님), 프리셋 꾸러미 16개 서버 업로드(승인), 병합(승인).
+- 최종 빌드 끝(10-19 21:5x, 1271초): 설치 exe 805.9MB 미서명 · 설치 폴더 1809MB · 바이너리 237개 sha. ★빌드 폴더에 _engine_test(점검 도구가 만든 시험 파일)가 남아 있어 exe 에 섞였을 수 있다 → 설치 시험 때 설치 폴더에 _engine_test 있으면 지우고 재빌드.
