@@ -41,7 +41,7 @@ ADMINS = ("페이블", "사장님", "관리자")            # approve(TTS·렌�
 # 고객 PC 모드(관제 234): 고객 설치팩이 CALCOPY_CUSTOMER_MODE=1 로 띄운다 — TTS·렌더 비용이 고객 본인 키·PC 라 고객("고객")이 사인한다.
 CUSTOMER_MODE = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
 CUSTOMER = "고객"
-PACK_ROOT = Path("C:/숏템_칼카피/packs")
+PACK_ROOT = Path(os.environ.get("CALCOPY_PACK_ROOT") or "C:/숏템_칼카피/packs")   # 고객 PC = 설치 폴더 자산(관제 234)
 VOICES = ROOT / "shopping_shorts" / "assets" / "voice_presets.json"
 CUT_DIFF_MIN = 0.5                                 # 응용: 컷(재료 영상·초)이 이 비율 이상 달라야 '컷 다름'
 MADE_STATES = ("plan_review", "producing", "final_review", "passed")

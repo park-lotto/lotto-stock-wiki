@@ -19,6 +19,7 @@ import argparse
 import concurrent.futures as cf
 import json
 import math
+import os
 import re
 import subprocess
 import sys
@@ -50,7 +51,7 @@ PREVIEW_HEAD = 300        # 미리보기는 앞 300초까지
 SHEET_N = 30              # 시트 한 장 칸 수(6×5)
 MAX_FRAMES = 120          # 영상 하나 최대 칸 수 — 300초면 2.5초 간격(10-18: 60칸=5초 간격은 1초 컷을 대사에 맞춰 고르기엔 성겼다)
 CELL = 200
-MEME_DIR = Path("C:/숏템_칼카피/packs/meme/meme_pack")
+MEME_DIR = Path(os.environ.get("CALCOPY_PACK_ROOT") or "C:/숏템_칼카피/packs") / "meme" / "meme_pack"   # 팩 뿌리는 calcopy_make.PACK_ROOT 와 같은 환경변수(관제 234)
 MEME_INDEX = ROOT / "research/meme_pack/extra_memes.json"
 MEME_EXCLUDE = Path(__file__).with_name("meme_exclude.json")   # 로고·남의 글자 짤(A5) — 눈 대조 목록
 STORE_RE = re.compile(r"\b(store|shop|showroom|display|shelf|shelves|retail|mall|counter|booth)\b", re.I)
