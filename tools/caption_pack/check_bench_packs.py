@@ -11,6 +11,8 @@
   ③ 핵심 단어 색: 정지 그림에 기대 색(±10)이 칠해졌나 · 강조 없는 줄엔 안 칠했나
   ④ 화자별 글꼴: 같은 글을 나레/원음으로 찍으면 그림이 다르다
   ⑤ 캡컷 그림(overlay_spans)·썸네일(render_layer_one)이 다 나온 자막 + 강조로 찍혔나(정지 그림과 대조)
+  ⑩ (step4 안) 굿레터 팩: glPop 곡선·모든 조각 팝·줄 전체 색·큰 글·라벨 자리 / 자간·행간 3길
+  ⑨ (step4) 범용 등장(관제 235 요청서 1~5): 키프레임·알파·이동 / 스냅샷 captionEnter / cps·글자 시각·커서·번짐 곡선 / 상자 투명도·모서리 / 퇴장 cut·fade·slide / 흔들림 + 캡컷·썸네일
 그리고 벤치 프레임과 나란히 시트(<팩>_비교.jpg)와 하이브리드 미리보기 영상(<팩>_hybrid.mp4, 자막 입힌 완성본)을 남긴다.
 
 ★자막표 → 비트 옮기기(rows_to_timeline)는 하이브리드 쪽이 그대로 쓰면 되는 견본이다 — 장면 자료 꼴의 주인은
@@ -95,7 +97,7 @@ def rows_to_timeline(rows, tts, total=None):
         beats.append({"beat_idx": i, "t0": t0, "dur": round(t1 - t0, 3), "narration": " ".join(r["text"] for r in ln),
                       "caption_lines": [r["text"] for r in ln], "cap_durs": durs, "cap_lead": round(lead, 3), "tts_path": str(tts),
                       "target_seconds": round(t1 - t0, 3), "role": "body", "primary": {"video_id": "s0", "start": t0, "end": t1},
-                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"]), ("stickers", r.get("stickers")), ("place", r.get("place"))) if v}
+                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"]), ("stickers", r.get("stickers")), ("place", r.get("place")), ("enter", r.get("enter"))) if v}
                                         for r in ln],
                       **({"chars": chars} if chars else {})})
     return beats
@@ -701,6 +703,240 @@ def step3_check(out, need, tts):
     return d
 
 
+# ── ⑨ 범용 등장(관제 235, 칼카피 요청서 §4-2 1·2·4·5) ─────────────────────────────────────────────────────────────────
+# 벤치 수치가 있는 것: 키치잇 팝 키프레임(요청서 1: 0f 0%·1f 22%·…·13f 100%, 30fps) · 스타픽룸 타이핑 cps 10~15·커서 400ms 깜빡·번짐 0.3초(요청서 2).
+# 벤치 수치가 없는 것(요청서에 수치 없음): 퇴장 cut/fade/slide(벤치는 전부 컷) · 흔들림 · 상자 투명도·모서리 — 입력 인자대로 나오는지만 잰다.
+KITCHIT_POP = [(0, 0), (1, 22), (2, 42), (3, 59), (4, 75), (5, 88), (6, 97), (7, 105), (8, 109), (9, 109), (10, 105), (11, 102), (13, 100)]   # (프레임, 크기%) — 요청서 1 견본, 30fps
+
+
+def patched_packs(patch):
+    """계약 파일의 PACKS 에 시험용 값을 잠깐 덮고(상자 인자 — 실제 팩엔 벤치 상자가 없다) 끝나면 바이트 그대로 되돌린다."""
+    import contextlib
+
+    @contextlib.contextmanager
+    def cm():
+        path = ROOT / "shopping_shorts/static/caption-motions.js"; raw = path.read_bytes(); text = raw.decode("utf-8")
+        head, body, tail = text.split("/*PACKS*/")
+        packs = json.loads(body)
+        for k, v in patch.items():
+            packs[k].update(v)
+        try:
+            path.write_bytes((head + "/*PACKS*/" + json.dumps(packs, ensure_ascii=False) + "/*PACKS*/" + tail).encode("utf-8"))
+            yield
+        finally:
+            path.write_bytes(raw)
+    return cm()
+
+
+def step4_check(out, need, tts):
+    d = out / "_step4"; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True, exist_ok=True)
+    R = lambda line, t0, t1, text, **kw: {"line": line, "t0": t0, "t1": t1, "text": text, "speaker": "orig", "variant": "", "sticker": "", "emph": [], **kw}
+
+    def build(pack, rows, tag, extra=None):
+        total = max(r["t1"] for r in rows)
+        tl = rows_to_timeline(rows, tts, total); snap = snapshot(pack)
+        if extra:
+            snap = scene_style.validate_snapshot({**snap, **extra})
+        ctx = scene_style.context_for(tl, {"text": "x"}, snap, None); idx = [i for i, s in enumerate(ctx["scenes"]) if s["caption"]]
+        lay = scene_style.render_layers(tl, snap, d / tag, {"text": "x"}, "bench")
+        return tl, snap, ctx, idx, lay, d / tag
+
+    def fr(S, k):
+        lay, L, idx = S; a = lay[idx[k]].get("animation")
+        still = img(L / lay[idx[k]]["file"])
+        return a, (lambda f: img(L / a["pattern"].replace("%04d", str(min(f, a["count"] - 1)).zfill(4))) if a else still), still
+
+    def bw(im):
+        b = ink_box(im, 200); return (b[2] - b[0]) if b else 0
+
+    def cx_(im, a=200):
+        b = ink_box(im, a); return (b[0] + b[2]) / 2 if b else None
+
+    # ── 서버가 스펙을 정리하는 한 곳(clean_caption_enter) — 범위 밖·모르는 이름은 버린다 / 스냅샷은 거절
+    badspecs = [{"kind": "nope"}, {"kind": "pop", "ms": 99999}, {"keyframes": [{"t": 0, "alpha": 300}]}, {"keyframes": []}, {"cps": 0, "kind": "pop"},
+                {"kind": "typeGlow", "cursor": {"char": "abc"}}, {"kind": "pop", "exit": {"kind": "spin"}}, {}, "pop"]
+    got = [scene_style.clean_caption_enter(b) for b in badspecs]
+    need(all(g is None for g in got), f"⑨ 스펙 정리: 범위 밖·모르는 값은 버림(통과한 번호 {[i for i, g in enumerate(got) if g is not None]} — 비어야 함)")
+    try:
+        scene_style.validate_snapshot({**snapshot("kitchit"), "captionEnter": {"kind": "pop", "ms": 99999}}); rej = False
+    except ValueError:
+        rej = True
+    need(rej, "⑨ 스펙 정리: 스냅샷 captionEnter 가 범위 밖이면 거절")
+
+    # ── 계약 파일 변환기(captionEnterMotion) = 요청서 키프레임 그대로(offset = 프레임/13, scale = %/100)
+    js = ("global.window={};eval(require('fs').readFileSync(process.argv[1],'utf8'));"
+          "const kf=JSON.parse(process.argv[2]);const m=window.captionEnterMotion({keyframes:kf},window.CAPTION_MOTIONS);console.log(JSON.stringify(m))")
+    spec_kf = [{"t": round(f / 30, 4), "scale": sc} for f, sc in KITCHIT_POP]
+    r_ = subprocess.run(["node", "-e", js, str(ROOT / "shopping_shorts/static/caption-motions.js"), json.dumps(spec_kf)], capture_output=True, text=True, encoding="utf-8")
+    try:
+        m = json.loads(r_.stdout)
+        sc_ = [float(f["scale"]) for f in m["frames"]]; off = [f["offset"] for f in m["frames"]]
+        ok = (len(sc_) == len(KITCHIT_POP) and all(abs(a - b / 100) < 1e-6 for a, (_, b) in zip(sc_, KITCHIT_POP))
+              and all(abs(o - f / 13) < .01 for o, (f, _) in zip(off, KITCHIT_POP)) and abs(m["ms"] - 433) <= 1 and m["frames"][-1]["opacity"] == 1)
+    except Exception:
+        ok = False
+    need(ok, f"⑨ 변환: 요청서 팝 키프레임 13개 → 모션 프레임(크기·offset=f/13·길이 433ms ±1·끝=제자리) {r_.stderr[:80]}")
+
+    # ── 렌더 1: 키프레임·알파/이동·cps·글자 시각·커서·번짐·흔들림·퇴장
+    rows = [R("a", 0, 1.2, "1년 내내", enter={"keyframes": spec_kf}),
+            R("b", 1.2, 2.4, "알파 이동", enter={"keyframes": [{"t": 0, "alpha": 50, "dy": 60}, {"t": .2, "alpha": 100, "dy": 0}]}),
+            R("c", 2.4, 4.4, "가나다라마바", enter={"kind": "typeGlow", "cps": 10, "glow": {"decay_ms": 300}}),
+            R("d", 4.4, 6.4, "가나다라마바", enter={"kind": "typeGlow", "cps": 10}, chars=[round(4.4 + k * .3, 3) for k in range(6)]),
+            R("e", 6.4, 8.4, "가나다라마바", enter={"kind": "typeCursor", "cps": 10, "cursor": {"char": "|", "blink_ms": 300}}),
+            R("f", 8.4, 10.4, "흔들림 하나", enter={"kind": "shake"}),
+            R("g", 10.4, 12.4, "흔들림 둘", enter={"kind": "shake", "amp": 2}),
+            R("h", 12.4, 14.4, "퇴장 컷", enter={"kind": "none", "exit": {"kind": "cut"}}),
+            R("i", 14.4, 16.4, "퇴장 페이드", enter={"kind": "none", "exit": {"kind": "fade", "ms": 300}}),
+            R("j", 16.4, 18.4, "퇴장 밀기", enter={"kind": "none", "exit": {"kind": "slide", "ms": 300, "dx": -400}}),
+            R("k", 18.4, 19.6, "기본 팩 등장")]
+    tl, snap, ctx, idx, lay, L = build("kitchit", rows, "kit"); S = (lay, L, idx)
+    # 1) 키프레임 크기 곡선 = 요청서 ±5%p, 길이
+    a, f_, still = fr(S, 0); full = bw(still) or 1
+    bad = []
+    for fno, pct in KITCHIT_POP:
+        w = bw(f_(fno)) / full * 100
+        if abs(w - pct) > 5: bad.append((fno, pct, round(w)))
+    need(a is not None and not bad and lay[idx[0]].get("enterMs") in range(430, 440), f"⑨ 키프레임 등장: 잉크 폭 곡선 = 요청서(13프레임) ±5%p · 길이 {lay[idx[0]].get('enterMs')}ms(433) · 어긋남 {bad}")
+    # 2) 알파·이동
+    a, f_, still = fr(S, 1); sa = alpha_sum(still); r0 = alpha_sum(f_(0)) / sa; c0 = ink_box(f_(0), 60); cs = ink_box(still, 60)
+    dy = (c0[1] - cs[1]) if c0 and cs else 999
+    need(a is not None and abs(r0 - .5) <= .08 and abs(dy - 60) <= 4 and alpha_sum(f_(a["count"] - 1)) >= sa * .98,
+         f"⑨ 알파·이동: 첫 프레임 투명도 {r0:.2f}(0.5 ±0.08) · 아래로 {dy}px(60 ±4) · 끝 = 정지 그림")
+    # 3) cps(글자·어절 시각이 없을 때 기본 속도) — 6글자, 10글자/초: 0.27초 3글자(0.5) · 0.4초 5글자(0.83). 기본 간격(80ms)이면 4글자(.67)·6글자(1.0)
+    a, f_, still = fr(S, 2); full = bw(still) or 1; w8, w12 = bw(f_(8)) / full, bw(f_(12)) / full
+    need(a is not None and abs(w8 - .5) <= .07 and abs(w12 - .83) <= .07, f"⑨ 타이핑 cps=10: 0.27초 글 폭 {w8:.2f}(0.50 ±.07) · 0.4초 {w12:.2f}(0.83 ±.07)")
+    # 3b) 글자 시각이 있으면 그것이 이긴다(0.3초마다 한 글자 → 0.27초 1글자 .17 · 0.5초 2글자 .33 — cps 10 이면 이미 6글자)
+    a, f_, still = fr(S, 3); full = bw(still) or 1; w8, w15 = bw(f_(8)) / full, bw(f_(15)) / full
+    need(a is not None and w8 <= .32 and .3 <= w15 <= .5, f"⑨ 글자 시각 > cps: 0.27초 {w8:.2f}(1글자 ≤.32) · 0.5초 {w15:.2f}(2글자 .30~.50) — cps 10 이면 이미 0.5/0.9 이상이라 구별됨")
+    # 4) 번짐 시간 곡선: 마지막 글자(0.5초) 뒤 0.1초 = 가장 짙음(알파 합이 정지 그림보다 큼) · 번짐 끝난 뒤 = 정지 그림과 같음
+    a, f_, still = fr(S, 2); sa = alpha_sum(still); peak = max(alpha_sum(f_(f)) / sa for f in range(15, 22)); late = alpha_sum(f_(34)) / sa
+    need(a is not None and peak >= 1.03 and abs(late - 1) <= .02, f"⑨ 번짐 곡선(0.3초): 마지막 글자 뒤 번짐 최대 {peak:.3f}배(≥1.03) · 번짐 끝난 뒤 {late:.3f}배(1.00 ±.02)")
+    # 5) 커서: 글자 '|' · 300ms 깜빡(보임 300 · 숨김 300) — 0.73초 보임 · 1.03초 숨김 · 1.33초 보임
+    a, f_, still = fr(S, 4)
+    r_ = [(ink_box(f_(f), 200) or (0, 0, 0, 0))[2] for f in (22, 31, 40)]
+    need(a is not None and r_[0] - r_[1] >= 6 and abs(r_[2] - r_[0]) <= 3, f"⑨ 커서 '|' 깜빡 300ms: 글 오른쪽 끝 0.73초 {r_[0]} · 1.03초 {r_[1]}(숨김) · 1.33초 {r_[2]} — 보임>숨김 6px↑ · 다시 보임")
+    # 6) 흔들림: 끝은 제자리 · amp 2 는 amp 1 의 2배 안팎
+    pk = []
+    for k in (5, 6):
+        a, f_, still = fr(S, k); c_s = cx_(still)
+        xs = [abs((cx_(f_(f)) or c_s) - c_s) for f in range(0, 12)]
+        pk.append((max(xs), abs((cx_(f_(a["count"] - 1)) or c_s) - c_s)))
+    need(pk[0][0] >= 4 and 1.6 <= pk[1][0] / max(pk[0][0], 1e-6) <= 2.4 and max(pk[0][1], pk[1][1]) <= 1.0,
+         f"⑨ 흔들림: 최대 이동 amp1 {pk[0][0]:.1f}px · amp2 {pk[1][0]:.1f}px(2배 ±.4) · 끝 제자리 {pk[0][1]:.1f}/{pk[1][1]:.1f}px")
+    # 7) 퇴장: 컷 = 마지막 프레임도 다 나온 자막 / 페이드·밀기 = 장면 끝 300ms 동안 선형(투명도 1-p · 이동 dx×p) — p = (프레임 시각 − (길이−300))/300
+    def prog(k, f):
+        sc = ctx["scenes"][idx[k]]; dur = (sc["end"] - sc["start"]) * 1000
+        return max(0.0, min(1.0, (f / 30 * 1000 - (dur - 300)) / 300))
+    a, f_, still = fr(S, 7); sa = alpha_sum(still)
+    need(a is not None and alpha_sum(f_(a["count"] - 1)) >= sa * .98, f"⑨ 퇴장 cut: 마지막 프레임 = 다 나온 자막({alpha_sum(f_(a['count'] - 1)) / sa:.2f})")
+    a, f_, still = fr(S, 8); sa = alpha_sum(still); n_ = a["count"] if a else 0
+    got_ = [(f, alpha_sum(f_(f)) / sa, 1 - prog(8, f)) for f in (n_ - 1, n_ - 5, n_ - 10, n_ - 15, 5)] if a else []
+    need(a is not None and n_ >= 55 and all(abs(g - e) <= .08 for _, g, e in got_) and sa > 1000,
+         f"⑨ 퇴장 fade 300ms: 프레임별 투명도(우리, 기대) {[(f, round(g, 2), round(e, 2)) for f, g, e in got_]} ±.08 · 정지 그림은 다 나옴(알파 합 {sa})")
+    a, f_, still = fr(S, 9); n_ = a["count"] if a else 0; c_s = cx_(still, 30)
+    sl = [(f, (cx_(f_(f), 30) or c_s) - c_s, -400 * prog(9, f)) for f in (n_ - 5, n_ - 10, 5)] if a else []
+    need(a is not None and all(abs(g - e) <= 25 for _, g, e in sl) and alpha_sum(still) > 1000,
+         f"⑨ 퇴장 slide 300ms dx-400: 프레임별 이동(우리, 기대 px) {[(f, round(g), round(e)) for f, g, e in sl]} ±25 · 정지 그림은 다 나옴")
+    # 8) 스펙 없는 줄은 종전 팩 등장 그대로
+    a, f_, still = fr(S, 10)
+    need(a is not None and a["count"] >= 10, "⑨ 스펙 없는 줄은 종전 팩 등장 그대로(애니메이션 프레임 있음)")
+
+    # ── 렌더 2: 스냅샷 captionEnter(팩 없음) — 칼카피 설명서의 등장 길이·키프레임이 스냅샷까지 간다
+    rows2 = [R("a", 0, 1.5, "스냅샷 등장"), R("b", 1.5, 3.0, "두번째")]
+    tl2, snap2, ctx2, idx2, lay2, L2 = build("", rows2, "snap", {"captionEnter": {"keyframes": [{"t": 0, "alpha": 20}, {"t": .5, "alpha": 100}]}}); S2 = (lay2, L2, idx2)
+    a, f_, still = fr(S2, 0); r0 = alpha_sum(f_(0)) / max(1, alpha_sum(still))
+    need(a is not None and lay2[idx2[0]].get("enterMs") in range(495, 506) and abs(r0 - .2) <= .06 and bool(snap2.get("captionEnter", {}).get("keyframes")),
+         f"⑨ 스냅샷 captionEnter: 길이 {lay2[idx2[0]].get('enterMs')}ms(500) · 첫 프레임 투명도 {r0:.2f}(0.20 ±.06)")
+    tl3, snap3, ctx3, idx3, lay3, L3 = build("", rows2, "snap0"); need(not lay3[idx3[0]].get("animation"), "⑨ 스냅샷 captionEnter 없으면 등장 없음(종전)")
+
+    # ── 렌더 3: 상자 투명도·둥근 모서리(팩 box) — 시험용 팩 값(실제 팩엔 벤치 상자가 없다)
+    rows4 = [R("a", 0, 1.0, "상자 시험")]
+    with patched_packs({"kitchit": {"box": {"color": "#102030", "alpha": 40, "radius": 30}}}):
+        _, _, _, idx4, lay4, L4 = build("kitchit", rows4, "box")
+    with patched_packs({"kitchit": {"box": {"color": "#102030", "alpha": 100, "radius": 0}}}):
+        _, _, _, idx5, lay5, L5 = build("kitchit", rows4, "box0")
+    _, _, _, idx6, lay6, L6 = build("kitchit", rows4, "box_none")
+    def ytop(im, x, lo):   # 열 x 에서 알파가 lo 이상인 첫 y(위에서부터)
+        al = im.split()[3]
+        return next((y for y in range(1200, 1450) if al.getpixel((x, y)) >= lo), None)
+    b_im = img(L4 / lay4[idx4[0]]["file"]); sq = img(L5 / lay5[idx5[0]]["file"])
+    mid_ = b_im.getpixel((300, ytop(b_im, 300, 95) + 8)) if ytop(b_im, 300, 95) else (0, 0, 0, 0)
+    t_edge, t_mid = ytop(b_im, 3, 95), ytop(b_im, 200, 95); q_edge, q_mid = ytop(sq, 3, 250), ytop(sq, 200, 250)
+    none_a = img(L6 / lay6[idx6[0]]["file"]).getpixel((540, 20))[3]
+    need(t_edge is not None and t_mid is not None and abs(mid_[3] - 102) <= 6 and all(abs(mid_[i] - c) <= 8 for i, c in enumerate((16, 32, 48))) and t_edge - t_mid >= 14,
+         f"⑨ 자막 상자(alpha 40%·radius 30px): 안쪽 {mid_}(알파 102 ±6 · 색 #102030) · 왼쪽 끝 열이 가운데 열보다 {None if t_edge is None else t_edge - t_mid}px 아래서 시작(원 반지름 30 → x=3 에서 약 17 · ≥14 = 둥글게 깎임)")
+    need(q_edge is not None and q_edge == q_mid and none_a == 0, f"⑨ 자막 상자 radius 0·alpha 100%: 왼쪽 끝 열 {q_edge} = 가운데 열 {q_mid}(각진 상자) · 상자 없는 팩은 투명(알파 {none_a})")
+
+    # ── 자간·행간(팩 text.style.letterSpacing·lineHeight) — 값을 바꾸면 그림이 실제로 달라지고 세 길(렌더·캡컷·썸네일)이 같은 그림
+    def spaced(tag, text, style):
+        base = PACKS["kitchit"]["text"]
+        with patched_packs({"kitchit": {"text": {**base, "style": {**base.get("style", {}), **style}}}}):
+            tl_, sn_, cx_s, ix_, ly_, L_s = build("kitchit", [R("a", 0, 1.0, text)], tag)
+            th = img(scene_style.render_layer_one(tl_, sn_, d / (tag + "_t"), ix_[0], {"text": "x"}, "bench"))   # 썸네일도 같은 팩 값으로(with 안)
+        im = img(L_s / ly_[ix_[0]]["file"])
+        sp_ = scene_style.overlay_spans(cx_s["scenes"], ly_, L_s); cap_ = img(sp_[-1]["path"]) if sp_ else None
+        return im, ink_box(im, 200), (hard_diff(th, im) + hard_diff(im, th), (hard_diff(cap_, im) if cap_ else 999))
+    LONG = "이것은 아주 길어서 한 줄에 다 들어가지 않을 정도로 매우매우 긴 자막 문장입니다 그래서 두 줄로 나뉩니다"
+    _, b0, r0_ = spaced("ls0", "짧은 글", {"letterSpacing": "0em"}); _, b1, r1_ = spaced("ls1", "짧은 글", {"letterSpacing": "0.3em"})
+    w0, w1 = b0[2] - b0[0], b1[2] - b1[0]
+    need(w1 >= w0 * 1.15 and r0_ == (0, 0) or w1 >= w0 * 1.15 and r1_[0] == 0 and r1_[1] <= 30,
+         f"⑨ 자간: letterSpacing 0em→0.3em 잉크 폭 {w0}→{w1}px(+15%↑) · 썸네일=렌더 그림 차이 {r1_[0]} · 캡컷 그림 차이 {r1_[1]}")
+    _, h1, q1 = spaced("lh1", LONG, {"lineHeight": "1"}); _, h2, q2 = spaced("lh2", LONG, {"lineHeight": "2"})
+    need(h2[3] - h2[1] >= (h1[3] - h1[1]) + 25 and q2[0] == 0 and q2[1] <= 30,
+         f"⑨ 행간: lineHeight 1→2 잉크 높이 {h1[3] - h1[1]}→{h2[3] - h2[1]}px(+25↑) · 썸네일=렌더 차이 {q2[0]} · 캡컷 그림 차이 {q2[1]}")
+
+    # ── 굿레터 팩(관제 235, 칼카피 굿레터 보강안 ed56bd44c): glPop 빠른 톡(28%→110%@0.1초→100%@0.175초) · 줄 전체 한 색 · 큰 글 · 라벨 자리
+    #   벤치(굿레터 60fps 실측): 753r 27→110%(0.117초)→100%(0.183초) · vcb 26%→110%@0.100→100%@0.167 · 자리 y68.75%(sMx9 잉크 y1288~1353) · 라벨 y65%
+    curve_ms = lambda t: curve("glPop", t)
+    peak_v = max(curve_ms(t) for t in range(100, 126, 5))
+    need(abs(curve_ms(0) - .28) <= .02 and 1.08 <= peak_v <= 1.12 and abs(curve_ms(175) - 1) <= .01 and abs(MOTIONS["glPop"]["ms"] - 175) <= 8,
+         f"⑩ glPop 곡선(벤치): 시작 {curve_ms(0) * 100:.0f}%(26~28) · 0.10~0.125초 최대 {peak_v * 100:.0f}%(108~112) · 0.175초 {curve_ms(175) * 100:.0f}%(100) · 길이 {MOTIONS['glPop']['ms']}ms(167~183)")
+    grows = [R("a", 0, 1.2, "굿레터 시험"), R("b", 1.2, 2.0, "앞 조각"), R("b", 2.0, 2.8, "뒤 조각"), R("c", 2.8, 4.0, "호박색 줄", variant="hi"),
+             R("d", 4.0, 5.2, "계란 2개", variant="big"), R("e", 5.2, 6.4, "제품 이름", variant="label")]
+    tlg, snapg, ctxg, idxg, layg, Lg = build("goodletter", grows, "gl"); SG = (layg, Lg, idxg)
+    a, f_, still = fr(SG, 0); full = bw(still) or 1
+    bad = [(f, round(bw(f_(f)) / full * 100), round(curve_ms(f / 30 * 1000) * 100)) for f in range(0, 7) if abs(bw(f_(f)) / full - (curve_ms(f / 30 * 1000) if f / 30 * 1000 < 175 else 1)) > .06]
+    need(a is not None and not bad and layg[idxg[0]].get("enterMs") in range(170, 181), f"⑩ glPop 렌더: 30fps 잉크 폭 곡선 = 계약 곡선 ±6%p(어긋남 {bad}) · 길이 {layg[idxg[0]].get('enterMs')}ms(175) · 첫 프레임 불투명")
+    a1, _, _ = fr(SG, 1); a2, _, _ = fr(SG, 2)
+    need(a1 is not None and a2 is not None and layg[idxg[1]].get("enterMs") in range(170, 181) and layg[idxg[2]].get("enterMs") in range(170, 181),
+         f"⑩ 모든 조각에 빠른 톡: 줄 앞 조각 {layg[idxg[1]].get('enterMs')}ms · 같은 줄 뒤 조각 {layg[idxg[2]].get('enterMs')}ms (kitchit 은 줄 첫 조각만)")
+    # 줄 전체 한 색(호박 #FCB53F) — 채움(검정 테 제외) 색 점 중 호박 비율
+    def fill_ratio(im, hex_):
+        want = _hex(hex_); n = m_ = 0
+        for px in im.get_flattened_data():
+            if px[3] > 200 and max(px[:3]) > 90:
+                n += 1; m_ += all(abs(px[i] - want[i]) <= 16 for i in range(3))
+        return m_ / max(n, 1)
+    _, _, st_h = fr(SG, 3); _, _, st_w = fr(SG, 0)
+    rh, rw = fill_ratio(st_h, "#FCB53F"), fill_ratio(st_w, "#FCB53F")
+    need(rh >= .8 and rw <= .02, f"⑩ 줄 전체 한 색 hi: 호박 #FCB53F 채움 비율 {rh:.2f}(≥0.8 = 줄 전체) · 보통 줄 {rw:.2f}(≤0.02)")
+    _, _, st_big = fr(SG, 4); bb, bn = ink_box(st_big, 200), ink_box(st_w, 200)
+    ab, _, _ = fr(SG, 4)
+    need(ab is None and 1.9 <= (bb[3] - bb[1]) / (bn[3] - bn[1]) <= 2.7, f"⑩ 큰 글 big: 잉크 높이 {(bb[3] - bb[1])}px = 보통 줄의 {(bb[3] - bb[1]) / (bn[3] - bn[1]):.2f}배(벤치 약 2.3배) · 등장 없음({ab is None})")
+    _, _, st_lab = fr(SG, 5); lb, al = ink_box(st_lab, 200), fr(SG, 5)[0]
+    cy_l, cy_n = (lb[1] + lb[3]) / 2, (bn[1] + bn[3]) / 2
+    need(al is None and abs(cy_l - .65 * 1920) <= 30 and abs(cy_n - .6875 * 1920) <= 30, f"⑩ 자리: 라벨 가운데 y {cy_l:.0f}(y65%=1248 ±30) · 보통 줄 {cy_n:.0f}(y68.75%=1320 ±30) · 라벨 등장 없음({al is None})")
+    spg = scene_style.overlay_spans(ctxg["scenes"], layg, Lg); badg = []
+    for k in range(6):
+        sc = ctxg["scenes"][idxg[k]]; sp = [x for x in spg if sc["start"] - 1e-6 <= x["start"] < sc["end"] - 1e-6]
+        st = img(Lg / layg[idxg[k]]["file"]); th = img(scene_style.render_layer_one(tlg, snapg, d / f"gt{k}", idxg[k], {"text": "x"}, "bench"))
+        if not sp or hard_diff(img(sp[-1]["path"]), st) > 30 or hard_diff(th, st) + hard_diff(st, th) != 0: badg.append(k)
+    need(not badg, f"⑩ 굿레터 캡컷 그림·썸네일 = 다 나온 정지 그림(어긋남 {badg})")
+
+    # ── 세 길: 캡컷 그림(overlay_spans)·썸네일(render_layer_one) = 다 나온 정지 그림(퇴장·등장 도중이 아님)
+    lay_, L_, idx_ = S; badc, badt = [], []
+    spans = scene_style.overlay_spans(ctx["scenes"], lay_, L_)
+    for k in range(10):
+        sc = ctx["scenes"][idx_[k]]; sp = [x for x in spans if sc["start"] - 1e-6 <= x["start"] < sc["end"] - 1e-6]
+        st = img(L_ / lay_[idx_[k]]["file"])
+        if not sp or alpha_sum(img(sp[-1]["path"])) < alpha_sum(st) * .97 or hard_diff(img(sp[-1]["path"]), st) > 30: badc.append(k)
+        if alpha_sum(st) < 1000: badc.append(f"빈 정지 그림{k}")
+        p = scene_style.render_layer_one(tl, snap, d / f"t{k}", idx_[k], {"text": "x"}, "bench")
+        if hard_diff(img(p), st) + hard_diff(st, img(p)) != 0: badt.append(k)
+    need(not badc, f"⑨ 캡컷 그림 = 다 나온 자막 정지 그림(키프레임·타이핑·흔들림·퇴장 10장면, 어긋남 {badc})")
+    need(not badt, f"⑨ 썸네일 = 정지 그림(어긋남 {badt})")
+
+
 def bench_frame(rel, t, cy, w=540, h=170):
     src = BENCH / rel; tmp = OUT / "_bench.png"
     va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{t:.3f}", "-i", str(src), "-frames:v", "1", str(tmp)])
@@ -782,7 +1018,7 @@ def sheet(pack, rows, ctx, idx, layers, L, final, out, report):
 if __name__ == "__main__":
     args = sys.argv[1:]
     compose = "--no-compose" not in args; args = [a for a in args if a != "--no-compose"]
-    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick", "stickers", "step3") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
+    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick", "stickers", "step3", "step4") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     packs = args[0].split(",") if args else ["kitchit", "kkultemnote", "starpick", "stickers"]
     fails = []
@@ -803,6 +1039,14 @@ if __name__ == "__main__":
             if not tts.exists():
                 va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
             step3_check(OUT, need, tts); continue
+        if p == "step4":   # ⑨ 범용 등장(관제 235 요청서 1~5)
+            def need(ok, msg):
+                print(("  통과  " if ok else "★ 실패  ") + "[4단계] " + msg)
+                if not ok: fails.append("[4단계] " + msg)
+            tts = OUT / "v.wav"
+            if not tts.exists():
+                va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
+            step4_check(OUT, need, tts); continue
         if p not in PACKS:
             fails.append(f"계약 파일에 팩 {p} 없음"); print("★ 실패  계약 파일에 팩", p, "없음"); continue
         run(p, OUT, compose, fails)

@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 
 from . import schema
+from .. import scene_style
 
 BLANK_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"   # 1×1 투명 — 고정형 미리보기 그림 자리
 POP_BASE_MS = 520      # precision20-ui.js runHookMotion 'pop' 의 기본 길이(ms) — 등장 ms 를 hookMotionSpeed 로 바꾸는 기준
@@ -36,7 +37,10 @@ def caption_effects(spec: dict) -> tuple[dict, list]:
         return snap, unsupported
     if cap.get("enter"):
         snap["bodyCaptionMotion"] = CAPTION_ENTER_LIVE[cap["enter"]["kind"]]
-        if cap["enter"]["kind"] != "none":
+        live = scene_style.clean_caption_enter({**cap["enter"], "kind": snap["bodyCaptionMotion"] or None})   # 길이·키프레임까지 — 모양 주인은 clean_caption_enter
+        if live:
+            snap["captionEnter"] = live
+        if cap["enter"]["kind"] != "none" and not live:
             unsupported.append(f"자막 등장 길이 {cap['enter']['ms']}ms — 라이브 '{snap['bodyCaptionMotion']}' 효과 길이를 쓴다")
     e = cap.get("emphasis")
     if e and e["words"] == "auto":

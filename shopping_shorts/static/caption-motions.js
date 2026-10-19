@@ -904,6 +904,68 @@
   "pack": true,
   "bench": "스타픽룸 j5D 0.2~1.0초 '최화정이 만들자마자' 30fps — 파랑 #0795FC→노랑 #FAED07→흰→주황 #FB5806, 250ms마다 한 칸, 글자마다 한 칸씩 어긋남",
   "boxAt": 0
+ },
+ "shake": {
+  "label": "덜덜 흔들림",
+  "ms": 360,
+  "easing": "linear",
+  "frames": [
+   {"opacity": 1, "translate": "0em 0em", "offset": 0.0},
+   {"opacity": 1, "translate": "0.2em 0em", "offset": 0.1},
+   {"opacity": 1, "translate": "-0.2em 0em", "offset": 0.25},
+   {"opacity": 1, "translate": "0.14em 0em", "offset": 0.4},
+   {"opacity": 1, "translate": "-0.14em 0em", "offset": 0.55},
+   {"opacity": 1, "translate": "0.08em 0em", "offset": 0.7},
+   {"opacity": 1, "translate": "-0.04em 0em", "offset": 0.85},
+   {"opacity": 1, "translate": "0em 0em", "offset": 1.0}
+  ],
+  "pack": true,
+  "bench": "등장 흔들림(관제 235 요청서 5) — 좌우로 줄어드는 떨림, 끝은 제자리. 크기는 spec.amp(0.2em 기준 배수)로. 벤치 실측 수치는 요청서에 없음(스타픽룸 '다른 등장' 줄에 이름만)"
+ },
+ "glPop": {
+  "label": "굿레터 빠른 톡",
+  "origin": true,
+  "ms": 175,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.28",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "offset": 0.2
+   },
+   {
+    "opacity": 1,
+    "scale": "0.80",
+    "offset": 0.4
+   },
+   {
+    "opacity": 1,
+    "scale": "1.08",
+    "offset": 0.6
+   },
+   {
+    "opacity": 1,
+    "scale": "1.12",
+    "offset": 0.68
+   },
+   {
+    "opacity": 1,
+    "scale": "1.04",
+    "offset": 0.85
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "pack": true,
+  "bench": "굿레터 60fps 실측: 753r 27→110%(0.117초)→100%(0.183초) · vcb 26%→110%@0.100→100%@0.167 · sMx9 2.98~3.13 — 가운데 기준, 불투명 시작, 모든 말 조각에 붙음"
  }
 }/*JSON*/;
   // 자막 스타일(관제 127 → 144) — 자막 모양 한 벌. 움직임은 아래 등장 효과팩(CAPTION_MOTION_PACKS)이 맡는다(10-06 사장님 '폰트나 설정 그대로 두고 효과만').
@@ -1474,6 +1536,101 @@
    "stroke": "0.22em #000 → 0.15em #2B1708(얇은 진갈색)",
    "place": "창 안 y1140 → 창 아래 y1440"
   }
+ },
+ "goodletter": {
+  "label": "굿레터 레시피 팝",
+  "desc": "흰 둥근 굵은 글 + 검정 테 · 말 조각마다 빠른 톡(0.17초) · 강조 줄은 줄 전체 호박색(옛 틀은 주황·노랑·민트) · 스티커 없음",
+  "font": "BinggraeBold",
+  "size": 76,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FDFDFD",
+   "style": {
+    "WebkitTextStroke": "0.17em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#FCB53F"
+   ]
+  },
+  "emph": {
+   "font": "BinggraeBold",
+   "size": 150,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.17em #000000",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "glPop",
+   "body": "glPop",
+   "cont": "glPop",
+   "price": "glPop",
+   "problem": "glPop",
+   "reveal": "glPop",
+   "end": "glPop",
+   "emph": ""
+  },
+  "variants": {
+   "hi": {
+    "text": {
+     "color": "#FCB53F"
+    },
+    "why": "새 틀 강조 줄 = 줄 전체 호박색(sMx9 #FCB53F·vcb #F6B644·753r #F2BD50) — 배치 = 판 설정 placement(말 줄 23~34%·끝 줄·훅 첫 색)"
+   },
+   "orange": {
+    "text": {
+     "color": "#FD7901"
+    },
+    "why": "옛 틀 주황 = 재료 낱말·수치·반문 펀치"
+   },
+   "yellow": {
+    "text": {
+     "color": "#FDD946"
+    },
+    "why": "옛 틀 노랑 = 감탄·맛 반응"
+   },
+   "mint": {
+    "text": {
+     "color": "#57E4D0"
+    },
+    "why": "옛 틀 민트 = 요령·답·제품명"
+   },
+   "big": {
+    "enter": "",
+    "size": 175,
+    "why": "수량 큰글 — 흰 큰 글 + 숫자 노랑(mark #FDE675), 컷과 즉시(sMx9 13.41)"
+   },
+   "label": {
+    "enter": "",
+    "text": {
+     "color": "#F9E04B"
+    },
+    "size": 62,
+    "place": {
+     "y": 65.0,
+     "bench": "제품 이름 자막 y1212~1285(옛 틀 kfmZ·E6SX·m4m5) — 말 자막보다 위"
+    },
+    "why": "끝 제품 이름 자막: 노랑 작은 굵은 글, 컷과 즉시, 끝까지 유지 + 효과음 한 발(impact-bass/pop) 뒤 무음"
+   }
+  },
+  "stickers": {},
+  "bench": "channel/goodletter/자막팩_보강안.json · 스타일분석.md §3",
+  "place": {
+   "y": 68.75,
+   "bench": "새 틀 자막 잉크 가운데 y≈1320/1920(sMx9 1288~1353) · 옛 틀은 y≈1396(72.7%) — 판 설정 frame 이 틀마다 덮는다"
+  }
  }
 }/*PACKS*/;
   // 효과마다 붙는 조건(관제 235) — 벤치에서 언제·어느 줄에 붙었나. 판 등록 작업자가 편마다 배치를 계산하는 근거. 코드는 읽지 않는다.
@@ -1539,6 +1696,53 @@
   "조건": "편당 0~2회, 원음 줄 안에서 앞 조각이 0.5초 이상 선 뒤"
  }
 }/*RULES*/;
+  // ── 범용 등장 한 벌(관제 235, 칼카피 요청서 §4-2 1·2·4·5) ──────────────────────────────────────────────────────────
+  //   spec = {kind?, ms?, keyframes?:[{t(초), scale(%), alpha(%), dy(px)}], cps?, cursor?:{char, blink_ms}, glow?:{decay_ms, color?},
+  //           amp?(흔들림 배수), exit?:{kind:'cut'|'fade'|'slide', ms?, dx?(px, slide)}}
+  //   kind: 'keyframes'(keyframes 가 있으면 생략 가능) | 이 파일의 등장 키(pop·typeGlow …) | 설명서 이름(kinds 표).
+  //   줄 건 곳(위가 이긴다): 장면 자료 scene.enter > 팩 variants/speakers enter(객체) > 팩 enter(객체) > 스냅샷 captionEnter. 문자열 enter 는 종전대로 키.
+  //   ★한계값 표(limits)는 서버(scene_style.clean_caption_enter)와 이 파일의 captionEnterMotion 이 같이 읽는다 — 서버는 ENTERSPEC 표식 사이를 json 으로 읽는다.
+  root.CAPTION_ENTER_SPEC = /*ENTERSPEC*/{
+ "limits": {"ms": [1, 5000], "t": [0, 5], "scale": [0, 400], "alpha": [0, 100], "dy": [-600, 600], "max_keyframes": 40,
+            "cps": [1, 60], "blink_ms": [50, 2000], "decay_ms": [50, 2000], "exit_ms": [1, 2000], "exit_dx": [-1080, 1080], "amp": [0, 3]},
+ "kinds": {"pop": "pop", "fade": "fade", "rise": "rise", "typing": "typing", "typewriter": "typing", "none": "", "shake": "shake",
+           "glitch": "rgbGlitch", "wipe": "wipeRTL", "rainbow": "rainbowCycle", "slide": "slide"},
+ "exits": ["cut", "fade", "slide"],
+ "follow": {"char": "_", "color": "#FFFFFF", "at": "after", "gap": 0.15, "size": 1, "blink": 400, "until": "scene"},
+ "glow": {"color": "#2B5C2B", "blur": [0.12, 0.28], "keys": [[0, 0], [0.35, 1]]}
+}/*ENTERSPEC*/;
+  root.captionEnterMotion = function (spec, motions) {
+    if (!spec || typeof spec !== 'object') return null;
+    const S = root.CAPTION_ENTER_SPEC, num = (v, d) => Number.isFinite(+v) && v !== null && v !== '' ? +v : d;
+    const kind = spec.kind || (Array.isArray(spec.keyframes) && spec.keyframes.length ? 'keyframes' : '');
+    let m;
+    if (kind === 'keyframes') {
+      const kf = (spec.keyframes || []).map(k => ({ t: Math.max(0, num(k.t, 0)), s: num(k.scale, 100), a: num(k.alpha, 100), d: num(k.dy, 0) })).sort((a, b) => a.t - b.t);
+      if (!kf.length) return null;
+      const lastT = kf[kf.length - 1].t, ms = Math.max(1, num(spec.ms, Math.round(lastT * 1000))), rest = k => k.s === 100 && k.a === 100 && k.d === 0;
+      const vals = k => ({ opacity: k.a / 100, scale: String(k.s / 100), translate: `0px ${k.d}px` });
+      const frames = kf.map(k => ({ offset: Math.min(1, k.t * 1000 / ms), ...vals(k) }));
+      if (frames[0].offset > 0) frames.unshift({ ...frames[0], offset: 0 });                       // 첫 키프레임 앞은 그 값을 붙든다
+      const lastF = frames[frames.length - 1];
+      if (lastF.offset < 1 || !rest(kf[kf.length - 1])) frames.push({ offset: 1, ...vals({ s: 100, a: 100, d: 0 }) }); // 끝은 늘 '효과 없는 자막' 그림
+      m = { label: '키프레임', origin: true, ms, easing: 'linear', frames };
+    } else {
+      const key = Object.prototype.hasOwnProperty.call(S.kinds, kind) ? S.kinds[kind] : kind;
+      if (key === '') m = { label: '없음', ms: 1, easing: 'linear', frames: [{ opacity: 1 }, { opacity: 1 }] };
+      else if (motions && motions[key]) m = JSON.parse(JSON.stringify(motions[key]));
+      else return null;
+      if (Number.isFinite(+spec.ms) && spec.ms > 0) { m.ms = +spec.ms; delete m.msPerChar; }
+    }
+    if (kind === 'shake' || m.frames.some(f => /em 0em$/.test(f.translate || ''))) {
+      const amp = num(spec.amp, 1);
+      if (amp !== 1) m.frames = m.frames.map(f => f.translate ? { ...f, translate: f.translate.replace(/(-?[\d.]+)em (-?[\d.]+)em/, (_, x, y) => `${(x * amp).toFixed(3)}em ${(y * amp).toFixed(3)}em`) } : f);
+    }
+    if (num(spec.cps, 0) > 0) m.cps = +spec.cps;
+    if (spec.cursor && typeof spec.cursor === 'object' && m.unit === 'char') m.follow = { ...(m.follow || S.follow), char: spec.cursor.char || (m.follow || S.follow).char, blink: num(spec.cursor.blink_ms, (m.follow || S.follow).blink) };
+    if (spec.glow && typeof spec.glow === 'object' && m.unit === 'char') m.glow = { ...S.glow, ...(m.glow || {}), ...(spec.glow.color ? { color: spec.glow.color } : {}), decay_ms: num(spec.glow.decay_ms, 0) };
+    if (spec.exit && typeof spec.exit === 'object' && S.exits.includes(spec.exit.kind) && spec.exit.kind !== 'cut') m.exit = { kind: spec.exit.kind, ms: num(spec.exit.ms, 150), dx: num(spec.exit.dx, -400) };
+    return m;
+  };
   root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조"};
   // 단어 강조 방식(관제 102 → 127) — 지금 말하는 단어를 어떻게 짚나. 편집기 WORD_FX_STYLES·서버 검증(scene_style.caption_word_fx_keys)이 여기를 읽는다.
   //   draw: 그 단어가 켜진 뒤 이 초 동안 그려진다(밑줄·형광펜·동그라미). 모양은 precision20-ui.css .wfx-<키>.

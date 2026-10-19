@@ -62,6 +62,7 @@ MAX_LAYERS = 16                     # 틀 한 장의 층 수. validate_snapshot 
 KINDS = ("bg", "video", "band", "text", "image")
 ROLES = ("title", "caption", "brand", "label")
 ALIGNS = ("left", "center", "right")
+ENTER_SPEC_KEYS = ("keyframes", "cps", "cursor", "glow", "amp", "exit")   # 자막 등장 스펙(관제 235) — 통과만
 ENTER_KINDS = ("pop", "slide", "flash")   # 제목 등장 — precision20-ui.js runHookMotion 이 그리는 것만
 CAPTION_ENTER_KINDS = ("pop", "fade", "rise", "typewriter", "none")   # 자막 등장 — 라이브 CAPTION_MOTIONS 로 옮긴다(to_snapshot.CAPTION_ENTER_LIVE)
 EMPH_STYLES = ("color", "grow", "underline")   # 낱말 강조 — words 'auto' 는 라이브 wordFx, 낱말 목록은 설명서 모드 자막에 색 span
@@ -206,7 +207,7 @@ def _text(layer, where, W, H):
             raise FrameError(f"{where}.enter: 제목·자막 등장만 그립니다")
         if not isinstance(enter, dict) or enter.get("kind") not in kinds:
             raise FrameError(f"{where}.enter.kind: {kinds} 중 하나이거나 enter 가 null 이어야 합니다")
-        enter = {"kind": enter["kind"], "ms": _num(enter.get("ms", 300), where + ".enter.ms", 0, 5000)}
+        enter = {"kind": enter["kind"], "ms": _num(enter.get("ms", 300), where + ".enter.ms", 0, 5000), **{k: enter[k] for k in ENTER_SPEC_KEYS if role == "caption" and k in enter}}   # 범용 등장 스펙은 실어 두고 모양 검사는 scene_style.clean_caption_enter 한 곳
     out["enter"] = enter
     emph = _opt(layer, "emphasis")
     if emph is not None:
