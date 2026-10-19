@@ -33,6 +33,8 @@ FORBIDDEN = (
     "tools/calcopy/transcribe_free.py", "tools/calcopy/*/README.md", "tools/calcopy/*.md",
     "research/*", "docs/*", "handoff/*", "wiki/*", "관제/*", "raw/*", "out/*.md",
     ".env*", "*.pem", "shopping_shorts/app.py", "shopping_shorts/claude_portal.py", "shopping_shorts/tests/*",
+    # 서버 수집기(계정 돌리기·프록시 슬롯·유료 수집) — 회원 PC 받기는 회원 로그인 쿠키로 한다(media_download 는 이것들 없이 돈다, 10-19 실측)
+    "shopping_shorts/channel_archive.py", "shopping_shorts/instagram_playwright.py", "shopping_shorts/apify_client.py", "shopping_shorts/store.py",
 )
 # 묶음 안 어디에도 있으면 안 되는 글자(서버 주소·접속 열쇠 꼴·키 이름)
 #   duckdns 는 숏템 공개 주소(고객 프로그램이 라이선스 확인에 접속)라 숨길 대상이 아니다.
@@ -48,7 +50,9 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "tools/calcopy/engine/worker_steps.py", "tools/calcopy/engine/remake.py", "tools/calcopy/remake_video.py",
          "tools/calcopy/narr_video.py", "tools/calcopy/engine/client_llm.py", "tools/calcopy/engine/asr_local.py",
          "tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/yt_channel.py",
-         "shopping_shorts/scene_style.py", "tools/calcopy/preview_request.py")   # 설정 화면 미리보기·검사(관제 234)
+         "shopping_shorts/scene_style.py", "tools/calcopy/preview_request.py",   # 설정 화면 미리보기·검사(관제 234)
+         "shopping_shorts/media_download.py", "shopping_shorts/grab_domains.py", "shopping_shorts/frame_extract.py",   # 인스타·틱톡 등 받기(숏템메이커와 같은 주인, 관제 234)
+         "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py")
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:

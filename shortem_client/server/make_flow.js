@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
+import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 
@@ -74,6 +75,7 @@ async function go(args, opts, presetId) {
     if (rental.dev && args.includes('rented')) return { fail: { why: '개발 PC 입니다 — SHORTEM_DEV_PRESET 에 엔진 프리셋 경로를 주세요', code: 'dev_preset' } };
     opts = { ...opts, onClose: rental.release };
   }
+  if (['start', 'choose', 'approve', 'restyle'].includes(args[0])) await refreshCookies();   // 받기 전 최신 로그인 쿠키(유튜브 세션은 자주 돈다)
   const r = startRun(args, opts);
   const out = await waitRun(r, waitMs());
   if (out) return shapeSession(out);

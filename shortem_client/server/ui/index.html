@@ -103,7 +103,7 @@ function state(msg,bad){const e=$('state');e.className='state'+(bad?' err':'');e
 async function load(force){
   const st=await api('/api/state');
   if(st.error)state(st.error,true);
-  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length;
+  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length||JSON.stringify(st.logins)!==JSON.stringify(S.st.logins);
   S.st=st;S.stamp=st.stamp;
   if(changed&&!S.saving){render();preview()}
   if(!st.error)state('이 PC 에 저장됨');
@@ -119,6 +119,7 @@ function render(){
   let h='';
   if(S.step==='preset'){
     h=`<h2>프리셋 고르기 <small>고르면 화면·자막·소리 기본값이 그 프리셋 완본대로 들어갑니다</small></h2>
+      ${loginsBox(st.logins)}
       <div class="cards">${(st.presets||[]).map(x=>`<button class="card${x.id===st.current?' on':''}" data-preset="${esc(x.id)}"><b>${esc(x.name)}</b><span>${esc(x.desc||'')}</span></button>`).join('')||'<p class="err">쓸 수 있는 프리셋이 없습니다 — Claude 에게 "숏템 준비 점검"을 부탁하세요</p>'}</div>`;
   }else if(S.step==='screen'){
     h=`<h2>화면 <small>바꾼 칸만 바뀌고 나머지는 프리셋 그대로</small></h2>
@@ -161,6 +162,13 @@ function render(){
   $('board').innerHTML=h;
 }
 
+function loginsBox(l){
+  if(!l)return'';
+  const P={instagram:'인스타그램',tiktok:'틱톡',youtube:'유튜브'};
+  return `<div class="sec"><div class="sec-h"><b>영상 받기 계정</b><small>인스타·틱톡·유튜브 영상을 이 PC 에서 받으려면 고객님 계정 연결이 필요합니다</small></div>
+    <div class="chips">${Object.keys(P).map(k=>`<button class="chip${l.connected[k]?' on':''}" data-login="${k}">${l.connected[k]?'✓ ':''}${P[k]} ${l.connected[k]?'연결됨':'연결하기'}</button>`).join('')}</div>
+    ${l.waiting?`<div class="note">열린 크롬 창에서 ${P[l.waiting]}에 로그인한 뒤 <b>창을 닫아 주세요</b>. 닫으면 여기에 '연결됨'이 뜹니다.</div>`:''}</div>`;
+}
 function fontGrid(key,cur,fonts){
   return `<div class="fontgrid">${fonts.map(f=>`<button class="${f===cur?'on':''}" data-font="${key}" data-v="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</button>`).join('')}</div>`;
 }
@@ -176,6 +184,7 @@ async function save(patch){
 $('board').addEventListener('click',async e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.go!==undefined){S.step=STEPS[+t.dataset.go].k;render();return}
+  if(t.dataset.login){const r=await api('/api/login',{platform:t.dataset.login});if(!r.ok)state(r.why,true);await load(true);return}
   if(t.dataset.preset){await api('/api/select',{preset:t.dataset.preset});S.video=null;await load(true);S.step='screen';render();return}
   if(t.id==='reset'){await api('/api/reset',{preset:S.st.current});await load(true);return}
   if(t.dataset.font)return save({text:{[t.dataset.font]:t.dataset.v}});

@@ -1,4 +1,4 @@
-// MCP 겉면 — stdio 로 띄워 도구 8개(5판: shortem_ai·shortem_settings 추가)·설명·annotations·셸 도구 없음·키 값 비노출 확인
+// MCP 겉면 — stdio 로 띄워 도구 9개(5판: shortem_ai·shortem_settings·shortem_login 추가)·설명·annotations·셸 도구 없음·키 값 비노출 확인
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -14,9 +14,9 @@ const client = new Client({ name: 't', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER], env: { ...process.env }, stderr: 'ignore' }));
 test.after(async () => { await client.close(); await fake.close(); });
 
-test('도구 8개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
+test('도구 9개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_job', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);
+  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_job', 'shortem_login', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_settings', 'shortem_setup']);
   const by = Object.fromEntries(tools.map(t => [t.name, t]));
   assert.equal(by.shortem_presets.annotations.readOnlyHint, true);
   assert.equal(by.shortem_profile.annotations.readOnlyHint, true);

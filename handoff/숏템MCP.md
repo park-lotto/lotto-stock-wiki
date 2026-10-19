@@ -87,3 +87,13 @@
 - 외곽선: 색 칸(outline_rgb) 추가, 화면 막대 0~12.
 - 완성본 다시 만들기: 엔진 `calcopy_make.restyle` + make.py restyle + MCP step=restyle + 화면 버튼. 실측: 원음형 1편 209초, AI 요청 0, 템플릿·채널명·[광고]·글꼴 반영 확인(프레임 대조).
 - 점검 도구: ui_check.js 18칸 전부 통과(템플릿 화면=렌더 0.03%). ★거짓 통과 2번째를 잡음 — '그리는 중' 표시만 기다려 저장 전 그림을 찍었다 → 다 그린 횟수(__drawn)로 기다리게. template_render_check.py(compose 경로).
+
+## 2026-10-19 (밤) — 인스타·틱톡·유튜브 회원 PC 받기(사장님 "본인 PC 에서 되게 설정도 팩에 / 우리도 처음에 내 PC 안에서")
+- 우리 PC 방식 그대로: 로그인 브라우저 쿠키 → yt-dlp + 인스타 세션 파일. 받는 판단 주인 = media_download.download_any(숏템메이커와 같은 것).
+- PC `logins.js` + MCP `shortem_login`(open/status) + 설정 화면 '영상 받기 계정' — 숏템 전용 크롬 프로필(~/.shortem/browser), 회원이 직접 로그인 후 창 닫기(구글이 원격 제어 창 로그인을 막아서 보통 창). 만들기 전마다 같은 프로필에서 쿠키 다시 뽑기(0.6초 실측).
+- 엔진 yt-dlp 호출 전부에 쿠키: XDG_CONFIG_HOME/yt-dlp/config(--cookies) — exe·파이썬 모듈 둘 다 읽음 실측.
+- 엔진: 유튜브 밖 참고 영상 → ref_facts 가 media_download.probe_grab_meta, 재료 = 그 영상(url: 질의 → remake.download_url).
+- ★결함 잡음: media_download 가 핀터레스트 판별에 app.py 를 불러 회원 PC(app 없음)에서 틱톡·유튜브 받기가 통째로 막힘 → 주소 목록을 shopping_shorts/grab_domains.py 한 곳으로(app 도 거기서 import).
+- 묶음: media_download·grab_domains·frame_extract·instagram_parse·douyin_fetch·threads_parse 추가, 서버 수집기(channel_archive·instagram_playwright·apify_client·store) 금지.
+- 실측(서버 모듈 막은 회원 PC 조건, 로그인 없음): 인스타 4.4MB·틱톡 17MB·유튜브 OK, 엔진 재료 단계 틱톡 후보 시트까지 rc=2.
+- ⏭ 실제 로그인 창 시험(사장님 계정으로 '로그인만') — 인스타 1080p·비공개 막힘 상황에서 쿠키 효과 확인. 핀터레스트는 pinterest_crawl 미포함(필요하면 추가).

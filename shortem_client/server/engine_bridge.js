@@ -8,6 +8,7 @@ import crypto from 'node:crypto';
 import { homeDir, ensureDir, jail } from './paths.js';
 import { toolPath, toolsDir, devMode } from './tools_paths.js';
 import { readKey } from './engine/voice.js';
+import { engineCookieEnv } from './logins.js';
 
 export const SID_RE = /^[0-9a-f]{12}$/;
 export const REQ_RE = /^[0-9]{8}-[0-9]{6}-[0-9A-Za-z가-힣_.-]{1,40}-[0-9a-f]{6}$/;
@@ -28,8 +29,10 @@ export const dataDir = () => ensureDir(homeDir(), '창고');
 function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     CALCOPY_GEMINI_BACKEND: 'client', CALCOPY_CUSTOMER_MODE: '1', SHORTEM_LLM_QUEUE: queue,
-    CALCOPY_DATA_DIR: dataDir(), CALCOPY_PACK_ROOT: packRoot(), CHANNEL_FIND_CACHE: ensureDir(homeDir(), 'cache', 'channel_find') };
+    CALCOPY_DATA_DIR: dataDir(), CALCOPY_PACK_ROOT: packRoot(), CHANNEL_FIND_CACHE: ensureDir(homeDir(), 'cache', 'channel_find'),
+    YTDLP_PROXY_SLOTS: '0', INSTAGRAM_SCRAPER: 'playwright' };   // 회원 PC = 우리 프록시·유료 수집 없음(받기는 회원 로그인 쿠키)
   if (packFile) env.CALCOPY_PACKS = packFile;
+  Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});
   const tc = readKey('typecast');                        // 목소리 = 고객 본인 키(~/.shortem/keys) — 값은 출력하지 않는다
   if (tc) env.TYPECAST_API_KEY = tc;
