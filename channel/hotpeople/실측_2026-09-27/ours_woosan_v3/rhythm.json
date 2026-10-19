@@ -1,0 +1,15 @@
+{
+ "ours_woosan": {
+  "dur": 54.53,
+  "cuts": 25,
+  "first_cut": 2.27,
+  "cut_std": 0.61,
+  "cut_eq_sub": "24/24",
+  "cut_eq_sub_pct": 100,
+  "longest_still": 2.3,
+  "event_gap_med": 2.2,
+  "hook_n": 10,
+  "rehook_gap_med": 4.4,
+  "rehook_gap_max": 10.7
+ }
+}

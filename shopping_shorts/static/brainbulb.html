@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>뇌전구 제작소</title>
+<!-- 클라이언트 에러를 서버로 자동 보고 — ★<head> 맨 위(아래가 통째로 죽어도 이건 산다).
+     produce.html:13 과 같은 이유: 사장님에게 개발자도구를 열게 하면 안 된다. -->
+<script src="/error_help.js"></script>
+<style>
+/* ★theme.css 를 이 <style> **뒤에** 링크한다(produce.html:1681과 같은 순서).
+   같은 특이도면 theme.css 가 이기므로, 여기서 이기려면 .main 등을 앞에 붙여 한 단 올린다. */
+:root{
+  --bg:#070b12; --panel:#0e1420; --line:#1b2536; --txt:#e8eef8; --sub:#8b9bb4;
+  --accent:#3ee0bf; --ok:#34d399; --warn:#facc6b; --bad:#fb7185;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif}
+.main{flex:1;min-width:0;padding:24px 32px;max-width:1180px}
+@media(max-width:700px){ .main{padding:16px} }
+a{color:var(--accent)}
+.head h2{margin:0 0 4px;font-size:22px;font-weight:900;letter-spacing:-.5px}
+.head .desc{margin:0 0 18px;color:var(--sub);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.lb{display:block;font-size:12px;font-weight:800;color:var(--sub);margin:0 0 6px}
+input[type=text],textarea,select{width:100%;background:#0a0f18;color:var(--txt);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+.btn{background:#152033;color:var(--txt);border:1px solid var(--line);border-radius:10px;
+  padding:10px 16px;font:inherit;font-weight:800;cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.go{background:linear-gradient(135deg,#6ef0d4,#14b8a6);color:#04201b;border:0}
+.grow{flex:1;min-width:220px}
+.mini{font-size:12px;color:var(--sub)}
+.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);cursor:pointer;
+  user-select:none;white-space:nowrap}
+.chk input{accent-color:var(--accent);width:15px;height:15px}
+
+/* 상태줄 — ★그리는 함수는 drawStatus 하나뿐(produce.html:8887과 같은 규칙) */
+#status{display:flex;align-items:center;gap:10px;min-height:22px;font-weight:800}
+#status .dot{width:9px;height:9px;border-radius:50%;background:var(--sub);flex:none}
+#status.busy .dot{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+#status.ok .dot{background:var(--ok)} #status.bad .dot{background:var(--bad)}
+#status .el{margin-left:auto;font-weight:700;color:var(--sub);font-size:12px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){ #status.busy .dot{animation:none} }
+
+/* 멈춤 안내 — 어디서·왜·뭘 고치면 되는지(pipeline 이 fail 로 이미 만들어 준다) */
+.fail{border:1px solid rgba(251,113,133,.45);background:rgba(251,113,133,.08);
+  border-radius:12px;padding:14px;margin:12px 0 0}
+.fail h4{margin:0 0 8px;font-size:13.5px;color:var(--bad)}
+.fail dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px}
+.fail dt{color:var(--sub);font-weight:800;white-space:nowrap}
+.fail dd{margin:0;word-break:break-word;white-space:pre-wrap}
+
+.log{background:#080d15;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  max-height:220px;overflow:auto;font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#9fb0c8}
+.log div{white-space:pre-wrap;word-break:break-all}
+.log b{color:var(--ok)} .log i{color:var(--bad);font-style:normal}
+
+table.jobs{width:100%;border-collapse:collapse;font-size:13px}
+table.jobs th,table.jobs td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.jobs th{color:var(--sub);font-size:11.5px;font-weight:800}
+table.jobs tr{cursor:pointer}
+table.jobs tr:hover td{background:#131c2b}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;
+  border:1px solid var(--line);color:var(--sub)}
+.tag.run{color:var(--accent);border-color:rgba(62,224,191,.45)}
+.tag.done{color:var(--ok);border-color:rgba(52,211,153,.45)}
+video{width:100%;max-width:420px;border-radius:12px;border:1px solid var(--line);display:block}
+.retry{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0}
+.retry select{width:auto;min-width:160px}
+</style>
+<link rel="stylesheet" href="theme.css?v=1">
+</head>
+<body>
+<main class="main">
+  <div class="head">
+    <h2>💡 뇌전구 제작소</h2>
+    <p class="desc">기사 링크 하나로 뇌전구 규격 숏폼까지. 13단계가 차례로 돌아가고,
+      멈추면 <b>어디서 왜 멈췄는지</b> 그대로 보여줍니다. — 관리자 전용</p>
+  </div>
+
+  <!-- ① 만들기 -->
+  <section class="card">
+    <div class="row" style="margin:0 0 10px">
+      <div class="grow">
+        <label class="lb" for="url">기사 링크 (네이버 뉴스 등)</label>
+        <input type="text" id="url" placeholder="https://n.news.naver.com/mnews/article/…">
+      </div>
+      <div style="min-width:170px">
+        <label class="lb" for="name">작업 이름 (비우면 자동)</label>
+        <input type="text" id="name" placeholder="예: 최민식">
+      </div>
+    </div>
+    <details style="margin:0 0 10px">
+      <summary class="mini" style="cursor:pointer">링크 대신 본문을 직접 붙여넣기</summary>
+      <textarea id="text" placeholder="기사 본문을 그대로 붙여넣으세요" style="margin-top:8px"></textarea>
+    </details>
+    <div class="row" style="margin:0 0 12px">
+      <label class="chk"><input type="checkbox" id="noImages"> 그림 없이(빠름·무료)</label>
+      <label class="chk"><input type="checkbox" id="noReview"> 사진 검수 생략</label>
+      <label class="chk" style="margin-left:auto">
+        대본 <select id="scriptLlm" style="margin-left:6px">
+          <option value="">클로드 (기본·실물에 가까움)</option>
+          <option value="gemini">제미니 (빠름·대량)</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <button class="btn go" id="btnGo" onclick="start()">▶ 만들기 시작</button>
+      <div id="status"><span class="dot"></span><span class="msg">링크를 넣고 시작하세요</span><span class="el"></span></div>
+    </div>
+    <div id="failBox"></div>
+  </section>
+
+  <!-- ② 진행 (13단계) -->
+  <section class="card" id="progressCard" hidden>
+    <div class="steps" id="steps"></div>
+    <div class="row" style="margin:10px 0 0">
+      <span class="mini" id="meta"></span>
+    </div>
+    <div class="retry" id="retryBox" hidden>
+      <span class="mini">막혔으면 이 단계부터 다시:</span>
+      <select id="retryStep"></select>
+      <button class="btn" onclick="retry()">↻ 다시 돌리기</button>
+    </div>
+    <div style="margin:14px 0 0" id="logWrap" hidden>
+      <label class="lb">진행 기록</label>
+      <div class="log" id="log"></div>
+    </div>
+    <div style="margin:14px 0 0" id="videoWrap" hidden>
+      <label class="lb">완성본</label>
+      <video id="video" controls playsinline></video>
+      <div class="row" style="margin:8px 0 0">
+        <a class="btn" id="dl" download>⬇ 내려받기</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 만든 것들 -->
+  <section class="card">
+    <div class="row" style="margin:0 0 10px">
+      <label class="lb" style="margin:0">만든 편</label>
+      <button class="btn" style="margin-left:auto;padding:6px 12px" onclick="loadJobs()">새로고침</button>
+    </div>
+    <table class="jobs"><thead><tr>
+      <th>이름</th><th>제목</th><th>단계</th><th>길이</th><th>컷</th>
+    </tr></thead><tbody id="jobs"><tr><td colspan="5" class="mini">불러오는 중…</td></tr></tbody></table>
+  </section>
+</main>
+
+<script>
+/* ── 뇌전구 제작소 화면 ─────────────────────────────────────────────
+   서버가 진실이다: 단계 목록·상태·멈춤 사유는 전부 /api/brainbulb/status 가 준다.
+   ★단계 번호나 이름을 여기 손으로 쓰지 않는다(produce.html:3528 실사고 —
+     단계가 바뀌자 화면 문구 16곳이 전부 거짓말이 됐다). */
+let JOB = null, POLL = null, T0 = 0;
+
+/* ★폴러 핸들은 이 래퍼 하나로만 다룬다(produce.html:11884 실사고 — 앞의 것을
+   안 죽여 고아 폴러가 계속 살아 매초 API를 때렸다). */
+function setPoll(fn, ms){ clearInterval(POLL); POLL = setInterval(fn, ms); return POLL; }
+function stopPoll(){ clearInterval(POLL); POLL = null; }
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* 상태줄을 그리는 유일한 함수. ★실패 시 className 도 반드시 되돌린다
+   (produce.html:11950 — textContent만 바꾸면 클래스가 남아 영원히 도는 것처럼 보인다). */
+function drawStatus(msg, kind, right){
+  const el = $('status');
+  el.className = kind || '';
+  el.querySelector('.msg').textContent = msg;
+  el.querySelector('.el').textContent = right || '';
+}
+function elapsed(){
+  if(!T0) return '';
+  const s = Math.round((Date.now()-T0)/1000);
+  return s < 60 ? s+'초' : Math.floor(s/60)+'분 '+(s%60)+'초';
+}
+
+/* 아이콘은 단계 수와 무관하게 순환시킨다 — 단계가 늘어도 화면이 안 깨진다. */
+const ICONS = [
+  'M4 6h16M4 12h10M4 18h7',                                  // 소재
+  'M5 4h9l5 5v11H5z M14 4v5h5',                              // 대본
+  'M4 7h16M4 12h16M4 17h9',                                  // 줄
+  'M4 12l5 5L20 6',                                          // 검사
+  'M4 5h16v12H4z M8 9h8',                                    // 주문서
+  'M4 5h16v14H4z M8 11l3 3 5-6',                             // 그림
+  'M12 3v10 M9 6a3 3 0 006 0 M5 12a7 7 0 0014 0 M12 19v2',   // 성우
+  'M12 7v5l3 2 M21 12a9 9 0 11-18 0 9 9 0 0118 0z',          // 시간표
+  'M3 6h18v12H3z M7 15h10',                                  // 자막
+  'M6 12a6 6 0 0112 0 M9 12v4 M15 12v4 M3 12h2 M19 12h2',    // 효과음
+  'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z',   // 화면
+  'M5 4l14 8-14 8z',                                          // 렌더
+  'M20 6L9 17l-5-5'                                           // 검사
+];
+const COLORS = [['#38bdf8','#7dd3fc'],['#8c6ef0','#c4b5fd'],['#f472b6','#fbcfe8'],
+  ['#fb7185','#fecdd3'],['#3ee0bf','#99f6e4'],['#fb923c','#fed7aa'],['#facc6b','#fef3c7'],
+  ['#a3e635','#d9f99d'],['#34d399','#a7f3d0'],['#22d3ee','#a5f3fc'],['#a78bfa','#ddd6fe'],
+  ['#f9a8d4','#fce7f3'],['#6ee7b7','#d1fae5']];
+
+function renderSteps(st){
+  const steps = st.steps || [];
+  const doneN = steps.filter(s => s.state === 'done').length;
+  const pct = steps.length > 1 ? Math.round(doneN / steps.length * 100) : 0;
+  $('steps').innerHTML =
+    `<div class="dockflow"><i class="dfull"></i><i class="drun" style="width:${pct}%"></i></div>`
+    + '<div class="dockbar">'
+    + steps.map((s,i) => {
+        /* 서버가 준 state 를 그대로 쓴다 — 화면이 "지나왔으니 됐겠지"로 판정하지 않는다
+           (produce.html:4035 실사고: 빈 산출물에 초록 체크가 켜졌다). */
+        const cls = s.state === 'done' ? 'dk done'
+                  : s.state === 'running' ? 'dk cur'
+                  : s.state === 'empty' ? 'dk wait' : 'dk wait';
+        const [c,c2] = COLORS[i % COLORS.length];
+        /* 도크엔 짧은 이름(13칸이라 한 칸이 53px뿐 — 긴 이름은 전부 두 줄로 접힌다).
+           마우스를 올리면 긴 이름이 뜬다. */
+        return `<div class="${cls}" style="--c:${c};--c2:${c2}" title="${esc(s.label)}">`
+             + `<div class="dkic"><svg viewBox="0 0 24 24"><path d="${ICONS[i%ICONS.length]}"/></svg></div>`
+             + `<div class="dkl">${esc(s.short || s.label)}</div></div>`;
+      }).join('') + '</div>';
+}
+
+function renderFail(f){
+  if(!f){ $('failBox').innerHTML = ''; return; }
+  $('failBox').innerHTML = '<div class="fail"><h4>⚠ 여기서 멈췄습니다</h4><dl>'
+    + `<dt>어디서</dt><dd>${esc(f.where)}</dd>`
+    + `<dt>왜</dt><dd>${esc(f.why)}</dd>`
+    + (f.fix ? `<dt>고치려면</dt><dd>${esc(typeof f.fix === 'string' ? f.fix : JSON.stringify(f.fix, null, 1))}</dd>` : '')
+    + '</dl></div>';
+}
+
+function renderLog(hist){
+  if(!hist || !hist.length){ $('logWrap').hidden = true; return; }
+  $('logWrap').hidden = false;
+  $('log').innerHTML = hist.map(h => {
+    const t = h.at ? new Date(h.at*1000).toLocaleTimeString('ko-KR') : '';
+    return h.ok ? `<div>${t} <b>✓ ${esc(h.step)}</b></div>`
+                : `<div>${t} <i>✗ ${esc(h.step)}</i> ${esc(h.error||'')}</div>`;
+  }).reverse().join('');
+  $('log').scrollTop = 0;
+}
+
+function apply(st){
+  $('progressCard').hidden = false;
+  renderSteps(st);
+  renderFail(st.fail);
+  renderLog(st.history);
+
+  const bits = [];
+  if(st.title) bits.push('『'+st.title+'』');
+  if(st.total_sec) bits.push(st.total_sec+'초');
+  if(st.cuts) bits.push('컷 '+st.cuts);
+  if(st.attempts) bits.push('대본 '+st.attempts+'회');
+  if(st.tts_spent_chars) bits.push('음성 '+st.tts_spent_chars.toLocaleString()+'자');
+  $('meta').textContent = bits.join(' · ');
+
+  if(st.mp4){
+    $('videoWrap').hidden = false;
+    if($('video').getAttribute('src') !== st.mp4){ $('video').src = st.mp4; }
+    $('dl').href = st.mp4;
+  } else { $('videoWrap').hidden = true; }
+
+  // 막혔을 때만 「이 단계부터 다시」를 연다 — 도는 중에 누르면 두 번 돈다.
+  const stuck = !st.running && !!st.fail;
+  $('retryBox').hidden = !(stuck || (!st.running && st.step_done));
+  if(!$('retryStep').options.length && st.steps){
+    $('retryStep').innerHTML = st.steps.map(s => `<option value="${s.key}">${esc(s.label)}</option>`).join('');
+  }
+  if(st.next_step) $('retryStep').value = st.next_step;
+
+  $('btnGo').disabled = !!st.running;
+  if(st.running){
+    const cur = (st.steps||[]).find(s => s.state === 'running');
+    drawStatus(cur ? (cur.label+' 하는 중…') : '도는 중…', 'busy', elapsed());
+  } else if(st.fail){
+    drawStatus('멈췄습니다 — 아래를 보세요', 'bad', elapsed());
+    stopPoll(); loadJobs();
+  } else if(st.mp4 && !st.next_step){
+    drawStatus('완성되었습니다', 'ok', elapsed());
+    stopPoll(); loadJobs();
+  } else {
+    drawStatus(st.step_done ? ('여기까지 됐습니다 — '+st.step_done) : '시작 전', '', elapsed());
+    stopPoll();
+  }
+}
+
+let pollFails = 0;
+async function tick(){
+  if(!JOB) return;
+  try{
+    const r = await fetch('/api/brainbulb/status?job_id='+encodeURIComponent(JOB));
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    apply(await r.json());
+    pollFails = 0;
+  }catch(e){
+    /* ★예외를 삼키지 않는다(produce.html:11964) — 삼키면 화면이 마지막 문구로 굳고
+       사장님은 "되고 있다"고 믿는다. */
+    console.error('[brainbulb] 상태 조회 실패', e);
+    if(++pollFails >= 3) drawStatus('상태를 확인하지 못하고 있습니다 — 새로고침(F5) 해보세요', 'bad', '');
+  }
+}
+
+async function start(){
+  const url = $('url').value.trim(), text = $('text').value.trim();
+  if(!url && !text){ drawStatus('기사 링크나 본문을 넣어 주세요', 'bad', ''); return; }
+  $('btnGo').disabled = true;
+  drawStatus('기사를 읽는 중…', 'busy', '');
+  $('failBox').innerHTML = '';
+  try{
+    const r = await fetch('/api/brainbulb/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ url, text, name: $('name').value.trim(),
+        no_images: $('noImages').checked, no_review: $('noReview').checked,
+        script_llm: $('scriptLlm').value || null })
+    });
+    const d = await r.json();
+    if(r.status === 409 && d.exists){
+      /* 같은 이름이 이미 있다 — 덮어쓰면 그 편의 사진·음성이 섞인다. 반드시 물어본다. */
+      drawStatus('같은 이름의 편이 이미 있습니다', 'bad', '');
+      $('failBox').innerHTML = '<div class="fail"><h4>⚠ 「'+esc(d.exists)+'」은(는) 이미 있는 작업입니다</h4>'
+        + '<div class="mini" style="margin:0 0 10px">덮어쓰면 그 편의 옛 사진·음성이 남은 채로 새 대본이 얹힙니다.'
+        + ' 새로 만들려면 <b>작업 이름을 비우거나</b> 다른 이름을 쓰세요.</div>'
+        + '<button class="btn" onclick="$(\'name\').value=\'\';$(\'failBox\').innerHTML=\'\';start()">새 폴더로 만들기</button></div>';
+      $('btnGo').disabled = false; return;
+    }
+    if(!r.ok || d.error){ drawStatus(d.error || ('시작하지 못했습니다 (HTTP '+r.status+')'), 'bad', ''); $('btnGo').disabled = false; return; }
+    JOB = d.job_id; T0 = Date.now();
+    $('retryStep').innerHTML = '';
+    if(d.already) drawStatus('이미 돌고 있는 작업입니다 — 그대로 이어서 봅니다', 'busy', '');
+    tick(); setPoll(tick, 2500);
+  }catch(e){
+    console.error('[brainbulb] 시작 실패', e);
+    drawStatus('시작하지 못했습니다 — '+e.message, 'bad', '');
+    $('btnGo').disabled = false;
+  }
+}
+
+async function retry(){
+  if(!JOB) return;
+  const step = $('retryStep').value;
+  $('failBox').innerHTML = '';
+  drawStatus(step+' 단계부터 다시 도는 중…', 'busy', '');
+  try{
+    const r = await fetch('/api/brainbulb/retry', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ job_id: JOB, step,
+        no_images: $('noImages').checked, no_review: $('noReview').checked,
+        script_llm: $('scriptLlm').value || null })
+    });
+    const d = await r.json();
+    if(!r.ok || d.error){ drawStatus(d.error || '다시 돌리지 못했습니다', 'bad', ''); return; }
+    T0 = Date.now(); tick(); setPoll(tick, 2500);
+  }catch(e){
+    console.error('[brainbulb] 재시도 실패', e);
+    drawStatus('다시 돌리지 못했습니다 — '+e.message, 'bad', '');
+  }
+}
+
+async function open_(id){
+  JOB = id; T0 = 0;
+  $('retryStep').innerHTML = '';
+  /* ★이름칸을 건드리지 않는다(2026-09-16 실사고). 목록에서 편을 눌러 보기만 해도
+     이름칸이 그 편 이름으로 채워졌고, 그 상태로 새 링크를 넣으니 **옛 편 폴더에
+     덮어써져** 박위 편의 옛 사진 위에 제로카레 대본이 얹혔다(돈도 두 번 나갔다). */
+  await tick();
+  const st = await (await fetch('/api/brainbulb/status?job_id='+encodeURIComponent(id))).json();
+  if(st.running){ T0 = Date.now(); setPoll(tick, 2500); }
+  $('progressCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function loadJobs(){
+  try{
+    const d = await (await fetch('/api/brainbulb/jobs')).json();
+    const rows = (d.jobs||[]);
+    $('jobs').innerHTML = rows.length ? rows.map(j =>
+      `<tr onclick="open_('${esc(j.job_id)}')">`
+      + `<td><b>${esc(j.job_id)}</b></td>`
+      + `<td class="mini">${esc(j.title||'')}</td>`
+      + `<td>${j.running ? '<span class="tag run">도는 중</span>'
+              : j.mp4 ? '<span class="tag done">완성</span>'
+              : '<span class="tag">'+esc(j.step_done||'시작 전')+'</span>'}</td>`
+      + `<td class="mini">${j.total_sec ? j.total_sec+'초' : ''}</td>`
+      + `<td class="mini">${j.cuts || ''}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="mini">아직 만든 편이 없습니다</td></tr>';
+  }catch(e){
+    console.error('[brainbulb] 목록 실패', e);
+    $('jobs').innerHTML = '<tr><td colspan="5" class="mini">목록을 불러오지 못했습니다</td></tr>';
+  }
+}
+
+$('url').addEventListener('keydown', e => { if(e.key === 'Enter') start(); });
+loadJobs();
+</script>
+<script src="/sidebar.js?v=2"></script>
+</body>
+</html>
