@@ -288,8 +288,7 @@ def yt_detail(vid: str, n_comments: int = 50) -> dict:
 
 # 라이브 발굴 DB(읽기 전용) — 해외 참고 채널 표 overseas_ref_channel(category '해외반응', 제품 쪽 키워드)의 대표 영상(top_video·top_views).
 # 10-16 실측: reel_history 제품 카테고리는 한글 캡션이 아닌 행이 거의 다 '빈 캡션 인스타'라 해외 계정 판별이 안 됐다 → 해외 표를 쓴다.
-REF_SSH = "ubuntu@3.35.251.172"
-REF_KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")  # PC 마다 홈이 다르다(CH·TheRose)
+# 서버 접속 정보(REF_SSH·REF_KEY)는 engine/_server_access.py — 고객 설치팩 묶음에 안 간다(관제 234). 이 길은 우리 PC 전용.
 REF_DB = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db"
 PRODUCT_KW = ("gadget", "gadgets", "innovative gadgets", "useful inventions", "cleaning tools", "outdoor tools", "home improvement",
               "diy", "tech", "unboxing", "creative", "kitchen")   # overseas_ref_channel.keywords 10-16 실측 분포 중 제품 쪽
@@ -313,6 +312,10 @@ print(json.dumps(rows, ensure_ascii=False))
 
 def db_top(n: int = 20) -> list[dict]:
     """reference.db overseas_ref_channel — 해외반응·제품 키워드 채널의 대표 영상 n개(조회 순). ssh 로 읽기 전용(mode=ro)."""
+    try:
+        from tools.calcopy.engine._server_access import REF_KEY, REF_SSH
+    except ImportError:
+        raise RuntimeError("발굴 DB 길은 이 설치본에 없다(우리 PC 전용) — 채널·영상 주소로 찾으세요") from None
     r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", REF_KEY, REF_SSH, "python3", "-", str(n), ",".join(PRODUCT_KW)],
                        input=_DB_PY.replace("DBPATH", REF_DB), capture_output=True, encoding="utf-8", errors="replace", timeout=90)
     if r.returncode != 0:
@@ -664,7 +667,7 @@ def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=pri
     조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
     stats = channel_find.channel_stats(시험에서 가짜). 반환 (후보, 실패)."""
     if stats is None:
-        from tools.calcopy.engine.channel_find import channel_stats as stats
+        from tools.calcopy.engine.yt_channel import channel_stats as stats   # 판정 노하우(channel_find) 없이 채널 읽기만
     d = json.loads(Path(channels_file).read_text(encoding="utf-8"))
     rows = (d.get("channels") if isinstance(d, dict) else d) or []
     originals = any("verdict" not in c for c in rows)      # 해외원본_채널.json(판정 칸 없음) = 소재+재료 채널
