@@ -1,0 +1,23 @@
+{
+ "name": "재미썸홈판",
+ "renderer": "jaemi",
+ "_note": "얜샷템 하이브리드 2번 판 — 이븐쇼핑(재미썸홈) 결. 렌더러 render_jaemi.py 는 render 칸을 기본값(DEF)으로 읽는다(값 주인 = 이 파일).",
+ "bench": {"channel": "evenshopping", "analysis": "channel/evenshopping/대본설명서/points.json"},
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "why": "사장님 10-18 밤 확정 — 재미썸홈판 = 박창수(필재 금지)"},
+ "bgm": {"id": "honwaka_puppu"},
+ "loudness": {"lufs": -14.0, "tp": -1.5},
+ "length": {"min": 25, "max": 35},
+ "render": {"end_pad": 0.7, "gap_o_f1": 0.12, "duck_db": -10.0, "bgm_a_rms": -31.5, "voice_rms": -17.5, "target_lufs": -14.0, "silence_d": 0.08,
+            "voice_af": "highpass=f=90,acompressor=threshold=0.03:ratio=2:attack=10:release=150:makeup=1", "sfx_density": "low",
+            "tempo_max": 1.27, "tempo_min": 0.85, "last_tempo_tol": 0.10, "pause_long": 0.28, "pause_comma": 0.235, "pause_period": 0.315,
+            "opener_at": -0.25, "preset_b": "channel/evenshopping/preset/숏템템플릿/manifest.json"},
+ "title_form": "body_title 한 줄(이븐쇼핑 t11 틀)",
+ "script": {
+  "brief": [
+   "orig(조각)·orig_caps(원본 초, 글) · lines(slot f1·bait·limit·more·twist·land) · pieces(자막 조각 ≤13자, 대사 글자 순서 그대로) · A(원음 밑 화면, at) · F1(from_piece) · B(pieces 번호 묶음, crop [x,y,h]).",
+   "결 = channel/evenshopping/대본설명서/points.json(이븐쇼핑 8칸 title→bait→reveal→solve→more→more2→twist→land, 반말 전언체 '~다는 거·~다고').",
+   "tts_tempo·punct_at 은 비워 둔다(자동). 렌더가 '문장부호 근처 무음 없음'으로 멈추면 그때만 손으로."
+  ],
+  "audit": [{"kind": "engine", "name": "jaemi"}]
+ }
+}

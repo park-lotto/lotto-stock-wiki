@@ -1010,6 +1010,8 @@
    "emph": "overPop"
   },
   "variants": {
+   "cut": {"enter": "", "why": "줄 첫 덩어리인데 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"},
+   "pop": {"enter": "overPop", "why": "같은 줄 안 덩어리인데 벤치가 팝으로 넣은 곳(배치 규칙)"},
    "typing": {
     "enter": "typeFlash",
     "place": {
@@ -1101,6 +1103,7 @@
    }
   },
   "variants": {
+   "cut": {"enter": "", "why": "나레 덩어리를 벤치가 컷으로 넣은 곳(배치 규칙 placement.place, 관제 097)"},
    "orig_pop": {
     "size": 115,
     "text": {
@@ -1188,6 +1191,8 @@
    }
   },
   "variants": {
+   "cut": {"enter": "", "why": "나레 덩어리를 벤치가 한 번에 넣은 곳(배치 규칙 placement.place, 관제 097)"},
+   "pop": {"enter": "pop", "why": "원음 덩어리를 벤치가 작게→크게로 넣은 곳(배치 규칙)"},
    "cursor": {
     "enter": "typeCursor",
     "text": {

@@ -1,0 +1,650 @@
+{
+ "name": "스타픽룸판",
+ "renderer": "bench",
+ "_note": "얜샷템 하이브리드 — 스타픽룸 칼카피 판: 원음 훅 → 나레 다리(타이핑, 전언 '~있다는데..?') → 우리 체험 나레 → 원음 끝. 근거 channel/starpickroom/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
+ "bench": {
+  "channel": "starpickroom",
+  "analysis": "channel/starpickroom/스타일분석.md",
+  "design": "channel/starpickroom/하이브리드_판설계.md",
+  "line_reads": "channel/starpickroom/줄판독",
+  "src_dir": "C:/숏템_칼카피/starpickroom/src",
+  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
+  "sfx_key": "starpickroom"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "candidates": [
+   "tc-yura"
+  ],
+  "why": "벤치 나레 여성(f0 202~258Hz). 후보 tc-yura 는 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
+ },
+ "cps_target": 6.9,
+ "bgm": {
+  "id": "otsukare_summer",
+  "db_below_voice": 14.4,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.4,
+  "why": "벤치 밝은 여름곡 내내, 덕킹 없음"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 28,
+  "max": 38
+ },
+ "timing": {
+  "gap": 0.2,
+  "gap_oo": 0.25,
+  "tail": 0.5
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   483,
+   1080,
+   1058
+  ],
+  "title": [
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 92,
+    "center": 288,
+    "shear": 0.1763,
+    "color": "#FCFCFC",
+    "hi": "#FDF702",
+    "max_w": 1030
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 92,
+    "center": 392,
+    "shear": 0.1763,
+    "color": "#FCFCFC",
+    "hi": "#CF04FC",
+    "max_w": 1030
+   }
+  ],
+  "watermark": {
+   "text": "얜샷템",
+   "font": "GmarketSansBold.otf",
+   "px": 56,
+   "x1": 1030,
+   "cy": 550,
+   "alpha": 140
+  },
+  "logo": {
+   "kind": "spr_gold",
+   "text": "얜샷템"
+  },
+  "credit": {
+   "font": "Pretendard-Bold.otf",
+   "px": 36,
+   "color": "#8B8B88",
+   "center": 1626
+  }
+ },
+ "caption": {
+  "pack": "starpick",
+  "pack_default": {
+   "narr.first": "typing",
+   "narr.rest": "typing",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {
+   "cut": "cut",
+   "pop": "pop",
+   "typing": "heart"
+  },
+  "typing_cps": 12.5,
+  "chunk_max_chars": 15
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
+  "gain_db": -6
+ },
+ "placement": {
+  "rules": {
+   "stickers": {
+    "object_pop": {
+     "needs_key": true,
+     "why": "재료 낱말 + 3D 누끼(VbpdN 땅콩버터·바나나) — 대본 caps 에 object_src 가 있을 때만"
+    }
+   },
+   "sfx": {
+    "kind": "pop",
+    "max": 3,
+    "why": "10-19 신호 재측정: 편당 0~3발, 첫 원음 훅의 자막교체+스티커 겹침 또는 자막교체 순간"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/starpickroom/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 11,
+     "enter": {
+      "typing": 0.636,
+      "cut": 0.364
+     },
+     "emph": 0.091
+    },
+    "narr.rest": {
+     "n": 15,
+     "enter": {
+      "typing": 0.533,
+      "cut": 0.4,
+      "pop": 0.067
+     },
+     "emph": 0.067
+    },
+    "orig.first": {
+     "n": 16,
+     "enter": {
+      "cut": 0.938,
+      "other": 0.062
+     },
+     "emph": 0.0
+    },
+    "orig.rest": {
+     "n": 107,
+     "enter": {
+      "cut": 0.897,
+      "typing": 0.047,
+      "other": 0.028,
+      "pop": 0.028
+     },
+     "emph": 0.075
+    }
+   },
+   "share": {
+    "emph": 0.5,
+    "typing": 0.875,
+    "sfx": 0.875
+   },
+   "stickers": {
+    "circle_arrow": 0.125,
+    "heart": 0.25,
+    "object_pop": 0.25,
+    "other": 0.375,
+    "spark_lines": 0.25
+   },
+   "videos": [
+    {
+     "id": "21VoGAEK_pU",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "typing": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 12
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [
+      "cap",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "ASqFulFvhgg",
+     "n": 12,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 8,
+        "typing": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "object_pop": 1,
+      "heart": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      },
+      "object_pop": {
+       "none": 1
+      },
+      "heart": {
+       "excl": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "cap",
+      "cap",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "dKczVzmdr00",
+     "n": 26,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "other": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 25,
+       "enter": {
+        "cut": 19,
+        "typing": 4,
+        "other": 1,
+        "pop": 1
+       },
+       "emph": 4
+      }
+     },
+     "stickers": {
+      "heart": 4,
+      "other": 1
+     },
+     "sticker_lex": {
+      "heart": {
+       "none": 2,
+       "price": 2,
+       "ask": 1
+      },
+      "other": {
+       "excl": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "EZQlWvvnKPI",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 12,
+       "enter": {
+        "cut": 11,
+        "other": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "typing": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "typing": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [
+      "cap",
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "j5D30T2n0-w",
+     "n": 17,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 6
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1,
+      "other": 3,
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      },
+      "other": {
+       "none": 2,
+       "excl": 1,
+       "ask": 1
+      },
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "cut",
+      "cut"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "onmwSxfco-A",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 14,
+       "enter": {
+        "cut": 14
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {},
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "r5XN6Eilfxs",
+     "n": 16,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 9
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "typing": 1,
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "cap",
+      "none",
+      "cap"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "VbpdNba182M",
+     "n": 25,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 20,
+       "enter": {
+        "cut": 17,
+        "pop": 2,
+        "other": 1
+       },
+       "emph": 4
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "typing": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "object_pop": 2
+     },
+     "sticker_lex": {
+      "object_pop": {
+       "none": 2
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "cap",
+      "sticker",
+      "sticker",
+      "none",
+      "none",
+      "none",
+      "cap",
+      "none"
+     ],
+     "no_caption": 0
+    }
+   ]
+  }
+ },
+ "title_form": "1줄 = 연예인 본인 말 인용·훅 구절(노랑 hi = 핵심 낱말) / 2줄 = '이름의 [보라 hi 제품]'",
+ "script": {
+  "brief": [
+   "박자: O1 원음 훅 4~6초(본인 말 2조각) → N1 나레 다리 3~4초 '[수식어] [이름]이 [행동]한 [대상]이 있다는데..?'(3인칭 전언 반말) → B1~B6 우리 나레(1인칭 존댓말 '저도 이거 보고 ~ 봤는데요' → 와우 → 비유 → 권위 전언 → 사회 반응) → O2 원음 끝 1.5~2.5초.",
+   "길이 30~38초. 한 줄 TTS ≤35자, 자막 조각 ≤15자(공백 빼고). 숫자는 tts 칸에 한글로.",
+   "재료 낱말(먹는 것·바르는 것)을 caps key 로 — 누끼 그림 object_src 가 있으면 3D 스티커 후보.",
+   "효능·질병 말 금지, 권위는 전언으로만, CTA 없음."
+  ],
+  "example": "channel/starpickroom/하이브리드_성시경/대본.json",
+  "audit": [
+   {
+    "kind": "first_line",
+    "is": "orig"
+   },
+   {
+    "kind": "last_line",
+    "is": "orig"
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 6,
+    "max": 8
+   },
+   {
+    "kind": "tts_chars",
+    "min": 8,
+    "max": 35
+   },
+   {
+    "kind": "ending",
+    "which": "first_tts",
+    "pattern": "있다는데\\s*\\.*\\?*$",
+    "why": "나레 다리 = 전언 '~있다는데..?'"
+   },
+   {
+    "kind": "has_line",
+    "of": "tts",
+    "pattern": "(저도|제가).*(봤는데|봤어요)",
+    "min": 1,
+    "why": "1인칭 체험 이음"
+   },
+   {
+    "kind": "ending",
+    "which": "rest_tts",
+    "pattern": "(더라고요|봤는데요|대요|래요|같아요|거예요|어요|에요|해요|네요)\\s*[.,!]*$",
+    "min_share": 0.7,
+    "why": "B = 1인칭 존댓말"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 15
+   },
+   {
+    "kind": "est_length",
+    "min": 28,
+    "max": 38
+   }
+  ]
+ }
+}

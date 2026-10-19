@@ -7,7 +7,9 @@
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> screen                       # 메타·자동자막·360p 토막 시트 → screen.json (소넷이 chosen 적음)
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> download                     # screen.json chosen 만 1080p + 원본 영상
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> asr                          # 원본 후보 구간 받아쓰기(서버 제미나이 2모델, 병렬) → asr/*.json
-    PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> plan [--version 잇썸홈판|재미썸홈판|both]   # 대본·재료 → 계획 시트(TTS 전)
+    PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> plan [--version <판>|both]   # 대본·재료 → 계획 시트(TTS 전)
+      ★판 = tools/calcopy/hybrid/styles/<판>.json 한 곳(판 등록) — 잇썸홈판·재미썸홈판·키치잇판·꿀템노트판·스타픽룸판 …
+        "키치잇 스타일로" = --version 키치잇판. both = 잇썸홈판+재미썸홈판(옛 기본), all = 등록된 판 전부.
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> name_check                   # 이름 발음 사전 점검(이름 구절만 합성·받아쓰기) → 대본 tts 에 반영
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> render [--version …] [--parallel]   # TTS 1회 + 렌더(두 판 동시 가능) → render/final.mp4
     PYTHONUTF8=1 py tools/calcopy/hybrid/run.py <연예인> checks [--version …]         # B표 초안 + 썸네일 JPG + 얼굴 검사(--no-asr 로 받아쓰기 생략)
@@ -31,7 +33,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import DESK_DIR, DOC_BASE, WORK_BASE, StageError, Timer, jload, jsave, md5  # noqa: E402
 
-VERSIONS = ("잇썸홈판", "재미썸홈판")
+from tools.calcopy.hybrid import styles as STY  # noqa: E402
+
+VERSIONS = tuple(STY.names())          # 판 목록 = styles/ 폴더(판 등록 한 곳)
+DEFAULT_BOTH = ("잇썸홈판", "재미썸홈판")
 STAGES = ["init", "research", "candidates", "screen", "download", "asr", "script", "plan", "name_check", "render", "checks", "deliver"]
 HUMAN = {"research": "briefs/research.md", "screen_pick": "briefs/screen_pick.md", "script": "briefs/script.md", "review": "briefs/review.md"}
 BRIEFS = Path(__file__).with_name("briefs")
@@ -74,7 +79,7 @@ def st_init(ctx: Ctx, a):
     ctx.state["cfg"].update({k: v for k, v in {"source": a.source, "product": a.product, "keywords": a.keywords.split(",") if a.keywords else None,
                                                "queries": a.queries, "exclude": a.exclude.split(",") if a.exclude else None}.items() if v})
     (ctx.D / "조사").mkdir(parents=True, exist_ok=True)
-    for v in VERSIONS:
+    for v in DEFAULT_BOTH:
         (ctx.D / v).mkdir(exist_ok=True)
     ctx.mark("init")
     print(f"[init] {ctx.W} · {ctx.D} · cfg {json.dumps(ctx.state['cfg'], ensure_ascii=False)}")
@@ -136,12 +141,28 @@ def st_asr(ctx: Ctx, a):
 
 
 def _versions(a):
-    return list(VERSIONS) if a.version in (None, "both") else [a.version]
+    if a.version in (None, "both"):
+        return list(DEFAULT_BOTH)
+    if a.version == "all":
+        return list(VERSIONS)
+    return [a.version]
+
+
+class _Bench:
+    """벤치 판(renderer=bench) — render_bench.render(판, doc, work) 를 옛 렌더러와 같은 꼴로."""
+    def __init__(self, name):
+        self.name = name
+
+    def render(self, doc, work, plan_only=False, log=print):
+        from tools.calcopy.hybrid import render_bench
+        return render_bench.render(self.name, doc, work, plan_only=plan_only, log=log)
 
 
 def _renderer(v):
+    """판 설정 renderer 칸 하나로 고른다(판 이름 분기 없음)."""
     from tools.calcopy.hybrid import render_itssum, render_jaemi
-    return render_itssum if v == "잇썸홈판" else render_jaemi
+    kind = STY.load(v)["renderer"]
+    return {"itssum": render_itssum, "jaemi": render_jaemi}.get(kind) or _Bench(v)
 
 
 def _need_docs(ctx: Ctx, v):
@@ -163,8 +184,8 @@ def st_name_check(ctx: Ctx, a):
     for v in _versions(a):
         _need_docs(ctx, v)
         S = jload(ctx.D / v / "대본.json")
-        voice = S["voice"]["voice_id"]
-        r = name_check.check(ctx.celeb, voice, ctx.W / "name_check" / voice, S["voice"].get("tempo"))
+        voice = (S.get("voice") or STY.load(v)["voice"])["voice_id"]   # 벤치 판 대본은 목소리를 판 설정에서
+        r = name_check.check(ctx.celeb, voice, ctx.W / "name_check" / voice, (S.get("voice") or {}).get("tempo"))
         sp = r["tts"]
         changed = 0
         from tools.calcopy.engine import name_dict as ND
@@ -200,6 +221,12 @@ def st_render(ctx: Ctx, a):
 def st_checks(ctx: Ctx, a):
     from tools.calcopy.hybrid import checks, thumb
     for v in _versions(a):
+        if STY.load(v)["renderer"] == "bench":
+            from tools.calcopy.hybrid import bench_check
+            r = _timed(ctx, f"checks:{v}", bench_check.check, v, ctx.D / v, ctx.W / v)
+            ctx.mark(f"checks:{v}", ok_auto=r["ok"], report=r["report"])
+            print(f"[checks:{v}] 자동 {'○' if r['ok'] else '×'} · {r['report']}")
+            continue
         r = _timed(ctx, f"checks:{v}", checks.check, ctx.D / v, ctx.W / v, asr=not a.no_asr, bench_median=a.bench_median)
         try:
             th = _timed(ctx, f"thumb:{v}", thumb.make_thumb, ctx.D / v, ctx.W / v)
@@ -219,7 +246,7 @@ def st_deliver(ctx: Ctx, a):
         final = ctx.W / v / "render" / "final.mp4"
         jpg = ctx.W / v / "render" / "final.jpg"
         DESK_DIR.mkdir(parents=True, exist_ok=True)
-        dst = DESK_DIR / f"칼카피_얜샷템_{slug}_{v}.mp4"
+        dst = DESK_DIR / f"칼카피_얜샷템_{slug}_{v}.mp4"   # 드라이브 정본 이름·자리는 channel/칼카피_시작.md 🛑 블록(robocopy) — 여기는 바탕화면 사본
         shutil.copy(final, dst)
         same = md5(final) == md5(dst)
         if jpg.exists():
@@ -267,7 +294,7 @@ def main():
     ap.add_argument("celeb"); ap.add_argument("stage", choices=list(FN) + ["all"])
     ap.add_argument("--source"); ap.add_argument("--product"); ap.add_argument("--keywords"); ap.add_argument("--queries", nargs="*"); ap.add_argument("--exclude", default="")
     ap.add_argument("--n", type=int, default=12); ap.add_argument("--top", type=int, default=12); ap.add_argument("--no-server", action="store_true")
-    ap.add_argument("--version", choices=list(VERSIONS) + ["both"]); ap.add_argument("--parallel", action="store_true"); ap.add_argument("--no-asr", action="store_true")
+    ap.add_argument("--version", choices=list(VERSIONS) + ["both", "all"]); ap.add_argument("--parallel", action="store_true"); ap.add_argument("--no-asr", action="store_true")
     ap.add_argument("--bench-median", type=float); ap.add_argument("--force", action="store_true"); ap.add_argument("--until"); ap.add_argument("--redo")
     a = ap.parse_args()
     ctx = Ctx(a.celeb)

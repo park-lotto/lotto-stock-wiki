@@ -1,0 +1,65 @@
+{
+ "name": "꿀템노트판",
+ "renderer": "bench",
+ "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
+ "bench": {"channel": "kkultemnote", "analysis": "channel/kkultemnote/스타일분석.md", "design": "channel/kkultemnote/하이브리드_판설계.md",
+           "line_reads": "channel/kkultemnote/줄판독", "src_dir": "C:/숏템_칼카피/kkultemnote/src",
+           "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json", "sfx_key": "kkultemnote"},
+ "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"},
+ "cps_target": 7.5,
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 12.0, "duck_orig_db": 0.0, "fade_out": 0.4, "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음"},
+ "loudness": {"lufs": -14.0, "tp": -1.5},
+ "length": {"min": 15, "max": 22},
+ "timing": {"gap_after_tts": 0.06, "gap_after_orig": 0.04, "tail": 0.30},
+ "frame": {
+  "bg": [0, 0, 0], "window": [0, 420, 1080, 1080],
+  "title": [
+   {"font": "SBAggroB.ttf", "px": 98, "ink_top": 176, "color": "#FFFFFF", "hi": "#FCB9CE", "max_w": 960},
+   {"font": "SBAggroB.ttf", "px": 112, "ink_top": 287, "color": "#FFFFFF", "hi": "#0091FD", "max_w": 960}
+  ],
+  "logo": null,
+  "credit": {"font": "Pretendard-Regular.otf", "px": 40, "color": "#FAFAFA", "ink_top": 1615},
+  "comment": {"bottom": 1505, "px": 30}
+ },
+ "caption": {
+  "pack": "kkultemnote",
+  "pack_default": {"narr.first": "fade", "narr.rest": "fade", "orig.first": "cut", "orig.rest": "cut"},
+  "variant_for": {"pop": "orig_pop", "cut": "cut"},
+  "chunk_max_chars": 15
+ },
+ "cuts": {"push_tts": 0.0, "push_orig": 0.0},
+ "sfx_files": {"ding": "팩01/ding.wav", "whoosh": "팩01/whoosh.wav", "pop": "팩01/pop.wav", "gain_db": -8},
+ "placement": {
+  "rules": {
+   "variants": {"orig_red": {"speaker": "orig", "lex": ["excl"], "match": "빨강", "why": "BpU '혹 하는 거지'·m0E '안 들어가는 게 없어!' 빨강 펀치"}},
+   "stickers": {"comment_card": {"needs_comment": true, "why": "벤치 댓글 카드 5/8편 — 대본에 원본 실제 댓글이 있을 때만"}},
+   "sfx": {"kind": "ding", "max": 1, "why": "10-19 신호 재측정: 기본 0발, 있으면 자막교체·나레→원음 전환 순간 1발"}
+  },
+  "counted": {}
+ },
+ "title_form": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
+ "script": {
+  "brief": [
+   "줄 = 원음 줄(연예인 본인 말, 원본 구간 그대로)과 나레 줄이 번갈아. 나레 3~5줄·한 줄 10~22자·전체 60~95자, 나레 비중 33~45%.",
+   "박자: ①원음 훅 0.8~2초(반응·반문 한 마디, 첫 프레임 연예인 얼굴) ②나레 전언 '[인물]도 [행동]한 [제품] [정체]가 있다는데요?' ③원음 증언 ④나레 질문 '대체 ~가요?'/'뭐 때문에 ~가요?' ⑤원음 답 ⑥나레 정보 '~다네요?' ⑦원음 감탄 ⑧나레 반전·가격·권위 '~지만 ~라는데요?'(숫자 1개 근거 필수) ⑨원음 반전 ⑩원음 끝.",
+   "어미: '~다는데요?'·'~라는데요?'·'~다네요?'·질문 '~가요?' · 끝 정리 '결국 ~했네요'. 반말·1인칭·CTA 없음.",
+   "정직 선: 연예인이 말하지 않은 평가를 연예인 입에 넣지 않는다 — 원음에 반대 말이 있으면 반전 박자로 그대로.",
+   "원본 실제 댓글(좋아요 1위)을 comment{text,likes,from,to} 로 적으면 배치 규칙이 붙일지 정한다."
+  ],
+  "example": "channel/kkultemnote/하이브리드_성시경/대본.json",
+  "audit": [
+   {"kind": "first_line", "is": "orig"},
+   {"kind": "orig_span", "which": "first", "max": 2.2},
+   {"kind": "count", "of": "tts", "min": 3, "max": 5},
+   {"kind": "no_adjacent", "of": "tts"},
+   {"kind": "tts_chars", "min": 8, "max": 26},
+   {"kind": "tts_total_chars", "min": 55, "max": 100},
+   {"kind": "ending", "which": "all_tts", "pattern": "(다는데요|라는데요|다네요|라네요|가요|나요|했네요|다는데|래요)\\s*[?？.!]*$", "min_share": 0.75, "why": "전언·질문 어미"},
+   {"kind": "forbid_in", "of": "tts", "pattern": "^(저도|제가|나도|저는)|따라 (사|해) 봤", "why": "1인칭 없음(꿀템노트 결)"},
+   {"kind": "last_line", "is": "orig", "or_tts_pattern": "했네요"},
+   {"kind": "cap_chars", "max": 15},
+   {"kind": "narr_share", "min": 0.30, "max": 0.48},
+   {"kind": "est_length", "min": 15, "max": 22}
+  ]
+ }
+}

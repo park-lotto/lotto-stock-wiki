@@ -1,0 +1,23 @@
+{
+ "name": "잇썸홈판",
+ "renderer": "itssum",
+ "_note": "얜샷템 하이브리드 1번 판 — 두유노(잇썸홈) 결. 렌더러 render_itssum.py 는 render 칸을 기본값(DEF)으로 읽는다(값 주인 = 이 파일). 정본 channel/yanshottem/하이브리드_함익병/.",
+ "bench": {"channel": "homedesignnote", "analysis": "channel/homedesignnote/대본설명서/설명서.md"},
+ "voice": {"name": "미나", "voice_id": "kr-mina-expressive", "why": "사장님 10-18 밤 확정 — 잇썸홈판 = 일레븐랩스 미나(배속 서비스 규칙 1.35 고정)"},
+ "bgm": {"id": "honwaka_puppu", "db_below_voice": 14.4, "duck_orig_db": -10.0},
+ "loudness": {"lufs": -8.6, "tp": -3.2, "why": "옛 판 그대로(동작 그대로 옮김) — −14 통일은 벤치 3판부터"},
+ "length": {"min": 28, "max": 38},
+ "render": {"gap": 0.20, "gap_ab": 0.20, "gap_oo": 0.25, "tail": 0.50, "target_lufs": -8.6, "tp": -3.2, "orig_af": "highpass=f=90",
+            "a_end_pad": 0.0, "orig_fade": 0.015, "bgm_dir": "shopping_shorts/assets/bgm_lib", "preset_b": "channel/homedesignnote/preset/전체화면_가운데자막",
+            "frame_a": "channel/mantem/frame_얜샷템.json"},
+ "title_form": "2줄 '<수식어> <이름>이 요즘 매일 ~' / '<제품 분류>의 비밀' (얜샷템 틀 흰/민트)",
+ "script": {
+  "brief": [
+   "lines: H(TTS 한마디, 전언체 '~다는') → O(원음 조각, 본인 말만 · spans 또는 pieces · caps_rel/caps) → B1~B6(1인칭 체험 → 와우 3줄·권위 1줄·비유 1줄 → 사회 반응 끝). TTS 문장 ≤35자, 조사·어미 다 있게(A13).",
+   "결 = channel/homedesignnote/대본설명서/설명서.md(두유노홈디노 49편 — 체험담 존댓말 '~더라고요', 계기·극단행동·체감비유·결과과장, 속성 다음엔 '나에게 생기는 변화').",
+   "재료 A: H 컷도 연예인 얼굴(썸네일 규칙) · O 컷은 원음 입 모양 그대로(at = 원음 이어 붙인 초) · B 컷은 제품만(max = 원본 샷 경계)."
+  ],
+  "example": "channel/yanshottem/하이브리드_한혜진/대본_2판/",
+  "audit": [{"kind": "engine", "name": "itssum"}]
+ }
+}

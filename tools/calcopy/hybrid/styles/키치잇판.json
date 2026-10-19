@@ -1,0 +1,70 @@
+{
+ "name": "키치잇판",
+ "renderer": "bench",
+ "_note": "얜샷템 하이브리드 — 키치잇(@키치잇) 칼카피 판. 근거 channel/kitchit/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}. 렌더 = render_bench.py(이 파일만 보고 그린다).",
+ "bench": {"channel": "kitchit", "analysis": "channel/kitchit/스타일분석.md", "design": "channel/kitchit/하이브리드_판설계.md",
+           "line_reads": "channel/kitchit/줄판독", "src_dir": "C:/숏템_칼카피/kitchit/src",
+           "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json", "sfx_key": "kitchit"},
+ "voice": {"name": "미나", "voice_id": "kr-mina-expressive", "candidates": ["kr-keleek-stable"],
+           "why": "벤치 나레 여자 밝은 톤(F0 204~298Hz). 10-19 신호 재측정: 미나 닮음 74개 중 13~52위 — 후보 kr-keleek-stable(3/8편 1위)은 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"},
+ "cps_target": 6.9,
+ "bgm": {"id": "qiuqiu", "db_below_voice": 9.0, "duck_orig_db": -6.0, "fade_out": 0.4, "why": "벤치 8편 BGM 0초~끝 경쾌·발랄(곡 식별 불가), 원음 줄 −6dB"},
+ "loudness": {"lufs": -14.0, "tp": -1.5},
+ "length": {"min": 25, "max": 30},
+ "timing": {"gap": 0.10, "tail": 0.35},
+ "frame": {
+  "bg": [0, 0, 0], "window": [0, 420, 1080, 1080],
+  "title": [
+   {"font": "Jalnan2.ttf", "px": 79, "ink_top": 164, "shear": 0.2, "color": "#FFFFFF", "hi": "#FF2A2A", "max_w": 1000},
+   {"font": "Jalnan2.ttf", "px": 77, "box": [42, 269, 1037, 399], "box_color": "#FDE600", "color": "#000000", "max_w": 960}
+  ],
+  "logo": {"text": "얜샷템", "font": "Jalnan2.ttf", "px": 43, "x": 75, "y": 435, "rgba": [205, 205, 205, 215], "stroke": 2, "stroke_rgba": [50, 50, 50, 200]},
+  "credit": {"font": "Pretendard-Bold.otf", "px": 46, "color": "#B6B6B6", "ink_top": 1535},
+  "flash_sec": 0.10
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {"narr.first": "pop", "orig.first": "pop", "narr.rest": "cut", "orig.rest": "cut"},
+  "variant_for": {"cut": "cut", "pop": "pop", "typing": "typing"},
+  "typing_variant": "typing", "typing_cps": 10.0,
+  "chunk_max_chars": 12
+ },
+ "cuts": {"push_tts": 0.06, "push_orig": 0.03},
+ "sfx_files": {"ding": "팩01/ding.wav", "whoosh": "팩01/whoosh.wav", "pop": "팩01/pop.wav", "gain_db": -8},
+ "placement": {
+  "rules": {
+   "typing_sticker": {"kind": "heart", "speaker": "orig", "why": "벤치 BRa 원음 타이핑 덩어리 아래 ♥(본보기 편에 ♥ 가 있을 때만)"},
+   "stickers": {
+    "gem": {"lex": ["lux", "price"], "needs_key": true, "why": "BRa '부내나'·'부내까지 나면' 💎 — 고급·부·값 낱말"},
+    "spark_lines": {"lex": ["excl"], "needs_key": true},
+    "kk_doodle": {"lex": ["excl"]}
+   },
+   "sfx": {"kind": "ding", "max": 1, "why": "10-19 신호 재측정: 편당 0~1발, 자막교체 또는 나레→원음 전환 직후(옛 '0초 띵+전환마다 휙' 폐기)"},
+   "flash": {"share": 0.25, "where": "last_switch", "why": "흰 번쩍임 0.1초 = BRa 19초·_Wa(8편 중 2편) 마무리 줄 시작"}
+  },
+  "counted": {}
+ },
+ "title_form": "1줄 = 인물+대상 느낌표('성시경 신라면 1등 레시피!') / 2줄(노랑 박스) = 반전 질문('면을 따로 비빈다고?') · 2줄 13자 안",
+ "script": {
+  "brief": [
+   "박자(키치잇 8편 + 하이브리드 뒤): N 훅(전언 의문 1줄 '~다네요?/~다고?') → O 원음 증언 → N 질문 1줄('대체 어떻게/어떤 ~길래?') → O 원음 답 → (O 원음 한마디) → 이음 N '저도 보자마자 따라 ~ 봤는데요,' → N 와우·비유 → N 권위 전언('~대요') → N 사회 반응 끝('~난리래요'·'~말 다 했죠').",
+   "나레 줄 5~7줄, 줄당 1.2~4초(6~28자). 앞 12~14초 · 뒤 12~14초 → 전체 25~28초.",
+   "어미: 앞 = 전언 의문('~다네요?'·'~다고?'·'~길래?'), 뒤 = 해요체 전언('~더라고요'·'~대요'·'~래요').",
+   "자막 덩어리(caps) = 2~5어절·12자 안, 덩어리마다 핵심 낱말 하나를 key 로(색칠 여부는 배치 규칙이 정한다). 고급·가격 낱말이 있으면 key 로 — 💎 후보.",
+   "1인칭 체험은 '따라 사 봤는데/따라 해 봤는데' 꼴, 효능·질병 말 금지, 권위자 말은 전언으로만, 연예인이 인정 안 한 것은 인정했다고 안 쓴다, CTA 없음."
+  ],
+  "example": "channel/kitchit/하이브리드_성시경/대본.json",
+  "audit": [
+   {"kind": "first_line", "is": "tts"},
+   {"kind": "count", "of": "tts", "min": 5, "max": 7},
+   {"kind": "count", "of": "orig", "min": 2, "max": 4},
+   {"kind": "tts_chars", "min": 6, "max": 30},
+   {"kind": "ending", "which": "first_tts", "pattern": "(다네요|다고|길래|래요|라는데|다는데)\\s*[?？.]*$", "why": "훅 = 전언 의문"},
+   {"kind": "has_line", "of": "tts", "pattern": "(대체|어떻게|뭐길래|어떤|왜).*\\?", "min": 1, "why": "나레 질문 줄"},
+   {"kind": "has_line", "of": "tts", "pattern": "따라 (사|해|끓여|발라|입어|써) 봤", "min": 1, "why": "이음 '따라 ~ 봤는데'"},
+   {"kind": "ending", "which": "last_tts", "pattern": "(난리|필수템|말 다 했죠|사이에서|품절|대세|인기).*$", "why": "끝 = 사회 반응"},
+   {"kind": "cap_chars", "max": 12},
+   {"kind": "est_length", "min": 25, "max": 30}
+  ]
+ }
+}
