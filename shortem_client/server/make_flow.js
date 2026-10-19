@@ -3,8 +3,8 @@
 //   하이쿠도 따라오게: 응답마다 need 하나와 그 need 에 맞는 도구 호출 한 줄(next)을 준다.
 import fs from 'node:fs';
 import path from 'node:path';
-import { startRun, waitRun, getRun, activeRuns, pending, SID_RE } from './engine_bridge.js';
-import { homeDir, writeFileIn } from './paths.js';
+import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir } from './engine_bridge.js';
+import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
@@ -37,9 +37,16 @@ export function shapeSession(S) {
       hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
   }
   if ((t.state || '') === 'final_review' || S.state === 'final_review') {
-    const files = S.files || [];
-    const fin = files.find(f => f.name === 'final.mp4');
-    return { ...base, need: 'done', video: fin && fin.path, files: files.map(f => f.name), hints: ['완성본 경로를 고객에게 알려 주세요'] };
+    // 완성본 = 엔진 소재 폴더(창고/calcopy/topics/<id>/final.mp4) → 고객이 보는 작업 폴더(바탕화면 숏템작업)에 한 벌 복사
+    const src = S.topic_id != null ? path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), 'final.mp4') : null;
+    let video = null;
+    if (src && fs.existsSync(src)) {
+      const name = `${String((t.name || 'shortem')).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${S.sid}.mp4`;
+      video = path.join(ensureDir(workDir(), '완성본'), name);
+      if (!fs.existsSync(video)) fs.copyFileSync(src, video);
+    }
+    if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
+    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)'] };
   }
   return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
 }

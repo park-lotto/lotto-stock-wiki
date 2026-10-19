@@ -45,14 +45,19 @@ test('잘못된 id·배열 답·경로 탈출 그림은 거절', () => {
   assert.match(c[0].text, /그림을 읽지 못함/);
 });
 
-test('세션 → need: 후보·사인·완성', () => {
+test('세션 → need: 후보·사인·완성', async () => {
   const c = shapeSession({ sid: 'abcdef012345', state: 'candidates', candidates: [{ n: 1, title: '주걱', total: 46, line: 'x', scores: {} }] });
   assert.equal(c.need, 'choose');
   assert.match(c.next, /step="choose"/);
   assert.equal(shapeSession({ sid: 'abcdef012345', state: 'candidates', candidates: [] }).need, 'retry');
   assert.equal(shapeSession({ sid: 'abcdef012345', state: 'working', topic: { state: 'plan_review' }, files: [{ name: '계획.md' }] }).need, 'approve');
-  const done = shapeSession({ sid: 'abcdef012345', state: 'final_review', files: [{ name: 'final.mp4', path: 'C:/x/final.mp4' }] });
+  const { dataDir } = await import('../server/engine_bridge.js');
+  const tdir = path.join(dataDir(), 'calcopy', 'topics', '7');
+  fs.mkdirSync(tdir, { recursive: true });
+  fs.writeFileSync(path.join(tdir, 'final.mp4'), 'x');
+  const done = shapeSession({ sid: 'abcdef012345', state: 'final_review', topic_id: 7, topic: { name: '코팩 / 피지' } });
   assert.equal(done.need, 'done');
-  assert.equal(done.video, 'C:/x/final.mp4');
+  assert.ok(done.video.endsWith('코팩_피지_abcdef012345.mp4') && fs.existsSync(done.video));   // 작업 폴더 완성본/ 에 복사
+  assert.ok(shapeSession({ sid: 'abcdef012345', state: 'final_review', topic_id: 8 }).fail);      // 파일 없으면 실패로
   assert.ok(shapeSession({ error: '거절', code: 403 }).fail);
 });

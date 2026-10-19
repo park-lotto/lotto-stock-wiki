@@ -23,7 +23,7 @@ function pythonExe() {
 }
 export const packRoot = () => path.resolve(process.env.SHORTEM_PACK_ROOT || path.join(toolsDir(), '..', 'packs'));
 const aiRoot = () => ensureDir(homeDir(), 'ai');
-const dataDir = () => ensureDir(homeDir(), '창고');
+export const dataDir = () => ensureDir(homeDir(), '창고');
 
 function engineEnv(queue, packFile, extraEnv) {
   const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
