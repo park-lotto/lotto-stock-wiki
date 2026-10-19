@@ -3876,7 +3876,16 @@ def _line_sfx_len(path):
         return 0.0
 
 
-def sfx_events_for(timeline, sfx_paths):
+def _sfx_vol(sfx):
+    """칸 효과음 한 발의 음량 배수(3단계 효과음 줄 −/+, 0.0~2.0). 없거나 이상하면 1.0."""
+    try:
+        v = float((sfx or {}).get("vol", 1.0))
+    except (TypeError, ValueError):
+        return 1.0
+    return min(2.0, max(0.0, v))
+
+
+def sfx_events_for(timeline, sfx_paths, with_ref=False):
     """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
 
     비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다(별도 계산 금지 —
@@ -3902,7 +3911,7 @@ def sfx_events_for(timeline, sfx_paths):
                 if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
         manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - set(line)
         _pe = {b["beat_idx"]: b["pack_edit"] for b in (timeline or []) if b.get("pack_edit")}   # 2단계 팩 소리 빼기·바꾸기(관제 143 확장)
-        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe)
+        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe, with_ref=with_ref)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
@@ -3919,12 +3928,22 @@ def sfx_events_for(timeline, sfx_paths):
             offset = b["dur"]
         else:
             offset = sum(seg_durs[:-1])
+        try:
+            offset = min(float(b["dur"]), max(0.0, offset + float(sfx.get("shift") or 0.0)))   # 3단계 효과음 줄에서 끌어 옮긴 만큼(관제 203)
+        except (TypeError, ValueError):
+            pass
         if sfx.get("match_type") == "line":
             # 줄 효과음 볼륨 = 분류별 표(storyboard.SFX_LINE_VOL 한 곳) — 렌더·캡컷이 이 보정배를 같은 식으로 쓴다
             from shopping_shorts import storyboard as _sbm
-            events.append((path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat"))))
+            # × 3단계 효과음 줄에서 고른 음량(sfx["vol"], 관제 203 — 없으면 1.0)
+            ev = (path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat")) * _sfx_vol(sfx))
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
         else:
-            events.append((path, b["t0"] + offset))
+            if with_ref or sfx.get("vol") is not None:
+                ev = (path, b["t0"] + offset, _sfx_vol(sfx))
+            else:
+                ev = (path, b["t0"] + offset)
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
     return events
 
 

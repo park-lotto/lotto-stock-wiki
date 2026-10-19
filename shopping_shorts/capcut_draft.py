@@ -529,9 +529,14 @@ def _zoom_pieces(t, dur, spans, base_zoom):
     """[t, t+dur) 를 장면 확대 구간(scene_style.zoom_spans, 초)이 바뀌는 시각에서 나눈다 → [(시작us, 길이us, 배율, 이동)].
     구간 밖은 비트 확대(base_zoom). 구간이 없으면 통째로 한 조각(종전과 같다)."""
     cuts = {t, t + dur}
+    # ★나누는 자리는 프레임 칸(1/30초)에 맞추고, 조각 끝에서 반 프레임 안이면 나누지 않는다(2026-10-18 고객 제보
+    #   "캡컷에서 튀는 부분", job becdf537ca2e): 장면 경계 초가 컷 경계와 몇 ms 어긋나 0.003~0.016초 조각이 생겼고
+    #   캡컷이 그 한 장을 보여 튀었다. 완성본(scene_style.compose)도 장면을 round(초*30) 프레임으로 자른다.
+    _fr = 1e6 / 30.0
     for sp in spans or []:
         for x in (_us(sp["start"]), _us(sp["end"])):
-            if t < x < t + dur:
+            x = round(round(x / _fr) * _fr)
+            if t + _fr / 2 <= x <= t + dur - _fr / 2:
                 cuts.add(x)
     edges = sorted(cuts)
     out = []

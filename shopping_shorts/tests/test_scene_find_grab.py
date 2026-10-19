@@ -27,3 +27,13 @@ def test_플랫폼_판별():
     assert app._grab_platform_of("https://youtu.be/x") == "youtube"
     assert app._grab_platform_of("https://www.rednote.com/explore/1") == "xiaohongshu"
     assert app._grab_platform_of("https://www.tiktok.com/@a/video/1") == "tiktok"
+
+
+def test_받기_실패는_사유와_함께_남는다(tmp_path):
+    """2026-10-16 라이브 실측: 사이트 📥 로 담은 영상이 받기 실패하면 조용히 사라졌다."""
+    app._note_extra_fail(tmp_path, "https://y/1", {"platform": "youtube"},
+                         app._extra_fail_reason(RuntimeError("ERROR: [youtube] x: This video is unavailable")))
+    import json
+    rows = json.loads((tmp_path / "x_failed.json").read_text("utf-8"))
+    assert rows[-1]["url"] == "https://y/1" and "볼 수 없는 영상" in rows[-1]["reason"]
+    assert "로그인이 만료" in app._extra_fail_reason(RuntimeError("account cookies are no longer valid"))

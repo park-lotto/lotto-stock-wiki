@@ -77,9 +77,9 @@ note: 무엇이 모자란지 한 구절.
 
 P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집자**다. 장면이 먼저고, 문장은 장면에서 나온다.
 [재료 종류] %s (판: %s)
-[장면 목록 — 조각 번호(길이)·쓰임]
+[장면 목록 — 묶음별 조각 번호(길이): 화면 설명. ★제품이 무엇이고 무엇을 하는지는 이 화면 설명에서만 읽어라]
 %s
-[없는 장면] %s
+[없는 장면 — 재료에 **없다**. 이 내용을 효능·사실로 문장에 쓰지 마라] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
 [🎯 손님이 역할을 짐작해 담은 조각 — 역할 이름은 **손님 짐작**이다(문제인지 효과인지 헷갈렸을 수 있다). 조각 내용을 보고 이 스타일 칸 중 가장 맞는 칸의 맨 앞에 넣어라. 훅으로 담은 조각은 반드시 첫 칸. CTA로 담은 조각은 CTA 칸이 있을 때만 그 칸에, 없으면 넣지 마라(칸을 새로 만들지 마라). 맞는 칸이 정말 없으면 넣지 않아도 된다 — 손님 화면에 따로 보여 준다. 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 
@@ -94,6 +94,7 @@ P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집
   화면에 보이는 장면을 살려 말맛 있게(구어·리듬·감탄·과장 허용). 장면 설명문 금지.
   그 칸이 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)를 하는 칸이면 그 이야기를 하되, 깔리는 조각은 그 이야기에 어울리는 결과 장면으로.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
+  ★댓글 유도(「댓글에 OO 남기면」)는 칸이 하는 일이 댓글 유도인 칸에서만, 한 편에 한 번만 써라.
 - need: 그 칸이 하는 일.
 - weak: 딱 맞는 장면이 없어 가까운 장면으로 대신했으면 그 이유와 보충 방법 한 줄, 맞으면 빈 문자열.
 first_line_style: 고른 첫 줄 틀(빈칸 채운 것).
@@ -103,9 +104,9 @@ first_line_style: 고른 첫 줄 틀(빈칸 채운 것).
 P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집자**다. 장면이 먼저고, 문장은 장면에서 나온다.
 이번엔 정해진 스타일에 갇히지 말고 **이 재료로 가장 재밌는 이야기**를 짜라. 아래 [참고 스타일]은 흐름 참고만, [말맛 재료]의 결·어미·리듬을 살려라.
 [재료 종류] %s
-[장면 목록 — 조각 번호(길이)·쓰임]
+[장면 목록 — 묶음별 조각 번호(길이): 화면 설명. ★제품이 무엇이고 무엇을 하는지는 이 화면 설명에서만 읽어라]
 %s
-[없는 장면] %s
+[없는 장면 — 재료에 **없다**. 이 내용을 효능·사실로 문장에 쓰지 마라] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
 [🎯 손님이 역할을 짐작해 담은 조각 — 역할 이름은 **손님 짐작**이다(문제인지 효과인지 헷갈렸을 수 있다). 조각 내용을 보고 이 스타일 칸 중 가장 맞는 칸의 맨 앞에 넣어라. 훅으로 담은 조각은 반드시 첫 칸. CTA로 담은 조각은 CTA 칸이 있을 때만 그 칸에, 없으면 넣지 마라(칸을 새로 만들지 마라). 맞는 칸이 정말 없으면 넣지 않아도 된다 — 손님 화면에 따로 보여 준다. 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 [참고 스타일] %s — 칸 흐름: %s
@@ -121,14 +122,18 @@ P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편�
 - ids: 그 칸 조각 번호 1~3개(목록에 있는 것만, 한 조각은 한 칸에만). 조각 길이 합 × 1.2 ≥ 문장 읽는 시간(글자 수 ÷ 7초).
 - line: 한 문장(12~45자). 화면에 보이는 장면을 구체 동작·질감으로, 과장·감탄·반전 허용. 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)도 허용.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
+  ★댓글 유도(「댓글에 OO 남기면」)는 마지막 마무리 칸에서만, 한 편에 한 번만 써라.
 - weak: 딱 맞는 장면이 없어 대신했으면 이유와 보충 방법 한 줄, 맞으면 빈 문자열.
 first_line_style: 이 대본의 성격 한 구절.
 출력 JSON만.
 """
 
 P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리보드 칸마다 [칸이 하는 일]·[문장]·[깔린 조각의 화면 설명]이다.
-★문장이 화면 설명에 없는 **제품 사실**(가격·숫자·용량·제품 기능)을 지어낸 칸만 찾아, 같은 말투로 그 사실을 빼고 다시 써라.
-가족 반응·전문가 출처·댓글 유도·과장·감탄은 스타일이니 **고치지 마라**. 칸이 하는 일도 바꾸지 마라.
+★문장이 화면 설명에 없는 **제품 사실**(구체 금액·숫자·용량·제품 기능)을 지어낸 칸만 찾아, 같은 말투로 그 사실을 빼고 다시 써라.
+가족 반응·전문가 출처·댓글 유도·과장(「떼돈」「품절 대란」「난리 난」「미쳤다」)·감탄은 스타일이니 **고치지 마라**.
+고칠 게 없는 칸은 fix 에 넣지 마라(같은 문장을 다시 적지 마라).
+숫자 없는 가격 평가(「이 값에」「이 가격에」「가격 부담 없이」「가성비」)는 사실이 아니라 평가다 — **고치지 마라**.
+고칠 때도 칸이 하는 일은 남겨라 — 가격 칸에서 금액(「몇천 원」「만 원대」)을 뺄 때는 「이 가격에」처럼 가격 이야기는 남긴다.
 코드가 이미 걸러 낸 칸: %s
 출력 JSON만: {"fix":[{"i":칸번호(0부터),"why":"...","line":"..."}]}
 
@@ -1092,8 +1097,10 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     fixed = []
     for fx in r4.get("fix") or []:
         i = fx.get("i")
-        if isinstance(i, int) and 0 <= i < len(slots) and (fx.get("line") or "").strip():
-            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fx["line"].strip(), fx.get("why") or ""
+        # 검수자가 입력 칸 머리표("[price — …] 문장:")까지 베껴 돌려줄 때가 있다 — 문장만 남긴다(관제 216 시험 실측)
+        fl = re.sub(r"^\s*(칸\s*\d+\s*)?\[[^\]]*\]\s*(문장\s*:\s*)?", "", str(fx.get("line") or "")).strip()
+        if isinstance(i, int) and 0 <= i < len(slots) and fl and not _same_line(fl, slots[i].get("line")):
+            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fl, fx.get("why") or ""
             fixed.append(i)
     apply_signals(slots, key, 0, yt)      # 생성·사실 검수 뒤 코드가 신호어를 확인·보정(사실 검수가 줄을 고쳐도 신호어가 남게)
     check = slot_checks(slots, segs)
@@ -1174,8 +1181,11 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
         star_s, role_s = drop_seed_picks(star_s, role_s, ex)
     segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=bool(use_seed))
     tag_of = r1.get("tag_of") or {}
-    groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
-                                                              for c in g["ids"] if c in segs)) for g in r1["groups"]
+    # ★조각마다 화면 설명을 싣는다(관제 216) — 묶음 이름만 주면 작가가 화면을 못 보고 제품을 짐작해 쓴다
+    #   (실측 7f69cb45810b: 롤 메모 테이프인데 '필기 시연' 묶음 이름만 보고 지우개·잉크 대본이 나왔다)
+    groups_txt = "\n".join("  %s:\n%s" % (g["name"], "\n".join("    - %s(%.1f초%s): %s" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "",
+                                                                                     texts.get(c, "").strip()[:110])
+                                                           for c in g["ids"] if c in segs)) for g in r1["groups"]
                             if any(c in segs for c in g["ids"]))   # 씨앗 조각은 후보로 안 싣는다 — ★씨앗만 든 묶음은 이름도 안 싣는다(실으면 모델이 묶음 이름을 장면 번호 자리에 적는다, 관제 147)
     star = [x for x in star_s.split(",") if x]
     roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
@@ -1317,6 +1327,86 @@ ARC_RANK = [(("hook", "title"), 0), (("bait", "notice", "situation", "ask", "con
             (("price", "deal", "cta", "closing", "land", "outro", "end"), 8)]
 ARC_KO = {"hook": "훅", "bait": "미끼(궁금증)", "pain": "불편", "reveal": "정체 공개", "feature": "특징·쓰는 법", "escalation": "고조", "twist": "반전",
           "benefit": "이점·반응", "proof": "반응·증거", "how": "사용법", "result": "결과", "closing": "마무리"}
+
+
+# ── 칸 이름 한국어(관제 215, 2026-10-15) — 고객 화면에 보이는 칸 이름의 주인은 여기 한 곳.
+#   화면(produce.html sbKo)은 /api/produce/storyboard 의 role_ko 를 받아 쓴다. 손으로 두 벌 적다 영어 노출(1353판 중 626판).
+ROLE_KO = {
+    "hook": "훅",
+    "title": "제목",
+    "bait": "미끼",
+    "fame": "유명세",
+    "reveal": "정체 공개",
+    "limit": "한계",
+    "solve": "해결",
+    "more": "더",
+    "twist": "반전",
+    "land": "마무리",
+    "price": "가격",
+    "power": "성능",
+    "easy": "쉬움",
+    "extra": "덤",
+    "deal": "딜",
+    "howto": "사용법",
+    "vs": "비교",
+    "proof": "증거",
+    "react": "반응",
+    "what": "정체",
+    "good": "좋은 점",
+    "pain": "불편",
+    "how": "어떻게",
+    "story": "탄생 이야기",
+    "benefit": "효능",
+    "escalate": "고조",
+    "escalation": "고조",
+    "method": "방법",
+    "steps": "단계",
+    "texture": "식감",
+    "usage": "활용",
+    "witness": "증인",
+    "cta": "마무리",
+    "situation": "상황",
+    "notice": "눈치챔",
+    "ask": "물어봄",
+    "result": "결과",
+    "regret": "후회",
+    "origin": "본래 용도",
+    "cases": "엉뚱한 쓰임",
+    "mistake": "실수",
+    "authority": "권위",
+    "reason": "이유",
+    "problem": "문제",
+    "mechanism": "원리",
+    "ease": "쉬움",
+    "context": "맥락",
+    "spec": "스펙",
+    "bonus": "덤",
+    "source": "출처",
+    "fit": "맞는 사람",
+    "control": "조절",
+    "free": "새 칸",
+    "feature": "특징",
+    "closing": "마무리",
+    "targets": "쓰는 곳",
+    "spread": "입소문",
+    "scale": "화제성",
+    "action": "동작",
+    "before": "쓰기 전",
+    "contrast": "비교",
+    "effect": "효과",
+    "end": "마무리",
+    "identity": "정체 공개",
+    "intro": "소개",
+    "outro": "마무리",
+    "shock": "충격",
+    "use": "쓰는 법",
+}
+
+
+def role_ko(slot):
+    """칸 이름(escalation_2 처럼 번호가 붙어도) → 한국어. 모르는 이름은 None(호출부가 경보)."""
+    t = str(slot or "").lower()
+    return ROLE_KO.get(t) or ROLE_KO.get(t.split("_")[0])
 
 
 def arc_rank(slot):

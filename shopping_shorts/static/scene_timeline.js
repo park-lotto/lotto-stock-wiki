@@ -36,6 +36,30 @@
     try { console.warn('[timeline]', fallback, '|', why || '(서버 사유 없음)'); } catch (_) {}
   }
 
+  // ★위 컷 = 주황 박스(관제 204 9번, 2026-10-15 사장님 "고무줄 말고 박스 크기 줄이듯") — 새 작업(hand_cut)만.
+  //   양 끝 = 그 카드 길이만, 가운데 밀기 = 원본에서 쓰는 구간 옮기기. 구간은 replaceRoll 한 길로 바꾼다(0순위-B).
+  function _box(i) {
+    return !!(DATA && DATA.hand_cut) && !(typeof CUTS !== 'undefined' && CUTS[i]);
+  }
+  // 칸 i 의 컷 c 를 원본 [a,b] 구간으로 바꾸고, 정해 둔 길이(✋)는 새 조각으로 옮긴다.
+  function _boxRange(i, c, a, b, len) {
+    const srcDur = (DATA.src_duration || {})[c.video_id] || b;
+    const w = b - a;
+    if (a < 0) { a = 0; b = w; }
+    if (b > srcDur) { b = srcDur; a = Math.max(0, b - w); }
+    a = Math.round(a * 100) / 100; b = Math.round(b * 100) / 100;
+    const old = getFix(i, c.seg_id);
+    delete FIXLEN[fixKey(i, c.seg_id)];                  // 옛 조각 길이는 걷는다(찌꺼기 금지)
+    replaceRoll(c.seg_id, c.video_id, { s: a, e: b });
+    const id = _extraIdOf(c.video_id, a, b);
+    const L = len != null ? len : old;
+    if (id) (g.HAND_LAST = g.HAND_LAST || {})[i] = id;
+    if (L > 0 && id) setFix(i, id, L);
+  }
+  function _extraIdOf(vid, a, b) {
+    return (typeof _extraId === 'function') ? _extraId(vid, a, b) : null;
+  }
+
   function _dur(i) {
     return Math.max(0.2, beatDur(i) || 0.2);
   }
@@ -60,16 +84,17 @@
       //   딱 맞는 칸(3.6/3.6)에도 떠서 틀린 경고였다. 모자람은 머리글 문구 한 곳에서만 알린다.
       const stretchPx = 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
-      return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}" data-k="${k}" data-seg="${c.seg_id}"
+      return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}${_box(i) ? ' obox' : ''}" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlSeekPlay(${i}, event)">
         <img class="tl-thumb" src="${SL.thumb(c.seg_id)}" loading="lazy">
-        <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
-          ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
+        <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}${(_box(i) && DATA.box_frames_fixed) ? ' ask' : ''}"
+          ${(_box(i) && DATA.box_frames_fixed) ? `title="누르면 초를 직접 넣어 길이를 정합니다" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}', true)"`
+            : getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
           >${(getFix(i, c.seg_id) && !CUTS[i] && !sceneRuleOn(i)) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
-        ${CUTS[i] ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
+        ${(CUTS[i] || _box(i)) ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
         <span class="tl-edge" data-k="${k}" title="${CUTS[i] ? '끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다' : '끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다'}"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
@@ -136,9 +161,13 @@
       : '';    // 옛 작업은 기록이 없다 — 아무것도 안 단다(모르는 걸 아는 척하지 않는다)
     // 🔊 이 칸에서 실제로 울리는 효과음(관제 203) — 서버가 렌더와 같은 함수로 잰 시각(SFXP.beats[].sounds). 그리기만 한다
     const _sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(_b.beat_idx != null ? _b.beat_idx : i));
-    const sfxMarks = ((_sb && _sb.sounds) || []).map(s => `<span class="tl-sfxmark ${s.kind === 'line' ? 'line' : ''}"
-        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${s.kind === 'line' ? '줄 효과음' : '효과음팩'} · ${String(s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초">🔊</span>`).join('');
-    const audHtml = sfxMarks + `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
+    // 효과음 줄(10-15 사장님 "음성이 아니라 효과음으로, 들어보고 음량·삭제 간편하게") — 칩을 누르면 tlSfxOpen 작은 창
+    const _bk = _b.beat_idx != null ? _b.beat_idx : i;
+    const sfxChips = ((_sb && _sb.sounds) || []).map((s, k) => `<span class="tl-sfxmark ${s.kind === 'line' ? 'line' : ''}${(+s.vol === 0) ? ' mute' : ''}"
+        style="left:${(Math.max(0, +s.t) * pps).toFixed(1)}px" title="${String(s.label || s.name).replace(/[<>"&]/g, '')} · ${(+s.t).toFixed(2)}초 — 눌러서 듣기·바꾸기·음량·빼기 / 좌우로 끌어 자리 옮기기"
+        data-bi="${_bk}" data-k="${k}" data-pps="${pps.toFixed(3)}" onpointerdown="tlSfxDown(event,this)" onclick="event.stopPropagation()">🔊 ${String(s.label || s.name).replace(/[<>"&]/g, '').slice(0, 6)}${(+s.vol !== 1) ? ` ${Math.round(+s.vol * 100)}%` : ''}</span>`).join('');
+    const sfxLane = `<div class="tl-lane tl-sfxs"><span class="tl-name">효과음</span>${sfxChips || '<span class="tl-loading">없음</span>'}</div>`;
+    const audHtml = `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
         <span class="tl-aud-l">${srcBadge}${ttsReal ? ` beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
                                          : ' 🔇 음성 없음 — 추정 길이'}</span></div>`;
 
@@ -151,17 +180,31 @@
         title="${TL_EDIT[i] ? '경계 편집 끝내기' : '자막 구절 경계 고치기 — 어절 사이를 눌러 끊고 합칩니다 (초는 실제 발화 시각으로 자동 재계산)'}"
         onclick="event.stopPropagation();tlEditToggle(${i})">${TL_EDIT[i] ? '✔ 끝내기' : '✂ 경계'}</button>`;
 
-    return `<div class="tlwrap" data-i="${i}" data-pps="${pps.toFixed(3)}"
+    return `<div class="tlwrap${_tlSndFolded() ? ' sndfold' : ''}" data-i="${i}" data-pps="${pps.toFixed(3)}"
                  onclick="event.stopPropagation()">
       <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${emptyHtml}${stretchBadge}</div>
       ${capLane}
-      <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
+      <div class="tl-lane tl-auds"><button type="button" class="tl-sndfold" title="효과음·배경음 줄 접기/펼치기"
+        onclick="event.stopPropagation();tlSndFold()">음성 ${_tlSndFolded() ? '▸' : '▾'}</button>${audHtml}</div>
+      ${sfxLane}
+      <div class="tl-lane tl-bgms"><span class="tl-name">배경음</span><div class="tl-bgmbar" data-i="${i}" style="left:0;width:${(dur * pps).toFixed(1)}px"
+        onclick="event.stopPropagation();tlBgmPlay(${i},this)">${tlBgmLabel()}</div></div>
       ${editBtn}
-      <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span></div>
+      <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span>${(_box(i) && DATA.box_frames_fixed && clips.length) ? `<button type="button" class="tl-cutat" title="빨간 막대 자리에서 이 카드를 두 장으로 자릅니다" onclick="event.stopPropagation();tlSplitAt(${i})">✂ 자르기</button>` : ''}</div>
     </div>`;
   }
 
+  // 효과음·배경음 줄 접기(10-15 사장님) — 보는 사람 취향이라 브라우저에만 기억한다
+  function _tlSndFolded(){ try { return localStorage.getItem('tl_snd_fold') === '1'; } catch (e) { return false; } }
+  window.tlSndFold = function(){
+    const on = !_tlSndFolded();
+    try { localStorage.setItem('tl_snd_fold', on ? '1' : '0'); } catch (e) {}
+    document.querySelectorAll('.tlwrap').forEach(w => w.classList.toggle('sndfold', on));
+    document.querySelectorAll('.tl-sndfold').forEach(b => { b.textContent = '음성 ' + (on ? '▸' : '▾'); });
+  };
+
   const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
+  g.TL_POS = TL_POS;               // 3단계 「✂ 자르기」(scene_lab tlSplitAt)가 읽는다
 
   // ── 스페이스 = 선택 칸 재생/일시정지(2026-08-29 사장님 — 재생선을 옮겨놓고 스페이스로
   //    그 지점부터 듣고 멈추며 자막과 비교하는 흐름). 재생·정지·이어서는 전부 기존 경로
@@ -212,7 +255,9 @@
     // ★박스 = 그 조각이 쓰인 자리(2026-08-29 사장님 "그 영상이 담긴 부분이 오렌지박스로
     //   되어서 해당 영상을 필름으로 펼치고") — 그 영상 필름을 바로 펼치고, 잠금 박스를
     //   조각의 원본 위치에 놓는다. 카드의 🎞펼치기는 이 버튼이 겸한다(폭도 확보).
-    REPLACE = { i, k, len: Math.round(c.dur * 100) / 100, oldSeg: c.seg_id,
+    // ★박스 길이 = 실제로 읽는 원본 구간(2026-10-15 사장님 "아래 박스엔 바나나가 없는데 위엔 나온다") —
+    //   빠르게/느리게 맞춘 컷은 화면 길이(dur)와 원본 길이(src_dur)가 달라 dur 로 그리면 쓰는 끝이 박스 밖에 숨는다.
+    REPLACE = { i, k, len: Math.round((+c.src_dur || c.dur) * 100) / 100, oldSeg: c.seg_id,
                 vid: c.video_id, from: Math.round(c.start * 100) / 100 };
     render();
     try {
@@ -321,6 +366,55 @@
     const c = clips[k];
     if (c) setFix(i, c.seg_id, 0);         // setFix가 render()까지 부른다
   };
+  // 주황 박스 가운데를 잡고 밀기 = 원본에서 쓰는 구간 옮기기(길이 그대로). 4px 안 움직이면 그냥 누름(재생).
+  function wireBox(host, i, pps) {
+    if (!_box(i)) return;
+    host.querySelectorAll('.tl-cut.obox').forEach(cut => {
+      cut.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('.tl-edge, button, .tl-len')) return;
+        e.preventDefault(); e.stopPropagation();               // 그림 기본 끌기·칸 고르기(다시 그리기)가 끌기를 끊지 않게
+        const k = +cut.dataset.k, x0 = e.clientX;
+        let moved = false;
+        const fr = () => cut.querySelector('.tl-frames');
+        const move = me => {
+          const dx = me.clientX - x0;
+          if (!moved && Math.abs(dx) < 4) return;
+          if (!moved) { moved = true; cut.classList.add('sliding'); try { cut.setPointerCapture(me.pointerId); } catch (_) {} }
+          const f = fr(); if (f) f.style.transform = `translateX(${-dx}px)`;   // 그림이 반대로 흘러 '창이 옮겨 가는' 느낌
+          const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i), c = clips[k];
+          const badge = cut.querySelector('.tl-len');
+          if (c && badge) {
+            const ratio = (+c.src_dur || c.dur) / c.dur, st = Math.max(0, +c.start + dx / pps * ratio);
+            badge.textContent = `${st.toFixed(1)}초부터`;
+          }
+        };
+        const up = ue => {
+          cut.removeEventListener('pointermove', move);
+          cut.removeEventListener('pointerup', up);
+          cut.removeEventListener('pointercancel', up);
+          if (!moved) return;                                  // 그냥 누름 → onclick(재생)이 받는다
+          cut.classList.remove('sliding');
+          cut.dataset.slid = '1';                              // 뒤따르는 click(재생) 한 번 막기
+          const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i), c = clips[k];
+          const dx = ue.clientX - x0;
+          if (!c) { g.tlMount(); return; }
+          const used = +c.src_dur || c.dur, ds = dx / pps * (used / c.dur);
+          if (Math.abs(ds) < 0.05) { g.tlMount(); return; }
+          const seg = DATA.segments[c.seg_id] || {};
+          // 조각 전체(앞뒤 여유 포함)를 같이 옮긴다 — 쓰는 창과 원본 위치 관계를 그대로 둔다
+          const a0 = isFinite(+seg.start) ? +seg.start : +c.start, b0 = isFinite(+seg.end) ? +seg.end : +c.start + used;
+          _boxRange(i, c, a0 + ds, b0 + ds, null);
+        };
+        cut.addEventListener('pointermove', move);
+        cut.addEventListener('pointerup', up);
+        cut.addEventListener('pointercancel', up);
+      });
+      cut.addEventListener('dragstart', ev => ev.preventDefault());
+      cut.addEventListener('click', ev => {
+        if (cut.dataset.slid) { delete cut.dataset.slid; ev.stopImmediatePropagation(); ev.preventDefault(); }
+      }, true);
+    });
+  }
   function wireEdges(host, i, pps) {
     host.querySelectorAll('.tl-edge').forEach(ed => {
       ed.addEventListener('pointerdown', e => {
@@ -332,6 +426,10 @@
         const badge = cut.querySelector('.tl-len');
         cut.classList.add('sizing');
         try { ed.setPointerCapture(e.pointerId); } catch (_) {}
+        // ★박스만 움직이고 그림은 제자리(관제 204, 2026-10-16 사장님 "아래 필름 박스처럼 — 장면이 따라오지 않게").
+        //   끄는 동안 필름 그림·대표 썸네일의 폭을 잡을 때 폭(w0)으로 고정하고, 앞 손잡이면 오른쪽에 붙인다. 관리자만.
+        const pin = (_box(i) && DATA.box_frames_fixed) ? [...cut.querySelectorAll('.tl-frames, .tl-thumb')] : [];
+        pin.forEach(el => { el.style.position = 'absolute'; el.style.top = '0'; el.style.width = cut.clientWidth + 'px'; el.style.left = '0'; el.style.right = 'auto'; });
         // ★끄는 도중에도 한계에서 딱 멈춘다(2026-09-14 사장님 "마지막 컷 잡고 뒤로 최대한 해도 끝에
         //   딱 맞게 멈추게"). 한계 = 놓았을 때 dragCut이 허락하는 길이와 같다(두 벌 규칙 금지 — 같은 식).
         let maxSec = Infinity, minSec = 0.2;
@@ -345,6 +443,7 @@
           const w = Math.min(maxSec * pps - 2, Math.max(minSec * pps - 2, w0 + dx));   // 폭은 dur*pps-2로 그린다
           cut.style.width = w + 'px';                       // 미리보기 — 확정은 놓을 때
           if (fromLeft) cut.style.left = (left0 - (w - w0)) + 'px';
+          if (fromLeft) pin.forEach(el => { el.style.left = (w - w0) + 'px'; });   // 박스 왼끝이 움직여도 그림은 화면에 그대로
           if (badge) badge.textContent = (CUTS[i] ? '' : '✋') + ((w + 2) / pps).toFixed(2) + 's';
           me.stopPropagation();
         };
@@ -358,6 +457,13 @@
           const c = clips[k];
           // ★구절 맞춤을 끈 칸 = 양옆 두 컷만(scene_play.js CUTS 규칙). ✋는 안 쓴다.
           if (c && CUTS[i]) { if (Math.abs(sec - c.dur) >= 0.02) dragCut(i, k, sec); else g.tlMount(); }
+          else if (c && fromLeft && _box(i)) {
+            // 앞 손잡이 = 원본의 앞을 자르거나 늘린다(끝은 그대로). 화면 길이도 그만큼.
+            if (Math.abs(sec - c.dur) < 0.05) { g.tlMount(); ue.stopPropagation(); return; }
+            const used = +c.src_dur || c.dur, ratio = used / c.dur;
+            const b = +c.start + used, a = b - sec * ratio;
+            _boxRange(i, c, a, b, +(sec * ratio).toFixed(2));   // FIXLEN = 읽는 원본 길이(화면 초 아님 — Fable 점검 10-15)
+          }
           else if (c && Math.abs(sec - c.dur) >= 0.05) {
             // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
             //   (2026-09-14 사장님 "줄여지는게 있고 안될때도 있고"). 끈 컷 말고 전부 ✋면
@@ -367,7 +473,9 @@
               const nb = clips[k + 1] || clips[k - 1];
               if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
             }
-            setFix(i, c.seg_id, sec);
+            if (typeof g.handSnap === 'function') g.handSnap(i);
+            (g.HAND_LAST = g.HAND_LAST || {})[i] = c.seg_id;
+            setFix(i, c.seg_id, sec);                       // 새 작업은 칸 전체가 한 속도로 맞춘다(scenesV2Alloc 'all')
           }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
@@ -492,6 +600,7 @@
     const capEls = [...host.querySelectorAll('.tl-cap')];
     const caps = capsOf(i);
     wireEdges(host, i, pps);               // 컷 가장자리 드래그(길이 조절)
+    wireBox(host, i, pps);                 // 주황 박스 가운데 밀기(쓰는 구간 옮기기)
     // ★컷은 늘 필름식(프레임 여러 장)으로 — 한 장짜리 카드 금지(2026-10-14 사장님). 화면에 보일 때 채운다(칸이 많아도 가볍게).
     const _cuts = [...host.querySelectorAll('.tl-cut')];
     const _fill = el => { if (el.classList.contains('open') || el.classList.contains('noframes')) return; el.classList.add('open'); g.tlFillFrames(i, +el.dataset.k, el); };
@@ -599,3 +708,120 @@
     RAFS.push(requestAnimationFrame(tick));
   }
 })(window);
+
+/* 효과음 칩 작은 창 — ▶듣기 · 음량 −/+ · 빼기. 저장은 /sfx_hit(서버 주인), 다시 그리기는 sfxpRefresh. */
+(function () {
+  let pop = null, au = null;
+  function close() { if (pop) { pop.remove(); pop = null; } if (au) { au.pause(); au = null; } }
+  document.addEventListener('click', e => { if (pop && !pop.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (pop && e.key === 'Escape') close(); });   // 10-16 사장님 "끄거나 접는 게 없어"
+  window.tlSfxOpen = function (bi, k, el) {
+    close();
+    const sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(bi));
+    const s = sb && sb.sounds && sb.sounds[k]; if (!s) return;
+    let vol = +s.vol;
+    pop = document.createElement('div'); pop.className = 'tl-sfxpop';
+    const r = el.getBoundingClientRect();
+    pop.style.left = Math.max(8, Math.min(window.innerWidth - 230, r.left)) + 'px';
+    pop.style.top = (r.bottom + 4) + 'px';
+    const paint = () => { pop.querySelector('.v').textContent = Math.round(vol * 100) + '%'; };
+    pop.innerHTML = `<b>${String(s.label || s.name).replace(/[<>"&]/g, '')}</b> <span class="t">${(+s.t).toFixed(1)}초</span><button class="x" title="닫기">✕</button>
+      <div class="row"><button class="play">▶ 듣기</button><button class="dn">−</button><span class="v"></span><button class="up">+</button><button class="del">🗑 빼기</button></div>
+      <div class="row"><select class="swap" title="고르면 바로 바뀝니다"></select></div>`;
+    document.body.appendChild(pop); paint();
+    pop.addEventListener('click', e => e.stopPropagation());
+    const job = new URLSearchParams(location.search).get('job') || window.JOB_ID;
+    const send = async (op) => {
+      const body = { beat_idx: bi, kind: s.kind, op, vol, slot: s.slot, n: s.n };
+      const res = await fetch(`/api/produce/mix/${job}/sfx_hit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await res.json().catch(() => ({}));
+      if (!d.ok) { alertSay(d.error || '저장 못 했어요'); return false; }
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+      return true;
+    };
+    function alertSay(m) { const t = pop && pop.querySelector('.t'); if (t) t.textContent = '⚠ ' + m; }
+    let timer = null;
+    const step = d => { vol = Math.round(Math.min(2, Math.max(0, vol + d)) * 10) / 10; paint(); if (au) au.volume = Math.min(1, vol);
+      clearTimeout(timer); timer = setTimeout(() => send('vol'), 500); };
+    pop.querySelector('.x').onclick = close;
+    pop.querySelector('.dn').onclick = () => step(-0.1);
+    pop.querySelector('.up').onclick = () => step(0.1);
+    pop.querySelector('.play').onclick = () => { if (!s.url) return alertSay('들어볼 파일이 없어요');
+      if (au) au.pause(); au = new Audio(s.url); au.volume = Math.min(1, vol); au.play().catch(() => alertSay('재생 못 했어요')); };
+    pop.querySelector('.del').onclick = async () => { if (await send('off')) close(); };
+    // 바꾸기 — 팩 소리는 팩 안 다른 소리(pack_edit.swap), 칸 효과음은 효과음 서랍 소리(/sfx asset_id, 종전 길)
+    const sel = pop.querySelector('.swap'), esc2 = x => String(x).replace(/[<>"&]/g, '');
+    if (s.kind === 'pack') {
+      sel.innerHTML += (window.SFX_PACK_SLOTS || []).map(o => `<option value="${o.slot}" ${o.slot === s.name ? 'selected' : ''}>${esc2(o.label)}${o.slot === s.slot && o.slot !== s.name ? ' (원래 소리)' : ''}</option>`).join('');
+    } else if (typeof window.sfxBankList === 'function') {
+      window.sfxBankList().then(list => {
+        const cats = {}; (list || []).forEach(a => { (cats[a.cat || '기타'] = cats[a.cat || '기타'] || []).push(a); });
+        sel.innerHTML += Object.keys(cats).map(c => `<optgroup label="${esc2(c)}">${cats[c].map(a => `<option value="${a.id}" ${String(a.id) === String(s.asset_id) ? 'selected' : ''}>${esc2(a.title)}</option>`).join('')}</optgroup>`).join('');
+      });
+    }
+    sel.onchange = async () => {
+      const v = sel.value; if (!v || v === String(s.kind === 'pack' ? s.name : s.asset_id)) return;
+      if (s.kind === 'pack') { if (await sendSwap(v)) close(); return; }
+      const res = await fetch(`/api/produce/mix/${job}/sfx`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ beat_idx: bi, asset_id: +v }) });
+      const d = await res.json().catch(() => ({}));
+      if (!d.ok) return alertSay(d.error || '못 바꿨어요');
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+      close();
+    };
+    async function sendSwap(to) {
+      const res = await fetch(`/api/produce/mix/${job}/sfx_hit`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beat_idx: bi, kind: 'pack', op: 'swap', to, slot: s.slot, n: s.n }) });
+      const d = await res.json().catch(() => ({}));
+      if (!d.ok) { alertSay(d.error || '못 바꿨어요'); return false; }
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+      return true;
+    }
+  };
+  // 칩 끌기 = 자리 옮기기(3px 넘게 움직이면 끌기, 아니면 눌러서 작은 창). 놓으면 옮긴 총량(dt)을 서버에 — 시각 판단은 서버 sfx_events_for
+  window.tlSfxDown = function (e, el) {
+    e.stopPropagation();
+    const x0 = e.clientX, left0 = parseFloat(el.style.left) || 0, pps = +el.dataset.pps || 1;
+    const bi = +el.dataset.bi, k = +el.dataset.k;
+    let moved = false;
+    const mv = ev => { const dx = ev.clientX - x0; if (Math.abs(dx) > 3) moved = true; if (moved) { el.style.left = Math.max(0, left0 + dx) + 'px'; el.classList.add('dragging'); } };
+    const up = async ev => {
+      document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up);
+      el.classList.remove('dragging');
+      if (!moved) { window.tlSfxOpen(bi, k, el); return; }
+      const sb = (window.SFX_SOUNDS || []).find(x => String(x.beat_idx) === String(bi));
+      const s = sb && sb.sounds && sb.sounds[k]; if (!s) return;
+      const newT = Math.max(0, left0 + (ev.clientX - x0)) / pps;
+      const dt = Math.round(((+s.dt || 0) + (newT - (+s.t))) * 100) / 100;
+      const job = new URLSearchParams(location.search).get('job') || window.JOB_ID;
+      await fetch(`/api/produce/mix/${job}/sfx_hit`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beat_idx: bi, kind: s.kind, op: 'move', dt, slot: s.slot, n: s.n }) }).catch(() => {});
+      if (typeof window.sfxpRefresh === 'function') window.sfxpRefresh();
+    };
+    document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up);
+  };
+})();
+
+/* 배경음 줄(10-15 사장님 "효과음 아래 배경음 칸, 배치해서 들어볼 수 있게") — 곡·음량·속도는 3단계 배경음 탭 저장값(BGMP) 그대로.
+   누르면 영상 안 이 칸 시작 시각부터 그 곡을 고른 음량·속도로 튼다(렌더는 곡 0초=영상 0초). */
+function tlBgmLabel() {
+  const b = typeof window.bgmInfo === 'function' ? window.bgmInfo() : null;
+  if (!b || !b.current) return '<span class="nm">🎵 배경음 없음 — 오른쪽 배경음 탭에서 고르세요</span>';
+  const t = (b.tracks || []).find(x => x.id === b.current);
+  return `<span class="nm">🎵 ${String(t ? t.title : b.current).replace(/[<>"&]/g, '')} · ${b.volume}%${+b.speed !== 1 ? ' · ' + (+b.speed).toFixed(2) + 'x' : ''}</span><span class="pl">▶ 여기부터 듣기</span>`;
+}
+window.tlBgmRepaint = function () { document.querySelectorAll('.tl-bgmbar').forEach(el => { el.innerHTML = tlBgmLabel(); }); };
+(function () {
+  let au = null, on = null;
+  window.tlBgmPlay = function (i, el) {
+    const b = typeof window.bgmInfo === 'function' ? window.bgmInfo() : null;
+    if (au) { au.pause(); au = null; if (on) on.classList.remove('playing'); if (on === el) { on = null; return; } }
+    if (!b || !b.current) return;
+    let t0 = 0; const td = (DATA.tts_dur || {});
+    for (let k = 0; k < i; k++) t0 += +(td[String(k)] || 0);
+    au = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(b.current));
+    au.playbackRate = +b.speed || 1; au.volume = Math.max(0, Math.min(1, (+b.volume || 0) / 100));
+    au.addEventListener('loadedmetadata', () => { au.currentTime = au.duration ? (t0 * (+b.speed || 1)) % au.duration : 0; au.play().catch(() => {}); }, { once: true });
+    on = el; el.classList.add('playing');
+    setTimeout(() => { if (au && on === el) { au.pause(); au = null; el.classList.remove('playing'); on = null; } }, 6000);
+  };
+})();

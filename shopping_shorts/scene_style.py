@@ -95,7 +95,7 @@ def validate_snapshot(value):
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
     walk({k: v for k, v in value.items() if k != "customFrame"})   # 칼카피 틀 행은 check_row 가 설명서 규칙(schema)으로 따로 검사·재생성한다(틀 여러 장이면 깊이·개수가 이 상한을 넘는다)
-    for name in ("text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
+    for name in ("text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")
     for color in (value.get("colors") or {}).values():
@@ -128,9 +128,13 @@ def validate_snapshot(value):
         for key in ("background","color"):
             if key in caption and (not isinstance(caption[key],str) or len(caption[key])>500):
                 raise ValueError("자막 색상 형식이 올바르지 않습니다")
-    for texts in (value.get("text") or {},value.get("captionTexts") or {}):
+    for texts in (value.get("text") or {},value.get("sceneTexts") or {},value.get("captionTexts") or {}):
         if any(not isinstance(t,str) for t in texts.values()):
             raise ValueError("문구는 텍스트여야 합니다")
+    # 장면별 제목·채널명 글(관제 219, 회원 힘 10-16 "이 장면만 저장해도 전체 영상에 적용") — 키 = 칸:장면번호. 편집기 precision20-ui.js sceneTexts 와 짝
+    for key in (value.get("sceneTexts") or {}):
+        if not re.fullmatch(r"(channel|hook1|hook2|bodyTitle):\d{1,3}", str(key)):
+            raise ValueError("장면별 문구 형식이 올바르지 않습니다")
     for effect in (value.get("effects") or {}).values():
         if not isinstance(effect,dict):
             raise ValueError("효과 형식이 올바르지 않습니다")
@@ -159,7 +163,7 @@ def validate_snapshot(value):
             for mask in effect["masks"]:
                 if not isinstance(mask,dict):
                     raise ValueError("가림막 항목이 올바르지 않습니다")
-                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image") else mask.get("kind")}])
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image","mograph") else mask.get("kind")}])
                 if not base:
                     continue
                 item=base[0]
@@ -167,6 +171,11 @@ def validate_snapshot(value):
                     if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
                         raise ValueError("도형 종류가 올바르지 않습니다")
                     item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("kind")=="mograph":
+                    # 모션그래픽팩(관제 222): 어떤 효과인지(이름)만 받는다 — 모양·시간표의 주인은 static/motion-graphics-pack.js
+                    if not re.fullmatch(r"[a-z0-9_]{1,32}",str(mask.get("mograph") or "")):
+                        raise ValueError("모션그래픽 종류가 올바르지 않습니다")
+                    item.update(kind="mograph",mograph=mask["mograph"])
                 if mask.get("kind")=="image":
                     # 로고(관제 065): 계정 폴더의 PNG만. 파일이 없으면 버린다(없는 그림을 렌더가 기다리지 않게).
                     src=str(mask.get("src") or "")
@@ -270,7 +279,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "customFrame", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "customFrame", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -410,6 +419,155 @@ def attach_scene_words(scenes, timeline):
         span = max(1e-6, float(tail) - float(head))
         a, b = float(scene["start"]), float(scene["end"])
         scene["words"] = [round(a + (b - a) * max(0.0, min(1.0, (float(s) - float(head)) / span)), 3) for s in starts]
+    _attach_scene_chars(scenes, timeline)
+    return scenes
+
+
+def _attach_scene_chars(scenes, timeline):
+    """글자가 나오는 시각(초, 영상 기준)을 scene["chars"] 에 붙인다 — 말 맞춘 타이핑(관제 235)이 읽는다.
+
+    비트에 글자 시각(beat["chars"] = [{"char","start"}], start = **그 비트 시작(t0)부터 영상 초** — 배속·앞자르기를 이미 갚은 값)이
+    있을 때만. 구절의 글자(띄어쓰기 뺀 글자 하나하나)를 정렬 글자와 **순서대로** 맞춰 t0+start 를 그대로 쓴다(구절 창 안으로만 자른다).
+    ★어절 시각(attach_scene_words)처럼 구절 창에 비율로 늘리지 않는다 — 늘리면 말 빠르기가 아니라 자막 길이에 맞춰 쳐진다.
+    글자가 안 맞으면 안 붙인다 → 편집기가 어절 시각을 글자로 나누고, 그것도 없으면 일정 간격(효과의 stagger)으로 친다.
+    값 개수 = 편집기가 쪼갠 글자 수(.cap-c, 띄어쓰기 뺀 글자) — 기호도 한 글자로 센다(정렬에 없으면 앞 글자와 같은 시각)."""
+    chars_of = {}
+    for beat in timeline:
+        al = [c for c in (beat.get("chars") or []) if isinstance(c, dict) and str(c.get("char") or "").strip() and c.get("start") is not None]
+        if al:
+            chars_of[beat["beat_idx"]] = (float(beat.get("t0") or 0.0), al)
+    cursor = {}
+    for scene in scenes:
+        t0, al = chars_of.get(scene.get("beat_idx"), (0.0, None))
+        text = [ch for ch in (scene.get("caption") or "") if not ch.isspace()]
+        if not al or not text:
+            continue
+        k, starts = cursor.get(scene["beat_idx"], 0), []
+        for ch in text:
+            if not _word_key(ch):              # 기호 — 앞 글자와 같이 나온다(정렬에도 있으면 하나 건너뛴다)
+                if k < len(al) and al[k]["char"] == ch:
+                    k += 1
+                starts.append(starts[-1] if starts else None)
+                continue
+            while k < len(al) and not _word_key(al[k]["char"]):
+                k += 1
+            if k >= len(al) or _word_key(al[k]["char"]) != _word_key(ch):
+                starts = None
+                break
+            starts.append(t0 + float(al[k]["start"])); k += 1
+        if not starts or all(s is None for s in starts):
+            continue
+        cursor[scene["beat_idx"]] = k
+        head = next(s for s in starts if s is not None)
+        a, b = float(scene["start"]), float(scene["end"])
+        scene["chars"] = [round(max(a, min(b, head if s is None else s)), 3) for s in starts]
+
+
+_HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+def scene_marks(beat, piece, caption):
+    """비트 자료 → 장면(자막 구절) 하나에 실을 표시 — **판단의 주인은 이 함수 하나**(관제 235 자막팩 보강).
+
+    편집기(out/precision20-ui.js)·렌더·캡컷·썸네일은 장면에 실린 값만 읽는다. 하이브리드(칼카피 엔진) 쪽은 비트에 이렇게 실어 넘긴다:
+      beat["speaker"]       'narr'(나레) | 'orig'(원음) — 비트 전체. 팩의 speakers 칸이 그 화자의 글꼴·크기·색·등장을 정한다.
+      beat["variant"]       팩의 variants 키(예: 'orig_pop'·'orig_red'·'typing') — 한 줄 모양을 통째로 바꾼다.
+      beat["emph"]          핵심 단어 [문자열 | {"word","color"?,"grow"?}] — 구절마다 그 낱말이 있으면 칠한다.
+      beat["caption_marks"] 구절별(caption_lines 순서) [{"speaker"?,"variant"?,"emph"?,"sticker"?}] — 있으면 비트 값보다 이긴다.
+      beat["chars"]         글자 정렬 [{"char","start"}] — _attach_scene_chars 가 장면 글자 시각으로 옮긴다.
+      beat["stickers"] / caption_marks[k]["stickers"]  2단계 스티커 [{kind, word?, x?,y?,r?, text?, likes?, src?, hold?}] — _sticker 가 정리.
+    장면에 붙는 값: stickers=[{kind,w?,x?,y?,r?,text?,likes?,src?,hold?,cont?}] · speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
+    어절 번호 = 자막 글을 띄어쓰기로 나눈 순서(편집기 splitCaptionWords 와 같다). 낱말은 어절 안에 들어 있으면 맞는다('성시경' ⊂ '성시경이').
+    자료가 없으면 빈 dict — 고객 작업 장면은 종전과 글자 하나 다르지 않다."""
+    marks = beat.get("caption_marks")
+    own = marks[piece] if isinstance(marks, list) and piece < len(marks) and isinstance(marks[piece], dict) else {}
+    out = {}
+    for key in ("speaker", "variant", "sticker"):
+        value = own.get(key, beat.get(key))
+        if isinstance(value, str) and value.strip():
+            out[key] = value.strip()
+    tokens = [_word_key(t) for t in (caption or "").split()]
+    emph, group = [], 0
+    for item in own.get("emph", beat.get("emph")) or []:
+        item = {"word": item} if isinstance(item, str) else item if isinstance(item, dict) else {}
+        want = [_word_key(p) for p in str(item.get("word") or "").split() if _word_key(p)]
+        if not want:
+            continue
+        at = next((i for i in range(len(tokens) - len(want) + 1)
+                   if all(w and w in tokens[i + j] for j, w in enumerate(want))), None)
+        if at is None:
+            continue
+        for i in range(at, at + len(want)):
+            if any(m["w"] == i for m in emph):
+                continue
+            mark = {"w": i, "g": group}           # g = 낱말 묶음 번호 — 여러 어절 낱말('1등 레시피')은 한 색
+            if _HEX.match(str(item.get("color") or "")):
+                mark["color"] = str(item["color"]).upper()
+            if item.get("grow") in ("pop", "hold"):
+                mark["grow"] = item["grow"]
+            emph.append(mark)
+        group += 1
+    if emph:
+        out["emph"] = sorted(emph, key=lambda m: m["w"])
+    stickers = [st for st in (_sticker(item, tokens) for item in (own.get("stickers", beat.get("stickers")) or [])) if st]
+    if stickers:
+        out["stickers"] = stickers
+    return out
+
+
+STICKER_KINDS = ("gem", "spark_lines", "circle_arrow", "kk_doodle", "comment_card", "object_pop")   # 2단계 스티커(관제 235) — 그림은 편집기 renderStickers
+_DATA_URI_CACHE = {}
+
+
+def _sticker(item, tokens):
+    """스티커 한 개 정리. {"kind", "word"?(붙을 낱말), "x","y","r"?(화면 %, circle_arrow), "text","likes"?(comment_card),
+    "src"?(object_pop 누끼 그림 — 로컬 파일이면 data: 주소로 바꿔 싣는다), "hold"?(초 | "beat")}. 모르는 kind 는 버린다."""
+    if not isinstance(item, dict) or item.get("kind") not in STICKER_KINDS:
+        return None
+    st = {"kind": item["kind"]}
+    want = [_word_key(p) for p in str(item.get("word") or "").split() if _word_key(p)]
+    if want:
+        at = next((i for i in range(len(tokens) - len(want) + 1) if all(w and w in tokens[i + j] for j, w in enumerate(want))), None)
+        if at is not None:
+            st["w"] = at + len(want) - 1          # 여러 어절 낱말이면 마지막 어절 옆
+    for key in ("x", "y", "r", "likes"):
+        if isinstance(item.get(key), (int, float)):
+            st[key] = float(item[key])
+    if item.get("text"):
+        st["text"] = str(item["text"])[:120]
+    hold = item.get("hold")
+    if hold == "beat" or isinstance(hold, (int, float)):
+        st["hold"] = hold
+    src = str(item.get("src") or "")
+    if src and not src.startswith(("data:", "http://", "https://", "/")):
+        path = Path(src)
+        if path.exists():
+            if src not in _DATA_URI_CACHE:
+                import base64, mimetypes
+                mime = mimetypes.guess_type(path.name)[0] or "image/png"
+                _DATA_URI_CACHE[src] = f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
+            src = _DATA_URI_CACHE[src]
+        else:
+            print(f"[scene_style] 스티커 그림 없음: {src}", file=sys.stderr); src = ""
+    if src:
+        st["src"] = src
+    if st["kind"] == "object_pop" and not src:
+        return None
+    return st
+
+
+def _spread_stickers(scenes):
+    """오래 머무는 스티커(hold: 초 | 'beat')를 뒤 장면에도 싣는다 — 등장은 처음 장면에서만(cont=True 면 등장 없이 처음부터 보인다).
+    장면 레이어는 장면마다 따로 그리므로, 걸쳐 있는 장면마다 같은 스티커가 있어야 끊기지 않는다(댓글 카드 2~6초 · 3D 재료 '그 재료 이야기 끝까지')."""
+    for i, sc in enumerate(scenes):
+        for st in [x for x in sc.get("stickers") or [] if not x.get("cont") and "hold" in x]:
+            until = None if st["hold"] == "beat" else float(sc["start"]) + float(st["hold"])
+            for nxt in scenes[i + 1:]:
+                if (until is None and nxt.get("beat_idx") != sc.get("beat_idx")) or (until is not None and float(nxt["start"]) >= until - 1e-6):
+                    break
+                copy = {k: v for k, v in st.items() if k not in ("w", "hold")}
+                copy["cont"] = True
+                nxt.setdefault("stickers", []).append(copy)
     return scenes
 
 
@@ -479,17 +637,18 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
         moment = moment_of(beat.get("role"), beat.get("meme"))   # 중요 장면 종류(관제 124·158) — 편집기 자동 배치·강조효과 프리셋이 쓴다
         caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
-        for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
+        for piece, (caption, t0, t1) in enumerate(caption_schedule(beat, absorb_lead=_absorb)):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
             if a > cursor + .001:
                 scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
-            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
+            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment,
+                           **scene_marks(beat, piece, caption)})   # 화자·줄 변형·핵심 단어(관제 235) — 비트에 자료가 있을 때만 붙는다
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
-    scenes = attach_scene_words(_absorb_tiny_gaps(scenes), timeline)
+    scenes = _spread_stickers(attach_scene_words(_absorb_tiny_gaps(scenes), timeline))
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
         # ★제목이 비면 **대본의 제목 줄(첫 문장)**을 쓴다. AI 후보(ai_copy)는 그 줄이
@@ -652,6 +811,13 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0, skip=0
             f":d=1:s={width}x{height}:fps=30")
 
 
+# 장면 조각 비트레이트 상한(2026-10-18 고객 제보 "흑백+강조 장면에서 목소리에 버퍼가 걸리고 떨림").
+#   흑백 충격의 필름 잡티(noise c0f=t)+흔들림은 매 프레임이 새 그림이라 crf 만으로는 그 장면이 초당 70~100Mb까지 치솟았다
+#   (실측 fd561d143f44·8eb2c0982f5a·383ac5b29649, 평소 5~12Mb). 재생기가 그 구간에서 버벅여 소리가 끊겨 들린다.
+#   상한 20Mb(1초 버퍼) — 같은 구간 재인코딩 실측 75→20Mb, 평소 구간은 그대로.
+SCENE_PART_VBV = ("-maxrate", "20M", "-bufsize", "20M")
+
+
 def shock_vf(effect, width, height):
     """흑백 충격(관제 124, 사장님 2026-10-05 "흑백은 충격·잘못된 비포 장면에, 흑백과 지지직 효과·약간 흔들리는 느낌") — 영상 칸에만.
     흑백+대비 · 필름 잡티(noise) · 흔들림(프레임마다 ±1.2% 이동) · 지지직(13프레임마다 2프레임 크게 찢기듯 밀림+번쩍).
@@ -689,7 +855,7 @@ CAPCUT_SCENE_FX = {
     "shock": "keyframe",
     "dim": "under",
     "animation": "word_frames",
-    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다
+    "masks": "bake",           # 흐림 가림막(gblur) — 캡컷 초안에 흐림을 그림으로 실을 수 없다 · 모션그래픽(관제 222)도 움직임이 본체라 완성본에서 뜬다
     "highlight": "bake",       # 장면 강조(highlight_fc)
     "camera": "bake",          # 틀 카메라 움직임(zoompan) — 글자 그림까지 같이 움직인다
 }
@@ -698,7 +864,7 @@ CAPCUT_SCENE_FX = {
 def _needs_bake(effect, layer):
     """이 장면을 완성본에서 떠 와야 하나 — CAPCUT_SCENE_FX 의 bake 효과가 실제로 켜졌는지."""
     effect=effect or {}
-    if any((m or {}).get("fx")=="blur" for m in effect.get("masks") or []):
+    if any((m or {}).get("fx")=="blur" or (m or {}).get("kind")=="mograph" for m in effect.get("masks") or []):
         return True
     from .video_assemble import scene_hl_of      # 강조 켜짐 해석은 렌더(compose→highlight_fc)와 같은 함수 — "on":false 는 꺼짐
     if effect.get("highlight") and scene_hl_of({"scene_hl":effect.get("highlight")}):
@@ -782,7 +948,7 @@ def capcut_bake_spans(scenes, snapshot, layers, folder, final_video):
                 continue
         path=folder/f"scene-style-bake-{i:04d}.mp4"
         va._run_ffmpeg(["ffmpeg","-y","-ss",f"{shift+start:.3f}","-i",str(final_video),"-t",f"{end-start:.3f}","-an",
-                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),"-pix_fmt","yuv420p","-r","30",str(path)])
+                        "-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,"-pix_fmt","yuv420p","-r","30",str(path)])
         out.append({"path":str(path),"start":start,"end":end,"scene":i})
     return out
 
@@ -954,7 +1120,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         else:
             graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*SCENE_PART_VBV,*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
         parts.append(part)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")
