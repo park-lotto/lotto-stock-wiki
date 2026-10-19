@@ -83,6 +83,13 @@ def default_pack() -> dict:
     for pool in ("sfx_pool", "meme_pool"):
         out[pool] = {k: v for k, v in (out.get(pool) or {}).items() if k not in ("dir", "manifest")}
     out["bgm"] = {k: v for k, v in (out.get("bgm") or {}).items() if k != "lib"}
+    # 효과음: 설치본 팩 장부(CALCOPY_PACK_ROOT/packs_manifest.json — 설치팩 build_packs 가 동봉 팩01~09 로 만든다)가 있으면
+    #   팩01 의 오프너=시작·뽁=강조·띵=끝(우리 장부 번호 80·1473·78 자리 그대로의 역할). 짤 번호는 우리 PC 서버 번호라 고객 PC 엔 없다 → 비운다.
+    man = MK._pack_assets()
+    by = {(a.get("pack"), a.get("slot")): a["id"] for a in man.values() if a.get("pack")}
+    if by:
+        out["sfx_pool"] = {"start": [by[("팩01", "opener")]], "point": [by[("팩01", "pop")]], "end": [by[("팩01", "ding")]]}
+        out["meme_pool"] = {"kinds": (out.get("meme_pool") or {}).get("kinds") or [], "ids": []}
     out["brand"] = {k: v for k, v in (out.get("brand") or {}).items() if not k.startswith("_")}
     out["tts"] = {k: v for k, v in (out.get("tts") or {}).items() if not k.startswith("_")}
     return out
