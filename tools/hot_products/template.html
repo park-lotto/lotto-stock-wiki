@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>인기상품 랭킹 — 시안</title>
+<style>
+:root{--bg:#070b14;--card:#0f1624;--line:#1d2a3d;--txt:#e8edf7;--sub:#8b97ad;--mint:#3ee0bf;--aurora:#8c6ef0;--gold:#facc6b;--hot:#ff6b4a}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--txt);
+  background:radial-gradient(60% 50% at 20% 0%,rgba(62,224,191,.09),transparent 60%),radial-gradient(50% 45% at 90% 10%,rgba(140,110,240,.11),transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 16px 60px}
+.mock{display:inline-block;font-size:12px;color:#04201b;background:var(--gold);border-radius:6px;padding:3px 8px;font-weight:800;margin-bottom:10px}
+h1{margin:0 0 4px;font-size:26px;letter-spacing:-.5px}
+.lead{color:var(--sub);margin:0 0 18px;font-size:14px}
+.sites{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.site{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:12px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer;display:flex;gap:8px;align-items:center}
+.site small{font-weight:500;color:var(--sub);font-size:11px}
+.site.on{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint),0 0 18px rgba(62,224,191,.25)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--mint);color:#04201b;border-color:var(--mint);font-weight:800}
+select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
+.cats{padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:4px 0 12px}
+.cat{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:10px;padding:8px 13px;font-size:14px;font-weight:700;cursor:pointer}
+.cat em{font-style:normal;color:var(--sub);font-weight:500;font-size:12px;margin-left:4px}
+.cat.on{background:linear-gradient(135deg,#8c6ef0,#3ee0bf);color:#fff;border-color:transparent}
+.cat.on em{color:#e9fff9}
+.cat.ex{color:var(--sub);font-weight:500;border-style:dashed}
+.cat.ex.on{background:#2a1b1b;color:#ffb4a6;border-color:#5a2c2c}
+.card.dim{opacity:.55}
+.why{font-size:11px;color:#ffb4a6;background:rgba(255,107,74,.12);border-radius:6px;padding:3px 7px;align-self:flex-start}
+.meta{color:var(--sub);font-size:12px;margin:6px 0 16px}
+.meta b{color:var(--txt)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.card:hover{border-color:#2c4060}
+.rank{position:absolute;top:8px;left:8px;min-width:30px;height:30px;padding:0 8px;border-radius:9px;display:grid;place-items:center;font-weight:900;font-size:14px;background:rgba(7,11,20,.85);color:var(--txt);border:1px solid var(--line)}
+.rank.top{background:linear-gradient(135deg,#ffe29a,#f5b53f);color:#3a2800;border:none}
+.thumb{aspect-ratio:1/1;background:#0b111c;width:100%;object-fit:cover;display:block}
+.body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
+.title{font-size:13.5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px}
+.price{font-size:17px;font-weight:900}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11px;color:var(--sub);background:#141e30;border-radius:6px;padding:3px 7px}
+.tag.hot{color:#ffd2c7;background:rgba(255,107,74,.15)}
+.btns{display:flex;gap:6px;margin-top:auto}
+.go{flex:1;text-align:center;text-decoration:none;font-size:13px;font-weight:800;color:#04201b;background:linear-gradient(90deg,#3ee0bf,#7df5db);border-radius:9px;padding:9px 6px}
+.src{text-decoration:none;font-size:12px;color:var(--sub);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
+.kw{font-size:11px;color:var(--sub)}
+.kw b{color:var(--mint);font-weight:700}
+.note{margin-top:28px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--sub);font-size:13px;line-height:1.7}
+.note b{color:var(--txt)}
+@media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:10px}.go{font-size:12px;padding:8px 4px;white-space:nowrap}.src{padding:8px 7px}.site{padding:8px 11px;font-size:14px}.price{font-size:15px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="mock">시안 · __DATE__ 실제 수집 데이터</span>
+  <h1>🔥 인기상품 랭킹</h1>
+  <p class="lead">지금 잘 팔리는 제품을 보고, 바로 <b>숏템파워</b>로 영상 소재를 찾으세요. 매일 오전 8시 갱신.</p>
+  <div class="sites" id="sites"></div>
+  <div class="bar cats" id="cats"></div>
+  <div class="bar" id="sorts"></div>
+  <div class="meta" id="meta"></div>
+  <div class="grid" id="grid"></div>
+  <div class="note">
+    <b>시안 참고</b><br>
+    · [숏템파워로 찾기]를 누르면 숏템메이커에서 그 제품명으로 검색됩니다(로그인 필요). 검색어는 제품명에서 수량·용량 등을 뺀 앞부분입니다.<br>
+    · 네이버·쿠팡은 서버가 모으고, 아마존·테무·알리·1688은 사장님 PC가 모아 서버로 보냅니다.<br>
+    · 알리는 제휴 API 승인 뒤 정렬 종류가 늘어납니다. 1688 신상품, 아마존 급상승은 아직 수집되지 않습니다.
+  </div>
+</div>
+<script>
+const D = __DATA__;
+const SITES = [
+  {id:"naver", name:"네이버", by:"서버", sorts:[
+    {label:"구매 많은 순", key:p=>`naver_PRODUCT_BUY_${p}`},
+    {label:"클릭 많은 순", key:p=>`naver_PRODUCT_CLICK_${p}`}], period:true},
+  {id:"coupang", name:"쿠팡", by:"서버", sorts:[
+    {label:"카테고리 베스트", key:c=>`coupang_cat_${c}`, cats:true},
+    {label:"골드박스 특가", key:()=>"coupang_goldbox"}]},
+  {id:"amazon", name:"아마존", by:"PC", sorts:[
+    {label:"베스트셀러", key:()=>"amazon_bs"},
+    {label:"신상품 랭킹", key:()=>"amazon_new"}]},
+  {id:"temu", name:"테무", by:"PC", sorts:[
+    {label:"판매수 순", key:()=>"temu_sold"},
+    {label:"베스트셀러", key:()=>"temu_best"}]},
+  {id:"ali", name:"알리", by:"PC", sorts:[
+    {label:"판매수 순", key:()=>"ali_sold"},
+    {label:"베스트셀러", key:()=>"ali_best"}]},
+  {id:"1688", name:"1688", by:"PC", sorts:[
+    {label:"인기 상품", key:()=>"1688_Most_Popular"},
+    {label:"급상승(트렌딩)", key:()=>"1688_TRENDING"}]},
+];
+const CATS = {"1001":"여성패션","1002":"남성패션","1010":"뷰티","1011":"출산/유아동","1012":"식품","1013":"주방용품","1014":"생활용품","1015":"홈인테리어","1016":"가전디지털","1017":"스포츠/레저","1018":"자동차용품","1024":"헬스/건강식품","1029":"반려동물용품"};
+const PCATS = [["all","전체"],["홈템","🏠 홈템"],["뷰티","💄 뷰티"],["장비템","🔧 장비템"],["차량템","🚗 차량템"],["반려템","🐶 반려템"],["육아템","🧸 육아템"],["디지털템","📱 디지털템"]];
+const st = {site:"naver", sort:0, period:"DAILY", cat:"1013", pcat:"all"};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(){
+  const site = SITES.find(s => s.id === st.site);
+  $("sites").innerHTML = SITES.map(s => `<button class="site ${s.id===st.site?"on":""}" data-site="${s.id}">${s.name}<small>${s.by==="서버"?"자동":"PC"}</small></button>`).join("");
+  let bar = site.sorts.map((o,i) => `<button class="chip ${i===st.sort?"on":""}" data-sort="${i}">${o.label}</button>`).join("");
+  if (site.period) bar += `<select id="period"><option value="DAILY">일간</option><option value="WEEKLY">주간</option></select>`;
+  if (site.sorts[st.sort].cats) bar += `<select id="cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select>`;
+  $("sorts").innerHTML = bar;
+  if ($("period")) $("period").value = st.period;
+  if ($("cat")) $("cat").value = st.cat;
+  const key = site.sorts[st.sort].key(site.period ? st.period : st.cat);
+  const all = D[key] || [];
+  const ok = all.filter(r => r.cat && r.cat !== "제외");
+  const exN = all.length - ok.length;
+  const cnt = c => c === "all" ? ok.length : ok.filter(r => r.cat === c).length;
+  $("cats").innerHTML = PCATS.filter(([c]) => c === "all" || cnt(c) > 0).map(([c,l]) => `<button class="cat ${st.pcat===c?"on":""}" data-pcat="${c}">${l}<em>${cnt(c)}</em></button>`).join("")
+    + `<button class="cat ex ${st.pcat==="제외"?"on":""}" data-pcat="제외">🚫 쇼츠 불가 제외<em>${exN}</em></button>`;
+  const rows = st.pcat === "all" ? ok : all.filter(r => (r.cat || "제외") === st.pcat);
+  $("meta").innerHTML = `<b>${site.name}</b> · ${site.sorts[st.sort].label} · ${st.pcat==="all"?"쇼츠 가능 전체":st.pcat} ${rows.length}개 (원래 ${all.length}개 중) · 수집 ${site.by==="서버"?"서버 자동":"사장님 PC"}`;
+  $("grid").innerHTML = rows.map((r,i) => `
+    <div class="card ${r.cat==="제외"?"dim":""}">
+      <span class="rank ${i<3?"top":""}">${r.cat==="제외"?"–":i+1}</span>
+      <img class="thumb" src="${esc(r.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
+      <div class="body">
+        <div class="title" title="${esc(r.title)}">${esc(r.title)}</div>
+        <div class="price">${esc(r.price)}</div>
+        ${r.cat==="제외"?`<span class="why">제외: ${esc(r.why||"")}</span>`:""}
+        <div class="tags">${(r.chips||[]).map(c=>`<span class="tag ${/🔥|📈/.test(c)?"hot":""}">${esc(c)}</span>`).join("")}</div>
+        <div class="kw">검색어 <b>${esc(r.kw)}</b></div>
+        <div class="btns">
+          <a class="go" target="_blank" href="https://shoppingshorts.duckdns.org/?kwfind=${encodeURIComponent(r.kw)}">🔎 숏템파워로 찾기</a>
+          ${r.url?`<a class="src" target="_blank" rel="noreferrer" href="${esc(r.url)}">원문</a>`:""}
+        </div>
+      </div>
+    </div>`).join("") || `<p class="meta">아직 모은 상품이 없습니다.</p>`;
+}
+document.addEventListener("click", e => {
+  const s = e.target.closest("[data-site]"); if (s) { st.site = s.dataset.site; st.sort = 0; render(); return; }
+  const c = e.target.closest("[data-pcat]"); if (c) { st.pcat = c.dataset.pcat; render(); return; }
+  const o = e.target.closest("[data-sort]"); if (o) { st.sort = +o.dataset.sort; render(); }
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "period") st.period = e.target.value;
+  if (e.target.id === "cat") st.cat = e.target.value;
+  render();
+});
+render();
+</script>
+</body>
+</html>
