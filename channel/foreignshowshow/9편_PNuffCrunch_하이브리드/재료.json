@@ -1,0 +1,210 @@
+{
+ "_note": "뒤 화면 = 같은 제품 P-Nuff Crunch 의 남의 리뷰 유튜브 영상 4편(방송·판매사 공식 아님): A 037qOnFsmFU Elana Ross(1080p) · B DCW6WBkLNOk Dr. Melissa Mondal(1080p, 박힌 영어 자막 y≥990 크롭 밖) · C 4p45nxPOJ9g Duo Daily Finds(1080p) · D Qj4D2WNsIRc FDF 세 사람 시식(2160p 원본 받기가 403 으로 끊겨 받은 앞 54초를 1080p 로 옮김 = Qj4D2WNsIRc_0-54_1080.mp4, 시각 = 원본 시각). 앞 0~17.26초(방송 wp45o5i7zhE·판매사 vr3dPT0wnrY)와 같은 원본 없음. 사람 순서 A B / C D / B C / D C / D — 같은 사람 연속 컷 없음. 샷 경계 scene>0.3: DCW6 22.06·27.53·32.13·49.45·71.81(A·C·D 0~54 는 한 샷 연속 촬영). 박힌 글자: D 의 'JASON'·'SMILE JASON'(8~40초 오른쪽 위)·'P-NUFF CHRUNCH PEANUT'(50초~ 아래) 구간·자리 피함.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/9편_PNuffCrunch/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "shots": [
+  {
+   "i": 0,
+   "line": "B1",
+   "src": "037qOnFsmFU.mp4",
+   "ss": 12.0,
+   "dur": 2.2,
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 A(Elana Ross, 검은 티): 보라 P-Nuff Crunch 봉지를 카메라 앞에 들어 보임"
+  },
+  {
+   "i": 1,
+   "line": "B1",
+   "src": "DCW6WBkLNOk.mp4",
+   "ss": 28.6,
+   "dur": 2.2,
+   "src_crop": [
+    470,
+    0,
+    986,
+    960
+   ],
+   "mute": true,
+   "ours": "리뷰어 B(Dr. Melissa, 주방): 'Peanut Puffs' 봉지를 얼굴 앞에 바짝 들어 보임(아래 박힌 자막 크롭 밖)"
+  },
+  {
+   "i": 2,
+   "line": "B2",
+   "src": "4p45nxPOJ9g.mp4",
+   "ss": 45.6,
+   "dur": 2.4,
+   "src_crop": [
+    100,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 C(Duo Daily Finds): 봉지에서 꺼낸 땅콩 모양 퍼프를 손가락으로 집어 카메라 앞에"
+  },
+  {
+   "i": 3,
+   "line": "B2",
+   "src": "Qj4D2WNsIRc_0-54_1080.mp4",
+   "ss": 20.0,
+   "dur": 2.4,
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 D(FDF 세 사람 시식): 긴 머리 여성이 봉지를 기울여 퍼프를 보여 줌, 옆에 비니 쓴 남자"
+  },
+  {
+   "i": 4,
+   "line": "B3",
+   "src": "DCW6WBkLNOk.mp4",
+   "ss": 23.8,
+   "dur": 2.4,
+   "src_crop": [
+    1020,
+    120,
+    840,
+    818
+   ],
+   "mute": true,
+   "ours": "리뷰 영상 속 영양 성분표 그림: 'Amount per serving Calories 130'(f11) — 화살표 대상"
+  },
+  {
+   "i": 5,
+   "line": "B3",
+   "src": "4p45nxPOJ9g.mp4",
+   "ss": 91.5,
+   "dur": 2.2,
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 C: 보라 BBQ 봉지를 세워 들고 이야기"
+  },
+  {
+   "i": 6,
+   "line": "B4",
+   "src": "Qj4D2WNsIRc_0-54_1080.mp4",
+   "ss": 15.9,
+   "dur": 1.6,
+   "src_crop": [
+    800,
+    106,
+    1000,
+    974
+   ],
+   "mute": true,
+   "ours": "리뷰어 D: 봉지 뒷면 'THE POWER OF PLANT PROTEIN'·Gluten-Free 목록을 카메라에 보임(봉지가 움직여 효과 없음)"
+  },
+  {
+   "i": 7,
+   "line": "B4",
+   "src": "4p45nxPOJ9g.mp4",
+   "ss": 121.0,
+   "dur": 2.4,
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 C: 주황 'Peanut Puffs' 봉지를 들어 보임"
+  },
+  {
+   "i": 8,
+   "line": "B5",
+   "src": "Qj4D2WNsIRc_0-54_1080.mp4",
+   "ss": 44.4,
+   "dur": 2.9,
+   "src_crop": [
+    0,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 D 세 사람: 대머리 남자가 봉지를 들고 말하고 뒤에 여성 — 사람들 반응(끝 줄)"
+  }
+ ],
+ "effects": [
+  {
+   "line": "B3",
+   "kind": "arrow_green_down",
+   "t": [
+    1.0,
+    2.2
+   ],
+   "how": "target",
+   "target": [
+    874,
+    637,
+    945,
+    679
+   ],
+   "target_box": [
+    874,
+    637,
+    945,
+    679
+   ],
+   "target_src_box": [
+    1700,
+    278,
+    1755,
+    310
+   ],
+   "target_row_box": [
+    656,
+    630,
+    949,
+    681
+   ],
+   "target_row_src_box": [
+    1530,
+    272,
+    1758,
+    312
+   ],
+   "at": [
+    910,
+    552
+   ],
+   "target_what": "리뷰 영상 영양 성분표의 'Calories 130' 숫자(DCW6WBkLNOk 23.5·25.0·26.5초 세 프레임 같은 자리 — 그림이 화면에 고정, 22.06~27.53 한 샷)",
+   "why": "B3 자막 '한 번 먹는 양이 130칼로리라서' 순간 그 숫자를 가리킴(벤치 QMJ 첫 시연 초록 아래 화살표 꼴). 환산: crop [1020,120,840,818] → X=(x-1020)×1.2857, Y=434+(y-120)×1.2861 · at = 화살표 그림 가운데(fx.tip_offset: 끝 = at+(0,98.5)) → 끝점 (910,650.5)±9 흔들 = '130' 상자 y637~679 안",
+   "sheet": [
+    "C:/숏템_칼카피/foreignshowshow/하이브리드/9편_PNuffCrunch/fx_sheet_B3_DCW6.jpg",
+    "C:/숏템_칼카피/foreignshowshow/하이브리드/9편_PNuffCrunch/fr/cal_fine.jpg"
+   ]
+  }
+ ],
+ "effects_dropped": [
+  {
+   "line": "B2",
+   "what": "4p45 45.6 손가락에 집은 퍼프",
+   "why": "2초 안에 손이 크게 움직임(fr/4p45_B2.jpg 4프레임) — 대상 못 따라감"
+  },
+  {
+   "line": "B4",
+   "what": "037q 봉지 '20g PROTEIN' 배지",
+   "why": "0.4초 간격 7프레임에서 배지가 x 770→960→880 으로 흔들림(fx_sheet_B4_037q.jpg)"
+  }
+ ]
+}
