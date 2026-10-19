@@ -268,7 +268,12 @@ def step_source(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     _engine("remake")
     cmd, out = _remake_args(TF, ctx, topic)
-    q = (topic.get("source") or {}).get("query") or topic.get("name") or ""
+    src = topic.get("source") or {}
+    q = src.get("query") or topic.get("name") or ""
+    # ★채널 기준 소재의 원본 편(한국 채널 편집본)은 재료로 쓰지 않는다 — 10-19 실측: 잇템로그 편집본을 재료로 넣자
+    #   그 채널의 한국어 자막('아.. 역겨워;;')이 화면에 박힌 채 계획 시트에 들어갔다. 현장썰 재료 = 해외 원본(다음: 원본 찾기).
+    if src.get("kind") == "채널":
+        q = " ".join(TF.core_terms(topic.get("name") or "")[:3]) or q
     if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
         from tools.calcopy.engine import worker_ledger as L
         L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
@@ -280,15 +285,17 @@ def step_source(topic, ctx: Ctx) -> dict:
         arts["재료후보_시트.jpg"] = str(sheets[0])
     if rc != 2 or "재료_뼈대.json" not in arts:
         raise StepError(f"재료 후보 모드 rc={rc}(기대 2) — {tail[-300:]}", arts)
-    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
-    if hook and not (out / "재료.json").exists():
-        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
-        (out / "재료.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
-        arts["재료.json"] = str(out / "재료.json")
     vids = sorted(cand.glob("v_*.mp4")) + sorted(out.glob("v_*.mp4"))
     rights = {v.name: "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)" for v in vids}
-    if not rights:
+    if not rights:   # ★초안보다 먼저 — 10-19 실측: 후보 0 시도가 빈 재료.json 을 남겨, 다음 시도가 원본을 받아도 빈 초안으로 계획이 죽었다
         raise StepError("재료 후보 영상 0개 — 출처(rights)를 적을 재료가 없다", arts)
+    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
+    mp = out / "재료.json"
+    stale = mp.exists() and not any(s_.get("src") for s_ in (json.loads(mp.read_text(encoding="utf-8")).get("shots") or []))
+    if hook and (not mp.exists() or stale):
+        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
+        mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+        arts["재료.json"] = str(mp)
     return {"artifacts": arts, "data": {"rights": rights}, "outputs": {"materials_skeleton": "재료_뼈대.json"}}
 
 

@@ -22,6 +22,8 @@ from pathlib import Path
 
 YT_PER_HOUR = 300
 GEMINI_PER_HOUR = 10       # 10-16 보정: 엔진이 광고·과거 소재를 물어오는 동안 낮춤(처음 40)
+# 고객 PC 모드(관제 234): AI = 고객 본인 Claude — 우리 무료 키 보호 한도(10)는 맞지 않는다. 폭주만 막는 상한.
+CLIENT_AI_PER_HOUR = int(os.environ.get("CALCOPY_CLIENT_AI_PER_HOUR") or 300)
 PAUSE_429_SEC = 30 * 60
 KINDS = ("yt", "gemini", "topic", "script", "ok", "limit", "pause", "error", "rescore", "rescore_done")   # ok = 단계 통과(note=단계 이름)
 
@@ -103,7 +105,8 @@ def take(worker: str, kind: str, n: int, what: str, data_dir=None):
         if kind == "yt":
             used, cap, who = sum(r["n"] for r in rows if r["kind"] == "yt"), YT_PER_HOUR, "4워커 합"
         elif kind == "gemini":
-            used, cap, who = sum(r["n"] for r in rows if r["kind"] == "gemini" and r["worker"] == worker), GEMINI_PER_HOUR, worker
+            cap = CLIENT_AI_PER_HOUR if os.environ.get("CALCOPY_GEMINI_BACKEND") == "client" else GEMINI_PER_HOUR
+            used, who = sum(r["n"] for r in rows if r["kind"] == "gemini" and r["worker"] == worker), worker
         else:
             raise ValueError(kind)
         if used + n > cap:

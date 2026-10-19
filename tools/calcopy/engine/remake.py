@@ -110,7 +110,7 @@ def gather_candidates(J: dict, spec: dict, queries: list[str], out: Path) -> Pat
     shots = orig_grid(J, spec, cand)
     ids, seen = [], set()
     for q in queries:
-        for vid in search_shorts(q):
+        for vid in ([q[3:].strip()] if q.startswith("id:") else search_shorts(q)):   # id:<영상> = 그 편을 바로 후보로(채널 기준 소재의 원본 편, 관제 234)
             if vid not in seen:
                 seen.add(vid); ids.append(vid)
     got = [f for f in (download(v, cand) for v in ids) if f]
