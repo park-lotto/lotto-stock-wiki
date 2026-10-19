@@ -192,18 +192,19 @@ def hook_circle(src: Path, ss: float, dur: float, old_crop=None, old_at=None) ->
 CAP_BAND = (880, 1030)   # 자막 띠(한 줄 929~988·두 줄 895~1022) — 화살표가 자막을 덮으면 대상을 못 가리킨다(벤치 화살표도 자막을 안 덮음)
 
 
-def on_target(kind: str, box: list, avoid_caption: bool = True) -> dict:
-    """(판단 주인: 대상 꾸밈 자리) box = 완성본 좌표 [x0,y0,x1,y1] → {at, radius?} 또는 {drop: 이유}.
+def on_target(kind: str, box: list, avoid_caption: bool = True, path: list | None = None) -> dict:
+    """(판단 주인: 대상 꾸밈 자리) box = 완성본 좌표 [x0,y0,x1,y1] → {at, radius?, kind?, kind_from?} 또는 {drop: 이유}.
     끝점(fx.tip_offset)이 상자 가장자리에 정확히 닿는다(tip_gap_px 만큼 안쪽):
       초록 ↓   : 끝 = 상자 위 변 가운데 · 분홍 ↑ : 끝 = 상자 아래 변 가운데 · 빨간 곡선 : 끝 = 아래 변 왼쪽 1/3(찌르기가 상자 안으로)
       점선 원  : 중심 = 상자 가운데, 반지름 = 상자 반대각선 × target_pad (r_range 안) — 창 밖이면 줄이거나(r_range 하한까지) 상자 안에서 옮긴다
-    화살표 몸통이 자막 띠를 덮거나 창 밖이면 놓지 않는다(drop) — 억지로 딴 데 두지 않는다(R4). 대상이 자막 자체면(avoid_caption=False) 띠 검사 안 함(끝이 자막 잉크 가장자리)."""
+    화살표 몸통이 자막 띠를 덮거나 창 밖이면 그 꼴은 못 쓴다. 그때 벤치 꼴 안에서(초록 ↓·분홍 ↑·빨강 곡선) 다른 방향을 고른다(arrow_choice) —
+    대상이 자막 띠 바로 아래면 초록 ↓ 은 늘 띠를 덮어 빠졌다(10-20 11편 하이브리드 B3·4편 L4). 다 안 되면 drop(억지로 딴 데 두지 않는다, R4).
+    path = 추적 길 [[t,x0,y0,x1,y1],…] — 주면 길 전체에서 들어가는 꼴만(따라가다 창 밖으로 빠지던 것). 대상이 자막 자체면(avoid_caption=False) 띠 검사 안 함."""
     from tools.calcopy.shark import fx as FX
     E = rules()["effects"]; G = rules()["target"]
     x0, y0, x1, y1 = box
     bw, bh = x1 - x0, y1 - y0
     wx, wy, ww, wh = E["window"]
-    gap = G["tip_gap_px"]
     if kind == "dashed_circle":
         o = E["dashed_circle"]
         r = max(o["r_range"][0], min(o["r_range"][1], 0.5 * (bw ** 2 + bh ** 2) ** 0.5 * o["target_pad"]))
@@ -220,24 +221,64 @@ def on_target(kind: str, box: list, avoid_caption: bool = True) -> dict:
         return {"at": [int(round(cx)), int(round(cy))], "radius": int(round(r))}
     if kind not in FX.ARROWS:
         raise ValueError(f"대상 자리 규칙 없음: {kind}")
-    o = E[kind]
+    return arrow_choice(kind, box, avoid_caption, path)
+
+
+def _arrow_tips(kind: str, box: list, gap: float, edge: bool) -> list[tuple[float, float]]:
+    """화살표 끝 후보(상자 안). edge=True = 벤치 자리(가장자리), False = 상자 안쪽으로 들어간 끝(가장자리 자리가 다 막힐 때만)."""
+    x0, y0, x1, y1 = box
+    bw, bh = x1 - x0, y1 - y0
     if kind == "arrow_green_down":
-        tip = ((x0 + x1) / 2, y0 + gap)
+        ys = [y0 + gap] if edge else [y0 + 0.25 * bh, y0 + 0.5 * bh]
+        xs = [0.5, 1 / 3, 2 / 3]
     elif kind == "arrow_pink_up":
-        tip = ((x0 + x1) / 2, y1 - gap)
+        ys = [y1 - gap] if edge else [y1 - 0.25 * bh, y1 - 0.5 * bh]
+        xs = [0.5, 1 / 3, 2 / 3]
     else:
-        tip = (x0 + bw / 3, y1 - gap)
-    tx, ty = FX.tip_offset(kind)
-    at = [tip[0] - tx, tip[1] - ty]
-    mx = o.get("poke_px", 0) / 2 ** 0.5
-    my = o.get("bob_px", 0) + mx
-    ax0, ax1 = at[0] - o["w"] / 2 - mx, at[0] + o["w"] / 2 + mx
-    ay0, ay1 = at[1] - o["h"] / 2 - my, at[1] + o["h"] / 2 + my
-    if ax0 < wx or ax1 > wx + ww or ay0 < wy or ay1 > wy + wh:
-        return {"drop": f"{kind} 몸통이 창 밖(끝 {tip[0]:.0f},{tip[1]:.0f}) — 대상이 창 가장자리"}
-    if avoid_caption and ay1 > CAP_BAND[0] and ay0 < CAP_BAND[1]:
-        return {"drop": f"{kind} 몸통이 자막 띠({CAP_BAND})를 덮음 — 대상 상자 {box}"}
-    return {"at": [int(round(at[0])), int(round(at[1]))]}
+        ys = [y1 - gap] if edge else [y1 - 0.25 * bh, y1 - 0.5 * bh]
+        xs = [1 / 3, 0.5, 0.2]
+    return [(x0 + f * bw, y) for y in ys for f in xs]
+
+
+def arrow_choice(kind: str, box: list, avoid_caption: bool = True, path: list | None = None) -> dict:
+    """(판단 주인: 화살표 꼴·끝 고르기) 바라는 꼴(kind) 가장자리 끝 → 다른 벤치 꼴 가장자리 끝 → (같은 순서로) 상자 안쪽 끝.
+    몸통(그림 상자 + 흔들 폭)이 추적 길 내내 창 안·자막 띠 밖이어야 한다. 반환 {at, kind?, kind_from?, tip_in?} | {drop}."""
+    from tools.calcopy.shark import fx as FX
+    E = rules()["effects"]; G = rules()["target"]
+    wx, wy, ww, wh = E["window"]
+    gap = G["tip_gap_px"]
+    x0, y0, x1, y1 = box
+    shifts = [(0.0, 0.0)]
+    if path and len(path) > 1:
+        b0 = path[0]
+        shifts = [((q[1] + q[3] - b0[1] - b0[3]) / 2, (q[2] + q[4] - b0[2] - b0[4]) / 2) for q in path]
+    kinds = [kind] + [k for k in FX.ARROWS if k != kind]
+    why = []
+    for edge in (True, False):
+        for k in kinds:
+            o = E[k]
+            tx, ty = FX.tip_offset(k)
+            mx = o.get("poke_px", 0) / 2 ** 0.5
+            my = o.get("bob_px", 0) + mx
+            for tip in _arrow_tips(k, box, gap, edge):
+                at = [tip[0] - tx, tip[1] - ty]
+                bad = None
+                for dx, dy in shifts:
+                    ax0, ax1 = at[0] + dx - o["w"] / 2 - mx, at[0] + dx + o["w"] / 2 + mx
+                    ay0, ay1 = at[1] + dy - o["h"] / 2 - my, at[1] + dy + o["h"] / 2 + my
+                    if ax0 < wx or ax1 > wx + ww or ay0 < wy or ay1 > wy + wh:
+                        bad = "창 밖"; break
+                    if avoid_caption and ay1 > CAP_BAND[0] and ay0 < CAP_BAND[1]:
+                        bad = f"자막 띠{CAP_BAND}"; break
+                if bad:
+                    why.append(f"{k}{'' if edge else '(안쪽)'} 끝({tip[0]:.0f},{tip[1]:.0f}) {bad}"); continue
+                r = {"at": [int(round(at[0])), int(round(at[1]))]}
+                if k != kind:
+                    r.update({"kind": k, "kind_from": kind})
+                if not edge:
+                    r["tip_in"] = [int(round(tip[0])), int(round(tip[1]))]
+                return r
+    return {"drop": f"화살표 세 꼴 다 안 들어감(대상 상자 {box}) — " + " · ".join(why[:4])}
 
 
 # ── 완성본 화면 = 렌더와 같은 길(narr_video.shot_clip)로 그린 컷 캔버스 ──────────
@@ -540,7 +581,7 @@ def fix(doc: Path, info: dict | None = None) -> list[str]:
     log = []
     li = {x["id"]: x for x in info["lines"]}
     for e in M["effects"]:
-        for k in ("drop", "track", "target_path", "target_box", "track_conf", "track_how", "face_cover", "face_clear", "why_target"):
+        for k in ("drop", "track", "target_path", "target_box", "track_conf", "track_how", "face_cover", "face_clear", "why_target", "tip_in"):
             e.pop(k, None)
         if e["kind"] == "flash" or e["line"] not in li:
             continue
@@ -596,7 +637,9 @@ def fix(doc: Path, info: dict | None = None) -> list[str]:
                 tp, conf, t_end = tr["path"], tr["conf"], min(t1, t0 + tr["t_end"] - t0)
             else:
                 tp, conf, t_end = [[0.0, *box]], 1.0, t1
-            r = on_target(e["kind"], box, avoid_caption=tg != "caption")
+            if e.get("kind_from"):                 # 앞 fix 가 꼴을 바꿨으면 바라던 꼴부터 다시 고른다
+                e["kind"] = e.pop("kind_from")
+            r = on_target(e["kind"], box, avoid_caption=tg != "caption", path=tp if how else None)
             if r.get("drop"):
                 e["drop"] = r["drop"]
                 log.append(f"{e['line']} {e['kind']} 뺌: {r['drop']}"); continue
