@@ -60,7 +60,7 @@ def preview(req: dict) -> dict:
 def catalog() -> dict:
     """고를 수 있는 값 — 각 주인이 아는 이름만(렌더러 @font-face · 틀 규칙 · 목소리 목록 · 곡 목록)."""
     from shopping_shorts import bgm_lib
-    from shopping_shorts.calcopy_frame import schema
+    from shopping_shorts.calcopy_frame import schema, to_snapshot
     html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
     fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
     voices, seen = [], set()
@@ -70,7 +70,9 @@ def catalog() -> dict:
             seen.add(vid)
             voices.append({"voice_id": vid, "name": v["name"], "preset_id": v.get("preset_id"), "about": v.get("one_liner") or ""})
     return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
-            "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack()}
+            "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
+            # 숏템메이커 템플릿(썰20·고정20) — 이름만(견본 그림은 벤치 화면이라 고객에게 안 보낸다). 고르면 렌더러가 그 자리에서 그린다
+            "templates": [{"mode": m, "id": r["id"], "name": r["name"]} for m in ("story", "continuous") for r in to_snapshot.template_rows(m)]}
 
 
 def default_pack() -> dict:
@@ -88,7 +90,7 @@ def default_pack() -> dict:
 
 EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption"),
             "tts": ("provider", "voice_id", "name", "preset_id", "tempo", "alternates"), "bgm": ("candidates", "gain"),
-            "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids")}
+            "sfx_pool": ("start", "point", "end"), "meme_pool": ("kinds", "ids"), "template": None}
 
 
 def check(pack: dict, cat: dict | None = None) -> list:
@@ -98,6 +100,10 @@ def check(pack: dict, cat: dict | None = None) -> list:
     for k, v in pack.items():
         if k not in EDITABLE:
             err.append(f"모르는 칸: {k}")
+        elif k == "template":
+            if v != "none" and not (isinstance(v, dict) and set(v) == {"mode", "id"}
+                                    and any(x["mode"] == v["mode"] and x["id"] == v["id"] for x in cat["templates"])):
+                err.append(f"모르는 템플릿: {v}")
         elif not isinstance(v, dict) or any(x not in EDITABLE[k] for x in v):
             err.append(f"모르는 칸: {k}.{sorted(set(v) - set(EDITABLE[k])) if isinstance(v, dict) else v}")
     b, tx, tts, bgm = pack.get("brand") or {}, pack.get("text") or {}, pack.get("tts") or {}, pack.get("bgm") or {}
@@ -107,8 +113,11 @@ def check(pack: dict, cat: dict | None = None) -> list:
         if tx.get(key) and tx[key] not in cat["fonts"]:
             err.append(f"모르는 글꼴: {tx[key]}")
     cap = tx.get("caption") or {}
-    if set(cap) - {"mode", "enter", "emphasis", "outline_px"}:
-        err.append(f"모르는 자막 칸: {sorted(set(cap) - {'mode', 'enter', 'emphasis', 'outline_px'})}")
+    if set(cap) - {"mode", "enter", "emphasis", "outline_px", "outline_rgb"}:
+        err.append(f"모르는 자막 칸: {sorted(set(cap) - {'mode', 'enter', 'emphasis', 'outline_px', 'outline_rgb'})}")
+    o = cap.get("outline_rgb")
+    if o is not None and not (isinstance(o, list) and len(o) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in o)):
+        err.append("외곽선 색은 [R,G,B] 0~255")
     if cap.get("mode") and cap["mode"] not in cat["caption_mode"]:
         err.append(f"모르는 자막 쌓기: {cap['mode']}")
     e = cap.get("enter")
@@ -119,7 +128,7 @@ def check(pack: dict, cat: dict | None = None) -> list:
                                          and isinstance(m.get("rgb"), list) and len(m["rgb"]) == 3 and all(isinstance(c, int) and 0 <= c <= 255 for c in m["rgb"])):
         err.append(f"모르는 낱말 강조: {m}")
     if "outline_px" in cap and not (isinstance(cap["outline_px"], (int, float)) and 0 <= cap["outline_px"] <= 20):
-        err.append("자막 외곽선은 0~20px")
+        err.append("자막 외곽선은 0~20px")   # 화면 막대는 0~12(넘으면 글자가 뭉개진다), Claude 가 말로 키우는 건 20까지
     if tts.get("voice_id") and tts["voice_id"] not in {v["voice_id"] for v in cat["voices"]}:
         err.append(f"모르는 목소리: {tts.get('name') or tts['voice_id']}")
     if tts.get("tempo") is not None and not (isinstance(tts["tempo"], (int, float)) and 0.8 <= tts["tempo"] <= 1.8):

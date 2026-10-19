@@ -108,6 +108,8 @@ def check_row(row) -> dict:
 def to_snapshot(frame, text: dict | None = None) -> dict:
     """설명서 → 라이브 렌더러 스냅샷(scene_style.validate_snapshot 을 통과하는 모양).
     text: 작업의 제목 문구 등({"hook1": .., "hook2": ..}) — 비우면 작업 제목(context.text)을 그대로 쓴다."""
+    if frame.get("shortem_template"):                     # 고객이 숏템메이커 템플릿(썰20·고정20)을 고른 편(관제 234 5판)
+        return template_snapshot(frame, frame["shortem_template"], text)
     row = build_row(frame)
     title = next((l for l in schema.all_layers(row["frame"]["spec"]) if l["kind"] == "text" and l["role"] == "title"), None)
     enter = title and title["enter"]
@@ -119,4 +121,33 @@ def to_snapshot(frame, text: dict | None = None) -> dict:
     snap.update(caption_effects(row["frame"]["spec"])[0])
     if text:
         snap["text"] = {k: str(v) for k, v in text.items() if k in ("channel", "hook1", "hook2", "bodyTitle")}
+    return snap
+
+
+TEMPLATE_MODES = {"story": "precision20-data.js", "continuous": "continuous20-data.js"}
+
+
+def template_rows(mode: str) -> list:
+    """숏템메이커 템플릿 행(라이브 데이터 파일 out/precision20-data.js·continuous20-data.js) — 판단 주인은 그 데이터 파일.
+    '원본 영상 그대로'(plain)와 칼카피 틀 행(custom_)은 템플릿이 아니라 뺀다."""
+    import json
+    from pathlib import Path
+    raw = (Path(__file__).resolve().parents[2] / "out" / TEMPLATE_MODES[mode]).read_text(encoding="utf-8-sig").strip()
+    rows = json.loads(raw.split("=", 1)[1].rstrip(";\r\n "))
+    return [r for r in rows if r["id"] != "plain" and not r["id"].startswith("custom_")]
+
+
+def template_snapshot(frame, tpl: dict, text: dict | None = None) -> dict:
+    """프리셋 틀 대신 숏템메이커 템플릿 한 장으로 그린다. 자막 등장·강조는 프리셋(틀 설명서)이 정한 것을 그대로 옮긴다
+    (바꾼 칸만 바뀐다 — 사장님 10-19). 영상 칸 자리는 템플릿이 정한다(렌더러 geometry → compose)."""
+    mode, tid = tpl.get("mode"), tpl.get("id")
+    if mode not in TEMPLATE_MODES or tid not in {r["id"] for r in template_rows(mode)}:
+        raise schema.FrameError(f"모르는 템플릿: {mode}/{tid}")
+    snap = {"version": 1, "mode": mode, "presetId": tid, "sceneIndex": 0, "motionPack": "off"}
+    snap.update(caption_effects(schema.validate(frame))[0])
+    snap["text"] = {"channel": str(tpl.get("channel") or "")}             # 템플릿 기본 채널명('숏템메이커')이 찍히지 않게 — 10-19 렌더 실측
+    if tpl.get("ad"):                                                      # 프리셋의 [광고] 표시는 템플릿에서도 남긴다(표시 의무) — 렌더러 광고 표시 칸
+        snap["branding"] = {"ad": {"on": True, "text": str(tpl["ad"])[:40], "x": 90, "y": 11, "size": 3, "opacity": 100, "color": "#ffffff"}}
+    if text:
+        snap["text"].update({k: str(v) for k, v in text.items() if k in ("channel", "hook1", "hook2", "bodyTitle")})
     return snap

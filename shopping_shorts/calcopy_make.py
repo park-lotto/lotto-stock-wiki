@@ -158,7 +158,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                         if text.get("caption_font") and L.get("font") != text["caption_font"]:
                             applied.append(f"{fid} 자막 글꼴 {L.get('font')} → {text['caption_font']}"); L["font"] = text["caption_font"]
                         if "outline_px" in cap:
-                            L["outline"] = {"px": cap["outline_px"], "rgb": (L.get("outline") or {}).get("rgb") or [0, 0, 0]} if cap["outline_px"] else None
+                            L["outline"] = ({"px": cap["outline_px"], "rgb": list(cap.get("outline_rgb") or (L.get("outline") or {}).get("rgb") or [0, 0, 0])}
+                                            if cap["outline_px"] else None)   # 색: 고객이 고른 색 → 틀 색 → 검정(10-19 검정 글자+검정 외곽선이 뭉개진 그림 실측)
                             applied.append(f"{fid} 자막 외곽선 {cap['outline_px']}px")
                         if cap.get("enter"):
                             L["enter"] = None if cap["enter"] == "none" else cap["enter"]
@@ -169,6 +170,13 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                     c = c.get(fid) if isinstance(c, dict) else c
                     if c:
                         applied.append(f"{fid} 머리 띠 색 {L.get('rgb')} → {c}"); L["rgb"] = list(c)
+        tpl = pack.get("template")
+        if isinstance(tpl, dict) and tpl.get("id"):          # 숏템메이커 템플릿으로 그리기(관제 234 5판) — 그리는 판단은 to_snapshot.template_snapshot 한 곳
+            ad = next((L.get("text") for fr in _frames(frame) for L in fr.get("layers", [])
+                       if L.get("kind") == "text" and L.get("role") == "brand" and is_disclosure(L.get("text"))), None)
+            # 템플릿에는 프리셋의 채널명 칸·[광고] 칸이 없다 — 고객 채널명과 광고 표시(표시 의무)를 템플릿 칸으로 옮겨 달라고 함께 싣는다
+            frame["shortem_template"] = {"mode": tpl.get("mode"), "id": tpl["id"], "channel": str(new_name or ""), "ad": ad}
+            applied.append(f"화면 템플릿 → 숏템메이커 {tpl.get('mode')}/{tpl['id']}")
     tts, bgm = pack.get("tts") or {}, pack.get("bgm") or {}
     remake_args = {}
     if tts.get("voice_id"):

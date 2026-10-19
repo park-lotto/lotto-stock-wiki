@@ -137,3 +137,27 @@ def test_merge_keeps_ad_disclosure():
     cfg = MK.merge_preset_pack("channel/sseolpulda/preset/A_흰바탕창/창아래_검정", {"brand": {"channel_name": "내 채널"}})
     texts = [L.get("text") for fr in MK._frames(cfg["frame"]) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand"]
     assert "[광고]" in texts and "내 채널" not in texts
+
+
+def test_template_pack_keeps_channel_and_ad_disclosure():
+    """숏템메이커 템플릿 고르기(관제 234 5판) — 템플릿에도 고객 채널명·[광고] 표시가 남는다(10-19 렌더 실측: 기본 '숏템메이커'·광고 사라짐)."""
+    import pytest
+    from shopping_shorts import calcopy_make as MK, scene_style
+    from shopping_shorts.calcopy_frame import to_snapshot, schema
+    P = "channel/sseolpulda/preset/A_흰바탕창/창아래_검정"
+    cfg = MK.merge_preset_pack(P, {"template": {"mode": "story", "id": "t11"}, "brand": {"channel_name": "우리채널"}})
+    snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(cfg["frame"]))
+    assert (snap["mode"], snap["presetId"], snap["text"]["channel"]) == ("story", "t11", "우리채널")
+    assert snap["branding"]["ad"]["on"] and "광고" in snap["branding"]["ad"]["text"]
+    plain = to_snapshot.to_snapshot(MK.merge_preset_pack(P, {})["frame"])
+    assert plain["presetId"].startswith("custom_") and "customFrame" in plain, "템플릿을 안 고르면 프리셋 틀 그대로"
+    bad = MK.merge_preset_pack(P, {"template": {"mode": "story", "id": "zz"}})
+    with pytest.raises(schema.FrameError):
+        to_snapshot.to_snapshot(bad["frame"])
+
+
+def test_caption_outline_color_from_pack():
+    from shopping_shorts import calcopy_make as MK
+    cfg = MK.merge_preset_pack("channel/sseolpulda/preset/A_흰바탕창/창아래_검정", {"text": {"caption": {"outline_px": 6, "outline_rgb": [255, 255, 255]}}})
+    cap = next(L for fr in MK._frames(cfg["frame"]) for L in fr["layers"] if L.get("role") == "caption")
+    assert cap["outline"] == {"px": 6, "rgb": [255, 255, 255]}
