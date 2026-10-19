@@ -42,6 +42,50 @@ SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA 
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
 
 
+# 만들기 경로의 입구 — 추적이 못 본 갈래(예: 나레형 렌더는 목소리 비용 때문에 시험에서 안 돌림)도 빠지지 않게,
+# 이 모듈들과 그 '파일 맨 위' import 를 따라간 모듈은 늘 넣는다(함수 안 import 는 추적이 맡는다).
+ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calcopy/engine/worker.py",
+         "tools/calcopy/engine/worker_steps.py", "tools/calcopy/engine/remake.py", "tools/calcopy/remake_video.py",
+         "tools/calcopy/narr_video.py", "tools/calcopy/engine/client_llm.py", "tools/calcopy/engine/asr_local.py",
+         "tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/yt_channel.py",
+         "shopping_shorts/scene_style.py")
+
+
+def top_imports(engine: Path, entries=ENTRY) -> set[str]:
+    """입구 모듈의 모듈 맨 위 import 를 우리 패키지(shopping_shorts·tools·pipeline) 안에서 따라간 파일들."""
+    import ast
+    def mod_file(name):
+        p = engine / Path(*name.split("."))
+        for c in (p.with_suffix(".py"), p / "__init__.py"):
+            if c.is_file():
+                return c
+        return None
+    todo, seen = [engine / e for e in entries], set()
+    while todo:
+        f = todo.pop()
+        rel = f.relative_to(engine).as_posix()
+        if rel in seen or not f.is_file():
+            continue
+        seen.add(rel)
+        tree = ast.parse(f.read_text(encoding="utf-8"))
+        pkg = rel[:-3].replace("/", ".")
+        pkg = pkg if f.name == "__init__.py" else pkg.rsplit(".", 1)[0]
+        for n in tree.body:   # 맨 위 문장만(함수·클래스 안 import 는 제외)
+            names = []
+            if isinstance(n, ast.Import):
+                names = [a.name for a in n.names]
+            elif isinstance(n, ast.ImportFrom):
+                base = (pkg.split(".")[:len(pkg.split(".")) - (n.level - 1)] if n.level else [])
+                mod = ".".join(base + ([n.module] if n.module else []))
+                names = [mod] + [f"{mod}.{a.name}" for a in n.names]
+            for x in names:
+                if x.split(".")[0] in ("shopping_shorts", "tools", "pipeline"):
+                    m = mod_file(x)
+                    if m:
+                        todo.append(m)
+    return seen
+
+
 def forbidden(rel: str) -> str | None:
     for pat in FORBIDDEN:
         if fnmatch.fnmatch(rel, pat) or rel == pat:
@@ -93,7 +137,7 @@ def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
     mods, data = traced(traces, engine)
-    want = sorted(mods | data | set(RENDERER_EXTRA) | set(showcase_deps(engine)))
+    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)
