@@ -257,13 +257,17 @@ def script_prompt(picks, detail, feedback=None):
 _PRICE_RE = re.compile(r"\d[\d,]*\s*(원|만\s*원|만원|%)|\d+\s*성급")
 
 
-def script_issues(lines, detail, n_expected=None):
-    """대본 금지 검사(렌더 전 관문). 문제 목록(빈 목록 = 통과)."""
+def script_issues(lines, detail, n_expected=None, style=None):
+    """대본 금지 검사(렌더 전 관문). 문제 목록(빈 목록 = 통과).
+    style 이 화자 창작을 허용하는 채널 말투(STYLES[..]["persona"])면 '가 본 척' 검사는 끄고 그 채널 어미 검사를 켠다."""
     issues = []
+    persona = bool((STYLES.get(style or "") or {}).get("persona"))
+    if style:
+        issues += style_ending_issues(lines, style)
     text = " ".join(lines or [])
     if n_expected and len(lines or []) != n_expected:
         issues.append("줄 수 %d (기대 %d)" % (len(lines or []), n_expected))
-    for w in ("다녀왔", "좋았고요", "먹어봤", "묵어봤", "가봤는데"):
+    for w in (() if persona else ("다녀왔", "좋았고요", "먹어봤", "묵어봤", "가봤는데")):
         if w in text:
             issues.append("가 본 척: " + w)
     if _PRICE_RE.search(text):
@@ -360,12 +364,19 @@ _JUDGE_PROMPT_SCRIPT = (
     "\"bad_lines\": [\"줄번호: 이유\"], \"one_line\": \"한 줄 평\"}]}")
 
 
-def judge_scripts(versions, picks, call=None):
-    """오푸스 채점(5기준) — 쓴 것과 다른 호출이 본다. 반환: {유형: {점수…, total, bad_lines, one_line}}."""
+def judge_scripts(versions, picks, call=None, style=None):
+    """오푸스 채점(5기준) — 쓴 것과 다른 호출이 본다. 반환: {유형: {점수…, total, bad_lines, one_line}}.
+    style 이 화자 창작을 허용하는 말투면 그 허용선을 채점자에게도 알린다(쓰는 쪽과 재는 쪽이 다른 규칙이면 안 된다)."""
     call = call or claude_call
     cand = "\n\n".join("%d) [%s]\n%s" % (k + 1, v.get("type", ""), "\n".join("%d. %s" % (i + 1, l) for i, l in enumerate(v["lines"])))
                        for k, v in enumerate(versions))
-    got = call([p["path"] for p in picks], _JUDGE_PROMPT_SCRIPT % (len(picks), REFERENCE_SCRIPTS[1][1], cand)) or {}
+    prompt = _JUDGE_PROMPT_SCRIPT % (len(picks), REFERENCE_SCRIPTS[1][1], cand)
+    st = STYLES.get(style or "")
+    if st and st.get("persona"):
+        prompt += ("\n\n[이 채널의 창작 허용선] 화자 설정·지인·가족·계기·감상·체감 비유·결과 과장('와이프가 보여줬는데', "
+                   "'보는 사람마다 묻더라고요', '말을 잃더라고요')은 이 채널의 결이라 감점하지 마라. 감점은 시설·물건·풍경·시간대가 "
+                   "그 화면 사진과 안 맞을 때만. 말투 기준: " + st["guide"][:300])
+    got = call([p["path"] for p in picks], prompt) or {}
     out = {}
     for s in got.get("scores") or []:
         k = int(s.get("v", 0)) - 1
@@ -376,16 +387,67 @@ def judge_scripts(versions, picks, call=None):
     return out
 
 
-def write_script_claude(picks, detail, model="opus"):
-    """오푸스가 사진 7장을 직접 보며 3유형을 쓰고 → 금지 검사 → 다른 오푸스 호출이 채점 → 최고점 + 금지 통과를 추천."""
+# ── 채널 말투(스타일) — 같은 사진·같은 컷 짝 위에 말투만 갈아 끼운다 ────────────────────────────────
+#   근거: channel/homedesignnote/대본설명서/설명서.md (두유노홈디노 원본 49편 실측, 2026-10-16)
+#   ★창작 허용선(그 설명서 2판): 화자·지인·가족·계기·극단행동·감상·체감 비유·결과 과장 = 창작 허용(이 채널의 결).
+#     근거 필수 = 시설·속성(→ 사진에 보이는 것만)·가격·인기. 그래서 이 말투에선 '가 본 척' 금지를 풀고 사진 검사는 그대로 둔다.
+STYLES = {
+    "두유노홈디노": {
+        "persona": True,
+        "endings_own": ("더라고요", "더라구요", "어요", "아요", "세요", "대요", "잖아요", "거든요", "예요", "에요", "해요", "나요", "요"),
+        "endings_foreign": ("네요", "는데요", "음", "임", "함", "거"),
+        "guide": (
+            "말투 = 인스타 '두유노홈디노' 채널. 존댓말 체험담. 어미는 ~더라고요(가장 많이)·~어요·~대요·~잖아요·~거든요·~세요. "
+            "~네요·~는데요·~음/임/함 으로 끝내지 마라(남의 어미).\n"
+            "문장은 '~했는데 ~라서 ~하니까 ~더라고요' 처럼 길게 이어 붙인다(문장 4~5개). 7줄은 그 긴 문장의 마디다 — "
+            "줄 끝이 '~는데', '~고', '~니까', '~어서' 로 다음 줄에 이어져도 된다(자막은 줄 단위로 끊긴다).\n"
+            "첫 문장 = 주변 사람 계기로 연다: '저희 와이프가 ~ 보여줬는데', '여행 좋아하는 친구가 ~ 하더라고요', "
+            "'회사 언니가 ~ 다녀와서 자랑을 하는데'. 또는 고백형('~하려다가 와이프한테 혼났어요').\n"
+            "가운데 = 화면마다 보이는 것 + 체감 비유('호텔인데 미술관 같더라고요') + 사회적 반응('보는 사람마다 어디냐고 물어보더라고요'). "
+            "말버릇을 1~2번: '보는 사람마다', '심지어 이게', '이거 하나만', '너무 좋아요'.\n"
+            "마지막 = 결과 과장 + 댓글 유도('이제 다른 데는 못 가겠더라고요, 어딘지 궁금하면 댓글에 정보 남겨 주세요').\n"
+            "화자·지인·계기·감상은 지어내도 되지만, 시설·물건·풍경은 그 화면 사진에 보이는 것만 말한다."),
+        "types": ("지인사건형", "고백·체험단정형", "발견·반응형"),
+    },
+}
+
+
+def style_ending_issues(lines, style):
+    """채널 말투 검사 — 문장 끝 어미(마침표·물음표·느낌표·마지막 줄)가 그 채널 어미인가. 남의 어미면 지적."""
+    st = STYLES.get(style or "")
+    if not st:
+        return []
+    text = " ".join(lines or [])
+    sents = [x.strip(" '\"") for x in re.split(r"[.!?]\s*", text) if x.strip()]
+    issues = []
+    for s in sents:
+        tail = re.sub(r"[^가-힣]+$", "", s)
+        if any(tail.endswith(e) for e in st["endings_foreign"]) and not any(tail.endswith(e) for e in ("어요", "아요")):
+            issues.append("말투(남의 어미): …" + tail[-8:])
+    own = sum(1 for s in sents if any(re.sub(r"[^가-힣]+$", "", s).endswith(e) for e in st["endings_own"]))
+    if sents and own / len(sents) < 0.75:
+        issues.append("말투: 채널 어미 문장 %d/%d" % (own, len(sents)))
+    return issues
+
+
+def write_script_claude(picks, detail, model="opus", style=None):
+    """오푸스가 사진 7장을 직접 보며 3유형을 쓰고 → 금지 검사 → 다른 오푸스 호출이 채점 → 최고점 + 금지 통과를 추천.
+    style = STYLES 의 채널 말투(예: '두유노홈디노') — 말투·유형만 바꾸고 화면 짝·근거 규칙은 그대로."""
     p = script_prompt(picks, detail).replace("아래 화면이 이 순서로", "열어 본 사진(photo_1~)이 이 순서로")
+    st = STYLES.get(style or "")
+    if st:
+        p = p.replace("대본 3개(유형마다 1개)를 써라.", "대본 3개를 써라 — 유형: " + " / ".join(st["types"]) + ".")
+        p = p.replace("3. 직접 다녀온 척하지 마라('다녀왔는데', '좋았고요', '먹어봤는데' 금지). 보이는 것을 생생하게 소개하는 말투.",
+                      "3. [말투] " + st["guide"])
+        p = p.replace("짧고 센 문장, 해요체, 한 줄 = 한 호흡.", "줄은 긴 문장의 마디(이어지는 연결어미 허용).")
     got = claude_call([q["path"] for q in picks], p + '\n\nJSON: {"versions": [{"type": "유형", "lines": ["줄1", ...]}]}', model=model)
     versions = [v for v in got.get("versions") or [] if isinstance(v, dict) and v.get("lines")]
-    issues = {v.get("type", "?"): script_issues(v["lines"], detail, len(picks)) for v in versions}
-    scores = judge_scripts(versions, picks) if versions else {}
+    issues = {v.get("type", "?"): script_issues(v["lines"], detail, len(picks), style=style) for v in versions}
+    scores = judge_scripts(versions, picks, style=style) if versions else {}
     for t, sc in scores.items():
         issues.setdefault(t, []).extend("사진 대조: " + b for b in sc.get("bad_lines") or [])
-    hard_ok = [v for v in versions if not [x for x in script_issues(v["lines"], detail, len(picks)) if not x.startswith("길이")]]
+    hard_ok = [v for v in versions if not [x for x in script_issues(v["lines"], detail, len(picks), style=style)
+                                            if not x.startswith(("길이", "말투"))]]
     chosen = max(hard_ok or versions, key=lambda v: (scores.get(v.get("type", "?")) or {}).get("total", 0)) if versions else None
     return {"chosen": chosen, "versions": versions, "issues": issues, "scores": scores, "writer": "claude-" + model,
             "clean": bool(chosen) and not issues.get(chosen.get("type", "?")), "attempts": 1}

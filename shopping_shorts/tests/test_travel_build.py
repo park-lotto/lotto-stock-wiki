@@ -67,3 +67,13 @@ def test_write_script_picks_clean_version_and_retries_with_feedback():
     picks = [_j(i, "water", 3) for i in range(7)]
     r = tb.write_script(picks, {"name": "네스트호텔"}, call=call, verify=lambda *a, **k: {"checks": []})
     assert r["chosen"]["type"] == "감각/공간 몰입형" and r["clean"] and r["attempts"] == 1
+
+
+def test_style_hdn_endings_and_persona_allowed():
+    good = ["와이프가 바다 앞 풀을 보여줬는데", "선베드 너머가 전부 바다라서", "로비가 미술관 같더라고요.",
+            "심지어 침대에서도 바다가 보이거든요.", "밤엔 잔디밭이 빛나고", "소파가 넓더라고요.", "궁금하면 댓글 주세요."]
+    iss = tb.script_issues(good, {}, 7, style="두유노홈디노")
+    assert not [x for x in iss if x.startswith(("말투", "가 본 척"))], iss
+    bad = ["풀이 정말 좋네요.", "바다가 보임.", "로비 최고임.", "침대 넓음.", "정원 예쁨.", "소파 좋음.", "댓글 주세요."]
+    assert [x for x in tb.script_issues(bad, {}, 7, style="두유노홈디노") if x.startswith("말투")]
+    assert [x for x in tb.script_issues(["다녀왔는데 좋았고요"] * 7, {}, 7) if x.startswith("가 본 척")]     # 기본 말투는 막는다
