@@ -44,32 +44,63 @@
    "mute": false,
    "audio_src": "Ij6BNYohK2o_audio.m4a",
    "audio_ss": 197.5,
-   "audio_dur": 2.77,
+   "audio_dur": 0.8,
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     197.5,
-    200.27
+    198.3
    ],
    "ss": 197.5,
-   "dur": 2.77,
+   "dur": 0.8,
    "t_final_est": [
     0.0,
+    0.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    439,
+    54,
+    1053,
+    1026
+   ],
+   "scale": 1.0253,
+   "ours": "파란 재킷 투자자가 종이컵 커피를 마심(원본 반응 컷 — 벤치 0~3초와 같은 샷). 0초 원 = 이 컷(원 0.80초)의 얼굴로 fx_place.fix 가 크롭 계산",
+   "audio": "원본 소리(원음)",
+   "why_crop": "fx_place.hook_circle: 얼굴 검출(YuNet 3프레임) 얼굴 높이 329px×1.025 = 창 폭 0.31 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 198.3,
+   "audio_dur": 1.97,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    198.3,
+    200.27
+   ],
+   "ss": 198.3,
+   "dur": 1.97,
+   "t_final_est": [
+    0.8,
     2.77
    ],
    "res": "1920x1080",
    "src_crop": [
-    408,
-    33,
-    1075,
-    1047
+    439,
+    54,
+    1053,
+    1026
    ],
-   "scale": 1.0048,
-   "ours": "파란 재킷 투자자가 종이컵 커피를 마시고 내려놓음(원본 반응 컷 — 벤치 0~3초와 같은 샷)",
-   "audio": "원본 소리(원음)",
-   "why_crop": "fx_place.hook_circle: 얼굴 검출(YuNet 3프레임) 얼굴 높이 335px×1.005 = 창 폭 0.31 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+   "scale": 1.026,
+   "ours": "같은 샷 이어서 — 컵을 내리고 웃음(크롭 = 첫 컷 fix 크롭과 같게, 이음 없음)",
+   "audio": "원본 소리(원음)"
   },
   {
-   "i": 1,
+   "i": 2,
    "line": "O1",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -100,7 +131,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 2,
+   "i": 3,
    "line": "N1",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -108,13 +139,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     41.9,
-    43.412
+    43.163
    ],
    "ss": 41.9,
-   "dur": 1.512,
+   "dur": 1.263,
    "t_final_est": [
     3.45,
-    4.96
+    4.71
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -128,35 +159,35 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 3,
+   "i": 4,
    "line": "N1",
    "kind": "나레",
    "src": "tXJe96m7pFE.mp4",
    "mute": true,
    "url": "https://www.youtube.com/watch?v=tXJe96m7pFE",
    "src_orig_span": [
-    7.5,
-    8.298
+    5.0,
+    5.913
    ],
-   "ss": 7.5,
-   "dur": 0.798,
+   "ss": 5.0,
+   "dur": 0.913,
    "t_final_est": [
-    4.96,
-    5.76
+    4.71,
+    5.63
    ],
    "res": "1920x1080",
    "src_crop": [
-    545,
+    445,
     0,
     1109,
     1080
    ],
    "scale": 0.974,
-   "ours": "판매사 공식 영상: 두 손으로 필터 걸이를 펼쳐 컵에 거는 손 근접",
+   "ours": "판매사 공식 영상: 두 손으로 필터 걸이를 펼치는 손 근접(카메라 고정 구간 — 7.5~8.45 는 확대 움직임이라 점프줌으로 잡혀 바꿈)",
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 4,
+   "i": 5,
    "line": "O3",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -172,8 +203,8 @@
    "ss": 70.28,
    "dur": 3.74,
    "t_final_est": [
-    5.76,
-    9.5
+    5.63,
+    9.37
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -187,7 +218,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 5,
+   "i": 6,
    "line": "N3",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -195,13 +226,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     77.3,
-    78.667
+    78.647
    ],
    "ss": 77.3,
-   "dur": 1.367,
+   "dur": 1.347,
    "t_final_est": [
-    9.5,
-    10.87
+    9.37,
+    10.71
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -215,7 +246,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 6,
+   "i": 7,
    "line": "N3",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -223,13 +254,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     102.2,
-    103.653
+    103.631
    ],
    "ss": 102.2,
-   "dur": 1.453,
+   "dur": 1.431,
    "t_final_est": [
-    10.87,
-    12.32
+    10.71,
+    12.14
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -243,7 +274,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 7,
+   "i": 8,
    "line": "O4",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -259,8 +290,8 @@
    "ss": 88.12,
    "dur": 3.38,
    "t_final_est": [
-    12.32,
-    15.7
+    12.14,
+    15.52
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -274,7 +305,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 8,
+   "i": 9,
    "line": "N5",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -282,13 +313,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     132.0,
-    133.672
+    133.504
    ],
    "ss": 132.0,
-   "dur": 1.672,
+   "dur": 1.504,
    "t_final_est": [
-    15.7,
-    17.37
+    15.52,
+    17.03
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -302,7 +333,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 9,
+   "i": 10,
    "line": "N5",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -310,13 +341,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     136.3,
-    137.708
+    137.566
    ],
    "ss": 136.3,
-   "dur": 1.408,
+   "dur": 1.266,
    "t_final_est": [
-    17.37,
-    18.78
+    17.03,
+    18.29
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -330,7 +361,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 10,
+   "i": 11,
    "line": "O6",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -346,8 +377,8 @@
    "ss": 141.34,
    "dur": 2.1,
    "t_final_est": [
-    18.78,
-    20.88
+    18.29,
+    20.39
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -361,7 +392,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 11,
+   "i": 12,
    "line": "O6",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -377,8 +408,8 @@
    "ss": 143.44,
    "dur": 0.86,
    "t_final_est": [
-    20.88,
-    21.74
+    20.39,
+    21.25
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -392,7 +423,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 12,
+   "i": 13,
    "line": "O7",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -408,8 +439,8 @@
    "ss": 144.6,
    "dur": 0.44,
    "t_final_est": [
-    21.74,
-    22.18
+    21.25,
+    21.69
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -423,7 +454,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 13,
+   "i": 14,
    "line": "O7",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -439,8 +470,8 @@
    "ss": 145.04,
    "dur": 1.77,
    "t_final_est": [
-    22.18,
-    23.95
+    21.69,
+    23.46
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -454,7 +485,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 14,
+   "i": 15,
    "line": "O7",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -470,8 +501,8 @@
    "ss": 146.81,
    "dur": 0.75,
    "t_final_est": [
-    23.95,
-    24.7
+    23.46,
+    24.21
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -485,63 +516,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 15,
-   "line": "N6",
-   "kind": "나레",
-   "src": "Ij6BNYohK2o.mp4",
-   "mute": true,
-   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
-   "src_orig_span": [
-    183.1,
-    184.638
-   ],
-   "ss": 183.1,
-   "dur": 1.538,
-   "t_final_est": [
-    24.7,
-    26.24
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    365,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "창업자가 지난 이야기를 함(소리 끔)",
-   "audio": "원본 소리 끔 + TTS"
-  },
-  {
    "i": 16,
-   "line": "N6",
-   "kind": "나레",
-   "src": "Ij6BNYohK2o.mp4",
-   "mute": true,
-   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
-   "src_orig_span": [
-    117.4,
-    118.682
-   ],
-   "ss": 117.4,
-   "dur": 1.282,
-   "t_final_est": [
-    26.24,
-    27.52
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "방송 삽입 화면: 줄 선 'POUR OVER SET' 상자들(포장 글자 = 제품)",
-   "audio": "원본 소리 끔 + TTS"
-  },
-  {
-   "i": 17,
    "line": "O8",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -557,8 +532,8 @@
    "ss": 229.66,
    "dur": 1.57,
    "t_final_est": [
-    27.52,
-    29.09
+    24.21,
+    25.78
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -572,7 +547,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 18,
+   "i": 17,
    "line": "O8",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -588,8 +563,8 @@
    "ss": 231.23,
    "dur": 1.19,
    "t_final_est": [
-    29.09,
-    30.28
+    25.78,
+    26.97
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -603,7 +578,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 19,
+   "i": 18,
    "line": "N7",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -611,13 +586,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     15.3,
-    16.685
+    16.584
    ],
    "ss": 15.3,
-   "dur": 1.385,
+   "dur": 1.284,
    "t_final_est": [
-    30.28,
-    31.67
+    26.97,
+    28.26
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -631,7 +606,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 20,
+   "i": 19,
    "line": "N7",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -639,13 +614,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     289.95,
-    292.535
+    292.346
    ],
    "ss": 289.95,
-   "dur": 2.585,
+   "dur": 2.396,
    "t_final_est": [
-    31.67,
-    34.25
+    28.26,
+    30.65
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -659,7 +634,7 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 21,
+   "i": 20,
    "line": "O9",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -675,8 +650,8 @@
    "ss": 295.56,
    "dur": 1.0,
    "t_final_est": [
-    34.25,
-    35.25
+    30.65,
+    31.65
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -690,63 +665,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 22,
-   "line": "N9",
-   "kind": "나레",
-   "src": "Ij6BNYohK2o.mp4",
-   "mute": true,
-   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
-   "src_orig_span": [
-    422.0,
-    423.54
-   ],
-   "ss": 422.0,
-   "dur": 1.54,
-   "t_final_est": [
-    35.25,
-    36.79
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "대머리 투자자가 손을 펴며 빠지겠다고 말함(소리 끔)",
-   "audio": "원본 소리 끔 + TTS"
-  },
-  {
-   "i": 23,
-   "line": "N9",
-   "kind": "나레",
-   "src": "Ij6BNYohK2o.mp4",
-   "mute": true,
-   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
-   "src_orig_span": [
-    494.5,
-    496.04
-   ],
-   "ss": 494.5,
-   "dur": 1.54,
-   "t_final_est": [
-    36.79,
-    38.33
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "검은 정장 투자자가 손가락을 들며 빠짐(소리 끔)",
-   "audio": "원본 소리 끔 + TTS"
-  },
-  {
-   "i": 24,
+   "i": 21,
    "line": "O10",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -762,8 +681,8 @@
    "ss": 519.96,
    "dur": 1.36,
    "t_final_est": [
-    38.33,
-    39.69
+    31.65,
+    33.01
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -777,7 +696,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 25,
+   "i": 22,
    "line": "O10",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -793,8 +712,8 @@
    "ss": 521.32,
    "dur": 1.47,
    "t_final_est": [
-    39.69,
-    41.16
+    33.01,
+    34.48
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -808,7 +727,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 26,
+   "i": 23,
    "line": "O10",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -824,8 +743,8 @@
    "ss": 522.79,
    "dur": 2.03,
    "t_final_est": [
-    41.16,
-    43.19
+    34.48,
+    36.51
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -839,24 +758,24 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 27,
+   "i": 24,
    "line": "O10",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
    "mute": false,
    "audio_src": "Ij6BNYohK2o_audio.m4a",
    "audio_ss": 524.82,
-   "audio_dur": 0.78,
+   "audio_dur": 0.58,
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     524.82,
-    525.6
+    525.4
    ],
    "ss": 524.82,
-   "dur": 0.78,
+   "dur": 0.58,
    "t_final_est": [
-    43.19,
-    43.97
+    36.51,
+    37.09
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -870,7 +789,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 28,
+   "i": 25,
    "line": "O11",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -886,8 +805,8 @@
    "ss": 582.5,
    "dur": 0.42,
    "t_final_est": [
-    43.97,
-    44.39
+    37.09,
+    37.51
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -901,7 +820,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 29,
+   "i": 26,
    "line": "O11",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -917,8 +836,8 @@
    "ss": 582.92,
    "dur": 1.5,
    "t_final_est": [
-    44.39,
-    45.89
+    37.51,
+    39.01
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -932,7 +851,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 30,
+   "i": 27,
    "line": "O11",
    "kind": "원음",
    "src": "Ij6BNYohK2o.mp4",
@@ -948,8 +867,8 @@
    "ss": 584.42,
    "dur": 1.28,
    "t_final_est": [
-    45.89,
-    47.17
+    39.01,
+    40.29
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -963,7 +882,7 @@
    "audio": "원본 소리(원음)"
   },
   {
-   "i": 31,
+   "i": 28,
    "line": "N11",
    "kind": "나레",
    "src": "Ij6BNYohK2o.mp4",
@@ -971,13 +890,13 @@
    "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
    "src_orig_span": [
     593.5,
-    594.91
+    594.791
    ],
    "ss": 593.5,
-   "dur": 1.41,
+   "dur": 1.291,
    "t_final_est": [
-    47.17,
-    48.58
+    40.29,
+    41.59
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -987,53 +906,25 @@
     1080
    ],
    "scale": 0.974,
-   "ours": "창업자가 무대를 걸어 나감",
+   "ours": "창업자가 무대를 걸어 나감(샷 593.33~600.90)",
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 32,
+   "i": 29,
    "line": "N11",
-   "kind": "나레",
-   "src": "Ij6BNYohK2o.mp4",
-   "mute": true,
-   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
-   "src_orig_span": [
-    596.7,
-    598.11
-   ],
-   "ss": 596.7,
-   "dur": 1.41,
-   "t_final_est": [
-    48.58,
-    49.99
-   ],
-   "res": "1920x1080",
-   "src_crop": [
-    405,
-    0,
-    1109,
-    1080
-   ],
-   "scale": 0.974,
-   "ours": "같은 샷 이어서 — 복도로 걸어 나옴",
-   "audio": "원본 소리 끔 + TTS"
-  },
-  {
-   "i": 33,
-   "line": "N12",
    "kind": "나레",
    "src": "Pbt3hLQ5Z28.mp4",
    "mute": true,
    "url": "https://www.youtube.com/watch?v=Pbt3hLQ5Z28",
    "src_orig_span": [
     0.5,
-    1.822
+    1.791
    ],
    "ss": 0.5,
-   "dur": 1.322,
+   "dur": 1.291,
    "t_final_est": [
-    49.99,
-    51.31
+    41.59,
+    42.88
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -1047,21 +938,21 @@
    "audio": "원본 소리 끔 + TTS"
   },
   {
-   "i": 34,
-   "line": "N12",
+   "i": 30,
+   "line": "N11",
    "kind": "나레",
    "src": "Pbt3hLQ5Z28.mp4",
    "mute": true,
    "url": "https://www.youtube.com/watch?v=Pbt3hLQ5Z28",
    "src_orig_span": [
     136.0,
-    137.498
+    137.688
    ],
    "ss": 136.0,
-   "dur": 1.498,
+   "dur": 1.688,
    "t_final_est": [
-    51.31,
-    52.81
+    42.88,
+    44.56
    ],
    "res": "1920x1080",
    "src_crop": [
@@ -1082,15 +973,19 @@
    "kind": "red_circle",
    "at": [
     510,
-    723
+    758
    ],
    "size": 430,
    "how": "face",
-   "why": "벤치 QMJ 0초 얼굴 훅 원(반지름 209 고정) — 자리·첫 컷 크롭은 fx_place.fix 가 얼굴 검출로 계산(render.py --tts-only 뒤)",
+   "t": [
+    0.0,
+    0.8
+   ],
+   "why": "벤치 QMJ 0초 얼굴 훅 원(반지름 209 고정) — 자리·첫 컷 크롭은 fx_place.fix 가 얼굴 검출로 계산. 길이 0.80초 = 첫 컷 끝(벤치 원 길이 0.53~1.43 안, 원은 컷과 같이 사라짐) — 고개를 들기 전(10fps 얼굴 실측 tools/hook_faces.py: 첫 컷 얼굴로 자리 잡으면 0~0.75초 얼굴 둘레 16점 전부 원 안, 옛 판(2.77초 컷 중앙값 자리·끝까지) 평균 0.76)",
    "face_src": {
-    "cx": 915.6,
-    "eye_y": 304.2,
-    "h": 335.5,
+    "cx": 936.6,
+    "eye_y": 353.3,
+    "h": 328.5,
     "n": 3
    },
    "fh_win": 0.312
@@ -1146,7 +1041,7 @@
    ],
    "t": [
     0.17,
-    1.567
+    1.504
    ],
    "how": "target",
    "target": "person",
@@ -1158,74 +1053,7 @@
     1080,
     1400
    ],
-   "radius": 330,
-   "track": [
-    [
-     0.1,
-     540,
-     917
-    ],
-    [
-     0.204,
-     541,
-     918
-    ],
-    [
-     0.308,
-     539,
-     919
-    ],
-    [
-     0.412,
-     555,
-     921
-    ],
-    [
-     0.516,
-     564,
-     922
-    ],
-    [
-     0.62,
-     576,
-     921
-    ],
-    [
-     0.723,
-     593,
-     921
-    ],
-    [
-     0.827,
-     608,
-     921
-    ],
-    [
-     0.931,
-     605,
-     921
-    ],
-    [
-     1.035,
-     579,
-     921
-    ],
-    [
-     1.139,
-     564,
-     922
-    ],
-    [
-     1.243,
-     589,
-     924
-    ],
-    [
-     1.347,
-     598,
-     924
-    ]
-   ]
+   "radius": 330
   },
   {
    "line": "N5",
@@ -1324,7 +1152,7 @@
    "why": "벤치 QMJ 44.367 결정 빨강 — 우리 '딜!' 두 팔 컷(584.42)"
   },
   {
-   "line": "N12",
+   "line": "N11",
    "kind": "flash",
    "color": "초록",
    "at": [
@@ -1335,7 +1163,7 @@
     0.0,
     0.45
    ],
-   "why": "벤치 QMJ 45.667 결과 초록"
+   "why": "벤치 QMJ 45.667 결과 초록 — 우리 방송 후 결과 줄 첫 컷"
   }
  ],
  "sfx_not_drawn": []

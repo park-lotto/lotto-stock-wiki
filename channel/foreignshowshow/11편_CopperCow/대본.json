@@ -107,7 +107,9 @@
   "BBH 벤치 'There are no preservatives or additives.'(94.32~96.24) — 길이 때문에 뺌",
   "BBH 벤치 끝 'Wow.'(233.42~233.72, 0.3초) — '400만 달러?!' 반응으로 끝냄",
   "케빈·데이먼드 '사회주의' 말다툼(450~500초)·마크 4%+자문 지분 역제안(552~575초) — 길이 때문에 뺌",
-  "방송 뒤 시리즈 A 850만 달러(요약 기사만, 1차 출처 못 엶) — 넣지 않음"
+  "방송 뒤 시리즈 A 850만 달러(요약 기사만, 1차 출처 못 엶) — 넣지 않음",
+  "N6 '4년 전만 해도 자매네 차고에서 직접 만들던 커피인데'(f9)·N9 '작년에만 140만 달러 적자라 샤크들이 줄줄이 빠지는데'(f13) — 페이블 10-19 길이 45초 이하 지시로 뺌",
+  "N11·N12(방송 뒤 무산 / 입점) — 페이블 10-19 지시로 한 줄(N11)로 합침"
  ],
  "final": {
   "lines": [
@@ -484,50 +486,6 @@
     ]
    },
    {
-    "id": "N6",
-    "kind": "나레",
-    "fn": "숫자(사연)",
-    "facts": [
-     "f9"
-    ],
-    "caps": [
-     "4년 전만 해도",
-     "자매네 차고에서",
-     "직접 만들던 커피인데"
-    ],
-    "text": "4년 전만 해도 자매네 차고에서 직접 만들던 커피인데",
-    "tts": "사 년 전만 해도 자매네 차고에서 직접 만들던 커피인데",
-    "emph": [
-     {
-      "cap": "4년 전만 해도",
-      "span": "4년",
-      "color": "민트",
-      "whole": false,
-      "why": "숫자 덩어리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "자매네 차고에서",
-      "span": "자매네 차고에서",
-      "color": "파랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "직접 만들던 커피인데",
-      "span": "만들던 커피인데",
-      "color": "초록",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     }
-    ]
-   },
-   {
     "id": "O8",
     "kind": "원음",
     "fn": "숫자",
@@ -556,7 +514,7 @@
      {
       "cap": "지금까지 총매출이",
       "span": "총매출이",
-      "color": "노랑",
+      "color": "민트",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
@@ -565,7 +523,7 @@
      {
       "cap": "400만 달러예요",
       "span": "400만 달러예요",
-      "color": "빨강",
+      "color": "파랑",
       "whole": true,
       "why": "숫자 덩어리",
       "how": "auto",
@@ -574,7 +532,7 @@
      {
       "cap": "400만 달러?!",
       "span": "400만 달러?!",
-      "color": "주황",
+      "color": "초록",
       "whole": true,
       "why": "줄 전체(반응)",
       "how": "auto",
@@ -602,7 +560,7 @@
      {
       "cap": "근데 지분 4%에",
       "span": "4%에",
-      "color": "민트",
+      "color": "노랑",
       "whole": false,
       "why": "숫자 덩어리",
       "how": "auto",
@@ -611,7 +569,7 @@
      {
       "cap": "60만 달러,",
       "span": "60만 달러,",
-      "color": "초록",
+      "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -620,7 +578,7 @@
      {
       "cap": "회사 가치로",
       "span": "회사 가치로",
-      "color": "분홍",
+      "color": "주황",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -629,7 +587,7 @@
      {
       "cap": "1,500만 달러를",
       "span": "1,500만 달러를",
-      "color": "노랑",
+      "color": "민트",
       "whole": true,
       "why": "숫자 덩어리",
       "how": "auto",
@@ -638,7 +596,7 @@
      {
       "cap": "불렀는데",
       "span": "불렀는데",
-      "color": "빨강",
+      "color": "초록",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -668,63 +626,9 @@
      {
       "cap": "말도 안 돼!",
       "span": "말도 안 돼!",
-      "color": "초록",
+      "color": "분홍",
       "whole": true,
       "why": "줄 전체(반응)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     }
-    ]
-   },
-   {
-    "id": "N9",
-    "kind": "나레",
-    "fn": "지분 경쟁(이탈)",
-    "facts": [
-     "f13"
-    ],
-    "caps": [
-     "작년에만",
-     "140만 달러 적자라",
-     "샤크들이",
-     "줄줄이 빠지는데"
-    ],
-    "text": "작년에만 140만 달러 적자라 샤크들이 줄줄이 빠지는데",
-    "tts": "작년에만 백사십만 달러 적자라 샤크들이 줄줄이 빠지는데",
-    "emph": [
-     {
-      "cap": "작년에만",
-      "span": "작년에만",
-      "color": "민트",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "140만 달러 적자라",
-      "span": "140만 달러",
-      "color": "주황",
-      "whole": false,
-      "why": "숫자 덩어리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "샤크들이",
-      "span": "샤크들이",
-      "color": "파랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "줄줄이 빠지는데",
-      "span": "줄줄이 빠지는데",
-      "color": "노랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      }
@@ -749,7 +653,7 @@
     ],
     "span": [
      519.96,
-     525.6
+     525.4
     ],
     "orig_en": "So I'll make you an offer. I'll give you the 600,000 for 8%.",
     "text": "제안 하나 할게요 60만 달러에 지분 8%",
@@ -759,7 +663,7 @@
      {
       "cap": "제안 하나 할게요",
       "span": "하나 할게요",
-      "color": "빨강",
+      "color": "노랑",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
@@ -768,7 +672,7 @@
      {
       "cap": "60만 달러에",
       "span": "60만 달러에",
-      "color": "초록",
+      "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -777,7 +681,7 @@
      {
       "cap": "지분 8%",
       "span": "지분 8%",
-      "color": "민트",
+      "color": "초록",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -814,7 +718,7 @@
      {
       "cap": "제안 받을게요!",
       "span": "제안 받을게요!",
-      "color": "노랑",
+      "color": "민트",
       "whole": true,
       "why": "줄 전체(반응)",
       "how": "auto",
@@ -823,7 +727,7 @@
      {
       "cap": "딜!",
       "span": "딜!",
-      "color": "분홍",
+      "color": "주황",
       "whole": true,
       "why": "줄 전체(반응)",
       "how": "auto",
@@ -832,7 +736,7 @@
      {
       "cap": "좋았어!",
       "span": "좋았어!",
-      "color": "주황",
+      "color": "파랑",
       "whole": true,
       "why": "줄 전체(반응)",
       "how": "auto",
@@ -845,74 +749,40 @@
     "kind": "나레",
     "fn": "방송 후 결과",
     "facts": [
-     "f16"
-    ],
-    "caps": [
-     "근데 방송이 나간 뒤",
-     "이 투자는 결국",
-     "없던 일이 됐다는데"
-    ],
-    "text": "근데 방송이 나간 뒤 이 투자는 결국 없던 일이 됐다는데",
-    "tts": "근데 방송이 나간 뒤 이 투자는 결국 없던 일이 됐다는데",
-    "emph": [
-     {
-      "cap": "근데 방송이 나간 뒤",
-      "span": "근데 방송이",
-      "color": "초록",
-      "whole": false,
-      "why": "머리(꼬리 약함)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "이 투자는 결국",
-      "span": "투자는 결국",
-      "color": "빨강",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "없던 일이 됐다는데",
-      "span": "됐다는데",
-      "color": "민트",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     }
-    ]
-   },
-   {
-    "id": "N12",
-    "kind": "나레",
-    "fn": "방송 후 결과",
-    "facts": [
      "f16",
      "f17"
     ],
     "caps": [
-     "그래도 그 뒤",
-     "홀푸드, 월마트 같은",
-     "마트에 들어갔다고"
+     "방송 뒤 투자는",
+     "결국 없던 일이 됐지만",
+     "홀푸드랑 월마트엔",
+     "들어갔다고"
     ],
-    "text": "그래도 그 뒤 홀푸드, 월마트 같은 마트에 들어갔다고",
-    "tts": "그래도 그 뒤 홀푸드, 월마트 같은 마트에 들어갔다고",
-    "fx": "초록 번쩍 — 벤치 QMJ 45.7 결과",
+    "text": "방송 뒤 투자는 결국 없던 일이 됐지만 홀푸드랑 월마트엔 들어갔다고",
+    "tts": "방송 뒤 투자는 결국 없던 일이 됐지만 홀푸드랑 월마트엔 들어갔다고",
+    "fx": "초록 번쩍 — 벤치 QMJ 45.7 결과(입점 컷 첫머리)",
     "emph": [
      {
-      "cap": "그래도 그 뒤",
-      "span": "그래도 그 뒤",
+      "cap": "방송 뒤 투자는",
+      "span": "투자는",
       "color": "노랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
+      "whole": false,
+      "why": "서술 꼬리",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "홀푸드, 월마트 같은",
-      "span": "월마트 같은",
+      "cap": "결국 없던 일이 됐지만",
+      "span": "일이 됐지만",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "홀푸드랑 월마트엔",
+      "span": "월마트엔",
       "color": "초록",
       "whole": false,
       "why": "서술 꼬리",
@@ -920,11 +790,11 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "마트에 들어갔다고",
+      "cap": "들어갔다고",
       "span": "들어갔다고",
-      "color": "빨강",
-      "whole": false,
-      "why": "서술 꼬리",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      }
