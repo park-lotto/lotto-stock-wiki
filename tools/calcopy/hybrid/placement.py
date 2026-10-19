@@ -256,6 +256,7 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
             st = {"kind": kind, "word": out[i].get("key") or ""}
             if kind == "object_pop":
                 st.update({"src": out[i]["object_src"], "hold": "beat"})
+            st.update({k: rule[k] for k in ("x", "y") if isinstance(rule.get(k), (int, float))})   # 판 설정 스티커 자리(화면 %) — 없으면 그림 쪽 기본 자리
             out[i]["stickers"].append(st)
             log.append(f"스티커 {kind} → {out[i]['line']}「{out[i]['text']}」")
         if len(cand) < need:

@@ -1357,6 +1357,123 @@
    "y": 59.38,
    "bench": "y1105~1175 가운데 1140/1920 — 8편 같음, 나레·원음 같은 자리"
   }
+ },
+ "recipe": {
+  "label": "연예인레시피 타이핑",
+  "desc": "흰 잘난고딕 + 진갈색 테 · 나레만 타닥 타이핑 · 원음은 즉시 · 재료 낱말은 사물 색 — 스타픽룸 타이핑의 변형(자리·글꼴·테만 다름)",
+  "font": "JalnanGothic",
+  "size": 72,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.15em #2B1708",
+    "paintOrder": "stroke fill",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#FEFD02"
+   ]
+  },
+  "emph": {
+   "font": "JalnanGothic",
+   "size": 130,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.15em #2B1708",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": "pop"
+  },
+  "speakers": {
+   "narr": {
+    "text": {
+     "style": {
+      "textShadow": "0 0 0.12em rgba(43,92,43,.35),0 0 0.28em rgba(43,92,43,.35)"
+     }
+    },
+    "enter": "typeGlow"
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {
+   "cut": {
+    "enter": "",
+    "why": "나레 덩어리를 벤치가 한 번에 넣은 곳(배치 규칙 placement.place, 관제 097)"
+   },
+   "pop": {
+    "enter": "pop",
+    "why": "원음 덩어리를 벤치가 작게→크게로 넣은 곳(배치 규칙)"
+   },
+   "cursor": {
+    "enter": "typeCursor",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   },
+   "heart": {
+    "enter": "typeHeart",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   },
+   "glitch": {
+    "enter": "rgbGlitch",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   },
+   "wipe": {
+    "enter": "wipeRTL",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   },
+   "rainbow": {
+    "enter": "rainbowCycle",
+    "text": {
+     "style": {
+      "textShadow": "none"
+     }
+    }
+   }
+  },
+  "bench": "starpick 변형 — tools/calcopy/hybrid/styles/연예인레시피판.json (벤치 값 → 우리 값 note)",
+  "place": {
+   "y": 75.0,
+   "bench": "starpick y59.38(창 안 1140) → 창 아래 검정 띠 1440/1920 (연예인레시피판 창 y400~1340)"
+  },
+  "why": {
+   "font": "GmarketSansBold → JalnanGothic(같은 둥근 굵은 고딕 결, 다른 글꼴)",
+   "stroke": "0.22em #000 → 0.15em #2B1708(얇은 진갈색)",
+   "place": "창 안 y1140 → 창 아래 y1440"
+  }
  }
 }/*PACKS*/;
   // 효과마다 붙는 조건(관제 235) — 벤치에서 언제·어느 줄에 붙었나. 판 등록 작업자가 편마다 배치를 계산하는 근거. 코드는 읽지 않는다.

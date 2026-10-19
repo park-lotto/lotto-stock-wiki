@@ -39,8 +39,18 @@ def path_of(name: str) -> Path:
     return p
 
 
-def load(name: str) -> dict:
+def _raw(name: str, seen: tuple = ()) -> dict:
+    """판 파일 한 장 — `base`(바탕 판 이름)가 있으면 바탕 판을 먼저 깔고 이 파일이 덮는다(변형판: 뼈대는 바탕 판 그대로, 겉모양만 덮기, 10-20)."""
+    if name in seen:
+        raise SystemExit(f"판 설정 base 가 돌고 돈다: {' → '.join(seen + (name,))}")
     raw = json.loads(path_of(name).read_text(encoding="utf-8"))
+    if raw.get("base"):
+        return _merge(_raw(raw["base"], seen + (name,)), raw)
+    return raw
+
+
+def load(name: str) -> dict:
+    raw = _raw(name)
     common = json.loads((DIR / "_common.json").read_text(encoding="utf-8")) if (DIR / "_common.json").exists() else {}
     st = _merge(common, raw)
     miss = [k for k in REQUIRED if k not in st]
