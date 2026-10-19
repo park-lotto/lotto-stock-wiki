@@ -5,6 +5,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,7 +52,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 
 function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f.layers; }
 
-export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride } = {}) {
+export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent } = {}) {
   const FT = fontTable();
   const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
@@ -167,6 +168,24 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         if (!b || b.exp < Date.now()) return fail(res, 403, 'expired', '받기 주소가 만료되었습니다');
         const buf = fs.readFileSync(b.file);
         res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': buf.length }); return res.end(buf);
+      }
+      // 편마다 프리셋(관제 234) — 잠그기는 서버와 같은 파이썬 AESGCM(nonce 12 + 암호문 + 태그, 덧붙임 글 cid|job)로 한다(언어 사이 호환 확인)
+      if (u.pathname === '/api/claude/rent' && req.method === 'POST') {
+        const a = auth(req, res); if (!a) return;
+        const b = await body(req);
+        const L = a.c.lease;
+        if (!L || L.exp <= Date.now() || L.job_id !== b.job || L.fp !== a.fp || (b.lease && b.lease !== L.lease_id)) return fail(res, 409, 'lease_lost', '작업 권한이 없습니다');
+        if (!rent) return fail(res, 503, 'not_ready', '이 프리셋을 지금 준비할 수 없습니다');
+        if (rent.deny) return fail(res, 403, 'not_entitled', '이 프리셋은 지금 쓸 수 없습니다');
+        const aad = `${a.cid}|${b.job}`;
+        const py = `import sys,os,json,base64,hashlib
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+d=sys.stdin.buffer.read();aad=sys.argv[1].encode()
+k=AESGCM.generate_key(bit_length=256);n=os.urandom(12)
+print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode(),"key":base64.b64encode(k).decode(),"sha256":hashlib.sha256(d).hexdigest()}))`;
+        const out = JSON.parse(execFileSync(process.platform === 'win32' ? 'py' : 'python3', ['-c', py, aad], { input: rent.zip }).toString());
+        state.rents = (state.rents || 0) + 1;
+        return send(res, 200, { ok: true, preset_path: rent.preset_path, aad, ...(rent.tamper ? { ...out, key: Buffer.alloc(32).toString('base64') } : out) });
       }
       if (u.pathname === '/api/claude/feedback' && req.method === 'POST') {
         const a = auth(req, res); if (!a) return;

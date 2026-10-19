@@ -19,7 +19,8 @@ import { keyStatus } from './engine/voice.js';
 import { homeDir, workDir, writeFileIn, jail } from './paths.js';
 import { selftest } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
-import { requestContent, answer as aiAnswer } from './engine_bridge.js';
+import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
+import { sweep as sweepRented } from './preset_rent.js';
 
 export const TOOL_TEXT = Object.freeze({
   shortem_setup: '숏템 준비 점검 — 라이선스 확인·이 기기 등록(2대까지)·실행 도구 지문 대조·API 키 파일 유무·디스크 여유를 확인합니다. selftest=true 면 시험 렌더·시험 목소리·시험 다운로드 3종과 자가점검_결과.md 를 작업 폴더 _자가점검 에 만듭니다. 프로그램을 내려받거나 설치하지 않습니다. license_key 를 주면 이 PC 에 저장하고 값은 다시 보여 주지 않습니다.',
@@ -171,6 +172,7 @@ export function buildServer(ctx = makeCtx()) {
 async function main() {
   pruneAudit();
   try { gcCache(); } catch { /* 캐시 없음 */ }
+  try { sweepRented(engineRoot()); } catch { /* 지난번에 못 지운 빌린 프리셋 — 다음에 */ }
   const server = buildServer();
   await server.connect(new StdioServerTransport());
 }

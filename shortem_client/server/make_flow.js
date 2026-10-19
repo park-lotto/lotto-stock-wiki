@@ -3,7 +3,8 @@
 //   하이쿠도 따라오게: 응답마다 need 하나와 그 need 에 맞는 도구 호출 한 줄(next)을 준다.
 import fs from 'node:fs';
 import path from 'node:path';
-import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir } from './engine_bridge.js';
+import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir, engineRoot } from './engine_bridge.js';
+import { rentPreset } from './preset_rent.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
@@ -60,7 +61,19 @@ export function packFileFor(profile) {
   return path.join(homeDir(), rel);
 }
 
-async function go(args, opts) {
+const RENT_FAIL = { not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
+  not_ready: '이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 부르세요', busy: '앞 작업이 끝난 뒤 다시 부르세요',
+  lease_lost: '작업 권한을 받지 못했습니다 — 다른 PC 에서 쓰는 중인지 확인하세요', no_key: '라이선스 키가 없습니다 — 숏템 설치를 다시 확인하세요' };
+
+// 프리셋이 필요한 단계(start·choose·approve)는 그 편 동안만 서버에서 빌린다 — 판단은 서버(claude_portal.preset_rent)
+async function go(args, opts, profile) {
+  if (profile && profile.profile_id && !process.env.SHORTEM_DEV_PACK) {
+    let rental;
+    try { rental = await rentPreset({ engineRoot: engineRoot(), profileId: profile.profile_id }); }
+    catch (e) { return { fail: { why: RENT_FAIL[e.code] || '프리셋을 받지 못했습니다', code: e.code || 'rent', fix: '잠시 뒤 같은 단계를 다시 부르세요' } }; }
+    if (rental.presetPath && args[0] === 'start') args = args.map((a, i) => (args[i - 1] === '--preset' ? rental.presetPath : a));
+    opts = { ...opts, onClose: rental.release };
+  }
   const r = startRun(args, opts);
   const out = await waitRun(r, waitMs());
   if (out) return shapeSession(out);
@@ -91,14 +104,14 @@ export async function makeStep({ step, sid, n, run_id, profile, topic, channel, 
     if (video && !VIDEO.test(video)) return { hints: ['영상 주소는 유튜브 쇼츠·틱톡 영상·인스타 릴스 주소여야 합니다'] };
     const args = ['start', '--preset', profile.preset_path, '--pack', '1',
       ...(topic ? ['--topic', String(topic).slice(0, 200)] : []), ...(video ? ['--ref', video] : [])];
-    return go(args, { packFile: packFileFor(profile), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} });
+    return go(args, { packFile: packFileFor(profile), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} }, profile);
   }
   if (!SID_RE.test(String(sid || ''))) return { hints: ['sid 가 필요합니다(start 응답의 sid)'] };
   if (step === 'choose') {
     if (!Number.isInteger(n) || n < 1) return { hints: ['고른 후보 번호 n 이 필요합니다'] };
-    return go(['choose', sid, String(n)], { packFile: packFileFor(profile) });
+    return go(['choose', sid, String(n)], { packFile: packFileFor(profile) }, profile);
   }
-  if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: packFileFor(profile) });
+  if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: packFileFor(profile) }, profile);
   if (step === 'status') return go(['status', sid], { packFile: packFileFor(profile) });
   return { hints: ['모르는 단계입니다'] };
 }

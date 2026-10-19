@@ -47,7 +47,7 @@ function engineEnv(queue, packFile, extraEnv) {
 const runs = new Map();   // runId → {proc, done, out, err, queue}
 
 // make.py --json <args…> 를 뒤에서 띄운다. 도구 호출은 waitMs 만 기다린다(AI 요청이 생기면 바로 돌아간다).
-export function startRun(args, { packFile, env: extraEnv } = {}) {
+export function startRun(args, { packFile, env: extraEnv, onClose } = {}) {
   const runId = 'r' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const queue = ensureDir(aiRoot(), runId);
   const proc = spawn(pythonExe(), [path.join(engineRoot(), 'tools', 'calcopy', 'make.py'), '--json', ...args],
@@ -55,8 +55,9 @@ export function startRun(args, { packFile, env: extraEnv } = {}) {
   const r = { runId, queue, proc, done: false, out: [], err: '', code: null, started: Date.now() };
   proc.stdout.on('data', d => r.out.push(d));
   proc.stderr.on('data', d => { if (r.err.length < 200000) r.err += String(d); });
-  proc.on('close', code => { r.done = true; r.code = code; });
-  proc.on('error', e => { r.done = true; r.code = -1; r.err += String(e && e.message); });
+  const closed = () => { if (onClose) Promise.resolve(onClose()).catch(() => {}); };   // 빌린 프리셋 지우기·작업 권한 반납
+  proc.on('close', code => { r.done = true; r.code = code; closed(); });
+  proc.on('error', e => { r.done = true; r.code = -1; r.err += String(e && e.message); closed(); });
   runs.set(runId, r);
   return r;
 }
