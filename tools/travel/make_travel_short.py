@@ -190,14 +190,18 @@ def stage_render(work, script_idx=None, swaps=None, no_veo=False):
         raise SystemExit("세 안 모두 관문 지적이 남아 있다 — 검토 화면을 보고 --script 번호로 직접 고르세요(돈 드는 영상화는 사람이 고른 뒤에만)")
     v = versions[script_idx] if script_idx is not None else state["script"]["chosen"]
     lines = v["lines"]
-    hard = [x for x in tb.script_issues(lines, state["detail"], len(picks)) if not x.startswith("길이")]
+    # 안이 정한 사진 순서(order)대로 사진·시작 화면을 다시 세운다 — 판단은 travel_build.ordered_picks 한 곳
+    order_idx = [picks.index(p) for p in tb.ordered_picks(picks, v)]
+    picks = [picks[k] for k in order_idx]
+    state["frames"] = [state["frames"][k] for k in order_idx]
+    hard =[x for x in tb.script_issues(lines, state["detail"], len(picks)) if not x.startswith("길이")]
     if hard:                                    # 이름·가격·지역·가 본 척은 사람이 골라도 렌더하지 않는다
         raise SystemExit("대본 금지 검사 탈락 — 렌더하지 않는다: %s" % hard)
     rep = state["rep"]
     t = time.time()
     clips = []
     for i, (p, fr) in enumerate(zip(picks, state["frames"])):
-        out = work / ("clip_%d.mp4" % i)
+        out = work / ("clip_n%02d.mp4" % p["no"])        # 사진 번호로 이름 — 순서가 바뀌어도 같은 사진의 클립을 다시 쓴다
         if not (out.exists() and out.stat().st_size > 10_000):
             if no_veo:
                 va._run_ffmpeg(["ffmpeg", "-y", "-loop", "1", "-i", fr["path"], "-t", "4", "-r", "30", "-vf", "scale=1080:1920",
