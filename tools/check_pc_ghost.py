@@ -58,6 +58,26 @@ def main():
         ok, slot, _ = st.device_register(cid, "sim-same-pc-%d" % cid, last["ua"], last["ip"])
         (same_ok if ok else same_no).append(cid)
     print("  └ 그중 같은 PC 쿠키 손실이면 풀림 %d: %s / 안 풀림 %s" % (len(same_ok), same_ok, same_no))
+    # 관제 238: 등록된 **모든 칸**에서 쿠키를 잃고 크롬이 한 단계 올라갔을 때(윤주홍 10-19) 버튼 없이 통과하나
+    #   + 같은 칸 수 그대로인가 / 다른 장소(처음 보는 IP)의 새 PC는 여전히 막히나
+    import re as _re
+    bump = lambda ua: _re.sub(r"Chrome/(\d+)", lambda m: "Chrome/%d" % (int(m.group(1)) + 1), ua or "")
+    pass_n, fail = 0, []
+    for cid, slot, _d, _f, _l, ua, ip in rows:
+        st2 = Store(str(pathlib.Path(tempfile.mkdtemp()) / "re.db"))
+        st2.device_list(1)
+        with st2._conn() as c:
+            c.executemany("INSERT INTO customer_devices(customer_id,slot,device_id,first_seen,last_seen,ua,ip) "
+                          "VALUES(?,?,?,?,?,?,?)", [r for r in rows if r[0] == cid])
+        ok, got, _n = st2.device_check(cid, "sim-lost-cookie", bump(ua), ip)
+        if ok and len(st2.device_list(cid)) == per[cid]:
+            pass_n += 1
+        else:
+            fail.append((cid, slot, got))
+    blocked = sum(1 for cid in full
+                  if not st.device_check(cid, "sim-elsewhere", "Mozilla/5.0 (Windows NT 10.0) Chrome/999", "203.0.113.9")[0])
+    print("쿠키 잃고 크롬 업데이트된 같은 PC(전 칸 %d): 버튼 없이 통과 %d / 실패 %s" % (len(rows), pass_n, fail))
+    print("다른 장소 새 PC(꽉 찬 %d명): 막힘 %d" % (len(full), blocked))
     return freed, kept
 
 
