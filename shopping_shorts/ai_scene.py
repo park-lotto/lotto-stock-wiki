@@ -354,6 +354,36 @@ def frame_at(job, work, beat, vid, t, *, resolve_sources=None):
     return extract_frame(src, t, out)
 
 
+# ── 여행형(관제 239) — 숙소 공식 사진 1장 → 카메라가 움직이는 영상 ─────────────────────────────
+#   강의 6편 실측 프롬프트(한국어 한 줄·움직임 하나)를 사진 종류별 카메라 표로 옮겼다
+#   (channel/strategy/여행쇼핑쇼츠_프로그램설계.md 2-3). 상품 영상용 build_prompt 의 '손에 든 폰 흔들림'은
+#   드론·틸트와 부딪혀 여행용은 따로 둔다. 금지 목록(사람·얼굴·글자·로고)은 같은 FORBID 를 쓴다.
+TRAVEL_CAMERA = {
+    "water_aerial": "Smooth drone shot slowly descending from above toward the pool; the water surface ripples gently and the lights shimmer.",
+    "water": "Smooth drone-like push-in toward the water; the water ripples naturally and reflections move softly.",
+    "onsen": "Warm water flows naturally and steam drifts; the camera moves slowly to the right like a person filming by hand.",
+    "bath": "Water pours naturally into the tub and slowly fills it; the camera stays almost still.",
+    "room": "The camera glides slowly forward into the room at eye level, like walking in for the first time.",
+    "view": "Slow pan to the right revealing the wide view through the windows; light shifts gently.",
+    "exterior": "Very slow tilt up from the building toward the sky.",
+    "lobby": "Slow first-person walk forward through the space at eye level.",
+    "other": "Slow, steady push-in toward the center of the scene.",
+}
+
+
+def build_travel_prompt(kind, desc_en, sec=4):
+    """여행 사진 → Veo 프롬프트. 표에 없는 종류는 'other'. 모양·구조는 사진 그대로 두라고 못 박는다."""
+    cam = TRAVEL_CAMERA.get(kind) or TRAVEL_CAMERA["other"]
+    return (
+        f"INPUT IMAGE = FRAME 0: {desc_en} Keep the architecture, furniture, layout and colors exactly as in the image.\n"
+        f"CONTINUOUS SINGLE SHOT, ONE TAKE, NO CUT, {int(sec)}.0 seconds. Vertical 9:16.\n"
+        f"CAMERA AND MOTION: {cam}\n"
+        "REALISM: photorealistic travel footage of a real hotel, natural light as in the image. Nothing is drawn or animated on top. "
+        "No person, face or body enters the frame at any moment.\n\n"
+        f"NEGATIVE: {FORBID}, no new buildings, no new signs, no changed room layout."
+    )
+
+
 def build_prompt(motion, sec, style="natural", visible=None):
     """스파이크에서 확인된 형식: 첫 프레임 묘사 + 초 단위 사건 + 재질·조명 + 금지 목록.
 
