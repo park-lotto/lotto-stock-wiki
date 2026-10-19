@@ -254,25 +254,48 @@ def cut_canvas(info: dict, cand: Path, c: dict) -> Path:
     from tools.calcopy import narr_video as nv
     d = Path(info.get("_dir") or Path(info.get("narr_placed", ".")).parent) / "fxcut"
     d.mkdir(parents=True, exist_ok=True)
-    key = f"{Path(c['src']).stem}_{c['ss']}_{c['dur']}_{'-'.join(map(str, c.get('src_crop') or []))}_{c.get('ar')}_{c.get('fit')}_{json.dumps(c.get('move'))}"
+    n = canvas_len(c)
+    key = f"{Path(c['src']).stem}_{c['ss']}_{c['dur']}_{n}f_{'-'.join(map(str, c.get('src_crop') or []))}_{c.get('ar')}_{c.get('fit')}_{json.dumps(c.get('move'))}"
     out = d / (re.sub(r"[^0-9A-Za-z_.-]", "_", key)[:120] + ".mp4")
     if not out.exists():
         nv.shot_clip(cand / c["src"], c["ss"], c["dur"], WINDOW, 750, True, out, c.get("ar"), None, c.get("fit") or "cover", 0,
-                     c.get("src_crop"), bool(c.get("loop")), True, None, None, c.get("move"))
+                     c.get("src_crop"), bool(c.get("loop")), True, None, n, c.get("move"))
     return out
 
 
+def canvas_len(c: dict) -> int:
+    """(판단 주인: 컷 캔버스 프레임 수) 렌더(narr_video.render_shot)와 같은 규칙 — 컷 경계를 완성본 절대 시각에서 한 번만 반올림(nv.frame_at).
+    옛 캔버스는 -t dur 로 만들어 0.8초 컷이 23프레임(렌더 24) → 끝 프레임을 찾으면 IndexError(10-20 11편 hook_object)."""
+    from tools.calcopy import narr_video as nv
+    return max(1, nv.frame_at(c["t1"]) - nv.frame_at(c["t0"]))
+
+
+def canvas_index(c: dict, t: float) -> int:
+    """완성본 시각 t → 그 컷 캔버스의 프레임 번호(시각 t 에 화면에 떠 있는 프레임 = floor, 컷 안으로 가둠)."""
+    from tools.calcopy import narr_video as nv
+    return min(canvas_len(c) - 1, max(0, int(t * nv.FPS + 1e-6) - nv.frame_at(c["t0"])))
+
+
 def canvas_frames(info: dict, cand: Path, t0: float, t1: float, fps: float) -> tuple[list[float], np.ndarray, dict]:
-    """완성본 [t0, min(t1, 컷 끝)) 을 fps 로 — (시각들, 프레임 (n,1920,1080,3) 반 크기 아님, 컷)."""
+    """완성본 [t0, min(t1, 컷 끝)) 을 fps 로 — (시각들, 프레임 (n,1920,1080,3) 반 크기 아님, 컷).
+    프레임은 시각 → canvas_index 로 골라 번호로 뽑는다(-ss 로 끝 근처를 찾으면 0장이 나와 IndexError 였다). 최소 1장."""
     c = _cut_at(info, t0)
-    t1 = min(t1, c["t1"] - 1e-3)
+    t1 = min(t1, c["t1"])
     p = cut_canvas(info, cand, c)
-    a = t0 - c["t0"]
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{max(0.04, t1 - t0):.3f}", "-i", str(p), "-vf", f"fps={fps}",
+    ts = [t0]
+    while t0 + len(ts) / fps < t1 - 1e-6:
+        ts.append(t0 + len(ts) / fps)
+    idx = [canvas_index(c, t) for t in ts]
+    uniq = sorted(set(idx))
+    sel = "+".join(f"eq(n,{k})" for k in uniq)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(p), "-vf", f"select='{sel}'", "-fps_mode", "passthrough",
                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, check=True).stdout
     n = len(raw) // (1080 * 1920 * 3)
+    if n != len(uniq):
+        raise ValueError(f"컷 {c['i']} 캔버스에서 프레임 {uniq} 중 {n}장만 나옴({p})")
     fr = np.frombuffer(raw[:n * 1080 * 1920 * 3], np.uint8).reshape(n, 1920, 1080, 3)
-    return [round(t0 + k / fps, 3) for k in range(n)], fr, c
+    pos = {k: j for j, k in enumerate(uniq)}
+    return [round(t, 3) for t in ts], fr[[pos[k] for k in idx]], c
 
 
 def _final_frame(info: dict, cand: Path, t: float):
