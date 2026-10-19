@@ -55,7 +55,8 @@ def main() -> int:
     ap.add_argument("--video", default="https://www.tiktok.com/@11street_official/video/7512363471871216903")
     a = ap.parse_args()
     inst = Path(a.install).resolve()
-    home = inst / "_engine_test"
+    import tempfile
+    home = Path(tempfile.gettempdir()) / "shortem_engine_test"     # 설치 폴더 밖 — 빌드 폴더에 시험 파일이 섞여 설치 exe 에 들어가지 않게
     shutil.rmtree(home, ignore_errors=True)
     home.mkdir(parents=True)
     env = env_for(inst, home)
