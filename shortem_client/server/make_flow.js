@@ -21,9 +21,16 @@ function aiNeed(runId) {
 const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
 
 // 엔진 세션 → 응답
+// 엔진 오류 글 → 고객용(경로·내부 파일 이름·벤치 경로를 지우고 짧게) — 숏템 내부를 설명하지 않는다(관제 234)
+export function cleanWhy(msg) {
+  return String(msg || '').replace(/[A-Za-z]:[\\/][^\s'"]*/g, '…').replace(/(?:^|[\s'"(])\/[^\s'"]+/g, ' …')
+    .replace(/channel\/[^\s'"]+/g, '프리셋').replace(/[\w가-힣.-]+\.(?:py|json|js|md|mp4|wav)/g, '파일')
+    .replace(/Traceback[\s\S]*/, '').replace(/\s+/g, ' ').trim().slice(0, 160) || '엔진이 멈췄습니다';
+}
+
 export function shapeSession(S) {
-  if (!S || S.error) return { fail: { why: (S && S.error) || '엔진이 답하지 않았습니다', code: S && S.code, fix: '같은 단계를 한 번 더 부르세요. 또 실패하면 shortem_feedback 으로 알려 주세요' } };
-  const base = { sid: S.sid, state: S.state, preset: S.preset };
+  if (!S || S.error) return { fail: { why: cleanWhy((S && S.error) || '엔진이 답하지 않았습니다'), code: S && S.code, fix: '같은 단계를 한 번 더 부르세요. 또 실패하면 shortem_feedback 으로 알려 주세요' } };
+  const base = { sid: S.sid, state: S.state };   // 내부 프리셋 경로(벤치 채널 이름이 들어 있다)는 내보내지 않는다
   if (S.state === 'candidates') {
     const c = (S.candidates || []).map(cand);
     if (!c.length) return { ...base, need: 'retry', hints: ['점수가 난 후보가 없습니다 — 잠시 뒤 shortem_make(step="start") 를 다시 부르면 소재를 더 찾습니다'] };
@@ -32,7 +39,7 @@ export function shapeSession(S) {
       hints: ['후보를 표로 보여 주고 고객이 번호를 고르게 하세요(대신 고르지 마세요)'] };
   }
   const t = S.topic || {};
-  if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: S.error || `엔진이 ${t.state || S.state} 에서 멈췄습니다`, fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
+  if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: cleanWhy(S.error || '만들기가 멈췄습니다'), fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
   if ((t.state || '') === 'plan_review') {
     const files = (S.files || []).map(f => f.name);
     return { ...base, need: 'approve', plan_files: files,

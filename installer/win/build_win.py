@@ -210,8 +210,11 @@ def build_tools(out: Path, stage: Path, report: dict) -> dict:
     safe_extract_tar(t, e)
     shutil.copytree(e / "python", tools / "python")
     py = tools / "python" / "python.exe"
-    req = ROOT / "common" / "requirements-py312.txt"
-    log("python: Pillow·numpy 설치(해시 고정)")
+    # 엔진 패키지 목록(Pillow·numpy 포함 상위 집합 — 관제 234 5판). 없으면 예전처럼 Pillow·numpy 만.
+    req = ROOT / "common" / "requirements-engine-py312-win.txt"
+    if not req.exists():
+        req = ROOT / "common" / "requirements-py312.txt"
+    log(f"python: {req.name} 설치(해시 고정)")
     r = run([py, "-I", "-m", "pip", "install", "--no-cache-dir", "--disable-pip-version-check",
              "--no-warn-script-location", "--no-compile", "--only-binary=:all:", "--require-hashes", "-r", req], cwd=out)
     if r.returncode != 0:
@@ -243,7 +246,8 @@ def probe_versions(stage: Path, info: dict) -> dict:
     filters = run([t / info["ffmpeg"]["exe"], "-hide_banner", "-filters"]).stdout
     got["ffmpeg_ass_filter"] = " ass " in filters
     r = run([t / info["python"]["exe"], "-I", "-c",
-             "import sys,PIL,numpy;print(sys.version.split()[0],PIL.__version__,numpy.__version__)"], cwd=t)
+             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv;from google import genai;"
+             "print(sys.version.split()[0],PIL.__version__,numpy.__version__,cv2.__version__,faster_whisper.__version__)"], cwd=t)
     got["python"] = r.stdout.strip() or r.stderr.strip()
     got["yt-dlp"] = run([t / info["yt-dlp"]["exe"], "--version"]).stdout.strip()
     if not got["ffmpeg_ass_filter"]:
@@ -302,6 +306,47 @@ def build_server(stage: Path, client: Path, report: dict) -> None:
     files = sum(1 for _ in srv.rglob("*") if _.is_file())
     report["server"] = {"placeholder": False, "client": str(client), "files": files, "deps": deps,
                         "package_dir": str(pkg_dir) if pkg_dir else None}
+
+
+PUPPETEER_SHIM = """// 엔진 렌더러(tools/render_scene_style.js)의 require('puppeteer') → 설치본 크롬(chrome-headless-shell)으로 띄우는 얇은 연결(관제 234).
+//   puppeteer 본체(크롬 내려받기 포함)를 싣지 않고 서버의 puppeteer-core 를 쓴다(NODE_PATH = 설치/server/node_modules).
+const core = require('puppeteer-core');
+const shim = Object.create(core);
+shim.launch = (o = {}) => core.launch({ executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, ...o });
+module.exports = shim;
+module.exports.default = shim;
+"""
+
+
+def build_engine(stage: Path, engine: Path, report: dict) -> None:
+    """엔진 묶음(만들기 전용 — engine_bundle 검사 통과분) + 받아쓰기 모델 + 렌더러 연결. 프리셋(channel/)은 넣지 않는다(편마다 빌린다)."""
+    sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
+    import engine_bundle as EB
+    if not (engine / "tools" / "calcopy" / "make.py").exists():
+        raise SystemExit(f"[build_win] 엔진 폴더가 아닙니다: {engine}")
+    dst = stage / "engine"
+    man = EB.build(engine, ROOT / "common" / "engine_traces", dst)
+    bad = EB.check(dst)
+    if bad:
+        raise SystemExit("[build_win] 엔진 묶음 검사 빨강 — " + " / ".join(bad[:5]))
+    shim = dst / "node_modules" / "puppeteer"
+    shim.mkdir(parents=True, exist_ok=True)
+    (shim / "index.js").write_text(PUPPETEER_SHIM, encoding="utf-8")
+    (shim / "package.json").write_text('{"name":"puppeteer","version":"0.0.0-shortem","main":"index.js"}' + chr(10), encoding="utf-8")
+    # 받아쓰기 모델(faster-whisper small, CT2) — 첫 설치에 다 깔려 있어야 한다(사장님 10-19). 엔진은 SHORTEM_WHISPER_DIR/<이름>
+    src = os.environ.get("SHORTEM_WHISPER_SRC") or next(iter(sorted((Path.home() / ".cache" / "huggingface" / "hub" /
+                                                                       "models--Systran--faster-whisper-small" / "snapshots").glob("*"))), None)
+    if not src or not (Path(src) / "model.bin").exists():
+        raise SystemExit("[build_win] 받아쓰기 모델(faster-whisper-small)이 없습니다 — SHORTEM_WHISPER_SRC 로 폴더를 주세요")
+    wd = stage / "models" / "whisper" / "small"
+    if wd.exists():
+        shutil.rmtree(wd)
+    wd.mkdir(parents=True)
+    for name in ("config.json", "model.bin", "tokenizer.json", "vocabulary.txt"):
+        shutil.copy2(Path(src) / name, wd / name)          # 캐시는 링크일 수 있다 — copy2 가 실제 파일로 복사
+    report["engine"] = {"files": len(man["files"]), "dropped": len(man["dropped"]), "missing": man["missing"],
+                        "whisper_mb": round(sum(p.stat().st_size for p in wd.iterdir()) / 1e6, 1), "check": "통과"}
+    log(f"엔진 묶음 {len(man['files'])}파일(뺀 것 {len(man['dropped'])}) · 받아쓰기 모델 {report['engine']['whisper_mb']}MB")
 
 
 def build_mcpb(out: Path, dist: Path, stage: Path, report: dict) -> Path:
@@ -396,6 +441,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "build"))
     ap.add_argument("--client", default=str(ROOT.parent / "shortem_client"))
+    ap.add_argument("--engine", default=str(ROOT.parent.parent / "칼카피숏템엔진"), help="엔진 트랙 폴더(엔진 묶음 원본)")
     ap.add_argument("--version", default=LOCK["installer_version"])
     ap.add_argument("--skip-exe", action="store_true")
     a = ap.parse_args()
@@ -413,6 +459,7 @@ def main() -> None:
     report["probe"] = probe_versions(stage, info)
     log(f"버전 실측: {json.dumps(report['probe'], ensure_ascii=False)}")
     build_server(stage, Path(a.client).resolve(), report)
+    build_engine(stage, Path(a.engine).resolve(), report)
     shutil.copy2(ROOT / "common" / "postinstall.js", stage / "postinstall.js")
     shutil.copy2(ROOT / "시작.md", stage / "시작.template.md")
     shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
