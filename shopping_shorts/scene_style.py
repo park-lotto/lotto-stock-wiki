@@ -465,6 +465,7 @@ def scene_marks(beat, piece, caption):
       beat["emph"]          핵심 단어 [문자열 | {"word","color"?,"grow"?}] — 구절마다 그 낱말이 있으면 칠한다.
       beat["caption_marks"] 구절별(caption_lines 순서) [{"speaker"?,"variant"?,"emph"?,"sticker"?}] — 있으면 비트 값보다 이긴다.
       beat["chars"]         글자 정렬 [{"char","start"}] — _attach_scene_chars 가 장면 글자 시각으로 옮긴다.
+      beat["place"] / caption_marks[k]["place"]  줄 자리 {"y":%,"x"?:%} — 벤치에서 자리가 달라진 줄에만(기본은 팩 자리).
       beat["stickers"] / caption_marks[k]["stickers"]  2단계 스티커 [{kind, word?, x?,y?,r?, text?, likes?, src?, hold?}] — _sticker 가 정리.
     장면에 붙는 값: stickers=[{kind,w?,x?,y?,r?,text?,likes?,src?,hold?,cont?}] · speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
     어절 번호 = 자막 글을 띄어쓰기로 나눈 순서(편집기 splitCaptionWords 와 같다). 낱말은 어절 안에 들어 있으면 맞는다('성시경' ⊂ '성시경이').
@@ -476,6 +477,11 @@ def scene_marks(beat, piece, caption):
         value = own.get(key, beat.get(key))
         if isinstance(value, str) and value.strip():
             out[key] = value.strip()
+    place = own.get("place", beat.get("place"))   # 줄 자리(caption_anchor) {"y": 화면 높이 %, "x"?: 가운데 가로 %} — 팩 기본 자리보다 앞
+    if isinstance(place, dict) and isinstance(place.get("y"), (int, float)) and 0 <= place["y"] <= 100:
+        out["place"] = {"y": float(place["y"])}
+        if isinstance(place.get("x"), (int, float)) and 0 <= place["x"] <= 100:
+            out["place"]["x"] = float(place["x"])
     tokens = [_word_key(t) for t in (caption or "").split()]
     emph, group = [], 0
     for item in own.get("emph", beat.get("emph")) or []:
@@ -505,7 +511,8 @@ def scene_marks(beat, piece, caption):
     return out
 
 
-STICKER_KINDS = ("gem", "spark_lines", "circle_arrow", "kk_doodle", "comment_card", "object_pop")   # 2단계 스티커(관제 235) — 그림은 편집기 renderStickers
+STICKER_KINDS = ("gem", "spark_lines", "circle_arrow", "kk_doodle", "comment_card", "object_pop",
+                 "hearts", "sound_word", "small_text", "comic_burst", "aside_line", "append_text")   # 3단계(관제 235)   # 2단계 스티커(관제 235) — 그림은 편집기 renderStickers
 _DATA_URI_CACHE = {}
 
 
@@ -520,11 +527,13 @@ def _sticker(item, tokens):
         at = next((i for i in range(len(tokens) - len(want) + 1) if all(w and w in tokens[i + j] for j, w in enumerate(want))), None)
         if at is not None:
             st["w"] = at + len(want) - 1          # 여러 어절 낱말이면 마지막 어절 옆
-    for key in ("x", "y", "r", "likes"):
+    for key in ("x", "y", "r", "likes", "size"):
         if isinstance(item.get(key), (int, float)):
             st[key] = float(item[key])
     if item.get("text"):
         st["text"] = str(item["text"])[:120]
+    if item.get("variant") in ("a", "b"):
+        st["variant"] = item["variant"]               # comic_burst 두 벌(a 초록·주황 / b 빨강·하늘)
     hold = item.get("hold")
     if hold == "beat" or isinstance(hold, (int, float)):
         st["hold"] = hold

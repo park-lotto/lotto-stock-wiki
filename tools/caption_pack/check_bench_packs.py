@@ -95,7 +95,7 @@ def rows_to_timeline(rows, tts, total=None):
         beats.append({"beat_idx": i, "t0": t0, "dur": round(t1 - t0, 3), "narration": " ".join(r["text"] for r in ln),
                       "caption_lines": [r["text"] for r in ln], "cap_durs": durs, "cap_lead": round(lead, 3), "tts_path": str(tts),
                       "target_seconds": round(t1 - t0, 3), "role": "body", "primary": {"video_id": "s0", "start": t0, "end": t1},
-                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"]), ("stickers", r.get("stickers"))) if v}
+                      "caption_marks": [{k: v for k, v in (("speaker", r["speaker"]), ("variant", r["variant"]), ("sticker", r["sticker"]), ("emph", r["emph"]), ("stickers", r.get("stickers")), ("place", r.get("place"))) if v}
                                         for r in ln],
                       **({"chars": chars} if chars else {})})
     return beats
@@ -506,6 +506,201 @@ BENCH_SHOTS = {
 }
 
 
+def _runs(im, box, want, gap=30, tol=30):
+    """box 안에서 want 색 점들의 가로 덩어리 [(x0,x1,y0,y1)] — gap 보다 벌어지면 다른 덩어리."""
+    px = im.load(); cols = {}
+    for y in range(box[1], box[3], 2):
+        for x in range(box[0], box[2], 2):
+            c = px[x, y]
+            if c[3] > 200 and all(abs(c[j] - want[j]) <= tol for j in range(3)):
+                cols.setdefault(x, []).append(y)
+    out = []
+    for x in sorted(cols):
+        if out and x - out[-1][1] <= gap:
+            o = out[-1]; o[1] = x; o[2] = min(o[2], min(cols[x])); o[3] = max(o[3], max(cols[x]))
+        else:
+            out.append([x, x, min(cols[x]), max(cols[x])])
+    return [tuple(o) for o in out if (o[1] - o[0]) > 6]
+
+
+def _hex(h):
+    return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def step3_check(out, need, tts):
+    """⑧ 보강 3단계(관제 235) — 스타픽룸 글리치·오른쪽 닦기·무지개 / 자막 자리(place) / 하트 무리·효과음 글자·작은 글·만화 번쩍 /
+    괄호 줄·이어 붙이기. 수치 = 벤치 프레임 실측(편·초는 계약 파일 bench 칸과 handoff/자막팩보강.md 표).
+    ★벤치 수치는 전부 벤치 프레임 대비로 쟀다(우리 글자 대비 아님)."""
+    d = out / "_step3"; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True, exist_ok=True)
+
+    def build(pack, rows, tag):
+        total = max(r["t1"] for r in rows)
+        tl = rows_to_timeline(rows, tts, total); snap = snapshot(pack)
+        ctx = scene_style.context_for(tl, {"text": "x"}, snap, None); idx = [i for i, s in enumerate(ctx["scenes"]) if s["caption"]]
+        lay = scene_style.render_layers(tl, snap, d / tag, {"text": "x"}, "bench")
+        return tl, snap, ctx, idx, lay, d / tag
+
+    R = lambda line, t0, t1, text, **kw: {"line": line, "t0": t0, "t1": t1, "text": text, "speaker": "orig", "variant": "", "sticker": "", "emph": [], **kw}
+
+    def frames_of(lay, L, k):
+        a = lay[k].get("animation")
+        return a, (lambda f: img(L / a["pattern"].replace("%04d", str(min(f, a["count"] - 1)).zfill(4))) if a else img(L / lay[k]["file"]))
+
+    # ── 스타픽룸 세 가지 등장 + 줄 자리
+    rows = [R("g", 0, 1.6, "땅콩버터에...", variant="glitch"), R("w", 1.6, 3.2, "가르쳐 드려요?", variant="wipe"),
+            R("r", 3.2, 5.0, "최화정이 만들자마자", variant="rainbow"), R("p", 5.0, 6.5, "위치 옮기기", place={"y": 50, "x": 30})]
+    tl, snap, ctx, idx, lay, L = build("starpick", rows, "star"); S1 = (lay, L, idx); B1 = (tl, snap, ctx)
+    # rgbGlitch: 벤치 VbpdN 1.37~1.80초(0.43초) — 처음 0.1초 맨 글자 · 1.60~1.63 가장 벌어짐 · 1.80 끝
+    a, fr = frames_of(lay, L, idx[0]); RED, CY = "#FF2D55", "#00B0FF"
+    cnt = [cbox(fr(f), [RED], 40)[1] + cbox(fr(f), [CY], 40)[1] for f in range(16)]
+    peak = max(cnt); hi = [f for f, c in enumerate(cnt) if c >= peak * .8]; pf = round(sum(hi) / len(hi)) if peak else -1   # 가장 벌어진 구간(80% 이상)의 가운데
+    need(a is not None and peak > 300 and 6 <= pf <= 10 and max(cnt[:3]) <= peak * .1 and max(cnt[14:]) <= peak * .1,
+         f"⑧ 글리치: 빨강·하늘 점 프레임별 {cnt} — 처음 3프레임 맨 글자 · 가장 벌어진 프레임 {pf}(벤치 6~10) · 14프레임부터 사라짐")
+    sep = 0
+    if peak:
+        im = fr(pf); px = im.load(); xs = {RED: [], CY: []}
+        for y in range(0, im.size[1], 2):
+            for x in range(0, im.size[0], 2):
+                c = px[x, y]
+                if c[3] > 200:
+                    for h in xs:
+                        if all(abs(c[j] - _hex(h)[j]) <= 40 for j in range(3)): xs[h].append(x)
+        sep = abs(sum(xs[RED]) / len(xs[RED]) - sum(xs[CY]) / len(xs[CY])) if xs[RED] and xs[CY] else 0
+    need(peak > 0 and sep > 0, f"⑧ 글리치: 빨강 점이 하늘 점보다 왼쪽(가운데 차이 {sep:.1f}px — 빨강은 글자 왼 가장자리·하늘은 오른쪽에만 보이므로 양이 아니라 방향만)")
+    stl = cbox(img(L / lay[idx[0]]["file"]), [RED, CY], 40)[1]
+    need(stl == 0, f"⑧ 글리치: 정지 그림(캡컷·썸네일)에는 번짐 없음(점 {stl})")
+    # wipeRTL: 오른쪽 끝부터 드러남 — 벤치 VbpdN 17.37~17.70(8자 0.33초) · EZQl 3.37~4.00(12자 0.63초) = 글자당 약 47ms
+    a, fr = frames_of(lay, L, idx[1])
+    wb = [ink_box(fr(f).crop((0, 1000, 1080, 1250)), 200) for f in range(16)]
+    wd = [(b[2] - b[0]) if b else 0 for b in wb]; full = wd[-1] or 1
+    rights = [b[2] for b in wb if b and b[2] - b[0] > full * .3] or [0]
+    nfull = next((f for f, w_ in enumerate(wd) if w_ >= full * .98), 99)
+    need(a is not None and wd[0] < full * .25 and max(rights) - min(rights) <= 10 and 9 <= nfull <= 13 and wd == sorted(wd),
+         f"⑧ 오른쪽 닦기: 글 폭 비율 {[round(w_ / full, 2) for w_ in wd]} · 오른쪽 끝 고정(흔들림 {max(rights) - min(rights)}px) · 다 나옴 {nfull}프레임(8자×47ms=11프레임 ±2)")
+    # rainbowCycle: 글자마다 파랑→노랑→흰→주황 돌림 250ms, 글자 번호만큼 위상 — 벤치 j5D 0.2~1.0초 글자 9개 실측(색 hex 는 중앙값)
+    a, fr = frames_of(lay, L, idx[2]); COL = {"B": "#0795FC", "Y": "#FAED07", "W": "#FFFFFF", "O": "#FB5806"}
+
+    def slice_color(im, k):
+        b = ink_box(im.crop((0, 1000, 1080, 1250)), 200)
+        if not b: return "?"
+        w_ = (b[2] - b[0]) / 9; box = (int(b[0] + w_ * k), 1000 + b[1], int(b[0] + w_ * (k + 1)), 1000 + b[3])
+        score = {c: sum((r[1] - r[0]) * (r[3] - r[2]) for r in _runs(im, box, _hex(COL[c]), 400, 24)) for c in COL}
+        return max(score, key=score.get)
+
+    seq0 = "".join(slice_color(fr(f), 0) for f in (0, 8, 16, 24)); seq1 = "".join(slice_color(fr(f), 1) for f in (0, 8, 16, 24))
+    need(seq0 == "OBYW" and seq1 == "BYWO", f"⑧ 무지개: 첫 글자 0·0.27·0.53·0.8초 색 {seq0}(벤치 O→B→Y→W) · 둘째 글자 {seq1}(B→Y→W→O) — 250ms마다 · 글자 번호만큼 위상")
+    st = img(L / lay[idx[2]]["file"]); s0, s1 = slice_color(st, 0), slice_color(st, 1)
+    need(s0 == "O" and s1 == "B", f"⑧ 무지개: 정지 그림도 시작 색({s0}{s1}) — 캡컷·썸네일 = 렌더 첫 프레임")
+    # 자막 자리 이동(caption_anchor): 줄마다 place{x,y}(%) — 벤치 키치잇 원음 타이핑 줄 y1300(기본 1351)
+    pb = ink_box(img(L / lay[idx[3]]["file"]), 200)
+    cx, cy = ((pb[0] + pb[2]) / 2, (pb[1] + pb[3]) / 2) if pb else (0, 0)
+    need(bool(pb) and abs(cx - 324) <= 30 and abs(cy - 960) <= 30, f"⑧ 줄 자리: place x30% y50% → 글 가운데 ({cx:.0f},{cy:.0f}) = (324,960) ±30")
+
+    # ── 꿀템노트 스티커·줄 6종
+    rows = [R("h", 0, 2.0, "너무 예쁘다!", stickers=[{"kind": "hearts", "x": 50, "y": 41}]),
+            R("s", 2.0, 3.5, "엄청 맛있어", stickers=[{"kind": "sound_word", "text": "쿰", "x": 20.1, "y": 65.7, "r": -3}, {"kind": "sound_word", "text": "직", "x": 85.9, "y": 65.7, "r": 8}]),
+            R("t", 3.5, 5.0, "지갑 열게 한 이유가 있다는데?", stickers=[{"kind": "small_text", "text": "WOW", "x": 72, "y": 55}]),
+            R("b", 5.0, 6.0, "알고 보니 요즘", stickers=[{"kind": "comic_burst", "variant": "a"}]),
+            R("c", 6.0, 7.0, "알고 보니 요즘", stickers=[{"kind": "comic_burst", "variant": "b"}]),
+            R("a", 7.0, 9.0, "변신하는 식탁을 막 보여주면서", stickers=[{"kind": "aside_line", "text": "(난리가 났음)"}]),
+            R("p", 9.0, 10.0, "되게 가벼워"), R("p", 10.0, 11.5, "되게 가벼워", stickers=[{"kind": "append_text", "text": "맞아!"}])]
+    tl, snap, ctx, idx, lay, L = build("kkultemnote", rows, "kk"); S2 = (lay, L, idx); B2 = (tl, snap, ctx)
+    still = lambda k: img(L / lay[idx[k]]["file"])
+    # 하트 무리: 얼굴(50%,41%)에서 퍼짐 — 벤치 KCx 0.0~1.5초 하트 5~95% 가로 반폭 0.13초 165 · 0.27초 245 · 0.47초 325 · 0.87초 385px, 위 5% 끝 y 0.87초 440
+    a, fr = frames_of(lay, L, idx[0]); HC = "#FF4D63"
+
+    def hpts(im):
+        px = im.load(); xs, ys = [], []
+        for y in range(300, 1300, 2):
+            for x in range(0, 1080, 2):
+                c = px[x, y]
+                if c[3] > 150 and all(abs(c[j] - _hex(HC)[j]) <= 28 for j in range(3)): xs.append(x); ys.append(y)
+        return xs, ys
+
+    half = {}
+    for f, bench in ((4, 165), (8, 245), (14, 325), (26, 385)):
+        sx = sorted(hpts(fr(f))[0]) if a else []
+        half[f] = ((sx[int(len(sx) * .95)] - sx[int(len(sx) * .05)]) / 2 if len(sx) > 20 else 0, bench)
+    ys26 = sorted(hpts(fr(26))[1]) if a else []
+    top = ys26[int(len(ys26) * .05)] if len(ys26) > 20 else 0
+    need(a is not None and all(abs(v / b_ - 1) <= .25 for v, b_ in half.values()) and abs(top - 440) <= 45,
+         "⑧ 하트 무리: 가로 반폭 {프레임: (우리, 벤치)} " + str({k: (round(v[0]), v[1]) for k, v in half.items()}) + f" ±25% · 0.87초 위 5% 끝 y {top}(벤치 440 ±45)")
+    # 효과음 글자: 빨강 #FD2628 + 흰 테 — 벤치 cLk 5.4~6.6초 쿰 192×227(중심 217,1265) · 직 172×233(중심 928,1259)
+    im = still(1); rr = _runs(im, (0, 1000, 1080, 1500), (253, 38, 40), 120, 28)
+    need(len(rr) == 2 and abs((rr[0][0] + rr[0][1]) / 2 - 217) <= 40 and abs((rr[1][0] + rr[1][1]) / 2 - 928) <= 40 and all(abs((r[3] - r[2]) / 230 - 1) <= .22 for r in rr),
+         f"⑧ 효과음 글자 쿰·직: 덩어리 {rr} — 중심 x 217·928(±40) · 높이 ≈230(±22%) · 빨강 #FD2628")
+    wr = cbox(im.crop((0, 1000, 1080, 1225)), ["#FFFFFF"], 8)[1]   # 자막 줄(y1244~) 위쪽 — 글자 윗부분 흰 테만
+    need(wr > 250, f"⑧ 효과음 글자: 흰 테 점 {wr}(벤치 약 9px 테 — 자막 줄 위쪽 구간만)")
+    # 작은 글 WOW: 노랑 글자 — 벤치 m0E 4.3~4.7초 폭 185 · 높이 55 · 가운데 (778,1058)
+    im = still(2); ww = _runs(im, (0, 800, 1080, 1300), (255, 224, 0), 80, 40)
+    w0 = max(ww, key=lambda r: r[1] - r[0]) if ww else None
+    need(bool(w0) and abs((w0[1] - w0[0]) / 185 - 1) <= .25 and abs((w0[3] - w0[2]) / 55 - 1) <= .3 and abs((w0[0] + w0[1]) / 2 - 778) <= 40 and abs((w0[2] + w0[3]) / 2 - 1058) <= 40,
+         f"⑧ 작은 글 WOW: {w0} — 폭 185·높이 55(±25~30%) · 가운데 (778,1058) ±40")
+    # 만화 번쩍: 초록·주황 느낌표·별(a) / 빨강 느낌표·하늘 번개(b) — 벤치 j5D 6.9~7.3 · 9.3~9.9, 0.4초 안에 사라짐
+    for k, name_, hexes in ((3, "a", ["#7ED321", "#F5A623"]), (4, "b", ["#E02020", "#4FC3F7"])):
+        a, fr = frames_of(lay, L, idx[k]); capb = ink_box(still(k).crop((0, 1100, 1080, 1500)), 200)
+        mid = [cbox(fr(f), hexes, 36)[1] for f in range(16)] if a else []
+        bb = cbox(fr(5), hexes, 36)[0] if a else None
+        need(a is not None and mid[5] > 150 and mid[-1] == 0 and bb is not None and capb is not None and bb[3] <= 1100 + capb[1] + 45,
+             f"⑧ 만화 번쩍 {name_}: 색 점 프레임별 {mid} — 0.5초 안에 나왔다 사라짐 · 상자 {bb} 자막 위({capb and 1100 + capb[1]})")
+    # 괄호 줄: 노랑 #FFDC06, 자막 가운데 −96px — 벤치 _dz 8.9~10.5초 가운데 y1190(자막 1286)
+    ay = _runs(still(5), (0, 1000, 1080, 1250), (255, 220, 6), 120, 30)
+    a0 = max(ay, key=lambda r: r[1] - r[0]) if ay else None
+    need(bool(a0) and abs((a0[2] + a0[3]) / 2 - 1190) <= 20 and abs((a0[3] - a0[2]) / 69 - 1) <= .25 and abs((a0[1] - a0[0]) / 391 - 1) <= .25,
+         f"⑧ 괄호 줄: {a0} — 가운데 y 1190 ±20 · 높이 69 · 폭 391(±25%)")
+    # 이어 붙이기: 앞 글 제자리, 뒤 글 오른쪽에 61px 띄어 — 벤치 BpU 0.5→0.6초 '되게 가벼워' 226~574(높이65) · '맞아!' 635~844(높이110)
+    r1 = _runs(still(6), (0, 1100, 1080, 1500), (255, 255, 255), 40, 12); r2 = _runs(still(7), (0, 1100, 1080, 1500), (255, 255, 255), 40, 12)
+    need(len(r1) == 1 and len(r2) == 2 and abs(r1[0][0] - r2[0][0]) <= 3 and abs(r1[0][1] - r2[0][1]) <= 3 and 40 <= r2[1][0] - r2[0][1] <= 80
+         and abs((r2[1][3] - r2[1][2]) / (r2[0][3] - r2[0][2]) - 110 / 65) <= .45,
+         f"⑧ 이어 붙이기: 앞 {r1} → 뒤 {r2} — 앞 글 제자리(±3px) · 틈 61px(40~80) · 뒤 글 높이/앞 글 높이 = 벤치 110/65")
+    # ── 캡컷 그림·썸네일 — 정지 그림과 같아야 한다(렌더 길 ② 캡컷 overlay_spans · ③ 썸네일 render_layer_one)
+    for tag, S, B, ks in (("star", S1, B1, (0, 1, 2, 3)), ("kk", S2, B2, (0, 1, 2, 3, 4, 5, 7))):
+        lay_, L_, idx_ = S; tl_, snap_, ctx_ = B
+        spans = scene_style.overlay_spans(ctx_["scenes"], lay_, L_); bad = []
+        for k in ks:
+            sc = ctx_["scenes"][idx_[k]]; sp = [x for x in spans if sc["start"] - 1e-6 <= x["start"] < sc["end"] - 1e-6]
+            st = img(L_ / lay_[idx_[k]]["file"])
+            if not sp or alpha_sum(img(sp[-1]["path"])) < alpha_sum(st) * .97 or hard_diff(img(sp[-1]["path"]), st) > 30: bad.append(k)
+        need(not bad, f"⑧ 캡컷 그림({tag}) = 다 나온 자막+스티커 정지 그림(어긋남 장면 {bad})")
+        badt = []
+        for k in ks:
+            p = scene_style.render_layer_one(tl_, snap_, d / f"t_{tag}{k}", idx_[k], {"text": "x"}, "bench")
+            if hard_diff(img(p), img(L_ / lay_[idx_[k]]["file"])) + hard_diff(img(L_ / lay_[idx_[k]]["file"]), img(p)) != 0: badt.append(k)
+        need(not badt, f"⑧ 썸네일({tag}) = 정지 그림(어긋남 장면 {badt})")
+    # ── 시트: 벤치 프레임 · 우리 프레임을 같은 상자 크기·같은 배율(0.5)로 나란히
+    def ours(S, k, f=None):
+        lay_, L_, idx_ = S; im = frames_of(lay_, L_, idx_[k])[1](f) if f is not None else img(L_ / lay_[idx_[k]]["file"])
+        bg = Image.new("RGBA", (1080, 1920), (70, 90, 110, 255)); bg.alpha_composite(im); return bg.convert("RGB")
+    PAIRS = [("RGB 글리치", "starpickroom/src/VbpdNba182M.mp4", 1.60, (200, 1040, 880, 1240), ours(S1, 0, 8), (200, 1040, 880, 1240)),
+             ("오른쪽 닦기(0.17초 지점)", "starpickroom/src/VbpdNba182M.mp4", 17.50, (200, 1040, 880, 1240), ours(S1, 1, 5), (200, 1040, 880, 1240)),
+             ("무지개 돌림 0초", "starpickroom/src/j5D30T2n0-w.mp4", 0.30, (150, 1040, 930, 1240), ours(S1, 2, 0), (150, 1040, 930, 1240)),
+             ("무지개 돌림 0.27초", "starpickroom/src/j5D30T2n0-w.mp4", 0.57, (150, 1040, 930, 1240), ours(S1, 2, 8), (150, 1040, 930, 1240)),
+             ("하트 무리 0.47초", "kkultemnote/src/KCxJ5qJft38.mp4", 0.47, (0, 300, 1080, 1250), ours(S2, 0, 14), (0, 300, 1080, 1250)),
+             ("효과음 글자 쿰·직", "kkultemnote/src/cLk6fJly6OY.mp4", 6.0, (0, 1050, 1080, 1450), ours(S2, 1), (0, 1050, 1080, 1450)),
+             ("작은 글 WOW", "kkultemnote/src/m0Ex0y1DN5s.mp4", 4.5, (300, 900, 1080, 1250), ours(S2, 2), (300, 900, 1080, 1250)),
+             ("만화 번쩍 a", "starpickroom/src/j5D30T2n0-w.mp4", 7.00, (150, 950, 930, 1250), ours(S2, 3, 6), (150, 1050, 930, 1350)),
+             ("만화 번쩍 b", "starpickroom/src/j5D30T2n0-w.mp4", 9.40, (150, 950, 930, 1250), ours(S2, 4, 6), (150, 1050, 930, 1350)),
+             ("괄호 줄", "kkultemnote/src/_dzncUms1yQ.mp4", 9.50, (0, 1100, 1080, 1400), ours(S2, 5), (0, 1100, 1080, 1400)),
+             ("이어 붙이기", "kkultemnote/src/BpUOIUwkoG4.mp4", 0.70, (0, 1150, 1080, 1400), ours(S2, 7), (0, 1150, 1080, 1400))]
+    try:
+        font = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 22)
+    except OSError:
+        font = ImageFont.load_default()
+    cells = []
+    for title, rel, t, bbox, o_im, obox in PAIRS:
+        w, h = (bbox[2] - bbox[0]) // 2, (bbox[3] - bbox[1]) // 2
+        va._run_ffmpeg(["ffmpeg", "-y", "-ss", str(t), "-i", str(BENCH / rel), "-frames:v", "1", str(d / "_b.png")])
+        bimg = Image.open(d / "_b.png").convert("RGB").resize((1080, 1920)).crop(bbox).resize((w, h))
+        cells.append((title, f"{pathlib.Path(rel).stem} {t}초", bimg, o_im.crop(obox).resize((w, h))))
+    W = max(c[2].width for c in cells) * 2 + 30; H = sum(c[2].height + 34 for c in cells)
+    sheet = Image.new("RGB", (W, H), (16, 18, 22)); dr = ImageDraw.Draw(sheet); y = 0
+    for title, src_, b_, o_ in cells:
+        dr.text((8, y + 5), f"{title} — 왼쪽 벤치({src_}) · 오른쪽 우리 · 같은 배율(0.5)·같은 칸", fill=(240, 240, 240), font=font); y += 34
+        sheet.paste(b_, (0, y)); sheet.paste(o_, (b_.width + 30, y)); y += b_.height
+    sheet.save(out / "step3_시트.jpg", quality=88); print(f"  시트 {out / 'step3_시트.jpg'}")
+    return d
+
+
 def bench_frame(rel, t, cy, w=540, h=170):
     src = BENCH / rel; tmp = OUT / "_bench.png"
     va._run_ffmpeg(["ffmpeg", "-y", "-ss", f"{t:.3f}", "-i", str(src), "-frames:v", "1", str(tmp)])
@@ -587,7 +782,7 @@ def sheet(pack, rows, ctx, idx, layers, L, final, out, report):
 if __name__ == "__main__":
     args = sys.argv[1:]
     compose = "--no-compose" not in args; args = [a for a in args if a != "--no-compose"]
-    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick", "stickers") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
+    OUT = pathlib.Path(args.pop(0) if args and not args[0] in ("kitchit", "kkultemnote", "starpick", "stickers", "step3") and "," not in args[0] else ROOT / "out/check_bench_packs").resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     packs = args[0].split(",") if args else ["kitchit", "kkultemnote", "starpick", "stickers"]
     fails = []
@@ -600,6 +795,14 @@ if __name__ == "__main__":
             if not tts.exists():
                 va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
             sticker_check(OUT, need, tts); continue
+        if p == "step3":   # ⑧ 보강 3단계
+            def need(ok, msg):
+                print(("  통과  " if ok else "★ 실패  ") + "[3단계] " + msg)
+                if not ok: fails.append("[3단계] " + msg)
+            tts = OUT / "v.wav"
+            if not tts.exists():
+                va._run_ffmpeg(["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "2", str(tts)])
+            step3_check(OUT, need, tts); continue
         if p not in PACKS:
             fails.append(f"계약 파일에 팩 {p} 없음"); print("★ 실패  계약 파일에 팩", p, "없음"); continue
         run(p, OUT, compose, fails)

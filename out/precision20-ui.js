@@ -1158,7 +1158,7 @@
     thumb:down=>`<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" style="vertical-align:-.25em${down?';transform:scaleY(-1)':''}"><path d="M7 10v11H3V10h4zm2 11h8.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 19 10h-5l.8-4.2A1.6 1.6 0 0 0 13.2 4L9 10v11z" fill="none" stroke="#0F0F0F" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
   };
   function renderStickers(text){
-    layer.querySelectorAll('.cap-stk').forEach(e=>e.remove());
+    layer.querySelectorAll('.cap-stk,.cap-glitch').forEach(e=>e.remove());
     const sc=sceneContext?.scenes?.[sceneIndex],list=(sc?.stickers||[]).filter(s=>s&&s.kind);if(!list.length||!text||text.hidden)return;
     const L=layer.getBoundingClientRect(),k=L.width/1080||1,fs=parseFloat(getComputedStyle(text).fontSize)||40;
     splitCaptionWords(text);const words=[...text.querySelectorAll('.wfx-w')],range=document.createRange();range.selectNodeContents(text);const ink=range.getBoundingClientRect();
@@ -1189,6 +1189,37 @@
       }else if(s.kind==='object_pop'&&s.src){   // 3D 재료 누끼(스타픽룸 VbpdN 18.5) — 자막 왼쪽 아래 창 안, 폭 ≤280·높이 ≤300(벤치 y1200~1460), 둘째부터 옆으로 겹쳐 쌓임
         const w=280*k,x=(s.x!=null?s.x/100*L.width:180*k)+pops*150*k,y=(s.y!=null?s.y/100*L.height:ink.bottom-L.top+40*k)+pops*30*k;pops++;   // 기본 = x180 · 자막 아래 +40(스타픽룸 실측 '자막 아래 +40~+300')
         box(el,x,y,w,null);el.innerHTML=`<img src="${s.src}" style="display:block;max-width:100%;max-height:${300*k}px;width:auto;height:auto;filter:drop-shadow(0 ${6*k}px ${8*k}px rgba(0,0,0,.45))">`;
+      }else if(s.kind==='hearts'){   // 하트 무리(꿀템노트 KCx 0.0~1.5 실측) — 얼굴 자리(x·y 화면 %)에서 퍼져 나감. 하트 26개 · 한 개 36px 안팎 · 가로 반폭 385 · 위 340·아래 290
+        const cx=(s.x??50)/100*L.width,cy=(s.y??41)/100*L.height;box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+        for(let i=0;i<26;i++){
+          const a=rnd()*Math.PI*2,r=.3+.7*Math.sqrt(rnd()),sz=(26+rnd()*24)*k,dx=Math.cos(a)*r*465*k,dy=(Math.sin(a)*r*(Math.sin(a)<0?410:290)-25)*k;
+          const h=document.createElement('span');h.className='cap-heart cap-u';h.dataset.dx=dx.toFixed(1);h.dataset.dy=dy.toFixed(1);
+          Object.assign(h.style,{position:'absolute',left:(cx-sz/2)+'px',top:(cy-sz/2)+'px',width:sz+'px',height:sz+'px',translate:`${dx}px ${dy}px`,opacity:'.85'});
+          h.innerHTML='<svg viewBox="0 0 32 29" width="100%" height="100%"><path d="M16 28C6 20 1 14.5 1 8.5C1 4 4.5 1 8.5 1C11.5 1 14 2.7 16 5.6C18 2.7 20.5 1 23.5 1C27.5 1 31 4 31 8.5C31 14.5 26 20 16 28Z" fill="#FF4D63"/></svg>';
+          el.appendChild(h);
+        }
+      }else if(s.kind==='sound_word'){   // 효과음 글자(꿀템노트 cLk 5.4~6.6 '쿰'·'직') — 빨강 #FD2628 굵은 글자 + 흰 테 9px, 장면 안 자리(화면 %), 컷인
+        const sz=(s.size||265)*k;box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        el.innerHTML=`<span style="position:absolute;left:${(s.x??20)/100*L.width}px;top:${(s.y??65.7)/100*L.height}px;translate:-50% -50%;rotate:${s.r??0}deg;font:400 ${sz}px 'BMJUA',sans-serif;line-height:1;white-space:nowrap;color:#FD2628;-webkit-text-stroke:${18*k}px #FFFFFF;paint-order:stroke fill">${String(s.text||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span>`;
+      }else if(s.kind==='small_text'){   // 작은 장식 글(꿀템노트 m0E 4.3~4.7 'WOW' · 11.5 '✦') — 노랑 글자 + 검정 테, 자막 위쪽 자리(화면 %), 컷인
+        const star=String(s.text||'WOW')==='✦',sz=(s.size||(star?56:84))*k;box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        el.innerHTML=`<span style="position:absolute;left:${(s.x??72)/100*L.width}px;top:${(s.y??55)/100*L.height}px;translate:-50% -50%;font:400 ${sz}px 'BMJUA',sans-serif;line-height:1;white-space:nowrap;color:${star?'#FFFFFF':'#FFE000'};-webkit-text-stroke:${(star?0:7)*k}px #111;paint-order:stroke fill${star?';text-shadow:0 0 8px #fff':''}">${String(s.text||'WOW').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span>`;
+      }else if(s.kind==='comic_burst'){   // 만화 번쩍(스타픽룸 j5D 6.9~7.3 a · 9.3~9.5 b) — 자막 위에 느낌표·별·번개 조각, 0.4초 동안 커졌다 사라짐
+        const cxm=(ink.left+ink.right)/2-L.left,top=ink.top-L.top,A=s.variant!=='b';box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        const BK=1.5*k,EX=(c,w,h)=>`<svg viewBox="0 0 30 80" width="${w*BK}" height="${h*BK}" style="overflow:visible"><path d="M7 2h16l-3 46H10z" fill="${c}" stroke="#111" stroke-width="3" stroke-linejoin="round"/><circle cx="15" cy="64" r="9" fill="${c}" stroke="#111" stroke-width="3"/></svg>`;
+        const STAR=(c,w)=>`<svg viewBox="0 0 40 40" width="${w*BK}" height="${w*BK}" style="overflow:visible"><polygon points="20,2 25,15 39,15 28,24 32,38 20,29 8,38 12,24 1,15 15,15" fill="${c}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/></svg>`;
+        const BOLT=(c,w,h)=>`<svg viewBox="0 0 30 80" width="${w*BK}" height="${h*BK}" style="overflow:visible"><polygon points="20,0 4,42 15,42 8,80 28,30 16,30" fill="${c}" stroke="#111" stroke-width="3" stroke-linejoin="round"/></svg>`;
+        const P=A?[[-110,-75,EX('#7ED321',22,60),20,0],[-30,-95,EX('#F5A623',28,78),-6,1],[-70,-60,STAR('#E94AA0',30),0,0],[25,-80,STAR('#E02020',25),0,1],[45,-35,STAR('#FFF3D0',30),0,0]]
+          :[[-85,-45,EX('#E02020',30,62),-15,0],[0,-45,EX('#E02020',30,62),15,1],[-55,-90,BOLT('#4FC3F7',40,120),0,0],[80,-70,BOLT('#4FC3F7',34,90),40,1]];
+        P.forEach(([dx,dy,svg,rot,alt])=>{const q=document.createElement('span');q.className='cap-burst cap-u';q.dataset.rot=rot;q.dataset.alt=alt;
+          Object.assign(q.style,{position:'absolute',left:(cxm+dx*k*1.3)+'px',top:(top+dy*k*1.3)+'px',opacity:'0',rotate:rot+'deg'});q.innerHTML=svg;el.appendChild(q);});
+      }else if(s.kind==='aside_line'){   // 괄호 줄(꿀템노트 _dz 9.0~10.5 '(난리가 났음)') — 자막 위 한 줄, 노랑 #FFDC06 글자 0.7배, 가운데 간격 96px, 컷인
+        const cxm=(ink.left+ink.right)/2-L.left,cym=(ink.top+ink.bottom)/2-L.top-96*k,sz=fs*.86;box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        el.innerHTML=`<span style="position:absolute;left:${cxm}px;top:${cym}px;translate:-50% -50%;font:400 ${sz}px 'Kkubulim','BMJUA',sans-serif;line-height:1;white-space:nowrap;color:#FFDC06;-webkit-text-stroke:${sz*.11}px #000;paint-order:stroke fill">${String(s.text||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span>`;
+      }else if(s.kind==='append_text'){   // 이어 붙이기(꿀템노트 BpU 0.5→0.6 '되게 가벼워'+'맞아!') — 앞 글은 제자리, 뒤 글만 오른쪽에 61px 띄어 컷인. 글꼴 BMDOHYEON 앞 글의 1.3배
+        const sz=fs*1.45,x=ink.right-L.left+42*k,cym=(ink.top+ink.bottom)/2-L.top+6*k;box(el,0,0,L.width,L.height);el.style.zIndex='2';
+        el.innerHTML=`<span style="position:absolute;left:${x}px;top:${cym}px;translate:0 -50%;font:400 ${sz}px 'BMDOHYEON','BMJUA',sans-serif;line-height:1;white-space:nowrap;color:#FFFFFF;-webkit-text-stroke:${sz*.11}px #000;paint-order:stroke fill">${String(s.text||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</span>`;
       }else return;
       layer.insertBefore(el,badge);
     });
@@ -1209,6 +1240,12 @@
       else if(kind==='circle_arrow'){const ring=el.querySelector('.stk-ring'),arrow=el.querySelector('.stk-arrow');
         if(ring)go(ring.animate([{strokeDashoffset:'100'},{strokeDashoffset:'0'}],{duration:200,easing:'linear',fill:'both'}));
         if(arrow)go(arrow.animate([{opacity:0,transform:'translate(-90px,-90px)'},{opacity:1,transform:'translate(0px,0px)'}],{duration:250,easing:'cubic-bezier(.2,.9,.3,1)',fill:'both'}));total=Math.max(total,250);}
+      else if(kind==='hearts'){el.querySelectorAll('.cap-heart').forEach((h,i)=>{   // 0.87초 가로 반폭 385 = 벤치. 바깥으로 easeOutCubic 1.0초(0.13초 165 · 0.27초 245 · 0.47초 325)
+          const dx=+h.dataset.dx,dy=+h.dataset.dy;go(h.animate([{translate:'0px 0px',scale:'.5',opacity:.85},{translate:`${dx}px ${dy}px`,scale:'1',opacity:.85}],{duration:1000,easing:'cubic-bezier(.165,.84,.44,1)',fill:'both'}))});total=Math.max(total,1000);}
+      else if(kind==='sound_word'||kind==='small_text'||kind==='aside_line'||kind==='append_text'){/* 컷인(벤치 중간 프레임 없음) — 애니메이션 없음 */}
+      else if(kind==='comic_burst'){   // 0.4초: 작게(0.5배) → 1.3배 → 사라짐, 홀수 조각은 가운데 프레임에서 7° 돌고 5px 옮겨 깜빡임(벤치 0.13초마다 조각 자리 바뀜)
+        el.querySelectorAll('.cap-burst').forEach(q=>{const alt=+q.dataset.alt,rot=+q.dataset.rot;
+          go(q.animate([{scale:'.5',opacity:0,rotate:rot+'deg'},{scale:'1.0',opacity:1,rotate:(rot+(alt?7:-7))+'deg',offset:.3},{scale:'1.3',opacity:1,rotate:rot+'deg',offset:.65},{scale:'.7',opacity:0,rotate:(rot+(alt?-7:7))+'deg'}],{duration:400,easing:'linear',fill:'both'}))});total=Math.max(total,400);}
       else if(kind==='object_pop'){el.style.transformOrigin='50% 50%';go(el.animate([{scale:'0.4',opacity:0},{scale:'1.08',opacity:1,offset:.7},{scale:'1',opacity:1}],{duration:350,easing:'linear',fill:'both'}));total=Math.max(total,350);}
     });
     return Math.ceil(total);
@@ -1222,21 +1259,26 @@
     if(!text||text.hidden||!text.textContent.trim())return 0;
     [text,mask,...text.querySelectorAll('.cap-u')].filter(Boolean).forEach(el=>el.getAnimations().forEach(a=>a.cancel()));   // 09-19: 상자는 두고 글자만 움직인다 — 상자가 움직이면 뒤 검은 칸이 드러났다
     text.querySelectorAll('.cap-follow').forEach(e=>e.remove());   // 하트·커서(관제 235)는 등장마다 새로 단다
+    layer.querySelectorAll('.cap-glitch').forEach(e=>e.remove());   // 글리치 겹침 글자도 등장마다 새로
     if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
     const els=motion.unit?captionUnits(text,motion.unit):[text];
-    const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,ms=motion.ms||CAPTION_ENTER_MS;
+    const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,nch=text.textContent.replace(/\s/g,'').length,ms=motion.msPerChar?Math.max(motion.msMin||0,Math.min(motion.msMax||1e9,Math.round(nch*motion.msPerChar))):motion.ms||CAPTION_ENTER_MS;
     // 단위마다 늦게 시작한다 — 간격은 stagger, 다만 마지막 단위도 spread 안에 시작하게 줄인다(긴 자막도 장면 안에 끝).
     //   말 맞춘 타이핑(sync:'speech', 관제 235)은 글자마다 장면 자료의 시각(captionCharDelays).
     const step=els.length>1?Math.min(motion.stagger||0,(motion.spread??Infinity)/(els.length-1)):0,mid=(els.length-1)/2;
     const delays=motion.unit==='char'&&motion.sync==='speech'?captionCharDelays(els,motion,text):els.map((_,k)=>k*step);
     const drive=a=>{if(seeking){a.pause();a.currentTime=options.time;}else a.finished.then(()=>a.cancel()).catch(()=>{});return a};
+    // 오른쪽에서 닦아 나오기(스타픽룸 VbpdN 17.4 · EZQl 3.3) — 글이 있는 곳(잉크)의 오른쪽 끝부터 왼쪽으로 드러난다(칸 폭이 아니라 글 기준)
+    let wipeFrames=null;
+    if(motion.wipe==='rtl'){const rg=document.createRange();rg.selectNodeContents(text);const ink=rg.getBoundingClientRect(),sx=T.width/(text.offsetWidth||1)||1;
+      wipeFrames=[{clipPath:`inset(-60% -30px -60% ${((ink.right-T.left)/sx+4).toFixed(1)}px)`},{clipPath:`inset(-60% -30px -60% ${((ink.left-T.left)/sx-14).toFixed(1)}px)`}];}
     const follow=motion.unit==='char'?(motion.follow||captionPackAt(sceneIndex)?.stickers?.[sceneContext?.scenes?.[sceneIndex]?.sticker]?.follow):null;
     const spots=follow?captionFollowSpots(els,text,follow):null;   // 글자 자리는 움직이기 전에 잰다(첫 키프레임 크기가 자리를 바꾼다)
     els.forEach((el,k)=>{
       if(motion.origin===true){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
       else if(typeof motion.origin==='string')el.style.transformOrigin=motion.origin;
       // spreadX: 가운데에서 (번호-가운데)×값×spreadK(em) 벌어진 자리(translate) — spreadK 없는 키프레임은 제자리
-      const frames=motion.spreadX?motion.frames.map(({spreadK,...f})=>({...f,translate:`${((k-mid)*motion.spreadX*(spreadK||0)).toFixed(3)}em 0`})):motion.frames;
+      const frames=wipeFrames||(motion.spreadX?motion.frames.map(({spreadK,...f})=>({...f,translate:`${((k-mid)*motion.spreadX*(spreadK||0)).toFixed(3)}em 0`})):motion.frames);
       drive(el.animate(frames,{duration:ms,delay:delays[k]-(motion.sync==='speech'?1:0),easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'}));
       // 새 글자 첫 프레임 번쩍(관제 235 키치잇 분홍) — 그 글자가 나온 순간 flash.ms 동안만 그 색, 끝나면 제 색(강조 색이면 강조 색)
       if(motion.flash?.color)drive(el.animate([{color:motion.flash.color},{color:motion.flash.color}],{duration:motion.flash.ms||33,delay:delays[k]-1,fill:'none'}));
@@ -1247,6 +1289,24 @@
       drive(w.animate([{opacity:0},{opacity:1}],{duration:1,delay:delays[first]+ms*(motion.boxAt??.3),easing:'steps(1,start)',fill:'both'}));
     });
     let total=Math.ceil(Math.max(0,...delays)+ms);
+    // RGB 글리치(스타픽룸 VbpdN 1.4) — 같은 글 4벌(빨강·노랑·초록·하늘, 맨 글자는 그대로)을 맨 글자 위에 좌우로 ±amp(em) 벌렸다 모은 뒤 그 위에 흰 알맹이를 한 번 더 얹는다.
+    //   벤치는 검정 테 위로 색 가장자리가 보이고 글자 가운데는 흰색 — 그래서 색 벌은 아래, 맨 위에 테 없는 제 색 글자.
+    if(motion.glitch){
+      const g=motion.glitch,mk=col=>{const c=text.cloneNode(true);c.removeAttribute('data-edit-bind');c.classList.remove('precision-text');c.classList.add('cap-glitch','cap-u');
+        c.querySelectorAll('*').forEach(e=>{e.className='';e.style.cssText=`color:${col};background:none;-webkit-text-stroke:0;text-shadow:none;transform:none;translate:none;opacity:1;clip-path:none`;});
+        Object.assign(c.style,{position:'absolute',zIndex:String((parseInt(getComputedStyle(text).zIndex,10)||0)+1),color:col,webkitTextStroke:'0',textShadow:'none',pointerEvents:'none',opacity:'0',animation:'none',transition:'none'});return c};
+      let tail=text;
+      g.colors.forEach(([col,mul])=>{const c=mk(col);tail.after(c);tail=c;
+        drive(c.animate(g.keys.map(([o,v])=>({offset:o,translate:`${mul*v*g.amp}em 0`,opacity:v>0?g.alpha:0})),{duration:ms,easing:'linear',fill:'none'}));});
+      const core=mk(getComputedStyle(text).color);tail.after(core);drive(core.animate([{opacity:1},{opacity:1}],{duration:ms,easing:'linear',fill:'none'}));
+    }
+    // 글자마다 무지개 돌림(스타픽룸 j5D 0.2~1.0) — 색 칸 하나 = cycle.ms, 글자 k 는 칸이 k 만큼 어긋남(공백도 한 글자)
+    if(motion.cycle&&motion.unit==='char'){
+      const cy_=motion.cycle,n=cy_.colors.length,sc0=sceneContext?.scenes?.[sceneIndex];captionIndexChars(text);
+      els.forEach(el=>{const kk=+el.dataset.ci||0,kf=[];for(let j=0;j<=n;j++)kf.push({offset:j/n,color:cy_.colors[(cy_.phase0+kk+j)%n],easing:'steps(1,end)'});
+        const a=el.animate(kf,{duration:cy_.ms*n,iterations:Infinity,fill:'both'});if(seeking){a.pause();a.currentTime=options.time;}});
+      total=Math.max(total,sc0?Math.max(1,Math.round((sc0.end-sc0.start)*1000)-1):1000);
+    }
     // 줄 번짐(관제 235 스타픽룸 초록) — 타이핑 내내 글자 그림자 세기 keys[[진행도,세기]…], 끝은 팩 글자 그림자(밑바탕 값)로 돌아간다
     if(motion.glow?.color){
       const g=motion.glow,rgb=[1,3,5].map(i=>parseInt(g.color.slice(i,i+2),16)).join(','),[b0,b1]=g.blur||[.12,.28];
@@ -1255,6 +1315,17 @@
     }
     if(spots)total=Math.max(total,captionFollow(text,follow,spots,delays,ms,drive,seeking?options.time:null));
     return total;
+  }
+  // 글자 번호(공백도 한 글자로 센다) — 무지개 돌림의 위상. 어절(.wfx-w) 사이 공백 1칸.
+  function captionIndexChars(text){
+    captionUnits(text,'char');let k=0;
+    text.querySelectorAll('.wfx-w').forEach(w=>{const cs=[...w.querySelectorAll('.cap-c')];cs.forEach((c,j)=>c.dataset.ci=k+j);k+=cs.length+1;});
+  }
+  // 정지 그림(캡컷·썸네일·움직임 끝 뒤)에서도 무지개는 시작 색 — 애니메이션이 없어도 글자 색이 칠해져 있게
+  function captionCycleStatic(text){
+    const mo=captionMotionNow();if(!mo?.cycle||mo.unit!=='char'||!text||text.hidden||!text.textContent.trim())return;
+    captionIndexChars(text);const cy_=mo.cycle,n=cy_.colors.length;
+    text.querySelectorAll('.cap-c').forEach(c=>{c.style.color=cy_.colors[(cy_.phase0+(+c.dataset.ci||0))%n]});
   }
   // 말 맞춘 타이핑(관제 235) — 글자 k 가 나오는 시각(장면 시작 기준 ms). 주인 = 장면 자료(서버 scene_style):
   //   scene.chars(글자 시각) > scene.words(어절 시각을 그 어절 글자 수로 나눔) > 효과의 일정 간격(stagger·spread).
@@ -1971,7 +2042,7 @@
     if(!captionVisible())return;
     const settings=captionSettings(),source=captionSource(frame),drag=captionDrags.get(captionKey())||{x:0,y:0};
     const w=settings.placement==='title'?100:settings.w,h=settings.h;
-    const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
+    const plx=sceneContext?.scenes?.[sceneIndex]?.place?.x,x=settings.placement==='title'?0:Number.isFinite(plx)?(100-w)/2+drag.x+(plx-50):Math.max(0,Math.min(100-w,(100-w)/2+drag.x));   // 줄 자리 x(가운데 %)가 있으면 화면 가장자리 제한 없이 그 가운데에
     // ★원본(plain)은 제목칸이 없다 — 자막 기준선을 titleHeight(=0)로 잡으면 화면 맨 위로 붙는다(2026-09-24 실측).
     //   그 틀에서는 자막 줄이 정해 둔 제 자리(영상 아래쪽)를 기준으로 삼고, 끌어 옮긴 양만 더한다.
     // ★원본 자막은 제목 **실제 아래**에 붙는다(2026-10-03 사장님 화면: 제목이 커지거나 내려가 있으면 고정 줄(22%)의 자막이 제목 둘째 줄과 겹쳤다).
@@ -1980,7 +2051,7 @@
     const plainLine=source.ln?source.ln.y0/frame.height*100:80;
     // 자막팩 기본 자리(관제 235): 팩(화자·줄 변형 포함)이 place.y(자막 한 줄 가운데, 화면 높이 %)를 가지면 그 자리가 기준선 — 벤치 채널은 8편 내내 자막 자리가 같다(채널 모양의 일부).
     //   고객이 끌어 옮긴 양(drag)·↑↓(textOffset)은 그 위에 그대로 더해진다(고객 값이 이긴다). 팩에 자리가 없으면 종전(틀 자리) 그대로.
-    const packPlace=captionPackAt(sceneIndex)?.place;
+    const scPlace=sceneContext?.scenes?.[sceneIndex]?.place,packPlace=scPlace&&Number.isFinite(scPlace.y)?scPlace:captionPackAt(sceneIndex)?.place;   // 줄 자리(caption_anchor, 관제 235): 장면 자료 place{x,y}% 가 팩 자리보다 앞
     const capBase=Number.isFinite(packPlace?.y)?packPlace.y-h/2:rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:Math.max(plainLine,plainTitleEnd()+1)):titleHeight(frame);
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
@@ -2000,6 +2071,7 @@
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
     emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
+    captionCycleStatic(layer.querySelector('.precision-text[data-edit-bind="caption"]'));   // 무지개 돌림(관제 235) — 정지 그림 색
     renderStickers(layer.querySelector('.precision-text[data-edit-bind="caption"]'));   // 2단계 스티커(관제 235) — 다 나온 그림. 장면 자료에 스티커가 없으면 아무것도 안 그린다
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
