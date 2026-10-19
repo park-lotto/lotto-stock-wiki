@@ -1,0 +1,395 @@
+{
+ "_note": "샥탬스토리 하이브리드 10편 Scrub Daddy — 앞 0~11.77초(O1~O2) = 칼카피 그대로(끝 원음 '물 온도만 바꾸면 질감이 완전히 바뀌어요'), 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(잇썸홈판 존댓말 — 사장님 10-19 §12 14-0, 반말 지시 취소). CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "스크럽대디 수세미 랜덤발송 3개입(쿠팡 9132497584, 15,900원, 상품평 4,360 — 방송 제품과 같은 Scrub Daddy 오리지널) · 렌즈 3장 겹침 쿠팡 8099319188(2/3)·8050589464(2/3)",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "물 온도만 바꾸면 딱딱↔말랑으로 질감이 바뀌는 웃는 얼굴 수세미(앞 O2 원음이 그 약속으로 끝남)",
+  "뒤흥미": "같은 제품 리뷰 영상에서 그 변화가 눈에 보임 — xcLsT79etJU 25~38초 얼음물 그릇·따뜻한 물 그릇에 번갈아 담그는 비교, CCv0Hj-DOzQ 16~30초 '짜기 힘들다'(단단) → 60~64초 '말랑하고 짜기 쉽다', hrOwOzyKTf0 63~67초 말랑해진 수세미를 꾹 쥠, CCv0 포장에 'SOFT in warm water / FIRM in cool water' 인쇄",
+  "판정": "같음",
+  "근거": "같은 제품(Scrub Daddy 오리지널) — 쿠팡 9132497584 검색 결과(쿠팡검색_8-12_2026-10-19.json '스크럽대디'·'Scrub Daddy') + 렌즈 3/3장 scrubdaddy.kr·costco·kurly, 쿠팡 2/3장. 리뷰 영상 프레임 시트 C:/숏템_칼카피/foreignshowshow/하이브리드/10편_ScrubDaddy/sheet/{xcLs_pick,CCv0_2s,hrOwOzyKTf0_1s}.jpg"
+ },
+ "hybrid": {
+  "front_doc": "../10편_ScrubDaddy",
+  "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_10편_ScrubDaddy.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/10편_ScrubDaddy/work/render/render_info.json",
+  "cut_after": "O2",
+  "cut_why": "O2 원음 '물 온도만 바꾸면 질감이 완전히 바뀌어요' 끝(11.771) — 다음 N2(찬물 딱딱) 나레 전. 약속(궁금증)으로 끝나 '근데 진짜 물 온도로 바뀌나 싶어서'로 잇는다. N2~N4 사실은 뒤가 체험으로 받는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "샥탬 하이브리드 3~6편과 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "샤크들이 서로 싸운",
+  "line2": "웃는 수세미?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 8.02,
+  "cps_note": "앞 10편 완성본 나레 실측 cps_out 8.02(render_info narr)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "이음(연결어)+잉?",
+    "text": "근데 진짜 물 온도로 바뀌나 싶어서 쿠팡에 쳐 봤더니 똑같은 제품이 있더라고요",
+    "tts": "근데 진짜 물 온도로 바뀌나 싶어서 쿠팡에 쳐 봤더니 똑같은 제품이 있더라고요",
+    "caps": [
+     "근데 진짜",
+     "물 온도로 바뀌나 싶어서",
+     "쿠팡에 쳐 봤더니",
+     "똑같은 제품이",
+     "있더라고요"
+    ],
+    "facts": [
+     "c1"
+    ],
+    "emph_words": [
+     "똑같은"
+    ],
+    "point": "잉",
+    "answer_at": 2,
+    "emph": [
+     {
+      "cap": "근데 진짜",
+      "span": "근데 진짜",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "물 온도로 바뀌나 싶어서",
+      "span": "바뀌나 싶어서",
+      "color": "노랑",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "쿠팡에 쳐 봤더니",
+      "span": "쳐 봤더니",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "똑같은 제품이",
+      "span": "똑같은 제품이",
+      "color": "민트",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "있더라고요",
+      "span": "있더라고요",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "②권위·숫자(와우1)",
+    "text": "이게 말도 안 되는 게 홈쇼핑에서 7분도 안 돼 4만 2천 개가 팔렸다더라고요",
+    "tts": "이게 말도 안 되는 게 홈쇼핑에서 7분도 안 돼 4만 2천 개가 팔렸다더라고요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "홈쇼핑에서",
+     "7분도 안 돼",
+     "4만 2천 개가",
+     "팔렸다더라고요"
+    ],
+    "facts": [
+     "f11"
+    ],
+    "emph_words": [
+     "4만 2천 개"
+    ],
+    "emph": [
+     {
+      "cap": "이게 말도 안 되는 게",
+      "span": "이게 말도",
+      "color": "분홍",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "홈쇼핑에서",
+      "span": "홈쇼핑에서",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "7분도 안 돼",
+      "span": "7분도 안 돼",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "4만 2천 개가",
+      "span": "4만 2천 개가",
+      "color": "노랑",
+      "whole": true,
+      "why": "숫자 덩어리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "팔렸다더라고요",
+      "span": "팔렸다더라고요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "③핵심(와우2, 잉 답)",
+    "text": "진짜 핵심은 이건데, 찬물에 적시니까 돌처럼 딱딱해져서 눌은 때가 벗겨지더라고요",
+    "tts": "진짜 핵심은 이건데, 찬물에 적시니까 돌처럼 딱딱해져서 눌은 때가 벗겨지더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "찬물에 적시니까",
+     "돌처럼 딱딱해져서",
+     "눌은 때가",
+     "벗겨지더라고요"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "emph_words": [
+     "딱딱해져서"
+    ],
+    "emph": [
+     {
+      "cap": "진짜 핵심은 이건데",
+      "span": "핵심은 이건데",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "찬물에 적시니까",
+      "span": "찬물에 적시니까",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "돌처럼 딱딱해져서",
+      "span": "딱딱해져서",
+      "color": "초록",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "눌은 때가",
+      "span": "눌은 때가",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "벗겨지더라고요",
+      "span": "벗겨지더라고요",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 따뜻한 물에선 말랑해지니까 그릇에 흠집도 안 나요",
+    "tts": "심지어 이게 대박인 게 따뜻한 물에선 말랑해지니까 그릇에 흠집도 안 나요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "따뜻한 물에선",
+     "말랑해지니까",
+     "그릇에 흠집도",
+     "안 나요"
+    ],
+    "facts": [
+     "f4"
+    ],
+    "emph_words": [
+     "말랑해지니까"
+    ],
+    "emph": [
+     {
+      "cap": "심지어 이게 대박인 게",
+      "span": "심지어 이게",
+      "color": "민트",
+      "whole": false,
+      "why": "머리(꼬리 약함)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "따뜻한 물에선",
+      "span": "따뜻한 물에선",
+      "color": "분홍",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "말랑해지니까",
+      "span": "말랑해지니까",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "그릇에 흠집도",
+      "span": "그릇에 흠집도",
+      "color": "주황",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "안 나요",
+      "span": "안 나요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "text": "웃는 입에 숟가락 끼워 닦는 거 보고 애들이 설거지한다고 난리예요",
+    "tts": "웃는 입에 숟가락 끼워 닦는 거 보고 애들이 설거지한다고 난리예요",
+    "caps": [
+     "웃는 입에",
+     "숟가락 끼워 닦는 거 보고",
+     "애들이",
+     "설거지한다고",
+     "난리예요"
+    ],
+    "facts": [
+     "f5"
+    ],
+    "emph_words": [
+     "난리"
+    ],
+    "emph": [
+     {
+      "cap": "웃는 입에",
+      "span": "웃는 입에",
+      "color": "빨강",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "숟가락 끼워 닦는 거 보고",
+      "span": "닦는 거 보고",
+      "color": "민트",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "애들이",
+      "span": "애들이",
+      "color": "파랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "설거지한다고",
+      "span": "설거지한다고",
+      "color": "초록",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "난리예요",
+      "span": "난리예요",
+      "color": "노랑",
+      "whole": true,
+      "why": "줄 전체(≤5자·한 낱말)",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     }
+    ]
+   }
+  ],
+  "len_note": "글자 164자(잇썸홈판 120~165 안) — script_audit judge 0.874 통과·points ok(와우 3·잉 B1→B3). 뒤 길이는 hybrid --plan 추정 참조"
+ },
+ "facts": {
+  "c1": "쿠팡 검색 '스크럽대디'·'Scrub Daddy'·'스마일 수세미'(2026-10-19 이 PC 회선, C:/숏템_칼카피/foreignshowshow/하이브리드/쿠팡검색_8-12_2026-10-19.json) → 9132497584 '스크럽대디 수세미 랜덤발송, 3개입, 1개' 15,900원 상품평 (4,360) 외 8115350013 마미·8050589464 스펀지 대디 4종. 구글 렌즈 원본 3장(lens_src 10_a·b·c) → 쿠팡 8099319188·8050589464 각 2/3장. 상품 페이지는 10-19 밤 403(잠시 막힘)이라 검색 결과까지만",
+  "f4": "앞 편 근거 f4: 원본 47~82 'soft and compressible / hard and firm … burned on … scrubbing it right off … It won't scratch any of your surfaces' · 위키백과 Scrub Daddy 'firm in cold water and soft in warm water' · 제품 포장 글자 'SOFT in warm water / FIRM in cool water'(CCv0Hj-DOzQ 3~6초 프레임) — '돌처럼'·'흠집도 안 나요'는 체감 표현(창작, 근거는 판매자 주장)",
+  "f5": "앞 편 근거 f5: 원본 102.0~111.6 'that smiling mouth, that cleans spoons … on both sides at the same time' — '애들이 설거지한다고 난리'는 창작(사회 반응·감상)",
+  "f11": "앞 편 근거 f11: 위키백과 Scrub Daddy 'The following day, Greiner and Krause sold 42,000 sponges in under seven minutes on QVC.'(Bustle 2014-12-05 인용) — 앞 0~11.8초엔 안 나온 사실(앞 N7 은 잘려 나감)",
+  "창작": "B3 '돌처럼'·B4 체감·B5 '애들이 설거지한다고 난리' = 화자 감상·사회 반응(설명서 §4 창작 허용선)"
+ }
+}
