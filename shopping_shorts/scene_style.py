@@ -22,6 +22,91 @@ def caption_pack_keys():
     return tuple(json.loads(text.split("/*PACKS*/")[1]))
 
 
+def caption_enter_spec_table():
+    """범용 등장(스펙) 한계값·이름 표 — 같은 계약 파일의 ENTERSPEC 표식 사이(관제 235). 편집기 captionEnterMotion 과 같은 표를 읽는다."""
+    text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return json.loads(text.split("/*ENTERSPEC*/")[1])
+
+
+def clean_caption_enter(spec):
+    """범용 등장 스펙 정리 — **이 함수가 스펙 모양의 주인**(관제 235 요청서 1·2·4·5). 스냅샷 captionEnter·장면 자료 enter 가 같이 쓴다.
+    {kind?, ms?, keyframes?:[{t(초),scale(%),alpha(%),dy(px)}], cps?, cursor?:{char,blink_ms}, glow?:{decay_ms,color?}, amp?, exit?:{kind,ms?,dx?}}
+    한계는 계약 파일 표(limits). 올바르지 않으면 None(호출한 쪽이 버리거나 거절). 칼카피 설명서 enter({kind,ms,keyframes?}) 도 이 함수 하나로 스냅샷에 옮긴다."""
+    if not isinstance(spec, dict):
+        return None
+    table = caption_enter_spec_table(); lim = table["limits"]
+
+    def num(v, key):
+        lo, hi = lim[key]
+        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and lo <= v <= hi else None
+
+    out = {}
+    kind = spec.get("kind")
+    if kind is not None:
+        if not isinstance(kind, str) or kind not in {"keyframes", *table["kinds"], *caption_motion_keys()}:
+            return None
+        out["kind"] = kind
+    if spec.get("ms") is not None:
+        ms = num(spec["ms"], "ms")
+        if ms is None:
+            return None
+        out["ms"] = round(ms)
+    frames = spec.get("keyframes")
+    if frames is not None:
+        if not isinstance(frames, list) or not 1 <= len(frames) <= lim["max_keyframes"]:
+            return None
+        clean = []
+        for frame in frames:
+            if not isinstance(frame, dict) or num(frame.get("t"), "t") is None:
+                return None
+            item = {"t": round(num(frame["t"], "t"), 4)}
+            for key, name in (("scale", "scale"), ("alpha", "alpha"), ("dy", "dy")):
+                if frame.get(key) is not None:
+                    value = num(frame[key], name)
+                    if value is None:
+                        return None
+                    item[key] = round(value, 3)
+            clean.append(item)
+        out["keyframes"] = clean
+    if "kind" not in out and "keyframes" not in out:
+        return None
+    for key, name in (("cps", "cps"), ("amp", "amp")):
+        if spec.get(key) is not None:
+            value = num(spec[key], name)
+            if value is None:
+                return None
+            out[key] = value
+    cursor = spec.get("cursor")
+    if cursor is not None:
+        if not isinstance(cursor, dict) or not isinstance(cursor.get("char", "_"), str) or not 1 <= len(cursor.get("char", "_")) <= 2:
+            return None
+        out["cursor"] = {"char": cursor.get("char", "_")}
+        if cursor.get("blink_ms") is not None:
+            blink = num(cursor["blink_ms"], "blink_ms")
+            if blink is None:
+                return None
+            out["cursor"]["blink_ms"] = round(blink)
+    glow = spec.get("glow")
+    if glow is not None:
+        if not isinstance(glow, dict) or num(glow.get("decay_ms"), "decay_ms") is None or not _HEX.match(str(glow.get("color", "#000000"))):
+            return None
+        out["glow"] = {"decay_ms": round(num(glow["decay_ms"], "decay_ms"))}
+        if glow.get("color"):
+            out["glow"]["color"] = str(glow["color"]).upper()
+    ex = spec.get("exit")
+    if ex is not None:
+        if not isinstance(ex, dict) or ex.get("kind") not in table["exits"]:
+            return None
+        out["exit"] = {"kind": ex["kind"]}
+        for key, name in (("ms", "exit_ms"), ("dx", "exit_dx")):
+            if ex.get(key) is not None:
+                value = num(ex[key], name)
+                if value is None:
+                    return None
+                out["exit"][key] = round(value)
+    return out
+
+
 def caption_motion_pack_count():
     """등장 효과팩 개수 — 같은 계약 파일의 MPACKS 표식 사이(관제 144)."""
     text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
@@ -228,6 +313,11 @@ def validate_snapshot(value):
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     if value.get("captionPack") not in (None, "", *caption_pack_keys()):   # 자막팩(관제 127) — 계약 파일 한 곳
         raise ValueError("자막팩 값이 올바르지 않습니다")
+    if value.get("captionEnter") is not None:   # 범용 등장 스펙(관제 235) — 칼카피 설명서의 등장 길이·키프레임이 여기로 온다
+        cleaned = clean_caption_enter(value["captionEnter"])
+        if cleaned is None:
+            raise ValueError("자막 등장 값이 올바르지 않습니다")
+        value["captionEnter"] = cleaned
     if value.get("motionPack") not in (None, "", "off", *(str(k) for k in range(1, caption_motion_pack_count() + 1))):   # 등장 효과팩(관제 144)
         raise ValueError("등장 효과팩 값이 올바르지 않습니다")
     fx_preset = value.get("fxPreset")
@@ -269,7 +359,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionEnter", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "sceneTexts", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -465,6 +555,7 @@ def scene_marks(beat, piece, caption):
       beat["emph"]          핵심 단어 [문자열 | {"word","color"?,"grow"?}] — 구절마다 그 낱말이 있으면 칠한다.
       beat["caption_marks"] 구절별(caption_lines 순서) [{"speaker"?,"variant"?,"emph"?,"sticker"?}] — 있으면 비트 값보다 이긴다.
       beat["chars"]         글자 정렬 [{"char","start"}] — _attach_scene_chars 가 장면 글자 시각으로 옮긴다.
+      beat["caption_enter"] / caption_marks[k]["enter"]  범용 등장 스펙 {kind?,ms?,keyframes?,cps?,cursor?,glow?,amp?,exit?} — clean_caption_enter 가 정리(올바르지 않으면 버림).
       beat["place"] / caption_marks[k]["place"]  줄 자리 {"y":%,"x"?:%} — 벤치에서 자리가 달라진 줄에만(기본은 팩 자리).
       beat["stickers"] / caption_marks[k]["stickers"]  2단계 스티커 [{kind, word?, x?,y?,r?, text?, likes?, src?, hold?}] — _sticker 가 정리.
     장면에 붙는 값: stickers=[{kind,w?,x?,y?,r?,text?,likes?,src?,hold?,cont?}] · speaker · variant · emph=[{"w":어절번호,"g":낱말묶음,"color"?:"#RRGGBB","grow"?}] · sticker(2단계 스티커 자리 — 지금은 'heart' 만 그린다).
@@ -482,6 +573,9 @@ def scene_marks(beat, piece, caption):
         out["place"] = {"y": float(place["y"])}
         if isinstance(place.get("x"), (int, float)) and 0 <= place["x"] <= 100:
             out["place"]["x"] = float(place["x"])
+    enter = clean_caption_enter(own.get("enter", beat.get("caption_enter")))   # 범용 등장 스펙(관제 235 요청서 1·2·4·5) — 장면 자료 enter 는 팩·스냅샷보다 앞
+    if enter:
+        out["enter"] = enter
     tokens = [_word_key(t) for t in (caption or "").split()]
     emph, group = [], 0
     for item in own.get("emph", beat.get("emph")) or []:
