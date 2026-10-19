@@ -52,11 +52,15 @@ HUMAN = {"readlines": "줄판독(눈) — 묶음 _kal/워커묶음.json 을 워�
          "make": "제작 — 소재·대본·재료 준비 뒤 preset_make 로 시험편 1편(TTS 과금은 허락됨) → --ours-mp4/--ours-lines 로 다시 실행"}
 
 
-KNOWN_VOICES = [  # 지금까지 쓴 목소리(필재 금지 — 시작 문서 §12). 주인 칸은 판 파일 voice 한 곳(여기는 후보 표만)
-    {"name": "미나", "voice_id": "kr-mina-expressive", "engine": "일레븐랩스", "note": "잇썸홈판·키치잇판·스타픽룸판, 배속 1.35 고정"},
-    {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "engine": "타입캐스트", "note": "재미썸홈판·꿀템노트판·썰템쇼, 남자면 박창수"},
-    {"name": "지훈", "voice_id": "tc_61f0859907085fc68561c9a1", "engine": "타입캐스트", "note": "샥탬스토리(남, f0 129Hz)"},
+KNOWN_VOICES = [  # 칼카피 목소리 명단(사장님 10-20 확정 — 시작 문서 §12): 여 = 미나·문정·유라 / 남 = 박창수·지훈. 필재 금지(빠르면 발음 뭉개짐).
+    # 주인 칸은 판 파일 voice 한 곳(여기는 후보 표만). 빠르게 돌리면 반드시 받아쓰기 되돌림으로 발음 확인(§12).
+    {"name": "미나", "voice_id": "kr-mina-expressive", "engine": "일레븐랩스", "gender": "여", "note": "잇썸홈판·키치잇판·스타픽룸판, 배속 1.35 고정"},
+    {"name": "문정", "voice_id": "tc_68f9c6a72f0f04a417bb136f", "engine": "타입캐스트", "gender": "여", "note": "차분·단정 — 아이템홈 1편·핫템 3호(6.52자/초)"},
+    {"name": "유라", "voice_id": "tc_61130d6cf89dd58a4c13295d", "engine": "타입캐스트", "gender": "여", "note": "젊은 광고 나레 — 8.7~8.8자/초 실적"},
+    {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "engine": "타입캐스트", "gender": "남", "note": "재미썸홈판·꿀템노트판·썰템쇼"},
+    {"name": "지훈", "voice_id": "tc_61f0859907085fc68561c9a1", "engine": "타입캐스트", "gender": "남", "note": "샥탬스토리(f0 129Hz)"},
 ]
+BANNED_VOICES = {"tc_68257f68bc6e3c161ab5078d": "필재 — 빠르게 하면 발음이 계속 이상하게 된다(사장님 10-20)"}
 AXES = ("자막", "틀", "장면전환", "장면대사", "스토리", "대본", "소리", "스티커", "썸네일", "소재", "채널")
 _AXIS_KW = {"자막": ("자막", "타이핑", "팝", "글꼴", "강조"), "틀": ("틀", "제목", "로고", "창", "출처"), "장면전환": ("컷", "전환", "줌", "정지"), "장면대사": ("장면", "매칭", "시연"),
             "스토리": ("박자", "훅", "반전", "끝", "결말", "흐름"), "대본": ("어미", "전언", "말투", "대본", "나레는", "반말"), "소리": ("효과음", "BGM", "목소리", "LUFS", "덕킹"),
@@ -92,7 +96,7 @@ def voice_candidates() -> list[dict]:
             rows.setdefault(c, {"name": c, "voice_id": c, "engine": "타입캐스트" if c.startswith("tc") else "일레븐랩스", "note": f"{d.get('name')} 후보(사장님 귀 확인 전)", "used_in": []})
     vp = ROOT / "shopping_shorts/assets/voice_presets.json"
     n_el = len(json.loads(vp.read_text(encoding="utf-8"))) if vp.exists() else 0
-    out = list(rows.values())
+    out = [r for r in rows.values() if r["voice_id"] not in BANNED_VOICES]
     out.append({"name": f"(일레븐랩스 프리셋 {n_el}종 더 — shopping_shorts/assets/voice_presets.json)", "voice_id": "", "engine": "일레븐랩스", "note": "", "used_in": []})
     return out
 
@@ -110,7 +114,8 @@ def voice_recommend(S) -> str:
     if not genders:
         return "미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로)"
     g = max(set(genders), key=genders.count)
-    return ("박창수 tc_6059dad0b83880769a50502f" if g == "male" else "미나 kr-mina-expressive") + f" (벤치 화자 {'남' if g == 'male' else '여'} {genders.count(g)}/{len(genders)})"
+    pool = [v["name"] for v in KNOWN_VOICES if v["gender"] == ("남" if g == "male" else "여")]
+    return " / ".join(pool) + f" 중에서 (벤치 화자 {'남' if g == 'male' else '여'} {genders.count(g)}/{len(genders)})"
 
 
 def menu(axis: str = "all") -> list[dict]:
