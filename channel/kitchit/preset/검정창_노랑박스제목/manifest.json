@@ -1,0 +1,921 @@
+{
+ "slug": "kitchit",
+ "style": "검정창_노랑박스제목",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-18T23:05:26+09:00",
+ "sources": [
+  {
+   "id": "Cs-Ka_S8nDM",
+   "tteutgi": "channel/kitchit/뜯기/Cs-Ka_S8nDM/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:49",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 4개: [6, 7, 9, 10]",
+    "글꼴 1위 점수 0.3618 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 12.6~15.0",
+    "소리 구성 duck_db: 한국어 나레 구간 없음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1887
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.1436
+     },
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.1376
+     }
+    ],
+    "top5": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1887
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.1436
+     },
+     {
+      "font": "Dongle-Bold.ttf",
+      "score": 0.1376
+     },
+     {
+      "font": "S-CoreDream-6Bold.ttf",
+      "score": 0.137
+     },
+     {
+      "font": "Cafe24Danjunghae.ttf",
+      "score": 0.1328
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "4c85cd650385"
+  },
+  {
+   "id": "BRa5Iv4A3Y8",
+   "tteutgi": "channel/kitchit/뜯기/BRa5Iv4A3Y8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:49",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 9개: [1, 8, 10, 17, 18, 19, 20, 21, 22]",
+    "글꼴 1위 점수 0.0942 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 18.5~21.1",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].line_rgb",
+    "layers[text:label].rgb",
+    "layers[text:label].text"
+   ],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.8175
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.8099
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7822
+     }
+    ],
+    "top5": [
+     {
+      "font": "yg-jalnan.ttf",
+      "score": 0.8175
+     },
+     {
+      "font": "Jalnan2.ttf",
+      "score": 0.8099
+     },
+     {
+      "font": "JalnanGothic.ttf",
+      "score": 0.7822
+     },
+     {
+      "font": "GmarketSansBold.otf",
+      "score": 0.6636
+     },
+     {
+      "font": "SBAggroB.ttf",
+      "score": 0.6287
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "99e9b097a4ca"
+  },
+  {
+   "id": "Ks5kYYKAUlQ",
+   "tteutgi": "channel/kitchit/뜯기/Ks5kYYKAUlQ/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:49",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 1개: [0]",
+    "글꼴 1위 점수 0.0687 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1856
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.1451
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.139
+     }
+    ],
+    "top5": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1856
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.1451
+     },
+     {
+      "font": "Dokdo-Regular.ttf",
+      "score": 0.139
+     },
+     {
+      "font": "Cafe24Danjunghae.ttf",
+      "score": 0.1362
+     },
+     {
+      "font": "Sunflower-Medium.ttf",
+      "score": 0.1358
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "9b8947505101"
+  },
+  {
+   "id": "Nv99RyxmrfU",
+   "tteutgi": "channel/kitchit/뜯기/Nv99RyxmrfU/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:49",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 7개: [0, 1, 2, 3, 4, 5, 6]",
+    "글꼴: OCR 줄 수와 잉크 줄 수가 맞는 자막이 없음",
+    "받아쓰기: 길이 초과 12.6~14.3",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "소리 구성 caption_eq_narration: 자막 글자(OCR) 없음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "GrandifloraOne-Regular.ttf",
+      "score": 0.0317
+     },
+     {
+      "font": "MoiraiOne-Regular.ttf",
+      "score": 0.0256
+     },
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.0196
+     }
+    ],
+    "top5": [
+     {
+      "font": "GrandifloraOne-Regular.ttf",
+      "score": 0.0317
+     },
+     {
+      "font": "MoiraiOne-Regular.ttf",
+      "score": 0.0256
+     },
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.0196
+     },
+     {
+      "font": "GowunBatang.ttf",
+      "score": 0.017
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0163
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "b188b1266b08"
+  },
+  {
+   "id": "oTi41R74WIY",
+   "tteutgi": "channel/kitchit/뜯기/oTi41R74WIY/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 22:05",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 2개: [3, 5]",
+    "글꼴 1위 점수 0.118 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 9.6~11.2",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1646
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.1482
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.1444
+     }
+    ],
+    "top5": [
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1646
+     },
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.1482
+     },
+     {
+      "font": "BMJUA.ttf",
+      "score": 0.1444
+     },
+     {
+      "font": "Pretendard-ExtraBold.otf",
+      "score": 0.1434
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.1425
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "5b641a625378"
+  },
+  {
+   "id": "cNo91ddBwB8",
+   "tteutgi": "channel/kitchit/뜯기/cNo91ddBwB8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:59",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "글꼴 1위 점수 0.0878 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 12.2~13.8",
+    "소리 구성 duck_db: 말 없는 구간 0.5초 미만",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.0271
+     },
+     {
+      "font": "GrandifloraOne-Regular.ttf",
+      "score": 0.0243
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0234
+     }
+    ],
+    "top5": [
+     {
+      "font": "NanumBrushScript.ttf",
+      "score": 0.0271
+     },
+     {
+      "font": "GrandifloraOne-Regular.ttf",
+      "score": 0.0243
+     },
+     {
+      "font": "HiMelody.ttf",
+      "score": 0.0234
+     },
+     {
+      "font": "GowunBatang.ttf",
+      "score": 0.0172
+     },
+     {
+      "font": "MoiraiOne-Regular.ttf",
+      "score": 0.0131
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "e627a8177ba9"
+  },
+  {
+   "id": "_Wa4IehA6yE",
+   "tteutgi": "channel/kitchit/뜯기/_Wa4IehA6yE/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 21:55",
+   "frame_tool": "kitchit_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "창 y420 1080x1080(8편 밝기 행 실측)",
+    "제목 1줄 흰 기울임 Jalnan2 79 · 2줄 노랑 박스 #FDE600 x42~1037 y269~399 + 검정 Jalnan2 77(박스 없는 편은 노랑 글)",
+    "자막 Jalnan2 73·가운데 y1351·외곽선 7px #151618 + 흰 바깥 테두리 약 2px(층 하나로 표현 못 함 — 자막팩 보강안)",
+    "자막 등장 pop 400ms(0프레임 22% → 0.27초 109% → 0.40초 100%, Cs-Ka '1년 내내' 30fps 실측)",
+    "강조색 돌림(노랑·초록·하늘·분홍·연보라)은 설명서 한 색만 — 돌림은 자막팩 보강안",
+    "로고 '키치잇' x75 y435 회색 + 출처 줄 y1535 회색(자동이 못 잡아 손으로)"
+   ],
+   "unknown": [
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [6, 7, 11]",
+    "글꼴 1위 점수 0.372 < 0.5 — 창고에 없는 글꼴일 수 있음",
+    "받아쓰기: 길이 초과 11.8~14.3",
+    "소리 구성 duck_db: 한국어 나레 구간 없음",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "키치잇자막",
+   "title_ink_w": null,
+   "title_fonts": {
+    "top3": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.1951
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.1913
+     },
+     {
+      "font": "S-CoreDream-6Bold.ttf",
+      "score": 0.1836
+     }
+    ],
+    "top5": [
+     {
+      "font": "BMDOHYEON.ttf",
+      "score": 0.1951
+     },
+     {
+      "font": "S-CoreDream-7ExtraBold.ttf",
+      "score": 0.1913
+     },
+     {
+      "font": "S-CoreDream-6Bold.ttf",
+      "score": 0.1836
+     },
+     {
+      "font": "TmonMonsori.ttf",
+      "score": 0.1806
+     },
+     {
+      "font": "KirangHaerang.ttf",
+      "score": 0.1716
+     }
+    ]
+   },
+   "title_pooled": null,
+   "frame_sha1": "011505261d6d"
+  }
+ ],
+ "updated_at": "2026-10-18T23:05:27+09:00",
+ "variables": [
+  "layers[text:title].line_rgb",
+  "layers[text:title].text",
+  "layers[text:label].rgb",
+  "layers[text:label].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "키치잇자막",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 1310,
+    "w": 900,
+    "align": "center",
+    "lines": 1,
+    "font": "Jalnan2",
+    "size": 73,
+    "line_h": 82,
+    "rgb": [
+     255,
+     255,
+     255
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": {
+     "px": 7,
+     "rgb": [
+      21,
+      22,
+      24
+     ]
+    },
+    "line_outline": null,
+    "shadow": null,
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "pop",
+     "ms": 400
+    },
+    "emphasis": {
+     "words": "auto",
+     "rgb": [
+      254,
+      221,
+      0
+     ],
+     "style": "color"
+    },
+    "text": null
+   },
+   "status": "잰 편 Cs-Ka_S8nDM",
+   "sources": [
+    "Cs-Ka_S8nDM",
+    "BRa5Iv4A3Y8",
+    "Ks5kYYKAUlQ",
+    "Nv99RyxmrfU",
+    "oTi41R74WIY",
+    "cNo91ddBwB8",
+    "_Wa4IehA6yE"
+   ],
+   "notes": [
+    "Cs-Ka_S8nDM: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "BRa5Iv4A3Y8: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "Ks5kYYKAUlQ: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "Nv99RyxmrfU: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "oTi41R74WIY: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "cNo91ddBwB8: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑",
+    "_Wa4IehA6yE: 흰 글+진한 외곽선+흰 바깥 테두리 · 핵심 낱말 하나 색 돌림 · pop 등장 · 원음 구간 타이핑"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].line_rgb": {
+   "values": {
+    "Cs-Ka_S8nDM": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "BRa5Iv4A3Y8": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      243,
+      252,
+      50
+     ]
+    ],
+    "Ks5kYYKAUlQ": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "Nv99RyxmrfU": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "oTi41R74WIY": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "cNo91ddBwB8": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "_Wa4IehA6yE": [
+     [
+      255,
+      255,
+      255
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   "default": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     0,
+     0,
+     0
+    ]
+   ],
+   "range": null,
+   "how": "자리별 중앙값(7/7편)"
+  },
+  "layers[text:title].text": {
+   "values": {
+    "Cs-Ka_S8nDM": "50살 최강희 찐애착백!\n명품 아니고 백화점 브랜드?",
+    "BRa5Iv4A3Y8": "최화정 피부 실화?\n추석 선물 효도 끝판왕",
+    "Ks5kYYKAUlQ": "가을 햇볕에 피부 찢어질 때?\n박세리가 '몇 통째' 쓴 선크림!",
+    "Nv99RyxmrfU": "실장님도 탐낸 베이스\n알고 보니 1만원대?",
+    "oTi41R74WIY": "에르메스인줄! 고현정가방\n가격듣고 놀란 반전브랜드",
+    "cNo91ddBwB8": "선우용여가 픽한 눈가 꿀템\n뻑뻑하고 눈곱낄 때 슥-",
+    "_Wa4IehA6yE": "가을 피부 쩍쩍 갈라질 때?\n50살 최강희의 피부소생법!"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "layers[text:label].rgb": {
+   "values": {
+    "Cs-Ka_S8nDM": [
+     182,
+     182,
+     182
+    ],
+    "BRa5Iv4A3Y8": [
+     92,
+     93,
+     92
+    ],
+    "Ks5kYYKAUlQ": [
+     182,
+     182,
+     182
+    ],
+    "Nv99RyxmrfU": [
+     182,
+     182,
+     182
+    ],
+    "oTi41R74WIY": [
+     182,
+     182,
+     182
+    ],
+    "cNo91ddBwB8": [
+     182,
+     182,
+     182
+    ],
+    "_Wa4IehA6yE": [
+     182,
+     182,
+     182
+    ]
+   },
+   "default": [
+    182,
+    182,
+    182
+   ],
+   "range": null,
+   "how": "자리별 중앙값(7/7편)"
+  },
+  "layers[text:label].text": {
+   "values": {
+    "Cs-Ka_S8nDM": "출처: 나도 최강희",
+    "BRa5Iv4A3Y8": "출처: 성시경 SUNG SI KYUNG",
+    "Ks5kYYKAUlQ": "출처: 박세리의 속사정",
+    "Nv99RyxmrfU": "출처: 윤쥬르 YOONJOUR 장윤주",
+    "oTi41R74WIY": "출처: 고현정",
+    "cNo91ddBwB8": "출처: 옥탑방의 문제아들",
+    "_Wa4IehA6yE": "출처: 전참시"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "Cs-Ka_S8nDM": 135,
+     "BRa5Iv4A3Y8": 135,
+     "Ks5kYYKAUlQ": 135,
+     "Nv99RyxmrfU": 135,
+     "oTi41R74WIY": 135,
+     "cNo91ddBwB8": 135,
+     "_Wa4IehA6yE": 135
+    },
+    "default": 135,
+    "range": [
+     135,
+     135
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "gap": {
+    "values": {
+     "Cs-Ka_S8nDM": 19,
+     "BRa5Iv4A3Y8": 19,
+     "Ks5kYYKAUlQ": 19,
+     "Nv99RyxmrfU": 19,
+     "oTi41R74WIY": 19,
+     "cNo91ddBwB8": 19,
+     "_Wa4IehA6yE": 19
+    },
+    "default": 19,
+    "range": [
+     19,
+     19
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "Cs-Ka_S8nDM": 1.705,
+     "BRa5Iv4A3Y8": 1.705,
+     "Ks5kYYKAUlQ": 1.705,
+     "Nv99RyxmrfU": 1.705,
+     "oTi41R74WIY": 1.705,
+     "cNo91ddBwB8": 1.705,
+     "_Wa4IehA6yE": 1.705
+    },
+    "default": 1.705,
+    "range": [
+     1.705,
+     1.705
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "size_cap": {
+    "values": {
+     "Cs-Ka_S8nDM": 78,
+     "BRa5Iv4A3Y8": 78,
+     "Ks5kYYKAUlQ": 78,
+     "Nv99RyxmrfU": 78,
+     "oTi41R74WIY": 78,
+     "cNo91ddBwB8": 78,
+     "_Wa4IehA6yE": 78
+    },
+    "default": 78,
+    "range": [
+     78,
+     78
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "video_bottom": {
+    "values": {
+     "Cs-Ka_S8nDM": 1500,
+     "BRa5Iv4A3Y8": 1500,
+     "Ks5kYYKAUlQ": 1500,
+     "Nv99RyxmrfU": 1500,
+     "oTi41R74WIY": 1500,
+     "cNo91ddBwB8": 1500,
+     "_Wa4IehA6yE": 1500
+    },
+    "default": 1500,
+    "range": [
+     1500,
+     1500
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "video_top": {
+    "values": {
+     "Cs-Ka_S8nDM": 420,
+     "BRa5Iv4A3Y8": 420,
+     "Ks5kYYKAUlQ": 420,
+     "Nv99RyxmrfU": 420,
+     "oTi41R74WIY": 420,
+     "cNo91ddBwB8": 420,
+     "_Wa4IehA6yE": 420
+    },
+    "default": 420,
+    "range": [
+     420,
+     420
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "gap_ink": {
+    "values": {
+     "Cs-Ka_S8nDM": 56,
+     "BRa5Iv4A3Y8": 56,
+     "Ks5kYYKAUlQ": 56,
+     "Nv99RyxmrfU": 58,
+     "oTi41R74WIY": 58,
+     "cNo91ddBwB8": 58,
+     "_Wa4IehA6yE": 56
+    },
+    "default": 56,
+    "range": [
+     56,
+     58
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "fill_w": {
+    "values": {
+     "Cs-Ka_S8nDM": 961,
+     "BRa5Iv4A3Y8": 762,
+     "Ks5kYYKAUlQ": 1007,
+     "Nv99RyxmrfU": 755,
+     "oTi41R74WIY": 921,
+     "cNo91ddBwB8": 935,
+     "_Wa4IehA6yE": 943
+    },
+    "default": 1032,
+    "range": [
+     755,
+     1007
+    ],
+    "how": "잰 폭 최대와 화면 폭−48 중 큰 값"
+   },
+   "cap_dy": {
+    "values": {
+     "Cs-Ka_S8nDM": -190,
+     "BRa5Iv4A3Y8": -190,
+     "Ks5kYYKAUlQ": -190,
+     "Nv99RyxmrfU": -190,
+     "oTi41R74WIY": -190,
+     "cNo91ddBwB8": -190,
+     "_Wa4IehA6yE": -190
+    },
+    "default": -190,
+    "range": [
+     -190,
+     -190
+    ],
+    "how": "중앙값(7/7편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "gap_ink",
+    "range": null,
+    "how": "제목 끝–창 간격 고정(gap_ink)"
+   }
+  }
+ },
+ "roles": [
+  "나레 훅(전언 ~다네요?/~다고?, 인물+제품 정체)",
+  "원음 증언(본인 말)",
+  "나레 질문 한 줄(대체 어떤 ~길래?)",
+  "원음 답(디테일)",
+  "나레 마무리(~말 다했죠/~래)"
+ ],
+ "source_kind": "해외영상",
+ "note": "기록용 — 렌더 숫자는 channel/kitchit/preset/kitchit_frame.json, 자막 효과는 channel/kitchit/자막팩_보강안.json"
+}

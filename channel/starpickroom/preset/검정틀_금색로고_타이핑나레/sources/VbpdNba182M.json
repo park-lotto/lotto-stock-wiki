@@ -1,0 +1,171 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 483,
+   "w": 1080,
+   "h": 1058,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 236,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 92,
+   "line_h": 104,
+   "rgb": [
+    252,
+    252,
+    252
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "땅콩버터에 푹 빠진\n공효진이 찾아낸 최강 조합"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1106,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 62,
+   "line_h": 70,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 7,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1604,
+   "w": 900,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 36,
+   "line_h": 44,
+   "rgb": [
+    139,
+    139,
+    136
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처: 당분간 공효진"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 910,
+   "y": 522,
+   "w": 260,
+   "align": "center",
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 56,
+   "line_h": 60,
+   "rgb": [
+    200,
+    200,
+    200
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "스타픽룸"
+  },
+  {
+   "kind": "image",
+   "src": "channel/starpickroom/preset/assets/logo_yanshottem.png",
+   "x": 0,
+   "y": 1666,
+   "w": 1080,
+   "h": 254
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "VbpdNba182M"
+}
