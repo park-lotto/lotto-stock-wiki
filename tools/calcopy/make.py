@@ -72,6 +72,9 @@ def main(argv=None):
     p = sp.add_parser("approve")
     p.add_argument("sid")
     p.add_argument("--by", required=True)
+    rs = sp.add_parser("restyle", help="완성본을 지금 설정(팩)으로 겉모습만 다시(관제 234)")
+    rs.add_argument("sid")
+    rs.add_argument("--by", required=True)
     r = sp.add_parser("reject")
     r.add_argument("sid")
     r.add_argument("reason")
@@ -108,6 +111,12 @@ def main(argv=None):
             _status(MK.status(x.sid))
         elif x.cmd == "approve":
             MK.approve(x.sid, by=x.by, deps=DEPS)
+            if x.json:
+                print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
+                return 0
+            _status(MK.status(x.sid))
+        elif x.cmd == "restyle":
+            MK.restyle(x.sid, by=x.by, deps=DEPS)
             if x.json:
                 print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
                 return 0

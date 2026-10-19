@@ -748,6 +748,41 @@ def approve(sid: str, by: str | None = None, data_dir=None, deps: dict | None = 
     return _load(sid, data_dir)
 
 
+def restyle(sid: str, by: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
+    """완성본 고치기(관제 234 5판, 사장님 10-19 "완성본을 보고 거기서 편집") — 지금 팩(고객 PC 설정)으로 겉모습만 다시 만든다.
+    대본·재료·계획은 그대로. 목소리는 목소리·빠르기 칸이 바뀐 때만 새로(고객 키 비용), 아니면 있던 목소리 파일 그대로.
+    판단: 합치기 = merge_preset_pack · 렌더 = worker_steps.step_produce(다시 '만들기' 자리로 되돌려 같은 길을 탄다)."""
+    if by not in ADMINS and not (CUSTOMER_MODE and by == CUSTOMER):
+        raise MakeError(f"다시 만들기는 관리자·고객만 — by={by!r}", 403)
+    S = _load(sid, data_dir)
+    t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"] if S.get("topic_id") else {}
+    if t.get("state") != "final_review":
+        raise MakeError(f"완성본 자리가 아니다(지금 {t.get('state')})", 409)
+    cfg = merge_preset_pack(S["preset"], _patched(load_packs()[str(S["pack"])], S.get("pack_patch")))
+    mdir = Path(S["merged_preset"])
+    old = json.loads((mdir / "make.json").read_text(encoding="utf-8")).get("remake_args") or {}
+    write_merged(cfg, mdir)
+    new = cfg["remake_args"]
+    if any(old.get(k) != new.get(k) for k in ("voice", "tempo")):
+        narr = _worker(S, data_dir, deps).ctx.workdir(t) / "제작" / "narr_full.mp3"
+        if narr.exists():
+            narr.unlink()                                     # 목소리 칸이 바뀌었다 — 새로 만든다(step_produce 가 --make-tts)
+    CT.review(S["topic_id"], "final_review", "reject", by=f"만들기 입구 · {by}", reason="설정을 바꿔 겉모습만 다시 만든다(restyle)",
+              back_to="producing", data_dir=data_dir)
+    S.update(state="producing", applied=cfg["applied"], restyles=S.get("restyles", 0) + 1)
+    _save(S, data_dir)
+
+    def job():
+        S2 = _load(sid, data_dir)
+        t2, err = _run_until(S2, ("final_review",), data_dir, deps)
+        S3 = _load(sid, data_dir)
+        S3["log"] = S2["log"]
+        S3.update(state="final_review" if t2["state"] == "final_review" else "stopped", error=err, topic_state=t2["state"])
+        _save(S3, data_dir)
+    _bg(S, job, data_dir, deps)
+    return _load(sid, data_dir)
+
+
 def reject(sid: str, reason: str, data_dir=None, deps: dict | None = None) -> dict:
     """반려 = 사유를 적고 대본부터 다시 1회(대본→재료→계획). 두 번째 반려는 폐기."""
     if not (reason or "").strip():
