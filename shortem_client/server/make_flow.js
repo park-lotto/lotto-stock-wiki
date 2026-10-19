@@ -60,7 +60,17 @@ async function go(args, opts) {
   return r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId);
 }
 
-export async function makeStep({ step, sid, n, run_id, profile, topic }) {
+const YT_CHANNEL = /^https:\/\/(www\.)?youtube\.com\/(@[^/?#]{1,80}|channel\/UC[0-9A-Za-z_-]{22})\/?$/;
+const VIDEO = /^https:\/\/(www\.)?(youtube\.com\/(shorts\/|watch\?v=)[0-9A-Za-z_-]{11}|youtu\.be\/[0-9A-Za-z_-]{11}|tiktok\.com\/@[^/]{1,60}\/video\/[0-9]{8,25}|instagram\.com\/(reel|p)\/[0-9A-Za-z_-]{5,40})/;
+
+// 고객이 준 해외 원본 채널 → 엔진이 읽는 원본 채널 목록 파일(~/.shortem/원본채널.json, 고객 채널만)
+function originalsFile(channel) {
+  const rel = '원본채널.json';
+  writeFileIn(homeDir(), rel, JSON.stringify({ note: '고객이 준 해외 원본 채널(관제 234)', channels: [{ platform: 'youtube', url: channel }] }));
+  return path.join(homeDir(), rel);
+}
+
+export async function makeStep({ step, sid, n, run_id, profile, topic, channel, video }) {
   if (step === 'wait') {
     const r = getRun(run_id) || activeRuns()[0];
     if (!r) return { hints: ['기다릴 작업이 없습니다 — shortem_make(step="status", sid=…) 로 보세요'] };
@@ -70,8 +80,11 @@ export async function makeStep({ step, sid, n, run_id, profile, topic }) {
   if (step === 'start') {
     if (!profile) return { hints: ['프로필이 없습니다 — shortem_presets refresh=true 로 내 채널을 받으세요'] };
     if (!profile.preset_path) return { hints: ['이 프로필의 프리셋을 찾지 못했습니다 — 숏템 웹 설정에서 프리셋을 다시 저장하세요'] };
-    const args = ['start', '--preset', profile.preset_path, '--pack', '1', ...(topic ? ['--topic', String(topic).slice(0, 200)] : [])];
-    return go(args, { packFile: packFileFor(profile) });
+    if (channel && !YT_CHANNEL.test(channel)) return { hints: ['채널 주소는 https://www.youtube.com/@이름 또는 /channel/UC… 꼴이어야 합니다(틱톡·인스타 채널은 아직 못 엽니다 — 영상 주소를 주세요)'] };
+    if (video && !VIDEO.test(video)) return { hints: ['영상 주소는 유튜브 쇼츠·틱톡 영상·인스타 릴스 주소여야 합니다'] };
+    const args = ['start', '--preset', profile.preset_path, '--pack', '1',
+      ...(topic ? ['--topic', String(topic).slice(0, 200)] : []), ...(video ? ['--ref', video] : [])];
+    return go(args, { packFile: packFileFor(profile), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} });
   }
   if (!SID_RE.test(String(sid || ''))) return { hints: ['sid 가 필요합니다(start 응답의 sid)'] };
   if (step === 'choose') {
