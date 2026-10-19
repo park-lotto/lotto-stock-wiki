@@ -42,6 +42,13 @@
 - **e2e 라이브 1편**(`SHORTEM_E2E_BASE=https://shoppingshorts.duckdns.org`, 개발 도구 모드): 9/9 완료, 12.174초 1080x1920 h264+aac -14.3 LUFS, comment `shortem:e41635236030:j_…`. 프레임 3장 눈으로: 머리띠·작성자 줄에 '썰풀다실측', 게시글 제목 자리 = 이 편 제목, 자막 줄마다 바뀜. 경보 0 · 기기 1/2 · lease 해제됨
 - 못 한 것: 통과작 견본 15편 — 원본 mp4 가 이 PC `C:/숏템_칼카피/…` 에 없고 외장 D 미연결(서버에도 없음) → D 연결 뒤 이 PC 에서 `build_previews.py --kinds result --store <임시>` 로 굽고 서버 `claude_store/preview/result/` 로 올림 · 설치팩 파일은 서버에 안 올림(페이지 '준비 중', 미서명 203MB — 배포 여부 사장님 결정)
 
+## 2026-10-19 오후 (TheRose PC) — 5판 설계·엔진 고객 모드
+- 사장님 결정: 고객 PC 에서 만든다(웹은 시각적 선택만) · 키는 고객 각자 · 제미나이 일 = 고객 Claude(하이쿠·소넷·오퍼스) · 받아쓰기 위스퍼(+스피치매틱스) · 이미지 생성 = 고객 버텍스 · 소재 = 우리 채널 목록+찾는 법+넓히는 법 · 서버 부담 0 · 처음 설치에 전부
+- 설계: `docs/superpowers/specs/2026-10-19-숏템MCP-완본엔진-design.md` (진행 표·결함·한계·다음 포함)
+- 엔진 트랙 커밋 4개(50b978f76·c45d3d261·3d62ddc00·38537600b, 원격 push) — 고객 모드 스위치에서만 동작
+- 시안(웹 설정 페이지): `out/claude_설정화면_시안.html` · 아티팩트 VfjvoULjt3CJ1sdrzt6FSE — 사장님 지적 "템플릿 누르고 글꼴 바꾸면 안 됨(보여주기식)" → 실제 페이지는 같은 렌더러(showcase iframe + sceneStyle.load)로
+- 도구: `tools/claude_portal/engine_trace.py`(엔진이 실제로 쓴 모듈·파일 기록)
+
 ## ⏭ 다음
 - **타입캐스트 실제 합성 미실측**(이 PC 에 키 없음) — 키 있는 PC 에서 shortem_setup selftest 로 시험 목소리
 - 미구현: 고객 채널명 PNG 견본 · 캐시 틀 ±1px 지터 · 자막 효과 2초 견본 · 대본 뒤 extra(짤·효과음) 요청 · 원음 깔기 · 템플릿 자산 사용

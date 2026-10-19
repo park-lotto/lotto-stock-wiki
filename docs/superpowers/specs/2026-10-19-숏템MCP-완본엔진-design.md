@@ -1,0 +1,89 @@
+# 숏템MCP 5판 — 고객 PC에서 칼카피 완본 그대로 (관제 234, 2026-10-19)
+
+## 사장님 결정 (2026-10-19)
+- 만드는 곳 = **고객 PC의 Claude**. 숏템메이커(웹)는 Claude 가 못 하는 **시각적 선택(프리셋·템플릿·옵션 고르기)만** 돕는다.
+- API 키는 고객이 각자 등록(제미나이·타입캐스트…). 우리 키는 고객에게 가지 않는다.
+- 소재 찾기 = 우리가 칼카피한 채널 목록 + 찾는 법 + 채널 넓히는 법을 Claude 에게 넘긴다. 고객 PC 에서 찾는다.
+- 우리 서버 = 처음 옵션 페이지·라이선스 정도. **서버 부담 거의 0.**
+- 처음 설치 때 **모든 것이 다 깔려 있다**(영상마다 서버에서 받아 오지 않는다).
+- 프리셋 = 드라이브 `칼카피영상` 완본 형태 그대로. 장면마다 다른 자막·효과는 기본으로 다 들어가고, 옵션을 바꾸면 바꾼 것만 바뀐다.
+- 템플릿 = 숏템메이커 템플릿(썰 20 · 고정 20)도 고를 수 있다. 자막 스타일도 프리셋 것이 기본.
+- 흐름 = 프리셋 고르기 → Claude 가 후보 소재 몇 개 → 고객 사인 → 만들기. 고객 Claude 에서 말로 옵션 변경 가능.
+- 웹 설정 페이지 = 제작소처럼 한 페이지 + 단계 탭, 고급 디자인, 프리셋 카드 클릭하면 다음 단계.
+
+- (추가) 고객 Claude 는 하이쿠·소넷·오퍼스로 세팅한다. **지금 워커에서 제미나이가 하는 일 = 고객 Claude 가 한다.**
+- (추가) 받아쓰기 = 위스퍼(로컬, 기본). 스피치매틱스는 후보(고객 키가 있으면).
+- (추가) 이미지 생성 = 고객 본인 버텍스 API. (2026-10-19 실측: 칼카피 엔진 본 경로에는 이미지 생성 지점이 없다 — `gemini_free` 가 BRAINBULB_VERTEX=0 으로 끈다. 생기면 그 자리에서 고객 버텍스 키.)
+
+## AI 일 나누기 (제미나이 → 고객 Claude)
+- 엔진의 AI 호출은 이미 꽂는 자리 하나다: `llm(parts, prompt, tag) -> (dict|None, err)`, 기본 `gemini_free.ask`(analyze·topic_find·material_auto·script_engine·rules·channel_find…).
+- 고객 모드 = 그 기본값 한 곳을 **'고객 Claude 창구'**로: 요청(프롬프트 + 그림 파일)을 작업 폴더 줄에 쓰고 기다린다 →
+  MCP 가 Claude 에게 "요청 N건" 을 넘긴다(tag 로 하이쿠/소넷/오퍼스 권장 등급) → Claude 가 답을 MCP 로 → 엔진이 이어 간다.
+- 소리 parts(audio/*) = 받아쓰기 → 위스퍼(기본)·스피치매틱스(고객 키). 영상 parts = 장면 그림으로 바꿔 Claude 에게.
+- 하이쿠도 돌 수 있게: 답 형식(JSON 스키마)은 엔진이 검사하고 틀리면 다시 묻는다(조용히 넘기지 않음).
+
+## 실측으로 확인한 것 (이 세션)
+- 완본은 칼카피 엔진(`track/칼카피숏템엔진`)이 만든다: `calcopy_make.start → candidates(창고 상위 10) → choose → bench·score·assign·script·source·plan → plan_review(사람) → approve → produce(remake.py)`.
+- 완본 렌더 = frame.json → `calcopy_frame.to_snapshot` → `scene_style.compose`(라이브 장면꾸미기 렌더러 `precision20-ui.js` + `tools/render_scene_style.js`). 숏템 템플릿 40종도 같은 렌더러.
+  → **그리기 판단은 한 벌**. 지금 PC 클라이언트의 `engine/overlay_page.js` 는 다른 벌이다 → 결과가 완본과 다를 수밖에 없다 → 버린다.
+- 엔진 렌더 경로만 묶어서(엔진 커밋 `git archive`) 돌리면 `check_caption_fx_render.py` 9/9 통과(2026-10-19, 이 PC).
+  불려 온 우리 모듈 16개, 외부 PIL·numpy·google-genai·httpx… (`edit_plan → keyroute → pipeline.atoms.key_vault` 가 렌더 길에 끼어 있다 — 고객 묶음에선 끊거나 고객 키로).
+- 엔진 제미나이 = `gemini_server.py`(**우리 서버 키 풀**로 보냄) + `gemini_keys.py`(.env 이름 패턴). 고객 모드에서는 서버로 보내면 안 된다.
+- 창고 = `CALCOPY_DATA_DIR/calcopy/topics.db`(sqlite) — 로컬 파일이라 고객 PC 에 그대로 둘 수 있다.
+
+## 구조
+```
+[웹 /claude 설정]  프리셋 카드(완본 견본) · 템플릿 40 · 글꼴·자막팩·색·소리 — 미리보기 = 같은 렌더러(showcase iframe + sceneStyle.load)
+        │ 저장: 프로필(preset_id + options)  ← 서버 일은 이것뿐
+        ▼
+[고객 PC 설치팩]  node MCP(shortem) + 임베디드 파이썬 + 엔진 묶음(고정 커밋, pyc) + 렌더러 묶음(showcase·글꼴) + 자산 전부 + chrome·ffmpeg·yt-dlp
+        │ Claude 도구: 준비 → 후보(start) → 고르기(choose) → 계획 검수 → 사인(approve) → 완성 / 말로 바꾸기(pack_patch)
+        ▼
+  엔진이 고객 키(제미나이·타입캐스트)로, 고객 PC 창고(sqlite)에서, 같은 렌더러로 final.mp4
+```
+
+## 판단 주인 (한 곳씩)
+| 판단 | 주인 | 부르는 곳 |
+|---|---|---|
+| 프로필(프리셋+옵션) → 엔진 팩 | `channel_profile.pack_for(preset, options)` (새로) | 웹 미리보기 · PC 설치(팩 파일) |
+| 프리셋+팩 → 제작 설정 | 엔진 `calcopy_make.merge_preset_pack` (그대로) | PC 엔진 |
+| 틀 → 렌더 스냅샷 | 엔진 `calcopy_frame.to_snapshot` (그대로) | 웹 미리보기(서버가 불러 줌) · PC 렌더 |
+| 그리기 | `out/precision20-ui.js` sceneStyle (그대로) | 웹 미리보기 · PC 렌더 |
+| 제미나이 백엔드(서버 풀 / 고객 키) | 엔진 `gemini_server` 한 곳에 고객 모드 스위치 | 엔진 전부 |
+| 엔진 묶음에 넣을 파일 | `tools/claude_portal/build_engine_bundle.py` (추적 기반 목록) | 설치팩 빌드 |
+
+## 결과물 검사 (기능과 같은 커밋)
+1. 묶음만으로(저장소 없이, PATH 비움) 엔진 렌더 검사 통과 — `check_caption_fx_render` + 프리셋별 1장면.
+2. 묶음에 우리 키·서버 주소·벤치 원본 0 — 묶음 검사 도구.
+3. 옵션 버튼마다 전/후 렌더 그림이 다르다(웹 미리보기 = PC 렌더 같은 그림) — 버튼 전수 검사 도구.
+4. 같은 재료·대본으로 PC 묶음 렌더 = 엔진 렌더(프레임 대조).
+5. 라이브: 관리자로 /claude 에서 고르고 → 설치본 Claude 로 1편 끝까지 → 프레임 눈으로.
+
+## 미결 (만들며 정한다)
+- 엔진 코드 고객 모드 스위치(제미나이 백엔드·키 경로·타입캐스트 키) — 엔진 트랙 담당과 겹친다. 이 트랙에서 고치면 finish 에서 소유권 검사.
+- 소스 보호: pyc + 라이선스. 완전한 보호는 아님(사장님께 보고).
+- 설치 크기: 자산 570MB + 런타임 → 약 1GB 예상(실측 후 보고).
+
+## 진행 (2026-10-19 오후, 엔진 트랙 track/칼카피숏템엔진 에 커밋 — 전부 스위치 켤 때만 동작, 기본값 그대로)
+| 커밋 | 내용 | 실측 |
+|---|---|---|
+| 50b978f76 | `gemini_free.ask` BACKEND=client → `engine/client_llm`(줄 폴더) · `engine/asr_local`(위스퍼/스피치매틱스) · `CALCOPY_CUSTOMER_MODE`(고객 사인) · `CALCOPY_PACKS` · `make.py --json` | 썰풀다 원본 analyze 고객 모드 298.9초·AI 8건 → 자막·제작법·효과음 수 제미나이판과 일치 / 배경음악·목소리 어긋남 |
+| c45d3d261 | 고객 모드 후보 = bench→score 로 점수 난 것만(무관 영상 제외) | banggu 빈 창고: 점수 난 2건 = 스벅 정치 논란(검색어 길의 한계) |
+| 3d62ddc00 | 채널 기준 찾기 `topic_find.channel_candidates`(같은결 채널 '확정'의 터진 편 ≥ 중앙값 1.5배) | 7채널 20초 → 후보 10(아이언맨 헬멧 177배 등) |
+| 38537600b | `CALCOPY_PACK_ROOT` (팩 자산 뿌리) | — |
+
+### 실측으로 잡은 결함(고침)
+- 엔진 `tools/calcopy/engine/filelock.py` 가 pip `filelock` 을 가려 위스퍼(huggingface_hub)가 안 뜸 → import 때만 엔진 폴더 경로 제외
+- 엔진이 답 파일을 쓰는 중(빈 파일)에 읽어 '틀린 답'으로 셈 → 다 써진 뒤 읽기 + 쓰는 쪽은 tmp→이름 바꾸기
+- 소리 음높이(자기상관 0.3 문턱)가 분홍·갈색 잡음을 100% 음높이로 잡음 → YIN
+
+### 남은 한계(사장님께 보고함)
+- 배경음악 판별: 위스퍼+숫자로는 '말 없는 구간이 크다'까지. 음악/현장음 구분은 소리 분류 모델(YAMNet 류) 동봉이 필요.
+- 같은 결 채널 목록은 현장썰(썰풀다·핫템리포트) 18채널뿐. 제품비하인드(방구석) 등은 channel_find 로 목록을 먼저 만들어야 채널 기준 찾기가 된다.
+- 팩 자산(packs_manifest.json·sfx·meme)은 CH PC 로컬에만 있다 → 설치팩은 서버 claude_store 를 PACK_ROOT 꼴로 풀어 넣는다(만들 것).
+- 엔진 안 하드코딩 경로: copy_render.MEME_DIR·SFX_DIR(C:/숏템_칼카피/memes·sseolpulda/sfx_pack) — 고객 흐름에서 쓰이는지 전체 흐름 추적으로 확인할 것.
+
+### 다음
+1. MCP 다리(shortem_client/server/engine_bridge.js): 동봉 파이썬으로 `make.py --json start/choose/approve/status` · AI 요청 목록/답 도구(shortem_ai) — 그림은 MCP 이미지 내용으로
+2. 프로필 → 팩 주인 함수 `channel_profile.pack_for` (웹 옵션 자산 id → 엔진 팩 + PACK_ROOT 경로)
+3. 전체 흐름(start→choose→approve) 고객 모드 1편 + engine_trace 로 묶음 목록 확정 → build_engine_bundle
