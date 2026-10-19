@@ -14226,6 +14226,7 @@ async function tcvUse(btn, i, src){
     })).json();
     if(!r || !r.ok){ toast('⚠️ '+((r&&r.error)||'등록 실패')); btn.disabled=false; btn.textContent=orig; return; }
     toast('✅ '+v.name+' 성우를 담았습니다');
+    btn.textContent='✓ 담음';          // 성공해도 '등록 중…'에 멈춰 있었다(2026-10-19 Park님) — Fish 담기와 같게
     await loadPresets();               // 카드 목록을 다시 받아 두 열에 반영
     if(r.group_id) pickPreset(r.group_id);
   }catch(e){ toast('⚠️ 등록 실패'); btn.disabled=false; btn.textContent=orig; }
@@ -14388,6 +14389,13 @@ function _sampleUrlOf(g){
   const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
   return (v&&v.sample_url)||'';
 }
+// 샘플 없는 성우(타입캐스트·Fish 담기 — 크레딧 아끼려 샘플을 안 굽는다)의 ▶.
+//   꺼진 채 두면 고장으로 보인다(2026-10-19 Park님 "등록후에도 화살표 재생바가 죽어있어요") →
+//   그 성우를 골라 두고 '목소리만 미리듣기'로 안내한다.
+function _vplayNoSample(gid){
+  pickPreset(gid);
+  toast('🎧 샘플이 없는 성우예요 — 골라 두었으니 아래 「목소리만 미리듣기」로 들어보세요');
+}
 function renderPresetCards(){
   const cardHtml=(g)=>{
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
@@ -14418,8 +14426,8 @@ function renderPresetCards(){
           </div>
           <button type="button" class="vstar${fav?' on':''}" title="즐겨찾기에 담기"
                   onclick="event.stopPropagation();toggleFav('${g.group_id}')">${fav?'★':'☆'}</button>
-          <button type="button" class="vplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음')}"
-                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
+          <button type="button" class="vplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음 — 골라서 미리듣기')}"
+                  onclick="event.stopPropagation();${url?`playSample(this,'${esc(url)}')`:`_vplayNoSample('${g.group_id}')`}" ${(url||!g.samples_pending)?'':'disabled'}>▶</button>
         </div>
         ${g.best?'<span class="vbadge">추천</span>':''}
         <div class="tones">${tones}</div>
@@ -14479,8 +14487,8 @@ function renderFavRow(){
   return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
     + favs.map(g=>{ const url=_sampleUrlOf(g); return `<div class="fchip" onclick="pickPreset('${g.group_id}')">
          <span>${esc(g.name)}</span>
-         <button type="button" class="fplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음')}"
-           onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
+         <button type="button" class="fplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음 — 골라서 미리듣기')}"
+           onclick="event.stopPropagation();${url?`playSample(this,'${esc(url)}')`:`_vplayNoSample('${g.group_id}')`}" ${(url||!g.samples_pending)?'':'disabled'}>▶</button>
        </div>`; }).join('') + '</div>';
 }
 
