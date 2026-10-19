@@ -15259,11 +15259,14 @@ async function refreshInpock(){
   const H = d.link_hub || {key:'inpock', name:'인포크', page:'https://link.inpock.co.kr', admin:'https://link.inpock.co.kr/admin'};
   window._linkHub = H;
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
-    <div style="font-weight:600;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">📦 ${esc(H.name)} 등록 대기
-      <select onchange="setLinkHub(this.value)" title="쓰는 링크 서비스를 고르세요 — 다음 영상에도 그대로" style="font-size:12px;padding:3px 6px">
-        <option value="inpock" ${H.key==='inpock'?'selected':''}>인포크</option>
-        <option value="moneying" ${H.key==='moneying'?'selected':''}>머닝</option>
-      </select></div>
+    <!-- 링크 서비스 고르기 — 작은 선택 칸은 안 보였다(2026-10-19 사장님 "인포크·머닝 두 개 양옆으로, 눌러서 선택") -->
+    <div style="display:flex;gap:8px;margin-bottom:10px" title="쓰는 링크 서비스를 누르세요 — 다음 영상에도 그대로">
+      ${[['inpock','인포크'],['moneying','머닝']].map(([k,n])=>`<button type="button" data-linkhub="${k}" onclick="setLinkHub('${k}')"
+        style="flex:1;padding:10px 0;font-size:15px;font-weight:700;border-radius:10px;cursor:pointer;${H.key===k
+          ?'background:var(--accent);color:#fff;border:2px solid var(--accent)'
+          :'background:transparent;color:var(--sub);border:2px solid var(--line)'}">${H.key===k?'✓ ':''}${n}</button>`).join('')}
+    </div>
+    <div style="font-weight:600;margin-bottom:6px">📦 ${esc(H.name)} 등록 대기</div>
     <div style="font-size:13px">${esc(p.name||p.keyword||'상품')}
       ${p.partner_url
         ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
