@@ -482,9 +482,9 @@ def hit_report(e: dict) -> dict:
         else:
             d = _dist_box(pl["cx"], pl["cy"], box)
             bad = d > 0
-            if k == "red_circle":
-                r = e.get("size", E["red_circle"]["size"]) / 2
-                bad = bad or r < G["circle_r_min_frac"] * max(box[2] - box[0], box[3] - box[1]) / 2
+            if k == "red_circle":     # 물건 전체를 감싸나: 선 안쪽 반지름 ≥ 상자 반대각선(페이블 10-20)
+                r_in = e.get("size", E["red_circle"]["size"]) / 2 - float(e.get("stroke") or E["red_circle"]["stroke"])
+                bad = bad or r_in < 0.5 * ((box[2] - box[0]) ** 2 + (box[3] - box[1]) ** 2) ** 0.5 - 1
         worst = max(worst, d)
         miss += bad
     ok = n > 0 and miss == 0

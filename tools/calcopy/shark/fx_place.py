@@ -448,7 +448,8 @@ def _disk_box(cx, cy, r, b) -> bool:
 
 def hook_object(info: dict, cand: Path, e: dict, t0: float, t1: float) -> dict:
     """(판단 주인: 0초 빨간 원 = 물건, R3) 물건 상자(손 상자 e.target 목록 | 제미나이 e.target_what) → 추적 → 원 중심 = 상자 가운데,
-    크기 = 긴 변 × object.pad(size_range 안). ★얼굴 검사: 원 시간 안 face_check_frames 장의 YuNet 얼굴 상자와 원판이 겹치면 ValueError(거절).
+    크기 = 물건 전체를 감쌈(선 안쪽 ≥ 상자 반대각선×enclose_pad, size_range 상한 960). 창에 다 안 들어가거나 얼굴(YuNet)과 원판이 겹치면 그 순간 거절 →
+    추적 길의 뒤 순간부터 다시(t_shift). 맞는 순간이 없으면 ValueError.
     반환 e 에 넣을 값 {at, size, how:'object', face_clear, target_box, target_path, track, track_conf, why}."""
     E = rules()["effects"]; O = E["red_circle"]["object"]
     a, _, _, _ = _final_frame(info, cand, t0 + 0.05)
@@ -462,29 +463,41 @@ def hook_object(info: dict, cand: Path, e: dict, t0: float, t1: float) -> dict:
             raise ValueError(f"{e['line']} red_circle 물건 '{e['target_what']}' 못 잡음: {why} → 다른 컷 또는 손 상자")
     tr = track_box(info, cand, box, t0, t1)
     sw = float(e.get("stroke") or E["red_circle"]["stroke"])
-    bw, bh = box[2] - box[0], box[3] - box[1]
-    size = int(round(min(O["size_range"][1], max(O["size_range"][0], max(bw, bh) * O["pad"] + sw))))
-    track = [[p[0], round((p[1] + p[3]) / 2), round((p[2] + p[4]) / 2)] for p in tr["path"]]
     wx, wy, ww, wh = E["window"]
-    room = min(min(x - wx, wx + ww - x, y - wy, wy + wh - y) for _, x, y in track) - 2
-    size = int(min(size, 2 * room))          # 원 전체가 창 안(fx.outside 와 같은 상자) — 줄여서 물건을 못 감싸면 렌더 적중 검사(circle_r_min_frac)가 뺀다
-    r = size / 2
+    G = rules()["target"]
+    from tools.calcopy.shark import fx as FX
+    P_ = tr["path"]
+    hd = [0.5 * ((q[3] - q[1]) ** 2 + (q[4] - q[2]) ** 2) ** 0.5 for q in P_]          # 상자 반대각선 = 물건 전체를 감싸는 최소 반지름
+    ctr = [[q[0], round((q[1] + q[3]) / 2), round((q[2] + q[4]) / 2)] for q in P_]
+    why_skip = []
     n = O["face_check_frames"]
-    hits = []
-    for k in range(n):
-        tt = t0 + 0.05 + (min(t1, tr["t_end"]) - t0 - 0.1) * k / max(1, n - 1)
-        fa, _, _, _ = _final_frame(info, cand, tt)
-        from tools.calcopy.shark import fx as FX
-        cx, cy = FX.track_at(track, tt - t0)
-        for fb in face_boxes(fa):
-            if _disk_box(cx, cy, r, fb):
-                hits.append((round(tt, 2), [round(v) for v in fb]))
-    if hits:
-        raise ValueError(f"{e['line']} red_circle 거절(R3): 원(중심 {track[0][1:]}, 반지름 {r:.0f})이 얼굴 상자와 겹침 {hits} → 다른 물건·컷")
-    moved = max(abs(p[1] - track[0][1]) + abs(p[2] - track[0][2]) for p in track)
-    return {"at": track[0][1:], "size": size, "how": "object", "face_clear": True, "target_box": [round(v) for v in box],
-            "target_path": tr["path"], "track": track if moved > 4 else None, "track_conf": tr["conf"], "track_how": tr["how"],
-            "why_target": f"{why} · 추적 {tr['how']} 신뢰 {tr['conf']} · 얼굴 {n}프레임 겹침 0"}
+    # 원 = 물건 전체를 감싸는 크기(선 안쪽 가장자리 ≥ 반대각선 × enclose_pad). 창에 다 안 들어가거나 얼굴과 겹치면 그 순간은 거절 →
+    # 추적 길에서 더 뒤 순간부터(남은 길이 ≥ target.min_len) 다시 본다(페이블 10-20 '원은 물건 전체를 감싸는 게 우선').
+    for k in range(len(P_)):
+        if P_[-1][0] - P_[k][0] + 1 / G["track_fps"] < G["min_len"]:
+            break
+        size = int(round(max(O["size_range"][0], 2 * (max(hd[k:]) * O["enclose_pad"] + sw))))
+        r = size / 2
+        room = min(min(x - wx, wx + ww - x, y - wy, wy + wh - y) for _, x, y in ctr[k:]) - 2
+        if size > O["size_range"][1] or r > room:
+            why_skip.append(f"{P_[k][0]:.2f}초 원 {size}px 창에 안 들어감(여유 반지름 {room:.0f})"); continue
+        sh = P_[k][0]
+        track = [[round(c[0] - sh, 3), c[1], c[2]] for c in ctr[k:]]
+        tpath = [[round(q[0] - sh, 3), *q[1:]] for q in P_[k:]]
+        hits = []
+        for j in range(n):
+            tt = t0 + sh + 0.03 + (track[-1][0] - 0.06) * j / max(1, n - 1)
+            fa, _, _, _ = _final_frame(info, cand, tt)
+            cx, cy = FX.track_at(track, tt - t0 - sh)
+            hits += [(round(tt, 2), [round(v) for v in fb]) for fb in face_boxes(fa) if _disk_box(cx, cy, r, fb)]
+        if hits:
+            why_skip.append(f"{P_[k][0]:.2f}초 얼굴 겹침 {hits[:2]}"); continue
+        moved = max(abs(c[1] - track[0][1]) + abs(c[2] - track[0][2]) for c in track)
+        return {"at": track[0][1:], "size": size, "how": "object", "face_clear": True, "target_box": [round(v) for v in P_[k][1:]],
+                "target_path": tpath, "track": track if moved > 4 else None, "track_conf": tr["conf"], "track_how": tr["how"], "t_shift": round(sh, 3),
+                "why_target": f"{why} · 추적 {tr['how']} 신뢰 {tr['conf']} · 원 {size}px = 물건 반대각선 {max(hd[k:]):.0f}×{O['enclose_pad']}+선 · 얼굴 {n}프레임 겹침 0"
+                              + (f" · {sh:.2f}초 뒤 순간부터(앞 순간 거절 {len(why_skip)})" if sh else "")}
+    raise ValueError(f"{e['line']} red_circle 거절(R3·물건 전체 감쌈): 맞는 순간 없음 — {why_skip[:3]}… → 다른 컷·크롭(물건이 창의 가운데·작게)")
 
 
 def fix(doc: Path, info: dict | None = None) -> list[str]:
@@ -517,8 +530,8 @@ def fix(doc: Path, info: dict | None = None) -> list[str]:
             if e["kind"] == "red_circle":
                 t1 = scene_end(info, cand, t0 + 0.02, t1)
                 r = hook_object(info, cand, e, t0, t1)
-                e.update({k: v for k, v in r.items() if v is not None})
-                e["t"] = [tt[0], round(min(t1, r["target_path"][-1][0] + t0 + 1 / 15) - L0, 3)]
+                e.update({k: v for k, v in r.items() if v is not None and k != "t_shift"})
+                e["t"] = [round(tt[0] + r["t_shift"], 3), round(min(t1, r["target_path"][-1][0] + t0 + r["t_shift"] + 1 / 15) - L0, 3)]
                 log.append(f"{e['line']} red_circle 물건 원 at {r['at']} size {r['size']} — {r['why_target']}")
                 continue
             if e["kind"] in ("money_emoji", "emoji"):
