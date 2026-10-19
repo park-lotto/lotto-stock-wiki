@@ -610,9 +610,13 @@ def place_narr(D, P, NM, R: Path) -> Path:
         d_ms = int(round((x["t0"] - pre) * 1000))
         fc.append(f"[0:a]atrim={a - pre:.3f}:{b + 0.10:.3f},asetpts=PTS-STARTPTS,afade=t=out:st={b - a + pre + 0.05:.3f}:d=0.05,adelay={d_ms}:all=1[n{k}]")
         lab.append(f"[n{k}]"); k += 1
-    fc.append("".join(lab) + f"amix=inputs={len(lab)}:normalize=0:duration=longest,apad,atrim=0:{P['dur']:.3f}[a]")
+    # 나레가 전부 늦게 시작하면(첫 줄 원음) amix 출력이 첫 나레 시각부터 시작해 atrim 이 앞 무음을 잘라 나레가 0초로 당겨졌다
+    # (10-19 12편 실측 narr_placed 34.33초 = 38.99−4.66). first_pts=0 으로 앞을 무음으로 채운 뒤 자른다
+    fc.append("".join(lab) + f"amix=inputs={len(lab)}:normalize=0:duration=longest,aresample=async=1:first_pts=0,apad,atrim=0:{P['dur']:.3f}[a]")
     out = R / "narr_placed.wav"
     run(["ffmpeg", "-y", "-i", src, "-filter_complex", ";".join(fc), "-map", "[a]", "-ar", SR, "-ac", "1", out])
+    if abs(dur_of(out) - P["dur"]) > 0.05:      # 길이가 다르면 나레 자리가 밀린 것 — 조용히 넘기지 않는다
+        raise StageError(f"narr_placed 길이 {dur_of(out):.3f} ≠ 편 길이 {P['dur']:.3f} — 나레 자리 어긋남")
     return out
 
 
