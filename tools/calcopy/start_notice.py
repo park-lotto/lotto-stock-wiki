@@ -18,6 +18,8 @@ def notice(root):
     box = [l for l in top if l.startswith("> 🛑") or (l.startswith("> ") and l[2:3].isdigit())]
     heads = [l.lstrip("# ").strip() for l in lines if l.startswith("## ")]
     return ("★칼카피 트랙 세션이다. 다른 일보다 먼저 `channel/칼카피_시작.md`(지침서)를 Read 로 끝까지 읽고 시작하라.\n"
+            "★사장님이 '<채널> 칼카피하자' 라고 하면 = tools/calcopy/칼카피_분석지침서.md §1 실행 대본대로 "
+            "`py tools/calcopy/engine/kal.py <채널> --slug … --brand … --hybrid …` 부터(10-20).\n"
             f"{updated}\n" + "\n".join(box) + "\n절 목록: " + " | ".join(heads))
 
 
