@@ -99,3 +99,14 @@ def test_channel_candidates_picks_breakouts_only(tmp_path):
     c, failed = TF.channel_candidates(f, 5, {"v4"}, log=lambda m: None, stats=stats)
     assert calls == ["UCa"] and not failed
     assert [x["source"]["id"] for x in c] == ["v2", "v3"] and c[0]["source"]["kind"] == "채널"
+
+
+def test_bench_seeds_channel_source_video(tmp_path):
+    """채널 기준 후보의 벤치는 그 채널에서 터진 원본 편부터(검색 0건이어도 벤치 1편) — 10-19 실측 5후보 모두 벤치 0 결함."""
+    from tools.calcopy.engine import topic_find as TF
+    seen = []
+    net = {"yt_search": lambda q, n, m: [], "yt_detail": lambda vid, n: (seen.append(vid) or {"id": vid, "url": f"https://www.youtube.com/shorts/{vid}", "title": "주걱", "views": 9, "comments": []})}
+    llm = TF.LLM(lambda p, t: ({"points": [{"kind": "hook", "text": "주걱", "from": "v_SRC"}], "best_angle": "a"}, None), budget=5)
+    c = {"id": "c1", "topic": "미국에서 터진 주걱 영상", "query": "주걱", "key": "채널:가", "source": {"kind": "채널", "id": "SRC"}}
+    b = TF.bench(c, tmp_path, net, llm, 4)
+    assert seen == ["SRC"] and b["points"]

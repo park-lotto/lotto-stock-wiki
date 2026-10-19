@@ -800,6 +800,10 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     if fb:   # 검색 통로 기록 — '같은 검색어 1편/0편' 들쭉날쭉의 원인(sp 멈춤 → ytsearch 폴백)을 남긴다
         failed.append(f"검색: {fb}")
     lst = [v for v in lst if v.get("id")]   # 폴백 실패 표식({id: None})은 상세 조회하지 않는다(10-16 실측: yt_detail(None) 150초 대기)
+    src = c.get("source") or {}
+    seed = src.get("id") if src.get("kind") == "채널" else None
+    if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
+        lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
     for v in lst[:n_videos]:
         try:
             limits.take(1, f"벤치 상세 {v['id']}")
@@ -814,7 +818,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         if off:
             failed.append(f"{v['id']}: 공식·광고 제외 — {off}")
             continue
-        ok, why = relevance(d, c.get("key") or c["query"], c["topic"])
+        ok, why = (True, "채널 원본 편") if v["id"] == seed else relevance(d, c.get("key") or c["query"], c["topic"])
         if not ok:
             failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]}) — {why}")
             continue
