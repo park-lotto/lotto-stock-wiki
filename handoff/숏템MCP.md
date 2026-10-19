@@ -56,3 +56,27 @@
 - 서명: 윈도 코드서명 인증서·Apple Developer(연 99달러) 필요 — 지금 미서명(SmartScreen 경고)
 - 맥: `installer/mac/build_mac.sh` 는 `bash -n` 만 통과. 맥 기기 2대에서 libass 정적 ffmpeg 빌드·서명·공증 실측
 - Claude Desktop 에서 .mcpb 실제 설치 UI 시험 미실측
+
+## 2026-10-19 (오후) — 1~3번: 엔진 묶음·편마다 프리셋 빌려주기·회원 PC 설정 화면
+
+완료(트랙 커밋, 라이브 미반영):
+- 서버 `claude_portal.preset_rent`/`rent` + `POST /api/claude/rent` — 관문 `_job_gate`(작업 권한·등급) 뒤 AES-256-GCM(aad=cid|job) 꾸러미. 프로필 없이 `preset`(고객용 id)로도 빌린다. PC 1대(DEVICES_MAX=1).
+- 라이선스 응답 `presets:[{id,name,desc}]` — 이름 주인 = 관리자 설정 `claude_preset_names`(없으면 틀 설명). ★5개 이름(제품비하인드썰형 등)↔프리셋 짝은 아직 안 넣음 — 사장님 확인 필요.
+- PC `preset_rent.js` — 메모리 열쇠로 풀어 엔진이 도는 동안만 `engine/channel`(표식 .rented), 끝나면 지우고 권한 반납. 설정 화면 미리보기는 kind=ui(10분 무사용 반납, 제작이 오면 넘김). 시험 rent.test.js 4개 + 실물 썰풀다 꾸러미 19파일 엔진 원본과 sha 일치.
+- 엔진 `tools/calcopy/preview_request.py`(엔진 트랙) — preview/catalog/check. merge_preset_pack·title_text·to_snapshot·context_for 를 그대로 부름(새 판단 없음).
+- PC `local_settings.js`(~/.shortem/settings.json 한 곳 — 화면·Claude·제작 공용) · `local_ui.js`(127.0.0.1·토큰 쿠키·Host 검사) · `ui/index.html`(프리셋·화면·자막·소리·완성본 탭) · MCP `shortem_settings`(open/get/set/select) · `shortem_make` 가 로컬 설정 프리셋 사용.
+- 검사 도구 `shortem_client/test/ui_check.js`(+ui_vs_render.py): 실제 크롬으로 단추 11개 누름 → 저장·그림 바뀜, **화면 미리보기 = 공식 render_layer_one 차이 0.00%(장면 1·2)**, 렌더러 스타일 글 일치.
+  ★첫 실행은 '그림 바뀜'이 거짓 통과였다(미리보기가 '불러오는 중' 상태). 눈으로 보고 잡음 — 렌더러 export 스타일·sceneStyleExporting 을 그대로 입혀 고침.
+
+⏭ 다음:
+- 완성본 '지금 설정으로 다시 만들기'(엔진 재렌더 명령) — 화면은 미리보기까지만.
+- 숏템메이커 템플릿(썰20·고정20) 선택 — merge_preset_pack 이 아직 템플릿 칸을 모른다.
+- 외곽선 슬라이더 0~20: 검정 글자+검정 외곽선 10px 이면 글자가 뭉개진다(실측 그림) — 색 칸 또는 상한 조정 검토.
+- 4번(클로드형 서버 부담 0) — 조사 결과 아래.
+- MCP 응답 최소화·설치팩(의존성·Nuitka·자동 업데이트)·깨끗한 PC 시험.
+
+### 서버 부담 조사(읽기만, 2026-10-19)
+- 렌더 계열(`video_assemble.assemble`·`scene_style`·캡컷)은 Store 참조 0~1건 → PC 이전 쉬움.
+- `mix_pipeline.py` Store 참조 113건(진행·과금·공용 추출 캐시) → 가장 어려움.
+- 막는 것 3: ①인스타 다운로드가 서버 로그인 세션·유튜브 서버 프록시에 묶임(media_download.py:439·:258) ②Gemini 가 회원 키도 공용 풀로 서버에서 돎(config.refresh_member_gemini_keys :218, keyroute :511) ③진행·과금이 서버 DB·공용 캐시에 붙음.
+- 서버에 남아야 하는 것: 화면·로그인/등급·프리셋 임대·상태 기록·랭킹 DB와 수집기(공용).

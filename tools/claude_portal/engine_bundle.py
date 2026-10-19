@@ -48,7 +48,7 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "tools/calcopy/engine/worker_steps.py", "tools/calcopy/engine/remake.py", "tools/calcopy/remake_video.py",
          "tools/calcopy/narr_video.py", "tools/calcopy/engine/client_llm.py", "tools/calcopy/engine/asr_local.py",
          "tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/yt_channel.py",
-         "shopping_shorts/scene_style.py")
+         "shopping_shorts/scene_style.py", "tools/calcopy/preview_request.py")   # 설정 화면 미리보기·검사(관제 234)
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:

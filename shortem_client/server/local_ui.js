@@ -115,6 +115,8 @@ async function route(req, res, token, port) {
     if (!videos().some(v => v.name === name)) return send(res, 404, { error: '없음' });
     return serveFile(req, res, path.join(workDir(), '완성본', name), TYPES.mp4);
   }
+  // 렌더러 편집기 쪽 '내 로고' 목록(미리보기에는 안 쓰인다) — 서버를 부르지 않게 빈 목록
+  if (u.pathname === '/api/produce/scene-style/logo' && req.method === 'GET') return send(res, 200, { items: [] });
   if (!u.pathname.startsWith('/api/')) return send(res, 404, { error: '없음' });
   if (req.method === 'POST' && req.headers['x-shortem-ui'] !== '1') return send(res, 403, { error: '화면에서만 바꿀 수 있습니다' });
   if (u.pathname === '/api/state' && req.method === 'GET') {
