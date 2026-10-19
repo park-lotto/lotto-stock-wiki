@@ -97,3 +97,13 @@
 - 묶음: media_download·grab_domains·frame_extract·instagram_parse·douyin_fetch·threads_parse 추가, 서버 수집기(channel_archive·instagram_playwright·apify_client·store) 금지.
 - 실측(서버 모듈 막은 회원 PC 조건, 로그인 없음): 인스타 4.4MB·틱톡 17MB·유튜브 OK, 엔진 재료 단계 틱톡 후보 시트까지 rc=2.
 - ⏭ 실제 로그인 창 시험(사장님 계정으로 '로그인만') — 인스타 1080p·비공개 막힘 상황에서 쿠키 효과 확인. 핀터레스트는 pinterest_crawl 미포함(필요하면 추가).
+
+## 2026-10-19 (밤 2) — 남은 것 끝까지(설치팩·숨김·자동 업데이트)
+- 설치팩: 엔진 묶음(173+데이터) · 엔진 패키지 49개 해시 고정(requirements-engine-py312-win.txt) · 받아쓰기 모델 whisper small 486MB · 렌더러 puppeteer 연결(engine/node_modules/puppeteer → 설치 크롬) · 효과음 팩 147개+장부(build_packs) · app_version.json. 설치 폴더 약 1.8GB.
+- ★결함 2: (1) 묶음에 목소리 목록·배경음악·효과음 팩이 빠짐(파이썬 추적에 안 잡히는 파일) → DATA_EXTRA. (2) 오늘 이 PC 완성본 효과음 file=None — 우리 팩 장부(C:/숏템_칼카피/packs)가 이 PC 에 없고 서버 scene_assets 에도 그 번호 없음 → 설치본은 동봉 팩 장부, 고객 기본 팩은 팩01 오프너·뽁·띵. 짤 팩은 아직(번호가 우리 서버 것).
+- 설치본 점검 test_engine_installed.py(설치 폴더 도구만): 렌더 잉크 0.476 · 틱톡 받기 3.8MB · 위스퍼 구절 5 OK, 목록(catalog)만 빨강 → 데이터 넣고 재빌드 중.
+- 숨김: MCP 서버 instructions · 실패 글 경로 지우기(cleanWhy) · 응답에서 내부 프리셋 경로 제거 · AI 요청에 '내부 지시' 표시 · 플러그인 안내서 make/script/setup 새 흐름(Read/Glob/Grep 막음).
+- 자동 업데이트: 서버 update_info(+오래된 엔진 허용) · publish_update.py · PC updater.js(받아 _update/<판>) · launcher applyPending(다음 켤 때 바꾸기·되돌리기).
+- 프리셋 꾸러미 16개 빌드(스크래치 preset_packs_all) — 서버 claude_store/preset_packs/ 업로드는 승인 뒤.
+- 숏템메이커 서버 부담 0: 설계·결정 3(설계 문서 끝). 렌더 run_render 는 DB 12곳·키 0 실측.
+⏭ 최종 빌드 → 설치 시험(test_install + test_engine_installed) · 로그인 실측(사장님) · 하이쿠 1편 · 짤 팩 · 병합 전 승인.
