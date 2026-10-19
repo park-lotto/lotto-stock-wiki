@@ -6679,7 +6679,7 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
                             _vwav.unlink(missing_ok=True)
                     ensure_faststart(vout)
 
-                _cv.render_variants(cfg=_cvcfg, plan=plan_used, work=work,
+                _cv.render_variants(cfg=_cvcfg, plan=_cv.marked_plan(plan_used, job), work=work,
                                     render_one=_cv_render, synth=_cv_synth)
         except Exception:      # noqa: BLE001 — 판 때문에 본편을 잃지 않는다
             traceback.print_exc(file=sys.stderr)
