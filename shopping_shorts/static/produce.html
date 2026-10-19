@@ -19789,7 +19789,11 @@ function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; c
   if(id){ sl.sfx_pick=Number(id); sl.sfx_manual=1; } else { delete sl.sfx_pick; sl.sfx_off=1; }
   sbPicksSync(ek,bd); }   // 줄 효과음이 바뀌면 그 줄 기본 효과음 첫 발도 서버가 다시 정한다
 // 팩 소리 빼기·바꾸기·되돌리기 — 칩의 ref(소리 이름+그 줄 안 순번)만 sl.pack_edit 에 적고 서버가 다시 계산한다(sfx_pack.apply_pack_edit)
-const SB_PACK_SLOTS=[['opener','시작(두둥)'],['pop','뽁'],['dung','둥'],['ding','띠링'],['whoosh','휙'],['tick','틱'],['click2','딸깍']];
+// 바꿀 소리 목록은 서버(sfx_pack.ALL_SLOTS)에서 받는다 — 여기 따로 적으면 카테고리가 늘 때 어긋난다(관제 237)
+let SB_PACK_SLOTS=null;
+function sbPackSlots(){ if(SB_PACK_SLOTS) return Promise.resolve(SB_PACK_SLOTS);
+  return fetch('/api/produce/sfx_pack/slots').then(r=>r.json()).then(d=>{ SB_PACK_SLOTS=(d.slots||[]).map(o=>[o.slot,o.label]); return SB_PACK_SLOTS; })
+    .catch(e=>{ console.warn('[packsfx] 소리 목록 못 받음', e); return []; }); }
 function sbPackEdit(i, k, act, to){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   const x=(sl.pack_sfx||[])[k]; if(!x||!x.ref) return; const ref=x.ref;
   const pe=sl.pack_edit||{}; const same=r=>r.slot===ref.slot&&Number(r.n)===Number(ref.n);
@@ -19803,6 +19807,7 @@ function sbPackSwapOpen(i, k){ const box=document.getElementById('sbPackSwap'+i)
   const x=((bd.slots[i]||{}).pack_sfx||[])[k]; if(!x) return;
   if(box.dataset.k===String(k) && box.innerHTML){ box.innerHTML=''; box.dataset.k=''; return; }
   box.dataset.k=String(k);
+  if(!SB_PACK_SLOTS){ sbPackSlots().then(()=>{ box.dataset.k=''; sbPackSwapOpen(i,k); }); return; }
   const base=String(x.url||'').replace(/[^\/]+$/,'');
   box.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;font-size:12px">바꿀 소리: ${SB_PACK_SLOTS.filter(([s])=>s!==x.slot).map(([s,l])=>
     `<span style="display:inline-flex;gap:2px"><button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="미리 듣기" onclick="sbPackPlay('${sbE(base+s)}')">▶</button><button class="mp-btn" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbPackEdit(${i},${k},'swap','${s}')">${l}</button></span>`).join('')}</div>`; }

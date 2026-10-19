@@ -76,7 +76,9 @@ def test_미리보기와_렌더가_같은_함수로_같은_결과(monkeypatch):
     lines[bi]["pack_edit"] = edit
     rows = sfx_pack.preview_lines(lines, PACK)
     shown = sorted((r["slot"], r["t"]) for row in rows for r in row if not r.get("off"))
-    rend = sorted((os.path.basename(p)[:-4], round(t, 1)) for p, t, _ in sfx_pack.events(tl, PACK, pack_edit={bi: edit}))
+    # 카테고리 소리(관제 237)는 `_분류/<칸>/<변형>.wav` — 칸 이름은 폴더 이름이다
+    _slot = lambda p: os.path.basename(os.path.dirname(p)) if os.path.dirname(os.path.dirname(p)) == sfx_pack.CATEGORY_DIR else os.path.basename(p)[:-4]
+    rend = sorted((_slot(p), round(t, 1)) for p, t, _ in sfx_pack.events(tl, PACK, pack_edit={bi: edit}))
     assert shown == rend
     assert any(r.get("off") for r in rows[bi]) and rows[bi][0]["ref"] == {"slot": s0, "n": 0}
 

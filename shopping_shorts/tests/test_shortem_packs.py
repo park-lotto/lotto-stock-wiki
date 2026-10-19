@@ -43,7 +43,7 @@ def test_목록은_팩_주인을_그대로_읽는다(monkeypatch):
     d = c.get("/api/admin/shortem_packs").json()
     assert d["ok"]
     assert [p["name"] for p in d["sfx_packs"]] == [n for n, _ in sfx_pack.list_packs()]
-    assert all(len(p["slots"]) == len(sfx_pack.SLOTS) for p in d["sfx_packs"])
+    assert all(len(p["slots"]) == len(sfx_pack.ALL_SLOTS) for p in d["sfx_packs"])      # 카테고리 칸 포함(관제 237)
     assert [t["id"] for t in d["bgm"]] == [t["id"] for t in bgm_lib.list_tracks()]
     assert d["fonts"] == sorted(f.name for f in (STATIC / "fonts").iterdir() if f.suffix.lower() in (".ttf", ".otf"))
     assert {"count", "engines"} <= set(d["voices"]) and {"total", "emotions"} <= set(d["memes"])

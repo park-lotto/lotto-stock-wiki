@@ -25,6 +25,11 @@ import zlib
 
 PACK_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "sfx_packs")
 SLOTS = ("opener", "pop", "dung", "ding", "whoosh", "tick", "click2")
+# 사건별 카테고리(관제 237, 2026-10-19) — 팩마다 따로 두지 않고 공용 폴더 `_분류/<칸>/` 에 변형 여러 개.
+#   팩마다 그중 하나를 고정으로 쓴다(sound_path) — 미리듣기=완성본. 만드는 도구 tools/sfx_bench/make_categories.py.
+CATEGORY_DIR = os.path.join(PACK_DIR, "_분류")
+CATEGORY_SLOTS = ("money", "shock", "reveal", "gasp", "bubble", "wrong", "laugh", "step")
+ALL_SLOTS = SLOTS + CATEGORY_SLOTS
 
 OPENER_AT = 0.06          # 실측: 12편 전부 0.03~0.07초
 WHOOSH_LEAD = 0.035       # 첫 넘김: 휙이 넘김보다 먼저(8편 중앙)
@@ -69,13 +74,14 @@ RINGS = {g: _spread(c) for g, c in RING_COUNTS.items()}
 # 구간 → (칸 첫 자막에 고정되는 소리 또는 None, 나머지 자막이 도는 순서)
 #   첫 자막 고정은 **문구 종류가 소리를 정한 것만**(실측): 반전 "진짜 충격적인 포인트는"=둥 6/10 ·
 #   반박 "이게 말도 안 되는 게"=둥 · 결과("변신시켜버렸다는 거"·"끝판왕")=띠링.
+#   ★사건별 카테고리(관제 237): 결과 첫 줄=돈 · 반전 첫 줄=충격 · 정체 공개 첫 줄=짠(등장). 나머지 줄은 실측 순서 그대로.
 GROUP_SOUNDS = {
     "떡밥": (None, "떡밥"),
-    "공개": (None, "공개"),
+    "공개": ("reveal", "공개"),
     "반박": ("dung", "시연"),
     "시연": (None, "시연"),
-    "결과": ("ding", "시연"),
-    "반전": ("dung", "반전"),
+    "결과": ("money", "시연"),
+    "반전": ("shock", "반전"),
     "마무리": (None, "마무리"),
 }
 DEFAULT_SOUNDS = (None, "떡밥")     # 표에 없는 역할
@@ -102,7 +108,10 @@ PACK_GAIN_DB = 4.3
 _AUDIBLE_FLOOR_DB = -11.0
 LEVEL_TARGET_DB = {k: max(v, _AUDIBLE_FLOOR_DB) for k, v in {
     "opener": -8.8, "dung": -7.0, "pop": -11.9, "ding": -14.7,
-    "whoosh": -20.2, "tick": -22.4, "click2": -20.6}.items()}
+    "whoosh": -20.2, "tick": -22.4, "click2": -20.6,
+    # 카테고리(관제 237) — 실측 기준이 없어 비슷한 칸에 맞췄다: 충격=둥, 짠=오프너, 나머지는 들리는 바닥
+    "shock": -7.0, "reveal": -8.8, "money": -10.0, "gasp": -10.0,
+    "bubble": -11.0, "wrong": -11.0, "laugh": -11.0, "step": -11.0}.items()}
 _LEVEL_CACHE = {}
 
 
@@ -155,7 +164,29 @@ def list_packs():
 ACTIVE_PACKS = ("팩21_사장님",)
 
 
-SLOT_LABEL = {"opener": "시작(두둥)", "pop": "뽁", "dung": "둥", "ding": "띠링", "whoosh": "휙", "tick": "틱", "click2": "딸깍"}
+SLOT_LABEL = {"opener": "시작(두둥)", "pop": "뽁", "dung": "둥", "ding": "띠링", "whoosh": "휙", "tick": "틱", "click2": "딸깍",
+              "money": "돈", "shock": "충격", "reveal": "짠(등장)", "gasp": "헉", "bubble": "물방울",
+              "wrong": "땡(오답)", "laugh": "웃음", "step": "발소리"}
+
+
+def sound_path(pack_dir, slot):
+    """팩 소리 한 칸의 파일 경로 — 렌더·캡컷(events)·미리듣기(app 소리 주소)가 전부 이것 하나로 찾는다.
+    기본 7칸은 팩 폴더의 <칸>.wav, 카테고리 칸은 `_분류/<칸>/` 변형 중 팩 이름으로 고정된 하나.
+    카테고리 폴더가 비었으면 None(그 소리는 빠진다)."""
+    if slot in SLOTS:
+        return os.path.join(pack_dir, slot + ".wav")
+    if slot not in CATEGORY_SLOTS:
+        return None
+    d = os.path.join(CATEGORY_DIR, slot)
+    try:
+        files = sorted(f for f in os.listdir(d) if f.endswith(".wav"))
+    except OSError:
+        files = []
+    if not files:
+        print("[sfx_pack] 카테고리 %s 파일 없음 — 그 소리는 빠진다" % slot, file=sys.stderr)
+        return None
+    key = os.path.basename(os.path.normpath(pack_dir or "")) + "/" + slot
+    return os.path.join(d, files[zlib.crc32(key.encode()) % len(files)])
 
 
 def pack_label(name):
@@ -393,7 +424,7 @@ def clean_pack_edit(v):
     if not isinstance(v, dict):
         return None
     def _ref(x, need_to=False):
-        if not isinstance(x, dict) or x.get("slot") not in SLOTS:
+        if not isinstance(x, dict) or x.get("slot") not in ALL_SLOTS:
             return None
         try:
             n = int(x.get("n") or 0)
@@ -403,7 +434,7 @@ def clean_pack_edit(v):
             return None
         r = {"slot": x["slot"], "n": n}
         if need_to:
-            if x.get("to") not in SLOTS or x.get("to") == x["slot"]:
+            if x.get("to") not in ALL_SLOTS or x.get("to") == x["slot"]:
                 return None
             r["to"] = x["to"]
         return r
@@ -523,7 +554,9 @@ def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None, with
     out = []
     for e in flat:
         slot, t = e[0], e[1]
-        path = os.path.join(pack["dir"], slot + ".wav")
+        path = sound_path(pack["dir"], slot)
+        if not path:
+            continue
         g = _gain_for(path, slot) * level_mul * (float(e[4]) if len(e) > 4 else 1.0)
         out.append((path, t, g, e[5]) if with_ref and len(e) > 5 else (path, t, g))
     return out

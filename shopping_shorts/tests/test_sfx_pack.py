@@ -141,8 +141,8 @@ def test_events_follow_even_rules():
     assert ("tick", round(1.6 + 0.07, 3)) in [(s, round(t, 3)) for s, t, _ in ev]
     # 칸 역할이 소리를 정한다(단어 검색 없음): 반전 칸 첫 자막=둥 · 결과 칸 첫 자막=띠링 · 시연 칸=시연 순서
     by_text = {txt: s for s, _, txt in ev if txt}
-    assert by_text.get("근데 진짜 충격적인") == "dung"
-    assert by_text.get("도마 접시 안 사고") == "ding"
+    assert by_text.get("근데 진짜 충격적인") == "shock"      # 반전 첫 줄=충격(관제 237)
+    assert by_text.get("도마 접시 안 사고") == "money"      # 결과 첫 줄=돈(관제 237)
     assert by_text.get("페이퍼로 칼을 감싸") in sfx_pack.RINGS["시연"]
     # 소리는 자막이 바뀌는 그 시각에 난다(렌더 자막 함수와 같은 값)
     starts = {round(st, 4) for b in tl for _, st, _ in va.caption_schedule(b)}

@@ -23086,7 +23086,7 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
             "pack": got[0] if got else None, "pack_no": pack_no, "pack_choice": choice or "auto",
             "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
             "packs": packs, "beats": beats_out, "timeline_ready": bool(timeline),
-            "pack_slots": [{"slot": k, "label": sfx_pack.SLOT_LABEL.get(k, k)} for k in sfx_pack.SLOTS],   # 효과음 줄 '바꾸기' 목록
+            "pack_slots": [{"slot": k, "label": sfx_pack.SLOT_LABEL.get(k, k)} for k in sfx_pack.ALL_SLOTS],   # 효과음 줄 '바꾸기' 목록
             "family": sfx_pack.script_family(store, job)}
 
 
@@ -23181,10 +23181,19 @@ def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
     """팩 소리 미리듣기(2026-10-01 관제 059) — 팩 번호(1부터, list_packs 순서)·칸 이름의 wav 그대로."""
     from shopping_shorts import sfx_pack
     allp = sfx_pack.list_packs()
-    if slot not in sfx_pack.SLOTS or not (1 <= int(pack_no) <= len(allp)):
+    if slot not in sfx_pack.ALL_SLOTS or not (1 <= int(pack_no) <= len(allp)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "소리 없음"})
-    path = os.path.join(allp[int(pack_no) - 1][1], slot + ".wav")
+    path = sfx_pack.sound_path(allp[int(pack_no) - 1][1], slot)      # 렌더와 같은 파일(관제 237 카테고리 포함)
+    if not path or not os.path.isfile(path):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소리 없음"})
     return FileResponse(path, media_type="audio/wav", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/api/produce/sfx_pack/slots")
+def api_sfx_pack_slots():
+    """팩 소리 '바꾸기' 목록(관제 237) — 2단계 보드가 칸 이름을 따로 적지 않고 여기서 받는다."""
+    from shopping_shorts import sfx_pack
+    return {"ok": True, "slots": [{"slot": k, "label": sfx_pack.SLOT_LABEL.get(k, k)} for k in sfx_pack.ALL_SLOTS]}
 
 
 @app.get("/api/produce/scene-style/assets/{asset_path:path}")
@@ -28471,7 +28480,7 @@ def _shortem_packs_list(request: Request):
     from shopping_shorts import sfx_pack, bgm_lib, voice_presets
     from shopping_shorts import storyboard as _sbm
     st = Store(DB_PATH)
-    packs = [{"no": i + 1, "name": name, "slots": [{"slot": s_, "label": sfx_pack.SLOT_LABEL.get(s_, s_)} for s_ in sfx_pack.SLOTS]}
+    packs = [{"no": i + 1, "name": name, "slots": [{"slot": s_, "label": sfx_pack.SLOT_LABEL.get(s_, s_)} for s_ in sfx_pack.ALL_SLOTS]}
              for i, (name, _d) in enumerate(sfx_pack.list_packs())]
     bank = mix_pipeline._sfx_bank(st)
     drawer = [{"cat": c, "count": len(bank.get(c) or []),
