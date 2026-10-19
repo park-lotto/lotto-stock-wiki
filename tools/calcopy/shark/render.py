@@ -717,24 +717,52 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
     # R5(10-19): 목표 −14 LUFS·트루피크 ≤ −1.5. 옛 −9 때 쓰던 tanh 깎기는 뺐다(소리 뭉갬 — −14 는 낮추는 쪽이라 깎을 일이 없다).
     # → 가벼운 압축(−18dB·3:1·+6dB, 나레/원음 고르게) → 이득 g → 리미터(트루피크 목표 −1dB, AAC 넘침 몫) → 16kHz 위 자름.
     #   g 만 재며 맞추고(최대 8번), 최고점이 넘으면 리미터를 낮춘다.
-    comp = "acompressor=threshold=0.125:ratio=3:attack=5:release=120:knee=4:makeup=2"
-    g, lim, hist = C["target_lufs"] - I0, 10 ** ((C["peak_max"] - 1.0) / 20), []
     final = R / "final.mp4"
-    for it in range(8):
+    I, pk, hist = loud_fit(video, pre, I0, C["target_lufs"], C["peak_max"], P["dur"], final)
+    return {"bgm": C["bgm"], "bgm_ss": bss, "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": LOUD_COMP + " → volume → alimiter → lowpass 16k", "target": [C["target_lufs"], C["peak_max"]], "passes": hist, "final_I": I, "final_peak": pk}
+
+
+LOUD_COMP = "acompressor=threshold=0.125:ratio=3:attack=5:release=120:knee=4:makeup=2"
+
+
+def next_gain(hist: list[dict], target: float, tol: float) -> float:
+    """(판단 주인: 소리 맞춤 다음 이득) 잰 점들로 할선(secant) — 대상 구간(목표±tol 밖 아래·위 가장 가까운 점) 안으로 가두고,
+    밖이면 반으로 가른다(이분법). 첫 걸음만 옛 규칙(차×2).
+    옛 규칙 '차×2' 를 계속 쓰면 이득↔LUFS 기울기가 ~1 인 소리(삐 소리판·−14 LUFS)에서 위아래로 같은 폭만큼 튀어 안 모인다
+    (10-20 하이브리드 --preview −13.1↔−14.9 8번 멈춤, 10편 하이브리드 5번)."""
+    pts = [(h["gain"], h["I"]) for h in hist if h["I"] == h["I"]]     # 리미터만 낮춘 걸음도 같은 곡선으로 친다(I 차이 0.1 안팎)
+    g, I = pts[-1]
+    if len(pts) < 2:
+        return g + (target - I) * 2.0
+    lo = max((p for p in pts if p[1] < target - tol), default=None, key=lambda p: p[0])
+    hi = min((p for p in pts if p[1] > target + tol), default=None, key=lambda p: p[0])
+    (g0, I0) = pts[-2]
+    slope = (I - I0) / (g - g0) if abs(g - g0) > 1e-3 else 1.0
+    slope = min(1.5, max(0.3, slope)) if slope > 0 else 1.0
+    nx = g + (target - I) / slope
+    if lo and hi and lo[0] < hi[0]:
+        if not (lo[0] < nx < hi[0]):
+            nx = (lo[0] + hi[0]) / 2
+    return round(nx, 2)
+
+
+def loud_fit(video: Path, pre: Path, I0: float, target: float, peak_max: float, dur: float, final: Path, tries: int = 10):
+    """(판단 주인: 마지막 소리 크기) 가벼운 압축 → 이득 g → 리미터(트루피크 목표 −1dB, AAC 넘침 몫) → 16kHz 위 자름.
+    g 는 next_gain 으로 재며 맞추고, 최고점이 넘으면 리미터를 낮춘다(이득은 그대로)."""
+    g, lim, hist = target - I0, 10 ** ((peak_max - 1.0) / 20), []
+    for it in range(tries):
         run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex",
-             f"[1:a]{comp},volume={g:.2f}dB,alimiter=limit={lim:.3f}:attack=2:release=40:level=false,lowpass=f=16000[a]",
-             "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
+             f"[1:a]{LOUD_COMP},volume={g:.2f}dB,alimiter=limit={lim:.3f}:attack=2:release=40:level=false,lowpass=f=16000[a]",
+             "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{dur:.3f}", final])
         I, pk = lufs(final)
         hist.append({"gain": round(g, 2), "limit": round(lim, 3), "I": I, "peak": pk})
-        if abs(I - C["target_lufs"]) <= LOUD["tol"] and pk <= C["peak_max"]:
-            break
-        if pk > C["peak_max"]:
-            lim *= 10 ** ((C["peak_max"] - pk - 0.2) / 20)
+        if abs(I - target) <= LOUD["tol"] and pk <= peak_max:
+            return I, pk, hist
+        if pk > peak_max:
+            lim *= 10 ** ((peak_max - pk - 0.2) / 20)
         else:
-            g += (C["target_lufs"] - I) * 2.0
-    else:
-        raise StageError(f"소리 크기 못 맞춤 {hist}")
-    return {"bgm": C["bgm"], "bgm_ss": bss, "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → alimiter → lowpass 16k", "target": [C["target_lufs"], C["peak_max"]], "passes": hist, "final_I": I, "final_peak": pk}
+            g = next_gain(hist, target, LOUD["tol"])
+    raise StageError(f"소리 크기 못 맞춤 {hist}")
 
 
 def reuse_tts(R: Path, src: Path | None) -> str | None:
