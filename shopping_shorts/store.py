@@ -523,6 +523,24 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # ── 여행 담기(관제 239, 2026-10-19) — 숙소·항공 상품 북마크. 영상이 아니라서 mix_basket 과 따로 둔다
+            #   (mix_basket 은 담자마자 영상 받기·메타 크롤이 돈다 — 상품 페이지를 넣으면 헛돈다).
+            #   item_key = travel_source.travel_site 의 site:kind:id. 출처(site)는 영상 표기 문구의 근거다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS travel_basket (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    item_key TEXT NOT NULL,
+                    site TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    url TEXT,
+                    name TEXT,
+                    thumbnail TEXT,
+                    price INTEGER,
+                    meta_json TEXT,
+                    added_at TEXT,
+                    PRIMARY KEY (customer_id, item_key)
+                )
+            """)
             # ── 볼채널등록(개인 채널 즐겨찾기, 2026-09-02 사장님 요청) ──────────────
             #   영상 즐겨찾기(mix_basket)의 채널판. ★전역 수집과 철저히 분리한다 —
             #   여기 담긴 채널은 platform_seeds/discovered_channels에 **넣지 않는다**.
@@ -3112,6 +3130,67 @@ class Store:
                 (customer_id, shortcode, url, thumbnail, name, caption, video_url or ""),
             )
             return True
+
+    def travel_basket_add(self, item_key, site, kind, url="", name="", thumbnail="",
+                          price=None, meta=None, customer_id=LEGACY_CUSTOMER_ID):
+        """여행 담기(관제 239) — 멱등. 새로 담겼으면 True. 다시 담으면 빈 칸만 채운다(덮어쓰지 않는다)."""
+        mj = json.dumps(meta, ensure_ascii=False) if meta else None
+        with self._conn() as c:
+            if c.execute("SELECT 1 FROM travel_basket WHERE customer_id=? AND item_key=?",
+                         (customer_id, item_key)).fetchone():
+                c.execute(
+                    "UPDATE travel_basket SET "
+                    "name=CASE WHEN COALESCE(name,'')='' THEN ? ELSE name END, "
+                    "thumbnail=CASE WHEN COALESCE(thumbnail,'')='' THEN ? ELSE thumbnail END, "
+                    "price=COALESCE(price, ?), meta_json=COALESCE(meta_json, ?) "
+                    "WHERE customer_id=? AND item_key=?",
+                    (name or "", thumbnail or "", price, mj, customer_id, item_key))
+                return False
+            c.execute(
+                "INSERT INTO travel_basket(customer_id, item_key, site, kind, url, name, thumbnail, price, "
+                "meta_json, added_at) VALUES(?,?,?,?,?,?,?,?,?, datetime('now'))",
+                (customer_id, item_key, site, kind, url, name or "", thumbnail or "", price, mj))
+            return True
+
+    def travel_basket_set(self, item_key, customer_id=LEGACY_CUSTOMER_ID, name=None, thumbnail=None,
+                          price=None, meta=None):
+        """백그라운드 보강(상세 가져오기) 결과로 덮어쓴다 — 사이트에서 읽은 값이 정답이다."""
+        sets, vals = [], []
+        for col, v in (("name", name), ("thumbnail", thumbnail), ("price", price)):
+            if v not in (None, ""):
+                sets.append(col + "=?"); vals.append(v)
+        if meta is not None:
+            sets.append("meta_json=?"); vals.append(json.dumps(meta, ensure_ascii=False))
+        if not sets:
+            return
+        with self._conn() as c:
+            c.execute("UPDATE travel_basket SET " + ", ".join(sets) + " WHERE customer_id=? AND item_key=?",
+                      vals + [customer_id, item_key])
+
+    def travel_basket_list(self, customer_id=LEGACY_CUSTOMER_ID, kind=None):
+        """담은 최신순. meta_json 은 풀어서 meta 로."""
+        q = ("SELECT item_key, site, kind, url, name, thumbnail, price, meta_json, added_at "
+             "FROM travel_basket WHERE customer_id=?")
+        args = [customer_id]
+        if kind:
+            q += " AND kind=?"; args.append(kind)
+        with self._conn() as c:
+            rows = c.execute(q + " ORDER BY added_at DESC, rowid DESC", args).fetchall()
+        out = []
+        for r in rows:
+            it = {"item_key": r[0], "site": r[1], "kind": r[2], "url": r[3], "name": r[4],
+                  "thumbnail": r[5], "price": r[6], "added_at": r[8]}
+            if r[7]:
+                try:
+                    it["meta"] = json.loads(r[7])
+                except (ValueError, TypeError):
+                    pass
+            out.append(it)
+        return out
+
+    def travel_basket_remove(self, item_key, customer_id=LEGACY_CUSTOMER_ID):
+        with self._conn() as c:
+            c.execute("DELETE FROM travel_basket WHERE customer_id=? AND item_key=?", (customer_id, item_key))
 
     def mix_basket_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """바구니에서 제거."""

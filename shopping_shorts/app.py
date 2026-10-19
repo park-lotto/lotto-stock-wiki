@@ -2518,8 +2518,11 @@ def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
     elif dest == "channel":
         r = _fav_channel_register(cid, link)
     else:
+        from shopping_shorts import travel_source
+        _tr = travel_source.travel_site(link)
         return {"ok": True, "status": "preview", "link": link,
-                "platform": _grab_platform(link) or _fav_channel_platform(link)}
+                "platform": ("travel" if _tr else (_grab_platform(link) or _fav_channel_platform(link))),
+                "site_name": (_tr or {}).get("site_name", "")}
     r.update(ok=r["status"] in ("added", "exists"), link=link, dest=dest)
     return r
 
@@ -17088,7 +17091,7 @@ _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 #   ★admin=1을 주면 안 된다 — 관리자 전권(수집·차단·계정목록)이 통째로 열린다.
 #   허용 목록은 DB 설정에 두어 **배포 없이** 사장님이 넣고 뺄 수 있다.
 #     설정키: feature_allow_<기능>  값: "11,42" (customer_id 쉼표 구분)
-_FEATURE_KEYS = ("naverclip", "pinterest")
+_FEATURE_KEYS = ("naverclip", "pinterest", "travel")   # travel = 레퍼런스랭킹 ✈️여행 탭(관제 239)
 
 
 def _feature_allowed(store, cid, feature):
@@ -19843,6 +19846,12 @@ def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks
     lvl = access_level(cid)
     if lvl != "full":
         return {"status": "pending" if lvl == "pending" else "paid"}
+    # ★여행 상품(숙소·항공) 주소는 영상이 아니다 — 영상 받기·메타 크롤을 타지 않고 여행 담기로 간다(관제 239).
+    #   판정은 travel_source.travel_site 한 곳.
+    from shopping_shorts import travel_source
+    tr = travel_source.travel_site(url)
+    if tr:
+        return _grab_travel(cid, url, tr, thumbnail, title, background_tasks)
     platform = _grab_platform(url)
     if not platform:
         return {"status": "badlink"}
@@ -19867,6 +19876,90 @@ def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid,
                      video_url=vurl)
     return {"status": "added" if added else "exists", "platform": platform, "shortcode": sc}
+
+
+def _grab_travel(cid, url, tr, thumbnail="", title="", background_tasks=None) -> dict:
+    """✈️여행 담기(관제 239) — 숙소·항공 상세 페이지 → travel_basket. 상세(이름·가격·공식 사진 수·출처)는 뒤에서 채운다.
+    상세가 아닌 화면(사이트 첫 화면·검색 목록)은 kind 가 없어 담지 않는다(무엇을 담았는지 모르는 행을 만들지 않는다)."""
+    from shopping_shorts import travel_source
+    if not tr.get("kind"):
+        return {"status": "travel_nodetail", "platform": "travel", "site_name": tr["site_name"]}
+    key = travel_source.item_key(tr)
+    added = Store(DB_PATH).travel_basket_add(
+        key, tr["site"], tr["kind"], url=url, name=(title or "")[:120], thumbnail=thumbnail or "",
+        meta={"site_name": tr["site_name"], "source_label": travel_source.source_label(tr["site"])},
+        customer_id=cid)
+    if background_tasks is not None:
+        background_tasks.add_task(_enrich_travel, url, key, cid)
+    return {"status": "added" if added else "exists", "platform": "travel", "site_name": tr["site_name"],
+            "kind": tr["kind"], "item_key": key}
+
+
+def _enrich_travel(url, key, cid):
+    """백그라운드: 상세를 읽어 이름·대표 사진·최저가·출처를 채운다. 실패는 로그에 남기고 담긴 행은 그대로 둔다."""
+    from shopping_shorts import travel_source
+    try:
+        d = travel_source.fetch(url)
+    except Exception as e:      # noqa: BLE001 — 보강 실패가 담기를 되돌리면 안 된다(이유는 남긴다)
+        logging.getLogger("travel").warning("여행 담기 보강 실패 %s: %s", url, e)
+        return
+    Store(DB_PATH).travel_basket_set(
+        key, customer_id=cid, name=d.get("name"), thumbnail=travel_source.cover_photo(d),
+        price=d.get("price_from"),
+        meta={k: d.get(k) for k in ("site_name", "source_label", "grade", "address", "rating",
+                                     "review_count", "facilities")} | {"photo_count": len(d.get("photos") or [])})
+
+
+def _travel_denied(request):
+    """✈️여행 탭·API 문 — 관리자 또는 feature_allow_travel 에 든 회원만(_feature_allowed 한 곳)."""
+    if not _feature_allowed(Store(DB_PATH), _cid(request), "travel"):
+        return JSONResponse({"error": "여행 탭은 아직 열리지 않았어요"}, status_code=403)
+    return None
+
+
+@app.get("/api/travel/best")
+def api_travel_best(request: Request, kind: str = "stay", site: str = ""):
+    """레퍼런스랭킹 ✈️여행 — 사이트별 베스트. 판단·수집은 travel_source.best_items."""
+    d = _travel_denied(request)
+    if d:
+        return d
+    from shopping_shorts import travel_source
+    try:
+        return travel_source.best_items(kind, site or None)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.get("/api/travel/basket")
+def api_travel_basket(request: Request, kind: str = ""):
+    d = _travel_denied(request)
+    if d:
+        return d
+    return {"items": Store(DB_PATH).travel_basket_list(customer_id=_cid(request), kind=kind or None)}
+
+
+@app.post("/api/travel/basket")
+def api_travel_basket_add(request: Request, background_tasks: BackgroundTasks, body: dict):
+    """주소 붙여넣기 담기 — 확장 없이도 담는 길. 판단은 PC 📥담기·폰 공유와 같은 _grab_video."""
+    d = _travel_denied(request)
+    if d:
+        return d
+    from shopping_shorts import travel_source
+    url = (body.get("url") or "").strip()
+    if not travel_source.travel_site(url):
+        return {"ok": False, "status": "badlink", "error": "여기어때·쿠팡트래블·야놀자·마이리얼트립·트립닷컴·아고다 주소만 담을 수 있어요"}
+    r = _grab_video(_cid(request), url, title=(body.get("title") or ""), background_tasks=background_tasks)
+    r["ok"] = r["status"] in ("added", "exists")
+    return r
+
+
+@app.post("/api/travel/basket/remove")
+def api_travel_basket_remove(request: Request, body: dict):
+    d = _travel_denied(request)
+    if d:
+        return d
+    Store(DB_PATH).travel_basket_remove((body.get("item_key") or ""), customer_id=_cid(request))
+    return {"ok": True}
 
 
 @app.get("/api/grab", include_in_schema=False)
@@ -19899,6 +19992,11 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
                                 "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
     if st == "badlink":
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    if st == "travel_nodetail":
+        return _grab_popup_html(False, "숙소·항공 상세 페이지에서 눌러주세요", f"{r['site_name']} 목록 화면은 담을 수 없어요")
+    if r.get("platform") == "travel":
+        return _grab_popup_html(True, "여행 담기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
+                                f"출처: {r['site_name']} · 레퍼런스랭킹 ✈️여행 → 내가 담은 것")
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
                             f"{r['platform']} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 

@@ -28,6 +28,8 @@ SITES = {
     "mrt":     {"name": "마이리얼트립", "hosts": ("myrealtrip.com",),                   "kinds": ("stay", "air")},
     "tripcom": {"name": "트립닷컴",     "hosts": ("trip.com",),                         "kinds": ("stay", "air")},
     "agoda":   {"name": "아고다",       "hosts": ("agoda.com",),                        "kinds": ("stay",)},
+    "naver":   {"name": "네이버 항공권", "hosts": ("flight.naver.com",),                "kinds": ("air",)},
+    "nol":     {"name": "NOL 항공",     "hosts": ("tour.yanolja.com",),                 "kinds": ("air",)},
 }
 KINDS = {"stay": "숙소", "air": "항공"}
 
@@ -41,11 +43,12 @@ _NEXT_RE = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
 
 def _site_of_host(host):
     host = (host or "").lower().split(":")[0]
-    for key, s in SITES.items():
+    best, blen = None, 0
+    for key, s in SITES.items():           # 가장 길게 맞는 주소가 이긴다(tour.yanolja.com=NOL 항공 > yanolja.com=야놀자)
         for h in s["hosts"]:
-            if host == h or host.endswith("." + h):
-                return key
-    return None
+            if (host == h or host.endswith("." + h)) and len(h) > blen:
+                best, blen = key, len(h)
+    return best
 
 
 def travel_site(url):
@@ -67,7 +70,28 @@ def travel_site(url):
         m = _YEOGI_STAY_RE.search(p.path)
         if m:
             kind, pid = "stay", m.group(1)
+    elif (site == "naver" and p.path.startswith("/flights/")) or (site == "nol" and p.path.startswith("/air/search/")):
+        # 항공은 '노선+날짜'가 곧 상품이다 — 경로 그대로를 번호로 쓴다(같은 노선·날짜면 같은 키)
+        kind, pid = "air", p.path.strip("/").split("/", 1)[-1]
     return {"site": site, "site_name": SITES[site]["name"], "kind": kind, "id": pid}
+
+
+def item_key(t):
+    """담기·목록의 고유 키 = 사이트:종류:상품번호. travel_site 결과에서만 만든다."""
+    return "%s:%s:%s" % (t["site"], t.get("kind") or "", t.get("id") or "")
+
+
+# 대표 사진 고르기 — 목록 카드·담기 썸네일용. 물놀이 > 전경 > 대표 사진 > 첫 장(강의 공식: 물놀이가 시선을 끈다).
+_COVER_ORDER = ("수영장", "스파", "자쿠지", "노천", "전경", "대표")
+
+
+def cover_photo(d):
+    photos = (d or {}).get("photos") or []
+    for word in _COVER_ORDER:
+        for p in photos:
+            if word in (p.get("label") or ""):
+                return p["url"]
+    return photos[0]["url"] if photos else ""
 
 
 def source_label(site):
@@ -148,8 +172,99 @@ def fetch(url):
     raise ValueError("%s 상세 가져오기는 아직 지원하지 않습니다" % t["site_name"])
 
 
+# ── 베스트 목록 수집기 ─────────────────────────────────────────────────────────
+# ★robots.txt 가 허용하는 경로만 쓴다(2026-10-19 실측 조사: channel/strategy/여행쇼핑쇼츠_프로그램설계 참조).
+#   트립닷컴(/restapi/soa2 금지)·마이리얼트립(api3·flights 전면 금지)은 받아지지만 넣지 않았다.
+#   항목 모양(화면·담기가 이것만 읽는다): site, site_name, kind, rank, title, sub, price, price_note,
+#   depart, return, airline, url, image, source_label
+
+def _air_item(site, rank, origin, dest, country, price, note, depart, ret, airline, url, image):
+    return {"site": site, "site_name": SITES[site]["name"], "kind": "air", "rank": rank,
+            "title": "%s → %s" % (origin, dest), "sub": country or "", "price": price, "price_note": note,
+            "depart": depart, "return": ret, "airline": airline or "", "url": url, "image": image or "",
+            "source_label": source_label(site)}
+
+
+_AIRPORT_KO = {"ICN": "인천", "GMP": "김포", "PUS": "부산", "CJU": "제주", "TAE": "대구", "CJJ": "청주", "KWJ": "광주"}
+
+
+def _ymd(s):
+    s = (s or "").replace("-", "")
+    return "%s-%s-%s" % (s[:4], s[4:6], s[6:8]) if len(s) == 8 else ""
+
+
+def _best_naver_air():
+    """네이버 항공권 첫 화면(robots 허용 '/') 의 '예약 많은 여행지' 10곳 — __NEXT_DATA__ apolloState."""
+    st = _next_data(_get("https://flight.naver.com/"))["props"]["apolloState"]["ROOT_QUERY"]
+    rows = st.get('trendingBookedAirports({"category":"ALL"})') or []
+    out = []
+    for i, x in enumerate(rows, 1):
+        f, a = x.get("flight") or {}, x.get("airport") or {}
+        dd, rd = f.get("departureDate") or "", f.get("returnDate") or ""
+        seg = "domestic" if f.get("isDomestic") else "international"
+        url = "https://flight.naver.com/flights/%s/%s-%s-%s" % (seg, f.get("departureLocationCode"), f.get("arrivalLocationCode"), dd)
+        if rd:
+            url += "/%s-%s-%s" % (f.get("arrivalLocationCode"), f.get("departureLocationCode"), rd)
+        url += "?adult=1&fareType=Y"
+        _o = f.get("departureLocationCode") or ""
+        out.append(_air_item("naver", x.get("rank") or i, _AIRPORT_KO.get(_o, _o), a.get("cityName"),
+                             a.get("countryName"), f.get("minPrice"), "왕복 최저" if rd else "편도 최저",
+                             _ymd(dd), _ymd(rd), "", url, (a.get("cityImage") or {}).get("imageUrl")))
+    return out
+
+
+def _best_nol_air():
+    """NOL 항공(tour.yanolja.com, robots Allow: /) 추천 특가 — 가격대별 묶음, 항공사·도시 사진 포함."""
+    from curl_cffi import requests as cr
+    r = cr.get("https://tour.yanolja.com/air/air-api/nol-air-web-api/recommendations/theme-itineraries",
+               params={"themeType": "PRICE_DETAIL", "routeType": "INTERNATIONAL"}, impersonate="chrome",
+               headers={"Referer": "https://tour.yanolja.com/air", "Accept-Language": "ko-KR"}, timeout=_TIMEOUT)
+    if r.status_code != 200:
+        raise RuntimeError("NOL 항공 응답 %s" % r.status_code)
+    out = []
+    for grp in r.json() or []:
+        for it in grp.get("items") or []:
+            o, d = it.get("originCity") or {}, it.get("destinationCity") or {}
+            dd, rd = (it.get("outboundDate") or "").replace("-", ""), (it.get("inboundDate") or "").replace("-", "")
+            url = "https://tour.yanolja.com/air/search/c:%s-c:%s-%s" % (o.get("code"), d.get("code"), dd)
+            if rd:
+                url += "/c:%s-c:%s-%s" % (d.get("code"), o.get("code"), rd)
+            url += "?cabin=%s&infant=0&child=0&adult=1" % (it.get("cabinType") or "ECONOMY")
+            out.append(_air_item("nol", len(out) + 1, o.get("name"), d.get("name"), grp.get("title") or "",
+                                 it.get("totalPrice"), "왕복 총액" if rd else "편도", _ymd(dd), _ymd(rd),
+                                 it.get("airlineCode"), url, it.get("backgroundImageUrl")))
+    out.sort(key=lambda x: (x["price"] is None, x["price"] or 0))
+    for i, x in enumerate(out, 1):
+        x["rank"] = i
+    return out
+
+
+_BEST = {("air", "naver"): _best_naver_air, ("air", "nol"): _best_nol_air}
+_BEST_TTL = 3 * 3600          # 사이트 부담·속도 — 같은 목록은 3시간 재사용
+_best_cache = {}
+
+
 def best_items(kind, site=None):
-    """사이트별 베스트 목록 — 사이트 수집기가 붙는 대로 채운다. 지금은 빈 목록과 이유를 돌려준다."""
+    """사이트별 베스트 목록. site 를 안 주면 그 종류의 모든 수집기를 합친다(사이트별 순위는 그대로).
+    한 사이트가 실패해도 나머지는 돌려주고 실패 이유를 errors 에 남긴다(조용히 빈 목록 금지)."""
     if kind not in KINDS:
         raise ValueError("kind 는 stay|air")
-    return {"kind": kind, "site": site, "items": [], "note": "수집기 준비 중"}
+    if site and site not in SITES:
+        raise ValueError("모르는 사이트: %s" % site)
+    keys = [k for k in _BEST if k[0] == kind and (not site or k[1] == site)]
+    items, errors, now = [], {}, time.time()
+    for k in keys:
+        hit = _best_cache.get(k)
+        if hit and now - hit[0] < _BEST_TTL:
+            items += hit[1]
+            continue
+        try:
+            rows = _BEST[k]()
+            _best_cache[k] = (now, rows)
+            items += rows
+        except Exception as e:      # noqa: BLE001 — 한 사이트 장애가 탭 전체를 비우면 안 된다(이유는 남긴다)
+            errors[SITES[k[1]]["name"]] = str(e)[:200]
+            if hit:
+                items += hit[1]      # 지난 목록이라도 보여 준다(언제 것인지는 fetched_at 으로)
+    sites = [{"site": k[1], "site_name": SITES[k[1]]["name"]} for k in _BEST if k[0] == kind]
+    return {"kind": kind, "site": site, "items": items, "sites": sites, "errors": errors}
