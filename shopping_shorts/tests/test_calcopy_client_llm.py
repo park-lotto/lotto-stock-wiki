@@ -38,7 +38,7 @@ def test_client_answer_roundtrip_and_image_part(tmp_path, monkeypatch):
     d, err = C.ask([b"\xff\xd8fakejpeg", "라벨"], "읽어라", tag="ocr0")
     assert err is None and d["items"][0]["lines"] == ["안녕"] and d["_via"] == "client"
     req = json.loads(next(tmp_path.iterdir()).joinpath("request.json").read_text(encoding="utf-8"))
-    assert [p["kind"] for p in req["parts"]] == ["image", "text"] and req["tier"] == "sonnet"
+    assert [p["kind"] for p in req["parts"]] == ["image", "text"] and req["tier"] == "opus"   # 기본 = 오푸스(사장님 10-19)
 
 
 def test_empty_file_while_writing_is_not_counted_as_bad(tmp_path, monkeypatch):
@@ -67,7 +67,9 @@ def test_bad_answer_retries_then_fails(tmp_path, monkeypatch):
 
 
 def test_tier_of():
-    assert C.tier_of("draft") == "opus" and C.tier_of("asr") == "haiku" and C.tier_of("mat0") == "sonnet"
+    # 사장님 10-19: 품질에 닿는 건 오푸스 — 실측 요청 꼬리표 전부 opus(하이쿠·소넷은 품질 무관이라 이름 댄 것만)
+    for tag in ("draft", "rewrite1", "score", "ocr0", "support", "bench_c3", "asr", "mat0"):
+        assert C.tier_of(tag) == "opus", tag
 
 
 def test_customer_mode_approve_gate(monkeypatch):

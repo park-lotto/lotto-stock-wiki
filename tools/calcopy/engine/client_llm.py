@@ -27,18 +27,17 @@ POLL_S = 0.5
 TIMEOUT_S = float(os.environ.get("SHORTEM_LLM_TIMEOUT") or 3600)
 RETRIES = 2                      # 모양이 틀린 답을 다시 묻는 횟수
 VIDEO_FRAMES = 12                # 영상 파트 → 장면 그림 최대 장수
-# tag 머리 → 권장 등급. 위에서부터 첫 일치. (대본 글쓰기 = 품질, 판독·분류 = 속도)
-TIERS = (
-    (r"^(draft|rewrite|narr|support|captions_line|style)", "opus"),
-    (r"^(asr|tts_asr|ov|ovedge|ma_tag|tag|db_nouns|fit|channel_find:sample|frame_text)", "haiku"),
-)
+# tag 머리 → 권장 등급. 사장님 10-19: "하이쿠·소넷은 완전 단순하고 품질에 영향 없는 것만, 품질에 닿는 건 오푸스가 거의 다".
+#   그래서 기본 = opus. 하이쿠는 결과물에 안 닿는다고 이름을 대고 적은 것만(지금은 없다 — 넣을 때 왜 품질 무관인지 같이 적는다).
+#   실측(고객 모드 1편 요청 58건): score 22 · ocr0 14 · support 6 · draft/rewrite 7 · bench 7 — 전부 품질에 닿는다.
+TIERS: tuple = ()
 
 
 def tier_of(tag: str) -> str:
     for pat, tier in TIERS:
         if re.search(pat, tag or ""):
             return tier
-    return "sonnet"
+    return "opus"
 
 
 def queue_dir() -> Path:
