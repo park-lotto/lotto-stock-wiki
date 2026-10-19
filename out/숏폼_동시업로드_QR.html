@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏폼 업로드 QR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--sub:#5d6470;--line:#e3e6eb;--auto:#0a7d4f;--hand:#b45309;--no:#9b1c1c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111317;--card:#1b1e24;--ink:#eef0f3;--sub:#9aa2ae;--line:#2c313a;--auto:#34d399;--hand:#fbbf24;--no:#f87171}}
+:root[data-theme="dark"]{--bg:#111317;--card:#1b1e24;--ink:#eef0f3;--sub:#9aa2ae;--line:#2c313a;--auto:#34d399;--hand:#fbbf24;--no:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Malgun Gothic",system-ui,sans-serif;line-height:1.5}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:19px;margin:34px 0 4px}
+.lead{color:var(--sub);margin:0 0 16px}
+.os{display:flex;gap:8px;margin:12px 0 4px}
+.os button{font:inherit;font-size:16px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.os button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.qr{background:#fff;padding:8px;border-radius:8px;width:176px;height:176px}
+.qr img,.qr canvas{width:160px!important;height:160px!important}
+.name{font-weight:700;font-size:17px;margin-top:10px}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:4px;border:1px solid currentColor}
+.auto{color:var(--auto)}.hand{color:var(--hand)}.no{color:var(--no)}
+.memo{font-size:13px;color:var(--sub);margin-top:6px}
+ol{padding-left:20px}ol li{margin:6px 0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:12px}
+.warn{border-color:var(--hand)}
+@media print{.os{display:none}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+<h1>숏폼 업로드 QR — 공기계 8대용</h1>
+<p class="lead">폰 카메라로 QR을 찍으면 앱 설치·가입 화면이 바로 열립니다. 먼저 폰 종류를 고르세요.</p>
+<div class="os"><button data-os="and" class="on">안드로이드(갤럭시)</button><button data-os="ios">아이폰</button></div>
+
+<h2>① 한 번 올리면 자동으로 같이 올라가는 곳 (6곳)</h2>
+<p class="lead">아래 ③ Metricool에 계정을 연결해 두면 영상 1개를 한 번에 예약·게시할 수 있습니다.</p>
+<div class="grid" id="g-auto"></div>
+
+<h2>② 한국 플랫폼 — 손으로 따로 올려야 하는 곳</h2>
+<p class="lead">동시 업로드 도구들이 이 플랫폼들은 지원하지 않습니다. 앱에서 직접 올립니다.</p>
+<div class="grid" id="g-hand"></div>
+
+<h2>③ 동시 업로드 도구</h2>
+<div class="grid" id="g-tool"></div>
+
+<h2>④ 가장 편한 가입 순서</h2>
+<div class="box">
+<ol>
+<li><b>폰마다 구글 계정 1개</b>를 먼저 만든다 → 유튜브는 이걸로 끝(유튜브 스튜디오 앱 로그인).</li>
+<li>인스타그램 가입 → <b>스레드·페이스북은 인스타 계정으로 이어서 가입</b>(같은 메타 계정이라 따로 만들 필요 없음).</li>
+<li>틱톡 가입 — 구글로 계속하기를 누르면 1번 계정으로 바로 됨.</li>
+<li>네이버 앱 → 클립 탭에서 첫 영상 올리기 → 클립 크리에이터 센터에서 지원(네이버 아이디 1개 필요).</li>
+<li>카카오톡 숏폼 스튜디오 가입 신청(심사 대기) · 당근 앱 가입.</li>
+<li>PC에서 <b>Metricool</b> 가입 → 유튜브·틱톡·인스타·스레드·페이스북·핀터레스트 연결 → 이후 영상은 Metricool에서 한 번에 게시.</li>
+<li>한국 플랫폼(네이버 클립 등)은 같은 영상 파일을 폰에서 직접 올린다.</li>
+</ol>
+</div>
+<div class="box warn">
+<b>⚠️ 주의</b> — 같은 영상을 여러 계정에 똑같이 올리면 틱톡·인스타·유튜브가 "중복·재업로드 콘텐츠"로 노출을 줄이거나 수익화를 막을 수 있습니다. 또 한 번에 여러 계정을 같은 와이파이·같은 정보로 만들면 묶여서 같이 정지될 수 있으니, <b>폰 1대 = 계정 1세트</b>로 나누고 하루에 몇 개씩 천천히 만드세요.
+</div>
+</main>
+<script>
+const P=id=>"https://play.google.com/store/apps/details?id="+id, A=id=>"https://apps.apple.com/kr/app/id"+id;
+const items={
+ auto:[
+  {n:"유튜브 스튜디오",and:P("com.google.android.apps.youtube.creator"),ios:A("888530356"),m:"구글 계정으로 로그인"},
+  {n:"틱톡",and:P("com.zhiliaoapp.musically"),ios:A("1235601864"),m:"구글로 계속하기"},
+  {n:"인스타그램 릴스",and:P("com.instagram.android"),ios:A("389801252"),m:"먼저 가입 — 스레드·페북이 따라옴"},
+  {n:"스레드",and:P("com.instagram.barcelona"),ios:A("6446901002"),m:"인스타 계정으로 로그인"},
+  {n:"페이스북 릴스",and:P("com.facebook.katana"),ios:A("284882215"),m:"인스타와 연결"},
+  {n:"핀터레스트",and:P("com.pinterest"),ios:A("429047995"),m:"구글로 가입"}],
+ hand:[
+  {n:"네이버 클립 (올리기)",and:P("com.nhn.android.search"),ios:A("393499958"),t:"hand",tl:"누구나 업로드",m:"네이버 앱 → 클립. 선발 안 돼도 업로드 가능"},
+  {n:"네이버 클립 크리에이터 (돈 받기)",web:"https://clipcreators.naver.com/",t:"hand",tl:"신청 → 선발",m:"클립 채널 있으면 지원. 26년 최대 2만 명 상시 선발, 월 최대 90만 원"},
+  {n:"네이버 쇼핑커넥트",web:"https://brandconnect.naver.com/",t:"hand",tl:"판매자 아니어도 됨",m:"상품 링크를 클립에 걸고 팔리면 수수료"},
+  {n:"네이버쇼핑 숏클립",web:"https://sell.smartstore.naver.com/",t:"no",tl:"판매자만",m:"스마트스토어 새싹 등급 이상 + 라이브 권한 필요"},
+  {n:"카카오톡 숏폼 스튜디오",web:"https://shortform-studio.kakao.com/",t:"hand",tl:"신청 → 카카오 심사",m:"카카오계정으로 가입 신청 → 심사 통과해야 업로드 권한. 만 14세 이상 개인·사업자"},
+  {n:"당근 스토리",and:P("com.towneers.www"),ios:A("1018769995"),t:"hand",tl:"누구나 업로드",m:"5초~1분 동네 숏폼. 가게는 비즈프로필로 올리면 '내 근처'에 노출"},
+  {n:"토스 쇼핑 크리에이터",and:P("viva.republica.toss"),ios:A("839333328"),t:"no",tl:"공식 안내 못 찾음",m:"이용 후기만 있음(영상 제출 → 심사 → 판매 수수료). 토스 앱에서 직접 확인 필요"}],
+ tool:[
+  {n:"Metricool",web:"https://metricool.com/ko/",t:"auto",tl:"무료 플랜 있음",m:"PC에서 가입 → ①의 6곳 연결 → 한 번에 게시"}]
+};
+let os="and";
+function draw(){
+ for(const k in items){
+  const g=document.getElementById("g-"+k);g.innerHTML="";
+  items[k].forEach(it=>{
+   const url=it.web||it[os];
+   const c=document.createElement("div");c.className="card";
+   const q=document.createElement("div");q.className="qr";c.appendChild(q);
+   const tl=it.tl||"자동 동시업로드",t=it.t||"auto";
+   c.insertAdjacentHTML("beforeend",`<div class="name">${it.name||it.n}</div><div class="tag ${t}">${tl}</div><div class="memo">${it.m}</div>`);
+   g.appendChild(c);
+   new QRCode(q,{text:url,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+  });
+ }
+}
+document.querySelectorAll(".os button").forEach(b=>b.onclick=()=>{os=b.dataset.os;document.querySelectorAll(".os button").forEach(x=>x.classList.toggle("on",x===b));draw();});
+draw();
+</script>
+</body>
+</html>
