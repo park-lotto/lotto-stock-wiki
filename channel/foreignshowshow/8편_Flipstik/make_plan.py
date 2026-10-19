@@ -66,8 +66,6 @@ LINES = [
      "fx": "초록 아래 화살표(판에 붙은 폰) — 벤치 QMJ 0.567~1.267 첫 시연 제품",
      "cuts": [(CLIP, 107.20, 109.009, crop(CLIP, 960), "'STICK YOUR PHONE HERE' 판(제품 시연 소품)에 폰을 탁 붙임(근접)"),
               (CLIP, 109.009, 109.95, crop(CLIP, 900), "분홍 블라우스 투자자가 봄(원본 반응 컷)")]},
-    {"id": "O4", "kind": "원음", "beat": "반응", "audio": (110.18, 110.75), "en": "Cool.", "sub": ["멋지네"], "style": "원음반응_크게", "facts": ["f3"],
-     "cuts": [(CLIP, 110.18, 110.75, crop(CLIP, 880), "마크가 웃으며 '쿨'(말하는 본인, 샷 110.18~110.81 — BBH 6.4초와 같은 컷)")]},
     {"id": "O5", "kind": "원음", "beat": "시연(핵심)", "audio": (110.75, 113.70), "en": "And when I say stick, I mean it really sticks.",
      "sub": ["붙는다는 건", "진짜 딱 붙는다는 거예요"], "facts": ["f3"], "cap_at": [110.78, 112.08],
      "fx": "초록 번쩍(장면 넘김) — 판 근접 컷 첫 프레임",
@@ -296,6 +294,7 @@ def doc_update():
     S["form"] = "방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 틀 = preset 「샤크탱크_검정띠2줄」"
     S["facts"] = {k: {"text": v[0], "url": f"https://www.youtube.com/watch?v={CLIP}", "kind": v[1]} for k, v in FACTS.items()}
     S["dropped"] = ["BBH 1.0~6.4 'paper thin device … on the back of your phone' 원음 → 나레 N1 로(같은 사실, 컷 길이 맞춤)",
+                    "O4 마크 'Cool.'(110.18~110.75, BBH 6.4) — 길이 때문에 뺌(페이블 10-19)",
                     "BBH 16.7~22 'It's not just glass … textured tile surface' 원음 — 길이 때문에 뺌",
                     "'comes off without damaging the surface' — 받아쓰기 갈림('without residue') → 나레 N2 는 '쏙 떨어진다'까지만",
                     "케빈 'Now you only have one shark. I'm out.'(503.68~) — 0초 훅(501.85~503.30)과 3초 안 → 재사용 검사(B13) 때문에 뺌, 끝 나레 N7 '케빈 제안은 날아가고'로",

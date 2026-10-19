@@ -84,6 +84,7 @@
  },
  "dropped": [
   "BBH 1.0~6.4 'paper thin device … on the back of your phone' 원음 → 나레 N1 로(같은 사실, 컷 길이 맞춤)",
+  "O4 마크 'Cool.'(110.18~110.75, BBH 6.4) — 길이 때문에 뺌(페이블 10-19)",
   "BBH 16.7~22 'It's not just glass … textured tile surface' 원음 — 길이 때문에 뺌",
   "'comes off without damaging the surface' — 받아쓰기 갈림('without residue') → 나레 N2 는 '쏙 떨어진다'까지만",
   "케빈 'Now you only have one shark. I'm out.'(503.68~) — 0초 훅(501.85~503.30)과 3초 안 → 재사용 검사(B13) 때문에 뺌, 끝 나레 N7 '케빈 제안은 날아가고'로",
@@ -224,35 +225,6 @@
       "color": "분홍",
       "whole": false,
       "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     }
-    ]
-   },
-   {
-    "id": "O4",
-    "kind": "원음",
-    "fn": "반응",
-    "facts": [
-     "f3"
-    ],
-    "caps": [
-     "멋지네"
-    ],
-    "span": [
-     110.18,
-     110.75
-    ],
-    "orig_en": "Cool.",
-    "text": "멋지네",
-    "style": "원음반응_크게",
-    "emph": [
-     {
-      "cap": "멋지네",
-      "span": "멋지네",
-      "color": "파랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      }
