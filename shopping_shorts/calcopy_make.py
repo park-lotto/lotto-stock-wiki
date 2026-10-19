@@ -38,7 +38,10 @@ AI_WORDS = re.compile(r"(\bai\b|에이아이|인공지능|합성|딥페이크|�
 N_CANDIDATES = 10
 STEPS_TO_PLAN = ["bench", "score", "assign", "script", "source", "plan"]
 ADMINS = ("페이블", "사장님", "관리자")            # approve(TTS·렌더 = 돈·시간) 는 이 이름만 — API 는 관리자 세션이 "관리자"로 부른다
-PACK_ROOT = Path("C:/숏템_칼카피/packs")
+# 고객 PC 모드(관제 234): 고객 설치팩이 CALCOPY_CUSTOMER_MODE=1 로 띄운다 — TTS·렌더 비용이 고객 본인 키·PC 라 고객("고객")이 사인한다.
+CUSTOMER_MODE = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
+CUSTOMER = "고객"
+PACK_ROOT = Path(os.environ.get("CALCOPY_PACK_ROOT") or "C:/숏템_칼카피/packs")   # 고객 PC = 설치 폴더 자산(관제 234)
 VOICES = ROOT / "shopping_shorts" / "assets" / "voice_presets.json"
 CUT_DIFF_MIN = 0.5                                 # 응용: 컷(재료 영상·초)이 이 비율 이상 달라야 '컷 다름'
 MADE_STATES = ("plan_review", "producing", "final_review", "passed")
@@ -52,7 +55,9 @@ class MakeError(Exception):
 
 # ── 팩·프리셋 ──────────────────────────────────────────────────────────────
 def packs_path() -> Path:
-    """실파일: 로컬 C:/숏템_칼카피/packs(있으면) → 데이터 폴더(서버) → 저장소 기본값(읽기만)."""
+    """실파일: CALCOPY_PACKS(고객 PC — 숏템 웹 프로필에서 만든 팩) → 로컬 C:/숏템_칼카피/packs(있으면) → 데이터 폴더(서버) → 저장소 기본값(읽기만)."""
+    if os.environ.get("CALCOPY_PACKS"):
+        return Path(os.environ["CALCOPY_PACKS"])
     if LOCAL_PACKS.parent.is_dir():
         return LOCAL_PACKS
     return CT.base_dir() / "my_packs.json"
@@ -111,6 +116,14 @@ def _frames(frame: dict) -> list[dict]:
     return frame["frames"] if isinstance(frame.get("frames"), list) else [frame]
 
 
+DISCLOSURE_WORDS = ("광고", "협찬", "유료", "AD", "PPL")   # 광고 표시 글(썰풀다 brand 자리 '[광고]' 등)
+
+
+def is_disclosure(t) -> bool:
+    """광고·협찬 표시 글인가 — 판단 한 곳(서버 channel_profile 도 이것을 따른다)."""
+    return isinstance(t, str) and any(w in t for w in DISCLOSURE_WORDS)
+
+
 def merge_preset_pack(preset: str, pack: dict) -> dict:
     """판단 한 곳: 프리셋 구조 + 내 팩 키트 → 제작 설정. 틀 설명서에 brand/text 덮어쓰기, 제작 인자·재료 기본값에 tts/meme/sfx/bgm.
     바꾼 자리는 applied 에 한 줄씩(무엇을 무엇으로) — 계획.md·보드가 그대로 보여 준다."""
@@ -121,7 +134,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
     brand, text, cap = pack.get("brand") or {}, pack.get("text") or {}, (pack.get("text") or {}).get("caption") or {}
     if frame is not None:
         frame = copy.deepcopy(frame)
-        old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")}
+        old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")
+                     and not is_disclosure(L.get("text"))}
         new_name = brand.get("channel_name")
         colors = brand.get("colors") or {}
         for fr in _frames(frame):
@@ -129,7 +143,9 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
             for L in fr.get("layers", []):
                 if L.get("kind") == "text":
                     role = L.get("role")
-                    if new_name and role == "brand":
+                    if new_name and role == "brand" and is_disclosure(L.get("text")):
+                        pass   # 광고 표시 자리는 채널명으로 덮지 않는다(표시 의무, 관제 234 — 10-19 렌더에서 '[광고]' 가 '내 채널'로 바뀐 것을 눈으로 확인)
+                    elif new_name and role == "brand":
                         applied.append(f"{fid} 채널명 '{L.get('text')}' → '{new_name}'"); L["text"] = new_name
                     elif new_name and isinstance(L.get("text"), str) and any(o and o in L["text"] for o in old_names):
                         before = L["text"]
@@ -142,7 +158,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                         if text.get("caption_font") and L.get("font") != text["caption_font"]:
                             applied.append(f"{fid} 자막 글꼴 {L.get('font')} → {text['caption_font']}"); L["font"] = text["caption_font"]
                         if "outline_px" in cap:
-                            L["outline"] = {"px": cap["outline_px"], "rgb": (L.get("outline") or {}).get("rgb") or [0, 0, 0]} if cap["outline_px"] else None
+                            L["outline"] = ({"px": cap["outline_px"], "rgb": list(cap.get("outline_rgb") or (L.get("outline") or {}).get("rgb") or [0, 0, 0])}
+                                            if cap["outline_px"] else None)   # 색: 고객이 고른 색 → 틀 색 → 검정(10-19 검정 글자+검정 외곽선이 뭉개진 그림 실측)
                             applied.append(f"{fid} 자막 외곽선 {cap['outline_px']}px")
                         if cap.get("enter"):
                             L["enter"] = None if cap["enter"] == "none" else cap["enter"]
@@ -153,6 +170,13 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                     c = c.get(fid) if isinstance(c, dict) else c
                     if c:
                         applied.append(f"{fid} 머리 띠 색 {L.get('rgb')} → {c}"); L["rgb"] = list(c)
+        tpl = pack.get("template")
+        if isinstance(tpl, dict) and tpl.get("id"):          # 숏템메이커 템플릿으로 그리기(관제 234 5판) — 그리는 판단은 to_snapshot.template_snapshot 한 곳
+            ad = next((L.get("text") for fr in _frames(frame) for L in fr.get("layers", [])
+                       if L.get("kind") == "text" and L.get("role") == "brand" and is_disclosure(L.get("text"))), None)
+            # 템플릿에는 프리셋의 채널명 칸·[광고] 칸이 없다 — 고객 채널명과 광고 표시(표시 의무)를 템플릿 칸으로 옮겨 달라고 함께 싣는다
+            frame["shortem_template"] = {"mode": tpl.get("mode"), "id": tpl["id"], "channel": str(new_name or ""), "ad": ad}
+            applied.append(f"화면 템플릿 → 숏템메이커 {tpl.get('mode')}/{tpl['id']}")
     tts, bgm = pack.get("tts") or {}, pack.get("bgm") or {}
     remake_args = {}
     if tts.get("voice_id"):
@@ -409,6 +433,8 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
             f2, title = (deps.get("ref_facts") or ref_facts)(ref_url)
             facts = {**f2, **facts}
             src = {"via": "참고 URL", "url": ref_url}
+            if not is_youtube(ref_url):
+                src["kind"] = "참고영상"      # 유튜브 밖은 검색할 곳이 없다 — 그 영상이 곧 재료(worker_steps.step_source)
             topic = topic or title
         if facts:
             src["facts_n"] = len(facts)
@@ -425,6 +451,44 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
     return _save(S, data_dir)
 
 
+PRESCORE_N = int(os.environ.get("CALCOPY_PRESCORE_N") or 5)
+PRESCORE_MIN = int(os.environ.get("CALCOPY_PRESCORE_MIN") or 3)     # 이만큼 점수 난 후보가 모일 때까지
+PRESCORE_ROUNDS = int(os.environ.get("CALCOPY_PRESCORE_ROUNDS") or 3)  # 찾기를 더 돌리는 상한(바퀴)
+
+
+def _prescore(S: dict, rows: list[dict], data_dir=None, deps=None) -> list[dict]:
+    """고객 PC 모드(관제 234): 고객 PC 창고에는 미리 돌아 둔 워커가 없다 — 찾기만 된(found) 후보를 그대로 보이면
+    점수 없는 시사 뉴스가 섞인다(10-19 실측: 빈 창고에서 '스벅 일베놀이 근황'·KNN 뉴스가 점수 없이 후보로).
+    그래서 같은 워커 단계(bench→score)로 점수를 매기고, **점수가 난 것만** 보여 준다(bench 가 '무관 영상'으로 거른 것은 뺀다).
+    모자라면 찾기를 PRESCORE_ROUNDS 바퀴까지 더 돈다. AI 는 후보당 2건(고객 Claude)."""
+    failed: set = set()
+    log = S.setdefault("log", [])
+
+    def live():
+        return [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"]
+                if t["state"] in ("found", "benched", "scored") and not t.get("stalled") and t["id"] not in failed]
+    for rnd in range(PRESCORE_ROUNDS + 1):
+        cur = live()
+        if sum(1 for t in cur if t["state"] == "scored") >= PRESCORE_MIN:
+            break
+        todo = [t for t in cur if t["state"] in ("found", "benched")][:PRESCORE_N]
+        if not todo:
+            if rnd == PRESCORE_ROUNDS:
+                break
+            w = _worker(S, data_dir, deps)
+            w.find_every = 1
+            w.find()
+            log.append(f"[후보 점수] {rnd + 1}바퀴: 점수 난 후보가 {PRESCORE_MIN}개 미만 — 소재를 더 찾았다")
+            continue
+        for t in todo:
+            S2 = {**S, "topic_id": t["id"], "log": log}
+            t2, err = _run_until(S2, ("scored",), data_dir, deps, max_ticks=3)
+            if err or t2["state"] != "scored":
+                failed.add(t["id"])
+                log.append(f"[후보 점수] #{t['id']} 뺌: {str(err)[:160]}")
+    return [t for t in live() if t["state"] == "scored"]
+
+
 def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
     rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"] if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]
     if len(rows) < N_CANDIDATES:                       # 모자라면 그 자리에서 찾기(검색만 — 제미나이 0, 유튜브는 장부 한도 뒤)
@@ -433,6 +497,8 @@ def candidates(S: dict, data_dir=None, deps: dict | None = None) -> list[dict]:
         w.find()
         rows = [t for t in CT.board(category=S["category"], limit=2000, data_dir=data_dir)["topics"]
                 if t["state"] in ("found", "benched", "scored") and not t.get("stalled")]     # 멈춘(stalled) 소재는 골라도 못 돈다
+    if CUSTOMER_MODE:
+        rows = _prescore(S, rows, data_dir, deps)
     rows.sort(key=lambda t: -((t.get("score") or {}).get("total") or -1))
     made = made_counts(data_dir)
     return [{"n": i + 1, **_candidate(t, data_dir), "made": made.get(t["id"], 0)} for i, t in enumerate(rows[:N_CANDIDATES])]
@@ -558,12 +624,29 @@ def _start_reuse(S: dict, src_id: int, data_dir, deps) -> dict:
     return choose(S["sid"], 1, data_dir=data_dir, deps=deps)
 
 
+def is_youtube(url: str) -> bool:
+    return bool(re.search(r"(?:youtube\.com/(?:shorts/|watch\?v=)|youtu\.be/)[\w-]{11}", url or ""))
+
+
+def _ref_facts_other(url: str) -> tuple[dict, str]:
+    """유튜브 밖 참고 영상 → 근거(제목·채널·통계). 읽기 = media_download.probe_grab_meta(고객 PC 는 고객 로그인 쿠키)."""
+    from shopping_shorts import media_download as MD
+    d = MD.probe_grab_meta(url)
+    if not d.get("title"):
+        raise MakeError(f"참고 영상을 못 읽음(계정 연결이 필요할 수 있다): {url}")
+    facts = {"r1": {"text": f"(참고 영상 글) {str(d['title'])[:300]}", "url": url}}
+    stats = ", ".join(f"{k} {d[k]}" for k in ("views", "likes", "comments") if d.get(k) is not None)
+    if d.get("channel") or stats:
+        facts["r2"] = {"text": f"(참고 영상 정보) 올린 곳 {d.get('channel') or '-'} · {stats}".strip(" ·"), "url": url}
+    return facts, str(d["title"]).splitlines()[0][:80]
+
+
 def ref_facts(url: str) -> tuple[dict, str]:
     """참고 영상 → 근거(제목·설명·댓글 상위). 받아쓰기는 아직 안 붙였다(무료 받아쓰기 도구 연결은 다음 단계)."""
     from tools.calcopy.engine import topic_find as TF
     vid = re.search(r"(?:shorts/|v=|youtu\.be/)([\w-]{11})", url)
-    if not vid:
-        raise MakeError(f"유튜브 영상 주소가 아니다: {url}")
+    if not vid:                                         # 인스타·틱톡·쓰레드 등 — 숏템메이커와 같은 받기 주인(media_download)이 읽는다(관제 234)
+        return _ref_facts_other(url)
     d = TF.yt_detail(vid.group(1), 30)
     if d.get("failed"):
         raise MakeError(f"참고 영상 못 읽음: {d['failed'][:200]}")
@@ -588,6 +671,10 @@ def _worker(S: dict, data_dir=None, deps: dict | None = None):
         extra["keywords"] = chn["keywords"]           # 찾기 검색 명사 — 워커 가동표와 같은 파일
     if chn.get("source_kind"):
         extra["source_kind"] = chn["source_kind"]
+    if chn.get("channels_file"):
+        extra["channels_file"] = str(ROOT / chn["channels_file"])   # 같은 결 채널 목록(채널 기준 찾기, 관제 234)
+    if os.environ.get("CALCOPY_ORIGINALS_FILE") or chn.get("originals_file"):   # 해외 원본 채널 목록 — 고객이 준 채널이면 환경변수로
+        extra["originals_file"] = os.environ.get("CALCOPY_ORIGINALS_FILE") or str(ROOT / chn["originals_file"])
     extra["materials_hook"] = lambda skel: draft_materials(skel, mk["materials_defaults"], deps.get("assets"))
     w = Worker(deps.get("api") or LocalApi(data_dir), S["category"], "bench", S["slug"], name=f"make-{S['sid']}",
                out_root=_sdir(data_dir) / S["sid"] / "work", steps=deps.get("steps") or __import__("tools.calcopy.engine.worker_steps", fromlist=["x"]),
@@ -651,18 +738,57 @@ def choose(sid: str, n: int, data_dir=None, deps: dict | None = None) -> dict:
 
 def approve(sid: str, by: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
     """OK → TTS 1회·렌더. 관리자(ADMINS)만 — 돈(타입캐스트)·시간이 드는 첫 자리. 응용이면 형제 제작물과 실제로 다른지 다시 판다."""
-    if by not in ADMINS:
+    if by not in ADMINS and not (CUSTOMER_MODE and by == CUSTOMER):
         raise MakeError(f"승인은 관리자({'/'.join(ADMINS[:2])})만 — by={by!r}", 403)
     S = _load(sid, data_dir)
     t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"]
-    if t["state"] != "plan_review":
+    # 고객 모드: 이미 사인한 편이 렌더 중 멈췄으면(producing·세션 stopped/failed) 사인을 다시 받지 않고 렌더만 다시(관제 234 —
+    #   10-19 실측: 렌더 실패 뒤 '선검수 자리가 아니다(지금 producing)'로 그 편을 다시 만들 길이 없었다)
+    retry = CUSTOMER_MODE and t["state"] == "producing" and S.get("state") in ("stopped", "failed") and S.get("approved_by")
+    if t["state"] != "plan_review" and not retry:
         raise MakeError(f"선검수 자리가 아니다(지금 {t['state']})", 409)
     bad = variant_check(S, data_dir, final=True)
     if bad:
         raise MakeError("승인 거절(응용 중복): " + " / ".join(bad), 409)
-    CT.review(S["topic_id"], "plan_review", "pass", by=f"만들기 입구 · {by}", data_dir=data_dir)
+    if not retry:
+        CT.review(S["topic_id"], "plan_review", "pass", by=f"만들기 입구 · {by}", data_dir=data_dir)
     S["state"] = "producing"
     S["approved_by"] = by
+    _save(S, data_dir)
+
+    def job():
+        S2 = _load(sid, data_dir)
+        t2, err = _run_until(S2, ("final_review",), data_dir, deps)
+        S3 = _load(sid, data_dir)
+        S3["log"] = S2["log"]
+        S3.update(state="final_review" if t2["state"] == "final_review" else "stopped", error=err, topic_state=t2["state"])
+        _save(S3, data_dir)
+    _bg(S, job, data_dir, deps)
+    return _load(sid, data_dir)
+
+
+def restyle(sid: str, by: str | None = None, data_dir=None, deps: dict | None = None) -> dict:
+    """완성본 고치기(관제 234 5판, 사장님 10-19 "완성본을 보고 거기서 편집") — 지금 팩(고객 PC 설정)으로 겉모습만 다시 만든다.
+    대본·재료·계획은 그대로. 목소리는 목소리·빠르기 칸이 바뀐 때만 새로(고객 키 비용), 아니면 있던 목소리 파일 그대로.
+    판단: 합치기 = merge_preset_pack · 렌더 = worker_steps.step_produce(다시 '만들기' 자리로 되돌려 같은 길을 탄다)."""
+    if by not in ADMINS and not (CUSTOMER_MODE and by == CUSTOMER):
+        raise MakeError(f"다시 만들기는 관리자·고객만 — by={by!r}", 403)
+    S = _load(sid, data_dir)
+    t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"] if S.get("topic_id") else {}
+    if t.get("state") != "final_review":
+        raise MakeError(f"완성본 자리가 아니다(지금 {t.get('state')})", 409)
+    cfg = merge_preset_pack(S["preset"], _patched(load_packs()[str(S["pack"])], S.get("pack_patch")))
+    mdir = Path(S["merged_preset"])
+    old = json.loads((mdir / "make.json").read_text(encoding="utf-8")).get("remake_args") or {}
+    write_merged(cfg, mdir)
+    new = cfg["remake_args"]
+    if any(old.get(k) != new.get(k) for k in ("voice", "tempo")):
+        narr = _worker(S, data_dir, deps).ctx.workdir(t) / "제작" / "narr_full.mp3"
+        if narr.exists():
+            narr.unlink()                                     # 목소리 칸이 바뀌었다 — 새로 만든다(step_produce 가 --make-tts)
+    CT.review(S["topic_id"], "final_review", "reject", by=f"만들기 입구 · {by}", reason="설정을 바꿔 겉모습만 다시 만든다(restyle)",
+              back_to="producing", data_dir=data_dir)
+    S.update(state="producing", applied=cfg["applied"], restyles=S.get("restyles", 0) + 1)
     _save(S, data_dir)
 
     def job():

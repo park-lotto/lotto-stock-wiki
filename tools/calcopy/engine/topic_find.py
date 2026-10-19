@@ -288,8 +288,7 @@ def yt_detail(vid: str, n_comments: int = 50) -> dict:
 
 # 라이브 발굴 DB(읽기 전용) — 해외 참고 채널 표 overseas_ref_channel(category '해외반응', 제품 쪽 키워드)의 대표 영상(top_video·top_views).
 # 10-16 실측: reel_history 제품 카테고리는 한글 캡션이 아닌 행이 거의 다 '빈 캡션 인스타'라 해외 계정 판별이 안 됐다 → 해외 표를 쓴다.
-REF_SSH = "ubuntu@3.35.251.172"
-REF_KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")  # PC 마다 홈이 다르다(CH·TheRose)
+# 서버 접속 정보(REF_SSH·REF_KEY)는 engine/_server_access.py — 고객 설치팩 묶음에 안 간다(관제 234). 이 길은 우리 PC 전용.
 REF_DB = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db"
 PRODUCT_KW = ("gadget", "gadgets", "innovative gadgets", "useful inventions", "cleaning tools", "outdoor tools", "home improvement",
               "diy", "tech", "unboxing", "creative", "kitchen")   # overseas_ref_channel.keywords 10-16 실측 분포 중 제품 쪽
@@ -313,6 +312,10 @@ print(json.dumps(rows, ensure_ascii=False))
 
 def db_top(n: int = 20) -> list[dict]:
     """reference.db overseas_ref_channel — 해외반응·제품 키워드 채널의 대표 영상 n개(조회 순). ssh 로 읽기 전용(mode=ro)."""
+    try:
+        from tools.calcopy.engine._server_access import REF_KEY, REF_SSH
+    except ImportError:
+        raise RuntimeError("발굴 DB 길은 이 설치본에 없다(우리 PC 전용) — 채널·영상 주소로 찾으세요") from None
     r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", REF_KEY, REF_SSH, "python3", "-", str(n), ",".join(PRODUCT_KW)],
                        input=_DB_PY.replace("DBPATH", REF_DB), capture_output=True, encoding="utf-8", errors="replace", timeout=90)
     if r.returncode != 0:
@@ -640,6 +643,65 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
     return cands, failed
 
 
+def channel_of_video(url: str | None) -> str | None:
+    """영상 주소 → 그 채널 id(UC…) — 해외원본_채널.json 유튜브 행은 채널 주소 없이 예시 영상만 있다(10-19 실측 75행)."""
+    if not url:
+        return None
+    try:
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--print", "%(channel_id)s", url],
+                           capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    cid = (r.stdout or "").strip().splitlines()[-1:] or [""]
+    return cid[0] if cid[0].startswith("UC") else None
+
+
+CHANNEL_VERDICTS = ("확정",)          # 같은결_채널.json 의 verdict 가 이 말로 시작하는 채널만 소재 출처로
+CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 이상 = 그 채널에서 '터진' 편
+
+
+def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=print, per_channel: int = 30,
+                       stats=None) -> tuple[list[dict], list[dict]]:
+    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 칼카피한 채널 목록을 넘기고 어떻게 찾아나가는지").
+    같은 결 채널(channel_find 가 판정한 목록 — 확정만)의 최근 쇼츠에서 **그 채널 조회 중앙값의 1.5배 이상** 터진 편을
+    조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
+    stats = channel_find.channel_stats(시험에서 가짜). 반환 (후보, 실패)."""
+    if stats is None:
+        from tools.calcopy.engine.yt_channel import channel_stats as stats   # 판정 노하우(channel_find) 없이 채널 읽기만
+    d = json.loads(Path(channels_file).read_text(encoding="utf-8"))
+    rows = (d.get("channels") if isinstance(d, dict) else d) or []
+    originals = any("verdict" not in c for c in rows)      # 해외원본_채널.json(판정 칸 없음) = 소재+재료 채널
+    chans = [c for c in rows if (c.get("platform", "youtube") == "youtube") and
+             (originals or str(c.get("verdict") or "").startswith(CHANNEL_VERDICTS))]
+    pool, failed = [], []
+    for c in chans:
+        ref = c.get("channel_id") or c.get("handle") or c.get("url") or channel_of_video(((c.get("examples") or [{}])[0]).get("url"))
+        st = stats(ref, per_channel) if ref else None
+        if not st or not st.get("median_views"):
+            failed.append({"where": f"channel {c.get('name') or ref}", "why": "채널 실측 실패"})
+            continue
+        med = st["median_views"]
+        for v in st.get("videos") or []:
+            if not v.get("id") or v["id"] in seen_ids or not isinstance(v.get("views"), (int, float)):
+                continue
+            r = v["views"] / med if med else 0
+            if r >= CHANNEL_MIN_RATIO:
+                pool.append({"id": v["id"], "title": v.get("title") or "", "views": v["views"], "ratio": round(r, 2),
+                             "channel": st.get("name") or c.get("name"), "url": f"https://www.youtube.com/shorts/{v['id']}"})
+    pool.sort(key=lambda v: (-v["ratio"], -v["views"]))
+    cands: list[dict] = []
+    for v in pool:
+        t = _clean_title(v["title"])
+        if not t or any(overlap(t, [{"what": "", "text": c["topic"]}])["score"] >= 0.6 for c in cands):
+            continue
+        cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
+                      "source": {"kind": "해외원본" if originals else "채널", **v}})
+        if len(cands) >= n:
+            break
+    log(f"[채널 찾기] 채널 {len(chans)}개 → 터진 편 {len(pool)}개 → 후보 {len(cands)}개 · 실패 {len(failed)}")
+    return cands, failed
+
+
 def date_filter(pool: list[dict], months: int | None, net: dict, limits: "Limits", failed: list) -> list[dict]:
     """최근 N개월만 — 조회 상위 DATE_PROBE 편의 올린 날짜를 받아 로컬에서 거른다(날짜 모르면 뺀다, 개수는 failed 에).
     날짜 통로가 없으면(시험 가짜 네트워크) 거르지 않고 그 사실을 남긴다."""
@@ -756,6 +818,10 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     if fb:   # 검색 통로 기록 — '같은 검색어 1편/0편' 들쭉날쭉의 원인(sp 멈춤 → ytsearch 폴백)을 남긴다
         failed.append(f"검색: {fb}")
     lst = [v for v in lst if v.get("id")]   # 폴백 실패 표식({id: None})은 상세 조회하지 않는다(10-16 실측: yt_detail(None) 150초 대기)
+    src = c.get("source") or {}
+    seed = src.get("id") if src.get("kind") in ("채널", "해외원본") else None
+    if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
+        lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
     for v in lst[:n_videos]:
         try:
             limits.take(1, f"벤치 상세 {v['id']}")
@@ -770,7 +836,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         if off:
             failed.append(f"{v['id']}: 공식·광고 제외 — {off}")
             continue
-        ok, why = relevance(d, c.get("key") or c["query"], c["topic"])
+        ok, why = (True, "채널 원본 편") if v["id"] == seed else relevance(d, c.get("key") or c["query"], c["topic"])
         if not ok:
             failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]}) — {why}")
             continue

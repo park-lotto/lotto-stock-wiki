@@ -709,7 +709,7 @@ def _is_direct_video(u):
 
 def _is_pinterest_host(host):
     """핀터레스트 주소인가 — 앱 공유 링크(pin.it)와 나라별 주소까지(2026-09-24 고객 "담기가 안 된다")."""
-    from shopping_shorts.app import _GRAB_DOMAINS   # 지연 import(순환 회피) — 목록은 한 곳에만 둔다
+    from shopping_shorts.grab_domains import _GRAB_DOMAINS   # 목록은 한 곳(grab_domains) — app 을 부르지 않는다(회원 PC 엔진엔 app 이 없다)
     doms = next((d for n, d in _GRAB_DOMAINS if n == "pinterest"), ("pinterest.com",))
     host = (host or "").lower()
     return any(host == d or host.endswith("." + d) for d in doms)

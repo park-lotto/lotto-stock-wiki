@@ -72,9 +72,13 @@ def main(argv=None):
     p = sp.add_parser("approve")
     p.add_argument("sid")
     p.add_argument("--by", required=True)
+    rs = sp.add_parser("restyle", help="완성본을 지금 설정(팩)으로 겉모습만 다시(관제 234)")
+    rs.add_argument("sid")
+    rs.add_argument("--by", required=True)
     r = sp.add_parser("reject")
     r.add_argument("sid")
     r.add_argument("reason")
+    ap.add_argument("--json", action="store_true", help="표 대신 세션 JSON 한 줄(고객 PC MCP 가 읽는다, 관제 234)")
     x = ap.parse_args(argv)
     try:
         if x.cmd == "start":
@@ -88,22 +92,40 @@ def main(argv=None):
             if x.channel_name:
                 patch["brand"] = {"channel_name": x.channel_name}
             S = MK.start(x.preset, x.pack, topic=x.topic, ref_url=x.ref, facts=x.facts, reuse_of=x.reuse_of, pack_patch=patch or None, deps=DEPS)
+            if x.json:
+                print(json.dumps(MK.status(S["sid"]), ensure_ascii=False, default=str))
+                return 0
             _table(S)
             if S["state"] != "candidates":
                 _status(MK.status(S["sid"]))
         elif x.cmd == "choose":
             MK.choose(x.sid, x.n, deps=DEPS)
+            if x.json:
+                print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
+                return 0
             _status(MK.status(x.sid))
         elif x.cmd == "status":
+            if x.json:
+                print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
+                return 0
             _status(MK.status(x.sid))
         elif x.cmd == "approve":
             MK.approve(x.sid, by=x.by, deps=DEPS)
+            if x.json:
+                print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
+                return 0
+            _status(MK.status(x.sid))
+        elif x.cmd == "restyle":
+            MK.restyle(x.sid, by=x.by, deps=DEPS)
+            if x.json:
+                print(json.dumps(MK.status(x.sid), ensure_ascii=False, default=str))
+                return 0
             _status(MK.status(x.sid))
         elif x.cmd == "reject":
             MK.reject(x.sid, x.reason, deps=DEPS)
             _status(MK.status(x.sid))
     except MK.MakeError as e:
-        print(f"거절({e.code}): {e.msg}")
+        print(json.dumps({"error": e.msg, "code": e.code}, ensure_ascii=False) if x.json else f"거절({e.code}): {e.msg}")
         return 2
     return 0
 

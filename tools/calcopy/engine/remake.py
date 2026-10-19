@@ -56,6 +56,26 @@ def download(vid: str, out: Path) -> Path | None:
     return f if f.exists() else None
 
 
+def download_url(url: str, out: Path) -> Path | None:
+    """유튜브 밖 영상 한 편 → out/v_<주소 지문>.mp4. 받기는 숏템메이커와 같은 주인(media_download.download_any — 플랫폼별
+    쿠키·세션·폴백). 고객 PC 는 고객이 연결한 로그인(shortem_login)을 쓴다."""
+    import hashlib
+    import shutil
+    from shopping_shorts import media_download as MD
+    f = out / f"v_{hashlib.sha1(url.encode()).hexdigest()[:11]}.mp4"
+    if f.exists():
+        return f
+    tmp = out / "_받기"
+    try:
+        got, _ = MD.download_any(url, str(tmp))
+        shutil.move(got, f)
+    except Exception as e:  # noqa: BLE001 — 이유를 남기고 그 편만 뺀다(후보 0이면 step_source 가 멈춘다)
+        print(f"[재료] 받기 실패 {url}: {str(e)[-300:]}", file=sys.stderr)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return f if f.exists() else None
+
+
 def contact_sheet(videos: list[Path], dst: Path, per: int = 6, rows: int = 9):
     """후보마다 한 줄(고르게 per 장 + 시각) — 원본 컷과 눈으로 대조할 시트."""
     from PIL import Image, ImageDraw
@@ -108,12 +128,17 @@ def orig_grid(J: dict, spec: dict, dst: Path):
 def gather_candidates(J: dict, spec: dict, queries: list[str], out: Path) -> Path:
     cand = out / "재료후보"; cand.mkdir(parents=True, exist_ok=True)
     shots = orig_grid(J, spec, cand)
-    ids, seen = [], set()
+    ids, seen, urls = [], set(), []
     for q in queries:
-        for vid in search_shorts(q):
+        if q.startswith("url:"):                       # url:<주소> = 유튜브 밖 영상(인스타·틱톡…) 그 편 — 받기 주인 media_download
+            f = download_url(q[4:].strip(), cand)
+            if f and f.name not in seen:
+                seen.add(f.name); urls.append(f)
+            continue
+        for vid in ([q[3:].strip()] if q.startswith("id:") else search_shorts(q)):   # id:<영상> = 그 편을 바로 후보로(채널 기준 소재의 원본 편, 관제 234)
             if vid not in seen:
                 seen.add(vid); ids.append(vid)
-    got = [f for f in (download(v, cand) for v in ids) if f]
+    got = urls + [f for f in (download(v, cand) for v in ids) if f]
     contact_sheet(sorted(got), cand)
     skel = {"_note": "remake.py 가 만든 뼈대 — 후보시트_*.jpg 를 원본컷.jpg 와 대조해 shots[*].src/ss/crop_y/status 를 채운다(판단 자리)",
             "cand_dir": str(cand), "queries": queries, "downloaded": len(got),

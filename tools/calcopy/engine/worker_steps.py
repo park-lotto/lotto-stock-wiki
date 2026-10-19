@@ -153,7 +153,10 @@ def step_find(topic, ctx: Ctx) -> dict:
     """소재 후보 모으기 → 새 행. 검색어 만들기·통로는 topic_find.run 앞부분과 **같은 함수**를 같은 순서로 부른다
     (해외영상+검색어 없음 = db_candidates, 그 밖 = target_queries+gather). ★엔진에 find_candidates() 가 생기면 그걸 부르고 이 순서는 지운다."""
     TF = _engine("topic_find")
-    if hasattr(TF, "find_candidates"):
+    if ctx.extra.get("originals_file") or ctx.extra.get("channels_file"):   # 채널 기준 찾기(관제 234) — 해외 원본 채널(소재+재료)이 있으면 그것, 없으면 같은 결 한국 채널
+        top = TF._read_json(_preset(TF, ctx, None)["chdir"] / "원자료" / "top50.json") or []
+        cands, failed = TF.channel_candidates(ctx.extra.get("originals_file") or ctx.extra["channels_file"], ctx.find_n, {v["id"] for v in top}, ctx.log)
+    elif hasattr(TF, "find_candidates"):
         r = TF.find_candidates(ctx.preset_of(None), ctx.find_n, keywords=ctx.extra.get("keywords"), net=_net(TF, ctx), llm=_llm(TF, ctx), log=ctx.log)
         cands, failed = r["candidates"], r["failed"]
     else:
@@ -265,7 +268,16 @@ def step_source(topic, ctx: Ctx) -> dict:
     TF = _engine("topic_find")
     _engine("remake")
     cmd, out = _remake_args(TF, ctx, topic)
-    q = (topic.get("source") or {}).get("query") or topic.get("name") or ""
+    src = topic.get("source") or {}
+    q = src.get("query") or topic.get("name") or ""
+    # ★채널 기준 소재의 원본 편(한국 채널 편집본)은 재료로 쓰지 않는다 — 10-19 실측: 잇템로그 편집본을 재료로 넣자
+    #   그 채널의 한국어 자막('아.. 역겨워;;')이 화면에 박힌 채 계획 시트에 들어갔다. 현장썰 재료 = 해외 원본(다음: 원본 찾기).
+    if src.get("kind") == "채널":
+        q = " ".join(TF.core_terms(topic.get("name") or "")[:3]) or q
+    elif src.get("kind") == "해외원본" and src.get("id"):   # 해외 원본 채널에서 터진 편 = 그 편이 곧 재료(자막 없는 원본, 관제 234)
+        q = f"id:{src['id']}"
+    elif src.get("kind") == "참고영상" and src.get("url"):  # 고객이 준 인스타·틱톡 등 영상 = 그 영상이 재료(받기는 media_download, 관제 234)
+        q = f"url:{src['url']}"
     if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
         from tools.calcopy.engine import worker_ledger as L
         L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
@@ -277,15 +289,17 @@ def step_source(topic, ctx: Ctx) -> dict:
         arts["재료후보_시트.jpg"] = str(sheets[0])
     if rc != 2 or "재료_뼈대.json" not in arts:
         raise StepError(f"재료 후보 모드 rc={rc}(기대 2) — {tail[-300:]}", arts)
-    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
-    if hook and not (out / "재료.json").exists():
-        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
-        (out / "재료.json").write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
-        arts["재료.json"] = str(out / "재료.json")
     vids = sorted(cand.glob("v_*.mp4")) + sorted(out.glob("v_*.mp4"))
-    rights = {v.name: "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)" for v in vids}
-    if not rights:
+    rights = {v.name: ("고객이 준 참고 영상(사용 전 사람 확인)" if q.startswith("url:") else "유튜브 쇼츠(재료 후보·참고, 사용 전 사람 확인)") for v in vids}
+    if not rights:   # ★초안보다 먼저 — 10-19 실측: 후보 0 시도가 빈 재료.json 을 남겨, 다음 시도가 원본을 받아도 빈 초안으로 계획이 죽었다
         raise StepError("재료 후보 영상 0개 — 출처(rights)를 적을 재료가 없다", arts)
+    hook = ctx.extra.get("materials_hook")      # 만들기 입구: 뼈대 → 재료 자동 초안(팩 기본값 주입은 calcopy_make.draft_materials 한 곳)
+    mp = out / "재료.json"
+    stale = mp.exists() and not any(s_.get("src") for s_ in (json.loads(mp.read_text(encoding="utf-8")).get("shots") or []))
+    if hook and (not mp.exists() or stale):
+        M = hook(json.loads((out / "재료_뼈대.json").read_text(encoding="utf-8")))
+        mp.write_text(json.dumps(M, ensure_ascii=False, indent=1), encoding="utf-8")
+        arts["재료.json"] = str(mp)
     return {"artifacts": arts, "data": {"rights": rights}, "outputs": {"materials_skeleton": "재료_뼈대.json"}}
 
 

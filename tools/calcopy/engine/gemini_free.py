@@ -195,7 +195,14 @@ def _ask_server(parts: list, prompt: str, tag: str = "", models: tuple | None = 
 
 
 def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) -> tuple[dict | None, str | None]:
-    """창구 하나. BACKEND=local → 로컬만 / server → 서버만 / auto(기본) → 로컬 먼저, 오늘 로컬 풀이 다 막히면(quota·no_key·429) 서버 풀로."""
+    """창구 하나. BACKEND=local → 로컬만 / server → 서버만 / auto(기본) → 로컬 먼저, 오늘 로컬 풀이 다 막히면(quota·no_key·429) 서버 풀로.
+    client → 고객 PC 모드(관제 234): 고객 Claude 가 답한다(engine/client_llm — 제미나이·서버 풀 0, 소리는 위스퍼 글로)."""
+    if BACKEND == "client":
+        from tools.calcopy.engine import client_llm
+        t0 = time.time()
+        d, err = client_llm.ask(parts, prompt, tag, models)
+        CALLS.append({"tag": tag, "via": "client", **({"ok": True} if d is not None else {"failed": err}), "sec": round(time.time() - t0, 1)})
+        return d, err
     if BACKEND == "server":
         return _ask_server(parts, prompt, tag, models)
     d, err = _ask_local(parts, prompt, tag, models)
