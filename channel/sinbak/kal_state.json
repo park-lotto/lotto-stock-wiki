@@ -80,56 +80,48 @@
    "note": "뼈대 6편 새로, 묶음 6편"
   },
   "readlines": {
-   "state": "waiting_human",
+   "state": "done",
    "sec": 0.0,
-   "at": "2026-10-20 08:24",
+   "at": "2026-10-20 08:46",
    "outputs": {
-    "pending": {
-     "rAt34vkQ0OY": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~2.2) speaker 미기입",
-      "줄0(0.0~2.2) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(2.2~4.3) speaker 미기입",
-      "줄1(2.2~4.3) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "oT-SxFJcQ-4": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~1.7) speaker 미기입",
-      "줄0(0.0~1.7) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(1.7~3.7) speaker 미기입",
-      "줄1(1.7~3.7) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "fzoZc7V_hDM": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~2.1) speaker 미기입",
-      "줄0(0.0~2.1) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(2.1~3.5) speaker 미기입",
-      "줄1(2.1~3.5) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "CnRWZ3scVfk": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~2.4) speaker 미기입",
-      "줄0(0.0~2.4) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(2.4~3.9) speaker 미기입",
-      "줄1(2.4~3.9) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "bpjoacs2S6Q": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~2.6) speaker 미기입",
-      "줄0(0.0~2.6) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(2.6~4.5) speaker 미기입",
-      "줄1(2.6~4.5) enter 미기입(꾸밈 없으면 'instant')"
-     ],
-     "edTkyQKrqMk": [
-      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
-      "줄0(0.0~2.5) speaker 미기입",
-      "줄0(0.0~2.5) enter 미기입(꾸밈 없으면 'instant')",
-      "줄1(2.5~4.7) speaker 미기입",
-      "줄1(2.5~4.7) enter 미기입(꾸밈 없으면 'instant')"
-     ]
-    }
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ]
    },
-   "note": "줄판독 미완 6/6편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+   "note": "줄판독 6편 strict 통과"
+  },
+  "rules": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-20 08:48",
+   "outputs": {
+    "draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\스타일분석_초안.md",
+    "palette": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\팔레트.json",
+    "plan_draft": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\sinbak판_초안.json"
+   },
+   "note": "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
+  },
+  "copy": {
+   "state": "waiting_human",
+   "sec": 28.8,
+   "at": "2026-10-20 08:48",
+   "outputs": {
+    "frames": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "errs": []
+   },
+   "note": "프리셋 손질 — frames/frame_<id>.json 을 _hand/ 로 손질(실측 근거 notes) → preset_save → 다시 실행 (견본 channel/starpickroom/preset/spr_preset.py · 자동본 C:\\숏템_칼카피\\sinbak\\frames)"
   }
  },
  "asked": {},
