@@ -1,0 +1,698 @@
+{
+ "B_61_glasspaint": {
+  "side": "B",
+  "id": 61,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 255,
+    "lines": 8,
+    "first": "아니 창문에 롤러질 몇 번 했다고 투명한 유리가 바로 불투명해진다고요?",
+    "first_chars": 30,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 233,
+    "lines": 8,
+    "first": "이게 요새 그렇게 유명한 유리 페인트라면서요?",
+    "first_chars": 20,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "이게 요새 그렇게 유명한 유리 페인트라면서요?"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.24,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_61_wrap": {
+  "side": "B",
+  "id": 61,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 225,
+    "lines": 8,
+    "first": "아니 일반 랩처럼 보이는데 꾹 누르기만 하면 착 붙는다고요?",
+    "first_chars": 25,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 221,
+    "lines": 8,
+    "first": "아니 음식 밀봉할 때 쓰던 랩인데 신발 포장에 페인트칠까지 된다고요?",
+    "first_chars": 29,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.3,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_62_glasspaint": {
+  "side": "B",
+  "id": 62,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 235,
+    "lines": 8,
+    "first": "저 이거 몰라서 창문 통째로 바꿀 뻔했거든요",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 2
+   },
+   {
+    "chars": 238,
+    "lines": 8,
+    "first": "이것 때문에 떼기 힘든 시트지랑 완전히 손절했거든요",
+    "first_chars": 22,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.3,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_62_wrap": {
+  "side": "B",
+  "id": 62,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 200,
+    "lines": 8,
+    "first": "저 이거 몰라서 그냥 바꿀 뻔했어요",
+    "first_chars": 14,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 203,
+    "lines": 8,
+    "first": "이것 때문에 일반 랩이랑 완전히 손절했어요",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.25,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_65_glasspaint": {
+  "side": "B",
+  "id": 65,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 183,
+    "lines": 6,
+    "first": "이케아도 당황한 천재 발명품",
+    "first_chars": 12,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "이케아도 당황한 천재 발명품",
+     "최근 자취생 사이에서 논란이 되고 있는 이게 하나 있는데 말도 안 되는 기상천외한 용도로 썼기 때문이라고",
+     "비싼 시트지 잘라 붙여야 했는데 롤러로 쓱 바르기만 하면 햇빛은 통하고 바깥 시선만 뿌옇게 가려주는 거",
+     "이러니 난리가 날 만하다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 184,
+    "lines": 6,
+    "first": "귀찮음만으로 떼돈 번 한국 천재 발명품",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "한국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "귀찮음만으로 떼돈 번 한국 천재 발명품",
+     "최근 누가 봐도 평범한 이 제품 하나가 바이럴이 터지며 품절 대란이라는데 왜냐면 시선 차단 불편이 없어졌기 때문"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.43,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_65_wrap": {
+  "side": "B",
+  "id": 65,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 166,
+    "lines": 6,
+    "first": "다이소도 놀랄 미국 천재 발명품",
+    "first_chars": 13,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [
+     "다이소"
+    ],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "다이소도 놀랄 미국 천재 발명품",
+     "최근 주부들 사이에서 논란이 되고 있는 이게 하나 있는데 말도 안 되는 기상천외한 용도로 썼기 때문이라고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 162,
+    "lines": 6,
+    "first": "귀찮음만으로 떼돈 번 미국 천재 발명품",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "귀찮음만으로 떼돈 번 미국 천재 발명품",
+     "최근 평범해 보이는 이게 바이럴이 터지며 품절 대란이라는데 왜냐면 음식 흘리는 불편이 없어졌기 때문"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.48,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_66_glasspaint": {
+  "side": "B",
+  "id": 66,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 175,
+    "lines": 6,
+    "first": "창문 시선 때문에 고생했으면 이거 보면 됨",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "기존 시트지는 기포 생기고 나중에 떼어내기도 힘들어서 제대로 되지도 않았음"
+    ],
+    "judged": true,
+    "pain_lines": 2
+   },
+   {
+    "chars": 176,
+    "lines": 6,
+    "first": "자취생들 눈물나게 하는 유리 페인트",
+    "first_chars": 15,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "기존 시트지는 혼자 붙이다 망치고 원상복구도 안 돼서 전셋집에선 쓰지도 못했음"
+    ],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": 0.06,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_66_wrap": {
+  "side": "B",
+  "id": 66,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 161,
+    "lines": 7,
+    "first": "랩 안 붙어 고생했으면 이거 보면 됨",
+    "first_chars": 14,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "손으로 누르면 착 붙어서 아예 구조가 다름",
+     "근데 코스트코 가면 꼭 사야 된다는데 신발까지 싸 버림"
+    ],
+    "judged": true,
+    "pain_lines": 3
+   },
+   {
+    "chars": 160,
+    "lines": 7,
+    "first": "이제 주방 랩 이걸로 끝났음",
+    "first_chars": 11,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": 0.16,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_67_glasspaint": {
+  "side": "B",
+  "id": 67,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 104,
+    "lines": 5,
+    "first": "친구네 집 갔다가 이거 보고 충격 먹었음",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "가격도 착한데 욕실 창문에 써도 딱이라 활용성 대박임"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 104,
+    "lines": 5,
+    "first": "자취생들 사이에서 난리 난 아이템이 하나 있는데",
+    "first_chars": 20,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "자취생들 사이에서 난리 난 아이템이 하나 있는데",
+     "가격도 착한데 전셋집 창문이나 화장실에도 딱임"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.06,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_67_wrap": {
+  "side": "B",
+  "id": 67,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 114,
+    "lines": 5,
+    "first": "친구네 집들이 갔다가 이거 보고 충격 먹었음",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 116,
+    "lines": 5,
+    "first": "살림 고수들 사이에서 난리 난 아이템이 하나 있는데",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "살림 고수들 사이에서 난리 난 아이템이 하나 있는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.15,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_68_glasspaint": {
+  "side": "B",
+  "id": 68,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 113,
+    "lines": 5,
+    "first": "이 값에 사생활 보호 싹 된다는 게 말이 됨?",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "이 값에 사생활 보호 싹 된다는 게 말이 됨?"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 119,
+    "lines": 5,
+    "first": "단돈 몇천 원으로 우리 집 욕실 창을 싹 엎어버림",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "단돈 몇천 원으로 우리 집 욕실 창을 싹 엎어버림"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.06,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_68_wrap": {
+  "side": "B",
+  "id": 68,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 108,
+    "lines": 5,
+    "first": "이 값에 쏟아짐까지 막는다는 게 말이 됨?",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 102,
+    "lines": 5,
+    "first": "단돈 몇천 원에 쏟아짐 싹 잡는 게 있음",
+    "first_chars": 15,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "단돈 몇천 원에 쏟아짐 싹 잡는 게 있음"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.38,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_69_glasspaint": {
+  "side": "B",
+  "id": 69,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 78,
+    "lines": 4,
+    "first": "요놈 하나면 창문 사생활 걱정 끝인 겨",
+    "first_chars": 15,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 79,
+    "lines": 4,
+    "first": "요놈 하나면 외부 시선 차단 한 방에 해결된단게",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": 0.29,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_69_wrap": {
+  "side": "B",
+  "id": 69,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 81,
+    "lines": 4,
+    "first": "요놈 하나면 주방 밀봉 걱정 끝인 겨",
+    "first_chars": 14,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   },
+   {
+    "chars": 79,
+    "lines": 4,
+    "first": "요놈 하나면 그릇 밀봉 한 방에 해결된단게",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.45,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_70_glasspaint": {
+  "side": "B",
+  "id": 70,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 227,
+    "lines": 8,
+    "first": "만든 사람도 예상 못한 뜻밖의 활용법",
+    "first_chars": 15,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "요즘 자취생들 사이에서 난리 난 페인트가 하나 있는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 234,
+    "lines": 8,
+    "first": "디자이너도 예측 못한 사용법",
+    "first_chars": 12,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "디자이너도 예측 못한 사용법",
+     "요즘 집꾸미기 덕후들 사이에서 논란이 되고 있는 페인트가 하나 있는데",
+     "근데 사람들이 이게 칠하자마자 젖빛으로 변하고 손상 없이 벗겨진다는 걸 눈치채고 엉뚱한 데 가져다 쓰기 시작하는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.44,
+  "same_as": null,
+  "engine_status": null
+ },
+ "B_70_wrap": {
+  "side": "B",
+  "id": 70,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 249,
+    "lines": 8,
+    "first": "코스트코도 예상 못한 미친 활용법",
+    "first_chars": 14,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "코스트코도 예상 못한 미친 활용법",
+     "요즘 살림 덕후들 사이에서 논란이 되고 있는 주방 아이템이 하나 있는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   },
+   {
+    "chars": 230,
+    "lines": 8,
+    "first": "코스트코 디자이너도 예측 못한 사용법",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "코스트코 디자이너도 예측 못한 사용법",
+     "요즘 살림 고수들 사이에서 화제가 되고 있는 꿀템이 하나 있는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": 0.67,
+  "same_as": null,
+  "engine_status": null
+ }
+}

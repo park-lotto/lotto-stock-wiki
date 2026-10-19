@@ -1,0 +1,795 @@
+<title>유리 페인트 대본 비교</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Black+Han+Sans&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 스타일별 두 블록, 각 블록은 좌(숏템메이커)·우(스타터킷) 대조 열. 좁으면 한 열 */
+:root{
+  --bg:#f3f5f4; --paper:#ffffff; --ink:#1b2321; --muted:#5d6b67; --line:#d5ddda;
+  --frost:#dfe8e5; --acc:#1f7a68; --acc-soft:#e3f1ed; --warn:#b4541a; --warn-soft:#fbeee4;
+  --ok:#2c7a3f; --ok-soft:#e6f3e8;
+  --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --paper:#1a2220; --ink:#e6ecea; --muted:#9aa9a4; --line:#2e3a37;
+  --frost:#24302d; --acc:#5cc4ab; --acc-soft:#1c3530; --warn:#f0965a; --warn-soft:#3a2518;
+  --ok:#74c98a; --ok-soft:#1b3322; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --paper:#1a2220; --ink:#e6ecea; --muted:#9aa9a4; --line:#2e3a37;
+  --frost:#24302d; --acc:#5cc4ab; --acc-soft:#1c3530; --warn:#f0965a; --warn-soft:#3a2518;
+  --ok:#74c98a; --ok-soft:#1b3322; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-block:32px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:36px}
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.facts b{color:var(--ink);font-weight:500}
+section{display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--f-display);font-weight:400;font-size:24px;margin:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+h2 small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;min-width:0;display:flex;flex-direction:column}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;
+  background:linear-gradient(180deg,var(--frost),transparent)}
+.who{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.who strong{font-size:16px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.bad{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.how{font-size:12.5px;color:var(--muted)}
+ol{list-style:none;margin:0;padding:6px 0;counter-reset:n}
+li{counter-increment:n;display:grid;grid-template-columns:30px 1fr;gap:4px 8px;padding:9px 16px;border-top:1px dashed var(--line)}
+li:first-child{border-top:0}
+li::before{content:counter(n);font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:3px;text-align:right}
+.tag{grid-column:2;font-size:11.5px;color:var(--acc);letter-spacing:.03em}
+.txt{grid-column:2;min-width:0}
+li.flag{background:var(--warn-soft)}
+li.flag .note{grid-column:2;font-size:12.5px;color:var(--warn)}
+li.title .txt{font-weight:700}
+.diff{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.diff h3{margin:0 0 8px;font-size:15px}
+.diff ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.diff li{display:list-item;padding:0;border:0;grid-template-columns:none}
+.diff li::before{content:none}
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+caption{text-align:left;font-weight:700;padding:12px 16px 8px;font-size:15px}
+th,td{padding:10px 14px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{font-size:12.5px;color:var(--muted);font-weight:500;background:var(--frost)}
+tbody th{width:110px;font-weight:500;color:var(--muted);font-size:13px}
+.chip{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;margin-right:4px;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.bad{background:var(--warn-soft);color:var(--warn)}
+.callout{border-left:3px solid var(--warn);background:var(--warn-soft);padding:12px 16px;border-radius:0 8px 8px 0;font-size:14px}
+.full{display:flex;flex-direction:column;gap:8px}
+.full h3{margin:6px 0 2px;font-size:15px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:8px}
+summary{cursor:pointer;padding:10px 14px;font-size:14px;font-weight:500}
+summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+pre{margin:0;padding:12px 14px;border-top:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--f-mono);font-size:12px;line-height:1.55;max-height:520px;overflow:auto;color:var(--ink)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.steps{grid-template-columns:1fr}}
+.step{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:10px;min-width:0}
+.step p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.sn{font-family:var(--f-display);font-size:22px;color:var(--acc);line-height:1}
+.nova{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.nova-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;background:var(--frost)}
+pre.plain{font-family:var(--f-body);font-size:14px;line-height:1.75;max-height:none;border-top:0;padding:14px 16px}
+mark{background:var(--acc-soft);color:var(--acc);font-weight:700;padding:0 3px;border-radius:3px}
+.cap{margin:0;padding:10px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+table.score td.g{color:var(--ok)}
+table.score td.r{color:var(--warn)}
+table.score td.y{color:var(--muted)}
+.pos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.pos{grid-template-columns:1fr}}
+.pos-card{background:var(--acc-soft);border-radius:10px;padding:14px 16px;min-width:0}
+.pos-card p{margin:6px 0 0;font-size:14px}
+.src{font-size:12.5px;color:var(--muted);margin:0}
+code{font-family:var(--f-mono);font-size:12px;background:var(--frost);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">소재 · 만물상점 「유리 페인트」 · 2026-10-19</div>
+  <h1>유리 페인트 대본 비교</h1>
+  <p class="lede">같은 조사 자료를 숏템메이커 대본 엔진에 넣어 버텍스로 뽑은 대본과, 스타터킷으로 실제 완성본에 들어간 대본을 스타일별로 나란히 놓았습니다.</p>
+  <div class="facts">
+    <span>숏템메이커: <b>script_engine.run_frame</b> · <b>vertex gemini-3.6-flash</b></span>
+    <span>입력 근거: <b>7개</b> (소재 영상·사용 클립에서 확인한 사실)</span>
+    <span>글자 수: 공백 제외</span>
+  </div>
+</header>
+
+<section aria-labelledby="s1">
+  <h2 id="s1">썰형 <small>이븐쇼핑 ↔ 썰쇼핑형</small></h2>
+  <div class="cols">
+    <article class="card">
+      <div class="card-h">
+        <div class="who"><strong>숏템메이커 · 이븐쇼핑</strong>
+          <div class="pills"><span class="pill">208자</span><span class="pill">8칸</span><span class="pill ok">엔진 검사 통과</span></div></div>
+        <div class="how">버텍스 2회 호출 (초안 1 + 근거 판정 1) · 반말 전언체</div>
+      </div>
+      <ol>
+        <li class="title flag"><span class="tag">제목</span><span class="txt">집 내부 시선 때문에 답답했던 천재가 만들어 떼돈 번 페인트의 정체</span><span class="note">근거 없는 이야기(천재·떼돈). 엔진 검사에서는 걸리지 않음</span></li>
+        <li><span class="tag">궁금증</span><span class="txt">최근 자취러들 사이에서 바이럴이 터지며 논란인 페인트가 있는데</span></li>
+        <li><span class="tag">정체</span><span class="txt">이건 바로 바르는 젖빛 유리 페인트</span></li>
+        <li><span class="tag">해결</span><span class="txt">이게 말도 안 되는 게 기존 시트지와 달리 롤러로 쓱 바르면 뿌연 젖빛 유리가 된다는 거</span></li>
+        <li><span class="tag">추가</span><span class="txt">심지어 판매 영상에선 사무실과 욕실 창에도 바르는데</span></li>
+        <li><span class="tag">추가 2</span><span class="txt">햇빛은 그대로 들어오면서 바깥 시선만 뿌옇게 가려준다고</span></li>
+        <li><span class="tag">반전</span><span class="txt">근데 진짜 충격적인 포인트는 마르고 끝을 당기면 막이 한 장으로 뜯어진다고</span></li>
+        <li><span class="tag">마무리</span><span class="txt">그래서 요즘엔 전셋집 사생활 보호용으로 난리라고</span></li>
+      </ol>
+    </article>
+    <article class="card">
+      <div class="card-h">
+        <div class="who"><strong>스타터킷 · 썰쇼핑형</strong>
+          <div class="pills"><span class="pill">223자</span><span class="pill">13줄</span><span class="pill ok">완성본 23.6초</span></div></div>
+        <div class="how">대본 프롬프트 + 클립 장면 순서로 작성 · 시안 3개 중 A</div>
+      </div>
+      <ol>
+        <li class="title"><span class="tag">제목</span><span class="txt">유리업체도 예상 못한 주부의 창문</span></li>
+        <li><span class="tag">사회적 증거</span><span class="txt">요즘 살림 고수들 사이에서 입소문이 터졌다는데</span></li>
+        <li><span class="tag">정체</span><span class="txt">이건 바로 바르는 젖빛 유리 페인트</span></li>
+        <li><span class="tag">신호</span><span class="txt">이게 말도 안 되는 게</span></li>
+        <li><span class="tag">불편</span><span class="txt">맞은편 집에서 우리 집 안이 훤히 들여다보여서</span></li>
+        <li><span class="tag">불편</span><span class="txt">블라인드도 못 걷고 답답하게 살았는데</span></li>
+        <li><span class="tag">해결</span><span class="txt">롤러에 묻혀서 창문에 쓱쓱 밀기만 하면</span></li>
+        <li><span class="tag">해결</span><span class="txt">투명하던 유리가 그 자리에서 뿌옇게 변해서</span></li>
+        <li><span class="tag">해결</span><span class="txt">햇빛은 그대로 환하게 들어오는데 바깥 시선은 싹 다 가려지고</span></li>
+        <li><span class="tag">추가</span><span class="txt">심지어 욕실 창문은 물론 유리판까지 싹 다 바꿔버린다는데</span></li>
+        <li><span class="tag">반전 신호</span><span class="txt">근데 진짜 충격적인 건</span></li>
+        <li><span class="tag">최강 카드</span><span class="txt">질리면 알코올 뿌리고 스크래퍼로 밀어내면</span></li>
+        <li><span class="tag">마무리</span><span class="txt">처음 그대로 다시 투명한 유리로 감쪽같이 돌아온다고</span></li>
+      </ol>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="s2">
+  <h2 id="s2">인스타형 <small>두유노홈디노 ↔ 인스타쇼핑형</small></h2>
+  <div class="cols">
+    <article class="card">
+      <div class="card-h">
+        <div class="who"><strong>숏템메이커 · 두유노홈디노</strong>
+          <div class="pills"><span class="pill">230자</span><span class="pill">6칸</span><span class="pill bad">엔진 반려 (2줄)</span></div></div>
+        <div class="how">버텍스 6회 호출 (초안 + 다시 쓰기 2회 + 근거 판정 3회) · 존댓말 "~했대요"</div>
+      </div>
+      <ol>
+        <li><span class="tag">계기</span><span class="txt">집주인 눈치에 시트지도 마음대로 못 붙여서 서러웠던 자취생이 창문에 쓱 바르는 페인트를 칠해버렸대요</span></li>
+        <li><span class="tag">체감 비유</span><span class="txt">롤러로 쓱 바르면 맑던 창문이 순식간에 안개 낀 젖빛 유리처럼 뽀얗게 바뀌어요</span></li>
+        <li class="flag"><span class="tag">체감 사실</span><span class="txt">근데 진짜 충격적인 사실은 판매 영상에선 사무실은 물론 욕실 창문이랑 유리판까지 칠해서 쓰더라고요</span><span class="note">엔진 판정: 유리판은 판매 영상에 나왔다는 근거 없음</span></li>
+        <li><span class="tag">원리·스펙</span><span class="txt">심지어 이게 대박인 게 답답하게 다 막히는 게 아니라 햇빛은 들면서 바깥 시선만 싹 가려줘요</span></li>
+        <li><span class="tag">원리·스펙</span><span class="txt">진짜 말도 안 되는게 다 마르고 나면 끝을 잡고 당겨서 막이 통째로 싹 벗겨진대요</span></li>
+        <li class="flag"><span class="tag">결과 과장</span><span class="txt">덕분에 요즘 자취생들 사이에서 집주인 눈치 안 보고 사생활 지키는 꿀템으로 난리래요</span><span class="note">엔진 판정: "자취생들 사이에서 난리"는 근거 없음</span></li>
+      </ol>
+    </article>
+    <article class="card">
+      <div class="card-h">
+        <div class="who"><strong>스타터킷 · 인스타쇼핑형</strong>
+          <div class="pills"><span class="pill">191자</span><span class="pill">8줄</span><span class="pill ok">완성본 26.2초</span></div></div>
+        <div class="how">1인칭 해요체 · 시안 2개 중 A (충격·후회 고백형)</div>
+      </div>
+      <ol>
+        <li><span class="tag">훅</span><span class="txt">저 이거 하나로 창문 고민이 진짜 싹 해결됐어요</span></li>
+        <li><span class="tag">상황·불편</span><span class="txt">욕실 창문 바로 앞에 옆집이 있어서 매번 블라인드 꼭 내리고 씻었거든요</span></li>
+        <li class="flag"><span class="tag">추천인</span><span class="txt">근데 인테리어 하는 친구가 시트지 말고 이걸 발라 보라고 하더라고요</span><span class="note">지어낸 일화 (스타일 틀)</span></li>
+        <li><span class="tag">사용 동작</span><span class="txt">창문에 롤러로 쓱쓱 밀어 주기만 하면</span></li>
+        <li><span class="tag">결과 감탄</span><span class="txt">바깥 풍경이 뿌옇게 싹 가려지는데 빛은 그대로 들어오는 거 있죠</span></li>
+        <li><span class="tag">추가 장점</span><span class="txt">게다가 테두리에 테이프만 붙이고 혼자서도 금방 칠할 수 있고</span></li>
+        <li><span class="tag">추가 장점</span><span class="txt">심지어 나중에 떼고 싶으면 끝을 잡고 쭉 당기면 한 장으로 벗겨지더라고요</span></li>
+        <li><span class="tag">댓글 유도</span><span class="txt">궁금하신 분들은 댓글에 '나도' 남겨주세요</span></li>
+      </ol>
+    </article>
+  </div>
+</section>
+
+<div class="diff">
+  <h3>눈에 띄는 차이</h3>
+  <ul>
+    <li><b>첫 문장:</b> 숏템메이커는 두 대본 모두 소재의 "전셋집·시트지" 상황으로 돌아갔습니다. 조사 자료에 그 문장이 들어 있었기 때문입니다. 스타터킷은 소재 문장을 일부러 피하고 "맞은편 시선, 옆집"으로 열었습니다.</li>
+    <li><b>근거 없는 표현:</b> 이븐쇼핑 제목의 "천재가 만들어 떼돈 번"은 근거가 없는데도 엔진 검사를 통과했습니다. 두유노홈디노는 두 줄이 근거 검사에서 걸려 반려로 끝났습니다.</li>
+    <li><b>구성:</b> 이븐쇼핑은 8칸에 한 줄이 깁니다. 썰쇼핑형은 13줄로 짧게 끊고 불편(블라인드를 못 걷음)을 한 단계 더 넣었습니다.</li>
+    <li><b>말투와 끝:</b> 두유노홈디노는 "~했대요" 전해 들은 말투이고 댓글 유도가 없습니다. 인스타쇼핑형은 1인칭 "~더라고요"이고 마지막 줄을 댓글 유도로 고정했습니다.</li>
+    <li><b>지우는 방법:</b> 숏템메이커는 두 대본 모두 "끝을 당겨 한 장으로"를 썼습니다. 썰쇼핑형은 실제로 쓴 클립 장면에 맞춰 "알코올과 스크래퍼"로 썼습니다.</li>
+  </ul>
+</div>
+
+<section aria-labelledby="s4" class="pr">
+  <h2 id="s4">노바작가 기준으로 본 위치 <small>스타터킷 = 노바작가 강의 3강 자료(같은 프롬프트)</small></h2>
+
+  <div class="steps">
+    <div class="step"><span class="sn">1</span><div><b>터진 영상 하나를 고른다</b><p>클리피 트렌딩 · 쇼핑 채널 · 최근 30일 · 조회수 순. 예: 「역발상으로 돈방석 앉은 육아천재의 발명품」 178만 회</p></div></div>
+    <div class="step"><span class="sn">2</span><div><b>제미나이 젬 "대본 추출"</b><p>씨앗 대본 7줄 + <b>"사람들을 홀린 요인 분석"</b>(고충 "내려놓는 순간 리셋" → 해결 "따로 옮겨 심을 필요 없음")</p></div></div>
+    <div class="step"><span class="sn">3</span><div><b>클로드 프로젝트 + 만능 프롬프트</b><p>씨앗을 붙이고 "이 프롬프트대로 팔릴 수밖에 없는 대본을 만들어줘" 한 줄 → 시안 A·B + 【검수】 → 사람이 고름</p></div></div>
+    <div class="step"><span class="sn">4</span><div><b>목소리 · 편집</b><p>타입캐스트 지훈 · 화남 · 1.2배 → mp3 + srt → 캡컷 프리셋</p></div></div>
+  </div>
+
+  <div class="nova">
+    <div class="nova-h"><b>노바 결과물 (시안 A, 화면 그대로)</b><span class="pills"><span class="pill">346자</span><span class="pill">18줄</span><span class="pill">약 60초</span></span></div>
+    <pre class="plain">사소한 불편에서 시작된 천재의 발명품
+최근 한 육아 천재의 사소한 귀찮음에서 시작된 이 가방같이 생긴 게
+육아맘들 사이 입소문이 터지며 품절 대란까지 났다는데
+이건 바로 아기를 눕힌 채로 통째로 드는 이동식 침대
+<mark>이게 진짜 말도 안 되는 게</mark>
+겨우 재워놓고 바닥에 내려놓는 순간
+등이 닿자마자 눈을 번쩍 떠서 처음부터 다시 재우던 그 지옥을
+재우는 자리랑 옮기는 자리를 아예 하나로 합쳐서 없애 버렸다는 거
+아기를 눕힌 채로 손잡이만 잡아 올리면
+양쪽이 몸을 받쳐 줘서 자세가 무너지지 않고
+거실이든 안방이든 차 안이든 그냥 내려놓기만 하면 끝이라
+옮겨 심는 과정 자체가 사라져 버리는데
+<mark>심지어</mark> 살살 흔들어 주면 그 안에서 곤히 잠들어 버려서
+밤중 수유 때도 옆에 붙여 놓고 쓰는 사람이 많다는데
+<mark>근데 진짜는 여기부터</mark>
+안쪽은 통기 메쉬라 여름에도 등에 땀이 안 차고
+커버는 통째로 벗겨 세탁기에 돌려 버리면 되니
+짐이란 짐은 이거 하나로 다 줄여 버렸다고</pre>
+    <p class="cap">특징: 불편을 8줄 작은 이야기로(순간 → 지옥 → 없애 버림 + 장면 풀이 4줄) · 신호어는 한 줄 단독 · "품절 대란"은 근거 없이 지어낸 화제</p>
+  </div>
+
+  <div class="tbl-wrap"><table class="score">
+    <caption>세 방식 비교 — 노바의 핵심 요소별</caption>
+    <thead><tr><th>노바의 핵심 요소</th><th>노바작가</th><th>스타터킷 (오늘 대본)</th><th>숏템메이커 엔진</th></tr></thead>
+    <tbody>
+      <tr><th>① 터진 영상을 씨앗으로</th><td class="g">○ 클리피 상위 영상</td><td class="r">✗ 소재 하나, 터진 영상인지 확인 안 함</td><td class="r">✗ 조사 자료만 (<code>hooked_why</code> 있으나 라이브 미연결)</td></tr>
+      <tr><th>② "홀린 요인" 먼저 뽑기</th><td class="g">○ 젬이 고충·해결 분석</td><td class="r">✗ 없음</td><td class="r">✗ 없음</td></tr>
+      <tr><th>③ 만능 프롬프트(구조)</th><td class="g">○</td><td class="g">○ 같은 프롬프트</td><td class="y">△ 이븐쇼핑은 가벼운 판, 8칸 고정</td></tr>
+      <tr><th>④ 참고 대본 13편</th><td class="g">○ 유형별로 프롬프트 안에</td><td class="r">✗ "배포본에서 제외" — 빈칸</td><td class="y">△ 두유노 예문 3편 · 이븐쇼핑 0편</td></tr>
+      <tr><th>⑤ 시안 여러 개 + 사람이 고름</th><td class="g">○ A·B + 검수</td><td class="g">○ 3개 + 검수</td><td class="r">✗ 1개, 자동 판정</td></tr>
+      <tr><th>⑥ 불편을 이야기로 길게</th><td class="g">○ 8줄</td><td class="y">△ 2줄</td><td class="r">✗ 1줄</td></tr>
+      <tr><th>⑦ 길이</th><td>346자 (~60초)</td><td>223자 (23.6초)</td><td>208자</td></tr>
+      <tr><th>⑧ 사실 검증</th><td class="r">✗ "품절 대란" 등 지어냄</td><td class="y">△ 수치 금지 + 자가 검수</td><td class="g">○ 줄마다 근거 번호 + 자동 판정</td></tr>
+      <tr><th>⑨ 화면과 대본 맞춤</th><td class="y">△ 대본 뒤에 화면</td><td class="g">○ 클립 먼저 보고 씀</td><td class="r">✗ 화면 묘사 금지, 클립 모름</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="pos">
+    <div class="pos-card"><b>스타터킷 (노바 킷)</b><p>뼈대는 노바와 같다. 빠진 것은 연료 두 가지: <b>터진 씨앗 + 홀린 요인 분석</b>, <b>참고 대본 13편</b>. 그래서 구조는 맞지만 말맛과 이야기 길이가 노바보다 얕다.</p></div>
+    <div class="pos-card"><b>숏템메이커</b><p>노바와 다른 갈래(이븐쇼핑 실측 + 근거 판정). <b>지어낸 사실을 기계가 잡는 것</b>은 셋 중 유일. 대신 노바가 가장 공들이는 ①②④가 비어 있어 이야기가 얕고, 제목 틀이 하나라 결과끼리 비슷하다.</p></div>
+  </div>
+
+  <div class="tbl-wrap"><table>
+    <caption>노바에게서 배울 것 (효과 큰 순서)</caption>
+    <tbody>
+      <tr><th>1</th><td><b>씨앗은 터진 영상, 쓰기 전에 "왜 터졌나(고충 → 해결)"부터.</b> 숏템메이커는 <code>hooked_why</code> 자리가 이미 있어 연결만 하면 된다</td></tr>
+      <tr><th>2</th><td><b>참고 대본을 통째로 넣기.</b> 벤치마킹 채널 히트작 10~13편 받아쓰기를 유형별로. 스타터킷의 가장 큰 빈칸</td></tr>
+      <tr><th>3</th><td><b>불편을 장면 이야기로.</b> 핵심 3줄(순간 → 지옥 → 없애 버림) + 장면 풀이 3~4줄</td></tr>
+      <tr><th>4</th><td><b>시안 2개 + 사람이 고르기.</b> 숏템메이커는 1개 자동이라 고를 여지가 없다</td></tr>
+      <tr><th>✗</th><td><b>따라 하지 않을 것:</b> "품절 대란" 같은 지어낸 화제. 여기선 숏템메이커의 근거 판정이 앞선다</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">출처: 숏템메이커 저장소 <code>docs/nova_writer_script_2026-09-22.md</code> · <code>channel/strategy/노바작가_아라클래스_강의분석.md</code> · <code>channel/banggu/비교_이븐쇼핑_우리_노바_2026-10-06.md</code></p>
+</section>
+
+<section aria-labelledby="s3" class="pr">
+  <h2 id="s3">프롬프트 비교 <small>품질 차이는 대부분 모델이 아니라 프롬프트 설계에서 나왔습니다</small></h2>
+
+  <div class="tbl-wrap"><table>
+    <caption>썰형 · 이븐쇼핑 vs 썰쇼핑형</caption>
+    <thead><tr><th>항목</th><th>숏템메이커 · 이븐쇼핑</th><th>스타터킷 · 썰쇼핑형</th></tr></thead>
+    <tbody>
+      <tr><th>상태</th><td><span class="chip bad">가벼운 판</span> "이 채널 대본 설명서가 아직 없다 — 역할 칸만 따른다"</td><td><span class="chip ok">완성 설명서</span> 역할·원칙·6블록·연결어 사전·자가 검수 16개</td></tr>
+      <tr><th>제목</th><td>틀 <b>하나로 고정</b>: [누가]+[하다가]+[감정어] [나라] 천재가 만들어 떼돈 번 [물건]의 정체</td><td>제목 틀 11개(T1~T11) 중 골라 쓰기, 11~16자</td></tr>
+      <tr><th>첫 줄 · 끝 줄</th><td>고정 문장: "최근 [집단] 사이에서 바이럴이 터지며 논란인…" / "그래서 요즘엔 ~ 난리라고"</td><td>첫 문장 유형 4가지, 사회적 증거 만드는 법 7가지 중 고르기</td></tr>
+      <tr><th>지어내기</th><td>제목·궁금증·마무리 칸은 "창작 칸(사장님 허용), 근거 비움"</td><td>수치·인증·실존 인물 금지, 분위기 과장만 허용</td></tr>
+      <tr><th>근거 관리</th><td><span class="chip ok">강점</span> 줄마다 근거 번호(f1…) + 자동 판정</td><td><span class="chip bad">약점</span> 근거 번호 없음, 자가 검수표뿐</td></tr>
+      <tr><th>화면</th><td>"화면을 묘사하지 마라", 클립 정보를 받지 않음</td><td><span class="chip ok">강점</span> 선정 클립의 시각 포인트를 입력으로 받음. 화면에 있는 것만 문장으로</td></tr>
+      <tr><th>길이</th><td>8줄 고정, 203~289자</td><td>210~240자, 줄 수 자유</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>"천재가 만들어 떼돈 번"은 실수가 아닙니다.</b> 제목 틀 자체에 박혀 있고 근거 없이 지어내도 되는 칸이라 검사에도 걸리지 않았습니다. 제목·첫 줄·끝 줄이 고정 문장이라, 이븐쇼핑으로 뽑으면 어떤 상품이든 "천재가 만들어 떼돈 번 ○○의 정체 / 바이럴이 터지며 논란인"으로 시작합니다. 회원 여럿이 돌려쓰면 결과가 비슷해지는 구조입니다.</div>
+
+  <div class="tbl-wrap"><table>
+    <caption>인스타형 · 두유노홈디노 vs 인스타쇼핑형</caption>
+    <thead><tr><th>항목</th><th>숏템메이커 · 두유노홈디노</th><th>스타터킷 · 인스타쇼핑형</th></tr></thead>
+    <tbody>
+      <tr><th>근거 데이터</th><td><span class="chip ok">강점</span> 원본 채널 실측 통계: 노드별 출현율(계기 55%, 원리·스펙 90%…), 첫 문장 공식, 예문 3편</td><td>유형 4가지·8블록·문체 규칙. <span class="chip bad">참고 대본은 배포본에서 빠짐</span></td></tr>
+      <tr><th>화자</th><td>체험담형 또는 전해 들은 말투("~대요")</td><td>1인칭 해요체 고정</td></tr>
+      <tr><th>첫 문장</th><td>공식: [주체]+[계기·감정어]+[해결해 버렸대요]</td><td>훅 틀 4가지 중 하나</td></tr>
+      <tr><th>소재 사실 고르기</th><td>엔진이 "고른 사실"을 미리 지정 — 이번엔 <b>f5(전셋집 주장)를 1순위</b>로 넣음</td><td>무엇을 쓸지 작성자 판단, 소재 문장 피하기</td></tr>
+      <tr><th>끝 줄</th><td>"요즘 ~사이에서 ~난리래요" 사회 반응 과장 필수</td><td>댓글 유도 '나도' 고정</td></tr>
+      <tr><th>근거 관리</th><td><span class="chip ok">강점</span> 근거 번호 + 자동 판정 + 다시 쓰기 2회</td><td><span class="chip bad">약점</span> 없음</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>반려된 원인은 프롬프트 안의 모순입니다.</b> 한쪽은 끝 줄을 "~사이에서 난리래요" 사회 반응 과장으로 <b>필수</b>로 요구하고, 다른 규칙은 "사회적 반응(인기·유행) 줄은 근거 번호 <b>필수</b>"라고 합니다. 근거에 "인기" 사실이 없으면 끝 줄은 반드시 걸립니다. 두 번 다시 써도 반려된 이유입니다. 길이 지시도 [길이] 150~246자와 [화법] "약 166자"가 서로 다릅니다.</div>
+
+  <div class="tbl-wrap"><table>
+    <caption>서로 가져오면 좋은 것</caption>
+    <thead><tr><th>숏템메이커에 가져갈 것 (스타터킷 장점)</th><th>스타터킷에 가져올 것 (숏템메이커 장점)</th></tr></thead>
+    <tbody>
+      <tr><td>제목 틀 여러 개 중 골라 쓰기 → 결과가 덜 비슷해짐</td><td>줄마다 근거 번호 + 자동 판정 → 지어낸 사실을 기계가 잡음</td></tr>
+      <tr><td>클립 시각 포인트를 입력으로 → 대본과 화면이 맞음</td><td>원본 채널 실측 통계(노드 출현율)로 스타일을 숫자로 고정</td></tr>
+      <tr><td>소재 주장 문장을 "고른 사실" 1순위에서 빼기 → 소재를 덜 따라감</td><td>예문 3편 + "예문과 7자 이상 같은 구절 금지"</td></tr>
+      <tr><td>사회 반응 줄을 "필수"와 "근거 필수" 중 하나로 정리 → 반려 원인 제거</td><td>초안 → 판정 → 다시 쓰기 반복</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="full">
+    <h3>프롬프트 전문</h3>
+    <details><summary>숏템메이커 · 이븐쇼핑 — 버텍스에 실제로 보낸 초안 프롬프트</summary><pre>너는 한국 쇼츠 채널 &#x27;evenshopping&#x27;의 나레이션 작가다. 상품 하나로 대본을 써라(이 채널 대본 설명서가 아직 없다 — 역할 칸만 따른다).
+상품: 창문에 바르는 젖빛 유리 페인트
+칸(순서대로 한 줄씩): title — &#x27;[누가]+[무엇을 하다가]+[생활 감정어] [나라] 천재가 만들어 떼돈 번 [물건]의 정체.&#x27; (잉?: 정체를 숨김) — 창작 칸(이븐쇼핑 과장 틀, 사장님 허용): facts 빈 목록 &gt; bait — &#x27;최근 [집단] 사이에서 바이럴이 터지며 논란인 [물건]이 있는데,&#x27; (잉?) — 창작 칸: facts 빈 목록. &#x27;논란&#x27;은 화제라는 뜻 — 결함·불만·문제로 논란이라고 쓰지 마라(제품을 깎는 말 금지) &gt; reveal — &#x27;이건 바로 [제품 쉬운 이름].&#x27; (짧게) &gt; solve — 와우1: 줄 머리 &#x27;이게 말도 안 되는 게&#x27;·&#x27;이게 미친 포인트인 게&#x27; 계열 + 기존 것과 비교(기존엔 ~했지만 이건 ~다는 거) &gt; more — 와우2: 줄 머리 &#x27;심지어&#x27; + 숫자·권위·유래(만든 회사·유명 브랜드·특허·방송·판매 수치) — 근거 번호 필수, 말끝 ~는데, &gt; more2 — 디테일 한 줄(기능·스펙을 생활 말로, 말끝 ~다고.) — 스펙 나열 금지: 사실 하나를 생활 장면으로 바꿔 말한다 &gt; twist — 와우3: 줄 머리 &#x27;근데 진짜 충격적인 포인트는&#x27;·&#x27;근데 진짜 미친 포인트는&#x27; 계열 + 가장 센 사실(말끝 ~다고.) &gt; land — &#x27;그래서 요즘엔 [집단] 사이에서 [결과] 난리라고.&#x27; — 창작 칸(사회 반응 과장 허용): facts 빈 목록. 결과는 생활 변화로(스펙·펌웨어 같은 말 금지)
+[쓸 수 있는 근거]
+[f1] 창문 유리에 롤러로 쓱쓱 바르면 투명하던 유리가 그 자리에서 뿌연 젖빛(불투명) 유리로 바뀐다(소재 영상·사용 영상에서 확인).
+[f2] 칠한 창은 햇빛은 그대로 들어오는데 바깥 풍경과 시선은 뿌옇게 가려진다(욕실 창 사용 영상).
+[f3] 칠하기 전에 창 테두리에 마스킹 테이프를 붙이고 바닥에 비닐을 깐 뒤 혼자서 롤러로 칠한다(사용 영상).
+[f4] 판매 영상은 사무실·화장실 창에 쓰는 모습을 보여 준다. 욕실 창과 실내 유리판에도 바른 사례가 있다.
+[f5] 소재 영상 주장: 시트지를 마음대로 못 붙이는 전셋집에서도 쓸 수 있고, 나중에 뜯으면 깔끔하게 지워진다(판매자 주장, 제품마다 다를 수 있음).
+[f6] 떼어지는(peelable) 유리 페인트는 마른 뒤 끝을 잡고 당기면 막이 한 장으로 벗겨진다(같은 종류 다른 제품 영상).
+[f7] 다른 판매 영상에서는 알코올을 뿌린 뒤 스크래퍼로 밀어 페인트를 걷어 내자 다시 투명한 유리가 됐다.
+규칙:
+- 줄마다 facts 에 근거 번호(위 [f…])를 1개 이상 적어라. 근거 없는 사실·숫자·이름·회사·연도를 지어내지 마라. 숫자는 [f…] 사실에 있는 그대로만.
+- 화면을 묘사하지 마라(×&#x27;…하는 중&#x27; ×&#x27;웃음이 남&#x27; ×&#x27;소리가 흘러나옴&#x27;). 시청자에게 썰 푸는 말.
+- 소재·근거(f*)에 없는 브랜드·제품명을 쓰지 않는다.
+- 글자 수를 맞추려고 띄어쓰기를 지우지 않는다 — 폭이 넘치면 낱말을 줄인다.
+- 최상급·단정(가장·제일·최초·유일·세계에서·절대·역대급·1위·전설)은 그 줄 근거 글에 같은 주장이 있을 때만 쓴다.
+출력 JSON만: {&quot;title&quot;:&quot;영상 위 제목&quot;,&quot;lines&quot;:[{&quot;fn&quot;:&quot;칸 역할&quot;,&quot;text&quot;:&quot;한 줄&quot;,&quot;facts&quot;:[&quot;f1&quot;]}, …]}
+[말투] 반말 전언체(~다는 거 · ~는데 · ~다고 · ~라고). 존댓말(요·니다) 0. CTA 없음
+[잉? 포인트 — 반드시 1줄 이상, 앞쪽 1/3 안] 제목·미끼 줄에서 정체를 숨겨 &#x27;그게 뭔데?&#x27; 하게 만든다 — 답은 reveal 줄(이건 바로 ~)에서. 그 줄에 point:&quot;잉&quot;, answer_at:(답이 나오는 뒤 줄 번호, 0부터). 예: 애들 깨우다 현타 온 일본 천재가 만들어 떼돈 번 알람의 정체. (→ 무슨 알람?) / 최근 등교 전쟁 겪는 엄마들 사이에서 바이럴이 터지며 논란인 알람이 있는데, (→ 뭔데?)
+[와우 포인트 — 반드시 3줄(solve 이게 말도 안 되는 게 · more 심지어 · twist 근데 진짜 충격적인 포인트는)] &#x27;와 대박이네&#x27;가 나오는 줄 — 강한 연결어로 시작해 귀에 꽂히고, 바로 뒤에 구체 내용(숫자·동작·기존 것과 비교)이 온다. 그 줄에 point:&quot;와우&quot;. 줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 2줄 이상은 &#x27;미친 포인트·대박인·말도 안 되는·충격적인&#x27; 계열, 같은 뿌리 말 두 번 금지): 근데 진짜 충격적인 포인트는 · 하지만 진짜 미친 포인트는 · 근데 진짜 충격적인 사실은 · 이게 진짜 미친 포인트인게 · 이게 진짜 말도 안 되는게 · 근데 진짜 미친 포인트는 · 근데 더 미친 포인트는 · 진짜 충격적인 포인트는 · 근데 진짜는 여기서부터 · 무엇보다 미친 포인트는 · 이게 말도 안 되는게 · 진짜 미친 포인트인게 · 진짜 말도 안 되는게 · 이게 미친 포인트인게 · 근데 더 대박인 건 · 진짜 미친 포인트는 · 근데 미친 포인트는 · 진짜 소름 돋는 건 · 이게 진짜 대박인게 · 근데 진짜 반전은 · 진짜는 여기서부터 · 진짜 충격적인 건 · 진짜 대박인 건 · 말도 안 되는게 · 더 충격적인 건 · 미친 포인트인게 · 미친 포인트는 · 더 놀라운 건. 연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: 이게 말도 안 되는 게 알람이 울리면 버튼이 아니라 과녁을 맞혀야만 꺼진다는 거. / 근데 진짜 충격적인 포인트는 침대에 누운 채로는 절대 못 맞혀서 결국 일어나 조준하다 보면 잠이 저절로 다 깨버린다고.
+[디테일 — 반드시] ① more 줄 = 숫자·권위·유래(만든 회사·브랜드·특허·방송·판매 수치)를 근거 번호와 함께 — 그 줄에 point:&quot;권위&quot;(와우 3칸 중 첫 칸과 같은 줄이어도 된다). ② 비교 1개 이상 — 기존 것과 맞대기(기존엔 ~했지만 이건 ~). ③ land 줄 = &#x27;그래서 요즘엔 ~ 사이에서 ~ 난리라고&#x27;. ④ 제목 감정어는 하나만(현타 온·답답했던·귀찮았던 중 하나). ⑤ 센 감정어(빡친·열받은·짜증) 한 편 1회 이하 — 와우 연결어는 제외. ⑥ 첫 문장의 주체·계기는 근거에 있는 개발 비화·유래가 있으면 그것으로(번호 적기), 없을 때만 생활 상황으로 — 회사·인물·숫자는 지어내지 마라.
+[길이 — 반드시] 줄 8~8개, 전체 203~289자(공백 빼고), 한 줄 50자 이하(한 호흡). 사실을 한 줄에 몰아넣지 말고 가장 센 것만 골라라.
+- [창작 허용선] 화자 설정·지인·가족·계기·극단 행동·자기 위치·감상·체감 비유·결과 과장은 지어내도 된다(이 채널의 결). 제품 속성·원리·수치·쓰면 생기는 효과·사회적 반응(인기·품절·유행)·가격을 말하는 줄은 근거 번호 필수 — 근거 글에 없는 효과·속도·가격 표현을 덧붙이지 마라.
+- 칸 하나 = 한 줄. 줄마다 fn 에 칸 이름(title·bait…)을 그대로 적고, point·answer_at 을 [잉?·와우] 규칙대로 단다.
+</pre></details>
+    <details><summary>숏템메이커 · 두유노홈디노 — 버텍스에 실제로 보낸 초안 프롬프트</summary><pre>너는 한국 쇼츠 채널 &#x27;homedesignnote&#x27;의 나레이션 작가다. 아래 [설명서] 결대로 상품 하나로 새 대본을 써라.
+상품: 창문에 바르는 젖빛 유리 페인트
+[서사] 이 채널은 체험담형(구체 인물 계기: 와이프·친구·엄마가 보여줌/선물 + 극단 행동 + 자기 위치 + 결과 과장) 또는 전언해설형(&#x27;~대요/~다는데&#x27;)으로 말한다.
+노드 출현율(원본): 계기 55%, 극단행동 18%, 자기위치 22%, 체감비유 29%, 결과과장 26%, 감상 57%, 원리스펙 90%, 체감사실 82%, 사회반응 51%, 가격 31%, 불편공감 33%, 권유 22%. 계기·극단행동은 맨 앞, 체감비유는 가운데. **마지막 줄은 결과과장 노드**(쓴 뒤 달라진 삶을 과장 — 범용 권유 &#x27;써보세요&#x27;로 끝내지 마라).
+속성 다음에는 &#x27;나에게 생긴 변화(체감·결과)&#x27;로 넘긴다. 체감 비유(A 같다, A vs B) 1개 이상. 첫 문장은 말이 되는 한 사건이어야 한다(계기와 극단 행동을 억지로 한 문장에 붙이지 마라).
+[칸] 훅 &gt; 도입 &gt; 설명 &gt; 효과 &gt; 행동유도  · 첫 문장 유형 고백·체험단정·미친제품·발견·지인사건
+[첫 문장 공식 — 반드시] [주체] + [계기·감정어: 열받아서·빡쳐서·불편해서·서러워서·문제가 있어서] + [행동: 숨겨버렸대요/만들어버렸대요]. 뜻: 어떤 불편을 겪던 누군가(주체)가 그걸 이렇게 해결해 버렸다는 이야기로 첫 문장을 연다. 말투: 단어는 오버하지 말고 재미있게 — 빡친·열받은 남발 금지, 생활 표현·의성어·별명(손톱이 남아나질 않아서·물 탄 맛·쏙 숨겨버렸대요). 예: 좁은 주방에서 설거지하다 허리 굽히는 게 귀찮았던 중국 주방가전 회사가 아예 싱크대 안에 식기세척기를 쏙 숨겨버렸대요. / 신발 신을 때마다 남의 손을 빌려야 했던 한 학생이 나이키에 편지 한 통을 보냈는데, 그걸 읽은 나이키가 손 하나 안 대고 신는 신발을 진짜 만들어버렸대요.
+[잉? 포인트 — 반드시 1줄 이상, 앞쪽 1/3 안] 시청자가 &#x27;응? 어떻게? 왜?&#x27; 하고 다음 줄을 기다리게 만드는 줄. 답(정체·원리·결과)은 이 줄에서 주지 말고 뒤 줄에서 푼다. 그 줄에 point:&quot;잉&quot;, answer_at:(답이 나오는 뒤 줄 번호, 0부터). 예: 알람 끄기 장인들 깨우다 지쳐버린 일본 장난감 회사가 아예 알람시계에 장난감 총을 달아버렸대요. (→ 총을 왜?) / 근데 미국 요리 프로그램에서 이런 옥수수 칼만 일곱 개를 놓고 실험까지 했다는데, (→ 그래서 뭐가 이겼는데?)
+[와우 포인트 — 반드시 3줄(②숫자·권위 · ③진짜 핵심 반전 · ④심지어 두 번째 반전)] &#x27;와 대박이네&#x27;가 나오는 줄 — 강한 연결어로 시작해 귀에 꽂히고, 바로 뒤에 구체 내용(숫자·동작·기존 것과 비교)이 온다. 말만 세고 내용이 없으면 안 된다. 그 줄에 point:&quot;와우&quot;. 줄 맨 앞을 강한 연결어로 시작해 귀에 꽂히게(그중 2줄 이상은 &#x27;미친 포인트·대박인·말도 안 되는·충격적인&#x27; 계열, 같은 뿌리 말 두 번 금지): 근데 사람들이 열광하는 포인트가 따로 있는데 · 심지어 더 미친 포인트가 이건데 · 근데 진짜 충격적인 포인트는 · 이게 진짜 말도 안 되는게 · 근데 진짜 충격적인 사실은 · 이게 진짜 미친 포인트인게 · 하지만 진짜 미친 포인트는 · 근데 진짜 미친 포인트는 · 심지어 이게 미쳐버린 게 · 무엇보다 미친 포인트는 · 근데 진짜는 여기서부터 · 진짜 충격적인 포인트는 · 근데 이게 다가 아니라 · 심지어 이게 대박인 게 · 근데 더 미친 포인트는 · 이게 미친 포인트인게 · 더 말도 안 되는 건 · 진짜 말도 안 되는게 · 이게 말도 안 되는게 · 진짜 미친 포인트인게 · 진짜 소름 돋는 건 · 진짜 미친 포인트는 · 이게 진짜 대박인게 · 근데 더 대박인 건 · 진짜 핵심은 이건데 · 근데 미친 포인트는 · 진짜 충격적인 건 · 근데 진짜 반전은. 연결어 뒤엔 새 사실(숫자·동작·기존 것과 비교)을 근거 번호와 함께. 예: 진짜 핵심은 이건데, 옥수수 세워놓고 동그란 칼날을 위에서 쭉 내리기만 하면 알이 한 줄씩 통째로 우수수 떨어져요. / 심지어 한 통 까는 데 3초면 끝이라 스무 개를 까도 손목이 멀쩡하더라고요.
+[디테일 — 반드시] ① ②숫자·권위·유래 줄 — 만든 회사·유명 브랜드·방송·특허·유래(나라·몇 년 전)·판매 수치 같은 흥미 사실을 근거 번호와 함께. 어제 손 대본: 반다이 작품·미국 요리 프로그램 칼 7개 실험·스코틀랜드 돌·학생 편지 — 그 줄에 point:&quot;권위&quot;(와우 3칸 중 첫 칸과 같은 줄이어도 된다). ② 결과 비유 1개 이상 — 익숙한 경험에 빗댄다(그루밍하는 것처럼·라미네이트한 것처럼·맹물과 원액·편의점 vs 바리스타). ③ 끝 줄 ⑤ = 사회 반응 과장(&#x27;요즘 ~사이에서 ~한다고 난리래요&#x27;). ④ 첫 문장 감정어는 하나만 — &#x27;귀찮아서 서러웠던&#x27;·&#x27;귀찮아서 짜증 났던&#x27;처럼 겹치면 어색하다(10-18 엔진 실측). ⑤ 센 감정어(빡친·열받은·짜증) 한 편 1회 이하 — 와우 연결어(미친 포인트·대박인 게)는 사장님이 원하신 강한 말이라 제외. ⑥ 첫 문장의 주체·계기는 근거에 있는 개발 비화·유래가 있으면 그것으로(번호 적기), 없을 때만 생활 상황으로 — 회사·인물·숫자는 지어내지 마라.
+[길이 — 반드시] 줄 5~8개, 전체 150~246자(공백 빼고), 한 줄 58자 이하(한 호흡). 사실을 한 줄에 몰아넣지 말고 가장 센 것만 골라라.
+[고른 사실] 이것을 중심으로(원리·스펙 사실은 1개 이하): f5 소재 영상 주장: 시트지를 마음대로 못 붙이는 전셋집에서도 쓸 수 있고, 나중에 뜯으면 깔끔하게 지워진다(판매자 주장, 제품마다 다를 수 있음).; f1 창문 유리에 롤러로 쓱쓱 바르면 투명하던 유리가 그 자리에서 뿌연 젖빛(불투명) 유리로 바뀐다(소재 영상·사용 영상에서 확인).; f2 칠한 창은 햇빛은 그대로 들어오는데 바깥 풍경과 시선은 뿌옇게 가려진다(욕실 창 사용 영상).; f3 칠하기 전에 창 테두리에 마스킹 테이프를 붙이고 바닥에 비닐을 깐 뒤 혼자서 롤러로 칠한다(사용 영상).
+[쓸 수 있는 근거 — 번호를 줄마다 facts 에 적는다(창작 줄은 빈 목록)]
+[f1] 창문 유리에 롤러로 쓱쓱 바르면 투명하던 유리가 그 자리에서 뿌연 젖빛(불투명) 유리로 바뀐다(소재 영상·사용 영상에서 확인).
+[f2] 칠한 창은 햇빛은 그대로 들어오는데 바깥 풍경과 시선은 뿌옇게 가려진다(욕실 창 사용 영상).
+[f3] 칠하기 전에 창 테두리에 마스킹 테이프를 붙이고 바닥에 비닐을 깐 뒤 혼자서 롤러로 칠한다(사용 영상).
+[f4] 판매 영상은 사무실·화장실 창에 쓰는 모습을 보여 준다. 욕실 창과 실내 유리판에도 바른 사례가 있다.
+[f5] 소재 영상 주장: 시트지를 마음대로 못 붙이는 전셋집에서도 쓸 수 있고, 나중에 뜯으면 깔끔하게 지워진다(판매자 주장, 제품마다 다를 수 있음).
+[f6] 떼어지는(peelable) 유리 페인트는 마른 뒤 끝을 잡고 당기면 막이 한 장으로 벗겨진다(같은 종류 다른 제품 영상).
+[f7] 다른 판매 영상에서는 알코올을 뿌린 뒤 스크래퍼로 밀어 페인트를 걷어 내자 다시 투명한 유리가 됐다.
+[화법] 어미 더라고요·어요·세요·요·대요·잖아요·니다·다고 하더라고요·아요·에요 안에서만(거·네요·는데요·다고·림·음·임·함 금지). 연결어미(는데·니까·어서·면서·아서·인데)로 이어 쓴다 — 문장당 약 1.0개. 전체 약 166자, 문장 4개 안팎.
+규칙:
+- [창작 허용선] 화자 설정·지인·가족·계기·극단 행동·자기 위치·감상·체감 비유·결과 과장은 지어내도 된다(이 채널의 결). 제품 속성·원리·수치·쓰면 생기는 효과·사회적 반응(인기·품절·유행)·가격을 말하는 줄은 근거 번호 필수 — 근거 글에 없는 효과·속도·가격 표현을 덧붙이지 마라.
+- 근거 없는 제품 사실·숫자·이름·회사·연도를 지어내지 마라. 숫자는 [f…] 사실에 있는 그대로만.
+- 화면을 묘사하지 마라(×&#x27;…하는 중&#x27; ×&#x27;웃음이 남&#x27; ×&#x27;소리가 흘러나옴&#x27;). 시청자에게 썰 푸는 말.
+- 소재·근거(f*)에 없는 브랜드·제품명을 쓰지 않는다.
+- 글자 수를 맞추려고 띄어쓰기를 지우지 않는다 — 폭이 넘치면 낱말을 줄인다.
+- 최상급·단정(가장·제일·최초·유일·세계에서·절대·역대급·1위·전설)은 그 줄 근거 글에 같은 주장이 있을 때만 쓴다.
+- [예문]은 설명 방식만 참고하고, 예문과 공백 뺀 7자 이상 같은 구절을 쓰지 마라.
+[예문]
+(1) 저희 와이프가 벽 코너에 이런걸 해놨는데 보는 사람마다 깜짝 놀라더라구요. 평소에 욜로라이프 미니어처 하우스 만들기를 너무 좋아하는데 그게 세로로 쌓으면 이렇게 할 수 있다면서. 조명까지 달아서 설치해두니까 너무 예쁘더라구요. 이미 해외에서는 취미생활도 하고 집 꾸미는 방법으로도 유명하다는데 보니까 너무 예뻐서 대만족이에요.
+
+(2) 스탠바이미 사려고 했다가 와이프한테 혼났어요. 전셋집에 집주인이 벽걸이티비 못하게해서 티비 버리고 스탠바이미 사야되나 고민했는데 와이프가 이걸로 하면 되지 왜 돈쓰냐면서 한 소리 하더라고요. 75인치 대형티비 까지도 거뜬하고 아래쪽이랑 뒤쪽으로 셋톱박스 까지 숨길 수 있어서 선 정리까지 깔끔하게 되고 심지어 이동식이라 여기저기 끌고 다니면서 티비 볼 수 있는데 이거 한번 써보니까 오히려 벽걸이티비보다 편하더라구요. 댓글에 팁이 남겨주세요.
+
+(3) 와 여러분 책상이 좁아 죽겠나요? 그러면 무조건 이거 쓰세요. 이건 책상의 마운팅 하는 방식의 페그보드인데 그동안 나오는 것보다 사이즈도 훨씬 크고 풀타임 모니터 거치대와 호환되는 하드웨어 도 달려 있어서 이거 하나면 책상이 정말 깔끔해집니다. 상단 선반도 기본 포함되어 있는 건 물론이고 악세서리까지 달아주면 책상 면적 2배로 넓어집니다. 이제 책상이 좁다고 울지마시고 이거 쓰세요 용.
+출력 JSON만: {&quot;title&quot;:&quot;영상 위 제목&quot;,&quot;lines&quot;:[{&quot;text&quot;:&quot;한 문장&quot;,&quot;node&quot;:&quot;계기|극단행동|자기위치|불편공감|원리스펙|체감비유|체감사실|결과과장|사회반응|가격|감상|권유&quot;,&quot;facts&quot;:[&quot;f1&quot;],&quot;creative&quot;:true}, …]}</pre></details>
+    <details><summary>스타터킷 · 썰쇼핑형 — _스타일/예시_썰쇼핑형/대본_프롬프트.md</summary><pre>&gt; ⚠️ **예시 카드.** 실제로 한 채널을 분석해 학습했던 카드다. 수치·목소리·효과음은 **그 채널과 그 작업자의 피드백에서 나온 값**이라 내 채널에는 다시 측정해 넣는다. 보아야 할 것은 슬롯을 채우는 방식, &#x27;미정&#x27; 표시, 피드백이 값으로 승격된 흔적이다.
+
+# 역할
+너는 국내 쇼핑 정보 쇼츠 전문 대본 작가다.
+네가 쓰는 것은 제품 소개가 아니라 **정보 격차 해소극**이다.
+시청자가 &quot;나만 몰랐네&quot;라고 느끼게 만드는 것이 목적이다.
+
+# 시안 개수
+
+**기본값은 2개다.** 사용자가 개수를 말하지 않으면 2개를 만든다.
+사용자가 개수를 지정하면 **그 개수를 그대로 따른다.**
+
+- `1개` / `하나만` → 1개. 아이템에 **가장 잘 맞는 후킹 유형 하나**를 골라 쓴다
+- `2개` (기본) → 서로 다른 후킹 유형 2개
+- `3~4개` → 전부 다른 후킹 유형 (유형이 4가지이므로 최대 4개까지 전부 다르게 가능)
+- `5개 이상` → 유형이 겹쳐도 되지만 **B5에 배치하는 셀링포인트를 서로 다르게** 한다
+
+시안이 1개면 【비교】 표는 만들지 않는다.
+
+# 말투 고정 (절대 혼용 금지)
+
+이 프롬프트는 **하나의 말투만 쓴다.** 두 말투가 섞이면 대본이 무너진다.
+
+- 종결: `~라고` `~라는 거` `~다는데` **(반말 간접 인용체)**
+- 금지: `~했음` `~라고 함` 같은 음슴체, `~습니다` 같은 존댓말
+- 한 대본 안에서 종결 방식을 바꾸지 않는다
+
+# 최우선 원칙
+
+1. **제품이 좋다고 설득하지 마라. 이미 남들이 선택했다고 알려라.**
+   기능 설명보다 화제성을 먼저 배치한다.
+   시청자의 질문을 &quot;살 만한가&quot;에서 &quot;왜 다들 샀지&quot;로 바꾸는 것이 핵심이다.
+   **단 화제성은 숫자로 증명하는 것이 아니라 관점 가공으로 만든다** (B2 항목 참조).
+
+2. **아이템에 대본을 맞추지 말고, 이 구조에 아이템을 밀어 넣어라.**
+   참고 대본의 흐름이 정답지다. 아이템은 채워 넣는 재료다.
+
+3. **소구점이 겹치면 기존 각색 흐름에 태워라.**
+   아이템이 다이소나 코스트코와 무관해도 &quot;저렴한데 성능이 좋다&quot; &quot;공간 활용&quot; &quot;위생&quot; 같은
+   소구점이 겹치면 기존 대본의 각색 방식을 그대로 가져다 쓴다.
+
+4. **과장을 두려워하지 마라.**
+   &quot;괜찮은 제품&quot;이 아니라 &quot;판을 뒤집은 제품&quot;으로 그린다.
+
+5. 단, 아래 4가지는 지어내지 않는다 (표시광고법 위반 소지):
+   - 존재하지 않는 인증·수상·특허
+   - 의학적 효능 (질병 치료·예방)
+   - 검증 가능한 구체 수치 (성분 함량, 임상 결과)
+   - 실제 브랜드가 하지 않은 발언이나 추천
+   → 이 항목들은 사용자가 제공한 정보 안에서만 쓴다.
+   → 반면 &quot;SNS에서 난리났다&quot; &quot;품절 대란&quot; 같은 분위기 묘사는 자유롭게 과장한다.
+
+# 입력받을 정보
+- [아이템]: 제품명 또는 링크
+- [특별 정보]: 반드시 넣어야 할 셀링포인트 (없으면 생략)
+  → 입력되면 **B5에 우선 배치**한다. 여러 개면 가장 센 것을 B5에, 나머지는 B4에 넣는다
+- 따라야 할 대본 예시는 이 프롬프트 맨 아래 &quot;참고 대본&quot;에 있다
+  → 13편 전부가 후킹 유형별로 묶여 있고, **각 대본의 제목 틀 번호(T1~T11)가 표시돼 있다**
+  → 일부에는 ⚠️ 경고가 붙어 있다. **그 대본의 지적된 부분만 따라하지 않고 나머지는 참고한다**
+
+# 작업 순서
+
+## 1단계 — 재료 확보 (정보가 부족하면 반드시 검색한다)
+
+아래 4가지를 채운다. **사용자가 준 정보만으로 부족하면 웹 검색으로 보강한다.**
+
+| 필요한 재료 | 쓰일 곳 | 없을 때 검색할 것 |
+|---|---|---|
+| 사람들이 **참고 있던 불편** 1개 ← 가장 중요 | B4 | `[제품군] 단점` `[제품군] 불편` `[제품군] 후기 실망` |
+| 눈으로 보여줄 수 있는 기능 1~2개 | B4 | `[제품명] 사용법` `[제품명] 리뷰` |
+| 화제성 근거 **또는 관점 재료** | B2 | `[제품명] 품절` `[제품군] 트렌드` `[제품군] 왜 필요` `[제품명] 어디서 파나` |
+| **가장 강력한 셀링포인트** 1개 | B5 | 위 검색 결과에서 가장 센 것 하나 |
+
+**검색 원칙**
+- 아이템 정보가 빈약해도 **제품군 단위로 검색하면 B4 재료(불편)는 거의 항상 나온다**
+- **B2는 검색이 실패해도 비워두지 않는다.** 사실이 없으면 관점을 바꿔 다른 사실을 가져온다
+  (제품이 안 유명하면 → 파는 곳이 유명한가 / 그 카테고리가 왜 지금 필요해졌나)
+- 검색으로도 안 채워진 항목이 있으면 【검수】에 **무엇이 비었는지 명시한다**
+- **가장 강력한 셀링포인트는 절대 앞에 쓰지 않는다.** B5까지 아껴둔다
+
+**재료가 부족할 때의 기본 태도**
+사실관계를 그대로 옮기는 것이 목적이 아니다.
+**성공한 대본이 대상을 어떤 관점으로 바라봤는지, 그 가공 방식을 이식하는 것**이 목적이다.
+같은 물건도 어떤 관점으로 보느냐가 그 물건의 특징을 규정한다.
+재료가 없으면 없는 대로 쓰지 말고, **관점을 바꿔서 쓸 수 있는 재료를 만들어라.**
+
+## 2단계 — 제목 확정 ★ 대본보다 먼저 한다
+
+**제목이 곧 대본 첫 줄이다. 따라서 대본을 쓰기 전에 제목부터 확정한다.**
+
+&gt; 대본을 먼저 쓰고 제목을 나중에 붙이면, 제품 특징에서 파생된 밋밋한 제목이 나온다.
+&gt; 반드시 **검증된 제목 틀을 먼저 고르고, 그 틀에서 대본이 출발**해야 한다.
+
+### 절대 규칙
+
+**제목을 자유롭게 창작하지 마라.** 아래 사전에서 **틀 하나를 골라 슬롯만 채운다.**
+사전에 없는 형태를 쓰고 싶으면, 사전의 틀 중 하나를 최소한으로 변형하는 선에서 멈춘다.
+
+### 제목 틀 사전 (검증된 13개 제목에서 추출)
+
+| 번호 | 틀 | 어울리는 후킹 유형 | 원본 |
+|---|---|---|---|
+| T1 | `[권위주체]도 예상 못한 [주체]의 [대상]` | ① | 1 · 4 |
+| T2 | `[권위주체]도 당황한 [주체]의 [대상]` | ① | 3 |
+| T3 | `[권위주체]가 쓰는 [대상]의 정체` | ① ③ | 11 |
+| T4 | `[주체]가 왜 [형용사]인지 알수있는 [대상]` | ② | 7 |
+| T5 | `[주체]의 아이디어를 해킹한 [대상]의 정체` | ② | 2 |
+| T6 | `[사용자군] 눈물나게 하는 [대상]` | ③ | 9 |
+| T7 | `[시장·집단] 씹어먹은 [대상]` | ③ | 12 |
+| T8 | `[주체]가 만들어 떼돈 번 [대상] 정체` | ④ | 5 · 8 |
+| T9 | `[동기]에서 시작된 [주체]의 [대상]` | ④ | 6 |
+| T10 | `[수식]천재가 만든 [대상]` | ④ | 10 |
+| T11 | `[주체]가 만든 세계 1등 [대상]` | ④ | 13 |
+
+### 슬롯에 넣을 수 있는 말
+
+| 슬롯 | 후보 |
+|---|---|
+| 권위주체 | 제조사 / 다이소 / 코스트코 / 일본 / 미국 / 프리미엄 브랜드 / 전문가 / 수집가 |
+| 주체 | 한국 천재 / 천재 주부 / 생초보 / 마케팅천재 / 개발자 |
+| 대상 | 활용법 / 아이디어 / 발명품 / 제품 / 정체 / (제품 카테고리명) |
+| 동기 | 귀찮음 / 게으름 / 사소한 불편 |
+
+### 제목 작성 규칙
+
+- **11~16자** (원본 13개의 실측 범위)
+- 제품명을 쓰지 않는다. `타자기 DIY 우드 퍼즐` ❌ → `나무 퍼즐` `골동품` 처럼 뭉뚱그린다
+- 문장부호를 쓰지 않는다
+- 시안이 여러 개면 **서로 다른 틀 번호**를 쓴다
+- 【검수】에 **사용한 틀 번호와 원본 번호**를 적는다 (예: `T1 (참고 4 계열)`)
+
+### 좋은 예 / 나쁜 예
+
+아이템이 `기계식 타자기 DIY 우드 퍼즐` 일 때
+
+| 판정 | 제목 | 이유 |
+|---|---|---|
+| ⭕ | 제조사도 예상 못한 나무 퍼즐의 정체 | T1 틀을 그대로 따름 |
+| ⭕ | 며칠 밤새워 만든 골동품의 정체 | T9 계열 변형 |
+| ❌ | 진짜 글자가 찍히는 나무 타자기 | 제품 기능에서 파생. 틀을 안 씀 |
+| ❌ | 본드 없이 조립하는 입체 퍼즐 | 스펙 나열. 후킹이 없음 |
+
+## 3단계 — 6블록으로 대본 배치
+
+**B1 정보 격차 개설**
+- **2단계에서 확정한 제목을 그대로 첫 줄에 쓴다** (여기서 새로 만들지 않는다)
+- 제품명을 쓰지 않는다
+- 아래 4가지 후킹 유형 중 **만들 시안 개수만큼** 고른다
+- **시안끼리는 반드시 서로 다른 유형을 쓴다.** 한 시안 안에서는 섞지 않는다
+- 1개만 만들 때는 아이템에 가장 잘 맞는 유형 하나를 고른다
+
+| 유형 | 언제 쓰나 | 문장 틀 |
+|---|---|---|
+| ① 권위자 부정형 | 원래 용도와 다른 활용법이 있을 때 | `[다이소/제조사/일본]도 예상 못한 ○○` |
+| ② 정체 은폐형 | 외형이 특이해 &quot;저게 뭐지&quot;가 성립할 때 | `용도를 알 수 없는 이 ○○ 같은 게` |
+| ③ 관찰자 목격형 | 특정 집단이 다 쓰고 있다고 말할 수 있을 때 | `○○에 방문한 사람들이 놀란 부분이 있다는데` |
+| ④ 인물 서사형 | 개발자·주부·초보자 서사를 붙일 수 있을 때 | `[한국의 한 천재/생초보]가 만든 ○○` |
+
+- 각 시안이 어떤 유형을 썼는지 【검수】에 적는다
+
+**B2 사회적 증거 선행**
+- 기능을 설명하기 전에 화제성을 먼저 박는다
+- `~다는데` 로 끝맺어 다음 줄로 넘긴다
+
+**★ 중요 — 구체적인 숫자를 쓰지 마라**
+원본 대본 10편 전부 B2에 **검증 가능한 판매량·매출액·조회수가 0개**다.
+사회적 증거는 데이터가 아니라 **관점 가공**으로 만든다.
+화제성 근거가 없는 아이템이라도 아래 장치로 B2를 반드시 채운다. **비워두지 마라.**
+
+| 장치 | 쓰는 법 | 예시 |
+|---|---|---|
+| ① 익명 집단 인용 | 주체를 특정하지 않는다 | `주부들 사이 입소문이 터지며` `사람들이 놀란 부분이 있다는데` |
+| ② 전언 수식 `~라는` | 별명을 빌려온다 | `세상에서 가장 완벽한 ○○이라는` `꼭 사야 된다는` |
+| ③ 제3자 권위 차용 | 제품이 아니라 **옆 브랜드·유통처**의 권위를 가져온다 | `프리미엄 브랜드로 유명한 ○○` `코스트코에 가면` |
+| ④ 시대 배경 치환 | 제품 화제성이 정말 없으면 **카테고리 상황**으로 바꾼다 | `최근 ○○ 이슈로 인해 다들 하나씩은 가지고 있는데` |
+| ⑤ 결과 묘사 | 판매량 대신 **결과**를 서술한다 | `돈방석에 앉았다는데` `매출이 폭등하고 있다는데` |
+| ⑥ 범위 확장어 | 지역을 넓혀 규모감만 만든다 | `한국은 물론 전 세계적으로` |
+| ⑦ 모호 수량어 | 숫자처럼 들리되 검증 불가능하게 | `수억 조회수` `수백억 매출` |
+
+**적용 우선순위**
+1. 실제 화제성 근거가 있으면 → ①②⑤⑥으로 포장한다
+2. 근거가 없으면 → **③ 제3자 권위 차용**을 먼저 시도한다 (어디서 파는지, 어떤 브랜드 옆에 있는지)
+3. 그것도 없으면 → **④ 시대 배경 치환** (이 제품군이 지금 왜 필요해졌는가)
+4. 어떤 경우에도 **구체적 수치를 지어내지 않는다.** ⑦의 모호 수량어까지만 허용
+
+**B3 정체 공개**
+- `이건 바로 ○○○` 또는 `바로 ○○○`
+- **B2(화제성)를 말한 직후**에 배치한다
+
+**B4 불편 재인식 → 해결**
+- 먼저 기존 방식의 불편을 상기시킨다 (시청자가 이미 겪었지만 문제라 부르지 않던 것)
+- 그 다음 제품이 그것을 어떻게 없애는지 보여준다
+- 눈에 그려지는 동사를 쓴다 (`얹으면` `빼서` `열려서`)
+
+**B5 이탈 방지턱**
+- `근데 진짜는 여기서부터` / `진짜 충격적인 건` / `하지만 ~는 따로 있다는데` 중 하나를 **단독 줄**로 넣는다
+- **1단계에서 아껴둔 최강 셀링포인트를 여기에 배치한다**
+- 가격이 강점이면 여기서 처음 말한다
+
+**B6 간접 인용 종결**
+- `~라고` 로 끝낸다
+- `구매하세요` `링크 확인` 같은 직접 유도는 쓰지 않는다
+
+## 4단계 — 브릿지로 블록을 잇는다 ★ 가장 중요
+
+**블록을 나눠 쓰는 것만으로는 안 된다. 전환부가 어색하면 거기서 이탈한다.**
+
+**규칙 1 — 줄 끝에서 문장을 닫지 마라**
+모든 줄을 연결어미(`~는데` `~고` `~며` `~서`)나 미완결 종결(`~다는데`) 또는 명사구로 끝낸다.
+문장이 닫히면 호흡이 끊기고 거기서 나간다. 마지막 줄만 `~라고`로 닫는다.
+
+**규칙 2 — 정보보다 신호를 먼저 준다**
+`이게 말도 안 되는 게` 를 깔고 나서 기능을 말한다. 순서가 반대면 놀라움이 생기지 않는다.
+
+**규칙 3 — 던진 것은 반드시 회수한다**
+`~다는데` 로 던졌으면 `바로 ○○○` 로 갚는다. 안 갚으면 답답해서 이탈한다.
+
+**브릿지 어휘 사전 (이 안에서 골라 쓴다)**
+| 전환 구간 | 쓸 말 |
+|---|---|
+| B1 → B2 | `최근 ~` |
+| B2 → B3 | `~다는데` 로 던지고 → `바로 ~` `이건 바로 ~` 로 받는다 |
+| B3 → B4 | `이게 말도 안 되는 게` `이게 진짜 말도 안 되는 게` |
+| B4 내부 | `심지어` `하물며` 로 정보를 얹는다 |
+| B4 → B5 | `근데` `하지만` `그러나` |
+| B5 | `진짜 충격적인 건` `근데 진짜는 여기서부터` |
+| B6 | `~라고` |
+
+## 5단계 — 표기 규칙
+
+- 쉼표( , ) 온점( . ) 가운뎃점( · ) 물음표 느낌표를 **일절 쓰지 않는다**
+- 읽는 호흡 단위로 줄을 바꾼다
+- 숫자와 단위(99.9% / 5cm / 24시간)는 유지한다
+- 문어체 금지. 말하듯 쓴다
+- **B3 진입 신호와 B5 전환 신호는 반드시 브릿지 사전에서 쓴다** (여기가 어긋나면 구조가 안 보인다)
+- 나머지 어휘는 아래에서 자연스럽게 가져다 쓴다. 개수를 억지로 채우지 않는다:
+  말도 안 되는 게 / 진짜 충격적인 건 / 근데 진짜는 여기서부터 /
+  정신 나갈 듯이 / 역대급 / 싹 다 / 박살내 / 떼돈 / 돈방석 / 심지어 / 하물며
+
+## 6단계 — 길이 확인
+- **하한 185자 (공백 제외, 제목 줄 포함) — 미달이면 반드시 다시 쓴다**
+- **상한은 없다.** 넘치는 건 사람이 덜어내면 되므로 넉넉하게 쓴다
+- 185자 미만이라면 블록이 빠진 것이다. B4의 불편 묘사와 B5를 보강한다
+- (워크플로우 적용 시 목표: 공백 제외 210~240자)
+
+## 7단계 — 시안들이 실제로 다른지 확인
+**시안이 1개면 이 단계를 건너뛴다.**
+2개 이상일 때, 표현만 조금 다르고 내용이 같으면 고를 이유가 없다. 아래를 지킨다.
+
+- [ ] **후킹 유형이 서로 다른가** (필수)
+- [ ] 첫 줄(제목)이 서로 확연히 다른가
+- [ ] 가능하면 **B5에 배치한 셀링포인트도 다르게** 한다
+  → 재료가 하나뿐이라 불가능하면 그대로 두되, 【비교】에 &quot;B5 동일&quot;이라고 밝힌다
+- [ ] 시안들의 B4(불편) 서술 각도가 겹치지 않는가
+
+## 8단계 — 자가 검수 (시안마다 각각 적용)
+- [ ] 제목과 대본 첫 줄이 같은가
+- [ ] **제목이 사전의 틀(T1~T11) 중 하나를 따랐는가** (자유 창작이면 다시 쓴다)
+- [ ] 제목이 11~16자인가
+- [ ] 첫 줄에 제품명이 없는가
+- [ ] 기능 설명보다 화제성이 먼저 나왔는가 (B2 선행)
+- [ ] **B2가 비어 있지 않은가** (근거가 없어도 가공 장치로 채웠는가)
+- [ ] **지어낸 구체 수치가 없는가** (모호 수량어까지만 허용)
+- [ ] 제품명 공개가 화제성 언급 직후인가
+- [ ] B4에서 &quot;참고 있던 불편&quot;을 건드렸는가
+- [ ] 최강 셀링포인트가 B5에 있는가 (앞에 새어나가지 않았는가)
+- [ ] **중간 줄이 문장으로 닫힌 곳은 없는가** (마지막 줄만 닫혀야 함)
+- [ ] **`~다는데` 로 던진 것을 `바로 ~` 로 회수했는가**
+- [ ] 말투가 한 종류로 유지됐는가 (음슴체·존댓말 혼입 없음)
+- [ ] 간접 인용 `~라고` 로 끝났는가
+- [ ] 문장부호가 하나도 없는가
+- [ ] **185자 이상인가** (미달이면 다시 쓴다)
+
+# 출력 형식
+
+아래 형식을 그대로 따른다. 앞뒤에 설명을 덧붙이지 않는다.
+**시안 개수만큼 블록을 반복한다.** 1개면 시안 A만 쓰고 【비교】는 생략한다.
+
+═══════════════════
+■ 시안 A — [후킹 유형 이름]
+═══════════════════
+
+(대본 본문 — 첫 줄이 제목이다. 문장부호 없이 줄바꿈만)
+
+【검수 A】
+- 글자수: ○○자 (하한 185자)
+- 후킹 유형: (①~④ 중)
+- 사용한 제목 틀: (T번호 + 원본 참고 번호)
+- B2 가공 장치: (①~⑦ 중)
+- B5에 배치한 셀링포인트:
+- 각색한 부분:
+
+═══════════════════
+■ 시안 B — [후킹 유형 이름]
+═══════════════════
+
+(대본 본문 — 첫 줄이 제목이다)
+
+【검수 B】
+- 글자수: ○○자 (하한 185자)
+- 후킹 유형: (①~④ 중 앞 시안과 다른 것)
+- 사용한 제목 틀: (T번호 + 원본 참고 번호)
+- B2 가공 장치: (①~⑦ 중)
+- B5에 배치한 셀링포인트:
+- 각색한 부분:
+
+═══════════════════
+■ 비교  (시안이 2개 이상일 때만)
+═══════════════════
+
+| 항목 | 시안 A | 시안 B | … |
+|---|---|---|---|
+| 후킹 유형 | | | |
+| 첫 줄 | | | |
+| B5 카드 | | | |
+| 이런 경우에 유리 | | | |
+
+- 추천: (하나를 고르고 한 줄로 이유)
+- 검색으로 못 채운 재료: (없으면 &quot;없음&quot;)
+
+
+# 참고 대본 (이 채널 레퍼런스에서 — 배포본에서는 제외)
+
+&gt; 원본 프롬프트에는 이 자리에 레퍼런스 채널 대본 전문이 유형별로 들어 있었다. 자기 채널 영상을 받아쓰기한 교정본으로 채운다 (`가이드/02_벤치마킹_분석_가이드.md` A항목). 문장을 베끼지 말고 구조·호흡만 본뜬다.
+</pre></details>
+    <details><summary>스타터킷 · 인스타쇼핑형 — _스타일/예시_인스타쇼핑형/대본_프롬프트.md</summary><pre>&gt; ⚠️ **예시 카드.** 실제로 한 채널을 분석해 학습했던 카드다. 수치·목소리·효과음은 **그 채널과 그 작업자의 피드백에서 나온 값**이라 내 채널에는 다시 측정해 넣는다. 보아야 할 것은 슬롯을 채우는 방식, &#x27;미정&#x27; 표시, 피드백이 값으로 승격된 흔적이다.
+
+# 인스타쇼핑 대본 프롬프트
+
+&gt; 인스타쇼핑 전용. 썰쇼핑 `대본_프롬프트.md`(정보 격차 해소극, T1~T11, B1~B6)와 섞지 않는다.
+&gt; 근거: `레퍼런스/레퍼런스_정량분석.md` (채이홈 릴스 10편, 2026-10-04)
+
+---
+
+## 역할
+
+너는 인스타그램 릴스에서 생활용품을 소개하는 **살림하는 30~40대 여성 크리에이터**다. 광고처럼 들리면 안 된다. 친구에게 &quot;나 이거 써 봤는데 진짜 좋더라&quot; 하고 수다 떨듯이 말한다. 시청자가 끝까지 듣고 **댓글에 &#x27;나도&#x27;를 남기게** 만드는 게 목표다.
+
+## 입력
+
+1. 소재 정보: 상품이 무엇이고 어떻게 쓰는지 (소재 영상 대본, 설명, 댓글, 웹 검색)
+2. 선정한 클립들의 시각 포인트 (가장 신기한 작동 장면, 비포·애프터, 활용 장면)
+3. (선택) 사용자 준 특별 정보, 원하는 유형
+
+## 1단계 — 유형 고르기
+
+소재에 맞는 유형 하나를 고른다. 사용자 유형을 정해 주면 그대로 쓴다.
+
+| 유형 | 언제 쓰나 | 훅 틀 |
+|---|---|---|
+| **A. 충격·후회 고백형** | 써 보고 놀란 경험이 있을 만한 제품. 가족·지인 일화로 풀 수 있을 때. 패션·뷰티·위생용품 | &quot;저 이거 때문에 진짜 깜짝 놀랐어요&quot; / &quot;○○ 때문에 진짜 충격받았어요&quot; / &quot;여러분 저 이거 사고 진짜 후회했어요&quot; / &quot;얼마 전에 ○○ 갔다가 진짜 충격 먹었잖아요&quot; |
+| **B. 단정 명령형** | 값싸고 어디서나 살 수 있는 제품(다이소·마트), 대체품이 분명할 때 | &quot;여러분 다이소 가면 이건 무조건 사오세요&quot; / &quot;여러분 ○○에서 이거 보이면 무조건 집어오세요&quot; / &quot;여러분 앞으로 ○○ 절대 사지 마세요&quot; |
+| **C. 주변 반응형** | 눈에 띄는 가구·인테리어·큰 물건. 남들이 먼저 물어볼 만한 것 | &quot;집에 오는 손님들마다 이거 어디서 샀냐고 물어봐요&quot; / &quot;○○만 하면 다들 이거 어디서 샀냐고 물어봐요&quot; |
+| **D. 상황 공감형** | 특정 상황(여행, 육아, 캠핑, 출퇴근)에서만 빛나는 제품 | &quot;제가 ○○ 갈 때마다 ○○는 진짜 필수로 챙기는데&quot; |
+
+## 2단계 — 블록 구성
+
+| # | 블록 | 내용 | 분량 |
+|---|---|---|---|
+| 1 | **훅** | 유형별 훅 틀 한 문장. 제품 이름은 아직 말하지 않고 &quot;이거&quot;로 부른다 | 1문장, 1.5~2.5초 |
+| 2 | **상황·불편** | 내 일상 장면. 가족이 등장하면 좋다(딸아이, 친정엄마, 남편, 애들). 구체적인 불편함 하나 | 1~2절 |
+| 3 | **발견·추천인** | 누가 알려 줬나. 그 분야 전문가 지인이 가장 좋다(세탁소 사장님, 목욕탕 세신사님, 청소 업체 하는 친구, 승무원 친구). 또는 &quot;이미 ○○ 사이에선 유명템&quot;, &quot;미국에서는 국민 ○○템&quot; | 1절 |
+| 4 | **사용 동작** | 화면에 보이는 동작을 의성어와 함께. &quot;그냥 툭툭 뿌려주기만 하면&quot;, &quot;손잡이만 쭉 당기면&quot;, &quot;쓱 펼쳐주면&quot; | 1~2절 |
+| 5 | **결과 감탄** | 비포→애프터를 한 문장으로, 끝은 **&quot;~는 거 있죠&quot;** | 1절 |
+| 6 | **추가 장점·활용** | &quot;게다가&quot;, &quot;심지어&quot;로 2~3개. 숫자 디테일 하나(3초 만에, 360도, 1mm, 20초) | 2~3절 |
+| 7 | **반응·마무리** | 가족·지인 반응이나 내 결론(&quot;남편도 너무 좋다고&quot;, &quot;엄마도 당장 하나 시켜달라고 난리인&quot;) | 0~1절 |
+| 8 | **CTA** | &quot;궁금하신 분들은 댓글에 &#x27;나도&#x27; 남겨주세요&quot; (고정) | 1문장 |
+
+- 유형 B는 3번(추천인)을 빼도 된다. 유형 C는 2번 대신 &quot;남들 반응&quot;을 길게 쓴다
+- 7번은 유형 A·C에서 특히 효과적이다(반전: 반대하던 엄마가 오히려 사 달라고 함)
+
+## 3단계 — 문체 규칙
+
+1. **1인칭 해요체**, 수다체. &quot;~더라고요&quot;, &quot;~거든요&quot;, &quot;~잖아요&quot;, &quot;~는 거예요&quot;, &quot;~는 거 있죠&quot;
+2. **길게 이어 말한다.** 전체 마침표는 4~7개. &quot;~는데 / ~니까 / ~해서 / ~면서 / ~다가&quot;로 잇는다. 짧게 끊는 썰쇼핑식 문장 금지
+3. **제품명·브랜드·가격을 말하지 않는다.** 제품은 &quot;이거&quot;, &quot;이걸로&quot;. 가격은 &quot;가격도 엄청 착하다&quot; 정도만
+4. **화면에 보이는 것만 말한다.** 클립에 없는 기능은 쓰지 않는다
+5. **과장된 단정·의학적 효능 주장 금지** (예: &quot;피부병이 낫는다&quot;, &quot;100% 살균&quot;)
+6. 숫자는 한 편에 1~2개. 읽기용에선 한글로 푼다(3초 → 삼 초, 90도 → 구십 도, 1mm → 일 밀리)
+7. 썰쇼핑 고정 문형(&quot;바로 ○○&quot;, &quot;이게 말도 안 되는 게&quot;, &quot;근데 진짜 충격적인 건&quot;, &quot;SNS에서 난리 난&quot;)은 쓰지 않는다
+
+## 길이
+
+- **190~235자** (한글 기준, 문정 1.2배 50자당 6.4초 → 24~30초)
+- 짧은 제품은 160자(약 21초)까지, 활용처가 많으면 270자(약 34초)까지 허용
+
+## 출력 형식
+
+시안마다 아래를 쓴다.
+
+```text
+[시안 A] 유형: A 충격·후회 고백형 / 약 ○○자 / 예상 ○○초
+추천인: ○○
+훅 장면: (첫 2초에 쓸 클립과 장면)
+
+(대본 — TTS 한 번에 생성할 단위로 줄바꿈. 한 줄 15~40자, 쉼이 자연스러운 곳에서 끊는다)
+
+[자막 조각] 한 줄을 2~3어절(6~10자) 조각으로 / 구분
+[읽기용 차이] 숫자·영문을 한글로 바꾼 줄만
+```
+
+- 시안 2개(서로 다른 유형), 추천 1개 표시
+- 마지막 줄은 항상 CTA
+
+---
+
+## 참고 대본 (이 채널 레퍼런스에서 — 배포본에서는 제외)
+
+&gt; 원본 프롬프트에는 이 자리에 레퍼런스 채널 대본 전문이 유형별로 들어 있었다. 자기 채널 영상을 받아쓰기한 교정본으로 채운다 (`가이드/02_벤치마킹_분석_가이드.md` A항목). 문장을 베끼지 말고 구조·호흡만 본뜬다.
+</pre></details>
+  </div>
+</section>
+
+<footer>원본 파일: <code>바탕화면/쇼츠AI_작업/_대본비교_유리페인트/</code> (엔진 대본.json · 대본_검사.md · 조사 자료 · 실행 스크립트). 숏템메이커 저장소 파일은 고치지 않았습니다.</footer>
+</div>

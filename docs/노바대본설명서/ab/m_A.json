@@ -1,0 +1,1378 @@
+{
+ "A_52_glasspaint": {
+  "side": "A",
+  "id": 52,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 237,
+    "lines": 10,
+    "first": "저 언니네 집 갔다가 진짜 충격 받았잖아요.",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_52_wrap": {
+  "side": "A",
+  "id": 52,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 258,
+    "lines": 10,
+    "first": "저 엄마한테 랩 헐렁하게 씌웠다고 덜컥 혼날 뻔했잖아요!",
+    "first_chars": 24,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 3
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_53_glasspaint": {
+  "side": "A",
+  "id": 53,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 200,
+    "lines": 9,
+    "first": "여러분 창문 사생활 보호는 무조건 이렇게 하세요!",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_53_wrap": {
+  "side": "A",
+  "id": 53,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 262,
+    "lines": 9,
+    "first": "여러분 남은 음식 보관할 땐 무조건 이렇게 하세요.",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_54_glasspaint": {
+  "side": "A",
+  "id": 54,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 271,
+    "lines": 9,
+    "first": "와.. 해외에서 요즘 완전 난리 났다는 유리 페인트가 있는 거 있죠!",
+    "first_chars": 28,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "해외에서 요즘 완전 난리 났다는 유리 페인트가 있는 거 있죠!",
+     "한 번 써본 사람들이 주변에 알려주면서 자취생들 사이에서 난리가 났대요.",
+     "저도 반신반의하면서 어렵게 구해다가 유리창에 롤러로 슥슥 칠해봤거든요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_54_wrap": {
+  "side": "A",
+  "id": 54,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 232,
+    "lines": 9,
+    "first": "와.. 미국에서 요즘 완전 난리가 난 랩이 있는 거 있죠!",
+    "first_chars": 23,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국",
+     "한국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "미국에서 요즘 완전 난리가 난 랩이 있는 거 있죠!",
+     "한 번 써본 살림 고수들 사이에서 입소문이 쫙 퍼졌다는 거예요.",
+     "해외에선 물량이 없어서 못 판다 소리가 나올 정도로 난리가 났었대요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_55_glasspaint": {
+  "side": "A",
+  "id": 55,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 282,
+    "lines": 9,
+    "first": "집 안 훤히 들여다보여 빡친 사람들 환장하게 만든 천재의 발명품",
+    "first_chars": 26,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "집 안 훤히 들여다보여 빡친 사람들 환장하게 만든 천재의 발명품",
+     "창밖에서 이웃집이 너무 잘 보여 스트레스받던 사람들 사이에서 난리가 났다는데",
+     "롤러로 쓱 밀기만 하면 외부 시선을 싹 차단해 버려서 돈방석에 앉았다고",
+     "이러니 전 세계 사생활 보호템으로 떼돈을 벌 수밖에 없었다고"
+    ],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_55_wrap": {
+  "side": "A",
+  "id": 55,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 216,
+    "lines": 9,
+    "first": "주부들 환장하게 만든 미국 천재의 발명품",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "주부들 환장하게 만든 미국 천재의 발명품",
+     "딱 봤을 땐 흔한 주방 랩처럼 생긴 이게 SNS에서 난리가 났다는데",
+     "이걸 개발한 천재가 돈방석에 앉았다는 소문이 돌면서 입소문 터졌다는데",
+     "이러니 전 세계 주부들이 환장하고 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_56_glasspaint": {
+  "side": "A",
+  "id": 56,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 193,
+    "lines": 7,
+    "first": "건축가도 놀라버린 미국 천재의 미친 활용법",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "건축가도 놀라버린 미국 천재의 미친 활용법",
+     "요새 이 페인트 하나로 SNS가 완전히 뒤집어졌다는데",
+     "이게 원래는 욕실 유리를 가리려고 나온 평범한 페인트였음",
+     "근데 한 주부가 뿌옇게 되는 속성을 깨닫고 온 사방에 칠해 버렸다는 거"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_56_wrap": {
+  "side": "A",
+  "id": 56,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 185,
+    "lines": 7,
+    "first": "제조사도 감탄한 미국 천재의 미친 활용법",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "제조사도 감탄한 미국 천재의 미친 활용법",
+     "요새 이 매직랩 하나로 인터넷이 싹 뒤집어졌다는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_58_glasspaint": {
+  "side": "A",
+  "id": 58,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 200,
+    "lines": 8,
+    "first": "여러분 사생활 가린다고 커튼만 치는 거 절대 하지 마세요!",
+    "first_chars": 24,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_58_wrap": {
+  "side": "A",
+  "id": 58,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 198,
+    "lines": 8,
+    "first": "여러분 그릇에 일반 랩 헐렁하게 절대 덮지 마세요!",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "심지어 주스나 냄비 국물까지 완벽하게 밀봉되니까 다들 난리예요."
+    ],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_59_glasspaint": {
+  "side": "A",
+  "id": 59,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 219,
+    "lines": 8,
+    "first": "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요!",
+    "first_chars": 22,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요!",
+     "주변에서 다들 이걸 쓰고 있길래 부랴부랴 찾아봤거든요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_59_wrap": {
+  "side": "A",
+  "id": 59,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 228,
+    "lines": 8,
+    "first": "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요.",
+    "first_chars": 22,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요.",
+     "주변에서 하나둘 다 이걸 쓰고 있길래 저만 모르나 싶어서 가져왔거든요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_60_glasspaint": {
+  "side": "A",
+  "id": 60,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 164,
+    "lines": 7,
+    "first": "역발상으로 돈방석 앉은 천재의 발명품",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "역발상으로 돈방석 앉은 천재의 발명품",
+     "창문 밖으로 사생활 털리는 거에 빡쳐서 만든 이게 조용히 퍼지기 시작했는데",
+     "만든 사람이 미쳤다며 SNS에서 난리가 났는데",
+     "이러니 천재 소리 들으며 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_60_wrap": {
+  "side": "A",
+  "id": 60,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 196,
+    "lines": 7,
+    "first": "모두가 무릎 탁 친 천재의 발명품",
+    "first_chars": 13,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "헐렁거리며 다 들뜨는 일반 랩에 빡쳐서 나온 이 물건이 살림 고수들 사이에서 난리가 났다는데",
+     "만든 사람이 천재라며 입소문 타고 품절 대란까지 터졌다는데",
+     "이러니 다들 감탄하고 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_61_glasspaint": {
+  "side": "A",
+  "id": 61,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 223,
+    "lines": 8,
+    "first": "아니 잠깐만요, 창문에 쓱 바르면 사생활이 차단된다고요?",
+    "first_chars": 25,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_61_wrap": {
+  "side": "A",
+  "id": 61,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 205,
+    "lines": 8,
+    "first": "아니 잠깐만요, 음료 컵을 뒤집어도 안 샌다고요?",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "알고 보니 요즘 핫한 매직 랩이더라고요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_62_glasspaint": {
+  "side": "A",
+  "id": 62,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 238,
+    "lines": 8,
+    "first": "저 사생활 보호 페인트 몰라서 괜히 비싼 블라인드로 바꿀 뻔했어요!",
+    "first_chars": 28,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_62_wrap": {
+  "side": "A",
+  "id": 62,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 202,
+    "lines": 8,
+    "first": "저 밀폐용기 다 버리고 새로 바꿀 뻔했거든요.",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_65_glasspaint": {
+  "side": "A",
+  "id": 65,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 146,
+    "lines": 6,
+    "first": "이케아도 당황하게 만든 천재의 발명품",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "이케아도 당황하게 만든 천재의 발명품",
+     "지금 주부들 사이에서 바이럴 터지면서 주문 폭주했다는데",
+     "이러니 난리가 날 만하다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_65_wrap": {
+  "side": "A",
+  "id": 65,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 160,
+    "lines": 6,
+    "first": "미국 천재가 만들어 전 세계 주부들 환장하게 만든 발명품",
+    "first_chars": 23,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "미국 천재가 만들어 전 세계 주부들 환장하게 만든 발명품",
+     "최근 살림꾼들 사이에서 소문이 터지며 품절 대란이 났다는데",
+     "이러니 떼돈을 벌고 난리가 났다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_66_glasspaint": {
+  "side": "A",
+  "id": 66,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 167,
+    "lines": 6,
+    "first": "옆집 시선 때문에 고생했으면 이거 보면 됨",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "기존 시트지는 기포 빠지고 떼어낼 때 찐득하게 남아 제대로 되지도 않았음"
+    ],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_66_wrap": {
+  "side": "A",
+  "id": 66,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 174,
+    "lines": 6,
+    "first": "주부들 구원한 천재의 발명품 정체라는데",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "주부들 구원한 천재의 발명품 정체라는데"
+    ],
+    "judged": true,
+    "pain_lines": 2
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_67_glasspaint": {
+  "side": "A",
+  "id": 67,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 132,
+    "lines": 5,
+    "first": "자취방 창문 보다가 이거 알고 진짜 충격 먹었음",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "가격도 착한데 욕실 창문 어디든 칠할 수 있으니 진짜 효율 대박임"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_67_wrap": {
+  "side": "A",
+  "id": 67,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 126,
+    "lines": 5,
+    "first": "살림 고수 집 갔다가 이거 보고 진짜 충격 먹었음",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "3개 묶음 가격도 착한데 층층이 쌓아 보관까지 되니 효율 대박이라고."
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_68_glasspaint": {
+  "side": "A",
+  "id": 68,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 140,
+    "lines": 5,
+    "first": "이 가격에 집 안 훤히 들여다보이는 창문 싹 가려주는 게 있다는 거",
+    "first_chars": 26,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "이 가격에 집 안 훤히 들여다보이는 창문 싹 가려주는 게 있다는 거",
+     "거기다 맘에 안 들면 스크래퍼로 슥 긁어 한 장으로 떼어내면 그만임",
+     "이 정도 가성비에 사생활까지 완벽하게 지켜주면 진짜 한번 써봐야겠더라"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_68_wrap": {
+  "side": "A",
+  "id": 68,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 131,
+    "lines": 5,
+    "first": "무조건 사야 되는 필수 살림템이 있다고",
+    "first_chars": 16,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "이 정도 밀봉력에 활용성이면 주부들 사이에서 난리 날 만하겠더라"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_69_glasspaint": {
+  "side": "A",
+  "id": 69,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 87,
+    "lines": 4,
+    "first": "요놈 하나면 창문 사생활 노출 걱정 싹 끝나는 겨",
+    "first_chars": 19,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_69_wrap": {
+  "side": "A",
+  "id": 69,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 92,
+    "lines": 4,
+    "first": "이 가격에 요놈 하나면 음식 밀봉 걱정 싹 끝나는 겨",
+    "first_chars": 20,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 0,
+    "unsupported_claims": [],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_70_glasspaint": {
+  "side": "A",
+  "id": 70,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 193,
+    "lines": 7,
+    "first": "건축가도 놀라버린 미국 천재의 미친 활용법",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "건축가도 놀라버린 미국 천재의 미친 활용법",
+     "요새 이 페인트 하나로 SNS가 완전히 뒤집어졌다는데",
+     "이게 원래는 욕실 유리를 가리려고 나온 평범한 페인트였음",
+     "근데 한 주부가 뿌옇게 되는 속성을 깨닫고 온 사방에 칠해 버렸다는 거"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_70_wrap": {
+  "side": "A",
+  "id": 70,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 185,
+    "lines": 7,
+    "first": "제조사도 감탄한 미국 천재의 미친 활용법",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "제조사도 감탄한 미국 천재의 미친 활용법",
+     "요새 이 매직랩 하나로 인터넷이 싹 뒤집어졌다는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_71_glasspaint": {
+  "side": "A",
+  "id": 71,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 193,
+    "lines": 7,
+    "first": "건축가도 놀라버린 미국 천재의 미친 활용법",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "건축가도 놀라버린 미국 천재의 미친 활용법",
+     "요새 이 페인트 하나로 SNS가 완전히 뒤집어졌다는데",
+     "이게 원래는 욕실 유리를 가리려고 나온 평범한 페인트였음",
+     "근데 한 주부가 뿌옇게 되는 속성을 깨닫고 온 사방에 칠해 버렸다는 거"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_71_wrap": {
+  "side": "A",
+  "id": 71,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 185,
+    "lines": 7,
+    "first": "제조사도 감탄한 미국 천재의 미친 활용법",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "제조사도 감탄한 미국 천재의 미친 활용법",
+     "요새 이 매직랩 하나로 인터넷이 싹 뒤집어졌다는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_72_glasspaint": {
+  "side": "A",
+  "id": 72,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 193,
+    "lines": 7,
+    "first": "건축가도 놀라버린 미국 천재의 미친 활용법",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "건축가도 놀라버린 미국 천재의 미친 활용법",
+     "요새 이 페인트 하나로 SNS가 완전히 뒤집어졌다는데",
+     "이게 원래는 욕실 유리를 가리려고 나온 평범한 페인트였음",
+     "근데 한 주부가 뿌옇게 되는 속성을 깨닫고 온 사방에 칠해 버렸다는 거"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_72_wrap": {
+  "side": "A",
+  "id": 72,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 185,
+    "lines": 7,
+    "first": "제조사도 감탄한 미국 천재의 미친 활용법",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "제조사도 감탄한 미국 천재의 미친 활용법",
+     "요새 이 매직랩 하나로 인터넷이 싹 뒤집어졌다는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_73_glasspaint": {
+  "side": "A",
+  "id": 73,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 193,
+    "lines": 7,
+    "first": "건축가도 놀라버린 미국 천재의 미친 활용법",
+    "first_chars": 18,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "건축가도 놀라버린 미국 천재의 미친 활용법",
+     "요새 이 페인트 하나로 SNS가 완전히 뒤집어졌다는데",
+     "이게 원래는 욕실 유리를 가리려고 나온 평범한 페인트였음",
+     "근데 한 주부가 뿌옇게 되는 속성을 깨닫고 온 사방에 칠해 버렸다는 거"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_73_wrap": {
+  "side": "A",
+  "id": 73,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 185,
+    "lines": 7,
+    "first": "제조사도 감탄한 미국 천재의 미친 활용법",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 2,
+    "unsupported_claims": [
+     "제조사도 감탄한 미국 천재의 미친 활용법",
+     "요새 이 매직랩 하나로 인터넷이 싹 뒤집어졌다는데"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 56,
+  "engine_status": null
+ },
+ "A_74_glasspaint": {
+  "side": "A",
+  "id": 74,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 275,
+    "lines": 9,
+    "first": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "투명한 창문 너머로 이웃집이 훤히 보여 노이로제 걸릴 뻔했던 사람들 사이에서 난리가 났다는데",
+     "커튼이나 답답한 시트지 대신 쓱 바르는 영상으로 대박 터지며 돈방석에 앉았다는데",
+     "이게 말도 안 되는 게 똥손이 바르고 대충 칠해도 자국 없이 깔끔하게 아래만 딱 가려버릴 수도 있다는데",
+     "이러니 전 세계 주부들 사이에서 난리가 났다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": null
+ },
+ "A_74_wrap": {
+  "side": "A",
+  "id": 74,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 216,
+    "lines": 9,
+    "first": "주부들 환장하게 만든 미국 천재의 발명품",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "주부들 환장하게 만든 미국 천재의 발명품",
+     "딱 봤을 땐 흔한 주방 랩처럼 생긴 이게 SNS에서 난리가 났다는데",
+     "이걸 개발한 천재가 돈방석에 앉았다는 소문이 돌면서 입소문 터졌다는데",
+     "이러니 전 세계 주부들이 환장하고 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 55,
+  "engine_status": null
+ },
+ "A_75_glasspaint": {
+  "side": "A",
+  "id": 75,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 275,
+    "lines": 9,
+    "first": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "투명한 창문 너머로 이웃집이 훤히 보여 노이로제 걸릴 뻔했던 사람들 사이에서 난리가 났다는데",
+     "커튼이나 답답한 시트지 대신 쓱 바르는 영상으로 대박 터지며 돈방석에 앉았다는데",
+     "이게 말도 안 되는 게 똥손이 바르고 대충 칠해도 자국 없이 깔끔하게 아래만 딱 가려버릴 수도 있다는데",
+     "이러니 전 세계 주부들 사이에서 난리가 났다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": 55,
+  "engine_status": null
+ },
+ "A_75_wrap": {
+  "side": "A",
+  "id": 75,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 216,
+    "lines": 9,
+    "first": "주부들 환장하게 만든 미국 천재의 발명품",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "주부들 환장하게 만든 미국 천재의 발명품",
+     "딱 봤을 땐 흔한 주방 랩처럼 생긴 이게 SNS에서 난리가 났다는데",
+     "이걸 개발한 천재가 돈방석에 앉았다는 소문이 돌면서 입소문 터졌다는데",
+     "이러니 전 세계 주부들이 환장하고 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 55,
+  "engine_status": null
+ },
+ "A_76_glasspaint": {
+  "side": "A",
+  "id": 76,
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 275,
+    "lines": 9,
+    "first": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+    "first_chars": 21,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "투명한 창문 너머로 이웃집이 훤히 보여 노이로제 걸릴 뻔했던 사람들 사이에서 난리가 났다는데",
+     "커튼이나 답답한 시트지 대신 쓱 바르는 영상으로 대박 터지며 돈방석에 앉았다는데",
+     "이게 말도 안 되는 게 똥손이 바르고 대충 칠해도 자국 없이 깔끔하게 아래만 딱 가려버릴 수도 있다는데",
+     "이러니 전 세계 주부들 사이에서 난리가 났다고"
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": 55,
+  "engine_status": null
+ },
+ "A_76_wrap": {
+  "side": "A",
+  "id": 76,
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 216,
+    "lines": 9,
+    "first": "주부들 환장하게 만든 미국 천재의 발명품",
+    "first_chars": 17,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "미국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 4,
+    "unsupported_claims": [
+     "주부들 환장하게 만든 미국 천재의 발명품",
+     "딱 봤을 땐 흔한 주방 랩처럼 생긴 이게 SNS에서 난리가 났다는데",
+     "이걸 개발한 천재가 돈방석에 앉았다는 소문이 돌면서 입소문 터졌다는데",
+     "이러니 전 세계 주부들이 환장하고 떼돈을 벌었다고"
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": 55,
+  "engine_status": null
+ },
+ "A_even_glasspaint": {
+  "side": "A",
+  "id": "even",
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 237,
+    "lines": 8,
+    "first": "집 안 들여다보여서 답답했던 한국 천재가 만들어 떼돈 번 페인트의 정체.",
+    "first_chars": 30,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [
+     "한국"
+    ],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "집 안 들여다보여서 답답했던 한국 천재가 만들어 떼돈 번 페인트의 정체.",
+     "최근 자취생들 사이에서 바이럴이 터지며 논란인 페인트가 있는데,",
+     "그래서 요즘엔 자취생들 사이에서 사생활 차단 신세계 났다고 난리라고."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": "ok"
+ },
+ "A_even_wrap": {
+  "side": "A",
+  "id": "even",
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 226,
+    "lines": 8,
+    "first": "남은 음식 포장하다 답답했던 천재가 만들어 떼돈 번 랩의 정체.",
+    "first_chars": 26,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 3,
+    "unsupported_claims": [
+     "남은 음식 포장하다 답답했던 천재가 만들어 떼돈 번 랩의 정체.",
+     "최근 주부들 사이에서 바이럴이 터지며 논란인 랩이 있는데,",
+     "그래서 요즘엔 주부들 사이에서 주방 살림 꿀템이라고 난리라고."
+    ],
+    "judged": true,
+    "pain_lines": 0
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": "failed_checks"
+ },
+ "A_hdn_glasspaint": {
+  "side": "A",
+  "id": "hdn",
+  "src": "glasspaint",
+  "drafts": [
+   {
+    "chars": 223,
+    "lines": 6,
+    "first": "사생활 노출이 서러웠던 자취생이 창문에 시트지 대신 페인트를 쓱쓱 바르고 숨겨버렸대요.",
+    "first_chars": 38,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "덕분에 시트지 못 붙이던 전셋집 사시는 분들 사이에서 사생활 걱정 싹 사라졌다고 난리래요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": "failed_checks"
+ },
+ "A_hdn_wrap": {
+  "side": "A",
+  "id": "hdn",
+  "src": "wrap",
+  "drafts": [
+   {
+    "chars": 195,
+    "lines": 6,
+    "first": "여행 갈 때 신발 챙기기 불편했던 와이프가 아예 신발을 랩으로 통째로 싸버렸대요.",
+    "first_chars": 34,
+    "empty_slots": 0,
+    "made_numbers": [],
+    "made_sellers": [],
+    "made_nations": [],
+    "copy_source_title": "",
+    "unsupported": 1,
+    "unsupported_claims": [
+     "요즘 살림꾼들 사이에서 이 랩 하나로 집 안 살림 수준이 싹 달라졌다고 난리래요."
+    ],
+    "judged": true,
+    "pain_lines": 1
+   }
+  ],
+  "first_sim": null,
+  "same_as": null,
+  "engine_status": "failed_checks"
+ }
+}

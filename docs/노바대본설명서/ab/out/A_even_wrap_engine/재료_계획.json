@@ -1,0 +1,85 @@
+{
+ "_note": "script_engine.run_frame 이 쓴 재료 계획 — kind = 대본 설명서 5칸 계약(shot_kinds_for). src/ss/src_crop 은 재료 담당이 채운다.",
+ "shots": [
+  {
+   "i": 0,
+   "line": 0,
+   "kind": "제품전체",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "남은 음식 포장하다 답답했던 천재가 만들어 떼돈 번 랩의 정체.",
+   "why": "줄 1 노드 title"
+  },
+  {
+   "i": 1,
+   "line": 1,
+   "kind": "사용동작",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "최근 주부들 사이에서 바이럴이 터지며 논란인 랩이 있는데,",
+   "why": "줄 2 노드 bait"
+  },
+  {
+   "i": 2,
+   "line": 2,
+   "kind": "제품전체",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "이건 바로 꾹 누르면 붙는 밀착 랩.",
+   "why": "줄 3 노드 reveal"
+  },
+  {
+   "i": 3,
+   "line": 3,
+   "kind": "사용동작",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "이게 말도 안 되는 게 나무 그릇이나 종이 접시 같은 마른 표면에도 꾹 누르면 착 붙는다는 거.",
+   "why": "줄 4 노드 solve"
+  },
+  {
+   "i": 4,
+   "line": 4,
+   "kind": "제품전체",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "심지어 코스트코 활용 영상에서도 정식으로 소개됐는데,",
+   "why": "줄 5 노드 more"
+  },
+  {
+   "i": 5,
+   "line": 5,
+   "kind": "사용동작",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "제조사 광고 영상에선 랩을 씌우고 꾹 누른 과일 그릇을 거꾸로 들어도 안 쏟아진다고.",
+   "why": "줄 6 노드 more2"
+  },
+  {
+   "i": 6,
+   "line": 6,
+   "kind": "제품전체",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "근데 진짜 충격적인 포인트는 페인트칠할 때 테이프 대신 붙였다 떼도 경계선이 깔끔하다고.",
+   "why": "줄 7 노드 twist"
+  },
+  {
+   "i": 7,
+   "line": 7,
+   "kind": "사용동작",
+   "src": null,
+   "ss": null,
+   "ours": "",
+   "text": "그래서 요즘엔 주부들 사이에서 주방 살림 꿀템이라고 난리라고.",
+   "why": "줄 8 노드 land"
+  }
+ ]
+}

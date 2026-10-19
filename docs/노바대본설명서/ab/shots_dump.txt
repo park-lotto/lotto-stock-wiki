@@ -1,0 +1,104 @@
+== 영상_4_썰쇼핑형 {'c01': 'qf613aTwTUU.mp4', 'c02': 'jP1MMUc7Kiw.mp4', 'c03': 'Y_F1NUk8uIs.mp4', 'c04': 'I0kPCvvJYYQ.mp4', 'c05': 'IC1YQ5eKEEw.mp4'}
+0 jP1MMUc7Kiw.mp4 80.6 0.53 안에서 본 창에 롤러 — 푸른 하늘이 뿌옇게 덮여 감
+1 qf613aTwTUU.mp4 63.0 0.5 장갑 낀 손이 창에 롤러, 칠한 곳만 젖빛
+2 qf613aTwTUU.mp4 94.6 0.53 아래 절반만 젖빛, 위는 맑은 창 — 비포·애프터 한 화면
+3 jP1MMUc7Kiw.mp4 97.2 1.03 욕실 창 전체가 젖빛
+4 qf613aTwTUU.mp4 5.1 1.03 젖빛 창 너머 풍경이 흐림
+5 qf613aTwTUU.mp4 13.0 0.3 창틀 위 페인트 통
+6 jP1MMUc7Kiw.mp4 25.9 1.13 Frosted Glass Paint 통과 도구
+7 qf613aTwTUU.mp4 39.1 0.83 통 열고 페인트 섞기
+8 jP1MMUc7Kiw.mp4 41.1 0.5 맑은 창 너머 이웃집이 또렷
+9 jP1MMUc7Kiw.mp4 36.0 0.7 안에서 본 투명한 창
+10 qf613aTwTUU.mp4 34.6 0.73 투명한 창 너머 마당이 훤함
+11 jP1MMUc7Kiw.mp4 40.2 0.37 커튼 옆 창
+12 jP1MMUc7Kiw.mp4 46.1 1.3 비닐로 가려 둔 창
+13 qf613aTwTUU.mp4 48.0 0.7 롤러 칠 시작
+14 jP1MMUc7Kiw.mp4 75.0 0.47 투명한 창에 롤러 쓱
+15 qf613aTwTUU.mp4 55.0 0.67 롤러로 미는 손
+16 jP1MMUc7Kiw.mp4 78.0 0.57 맑은 하늘 위로 롤러 자국
+17 qf613aTwTUU.mp4 68.0 0.57 칠한 부분이 뿌옇게
+18 jP1MMUc7Kiw.mp4 88.0 0.6 하늘이 뿌옇게 덮인 창
+19 qf613aTwTUU.mp4 7.0 0.6 젖빛 창으로 밝은 빛
+20 jP1MMUc7Kiw.mp4 118.0 0.6 변기 위 욕실 창이 환한 젖빛
+21 qf613aTwTUU.mp4 96.0 0.7 아래 젖빛 위 맑음
+22 qf613aTwTUU.mp4 78.0 0.57 테이프 붙은 창이 완전히 젖빛
+23 jP1MMUc7Kiw.mp4 121.0 1.3 욕실 창 젖빛
+24 I0kPCvvJYYQ.mp4 146.0 0.53 젖빛으로 변한 유리판을 들어 보임
+25 I0kPCvvJYYQ.mp4 117.0 0.87 유리판에 롤러
+26 jP1MMUc7Kiw.mp4 111.0 1.1 젖빛 창 앞 손
+27 Y_F1NUk8uIs.mp4 57.5 1.13 젖빛 유리에 알코올 분무
+28 Y_F1NUk8uIs.mp4 58.6 0.9 스크래퍼로 위에서부터 긁어 내림
+29 Y_F1NUk8uIs.mp4 60.3 0.73 긁어낸 위쪽이 다시 투명
+30 Y_F1NUk8uIs.mp4 61.0 1.47 투명해진 유리를 손으로 쓸어 보임
+== 영상_5_인스타쇼핑형 {'c01': 'jP1MMUc7Kiw.mp4', 'c02': 'qf613aTwTUU.mp4', 'c03': '8nUIK8LWLLM.mp4', 'c04': 'IC1YQ5eKEEw.mp4'}
+0 jP1MMUc7Kiw.mp4 76.6 1.77 훅: 왼쪽은 투명(나무), 오른쪽은 칠해서 뿌연 창 + 롤러
+1 jP1MMUc7Kiw.mp4 90.0 1.17 거의 다 뿌옇게 칠해진 창
+2 jP1MMUc7Kiw.mp4 36.1 0.97 투명한 창 너머 옆집이 훤히 보임
+3 jP1MMUc7Kiw.mp4 39.85 0.67 창밖 옆집 지붕·담장
+4 jP1MMUc7Kiw.mp4 105.9 1.23 욕실 샤워 공간
+5 jP1MMUc7Kiw.mp4 115.5 1.03 욕실 변기 쪽 창
+6 8nUIK8LWLLM.mp4 28.2 1.0 다른 사람이 유리에 롤러로 칠하는 모습
+7 8nUIK8LWLLM.mp4 31.4 1.57 유리 칠하기 계속(점프 컷)
+8 qf613aTwTUU.mp4 18.3 1.7 페인트 통·롤러·테이프 재료
+9 qf613aTwTUU.mp4 48.0 1.0 장갑 낀 손이 창에 롤러질 시작
+10 8nUIK8LWLLM.mp4 34.4 1.37 롤러 근접 쓱 밀기
+11 qf613aTwTUU.mp4 62.0 0.97 칠한 부분 바깥이 흐려짐
+12 IC1YQ5eKEEw.mp4 150.0 0.9 다른 집 창: 하늘만 남고 아래가 뿌옇게 가려진 완성 창(오른쪽 아래 인물 화면 제외)
+13 jP1MMUc7Kiw.mp4 98.0 0.87 빛이 환하게 들어오는 욕실 젖빛 창
+14 jP1MMUc7Kiw.mp4 119.6 0.87 환하게 빛 드는 욕실 젖빛 창
+15 jP1MMUc7Kiw.mp4 45.5 1.37 창 테두리 테이프·비닐 마스킹
+16 IC1YQ5eKEEw.mp4 104.0 1.57 혼자 롤러로 창 칠하기
+17 IC1YQ5eKEEw.mp4 120.0 1.53 칠해 둔 창(떼기 전)
+18 8nUIK8LWLLM.mp4 36.6 2.5 ★ 칠한 막을 끝 잡고 한 장으로 벗겨 냄
+19 qf613aTwTUU.mp4 0.3 0.67 아래만 젖빛인 완성 창
+20 qf613aTwTUU.mp4 9.0 1.47 젖빛 창 너머 흐린 들판(하단 영어 글자 제외)
+== 영상_1_썰쇼핑형 {'c01': 'lic7OMPANw4.mp4', 'c02': '3LBie-y-x40.mp4', 'c03': 'vrDeFk3O3j0.mp4', 'c04': 'JY7dYlE2F70.mp4', 'c05': 'rWLHBrKK7M.mp4', 'c06': 'kHkBQwiAatk.mp4', 'c07': 'XvyiJKbxZEc.mp4', 'c08': 'Nyy-VC3-1GM.mp4'}
+0 rWLHBrKK7M.mp4 10.2 0.6 두 손으로 그릇 테두리를 눌러 밀착
+1 lic7OMPANw4.mp4 13.6 0.6 과일 그릇 테두리에 랩을 감싸 붙임
+2 JY7dYlE2F70.mp4 9.0 0.6 랩 씌운 나무 도마를 통째로 들어 올림(피망 고정)
+3 lic7OMPANw4.mp4 0.2 1.1 랩 씌운 접시·그릇이 가득한 식탁
+4 rWLHBrKK7M.mp4 16.2 0.9 랩 씌운 그릇을 층층이 쌓음
+5 Nyy-VC3-1GM.mp4 4.5 0.73 제품 상자 정면 공개
+6 lic7OMPANw4.mp4 4.0 0.63 상자에서 랩을 쭉 뽑음
+7 vrDeFk3O3j0.mp4 9.3 0.9 냄비 국물을 통에 붓는 과정
+8 XvyiJKbxZEc.mp4 54.0 0.9 그릇 위에 랩을 펼쳐 덮음
+9 XvyiJKbxZEc.mp4 57.5 0.67 헐렁하게 들뜬 랩
+10 XvyiJKbxZEc.mp4 61.0 0.57 손으로 들뜬 랩을 만짐
+11 lic7OMPANw4.mp4 16.0 0.7 손바닥으로 그릇 위를 꾹 누름
+12 JY7dYlE2F70.mp4 17.4 0.57 양손으로 파란 그릇 랩을 누름
+13 lic7OMPANw4.mp4 23.0 0.67 랩이 착 붙은 그릇을 감싸 쥠
+14 3LBie-y-x40.mp4 43.0 0.83 신발을 랩 위에 올림
+15 3LBie-y-x40.mp4 47.5 0.87 신발을 랩으로 통째로 감쌈
+16 3LBie-y-x40.mp4 50.2 0.57 싼 신발을 가방에 넣음
+17 3LBie-y-x40.mp4 73.5 0.73 주황 페인트를 칠함
+18 3LBie-y-x40.mp4 63.0 0.93 파란 판에 랩을 붙여 누름
+19 3LBie-y-x40.mp4 77.0 0.63 칠한 뒤 랩을 쓱 떼어냄
+20 3LBie-y-x40.mp4 79.8 0.77 주황·파랑 경계가 칼같이 나뉜 판
+21 3LBie-y-x40.mp4 78.5 0.97 경계선 근접
+22 vrDeFk3O3j0.mp4 17.6 1.17 밀봉 통을 든 사람
+23 lic7OMPANw4.mp4 21.0 0.77 그릇 테두리를 꾹 눌러 덮음
+24 vrDeFk3O3j0.mp4 19.0 1.13 국물 든 통을 옆으로 기울임
+25 lic7OMPANw4.mp4 25.4 0.43 과일 그릇을 거꾸로 뒤집음
+26 kHkBQwiAatk.mp4 57.5 0.9 주스 컵을 거꾸로 세워도 안 샘
+27 3LBie-y-x40.mp4 94.2 1.0 3개 묶음 상자와 활용품
+28 rWLHBrKK7M.mp4 19.0 0.7 랩 씌운 그릇을 하나 더 쌓아 올림
+29 3LBie-y-x40.mp4 102.0 0.63 쌓아 둔 3개 묶음 상자
+== 영상_2_인스타쇼핑형 {'c01': 'lic7OMPANw4.mp4', 'c02': '3LBie-y-x40.mp4', 'c03': 'kHkBQwiAatk.mp4', 'c04': 'XvyiJKbxZEc.mp4', 'c05': 'Nyy-VC3-1GM.mp4', 'c06': 'ISsgwFMjgXI.mp4'}
+0 lic7OMPANw4.mp4 25.32 2.3 훅: 랩 씌운 과일 그릇을 거꾸로 뒤집어 들어도 안 쏟아짐
+1 XvyiJKbxZEc.mp4 58.0 3.63 불편: 그릇 위에 들뜬 채 흘러내린 랩, 손으로 붙잡아도 안 붙음
+2 lic7OMPANw4.mp4 0.0 2.5 랩 씌운 접시들과 랩 상자(살림 고수 집 식탁)
+3 lic7OMPANw4.mp4 3.6 1.2 상자에서 랩을 뽑아냄
+4 lic7OMPANw4.mp4 8.0 0.97 과일 그릇 위에 랩을 올림
+5 lic7OMPANw4.mp4 15.65 1.83 손바닥으로 꾹꾹 눌러 줌
+6 kHkBQwiAatk.mp4 45.9 1.17 손가락으로 컵 가장자리를 눌러 붙임
+7 kHkBQwiAatk.mp4 49.3 1.3 랩 씌운 주스 컵을 기울여 뒤집음
+8 kHkBQwiAatk.mp4 57.45 0.93 ★ 주스 컵을 거꾸로 세워도 안 샘
+9 3LBie-y-x40.mp4 61.6 0.87 파란 판에 랩을 붙이고 눌러 줌
+10 3LBie-y-x40.mp4 69.4 1.03 랩 경계에 맞춰 붓으로 페인트칠
+11 3LBie-y-x40.mp4 78.35 0.8 랩을 쓱 떼어 냄
+12 3LBie-y-x40.mp4 79.8 0.77 경계선이 깔끔하게 남은 판
+13 3LBie-y-x40.mp4 42.3 1.07 신발을 랩 위에 올림
+14 3LBie-y-x40.mp4 45.6 0.8 신발을 랩으로 통째로 감쌈
+15 3LBie-y-x40.mp4 49.8 1.33 싼 신발을 배낭에 쏙 넣음
+16 kHkBQwiAatk.mp4 41.2 1.17 주스 컵에 랩을 덮어 씌움(일상 활용)
+17 lic7OMPANw4.mp4 12.0 2.27 CTA: 그릇 가장자리를 랩으로 착 감싸는 손

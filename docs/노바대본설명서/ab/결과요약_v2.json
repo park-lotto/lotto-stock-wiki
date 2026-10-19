@@ -1,0 +1,1232 @@
+{
+ "평균": {
+  "A": {
+   "first_score": 1.0,
+   "fact": 0.42,
+   "mood": 1.23,
+   "made": 0.38,
+   "nonron": 0.08,
+   "copy": 3.31,
+   "cta": 0.65,
+   "weak_end": 0.0,
+   "skel": 0.04,
+   "chars": 216.58,
+   "n": 26,
+   "cta2plus": 3,
+   "first_full": 6
+  },
+  "B2": {
+   "first_score": 1.71,
+   "fact": 0.23,
+   "mood": 1.06,
+   "made": 0.0,
+   "nonron": 0.0,
+   "copy": 2.48,
+   "cta": 0.58,
+   "weak_end": 0.0,
+   "skel": 0.07,
+   "chars": 237.98,
+   "n": 52,
+   "cta2plus": 0,
+   "first_full": 37
+  }
+ },
+ "스타일별": [
+  {
+   "id": "jungche",
+   "name": "정체 숨김(55·65·74·75·76 통합)",
+   "src": "glasspaint",
+   "A_id": "55",
+   "A": [
+    {
+     "chars": 282,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 4,
+     "made": 1,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 196,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.11
+    },
+    {
+     "chars": 203,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.11
+    }
+   ]
+  },
+  {
+   "id": "jungche",
+   "name": "정체 숨김(55·65·74·75·76 통합)",
+   "src": "wrap",
+   "A_id": "55",
+   "A": [
+    {
+     "chars": 216,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 4,
+     "made": 2,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ],
+   "B2": [
+    {
+     "chars": 214,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 4,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.33
+    },
+    {
+     "chars": 223,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 4,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.22
+    }
+   ]
+  },
+  {
+   "id": "oyong",
+   "name": "오용·활용법(56·70~73 통합)",
+   "src": "glasspaint",
+   "A_id": "56",
+   "A": [
+    {
+     "chars": 193,
+     "first_score": 1,
+     "fact": 3,
+     "mood": 1,
+     "made": 1,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.14
+    }
+   ],
+   "B2": [
+    {
+     "chars": 267,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 8,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 255,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ]
+  },
+  {
+   "id": "oyong",
+   "name": "오용·활용법(56·70~73 통합)",
+   "src": "wrap",
+   "A_id": "56",
+   "A": [
+    {
+     "chars": 185,
+     "first_score": 1,
+     "fact": 1,
+     "mood": 1,
+     "made": 1,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.14
+    }
+   ],
+   "B2": [
+    {
+     "chars": 255,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 258,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "60",
+   "name": "60 개발자도 무릎 탁",
+   "src": "glasspaint",
+   "A_id": "60",
+   "A": [
+    {
+     "chars": 164,
+     "first_score": 1,
+     "fact": 1,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 5,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.14
+    }
+   ],
+   "B2": [
+    {
+     "chars": 237,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.14
+    },
+    {
+     "chars": 231,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "60",
+   "name": "60 개발자도 무릎 탁",
+   "src": "wrap",
+   "A_id": "60",
+   "A": [
+    {
+     "chars": 196,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 217,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.14
+    },
+    {
+     "chars": 218,
+     "first_score": 2,
+     "fact": 2,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "66",
+   "name": "66 답답했잖아",
+   "src": "glasspaint",
+   "A_id": "66",
+   "A": [
+    {
+     "chars": 167,
+     "first_score": 1,
+     "fact": 1,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 170,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.17
+    },
+    {
+     "chars": 168,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.17
+    }
+   ]
+  },
+  {
+   "id": "66",
+   "name": "66 답답했잖아",
+   "src": "wrap",
+   "A_id": "66",
+   "A": [
+    {
+     "chars": 174,
+     "first_score": 0,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 5,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 165,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 164,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "52",
+   "name": "52 가족갈등 반전형",
+   "src": "glasspaint",
+   "A_id": "52",
+   "A": [
+    {
+     "chars": 237,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 301,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 6,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 321,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "52",
+   "name": "52 가족갈등 반전형",
+   "src": "wrap",
+   "A_id": "52",
+   "A": [
+    {
+     "chars": 258,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 310,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.1
+    },
+    {
+     "chars": 304,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.1
+    }
+   ]
+  },
+  {
+   "id": "53",
+   "name": "53 단정 명령형",
+   "src": "glasspaint",
+   "A_id": "53",
+   "A": [
+    {
+     "chars": 200,
+     "first_score": 0,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 2,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 247,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 241,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "53",
+   "name": "53 단정 명령형",
+   "src": "wrap",
+   "A_id": "53",
+   "A": [
+    {
+     "chars": 262,
+     "first_score": 0,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 2,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 257,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 267,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "54",
+   "name": "54 물건 발견형",
+   "src": "glasspaint",
+   "A_id": "54",
+   "A": [
+    {
+     "chars": 271,
+     "first_score": 1,
+     "fact": 1,
+     "mood": 2,
+     "made": 1,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 2,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 244,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 243,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "54",
+   "name": "54 물건 발견형",
+   "src": "wrap",
+   "A_id": "54",
+   "A": [
+    {
+     "chars": 232,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 3,
+     "made": 3,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 234,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 7,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 233,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 2,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ]
+  },
+  {
+   "id": "58",
+   "name": "58 금지경고형",
+   "src": "glasspaint",
+   "A_id": "58",
+   "A": [
+    {
+     "chars": 200,
+     "first_score": 0,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 240,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 5,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 225,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "58",
+   "name": "58 금지경고형",
+   "src": "wrap",
+   "A_id": "58",
+   "A": [
+    {
+     "chars": 198,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 5,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 278,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 287,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "59",
+   "name": "59 사회증거형",
+   "src": "glasspaint",
+   "A_id": "59",
+   "A": [
+    {
+     "chars": 219,
+     "first_score": 0,
+     "fact": 2,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 5,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 250,
+     "first_score": 1,
+     "fact": 1,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 228,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "59",
+   "name": "59 사회증거형",
+   "src": "wrap",
+   "A_id": "59",
+   "A": [
+    {
+     "chars": 228,
+     "first_score": 0,
+     "fact": 2,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 6,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 191,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 194,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "61",
+   "name": "61 정체의문형",
+   "src": "glasspaint",
+   "A_id": "61",
+   "A": [
+    {
+     "chars": 223,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 257,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 250,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "61",
+   "name": "61 정체의문형",
+   "src": "wrap",
+   "A_id": "61",
+   "A": [
+    {
+     "chars": 205,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 217,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 230,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "62",
+   "name": "62 무지후회형",
+   "src": "glasspaint",
+   "A_id": "62",
+   "A": [
+    {
+     "chars": 238,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 244,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 248,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ]
+  },
+  {
+   "id": "62",
+   "name": "62 무지후회형",
+   "src": "wrap",
+   "A_id": "62",
+   "A": [
+    {
+     "chars": 202,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 230,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 236,
+     "first_score": 1,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "even",
+   "name": "이븐쇼핑",
+   "src": "glasspaint",
+   "A_id": "even",
+   "A": [
+    {
+     "chars": 237,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 3,
+     "made": 1,
+     "nonron": 1,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ],
+   "B2": [
+    {
+     "chars": 238,
+     "first_score": 2,
+     "fact": 1,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 4,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    },
+    {
+     "chars": 225,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ]
+  },
+  {
+   "id": "even",
+   "name": "이븐쇼핑",
+   "src": "wrap",
+   "A_id": "even",
+   "A": [
+    {
+     "chars": 226,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 3,
+     "made": 0,
+     "nonron": 1,
+     "copy": 3,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.12
+    }
+   ],
+   "B2": [
+    {
+     "chars": 275,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 4,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.38
+    },
+    {
+     "chars": 237,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 3,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.38
+    }
+   ]
+  },
+  {
+   "id": "hdn",
+   "name": "두유노홈디노",
+   "src": "glasspaint",
+   "A_id": "hdn",
+   "A": [
+    {
+     "chars": 223,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ],
+   "B2": [
+    {
+     "chars": 206,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 2,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.17
+    },
+    {
+     "chars": 200,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  },
+  {
+   "id": "hdn",
+   "name": "두유노홈디노",
+   "src": "wrap",
+   "A_id": "hdn",
+   "A": [
+    {
+     "chars": 195,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 1,
+     "made": 0,
+     "nonron": 0,
+     "copy": 0,
+     "cta": 0,
+     "weak_end": 0,
+     "skel": 0.17
+    }
+   ],
+   "B2": [
+    {
+     "chars": 260,
+     "first_score": 2,
+     "fact": 2,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 3,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    },
+    {
+     "chars": 286,
+     "first_score": 2,
+     "fact": 0,
+     "mood": 0,
+     "made": 0,
+     "nonron": 0,
+     "copy": 1,
+     "cta": 1,
+     "weak_end": 0,
+     "skel": 0.0
+    }
+   ]
+  }
+ ]
+}
