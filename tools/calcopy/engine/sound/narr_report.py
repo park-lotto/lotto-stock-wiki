@@ -1,5 +1,6 @@
 """나레 판정 + 닮은 우리 목소리. python narr_report.py <wav폴더> <출력json>
-나레 구간 = starpickroom 줄판독(화자 '나레') / kitchit 스타일분석 표 / kkultemnote 뜯기 받아쓰기(기존 결과 재사용, 호출 없음) — 아래 NARR 표."""
+wav 이름 = <slug>__<영상id>.wav. 나레·원음 구간 = **그 채널 줄판독** `channel/<slug>/줄판독/*.json`(화자 '나레'·'원음/연예인/본인') — 어느 채널이든(10-20 범용화, kal.py 소리 단계).
+줄판독이 없는 옛 두 채널만 아래 NARR 표(손으로 적은 구간)를 쓴다."""
 import sys, os, json, glob, subprocess
 import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
@@ -14,9 +15,10 @@ NARR={
  'kkultemnote':{'2wJTffElmjk':[(2.4,4.9),(14.4,15.6)],'653bTRm8p6E':[(1.4,5.1),(6.8,13.1)],'BpUOIUwkoG4':[(1.8,4.2),(5.5,6.6),(8.8,10.0),(11.6,12.9),(14.6,15.2)],
    'KCxJ5qJft38':[(1.0,4.0),(9.6,12.3),(13.5,15.8)],'_dzncUms1yQ':[(0,4.9),(11.4,15.4)],'cLk6fJly6OY':[(1.0,2.8),(9.7,10.9),(11.9,13.5)],
    'm0Ex0y1DN5s':[(1.8,4.5),(17.3,18.5)],'znHaConczpE':[(2.3,6.1),(7.5,9.3),(15.3,16.4)]}}
-def spr_lines():
+def line_segs(slug):
+    """채널 줄판독 → {'narr':{vid:[(a,b)]}, 'orig':{…}}. 없으면 빈 것."""
     out={'narr':{}, 'orig':{}}
-    for p in glob.glob('channel/starpickroom/줄판독/*.json'):
+    for p in glob.glob(f'channel/{slug}/줄판독/*.json'):
         d=json.load(open(p,encoding='utf-8')); i=d['id']
         for l in d['lines']:
             sp=l.get('speaker') or ''
@@ -58,10 +60,12 @@ def main(wavdir,out):
     keys=['st_std','micro_dst','micro_p90','shim','pause_cv','voiced_ratio']
     for k in keys:
         v=[lib[i]['f'][k] for i in ids if lib[i]['f'].get(k) is not None]; res['tts_lib_stats'][k]=[round(float(np.percentile(v,q)),3) for q in (10,50,90)]
-    spr=spr_lines()
+    segs_of={}
     for w in sorted(glob.glob(os.path.join(wavdir,'*.wav'))):
         ch,vid=os.path.basename(w)[:-4].split('__'); x=load(w)
-        if ch=='starpickroom': nar=spr['narr'].get(vid,[]); org=spr['orig'].get(vid,[])
+        if ch not in segs_of: segs_of[ch]=line_segs(ch)
+        L=segs_of[ch]
+        if vid in L['narr'] or vid in L['orig']: nar=L['narr'].get(vid,[]); org=L['orig'].get(vid,[])
         else: nar=NARR.get(ch,{}).get(vid,[]); org=[]
         r={}
         for tag,segs in (('narr',nar),('orig',org)):
