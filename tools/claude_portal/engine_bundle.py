@@ -42,6 +42,22 @@ SECRETS = (r"3\.35\.251\.172", r"LightsailDefaultKey", r"ubuntu@", r"BEGIN (RSA 
            r"AIza[0-9A-Za-z_-]{30,}", r"SHORTS_GEMINI_KEY_\d+\s*=")
 # 노드 렌더러(render_scene_style.js)가 file:// 로 여는 것 — 파이썬 추적에 안 잡힌다. showcase html 의 src/href 에서 더 읽는다.
 RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.html")
+# 파이썬 추적에 안 잡히는 데이터(ffmpeg·node 가 여는 것, 설정 화면만 쓰는 것) — 10-19 설치본 실측: 목소리 목록·배경음악이 빠져
+#   설정 화면 목록이 죽고 완성본 배경음악이 비었다. 폴더는 그 아래 파일 전부.
+DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
+              "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
+              "tools/calcopy/engine/warehouse_channels.json")
+
+
+def data_extra(engine: Path) -> list[str]:
+    out = []
+    for rel in DATA_EXTRA:
+        p = engine / rel
+        if p.is_dir():
+            out += [q.relative_to(engine).as_posix() for q in sorted(p.rglob("*")) if q.is_file()]
+        elif p.is_file():
+            out.append(rel)
+    return out
 
 
 # 만들기 경로의 입구 — 추적이 못 본 갈래(예: 나레형 렌더는 목소리 비용 때문에 시험에서 안 돌림)도 빠지지 않게,
@@ -141,7 +157,7 @@ def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
     mods, data = traced(traces, engine)
-    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)))
+    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)

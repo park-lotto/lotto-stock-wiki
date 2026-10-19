@@ -349,6 +349,29 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     log(f"엔진 묶음 {len(man['files'])}파일(뺀 것 {len(man['dropped'])}) · 받아쓰기 모델 {report['engine']['whisper_mb']}MB")
 
 
+def build_packs(stage: Path, engine: Path, report: dict) -> None:
+    """효과음 팩(숏템메이커 팩01~09) → <설치>/packs/sfx/팩NN/ + packs_manifest.json(엔진 calcopy_make._pack_assets 가 읽는 꼴).
+    10-19 실측: 우리 PC 의 팩 장부가 없어 완성본 효과음이 file=None 으로 빠졌다 — 설치본은 동봉 팩을 가리키는 장부를 직접 갖는다.
+    어느 칸을 시작·강조·끝에 쓰나는 엔진 preview_request.default_pack 한 곳이 정한다(여기는 파일·번호만)."""
+    src = engine / "shopping_shorts" / "assets" / "sfx_packs"
+    dst = stage / "packs"
+    if dst.exists():
+        shutil.rmtree(dst)
+    man, n = [], 0
+    for pk in sorted(p for p in src.iterdir() if p.is_dir()):
+        for f in sorted(pk.iterdir()):
+            if f.suffix.lower() not in (".wav", ".mp3"):
+                continue
+            n += 1
+            (dst / "sfx" / pk.name).mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, dst / "sfx" / pk.name / f.name)
+            man.append({"id": 10000 + n, "kind": "sfx", "pack": pk.name, "slot": f.stem, "file": f.name,
+                        "media_path": f"scene_assets/{pk.name}/{f.name}", "title": f"{pk.name} {f.stem}"})
+    (dst / "packs_manifest.json").write_text(json.dumps(man, ensure_ascii=False, indent=0), encoding="utf-8")
+    report["packs"] = {"sfx": len(man)}
+    log(f"효과음 팩 {len(man)}개 → packs/")
+
+
 def build_mcpb(out: Path, dist: Path, stage: Path, report: dict) -> Path:
     ms = fresh(out / "mcpb_stage")
     for f in ("manifest.json", "launcher.js", "icon.png"):
@@ -460,6 +483,7 @@ def main() -> None:
     log(f"버전 실측: {json.dumps(report['probe'], ensure_ascii=False)}")
     build_server(stage, Path(a.client).resolve(), report)
     build_engine(stage, Path(a.engine).resolve(), report)
+    build_packs(stage, Path(a.engine).resolve(), report)
     shutil.copy2(ROOT / "common" / "postinstall.js", stage / "postinstall.js")
     shutil.copy2(ROOT / "시작.md", stage / "시작.template.md")
     shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
