@@ -129,3 +129,23 @@ export function answer(id, obj) {
   fs.renameSync(tmp, jail(p.dir, 'answer.json'));        // 엔진이 쓰다 만 파일을 읽지 않게(10-19 실측 결함)
   return { ok: true };
 }
+
+// 엔진 미리보기 도구(tools/calcopy/preview_request.py) — 판단(합치기·스냅샷·검사)은 엔진, 여기는 부르기만. 결과는 JSON 한 줄.
+export function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
+  return new Promise(resolve => {
+    const proc = spawn(pythonExe(), [path.join(engineRoot(), 'tools', 'calcopy', 'preview_request.py'), cmd],
+      { cwd: engineRoot(), env: engineEnv(ensureDir(aiRoot(), '_ui'), null, {}), shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    const out = [];
+    let err = '';
+    const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+    proc.stdout.on('data', d => out.push(d));
+    proc.stderr.on('data', d => { if (err.length < 20000) err += String(d); });
+    proc.on('error', e => { clearTimeout(t); resolve({ error: String(e && e.message) }); });
+    proc.on('close', () => {
+      clearTimeout(t);
+      const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
+      try { resolve(JSON.parse(s)); } catch { resolve({ error: '엔진 미리보기가 답하지 않았습니다', tail: err.slice(-400) }); }
+    });
+    proc.stdin.end(input ? JSON.stringify(input) : '');
+  });
+}

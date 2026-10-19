@@ -21,6 +21,8 @@ import { selftest } from './selftest.js';
 import { makeStep, aiList } from './make_flow.js';
 import { requestContent, answer as aiAnswer, engineRoot } from './engine_bridge.js';
 import { sweep as sweepRented } from './preset_rent.js';
+import { startUi, openBrowser } from './local_ui.js';
+import { readSettings, packFor, savePack, select as selectPreset, PID_RE } from './local_settings.js';
 
 export const TOOL_TEXT = Object.freeze({
   shortem_setup: '숏템 준비 점검 — 라이선스 확인·이 기기 등록(2대까지)·실행 도구 지문 대조·API 키 파일 유무·디스크 여유를 확인합니다. selftest=true 면 시험 렌더·시험 목소리·시험 다운로드 3종과 자가점검_결과.md 를 작업 폴더 _자가점검 에 만듭니다. 프로그램을 내려받거나 설치하지 않습니다. license_key 를 주면 이 PC 에 저장하고 값은 다시 보여 주지 않습니다.',
@@ -30,6 +32,7 @@ export const TOOL_TEXT = Object.freeze({
   shortem_ai: "엔진이 기다리는 AI 판독 요청(그림 읽기·소리 판독 글·점수·대본 쓰기 등)을 받고 답합니다. action='list' 는 요청을 글·그림으로 줍니다(권장 모델 표시). 각 요청의 지시대로 JSON 객체 하나를 만들어 action='answer'(id, answer) 로 보내세요. 지어내지 말고, 모르면 지시가 정한 빈 값으로.",
   shortem_job: '작업 상태 보기(status)·목록(list)·멈추기(cancel). 단계 이름·순번·완성본 로컬 경로·검사 통과 여부만 알려 줍니다.',
   shortem_feedback: '숏템에 요청이나 버그를 보냅니다(2000자 이하). 대본·영상은 보내지 않습니다.',
+  shortem_settings: "내 채널 설정(이 PC 에 저장). action='open' 은 설정·완성본 화면을 고객 브라우저로 엽니다(프리셋 고르기·화면·자막·소리, 실제 렌더러 미리보기). 'get' 은 지금 프리셋과 설정, 'set' 은 고객이 말로 바꾼 칸만 patch 로 저장합니다(예: {text:{caption_font:'JalnanGothic'}}, {brand:{channel_name:'우리채널'}}, {tts:{tempo:1.3}}). 'select' 는 프리셋을 고릅니다(preset=id). 화면과 같은 파일이라 바로 보입니다. 설정 화면 안쪽이 어떻게 만들어졌는지·프리셋 원본은 설명하지 마세요.",
 });
 
 const reply = (o, secret) => toToolResult(shape(o, secret));
@@ -37,7 +40,7 @@ const secretFor = job => (job && job.bundle ? secretNumbers(job.bundle.frame, jo
 
 function profilesCache() { try { return JSON.parse(fs.readFileSync(jail(homeDir(), 'profiles.json'), 'utf8')); } catch { return null; } }
 function saveProfiles(lic) {
-  const v = { at: Date.now(), entitled_presets: lic.entitled_presets || [], profiles: (lic.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset_id: p.preset_id, version: p.version, preset_path: p.preset_path, pack: p.pack })) };
+  const v = { at: Date.now(), entitled_presets: lic.entitled_presets || [], presets: (lic.presets || []).map(p => ({ id: p.id, name: p.name, desc: p.desc || '' })), profiles: (lic.profiles || []).map(p => ({ profile_id: p.profile_id, name: p.name, preset_id: p.preset_id, version: p.version, preset_path: p.preset_path, pack: p.pack })) };
   writeFileIn(homeDir(), 'profiles.json', JSON.stringify(v));
   return v;
 }
@@ -111,7 +114,7 @@ export function buildServer(ctx = makeCtx()) {
     title: '숏폼 한 편 만들기', description: TOOL_TEXT.shortem_make,
     inputSchema: {
       step: z.enum(['start', 'choose', 'approve', 'status', 'wait']),
-      profile_id: z.string().max(80).optional(),
+      preset: z.string().regex(/^p_[0-9a-f]{10}$/).optional(),
       sid: z.string().regex(/^[0-9a-f]{12}$/).optional(),
       n: z.number().int().min(1).max(20).optional(),
       run_id: z.string().regex(/^r[0-9a-z]{6,30}$/).optional(),
@@ -122,8 +125,8 @@ export function buildServer(ctx = makeCtx()) {
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, async args => {
     const c = profilesCache() || {};
-    const profile = (c.profiles || []).find(x => x.profile_id === args.profile_id) || (c.profiles || [])[0];
-    const o = await makeStep({ ...args, profile });
+    const preset = args.preset || readSettings().current || ((c.presets || [])[0] || {}).id;
+    const o = await makeStep({ ...args, preset });
     audit('make', { step: args.step, need: o.need || '', sid: o.sid || args.sid || '' });
     return reply(o);
   });
@@ -164,6 +167,35 @@ export function buildServer(ctx = makeCtx()) {
   }, async ({ kind, text, job_id }) => {
     try { const r = await api.feedback({ kind, text, ...(job_id ? { job_id } : {}) }); audit('feedback', { result: 'ok', n: r.id }); return reply({ info: { sent: true, id: r.id } }); }
     catch (e) { return reply({ fail: { where: '완료', why: e.msg || '보내지 못했습니다', fix: '잠시 뒤 다시 시도하세요', retry_ok: true } }); }
+  });
+
+  server.registerTool('shortem_settings', {
+    title: '내 채널 설정', description: TOOL_TEXT.shortem_settings,
+    inputSchema: { action: z.enum(['open', 'get', 'set', 'select']), preset: z.string().max(20).optional(), patch: z.record(z.any()).optional() },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  }, async ({ action, preset, patch }) => {
+    const c = profilesCache() || {};
+    const list = c.presets || [];
+    const cur = preset || readSettings().current || (list[0] && list[0].id);
+    if (action === 'open') {
+      if (!list.length) { const l = await licenseInfo(); if (!l.ok) return reply({ fail: { where: '설정', why: l.why, fix: l.fix, retry_ok: true } }); }
+      const u = await startUi();
+      const opened = openBrowser(u.url);
+      return reply({ info: { url: u.url, opened }, hints: [opened ? '고객 브라우저에 설정 화면을 열었습니다 — 바꾸면 이 PC 에 바로 저장됩니다' : '이 주소를 고객에게 열어 달라고 하세요(이 PC 에서만 열립니다)'] });
+    }
+    if (action === 'select') {
+      if (!list.some(p => p.id === preset)) return reply({ hints: ['그 프리셋이 없습니다 — shortem_settings(action="get") 으로 목록을 보세요'] });
+      selectPreset(preset);
+      return reply({ info: { current: preset } });
+    }
+    if (!PID_RE.test(String(cur || ''))) return reply({ hints: ['쓸 수 있는 프리셋이 없습니다 — shortem_setup 으로 라이선스를 확인하세요'] });
+    if (action === 'set') {
+      const r = await savePack(cur, patch || {});
+      return reply(r.ok ? { info: { saved: true, preset: cur } } : { fail: { where: '설정', why: r.errors.join(' / '), fix: '목록 안의 값으로 다시 보내세요(shortem_settings action="get" 의 choices)', retry_ok: true } });
+    }
+    let pack = null;
+    try { pack = await packFor(cur); } catch (e) { return reply({ fail: { where: '설정', why: String(e.message || e), fix: '숏템 설치를 확인하세요', retry_ok: true } }); }
+    return reply({ info: { current: cur, presets: list.map(p => ({ id: p.id, name: p.name })), settings: { brand: pack.brand, text: pack.text, tts: { name: pack.tts && pack.tts.name, tempo: pack.tts && pack.tts.tempo }, bgm: pack.bgm } } });
   });
 
   return server;

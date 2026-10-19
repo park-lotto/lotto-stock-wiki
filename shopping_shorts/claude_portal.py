@@ -447,6 +447,24 @@ def _style_label(style: str) -> str:
     return " · ".join(p for p in parts if p)
 
 
+def preset_names(store, ids) -> list:
+    """고객에게 보이는 프리셋 이름(관제 234 5판 — PC 로컬 설정 화면이 쓴다). 이름은 관리자 설정 claude_preset_names
+    (JSON {고객용 id 또는 내부 slug/틀: {name, desc}})가 주인, 없으면 틀 설명(_style_label). 벤치 slug 는 내보내지 않는다."""
+    try:
+        names = json.loads(str(_setting(store, "claude_preset_names", "") or "{}"))
+    except ValueError:
+        log.warning("claude_portal: claude_preset_names 가 깨졌다 — 틀 설명으로 보인다")
+        names = {}
+    out = []
+    for pid in ids:
+        p = _preset_by_id(store, pid)
+        if not p:
+            continue
+        n = names.get(pid) or names.get(p["internal"]) or {}
+        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120]})
+    return out
+
+
 def _ledgers():
     from shopping_shorts import calcopy_board
     return calcopy_board.preset_home(channel_root())
@@ -632,6 +650,7 @@ def license(ctx: dict, store=None) -> dict:
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
             "devices_used": len(live), "devices_max": DEVICES_MAX,
             "entitled_presets": _entitled(store, cid, row),
+            "presets": preset_names(store, _entitled(store, cid, row)),
             "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
                           "version": p["version"]} for p in list_profiles(cid, store)],
             "min_engine": str(_setting(store, "claude_min_engine", "1.0.0")),
@@ -737,9 +756,10 @@ def _profile_row(c, cid, profile_id):
     return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
 
 
-def _job_gate(store, cid, profile_id, job_request: dict) -> tuple:
+def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tuple:
     """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
-    스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필 → 구매(등급)한 프리셋. 반환 (프로필 행, 프리셋, 라이선스 행)."""
+    스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필(또는 PC 로컬 설정이 고른 프리셋 id) → 구매(등급)한 프리셋.
+    반환 (프로필 행 또는 None, 프리셋, 라이선스 행)."""
     job_id = str(job_request.get("job_id") or "")
     if not _JOB_RE.match(job_id):
         raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
@@ -752,11 +772,12 @@ def _job_gate(store, cid, profile_id, job_request: dict) -> tuple:
     if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
             or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
         raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
-    if not prof:
+    if not prof and not preset_id:
         raise PortalError("bad_request", "채널 프로필을 찾을 수 없습니다 — 페이지에서 프로필을 저장하세요")
-    if prof["preset_id"] not in _entitled(store, cid, lic):
+    want = prof["preset_id"] if prof else str(preset_id)
+    if want not in _entitled(store, cid, lic):
         raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
-    p = _preset_by_id(store, prof["preset_id"])
+    p = _preset_by_id(store, want)
     if not p:
         raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
     return prof, p, lic
@@ -767,7 +788,7 @@ def preset_pack_path(pid: str) -> Path:
     return store_dir() / "preset_packs" / f"{pid}.zip"
 
 
-def preset_rent(cid, profile_id, job_request: dict, store=None) -> dict:
+def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) -> dict:
     """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
     이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -775,7 +796,7 @@ def preset_rent(cid, profile_id, job_request: dict, store=None) -> dict:
     ensure_schema(store)
     cid = int(cid)
     job_id = str(job_request.get("job_id") or "")
-    prof, p, _ = _job_gate(store, cid, profile_id, job_request)
+    prof, p, _ = _job_gate(store, cid, profile_id, job_request, preset_id=preset_id)
     f = preset_pack_path(p["id"])
     if not f.is_file():
         log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
@@ -791,12 +812,13 @@ def preset_rent(cid, profile_id, job_request: dict, store=None) -> dict:
             "sha256": hashlib.sha256(data).hexdigest()}
 
 
-def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None) -> dict:
-    """POST /api/claude/rent — 관문 뒤 preset_rent."""
+def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=None) -> dict:
+    """POST /api/claude/rent — 관문 뒤 preset_rent. PC 로컬 설정이면 profile 없이 preset(고객용 프리셋 id)."""
     store = _store(store)
     ensure_schema(store)
     cid, _, dev = _front(store, ctx, "rent")
-    return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store)
+    return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store,
+                       preset_id=preset_id or None)
 
 
 def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:

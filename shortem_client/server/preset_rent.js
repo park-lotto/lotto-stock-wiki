@@ -69,19 +69,31 @@ export function sweep(engineRoot) {
   return true;
 }
 
-// 빌리기 → { presetPath, release() }. 개발 PC(표식 없는 channel 이 이미 있음)는 빌리지 않고 그 파일을 쓴다.
-export async function rentPreset({ engineRoot, profileId, stepName }) {
+// 빌리기 → { presetPath, release() }. 개발 PC(표식 없는 진짜 channel 이 이미 있음)는 빌리지 않고 그 파일을 쓴다.
+//   kind: 'make'(제작 한 단계 — 엔진이 끝나면 반납) · 'ui'(설정 화면 미리보기 — 10분 안 쓰면 반납, 제작이 오면 넘겨준다)
+const UI_IDLE_MS = 10 * 60 * 1000;
+export async function rentPreset({ engineRoot, presetId, profileId, stepName, kind = 'make' }) {
   const root = channelDir(engineRoot);
   if (fs.existsSync(root) && !fs.existsSync(path.join(root, MARK))) return { presetPath: null, dev: true, release: async () => {} };
-  if (current) throw new ApiError(409, { code: 'busy', msg: '앞 작업이 끝난 뒤 다시 부르세요' });
+  const want = presetId || profileId;
+  if (current) {
+    if (current.want === want && (kind === 'ui' || current.kind === 'ui')) {   // 같은 프리셋이 이미 풀려 있다 — 다시 받지 않는다
+      if (current.kind === 'ui' && kind === 'make') { current.kind = 'make'; clearTimeout(current.idle); }
+      else if (current.kind === 'ui') touch(current, engineRoot);
+      const me = current;
+      return { presetPath: me.presetPath, release: kind === 'make' ? () => release(me, engineRoot) : async () => {} };
+    }
+    if (current.kind === 'ui' && kind === 'make') await release(current, engineRoot);   // 미리보기는 제작에 자리를 내준다
+    else throw new ApiError(409, { code: 'busy', msg: kind === 'ui' ? '제작 중에는 다른 프리셋 미리보기를 잠시 못 합니다' : '앞 작업이 끝난 뒤 다시 부르세요' });
+  }
   sweep(engineRoot);
-  const jobId = 'm' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+  const jobId = (kind === 'ui' ? 'u' : 'm') + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
   const lease = new Lease(jobId, { stepName: stepName || (() => '소재') });
   await lease.acquire();
-  const me = { jobId, lease };
+  const me = { jobId, lease, kind, want };
   current = me;
   try {
-    const r = await api.rent(profileId, jobId, lease.id);
+    const r = await api.rent(presetId ? null : profileId, jobId, lease.id, presetId || null);
     fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(path.join(root, MARK), jobId);
     unpack(openPack(r), root);
@@ -91,15 +103,25 @@ export async function rentPreset({ engineRoot, profileId, stepName }) {
     await release(me, engineRoot);
     throw e;
   }
-  return { presetPath: me.presetPath, release: () => release(me, engineRoot) };
+  if (kind === 'ui') touch(me, engineRoot);
+  return { presetPath: me.presetPath, release: kind === 'make' ? () => release(me, engineRoot) : async () => {} };
+}
+
+function touch(me, engineRoot) {
+  clearTimeout(me.idle);
+  me.idle = setTimeout(() => { if (current === me && me.kind === 'ui') release(me, engineRoot).catch(() => {}); }, UI_IDLE_MS);
+  if (me.idle.unref) me.idle.unref();
 }
 
 async function release(me, engineRoot) {
   if (current !== me) return;
   current = null;
+  clearTimeout(me.idle);
   try { fs.rmSync(channelDir(engineRoot), { recursive: true, force: true }); } catch { /* 다음 sweep 이 지운다 */ }
   await me.lease.release();
   audit('preset_return', { job: me.jobId, result: 'ok' });
 }
+
+export async function releaseAll(engineRoot) { if (current) await release(current, engineRoot); }
 
 export const renting = () => !!current;

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { startRun, waitRun, getRun, activeRuns, pending, SID_RE, dataDir, engineRoot } from './engine_bridge.js';
 import { rentPreset } from './preset_rent.js';
+import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
@@ -45,6 +46,7 @@ export function shapeSession(S) {
       const name = `${String((t.name || 'shortem')).replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${S.sid}.mp4`;
       video = path.join(ensureDir(workDir(), '완성본'), name);
       if (!fs.existsSync(video)) fs.copyFileSync(src, video);
+      try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: S.sid, title: String(t.name || ''), preset: S.preset_id || null, topic_dir: path.dirname(src) })); } catch { /* 표식 없이도 영상은 본다 */ }
     }
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
     return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)'] };
@@ -52,13 +54,10 @@ export function shapeSession(S) {
   return { ...base, need: 'wait', topic_state: t.state, next: `shortem_make(step="status", sid="${S.sid}")` };
 }
 
-// 프로필 → 엔진 팩 파일(~/.shortem/packs/<프로필>.json) — 팩 내용은 서버(channel_profile.pack_for)가 만든 것을 그대로 쓴다
-export function packFileFor(profile) {
+// 프리셋 → 엔진 팩 파일 — 내용은 PC 로컬 설정(local_settings, 설정 화면·Claude 가 같이 고친 것) 한 곳
+export async function packFileFor(presetId) {
   if (process.env.SHORTEM_DEV_PACK) return process.env.SHORTEM_DEV_PACK;
-  if (!profile || !profile.pack) return null;
-  const rel = path.join('packs', `${String(profile.profile_id).replace(/[^0-9A-Za-z_-]/g, '_')}.json`);
-  writeFileIn(homeDir(), rel, JSON.stringify({ 1: profile.pack }));
-  return path.join(homeDir(), rel);
+  return PID_RE.test(String(presetId || '')) ? localPackFile(presetId) : null;
 }
 
 const RENT_FAIL = { not_entitled: '이 프리셋은 지금 등급으로 쓸 수 없습니다 — 숏템 웹에서 등급을 확인하세요',
@@ -66,12 +65,13 @@ const RENT_FAIL = { not_entitled: '이 프리셋은 지금 등급으로 쓸 수 
   lease_lost: '작업 권한을 받지 못했습니다 — 다른 PC 에서 쓰는 중인지 확인하세요', no_key: '라이선스 키가 없습니다 — 숏템 설치를 다시 확인하세요' };
 
 // 프리셋이 필요한 단계(start·choose·approve)는 그 편 동안만 서버에서 빌린다 — 판단은 서버(claude_portal.preset_rent)
-async function go(args, opts, profile) {
-  if (profile && profile.profile_id && !process.env.SHORTEM_DEV_PACK) {
+async function go(args, opts, presetId) {
+  if (presetId && !process.env.SHORTEM_DEV_PACK) {
     let rental;
-    try { rental = await rentPreset({ engineRoot: engineRoot(), profileId: profile.profile_id }); }
+    try { rental = await rentPreset({ engineRoot: engineRoot(), presetId }); }
     catch (e) { return { fail: { why: RENT_FAIL[e.code] || '프리셋을 받지 못했습니다', code: e.code || 'rent', fix: '잠시 뒤 같은 단계를 다시 부르세요' } }; }
     if (rental.presetPath && args[0] === 'start') args = args.map((a, i) => (args[i - 1] === '--preset' ? rental.presetPath : a));
+    if (rental.dev && args.includes('rented')) return { fail: { why: '개발 PC 입니다 — SHORTEM_DEV_PRESET 에 엔진 프리셋 경로를 주세요', code: 'dev_preset' } };
     opts = { ...opts, onClose: rental.release };
   }
   const r = startRun(args, opts);
@@ -90,7 +90,7 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
-export async function makeStep({ step, sid, n, run_id, profile, topic, channel, video }) {
+export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video }) {
   if (step === 'wait') {
     const r = getRun(run_id) || activeRuns()[0];
     if (!r) return { hints: ['기다릴 작업이 없습니다 — shortem_make(step="status", sid=…) 로 보세요'] };
@@ -98,23 +98,25 @@ export async function makeStep({ step, sid, n, run_id, profile, topic, channel, 
     return out ? shapeSession(out) : (r.done ? shapeSession({ error: '엔진 결과 없음' }) : aiNeed(r.runId));
   }
   if (step === 'start') {
-    if (!profile) return { hints: ['프로필이 없습니다 — shortem_presets refresh=true 로 내 채널을 받으세요'] };
-    if (!profile.preset_path) return { hints: ['이 프로필의 프리셋을 찾지 못했습니다 — 숏템 웹 설정에서 프리셋을 다시 저장하세요'] };
+    if (!preset) return { hints: ['고른 프리셋이 없습니다 — shortem_settings(action="open") 으로 설정 화면을 열어 프리셋을 고르세요'] };
+    const devPath = process.env.SHORTEM_DEV_PRESET || '';   // 개발 PC: 빌리지 않고 엔진 폴더의 프리셋을 쓴다
     if (channel && !YT_CHANNEL.test(channel)) return { hints: ['채널 주소는 https://www.youtube.com/@이름 또는 /channel/UC… 꼴이어야 합니다(틱톡·인스타 채널은 아직 못 엽니다 — 영상 주소를 주세요)'] };
     if (video && !VIDEO.test(video)) return { hints: ['영상 주소는 유튜브 쇼츠·틱톡 영상·인스타 릴스 주소여야 합니다'] };
-    const args = ['start', '--preset', profile.preset_path, '--pack', '1',
+    const args = ['start', '--preset', devPath || 'rented', '--pack', '1',
       ...(topic ? ['--topic', String(topic).slice(0, 200)] : []), ...(video ? ['--ref', video] : [])];
-    return go(args, { packFile: packFileFor(profile), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} }, profile);
+    return go(args, { packFile: await packFileFor(preset), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} }, devPath ? null : preset);
   }
   if (!SID_RE.test(String(sid || ''))) return { hints: ['sid 가 필요합니다(start 응답의 sid)'] };
   if (step === 'choose') {
     if (!Number.isInteger(n) || n < 1) return { hints: ['고른 후보 번호 n 이 필요합니다'] };
-    return go(['choose', sid, String(n)], { packFile: packFileFor(profile) }, profile);
+    return go(['choose', sid, String(n)], { packFile: await packFileFor(preset) }, devPathOr(preset));
   }
-  if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: packFileFor(profile) }, profile);
-  if (step === 'status') return go(['status', sid], { packFile: packFileFor(profile) });
+  if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
+  if (step === 'status') return go(['status', sid], { packFile: await packFileFor(preset) });
   return { hints: ['모르는 단계입니다'] };
 }
+
+const devPathOr = p => (process.env.SHORTEM_DEV_PRESET ? null : p);
 
 export function aiList(limit = 3) {
   return pending().slice(0, limit);

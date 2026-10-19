@@ -17168,6 +17168,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "license_kv",
                        # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
                        "claude_presets_off",
+                       # 클로드형 프리셋 고객용 이름(JSON {프리셋 id 또는 slug/틀: {name, desc}}) — PC 로컬 설정 화면 목록(관제 234)
+                       "claude_preset_names",
                        # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
                        "claude_min_engine", "claude_min_installer",
                        # 클로드형 이상 행동 임계값(JSON, 설계 §7-9 초기안을 덮어쓴다)
@@ -18634,7 +18636,7 @@ async def api_claude_rent(request: Request):
     body = await _claude_body(request)
     ctx = _cp.ctx_from_request(request, _client_ip(request))
     return _claude_json(await run_in_threadpool(_cp.call, _cp.rent, ctx, str(body.get("profile") or ""), str(body.get("job") or ""),
-                                                body.get("lease") or None, Store(DB_PATH)))
+                                                body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
 @app.get("/api/claude/pack/{asset_id:path}")

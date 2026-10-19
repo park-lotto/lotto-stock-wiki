@@ -540,3 +540,23 @@ def test_rent_편마다_잠근_꾸러미_풀면_원본과_같다(env):
     with cp._tx(env["store"]) as con:
         n = con.execute("SELECT COUNT(*) FROM claude_lease_log WHERE action='rent'").fetchone()[0]
     assert n == 2
+
+
+def test_rent_로컬설정은_프리셋id로_빌리고_이름목록은_관리자설정(env):
+    """PC 로컬 설정(관제 234 5판) — 서버 프로필 없이 고객용 프리셋 id 로 빌린다. 이름은 claude_preset_names, 없으면 틀 설명."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    lic = c.get("/api/claude/license", headers=_h(k)).json()
+    assert lic["presets"] == [{"id": env["preset"], "name": "흰바탕창 · 창아래 검정", "desc": ""}]
+    assert "benchslug" not in _json.dumps(lic["presets"]), "벤치 slug 가 이름에 새면 안 된다"
+    env["store"].set_setting("claude_preset_names", _json.dumps({"benchslug/A_흰바탕창/창아래_검정": {"name": "제품비하인드썰형", "desc": "뒷이야기 썰"}}))
+    assert c.get("/api/claude/license", headers=_h(k)).json()["presets"][0]["name"] == "제품비하인드썰형"
+    lid = c.post("/api/claude/lease", headers=_h(k), json={"action": "acquire", "job_id": "j1"}).json()["lease_id"]
+    f = cp.preset_pack_path(env["preset"])
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(b"PK-test")
+    r = c.post("/api/claude/rent", headers=_h(k), json={"preset": env["preset"], "job": "j1", "lease": lid})
+    assert r.status_code == 200 and r.json()["sha256"], r.text
+    assert c.post("/api/claude/rent", headers=_h(k), json={"preset": "p_0000000000", "job": "j1", "lease": lid}).json()["code"] == "not_entitled"
+    assert c.post("/api/claude/rent", headers=_h(k), json={"job": "j1", "lease": lid}).json()["code"] == "bad_request"
