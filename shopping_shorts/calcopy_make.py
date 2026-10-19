@@ -635,6 +635,8 @@ def _worker(S: dict, data_dir=None, deps: dict | None = None):
         extra["source_kind"] = chn["source_kind"]
     if chn.get("channels_file"):
         extra["channels_file"] = str(ROOT / chn["channels_file"])   # 같은 결 채널 목록(채널 기준 찾기, 관제 234)
+    if os.environ.get("CALCOPY_ORIGINALS_FILE") or chn.get("originals_file"):   # 해외 원본 채널 목록 — 고객이 준 채널이면 환경변수로
+        extra["originals_file"] = os.environ.get("CALCOPY_ORIGINALS_FILE") or str(ROOT / chn["originals_file"])
     extra["materials_hook"] = lambda skel: draft_materials(skel, mk["materials_defaults"], deps.get("assets"))
     w = Worker(deps.get("api") or LocalApi(data_dir), S["category"], "bench", S["slug"], name=f"make-{S['sid']}",
                out_root=_sdir(data_dir) / S["sid"] / "work", steps=deps.get("steps") or __import__("tools.calcopy.engine.worker_steps", fromlist=["x"]),

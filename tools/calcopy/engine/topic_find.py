@@ -640,6 +640,19 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
     return cands, failed
 
 
+def channel_of_video(url: str | None) -> str | None:
+    """영상 주소 → 그 채널 id(UC…) — 해외원본_채널.json 유튜브 행은 채널 주소 없이 예시 영상만 있다(10-19 실측 75행)."""
+    if not url:
+        return None
+    try:
+        r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--skip-download", "--print", "%(channel_id)s", url],
+                           capture_output=True, encoding="utf-8", stdin=subprocess.DEVNULL, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    cid = (r.stdout or "").strip().splitlines()[-1:] or [""]
+    return cid[0] if cid[0].startswith("UC") else None
+
+
 CHANNEL_VERDICTS = ("확정",)          # 같은결_채널.json 의 verdict 가 이 말로 시작하는 채널만 소재 출처로
 CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 이상 = 그 채널에서 '터진' 편
 
@@ -653,11 +666,13 @@ def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=pri
     if stats is None:
         from tools.calcopy.engine.channel_find import channel_stats as stats
     d = json.loads(Path(channels_file).read_text(encoding="utf-8"))
-    chans = [c for c in (d.get("channels") if isinstance(d, dict) else d) or []
-             if str(c.get("verdict") or "").startswith(CHANNEL_VERDICTS)]
+    rows = (d.get("channels") if isinstance(d, dict) else d) or []
+    originals = any("verdict" not in c for c in rows)      # 해외원본_채널.json(판정 칸 없음) = 소재+재료 채널
+    chans = [c for c in rows if (c.get("platform", "youtube") == "youtube") and
+             (originals or str(c.get("verdict") or "").startswith(CHANNEL_VERDICTS))]
     pool, failed = [], []
     for c in chans:
-        ref = c.get("channel_id") or c.get("handle") or c.get("url")
+        ref = c.get("channel_id") or c.get("handle") or c.get("url") or channel_of_video(((c.get("examples") or [{}])[0]).get("url"))
         st = stats(ref, per_channel) if ref else None
         if not st or not st.get("median_views"):
             failed.append({"where": f"channel {c.get('name') or ref}", "why": "채널 실측 실패"})
@@ -677,7 +692,7 @@ def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=pri
         if not t or any(overlap(t, [{"what": "", "text": c["topic"]}])["score"] >= 0.6 for c in cands):
             continue
         cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
-                      "source": {"kind": "채널", **v}})
+                      "source": {"kind": "해외원본" if originals else "채널", **v}})
         if len(cands) >= n:
             break
     log(f"[채널 찾기] 채널 {len(chans)}개 → 터진 편 {len(pool)}개 → 후보 {len(cands)}개 · 실패 {len(failed)}")
@@ -801,7 +816,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         failed.append(f"검색: {fb}")
     lst = [v for v in lst if v.get("id")]   # 폴백 실패 표식({id: None})은 상세 조회하지 않는다(10-16 실측: yt_detail(None) 150초 대기)
     src = c.get("source") or {}
-    seed = src.get("id") if src.get("kind") == "채널" else None
+    seed = src.get("id") if src.get("kind") in ("채널", "해외원본") else None
     if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
         lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
     for v in lst[:n_videos]:

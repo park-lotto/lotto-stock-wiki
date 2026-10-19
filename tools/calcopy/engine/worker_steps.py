@@ -153,9 +153,9 @@ def step_find(topic, ctx: Ctx) -> dict:
     """소재 후보 모으기 → 새 행. 검색어 만들기·통로는 topic_find.run 앞부분과 **같은 함수**를 같은 순서로 부른다
     (해외영상+검색어 없음 = db_candidates, 그 밖 = target_queries+gather). ★엔진에 find_candidates() 가 생기면 그걸 부르고 이 순서는 지운다."""
     TF = _engine("topic_find")
-    if ctx.extra.get("channels_file"):        # 채널 기준 찾기(관제 234) — 같은 결 채널 목록이 있는 프리셋은 이 길 먼저
+    if ctx.extra.get("originals_file") or ctx.extra.get("channels_file"):   # 채널 기준 찾기(관제 234) — 해외 원본 채널(소재+재료)이 있으면 그것, 없으면 같은 결 한국 채널
         top = TF._read_json(_preset(TF, ctx, None)["chdir"] / "원자료" / "top50.json") or []
-        cands, failed = TF.channel_candidates(ctx.extra["channels_file"], ctx.find_n, {v["id"] for v in top}, ctx.log)
+        cands, failed = TF.channel_candidates(ctx.extra.get("originals_file") or ctx.extra["channels_file"], ctx.find_n, {v["id"] for v in top}, ctx.log)
     elif hasattr(TF, "find_candidates"):
         r = TF.find_candidates(ctx.preset_of(None), ctx.find_n, keywords=ctx.extra.get("keywords"), net=_net(TF, ctx), llm=_llm(TF, ctx), log=ctx.log)
         cands, failed = r["candidates"], r["failed"]
@@ -274,6 +274,8 @@ def step_source(topic, ctx: Ctx) -> dict:
     #   그 채널의 한국어 자막('아.. 역겨워;;')이 화면에 박힌 채 계획 시트에 들어갔다. 현장썰 재료 = 해외 원본(다음: 원본 찾기).
     if src.get("kind") == "채널":
         q = " ".join(TF.core_terms(topic.get("name") or "")[:3]) or q
+    elif src.get("kind") == "해외원본" and src.get("id"):   # 해외 원본 채널에서 터진 편 = 그 편이 곧 재료(자막 없는 원본, 관제 234)
+        q = f"id:{src['id']}"
     if ctx.worker:                                     # remake 후보 모드는 검색 1번에 쇼츠 최대 12편을 받는다(remake.search_shorts n=12)
         from tools.calcopy.engine import worker_ledger as L
         L.take(ctx.worker, "yt", 12, f"재료 후보 {q}")
