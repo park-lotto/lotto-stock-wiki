@@ -1,0 +1,1351 @@
+{
+ "_note": "샥탬스토리 10편 Scrub Daddy 재료 계획 — TTS·렌더 전. 창 1080x1052. make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(ae5MssJ8en4_audio.m4a).",
+ "sources": {
+  "ae5MssJ8en4": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "A Bidding War Breaks Out During Scrub Daddy's Pitch | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137 + 140 영어 원음)",
+   "길이": 740.97,
+   "받은 구간": "전체",
+   "조회": 22163835,
+   "남의 글자": "이름·제안 띠(y 820~970: 'AARON KRAUSE / SCRUB DADDY' 15~30초 · 'Kevin's/Daymond's/Lori's offer…' 422~640초) — 띠가 뜨는 O5·O6·O7 컷은 크롭 높이 810 으로 뺌, 나머지 쓴 구간은 띠 없음(시트 확인). 모서리 로고 없음(20·596초 원본 확인). 끝 720~741 'SHARK TANK WATCH MORE' 판 안 씀"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "샤크들이 서로 싸운",
+  "line2": "웃는 수세미?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 399.8,
+   "audio_dur": 3.403,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    399.8,
+    403.203
+   ],
+   "ss": 399.8,
+   "dur": 3.403,
+   "t_final_est": [
+    0.0,
+    3.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 로리가 'I can tell instantly if it's a hero or a zero'(말하는 본인, 상반신 중간 샷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 403.203,
+   "audio_dur": 1.635,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    403.203,
+    404.838
+   ],
+   "ss": 403.203,
+   "dur": 1.635,
+   "t_final_est": [
+    3.4,
+    5.04
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    417,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 에런(주황 셔츠)이 수세미 들고 들음(원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 404.838,
+   "audio_dur": 1.368,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    404.838,
+    406.206
+   ],
+   "ss": 404.838,
+   "dur": 1.368,
+   "t_final_est": [
+    5.04,
+    6.41
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    474,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 데이먼드 반응(원본 편집 그대로 — 원음은 로리)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 406.206,
+   "audio_dur": 0.694,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    406.206,
+    406.9
+   ],
+   "ss": 406.206,
+   "dur": 0.694,
+   "t_final_est": [
+    6.41,
+    7.1
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    243,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 'is a hero' 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "N1",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    157.2,
+    159.25
+   ],
+   "ss": 157.2,
+   "dur": 2.05,
+   "t_final_est": [
+    7.1,
+    9.15
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    212,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "웃는 얼굴 노란 수세미를 손에 든 근접(얼굴 없음)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 5,
+   "line": "O2",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 32.75,
+   "audio_dur": 3.186,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    32.75,
+    35.936
+   ],
+   "ss": 32.75,
+   "dur": 3.186,
+   "t_final_est": [
+    9.15,
+    12.34
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    463,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런이 두 손에 수세미를 들고 말함(말하는 본인, 가슴 높이)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 6,
+   "line": "O2",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 35.936,
+   "audio_dur": 1.064,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    35.936,
+    37.0
+   ],
+   "ss": 35.936,
+   "dur": 1.064,
+   "t_final_est": [
+    12.34,
+    13.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    441,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런 상반신(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 7,
+   "line": "N2",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    57.95,
+    59.17
+   ],
+   "ss": 57.95,
+   "dur": 1.22,
+   "t_final_est": [
+    13.4,
+    14.62
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "4.5kg 아령 두 개를 수세미 위에 — 한쪽은 눌리고 한쪽은 버팀(딱딱)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 8,
+   "line": "N2",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    71.8,
+    73.02
+   ],
+   "ss": 71.8,
+   "dur": 1.22,
+   "t_final_est": [
+    14.62,
+    15.84
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    609,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "수세미로 탄 자국 난 유리 상판을 문지름(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N3",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    79.95,
+    81.17
+   ],
+   "ss": 79.95,
+   "dur": 1.22,
+   "t_final_est": [
+    15.84,
+    17.06
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "스테인리스 팬 안을 수세미로 닦음(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "N3",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    98.25,
+    99.47
+   ],
+   "ss": 98.25,
+   "dur": 1.22,
+   "t_final_est": [
+    17.06,
+    18.28
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    178,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "수세미를 손에 끼고 유리컵 안을 닦음(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 11,
+   "line": "N4",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    106.3,
+    108.74
+   ],
+   "ss": 106.3,
+   "dur": 2.44,
+   "t_final_est": [
+    18.28,
+    20.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "웃는 입 구멍에 숟가락을 끼워 앞뒤로 닦음(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 12,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    134.65,
+    135.704
+   ],
+   "ss": 134.65,
+   "dur": 1.054,
+   "t_final_est": [
+    20.72,
+    21.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    459,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 데이먼드가 수세미를 받아 봄",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 13,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    139.35,
+    140.687
+   ],
+   "ss": 139.35,
+   "dur": 1.337,
+   "t_final_est": [
+    21.77,
+    23.11
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    362,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 로리가 수세미를 눌러 봄",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    141.1,
+    142.073
+   ],
+   "ss": 141.1,
+   "dur": 0.973,
+   "t_final_est": [
+    23.11,
+    24.08
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    251,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 로버트가 수세미를 들어 봄",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 15,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    147.4,
+    148.656
+   ],
+   "ss": 147.4,
+   "dur": 1.256,
+   "t_final_est": [
+    24.08,
+    25.34
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    260,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로버트가 수세미를 쥐어 봄",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N6",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    515.75,
+    517.15
+   ],
+   "ss": 515.75,
+   "dur": 1.4,
+   "t_final_est": [
+    25.34,
+    26.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 와이드: 에런 앞에 투자자석",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "N6",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    518.99,
+    519.77
+   ],
+   "ss": 518.99,
+   "dur": 0.78,
+   "t_final_est": [
+    26.74,
+    27.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 와이드: 서로 말을 끊음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 468.4,
+   "audio_dur": 1.002,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    468.4,
+    469.402
+   ],
+   "ss": 468.4,
+   "dur": 1.002,
+   "t_final_est": [
+    27.52,
+    28.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    626,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "에런이 듣는 얼굴(원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 469.402,
+   "audio_dur": 0.935,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    469.402,
+    470.337
+   ],
+   "ss": 469.402,
+   "dur": 0.935,
+   "t_final_est": [
+    28.52,
+    29.46
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    536,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "투자자 데이먼드가 제안(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 470.337,
+   "audio_dur": 0.8,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    470.337,
+    471.137
+   ],
+   "ss": 470.337,
+   "dur": 0.8,
+   "t_final_est": [
+    29.46,
+    30.26
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    483,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "투자자 케빈 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 471.137,
+   "audio_dur": 0.734,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    471.137,
+    471.871
+   ],
+   "ss": 471.137,
+   "dur": 0.734,
+   "t_final_est": [
+    30.26,
+    30.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    392,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "로리 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 471.871,
+   "audio_dur": 0.729,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    471.871,
+    472.6
+   ],
+   "ss": 471.871,
+   "dur": 0.729,
+   "t_final_est": [
+    30.99,
+    31.72
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    544,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "투자자석 와이드",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 592.55,
+   "audio_dur": 2.544,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    592.55,
+    595.094
+   ],
+   "ss": 592.55,
+   "dur": 2.544,
+   "t_final_est": [
+    31.72,
+    34.26
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    444,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "로리가 제안(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 595.094,
+   "audio_dur": 1.002,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    595.094,
+    596.096
+   ],
+   "ss": 595.094,
+   "dur": 1.002,
+   "t_final_est": [
+    34.26,
+    35.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    550,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "에런 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 596.096,
+   "audio_dur": 1.301,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    596.096,
+    597.397
+   ],
+   "ss": 596.096,
+   "dur": 1.301,
+   "t_final_est": [
+    35.27,
+    36.57
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    500,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "로리(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 597.397,
+   "audio_dur": 0.703,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    597.397,
+    598.1
+   ],
+   "ss": 597.397,
+   "dur": 0.703,
+   "t_final_est": [
+    36.57,
+    37.27
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    583,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "에런 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O7",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 605.95,
+   "audio_dur": 2.858,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    605.95,
+    608.808
+   ],
+   "ss": 605.95,
+   "dur": 2.858,
+   "t_final_est": [
+    37.27,
+    40.13
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    544,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "투자자석 와이드(로리 말함 — 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 28,
+   "line": "O7",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 608.808,
+   "audio_dur": 1.192,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    608.808,
+    610.0
+   ],
+   "ss": 608.808,
+   "dur": 1.192,
+   "t_final_est": [
+    40.13,
+    41.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    485,
+    0,
+    832,
+    810
+   ],
+   "scale": 1.298,
+   "ours": "에런이 입을 벌리고 놀람",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 29,
+   "line": "O8",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 658.25,
+   "audio_dur": 0.775,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    658.25,
+    659.025
+   ],
+   "ss": 658.25,
+   "dur": 0.775,
+   "t_final_est": [
+    41.32,
+    42.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    440,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런이 들음(원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 30,
+   "line": "O8",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 659.025,
+   "audio_dur": 2.669,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    659.025,
+    661.694
+   ],
+   "ss": 659.025,
+   "dur": 2.669,
+   "t_final_est": [
+    42.09,
+    44.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    342,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 몰아붙임(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 31,
+   "line": "O8",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 661.694,
+   "audio_dur": 0.756,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    661.694,
+    662.45
+   ],
+   "ss": 661.694,
+   "dur": 0.756,
+   "t_final_est": [
+    44.76,
+    45.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    459,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 32,
+   "line": "O9",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 673.15,
+   "audio_dur": 1.357,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    673.15,
+    674.507
+   ],
+   "ss": 673.15,
+   "dur": 1.357,
+   "t_final_est": [
+    45.52,
+    46.88
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    549,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런이 되물음(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 33,
+   "line": "O9",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 674.507,
+   "audio_dur": 0.793,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    674.507,
+    675.3
+   ],
+   "ss": 674.507,
+   "dur": 0.793,
+   "t_final_est": [
+    46.88,
+    47.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    476,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자 케빈 반응",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 34,
+   "line": "O10",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 680.75,
+   "audio_dur": 2.433,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    680.75,
+    683.183
+   ],
+   "ss": 680.75,
+   "dur": 2.433,
+   "t_final_est": [
+    47.67,
+    50.1
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    288,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리가 수락(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 35,
+   "line": "O10",
+   "kind": "원음",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": false,
+   "audio_src": "ae5MssJ8en4_audio.m4a",
+   "audio_ss": 683.183,
+   "audio_dur": 1.367,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    683.183,
+    684.55
+   ],
+   "ss": 683.183,
+   "dur": 1.367,
+   "t_final_est": [
+    50.1,
+    51.47
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    675,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런 'We got a deal'(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 36,
+   "line": "N7",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    690.95,
+    692.154
+   ],
+   "ss": 690.95,
+   "dur": 1.204,
+   "t_final_est": [
+    51.47,
+    52.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    398,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "로리와 에런이 포옹(거래 직후)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 37,
+   "line": "N7",
+   "kind": "나레",
+   "src": "ae5MssJ8en4.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ae5MssJ8en4",
+   "src_orig_span": [
+    701.0,
+    703.006
+   ],
+   "ss": 701.0,
+   "dur": 2.006,
+   "t_final_est": [
+    52.67,
+    54.68
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    745,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "에런이 수세미를 들고 무대 밖으로 걸어 나감(끝 컷 ≥1.5)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/10편_ScrubDaddy/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    510,
+    731
+   ],
+   "size": 430,
+   "t": [
+    0.0,
+    3.403
+   ],
+   "how": "face",
+   "face_src": {
+    "cx": 809.0,
+    "eye_y": 284.4,
+    "h": 417.5,
+    "n": 3
+   },
+   "fh_win": 0.377,
+   "why": "foreignshowshow 0초 결말 반응 투자자 얼굴 빨간 실선 원(QMJ 0.0~0.533, 첫 컷 내내) — 얼굴 검출(YuNet 3프레임) 얼굴 높이 417px×0.974 = 창 폭 0.38 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+  },
+  {
+   "line": "N1",
+   "kind": "arrow_green_down",
+   "t": [
+    0.0,
+    0.7
+   ],
+   "how": "target",
+   "target": [
+    220,
+    643,
+    749,
+    1126
+   ],
+   "target_what": "웃는 얼굴 수세미(노란 덩어리 검출)",
+   "why": "벤치 QMJ 0.567~1.267 둘째 컷 제품 위 초록 아래 화살표",
+   "at": [
+    484,
+    627
+   ]
+  },
+  {
+   "line": "N2",
+   "kind": "arrow_curve_red",
+   "t": [
+    1.22,
+    2.44
+   ],
+   "how": "target",
+   "target": [
+    58,
+    875,
+    263,
+    1088
+   ],
+   "target_what": "유리 상판을 문지르는 수세미(노란 덩어리 검출)",
+   "why": "벤치 QMJ 20.367~22.9 둘째 시연 빨간 곡선 화살표(찌르기)+휙",
+   "at": [
+    133,
+    1179
+   ]
+  },
+  {
+   "line": "N5",
+   "kind": "arrow_pink_up",
+   "at": [
+    533,
+    1230
+   ],
+   "t": [
+    1.1,
+    2.4
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 12.017~13.82 숫자 조각 분홍 위 화살표 — 자막 '주문이 30%씩 늘어서'(둘째 조각, 시각은 추정 — TTS 뒤 조각 시각으로 맞춤)"
+  },
+  {
+   "line": "O5",
+   "kind": "money_emoji",
+   "at": [
+    537,
+    1189
+   ],
+   "t": [
+    0.033,
+    1.333
+   ],
+   "how": "auto",
+   "why": "벤치 QMJ 38.7~40.0 날개 돈다발(제안 금액 줄)"
+  },
+  {
+   "line": "O2",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 QMJ 7.1 장면 넘김 초록 번쩍(시연 시작)"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 QMJ 38.667 투자 제안 초록 번쩍"
+  },
+  {
+   "line": "O7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    2.858,
+    3.308
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 QMJ 11.2 와우 빨강 번쩍 — 에런 놀란 얼굴 컷 첫 프레임"
+  },
+  {
+   "line": "O8",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "벤치 QMJ 44.367 결정 빨강 번쩍"
+  },
+  {
+   "line": "O10",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    2.433,
+    2.883
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 QMJ 45.667 거래 성공 초록 번쩍 — 'We got a deal' 컷 첫 프레임"
+  },
+  {
+   "line": "N7",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "벤치 QMJ 49.3 방송 후 결과 초록 번쩍"
+  }
+ ],
+ "sfx_not_drawn": [
+  "벤치 6박자 '기존 불편' 점선 원 — 이 편엔 불편을 겪는 사람 컷이 원본에 없음(창업자 시연뿐) → 안 넣음(벤치와 다른 점)"
+ ]
+}
