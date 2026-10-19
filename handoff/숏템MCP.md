@@ -107,3 +107,9 @@
 - 프리셋 꾸러미 16개 빌드(스크래치 preset_packs_all) — 서버 claude_store/preset_packs/ 업로드는 승인 뒤.
 - 숏템메이커 서버 부담 0: 설계·결정 3(설계 문서 끝). 렌더 run_render 는 DB 12곳·키 0 실측.
 ⏭ 최종 빌드 → 설치 시험(test_install + test_engine_installed) · 로그인 실측(사장님) · 하이쿠 1편 · 짤 팩 · 병합 전 승인.
+
+## 2026-10-19 (밤 3) — 멈춘 자리(사장님 "지금 하는 거까지 하고 커밋·푸시, 이어서 할 거야")
+- 모델 배분: 엔진 client_llm.tier_of 기본 = opus(사장님 "하이쿠·소넷은 완전 단순·품질 무관만, 품질은 오푸스"). 실측 요청 꼬리표(score·ocr0·support·draft·rewrite·bench) 전부 opus. 플러그인 make/script 안내서: opus 요청은 오푸스가 — 지금 모델이 아니면 Agent(model=opus)에게.
+- 인스타 로그인 실측(사장님 계정, 숏템 전용 프로필 scratchpad/login_home): 연결됨 true. yt-dlp -F 에 쿠키 넣으면 1080x1920 형식이 보인다(없으면 최대 720). ★그런데 media_download 경로는 쿠키를 넘기는데도(564B) 720p 를 받는다 → 원인 후보: _download_ytdlp 형식 고르기(1080 이 vp9 이라 h264 선호에서 밀리나?) — 다음에 형식 문자열·고른 format_id 를 찍어 확인.
+- 최종 설치 exe 빌드 = 이번에 압축까지 끝났는지 확인 필요(scratchpad/installer_build/build_final.log). 끝났으면: test_install.py(/SANDBOX) → 설치 폴더에 _engine_test 섞였는지 확인(섞였으면 재빌드 — 점검 도구는 이미 밖으로 옮김) → test_engine_installed.py → 하이쿠 1편(scratchpad/haiku/prompt.txt, 시험 서버 FAKE_RENT_*).
+- 그 뒤: 짤 팩 동봉, 숏템메이커 서버 부담 0(결정 3 사장님), 프리셋 꾸러미 16개 서버 업로드(승인), 병합(승인).

@@ -2,7 +2,7 @@
 name: make
 description: 숏템 — 내 채널 프리셋으로 숏폼 한 편 만들기(소재 후보 → 고객이 고르기 → 대본·계획 → 고객 사인 → 완성본 · 완성본 다시 만들기). 사용자가 "/shortem:make", "숏템으로 만들어줘", "이 영상으로 만들어줘", "다시 만들어줘" 라고 할 때.
 argument-hint: "[영상 주소 · 해외 원본 채널 주소 · 소재 한 줄]"
-allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
+allowed-tools: mcp__plugin_shortem_shortem__shortem_make mcp__plugin_shortem_shortem__shortem_ai Agent mcp__plugin_shortem_shortem__shortem_settings mcp__plugin_shortem_shortem__shortem_login mcp__plugin_shortem_shortem__shortem_setup mcp__plugin_shortem_shortem__shortem_feedback
 disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Grep
 ---
 
@@ -13,7 +13,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Gre
 ## 순서 — 응답의 `need` 와 `next` 가 다음 할 일을 정한다(지어내지 않는다)
 1. `shortem_make(step="start", …)`. 프리셋은 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
 2. `need` 에 따라:
-   - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
+   - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청의 `권장 모델`이 `opus` 면 오푸스가 답한다(지금 모델이 아니면 `Agent`(model=opus)에게 맡긴다 — `script` 스킬). 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
    - `choose` → 후보를 번호·제목·한 줄로 표를 만들어 보여 주고 **고객이 고른 번호**로 `step="choose"`. 대신 고르지 않는다.
    - `approve` → 대본·계획을 보여 주고 **고객이 "좋아요"라고 하면** `step="approve"`(목소리·렌더는 고객 키 비용).
    - `wait` → `next` 를 그대로 부른다.
