@@ -1,0 +1,158 @@
+{
+ "slug": "sinbak",
+ "ref": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g",
+ "steps": {
+  "select": {
+   "state": "done",
+   "sec": 15.3,
+   "at": "2026-10-20 08:12",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\sinbak\\top.json"
+   },
+   "note": "신박발견 구독 53000 편 552 조회중앙 45,000 최대 28,000,000 (구독 대비 중앙 0.85)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:16",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\sinbak\\src",
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ]
+   },
+   "note": "받음 6/6(720p lite, C 여유 27.9GB)"
+  },
+  "tteutgi": {
+   "state": "done",
+   "sec": 0.2,
+   "at": "2026-10-20 08:22",
+   "outputs": {
+    "ids": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "dir": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\뜯기"
+   },
+   "note": "뜯기 6편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 118.8,
+   "at": "2026-10-20 08:24",
+   "outputs": {
+    "dirs": {
+     "rAt34vkQ0OY": "C:\\숏템_칼카피\\sinbak\\kal\\frames_rAt34vkQ0OY",
+     "oT-SxFJcQ-4": "C:\\숏템_칼카피\\sinbak\\kal\\frames_oT-SxFJcQ-4",
+     "fzoZc7V_hDM": "C:\\숏템_칼카피\\sinbak\\kal\\frames_fzoZc7V_hDM",
+     "CnRWZ3scVfk": "C:\\숏템_칼카피\\sinbak\\kal\\frames_CnRWZ3scVfk",
+     "bpjoacs2S6Q": "C:\\숏템_칼카피\\sinbak\\kal\\frames_bpjoacs2S6Q",
+     "edTkyQKrqMk": "C:\\숏템_칼카피\\sinbak\\kal\\frames_edTkyQKrqMk"
+    }
+   },
+   "note": "시트·0.1초 띠 6편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.0,
+   "at": "2026-10-20 08:24",
+   "outputs": {
+    "skeletons": [
+     "rAt34vkQ0OY",
+     "oT-SxFJcQ-4",
+     "fzoZc7V_hDM",
+     "CnRWZ3scVfk",
+     "bpjoacs2S6Q",
+     "edTkyQKrqMk"
+    ],
+    "bundle": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\CH\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\sinbak\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 6편 새로, 묶음 6편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-20 08:24",
+   "outputs": {
+    "pending": {
+     "rAt34vkQ0OY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.2) speaker 미기입",
+      "줄0(0.0~2.2) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(2.2~4.3) speaker 미기입",
+      "줄1(2.2~4.3) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "oT-SxFJcQ-4": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~1.7) speaker 미기입",
+      "줄0(0.0~1.7) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(1.7~3.7) speaker 미기입",
+      "줄1(1.7~3.7) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "fzoZc7V_hDM": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.1) speaker 미기입",
+      "줄0(0.0~2.1) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(2.1~3.5) speaker 미기입",
+      "줄1(2.1~3.5) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "CnRWZ3scVfk": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.4) speaker 미기입",
+      "줄0(0.0~2.4) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(2.4~3.9) speaker 미기입",
+      "줄1(2.4~3.9) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "bpjoacs2S6Q": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.6) speaker 미기입",
+      "줄0(0.0~2.6) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(2.6~4.5) speaker 미기입",
+      "줄1(2.6~4.5) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "edTkyQKrqMk": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(0.0~2.5) speaker 미기입",
+      "줄0(0.0~2.5) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(2.5~4.7) speaker 미기입",
+      "줄1(2.5~4.7) enter 미기입(꾸밈 없으면 'instant')"
+     ]
+    }
+   },
+   "note": "줄판독 미완 6/6편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "신박리포트",
+ "n": 6,
+ "hybrid": "예",
+ "voice": "tc_6059dad0b83880769a50502f",
+ "lite": true,
+ "channel": {
+  "name": "신박발견",
+  "url": "https://www.youtube.com/channel/UC9SnR_zj0wRj59NSBrWdI2g/shorts",
+  "subs": 53000,
+  "total": 552,
+  "view_median": 45000,
+  "view_max": 28000000,
+  "top_ids": [
+   "rAt34vkQ0OY",
+   "oT-SxFJcQ-4",
+   "fzoZc7V_hDM",
+   "CnRWZ3scVfk",
+   "bpjoacs2S6Q",
+   "edTkyQKrqMk"
+  ],
+  "views_per_sub": 0.85
+ }
+}
