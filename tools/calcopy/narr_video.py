@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from shopping_shorts import bgm_lib, scene_style, video_assemble as va  # noqa: E402
 from shopping_shorts.calcopy_frame import schema, to_snapshot  # noqa: E402
-from tools.calcopy.remake_video import _lufs  # noqa: E402
+from tools.calcopy.remake_video import _lufs, sfx_list, title_text  # noqa: E402
 
 
 # ── 자막 조각 ─────────────────────────────────────────────────────────────
@@ -633,10 +633,10 @@ def build(plan: dict):
             tl.append({"beat_idx": bi, "t0": round(a - t_a, 3), "dur": round(b - a, 3), "narration": txt, "caption_lines": [txt] if txt else [],
                        "role": "hook" if bi == 0 else "body", "primary": {"video_id": "s0", "start": a - t_a, "end": b - t_a}})
             bi += 1
-        title = next((l for l in spec["layers"] if l["kind"] == "text" and l["role"] == "title"), None)
+        title_t = title_text(spec, S)   # 판단 한 곳 = remake_video.title_text
         snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
         seg = out / "work" / f"seg{fi}.mp4"
-        scene_style.compose(str(mat), tl, snap, str(seg), out / "work" / f"compose{fi}", {"text": (title or {}).get("text") or ""})
+        scene_style.compose(str(mat), tl, snap, str(seg), out / "work" / f"compose{fi}", {"text": title_t})
         seg_files.append(seg)
     vlist = out / "work" / "segs.txt"
     vlist.write_text("".join(f"file '{p.as_posix()}'\n" for p in seg_files), encoding="utf-8")
@@ -660,12 +660,7 @@ def build(plan: dict):
     gain = round(target - _lufs(mixed)["I"], 2)   # 한 번 loudnorm 은 목표보다 ~1dB 덜 나온다(remake_video 와 같은 보정)
     final = out / "final.mp4"
     # 효과음(재료.json sfx: [{file, t(초 또는 "end-0.2"), db}]) — 원본 효과음 자리(뜯기 audio.composition.sfx.times)
-    sfx = []
-    for x in M.get("sfx") or []:
-        t = x["t"]
-        t = dur + float(t[3:]) if isinstance(t, str) and t.startswith("end") else float(t)
-        if (ROOT / x["file"]).exists():
-            sfx.append((ROOT / x["file"], max(0.0, t), float(x.get("db", 0))))
+    sfx = sfx_list(M, dur)   # 판단 한 곳 = remake_video.sfx_list
     fc2 = f"[1:a]volume={gain}dB[a0]"
     for k, (fp, t, db) in enumerate(sfx):
         ms = int(round(t * 1000))

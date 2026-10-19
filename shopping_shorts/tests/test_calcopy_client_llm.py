@@ -110,3 +110,30 @@ def test_bench_seeds_channel_source_video(tmp_path):
     c = {"id": "c1", "topic": "미국에서 터진 주걱 영상", "query": "주걱", "key": "채널:가", "source": {"kind": "채널", "id": "SRC"}}
     b = TF.bench(c, tmp_path, net, llm, 4)
     assert seen == ["SRC"] and b["points"]
+
+
+def test_sfx_list_end_relative_and_missing_file(tmp_path, monkeypatch):
+    """효과음 시각·파일 판단 한 곳(remake_video.sfx_list): 'end-0.2' 는 끝 기준, 빈 파일·없는 파일은 빼고 렌더는 계속."""
+    from tools.calcopy import remake_video as RV
+    f = tmp_path / "a.mp3"
+    f.write_bytes(b"x")
+    monkeypatch.setattr(RV, "ROOT", tmp_path)
+    got = RV.sfx_list({"sfx": [{"file": "a.mp3", "t": "end-0.2", "db": -3}, {"file": None, "t": 0.0}, {"file": "없음.mp3", "t": 1}]}, 10.0)
+    assert got == [(f, 9.8, -3.0)]
+
+
+def test_title_text_fills_per_video_from_script():
+    """제목 판단 한 곳: 틀 제목이 $per_video 면 대본 제목, 틀에 진짜 글이 있으면 그 글."""
+    from tools.calcopy import remake_video as RV
+    spec = {"layers": [{"kind": "text", "role": "title", "text": "$per_video"}]}
+    assert RV.title_text(spec, {"title": "외국인이 역겹다는 한국 코팩\n범인은 따로"}) == "외국인이 역겹다는 한국 코팩\n범인은 따로"
+    assert RV.title_text({"layers": [{"kind": "text", "role": "title", "text": "고정 제목"}]}, {"title": "x"}) == "고정 제목"
+    assert RV.title_text(spec, {}) == ""
+
+
+def test_merge_keeps_ad_disclosure():
+    """채널명을 넣어도 '[광고]' 자리는 그대로(썰풀다 틀). 10-19 렌더 눈 확인 결함."""
+    from shopping_shorts import calcopy_make as MK
+    cfg = MK.merge_preset_pack("channel/sseolpulda/preset/A_흰바탕창/창아래_검정", {"brand": {"channel_name": "내 채널"}})
+    texts = [L.get("text") for fr in MK._frames(cfg["frame"]) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand"]
+    assert "[광고]" in texts and "내 채널" not in texts

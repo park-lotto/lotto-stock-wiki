@@ -116,6 +116,14 @@ def _frames(frame: dict) -> list[dict]:
     return frame["frames"] if isinstance(frame.get("frames"), list) else [frame]
 
 
+DISCLOSURE_WORDS = ("광고", "협찬", "유료", "AD", "PPL")   # 광고 표시 글(썰풀다 brand 자리 '[광고]' 등)
+
+
+def is_disclosure(t) -> bool:
+    """광고·협찬 표시 글인가 — 판단 한 곳(서버 channel_profile 도 이것을 따른다)."""
+    return isinstance(t, str) and any(w in t for w in DISCLOSURE_WORDS)
+
+
 def merge_preset_pack(preset: str, pack: dict) -> dict:
     """판단 한 곳: 프리셋 구조 + 내 팩 키트 → 제작 설정. 틀 설명서에 brand/text 덮어쓰기, 제작 인자·재료 기본값에 tts/meme/sfx/bgm.
     바꾼 자리는 applied 에 한 줄씩(무엇을 무엇으로) — 계획.md·보드가 그대로 보여 준다."""
@@ -126,7 +134,8 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
     brand, text, cap = pack.get("brand") or {}, pack.get("text") or {}, (pack.get("text") or {}).get("caption") or {}
     if frame is not None:
         frame = copy.deepcopy(frame)
-        old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")}
+        old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")
+                     and not is_disclosure(L.get("text"))}
         new_name = brand.get("channel_name")
         colors = brand.get("colors") or {}
         for fr in _frames(frame):
@@ -134,7 +143,9 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
             for L in fr.get("layers", []):
                 if L.get("kind") == "text":
                     role = L.get("role")
-                    if new_name and role == "brand":
+                    if new_name and role == "brand" and is_disclosure(L.get("text")):
+                        pass   # 광고 표시 자리는 채널명으로 덮지 않는다(표시 의무, 관제 234 — 10-19 렌더에서 '[광고]' 가 '내 채널'로 바뀐 것을 눈으로 확인)
+                    elif new_name and role == "brand":
                         applied.append(f"{fid} 채널명 '{L.get('text')}' → '{new_name}'"); L["text"] = new_name
                     elif new_name and isinstance(L.get("text"), str) and any(o and o in L["text"] for o in old_names):
                         before = L["text"]
@@ -704,12 +715,16 @@ def approve(sid: str, by: str | None = None, data_dir=None, deps: dict | None = 
         raise MakeError(f"승인은 관리자({'/'.join(ADMINS[:2])})만 — by={by!r}", 403)
     S = _load(sid, data_dir)
     t = CT.detail(S["topic_id"], data_dir=data_dir)["topic"]
-    if t["state"] != "plan_review":
+    # 고객 모드: 이미 사인한 편이 렌더 중 멈췄으면(producing·세션 stopped/failed) 사인을 다시 받지 않고 렌더만 다시(관제 234 —
+    #   10-19 실측: 렌더 실패 뒤 '선검수 자리가 아니다(지금 producing)'로 그 편을 다시 만들 길이 없었다)
+    retry = CUSTOMER_MODE and t["state"] == "producing" and S.get("state") in ("stopped", "failed") and S.get("approved_by")
+    if t["state"] != "plan_review" and not retry:
         raise MakeError(f"선검수 자리가 아니다(지금 {t['state']})", 409)
     bad = variant_check(S, data_dir, final=True)
     if bad:
         raise MakeError("승인 거절(응용 중복): " + " / ".join(bad), 409)
-    CT.review(S["topic_id"], "plan_review", "pass", by=f"만들기 입구 · {by}", data_dir=data_dir)
+    if not retry:
+        CT.review(S["topic_id"], "plan_review", "pass", by=f"만들기 입구 · {by}", data_dir=data_dir)
     S["state"] = "producing"
     S["approved_by"] = by
     _save(S, data_dir)

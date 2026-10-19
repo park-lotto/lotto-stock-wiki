@@ -68,6 +68,39 @@ def _bgm_vol_expr(silent, ratio):
     return f"if({cond},{BGM_FILL},{ratio})"
 
 
+PER_VIDEO = "$per_video"
+
+
+def title_text(spec: dict, S: dict) -> str:
+    """영상 위 제목 글 — 판단 한 곳(remake_video·narr_video 공용, 관제 234). 틀 제목 칸이 '편마다 정함'($per_video)이거나 비면
+    이 편 대본의 제목. 10-19 실측: 만들기 입구 1편이 제목 자리에 '$per_video' 글자가 그대로 찍혀 나왔다(틀 글을 그대로 썼다)."""
+    L = next((l for l in spec.get("layers") or [] if l.get("kind") == "text" and l.get("role") == "title"), None)
+    t = str((L or {}).get("text") or "").strip()
+    if not t or t == PER_VIDEO:
+        t = str(S.get("title") or (S.get("final") or {}).get("title") or "").strip()
+    return "" if t == PER_VIDEO else t
+
+
+def sfx_list(M: dict, dur: float) -> list:
+    """재료.json sfx → [(파일, 시각초, dB)] — 판단 한 곳(remake_video·narr_video 공용, 관제 234).
+    t = 초 또는 "end-0.2"(끝에서), 파일이 비었거나 없으면 그 효과음만 빼고 이유를 찍는다(10-19 실측: 팩 자산이 없는 PC 에서
+    file=None 으로 렌더 전체가 TypeError, 원음+자막형은 "end-0.2" 를 float 로 바꾸다 죽을 자리였다)."""
+    out = []
+    for x in M.get("sfx") or []:
+        f, t = x.get("file"), x.get("t", 0)
+        try:
+            t = dur + float(str(t)[3:]) if isinstance(t, str) and t.startswith("end") else float(t)
+        except ValueError:
+            print(f"[효과음] 시각을 못 읽음 {t!r} — 뺌", file=sys.stderr)
+            continue
+        p = (ROOT / f) if f else None
+        if not p or not p.exists():
+            print(f"[효과음] 파일 없음 {f!r}(자산 #{x.get('asset_id')}) — 뺌", file=sys.stderr)
+            continue
+        out.append((p, max(0.0, t), float(x.get("db", 0))))
+    return out
+
+
 def material(M, spec, tail_start, dur, work, bgm_id, bgm_ratio, target):
     v = next(l for l in spec["layers"] if l["kind"] == "video")
     W, H = spec["canvas"]
@@ -107,15 +140,15 @@ def material(M, spec, tail_start, dur, work, bgm_id, bgm_ratio, target):
     gain = round(target - _lufs(mixed)["I"], 2)
     out = work / "material.mp4"
     # 효과음(재료.json sfx: [{file, t, db}]) — 음량 맞춘 섞인 소리 위에 그 시각 그대로 얹는다(뜯기 rules 효과음 시각)
-    sfx = [x for x in (M.get("sfx") or []) if (ROOT / x["file"]).exists()]
+    sfx = sfx_list(M, dur)
     fc2 = f"[1:a]volume={gain}dB[a0]"
-    for k, x in enumerate(sfx):
-        ms = int(round(float(x["t"]) * 1000))
-        fc2 += f";[{k + 2}:a]aresample=48000,aformat=channel_layouts=stereo,volume={float(x.get('db', 0))}dB,adelay={ms}|{ms}[s{k}]"
+    for k, (fp, t, db) in enumerate(sfx):
+        ms = int(round(t * 1000))
+        fc2 += f";[{k + 2}:a]aresample=48000,aformat=channel_layouts=stereo,volume={db}dB,adelay={ms}|{ms}[s{k}]"
     if sfx:
         fc2 += ";[a0]" + "".join(f"[s{k}]" for k in range(len(sfx))) + f"amix=inputs={len(sfx) + 1}:normalize=0:duration=first[a1]"
     fc2 += f";[{'a1' if sfx else 'a0'}]alimiter=limit=0.89:level=false[a]"
-    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(silent), "-i", str(mixed), *[a for x in sfx for a in ("-i", str(ROOT / x["file"]))],
+    va._run_ffmpeg(["ffmpeg", "-y", "-i", str(silent), "-i", str(mixed), *[a for fp, _, _ in sfx for a in ("-i", str(fp))],
                     "-filter_complex", fc2, "-map", "0:v", "-map", "[a]",
                     "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", str(out)])
     return out, bgm, silent_ranges
@@ -138,8 +171,7 @@ def make(frame_p, J_p, M_p, S_p, out, bgm_id=None, bgm_ratio=0.15, target=-10.1)
     J2 = json.loads(json.dumps(J))
     J2["captions"]["items"] = [{"i": k, "text": [t]} for k, t in enumerate(lines)]
     tl = timeline_from(J2, tail_start)
-    title = next((l for l in spec["layers"] if l["kind"] == "text" and l["role"] == "title"), None)
-    head = {"text": (title or {}).get("text") or ""}
+    head = {"text": title_text(spec, S)}
     snap = scene_style.validate_snapshot(to_snapshot.to_snapshot(frame))
     mat, bgm, silent = material(M, spec, tail_start, dur, out / "work", bgm_id, bgm_ratio, target)
     shutil.copy(mat, out / "material.mp4")
