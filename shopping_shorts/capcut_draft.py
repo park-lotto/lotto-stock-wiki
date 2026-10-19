@@ -633,7 +633,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
                 sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None, scene_dim_layers=None,
                 scene_zoom_spans=None,
-                cut_segments=None, freeze_images=None):
+                cut_segments=None, freeze_images=None, disclosure_layer=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -965,9 +965,20 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wseg["track_render_index"] = 3        # 자막(2)보다 위
         wm_track["segments"].append(wseg)
 
+    # ── 표기(광고·AI 콘텐츠·출처, 관제 239) — 렌더와 같은 PNG(video_assemble.disclosure_layer_png)를 영상 전체에 맨 위로 ──
+    dis_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                 "name": "disclosure", "is_default_name": False, "segments": []}
+    if disclosure_layer and disclosure_layer.get("_capcut_path") and total_us > 0:
+        dm = _photo_material(disclosure_layer["_capcut_path"], "disclosure.png", cw, ch)
+        mats["videos"].append(dm)
+        dseg = _base_segment(dm["id"], 0, total_us, source_start=0, source_dur=total_us,
+                             render_index=0, volume=0.0)
+        dseg["track_render_index"] = 9        # 자막·워터마크·장면꾸미기 위 = 맨 위(렌더도 완성본 위에 얹는다)
+        dis_track["segments"].append(dseg)
+
     tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
                           aud_track, bgm_track, sfx_track, txt_track, wm_track,
-                          scene_dim_track, scene_overlay_track)
+                          scene_dim_track, scene_overlay_track, dis_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
@@ -1114,6 +1125,20 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             headcopy_layer = {"_capcut_path": _hp, "t0": float(_ht0 or 0.0),
                               "dur": float(_hdur or 0.0)}
 
+    disclosure_layer = None
+    if isinstance(deco, dict) and deco.get("disclosure"):
+        from shopping_shorts.video_assemble import disclosure_layer_png
+        import tempfile
+        _dtmp = Path(tempfile.mkdtemp(prefix="disclosure_"))
+        try:
+            _dpng = disclosure_layer_png(deco, _dtmp / "disclosure.png")
+            if _dpng:
+                _dp, _ = _bring(_dpng, "disclosure.png")
+                if _dp:
+                    disclosure_layer = {"_capcut_path": _dp}
+        finally:
+            shutil.rmtree(_dtmp, ignore_errors=True)
+
     bgm_layer = None
     _bgm = (deco.get("bgm") or {}) if isinstance(deco, dict) else {}
     if _bgm.get("_abspath"):
@@ -1179,7 +1204,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                            sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
                            scene_overlay_layers=copied_scene_layers, scene_dim_layers=copied_dim_layers,
                            scene_zoom_spans=scene_zoom_spans,
-                           cut_segments=cut_segs, freeze_images=freeze_images)
+                           cut_segments=cut_segs, freeze_images=freeze_images,
+                           disclosure_layer=disclosure_layer)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.

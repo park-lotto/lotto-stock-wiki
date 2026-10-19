@@ -3761,6 +3761,65 @@ def headcopy_span(timeline):
     return (0.0, float(m.group(1))) if m else (0.0, total)
 
 
+# ── 표기(광고·AI 콘텐츠·출처) — 관제 239 ─────────────────────────────────────────────
+#   ★판단의 주인: 무엇을 적나 = disclosure_texts, 어떻게 그리나 = disclosure_layer_png. 렌더(assemble 출구)와
+#     캡컷(capcut_draft.assemble_draft_folder)이 **같은 PNG 한 장**을 얹는다(0순위-B · 0순위-A1a).
+#   ★deco["disclosure"] 가 없으면 아무것도 안 한다 — 기존 고객 영상은 한 픽셀도 안 바뀐다.
+#     예) {"ad": True, "ai": True, "source": "출처: 여기어때"}  (여행형 제작이 채운다 — travel_source.source_label)
+def disclosure_texts(deco):
+    """오른쪽 위에 위에서부터 적을 줄. 광고 → AI 콘텐츠 → 출처 순(표시 의무가 큰 것부터)."""
+    d = (deco or {}).get("disclosure") if isinstance(deco, dict) else None
+    if not isinstance(d, dict):
+        return []
+    out = []
+    if d.get("ad"):
+        out.append("광고")
+    if d.get("ai"):
+        out.append("AI 콘텐츠")
+    src = str(d.get("source") or "").strip()
+    if src:
+        out.append(src if src.startswith("출처") else "출처: " + src)
+    return out
+
+
+def disclosure_layer_png(deco, out_path):
+    """표기 줄들을 1080x1920 투명 PNG 한 장으로 — 오른쪽 위, 반투명 검은 띠 위 흰 글자. 없으면 None."""
+    texts = disclosure_texts(deco)
+    if not texts:
+        return None
+    from PIL import Image, ImageDraw, ImageFont
+    font_path = _resolve_font()
+    if not font_path:
+        raise RuntimeError("표기용 한글 폰트가 없다(_FONT_CANDIDATES)")
+    font = ImageFont.truetype(font_path, 30)
+    im = Image.new("RGBA", (_OUT_W, _OUT_H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    y, right, padx, pady = 56, _OUT_W - 36, 14, 7
+    for t in texts:
+        l, top, r, b = d.textbbox((0, 0), t, font=font)
+        w, h = r - l, b - top
+        x0 = right - w - padx * 2
+        d.rounded_rectangle((x0, y, right, y + h + pady * 2), radius=10, fill=(0, 0, 0, 140))
+        d.text((x0 + padx - l, y + pady - top), t, font=font, fill=(255, 255, 255, 235))
+        y += h + pady * 2 + 8
+    im.save(out_path)
+    return str(out_path)
+
+
+def _apply_disclosure(video_path, deco, work):
+    """완성본에 표기 PNG 를 영상 전체 길이로 얹는다(소리는 그대로 복사). 표기가 없으면 손대지 않는다."""
+    png = disclosure_layer_png(deco, Path(work) / "disclosure.png")
+    if not png:
+        return video_path
+    tmp = Path(work) / "with-disclosure.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(video_path), "-i", png,
+                 "-filter_complex", "[0:v][1:v]overlay=0:0:format=auto[v]", "-map", "[v]", "-map", "0:a?",
+                 "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(),
+                 "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart", str(tmp)])
+    shutil.move(str(tmp), str(video_path))
+    return video_path
+
+
 def headcopy_layer_png(headcopy, out_path, work, caption_style=None, deco=None):
     """머리카피를 **투명 PNG 한 장**으로 굽는다(캡컷 내보내기용) → out_path 또는 None.
 
@@ -4147,11 +4206,14 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
             _burn_captions(base_video, edit_plan, tts_paths, with_audio, work,
                            deco=audio_deco, sfx_paths=sfx_paths, skip_text=True,
                            narr_wav=_narr, audio_wav_out=audio_wav_out)
-            return compose(with_audio, _beat_timeline(edit_plan, tts_paths),
-                           deco["scene_style"], out_path, work, headcopy)
+            res = compose(with_audio, _beat_timeline(edit_plan, tts_paths),
+                          deco["scene_style"], out_path, work, headcopy)
+            return _apply_disclosure(res, deco, work)          # 표기는 두 갈래 공통 출구에서 한 번(관제 239)
+        _deco_in = deco
         base_video, deco = _pre_compose_under_text(base_video, deco, work)
-        return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths,
-                              narr_wav=_narr, audio_wav_out=audio_wav_out)
+        res = _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths,
+                             narr_wav=_narr, audio_wav_out=audio_wav_out)
+        return _apply_disclosure(res, _deco_in, work)
     finally:
         try:
             import shutil as _sh
