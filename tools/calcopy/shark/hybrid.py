@@ -118,7 +118,7 @@ def join(F: dict, cut: dict, back_mp4: Path, tr: dict, R: Path) -> Path:
 
 
 def plan_md(doc: Path, S: dict, F: dict, cut: dict, bd: dict, info: dict) -> Path:
-    """계획 시트(plan/하이브리드_계획.md) — 앞 자르기·이음 문장·뒤 줄별 화면·강조·효과. 숫자는 render_info(뒤 계획)·앞 render_info 에서만."""
+    """자동 계획 시트(plan/하이브리드_계획_자동.md — 손으로 쓴 plan/하이브리드_계획.md 는 안 건드린다, 10-20 덮어씀 사고) — 앞 자르기·이음 문장·뒤 줄별 화면·강조·효과. 숫자는 render_info(뒤 계획)·앞 render_info 에서만."""
     H = S["hybrid"]
     caps_of = {}
     for c in info["captions"]:
@@ -126,7 +126,7 @@ def plan_md(doc: Path, S: dict, F: dict, cut: dict, bd: dict, info: dict) -> Pat
     emph = {l["id"]: {e["cap"]: f"{e['span']}({e['color']})" for e in l.get("emph") or []} for l in S["final"]["lines"]}
     fl = {x["id"]: x for x in F["info"]["lines"]}
     fcaps = [c for c in F["info"]["captions"] if c["line"] == cut["line"]]
-    L = [f"# 하이브리드 계획 — {doc.name} (tools/calcopy/shark/hybrid.py --plan 이 씀)", "",
+    L = [f"# 하이브리드 계획 — {doc.name} (tools/calcopy/shark/hybrid.py --plan 이 씀 — 손 계획은 하이브리드_계획.md)", "",
          f"- 제품: {S.get('product', '')}",
          f"- 앞: `{H['front_src']}` 0~{cut['dur']:.3f}초(프레임 {cut['nf']}) = 앞 줄 {cut['line']} 끝 — 끝 원음 「{' / '.join(c['text'] for c in fcaps)}」 · 까닭: {H.get('cut_why', '')}",
          f"- 이음: {H.get('transition', {}).get('kind')} {H.get('transition', {}).get('dur')}초(제목 띠 y<{H.get('transition', {}).get('keep_top')} 고정) · BGM {bd['bgm']} 를 {bd['bgm_ss']}초부터 이어서 · 목소리 {S['voice']['name']}({S['voice']['voice_id']}, speed {S['voice'].get('speed')}) · 목표 말속도 {S['final']['cps_target']}자/초",
@@ -139,7 +139,7 @@ def plan_md(doc: Path, S: dict, F: dict, cut: dict, bd: dict, info: dict) -> Pat
     eff = [f"{e['line']} {e['kind']}" + (f" → {e.get('target_what') or e.get('target')}" if e.get("target") else "") for e in jload(doc / "재료.json").get("effects") or []]
     L += ["", "## 효과", "- 이음 자리 화면 효과 1개(위 이음). 뒤 꾸밈 = 재료 effects(대상 확실한 것만 — 렌더 fx.gate 적중 검사가 미달이면 뺌): " + (", ".join(eff) or "없음"), "",
           "## 근거", *[f"- {k}: {v if isinstance(v, str) else v.get('text')}" for k, v in (S.get("facts") or {}).items()]]
-    out = doc / "plan" / "하이브리드_계획.md"
+    out = doc / "plan" / "하이브리드_계획_자동.md"
     out.parent.mkdir(exist_ok=True)
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
     return out
