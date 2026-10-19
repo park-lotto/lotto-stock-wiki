@@ -433,6 +433,9 @@ body.is-admin .admin-only{display:block}
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
+      <!-- ✈️ 여행(관제 239, 2026-10-19) — 숙소·항공 사이트별 베스트 + 내가 담은 것. 관리자 먼저(admin-only),
+           회원은 feature_allow_travel 로 연다(_FEATURE_KEYS). 화면은 #travelRoot 하나에 그린다(renderTravel). -->
+      <div class="ctype admin-only" data-platform="travel" onclick="switchPlatform('travel',this)">✈️ 여행</div>
     </div>
     </details>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
@@ -694,7 +697,7 @@ body.is-admin .admin-only{display:block}
     <div class="ctypes" id="styles" style="display:none"></div>
     <!-- 검색 + 주소 넣기(2026-08-18 사장님). 주소는 원래도 엔터로 됐지만 "검색"처럼 보여
          찾지 못하셨다 → 문구에 명시하고, 옆에 버튼을 둬 눈에 보이게 한다. -->
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
+    <div id="rankSearchRow" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
       <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재 / 🔗 영상 주소 붙여넣기"
              oninput="setSearch(this.value);_urlCardAutoClose(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
              style="flex:1;min-width:240px;max-width:420px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
@@ -733,6 +736,7 @@ body.is-admin .admin-only{display:block}
       <div id="overseasList"></div>
     </div>
     <div id="trendRoot" style="display:none"></div>
+    <div id="travelRoot" style="display:none"></div>
     <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
@@ -1155,8 +1159,25 @@ function switchPlatform(p, el){
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
+  const isTravel = (p==='travel');
   document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
-  document.getElementById('cards').style.display = isTrend ? 'none' : '';
+  document.getElementById('travelRoot').style.display = isTravel ? 'block' : 'none';
+  document.getElementById('cards').style.display = (isTrend||isTravel) ? 'none' : '';
+  // 여행 탭: 영상 랭킹용 줄(정렬·카테고리·검색·수집)은 다 숨기고 travelRoot 만 쓴다. 돌아오면 다시 보인다.
+  //   ★원래 숨겨져 있던 줄(styles·urlCardBox 등)은 원래 값으로 돌려놓는다 — ''로 지우면 숨김이 풀린다.
+  ['tabs','ctypes','styles','rankSearchRow','cats','urlCardBox','overseasBox'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(isTravel){ if(el.dataset.tvPrev===undefined){ el.dataset.tvPrev=el.style.display; } el.style.display='none'; }
+    else if(el.dataset.tvPrev!==undefined){ el.style.display=el.dataset.tvPrev; delete el.dataset.tvPrev; }
+  });
+  if(isTravel){
+    ['seedPanel','refRegister','ttMode','ttPanel','collectBtn','ytCatBox','censusBtn','statusBox','collectProgress','pinPanel','ncPanel','xhsDiscoverPanel','igDiscoverPanel'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='none';
+    });
+    const _st=document.getElementById('status'); if(_st) _st.textContent='';
+    renderTravel();
+    return;
+  }
   if(isTrend){
     // 트렌드 탭: 수집은 인스·틱·유튜에서만 한다(중국앱은 크롤 불가). 그래서 여기선
     // 수집버튼·수집상태·전수조사·시스템상태·등록패널을 전부 숨기고 renderTrendCards의

@@ -70,6 +70,10 @@ def travel_site(url):
         m = _YEOGI_STAY_RE.search(p.path)
         if m:
             kind, pid = "stay", m.group(1)
+    elif site == "yanolja":
+        m = re.search(r"/stay/domestic/(\d+)", p.path)
+        if m:
+            kind, pid = "stay", m.group(1)
     elif (site == "naver" and p.path.startswith("/flights/")) or (site == "nol" and p.path.startswith("/air/search/")):
         # 항공은 '노선+날짜'가 곧 상품이다 — 경로 그대로를 번호로 쓴다(같은 노선·날짜면 같은 키)
         kind, pid = "air", p.path.strip("/").split("/", 1)[-1]
@@ -239,7 +243,87 @@ def _best_nol_air():
     return out
 
 
-_BEST = {("air", "naver"): _best_naver_air, ("air", "nol"): _best_nol_air}
+def _stay_item(site, rank, name, group, price, rating, scale, reviews, url, image, extra=""):
+    return {"site": site, "site_name": SITES[site]["name"], "kind": "stay", "rank": rank,
+            "title": name or "", "sub": " · ".join(x for x in (group, extra) if x), "price": price,
+            "price_note": "1박~" if price else "", "rating": rating, "rating_scale": scale,
+            "reviews": reviews, "depart": "", "return": "", "airline": "", "url": url, "image": image or "",
+            "source_label": source_label(site)}
+
+
+_YEOGI_CAT = {0: "전체 인기", 2: "호텔·리조트", 3: "펜션·풀빌라"}
+
+
+def _best_yeogi_stay():
+    """여기어때 메인 '인기 숙소' API(robots 금지 경로 아님) — 전체·호텔·펜션 각 20건(중복은 앞 묶음만)."""
+    out, seen = [], set()
+    for cat, label in _YEOGI_CAT.items():
+        j = json.loads(_get("https://www.yeogi.com/api/gateway/web-product-api/recommendations/popular?category=%d" % cat))
+        for i, it in enumerate(j.get("body") or [], 1):
+            m = it.get("meta") or {}
+            if not m.get("id") or m["id"] in seen:
+                continue
+            seen.add(m["id"])
+            price = (((it.get("room") or {}).get("stay") or {}).get("price") or {})
+            br, rv = it.get("braze") or {}, m.get("review") or {}
+            imgs = m.get("newImages") or m.get("images") or []
+            img = imgs[0] if imgs else ""
+            if isinstance(img, dict):
+                img = img.get("image") or ""
+            region = " ".join(x for x in (br.get("region"), br.get("city")) if x)
+            out.append(_stay_item("yeogi", i, m.get("name"), label, price.get("discountPrice") or price.get("strikePrice"),
+                                  rv.get("rate"), 10, rv.get("count"),
+                                  "https://www.yeogi.com/domestic-accommodations/%s" % m["id"], img, region))
+    return out
+
+
+def _nol_rsc(html):
+    parts = re.findall(r'self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)', html)
+    txt = []
+    for p in parts:
+        try:
+            txt.append(json.loads(p))
+        except ValueError:
+            pass
+    rsc, dec, res = "".join(txt), json.JSONDecoder(), []
+    for m in re.finditer(r'\{"data":\{"header":\{"title":', rsc):
+        try:
+            res.append(dec.raw_decode(rsc, m.start())[0]["data"])
+        except ValueError:
+            continue
+    return res
+
+
+def _best_yanolja_stay():
+    """NOL(야놀자) 카테고리 홈(robots 허용) 의 '인기 펜션 BEST'(지역 탭)·'국내 여행 인기 호텔' 위젯."""
+    out = []
+    for kind in ("pension", "hotel"):
+        for w in _nol_rsc(_get("https://nol.yanolja.com/sub-home/%s" % kind)):
+            title = (w.get("header") or {}).get("title") or ""
+            # 베스트 위젯만 — 테마·광고 위젯은 빼고, '강원도 여행 인기 숙소'는 탭이 경주·부산이라(사이트 쪽 제목 불일치, 실측) 뺀다
+            if not ("BEST" in title or "인기 호텔" in title):
+                continue
+            blocks = w.get("items") or []
+            tabs = [b for b in blocks if isinstance(b, dict) and "items" in b and "header" in b] or [{"header": {}, "items": blocks}]
+            for b in tabs:
+                tab = (b.get("header") or {}).get("title") or ""
+                for i, it in enumerate([x for x in b.get("items") or [] if isinstance(x, dict) and x.get("id")], 1):
+                    pg = ((it.get("logMeta") or {}).get("priceGroup") or {})
+                    web = ((it.get("action") or {}).get("web") or "")
+                    sc = it.get("score")
+                    try:
+                        sc = float(sc)
+                    except (TypeError, ValueError):
+                        sc = None
+                    rc = int(re.sub(r"\D", "", str(it.get("reviewCount") or "")) or 0) or None
+                    out.append(_stay_item("yanolja", i, it.get("title"), title, (pg.get("sellPrices") or [None])[0],
+                                          sc, 5, rc, ("https://nol.yanolja.com" + web) if web.startswith("/") else web,
+                                          it.get("imageUrl"), tab))
+    return out
+
+
+_BEST = {("stay", "yeogi"): _best_yeogi_stay, ("stay", "yanolja"): _best_yanolja_stay,
+         ("air", "naver"): _best_naver_air, ("air", "nol"): _best_nol_air}
 _BEST_TTL = 3 * 3600          # 사이트 부담·속도 — 같은 목록은 3시간 재사용
 _best_cache = {}
 
