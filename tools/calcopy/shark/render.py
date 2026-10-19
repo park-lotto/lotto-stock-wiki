@@ -180,6 +180,30 @@ def narr_beep(NM, R: Path) -> dict:
     return {**NM, "wav": str(out), "how": NM["how"] + " · 나레 자리 삐 소리(미리보기)"}
 
 
+def real_tail_ends(wav: Path, al: dict, floor_db=-40.0, win=0.01) -> list[dict]:
+    """쉼표·마침표 앞 글자의 끝을 실제 소리 끝으로 늦춘다(al 을 고친다). 타입캐스트 정렬은 말 꼬리를 일찍 끊는다 —
+    10-19 샥탬 10편 '닦인다고.' 정렬 8.119초, 실제 '고' 는 8.34초까지(−22~−32dB) → 쉼이 0.32초로 보여 shape 가 안 늘리고
+    실제 무음 0.08초, 줄 끝(+0.10)이 꼬리를 자른다. 정렬 끝부터 10ms 창 RMS 가 floor 아래로 처음 떨어지는 곳까지 늘린다(뒤 글자 시작 −0.05 넘지 않음)."""
+    import subprocess
+    import numpy as np
+    from tools.calcopy.engine import tts_pause as TP
+    x = np.frombuffer(subprocess.run(["ffmpeg", "-v", "error", "-i", str(wav), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
+                                     capture_output=True, check=True).stdout, np.float32)
+    sr = int(SR); n = int(win * sr); e = al["character_end_times_seconds"]; ch = al["characters"]
+    fixed = []
+    for kind, a, b in TP.pause_slots(al):
+        j = next(i for i in range(len(ch) - 1, -1, -1) if abs(float(e[i]) - a) < 1e-9)
+        t = a
+        while t + win < b - 0.05:
+            w = x[int(t * sr): int(t * sr) + n]
+            if len(w) == 0 or 20 * np.log10(float(np.sqrt(np.mean(w * w))) + 1e-9) < floor_db:
+                break
+            t += win
+        if t - a >= 0.02:
+            e[j] = t; fixed.append({"at": round(a, 3), "real_end": round(t, 3)})
+    return fixed
+
+
 def narr_tts(D, R: Path, confirm: bool) -> dict:
     """나레 줄만 TTS 1회 통째(엔진 tts_pause.synth) → atempo(목표 cps, 0.85~1.27) → tts_pause.shape → 줄마다 [start,end](정렬 글자 시각을 shape 이음매로 옮김).
     옮긴 줄 머리가 실제 말 구간 시작과 0.12초 넘게 다르면 멈춘다(조용히 어긋나지 않게)."""
@@ -224,6 +248,7 @@ def narr_tts(D, R: Path, confirm: bool) -> dict:
     run(["ffmpeg", "-y", "-i", raw, "-af", f"atempo={tempo}", "-ar", SR, "-ac", "1", tw])
     al = {"characters": ch, "character_start_times_seconds": [x / tempo for x in align["character_start_times_seconds"]],
           "character_end_times_seconds": [x / tempo for x in align["character_end_times_seconds"]]}
+    tail_fix = real_tail_ends(tw, al)
     plog = TP.shape(str(tw), al, str(R / "narr_shaped.mp3"))
     narr = R / "narr.wav"
     run(["ffmpeg", "-y", "-i", R / "narr_shaped.mp3", "-ar", SR, "-ac", "1", narr])
@@ -253,7 +278,7 @@ def narr_tts(D, R: Path, confirm: bool) -> dict:
     sp = sum(o["end"] - o["start"] for o in out)
     return {"lines": out, "wav": str(narr), "tempo": tempo, "cps_out": round(nchar(text) / max(sp, 0.1), 2),
             "line_cps": {o["id"]: round(nchar(l["tts"]) / max(o["end"] - o["start"], 0.1), 2) for o, l in zip(out, NL)}, "raw_cps": round(rate, 2), "target_cps": tgt, "voice": m,
-            "pauses": plog, "how": "타입캐스트 정렬 + tts_pause.shape"}
+            "pauses": plog, "tail_fix": tail_fix, "how": "타입캐스트 정렬(꼬리 = 실제 소리 끝) + tts_pause.shape"}
 
 
 # ── 판단 주인 ─────────────────────────────────────────────────────────
