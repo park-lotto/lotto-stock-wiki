@@ -10286,7 +10286,7 @@ def api_mix_cta_variants(job_id: str, request: Request):
         f = _MIX_WORK_DIR / job_id / str(rec.get("file") or "")
         rec["stale"] = bool(rec.get("file") and src and Path(src).exists() and f.exists()
                             and f.stat().st_mtime + 1 < Path(src).stat().st_mtime)
-    has_cta = bool(_cv.cta_beat_indexes(job.get("edit_plan") or {}))
+    has_cta = bool(_cv.cta_beat_indexes(_cv.marked_plan(job.get("edit_plan") or {}, job)))
     return {"ok": True, "config": cfg, "status": st, "has_cta": has_cta}
 
 

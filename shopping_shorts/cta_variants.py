@@ -23,10 +23,11 @@ from pathlib import Path
 PLATFORMS = [
     {"key": "insta",   "label": "인스타",        "text": "궁금하면 댓글 남겨주세요, 바로 링크 보내드릴게요."},
     {"key": "yt_shop", "label": "유튜브 수익창출", "text": "영상 속 제품 스티커를 눌러보세요."},
-    {"key": "yt_long", "label": "유튜브 비수창",   "text": "아래 관련 영상을 눌러 구매링크를 확인하세요."},
+    {"key": "yt_long", "label": "유튜브 비수창",   "text": "아래 ▶관련 영상을 눌러 구매링크를 확인하세요."},
     {"key": "profile", "label": "틱톡·클립",       "text": "프로필 링크에서 확인하세요."},
 ]
 _KEYS = {p["key"] for p in PLATFORMS}
+_OLD_DEFAULTS = {"아래 관련 영상을 눌러 구매링크를 확인하세요."}
 TTS_MODES = ("cta", "full")      # cta = CTA 칸만 새로 굽기(빠름) / full = 판마다 전체 목소리 다시(느림·이음매 자연)
 MAX_TEXT = 80
 
@@ -48,6 +49,8 @@ def normalize(raw):
     for p in PLATFORMS:
         x = by.get(p["key"]) or {}
         text = " ".join(str(x.get("text") or p["text"]).split())[:MAX_TEXT]
+        if text in _OLD_DEFAULTS:      # 고치지 않은 옛 기본 문구는 새 기본으로(화살표 추가, 10-19)
+            text = p["text"]
         items.append({"key": p["key"], "label": p["label"], "on": bool(x.get("on")), "text": text})
     return {"tts_mode": mode, "items": items}
 
@@ -84,6 +87,18 @@ def cta_beat_indexes(plan):
     """CTA 칸 위치(대본 순서). 판단은 edit_plan._is_cta 한 곳."""
     from shopping_shorts.edit_plan import _is_cta
     return [i for i, b in enumerate((plan or {}).get("beats") or []) if _is_cta(b)]
+
+
+def marked_plan(plan, job):
+    """칸에 CTA 표시가 하나도 없는 작업(계획 때 자동 추정이 못 잡은 것)은 **사본**에 같은 판정(apply_cta_mark)을
+    다시 얹는다 — app 의 CTA 자르기와 같은 방식. DB 의 계획은 안 바꾼다(2026-10-19 Park님 383ac5b29649)."""
+    beats = (plan or {}).get("beats") or []
+    if not beats or any("cta_mark" in b for b in beats):
+        return plan
+    from shopping_shorts.edit_plan import apply_cta_mark
+    vp = copy.deepcopy(plan)
+    apply_cta_mark(vp["beats"], (job or {}).get("given_script"), (job or {}).get("script_structure"))
+    return vp
 
 
 def variant_plan(plan, text):
