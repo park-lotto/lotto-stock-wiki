@@ -1,0 +1,564 @@
+{
+ "id": "CnRWZ3scVfk",
+ "dur": 17.333,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "역대급 귀여운 정당방위",
+   "colors": [
+    {
+     "word": "역대급 귀여운 정당방위",
+     "hex": "#000000"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   449,
+   525
+  ],
+  "window": [
+   19,
+   541,
+   1060,
+   1286
+  ],
+  "caption_band": [
+   1299,
+   1365
+  ],
+  "logo_y": [
+   280,
+   405
+  ],
+  "watermark": null,
+  "bg_hex": "#F1F3F0",
+  "source_y": null
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.433,
+   "speaker": "나레",
+   "text": "물로 죄를 씻어주고 있는데",
+   "layer": "신박발견-본문",
+   "role": "훅",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "신부가 세례반 위 아기 머리에 손으로 물을 부음(위에서 내려다본 앵글)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 2.433,
+   "t1": 3.867,
+   "speaker": "나레",
+   "text": "좀 차가운듯?",
+   "layer": "신박발견-본문",
+   "role": "다리",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "물 붓기 계속, 아기 얼굴 찡그림·우는 입",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 3.867,
+   "t1": 5.567,
+   "speaker": "나레",
+   "text": "하지만 엄숙한 신부님",
+   "layer": "신박발견-본문",
+   "role": "이음",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "신부가 고개 숙인 채 차분히 물 붓기 계속",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 5.567,
+   "t1": 7.4,
+   "speaker": "나레",
+   "text": "드디어 죄를 다 씻고",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "6.2초부터 흰 수건으로 아기 머리를 닦음",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 7.4,
+   "t1": 8.933,
+   "speaker": "나레",
+   "text": "세례 의식 마지막 단계",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "신부가 아기를 안고 수건으로 닦으며 몸을 돌림",
+   "fit": 5,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 8.933,
+   "t1": 10.967,
+   "speaker": "나레",
+   "text": "이마에 성호를 그어줄 예정",
+   "layer": "신박발견-본문",
+   "role": "고조",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부제(헤드셋 마이크)가 웃으며 말함 → 10.3초 카메라가 오른쪽 신부·아기로 이동",
+   "fit": 5,
+   "motion": "pan",
+   "transition": "cut",
+   "cut_at": [
+    8.933
+   ],
+   "voiced": false
+  },
+  {
+   "t0": 10.967,
+   "t1": 12.934,
+   "speaker": "나레",
+   "text": "미안했는지 달래주는 그때",
+   "layer": "신박발견-본문",
+   "role": "고조",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신부가 아기를 가슴에 안고 눈 감고 달램, 뒤에 수염 난 복사 웃음",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 12.934,
+   "t1": 13.9,
+   "speaker": "나레",
+   "text": "복수ㅋㅋㅋ",
+   "layer": "신박발견-본문",
+   "role": "반전",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "아기 손이 신부 얼굴(코·입)을 때림 → 13.23초 신부 쪽으로 당겨진 화면",
+   "fit": 9,
+   "motion": "zoom_in",
+   "transition": "cut",
+   "cut_at": [
+    12.934,
+    13.234
+   ],
+   "voiced": false
+  },
+  {
+   "t0": 13.9,
+   "t1": 16.234,
+   "speaker": "나레",
+   "text": "ㅋㅋㅋㅋㅋㅋㅋㅋ",
+   "layer": "신박발견-본문",
+   "role": "고조",
+   "enter": "흔들림(shake) — 등장 instant, 매 프레임 x 좌우 수 px 떨림",
+   "y": [
+    1302,
+    1361
+   ],
+   "fill_hex": "#038EFA",
+   "outline": "검정·약 10px",
+   "emph": [
+    {
+     "word": "ㅋㅋㅋㅋㅋㅋㅋㅋ",
+     "hex": "#038EFA"
+    }
+   ],
+   "sticker": [],
+   "sfx": "원본 웃음소리 커짐(13.9초~ 약 -11dB, 이전 -25dB) — 추가 효과음인지 원음인지 미확인",
+   "scene": "얼굴",
+   "scene_desc": "신부가 웃으며 아기를 안고 얼굴을 쓰다듬음, 뒤 복사·신자 웃음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false
+  },
+  {
+   "t0": 16.234,
+   "t1": 17.333,
+   "speaker": "나레",
+   "text": "자매님 성격 화끈하네ㅋㅋ",
+   "layer": "신박발견-본문",
+   "role": "끝",
+   "enter": "instant",
+   "y": [
+    1299,
+    1364
+   ],
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신부가 활짝 웃으며 아기 머리를 감싸 안음(다른 앵글)",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    16.234
+   ],
+   "voiced": false
+  },
+  {
+   "t0": 1.417,
+   "t1": 3.867,
+   "speaker": "제3자",
+   "text": "(뿌애앵~)",
+   "layer": "신박발견-의성어",
+   "role": "훅",
+   "enter": "pop — 첫 1프레임 흐린 잔상 뒤 고정",
+   "y": [
+    832,
+    957
+   ],
+   "fill_hex": "#FA3DA5",
+   "outline": "검정·약 8px(괄호 바깥 연분홍 잔상)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "물 붓는 중 우는 아기",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 3.867,
+   "t1": 5.567,
+   "speaker": "제3자",
+   "text": "(이게모야)",
+   "layer": "신박발견-의성어",
+   "role": "본문",
+   "enter": "instant(앞 말풍선과 같은 자리 교체)",
+   "y": [
+    838,
+    953
+   ],
+   "fill_hex": "#FB3DA7",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "찡그린 채 물 맞는 아기",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 5.567,
+   "t1": 7.033,
+   "speaker": "제3자",
+   "text": "(언제끝나)",
+   "layer": "신박발견-의성어",
+   "role": "본문",
+   "enter": "instant(같은 자리 교체)",
+   "y": [
+    838,
+    951
+   ],
+   "fill_hex": "#FB3DA7",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "수건으로 닦이는 아기",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 12.934,
+   "t1": 13.9,
+   "speaker": "제3자",
+   "text": "(찰싹)",
+   "layer": "신박발견-의성어",
+   "role": "반전",
+   "enter": "instant(컷과 같이)",
+   "y": [
+    952,
+    1067
+   ],
+   "fill_hex": "#FB3DA6",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "아기 손이 신부 얼굴에 닿음",
+   "fit": 9,
+   "motion": "zoom_in",
+   "transition": "cut",
+   "cut_at": [
+    12.934,
+    13.234
+   ],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 6.217,
+   "t1": 7.033,
+   "speaker": "원음:불명",
+   "text": "(아멘!)",
+   "layer": "신박발견-대사",
+   "role": "본문",
+   "enter": "instant",
+   "y": [
+    624,
+    721
+   ],
+   "fill_hex": "#028EFB",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "신부 머리 위 — 신부 말로 붙임(괄호 꼴, 파랑)",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": true,
+   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄"
+  },
+  {
+   "t0": 8.933,
+   "t1": 10.967,
+   "speaker": "제3자",
+   "text": "이제 도장 찍으시죠",
+   "layer": "신박발견-대사",
+   "role": "본문",
+   "enter": "instant(컷과 같이)",
+   "y": [
+    1030,
+    1117
+   ],
+   "fill_hex": "#04AF0D",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "부제가 웃으며 신부 쪽을 봄",
+   "fit": 6,
+   "motion": "pan",
+   "transition": "cut",
+   "cut_at": [
+    8.933
+   ],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 10.967,
+   "t1": 12.934,
+   "speaker": "원음:불명",
+   "text": "오구~오구~ 다왔다~",
+   "layer": "신박발견-대사",
+   "role": "고조",
+   "enter": "instant",
+   "y": [
+    890,
+    1075
+   ],
+   "fill_hex": "#F1C614",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신부가 아기를 안고 달램(두 줄 자막)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": true,
+   "_note": "창 안 자막 = 화면 속 신부의 실제 말(위스퍼 en: 6~8초 'Amen.' / 12~14초 'There we go.')을 한국어로 옮긴 것으로 봄"
+  },
+  {
+   "t0": 14.95,
+   "t1": 16.234,
+   "speaker": "제3자",
+   "text": "미안미안ㅋㅋ",
+   "layer": "신박발견-대사",
+   "role": "끝",
+   "enter": "instant",
+   "y": [
+    938,
+    1025
+   ],
+   "fill_hex": "#F1C613",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신부가 웃으며 아기 얼굴 쓰다듬음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  },
+  {
+   "t0": 16.417,
+   "t1": 17.333,
+   "speaker": "제3자",
+   "text": "환영해요~",
+   "layer": "신박발견-대사",
+   "role": "끝",
+   "enter": "instant",
+   "y": [
+    936,
+    1025
+   ],
+   "fill_hex": "#F1C613",
+   "outline": "검정·약 8px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "신부가 웃으며 아기 머리 감싸 안음",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "_note": "창 안 자막(채널이 화면 속 인물 말로 붙임) — 음성 아님"
+  }
+ ],
+ "beats": "훅(0~2.4초 세례 물 붓기+'(뿌애앵~)' 우는 아기) → 다리·이음(2.4~5.6 차가운듯?/엄숙한 신부님, 아기 속마음 말풍선 교체) → 본문(5.6~8.9 닦기·마지막 단계, '(아멘!)') → 고조(8.9~12.9 부제 '도장 찍으시죠' → 신부가 안고 달램 '오구오구') → 반전(12.9~13.9 아기가 신부 얼굴 찰싹 '복수ㅋㅋㅋ') → 고조(13.9~16.2 파란 ㅋ 줄 흔들림·웃음) → 끝(16.2~17.3 '자매님 성격 화끈하네ㅋㅋ'·'환영해요~')",
+ "narr_share": "본문 층(자막이 나레 역할) 10/19줄 · 17.33/17.33초(창 아래 자막 0초도 빈 곳 없음). 창 안 말풍선 9줄(의성어 4·대사 5) 13.0초. 말소리 나레 없음",
+ "notes": [
+  "제목 '역대급 귀여운 정당방위' 검정 굵은 고딕 1줄 — 0~17초 1초 간격 18장에서 고정(overview.jpg)",
+  "바탕 #F1F3F0, 로고 줄(마스코트+'a novel discovery'+'신박발견') y280~405 고정, 영상 창 둥근 모서리 x19~1060 y541~1286",
+  "본문 자막 = 창 아래 검정 글자·외곽선 없음·등장 instant(cap_in.jpg 1/30초 띠). 예외 1줄: 'ㅋㅋㅋㅋㅋㅋㅋㅋ'(ㅋ 8개) 파랑 #038EFA+검정 두꺼운 외곽선+프레임마다 좌우 떨림(kk.jpg)",
+  "창 안 말풍선 색 = 말하는 쪽: 아기 = 괄호+마젠타 #FB3DA7 (뿌애앵~/이게모야/언제끝나/찰싹), 신부 = 파랑 괄호(아멘!) 또는 노랑 #F1C614 (오구오구·미안미안·환영해요), 부제 = 초록 #04AF0D(이제 도장 찍으시죠). 전부 검정 외곽선 약 8px",
+  "지휘자 관찰과 다른 점: 이 편엔 그려 넣은 화살표·노란 글씨 스티커 없음(0개) · 창 안 글은 의성어만이 아니라 인물 대사(괄호 없는 노랑·초록)도 있어 층을 '신박발견-의성어'(괄호 마젠타, 아기)·'신박발견-대사'(그 밖)로 나눔 · 마젠타 외곽선은 흰색이 아니라 검정",
+  "speaker: 본문 = 나레(voiced false) · 창 안 말풍선 = 제3자(화면 속 아기·신부·부제에게 채널이 붙인 글, voiced false)",
+  "컷(ffmpeg scene): 8.933 · 12.934 · 13.234(신부 쪽 당긴 화면) · 16.234. 0~8.9초는 한 테이크 손떨림 카메라, 10.3초 부제→신부 팬",
+  "원본 출처 표기 화면에 없음(설명란에만 '인스타그램 cslnorfolk')",
+  "소리: 원본 현장음 — 신부 영어 말소리 있음(faster_whisper small en: 0~6초 'baptize… Father, Son, Holy Spirit', 6~8 'Amen.', 8~12 'Oh, yes, it's great'(불확실), 12~14 'There we go.'). 아기 울음 0~7초, 13.9초~ 웃음 -11dB. 채널 나레 목소리 없음. 배경음악·추가 효과음 여부는 귀로 못 들어 미확인(설명란엔 'BGM 포함' 문구)",
+  "speaker 보정: (아멘!)·'오구~오구~ 다왔다~' = 원음:불명 voiced true(신부 실제 말의 번역 자막). 나머지 창 안 말풍선은 제3자 voiced false(실제 말 대응 미확인)"
+ ],
+ "name_evidence": [],
+ "_todo": [],
+ "_made_by": "줄판독 워커(1080 원본 프레임 눈 판독 + cv2 색·좌표 + ffmpeg scene) 10-20"
+}

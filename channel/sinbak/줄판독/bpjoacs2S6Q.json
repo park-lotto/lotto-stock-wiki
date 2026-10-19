@@ -1,0 +1,588 @@
+{
+ "id": "bpjoacs2S6Q",
+ "dur": 23.967,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "정성에 '아이디어'가 더해질 때",
+   "colors": [
+    {
+     "word": "정성에 '아이디어'가 더해질 때",
+     "hex": "#000000"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   456,
+   518
+  ],
+  "title_x": [
+   71,
+   842
+  ],
+  "title_align": "left",
+  "window": [
+   20,
+   541,
+   1058,
+   1286
+  ],
+  "window_radius_px": 75,
+  "caption_band": [
+   1298,
+   1370
+  ],
+  "caption_cx": 546,
+  "logo_y": [
+   280,
+   405
+  ],
+  "logo": "마스코트(돋보기 캐릭터, x≈40~150) + 'a novel discovery'(검정 굵은 영문, y280~339) + '신박발견'(검정 한글, y340~405)",
+  "source_y": null,
+  "watermark": null,
+  "source_hex": "#F2F2F2",
+  "below_caption": "1370~1920 빈 바탕 #F2F2F2 (글자·워터마크 없음, 0~24초 최소 밝기 222)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.6,
+   "speaker": "나레",
+   "text": "책방 할머니의 완벽한 패키징인데",
+   "layer": "신박발견-본문",
+   "role": "훅",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1300,
+    1364
+   ],
+   "x": [
+    88,
+    1005
+   ],
+   "align": "center",
+   "size_px": 64,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "위에서 내려다본 손이 꽃무늬 포장지로 책을 감싸 접는 중",
+   "fit": 7,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 2.6,
+   "t1": 4.5,
+   "speaker": "나레",
+   "text": "알아두면 좋을 것 같음",
+   "layer": "신박발견-본문",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1299,
+    1364
+   ],
+   "x": [
+    232,
+    859
+   ],
+   "align": "center",
+   "size_px": 65,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "두 손으로 접은 포장지 앞면을 눌러 펴는 장면 — 문장 동작(알아둠)은 화면에 없음",
+   "fit": 4,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    2.6
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 4.5,
+   "t1": 6.767,
+   "speaker": "나레",
+   "text": "옆 면을 넣고, 앞으로 접어서",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1298,
+    1370
+   ],
+   "x": [
+    150,
+    944
+   ],
+   "align": "center",
+   "size_px": 72,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "옆 날개를 안쪽으로 밀어 넣고 앞으로 접어 덮음",
+   "fit": 9,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    4.5
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 6.767,
+   "t1": 8.3,
+   "speaker": "나레",
+   "text": "좌우 한 번씩",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1302,
+    1362
+   ],
+   "x": [
+    365,
+    724
+   ],
+   "align": "center",
+   "size_px": 60,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "왼쪽·오른쪽 날개를 차례로 접어 겹침",
+   "fit": 8,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    6.767
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 10.7,
+   "speaker": "나레",
+   "text": "총 4번 포개어 준 다음",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1300,
+    1365
+   ],
+   "x": [
+    216,
+    878
+   ],
+   "align": "center",
+   "size_px": 65,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "앞면 접힌 끝을 손끝으로 포개 정리, 사선 접힘이 쌓인 봉투 모양",
+   "fit": 8,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    8.3
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 10.7,
+   "t1": 12.533,
+   "speaker": "나레",
+   "text": "왁스를 부어서",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1299,
+    1363
+   ],
+   "x": [
+    354,
+    736
+   ],
+   "align": "center",
+   "size_px": 64,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "실링 왁스 숟가락으로 녹인 왁스를 접힌 자리 위에 부음",
+   "fit": 10,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    10.7
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 12.533,
+   "t1": 14.633,
+   "speaker": "나레",
+   "text": "퀄리티 높여주고",
+   "layer": "신박발견-본문",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1300,
+    1363
+   ],
+   "x": [
+    329,
+    766
+   ],
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "금색 실링 도장을 왁스에 눌러 찍고 떼어 문양이 드러남",
+   "fit": 8,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    12.533,
+    13.667
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 14.633,
+   "t1": 16.367,
+   "speaker": "나레",
+   "text": "밑면 정리하면 이제 시작인데",
+   "layer": "신박발견-본문",
+   "role": "이음",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1300,
+    1362
+   ],
+   "x": [
+    148,
+    947
+   ],
+   "align": "center",
+   "size_px": 62,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "원본 동작음 추정(쿵 — 저음 중심 270Hz, 0.1초, 배경보다 +11dB)",
+    "t": 14.73,
+    "basis": "신호(16kHz 파형 10ms 창) — 효과음 삽입인지 상자 내려놓는 소리인지 구분 못 함"
+   },
+   "scene": "과정",
+   "scene_desc": "포장된 책을 세워 밑면 날개를 접어 넣어 정리",
+   "fit": 8,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    14.633,
+    15.233
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 16.367,
+   "t1": 17.6,
+   "speaker": "나레",
+   "text": "앞면의 틈새에",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1301,
+    1363
+   ],
+   "x": [
+    355,
+    737
+   ],
+   "align": "center",
+   "size_px": 62,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "앞면 사선 접힘 틈에 'BOOK REVIEW' 카드를 꽂아 넣음",
+   "fit": 9,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    16.367
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 17.6,
+   "t1": 19.967,
+   "speaker": "나레",
+   "text": "다양한 패키지를 넣어서",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1299,
+    1363
+   ],
+   "x": [
+    219,
+    870
+   ],
+   "align": "center",
+   "size_px": 64,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "분홍 무늬 종이·분홍 펜을 틈에 차례로 꽂음",
+   "fit": 9,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    17.6,
+    18.9
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 19.967,
+   "t1": 22.367,
+   "speaker": "나레",
+   "text": "풍성함을 더해주면?",
+   "layer": "신박발견-본문",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1301,
+    1364
+   ],
+   "x": [
+    277,
+    808
+   ],
+   "align": "center",
+   "size_px": 63,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "분홍 메모지·하트 카드를 더 꽂아 앞면이 꽉 참",
+   "fit": 8,
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    19.967,
+    20.6,
+    21.633
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  },
+  {
+   "t0": 22.367,
+   "t1": 23.967,
+   "speaker": "나레",
+   "text": "이걸 어떻게 뜯지?ㄷㄷ",
+   "layer": "신박발견-본문",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": null,
+   "y": [
+    1301,
+    1366
+   ],
+   "x": [
+    223,
+    856
+   ],
+   "align": "center",
+   "size_px": 65,
+   "font": {
+    "name": "둥근 굵은 한글 고딕(배민 주아체 계열 추정)",
+    "basis": "확대 크롭 눈 — 둥근 획끝·굵기 균일"
+   },
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·2px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "소품이 가득 꽂힌 완성 포장을 들어 보여줌(손에 들어 살짝 흔들림)",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    22.367
+   ],
+   "voiced": false,
+   "exit": "cut(다음 자막과 같은 프레임에 교체)",
+   "confidence": "픽셀",
+   "notes": "자막 교체 프레임 = 창 컷 프레임(30fps 실측 같은 프레임)"
+  }
+ ],
+ "beats": "훅(0~2.6초 '책방 할머니의 완벽한 패키징인데' — 포장 접는 손) → 다리(2.6~4.5 '알아두면 좋을 것 같음') → 과정 본문(4.5~12.5 접기·포개기·왁스 붓기) → 고조(12.5~14.6 실링 도장 '퀄리티 높여주고') → 이음(14.6~16.4 '밑면 정리하면 이제 시작인데' 반전 예고) → 본문(16.4~20.0 틈새에 카드·종이·펜 꽂기) → 공개(20.0~22.4 '풍성함을 더해주면?') → 끝(22.4~24.0 완성품 들고 '이걸 어떻게 뜯지?ㄷㄷ')",
+ "narr_share": {
+  "lines": "12/12",
+  "sec": "23.967/23.967",
+  "note": "채널 자막이 전 구간 빈틈 없이 나레 역할(말소리 없음)"
+ },
+ "notes": [
+  "말소리 없음: faster_whisper small int8(vad) 세그먼트 0 · 원음은 배경음악 한 곡이 처음~끝 -17~-26dB(0.1초 RMS)로 고르게 깔림",
+  "의성어 자막·스티커·화살표·노란 글씨 0개 — 4fps 창 시트(96칸)·0.1초 띠 7곳 눈으로 확인. 지휘자 관찰(fzoZc7V_hDM 의성어·그려 넣은 표시)과 다름",
+  "제목 '정성에 '아이디어'가 더해질 때' 0~24초 고정(제목 띠 잉크 13,497~13,516px 일정), 전부 검정 — 낱말 강조색 없음, 왼쪽 정렬 x71",
+  "본문 자막 = 검정 #000000 채움 + 흰 2px 테두리(테두리 링 밝기 중앙 255, 바탕 243), 가운데 정렬 cx 540~548, 글자 높이 60~72px, 낱말 사이 넓은 공백",
+  "자막 12줄 전부 instant(한 프레임 교체), 12줄 모두 교체 프레임 = 컷 프레임. 컷 16개(자막 경계 11 + 줄 안 컷 5: 13.667·15.233·18.9·20.6·21.633), 컷 길이 중앙 1.2초",
+  "뼈대 OCR 은 6.8~8.3 '좌우 한 번씩'·14.6~16.4 '밑면 정리하면 이제 시작인데' 두 줄을 빈칸으로 놓쳤다 — 1080 프레임에서 채움. 시각은 30fps 잉크 차이로 다시 잼",
+  "원본박힘 글자 없음(책 표지 일부 'P'·'BOOK REVIEW' 카드 글자는 소품 인쇄 — 자막 아님)"
+ ],
+ "name_evidence": [],
+ "_made_by": "줄판독 워커(1080 원본 프레임·30fps 픽셀·파형, 10-20)",
+ "frame0": {
+  "what": "꽃무늬 포장지로 책을 감싸 접는 두 손(위에서 내려다봄)",
+  "face_frac": 0.0,
+  "text": "책방 할머니의 완벽한 패키징인데"
+ }
+}

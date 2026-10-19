@@ -1,0 +1,795 @@
+{
+ "id": "rAt34vkQ0OY",
+ "dur": 11.467,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "너무 쉬워 안 까먹는 아이디어",
+   "colors": [
+    {
+     "word": "너무 쉬워 안 까먹는 아이디어",
+     "hex": "#000000"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   454,
+   520
+  ],
+  "window": [
+   20,
+   541,
+   1059,
+   1287
+  ],
+  "caption_band": [
+   1300,
+   1366
+  ],
+  "logo_y": [
+   280,
+   406
+  ],
+  "watermark": null,
+  "bg_hex": "#F3F3F3",
+  "source_y": null,
+  "source_hex": null,
+  "window_radius": "둥근 모서리(약 30px, 눈)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 2.17,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "고무링 완전 정복 영상인데",
+   "layer": "신박발견-본문",
+   "role": "훅",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "0.03·0.13 짧은 컷 2번 뒤 손가락으로 검은 고무링을 쇠 이음관 입구에 밀어 넣는 근접",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    0.03,
+    0.13,
+    2.0,
+    2.17
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 2.17,
+   "t1": 4.27,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "맨 손으로 하다 성격 버림",
+   "layer": "신박발견-본문",
+   "role": "다리",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "엄지로 고무링을 끼우려다 튕겨 나오고 빠지는 실패 장면(4.07 각도 바뀜)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    2.17,
+    4.07,
+    4.27
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 4.27,
+   "t1": 5.93,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "링 안에 끈(실)을 끼워서",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "초록 배경, 노란 끈 고리를 고무링 구멍에 통과(5.47~5.83 짧은 컷 4번)",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    4.27,
+    5.47,
+    5.53,
+    5.73,
+    5.83,
+    5.93
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 5.93,
+   "t1": 7.37,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "고리부분을 걸고",
+   "layer": "신박발견-본문",
+   "role": "본문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "노란 끈 고리를 이음관 머리 위로 넘겨 걸기(6.13·6.43 컷)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    5.93,
+    6.13,
+    6.43,
+    7.37
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 7.37,
+   "t1": 9.33,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "양쪽 끝을 쭉! 당겨주면?",
+   "layer": "신박발견-본문",
+   "role": "질문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "끈 양 끝을 당기자 고무링이 늘어나 이음관 위로 올라가 홈으로 감김",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    7.37
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 9.33,
+   "t1": 10.5,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "와... 설마...ㄷㄷ",
+   "layer": "신박발견-본문",
+   "role": "공개",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 9.62,
+    "basis": "파형 솟음",
+    "note": "짧은 딸깍/탁 타격(전대역 세로줄)"
+   },
+   "scene": "과정",
+   "scene_desc": "고무링이 홈에 걸린 채 끈이 빠져나감 — 반응 줄(장면 변화 없이 자막만 바뀜)",
+   "fit": 5,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    10.5
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 10.5,
+   "t1": 11.467,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "진짜 쉽네ㅋ",
+   "layer": "신박발견-본문",
+   "role": "끝",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    1300,
+    1366
+   ],
+   "x": "가운데",
+   "align": "center",
+   "fill_hex": "#000000",
+   "outline": "흰 #FFFFFF·약 2px(10-20 지휘자 픽셀 재측: 획 둘레 5px 고리 중앙 245~255 vs 바탕 242 — 흰 바탕이라 눈에 안 보임)",
+   "box": null,
+   "shadow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "고무링이 끼워진 이음관을 손가락으로 쥐고 보여줌",
+   "fit": 5,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    10.5
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 0.5,
+   "t1": 1.27,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "아오!",
+   "layer": "신박발견-의성어",
+   "role": "훅",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    701,
+    783
+   ],
+   "x": [
+    235,
+    419
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F9094E",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "고무링 밀어 넣기 실패 순간 짜증 감탄",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 1.57,
+   "t1": 2.17,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "쫌!",
+   "layer": "신박발견-의성어",
+   "role": "다리",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    772,
+    855
+   ],
+   "x": [
+    690,
+    793
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F60A4D",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "휙",
+    "t": 1.72,
+    "basis": "파형 솟음",
+    "note": "1.70~1.85 전대역 짧은 쓸림"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "다시 밀어 넣는 순간(2.0 컷 넘어 유지)",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    2.0,
+    2.17
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 2.4,
+   "t1": 3.0,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "제바알!",
+   "layer": "신박발견-의성어",
+   "role": "다리",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    698,
+    781
+   ],
+   "x": [
+    402,
+    671
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F8094E",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "기타",
+    "t": 2.58,
+    "basis": "파형 솟음",
+    "note": "2.55~2.65 짧은 전대역 타격"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "두 엄지로 고무링을 누름",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 3.03,
+   "t1": 3.43,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(튕김)",
+   "layer": "신박발견-의성어",
+   "role": "다리",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    692,
+    793
+   ],
+   "x": [
+    128,
+    349
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#EFC716",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "고무링이 튕겨 나옴",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 3.9,
+   "t1": 4.27,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(빠짐)",
+   "layer": "신박발견-의성어",
+   "role": "다리",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    628,
+    711
+   ],
+   "x": [
+    602,
+    819
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#EFC715",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "고무링이 빠져 빈 이음관(4.07 컷 넘어 유지)",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    4.07,
+    4.27
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 4.6,
+   "t1": 5.27,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(슈욱)",
+   "layer": "신박발견-의성어",
+   "role": "본문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    650,
+    733
+   ],
+   "x": [
+    448,
+    665
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#068EF7",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "휙",
+    "t": 4.8,
+    "basis": "파형 솟음",
+    "note": "4.80~5.30 전대역 바람 소리(슈욱)"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "노란 끈 고리가 고무링 구멍을 통과",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 5.93,
+   "t1": 6.43,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(넘기고)",
+   "layer": "신박발견-의성어",
+   "role": "본문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    720,
+    820
+   ],
+   "x": [
+    344,
+    691
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F0C715",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "뽁",
+    "t": 6.1,
+    "basis": "파형 솟음",
+    "note": "6.10~6.25 저음 쿵(-7dB, 6.13 컷 직전)"
+   },
+   "scene": "과정",
+   "scene_desc": "끈 고리를 이음관 머리 위로 넘김",
+   "fit": 8,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    5.93,
+    6.13,
+    6.43
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 6.43,
+   "t1": 7.37,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(철컥)",
+   "layer": "신박발견-의성어",
+   "role": "본문",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    648,
+    733
+   ],
+   "x": [
+    448,
+    665
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#068EF7",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "끈이 이음관 양옆으로 걸린 상태",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    6.43,
+    7.37
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 7.37,
+   "t1": 8.23,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(당겨 당겨)",
+   "layer": "신박발견-의성어",
+   "role": "고조",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    876,
+    958
+   ],
+   "x": [
+    334,
+    747
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F9094F",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "끈 양 끝을 당겨 고무링이 늘어남",
+   "fit": 9,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    7.37
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 8.57,
+   "t1": 9.33,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "오~",
+   "layer": "신박발견-의성어",
+   "role": "공개",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    876,
+    958
+   ],
+   "x": [
+    472,
+    608
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#F90A4F",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "탄성",
+    "t": 8.6,
+    "basis": "파형 솟음",
+    "note": "8.60~9.55 큰 저음 붐 지속(-2dB, 영상 최대 음량)"
+   },
+   "scene": "과정",
+   "scene_desc": "고무링이 이음관 머리 위로 넘어가 홈에 감김",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 9.97,
+   "t1": 10.5,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "(쾌감)",
+   "layer": "신박발견-의성어",
+   "role": "공개",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    806,
+    887
+   ],
+   "x": [
+    416,
+    633
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#EFC716",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "과정",
+   "scene_desc": "고무링이 홈에 깔끔히 자리잡은 이음관",
+   "fit": 7,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    10.5
+   ],
+   "confidence": "픽셀"
+  },
+  {
+   "t0": 10.5,
+   "t1": 11.467,
+   "speaker": "나레",
+   "voiced": false,
+   "text": "모든 고무링 다 됨",
+   "layer": "신박발견-창결론",
+   "role": "끝",
+   "enter": "instant",
+   "exit": "instant",
+   "y": [
+    854,
+    1049
+   ],
+   "x": [
+    320,
+    756
+   ],
+   "align": "자유(동작 자리 옆)",
+   "fill_hex": "#EFC715",
+   "outline": "#000000·8px",
+   "outline_px": {
+    "px": 8,
+    "hex": "#000000"
+   },
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "탄성",
+    "t": 11.15,
+    "basis": "파형 솟음",
+    "note": "11.15~11.40 큰 저음 타격(-1dB) — 끝 마무리"
+   },
+   "scene": "손·제품 근접",
+   "scene_desc": "끼워진 고무링 이음관을 손으로 쥠(2줄 큰 글씨, 창 가운데)",
+   "fit": 6,
+   "motion": "cam",
+   "transition": "cut",
+   "cut_at": [
+    10.5
+   ],
+   "confidence": "픽셀"
+  }
+ ],
+ "beats": "훅(0~2.17 '고무링 완전 정복 영상인데' + 아오!·쫌! 실패 장면) → 다리(2.17~4.27 '맨 손으로 하다 성격 버림' 제바알!·튕김·빠짐 실패 반복) → 본문(4.27~7.37 끈 끼우기→고리 걸기, 슈욱·넘기고·철컥) → 질문·고조(7.37~8.23 '양쪽 끝을 쭉! 당겨주면?' 당겨 당겨) → 공개(8.57~10.5 오~ 큰 저음 붐·'와... 설마...ㄷㄷ'·쾌감) → 끝(10.5~11.47 '진짜 쉽네ㅋ'+창 안 '모든 고무링 다 됨', 저음 타격)",
+ "narr_share": {
+  "lines": "19/19 (본문 7·의성어 11·창결론 1 — 모두 채널 자막, 말소리 0)",
+  "sec": "본문 11.47/11.47초(100%) · 의성어 6.54초(57%)"
+ },
+ "notes": [
+  "1080 원본 판독. 뼈대 OCR이 0~2.17 첫 줄 '고무링 완전 정복 영상인데'를 놓쳤고, '꼰(실)'→실제 '끈(실)', '진짜 쉽네ㅋ' 확인.",
+  "제목 '너무 쉬워 안 까먹는 아이디어' 0~11.47 전 프레임 고정(2fps 23칸 전부 같음). 검정, 그림자·외곽선 없음.",
+  "본문 자막: 창 아래 회백(#F3F3F3) 바탕 위 검정 손글씨풍 둥근 고딕, 외곽선·상자 없음, 가운데 정렬, 글자 높이 약 66px(y1300~1366). 7줄 모두 컷 경계와 같은 프레임에 instant 교체(9.33만 컷 없이 교체).",
+  "의성어: 11개 + 창결론 1개 — 채움 3색: 빨강·마젠타 #F9094E(아오!·쫌!·제바알!·당겨 당겨·오~ = 감정·힘), 노랑 #EFC716(튕김·빠짐·넘기고·쾌감·모든 고무링 다 됨 = 상태·결과), 파랑 #068EF7(슈욱·철컥 = 동작음). 외곽선 검정 약 8px, 흰 외곽선 없음(지휘자 추정 '흰 외곽선'과 다름). 괄호 꼴은 노랑·파랑만, 빨강 감탄은 괄호 없이 '!'/'~'.",
+  "의성어 등장·퇴장 전부 instant(첫 프레임부터 채움 픽셀 100%), 자리는 창 위쪽 고정이 아니라 동작 옆 자유 배치(y 628~958).",
+  "스티커(화살표·그림) 0개. 원본 박힌 글자 없음. 워터마크 없음.",
+  "소리: faster_whisper small(cpu int8) VAD 말소리 0(무VAD는 '구독과 좋아요' 환각 1개만). 배경음악 상시 약 -27dB + 효과음 자리 6곳(1.72·2.58·4.8·6.1·8.6·11.15) + 9.62 작은 타격. 효과음 종류는 파형·스펙트럼 추정(귀로 못 들음).",
+  "컷 15곳(0.03·0.13·2.0·2.17·4.07·4.27·5.47·5.53·5.73·5.83·5.93·6.13·6.43·7.37·10.5) — 히스토그램·창 차이+눈 확인. 5.47~5.83 짧은 컷은 손 움직임과 섞여 ±1프레임 불확실. 화면은 손으로 든 카메라(cam)."
+ ],
+ "name_evidence": [],
+ "_made_by": "줄판독 워커(1080 원본 눈+cv2, 10-20)"
+}
