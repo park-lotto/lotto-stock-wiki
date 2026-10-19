@@ -1,15 +1,15 @@
 # 브리프 — 대본·재료 초안 (소넷 워커 초안 → 오푸스 확정)
 
-**목표**: `channel/yanshottem/하이브리드_<연예인>/{잇썸홈판,재미썸홈판}/대본.json·재료.json·근거.md` — 새 렌더러 입력 꼴(v2).
+**목표**: `channel/yanshottem/하이브리드_<연예인>/<판>/대본.json·재료.json·근거.md` — 판 = `--version <판>`(판 설정 styles/<판>.json).
 **정본(꼴을 그대로 베낀다)**: `C:/숏템_칼카피/yanshottem/_hybrid_pipeline_test/장윤정/doc/{잇썸홈판,재미썸홈판}/` (legacy_import 가 만든 v2 — 키 이름·구조가 렌더러 docstring 과 같다)
 **규칙 문서**: `tools/calcopy/검수_매뉴얼.md` A 전부 · `tools/calcopy/hybrid/render_itssum.py` / `render_jaemi.py` 첫 docstring(필드 설명).
 
-## 잇썸홈판 (박창수 TTS · 원음 → 잇썸홈 틀)
-- lines: H(TTS 한마디, 전언체 '~다는') → O(원음 조각, 본인 말만 · `spans` 또는 `pieces` · `caps_rel`/`caps`) → B1~B5(1인칭 체험 → 손해 피하기 → 남들도/행동). TTS 문장 ≤35자, 조사·어미 다 있게(A13). 이름은 그대로 쓰고 `name_check` 가 tts 칸만 바꾼다.
-- 재료 A: **H 컷도 연예인 얼굴**(사장님 10-18 "썸네일은 무조건 연예인" — 0초·H 구간 제품 컷 금지, 얼굴 1개·크게·가운데). O 컷은 원음 입 모양 그대로(at = 원음 이어 붙인 초). B 컷은 제품만(남의 얼굴·손 근접 금지, 원본 자막 띠 크롭 밖, `max` = 원본 샷 경계까지 초).
-## 재미썸홈판 (필재 TTS · 원음 → F1 한마디 → 재미썸홈 t11 틀)
-- orig(조각)·orig_caps(원본 초, 글) · lines(slot f1·bait·limit·more·twist·land) · pieces(자막 조각 ≤13자, 대사 글자 순서 그대로) · A(원음 밑 화면, at) · F1(from_piece) · B(pieces 번호 묶음, crop [x,y,h]).
-- `tts_tempo`·`punct_at` 은 비워 둔다(자동). 렌더가 "문장부호 근처 무음 없음"으로 멈추면 그때만 손으로 적는다.
+## 판별 절 — 판 설정 한 곳에서 읽는다(10-19, 판 등록 = `tools/calcopy/hybrid/styles/<판>.json` script 칸)
+- 쓸 판의 절을 먼저 뽑아 읽는다: `PYTHONUTF8=1 py tools/calcopy/hybrid/styles.py brief <판>` (판 목록: `styles.py list` — 잇썸홈판·재미썸홈판·키치잇판·꿀템노트판·스타픽룸판 …).
+  박자·줄 수·글자 수·어미·목소리·길이·예시 대본이 거기 있다. 이 문서에 판별 규칙을 다시 적지 않는다(두 벌 금지).
+- 벤치 판(renderer=bench) 대본 꼴 = `render_bench.py` 첫 docstring: title_lines [[[글, 'hi'|null], …], …] · lines[{id, kind:'tts', tts, caps[{text, key}]} | {id, kind:'orig', src, spans, caps_rel[[글, s0, s1, key?]]}].
+  caps 의 key = 그 덩어리 핵심 낱말 후보 — 칠할지·스티커를 붙일지는 배치 규칙(`placement.place`)이 벤치 본보기 편 비율로 정한다(모든 덩어리에 꾸밈을 바르지 않는다).
+- 재료.json = cand_dir · cuts{줄 id: [{src, ss, crop[x,y,w,h], w?, at?, max?, move?, see}]} (tts 줄 = w 비례 나눔 · orig 줄 = at, ss 비우면 입 맞춤). 창 비율은 판 설정 frame.window.
 ## 공통
 - 줄마다 근거.md 한 줄(원본 초·댓글·기사). 없는 사실 금지. 금액·최상급 금지.
 - 컷 시각은 `plan` 단계의 계획 시트(`plan/계획_시트.jpg`)로 눈 확인 → 컷마다 see(무엇이 보이나)·face(누구 얼굴)·text(남의 글자) 칸을 채운다.
@@ -22,7 +22,7 @@
 - **권위자 인용(사장님 10-18 "권위자에 빗대어 · ~하다더라 · 인용만 하는 거지")**: 브랜드 유래·연도·나라(예 '미국 오하이오에서 백오십 년 가까이 된 오트밀 브랜드')와 전문가 권고를 **전언으로만** — 잇썸홈 `~하더라고요`, 재미썸홈 `~한다더라/~라고`. 효능을 우리 말로 단정하지 않는다. 질병 이름(심장·콜레스테롤·혈당·다이어트·피부병 등)과 '낫는다·예방' 금지(식품표시광고법 제8조 — 학술자료로 질병 연관 암시도 금지). 출처는 근거에 URL로.
 - **CTA 없음**(사장님 10-18 "유튜브 스타일이니 CTA 넣지 마 — 인스타형 판에서만"). '저 영상 보고 나도 샀다'는 체험 줄로 남긴다.
 - 창작 허용 = 화자·가족·계기·극단행동·감상·비유·결과과장 / 근거 필수 = 제품 속성·원리·수치·체감 효과·인기·가격(줄마다 `facts` 번호).
-- **끝낼 때 검사**: `PYTHONUTF8=1 py tools/calcopy/hybrid/script_audit.py <대본.json>` — 잇썸홈 judge 통과 + points ok, 재미썸홈 points ok 여야 오푸스 확정으로 넘긴다. 예시 = `channel/yanshottem/하이브리드_한혜진/대본_2판/`.
+- **끝낼 때 검사**: `PYTHONUTF8=1 py tools/calcopy/hybrid/script_audit.py <대본.json> --version <판>` — 판 설정 script.audit 규칙 전부 통과(ok) 여야 오푸스 확정으로 넘긴다. 예시 = `channel/yanshottem/하이브리드_한혜진/대본_2판/`.
 
 ## 끝낼 때
-`py tools/calcopy/hybrid/run.py <연예인> plan` 이 멈춤 없이 돌아야 한다(컷이 샷보다 길면 멈춘다). 멈춘 이유를 고친 뒤 넘긴다.
+`py tools/calcopy/hybrid/run.py <연예인> plan --version <판>` 이 멈춤 없이 돌아야 한다(컷이 샷보다 길면 멈춘다). 멈춘 이유를 고친 뒤 넘긴다.

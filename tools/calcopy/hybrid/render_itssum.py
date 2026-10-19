@@ -29,8 +29,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_ITSSUM_B, ROOT, SR, StageError, dur_of, frame_png, jload, jsave,  # noqa: E402
                                          lufs, nchar, run, silences)
 
-DEF = {"gap": 0.20, "gap_ab": 0.20, "gap_oo": 0.25, "tail": 0.50, "target_lufs": -8.6, "tp": -3.2, "orig_af": "highpass=f=90",
-       "a_end_pad": 0.0, "orig_fade": 0.015, "bgm_dir": "shopping_shorts/assets/bgm_lib", "preset_b": str(PRESET_ITSSUM_B)}
+# 기본값 주인 = 판 설정 styles/잇썸홈판.json render 칸(판 등록 한 곳, 10-19). 대본 render 칸이 이긴다.
+def _style_def(name: str) -> dict:
+    from tools.calcopy.hybrid import styles as ST
+    d = dict(ST.load(name)["render"])
+    for k in ("preset_b", "frame_a"):
+        if k in d and not Path(d[k]).is_absolute():
+            d[k] = str(ROOT / d[k])
+    return d
+
+
+DEF = _style_def("잇썸홈판")
 PLAN_MARGIN = 1.15      # 계획(어림) 컷 길이 × 이 배수가 max 를 넘으면 '빠듯' — 10-18 손태영 어림 대비 실제 TTS 줄 길이 최대 +12%
 
 
@@ -296,7 +305,7 @@ def crop_vf(c, w, h):
 
 
 def frame_a(S, dst: Path) -> dict:
-    fr = jload(S.get("frame_a") or FRAME_A_DEFAULT)
+    fr = jload(S.get("frame_a") or DEF.get("frame_a") or FRAME_A_DEFAULT)
     next(l for l in fr["layers"] if l.get("role") == "title")["text"] = S["title"]
     next(l for l in fr["layers"] if l.get("role") == "label")["text"] = S["source_label"]
     fr.setdefault("made_from", {})["episode"] = f"얜샷템 하이브리드 잇썸홈판 {S.get('slug', '')} — title·label 글만 바꿈 (tools/calcopy/hybrid/render_itssum.py)"

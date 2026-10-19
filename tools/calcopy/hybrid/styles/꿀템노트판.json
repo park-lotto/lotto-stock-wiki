@@ -3,6 +3,7 @@
  "renderer": "bench",
  "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
+  "ko": "꿀템노트",
   "channel": "kkultemnote",
   "analysis": "channel/kkultemnote/스타일분석.md",
   "design": "channel/kkultemnote/하이브리드_판설계.md",

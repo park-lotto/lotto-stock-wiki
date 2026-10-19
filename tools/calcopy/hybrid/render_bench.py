@@ -35,6 +35,7 @@ SFX_DIR = ROOT / "shopping_shorts/assets/sfx_packs"
 BGM_DIR = ROOT / "shopping_shorts/assets/bgm_lib"
 FACE_MODEL = "C:/calcopy_models/face_detection_yunet_2023mar.onnx"
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
+CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small")   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
 
 
 def _rgb(c):
@@ -116,7 +117,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
             lines[L["id"]] = [round(t0, 3), round(t, 3)]
             for j, c in enumerate(caps_of(L)):
                 rows.append({"line": L["id"], "j": j, "speaker": "orig", "text": c["text"], "t0": round(t0 + c["s0"], 3), "t1": round(t0 + c["s1"], 3),
-                             **{k: c[k] for k in ("key", "key_color", "object_src") if c.get(k)}})
+                             **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
         else:
             s = (sent or {}).get(L["id"])
             d = s["dur"] if s else round(nchar(L["tts"]) / est, 3)
@@ -127,7 +128,7 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 a = t + starts[j]
                 b = t + (starts[j + 1] if j + 1 < len(caps) else d)
                 rows.append({"line": L["id"], "j": j, "speaker": "narr", "text": c["text"], "t0": round(a, 3), "t1": round(b, 3),
-                             **{k: c[k] for k in ("key", "key_color", "object_src") if c.get(k)}})
+                             **{k: c[k] for k in CAP_EXTRA if c.get(k)}})
             char0 += nchar(L["tts"])
             t += d
         prev = L["kind"]

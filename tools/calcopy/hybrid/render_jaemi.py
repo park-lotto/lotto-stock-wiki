@@ -30,10 +30,16 @@ from tools.calcopy.hybrid.common import (FPS, FRAME_A_DEFAULT, PRESET_JAEMI_B, R
 
 WIN_A = 1080
 WIN_B = (1080, 1407)
-DEF = {"end_pad": 0.7, "gap_o_f1": 0.12, "duck_db": -10.0, "bgm_a_rms": -31.5, "voice_rms": -17.5, "target_lufs": -14.0, "silence_d": 0.08,
-       "voice_af": "highpass=f=90,acompressor=threshold=0.03:ratio=2:attack=10:release=150:makeup=1", "sfx_density": "low",
-       "tempo_max": 1.27, "tempo_min": 0.85, "last_tempo_tol": 0.10, "pause_long": 0.28, "pause_comma": 0.235, "pause_period": 0.315,
-       "opener_at": -0.25, "preset_b": str(PRESET_JAEMI_B)}
+# 기본값 주인 = 판 설정 styles/재미썸홈판.json render 칸(판 등록 한 곳, 10-19). 대본 render 칸이 이긴다.
+def _style_def(name: str) -> dict:
+    from tools.calcopy.hybrid import styles as ST
+    d = dict(ST.load(name)["render"])
+    if "preset_b" in d and not Path(d["preset_b"]).is_absolute():
+        d["preset_b"] = str(ROOT / d["preset_b"])
+    return d
+
+
+DEF = _style_def("재미썸홈판")
 PLAN_MARGIN = 1.15      # 계획(어림) 컷 길이 × 이 배수가 max 를 넘으면 '빠듯'(재료 B/A/F1 에 max 를 적은 컷만)
 
 

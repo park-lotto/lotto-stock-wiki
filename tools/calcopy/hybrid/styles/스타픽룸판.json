@@ -3,6 +3,7 @@
  "renderer": "bench",
  "_note": "얜샷템 하이브리드 — 스타픽룸 칼카피 판: 원음 훅 → 나레 다리(타이핑, 전언 '~있다는데..?') → 우리 체험 나레 → 원음 끝. 근거 channel/starpickroom/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
  "bench": {
+  "ko": "스타픽룸",
   "channel": "starpickroom",
   "analysis": "channel/starpickroom/스타일분석.md",
   "design": "channel/starpickroom/하이브리드_판설계.md",

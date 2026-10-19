@@ -1,0 +1,386 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.156,
+   "text": "옷 잘 입기로 소문난",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "소문난"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.156,
+   "t1": 2.844,
+   "text": "김나영이 요즘 매일 입는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "김나영이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.844,
+   "t1": 3.748,
+   "text": "니트가 있다네요?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "니트가"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.748,
+   "t1": 5.018,
+   "text": "이 니트도 진짜 예쁘죠?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "예쁘죠?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 5.018,
+   "t1": 6.369,
+   "text": "대체 어떤 니트길래?",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "니트길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 6.369,
+   "t1": 7.289,
+   "text": "근데 이게 약간 좀",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 7.289,
+   "t1": 9.539,
+   "text": "톤다운된 레드야",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "레드야"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 9.539,
+   "t1": 11.519,
+   "text": "너무 선명한 빨강은",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "빨강은"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "kk_doodle",
+     "word": "빨강은"
+    }
+   ]
+  },
+  {
+   "line": "O3",
+   "t0": 11.519,
+   "t1": 13.639,
+   "text": "조금 튀어 보일 수도 있는데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 13.639,
+   "t1": 14.76,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.76,
+   "t1": 15.852,
+   "text": "바로 따라 사 봤는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 15.852,
+   "t1": 16.676,
+   "text": "울 100%인데도",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "100%인데도"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 16.676,
+   "t1": 18.228,
+   "text": "얇고 가벼워서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "가벼워서"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 18.228,
+   "t1": 19.517,
+   "text": "맨투맨처럼 편하더라고요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "맨투맨처럼"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 19.517,
+   "t1": 20.468,
+   "text": "보그 코리아도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보그"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 20.468,
+   "t1": 21.714,
+   "text": "블랙 티 위에 겹친",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "블랙"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.714,
+   "t1": 22.902,
+   "text": "레드 니트를 짚었대요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "레드"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 22.902,
+   "t1": 24.695,
+   "text": "그래서 지금 공식 몰에선",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "공식"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 24.695,
+   "t1": 25.406,
+   "text": "품절이라",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "품절이라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.406,
+   "t1": 26.733,
+   "text": "재입고만 기다린대요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "재입고만"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [
+  13.639
+ ],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = _Wa4IehA6yE",
+  "스티커 kk_doodle → O3「너무 선명한 빨강은」",
+  "효과음 0발(본보기 0) []",
+  "번쩍 [13.639]",
+  "등장 {'pop': 10, 'cut': 10} · 강조 18/20"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "_Wa4IehA6yE",
+  "worst_slot_diff": 0.167,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "ours": {
+     "cut": 0.56,
+     "pop": 0.44
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 9
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "pop": 0.55,
+     "cut": 0.45
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 0.82,
+    "ours_emph": 0.5,
+    "n": 2
+   },
+   "stickers": {
+    "bench": {
+     "kk_doodle": 1
+    },
+    "ours": {
+     "kk_doodle": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

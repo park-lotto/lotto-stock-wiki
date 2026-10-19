@@ -296,11 +296,88 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
         if cand:
             flashes = [cand[-1]]
         log.append(f"번쩍 {flashes}")
+    effects_step(out, style, seed, log)
     for r in out:
         r["variant"] = r.pop("variant_force", None) or variant_of(r, style)
     tally = Counter(r["enter"] for r in out)
     log.append(f"등장 {dict(tally)} · 강조 {sum(1 for r in out if r.get('emph'))}/{len(out)}")
     return {"reference": ref["id"] if ref else None, "rows": out, "sfx": sfx, "flashes": flashes, "log": log}
+
+
+# ── 효과별 붙는 조건(주인 = 자막팩 계약 caption-motions.js CAPTION_EFFECT_RULES, 관제 235) ─────────────
+# 조건 글(채널·편당 횟수·글자 수)은 계약 파일 한 곳에서 읽는다 — 여기는 '그 조건이 우리 덩어리 중 어디냐'를 고르는 법(박자 자리)만.
+# 효과 이름 → (자막팩에서 어떻게 거나: 줄 변형 이름 | 스티커 kind, 박자 자리 고르기)
+EFFECT_HOW = {
+    "rgbGlitch": ("variant", "glitch"), "wipeRTL": ("variant", "wipe"), "rainbowCycle": ("variant", "rainbow"),
+    "hearts": ("sticker", "hearts"), "comic_burst": ("sticker", "comic_burst"), "aside_line": ("sticker", "aside_line"),
+    "append_text": ("sticker", "append_text"), "sound_word": ("sticker", "sound_word"), "small_text": ("sticker", "small_text"),
+}
+TEXT_NEEDS = {"aside_line": "aside", "append_text": "append", "sound_word": "sound", "small_text": "small"}   # 대본 caps 에 그 글이 있을 때만
+
+
+def effect_rules() -> dict:
+    s = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return json.loads(s.split("/*RULES*/")[1]) if "/*RULES*/" in s else {}
+
+
+def _per_video(cond: str) -> tuple[int, int]:
+    m = re.search(r"편당\s*(\d+)\s*(?:~\s*(\d+))?\s*회", cond or "")
+    return (int(m.group(1)), int(m.group(2) or m.group(1))) if m else (0, 1)
+
+
+def _effect_where(name: str, out: list[dict], cond: str) -> list[int]:
+    nc = lambda r: len(re.sub(r"\s", "", r["text"]))
+    m = re.search(r"(\d+)\s*~\s*(\d+)\s*자", cond or ""); lo, hi = (int(m.group(1)), int(m.group(2))) if m else (0, 99)
+    m = re.search(r"(\d+)\s*자 이상", cond or ""); lo = int(m.group(1)) if m else lo
+    hook_end = next((r["t0"] for k, r in enumerate(out) if k and r["speaker"] != out[0]["speaker"]), 8.0)
+    if name == "rgbGlitch":       # 훅(앞 원음 구간) 원음 줄, 제품 이름(key)이 처음 나오는 줄
+        return [i for i, r in enumerate(out) if r["speaker"] == "orig" and r["t0"] < max(hook_end, 3.5) and r.get("key")][:1]
+    if name == "wipeRTL":         # 화면 바뀐 직후 첫 줄, 8자 이상 원음, 둘로 나눈 둘째 조각 제외
+        return [i for i, r in enumerate(out) if r["speaker"] == "orig" and r["first"] and nc(r) >= lo]
+    if name == "rainbowCycle":    # 편 첫 나레 줄, 8~10자
+        i = next((i for i, r in enumerate(out) if r["speaker"] == "narr"), None)
+        return [i] if i is not None and lo <= nc(out[i]) <= hi + 2 else []
+    if name == "hearts":          # 편 첫 장면 감탄 한마디
+        return [0] if out and set(out[0]["lex"]) & {"excl"} else []
+    if name == "comic_burst":     # 2초 넘게 머무는 나레 줄
+        return [i for i, r in enumerate(out) if r["speaker"] == "narr" and r["t1"] - r["t0"] > 2.0]
+    if name == "aside_line":      # 1.5초+ 머무는 원음 줄
+        return [i for i, r in enumerate(out) if r["speaker"] == "orig" and r["t1"] - r["t0"] >= 1.5]
+    return [i for i, r in enumerate(out)]
+
+
+def effects_step(out: list[dict], style: dict, seed: str, log: list):
+    """CAPTION_EFFECT_RULES 중 이 판 벤치 채널 효과만: 편당 횟수(씨앗으로 범위 안에서 고름) → 박자 자리 → 줄 변형·스티커."""
+    ko = style["bench"].get("ko")
+    ref = reference(style, seed)
+    for name, R in effect_rules().items():
+        if name.startswith("_") or name not in EFFECT_HOW or not ko or ko not in R.get("채널", ""):
+            continue
+        # 영상마다 다르게: 그 효과가 '본 곳'(벤치 편 id 앞부분)에 본보기 편이 있을 때만 — 없는 편을 본보기로 삼았으면 안 붙인다
+        seen_ids = re.findall(r"[A-Za-z0-9_-]{3,}", R.get("본 곳", ""))
+        if not ref or not any(ref["id"].startswith(x) for x in seen_ids):
+            continue
+        lo, hi = _per_video(R.get("조건", ""))
+        n = lo + _h(seed, f"effect:{name}") % (hi - lo + 1)
+        if not n:
+            log.append(f"효과 {name} 0회(편당 {lo}~{hi})"); continue
+        need = TEXT_NEEDS.get(name)
+        cand = [i for i in _effect_where(name, out, R.get("조건", "")) if not need or out[i].get(need)]
+        how, key = EFFECT_HOW[name]
+        for i in _spread(cand, n):
+            if how == "variant":
+                if not out[i].get("variant_force"):
+                    out[i]["variant_force"] = key
+            else:
+                st = {"kind": key}
+                if need:
+                    st["text"] = out[i][need]
+                if name == "comic_burst":
+                    st["variant"] = "a"
+                if name == "hearts":
+                    st.update({"x": 50, "y": 41, "hold": 1.0})
+                out[i]["stickers"].append(st)
+            log.append(f"효과 {name} → {out[i]['line']}「{out[i]['text']}」(계약 조건: {R.get('조건', '')[:40]})")
 
 
 def variant_of(r: dict, style: dict) -> str:
