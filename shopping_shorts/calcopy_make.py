@@ -633,6 +633,8 @@ def _worker(S: dict, data_dir=None, deps: dict | None = None):
         extra["keywords"] = chn["keywords"]           # 찾기 검색 명사 — 워커 가동표와 같은 파일
     if chn.get("source_kind"):
         extra["source_kind"] = chn["source_kind"]
+    if chn.get("channels_file"):
+        extra["channels_file"] = str(ROOT / chn["channels_file"])   # 같은 결 채널 목록(채널 기준 찾기, 관제 234)
     extra["materials_hook"] = lambda skel: draft_materials(skel, mk["materials_defaults"], deps.get("assets"))
     w = Worker(deps.get("api") or LocalApi(data_dir), S["category"], "bench", S["slug"], name=f"make-{S['sid']}",
                out_root=_sdir(data_dir) / S["sid"] / "work", steps=deps.get("steps") or __import__("tools.calcopy.engine.worker_steps", fromlist=["x"]),

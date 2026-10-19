@@ -640,6 +640,50 @@ def gather(kind: str, keywords: list[str], n: int, months: int | None, own_ids: 
     return cands, failed
 
 
+CHANNEL_VERDICTS = ("확정",)          # 같은결_채널.json 의 verdict 가 이 말로 시작하는 채널만 소재 출처로
+CHANNEL_MIN_RATIO = 1.5                # 채널 조회 중앙값의 이 배수 이상 = 그 채널에서 '터진' 편
+
+
+def channel_candidates(channels_file: str | Path, n: int, seen_ids: set, log=print, per_channel: int = 30,
+                       stats=None) -> tuple[list[dict], list[dict]]:
+    """채널 기준 소재 찾기(관제 234, 2026-10-19 사장님 "우리가 칼카피한 채널 목록을 넘기고 어떻게 찾아나가는지").
+    같은 결 채널(channel_find 가 판정한 목록 — 확정만)의 최근 쇼츠에서 **그 채널 조회 중앙값의 1.5배 이상** 터진 편을
+    조회/중앙값 배수 순으로 후보로. 검색어 길(gather)은 브랜드 낱말로 유튜브를 찾다 시사 뉴스가 섞였다(10-19 실측, 스벅 논란 5건).
+    stats = channel_find.channel_stats(시험에서 가짜). 반환 (후보, 실패)."""
+    if stats is None:
+        from tools.calcopy.engine.channel_find import channel_stats as stats
+    d = json.loads(Path(channels_file).read_text(encoding="utf-8"))
+    chans = [c for c in (d.get("channels") if isinstance(d, dict) else d) or []
+             if str(c.get("verdict") or "").startswith(CHANNEL_VERDICTS)]
+    pool, failed = [], []
+    for c in chans:
+        ref = c.get("channel_id") or c.get("handle") or c.get("url")
+        st = stats(ref, per_channel) if ref else None
+        if not st or not st.get("median_views"):
+            failed.append({"where": f"channel {c.get('name') or ref}", "why": "채널 실측 실패"})
+            continue
+        med = st["median_views"]
+        for v in st.get("videos") or []:
+            if not v.get("id") or v["id"] in seen_ids or not isinstance(v.get("views"), (int, float)):
+                continue
+            r = v["views"] / med if med else 0
+            if r >= CHANNEL_MIN_RATIO:
+                pool.append({"id": v["id"], "title": v.get("title") or "", "views": v["views"], "ratio": round(r, 2),
+                             "channel": st.get("name") or c.get("name"), "url": f"https://www.youtube.com/shorts/{v['id']}"})
+    pool.sort(key=lambda v: (-v["ratio"], -v["views"]))
+    cands: list[dict] = []
+    for v in pool:
+        t = _clean_title(v["title"])
+        if not t or any(overlap(t, [{"what": "", "text": c["topic"]}])["score"] >= 0.6 for c in cands):
+            continue
+        cands.append({"id": f"c{len(cands) + 1}", "topic": t, "query": bench_query(t, t), "key": f"채널:{v['channel']}",
+                      "source": {"kind": "채널", **v}})
+        if len(cands) >= n:
+            break
+    log(f"[채널 찾기] 채널 {len(chans)}개 → 터진 편 {len(pool)}개 → 후보 {len(cands)}개 · 실패 {len(failed)}")
+    return cands, failed
+
+
 def date_filter(pool: list[dict], months: int | None, net: dict, limits: "Limits", failed: list) -> list[dict]:
     """최근 N개월만 — 조회 상위 DATE_PROBE 편의 올린 날짜를 받아 로컬에서 거른다(날짜 모르면 뺀다, 개수는 failed 에).
     날짜 통로가 없으면(시험 가짜 네트워크) 거르지 않고 그 사실을 남긴다."""

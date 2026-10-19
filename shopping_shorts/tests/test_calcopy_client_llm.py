@@ -81,3 +81,21 @@ def test_customer_mode_approve_gate(monkeypatch):
     assert not MK3.CUSTOMER_MODE
     with pytest.raises(MK3.MakeError):
         MK3.approve("없는세션", by="고객")
+
+
+def test_channel_candidates_picks_breakouts_only(tmp_path):
+    """채널 기준 찾기: 확정 채널만, 조회 중앙값 1.5배 이상만, 배수 순, 이미 본 id 는 뺀다."""
+    from tools.calcopy.engine import topic_find as TF
+    f = tmp_path / "ch.json"
+    f.write_text(json.dumps({"channels": [{"name": "가", "channel_id": "UCa", "verdict": "확정"},
+                                          {"name": "나", "channel_id": "UCb", "verdict": "후보"}]}, ensure_ascii=False), encoding="utf-8")
+    calls = []
+
+    def stats(ref, n):
+        calls.append(ref)
+        return {"name": "가", "median_views": 1000, "videos": [
+            {"id": "v1", "title": "평범한 편", "views": 1000}, {"id": "v2", "title": "터진 주걱 영상", "views": 9000},
+            {"id": "v3", "title": "조금 터진 의자 영상", "views": 2000}, {"id": "v4", "title": "이미 만든 편", "views": 50000}]}
+    c, failed = TF.channel_candidates(f, 5, {"v4"}, log=lambda m: None, stats=stats)
+    assert calls == ["UCa"] and not failed
+    assert [x["source"]["id"] for x in c] == ["v2", "v3"] and c[0]["source"]["kind"] == "채널"

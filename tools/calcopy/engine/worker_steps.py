@@ -153,7 +153,10 @@ def step_find(topic, ctx: Ctx) -> dict:
     """소재 후보 모으기 → 새 행. 검색어 만들기·통로는 topic_find.run 앞부분과 **같은 함수**를 같은 순서로 부른다
     (해외영상+검색어 없음 = db_candidates, 그 밖 = target_queries+gather). ★엔진에 find_candidates() 가 생기면 그걸 부르고 이 순서는 지운다."""
     TF = _engine("topic_find")
-    if hasattr(TF, "find_candidates"):
+    if ctx.extra.get("channels_file"):        # 채널 기준 찾기(관제 234) — 같은 결 채널 목록이 있는 프리셋은 이 길 먼저
+        top = TF._read_json(_preset(TF, ctx, None)["chdir"] / "원자료" / "top50.json") or []
+        cands, failed = TF.channel_candidates(ctx.extra["channels_file"], ctx.find_n, {v["id"] for v in top}, ctx.log)
+    elif hasattr(TF, "find_candidates"):
         r = TF.find_candidates(ctx.preset_of(None), ctx.find_n, keywords=ctx.extra.get("keywords"), net=_net(TF, ctx), llm=_llm(TF, ctx), log=ctx.log)
         cands, failed = r["candidates"], r["failed"]
     else:

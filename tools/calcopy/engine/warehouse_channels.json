@@ -2,7 +2,8 @@
  "sseolpulda": {
   "category": "해외썰",
   "preset": "channel/sseolpulda/preset/A_흰바탕창/창아래_검정",
-  "steps": "bench,score,assign,script,source"
+  "steps": "bench,score,assign,script,source",
+  "channels_file": "channel/스타일분석/현장썰/채널수집/같은결_채널.json"
  },
  "yummyknow": {
   "category": "식품",
@@ -43,7 +44,8 @@
    "amazing gadget",
    "cool gadgets",
    "kitchen gadget"
-  ]
+  ],
+  "channels_file": "channel/스타일분석/현장썰/채널수집/같은결_채널.json"
  },
- "_note": "keywords = 제품비하인드 검색 명사 초기값(엔진: 우리 과거 제목에서 뽑지 않는다 — 사장님/조율자가 고친다). 해외영상은 비우면 reference.db 대표 영상(db_candidates)"
+ "_note": "keywords = 제품비하인드 검색 명사 초기값(엔진: 우리 과거 제목에서 뽑지 않는다 — 사장님/조율자가 고친다). 해외영상은 비우면 reference.db 대표 영상(db_candidates) / channels_file = 같은 결 채널 목록(channel_find 판정 '확정') — 있으면 찾기는 채널 기준(topic_find.channel_candidates, 관제 234)"
 }
