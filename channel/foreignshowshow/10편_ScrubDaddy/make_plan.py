@@ -94,9 +94,9 @@ def C(a, b, how, what, h=1080):
 
 # 원음 줄 audio = (원본 시작, 끝) — 원본 초. cut = (소스, 원본 시작, 원본 끝, [x,y,w,h], 화면에 보이는 것)
 LINES = [
-    {"id": "O1", "kind": "원음", "beat": "의문(반응 먼저)", "audio": (399.80, 406.90),
-     "en": "I can tell instantly if it's a hero or a zero. And I think what you've got here is a hero.",
-     "sub": ["딱 보면 알아요", "히어로인지 제로인지", "이건 히어로예요!"], "facts": ["f1"], "cap_at": [399.8, 400.9, 403.6],
+    {"id": "O1", "kind": "원음", "beat": "의문(반응 먼저)", "audio": (401.32, 406.90),
+     "en": "if it's a hero or a zero. And I think what you've got here is a hero.",
+     "sub": ["히어로인지 제로인지", "이건 히어로예요!"], "facts": ["f1"], "cap_at": [401.32, 403.6],
      "fx": "0초 빨간 실선 원(투자자 로리 얼굴, fx_place.hook_circle) — 벤치 BBH 0초 = 같은 로리 'I can tell instantly…'(효과 없음) · foreignshowshow 0초 결말 반응 원",
      "cuts": ["HOOK",
               C(403.203, 404.838, "face", "창업자 에런(주황 셔츠)이 수세미 들고 들음(원본 편집 그대로)"),
@@ -121,17 +121,18 @@ LINES = [
      "sub": ["따뜻한 물에선 말랑해져서", "흠집도 안 낸다는데"], "facts": ["f4"],
      "cuts": [C(79.95, 81.60, "yellow", "스테인리스 팬 안을 수세미로 닦음(근접)"),
               C(98.25, 99.90, "yellow", "수세미를 손에 끼고 유리컵 안을 닦음(근접)")]},
+    {"id": "O3", "kind": "원음", "beat": "시연", "audio": (102.44, 104.55), "en": "And that smiley mouth, that cleans spoons,",
+     "sub": ["웃는 입으로는", "숟가락까지 닦아요"], "facts": ["f5"], "cap_at": [102.44, 103.6],
+     "cuts": [C(102.436, 104.55, "face", "에런이 수세미를 들고 시연하며 말함(말하는 본인)")]},
     {"id": "N4", "kind": "나레", "beat": "시연", "text": "입에 숟가락을 끼우면 앞뒤가 한 번에 닦인다고", "tts": "입에 숟가락을 끼우면 앞뒤가 한 번에 닦인다고",
      "sub": ["입에 숟가락을 끼우면", "앞뒤가 한 번에 닦인다고"], "facts": ["f5"],
      "cuts": [C(106.30, 109.80, "yellow", "웃는 입 구멍에 숟가락을 끼워 앞뒤로 닦음(근접)")]},
-    {"id": "N5", "kind": "나레", "beat": "숫자", "text": "홈쇼핑에 나갈 때마다 주문이 30%씩 늘어서 넉 달 만에 10만 달러 넘게 팔았다는데",
-     "tts": "홈쇼핑에 나갈 때마다 주문이 삼십 퍼센트씩 늘어서 넉 달 만에 십만 달러 넘게 팔았다는데",
-     "sub": ["홈쇼핑에 나갈 때마다", "주문이 30%씩 늘어서", "넉 달 만에 10만 달러", "넘게 팔았다는데"], "facts": ["f6"],
-     "fx": "분홍 위 화살표(숫자 자막 '30%씩') — 벤치 QMJ 12.017 숫자 조각",
-     "cuts": [C(134.65, 135.95, "face", "투자자 데이먼드가 수세미를 받아 봄"),
-              C(139.35, 141.00, "face", "투자자 로리가 수세미를 눌러 봄"),
-              C(141.10, 142.30, "face", "투자자 로버트가 수세미를 들어 봄"),
-              C(147.40, 148.95, "face", "로버트가 수세미를 쥐어 봄")]},
+    {"id": "N5", "kind": "나레", "beat": "숫자", "text": "넉 달 만에 10만 달러 넘게 팔았다는데",
+     "tts": "넉 달 만에 십만 달러 넘게 팔았다는데",
+     "sub": ["넉 달 만에 10만 달러", "넘게 팔았다는데"], "facts": ["f6"],
+     "fx": "분홍 위 화살표(숫자 자막 '넉 달 만에 10만 달러') — 벤치 QMJ 12.017 숫자 조각",
+     "cuts": [C(139.35, 141.00, "face", "투자자 로리가 수세미를 눌러 봄"),
+              C(141.10, 142.30, "face", "투자자 로버트가 수세미를 들어 봄")]},
     {"id": "N6", "kind": "나레", "beat": "지분 경쟁", "text": "그러자 샤크들끼리 입찰 전쟁이 붙었는데", "tts": "그러자 샤크들끼리 입찰 전쟁이 붙었는데",
      "sub": ["그러자 샤크들끼리", "입찰 전쟁이 붙었는데"], "facts": ["f7"],
      "cuts": [C(515.75, 517.33, 960, "무대 와이드: 에런 앞에 투자자석"),
@@ -183,8 +184,11 @@ LINES = [
 
 def hook_cut():
     """O1 첫 컷 = 로리 399.80~403.203 — 크롭·원 자리는 fx_place.hook_circle(얼굴 검출) 한 곳."""
+    # 원·크롭 = 같은 샷(399.40~403.20, 카메라 고정) 전체로 잰 hook_circle 그대로 — 페이블 10-19 "원은 로리 얼굴 그대로(자리·크기 OK)".
+    # 첫 컷만 401.32~ 로 줄이면 로리가 앞으로 기운 뒤 프레임만 재게 돼 얼굴/창 0.39 로 hook_circle 이 멈춤(허용 0.38) — 같은 샷이라 크롭은 같다
     r = FP.hook_circle(SRC / FILES[CLIP][0], 399.80, 403.203 - 399.80)
-    return r, (CLIP, 399.80, 403.203, r["src_crop"], "투자자 로리가 'I can tell instantly if it's a hero or a zero'(말하는 본인, 상반신 중간 샷)")
+    r["why"] += " · 측정 창 399.80~403.20(같은 샷), 쓰는 컷 401.32~403.20"
+    return r, (CLIP, 401.32, 403.203, r["src_crop"], "투자자 로리가 'I can tell instantly if it's a hero or a zero'(말하는 본인, 상반신 중간 샷)")
 
 
 HOOK, HOOK_CUT = hook_cut()
@@ -367,7 +371,7 @@ TITLES = {"line1": "샤크들이 서로 싸운", "line2": "웃는 수세미?!"}
 
 def effects(shots):
     E = []
-    rc = {"line": "O1", "kind": "red_circle", "at": HOOK["at"], "size": HOOK["size"], "t": [0.0, round(403.203 - 399.80, 3)], "how": "face",
+    rc = {"line": "O1", "kind": "red_circle", "at": HOOK["at"], "size": HOOK["size"], "t": [0.0, round(403.203 - 401.32, 3)], "how": "face",
           "face_src": HOOK["face_src"], "fh_win": HOOK["fh_win"],
           "why": "foreignshowshow 0초 결말 반응 투자자 얼굴 빨간 실선 원(QMJ 0.0~0.533, 첫 컷 내내) — " + HOOK["why"]}
     E.append(rc)
@@ -379,8 +383,8 @@ def effects(shots):
     E.append({"line": "N2", "kind": "arrow_curve_red", "t": [t_c, round(t_c + s2["dur"], 3)], "how": "target", "target": box2,
               "target_what": "유리 상판을 문지르는 수세미(노란 덩어리 검출)", "why": "벤치 QMJ 20.367~22.9 둘째 시연 빨간 곡선 화살표(찌르기)+휙",
               **FP.on_target("arrow_curve_red", box2)})
-    E.append({"line": "N5", "kind": "arrow_pink_up", "at": [533, 1230], "t": [1.1, 2.4], "how": "auto",
-              "why": "벤치 QMJ 12.017~13.82 숫자 조각 분홍 위 화살표 — 자막 '주문이 30%씩 늘어서'(둘째 조각, 시각은 추정 — TTS 뒤 조각 시각으로 맞춤)"})
+    E.append({"line": "N5", "kind": "arrow_pink_up", "at": [533, 1230], "t": [0.0, 1.0], "how": "auto",
+              "why": "벤치 QMJ 12.017~13.82 숫자 조각 분홍 위 화살표 — 자막 첫 조각 '넉 달 만에 10만 달러'"})
     E.append({"line": "O5", "kind": "money_emoji", "at": [537, 1189], "t": [0.033, 1.333], "how": "auto", "why": "벤치 QMJ 38.7~40.0 날개 돈다발(제안 금액 줄)"})
 
     def fl(line, color, t0, why):
@@ -428,11 +432,11 @@ META = {
               "window": [0, 434, 1080, 1052]},
     "form": "foreignshowshow 꼴 — 방송 원음(영어)+한국어 번역 자막 / 한국어 TTS 나레(반말 전언체)+자막 번갈아. 원음 순간 = BBH 벤치가 고른 입찰 장면. 틀 = preset 「샤크탱크_검정띠2줄」",
     "facts": {
-        "f1": {"text": "원본 399.8~406.9 로리 'I can tell instantly if it's a hero or a zero. And I think what you've got here is a hero.'(구간 단독 2모델 asr/span_v1.json) · 이름 = 화면 띠 'Lori's offer…'(596초 등)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음"},
+        "f1": {"text": "원본 401.32~406.9 로리 '(I can tell instantly) if it's a hero or a zero. And I think what you've got here is a hero.'(구간 단독 2모델 asr/span_v1.json · 401.32 부터 자른 클립도 2모델 모두 'If it's a hero or a zero' 로 들음 asr/hook_start.json — 페이블 10-19 첫 컷 ≤1.9초 지시로 '딱 보면 알아요' 버림) · 이름 = 화면 띠 'Lori's offer…'(596초 등)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음"},
         "f2": {"text": "원본 94.1~96.7 창업자 'Sharks, that's not just another smiling face.' · 20.8~23.4 'the cutest but most high-tech scrubbing tool'(30초 창 2모델 asr/src_seg.json) — 창업자 주장 → 전언체", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음(창업자 주장)"},
         "f3": {"text": "원본 32.75~37.0 'Scrub Daddy completely changes its texture by just adjusting your water temperature.'(2모델 span_v1 — 한 모델은 'scrubbing it' 으로 들음)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음"},
         "f4": {"text": "원본 47~60 '10-pound weights … soft and compressible … gentle scrubbing / hard and firm … heavy-duty scrubbing' · 60~82 'burned on … scrubbing it right off … It won't scratch any of your surfaces' · 위키백과 Scrub Daddy: 'firm in cold water and soft in warm water'(NBR 2016-05-13 인용)", "url": "https://en.wikipedia.org/wiki/Scrub_Daddy", "kind": "방송 원음+백과"},
-        "f5": {"text": "원본 102.0~111.6 'And that smiling mouth, that cleans spoons, knives, forks, spatulas … on both sides at the same time.'(30초 창 2모델)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음(창업자 시연 — 전언체)"},
+        "f5": {"text": "원본 102.0~111.6 'And that smiling mouth, that cleans spoons, knives, forks, spatulas … on both sides at the same time.'(30초 창 2모델) · O3 원음 102.44~104.55 'And that smiley mouth, that cleans spoons,'(구간 단독 2모델 asr/span_v3.json + 102.44 부터 자른 클립 2모델 asr/span_seg3.json)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음(창업자 시연 — 전언체)"},
         "f6": {"text": "원본 136.5~147.7 'I've been on QVC three times … every time I go on, they reorder 30% more than the last time.' · 150~154.9 'total sales? QVC, wholesale' — 'Just north of $100,000, only in four months.'(구간 단독 2모델 span_v1)", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음(창업자 말 — 전언체)"},
         "f7": {"text": "공식 원본 제목 'A Bidding War Breaks Out During Scrub Daddy's Pitch'(Shark Tank Global) · 원본 386~600 케빈(10만 달러+개당 로열티)·데이먼드·로리 제안이 차례로 바뀜(30초 창 받아쓰기) · 화면 띠 'Kevin's offer'·'Daymond's offer'·'Lori's offer'", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "공식 제목+방송"},
         "f8": {"text": "원본 468.4~472.6 데이먼드 'I'm going to give you $150,000 for 25%.'(2모델 span_v1·v2) · 화면 띠 475~480초 'Daymond's offer: $150k for a 25% stake'", "url": "https://www.youtube.com/watch?v=ae5MssJ8en4", "kind": "방송 원음+화면 띠"},
