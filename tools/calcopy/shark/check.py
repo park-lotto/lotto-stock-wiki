@@ -19,8 +19,11 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid.common import dur_of, jload, jsave, lufs, md5, nchar, silences  # noqa: E402
 from tools.calcopy.hybrid.checks import reuse_violations  # noqa: E402
+from tools.calcopy.shark.caption_style import rules  # noqa: E402
 
-LUFS_TOL, PEAK_MAX, LEN_TOL, CUT_TOL = 0.5, -0.5, 0.15, 0.30
+LEN_TOL, CUT_TOL = 0.15, 0.30
+LOUD = rules()["loudness"]   # B2 목표·트루피크 = rules.json loudness 한 곳(R5 −14 LUFS·≤ −1.5 dBTP) — 렌더·하이브리드와 같은 값
+LUFS_TOL, PEAK_MAX = LOUD["check_tol"], LOUD["true_peak_max"]
 CUT_MIN, END_MIN, CAP_MAX, SYNC_TOL = 1.2, 1.5, 13, 0.04
 
 
@@ -83,7 +86,7 @@ def check(doc: Path, work: Path, stage: str = "render", asr: bool = False) -> di
     R = work / stage
     info = jload(R / "render_info.json")
     S = jload(doc / "대본.json")
-    target = (S.get("render") or {}).get("target_lufs", -9.0)
+    target = (S.get("render") or {}).get("target_lufs", LOUD["target_lufs"])
     cuts = [c for c in info["cuts"] if not c.get("dropped")]
     ds = sorted(c["dur"] for c in cuts)
     med = ds[len(ds) // 2]

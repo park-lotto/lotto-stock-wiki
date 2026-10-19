@@ -120,18 +120,22 @@ def window(src) -> dict:
     W, H = 270, 263
     red = np.array(E["red_circle"]["color"]); pink = np.array(E["arrow_pink_up"]["color"]); grn = np.array(E["arrow_green_down"]["color"])
     rows = []
+    from tools.calcopy.shark import fx as FX
+    edge = FX._edge_mask(W, H) > 0.5
+    edge[106:157] = False
     for a in _frames(src, f"crop=1080:1052:0:434,scale={W}:{H}", W, H, 10):
         a = a.astype(int)
         a[106:157] = 0    # 자막 띠(860~1060 → 창 좌표 426~626 → 1/4)
         r, g, b = a[..., 0], a[..., 1], a[..., 2]
+        e = a[edge]          # 번쩍 = 가장자리 띠에서 잰다(R4 가장자리 빛 — 벤치 전면 번쩍도 가장자리가 같이 물든다)
         rows.append({"red": int((np.abs(a - red).sum(axis=2) < 70).sum()), "pink": int(((r > 220) & (b > 180) & (g < 140)).sum()),
                      "green": int((np.abs(a - grn).sum(axis=2) < 80).sum()),
-                     "gc": float(g.mean() - (r.mean() + b.mean()) / 2), "rc": float(r.mean() - (g.mean() + b.mean()) / 2)})
+                     "gc": float(e[:, 1].mean() - (e[:, 0].mean() + e[:, 2].mean()) / 2), "rc": float(e[:, 0].mean() - (e[:, 1].mean() + e[:, 2].mean()) / 2)})
     flashes = []
     for key, nm in (("gc", "초록"), ("rc", "빨강")):
         for i in range(1, len(rows) - 3):
             x = rows[i][key]
-            if x - rows[i - 1][key] > 35 and x > 40 and rows[i + 3][key] < x - 10:
+            if x - rows[i - 1][key] > 25 and x > 25 and rows[i + 3][key] < x - 10:   # 10-19 R4 가장자리 빛(옅음·0.22초)은 10fps 표본에서 +38~46 → 문턱 35·40 → 25·25(벤치 번쩍 아닌 튐 최대 g+23·r+22, 실측)
                 flashes.append({"t": round(i / 10, 1), "color": nm})
     objs = []
     for key, th, nm in (("red", 60, "빨강 꾸밈"), ("pink", 40, "분홍 화살표"), ("green", 60, "초록 꾸밈")):
@@ -170,7 +174,7 @@ def ding_after(src, times) -> list[bool]:
     return out
 
 
-MEASURE_VER = 4   # 잣대가 바뀌면 올린다(벤치 재기 저장본을 버리게)
+MEASURE_VER = 5   # 5 = 번쩍을 가장자리 띠로(10-19 R4) · 잣대가 바뀌면 올린다(벤치 재기 저장본을 버리게)
 
 
 def measure(src, cache: Path | None = None) -> dict:
@@ -265,8 +269,9 @@ def judge(b: dict, o: dict) -> list[tuple]:
         ("효과음: 번쩍 뒤 띠링 비율", b["ding_ratio"], o["ding_ratio"], o["ding_ratio"] >= K["ding_after_flash_min"]),
         ("와우: 번쩍+꾸밈 분당", b["wow_per_min"], o["wow_per_min"], o["wow_per_min"] >= 0.6 * b["wow_per_min"]),
     ]
-    ok, why = hook_face_ok(o.get("hook_face"))
-    rows.append(("원-얼굴: 0초 빨간 원이 얼굴(머리) 전체를 감싸나", _hf(b.get("hook_face")), (_hf(o.get("hook_face")) or "없음") + (f" ✗ {why}" if why else ""), ok))
+    h = o.get("hook_face")      # R3(사장님 10-19): 0초 원은 얼굴 말고 물건 — 원 안에 얼굴이 들어 있으면 실패(벤치 얼굴 원 관계는 기록으로만)
+    ok = not h or h["rel"]["face_inside"] < 0.05
+    rows.append(("원-얼굴(R3): 0초 빨간 원이 얼굴을 피해 물건에", _hf(b.get("hook_face")), (_hf(h) or "원 안 얼굴 없음") + ("" if ok else " ✗ 얼굴 원"), ok))
     return rows
 
 

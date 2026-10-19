@@ -8,13 +8,14 @@
   --preview     TTS 없이 --plan 시각 그대로 끝까지 렌더(나레 자리 = 삐 소리) → <작업>/preview/final.mp4 — 컷·자막·원음·크롭 눈 확인용(비용 0)
   (없음)        렌더 끝까지 → <작업>/render/final.mp4 (+ check.py 로 B표)
   --confirm-tts 타입캐스트를 **처음** 부를 때만 필요(페이블 OK 뒤 1회 — 비용). 이미 narr_raw.mp3 가 있으면 다시 안 부른다.
+  --tts-from    옛 렌더 폴더의 narr_raw.* 를 복사해 재사용(새 엔진으로 다시 렌더할 때 — 비용 0)
 
 선례 channel/itemhome/1편_안유진로션/make_render.py(편 전용)를 채널 한 벌로. 엔진은 부르기만 한다:
   TTS = engine/tts_pause.synth(통째 1회, 성우 속도 voice_presets) → atempo(상한 1.27) → tts_pause.shape(쉼표 0.22·마침표 0.30)
   화면 = narr_video.build(틀 한 장·자막 페이지 1개 × shots[0].cuts = 컷 전부, 판단 주인 shot_pieces) — 자막은 build 에서 안 그림
   원음 = hottem_audio.add_source_bed(줄 단위 원음 시간표, gap_gain = 원음 창 올림) — 원음 창엔 나레 없음(J컷 꼬리만 덕킹)
   자막·꾸밈 = narr_video.emph_png(나레 꼴 / 원음 꼴 두 층)·overlay_png 을 완성본 좌표로 얹음
-  BGM = bgm_lib 곡, 원음 창에서 덕킹 → 목표 −9.0 LUFS · 최고점 ≤ −0.5 dBFS(검수 B2, 사장님 10-18)
+  BGM = bgm_lib 곡, 원음 창에서 덕킹 → 목표 −14.0 LUFS · 트루피크 ≤ −1.5 dBTP(R5 사장님 10-19 '음량이 너무커', 값 주인 rules.json loudness)
 
 판단 주인(한 함수씩) — 렌더·검사(check.py)는 render_info.json 의 같은 값을 읽는다:
   줄 시각   line_times()    · 컷 시각   cut_times()    · 자막 시각  caption_times()    · 원음 소리 시간표  audio_pieces()
@@ -36,7 +37,11 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from tools.calcopy.hybrid.common import SR, StageError, dur_of, jload, jsave, lufs, nchar, run  # noqa: E402
 
+from tools.calcopy.shark import fx as FX  # noqa: E402  — 자막·꾸밈·번쩍·효과음 그림/자리 주인(값은 shark/rules.json)
+
 FALLBACK_PRESET = ROOT / "channel/mantem/preset/얜샷템"
+ENGINE = "shark-v2 2026-10-19 (R3 물건 원·R4 적중 검사·고급 모양·R5 −14 LUFS)"   # render_info 표식 — 하이브리드가 앞 렌더 판을 이걸로 가린다
+LOUD = FX.R()["loudness"]
 DEF = {
     "gap": 0.08,            # 줄과 줄 사이(원음 뒤·원음 앞) — 1편 대본 t_final 간격
     "end_pad": 0.6,         # 끝 줄 뒤 여유
@@ -48,9 +53,8 @@ DEF = {
     "orig_rel_db": 0.0,     # 원음 창 크기 = 나레 LUFS + 이것
     "orig_gain_clamp": [-6.0, 18.0],
     "bgm": "sweets", "bgm_lufs": -24.5, "duck_db": -10.0,
-    "target_lufs": -9.0, "peak_max": -0.5,
+    "target_lufs": LOUD["target_lufs"], "peak_max": LOUD["true_peak_max"],
 }
-from tools.calcopy.shark import fx as FX  # noqa: E402  — 자막·꾸밈·번쩍·효과음 그림/자리 주인(값은 shark/rules.json)
 FX_KINDS = FX.KINDS
 
 
@@ -104,7 +108,10 @@ def load_doc(doc: Path) -> dict:
         if s["line"] not in ids:
             raise StageError(f"재료 컷 {s.get('i')} 의 줄 {s['line']} 이 대본에 없음")
         a = {"i": s.get("i", len(shots)), "line": s["line"], "src": s["src"], "ss": float(s["ss"]), "dur": float(s["dur"]),
-             "src_crop": s.get("src_crop"), "mute": bool(s.get("mute")), "see": s.get("ours") or s.get("why", "")}
+             "src_crop": s.get("src_crop"), "mute": bool(s.get("mute")), "see": s.get("ours") or s.get("why", ""),
+             **{k: s[k] for k in SHOT_KEYS if s.get(k) is not None}, "cover": bool(s.get("cover"))}
+        if Path(s["src"]).suffix.lower() in STILL and not s.get("mute"):
+            raise StageError(f"재료 컷 {s.get('i')}: 그림 파일({s['src']})은 소리가 없다 — mute: true")
         if not s.get("mute"):
             a["audio_src"] = s.get("audio_src") or s["src"]
             if s.get("audio_ss") is not None:
@@ -132,6 +139,11 @@ def load_doc(doc: Path) -> dict:
             "fx_notes": [f"{e.get('at')}: {e.get('fx')}" for e in S.get("effects_record") or []]
                         + [f"{l['id']}: {l['fx']}" for l in lines if l.get("fx")]
                         + [f"컷{s.get('i')}({s['line']}): {s['fx']}" for s in M["shots"] if s.get("fx")]}
+
+
+SHOT_KEYS = ("ar", "fit", "move", "loop")   # 컷 덮어쓰기(그림 움직임·세로/가로 비율·채우기·짧은 영상 되풀이) — 그리기는 narr_video.shot_clip 한 곳.
+#   loop: true → narr_video 의 kind "짤"(재료 shots[].kind 는 이 채널에서 줄 종류 '원음/나레' 라 그대로 넘기지 않는다)
+STILL = (".png", ".jpg", ".jpeg")
 
 
 def check_sources(D) -> list[str]:
@@ -346,12 +358,13 @@ def cut_times(D, LT) -> list[dict]:
                 if ss < pend - 1e-3 and pend - ss < 5:
                     ss = round(pend, 3)
             c = {"i": s["i"], "line": x["id"], "kind": x["kind"], "src": s["src"], "ss": round(ss, 3), "src_crop": s["src_crop"],
-                 "t0": round(t0, 3), "t1": round(t1, 3), "dur": round(t1 - t0, 3), "plan_dur": s["dur"], "see": s["see"]}
+                 "t0": round(t0, 3), "t1": round(t1, 3), "dur": round(t1 - t0, 3), "plan_dur": s["dur"], "see": s["see"],
+                 **{k: s[k] for k in SHOT_KEYS if k in s}}
             if ss != s["ss"]:
                 c["ss_moved"] = s["ss"]
             if x["kind"] == "O":
                 ad = audio_of(D, LD[x["id"]])
-                if ad["src"] == s["src"]:
+                if ad["src"] == s["src"] and not s.get("cover"):   # cover = 소리는 원음, 화면은 다른 장면(입 모양 맞출 것 없음)
                     c["sync"] = round(s["ss"] - (ad["ss"] + (t0 - a)), 3)
             out.append(c); prev = c
         if x["kind"] == "O":
@@ -559,22 +572,26 @@ def cap_style(c: dict, n_caps: int, FS: dict) -> tuple[str, dict]:
     return ("원음" if c["kind"] == "O" else "나레"), (FS["orig_style"] if c["kind"] == "O" else FS["narr_style"])
 
 
-def effects(D, LT) -> tuple[list[dict], list[str]]:
-    """재료.effects[{line, kind:red_circle|emoji, at:[x,y](완성본 좌표), size, t:[줄 안 시작,끝], emoji, color}] → 완성본 시각.
-    좌표 없는 메모(effects_record·fx)는 못 그림으로 남긴다."""
+def effects(D, LT) -> tuple[list[dict], list[str], list[dict]]:
+    """재료.effects[{line, kind, at:[x,y](완성본 좌표), t:[줄 안 시작,끝], target_path·track…}] → 완성본 시각 + 적중 검사(fx.gate, R3·R4).
+    검사 미달·fix 가 뺀 것(drop)은 그리지 않고 (line, kind, 이유)로 돌려준다(render_info fx_dropped). 좌표 없는 메모는 못 그림으로 남긴다."""
     lt = {x["id"]: x for x in LT["lines"]}
-    out = []
+    out, dropped = [], []
     for e in D["effects"]:
         if e.get("kind") not in FX_KINDS:
             raise StageError(f"꾸밈 '{e.get('kind')}' 은 엔진(overlay_png)이 못 그린다 — 엔진 요청: {e}")
-        if e.get("line") not in lt or not e.get("at"):
-            raise StageError(f"꾸밈에 line·at 필요: {e}")
+        if e.get("line") not in lt:
+            raise StageError(f"꾸밈 줄 없음: {e}")
+        if e.get("drop") or not e.get("at"):
+            dropped.append({"line": e["line"], "kind": e["kind"], "why": e.get("drop") or "자리(at) 없음"}); continue
         x = lt[e["line"]]
         a, b = e.get("t") or [0.0, x["t1"] - x["t0"]]
         out.append({**e, "T": [round(x["t0"] + a, 3), round(min(x["t1"], x["t0"] + b), 3)]})
+    out, dg = FX.gate(out)
+    dropped += dg
     drawn = {e["line"] for e in out}
     not_drawn = [f"안 그림(좌표 없음·엔진에 없는 꼴) — {n}" for n in D["fx_notes"] if n.split(":")[0].split(" ")[0] not in drawn]
-    return out, not_drawn
+    return out, not_drawn, dropped
 
 
 # ── 계획(공통) ───────────────────────────────────────────────────────────
@@ -583,18 +600,18 @@ def plan_all(D, NM, segs=None) -> dict:
     cuts = cut_times(D, LT)
     caps = caption_times(D, LT, segs)
     aud = audio_pieces(D, LT)
-    fx, nd = effects(D, LT)
-    return {"lines": LT["lines"], "dur": LT["dur"], "cuts": cuts, "captions": caps, "audio": aud, "effects": fx, "fx_not_drawn": nd}
+    fx, nd, fd = effects(D, LT)
+    return {"lines": LT["lines"], "dur": LT["dur"], "cuts": cuts, "captions": caps, "audio": aud, "effects": fx, "fx_not_drawn": nd, "fx_dropped": fd}
 
 
 def info_of(D, P, NM, mode, extra=None) -> dict:
     live = [c for c in P["cuts"] if not c.get("dropped")]
     ds = sorted(c["dur"] for c in live)
     LD = {l["id"]: l for l in D["lines"]}
-    return {"mode": mode, "dur": P["dur"], "bench_dur": D["bench"].get("dur"), "bench_cut_median": D["bench"].get("cut_median"),
+    return {"mode": mode, "engine": ENGINE, "dur": P["dur"], "bench_dur": D["bench"].get("dur"), "bench_cut_median": D["bench"].get("cut_median"),
             "narr": {k: v for k, v in NM.items() if k != "lines"}, "narr_lines": NM["lines"],
             "lines": [{**x, "caps_from": LD[x["id"]]["caps_from"], "tts": LD[x["id"]].get("tts"), "en": LD[x["id"]].get("en")} for x in P["lines"]],
-            "cuts": P["cuts"], "captions": P["captions"], "audio": P["audio"], "effects": P["effects"], "fx_not_drawn": P["fx_not_drawn"],
+            "cuts": P["cuts"], "captions": P["captions"], "audio": P["audio"], "effects": P["effects"], "fx_not_drawn": P["fx_not_drawn"], "fx_dropped": P.get("fx_dropped", []),
             "summary": {"cuts": len(live), "dropped": [c["i"] for c in P["cuts"] if c.get("dropped")], "cut_median": ds[len(ds) // 2],
                         "cut_min": ds[0], "end_cut": live[-1]["dur"], "short_cuts": [(c["i"], c["dur"]) for c in live if c["dur"] < 1.2],
                         "caps": len(P["captions"]), "cap_max_chars": max(nchar(c["text"]) for c in P["captions"]),
@@ -617,7 +634,8 @@ def table_md(info) -> str:
         L.append(f"| {c['i']} | {c['line']} | {c['t0']:.2f}–{c['t1']:.2f} | {c['dur']:.2f}({c['plan_dur']}) | {Path(c['src']).stem[:6]}@{c['ss']} | "
                  f"{c.get('sync', '')} | {c['see'][:40]} |")
     L += ["", "## 원음 소리", *[f"- {p['a']:.2f}–{p['b']:.2f} " + ("끔" if p.get("mute") else f"{p['line']} {Path(p['src']).stem}@{p['ss']}+{p['dur']}") for p in info["audio"]],
-          "", "## 못 그림", *([f"- {n}" for n in info["fx_not_drawn"]] or ["- 없음"])]
+          "", "## 못 그림", *([f"- {n}" for n in info["fx_not_drawn"]] or ["- 없음"]),
+          "", "## 뺀 꾸밈(적중 검사·R3·R4)", *([f"- {d['line']} {d['kind']}: {d['why']}" for d in info.get("fx_dropped") or []] or ["- 없음"])]
     return "\n".join(L) + "\n"
 
 
@@ -693,19 +711,19 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
          f"loudnorm=I={C['bgm_lufs']}:TP=-6:LRA=11,aresample={SR},volume='{terms}':eval=frame[b];[m][b]amix=inputs=2:normalize=0:duration=first[a]",
          "-map", "[a]", "-t", f"{P['dur']:.3f}", "-c:a", "pcm_f32le", pre])
     I0, _ = lufs(pre)
-    # 나레(타입캐스트) 마루비 ~18dB 라 리미터만으로는 −9 LUFS 가 안 된다(10-18 실측: alimiter 로 +23dB 넣어도 −9.6, 소리 뭉갬)
-    # → 압축(−18dB·3:1·+6dB) → 이득 g → 부드러운 깎기(tanh, 벤치도 깎임 +1.0 TP) → 리미터(−3dB, AAC 넘침 몫) → 16kHz 위 자름.
-    #   g 만 재며 맞추고(최대 8번), 최고점이 넘으면 리미터를 낮춘다(10-18 1차: tanh 뒤 trim 으로 맞추니 AAC 넘침이 −1.4~+1.9 로 흔들려 못 맞춤).
+    # R5(10-19): 목표 −14 LUFS·트루피크 ≤ −1.5. 옛 −9 때 쓰던 tanh 깎기는 뺐다(소리 뭉갬 — −14 는 낮추는 쪽이라 깎을 일이 없다).
+    # → 가벼운 압축(−18dB·3:1·+6dB, 나레/원음 고르게) → 이득 g → 리미터(트루피크 목표 −1dB, AAC 넘침 몫) → 16kHz 위 자름.
+    #   g 만 재며 맞추고(최대 8번), 최고점이 넘으면 리미터를 낮춘다.
     comp = "acompressor=threshold=0.125:ratio=3:attack=5:release=120:knee=4:makeup=2"
-    g, lim, hist = C["target_lufs"] - I0 + 1.0, 0.71, []
+    g, lim, hist = C["target_lufs"] - I0, 10 ** ((C["peak_max"] - 1.0) / 20), []
     final = R / "final.mp4"
     for it in range(8):
         run(["ffmpeg", "-y", "-i", video, "-i", pre, "-filter_complex",
-             f"[1:a]{comp},volume={g:.2f}dB,asoftclip=type=tanh,alimiter=limit={lim:.3f}:attack=2:release=40:level=false,lowpass=f=16000[a]",
+             f"[1:a]{comp},volume={g:.2f}dB,alimiter=limit={lim:.3f}:attack=2:release=40:level=false,lowpass=f=16000[a]",
              "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", f"{P['dur']:.3f}", final])
         I, pk = lufs(final)
         hist.append({"gain": round(g, 2), "limit": round(lim, 3), "I": I, "peak": pk})
-        if abs(I - C["target_lufs"]) <= 0.3 and pk <= C["peak_max"]:
+        if abs(I - C["target_lufs"]) <= LOUD["tol"] and pk <= C["peak_max"]:
             break
         if pk > C["peak_max"]:
             lim *= 10 ** ((C["peak_max"] - pk - 0.2) / 20)
@@ -713,10 +731,26 @@ def audio_final(D, P, C, src_mp4: Path, video: Path, R: Path) -> dict:
             g += (C["target_lufs"] - I) * 2.0
     else:
         raise StageError(f"소리 크기 못 맞춤 {hist}")
-    return {"bgm": C["bgm"], "bgm_ss": bss, "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → asoftclip(tanh) → alimiter → lowpass 16k", "passes": hist, "final_I": I, "final_peak": pk}
+    return {"bgm": C["bgm"], "bgm_ss": bss, "bgm_lufs": C["bgm_lufs"], "duck_db": C["duck_db"], "mix_I": I0, "chain": comp + " → volume → alimiter → lowpass 16k", "target": [C["target_lufs"], C["peak_max"]], "passes": hist, "final_I": I, "final_peak": pk}
 
 
-def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_target=None) -> dict:
+def reuse_tts(R: Path, src: Path | None) -> str | None:
+    """옛 렌더 폴더의 타입캐스트 원본(narr_raw.mp3·정렬·meta)을 새 작업 폴더로 복사 — 타입캐스트 다시 안 부른다(비용 0).
+    글이 다르면 narr_tts 가 meta.text 대조로 멈춘다(조용히 다른 나레를 쓰지 않는다)."""
+    if not src:
+        return None
+    if (R / "narr_raw.mp3").exists():
+        return f"TTS 재사용: 이미 있음 {R / 'narr_raw.mp3'}"
+    names = ("narr_raw.mp3", "narr_raw.align.json", "narr_raw.meta.json")
+    if not all((src / n).exists() for n in names):
+        raise StageError(f"--tts-from {src} 에 {names} 가 다 없다")
+    R.mkdir(parents=True, exist_ok=True)
+    for n in names:
+        shutil.copy2(src / n, R / n)
+    return f"TTS 재사용: {src} → {R}"
+
+
+def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_target=None, tts_from: Path | None = None) -> dict:
     D = load_doc(doc)
     if cps:
         D["C"]["cps_plan"] = cps
@@ -734,12 +768,13 @@ def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_ta
         (R / "컷표.md").write_text(table_md(info), encoding="utf-8")
         return info
     from tools.calcopy import narr_video as nv, hottem_audio as ha
+    tts_note = reuse_tts(R, tts_from) if mode != "preview" else None
     NM = narr_beep(narr_plan(D), R) if mode == "preview" else narr_tts(D, R, confirm_tts)
     P0 = plan_all(D, NM)
     placed = place_narr(D, P0, NM, R)
     segs, _ = nv.speech_segments(str(placed), "-40dB", 0.06)
     P = plan_all(D, NM, segs)
-    base = {"frame": FS["frame"], "preset": FS["preset"], "frame_notes": FS["notes"], "sources": src_notes, "narr_placed": str(placed)}
+    base = {"frame": FS["frame"], "preset": FS["preset"], "frame_notes": FS["notes"], "sources": src_notes, "narr_placed": str(placed), "tts_reuse": tts_note}
     if mode == "tts":
         info = info_of(D, P, NM, "tts-only", base)
         jsave(R / "render_info.json", info)
@@ -750,7 +785,8 @@ def render(doc: Path, work: Path, mode: str, confirm_tts=False, cps=None, cps_ta
     jsave(R / "script_render.json", {"_note": "shark/render.py — narr_video 용(자막은 완성본에 따로 얹음)", "final": {"lines": [{"text": "가"}]}})
     jsave(R / "materials_render.json", {"cand_dir": str(D["cand_dir"]), "shots": [{
         "i": 0, "full": True, "src": live[0]["src"], "ss": live[0]["ss"],
-        "cuts": [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], **({"src_crop": c["src_crop"]} if c.get("src_crop") else {})} for c in live]}]})
+        "cuts": [{"src": c["src"], "ss": c["ss"], "dur": c["dur"], **({"src_crop": c["src_crop"]} if c.get("src_crop") else {}),
+                  **{k: c[k] for k in SHOT_KEYS if c.get(k) is not None and k != "loop"}, **({"kind": "짤"} if c.get("loop") else {})} for c in live]}]})
     nvout = R / "nv"
     final_nv = nv.build({"tteutgi": None, "frames": [{"frame": FS["frame"], "t_end": None}], "script": str(R / "script_render.json"), "tts": str(placed),
                          "materials": str(R / "materials_render.json"), "out": str(nvout), "bgm": None, "lufs": C["narr_lufs"], "chunk": 14,
@@ -779,17 +815,20 @@ def main():
     ap.add_argument("--plan", action="store_true"); ap.add_argument("--tts-only", action="store_true")
     ap.add_argument("--preview", action="store_true"); ap.add_argument("--confirm-tts", action="store_true"); ap.add_argument("--cps", type=float)
     ap.add_argument("--cps-target", type=float, help="TTS atempo 목표 자/초(없으면 대본 final.cps_target)")
+    ap.add_argument("--tts-from", help="옛 렌더 폴더(narr_raw.mp3·정렬·meta) — 타입캐스트를 다시 안 부르고 복사해 쓴다")
     a = ap.parse_args()
     mode = "plan" if a.plan else ("preview" if a.preview else ("tts" if a.tts_only else "render"))
     try:
-        info = render(Path(a.doc).resolve(), Path(a.work).resolve(), mode, a.confirm_tts, a.cps, a.cps_target)
+        info = render(Path(a.doc).resolve(), Path(a.work).resolve(), mode, a.confirm_tts, a.cps, a.cps_target, Path(a.tts_from) if a.tts_from else None)
     except StageError as e:
         print(f"[멈춤] {e}", file=sys.stderr)
         sys.exit(2)
     s = info["summary"]
     log(f"[{info['mode']}] 길이 {info['dur']:.2f}초(벤치 {info['bench_dur']}) · 컷 {s['cuts']} 중앙 {s['cut_median']:.2f} 최단 {s['cut_min']:.2f} 끝 {s['end_cut']:.2f}"
         f" · 1.2초 미만 {s['short_cuts']} · 빠진 컷 {s['dropped']} · 자막 {s['caps']}조각 최대 {s['cap_max_chars']}자 · 원음 {s['orig_sec']}초"
-        f" · 화면≠소리 시각 {s['sync_off']} · 못 그림 {len(info['fx_not_drawn'])}")
+        f" · 화면≠소리 시각 {s['sync_off']} · 못 그림 {len(info['fx_not_drawn'])} · 뺀 꾸밈 {len(info.get('fx_dropped') or [])}")
+    for d in info.get("fx_dropped") or []:
+        log("   뺀 꾸밈", d["line"], d["kind"], d["why"])
     for n in info.get("frame_notes", []) + info.get("sources", []):
         log("  ", n)
 

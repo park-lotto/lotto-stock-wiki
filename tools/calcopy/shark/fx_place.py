@@ -3,15 +3,14 @@
 
 (판단 주인)
   어느 줄에 어떤 꾸밈      propose()      — 박자 낱말·기본 자리는 rules.json placement
-  0초 빨간 원 자리·첫 컷 크롭  hook_circle()  — ★얼굴 검출(YuNet)로 계산. 눈대중 금지(사장님 10-18 "빨간원 너무 안맞는다").
-                              원 크기는 벤치 고정(r 209), 크롭을 얼굴 높이 337px(창 폭 0.31 = 상반신 중간 샷)로 맞추고 원 중심 = 얼굴 가운데·눈 +0.05fh.
-                              초근접이라 크롭을 넓혀도 얼굴이 벤치 범위보다 크면 멈춘다(다른 컷을 고를 것).
-  대상 꾸밈 자리           on_target()    — 재료 effects[].target = 'person'(NanoDet 사람 검출, 점선 원 기본) | 'face'(YuNet 머리) | 완성본 상자 [x0,y0,x1,y1](검출 못 하는 물건)
-                              → 자리·크기는 벤치 비율로 계산. 대상 검출은 render.py --tts-only 의 실제 컷 시각(render_info)으로 소스 프레임을 잰다
-  (how: 'face' = hook_circle 결과 / 'target' = on_target 결과 / 'auto' = propose — 손 좌표(how='hand')는 fix 가 대상 상자로 바꾼다)
+  0초 빨간 원 = 물건        hook_object()  — R3(사장님 10-19 "처음에 빨간원 얼굴에 하지말고"): 물건 상자(손 상자 | 제미나이 무료 키풀 object_box)
+                              → 추적 → 원 중심 = 물건 가운데. 얼굴 상자(YuNet)와 원판이 겹치면 거절(ValueError). hook_circle(얼굴)은 옛 크롭 계산용으로만 남김
+  대상 꾸밈 자리           on_target()    — 끝점(fx.tip_offset)이 대상 상자 가장자리에 닿게. 자막 띠 덮음·창 밖이면 drop(억지로 안 둠, R4)
+  대상 따라가기            track_box()    — 정규 상관 템플릿(물건) / NanoDet 연속(사람), 신뢰도 → 렌더 fx.hit_report 가 적중 검사
+  대상 재는 화면           cut_canvas()   — 렌더와 같은 narr_video.shot_clip 으로 컷을 그려 잰다(src_crop·세로 영상·그림 move 다 같은 길, 좌표 = 완성본)
 
     PYTHONUTF8=1 py tools/calcopy/shark/fx_place.py <편 폴더> <작업 폴더> [--write]   # 제안 표 + 1차 완성본 그 시각 프레임 시트(<작업>/fx_place.jpg)
-    PYTHONUTF8=1 py tools/calcopy/shark/fx_place.py fix <편 폴더> [직전 render_info.json]   # 0초 원(얼굴)·대상 꾸밈 자리를 계산해 재료.json 에 씀
+    PYTHONUTF8=1 py tools/calcopy/shark/fx_place.py fix <편 폴더> <--tts-only render_info.json>   # 물건 원·대상 꾸밈 자리·길을 계산해 재료.json 에 씀
 """
 from __future__ import annotations
 
@@ -20,6 +19,8 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
@@ -187,177 +188,399 @@ def hook_circle(src: Path, ss: float, dur: float, old_crop=None, old_at=None) ->
             "why": f"얼굴 검출(YuNet {len(picks)}프레임) 얼굴 높이 {fh:.0f}px×{s:.3f} = 창 폭 {fh_win:.2f} · 원 중심 = 얼굴 가운데·눈+{used_dy}fh", "eye_dy_fh": used_dy}
 
 
-# ── 대상 꾸밈 = 대상 상자 → 벤치 비율 ─────────────────────────────────────
-def on_target(kind: str, box: list) -> dict:
-    """(판단 주인: 대상 꾸밈 자리) box = 완성본 좌표 [x0,y0,x1,y1](무엇을 가리킬지 = 사람이 고름) → {at, radius?} (벤치 QMJ 실측 비율).
-      점선 원  : 중심 = 상자 가운데, 반지름 = 상자 반대각선 × target_pad (r_range 안) — QMJ 9.3 자루를 통째로 감쌈
-      초록 ↓   : 화살 끝 = 상자 위 끝 + 0.17×상자 높이(자루 윗부분에 꽂힘, QMJ 0.8 끝 y811·자루 위 673·자루 높이 ~800), 가로 = 상자 가운데
-      빨간 곡선 : 화살 끝(틀 0.87,0.03) = 상자 왼쪽 아래 1/3 지점(QMJ 20.45 끝이 자루 아래 가장자리를 찌름)"""
-    E = rules()["effects"]
+# ── 대상 꾸밈 = 대상 상자 → 끝점이 상자 가장자리에 닿게(R4) ─────────────────
+CAP_BAND = (880, 1030)   # 자막 띠(한 줄 929~988·두 줄 895~1022) — 화살표가 자막을 덮으면 대상을 못 가리킨다(벤치 화살표도 자막을 안 덮음)
+
+
+def on_target(kind: str, box: list, avoid_caption: bool = True) -> dict:
+    """(판단 주인: 대상 꾸밈 자리) box = 완성본 좌표 [x0,y0,x1,y1] → {at, radius?} 또는 {drop: 이유}.
+    끝점(fx.tip_offset)이 상자 가장자리에 정확히 닿는다(tip_gap_px 만큼 안쪽):
+      초록 ↓   : 끝 = 상자 위 변 가운데 · 분홍 ↑ : 끝 = 상자 아래 변 가운데 · 빨간 곡선 : 끝 = 아래 변 왼쪽 1/3(찌르기가 상자 안으로)
+      점선 원  : 중심 = 상자 가운데, 반지름 = 상자 반대각선 × target_pad (r_range 안) — 창 밖이면 줄이거나(r_range 하한까지) 상자 안에서 옮긴다
+    화살표 몸통이 자막 띠를 덮거나 창 밖이면 놓지 않는다(drop) — 억지로 딴 데 두지 않는다(R4). 대상이 자막 자체면(avoid_caption=False) 띠 검사 안 함(끝이 자막 잉크 가장자리)."""
+    from tools.calcopy.shark import fx as FX
+    E = rules()["effects"]; G = rules()["target"]
     x0, y0, x1, y1 = box
     bw, bh = x1 - x0, y1 - y0
     wx, wy, ww, wh = E["window"]
+    gap = G["tip_gap_px"]
     if kind == "dashed_circle":
         o = E["dashed_circle"]
         r = max(o["r_range"][0], min(o["r_range"][1], 0.5 * (bw ** 2 + bh ** 2) ** 0.5 * o["target_pad"]))
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-        rp = r * max(o.get("pop") or [1.0])          # 등장 때 커진 크기까지 창 안(fx.outside 와 같은 상자)
-        m = rp + o["stroke_ratio"] * rp / 2 + 2
-        cx = min(max(cx, wx + m), wx + ww - m); cy = min(max(cy, wy + m), wy + wh - m)
+        k = max(o.get("pop") or [1.0]) * (1 + o["stroke_ratio"] / 2)
+        room = min(cx - wx, wx + ww - cx, cy - wy, wy + wh - cy) - 2
+        if r * k > room:                                  # 줄인다(하한까지) → 그래도 넘치면 상자 안에서 창 안쪽으로 옮긴다
+            r = max(o["r_range"][0], room / k)
+            m = r * k + 2
+            cx2 = min(max(cx, wx + m), wx + ww - m); cy2 = min(max(cy, wy + m), wy + wh - m)
+            if not (x0 <= cx2 <= x1 and y0 <= cy2 <= y1):
+                return {"drop": f"점선 원이 창 안에 안 들어감(대상 상자 {box}, 반지름 {r:.0f})"}
+            cx, cy = cx2, cy2
         return {"at": [int(round(cx)), int(round(cy))], "radius": int(round(r))}
+    if kind not in FX.ARROWS:
+        raise ValueError(f"대상 자리 규칙 없음: {kind}")
+    o = E[kind]
     if kind == "arrow_green_down":
-        o = E["arrow_green_down"]
-        tip_y = y0 + 0.17 * bh
-        cy = tip_y - o["h"] / 2
-        cy = max(cy, wy + o["h"] / 2 + o["bob_px"] + 30)
-        cap0, cap1 = 880, 1030          # 자막 띠(한 줄 929~988·두 줄 895~1022) — 벤치 화살표는 자막을 안 덮는다(QMJ 614~811, 자막 위)
-        if cy + o["h"] / 2 + o["bob_px"] > cap0 and cy - o["h"] / 2 - o["bob_px"] < cap1:
-            cy = cap1 + o["bob_px"] + 5 + o["h"] / 2 if tip_y > (cap0 + cap1) / 2 else cap0 - o["bob_px"] - 5 - o["h"] / 2
-        return {"at": [int(round((x0 + x1) / 2)), int(round(cy))]}
-    if kind == "arrow_curve_red":
-        o = E["arrow_curve_red"]
-        tx, ty = x0 + bw / 3, y1
-        ax, ay = tx - (0.87 - 0.5) * o["w"], ty - (0.03 - 0.5) * o["h"]
-        m = o["poke_px"] / 2 ** 0.5 + 2           # 찌르기 폭까지 창 안(fx.outside 와 같은 상자)
-        ax = min(max(ax, wx + o["w"] / 2 + m), wx + ww - o["w"] / 2 - m)
-        ay = min(max(ay, wy + o["h"] / 2 + m), wy + wh - o["h"] / 2 - m)
-        return {"at": [int(round(ax)), int(round(ay))]}
-    raise ValueError(f"대상 자리 규칙 없음: {kind}")
+        tip = ((x0 + x1) / 2, y0 + gap)
+    elif kind == "arrow_pink_up":
+        tip = ((x0 + x1) / 2, y1 - gap)
+    else:
+        tip = (x0 + bw / 3, y1 - gap)
+    tx, ty = FX.tip_offset(kind)
+    at = [tip[0] - tx, tip[1] - ty]
+    mx = o.get("poke_px", 0) / 2 ** 0.5
+    my = o.get("bob_px", 0) + mx
+    ax0, ax1 = at[0] - o["w"] / 2 - mx, at[0] + o["w"] / 2 + mx
+    ay0, ay1 = at[1] - o["h"] / 2 - my, at[1] + o["h"] / 2 + my
+    if ax0 < wx or ax1 > wx + ww or ay0 < wy or ay1 > wy + wh:
+        return {"drop": f"{kind} 몸통이 창 밖(끝 {tip[0]:.0f},{tip[1]:.0f}) — 대상이 창 가장자리"}
+    if avoid_caption and ay1 > CAP_BAND[0] and ay0 < CAP_BAND[1]:
+        return {"drop": f"{kind} 몸통이 자막 띠({CAP_BAND})를 덮음 — 대상 상자 {box}"}
+    return {"at": [int(round(at[0])), int(round(at[1]))]}
+
+
+# ── 완성본 화면 = 렌더와 같은 길(narr_video.shot_clip)로 그린 컷 캔버스 ──────────
+WINDOW = {"x": 0, "y": 434, "w": 1080, "h": 1052}   # 캔버스 창 top = (1920−1052)/2 = 434 = 완성본 창 y → 캔버스 좌표 = 완성본 좌표
+
+
+def _cut_at(info: dict, t: float) -> dict:
+    return next(c for c in info["cuts"] if not c.get("dropped") and c["t0"] <= t < c["t1"])
+
+
+def cut_canvas(info: dict, cand: Path, c: dict) -> Path:
+    """(판단 주인: 효과 대상 재기용 화면) 컷 하나를 렌더와 **같은 함수**(narr_video.shot_clip: src_crop·ar·fit·move·그림 파일)로 1080×1920 캔버스 mp4 로.
+    소스 좌표 바꾸기를 따로 계산하지 않는다(그림 움직임·세로 영상·박힌 자막 crop 이 다 같은 길) — 결과 좌표 = 완성본 좌표."""
+    from tools.calcopy import narr_video as nv
+    d = Path(info.get("_dir") or Path(info.get("narr_placed", ".")).parent) / "fxcut"
+    d.mkdir(parents=True, exist_ok=True)
+    key = f"{Path(c['src']).stem}_{c['ss']}_{c['dur']}_{'-'.join(map(str, c.get('src_crop') or []))}_{c.get('ar')}_{c.get('fit')}_{json.dumps(c.get('move'))}"
+    out = d / (re.sub(r"[^0-9A-Za-z_.-]", "_", key)[:120] + ".mp4")
+    if not out.exists():
+        nv.shot_clip(cand / c["src"], c["ss"], c["dur"], WINDOW, 750, True, out, c.get("ar"), None, c.get("fit") or "cover", 0,
+                     c.get("src_crop"), bool(c.get("loop")), True, None, None, c.get("move"))
+    return out
+
+
+def canvas_frames(info: dict, cand: Path, t0: float, t1: float, fps: float) -> tuple[list[float], np.ndarray, dict]:
+    """완성본 [t0, min(t1, 컷 끝)) 을 fps 로 — (시각들, 프레임 (n,1920,1080,3) 반 크기 아님, 컷)."""
+    c = _cut_at(info, t0)
+    t1 = min(t1, c["t1"] - 1e-3)
+    p = cut_canvas(info, cand, c)
+    a = t0 - c["t0"]
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{max(0.04, t1 - t0):.3f}", "-i", str(p), "-vf", f"fps={fps}",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, check=True).stdout
+    n = len(raw) // (1080 * 1920 * 3)
+    fr = np.frombuffer(raw[:n * 1080 * 1920 * 3], np.uint8).reshape(n, 1920, 1080, 3)
+    return [round(t0 + k / fps, 3) for k in range(n)], fr, c
 
 
 def _final_frame(info: dict, cand: Path, t: float):
-    """완성본 시각 t 의 소스 프레임 + 소스→완성본 좌표 바꾸기(직전 렌더/--tts-only render_info 컷의 소스·초·크롭)."""
+    """완성본 시각 t 의 화면(캔버스 = 완성본 좌표) — (rgb, to_final(항등), inside(창 안), 컷)."""
+    _, fr, c = canvas_frames(info, cand, t, t + 0.05, 30)
     E = rules()["effects"]; wx, wy, ww, wh = E["window"]
-    c = next(c for c in info["cuts"] if not c.get("dropped") and c["t0"] <= t < c["t1"])
-    a, W, H = _src_frame(cand / c["src"], c["ss"] + (t - c["t0"]))
-    x0, y0, cw, ch = c.get("src_crop") or [0, 0, W, H]
-    sc = max(ww / cw, wh / ch)
-    ox, oy = x0 + (cw - ww / sc) / 2, y0 + (ch - wh / sc) / 2
-
-    def to_final(bx0, by0, bx1, by1):
-        return [round((bx0 - ox) * sc + wx), round((by0 - oy) * sc + wy), round((bx1 - ox) * sc + wx), round((by1 - oy) * sc + wy)]
-    inside = lambda x, y: ox <= x <= ox + ww / sc and oy <= y <= oy + wh / sc
-    return a, to_final, inside, c
+    return fr[0], (lambda a, b, c_, d: [round(a), round(b), round(c_), round(d)]), (lambda x, y: wx <= x <= wx + ww and wy <= y <= wy + wh), c
 
 
 def scene_end(info: dict, cand: Path, t0: float, t1: float, th: float = 0.3) -> float:
     """완성본 [t0,t1) 안에서 화면이 처음 바뀌는 시각(컷 경계 또는 한 컷 안 원본 편집 경계, ffmpeg scene>th). 없으면 t1.
-    점선 원은 장면과 같이 사라진다(벤치) — 렌더 컷 하나 안에 방송 편집 경계가 있으면 거기서 끊어야 다음 장면에 원이 남지 않는다(6편 L4)."""
-    c = next(c for c in info["cuts"] if not c.get("dropped") and c["t0"] <= t0 < c["t1"])
+    꾸밈은 장면과 같이 사라진다(벤치) — 렌더 컷 하나 안에 방송 편집 경계가 있으면 거기서 끊어야 다음 장면에 꾸밈이 남지 않는다(6편 L4)."""
+    c = _cut_at(info, t0)
     t1 = min(t1, c["t1"])
-    a = c["ss"] + (t0 - c["t0"])
-    r = subprocess.run(["ffmpeg", "-hide_banner", "-ss", f"{a:.3f}", "-t", f"{t1 - t0:.3f}", "-i", str(cand / c["src"]), "-vf",
+    p = cut_canvas(info, cand, c)
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-ss", f"{t0 - c['t0']:.3f}", "-t", f"{t1 - t0:.3f}", "-i", str(p), "-vf",
                         f"select='gt(scene,{th})',showinfo", "-an", "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
-    ts = [float(x) for x in re.findall(r"pts_time:([0-9.]+)", r.stderr)]
+    ts = [float(x) for x in re.findall(r"pts_time:([0-9.]+)", r.stderr) if float(x) > 0.02]
     return round(t0 + ts[0], 3) if ts else t1
 
 
-def final_face(info: dict, cand: Path, t: float) -> list:
-    """완성본 시각 t 의 창 안 머리 상자 [x0,y0,x1,y1](완성본 좌표, YuNet 상자 위로 0.35fh = 정수리)."""
+def face_boxes(rgb: np.ndarray) -> list[list]:
+    """완성본 프레임의 창 안 얼굴 상자들 [x0,y0,x1,y1](YuNet = cv2.FaceDetectorYN, 위로 0.35fh = 정수리까지)."""
     from tools.calcopy.shark import fx_measure as FM
-    a, to_final, inside, _ = _final_frame(info, cand, t)
-    fs = [f for f in FM.faces(a) if inside(f["cx"], f["cy"])]
+    E = rules()["effects"]; wx, wy, ww, wh = E["window"]
+    out = []
+    for f in FM.faces(rgb):
+        if wx <= f["cx"] <= wx + ww and wy <= f["cy"] <= wy + wh:
+            out.append([f["x"], f["y"] - 0.35 * f["h"], f["x"] + f["w"], f["y"] + f["h"]])
+    return out
+
+
+def final_face(info: dict, cand: Path, t: float) -> list:
+    """완성본 시각 t 의 창 안 머리 상자 [x0,y0,x1,y1]."""
+    a, _, _, _ = _final_frame(info, cand, t)
+    fs = face_boxes(a)
     if not fs:
         raise ValueError(f"얼굴 없음 t={t}")
-    f = fs[0]
-    return to_final(f["x"], f["y"] - 0.35 * f["h"], f["x"] + f["w"], f["y"] + f["h"])
+    return [round(v) for v in fs[0]]
+
+
+def _iou(a, b):
+    ix = max(0, min(a[2], b[2]) - max(a[0], b[0])); iy = max(0, min(a[3], b[3]) - max(a[1], b[1]))
+    u = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - ix * iy
+    return ix * iy / max(1, u)
 
 
 def final_person(info: dict, cand: Path, t0: float, t1: float) -> list:
     """완성본 [t0,t1) 동안 창 안에 계속 있는 사람 상자(NanoDet 'person') — 세 시각에서 겹침(IoU) 합이 가장 큰 사람(같으면 큰 사람).
     벤치 점선 원 = 불편을 겪는 사람(QMJ 9.3 허리 숙인 작업자)을 감싼다(페이블 10-18)."""
     from tools.calcopy.shark import fx_measure as FM
-    ts = [t0 + 0.05, (t0 + t1) / 2, max(t0 + 0.05, t1 - 0.1)]
+    E = rules()["effects"]; wx, wy, ww, wh = E["window"]
     sets = []
-    for t in ts:
-        a, to_final, inside, _ = _final_frame(info, cand, t)
-        sets.append([to_final(p["x0"], p["y0"], p["x1"], p["y1"]) for p in FM.persons(a) if inside((p["x0"] + p["x1"]) / 2, (p["y0"] + p["y1"]) / 2)])
+    for t in [t0 + 0.05, (t0 + t1) / 2, max(t0 + 0.05, t1 - 0.1)]:
+        a, _, inside, _ = _final_frame(info, cand, t)
+        sets.append([[p["x0"], p["y0"], p["x1"], p["y1"]] for p in FM.persons(a) if inside((p["x0"] + p["x1"]) / 2, (p["y0"] + p["y1"]) / 2)])
     if not sets[0]:
         raise ValueError(f"사람 없음 t={t0}")
 
-    def iou(a, b):
-        ix = max(0, min(a[2], b[2]) - max(a[0], b[0])); iy = max(0, min(a[3], b[3]) - max(a[1], b[1]))
-        u = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - ix * iy
-        return ix * iy / max(1, u)
-    E = rules()["effects"]; wx, wy, ww, wh = E["window"]
     def score(b):
-        st = sum(max([iou(b, o) for o in S] or [0]) for S in sets[1:])
+        st = sum(max([_iou(b, o) for o in S] or [0]) for S in sets[1:])
         area = (min(b[2], wx + ww) - max(b[0], wx)) * (min(b[3], wy + wh) - max(b[1], wy)) / (ww * wh)
         return st + 0.5 * area
     best = max(sets[0], key=score)
-    return [max(wx, best[0]), max(wy, best[1]), min(wx + ww, best[2]), min(wy + wh, best[3])]
+    return [round(max(wx, best[0])), round(max(wy, best[1])), round(min(wx + ww, best[2])), round(min(wy + wh, best[3]))]
 
 
-def track_person(info: dict, cand: Path, box: list, t0: float, t1: float, n: int = 13) -> list:
-    """고른 사람 상자를 [t0,t1) 동안 따라간 중심 [[t−t0, cx, cy], …](완성본 좌표) — 매 시각 앞 상자와 가장 많이 겹치는 사람."""
+def object_box(rgb: np.ndarray, what: str) -> tuple[list | None, str]:
+    """(판단 주인: 물건 상자) 완성본 프레임 창에서 '무엇'의 상자 — 제미나이 무료 키풀(engine/gemini_free.ask, 버텍스 0).
+    반환 ([x0,y0,x1,y1] 완성본 좌표 | None, 까닭). 못 찾음·확신 낮음·상자가 창의 60% 넘게 = None(확실할 때만, R4)."""
+    import io
+    from PIL import Image
+    from tools.calcopy.engine import gemini_free as GF
+    E = rules()["effects"]; wx, wy, ww, wh = E["window"]
+    win = Image.fromarray(rgb[wy:wy + wh, wx:wx + ww])
+    buf = io.BytesIO(); win.save(buf, "JPEG", quality=90)
+    prompt = (f"In this video frame, find exactly this object: \"{what}\". "
+              "Return JSON {\"found\": true|false, \"box_2d\": [ymin, xmin, ymax, xmax] normalized 0-1000 tightly around the whole object, "
+              "\"label\": short name of what you boxed, \"confidence\": 0..1}. If it is not clearly visible, found=false. Do not box a person's face unless asked.")
+    d, err = GF.ask([buf.getvalue()], prompt, tag="shark_object_box")
+    if d is None:
+        return None, f"제미나이 실패 {err}"
+    model = d.get("_model")
+    if isinstance(d.get("items"), list) and d["items"]:
+        d = d["items"][0]
+    if d.get("found") is False or not d.get("box_2d") or len(d["box_2d"]) != 4 or float(d.get("confidence") or 0.7) < 0.6:   # 3.x 는 found·confidence 를 빼고 상자만 줄 때가 있다(10-19 실측)
+        return None, f"제미나이: 못 찾음/확신 낮음 {json.dumps({k: d.get(k) for k in ('found', 'confidence', 'label')}, ensure_ascii=False)}"
+    y0, x0, y1, x1 = (float(v) for v in d["box_2d"])
+    b = [wx + x0 / 1000 * ww, wy + y0 / 1000 * wh, wx + x1 / 1000 * ww, wy + y1 / 1000 * wh]
+    if (b[2] - b[0]) * (b[3] - b[1]) > 0.6 * ww * wh or b[2] - b[0] < 20 or b[3] - b[1] < 20:
+        return None, f"제미나이 상자 크기 이상 {b}"
+    return [round(v) for v in b], f"제미나이 {model} '{d.get('label')}' 확신 {d.get('confidence')}"
+
+
+def caption_box(S: dict, info: dict, t: float) -> list | None:
+    """완성본 시각 t 의 자막 잉크 상자(강조 색 덩어리가 있으면 그 덩어리) — 숫자 자막을 가리키는 분홍 ↑ 대상. 우리가 그린 자막이라 추적 불필요."""
+    from tools.calcopy.shark import caption_style as CS, fx as FX
+    c = next((c for c in info["captions"] if c["t0"] <= t < c["t1"]), None)
+    if c is None:
+        return None
+    em = [dict(x) for x in FX.emph_for(S, c["line"], c["text"])]
+    im = np.array(CS.caption_image(c["text"], em, c.get("style") == "원음반응"))
+    a = im[..., 3] > 200
+    col = a & ((im[..., :3].astype(int).min(axis=2)) < 200)       # 흰 글자 아닌 색 글자
+    m = col if col.sum() > 200 else a
+    ys, xs = np.nonzero(m)
+    return [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())] if len(xs) else None
+
+
+def track_box(info: dict, cand: Path, box: list, t0: float, t1: float, how: str = "template") -> dict:
+    """(판단 주인: 대상 따라가기) 완성본 [t0,t1) 동안 대상 상자의 길. cv2 5.0(contrib 없음 → CSRT·KCF 없음)이라
+      template = 첫 프레임 상자 그림을 다음 프레임마다 주변(search_frac)에서 정규 상관(TM_CCOEFF_NORMED)으로 찾음, 신뢰도 = 첫 그림과의 상관 최솟값
+      detect   = 프레임마다 NanoDet 사람 중 앞 상자와 가장 겹치는 것(IoU>0.3), 신뢰도 = 잡힌 프레임 비율
+    반환 {path: [[t−t0, x0,y0,x1,y1], …](3점 평균), conf, how, t_end}."""
+    import cv2
     from tools.calcopy.shark import fx_measure as FM
-    def iou(a, b):
-        ix = max(0, min(a[2], b[2]) - max(a[0], b[0])); iy = max(0, min(a[3], b[3]) - max(a[1], b[1]))
-        u = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - ix * iy
-        return ix * iy / max(1, u)
-    out, cur = [], box
-    for k in range(n):
-        t = t0 + (t1 - t0 - 0.05) * k / (n - 1)
-        a, to_final, inside, _ = _final_frame(info, cand, t)
-        ps = [to_final(q["x0"], q["y0"], q["x1"], q["y1"]) for q in FM.persons(a)]
-        if ps:
-            b = max(ps, key=lambda b: iou(b, cur))
-            if iou(b, cur) > 0.2:
+    G = rules()["target"]
+    ts, fr, c = canvas_frames(info, cand, t0, t1, G["track_fps"])
+    cur = [float(v) for v in box]
+    path, confs = [], []
+    if how == "template":
+        g0 = cv2.cvtColor(np.ascontiguousarray(fr[0]), cv2.COLOR_RGB2GRAY)
+        x0, y0, x1, y1 = (int(round(v)) for v in cur)
+        x0, y0 = max(0, x0), max(0, y0); x1, y1 = min(1080, x1), min(1920, y1)
+        tpl = g0[y0:y1, x0:x1]
+        tw, th = x1 - x0, y1 - y0
+        cur = [x0, y0, x1, y1]
+        for k, t in enumerate(ts):
+            if k:
+                g = cv2.cvtColor(np.ascontiguousarray(fr[k]), cv2.COLOR_RGB2GRAY)
+                m = int(G["search_frac"] * max(tw, th))
+                sx0, sy0 = max(0, int(cur[0]) - m), max(0, int(cur[1]) - m)
+                sx1, sy1 = min(1080, int(cur[2]) + m), min(1920, int(cur[3]) + m)
+                reg = g[sy0:sy1, sx0:sx1]
+                if reg.shape[0] < th or reg.shape[1] < tw:
+                    confs.append(0.0); path.append([round(t - t0, 3), *cur]); continue
+                r = cv2.matchTemplate(reg, tpl, cv2.TM_CCOEFF_NORMED)
+                _, mv, _, ml = cv2.minMaxLoc(r)
+                cur = [sx0 + ml[0], sy0 + ml[1], sx0 + ml[0] + tw, sy0 + ml[1] + th]
+                confs.append(float(mv))
+            path.append([round(t - t0, 3), *cur])
+    else:
+        for k, t in enumerate(ts):
+            ps = [[q["x0"], q["y0"], q["x1"], q["y1"]] for q in FM.persons(fr[k])]
+            b = max(ps, key=lambda b: _iou(b, cur)) if ps else None
+            ok = b is not None and _iou(b, cur) > 0.3
+            if ok:
                 cur = b
-        out.append([round(t - t0, 3), round((cur[0] + cur[2]) / 2), round((cur[1] + cur[3]) / 2)])
-    sm = []   # 검출 흔들림을 3점 평균으로 펴서(원이 떨지 않게)
-    for k in range(len(out)):
-        w = out[max(0, k - 1):k + 2]
-        sm.append([out[k][0], round(sum(x[1] for x in w) / len(w)), round(sum(x[2] for x in w) / len(w))])
-    return sm
+            if k:
+                confs.append(1.0 if ok else 0.0)
+            path.append([round(t - t0, 3), *cur])
+    sm = []
+    for k in range(len(path)):
+        w = path[max(0, k - 1):k + 2]
+        sm.append([path[k][0]] + [round(sum(x[i] for x in w) / len(w), 1) for i in range(1, 5)])
+    conf = (min(confs) if how == "template" else sum(confs) / len(confs)) if confs else 1.0
+    return {"path": sm, "conf": round(conf, 3), "how": how, "t_end": round(ts[-1] + 1 / G["track_fps"], 3) if ts else t1, "cut": c["i"]}
+
+
+def _disk_box(cx, cy, r, b) -> bool:
+    """원판(cx,cy,r)과 상자 b 가 겹치나."""
+    dx = max(b[0] - cx, 0, cx - b[2]); dy = max(b[1] - cy, 0, cy - b[3])
+    return dx * dx + dy * dy < r * r
+
+
+def hook_object(info: dict, cand: Path, e: dict, t0: float, t1: float) -> dict:
+    """(판단 주인: 0초 빨간 원 = 물건, R3) 물건 상자(손 상자 e.target 목록 | 제미나이 e.target_what) → 추적 → 원 중심 = 상자 가운데,
+    크기 = 긴 변 × object.pad(size_range 안). ★얼굴 검사: 원 시간 안 face_check_frames 장의 YuNet 얼굴 상자와 원판이 겹치면 ValueError(거절).
+    반환 e 에 넣을 값 {at, size, how:'object', face_clear, target_box, target_path, track, track_conf, why}."""
+    E = rules()["effects"]; O = E["red_circle"]["object"]
+    a, _, _, _ = _final_frame(info, cand, t0 + 0.05)
+    box = e["target"] if isinstance(e.get("target"), list) else None      # 손 상자 = target 에 [x0,y0,x1,y1](target_box 는 계산 결과 칸)
+    why = "손 상자(재료 target)"
+    if box is None:
+        if not e.get("target_what"):
+            raise ValueError(f"{e['line']} red_circle: 물건 이름(target_what) 또는 상자(target_box) 필요 — 얼굴 원 금지(R3)")
+        box, why = object_box(a, e["target_what"])
+        if box is None:
+            raise ValueError(f"{e['line']} red_circle 물건 '{e['target_what']}' 못 잡음: {why} → 다른 컷 또는 손 상자")
+    tr = track_box(info, cand, box, t0, t1)
+    sw = float(e.get("stroke") or E["red_circle"]["stroke"])
+    bw, bh = box[2] - box[0], box[3] - box[1]
+    size = int(round(min(O["size_range"][1], max(O["size_range"][0], max(bw, bh) * O["pad"] + sw))))
+    track = [[p[0], round((p[1] + p[3]) / 2), round((p[2] + p[4]) / 2)] for p in tr["path"]]
+    wx, wy, ww, wh = E["window"]
+    room = min(min(x - wx, wx + ww - x, y - wy, wy + wh - y) for _, x, y in track) - 2
+    size = int(min(size, 2 * room))          # 원 전체가 창 안(fx.outside 와 같은 상자) — 줄여서 물건을 못 감싸면 렌더 적중 검사(circle_r_min_frac)가 뺀다
+    r = size / 2
+    n = O["face_check_frames"]
+    hits = []
+    for k in range(n):
+        tt = t0 + 0.05 + (min(t1, tr["t_end"]) - t0 - 0.1) * k / max(1, n - 1)
+        fa, _, _, _ = _final_frame(info, cand, tt)
+        from tools.calcopy.shark import fx as FX
+        cx, cy = FX.track_at(track, tt - t0)
+        for fb in face_boxes(fa):
+            if _disk_box(cx, cy, r, fb):
+                hits.append((round(tt, 2), [round(v) for v in fb]))
+    if hits:
+        raise ValueError(f"{e['line']} red_circle 거절(R3): 원(중심 {track[0][1:]}, 반지름 {r:.0f})이 얼굴 상자와 겹침 {hits} → 다른 물건·컷")
+    moved = max(abs(p[1] - track[0][1]) + abs(p[2] - track[0][2]) for p in track)
+    return {"at": track[0][1:], "size": size, "how": "object", "face_clear": True, "target_box": [round(v) for v in box],
+            "target_path": tr["path"], "track": track if moved > 4 else None, "track_conf": tr["conf"], "track_how": tr["how"],
+            "why_target": f"{why} · 추적 {tr['how']} 신뢰 {tr['conf']} · 얼굴 {n}프레임 겹침 0"}
 
 
 def fix(doc: Path, info: dict | None = None) -> list[str]:
-    """재료.json: 0초 빨간 원 → hook_circle(첫 컷 크롭·자리), target 있는 꾸밈 → on_target(target='face' 면 직전 렌더 컷으로 머리 상자를 잼). 쓴 내용 줄 목록."""
+    """재료.json effects 의 대상·자리·길을 계산해 쓴다(R3·R4). 직전 --tts-only render_info(실제 컷 시각)가 필요하다.
+      red_circle         → hook_object(물건, 얼굴 겹침 거절)
+      target 있는 꾸밈   → 대상 상자(list=손 상자 | 'person' NanoDet | 'face' | 'object'+target_what 제미나이 | 'caption' 자막 잉크)
+                          → track_box(컷·장면 끝까지) → on_target(끝점이 상자 가장자리) → track(꾸밈 길) · 못 맞추면 e.drop = 이유
+      이모지             → 얼굴 가림 비율(face_cover)
+    적중 판정 자체는 렌더(fx.hit_report)가 한다 — 여기선 값만 적는다."""
+    from tools.calcopy.shark import fx as FX
     p = doc / "재료.json"
     M = json.loads(p.read_text(encoding="utf-8"))
+    S = json.loads((doc / "대본.json").read_text(encoding="utf-8"))
     cand = Path(M["cand_dir"])
+    if not info:
+        raise ValueError("fix 는 render_info(--tts-only 로 만든 실제 컷 시각)가 필요")
     log = []
-    li = {x["id"]: x for x in (info or {}).get("lines", [])}
+    li = {x["id"]: x for x in info["lines"]}
     for e in M["effects"]:
-        if e["kind"] == "red_circle":
-            sh = next(s for s in M["shots"] if s["line"] == e["line"])
-            r = hook_circle(cand / sh["src"], float(sh["ss"]), float(sh["dur"]), sh.get("src_crop"), e.get("at"))
-            sh["src_crop"] = r["src_crop"]; sh["scale"] = r["scale"]
-            sh["why_crop"] = "fx_place.hook_circle: " + r["why"]
-            for k in ("stroke",):
-                e.pop(k, None)
-            e.update({"at": r["at"], "size": r["size"], "how": "face", "face_src": r["face_src"], "fh_win": r["fh_win"]})
-            log.append(f"{e['line']} red_circle at {r['at']} crop {r['src_crop']} 얼굴/창 {r['fh_win']}")
-        elif e.get("target"):
-            box = e["target"]
-            if box in ("face", "person"):
-                if not info:
-                    raise ValueError("target face/person 은 render_info(--tts-only 로 만든 실제 컷 시각)가 필요")
-                t = li[e["line"]]["t0"] + (e.get("t") or [0.0])[0]
-                c = next(c for c in info["cuts"] if not c.get("dropped") and c["t0"] <= t + 0.2 < c["t1"])
-                t_end = min(c["t1"], li[e["line"]]["t0"] + (e.get("t") or [0, 9])[1])
-                if e["kind"] == "dashed_circle":
-                    t_end = scene_end(info, cand, t + 0.05, t_end)
-                    e["t"] = [e["t"][0], round(t_end - li[e["line"]]["t0"], 3)]
-                box = final_face(info, cand, t + 0.2) if box == "face" else final_person(info, cand, t + 0.1, t_end)
-                e["target_box"] = box
-            r = on_target(e["kind"], box)
-            e.update(r); e["how"] = "target"
-            e.pop("track", None)
-            if e["kind"] == "dashed_circle" and e["target"] == "person":
-                # 벤치 점선 원은 대상이 가만있어 중심 고정(≤2.5px). 우리 대상이 움직이면(반지름 0.2 넘게) 원이 사람을 따라간다
-                tr = track_person(info, cand, box, t + 0.1, t_end)
-                mv = max(((x - tr[0][1]) ** 2 + (y - tr[0][2]) ** 2) ** 0.5 for _, x, y in tr)
-                if mv > 0.2 * r["radius"]:
-                    E_ = rules()["effects"]; wx, wy, ww, wh = E_["window"]
-                    rp = r["radius"] * max(E_["dashed_circle"].get("pop") or [1.0])
-                    m = rp + E_["dashed_circle"]["stroke_ratio"] * rp / 2 + 2
-                    dx0, dy0 = r["at"][0] - tr[0][1], r["at"][1] - tr[0][2]
-                    e["track"] = [[round(tt + 0.1 - (e["t"][0] - (t - li[e["line"]]["t0"])), 3),
-                                   int(min(max(x + dx0, wx + m), wx + ww - m)), int(min(max(y + dy0, wy + m), wy + wh - m))] for tt, x, y in tr]
-                    r["track_move_px"] = round(mv)
-            log.append(f"{e['line']} {e['kind']} 대상 {e['target']} → {r}")
+        for k in ("drop", "track", "target_path", "target_box", "track_conf", "track_how", "face_cover", "face_clear", "why_target"):
+            e.pop(k, None)
+        if e["kind"] == "flash" or e["line"] not in li:
+            continue
+        L0 = li[e["line"]]["t0"]
+        tt = e.get("t") or [0.0, li[e["line"]]["t1"] - L0]
+        t0 = L0 + tt[0]
+        c = _cut_at(info, t0 + 0.02)
+        t1 = min(L0 + tt[1], c["t1"])
+        try:
+            if e["kind"] == "red_circle":
+                t1 = scene_end(info, cand, t0 + 0.02, t1)
+                r = hook_object(info, cand, e, t0, t1)
+                e.update({k: v for k, v in r.items() if v is not None})
+                e["t"] = [tt[0], round(min(t1, r["target_path"][-1][0] + t0 + 1 / 15) - L0, 3)]
+                log.append(f"{e['line']} red_circle 물건 원 at {r['at']} size {r['size']} — {r['why_target']}")
+                continue
+            if e["kind"] in ("money_emoji", "emoji"):
+                a, _, _, _ = _final_frame(info, cand, (t0 + t1) / 2)
+                w, h = (v - 2 * FX.PAD for v in FX.sprite(e["kind"], FX._key(e)).size)
+                eb = [e["at"][0] - w / 2, e["at"][1] - h / 2, e["at"][0] + w / 2, e["at"][1] + h / 2]
+                cov = 0.0
+                for fb in face_boxes(a):
+                    ix = max(0, min(eb[2], fb[2]) - max(eb[0], fb[0])); iy = max(0, min(eb[3], fb[3]) - max(eb[1], fb[1]))
+                    cov = max(cov, ix * iy / max(1, (fb[2] - fb[0]) * (fb[3] - fb[1])))
+                e["face_cover"] = round(cov, 3)
+                log.append(f"{e['line']} {e['kind']} 얼굴 가림 {cov:.2f}")
+                continue
+            tg = e.get("target")
+            if not tg:
+                e["drop"] = "대상 없음(target) — R4 확실할 때만"
+                log.append(f"{e['line']} {e['kind']} 뺌: 대상 없음"); continue
+            t1 = scene_end(info, cand, t0 + 0.02, t1)
+            how, why = "template", ""
+            if isinstance(tg, list):
+                box, why = tg, "손 상자"
+            elif tg == "person":
+                box, why, how = final_person(info, cand, t0 + 0.05, t1), "NanoDet 사람", "detect"
+            elif tg == "face":
+                box, why = final_face(info, cand, t0 + 0.05), "YuNet 머리"
+            elif tg == "caption":
+                box, why = caption_box(S, info, t0 + 0.05), "자막 잉크(강조 덩어리)"
+                how = None
+            elif tg == "object":
+                a, _, _, _ = _final_frame(info, cand, t0 + 0.05)
+                box, why = object_box(a, e.get("target_what") or "")
+            else:
+                raise ValueError(f"target 모름 {tg}")
+            if box is None:
+                e["drop"] = f"대상 못 잡음: {why}"
+                log.append(f"{e['line']} {e['kind']} 뺌: {e['drop']}"); continue
+            if how:
+                tr = track_box(info, cand, box, t0, t1, how)
+                tp, conf, t_end = tr["path"], tr["conf"], min(t1, t0 + tr["t_end"] - t0)
+            else:
+                tp, conf, t_end = [[0.0, *box]], 1.0, t1
+            r = on_target(e["kind"], box, avoid_caption=tg != "caption")
+            if r.get("drop"):
+                e["drop"] = r["drop"]
+                log.append(f"{e['line']} {e['kind']} 뺌: {r['drop']}"); continue
+            e.update(r)
+            e["target_box"] = [round(v) for v in box]
+            e["target_path"] = tp
+            e["track_conf"] = conf
+            e["track_how"] = how or "static"
+            e["t"] = [tt[0], round(t_end - L0, 3)]
+            if len(tp) > 1:
+                b0 = tp[0]
+                e["track"] = [[q[0], round(e["at"][0] + (q[1] + q[3] - b0[1] - b0[3]) / 2), round(e["at"][1] + (q[2] + q[4] - b0[2] - b0[4]) / 2)] for q in tp]
+                if max(abs(q[1] - e["at"][0]) + abs(q[2] - e["at"][1]) for q in e["track"]) <= 4:
+                    e.pop("track")
+            bad = FX.outside([{**e, "T": [0, 1]}])
+            if bad and e["kind"] == "dashed_circle" and e.get("track"):
+                e.pop("track")                 # 점선 원은 벤치처럼 중심 고정으로 되돌림(상자 안 중심이면 적중)
+                bad = FX.outside([{**e, "T": [0, 1]}])
+            if bad:
+                e["drop"] = f"따라가다 창 밖: {bad}"
+            e["why_target"] = f"{why} · 추적 {e['track_how']} 신뢰 {conf}"
+            log.append(f"{e['line']} {e['kind']} 대상 {tg if not isinstance(tg, list) else '손 상자'} {e['target_box']} → at {e.get('at')} 신뢰 {conf}"
+                       + (f" 뺌: {e['drop']}" if e.get("drop") else ""))
+        except ValueError as er:
+            if e["kind"] == "red_circle":
+                raise
+            e["drop"] = str(er)
+            log.append(f"{e['line']} {e['kind']} 뺌: {er}")
     p.write_text(json.dumps(M, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return log
 
@@ -386,7 +609,10 @@ def sheet(final: Path, info: dict, eff: list[dict], dst: Path):
 
 def main():
     if sys.argv[1] == "fix":
-        info = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8")) if len(sys.argv) > 3 else None
+        info = None
+        if len(sys.argv) > 3:
+            info = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+            info["_dir"] = str(Path(sys.argv[3]).resolve().parent)
         for x in fix(Path(sys.argv[2]), info):
             print(x)
         return

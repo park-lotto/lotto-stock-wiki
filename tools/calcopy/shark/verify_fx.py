@@ -113,7 +113,8 @@ def main():
         if k == "flash":
             on = frame(a.mp4, T0 + 0.05); off = frame(a.mp4, max(0, T0 - 0.1)); aft = frame(a.mp4, T1 + 0.15)
             c = np.array(FLASH_RGB[e["color"]], float)
-            win = lambda f: f[434:434 + 1052].reshape(-1, 3).mean(0)        # 창 안만(위아래 검정·제목 띠 빼고)
+            em = FX._edge_mask(1080, 1052) > 0.5 if E["flash"].get("style") == "edge" else np.ones((1052, 1080), bool)   # R4 가장자리 빛 = 가장자리 띠만 잰다
+            win = lambda f: f[434:434 + 1052][em].mean(0)        # 창 안만(위아래 검정·제목 띠 빼고)
             d_on, d_off, d_aft = (float(np.linalg.norm(win(f) - c)) for f in (on, off, aft))
             # 앞 프레임이 다른 컷(밝은 벽 등)이면 번쩍 전이 오히려 색에 가까울 수 있다(7편 O2 실측) → 번쩍 뒤 같은 샷과도 비교
             ok = d_on < d_off - 15 or d_on < d_aft - 15
@@ -132,21 +133,38 @@ def main():
                 n_on = int(m_on.sum()); n_off = int(m_off.sum())
             new = int((m_on & ~m_off).sum()) if k != "money_emoji" and rgb is not None else n_on   # 전엔 없던 효과 색 = 새로 그려진 것(바탕에 원래 빨강이 있어도)
             ok = new > 800
-            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "at": e["at"], "t_seen": round(tm, 3), "px_on": n_on, "px_before": n_off if off is not None else None, "px_new": new, "ok": bool(ok)})
-        tiles.append((f"{e['line']} {k} {T0:.2f}s", off if k != "flash" else frame(a.mp4, max(0, T0 - 0.1)), on, box))
+            mark = None
+            if e.get("target_path") or e.get("target_box"):   # 그 프레임의 대상 상자·끝점(적중 눈 확인)
+                tp = e.get("target_path") or [[0.0, *e["target_box"]]]
+                p = FX.pose(e, tm)
+                mark = {"box": FX.track_at(tp, tm - T0), "tip": FX.place(e, p)["tip"] if p else None}
+            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "at": e["at"], "t_seen": round(tm, 3), "px_on": n_on, "px_before": n_off if off is not None else None, "px_new": new, "ok": bool(ok),
+                              "hit": (e.get("hit") or {}).get("why"), "target": e.get("target_what") or (e.get("target") if isinstance(e.get("target"), str) else "손 상자" if e.get("target") else None)})
+            if mark:
+                bx = mark["box"]
+                box = (int(max(0, min(box[0], bx[0] - 20))), int(max(0, min(box[1], bx[1] - 20))), int(min(W, max(box[2], bx[2] + 20))), int(min(H, max(box[3], bx[3] + 20))))
+        tiles.append((f"{e['line']} {k} {T0:.2f}s" + (f" -> {out['fx'][-1].get('target')}" if k != "flash" else ""), off if k != "flash" else frame(a.mp4, max(0, T0 - 0.1)), on, box,
+                      mark if k != "flash" else None))
 
     # 시트: 효과마다 [전 | 중] 확대
     from PIL import Image, ImageDraw
     th = 300; rows = []
-    for name, off, on, (x0, y0, x1, y1) in tiles:
+    for name, off, on, (x0, y0, x1, y1), mark in tiles:
         pad = 60; x0, y0, x1, y1 = max(0, x0 - pad), max(0, y0 - pad), min(W, x1 + pad), min(H, y1 + pad)
         ims = []
-        for f in (off, on):
-            im = Image.fromarray(f[y0:y1, x0:x1] if f is not None else np.zeros((y1 - y0, x1 - x0, 3), np.uint8))
+        for j, f in enumerate((off, on)):
+            im = Image.fromarray(f[y0:y1, x0:x1].copy() if f is not None else np.zeros((y1 - y0, x1 - x0, 3), np.uint8))
+            if j == 1 and mark:     # 하늘색 = 대상 상자, 노랑 점 = 그 프레임 효과 끝점(화살표)·중심(원)
+                d = ImageDraw.Draw(im); b = mark["box"]
+                d.rectangle([b[0] - x0, b[1] - y0, b[2] - x0, b[3] - y0], outline=(0, 220, 255), width=4)
+                if mark["tip"]:
+                    tx, ty = mark["tip"][0] - x0, mark["tip"][1] - y0
+                    d.ellipse([tx - 9, ty - 9, tx + 9, ty + 9], fill=(255, 255, 0), outline=(0, 0, 0), width=2)
             ims.append(im.resize((int(im.width * th / im.height), th)))
         row = Image.new("RGB", (ims[0].width + ims[1].width + 10, th + 28), "white")
         row.paste(ims[0], (0, 28)); row.paste(ims[1], (ims[0].width + 10, 28))
-        ImageDraw.Draw(row).text((4, 4), f"{name}   [before | during]", fill="black")
+        from PIL import ImageFont
+        ImageDraw.Draw(row).text((4, 2), f"{name}   [전 | 중]  하늘색=대상 상자 노랑=끝점", fill="black", font=ImageFont.truetype("C:/Windows/Fonts/malgunbd.ttf", 18))
         rows.append(row)
     if rows:
         sw = max(r.width for r in rows); sh = sum(r.height + 6 for r in rows)
@@ -155,7 +173,8 @@ def main():
             S.paste(r, (0, y)); y += r.height + 6
         S.save(a.sheet, quality=85)
     out["sheet"] = a.sheet
-    out["summary"] = {"sfx_ok": f"{sum(s['ok'] for s in out['sfx'])}/{len(out['sfx'])}", "fx_ok": f"{sum(f['ok'] for f in out['fx'])}/{len(out['fx'])}"}
+    out["dropped"] = I.get("fx_dropped") or []
+    out["summary"] = {"dropped": len(out["dropped"]), "sfx_ok": f"{sum(s['ok'] for s in out['sfx'])}/{len(out['sfx'])}", "fx_ok": f"{sum(f['ok'] for f in out['fx'])}/{len(out['fx'])}"}
     print(json.dumps(out, ensure_ascii=False, indent=1))
 
 

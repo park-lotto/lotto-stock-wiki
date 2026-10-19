@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""샥탬스토리 하이브리드 — 앞 = 완성 칼카피 영상 0~cut 초 그대로(후킹), 뒤 = 같은 옷(지훈·샥탬 프리셋·같은 BGM 이어서)의 1인칭 체험 나레 (관제 097, 2026-10-18).
+"""샥탬스토리 하이브리드 — 앞 = 새 엔진으로 다시 렌더한 칼카피 0~cut 초(후킹), 뒤 = 같은 옷(지훈·샥탬 프리셋·같은 BGM 이어서)의 1인칭 체험 나레 (관제 097, 2026-10-18).
 
     PYTHONUTF8=1 py tools/calcopy/shark/hybrid.py <하이브리드 doc 폴더> <작업 폴더> [--plan] [--preview] [--confirm-tts] [--back-only] [--desktop <mp4>]
 
@@ -8,7 +8,12 @@
   --back-only   뒤만 렌더(앞 수리본이 아직 없을 때). 이어 붙이기는 나중에 다시 부르면 뒤 렌더를 재사용
   --confirm-tts 타입캐스트를 처음 부를 때만(페이블 OK 뒤 1회)
 
-판단 주인(여기서 정하는 것은 셋뿐 — 나머지는 shark/render.py 를 부른다):
+  앞 = front_render(): 앞 render_info 의 engine 표식이 지금 엔진(render.ENGINE)과 다르면 앞 칼카피를 새 엔진으로 다시 렌더한다
+        (물건 원·적중 검사·고급 모양·−14 LUFS) — 작업 폴더 <앞 작업>/../엔진v2(또는 hybrid.front_work), 옛 타입캐스트 나레 재사용(--tts-from, 비용 0).
+        옛 완성 mp4(front_src)는 새 판이 없을 때(--old-front)만.
+  뒤 꾸밈 = 뒤 재료.json effects 를 shark/render.py 가 그대로 받는다(대상·적중 검사 같은 길) — 대상 확실한 것만.
+판단 주인(여기서 정하는 것은 넷뿐 — 나머지는 shark/render.py 를 부른다):
+  ⓪ 앞 판 고르기     front_render()
   ① 앞 자르기 시각  front_cut()   — 대본 hybrid.cut(앞 render_info 줄 경계) → 프레임 단위(30fps 안쪽)
   ② BGM 이어 틀기    back_defaults() — 앞 편 BGM 곡(앞 render_info.audio_mix.bgm)을 ①초부터(render.DEF bgm·bgm_ss, 대본엔 안 적는다 = 한 곳)
   ③ 이음 효과        join()        — 앞 마지막 프레임을 늘려 뒤 첫 dur 초와 xfade(제목 띠 keep_top 위는 고정), 소리는 그대로 이어 붙임
@@ -28,14 +33,29 @@ from tools.calcopy.hybrid.common import StageError, dur_of, jload, jsave, lufs, 
 from tools.calcopy.shark import render as SR_  # noqa: E402
 
 FPS = 30
+LIM = 10 ** ((SR_.LOUD["true_peak_max"] - 1.0) / 20)   # 이음 리미터 = 렌더와 같은 목표(rules.json loudness) — 앞·뒤 둘 다 −14 LUFS 로 렌더돼 이음도 같은 크기
 
 
-def front_info(H: dict, doc: Path) -> dict:
+def front_info(H: dict, doc: Path, old: bool = False, plan: bool = False) -> dict:
     fd = (doc / H["front_doc"]).resolve()
     ri = Path(H["front_render_info"])
     if not ri.exists():
         raise StageError(f"앞 render_info 없음 {ri}")
-    return {"doc": fd, "info": jload(ri), "src": Path(H["front_src"])}
+    if old:
+        return {"doc": fd, "info": jload(ri), "src": Path(H["front_src"]), "how": "옛 완성본(--old-front)"}
+    return front_render(H, fd, ri, plan)
+
+
+def front_render(H: dict, fd: Path, ri: Path, plan: bool = False) -> dict:
+    """(판단 주인: 앞 판) 새 엔진(render.ENGINE) 표식이 붙은 앞 렌더가 있으면 그것, 없으면 앞 칼카피를 다시 렌더(옛 나레 재사용)."""
+    fw = Path(H.get("front_work") or ri.parents[2] / "엔진v2")
+    nri = fw / "render" / "render_info.json"
+    if nri.exists() and jload(nri).get("engine") == SR_.ENGINE and (fw / "render" / "final.mp4").exists():
+        return {"doc": fd, "info": jload(nri), "src": fw / "render" / "final.mp4", "how": f"새 엔진 앞(있음) {fw}"}
+    if plan:      # 계획만 — 옛 줄 시각으로 자리만 본다(같은 나레라 줄 시각 같음)
+        return {"doc": fd, "info": jload(ri), "src": Path(H["front_src"]), "how": "계획: 옛 render_info(앞 새 렌더 전)"}
+    info = SR_.render(fd, fw, "render", False, None, None, ri.parent)
+    return {"doc": fd, "info": info, "src": fw / "render" / "final.mp4", "how": f"새 엔진 앞 렌더 {fw} (나레 재사용 {ri.parent})"}
 
 
 def front_cut(H: dict, F: dict, check_src: bool = True) -> dict:
@@ -62,12 +82,16 @@ def back_defaults(F: dict, cut: dict) -> dict:
 
 
 def render_back(doc: Path, work: Path, mode: str, confirm: bool, bd: dict) -> dict:
+    keep = {k: SR_.DEF[k] for k in bd}
     SR_.DEF.update(bd)          # 대본 render 칸이 없으면 이 값(앞과 같은 곡·같은 크기·이어 튼 초)
     S = jload(doc / "대본.json")
     clash = [k for k in bd if k in (S.get("render") or {})]
     if clash:
         raise StageError(f"대본 render 에 {clash} 가 있다 — BGM 은 앞 편에서 정한다(한 곳)")
-    return SR_.render(doc, work, mode, confirm)
+    try:
+        return SR_.render(doc, work, mode, confirm)
+    finally:
+        SR_.DEF.update(keep)      # 앞을 같은 프로세스에서 다시 렌더할 때 뒤 BGM 값이 새지 않게
 
 
 def join(F: dict, cut: dict, back_mp4: Path, tr: dict, R: Path) -> Path:
@@ -84,7 +108,7 @@ def join(F: dict, cut: dict, back_mp4: Path, tr: dict, R: Path) -> Path:
     run(["ffmpeg", "-y", "-i", front, "-i", back, "-filter_complex",
          f"[0:v]tpad=stop_mode=clone:stop_duration={d:.3f},settb=AVTB,fps={FPS},split[f][fb];[fb]crop=1080:{band}:0:0[band];[1:v]settb=AVTB,fps={FPS}[b];"
          f"[f][b]xfade=transition={tr.get('kind', 'slideleft')}:duration={d:.3f}:offset={fdur:.4f}[x];[x][band]overlay=0:0:eof_action=pass,format=yuv420p[v];"
-         "[0:a][1:a]concat=n=2:v=0:a=1,alimiter=limit=0.84:attack=2:release=40:level=false,afade=t=in:d=0.03[a]",   # 이어 붙여 AAC 다시 구우면 최고점이 +0.3 까지 튐(10-18 4편 미리보기) → −1.5 dBFS 로 막음 · 리미터는 첫 몇 ms 를 못 잡아 0초에 +1.3(3편) → 첫 30ms 페이드(10ms 는 12ms 지점이 여전히 깎임)
+         f"[0:a][1:a]concat=n=2:v=0:a=1,alimiter=limit={LIM:.4f}:attack=2:release=40:level=false,afade=t=in:d=0.03[a]",   # 이어 붙여 AAC 다시 구우면 최고점이 튐(10-18 4편 미리보기) → rules loudness 트루피크 −1dB 로 막음(R5 한 곳) · 리미터는 첫 몇 ms 를 못 잡아 0초에 +1.3(3편) → 첫 30ms 페이드
          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-r", FPS, "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "1", final])
     return final
 
@@ -108,7 +132,8 @@ def plan_md(doc: Path, S: dict, F: dict, cut: dict, bd: dict, info: dict) -> Pat
         cs = " / ".join(f"{c['text']}" + (f" [{emph[l['id']][c['text']]}]" if c["text"] in emph.get(l["id"], {}) else "") for c in caps_of.get(l["id"], []))
         sh = " · ".join(f"{Path(c['src']).stem[:8]}@{c['ss']} {c['see']}" for c in info["cuts"] if c["line"] == l["id"] and not c.get("dropped"))
         L.append(f"| {l['id']} | {l.get('fn', '')} | {l['text']} | {cs} | {sh} | {', '.join(l.get('facts') or []) or '창작(감상·사회 반응)'} |")
-    L += ["", "## 효과", "- 이음 자리 화면 효과 1개(위 이음). 뒤 꾸밈(빨간 원·화살표 등) 없음 — 앞 6박자의 효과는 앞에서 끝, 뒤는 자막 낱말 색(shark/emph.py 자동)만.", "",
+    eff = [f"{e['line']} {e['kind']}" + (f" → {e.get('target_what') or e.get('target')}" if e.get("target") else "") for e in jload(doc / "재료.json").get("effects") or []]
+    L += ["", "## 효과", "- 이음 자리 화면 효과 1개(위 이음). 뒤 꾸밈 = 재료 effects(대상 확실한 것만 — 렌더 fx.gate 적중 검사가 미달이면 뺌): " + (", ".join(eff) or "없음"), "",
           "## 근거", *[f"- {k}: {v if isinstance(v, str) else v.get('text')}" for k, v in (S.get("facts") or {}).items()]]
     out = doc / "plan" / "하이브리드_계획.md"
     out.parent.mkdir(exist_ok=True)
@@ -132,12 +157,14 @@ def main():
     ap.add_argument("doc"); ap.add_argument("work")
     ap.add_argument("--plan", action="store_true"); ap.add_argument("--preview", action="store_true")
     ap.add_argument("--back-only", action="store_true"); ap.add_argument("--confirm-tts", action="store_true"); ap.add_argument("--desktop")
+    ap.add_argument("--old-front", action="store_true", help="앞을 옛 완성 mp4(front_src)에서 자름(새 엔진 앞을 안 만든다)")
     a = ap.parse_args()
     doc, work = Path(a.doc).resolve(), Path(a.work).resolve()
     try:
         S = jload(doc / "대본.json")
         H = S["hybrid"]
-        F = front_info(H, doc)
+        F = front_info(H, doc, a.old_front, plan=a.plan or a.back_only)
+        print(f"[앞] {F['how']}", flush=True)
         cut = front_cut(H, F, check_src=not (a.back_only or a.plan))
         bd = back_defaults(F, cut)
         mode = "plan" if a.plan else ("preview" if a.preview else "render")
@@ -157,7 +184,7 @@ def main():
         win = (0, 434, 1080, 1052)
         seams = check_seams.check(str(final), win, None)
         I, pk = lufs(final)
-        res = {"made_by": "tools/calcopy/shark/hybrid.py", "front_src": str(F["src"]), "front_md5": md5(F["src"]), "cut": cut, "bgm": bd,
+        res = {"made_by": "tools/calcopy/shark/hybrid.py", "engine": SR_.ENGINE, "front_how": F["how"], "front_src": str(F["src"]), "front_md5": md5(F["src"]), "cut": cut, "bgm": bd,
                "back": str(back_mp4), "back_dur": info["dur"], "back_audio": info.get("audio_mix"), "final": str(final), "final_dur": dur_of(final),
                "final_lufs": I, "final_peak": pk, "front_lufs": lufs(J / "front.mp4"), "back_lufs": lufs(back_mp4),
                "seams": {"ok": seams["ok"], "컷": len(seams["컷"]), "되감김": seams["되감김"], "점프줌": seams["점프줌"], "판정": seams.get("점프줌_판정")},

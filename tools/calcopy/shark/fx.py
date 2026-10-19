@@ -36,84 +36,103 @@ def R():
 
 
 # ── 모양 ─────────────────────────────────────────────────────────────
-@lru_cache(maxsize=32)
-def sprite(kind: str, key: tuple = ()):
-    """(판단 주인: 꾸밈 모양) → RGBA PIL. key = 크기 등 덮어쓰기 (이름, 값) 쌍."""
-    from PIL import Image, ImageChops, ImageDraw, ImageFilter
+def _finish(m, color, S: int, outline=True, grad="down", light_k="grad_light"):
+    """(판단 주인: 모양 마감, R4 고급화) 4배 마스크 m(L, 여백 포함) → 줄인 RGBA. 그림자(아래 부드럽게) → 진한 외곽선 → 은은한 그라데이션 채움.
+    값은 rules effects.style 한 곳."""
+    from PIL import Image, ImageChops, ImageFilter
+    st = R()["effects"]["style"]
+    col = np.array(color, float)
+    W_, H_ = m.size
+    out = Image.new("RGBA", m.size, (0, 0, 0, 0))
+    sh = st["shadow"]
+    base = m.filter(ImageFilter.MaxFilter(2 * st["outline_px"] * S + 1)) if outline else m
+    sm = ImageChops.offset(base, int(sh["dx"] * S), int(sh["dy"] * S)).filter(ImageFilter.GaussianBlur(sh["blur"] * S))
+    s_ = Image.new("RGBA", m.size, (0, 0, 0, 0)); s_.putalpha(sm.point(lambda v: int(v * sh["alpha"]))); out.alpha_composite(s_)
+    if outline:
+        o_ = Image.new("RGBA", m.size, tuple(int(v) for v in col * st["outline_dark"]) + (0,)); o_.putalpha(base); out.alpha_composite(o_)
+    light = col + (255 - col) * st[light_k]
+    ys = np.linspace(0, 1, H_)[:, None]
+    if grad == "up":
+        ys = 1 - ys
+    g = (light[None, None, :] * (1 - ys[..., None]) + col[None, None, :] * ys[..., None]) * np.ones((1, W_, 1))
+    f_ = Image.fromarray(np.dstack([g.astype(np.uint8), np.array(m)]), "RGBA")
+    out.alpha_composite(f_)
+    return out.resize((W_ // S, H_ // S), Image.LANCZOS)
+
+
+def _round(m, S):
+    """마스크 모서리 둥글게(흐린 뒤 문턱) — rules style.round_px."""
+    from PIL import ImageFilter
+    r = R()["effects"]["style"]["round_px"] * S
+    return m.filter(ImageFilter.GaussianBlur(r)).point(lambda v: 255 if v >= 128 else 0)
+
+
+PAD = 14   # 모양 둘레 여백(그림자·외곽선 자리, 위아래 같은 크기 → 모양 가운데 = 그림 가운데)
+
+
+def tip_offset(kind: str, key: tuple = ()) -> tuple[float, float]:
+    """(판단 주인: 꾸밈이 가리키는 점) 제 크기 그림 가운데 기준 끝점(px). 화살표 = 끝, 원·이모지 = 가운데(0,0). on_target·적중 검사·그리기가 같이 쓴다."""
     E = R()["effects"]
     o = {**E.get(kind, {}), **dict(key)}
-    if kind == "red_circle":
-        # 벤치 확대(QMJ·hZg·mVz 0.25): 선 11px + 양쪽 2px 부드러운 테, 그림자 없음 → 4배로 그려 줄이고 살짝 흐림
-        d = int(o.get("size", 430)); sw = int(o["stroke"]); pad = 6; S = 4
-        D = (d + 2 * pad) * S
-        m = Image.new("L", (D, D), 0)
-        ImageDraw.Draw(m).ellipse([pad * S, pad * S, (pad + d) * S, (pad + d) * S], outline=255, width=sw * S)
-        m = m.resize((d + 2 * pad, d + 2 * pad), Image.LANCZOS).filter(ImageFilter.GaussianBlur(float(o.get("aa_blur", 0.8))))
-        im = Image.new("RGBA", m.size, tuple(o["color"]) + (0,)); im.putalpha(m)
-        return im
     if kind == "arrow_green_down":
-        # 벤치 QMJ 0.8 확대: 가는 몸통 + 굵은 V 갈매기 머리(팔 굵기 arm·W, 45°), 밝은 초록 채움 + 안쪽 입체 테 + 바깥 번짐
-        w, h = int(o["w"]), int(o["h"])
-        S = 4; W_, H_ = w * S, h * S
-        g = 28 * S   # 번짐 여백
-        im = Image.new("RGBA", (W_ + 2 * g, H_ + 2 * g), (0, 0, 0, 0))
-        sh = 0.18 * W_
-        arm = float(o.get("arm", 0.24)) * W_
-        top = float(o.get("head_top", 0.56)) * H_
-        cx = g + W_ / 2
-        tip = (cx, g + H_)
-        m = Image.new("L", im.size, 0); dm = ImageDraw.Draw(m)
-        dm.rectangle([cx - sh / 2, g, cx + sh / 2, g + H_ - arm], fill=255)
-        a2 = arm / math.sqrt(2)
-        dm.polygon([(g, g + top), (g + a2, g + top - a2), (cx, g + H_ - 2 * a2), (g + W_ - a2, g + top - a2), (g + W_, g + top), tip], fill=255)
-        col = tuple(o["color"])
-        dark = (0, 120, 0); lite = (150, 255, 140)
-        glow = m.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(9 * S))
-        gl = Image.new("RGBA", im.size, col + (0,)); gl.putalpha(glow.point(lambda v: int(v * 0.85)))
-        im.alpha_composite(gl)
-        face = Image.new("RGBA", im.size, col + (0,)); face.putalpha(m); im.alpha_composite(face)
-        inner = m.filter(ImageFilter.MinFilter(4 * S + 1))
-        rim_d = ImageChops.subtract(inner, ImageChops.offset(inner, -2 * S, -2 * S))   # 안쪽 오른쪽 아래 어두운 테
-        rim_l = ImageChops.subtract(inner, ImageChops.offset(inner, S, S))             # 안쪽 왼쪽 위 밝은 테
-        for rim, c in ((rim_d, dark), (rim_l, lite)):
-            t = Image.new("RGBA", im.size, c + (0,)); t.putalpha(rim.point(lambda v: int(v * 0.9))); im.alpha_composite(t)
-        return im.resize((im.size[0] // S, im.size[1] // S), Image.LANCZOS)
+        return 0.0, o["h"] / 2
     if kind == "arrow_pink_up":
-        # 벤치 QMJ 12.5 확대(칸 12px): 칸 그림 15×24 — 머리 계단 7줄·몸통 5칸·검정 테 1칸, 왼쪽 진한·오른쪽 연한 분홍 띠
-        cw, ch = o.get("cells", [15, 24]); px = int(o["pixel"])
-        K, MAIN, DK, LT = (10, 10, 10), tuple(o.get("main", o["color"])), tuple(o["dark"]), tuple(o["light"])
-        grid = {}
-        c = cw // 2
-        grid[(c, 0)] = K
-        for k in range(7):                       # 머리 줄 k: 분홍 c−k..c+k, 테 c±(k+1)
-            y = 1 + k
-            for x in range(c - k, c + k + 1):
-                grid[(x, y)] = MAIN
-            grid[(c - k, y)] = DK if k else LT
-            grid[(c + k, y)] = LT
-            grid[(c - k - 1, y)] = K; grid[(c + k + 1, y)] = K
-        for x in range(1, cw - 1):
-            grid[(x, 8)] = K
-        for yy in range(8, ch - 1):              # 몸통 5칸(c−2..c+2)
-            grid[(c - 3, yy)] = K; grid[(c + 3, yy)] = K
-            for x in range(c - 2, c + 3):
-                grid[(x, yy)] = MAIN
-            grid[(c - 2, yy)] = DK; grid[(c + 2, yy)] = LT
-        for x in range(c - 3, c + 4):
-            grid[(x, ch - 1)] = K
-        sm = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-        for (x, y), v in grid.items():
-            sm.putpixel((x, y), v + (255,))
-        return sm.resize((cw * px, ch * px), Image.NEAREST)
+        return 0.0, -o["h"] / 2
+    if kind == "arrow_curve_red":
+        return (0.87 - 0.5) * o["w"], (0.03 - 0.5) * o["h"]
+    return 0.0, 0.0
+
+
+def _straight_arrow(w, h, shaft, head_h, S, up=False):
+    from PIL import Image, ImageDraw
+    p = PAD * S
+    W_, H_ = w * S + 2 * p, h * S + 2 * p
+    m = Image.new("L", (W_, H_), 0); d = ImageDraw.Draw(m)
+    cx = W_ / 2; sw = shaft * w * S; hh = head_h * h * S
+    top, bot = p, p + h * S
+    d.rectangle([cx - sw / 2, top, cx + sw / 2, bot - hh + S], fill=255)
+    d.polygon([(p, bot - hh), (W_ - p, bot - hh), (cx, bot)], fill=255)
+    m = _round(m, S)
+    if up:
+        m = m.transpose(Image.FLIP_TOP_BOTTOM)
+    return m
+
+
+@lru_cache(maxsize=64)
+def sprite(kind: str, key: tuple = ()):
+    """(판단 주인: 꾸밈 모양) → RGBA PIL(둘레 여백 PAD, 가운데 = 모양 가운데). key = 크기 등 덮어쓰기 (이름, 값) 쌍. sweep = 빨간 원 그려진 비율(0~1)."""
+    from PIL import Image, ImageDraw, ImageFilter
+    E = R()["effects"]
+    S = int(E["style"]["ss"])
+    o = {**E.get(kind, {}), **dict(key)}
+    if kind == "red_circle":
+        # 벤치 확대: 선 11px + 부드러운 테. R4: 그려지듯 나타남(sweep, 12시부터 시계 방향, 둥근 끝) + 은은한 그림자
+        d = int(o.get("size", 430)); sw = float(o.get("stroke") or E["red_circle"]["stroke"]); sweep = float(o.get("sweep", 1.0))
+        p = PAD * S; D = d * S + 2 * p
+        m = Image.new("L", (D, D), 0); dr = ImageDraw.Draw(m)
+        box = [p + sw * S / 2, p + sw * S / 2, D - p - sw * S / 2, D - p - sw * S / 2]
+        rr = (box[2] - box[0]) / 2; c0 = D / 2
+        if sweep >= 0.999:
+            dr.ellipse([c0 - rr - sw * S / 2, c0 - rr - sw * S / 2, c0 + rr + sw * S / 2, c0 + rr + sw * S / 2], outline=255, width=int(sw * S))
+        else:
+            a1 = -90 + 360 * sweep
+            dr.arc([c0 - rr - sw * S / 2, c0 - rr - sw * S / 2, c0 + rr + sw * S / 2, c0 + rr + sw * S / 2], -90, a1, fill=255, width=int(sw * S))
+            for ang in (-90, a1):      # 둥근 끝
+                x = c0 + rr * math.cos(math.radians(ang)); y = c0 + rr * math.sin(math.radians(ang))
+                dr.ellipse([x - sw * S / 2, y - sw * S / 2, x + sw * S / 2, y + sw * S / 2], fill=255)
+        return _finish(m, o["color"], S, outline=False, light_k="ring_grad_light")
+    if kind == "arrow_green_down":
+        return _finish(_straight_arrow(int(o["w"]), int(o["h"]), float(o["shaft"]), float(o["head_h"]), S), o["color"], S)
+    if kind == "arrow_pink_up":
+        return _finish(_straight_arrow(int(o["w"]), int(o["h"]), float(o["shaft"]), float(o["head_h"]), S, up=True), o.get("main", o["color"]), S, grad="up")
     if kind == "arrow_curve_red":
         # 벤치 QMJ 20.45 확대: 붓 손그림 — 꼬리(왼쪽 아래, 가늘게) → 오른쪽 위 끝으로 휘는 굵기 변하는 선 + 열린 V 두 팔(끝 가늘게)
         w, h, sw = int(o["w"]), int(o["h"]), float(o["stroke"])
-        S = 4
-        im = Image.new("RGBA", (w * S, h * S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-        col = tuple(o["color"]) + (255,)
+        p = PAD * S
+        m = Image.new("L", (w * S + 2 * p, h * S + 2 * p), 0); d = ImageDraw.Draw(m)
 
         def P(x, y):
-            return (x * w * S, y * h * S)
+            return (p + x * w * S, p + y * h * S)
 
         def brush(pts, w0, w1, w2):
             n = len(pts)
@@ -124,7 +143,7 @@ def sprite(kind: str, key: tuple = ()):
                 (x0, y0), (x1, y1) = pts[k], pts[k + 1]
                 for t in np.linspace(0, 1, 4):
                     x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-                    d.ellipse([x - r_, y - r_, x + r_, y + r_], fill=col)
+                    d.ellipse([x - r_, y - r_, x + r_, y + r_], fill=255)
 
         def bez(p0, p1, p2, p3, n=80):
             a0, a1, a2, a3 = (np.array(v) for v in (p0, p1, p2, p3))
@@ -133,35 +152,73 @@ def sprite(kind: str, key: tuple = ()):
         brush(bez(P(0.03, 0.97), P(0.40, 0.92), P(0.72, 0.62), tip), 0.25 * sw, 1.25 * sw, 0.9 * sw)
         brush(bez(tip, P(0.75, 0.10), P(0.55, 0.30), P(0.40, 0.42), 30), 1.0 * sw, 0.8 * sw, 0.25 * sw)     # 왼팔
         brush(bez(tip, P(0.92, 0.20), P(0.97, 0.40), P(0.98, 0.58), 30), 1.0 * sw, 0.8 * sw, 0.25 * sw)     # 오른팔
-        return im.resize((w, h), Image.LANCZOS)
+        return _finish(m, o["color"], S)
     if kind in ("money_emoji", "emoji"):
         src = Image.open(ROOT / E["money_emoji"]["asset"]).convert("RGBA")
         src = src.crop(src.getbbox())
-        return src.resize((int(o.get("w", E["money_emoji"]["w"])), int(o.get("h", E["money_emoji"]["h"]))), Image.LANCZOS)
+        im = src.resize((int(o.get("w", E["money_emoji"]["w"])), int(o.get("h", E["money_emoji"]["h"]))), Image.LANCZOS)
+        out = Image.new("RGBA", (im.size[0] + 2 * PAD, im.size[1] + 2 * PAD), (0, 0, 0, 0))
+        sh = E["style"]["shadow"]
+        a = Image.new("L", out.size, 0); a.paste(im.getchannel("A"), (PAD + sh["dx"], PAD + sh["dy"]))
+        s_ = Image.new("RGBA", out.size, (0, 0, 0, 0)); s_.putalpha(a.filter(ImageFilter.GaussianBlur(sh["blur"])).point(lambda v: int(v * sh["alpha"])))
+        out.alpha_composite(s_); out.alpha_composite(im, (PAD, PAD))
+        return out
     raise ValueError(f"모르는 꾸밈 {kind}")
 
 
 def dashed(r: int, sw: int, n: int, duty: float, deg: float, color):
-    """점선 원(벤치: 점 6개·점 25°·납작한 끝) — r = 선 가운데 반지름. 4배로 그려 줄임(부드러운 테)."""
+    """점선 원(벤치: 점 6개·점 25°) — r = 선 가운데 반지름. 4배로 그려 줄임 + 둥근 끝 + 마감(그림자, R4)."""
     from PIL import Image, ImageDraw
-    S = 4
-    pad = sw
+    S = int(R()["effects"]["style"]["ss"])
+    pad = sw + PAD
     D = 2 * (r + pad)
     m = Image.new("L", (D * S, D * S), 0); d = ImageDraw.Draw(m)
-    ro = r + sw / 2
-    box = [(pad + r - ro) * S, (pad + r - ro) * S, (pad + r + ro) * S, (pad + r + ro) * S]
+    c0 = D * S / 2
     step = 360 / n
     for k in range(n):
         a = deg + k * step
-        d.arc(box, a, a + step * duty, fill=255, width=int(sw * S))
-    m = m.resize((D, D), Image.LANCZOS)
-    im = Image.new("RGBA", (D, D), tuple(color) + (0,)); im.putalpha(m)
-    return im
+        d.arc([c0 - r * S - sw * S / 2, c0 - r * S - sw * S / 2, c0 + r * S + sw * S / 2, c0 + r * S + sw * S / 2], a, a + step * duty, fill=255, width=int(sw * S))
+        for ang in (a, a + step * duty):
+            x = c0 + r * S * math.cos(math.radians(ang)); y = c0 + r * S * math.sin(math.radians(ang))
+            d.ellipse([x - sw * S / 2, y - sw * S / 2, x + sw * S / 2, y + sw * S / 2], fill=255)
+    return _finish(m, color, S, outline=False, light_k="ring_grad_light")
 
 
 # ── 움직임 ───────────────────────────────────────────────────────────
+ARROWS = ("arrow_green_down", "arrow_pink_up", "arrow_curve_red")
+POPS = ARROWS + ("money_emoji", "emoji")
+
+
+def _pop(k: int) -> tuple[float, float]:
+    """(배율, 흔들 각도) 등장 k 프레임째 — ease-out-back 팝 + 감쇠 흔들(rules effects.pop)."""
+    o = R()["effects"]["pop"]
+    n = o["frames"]
+    sc = 1.0
+    if k < n:
+        u = (k + 1) / n
+        c1 = o["overshoot"]; c3 = c1 + 1
+        e = 1 + c3 * (u - 1) ** 3 + c1 * (u - 1) ** 2
+        sc = o["from"] + (1 - o["from"]) * e
+    rot = 0.0
+    if k < o["wobble_frames"]:
+        u = k / o["wobble_frames"]
+        rot = o["wobble_deg"] * math.sin(2 * math.pi * o["wobble_cycles"] * u) * (1 - u)
+    return sc, rot
+
+
+def track_at(tr: list, u: float) -> list:
+    """[[초, a, b, …], …] 사이를 직선으로(끝은 멈춤) — 대상 길·꾸밈 길 공통."""
+    if len(tr) == 1:
+        return list(tr[0][1:])
+    k = max(0, min(len(tr) - 2, next((i for i in range(len(tr) - 1) if tr[i + 1][0] >= u), len(tr) - 2)))
+    (t0_, *a), (t1_, *b) = tr[k], tr[k + 1]
+    f = min(1.0, max(0.0, (u - t0_) / max(1e-6, t1_ - t0_)))
+    return [x + (y - x) * f for x, y in zip(a, b)]
+
+
 def pose(e: dict, t: float) -> dict | None:
-    """(판단 주인: 꾸밈 움직임) 시각 t 의 {scale, dx, dy, alpha, deg} — 꾸밈 시간 밖이면 None."""
+    """(판단 주인: 꾸밈 움직임) 시각 t 의 {scale, dx, dy, alpha, deg, rot, sweep} — 꾸밈 시간 밖이면 None.
+    dx/dy = 대상 따라감(track) + 흔들(bob)·찌르기(poke). 화살표 배율·회전은 끝점 기준(place)."""
     E = R()["effects"]
     a, b = e["T"]
     if t < a - 1e-6 or t >= b - 1e-6:
@@ -169,11 +226,13 @@ def pose(e: dict, t: float) -> dict | None:
     k = int(round((t - a) * FPS))
     left = int(round((b - t) * FPS))
     o = E.get(e["kind"], {})
-    p = {"scale": 1.0, "dx": 0.0, "dy": 0.0, "alpha": 1.0, "deg": 0.0}
-    if e["kind"] in ("arrow_pink_up", "money_emoji", "emoji") and k < len(E["pop"]["scales"]):
-        p["scale"] = E["pop"]["scales"][k]
+    p = {"scale": 1.0, "dx": 0.0, "dy": 0.0, "alpha": 1.0, "deg": 0.0, "rot": 0.0, "sweep": 1.0}
+    if e["kind"] in POPS:
+        p["scale"], p["rot"] = _pop(k)
     if e["kind"] == "dashed_circle" and k < len(o["pop"]):     # 벤치 3편: 1.08 → 0.85(5~10프레임) → 1.0(14프레임째)
         p["scale"] = o["pop"][k]
+    if e["kind"] == "red_circle":
+        p["sweep"] = min(1.0, (k + 1) / max(1, int(o.get("draw_frames", 1))))
     if e["kind"] not in ("red_circle", "flash", "dashed_circle") and left <= E["exit_frames"]:   # 실선·점선 원은 컷과 같이 사라짐(실측)
         f = left / (E["exit_frames"] + 1)
         p["scale"] *= 0.6 + 0.4 * f; p["alpha"] = f
@@ -184,21 +243,67 @@ def pose(e: dict, t: float) -> dict | None:
         p["dx"], p["dy"] = s, -s
     if e["kind"] == "dashed_circle":
         p["deg"] = o["deg_per_s"] * (t - a)
-        if e.get("track"):        # 대상이 움직일 때만(fx_place.fix 가 사람 검출로 적음): 꾸밈 시작 기준 [[초, x, y], …] 사이를 직선으로
-            tr, u = e["track"], t - a
-            k = max(0, min(len(tr) - 2, next((i for i in range(len(tr) - 1) if tr[i + 1][0] >= u), len(tr) - 2)))
-            (t0_, x0_, y0_), (t1_, x1_, y1_) = tr[k], tr[k + 1]
-            f = min(1.0, max(0.0, (u - t0_) / max(1e-6, t1_ - t0_)))
-            p["dx"], p["dy"] = x0_ + (x1_ - x0_) * f - e["at"][0], y0_ + (y1_ - y0_) * f - e["at"][1]
+    if e.get("track"):        # 대상 따라감(fx_place.fix 가 추적으로 적음): 꾸밈 시작 기준 [[초, x, y], …] = 그 시각 at
+        x, y = track_at(e["track"], t - a)
+        p["dx"] += x - e["at"][0]; p["dy"] += y - e["at"][1]
     if e["kind"] == "flash":
-        p["alpha"] = max(0.0, E["flash"]["alpha0"] * (1 - (t - a) / E["flash"]["dur"]))
+        F = E["flash"]
+        if F.get("style") == "edge":
+            u = min(1.0, (t - a) / F["edge_dur"])
+            p["alpha"] = max(0.0, F["edge_alpha0"] * (1 - u) ** 2)     # 감속으로 사라짐
+        else:
+            p["alpha"] = max(0.0, F["alpha0"] * (1 - (t - a) / F["dur"]))
     return p
+
+
+def _rot(v, deg):
+    th = math.radians(deg)
+    return v[0] * math.cos(th) + v[1] * math.sin(th), -v[0] * math.sin(th) + v[1] * math.cos(th)
+
+
+def _key(e: dict) -> tuple:
+    return tuple(sorted((k, v) for k, v in e.items() if k in ("size", "w", "h", "radius", "stroke")))
+
+
+def place(e: dict, p: dict) -> dict:
+    """(판단 주인: 그리는 자리) pose → {cx, cy, tip:[x,y]}(완성본 좌표). 화살표는 끝점이 제자리(at+끝+움직임)에 고정된 채 커지고 돈다."""
+    tx, ty = tip_offset(e["kind"], _key(e))
+    tip = (e["at"][0] + tx + p["dx"], e["at"][1] + ty + p["dy"])
+    if e["kind"] in ARROWS:
+        vx, vy = _rot((tx * p["scale"], ty * p["scale"]), p["rot"])
+        return {"cx": tip[0] - vx, "cy": tip[1] - vy, "tip": list(tip)}
+    return {"cx": e["at"][0] + p["dx"], "cy": e["at"][1] + p["dy"], "tip": [e["at"][0] + p["dx"], e["at"][1] + p["dy"]]}
+
+
+@lru_cache(maxsize=8)
+def _edge_mask(w: int, h: int):
+    """번쩍 가장자리 빛 모양(0~1) — 타원 거리 clear 안쪽 0, 가장자리 1(부드럽게). rules effects.flash.clear·soft."""
+    F = R()["effects"]["flash"]
+    ys, xs = np.mgrid[0:h, 0:w]
+    dd = np.sqrt(((xs - w / 2) / (w / 2)) ** 2 + ((ys - h / 2) / (h / 2)) ** 2) / math.sqrt(2)   # 모서리 = 1, 변 가운데 = 0.71
+    c0 = F["clear"] * 0.7071
+    u = np.clip((dd - c0) / max(1e-6, (0.7071 - c0) * (1 + F["soft"])), 0, 1)
+    return (u * u * (3 - 2 * u)).astype(np.float32)
+
+
+def flash_image(color, alpha: float, w: int, h: int):
+    """(판단 주인: 번쩍 모양) R4 가장자리 빛(edge) — 옛 전면 원색(style 없음)도 그대로 그릴 수 있다."""
+    from PIL import Image
+    F = R()["effects"]["flash"]
+    col = np.array(color, float)
+    if F.get("style") == "edge":
+        col = col + (255 - col) * F["tint"]
+        a = (_edge_mask(w, h) * alpha * 255).astype(np.uint8)
+    else:
+        a = np.full((h, w), int(round(alpha * 255)), np.uint8)
+    rgb = np.broadcast_to(col.astype(np.uint8), (h, w, 3))
+    return Image.fromarray(np.dstack([rgb, a]), "RGBA")
 
 
 # ── 그리기(미리곱한 알파 numpy) ─────────────────────────────────────────
 @lru_cache(maxsize=512)
-def _sprite_im(kind, key, scale_q, deg_q, alpha_q):
-    """그릴 모양 한 장(PIL RGBA, 곧은 알파) — 배율·회전·투명도 값마다 한 번만 만든다."""
+def _sprite_im(kind, key, scale_q, deg_q, alpha_q, rot_q=0.0, sweep_q=1.0):
+    """그릴 모양 한 장(PIL RGBA, 곧은 알파) — 배율·회전·투명도·그려진 비율 값마다 한 번만 만든다."""
     from PIL import Image
     if kind == "dashed_circle":
         o = {**R()["effects"]["dashed_circle"], **dict(key)}
@@ -206,9 +311,11 @@ def _sprite_im(kind, key, scale_q, deg_q, alpha_q):
         im = dashed(r_, int(round(o.get("stroke") or o["stroke_ratio"] * r_)), int(o["dashes"]), float(o["duty"]), deg_q, o["color"])
         scale_q = 1.0   # 점선 원은 배율을 반지름으로 그렸다(선 두께 비 유지)
     else:
-        im = sprite(kind, key)
+        im = sprite(kind, key + ((("sweep", sweep_q),) if sweep_q < 0.999 else ()))
     if abs(scale_q - 1.0) > 1e-3:
         im = im.resize((max(1, int(im.size[0] * scale_q)), max(1, int(im.size[1] * scale_q))), Image.LANCZOS)
+    if abs(rot_q) > 0.05:
+        im = im.rotate(rot_q, resample=Image.BICUBIC, expand=True)
     if alpha_q < 0.999:
         im = im.copy(); im.putalpha(im.getchannel("A").point(lambda v: int(v * alpha_q)))
     return im
@@ -271,13 +378,12 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
             if p is None:
                 continue
             if e["kind"] == "flash":
-                col = tuple(E["flash"]["colors"][e.get("color", "초록")])
-                fl = Image.new("RGBA", (1080, H - 8), col + (int(round(p["alpha"] * 255)),))
-                cv.alpha_composite(fl, (0, 4))
+                cv.alpha_composite(flash_image(E["flash"]["colors"][e.get("color", "초록")], round(p["alpha"], 3), 1080, H - 8), (0, 4))
                 continue
-            key = tuple(sorted((k, v) for k, v in e.items() if k in ("size", "w", "h", "radius", "stroke")))
-            im = _sprite_im(e["kind"], key, round(p["scale"], 2), round(p["deg"] / 3) * 3.0, round(p["alpha"], 2))
-            x0 = int(round(e["at"][0] + p["dx"] - im.size[0] / 2)); y0 = int(round(e["at"][1] - Y0 + p["dy"] - im.size[1] / 2))
+            im = _sprite_im(e["kind"], _key(e), round(p["scale"], 2), round(p["deg"] / 3) * 3.0, round(p["alpha"], 2),
+                            round(p["rot"], 1), round(p["sweep"], 3))
+            pl = place(e, p)
+            x0 = int(round(pl["cx"] - im.size[0] / 2)); y0 = int(round(pl["cy"] - Y0 - im.size[1] / 2))
             cv.alpha_composite(im, (max(0, x0), max(0, y0)), (max(0, -x0), max(0, -y0)))
         c, blur = caption_at(caps, t)
         if c is not None:
@@ -296,7 +402,7 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
 
 
 def outside(effects: list[dict]) -> list[str]:
-    """(판단 주인: 꾸밈이 창 안에 온전한가) 번쩍 빼고 제 크기 모양 상자(움직임 폭 포함)가 rules effects.window 안이어야 한다."""
+    """(판단 주인: 꾸밈이 창 안에 온전한가) 번쩍 빼고 제 크기 모양 상자(움직임 폭 포함, 그림자 여백 PAD 뺌)가 rules effects.window 안이어야 한다."""
     E = R()["effects"]
     wx, wy, ww, wh = E["window"]
     m = E["inside_window"]["margin_px"]
@@ -304,23 +410,87 @@ def outside(effects: list[dict]) -> list[str]:
     for e in effects:
         if e["kind"] == "flash":
             continue
-        key = tuple(sorted((k, v) for k, v in e.items() if k in ("size", "w", "h", "radius", "stroke")))
+        key = _key(e)
         if e["kind"] == "dashed_circle":
             o = {**E["dashed_circle"], **dict(key)}
             rr = int(o["radius"]) * max(o.get("pop") or [1.0])          # 등장 때 1.08배로 커진 순간까지 창 안(6편 L4 페이블 10-18)
             w = h = 2 * rr + int(o.get("stroke") or o["stroke_ratio"] * rr)
         else:
-            w, h = sprite(e["kind"], key).size
+            w, h = (v - 2 * PAD for v in sprite(e["kind"], key).size)
         o = E.get(e["kind"], {})
         mx = o.get("poke_px", 0) / math.sqrt(2)
         my = o.get("bob_px", 0) + mx
-        for ax, ay in [e["at"]] + [p[1:] for p in e.get("track") or []]:   # 따라가는 점선 원은 길 위 모든 점
+        for ax, ay in [e["at"]] + [p[1:3] for p in e.get("track") or []]:   # 따라가는 꾸밈은 길 위 모든 점
             x0, x1 = ax - w / 2 - mx, ax + w / 2 + mx
             y0, y1 = ay - h / 2 - my, ay + h / 2 + my
             if x0 < wx + m or x1 > wx + ww - m or y0 < wy + m or y1 > wy + wh - m:
                 out.append(f"{e.get('line')} {e['kind']} 상자 x{x0:.0f}~{x1:.0f} y{y0:.0f}~{y1:.0f}")
                 break
     return out
+
+
+# ── 적중 검사(R4 "확실할 때만") ─────────────────────────────────────────
+def _dist_box(x, y, b) -> float:
+    dx = max(b[0] - x, 0, x - b[2]); dy = max(b[1] - y, 0, y - b[3])
+    return math.hypot(dx, dy)
+
+
+def hit_report(e: dict) -> dict:
+    """(판단 주인: 효과가 대상에 맞나) 꾸밈 프레임마다 끝점(화살표)·원 중심이 대상 상자(target_path / target_box) 위·안인가 + 추적 신뢰도.
+    flash 는 대상 없음(통과). 이모지는 얼굴 가림만 fx_place 가 본다(face_cover). 0초 빨간 원은 물건 원(how=object)·얼굴 검사 통과(face_clear)여야 한다(R3).
+    반환 {ok, why, n, miss, worst_px}. render.effects 가 ok=False 면 뺀다."""
+    E = R()["effects"]; G = R()["target"]
+    k = e["kind"]
+    if k == "flash":
+        return {"ok": True, "why": "대상 없음(번쩍)"}
+    if k in ("money_emoji", "emoji"):
+        if e.get("face_cover") is not None and e["face_cover"] > G["face_cover_max"]:
+            return {"ok": False, "why": f"얼굴 가림 {e['face_cover']:.2f}>{G['face_cover_max']}"}
+        return {"ok": True, "why": "장식(대상 없음)" + ("" if e.get("face_cover") is not None else " · 얼굴 가림 안 잼")}
+    if k == "red_circle" and not (e.get("how") == "object" and e.get("face_clear") is True):
+        return {"ok": False, "why": "R3: 0초 원은 물건 원(fx_place.hook_object — 얼굴 겹침 거절 통과)만 — 얼굴 원·검사 안 한 원은 뺀다"}
+    if e.get("drop"):
+        return {"ok": False, "why": e["drop"]}
+    box0 = e.get("target_box") or (e["target"] if isinstance(e.get("target"), list) else None)    # 계산된 상자 | 손 상자(target 목록, 고정)
+    tp = e.get("target_path") or ([[0.0, *box0]] if box0 else None)
+    if not tp:
+        return {"ok": False, "why": "대상 상자 없음(target) — 확실하지 않은 효과는 넣지 않는다(R4)"}
+    th = G["det_min"] if e.get("track_how") == "detect" else G["ncc_min"]
+    if e.get("track_conf") is not None and e["track_conf"] < th:
+        return {"ok": False, "why": f"대상 추적 신뢰도 {e['track_conf']:.2f}<{th} ({e.get('track_how')})"}
+    a, b = e["T"]
+    n, miss, worst = 0, 0, 0.0
+    for f in range(int(math.ceil((b - a) * FPS))):
+        t = a + f / FPS
+        p = pose(e, t)
+        if p is None:
+            continue
+        box = track_at(tp, t - a)
+        pl = place(e, p)
+        n += 1
+        if k in ARROWS:
+            d = _dist_box(pl["tip"][0], pl["tip"][1], box)
+            bad = d > G["tip_tol_px"]
+        else:
+            d = _dist_box(pl["cx"], pl["cy"], box)
+            bad = d > 0
+            if k == "red_circle":
+                r = e.get("size", E["red_circle"]["size"]) / 2
+                bad = bad or r < G["circle_r_min_frac"] * max(box[2] - box[0], box[3] - box[1]) / 2
+        worst = max(worst, d)
+        miss += bad
+    ok = n > 0 and miss == 0
+    return {"ok": ok, "n": n, "miss": miss, "worst_px": round(worst, 1),
+            "why": ("대상 위 " if ok else f"빗나감 {miss}/{n}프레임 ") + f"(최대 {worst:.0f}px, 추적 {e.get('track_how', '고정')} {e.get('track_conf', '')})"}
+
+
+def gate(effects: list[dict]) -> tuple[list[dict], list[dict]]:
+    """적중 검사로 (그릴 것, 뺀 것[{line, kind, why}]) — render.effects 가 부른다(뺀 이유는 render_info fx_dropped)."""
+    keep, drop = [], []
+    for e in effects:
+        h = hit_report(e)
+        (keep if h["ok"] else drop).append({**e, "hit": h} if h["ok"] else {"line": e.get("line"), "kind": e["kind"], "why": h["why"]})
+    return keep, drop
 
 
 def E_FLASH_DUR():
@@ -390,16 +560,39 @@ def add_sfx(bed_mp4: Path, events: list[dict], R_: Path) -> Path:
 
 def main():
     if sys.argv[1] == "sheet":
+        # 꾸밈 견본 시트: 1줄 = 제 크기 모양 6종 / 2줄 = 등장(원 그려짐·화살표 팝·흔들) 프레임 / 3줄 = 번쩍(창 1/3 축소, --bg 그림 위)
         from PIL import Image
         E = R()["effects"]
+        bg = Image.open(sys.argv[sys.argv.index("--bg") + 1]).convert("RGBA") if "--bg" in sys.argv else None
         tiles = [sprite("red_circle", (("size", 430),)), dashed(E["dashed_circle"]["radius"], int(E["dashed_circle"]["stroke_ratio"] * E["dashed_circle"]["radius"]), E["dashed_circle"]["dashes"],
                  E["dashed_circle"]["duty"], 0, E["dashed_circle"]["color"]), sprite("arrow_green_down"), sprite("arrow_pink_up"),
                  sprite("arrow_curve_red"), sprite("money_emoji")]
-        W = sum(t.size[0] for t in tiles) + 20 * len(tiles)
-        sh = Image.new("RGBA", (W, max(t.size[1] for t in tiles) + 20), (110, 90, 70, 255))
-        x = 10
-        for t in tiles:
-            sh.alpha_composite(t, (x, 10)); x += t.size[0] + 20
+        anim = []
+        for k in (0, 2, 4, 6):
+            sw = min(1.0, (k + 1) / E["red_circle"]["draw_frames"])
+            anim.append(_sprite_im("red_circle", (("size", 240),), 1.0, 0.0, 1.0, 0.0, round(sw, 3)))
+        for k in (0, 2, 4, 6, 9, 13):
+            sc, rot = _pop(k)
+            anim.append(_sprite_im("arrow_green_down", (), round(sc, 2), 0.0, 1.0, round(rot, 1), 1.0))
+        rows = [tiles, anim]
+        if "flash" in E and hasattr(sys, "argv"):
+            fl = []
+            for col in ("초록", "빨강"):
+                for t in (0.0, 0.1):
+                    p = pose({"kind": "flash", "T": [0.0, 1.0], "at": [540, 960]}, t)
+                    base = (bg.resize((360, 351)) if bg else Image.new("RGBA", (360, 351), (110, 90, 70, 255))).copy()
+                    base.alpha_composite(flash_image(E["flash"]["colors"][col], p["alpha"], 1080, 1052).resize((360, 351)))
+                    fl.append(base)
+            rows.append(fl)
+        W = max(sum(t.size[0] for t in r) + 20 * len(r) for r in rows) + 10
+        Hs = [max(t.size[1] for t in r) + 20 for r in rows]
+        sh = Image.new("RGBA", (W, sum(Hs)), (110, 90, 70, 255))
+        y = 0
+        for r, hh in zip(rows, Hs):
+            x = 10
+            for t in r:
+                sh.alpha_composite(t, (x, y + 10)); x += t.size[0] + 20
+            y += hh
         sh.convert("RGB").save(sys.argv[2])
         print(sys.argv[2])
 
