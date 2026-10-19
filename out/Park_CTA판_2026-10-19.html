@@ -18,24 +18,24 @@ table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:6px}td,th{
 code{background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px}
 </style></head><body><main>
 <h1>Park님 CTA 판 요청 · 2026-10-19</h1>
-<div class="sub">고친 것 2 · 안내 1 — 관문(테스트) 진행 중, 통과하면 바로 배포 후 라이브 확인</div>
+<div class="sub">고친 것 2 · 안내 1 — <b>라이브 반영 완료</b>(관문 통과·배포 bf7f9a352)</div>
 
-<div class="card"><div class="top"><span class="ttl">① "CTA 칸이 없어 판을 못 만든다"</span><span class="st wip">수정·라이브 대기</span></div>
+<div class="card"><div class="top"><span class="ttl">① "CTA 칸이 없어 판을 못 만든다"</span><span class="st ok">라이브 반영</span></div>
 <div class="row"><span class="k">원인</span>작업 <code>383ac5b29649</code> 마지막 줄 “이국적인 샌드 커피 위치 구매는 화면 속 <b>스티커를 클릭</b>해주세요.” — CTA 자동 판정 단어가 댓글·프로필·남겨주·눌러뿐이라 <b>클릭·스티커·링크</b>를 못 알아봄. 칸에 CTA 표시가 하나도 안 박혀 판을 못 만듦</div>
 <div class="row"><span class="k">조치</span>① 판정 단어에 클릭·스티커·링크 추가(주인 <code>edit_plan._looks_cta_text</code>) ② 이미 만든 작업도 판 만들 때 CTA를 다시 판정(<code>cta_variants.marked_plan</code>, DB는 안 바꿈)</div>
-<div class="row"><span class="k">검증</span>서버 실데이터: Park님 작업 CTA 칸 <b>없음 → 7번째 칸</b>. 최근 7일 작업 488개 마지막 줄 전수 → 새로 CTA로 잡힌 17개 전부 진짜 CTA, 잘못 잡힌 것 0
+<div class="row"><span class="k">검증</span>서버 실데이터: Park님 작업 CTA 칸 <b>없음 → 7번째 칸</b>. 최근 7일 작업 488개 마지막 줄 전수 → 새로 CTA로 잡힌 17개 전부 진짜 CTA, 잘못 잡힌 것 0. <b>라이브 관리자 확인: 383ac5b29649 판정 has_cta = true</b>
 <table><tr><th>새로 잡힌 문장(예)</th><th>건수</th></tr>
 <tr><td>궁금하시면 구매링크 확인해주세요</td><td>14</td></tr>
 <tr><td>정보 궁금하시면 구매링크 클릭해 주세요~</td><td>1</td></tr>
 <tr><td>…화면 속 스티커를 클릭해주세요. (Park님)</td><td>1</td></tr>
 <tr><td>직접 느껴보고 싶다면 ▶ 모양을 클릭하세요!</td><td>1</td></tr></table></div></div>
 
-<div class="card"><div class="top"><span class="ttl">② 비수창 CTA에 화살표 기본</span><span class="st wip">수정·라이브 대기</span></div>
+<div class="card"><div class="top"><span class="ttl">② 비수창 CTA에 화살표 기본</span><span class="st ok">라이브 반영</span></div>
 <div class="row"><span class="k">조치</span>유튜브 비수창 기본 문구 → <b>“아래 ▶관련 영상을 눌러 구매링크를 확인하세요.”</b> 옛 기본 문구를 그대로 쓰던 회원도 자동으로 새 문구. 화살표(▶ ▼ 👇 등)는 <b>자막에만</b> 보이고 목소리는 안 읽음(주인 <code>narration_naturalize.strip_arrows</code>, 한 줄·통짜 합성 모두 이곳을 지남)</div>
-<div class="row"><span class="k">검증</span>TTS 입력 실측: “아래 ▶관련 영상…” → “아래 관련 영상…”(▶ 빠짐). 실제 음성 파일 청취는 배포 뒤 렌더로 확인 예정</div></div>
+<div class="row"><span class="k">검증</span>TTS 입력 실측: “아래 ▶관련 영상…” → “아래 관련 영상…”(▶ 빠짐). 라이브 확인: Park님 작업 비수창 문구에 ▶ 들어감. 실제 음성 파일 청취는 다음 렌더에서 확인 예정</div></div>
 
 <div class="card"><div class="top"><span class="ttl">③ 최종 렌더 전 미리보기</span><span class="st ok">안내</span></div>
-<div class="row">본편은 지금도 편집 화면 <b>「▶ 전체 재생」</b>으로 차감 없이 끝까지 볼 수 있음. <b>CTA 판만 따로 미리 보는 기능은 없음</b>(판은 렌더 때 만들어짐) — 원하시면 별도로 만들 수 있음</div></div>
+<div class="row">3단계 「▶️ 전체 재생」 = 순서·목소리·자막만(6단계 장면 효과는 안 나옴, scene_play.js에 효과 재생 없음). 6단계 편집기 = 훅·본문 정지 화면 미리보기만(재생 코드 없음). <b>꾸밈까지 반영된 렌더 전 전체 미리보기는 없음</b> — 만들려면 별도 카드</div></div>
 
 <div class="card"><div class="top"><span class="ttl">작업 중 사고 1건</span><span class="st ok">수습 완료</span></div>
 <div class="row">서버 시험 사본을 만들며 데이터 폴더까지 복사돼 디스크가 잠깐 100% → 즉시 중단·삭제, 여유 38GB 복구, 사이트 정상(200), 그 사이 디스크 오류 로그 0건. 재측정은 코드만(7MB)</div></div>
@@ -50,9 +50,12 @@ code{background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px}
 유튜브 비수창 기본 문구를 "아래 ▶관련 영상을 눌러 구매링크를 확인하세요."로 바꿨어요. 화살표는 자막에만 나오고 목소리로는 읽지 않아요.
 
 3️⃣ 최종 렌더 전 미리보기
-본편은 편집 화면의 「▶ 전체 재생」으로 차감 없이 끝까지 미리 보실 수 있어요. CTA 판은 렌더할 때 만들어져서 따로 미리 보기는 아직 없어요. 판은 본편과 마지막 문장만 달라서, 본편을 전체 재생으로 확인하신 뒤 렌더하시면 돼요.
+지금은 꾸미기까지 다 들어간 영상을 렌더 전에 움직이는 그대로 미리 보는 기능은 없어요 🙏
+· 3단계 「▶️ 전체 재생」: 장면 순서·목소리·자막을 끝까지 볼 수 있지만, 6단계에서 꾸민 장면 효과는 다 나오지 않아요.
+· 6단계 장면꾸미기: 훅·본문 화면을 정지 화면으로 미리 볼 수 있어요.
+그래서 꾸밈까지 들어간 최종 모습은 지금은 렌더 결과로 확인하셔야 해요. 렌더 전 전체 미리보기는 요청으로 받아 검토할게요!
 
-반영되면 다시 알려드릴게요!</div>
+지금 바로 반영돼 있으니, 마지막 단계에서 판을 다시 골라 최종 렌더해 주세요!</div>
 <button class="copy" onclick="cp('m1',this)">📋 복사</button>
 <script>function cp(id,b){try{navigator.clipboard.writeText(document.getElementById(id).innerText);b.textContent='복사됨 ✓';}catch(e){b.textContent='복사 실패 — 직접 드래그해 주세요';}}</script>
 </main></body></html>

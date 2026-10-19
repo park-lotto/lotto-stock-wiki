@@ -1,0 +1,247 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>숏템 채널 설정 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Black+Han+Sans&display=swap">
+<style>
+/* 레이아웃: 위 = 시안 A/B 전환, 아래 = 왼쪽 설정 + 오른쪽 고정 미리보기(9:16) */
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --line:#dde3e8; --fg:#1b2530; --mute:#5f6d7a;
+  --accent:#0f7b6c; --accent-soft:#e1f2ef; --warn:#a15c00; --warn-soft:#fff2dc;
+  --phone:#111820;
+  --f-body:"IBM Plex Sans KR",system-ui,"Malgun Gothic",sans-serif;
+  --f-cap:"Black Han Sans","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12181e; --panel:#1a2229; --line:#2c3843; --fg:#e4eaef; --mute:#93a1ad;
+  --accent:#3cc2ad; --accent-soft:#163631; --warn:#f0b35a; --warn-soft:#3a2c15; --phone:#05080b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181e; --panel:#1a2229; --line:#2c3843; --fg:#e4eaef; --mute:#93a1ad;
+  --accent:#3cc2ad; --accent-soft:#163631; --warn:#f0b35a; --warn-soft:#3a2c15; --phone:#05080b; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1{font-size:20px;margin:0;text-wrap:balance}
+.lead{margin:0;color:var(--mute);max-width:70ch}
+.switch{display:flex;gap:8px;flex-wrap:wrap}
+.switch button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:10px 14px;border-radius:8px;cursor:pointer;text-align:left;flex:1 1 260px;min-width:0}
+.switch button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.switch b{display:block;font-size:15px}
+.switch span{color:var(--mute);font-size:13px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs span{padding:8px 12px;color:var(--mute);white-space:nowrap}
+.tabs span.on{color:var(--fg);border-bottom:2px solid var(--accent);font-weight:700}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.left{display:grid;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+.card h2{font-size:15px;margin:0;display:flex;gap:8px;align-items:baseline}
+.card h2 small{color:var(--mute);font-weight:400;font-size:12px}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.preset{font:inherit;color:var(--fg);text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px;cursor:pointer;display:grid;gap:2px}
+.preset[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.preset b{font-size:14px}.preset span{font-size:12px;color:var(--mute)}
+label.row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center}
+@media (max-width:480px){label.row{grid-template-columns:minmax(0,1fr)}}
+label.row>span{color:var(--mute);font-size:13px}
+select,input[type=text]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-width:0}
+select.custom{border-color:var(--accent);background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{grid-column:2;font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:5px 8px}
+@media (max-width:480px){.hint{grid-column:1}}
+details.grp{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+details.grp>summary{cursor:pointer;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;gap:8px;list-style:none}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary::before{content:"▸";margin-right:6px;color:var(--mute)}
+details.grp[open]>summary::before{content:"▾"}
+details.grp>summary em{font-style:normal;font-weight:400;font-size:12px;color:var(--mute)}
+details.grp>summary em.chg{color:var(--accent);font-weight:700}
+details.grp .body{padding:0 16px 14px;display:grid;gap:10px}
+.btn{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700}
+.btn.pri{background:var(--accent);color:var(--panel)}
+.btn.sec{background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.saverow{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.toast{color:var(--accent);font-weight:700;font-size:13px}
+/* 단계 */
+.steps{display:flex;gap:4px;flex-wrap:wrap}
+.steps button{font:inherit;font-size:13px;flex:1 1 90px;border:1px solid var(--line);background:var(--panel);color:var(--mute);padding:8px 6px;border-radius:8px;cursor:pointer}
+.steps button.on{color:var(--fg);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);font-weight:700}
+.steps button.done{color:var(--accent)}
+.summary{display:grid;gap:4px;font-size:13px}
+.summary div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:3px 0}
+.summary div b{font-weight:500}
+/* 미리보기 */
+.right{position:sticky;top:12px;display:grid;gap:10px;min-width:0}
+@media (max-width:860px){.right{position:static}}
+.phone{aspect-ratio:9/16;max-width:100%;width:300px;margin:0 auto;background:var(--phone);border-radius:18px;overflow:hidden;position:relative;color:#fff}
+.ph-band{position:absolute;left:0;right:0;top:0;height:15%;display:grid;place-items:center;font-family:var(--f-cap);font-size:20px;letter-spacing:.02em}
+.ph-title{position:absolute;left:8%;right:8%;top:17%;font-family:var(--f-cap);font-size:19px;line-height:1.3;text-align:center}
+.ph-video{position:absolute;left:0;right:0;top:32%;height:42%;background:repeating-linear-gradient(135deg,#2a3640 0 12px,#24303a 12px 24px);display:grid;place-items:center;color:#8fa0ad;font-size:12px}
+.ph-cap{position:absolute;left:6%;right:6%;top:77%;text-align:center;font-family:var(--f-cap);font-size:22px;line-height:1.25}
+.ph-cap .w{color:var(--hl,#ffd84a)}
+.ph-post{position:absolute;left:6%;right:6%;top:6%;background:#fff;color:#111;border-radius:10px;padding:10px 12px;font-size:12px;display:grid;gap:4px}
+.ph-post b{font-size:15px;font-family:var(--f-cap);font-weight:400}
+.ph-frame{position:absolute;inset:0;border:10px solid var(--fr,#ff5a36);border-radius:18px;pointer-events:none}
+.ph-tag{position:absolute;right:8px;bottom:8px;font-size:10px;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px}
+.tl{position:relative;height:26px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.tl .bar{position:absolute;top:0;bottom:0;left:0;width:0;background:var(--accent-soft)}
+.tl .sfx{position:absolute;top:6px;width:10px;height:12px;margin-left:-5px;border-radius:3px;background:var(--warn)}
+.tl .lab{position:absolute;left:8px;top:4px;font-size:11px;color:var(--mute)}
+.chg{font-size:13px;display:grid;gap:4px}
+.chg ul{margin:0;padding-left:18px}
+.muted{color:var(--mute);font-size:12px}
+/* 등장 효과 */
+@keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes slide{from{transform:translateX(-40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes slam{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.a-rise{animation:rise .35s ease-out}.a-pop{animation:pop .4s ease-out}.a-slide{animation:slide .35s ease-out}.a-fade{animation:fade .5s}.a-slam{animation:slam .25s ease-in}
+@media (prefers-reduced-motion:reduce){.ph-cap span{animation:none!important}}
+.note{font-size:12px;color:var(--mute);border-top:1px solid var(--line);padding-top:10px}
+</style>
+
+<div class="wrap">
+  <h1>/claude 채널 설정 화면 시안 두 가지</h1>
+  <p class="lead">아래에서 A와 B를 바꿔 가며 눌러 보세요. 고른 값은 두 시안이 함께 씁니다. 프리셋 이름과 숫자는 화면 모양을 보이려고 넣은 <b>예시</b>이고, 오른쪽 미리보기도 실제 렌더가 아닌 모형입니다.</p>
+
+  <div class="switch" role="group" aria-label="시안 고르기">
+    <button id="swA" aria-pressed="true"><b>A · 한 페이지 + 접는 묶음 (추천)</b><span>프리셋을 고르고 채널명을 적은 뒤 저장하면 끝납니다. 바꾸고 싶은 묶음만 펼칩니다.</span></button>
+    <button id="swB" aria-pressed="false"><b>B · 제작소처럼 단계별</b><span>1→5단계를 '다음'으로 넘어갑니다. 처음 쓰는 사람에게는 친절하지만, 한 칸만 고칠 때도 해당 단계를 찾아 들어가야 합니다.</span></button>
+  </div>
+
+  <div class="tabs" aria-hidden="true"><span class="on">설정</span><span>라이선스·기기</span><span>설치</span><span>Claude에서 쓰기</span></div>
+
+  <div class="main">
+    <div class="left" id="left"></div>
+    <aside class="right">
+      <div class="phone" id="phone"></div>
+      <div class="tl" id="tl"><div class="bar" id="tlbar"></div><span class="lab">5초 · 효과음 위치</span></div>
+      <button class="btn pri" id="play">▶ 5초 시험 재생</button>
+      <div class="card chg" id="chg"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const PRESETS={
+  post:{name:"게시글형",sub:"썰 · 게시글 카드",d:{tpl:"틀 그대로",font:"검은고딕",band:"#1f3a8a",pack:"story",enter:"rise",emph:"단어 노랑",outline:"6px",voice:"남성 · 차분",tempo:"1.30",sfx:"팩01",sfxN:3,bgm:"잔잔",meme:"없음"}},
+  review:{name:"리뷰형",sub:"쇼핑 · 제품 리뷰",d:{tpl:"틀 그대로",font:"검은고딕",band:"#c2185b",pack:"deal",enter:"slide",emph:"단어 노랑",outline:"8px",voice:"여성 2명 · 밝고 빠름",tempo:"1.40",sfx:"팩02",sfxN:4,bgm:"경쾌·밝음",meme:"반응 짤"}},
+  tension:{name:"긴장형",sub:"사건 · 반전",d:{tpl:"틀 그대로",font:"검은고딕",band:"#111111",pack:"tension",enter:"slam",emph:"단어 빨강",outline:"10px",voice:"남성 · 낮고 무거움",tempo:"1.25",sfx:"팩03",sfxN:6,bgm:"긴장",meme:"없음"}}
+};
+const FIELDS=[
+  {g:"screen",k:"tpl",label:"꾸미기 템플릿",opts:["틀 그대로","썰 스타일 01 · 게시글 카드","썰 스타일 07 · 말풍선","고정 스타일 03 · 테두리 액자","고정 스타일 12 · 상단 큰 제목"],more:"썰 스타일 20 · 고정 스타일 20"},
+  {g:"screen",k:"font",label:"제목·자막 글꼴",opts:["검은고딕","지마켓 산스","여기어때 잘난체","배민 도현"],more:"글꼴 30종, 칸 안에 견본 글씨로 표시"},
+  {g:"screen",k:"band",label:"머리띠 색",opts:["#1f3a8a","#c2185b","#111111","#0f7b6c","#e65100"]},
+  {g:"cap",k:"pack",label:"자막팩",opts:["tension","clean","premium","story","deal","soft"]},
+  {g:"cap",k:"enter",label:"자막 등장 효과",opts:["rise","pop","slide","fade","slam"],more:"14종"},
+  {g:"cap",k:"emph",label:"단어 강조",opts:["단어 노랑","단어 빨강","강조 없음"]},
+  {g:"cap",k:"outline",label:"외곽선",opts:["0px","6px","8px","10px"]},
+  {g:"sound",k:"voice",label:"목소리",opts:["남성 · 차분","여성 2명 · 밝고 빠름","남성 · 낮고 무거움","여성 · 또렷"]},
+  {g:"sound",k:"tempo",label:"말 빠르기",opts:["1.20","1.25","1.30","1.36","1.40"]},
+  {g:"sound",k:"sfx",label:"효과음 팩",opts:["팩01","팩02","팩03"],sfxHint:true},
+  {g:"sound",k:"bgm",label:"배경음",opts:["잔잔","경쾌·밝음","긴장"]},
+  {g:"sound",k:"meme",label:"짤",opts:["없음","반응 짤","동물 짤"]}
+];
+const GROUPS=[{id:"screen",name:"화면"},{id:"cap",name:"자막"},{id:"sound",name:"소리"}];
+const BANDNAME={"#1f3a8a":"남색","#c2185b":"자홍","#111111":"검정","#0f7b6c":"청록","#e65100":"주황"};
+const S={layout:"A",preset:"post",channel:"썰풀다실측",v:{},open:{},step:0,saved:""};
+try{const o=JSON.parse(localStorage.getItem("mockState")||"null");if(o)Object.assign(S,o,{saved:""})}catch(e){}
+function keep(){try{localStorage.setItem("mockState",JSON.stringify(S))}catch(e){}}
+const P=()=>PRESETS[S.preset].d;
+const val=k=>S.v[k]&&S.v[k]!=="__p"?S.v[k]:P()[k];
+const custom=k=>S.v[k]&&S.v[k]!=="__p";
+const show=(k,x)=>k==="band"?(BANDNAME[x]||x):x;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function fieldHTML(f){
+  const pv=show(f.k,P()[f.k]);
+  let o=`<option value="__p">프리셋대로 (${esc(pv)})</option>`+f.opts.map(x=>`<option value="${esc(x)}" ${S.v[f.k]===x?"selected":""}>${esc(show(f.k,x))}</option>`).join("");
+  let h=`<label class="row"><span>${f.label}</span><select id="f_${f.k}" data-k="${f.k}" class="${custom(f.k)?"custom":""}">${o}</select></label>`;
+  if(f.sfxHint)h+=`<div class="hint">이 프리셋 원본은 효과음 <b>${P().sfxN}개</b>(약 ${(5/P().sfxN*2).toFixed(1)}초에 1개)를 씁니다. '프리셋대로'로 두면 같은 개수·간격으로 넣습니다.</div>`;
+  if(f.more)h+=`<div class="muted" style="grid-column:2">실제 화면에서는 ${f.more}</div>`;
+  return h;
+}
+function presetHTML(){
+  return `<div class="card"><h2>프리셋 고르기 <small>대본 구조와 기본 화면을 정합니다</small></h2><div class="presets">`+
+   Object.entries(PRESETS).map(([id,p])=>`<button class="preset" data-p="${id}" aria-pressed="${S.preset===id}"><b>${p.name}</b><span>${p.sub}</span><span>효과음 ${p.d.sfxN}개 · ${p.d.bgm}</span></button>`).join("")+
+   `</div><label class="row"><span>채널명</span><input type="text" id="f_channel" value="${esc(S.channel)}"></label></div>`;
+}
+const chgCount=g=>FIELDS.filter(f=>f.g===g&&custom(f.k)).length;
+function renderA(){
+  let h=presetHTML();
+  for(const g of GROUPS){
+    const n=chgCount(g.id);
+    h+=`<details class="grp" data-g="${g.id}" ${S.open[g.id]?"open":""}><summary><span>${g.name}</span><em class="${n?"chg":""}">${n?`바꾼 칸 ${n}개`:"전부 프리셋대로"}</em></summary><div class="body">${FIELDS.filter(f=>f.g===g.id).map(fieldHTML).join("")}</div></details>`;
+  }
+  h+=`<div class="saverow"><span class="toast">${S.saved}</span><button class="btn sec" id="reset">전부 프리셋대로</button><button class="btn pri" id="save">저장</button></div>`;
+  return h;
+}
+const STEPS=["프리셋","화면","자막","소리","확인·저장"];
+function renderB(){
+  let h=`<div class="steps">`+STEPS.map((s,i)=>`<button data-step="${i}" class="${i===S.step?"on":i<S.step?"done":""}">${i+1} ${s}</button>`).join("")+`</div>`;
+  if(S.step===0)h+=presetHTML();
+  else if(S.step<4){const g=GROUPS[S.step-1];h+=`<div class="card"><h2>${S.step+1}단계 · ${g.name} <small>모르면 '프리셋대로' 그대로 두고 다음</small></h2>${FIELDS.filter(f=>f.g===g.id).map(fieldHTML).join("")}</div>`}
+  else{h+=`<div class="card"><h2>5단계 · 확인하고 저장</h2><div class="summary"><div><span>프리셋</span><b>${PRESETS[S.preset].name}</b></div><div><span>채널명</span><b>${esc(S.channel)}</b></div>`+
+    FIELDS.map(f=>`<div><span>${f.label}</span><b>${custom(f.k)?esc(show(f.k,val(f.k))):"프리셋대로"}</b></div>`).join("")+`</div></div>`}
+  h+=`<div class="saverow"><span class="toast">${S.saved}</span><button class="btn sec" id="prev" ${S.step===0?"disabled":""}>이전</button>`+(S.step<4?`<button class="btn pri" id="next">다음 →</button>`:`<button class="btn pri" id="save">저장</button>`)+`</div>`;
+  return h;
+}
+function renderPhone(line){
+  const tpl=val("tpl"),band=val("band"),hl=val("emph")==="단어 빨강"?"#ff4d4d":val("emph")==="강조 없음"?"#fff":"#ffd84a";
+  const ol=parseInt(val("outline"))||0, st=ol?`-webkit-text-stroke:${Math.min(ol,10)/3}px #000;paint-order:stroke fill`:"";
+  const cap=line||"엄마가 몰래 바꾼 <span class='w'>비밀번호</span>";
+  let h="";
+  if(tpl.startsWith("썰 스타일")){h+=`<div class="ph-post"><span style="color:#666">${esc(S.channel)} · 방금</span><b>시댁에서 생긴 일 들어보세요</b><span style="color:#888">조회 1.2만 · 댓글 384</span></div>`}
+  else if(tpl.startsWith("고정 스타일")){h+=`<div class="ph-band" style="background:transparent;top:3%;font-size:24px;color:${band==="#111111"?"#fff":band}">${esc(S.channel)}</div><div class="ph-title" style="top:14%">시댁에서 생긴 일</div><div class="ph-frame" style="--fr:${band}"></div>`}
+  else{h+=`<div class="ph-band" style="background:${band}">${esc(S.channel)}</div><div class="ph-title">시댁에서 생긴 일 들어보세요</div>`}
+  h+=`<div class="ph-video">원본 영상 자리</div><div class="ph-cap" style="--hl:${hl};${st}"><span class="a-${val("enter")}" style="display:inline-block">${cap}</span></div><div class="ph-tag">자막팩 ${esc(val("pack"))} · ${esc(tpl)}</div>`;
+  document.getElementById("phone").innerHTML=h;
+}
+function renderTL(){
+  const n=P().sfxN, tl=document.getElementById("tl");
+  tl.querySelectorAll(".sfx").forEach(e=>e.remove());
+  const shown=Math.max(1,Math.round(n/2));
+  for(let i=0;i<shown;i++){const d=document.createElement("i");d.className="sfx";d.style.left=(12+i*(80/Math.max(1,shown-1||1)))+"%";if(shown===1)d.style.left="20%";tl.appendChild(d)}
+}
+function renderChg(){
+  const list=FIELDS.filter(f=>custom(f.k));
+  document.getElementById("chg").innerHTML=`<b>프리셋에서 바꾼 것 ${list.length}개</b>`+(list.length?`<ul>${list.map(f=>`<li>${f.label}: ${esc(show(f.k,P()[f.k]))} → <b>${esc(show(f.k,val(f.k)))}</b></li>`).join("")}</ul>`:`<span class="muted">모든 칸이 프리셋대로입니다. 이대로 저장해도 영상이 만들어집니다.</span>`)+`<div class="note">목소리: ${esc(val("voice"))} · 빠르기 ${esc(val("tempo"))} · 배경음 ${esc(val("bgm"))} · 짤 ${esc(val("meme"))}</div>`;
+}
+function render(){
+  document.getElementById("swA").setAttribute("aria-pressed",S.layout==="A");
+  document.getElementById("swB").setAttribute("aria-pressed",S.layout==="B");
+  document.getElementById("left").innerHTML=S.layout==="A"?renderA():renderB();
+  renderPhone();renderTL();renderChg();keep();
+}
+document.getElementById("swA").onclick=()=>{S.layout="A";S.saved="";render()};
+document.getElementById("swB").onclick=()=>{S.layout="B";S.saved="";render()};
+const left=document.getElementById("left");
+left.addEventListener("change",e=>{const k=e.target.dataset.k;if(k){S.v[k]=e.target.value;S.saved="";render()}});
+left.addEventListener("input",e=>{if(e.target.id==="f_channel"){S.channel=e.target.value;renderPhone();keep()}});
+left.addEventListener("toggle",e=>{if(e.target.dataset&&e.target.dataset.g){S.open[e.target.dataset.g]=e.target.open;keep()}},true);
+left.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.p){S.preset=b.dataset.p;S.saved="";render()}
+  else if(b.dataset.step){S.step=+b.dataset.step;render()}
+  else if(b.id==="next"){S.step=Math.min(4,S.step+1);render()}
+  else if(b.id==="prev"){S.step=Math.max(0,S.step-1);render()}
+  else if(b.id==="reset"){S.v={};S.saved="";render()}
+  else if(b.id==="save"){S.saved="저장됨 (시안이라 서버에는 안 갑니다)";render()}
+});
+let playing=null;
+document.getElementById("play").onclick=()=>{
+  if(playing)return;
+  const lines=["엄마가 몰래 바꾼 <span class='w'>비밀번호</span>","알고 보니 <span class='w'>내 생일</span>이었다","그런데 그날 <span class='w'>문자 한 통</span>이 왔다"];
+  const bar=document.getElementById("tlbar"),btn=document.getElementById("play");
+  const t0=performance.now();let idx=-1;btn.textContent="재생 중…";
+  playing=setInterval(()=>{
+    const t=(performance.now()-t0)/1000, i=Math.min(2,Math.floor(t/1.67));
+    bar.style.width=Math.min(100,t/5*100)+"%";
+    if(i!==idx){idx=i;renderPhone(lines[i])}
+    if(t>=5){clearInterval(playing);playing=null;btn.textContent="▶ 5초 시험 재생";setTimeout(()=>{bar.style.width="0";renderPhone()},600)}
+  },50);
+};
+render();
+</script>
+
+</body></html>
