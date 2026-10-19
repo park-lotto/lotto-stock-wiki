@@ -2,40 +2,682 @@
  "name": "꿀템노트판",
  "renderer": "bench",
  "_note": "얜샷템 하이브리드 — 꿀템노트(@꿀템노트-g1z) 칼카피 판: 나레가 묻고 연예인 원음이 답하는 가짜 대화. 근거 channel/kkultemnote/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}.",
- "bench": {"channel": "kkultemnote", "analysis": "channel/kkultemnote/스타일분석.md", "design": "channel/kkultemnote/하이브리드_판설계.md",
-           "line_reads": "channel/kkultemnote/줄판독", "src_dir": "C:/숏템_칼카피/kkultemnote/src",
-           "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json", "sfx_key": "kkultemnote"},
- "voice": {"name": "박창수", "voice_id": "tc_6059dad0b83880769a50502f", "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"},
+ "bench": {
+  "channel": "kkultemnote",
+  "analysis": "channel/kkultemnote/스타일분석.md",
+  "design": "channel/kkultemnote/하이브리드_판설계.md",
+  "line_reads": "channel/kkultemnote/줄판독",
+  "src_dir": "C:/숏템_칼카피/kkultemnote/src",
+  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
+  "sfx_key": "kkultemnote"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"
+ },
  "cps_target": 7.5,
- "bgm": {"id": "honwaka_puppu", "db_below_voice": 12.0, "duck_orig_db": 0.0, "fade_out": 0.4, "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음"},
- "loudness": {"lufs": -14.0, "tp": -1.5},
- "length": {"min": 15, "max": 22},
- "timing": {"gap_after_tts": 0.06, "gap_after_orig": 0.04, "tail": 0.30},
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 12.0,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.4,
+  "why": "벤치 7/8편 BGM 경쾌·처음~끝·페이드 없음"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 15,
+  "max": 22
+ },
+ "timing": {
+  "gap_after_tts": 0.06,
+  "gap_after_orig": 0.04,
+  "tail": 0.3
+ },
  "frame": {
-  "bg": [0, 0, 0], "window": [0, 420, 1080, 1080],
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
   "title": [
-   {"font": "SBAggroB.ttf", "px": 98, "ink_top": 176, "color": "#FFFFFF", "hi": "#FCB9CE", "max_w": 960},
-   {"font": "SBAggroB.ttf", "px": 112, "ink_top": 287, "color": "#FFFFFF", "hi": "#0091FD", "max_w": 960}
+   {
+    "font": "SBAggroB.ttf",
+    "px": 98,
+    "ink_top": 176,
+    "color": "#FFFFFF",
+    "hi": "#FCB9CE",
+    "max_w": 960
+   },
+   {
+    "font": "SBAggroB.ttf",
+    "px": 112,
+    "ink_top": 287,
+    "color": "#FFFFFF",
+    "hi": "#0091FD",
+    "max_w": 960
+   }
   ],
   "logo": null,
-  "credit": {"font": "Pretendard-Regular.otf", "px": 40, "color": "#FAFAFA", "ink_top": 1615},
-  "comment": {"bottom": 1505, "px": 30}
+  "credit": {
+   "font": "Pretendard-Regular.otf",
+   "px": 40,
+   "color": "#FAFAFA",
+   "ink_top": 1615
+  },
+  "comment": {
+   "bottom": 1505,
+   "px": 30
+  }
  },
  "caption": {
   "pack": "kkultemnote",
-  "pack_default": {"narr.first": "fade", "narr.rest": "fade", "orig.first": "cut", "orig.rest": "cut"},
-  "variant_for": {"pop": "orig_pop", "cut": "cut"},
+  "pack_default": {
+   "narr.first": "fade",
+   "narr.rest": "fade",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {
+   "pop": "orig_pop",
+   "cut": "cut"
+  },
   "chunk_max_chars": 15
  },
- "cuts": {"push_tts": 0.0, "push_orig": 0.0},
- "sfx_files": {"ding": "팩01/ding.wav", "whoosh": "팩01/whoosh.wav", "pop": "팩01/pop.wav", "gain_db": -8},
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
+  "gain_db": -8
+ },
  "placement": {
   "rules": {
-   "variants": {"orig_red": {"speaker": "orig", "lex": ["excl"], "match": "빨강", "why": "BpU '혹 하는 거지'·m0E '안 들어가는 게 없어!' 빨강 펀치"}},
-   "stickers": {"comment_card": {"needs_comment": true, "why": "벤치 댓글 카드 5/8편 — 대본에 원본 실제 댓글이 있을 때만"}},
-   "sfx": {"kind": "ding", "max": 1, "why": "10-19 신호 재측정: 기본 0발, 있으면 자막교체·나레→원음 전환 순간 1발"}
+   "variants": {
+    "orig_red": {
+     "speaker": "orig",
+     "lex": [
+      "excl"
+     ],
+     "match": "빨강",
+     "why": "BpU '혹 하는 거지'·m0E '안 들어가는 게 없어!' 빨강 펀치"
+    }
+   },
+   "stickers": {
+    "comment_card": {
+     "needs_comment": true,
+     "why": "벤치 댓글 카드 5/8편 — 대본에 원본 실제 댓글이 있을 때만"
+    }
+   },
+   "sfx": {
+    "kind": "ding",
+    "max": 1,
+    "why": "10-19 신호 재측정: 기본 0발, 있으면 자막교체·나레→원음 전환 순간 1발"
+   }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/kkultemnote/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 23,
+     "enter": {
+      "fade": 0.522,
+      "cut": 0.478
+     },
+     "emph": 0.696
+    },
+    "narr.rest": {
+     "n": 31,
+     "enter": {
+      "fade": 0.548,
+      "cut": 0.419,
+      "append": 0.032
+     },
+     "emph": 0.484
+    },
+    "orig.first": {
+     "n": 29,
+     "enter": {
+      "cut": 0.414,
+      "pop": 0.31,
+      "fade": 0.207,
+      "other": 0.034,
+      "typing": 0.034
+     },
+     "emph": 0.207
+    },
+    "orig.rest": {
+     "n": 66,
+     "enter": {
+      "cut": 0.561,
+      "fade": 0.288,
+      "append": 0.045,
+      "pop": 0.045,
+      "other": 0.03,
+      "typing": 0.03
+     },
+     "emph": 0.182
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 0.375,
+    "sfx": 0.25
+   },
+   "stickers": {
+    "comment_card": 0.625,
+    "heart": 0.125,
+    "object_pop": 0.25,
+    "other": 0.5,
+    "spark_lines": 0.625
+   },
+   "videos": [
+    {
+     "id": "2wJTffElmjk",
+     "n": 16,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "other": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 6,
+        "fade": 4
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "fade": 2
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 2,
+      "comment_card": 12,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "ask": 1,
+       "none": 1
+      },
+      "comment_card": {
+       "ask": 3,
+       "excl": 3,
+       "none": 6
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "노랑 작게→커짐": 1,
+      "빨강": 1,
+      "기본('깜짝' 어절 크고 굵게)": 1,
+      "기타(잔상 글리치)": 1,
+      "노랑(전체)": 1,
+      "기타(나레 글꼴 굵은 고딕)": 1,
+      "기본(강조어 노랑 크게)": 3
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "653bTRm8p6E",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "pop": 2,
+        "cut": 2
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "fade": 1
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "spark_lines": 4
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 2,
+       "excl": 2
+      }
+     },
+     "variants": {
+      "기타(노랑 꾸불림)": 3,
+      "기타(분홍 굵은 꾸불림)": 1,
+      "기타(괄호 보충 줄, 노랑 꾸불림, 글 위 따로)": 1
+     },
+     "sfx": [],
+     "no_caption": 3
+    },
+    {
+     "id": "_dzncUms1yQ",
+     "n": 18,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "pop": 1,
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "fade": 5,
+        "other": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "fade": 3
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "fade": 5
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "other": 2
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기본(작게→정상)": 1,
+      "기타(잔상 글리치)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "BpUOIUwkoG4",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "fade": 2,
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 9,
+       "enter": {
+        "cut": 4,
+        "fade": 3,
+        "append": 2
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 4,
+       "enter": {
+        "fade": 3,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "fade": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "none": 2
+      }
+     },
+     "variants": {
+      "기타(붙인 어절 굵은 고딕 흰)": 1,
+      "크게 튀어나옴": 1,
+      "빨강": 1,
+      "기타(붙인 어절 굵은 흰)": 1,
+      "기타(굵은 흰 고딕 크게)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "cLk6fJly6OY",
+     "n": 17,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "cut": 2,
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "cut": 5,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {
+      "object_pop": 5,
+      "other": 2,
+      "comment_card": 2
+     },
+     "sticker_lex": {
+      "object_pop": {
+       "none": 4,
+       "excl": 1
+      },
+      "other": {
+       "price": 1,
+       "excl": 1
+      },
+      "comment_card": {
+       "excl": 2
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 1,
+      "노랑(전체)": 1,
+      "노랑(전체)·어절이 위에서 튀어 붙음": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "KCxJ5qJft38",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "cut": 3,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 4,
+        "fade": 1,
+        "pop": 1
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "fade": 3,
+        "cut": 2,
+        "append": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "heart": 1,
+      "comment_card": 4,
+      "other": 1,
+      "object_pop": 1
+     },
+     "sticker_lex": {
+      "heart": {
+       "excl": 1
+      },
+      "comment_card": {
+       "none": 3,
+       "excl": 1
+      },
+      "other": {
+       "excl": 1
+      },
+      "object_pop": {
+       "lux": 1
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 2,
+      "기타(2줄: 위 꾸불림 흰 + 아래 큰 얇은 회흰 감동)": 1,
+      "기타(주황 꾸불림)": 2,
+      "기타(붙인 어절 분홍 + 분홍 번짐 이중상)": 1,
+      "기타(대괄호 보충 줄, 굵은 흰 고딕 + 회색 외곽)": 1
+     },
+     "sfx": [
+      "switch"
+     ],
+     "no_caption": 1
+    },
+    {
+     "id": "m0Ex0y1DN5s",
+     "n": 23,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 13,
+        "fade": 1,
+        "pop": 1,
+        "append": 1,
+        "typing": 1
+       },
+       "emph": 3
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "fade": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {
+      "comment_card": 2,
+      "spark_lines": 3
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 1,
+       "excl": 1
+      },
+      "spark_lines": {
+       "none": 3
+      }
+     },
+     "variants": {
+      "기타(숫자 굵은 노랑 고딕 + 나머지 꾸불림 흰)": 1,
+      "기타(굵은 노랑 고딕 + 뒤에 흐린 큰 사본 1초 유지)": 1,
+      "크게 튀어나옴": 1,
+      "기타(굵은 흰 고딕)": 1,
+      "기타(붙인 어절 굵은 노랑 고딕)": 1,
+      "빨강": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "znHaConczpE",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 4,
+       "enter": {
+        "pop": 2,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "fade": 4,
+        "pop": 1,
+        "other": 1,
+        "cut": 1
+       },
+       "emph": 1
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "fade": 3
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "fade": 4,
+        "cut": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "comment_card": 9,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "comment_card": {
+       "none": 6,
+       "lux": 1,
+       "excl": 2
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "크게 튀어나옴": 2,
+      "빨강": 1,
+      "기타(잔상 글리치)": 1,
+      "노랑(전체)": 1
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0
+    }
+   ]
+  }
  },
  "title_form": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
  "script": {
@@ -48,18 +690,67 @@
   ],
   "example": "channel/kkultemnote/하이브리드_성시경/대본.json",
   "audit": [
-   {"kind": "first_line", "is": "orig"},
-   {"kind": "orig_span", "which": "first", "max": 2.2},
-   {"kind": "count", "of": "tts", "min": 3, "max": 5},
-   {"kind": "no_adjacent", "of": "tts"},
-   {"kind": "tts_chars", "min": 8, "max": 26},
-   {"kind": "tts_total_chars", "min": 55, "max": 100},
-   {"kind": "ending", "which": "all_tts", "pattern": "(다는데요|라는데요|다네요|라네요|가요|나요|했네요|다는데|래요)\\s*[?？.!]*$", "min_share": 0.75, "why": "전언·질문 어미"},
-   {"kind": "forbid_in", "of": "tts", "pattern": "^(저도|제가|나도|저는)|따라 (사|해) 봤", "why": "1인칭 없음(꿀템노트 결)"},
-   {"kind": "last_line", "is": "orig", "or_tts_pattern": "했네요"},
-   {"kind": "cap_chars", "max": 15},
-   {"kind": "narr_share", "min": 0.30, "max": 0.48},
-   {"kind": "est_length", "min": 15, "max": 22}
+   {
+    "kind": "first_line",
+    "is": "orig"
+   },
+   {
+    "kind": "orig_span",
+    "which": "first",
+    "max": 2.2
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 3,
+    "max": 5
+   },
+   {
+    "kind": "no_adjacent",
+    "of": "tts"
+   },
+   {
+    "kind": "tts_chars",
+    "min": 8,
+    "max": 26
+   },
+   {
+    "kind": "tts_total_chars",
+    "min": 55,
+    "max": 100
+   },
+   {
+    "kind": "ending",
+    "which": "all_tts",
+    "pattern": "(다는데요|라는데요|다네요|라네요|가요|나요|했네요|다는데|래요)\\s*[?？.!]*$",
+    "min_share": 0.75,
+    "why": "전언·질문 어미"
+   },
+   {
+    "kind": "forbid_in",
+    "of": "tts",
+    "pattern": "^(저도|제가|나도|저는)|따라 (사|해) 봤",
+    "why": "1인칭 없음(꿀템노트 결)"
+   },
+   {
+    "kind": "last_line",
+    "is": "orig",
+    "or_tts_pattern": "했네요"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 15
+   },
+   {
+    "kind": "narr_share",
+    "min": 0.3,
+    "max": 0.48
+   },
+   {
+    "kind": "est_length",
+    "min": 15,
+    "max": 22
+   }
   ]
  }
 }

@@ -1,0 +1,625 @@
+{
+ "id": "m0Ex0y1DN5s",
+ "dur": 19.554,
+ "fps": 60,
+ "size": "1080x1920",
+ "title_lines": [
+  {
+   "text": "가방 안사는 장윤정이",
+   "colors": [
+    {
+     "word": "가방 안사는",
+     "hex": "#F9ADCE"
+    },
+    {
+     "word": "장윤정이",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "지갑 열게 만든 이유",
+   "colors": [
+    {
+     "word": "지갑 열게",
+     "hex": "#0C96FA"
+    },
+    {
+     "word": "만든 이유",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.0,
+   "speaker": "원음",
+   "text": "100만원 넘어갈 줄 알고",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 300,
+   "variant": "기타(숫자 굵은 노랑 고딕 + 나머지 꾸불림 흰)",
+   "emph": [
+    {
+     "word": "100만원",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "0.0 작게 → 0.2~0.3 가로 번짐 → 0.4 완성. 한 덩어리 안에 굵은 노랑 고딕과 꾸불림 흰이 섞임",
+   "cut_at": []
+  },
+  {
+   "t0": 1.0,
+   "t1": 1.95,
+   "speaker": "원음",
+   "text": "저 가방 안 사는데",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 2.05,
+   "t1": 3.4,
+   "speaker": "나레",
+   "text": "가방 잘 안사는 장윤정도",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "가방 잘 안사는",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "댓글카드",
+     "t_in": 2.0,
+     "t_out": 5.85,
+     "x": 40,
+     "y": 1410,
+     "w": 1000,
+     "anim": "컷인·컷아웃(글 가방브랜드 구매처 너무너무 궁금해요 제가 찾던 디자인인데 ㅠㅠ 🙏🙏🙏, 좋아요 1)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "2.0 카드만 먼저, 0.1초 뒤 나레 글",
+   "cut_at": [
+    2.367
+   ]
+  },
+  {
+   "t0": 3.4,
+   "t1": 4.8,
+   "speaker": "나레",
+   "text": "지갑 열게 한 이유가 있다는데?",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "지갑 열게 한 이유",
+     "hex": "#EDCC2A"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "3.4 겹친 이중상 1~2프레임",
+   "cut_at": []
+  },
+  {
+   "t0": 4.8,
+   "t1": 5.85,
+   "speaker": "불명",
+   "text": "메이크업 박스인 거야",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기타(굵은 노랑 고딕 + 뒤에 흐린 큰 사본 1초 유지)",
+   "emph": [
+    {
+     "word": "메이크업 박스인 거야",
+     "hex": "#EDCC2A"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#EDCC2A",
+   "notes": "화자 확정 못 함(굵은 고딕=나레 글꼴이지만 내용은 원음식)",
+   "cut_at": []
+  },
+  {
+   "t0": 5.9,
+   "t1": 7.7,
+   "speaker": "원음",
+   "text": "수납하기 좋겠는데? 싫어가지고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "수납하기 좋겠는데?",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(행사장 컷, 다른 영상)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "원음인데 앞 어절이 노랑 꾸불림",
+   "cut_at": [
+    7.067
+   ]
+  },
+  {
+   "t0": 7.7,
+   "t1": 8.4,
+   "speaker": "원음",
+   "text": "열었더니!",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "바탕 흐림(모자이크)은 원본 영상",
+   "cut_at": []
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.2,
+   "speaker": "원음",
+   "text": "야 이거 뭐",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 9.2,
+   "t1": 9.75,
+   "speaker": "원음",
+   "text": "펼쳐 놓으면 이만해!!",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 300,
+   "variant": "크게 튀어나옴",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "댓글카드",
+     "t_in": 9.2,
+     "t_out": 12.25,
+     "x": 310,
+     "y": 1400,
+     "w": 430,
+     "anim": "컷인·컷아웃(글 가방 브랜드 알고싶어요~~, 좋아요 9)"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "굵은 흰 고딕, 9.2~9.5 흐린 큰 사본 → 9.6 정상. 이 덩어리부터 댓글카드 2",
+   "cut_at": []
+  },
+  {
+   "t0": 9.75,
+   "t1": 10.4,
+   "speaker": "원음",
+   "text": "밴드가 있고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 10.5,
+   "t1": 10.9,
+   "speaker": "원음",
+   "text": "브러쉬 넣는",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "브러쉬",
+     "hex": "#FBFF21"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 10.9,
+   "t1": 11.4,
+   "speaker": "원음",
+   "text": "이렇게 넓어!",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 11.4,
+   "t1": 12.3,
+   "speaker": "원음",
+   "text": "수납하기 이렇게 좋은 거야",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 11.4,
+     "t_out": 11.55,
+     "x": 980,
+     "y": 1330,
+     "w": 60,
+     "anim": "반짝"
+    },
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 11.55,
+     "t_out": 11.7,
+     "x": 380,
+     "y": 1300,
+     "w": 60,
+     "anim": "반짝"
+    },
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 11.65,
+     "t_out": 11.95,
+     "x": 230,
+     "y": 1200,
+     "w": 50,
+     "anim": "반짝"
+    }
+   ],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "✦ 3개(글 오른쪽 위 → 오른쪽 아래 → 왼쪽 아래)",
+   "cut_at": []
+  },
+  {
+   "t0": 12.3,
+   "t1": 12.9,
+   "speaker": "원음",
+   "text": "여기도!!",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기타(굵은 흰 고딕)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 12.9,
+   "t1": 13.5,
+   "speaker": "원음",
+   "text": "이렇게 넓어",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 13.5,
+   "t1": 14.1,
+   "speaker": "원음",
+   "text": "이렇게 넓어 대박이지",
+   "layer": "채널",
+   "enter": "append",
+   "enter_ms": 0,
+   "variant": "기타(붙인 어절 굵은 노랑 고딕)",
+   "emph": [
+    {
+     "word": "대박이지",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 14.1,
+   "t1": 14.8,
+   "speaker": "원음",
+   "text": "밴드가 있고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 14.8,
+   "t1": 15.6,
+   "speaker": "원음",
+   "text": "너도 들어가",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "15.1~15.5 글 뒤에 흐린 사본이 아래로 번져 있음",
+   "cut_at": []
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.3,
+   "speaker": "원음",
+   "text": "안 들어가는 게 없어!",
+   "layer": "채널",
+   "enter": "typing",
+   "enter_ms": 300,
+   "variant": "빨강",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#E10116",
+   "notes": "15.6 안 → 15.7 안 들어가 → 15.8 안 들어가는 게 어절씩 튀어나오며 쌓임, 빨강 꾸불림",
+   "cut_at": []
+  },
+  {
+   "t0": 16.3,
+   "t1": 17.0,
+   "speaker": "원음",
+   "text": "난리야 난리",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 17.1,
+   "t1": 18.3,
+   "speaker": "나레",
+   "text": "가방 맨 모습 좀 보여주세요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "가방 맨 모습",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 18.4,
+   "t1": 19.0,
+   "speaker": "원음",
+   "text": "되게 가벼워",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(가방 든 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 19.0,
+   "t1": 19.55,
+   "speaker": "원음",
+   "text": "너무 괜찮지",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(가방 든 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0~2.0 원음 100만원 넘어갈 줄 알고 / 저 가방 안 사는데) → 나레(가방 잘 안사는 장윤정도 / 지갑 열게 한 이유가 있다는데?) → 원음 설명 연속(수납·밴드·브러쉬, 댓글카드 2장) → 원음 빨강 안 들어가는 게 없어! → 나레 가방 맨 모습 좀 보여주세요 → 원음 끝(되게 가벼워 / 너무 괜찮지)",
+ "narr_share": "나레 덩어리 3/23, 나레 3.9초/19.554초 = 20% ",
+ "notes": [
+  "등장·시각은 10fps 띠(0.1초)로 읽음 → enter_ms·시각 ±0.1초, 30fps 띠는 안 봄(확인 못 함)",
+  "hex는 포화 픽셀 중앙값(압축 번짐 ±) — 노랑은 #F4D611~#FAFF16 폭으로 나옴(BpU 스타일분석 실측 #FDF60E)",
+  "y는 10fps 띠 눈대중(±15px)",
+  "m0E: 나레는 2.05~4.8·17.1~18.3 단 3덩어리 + 불명 1(4.8). 나머지가 원음 — 스타일분석의 나레-원음 가짜 대화 3~4번과 달리 원음 연속이 길다(5.9~17.0 = 약 11초)",
+  "m0E: 댓글카드 2장(2.0~5.85 / 9.2~12.25), 스타일분석 2~6초 유지와 일치",
+  "효과음: 뜯기 후보 0.1·1.8 은 파형 솟음 없음 → null. 다른 솟음은 말·BGM 시작과 구분 불가",
+  "원음 화자 이름은 출처 채널명·제목 장윤정 으로만 추정, 줄마다 확인은 안 함",
+  "4.8 메이크업 박스인 거야 화자 불명"
+ ]
+}

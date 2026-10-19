@@ -1,0 +1,486 @@
+{
+ "id": "_dzncUms1yQ",
+ "dur": 17.7,
+ "fps": 60,
+ "size": "1080x1920",
+ "title_lines": [
+  {
+   "text": "소개하고 난리나서",
+   "colors": [
+    {
+     "word": "소개하고 난리나서",
+     "hex": "#FCB9CE"
+    }
+   ]
+  },
+  {
+   "text": "당황한 장윤정의 이것",
+   "colors": [
+    {
+     "word": "당황한",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "장윤정의 이것",
+     "hex": "#0091FD"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "lines": [
+  {
+   "t0": 0.03,
+   "t1": 1.0,
+   "speaker": "원음",
+   "text": "얘 금액이 얼마였지?",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 130,
+   "variant": "기본(작게→정상)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "기타",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "0.03 아주 작게→0.10 정상, 0.2~0.4 색분리 잔상"
+  },
+  {
+   "t0": 1.07,
+   "t1": 2.47,
+   "speaker": "원음",
+   "text": "아이고 아이고 에잉!! ㅎ",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": {
+    "kind": "웃음",
+    "t": 1.0,
+    "basis": "둘다"
+   },
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 2.53,
+   "t1": 3.7,
+   "speaker": "나레",
+   "text": "금액이 어마어마한 이 테이블",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "금액이 어마어마",
+     "hex": "#FEF60E"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 3.7,
+   "t1": 4.3,
+   "speaker": "나레",
+   "text": "한번 소개했다가",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 4.33,
+   "t1": 5.2,
+   "speaker": "나레",
+   "text": "아주 난리가 났었다는데요?",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    5.167
+   ],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "전언체"
+  },
+  {
+   "t0": 5.2,
+   "t1": 5.9,
+   "speaker": "원음",
+   "text": "이거 예술이야",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 5.9,
+   "t1": 7.0,
+   "speaker": "원음",
+   "text": "나 이거 너무 잘 산 거 같아",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "너무 잘 산 거",
+     "hex": "#FFF819"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    6.967
+   ],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 7.0,
+   "t1": 8.1,
+   "speaker": "원음",
+   "text": "얼핏 보여드렸거든요?",
+   "layer": "채널",
+   "enter": "기타(색분리 잔상 글리치)",
+   "enter_ms": 0,
+   "variant": "기타(잔상 글리치)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    8.067
+   ],
+   "scene": "얼굴",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "글자 겹침 잔상이 줄 내내 유지"
+  },
+  {
+   "t0": 8.1,
+   "t1": 8.93,
+   "speaker": "원음",
+   "text": "며칠 있다가",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(괄호 보충 줄)",
+     "desc": "(난리가 났음) 노랑 작은 글씨",
+     "t_in": 8.87,
+     "t_out": 10.6,
+     "x": 340,
+     "y": 1160,
+     "w": 410,
+     "anim": "cut"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "얼굴",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 8.93,
+   "t1": 10.6,
+   "speaker": "원음",
+   "text": "변신하는 식탁을 막 보여주면서",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(괄호 보충 줄)",
+     "desc": "(난리가 났음) 노랑 작은 글씨",
+     "t_in": 8.87,
+     "t_out": 10.6,
+     "x": 340,
+     "y": 1160,
+     "w": 410,
+     "anim": "cut"
+    }
+   ],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "얼굴",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "위에 노랑 보충 줄 (난리가 났음)이 8.87부터 먼저 떠 있음"
+  },
+  {
+   "t0": 10.63,
+   "t1": 11.5,
+   "speaker": "원음",
+   "text": "그거 아니거든요?",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    11.467
+   ],
+   "scene": "기타",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "행사 무대 컷(다른 영상)"
+  },
+  {
+   "t0": 11.5,
+   "t1": 12.3,
+   "speaker": "나레",
+   "text": "너무 비싸서 대신",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 12.37,
+   "t1": 13.47,
+   "speaker": "나레",
+   "text": "가성비템이 유행한 거라는데",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "가성비템",
+     "hex": "#FEF60C"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "전언체"
+  },
+  {
+   "t0": 13.5,
+   "t1": 14.2,
+   "speaker": "나레",
+   "text": "돌리면 확장이 되니까",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "돌리면 확장",
+     "hex": "#FEF60C"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 14.27,
+   "t1": 15.37,
+   "speaker": "나레",
+   "text": "어디든 둘 수 있어서 인기라네요",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "어디든 둘 수 있어서",
+     "hex": "#FEF811"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "전언체"
+  },
+  {
+   "t0": 15.4,
+   "t1": 16.0,
+   "speaker": "원음",
+   "text": "너무 좋아",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    15.967
+   ],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 16.0,
+   "t1": 16.7,
+   "speaker": "원음",
+   "text": "접었다 폈다",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 16.7,
+   "t1": 17.7,
+   "speaker": "나레",
+   "text": "손님 올 때 진짜 딱이네요",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 33,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "손님 올 때",
+     "hex": "#FCD109"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "끝 줄이 나레"
+  }
+ ],
+ "no_caption": [],
+ "beats": "0~1 원음 '얘 금액이 얼마였지?' → 원음 '아이고 아이고' → 2.5 나레 '금액이 어마어마한 이 테이블 한번 소개했다가 아주 난리가 났었다는데요?' → 5.2 원음 6줄(보충줄 난리가 났음) → 11.5 나레 3줄 → 15.4 원음 '너무 좋아·접었다 폈다' → 끝 나레 '손님 올 때 진짜 딱이네요'",
+ "narr_share": "나레 덩어리 8/18, 나레 7.3초/자막 17.3초/영상 17.7초",
+ "notes": [
+  "효과음 뜯기 후보 1.0(웃음) 은 파형 1.08·1.24 솟음과 겹치나 '아이고' 발화 시작이라 효과음 단정 못 함. 1.9 후보는 파형 근거 없음.",
+  "8.87 부터 노랑 보충 줄 '(난리가 났음)' — 스타일분석의 '(난리가 났음) 9.0' 과 같은 것, 8.87 부터 시작.",
+  "끝 줄이 나레(손님 올 때 진짜 딱이네요) — 스타일분석 '원음으로 끝'과 다름.",
+  "댓글카드 없음(이 편)."
+ ]
+}

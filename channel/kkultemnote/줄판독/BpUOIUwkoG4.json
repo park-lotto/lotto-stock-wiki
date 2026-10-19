@@ -1,0 +1,485 @@
+{
+ "id": "BpUOIUwkoG4",
+ "dur": 15.214,
+ "fps": 60,
+ "size": "1080x1920",
+ "title_lines": [
+  {
+   "text": "사악한 가격? 장윤정도",
+   "colors": [
+    {
+     "word": "사악한 가격?",
+     "hex": "#F9ADCE"
+    },
+    {
+     "word": "장윤정도",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "혹하게 만드는 쇼파",
+   "colors": [
+    {
+     "word": "혹하게 만드는 쇼파",
+     "hex": "#0C96FA"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 장공장장윤정",
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.6,
+   "speaker": "원음",
+   "text": "되게 가벼워",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 300,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "0.0 점만 → 0.1 완성 + 흐린 큰 사본이 0.4까지 남음(번짐 페이드)",
+   "cut_at": []
+  },
+  {
+   "t0": 0.6,
+   "t1": 1.1,
+   "speaker": "원음",
+   "text": "되게 가벼워 맞아!",
+   "layer": "채널",
+   "enter": "append",
+   "enter_ms": 0,
+   "variant": "기타(붙인 어절 굵은 고딕 흰)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "앞 글 두고 맞아! 굵게 붙임(orig_append)",
+   "cut_at": []
+  },
+  {
+   "t0": 1.1,
+   "t1": 1.7,
+   "speaker": "원음",
+   "text": "앉아보세요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(옆모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 1.7,
+   "t1": 2.6,
+   "speaker": "나레",
+   "text": "한 손으로 툭툭 들어도",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "툭툭",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "스타일분석은 1.7~4.0 한 줄로 봤으나 2.6에서 새 덩어리",
+   "cut_at": []
+  },
+  {
+   "t0": 2.6,
+   "t1": 3.9,
+   "speaker": "나레",
+   "text": "될정도로 가벼운 쇼파라는데요?",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "가벼운 쇼파",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 3.9,
+   "t1": 5.0,
+   "speaker": "원음",
+   "text": "굉장히 유명한 브랜드예요",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 3.95,
+     "t_out": 4.07,
+     "x": 833,
+     "y": 1290,
+     "w": 90,
+     "anim": "반짝 번쩍(2프레임)"
+    },
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 4.15,
+     "t_out": 4.3,
+     "x": 250,
+     "y": 1322,
+     "w": 90,
+     "anim": "반짝"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타(옆모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "3.9 작고 흐리게 → 4.0 완성. ✦ 반짝 2번(글 오른쪽 끝, 왼쪽 아래)",
+   "cut_at": []
+  },
+  {
+   "t0": 5.0,
+   "t1": 5.8,
+   "speaker": "나레",
+   "text": "뭐때문에 유명한가요?",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "유명",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(뒷모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 5.8,
+   "t1": 6.5,
+   "speaker": "원음",
+   "text": "앉아보면",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 400,
+   "variant": "크게 튀어나옴",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "5.8 아주 작게 → 5.9 크게 → 6.0~6.1 회색 테 번짐 → 6.2 정상(orig_pop)",
+   "cut_at": []
+  },
+  {
+   "t0": 6.5,
+   "t1": 7.3,
+   "speaker": "원음",
+   "text": "하나를 사고 싶더라고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 7.3,
+   "t1": 8.0,
+   "speaker": "원음",
+   "text": "앉는 느낌이",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "7.3 회색 반투명",
+   "cut_at": []
+  },
+  {
+   "t0": 8.03,
+   "t1": 9.0,
+   "speaker": "나레",
+   "text": "몸을 싹 감싼다네요?",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(앉은 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 9.0,
+   "t1": 10.0,
+   "speaker": "원음",
+   "text": "혹 하는 거지",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "빨강",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#E10116",
+   "notes": "빨강 꾸불림 + 검정 테, 자간 넓음(orig_red)",
+   "cut_at": []
+  },
+  {
+   "t0": 10.0,
+   "t1": 10.6,
+   "speaker": "원음",
+   "text": "앉아 보셔야죠",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 10.6,
+   "t1": 11.5,
+   "speaker": "나레",
+   "text": "가격은 비싸다는데요?",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 67,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "비싸",
+     "hex": "#F4D611"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": [
+    11.433
+   ]
+  },
+  {
+   "t0": 11.5,
+   "t1": 12.1,
+   "speaker": "원음",
+   "text": "가격은 사나워요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(행사장 리액션 컷, 다른 영상)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 12.1,
+   "t1": 12.75,
+   "speaker": "원음",
+   "text": "가격은 사나워요 아아아아악~",
+   "layer": "채널",
+   "enter": "append",
+   "enter_ms": 0,
+   "variant": "기타(붙인 어절 굵은 흰)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(행사장 리액션 컷)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 12.75,
+   "t1": 13.8,
+   "speaker": "원음",
+   "text": "장점이 많은 만큼",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(하반신·가구)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 13.8,
+   "t1": 14.3,
+   "speaker": "원음",
+   "text": "금액보고",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기타(굵은 흰 고딕 크게)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "13.8 회색 → 13.9 굵게 완성",
+   "cut_at": []
+  },
+  {
+   "t0": 14.3,
+   "t1": 15.2,
+   "speaker": "원음",
+   "text": "잡깐만 둘러보고 올게요^^",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0~1.7 원음 되게 가벼워 맞아! 앉아보세요) → 나레 전언(툭툭 들어도/가벼운 쇼파) → 원음 → 나레 질문(뭐때문에 유명한가요?) → 원음 → 나레(몸을 싹 감싼다네요?) → 원음 빨강 → 나레(가격은 비싸다는데요?) → 원음 끝(둘러보고 올게요^^)",
+ "narr_share": "나레 덩어리 5/19, 나레 4.9초/15.214초 = 32% (스타일분석 33%)",
+ "notes": [
+  "등장·시각은 10fps 띠(0.1초)로 읽음 → enter_ms·시각 ±0.1초, 30fps 띠는 안 봄(확인 못 함)",
+  "hex는 포화 픽셀 중앙값(압축 번짐 ±) — 노랑은 #F4D611~#FAFF16 폭으로 나옴(BpU 스타일분석 실측 #FDF60E)",
+  "y는 10fps 띠 눈대중(±15px)",
+  "BpU: 스타일분석은 나레 4줄이라 했으나 나레가 5덩어리(1.7·2.6 두 덩어리)",
+  "BpU: 스타일분석 원음 등장=컷인 과 달리 원음 덩어리 다수가 fade(반투명 1~3프레임)로 들어옴 — 컷인은 0.6 맞아!·9.0 혹하는·10.0 앉아보셔야죠 등",
+  "효과음: 뜯기 후보 0, 파형 솟음은 말 시작과 겹쳐 구분 못 함 → 전부 null",
+  "11.5~12.7 장면은 다른 영상 행사장 — 화자 이름 글자 없음"
+ ]
+}

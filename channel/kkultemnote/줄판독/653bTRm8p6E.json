@@ -1,0 +1,505 @@
+{
+ "id": "653bTRm8p6E",
+ "dur": 16.214,
+ "fps": 60,
+ "size": "1080x1920",
+ "title_lines": [
+  {
+   "text": "이미숙이 첫눈에 반해",
+   "colors": [
+    {
+     "word": "이미숙이 첫눈에 반해",
+     "hex": "#F9ADCE"
+    }
+   ]
+  },
+  {
+   "text": "결국 사버린 이것",
+   "colors": [
+    {
+     "word": "결국 사버린",
+     "hex": "#0C96FA"
+    },
+    {
+     "word": "이것",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 : 숙스러운 미숙씨",
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 0.8,
+   "speaker": "원음",
+   "text": "어머 이거 이쁘다",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 300,
+   "variant": "기타(노랑 꾸불림)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#F5DC1F",
+   "notes": "0.0 작게 → 0.2~0.3 가로 번짐 꼬리 → 0.4 완성",
+   "cut_at": []
+  },
+  {
+   "t0": 0.85,
+   "t1": 1.5,
+   "speaker": "원음",
+   "text": "언니 이거 하나 사가자",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 0.9,
+     "t_out": 1.0,
+     "x": 830,
+     "y": 1250,
+     "w": 70,
+     "anim": "반짝 번쩍"
+    },
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 1.1,
+     "t_out": 1.2,
+     "x": 250,
+     "y": 1320,
+     "w": 70,
+     "anim": "반짝"
+    }
+   ],
+   "sfx": {
+    "kind": "띵",
+    "t": 0.89,
+    "basis": "파형 솟음"
+   },
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "✦ 오른쪽 끝(0.9)·왼쪽 아래(1.1). 파형 0.89 솟음은 말 시작과 구분 못 함",
+   "cut_at": []
+  },
+  {
+   "t0": 1.6,
+   "t1": 2.55,
+   "speaker": "나레",
+   "text": "이미숙이 보자마자 첫눈에 반한",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(걷는 뒷모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 2.7,
+   "t1": 3.4,
+   "speaker": "나레",
+   "text": "이케아 조리대인데",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "이케아 조리대",
+     "hex": "#FAFF16"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(걷는 뒷모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 3.4,
+   "t1": 4.4,
+   "speaker": "나레",
+   "text": "촬영도가 미쳤다네요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 4.4,
+   "t1": 5.0,
+   "speaker": "원음",
+   "text": "이동으로(하면서)",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기타(노랑 꾸불림)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(걷는 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#F5DC1F",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 5.0,
+   "t1": 6.8,
+   "speaker": "원음",
+   "text": "밀고 다니면서?",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기타(노랑 꾸불림)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(걷는 모습)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#F5DC1F",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 6.8,
+   "t1": 7.9,
+   "speaker": "나레",
+   "text": "바퀴가 달려서 이동이 되니까",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "바퀴가 달려서",
+     "hex": "#FAFF16"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 8.0,
+   "t1": 8.3,
+   "speaker": "나레",
+   "text": "옮겨다니면서",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 8.3,
+   "t1": 8.9,
+   "speaker": "나레",
+   "text": "쓸 수 있는데",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 8.9,
+   "t1": 10.0,
+   "speaker": "나레",
+   "text": "외국에서는 홈 카페존으로",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": [
+    9.633
+   ]
+  },
+  {
+   "t0": 10.0,
+   "t1": 10.8,
+   "speaker": "나레",
+   "text": "만드는게 유행이라네요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 10.8,
+   "t1": 12.3,
+   "speaker": "나레",
+   "text": "가격도 쌈데 활용도도 좋아서",
+   "layer": "채널",
+   "enter": "fade",
+   "enter_ms": 100,
+   "variant": "기본",
+   "emph": [
+    {
+     "word": "가격도 쌈데",
+     "hex": "#F5D311"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "10.8 글 번짐 반투명 → 10.9 완성",
+   "cut_at": []
+  },
+  {
+   "t0": 12.3,
+   "t1": 12.85,
+   "speaker": "나레",
+   "text": "결국 샀다네요",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 13.0,
+   "t1": 14.25,
+   "speaker": "원음",
+   "text": "흐!! 와 이쁘다",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 100,
+   "variant": "기타(분홍 굵은 꾸불림)",
+   "emph": [
+    {
+     "word": "흐!! 와 이쁘다",
+     "hex": "#F47AAD"
+    }
+   ],
+   "sticker": [
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 13.0,
+     "t_out": 13.1,
+     "x": 960,
+     "y": 1270,
+     "w": 60,
+     "anim": "반짝 번쩍"
+    },
+    {
+     "what": "기타(반짝 ✦)",
+     "t_in": 13.2,
+     "t_out": 13.3,
+     "x": 220,
+     "y": 1345,
+     "w": 70,
+     "anim": "반짝"
+    }
+   ],
+   "sfx": {
+    "kind": "띵",
+    "t": 13.06,
+    "basis": "파형 솟음"
+   },
+   "scene": "기타(조리대 단독 컷)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#F47AAD",
+   "notes": "분홍 #F47AAD. 파형 13.06 솟음은 말 시작과 구분 못 함",
+   "cut_at": []
+  },
+  {
+   "t0": 14.3,
+   "t1": 16.2,
+   "speaker": "나레",
+   "text": "(이동식 보조 조리대)",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기타(괄호 보충 줄, 노랑 꾸불림, 글 위 따로)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(얼굴 근접)",
+   "y": [
+    1165,
+    1215
+   ],
+   "fill_hex": "#F6DC23",
+   "notes": "14.3~16.2 두 줄 중 윗줄. 띠 위쪽(y 1165~1215)",
+   "cut_at": []
+  },
+  {
+   "t0": 14.3,
+   "t1": 15.55,
+   "speaker": "원음",
+   "text": "사이드 트레일러 같은거로",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(얼굴 근접)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  },
+  {
+   "t0": 15.6,
+   "t1": 16.2,
+   "speaker": "원음",
+   "text": "사용하는거야",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타(얼굴 근접)",
+   "y": [
+    1245,
+    1330
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "",
+   "cut_at": []
+  }
+ ],
+ "no_caption": [
+  [
+   2.55,
+   2.7
+  ],
+  [
+   7.85,
+   8.0
+  ],
+  [
+   12.85,
+   13.0
+  ]
+ ],
+ "beats": "훅(0~1.5 원음 어머 이거 이쁘다 / 언니 이거 하나 사가자) → 나레 전언 연속(이미숙이 첫눈에 반한 이케아 조리대인데 … 결국 샀다네요, 4.4~6.8만 원음) → 원음 흐!! 와 이쁘다 → 원음 끝 설명(사이드 트레일러 같은거로 사용하는거야) + 괄호 보충 줄",
+ "narr_share": "나레 덩어리 11/18, 나레 10.5초/16.214초 = 65% ",
+ "notes": [
+  "등장·시각은 10fps 띠(0.1초)로 읽음 → enter_ms·시각 ±0.1초, 30fps 띠는 안 봄(확인 못 함)",
+  "hex는 포화 픽셀 중앙값(압축 번짐 ±) — 노랑은 #F4D611~#FAFF16 폭으로 나옴(BpU 스타일분석 실측 #FDF60E)",
+  "y는 10fps 띠 눈대중(±15px)",
+  "653b: 나레가 길게 이어짐(1.6~12.85, 원음 4.4~6.8 제외) — 스타일분석의 나레-원음 짧은 문답과 다름, 나레 덩어리가 0.3~1.5초 조각으로 쪼개져 이어짐",
+  "653b: 댓글카드 없음, 하트 없음, 반짝 ✦ 2회 4개",
+  "653b: 4.4~6.8 이동으로(하면서) / 밀고 다니면서? 는 노랑 꾸불림이라 원음으로 분류했으나 말투는 질문형(화자 확정 못 함)",
+  "효과음: 뜯기 후보 0, 반짝 ✦ 자리와 겹치는 파형 솟음 0.89·13.06 두 곳 — 말 시작과 구분 못 함",
+  "괄호 보충 줄 (이동식 보조 조리대) 가 띠(y1245~1330)가 아니라 그 위 y 1165~1215에 따로 놓임"
+ ]
+}

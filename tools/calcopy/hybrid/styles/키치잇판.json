@@ -2,47 +2,650 @@
  "name": "키치잇판",
  "renderer": "bench",
  "_note": "얜샷템 하이브리드 — 키치잇(@키치잇) 칼카피 판. 근거 channel/kitchit/{스타일분석.md, 하이브리드_판설계.md, 줄판독/}. 렌더 = render_bench.py(이 파일만 보고 그린다).",
- "bench": {"channel": "kitchit", "analysis": "channel/kitchit/스타일분석.md", "design": "channel/kitchit/하이브리드_판설계.md",
-           "line_reads": "channel/kitchit/줄판독", "src_dir": "C:/숏템_칼카피/kitchit/src",
-           "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json", "sfx_key": "kitchit"},
- "voice": {"name": "미나", "voice_id": "kr-mina-expressive", "candidates": ["kr-keleek-stable"],
-           "why": "벤치 나레 여자 밝은 톤(F0 204~298Hz). 10-19 신호 재측정: 미나 닮음 74개 중 13~52위 — 후보 kr-keleek-stable(3/8편 1위)은 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"},
- "cps_target": 6.9,
- "bgm": {"id": "qiuqiu", "db_below_voice": 9.0, "duck_orig_db": -6.0, "fade_out": 0.4, "why": "벤치 8편 BGM 0초~끝 경쾌·발랄(곡 식별 불가), 원음 줄 −6dB"},
- "loudness": {"lufs": -14.0, "tp": -1.5},
- "length": {"min": 25, "max": 30},
- "timing": {"gap": 0.10, "tail": 0.35},
- "frame": {
-  "bg": [0, 0, 0], "window": [0, 420, 1080, 1080],
-  "title": [
-   {"font": "Jalnan2.ttf", "px": 79, "ink_top": 164, "shear": 0.2, "color": "#FFFFFF", "hi": "#FF2A2A", "max_w": 1000},
-   {"font": "Jalnan2.ttf", "px": 77, "box": [42, 269, 1037, 399], "box_color": "#FDE600", "color": "#000000", "max_w": 960}
+ "bench": {
+  "channel": "kitchit",
+  "analysis": "channel/kitchit/스타일분석.md",
+  "design": "channel/kitchit/하이브리드_판설계.md",
+  "line_reads": "channel/kitchit/줄판독",
+  "src_dir": "C:/숏템_칼카피/kitchit/src",
+  "sfx_events": "channel/starpickroom/_tools/결과/sfx_events_rules.json",
+  "sfx_key": "kitchit"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "candidates": [
+   "kr-keleek-stable"
   ],
-  "logo": {"text": "얜샷템", "font": "Jalnan2.ttf", "px": 43, "x": 75, "y": 435, "rgba": [205, 205, 205, 215], "stroke": 2, "stroke_rgba": [50, 50, 50, 200]},
-  "credit": {"font": "Pretendard-Bold.otf", "px": 46, "color": "#B6B6B6", "ink_top": 1535},
-  "flash_sec": 0.10
+  "why": "벤치 나레 여자 밝은 톤(F0 204~298Hz). 10-19 신호 재측정: 미나 닮음 74개 중 13~52위 — 후보 kr-keleek-stable(3/8편 1위)은 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
+ },
+ "cps_target": 6.9,
+ "bgm": {
+  "id": "qiuqiu",
+  "db_below_voice": 9.0,
+  "duck_orig_db": -6.0,
+  "fade_out": 0.4,
+  "why": "벤치 8편 BGM 0초~끝 경쾌·발랄(곡 식별 불가), 원음 줄 −6dB"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 25,
+  "max": 30
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.35
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 79,
+    "ink_top": 164,
+    "shear": 0.2,
+    "color": "#FFFFFF",
+    "hi": "#FF2A2A",
+    "max_w": 1000
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 77,
+    "box": [
+     42,
+     269,
+     1037,
+     399
+    ],
+    "box_color": "#FDE600",
+    "color": "#000000",
+    "max_w": 960
+   }
+  ],
+  "logo": {
+   "text": "얜샷템",
+   "font": "Jalnan2.ttf",
+   "px": 43,
+   "x": 75,
+   "y": 435,
+   "rgba": [
+    205,
+    205,
+    205,
+    215
+   ],
+   "stroke": 2,
+   "stroke_rgba": [
+    50,
+    50,
+    50,
+    200
+   ]
+  },
+  "credit": {
+   "font": "Pretendard-Bold.otf",
+   "px": 46,
+   "color": "#B6B6B6",
+   "ink_top": 1535
+  },
+  "flash_sec": 0.1
  },
  "caption": {
   "pack": "kitchit",
-  "pack_default": {"narr.first": "pop", "orig.first": "pop", "narr.rest": "cut", "orig.rest": "cut"},
-  "variant_for": {"cut": "cut", "pop": "pop", "typing": "typing"},
-  "typing_variant": "typing", "typing_cps": 10.0,
+  "pack_default": {
+   "narr.first": "pop",
+   "orig.first": "pop",
+   "narr.rest": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {
+   "cut": "cut",
+   "pop": "pop",
+   "typing": "typing"
+  },
+  "typing_variant": "typing",
+  "typing_cps": 10.0,
   "chunk_max_chars": 12
  },
- "cuts": {"push_tts": 0.06, "push_orig": 0.03},
- "sfx_files": {"ding": "팩01/ding.wav", "whoosh": "팩01/whoosh.wav", "pop": "팩01/pop.wav", "gain_db": -8},
+ "cuts": {
+  "push_tts": 0.06,
+  "push_orig": 0.03
+ },
+ "sfx_files": {
+  "ding": "팩01/ding.wav",
+  "whoosh": "팩01/whoosh.wav",
+  "pop": "팩01/pop.wav",
+  "gain_db": -8
+ },
  "placement": {
   "rules": {
-   "typing_sticker": {"kind": "heart", "speaker": "orig", "why": "벤치 BRa 원음 타이핑 덩어리 아래 ♥(본보기 편에 ♥ 가 있을 때만)"},
-   "stickers": {
-    "gem": {"lex": ["lux", "price"], "needs_key": true, "why": "BRa '부내나'·'부내까지 나면' 💎 — 고급·부·값 낱말"},
-    "spark_lines": {"lex": ["excl"], "needs_key": true},
-    "kk_doodle": {"lex": ["excl"]}
+   "typing_sticker": {
+    "kind": "heart",
+    "speaker": "orig",
+    "why": "벤치 BRa 원음 타이핑 덩어리 아래 ♥(본보기 편에 ♥ 가 있을 때만)"
    },
-   "sfx": {"kind": "ding", "max": 1, "why": "10-19 신호 재측정: 편당 0~1발, 자막교체 또는 나레→원음 전환 직후(옛 '0초 띵+전환마다 휙' 폐기)"},
-   "flash": {"share": 0.25, "where": "last_switch", "why": "흰 번쩍임 0.1초 = BRa 19초·_Wa(8편 중 2편) 마무리 줄 시작"}
+   "stickers": {
+    "gem": {
+     "lex": [
+      "lux",
+      "price"
+     ],
+     "needs_key": true,
+     "why": "BRa '부내나'·'부내까지 나면' 💎 — 고급·부·값 낱말"
+    },
+    "spark_lines": {
+     "lex": [
+      "excl"
+     ],
+     "needs_key": true
+    },
+    "kk_doodle": {
+     "lex": [
+      "excl"
+     ]
+    }
+   },
+   "sfx": {
+    "kind": "ding",
+    "max": 1,
+    "why": "10-19 신호 재측정: 편당 0~1발, 자막교체 또는 나레→원음 전환 직후(옛 '0초 띵+전환마다 휙' 폐기)"
+   },
+   "flash": {
+    "share": 0.25,
+    "where": "last_switch",
+    "why": "흰 번쩍임 0.1초 = BRa 19초·_Wa(8편 중 2편) 마무리 줄 시작"
+   }
   },
-  "counted": {}
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/kitchit/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 16,
+     "enter": {
+      "pop": 0.562,
+      "cut": 0.25,
+      "fade": 0.188
+     },
+     "emph": 0.625
+    },
+    "narr.rest": {
+     "n": 35,
+     "enter": {
+      "pop": 0.571,
+      "fade": 0.2,
+      "cut": 0.171,
+      "typing": 0.057
+     },
+     "emph": 0.657
+    },
+    "orig.first": {
+     "n": 15,
+     "enter": {
+      "pop": 0.4,
+      "cut": 0.4,
+      "fade": 0.2
+     },
+     "emph": 0.467
+    },
+    "orig.rest": {
+     "n": 69,
+     "enter": {
+      "cut": 0.406,
+      "pop": 0.348,
+      "typing": 0.159,
+      "fade": 0.087
+     },
+     "emph": 0.493
+    }
+   },
+   "share": {
+    "emph": 0.875,
+    "typing": 0.375,
+    "sfx": 0.375
+   },
+   "stickers": {
+    "circle_arrow": 0.25,
+    "gem": 0.125,
+    "heart": 0.125,
+    "kk_doodle": 0.125,
+    "other": 0.125,
+    "spark_lines": 0.375
+   },
+   "videos": [
+    {
+     "id": "_Wa4IehA6yE",
+     "n": 17,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "pop": 1
+       },
+       "emph": 2
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 11,
+       "enter": {
+        "pop": 6,
+        "cut": 5
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "kk_doodle": 1
+     },
+     "sticker_lex": {
+      "kk_doodle": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기울임": 2,
+      "기타(덩어리 전체 연하늘 #BEFFFC, 주황빛 테두리)": 1,
+      "기타(덩어리 전체 노랑, 주황 테두리·크게)": 1,
+      "기타(덩어리 전체 초록, 주황 테두리)": 1,
+      "기타(덩어리 전체 노랑, 크게)": 1,
+      "기타(덩어리 전체 연보라)": 1,
+      "기타(덩어리 전체 초록)": 1,
+      "기타(덩어리 전체 하늘, 주황 테두리)": 1
+     },
+     "sfx": [],
+     "no_caption": 15
+    },
+    {
+     "id": "BRa5Iv4A3Y8",
+     "n": 21,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 5,
+       "enter": {
+        "pop": 2,
+        "cut": 2,
+        "typing": 1
+       },
+       "emph": 5
+      },
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 13,
+       "enter": {
+        "typing": 9,
+        "cut": 3,
+        "pop": 1
+       },
+       "emph": 10
+      }
+     },
+     "stickers": {
+      "spark_lines": 2,
+      "heart": 3,
+      "gem": 3
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "excl": 2
+      },
+      "heart": {
+       "none": 3
+      },
+      "gem": {
+       "lux": 2,
+       "none": 1
+      }
+     },
+     "variants": {
+      "기타(번진 초록 블록이 선명해지며 나옴)": 1,
+      "기타(글자마다 튀어 나옴)": 1,
+      "기울임+라일락 흰빛(색 강조 낱말 없음, 글씨 전체가 연함)": 1,
+      "기타(첫 글자 분홍 번쩍)": 1,
+      "기타(전체 하늘색, 글자마다 튀며 마지막에 하늘 터짐)": 1,
+      "전체 분홍보라": 2,
+      "기타(음절마다 튀어 나옴 '내음' 크게 출렁)": 1,
+      "전체 라일락": 1,
+      "기타(마지막 '나' 작게)": 1,
+      "기타('다 했죠' 반투명에서 선명해짐)": 1
+     },
+     "sfx": [
+      "cap"
+     ],
+     "no_caption": 1
+    },
+    {
+     "id": "cNo91ddBwB8",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 2
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 6,
+        "pop": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "ask": 1
+      }
+     },
+     "variants": {},
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 2
+    },
+    {
+     "id": "Cs-Ka_S8nDM",
+     "n": 18,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "pop": 2,
+        "cut": 1
+       },
+       "emph": 3
+      },
+      "orig.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 5,
+        "pop": 5,
+        "typing": 1
+       },
+       "emph": 8
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "spark_lines": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "ask": 1
+      },
+      "spark_lines": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기울임(약 11° 기울임)": 1,
+      "기울임+분홍 전체색": 1,
+      "기타(글자마다 위로 튀며 기울어 나타남)": 1
+     },
+     "sfx": [],
+     "no_caption": 1
+    },
+    {
+     "id": "Ks5kYYKAUlQ",
+     "n": 13,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 3,
+       "enter": {
+        "fade": 1,
+        "pop": 1,
+        "typing": 1
+       },
+       "emph": 2
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "fade": 1,
+        "cut": 1
+       },
+       "emph": 2
+      },
+      "orig.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 2,
+        "pop": 2,
+        "fade": 1,
+        "typing": 1
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {
+      "spark_lines": 2
+     },
+     "sticker_lex": {
+      "spark_lines": {
+       "ask": 1,
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기타(낱말·글자 단위로 이어 붙음)": 1,
+      "기타(글자 단위로 튀며 이어 붙음, 전체 초록)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "Nv99RyxmrfU",
+     "n": 16,
+     "slots": {
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "cut": 1,
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 1,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 5,
+        "pop": 5
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "크게 튀어나옴(만원만 다른 줄보다 1.3배쯤 크고 노랑)": 1
+     },
+     "sfx": [
+      "cap"
+     ],
+     "no_caption": 0
+    },
+    {
+     "id": "oTi41R74WIY",
+     "n": 15,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "narr.rest": {
+       "n": 14,
+       "enter": {
+        "pop": 14
+       },
+       "emph": 9
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기타(덩어리 전체가 분홍 채움)": 1,
+      "기타(덩어리 전체가 연보라 채움)": 1
+     },
+     "sfx": [],
+     "no_caption": 4
+    },
+    {
+     "id": "vSEaZ-BCELY",
+     "n": 19,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "fade": 2,
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "fade": 5,
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 4
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "fade": 2
+       },
+       "emph": 2
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "fade": 6
+       },
+       "emph": 3
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기타(덩어리 전체 분홍)": 4,
+      "기타(덩어리 전체 연보라)": 2
+     },
+     "sfx": [],
+     "no_caption": 2
+    }
+   ]
+  }
  },
  "title_form": "1줄 = 인물+대상 느낌표('성시경 신라면 1등 레시피!') / 2줄(노랑 박스) = 반전 질문('면을 따로 비빈다고?') · 2줄 13자 안",
  "script": {
@@ -55,16 +658,62 @@
   ],
   "example": "channel/kitchit/하이브리드_성시경/대본.json",
   "audit": [
-   {"kind": "first_line", "is": "tts"},
-   {"kind": "count", "of": "tts", "min": 5, "max": 7},
-   {"kind": "count", "of": "orig", "min": 2, "max": 4},
-   {"kind": "tts_chars", "min": 6, "max": 30},
-   {"kind": "ending", "which": "first_tts", "pattern": "(다네요|다고|길래|래요|라는데|다는데)\\s*[?？.]*$", "why": "훅 = 전언 의문"},
-   {"kind": "has_line", "of": "tts", "pattern": "(대체|어떻게|뭐길래|어떤|왜).*\\?", "min": 1, "why": "나레 질문 줄"},
-   {"kind": "has_line", "of": "tts", "pattern": "따라 (사|해|끓여|발라|입어|써) 봤", "min": 1, "why": "이음 '따라 ~ 봤는데'"},
-   {"kind": "ending", "which": "last_tts", "pattern": "(난리|필수템|말 다 했죠|사이에서|품절|대세|인기).*$", "why": "끝 = 사회 반응"},
-   {"kind": "cap_chars", "max": 12},
-   {"kind": "est_length", "min": 25, "max": 30}
+   {
+    "kind": "first_line",
+    "is": "tts"
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 5,
+    "max": 7
+   },
+   {
+    "kind": "count",
+    "of": "orig",
+    "min": 2,
+    "max": 4
+   },
+   {
+    "kind": "tts_chars",
+    "min": 6,
+    "max": 30
+   },
+   {
+    "kind": "ending",
+    "which": "first_tts",
+    "pattern": "(다네요|다고|길래|래요|라는데|다는데)\\s*[?？.]*$",
+    "why": "훅 = 전언 의문"
+   },
+   {
+    "kind": "has_line",
+    "of": "tts",
+    "pattern": "(대체|어떻게|뭐길래|어떤|왜).*\\?",
+    "min": 1,
+    "why": "나레 질문 줄"
+   },
+   {
+    "kind": "has_line",
+    "of": "tts",
+    "pattern": "따라 (사|해|끓여|발라|입어|써) 봤",
+    "min": 1,
+    "why": "이음 '따라 ~ 봤는데'"
+   },
+   {
+    "kind": "ending",
+    "which": "last_tts",
+    "pattern": "(난리|필수템|말 다 했죠|사이에서|품절|대세|인기).*$",
+    "why": "끝 = 사회 반응"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 12
+   },
+   {
+    "kind": "est_length",
+    "min": 25,
+    "max": 30
+   }
   ]
  }
 }

@@ -1,0 +1,379 @@
+{
+ "id": "Nv99RyxmrfU",
+ "dur": 14.0,
+ "fps": 30,
+ "size": "1080x1920",
+ "title_lines": [],
+ "source_label": "출처: 윤쥬르 YOONJOUR 장윤주 (스타일분석 기준, 이번에 재확인 안 함)",
+ "lines": [
+  {
+   "t0": 0.03,
+   "t1": 0.93,
+   "speaker": "나레",
+   "text": "메이크업 실장님도",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 230,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "기타",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "30fps 1~7프레임, 강조색 없음"
+  },
+  {
+   "t0": 0.93,
+   "t1": 1.73,
+   "speaker": "나레",
+   "text": "탐낸 베이스라고?",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "기타",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "같은 컷 안 교체(컷 없음), 첫 프레임 완성, 강조색 없음"
+  },
+  {
+   "t0": 1.77,
+   "t1": 2.57,
+   "speaker": "원음",
+   "text": "이 베이스 뭐라고?",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    1.733
+   ],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "53→58프레임"
+  },
+  {
+   "t0": 2.57,
+   "t1": 3.1,
+   "speaker": "원음",
+   "text": "나 살라고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    2.567
+   ],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 3.13,
+   "t1": 4.3,
+   "speaker": "원음",
+   "text": "어우 야~ 내가 하나 줄게",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    3.1
+   ],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "94→98프레임"
+  },
+  {
+   "t0": 4.33,
+   "t1": 5.53,
+   "speaker": "원음",
+   "text": "본 중에 피부 표현이",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    4.333
+   ],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 5.57,
+   "t1": 6.13,
+   "speaker": "원음",
+   "text": "진짜 예뻐요",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "같은 컷 안 교체인데도 팝(167→171프레임)"
+  },
+  {
+   "t0": 6.17,
+   "t1": 7.1,
+   "speaker": "원음",
+   "text": "커버력도 좋고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    6.167
+   ],
+   "scene": "손·제품 근접",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 7.13,
+   "t1": 8.3,
+   "speaker": "원음",
+   "text": "밀착력도 좋고",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "같은 컷 안 교체 팝(214→219프레임)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 8.9,
+   "speaker": "나레",
+   "text": "이 피부 표현에",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    8.3
+   ],
+   "scene": "화보",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "화보 컷으로 바뀌며(뜯기 컷 목록엔 8.833 만 있음) 첫 프레임 완성"
+  },
+  {
+   "t0": 8.93,
+   "t1": 9.5,
+   "speaker": "나레",
+   "text": "만원 대라고?",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 130,
+   "variant": "크게 튀어나옴(만원만 다른 줄보다 1.3배쯤 크고 노랑)",
+   "emph": [
+    {
+     "word": "만원",
+     "hex": "#F3FF0C"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    8.833
+   ],
+   "scene": "얼굴",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "268→272프레임에 커짐, 노랑 #F3FF0C 는 이 편 유일한 강조"
+  },
+  {
+   "t0": 9.53,
+   "t1": 10.33,
+   "speaker": "원음",
+   "text": "들뜨지 않아서",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    9.5
+   ],
+   "scene": "기타",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "스타일분석은 나레를 10.0 까지로 적음 — 이 글은 말 내용상 본인 말이라 9.5(컷)에서 원음으로 잡음. 입 모양은 이 장면에 없어 확인 못 함"
+  },
+  {
+   "t0": 10.37,
+   "t1": 11.5,
+   "speaker": "원음",
+   "text": "수정을 해야 될 때 있잖아",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "기타",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "310→315프레임"
+  },
+  {
+   "t0": 11.57,
+   "t1": 12.33,
+   "speaker": "원음",
+   "text": "그런 일이 없더라고",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "기타",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": ""
+  },
+  {
+   "t0": 12.37,
+   "t1": 13.5,
+   "speaker": "원음",
+   "text": "약간 톤업도 살짝 되는",
+   "layer": "채널",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [
+    12.333
+   ],
+   "scene": "손·제품 근접",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "370→375프레임"
+  },
+  {
+   "t0": 13.53,
+   "t1": 14.0,
+   "speaker": "원음",
+   "text": "어머 너무 좋다!",
+   "layer": "채널",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "cut_at": [],
+   "scene": "손·제품 근접",
+   "y": [
+    1290,
+    1420
+   ],
+   "fill_hex": "#FFFFFF",
+   "notes": "같은 컷 안 교체, 끝 구간"
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅 0.03~1.73 나레 2덩어리(메이크업 실장님도 탐낸 베이스라고?) → 1.77~8.3 원음 7덩어리(이 베이스 뭐라고?~밀착력도 좋고) → 8.3~9.5 나레 2덩어리(이 피부 표현에 만원 대라고?) → 9.53~14.0 원음 6덩어리 끝=원음. 이 편은 모든 줄이 흰 글 한 가지, 강조색은 '만원' 하나뿐",
+ "narr_share": "나레 덩어리 4/16, 나레 초 약 1.7+1.2=2.9/14.0",
+ "notes": [
+  "효과음 전부 null: 뜯기 후보 0.1·8.4 는 확인 못 함. 이번에 5~10kHz 솟음(+18dB↑)을 재니 0.15·0.42·1.79·4.08·7.13~7.46·7.87·8.3·10.45 등 24곳이 나오나 말소리 파열음과 구분이 안 돼 '파형 솟음' 근거로 못 씀(스타일분석 신호 재측정과 같은 결론: 확인 불가)",
+  "스티커 0개(💎·♥·강조선 없음) — 스타일분석의 5색 돌림도 이 편엔 없고 강조색은 노랑 '만원' 하나",
+  "enter: 팝 8(작게 시작 → 4~7프레임 완성, 정점 크기는 못 쟀음) · cut 8. 줄 첫 덩어리=팝이라는 규칙은 이 편에 안 맞음(컷 직후에도 cut 인 곳 5개: 탐낸 베이스·나 살라고·본 중에·커버력·이 피부 표현에), 같은 컷 안 교체에도 팝이 3번",
+  "8.3 '이 피부 표현에' 의 컷은 뜯기 컷 목록(8.833)과 어긋남 — 8.3 에 영상이 분홍 번쩍으로 바뀌어 컷 감지가 못 잡은 듯, 확인 못 함",
+  "색 hex = cv2 채도 픽셀 중앙값(노랑 #F3FF0C)"
+ ]
+}
