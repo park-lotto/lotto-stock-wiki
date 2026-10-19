@@ -1,4 +1,4 @@
-// MCP 겉면 — stdio 로 띄워 도구 6개·설명·annotations·셸 도구 없음·키 값 비노출 확인
+// MCP 겉면 — stdio 로 띄워 도구 7개(5판: shortem_ai 추가)·설명·annotations·셸 도구 없음·키 값 비노출 확인
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -14,14 +14,14 @@ const client = new Client({ name: 't', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [SERVER], env: { ...process.env }, stderr: 'ignore' }));
 test.after(async () => { await client.close(); await fake.close(); });
 
-test('도구 6개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
+test('도구 7개 · 고정 설명 · annotations · 셸 실행 도구 없음', async () => {
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_feedback', 'shortem_job', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_setup']);
+  assert.deepEqual(tools.map(t => t.name).sort(), ['shortem_ai', 'shortem_feedback', 'shortem_job', 'shortem_make', 'shortem_presets', 'shortem_profile', 'shortem_setup']);
   const by = Object.fromEntries(tools.map(t => [t.name, t]));
   assert.equal(by.shortem_presets.annotations.readOnlyHint, true);
   assert.equal(by.shortem_profile.annotations.readOnlyHint, true);
   assert.equal(by.shortem_make.annotations.destructiveHint, false);
-  assert.equal(by.shortem_make.annotations.idempotentHint, true);
+  assert.equal(by.shortem_make.annotations.idempotentHint, false);   // start 는 매번 새 세션
   assert.equal(by.shortem_job.annotations.destructiveHint, true);
   assert.ok(!tools.some(t => /shell|exec|command|run_/i.test(t.name)));
   for (const t of tools) for (const n of ['1462', '1006', '93.2', '-7.4', '1080', '1920']) assert.ok(!t.description.includes(n), `${t.name} 설명에 규격 숫자 ${n}`);
