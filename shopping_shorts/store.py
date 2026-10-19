@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -7162,15 +7163,29 @@ class Store:
         f, l = int(first_seen or 0), int(last_seen or 0)
         return (l - f) < self.GHOST_MAX_USE and (now - l) > self.GHOST_IDLE
 
+    @staticmethod
+    def _ua_family(ua):
+        """브라우저 종류만 남긴다 — 버전 숫자는 뺀다(관제 238).
+        크롬은 몇 주마다 자동 업데이트돼 154→155만 바뀌어도 같은 PC를 못 알아봤다(윤주홍 10-19)."""
+        return re.sub(r"\d+", "", (ua or "")[:200])
+
+    def _same_pc_slot(self, rows, ua, ip):
+        """같은 PC로 보이는 칸(같은 IP + 같은 브라우저 종류) → slot | None. 판정은 여기 한 곳.
+
+        rows = (slot, device_id, first_seen, last_seen, ua, ip). 여럿이면 가장 오래 안 보인 칸.
+        """
+        ip, fam = (ip or "")[:64], self._ua_family(ua)
+        same = [r for r in rows if ip and r[5] == ip and self._ua_family(r[4]) == fam]
+        return min(same, key=lambda r: r[3] or 0)[0] if same else None
+
     def _replaceable_slot(self, rows, ua, ip, now):
         """꽉 찼을 때 새 PC에게 내줄 칸 → (slot, 사유) | (None, ""). 판정은 여기 한 곳.
 
         rows = (slot, device_id, first_seen, last_seen, ua, ip). 우선순위: 같은 PC → 유령 → 7일 미사용.
         """
-        ua, ip = (ua or "")[:200], (ip or "")[:64]
-        same = [r for r in rows if ip and r[5] == ip and (r[4] or "") == ua]
+        same = self._same_pc_slot(rows, ua, ip)
         if same:
-            return min(same, key=lambda r: r[3] or 0)[0], "same_pc"
+            return same, "same_pc"
         ghosts = [r for r in rows if self._is_ghost_slot(r[2], r[3], now)]
         if ghosts:
             return min(ghosts, key=lambda r: r[3] or 0)[0], "ghost"
@@ -7202,7 +7217,7 @@ class Store:
             return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen, ua, ip FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
@@ -7211,6 +7226,15 @@ class Store:
                               "WHERE customer_id=? AND slot=?",
                               (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
                     return True, slot, len(used)
+            # 🔁 쿠키만 잃은 같은 PC(관제 238): 그 칸을 이 도장으로 이어받는다 — 버튼 없이, 칸 수는 그대로.
+            #   황선희(10-19 쿠키 통째 삭제)·윤주홍(쿠키 손실+크롬 업데이트)이 같은 PC인데 막혔다.
+            slot = self._same_pc_slot(rows, ua, ip)
+            if slot:
+                c.execute("UPDATE customer_devices SET device_id=?, last_seen=?, ua=?, ip=? "
+                          "WHERE customer_id=? AND slot=?",
+                          (device_id, now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
+                print(f"[pc] 같은 PC 재인식 cid={customer_id} slot={slot}", file=sys.stderr)
+                return True, slot, len(used)
             return False, None, len(used)
 
     def device_register(self, customer_id, device_id, ua="", ip=""):
