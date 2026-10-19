@@ -12026,7 +12026,10 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # 샤오훙슈 신 CDN. 옛 xhscdn.com은 위에 이미 있다(둘 다 살아 있다).
                         "rednotecdn.com",
                         # 유튜브 채널 아바타·배너(yt3.googleusercontent.com).
-                        "googleusercontent.com")
+                        "googleusercontent.com",
+                        # ✈️여행 탭(관제 239) — 여기어때(image.withstatic.com)·야놀자(yaimg.yanolja.com)·NOL 항공 도시 사진(media.triple.guide).
+                        #   네이버 항공 도시 사진(flight-phinf.pstatic.net)은 위 pstatic.net 으로 이미 통과한다.
+                        "withstatic.com", "yaimg.yanolja.com", "triple.guide")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
                         # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
@@ -12053,6 +12056,26 @@ _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
 #  서버 ffmpeg도 HEIF 컨테이너를 못 읽는다) → 서버에서 JPEG로 바꿔 내려준다.
 # pillow-heif가 없으면 **조용히 원본을 그대로** 준다(지금까지와 동일 동작 = 안 나빠진다).
 _HEIF_READY = None
+
+
+_THUMB_BIG_BYTES = 1_500_000     # 카드 썸네일로 이보다 큰 원본은 줄인다
+
+
+def _thumb_shrink_big(body: bytes, ctype: str):
+    """카드에 쓰기엔 너무 큰 원본(예: 네이버 항공 도시 사진 7.7MB, 2026-10-19 실측)을 폭 960 JPEG 로 줄인다.
+    작은 그림은 손대지 않는다. 실패하면 원본 그대로(썸네일 하나 때문에 카드를 죽이지 않는다)."""
+    if len(body or b"") <= _THUMB_BIG_BYTES or not (ctype or "").startswith("image/"):
+        return body, ctype
+    try:
+        import io as _io
+        from PIL import Image
+        im = Image.open(_io.BytesIO(body))
+        im.thumbnail((960, 960 * 4))
+        buf = _io.BytesIO()
+        im.convert("RGB").save(buf, "JPEG", quality=82)
+        return buf.getvalue(), "image/jpeg"
+    except Exception:      # noqa: BLE001
+        return body, ctype
 
 
 def _thumb_to_web_format(body: bytes, ctype: str):
@@ -12377,6 +12400,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         # ★브라우저가 못 그리는 포맷(도우인 커버는 image/heic)은 여기서 JPEG로 바꾼다.
         #   변환분을 캐시에도 넣어야 다음 요청이 다시 변환하지 않는다.
         body, ctype = _thumb_to_web_format(r.content, ctype)
+        body, ctype = _thumb_shrink_big(body, ctype)
         if cache is not None and ctype.startswith("image/"):
             try:
                 _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)

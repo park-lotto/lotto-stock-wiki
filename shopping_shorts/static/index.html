@@ -58,6 +58,8 @@
   /* 트렌드 주제 카드만 예외 — 여긴 쇼츠 재생 칸이 아니라 '이 주제로 터진 영상들'의
      대표 이미지다. 9:16으로 늘리면 목록만 길어지고 얻는 게 없어 옛 높이를 지킨다. */
   .trend-card img{aspect-ratio:auto;height:220px}
+  /* ✈️여행 카드(관제 239) — 숙소·항공 사진은 가로라 9:16로 늘리지 않는다 */
+  .tv-card img{aspect-ratio:4/3;height:auto}
   .thumb-video{width:100%;aspect-ratio:var(--shorts-ar);height:auto;object-fit:cover;background:#000;display:block}
   .play-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
@@ -1165,7 +1167,7 @@ function switchPlatform(p, el){
   document.getElementById('cards').style.display = (isTrend||isTravel) ? 'none' : '';
   // 여행 탭: 영상 랭킹용 줄(정렬·카테고리·검색·수집)은 다 숨기고 travelRoot 만 쓴다. 돌아오면 다시 보인다.
   //   ★원래 숨겨져 있던 줄(styles·urlCardBox 등)은 원래 값으로 돌려놓는다 — ''로 지우면 숨김이 풀린다.
-  ['tabs','ctypes','styles','rankSearchRow','cats','urlCardBox','overseasBox'].forEach(id=>{
+  ['tabs','spanTabs','ctypes','styles','rankSearchRow','cats','urlCardBox','overseasBox'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     if(isTravel){ if(el.dataset.tvPrev===undefined){ el.dataset.tvPrev=el.style.display; } el.style.display='none'; }
     else if(el.dataset.tvPrev!==undefined){ el.style.display=el.dataset.tvPrev; delete el.dataset.tvPrev; }
@@ -4350,6 +4352,108 @@ function _cnTrendBtn(zh){
 
 // 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
 const TREND_TOP_N = 60;
+// ── ✈️ 여행 탭(관제 239) — 숙소·항공 사이트별 베스트 + 내가 담은 것 + 주소 붙여넣기 담기 ──────────
+//   수집·판정은 서버(travel_source.best_items / travel_site) 한 곳. 화면은 받은 그대로 그린다(0순위-B).
+const TV = {kind:'stay', site:'', view:'best', data:null, mine:null};
+function _tvWon(n){ return (n==null||n==='')?'':(Number(n).toLocaleString('ko-KR')+'원'); }
+function _tvChip(on,label,fn){
+  return '<button onclick="'+fn+'" style="padding:6px 12px;border-radius:999px;border:1px solid '+(on?'var(--accent)':'var(--line)')
+    +';background:'+(on?'var(--sel-bg)':'var(--inset)')+';color:'+(on?'var(--sel-fg)':'var(--txt)')+';font-size:13px;cursor:pointer">'+label+'</button>';
+}
+async function renderTravel(){
+  const root=document.getElementById('travelRoot'); if(!root) return;
+  root.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
+    + _tvChip(TV.kind==='stay','🏨 숙소',"tvSet('kind','stay')") + _tvChip(TV.kind==='air','✈️ 항공',"tvSet('kind','air')")
+    + '<span style="width:1px;height:20px;background:var(--line);margin:0 4px"></span>'
+    + _tvChip(TV.view==='best','🔥 사이트 베스트',"tvSet('view','best')") + _tvChip(TV.view==='mine','📥 내가 담은 것',"tvSet('view','mine')")
+    + '</div><div id="tvSites" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<input id="tvUrl" placeholder="🔗 숙소·항공 상세 주소 붙여넣고 담기 (여기어때·야놀자·NOL 항공·네이버 항공권…)" onkeydown="if(event.key===\'Enter\')tvGrab()"'
+    + ' style="flex:1;min-width:240px;max-width:520px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">'
+    + '<button onclick="tvGrab()" style="padding:8px 14px">📥 담기</button>'
+    + '<span id="tvMsg" style="font-size:12px;color:var(--sub);align-self:center"></span></div>'
+    + '<div id="tvList"><div class="sm-loading">불러오는 중…</div></div>';
+  try{
+    if(TV.view==='best'){
+      const r=await fetch('/api/travel/best?kind='+TV.kind); TV.data=await r.json();
+      if(!r.ok) throw new Error(TV.data.error||r.status);
+    } else {
+      const r=await fetch('/api/travel/basket?kind='+TV.kind); TV.mine=await r.json();
+      if(!r.ok) throw new Error(TV.mine.error||r.status);
+    }
+  }catch(e){
+    document.getElementById('tvList').innerHTML='<div style="padding:14px;color:var(--sub)">불러오지 못했어요: '+esc(String(e.message||e))+'</div>';
+    return;
+  }
+  tvDraw();
+}
+function tvSet(k,v){ TV[k]=v; TV.site=''; renderTravel(); }
+function tvSite(s){ TV.site=s; tvDraw(); }
+function tvDraw(){
+  const sitesEl=document.getElementById('tvSites'), list=document.getElementById('tvList');
+  let items, errs={};
+  if(TV.view==='best'){
+    const d=TV.data||{}; items=d.items||[]; errs=d.errors||{};
+    sitesEl.innerHTML=[{site:'',site_name:'전체'}].concat(d.sites||[]).map(function(s){
+      const on=(TV.site===s.site), n=s.site?items.filter(i=>i.site===s.site).length:items.length;
+      return '<button onclick="tvSite(\''+s.site+'\')" style="padding:4px 10px;border-radius:8px;border:1px solid '+(on?'var(--accent)':'var(--line)')
+        +';background:'+(on?'var(--sel-bg)':'transparent')+';color:'+(on?'var(--sel-fg)':'var(--sub)')+';font-size:12px;cursor:pointer">'+esc(s.site_name)+' '+n+'</button>';
+    }).join('');
+    if(TV.site) items=items.filter(i=>i.site===TV.site);
+  } else {
+    sitesEl.innerHTML='';
+    items=((TV.mine||{}).items||[]).map(function(i){
+      const m=i.meta||{};
+      return Object.assign({}, i, {title:i.name, sub:m.address||'', price_note:i.price?'1박~':'', source_label:m.source_label||'',
+        site_name:m.site_name||i.site, image:i.thumbnail, rating:m.rating, rating_scale:10, reviews:m.review_count, mine:true});
+    });
+  }
+  const ek=Object.keys(errs);
+  const errHtml=ek.length?'<div style="font-size:12px;color:var(--fire);margin-bottom:8px">⚠ 못 받은 사이트: '+ek.map(esc).join(', ')+'</div>':'';
+  if(!items.length){
+    list.innerHTML=errHtml+'<div style="padding:14px;color:var(--sub)">'+(TV.view==='mine'
+      ?'아직 담은 '+(TV.kind==='air'?'항공권':'숙소')+'이 없어요. 사이트 베스트에서 📥를 누르거나 위에 주소를 붙여넣어 담으세요.'
+      :'목록이 비었어요.')+'</div>';
+    return;
+  }
+  list.innerHTML = errHtml + '<div class="cards">' + items.map(function(i){
+    const md=function(x){ return x?x.slice(5).replace('-','/'):''; };
+    const when=i.depart?(md(i.depart)+(i.return?' ~ '+md(i.return):'')):'';
+    const rate=(i.rating!=null&&i.rating!=='')?('⭐ '+i.rating+(i.rating_scale?'/'+i.rating_scale:'')+(i.reviews?' · 후기 '+Number(i.reviews).toLocaleString('ko-KR'):'')):'';
+    const act=i.mine
+      ?'<button onclick="tvRemove(\''+esc(i.item_key)+'\')" style="padding:5px 10px;font-size:12px;background:var(--inset);color:var(--txt);border:1px solid var(--line)">빼기</button>'
+      :'<button onclick="tvGrab(\''+esc(i.url)+'\')" style="padding:5px 10px;font-size:12px">📥 담기</button>';
+    const badge='position:absolute;top:8px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;';
+    return '<div class="card tv-card">'
+      + '<div class="thumb" style="background:var(--inset)"><a href="'+esc(i.url)+'" target="_blank" rel="noopener">'
+      + '<img src="'+esc(thumbURL(i.image||''))+'" referrerpolicy="no-referrer" style="width:100%;object-fit:cover;display:block" onerror="this.style.visibility=\'hidden\'"></a>'
+      + ((i.rank&&!i.mine)?'<div style="'+badge+'left:8px;font-size:12px;font-weight:700;padding:2px 8px">'+i.rank+'위</div>':'')
+      + '<div style="'+badge+'right:8px;font-size:11px;padding:2px 7px">'+esc(i.source_label||('출처: '+(i.site_name||'')))+'</div></div>'
+      + '<div style="padding:10px 12px;display:flex;flex-direction:column;gap:4px;flex:1">'
+      + '<div style="font-weight:700;font-size:14px;line-height:1.35">'+esc(i.title||'')+'</div>'
+      + '<div style="font-size:12px;color:var(--sub)">'+esc(i.sub||'')+(i.airline?' · '+esc(i.airline):'')+'</div>'
+      + '<div style="font-size:15px;font-weight:800;color:var(--accent)">'+_tvWon(i.price)+' <span style="font-size:11px;font-weight:400;color:var(--sub)">'+esc(i.price_note||'')+'</span></div>'
+      + '<div style="font-size:12px;color:var(--sub)">'+(when?'🗓 '+esc(when)+' ':'')+rate+'</div>'
+      + '<div style="display:flex;gap:6px;margin-top:auto;padding-top:6px"><a href="'+esc(i.url)+'" target="_blank" rel="noopener" style="font-size:12px;color:var(--sub);align-self:center;margin-right:auto">사이트에서 보기 ↗</a>'+act+'</div>'
+      + '</div></div>';
+  }).join('') + '</div>';
+}
+async function tvGrab(u){
+  const box=document.getElementById('tvUrl'), msg=document.getElementById('tvMsg');
+  const url=(u||(box&&box.value)||'').trim();
+  if(!url){ msg.textContent='주소를 붙여넣어 주세요'; return; }
+  msg.textContent='담는 중…';
+  try{
+    const r=await fetch('/api/travel/basket',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})});
+    const d=await r.json();
+    if(d.ok){ msg.textContent=(d.status==='added'?'✅ 담았어요':'✔ 이미 담겨 있어요')+' · 출처: '+(d.site_name||''); if(!u&&box) box.value=''; }
+    else msg.textContent='⚠ '+(d.status==='travel_nodetail'?'숙소·항공 상세 페이지 주소를 넣어 주세요':(d.error||'담지 못했어요'));
+  }catch(e){ msg.textContent='⚠ 통신 오류'; }
+}
+async function tvRemove(key){
+  await fetch('/api/travel/basket/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item_key:key})});
+  renderTravel();
+}
 async function renderTrendCards(){
   const root = document.getElementById('trendRoot');
   if(!root) return;
