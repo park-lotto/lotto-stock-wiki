@@ -1,0 +1,2945 @@
+{
+ "channel": "굿레터",
+ "channel_id": "UCSJH3yRBxjVz4qh4ufcyCbg",
+ "measured": "2026-10-20 yt-dlp flat(조회)+개별 메타(최근 119편)",
+ "rule": "연예인레시피=조리·만드는 법·먹조합을 보여 주는 편 / 식재료·먹는법=코스트코 식재료+먹는·사는·손질 팁(조리 과정 짧음) / 식품쇼핑=먹는 제품 추천 / 비식품쇼핑=그 밖의 제품 / 이전_국뽕·이슈=2026-08 이전 다른 장르",
+ "summary": {
+  "비식품쇼핑": {
+   "n": 65,
+   "median": 11467,
+   "max": 912153,
+   "min": 1242,
+   "over100k": 13
+  },
+  "식재료·먹는법(경계)": {
+   "n": 7,
+   "median": 101534,
+   "max": 1823956,
+   "min": 11884,
+   "over100k": 4
+  },
+  "식품쇼핑": {
+   "n": 33,
+   "median": 7942,
+   "max": 441197,
+   "min": 1536,
+   "over100k": 6
+  },
+  "연예인레시피": {
+   "n": 14,
+   "median": 23490.5,
+   "max": 489659,
+   "min": 3086,
+   "over100k": 3
+  },
+  "이전_국뽕·이슈": {
+   "n": 171,
+   "median": 36000,
+   "max": 15000000,
+   "min": 2000,
+   "over100k": 32
+  }
+ },
+ "rows": [
+  {
+   "id": "7mCOwmmcjDY",
+   "cls": "식품쇼핑",
+   "views": 1536,
+   "date": "20261019",
+   "dur": 26,
+   "title": "40대 여성 비타민 추천, 손태영 아들 룩희가 심부름으로 사 온 120정짜리 #손태영 #비타민",
+   "celeb": true,
+   "link_no": "149"
+  },
+  {
+   "id": "wejfv6LzFvg",
+   "cls": "식품쇼핑",
+   "views": 55968,
+   "date": "20261018",
+   "dur": 32,
+   "title": "커피 설탕 추천, 88세 김영옥이 떨어지자마자 또 시킨 각설탕 #김영옥 #각설탕",
+   "celeb": true,
+   "link_no": "148"
+  },
+  {
+   "id": "3tLkgiWDRBQ",
+   "cls": "식품쇼핑",
+   "views": 114388,
+   "date": "20261018",
+   "dur": 26,
+   "title": "아침 식단 추천, 41년째 같은 체중인 66세 정보석이 15년째 매일 먹는 것 #정보석 #낫또",
+   "celeb": true,
+   "link_no": "147"
+  },
+  {
+   "id": "3PFF0Pc3iv4",
+   "cls": "식품쇼핑",
+   "views": 79344,
+   "date": "20261018",
+   "dur": 21,
+   "title": "치즈 간식 추천, 88세 김영옥이 며느리 덕에 정이 들어 매일 까먹는 빨간 치즈 #김영옥 #빅마마",
+   "celeb": true,
+   "link_no": "146"
+  },
+  {
+   "id": "9zi58IwNhLY",
+   "cls": "비식품쇼핑",
+   "views": 2094,
+   "date": "20261018",
+   "dur": 25,
+   "title": "겨울 보습 루틴, 화사가 수분크림 발라도 얼굴이 틀 때 꼭 갖고 다니는 두 가지 #화사 #수분크림",
+   "celeb": true,
+   "link_no": "145"
+  },
+  {
+   "id": "7GHYoaz4R_4",
+   "cls": "식품쇼핑",
+   "views": 5335,
+   "date": "20261017",
+   "dur": 39,
+   "title": "밥반찬 추천, 박명수가 「나 이거 당장 시킨다」 한 쿠팡 리뷰 6만 개 반찬 #밥도둑 #박명수",
+   "celeb": true,
+   "link_no": "144"
+  },
+  {
+   "id": "QaJNyBqcnv8",
+   "cls": "비식품쇼핑",
+   "views": 5087,
+   "date": "20261017",
+   "dur": 43,
+   "title": "톤업크림 추천, 강민경이 「이것만 썼어요」 한 스킨 틴트를 목에 발라 봤더니 #톤업크림 #강민경",
+   "celeb": true,
+   "link_no": "143"
+  },
+  {
+   "id": "MApqAdA86Oo",
+   "cls": "식품쇼핑",
+   "views": 4633,
+   "date": "20261016",
+   "dur": 36,
+   "title": "붓기 빼는 법, 미야오 안나가 촬영 전날 밤 먹고 자는 것 #붓기 #미야오안나",
+   "celeb": true,
+   "link_no": "142"
+  },
+  {
+   "id": "8s6cv3tkF6I",
+   "cls": "비식품쇼핑",
+   "views": 110114,
+   "date": "20261016",
+   "dur": 14,
+   "title": "미니 프라이팬 추천, 손태영이 계란말이 사각팬 대신 요즘 쓰는 것 #미니프라이팬 #손태영",
+   "celeb": true,
+   "link_no": "141"
+  },
+  {
+   "id": "sMx9RWuifCA",
+   "cls": "연예인레시피",
+   "views": 83573,
+   "date": "20261016",
+   "dur": 27,
+   "title": "신라면 맛있게 끓이는 법, 성시경이 1등 레시피를 따라 해 본 결과 #신라면 #성시경",
+   "celeb": true,
+   "link_no": "140"
+  },
+  {
+   "id": "uNqFSc2Pegg",
+   "cls": "비식품쇼핑",
+   "views": 1556,
+   "date": "20261015",
+   "dur": 25,
+   "title": "온수 찜질기, 수족냉증 슬기가 매일 끌어안고 자는 이유 #찜질기 #슬기",
+   "celeb": true,
+   "link_no": "138"
+  },
+  {
+   "id": "KPGlVAXhZJg",
+   "cls": "비식품쇼핑",
+   "views": 241865,
+   "date": "20261015",
+   "dur": 20,
+   "title": "전기담요 추천, 신지가 남편이랑 떨어져 앉는 이유 #전기담요 #신지",
+   "celeb": true,
+   "link_no": "139"
+  },
+  {
+   "id": "vjkEuD9QKGs",
+   "cls": "비식품쇼핑",
+   "views": 1726,
+   "date": "20261014",
+   "dur": 17,
+   "title": "환절기 아기방에 안전한 저온 가습기 장만한 #박수홍",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "yXJT9VliyQQ",
+   "cls": "비식품쇼핑",
+   "views": 8381,
+   "date": "20261013",
+   "dur": 27,
+   "title": "겨울에 핫팩 대신 이걸 들고 다닌 채정안 #겨울템 #추천템",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "28xeUZRGRtQ",
+   "cls": "비식품쇼핑",
+   "views": 808137,
+   "date": "20261012",
+   "dur": 24,
+   "title": "미니 전기장판, 김숙이 겨울 해외여행에 꼭 챙기는 이유 #전기장판 #김숙",
+   "celeb": true,
+   "link_no": "137"
+  },
+  {
+   "id": "NgXrweGh3d4",
+   "cls": "식품쇼핑",
+   "views": 7942,
+   "date": "20261011",
+   "dur": 19,
+   "title": "황도 통조림, 권나라가 끊었다가 다시 먹게 된 이유 #황도 #권나라",
+   "celeb": true,
+   "link_no": "136"
+  },
+  {
+   "id": "ON6IgX5oFV4",
+   "cls": "비식품쇼핑",
+   "views": 23707,
+   "date": "20261010",
+   "dur": 31,
+   "title": "세수 비누 추천, 피부과 의사 함익병이 주로 쓴다는 비누 #세안 #함익병",
+   "celeb": true,
+   "link_no": "135"
+  },
+  {
+   "id": "HqvQyybFp9Y",
+   "cls": "비식품쇼핑",
+   "views": 20990,
+   "date": "20261010",
+   "dur": 39,
+   "title": "향수 같은 핸드크림, 장윤주가 장도연 손에 코 박은 이유 #핸드크림 #장도연",
+   "celeb": true,
+   "link_no": "134"
+  },
+  {
+   "id": "3vCTC8GuNqo",
+   "cls": "식품쇼핑",
+   "views": 71416,
+   "date": "20261010",
+   "dur": 48,
+   "title": "홍현희 다이어트, 아들 준범이 한마디에 각 잡고 시작한 이유 #홍현희 #다이어트",
+   "celeb": true,
+   "link_no": "107"
+  },
+  {
+   "id": "IUUncEONB-4",
+   "cls": "비식품쇼핑",
+   "views": 11467,
+   "date": "20261010",
+   "dur": 29,
+   "title": "방한 슬리퍼 추천, 안소희가 털 슬리퍼 신고도 발 시렸던 이유 #방한슬리퍼 #안소희",
+   "celeb": true,
+   "link_no": "133"
+  },
+  {
+   "id": "9bPVqBpRvow",
+   "cls": "비식품쇼핑",
+   "views": 5545,
+   "date": "20261009",
+   "dur": 27,
+   "title": "발열 양말, 따뜻하다던 송은이가 소름 돋은 이유 #발열양말 #송은이",
+   "celeb": true,
+   "link_no": "132"
+  },
+  {
+   "id": "P3FO-1iJiI4",
+   "cls": "비식품쇼핑",
+   "views": 912153,
+   "date": "20261009",
+   "dur": 33,
+   "title": "전기담요 추천, 공효진이 겨울 촬영장에 두 개씩 챙기는 것 #전기담요 #공효진",
+   "celeb": true,
+   "link_no": "131"
+  },
+  {
+   "id": "753rWbcjHYc",
+   "cls": "연예인레시피",
+   "views": 24488,
+   "date": "20261009",
+   "dur": 40,
+   "title": "들기름 국수 레시피, 장윤정이 간장·설탕 대신 넣는 소스 하나 #들기름국수 #장윤정",
+   "celeb": true,
+   "link_no": "130"
+  },
+  {
+   "id": "RbqmLEV6F8I",
+   "cls": "비식품쇼핑",
+   "views": 6132,
+   "date": "20261008",
+   "dur": 20,
+   "title": "립밤 추천, 최지우가 모든 가방 안주머니에 하나씩 넣어 둔 것 #립밤 #최지우",
+   "celeb": true,
+   "link_no": "129"
+  },
+  {
+   "id": "yxskKVmsjK0",
+   "cls": "비식품쇼핑",
+   "views": 17637,
+   "date": "20261008",
+   "dur": 17,
+   "title": "흰옷에 국물 튀었을 때 트와이스 사나가 가방에서 바로 꺼낸다는 비상템 #사나 #트와이스",
+   "celeb": true,
+   "link_no": "128"
+  },
+  {
+   "id": "NdISTiRC9do",
+   "cls": "연예인레시피",
+   "views": 11727,
+   "date": "20261008",
+   "dur": 24,
+   "title": "조미료 0g인데 감칠맛 폭발? 이연복 셰프가 9점 준 파스타의 숨은 비결 #이연복 #파스타",
+   "celeb": true,
+   "link_no": "127"
+  },
+  {
+   "id": "vcb_-h7Ajwo",
+   "cls": "연예인레시피",
+   "views": 489659,
+   "date": "20261008",
+   "dur": 25,
+   "title": "아침 식사 대용 콩국물, 이혜정이 5년째 소금 없이 마시는 법 #콩국물 #이혜정",
+   "celeb": true,
+   "link_no": "126"
+  },
+  {
+   "id": "xy2hwj8ETtU",
+   "cls": "비식품쇼핑",
+   "views": 1939,
+   "date": "20261007",
+   "dur": 18,
+   "title": "800원대인데 손목에 힘 안 들어간다고 난리 난 인생 볼펜 #볼펜추천 #젤펜",
+   "celeb": false,
+   "link_no": "125"
+  },
+  {
+   "id": "AqtCG-iENqw",
+   "cls": "연예인레시피",
+   "views": 17400,
+   "date": "20261007",
+   "dur": 28,
+   "title": "박 연포탕 끓이는 법, 이영자가 육수 대신 넣는 것 #연포탕 #이영자",
+   "celeb": true,
+   "link_no": "123"
+  },
+  {
+   "id": "AK9fa2-1gvE",
+   "cls": "식품쇼핑",
+   "views": 6060,
+   "date": "20261006",
+   "dur": 23,
+   "title": "탄산수에 타 마시는 식초, 김다예가 5개월째 마시는 무설탕 비니거 #와인식초 #김다예",
+   "celeb": true,
+   "link_no": "122"
+  },
+  {
+   "id": "664nr95bfFc",
+   "cls": "비식품쇼핑",
+   "views": 1801,
+   "date": "20261006",
+   "dur": 28,
+   "title": "냄새에 예민한 강민경이 차에서 곱창 먹고도 뿌린다는 끝판왕 탈취제 #강민경 #다비치",
+   "celeb": true,
+   "link_no": "121"
+  },
+  {
+   "id": "OsXl-2NRW6Q",
+   "cls": "비식품쇼핑",
+   "views": 5112,
+   "date": "20261006",
+   "dur": 30,
+   "title": "동안 배우 김혜은이 피부에 바세린 바를 때 절대 그냥 안 바르는 이유 #김혜은 #바세린",
+   "celeb": true,
+   "link_no": "120"
+  },
+  {
+   "id": "g7TAyYvtPR8",
+   "cls": "비식품쇼핑",
+   "views": 151192,
+   "date": "20261005",
+   "dur": 28,
+   "title": "목주름 관리, 50대 김가연이 목까지 붙이는 쌀 토너 #목주름 #김가연",
+   "celeb": true,
+   "link_no": "119"
+  },
+  {
+   "id": "Q2zHtgE36s8",
+   "cls": "식품쇼핑",
+   "views": 130041,
+   "date": "20261005",
+   "dur": 16,
+   "title": "자다 깨는 사람, 이준호가 자기 30분 전에 먹는 것 #마그네슘 #이준호",
+   "celeb": true,
+   "link_no": "118"
+  },
+  {
+   "id": "uhKqHdJwPYw",
+   "cls": "비식품쇼핑",
+   "views": 36262,
+   "date": "20261005",
+   "dur": 10,
+   "title": "햇빛 자국 지운 비타민C 앰플, 최은경이 가루 섞어 바르는 법 #비타민C앰플 #최은경",
+   "celeb": true,
+   "link_no": "117"
+  },
+  {
+   "id": "05WEbwRZK9Q",
+   "cls": "식품쇼핑",
+   "views": 8228,
+   "date": "20261004",
+   "dur": 24,
+   "title": "일본 초코바 추천, 홍윤화가 하루 한 개만 먹자고 다짐한 것 #초코바 #홍윤화",
+   "celeb": true,
+   "link_no": "116"
+  },
+  {
+   "id": "-PbPYHZgx-I",
+   "cls": "비식품쇼핑",
+   "views": 15720,
+   "date": "20261004",
+   "dur": 14,
+   "title": "빗질만 하면 도망치던 고양이가 골골송 부르게 만드는 브러쉬 #고양이브러쉬 #털갈이",
+   "celeb": false,
+   "link_no": "115"
+  },
+  {
+   "id": "kfmZ_t4Bbss",
+   "cls": "연예인레시피",
+   "views": 106408,
+   "date": "20261004",
+   "dur": 30,
+   "title": "오징어젓 무무침, 김가연이 무를 꼬들꼬들하게 만드는 방법 #오징어젓갈 #김가연",
+   "celeb": true,
+   "link_no": "114"
+  },
+  {
+   "id": "EH_PWYcNeuk",
+   "cls": "연예인레시피",
+   "views": 8162,
+   "date": "20261004",
+   "dur": 19,
+   "title": "간장 끓일 필요 없다고? 요리연구가 이보은의 초간단 고추장아찌 비법 #이보은 #고추장아찌",
+   "celeb": true,
+   "link_no": "113"
+  },
+  {
+   "id": "m4m5oajgQFo",
+   "cls": "연예인레시피",
+   "views": 22493,
+   "date": "20261003",
+   "dur": 24,
+   "title": "새우젓무침 만드는 법, 김가연이 엄마한테 배운 밥도둑 #새우젓무침 #김가연",
+   "celeb": true,
+   "link_no": "112"
+  },
+  {
+   "id": "yoqpNmsVrYs",
+   "cls": "연예인레시피",
+   "views": 3086,
+   "date": "20261003",
+   "dur": 22,
+   "title": "파스타집 갈 필요 없다는 규현의 충격적인 사리곰탕 꿀조합 #규현 #사리곰탕",
+   "celeb": true,
+   "link_no": "111"
+  },
+  {
+   "id": "67eF7du9GrA",
+   "cls": "식품쇼핑",
+   "views": 7877,
+   "date": "20261002",
+   "dur": 16,
+   "title": "매운 겉절이 추천, 이지혜는 물 찾고 남편은 최애라는 김치 #겉절이 #이지혜",
+   "celeb": true,
+   "link_no": "110"
+  },
+  {
+   "id": "9nmQ0sNc9cQ",
+   "cls": "식품쇼핑",
+   "views": 288734,
+   "date": "20261002",
+   "dur": 27,
+   "title": "공복 16시간 홍현희 다이어트,첫 끼로 마시는 것 #간헐적단식 #홍현희 #다이어트",
+   "celeb": true,
+   "link_no": "109"
+  },
+  {
+   "id": "ITYMGIL3pYE",
+   "cls": "식품쇼핑",
+   "views": 172227,
+   "date": "20261002",
+   "dur": 26,
+   "title": "배달 김치 추천, 11개 먹어 본 이지혜가 1등 준 김치 #김치추천 #이지혜",
+   "celeb": true,
+   "link_no": "108"
+  },
+  {
+   "id": "Hu4of0J4XMM",
+   "cls": "식품쇼핑",
+   "views": 441197,
+   "date": "20261001",
+   "dur": 36,
+   "title": "홍현희 다이어트 10kg 감량 비결, 주사 아니라 식전에 마신 이것 #홍현희 #다이어트",
+   "celeb": true,
+   "link_no": "107"
+  },
+  {
+   "id": "qVq7eKy2ibE",
+   "cls": "식품쇼핑",
+   "views": 5118,
+   "date": "20261001",
+   "dur": 33,
+   "title": "나라즈케가 뭐길래, 여에스더가 일주일치를 이틀 만에 먹은 반찬 #나라즈케 #여에스더",
+   "celeb": true,
+   "link_no": "106"
+  },
+  {
+   "id": "E6SXj8FdT2s",
+   "cls": "연예인레시피",
+   "views": 61647,
+   "date": "20261001",
+   "dur": 30,
+   "title": "멸치볶음 안 뭉치게 하는 법, 김가연이 넣는 의외의 간장 #멸치볶음 #김가연",
+   "celeb": true,
+   "link_no": "105"
+  },
+  {
+   "id": "Utx-0GNQj0I",
+   "cls": "식품쇼핑",
+   "views": 408560,
+   "date": "20260930",
+   "dur": 29,
+   "title": "물떡 어묵, 이민정네 냉장고에 늘 있다는 N차 구매템 #물떡 #이민정",
+   "celeb": true,
+   "link_no": "104"
+  },
+  {
+   "id": "FE9bbuz2PVs",
+   "cls": "비식품쇼핑",
+   "views": 154422,
+   "date": "20260930",
+   "dur": 35,
+   "title": "목주름 관리, 탑모델 한혜진이 매일 밤 목까지 바르는 것 #목주름 #한혜진",
+   "celeb": true,
+   "link_no": "103"
+  },
+  {
+   "id": "1cfhxySmCVs",
+   "cls": "식품쇼핑",
+   "views": 6798,
+   "date": "20260930",
+   "dur": 25,
+   "title": "태국 김과자, 차예련·주상욱 부부가 300봉지 먹은 것 #김과자 #차예련",
+   "celeb": true,
+   "link_no": "102"
+  },
+  {
+   "id": "KHibKIAJTIc",
+   "cls": "식품쇼핑",
+   "views": 4875,
+   "date": "20260929",
+   "dur": 32,
+   "title": "불 안 쓰는 비빔국수, 차예련이 더운 날 꺼내는 면 #비빔국수 #차예련",
+   "celeb": true,
+   "link_no": "100"
+  },
+  {
+   "id": "J6YrCWps6fg",
+   "cls": "비식품쇼핑",
+   "views": 606038,
+   "date": "20260929",
+   "dur": 34,
+   "title": "다이어트 지압 슬리퍼, 57kg 찍은 황정음이 남대문까지 가서 산 이유 #지압슬리퍼 #황정음",
+   "celeb": true,
+   "link_no": "99"
+  },
+  {
+   "id": "DPAUfgkV8oQ",
+   "cls": "식재료·먹는법(경계)",
+   "views": 11884,
+   "date": "20260928",
+   "dur": 15,
+   "title": "강된장 재료, 빅마마 이혜정이 장 볼 때마다 사 두는 것 #강된장 #이혜정",
+   "celeb": true,
+   "link_no": "98"
+  },
+  {
+   "id": "AjhrHGFj1Ek",
+   "cls": "비식품쇼핑",
+   "views": 33166,
+   "date": "20260928",
+   "dur": 36,
+   "title": "새치 커버 셀프 염색, 백발 고집하던 한고은 남편이 달라진 이유 #새치커버 #한고은",
+   "celeb": true,
+   "link_no": "97"
+  },
+  {
+   "id": "nUV2WnODwLs",
+   "cls": "식품쇼핑",
+   "views": 2040,
+   "date": "20260928",
+   "dur": 33,
+   "title": "6개월 10kg 감량 식단, 흑백요리사 권성준이 먹는 밥 #다이어트식단 #권성준",
+   "celeb": true,
+   "link_no": "96"
+  },
+  {
+   "id": "_9pQwo8oOLk",
+   "cls": "비식품쇼핑",
+   "views": 9133,
+   "date": "20260928",
+   "dur": 27,
+   "title": "커클랜드 휴지, 김석훈이 포장 뒷면 제조사 보고 놀란 이유 #커클랜드 #김석훈",
+   "celeb": true,
+   "link_no": "95"
+  },
+  {
+   "id": "j-fB61Yhx5g",
+   "cls": "연예인레시피",
+   "views": 301548,
+   "date": "20260927",
+   "dur": 26,
+   "title": "하겐다즈 맛있게 먹는 법, 셰프들이 그릇째 비운 윤남노 조합 #하겐다즈 #윤남노",
+   "celeb": true,
+   "link_no": "94"
+  },
+  {
+   "id": "mSmZgwY2K4E",
+   "cls": "연예인레시피",
+   "views": 8357,
+   "date": "20260927",
+   "dur": 40,
+   "title": "케일 샐러드 드레싱, 신애라가 이것만 넣으면 끝이라는 것 #샐러드드레싱 #신애라",
+   "celeb": true,
+   "link_no": "93"
+  },
+  {
+   "id": "_NRR_aHvuVo",
+   "cls": "식재료·먹는법(경계)",
+   "views": 84666,
+   "date": "20260927",
+   "dur": 20,
+   "title": "코스트코 삼겹살 7kg, 빅마마 이혜정이 사 오자마자 하는 손질 #코스트코 #이혜정",
+   "celeb": true,
+   "link_no": "92"
+  },
+  {
+   "id": "JWlvk7IecHg",
+   "cls": "식재료·먹는법(경계)",
+   "views": 132542,
+   "date": "20260927",
+   "dur": 18,
+   "title": "말돈소금 먹는 법, 홍윤화가 요리에 넣지 말라는 이유 #말돈소금 #홍윤화",
+   "celeb": true,
+   "link_no": "91"
+  },
+  {
+   "id": "RcKAwE8ygoY",
+   "cls": "식재료·먹는법(경계)",
+   "views": 239706,
+   "date": "20260926",
+   "dur": 21,
+   "title": "코스트코 연어, 빅마마 이혜정이 두 개 사도 집에 하나만 남는 이유 #코스트코 #이혜정",
+   "celeb": true,
+   "link_no": "90"
+  },
+  {
+   "id": "-5O-Tp4vsi8",
+   "cls": "식재료·먹는법(경계)",
+   "views": 101534,
+   "date": "20260926",
+   "dur": 28,
+   "title": "코스트코 계란 60개, 김석훈이 반으로 나눠 사는 방법 #코스트코 #김석훈",
+   "celeb": true,
+   "link_no": "89"
+  },
+  {
+   "id": "DCuJuKzht68",
+   "cls": "식재료·먹는법(경계)",
+   "views": 94540,
+   "date": "20260926",
+   "dur": 26,
+   "title": "코스트코 한우 안심, 홍윤화가 일주일치를 하루 만에 먹은 이유 #코스트코 #홍윤화",
+   "celeb": true,
+   "link_no": "88"
+  },
+  {
+   "id": "5VMNcWURrwA",
+   "cls": "비식품쇼핑",
+   "views": 1692,
+   "date": "20260926",
+   "dur": 26,
+   "title": "거품 안 나는 소금치약, 엄지원이 몇 년째 매일 아침 쓰는 것 #소금치약 #엄지원",
+   "celeb": true,
+   "link_no": "74"
+  },
+  {
+   "id": "-9yNy0GLDg4",
+   "cls": "식재료·먹는법(경계)",
+   "views": 1823956,
+   "date": "20260925",
+   "dur": 20,
+   "title": "코스트코 가면 무조건 쟁여둔다는 빅마마 이혜정의 붉은 새우 #빅마마 #이혜정 #코스트코 #붉은새우",
+   "celeb": true,
+   "link_no": "87"
+  },
+  {
+   "id": "Wq_vbU7brsU",
+   "cls": "연예인레시피",
+   "views": 20586,
+   "date": "20260925",
+   "dur": 30,
+   "title": "보리굴비 먹는 법, 96세 달인이 매일 먹는 장수 밥상 #보리굴비 #생활의달인",
+   "celeb": false,
+   "link_no": "86"
+  },
+  {
+   "id": "fox6SKU0U3w",
+   "cls": "식품쇼핑",
+   "views": 5181,
+   "date": "20260925",
+   "dur": 29,
+   "title": "비타민C 먹는 시간, 71세 비타민C 박사가 빈속을 피하는 이유 #비타민C #이왕재",
+   "celeb": true,
+   "link_no": "85"
+  },
+  {
+   "id": "AJUCRRaK9TA",
+   "cls": "비식품쇼핑",
+   "views": 8798,
+   "date": "20260925",
+   "dur": 27,
+   "title": "중요한 약속 일주일 전, 안선영이 매일 붙이는 레티놀 팩 #레티놀 #안선영",
+   "celeb": true,
+   "link_no": "84"
+  },
+  {
+   "id": "X9mRnmvmTD8",
+   "cls": "연예인레시피",
+   "views": 35847,
+   "date": "20260925",
+   "dur": 26,
+   "title": "티본스테이크 굽는 법, 강주은이 집에서 반값에 먹는 방법 #티본스테이크 #강주은",
+   "celeb": true,
+   "link_no": "83"
+  },
+  {
+   "id": "K_PjTtrlHNs",
+   "cls": "식품쇼핑",
+   "views": 8842,
+   "date": "20260924",
+   "dur": 12,
+   "title": "김자반 추천, 윤혜진이 밥도 없이 퍼먹는다는 트레이더스 반찬 #김자반 #윤혜진",
+   "celeb": true,
+   "link_no": "82"
+  },
+  {
+   "id": "hLtat3COZbg",
+   "cls": "비식품쇼핑",
+   "views": 13756,
+   "date": "20260924",
+   "dur": 26,
+   "title": "셀프 염색 순서, 최은경이 염색약을 아래부터 바르는 이유 #셀프염색 #최은경",
+   "celeb": true,
+   "link_no": "75"
+  },
+  {
+   "id": "NJVGMdpluxA",
+   "cls": "식품쇼핑",
+   "views": 1880,
+   "date": "20260924",
+   "dur": 15,
+   "title": "식후 10분 뒤에 먹는다는 88세 김영옥의 카무트 효소 #카무트효소 #김영옥",
+   "celeb": true,
+   "link_no": "81"
+  },
+  {
+   "id": "bS-W05owOXE",
+   "cls": "비식품쇼핑",
+   "views": 6106,
+   "date": "20260924",
+   "dur": 17,
+   "title": "기미 미백 만 원으로? 피부과 원장 함익병이 추천한 것 #기미 #함익병",
+   "celeb": true,
+   "link_no": "80"
+  },
+  {
+   "id": "BIFXHgpQIxM",
+   "cls": "비식품쇼핑",
+   "views": 11201,
+   "date": "20260924",
+   "dur": 18,
+   "title": "화장실 냄새 없애는 법, 김숙이 여행 가면 볼일 보기 전에 뿌리는 것 #화장실냄새 #김숙",
+   "celeb": true,
+   "link_no": "79"
+  },
+  {
+   "id": "_n9s1e3nGVc",
+   "cls": "비식품쇼핑",
+   "views": 4516,
+   "date": "20260923",
+   "dur": 27,
+   "title": "때르메스가 뭐길래? 문상훈·김나영이 산 때밀이 타월 #때르메스 #때밀이",
+   "celeb": true,
+   "link_no": "77"
+  },
+  {
+   "id": "s0j-irCoJs0",
+   "cls": "식품쇼핑",
+   "views": 33330,
+   "date": "20260922",
+   "dur": 21,
+   "title": "굶지 않는 다이어트 식단, 대식가 고준희가 계속 재주문하는 면 #다이어트식단 #고준희",
+   "celeb": true,
+   "link_no": "76"
+  },
+  {
+   "id": "QZJvm8JANdU",
+   "cls": "비식품쇼핑",
+   "views": 82956,
+   "date": "20260922",
+   "dur": 17,
+   "title": "입 마름 심할 때, 장윤정이 무대 서기 전 꼭 쓰는 치약 #소금치약 #장윤정",
+   "celeb": true,
+   "link_no": "74"
+  },
+  {
+   "id": "fECsaF4YMLg",
+   "cls": "식품쇼핑",
+   "views": 1716,
+   "date": "20260922",
+   "dur": 13,
+   "title": "홍삼·유산균 뭐 먹나, 88세 김영옥 약통에서 나온 두 가지 #홍삼 #김영옥",
+   "celeb": true,
+   "link_no": "73"
+  },
+  {
+   "id": "CB-yCF6c7gk",
+   "cls": "식품쇼핑",
+   "views": 8091,
+   "date": "20260922",
+   "dur": 19,
+   "title": "전자레인지 떡볶이 추천, 차예련이 물 끓이기도 귀찮을 때 먹는 것 #떡볶이 #차예련",
+   "celeb": true,
+   "link_no": "72"
+  },
+  {
+   "id": "2SIfPCaj-cU",
+   "cls": "비식품쇼핑",
+   "views": 2292,
+   "date": "20260921",
+   "dur": 13,
+   "title": "요즘 중학생 올리브영 쇼핑, 중1 딸 쇼핑백 열어 본 이지현 반응 #올리브영 #이지현",
+   "celeb": true,
+   "link_no": "78"
+  },
+  {
+   "id": "e_om6FodjCw",
+   "cls": "식품쇼핑",
+   "views": 5150,
+   "date": "20260921",
+   "dur": 15,
+   "title": "수면제 대신? 잠 못 자는 안문숙에게 72세 박정수가 챙겨 준 것 #불면증 #박정수",
+   "celeb": true,
+   "link_no": "71"
+  },
+  {
+   "id": "AN6Jlj3_sJA",
+   "cls": "식품쇼핑",
+   "views": 31857,
+   "date": "20260921",
+   "dur": 13,
+   "title": "77세 박원숙 영양제 바구니, 정기적으로 먹는 건 딱 두 가지 #영양제 #박원숙",
+   "celeb": true,
+   "link_no": "70"
+  },
+  {
+   "id": "NfK6TDyg410",
+   "cls": "비식품쇼핑",
+   "views": 52469,
+   "date": "20260921",
+   "dur": 18,
+   "title": "백탁 없는 선크림 추천, 윤혜진이 메이크업 샵에서도 쓴다고 알게 된 것 #선크림 #윤혜진",
+   "celeb": true,
+   "link_no": "69"
+  },
+  {
+   "id": "X1Yjtun9SHk",
+   "cls": "식품쇼핑",
+   "views": 5747,
+   "date": "20260920",
+   "dur": 18,
+   "title": "부모님 영양제 하나만 고른다면? 약사 손주가 88세 김영옥에게 준 것 #영양제 #김영옥",
+   "celeb": true,
+   "link_no": "68"
+  },
+  {
+   "id": "omwvnDyQkIY",
+   "cls": "비식품쇼핑",
+   "views": 8425,
+   "date": "20260920",
+   "dur": 19,
+   "title": "물광 피부 만드는 법, 장성규가 놀란 소유 쌩얼의 비결 #물광피부 #소유",
+   "celeb": true,
+   "link_no": "67"
+  },
+  {
+   "id": "Q3kC0wDkvC4",
+   "cls": "비식품쇼핑",
+   "views": 23392,
+   "date": "20260919",
+   "dur": 25,
+   "title": "콧볼 쉐딩하면 더 넓어 보인다? 이사배가 대신 하나만 쓰라는 것 #컨실러 #이사배",
+   "celeb": true,
+   "link_no": "66"
+  },
+  {
+   "id": "Bcvz0vPW0sE",
+   "cls": "식품쇼핑",
+   "views": 61457,
+   "date": "20260919",
+   "dur": 26,
+   "title": "미국 시리얼 추천, 크리스탈이 5박스씩 사 와 밤에 몰래 먹는 것 #시리얼 #크리스탈",
+   "celeb": true,
+   "link_no": "65"
+  },
+  {
+   "id": "MhppshUXiD0",
+   "cls": "비식품쇼핑",
+   "views": 575375,
+   "date": "20260918",
+   "dur": 18,
+   "title": "집에서 키 커 보이는 슬리퍼, 이지현이 중1 딸한테 들킨 비밀 #통굽슬리퍼 #이지현",
+   "celeb": true,
+   "link_no": "64"
+  },
+  {
+   "id": "i6GxSS4P1eM",
+   "cls": "비식품쇼핑",
+   "views": 24481,
+   "date": "20260918",
+   "dur": 24,
+   "title": "붙이고 설거지해도 안 묻는 팩, 류혜영이 50장째 쓰는 것 #마스크팩 #류혜영",
+   "celeb": true,
+   "link_no": "63"
+  },
+  {
+   "id": "58ER4S-356E",
+   "cls": "비식품쇼핑",
+   "views": 31787,
+   "date": "20260917",
+   "dur": 20,
+   "title": "발뒤꿈치 각질 밀지 마세요, 피부과 원장 함익병이 대신 바르는 것 #발뒤꿈치각질 #함익병",
+   "celeb": true,
+   "link_no": "62"
+  },
+  {
+   "id": "q9HhLm1khjQ",
+   "cls": "식품쇼핑",
+   "views": 2043,
+   "date": "20260917",
+   "dur": 22,
+   "title": "코스트코 우동 추천, 오미연 가족이 10번 넘게 산 넓적한 면 #코스트코 #오미연",
+   "celeb": true,
+   "link_no": "61"
+  },
+  {
+   "id": "2Y2Fw-O_oV4",
+   "cls": "비식품쇼핑",
+   "views": 26616,
+   "date": "20260917",
+   "dur": 17,
+   "title": "미백 치약 추천, 류혜영이 10년 넘게 이것만 쓰는 이유 #미백치약 #류혜영",
+   "celeb": true,
+   "link_no": "60"
+  },
+  {
+   "id": "CxE_pde9fTg",
+   "cls": "비식품쇼핑",
+   "views": 7331,
+   "date": "20260916",
+   "dur": 22,
+   "title": "음식물처리기 65만 원, 살까 말까 고민에 김나영이 내린 결론 #음식물처리기 #김나영",
+   "celeb": true,
+   "link_no": "58"
+  },
+  {
+   "id": "ENTproeadd0",
+   "cls": "비식품쇼핑",
+   "views": 357673,
+   "date": "20260916",
+   "dur": 22,
+   "title": "인바디 체중계 40만 원, 김나영이 하루 2,500원이라고 계산한 이유 #인바디 #김나영",
+   "celeb": true,
+   "link_no": "56"
+  },
+  {
+   "id": "SrXgkZn__ek",
+   "cls": "비식품쇼핑",
+   "views": 1997,
+   "date": "20260915",
+   "dur": 22,
+   "title": "두피 샴푸 추천, 최은경네 세 식구가 같은 통으로 쓰는 것 #두피샴푸 #최은경",
+   "celeb": true,
+   "link_no": "51"
+  },
+  {
+   "id": "Ww7PCBGt26o",
+   "cls": "식품쇼핑",
+   "views": 2686,
+   "date": "20260912",
+   "dur": 26,
+   "title": "기관지 약해졌다는 87세 김영옥이 냉장고에 두고 먹는 시럽 #기관지 #김영옥",
+   "celeb": true,
+   "link_no": "45"
+  },
+  {
+   "id": "kFW39nVAfQ4",
+   "cls": "식품쇼핑",
+   "views": 18239,
+   "date": "20260912",
+   "dur": 36,
+   "title": "아침 단백질 챙기는 법, 88세 김영옥이 두 박스 산 것 #단백질 #김영옥",
+   "celeb": true,
+   "link_no": "43"
+  },
+  {
+   "id": "dMj_fGDx3rE",
+   "cls": "비식품쇼핑",
+   "views": 553182,
+   "date": "20260911",
+   "dur": 21,
+   "title": "전기세 많이 나오는 가전 1위, 이지현이 밥솥 보온 안 하는 이유 #전기세 #이지현",
+   "celeb": true,
+   "link_no": "34"
+  },
+  {
+   "id": "BfepaqJ15QM",
+   "cls": "비식품쇼핑",
+   "views": 6762,
+   "date": "20260909",
+   "dur": 21,
+   "title": "수면안대 추천, 로제가 미국에서 받고 계속 쓴다는 안대 #수면안대 #로제",
+   "celeb": true,
+   "link_no": "29"
+  },
+  {
+   "id": "eMDS36l2SmI",
+   "cls": "비식품쇼핑",
+   "views": 36849,
+   "date": "20260908",
+   "dur": 35,
+   "title": "얼굴 작아 보이는 법, 미미가 이수지 귀에 붙여 준 것 #얼굴작아지는법 #미미",
+   "celeb": true,
+   "link_no": "27"
+  },
+  {
+   "id": "eUxs_tDySs8",
+   "cls": "비식품쇼핑",
+   "views": 2347,
+   "date": "20260907",
+   "dur": 32,
+   "title": "코 블랙헤드 짜지 마세요, 그 검은 점의 진짜 정체 #블랙헤드 #모공관리",
+   "celeb": false,
+   "link_no": "26"
+  },
+  {
+   "id": "Xt6RTbv6vbo",
+   "cls": "비식품쇼핑",
+   "views": 11589,
+   "date": "20260907",
+   "dur": 32,
+   "title": "바디 미백 로션, 이채영이 몰래 쓰다 멤버들한테 들킨 것 #바디로션 #이채영",
+   "celeb": true,
+   "link_no": "25"
+  },
+  {
+   "id": "hkU-MzieqbU",
+   "cls": "비식품쇼핑",
+   "views": 91465,
+   "date": "20260907",
+   "dur": 23,
+   "title": "정수리 흰머리 가리는 법, 이지현이 두꺼운 머리띠만 하는 이유 #흰머리 #이지현",
+   "celeb": true,
+   "link_no": "23"
+  },
+  {
+   "id": "RHuRtTuJkAI",
+   "cls": "비식품쇼핑",
+   "views": 12610,
+   "date": "20260906",
+   "dur": 34,
+   "title": "헤어라인 쿠션으로 빈 곳만 채우면 얼굴이 작아 보인다는 이사배 팁 #헤어라인 #이사배",
+   "celeb": true,
+   "link_no": "22"
+  },
+  {
+   "id": "HPDC6xzuLU0",
+   "cls": "비식품쇼핑",
+   "views": 48213,
+   "date": "20260905",
+   "dur": 26,
+   "title": "지압슬리퍼 여러 개 사 본 이사배가 결국 정착한 슬리퍼의 차이 #지압슬리퍼 #이사배",
+   "celeb": true,
+   "link_no": "21"
+  },
+  {
+   "id": "XXVSZrhez4Q",
+   "cls": "비식품쇼핑",
+   "views": 9109,
+   "date": "20260905",
+   "dur": 23,
+   "title": "맥 립스틱 추천, 립스틱 회사 사장까지 한 김새롬이 정착한 색 #맥립스틱 #김새롬",
+   "celeb": true,
+   "link_no": "20"
+  },
+  {
+   "id": "jWaM4CRXheo",
+   "cls": "비식품쇼핑",
+   "views": 283638,
+   "date": "20260904",
+   "dur": 40,
+   "title": "129만 원 향수 쓰는 브라이언이 7만 원짜리 맡고 놀란 이유 #브라이언 #향수추천",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "E93ppvJ1pIs",
+   "cls": "비식품쇼핑",
+   "views": 2176,
+   "date": "20260901",
+   "dur": 45,
+   "title": "자글자글한 눈가 주름 하루 10분 케어로 되돌리는 저렴한 홈 디바이스  #꿀템추천",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "7PxW-FAHBiM",
+   "cls": "비식품쇼핑",
+   "views": 6206,
+   "date": "20260901",
+   "dur": 60,
+   "title": "김숙 걱정에 송은이가 꺼내 물건의 정체 #살림꿀템",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "wIaMwWDt4qg",
+   "cls": "비식품쇼핑",
+   "views": 1242,
+   "date": "20260830",
+   "dur": 59,
+   "title": "올리브영 세일 때 민감성·속건조 피부가 담을 5개 #올리브영세일 #올리브영추천",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "IqnxSXY9Jpw",
+   "cls": "비식품쇼핑",
+   "views": 3584,
+   "date": "20260830",
+   "dur": 30,
+   "title": "계란 2판 한 번에 드는 장바구니, 직접 만들다 포기하고 산 것 #계란장바구니 #장바구니",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "H_lm81350dI",
+   "cls": "비식품쇼핑",
+   "views": 2378,
+   "date": "20260828",
+   "dur": 35,
+   "title": "화장 잘 먹게 하려면 화장 전에 바르라는 세럼의 정체 #화잘먹세럼 #콜라겐세럼",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "trLwaiia2AU",
+   "cls": "비식품쇼핑",
+   "views": 392824,
+   "date": "20260828",
+   "dur": 18,
+   "title": "화사가 열 통씩 쟁여놨다는 입술템의 정체 #화사 #마마무 #연예인추천템",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "IXjszdQtpr8",
+   "cls": "비식품쇼핑",
+   "views": 109372,
+   "date": "20260828",
+   "dur": 39,
+   "title": "좁은 주방 수납, 수납장 짜기 전에 이 3개부터 달아 보세요 #주방수납 #주방정리",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "ksftNrMlqgg",
+   "cls": "비식품쇼핑",
+   "views": 2280,
+   "date": "20260823",
+   "dur": 36,
+   "title": "조카 선물 고민 끝, 4만 원으로 최애 삼촌 된 장난감 #조카선물 #어린이선물",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "rzi6zwWp-j4",
+   "cls": "비식품쇼핑",
+   "views": 2204,
+   "date": "20260821",
+   "dur": 16,
+   "title": "정당방위",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "4H0QoI3AGAI",
+   "cls": "비식품쇼핑",
+   "views": 5178,
+   "date": "20260817",
+   "dur": 17,
+   "title": "욕실 수납 부족할 때 못 안 박고 선반 다는 법 #욕실선반 #무타공선반",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "L_tePmtCcYI",
+   "cls": "비식품쇼핑",
+   "views": 14096,
+   "date": "20260815",
+   "dur": 38,
+   "title": "권연벌레 살충제 뿌리지 말고 하룻밤 두면 이만큼 잡히는 것 #권연벌레 #권연벌레퇴치",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "1YXpwcCcjSQ",
+   "cls": "비식품쇼핑",
+   "views": 3214,
+   "date": "20260813",
+   "dur": 20,
+   "title": "강아지 털 붙은 소파, 테이프 돌돌이 대신 쓴다는 물로 씻는 이것 #강아지털 #돌돌이",
+   "celeb": false,
+   "link_no": null
+  },
+  {
+   "id": "HKbImYb7b0w",
+   "cls": "이전_국뽕·이슈",
+   "views": 62000,
+   "date": null,
+   "dur": null,
+   "title": "한국을 좋아할 수 밖에 없는 이유 ㅋㅋ",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "pVu8ceMcp2U",
+   "cls": "이전_국뽕·이슈",
+   "views": 33000,
+   "date": null,
+   "dur": null,
+   "title": "여러분은 도자 캣이란 가수를 아시나요?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "2HnOcNyO-Qg",
+   "cls": "이전_국뽕·이슈",
+   "views": 16000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고 싶어하는 이유 27",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "IT16wmTPDYU",
+   "cls": "이전_국뽕·이슈",
+   "views": 15000,
+   "date": null,
+   "dur": null,
+   "title": "빌리 vs 싸이 당신의 선택은?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Dt3gjElHKGc",
+   "cls": "이전_국뽕·이슈",
+   "views": 20000,
+   "date": null,
+   "dur": null,
+   "title": "인도 연기천재의 나라별 총 맞는 연기(한국은 역시)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "buh1rt479xA",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "일본 도쿄돔에서 울려퍼진 애국가",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "bL7xPaSiQKY",
+   "cls": "이전_국뽕·이슈",
+   "views": 98000,
+   "date": null,
+   "dur": null,
+   "title": "떼창을 일본X 한국O 하는 이유 2",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "p3Okvpqr7GA",
+   "cls": "이전_국뽕·이슈",
+   "views": 3200000,
+   "date": null,
+   "dur": null,
+   "title": "떼창을 일본X 한국O 하는 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "8cXjzsIibes",
+   "cls": "이전_국뽕·이슈",
+   "views": 8400,
+   "date": null,
+   "dur": null,
+   "title": "한국의 슈바이처",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "2Pne-fBK7Bo",
+   "cls": "이전_국뽕·이슈",
+   "views": 16000,
+   "date": null,
+   "dur": null,
+   "title": "남수단의 영웅 이태석 신부",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "e42k5yffU_8",
+   "cls": "이전_국뽕·이슈",
+   "views": 11000,
+   "date": null,
+   "dur": null,
+   "title": "대한민국의 진정한 영웅들",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "wspmN7FREGY",
+   "cls": "이전_국뽕·이슈",
+   "views": 21000,
+   "date": null,
+   "dur": null,
+   "title": "한국인의 따뜻한 정",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "T66liGhGAr0",
+   "cls": "이전_국뽕·이슈",
+   "views": 15000,
+   "date": null,
+   "dur": null,
+   "title": "승객 전원을 살린 한국 기장 ㄷㄷㄷ",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "sslEURExZrY",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "형..진정해!! 알겠어.. 고마워",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "foI_oHsNGis",
+   "cls": "이전_국뽕·이슈",
+   "views": 9200,
+   "date": null,
+   "dur": null,
+   "title": "일본 요괴 \"모쿠소 호간\"의 진실",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "s2FCFSEp7C8",
+   "cls": "이전_국뽕·이슈",
+   "views": 13000,
+   "date": null,
+   "dur": null,
+   "title": "일본 장수가 두려워한 이순신",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "ZsKTBow81j0",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "예비역 병장 아저씨들 소집하는 게임( 콜오브 뷰티 모던워페어 4)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "jhwhSivBI6E",
+   "cls": "이전_국뽕·이슈",
+   "views": 28000,
+   "date": null,
+   "dur": null,
+   "title": "떼창으로 유명한 가수가 한국에 오면?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "gDwuz4E9r1k",
+   "cls": "이전_국뽕·이슈",
+   "views": 100000,
+   "date": null,
+   "dur": null,
+   "title": "팝의 여왕 한국 체험기",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "va2mdl_uaK4",
+   "cls": "이전_국뽕·이슈",
+   "views": 88000,
+   "date": null,
+   "dur": null,
+   "title": "축제인데 비오니까 오히려 좋아! (싸이 흠뻑쇼)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "BHYcQn7c00s",
+   "cls": "이전_국뽕·이슈",
+   "views": 1700000,
+   "date": null,
+   "dur": null,
+   "title": "그가 한국을 사랑한 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "njtk59tMjt8",
+   "cls": "이전_국뽕·이슈",
+   "views": 17000,
+   "date": null,
+   "dur": null,
+   "title": "클래식 음악마저 떼창하는...",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "7cDPf1ESppE",
+   "cls": "이전_국뽕·이슈",
+   "views": 34000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고 싶어하는 이유 25",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "4RxWPY2e2yw",
+   "cls": "이전_국뽕·이슈",
+   "views": 30000,
+   "date": null,
+   "dur": null,
+   "title": "밴드 헤체 전 마지막 내한",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "NP-sN7Lf2NM",
+   "cls": "이전_국뽕·이슈",
+   "views": 39000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고 싶어하는 이유 24",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "P4BBd3XCVkc",
+   "cls": "이전_국뽕·이슈",
+   "views": 36000,
+   "date": null,
+   "dur": null,
+   "title": "쇼팽의 심장을 주먹으로 두들긴 한국의 피아니스트",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "C2Or7JmlgXI",
+   "cls": "이전_국뽕·이슈",
+   "views": 14000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고 싶어하는 이유 23",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "3zFxBctlcWo",
+   "cls": "이전_국뽕·이슈",
+   "views": 124000,
+   "date": null,
+   "dur": null,
+   "title": "원곡자들을 놀라게한 한국의 수상한 관객들",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Rd_yWC_hpHs",
+   "cls": "이전_국뽕·이슈",
+   "views": 2300000,
+   "date": null,
+   "dur": null,
+   "title": "불어로 된 뮤지컬 곡도 떼창하는 한국인들",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "fSNj25u5mKk",
+   "cls": "이전_국뽕·이슈",
+   "views": 78000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고 싶어하는 이유 22",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "7oASemoGyEk",
+   "cls": "이전_국뽕·이슈",
+   "views": 42000,
+   "date": null,
+   "dur": null,
+   "title": "음을 갖다 댄 것 뿐인데 일본에서 인정 받는 한국의 S급 가수 #성시경",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "JD92ReMKlPg",
+   "cls": "이전_국뽕·이슈",
+   "views": 891000,
+   "date": null,
+   "dur": null,
+   "title": "외국가수들이 한국만 오고싶어하는 이유 21",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "KWS1ULPlOrE",
+   "cls": "이전_국뽕·이슈",
+   "views": 370000,
+   "date": null,
+   "dur": null,
+   "title": "외국가수들이 한국만 오고싶어하는 이유 20",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "ZlBg5HW68FA",
+   "cls": "이전_국뽕·이슈",
+   "views": 116000,
+   "date": null,
+   "dur": null,
+   "title": "외국가수들이 한국만 오고싶어하는 이유 19",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "T1ilbGIaHX0",
+   "cls": "이전_국뽕·이슈",
+   "views": 1300000,
+   "date": null,
+   "dur": null,
+   "title": "외국가수들이 한국만 오고싶어하는 이유 18",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "nN2tg2jasz8",
+   "cls": "이전_국뽕·이슈",
+   "views": 159000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 17",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "DnS7SJieLSY",
+   "cls": "이전_국뽕·이슈",
+   "views": 57000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국에 오고싶어하는 이유 16",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "5IQ4FHClstk",
+   "cls": "이전_국뽕·이슈",
+   "views": 55000,
+   "date": null,
+   "dur": null,
+   "title": "(감동 주의!!)일본에서 일어난 현대판 흥부라는 한국인 관광객의 행동 #뉴스",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "cYy4OQ0JAwY",
+   "cls": "이전_국뽕·이슈",
+   "views": 14000000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 15",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "9uIBSJgOxp8",
+   "cls": "이전_국뽕·이슈",
+   "views": 37000,
+   "date": null,
+   "dur": null,
+   "title": "요즘 세상이 나를 상대로 몰카하는거 같은 이유 #코첼라 #안녕하세요",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "co8iv_F4VLE",
+   "cls": "이전_국뽕·이슈",
+   "views": 27000,
+   "date": null,
+   "dur": null,
+   "title": "대만에서 난리난 한국식 카페",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "EY2g3BrZKX0",
+   "cls": "이전_국뽕·이슈",
+   "views": 203000,
+   "date": null,
+   "dur": null,
+   "title": "역으로 한국인을 찍는 내한 가수 ㅋㅋ",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "F2FqSiYBVoM",
+   "cls": "이전_국뽕·이슈",
+   "views": 55000,
+   "date": null,
+   "dur": null,
+   "title": "악질 유튜버 조니 소말리 징역 6개월 소식에#해외반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "LxwDhkAUf9M",
+   "cls": "이전_국뽕·이슈",
+   "views": 50000,
+   "date": null,
+   "dur": null,
+   "title": "한국에서 양치하다 잔소리들은 외국인의 하소연 #해외반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "HW6Xy9vHmyQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 47000,
+   "date": null,
+   "dur": null,
+   "title": "일본에서 폭발적인 한국식 저가 커피",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "4zYUxE1byBg",
+   "cls": "이전_국뽕·이슈",
+   "views": 24000,
+   "date": null,
+   "dur": null,
+   "title": "타국 왕실 홍보로 아마존 1등한 한국 화장품",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "2WVCtxwT1Kw",
+   "cls": "이전_국뽕·이슈",
+   "views": 51000,
+   "date": null,
+   "dur": null,
+   "title": "한국의 벚꽃을 보고 울컥한 외국인",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "fpx0GO2dpvg",
+   "cls": "이전_국뽕·이슈",
+   "views": 35000,
+   "date": null,
+   "dur": null,
+   "title": "누텔라보다 중독성 강한 잼",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "nz8y8XrBBe0",
+   "cls": "이전_국뽕·이슈",
+   "views": 40000,
+   "date": null,
+   "dur": null,
+   "title": "이번 여름은 파리 박멸 드가자",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "JwxNBmtgyUs",
+   "cls": "이전_국뽕·이슈",
+   "views": 18000,
+   "date": null,
+   "dur": null,
+   "title": "외국인들이 한국 세탁기만 찾는 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "xrQZOkHNIPI",
+   "cls": "이전_국뽕·이슈",
+   "views": 45000,
+   "date": null,
+   "dur": null,
+   "title": "한국인은 절대 못 참는다는 영상",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Pdt4otmqtlA",
+   "cls": "이전_국뽕·이슈",
+   "views": 44000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 유명한 한국인만 몰랐던 편의점 꿀조합 #이건몰랐지",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "5r_RZzfVAy8",
+   "cls": "이전_국뽕·이슈",
+   "views": 18000,
+   "date": null,
+   "dur": null,
+   "title": "공기청정기는 멘탈이 완전히 나가버렸습니다",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "fkznEi1HbgE",
+   "cls": "이전_국뽕·이슈",
+   "views": 40000,
+   "date": null,
+   "dur": null,
+   "title": "이게  될 줄은 몰랐네",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "xJHAQAwgFf4",
+   "cls": "이전_국뽕·이슈",
+   "views": 26000,
+   "date": null,
+   "dur": null,
+   "title": "한국이 세계 1위를 대하는 자세 #안세영",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "gTiXD2wXcdM",
+   "cls": "이전_국뽕·이슈",
+   "views": 69000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수가 한국에 또 왔다...",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "IuFSamhfFec",
+   "cls": "이전_국뽕·이슈",
+   "views": 33000,
+   "date": null,
+   "dur": null,
+   "title": "유튜브 조회수 1위의 정체",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "YglyvgN9TyM",
+   "cls": "이전_국뽕·이슈",
+   "views": 44000,
+   "date": null,
+   "dur": null,
+   "title": "??? : 소문 듣고 찾아왔습니다~",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "zfbA-mUZXfc",
+   "cls": "이전_국뽕·이슈",
+   "views": 39000,
+   "date": null,
+   "dur": null,
+   "title": "남이 평가하는 나는 진정한 내가 아니다",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "lY2g5ptQMT4",
+   "cls": "이전_국뽕·이슈",
+   "views": 67000,
+   "date": null,
+   "dur": null,
+   "title": "한국인을 위한 떼창곡",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "X4QES8_lMVY",
+   "cls": "이전_국뽕·이슈",
+   "views": 258000,
+   "date": null,
+   "dur": null,
+   "title": "기대한 만큼 보여주는 한국인들",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "hF172cIMGdU",
+   "cls": "이전_국뽕·이슈",
+   "views": 76000,
+   "date": null,
+   "dur": null,
+   "title": "추모곡은 한마음 한뜻으로...",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "TGSt0sjZTgE",
+   "cls": "이전_국뽕·이슈",
+   "views": 60000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 14",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "GR8NaPzHd70",
+   "cls": "이전_국뽕·이슈",
+   "views": 115000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 13",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "WF_q3fv7YcM",
+   "cls": "이전_국뽕·이슈",
+   "views": 50000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 12",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "R3F4eMLXxO4",
+   "cls": "이전_국뽕·이슈",
+   "views": 12000000,
+   "date": null,
+   "dur": null,
+   "title": "한국을 너무 우습게 생각한 언니",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "B_z9bZebLOQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 29000,
+   "date": null,
+   "dur": null,
+   "title": "10주연속 1위하던 가수가 하루아침에 사라짐",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "adiaEnj5MoM",
+   "cls": "이전_국뽕·이슈",
+   "views": 41000,
+   "date": null,
+   "dur": null,
+   "title": "33억뷰 글로벌 히트 노래 한국인은 준비되어있다 #떼창",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "vJZBPvVa7-4",
+   "cls": "이전_국뽕·이슈",
+   "views": 63000,
+   "date": null,
+   "dur": null,
+   "title": "일본에서 조용필,보아보다 더 유명했던 가수의 비극적 인생",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "O2GKrVgpwHU",
+   "cls": "이전_국뽕·이슈",
+   "views": 55000,
+   "date": null,
+   "dur": null,
+   "title": "학교에서 가르쳐준 떼창 #mylove #westlife",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "5nYshBkkolA",
+   "cls": "이전_국뽕·이슈",
+   "views": 50000,
+   "date": null,
+   "dur": null,
+   "title": "한국에서 외면 당해도 한국을 사랑한 무명가수",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "K8yHnAUeHzY",
+   "cls": "이전_국뽕·이슈",
+   "views": 58000,
+   "date": null,
+   "dur": null,
+   "title": "스웨덴 가수가 감동받고 리메이크한 한국 노래",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "kexPla9OFpQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 56000,
+   "date": null,
+   "dur": null,
+   "title": "깔끔하고 깨끗한 한국의 지하철 해외반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "mqaRSc8bTeU",
+   "cls": "이전_국뽕·이슈",
+   "views": 41000,
+   "date": null,
+   "dur": null,
+   "title": "고양에서 열린 공연이 용인에서도 들린 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "NNtpRGa98CU",
+   "cls": "이전_국뽕·이슈",
+   "views": 42000,
+   "date": null,
+   "dur": null,
+   "title": "맨유의 전설의 티82",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "29M-pxXU2po",
+   "cls": "이전_국뽕·이슈",
+   "views": 26000,
+   "date": null,
+   "dur": null,
+   "title": "중국을 좌절시킨 한국의 18세 금메달리스트",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "XRBT1Pb5VMI",
+   "cls": "이전_국뽕·이슈",
+   "views": 107000,
+   "date": null,
+   "dur": null,
+   "title": "넷플릭스 최종 보너스 5단계를 달성한 유일한 작품이 케더헌이라니..",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "sc4JGuMgjvM",
+   "cls": "이전_국뽕·이슈",
+   "views": 107000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 11",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "nHg8YjWwZjw",
+   "cls": "이전_국뽕·이슈",
+   "views": 49000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 10",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "gz9QaFCALz0",
+   "cls": "이전_국뽕·이슈",
+   "views": 150000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 9",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "JFc20bGiDiU",
+   "cls": "이전_국뽕·이슈",
+   "views": 781000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 8",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "1q5VUozvHkQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 195000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 7",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "jYX35F8zwU0",
+   "cls": "이전_국뽕·이슈",
+   "views": 2100000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 6",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "DNY6h3qKkaI",
+   "cls": "이전_국뽕·이슈",
+   "views": 8800000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 5",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "hVCSDThKNqM",
+   "cls": "이전_국뽕·이슈",
+   "views": 67000,
+   "date": null,
+   "dur": null,
+   "title": "미국인을 감동시킨 한국가수",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "09boc8uVp2M",
+   "cls": "이전_국뽕·이슈",
+   "views": 4600000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국에 오고싶어 하는 이유4",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "rO6jTVx0nJw",
+   "cls": "이전_국뽕·이슈",
+   "views": 43000,
+   "date": null,
+   "dur": null,
+   "title": "LA 폭동을 이겨낸 한국 아저씨들 #국제시장2",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "92qwLj4_oCk",
+   "cls": "이전_국뽕·이슈",
+   "views": 213000,
+   "date": null,
+   "dur": null,
+   "title": "독일가서 기립박수 받은 한국 군악대",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "f5sapw468TY",
+   "cls": "이전_국뽕·이슈",
+   "views": 839000,
+   "date": null,
+   "dur": null,
+   "title": "군대 다녀온 방탄소년단 월드투어 티켓팅 1분만에 매진 #bts #방탄 #방탄소년단",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "A7HL4ZkOHgY",
+   "cls": "이전_국뽕·이슈",
+   "views": 6700000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국에 오고싶어 하는 이유3",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "_jWO7DenNQY",
+   "cls": "이전_국뽕·이슈",
+   "views": 937000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 2",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "R1dbeaoWLxc",
+   "cls": "이전_국뽕·이슈",
+   "views": 15000000,
+   "date": null,
+   "dur": null,
+   "title": "외국 가수들이 한국만 오고싶어하는 이유 1",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "n2rJ-ElsLcg",
+   "cls": "이전_국뽕·이슈",
+   "views": 69000,
+   "date": null,
+   "dur": null,
+   "title": "요즘 유행하는 Made in China 밈",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "irjBDb1z7Z0",
+   "cls": "이전_국뽕·이슈",
+   "views": 79000,
+   "date": null,
+   "dur": null,
+   "title": "외국인들이 이해 못하는 비둘기를 본 한국인의 행동",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "8BjrxMgBnw0",
+   "cls": "이전_국뽕·이슈",
+   "views": 53000,
+   "date": null,
+   "dur": null,
+   "title": "올리브영을 통째로 가져간 중국",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "kdpqRwSwGjE",
+   "cls": "이전_국뽕·이슈",
+   "views": 72000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 열풍인 한국어 배우기(7탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "h3ZMsjj7VbE",
+   "cls": "이전_국뽕·이슈",
+   "views": 65000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 열풍인 한국어 배우기(6탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "lPjdZAGRVpQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 41000,
+   "date": null,
+   "dur": null,
+   "title": "중국이 발작한다 = 매우 좋은 신호",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Gca7duADVS4",
+   "cls": "이전_국뽕·이슈",
+   "views": 70000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 열풍인 한국어 배우기 (5탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "xHpOLHSYPUQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 42000,
+   "date": null,
+   "dur": null,
+   "title": "한국어 못하면 놀림 받는다는 해외 (4탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "u7ZC53jPSHE",
+   "cls": "이전_국뽕·이슈",
+   "views": 38000,
+   "date": null,
+   "dur": null,
+   "title": "이젠 한국인 피가 흐르면 부러움 받는 일본 상황",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "m-bD0RMQeA4",
+   "cls": "이전_국뽕·이슈",
+   "views": 52000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 열풍인 한국어 배우기!(3탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "N9URdszGdVo",
+   "cls": "이전_국뽕·이슈",
+   "views": 51000,
+   "date": null,
+   "dur": null,
+   "title": "한국행 비행기표 취소당한 외국인(2탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "JDa6AngcblE",
+   "cls": "이전_국뽕·이슈",
+   "views": 35000,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 열풍인 한국어 배우기!(1탄)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "ltvxb-s7jvI",
+   "cls": "이전_국뽕·이슈",
+   "views": 37000,
+   "date": null,
+   "dur": null,
+   "title": "외국인이 한국인들을 실험해보는데 결과는?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "5VzoxFQ8yH0",
+   "cls": "이전_국뽕·이슈",
+   "views": 20000,
+   "date": null,
+   "dur": null,
+   "title": "빨리빨리하다가 진화도 먼저한 한국인",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "wtP8gU_kzZI",
+   "cls": "이전_국뽕·이슈",
+   "views": 87000,
+   "date": null,
+   "dur": null,
+   "title": "구글이 버린 기업 한국이 사더니 ㅎㄷㄷ",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "YMrNaG9YqN0",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "소울푸드 또 유출 #국뽕 #계란빵 #명동",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "kcJRvfxYOVM",
+   "cls": "이전_국뽕·이슈",
+   "views": 38000,
+   "date": null,
+   "dur": null,
+   "title": "주인 없는 가방 100개로 한국인들 실험(충격반전)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "oeKpGVtErLk",
+   "cls": "이전_국뽕·이슈",
+   "views": 21000,
+   "date": null,
+   "dur": null,
+   "title": "역시 한국은 엄청나다는 외국인 관광객 #국뽕 #한국",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "QN6nHsEwMUI",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "한국 공사현장을 보고 외국인이 놀란 이유 #한국 #국뽕",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "m1LxbKisWg4",
+   "cls": "이전_국뽕·이슈",
+   "views": 30000,
+   "date": null,
+   "dur": null,
+   "title": "중국이 안세영을 귀하시켜려는 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "dbXcXVA6_A0",
+   "cls": "이전_국뽕·이슈",
+   "views": 14000,
+   "date": null,
+   "dur": null,
+   "title": "3000만 중국인 틱톡커 헛소리 박제",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "zhaIJ0Xlg08",
+   "cls": "이전_국뽕·이슈",
+   "views": 34000,
+   "date": null,
+   "dur": null,
+   "title": "전세계 1등 중국에 뺏길뻔한 한국",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "q_4CFvdXZ5c",
+   "cls": "이전_국뽕·이슈",
+   "views": 17000,
+   "date": null,
+   "dur": null,
+   "title": "중국말고 한국으로 여행오는 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "zJGb6f2Kas0",
+   "cls": "이전_국뽕·이슈",
+   "views": 63000,
+   "date": null,
+   "dur": null,
+   "title": "중국인의 한국 편의점 진상(반전)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "_KkIMSrZzN0",
+   "cls": "이전_국뽕·이슈",
+   "views": 22000,
+   "date": null,
+   "dur": null,
+   "title": "한국에 살기 전 후 비교 사진에 놀란 외국인들(해외댓글반응)#해외반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "HKqp0HtWAlI",
+   "cls": "이전_국뽕·이슈",
+   "views": 30000,
+   "date": null,
+   "dur": null,
+   "title": "한국인 엘레베이터 대기 모습을 본 해외댓글 반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "rz3pNgrTfPs",
+   "cls": "이전_국뽕·이슈",
+   "views": 42000,
+   "date": null,
+   "dur": null,
+   "title": "일본 아이돌 한국 방송 출연에 경악하는 일본반응",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "zS91fFjvjnM",
+   "cls": "이전_국뽕·이슈",
+   "views": 117000,
+   "date": null,
+   "dur": null,
+   "title": "日 여성 인터뷰 \"외국인과 결혼 선호도 압도적 한국남자\" 일본반응(열폭)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "BlnS5eQWo70",
+   "cls": "이전_국뽕·이슈",
+   "views": 14000,
+   "date": null,
+   "dur": null,
+   "title": "캄보디아 미남대회 클라스",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "9HLkipvfk30",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "(꿀팁)맛있는 딸기 고르는 방법",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "yQ7PpNxJkOw",
+   "cls": "이전_국뽕·이슈",
+   "views": 11000,
+   "date": null,
+   "dur": null,
+   "title": "치과의사들이 강추하는 치약 Top5",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "LiEuX0Iz6T4",
+   "cls": "이전_국뽕·이슈",
+   "views": 11000,
+   "date": null,
+   "dur": null,
+   "title": "잘 자다가 1시~4시 사이에 깨는 이유(해결법) #지식#불면증 #불면증",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "OILFsmn4uKQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "김빠진 콜라 활용 최강 꿀팁ㅋㅋ",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "nwGZDzMsfPk",
+   "cls": "이전_국뽕·이슈",
+   "views": 36000,
+   "date": null,
+   "dur": null,
+   "title": "수도꼭지에 호수연결 꿀팁",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "aJpG0o8vaGU",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "양말 이쁘게 정리하는 꿀팁",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "7FuTqk5Q9UU",
+   "cls": "이전_국뽕·이슈",
+   "views": 15000,
+   "date": null,
+   "dur": null,
+   "title": "간단 생활꿀팁 딱 10초 세탁기 넘칠때",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "YSSvDy8a0jI",
+   "cls": "이전_국뽕·이슈",
+   "views": 8400,
+   "date": null,
+   "dur": null,
+   "title": "불륜사이트 해킹 당했는데 남탕?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "4I6KGyYG300",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "월 1500 캄보디아 간다 Vs 안간다",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "GrAsvSDqGQw",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "(반전)유튜버가 비행기에서 뛰어내린 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "dVzVIakKQZQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 10000,
+   "date": null,
+   "dur": null,
+   "title": "15년에 예약한 영상이 25년에 올라왔는데 충격적이다",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "lwwE0OkUjdY",
+   "cls": "이전_국뽕·이슈",
+   "views": 26000,
+   "date": null,
+   "dur": null,
+   "title": "일본어도 잘하는 Rm #rm #bts #방탄소년단",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "MaFh07CIwN8",
+   "cls": "이전_국뽕·이슈",
+   "views": 280000,
+   "date": null,
+   "dur": null,
+   "title": "박보검 때문에 중국 짝퉁한복 한푸가 사라진다.(중국인들이 싫어요 누르는중..)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "eJ_lxYE8rvU",
+   "cls": "이전_국뽕·이슈",
+   "views": 8200,
+   "date": null,
+   "dur": null,
+   "title": "해외에서 퍼간 영상 3개가 1억뷰..근데 본인 게시물은 100만?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "2A8KJDtq_e4",
+   "cls": "이전_국뽕·이슈",
+   "views": 19000,
+   "date": null,
+   "dur": null,
+   "title": "반전)치어리더 인기순위가 야구팀 순위라면?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "4OunoienjSo",
+   "cls": "이전_국뽕·이슈",
+   "views": 6500,
+   "date": null,
+   "dur": null,
+   "title": "집사들이 고양이 말을 잘 들어야하는 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "3bU_Ewni8go",
+   "cls": "이전_국뽕·이슈",
+   "views": 13000,
+   "date": null,
+   "dur": null,
+   "title": "스타벅스 알바 900일차 알바생",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "hWws9G-CUVA",
+   "cls": "이전_국뽕·이슈",
+   "views": 6600,
+   "date": null,
+   "dur": null,
+   "title": "오늘 음주 잡힌 이진호 갱생 가능??",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "ZCE2xCzwRmU",
+   "cls": "이전_국뽕·이슈",
+   "views": 31000,
+   "date": null,
+   "dur": null,
+   "title": "이재석 경사님 추모식에 나타난 빌런을 막아선 한남자가 충격적인 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "MTlf6GWMgQg",
+   "cls": "이전_국뽕·이슈",
+   "views": 9300,
+   "date": null,
+   "dur": null,
+   "title": "(반전)김수용이 구한 미국의 월세방이 싼 이유 #김수용",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "15j68w-p6Ww",
+   "cls": "이전_국뽕·이슈",
+   "views": 23000,
+   "date": null,
+   "dur": null,
+   "title": "김수용을 섭외하는데 걸리는 시간 #김수용",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "3O4b6mS2OLg",
+   "cls": "이전_국뽕·이슈",
+   "views": 31000,
+   "date": null,
+   "dur": null,
+   "title": "샘 해밍턴이 한 외국인 오디션을 보는데..(외국인 한글패치 ver.25년)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "L7BegaRPkeE",
+   "cls": "이전_국뽕·이슈",
+   "views": 13000,
+   "date": null,
+   "dur": null,
+   "title": "220Kg 고릴라와 싸운 추성훈 결국..#추성훈",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "yLtQHidfLes",
+   "cls": "이전_국뽕·이슈",
+   "views": 36000,
+   "date": null,
+   "dur": null,
+   "title": "(반전)대학동문이 강동원 때문에 망한 이유",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "YQhFZuDp0x0",
+   "cls": "이전_국뽕·이슈",
+   "views": 6900,
+   "date": null,
+   "dur": null,
+   "title": "의외의 연예계의 절친들 Top5",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "xnis2na1vgA",
+   "cls": "이전_국뽕·이슈",
+   "views": 5000,
+   "date": null,
+   "dur": null,
+   "title": "장원영도 이건 못 참습니다. #장원영",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "OTrEUqiiZjM",
+   "cls": "이전_국뽕·이슈",
+   "views": 6600,
+   "date": null,
+   "dur": null,
+   "title": "영화에 진짜 깡패 출연시키면 안돼는 이유(양은이파 두목 출연)",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "9Dw4TzO1T5Q",
+   "cls": "이전_국뽕·이슈",
+   "views": 13000,
+   "date": null,
+   "dur": null,
+   "title": "블랙핑크 빙구댄스 모음",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "sEvK8whITgA",
+   "cls": "이전_국뽕·이슈",
+   "views": 4200,
+   "date": null,
+   "dur": null,
+   "title": "K리그에 5만 관중을 불러드린 임영웅 걸그룹 댄스#임영웅 #임영웅short",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "SLDiBpXrSW0",
+   "cls": "이전_국뽕·이슈",
+   "views": 640000,
+   "date": null,
+   "dur": null,
+   "title": "파리에서의 리사 ㅎㄷㄷ후방 조심(2탄 대기중 구독)  #리사 #lisa",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "ldR5Dfpbh6o",
+   "cls": "이전_국뽕·이슈",
+   "views": 152000,
+   "date": null,
+   "dur": null,
+   "title": "빠리바게트랑 뚜레쥬르가 장도연한테 광고비 줘야하는 이유 #장도연",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "vRvTKKdRtNs",
+   "cls": "이전_국뽕·이슈",
+   "views": 3300,
+   "date": null,
+   "dur": null,
+   "title": "박진영이 장관급에 임명됨 #박진영 #jyp",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "O5M5gtrOqFA",
+   "cls": "이전_국뽕·이슈",
+   "views": 5900,
+   "date": null,
+   "dur": null,
+   "title": "하하가 침까지 삼키며 긴장한 이유...(반전) #하하",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Rv7IWCDkLiI",
+   "cls": "이전_국뽕·이슈",
+   "views": 61000,
+   "date": null,
+   "dur": null,
+   "title": "국민 시트콤 지붕킥이 세드앤딩이었다니..",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "5rE0gN2vcV8",
+   "cls": "이전_국뽕·이슈",
+   "views": 8200,
+   "date": null,
+   "dur": null,
+   "title": "로제 미국 시상식에서 힙한 모습과 힙한 소감 #로제",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "zesSwP2hilw",
+   "cls": "이전_국뽕·이슈",
+   "views": 3300,
+   "date": null,
+   "dur": null,
+   "title": "갑자기 해명에 나선 김병만 전처의 이유 #김병만",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "Op2lEblO1P4",
+   "cls": "이전_국뽕·이슈",
+   "views": 3300,
+   "date": null,
+   "dur": null,
+   "title": "뉴진스 운명 9월 11일 무슨 일이?",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "fd72EcXRZk0",
+   "cls": "이전_국뽕·이슈",
+   "views": 30000,
+   "date": null,
+   "dur": null,
+   "title": "요상한 이이경",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "aOJZSJLB-b0",
+   "cls": "이전_국뽕·이슈",
+   "views": 4400,
+   "date": null,
+   "dur": null,
+   "title": "배우 이수혁 중국에서 12시간 강제 노동",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "VdiLuwD_qwk",
+   "cls": "이전_국뽕·이슈",
+   "views": 2000,
+   "date": null,
+   "dur": null,
+   "title": "롯데카드 960만 회원 해킹! 지금 당장 확인하세요 #롯데",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "tX9XUFm43y0",
+   "cls": "이전_국뽕·이슈",
+   "views": 13000,
+   "date": null,
+   "dur": null,
+   "title": "윤정수 예비신부, 김장훈의 반전 고백에 방송 중단 사태?#윤정수",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "i5dX57NgOsU",
+   "cls": "이전_국뽕·이슈",
+   "views": 2800,
+   "date": null,
+   "dur": null,
+   "title": "이영애 동안 얼굴의 비밀이 밝혀졌다",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "nRqIyCP2YBM",
+   "cls": "이전_국뽕·이슈",
+   "views": 31000,
+   "date": null,
+   "dur": null,
+   "title": "물에 빠진 남성을 구한 20대 여성",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "QBFxZzW5uQI",
+   "cls": "이전_국뽕·이슈",
+   "views": 4700,
+   "date": null,
+   "dur": null,
+   "title": "임영웅 팬들이 대단한 진짜 이유 #임영웅 #영웅시대",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "f5v0nhoVIwQ",
+   "cls": "이전_국뽕·이슈",
+   "views": 2700,
+   "date": null,
+   "dur": null,
+   "title": "파리에서 길빵 친 현아남편",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "vU90dHCYSFk",
+   "cls": "이전_국뽕·이슈",
+   "views": 22000,
+   "date": null,
+   "dur": null,
+   "title": "가수 김정민 아들이 일장기 달고 뛰는 이유 #김정민 #병역",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "D-yt36vxdlc",
+   "cls": "이전_국뽕·이슈",
+   "views": 5700,
+   "date": null,
+   "dur": null,
+   "title": "손흥민 데뷔골 !!! 감아차기 왕이 돌아왔다. #축구 #손흥민",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "k5Qa_egRMq4",
+   "cls": "이전_국뽕·이슈",
+   "views": 4300,
+   "date": null,
+   "dur": null,
+   "title": "불후의 명곡 임영웅편은 무조건 본방사수 해야하는 이유 #임영웅 #임영웅short",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "6tVx0151rQU",
+   "cls": "이전_국뽕·이슈",
+   "views": 3700,
+   "date": null,
+   "dur": null,
+   "title": "북한에 130억 퍼다준 유명 배우",
+   "celeb": true,
+   "link_no": null
+  },
+  {
+   "id": "i_tMILnx18o",
+   "cls": "이전_국뽕·이슈",
+   "views": 11000,
+   "date": null,
+   "dur": null,
+   "title": "성범죄자 가수 결혼생활의 결말은?#린 #mcthemax #이수  #이혼",
+   "celeb": true,
+   "link_no": null
+  }
+ ]
+}

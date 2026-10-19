@@ -1,0 +1,758 @@
+{
+ "id": "m4m5oajgQFo",
+ "dur": 24.25,
+ "fps": 60,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "밥 한 그릇 뚝딱",
+   "box": "없음",
+   "colors": [
+    {
+     "word": "밥 한 그릇 뚝딱",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "김가연 새우젓무침",
+   "box": "없음",
+   "colors": [
+    {
+     "word": "김가연",
+     "hex": "주황(#FD79 계열, 미측정)"
+    },
+    {
+     "word": "새우젓무침",
+     "hex": "노랑(#FDD9 계열, 미측정)"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: A급 장영란",
+ "ps_line": null,
+ "link_line": "없음(10-03 판 틀 — 링크 줄·주황 가로선·P.S. 줄 없음)",
+ "product_tag": [],
+ "layout": {
+  "note": "옛 틀(10-03 올림): 제목 2줄(2줄째 이름 주황+요리 노랑, 상자 없음) · 창 y≈475~1545 · 출처 흰 글 창 아래 · 주황 가로선 없음",
+  "window": [
+   0,
+   475,
+   1080,
+   1545
+  ],
+  "caption_y": [
+   1363,
+   1428
+  ]
+ },
+ "lines": [
+  {
+   "t0": 0.03,
+   "t1": 1.42,
+   "speaker": "원음:김가연",
+   "text": "음, 맛있어",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 1.45,
+   "t1": 2.75,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "와, 너무 맛있다",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "노랑채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FDD946",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "와, 너무 맛있다",
+     "hex": "#FDD946",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 2.85,
+   "t1": 3.55,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "새우젓갈",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "주황채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FD7901",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "새우젓갈",
+     "hex": "#FD7901",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 3.58,
+   "t1": 4.0,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "이거 얘도",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 4.02,
+   "t1": 4.85,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "밥 한 그릇 다 먹어요",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "노랑채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FDD946",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "밥 한 그릇 다 먹어요",
+     "hex": "#FDD946",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 4.97,
+   "t1": 5.65,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "이 언니 원래",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "상황",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 5.67,
+   "t1": 6.3,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "잘 안 알려주는데",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "상황",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 6.45,
+   "t1": 7.15,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "파는 것도 아닌데",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "상황",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 7.18,
+   "t1": 7.85,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "안 알려준다?",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "주황채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FD7901",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "안 알려준다?",
+     "hex": "#FD7901",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 7.88,
+   "t1": 10.35,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "이렇게 찬물에",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 10.38,
+   "t1": 11.05,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "샤워를 해요",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "민트채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#57E4D0",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "샤워를 해요",
+     "hex": "#57E4D0",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 11.08,
+   "t1": 11.75,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "짠기를 빼는구나",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 11.78,
+   "t1": 13.45,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "물을 꽉 짜주세요",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 13.48,
+   "t1": 14.95,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "남편을 쥐어짜듯이",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "주황채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FD7901",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "남편을 쥐어짜듯이",
+     "hex": "#FD7901",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 14.98,
+   "t1": 15.85,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "우리 사이가 좋아서",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "상황",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 15.88,
+   "t1": 16.35,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "나도 좋아",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "노랑채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FDD946",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "나도 좋아",
+     "hex": "#FDD946",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 16.38,
+   "t1": 17.35,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "고춧가루 넣고",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 17.38,
+   "t1": 18.25,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "참기름, 참깨",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 18.28,
+   "t1": 18.95,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "맛있어",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "노랑채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FDD946",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "맛있어",
+     "hex": "#FDD946",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 18.98,
+   "t1": 19.85,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "와 신기하다",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 19.88,
+   "t1": 20.95,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "얘를 딱 얹어서",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "팁",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 20.98,
+   "t1": 21.55,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "먹으면 끝나는 거예요",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "민트채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#57E4D0",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "먹으면 끝나는 거예요",
+     "hex": "#57E4D0",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "팁",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 21.58,
+   "t1": 22.3,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "밥을 그냥",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "기본",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FBF6F0",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "끝",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 22.32,
+   "t1": 23.08,
+   "speaker": "원음:불명(김가연 또는 진행자 — 귀로 못 가름)",
+   "text": "이만큼 먹는 거예요",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 120,
+   "variant": "주황채움",
+   "y": [
+    1363,
+    1428
+   ],
+   "fill_hex": "#FD7901",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "이만큼 먹는 거예요",
+     "hex": "#FD7901",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "끝",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 23.1,
+   "t1": 24.25,
+   "speaker": "불명",
+   "text": "새우젓 (추젓)",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "제품 이름 자막(창 안 위쪽 y1220~1275, 컷과 같이 즉시)",
+   "y": [
+    1220,
+    1275
+   ],
+   "fill_hex": "#FDD946",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "새우젓 (추젓)",
+     "hex": "#FDD946",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "role_detail": "제품",
+   "fit": 8,
+   "confidence": "눈",
+   "notes": "화면 글만(말소리 없음, RMS −81dB) — 제품 이름 자막"
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅 0~4.8초(원음 맛 반응 '음, 맛있어'→'와, 너무 맛있다'(노랑) → 재료 '새우젓갈'(주황) → '밥 한 그릇 다 먹어요'(노랑)) → 상황 5~7.8('이 언니 원래 잘 안 알려주는데 파는 것도 아닌데' → '안 알려준다?'(주황)) → 과정 7.9~18.3(찬물 샤워(민트)·물 꽉 짜기·'남편을 쥐어짜듯이'(주황) 농담·고춧가루·참기름) → 맛 반응 18.3~19.9 → 먹는 법 19.9~23.1('먹으면 끝나는 거예요'(민트)·'이만큼 먹는 거예요'(주황)) → 끝 23.1~24.25 무음 제품 컷 + 제품 이름 자막 '새우젓 (추젓)'(노랑)",
+ "narr_share": "나레 0/25 줄 — 전부 원음 대화(김가연·진행자). 끝 1.15초는 말소리 없음",
+ "notes": [
+  "색 4가지(실측 hex): 흰 #FBF6F0 / 노랑 #FDD946(맛 감탄·제품 이름) / 주황 #FD7901(재료 낱말·반전 물음·농담 펀치) / 민트 #57E4D0(조리 요령 '샤워를 해요'·'먹으면 끝나는 거예요'). 화자별 색이 아니다(같은 말 차례 안에서 흰→주황).",
+  "등장: 말 줄 전부 팝(60fps 1.43~1.55·22.32~22.42 확인, 나머지는 0.1초 격자에서 작은 첫 프레임). 끝 제품 이름 자막만 컷과 같이 즉시(23.10).",
+  "23.1~24.2 RMS −81dB = 소리 없음(BGM 도 없음) — 끝 무음 제품 컷.",
+  "화자: 김가연(제목 글)·진행자(출처 'A급 장영란' — 얼굴 이름표 없음). 같은 여성 두 명이라 음높이(f0 중앙 178~329Hz 줄마다 섞임)로 못 가름 → '불명'.",
+  "원본박힘: 2fps 시트 3.0초 '(새우젓)' 큰 글(창 위쪽) = A급 장영란 원본 편집 자막 추정 — 0.1초 띠 밖이라 줄로 안 셈.",
+  "효과음: 귀로 못 들음 — 스타일분석 §소리에서 파형으로.",
+  "fit = 원음 재편집이라 대사와 같은 순간의 원본 화면 — 일괄 8(눈, 줄마다 따로 채점 안 함). role_detail = 처음 적은 세부 역할(과정·재료·맛반응 …), role = 지침서 어휘로 접은 값."
+ ]
+}

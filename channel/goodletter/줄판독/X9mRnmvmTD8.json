@@ -1,0 +1,781 @@
+{
+ "id": "X9mRnmvmTD8",
+ "dur": 26.12,
+ "fps": 60,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "사먹으면 십만원인데",
+   "box": "없음",
+   "colors": [
+    {
+     "word": "사먹으면 십만원인데",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "강주은 티본스테이크",
+   "box": "없음",
+   "colors": [
+    {
+     "word": "강주은 티본",
+     "hex": "#FC7800"
+    },
+    {
+     "word": "스테이크",
+     "hex": "#C7A4FE"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처: 깡주은",
+ "ps_line": null,
+ "link_line": null,
+ "product_tag": [],
+ "name_evidence": [
+  "강주은 = 제목 2줄 '강주은 티본스테이크'(0~26초)·출처 '깡주은'"
+ ],
+ "layout": {
+  "title_y": [
+   [
+    175,
+    264
+   ],
+   [
+    296,
+    386
+   ]
+  ],
+  "window": [
+   0,
+   478,
+   1080,
+   1543
+  ],
+  "source_y": [
+   1774,
+   1823
+  ],
+  "source_hex": "#FDFCFC",
+  "ps_y": null,
+  "link_y": null,
+  "watermark": null,
+  "orange_rules": null,
+  "caption_ink_y": [
+   1360,
+   1435
+  ]
+ },
+ "frame0": {
+  "what": "얼굴",
+  "text": "사먹으면 십만원인데 / 강주은 티본스테이크 + 자막 '나가서 사 먹으면'(팝 시작)"
+ },
+ "lines": [
+  {
+   "t0": 0.0,
+   "t1": 1.233,
+   "speaker": "제3자",
+   "text": "나가서 사 먹으면",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "confidence": "눈",
+   "note": "모자 쓴 여성 출연자 입 움직임(1.6·1.9초 프레임)·vtt 첫 줄 뒤 >> — 이름 화면 글 없음",
+   "role_detail": "훅",
+   "fit": 9
+  },
+  {
+   "t0": 1.233,
+   "t1": 2.233,
+   "speaker": "제3자",
+   "text": "몇 십만 원",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(주황채움 — 가격)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#E67D13",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "몇 십만 원",
+     "hex": "#E67D13",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "confidence": "눈",
+   "role_detail": "훅",
+   "fit": 8
+  },
+  {
+   "t0": 2.233,
+   "t1": 3.55,
+   "speaker": "나레",
+   "text": "집에서 반값에 굽는",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [
+    2.233
+   ],
+   "confidence": "눈",
+   "note": "vtt >> 화자 바뀜 시작점. MFCC 거리: 강주은 얼굴 구간들과 0.84~0.96(강주은끼리 0.38~0.51) → 다른 목소리",
+   "role_detail": "훅",
+   "fit": 9
+  },
+  {
+   "t0": 3.55,
+   "t1": 5.0,
+   "speaker": "나레",
+   "text": "강주은 티본이래요",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(민트채움 — 이름+제품)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#73F3CF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "강주은 티본이래요",
+     "hex": "#73F3CF",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "confidence": "눈",
+   "note": "3인칭 전언 ~래요 + 앞 줄과 같은 목소리 결 → 나레",
+   "role_detail": "훅",
+   "fit": 9
+  },
+  {
+   "t0": 5.0,
+   "t1": 6.083,
+   "speaker": "불명",
+   "text": "굽기가 이런 식으로",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [
+    5.0
+   ],
+   "confidence": "눈",
+   "note": "얼굴 없음(단면 근접). vtt 는 앞 나레 줄과 >> 없이 이어짐. MFCC 어느 구간과도 0.67 이상 — 나레/강주은 판정 못 함",
+   "role_detail": "상황",
+   "fit": 9
+  },
+  {
+   "t0": 6.083,
+   "t1": 7.317,
+   "speaker": "불명",
+   "text": "되어 있어",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "confidence": "눈",
+   "note": "반말 끝. vtt 는 되어 있어요",
+   "role_detail": "상황",
+   "fit": 9
+  },
+  {
+   "t0": 7.317,
+   "t1": 8.083,
+   "speaker": "원음:강주은",
+   "text": "비싼 레스토랑에서",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    7.317
+   ],
+   "confidence": "픽셀",
+   "role_detail": "상황",
+   "fit": 10
+  },
+  {
+   "t0": 8.083,
+   "t1": 9.167,
+   "speaker": "원음:강주은",
+   "text": "먹는 거로 생각했는데",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "상황",
+   "fit": 10
+  },
+  {
+   "t0": 9.167,
+   "t1": 10.05,
+   "speaker": "원음:강주은",
+   "text": "너무 쉽더라고",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(주황채움 — 반전)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#E67D13",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "너무 쉽더라고",
+     "hex": "#E67D13",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "반전",
+   "fit": 9
+  },
+  {
+   "t0": 10.05,
+   "t1": 11.117,
+   "speaker": "원음:강주은",
+   "text": "504시간",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(주황채움 — 숫자, 크기는 기본)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#E67D13",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "504시간",
+     "hex": "#E67D13",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    10.05
+   ],
+   "confidence": "픽셀",
+   "note": "vtt 받아쓰기는 904시간 — 화면 504, 설명란 504",
+   "role_detail": "재료",
+   "fit": 7
+  },
+  {
+   "t0": 11.117,
+   "t1": 12.05,
+   "speaker": "원음:강주은",
+   "text": "드라이 에이징이야",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "재료",
+   "fit": 9
+  },
+  {
+   "t0": 12.05,
+   "t1": 12.9,
+   "speaker": "원음:강주은",
+   "text": "숙성이 된 거야",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "재료",
+   "fit": 9
+  },
+  {
+   "t0": 12.9,
+   "t1": 14.0,
+   "speaker": "원음:강주은",
+   "text": "4cm라고",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(민트채움 — 숫자, 크기는 기본)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#73F3CF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "4cm라고",
+     "hex": "#73F3CF",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [
+    12.9
+   ],
+   "confidence": "픽셀",
+   "note": "줄자로 두께 재는 장면",
+   "role_detail": "재료",
+   "fit": 10
+  },
+  {
+   "t0": 14.0,
+   "t1": 15.083,
+   "speaker": "원음:강주은",
+   "text": "이게 두께가",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·재료 근접",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "재료",
+   "fit": 10
+  },
+  {
+   "t0": 15.083,
+   "t1": 16.5,
+   "speaker": "불명",
+   "text": "(치이익)",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(괄호 소리 자막)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [
+    15.083
+   ],
+   "confidence": "눈",
+   "note": "굽는 소리 묘사 자막 — 말 아님",
+   "role_detail": "과정",
+   "fit": 6
+  },
+  {
+   "t0": 16.5,
+   "t1": 17.85,
+   "speaker": "원음:강주은",
+   "text": "육즙이 아주 그냥",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [
+    16.5
+   ],
+   "confidence": "눈",
+   "note": "오븐 장면(얼굴 없음). MFCC 강주은 얼굴 구간과 0.41~0.51 → 신호로 강주은",
+   "role_detail": "과정",
+   "fit": 8
+  },
+  {
+   "t0": 17.85,
+   "t1": 19.4,
+   "speaker": "원음:강주은",
+   "text": "살아있습니다",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(주황채움 — 맛 평)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#E67D13",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "살아있습니다",
+     "hex": "#E67D13",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "confidence": "눈",
+   "note": "오븐→도마 앞 화면 한 컷(카메라 당김, 컷 아님). 신호로 강주은",
+   "role_detail": "맛반응",
+   "fit": 9
+  },
+  {
+   "t0": 19.4,
+   "t1": 20.317,
+   "speaker": "불명",
+   "text": "너무 맛있어요",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [
+    19.4
+   ],
+   "confidence": "눈",
+   "note": "vtt >>. MFCC 가 2.2~3.5 나레 구간과 0.31 로 가장 가까움 — 나레일 가능성 있으나 33프레임 짧은 구간이라 확정 못 함",
+   "role_detail": "맛반응",
+   "fit": 7
+  },
+  {
+   "t0": 20.317,
+   "t1": 21.85,
+   "speaker": "제3자",
+   "text": "이거 안에도 이것도",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "confidence": "눈",
+   "note": "vtt >>. 강주은 구간과 MFCC 0.65~0.88 — 식탁 출연자",
+   "role_detail": "맛반응",
+   "fit": 9
+  },
+  {
+   "t0": 21.85,
+   "t1": 22.4,
+   "speaker": "제3자",
+   "text": "버터 향이",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "confidence": "눈",
+   "role_detail": "맛반응",
+   "fit": 9
+  },
+  {
+   "t0": 22.4,
+   "t1": 23.0,
+   "speaker": "제3자",
+   "text": "엄청 나는데요?",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(민트채움 — 맛 평)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#73F3CF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "엄청 나는데요?",
+     "hex": "#73F3CF",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "confidence": "눈",
+   "role_detail": "맛반응",
+   "fit": 9
+  },
+  {
+   "t0": 23.0,
+   "t1": 24.55,
+   "speaker": "원음:강주은",
+   "text": "그 계산이 반 가격이",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    23.0
+   ],
+   "confidence": "픽셀",
+   "note": "앞치마 차림 인터뷰 컷",
+   "role_detail": "끝",
+   "fit": 9
+  },
+  {
+   "t0": 24.55,
+   "t1": 25.083,
+   "speaker": "원음:강주은",
+   "text": "되니까",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기본",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "role_detail": "끝",
+   "fit": 9
+  },
+  {
+   "t0": 25.083,
+   "t1": 26.117,
+   "speaker": "원음:강주은",
+   "text": "너무 마음이 좋고",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 170,
+   "variant": "기타(주황채움 — 끝 감정)",
+   "y": [
+    1360,
+    1435
+   ],
+   "fill_hex": "#E67D13",
+   "outline": "검정 외곽(두께 미측정)",
+   "emph": [
+    {
+     "word": "너무 마음이 좋고",
+     "hex": "#E67D13",
+     "scale": 1.0,
+     "whole_line": true
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "confidence": "픽셀",
+   "note": "영상 끝까지 유지",
+   "role_detail": "끝",
+   "fit": 9
+  }
+ ],
+ "no_caption": [],
+ "beats": "훅(0~5.0초: 출연자 '나가서 사 먹으면 몇 십만 원' → 나레 '집에서 반값에 굽는 강주은 티본이래요', 완성 스테이크 칼질) → 상황(5.0~9.2 단면·'비싼 레스토랑에서 먹는 거로 생각했는데') → 반전(9.2 '너무 쉽더라고') → 재료(10.0~15.1 504시간 드라이에이징·4cm 두께) → 과정(15.1~19.4 치이익·오븐 '육즙이 살아있습니다') → 맛반응(19.4~23.0 식탁) → 끝(23.0~26.1 '반 가격이 되니까 너무 마음이 좋고')",
+ "narr_share": "나레 줄 2/24(확정) · 나레 초 2.77/26.12(10.6%) — 가능성 줄(19.4~20.3 너무 맛있어요) 넣으면 3/24·3.68초",
+ "notes": [
+  "틀이 sMx9·753r 과 다르다: 주황 가로선·제목 2줄 주황 상자·'✉ 굿레터' 워터마크·P.S. 줄·'프로필 링크에서 N번'·제품 꼬리표 전부 없음(6프레임마다 픽셀 검사 최대 0). 제목 2줄은 상자 없이 주황(#FC7800)+보라(#C7A4FE) 글자색. 출처는 y1774~1823 '출처: 깡주은'(YouTube 표기 없음). 설명란 '83번' 은 화면에 없음",
+  "강조색이 노랑이 아니라 주황 #E67D13(5줄)·민트 #73F3CF(3줄) 두 가지. 큰글(수량) 없음 — 504시간·4cm 도 기본 크기에 색만",
+  "등장: 24줄 전부 팝(잉크량 램프 6~7프레임에 최대 → 내려앉음, 60fps 그림 1.23·2.23·17.85·22.4초 확인). 이 편은 배경이 밝아 폭 곡선은 못 잼 — 753r 32.63초 곡선과 같은 모양",
+  "나레 판정 근거 = 말꼴(~래요 전언)+vtt >>+MFCC 거리(소리 결 보조, 단정 근거 아님). 귀로 듣지 않음. 5.0~7.3·19.4~20.3 은 미확정",
+  "효과음: 10ms RMS 급등(+10dB) 후보 32개가 말 시작과 겹쳐 구분 안 됨 → 전 줄 sfx null(미측정)",
+  "외곽선 두께·글꼴 미측정. 자막 잉크 y 는 1360~1435(밝은 배경 잡음 때문에 줄별 y 는 공통값)",
+  "emph 칸 통일(지휘 10-20): 줄 전체 강조색 줄은 emph=[{word: 줄 전체, whole_line: true}] — placement.count·kal_analyze rules 가 강조로 세게"
+ ],
+ "role_note": "role=검사 어휘(지침서 §6), role_detail=브리프 어휘(훅|상황|재료|과정|팁|맛반응|반전|끝). 맛반응→증거, 상황·재료·과정·팁→본문",
+ "fit_note": "fit=대사↔화면 맞음 0~10 눈 판정(말하는 얼굴·말하는 대상이 보이면 9~10, 얼굴 없는 원음·소리 자막 6~8)"
+}

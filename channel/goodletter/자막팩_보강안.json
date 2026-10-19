@@ -1,0 +1,73 @@
+{
+ "_note": "굿레터(연예인레시피) 자막을 자막팩(shopping_shorts/static/caption-motions.js, 계약 = origin/track/자막팩보강 판) 한 벌로 — 2026-10-20 관제 097. 'pack' = CAPTION_PACKS 에 넣을 꼴(키 goodletter, 계약에 없음 = 새로). 'new_motions' = CAPTION_MOTIONS 새 등장. 이미 있는 키(overPop·variants·place·emph·mark)를 먼저 재사용했고 새로 필요한 것만 new_*. 수치 = channel/goodletter/스타일분석.md §2·§3(60fps·픽셀 실측). 공용 코드는 이 파일로 고치지 않았다(구현 = 자막팩 담당). 배치(어느 줄에 색·큰글·제품 이름) = 판 설정 tools/calcopy/hybrid/styles/굿레터판.json placement — 팩은 모양만.",
+ "pack": {
+  "goodletter": {
+   "label": "굿레터 레시피 팝",
+   "desc": "흰 둥근 굵은 글 + 검정 테 · 말 조각마다 빠른 톡(0.17초) · 강조 줄은 줄 전체 호박색(옛 틀은 주황·노랑·민트) · 스티커 없음",
+   "font": "BinggraeBold",
+   "_font_note": "빙그레체 Bold — 눈 대조 1위(대조표 C:/숏템_칼카피/goodletter/work/fr/fontcmp_cap.jpg), 확정 아님. 장면꾸미기 등록 family 이름(schema.font_families 'BinggraeBold')이 자막팩 쪽에서도 같은지 확인 필요. 대안 Jalnan2(제목 글꼴)",
+   "size": 76,
+   "_size_note": "1080 폭에서 잉크 높이 65px(sMx9 y1288~1353) — kitchit 팩 size 78 = 73px 기준 환산",
+   "flat": true,
+   "look": "none",
+   "text": {
+    "color": "#FDFDFD",
+    "style": {
+     "WebkitTextStroke": "0.17em #000000",
+     "paintOrder": "stroke fill",
+     "strokeLinejoin": "round",
+     "textShadow": "none"
+    },
+    "_style_note": "검정 외곽 약 6px(새 틀)·9px(옛 틀, 눈) = 0.08~0.12em 바깥 → 획 0.17em. 그림자·상자·흰 바깥 테 없음"
+   },
+   "wordFx": {"style": "mark", "color": "", "grow": ""},
+   "mark": {"colors": ["#FCB53F"]},
+   "emph": {
+    "font": "BinggraeBold",
+    "size": 150,
+    "color": "#FFFFFF",
+    "style": {"WebkitTextStroke": "0.17em #000000", "paintOrder": "stroke fill"},
+    "_note": "수량 큰글('계란 2개' — 흰 큰 글, 숫자만 노랑 #FDE675, 잉크 y1237~1430 ≈ 일반의 2.3배) · 등장 없음(컷과 즉시)"
+   },
+   "motion": {"first": "glPop", "body": "glPop", "cont": "glPop", "price": "glPop", "problem": "glPop", "reveal": "glPop", "end": "glPop", "emph": ""},
+   "_motion_note": "말 줄 210개 중 팝 209(원음 191/192·나레 6/6·제3자 9/9) — 덩어리마다 전부. 즉시(등장 없음)는 큰글·제품 이름 자막 4/214 뿐",
+   "variants": {
+    "hi": {"text": {"color": "#FCB53F"}, "why": "새 틀 강조 줄 = 줄 전체 호박색(sMx9 #FCB53F·vcb #F6B644·753r #F2BD50) — 배치 = 판 설정 placement(말 줄 23~34%·끝 줄·훅 첫 색)"},
+    "orange": {"text": {"color": "#FD7901"}, "why": "옛 틀 주황 = 재료 낱말·수치·반문 펀치"},
+    "yellow": {"text": {"color": "#FDD946"}, "why": "옛 틀 노랑 = 감탄·맛 반응"},
+    "mint": {"text": {"color": "#57E4D0"}, "why": "옛 틀 민트 = 요령·답·제품명"},
+    "big": {"enter": "", "size": 175, "why": "수량 큰글 — 흰 큰 글 + 숫자 노랑(mark #FDE675), 컷과 즉시(sMx9 13.41)"},
+    "label": {"enter": "", "text": {"color": "#F9E04B"}, "size": 62, "place": {"y": 65.0, "bench": "제품 이름 자막 y1212~1285(옛 틀 kfmZ·E6SX·m4m5) — 말 자막보다 위"}, "why": "끝 제품 이름 자막: 노랑 작은 굵은 글, 컷과 즉시, 끝까지 유지 + 효과음 한 발(impact-bass/pop) 뒤 무음"}
+   },
+   "stickers": {},
+   "bench": "channel/goodletter/자막팩_보강안.json · 스타일분석.md §3",
+   "place": {"y": 68.75, "bench": "새 틀 자막 잉크 가운데 y≈1320/1920(sMx9 1288~1353) · 옛 틀은 y≈1396(72.7%) — 판 설정 frame 이 틀마다 덮는다"}
+  }
+ },
+ "new_motions": {
+  "glPop": {
+   "label": "굿레터 빠른 톡",
+   "origin": true,
+   "ms": 175,
+   "easing": "linear",
+   "frames": [
+    {"opacity": 1, "scale": "0.28", "offset": 0.0},
+    {"opacity": 1, "scale": "0.55", "offset": 0.2},
+    {"opacity": 1, "scale": "0.80", "offset": 0.4},
+    {"opacity": 1, "scale": "1.08", "offset": 0.6},
+    {"opacity": 1, "scale": "1.12", "offset": 0.68},
+    {"opacity": 1, "scale": "1.04", "offset": 0.85},
+    {"opacity": 1, "scale": "1", "offset": 1.0}
+   ],
+   "_bench": "60fps 실측: sMx9 2.98~3.13(작게→3.07 넘침 약 115%→3.13 안착) · 753r 32.63 폭 27→51→71→88→100→108→110%(0.117초)→105→100%(0.183초) · vcb 26%→110%@0.100→100%@0.167. 가운데 기준 확대, 반투명 단계 없음(첫 프레임부터 불투명). 줄 사이 빈 프레임 1~2개(앞 줄 사라짐 → 새 줄 작게).",
+   "_vs": "기존 overPop(키치잇, 433ms·0→109%) 과 모양은 같고 2.5배 빠르며 시작 크기가 28%(0 아님) — overPop 을 ms·첫 칸만 바꿔 쓸 수 있으면 새 키 없이 'overPop' + ms 175 로 대신해도 된다"
+  }
+ },
+ "new_keys": {},
+ "compare_existing": {
+  "kitchit": "overPop 은 줄 첫 덩어리만·0.43초 / 굿레터는 모든 덩어리·0.17초 · 키치잇 낱말 하나 5색 돌림 vs 굿레터 줄 전체 한 색",
+  "kkultemnote": "화자별 글꼴 2벌 vs 굿레터 화자 무관 한 벌",
+  "starpick": "나레 타이핑·원음 즉시 vs 굿레터 전부 팝 · 재료 낱말 사물 색 vs 줄 전체 호박",
+  "recipe": "스타픽룸 변형(잘난고딕·진갈색 테·타이핑) — 굿레터와 다른 판(겹치지 않음)"
+ }
+}

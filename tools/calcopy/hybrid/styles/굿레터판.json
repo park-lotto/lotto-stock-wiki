@@ -1,0 +1,567 @@
+{
+ "name": "굿레터판",
+ "renderer": "bench",
+ "_note": "초안(2026-10-20, 관제 097) — 연예인레시피 벤치 굿레터(@굿레터) 칼카피 판. 박자 = 원음 훅 → (선택) 나레 다리 1~2조각 '~래요' → 원음 과정·요령 → 원음 맛 반응 → 원음 끝 판정 한 줄. 자막 = 말 조각마다 빠른 팝, 줄 전체 강조색(새 틀 호박 1색). 근거 channel/goodletter/{스타일분석.md, 판설계.md, 줄판독/}. ★자막팩 키 goodletter 는 계약에 아직 없다(자막팩_보강안.json → 자막팩 담당) · frame.product_tag·frame.ps_line 은 스키마에 없는 새 칸(스키마 주인 관제 235 에 요청) · 렌더 시험 전(C 여유 부족·지시상 제작 안 함).",
+ "bench": {
+  "ko": "굿레터",
+  "channel": "goodletter",
+  "analysis": "channel/goodletter/스타일분석.md",
+  "design": "channel/goodletter/판설계.md",
+  "line_reads": "channel/goodletter/줄판독",
+  "src_dir": "C:/숏템_칼카피/goodletter/src",
+  "palette": "channel/goodletter/_kal/색규칙.json",
+  "sound": "channel/goodletter/_tools/결과_소리.json"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "tempo": 1.35,
+  "candidates": [
+   "kr-keleek",
+   "kr-talia"
+  ],
+  "why": "나레는 8편 중 2편·1~2조각뿐(여성 추정 f0 174~193Hz, 억양 평평). 여성 → 미나(분석지침서 §1 2 추천). candidates 는 X9mR 나레와 신호상 가까운 우리 목소리(거리 3.8, 신뢰 낮음) — 사장님 귀 확인 뒤에만 바꾼다(이 칸 한 곳)"
+ },
+ "cps_target": 6.0,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": 0.0,
+  "fade_out": 0.0,
+  "why": "굿레터 자체 BGM 없음 추정 — 옛 틀 끝 디지털 무음 kfmZ 1.3·m4m5 0.9·j-fB 0.5초(깔린 음악이면 0 이 안 된다). 원본 영상 안 음악만 그대로. 렌더러가 id null 을 'BGM 없음'으로 받는지 확인 필요(받지 못하면 렌더러 요청)"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 24,
+  "max": 30,
+  "why": "벤치 8편 24.25~40.07, 중앙 26.4(753r 40초 1편 빼면 24~30)"
+ },
+ "timing": {
+  "gap": 0.03,
+  "gap_oo": 0.03,
+  "tail": 0.3,
+  "why": "줄 사이 빈 프레임 1~2개(60fps) — 조각이 거의 붙어 바뀐다. 자막 조각 표시 중앙 0.9초"
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   6,
+   464,
+   1068,
+   1096
+  ],
+  "title": [
+   {
+    "font": "Jalnan2.ttf",
+    "px": 100,
+    "ink_top": 173,
+    "shear": 0,
+    "color": "#FFFFFF",
+    "max_w": 1040
+   },
+   {
+    "font": "Jalnan2.ttf",
+    "px": 96,
+    "box": true,
+    "box_color": "#FE7813",
+    "center": 350,
+    "shear": 0,
+    "color": "#0B0F0F",
+    "max_w": 900
+   }
+  ],
+  "rules": [
+   {
+    "y": 464,
+    "h": 12,
+    "color": "#FE7813"
+   },
+   {
+    "y": 1546,
+    "h": 12,
+    "color": "#FE7813"
+   }
+  ],
+  "watermark": {
+   "text": "✉ 연예인레시피",
+   "font": "Pretendard-Bold.otf",
+   "px": 34,
+   "x1": 1050,
+   "cy": 500,
+   "alpha": 150,
+   "why": "벤치 '✉ 굿레터' 자리 — 우리 브랜드 이름 미정(사장님)"
+  },
+  "logo": null,
+  "credit": {
+   "font": "Pretendard-Bold.otf",
+   "px": 40,
+   "color": "#BEBEBE",
+   "center": 1604,
+   "form": "출처 · {채널} (YouTube)"
+  },
+  "product_tag": {
+   "form": "● {제품}",
+   "bg": "#FE7813",
+   "text": "#0B0F0F",
+   "x": 15,
+   "y": 495,
+   "h": 60,
+   "radius": 30,
+   "on": "제품·재료가 화면에 나오는 컷(컷 경계에 맞춰 켜고 끔)",
+   "why": "새 틀 3/3편 — 스키마에 없는 새 칸"
+  },
+  "ps_line": {
+   "form": "P.S. {요령}",
+   "ps_color": "#FD811F",
+   "text_color": "#FEEB65",
+   "font": "손글씨 꼴(NanumPenScript 후보, 미측정)",
+   "center": 1694,
+   "start_frac": 0.45,
+   "why": "새 틀 3/3편 편 길이 45% 지점부터 끝까지 즉시 — 스키마에 없는 새 칸"
+  },
+  "link_line": null,
+  "_link_why": "벤치 '프로필 링크에서 N번' = CTA — 우리 판 CTA 없음(얜샷템 §12·_common forbid)"
+ },
+ "caption": {
+  "pack": "goodletter",
+  "pack_default": {
+   "narr.first": "pop",
+   "narr.rest": "pop",
+   "orig.first": "pop",
+   "orig.rest": "pop"
+  },
+  "variant_for": {
+   "pop": "pop",
+   "cut": "big"
+  },
+  "chunk_max_chars": 12,
+  "why": "말 줄 210 중 팝 209 · 조각 공백 뺀 자수 p50 6·p90 9·최대 12"
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "why": "줌·밀기 없음, 컷 중앙 1.48초, 자막 교체 = 컷(cut_eq_sub 중앙 0.84)"
+ },
+ "sfx_files": {
+  "impact": "meme_sfx:research/sfx_census/meme_sfx/충격_입막/sfx__impact-bass-2.mp3",
+  "pop": "팩05/pop.wav",
+  "gain_db": -6
+ },
+ "placement": {
+  "rules": {
+   "line_color": {
+    "variant": "hi",
+    "share": [
+     0.23,
+     0.34
+    ],
+    "must": [
+     "last_orig_line",
+     "first_color_in_first_1p7s"
+    ],
+    "prefer_roles": {
+     "공개": 0.64,
+     "끝": 0.5,
+     "훅": 0.47,
+     "증거": 0.45,
+     "반전": 0.42,
+     "본문": 0.31,
+     "질문": 0.3,
+     "다리": 0.0
+    },
+    "split_sentence": "뒤 조각",
+    "gap_white_lines": {
+     "median": 1,
+     "max": 4
+    },
+    "why": "스타일분석 §3-1 — 말 줄 78/210, 끝 줄 8/8, 첫 색 0.2~1.7초 8/8, 다리(나레) 줄 0/7 · 나레 3/6 = 뒤 조각 3/3",
+    "narr": "나레 두 조각 중 뒤 조각만 색(3/3), 앞 조각 흰(0/3)"
+   },
+   "big_qty": {
+    "variant": "big",
+    "max": 1,
+    "share_videos": 0.125,
+    "needs": "수량 낱말(N개·N분·N시간)이 컷 시작과 같을 때",
+    "why": "sMx9 '계란 2개' 1/8편"
+   },
+   "stickers": {},
+   "sfx": {
+    "kind": "none",
+    "max": 0,
+    "why": "자막 팝에 효과음 근거 없음(후보 145 중 자막 ±0.15초 37 = 우연 수준). 예외: 옛 틀 끝 제품 이름 자막 한 발(impact NCC 0.94·pop 0.57) — 새 틀은 끝 제품 자막 없음"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/goodletter/줄판독",
+   "n_videos": 8,
+   "slots": {
+    "narr.first": {
+     "n": 3,
+     "enter": {
+      "pop": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 3,
+     "enter": {
+      "pop": 1.0
+     },
+     "emph": 1.0
+    },
+    "orig.first": {
+     "n": 10,
+     "enter": {
+      "pop": 1.0
+     },
+     "emph": 0.1
+    },
+    "orig.rest": {
+     "n": 198,
+     "enter": {
+      "pop": 0.98,
+      "cut": 0.02
+     },
+     "emph": 0.394
+    }
+   },
+   "share": {
+    "emph": 1.0,
+    "typing": 0.0,
+    "sfx": 0.0
+   },
+   "stickers": {},
+   "videos": [
+    {
+     "id": "753rWbcjHYc",
+     "n": 38,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 37,
+       "enter": {
+        "pop": 37
+       },
+       "emph": 13
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 13
+     },
+     "sfx": [],
+     "no_caption": 6
+    },
+    {
+     "id": "E6SXj8FdT2s",
+     "n": 26,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 25,
+       "enter": {
+        "pop": 24,
+        "cut": 1
+       },
+       "emph": 12
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "주황채움": 5,
+      "노랑채움": 4,
+      "민트채움": 2,
+      "제품명 줄(작은 굵은 글·노랑, 말 자막보다 위, 컷과 동시 즉시, 끝까지 유지)": 1
+     },
+     "sfx": [],
+     "no_caption": 3
+    },
+    {
+     "id": "j-fB61Yhx5g",
+     "n": 22,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 16,
+       "enter": {
+        "pop": 16
+       },
+       "emph": 8
+      },
+      "narr.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 2
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 4,
+      "주황채움": 5,
+      "민트채움": 2
+     },
+     "sfx": [],
+     "no_caption": 1
+    },
+    {
+     "id": "kfmZ_t4Bbss",
+     "n": 24,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 23,
+       "enter": {
+        "pop": 22,
+        "cut": 1
+       },
+       "emph": 11
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 4,
+      "주황채움": 4,
+      "민트채움": 2,
+      "제품명 줄(작은 굵은 글·노랑, 말 자막보다 위 y1222~1274, 컷과 동시 즉시 등장)": 1
+     },
+     "sfx": [],
+     "no_caption": 2
+    },
+    {
+     "id": "m4m5oajgQFo",
+     "n": 25,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 24,
+       "enter": {
+        "pop": 23,
+        "cut": 1
+       },
+       "emph": 11
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 4,
+      "주황채움": 4,
+      "민트채움": 2,
+      "제품 이름 자막(창 안 위쪽 y1220~1275, 컷과 같이 즉시)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    },
+    {
+     "id": "sMx9RWuifCA",
+     "n": 31,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 30,
+       "enter": {
+        "pop": 29,
+        "cut": 1
+       },
+       "emph": 8
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 7,
+      "큰글(수량)": 1
+     },
+     "sfx": [],
+     "no_caption": 4
+    },
+    {
+     "id": "vcb_-h7Ajwo",
+     "n": 24,
+     "slots": {
+      "orig.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 23,
+       "enter": {
+        "pop": 23
+       },
+       "emph": 8
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "노랑채움": 8
+     },
+     "sfx": [],
+     "no_caption": 5
+    },
+    {
+     "id": "X9mRnmvmTD8",
+     "n": 24,
+     "slots": {
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "pop": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 20,
+       "enter": {
+        "pop": 20
+       },
+       "emph": 7
+      },
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 1
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기타(주황채움 — 가격)": 1,
+      "기타(민트채움 — 이름+제품)": 1,
+      "기타(주황채움 — 반전)": 1,
+      "기타(주황채움 — 숫자, 크기는 기본)": 1,
+      "기타(민트채움 — 숫자, 크기는 기본)": 1,
+      "기타(괄호 소리 자막)": 1,
+      "기타(주황채움 — 맛 평)": 1,
+      "기타(민트채움 — 맛 평)": 1,
+      "기타(주황채움 — 끝 감정)": 1
+     },
+     "sfx": [],
+     "no_caption": 0
+    }
+   ]
+  }
+ },
+ "title_form": "1줄 = 훅 구절 ≤9자('5분이면 끝나는'·'1등 레시피로 끓인'·'5년째 유지한 아침') / 2줄 = 주황 상자 안 '<이름> <요리>'",
+ "script": {
+  "brief": [
+   "연예인레시피 = 연예인 본인이 요리·먹는 법을 말하는 원본을 원음 그대로 재편집. 대본 = 원음 구간 고르기 + (선택) 나레 1~2조각.",
+   "박자: O1 원음 훅 0~3초(무엇을·왜 '…레시피가 있길래'·'어떻게 5년이나') → (선택) N1 나레 다리 '<이름> <장소>에서 나온 <요리/제품>이래요'(3인칭 전언 '~래요', 얼굴 없는 컷 위) → O2… 원음 과정·재료·요령 → 원음 맛 반응 → 원음 끝 판정 한 줄(반전이면 더 좋다 '짜파게티를 이길 수 없습니다 → 그건 진짜 인정').",
+   "길이 24~30초. 자막 조각 공백 빼고 ≤12자(중앙 6). 원음은 본인 말만, 받아쓰기로 확인. 숫자는 tts 칸에 한글로.",
+   "P.S. 요령 한 줄(≤16자, 근거 = 원음 속 요령) 과 제품 꼬리표 '● <제품>'(쿠팡에서 확인된 같은 제품만) 은 대본 caps 에 따로.",
+   "CTA 없음(링크 줄·'여러분은 ~?' 질문 빼기) · 효능·질병 말 금지 · 권위는 전언으로만."
+  ],
+  "example": null,
+  "audit": [
+   {
+    "kind": "first_line",
+    "is": "orig"
+   },
+   {
+    "kind": "last_line",
+    "is": "orig"
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 0,
+    "max": 2
+   },
+   {
+    "kind": "tts_chars",
+    "min": 6,
+    "max": 24
+   },
+   {
+    "kind": "ending",
+    "which": "all_tts",
+    "pattern": "(래요|대요|이래요|라고 해요)\\s*[.!]*$",
+    "min_share": 1.0,
+    "why": "나레 = 3인칭 전언 '~래요'(X9mR·j-fB)"
+   },
+   {
+    "kind": "narr_share",
+    "min": 0.0,
+    "max": 0.22
+   },
+   {
+    "kind": "cap_chars",
+    "max": 12
+   },
+   {
+    "kind": "est_length",
+    "min": 24,
+    "max": 30
+   }
+  ]
+ }
+}

@@ -1,0 +1,965 @@
+{
+ "id": "sMx9RWuifCA",
+ "dur": 26.65,
+ "fps": 60,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "1등 레시피로 끓인",
+   "box": "없음",
+   "colors": [
+    {
+     "word": "1등 레시피로 끓인",
+     "hex": "#FFFFFF"
+    }
+   ]
+  },
+  {
+   "text": "성시경 신라면",
+   "box": "주황상자 #FE7813 (x182~897,y288~411)",
+   "colors": [
+    {
+     "word": "성시경 신라면",
+     "hex": "짙은 검정(상자 위) — 스타일분석 §2"
+    }
+   ]
+  }
+ ],
+ "source_label": "출처 · 성시경 SUNG SI KYUNG (YouTube)",
+ "ps_line": {
+  "text": "P.S. 면만 먼저 참기름에 비비기",
+  "t_in": 12.0,
+  "t_out": 26.65,
+  "hex": "P.S. #FD811F(주황) + 본문 #FEEB65(노랑), 손글씨 꼴",
+  "note": "10fps 픽셀 추적 12.0초 켜짐(overlay_track.py) — 2fps 시트로는 11.0 부근부터 보임, 0.1초 재확인 안 함"
+ },
+ "link_line": "프로필 링크에서 140번(번호만 주황)",
+ "product_tag": [
+  {
+   "text": "● 농심 신라면",
+   "t_in": 10.8,
+   "t_out": 14.3
+  },
+  {
+   "text": "● 농심 신라면",
+   "t_in": 16.6,
+   "t_out": 18.7
+  },
+  {
+   "text": "● 농심 신라면",
+   "t_in": 22.4,
+   "t_out": 26.65
+  }
+ ],
+ "layout": {
+  "title_y": [
+   [
+    173,
+    263
+   ],
+   [
+    288,
+    411
+   ]
+  ],
+  "window": [
+   0,
+   476,
+   1080,
+   1545
+  ],
+  "orange_rules_y": [
+   [
+    464,
+    475
+   ],
+   [
+    1546,
+    1557
+   ]
+  ],
+  "source_y": [
+   1583,
+   1626
+  ],
+  "ps_y": [
+   1670,
+   1718
+  ],
+  "link_y": [
+   1794,
+   1836
+  ],
+  "watermark": "창 오른쪽 위 '✉ 굿레터' 흰 반투명",
+  "product_tag": "창 왼쪽 위 주황 알약 x≈15~345 y≈495~555"
+ },
+ "lines": [
+  {
+   "t0": 0.13,
+   "t1": 1.1,
+   "speaker": "원음:성시경",
+   "text": "신라면 제일 맛있게",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "훅",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 1.12,
+   "t1": 1.62,
+   "speaker": "원음:성시경",
+   "text": "끓이기 1등 한",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "훅",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 1.65,
+   "t1": 2.4,
+   "speaker": "원음:성시경",
+   "text": "레시피가 있길래",
+   "layer": "굿레터",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "레시피가 있길래",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "훅",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 2.55,
+   "t1": 2.97,
+   "speaker": "원음:성시경",
+   "text": "설명하면",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 2.98,
+   "t1": 4.03,
+   "speaker": "원음:성시경",
+   "text": "끓이다가 면 빼서",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 4.05,
+   "t1": 4.8,
+   "speaker": "원음:성시경",
+   "text": "그 면을",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 4.88,
+   "t1": 5.65,
+   "speaker": "원음:성시경",
+   "text": "참기름 다진 마늘에",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "참기름 다진 마늘에",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    4.883
+   ],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 5.67,
+   "t1": 6.08,
+   "speaker": "원음:성시경",
+   "text": "비벼요",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 6.1,
+   "t1": 6.95,
+   "speaker": "원음:성시경",
+   "text": "그리고 남아 끓고",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 6.97,
+   "t1": 7.75,
+   "speaker": "원음:성시경",
+   "text": "있는 물에다가 계란을",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 7.77,
+   "t1": 8.35,
+   "speaker": "원음:성시경",
+   "text": "풀어서 위에 얹는 거야",
+   "layer": "굿레터",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "과정",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 8.37,
+   "t1": 9.45,
+   "speaker": "원음:성시경",
+   "text": "그게 뭐가 맛있겠어?",
+   "layer": "굿레터",
+   "role": "질문",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "그게 뭐가 맛있겠어?",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    8.867
+   ],
+   "role_detail": "의심",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 9.55,
+   "t1": 10.15,
+   "speaker": "원음:성시경",
+   "text": "근데 1등 했다는 건",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "기대",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 10.17,
+   "t1": 10.75,
+   "speaker": "원음:성시경",
+   "text": "맛있을 거 아니에요",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    10.733
+   ],
+   "role_detail": "기대",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 10.87,
+   "t1": 11.25,
+   "speaker": "원음:성시경",
+   "text": "어떻게 되는데?",
+   "layer": "굿레터",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "기대",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 12.77,
+   "t1": 13.35,
+   "speaker": "원음:성시경",
+   "text": "먼저 비벼주라고",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "먼저 비벼주라고",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "팁",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 13.41,
+   "t1": 14.25,
+   "speaker": "원음:성시경",
+   "text": "계란 2개",
+   "layer": "굿레터",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "variant": "큰글(수량)",
+   "y": [
+    1237,
+    1430
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "2개",
+     "hex": "#FDE675",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [
+    13.433
+   ],
+   "role_detail": "재료",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 14.35,
+   "t1": 14.65,
+   "speaker": "원음:성시경",
+   "text": "완성입니다",
+   "layer": "굿레터",
+   "role": "이음",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "완성",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 14.67,
+   "t1": 15.45,
+   "speaker": "원음:성시경",
+   "text": "비주얼은",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "조리 과정",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 16.97,
+   "t1": 17.45,
+   "speaker": "원음:성시경",
+   "text": "그럴싸한데",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 17.6,
+   "t1": 18.05,
+   "speaker": "원음:성시경",
+   "text": "맛있는데",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 18.07,
+   "t1": 18.62,
+   "speaker": "원음:성시경",
+   "text": "맛이 없겠어요?",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "맛이 없겠어요?",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 18.97,
+   "t1": 19.55,
+   "speaker": "원음:성시경",
+   "text": "고급스러워집니다",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "고급스러워집니다",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 19.8,
+   "t1": 21.45,
+   "speaker": "원음:성시경",
+   "text": "참기름이랑 계란 향이",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [
+    20.233
+   ],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 21.47,
+   "t1": 22.25,
+   "speaker": "원음:성시경",
+   "text": "기분 좋게 들어가서",
+   "layer": "굿레터",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "완성 음식",
+   "cut_at": [],
+   "role_detail": "맛반응",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 22.3,
+   "t1": 23.15,
+   "speaker": "원음:성시경",
+   "text": "라면대회 1등을 할",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [
+    22.317
+   ],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 23.2,
+   "t1": 23.55,
+   "speaker": "원음:성시경",
+   "text": "레시피는 전",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 23.57,
+   "t1": 23.95,
+   "speaker": "원음:성시경",
+   "text": "아닌 거 같아요",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "cut_at": [],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 24.37,
+   "t1": 25.15,
+   "speaker": "원음:성시경",
+   "text": "짜파게티를",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [
+    24.433
+   ],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 25.17,
+   "t1": 25.55,
+   "speaker": "원음:성시경",
+   "text": "이길 수 없습니다",
+   "layer": "굿레터",
+   "role": "반전",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "기본",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FDFDFD",
+   "outline": "검정 약 6px",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "반전",
+   "fit": 8,
+   "confidence": "눈"
+  },
+  {
+   "t0": 25.57,
+   "t1": 26.6,
+   "speaker": "원음:성시경",
+   "text": "그건 진짜 인정",
+   "layer": "굿레터",
+   "role": "끝",
+   "enter": "pop",
+   "enter_ms": 150,
+   "variant": "노랑채움",
+   "y": [
+    1288,
+    1353
+   ],
+   "fill_hex": "#FCB53F",
+   "outline": "검정 약 6px",
+   "emph": [
+    {
+     "word": "그건 진짜 인정",
+     "hex": "#FCB53F",
+     "scale": 1.0
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "먹는 장면",
+   "cut_at": [],
+   "role_detail": "끝",
+   "fit": 8,
+   "confidence": "눈"
+  }
+ ],
+ "no_caption": [
+  [
+   11.25,
+   12.77
+  ],
+  [
+   15.45,
+   16.97
+  ],
+  [
+   19.55,
+   19.8
+  ],
+  [
+   23.95,
+   24.37
+  ]
+ ],
+ "beats": "훅 0~2.4초(원음 '신라면 제일 맛있게 끓이기 1등 한 레시피가 있길래') → 과정 설명 2.5~8.4(원음, 재료 줄 노랑) → 의심 8.4~9.5('그게 뭐가 맛있겠어?' 노랑) → 기대 9.5~11.3 → 조리 화면 10.7~16.5(제품 꼬리표·P.S. 팁 켜짐, '먼저 비벼주라고' 노랑·'계란 2개' 큰글) → 맛 반응 16.9~22.3('맛이 없겠어요?'·'고급스러워집니다' 노랑) → 반전 끝 22.3~26.6('라면대회 1등을 할 레시피는 전 아닌 거 같아요 짜파게티를 이길 수 없습니다' → '그건 진짜 인정' 노랑)",
+ "narr_share": "나레 0/31 줄, 0초 — 원음(성시경)만(vtt·입 모양·목소리 한 사람, 음높이 검사는 스타일분석 §소리)",
+ "notes": [
+  "등장: 일반 줄 전부 팝(약 30%→115% 넘침→100%, 60fps 로 2.98~3.13·1.12~1.20·19.82~19.90·22.32~22.40·23.22~23.30·4.05~4.15·6.12~6.20 확인 — 나머지 줄은 0.1초 격자에서 작은 첫 프레임으로 확인). '계란 2개'만 컷과 같이 즉시(13.41).",
+  "줄 사이 빈 프레임 1~2개(교체 때 앞 줄이 사라지고 새 줄이 작게 시작).",
+  "효과음: 귀로 못 들음 — 스타일분석 §소리의 파형 검사로 채움(이 파일 sfx 는 null).",
+  "제품 꼬리표 켜짐 구간은 10fps 주황 픽셀 추적(조리 근접 면 화면은 주황이 섞여 오검출 가능) — 11.0·12.2·13.5·17.0·18.0·23.0 프레임 눈 확인, 15.0·20.5 꺼짐 확인.",
+  "fit = 원음 재편집이라 대사와 같은 순간의 원본 화면 — 일괄 8(눈, 줄마다 따로 채점 안 함). role_detail = 처음 적은 세부 역할(과정·재료·맛반응 …), role = 지침서 어휘로 접은 값."
+ ]
+}
