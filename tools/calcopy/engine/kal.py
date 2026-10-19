@@ -6,13 +6,15 @@
 사람(Claude 눈) 단계에서는 멈추지 않고 **할 일 묶음**(판독 프레임 목록·줄판독 뼈대·워커 브리프)을 만들어 두고 state=waiting_human 으로 끝낸다.
 세션은 지침서 `tools/calcopy/칼카피_분석지침서.md` §실행 대본 순서로 묶음을 워커에 나눠 주고, 결과가 들어오면 같은 명령을 다시 돌린다.
 판단 주인: 단계 순서·건너뛰기·멈춤 = 이 파일 STEPS/run 한 곳. 각 단계의 판단은 기존 주인 함수(analyze.analyze·kal_analyze.*·to_frame.build·calcopy_board.set_step)를 부른다.
-제미나이 금지(사장님 10-18): 뜯기의 LLM 창구 = claude_cli.ask(소리 받아쓰기는 못 하므로 실패로 기록된다 — 받아쓰기는 vtt·스피치매틱스).
+제미나이 금지(사장님 10-18): 뜯기의 LLM 창구 = _claude_llm(claude_cli.ask 어댑터 · 소리 받아쓰기는 못 하므로 실패로 기록된다 — 받아쓰기는 vtt·스피치매틱스).
+경계(관제 235 합의 10-20): kal.py = 분석 입구(~판 설정 초안 `_kal/판설정_초안.json`). 제작은 렌더러를 만들지 않고 preset_make / hybrid/run.py 를 부른다. 소리 도구 = tools/calcopy/engine/sound/.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import re
+import statistics
 import subprocess
 import sys
 import time
@@ -109,8 +111,24 @@ def step_collect(S: State):
     return "done", {"src": str(base), "ids": have}, f"받음 {len(have)}/{len(ids)}" + (f" 실패 {errs}" if errs else "")
 
 
+def _claude_llm(parts: list, prompt: str, tag: str = ""):
+    """analyze 가 넘기는 제미나이 꼴 parts([라벨 str, jpg bytes, …] 또는 [(경로, 'audio/mp3')]) → claude_cli.ask(그림 bytes 만) 어댑터.
+    라벨은 프롬프트 앞에 번호로 접어 넣는다. 소리는 Claude 창구가 못 받으므로 실패로 돌려준다(조용히 건너뛰지 않는다 — 받아쓰기는 vtt·스피치매틱스)."""
+    from tools.calcopy.engine import claude_cli
+    imgs, labels = [], []
+    for x in parts or []:
+        if isinstance(x, (bytes, bytearray)):
+            imgs.append(bytes(x))
+        elif isinstance(x, str):
+            labels.append(x)
+        elif isinstance(x, tuple):
+            return None, f"소리 판독({x[1] if len(x) > 1 else '?'})은 Claude 창구 미지원 — 받아쓰기는 vtt/스피치매틱스"
+    head = ("그림 순서(Read 로 연 파일 순서)와 라벨: " + " / ".join(f"{i + 1}={lab}" for i, lab in enumerate(labels)) + "\n") if labels else ""
+    return claude_cli.ask(imgs, head + prompt, tag)
+
+
 def step_tteutgi(S: State):
-    from tools.calcopy.engine import analyze, claude_cli
+    from tools.calcopy.engine import analyze
     base = DATA / S.d["slug"] / "src"
     out_root = S.dir / "뜯기"
     done, errs = [], []
@@ -120,7 +138,7 @@ def step_tteutgi(S: State):
             done.append(vid)
             continue
         try:
-            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=claude_cli.ask, materials=False)
+            analyze.analyze(str(base / f"{vid}.mp4"), str(out), llm=_claude_llm, materials=False)
             done.append(vid)
         except Exception as e:  # 조용한 실패 금지 — 편별로 기록
             errs.append(f"{vid}: {type(e).__name__} {str(e)[:120]}")
@@ -199,6 +217,7 @@ def step_readlines(S: State):
 
 def step_rules(S: State):
     kd = S.dir / "_kal"
+    kd.mkdir(parents=True, exist_ok=True)      # --from rules(이미 분석한 채널)에서도 돈다
     docs = K._load_docs([str(S.dir / "줄판독")])
     R = K.rules_of(docs)
     (kd / "규칙빈도_초안.md").write_text(K.rules_md(R, S.d["slug"]), encoding="utf-8")
@@ -212,9 +231,46 @@ def step_rules(S: State):
     draft.write_text("# 스타일분석 초안(kal.py rules — 규칙빈도·대본언어·팔레트 자동 집계. 사람이 §3 꼴로 옮겨 적고 규칙을 채택한다)\n\n"
                      + K.rules_md(R, S.d["slug"]) + "\n" + K.script_md(Sc) + "\n## 팔레트(channel/<slug>/팔레트.json)\n"
                      + "\n".join(f"- {role}: " + ", ".join(f"{g['hex']}×{g['n_lines']}줄/{g['n_docs']}편" for g in lst[:6]) for role, lst in P["roles"].items() if lst) + "\n", encoding="utf-8")
+    # 판 설정 초안 — tools/calcopy/hybrid/styles/<판>.json 스키마(주인 = 관제 235, README.md·_common.json) 꼴로 **초안만** `_kal/<slug>판_초안.json`.
+    # styles/ 에 넣는 것·새 칸 추가는 그쪽 세션(스키마 주인). 정밀 측정값(자간·행간·팔레트·키프레임)은 판 파일에 안 넣고 channel/<slug>/ 파일을 경로로 가리킨다.
+    sp = R["by_speaker"]
+    def mode(k):
+        e = (sp.get(k) or {}).get("enter") or {}
+        return max(e, key=e.get) if e else None
+    durs = [e["dur"] for e in R["episodes"] if e["dur"]]
+    tts = {}
+    for vid in S.step("tteutgi")["outputs"]["ids"][:1]:
+        p = S.dir / "뜯기" / vid / "뜯기.json"
+        if p.exists():
+            tts = json.loads(p.read_text(encoding="utf-8"))
+    lay = tts.get("layout") or {}
+    narr_cps = [e["narr_cps"] for e in R["episodes"] if e.get("narr_cps")]
+    plan = {"name": f"{S.d['slug']}판", "renderer": "bench",
+            "_note": f"kal.py rules 초안({time.strftime('%Y-%m-%d')}) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+            "bench": {"ko": (S.d.get("channel") or {}).get("name"), "channel": S.d["ref"], "analysis": f"channel/{S.d['slug']}/스타일분석.md",
+                      "line_reads": f"channel/{S.d['slug']}/줄판독/", "src_dir": str(DATA / S.d["slug"] / "src"), "sfx_events": None, "sfx_key": None,
+                      "palette": f"channel/{S.d['slug']}/팔레트.json", "rules_counted": f"channel/{S.d['slug']}/_kal/규칙빈도.json"},
+            "voice": {"name": None, "voice_id": None, "candidates": [], "why": "engine/sound/narr_report.py 닮은 목소리 순위로 채움"},
+            "cps_target": round(statistics.median(narr_cps), 2) if narr_cps else None,
+            "bgm": {"id": None, "db_below_voice": None, "duck_orig_db": None, "fade_out": None, "why": "engine/sound/bgm_fp.py·뜯기 audio"},
+            "loudness": {"lufs": -14, "tp": -1.5},
+            "length": {"min": round(min(durs), 1) if durs else None, "max": round(max(durs), 1) if durs else None},
+            "script": {"brief": [f"{k}: 어미 " + ", ".join(e["ending"] for e in v["endings"][:4]) + f" · 존댓말 {v['honorific_rate']} · 전언 {v['report_rate']} · 자수 중앙 {v['chars']['med']}" for k, v in Sc.items()],
+                       "example": (Sc.get("나레") or {}).get("first_lines", [])[:3], "audit": []},
+            "frame": {"window": lay.get("window"), "title": [], "logo": None, "credit": None, "watermark": None, "comment": None},
+            "caption": {"pack": None, "pack_default": None, "variant_for": {}, "typing_cps": (sp.get("나레") or {}).get("cps")},
+            "timing": None, "cuts": None, "sfx_files": None,
+            "placement": {"rules": {"narr_enter": mode("나레"), "orig_enter": mode("원음"),
+                                    "fx_rate": {k: round(v["any"] / v["n"], 2) for k, v in sp.items() if v["n"]},
+                                    "plain_rate": round(R["plain"]["n"] / max(1, R["plain"]["denom"]), 2),
+                                    "by_pos": {k: round(v["any"] / v["n"], 2) for k, v in R["by_pos"].items() if v["n"]},
+                                    "strong": [f"{c['cond']} → {c['effect']} {c['k']}/{c['n']}" for c in R["rules"] if c["grade"] == "강"][:20]},
+                          "counted": {}},
+            "_todo": ["voice·bgm·sfx = engine/sound 결과", "frame.title/logo/credit = 스타일분석 §틀", "caption.pack = caption-motions.js 팩 이름(없으면 요청서)", "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"]}
+    (kd / f"{S.d['slug']}판_초안.json").write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     if not (S.dir / "스타일분석.md").exists():
-        return "waiting_human", {"draft": str(draft)}, HUMAN["rules"]
-    return "done", {"draft": str(draft), "palette": str(S.dir / "팔레트.json")}, "규칙빈도·대본언어·팔레트 집계 + 스타일분석.md 있음"
+        return "waiting_human", {"draft": str(draft), "plan_draft": str(kd / f"{S.d['slug']}판_초안.json")}, HUMAN["rules"]
+    return "done", {"draft": str(draft), "palette": str(S.dir / "팔레트.json"), "plan_draft": str(kd / f"{S.d['slug']}판_초안.json")}, "규칙빈도·대본언어·팔레트·판 설정 초안 + 스타일분석.md 있음"
 
 
 def step_copy(S: State):

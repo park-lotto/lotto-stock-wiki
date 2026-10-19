@@ -80,6 +80,9 @@ def enter_key(v) -> str:
     if head == "cut":
         return "instant"
     low = s.lower().replace("타이핑 아님", "").replace("타이핑 없음", "")
+    for en_key, en in (("typ", "typing"), ("glitch", "glitch"), ("wipe", "wipe"), ("slide", "slide"), ("rainbow", "rainbow"), ("fade", "fade"), ("shake", "shake"), ("pop", "pop")):
+        if en_key in head:                      # 자막팩 키(sprTypeGlow·typeFlash·rgbGlitch…)
+            return en
     for ko, en in _ENTER_KO:
         if ko in low:
             return en
@@ -709,15 +712,33 @@ def frame_metrics(png: str, band: tuple) -> dict:
     """한 프레임의 자막 띠 안 글자 잉크: 상자(x0,y0,x1,y1)·높이·채움색 중앙값 hex·외곽 어두운 색 중앙값."""
     import cv2
     import numpy as np
-    img = cv2.imread(png)
+    img = cv2.imdecode(np.fromfile(png, np.uint8), cv2.IMREAD_COLOR)   # 한글 경로: imread 는 조용히 None
+    if img is None:
+        raise FileNotFoundError(png)
     S = _sheets_mod()
     y0, y1 = band
     crop = img[y0:y1]
     m = S.text_mask(crop)
-    ys, xs = np.where(m > 0)
-    if len(xs) < 20:
+    # 글자 띠 = 행 밀도가 최대의 25% 넘는 가장 긴 연속 구간(밝은 옷·피부가 외곽선 옆에서 새는 성긴 행을 자른다 — VbpdN 11.0 실측 h75→56)
+    def run(prof, frac=0.25, win=15):
+        prof = np.convolve(prof.astype(float), np.ones(win) / win, mode="same")   # 글자 가로획 사이 빈 행을 메운다(15px 이동 평균)
+        th = prof.max() * frac
+        best, cur = (0, -1), None
+        for i, v in enumerate(prof):
+            if v > th:
+                cur = i if cur is None else cur
+                if i - cur > best[1] - best[0]:
+                    best = (cur, i)
+            else:
+                cur = None
+        return best
+    r0, r1 = run(m.sum(1))
+    if r1 < 0 or m[r0:r1 + 1].sum() < 20:
         return {"ink": int(m.sum()), "box": None}
-    box = [int(xs.min()), int(ys.min()) + y0, int(xs.max()), int(ys.max()) + y0]
+    c0, c1 = run(m[r0:r1 + 1].sum(0), 0.05, win=61)   # 어절 사이 빈 칸(~25px)을 넘긴다
+    m[:r0] = 0; m[r1 + 1:] = 0
+    ys, xs = np.where(m > 0)
+    box = [int(c0), int(r0) + y0, int(c1), int(r1) + y0]
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
     bright = (hsv[..., 2] > 215)
     fill = crop[(m > 0) & bright]
