@@ -110,8 +110,9 @@ def load_doc(doc: Path) -> dict:
         a = {"i": s.get("i", len(shots)), "line": s["line"], "src": s["src"], "ss": float(s["ss"]), "dur": float(s["dur"]),
              "src_crop": s.get("src_crop"), "mute": bool(s.get("mute")), "see": s.get("ours") or s.get("why", ""),
              **{k: s[k] for k in SHOT_KEYS if s.get(k) is not None}, "cover": bool(s.get("cover"))}
-        if Path(s["src"]).suffix.lower() in STILL and not s.get("mute"):
-            raise StageError(f"재료 컷 {s.get('i')}: 그림 파일({s['src']})은 소리가 없다 — mute: true")
+        if Path(s["src"]).suffix.lower() in STILL and not s.get("mute") and not (s.get("cover") and s.get("audio_src")):
+            # 그림 컷 = 소리 없음. 단 cover(화면만 다른 장면, 소리는 원음) 이면 audio_src(원음 파일)·audio_ss 로 원음을 쓴다(10-20 엔진 요청)
+            raise StageError(f"재료 컷 {s.get('i')}: 그림 파일({s['src']})은 소리가 없다 — mute: true, 또는 cover: true + audio_src·audio_ss(원음)")
         if not s.get("mute"):
             a["audio_src"] = s.get("audio_src") or s["src"]
             if s.get("audio_ss") is not None:
