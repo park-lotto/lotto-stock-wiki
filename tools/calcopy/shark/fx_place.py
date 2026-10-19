@@ -384,7 +384,7 @@ def caption_box(S: dict, info: dict, t: float) -> list | None:
 
 def track_box(info: dict, cand: Path, box: list, t0: float, t1: float, how: str = "template") -> dict:
     """(판단 주인: 대상 따라가기) 완성본 [t0,t1) 동안 대상 상자의 길. cv2 5.0(contrib 없음 → CSRT·KCF 없음)이라
-      template = 첫 프레임 상자 그림을 다음 프레임마다 주변(search_frac)에서 정규 상관(TM_CCOEFF_NORMED)으로 찾음, 신뢰도 = 첫 그림과의 상관 최솟값
+      template = 첫 프레임 상자 그림을 다음 프레임마다 주변(search_frac)·크기 ×0.96/1/1.04 에서 정규 상관(TM_CCOEFF_NORMED)으로 찾음(크기 따라감), 신뢰도 = 첫 그림과의 상관 최솟값
       detect   = 프레임마다 NanoDet 사람 중 앞 상자와 가장 겹치는 것(IoU>0.3), 신뢰도 = 잡힌 프레임 비율
     반환 {path: [[t−t0, x0,y0,x1,y1], …](3점 평균), conf, how, t_end}."""
     import cv2
@@ -398,21 +398,29 @@ def track_box(info: dict, cand: Path, box: list, t0: float, t1: float, how: str 
         x0, y0, x1, y1 = (int(round(v)) for v in cur)
         x0, y0 = max(0, x0), max(0, y0); x1, y1 = min(1080, x1), min(1920, y1)
         tpl = g0[y0:y1, x0:x1]
-        tw, th = x1 - x0, y1 - y0
+        tw0, th0 = x1 - x0, y1 - y0
+        sc = 1.0                         # 대상 크기 배율(카메라 줌·다가옴) — 프레임마다 앞 배율 ×{0.96,1,1.04} 중 가장 닮은 것(10-20 8편 0초 폰: 고정 크기면 1.35초에 41px 밀림)
         cur = [x0, y0, x1, y1]
         for k, t in enumerate(ts):
             if k:
                 g = cv2.cvtColor(np.ascontiguousarray(fr[k]), cv2.COLOR_RGB2GRAY)
-                m = int(G["search_frac"] * max(tw, th))
-                sx0, sy0 = max(0, int(cur[0]) - m), max(0, int(cur[1]) - m)
-                sx1, sy1 = min(1080, int(cur[2]) + m), min(1920, int(cur[3]) + m)
-                reg = g[sy0:sy1, sx0:sx1]
-                if reg.shape[0] < th or reg.shape[1] < tw:
+                cx, cy = (cur[0] + cur[2]) / 2, (cur[1] + cur[3]) / 2
+                best = None
+                for s_ in (sc * 0.96, sc, sc * 1.04):
+                    tw, th = max(8, int(round(tw0 * s_))), max(8, int(round(th0 * s_)))
+                    tp_ = cv2.resize(tpl, (tw, th), interpolation=cv2.INTER_AREA if s_ < 1 else cv2.INTER_LINEAR)
+                    m = int(G["search_frac"] * max(tw, th))
+                    sx0, sy0 = max(0, int(cx - tw / 2) - m), max(0, int(cy - th / 2) - m)
+                    sx1, sy1 = min(1080, int(cx + tw / 2) + m), min(1920, int(cy + th / 2) + m)
+                    reg = g[sy0:sy1, sx0:sx1]
+                    if reg.shape[0] < th or reg.shape[1] < tw:
+                        continue
+                    _, mv, _, ml = cv2.minMaxLoc(cv2.matchTemplate(reg, tp_, cv2.TM_CCOEFF_NORMED))
+                    if best is None or mv > best[0]:
+                        best = (mv, s_, [sx0 + ml[0], sy0 + ml[1], sx0 + ml[0] + tw, sy0 + ml[1] + th])
+                if best is None:
                     confs.append(0.0); path.append([round(t - t0, 3), *cur]); continue
-                r = cv2.matchTemplate(reg, tpl, cv2.TM_CCOEFF_NORMED)
-                _, mv, _, ml = cv2.minMaxLoc(r)
-                cur = [sx0 + ml[0], sy0 + ml[1], sx0 + ml[0] + tw, sy0 + ml[1] + th]
-                confs.append(float(mv))
+                confs.append(float(best[0])); sc = best[1]; cur = best[2]
             path.append([round(t - t0, 3), *cur])
     else:
         for k, t in enumerate(ts):
@@ -426,7 +434,7 @@ def track_box(info: dict, cand: Path, box: list, t0: float, t1: float, how: str 
             path.append([round(t - t0, 3), *cur])
     sm = []
     for k in range(len(path)):
-        w = path[max(0, k - 1):k + 2]
+        w = path[k - 1:k + 2] if 0 < k < len(path) - 1 else path[k:k + 1]     # 3점 평균은 안쪽만(끝점 평균은 빠른 대상에서 한 칸 늦어진다)
         sm.append([path[k][0]] + [round(sum(x[i] for x in w) / len(w), 1) for i in range(1, 5)])
     conf = (min(confs) if how == "template" else sum(confs) / len(confs)) if confs else 1.0
     return {"path": sm, "conf": round(conf, 3), "how": how, "t_end": round(ts[-1] + 1 / G["track_fps"], 3) if ts else t1, "cut": c["i"]}

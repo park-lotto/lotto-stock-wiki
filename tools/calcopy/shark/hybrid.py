@@ -82,7 +82,7 @@ def back_defaults(F: dict, cut: dict) -> dict:
 
 
 def render_back(doc: Path, work: Path, mode: str, confirm: bool, bd: dict) -> dict:
-    keep = {k: SR_.DEF[k] for k in bd}
+    keep = {k: SR_.DEF[k] for k in bd if k in SR_.DEF}     # bgm_ss 는 DEF 기본값이 없다(render 가 C.get("bgm_ss") 로 읽음) — 없던 칸은 끝나고 지운다
     SR_.DEF.update(bd)          # 대본 render 칸이 없으면 이 값(앞과 같은 곡·같은 크기·이어 튼 초)
     S = jload(doc / "대본.json")
     clash = [k for k in bd if k in (S.get("render") or {})]
@@ -91,7 +91,11 @@ def render_back(doc: Path, work: Path, mode: str, confirm: bool, bd: dict) -> di
     try:
         return SR_.render(doc, work, mode, confirm)
     finally:
-        SR_.DEF.update(keep)      # 앞을 같은 프로세스에서 다시 렌더할 때 뒤 BGM 값이 새지 않게
+        for k in bd:              # 앞을 같은 프로세스에서 다시 렌더할 때 뒤 BGM 값이 새지 않게
+            if k in keep:
+                SR_.DEF[k] = keep[k]
+            else:
+                SR_.DEF.pop(k, None)
 
 
 def join(F: dict, cut: dict, back_mp4: Path, tr: dict, R: Path) -> Path:

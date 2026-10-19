@@ -573,7 +573,8 @@ def cap_style(c: dict, n_caps: int, FS: dict) -> tuple[str, dict]:
 
 
 def effects(D, LT) -> tuple[list[dict], list[str], list[dict]]:
-    """재료.effects[{line, kind, at:[x,y](완성본 좌표), t:[줄 안 시작,끝], target_path·track…}] → 완성본 시각 + 적중 검사(fx.gate, R3·R4).
+    """재료.effects[{line, kind, at:[x,y](완성본 좌표 = ★그림 가운데, 화살표 끝 아님 — fx.tip_offset) | tip:[x,y](가리킬 점), t:[줄 안 시작,끝], target·target_path·track…}]
+    → 완성본 시각 + 적중 검사(fx.gate, R3·R4).
     검사 미달·fix 가 뺀 것(drop)은 그리지 않고 (line, kind, 이유)로 돌려준다(render_info fx_dropped). 좌표 없는 메모는 못 그림으로 남긴다."""
     lt = {x["id"]: x for x in LT["lines"]}
     out, dropped = [], []
@@ -582,6 +583,8 @@ def effects(D, LT) -> tuple[list[dict], list[str], list[dict]]:
             raise StageError(f"꾸밈 '{e.get('kind')}' 은 엔진(overlay_png)이 못 그린다 — 엔진 요청: {e}")
         if e.get("line") not in lt:
             raise StageError(f"꾸밈 줄 없음: {e}")
+        if e.get("tip") and not e.get("at"):          # 손으로 가리킬 점(tip)을 적은 꾸밈 → 그림 가운데(at) (fx.at_from_tip 한 곳)
+            e = {**e, "at": FX.at_from_tip(e["kind"], e["tip"], FX._key(e))}
         if e.get("drop") or not e.get("at"):
             dropped.append({"line": e["line"], "kind": e["kind"], "why": e.get("drop") or "자리(at) 없음"}); continue
         x = lt[e["line"]]

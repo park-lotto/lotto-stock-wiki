@@ -25,6 +25,17 @@ FRAME = {"itssum": ROOT / "channel/homedesignnote/대본설명서/script_frame.j
          "jaemi": ROOT / "channel/evenshopping/대본설명서/points.json"}
 
 
+KIND = {"나레": "tts", "원음": "orig"}
+
+
+def as_lines(d: dict) -> dict:
+    """대본 꼴 맞추기(주인 한 곳): 최상위 lines(하이브리드 판들) 그대로 / 없고 final.lines(샥탬 shark 대본)면 그것을 lines 로 —
+    샥탬 kind '나레/원음' 은 'tts/orig' 로. 최상위 lines 가 있으면 아무것도 안 바꾼다(옛 동작 그대로)."""
+    if d.get("lines") or not (d.get("final") or {}).get("lines"):
+        return d
+    return {**d, "lines": [{**l, "kind": KIND.get(l.get("kind"), l.get("kind"))} for l in d["final"]["lines"]]}
+
+
 def tts_lines(d: dict) -> list[dict]:
     out = []
     for l in d.get("lines") or []:
@@ -142,7 +153,7 @@ def rule_check(r: dict, d: dict, st: dict) -> tuple[bool, str]:
 
 
 def audit(path: Path, version: str | None = None) -> dict:
-    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    d = as_lines(json.loads(Path(path).read_text(encoding="utf-8")))
     v = version_of(Path(path), version)
     st = ST.load(v)
     lines = tts_lines(d)

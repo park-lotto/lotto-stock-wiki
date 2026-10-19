@@ -71,7 +71,9 @@ PAD = 14   # 모양 둘레 여백(그림자·외곽선 자리, 위아래 같은 
 
 
 def tip_offset(kind: str, key: tuple = ()) -> tuple[float, float]:
-    """(판단 주인: 꾸밈이 가리키는 점) 제 크기 그림 가운데 기준 끝점(px). 화살표 = 끝, 원·이모지 = 가운데(0,0). on_target·적중 검사·그리기가 같이 쓴다."""
+    """(판단 주인: 꾸밈이 가리키는 점) 제 크기 그림 가운데(= 재료 at) 기준 끝점(px). 화살표 = 끝, 원·이모지 = 가운데(0,0). on_target·적중 검사·그리기가 같이 쓴다.
+    재료 at 기준점 = 그림 가운데: 초록 ↓ 끝 = (at.x, at.y + h/2) · 분홍 ↑ 끝 = (at.x, at.y − h/2) · 빨간 곡선 끝 = at + (0.37w, −0.47h).
+    손으로 적을 땐 at 대신 tip(가리킬 점)을 적으면 렌더가 at_from_tip 으로 바꾼다 — 가장 좋은 건 target(상자) + fx_place.fix."""
     E = R()["effects"]
     o = {**E.get(kind, {}), **dict(key)}
     if kind == "arrow_green_down":
@@ -81,6 +83,12 @@ def tip_offset(kind: str, key: tuple = ()) -> tuple[float, float]:
     if kind == "arrow_curve_red":
         return (0.87 - 0.5) * o["w"], (0.03 - 0.5) * o["h"]
     return 0.0, 0.0
+
+
+def at_from_tip(kind: str, tip, key: tuple = ()) -> list:
+    """재료 effects[].tip(가리킬 점, 완성본 좌표) → at(그림 가운데). ★at 은 끝점이 아니다(10-20 10편: at 에 끝점을 적어 30/30 빗나감)."""
+    tx, ty = tip_offset(kind, key)
+    return [int(round(tip[0] - tx)), int(round(tip[1] - ty))]
 
 
 def _straight_arrow(w, h, shaft, head_h, S, up=False):
