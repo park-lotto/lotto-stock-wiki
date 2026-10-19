@@ -1,0 +1,1342 @@
+{
+ "_note": "샥탬스토리 11편 Copper Cow Coffee 재료 계획 — TTS·렌더 전. 창 1080x1052(채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(영어 원음 Ij6BNYohK2o_audio.m4a).",
+ "sources": {
+  "Ij6BNYohK2o": {
+   "채널": "Sony Pictures Television(공식)",
+   "제목": "Shark Tank US | Mark Sticks Up For Copper Cow Coffee Entrepreneur",
+   "해상도": "1920x1080 29.97fps (137 + 140 영어 원음, 오디오 트랙 1개)",
+   "길이": 671.9,
+   "받은 구간": "전체",
+   "남의 글자": "로고·방송사 띠 없음. 이름·제안 띠(106~117·300~302·514~520·526~570초 화면 아래) — 쓴 컷은 띠 없는 구간만(519.94~525.60 프레임 0.5초 간격 눈 확인)"
+  },
+  "tXJe96m7pFE": {
+   "채널": "Copper Cow Coffee(판매사 공식)",
+   "제목": "Copper Cow Coffee -- Portable Pourover Vietnamese Coffee",
+   "해상도": "1920x1080 24fps (137, 영상만)",
+   "길이": 22,
+   "남의 글자": "16.5초부터 로고 — 안 씀(쓴 7.5~8.45 글자 없음)"
+  },
+  "Pbt3hLQ5Z28": {
+   "채널": "Box Peel(실사용 언박싱, 말 없음)",
+   "제목": "Copper Cow Coffee Vietnamese Pour Over - Silent Unboxing & Pouring",
+   "해상도": "1920x1080 30fps (137, 영상만)",
+   "길이": 343,
+   "남의 글자": "없음(포장 글자 = 제품)"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "매출 400만 달러",
+  "line2": "컵에 거는 커피?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 197.5,
+   "audio_dur": 2.77,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    197.5,
+    200.27
+   ],
+   "ss": 197.5,
+   "dur": 2.77,
+   "t_final_est": [
+    0.0,
+    2.77
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    408,
+    33,
+    1075,
+    1047
+   ],
+   "scale": 1.0048,
+   "ours": "파란 재킷 투자자가 종이컵 커피를 마시고 내려놓음(원본 반응 컷 — 벤치 0~3초와 같은 샷)",
+   "audio": "원본 소리(원음)",
+   "why_crop": "fx_place.hook_circle: 얼굴 검출(YuNet 3프레임) 얼굴 높이 335px×1.005 = 창 폭 0.31 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 200.27,
+   "audio_dur": 0.68,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    200.27,
+    200.95
+   ],
+   "ss": 200.27,
+   "dur": 0.68,
+   "t_final_est": [
+    2.77,
+    3.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 여성 투자자가 커피 봉지를 들고 말함(말하는 본인 — 목소리 f0 210Hz 여성, 제미나이 화자 같음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "N1",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    41.9,
+    43.412
+   ],
+   "ss": 41.9,
+   "dur": 1.512,
+   "t_final_est": [
+    3.45,
+    4.96
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    205,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "방송 삽입 화면(분홍 배경): 유리컵에 건 드립 필터에 물을 부음 — 글자 없음",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 3,
+   "line": "N1",
+   "kind": "나레",
+   "src": "tXJe96m7pFE.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=tXJe96m7pFE",
+   "src_orig_span": [
+    7.5,
+    8.298
+   ],
+   "ss": 7.5,
+   "dur": 0.798,
+   "t_final_est": [
+    4.96,
+    5.76
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "판매사 공식 영상: 두 손으로 필터 걸이를 펼쳐 컵에 거는 손 근접",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 4,
+   "line": "O3",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 70.28,
+   "audio_dur": 3.74,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    70.28,
+    74.02
+   ],
+   "ss": 70.28,
+   "dur": 3.74,
+   "t_final_est": [
+    5.76,
+    9.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 손이 필터를 컵에 걸고 윗부분을 뜯음(근접, 말하는 본인 손)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N3",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    77.3,
+    78.667
+   ],
+   "ss": 77.3,
+   "dur": 1.367,
+   "t_final_est": [
+    9.5,
+    10.87
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    309,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "필터에서 커피가 유리컵으로 떨어짐(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N3",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    102.2,
+    103.653
+   ],
+   "ss": 102.2,
+   "dur": 1.453,
+   "t_final_est": [
+    10.87,
+    12.32
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "다 내린 커피 두 잔 — 밀크 커피와 블랙(근접)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O4",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 88.12,
+   "audio_dur": 3.38,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    88.12,
+    91.5
+   ],
+   "ss": 88.12,
+   "dur": 3.38,
+   "t_final_est": [
+    12.32,
+    15.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 크리머 봉지를 들어 보임(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "N5",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    132.0,
+    133.672
+   ],
+   "ss": 132.0,
+   "dur": 1.672,
+   "t_final_est": [
+    15.7,
+    17.37
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장·분홍 넥타이 투자자가 커피를 저으며 말함(그 말 하는 본인, 소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 9,
+   "line": "N5",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    136.3,
+    137.708
+   ],
+   "ss": 136.3,
+   "dur": 1.408,
+   "t_final_est": [
+    17.37,
+    18.78
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    331,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 투자자가 컵을 들고 이어 말함",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 10,
+   "line": "O6",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 141.34,
+   "audio_dur": 2.1,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    141.34,
+    143.44
+   ],
+   "ss": 141.34,
+   "dur": 2.1,
+   "t_final_est": [
+    18.78,
+    20.88
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자(원본 반응 컷 — 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O6",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 143.44,
+   "audio_dur": 0.86,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    143.44,
+    144.3
+   ],
+   "ss": 143.44,
+   "dur": 0.86,
+   "t_final_est": [
+    20.88,
+    21.74
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장 투자자가 컵을 들고 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O7",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 144.6,
+   "audio_dur": 0.44,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    144.6,
+    145.04
+   ],
+   "ss": 144.6,
+   "dur": 0.44,
+   "t_final_est": [
+    21.74,
+    22.18
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장 투자자(앞 샷 끝)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "O7",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 145.04,
+   "audio_dur": 1.77,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    145.04,
+    146.81
+   ],
+   "ss": 145.04,
+   "dur": 1.77,
+   "t_final_est": [
+    22.18,
+    23.95
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 손짓하며 답함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 14,
+   "line": "O7",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 146.81,
+   "audio_dur": 0.75,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    146.81,
+    147.56
+   ],
+   "ss": 146.81,
+   "dur": 0.75,
+   "t_final_est": [
+    23.95,
+    24.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장 투자자가 커피를 마시며 '좋네요'(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "N6",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    183.1,
+    184.638
+   ],
+   "ss": 183.1,
+   "dur": 1.538,
+   "t_final_est": [
+    24.7,
+    26.24
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 지난 이야기를 함(소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 16,
+   "line": "N6",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    117.4,
+    118.682
+   ],
+   "ss": 117.4,
+   "dur": 1.282,
+   "t_final_est": [
+    26.24,
+    27.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "방송 삽입 화면: 줄 선 'POUR OVER SET' 상자들(포장 글자 = 제품)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 17,
+   "line": "O8",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 229.66,
+   "audio_dur": 1.57,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    229.66,
+    231.23
+   ],
+   "ss": 229.66,
+   "dur": 1.57,
+   "t_final_est": [
+    27.52,
+    29.09
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    353,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 두 손을 펴며 말함(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 18,
+   "line": "O8",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 231.23,
+   "audio_dur": 1.19,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    231.23,
+    232.42
+   ],
+   "ss": 231.23,
+   "dur": 1.19,
+   "t_final_est": [
+    29.09,
+    30.28
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장 투자자 반응(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 19,
+   "line": "N7",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    15.3,
+    16.685
+   ],
+   "ss": 15.3,
+   "dur": 1.385,
+   "t_final_est": [
+    30.28,
+    31.67
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 무대에서 투자 요청(소리 끔, 샷 15.18~18.49)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 20,
+   "line": "N7",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    289.95,
+    292.535
+   ],
+   "ss": 289.95,
+   "dur": 2.585,
+   "t_final_est": [
+    31.67,
+    34.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 쪽 넓은 화면",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 21,
+   "line": "O9",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 295.56,
+   "audio_dur": 1.0,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    295.56,
+    296.56
+   ],
+   "ss": 295.56,
+   "dur": 1.0,
+   "t_final_est": [
+    34.25,
+    35.25
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 검은 정장 투자자가 두 손을 들며 '말도 안 돼'(말하는 본인, 샷 295.56~296.60)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "N9",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    422.0,
+    423.54
+   ],
+   "ss": 422.0,
+   "dur": 1.54,
+   "t_final_est": [
+    35.25,
+    36.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자가 손을 펴며 빠지겠다고 말함(소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 23,
+   "line": "N9",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    494.5,
+    496.04
+   ],
+   "ss": 494.5,
+   "dur": 1.54,
+   "t_final_est": [
+    36.79,
+    38.33
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 정장 투자자가 손가락을 들며 빠짐(소리 끔)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 24,
+   "line": "O10",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 519.96,
+   "audio_dur": 1.36,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    519.96,
+    521.32
+   ],
+   "ss": 519.96,
+   "dur": 1.36,
+   "t_final_est": [
+    38.33,
+    39.69
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    331,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자가 제안(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 25,
+   "line": "O10",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 521.32,
+   "audio_dur": 1.47,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    521.32,
+    522.79
+   ],
+   "ss": 521.32,
+   "dur": 1.47,
+   "t_final_est": [
+    39.69,
+    41.16
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "회색 재킷 투자자 반응(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 26,
+   "line": "O10",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 522.79,
+   "audio_dur": 2.03,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    522.79,
+    524.82
+   ],
+   "ss": 522.79,
+   "dur": 2.03,
+   "t_final_est": [
+    41.16,
+    43.19
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    375,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 듣고 웃음(원본 반응 컷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 27,
+   "line": "O10",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 524.82,
+   "audio_dur": 0.78,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    524.82,
+    525.6
+   ],
+   "ss": 524.82,
+   "dur": 0.78,
+   "t_final_est": [
+    43.19,
+    43.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자(말하는 본인 — 526초부터 나오는 제안 띠 전에 끊음)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 28,
+   "line": "O11",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 582.5,
+   "audio_dur": 0.42,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    582.5,
+    582.92
+   ],
+   "ss": 582.5,
+   "dur": 0.42,
+   "t_final_est": [
+    43.97,
+    44.39
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자(앞 샷 끝)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 29,
+   "line": "O11",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 582.92,
+   "audio_dur": 1.5,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    582.92,
+    584.42
+   ],
+   "ss": 582.92,
+   "dur": 1.5,
+   "t_final_est": [
+    44.39,
+    45.89
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 웃으며 수락(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 30,
+   "line": "O11",
+   "kind": "원음",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": false,
+   "audio_src": "Ij6BNYohK2o_audio.m4a",
+   "audio_ss": 584.42,
+   "audio_dur": 1.28,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    584.42,
+    585.7
+   ],
+   "ss": 584.42,
+   "dur": 1.28,
+   "t_final_est": [
+    45.89,
+    47.17
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "파란 재킷 투자자가 두 팔을 벌리며 '딜!'(말하는 본인)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 31,
+   "line": "N11",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    593.5,
+    594.91
+   ],
+   "ss": 593.5,
+   "dur": 1.41,
+   "t_final_est": [
+    47.17,
+    48.58
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자가 무대를 걸어 나감",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 32,
+   "line": "N11",
+   "kind": "나레",
+   "src": "Ij6BNYohK2o.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Ij6BNYohK2o",
+   "src_orig_span": [
+    596.7,
+    598.11
+   ],
+   "ss": 596.7,
+   "dur": 1.41,
+   "t_final_est": [
+    48.58,
+    49.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "같은 샷 이어서 — 복도로 걸어 나옴",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 33,
+   "line": "N12",
+   "kind": "나레",
+   "src": "Pbt3hLQ5Z28.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Pbt3hLQ5Z28",
+   "src_orig_span": [
+    0.5,
+    1.822
+   ],
+   "ss": 0.5,
+   "dur": 1.322,
+   "t_final_est": [
+    49.99,
+    51.31
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "실사용(Box Peel 언박싱 1080p): 분홍 'POUR OVER SET' 상자(포장 글자 = 제품)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 34,
+   "line": "N12",
+   "kind": "나레",
+   "src": "Pbt3hLQ5Z28.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=Pbt3hLQ5Z28",
+   "src_orig_span": [
+    136.0,
+    137.498
+   ],
+   "ss": 136.0,
+   "dur": 1.498,
+   "t_final_est": [
+    51.31,
+    52.81
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "실사용: 집에서 컵에 건 필터에 뜨거운 물을 부음(위에서)",
+   "audio": "원본 소리 끔 + TTS"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/11편_CopperCow/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    510,
+    723
+   ],
+   "size": 430,
+   "how": "face",
+   "why": "벤치 QMJ 0초 얼굴 훅 원(반지름 209 고정) — 자리·첫 컷 크롭은 fx_place.fix 가 얼굴 검출로 계산(render.py --tts-only 뒤)",
+   "face_src": {
+    "cx": 915.6,
+    "eye_y": 304.2,
+    "h": 335.5,
+    "n": 3
+   },
+   "fh_win": 0.312
+  },
+  {
+   "line": "N1",
+   "kind": "arrow_green_down",
+   "at": [
+    608,
+    603
+   ],
+   "t": [
+    0.0,
+    0.7
+   ],
+   "how": "target",
+   "target": [
+    404,
+    609,
+    813,
+    1155
+   ],
+   "target_what": "유리컵에 건 드립 필터(원본 42.8초 프레임 격자 실측 x620~1040·y180~740)",
+   "why": "벤치 QMJ 0.567~1.267 둘째 컷 제품 위 초록 아래 화살표"
+  },
+  {
+   "line": "N3",
+   "kind": "arrow_curve_red",
+   "at": [
+    423,
+    1219
+   ],
+   "t": [
+    0.3,
+    1.6
+   ],
+   "how": "target",
+   "target": [
+    435,
+    686,
+    646,
+    1128
+   ],
+   "target_what": "필터에서 컵으로 떨어지는 커피 줄기(원본 78.0초 격자 실측 x756~972·y259~713)",
+   "why": "벤치 QMJ 20.367 둘째 시연 빨간 곡선 화살표(찌르기)"
+  },
+  {
+   "line": "N5",
+   "kind": "dashed_circle",
+   "at": [
+    540,
+    917
+   ],
+   "t": [
+    0.17,
+    1.567
+   ],
+   "how": "target",
+   "target": "person",
+   "target_what": "두 시간 줄 섰다는 투자자(검은 정장, 사람 검출)",
+   "why": "벤치 QMJ 9.27~11.53 불편 겪는 사람 빨간 점선 원",
+   "target_box": [
+    0,
+    434,
+    1080,
+    1400
+   ],
+   "radius": 330,
+   "track": [
+    [
+     0.1,
+     540,
+     917
+    ],
+    [
+     0.204,
+     541,
+     918
+    ],
+    [
+     0.308,
+     539,
+     919
+    ],
+    [
+     0.412,
+     555,
+     921
+    ],
+    [
+     0.516,
+     564,
+     922
+    ],
+    [
+     0.62,
+     576,
+     921
+    ],
+    [
+     0.723,
+     593,
+     921
+    ],
+    [
+     0.827,
+     608,
+     921
+    ],
+    [
+     0.931,
+     605,
+     921
+    ],
+    [
+     1.035,
+     579,
+     921
+    ],
+    [
+     1.139,
+     564,
+     922
+    ],
+    [
+     1.243,
+     589,
+     924
+    ],
+    [
+     1.347,
+     598,
+     924
+    ]
+   ]
+  },
+  {
+   "line": "N5",
+   "kind": "flash",
+   "color": "빨강",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.9,
+    1.35
+   ],
+   "why": "벤치 QMJ 11.2 불편 빨강 번쩍(점선 원 떠 있는 동안)"
+  },
+  {
+   "line": "O8",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "why": "벤치 QMJ 28.1·7.1 장면 넘김 초록 — 매출 숫자 줄 첫 컷"
+  },
+  {
+   "line": "O8",
+   "kind": "arrow_pink_up",
+   "at": [
+    533,
+    1230
+   ],
+   "t": [
+    0.75,
+    2.3
+   ],
+   "why": "벤치 QMJ 12.017~13.82 숫자 조각 분홍 위 화살표 — 우리 '400만 달러예요' 조각"
+  },
+  {
+   "line": "O9",
+   "kind": "flash",
+   "color": "빨강",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "why": "벤치 QMJ 44.4 빨강(반응)"
+  },
+  {
+   "line": "O10",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.38,
+    1.83
+   ],
+   "why": "벤치 QMJ 38.667 제안 금액 컷 초록 번쩍(돈다발과 같은 프레임) — 우리 '60만 달러에' 조각 컷(521.32)"
+  },
+  {
+   "line": "O10",
+   "kind": "money_emoji",
+   "at": [
+    537,
+    1189
+   ],
+   "t": [
+    1.41,
+    2.71
+   ],
+   "why": "벤치 QMJ 38.7~40.0 날개 돈다발"
+  },
+  {
+   "line": "O11",
+   "kind": "flash",
+   "color": "빨강",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    1.92,
+    2.37
+   ],
+   "why": "벤치 QMJ 44.367 결정 빨강 — 우리 '딜!' 두 팔 컷(584.42)"
+  },
+  {
+   "line": "N12",
+   "kind": "flash",
+   "color": "초록",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "why": "벤치 QMJ 45.667 결과 초록"
+  }
+ ],
+ "sfx_not_drawn": []
+}
