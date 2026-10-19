@@ -1,0 +1,972 @@
+{
+ "_note": "샥탬스토리 12편 Chill Systems 재료 계획 — TTS·렌더 전. 창 1080x1052(채널 고정 [0,434,1080,1052]). make_plan.py LINES 가 정본(이 파일은 생성물). 원음 컷은 src_orig_span 그대로 원본 소리(영어 원음 ULws5gyPTHY_audio.m4a).",
+ "sources": {
+  "ULws5gyPTHY": {
+   "채널": "Shark Tank Global(공식)",
+   "제목": "\"It Only Holds Three Cans?\" The Sharks Question Chill Systems | Shark Tank US | Shark Tank Global",
+   "해상도": "1920x1080 29.97fps (137 + 140 영어 원음)",
+   "길이": 596.99,
+   "받은 구간": "전체",
+   "업로드": "2022-01-25",
+   "조회": 1921948,
+   "남의 글자": "방송사 로고 없음(133·562초 전체 프레임). 109~117초 이름·금액 띠 'CHASE MITCHELL & BRIAN BLOCH'·'Seeking $150k for a 15% stake' — 그 구간 안 씀. 392.4~394.3 제품 'YOUR LOGO HERE' 글자 — 안 씀. 쿨러 'Chill'·셔츠 'CS CHILL SYSTEMS'·샘플 'KEVIN' = 제품·소품 글자"
+  }
+ },
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "frame_preset": "channel/foreignshowshow/preset 「샤크탱크_검정띠2줄」",
+ "titles": {
+  "line1": "경쟁자가 얼음이라는",
+  "line2": "3캔짜리 쿨러?!"
+ },
+ "shots": [
+  {
+   "i": 0,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 301.3,
+   "audio_dur": 0.615,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    301.3,
+    301.915
+   ],
+   "ss": 301.3,
+   "dur": 0.615,
+   "t_final_est": [
+    0.0,
+    0.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "분홍 'Chill' 쿨러 제품 컷 + 얼음 조각(원본 299.87~301.94 샷 끝, 벤치 0초와 같은 샷)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 1,
+   "line": "O1",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 301.915,
+   "audio_dur": 1.085,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    301.915,
+    303.0
+   ],
+   "ss": 301.915,
+   "dur": 1.085,
+   "t_final_est": [
+    0.61,
+    1.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    335,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빨간 원피스 금발 투자자가 질문(말하는 본인, 샷 301.94~303.34)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 2,
+   "line": "O2",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 303.4,
+   "audio_dur": 0.7,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    303.4,
+    304.1
+   ],
+   "ss": 303.4,
+   "dur": 0.7,
+   "t_final_est": [
+    1.7,
+    2.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "창업자 두 사람이 손 모으고 '얼음'(말하는 본인 쪽, 샷 303.34~304.14)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 3,
+   "line": "O3",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 304.2,
+   "audio_dur": 1.385,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    304.2,
+    305.585
+   ],
+   "ss": 304.2,
+   "dur": 1.385,
+   "t_final_est": [
+    2.4,
+    3.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "금발 투자자가 되물음(말하는 본인, 샷 304.14~305.61)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 4,
+   "line": "O3",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 305.585,
+   "audio_dur": 0.815,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    305.585,
+    306.4
+   ],
+   "ss": 305.585,
+   "dur": 0.815,
+   "t_final_est": [
+    3.79,
+    4.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "남색 정장 투자자가 얼굴을 감싸고 웃음(원본 다음 샷 — 웃음소리, 말 없음 306.53 전까지)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 5,
+   "line": "N1",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    65.0,
+    66.155
+   ],
+   "ss": 65.0,
+   "dur": 1.155,
+   "t_final_est": [
+    4.6,
+    5.75
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "검은 원통 쿨러에 병을 꽂아 들어 보이는 손 근접(샷 64.93~67.17)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 6,
+   "line": "N1",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    79.1,
+    80.255
+   ],
+   "ss": 79.1,
+   "dur": 1.155,
+   "t_final_est": [
+    5.75,
+    6.91
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    125,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "빨간 원통 쿨러에 병이 꽂힌 근접(샷 78.91~82.58)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 7,
+   "line": "O4",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 30.05,
+   "audio_dur": 1.75,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    30.05,
+    31.8
+   ],
+   "ss": 30.05,
+   "dur": 1.75,
+   "t_final_est": [
+    6.91,
+    8.66
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    695,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "늦게 온 창업자가 얼음 봉지를 들고 들어와 말함(말하는 본인, 샷 28.43~31.83)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 8,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 130.07,
+   "audio_dur": 2.042,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    130.07,
+    132.112
+   ],
+   "ss": 130.07,
+   "dur": 2.042,
+   "t_final_est": [
+    8.66,
+    10.7
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자가 'KEVIN' 쿨러 샘플을 들고 말함(말하는 본인, 샷 130.06~132.13)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 9,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 132.112,
+   "audio_dur": 1.802,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    132.112,
+    133.914
+   ],
+   "ss": 132.112,
+   "dur": 1.802,
+   "t_final_est": [
+    10.7,
+    12.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "키 큰 창업자가 듣고 있음(원본 반응 컷 — 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 10,
+   "line": "O5",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 133.914,
+   "audio_dur": 2.486,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    133.914,
+    136.4
+   ],
+   "ss": 133.914,
+   "dur": 2.486,
+   "t_final_est": [
+    12.5,
+    14.99
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자가 이어 말함(샷 133.93~136.74)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 11,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 136.76,
+   "audio_dur": 3.227,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    136.76,
+    139.987
+   ],
+   "ss": 136.76,
+   "dur": 3.227,
+   "t_final_est": [
+    14.99,
+    18.22
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "키 큰 창업자가 웃으며 받아침(말하는 본인, 샷 136.74~140.01)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 12,
+   "line": "O6",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 139.987,
+   "audio_dur": 1.213,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    139.987,
+    141.2
+   ],
+   "ss": 139.987,
+   "dur": 1.213,
+   "t_final_est": [
+    18.22,
+    19.43
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    695,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "무대 와이드 — 창업자가 투자자 말투를 흉내(샷 140.01~142.14)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 13,
+   "line": "N3",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    142.3,
+    144.48
+   ],
+   "ss": 142.3,
+   "dur": 2.18,
+   "t_final_est": [
+    19.43,
+    21.61
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    445,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자가 쿨러를 무릎에 두고 듣는 얼굴(샷 142.14~145.05)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 14,
+   "line": "O7",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 160.2,
+   "audio_dur": 1.975,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    160.2,
+    162.175
+   ],
+   "ss": 160.2,
+   "dur": 1.975,
+   "t_final_est": [
+    21.61,
+    23.59
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    245,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "남색 정장 투자자가 질문(말하는 본인, 샷 160.09~162.20)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 15,
+   "line": "O7",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 162.175,
+   "audio_dur": 1.869,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    162.175,
+    164.044
+   ],
+   "ss": 162.175,
+   "dur": 1.869,
+   "t_final_est": [
+    23.59,
+    25.45
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "투자자석 쪽 와이드(원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 16,
+   "line": "O7",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 164.044,
+   "audio_dur": 1.336,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    164.044,
+    165.38
+   ],
+   "ss": 164.044,
+   "dur": 1.336,
+   "t_final_est": [
+    25.45,
+    26.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "짧은 머리 창업자가 '끔찍해요'(말하는 본인, 샷 164.06~165.40)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 17,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    176.6,
+    177.598
+   ],
+   "ss": 176.6,
+   "dur": 0.998,
+   "t_final_est": [
+    26.79,
+    27.79
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "짧은 머리 창업자가 원가를 하나씩 설명(샷 176.~177.98)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 18,
+   "line": "N5",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    181.0,
+    182.182
+   ],
+   "ss": 181.0,
+   "dur": 1.182,
+   "t_final_est": [
+    27.79,
+    28.97
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자 무대 중간 샷(샷 180.28~183.65)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 19,
+   "line": "O9",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 185.6,
+   "audio_dur": 0.833,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    185.6,
+    186.433
+   ],
+   "ss": 185.6,
+   "dur": 0.833,
+   "t_final_est": [
+    28.97,
+    29.8
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "짧은 머리 창업자 근접(말하는 본인, 샷 184.99~186.45)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 20,
+   "line": "O9",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 186.433,
+   "audio_dur": 1.397,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    186.433,
+    187.83
+   ],
+   "ss": 186.433,
+   "dur": 1.397,
+   "t_final_est": [
+    29.8,
+    31.2
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    365,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자가 듣다가 '만드는 데요?'(샷 186.45~187.85 — 앞 1초는 듣는 얼굴, 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 21,
+   "line": "O10",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 382.45,
+   "audio_dur": 2.11,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    382.45,
+    384.56
+   ],
+   "ss": 382.45,
+   "dur": 2.11,
+   "t_final_est": [
+    31.2,
+    33.31
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    355,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자(말하는 본인, 샷 382.45~384.58)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 22,
+   "line": "O12",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 397.55,
+   "audio_dur": 1.062,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    397.55,
+    398.612
+   ],
+   "ss": 397.55,
+   "dur": 1.062,
+   "t_final_est": [
+    33.31,
+    34.37
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    355,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "대머리 투자자 듣는 얼굴(원본 반응 컷 — 원본 편집 그대로)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 23,
+   "line": "O12",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 398.612,
+   "audio_dur": 1.228,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    398.612,
+    399.84
+   ],
+   "ss": 398.612,
+   "dur": 1.228,
+   "t_final_est": [
+    34.37,
+    35.6
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    405,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "남색 정장 투자자가 말함(말하는 본인, 샷 398.63~399.87)",
+   "audio": "원본 소리(원음)"
+  },
+  {
+   "i": 24,
+   "line": "N7",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    551.0,
+    551.896
+   ],
+   "ss": 551.0,
+   "dur": 0.896,
+   "t_final_est": [
+    35.6,
+    36.5
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    475,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자가 고개 숙여 인사하고 돌아섬(샷 550.88~553.29)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 25,
+   "line": "N7",
+   "kind": "나레",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": true,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    553.4,
+    554.424
+   ],
+   "ss": 553.4,
+   "dur": 1.024,
+   "t_final_est": [
+    36.5,
+    37.52
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    545,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "두 창업자가 복도로 걸어 나감(샷 553.29~560.03)",
+   "audio": "원본 소리 끔 + TTS"
+  },
+  {
+   "i": 26,
+   "line": "O13",
+   "kind": "원음",
+   "src": "ULws5gyPTHY.mp4",
+   "mute": false,
+   "audio_src": "ULws5gyPTHY_audio.m4a",
+   "audio_ss": 562.0,
+   "audio_dur": 1.72,
+   "url": "https://www.youtube.com/watch?v=ULws5gyPTHY",
+   "src_orig_span": [
+    562.0,
+    563.72
+   ],
+   "ss": 562.0,
+   "dur": 1.72,
+   "t_final_est": [
+    37.52,
+    39.24
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    525,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.974,
+   "ours": "퇴장 인터뷰 — 키 큰 창업자가 말함(말하는 본인, 샷 560.16~563.83)",
+   "audio": "원본 소리(원음)"
+  }
+ ],
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/12편_ChillSystems/src",
+ "effects": [
+  {
+   "line": "O1",
+   "kind": "red_circle",
+   "at": [
+    589,
+    887
+   ],
+   "size": 430,
+   "stroke": 11,
+   "t": [
+    0.0,
+    0.615
+   ],
+   "how": "target",
+   "target": "object",
+   "target_what": "분홍 Chill 쿨러의 'Chill' 로고(원본 301.6초 프레임 sheet/hook_301.6.jpg 격자 — 로고 상자 원본 x 880~1220·y 370~560)",
+   "why": "foreignshowshow 0초 빨간 실선 원(QMJ 0.000~0.533, 첫 컷과 같이 사라짐) — 벤치 Spark 0초가 같은 제품 컷이라 물건 원(벤치 8편 중 3편이 물건 원). 크기·선은 rules 고정값",
+   "engine": "fx_place.fix 금지(red_circle 을 얼굴로 덮어씀, 7편과 같은 엔진 요청)"
+  },
+  {
+   "line": "O4",
+   "kind": "dashed_circle",
+   "at": [
+    560,
+    900
+   ],
+   "t": [
+    0.17,
+    1.77
+   ],
+   "how": "target",
+   "target": "person",
+   "radius": 300,
+   "target_what": "얼음 봉지를 든 늦게 온 창업자(사람 검출로 자리 계산 — fx_place, at 은 자리표)",
+   "why": "벤치 QMJ 9.27~11.53 기존 불편 사람 빨간 점선 원(컷 +0.17 등장)"
+  },
+  {
+   "line": "O4",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "불편 박자 빨강 번쩍(QMJ 11.2)"
+  },
+  {
+   "line": "O5",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "장면 넘김 초록 번쩍(QMJ 7.1)"
+  },
+  {
+   "line": "O9",
+   "kind": "arrow_pink_up",
+   "at": [
+    533,
+    1230
+   ],
+   "t": [
+    0.8,
+    2.6
+   ],
+   "how": "auto",
+   "why": "숫자 조각 분홍 위 화살표 — '37달러까지 갔어요'(QMJ 12.017~13.82)"
+  },
+  {
+   "line": "O9",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "숫자 와우 초록 번쩍"
+  },
+  {
+   "line": "O10",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "빨강",
+   "how": "auto",
+   "why": "결정(거절) 빨강 번쩍(QMJ 44.4)"
+  },
+  {
+   "line": "O13",
+   "kind": "flash",
+   "at": [
+    540,
+    960
+   ],
+   "t": [
+    0.0,
+    0.45
+   ],
+   "color": "초록",
+   "how": "auto",
+   "why": "결과 초록 번쩍(QMJ 45.7)"
+  }
+ ]
+}
