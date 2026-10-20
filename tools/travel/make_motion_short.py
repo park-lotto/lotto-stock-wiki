@@ -547,6 +547,54 @@ _V3 = {1: {"chips": ["인천 영종구 운서동"]},
            "labels": ["온수풀", "해물짬뽕", "누워서 일출", "갈대밭 산책"]}}
 
 
+# 카드 아래 '실제 후기 댓글 + 손님 사진' (사장님 10-20 "영상 아래쪽에 댓글이랑 사진들 있음 보여주면 좋을듯")
+# 사진 고르기 = travel_scene.scene_photos(그 장면이 실제로 보이는 손님 사진), 문구 = photo_quotes(원문 글자 그대로 검사)
+_COMMENT_KEYS = {1: (["온수풀", "인피니티"], "야외 인피니티 온수풀"),
+                 2: (["일출", "해돋이"], "객실 창밖 바다나 일출"),
+                 3: (["짬뽕"], "룸서비스 해물짬뽕 그릇"),
+                 4: (["노천탕", "사우나"], "사우나 또는 노천탕"),
+                 5: (["번호표"], "체크인 번호표나 로비 대기", ["대기", "기다", "웨이팅", "줄이"], ["없었", "없어서", "바로 체크인"]),
+                 6: (["갈대"], "호텔 앞 갈대밭 산책로")}
+
+
+def stage_comments(sb, work, reviews_path, want=2):
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env", override=False)
+    from shopping_shorts import travel_scene as ts
+    work = Path(work)
+    reviews = json.loads(Path(reviews_path).read_text(encoding="utf-8"))
+    out_f = work / "comments.json"
+    out = json.loads(out_f.read_text(encoding="utf-8")) if out_f.exists() else {}
+    for s in _shots(sb):
+        n = str(s["n"])
+        if n in out or s["n"] not in _COMMENT_KEYS:
+            continue
+        keys, topic, must, avoid = (list(_COMMENT_KEYS[s["n"]]) + [None, None])[:4]
+        # 대본과 반대되는 후기(예: 대본 '대기 1시간' ↔ 후기 '웨이팅 없었어요')는 아예 후보에서 뺀다 — 실측 10-20 5줄
+        pool_ = [r for r in reviews if (not must or any(m in r.get("content", "") for m in must))
+                 and not any(x in r.get("content", "") for x in (avoid or []))]
+        sel = ts.scene_photos(pool_, keys, topic, work / ("cm_%s" % n), want=want)
+        if not sel:       # 손님이 찍지 않는 순간(번호표 등) — 사진 없이 후기 댓글만(핵심어 겹침·공감 순)
+            rv = sorted((r for r in pool_ if any(k in r.get("content", "") for k in keys)),
+                        key=lambda r: (-sum(k in r.get("content", "") for k in keys), -int(r.get("likes") or 0)))[:want]
+            sel = [{"path": None, "review": r} for r in rv]
+        qs = ts.photo_quotes([x["review"] for x in sel], keys, topic)
+        out[n] = [{"photo": x.get("path"), "quote": q, "rating": x["review"].get("rating")} for x, q in zip(sel, qs) if q]
+        out_f.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+        print("%s줄 사진 %d · 댓글 %s" % (n, sum(1 for x in out[n] if x["photo"]), [x["quote"] for x in out[n]]), flush=True)
+
+
+def _fit_clip(src, dst, need):
+    """Veo 4초 클립이 그 줄보다 짧으면 그 줄 길이에 맞춰 느리게(멈춤 방지). 길면 그대로(줄 끝에서 잘린다)."""
+    have = _dur(src)
+    if need <= have - 0.05:
+        shutil.copy(src, dst)
+        return
+    k = need / have + 0.03
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", "setpts=%.4f*PTS" % k, "-an", "-c:v", "libx264",
+                    "-crf", "16", "-pix_fmt", "yuv420p", str(dst)], check=True)
+
+
 def stage_build3(sb, work):
     from shopping_shorts import video_assemble as va
     sb, work = Path(sb), Path(work)
@@ -563,6 +611,8 @@ def stage_build3(sb, work):
     for f in ("whoosh.wav", "pop.wav", "dung.wav", "tick.wav"):
         shutil.copy(SFX / f, a / f)
     disc = va.disclosure_layer_png({"disclosure": {"ad": True, "ai": True, "source": "여기어때"}}, str(a / "disclosure.png"))
+    cf = work / "comments.json"
+    comments = json.loads(cf.read_text(encoding="utf-8")) if cf.exists() else {}
     e = html.escape
     body, js, sfx, tl, auds = [], [], [], [], []
     t = 0.0
@@ -571,7 +621,7 @@ def stage_build3(sb, work):
         words, dur = v["words"], v["dur"]
         end = t + dur + GAP + (0.6 if i == n - 1 else 0.0)
         g = _V3.get(s["n"], {})
-        shutil.copy(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i))
+        _fit_clip(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i), end - t)
         shutil.copy(work / v["mp3"], a / v["mp3"])
         auds.append('<audio id="v%d" src="assets/%s" data-start="%.3f" data-duration="%.3f" data-track-index="10" data-volume="1"></audio>'
                     % (i, v["mp3"], t, dur))
@@ -654,6 +704,20 @@ def stage_build3(sb, work):
                 js.append('(function(){var o={v:0},el=document.getElementById("cn%d");tl.to(o,{v:%d,duration:0.55,ease:"power3.out",'
                           'onUpdate:function(){el.textContent=Math.round(o.v)}},%.3f);})();' % (j, vv, tj + 0.05))
                 sfx.append((tj, "tick.wav", 0.2))
+        cms = comments.get(str(s["n"])) or []
+        if cms:     # 카드 아래 손님 사진 + 후기 댓글 — 컷 시작 0.4초부터 컷 끝까지, 줄마다 0.45초 간격
+            tcm = t + 0.4
+            rows = []
+            for j, c in enumerate(cms[:2]):
+                th = ('<img class="th" src="assets/%s">' % _img(c["photo"], a / ("cm_%d_%d.jpg" % (i, j)), 320)) if c.get("photo")                     else '<span class="th qi">“</span>'
+                star = ("★ %s · " % c["rating"]) if c.get("rating") else ""
+                rows.append('<div class="cm" id="cm%d_%d">%s<div class="bx"><p class="q">%s</p><small>%s실제 투숙객 후기 · 여기어때</small></div></div>'
+                            % (i, j, th, e(c["quote"]), e(star)))
+                js.append('tl.fromTo("#cm%d_%d",{opacity:0,x:60,filter:"blur(6px)"},{opacity:1,x:0,filter:"blur(0px)",duration:0.32,ease:"power3.out"},%.3f);'
+                          % (i, j, tcm + j * 0.45))
+                sfx.append((tcm + j * 0.45 - 0.068, "pop.wav", 0.16))
+            body.append('<div id="cms%d" class="clip cmts" data-start="%.3f" data-duration="%.3f" data-track-index="6">%s</div>'
+                        % (i, tcm, end - tcm, "".join(rows)))
         tl.append({"n": s["n"], "t": t, "dur": dur, "end": end, "split": t, "caps": caps, "emph": em,
                    "probe": [200, 470, "orange"]})
         t = end
@@ -676,7 +740,7 @@ _PAGE3 = """<!doctype html>
 html,body{margin:0;background:%(cr)s}
 #root{position:relative;width:100%%;height:100%%;overflow:hidden;background:%(cr)s}
 .clip{position:absolute}
-.card{left:90px;top:500px;width:900px;height:1060px;object-fit:cover;border-radius:36px;box-shadow:0 28px 60px rgba(40,25,10,.28);z-index:1}
+.card{left:90px;top:500px;width:900px;height:940px;object-fit:cover;border-radius:36px;box-shadow:0 28px 60px rgba(40,25,10,.28);z-index:1}
 .card.small{left:240px;top:430px;width:600px;height:720px}
 .head{left:0;right:0;top:0;height:460px;z-index:3}
 .head .ln{position:absolute;left:70px;right:70px;top:235px;text-align:center;font-family:"PretendardX";font-size:80px;line-height:1.22;
@@ -686,13 +750,21 @@ html,body{margin:0;background:%(cr)s}
 .stamp{left:0;top:0;width:100%%;height:100%%;z-index:4;pointer-events:none}
 .stamp .sp{position:absolute;right:70px;top:468px;padding:12px 26px;border:6px solid %(or)s;border-radius:16px;color:%(or)s;
  font-family:"PretendardX";font-size:54px;background:rgba(246,241,234,.92);letter-spacing:-.02em}
-.chips{left:0;right:0;top:1590px;display:flex;justify-content:center;align-items:center;gap:22px;z-index:4}
+.chips{left:0;right:0;top:1335px;display:flex;justify-content:center;align-items:center;gap:22px;z-index:4}
 .chip{position:relative;display:inline-block;font-family:"PretendardX";font-size:50px;color:#16130f;background:#fff;
  padding:16px 34px;border-radius:999px;box-shadow:0 10px 24px rgba(40,25,10,.16)}
 .chip.old{color:#8b8279}
 .chip.old i{position:absolute;left:22px;right:22px;top:50%%;height:6px;margin-top:-3px;background:%(or)s;transform-origin:left center;display:block}
 .chip.new{background:%(or)s;color:#fff}
 .arr{font-family:"PretendardX";font-size:60px;color:%(or)s}
+.cmts{left:70px;right:70px;top:1470px;z-index:4;display:flex;flex-direction:column;gap:18px}
+.cm{display:flex;align-items:center;gap:20px;background:#fff;border-radius:26px;padding:16px 22px 16px 16px;box-shadow:0 10px 26px rgba(40,25,10,.13)}
+.cm .th{width:140px;height:140px;object-fit:cover;border-radius:18px;flex:none}
+.cm .qi{display:flex;align-items:center;justify-content:center;background:%(cr)s;color:%(or)s;font-family:"MyeongjoX";font-size:110px;line-height:1}
+.cm .bx{min-width:0}
+.cm .q{margin:0;font-family:"PretendardX";font-size:40px;line-height:1.25;color:#16130f;letter-spacing:-.02em;word-break:keep-all;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cm small{display:block;margin-top:6px;font-family:"PretendardX";font-size:26px;color:#9a9086}
 .chart{left:90px;right:90px;top:1190px;z-index:4;background:#fff;border-radius:32px;padding:30px 36px;box-shadow:0 20px 44px rgba(40,25,10,.18)}
 .chart .ct{font-family:"PretendardX";font-size:40px;color:#8b8279;margin-bottom:14px}
 .row{display:flex;align-items:center;gap:18px;height:74px}
@@ -724,14 +796,14 @@ def stage_mix(work):
     work = Path(work)
     raw, out = work / "raw.mp4", work / "final.mp4"
     fc = ("[0:a]asplit=2[v][k];[1:a]volume=0.30[m];"
-          "[m][k]sidechaincompress=threshold=0.025:ratio=8:attack=15:release=350:makeup=1[md];"
+          "[m][k]sidechaincompress=threshold=0.012:ratio=10:attack=15:release=350:makeup=1[md];"
           "[v][md]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-stream_loop", "-1", "-i", str(BGM),
                     "-filter_complex", fc, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k",
                     "-ar", "48000", "-shortest", "-movflags", "+faststart", str(out)], check=True)
     # 덕킹 실측용 — 같은 설정으로 배경음만 뽑아 둔다(검사가 말할 때·쉴 때 크기를 잰다)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-stream_loop", "-1", "-i", str(BGM), "-filter_complex",
-                    "[0:a]anull[k];[1:a]volume=0.30[m];[m][k]sidechaincompress=threshold=0.025:ratio=8:attack=15:release=350:makeup=1[a]",
+                    "[0:a]anull[k];[1:a]volume=0.30[m];[m][k]sidechaincompress=threshold=0.012:ratio=10:attack=15:release=350:makeup=1[a]",
                     "-map", "[a]", "-t", "%.2f" % _dur(raw), str(work / "bgm_ducked.wav")], check=True)
     print("완성", out)
 
@@ -827,6 +899,8 @@ if __name__ == "__main__":
         sys.exit(0 if stage_check(sys.argv[2]) else 1)
     elif st == "voice":
         stage_voice(sys.argv[2], sys.argv[3], *(float(x) for x in sys.argv[4:5]))
+    elif st == "comments":
+        stage_comments(sys.argv[2], sys.argv[3], sys.argv[4])
     elif st == "build3":
         stage_build3(sys.argv[2], sys.argv[3])
     elif st == "build2":
