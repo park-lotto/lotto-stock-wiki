@@ -17317,3 +17317,4 @@
    238 PC 쿠키 지워지면 같은 PC도 막힘(윤주홍·황선희) — 같은 PC 자동 · 주인 shopping_shorts/store.py:Store._replaceable_slot
    243 서버 디스크 정리 기준 확장(7일 넘은 완료·30일 넘은 검토대기 작업의 · 주인 tools/disk_janitor.py:plan
 [2026-10-20 16:57:35] ■ 끝 rc=0
+[2026-10-20 17:57:01] ▶ tools\live_check.py --all
