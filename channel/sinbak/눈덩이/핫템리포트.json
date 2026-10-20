@@ -13,7 +13,7 @@
    "site": "youtube.com",
    "depth": 1,
    "from": "vLcKevaKfNI",
-   "done": false,
+   "done": true,
    "found": 1
   },
   "https://www.tiktok.com/@pedroviturbe12": {
@@ -94,7 +94,7 @@
    "site": "youtube.com",
    "depth": 1,
    "from": "RWS43GF1A_U",
-   "done": false,
+   "done": true,
    "found": 1
   },
   "https://www.tiktok.com/@_jrat": {
@@ -112,7 +112,7 @@
    "site": "youtube.com",
    "depth": 1,
    "from": "RWS43GF1A_U",
-   "done": false,
+   "done": true,
    "found": 1
   },
   "https://www.facebook.com/affordasale": {
@@ -130,7 +130,7 @@
    "site": "youtube.com",
    "depth": 1,
    "from": "RWS43GF1A_U",
-   "done": false,
+   "done": true,
    "found": 1
   },
   "https://www.youtube.com/channel/UCsf6zMC7kGGbdMXyex3Fa0g": {
@@ -139,7 +139,7 @@
    "site": "youtube.com",
    "depth": 1,
    "from": "RWS43GF1A_U",
-   "done": false,
+   "done": true,
    "found": 1
   },
   "https://www.facebook.com/supercarblondie": {
@@ -167,6 +167,114 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC2xrLnFoc8RbAkxVUi_VxGA": {
+   "name": "Mỗi Ngày Một Chút",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "yL-dznQzRA4",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/yet.melody": {
+   "name": "yet.melody",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "yL-dznQzRA4",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/shinsue_sue/": {
+   "name": "@shinsue_sue",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 2,
+   "from": "yL-dznQzRA4",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@ukusafunny8": {
+   "name": "@ukusafunny8",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "yL-dznQzRA4",
+   "done": true,
+   "found": 2
+  },
+  "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA": {
+   "name": "WholesomeEspanol",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "yL-dznQzRA4",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCK-277y3s6cqNF3cFQtJrig": {
+   "name": "月光夫妇",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/upsoclsupermommy": {
+   "name": "upsoclsupermommy",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/JustChina2023": {
+   "name": "JustChina2023",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/trendinginchina": {
+   "name": "trendinginchina",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCDshKkw606gAh_NDtWLK1Ew": {
+   "name": "다원노트",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/daaaae_y/": {
+   "name": "@daaaae_y",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCAh1nMVL6yhmtokXJxPig_Q": {
+   "name": "Neulbos 늘보스",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "k7v-iPQFPyY",
+   "done": false,
    "found": 1
   }
  },
@@ -1704,6 +1812,774 @@
      "https://www.tiktok.com/@_jrat/video/7198608137962786091",
      1,
      "The only way to get in contact with me is on instagram @_ ..."
+    ]
+   ]
+  },
+  "Mb-kPbaBZmw": {
+   "id": "Mb-kPbaBZmw",
+   "title": "My brother went into his room without a word, and my mother's regret after watching the CCTV footage",
+   "views": 7800000,
+   "channel": "지구촌픽",
+   "from_channel": "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A",
+   "orig": true,
+   "lang": "ko",
+   "ko_chars": 7,
+   "text": "하나, 총선을 잃은",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/TcWOrefDaeg",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC3f7gwTC9pDfC_HpOVCUx8g",
+     "name": "FurNest",
+     "views": 7861,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This boy longs to get his mother's love. #shorts #funny #cute"
+    },
+    {
+     "href": "https://www.facebook.com/DMzijin/posts/%E4%BA%8C%E8%83%8E%E5%AE%B6%E5%BA%AD%E6%9C%80%E6%89%8E%E5%BF%83%E7%9A%84%E4%B8%80%E5%B9%95%E7%9B%A3%E6%8E%A7%E6%8B%8D%E4%B8%8B%E5%85%A8%E7%A8%8B%E5%AA%BD%E5%AA%BD%E7%9C%8B%E5%AE%8C%E7%95%B6%E5%A0%B4%E5%B4%A9%E6%BD%B0%E5%90%8E%E6%82%94%E4%B8%80%E5%AE%9A%E8%A6%81%E5%96%84%E5%BE%85%E5%A4%A7%E5%AF%B6%E6%87%82%E4%BA%8B%E7%9A%84%E5%AD%A9%E5%AD%90%E6%87%89%E8%A9%B2%E8%A2%AB%E6%BA%AB%E6%9F%94%E4%BB%A5%E5%BE%85/1045678501543391/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/DMzijin",
+     "name": "DMzijin",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "二胎家庭最扎心的一幕！監控拍下全程，媽媽看完當場崩潰后悔 ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/dxu4BdVS8ls",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCa7Eql8yhcQ_Z9J_ucMX-bg",
+     "name": "Yichen's Mom",
+     "views": 32748,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "现在想想都后怕，翻看监控这一幕真的太吓人了！还好有哥哥在#记录真实生活 #监控下的一幕 #兄妹日常"
+    },
+    {
+     "href": "https://www.tiktok.com/@panda_ondolbang/video/7681323762066754834",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@panda_ondolbang",
+     "name": "@panda_ondolbang",
+     "views": null,
+     "resolved": true,
+     "lang": "ko",
+     "title": "동생을 지켜낸 세상에서 가장 든든한 오빠 #감동 #가족 | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/vxauQDUVbFE",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCDq8DReBjIVxkzPaWReSzkw",
+     "name": "귀여움할당제",
+     "views": 23154148,
+     "resolved": true,
+     "lang": "ko",
+     "title": "평화로운 육아? 제 사전엔 없습니다 2탄"
+    },
+    {
+     "href": "https://www.facebook.com/DMzijin/posts/二胎家庭最扎心的一幕監控拍下全程媽媽看完當場崩潰后悔一定要善待大寶懂事的孩子應該被溫柔以待/1045678501543391/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/DMzijin",
+     "name": "DMzijin",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "二胎家庭最扎心的一幕！監控拍下全程，媽媽看完當場崩潰后悔 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/ChD0ypUPhAy/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/dongyenam/",
+     "name": "@dongyenam",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by dongyenam"
+    },
+    {
+     "href": "https://www.facebook.com/cungconkhonlon.tv/videos/-nhiều-lúc-đưa-con-đi-thang-máy-mà-tim-muốn-nhảy-ra-ngoài-vì-mấy-cái-tay-nhanh-h/1347823040218454/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/cungconkhonlon.tv",
+     "name": "cungconkhonlon.tv",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "📍 Nhiều lúc đưa con đi thang máy mà tim muốn nhảy ra ngoài ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQ64C9oEkX8/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/nana___2.2/",
+     "name": "@nana___2.2",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by nana___2.2"
+    },
+    {
+     "href": "https://www.facebook.com/61565810636600/videos/돈까스-사준대서-따라갔다가이슈-쇼츠-부부-웃긴영상-가족-shorts-릴스/1295265772750390/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61565810636600",
+     "name": "61565810636600",
+     "views": null,
+     "resolved": true,
+     "lang": "ko",
+     "title": "돈까스 사준대서 따라갔다가... #이슈 #쇼츠 #부부 #웃긴영상 ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/gC7Grt7x8Aw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCjwffAwr6QL3D9c1ziq9QTQ",
+     "name": "CyoraTY",
+     "views": 75566,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Her Sister Was About to Fall... Then This 1-Year-Old Took Over 🥹 #Shorts"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DaCLBpzhni0/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/chengdu_china/",
+     "name": "@chengdu_china",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by chengdu_china"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV13au26gEPH/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV13au26gEPH/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "当妈妈提前回家家里开始鸡飞狗跳_哔哩哔哩_bilibili"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/EcjJrOR2--0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCu7grPPP7hYiFLotzs61qFg",
+     "name": "晴晴和朗朗",
+     "views": 296798,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "哥哥在沙发上睡着了差点掉下来，没想到妹妹的一个举动好暖心……#生二胎的意义#兄妹日常#记录真实生活"
+    },
+    {
+     "href": "https://www.facebook.com/p/一宸妈妈-61591235084161/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/p/一宸妈妈-61591235084161/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "一宸妈妈"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/TcWOrefDaeg",
+     1,
+     "This boy longs to get his mother's love. #shorts #funny ..."
+    ],
+    [
+     "https://www.facebook.com/DMzijin/posts/%E4%BA%8C%E8%83%8E%E5%AE%B6%E5%BA%AD%E6%9C%80%E6%89%8E%E5%BF%83%E7%9A%84%E4%B8%80%E5%B9%95%E7%9B%A3%E6%8E%A7%E6%8B%8D%E4%B8%8B%E5%85%A8%E7%A8%8B%E5%AA%BD%E5%AA%BD%E7%9C%8B%E5%AE%8C%E7%95%B6%E5%A0%B4%E5%B4%A9%E6%BD%B0%E5%90%8E%E6%82%94%E4%B8%80%E5%AE%9A%E8%A6%81%E5%96%84%E5%BE%85%E5%A4%A7%E5%AF%B6%E6%87%82%E4%BA%8B%E7%9A%84%E5%AD%A9%E5%AD%90%E6%87%89%E8%A9%B2%E8%A2%AB%E6%BA%AB%E6%9F%94%E4%BB%A5%E5%BE%85/1045678501543391/",
+     1,
+     "二胎家庭最扎心的一幕！監控拍下全程，媽媽看完當場崩潰后悔 ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/dxu4BdVS8ls",
+     1,
+     "现在想想都后怕，翻看监控这一幕真的太吓人了！还好有哥哥在 ..."
+    ],
+    [
+     "https://www.tiktok.com/@panda_ondolbang/video/7681323762066754834",
+     1,
+     "동생을 지켜낸 세상에서 가장 든든한 오빠 #감동 #가족 | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/vxauQDUVbFE",
+     1,
+     "평화로운 육아? 제 사전엔 없습니다 2탄 - YouTube"
+    ],
+    [
+     "https://www.facebook.com/DMzijin/posts/二胎家庭最扎心的一幕監控拍下全程媽媽看完當場崩潰后悔一定要善待大寶懂事的孩子應該被溫柔以待/1045678501543391/",
+     1,
+     "二胎家庭最扎心的一幕！監控拍下全程，媽媽看完當場崩潰后悔 ..."
+    ],
+    [
+     "https://www.instagram.com/p/ChD0ypUPhAy/",
+     1,
+     "제품제공 #파크론 매트 여러장 깔지말고 거실에 딱 한장으로 ..."
+    ],
+    [
+     "https://www.facebook.com/cungconkhonlon.tv/videos/-nhiều-lúc-đưa-con-đi-thang-máy-mà-tim-muốn-nhảy-ra-ngoài-vì-mấy-cái-tay-nhanh-h/1347823040218454/",
+     1,
+     "📍 Nhiều lúc đưa con đi thang máy mà tim muốn nhảy ra ngoài ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DQ64C9oEkX8/",
+     1,
+     "요즘 제 알고리즘이 왜 이러죠? 😂 사하구 사는 엄마들이 많아서 ..."
+    ],
+    [
+     "https://www.facebook.com/61565810636600/videos/돈까스-사준대서-따라갔다가이슈-쇼츠-부부-웃긴영상-가족-shorts-릴스/1295265772750390/",
+     1,
+     "돈까스 사준대서 따라갔다가... #이슈 #쇼츠 #부부 #웃긴영상 ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/gC7Grt7x8Aw",
+     1,
+     "Her Sister Was About to Fall... Then This 1-Year-Old Took ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DaCLBpzhni0/",
+     1,
+     "Seeing her big sister feeling unwell, this 2-year-old's ..."
+    ],
+    [
+     "https://www.bilibili.com/video/BV13au26gEPH/",
+     1,
+     "当妈妈提前回家家里开始鸡飞狗跳_哔哩哔哩_bilibili"
+    ],
+    [
+     "https://www.youtube.com/shorts/EcjJrOR2--0",
+     1,
+     "The older brother fell asleep on the sofa and almost fell ..."
+    ],
+    [
+     "https://www.facebook.com/p/一宸妈妈-61591235084161/",
+     1,
+     "一宸妈妈"
+    ]
+   ]
+  },
+  "yL-dznQzRA4": {
+   "id": "yL-dznQzRA4",
+   "title": "3-year-old big brother steps up to comfort his crying baby sibling instead of mom",
+   "views": 4500000,
+   "channel": "지구촌픽",
+   "from_channel": "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "K.O.R.A.",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/eh6lMYJBMME",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC2xrLnFoc8RbAkxVUi_VxGA",
+     "name": "Mỗi Ngày Một Chút",
+     "views": 1340624,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Cậu bé đã giúp mẹ dỗ em theo cách riêng của mình ❤️"
+    },
+    {
+     "href": "https://www.facebook.com/yet.melody/videos/有被-温馨-到-/911881071617428/",
+     "hits": 3,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/yet.melody",
+     "name": "yet.melody",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "有被#温馨到💕 | Bow Bow ChaiHong | Facebook"
+    },
+    {
+     "href": "https://www.instagram.com/p/DJwfe2QT-tO/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/shinsue_sue/",
+     "name": "@shinsue_sue",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by shinsue_sue"
+    },
+    {
+     "href": "https://www.tiktok.com/@ukusafunny8/video/7684582253229296926",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ukusafunny8",
+     "name": "@ukusafunny8",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@ukusafunny8/video/7678221509646847262",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ukusafunny8",
+     "name": "@ukusafunny8",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/bIziYLmMaRs",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA",
+     "name": "WholesomeEspanol",
+     "views": 118982,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Malinterpretó a su madre #bondad"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/vNqwEEUwW8Q",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCZmL5K3xG8eKUjer9WYYBfA",
+     "name": "회사밖세연",
+     "views": 29182,
+     "resolved": true,
+     "lang": "ko",
+     "title": "아기들 안전 교육 하는 법(딸VS아들 반응 차이ㅋㅋ)"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DUuiLO1E-g9/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/ara_yido/",
+     "name": "@ara_yido",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by ara_yido"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/ETMMmVED5uw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC8kfC5zv1Mo_3DcBbhEIfqw",
+     "name": "정형외과TV [대한정형외과학회]",
+     "views": 280,
+     "resolved": true,
+     "lang": "ko",
+     "title": "[AI 영상 공모전] 51 안심하고 움직이세요"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DczXkGUmFaI/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/adorable_yjyj/",
+     "name": "@adorable_yjyj",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by adorable_yjyj"
+    },
+    {
+     "href": "https://www.facebook.com/comehomeeatrice2019/videos/求歌名很洗腦聽了莫名開心一定要搭配嘟嘟嘴才行好康插播留言抽餐卷留言抽餐卷留言抽餐卷快來留言吧-預計20201231-2359活動結束請按下方參加活動網站進入ht/421269225892103/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/comehomeeatrice2019",
+     "name": "comehomeeatrice2019",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "求歌名？ 很洗腦聽了莫名開心🤣 一定要搭配嘟嘟嘴才行😙😙 📢好 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=r7jLh2YCjeY",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC_K3V7PBemcjguTt54SgBWQ",
+     "name": "박성순",
+     "views": 3355,
+     "resolved": true,
+     "lang": "ko",
+     "title": "UHD 2026.09.01 공덕동성당 남상근(라파엘)주임신부님 송별미사"
+    },
+    {
+     "href": "https://www.tiktok.com/@baby.funny89/video/7683413803287006495",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@baby.funny89",
+     "name": "@baby.funny89",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=twNw7pnNVSc",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCHVsFjUcyCCm--p0HFzxWuQ",
+     "name": "올숏 (KBS All Shorts)",
+     "views": 61214,
+     "resolved": true,
+     "lang": "ko",
+     "title": "[#살림하는남자들] 트로트 부부가 살림남에! 은가은♥️박현호 부부의 일상 #은가은 #박현호  | KBS 260725 방송"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=cmmiSu5PnNQ",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCpZBtwGoqEYZp7FAAjQ2ZSg",
+     "name": "Dr. chicchoc",
+     "views": 5039,
+     "resolved": true,
+     "lang": "ko",
+     "title": "[육아 Vlog] 소아과의사의 8개월아기 독박육아 하루..!! 😭| 8개월아기 발달&놀아주기, 이유식&목욕&수면 꿀팁 공개!!"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/eh6lMYJBMME",
+     3,
+     "The little boy helped his mom soothe his baby brother in his ..."
+    ],
+    [
+     "https://www.facebook.com/yet.melody/videos/有被-温馨-到-/911881071617428/",
+     3,
+     "有被#温馨到💕 | Bow Bow ChaiHong | Facebook"
+    ],
+    [
+     "https://www.instagram.com/p/DJwfe2QT-tO/",
+     3,
+     "5월근황. 정신없이 지내다보니 벌써 5월. 아이들이 커갈수록 ..."
+    ],
+    [
+     "https://www.tiktok.com/@ukusafunny8/video/7684582253229296926",
+     2,
+     "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    ],
+    [
+     "https://www.tiktok.com/@ukusafunny8/video/7678221509646847262",
+     2,
+     "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/bIziYLmMaRs",
+     2,
+     "He Misunderstood His Mom #kindness - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/vNqwEEUwW8Q",
+     1,
+     "How to Teach Baby Safety (The difference in reaction between ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DUuiLO1E-g9/",
+     1,
+     "아라이도 in 제주🌱 | 💙잡기놀이 증말 씐나게 한바탕 했다 ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/ETMMmVED5uw",
+     1,
+     "AI 영상 공모전] 51 안심하고 움직이세요 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DczXkGUmFaI/",
+     1,
+     "오빠만 보면 함박웃음 지어주는 유주😊 둘이 서로 너무 좋아하는 ..."
+    ],
+    [
+     "https://www.facebook.com/comehomeeatrice2019/videos/求歌名很洗腦聽了莫名開心一定要搭配嘟嘟嘴才行好康插播留言抽餐卷留言抽餐卷留言抽餐卷快來留言吧-預計20201231-2359活動結束請按下方參加活動網站進入ht/421269225892103/",
+     1,
+     "求歌名？ 很洗腦聽了莫名開心🤣 一定要搭配嘟嘟嘴才行😙😙 📢好 ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=r7jLh2YCjeY",
+     1,
+     "UHD 2026.09.01 공덕동성당 남상근(라파엘)주임신부님 송별미사 ..."
+    ],
+    [
+     "https://www.tiktok.com/@baby.funny89/video/7683413803287006495",
+     1,
+     "BalliBotMogis #TrendingReels #TrendingReels #Foryoupage ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=twNw7pnNVSc",
+     1,
+     "살림하는남자들] 트로트 부부가 살림남에! 은가은♥️박현호 ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=cmmiSu5PnNQ",
+     1,
+     "YouTube"
+    ]
+   ]
+  },
+  "k7v-iPQFPyY": {
+   "id": "k7v-iPQFPyY",
+   "title": "What a 3-month-old baby who wouldn't give up finally achieved",
+   "views": 4200000,
+   "channel": "지구촌픽",
+   "from_channel": "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A",
+   "orig": true,
+   "lang": "ko",
+   "ko_chars": 5,
+   "text": "너를 사랑해",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/cHYOWIqt_RE",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCK-277y3s6cqNF3cFQtJrig",
+     "name": "月光夫妇",
+     "views": 29,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "翻相册看到三个月翻身的视频才发现，我的宝宝尝试了那么多次才成功，她三个月都这么棒 我们又有什么理由不努力？#宝宝翻身 #人类幼崽 #带娃日常 #育儿经验分享"
+    },
+    {
+     "href": "https://www.facebook.com/upsoclsupermommy/videos/where-ya-at-babythis-little-one-never-gets-tired-of-playing-with-his-dad-through/1394107459215105/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/upsoclsupermommy",
+     "name": "upsoclsupermommy",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Where ya at, baby? This little one never gets tired of ..."
+    },
+    {
+     "href": "https://www.facebook.com/JustChina2023/videos/温馨时刻-父亲教孩子第一次翻身-萌娃太聪明可愛了baby/1077144940890651/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/JustChina2023",
+     "name": "JustChina2023",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "温馨时刻父亲教孩子第一次翻身萌娃太聪明可愛了#baby | China Walk"
+    },
+    {
+     "href": "https://www.facebook.com/trendinginchina/videos/a-3-month-old-baby-tried-to-roll-over-for-the-first-time-with-her-dads-help-fail/24513338811686504/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/trendinginchina",
+     "name": "trendinginchina",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "A 3-month-old baby tried to roll over for the first time ..."
+    },
+    {
+     "href": "https://m.youtube.com/shorts/bQLBb0YvASc",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCDshKkw606gAh_NDtWLK1Ew",
+     "name": "다원노트",
+     "views": 58613,
+     "resolved": true,
+     "lang": "ko",
+     "title": "눈 앞에서 했는데 아무도 목격하지 못한 아기의 첫 뒤집기 #shorts #쇼츠"
+    },
+    {
+     "href": "https://www.instagram.com/reel/B6zUffQnNm2/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/daaaae_y/",
+     "name": "@daaaae_y",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by daaaae_y"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=PS0hPHtMMmw",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCAh1nMVL6yhmtokXJxPig_Q",
+     "name": "Neulbos 늘보스",
+     "views": 996,
+     "resolved": true,
+     "lang": "ko",
+     "title": "북미 무료배송 🌎✨육아 필수템 아기 매트 (Feat. WunderKids 알집매트 BABY PLAYMAT)"
+    },
+    {
+     "href": "https://www.facebook.com/p/Kine-Frostmann-Lien-PhotographyFrostfoto-100057036416962/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/p/Kine-Frostmann-Lien-PhotographyFrostfoto-100057036416962/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Kine Frostmann Lien Photography/Frostfoto | Oslo"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=gSDVTS1-cyU",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC8y7Xa0E1Lo6PnVsu2KJbOA",
+     "name": "Don Diablo",
+     "views": 546798,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Don Diablo - Invincible (Theme From AFK Arena) | Official Music Video"
+    },
+    {
+     "href": "https://www.facebook.com/JustChina2023/videos/%E6%B8%A9%E9%A6%A8%E6%97%B6%E5%88%BB-%E7%88%B6%E4%BA%B2%E6%95%99%E5%AD%A9%E5%AD%90%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%BF%BB%E8%BA%AB-%E8%90%8C%E5%A8%83%E5%A4%AA%E8%81%AA%E6%98%8E%E5%8F%AF%E6%84%9B%E4%BA%86baby/1077144940890651/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/JustChina2023",
+     "name": "JustChina2023",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "温馨时刻父亲教孩子第一次翻身萌娃太聪明可愛了#baby | China Walk"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DIlJq9_pBbn/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/dongfangle1999/",
+     "name": "@dongfangle1999",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by dongfangle1999"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcaQ8epy0CP/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/chaaaan_young/",
+     "name": "@chaaaan_young",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by chaaaan_young"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/eWTCr4dBH6g",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCeDzzjnMTRgHWfWyEUCBgXA",
+     "name": "桐宝珩宝",
+     "views": 2479,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "人类幼崽的腿，杀伤性极强，挨一脚都不得了#爸爸带娃 #亲子日常 #人类幼崽迷惑行为大赏 #宝宝的腿部力量"
+    },
+    {
+     "href": "https://www.instagram.com/reel/C-P8faShOBw/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/hunter_fwang/",
+     "name": "@hunter_fwang",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by hunter_fwang"
+    },
+    {
+     "href": "https://www.tiktok.com/@shopmebimsua2023/video/7392172242064510226",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@shopmebimsua2023",
+     "name": "@shopmebimsua2023",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ngày nào con cũng tập luyện chăm chỉ để sau còn múa cho đẹp ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/cHYOWIqt_RE",
+     2,
+     "256 Going through my photo album and seeing the video of her ..."
+    ],
+    [
+     "https://www.facebook.com/upsoclsupermommy/videos/where-ya-at-babythis-little-one-never-gets-tired-of-playing-with-his-dad-through/1394107459215105/",
+     2,
+     "Where ya at, baby? This little one never gets tired of ..."
+    ],
+    [
+     "https://www.facebook.com/JustChina2023/videos/温馨时刻-父亲教孩子第一次翻身-萌娃太聪明可愛了baby/1077144940890651/",
+     2,
+     "温馨时刻父亲教孩子第一次翻身萌娃太聪明可愛了#baby | China Walk"
+    ],
+    [
+     "https://www.facebook.com/trendinginchina/videos/a-3-month-old-baby-tried-to-roll-over-for-the-first-time-with-her-dads-help-fail/24513338811686504/",
+     2,
+     "A 3-month-old baby tried to roll over for the first time ..."
+    ],
+    [
+     "https://m.youtube.com/shorts/bQLBb0YvASc",
+     2,
+     "눈 앞에서 했는데 아무도 목격하지 못한 아기의 첫 뒤집기 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/B6zUffQnNm2/",
+     2,
+     "아침부터 저러더니 하루 종일 엎드려뻗쳐하시는분ㅋㅋㅋㅋㅋ ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=PS0hPHtMMmw",
+     2,
+     "북미 무료배송 육아 필수템 아기 매트 (Feat. WunderKids 알집 ..."
+    ],
+    [
+     "https://www.facebook.com/p/Kine-Frostmann-Lien-PhotographyFrostfoto-100057036416962/",
+     1,
+     "Kine Frostmann Lien Photography/Frostfoto | Oslo"
+    ],
+    [
+     "https://www.youtube.com/watch?v=gSDVTS1-cyU",
+     1,
+     "Don Diablo - Invincible (Theme From AFK Arena) | Official ..."
+    ],
+    [
+     "https://www.facebook.com/JustChina2023/videos/%E6%B8%A9%E9%A6%A8%E6%97%B6%E5%88%BB-%E7%88%B6%E4%BA%B2%E6%95%99%E5%AD%A9%E5%AD%90%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%BF%BB%E8%BA%AB-%E8%90%8C%E5%A8%83%E5%A4%AA%E8%81%AA%E6%98%8E%E5%8F%AF%E6%84%9B%E4%BA%86baby/1077144940890651/",
+     1,
+     "温馨时刻父亲教孩子第一次翻身萌娃太聪明可愛了#baby | China Walk"
+    ],
+    [
+     "https://www.instagram.com/reel/DIlJq9_pBbn/",
+     1,
+     "三个月的宝宝都这么努力，我们又有什么理由放弃呢？#baby #reels"
+    ],
+    [
+     "https://www.instagram.com/reel/DcaQ8epy0CP/",
+     1,
+     "감격스런 첫 뒤집기 기념 인스타 계정 생성했습니다 사랑스런 제 ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/eWTCr4dBH6g",
+     1,
+     "人类幼崽的腿，杀伤性极强，挨一脚都不得了#爸爸带娃#亲子日常 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/C-P8faShOBw/",
+     1,
+     "내 아들하면 코 낮아짐"
+    ],
+    [
+     "https://www.tiktok.com/@shopmebimsua2023/video/7392172242064510226",
+     1,
+     "Ngày nào con cũng tập luyện chăm chỉ để sau còn múa cho đẹp ..."
     ]
    ]
   }
