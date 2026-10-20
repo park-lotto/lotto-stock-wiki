@@ -155,3 +155,17 @@ def test_alignment_not_normalized_alignment():
             "normalized_alignment": _align("나", [0.0], [0.4])}
     assert tts_timestamps.words_from_alignment(data.get("alignment"))[0]["word"] == "가"
     assert json.dumps(data)  # 구조가 dict인 것만 확인(스키마 문서화)
+
+
+def test_words_japanese_are_per_character():
+    """일본어 alignment → 글자 하나 = 단어 하나(문장부호·공백 제외). 관제 248."""
+    s = "安い、です。"
+    a = _align(s, [i * 0.1 for i in range(len(s))], [i * 0.1 + 0.1 for i in range(len(s))])
+    w = tts_timestamps.words_from_alignment(a)
+    assert [x["word"] for x in w] == ["安", "い", "で", "す"]
+    assert w[0]["start"] == 0.0 and w[2]["start"] == pytest.approx(0.3)
+
+
+def test_words_korean_still_whitespace():
+    a = _align("가나 다", [0.0, 0.1, 0.2, 0.3], [0.1, 0.2, 0.3, 0.4])
+    assert [x["word"] for x in tts_timestamps.words_from_alignment(a)] == ["가나", "다"]

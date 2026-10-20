@@ -21,11 +21,19 @@
 ★Pillow만 쓴다 — fontTools는 requirements.txt에 없다(서버 의존성을 늘리지 않기로).
 """
 import sys
+from pathlib import Path
 
 from PIL import ImageFont
 
+# 일본어 폴백 폰트(관제 248) — 기본 자막폰트(NanumGothic)가 일본어를 못 그릴 때만 쓴다(목록 fonts.json 엔 안 넣는다).
+JA_FALLBACK_FONT = Path(__file__).parent / "assets" / "NotoSansJP-Bold.ttf"
+
 # 어떤 한글 폰트에도 글리프가 없는 사적사용영역(PUA) 문자 — .notdef 표본을 얻는 자리.
-_PUA = ("", "")
+# 2026-10-21(관제 248): PUA 에 글리프가 있는 폰트(Jalnan2·JalnanGothic·Pretendard 등)는 이 쌍이 서로 달라
+#   "판정 불가 → 정상"이 되어 일본어 두부를 못 잡았다 → 후보 쌍을 늘린다(미할당 U+0378·0379, 비문자 U+FFFE·FFFF).
+#   순서대로 마스크가 같은 첫 쌍을 .notdef 표본으로 쓴다.
+_NOTDEF_PAIRS = (("\uf8ff", "\ue05c"), ("\u0378", "\u0379"), ("\ufffe", "\uffff"))
+_PUA = _NOTDEF_PAIRS[0]      # 종전 이름(외부 참조 호환)
 
 # 고른 폰트를 버리고 기본폰트로 되돌리는 문턱(못 그리는 글자 비율).
 #
@@ -55,9 +63,14 @@ def missing_glyphs(font_path, text):
             m = f.getmask(c)
             return (m.size, bytes(m))
 
-        ref, ref2 = mask(_PUA[0]), mask(_PUA[1])
-        if ref != ref2:
-            return ""  # PUA에 글리프가 있는 폰트 — 이 방법으로는 판정 못 한다
+        ref = None
+        for a, b in _NOTDEF_PAIRS:
+            ma = mask(a)
+            if ma == mask(b):
+                ref = ma
+                break
+        if ref is None:
+            return ""  # 어느 후보 쌍도 같지 않다 — 이 방법으로는 판정 못 한다(정상 간주, 종전과 같다)
         return "".join(c for c in text if mask(c) == ref)
     except Exception as e:  # noqa: BLE001 — 판정 실패가 렌더를 막으면 안 된다
         print(f"[폰트] 글리프 판정 실패(정상으로 간주) {font_path}: {e!r}", file=sys.stderr)
@@ -151,3 +164,15 @@ def draw_text(d, xy, text, font, fill, anchor="la", size=None,
             d.text((start, y), w, font=font, fill=fill, anchor="l" + va, **sk)
             start += font.getlength(w)
         start += gap
+
+
+def fallback_font_for(text):
+    """이 문구가 기본폰트로 못 그릴 언어면 그 언어용 폴백 폰트 경로(str), 아니면 None.
+    지금은 일본어(script_translate.lang_of == 'ja')만 — assets/NotoSansJP-Bold.ttf."""
+    try:
+        from shopping_shorts.script_translate import lang_of
+        if lang_of(text) == "ja" and JA_FALLBACK_FONT.exists():
+            return str(JA_FALLBACK_FONT)
+    except Exception as e:  # noqa: BLE001 — 판정 실패가 렌더를 막으면 안 된다(종전 기본폰트)
+        print(f"[폰트] 언어 폴백 판정 실패(기본폰트): {e!r}", file=sys.stderr)
+    return None

@@ -139,3 +139,135 @@ def test_speech_cps_is_language_aware_and_narr_secs_uses_it():
     assert edit_plan.speech_cps(text=ko) == edit_plan.speech_cps(lang="ko")
     # 실측(2026-09-29 라이브, 같은 뜻 영어/한국어): 영어 5.0초·한국어 5.3초 — 추정은 ±25% 안에서 실제를 따라간다
     assert 4.0 <= edit_plan.narr_secs(en) <= 6.3 and 4.0 <= edit_plan.narr_secs(ko) <= 6.6
+
+
+# ── 일본어모드(2026-10-21 관제 248) ─────────────────────────────────────────
+JA = ["ダイソーに行ったら、これだけは絶対に買ってください。", "値段も安いのに使い道が多すぎます。", "今すぐチェックしてみてください。"]
+
+
+def test_lang_of_table():
+    lo = script_translate.lang_of
+    assert lo(KO[0]) == "ko"
+    assert lo(EN[0]) == "en"
+    assert lo(JA[0]) == "ja"
+    assert lo("AI") == "ko"                # 짧은 영문 토큰은 문장이 아니다
+    assert lo("") == "ko" and lo(None) == "ko"
+    assert lo("カタカナ") == "ja" and lo("漢字") == "ja"
+    assert lo("가격 1980円") == "ko"        # 한글이 있으면 한국어가 이긴다
+
+
+def test_lang_of_yen_is_ja():
+    assert script_translate.lang_of("1980円") == "ja"
+
+
+def test_translate_ja_keeps_line_count_and_order():
+    assert script_translate.translate(KO, "ja", call=_fake(JA)) == JA
+
+
+def test_translate_ja_rejects_line_without_kana_or_kanji():
+    bad = list(JA); bad[1] = "Very cheap and useful"
+    with pytest.raises(ValueError) as e:
+        script_translate.translate(KO, "ja", call=_fake(bad), tries=1)
+    assert "일본어가 아니에요" in str(e.value) and "일본어 변환에 실패" in str(e.value)
+
+
+def test_translate_ja_rejects_leftover_hangul():
+    bad = list(JA); bad[0] = "ダイソー 가면 買って"
+    with pytest.raises(ValueError) as e:
+        script_translate.translate(KO, "ja", call=_fake(bad), tries=1)
+    assert "한글" in str(e.value)
+
+
+def test_translate_ja_prompt_is_japanese_prompt():
+    seen = []
+    script_translate.translate(KO, "ja", call=lambda p, s: seen.append(p) or {"lines": list(JA)})
+    assert "Japanese" in seen[0] and "です・ます" in seen[0]
+
+
+def test_translate_already_japanese_not_translated_again():
+    calls = []
+    out = script_translate.translate(JA, "ja", call=lambda p, s: calls.append(1) or {"lines": ["x"] * 3})
+    assert out == JA and calls == []
+
+
+def test_translate_rejects_unknown_lang():
+    with pytest.raises(ValueError):
+        script_translate.translate(KO, "zh", call=_fake(JA))
+
+
+def test_job_lang_ja():
+    assert script_translate.job_lang({"given_script": "\n".join(JA)}) == "ja"
+    assert script_translate.job_lang({"edit_plan": {"lang": "ja"}, "given_script": "\n".join(KO)}) == "ja"
+    assert script_translate.job_lang({"given_script": "\n".join(KO)}) == "ko"
+
+
+def test_naturalize_skips_korean_stages_for_japanese():
+    out = narration_naturalize.naturalize_detail(JA[0], {"spoken_style": {"on": True, "intensity": 1.0}})
+    assert out["text"] == JA[0] and out["applied"] == {}
+
+
+def test_lang_voice_block_japanese_mode():
+    job_ja = {"given_script": "\n".join(JA), "edit_plan": {}}
+    r = appmod._lang_voice_block(job_ja, {"model_id": "ssfm-v30"})
+    assert r is not None and r.status_code == 422 and "일본어모드" in r.body.decode("utf-8")
+    from shopping_shorts import fish_tts
+    fish_id = fish_tts._MODEL_PREFIX + "s1"
+    assert fish_tts.is_fish(fish_id)
+    r2 = appmod._lang_voice_block(job_ja, {"model_id": fish_id})
+    assert r2 is not None and r2.status_code == 422 and "일본어모드" in r2.body.decode("utf-8")
+    assert appmod._lang_voice_block(job_ja, {"model_id": "eleven_v3"}) is None
+
+
+def test_speech_cps_japanese():
+    from shopping_shorts import edit_plan
+    assert edit_plan.speech_cps(lang="ja", norm=True) == edit_plan._JA_CHARS_PER_SEC == 6.8
+    assert edit_plan.speech_cps(lang="ja") == edit_plan._JA_RAW_CHARS_PER_SEC == 7.4
+    assert edit_plan.speech_cps(text=JA[0]) == edit_plan._JA_RAW_CHARS_PER_SEC
+    assert edit_plan.speech_cps(text=JA[0], norm=True) == edit_plan._JA_CHARS_PER_SEC
+
+
+def test_asr_language():
+    al = script_translate.asr_language
+    assert al(JA[0]) == "ja" and al(EN[0]) == "en" and al(KO[0]) == "ko" and al("") == "ko"
+
+
+def test_caption_tokens():
+    ct = script_translate.caption_tokens
+    assert ct("値段、安い。") == ["値", "段", "安", "い"]
+    assert ct(KO[0]) == KO[0].split()
+    assert ct(EN[0]) == EN[0].split()
+    assert ct("") == [] and ct(None) == []
+
+
+def test_foreign_helpers():
+    assert script_translate.is_japanese(JA[0]) and not script_translate.is_japanese(KO[0])
+    assert script_translate.is_foreign_sentence(JA[0]) and script_translate.is_foreign_sentence(EN[0])
+    assert not script_translate.is_foreign_sentence(KO[0])
+    assert script_translate.foreign_ratio(JA + KO[:1], "ja") == 0.75
+    assert script_translate.LANG_LABEL == {"en": "영어", "ja": "일본어", "ko": "한국어"}
+
+
+def test_api_script_translate_ja(client, monkeypatch):
+    c, st = client
+    st.add_customer_key(c.cid, "elevenlabs", "EL")
+    monkeypatch.setattr(script_translate.script_generate, "_call_json", lambda p, s: {"lines": list(JA)})
+    r = c.post("/api/script/translate", json={"lines": KO, "lang": "ja"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    from shopping_shorts import edit_plan
+    assert d["lines"] == JA and d["lang"] == "ja" and d["cps"] == edit_plan.speech_cps(lang="ja", norm=True)
+    assert "cps_en" not in d
+
+
+def test_api_script_translate_en_keeps_cps_en(client):
+    c, st = client
+    st.add_customer_key(c.cid, "elevenlabs", "EL")
+    d = c.post("/api/script/translate", json={"lines": KO}).json()
+    assert d["lang"] == "en" and d["cps"] == d["cps_en"]
+
+
+def test_api_script_translate_rejects_unknown_lang(client):
+    c, st = client
+    st.add_customer_key(c.cid, "elevenlabs", "EL")
+    r = c.post("/api/script/translate", json={"lines": KO, "lang": "xx"})
+    assert r.status_code == 422 and r.json()["error"] == "지원하지 않는 언어예요"
