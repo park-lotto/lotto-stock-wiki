@@ -78,6 +78,17 @@ a:focus-visible,button:focus-visible,.chk:focus-within{outline:3px solid var(--m
 .tbl th{font-size:14px;color:var(--sub);font-weight:700;letter-spacing:.02em}
 .tbl td:first-child{font-weight:700;white-space:nowrap}
 .src{font-size:13px;color:var(--sub);white-space:nowrap}
+@media (max-width:640px){
+  .tbl{overflow:visible;border:0;background:transparent}
+  .tbl table{min-width:0}
+  .tbl thead{display:none}
+  .tbl tr{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .tbl td{display:block;border:0;padding:3px 0}
+  .tbl td:first-child{font-size:18px;white-space:normal;padding-bottom:6px}
+  .tbl td:nth-child(2)::before{content:"계정 늘리는 법";display:block;font-size:13px;font-weight:700;color:var(--sub)}
+  .tbl td:nth-child(3)::before{content:"전화번호·인증";display:block;font-size:13px;font-weight:700;color:var(--sub);margin-top:6px}
+  .tbl td:nth-child(4){margin-top:6px}
+}
 .tips{margin:12px 0 0;padding-left:22px;max-width:72ch}
 .tips li{margin:4px 0}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
