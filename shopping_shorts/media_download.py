@@ -642,8 +642,10 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
              #   27건이 608x1080, 틱톡 130건 중 112건이 576x1024(둘 다 1080x1920이 있었는데도).
              #   완성본은 1080x1920이라 540p급을 2배 키워 렌더한 셈 — 고객 "흐리다" 제보의 뿌리.
              #   상한은 그대로 1080p급(4K 차단)이되, 가로·세로 **긴 변 1920**으로 잰다.
-             "-f", (f"bestvideo{_Q_CAP}[ext=mp4]+bestaudio[ext=m4a]/"
-                    f"bestvideo{_Q_CAP}+bestaudio/best{_Q_CAP}/best"),
+             # ★bestvideo(화면만 든 형식)가 아니라 bv*(소리 섞인 형식 포함) — 인스타는 1080x1920 원본을
+             #   소리 섞인 한 파일로만 주고 화면만 든 DASH 는 720p 까지라, bestvideo 는 720p 를 골랐다(10-20 실측
+             #   DGzf060SVR_ 720→1080 · DCTdc0DT9MW 360→720). mp4 선호는 필터 대신 -S 로(유튜브 399+140·틱톡 그대로).
+             "-f", f"bv*{_Q_CAP}+ba/b{_Q_CAP}/b", "-S", "res,ext:mp4:m4a",
              "--merge-output-format", "mp4",
              "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
              "-o", out, url],
