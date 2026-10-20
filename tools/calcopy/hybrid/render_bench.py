@@ -27,13 +27,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from tools.calcopy.hybrid.common import FPS, ROOT, SR, StageError, dur_of, jload, jsave, lufs, nchar, probe, run  # noqa: E402
+from tools.calcopy.hybrid.common import FACE_MODEL, FPS, ROOT, SR, StageError, dur_of, jload, jsave, lufs, nchar, probe, run  # noqa: E402
 
 W, H = 1080, 1920
 FONTS = ROOT / "shopping_shorts/static/fonts"
 SFX_DIR = ROOT / "shopping_shorts/assets/sfx_packs"
 BGM_DIR = ROOT / "shopping_shorts/assets/bgm_lib"
-FACE_MODEL = "C:/calcopy_models/face_detection_yunet_2023mar.onnx"
 IMG_EXT = (".jpg", ".jpeg", ".png", ".webp")
 CAP_EXTRA = ("key", "key_color", "object_src", "aside", "append", "sound", "small")   # 대본 caps 덩어리 칸 → 배치(placement)가 읽는다
 

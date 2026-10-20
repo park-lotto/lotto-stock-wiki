@@ -25,7 +25,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import FPS, StageError, dur_of, jload, jsave, run  # noqa: E402
 
-MODEL = Path("C:/calcopy_models/face_detection_yunet_2023mar.onnx")
+from tools.calcopy.hybrid.common import FACE_MODEL as _FM  # noqa: E402 — 주인 = common.FACE_MODEL
+MODEL = Path(_FM)
 MODEL_SRC = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 FACE_MIN_FRAC = 0.20          # 얼굴 높이 / 창 높이 하한 — 10-18 실측: 바탕화면 15판 첫 프레임 0.28~1.0 · 옛 장윤정 재미썸 전신 0.12(작다·반려) · 옛 최은경 재미썸 0.27(얼굴 큼·통과)
 FACE_MIN_FRAC_THUMB = 0.12    # 썸네일 후보 고르기는 느슨하게(있는 것 중 가장 큰 얼굴을 고른다 — 반려 관문은 FACE_MIN_FRAC)
