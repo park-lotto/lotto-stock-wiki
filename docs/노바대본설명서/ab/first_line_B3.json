@@ -1,0 +1,96 @@
+{
+ "rows": [
+  {
+   "id": "even",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "창문 너머 사생활 다 보여서 답답했던 천재가 만들어 떼돈 번 페인트의 정체",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "even",
+   "src": "glasspaint",
+   "i": 1,
+   "line": "전셋집 창문에 시트지 못 붙여서 고생했던 천재가 만들어 떼돈 번 페인트의 정체",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "even",
+   "src": "wrap",
+   "i": 0,
+   "line": "남은 음식 덮으려다 헐렁하게 들떠서 답답했던 천재가 만들어 떼돈 번 랩의 정체",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "even",
+   "src": "wrap",
+   "i": 1,
+   "line": "그릇 씌우다 자꾸 미끄러져 샌 국물에 귀찮았던 천재가 만들어 떼돈 번 랩의 정체",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "jungche",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "밖이 훤히 보여 답답했던 자취생 환장하게 만든 천재의 발명품",
+   "mold": "T3",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "jungche",
+   "src": "glasspaint",
+   "i": 1,
+   "line": "남 시선 때문에 노이로제 걸릴 뻔한 주부들이 찾아낸 기가 막힌 해답",
+   "mold": "T4",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "jungche",
+   "src": "wrap",
+   "i": 0,
+   "line": "자꾸 들뜨는 랩에 답답했던 주부들 환장하게 만든 천재의 발명품",
+   "mold": "T3",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "jungche",
+   "src": "wrap",
+   "i": 1,
+   "line": "자꾸 들뜨는 랩 때문에 귀찮았던 자취생이 찾아낸 기가 막힌 해답",
+   "mold": "T4",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  }
+ ],
+ "spread": {
+  "glasspaint": {},
+  "wrap": {}
+ }
+}

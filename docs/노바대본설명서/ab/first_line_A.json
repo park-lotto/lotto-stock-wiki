@@ -1,0 +1,578 @@
+{
+ "rows": [
+  {
+   "id": "52",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "저 언니네 집 갔다가 진짜 충격 받았잖아요.",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "52",
+   "src": "wrap",
+   "i": 0,
+   "line": "저 엄마한테 랩 헐렁하게 씌웠다고 덜컥 혼날 뻔했잖아요!",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "53",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "여러분 창문 사생활 보호는 무조건 이렇게 하세요!",
+   "mold": "H1",
+   "score": 0.23,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "53",
+   "src": "wrap",
+   "i": 0,
+   "line": "여러분 남은 음식 보관할 땐 무조건 이렇게 하세요.",
+   "mold": "H1",
+   "score": 0.23,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "54",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "와.. 해외에서 요즘 완전 난리 났다는 유리 페인트가 있는 거 있죠!",
+   "mold": "H4",
+   "score": 0.12,
+   "keep": false,
+   "nations": [
+    "해외"
+   ],
+   "pain": null
+  },
+  {
+   "id": "54",
+   "src": "wrap",
+   "i": 0,
+   "line": "와.. 미국에서 요즘 완전 난리가 난 랩이 있는 거 있죠!",
+   "mold": "H4",
+   "score": 0.12,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": null
+  },
+  {
+   "id": "55",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "집 안 훤히 들여다보여 빡친 사람들 환장하게 만든 천재의 발명품",
+   "mold": "T1",
+   "score": 0.8,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "55",
+   "src": "wrap",
+   "i": 0,
+   "line": "주부들 환장하게 만든 미국 천재의 발명품",
+   "mold": "T7",
+   "score": 0.38,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "56",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "56",
+   "src": "wrap",
+   "i": 0,
+   "line": "제조사도 감탄한 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "58",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "여러분 사생활 가린다고 커튼만 치는 거 절대 하지 마세요!",
+   "mold": "H4",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "58",
+   "src": "wrap",
+   "i": 0,
+   "line": "여러분 그릇에 일반 랩 헐렁하게 절대 덮지 마세요!",
+   "mold": "H4",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "59",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요!",
+   "mold": "H3",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "59",
+   "src": "wrap",
+   "i": 0,
+   "line": "요즘 SNS에서 다들 이거 쓰는 이유 이제 알겠네요.",
+   "mold": "H3",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "60",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "역발상으로 돈방석 앉은 천재의 발명품",
+   "mold": "D2",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": false
+  },
+  {
+   "id": "60",
+   "src": "wrap",
+   "i": 0,
+   "line": "모두가 무릎 탁 친 천재의 발명품",
+   "mold": "D2",
+   "score": 0.38,
+   "keep": false,
+   "nations": [],
+   "pain": false
+  },
+  {
+   "id": "61",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "아니 잠깐만요, 창문에 쓱 바르면 사생활이 차단된다고요?",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "61",
+   "src": "wrap",
+   "i": 0,
+   "line": "아니 잠깐만요, 음료 컵을 뒤집어도 안 샌다고요?",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "62",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "저 사생활 보호 페인트 몰라서 괜히 비싼 블라인드로 바꿀 뻔했어요!",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "62",
+   "src": "wrap",
+   "i": 0,
+   "line": "저 밀폐용기 다 버리고 새로 바꿀 뻔했거든요.",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "65",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "이케아도 당황하게 만든 천재의 발명품",
+   "mold": "T7",
+   "score": 0.38,
+   "keep": false,
+   "nations": [],
+   "pain": false
+  },
+  {
+   "id": "65",
+   "src": "wrap",
+   "i": 0,
+   "line": "미국 천재가 만들어 전 세계 주부들 환장하게 만든 발명품",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "66",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "옆집 시선 때문에 고생했으면 이거 보면 됨",
+   "mold": "P2",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "66",
+   "src": "wrap",
+   "i": 0,
+   "line": "주부들 구원한 천재의 발명품 정체라는데",
+   "mold": "P3",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": false
+  },
+  {
+   "id": "67",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "자취방 창문 보다가 이거 알고 진짜 충격 먹었음",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "67",
+   "src": "wrap",
+   "i": 0,
+   "line": "살림 고수 집 갔다가 이거 보고 진짜 충격 먹었음",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "68",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "이 가격에 집 안 훤히 들여다보이는 창문 싹 가려주는 게 있다는 거",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "68",
+   "src": "wrap",
+   "i": 0,
+   "line": "무조건 사야 되는 필수 살림템이 있다고",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "69",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "요놈 하나면 창문 사생활 노출 걱정 싹 끝나는 겨",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "69",
+   "src": "wrap",
+   "i": 0,
+   "line": "이 가격에 요놈 하나면 음식 밀봉 걱정 싹 끝나는 겨",
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "70",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "70",
+   "src": "wrap",
+   "i": 0,
+   "line": "제조사도 감탄한 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "71",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "71",
+   "src": "wrap",
+   "i": 0,
+   "line": "제조사도 감탄한 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "72",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "72",
+   "src": "wrap",
+   "i": 0,
+   "line": "제조사도 감탄한 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "73",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "73",
+   "src": "wrap",
+   "i": 0,
+   "line": "제조사도 감탄한 미국 천재의 미친 활용법",
+   "mold": "M2",
+   "score": 0.4,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "74",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+   "mold": "T2",
+   "score": 0.75,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "74",
+   "src": "wrap",
+   "i": 0,
+   "line": "주부들 환장하게 만든 미국 천재의 발명품",
+   "mold": "T7",
+   "score": 0.38,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "75",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+   "mold": "T2",
+   "score": 0.75,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "75",
+   "src": "wrap",
+   "i": 0,
+   "line": "주부들 환장하게 만든 미국 천재의 발명품",
+   "mold": "T7",
+   "score": 0.38,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "76",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
+   "mold": "T2",
+   "score": 0.75,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "76",
+   "src": "wrap",
+   "i": 0,
+   "line": "주부들 환장하게 만든 미국 천재의 발명품",
+   "mold": "T7",
+   "score": 0.38,
+   "keep": false,
+   "nations": [
+    "미국"
+   ],
+   "pain": false
+  },
+  {
+   "id": "even",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "집 안 들여다보여서 답답했던 한국 천재가 만들어 떼돈 번 페인트의 정체.",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [
+    "한국"
+   ],
+   "pain": true
+  },
+  {
+   "id": "even",
+   "src": "wrap",
+   "i": 0,
+   "line": "남은 음식 포장하다 답답했던 천재가 만들어 떼돈 번 랩의 정체.",
+   "mold": "T1",
+   "score": 1.0,
+   "keep": true,
+   "nations": [],
+   "pain": true
+  },
+  {
+   "id": "hdn",
+   "src": "glasspaint",
+   "i": 0,
+   "line": "사생활 노출이 서러웠던 자취생이 창문에 시트지 대신 페인트를 쓱쓱 바르고 숨겨버렸대요.",
+   "mold": "H1",
+   "score": 0.4,
+   "keep": false,
+   "nations": [],
+   "pain": null
+  },
+  {
+   "id": "hdn",
+   "src": "wrap",
+   "i": 0,
+   "line": "여행 갈 때 신발 챙기기 불편했던 와이프가 아예 신발을 랩으로 통째로 싸버렸대요.",
+   "mold": "H1",
+   "score": 0.7,
+   "keep": true,
+   "nations": [],
+   "pain": null
+  }
+ ],
+ "spread": {
+  "glasspaint": {},
+  "wrap": {
+   "천재의발명품": [
+    "60",
+    "66",
+    "정체숨김"
+   ]
+  }
+ }
+}
