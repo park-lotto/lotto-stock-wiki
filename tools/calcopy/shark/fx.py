@@ -294,13 +294,39 @@ def _edge_mask(w: int, h: int):
     return (u * u * (3 - 2 * u)).astype(np.float32)
 
 
-def flash_image(color, alpha: float, w: int, h: int):
-    """(판단 주인: 번쩍 모양) R4 가장자리 빛(edge) — 옛 전면 원색(style 없음)도 그대로 그릴 수 있다."""
+def flash_look(luma: float | None) -> tuple[float, float]:
+    """(판단 주인: 번쩍 세기·색을 장면 밝기에 맞춤) 가장자리 평균 밝기 luma(0~255, 없으면 옛 값) → (tint, α 배율).
+    밝은(흰) 장면에선 흰빛 섞은 색이 바탕에 묻힌다 → tint 를 줄이고 α 를 조금 올린다(rules effects.flash.bright)."""
+    F = R()["effects"]["flash"]
+    b = F.get("bright")
+    if luma is None or not b:
+        return F["tint"], 1.0
+    u = min(1.0, max(0.0, (luma - b["luma"][0]) / (b["luma"][1] - b["luma"][0])))
+    return F["tint"] * (1 - u), 1.0 + b["alpha_gain"] * u
+
+
+def flash_scene_luma(fx: list[dict], bed: Path) -> None:
+    """번쩍마다 그 시각 바탕 영상(번쩍 얹기 전)의 창 가장자리(_edge_mask>0.5) 평균 밝기를 e['scene_luma'] 에 적는다."""
+    E = R()["effects"]; wx, wy, ww, wh = E["window"]
+    em = _edge_mask(ww, wh) > 0.5
+    for e in fx:
+        if e["kind"] != "flash":
+            continue
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{e['T'][0] + 0.02:.3f}", "-i", str(bed), "-frames:v", "1",
+                              "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+        if len(raw) != 1080 * 1920 * 3:
+            continue
+        f = np.frombuffer(raw, np.uint8).reshape(1920, 1080, 3)[wy:wy + wh, wx:wx + ww][em].astype(float)
+        e["scene_luma"] = round(float((f @ np.array([0.299, 0.587, 0.114])).mean()), 1)
+
+
+def flash_image(color, alpha: float, w: int, h: int, tint: float | None = None):
+    """(판단 주인: 번쩍 모양) R4 가장자리 빛(edge) — 옛 전면 원색(style 없음)도 그대로 그릴 수 있다. tint = flash_look 값(없으면 rules)."""
     from PIL import Image
     F = R()["effects"]["flash"]
     col = np.array(color, float)
     if F.get("style") == "edge":
-        col = col + (255 - col) * F["tint"]
+        col = col + (255 - col) * (F["tint"] if tint is None else tint)
         a = (_edge_mask(w, h) * alpha * 255).astype(np.uint8)
     else:
         a = np.full((h, w), int(round(alpha * 255)), np.uint8)
@@ -363,11 +389,14 @@ def caption_at(caps: list[dict], t: float):
     return None, 0
 
 
-def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
-    """완성본 길이 dur 의 RGBA 층(1080×(Y1−Y0), 30fps, qtrle mov) — 아래부터 번쩍 → 꾸밈 → 자막. 반환: 그린 사건 기록(검사·효과음용)."""
+def build_layer(P: dict, S: dict | None, out: Path, dur: float, bed: Path | None = None) -> dict:
+    """완성본 길이 dur 의 RGBA 층(1080×(Y1−Y0), 30fps, qtrle mov) — 아래부터 번쩍 → 꾸밈 → 자막. 반환: 그린 사건 기록(검사·효과음용).
+    bed = 번쩍 얹기 전 바탕 영상 — 주면 번쩍 세기·색을 장면 밝기에 맞춘다(flash_look)."""
     E = R()["effects"]
     caps = sorted(P["captions"], key=lambda c: c["t0"])
     fx = sorted(timed(P), key=lambda e: e["T"][0])
+    if bed is not None:
+        flash_scene_luma(fx, bed)
     bad = outside(fx)
     if bad:
         raise ValueError(f"꾸밈이 창 밖으로 나감(rules effects.inside_window) — 재료 크롭/자리 고칠 것: {bad}")
@@ -386,7 +415,8 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
             if p is None:
                 continue
             if e["kind"] == "flash":
-                cv.alpha_composite(flash_image(E["flash"]["colors"][e.get("color", "초록")], round(p["alpha"], 3), 1080, H - 8), (0, 4))
+                tint, gain = flash_look(e.get("scene_luma"))
+                cv.alpha_composite(flash_image(E["flash"]["colors"][e.get("color", "초록")], round(min(1.0, p["alpha"] * gain), 3), 1080, H - 8, round(tint, 3)), (0, 4))
                 continue
             im = _sprite_im(e["kind"], _key(e), round(p["scale"], 2), round(p["deg"] / 3) * 3.0, round(p["alpha"], 2),
                             round(p["rot"], 1), round(p["sweep"], 3))
@@ -404,6 +434,8 @@ def build_layer(P: dict, S: dict | None, out: Path, dur: float) -> dict:
         drawn["effects"][e["kind"]] = drawn["effects"].get(e["kind"], 0) + 1
         if e["kind"] == "flash":
             drawn["flash"].append(e["T"][0])
+            if e.get("scene_luma") is not None:
+                drawn.setdefault("flash_luma", []).append([e["T"][0], e["scene_luma"], *[round(v, 3) for v in flash_look(e["scene_luma"])]])
     drawn["captions"] = len(caps)
     drawn["emph_caps"] = sum(1 for c in caps if emph_for(S, c["line"], c["text"]))
     return drawn

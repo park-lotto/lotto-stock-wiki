@@ -691,7 +691,7 @@ def overlay_pass(D, P, FS, src_mp4: Path, R: Path) -> Path:
     for c in P["captions"]:
         c["style"], _ = cap_style(c, n_of[c["line"]], FS)
     layer = R / "fx_layer.mov"
-    P["fx_drawn"] = FX.build_layer(P, D["S"], layer, P["dur"])
+    P["fx_drawn"] = FX.build_layer(P, D["S"], layer, P["dur"], src_mp4)
     out = R / "video_cap.mp4"
     run(["ffmpeg", "-y", "-i", src_mp4, "-i", layer, "-filter_complex", f"[0:v][1:v]overlay=0:{FX.Y0}:format=auto,format=yuv420p[v]",
          "-map", "[v]", "-an", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-color_range", "tv", "-r", "30", out])

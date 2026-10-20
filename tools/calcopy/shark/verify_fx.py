@@ -28,6 +28,7 @@ SR = 48000
 W, H = 1080, 1920
 COLOR_TOL = 70
 FLASH_RGB = {"초록": (0, 255, 0), "빨강": (255, 30, 40), "노랑": (255, 230, 0)}
+FLASH_PUSH_MIN = 12.0   # 번쩍 판정 = 같은 샷 번쩍 직후 대비 색 쪽으로 민 양(0~255) — 10-20 실측 번쩍 29개 25.0~52.3 · 번쩍 없는 순간 81곳 중앙 1.3
 
 
 def pcm(mp4: str) -> np.ndarray:
@@ -116,9 +117,17 @@ def main():
             em = FX._edge_mask(1080, 1052) > 0.5 if E["flash"].get("style") == "edge" else np.ones((1052, 1080), bool)   # R4 가장자리 빛 = 가장자리 띠만 잰다
             win = lambda f: f[434:434 + 1052][em].mean(0)        # 창 안만(위아래 검정·제목 띠 빼고)
             d_on, d_off, d_aft = (float(np.linalg.norm(win(f) - c)) for f in (on, off, aft))
-            # 앞 프레임이 다른 컷(밝은 벽 등)이면 번쩍 전이 오히려 색에 가까울 수 있다(7편 O2 실측) → 번쩍 뒤 같은 샷과도 비교
-            ok = d_on < d_off - 15 or d_on < d_aft - 15
-            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "moved": bool(e.get("moved_into_dashed")), "color": e["color"], "dist_off": round(d_off, 1), "dist_on": round(d_on, 1), "dist_after": round(d_aft, 1), "ok": bool(ok)})
+            # ★판정 = 같은 샷 안에서 번쩍 순간이 번쩍 직후(빛이 다 빠진 edge_dur+0.08초)보다 번쩍 색 쪽으로 민 양(픽셀마다 바탕→색 방향 성분 평균).
+            #   옛 판정(평균색 거리, 앞 프레임·0.6초 뒤와 비교)은 번쩍이 컷 첫 프레임에 걸려 앞이 다른 컷이고 뒤 0.6초에 장면이 바뀌면 틀렸다
+            #   (10-20 9편 N2: 옛 거리차 9 '안 보임' — 같은 샷 비교 민 양 51.8, 통과한 O4 29.2 보다 큼). 번쩍 없는 순간 81곳 중앙 1.3.
+            base = frame(a.mp4, T0 + E["flash"].get("edge_dur", 0.22) + 0.08)
+            px_on, px_b = on[434:434 + 1052][em].astype(float), base[434:434 + 1052][em].astype(float)
+            dv = c - px_b
+            push = float((((px_on - px_b) * dv).sum(1) / (np.linalg.norm(dv, axis=1) + 1e-6)).mean())
+            luma = float((px_b @ np.array([0.299, 0.587, 0.114])).mean())
+            ok = push >= FLASH_PUSH_MIN
+            out["fx"].append({"kind": k, "line": e["line"], "T": [T0, T1], "moved": bool(e.get("moved_into_dashed")), "color": e["color"], "push": round(push, 1), "edge_luma": round(luma),
+                              "dist_off": round(d_off, 1), "dist_on": round(d_on, 1), "dist_after": round(d_aft, 1), "ok_old": bool(d_on < d_off - 15 or d_on < d_aft - 15), "ok": bool(ok)})
             box = (0, 434, W, 434 + 1052)
         else:
             cands = [(T0 + T1) / 2] if k == "red_circle" else [T0 + min(0.6, (T1 - T0) / 2), T1 - 0.25, T0 + 0.45]
