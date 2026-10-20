@@ -13222,6 +13222,27 @@ async def api_yt_details(request: Request, body: dict):
     return {"ok": True, "items": out}
 
 
+_YT_ANALYTICS_CACHE = {}        # video_id → (저장시각, 값) — 같은 영상은 1시간 동안 다시 안 묻는다
+
+
+@app.post("/api/yt/analytics")
+async def api_yt_analytics(body: dict):
+    """유튜브 쇼츠 한 편 성과 분석(관제 242, 2026-10-20 사장님) — 확장 영상 화면의 분석 상자가 부른다.
+    판단은 youtube_client.video_analytics 한 곳. 쿼터 4(무료), 실패는 캐시하지 않는다."""
+    from shopping_shorts.youtube_client import video_analytics
+    vid = str((body or {}).get("id") or "")
+    c = _YT_ANALYTICS_CACHE.get(vid)
+    if c and time.time() - c[0] < 3600:
+        return c[1]
+    r = await asyncio.to_thread(video_analytics, vid)
+    if r.get("ok"):
+        _YT_ANALYTICS_CACHE[vid] = (time.time(), r)
+        if len(_YT_ANALYTICS_CACHE) > 3000:
+            for k in sorted(_YT_ANALYTICS_CACHE, key=lambda k: _YT_ANALYTICS_CACHE[k][0])[:1000]:
+                _YT_ANALYTICS_CACHE.pop(k, None)
+    return r
+
+
 @app.post("/api/lens/kw/multi")
 async def api_lens_kw_multi(request: Request, body: dict):
     """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.

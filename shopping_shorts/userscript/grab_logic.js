@@ -35,7 +35,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261022;
+  var LOGIC_VER = 20261023;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -2083,9 +2083,184 @@
     if (s.id === "instagram") _igCaption(code, run);
     else run(_siteCaption(s));
   }
+  // ── ④ 유튜브 쇼츠 영상 분석 상자(관제 242, 2026-10-20 사장님) ─────────────────
+  //   숫자·판정은 서버 youtube_client.video_analytics 한 곳이 정한다. 여기는 그리기만 한다.
+  function _ytNum(n) {
+    if (n === null || n === undefined) return "-";
+    if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
+    if (n >= 1e4) return (n / 1e4).toFixed(n >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "만";
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "천";
+    return String(Math.round(n));
+  }
+  var YT_TIER_COLOR = { "대박": "#ff3b30", "터짐": "#ff9500", "잘됨": "#34c759", "보통": "#8e8e93", "낮음": "#5a5a5e" };
+  function _ytEl(tag, css, txt) {
+    var e = document.createElement(tag);
+    if (css) e.style.cssText = css;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+  function _ytTile(label, val, sub) {
+    var t = _ytEl("div", "background:#2a2a2c;border-radius:8px;padding:7px 9px;min-width:0");
+    t.appendChild(_ytEl("div", "font-size:11px;color:#aaa", label));
+    t.appendChild(_ytEl("div", "font:800 17px system-ui,sans-serif;color:#fff;margin-top:2px", val));
+    if (sub) t.appendChild(_ytEl("div", "font-size:11px;color:#8e8e93;margin-top:1px", sub));
+    return t;
+  }
+  // 그래프 ① 채널 최근 쇼츠 조회수(올린 순서). 이 영상은 주황, 점선 = 채널 중앙값.
+  //   ★로그 눈금(1천·1만·10만·100만…): 직선 축은 대박 몇 편이 축을 먹어 나머지가 바닥에 붙고, 위를 자르면
+  //   막대 대부분이 잘렸다(실측 해외쇼쇼 49편 중 13편 잘림). 눈금마다 숫자를 적어 읽을 수 있게 한다.
+  function _ytViewsChart(d) {
+    var NS = "http://www.w3.org/2000/svg", W = 600, H = 180, L = 44, B = 18, T = 10;
+    var ser = d.series || [], med = (d.median || {}).views || 0;
+    var vals = ser.map(function (s) { return Math.max(1, s.views); });
+    var lo = Math.floor(Math.log10(Math.min.apply(null, vals.concat([med || 1e9])))),
+        hi = Math.ceil(Math.log10(Math.max.apply(null, vals.concat([10]))));
+    if (hi <= lo) hi = lo + 1;
+    var n = Math.max(ser.length, 1), bw = (W - L - 4) / n, ph = H - B - T;
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.style.cssText = "width:100%;height:auto;display:block";
+    function add(tag, at, txt) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in at) e.setAttribute(k, at[k]);
+      if (txt !== undefined) e.textContent = txt;
+      svg.appendChild(e); return e;
+    }
+    function y(v) { return T + ph - (Math.log10(Math.max(1, v)) - lo) / (hi - lo) * ph; }
+    for (var g = lo; g <= hi; g++) {
+      add("line", { x1: L, y1: y(Math.pow(10, g)), x2: W, y2: y(Math.pow(10, g)), stroke: g === lo ? "#555" : "#333" });
+      add("text", { x: L - 6, y: y(Math.pow(10, g)) + 4, fill: "#888", "font-size": 11, "text-anchor": "end" }, _ytNum(Math.pow(10, g)));
+    }
+    var meX = null, meY = null;
+    for (var i = 0; i < ser.length; i++) {
+      var s = ser[i], x = L + 2 + i * bw, yy = y(s.views);
+      var r = add("rect", { x: x + bw * 0.12, y: yy, width: Math.max(1, bw * 0.76), height: Math.max(1, T + ph - yy), rx: 1.5,
+                            fill: s.me ? "#ff9500" : (s.views >= med ? "#5ac8fa" : "#3a6b80"), style: "cursor:pointer" });
+      var tt = document.createElementNS(NS, "title");
+      tt.textContent = (s.me ? "▶ 이 영상\n" : "") + s.title + "\n" + s.published + " · 조회 " + _ytNum(s.views); r.appendChild(tt);
+      (function (id) { r.addEventListener("click", function () { location.href = "https://www.youtube.com/shorts/" + id; }); })(s.id);
+      if (s.me) { meX = x + bw / 2; meY = yy; }
+    }
+    if (med) {
+      add("line", { x1: L, y1: y(med), x2: W, y2: y(med), stroke: "#ffd60a", "stroke-dasharray": "5 4", "stroke-width": 1.5 });
+      // 중앙값 글자는 이 영상 반대쪽 끝에 — 같은 자리면 '이 영상' 글자와 겹쳤다(실측)
+      var left = meX !== null && meX > (L + W) / 2;
+      add("text", { x: left ? L + 4 : W - 2, y: y(med) - 4, fill: "#ffd60a", "font-size": 11,
+                    "text-anchor": left ? "start" : "end", "paint-order": "stroke", stroke: "#161616", "stroke-width": 3 },
+          "채널 중앙값 " + _ytNum(med));
+    }
+    if (meX !== null) {
+      var ly = Math.max(T + 10, meY - 6), anchor = meX > W - 40 ? "end" : (meX < L + 40 ? "start" : "middle");
+      add("text", { x: meX, y: ly, fill: "#ff9500", "font-size": 12, "font-weight": 800, "text-anchor": anchor,
+                    "paint-order": "stroke", stroke: "#161616", "stroke-width": 3 }, "▼ 이 영상");
+    }
+    if (ser.length) {
+      add("text", { x: L, y: H - 3, fill: "#888", "font-size": 10 }, ser[0].published);
+      add("text", { x: W, y: H - 3, fill: "#888", "font-size": 10, "text-anchor": "end" }, ser[ser.length - 1].published);
+    }
+    return svg;
+  }
+  // 그래프 ② 이 영상 vs 채널 평소(중앙값) — 한 줄에 막대 두 개, 오른쪽에 몇 배인지.
+  function _ytCompareRow(label, me, med, fmt) {
+    var row = _ytEl("div", "display:grid;grid-template-columns:86px 1fr 52px;gap:8px;align-items:center;font-size:12px");
+    row.appendChild(_ytEl("div", "color:#ccc", label));
+    var bars = _ytEl("div", "display:flex;flex-direction:column;gap:3px");
+    var mx = Math.max(me || 0, med || 0) || 1;
+    function bar(v, color, who) {
+      var w = _ytEl("div", "display:flex;align-items:center;gap:6px");
+      var b = _ytEl("div", "height:10px;border-radius:3px;background:" + color + ";width:" + Math.max(2, (v || 0) / mx * 100) + "%;max-width:78%");
+      w.appendChild(b); w.appendChild(_ytEl("span", "font-size:11px;color:#bbb;white-space:nowrap", who + " " + (v === null || v === undefined ? "-" : fmt(v))));
+      return w;
+    }
+    bars.appendChild(bar(me, "#ff9500", "이 영상")); bars.appendChild(bar(med, "#636366", "채널"));
+    row.appendChild(bars);
+    var ratio = (me !== null && me !== undefined && med) ? me / med : null;
+    row.appendChild(_ytEl("div", "font:800 13px system-ui,sans-serif;text-align:right;color:" +
+      (ratio === null ? "#888" : ratio >= 1 ? "#34c759" : "#ff6961"), ratio === null ? "-" : ratio.toFixed(1) + "배"));
+    return row;
+  }
+  function _ytStatsRender(p, d) {
+    var body = p.querySelector(".ss-yt-body");
+    while (body.firstChild) body.removeChild(body.firstChild);   // 유튜브는 Trusted Types 라 innerHTML 대입이 막힌다(실측)
+    if (!d || !d.ok) { body.appendChild(_ytEl("div", "font-size:12px;color:#aaa", (d && d.error) || "분석을 못 받았어요")); return; }
+    var v = d.video, m = d.median || {}, tier = d.tier || { name: "-", desc: "비교할 쇼츠가 없어요" };
+    var head = _ytEl("div", "display:flex;align-items:center;gap:10px;flex-wrap:wrap");
+    head.appendChild(_ytEl("div", "background:" + (YT_TIER_COLOR[tier.name] || "#555") +
+      ";color:#fff;border-radius:8px;padding:6px 12px;font:900 18px system-ui,sans-serif", tier.name));
+    var hx = _ytEl("div", "display:flex;flex-direction:column;gap:2px");
+    hx.appendChild(_ytEl("div", "font:800 15px system-ui,sans-serif;color:#fff",
+      d.multiplier === null ? "비교할 쇼츠가 없어요" : "채널 평소의 " + d.multiplier + "배 (총 조회)"));
+    hx.appendChild(_ytEl("div", "font-size:12px;color:#bbb", tier.desc +
+      (d.multiplier_day ? " · 하루 평균으로는 " + d.multiplier_day + "배" : "") +
+      (d.rank ? " · 최근 쇼츠 " + (d.compared + 1) + "편 중 " + d.rank + "위" : "")));
+    head.appendChild(hx);
+    body.appendChild(head);
+    if (d.young) body.appendChild(_ytEl("div", "font-size:12px;color:#ffd60a;background:rgba(255,214,10,.1);border-radius:6px;padding:5px 8px",
+      "⏳ 올린 지 " + v.days + "일 — 아직 조회가 쌓이는 중이라 총 조회 배수는 낮게 나올 수 있어요. 하루 평균 배수를 같이 보세요."));
+    var tiles = _ytEl("div", "display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px");
+    tiles.appendChild(_ytTile("조회수", _ytNum(v.views), v.published));
+    tiles.appendChild(_ytTile("하루 평균", _ytNum(v.per_day), "올린 지 " + (v.days || "-") + "일"));
+    tiles.appendChild(_ytTile("좋아요율", v.like_rate === null ? "-" : v.like_rate + "%", "좋아요 " + _ytNum(v.likes)));
+    tiles.appendChild(_ytTile("댓글율", v.comment_rate === null ? "-" : v.comment_rate + "%", "댓글 " + _ytNum(v.comments)));
+    tiles.appendChild(_ytTile("구독자 대비", d.views_per_sub === null ? "-" : (d.views_per_sub >= 100 ? Math.round(d.views_per_sub) : d.views_per_sub) + "%", "구독 " + _ytNum((d.channel || {}).subs)));
+    body.appendChild(tiles);
+    if ((d.series || []).length > 1) {
+      body.appendChild(_ytEl("div", "font:800 12px system-ui,sans-serif;color:#ddd;margin-top:4px",
+        "📊 이 채널 최근 쇼츠 조회수 (막대를 누르면 그 영상으로)"));
+      body.appendChild(_ytViewsChart(d));
+      body.appendChild(_ytEl("div", "font:800 12px system-ui,sans-serif;color:#ddd;margin-top:4px", "⚖️ 채널 평소(중앙값)와 비교"));
+      var cmp = _ytEl("div", "display:flex;flex-direction:column;gap:6px");
+      cmp.appendChild(_ytCompareRow("하루 평균 조회", v.per_day, m.per_day, _ytNum));
+      cmp.appendChild(_ytCompareRow("좋아요율", v.like_rate, m.like_rate, function (x) { return x + "%"; }));
+      cmp.appendChild(_ytCompareRow("댓글율", v.comment_rate, m.comment_rate, function (x) { return x + "%"; }));
+      body.appendChild(cmp);
+    }
+    body.appendChild(_ytEl("div", "font-size:10px;color:#777;margin-top:2px",
+      "비교 대상: " + ((d.channel || {}).title || "") + " 최근 쇼츠 " + d.compared + "편 · " + (d.source || "")));
+  }
+  var _ytStatsCache = {};
+  function syncYtStats() {
+    var p = document.getElementById("ss-ytstat"), s = _kwSite();
+    var vid = (s && s.id === "youtube") ? s.post() : "";
+    if (!vid) { if (p) p.remove(); return; }
+    if (p && p.getAttribute("data-v") === vid) return;
+    if (p) p.remove();
+    p = document.createElement("div");
+    p.id = "ss-ytstat"; p.setAttribute("data-v", vid);
+    // 자리 = 사장님 캡처의 빨간 칸(영상 오른쪽, 관련 검색어 상자 아래). 끌어 옮기면 그 자리를 기억한다.
+    p.style.cssText = "position:fixed;right:18px;top:260px;z-index:2147483645;box-sizing:border-box;width:min(640px,46vw);max-height:calc(100vh - 280px);overflow:auto;" +
+      "background:rgba(22,22,22,.94);color:#eee;border-radius:12px;padding:10px 12px;font-family:system-ui,sans-serif;" +
+      "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px";
+    var hd = _ytEl("div", "display:flex;justify-content:space-between;align-items:center;gap:12px;font:800 13px system-ui,sans-serif");
+    hd.appendChild(_ytEl("span", "", "📈 영상 분석"));
+    hd.appendChild(_kwFoldBtn(p, "ss_ytstat_fold"));
+    var body = _ytEl("div", "display:flex;flex-direction:column;gap:8px"); body.className = "ss-yt-body";
+    var st = _ytEl("div", "font-size:12px;color:#aaa"); body.appendChild(st);
+    p.appendChild(hd); p.appendChild(body);
+    _kwFoldApply(p, "ss_ytstat_fold");
+    // 영상 오른쪽(좋아요·댓글 버튼 줄 다음)부터 화면 끝까지 — 고정 폭이면 영상을 덮었다(실측 1900px 화면).
+    var pv = document.querySelector("ytd-reel-video-renderer[is-active] video, #shorts-player video, ytd-shorts video");
+    var pr = pv && pv.getBoundingClientRect();
+    if (pr && pr.width > 100) {
+      var lx = Math.round(pr.right + 80), room = window.innerWidth - lx - 18;
+      if (room >= 420) { p.style.left = lx + "px"; p.style.right = "auto"; p.style.width = Math.min(room, 720) + "px"; }
+    }
+    document.body.appendChild(p);
+    _ssDrag(p, hd);
+    if (_ytStatsCache[vid]) { _ytStatsRender(p, _ytStatsCache[vid]); return; }
+    _kwTicking(st, "채널 최근 쇼츠와 비교하는 중…");
+    _gmPost(BASE + "/api/yt/analytics", { id: vid }, function (status, text) {
+      if (p.getAttribute("data-v") !== vid || !document.body.contains(p)) return;
+      var d = null;
+      try { d = JSON.parse(text); } catch (e) {}
+      if (status === 200 && d && d.ok) _ytStatsCache[vid] = d;
+      _ytStatsRender(p, status === 200 ? d : { ok: false, error: "서버 연결 실패(" + status + ")" });
+    }, function () {
+      if (document.body.contains(p)) _ytStatsRender(p, { ok: false, error: "서버 연결 실패" });
+    }, 60000);
+  }
   // 유튜브 롱폼처럼 확장이 꺼지는 화면에서 남은 판을 걷는다.
   function _kwClearAll() {
-    var ids = ["ss-kwfloat", "ss-kwpost"];
+    var ids = ["ss-kwfloat", "ss-kwpost", "ss-ytstat"];
     for (var i = 0; i < ids.length; i++) { var e = document.getElementById(ids[i]); if (e) e.remove(); }
   }
 
@@ -2517,7 +2692,7 @@
     var olds = document.querySelectorAll(".ss-card-ko");
     for (var i = 0; i < olds.length; i++) olds[i].remove();
   }
-  function tick() { try{_koTick();}catch(e){} if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
+  function tick() { try{_koTick();}catch(e){} if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{syncYtStats();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
