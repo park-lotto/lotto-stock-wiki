@@ -13,14 +13,14 @@
    "id": "G002",
    "title": "S2",
    "objective": "회원 키 칸 일레븐랩스·쿠팡 파트너스",
-   "status": "in_progress",
-   "evidence": null
+   "status": "complete",
+   "evidence": "key_ui_check ok(4칸·지문·env 4개) · npm test · catalog 명단 5"
   },
   {
    "id": "G003",
    "title": "S3",
    "objective": "hybrid/run.py 단계가 회원 PC에서 돈다",
-   "status": "pending",
+   "status": "in_progress",
    "evidence": null
   },
   {

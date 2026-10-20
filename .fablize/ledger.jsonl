@@ -56,3 +56,5 @@
 {"ts": "2026-10-20T16:41:53.435365+00:00", "event": "story_started", "id": "G001", "title": "S1"}
 {"ts": "2026-10-20T16:41:53.589831+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "99_회원PC_MCP.md eb807a10b", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-10-20T16:41:53.760383+00:00", "event": "story_started", "id": "G002", "title": "S2"}
+{"ts": "2026-10-20T16:58:28.362099+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "key_ui_check ok(4칸·지문·env 4개) · npm test · catalog 명단 5", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-20T16:58:28.512365+00:00", "event": "story_started", "id": "G003", "title": "S3"}

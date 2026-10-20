@@ -249,7 +249,7 @@ def probe_versions(stage: Path, info: dict) -> dict:
     filters = run([t / info["ffmpeg"]["exe"], "-hide_banner", "-filters"]).stdout
     got["ffmpeg_ass_filter"] = " ass " in filters
     r = run([t / info["python"]["exe"], "-I", "-c",
-             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv;from google import genai;"
+             "import sys,PIL,numpy,cv2,faster_whisper,yt_dlp,requests,dotenv,playwright.sync_api;from google import genai;"
              "print(sys.version.split()[0],PIL.__version__,numpy.__version__,cv2.__version__,faster_whisper.__version__)"], cwd=t)
     got["python"] = r.stdout.strip() or r.stderr.strip()
     got["yt-dlp"] = run([t / info["yt-dlp"]["exe"], "--version"]).stdout.strip()
