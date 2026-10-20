@@ -1,0 +1,2583 @@
+{
+ "channels": {
+  "https://www.youtube.com/@떠튜브": {
+   "name": "https://www.youtube.com/@떠튜브",
+   "lang": "ko",
+   "depth": 0,
+   "from": "씨앗",
+   "done": true
+  },
+  "https://www.facebook.com/61557141576634/videos/family-challenge-dr%C3%B4le-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "@popular": {
+   "name": "@popular",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 3
+  },
+  "https://www.tiktok.com/discover/mother-teaching-daughter-to-cook": {
+   "name": "tiktok.com",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/딸-엄마-요리할때": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/61557141576634/videos/family-challenge-drôle-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "@ddoremi__": {
+   "name": "@ddoremi__",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCb5ymSxGa41rYAMDvh22I2Q": {
+   "name": "TVCHOSUN LIFE",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCdK23vzK74N6SzL9VIKR3MQ": {
+   "name": "Sophia family",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCFmRb3Mqiw-AZzos6UUQPjA": {
+   "name": "순천한정식신화정",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "@nasiibadan777": {
+   "name": "@nasiibadan777",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCxaR3AByZf7vAPowBOq-iWA": {
+   "name": "Spanish in Korea",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/the.weenie.family/videos/my-korean-mom-is-very-demanding/2093457424727516/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/女儿蒂我软饭硬吃": {
+   "name": "tiktok.com",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DYD7rYNk7Ym/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "G3FAvXruqiM",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DUBDTAtE7lw/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/Dc-5pXUIMeA/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/육아에지친엄마의절규": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DdAx721yI-5/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/yeah1tv/posts/dễ-thương-vậy-chời-cre-tiemanhnangy1s26/1585077856991124/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DUDnQnAEusg/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DUCQJNdE5pX/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCG9aFJTZ-lMCHAiO1KJsirg": {
+   "name": "MBN News",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A": {
+   "name": "지구촌픽",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCOVSr__U9HE4nH_kTCQ5SJw": {
+   "name": "아기꽁냥",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCqtysCeDtGc3BrxJl0FTdsw": {
+   "name": "황정연",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/親精神小妹": {
+   "name": "tiktok.com",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DdBB8jmSIml/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/upsoclsupermae/videos/mãe-desmaia-ao-ouvir-o-choro-do-bebê/1601523234819170/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DUDudMwiXOw/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "58uNk7UHQS0",
+   "done": false,
+   "found": 1
+  },
+  "@user4851540871934.fan": {
+   "name": "@user4851540871934.fan",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 3
+  },
+  "https://www.youtube.com/channel/UCDjrPToNQpcZii_pfIcIM_Q": {
+   "name": "청담동 가위손 이한",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 2
+  },
+  "https://www.youtube.com/hashtag/새롬동미용실": {
+   "name": "youtube.com",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/itaemen.2025/videos/오늘의빈집연구소사진을-찍다보면-순간포착이다보니-여러표정이-찍히는데유난히도-눈감거나-이상한-표정이-많이-나오는-이-형을-위해헌정-영상인건가-ai활/1726336704971780/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DQb2Gwik16K/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/Sikboy714/videos/3월3일-두번째-더블싱글-w식보이sikboy-인스타-라이브식보이-sikboy-씩보이-피랩-두랩피부로숨쉬기-두피의건강0303-더블싱글-w-관심과사/192258125443294/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DV2W1sQEjG_/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/hair119.co.kr/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCqaEnBm3MyGaKcUKfrKO4sA": {
+   "name": "찐배영상",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/남자뒤통수머리볼륨자르기": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DePGuoRz0qG/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "a6O4ltJ1IKg",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UChlgI3UHCOnwUGzWzbJ3H5w": {
+   "name": "YTN",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 4
+  },
+  "https://www.instagram.com/p/DS3yiX_D53E/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DWpnaz1mbDS/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DaM__xXCa2M/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DcxxrXgk96j/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/가만히-잇는데-갑저기-슘이-답답해요": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/알마나-더사랑해야": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/jjaltoon/videos/파이트-짤툰-죽음/876756453336266/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC6u3fosnyufBiUiS3w609zw": {
+   "name": "키에커",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC5OKYjJECGgLMnXz6aIfuog": {
+   "name": "모두연결",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/이경우-고백": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/cindimedia/posts/남자들-요가하는-여자가-로망아니야-요가-선생님-이랑-체위가어휴-7월더블코인이벤트-놓치지말고-가입하편-보기-아이디-비번은-아무거나-치시면-새로나운/1610096615933687/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/CWVAcYfv2-2/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DI29RCgS0L4/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eJfVjhjVE8w",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UChnB1sRCJ3rXLp_8WkS14aA": {
+   "name": "MAJOR9 메이저나인",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DdvdsQYFGRa/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCem8l1w4OWhkqpoOg1SB4_w": {
+   "name": "재넌 ",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/61573130600577/videos/in-china-a-deaf-taxi-driver-picked-up-a-deaf-passenger-they-didnt-realize-it-at-/750134838101579/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCiBr0bK06imaMbLc8sAEz0A": {
+   "name": "MBCentertainment",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCzYXf5sgRGGZjN9Fmv3YKnw": {
+   "name": "최호구를 지켜줘",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCjKoaGQcwRNuvlL3BEK1ubg": {
+   "name": "RyJoon [CIS Life]",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DdiDsqjP4hB/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/realmudo/videos/무도-실례가-안-된다면-아이스크림-하나만-노홍철-레전드-무도짤-탄생-순간ㅋㅋ-여드름-브레이크-5편-mbc090627방송/1153333806167634/": {
+   "name": "facebook.com",
+   "lang": "ko",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "@leedo0001": {
+   "name": "@leedo0001",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.bilibili.com/video/BV17m421p7EP/": {
+   "name": "bilibili.com",
+   "lang": "foreign",
+   "site": "bilibili.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DeZfmZ3SB4I/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "@bdns_3": {
+   "name": "@bdns_3",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/tan.c.beng.94/videos/when-silence-stopped-being-a-barrier%E5%BD%93%E6%B2%89%E9%BB%98%E4%B8%8D%E5%86%8D%E6%98%AF%E9%9A%9C%E7%A2%8Dhe-was-deaf-and-he-was-used-to-not-b/1730594878213636/": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DD9K_9mJKBq/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "cXNqQ2iovjs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCF3UEVPt5zZTlBVJwDG317g": {
+   "name": "JTBC Voyage",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCvjJFgLQ_pU3IJWZMopS26Q": {
+   "name": "택시맨 주행기",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw": {
+   "name": "한문철 TV",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 9
+  },
+  "https://www.youtube.com/channel/UCQajJC-D6I3o5ICk1jhxWTg": {
+   "name": "Good-looking Driving License&Learn's Classroom",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCj3_t5p4L4aFsvdW3uHjnnw": {
+   "name": "연합뉴스 Yonhapnews",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCn9lNw5sQvHK68P_U7wWCrQ": {
+   "name": "maxoncon 중년대리TV",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DUsIp_Mk-87/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "b3_DDb5AEJs",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UChb4mWZ1WDdG5Ji5tUNxSMw": {
+   "name": "에리코",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/Dbfae7gz75O/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCCXmKfqL_oUXE3Xt6E4_uGQ": {
+   "name": "shift33",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/marketplace/henrietta-ny/dodge-grand-caravan/?locale=lt_LT": {
+   "name": "facebook.com",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DbBBgLeFIXQ/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCRLx6MLo1BoqF2LJ51p1xxA": {
+   "name": "Kman car",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DWQamu9Ev_k/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCoLNmFZMBYAEB7nz9msnoCg": {
+   "name": "단디옷만들기",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCehO2C1F30RUmh_KW2EKk2A": {
+   "name": "꽁스",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DThQNIFkcag/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCRoeRpwO9RR9M08nHYyfgOg": {
+   "name": "태광모터스",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/p/DZEp_h9k0pL/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCrOl7IuctoHW0iW-Gozj4EQ": {
+   "name": "비피디 BPD",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "h-EinSMSgV0",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCgsgpELbaTiGjCHIjHVF8uQ": {
+   "name": "TV생물도감",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCUNJ2kKnM92rHqH0dCsvHqw": {
+   "name": "ꩁ집순이 ◡̎ ⋆*",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DB-y_cdh9Yp/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/discover/알리익스프레스-미니어쳐": {
+   "name": "tiktok.com",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCUSVraAg8xx_iSyYkvP0nqQ": {
+   "name": "프롬tv",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCOWS1wmgdPiHCoDFyV7Soxw": {
+   "name": "이거보오",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DSXaIOiksHf/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/DeeAuMqzR2S/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCaT8jYOqn_-MGsS8G7h9Zqg": {
+   "name": "포텐독TV",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCFWVcECnnUE_2n5wjGa0AAQ": {
+   "name": "글로리영",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCV09kab-DQNPrCzklF9ks5A": {
+   "name": "ukkukku ",
+   "lang": "ko",
+   "site": "youtube",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.instagram.com/reel/C1oruBTqXSr/": {
+   "name": "instagram.com",
+   "lang": "ko",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  },
+  "@5ddl2": {
+   "name": "@5ddl2",
+   "lang": "ko",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "tZZGsSFMWfI",
+   "done": false,
+   "found": 1
+  }
+ },
+ "videos": {
+  "G3FAvXruqiM": {
+   "id": "G3FAvXruqiM",
+   "title": "이제 초등학교 들어간 딸이 엄마보다 요리 잘하면 생기는 일",
+   "views": 31000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 89,
+   "text": "평소 요리를 못하는 엄마 때문에 어린 나이에 요리를 터득해버린 딸인데 요리곤, 너? 저는 요리곤이 너무 좋아서 요리곤이 너무 좋아서 요리곤이 너무 좋아서 요리곤이 너무 좋아서 요리곤이 너무 좋아서 요리곤이 너무 좋아",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/61557141576634/videos/family-challenge-dr%C3%B4le-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61557141576634/videos/family-challenge-dr%C3%B4le-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "Family challenge #drôle #daughter #sister #comedian ..."
+    },
+    {
+     "href": "https://www.instagram.com/popular/kids-messy-cooking-attempts/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "@popular",
+     "name": "@popular",
+     "views": null,
+     "lang": "foreign",
+     "title": "Kids Messy Cooking Attempts"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/mother-teaching-daughter-to-cook",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/mother-teaching-daughter-to-cook",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "Mother Teaching Daughter to Cook | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/딸-엄마-요리할때",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/딸-엄마-요리할때",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "딸 엄마 요리할때 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/61557141576634/videos/family-challenge-drôle-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61557141576634/videos/family-challenge-drôle-daughter-sister-comedian-challenge-daughterlove-mom-momli/542393985103638/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "Family challenge #drôle #daughter #sister #comedian ..."
+    },
+    {
+     "href": "https://www.instagram.com/popular/쿠킹덤-귀마/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "@popular",
+     "name": "@popular",
+     "views": null,
+     "lang": "ko",
+     "title": "쿠킹덤 귀마"
+    },
+    {
+     "href": "https://www.tiktok.com/@ddoremi__/video/7690841122473659668",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@ddoremi__",
+     "name": "@ddoremi__",
+     "views": null,
+     "lang": "ko",
+     "title": "엄마한테 팝콘 해준다더니 긴급 구조 요청 보낸 사연을 아시나요 ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/U9Je6i9VN9k",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCb5ymSxGa41rYAMDvh22I2Q",
+     "name": "TVCHOSUN LIFE",
+     "views": 1334,
+     "lang": "ko",
+     "title": "[LIFE #Shorts] 아들의 팩폭"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=Xh3sm7YdeUE",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCdK23vzK74N6SzL9VIKR3MQ",
+     "name": "Sophia family",
+     "views": 63678,
+     "lang": "ko",
+     "title": "직접 반죽한 감자 수제비를 처음 먹어본 그리스 가족 반응은!?"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=8BXCN0fmRQQ",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCFmRb3Mqiw-AZzos6UUQPjA",
+     "name": "순천한정식신화정",
+     "views": 774,
+     "lang": "ko",
+     "title": "#신화정 #순천미식유람 #청암대학교 #미식해설사 #순천로컬여행"
+    },
+    {
+     "href": "https://www.tiktok.com/@nasiibadan777/video/7524312236433673477",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@nasiibadan777",
+     "name": "@nasiibadan777",
+     "views": null,
+     "lang": "foreign",
+     "title": "creatorsearchinsights2025 #creatorsearchinsights2025 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=egiDCZxielU",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCxaR3AByZf7vAPowBOq-iWA",
+     "name": "Spanish in Korea",
+     "views": 190059,
+     "lang": "ko",
+     "title": "치킨만 먹는 스페인 아내에게 닭볶음탕 해줬더니.. 밥까지 싹싹 비벼먹네요 |국제커플|"
+    },
+    {
+     "href": "https://www.facebook.com/the.weenie.family/videos/my-korean-mom-is-very-demanding/2093457424727516/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/the.weenie.family/videos/my-korean-mom-is-very-demanding/2093457424727516/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "The Weenie Family on Reels"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/女儿蒂我软饭硬吃",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/女儿蒂我软饭硬吃",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "女儿蒂我软饭硬吃| TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/p/DYD7rYNk7Ym/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DYD7rYNk7Ym/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "재미와 추억 둘 다 잡는 \\u003e여행 잼컨 추천 zip.\\u003c 가져왔습니다 ..."
+    }
+   ],
+   "lensed": true
+  },
+  "58uNk7UHQS0": {
+   "id": "58uNk7UHQS0",
+   "title": "육아하는 사람 빼고 한국인 90%가 욕한 영상",
+   "views": 16000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 42,
+   "text": "육아이를 해본 사람 빼고 한국인이라면 모두가 욕한다는 영상인데 잠깐 조용히 지나 했더니 수영 없었고",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/reel/DUBDTAtE7lw/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DUBDTAtE7lw/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "해외에서 화제된 아들 육아하다가 폭발한 엄마 맘아파 아가야 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/Dc-5pXUIMeA/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/Dc-5pXUIMeA/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "아들을 키우며 극한의 한계에 부딪힌 엄마가 결국 감정이 폭발해 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/discover/육아에지친엄마의절규",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/육아에지친엄마의절규",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "육아에지친엄마의절규 | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdAx721yI-5/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DdAx721yI-5/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "아들 육아하다 결국 감정이 폭발해버린 엄마의 영상이 많은 육아 ..."
+    },
+    {
+     "href": "https://www.facebook.com/yeah1tv/posts/dễ-thương-vậy-chời-cre-tiemanhnangy1s26/1585077856991124/",
+     "hits": 3,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/yeah1tv/posts/dễ-thương-vậy-chời-cre-tiemanhnangy1s26/1585077856991124/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "Dễ thương vậy chời 😍 Cre: tiemanhnang #Y1S26"
+    },
+    {
+     "href": "https://www.instagram.com/p/DUDnQnAEusg/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DUDnQnAEusg/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "엄마도 엄마가 처음이라..ㅜㅜ 겪어본 사람들은 모두 공감한다고 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DUCQJNdE5pX/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DUCQJNdE5pX/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "아들 육아 하다가 폭발한 엄마..ㅜㅠ 공감하는 사람이 많데"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/-TqIFprdsYc",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCG9aFJTZ-lMCHAiO1KJsirg",
+     "name": "MBN News",
+     "views": 81094,
+     "lang": "ko",
+     "title": "울고 있는 아기 앞에서 폭발한 엄마의 절규 [shorts]"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/dA3ThwTsY4k",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A",
+     "name": "지구촌픽",
+     "views": 3394939,
+     "lang": "ko",
+     "title": "엄마 목소리를 듣자마자 아이가 보인 놀라운 반응"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/vSgeDY_t2pU",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCOVSr__U9HE4nH_kTCQ5SJw",
+     "name": "아기꽁냥",
+     "views": 1638,
+     "lang": "ko",
+     "title": "동생 맞을 준비 완료! 엄마는 눈물핑 🥺❤️"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/pb588ejLueM",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCqtysCeDtGc3BrxJl0FTdsw",
+     "name": "황정연",
+     "views": 2790,
+     "lang": "ko",
+     "title": "4개월 수면퇴행 끝..!😢 #7개월아기 #말띠맘"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/親精神小妹",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/親精神小妹",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "親精神小妹| TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdBB8jmSIml/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DdBB8jmSIml/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "극한의 독박 육아에 결국 눈물 폭발한 엄마… 누리꾼들이 비난 ..."
+    },
+    {
+     "href": "https://www.facebook.com/upsoclsupermae/videos/mãe-desmaia-ao-ouvir-o-choro-do-bebê/1601523234819170/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/upsoclsupermae/videos/mãe-desmaia-ao-ouvir-o-choro-do-bebê/1601523234819170/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "A câmera de segurança do quarto registrou o momento. Muitas ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DUDudMwiXOw/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DUDudMwiXOw/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "엄마도 엄마가 처음이라ㅜㅜ"
+    }
+   ],
+   "lensed": true
+  },
+  "a6O4ltJ1IKg": {
+   "id": "a6O4ltJ1IKg",
+   "title": "조회수 '떡상' 중인 69세 할아버지의 출근 브이로그 ㅋㅋㅋ",
+   "views": 15000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 52,
+   "text": "아, 해당하지 마까 현재 조회수 떡상 중인 69세 할아버지 출근 브이로그인데 비상 입을 정리 두분 보충 재하 섀도 건조 빛지 오늘은 맹은",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@user4851540871934.fan/video/7692269718337555719",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@user4851540871934.fan",
+     "name": "@user4851540871934.fan",
+     "views": null,
+     "lang": "ko",
+     "title": "남자 바리깡 커트 쉽게 따라하기 — 아직도 어렵니 1편 (2/2 ..."
+    },
+    {
+     "href": "https://m.youtube.com/shorts/nbDwrv53mZU",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCDjrPToNQpcZii_pfIcIM_Q",
+     "name": "청담동 가위손 이한",
+     "views": 1234,
+     "lang": "ko",
+     "title": "kpop 솔져 헤어컷4️⃣#kpop #군인 #남자머리 #헤어컷 #레시피 #미용실 #추천 #에이크청담 #keşfet #kitten #jesus #love ✝️❤️"
+    },
+    {
+     "href": "https://www.youtube.com/hashtag/새롬동미용실",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/hashtag/새롬동미용실",
+     "name": "youtube.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "YouTube"
+    },
+    {
+     "href": "https://www.tiktok.com/@user4851540871934.fan/video/7693007609749671186",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@user4851540871934.fan",
+     "name": "@user4851540871934.fan",
+     "views": null,
+     "lang": "ko",
+     "title": "남자 헤어스타일 가일컷의 정석 (1/2) | 셀프 앞머리 컷트 ..."
+    },
+    {
+     "href": "https://www.facebook.com/itaemen.2025/videos/오늘의빈집연구소사진을-찍다보면-순간포착이다보니-여러표정이-찍히는데유난히도-눈감거나-이상한-표정이-많이-나오는-이-형을-위해헌정-영상인건가-ai활/1726336704971780/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/itaemen.2025/videos/오늘의빈집연구소사진을-찍다보면-순간포착이다보니-여러표정이-찍히는데유난히도-눈감거나-이상한-표정이-많이-나오는-이-형을-위해헌정-영상인건가-ai활/1726336704971780/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "오늘의빈집연구소》 사진을 찍다보면 순간포착이다보니 여러표정 ..."
+    },
+    {
+     "href": "https://www.instagram.com/popular/대머리-빛반사/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "@popular",
+     "name": "@popular",
+     "views": null,
+     "lang": "ko",
+     "title": "대머리 빛반사"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQb2Gwik16K/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DQb2Gwik16K/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "드롭컷🩶 M자 커버에 좋은 머리 중 하나가 드롭컷이란거 알고 ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/fPUt8Ey0cDI",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCDjrPToNQpcZii_pfIcIM_Q",
+     "name": "청담동 가위손 이한",
+     "views": 1318,
+     "lang": "ko",
+     "title": "kpop 연예인 헤어컷3️⃣#쉬운 #헤어컷 #가이드 #레시피 #공유 #kpop #남자머리 #헤어스타일 #추천 #에이크청담#미용실 #jesus #love ✝️❤️"
+    },
+    {
+     "href": "https://www.facebook.com/Sikboy714/videos/3월3일-두번째-더블싱글-w식보이sikboy-인스타-라이브식보이-sikboy-씩보이-피랩-두랩피부로숨쉬기-두피의건강0303-더블싱글-w-관심과사/192258125443294/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Sikboy714/videos/3월3일-두번째-더블싱글-w식보이sikboy-인스타-라이브식보이-sikboy-씩보이-피랩-두랩피부로숨쉬기-두피의건강0303-더블싱글-w-관심과사/192258125443294/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "3월3일 두번째 더블싱글 [W] 식보이(Sikboy) 인스타 라이브 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@user4851540871934.fan/video/7693742948244081938",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@user4851540871934.fan",
+     "name": "@user4851540871934.fan",
+     "views": null,
+     "lang": "ko",
+     "title": "크롭컷·스왓컷 남자 짧은 머리 셀프 커트 쉽게 하는 방법 | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DV2W1sQEjG_/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DV2W1sQEjG_/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "✓남자만 볼수있는 영상✓ . . . 전두가발 스타일을 모아봤어요 ..."
+    },
+    {
+     "href": "https://www.facebook.com/hair119.co.kr/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/hair119.co.kr/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "헤어119 (@hair119.co.kr) • Facebook"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=DHoWiCrZNZA",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCqaEnBm3MyGaKcUKfrKO4sA",
+     "name": "찐배영상",
+     "views": 5862,
+     "lang": "ko",
+     "title": "효진이 따뜻한거 마시는데 줌했다가 눈마주침"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/남자뒤통수머리볼륨자르기",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/남자뒤통수머리볼륨자르기",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "남자뒤통수머리볼륨자르기 | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DePGuoRz0qG/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DePGuoRz0qG/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "탈모로 인해 가발을 고민하고 계신가요? 대보가발은 고객님의 ..."
+    }
+   ],
+   "lensed": true
+  },
+  "eJfVjhjVE8w": {
+   "id": "eJfVjhjVE8w",
+   "title": "차 사고난 대학생을 도와준 버스기사님",
+   "views": 12000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 88,
+   "text": "시험 보러 가는 중인 대학생인데 깜빡이를 놓고 우측으로 들어가려고 했는데 갑자기 끼워둔 차 때문에 사고가 났죠 경험이 없는 대학생은 오히려 상대차 중한테 사과를 했는데 버스 기사님의 모든 상황을 보고 있었습니다",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=d0gJ7QxaEtY",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChlgI3UHCOnwUGzWzbJ3H5w",
+     "name": "YTN",
+     "views": 2193,
+     "lang": "ko",
+     "title": "[기업] SK E&S, 환경부·현대차와 '수소 통근버스 전환' 협약 체결 / YTN"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=lBr5yt18koE",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChlgI3UHCOnwUGzWzbJ3H5w",
+     "name": "YTN",
+     "views": 3688,
+     "lang": "ko",
+     "title": "[기업] 현대차 \"사우디 네옴시티서 수소 차량 성공적 실증\" / YTN"
+    },
+    {
+     "href": "https://www.instagram.com/p/DS3yiX_D53E/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DS3yiX_D53E/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "연말특집 현대 유니버스 FCEV Collection 2025년 한 해 동안 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DWpnaz1mbDS/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DWpnaz1mbDS/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "_ 현대차 수소전기버스 누적 판매 3천 대 돌파🚍 도심 혼잡 구간 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DaM__xXCa2M/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DaM__xXCa2M/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "곽동규 만화 | 노캡실화임미다 #인스타툰 #화형 #애니고 #애니 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DcxxrXgk96j/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DcxxrXgk96j/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "신점 썰은 나중에 올라갑니다 소재+1"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/가만히-잇는데-갑저기-슘이-답답해요",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/가만히-잇는데-갑저기-슘이-답답해요",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "가만히 잇는데 갑저기 슘이 답답해요 | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/알마나-더사랑해야",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/알마나-더사랑해야",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "알마나 더사랑해야 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/jjaltoon/videos/파이트-짤툰-죽음/876756453336266/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/jjaltoon/videos/파이트-짤툰-죽음/876756453336266/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "파이트 짤툰] 죽음 | 짤툰 | Facebook"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/WMwlR1aK5nk",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UC6u3fosnyufBiUiS3w609zw",
+     "name": "키에커",
+     "views": 292957,
+     "lang": "ko",
+     "title": "급똥대전쟁 최후"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/DCpVKe0xIOs",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UC5OKYjJECGgLMnXz6aIfuog",
+     "name": "모두연결",
+     "views": 164,
+     "lang": "ko",
+     "title": "#모두연결 #폐가전무상방문수거"
+    },
+    {
+     "href": "https://www.tiktok.com/discover/이경우-고백",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/이경우-고백",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "이경우 고백 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/cindimedia/posts/남자들-요가하는-여자가-로망아니야-요가-선생님-이랑-체위가어휴-7월더블코인이벤트-놓치지말고-가입하편-보기-아이디-비번은-아무거나-치시면-새로나운/1610096615933687/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/cindimedia/posts/남자들-요가하는-여자가-로망아니야-요가-선생님-이랑-체위가어휴-7월더블코인이벤트-놓치지말고-가입하편-보기-아이디-비번은-아무거나-치시면-새로나운/1610096615933687/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "남자들 요가하는 여자가 로망아니야?? 요가 선생님 이랑 체위가 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/CWVAcYfv2-2/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/CWVAcYfv2-2/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "메리지레드 시즌2 제6화 완벽한거짓말편(3) #메리지레드#인스 ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DI29RCgS0L4/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DI29RCgS0L4/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "스포츠토토 | 광고 [스포츠토토(@sportstoto.toto.proto) X 카인 ..."
+    }
+   ],
+   "lensed": true
+  },
+  "cXNqQ2iovjs": {
+   "id": "cXNqQ2iovjs",
+   "title": "'청각장애인' 이 택시에 탔는데 기사님이 수어를 할 줄 알면 생기는 일",
+   "views": 12000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 68,
+   "text": "택시에 탄 승계! 그런데 아무 말 없이 기사님이 휴대폰을 만지려고 합니다. 알고 보니 말을 들을 수 없는 청각장인이었죠. 수어를 할 줄 아는 기사님을 보자 표정이 한층 밝아지...",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=p3NAoppB16Y",
+     "hits": 3,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChnB1sRCJ3rXLp_8WkS14aA",
+     "name": "MAJOR9 메이저나인",
+     "views": 3928,
+     "lang": "ko",
+     "title": "[MAJOR9/바이브] 바이브(VIBE) 'Director's Cut : 슬픈가요' 퇴근길 LIVE Preview #2"
+    },
+    {
+     "href": "https://www.instagram.com/p/DdvdsQYFGRa/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DdvdsQYFGRa/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "오전 9시 출근을 앞둔 한 직장인의 모습이 공개되자 스튜디오가 ..."
+    },
+    {
+     "href": "https://youtu.be/RHFEKv7SJhk",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCem8l1w4OWhkqpoOg1SB4_w",
+     "name": "재넌 ",
+     "views": 728185,
+     "lang": "ko",
+     "title": "맨날 동생 무시하던 형 부자로 성공해서 참교육하기ㅋㅋㅋㅋ이제 무시 못하지?!"
+    },
+    {
+     "href": "https://www.facebook.com/61573130600577/videos/in-china-a-deaf-taxi-driver-picked-up-a-deaf-passenger-they-didnt-realize-it-at-/750134838101579/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61573130600577/videos/in-china-a-deaf-taxi-driver-picked-up-a-deaf-passenger-they-didnt-realize-it-at-/750134838101579/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "In China, a deaf taxi driver picked up a deaf passenger ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=UoZJjoCN61E",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCiBr0bK06imaMbLc8sAEz0A",
+     "name": "MBCentertainment",
+     "views": 383720,
+     "lang": "ko",
+     "title": "Infinite Challenge, Acne Break(2) #07, 여드름 브레이크(2) 20090627"
+    },
+    {
+     "href": "https://youtu.be/Dcwi5HXjCtA?si=cphyqQWoQKeefEf3",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCzYXf5sgRGGZjN9Fmv3YKnw",
+     "name": "최호구를 지켜줘",
+     "views": 31977,
+     "lang": "ko",
+     "title": "[sub] 응.. 납치된 거야..👻"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=PzzjoYfPkv4",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCjKoaGQcwRNuvlL3BEK1ubg",
+     "name": "RyJoon [CIS Life]",
+     "views": 1585043,
+     "lang": "ko",
+     "title": "택시사기 면역 100% 상대를 잘못 고른 카자흐스탄 사기꾼의 최후"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdiDsqjP4hB/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DdiDsqjP4hB/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "길거리 캐스팅까지 당한 AI 미모급 곽범 딸 ㄷㄷ #전현무계획4 ..."
+    },
+    {
+     "href": "https://www.facebook.com/realmudo/videos/무도-실례가-안-된다면-아이스크림-하나만-노홍철-레전드-무도짤-탄생-순간ㅋㅋ-여드름-브레이크-5편-mbc090627방송/1153333806167634/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/realmudo/videos/무도-실례가-안-된다면-아이스크림-하나만-노홍철-레전드-무도짤-탄생-순간ㅋㅋ-여드름-브레이크-5편-mbc090627방송/1153333806167634/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "ko",
+     "title": "무도] 실례가 안 된다면 아이스크림 하나만...🍦 노홍철 레전드 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@leedo0001",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@leedo0001",
+     "name": "@leedo0001",
+     "views": null,
+     "lang": "ko",
+     "title": "리도동동Leedo (@leedo0001) | TikTok"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV17m421p7EP/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV17m421p7EP/",
+     "name": "bilibili.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "中字】恋爱兄妹“正燮帮世承拿掉沾嘴上的东西”_哔哩哔哩_bilibili"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeZfmZ3SB4I/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DeZfmZ3SB4I/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "멘탈 탈탈 털리는중 #부부스타그램 #현실부부 #조수석 #유부남 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@bdns_3/video/7687092541161852167",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@bdns_3",
+     "name": "@bdns_3",
+     "views": null,
+     "lang": "ko",
+     "title": "오전 반차 내고 첫차로 성심당 오픈런 가능? #05 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/tan.c.beng.94/videos/when-silence-stopped-being-a-barrier%E5%BD%93%E6%B2%89%E9%BB%98%E4%B8%8D%E5%86%8D%E6%98%AF%E9%9A%9C%E7%A2%8Dhe-was-deaf-and-he-was-used-to-not-b/1730594878213636/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/tan.c.beng.94/videos/when-silence-stopped-being-a-barrier%E5%BD%93%E6%B2%89%E9%BB%98%E4%B8%8D%E5%86%8D%E6%98%AF%E9%9A%9C%E7%A2%8Dhe-was-deaf-and-he-was-used-to-not-b/1730594878213636/",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "When silence stopped being a barrier. 当沉默不再是障碍。 He ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DD9K_9mJKBq/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DD9K_9mJKBq/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "케이크 먹여주기 2차 시도만에 성공😊 벌금 다가오는거 진짜 ..."
+    }
+   ],
+   "lensed": true
+  },
+  "b3_DDb5AEJs": {
+   "id": "b3_DDb5AEJs",
+   "title": "빙판길 운전 할 때 꼭 알아야 하는 꿀팁",
+   "views": 8800000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 57,
+   "text": "한 번 알아두면 평생 써먹는 꿀팁인데 빈팡길에 브레이크가 말을 안 들을 때는 이렇게 해야겠죠 서행을 할 때 브레이크를 잡으면 계속 밀리잖아",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=cFZP__8CznQ",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCF3UEVPt5zZTlBVJwDG317g",
+     "name": "JTBC Voyage",
+     "views": 711135,
+     "lang": "ko",
+     "title": "＂지금 상황에 웃음이 나와?!＂ 가게로 돌진 후 사과 없이 웃기만 하는 운전자💥초보운전이 부른 아찔한 사고🔥| 한블리 (한문철의 블랙박스 리뷰)| JTBC 250919 방송 외"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=wv_72poPMnQ",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCvjJFgLQ_pU3IJWZMopS26Q",
+     "name": "택시맨 주행기",
+     "views": 4776,
+     "lang": "ko",
+     "title": "2026년 9월 3일:결국 일산까지 끌려갔습니다... 밤늦게 30만 원 찍고 기분 좋게 퇴근!"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=kZwMowNkc5A",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 16123,
+     "lang": "ko",
+     "title": "27447회. 내 차 보닛이 니 침대냐? 이거 재물손괴죄 가능한가요?"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=qjg2ZTqFCvw",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 22749,
+     "lang": "ko",
+     "title": "27926회. 갑자기 밀고 들어오는 옆 차 때문에 하마터면 인명사고 낼 뻔했습니다... 서울시 그리고 서울경찰청에서 점검이 필요해 보입니다!"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=D1b9ZAzlIfY",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 16639,
+     "lang": "ko",
+     "title": "27423회. 훅! 들어온 차, 멈춘 오토바이, 뒤에서 박은 블박차! 셋 중에 누가 제일 잘못했을까요?"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=rvhdDQZ5Bcg",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 12396,
+     "lang": "ko",
+     "title": "28207회. 라바콘으로 되어있는 길로 가는데 옆에 서있던 트럭에 열려있는 운전석 문에 충돌"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/qNCGCCobDgc",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCQajJC-D6I3o5ICk1jhxWTg",
+     "name": "Good-looking Driving License&Learn's Classroom",
+     "views": 1796354,
+     "lang": "ko",
+     "title": "앞차폭감은 이렇게 잡으세요^^"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=JrRvj19GOqA",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 19934,
+     "lang": "ko",
+     "title": "27977회. 긴급 출동하던 구급차와 충돌 후 전복.. 누가 가해자일까요?"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=Yn2ncNbwd3o",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 8314,
+     "lang": "ko",
+     "title": "27808회. 직진하는 차들 사이를 통과하려고 뒤에서 달려오던 오토바이와 부딪힌 사고, 블박차 운전자가 오토바이를 볼 수 있었을까요?"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=WNqGkKC9cO0",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 7879,
+     "lang": "ko",
+     "title": "27553회. 빵~ 경적도 울렸는데 상대 트럭은 사고 몰랐다고 합니다."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/kL3fidxh1pc",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCj3_t5p4L4aFsvdW3uHjnnw",
+     "name": "연합뉴스 Yonhapnews",
+     "views": 11646,
+     "lang": "ko",
+     "title": "운전중 영상 본 택시기사…지적한 승객에게 \"내리세요\" #shorts"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=YJRGpWzaxFo",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 10537,
+     "lang": "ko",
+     "title": "27252회. 신호없는교차로 통과하려고 일시정지했다가 출발하는데 좌측에서 빠르게달려온 오토바이와 사고"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=kQ8NGdaNiNw",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCH5U89kvHrVxxS80xpoOydw",
+     "name": "한문철 TV",
+     "views": 19753,
+     "lang": "ko",
+     "title": "28261회. 왕복2차로 갓길주차차량때문에 마주오던 차와 좁게 비켜가다가 사고"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=AdthBroon2A",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCn9lNw5sQvHK68P_U7wWCrQ",
+     "name": "maxoncon 중년대리TV",
+     "views": 66,
+     "lang": "ko",
+     "title": "공도 탈출성공/ 끈질긴 2시간전쟁 19Oct2026 #대리운전 #중벤 #편도콜 #ritimo"
+    },
+    {
+     "href": "https://www.instagram.com/p/DUsIp_Mk-87/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DUsIp_Mk-87/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "ㅘ,,,오토바이 타신분 괜찮으실려나..??"
+    }
+   ],
+   "lensed": true
+  },
+  "h-EinSMSgV0": {
+   "id": "h-EinSMSgV0",
+   "title": "현재 전세계인들이 한국 응원하고 있다는 한국인 vs 이슬람",
+   "views": 8200000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 67,
+   "text": "현재 전 세계인들이 한국인 응원한다는 영상인데 누가 보면 한국인 아저씨가 이슬람 여성을 위협하는 걸로 보이지만 현실은 주차를 개판으로 해서 차 좀 빼달라고 했고",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=0Xel4OehgcE",
+     "hits": 2,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChb4mWZ1WDdG5Ji5tUNxSMw",
+     "name": "에리코",
+     "views": 3314,
+     "lang": "ko",
+     "title": "미국자동차! 사놓고 가장 후회하는 차 TOP10 닷지 그랜드 캐러밴"
+    },
+    {
+     "href": "https://www.instagram.com/reel/Dbfae7gz75O/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/Dbfae7gz75O/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "남자 vs 여자 자동차시선 '독밥' 좋댓구알 부탁드립니다 #남자 ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/umHLkENZU0c",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCCXmKfqL_oUXE3Xt6E4_uGQ",
+     "name": "shift33",
+     "views": 1242,
+     "lang": "ko",
+     "title": "🇨🇦 캐나다 워홀 브이로그 EP.17 | 가장 기대했던 모레인 레이크, 실제로 보니 달랐습니다｜29일차 #캐나다워홀"
+    },
+    {
+     "href": "https://www.facebook.com/marketplace/henrietta-ny/dodge-grand-caravan/?locale=lt_LT",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/marketplace/henrietta-ny/dodge-grand-caravan/?locale=lt_LT",
+     "name": "facebook.com",
+     "views": null,
+     "lang": "foreign",
+     "title": "New and Used Dodge Grand Caravan Minivans For Sale in ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DbBBgLeFIXQ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DbBBgLeFIXQ/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "자동차 개조의 자유도가 높으면 이런 차들이 탄생합니다. 미니밴 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=0xwpEXSq3n8",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCRLx6MLo1BoqF2LJ51p1xxA",
+     "name": "Kman car",
+     "views": 4998,
+     "lang": "ko",
+     "title": "[리뷰,시승] 포드 익스플로러의 경쟁자 _ 어떤 차로 고르시겠습니다? _ 북미에서는 이 차도 제법 잘 팔리고 있습니다:) 닷지 듀랑고"
+    },
+    {
+     "href": "https://www.instagram.com/p/DWQamu9Ev_k/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DWQamu9Ev_k/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "⚜️❣️sold out ❣️⚜️ . . 박시한 노랑린넨 블라우스 가슴 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=VIKsR2pI8CM",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCoLNmFZMBYAEB7nz9msnoCg",
+     "name": "단디옷만들기",
+     "views": 445,
+     "lang": "ko",
+     "title": "넥셔링블라우스원피스 1- 구조설명과 소매"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=84T3hEyTWGc",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCehO2C1F30RUmh_KW2EKk2A",
+     "name": "꽁스",
+     "views": 2789,
+     "lang": "ko",
+     "title": "닷지 니트로 디젤 배기튜닝했습니다"
+    },
+    {
+     "href": "https://www.instagram.com/p/DThQNIFkcag/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DThQNIFkcag/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "이종민 | 미국 자동차 튜닝계의 유명 유튜브 채널인 군즈쿼드가 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=oi8WJL7ldFY",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCRoeRpwO9RR9M08nHYyfgOg",
+     "name": "태광모터스",
+     "views": 4826,
+     "lang": "ko",
+     "title": "강력한 힘을 가진 감성 끝판왕 픽업트럭!! 아는 사람은 다 안다는 닷지의 니트로!!(닷지 니트로 2.8 디젤)"
+    },
+    {
+     "href": "https://www.instagram.com/p/DZEp_h9k0pL/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DZEp_h9k0pL/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "그동안 소문만 무성했던 닷지 차저의 V8 엔진 복귀가 공식 확인 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=8Jvj2As8sw0",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCrOl7IuctoHW0iW-Gozj4EQ",
+     "name": "비피디 BPD",
+     "views": 207098,
+     "lang": "ko",
+     "title": "닷지 램 한국 정식 출시!! 국산 픽업 트럭은 끝났다.. 무쏘, 타스만 어떡하죠?"
+    }
+   ],
+   "lensed": true
+  },
+  "tZZGsSFMWfI": {
+   "id": "tZZGsSFMWfI",
+   "title": "하루 매출 수천만원이라는 일본의 장난감 기계",
+   "views": 8000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 66,
+   "text": "한 번 보이면 무조건 돈쓰게 하는 기계인데 방해하는 비둘기를 피해 우선 작은 알을 뽑으니까 아내보이는 작은 상자의 열쇠가 나오는데 그리고 겨우 흰색 알을 뽑으니",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=MFh03dX-Xtw",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCgsgpELbaTiGjCHIjHVF8uQ",
+     "name": "TV생물도감",
+     "views": 995937,
+     "lang": "ko",
+     "title": "창고에 박아놓고 수십년간 보존가능한 신비의 생물! 정말 물만 부으면 태어날까?"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/idMboWA4Shw",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCUNJ2kKnM92rHqH0dCsvHqw",
+     "name": "ꩁ집순이 ◡̎ ⋆*",
+     "views": 119,
+     "lang": "ko",
+     "title": "지브리 오뚜기 포장 #asmr #포장영상 #포장"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=0At_1cFx2XU",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChlgI3UHCOnwUGzWzbJ3H5w",
+     "name": "YTN",
+     "views": 2733,
+     "lang": "ko",
+     "title": "'작은 장난감 주의'...삼킴 사고 매년 증가 / YTN"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DB-y_cdh9Yp/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DB-y_cdh9Yp/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "정브르 | 맹독 있을것 같은데...참 특이허다 캐터피가 액체를 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/discover/알리익스프레스-미니어쳐",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/discover/알리익스프레스-미니어쳐",
+     "name": "tiktok.com",
+     "views": null,
+     "lang": "ko",
+     "title": "알리익스프레스 미니어쳐 | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=vfXAPBIMMLE",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UChlgI3UHCOnwUGzWzbJ3H5w",
+     "name": "YTN",
+     "views": 9820,
+     "lang": "ko",
+     "title": "쌀알 위에 돼지 3마리...타이완 미니어처 '화제' / YTN"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/VO9Z51CQ6Kc",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCUSVraAg8xx_iSyYkvP0nqQ",
+     "name": "프롬tv",
+     "views": 4694,
+     "lang": "ko",
+     "title": "죽을뻔 했던 고슴도치의 성장하는 모습!!"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/URJYY5gHR0U",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCOWS1wmgdPiHCoDFyV7Soxw",
+     "name": "이거보오",
+     "views": 1837,
+     "lang": "ko",
+     "title": "유리의 작은 흠집 주사기까지 등장"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DSXaIOiksHf/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DSXaIOiksHf/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "무려 쌀 한 톨 크기로 변신한 고질라라니… 이렇게 작디작은 ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeeAuMqzR2S/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DeeAuMqzR2S/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "📌 댓글에 고양이 남겨주세요 📌 프로필 링크(131번)에서 확인 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=U2YO7g-fdiA",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCaT8jYOqn_-MGsS8G7h9Zqg",
+     "name": "포텐독TV",
+     "views": 11121,
+     "lang": "ko",
+     "title": "똥밟았네 캔디가 있다?! l 똥밟았네 캔디🍭 출시!💖 [👍]"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/LoycZezHs7Q",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCFWVcECnnUE_2n5wjGa0AAQ",
+     "name": "글로리영",
+     "views": 2383,
+     "lang": "ko",
+     "title": "진짜 응아 냄새 안납니다 진짜루..🥺"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=pDclmPmqKfE",
+     "hits": 1,
+     "site": "youtube",
+     "key": "https://www.youtube.com/channel/UCV09kab-DQNPrCzklF9ks5A",
+     "name": "ukkukku ",
+     "views": 67494,
+     "lang": "ko",
+     "title": "[Toy asmr] Pororo Crong Eating and Potty Training With Pooping Slime 뽀로로 크롱 밥먹이고 배변훈련"
+    },
+    {
+     "href": "https://www.instagram.com/reel/C1oruBTqXSr/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/C1oruBTqXSr/",
+     "name": "instagram.com",
+     "views": null,
+     "lang": "ko",
+     "title": "따뜻한 우유에 #또루루 넣어서 마셔주면 하루종일 얼었던 몸과 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@5ddl2/video/7678600010694446357",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "@5ddl2",
+     "name": "@5ddl2",
+     "views": null,
+     "lang": "ko",
+     "title": "말랑이 수술하기 2탄: 납작똥 치료법과 ASMR 케어 | TikTok"
+    }
+   ],
+   "lensed": true
+  },
+  "kY182jMoKg4": {
+   "id": "kY182jMoKg4",
+   "title": "랭킹 671위 남자 테니스 선수 VS 랭킹 1위 여자 테니스 선수",
+   "views": 7900000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 61,
+   "text": "현재 랭킹 671위 남자 선수와 랭킹 1위 여자 선수가 붙으면 생기는 일인데 이 악물과 서블을 하고 아... 아깨서 안 깨루니까 진심으로 치면 못 받는다는 걸 깨달았나...",
+   "matches": []
+  },
+  "ZeFNGZf0Ndk": {
+   "id": "ZeFNGZf0Ndk",
+   "title": "프랑스에서 인기 폭발 중이라는 한국인 미용실",
+   "views": 7500000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 73,
+   "text": "외국인들 댓글 폭발 중인 한국이몽의 대화 스킬인데 필리핀 알아요? 엄마 필리핀 사람이야? 네 아 그래서 니가 이렇게 섹시하구나 초복 사람은 이 몸매가 안나오는데 저기 애쉬형 결과서",
+   "matches": []
+  },
+  "673urZh2tO0": {
+   "id": "673urZh2tO0",
+   "title": "미션 한 번에 성공하는 K 할아버지 ㄷㄷ",
+   "views": 6000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 30,
+   "text": "제안을 받자마자 바로 각 잡아버리는 K.R. 아버지인데 10초만에 15만원 벌어버리고",
+   "matches": []
+  },
+  "qzyAy2ips1I": {
+   "id": "qzyAy2ips1I",
+   "title": "같은 조건이면 '페이커' 도 이기는 남자 ㄷㄷ",
+   "views": 5800000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 56,
+   "text": "뇌성마비라 발을 이용해서 롤을 하는 남성인데 같은 조건이면 페이코도 이길 만큼 실력을 갈고 닦았죠 그러다 한 네티즈니 해설은 안됩니다",
+   "matches": []
+  },
+  "Tws-Nvd3TkM": {
+   "id": "Tws-Nvd3TkM",
+   "title": "모두가 어려워하는 지드래곤을 함부로 대하는 유일한 사람😂",
+   "views": 5800000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 59,
+   "text": "지드래곤이 나타나자 단체 기립하는 후배 가수들인데 이 상황이 불편했던 지드래곤이 손짓하자 그리고 이런 지들 엉가 딩가 하는 사람이 있었는데",
+   "matches": []
+  },
+  "OhiI-FUe1dA": {
+   "id": "OhiI-FUe1dA",
+   "title": "드론 영상 촬영자 연봉이 5억인 이유 ㄷㄷ",
+   "views": 4600000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 21,
+   "text": "게임 영상으로 착각하게 만든 역대급 드론 무빙인데",
+   "matches": []
+  },
+  "qrhNx-_uZXU": {
+   "id": "qrhNx-_uZXU",
+   "title": "무섭기로 유명한 판사도 감당 못하는 할아버지",
+   "views": 4300000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 27,
+   "text": "30cm 샌드위치를 12cm로 소교섭한 가게를 고소한 할아버지가 법정에 섰는데",
+   "matches": []
+  },
+  "5vL4iCGpCik": {
+   "id": "5vL4iCGpCik",
+   "title": "노점상 '먹튀범' 참교육하는 상남자 ㄷㄷ",
+   "views": 4000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 76,
+   "text": "진짜 인가요? 안 했어요 노존상 먹띠 범을 참교육하는 남성인데 도망갔어요? 아니 내 비덩이요 그냥 왜요? 아 그냥 저희요 그냥 하지만 참을 수 없었던 남성은 야! 이거 봐 이 새끼야! 이 새끼야! 진짜 안...",
+   "matches": []
+  },
+  "xX-8fwGU9WU": {
+   "id": "xX-8fwGU9WU",
+   "title": "팁 받는 게 너무 어색한 한국 알바생들 근황 ㅋㅋㅋ",
+   "views": 3600000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 65,
+   "text": "팁 받는 게 너무 어색한 한국인들 근황인데 팁! 네? 팁! 이거 너무 많은데요 나 나 주머니에다 넣어요 이거 주머니에다 넣어요 여기 팁! 너무 많아서 만 원으로 줄여봤는데",
+   "matches": []
+  },
+  "UGodDHZ_puM": {
+   "id": "UGodDHZ_puM",
+   "title": "조리돌림 하는 흑인들을 단어 한마디로 멘붕에 빠뜨린 여성",
+   "views": 3600000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 46,
+   "text": "너가 닮았잖아! 흑인 여성무리 에게 졸이돌림 당하고 있는 여성인데 외모 Xuan Run 시험사 저 사이 오빠모 결국 지하철에서 내...",
+   "matches": []
+  },
+  "x4tYyVaWsJA": {
+   "id": "x4tYyVaWsJA",
+   "title": "지하철 승객들 감탄하게 만든 기관사의 센스 ㅋㅋㅋ",
+   "views": 3200000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 44,
+   "text": "불꽃축제를 보고 싶은 승객을 위해 기간사가 보여준 미친 센스인데? 그리고 이걸 밖에서 보면 이런 모습이었죠",
+   "matches": []
+  },
+  "citnm4_F6X8": {
+   "id": "citnm4_F6X8",
+   "title": "'한식' 의 맛을 깨달아버린 불곰국 형님",
+   "views": 3100000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 28,
+   "text": "도대체 왜 떡상 안 하는지 모르겠는 외국인인데 그리고 양파를 다 먹고",
+   "matches": []
+  },
+  "Cuffu-ABrAc": {
+   "id": "Cuffu-ABrAc",
+   "title": "아무 이유없이 차를 막고 있는 아저씨 참교육 ㅋㅋㅋ",
+   "views": 3000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 49,
+   "text": "아무 이유 없이 차를 맡고 있는 아저씨 때문에 화가 난 차주인데 갑자기 태극권을 시전해 버리는데 그래도 미동을 하지 않자",
+   "matches": []
+  },
+  "O0ycWj22BOE": {
+   "id": "O0ycWj22BOE",
+   "title": "지하철 노인들의 싸움을 한 번에 말리는 진짜 상남자",
+   "views": 2600000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 65,
+   "text": "인스타에서 유명한 상남자 호소윈인데 1분 1시라고 말해 임마 지금 지하철에서 사과하고 사과해 자 빨리 얘기하겠죠 보안관이 출동하고 사과해 사과해 괜찮습니다",
+   "matches": []
+  },
+  "DnWJyhSdSqo": {
+   "id": "DnWJyhSdSqo",
+   "title": "버스기사 분노하게 만든 불법정차 민폐남",
+   "views": 2400000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 73,
+   "text": "야, 예를 들어서 가쁜... 불법 전차 한 명 때문에 피해자 속출한 상황인데 설마 저 느긋하게 오는 사람 저 사람인가? 분노한 버스 기사는? 차 주분이세요? 이렇게 차 대놓고 가면 어떡해요? 아, 여기...",
+   "matches": []
+  },
+  "Ak8Cme5JM1I": {
+   "id": "Ak8Cme5JM1I",
+   "title": "외국인들이 화상채팅에서 '한국말' 로 싸우면 생기는 일 ㅋㅋㅋ",
+   "views": 2300000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 44,
+   "text": "한 흑인이 한국에서 화성채팅을 하는 여자를 만났는데 근데 됐지 대뜸 욕을 해서 당황합니다 We are not Korean 아이 시발 샹년아",
+   "matches": []
+  },
+  "n35u0rJLJ8o": {
+   "id": "n35u0rJLJ8o",
+   "title": "CCTV에 박제된 음쓰통 진상남들 ㄷㄷ",
+   "views": 2200000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 74,
+   "text": "조만간 사건 반장에 올라갈 수 있다는 영상인데 다큰 성인 2명이 식당 앞에 음식물 쓰레기통을 발로 차는 게 고스란히 CCTV에 찍혔고 음수통을 바로 해달라는 말에 충격적인 행동을 보여줬는데",
+   "matches": []
+  },
+  "RPb2JIC1p0w": {
+   "id": "RPb2JIC1p0w",
+   "title": "운전자를 착하게 만드는 마법의 횡단보도 ㅋㅋㅋ",
+   "views": 2200000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 64,
+   "text": "아무도 양보해 주지 않는 위험한 횡단보도를 확 바꿔버린 남성인데 적도를 잡고 횡단보도를 건넌을 뿐인데 죽어도 양보를 안 하던 차주들이 갑자기 온손해졌죠",
+   "matches": []
+  },
+  "hFmo2Z-Q2TA": {
+   "id": "hFmo2Z-Q2TA",
+   "title": "한국 연예인 멘탈을 박살내는 일본 예능 근황",
+   "views": 2100000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 53,
+   "text": "한국형의 멘탈 부숴버리는 일본 예능인데 친구들이 많이 있었어요 그 학교도 가요 가요? 네 학교도 가요 아, 네? 이게 무슨 말인가 했는데",
+   "matches": []
+  },
+  "uRaMlL8UiEA": {
+   "id": "uRaMlL8UiEA",
+   "title": "프로 복싱선수인 줄 모르고 잘못 시비건 문신남의 최후",
+   "views": 1900000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 81,
+   "text": "건물 입구에서 문신남과 시비가 붙은 체육관 관장 올라와서 한 번 하자 정말 할 것 없이 링 위에서 야차를 제안했지만 비겁하게 엘리베이터에서부터 레슬링 기술을 걸었다고 하는데 분노한 관장은 참교육",
+   "matches": []
+  },
+  "ycTBj2nFchc": {
+   "id": "ycTBj2nFchc",
+   "title": "웃음참기 대회 우승한 레전드 자학개그 ㅋㅋㅋ",
+   "views": 1900000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 23,
+   "text": "자학객으로 웃음참기에 대해 가볍게 우승하는 여성인데",
+   "matches": []
+  },
+  "CdWbr0zML6M": {
+   "id": "CdWbr0zML6M",
+   "title": "와국인들 취향 저격한 50대 한국인의 브이로그",
+   "views": 1500000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 30,
+   "text": "갑자기 팔로워 미친듯이 들고 있는 50대 남성이 라면집에서 카메라를 켰는데",
+   "matches": []
+  },
+  "8zXCTMWTU4M": {
+   "id": "8zXCTMWTU4M",
+   "title": "전세계 사람들 흥분하게 만든 한국어 ㅋㅋㅋ",
+   "views": 1500000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 49,
+   "text": "발로란트 경계에서 나온 돌발 상황인데 욕을 하는 장면이 전세계에 생중예되었고 놀라운 반응을 볼 수 있었는데 먼저 미국",
+   "matches": []
+  },
+  "hfFs8xvT0Uo": {
+   "id": "hfFs8xvT0Uo",
+   "title": "엄마를 지키도록 '세팅된' 아기로봇 ㅋㅋㅋ",
+   "views": 1400000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 42,
+   "text": "가정교육이 너무 잘되면 생기는 일인데 누가 엄마를 때리면 지켜줘야 한다는 아빠의 말을 떠올린 아기는",
+   "matches": []
+  },
+  "JEZrE8sGtsg": {
+   "id": "JEZrE8sGtsg",
+   "title": "알고 보니 '극사실주의' 였던 몽타주 화가",
+   "views": 1400000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 25,
+   "text": "알고 보니 극사실주의였던 몽타주인데 아... 장난인가 싶었는데",
+   "matches": []
+  },
+  "IBraR4EGGpM": {
+   "id": "IBraR4EGGpM",
+   "title": "일본인이 삼겹살 처음 먹으면 생기는 일 ㅋㅋㅋ",
+   "views": 1300000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 70,
+   "text": "일본인이 삼겹살을 처음 먹으면 생기는 일인데 삼겹살에 쌈장을 바르고 잘 구워진 김치를 올리고 마무리로 참기는 코팅까지 해주고 한입 크게 먹어 보는데 오! 여기로 됐어 어? 어",
+   "matches": []
+  },
+  "btypbFrKMiE": {
+   "id": "btypbFrKMiE",
+   "title": "현재 전세계에서 '한국인' 만 욕한다는 영상",
+   "views": 1100000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 61,
+   "text": "현재 외국인만 욕해하고 한국인들만 욕한다는 영상인데 포장마차를 경험하러 온 여행객들이 음식을 주문하자 아앤 아앤 아앤 아앤 아앤 아앤 아앤 아앤",
+   "matches": []
+  },
+  "o_CVP3Hs9Mk": {
+   "id": "o_CVP3Hs9Mk",
+   "title": "좌파 우파 통일시킨 위험한 발언 ㄷㄷ",
+   "views": 1000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 63,
+   "text": "좌우 상관없이 널리 퍼져야 하는 영상인데 자본주의 국가를 무너져야 되고 무속 국가가 돼야 된다고요? 사회주의와 공산주의 국가가 돼야 된다고요? 이 나라가!",
+   "matches": []
+  },
+  "aY1rle9qkds": {
+   "id": "aY1rle9qkds",
+   "title": "의외로 외국인들이 '환장' 한다는 한국 음식",
+   "views": 1000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 81,
+   "text": "외국인들은 깻잎을 싫어한다는 속설을 들은 대한 외국인들의 찐 반응인데 근데 안 그래요? 안 그래요 누가 누가 그런 수많은 애들 진짜 그럼 나도 깻잎 싫어하는 외국인 한 번도 못 만났어 어떤 이상한 사람이",
+   "matches": []
+  },
+  "2bFUoKmEY1g": {
+   "id": "2bFUoKmEY1g",
+   "title": "조회수 떡상 중이라는 '이중인격' 엄마",
+   "views": 1000000,
+   "channel": "떠튜브",
+   "from_channel": "https://www.youtube.com/@떠튜브",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 86,
+   "text": "현재 조회수 떡상 중인 엄마 2중인정 영상인데 정체는 강아지였고 정체는 강아지였고 정체는 강아지였고 깜짝이야 어머 얘는 누구야? 무언가를 본 건 놀라는데 어머 얘는 누구야? 정체는 강아지였고 정체는 강아지였고",
+   "matches": []
+  }
+ }
+}
