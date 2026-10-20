@@ -2007,9 +2007,18 @@ def film_seg_from_id(seg_id, extract):
         if v:
             known.setdefault(_wash(v), str(v))
     real = known.get(vid)
+    if real is None and EXTRA_SRC_RE.match(vid):
+        # ★3단계 '장면 보충'으로 더한 영상 x1·x2…(관제 209) — extract 에 없어도 이 표에서 풀려야 한다.
+        #   안 풀리면 썸네일 검은 칸 + 화면 컷·완성본에서 그 조각이 빠진다(10-15 라이브 실측 job ed7c92abb6b4).
+        #   경로 안전: id 는 숫자만 허용하고, 파일은 하류(_resolve_sources 표)에서만 찾는다.
+        real = vid
     if real is None:
         return None
     return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+# 3단계 '장면 보충' 영상 id(work/x{n}/) — 판정은 이 한 곳(mix_pipeline.extra_source_paths 도 이것을 쓴다)
+EXTRA_SRC_RE = re.compile(r"^x(\d+)$")
 
 
 def scene_table(extract, plan, *, seg_map=None, film=True):
@@ -3320,7 +3329,8 @@ def _looks_cta_text(text):
         return True
     # 마지막 줄 전용이라 넓게 잡는다(guess_cta_index만 부른다) — 라이브 7일 실측 누락:
     #   "궁금하면 프로필에" / "궁금하시면 나도 남겨주세요" / "아무 댓글 주세요" / "제품사진 눌러봐".
-    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러")):
+    # "화면 속 스티커를 클릭해주세요"(Park님 383ac5b29649, 10-19) — 클릭·스티커·링크 부름도 CTA
+    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러", "클릭", "스티커", "링크")):
         return True
     # "'주름'이라고 남겨주세요"처럼 '댓글' 없이 따옴표 키워드만 부르는 말(김성현님 3b4111969ac4 원문)
     return bool(re.search(r"['‘’\"“”][^'‘’\"“”]{1,15}['‘’\"“”]\s*(?:이?라고)?\s*(?:댓글에?)?\s*"
@@ -6226,6 +6236,11 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("stretch_fill", None)
         # [속도 맞추기](2026-09-26) — 고객이 누른 조각만. 이 칸 목록에 있는 id만 남긴다(뺀 조각의 찌꺼기 방지).
+        # 손 길이로 생긴 빈칸을 무엇으로 메우나(관제 204) — 'self'·'all'만 남긴다(없으면 옆 카드, 기본).
+        if eb.get("fill") in ("self", "all"):
+            beat["hand_fill"] = eb.get("fill")
+        else:
+            beat.pop("hand_fill", None)
         _fit = [x for x in (eb.get("fit") or []) if isinstance(x, str) and x in (eb.get("list") or [])]
         if _fit:
             beat["fit_segs"] = _fit

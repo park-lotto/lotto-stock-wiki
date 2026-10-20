@@ -35,7 +35,7 @@
   // ① 서버 AI(/api/produce/mix/scene_focus — video_analysis.product_box)에 제품 상자를 묻는다 → 제품이 영상 칸의 약 75%를
   //    채우는 배율(1.2~2배, 사장님 상한 2배)로 그 중심을 향해 자른다. ② AI가 없거나 못 찾으면 그림 윤곽·움직임(아래)으로.
   async function aiBox(sc){
-    const url=(sc?.media_points?.[1]||sc?.media||'');if(!url.includes('/beatframe/'))return null;
+    const mp=sc?.media_points||[];const url=(mp[mp.length>>1]||sc?.media||'');if(!url.includes('/beatframe/'))return null;
     try{const r=await fetch(url.replace('/beatframe/','/scene_focus/'));if(!r.ok)return null;const d=await r.json();return Array.isArray(d.box)?d.box:null;}catch{return null;}
   }
   async function focusPan(i,zoom){
@@ -50,7 +50,7 @@
       const x0=toBox(ai[0],vx),x1=toBox(ai[2],vx),y0=toBox(ai[1],vy),y1=toBox(ai[3],vy);
       // 배율 자동(사장님 2026-10-06 "자동으로 하는데 수동으로도 조절되게"): 제품이 영상 칸의 85%를 채우게, 1.3~2배.
       //   2배 고정은 크게 찍힌 제품에서 몸통만 화면을 채웠다(핀·바늘이 화면 밖 — 결과물 확인). 손으로는 [확대 크기] 슬라이더(1.2~2.5).
-      const z=Math.max(1.3,Math.min(api.refFx.emphZoom,.85/Math.max(x1-x0,y1-y0,.01)));
+      const z=api.refFx.emphZoom;   // 2026-10-11 사장님 "1.3배를 기본으로"(관제 178) — 배율은 기본값 하나, 위치만 제품 쪽으로 잡는다
       const panOf=(b,zz)=>Math.max(-1,Math.min(1,1-(2*Math.min(1,Math.max(0,b))*zz-1)/(zz-1)));
       return {zoom:+z.toFixed(2),panX:+panOf((x0+x1)/2,z).toFixed(3),panY:+panOf((y0+y1)/2,z).toFixed(3),focus:[+((x0+x1)/2).toFixed(3),+((y0+y1)/2).toFixed(3)],box:[x0,y0,x1,y1].map(v=>+v.toFixed(3)),by:'ai'};
     }
@@ -171,8 +171,20 @@
   let lastIndex=-1,context=null,saving=false;
   // 효과팩 번호를 바꾸면(관제 144) 자동으로 깐 장면 효과를 그 번호의 장면 효과로 다시 깐다 — 고객이 고른 장면은 그대로
   window.addEventListener('scene-style-motion-pack',()=>{if(!api.autoPlaced())return;api.autoPlace(false);if(api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();});
+  // 확대 이어받기(2026-10-12 사장님 "한 컷이면 자막 2개든 3개든 이어지게") — 같은 컷(beat_idx)에 움직이는 확대가 있으면
+  //   컷의 첫 자막 시작~마지막 자막 끝 전체에 그 확대(컷 안 첫 번째 것)를 한 번만. 판단 주인은 서버 scene_style.zoom_runs — 이건 미리보기용 같은 규칙.
+  const ZOOM_KEYS=['zoom','zoomIn','zoomMove','panX','panY'];
+  function zoomRunOf(i){
+    const sc=api.context()?.scenes||[],cur=sc[i],me=api.effectAt(i)||{};
+    if(!cur)return {fx:me,off:0,dur:0};
+    let a=i,b=i;while(a>0&&sc[a-1].beat_idx===cur.beat_idx)a--;while(b+1<sc.length&&sc[b+1].beat_idx===cur.beat_idx)b++;
+    let src=null;for(let k=a;k<=b&&!src;k++){const e=api.effectAt(k)||{};if((Number(e.zoom)||1)>1.0001&&Number(e.zoomIn)>0)src=e;}
+    if(!src)return {fx:me,off:0,dur:cur.end-cur.start};
+    const fx={...me};ZOOM_KEYS.forEach(k=>{delete fx[k];if(k in src)fx[k]=src[k];});
+    return {fx,off:cur.start-sc[a].start,dur:sc[b].end-sc[a].start};
+  }
   function sync(){
-    const g=api.geometry(),e=api.effect(),z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
+    const g=api.geometry(),run=zoomRunOf(g.sceneIndex),e=run.fx,z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
     windowEl.style.top=g.media.top+'%';windowEl.style.height=g.media.height+'%';
     const px=(e.panX||0)*(z-1)*preview.clientWidth/2,py=(e.panY||0)*(z-1)*preview.clientHeight*g.media.height/200;
     // 어둡게(관제 124): 미리보기 그림 = 장면 첫 프레임 — 완성본(compose)·썸네일(compose_still)도 장면 시작에 같은 밝기를 건다.
@@ -188,14 +200,16 @@
       // 확대 움직임(관제 124): 장면을 열면 1배→도착 구도로. 곡선은 완성본(scene_style.zoom_move_vf)과 같다 —
       //   in: 0.5초 1-(1-t)² · pull: 장면 길이 동안 3t²-2t³ · inout: 0.5초 들어가고 끝 0.5초에 원본 크기로.
       media.getAnimations().forEach(a=>a.cancel());
-      const sc=api.context()?.scenes?.[g.sceneIndex],len=sc?Math.max(.6,sc.end-sc.start)*1000:1500,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
+      const len=run.dur>0?Math.max(.6,run.dur)*1000:1500,offMs=run.off*1000,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
+      let anim=null;
       if(inMs>0&&z>1){
-        if(way==='pull')media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
+        if(way==='pull')anim=media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
         // 확대→복귀는 끝에 원래 크기로 끝난다 — fill:forwards 로 끝 상태(원래 크기)에 머문다(사장님 "복귀되고 다시 확대로 간다": 끝나면 저장된 확대 구도로 되돌아갔다)
         // 짧은 장면(1초 이하)도 반드시 돌아온다 — 들어가기·돌아오기를 장면의 40%까지(완성본 zoom_move_vf·캡컷 zoom_curve 와 같은 규칙)
-        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
-        else media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
+        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);anim=media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
+        else anim=media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
       }
+      if(anim&&offMs>0)anim.currentTime=Math.min(offMs,len);   // 이어받은 칸은 묶음 안 자기 자리부터(완성본 zoom_move_vf skip 과 같다)
       // 흑백 충격: 흑백·대비 + 프레임마다 흔들림 + 13프레임마다 찢기듯 밀림·번쩍(완성본 scene_style.shock_vf 를 흉내)
       windowEl.getAnimations().forEach(a=>a.cancel());windowEl.style.filter=e.shock?'grayscale(1) contrast(1.28) brightness(.97)':'';
       if(e.shock){const kf=[];for(let f=0;f<26;f++){const glitch=f%13<2,dx=(.012*Math.sin(f*12.9898)+(glitch?.045*Math.sin(f*7.31):0))*100,dy=.009*Math.sin(f*78.233)*100;
@@ -255,7 +269,7 @@
     if(event.source!==window.parent||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-context'){
       context=event.data.context;
-      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:api.freshEffects(context.scenes.length)};   // 새 작업: 마지막에 쓴 로고만 전 장면에(관제 131, 판단은 precision20-ui.js)
+      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},sceneTexts:{},effects:api.freshEffects(context.scenes.length)};   // 새 작업: 마지막에 쓴 로고만 전 장면에(관제 131, 판단은 precision20-ui.js)
       api.load(context,saved);
       // 관리자 스위치 scene_fx_enabled(서버 context.fxEnabled) — 꺼지면 '강조 효과' 상자도 자동 배치도 없다(고객 화면 불변)
       refBox.hidden=context.fxEnabled===false;

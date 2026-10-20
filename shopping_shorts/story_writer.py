@@ -204,8 +204,9 @@ def attach_signal(text, word):
                     break
                 j += 1
                 k += 1
-            if k == len(cw) and (j == len(t) or t[j] == " "):
-                t = t[j:].strip()
+            # ★쉼표로 끊긴 꼴("되는 게, …")도 뗀다 — 못 떼면 두 겹(관제 216 실측: "진짜 말도 안 되는게 진짜 말도 안 되는 게, 툭하면…")
+            if k == len(cw) and (j == len(t) or t[j] in " ,，"):
+                t = t[j:].lstrip(",， ").strip()
                 break
         t = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", t)).strip()
     t = t.lstrip(",， ")

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장면 보충 팝업</title>
+<style>
+:root{--bg:#0f1117;--pn:#171a23;--pn2:#1f2330;--ln:#2c3242;--tx:#e8eaf0;--mu:#9aa3b5;--ac:#f5a623;--bl:#4c8dff;--gr:#2ecc8f;--rd:#ff5d5d;--yl:#ffd400}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 "Pretendard","Malgun Gothic",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:40px 0 12px;padding-left:10px;border-left:4px solid var(--ac)}h3{font-size:16px;margin:18px 0 8px}
+.mu{color:var(--mu)}.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:var(--pn2);border:1px solid var(--ln);margin-right:4px}
+.ok{color:var(--gr)}.warn{color:var(--ac)}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:12px;padding:16px;margin:12px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{border-bottom:1px solid var(--ln);padding:8px;text-align:left;vertical-align:top}th{color:var(--mu);font-weight:600}
+/* 목업 */
+.modal{background:#12151d;border:1px solid #3a4258;border-radius:14px;box-shadow:0 10px 40px #0008;overflow:hidden}
+.mh{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#1a1e2a;border-bottom:1px solid var(--ln)}
+.mh b{font-size:16px}.mh .x{margin-left:auto;color:var(--mu)}
+.tabs{display:flex;gap:6px;padding:10px 16px 0}.tab{padding:8px 16px;border-radius:9px 9px 0 0;background:var(--pn2);color:var(--mu);font-weight:600}.tab.on{background:var(--ac);color:#1a1300}
+.mb{padding:14px 16px;border-top:2px solid var(--ac)}
+.ctx{display:flex;gap:10px;align-items:center;background:var(--pn2);border-radius:9px;padding:8px 12px;font-size:14px;margin-bottom:12px;flex-wrap:wrap}
+.ctx .need{color:var(--yl);font-weight:700}
+input.kw{background:#0b0d13;border:1px solid var(--ln);color:var(--tx);border-radius:8px;padding:8px 10px;width:100%;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chip{padding:4px 11px;border-radius:14px;border:1px solid var(--ln);background:var(--pn2);font-size:13px}.chip.on{border-color:var(--ac);color:var(--ac)}
+.btn{display:inline-block;padding:7px 14px;border-radius:8px;background:var(--pn2);border:1px solid var(--ln);font-weight:600;font-size:14px}.btn.pri{background:var(--ac);color:#1a1300;border-color:var(--ac)}.btn.bl{background:var(--bl);border-color:var(--bl)}
+.res{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}@media(max-width:820px){.res{grid-template-columns:repeat(3,1fr)}}
+.th{aspect-ratio:9/16;border-radius:8px;background:linear-gradient(160deg,#3a2a1c,#1b1410);position:relative;border:2px solid transparent;overflow:hidden}
+.th.sel{border-color:var(--yl)}.th .lb{position:absolute;left:4px;top:4px;font-size:11px;background:#000a;padding:0 5px;border-radius:5px}
+.th .bt{position:absolute;left:0;right:0;bottom:0;font-size:11px;background:#000b;padding:3px 5px}
+.th .ic{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;opacity:.75}
+.th.t2{background:linear-gradient(160deg,#5a3a1a,#20160c)}.th.t3{background:linear-gradient(160deg,#2a2f3a,#10131a)}.th.t4{background:linear-gradient(160deg,#4a2020,#180c0c)}
+.film{display:flex;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--ln);position:relative;margin-top:8px}
+.film i{flex:1;border-right:1px solid #0006;background:linear-gradient(160deg,#4a3420,#1d140c)}
+.film .box{position:absolute;top:0;bottom:0;border:3px solid var(--yl);background:#ffd40022;border-radius:4px}
+.film .box span{position:absolute;top:-1px;left:4px;font-size:11px;color:var(--yl);font-weight:700}
+.prompt{background:#0b0d13;border:1px solid var(--ln);border-radius:8px;padding:10px;font-size:13px}
+.prompt .ko{color:var(--tx)}.prompt .en{color:var(--mu);font-family:Consolas,monospace;font-size:12px;margin-top:6px}
+.steps{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.st{flex:1;min-width:120px;text-align:center;padding:6px;border-radius:8px;background:var(--pn2);font-size:13px;color:var(--mu)}.st.on{background:#3a2c0e;color:var(--ac);font-weight:700}.st.done{color:var(--gr)}
+.flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}.flow .n{background:var(--pn2);border:1px solid var(--ln);border-radius:8px;padding:6px 10px}.flow .a{color:var(--mu)}
+.note{background:#2a2110;border:1px solid #5a4410;border-radius:9px;padding:10px 12px;font-size:14px}
+</style></head><body><div class="wrap">
+
+<h1>장면 보충 팝업 — 구상안</h1>
+<div class="mu">3단계에서 장면이 모자란 칸을 채우는 팝업 하나를 만들고, 그 안에 탭 두 개(🔎 키워드로 찾기 / ✨ AI로 만들기)를 둡니다. 어느 탭으로 채우든 <b>결과는 같은 자리로 갑니다: 필름에 "영상 N" 추가 + 노란 구간 박스 자동 지정</b>.<br>
+예시 칸: <b>4. feature</b> “반죽 부어주고 / 뚜껑 닫아 가열만 해주면 / 노릇하게 구워진다는 거” — 와플 굽는 장면이 3.0초인데 실제로는 4.3초가 필요해서 <b class="warn">1.3초가 모자랍니다</b>.</div>
+
+<h2>0. 공통 뼈대 — 하나의 팝업, 하나의 끝</h2>
+<div class="card">
+<div class="flow"><span class="n">칸의 <b>＋ 장면 보충</b> 버튼<br><span class="mu">(지금 AI 장면 버튼 자리)</span></span><span class="a">→</span>
+<span class="n">팝업<br>🔎 찾기 | ✨ 만들기</span><span class="a">→</span>
+<span class="n">영상 한 개 확정</span><span class="a">→</span>
+<span class="n"><b>서버 한 곳</b>에서 job 원본 목록에 “영상 N” 추가</span><span class="a">→</span>
+<span class="n">그 칸 길이만큼 <b style="color:var(--yl)">노란 박스</b> 자동 지정</span><span class="a">→</span>
+<span class="n">렌더 · 캡컷 · 썸네일이 그대로 따라옴</span></div>
+<table style="margin-top:12px">
+<tr><th>정하는 것</th><th>맡을 곳(하나만)</th><th>검사</th></tr>
+<tr><td>가져온 영상을 원본에 넣는 일</td><td>새 서버 함수 하나 <code>add_source_to_job()</code> — 찾기·만들기 둘 다 이걸 부름</td><td>실제 job에서 추가 → 필름에 뜨는지 화면으로 확인</td></tr>
+<tr><td>노란 박스(구간) 지정</td><td>사람이 <code>＋ 구간</code>으로 그릴 때 저장되는 경로를 그대로 탄다(새로 만들지 않음)</td><td>렌더 결과 그 칸 프레임 = 새 영상 프레임인지 대조, 캡컷 초안도 대조</td></tr>
+<tr><td>이 칸에 필요한 장면이 무엇인지</td><td>자막 줄 + 칸의 장면 설명에서 한 번 뽑아 두 탭이 같이 씀</td><td>예시 칸들에서 뽑은 키워드·설명을 사람이 눈으로 확인</td></tr>
+</table>
+</div>
+
+<h2>1. 🔎 키워드로 찾기 탭</h2>
+<div class="grid2">
+<div class="card"><h3>안 A · 숏템 파워 검색창을 그대로 띄우기</h3>
+<span class="tag ok">기능 많음</span><span class="tag warn">무겁다</span>
+<ul class="mu" style="padding-left:18px"><li>렌즈·국가·플랫폼 토글까지 다 있음</li><li>3단계 위에 큰 창이 하나 더 열려서 60대 회원은 어디서 돌아오는지 헷갈림</li><li>결과를 “이 칸”으로 돌려보내는 길을 새로 만들어야 함</li></ul></div>
+<div class="card" style="border-color:var(--ac)"><h3>안 B · 경량판 (추천)</h3>
+<span class="tag ok">한 화면</span><span class="tag ok">기존 API 재사용</span>
+<ul class="mu" style="padding-left:18px"><li>검색 엔진은 숏템 파워와 <b>같은 것</b>을 부름(두 벌 금지): <code>/api/lens/kw/expand</code>(비슷한 검색어) · <code>/api/lens/kw/search</code>(인스타·틱톡·유튜브) · <code>/api/lens/cn/search</code>(샤오홍슈·도우인)</li><li>화면만 작게: 검색어 칩 → 결과 썸네일 → 고르면 끝</li><li>“더 자세히 찾기”를 누르면 숏템 파워 본창으로 넘어감(안 A를 탈출구로)</li></ul></div>
+</div>
+
+<h3>경량판 목업 — 와플메이커 예시</h3>
+<div class="modal">
+<div class="mh"><b>＋ 4번 칸 장면 보충</b><span class="mu">feature · 1.3초 모자람</span><span class="x">✕</span></div>
+<div class="tabs"><span class="tab on">🔎 키워드로 찾기</span><span class="tab">✨ AI로 만들기</span></div>
+<div class="mb">
+<div class="ctx"><span>자막:</span><b>“반죽 부어주고 뚜껑 닫아 가열만 해주면 노릇하게 구워진다는 거”</b><span class="need">필요: 굽는 장면 1.3초+</span></div>
+<input class="kw" value="와플메이커">
+<div class="mu" style="font-size:13px;margin-top:6px">기본 검색어 = 제품명(와플메이커). 아래 칩은 <b>자막의 동작어 + 제품명</b>을 섞어 자동으로 뽑습니다. 누르면 바로 검색합니다.</div>
+<div class="chips"><span class="chip on">와플메이커</span><span class="chip on">와플메이커 반죽</span><span class="chip">와플 굽기</span><span class="chip">와플메이커 뚜껑</span><span class="chip">waffle maker pour</span><span class="chip">华夫饼机</span></div>
+<div class="chips"><span class="chip on">인스타</span><span class="chip on">틱톡</span><span class="chip on">유튜브 쇼츠</span><span class="chip">샤오홍슈</span><span class="chip">도우인</span><span class="mu" style="font-size:12px;align-self:center">· 담기 기록에 있는 영상 먼저</span></div>
+<div class="res">
+<div class="th sel"><span class="lb">틱톡 · 8초</span><span class="ic">🧇</span><span class="bt">반죽 붓기 → 뚜껑</span></div>
+<div class="th t2"><span class="lb">인스타 · 12초</span><span class="ic">🧇</span><span class="bt">노릇한 와플 꺼내기</span></div>
+<div class="th t3"><span class="lb">유튜브 · 15초</span><span class="ic">🍫</span><span class="bt">초코 반죽</span></div>
+<div class="th t4"><span class="lb">샤오홍슈 · 9초</span><span class="ic">🧇</span><span class="bt">뚜껑 열기 클로즈업</span></div>
+<div class="th"><span class="lb">인스타 · 6초</span><span class="ic">🧇</span><span class="bt">다른 제품(제외 표시)</span></div>
+</div>
+<h3>고른 영상 → 필름 미리보기 (영상 3으로 추가)</h3>
+<div class="film"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+<div class="box" style="left:16%;width:22%"><span>1.3초 → 4번 칸</span></div></div>
+<div class="mu" style="font-size:13px;margin-top:6px">노란 박스는 자동으로 잡히고, 사람이 끌어서 옮길 수 있습니다(지금 ＋ 구간 박스와 같은 것).</div>
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span class="btn pri">이 장면으로 채우기</span><span class="btn">다른 결과 더 보기</span><span class="btn">숏템 파워에서 자세히 찾기 ↗</span></div>
+</div></div>
+
+<div class="card"><h3>찾기 탭 세부 결정</h3>
+<table>
+<tr><th>항목</th><th>구상</th></tr>
+<tr><td>기본 검색어</td><td>제품명(이 job의 제품명 / 첫 담기 영상 제목에서). 예: <b>와플메이커</b></td></tr>
+<tr><td>추가 검색어</td><td>칸 자막의 동작어(붓다·닫다·굽다) + 제품명 → 한·영·중. 기존 <code>expand_search_keywords</code> 한 곳 사용</td></tr>
+<tr><td>결과 순서</td><td>① 회원이 이미 담아둔 영상 ② 같은 채널 ③ 새 검색 — 저작권·품질이 검증된 순서</td></tr>
+<tr><td>걸러내기</td><td>큰 자막 박힌 것·저화질·비슷한 다른 제품은 뒤로(메모리의 “장면영상 좋음 판정기준”)</td></tr>
+<tr><td>비용</td><td>검색어 확장 = Gemini 무료 키 풀. 외부 검색은 기존 숏템 파워와 같은 백엔드라 비용 구조도 같음</td></tr>
+</table></div>
+
+<h2>2. ✨ AI로 만들기 탭</h2>
+<div class="modal">
+<div class="mh"><b>＋ 4번 칸 장면 보충</b><span class="mu">feature · 1.3초 모자람</span><span class="x">✕</span></div>
+<div class="tabs"><span class="tab">🔎 키워드로 찾기</span><span class="tab on">✨ AI로 만들기</span></div>
+<div class="mb">
+<div class="steps"><span class="st done">① 원본 장면 고르기</span><span class="st on">② 프롬프트 확인</span><span class="st">③ 만들기(1~2분)</span><span class="st">④ 확인 → 필름에 넣기</span></div>
+
+<h3>① 어떤 장면에서 시작할까요? — AI가 고른 후보</h3>
+<div class="mu" style="font-size:13px">담아온 영상 전체에서 “반죽 붓기·뚜껑·굽기”와 어울리는 장면을 뽑아 점수순으로 보여줍니다. 고객이 다른 걸 골라도 됩니다.</div>
+<div class="res">
+<div class="th sel"><span class="lb">추천 ① 영상2 2.1초</span><span class="ic">🧇</span><span class="bt">반죽 붓는 중 · 손 보임</span></div>
+<div class="th t2"><span class="lb">② 영상2 4.0초</span><span class="ic">🧇</span><span class="bt">뚜껑 닫힘</span></div>
+<div class="th t4"><span class="lb">③ 영상1 0.7초</span><span class="ic">🍪</span><span class="bt">완성 와플 접시</span></div>
+<div class="th t3"><span class="lb">④ 영상1 3.2초</span><span class="ic">🔌</span><span class="bt">제품 전체 샷</span></div>
+<div class="th"><span class="lb">⑤ 직접 고르기</span><span class="ic">＋</span><span class="bt">필름에서 프레임 찍기</span></div>
+</div>
+
+<h3>② 이 장면의 프롬프트 (한글로 확인, 영어로 전송)</h3>
+<div class="grid2">
+<div class="prompt"><div class="ko"><b>자연스럽게</b> · 시작 프레임: 영상2 2.1초<br>빨간 와플메이커에 초코 반죽을 다 붓고, 손이 뚜껑을 천천히 닫는다. 틈새로 김이 살짝 올라온다. 카메라 고정, 같은 조명.</div>
+<div class="en">Close-up of a red waffle maker. Chocolate batter finishes pouring, a hand slowly closes the lid, light steam rises from the seam. Static camera, same lighting, realistic.</div></div>
+<div class="prompt"><div class="ko"><b>임팩트</b> · 같은 시작 프레임<br>뚜껑이 닫히는 순간 살짝 줌인, 김이 크게 피어오른다.</div>
+<div class="en">Same shot, quick push-in as the lid shuts, burst of steam, dramatic food-commercial feel.</div></div>
+</div>
+<div class="mu" style="font-size:13px;margin-top:6px">한글 칸을 고치면 영어가 다시 만들어집니다. 길이는 모자란 시간(1.3초)보다 넉넉하게 4초로 만들고 박스로 잘라 씁니다.</div>
+
+<h3>④ 만든 결과 확인</h3>
+<div class="grid2">
+<div class="card" style="margin:0"><div class="th sel" style="max-width:140px"><span class="lb">AI · 4초</span><span class="ic">▶</span><span class="bt">재생해서 확인</span></div></div>
+<div class="card" style="margin:0"><div class="mu" style="font-size:13px">마음에 들면 <b>필름에 넣기</b> → “영상 4”로 추가되고 노란 박스가 1.3초로 잡힙니다.<br>아니면 프롬프트를 고쳐 다시 만들거나 다른 시작 장면을 고릅니다.</div>
+<div class="film" style="height:48px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><div class="box" style="left:10%;width:32%"><span>1.3초</span></div></div></div>
+</div>
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span class="btn pri">필름에 넣기</span><span class="btn">프롬프트 고쳐 다시 만들기 (약 300원)</span><span class="btn">다른 시작 장면</span></div>
+</div></div>
+
+<div class="card"><h3>만들기 탭에서 지금 것과 달라지는 점</h3>
+<table>
+<tr><th>지금(확인함 · <code>scene_lab.html:3153~</code>)</th><th>바꾼 뒤</th></tr>
+<tr><td>그 칸의 프레임 하나로 바로 만든다</td><td>담아온 영상 전체에서 시작 장면 후보 여러 개 → 고객이 고름</td></tr>
+<tr><td>프롬프트 확인창 있음(관제 117, 한글·영어)</td><td>그대로 살려서 팝업 ② 단계로 옮김</td></tr>
+<tr><td>만든 영상이 <b>칸을 통째로 덮는다</b>(<code>match_type='ai'</code>)</td><td>필름에 <b>원본으로 추가</b> + 노란 박스 → 다른 영상과 똑같이 다룸(자르기·옮기기·캡컷)</td></tr>
+</table></div>
+
+<h2>3. 정하실 것</h2>
+<div class="note">
+<b>① 찾기 탭은 경량판(안 B)으로 갈까요?</b> 추천은 경량판에 “숏템 파워에서 자세히” 탈출구를 다는 것입니다.<br>
+<b>② 돈:</b> AI 만들기는 한 번에 약 300원입니다. 회원에게 열지, 지금처럼 관리자만 쓸지 정해 주세요(돈이 걸린 카드라 승인 필요).<br>
+<b>③ 순서:</b> 공통 뼈대(필름 추가 + 노란 박스) → 찾기 탭 → 만들기 탭 순서로 갑니다. 뼈대 하나로 두 탭이 같이 끝나기 때문입니다.
+</div>
+<div class="mu" style="font-size:12px;margin-top:20px">이 화면은 구상 목업입니다. 썸네일은 자리표시이고 아직 코드는 바꾸지 않았습니다. 검색 API 이름은 <code>app.py</code>에서 확인한 것(12807·12890·13026줄)입니다.</div>
+</div></body></html>

@@ -26,7 +26,7 @@ from pathlib import Path
 # storyboard 는 video_assemble 앞(관제 120 장면배분, 2026-10-07): video_assemble.sfx_events_for 가 줄 효과음 볼륨 표
 #   storyboard.line_sfx_gain 을 부른다. storyboard 는 script_generate·edit_plan 만 모듈 머리에서 import 한다.
 PATCH_MODULES = ("config", "voice_presets", "typecast_tts", "fish_tts", "audio_post", "tts_timestamps", "tts", "tts_joined",
-                 "frame_match", "seg_snap", "edit_plan", "screen_clips", "sfx_pack", "storyboard", "video_assemble", "clean_base", "mix_pipeline",
+                 "frame_match", "seg_snap", "edit_plan", "screen_clips", "sfx_pack", "storyboard", "video_assemble", "scene_style", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
 
 # 모듈 말고 같이 올릴 것: screen_clips 가 자기 옆(_HERE)의 러너·화면 코드를 부른다 / app 은 굽기 함수만 바꿔 끼운다.
@@ -52,7 +52,8 @@ def _repo_path_overrides():
     pkg = Path("shopping_shorts").resolve()
     return (("_FONT_DIR", pkg / "static" / "fonts"),
             ("_BUNDLED_FONT", str(pkg / "assets" / "NanumGothic.ttf")),
-            ("_ROOT", pkg.parent))
+            ("_ROOT", pkg.parent),
+            ("ROOT", pkg.parent))     # scene_style.ROOT — out/precision20-data.js·렌더 JS 자리(관제 191)
 
 
 def load_patch_modules(pd=None):

@@ -1,0 +1,48 @@
+#!/bin/bash
+# 숏템 맥 설치팩 postinstall — pkg 설치가 끝난 직후 1회. 실패해도 설치는 성공으로 둔다(로그만 남김).
+#   $2 = 설치된 위치(~/Library/Application Support/Shortem 이어야 한다)
+# 하는 일: 소유권 정리 · 시작.md/작업 폴더 만들기(동봉 node 로 postinstall.js) · Claude Code 플러그인용 환경변수
+# ★맥에서 실측 전(이 스크립트는 윈도 PC 에서 bash -n 문법 검사만 했다)
+set -u
+LOG="${TMPDIR:-/tmp}/shortem-postinstall.log"
+exec >>"$LOG" 2>&1
+echo "== $(date) shortem postinstall args: $*"
+
+TARGET="${2:-}"
+case "$TARGET" in
+  /Users/*) OWNER="$(echo "$TARGET" | cut -d/ -f3)" ;;
+  *)        OWNER="$(stat -f%Su /dev/console)" ;;
+esac
+UHOME="$(dscl . -read "/Users/$OWNER" NFSHomeDirectory 2>/dev/null | awk '{print $2}')"
+[ -n "$UHOME" ] || UHOME="/Users/$OWNER"
+if [ -z "$TARGET" ] || [ ! -d "$TARGET" ]; then TARGET="$UHOME/Library/Application Support/Shortem"; fi
+if [ ! -f "$TARGET/tools/tools.manifest.json" ]; then echo "설치 폴더가 아님: $TARGET"; exit 0; fi
+
+as_user() {
+  if [ "$(id -u)" = "0" ] && [ "$OWNER" != "root" ]; then sudo -u "$OWNER" -H "$@"; else "$@"; fi
+}
+if [ "$(id -u)" = "0" ] && [ "$OWNER" != "root" ]; then
+  chown -R "$OWNER":staff "$TARGET" || true
+fi
+xattr -dr com.apple.quarantine "$TARGET" 2>/dev/null || true
+
+NODE="$TARGET/tools/node/bin/node"
+VER="$(plutil -extract version raw -o - "$TARGET/tools/tools.manifest.json" 2>/dev/null || echo 0.0.0)"
+as_user "$NODE" "$TARGET/postinstall.js" --home "$TARGET" --desktop "$UHOME/Desktop" --version "$VER" || echo "postinstall.js 실패"
+
+# Claude Code 플러그인(plugin.json "${SHORTEM_NODE:-node}")이 동봉 node 를 찾게 — zsh(맥 기본 셸) 시작 파일에 표식 블록
+ZENV="$UHOME/.zshenv"
+as_user touch "$ZENV"
+as_user /usr/bin/sed -i '' '/# >>> shortem >>>/,/# <<< shortem <<</d' "$ZENV"
+as_user /bin/sh -c "cat >> '$ZENV'" <<EOF
+# >>> shortem >>>
+export SHORTEM_INSTALL="$TARGET"
+export SHORTEM_NODE="$NODE"
+# <<< shortem <<<
+EOF
+# 지금 로그인 세션의 GUI 앱에도(다음 로그아웃까지)
+UIDN="$(id -u "$OWNER")"
+launchctl asuser "$UIDN" sudo -u "$OWNER" launchctl setenv SHORTEM_INSTALL "$TARGET" 2>/dev/null || true
+launchctl asuser "$UIDN" sudo -u "$OWNER" launchctl setenv SHORTEM_NODE "$NODE" 2>/dev/null || true
+echo "완료: $TARGET (사용자 $OWNER)"
+exit 0

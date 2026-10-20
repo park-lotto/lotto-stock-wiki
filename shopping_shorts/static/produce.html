@@ -1905,6 +1905,20 @@
     </div>
 
     <div class="steps" id="steps"></div>
+    <!-- 작은 단계 이동줄(관제 205 회원 제보 "스크롤로 올라가지 않고 맨앞·맨뒤·몇 단계 이동") — 위 단계바가 화면 밖일 때만 아래에 뜬다.
+         이동 판단은 jump(o) 하나(잠금·게이트 그대로). 그리기는 renderSteps 가 위 단계바와 같이 한다 -->
+    <div id="stepsMini" class="steps-mini" hidden></div>
+    <style>
+      .steps-mini{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:150;display:flex;gap:4px;align-items:center;
+        padding:5px 8px;border-radius:999px;background:rgba(18,22,34,.92);box-shadow:0 4px 18px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+      .steps-mini[hidden]{display:none}
+      .steps-mini .smk{min-width:30px;height:30px;padding:0 6px;border-radius:999px;border:1.5px solid var(--c);background:transparent;color:#e8ecf6;
+        font:600 12px/1 inherit;cursor:pointer;white-space:nowrap}
+      .steps-mini .smk.done{background:color-mix(in srgb,var(--c) 30%,transparent)}
+      .steps-mini .smk.cur{background:var(--c);color:#fff;padding:0 10px}
+      .steps-mini .smk:hover{filter:brightness(1.25)}
+      .steps-mini .smt{color:#9aa3b8;font-size:11px;margin-right:2px}
+    </style>
 
     <!-- 1) 제작소: 좌(재료 그리드 ✓토글) · 우(AI PICK/빈 상태) — Task 4 재구성(2026-07-23).
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
@@ -2586,6 +2600,8 @@
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
         <button class="btn" onclick="seoCopyYoutube()">유튜브 전체 복사</button>
         <button class="btn" onclick="seoCopyInsta()">인스타 캡션 복사</button>
+        <!-- 📱 폰으로(2026-10-18 사장님 "폰으로 올리는 사람들 편하게") — QR → 폰 페이지에서 칸마다 복사·카톡 보내기 -->
+        <button class="btn" style="background:#fee500;color:#191600" onclick="seoToPhone()">📱 폰으로 보내기(카톡)</button>
         <span class="seoMsg" id="seoMsg"></span>
       </div>
       <!-- 🛒 쿠팡 상품 확정 (2026-08-18 3단계에서 이사) — 링크를 붙일 설명란과 같은 화면에 둔다.
@@ -3748,6 +3764,21 @@ function renderSteps(){
         + `<div class="dkl">${stepShort(o)}</div></div>`;
     }).join('')
     + '</div>';
+  renderStepsMini(oi);
+}
+// 작은 단계 이동줄 — 숫자만(지금 단계는 이름까지). 누르면 jump(o) 그대로라 잠긴 단계는 위 단계바와 똑같이 막힌다.
+function renderStepsMini(oi){
+  const m = document.getElementById('stepsMini');
+  if(!m) return;
+  m.innerHTML = '<span class="smt">단계</span>' + STEP_LABELS.map((label, o)=>{
+    const [c] = STEP_COLORS[o] || ['#3b455e'];
+    const cls = o === oi ? 'smk cur' : (o < oi && stepHasOutput(o) ? 'smk done' : 'smk');
+    return `<button type="button" class="${cls}" style="--c:${c}" title="${o+1}. ${label}" onclick="jump(${o})">${o === oi ? (o+1)+' '+stepShort(o) : (o+1)}</button>`;
+  }).join('');
+  if(!m._io && typeof IntersectionObserver === 'function'){
+    const top = document.getElementById('steps');
+    if(top){ m._io = new IntersectionObserver(es=>{ m.hidden = es[0].isIntersecting; }); m._io.observe(top); }
+  }
 }
 // ── 도크 단계바 끝 ──
 // ★단계가 확정되기 전에는 패널을 그리지 않는다(2026-09-07 사장님 "3단계 새로고침하면
@@ -3988,6 +4019,12 @@ async function seoGenerate(only){
   finally{ if(btn) btn.disabled = false; }
 }
 
+// 📱 제목·태그를 폰으로 — 먼저 저장(폰 페이지는 서버 저장값을 읽는다), 그다음 영상 QR 과 같은 창(영상 없으면 제목·태그만)
+async function seoToPhone(){
+  if(!MIX_JOB){ alert('작업을 먼저 열어 주세요'); return; }
+  try{ await seoSave(); }catch(e){}
+  showShareQr(MIX_JOB, {seo:true});
+}
 async function seoSave(){
   if(!MIX_JOB || !SEO) return;
   try{
@@ -4769,20 +4806,45 @@ function mkCurScene(){
   if(!b) return null;
   return {beat:(b.beat_idx!=null?b.beat_idx:BEAT_IDX), cut:(b.cut!=null?b.cut:null)};
 }
-function mkIsScene(m){ return !!m && m.beat!=null; }
+// ☑ 골라서(관제 182): m.scenes=[[beat,cut],...] 이면 여러 장면. 없으면 옛 단일 beat/cut.
+//   ★서버 deco_frame._scenes_of_raw 와 같은 규칙 — 장면 판정은 이 함수 하나를 거친다.
+function mkScenesOf(m){
+  if(!m) return [];
+  if(Array.isArray(m.scenes) && m.scenes.length)
+    return m.scenes.map(function(s){ return {beat:s[0], cut:(s.length>1&&s[1]!=null)?s[1]:null}; });
+  return m.beat!=null ? [{beat:m.beat, cut:(m.cut!=null?m.cut:null)}] : [];
+}
+function mkIsScene(m){ return mkScenesOf(m).length>0; }
+function mkIsPick(m){ return !!m && Array.isArray(m.scenes) && m.scenes.length>0; }
+function _mkHit(s, beat, cut){ return s.beat===beat && (s.cut==null || s.cut===cut); }
 function mkVisible(m){
   if(!mkIsScene(m)) return true;
   const c=mkCurScene(); if(!c) return false;
-  return m.beat===c.beat && (m.cut==null || m.cut===c.cut);
+  return mkScenesOf(m).some(function(s){ return _mkHit(s, c.beat, c.cut); });
 }
-// 그 가림막이 걸린 장면이 목록에서 몇 번째인지(화면의 "N / M 장면"과 같은 번호)
-function mkSceneNo(m){
-  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return null;
-  for(let i=0;i<BEATS_PREVIEW.length;i++){
-    const b=BEATS_PREVIEW[i], bi=(b.beat_idx!=null?b.beat_idx:i);
-    if(bi===m.beat && (m.cut==null || (b.cut!=null?b.cut:null)===m.cut)) return i+1;
+// 장면 목록(BEATS_PREVIEW)의 i번째(0부터)가 그 가림막에 걸렸나
+function mkHitsIdx(m, i){
+  const b=BEATS_PREVIEW[i]; if(!b) return false;
+  const bi=(b.beat_idx!=null?b.beat_idx:i), ci=(b.cut!=null?b.cut:null);
+  return mkScenesOf(m).some(function(s){ return _mkHit(s, bi, ci); });
+}
+// 걸린 장면 번호들(화면의 "N / M 장면"과 같은 번호, 1부터)
+function mkSceneNos(m){
+  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return [];
+  const out=[];
+  for(let i=0;i<BEATS_PREVIEW.length;i++) if(mkHitsIdx(m,i)) out.push(i+1);
+  return out;
+}
+function mkSceneNo(m){ const n=mkSceneNos(m); return n.length?n[0]:null; }
+// "4~20" · "1, 3, 5~7" 처럼 짧게
+function mkSceneLabel(m){
+  const n=mkSceneNos(m); if(!n.length) return '?';
+  const parts=[]; let a=n[0], p=n[0];
+  for(let k=1;k<=n.length;k++){
+    if(k<n.length && n[k]===p+1){ p=n[k]; continue; }
+    parts.push(a===p?String(a):(a+'~'+p)); if(k<n.length){ a=p=n[k]; }
   }
-  return null;
+  return parts.join(', ');
 }
 let MK_ONLY_SCENE=false;          // 새로 얹을 때 '이 장면에만' 붙일지(기본 꺼짐 = 지금까지와 같음)
 function mkTagNew(o){
@@ -4796,8 +4858,47 @@ function mkScope(v){
   const m=a[MK_SEL];
   if(v==='scene'){
     const c=mkCurScene(); if(!c){ alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    delete m.scenes;
     m.beat=c.beat; if(c.cut!=null) m.cut=c.cut; else delete m.cut;
-  }else{ delete m.beat; delete m.cut; }
+  }else if(v==='pick'){
+    // ☑ 골라서: 처음엔 **전부 켠 채로** 시작 — 고객은 빼고 싶은 장면만 끈다.
+    if(typeof BEATS_PREVIEW==='undefined' || !BEATS_PREVIEW.length){
+      alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    m.scenes=BEATS_PREVIEW.map(_mkKeyOf);
+    delete m.beat; delete m.cut;
+  }else{ delete m.beat; delete m.cut; delete m.scenes; }
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function _mkKeyOf(b, i){
+  const bi=(b.beat_idx!=null?b.beat_idx:i);
+  return (b.cut!=null)?[bi,b.cut]:[bi];
+}
+// 장면 칩 하나 켜고 끄기(i = 목록 0부터)
+function mkPickToggle(i){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL]; if(!mkIsPick(m)) return;
+  const on=[]; for(let k=0;k<BEATS_PREVIEW.length;k++) if(mkHitsIdx(m,k)) on.push(k);
+  const idx=on.indexOf(i);
+  if(idx>=0){
+    // ★다 끄면 서버는 '전체 장면'으로 읽는다 — 그 어긋남을 화면에서 막는다
+    if(on.length<=1){ alert('장면을 하나는 남겨 주세요. 다 빼려면 이 효과를 지우면 돼요.'); return; }
+    on.splice(idx,1);
+  }else on.push(i);
+  on.sort(function(x,y){ return x-y; });
+  m.scenes=on.map(function(k){ return _mkKeyOf(BEATS_PREVIEW[k], k); });
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 빠른 고르기: 'all' 전부 / 'nohook' 앞 3장면 빼기
+function mkPickQuick(kind){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL]; const n=BEATS_PREVIEW.length;
+  let ks=[]; for(let k=0;k<n;k++) ks.push(k);
+  if(kind==='nohook'){
+    if(n<=3){ alert('장면이 3개 이하라 앞 3장면을 빼면 남는 장면이 없어요.'); return; }
+    ks=ks.slice(3);
+  }
+  m.scenes=ks.map(function(k){ return _mkKeyOf(BEATS_PREVIEW[k], k); });
+  delete m.beat; delete m.cut;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
 // 장면을 넘기면 그 장면의 가림막만 보이게 다시 그린다(장면 전용이 하나라도 있을 때만).
@@ -4966,6 +5067,29 @@ function mkChoice(opts, cur, fn){
         +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+o[1]+'</button>';
     }).join('')+'</div>';
 }
+// ☑ 골라서 — 장면 번호 칩(켜짐=초록). 누르면 빼고/넣고. 지금 보는 장면은 굵은 테두리.
+function mkPickBlock(m){
+  const n=(typeof BEATS_PREVIEW!=='undefined'&&BEATS_PREVIEW)?BEATS_PREVIEW.length:0;
+  let cur=-1; try{ cur=BEAT_IDX; }catch(e){}
+  let chips='';
+  for(let i=0;i<n;i++){
+    const on=mkHitsIdx(m,i);
+    chips+='<button type="button" data-mk-pick="'+(i+1)+'" onclick="mkPickToggle('+i+')" '
+      +'title="'+(i+1)+'번 장면 '+(on?'빼기':'넣기')+'" '
+      +'style="min-width:34px;height:30px;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;'
+      +'background:'+(on?'#0d2a1c':'transparent')+';color:'+(on?'#7CE8B0':'#5a6672')+';'
+      +'border:'+(i===cur?'2px':'1px')+' solid '+(on?'#2FBF71':'var(--line)')+';'
+      +(on?'':'text-decoration:line-through;')+'">'+(i+1)+'</button>';
+  }
+  const cnt=mkSceneNos(m).length;
+  return '<div style="margin-top:6px;display:flex;gap:4px">'
+      +'<button type="button" onclick="mkPickQuick(&quot;nohook&quot;)" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;cursor:pointer;background:var(--inset2,#131c26);color:var(--txt);border:1px solid var(--line)">앞 3장면(훅) 빼기</button>'
+      +'<button type="button" onclick="mkPickQuick(&quot;all&quot;)" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;cursor:pointer;background:var(--inset2,#131c26);color:var(--txt);border:1px solid var(--line)">전부 켜기</button></div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+chips+'</div>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">번호를 누르면 그 장면에서 빠져요 · 지금 <b>'
+      +cnt+'개 장면</b>('+mkSceneLabel(m)+'번)에 보여요'
+      +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>';
+}
 function mkRender(){
   const pills=document.getElementById('mkPills');
   const ed=document.getElementById('mkEditor');
@@ -4984,7 +5108,7 @@ function mkRender(){
       +'background:'+(on?'#0d2a1c':'transparent')+';'
       +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
       +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번'
-      +(mkIsScene(_m)?' · 🎬'+(mkSceneNo(_m)||'?')+'장면':'')+'</button>';
+      +(mkIsScene(_m)?' · 🎬'+mkSceneLabel(_m)+'장면':'')+'</button>';
   }).join('');
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
   const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
@@ -5018,8 +5142,10 @@ function mkRender(){
   // 🎬 적용 범위 — 전체 장면 / 이 장면만(2026-09-10). 맨 위에 둔다: 가장 먼저 정할 일이다.
   const _sn=mkSceneNo(m);
   const scopeBlock='<div style="'+lab+'">어느 장면에</div>'
-    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만']], mkIsScene(m)?'scene':'all', 'mkScope')
-    +(mkIsScene(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
+    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만'],['pick','☑ 골라서']],
+              mkIsPick(m)?'pick':(mkIsScene(m)?'scene':'all'), 'mkScope')
+    +(mkIsPick(m)?mkPickBlock(m):'')
+    +(mkIsScene(m)&&!mkIsPick(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
       +(_sn?_sn+'번 장면에서만 덮습니다':'걸린 장면을 목록에서 못 찾았어요(편성이 바뀌었을 수 있어요) — 다시 [이 장면만]을 눌러 주세요')
       +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>':'');
   ed.innerHTML=
@@ -8936,11 +9062,12 @@ async function _restoreWork(workId){
   // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거로 그냥 넘어간다.
   // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
   // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
-  PREVIEW_STATUS = null; WATCHED_ALL = false;
+  PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false;
   if(MIX_JOB){
     try{
       const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
       if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+      if(s && s.ok) PREVIEW_GATE_PASSED = !!s.preview_gate_passed;   // 관제 186 — 판단은 서버 _preview_gate_passed
       try{ MIX_FAIL_MSG = (s && s.ok && s.status==='failed') ? (s.error||'원인 미상') : null; }catch(_){}   // 앞 절단 하네스엔 선언부가 없다
       // ★진행 중 매칭 이어받기(2026-08-06 사장님 제보 "다른 작업 갔다 오면 매칭중이 풀린다").
       //   서버 잡은 계속 도는데 복원 경로가 폴링을 재시작하지 않아 UI만 잊었다.
@@ -9178,6 +9305,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  if(d.link_hub) window._linkHub=d.link_hub;   // 회원이 고른 링크 서비스(인포크/머닝) — 문구 이름이 따른다
   COUPANG.suggestNo=d.suggest_number||0;   // ★내 마지막 번호+1 제안(2026-09-04)
   if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
@@ -9254,11 +9382,12 @@ function coupangInner(){
 // 이름은 지어내지 않는다 — 쿠팡 검색 카드를 고를 때 들어온 **실제 상품명**을 쓴다.
 function coupangDmSet(){
   const d=COUPANG.dm_set; if(!d) return '';
+  const HN=esc((window._linkHub||{}).name||'인포크');
   const p=COUPANG.product||{};
   // 파트너스 링크가 없으면 올려봐야 수수료가 안 붙는다 → 먼저 만들라고 안내한다.
   if(!p.partner_url){
     return `<div class="hint" style="margin-top:10px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px">
-      📦 인포크 등록 문구는 <b>파트너스 링크를 넣은 뒤</b> 나옵니다 — 지금 올리면 수수료가 안 붙습니다.</div>`;
+      📦 ${HN} 등록 문구는 <b>파트너스 링크를 넣은 뒤</b> 나옵니다 — 지금 올리면 수수료가 안 붙습니다.</div>`;
   }
   const row=(label,val)=>`<div style="display:flex;gap:6px;align-items:center;margin-top:5px">
       <span class="hint" style="min-width:74px">${label}</span>
@@ -9272,7 +9401,7 @@ function coupangDmSet(){
   //   카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을 받았다.
   const numTxt = (d.number || '').trim();
   return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--inset)">
-    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구
+    <div style="font-weight:600;font-size:13px">📦 ${HN}에 넣을 문구
       ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
       <span class="hint" style="min-width:74px">번호</span>
@@ -9288,14 +9417,14 @@ function coupangDmSet(){
       ${p.image?`<img src="${esc(p.image)}" alt="" style="width:64px;height:64px;object-fit:contain;background:#fff;border-radius:6px">`:''}
       <a class="btn-prev" style="padding:5px 11px;font-size:11px;text-decoration:none"
          href="/api/mix/product/${encodeURIComponent(MIX_JOB||'')}/image" download
-         title="인포크에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
+         title="${HN}에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
     </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
     ${row('설명(고지)', d.dm_desc)}
     <div class="hint" style="margin-top:8px">${numTxt
-      ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
+      ? `${HN}에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
       : (COUPANG.suggestNo
           ? `내 마지막 번호 다음인 <b>${COUPANG.suggestNo}</b>번을 넣어뒀습니다 — <b>번호 저장</b>을 누르면 위 문구에 붙습니다(고쳐도 됩니다).`
           : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.')}</div>
@@ -9640,7 +9769,7 @@ function cancelMixReview(){
   try{ clearInterval(MIX_POLL); }catch(_){ } MIX_POLL=null;
   try{ clearInterval(PREVIEW_POLL); }catch(_){ } PREVIEW_POLL=null;
   try{ ++PREVIEW_GEN; }catch(_){ }
-  PREVIEW_STATUS=null; WATCHED_ALL=false; MIX_JOB=null; try{ MIX_FAIL_MSG=null; }catch(_){}
+  PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false; MIX_JOB=null; try{ MIX_FAIL_MSG=null; }catch(_){}
   try{ MIX_SCRIPT=null; }catch(e){}   // 같은 이유로 try(위 주석 참고)
   try{ _syncSceneLab(false); }catch(_){ }   // 실험실 iframe도 내린다(옛 잡을 계속 보여주면 안 된다)
   const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
@@ -10574,8 +10703,16 @@ async function autoloadAllFootage(){
     try{
       const r = await fetch('/api/produce/autoload', {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+      if(r.status>=500){ const er=new Error('HTTP '+r.status); er.retry=true; throw er; }
       d = await r.json();
-    }catch(e){ break; }
+    }catch(e){
+      // ★요청이 끊기면(배포 재시작·502) 잠깐 뒤 다시 건다(관제 216, 2026-10-15 박세현님).
+      //   종전엔 여기서 끝나 화면은 "분석 중"인데 아무도 분석을 안 거는 상태로 굳었다 —
+      //   새로고침해야만 다시 돌았다. 서버가 도는 중인 영상은 다시 안 태우므로(_inflight) 중복 과금은 없다.
+      // 끊김(네트워크 TypeError·5xx)만 다시 건다 — 그 밖의 오류는 종전대로 멈춘다.
+      if((e instanceof TypeError || e.retry) && waits < 30){ waits++; batch--; await new Promise(r=>setTimeout(r, 15000)); continue; }
+      break;
+    }
     const results = (d && d.results) || [];
     added += (d && d.added) || 0;
     already += results.filter(x=>x.status==='already').length;
@@ -11634,7 +11771,7 @@ async function startProduceMix(){
     // 옛 폴러도 여기서 죽인다: pollPreview는 주인이 아니면 return만 하고 자기 인터벌은 안 끄므로
     // 안 죽이면 옛 job을 2.5초마다 계속 두드린다.
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
-    PREVIEW_STATUS=null; WATCHED_ALL=false;
+    PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false;
     MIX_JOB=d.job_id; try{ MIX_FAIL_MSG=null; }catch(_){}
     // Vertex 미등록 회원 — 막지 않고 안내만(판정은 서버 vertex_route.needs_notice, 문구·주소도 서버가 준다)
     if(d.vertex_notice){ try{ const vn=d.vertex_notice; const box=document.createElement('div');
@@ -12039,7 +12176,7 @@ async function loadMixReview(){
   // 새 매칭 — 옛 확정본은 낡았다. 장면편집 안 확정본 탭을 잠그고 가조립으로 되돌린다
   // (2026-08-22). 안 지우면 새 편집안 옆에 옛 영상이 남아 "이게 지금 것"으로 보인다.
   if (typeof _labCall==='function') _labCall('clearConfirm');
-  PREVIEW_STATUS = null; WATCHED_ALL = false; refreshNextBtn();
+  PREVIEW_STATUS = null; WATCHED_ALL = false; PREVIEW_GATE_PASSED = false; refreshNextBtn();
 }
 
 // ── 장면 우선 후보 카드(2026-07-20, Task7) ─── CANDIDATES-START
@@ -12285,7 +12422,7 @@ async function cloneCandidate(idx){
   // ★새 job = 한 번도 미리보기를 본 적 없다. 재매칭(3779줄)과 같은 초기화를 그대로 건다 —
   //   안 걸면 옛 job의 preview_status를 물고 유료 자막제거로 그냥 넘어간다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
-  PREVIEW_STATUS=null; WATCHED_ALL=false;
+  PREVIEW_STATUS=null; WATCHED_ALL=false; PREVIEW_GATE_PASSED=false;
   const pv=document.getElementById('mixPreview'); if(pv) pv.innerHTML='';
   MIX_JOB = d.job_id; try{ MIX_FAIL_MSG = null; }catch(_){}
   CAND_SEL = idx;
@@ -12406,8 +12543,9 @@ function renderSceneCutaway(beat, idx){
   // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
   const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
   if(memeOn && cw && cw.match_type==='meme'){
-    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
-      + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 ${({mid:'가운데',tail:'맨 끝'})[cw.pos]||'맨 앞'} ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+      + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`
+      + `<div class="mp-cell">${memePosBtns(cw, p => `memeCellAdjust(${idx},{pos:'${p}'})`, d => `memeCellAdjust(${idx},{head_sec:${d}})`, 'mp-btn')}</div>`;
   }
   if(memeOn && !cw){
     html += `<button class="mp-btn mp-add" onclick="memeCellOpen(${idx})" title="이 줄 맨 앞에 감정짤을 넣어요">＋짤</button>`;
@@ -12435,6 +12573,18 @@ function memeCellOpen(idx){
   const cw = b.cutaway || {};
   MemePack.openDrawer({title: (idx+1)+'번 줄 짤 고르기', emotion: cw.emotion || '', cur: cw.asset_id,
                        onPick: id => memeCellSet(idx, id)});
+}
+// 짤 자리(앞/중간/뒤)·길이(−/+) 바꾸기(관제 203) — 판단은 서버 storyboard.meme_adjust. 칸 상자는 _refreshBeatBox 로만 다시 그린다
+async function memeCellAdjust(idx, ch){
+  if(!MIX_JOB) return;
+  let r = null;
+  try{
+    r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/meme_adjust',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({beat_idx: mixBeatIdAt(idx)}, ch))})).json();
+  }catch(e){ toast('짤 반영 실패(네트워크)'); return; }
+  if(!r || !r.ok){ toast((r&&r.error)||'짤 반영 실패'); return; }
+  await _refreshBeatBox(idx);
 }
 // 저장 — 길이(head_sec)는 서버가 정한다(storyboard.meme_head, 자동 배치와 같은 함수). 칸 상자는 renderSceneCutaway 로만 다시 그린다
 async function memeCellSet(idx, assetId){
@@ -12705,6 +12855,7 @@ async function openPaletteView(){
 // 편집안(텍스트)만 보고는 "잘 붙었나"를 판단할 수 없으므로 여기서 공짜로(clean_fn 없이) 렌더해
 // 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
 let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
+let PREVIEW_GATE_PASSED = false;   // 관제 186 — 서버 /api/mix/status 의 preview_gate_passed
 let PREVIEW_POLL = null;
 // 미리보기의 "현재 주인" 세대번호 — PM_GEN(위 openScriptModal/openGenFromWiki 경합)과 같은 패턴이다.
 // await 뒤 돌아온 continuation은 자기가 아직 주인인지 확인하고, 아니면 아무것도 건드리지 않는다.
@@ -12733,7 +12884,8 @@ function onPlayAllFinished(){
 function canGoNext(){
   // 'failed'도 통과시킨다 — 렌더가 고장 났을 때의 탈출구(스펙 §7.1).
   // ffmpeg 문제 하나로 사장님이 영영 갇히면 안 된다. 정상 경로에선 안 뜬다.
-  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed' || WATCHED_ALL;
+  // ★한 번 통과한 작업은 효과음·배경음을 바꿔 미리보기가 비워져도 잠그지 않는다(관제 186, 서버 판단).
+  return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed' || WATCHED_ALL || PREVIEW_GATE_PASSED;
 }
 
 // T7: 게이트 판정 단일화(§4-3). 어느 단계가 지금 잠겨 있나 — jump·go·refreshNextBtn·renderSteps가
@@ -12982,7 +13134,7 @@ function cleanGo(si,pos,ci){
     if(typeof ci!=='number') ci=CLEAN_VIEW.ci||0;
     ci=Math.max(0,Math.min(n-1,ci));
     CLEAN_VIEW={ci:ci, si:CLEAN_CLIPS[ci].si, pos:pos, job:CLEAN_VIEW.job};
-    renderCleanReady(CLEAN_VIEW.job||MIX_JOB); return;
+    renderCleanReady(CLEAN_VIEW.job||MIX_JOB, true); return;
   }
   // 목록에 없는 번호로는 가지 않는다 — 안 쓰인 소스는 AFTER를 뽑을 수 없다.
   const L=_cleanIdxList();
@@ -12992,7 +13144,7 @@ function cleanGo(si,pos,ci){
     if(typeof si!=='number') si=L[0];
   }
   CLEAN_VIEW={si:si, pos:pos, job:CLEAN_VIEW.job};
-  renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
+  renderCleanReady(CLEAN_VIEW.job||MIX_JOB, true);
 }
 // ★지운 결과를 쓸지 말지 — 마음에 안 들면 원본으로 되돌리는 취소 버튼(2026-09-20 이윤정 고객 요청).
 //   결과 자체는 서버에 남겨둔 채 **쓸지 말지만** 뒤집는다. 그래서 되돌려도, 다시 켜도 0원이다.
@@ -13040,11 +13192,15 @@ async function setCleanUse(use, btn){
   }
 }
 
-function renderCleanReady(job){
+function renderCleanReady(job, browsing){
   const box=document.getElementById('cleanPreview'); if(!box) return;
   CLEAN_VIEW.job=job;
-  if(CLEAN_CLIPS_JOB!==job){             // 컷 목록을 한 번 받아온 뒤 그린다
-    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job); });
+  // ★컷 목록 저장본은 ◀▶ 넘겨보기(browsing) 동안만 쓴다(관제 211, 이성택님). 그 밖의 모든 진입은 서버에서 새로 받는다 —
+  //   종전엔 job당 한 번만 받아 영상대본MIX에서 장면을 빼고 넣은 뒤 돌아와도 지운 장면이 그대로, 새 장면은 안 보였다.
+  //   진입 경로마다 비우는 대신 여기 한 곳에서 정한다(경로가 늘어도 옛 목록이 남을 수 없다).
+  if(!browsing || CLEAN_CLIPS_JOB!==job){
+    CLEAN_CLIPS_JOB=null;
+    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job, true); });
     return;
   }
   const pos=CLEAN_VIEW.pos;
@@ -13366,6 +13522,12 @@ function cleanFailHtml(kind){
     return '<div class="cp-fail"><b>작업이 중간에 멈췄어요.</b> 서버 업데이트 등으로 끊긴 경우입니다. '
       + '다시 시도하시면 됩니다. <b>이미 처리된 결과가 있으면 추가 비용 없이 이어받아요.</b></div>' + redo;
   }
+  if(kind === 'assembly_mismatch'){
+    // 조립된 영상이 편집 화면 계획과 달라 업체를 부르기 전에 멈춘 경우(관제 176) — 차감이 없었다는 걸 먼저 말한다.
+    return '<div class="cp-fail"><b>자막 지우기를 시작하지 않았어요. 크레딧은 차감되지 않았습니다.</b><br>'
+      + '<span style="opacity:.85">영상을 조립한 결과가 편집 화면과 달라, 잘못 지워지지 않도록 멈췄습니다. '
+      + '<b>다시 시도</b>해 보시고, 같은 화면이 또 나오면 관리자에게 알려 주세요.</span></div>' + redo;
+  }
   if(kind === 'vendor_down'){
     // ★영상 탓으로 돌리지 않는다(2026-09-17). 자막제거 업체 앞단이 죽은 것이라
     //   소스를 바꿔도 똑같고, 기다렸다 다시 누르면 풀린다.
@@ -13536,7 +13698,7 @@ function paintCleanPick(){
       const on=P.sel.has(c.key);
       const keptLbl = c.kept ? '<span class="pk-kept">지움'+((c.done&&c.done.pro)?'·고급':((c.done&&c.done.basic)?'·기본':''))+'</span>' : '';
       return '<button type="button" class="pick-card'+(on?' on':'')+(c.kept?' kept':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
-        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
+        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'&k='+encodeURIComponent(c.key)+'" alt="">'
         +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'+keptLbl
         +'<span class="pk-sec">'+Number(c.dur).toFixed(1)+'초</span></button>';
     }).join('');
@@ -14004,7 +14166,7 @@ async function searchTypecastVoices(){
   if(!d || !d.ok){
     box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
   TCV_RESULTS = d.voices||[];
-  if(!TCV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다.</div>'; return; }
+  if(!TCV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다. 타입캐스트 앱에 있는 성우라도 API로 열려 있지 않은 성우는 여기 나오지 않아요.</div>'; return; }
   box.innerHTML = '<div class="hint" style="margin-bottom:6px">전체 '+(d.total||TCV_RESULTS.length)
     +'명 중 '+TCV_RESULTS.length+'명</div>'
     + TCV_RESULTS.map(function(v,i){
@@ -14064,6 +14226,7 @@ async function tcvUse(btn, i, src){
     })).json();
     if(!r || !r.ok){ toast('⚠️ '+((r&&r.error)||'등록 실패')); btn.disabled=false; btn.textContent=orig; return; }
     toast('✅ '+v.name+' 성우를 담았습니다');
+    btn.textContent='✓ 담음';          // 성공해도 '등록 중…'에 멈춰 있었다(2026-10-19 Park님) — Fish 담기와 같게
     await loadPresets();               // 카드 목록을 다시 받아 두 열에 반영
     if(r.group_id) pickPreset(r.group_id);
   }catch(e){ toast('⚠️ 등록 실패'); btn.disabled=false; btn.textContent=orig; }
@@ -14226,6 +14389,13 @@ function _sampleUrlOf(g){
   const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
   return (v&&v.sample_url)||'';
 }
+// 샘플 없는 성우(타입캐스트·Fish 담기 — 크레딧 아끼려 샘플을 안 굽는다)의 ▶.
+//   꺼진 채 두면 고장으로 보인다(2026-10-19 Park님 "등록후에도 화살표 재생바가 죽어있어요") →
+//   그 성우를 골라 두고 '목소리만 미리듣기'로 안내한다.
+function _vplayNoSample(gid){
+  pickPreset(gid);
+  toast('🎧 샘플이 없는 성우예요 — 골라 두었으니 아래 「목소리만 미리듣기」로 들어보세요');
+}
 function renderPresetCards(){
   const cardHtml=(g)=>{
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
@@ -14256,8 +14426,8 @@ function renderPresetCards(){
           </div>
           <button type="button" class="vstar${fav?' on':''}" title="즐겨찾기에 담기"
                   onclick="event.stopPropagation();toggleFav('${g.group_id}')">${fav?'★':'☆'}</button>
-          <button type="button" class="vplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음')}"
-                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
+          <button type="button" class="vplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음 — 골라서 미리듣기')}"
+                  onclick="event.stopPropagation();${url?`playSample(this,'${esc(url)}')`:`_vplayNoSample('${g.group_id}')`}" ${(url||!g.samples_pending)?'':'disabled'}>▶</button>
         </div>
         ${g.best?'<span class="vbadge">추천</span>':''}
         <div class="tones">${tones}</div>
@@ -14317,8 +14487,8 @@ function renderFavRow(){
   return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
     + favs.map(g=>{ const url=_sampleUrlOf(g); return `<div class="fchip" onclick="pickPreset('${g.group_id}')">
          <span>${esc(g.name)}</span>
-         <button type="button" class="fplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음')}"
-           onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
+         <button type="button" class="fplay" title="${url?'샘플 듣기':(g.samples_pending?'샘플 준비 중':'샘플 없음 — 골라서 미리듣기')}"
+           onclick="event.stopPropagation();${url?`playSample(this,'${esc(url)}')`:`_vplayNoSample('${g.group_id}')`}" ${(url||!g.samples_pending)?'':'disabled'}>▶</button>
        </div>`; }).join('') + '</div>';
 }
 
@@ -15085,8 +15255,18 @@ async function refreshInpock(){
     el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('seo')+' 「'+COUPANG_UI+'」에서 상품을 정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
+  // 링크 서비스(인포크/머닝)는 회원이 고른다 — 이름·여는 화면의 주인은 서버(coupang_partners.link_hub)
+  const H = d.link_hub || {key:'inpock', name:'인포크', page:'https://link.inpock.co.kr', admin:'https://link.inpock.co.kr/admin'};
+  window._linkHub = H;
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
-    <div style="font-weight:600;margin-bottom:6px">📦 인포크링크 등록 대기</div>
+    <!-- 링크 서비스 고르기 — 작은 선택 칸은 안 보였다(2026-10-19 사장님 "인포크·머닝 두 개 양옆으로, 눌러서 선택") -->
+    <div style="display:flex;gap:8px;margin-bottom:10px" title="쓰는 링크 서비스를 누르세요 — 다음 영상에도 그대로">
+      ${[['inpock','인포크'],['moneying','머닝']].map(([k,n])=>`<button type="button" data-linkhub="${k}" onclick="setLinkHub('${k}')"
+        style="flex:1;padding:10px 0;font-size:15px;font-weight:700;border-radius:10px;cursor:pointer;${H.key===k
+          ?'background:var(--accent);color:#fff;border:2px solid var(--accent)'
+          :'background:transparent;color:var(--sub);border:2px solid var(--line)'}">${H.key===k?'✓ ':''}${n}</button>`).join('')}
+    </div>
+    <div style="font-weight:600;margin-bottom:6px">📦 ${esc(H.name)} 등록 대기</div>
     <div style="font-size:13px">${esc(p.name||p.keyword||'상품')}
       ${p.partner_url
         ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
@@ -15096,22 +15276,26 @@ async function refreshInpock(){
       <!-- ★새 탭으로 연다(2026-08-18). 창 안 iframe은 폐기 — 인포크 쿠키가 전부 SameSite=Lax라
            크로스사이트 틀에는 안 실려 "로그인 만료"로만 보인다(실측). 대신 누르면 링크를
            복사하고 창까지 한 번에 열어준다. -->
-      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 링크 복사 + 인포크 열기 ↗</button>
+      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 링크 복사 + ${esc(H.name)} 열기 ↗</button>
       <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크만 복사</button>
       <!-- ★<a>는 인라인이라 옆 <button>과 baseline이 어긋나 혼자 위아래로 틀어져 보였다
            (2026-08-18 사장님 캡처). inline-flex+align-items:center+line-height로 버튼과
            같은 상자로 만든다. 글자 크기·패딩은 옆 버튼과 동일하게 유지. -->
       <a class="btn-prev" style="display:inline-flex;align-items:center;padding:7px 13px;font-size:12px;line-height:1.2;text-decoration:none;box-sizing:border-box" target="_blank" rel="noopener"
-         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크만 열기 ↗</a>
+         href="${esc(H.page)}">${esc(H.name)}만 열기 ↗</a>
       <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
         <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
       </label>
     </div>
     <div id="inpockOpenMsg" class="hint" style="margin-top:6px"></div>
-    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 인포크 프로필 링크 하나만 넣고, 상품은 인포크 안에서 관리합니다.
+    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 ${esc(H.name)} 프로필 링크 하나만 넣고, 상품은 ${esc(H.name)} 안에서 관리합니다.
       대가성 고지문구는 ${stepName('seo')} 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
   </div>`;
   window._inpockLink=d.final_link||'';
+}
+async function setLinkHub(hub){
+  try{ await fetch('/api/link_hub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hub})}); }catch(e){}
+  refreshInpock();
 }
 function inpockCopy(){ try{ navigator.clipboard.writeText(window._inpockLink||''); }catch(e){} }
 
@@ -15157,13 +15341,14 @@ async function inpockModalOpen(){
   //   않는다. 대신 rel=noopener를 단 <a>를 만들어 클릭한다 — 보안(opener 차단)은 그대로 두고
   //   차단 여부는 브라우저가 알아서 사장님에게 알린다.
   const a=document.createElement('a');
-  a.href='https://link.inpock.co.kr/admin'; a.target='_blank'; a.rel='noopener';
+  const H = window._linkHub || {name:'인포크', admin:'https://link.inpock.co.kr/admin'};
+  a.href=H.admin; a.target='_blank'; a.rel='noopener';
   document.body.appendChild(a); a.click(); a.remove();
   const el = document.getElementById('inpockOpenMsg');
   if(el){
     el.textContent = copied
-      ? '📋 링크를 복사했습니다 — 새로 열린 인포크 창에서 붙여넣기(Ctrl+V)'
-      : '⚠️ 자동복사 실패 — 위 링크를 직접 복사해 인포크에 붙여넣으세요.';
+      ? '📋 링크를 복사했습니다 — 새로 열린 '+H.name+' 창에서 붙여넣기(Ctrl+V)'
+      : '⚠️ 자동복사 실패 — 위 링크를 직접 복사해 '+H.name+'에 붙여넣으세요.';
     el.style.color = copied ? 'var(--ok)' : 'var(--fire)';
   }
 }
@@ -15292,7 +15477,7 @@ function qrAfterRender(){
   renderFinal();
 }
 // ── QR '폰으로 보내기' 모달 (2026-07-23) — PC에서 완성영상을 폰으로 넘겨 폰 카톡 네이티브 공유 ──
-async function showShareQr(job){
+async function showShareQr(job, opts){
   let ov=document.getElementById('qrOverlay');
   if(!ov){
     ov=document.createElement('div'); ov.id='qrOverlay';
@@ -15304,7 +15489,7 @@ async function showShareQr(job){
   const box=ov.querySelector('#qrBox');
   box.innerHTML='<div style="padding:40px 0;color:#888">QR 만드는 중…</div>';
   try{
-    const r=await fetch('/api/share/link/'+encodeURIComponent(job));
+    const r=await fetch('/api/share/link/'+encodeURIComponent(job)+((opts&&opts.seo)?'?seo=1':''));
     const d=await r.json();
     if(!d || !d.ok){ box.innerHTML='<div style="padding:24px">'+((d&&d.error)||'만들지 못했어요')+'</div>'; return; }
     box.innerHTML=
@@ -15481,6 +15666,8 @@ function renderExport(opts){
     //   CTA 칸이 있는지는 서버가 판단한다(대본마다 다르다) — 눌렀을 때 사유를 말해준다.
     + (rendered?`<button id="btnTrimCta" class="btn-next" style="${big};border:0;cursor:pointer" onclick="trimCta('${j}')">✂ 유튜브용 — CTA 잘라낸 영상</button>`:'')
     + (rendered?'<div class="hint" id="trimCtaHint" style="margin:2px 0 8px">유튜브엔 <b>댓글 유도(CTA)를 뺀 판</b>을 올릴 때 쓰세요. 인스타·틱톡엔 위 「완성 영상」 그대로.</div>':'')
+    // 📣 플랫폼별 CTA 판(2026-10-18 F1) — 렌더 전에 고르면 렌더 한 번에 같이 만들어진다(추가 차감 없음). 판단 주인 = 서버 cta_variants
+    + `<div id="ctaVarBox" data-job="${j}" style="margin:6px 0 10px"></div>`
     // ★완성본을 받은 뒤 바로 예약으로(2026-08-29 사장님 "완성본도 만든 뒤 다운을 누르면
     //   예약발행에도 들어가게"). 파일을 어디에 다시 올릴 필요가 없다 — 예약 단계가
     //   **같은 작업(MIX_JOB)의 완성본**을 그대로 쓴다.
@@ -15503,12 +15690,60 @@ function renderExport(opts){
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=srt" download>📝 SRT 자막</a>`
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=script" download>📄 스크립트</a>`
     + '</div>';
+  loadCtaVariants();
 }
 
 // ── 캡컷으로 보내기 (File System Access API, Chrome/Edge) — 설계 2026-07-20 T2 ──
 // 서버가 draft_content.json+에셋을 조립해 매니페스트로 주면, 브라우저가 사용자 캡컷 폴더에 직접 쓴다.
 // 폴더 핸들을 IndexedDB에 기억 → 2회차부터 폴더 선택 없이 원클릭. draft는 base 절대경로로 에셋을
 // 참조하므로 그 폴더에 파일을 함께 써야 캡컷이 찾는다(설계 부록A).
+// ── 📣 플랫폼별 CTA 판(2026-10-18 F1) ── 설정·상태는 서버(cta_variants)가 정한다. 화면은 그리고 저장만 한다.
+let CTAV=null, _ctavTimer=null;
+async function loadCtaVariants(){
+  const box=document.getElementById('ctaVarBox'); if(!box) return;
+  const j=box.dataset.job; let d=null;
+  if(j){ try{ d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(j))).json(); }catch(e){ return; } }
+  CTAV=(d&&d.ok)?d:null; drawCtaVariants();   // ★그리는 곳은 drawCtaVariants 하나(test_dom_owner_budget)
+  if(!CTAV) return;
+  const busy=Object.values((d.status||{}).items||{}).some(x=>x.status==='rendering'||x.status==='waiting');
+  clearTimeout(_ctavTimer); if(busy) _ctavTimer=setTimeout(loadCtaVariants,5000);
+}
+function drawCtaVariants(){
+  const box=document.getElementById('ctaVarBox'); if(!box) return;
+  if(!CTAV){ box.innerHTML=''; return; }
+  const j=box.dataset.job, cfg=CTAV.config, st=(CTAV.status||{}).items||{};
+  const n=Math.max(1, cfg.items.filter(x=>x.on).length);
+  const rows=cfg.items.map((it,i)=>{
+    const r=st[it.key]; let tail='';
+    if(r&&r.status==='done'&&!r.stale) tail=`<a class="btn-next" style="padding:5px 10px;font-size:12px" href="/api/mix/cta_video/${j}/${it.key}?dl=1" download>⬇ ${esc(it.label)} 판</a>`;
+    else if(r&&(r.status==='rendering'||r.status==='waiting')) tail='<span class="hint">만드는 중…</span>';
+    else if(r&&r.status==='failed') tail='<span class="hint" style="color:var(--fire)">실패: '+esc(r.error||'')+'</span>';
+    else if(r&&r.stale) tail='<span class="hint">옛 판 — 다시 렌더하면 새로 만들어져요</span>';
+    return `<div style="display:flex;gap:8px;align-items:center;margin:5px 0;flex-wrap:wrap">
+      <label style="display:flex;gap:6px;align-items:center;min-width:130px;cursor:pointer"><input type="checkbox" ${it.on?'checked':''} onchange="ctavSet(${i},'on',this.checked)"> <b>${esc(it.label)}</b></label>
+      <input type="text" maxlength="80" value="${esc(it.text)}" onchange="ctavSet(${i},'text',this.value)" style="flex:1;min-width:200px;padding:6px 8px">
+      ${tail}</div>`;}).join('');
+  box.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
+    <div style="font-weight:600;margin-bottom:4px">📣 플랫폼별 CTA 판 <span class="hint">— 고른 판은 다음 렌더 때 같이 만들어져요 (추가 차감 없음)</span></div>
+    ${CTAV.has_cta?'':'<div class="hint" style="color:var(--fire)">이 대본엔 CTA 칸이 없어 판을 만들 수 없어요</div>'}
+    ${rows}
+    <div style="margin:8px 0 4px;display:flex;gap:14px;flex-wrap:wrap;font-size:13px"><b>🎙 CTA 목소리</b>
+      <label style="cursor:pointer"><input type="radio" name="ctavTts" ${cfg.tts_mode!=='full'?'checked':''} onchange="ctavMode('cta')"> CTA 칸만 새로 굽기 (빠름)</label>
+      <label style="cursor:pointer"><input type="radio" name="ctavTts" ${cfg.tts_mode==='full'?'checked':''} onchange="ctavMode('full')"> 판마다 전체 목소리 다시 굽기 (느림)</label></div>
+    <div class="hint" style="line-height:1.7">⏱ <b>시간</b>: 판마다 영상을 다시 조립해요 — 판 ${n}개면 렌더 시간이 약 ${n+1}배가 됩니다.<br>
+      🎙 <b>목소리</b>: ‘CTA 칸만’은 그 부분만 새로 구워 앞말과 이어지는 곳의 톤이 살짝 다를 수 있어요. 자연스럽게 이어지길 원하면 ‘전체 다시 굽기’를 고르세요 — 대신 시간이 더 들어요.<br>
+      💳 판을 몇 개 골라도 렌더 1회만 차감돼요. 고른 뒤 <b>최종 렌더</b>를 누르면 본편이 먼저 나오고 판이 이어서 만들어져요.</div>
+    <div id="ctavMsg" class="hint"></div></div>`;
+}
+async function ctavSave(){
+  const box=document.getElementById('ctaVarBox'); if(!box||!CTAV) return;
+  try{
+    const d=await (await fetch('/api/mix/cta_variants/'+encodeURIComponent(box.dataset.job),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(CTAV.config)})).json();
+    if(d&&d.ok){ CTAV.config=d.config; drawCtaVariants(); const m=document.getElementById('ctavMsg'); if(m) m.textContent='저장했어요 ✓'; }
+  }catch(e){ const m=document.getElementById('ctavMsg'); if(m) m.textContent='저장하지 못했어요 — 다시 시도해 주세요'; }
+}
+function ctavSet(i,k,v){ if(!CTAV) return; CTAV.config.items[i][k]=v; ctavSave(); }
+function ctavMode(m){ if(!CTAV) return; CTAV.config.tts_mode=m; ctavSave(); }
 const CAPCUT_DEFAULT_PATH = 'C:\\capcutproject\\CapCut Drafts';
 function _ccIdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ss_capcut',1);
   r.onupgradeneeded=()=>r.result.createObjectStore('h'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
@@ -16658,9 +16893,11 @@ function renderThumbHandles(){
 function _thumbSizeRange(L){
   if (!L) return {min: 2, max: 60};
   if (L.kind === 'sticker') return {min: 5, max: 60};
-  if (L.kind === 'shape')   return {min: 5, max: 60};
+  if (L.kind === 'shape')   return {min: 5, max: 70};
   if (L.kind === 'badge')   return {min: 2, max: 14};
-  return {min: 2, max: 30};                      // 글자
+  // ★글자는 L.size 가 500분율이라(기본 90) 30~200 이다. 종전 2~30 으로 막혀 손잡이를 잡는 순간
+  //   글자가 30 이하로 쪼그라들고 다시 못 키웠다(2026-10-18 고객 제보 · 관제 226 트랙).
+  return {min: 30, max: 200, dflt: 90};          // 글자
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
@@ -16685,7 +16922,7 @@ function initThumbHandleDrag(){
     const p0 = pt(e);
     const d0 = Math.hypot(p0.clientX - cx, p0.clientY - cy);
     const a0 = Math.atan2(p0.clientY - cy, p0.clientX - cx);
-    const size0 = +L.size || 1, rot0 = +L.rot || 0;
+    const size0 = +L.size || _thumbSizeRange(L).dflt || 1, rot0 = +L.rot || 0;
     const {min, max} = _thumbSizeRange(L);
     const move = ev => {
       const p = pt(ev);
@@ -17086,7 +17323,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="5" max="70" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}° — 화살표 방향을 여기서 돌려요</label>
       <input type="range" min="-180" max="180" value="${L.rot}"
@@ -17139,7 +17376,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="2" max="14" step="0.5" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" step="0.5" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}°</label>
       <input type="range" min="-30" max="30" value="${L.rot}"
@@ -17160,7 +17397,7 @@ function renderThumbLayers(){
         <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
       </div>
       <label style="font-size:11px;color:var(--sub)">크기</label>
-      <input type="range" min="5" max="60" value="${L.size}"
+      <input type="range" min="${_thumbSizeRange(L).min}" max="${_thumbSizeRange(L).max}" value="${L.size}"
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
       <input type="range" min="-180" max="180" value="${L.rot}"
@@ -17196,7 +17433,7 @@ function renderThumbLayers(){
          슬라이더만으로는 지금 값이 몇인지 안 보이고 1씩 맞추기 어렵다. 값의 주인은 그대로 L.size/L.shadow —
          버튼·슬라이더 둘 다 thumbNumSet 한 곳을 거쳐 setThumbField로 간다. -->
     <label style="font-size:11px;color:var(--sub)">글자 크기 <span style="color:var(--sub);opacity:.7">(고정 · 문구가 달라도 같은 숫자는 같은 크기)</span></label>
-    ${thumbNumRow('size', L.size, 30, 200, 5)}
+    ${thumbNumRow('size', L.size, _thumbSizeRange(L).min, _thumbSizeRange(L).max, 5)}
     <label style="font-size:11px;color:var(--sub)">그림자 <span style="color:var(--sub);opacity:.7">(글자 뒤에 깔리는 검은 그림자 · 0이면 없음)</span></label>
     ${thumbNumRow('shadow', Number(L.shadow || 0), 0, 100, 10)}
     <label style="font-size:11px;color:var(--sub)">자간 ${Number(L.tracking || 0) > 0 ? '+' : ''}${Number(L.tracking || 0)}
@@ -18652,7 +18889,8 @@ function s2RenderDrafts(){
   const band=document.getElementById('s2ResultBand'), tabs=document.getElementById('s2Tabs'),
         box=document.getElementById('s2Drafts'), bar=document.getElementById('s2ConfirmBar');
   if(!band) return;
-  if(!S2.drafts.length){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
+  // ★스토리보드 켠 계정은 스토리보드가 곧 대본 화면 — 옛 ③결과 대본(안 카드)을 그 아래 또 보이지 않는다(관제 200 사장님 "예전 대본이 나온다")
+  if(!S2.drafts.length || window.STORYBOARD_ON){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
   band.style.display=''; if(bar) bar.style.display='';
   // ★"이 대본이 무엇으로 만들어졌나"를 화면이 말한다(사장님 제보 "무슨 영상인지 모르겠다").
   //   재료가 어긋나도 대본만 봐서는 알 수 없다 — 쓴 재료를 그대로 보여줘야 어긋남이 보인다.
@@ -19222,12 +19460,8 @@ function s2Confirm(i){
 // 데이터: /api/produce/storyboard/{MIX_JOB} (판단은 서버 shopping_shorts.storyboard 한 곳). 확정은 기존 s2Confirm 흐름을 그대로 탄다.
 const SB = {jid:'', data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, showall:{}, openf:{}, useSeed:false,
             edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, poll:null, err:''};
-const SB_KO = {hook:'훅',title:'제목',bait:'미끼',fame:'유명세',reveal:'정체 공개',limit:'한계',solve:'해결',more:'더',twist:'반전',land:'마무리',
-  price:'가격',power:'성능',easy:'쉬움',extra:'덤',deal:'딜',howto:'사용법',vs:'비교',proof:'증거',react:'반응',what:'정체',good:'좋은 점',
-  pain:'불편',how:'어떻게',story:'탄생 이야기',benefit:'효능',escalate:'고조',escalation:'고조',method:'방법',steps:'단계',texture:'식감',usage:'활용',
-  witness:'증인',cta:'마무리',situation:'상황',notice:'눈치챔',ask:'물어봄',result:'결과',regret:'후회',origin:'본래 용도',cases:'엉뚱한 쓰임',
-  mistake:'실수',authority:'권위',reason:'이유',problem:'문제',mechanism:'원리',ease:'쉬움',context:'맥락',spec:'스펙',bonus:'덤',source:'출처',fit:'맞는 사람',control:'조절',free:'새 칸'};
-function sbKo(s){ s=String(s||''); const b=s.split('_')[0].toLowerCase(); return SB_KO[s.toLowerCase()]||SB_KO[b]||s; }
+// 칸 이름 한국어는 서버 storyboard.ROLE_KO 한 곳(관제 215) — 응답 role_ko 로 받는다
+function sbKo(s){ s=String(s||''); const K=(SB.data&&SB.data.role_ko)||{}; const b=s.split('_')[0].toLowerCase(); return K[s.toLowerCase()]||K[b]||s; }
 function sbE(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function sbA(s){ return sbE(String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }   // onclick 안 '…' 인자
 const SB_TAGI = {"훅감":"🎣","비포":"😩","애프터":"✨","반전":"🔄","반응":"👥"};
@@ -19284,11 +19518,13 @@ async function sbLoad(){
 // 끝난 일을 탭으로 — 이미 받은 탭은 덮어쓰지 않는다(사람이 고친 문장·장면 순서를 지킨다)
 function sbAbsorb(tasks){
   Object.entries(tasks).forEach(([name, t])=>{
+    if(name.startsWith('insert:row~')){ sbRowGenAbsorb(name.slice(7), t||{}); return; }
     if(!t || t.state!=='done' || !t.result) return;
     let k=null;
     if(name.startsWith('board:')) k=name.slice(6);
     else if(name.startsWith('insert:')) k=name.slice(7);
     if(k==null) return;
+    if(k.startsWith('row~')) return;      // 줄 [＋ 칸 추가]의 결과 — 탭이 아니라 그 칸에 들어간다(sbRowGenAbsorb)
     if(!(t.result.slots||[]).length) return;
     if(SB.made[k]){
       // ★씨앗이 바뀌어 다시 만든 AI 자동 보드는 갈아 끼운다(관제 147) — 단 옛 보드에 씨앗 장면이 실제로 들어 있을 때만.
@@ -19430,13 +19666,65 @@ function sbEditDone(){ const [ek,bd]=sbCur(); if(bd) sbPicksSync(ek,bd); }
 function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd.slots.length) return; sbBake(ek,bd);
   [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbPicksSync(ek,bd); }
 function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbPicksSync(ek,bd); }
-function sbRowAdd(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i+1,0,{slot:'free',need:'새 칸',line:'',ids:[],added:true});
-  if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbPicksSync(ek,bd); }
+// [＋ 칸 추가](관제 200 사장님 "누르면 아래 생성, 어울리는 칸 제목 선택, 대본 기본 자동 생성·지우고 다시 쓰기")
+//   ① 누르면 그 줄 아래에 칸 종류 고르기 ② 고르면 빈 칸이 바로 생기고 AI가 그 자리 문장·장면을 채운다(서버 storyboard.insert at=자리 — 끼워 넣기와 같은 작가)
+//   ③ 직접 쓰기를 고르면 AI 없이 빈 칸. 채워진 문장은 칸에서 지우고 다시 쓰면 된다.
+function sbRowAdd(i){ SB.addAt=(SB.addAt===i?null:i); sbRender(); }
+function sbAddPick(i){ if(SB.addAt!==i) return '';
+  return `<div class="sb-xpick" style="margin-top:6px"><b>이 줄 아래에 넣을 칸</b> <span class="sb-note">고르면 AI가 앞뒤 흐름에 맞춰 문장·장면을 채워요(약 20초) — 마음에 안 들면 지우고 직접 쓰세요</span>
+    <div class="sb-xopts">${SB_EXTRA.map(([r,nm,d])=>`<span class="sb-xo" onclick="sbRowAddGo(${i},'${r}')">${nm} <small>${d}</small></span>`).join('')}
+    <span class="sb-xo" onclick="sbRowAddGo(${i},'')">✍ 빈 칸 <small>직접 쓰기</small></span> <span class="sb-more" onclick="sbRowAdd(${i})">닫기</span></div></div>`; }
+async function sbRowAddGo(i, role){
+  const [ek,bd]=sbCur(); if(!bd) return; SB.addAt=null; sbBake(ek,bd);
+  const ex=SB_EXTRA.find(x=>x[0]===role); const tag='row~'+Date.now();
+  const board=JSON.parse(JSON.stringify(bd));      // 끼우기 전 보드를 보낸다 — 서버가 at 자리에 한 칸 끼운다
+  const sl={slot:role||'free', need:ex?ex[2]:'새 칸', line:'', ids:[], added:true}; if(role) sl.gen=tag;
+  bd.slots.splice(i+1,0,sl); if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbPicksSync(ek,bd);
+  if(!role) return;
+  SB.rowGen=SB.rowGen||{}; SB.rowGen[tag]={ek, at:i+1};
+  if(await sbPost('/insert', {name:tag, key:String(ek).split('+')[0], board, extra:[role], at:i+1, use_seed:!!SB.useSeed})) setTimeout(sbLoad, 500);
+  else { delete sl.gen; delete SB.rowGen[tag]; sbRender(); }
+}
+// 줄 칸 채우기 결과를 그 칸에 — 사람이 그새 문장을 썼으면 덮지 않는다. 칸이 어디로 옮겨졌든 gen 표식으로 찾는다
+function sbRowGenAbsorb(name, t){ const G=SB.rowGen||{}; const g=G[name]; if(!g) return;
+  const bd=SB.made[g.ek]; const sl=bd&&bd.slots.find(x=>x.gen===name);
+  if(t.state==='error'){ if(sl){ delete sl.gen; toast('칸 문장 만들기 실패 — 직접 써 주세요'); } delete G[name]; return; }
+  if(t.state!=='done') return; delete G[name]; if(!sl) return; delete sl.gen;
+  const got=((t.result&&t.result.slots)||[])[g.at];
+  if(!got || !got.added){ toast('칸 문장을 못 받았어요 — 직접 써 주세요'); return; }
+  if(!String(sl.line||'').trim() && !(SB.edit[g.ek]&&String(SB.edit[g.ek][bd.slots.indexOf(sl)]||'').trim())) sl.line=got.line||'';
+  if(!(sl.ids||[]).length) sl.ids=(got.ids||[]).slice();
+  if(got.need) sl.need=got.need; if(got.why_scene) sl.why_scene=got.why_scene;
+  Object.keys(SB.ord).filter(o=>o.startsWith(g.ek+'#')).forEach(o=>delete SB.ord[o]);
+  sbPicksSync(g.ek,bd); }
+// 🌐 영어모드(관제 029를 스토리보드로, 관제 200) — 줄 문장을 영어로 갈아끼우고 원문은 line_ko 에 둔다(되돌리기).
+//   변환 판단은 서버 /api/script/translate 하나(줄 수 다르면 거부) — 2단계 옛 안 카드 s2ToggleLang 과 같은 길.
+function sbLangBtn(bd){ const en=bd.lang==='en';
+  return `<button class="sb-btn" id="sbLangBtn" title="${en?'영어 문장을 버리고 한국어 원문으로 되돌립니다':'모든 줄을 영어로 바꿉니다 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만)'}" onclick="sbToggleLang()">${en?'🇰🇷 한국어로':'🌐 영어모드로 변환'}</button>`; }
+async function sbToggleLang(){
+  const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd);
+  if(bd.lang==='en'){ bd.slots.forEach(sl=>{ if(sl.line_ko!=null) sl.line=sl.line_ko; delete sl.line_ko; }); bd.lang='ko'; sbRender(); _sbSaveSoon(); toast('한국어 원문으로 되돌렸어요'); return; }
+  const rows=bd.slots.map((sl,k)=>[k,String(sl.line||'').trim()]).filter(x=>x[1]);
+  if(!rows.length){ toast('문장이 없어요'); return; }
+  const b=document.getElementById('sbLangBtn'); if(b){ b.disabled=true; b.textContent='⏳ 영어로 바꾸는 중…'; }
+  try{
+    const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lines:rows.map(x=>x[1]), product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
+    if(!Array.isArray(d.lines)||d.lines.length!==rows.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
+    rows.forEach(([k,t],m)=>{ bd.slots[k].line_ko=t; bd.slots[k].line=d.lines[m]; });
+    bd.lang='en'; _sbSaveSoon();
+    toast('🌐 영어로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+  }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
+  finally{ sbRender(); }
+}
 function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
 function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
     <button class="sb-rb" title="이 줄을 대본에서 뺍니다(장면 칸도 같이)" onclick="sbRowDel(${i})">🗑 빼기</button>
-    <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button><button title="아래에 빈 칸" onclick="sbRowAdd(${i})">＋</button></span></div>`; }
+    <button class="sb-rb" title="이 줄 아래에 빈 칸을 하나 넣어요 — 문장을 쓰고 관련 후보에서 장면을 고르세요" onclick="sbRowAdd(${i})">＋ 칸 추가</button>
+    <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button></span></div>`; }
 // ── 감정짤 미리 고르기(관제 143) — 짤 들어갈 줄([1]·[3])·감정은 서버가 정해 칸에 싣는다(storyboard.apply_signals → meme_emotion).
 //   여기선 보여 주고 고른 번호를 칸(sl.meme_pick)에 붙일 뿐 — 줄을 옮겨도 칸과 함께 다닌다. 확정 때 storyboard 줄에 실려 meme_slots 가 먼저 쓴다.
 function sbMemeCell(i, sl){
@@ -19551,6 +19839,15 @@ function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의
   Object.keys(SB.ord).filter(o=>o.startsWith('mine#')).forEach(o=>delete SB.ord[o]); delete SB.edit['mine'];
   SB.view='mine'; sbRender(); }
 function sbMv(ek, i, j, d){ const a=SB.ord[ek+'#'+i]; const t=j+d; if(!a||t<0||t>=a.length) return; [a[j],a[t]]=[a[t],a[j]]; SB.play=null; sbResync(ek); }
+// ★장면을 위·아래 칸으로 옮기기(관제 221, 2026-10-16 회원 힘 "대본생성 단계에서 장면 위, 아래로 화면 옮기는 기능").
+//   칸 장면 목록(SB.ord)만 바꾼다 — ◀▶·✕와 같은 길(sbResync → 서버가 초·짤 다시 잼, 확정 때 sbLiveIds 로 3단계에 간다).
+//   아래 칸으로 가면 그 칸 맨 앞, 위 칸으로 가면 맨 뒤에 붙는다(문장 흐름상 가장 가까운 자리). 옮긴 장면은 '고른 장면'으로 표시.
+function sbMvRow(ek, i, j, d){ const bd=SB.made[ek]; const t=i+d; if(!bd||!bd.slots||t<0||t>=bd.slots.length) return;
+  const a=sbOrdOf(ek,i,bd.slots[i]), b=sbOrdOf(ek,t,bd.slots[t]); if(j<0||j>=a.length) return;
+  const id=a.splice(j,1)[0]; const at=b.indexOf(id); if(at>=0) b.splice(at,1);
+  if(d>0) b.unshift(id); else b.push(id);
+  const pk=bd.slots[t].picked=bd.slots[t].picked||[]; if(!pk.includes(id)) pk.unshift(id);
+  SB.play=null; if(typeof toast==='function') toast(`장면을 ${t+1}번 칸으로 옮겼어요`); sbResync(ek); }
 function sbRmCard(ek, i, j){ const a=SB.ord[ek+'#'+i]; if(a){ a.splice(j,1); SB.play=null; sbResync(ek); } }
 function sbResync(ek){ const bd=SB.made[ek]; if(bd && bd.slots) sbPicksSync(ek,bd); else sbRender(); }   // 카드 넣기·빼기·순서 → 초 다시 재기
 function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
@@ -19565,7 +19862,7 @@ function sbCellCards(ek, i, sl, ck){
     const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
     const pl=SB.play&&SB.play.ek===ek&&SB.play.i===i&&SB.play.j===j;
     return `<div class="sb-cc ${show?'':'off'}"><div class="sb-ccv" onclick="sbPlay('${sbA(ek)}',${i},${j})" title="${pl?'누르면 멈춤':'누르면 이 장면 재생(소리 없음)'}">${pl?sbClipV(id,120):sbTh(id,120)}</div><div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
-      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(p&&show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
+      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span>${i>0?`<span class="sb-mv" title="위 칸(${i}번)으로 옮기기" onclick="sbMvRow('${sbA(ek)}',${i},${j},-1)">▲</span>`:''}${(SB.made[ek]&&SB.made[ek].slots&&i<SB.made[ek].slots.length-1)?`<span class="sb-mv" title="아래 칸(${i+2}번)으로 옮기기" onclick="sbMvRow('${sbA(ek)}',${i},${j},1)">▼</span>`:''}<span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(p&&show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
 // 장면 카드 미리보기 — 누른 카드 하나만 그 조각 구간 영상(/storyboard/clip, 서버가 구간만 잘라 줌)을 소리 없이 반복
 function sbPlay(ek, i, j){ const p=SB.play; SB.play=(p&&p.ek===ek&&p.i===i&&p.j===j)?null:{ek,i,j}; sbRender(); }
 function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
@@ -19688,11 +19985,12 @@ function sbPage2(){
         <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onblur="sbEditDone()">${sbE(sbLine(ek,i,sl))}</div>
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
-          ${sbRowActs(i,bd.slots.length,sl)}${sbMemeCell(i,sl)}</div>
+          ${sl.gen?'<div class="sb-busy">⏳ AI가 이 칸 문장·장면을 채우는 중… (먼저 써도 돼요 — 쓴 문장은 안 덮어요)</div>':''}
+          ${sbRowActs(i,bd.slots.length,sl)}${sbAddPick(i)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
       <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
-      <div style="text-align:right;margin-top:10px"><button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
+      <div style="text-align:right;margin-top:10px">${sbLangBtn(bd)} <button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="sb-pickbar"><b>대본 스타일 고르기</b> <span class="sb-note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
       <span style="margin-left:auto"></span>
@@ -19858,6 +20156,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=21"></script>
+<script src="/scene-style-produce.js?v=22"></script>
 </body>
 </html>

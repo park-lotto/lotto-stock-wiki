@@ -584,7 +584,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0, script_endings=False, dialogue=None):
+                      customer_id=0, script_endings=False, dialogue=None, joined=True):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
 
     script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
@@ -640,7 +640,9 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
     #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
     #   생길 자리가 없다. 실패하면 아래 비트별 경로로 그대로 내려간다(라이브 안전).
     #   기본 off — TTS_JOINED=1로 켠다(검증 안 된 플래그를 라이브에 켜지 않는다).
-    if tts_joined.enabled() and _try_joined(
+    # joined=False: 플랫폼별 CTA 판의 'CTA 칸만' 방식(cta_variants) — 통짜는 한 칸만 바뀌어도 전 칸을 다시 구워
+    #   본편 목소리·자막 타이밍이 판마다 달라졌다(2026-10-18 서버 사본 실측). 그 칸만 칸별 경로로 굽는다.
+    if joined and tts_joined.enabled() and _try_joined(
             beats, tts_dir, voice=voice, skip_existing=skip_existing,
             global_pron=global_pron, customer_id=customer_id,
             script_endings=script_endings):
@@ -1923,6 +1925,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     plan["cut_rule"] = _CUT_RULE
     from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
     plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
+    from shopping_shorts.config import HAND_CUT as _HAND_CUT
+    plan["hand_cut"] = _HAND_CUT              # 관제 204 — 새 작업만 손 길이·빈칸 메우기
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
@@ -2095,6 +2099,26 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
             _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
+from shopping_shorts.edit_plan import EXTRA_SRC_RE as _EXTRA_SRC_RE  # 판정 한 곳(edit_plan)
+
+
+def extra_source_paths(work):
+    """3단계 '장면 보충'(관제 209)으로 더한 영상 {x1: mp4경로, …} — 번호순. 판단 주인은 이 함수 하나."""
+    out = []
+    try:
+        dirs = list(Path(work).iterdir())
+    except OSError:
+        return {}
+    for d in dirs:
+        m = _EXTRA_SRC_RE.match(d.name)
+        if not m or not d.is_dir():
+            continue
+        mp4 = next(d.glob("*.mp4"), None)
+        if mp4 is not None:
+            out.append((int(m.group(1)), d.name, str(mp4)))
+    return {vid: p for _, vid, p in sorted(out)}
+
+
 def _resolve_sources(job, work):
     """다운로드된 소스 mp4 경로 맵 {video_id: path}.
 
@@ -2108,6 +2132,10 @@ def _resolve_sources(job, work):
         mp4 = next((work / vid).glob("*.mp4"), None)
         if mp4 is not None:
             source_video_paths[vid] = str(mp4)
+    # ★3단계 '장면 보충'으로 나중에 더한 영상(관제 209) — work/x{n}/*.mp4. job["urls"]엔 넣지 않는다:
+    #   urls가 바뀌면 2단계가 '담은 영상이 바뀌었어요'로 유료 재매칭을 돌려 편집이 날아간다(_sources_hash).
+    #   렌더·캡컷·필름·청소본이 전부 이 표를 읽으므로 여기 한 곳에서 더하면 모든 길이 같이 본다.
+    source_video_paths.update(extra_source_paths(work))
     if not source_video_paths:
         raise RuntimeError("소스 영상을 하나도 찾지 못했습니다 (다운로드 디렉터리에 mp4 없음)")
     return source_video_paths
@@ -2442,7 +2470,18 @@ def _scene_mask_layers(tpl, plan, tts_paths, src_durs):
             lay["blur_mask"], lay["blur_sigma"] = str(bm), bs
         if lay.get("_abspath") or lay.get("blur_mask"):
             out.append(lay)
-    return out
+    # ☑ 골라서(관제 182): 같은 그림이 이어지는 장면들은 한 겹으로 합친다(17장면 = 오버레이 17겹 방지).
+    out.sort(key=lambda x: x["start"])
+    merged = []
+    for lay in out:
+        p = merged[-1] if merged else None
+        if (p and p.get("_abspath") == lay.get("_abspath")
+                and p.get("blur_mask") == lay.get("blur_mask")
+                and abs(lay["start"] - (p["start"] + p["dur"])) < 0.05):
+            p["dur"] = lay["start"] + lay["dur"] - p["start"]
+        else:
+            merged.append(dict(lay))
+    return merged
 
 
 def _resolve_cutaway_paths(store, plan, customer_id):
@@ -3386,6 +3425,22 @@ def _hold_beat(i, beat):
     return (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
 
 
+def _caption_groups(narr, secs, min_sec=1.2):
+    """처음 카드 수용 자막 묶음 수 — 줄 길이를 글자 수로 어림(음성 전이라)하고 1.2초 미만 줄은 옆 줄과 묶는다."""
+    from shopping_shorts.video_assemble import simple_caption_split
+    lines = simple_caption_split(narr, _CAPTION_MAX_CHARS_DEFAULT) if narr else []
+    chars = [len(str(x).replace(" ", "")) for x in lines]
+    tot = sum(chars)
+    if not tot or secs <= 0:
+        return 1
+    n, acc = 0, 0.0
+    for c in chars:
+        acc += secs * c / tot
+        if acc >= min_sec:
+            n, acc = n + 1, 0.0
+    return max(1, n)
+
+
 def _trim_for_cut_rhythm(plan):
     """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
     n = 0
@@ -3415,6 +3470,8 @@ def _trim_for_cut_rhythm(plan):
         #   종전 round(secs/2.5)는 3.7초 줄까지 1컷이라, 2단계가 준 장면을 깎아 같은 장면이 조각나고(구절 맞춤) 모자라 멈췄다
         #   (실측 24시간: 2.5초↑ 칸 35%가 한 장면, 멈춤 18%). 2.5초까지 1 · 5초까지 2 · 7.5초까지 3 · 최대 4.
         want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(math.ceil(secs / 2.5 - 1e-6)))))
+        if not hold:   # ★자막 묶음 수보다 적게 놓지 않는다(2026-10-15 사장님 "다해" — 10번 1안). 홀드는 그대로 1장
+            want = max(want, min(4, _caption_groups(narr, secs)))
         from shopping_shorts.ai_match import is_pinned as _is_pinned
         if _is_pinned(b):   # 스토리보드에서 사람이 고른 장면은 깎지 않는다(관제 120)
             want = 1 + len(alts)
@@ -4699,6 +4756,8 @@ def _va_read_cut_map(video_path):
 
 
 CLEAN_SIDECAR_RULE = "clean_cut_map/v1"
+# 조립본에 컷 지도가 없어 청소를 시작하지 않은 사유 — 화면 안내는 app.clean_failure_kind 가 이 표식으로 가른다
+CLEAN_NO_MAP_MSG = "조립된 영상이 편집 화면 계획과 달라 자막 지우기를 시작하지 않았습니다 [assembly_mismatch]"
 
 
 def _write_clean_sidecar(clean_path, cuts, cut_tiers=None):
@@ -4772,16 +4831,22 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             return str(out)
         sig = _clean_sig(job)          # 새로 만들 땐 현재 식 이름으로만 쓴다
         out = Path(work) / f"final_clean_{sig}.mp4"
+        # ★컷 지도 = 이 조립본을 만든 계획(조립본 옆 .cuts.json — video_assemble._render_mix 가 남긴다)
+        # ★지도가 없으면 **업체를 부르기 전에 멈춘다**(관제 176, 2026-10-09 2aa06a122f21): 지도는 조립이 계획과 달랐을 때만
+        #   안 남는다(칸 프레임 부족). 종전엔 예비 계산(final_clip_pairs·snapshot_cut_map)으로 고른 장면을 자르고 정본을
+        #   적었는데, 그 계산은 실제 파일과 자리가 달라 엉뚱한 구간이 지워지고(고객 크레딧 18초) 완성본 6/9칸이 다른 장면이 됐다.
+        _map = _va_read_cut_map(mix_raw)
+        if _map is None:
+            print("[clean] 조립본 컷 지도 없음 — 청소를 시작하지 않는다(업체 호출 0) sig=%s" % sig, file=sys.stderr)
+            raise RuntimeError(CLEAN_NO_MAP_MSG)
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig} tier={tier}", file=sys.stderr)
             _sel = clean_selection_of(job)
-            # ★컷 지도 = 이 조립본을 만든 계획(조립본 옆 .cuts.json — video_assemble._render_mix 가 남긴다)
-            _map = _va_read_cut_map(mix_raw)
             _tiers = None
             if _top is not None:
                 _plan = job.get("edit_plan") or {}
-                _mc = _map if _map is not None else final_clip_pairs(_plan, tts_paths_of(_plan), _src_durs_for(job, work))
+                _mc = _map
                 _send = [c for c in _mc if cut_selected(c, _top["send"])]
                 # ★실제 조립본의 지도로 한 번 더 확인 — 보낼 컷 자리가 정본을 만든 지도와 다르면 업체를 부르기 전에 멈춘다(환불)
                 if len(_send) != len(_top["send"]) or not _topup_same_spots(_top["base"].get("cuts"), _send):
@@ -4798,12 +4863,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 if Path(_top["base"]["path"]) == Path(out):
                     _drop_clean_frame_caches(work, sig)     # 같은 이름으로 내용이 바뀌었다 — 옛 그림 캐시를 버린다
             elif _sel:
-                # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(없을 때만 지금 편성으로 계산)
-                _plan = job.get("edit_plan") or {}
-                _tts = tts_paths_of(_plan)
-                res = _clean_partial(str(mix_raw), _map if _map is not None else
-                                     final_clip_pairs(_plan, _tts, _src_durs_for(job, work)),
-                                     _sel, keys, str(out), tier, work)
+                # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(지도가 없으면 위에서 이미 멈췄다 — 다시 계산하지 않는다)
+                res = _clean_partial(str(mix_raw), _map, _sel, keys, str(out), tier, work)
             else:
                 res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name)
         except Exception:
@@ -6593,6 +6654,35 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
             store.update_mix_job(job_id, status="ready_for_review", video_path=None)
             return
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
+        # 📣 플랫폼별 CTA 판(2026-10-18 F1) — 본편이 끝난 **뒤** 같은 재료로 판마다 한 번 더 조립한다.
+        #   판단은 cta_variants 한 곳. 과금 없음(본편 1회에 포함). 실패해도 본편은 이미 done.
+        try:
+            from shopping_shorts import cta_variants as _cv
+            _cvcfg = _cv.load_config(store, job_id, job.get("customer_id", 0))
+            if _cv.chosen(_cvcfg):
+                def _cv_synth(vp, tts_dir, full):
+                    _synthesize_beats(vp["beats"], tts_dir, voice=job.get("voice"), skip_existing=not full,
+                                      global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                                      script_endings=job_script_endings(job), dialogue=_dialogue_of(job),
+                                      joined=full)
+
+                def _cv_render(vp, vout):
+                    _vwav = (work / f"cta_audio_{vout.stem}.wav") if (_intro_on and _intro_png is not None) else None
+                    assemble(vp, tts_paths_of(vp), source_video_paths, str(vout), clean_fn=final_clean_fn,
+                             headcopy=job.get("headcopy"), caption_style=caption_style,
+                             deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                             **({"audio_wav_out": str(_vwav)} if _vwav else {}))
+                    if _vwav is not None:
+                        try:
+                            prepend_still(str(vout), str(_intro_png), seconds=_intro_sec, audio_wav=str(_vwav))
+                        finally:
+                            _vwav.unlink(missing_ok=True)
+                    ensure_faststart(vout)
+
+                _cv.render_variants(cfg=_cvcfg, plan=_cv.marked_plan(plan_used, job), work=work,
+                                    render_one=_cv_render, synth=_cv_synth)
+        except Exception:      # noqa: BLE001 — 판 때문에 본편을 잃지 않는다
+            traceback.print_exc(file=sys.stderr)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))

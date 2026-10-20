@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -1119,6 +1120,43 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🗂 카드뉴스 제작소(관제 223, 2026-10-17) — 회원별 카드뉴스 작품·브랜드·자동 규칙.
+            # ★customer_id를 WHERE에 항상 끼운다(produce_works와 같은 관례) — 남의 것은 못 읽고 못 지운다.
+            # status: draft(수동 작업) · pending(자동 생성, 승인 대기) · approved(승인) — 보관함은 draft+approved.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_works (
+                    work_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    title TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    state_json TEXT NOT NULL,
+                    rule_id INTEGER,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_works_customer "
+                      "ON cardnews_works(customer_id, status, updated_at DESC)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_brand (
+                    customer_id INTEGER PRIMARY KEY,
+                    brand_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cardnews_rules (
+                    rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    rule_json TEXT NOT NULL,
+                    enabled INTEGER NOT NULL DEFAULT 1,
+                    next_run INTEGER NOT NULL DEFAULT 0,
+                    last_run INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_cardnews_rules_due "
+                      "ON cardnews_rules(enabled, next_run)")
             # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
             # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
             # 일을 딸깍 한 번으로 끝낸다.
@@ -3307,12 +3345,14 @@ class Store:
     # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
     #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
     FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
+    FAV_CHANNEL_CAP_ADMIN = 100   # 관리자 상한(사장님 2026-10-18) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
 
     def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
                         followers=None, last_video_thumb="", last_video_url="",
-                        customer_id=LEGACY_CUSTOMER_ID):
+                        customer_id=LEGACY_CUSTOMER_ID, cap=None):
         """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
-        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다."""
+        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다.
+        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한."""
         platform = (platform or "").strip().lower()
         channel_id = (channel_id or "").strip().lstrip("@")
         if not platform or not channel_id:
@@ -3336,7 +3376,7 @@ class Store:
                 return False
             n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
                           (customer_id,)).fetchone()[0]
-            if n >= self.FAV_CHANNEL_CAP:
+            if n >= (cap or self.FAV_CHANNEL_CAP):
                 return None
             c.execute(
                 "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
@@ -3495,6 +3535,23 @@ class Store:
                 "last_error=?, updated_at=datetime('now') WHERE shortcode=?",
                 ((error or "")[:300], shortcode),
             )
+
+    def autoload_release_interrupted(self, window_sec=600):
+        """서버 재시작에 **끊긴** 시도를 돌려준다 — 기동 시 1회(관제 216, 2026-10-15).
+
+        ★선래치는 추출 **전에** 횟수를 올린다(재시작 루프 방지). 그런데 배포 재시작(SIGKILL)이
+          추출 도중 끊으면 그 1회가 영상 탓처럼 남는다. 실측 박세현님 work e4646d20d4f5:
+          소스 11개가 20:29·21:09 두 번의 배포 재시작에 끊겨 attempts=2·오류 없음·결과 없음 —
+          한 번만 더 끊기면 영구 포기(3회)가 되는 상태였다.
+        기동 직전 window_sec 안에 시작됐고 오류 없이 끝나지 못한 시도 = 이 재시작이 끊은 것.
+        결과가 있는 영상은 횟수가 쓰이지 않으므로 같이 깎여도 무해하다.
+        반환: 되돌린 행 수."""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1) "
+                "WHERE attempts>0 AND COALESCE(last_error,'')='' "
+                "AND updated_at >= datetime('now', ?)", ("-%d seconds" % int(window_sec),))
+            return cur.rowcount or 0
 
     def autoload_mark_error(self, shortcode, error):
         """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
@@ -5952,6 +6009,121 @@ class Store:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
 
+    # ── 🗂 카드뉴스 제작소(관제 223) ──
+    # 판단(문구·검사·장 구성)은 cardnews.py 한 곳. 여기는 저장만 한다.
+    def cardnews_save(self, work_id, customer_id, state, status=None, title=None, rule_id=None):
+        """작품 저장. work_id가 없으면 새로 만든다. 남의 work_id면 None(produce_works와 같은 결).
+        status·title을 안 주면 기존 값 보존. 돌려주는 값 = work_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(state, ensure_ascii=False)
+        with self._conn() as c:
+            if work_id:
+                row = c.execute("SELECT customer_id FROM cardnews_works WHERE work_id=?",
+                                (work_id,)).fetchone()
+                if row and row[0] != customer_id:
+                    return None
+                if row:
+                    cols, vals = ["state_json=?", "updated_at=?"], [payload, now]
+                    if status is not None:
+                        cols.append("status=?"); vals.append(status)
+                    if title is not None:
+                        cols.append("title=?"); vals.append(title)
+                    vals.append(work_id)
+                    c.execute(f"UPDATE cardnews_works SET {', '.join(cols)} WHERE work_id=?", tuple(vals))
+                    return work_id
+            work_id = work_id or ("cn_" + secrets.token_hex(6))
+            c.execute("INSERT INTO cardnews_works(work_id, customer_id, title, status, state_json, rule_id, "
+                      "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                      (work_id, customer_id, title or "", status or "draft", payload, rule_id, now, now))
+            return work_id
+
+    def cardnews_get(self, work_id, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                          "FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                          (work_id, customer_id)).fetchone()
+        if not r:
+            return None
+        return {"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                "rule_id": r[4], "created_at": r[5], "updated_at": r[6]}
+
+    def cardnews_list(self, customer_id, statuses=("draft", "approved"), limit=60):
+        qs = ",".join("?" * len(statuses))
+        with self._conn() as c:
+            rows = c.execute(f"SELECT work_id, title, status, state_json, rule_id, created_at, updated_at "
+                             f"FROM cardnews_works WHERE customer_id=? AND status IN ({qs}) "
+                             f"ORDER BY updated_at DESC LIMIT ?",
+                             (customer_id, *statuses, int(limit))).fetchall()
+        return [{"work_id": r[0], "title": r[1], "status": r[2], "state": json.loads(r[3] or "{}"),
+                 "rule_id": r[4], "created_at": r[5], "updated_at": r[6]} for r in rows]
+
+    def cardnews_delete(self, work_id, customer_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_works WHERE work_id=? AND customer_id=?",
+                             (work_id, customer_id)).rowcount > 0
+
+    def cardnews_count_since(self, customer_id, since_iso, rule_id=None):
+        """자동 규칙의 '하루 몇 편' 상한 판정용 — since 이후 만든 작품 수."""
+        sql = "SELECT COUNT(*) FROM cardnews_works WHERE customer_id=? AND created_at>=?"
+        args = [customer_id, since_iso]
+        if rule_id is not None:
+            sql += " AND rule_id=?"; args.append(rule_id)
+        with self._conn() as c:
+            return c.execute(sql, tuple(args)).fetchone()[0]
+
+    def cardnews_brand_get(self, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT brand_json FROM cardnews_brand WHERE customer_id=?",
+                          (customer_id,)).fetchone()
+        return json.loads(r[0]) if r else None
+
+    def cardnews_brand_set(self, customer_id, brand):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO cardnews_brand(customer_id, brand_json, updated_at) VALUES (?,?,?) "
+                      "ON CONFLICT(customer_id) DO UPDATE SET brand_json=excluded.brand_json, "
+                      "updated_at=excluded.updated_at",
+                      (customer_id, json.dumps(brand, ensure_ascii=False), now))
+
+    def cardnews_rules(self, customer_id):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, rule_json, enabled, next_run, last_run FROM cardnews_rules "
+                             "WHERE customer_id=? ORDER BY rule_id", (customer_id,)).fetchall()
+        return [{"rule_id": r[0], "rule": json.loads(r[1]), "enabled": bool(r[2]),
+                 "next_run": r[3], "last_run": r[4]} for r in rows]
+
+    def cardnews_rule_save(self, customer_id, rule, next_run, rule_id=None, enabled=True):
+        """규칙 저장. 남의 rule_id면 None. 돌려주는 값 = rule_id."""
+        now = datetime.now(timezone.utc).isoformat()
+        payload = json.dumps(rule, ensure_ascii=False)
+        with self._conn() as c:
+            if rule_id:
+                n = c.execute("UPDATE cardnews_rules SET rule_json=?, enabled=?, next_run=? "
+                              "WHERE rule_id=? AND customer_id=?",
+                              (payload, 1 if enabled else 0, int(next_run), rule_id, customer_id)).rowcount
+                return rule_id if n else None
+            cur = c.execute("INSERT INTO cardnews_rules(customer_id, rule_json, enabled, next_run, created_at) "
+                            "VALUES (?,?,?,?,?)", (customer_id, payload, 1 if enabled else 0, int(next_run), now))
+            return cur.lastrowid
+
+    def cardnews_rule_delete(self, customer_id, rule_id):
+        with self._conn() as c:
+            return c.execute("DELETE FROM cardnews_rules WHERE rule_id=? AND customer_id=?",
+                             (rule_id, customer_id)).rowcount > 0
+
+    def cardnews_rules_due(self, now_epoch):
+        with self._conn() as c:
+            rows = c.execute("SELECT rule_id, customer_id, rule_json, next_run FROM cardnews_rules "
+                             "WHERE enabled=1 AND next_run>0 AND next_run<=?", (int(now_epoch),)).fetchall()
+        return [{"rule_id": r[0], "customer_id": r[1], "rule": json.loads(r[2]), "next_run": r[3]} for r in rows]
+
+    def cardnews_rule_claim(self, rule_id, expect_next, new_next, now_epoch):
+        """자동 실행 1회를 **한 프로세스만** 가져간다 — next_run이 아직 expect_next일 때만 넘긴다.
+        웹 프로세스가 여럿이어도 같은 규칙이 두 번 돌지 않는다(SQL 한 문장 비교·갱신)."""
+        with self._conn() as c:
+            return c.execute("UPDATE cardnews_rules SET next_run=?, last_run=? WHERE rule_id=? AND next_run=?",
+                             (int(new_next), int(now_epoch), rule_id, int(expect_next))).rowcount == 1
+
     # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
     # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.
     # customer_id를 WHERE에 항상 끼운다 — produce_works와 같은 관례라 남의 프리셋은
@@ -6979,10 +7151,48 @@ class Store:
     GHOST_MAX_USE = 3600       # 첫 접속~마지막 접속이 이보다 짧고
     GHOST_IDLE = 86400         # 마지막 접속 뒤 이만큼 지났으면 유령
 
+    # 🔁 비울 수 있는 칸(관제 184, 2026-10-12): 유령 칸만으로는 부족했다. 라이브 꽉 찬 22명 실측 —
+    #   ①9명이 두 칸 다 **같은 IP**(= 같은 PC인데 오래 쓰던 쿠키가 지워져 새 도장) ②나머지 다수는
+    #   한 칸이 몇 주째 안 보임(= 바꾼/버린 PC). 둘 다 1시간 넘게 쓰여 유령 조건에 안 걸렸다.
+    #   그래서 새 PC 등록 때 ①같은 IP·같은 브라우저 칸 ②7일 넘게 안 쓴 칸도 비워준다.
+    #   두 장소에서 **둘 다 7일 안에** 쓰는 PC(진짜 돌려쓰기)는 그대로 막힌다.
+    STALE_IDLE = 7 * 86400
+
     def _is_ghost_slot(self, first_seen, last_seen, now):
         """이 칸이 유령 칸인가 — 판정은 여기 한 곳(관리자 화면 등도 이걸 부른다)."""
         f, l = int(first_seen or 0), int(last_seen or 0)
         return (l - f) < self.GHOST_MAX_USE and (now - l) > self.GHOST_IDLE
+
+    @staticmethod
+    def _ua_family(ua):
+        """브라우저 종류만 남긴다 — 버전 숫자는 뺀다(관제 238).
+        크롬은 몇 주마다 자동 업데이트돼 154→155만 바뀌어도 같은 PC를 못 알아봤다(윤주홍 10-19)."""
+        return re.sub(r"\d+", "", (ua or "")[:200])
+
+    def _same_pc_slot(self, rows, ua, ip):
+        """같은 PC로 보이는 칸(같은 IP + 같은 브라우저 종류) → slot | None. 판정은 여기 한 곳.
+
+        rows = (slot, device_id, first_seen, last_seen, ua, ip). 여럿이면 가장 오래 안 보인 칸.
+        """
+        ip, fam = (ip or "")[:64], self._ua_family(ua)
+        same = [r for r in rows if ip and r[5] == ip and self._ua_family(r[4]) == fam]
+        return min(same, key=lambda r: r[3] or 0)[0] if same else None
+
+    def _replaceable_slot(self, rows, ua, ip, now):
+        """꽉 찼을 때 새 PC에게 내줄 칸 → (slot, 사유) | (None, ""). 판정은 여기 한 곳.
+
+        rows = (slot, device_id, first_seen, last_seen, ua, ip). 우선순위: 같은 PC → 유령 → 7일 미사용.
+        """
+        same = self._same_pc_slot(rows, ua, ip)
+        if same:
+            return same, "same_pc"
+        ghosts = [r for r in rows if self._is_ghost_slot(r[2], r[3], now)]
+        if ghosts:
+            return min(ghosts, key=lambda r: r[3] or 0)[0], "ghost"
+        stale = [r for r in rows if now - int(r[3] or 0) > self.STALE_IDLE]
+        if stale:
+            return min(stale, key=lambda r: r[3] or 0)[0], "stale"
+        return None, ""
 
     def set_pro_term(self, customer_id, start_ts, until_ts):
         """기간제 이용권 설정(시작·만료). 0을 주면 그 칸을 비운다(=무기한).
@@ -7007,7 +7217,7 @@ class Store:
             return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen, ua, ip FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
@@ -7016,6 +7226,15 @@ class Store:
                               "WHERE customer_id=? AND slot=?",
                               (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
                     return True, slot, len(used)
+            # 🔁 쿠키만 잃은 같은 PC(관제 238): 그 칸을 이 도장으로 이어받는다 — 버튼 없이, 칸 수는 그대로.
+            #   황선희(10-19 쿠키 통째 삭제)·윤주홍(쿠키 손실+크롬 업데이트)이 같은 PC인데 막혔다.
+            slot = self._same_pc_slot(rows, ua, ip)
+            if slot:
+                c.execute("UPDATE customer_devices SET device_id=?, last_seen=?, ua=?, ip=? "
+                          "WHERE customer_id=? AND slot=?",
+                          (device_id, now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
+                print(f"[pc] 같은 PC 재인식 cid={customer_id} slot={slot}", file=sys.stderr)
+                return True, slot, len(used)
             return False, None, len(used)
 
     def device_register(self, customer_id, device_id, ua="", ip=""):
@@ -7028,23 +7247,23 @@ class Store:
             return False, None, "기기를 확인할 수 없어요"
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id, first_seen, last_seen FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen, ua, ip FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
                 if did == device_id:
                     return True, slot, "이미 등록된 PC예요"
             if len(used) >= self.PC_SLOTS:
-                # 꽉 찼으면 유령 칸(가장 오래 안 보인 것)을 이 PC로 바꾼다 — 관제 142
-                ghosts = sorted((r for r in rows if self._is_ghost_slot(r[2], r[3], now)),
-                                key=lambda r: r[3] or 0)
-                if ghosts:
-                    slot = ghosts[0][0]
+                # 꽉 찼으면 같은 PC·유령·7일 미사용 칸을 이 PC로 바꾼다 — 관제 142·184
+                slot, kind = self._replaceable_slot(rows, ua, ip, now)
+                if slot:
                     c.execute("UPDATE customer_devices SET device_id=?, first_seen=?, last_seen=?, "
                               "ua=?, ip=? WHERE customer_id=? AND slot=?",
                               (device_id, now, now, (ua or "")[:200], (ip or "")[:64],
                                customer_id, slot))
-                    print(f"[pc] 유령 칸 교체 cid={customer_id} slot={slot}", file=sys.stderr)
+                    print(f"[pc] 칸 교체({kind}) cid={customer_id} slot={slot}", file=sys.stderr)
+                    if kind == "same_pc":
+                        return True, slot, f"같은 PC로 보여 {slot}번 칸을 이 브라우저로 바꿨어요"
                     return True, slot, f"오래 안 쓴 {slot}번 PC 칸을 이 PC로 바꿨어요"
             for slot in range(1, self.PC_SLOTS + 1):
                 if slot not in used:

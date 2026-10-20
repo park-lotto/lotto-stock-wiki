@@ -1,0 +1,4 @@
+build/
+dist/
+*.part
+__pycache__/

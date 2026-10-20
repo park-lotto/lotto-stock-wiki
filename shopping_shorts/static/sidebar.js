@@ -57,14 +57,44 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 카드뉴스 제작소(관제 223, 2026-10-17) — 인스타 캐러셀 생성. 스위치 cardnews_enabled 열린 계정만(/api/me cardnews) 보인다.
+      { icon: "🗂", text: "카드뉴스 제작소", href: "/cardnews", cardnews: true },
       // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
-      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
-      { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
+      // 유튜브제작(2026-10-12 관제 185) — 사장님 유튜브 영상 제작판. 서버 라우트(_yt_studio_page)도 관리자만 연다.
+      { icon: "🎬", text: "유튜브제작",     href: "/yt_studio", admin: true },
       // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
       { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
+    ] },
+    // 🧳 숏템팩(관제 222, 2026-10-17 사장님 "좌측 칸에 숏템팩이라고 만들고 세부팩들 쭉 만들어서 넣어") — 우리 팩 전부를 한 화면(/shortem_packs)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_packs_page)도 관리자만 연다. 세부 팩은 그 화면의 칸(#id)으로 바로 간다.
+    { label: "숏템팩", admin: true, items: [
+      { icon: "🧳", text: "전체 보기",       href: "/shortem_packs", admin: true },
+      { icon: "🔊", text: "효과음팩",        href: "/shortem_packs#sfx", admin: true },
+      { icon: "🧰", text: "효과음 서랍",     href: "/shortem_packs#drawer", admin: true },
+      { icon: "🎵", text: "배경음",          href: "/shortem_packs#bgm", admin: true },
+      { icon: "🎙", text: "성우",            href: "/shortem_packs#voice", admin: true },
+      { icon: "💬", text: "자막 스타일",     href: "/shortem_packs#caption", admin: true },
+      { icon: "✨", text: "등장 효과팩",     href: "/shortem_packs#motion", admin: true },
+      { icon: "🎞", text: "모션그래픽팩",    href: "/shortem_packs#mograph", admin: true },
+      { icon: "😀", text: "스티커·배지·도형", href: "/shortem_packs#deco", admin: true },
+      { icon: "🖼", text: "템플릿",          href: "/shortem_packs#template", admin: true },
+      { icon: "😂", text: "감정짤팩",        href: "/shortem_packs#meme", admin: true },
+      { icon: "🔤", text: "글꼴",            href: "/shortem_packs#font", admin: true },
+      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다. (관제 222: 제작 묶음 → 숏템팩 묶음)
+      { icon: "🔒", text: "효과 견본(에펙)", href: "/fx_samples", admin: true },
+    ] },
+    // 🧬 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 벤치해 만든 브랜드·스타일·결과물 장부를 한 화면(/shortem_preset)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_preset_page)도 관리자만 연다. 세부 칸은 그 화면의 #id 로 바로 간다.
+    { label: "숏템프리셋", admin: true, items: [
+      { icon: "🧬", text: "전체 보기",       href: "/shortem_preset", admin: true },
+      { icon: "🏷", text: "브랜드",          href: "/shortem_preset#brand", admin: true },
+      { icon: "🎙", text: "스타일",          href: "/shortem_preset#style", admin: true },
+      { icon: "📦", text: "결과물",          href: "/shortem_preset#result", admin: true },
+      { icon: "📺", text: "벤치 채널 보관함", href: "/admin/calcopy", admin: true },
+      { icon: "📑", text: "분석 문서",       href: "/shortem_preset#docs", admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -210,15 +240,16 @@
     ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
-    html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
+    // 묶음째 관리자 전용(g.admin, 숏템팩) — 항목처럼 기본 숨김, /api/me 가 관리자면 같은 ss-admin-only 로 보인다
+    html += '<div class="ss-group' + (g.admin ? ' ss-admin-only"' + ' style="display:none"' : '"') + '><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
-      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "") + (it.cardnews ? " ss-cardnews-only" : "");
+      var hide = (it.admin || it.meme || it.cardnews) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -493,6 +524,8 @@
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
     if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
+    // 카드뉴스 제작소 스위치(cardnews_enabled) — 서버 /api/me cardnews 가 정본(서버 입구 _cn_gate와 같은 판정)
+    if (d.cardnews === true) document.querySelectorAll(".ss-cardnews-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;
@@ -1533,4 +1566,45 @@
   } else {
     showReplies();
   }
+})();
+
+// 카드 영상은 한 번에 하나만 재생한다(관제 175, 2026-10-10 고락규 님 화면).
+// 카드 ▶마다 썸네일 자리에 재생기가 생기는데 앞 카드 재생기는 그대로 남아 같이 돌았다.
+// 유튜브는 한 계정 동시 재생이 많으면 "너무 많은 기기가 스트리밍 중" 으로 앞 영상을 멈춘다.
+// 재생기를 만드는 곳이 화면마다 여럿(랭킹 6곳·수집 3곳)이라 각자 고치지 않고
+// 새 재생기가 화면에 붙는 순간을 여기 한 곳에서 보고 나머지를 세운다.
+(function playOnlyThis(){
+  // 카드 목록 화면만(랭킹·수집) — 제작 화면처럼 영상 여러 개를 같이 쓰는 곳은 건드리지 않는다
+  const me=document.currentScript;
+  if(!me || !me.hasAttribute('data-play-one')) return;
+  const EMBED=/youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|tiktok\.com\/embed\//;
+  const isPlayer=n=>n && n.nodeType===1 &&
+    ((n.tagName==='IFRAME' && EMBED.test(n.src||'')) || n.tagName==='VIDEO');
+  // 세운 재생기 자리에 [▶ 다시 재생] — 누르면 원래 재생기로 되돌린다(되돌린 것이 다시 '새 재생기'가 된다)
+  function park(p){
+    if(p.tagName==='VIDEO'){ try{ p.pause(); }catch(e){} return; }
+    const b=document.createElement('button');
+    b.type='button'; b.textContent='▶ 다시 재생';
+    b.title='다른 영상을 재생해서 멈췄어요';
+    b.style.cssText='width:100%;aspect-ratio:var(--shorts-ar,9/16);border:0;border-radius:8px;'
+      +'background:#000;color:#fff;font-size:14px;cursor:pointer;display:block';
+    if(p.style.position==='absolute') b.style.cssText+=';position:absolute;inset:0;height:100%';
+    b.onclick=e=>{ e.stopPropagation(); b.replaceWith(p); };
+    p.replaceWith(b);
+  }
+  function stopOthers(cur){
+    document.querySelectorAll('iframe,video').forEach(p=>{
+      if(p!==cur && isPlayer(p) && p.isConnected) park(p);
+    });
+  }
+  new MutationObserver(ms=>{
+    let cur=null;
+    for(const m of ms) for(const n of m.addedNodes){
+      if(isPlayer(n)) cur=n;
+      else if(n.nodeType===1 && n.querySelector){ const q=n.querySelector('iframe,video'); if(isPlayer(q)) cur=q; }
+    }
+    if(cur) stopOthers(cur);
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  // 이미 있던 영상(<video>)을 다시 재생해도 나머지를 세운다
+  document.addEventListener('play',e=>{ if(isPlayer(e.target)) stopOthers(e.target); },true);
 })();

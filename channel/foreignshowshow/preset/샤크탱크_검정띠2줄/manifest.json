@@ -1,0 +1,1673 @@
+{
+ "slug": "foreignshowshow",
+ "style": "샤크탱크_검정띠2줄",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-18T02:29:05+09:00",
+ "sources": [
+  {
+   "id": "QMJtjJz4M6w",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/QMJtjJz4M6w/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:06",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([212, 304], 856), ([318, 407], 924)] → 줄 크기 [100.0, 101.1] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 0.9994, 'wins': 1, 'raw': 0.7252}",
+    "제목 채움 [[255, 255, 131], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 3개: [0, 1, 2]",
+    "자막 글자 못 읽음 3/3개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "제작법 판독 실패: 컷 25 (quota)",
+    "제작법 판독 실패: 컷 26 (quota)",
+    "제작법 판독 실패: 컷 27 (quota)",
+    "제작법 판독 실패: 컷 28 (quota)",
+    "제작법 판독 실패: 컷 29 (quota)",
+    "제작법 판독 실패: 컷 30 (quota)",
+    "제작법 판독 실패: 컷 31 (quota)",
+    "제작법 판독 실패: 컷 32 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].text"
+   ],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "17f27ae00785"
+  },
+  {
+   "id": "kmQGQNJgSVo",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/kmQGQNJgSVo/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:09",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([162, 279], 675), ([295, 404], 902)] → 줄 크기 [134.5, 123.9] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 1.0, 'wins': 2, 'raw': 0.8001}",
+    "제목 채움 [[255, 248, 113], [255, 254, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 20개: [0, 6, 7, 9, 12, 13, 14, 15, 16, 17]",
+    "자막 글자 못 읽음 34/34개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].y",
+    "layers[text:title].size",
+    "layers[text:title].line_h",
+    "layers[text:title].rgb",
+    "layers[text:title].line_rgb",
+    "layers[text:title].line_scale"
+   ],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "f4e13fa7340e"
+  },
+  {
+   "id": "2jJoIbdciDY",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/2jJoIbdciDY/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:29",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([199, 306], 836), ([320, 415], 906)] → 줄 크기 [120.2, 110.5] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 1.0, 'wins': 2, 'raw': 0.7787}",
+    "제목 채움 [[255, 250, 122], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 2개: [5, 6]",
+    "자막 글자 못 읽음 11/11개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "제작법 판독 실패: 컷 25 (quota)",
+    "제작법 판독 실패: 컷 26 (quota)",
+    "제작법 판독 실패: 컷 27 (quota)",
+    "제작법 판독 실패: 컷 28 (quota)",
+    "제작법 판독 실패: 컷 29 (quota)",
+    "제작법 판독 실패: 컷 30 (quota)",
+    "제작법 판독 실패: 컷 31 (quota)",
+    "제작법 판독 실패: 컷 32 (quota)",
+    "제작법 판독 실패: 컷 33 (quota)",
+    "제작법 판독 실패: 컷 34 (quota)",
+    "제작법 판독 실패: 컷 35 (quota)",
+    "제작법 판독 실패: 컷 36 (quota)",
+    "제작법 판독 실패: 컷 37 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "d61b76d36d5a"
+  },
+  {
+   "id": "vbxJ_v132ao",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/vbxJ_v132ao/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:32",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([171, 283], 907), ([301, 410], 874)] → 줄 크기 [124.4, 125.3] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 1.0, 'wins': 2, 'raw': 0.7659}",
+    "제목 채움 [[255, 235, 124], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 27개: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11]",
+    "자막 글자 못 읽음 38/38개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "제작법 판독 실패: 컷 25 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "9ba85c2e4f52"
+  },
+  {
+   "id": "hZgCO9PEnO8",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/hZgCO9PEnO8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:34",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([152, 270], 945), ([290, 408], 939)] → 줄 크기 [135.6, 135.6] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 1.0, 'wins': 2, 'raw': 0.7503}",
+    "제목 채움 [[255, 248, 115], [255, 254, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 13개: [2, 3, 4, 7, 8, 9, 10, 14, 15, 19]",
+    "자막 글자 못 읽음 23/23개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "e4015e9182d9"
+  },
+  {
+   "id": "mVzrvBpMu3E",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/mVzrvBpMu3E/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:40",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([187, 271], 999), ([296, 413], 897)] → 줄 크기 [93.3, 136.0] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 1.0, 'wins': 2, 'raw': 0.7396}",
+    "제목 채움 [[255, 255, 121], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 31개: [0, 1, 2, 3, 4, 6, 12, 13, 14, 15]",
+    "자막 글자 못 읽음 46/46개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "제작법 판독 실패: 컷 25 (quota)",
+    "제작법 판독 실패: 컷 26 (quota)",
+    "제작법 판독 실패: 컷 27 (quota)",
+    "제작법 판독 실패: 컷 28 (quota)",
+    "제작법 판독 실패: 컷 29 (quota)",
+    "제작법 판독 실패: 컷 30 (quota)",
+    "제작법 판독 실패: 컷 31 (quota)",
+    "제작법 판독 실패: 컷 32 (quota)",
+    "제작법 판독 실패: 컷 33 (quota)",
+    "제작법 판독 실패: 컷 34 (quota)",
+    "제작법 판독 실패: 컷 35 (quota)",
+    "제작법 판독 실패: 컷 36 (quota)",
+    "제작법 판독 실패: 컷 37 (quota)",
+    "제작법 판독 실패: 컷 38 (quota)",
+    "제작법 판독 실패: 컷 39 (quota)",
+    "제작법 판독 실패: 컷 40 (quota)",
+    "제작법 판독 실패: 컷 41 (quota)",
+    "제작법 판독 실패: 컷 42 (quota)",
+    "제작법 판독 실패: 컷 43 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "layers[text:title].w"
+   ],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "a9f77b28733e"
+  },
+  {
+   "id": "aFqKN8s2cA8",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/aFqKN8s2cA8/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:50",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([187, 291], 596), ([311, 416], 980)] → 줄 크기 [118.2, 119.3] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 0.9997, 'wins': 1, 'raw': 0.7835}",
+    "제목 채움 [[255, 253, 127], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota']",
+    "자막 글자 못 읽음 3/3개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "제작법 판독 실패: 컷 15 (quota)",
+    "제작법 판독 실패: 컷 16 (quota)",
+    "제작법 판독 실패: 컷 17 (quota)",
+    "제작법 판독 실패: 컷 18 (quota)",
+    "제작법 판독 실패: 컷 19 (quota)",
+    "제작법 판독 실패: 컷 20 (quota)",
+    "제작법 판독 실패: 컷 21 (quota)",
+    "제작법 판독 실패: 컷 22 (quota)",
+    "제작법 판독 실패: 컷 23 (quota)",
+    "제작법 판독 실패: 컷 24 (quota)",
+    "제작법 판독 실패: 컷 25 (quota)",
+    "제작법 판독 실패: 컷 26 (quota)",
+    "제작법 판독 실패: 컷 27 (quota)",
+    "제작법 판독 실패: 컷 28 (quota)",
+    "제작법 판독 실패: 컷 29 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "75f6f7eb7eeb"
+  },
+  {
+   "id": "HI--3fL7nt4",
+   "tteutgi": "C:/Users/CH/Desktop/로또의 주식/.tracks/칼카피숏템엔진/channel/foreignshowshow/뜯기/HI--3fL7nt4/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-18 00:55",
+   "frame_tool": "fs_preset.hand",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+    "글꼴 못 정함: OCR 글자가 없음 — 글자 층 생략",
+    "제목 = 실측 잉크 [([151, 233], 898), ([259, 376], 897)] → 줄 크기 [92.1, 136.0] (to_frame.size_and_top)",
+    "제목 글꼴 GmarketSansBold — fontmatch 묶음 {'font': 'GmarketSansBold.otf', 'score': 0.9857, 'wins': 1, 'raw': 0.7306}",
+    "제목 채움 [[255, 237, 120], [255, 255, 255]]",
+    "자막 = 8편 공통 실측(1줄 잉크 929~988·2줄 895~953/963~1022, GmarketSansBold·줄 칸 68·valign center)",
+    "자막 크기 68·y 897 = 렌더 대조로 맞춤(PIL 역산 65.6·y 894 로 그리니 1줄 잉크 927~983 폭 615 vs 원본 929~987 폭 645 — loo QMJ 10-18)",
+    "자막 그림자 = 흰 글자 아래오른쪽 고리가 위왼쪽보다 어두움(밝기 차 18/10/2, 3표본) + 뜯기 glyph 그림자 [2,2] → dx3 dy3 blur6 (근사)",
+    "낱말 형광색·같은 색 번짐 빛은 층 하나로 못 그림(emphasis 는 한 색) — manifest channel_rules.captions.highlight_palette"
+   ],
+   "unknown": [
+    "자막 OCR 일부 실패: ['quota', 'quota', 'quota']",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 10개: [0, 1, 3, 6, 12, 13, 14, 17, 18, 19]",
+    "자막 글자 못 읽음 21/21개",
+    "제목 글꼴: 제목·브랜드 띠 대조 못 함: quota; quota",
+    "글꼴: OCR 글자가 없음",
+    "받아쓰기 실패: quota",
+    "소리 구성 실패: 받아쓰기 실패(quota)",
+    "제작법 판독 실패: 컷 0 (quota)",
+    "제작법 판독 실패: 컷 1 (quota)",
+    "제작법 판독 실패: 컷 2 (quota)",
+    "제작법 판독 실패: 컷 3 (quota)",
+    "제작법 판독 실패: 컷 4 (quota)",
+    "제작법 판독 실패: 컷 5 (quota)",
+    "제작법 판독 실패: 컷 6 (quota)",
+    "제작법 판독 실패: 컷 7 (quota)",
+    "제작법 판독 실패: 컷 8 (quota)",
+    "제작법 판독 실패: 컷 9 (quota)",
+    "제작법 판독 실패: 컷 10 (quota)",
+    "제작법 판독 실패: 컷 11 (quota)",
+    "제작법 판독 실패: 컷 12 (quota)",
+    "제작법 판독 실패: 컷 13 (quota)",
+    "제작법 판독 실패: 컷 14 (quota)",
+    "sfx_rules: 받아쓰기 실패(quota)",
+    "bgm_rules: 제미나이 배경음악 판독 없음",
+    "voice_rules: 받아쓰기 실패(quota)",
+    "overlay_rules: quota"
+   ],
+   "excluded_layers": [],
+   "became_variables": [],
+   "caption_style": "샤크탱크_검정띠2줄",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "8bf708153cec"
+  }
+ ],
+ "updated_at": "2026-10-18T02:29:05+09:00",
+ "variables": [
+  "layers[text:title].y",
+  "layers[text:title].w",
+  "layers[text:title].size",
+  "layers[text:title].line_h",
+  "layers[text:title].rgb",
+  "layers[text:title].line_rgb",
+  "layers[text:title].line_scale",
+  "layers[text:title].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "샤크탱크_검정띠2줄",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 897,
+    "w": 1000,
+    "align": "center",
+    "lines": 2,
+    "font": "GmarketSansBold",
+    "size": 68,
+    "line_h": 68,
+    "rgb": [
+     253,
+     250,
+     250
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": {
+     "dx": 3,
+     "dy": 3,
+     "blur": 6,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "status": "잰 편 QMJtjJz4M6w",
+   "sources": [
+    "QMJtjJz4M6w",
+    "kmQGQNJgSVo",
+    "2jJoIbdciDY",
+    "vbxJ_v132ao",
+    "hZgCO9PEnO8",
+    "mVzrvBpMu3E",
+    "aFqKN8s2cA8",
+    "HI--3fL7nt4"
+   ],
+   "notes": [
+    "나레 자막·원음 번역 자막 공통(8편 판독에서 꼴 차이 없음)"
+   ]
+  },
+  {
+   "name": "원음반응_크게",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 880,
+    "w": 1000,
+    "align": "center",
+    "lines": 2,
+    "font": "GmarketSansBold",
+    "size": 85.0,
+    "line_h": 85,
+    "rgb": [
+     253,
+     250,
+     250
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": {
+     "dx": 3,
+     "dy": 3,
+     "blur": 6,
+     "rgb": [
+      0,
+      0,
+      0
+     ]
+    },
+    "glow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": {
+     "kind": "none",
+     "ms": 300
+    },
+    "emphasis": null,
+    "text": null
+   },
+   "sources": [
+    "QMJtjJz4M6w",
+    "kmQGQNJgSVo",
+    "2jJoIbdciDY",
+    "vbxJ_v132ao",
+    "hZgCO9PEnO8",
+    "mVzrvBpMu3E",
+    "aFqKN8s2cA8",
+    "HI--3fL7nt4"
+   ],
+   "status": "손질(6/8편 18칸 실측 — 원음 짧은 반응 잉크 72~76 vs 보통 58~60)",
+   "notes": [
+    "뭐라고?!·대박·대단해!·그거 정말 좋네!·와우·아니·미친짓 그만해! 같은 한 마디 반응. 줄 전체 한 색인 칸이 많다",
+    "자리는 보통 자막과 같은 가운데(958.5)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "layers[text:title].y": {
+   "values": {
+    "QMJtjJz4M6w": 206,
+    "kmQGQNJgSVo": 154,
+    "2jJoIbdciDY": 192,
+    "vbxJ_v132ao": 164,
+    "hZgCO9PEnO8": 145,
+    "mVzrvBpMu3E": 185,
+    "aFqKN8s2cA8": 180,
+    "HI--3fL7nt4": 149
+   },
+   "default": 172,
+   "range": [
+    145,
+    206
+   ],
+   "how": "중앙값(8/8편)"
+  },
+  "layers[text:title].w": {
+   "values": {
+    "QMJtjJz4M6w": 1000,
+    "kmQGQNJgSVo": 1000,
+    "2jJoIbdciDY": 1000,
+    "vbxJ_v132ao": 1000,
+    "hZgCO9PEnO8": 1000,
+    "mVzrvBpMu3E": 1039,
+    "aFqKN8s2cA8": 1020,
+    "HI--3fL7nt4": 1000
+   },
+   "default": 1000,
+   "range": [
+    1000,
+    1039
+   ],
+   "how": "중앙값(8/8편)"
+  },
+  "layers[text:title].size": {
+   "values": {
+    "QMJtjJz4M6w": 100.5,
+    "kmQGQNJgSVo": 129.2,
+    "2jJoIbdciDY": 115.3,
+    "vbxJ_v132ao": 124.8,
+    "hZgCO9PEnO8": 135.6,
+    "mVzrvBpMu3E": 114.7,
+    "aFqKN8s2cA8": 118.8,
+    "HI--3fL7nt4": 114
+   },
+   "default": 117.05,
+   "range": [
+    100.5,
+    135.6
+   ],
+   "how": "중앙값(8/8편)"
+  },
+  "layers[text:title].line_h": {
+   "values": {
+    "QMJtjJz4M6w": 106,
+    "kmQGQNJgSVo": 133,
+    "2jJoIbdciDY": 121,
+    "vbxJ_v132ao": 130,
+    "hZgCO9PEnO8": 138,
+    "mVzrvBpMu3E": 109,
+    "aFqKN8s2cA8": 124,
+    "HI--3fL7nt4": 108
+   },
+   "default": 122,
+   "range": [
+    106,
+    138
+   ],
+   "how": "중앙값(8/8편)"
+  },
+  "layers[text:title].rgb": {
+   "values": {
+    "QMJtjJz4M6w": [
+     255,
+     255,
+     131
+    ],
+    "kmQGQNJgSVo": [
+     255,
+     248,
+     113
+    ],
+    "2jJoIbdciDY": [
+     255,
+     250,
+     122
+    ],
+    "vbxJ_v132ao": [
+     255,
+     235,
+     124
+    ],
+    "hZgCO9PEnO8": [
+     255,
+     248,
+     115
+    ],
+    "mVzrvBpMu3E": [
+     255,
+     255,
+     121
+    ],
+    "aFqKN8s2cA8": [
+     255,
+     253,
+     127
+    ],
+    "HI--3fL7nt4": [
+     255,
+     237,
+     120
+    ]
+   },
+   "default": [
+    255,
+    249,
+    122
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "layers[text:title].line_rgb": {
+   "values": {
+    "QMJtjJz4M6w": [
+     [
+      255,
+      255,
+      131
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ],
+    "kmQGQNJgSVo": [
+     [
+      255,
+      248,
+      113
+     ],
+     [
+      255,
+      254,
+      255
+     ]
+    ],
+    "2jJoIbdciDY": [
+     [
+      255,
+      250,
+      122
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ],
+    "vbxJ_v132ao": [
+     [
+      255,
+      235,
+      124
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ],
+    "hZgCO9PEnO8": [
+     [
+      255,
+      248,
+      115
+     ],
+     [
+      255,
+      254,
+      255
+     ]
+    ],
+    "mVzrvBpMu3E": [
+     [
+      255,
+      255,
+      121
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ],
+    "aFqKN8s2cA8": [
+     [
+      255,
+      253,
+      127
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ],
+    "HI--3fL7nt4": [
+     [
+      255,
+      237,
+      120
+     ],
+     [
+      255,
+      255,
+      255
+     ]
+    ]
+   },
+   "default": [
+    [
+     255,
+     249,
+     122
+    ],
+    [
+     255,
+     255,
+     255
+    ]
+   ],
+   "range": null,
+   "how": "자리별 중앙값(8/8편)"
+  },
+  "layers[text:title].line_scale": {
+   "values": {
+    "QMJtjJz4M6w": null,
+    "kmQGQNJgSVo": [
+     1.041,
+     0.959
+    ],
+    "2jJoIbdciDY": [
+     1.042,
+     0.958
+    ],
+    "vbxJ_v132ao": null,
+    "hZgCO9PEnO8": null,
+    "mVzrvBpMu3E": [
+     0.813,
+     1.186
+    ],
+    "aFqKN8s2cA8": null,
+    "HI--3fL7nt4": [
+     0.808,
+     1.193
+    ]
+   },
+   "default": null,
+   "range": null,
+   "how": "최빈(4/8편)"
+  },
+  "layers[text:title].text": {
+   "values": {
+    "QMJtjJz4M6w": "홍수를 막을 수 있는\n역대급 모래 주머니?!",
+    "kmQGQNJgSVo": "입기만 하면\n살 빠지는 땀복?!",
+    "2jJoIbdciDY": "땅콩잼을 이제는\n안 긁어도 된다고?!",
+    "vbxJ_v132ao": "구멍난 벽을 쉽게\n고쳐준다는 제품",
+    "hZgCO9PEnO8": "오로지 낚시줄만\n자른다는 제품?!",
+    "mVzrvBpMu3E": "여성만 쓸 수 있는 수건?!\n산다 vs 안산다",
+    "aFqKN8s2cA8": "케첩을 이제\n안 부어도 된다고?!",
+    "HI--3fL7nt4": "30초만에 와인 칠링?!\n산다 vs 안산다"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {
+   "title_top": {
+    "values": {
+     "QMJtjJz4M6w": 206,
+     "kmQGQNJgSVo": 154,
+     "2jJoIbdciDY": 192,
+     "vbxJ_v132ao": 164,
+     "hZgCO9PEnO8": 145,
+     "mVzrvBpMu3E": 185,
+     "aFqKN8s2cA8": 180,
+     "HI--3fL7nt4": 149
+    },
+    "default": 172,
+    "range": [
+     145,
+     206
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap": {
+    "values": {
+     "QMJtjJz4M6w": 16,
+     "kmQGQNJgSVo": 15,
+     "2jJoIbdciDY": 2,
+     "vbxJ_v132ao": 11,
+     "hZgCO9PEnO8": 14,
+     "mVzrvBpMu3E": 31,
+     "aFqKN8s2cA8": 6,
+     "HI--3fL7nt4": 72
+    },
+    "default": 14,
+    "range": [
+     2,
+     72
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "lh_ratio": {
+    "values": {
+     "QMJtjJz4M6w": 1.055,
+     "kmQGQNJgSVo": 1.029,
+     "2jJoIbdciDY": 1.049,
+     "vbxJ_v132ao": 1.042,
+     "hZgCO9PEnO8": 1.018,
+     "mVzrvBpMu3E": 0.95,
+     "aFqKN8s2cA8": 1.044,
+     "HI--3fL7nt4": 0.947
+    },
+    "default": 1.035,
+    "range": [
+     0.947,
+     1.055
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "size_cap": {
+    "values": {
+     "QMJtjJz4M6w": 100.5,
+     "kmQGQNJgSVo": 129.2,
+     "2jJoIbdciDY": 115.3,
+     "vbxJ_v132ao": 124.8,
+     "hZgCO9PEnO8": 135.6,
+     "mVzrvBpMu3E": 114.7,
+     "aFqKN8s2cA8": 118.8,
+     "HI--3fL7nt4": 114
+    },
+    "default": 117.05,
+    "range": [
+     100.5,
+     135.6
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_bottom": {
+    "values": {
+     "QMJtjJz4M6w": 1486,
+     "kmQGQNJgSVo": 1485,
+     "2jJoIbdciDY": 1484,
+     "vbxJ_v132ao": 1485,
+     "hZgCO9PEnO8": 1486,
+     "mVzrvBpMu3E": 1486,
+     "aFqKN8s2cA8": 1486,
+     "HI--3fL7nt4": 1483
+    },
+    "default": 1486,
+    "range": [
+     1483,
+     1486
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_top": {
+    "values": {
+     "QMJtjJz4M6w": 434,
+     "kmQGQNJgSVo": 435,
+     "2jJoIbdciDY": 436,
+     "vbxJ_v132ao": 435,
+     "hZgCO9PEnO8": 435,
+     "mVzrvBpMu3E": 434,
+     "aFqKN8s2cA8": 434,
+     "HI--3fL7nt4": 437
+    },
+    "default": 435,
+    "range": [
+     434,
+     437
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "gap_ink": {
+    "values": {
+     "QMJtjJz4M6w": 26,
+     "kmQGQNJgSVo": 29,
+     "2jJoIbdciDY": 18,
+     "vbxJ_v132ao": 26,
+     "hZgCO9PEnO8": 28,
+     "mVzrvBpMu3E": 30,
+     "aFqKN8s2cA8": 17,
+     "HI--3fL7nt4": 70
+    },
+    "default": 27,
+    "range": [
+     17,
+     70
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "fill_w": {
+    "values": {
+     "QMJtjJz4M6w": 924,
+     "kmQGQNJgSVo": 888,
+     "2jJoIbdciDY": 905,
+     "vbxJ_v132ao": 907,
+     "hZgCO9PEnO8": 942,
+     "mVzrvBpMu3E": 980,
+     "aFqKN8s2cA8": 964,
+     "HI--3fL7nt4": 897
+    },
+    "default": 4000,
+    "range": [
+     888,
+     980
+    ],
+    "how": "자간 줄이기 끔(4000) — 긴 줄은 렌더러가 칸 폭 w 에 맞춰 줄마다 크기를 줄인다(벤치와 같은 방식)"
+   },
+   "cap_dy": {
+    "values": {
+     "QMJtjJz4M6w": -589,
+     "kmQGQNJgSVo": -588,
+     "2jJoIbdciDY": -587,
+     "vbxJ_v132ao": -588,
+     "hZgCO9PEnO8": -589,
+     "mVzrvBpMu3E": -589,
+     "aFqKN8s2cA8": -589,
+     "HI--3fL7nt4": -586
+    },
+    "default": -588,
+    "range": [
+     -589,
+     -586
+    ],
+    "how": "중앙값(8/8편)"
+   },
+   "video_anchor": {
+    "values": null,
+    "default": "constant",
+    "range": null,
+    "how": "창 y 고정(video_top) — 벤치 창 위 끝 434~437(폭 3px) vs 제목 잉크 끝–창 간격 17~70(폭 53px): 창은 제목 크기와 무관하게 그 자리"
+   }
+  }
+ },
+ "roles": [
+  "0~2초 결말 반응(투자자 원음 리액션 + 빨간 원, 나레 없음)",
+  "나레 정체 한 줄(‘~하는 봉투가 있는데’ 숫자로 능력)",
+  "원음 시연·증거(번역 자막) ↔ 나레 한 줄 교대",
+  "기존 불편(나레 ‘~와 달리’ + 원음 공감)",
+  "숫자 박자(매출·원가·판매량 — 출처 있는 것만)",
+  "지분 경쟁(제안 금액·지분, 원음 ‘우리도 똑같이!’)",
+  "방송 후 결과(나레 후일담 ‘~다고’ 전언)"
+ ],
+ "source_kind": "해외영상",
+ "title_rule": {
+  "font": "GmarketSansBold",
+  "line_rgb": "1줄 노랑 [255,250,121](8편 중앙) · 2줄 흰",
+  "size": "편집자가 줄마다 고름(잉크 높이 82~118) — 2줄 잉크 아래 끝이 창 위 18~30px 위에 오도록(7/8)",
+  "ends": "2줄 끝 '?!' 6/8(vbx·mVz/HI 2줄 '산다 vs 안산다' 는 1줄 끝 ?!)"
+ },
+ "channel_name": {
+  "slot": null,
+  "note": "벤치 화면에 로고·채널명 없음(8편 창 밖 48프레임 최대 밝기 ≤6) — 샥탬스토리 글자 넣지 않음"
+ },
+ "render_gaps": [
+  {
+   "what": "자막 낱말별 형광색 + 같은 색 번짐 빛(한 줄에 여러 색)",
+   "now": "emphasis 는 한 색·glow 는 층 전체 한 색",
+   "pack": "없음"
+  },
+  {
+   "what": "원음 짧은 반응 크게(×1.25)",
+   "now": "caption_styles 로 층 바꾸기는 되나 장면마다 고르는 칸은 대본·제작 단계 몫",
+   "pack": "해당 없음"
+  },
+  {
+   "what": "자막 넘김 가로 흐림(2프레임)",
+   "now": "enter kind 에 없음(pop|fade|rise|typewriter|none) → none",
+   "pack": "없음"
+  },
+  {
+   "what": "빨간 원(실선, 반지름 178~217·선 12~15)",
+   "now": "frame.json 층 없음",
+   "pack": "circle_ring(강조, legacy·지어낸 모양 — 실측 아님)"
+  },
+  {
+   "what": "빨간 점선 원",
+   "now": "없음",
+   "pack": "없음"
+  },
+  {
+   "what": "분홍 굵은 화살표·빨간 곡선 화살표·초록 화살표",
+   "now": "없음",
+   "pack": "arrow_bold·arrow_curve(legacy, 기본색 #FF3B30)"
+  },
+  {
+   "what": "날개 돈다발 이모지",
+   "now": "없음",
+   "pack": "없음"
+  },
+  {
+   "what": "색 필터 번쩍(초록·빨강·노랑 0.1~0.3초)",
+   "now": "없음",
+   "pack": "없음(burst 는 도형)"
+  },
+  {
+   "what": "상황 자막 *…*",
+   "now": "자막 글로 넣으면 됨(같은 칸)",
+   "pack": "해당 없음"
+  }
+ ],
+ "channel_rules": {
+  "_why": "벤치 해외쇼츠 8편 실측(10-18, fs_measure.py) + 사장님 10-18 확정(샥탬스토리 시작 문서 §1) — 값마다 출처",
+  "brand": "샥탬스토리 — 화면에 넣지 않음(벤치 8편 화면 어디에도 로고·채널명 없음, 창 밖 48프레임 최대 밝기 ≤6)",
+  "style": "현장썰(한국어 나레 + 영어 원음 번역 자막 + 제품)",
+  "formula": "6박자: 0~3초 결말 반응(투자자+빨간 원) → 시연 → 기존 불편 → 숫자 → 지분 경쟁 → 방송 후 결과",
+  "narration_tone": "반말 전언체(~는데/~다고/~되자), 벤치 나레 연속 3어절 베끼기 금지, 숫자는 출처 있는 것만",
+  "captions": {
+   "narration_and_quote_same_style": true,
+   "why": "8편 296칸 판독 — 나레 자막·원음 번역 자막 모두 GmarketSansBold·같은 자리(가운데 958.5)·흰+낱말 형광. 원음 짧은 반응만 ×1.25",
+   "highlight_palette": {
+    "노랑": [
+     252,
+     226,
+     61
+    ],
+    "주황": [
+     245,
+     155,
+     72
+    ],
+    "빨강": [
+     235,
+     78,
+     79
+    ],
+    "초록": [
+     66,
+     252,
+     81
+    ],
+    "민트·청록": [
+     64,
+     248,
+     240
+    ],
+    "파랑": [
+     67,
+     165,
+     246
+    ],
+    "분홍": [
+     242,
+     98,
+     146
+    ]
+   },
+   "highlight_counts": {
+    "노랑": "71칸·8편",
+    "주황": "83칸·8편",
+    "빨강": "78칸·8편",
+    "초록": "45칸·7편",
+    "민트·청록": "46칸·7편",
+    "파랑": "29칸·7편",
+    "분홍": "9칸·4편"
+   },
+   "highlight_how": "낱말(구) 단위 1~2곳, 줄 전체를 한 색으로 칠하는 칸도 있음(원음 반응·상황 자막). 색 고르는 규칙은 없음(같은 편 안에서도 다 다름)",
+   "max_lines": 2,
+   "first_cut_sec": "0.57~1.87(7/8, 뜯기 요약)",
+   "cut_sec_median_ref": 1.27
+  },
+  "effects": {
+   "빨간 원(0~2초 첫 컷, 얼굴·반응 둘레)": {
+    "편": "6/8 눈 확인(QMJ·kmQ·2jJ·hZg·mVz·HI)",
+    "자리": "반지름 178~217·선 12~15px·[249,41,43] 실선",
+    "박자": "0초 결말 반응",
+    "근거": "fs_measure fx 10fps 순빨강 픽셀 + 프레임 눈 확인(fx_a/fx_b 시트)"
+   },
+   "빨간 점선 원": {
+    "편": "4/8(QMJ 9.1~11.8·kmQ 29.9~30.9·2jJ 29.6~31.5·hZg 3.2~4.4)",
+    "박자": "기존 불편·상처·증거 가리킴"
+   },
+   "화살표": {
+    "편": "분홍 굵은 화살표 2편(QMJ 12.0~13.7·hZg 8.3~10.1) · 빨간 곡선 1편(QMJ 20.4~22.9) · 초록 화살표 3편(QMJ 0.7·kmQ 0.0·2jJ 29.6)",
+    "박자": "시연 대상 가리킴"
+   },
+   "날개 돈다발 이모지": {
+    "편": "3/8(QMJ 38.7·kmQ 32.6·aFq 34.1)",
+    "박자": "투자 제안 금액 줄"
+   },
+   "색 필터 번쩍(초록·빨강/분홍·노랑, 0.1~0.3초)": {
+    "편": "8/8",
+    "횟수": "편당 초록 2~6·빨강/분홍 0~4·노랑 0~1(10fps 창 평균 치우침 + 눈 확인)",
+    "박자": "컷 넘김(가로 흐림과 같이)"
+   },
+   "자막 넘김 가로 흐림(약 2프레임)": {
+    "편": "8/8 판독 시트",
+    "박자": "자막 바뀔 때 앞 자막이 가로로 번지며 빠지고 새 자막이 번지며 들어옴"
+   },
+   "상황 자막 *…*": {
+    "편": "3/8(QMJ ‘*거래 성공*’·hZg ‘*직접 시범을 보여주는데*’ 등·vbx ‘* 하루에서 이틀 건조 *’)",
+    "꼴": "같은 자막 칸·노랑/빨강"
+   }
+  },
+  "sound": {
+   "target_lufs": -9.0,
+   "target_peak_dbfs_max": -0.5,
+   "clipping": 0,
+   "target_why": "페이블 10-18(사장님 확정): 검수 매뉴얼 B2 우리 기준 = 벤치 ±1.5 LUFS + 최고점 ≤ −0.5 dBFS",
+   "bench_measured": {
+    "I_lufs": [
+     -8.2,
+     -7.1
+    ],
+    "true_peak_dbtp": [
+     1.0,
+     1.6
+    ],
+    "LRA": [
+     1.2,
+     2.9
+    ],
+    "per_video": {
+     "QMJtjJz4M6w": [
+      -7.8,
+      1.0
+     ],
+     "kmQGQNJgSVo": [
+      -7.3,
+      1.6
+     ],
+     "2jJoIbdciDY": [
+      -7.7,
+      1.1
+     ],
+     "vbxJ_v132ao": [
+      -8.2,
+      1.5
+     ],
+     "hZgCO9PEnO8": [
+      -7.2,
+      1.6
+     ],
+     "mVzrvBpMu3E": [
+      -7.1,
+      1.2
+     ],
+     "aFqKN8s2cA8": [
+      -7.9,
+      1.2
+     ],
+     "HI--3fL7nt4": [
+      -8.0,
+      1.0
+     ]
+    },
+    "from": "뜯기.json audio.bench(I·TP·LRA) — 8/8 트루피크 +1.0~+1.6 = 클리핑, 그대로 따라가지 않는다"
+   },
+   "bgm_sfx_voice": "미측정 — 뜯기 받아쓰기·효과음·BGM 판독이 제미나이 quota 로 실패(엔진 요청: hybrid/server_ai.py asr 로 다시)"
+  },
+  "source_credit": false,
+  "excluded": "원본 방송 화면에 박힌 자막·로고($200k for a 10% stake 등 방송 그래픽)는 재료 크롭 단계에서 뺀다(공통 규칙)"
+ },
+ "verification": {
+  "at": "2026-10-18T02:56:40",
+  "tool": "channel/foreignshowshow/preset/fs_preset.py loo",
+  "frame_items(engine compare+judge)": {
+   "영상 창 x·w·아래 끝": "7/8",
+   "영상 창 y": "6/8",
+   "배경 RGB": "8/8",
+   "창 위 고정 글자 띠 개수 창 위 고정 글자 띠 개수": "7/8",
+   "제목 블록 아래 끝~창 위 끝(px)": "1/8",
+   "창 위 띠1 글자 높이(px)": "2/8",
+   "창 위 띠1 획 두께(px)": "4/8",
+   "창 위 띠1 잉크 비율": "5/8",
+   "창 위 띠2 글자 높이(px)": "8/8",
+   "창 위 띠2 획 두께(px)": "5/8",
+   "창 위 띠2 잉크 비율": "8/8",
+   "제목 글꼴(하위 스타일 글꼴 집합 안)": "8/8",
+   "창 위 띠3 글자 높이(px)": "0/1",
+   "창 위 띠3 획 두께(px)": "0/1",
+   "창 위 띠3 잉크 비율": "0/1"
+  },
+  "caption_1line": {
+   "잉크 위 y ±4": "7/8",
+   "잉크 높이 ±12%": "8/8",
+   "잉크 폭 ±10%": "6/8"
+  },
+  "caption_2line_per_line": {
+   "잉크 위 y ±4": "7/8",
+   "잉크 높이 ±12%": "2/8",
+   "잉크 폭 ±10%": "0/8"
+  },
+  "caption_rows": [
+   {
+    "id": "QMJtjJz4M6w",
+    "t": 36.45,
+    "y0": [
+     929,
+     929
+    ],
+    "h": [
+     58,
+     58
+    ],
+    "w": [
+     645,
+     638
+    ]
+   },
+   {
+    "id": "kmQGQNJgSVo",
+    "t": 33.65,
+    "y0": [
+     928,
+     929
+    ],
+    "h": [
+     59,
+     58
+    ],
+    "w": [
+     651,
+     401
+    ]
+   },
+   {
+    "id": "2jJoIbdciDY",
+    "t": 51.05,
+    "y0": [
+     929,
+     929
+    ],
+    "h": [
+     59,
+     59
+    ],
+    "w": [
+     758,
+     750
+    ]
+   },
+   {
+    "id": "vbxJ_v132ao",
+    "t": 13.75,
+    "y0": [
+     930,
+     929
+    ],
+    "h": [
+     58,
+     59
+    ],
+    "w": [
+     860,
+     852
+    ]
+   },
+   {
+    "id": "hZgCO9PEnO8",
+    "t": 34.35,
+    "y0": [
+     929,
+     928
+    ],
+    "h": [
+     59,
+     60
+    ],
+    "w": [
+     729,
+     723
+    ]
+   },
+   {
+    "id": "mVzrvBpMu3E",
+    "t": 6.85,
+    "y0": [
+     929,
+     929
+    ],
+    "h": [
+     59,
+     58
+    ],
+    "w": [
+     775,
+     768
+    ]
+   },
+   {
+    "id": "aFqKN8s2cA8",
+    "t": 23.45,
+    "y0": [
+     929,
+     929
+    ],
+    "h": [
+     59,
+     58
+    ],
+    "w": [
+     752,
+     744
+    ]
+   },
+   {
+    "id": "HI--3fL7nt4",
+    "t": 13.65,
+    "y0": [
+     860,
+     928
+    ],
+    "h": [
+     60,
+     59
+    ],
+    "w": [
+     756,
+     666
+    ]
+   },
+   {
+    "id": "QMJtjJz4M6w",
+    "t": 12.15,
+    "y0": [
+     895,
+     899
+    ],
+    "h": [
+     58,
+     51
+    ],
+    "w": [
+     540,
+     474
+    ]
+   },
+   {
+    "id": "QMJtjJz4M6w",
+    "t": 12.15,
+    "y0": [
+     963,
+     967
+    ],
+    "h": [
+     60,
+     52
+    ],
+    "w": [
+     712,
+     624
+    ]
+   },
+   {
+    "id": "kmQGQNJgSVo",
+    "t": 19.05,
+    "y0": [
+     894,
+     899
+    ],
+    "h": [
+     60,
+     51
+    ],
+    "w": [
+     707,
+     296
+    ]
+   },
+   {
+    "id": "kmQGQNJgSVo",
+    "t": 19.05,
+    "y0": [
+     964,
+     967
+    ],
+    "h": [
+     58,
+     51
+    ],
+    "w": [
+     510,
+     418
+    ]
+   },
+   {
+    "id": "2jJoIbdciDY",
+    "t": 10.65,
+    "y0": [
+     896,
+     899
+    ],
+    "h": [
+     56,
+     52
+    ],
+    "w": [
+     621,
+     545
+    ]
+   },
+   {
+    "id": "2jJoIbdciDY",
+    "t": 10.65,
+    "y0": [
+     963,
+     966
+    ],
+    "h": [
+     60,
+     53
+    ],
+    "w": [
+     848,
+     743
+    ]
+   },
+   {
+    "id": "hZgCO9PEnO8",
+    "t": 13.75,
+    "y0": [
+     895,
+     899
+    ],
+    "h": [
+     58,
+     51
+    ],
+    "w": [
+     340,
+     298
+    ]
+   },
+   {
+    "id": "hZgCO9PEnO8",
+    "t": 13.75,
+    "y0": [
+     964,
+     967
+    ],
+    "h": [
+     58,
+     51
+    ],
+    "w": [
+     691,
+     605
+    ]
+   }
+  ],
+  "notes": [
+   "원본 자막 잉크는 배경 흰·형광 물체가 섞인 칸을 뺐다(원본 못 잼)",
+   "kmQ·aFq 창 y 어긋남 = 재료 회색 가림 띠(자막 가리기)를 compare 가 창 경계로 읽은 것(창 규칙 값은 434~437 고정)",
+   "엔진 judge 는 창 위 띠 #0 을 [광고] 고정 띠로 보고 '고정' 판정 — 이 채널 띠 #0 = 제목 1줄(편집자가 고르는 크기)이라 띠1 글자 높이 불일치는 변수 차이"
+  ],
+  "sheet": "channel/foreignshowshow/preset/_hand/loo_대조.jpg",
+  "detail": "C:\\숏템_칼카피\\foreignshowshow\\preset_work\\loo\\loo_fs.json"
+ }
+}

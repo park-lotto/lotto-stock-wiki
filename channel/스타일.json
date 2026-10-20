@@ -1,0 +1,545 @@
+{
+ "_about": "칼카피 스타일 장부(주인 데이터, 사장님 2026-10-17) — 채널을 가로지르는 소리·화자 스타일. 같은 스타일을 하는 벤치 채널에서 강점을 찾아 strengths 에 계속 보강한다. 읽는 곳 tools/calcopy/brands.py:style_of",
+ "judge": "channel/sseolpulda/style_classify.py:classify (audio_comp kind + 피치 4반음 보정)",
+ "not_measured": "evenshopping·homedesignnote 는 소리 구성 미측정(1차분석 voice 칸 비어 있음)",
+ "styles": {
+  "현장썰": {
+   "old_name": "나레+원음",
+   "priority": 1,
+   "desc": "한국어 나레 + 해외 원음 + 해외에서 터진 원본 영상 + 원본 안에 제품이 있음(판매로 연결 가능)",
+   "why": "썰풀다 안 조회 중앙 1위(130만)·동종 1위 MuskLab·참고 땅콩쿠키 564만. 지금 엔진으로 바로 만든다(얜샷템 원음 깔기)",
+   "audio_kinds": [
+    "해외 원음+한국어 나레+자막"
+   ],
+   "strengths": [
+    {
+     "what": "0~3초에 결말 반응(투자자 '뭐라고?!'+빨간 원) 먼저 → 기능 시연 → 기존 불편 → 숫자 → 지분 경쟁 → 방송 후 결과(완판·인증) 6박자. 원음은 영어 출연자 말 + 한국어 번역 자막, 나레는 반말 전언체(~는데/~다고)",
+     "channel": "해외쇼츠 @foreignshowshow (우리 브랜드 샥탬스토리)",
+     "source": [
+      "channel/foreignshowshow/인수인계_샤크탱크_2026-10-17.md",
+      "channel/foreignshowshow/뜯기/요약_8편.md"
+     ],
+     "date": "2026-10-18",
+     "evidence": "상위 50편 중 쇼핑 편 23편 전부 샤크탱크 · 쇼핑 편 조회 중앙 410만 · 기준 편 QMJtjJz4M6w 1,247만·50.5초 · 8편 실측 창 [0,434~437,1080,~1050] 8/8 동일 · 길이 29~60초 · 첫 컷 0.57~1.87초(7/8) · 통합 −7.1~−8.2 LUFS(트루피크 +1.0~+1.6, 클리핑) · 근거편 QMJtjJz4M6w, kmQGQNJgSVo, 2jJoIbdciDY, vbxJ_v132ao, hZgCO9PEnO8, mVzrvBpMu3E, aFqKN8s2cA8, HI--3fL7nt4",
+     "strength": "중"
+    },
+    {
+     "what": "원음 구간엔 나레를 끈다(교대) — 나레가 원음을 덮지 않는다",
+     "evidence": "원음 시간 중 나레 겹침 Mp6LPm9qbLo 0·OE-11wb7vdY 0.007·ZqVgAg99gRI 0.013·a06yYTgpa_c 0.053·IRFN5B_2LMo 0·rMXGuFJEWDE 0(6/6). 나레 없는 구간 비율 현장썰 0.205~0.804(중앙 0.521) vs 제품 나레썰 핫템 4편 0~0.178·그래서리뷰 6편 0~0.072",
+     "strength": "강",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "나레 한 줄이 기능·궁금증을 말하고 끊으면 원음이 바로 그것을 시연한다(원음 = 제품 증거)",
+     "evidence": "OE-11wb7vdY '말 한마디에…자동 개폐되고'→0.0초 뒤 'JARVIS, close helmet' · ZqVgAg99gRI '괜히 하나 필요할 것 같은데'→시연 9구절 · a06yYTgpa_c '이유가 있는데'→사용자 시연 12.5초 · Mp6LPm9qbLo 붓기 시연 · rMXGuFJEWDE 이름+가격 나열 16.4초(5/6, IRFN 은 반응뿐). 제품 나레썰엔 없음",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "원음 대사는 의역 감탄형 한국어 자막, 나레 자막과 색을 달리한다(원음 하늘색 / 나레 흰색)",
+     "evidence": "핫템 4/4 시트 눈 판독: '진짜 갖고싶네!!'·'자비스~ 쏠~!!'·'와 진짜 미쳤다'·'갖고 싶어~!!!'. rMXGuFJEWDE 는 원음 자막 = 제품명+가격 큰 컬러 글자. Mp6LPm9qbLo 는 색 구분 약함",
+     "strength": "중",
+     "channel": "핫템리포트",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "원음 크기를 나레와 비슷하게 올린다(덕킹으로 묻지 않음)",
+     "evidence": "원음만−나레만 dB(50ms 힘 평균): Mp6 −2.5·OE11 −5.1·Zq −0.2·a06y −1.6·IRFN +7.1·rMXG −3.9(중앙 −2.05). 우리 칼카피_OE11 audio.json 원본 원음 −14.1 vs 나레 −14.2 LUFS",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "제품은 첫 프레임에, 제품 범주어는 훅(0~4.5초) 안에",
+     "evidence": "제품 첫 등장 0초 6/6 · 범주어 발화 0~4.5초 5/6(a06yYTgpa_c 만 19초). 제품 나레썰 대조는 시트 안 봐서 고유 강점인지 미확인",
+     "strength": "약",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "끝은 전언 '~다고(하네요)' 뒤 원음 한 마디로 닫는다, 구매 유도 문장은 없다",
+     "evidence": "전언 4/6 · 원음으로 끝 3/6(Mp6 딸 대사·OE11 '이 살아있네'·Zq 제조사 판매 멘트) · 구매 유도 0/6. 전언 끝은 나레썰에도 있어 고유한 것은 '원음으로 끝'뿐",
+     "strength": "중",
+     "channel": "핫템리포트·썰풀다",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    },
+    {
+     "what": "제조사·사용자 본인 영상이면 원음을 판매 멘트로 그대로 살린다",
+     "evidence": "ZqVgAg99gRI(390만) 마지막 7.7초 = 제조사 스펙 멘트 원음('무독성에 논스틱…식기세척기에 넣고 돌리세요'). 1편뿐",
+     "strength": "약",
+     "channel": "핫템리포트",
+     "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+     "date": "2026-10-18"
+    }
+   ],
+   "bench": {
+    "sseolpulda": {
+     "n": 5,
+     "views_median": 1300000,
+     "views_max": 2200000,
+     "ids": [
+      "w-Ygny1f8O8",
+      "t-xMApVctB0",
+      "m4nffB05HNU",
+      "LqPm7k1Aqek",
+      "rMXGuFJEWDE"
+     ],
+     "source": "channel/sseolpulda/스타일_전수분류.md (style_classify.py, 피치 보정 R2 포함)"
+    },
+    "hottemreport": {
+     "n": 4,
+     "of": 10,
+     "ids": [
+      "a06yYTgpa_c",
+      "IRFN5B_2LMo",
+      "OE-11wb7vdY",
+      "ZqVgAg99gRI"
+     ],
+     "source": "C:/숏템_칼카피/hottemreport/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    },
+    "yummyknow": {
+     "n": 1,
+     "of": 10,
+     "ids": [
+      "i1Xj1A73zFI"
+     ],
+     "source": "C:/숏템_칼카피/yummyknow/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    }
+   },
+   "must": [
+    "나레(한국어)",
+    "원음(원본 소리·대사·반응)",
+    "해외 원본(해외에서 터진 영상)",
+    "제품이 원본 안에 실제로 나옴 — 판매로 연결 가능"
+   ],
+   "exclude": "제품 없는 일반 해외 바이럴(사건·사고·동물·웃긴 영상)은 현장썰이 아니다 — 분석·벤치에서 뺀다",
+   "how": "이 꼴(must 4가지)을 기준으로 새 채널을 볼 때마다 그 채널의 강점을 strengths 에 추가한다(근거 편·숫자·출처 채널·날짜). 사장님 2026-10-18",
+   "example": "https://www.youtube.com/shorts/Mp6LPm9qbLo (사장님 기준 예시)",
+   "flow": {
+    "source": "channel/스타일분석/현장썰/쇼핑흐름_1차.md",
+    "date": "2026-10-18",
+    "n": 6,
+    "ids": [
+     "OE-11wb7vdY",
+     "ZqVgAg99gRI",
+     "IRFN5B_2LMo",
+     "a06yYTgpa_c",
+     "rMXGuFJEWDE",
+     "Mp6LPm9qbLo"
+    ],
+    "warning": "표본 6편, 잘되는 편만의 차이는 못 찾음 — 6편 공통 뼈대. 조회로는 제품 나레썰(그래서리뷰 8편 중앙 405만)보다 낫다는 근거 없음(흐름 6편 중앙 120만)",
+    "beats": [
+     {
+      "beat": "①제품 첫 프레임 + 나레 훅",
+      "t": "제품 0초(6/6), 훅 0.0~3.7초",
+      "rule": "훅에 제품 범주어, '~가 있는데요/~했다는데'로 끊음",
+      "ids": [
+       "OE-11wb7vdY",
+       "IRFN5B_2LMo",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo",
+       "rMXGuFJEWDE",
+       "ZqVgAg99gRI"
+      ]
+     },
+     {
+      "beat": "②첫 원음 = 반응·상황 한 마디",
+      "t": "1.8~5.0초(5/6)",
+      "rule": "감탄·상황 원음 0.7~2.5초, 나레 멈춤",
+      "ids": [
+       "a06yYTgpa_c",
+       "rMXGuFJEWDE",
+       "ZqVgAg99gRI",
+       "Mp6LPm9qbLo",
+       "OE-11wb7vdY"
+      ]
+     },
+     {
+      "beat": "③나레 한 줄 → 원음 증거 시연",
+      "t": "시연 시작 6.5~13초",
+      "rule": "나레가 기능·궁금증을 말하고 끊으면 원음이 시연(음성명령·사용·용량·가격)",
+      "ids": [
+       "OE-11wb7vdY",
+       "ZqVgAg99gRI",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo",
+       "rMXGuFJEWDE"
+      ]
+     },
+     {
+      "beat": "④장점 연타",
+      "t": "17~32초",
+      "rule": "나레 스펙 연타 또는 원음 시연 연타",
+      "ids": [
+       "OE-11wb7vdY",
+       "IRFN5B_2LMo",
+       "a06yYTgpa_c",
+       "ZqVgAg99gRI",
+       "rMXGuFJEWDE",
+       "Mp6LPm9qbLo"
+      ]
+     },
+     {
+      "beat": "⑤마무리",
+      "t": "마지막 2~8초",
+      "rule": "전언 '~다고 하네요'(4/6) + 원음 한 마디로 끝(3/6), 구매 유도 0/6",
+      "ids": [
+       "OE-11wb7vdY",
+       "ZqVgAg99gRI",
+       "a06yYTgpa_c",
+       "Mp6LPm9qbLo"
+      ]
+     }
+    ]
+   },
+   "strengths_keys": "what·evidence·strength(강/중/약)·channel·source·date — 이 꼴로만 추가"
+  },
+  "대사썰": {
+   "old_name": "역할극",
+   "priority": 2,
+   "desc": "한국어 목소리 2명 이상이 역할을 나눠 말한다(나레+인물 대사, 인물 대사는 목소리를 바꿔서)",
+   "why": "썰풀다 중앙 85만(나레만의 2.3배)·동종 81편 중 0편 = 경쟁 없는 차별점. 엔진에 줄별 화자·화자별 TTS·화자별 자막 필요",
+   "audio_kinds": [
+    "나레+역할 2명",
+    "역할극만"
+   ],
+   "strengths": [],
+   "bench": {
+    "sseolpulda": {
+     "n": 16,
+     "views_median": 846000,
+     "views_max": 3000000,
+     "ids": [
+      "ho5GSd-4To0",
+      "7DYbxVNz5q8",
+      "oJZDImhYdXw",
+      "v6Mrf2LDqS0",
+      "CRDgWgy4PA4",
+      "-cDiMofZWyo",
+      "sOGg5ySFBDo",
+      "eLYn_4Nckvw",
+      "WA5rBxExyP8",
+      "6KlP1xkSKnE",
+      "KWKNY4Vjguc",
+      "GnPAhXFxSV4",
+      "GqV__fVDMkk",
+      "mlaiX-U7Wgk",
+      "OksMoXVSN5M",
+      "tLuDcq_3zW4"
+     ],
+     "source": "channel/sseolpulda/스타일_전수분류.md (style_classify.py, 피치 보정 R2 포함)"
+    },
+    "yummyknow": {
+     "n": 5,
+     "of": 10,
+     "ids": [
+      "gBVXQdbzwJU",
+      "Mqhm5IH06NM",
+      "onjVWrO2_5E",
+      "PFvCfu1ECK4",
+      "rGFXQlS9Cp4"
+     ],
+     "source": "C:/숏템_칼카피/yummyknow/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    }
+   }
+  },
+  "나레썰": {
+   "old_name": "나레만",
+   "priority": 3,
+   "desc": "해외 원작에 한국어 나레이션만(원음 끔)",
+   "why": "가장 흔한 꼴(썰풀다 25편)·조회 중앙 37만으로 낮은 축·동종 대부분이 이 꼴 — 비중 줄임",
+   "audio_kinds": [
+    "나레 1명"
+   ],
+   "strengths": [],
+   "bench": {
+    "sseolpulda": {
+     "n": 25,
+     "views_median": 372000,
+     "views_max": 3700000,
+     "ids": [
+      "D3Pc6HZ6t6c",
+      "mYxuF1A74j4",
+      "GqSkDhM_bV0",
+      "1_VtwOkbbVE",
+      "6iW_aMG_-L0",
+      "s9RVpN6MzX4",
+      "qcR1cpdR-eA",
+      "L1mZz4riyZE",
+      "Wu8vTQLkY_E",
+      "_zLL14jbrdc",
+      "RfbD3Yf9t3E",
+      "L4Y90sbL-3A",
+      "Mkf664rnZKA",
+      "w7-TjvF93yw",
+      "JM3MtB0CHS4",
+      "sZzoHbDirfA",
+      "GFpMl6gVMI0",
+      "2OTU-cK0M5Y",
+      "SSwmHxNgWtU",
+      "9XWX-ZMbxlo",
+      "4RKsl0caOFw",
+      "6t5rlyFU1iA",
+      "Q9w-kd3AIdE",
+      "5NzKJp0LbBc",
+      "H5ie-Ah1gGY"
+     ],
+     "source": "channel/sseolpulda/스타일_전수분류.md (style_classify.py, 피치 보정 R2 포함)"
+    },
+    "hottemreport": {
+     "n": 4,
+     "of": 10,
+     "ids": [
+      "01ilCC0jZHk",
+      "8ogCjxMJsYo",
+      "PIHCaioKSp4",
+      "RWS43GF1A_U"
+     ],
+     "source": "C:/숏템_칼카피/hottemreport/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    },
+    "banggu": {
+     "n": 10,
+     "of": 10,
+     "ids": [
+      "48PbLQ5az6k",
+      "8iEhEniPpjE",
+      "ayNy6CSSrIQ",
+      "E9hmVYVa7OY",
+      "etM7eAGJ54g",
+      "ILIiqCJAOSI",
+      "Kz8KlJoQ1Vc",
+      "NtPQ51ztIto",
+      "omQdAxK_Y6c",
+      "pkX8M-hSLLE"
+     ],
+     "source": "C:/숏템_칼카피/banggu/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    },
+    "yummyknow": {
+     "n": 4,
+     "of": 10,
+     "ids": [
+      "76uZKOpnlqQ",
+      "eGPWpaJLFZE",
+      "g7cxCPWMI5M",
+      "p8IDs2HdfvY"
+     ],
+     "source": "C:/숏템_칼카피/yummyknow/engine_뜯기3 audio_comp kind(피치 보정 없음 — 대사썰을 덜 셀 수 있음)"
+    }
+   }
+  },
+  "자막썰": {
+   "old_name": "자막만",
+   "priority": 9,
+   "desc": "나레이션 없는 원작에 대본(자막)만 얹는다 — 원음 또는 BGM",
+   "why": "보조(사장님 3가지 밖). 썰풀다 3편 중앙 21만, ZdeZ 880만 한 편이 튐",
+   "audio_kinds": [
+    "원음만+자막",
+    "나레 없음"
+   ],
+   "strengths": [],
+   "bench": {
+    "sseolpulda": {
+     "n": 3,
+     "views_median": 205000,
+     "views_max": 8800000,
+     "ids": [
+      "ZdeZRtCeAC4",
+      "fnZNougO6NQ",
+      "iZ-TprLYezA"
+     ],
+     "source": "channel/sseolpulda/스타일_전수분류.md (style_classify.py, 피치 보정 R2 포함)"
+    }
+   }
+  }
+ },
+ "root": {
+  "name": "썰쇼츠",
+  "desc": "썰(비하인드·재밌는 얘기·흥미로운 이야기)에 기반한 쇼츠 — 모든 칼카피 채널의 뿌리는 하나다",
+  "rule": "사장님 2026-10-18: 뿌리는 하나에서 나간다. 채널마다 다른 점은 새 스타일이 아니라 이 뿌리에 얹는 옵션(options)으로 쌓는다. styles(현장썰·대사썰·나레썰·자막썰)는 소리 구성 축의 선택지다."
+ },
+ "options": {
+  "화자대사줄": {
+   "desc": "게시글형 틀 위 반말 전언체 나레 사이에 '화자 : 대사' 자막 줄(의인화한 집단·회사·나라 — 한국인들·제조사·벨 …)을 끼우고, 그 줄 그림은 반응 짤(짤 속 원래 자막과 말장난). 나레는 화자 이름을 빼고 대사만 읽는다. 끝줄은 1인칭 혼잣말 ㅋㅋ",
+   "why": "사장님 2026-10-18 새 스타일 지정. 재밌쇼 조회 중앙 24.6만(쇼츠 134편), 우리 벤치 뜯기 자막에 '화자 :' 0편. 대사썰(목소리 2명 이상)과 달리 판정 근거는 자막 화자표 — 목소리 수는 미측정",
+   "judge": "자막 OCR/눈 판독의 '화자 : ' 줄 (channel/humorshowshow/줄판독/*.json kind=화자대사|2인대화)",
+   "audio_kinds": [],
+   "strengths": [
+    "끝줄 1인칭 혼잣말 ㅋㅋ(훅 카드 꼴 16/16)",
+    "반응 짤 원래 자막과 대사 말장난",
+    "연예인 실사용 영상 보증 컷(강주은 fgA7)"
+   ],
+   "bench": {
+    "humorshowshow": {
+     "n": 15,
+     "of": 21,
+     "views_median": 2500000,
+     "ids": [
+      "NBdmq90aJus",
+      "pY2zNE5A1m4",
+      "jECuoRljWj0",
+      "bfKkNmVTGPs",
+      "obod5OHkvSA",
+      "UlljlEyhOio",
+      "kZOQNHpqlQE",
+      "xJvwMApZwnE",
+      "31fg67aKMjA",
+      "MhZkmqCTC74",
+      "cj3-wcltAao",
+      "kxAf4wZiB_g",
+      "7XRVuHfs45M",
+      "fgA7dgqwyRM",
+      "78p9VfCEbM4"
+     ],
+     "source": "channel/humorshowshow/대본스타일_줄판독_2026-10-17.md"
+    }
+   },
+   "axis": "대본·자막",
+   "name": "화자 대사 줄"
+  },
+  "따옴표인용반전": {
+   "axis": "대본·자막",
+   "desc": "업체 속마음·소비자 편견을 큰따옴표 인용 자막으로 → 정지 짤(라벨·흑백 전환) → 흰 화면 '라며/할 수 있지만' 0.3~0.8초 → 반전",
+   "bench": {
+    "godsungbi": {
+     "n": 12,
+     "of": 20,
+     "source": "channel/godsungbi/스타일분석_2026-10-17.md"
+    }
+   }
+  },
+  "연예인보증컷": {
+   "axis": "화면",
+   "desc": "나레로 이름 소개 1초 → 그 연예인이 같은 제품을 쓰는 원본 영상 + 본인 말 따옴표/자막 2~3초 → 나레 복귀",
+   "bench": {
+    "godsungbi": {
+     "ids": [
+      "VGjl_FeEQyo"
+     ],
+     "note": "빅마마 이혜정 새우"
+    },
+    "humorshowshow": {
+     "ids": [
+      "fgA7dgqwyRM"
+     ],
+     "note": "강주은 몬트리올 시즈닝"
+    }
+   },
+   "source": "channel/godsungbi/스타일분석_2026-10-17.md · channel/humorshowshow/대본스타일_줄판독_2026-10-17.md"
+  },
+  "조회수줄": {
+   "axis": "화면",
+   "desc": "게시글형 제목 아래 '익명·추천·조회·날짜·댓글' 줄(재밌쇼는 21편 같은 숫자)",
+   "bench": {
+    "humorshowshow": {
+     "n": 21,
+     "of": 21
+    }
+   }
+  },
+  "AI캐릭터감정": {
+   "axis": "화면",
+   "desc": "줄마다 감정 하나를 이라스토야(いらすとや)풍 AI 일러스트 캐릭터로 — 독기·의문(물음표)·당황(땀)·슬픔·항복(백기)·결의·충격. 캐릭터가 자막 동사를 연기, 정지 그림+켄번스",
+   "bench": {
+    "funbox": {
+     "n_sec": 169.2,
+     "of_videos": 21,
+     "source": "channel/funbox/스타일분석_2026-10-18.md"
+    }
+   }
+  },
+  "AI장면재연": {
+   "axis": "화면",
+   "desc": "실제 영상이 없는 과거 사연·회사 내부·소비자 반응 줄을 AI 실사풍 그림(가끔 이미지→영상)으로 재연, 그림 속 글자를 대본 단어에 맞춤. 제품 정체 공개 구간은 실물 영상",
+   "bench": {
+    "funbox": {
+     "n_sec": 234.8,
+     "of_videos": 21,
+     "source": "channel/funbox/스타일분석_2026-10-18.md"
+    },
+    "apbuki": {
+     "n_sec": 96.9,
+     "of_videos": 20,
+     "note": "개발자·발명가 사연 인물, 한 편 안 같은 얼굴",
+     "source": "channel/apbuki/스타일분석_2026-10-18.md"
+    }
+   }
+  },
+  "AI고지문구": {
+   "axis": "화면",
+   "desc": "'이해를 돕기 위해 AI가 사용되었습니다' 화면 맨 아래 회색 굵은 글자, 훅 카드 뒤 상시",
+   "bench": {
+    "funbox": {
+     "n": 21,
+     "of": 21
+    }
+   },
+   "note": "앞북이는 고지 없음"
+  },
+  "감정효과": {
+   "axis": "화면",
+   "desc": "감정마다 정해진 편집 효과 — 반함·감탄=노랑·주황 집중선, 행복=분홍 빛망울, 위기=RGB 글리치, 깨달음=흰 집중선, 분노·열정=붉은 색조+불티",
+   "bench": {
+    "apbuki": {
+     "source": "channel/apbuki/스타일분석_2026-10-18.md"
+    }
+   }
+  },
+  "인포그래픽모션": {
+   "axis": "화면",
+   "desc": "리모션식 모션그래픽 — 흰 바탕·주황 강조·작은 맥락 라벨: 숫자 카운트(0만→38만)·아이콘 쌓기·비율 막대·순위표·제한 알약",
+   "bench": {
+    "funbox": {
+     "ids": [
+      "7eiQobKYbH8"
+     ],
+     "note": "최근 편 1편에만 6장면, 상위 20편엔 없음(신규 시도)",
+     "source": "channel/funbox/스타일분석_2026-10-18.md"
+    }
+   }
+  },
+  "밈감정짤": {
+   "axis": "화면",
+   "desc": "사건·속마음 줄에 해외 밈 짤로 감정(의문=물음표 페페, 경악=마이클 스콧, 배신=펭귄 밀기, 승리=디카프리오 박수)",
+   "bench": {
+    "funbox": {
+     "n_sec": 69.5
+    },
+    "humorshowshow": {
+     "note": "화자대사줄과 함께"
+    }
+   }
+  },
+  "진짜는여기서부터": {
+   "axis": "대본",
+   "desc": "'이건 바로 ○○' → '이게 말도 안 되는 게'(차별점) → '근데 진짜는 여기서부터'(2차 반전)",
+   "bench": {
+    "apbuki": {
+     "source": "channel/apbuki/스타일분석_2026-10-18.md"
+    }
+   }
+  },
+  "끝줄혼잣말웃음": {
+   "axis": "대본",
+   "desc": "마지막 줄 1인칭 혼잣말 드립 + 웃음('아 ~해야겠네 ㅋㅋ'). 웃음은 ㅋㅋ·ㅎㅎ 둘 다 쓴다(사장님 10-18 ㅎㅎ 추가 — 벤치 4채널 줄판독엔 ㅋㅋ 95회·ㅎㅎ 0회)",
+   "bench": {
+    "humorshowshow": {
+     "n": 16,
+     "of": 16,
+     "note": "훅 카드 꼴 편 전부"
+    }
+   },
+   "laugh": [
+    "ㅋㅋ",
+    "ㅎㅎ"
+   ]
+  }
+ }
+}

@@ -130,6 +130,8 @@ tbody tr:hover{background:#1b1b22}
 <!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
      끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
 <div class=alertBoard id=alertBoard></div>
+<!-- 클로드형 경보(관제 234, 숏템MCP 설계 §7-9) — 고객 PC 라이선스·임대·자산 이상 행동. 판정은 claude_portal.anomaly_check 하나, 여기는 그리기·해제만. -->
+<div class=alertBoard id=claudeAlertBoard></div>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
 <div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
@@ -143,6 +145,7 @@ tbody tr:hover{background:#1b1b22}
   <!-- 제작 현황판(2026-09-02) — 회원이 오늘 뭘 만들고 있나 + 실제 영상. /ops와 형제. -->
   <a href="/admin/checks" target="_blank" rel="noopener" class="qbtn hot">🩺 관리점검표<small>오늘 어디가 아픈가</small></a>
   <a href="/admin/production" target="_blank" rel="noopener" class="qbtn hot">🎬 오늘 제작 현황<small>회원이 만든 영상</small></a>
+  <a href="/shortem_preset" target="_blank" rel="noopener" class="qbtn hot">🧬 숏템프리셋<small>브랜드·스타일·결과물</small></a>
   <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
   <a href="/apiwatch" target="_blank" rel="noopener" class="qbtn hot">🔑 API 관측판<small>키가 버티나</small></a>
   <!-- 크롤링 관측판(2026-09-01) — /ops와 형제. 저긴 서버 자원, 여긴 매일 도는 크롤이다.
@@ -388,7 +391,11 @@ const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'�
 // 함수 이름·번호 같은 기술 정보는 [기술 보기] 를 켜야 나온다. 카드 '쉬운 설명' 이 있으면 제목 대신 그걸 보여준다.
 let CTL_CARDS=[];
 function _ctlLabel(c){ return _abEsc(c.easy||c.title); }
-function _ctlNeeds(c){ return String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval; }
+// 이미 병합·라이브로 지나간 카드는 승인 버튼이 의미 없다(2026-10-12 관제 180) — 결정할 것에서 뺀다
+const CTL_PAST_APPROVAL=['병합','서버반영','라이브실측','완료'];
+function _ctlNeeds(c){ return String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval && !CTL_PAST_APPROVAL.includes(c.state); }
+// 카드마다 왜 승인이 필요한지 — '승인 필요: 예 — 사유' 의 사유가 있으면 그것, 없으면 지금 단계를 보여준다
+function _ctlWhy(c){ const m=String(c.needs_approval||'').replace(/^예\s*[—\-:·]?\s*/,''); return (m?'사유: '+_abEsc(m)+' · ':'사유 미기재(돈·회원 데이터 표시 카드) · ')+'지금 단계: '+_abEsc(c.state||'-'); }
 async function renderControlBoard(){
   const box=document.getElementById('controlBoard'); if(!box) return;
   let d=null;
@@ -414,7 +421,7 @@ function drawControlBoard(){
   h+='<div style="margin:4px 0 10px;text-align:right"><label style="font-size:11px;color:#8a8a92;cursor:pointer"><input type=checkbox id=ctlTech '+(tech?'checked':'')+' onchange="drawControlBoard()"> 기술 보기(번호·함수 이름)</label></div>';
   h+='<div style="font-weight:700;margin:4px 0">🔴 결정할 것 — 사장님 승인이 있어야 라이브로 갑니다 ('+need.length+')</div>';
   h+=need.length?need.map(c=>row(c,' <button onclick="approveCard('+c.no+')" style="margin-left:8px">승인</button>'
-      +'<div style="font-size:11px;color:#8a8a92">고객 화면·돈·회원 데이터가 바뀌는 변경. 승인 뒤 병합되고, 병합 뒤 실제 고객 작업으로 다시 잽니다.</div>')).join('')
+      +'<div style="font-size:11px;color:#8a8a92">'+_ctlWhy(c)+' — 승인 뒤 병합, 병합 뒤 실제 고객 작업으로 다시 잽니다.</div>')).join('')
       :'<div style="color:#8a8a92;font-size:12px;padding:4px 0 8px">없음 — 지금 결정할 것이 없습니다.</div>';
   h+='<div style="font-weight:700;margin:12px 0 4px">🟠 잘못된 것 — 배포 뒤 실제 고객 작업으로 재보니 기준 미달 ('+bad.length+')</div>';
   h+=bad.length?bad.map(c=>row(c,'<div style="font-size:11px;color:#e0a0a0">'+_abEsc(c.live||c.last||'')+'</div><div style="font-size:11px;color:#8a8a92">담당 세션에 "회귀 뜬 거 봐" 라고 하면 됩니다.</div>')).join('')
@@ -446,6 +453,24 @@ async function closeAlert(id){
   try{ await fetch('/api/admin/alerts/resolve',{method:'POST',
         headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
   renderAlertBoard();
+}
+// 클로드형 경보(관제 234) — 미해제만. 해제 = 확인함(정지 경보면 그 고객 정지도 풀린다 — 서버 resolve_alert).
+async function renderClaudeAlerts(){
+  const box=document.getElementById('claudeAlertBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/claude/alerts'); if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  const open=(d&&d.alerts)||[];
+  if(!open.length){ box.innerHTML=''; return; }
+  const LV={warn:'경고',throttle:'속도 제한',suspend:'일시 정지',alert:'관리자 확인'};
+  box.innerHTML=open.map(a=>'<div class="ab '+(a.level==='suspend'||a.level==='alert'?'cust':'ops')+'"><div style="flex:1;min-width:0">'
+    + '<div class=abl>🛡 클로드형 경보 · '+_abEsc(a.rule)+' '+_abEsc(LV[a.level]||a.level)+'</div>'
+    + '<div class=abt>'+_abEsc(a.title)+' · 고객 '+_abEsc(a.cid)+' · '+_abEsc(a.count)+'회</div>'
+    + '<div class=abm>'+_abEsc(a.detail)+' · '+_abEsc(new Date((a.ts||0)*1000).toLocaleString())+'</div></div>'
+    + '<button class=abx onclick="closeClaudeAlert('+JSON.stringify(a.id)+')">'+(a.level==='suspend'?'정지 풀기':'해제')+'</button></div>').join('');
+}
+async function closeClaudeAlert(id){
+  try{ await fetch('/api/admin/claude/alerts/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
+  renderClaudeAlerts();
 }
 async function load(){
   const r=await fetch('/api/admin/customers');
@@ -1278,6 +1303,9 @@ else loadBugs();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderAlertBoard);
 else renderAlertBoard();
 setInterval(renderAlertBoard, 30000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderClaudeAlerts);
+else renderClaudeAlerts();
+setInterval(renderClaudeAlerts, 30000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;

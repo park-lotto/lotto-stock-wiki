@@ -608,8 +608,48 @@ def _norm_masks(raw):
         sc = _scene_of_raw(m)
         if sc is not None:
             item["beat"], item["cut"] = sc
+        # ☑ 골라서(관제 182): 장면 여러 개. 단일 beat 와 같은 함수(_scenes_of_raw)로 읽는다.
+        scs = _scenes_list_raw(m)
+        if scs:
+            item["scenes"] = [list(s) for s in scs]
+        # 🛍 세트 표식(shopcta·myset:·mybadge:) — 편집기가 "다시 넣기/세트 빼기"에서 옛 세트를 찾는 열쇠.
+        #   종전엔 여기서 버려져 저장 뒤 다시 열면 옛 화살표를 못 찾고 하나 더 얹었다(2026-10-18 고객 제보,
+        #   job 383ac5b29649: 구매링크 화살표+스티커 화살표 동시). 없으면 키를 안 붙인다(옛 작업 cache_key 무변경).
+        st = m.get("set")
+        if isinstance(st, str) and st.strip():
+            item["set"] = st.strip()[:40]
         out.append(item)
     return out
+
+
+def _scenes_list_raw(m):
+    """m['scenes'] = [[beat, cut], ...] 를 [(beat, cut), ...] 로. 없거나 비면 None."""
+    raw = m.get("scenes")
+    if not isinstance(raw, list):
+        return None
+    out = []
+    for s in raw:
+        if isinstance(s, (list, tuple)) and s:
+            sc = _scene_of_raw({"beat": s[0], "cut": s[1] if len(s) > 1 else None})
+        elif isinstance(s, dict):
+            sc = _scene_of_raw(s)
+        else:
+            sc = _scene_of_raw({"beat": s})
+        if sc is not None and sc not in out:
+            out.append(sc)
+    return out or None
+
+
+def _scenes_of_raw(m):
+    """★장면 지정의 **유일한 판정**(관제 182). [(beat, cut), ...] 또는 None(=전체 장면).
+
+    'scenes' 목록(☑ 골라서)이 있으면 그것, 없으면 옛 단일 beat/cut(🎬 이 장면만).
+    """
+    scs = _scenes_list_raw(m)
+    if scs:
+        return scs
+    sc = _scene_of_raw(m)
+    return [sc] if sc is not None else None
 
 
 def _scene_of_raw(m):
@@ -644,17 +684,18 @@ def split_scene_masks(spec):
     spec = spec or {}
     raw = spec.get("masks") or []
     if not isinstance(raw, list) or not any(
-            isinstance(m, dict) and _scene_of_raw(m) is not None for m in raw):
+            isinstance(m, dict) and _scenes_of_raw(m) is not None for m in raw):
         return spec, {}
     keep, scenes = [], {}
     for m in raw:
         if not isinstance(m, dict):
             continue
-        sc = _scene_of_raw(m)
-        if sc is None:
+        scs = _scenes_of_raw(m)
+        if scs is None:
             keep.append(m)
         else:
-            scenes.setdefault(sc, []).append(m)
+            for sc in scs:
+                scenes.setdefault(sc, []).append(m)
     return dict(spec, masks=keep), scenes
 
 

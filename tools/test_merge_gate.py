@@ -40,7 +40,11 @@ def test_track_cli_survives_cp949_console():
     """track.py도 ✅·⚠️·🧹를 찍는다 — 3단계 실전에서 똑같이 터질 자리였다."""
     p = _run_under_cp949(
         f"import sys; sys.path.insert(0, r'{TOOLS}');"
-        "import track; sys.exit(track.main(['list']))"
+        "import track;"
+        # ★목록 계산은 가짜로 — 진짜 list 는 .tracks 381개를 훑어 143~258초(관문 전체를 끄는 최장 시험이었다, 2026-10-16 실측).
+        #   검사하려는 건 main() 의 출력 안전 처리(make_output_safe)가 cp949 에서 이모지를 견디는가 하나다.
+        "track.list_tracks = lambda *a, **k: (print('✅ ⚠️ 🧹 트랙'), 0)[1];"
+        "sys.exit(track.main(['list']))"
     )
     assert p.returncode == 0, p.stderr.decode("cp949", "replace")
 

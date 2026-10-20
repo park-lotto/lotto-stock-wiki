@@ -707,6 +707,17 @@ def cut_read_trim(take):
     return "trim=end=%.6f" % float(take)
 
 
+def cut_read_hold(start, take):
+    """화면 구멍 안의 컷을 읽는 필터 — 입력을 **자르지 않고**(-ss/-t 없이) 통째로 넣은 뒤 맨 앞에 둔다. cut_read_trim 자리를 대신한다.
+
+    ★왜(관제 176, 2aa06a122f21 s1 4.13→9.20초 화면 패킷 없음): `-ss 4.6 -t 1.98` 은 그 창에 패킷이 없어 0프레임이다.
+      재생기(편집 화면)는 그동안 직전 화면을 세워 보여 준다 — fps 가 구멍을 직전 프레임으로 채우고(tpad 는 구멍이
+      파일 끝까지 이어질 때 몫), 그 뒤에 창을 자른다. 통째 디코드라 느리다 — 빈 조각이 나왔을 때만 쓴다."""
+    s, t = float(start), float(take)
+    return ("fps=30,tpad=stop_mode=clone:stop_duration=%.3f,trim=start=%.6f:end=%.6f,setpts=PTS-STARTPTS"
+            % (t + 1.0, s, s + t))
+
+
 def motion_frames(nf, play_out, freeze, fps=30):
     """컷 조각 nf프레임 중 **움직이는 몫** — 정지가 없으면 전부, 있으면 play_out초의 반올림 프레임(나머지는 정지).
     완성본(_render_mix 1차 조각 -frames:v)과 편집 화면 합본(app enc trim)이 이 함수 하나로 잰다(0순위-B)."""
@@ -2722,6 +2733,30 @@ def meme_cutaway(beat):
         return None
 
 
+def meme_start(beat, dur):
+    """★짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음 타점(렌더·캡컷 sfx_events_for, 팩 비우기)이 이 값 하나를 쓴다.
+    앞 짤 = 0. 중간·뒤 짤 = 화면 컷 목록(screen_clips.meme_at — 렌더가 굽는 바로 그 컷)에서 짤 컷 시작. 짤 없으면 None.
+    컷 목록을 못 읽으면 자리 규칙으로 근사(뒤 = 칸 끝−짤, 중간 = 가운데)하고 한 줄 남긴다 — 조용히 줄 시작으로 돌아가지 않는다."""
+    cw = meme_cutaway(beat)
+    if not cw:
+        return None
+    pos = str(cw.get("pos") or "head")
+    if pos not in ("mid", "tail"):
+        return 0.0
+    try:
+        from shopping_shorts import screen_clips
+        at = screen_clips.meme_at(beat, dur)
+    except Exception as e:      # noqa: BLE001
+        at = None
+        print("[meme] 짤 시작 못 읽음 칸%s: %r" % ((beat or {}).get("beat_idx"), e), file=sys.stderr)
+    if at is not None:
+        return at
+    head = float(cw.get("head_sec") or 0)
+    rest = max(0.0, float(dur or 0) - head)
+    print("[meme] 칸%s 화면 컷 없음 — 짤 시작을 자리 규칙으로(%s)" % ((beat or {}).get("beat_idx"), pos), file=sys.stderr)
+    return round(rest if pos == "tail" else rest / 2, 3)
+
+
 def meme_sources(edit_plan, cutaway_paths):
     """{짤 컷 video_id: 짤 파일} — 소스 표(source_video_paths)에 더해 짤 컷을 보통 컷처럼 굽게 한다. cutaway_paths={beat_idx: 경로}."""
     out = {}
@@ -2824,8 +2859,23 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 *_vf_args, "-r", "30", "-an", "-frames:v", str(_nf_play),   # 초(-t)는 프레임 경계로 올림돼 칸 안에서 쌓인다
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
-            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
+                # ★빈 조각(관제 176) = 그 창에 화면 패킷이 없다(소스 구멍). 조용히 버리면 칸이 짧아지고 컷 지도가 안 남아
+                #   자막제거 뒤 완성본이 편집 화면과 달라졌다 → 재생기처럼 직전 화면을 세워 같은 프레임 수로 다시 굽는다.
+                print("[render] 빈 컷 조각 칸=%s 컷=%s %s@%.2f+%.2f — 직전 화면으로 채운다(소스 화면 구멍)" % (
+                    idx, j, c["video_id"], start, _c_src), file=sys.stderr)
+                _vf_hold = cut_read_hold(start, _c_src) + vf_full[len(cut_read_trim(_c_src)):]
+                _hl_fc = highlight_fc(beat, _vf_hold, grow=(_hl_per_cut or j == 0), cut=j)
+                _run_ffmpeg([
+                    "ffmpeg", "-y", "-i", str(src),
+                    *(["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc else ["-vf", _vf_hold]),
+                    "-r", "30", "-an", "-frames:v", str(_nf_play),
+                    "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
+                ])
+            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게(경보는 남긴다).
+            if not sub.exists() or _probe_duration(sub) <= 0.05:
+                print("[render] 컷 조각을 못 만들어 버린다 칸=%s 컷=%s %s@%.2f — 칸이 계획보다 짧아진다" % (
+                    idx, j, c["video_id"], start), file=sys.stderr)
                 continue
             # 2단계 — 정지프레임(P1 후속, 2026-07-19): 마지막 프레임을 freeze초 홀드하되
             #   전체에 켄번즈를 얹어 '죽은 정지'가 아니라 움직이는 홀드로 만든다. tpad→zoompan
@@ -3537,6 +3587,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "pack_edit": beat.get("pack_edit"),            # 2단계에서 고른 기본 팩 소리 빼기·바꾸기 — sfx_events_for 가 sfx_pack.events 로 넘긴다
             # 맨 앞 감정짤이 붙은 칸인가(관제 158) — 장면꾸미기가 이 칸을 '연결어(짤 장면)'로 본다(scene_style.moment_of). 판단은 meme_cutaway 한 곳.
             "meme": meme_cutaway(beat) is not None,
+            "meme_at": meme_start(beat, dur),              # 짤이 칸 안 몇 초에 시작하나(관제 203) — 짤 효과음이 짤 카드와 같이 울린다
             "head_trim": beat.get("head_trim", 0.0),
             # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
             #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).
@@ -3622,7 +3673,16 @@ def _line_sfx_len(path):
         return 0.0
 
 
-def sfx_events_for(timeline, sfx_paths):
+def _sfx_vol(sfx):
+    """칸 효과음 한 발의 음량 배수(3단계 효과음 줄 −/+, 0.0~2.0). 없거나 이상하면 1.0."""
+    try:
+        v = float((sfx or {}).get("vol", 1.0))
+    except (TypeError, ValueError):
+        return 1.0
+    return min(2.0, max(0.0, v))
+
+
+def sfx_events_for(timeline, sfx_paths, with_ref=False):
     """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
 
     비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다(별도 계산 금지 —
@@ -3648,7 +3708,7 @@ def sfx_events_for(timeline, sfx_paths):
                 if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
         manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - set(line)
         _pe = {b["beat_idx"]: b["pack_edit"] for b in (timeline or []) if b.get("pack_edit")}   # 2단계 팩 소리 빼기·바꾸기(관제 143 확장)
-        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe)
+        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe, with_ref=with_ref)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
@@ -3657,18 +3717,30 @@ def sfx_events_for(timeline, sfx_paths):
         segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
         seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
         pos = sfx.get("position")
-        if pos == "first":
+        if pos == "first" and sfx.get("match_type") == "line" and b.get("meme_at"):
+            offset = float(b["meme_at"])          # 짤 칸의 줄 효과음은 짤 카드가 나올 때(관제 203 — 짤을 중간·뒤로 옮기면 소리도 따라간다)
+        elif pos == "first":
             offset = 0.0
         elif pos == "transition":
             offset = b["dur"]
         else:
             offset = sum(seg_durs[:-1])
+        try:
+            offset = min(float(b["dur"]), max(0.0, offset + float(sfx.get("shift") or 0.0)))   # 3단계 효과음 줄에서 끌어 옮긴 만큼(관제 203)
+        except (TypeError, ValueError):
+            pass
         if sfx.get("match_type") == "line":
             # 줄 효과음 볼륨 = 분류별 표(storyboard.SFX_LINE_VOL 한 곳) — 렌더·캡컷이 이 보정배를 같은 식으로 쓴다
             from shopping_shorts import storyboard as _sbm
-            events.append((path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat"))))
+            # × 3단계 효과음 줄에서 고른 음량(sfx["vol"], 관제 203 — 없으면 1.0)
+            ev = (path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat")) * _sfx_vol(sfx))
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
         else:
-            events.append((path, b["t0"] + offset))
+            if with_ref or sfx.get("vol") is not None:
+                ev = (path, b["t0"] + offset, _sfx_vol(sfx))
+            else:
+                ev = (path, b["t0"] + offset)
+            events.append(ev + ({"beat_idx": b["beat_idx"], "line": True, "dt": float(sfx.get("shift") or 0.0)},) if with_ref else ev)
     return events
 
 
