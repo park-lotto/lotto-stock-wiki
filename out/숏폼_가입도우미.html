@@ -1,0 +1,221 @@
+<title>숏폼 가입 도우미</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=Black+Han+Sans&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* 위에서 아래로 따라 내려가는 체크리스트. 상단 진행 막대 고정, 카드는 단계별 묶음 */
+:root{
+  --bg:#f3f6f5; --card:#ffffff; --ink:#132a2a; --sub:#4f6463; --line:#d7e1df;
+  --accent:#0f6b63; --accent-ink:#ffffff; --mark:#ffd84d; --ok:#1d7a3e; --warn:#a14a06;
+  --f-display:"Black Han Sans","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1716; --card:#172221; --ink:#e7f0ee; --sub:#9fb3b0; --line:#2a3a38;
+  --accent:#3fb8a9; --accent-ink:#06201d; --mark:#e9c23a; --ok:#5fd18a; --warn:#f0a35c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1716; --card:#172221; --ink:#e7f0ee; --sub:#9fb3b0; --line:#2a3a38;
+  --accent:#3fb8a9; --accent-ink:#06201d; --mark:#e9c23a; --ok:#5fd18a; --warn:#f0a35c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto}
+header{padding-block:28px 8px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,6vw,44px);line-height:1.15;margin:0;text-wrap:balance}
+h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%)}
+.lead{color:var(--sub);margin:8px 0 0;max-width:62ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;border-bottom:1px solid var(--line)}
+.os{display:flex;gap:6px}
+.os button{font:inherit;font-size:16px;font-weight:600;padding:9px 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.os button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.prog{flex:1 1 220px;display:flex;align-items:center;gap:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.track{flex:1;height:12px;border-radius:99px;background:var(--line);overflow:hidden}
+.fill{height:100%;width:0;background:var(--ok);transition:width .3s}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+section{margin-top:36px}
+.stage{display:flex;gap:12px;align-items:baseline}
+.stage b{font-family:var(--f-display);font-weight:400;font-size:15px;letter-spacing:.06em;color:var(--accent);white-space:nowrap}
+h2{font-size:22px;margin:0;text-wrap:balance}
+.note{color:var(--sub);margin:4px 0 0;max-width:68ch}
+.prep{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.prep div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.prep strong{display:block;font-size:17px}
+.prep small{color:var(--sub);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.done{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.top{display:flex;gap:14px;align-items:flex-start}
+.qr{flex:none;background:#fff;padding:8px;border-radius:8px;width:156px;height:156px}
+.qr img,.qr canvas{display:block;width:140px;height:140px}
+.meta{min-width:0}
+.name{font-weight:700;font-size:19px;line-height:1.3}
+.who{display:inline-block;margin-top:6px;font-size:14px;font-weight:700;padding:2px 10px;border-radius:99px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.who.wait{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.money{font-size:15px;color:var(--sub);margin-top:6px}
+ol{margin:0;padding-left:22px}
+ol li{margin:3px 0}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.go{flex:1 1 140px;text-align:center;text-decoration:none;font-weight:700;padding:12px;border-radius:10px;background:var(--accent);color:var(--accent-ink)}
+.chk{flex:1 1 120px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;padding:10px;border-radius:10px;border:1.5px solid var(--line);cursor:pointer;user-select:none}
+.chk input{width:22px;height:22px;accent-color:var(--ok);margin:0}
+.card.done .chk{border-color:var(--ok);color:var(--ok)}
+a:focus-visible,button:focus-visible,.chk:focus-within{outline:3px solid var(--mark);outline-offset:2px}
+.warn{margin-top:36px;background:var(--card);border:1.5px solid var(--warn);border-radius:14px;padding:16px 18px}
+.warn h2{color:var(--warn);font-size:19px}
+.warn ul{margin:8px 0 0;padding-left:22px}
+.foot{color:var(--sub);font-size:14px;margin-top:20px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>숏폼 <span>가입 도우미</span></h1>
+  <p class="lead">영상 하나로 여러 곳에 올리고, 상품 링크로 수익까지 내는 데 필요한 가입을 순서대로 모았습니다. 폰으로 보시면 <b>초록 버튼</b>을 누르고, PC로 보시면 폰 카메라로 QR을 찍으세요. 끝난 곳은 <b>가입 완료</b>에 체크하면 이 기기에 기억됩니다.</p>
+</header>
+
+<div class="bar">
+  <div class="os" role="group" aria-label="휴대폰 종류">
+    <button id="os-and" data-os="and" aria-pressed="true">안드로이드(갤럭시)</button>
+    <button id="os-ios" data-os="ios" aria-pressed="false">아이폰</button>
+  </div>
+  <div class="prog"><span id="cnt">0 / 0</span><div class="track"><div class="fill" id="fill"></div></div></div>
+</div>
+
+<section>
+  <div class="stage"><b>준비</b><h2>가입 전에 손에 들고 있으면 빠른 것</h2></div>
+  <div class="prep">
+    <div><strong>구글 계정 1개</strong><small>유튜브·틱톡·핀터레스트가 이걸로 바로 가입됩니다</small></div>
+    <div><strong>본인 휴대폰 번호</strong><small>인증 문자를 받습니다. 폰 1대에 계정 1세트</small></div>
+    <div><strong>본인 명의 통장·신분증</strong><small>수익을 받는 곳(쿠팡·토스·네이버)에서 정산할 때 필요</small></div>
+    <div><strong>사업자등록증 (있으면)</strong><small>개인사업자·법인은 정산 유형을 사업자로 고릅니다. 없어도 개인으로 가입 가능</small></div>
+  </div>
+</section>
+
+<section>
+  <div class="stage"><b>1단계</b><h2>한 번 올리면 같이 올라가는 곳</h2></div>
+  <p class="note">여기 6곳은 4단계 도구(Metricool)에 연결해 두면 영상 1개를 한 번에 올릴 수 있습니다.</p>
+  <div class="grid" id="g-auto"></div>
+</section>
+
+<section>
+  <div class="stage"><b>2단계</b><h2>한국 플랫폼 · 앱에서 직접 올리는 곳</h2></div>
+  <p class="note">동시 업로드 도구가 지원하지 않습니다. 같은 영상 파일을 각 앱에서 올립니다.</p>
+  <div class="grid" id="g-hand"></div>
+</section>
+
+<section>
+  <div class="stage"><b>3단계</b><h2>돈 버는 상품 링크 만드는 곳</h2></div>
+  <p class="note">여기서 만든 링크를 영상 설명·댓글·상품 태그에 넣고, 팔리면 수수료를 받습니다. 영상에는 <b>"이 게시물은 제휴 활동으로 일정액의 수수료를 받습니다"</b>를 맨 위에 씁니다.</p>
+  <div class="grid" id="g-link"></div>
+</section>
+
+<section>
+  <div class="stage"><b>4단계</b><h2>한 번에 올리기 도구</h2></div>
+  <div class="grid" id="g-tool"></div>
+</section>
+
+<div class="warn">
+  <h2>이것만은 꼭 지키세요</h2>
+  <ul>
+    <li>남의 영상을 다시 올리면 유튜브·틱톡·메타·네이버·당근 모두 수익에서 빠집니다. <b>직접 찍은 영상</b>으로 올리세요.</li>
+    <li>같은 와이파이·같은 정보로 계정을 한꺼번에 많이 만들면 묶여서 같이 정지될 수 있습니다. 하루에 몇 개씩 천천히 만드세요.</li>
+    <li>당근은 판매·외부 링크·AI 영상을 금지합니다. 상품 링크는 1~3단계의 다른 곳에 넣으세요.</li>
+  </ul>
+</div>
+<p class="foot">금액·조건은 2026년 10월 기준 각 회사 공식 안내와 실제 이용자 영상으로 확인한 내용입니다. 회사 정책이 바뀌면 달라질 수 있습니다.</p>
+</div>
+
+<script>
+const P=id=>"https://play.google.com/store/apps/details?id="+id, A=id=>"https://apps.apple.com/kr/app/id"+id;
+const items={
+ auto:[
+  {id:"yt",n:"유튜브",and:P("com.google.android.youtube"),ios:A("544007664"),w:"누구나",
+   s:["앱 설치 → 구글 계정으로 로그인","오른쪽 아래 프로필 → '채널 만들기'","+ 버튼 → Shorts로 첫 영상 올리기"],
+   m:"구독자 500명부터 쇼핑 제휴, 1,000명 + 쇼츠 조회수 기준 넘으면 광고 수익"},
+  {id:"tt",n:"틱톡",and:P("com.zhiliaoapp.musically"),ios:A("1235601864"),w:"누구나",
+   s:["앱 설치 → '구글로 계속하기'","생년월일 입력 → 아이디 정하기","+ 버튼으로 영상 올리기"],
+   m:"조회수 리워드는 만 19세 이상·개인 계정·1분 이상 영상"},
+  {id:"ig",n:"인스타그램 릴스",and:P("com.instagram.android"),ios:A("389801252"),w:"누구나",
+   s:["앱 설치 → '새 계정 만들기'(휴대폰 번호)","설정 → 계정 유형 → '프로페셔널 계정'(크리에이터)으로 전환","+ 버튼 → 릴스 올리기"],
+   m:"스레드·페이스북이 이 계정으로 이어집니다. 먼저 가입하세요"},
+  {id:"th",n:"스레드",and:P("com.instagram.barcelona"),ios:A("6446901002"),w:"인스타 있으면 바로",
+   s:["앱 설치 → '인스타그램으로 계속'","프로필 가져오기 → 완료"],m:"따로 비밀번호를 만들 필요 없습니다"},
+  {id:"fb",n:"페이스북 릴스",and:P("com.facebook.katana"),ios:A("284882215"),w:"누구나",
+   s:["앱 설치 → 새 계정 만들기","인스타 설정 → '계정 센터' → 페이스북 연결","인스타에 올릴 때 '페이스북에도 공유' 켜기"],
+   m:"연결해 두면 인스타 릴스가 페이스북에 자동으로 같이 올라갑니다"},
+  {id:"pin",n:"핀터레스트",and:P("com.pinterest"),ios:A("429047995"),w:"누구나",
+   s:["앱 설치 → '구글로 계속하기'","설정 → '비즈니스 계정으로 전환'(무료)","+ 버튼 → 핀 만들기 → 영상 올리기"],
+   m:"핀에 상품 링크를 걸 수 있습니다. 단축 주소는 막힐 수 있어 원래 긴 주소를 넣으세요"}],
+ hand:[
+  {id:"nclip",n:"네이버 클립",and:P("com.nhn.android.search"),ios:A("393499958"),w:"누구나",
+   s:["네이버 앱 설치 → 네이버 아이디 로그인","'클립' 메뉴 → 올리기(+)","첫 영상 올리기 → 클립 채널이 만들어집니다"],
+   m:"선발되지 않아도 누구나 올릴 수 있습니다"},
+  {id:"ncc",n:"네이버 클립 크리에이터",web:"https://mkt.naver.com/clip-creators",w:"신청 → 선발",wait:1,
+   s:["클립 채널을 먼저 만든다(위 카드)","이 페이지에서 '지원하기'","다음 달 15일 이후 결과 → 그다음 달부터 활동"],
+   m:"실제 활동자는 월 약 10만 원(네이버페이 포인트)"},
+  {id:"nsc",n:"네이버쇼핑 숏클립",web:"https://sell.smartstore.naver.com/",w:"스마트스토어 판매자",
+   s:["스마트스토어센터 로그인","숏클립 메뉴 → 영상 등록 → 내 상품 연결","상품 페이지·쇼핑 화면에 노출"],
+   m:"판매자는 등급 상관없이 누구나. 판매자가 아니면 건너뛰세요"},
+  {id:"kakao",n:"카카오톡 숏폼 스튜디오",web:"https://shortform-studio.kakao.com/",w:"신청 → 심사",wait:1,
+   s:["카카오계정으로 로그인","가입 신청서 작성","카카오 심사 통과 뒤 업로드 가능"],
+   m:"만 14세 이상 개인·사업자. 리워드 금액은 아직 공개되지 않았습니다"},
+  {id:"dg",n:"당근 스토리",and:P("com.towneers.www"),ios:A("1018769995"),w:"누구나",
+   s:["앱 설치 → 휴대폰 번호로 가입","내 동네 인증","스토리 → 5초~1분 영상 올리기"],
+   m:"건당 당근머니 300~2,000원. 판매·외부 링크·AI 영상 금지"}],
+ link:[
+  {id:"cp",n:"쿠팡파트너스",web:"https://partners.coupang.com/",w:"누구나 · 사업자 가능",
+   s:["쿠팡 아이디로 로그인 → 회원 유형(개인/사업자) 선택","활동할 채널 주소(유튜브·인스타 등) 등록","상품 검색 → 링크 만들기 → 영상 설명에 넣기"],
+   m:"수수료 1.8~5.0%. 누적 판매액이 쌓이면 최종승인 → 그 전에 탈퇴하면 못 받습니다"},
+  {id:"sc",n:"네이버 쇼핑커넥트",web:"https://brandconnect.naver.com/",w:"판매자 아니어도 됨",
+   s:["네이버 아이디로 로그인 → 크리에이터 가입","클립 프로필 연결 → 정산 유형(개인/개인사업자/법인)","상품 골라 클립에 태그"],
+   m:"팔리면 상품마다 정해진 수수료. 승인 대기 없이 바로 시작"},
+  {id:"toss",n:"토스쇼핑 쉐어링크",web:"https://sharelink.toss.im/",w:"신청 → 심사 1~2일",wait:1,
+   s:["토스 앱 → 쇼핑 → 쉐어링크(또는 이 페이지)","유형 선택 → 정산 계좌 등록","활동 채널 주소 넣고 심사 신청"],
+   m:"수수료 8%"}],
+ tool:[
+  {id:"mc",n:"Metricool",web:"https://metricool.com/ko/",w:"무료 플랜 있음",
+   s:["PC에서 가입","1단계 6곳 계정 연결","영상 1개 올리고 6곳 체크 → 한 번에 게시·예약"],
+   m:"2단계 한국 플랫폼은 지원하지 않습니다"}]
+};
+const KEY="shortform-signup-done";
+let done={}; try{done=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+let os="and";
+const total=Object.values(items).reduce((a,l)=>a+l.length,0);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){}}
+function progress(){
+  const n=Object.keys(items).flatMap(k=>items[k]).filter(it=>done[it.id]).length;
+  document.getElementById("cnt").textContent=`가입 완료 ${n} / ${total}`;
+  document.getElementById("fill").style.width=(n/total*100)+"%";
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function draw(){
+  for(const k in items){
+    const g=document.getElementById("g-"+k); g.innerHTML="";
+    items[k].forEach(it=>{
+      const url=it.web||it[os];
+      const c=document.createElement("article"); c.className="card"+(done[it.id]?" done":"");
+      c.innerHTML=`<div class="top"><div class="qr" aria-hidden="true"></div><div class="meta">
+        <div class="name">${esc(it.n)}</div><span class="who${it.wait?" wait":""}">${esc(it.w)}</span>
+        <div class="money">${esc(it.m)}</div></div></div>
+        <ol>${it.s.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+        <div class="act"><a class="go" href="${url}" target="_blank" rel="noopener">${it.web?"가입 페이지 열기":"앱 설치하기"}</a>
+        <label class="chk"><input type="checkbox" id="chk-${it.id}" ${done[it.id]?"checked":""}> 가입 완료</label></div>`;
+      g.appendChild(c);
+      new QRCode(c.querySelector(".qr"),{text:url,width:140,height:140,correctLevel:QRCode.CorrectLevel.L});
+      c.querySelector("input").addEventListener("change",e=>{
+        if(e.target.checked)done[it.id]=1; else delete done[it.id];
+        c.classList.toggle("done",e.target.checked); save(); progress();
+      });
+    });
+  }
+  progress();
+}
+document.querySelectorAll(".os button").forEach(b=>b.addEventListener("click",()=>{
+  os=b.dataset.os;
+  document.querySelectorAll(".os button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  draw();
+}));
+if(/iPhone|iPad|iPod/.test(navigator.userAgent)){os="ios";document.getElementById("os-ios").click()}else draw();
+</script>
