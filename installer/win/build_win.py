@@ -39,6 +39,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent  # installer/
 LOCK = json.loads((ROOT / "common" / "tools.lock.json").read_text(encoding="utf-8"))
 PLAT = "win-x64"
+# 설치 폴더 맨 위에 둘 이름(이것만 exe 에 들어간다 — 시험이 남긴 _engine_test 같은 것이 섞인 사고, 10-19)
+STAGE_TOP = {"app_version.json", "claude-plugin", "engine", "models", "packs", "postinstall.js", "server",
+             "shortem.mcpb", "tools", "설치안내.html", "시작.template.md"}
 
 
 def log(msg: str) -> None:
@@ -490,6 +493,14 @@ def main() -> None:
     build_plugin(stage, report)
     build_mcpb(out, dist, stage, report)
     (stage / "app_version.json").write_text(json.dumps({"version": a.version}), encoding="utf-8")   # 켤 때 자동 업데이트가 비교하는 판(관제 234)
+    # 설치 폴더는 다시 빌드할 때 통째로 비우지 않는다 → 정한 이름 밖(시험 파일 등)은 exe 에 넣기 전에 걷어낸다
+    extra = sorted(p.name for p in stage.iterdir() if p.name not in STAGE_TOP)
+    for name in extra:
+        p = stage / name
+        shutil.rmtree(p) if p.is_dir() else p.unlink()
+    report["stage_removed"] = extra
+    if extra:
+        log(f"설치 폴더에서 걷어낸 것(정한 이름 밖): {extra}")
     man = write_manifest(stage, a.version)
     report["manifest_files"] = len(man["files"])
     stage_bytes = sum(p.stat().st_size for p in stage.rglob("*") if p.is_file())
