@@ -1,0 +1,28 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "네이버 블로그",
+  "블랙키위",
+  "블덱스"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "네이버 블로그 상위노출용 키워드 선정(스마트블록 인기주제/인기글, 최신성·연관성·방문자) 강의이며 상품 발굴 방법은 없음"
+ ],
+ "unique_insight": "상품이 아니라 블로그 글의 노출 가능 키워드를 고르는 방법이다.",
+ "insight_quote": "키워드를 찾는 방법은 이게 핵심입니다",
+ "read_check": {
+  "total_chars": 6855,
+  "last_sentence": "다들 즐거운 하루 보내세요."
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 6855
+ }
+}

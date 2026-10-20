@@ -1,0 +1,28 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "쿠팡"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "쿠팡 SEO 6단계(상품명 5~6글자, 카테고리, 옵션·정상가 40% 할인, 태그, 검색필터, 무료배송·당일출고)는 이미 정한 상품의 노출 최적화",
+  "할인쿠폰·리뷰 체험단(찜 후 구매)·최신성·쿠팡 쇼츠·외부 유입 안내",
+  "발 각질 제거기는 상품명 짓기 시연용 예시일 뿐 상품 발굴 근거가 아님"
+ ],
+ "unique_insight": "상품 발굴이 아니라 쿠팡에 올린 상품의 노출 점수를 올리는 방법. 자동완성·연관검색어를 쿠팡이 밀어주는 키워드로 보고 상품명과 태그를 채우라는 관점.",
+ "insight_quote": "자동 환성 검색어랑 연관 검색어를 최후선으로 봅니다",
+ "read_check": {
+  "total_chars": 12951,
+  "last_sentence": "글리브로 힘찬이었습니다."
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 12951
+ }
+}

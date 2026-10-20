@@ -1,0 +1,30 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "쿠팡 파트너스"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "쿠팡 파트너스 앱 로그인 방법과 인증번호 복사 팁",
+  "결제정보·대가성 문구 인증 안내",
+  "냉장고 예시로 상품 검색 후 단축 URL 구매 링크 만드는 조작법(상품을 고르는 기준이 아니라 링크 생성 기능 설명)",
+  "리포트(클릭수·구매·수익 3%·전환율) 설명",
+  "5강 인포크 링크 예고. 상품 발굴 기준은 전혀 없고 '냉장고 아무거나'로 연습"
+ ],
+ "unique_insight": "왕초보 쇼핑쇼츠 강의 4강으로 상품 발굴이 아닌 쿠팡 파트너스 링크 생성 조작 안내이며, 링크 클릭 뒤 24시간 안 구매면 다른 상품도 수익이 인정된다는 점이 유일한 정보.",
+ "insight_quote": "이 링크를 클릭해서 24시간 안에 사는 거면요",
+ "read_check": {
+  "total_chars": 6830,
+  "last_sentence": "중년도 쇼핑차할 수 있다. 파이팅. 안녕."
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 6830
+ }
+}

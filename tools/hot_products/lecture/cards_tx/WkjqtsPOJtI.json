@@ -1,0 +1,26 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "쿠팡"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "상품 발굴이 아니라 이미 등록한 상품의 승인 대기·상품 조회 위치·키워드 순위 확인(셀러랩스) 안내라 상품 고르는 방법이 없음"
+ ],
+ "unique_insight": "상품 발굴과 무관한 쿠팡 입점 후 운영 FAQ.",
+ "insight_quote": "쿠팡에서 상품을 올라오는데 대출 오디의 있는지 못찾겠어요",
+ "read_check": {
+  "total_chars": 2227,
+  "last_sentence": "이제는 내상 분 착기 하실 수 있겠죠 그럼 다음 시간에 만나요 안녕 or die"
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 2227
+ }
+}

@@ -15,7 +15,9 @@ for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8")
         k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
 H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"], "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"]}
 KEYS = [v for k, v in env.items() if re.match(r"^GEMINI_(API|INGEST|BRIEFING)_KEY(_\d+)?$", k) and v]
-DAYS = int(sys.argv[1]) if len(sys.argv) > 1 else 14
+EXTRACT_ONLY = "--extract-only" in sys.argv                       # 모은 제목(news_raw.json)으로 상품 고르기만 다시
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+DAYS = int(args[0]) if args else 14
 SINCE = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=DAYS)
 
 NEWS = {
@@ -33,7 +35,7 @@ YT = {"화제": ["요즘 난리난 꿀템", "품절대란 아이템", "다이소
 
 def clean(s): return re.sub(r"<[^>]+>", "", s).replace("&quot;", '"').replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
 raw = []
-for grp, qs in NEWS.items():
+for grp, qs in ({} if EXTRACT_ONLY else NEWS).items():
     for q in qs:
         for start in (1, 101):
             u = "https://openapi.naver.com/v1/search/news.json?" + urllib.parse.urlencode({"query": q, "display": 100, "start": start, "sort": "date"})
@@ -47,7 +49,7 @@ for grp, qs in NEWS.items():
                             "desc": clean(it["description"])[:160], "link": it.get("originallink") or it["link"]})
             if old or len(items) < 100: break
             time.sleep(0.2)
-for grp, qs in YT.items():
+for grp, qs in ({} if EXTRACT_ONLY else YT).items():
     for q in qs:
         url = "https://www.youtube.com/results?" + urllib.parse.urlencode({"search_query": q, "sp": "CAI="})   # 업로드 날짜순(ytsearchdate는 이 yt-dlp 에 없음)
         p = subprocess.run(["py", "-m", "yt_dlp", url, "--flat-playlist", "--playlist-end", "30", "--print", "%(id)s\t%(view_count)s\t%(title)s"],
@@ -62,7 +64,8 @@ for r in raw:
     if key in seen: continue
     seen.add(key); uniq.append(r)
 print("모은 제목", len(raw), "→ 중복 뺀", len(uniq))
-json.dump(uniq, open(os.path.join(HERE, "news_raw.json"), "w", encoding="utf-8"), ensure_ascii=False)
+if EXTRACT_ONLY: uniq = json.load(open(os.path.join(HERE, "news_raw.json"), encoding="utf-8"))
+else: json.dump(uniq, open(os.path.join(HERE, "news_raw.json"), "w", encoding="utf-8"), ensure_ascii=False)
 
 PROMPT = """아래는 최근 뉴스 기사·유튜브 영상 제목(+요약)이다. 각 줄에서 '지금 화제가 되는, 실제로 살 수 있는 상품'만 뽑아라.
 우리 목적: 쇼핑쇼츠(신박한 물건을 영상으로 보여주는 쇼츠·릴스) 소재 찾기.
@@ -73,11 +76,11 @@ PROMPT = """아래는 최근 뉴스 기사·유튜브 영상 제목(+요약)이�
 - buzz: 기사가 말하는 화제 근거(품절·완판·판매 n배·SNS 유행·재출시 등) 한 구절
 - who: 주 사용층(아이|10대|2030|5060|전체)
 JSON 배열만: [{"i":번호,"product":"...","kw":"...","shortsable":true,"buzz":"...","who":"..."}]"""
-ki, out = 0, []
+ki, out, failed = 0, [], 0
 for s in range(0, len(uniq), 80):
     b = uniq[s:s + 80]
     text = "\n".join(f"{i}. [{r['grp']}] {r['title']} | {r['desc']}" for i, r in enumerate(b))
-    res = None
+    res, err = None, ""
     for _ in range(len(KEYS) * 2):
         try:
             client = genai.Client(api_key=KEYS[ki % len(KEYS)])
@@ -85,14 +88,19 @@ for s in range(0, len(uniq), 80):
                                                config=types.GenerateContentConfig(temperature=0.1, response_mime_type="application/json"))
             res = json.loads(r.text); break
         except (errors.ClientError, errors.ServerError) as e:
-            ki += 1; time.sleep(5 if "429" in str(e) else 2)
+            err = str(e)[:90]; ki += 1; time.sleep(5 if "429" in str(e) else 2)
         except Exception as e:
             print("ERR", str(e)[:80]); break
+    if res is None:
+        failed += 1; print(f"★실패 묶음 {s}~{s + len(b)} (제미나이 한도·오류) 마지막 오류: {err}", flush=True)
     for o in res or []:
         i = o.get("i")
         if isinstance(i, int) and 0 <= i < len(b) and o.get("kw"):
             out.append({**b[i], **{k: o.get(k) for k in ("product", "kw", "shortsable", "buzz", "who")}})
     print(f"{min(s + 80, len(uniq))}/{len(uniq)} 상품 {len(out)}", flush=True)
+n_batches = (len(uniq) + 79) // 80
+if failed * 2 > n_batches:
+    sys.exit(f"★상품 고르기 실패 {failed}/{n_batches}묶음 — news_hot.json 을 덮어쓰지 않는다. 한도 풀린 뒤: py -I news_scan.py --extract-only")
 agg = collections.OrderedDict()
 for r in out:
     k = re.sub(r"\s+", " ", r["kw"].strip())

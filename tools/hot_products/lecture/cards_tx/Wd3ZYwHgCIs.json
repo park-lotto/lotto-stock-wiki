@@ -1,0 +1,31 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "네이버 스마트스토어",
+  "당근",
+  "네이버 쇼핑검색광고"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "상품명 키워드 배치(적합도)와 태그 10개 올바른 등록 방법: 이미 고른 상품의 노출 최적화",
+  "당근 비즈니스 광고 세팅(CPC 100~200원대)과 AI 카피 문구 만들기",
+  "네이버 쇼핑검색 광고 노출 매체 제한 세팅",
+  "네이버 실적 뉴스와 채널 홍보"
+ ],
+ "unique_insight": "상품 발굴 영상이 아니라 스마트스토어 SEO·외부 유입·광고 세팅 강의. 상위 판매자도 태그를 거의 등록하지 않는다는 점이 차별 포인트.",
+ "insight_quote": "키워드는 자석과 같아서 연관성이 깊은 키워드들끼리는 붙였어야 됩니다",
+ "read_check": {
+  "total_chars": 9860,
+  "last_sentence": "지금까지 로즈캐커 X였습니다. 감사합니다."
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 9860
+ }
+}

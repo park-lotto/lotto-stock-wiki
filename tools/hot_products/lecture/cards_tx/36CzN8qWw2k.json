@@ -1,0 +1,26 @@
+{
+ "is_lecture": false,
+ "platforms": [
+  "유튜브"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "유튜브 채널 키워드·카테고리·업로드 기본 설명·아동용 설정·댓글 필터·구독 워터마크 설정 6가지(상품 발굴과 무관)"
+ ],
+ "unique_insight": "상품 발굴 방법이 없는 유튜브 채널 설정 강의. 영상 노출은 썸네일과 제목이 먼저라는 점만 참고.",
+ "insight_quote": "제일 중요한 순서로 첫 번째 썸네일이고요. 두 번째가 제목입니다",
+ "read_check": {
+  "total_chars": 4764,
+  "last_sentence": "감사합니다."
+ },
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": true,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4764
+ }
+}
