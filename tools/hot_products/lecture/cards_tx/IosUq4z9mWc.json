@@ -1,0 +1,131 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "YouTube",
+  "Naver",
+  "Chrome"
+ ],
+ "methods": [
+  {
+   "name": "튜브버디 키워드 스코어 분석",
+   "goal": "꾸준히 팔림|경쟁 틈새",
+   "data_source": "TubeBuddy",
+   "steps": [
+    "유튜브 검색창에 키워드 입력",
+    "TubeBuddy의 'Show Keyword Score' 클릭",
+    "Volume(검색량)과 Competition(경쟁률) 지표 확인",
+    "종합 점수(Overall Score) 확인"
+   ],
+   "thresholds": [
+    {
+     "rule": "Volume 지표가 오른쪽으로 갈수록 검색량이 많음",
+     "quote": "오른쪽으로 갈수록 키워드가 많이 검색된단어 거겠죠"
+    },
+    {
+     "rule": "Competition 지표가 왼쪽으로 갈수록 관련 영상이 적음",
+     "quote": "이 쪽으로 갈수록 관련 영상이 적다는 거구요"
+    }
+   ],
+   "signal": "검색량(Volume)은 적더라도 경쟁률(Competition)이 낮은 키워드",
+   "signal_quote": "전반적으로 왜 괜찮다 라고 나오고 있죠",
+   "examples": [
+    {
+     "item": "유튜브 영상 편집",
+     "why": "중간 정도의 검색량과 높은 경쟁률로 상위 노출이 어려운 키워드",
+     "quote": "지금은 그렇게 좋은 키워드는 아니다"
+    },
+    {
+     "item": "유튜브 영상 편집 배우기",
+     "why": "검색량은 적지만 경쟁률이 낮아 상위 노출 가능성이 높은 키워드",
+     "quote": "전반적으로 왜 괜찮다 라고 나오고 있죠"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "경쟁 채널 태그 분석",
+   "goal": "경쟁 틈새|꾸준히 팔림",
+   "data_source": "TubeBuddy (타 영상 시청 시)",
+   "steps": [
+    "유튜브에서 인기 유튜버의 영상 시청",
+    "TubeBuddy를 통해 해당 영상의 태그 확인",
+    "내 영상 내용과 비슷한 태그를 복사하여 활용"
+   ],
+   "thresholds": [],
+   "signal": "인기 유튜버가 사용하는 효과적인 태그",
+   "signal_quote": "인기 유튜버 들이 어떻게 태그를 쓰고 있는지",
+   "examples": [],
+   "signal_verified": true
+  },
+  {
+   "name": "튜브버디 태그 추천 활용",
+   "goal": "꾸준히 팔림",
+   "data_source": "TubeBuddy (내 영상 업로드 시)",
+   "steps": [
+    "영상 업로드 시 태그 입력란에 키워드 작성",
+    "TubeBuddy가 추천하는 관련 태그 3개 확인 및 추가"
+   ],
+   "thresholds": [],
+   "signal": "작성 중인 내용과 관련된 추천 태그",
+   "signal_quote": "밑에 이렇게 추천 태그를 3가지 정도 이렇게 해 줍니다",
+   "examples": [],
+   "signal_verified": true
+  },
+  {
+   "name": "SEO 스코어 최적화",
+   "goal": "꾸준히 팔림",
+   "data_source": "TubeBuddy (내 영상 재생 시)",
+   "steps": [
+    "내 영상 재생 시 TubeBuddy의 SEO 스코어 확인",
+    "핵심 키워드를 제목, 설명, 태그에 일관성 있게 포함",
+    "키워드의 띄어쓰기까지 일치시켜 점수 향상"
+   ],
+   "thresholds": [],
+   "signal": "높은 SEO 스코어",
+   "signal_quote": "이 점수가 높을수록 상위에 노출될 가능성이 높겠죠",
+   "examples": [
+    {
+     "item": "무료 영상 편집 프로그램",
+     "why": "제목, 설명, 태그에 일관성 있게 키워드를 사용하여 높은 SEO 스코어 달성",
+     "quote": "무료 영상 편집 이라는 내용이 제목과 설명 태그 에도 이렇게 들어갈 수 있도록"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "초보 유튜버가 처음부터 '떡상'을 노리는 것은 어렵다.",
+   "quote": "초복 유튜버 가 처음부터 노리기 에는 쉽지 않을 수 있습니다"
+  },
+  {
+   "text": "SEO 점수가 100점이라고 해서 무조건 상단에 노출되는 것은 아니다.",
+   "quote": "이 점수가 100점 이라고 해서 상단에 노출되는 건 아니지만"
+  }
+ ],
+ "skipped": [
+  "TubeBuddy 설치 및 계정 연동 방법",
+  "제목, 설명, 태그 상세 작성 방법 (외부 링크 참조)"
+ ],
+ "unique_insight": "초보 유튜버는 '떡상'보다는 검색 노출을 통한 꾸준한 조회수 확보에 집중해야 하며, 이를 위해 TubeBuddy를 활용한 키워드 분석 및 SEO 최적화가 필수적이다.",
+ "insight_quote": "검색 노출을 염두에 두고 시작하신 것을 추천드립니다",
+ "insight_verified": true,
+ "coverage_thirds": 3,
+ "read_to_end": false,
+ "_check": {
+  "kept": 7,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4078
+ },
+ "_video": {
+  "id": "IosUq4z9mWc",
+  "title": "유튜브 검색 상위 노출 이것만 알면 됩니다! 초보 유튜버가 꼭 알아야 할 핵심 프로그램 튜브버디 사용법",
+  "channel": "유튜브신쌤",
+  "views": 25323,
+  "duration": 530,
+  "queries": [
+   "떡상 키워드 찾기"
+  ]
+ }
+}

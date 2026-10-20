@@ -1,0 +1,32 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "YouTube"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "유튜브 영상의 태그 및 해시태그 작성법과 중요성, 그리고 튜브버디를 활용한 키워드 추천 기능에 대해 설명했습니다. 상품 발굴 방법은 언급되지 않았습니다."
+ ],
+ "unique_insight": "",
+ "insight_quote": "",
+ "insight_verified": false,
+ "coverage_thirds": 0,
+ "read_to_end": false,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 2975
+ },
+ "_video": {
+  "id": "8Zp6UEmQQfI",
+  "title": "유튜브 태그 다는법, 태그와 해시태그의 차이? 유튜브 검색 노출의 핵심! 조회수 떡상의 비밀",
+  "channel": "유튜브신쌤",
+  "views": 165706,
+  "duration": 380,
+  "queries": [
+   "떡상 키워드 찾기"
+  ]
+ }
+}

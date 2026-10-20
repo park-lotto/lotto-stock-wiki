@@ -1,0 +1,34 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "유튜브",
+  "인스타",
+  "틱톡"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "인포크 링크 및 쿠팡 파트너스 가입, 계정 설정, 유튜브 채널 연결, 상품 링크 생성 및 삽입 방법"
+ ],
+ "unique_insight": "구독자가 0명인 상태에서도 짧은 영상만으로 상품 판매가 가능하다는 것을 확인",
+ "insight_quote": "짧은 영상만으로도 상품이 판매가 된다는 것을 확인을 했고",
+ "insight_verified": true,
+ "coverage_thirds": 0,
+ "read_to_end": false,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4198
+ },
+ "_video": {
+  "id": "FJKqGUaoZmY",
+  "title": "유튜브 구독자 없이 쿠팡파트너스 하는법 1탄 (feat. 인포크링크)",
+  "channel": "AI에 진심 | 게으른 유튜버",
+  "views": 220714,
+  "duration": 492,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

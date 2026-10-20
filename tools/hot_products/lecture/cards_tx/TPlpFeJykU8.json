@@ -1,0 +1,118 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "쿠팡 파트너스",
+  "아마존",
+  "유튜브",
+  "틱톡",
+  "인스타그램"
+ ],
+ "methods": [
+  {
+   "name": "효과가 시각적으로 명확한 제품",
+   "goal": "잘 팔릴 상품",
+   "data_source": "강사의 경험/관찰",
+   "steps": [
+    "제품의 효과가 화면에 바로 보여야 한다."
+   ],
+   "thresholds": [],
+   "signal": "시각적 효과",
+   "signal_quote": "효과가 눈에 확 보이는 제품",
+   "examples": [
+    {
+     "item": "자동 커튼",
+     "why": "버튼 누르니 커튼이 스르륵 움직이는 모습이 바로 보임",
+     "quote": "버튼 누르니까 커튼이 스르륵"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "후기가 많은 제품",
+   "goal": "잘 팔릴 상품",
+   "data_source": "제품 후기",
+   "steps": [
+    "제품 후기가 많아 조사할 데이터가 충분해야 한다."
+   ],
+   "thresholds": [],
+   "signal": "후기 수",
+   "signal_quote": "후기가 많은 제품",
+   "examples": [],
+   "signal_verified": true
+  },
+  {
+   "name": "시각적 변화가 큰 상품 (AI 트렌드 분석)",
+   "goal": "잘 팔릴 상품",
+   "data_source": "AI 리서치 (이번 주 트렌드)",
+   "steps": [
+    "AI가 분석한 이번 주 트렌드에서 시각적 변화가 큰 상품을 찾는다."
+   ],
+   "thresholds": [],
+   "signal": "시각적 변화",
+   "signal_quote": "시각적 변화가 큰 상품이 쇼핑 쇼츠에서 잘 팔린다고 나옵니다.",
+   "examples": [
+    {
+     "item": "창문 로봇 청소기",
+     "why": "더러운 유리가 깨끗해지는 시각적 변화가 명확함",
+     "quote": "더러운 유리가 깨끗해지는 거"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "소비자의 불편함을 해결하는 상품 (AI 불편함 분석)",
+   "goal": "잘 팔릴 상품",
+   "data_source": "AI 리서치 (소비자 불편함, 근거 링크 포함)",
+   "steps": [
+    "AI가 찾아낸 소비자의 실제 불편함을 해결하는 상품을 선택한다.",
+    "광고는 사람들이 불편해하는 것을 건드려야 잘 팔린다."
+   ],
+   "thresholds": [],
+   "signal": "소비자 불편함 해결",
+   "signal_quote": "사람들이 뭘 불편해하는지까지 찾아왔어요.",
+   "examples": [
+    {
+     "item": "창문 로봇 청소기",
+     "why": "고층 창문 청소의 위험과 비용 부담이라는 불편함을 해결",
+     "quote": "고층에서 창문 닭다가 매달리는게 무섭다. 업체 부르면 비싸다."
+    }
+   ],
+   "signal_verified": false
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "후기가 없으면 조사할 데이터가 부족하다.",
+   "quote": "후기가 없으면 볼 데이터가 없어요."
+  }
+ ],
+ "skipped": [
+  "클로드와 익스필드 MCP 연결 방법 설명",
+  "쇼핑 쇼츠 자동화 스킬의 작동 원리 및 다운로드/저장 방법 설명",
+  "AI를 활용한 콘텐츠 플랜(썸네일, 제목, 대사, 설명문, 태그 등) 자동 생성 방법 설명",
+  "제품 이미지 업로드 및 영상 화질/길이 설정 방법 설명",
+  "AI가 생성한 쇼핑 쇼츠 영상 시연 및 결과물 설명",
+  "성공적인 쇼츠 영상 구조 분석 및 적용 방법 설명"
+ ],
+ "unique_insight": "잘 팔리는 쇼핑 쇼츠는 제작 전 조사와 기획이 절반을 결정한다.",
+ "insight_quote": "잘 팔리는 쇼핑 쇼츠는요. 만들기 전에 이미 절반이 결정돼요.",
+ "insight_verified": true,
+ "coverage_thirds": 2,
+ "read_to_end": false,
+ "_check": {
+  "kept": 4,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4713
+ },
+ "_video": {
+  "id": "TPlpFeJykU8",
+  "title": "How to Automate Shopping Shorts with Claude: AI Shorts in a Snap from Just One Product Link!? (+S...",
+  "channel": "AI:ON 에이아이온💡돈버는법💡",
+  "views": 57377,
+  "duration": 653,
+  "queries": [
+   "쇼핑쇼츠 상품 찾는법"
+  ]
+ }
+}

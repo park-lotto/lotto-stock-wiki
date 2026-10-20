@@ -6,11 +6,10 @@ from google import genai
 from google.genai import types, errors
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-KEYS = [v for k, v in env.items() if re.match(r"^GEMINI_API_KEY(_\d+)?$", k) and v]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
+KEYS = gkeys.gemini_keys()
 
 cards = [json.load(open(f, encoding="utf-8")) for f in glob.glob(os.path.join(HERE, "cards", "*.json"))]
 cards = [c for c in cards if c.get("is_lecture")]

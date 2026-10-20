@@ -10,11 +10,10 @@ from fidelity import subs, norm
 from verify_tx import verify          # 인용 검사는 verify_tx 한 곳          # 자막 받기·정규화는 한 곳(fidelity.py)
 
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, "cards_tx"); os.makedirs(OUT, exist_ok=True)
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-KEYS = [v for k, v in env.items() if re.match(r"^GEMINI_(API|INGEST|BRIEFING)_KEY(_\d+)?$", k) and v]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
+KEYS = gkeys.gemini_keys()
 PROMPT = """아래는 한 유튜브 강의의 **전체 자막**(자동자막이라 띄어쓰기·오타 있음)이다. 처음부터 끝까지 빠짐없이 읽고,
 강사가 '잘 팔릴 상품 / 뜨는 키워드 / 시즌 상품 / 바이럴 상품'을 고르는 방법을 모두 뽑아라.
 우리 목적: 쇼핑쇼츠(신박한 물건 소개 쇼츠·릴스, 쿠팡파트너스) 제작자가 될 만한 상품을 핀셋으로 고르는 것.
@@ -56,4 +55,5 @@ for v in cand:
     if not isinstance(res, dict): print("실패", v["id"], flush=True); continue
     res = verify(res, raw); res["_video"] = v; kept, dropped = res["_check"]["kept"], res["_check"]["dropped"]
     json.dump(res, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    time.sleep(float(os.environ.get("HOT_GAP", "0")))     # 공용풀은 고객 제작과 같이 쓴다 — 서버에선 간격을 둔다
     print(f"{v['id']} 방법 {len(res['methods'])} 인용확인 {kept} 버림 {dropped} | {v['title'][:34]}", flush=True)

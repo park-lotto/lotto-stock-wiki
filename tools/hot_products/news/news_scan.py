@@ -9,12 +9,11 @@ from google import genai
 from google.genai import types, errors
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"], "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"]}
-KEYS = [v for k, v in env.items() if re.match(r"^GEMINI_(API|INGEST|BRIEFING)_KEY(_\d+)?$", k) and v]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
+H = {"X-Naver-Client-Id": env.get("NAVER_CLIENT_ID", ""), "X-Naver-Client-Secret": env.get("NAVER_CLIENT_SECRET", "")}
+KEYS = gkeys.gemini_keys()
 EXTRACT_ONLY = "--extract-only" in sys.argv                       # 모은 제목(news_raw.json)으로 상품 고르기만 다시
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 DAYS = int(args[0]) if args else 14
@@ -77,8 +76,11 @@ PROMPT = """아래는 최근 뉴스 기사·유튜브 영상 제목(+요약)이�
 - who: 주 사용층(아이|10대|2030|5060|전체)
 JSON 배열만: [{"i":번호,"product":"...","kw":"...","shortsable":true,"buzz":"...","who":"..."}]"""
 ki, out, failed = 0, [], 0
+PART = os.path.join(HERE, "news_extract_partial.json")        # 묶음마다 저장 — 끊겨도 이어 한다
+part = json.load(open(PART, encoding="utf-8")) if EXTRACT_ONLY and os.path.exists(PART) else {}
 for s in range(0, len(uniq), 80):
     b = uniq[s:s + 80]
+    if str(s) in part: out += part[str(s)]; continue
     text = "\n".join(f"{i}. [{r['grp']}] {r['title']} | {r['desc']}" for i, r in enumerate(b))
     res, err = None, ""
     for _ in range(len(KEYS) * 2):
@@ -96,7 +98,10 @@ for s in range(0, len(uniq), 80):
     for o in res or []:
         i = o.get("i")
         if isinstance(i, int) and 0 <= i < len(b) and o.get("kw"):
-            out.append({**b[i], **{k: o.get(k) for k in ("product", "kw", "shortsable", "buzz", "who")}})
+            out.append({**b[i], **{k: o.get(k) for k in ("product", "kw", "shortsable", "buzz", "who")}, "_b": s})
+    if res is not None:
+        part[str(s)] = [x for x in out if x.get("_b") == s]
+        json.dump(part, open(PART, "w", encoding="utf-8"), ensure_ascii=False)
     print(f"{min(s + 80, len(uniq))}/{len(uniq)} 상품 {len(out)}", flush=True)
 n_batches = (len(uniq) + 79) // 80
 if failed * 2 > n_batches:

@@ -8,11 +8,10 @@ from google.genai import types, errors
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..", "..")
-env = {}
-for line in open(os.path.join(ROOT, ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-KEYS = [v for k, v in env.items() if re.match(r"^GEMINI_(API|INGEST|BRIEFING)_KEY(_\d+)?$", k) and v]   # 임베딩 키는 뺀다
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
+KEYS = gkeys.gemini_keys()
 MODEL = os.environ.get("LECTURE_MODEL", "gemini-2.5-flash")
 os.makedirs(os.path.join(HERE, "cards"), exist_ok=True)
 

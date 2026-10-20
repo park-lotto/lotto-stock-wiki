@@ -1,0 +1,35 @@
+{
+ "is_lecture": true,
+ "platforms": [],
+ "methods": [],
+ "pitfalls": [
+  {
+   "text": "미리 캔버스 무료 버전 사용 시 유료 폰트를 잘못 사용하면 저작권법에 저촉될 수 있습니다.",
+   "quote": "자칫 잘못하면 저작권법에 걸릴 수도 있겠다"
+  }
+ ],
+ "skipped": [
+  "미리 캔버스를 활용한 상세페이지 제작 방법 (로그인, 가로 860픽셀 설정, 무료 이미지 사이트 활용, 이미지 톤앤무드 일관성 유지, 텍스트 제목/본문 대비, 차별화된 서비스 강조, 도형 및 폰트 사용 주의, 그림자/채도/밝기 조절, 니즈 자극 및 공감대 유발, 포장/수확/배송 과정 설명 등)"
+ ],
+ "unique_insight": "",
+ "insight_quote": "",
+ "insight_verified": false,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 1,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 3114
+ },
+ "_video": {
+  "id": "OoCyQkMK5IU",
+  "title": "안 보면 손해! 누구나 10분만에 스마트스토어 상세페이지 만들기ㅣ2023년 왕초보용 미리캔버스 강좌",
+  "channel": "셀디, 셀러를 위한 디자인",
+  "views": 113288,
+  "duration": 755,
+  "queries": [
+   "스마트스토어 시즌상품 미리 준비"
+  ]
+ }
+}

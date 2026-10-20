@@ -1,0 +1,89 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "Coupang Partners",
+  "Coupang"
+ ],
+ "methods": [
+  {
+   "name": "트렌드 키워드 검색 결과 활용",
+   "goal": "시즌|바이럴·급상승",
+   "data_source": "쿠팡 검색 트렌드",
+   "steps": [
+    "사람들이 관심 있어 할 것 같은 키워드를 쿠팡에 검색한다.",
+    "검색 결과 페이지를 링크로 생성하여 홍보한다."
+   ],
+   "thresholds": [],
+   "signal": "사람들의 관심",
+   "signal_quote": "사람들이 관심 있어 할 것 같은 검색 결과 페이지를 링크로 만들어서",
+   "examples": [
+    {
+     "item": "집들이 선물",
+     "why": "요즘 트렌드",
+     "quote": "요즘 집들이 선물은 어떤 것들을 주로 하는지 한번 뭐 확인해 보세요"
+    },
+    {
+     "item": "출산 선물",
+     "why": "요즘 트렌드",
+     "quote": "출산 선물 이런 걸 키워드로 해서 검색을 해 볼 수가 있잖아요"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "사회적 이슈/바이럴 키워드 활용",
+   "goal": "바이럴·급상승",
+   "data_source": "사회적 이슈",
+   "steps": [
+    "크게 이슈가 된 사회적 트렌드나 키워드를 파악한다.",
+    "관련 상품의 검색 결과 페이지를 링크로 생성하여 홍보한다."
+   ],
+   "thresholds": [],
+   "signal": "크게 이슈가 된",
+   "signal_quote": "아스파탐이 크게 이슈가 되었을 때 그 관련해서 글을 쓰고",
+   "examples": [
+    {
+     "item": "아스파탐이 들어가지 않은 막걸리",
+     "why": "아스파탐 이슈",
+     "quote": "아스파탐이 크게 이슈가 되었을 때 그 관련해서 글을 쓰고"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "쿠팡 파트너스 활동이 불가능한 상품이 있음",
+   "quote": "쿠팡 파트너스 활동이 불가능한 상품도 있다는 걸 알아두시고요"
+  }
+ ],
+ "skipped": [
+  "쿠팡 파트너스 가입, 승인, 정산 지급 방법",
+  "쿠팡 파트너스 홈페이지 및 쿠팡 홈페이지에서 상품 링크 생성하는 상세 방법",
+  "카테고리 및 테마 링크 생성 방법",
+  "검색 결과 페이지 링크 생성 방법",
+  "텍스트 링크 생성 및 블로그 삽입 방법",
+  "쿠팡 파트너스 수익 지급 방식 (3% 커미션, 24시간 쿠키)"
+ ],
+ "unique_insight": "사회적 이슈나 트렌드를 활용하여 관련 상품의 검색 결과 페이지를 링크로 만들어 홍보하는 방법",
+ "insight_quote": "아스파탐이 크게 이슈가 되었을 때 그 관련해서 글을 쓰고",
+ "insight_verified": true,
+ "coverage_thirds": 2,
+ "read_to_end": false,
+ "_check": {
+  "kept": 4,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4012
+ },
+ "_video": {
+  "id": "flXV0JrG7NQ",
+  "title": "5 Ways to Create a Coupang Partner Link - Use It Anytime, Anywhere",
+  "channel": "뚜벅맘",
+  "views": 31722,
+  "duration": 624,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

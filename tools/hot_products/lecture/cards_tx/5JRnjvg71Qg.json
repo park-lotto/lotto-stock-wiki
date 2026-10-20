@@ -1,0 +1,74 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "YouTube"
+ ],
+ "methods": [
+  {
+   "name": "유튜브 검색 프로그램 활용 (구독자 대비 조회수 필터)",
+   "goal": "바이럴·급상승",
+   "data_source": "유튜브 API",
+   "steps": [
+    "검색어를 입력하면 제목, 설명, 태그를 포함한 각종 내용이 결과값으로 나왔으면 좋겠어.",
+    "기간 필터를 정해서 업로드한 날짜에 따라 결과값을 구분해서 보고 싶어",
+    "구독자 대비 조회수 필터를 걸어서 보고 싶어 5단계로 구분해서 필터를 만들었죠."
+   ],
+   "thresholds": [
+    {
+     "rule": "구독자 대비 조회수 5단계",
+     "quote": "5단계로 구분해서 필터를 만들었죠."
+    }
+   ],
+   "signal": "구독자 대비 조회수가 엄청 잘 나온 영상",
+   "signal_quote": "5단계가 구독자 대비 조회수가 엄청 잘 나온 거야.",
+   "examples": [],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "GPT는 개선보다는 새로 만드는 것을 더 잘함",
+   "quote": "GPT는 대선보다는 새로 만드는 걸 더 잘합니다."
+  },
+  {
+   "text": "GPT가 가끔 전체 코드를 작성해주지 않을 수 있음",
+   "quote": "GPT가 가끔 전체 코드로 작성해 주지 않을 때가 있는데"
+  },
+  {
+   "text": "프로그램 개발 중 오류가 발생할 수 있음",
+   "quote": "지금처럼 이렇게 오류가 발생할 수 있고"
+  },
+  {
+   "text": "API 키를 타인에게 공개해서는 안 됨",
+   "quote": "API키는 다른 분들한테 공개하시면 안 됩니다."
+  }
+ ],
+ "skipped": [
+  "API 키 발급 및 관리 방법",
+  "GPT 프롬프트 작성 및 코딩 요청 방법",
+  "HTML 문서 생성 및 수정 과정",
+  "프로그램 디자인 및 UI 개선 요청 방법",
+  "오류 발생 시 대처 방법 (코딩 관련)"
+ ],
+ "unique_insight": "코딩 지식 없이도 GPT를 활용하여 맞춤형 데이터 분석 프로그램을 만들 수 있음",
+ "insight_quote": "코딩을 1도 몰라도 하나의 프로그램이 완성되는 겁니다.",
+ "insight_verified": true,
+ "coverage_thirds": 2,
+ "read_to_end": false,
+ "_check": {
+  "kept": 5,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 5117
+ },
+ "_video": {
+  "id": "5JRnjvg71Qg",
+  "title": "무료 유튜브 검색 프로그램 만들기 | ChatGPT 활용 | 초보자",
+  "channel": "직장인 AI 업무 자동화 | 라핀",
+  "views": 145124,
+  "duration": 602,
+  "queries": [
+   "떡상 키워드 찾기"
+  ]
+ }
+}

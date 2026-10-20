@@ -1,0 +1,43 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "유튜브",
+  "쿠팡 파트너스",
+  "토스 쇼핑",
+  "인스타그램",
+  "틱톡",
+  "인포크 링크"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "쿠팡 파트너스 수익 감소 및 토스 쇼핑 쉐어링크 소개",
+  "토스 쇼핑 쉐어링크의 10% 수익률 및 베타 서비스 기간 설명",
+  "토스 쇼핑 쉐어링크 신청 방법 및 승인 확인 절차 안내",
+  "토스 쉐어링크를 쇼츠 영상에 활용하는 방법 (프로필 링크, 인포크 링크 사용)",
+  "토스 쇼핑이 10% 수익을 지급하는 이유 (시장 점유율 확보 전략)",
+  "초기 진입의 중요성 강조 및 즉시 신청 독려",
+  "쇼츠 완전 정복하기 무료 전자책 제공 안내"
+ ],
+ "unique_insight": "",
+ "insight_quote": "",
+ "insight_verified": false,
+ "coverage_thirds": 0,
+ "read_to_end": false,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 2852
+ },
+ "_video": {
+  "id": "tMr5UFoqXpA",
+  "title": "Everything about Shopping Shorts will change to this in '26 | How to do Shopping Shorts from now ...",
+  "channel": "로이스 PD: 대기업 퇴사하고 유튜브로 생존하기",
+  "views": 23328,
+  "duration": 341,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

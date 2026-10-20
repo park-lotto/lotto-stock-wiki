@@ -1,0 +1,73 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "TikTok",
+  "샤우슈"
+ ],
+ "methods": [
+  {
+   "name": "틱톡 꿀템 검색을 통한 상품 발굴",
+   "goal": "바이럴·급상승",
+   "data_source": "TikTok",
+   "steps": [
+    "틱톡 검색란에 '꿀템'이라고 검색하여 인기 상품 소스 발굴"
+   ],
+   "thresholds": [],
+   "signal": "많은 영상 존재",
+   "signal_quote": "엄청 많이 있어요",
+   "examples": [
+    {
+     "item": "무타공 전동 커튼",
+     "why": "강사가 예시로 언급한 인기 상품",
+     "quote": "무타공 전동 커튼이에요"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "ChatGPT 및 틱톡을 활용한 키워드 확장 및 소스 발굴",
+   "goal": "바이럴·급상승",
+   "data_source": "ChatGPT, TikTok",
+   "steps": [
+    "발굴한 상품에 대한 키워드 10개를 ChatGPT로 중국어 번역 요청",
+    "번역된 중국어 키워드로 틱톡에 재검색하여 관련 영상 소스 추가 발굴",
+    "한국어 영상은 저작권 문제로 제외하고 중국어 영상 링크 수집"
+   ],
+   "thresholds": [],
+   "signal": "관련 영상 다수 발견",
+   "signal_quote": "관련해 가지고 엄청 많이 나와요",
+   "examples": [],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "한국어 영상의 저작권 문제로 인한 사용 제한",
+   "quote": "한국어로 되어 있는 거는 저작권이나 이런 것들이 있기 때문에 좀 빼워 주시고요"
+  }
+ ],
+ "skipped": [
+  "AI 쇼핑 쇼츠 영상 제작 자동화 방법 (클로드 코드, 익스필드 MCP 활용, 스킬 설정, 영상 분석 및 편집 과정)"
+ ],
+ "unique_insight": "쇼핑 쇼츠 시장의 과도한 유입에 대한 경고",
+ "insight_quote": "너무 많은 사람들이 유입된 느낌도 살짝 들기도 하거든요",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 2,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 6795
+ },
+ "_video": {
+  "id": "xak0GoAnsQU",
+  "title": "링크 하나만 던지면 쇼핑쇼츠가 완성됩니다 (클로드 코드 자동화 풀과정 공개)",
+  "channel": "알파GOGOGO",
+  "views": 62297,
+  "duration": 905,
+  "queries": [
+   "쇼핑쇼츠 키워드"
+  ]
+ }
+}

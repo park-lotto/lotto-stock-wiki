@@ -1,0 +1,9023 @@
+{
+ "n_in": 290,
+ "n_judged": 290,
+ "items": [
+  {
+   "kw": "아이폰 폴더블, 애플 폴더블폰",
+   "products": [
+    "아이폰 듀오",
+    "아이폰 듀오 (iPhone Duo)"
+   ],
+   "grps": {
+    "화제": 10
+   },
+   "who": {
+    "2030|전체": 10
+   },
+   "n_news": 10,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "예약 물량 소진, 품절 상태, 배송 내년 1월",
+    "사전예약 품귀 조짐, 조기 품절 가능성",
+    "주문 폭주, 3개월 대기, 중고거래 웃돈"
+   ],
+   "links": [
+    {
+     "t": "아이폰 듀오, 509만원에도 예약 물량 소진…배송 내년 '1월'",
+     "u": "https://www.newswhoplus.com/news/articleView.html?idxno=71977",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "아이폰 듀오, 사전예약 품귀 조짐...이통 3사 지원 경쟁 시작",
+     "u": "https://zdnet.co.kr/view/?no=20261016095617",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "\"400만원 넘는데 3개월 대기\"…아이폰 듀오 주문 폭주 [영상PICK]",
+     "u": "http://www.metroseoul.co.kr/article/20261019500186",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "예약 물량 소진",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "공기청정기",
+   "products": [
+    "공기청정기"
+   ],
+   "grps": {
+    "화제": 5
+   },
+   "who": {
+    "전체": 5
+   },
+   "n_news": 5,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "판매량 8월보다 9배 급증",
+    "판매량 8월보다 9배 급증",
+    "판매량 8월보다 9배 급증"
+   ],
+   "links": [
+    {
+     "t": "동남아 초비상 걸렸다 “종말 온 줄”…최악의 인도네시아 산불 국경 넘...",
+     "u": "https://www.sedaily.com/article/20102449?ref=naver",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "[아시아라운드업 20261016] 인도네시아 연무 확산, 이웃국들 대처방안 모...",
+     "u": "http://kor.theasian.asia/archives/418663",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "인니, 11년만의 최악 산불로 연무 확산…주변국도 '골머리' 말레이· 동...",
+     "u": "https://news.tvchosun.com/site/data/html_dir/2026/10/15/2026101590178.html",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "공기청정기",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 팝콘통, 캐릭터 팝콘통",
+   "products": [
+    "치이카와 팝콘통",
+    "CGV 치이카와 팝콘통"
+   ],
+   "grps": {
+    "화제": 5
+   },
+   "who": {
+    "10대, 2030": 1,
+    "2030": 4
+   },
+   "n_news": 5,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "품귀 현상, 현장/온라인 예약 판매 모두 매진, 높은 소장 가치",
+    "품절, 어른들 몰려감",
+    "1·2차 품절"
+   ],
+   "links": [
+    {
+     "t": "[기획] CGV, '팬심 볼모' 리셀러에 던진 통쾌한 한방",
+     "u": "https://www.kfenews.co.kr/news/articleView.html?idxno=666455",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "\"팝콘통 살게요\" 어른들 몰려갔다...3040이 '먼작귀'에 빠진 이유",
+     "u": "https://www.mt.co.kr/society/2026/10/19/2026101609142674265",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "\"나처럼 힘들게 살잖아?\"…2030 홀린 '치이카와' 반전 매력",
+     "u": "https://www.mt.co.kr/society/2026/10/19/2026101514270955950",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "팝콘통 살게요",
+   "kw_clean": "치이카와 팝콘통",
+   "shorts": true
+  },
+  {
+   "kw": "안마의자",
+   "products": [
+    "바디프렌드 안마의자",
+    "제스파 안마의자",
+    "파나소닉 안마의자",
+    "휴테크 안마의자",
+    "안마의자"
+   ],
+   "grps": {
+    "5060": 5
+   },
+   "who": {
+    "5060": 5
+   },
+   "n_news": 0,
+   "n_yt": 5,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "효도템, 명절선물추천",
+    "효도템, 명절선물추천",
+    "효도템, 명절선물추천"
+   ],
+   "links": [
+    {
+     "t": "안마의자 비교 선택가이드 추석명절선물추천 부모님 효도템 바디프렌드 제스파 파나소닉 휴테크",
+     "u": "https://youtu.be/rxNeUHVg-ak",
+     "d": ""
+    },
+    {
+     "t": "안마의자 비교 선택가이드 추석명절선물추천 부모님 효도템 바디프렌드 제스파 파나소닉 휴테크",
+     "u": "https://youtu.be/rxNeUHVg-ak",
+     "d": ""
+    },
+    {
+     "t": "안마의자 비교 선택가이드 추석명절선물추천 부모님 효도템 바디프렌드 제스파 파나소닉 휴테크",
+     "u": "https://youtu.be/rxNeUHVg-ak",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "안마의자",
+   "shorts": true
+  },
+  {
+   "kw": "공기청정기, 미세먼지 공기청정기",
+   "products": [
+    "공기청정기"
+   ],
+   "grps": {
+    "화제": 4
+   },
+   "who": {
+    "전체": 4
+   },
+   "n_news": 4,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "판매량 작년 동기의 7배로 불어남, 수요 급증",
+    "판매량 지난해 같은 기간의 7배로 불어남, 수요 급증",
+    "판매 9배 폭증, 판매량 지난해 같은 기간보다 7배"
+   ],
+   "links": [
+    {
+     "t": "인도네시아 산불로 주변국 주민 고통...공기청정기·산소통 수요 급증",
+     "u": "https://www.ytn.co.kr/_ln/0104_202610191759205668",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "인니 최악 산불에 고통받는 주변국…공기청정기·산소통 판매 급증",
+     "u": "https://news.kbs.co.kr/news/pc/view/view.do?ncd=8689171&ref=A",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "인도네시아 산불에 동남아 '숨 막힌다'…공기청정기 판매 9배 폭증",
+     "u": "https://www.kado.net/news/articleView.html?idxno=2079047",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "수요 급증",
+   "kw_clean": "공기청정기",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 굿즈, 캐릭터 상품",
+   "products": [
+    "치이카와 캐릭터 상품",
+    "극장판 치이카와 신상품"
+   ],
+   "grps": {
+    "화제": 4
+   },
+   "who": {
+    "2030": 3,
+    "10대, 2030": 1
+   },
+   "n_news": 4,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "팝업스토어 인기, 팬덤 형성",
+    "팝업스토어 인기",
+    "캐릭터 상품 인기, 탄탄한 팬층"
+   ],
+   "links": [
+    {
+     "t": "'치이카와' 관객 28.7% 증가, '암살자(들)' 61.4% 급감[영화순위]",
+     "u": "https://www.topstarnews.net/news/articleView.html?idxno=16250407",
+     "d": "2026-10-18"
+    },
+    {
+     "t": "팝콘통 하나에 2만9000원인데 '품절'…'영화·굿즈·팝업' 모두 대박 터...",
+     "u": "http://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610170041&t=NN",
+     "d": "2026-10-17"
+    },
+    {
+     "t": "'치이카와' 인기 속 K-애니 승부수...\"우리만의 서사\"",
+     "u": "https://www.ytn.co.kr/_ln/0106_202610170049577952",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": true,
+   "evidence": "품절",
+   "kw_clean": "치이카와 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "티타늄 밥솥, 쿠첸 밥솥",
+   "products": [
+    "쿠첸 티탄 컬렉션 밥솥"
+   ],
+   "grps": {
+    "5060": 4
+   },
+   "who": {
+    "전체": 4
+   },
+   "n_news": 4,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "3회 연속 완판",
+    "3회 연속 완판, 방송할 때마다 다 팔렸다",
+    "홈쇼핑 3회 연속 완판"
+   ],
+   "links": [
+    {
+     "t": "쿠첸, '티탄 컬렉션' CJ온스타일서 3회 연속 완판",
+     "u": "https://www.slist.kr/news/articleView.html?idxno=773328",
+     "d": "2026-10-14"
+    },
+    {
+     "t": "“방송할 때마다 다 팔렸다”…쿠첸 ‘티타늄 밥솥’ 3회 연속 완판",
+     "u": "https://www.mk.co.kr/article/12174598",
+     "d": "2026-10-13"
+    },
+    {
+     "t": "쿠첸 프리미엄 밥솥 '티탄 컬렉션', 홈쇼핑 3회 연속 완판",
+     "u": "http://www.hansbiz.co.kr/news/articleView.html?idxno=872188",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "3회 연속 완판",
+   "kw_clean": "밥솥",
+   "shorts": true
+  },
+  {
+   "kw": "파크골프채, 파크골프공",
+   "products": [
+    "파크골프 용품",
+    "파크골프 장비"
+   ],
+   "grps": {
+    "5060": 4
+   },
+   "who": {
+    "5060": 1,
+    "전체": 3
+   },
+   "n_news": 4,
+   "n_yt": 0,
+   "first": "2026-10-06",
+   "shortsable": true,
+   "buzz": [
+    "생활체육으로 인기가 높다, 동호인 해마다 늘고 있다",
+    "최근 전국적으로 인기를 얻고 있는 파크골프는 비교적 적은 장비로 남녀노소가 함께 즐길 수 있고, 어르신들의 건강관리와 여가활동에도 적합해 섬 지역 생활스포츠종목으로 주목받고 있다.",
+    "비교적 장비 부담이 적고 남녀노소 누구나 쉽게 즐길 수 있어 최근 생활체육 종목으로 인기를 높이고 있다."
+   ],
+   "links": [
+    {
+     "t": "[서울&] 파크골프 인기에 ‘36홀 시대’ 열었다",
+     "u": "http://www.seouland.com/arti/society/society_general/24454.html",
+     "d": "2026-10-08"
+    },
+    {
+     "t": "옹진군, 군민 체력도 UP 행복도 UP…안전·친절·생활스포츠로 삶의 질 ...",
+     "u": "https://www.stnsports.co.kr/news/articleView.html?idxno=323742",
+     "d": "2026-10-08"
+    },
+    {
+     "t": "[나주시 소식] 나주시장배 파크골프대회 '화합 한마당'",
+     "u": "https://www.newsfreezone.co.kr/news/articleView.html?idxno=712491",
+     "d": "2026-10-06"
+    }
+   ],
+   "demand": true,
+   "evidence": "파크골프 인기에",
+   "kw_clean": "파크골프 용품",
+   "shorts": true
+  },
+  {
+   "kw": "펭수 굿즈, 캐릭터 상품",
+   "products": [
+    "펭수 캐릭터 상품"
+   ],
+   "grps": {
+    "5060": 4
+   },
+   "who": {
+    "전체": 4
+   },
+   "n_news": 4,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "인기 캐릭터",
+    "인기 캐릭터",
+    "인기 캐릭터"
+   ],
+   "links": [
+    {
+     "t": "활쏘기 체험에 농특산물 구매와 평생학습 체험까지 …전통·농업·배움...",
+     "u": "https://www.kbmaeil.com/article/20261020500214",
+     "d": "2026-10-20"
+    },
+    {
+     "t": "예천 농산물축제·활축제·평생학습박람회…30일 한천체육공원서 개막",
+     "u": "https://daily.hankooki.com/news/articleView.html?idxno=1416477",
+     "d": "2026-10-20"
+    },
+    {
+     "t": "[기획특집] 활 쏘고, 예천의 맛 담고 펭수도 만난다…가을 축제 3색 즐거...",
+     "u": "https://www.kbsm.net/news/view.php?idx=538243",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "펭수 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "다이소 추천, 다이소 꿀템",
+   "products": [
+    "다이소 품절템",
+    "다이소 신상 꿀템",
+    "다이소 신상"
+   ],
+   "grps": {
+    "화제": 4
+   },
+   "who": {
+    "전체": 4
+   },
+   "n_news": 0,
+   "n_yt": 4,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "Always Sell Out",
+    "다이소 품절대란, 모두가 찾는 그 3가지 아이템",
+    "역대급 신상템, 직원도 놀란 가성비꿀템"
+   ],
+   "links": [
+    {
+     "t": "Buy Them If You See Them! 13 High-Quality Daiso Items That A",
+     "u": "https://youtu.be/NMRg7-XflUg",
+     "d": ""
+    },
+    {
+     "t": "다이소 품절대란 1편: 모두가 찾는 그 3가지 아이템은?",
+     "u": "https://youtu.be/5ggQ7C5DWbQ",
+     "d": ""
+    },
+    {
+     "t": "다이소가 작정하고 만든 역대급 신상템 & 직원도 놀란 가성비꿀템 33가지 | 다양한 활용법",
+     "u": "https://youtu.be/YUuU33pU2GE",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란",
+   "kw_clean": "다이소 꿀템",
+   "shorts": true
+  },
+  {
+   "kw": "다이소 추천, 다이소 품절",
+   "products": [
+    "다이소 꿀템",
+    "다이소 신상 꿀템"
+   ],
+   "grps": {
+    "화제": 4
+   },
+   "who": {
+    "전체": 4
+   },
+   "n_news": 0,
+   "n_yt": 4,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 품절대란, 꿀템",
+    "Must-Haves",
+    "고퀄리티 신상 & 역대급 꿀템, 품절대란"
+   ],
+   "links": [
+    {
+     "t": "다이소 품절대란 총집합 - 정말 다이소 제품 맞나?!싶은 꿀템 20가지!!!",
+     "u": "https://youtu.be/1w-SkcnYOkc",
+     "d": ""
+    },
+    {
+     "t": "Daiso Must-Haves",
+     "u": "https://youtu.be/zGvLiXiH798",
+     "d": ""
+    },
+    {
+     "t": "다이소 가서 이것만 집어오세요! 고퀄리티 신상 & 역대급 꿀템 36가지 |다이소 추천템 |주부 9단 살림팁 ",
+     "u": "https://youtu.be/AKmjHTooBI4",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란",
+   "kw_clean": "다이소 꿀템",
+   "shorts": true
+  },
+  {
+   "kw": "아이폰",
+   "products": [
+    "아이폰18 프로",
+    "아이폰"
+   ],
+   "grps": {
+    "화제": 3
+   },
+   "who": {
+    "10대, 2030, 전체": 3
+   },
+   "n_news": 3,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "인기 '시들' (화제성)",
+    "흥행 '먹구름' (화제성)",
+    "연간 판매량 약 4배 증가"
+   ],
+   "links": [
+    {
+     "t": "비싼데 무겁고 '먹통' 오류까지… 아이폰18 프로 인기 '시들'",
+     "u": "https://www.fnnews.com/news/202610151811021147",
+     "d": "2026-10-15"
+    },
+    {
+     "t": "비싸고 무거운데 오류까지…아이폰18 프로 흥행 '먹구름'",
+     "u": "https://www.fnnews.com/news/202610141354567585",
+     "d": "2026-10-15"
+    },
+    {
+     "t": "애플, 사상 첫 종가 기준 시총 5조 달러 돌파... 엔비디아 이어 세계 2번...",
+     "u": "https://www.insight.co.kr/news/577913",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "스마트폰",
+   "shorts": false
+  },
+  {
+   "kw": "치이카와 인형, 캐릭터 인형",
+   "products": [
+    "치이카와 인형"
+   ],
+   "grps": {
+    "화제": 3
+   },
+   "who": {
+    "10대, 2030": 1,
+    "2030": 2
+   },
+   "n_news": 3,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "SNS 화제, '한정선 랏코' 별명",
+    "입고 직후 품절, SNS 유행",
+    "캐릭터 상품 인기"
+   ],
+   "links": [
+    {
+     "t": "[유프로의 AI픽] “찹쌀떡 불티·캐릭터 굿즈 열풍”…유통채널 TOP3",
+     "u": "https://www.mediapen.com/news/view/1129377",
+     "d": "2026-10-13"
+    },
+    {
+     "t": "\"팝콘통 살게요\" 어른들 몰려갔다...3040이 '먼작귀'에 빠진 이유",
+     "u": "https://www.mt.co.kr/society/2026/10/19/2026101609142674265",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "‘치이카와’, ‘암살자(들)’ 3배 차로 제쳤다… 170만 돌파 눈앞",
+     "u": "https://www.edaily.co.kr/News/Read?newsId=01207046645614232&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "치이카와 인형",
+   "shorts": true
+  },
+  {
+   "kw": "삼성전자 가전, LG 가전, 애플 기기",
+   "products": [
+    "삼성전자, LG, 애플 인기 브랜드 상품"
+   ],
+   "grps": {
+    "화제": 3
+   },
+   "who": {
+    "전체": 3
+   },
+   "n_news": 3,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "10~30% 할인 한정 판매",
+    "10~30% 할인 한정 판매",
+    "10~30% 할인 한정 판매"
+   ],
+   "links": [
+    {
+     "t": "현대이지웰, 19일까지 '이지 세일 페스타' 진행",
+     "u": "https://www.nextdaily.co.kr/news/articleView.html?idxno=253931",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "현대이지웰, 복지몰 고객사 대상 '이지 세일 페스타' 진행",
+     "u": "http://www.ftoday.co.kr/news/articleView.html?idxno=367477",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "[유통가 오늘] W컨셉ㆍ코웨이라이프솔루션ㆍ다이소ㆍ현대이지웰",
+     "u": "https://www.cnbnews.com/news/articleView.html?idxno=1019723",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "가전제품",
+   "shorts": true
+  },
+  {
+   "kw": "로보카폴리 굿즈, 어린이 캐릭터",
+   "products": [
+    "로보카폴리 캐릭터 상품"
+   ],
+   "grps": {
+    "5060": 3
+   },
+   "who": {
+    "아이": 3
+   },
+   "n_news": 3,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "인기 캐릭터",
+    "인기 애니메이션 캐릭터",
+    "인기 캐릭터"
+   ],
+   "links": [
+    {
+     "t": "“이 가을, 여기 안 가면 후회” 송가인·김용빈 총출동, 강진만 갈대축...",
+     "u": "https://www.viva100.com/article/20261012500922",
+     "d": "2026-10-12"
+    },
+    {
+     "t": "[축제 598] 강진군, 가을 정취 가득한 '강진만 갈대축제' 24일 개막",
+     "u": "https://www.jeonmae.co.kr/news/articleView.html?idxno=1300266",
+     "d": "2026-10-12"
+    },
+    {
+     "t": "\"황금빛 갈대 속 힐링 축제\"… \"제11회 강진만 춤추는 갈대축제\" 24일 개...",
+     "u": "http://www.jeollailbo.com/news/articleView.html?idxno=813275",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로보카폴리 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "다이소 꿀템, 다이소 품절",
+   "products": [
+    "다이소 추천템"
+   ],
+   "grps": {
+    "화제": 3
+   },
+   "who": {
+    "전체": 3
+   },
+   "n_news": 0,
+   "n_yt": 3,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 품절대란, 살림 고수도 놀란 꿀템",
+    "품절대란, 찐 고수들만 쓰는 아이템, 역대급 퀄리티",
+    "쓰임새가 공개되자 전량 품절대란이 나버린"
+   ],
+   "links": [
+    {
+     "t": "다이소 품절대란 총집합 - 살림 고수도 놀란 꿀템들을 한번에 몰아보는 다이소 추천템 25가지!!!",
+     "u": "https://youtu.be/H3Svtp7JsJg",
+     "d": ""
+    },
+    {
+     "t": "다이소 가서 이걸 안사면 하수입니다ㅣ찐 고수들만 쓰는 아이템ㅣ품절대란ㅣ의외의 꿀템ㅣ역대급 퀄리티 다이소 추천",
+     "u": "https://youtu.be/rFAJrv5SCvE",
+     "d": ""
+    },
+    {
+     "t": "정체불명의 제품이었는데 쓰임새가 공개되자 전량 품절대란이 나버린 다이소 추천템 Top10",
+     "u": "https://youtu.be/hdAt4C6VLBI",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란",
+   "kw_clean": "다이소 꿀템",
+   "shorts": true
+  },
+  {
+   "kw": "휴대용 산소통, 산소발생기",
+   "products": [
+    "산소통"
+   ],
+   "grps": {
+    "화제": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "수요 급증",
+    "매출 35% 증가, 수요 급증"
+   ],
+   "links": [
+    {
+     "t": "인니 최악 산불에 고통받는 주변국…공기청정기·산소통 판매 급증",
+     "u": "https://news.kbs.co.kr/news/pc/view/view.do?ncd=8689171&ref=A",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "인니 산불로 주변국 주민 고통…공기청정기·산소통 수요 급증",
+     "u": "https://www.yna.co.kr/view/AKR20261019149600084?input=1195m",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "수요 급증",
+   "kw_clean": "산소통",
+   "shorts": true
+  },
+  {
+   "kw": "갤럭시 폴드",
+   "products": [
+    "삼성 갤럭시 폴드"
+   ],
+   "grps": {
+    "화제": 2
+   },
+   "who": {
+    "2030": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "검색 300% 증가, 사전 판매량 전작 대비 60% 급증",
+    "검색량 300% 증가, 사전 판매량 전작 대비 60% 급증"
+   ],
+   "links": [
+    {
+     "t": "애플 등판에 삼성 웃었다…갤폴드 검색 300% 증가",
+     "u": "https://biz.heraldcorp.com/article/10904955?ref=naver",
+     "d": "2026-10-16"
+    },
+    {
+     "t": "애플 판 키우자 삼성도 웃었다…‘갤폴드 검색량 300% 증가’, 삼성-애플...",
+     "u": "https://biz.heraldcorp.com/article/10904552?ref=naver",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "검색 300% 증가",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "아코디언북 녹스, 수작업 책",
+   "products": [
+    "수작업 아코디언북 ‘녹스’"
+   ],
+   "grps": {
+    "화제": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "품귀, 두 달 뒤에나 받을 수 있음",
+    "지금 주문하면 2달 뒤 받는다, 주문 폭주"
+   ],
+   "links": [
+    {
+     "t": "노벨상 카슨 책 품귀…수작업 아코디언북 ‘녹스’는 두 달 뒤에나",
+     "u": "https://www.khan.co.kr/article/202610122043005",
+     "d": "2026-10-12"
+    },
+    {
+     "t": "지금 주문하면 2달 뒤 받는다···노벨상 ‘녹스’, 장인 손으로 한 장...",
+     "u": "https://www.khan.co.kr/article/202610121622001",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "두 달 뒤에나",
+   "kw_clean": "아코디언북",
+   "shorts": true
+  },
+  {
+   "kw": "한샘 샘키즈 하우스",
+   "products": [
+    "한샘 샘키즈 하우스"
+   ],
+   "grps": {
+    "아이": 2
+   },
+   "who": {
+    "아이": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "쇼핑 행사에서 구매 유도",
+    "오프라인 매장 체험 공간으로 선보임"
+   ],
+   "links": [
+    {
+     "t": "초반 흥행 확인한 쇼핑 행사…막판엔 인기 상품 집중 배치",
+     "u": "http://www.kdfnews.com/news/articleView.html?idxno=189534",
+     "d": "2026-10-19"
+    },
+    {
+     "t": "가구 할인에 이사·청소까지…한샘, '쌤페스타' 온라인 이용자 110% ↑",
+     "u": "http://www.wikileaks-kr.org/news/articleView.html?idxno=193268",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "아동 가구",
+   "shorts": true
+  },
+  {
+   "kw": "스트레이 키즈 가방",
+   "products": [
+    "스트레이 키즈 타포린 가방",
+    "스트레이 키즈 타포린백"
+   ],
+   "grps": {
+    "아이": 2
+   },
+   "who": {
+    "10대": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "빼빼로 제품 3만 원 이상 구매 시 증정",
+    "빼빼로 전 제품 3만 원 이상 구매 시 증정"
+   ],
+   "links": [
+    {
+     "t": "키즈부터 산리오까지… 역대급 IP 라인업 맞이한 2026 빼빼로데이",
+     "u": "https://news.mtn.co.kr/news-detail/2026101411291266453",
+     "d": "2026-10-14"
+    },
+    {
+     "t": "롯데웰푸드, 스트레이 키즈·산리오와 '빼빼로데이' 기획 패키지 10종 선...",
+     "u": "https://www.newsmap.co.kr/news/articleView.html?idxno=3985",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "타포린 가방",
+   "shorts": true
+  },
+  {
+   "kw": "스트레이 키즈 키링",
+   "products": [
+    "스트레이 키즈 키링"
+   ],
+   "grps": {
+    "아이": 2
+   },
+   "who": {
+    "10대": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "빼빼로 제품 3만 원 이상 구매 시 증정",
+    "빼빼로 전 제품 3만 원 이상 구매 시 증정"
+   ],
+   "links": [
+    {
+     "t": "키즈부터 산리오까지… 역대급 IP 라인업 맞이한 2026 빼빼로데이",
+     "u": "https://news.mtn.co.kr/news-detail/2026101411291266453",
+     "d": "2026-10-14"
+    },
+    {
+     "t": "롯데웰푸드, 스트레이 키즈·산리오와 '빼빼로데이' 기획 패키지 10종 선...",
+     "u": "https://www.newsmap.co.kr/news/articleView.html?idxno=3985",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "키링",
+   "shorts": true
+  },
+  {
+   "kw": "HP 노트북, 게이밍 노트북",
+   "products": [
+    "HP 2026 (AMD 라이젠 AI 400 시리즈 프로세서와 엔비디아 지포스 RTX 5060 그래픽 탑재)"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "주요 행사 제품, 인기 노트북",
+    "대표 할인 제품, 최대 43% 할인"
+   ],
+   "links": [
+    {
+     "t": "[ICT 종합] 네이버클라우드 및 넥써쓰 소식 외",
+     "u": "https://www.gamevu.co.kr/news/articleView.html?idxno=61353",
+     "d": "2026-10-12"
+    },
+    {
+     "t": "HP·레노버, 노트북 최대 43% 할인… D램 폭등 속 단비 내린다",
+     "u": "https://www.econovill.com/news/articleView.html?idxno=753229",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "노트북",
+   "shorts": false
+  },
+  {
+   "kw": "바르는 장갑, 쉴딩 로션",
+   "products": [
+    "글러브인어보틀 (Gloves In A Bottle)"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "홈쇼핑 3회 연속 매진, 완판",
+    "홈쇼핑 채널에서 3회 연속 완판 기록"
+   ],
+   "links": [
+    {
+     "t": "글러브인어보틀, 홈쇼핑 3회 연속 매진 ··· 올해 마지막 방송도 완판",
+     "u": "https://www.datanet.co.kr/news/articleView.html?idxno=215210",
+     "d": "2026-10-20"
+    },
+    {
+     "t": "글러브인어보틀, 겨울 보습 수요 업고 홈쇼핑 3연속 매진",
+     "u": "http://www.beyondpost.co.kr/view.php?ud=202610201145418888d3244b4fed_30",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "3회 연속 매진",
+   "kw_clean": "보습 크림",
+   "shorts": true
+  },
+  {
+   "kw": "EMS 발마사지기, 발마사지기",
+   "products": [
+    "바디앤 EMS 트위핏 발마사지기"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "준비 수량 판매 완료, 첫 방송에서 준비한 수량이 모두 판매돼",
+    "런칭 첫 방송서 ‘완판’"
+   ],
+   "links": [
+    {
+     "t": "롯데홈쇼핑 첫선 '바디앤 EMS 트위핏 발마사지기' 준비 수량 판매 완료",
+     "u": "http://www.newsroad.co.kr/news/articleView.html?idxno=65458",
+     "d": "2026-10-08"
+    },
+    {
+     "t": "'바디앤 EMS 트위핏 발마사지기’, 롯데홈쇼핑 런칭 첫 방송서 ‘완판’",
+     "u": "https://www.gosiweek.com/article/1065576059560996",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "완판",
+   "kw_clean": "발마사지기",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 실용 굿즈",
+   "products": [
+    "인기 캐릭터 굿즈 (텀블러, 파우치 등)",
+    "세븐일레븐 캐릭터 굿즈"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "2030": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "실용성과 수집 요소를 더한 굿즈 상품 인기",
+    "주요 인기 상품, 20~30대가 전체의 61.3% 차지"
+   ],
+   "links": [
+    {
+     "t": "[유통갤러리] 현대퓨처넷, 'AI 시대 미디어 공간 기획' 웨비나 개최 外",
+     "u": "https://theviewers.co.kr/View.aspx?No=4256068",
+     "d": "2026-10-08"
+    },
+    {
+     "t": "[유통소식] 이마트, '가을의 맛' 신선식품 할인",
+     "u": "http://www.4th.kr/news/articleView.html?idxno=2119365",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "한샘 소파, 가죽 소파",
+   "products": [
+    "한샘 '더마스터' 소파",
+    "한샘 '레더' 소파"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "4050": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "꾸준한 인기, 40~50대 고객층 선호",
+    "꾸준한 인기, 40~50대 고객층 선호"
+   ],
+   "links": [
+    {
+     "t": "한샘, ‘스위브’ 5종으로 소파 선택지 확대…소재·기능 세분화",
+     "u": "http://www.newstomato.com/ReadNews.aspx?no=1315927&inflow=N",
+     "d": "2026-10-07"
+    },
+    {
+     "t": "한샘, ‘스위브’ 5종으로 소파 선택지 확대…소재·기능 세분화",
+     "u": "http://www.newstomato.com/ReadNews.aspx?no=1315927&inflow=N",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "소파",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 인기 캐릭터",
+   "products": [
+    "인기 캐릭터 상품"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "인기 캐릭터",
+    "인기 캐릭터"
+   ],
+   "links": [
+    {
+     "t": "롯데 임직원·가족 1만7000명 웃음꽃… 부산서 화합의 장",
+     "u": "https://www.fnnews.com/news/202610181908539235",
+     "d": "2026-10-18"
+    },
+    {
+     "t": "'롯데 러브 패밀리 페스티벌' 부산서도 열기 뜨거웠다",
+     "u": "https://www.fnnews.com/news/202610181015459930",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐릭터 상품",
+   "shorts": true
+  },
+  {
+   "kw": "파크골프 용품, 파크골프 장비",
+   "products": [
+    "파크골프 스틱, 파크골프 공",
+    "낫소 파크골프 용품, 다원솔루텍 파크골프 용품"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "5060": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "파크골프 인기",
+    "K-Sports 산업 첨단 기술력"
+   ],
+   "links": [
+    {
+     "t": "새마을금고, 전국 파크골프 어울림 한마당 개최",
+     "u": "https://www.cnbnews.com/news/articleView.html?idxno=1019285",
+     "d": "2026-10-14"
+    },
+    {
+     "t": "‘K-Sports Beyond’ 한국 스포츠산업 첨단 기술력과 잠재력 조명",
+     "u": "https://sports.khan.co.kr/article/202610130744013?pt=nv",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "파크골프 용품",
+   "shorts": true
+  },
+  {
+   "kw": "블루엘리펀트 안경, 선글라스",
+   "products": [
+    "블루엘리펀트 아이웨어"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "아이웨어 브랜드",
+    "아이웨어 브랜드"
+   ],
+   "links": [
+    {
+     "t": "[똑똑한트렌드] 블루엘리펀트, 락피쉬웨더웨어, 오르(ORR), 아웃도어 보...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261013021215612",
+     "d": "2026-10-13"
+    },
+    {
+     "t": "[유통딜리버리] 신세계 팩토리스토어ㆍCUㆍGS리테일ㆍ세븐일레븐ㆍSSG닷...",
+     "u": "https://www.dnews.co.kr/uhtml/view.jsp?idxno=202610130859417950281",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "아이웨어",
+   "shorts": true
+  },
+  {
+   "kw": "미니골프, 실내골프",
+   "products": [
+    "미니골프 세트",
+    "미니 골프 세트"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 2,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "다채로운 체험부스도 운영돼 가족 단위 방문객들에게 큰 인기를 끌었다.",
+    "다채로운 체험 부스가 운영돼 즐거움을 더했다."
+   ],
+   "links": [
+    {
+     "t": "제31회 달성군민체육대회 성황 개최…1만여 명 하나로 뭉친 화합의 장",
+     "u": "https://www.dnews.co.kr/uhtml/view.jsp?idxno=202610110912440760022",
+     "d": "2026-10-12"
+    },
+    {
+     "t": "달성군, '제31회 군민체육대회' 성황리 개최",
+     "u": "https://www.idaegu.co.kr/news/articleView.html?idxno=561908",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "미니골프 세트",
+   "shorts": true
+  },
+  {
+   "kw": "무인양품 추천, 무지템",
+   "products": [
+    "무인양품 꿀템",
+    "무인양품 품절템"
+   ],
+   "grps": {
+    "화제": 2
+   },
+   "who": {
+    "전체": 2
+   },
+   "n_news": 0,
+   "n_yt": 2,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 난리 난",
+    "sold-out viral items"
+   ],
+   "links": [
+    {
+     "t": "요즘 난리 난 생도넛 오픈런 후기! 무인양품 직구 꿀템과 간단한 여름 밥상",
+     "u": "https://youtu.be/A-R7O3M3wnc",
+     "d": ""
+    },
+    {
+     "t": "MUJI is trending lately, right?! I bought all the sold-out v",
+     "u": "https://youtu.be/kv30Y8MaNWs",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "sold-out viral items",
+   "kw_clean": "무인양품 꿀템",
+   "shorts": true
+  },
+  {
+   "kw": "전기요, 온열매트",
+   "products": [
+    "코스트코 전기요",
+    "한일 전기요"
+   ],
+   "grps": {
+    "5060": 2
+   },
+   "who": {
+    "5060": 2
+   },
+   "n_news": 0,
+   "n_yt": 2,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "효도템, 비교분석 추천",
+    "효도템, 비교분석 추천"
+   ],
+   "links": [
+    {
+     "t": "부모님 효도템! 코스트코 vs. 한일 전기요 비교분석  추천",
+     "u": "https://youtu.be/SjckNoTXbAw",
+     "d": ""
+    },
+    {
+     "t": "부모님 효도템! 코스트코 vs. 한일 전기요 비교분석  추천",
+     "u": "https://youtu.be/SjckNoTXbAw",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "전기요",
+   "shorts": true
+  },
+  {
+   "kw": "버블 마스크팩",
+   "products": [
+    "메노킨 크림버블마스크"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란 일으킨 브랜드의 신제품"
+   ],
+   "links": [
+    {
+     "t": "메노킨, 버블팩에 크림버블 더한 ‘크림버블마스크’ 2종 선봬",
+     "u": "http://www.segyebiz.com/newsView/20261016519201?OutUrl=naver",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "버블마스크",
+   "shorts": true
+  },
+  {
+   "kw": "폴더블 아이폰",
+   "products": [
+    "아이폰 듀오"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "예약 30분 만에 품절, 배송 2027년 1월로 밀림"
+   ],
+   "links": [
+    {
+     "t": "아이폰 듀오, 예약 30분 만에 '품절'…美 배송 2027년 1월로 밀렸다",
+     "u": "https://www.the-today.com/news/articleView.html?idxno=92025",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "예약 30분 만에 '품절'",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "다이소 스텐 찬통",
+   "products": [
+    "다이소 손잡이형 에어홀 스테인리스 304 찬통"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란 예고, 주방 필수템"
+   ],
+   "links": [
+    {
+     "t": "품절대란 예고…다이소서 새로 출시된 '주방 필수템'",
+     "u": "https://www.wikitree.co.kr/articles/1166558",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "스테인리스 찬통",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 팝콘통",
+   "products": [
+    "CGV 치이카와 팝콘통"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 온라인 예약 판매, 한정 판매"
+   ],
+   "links": [
+    {
+     "t": "CGV 먼작귀 팝콘통 가격은 #치이카와",
+     "u": "https://www.bntnews.co.kr/article/view/bnt202610160206",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "치이카와 팝콘통",
+   "shorts": true
+  },
+  {
+   "kw": "스타벅스 폴더블백",
+   "products": [
+    "스타벅스 폴더블 백 키링 (글레이즈드 백)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 신규 색상 선보임"
+   ],
+   "links": [
+    {
+     "t": "스타벅스, 결제액 회복세 이어 '봉다리백' 굿즈 흥행 열기 잇는다",
+     "u": "https://www.newsis.com/view/NISX20261015_0003827164",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "폴더블 백 키링",
+   "shorts": true
+  },
+  {
+   "kw": "순성 올인원 카시트",
+   "products": [
+    "순성 우노 (올인원 카시트)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "육아": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "대표 올인원 카시트, 할인 행사"
+   ],
+   "links": [
+    {
+     "t": "순성X네이버 베이비&키즈 세일 페스타 최대 52% 할인-사은품",
+     "u": "https://www.abcn.kr/news/articleView.html?idxno=93019",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "카시트",
+   "shorts": true
+  },
+  {
+   "kw": "순성 주니어 카시트",
+   "products": [
+    "순성 노바 (주니어 카시트)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "육아": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "높은 인기로 품절 대란, 할인 행사"
+   ],
+   "links": [
+    {
+     "t": "순성X네이버 베이비&키즈 세일 페스타 최대 52% 할인-사은품",
+     "u": "https://www.abcn.kr/news/articleView.html?idxno=93019",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "주니어 카시트",
+   "shorts": true
+  },
+  {
+   "kw": "봉은사 공덕 키링",
+   "products": [
+    "봉은사 공덕키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 두 시간 반 만에 품절, MZ 핫플"
+   ],
+   "links": [
+    {
+     "t": "\"재물운 얻고 가자\" 별안간 'MZ 핫플' 된 봉은사… 공덕키링 굿즈도 품절...",
+     "u": "https://www.hankookilbo.com/news/article/A2026100516190004347?did=NA",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "공덕키링 굿즈도 품절",
+   "kw_clean": "공덕 키링",
+   "shorts": true
+  },
+  {
+   "kw": "몬치치 리유저블 컵",
+   "products": [
+    "배스킨라빈스 몬치치 리유저블 컵"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 2차 판매 진행"
+   ],
+   "links": [
+    {
+     "t": "배스킨라빈스 “몬치치 협업 한번 더”…크로스백 한정 판매",
+     "u": "https://biz.heraldcorp.com/article/10900730?ref=naver",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "몬치치 리유저블 컵",
+   "shorts": true
+  },
+  {
+   "kw": "다이소 자동 물빠짐",
+   "products": [
+    "다이소 자동 물 빠짐 스테인리스 비누 받침대"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-06",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란템, 3000원 필수템"
+   ],
+   "links": [
+    {
+     "t": "품절되기 전에 보세요…안 사면 100% 후회하는 다이소 3000원 '필수템'",
+     "u": "https://www.wikitree.co.kr/articles/1164282",
+     "d": "2026-10-06"
+    }
+   ],
+   "demand": true,
+   "evidence": "품절되기 전에 보세요",
+   "kw_clean": "비누 받침대",
+   "shorts": true
+  },
+  {
+   "kw": "갤럭시 트라이폴드",
+   "products": [
+    "삼성전자 갤럭시Z 트라이폴드"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "10차례 재입고에서도 완판 행진"
+   ],
+   "links": [
+    {
+     "t": "아이폰 듀오 흥행에 삼성전자 폴더블폰 1위 위태, 노태문 트라이폴드 포...",
+     "u": "https://www.businesspost.co.kr/BP?command=article_view&num=449691",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "경주마 키링",
+   "products": [
+    "경주마 인형 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "완판 행진, 팬들의 소장 욕구 자극"
+   ],
+   "links": [
+    {
+     "t": "한국마사회, 말마프렌즈 스토어 팝업 확대...경주마 굿즈 완판 행진",
+     "u": "https://www.cnbnews.com/news/articleView.html?idxno=1019789",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "경주마 굿즈 완판 행진",
+   "kw_clean": "경주마 키링",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 굿즈",
+   "products": [
+    "치이카와 한정판 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "한정판 굿즈, 팝업스토어 열기, 완판 행진"
+   ],
+   "links": [
+    {
+     "t": "상영횟수 2배 적은데 회당 관객수 훨씬 앞서… 치이카와, '귀여움'으로 ...",
+     "u": "http://www.ttlnews.com/news/articleView.html?idxno=3150652",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "치이카와 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "폴더블폰, 접는 폰",
+   "products": [
+    "폴더블폰"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030|5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "출시 초기 완판 행진"
+   ],
+   "links": [
+    {
+     "t": "[폴더블 대전환③·끝] '접는 재미'는 끝났다… 승부는 두께와 화면",
+     "u": "http://www.the-biz.co.kr/news/articleView.html?idxno=728948",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "폴더블폰, 아이폰",
+   "products": [
+    "아이폰 듀오"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "3개월 대기 필수, 사전예약 주문 몰림"
+   ],
+   "links": [
+    {
+     "t": "\"오픈런 해도 못 산다\"…3개월 대기 필수된 '아이폰 듀오'",
+     "u": "https://www.newsis.com/view/NISX20261019_0003832262",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "3개월 대기 필수",
+   "kw_clean": "폴더블폰",
+   "shorts": false
+  },
+  {
+   "kw": "전기면도기, 필립스 면도기",
+   "products": [
+    "필립스 전기면도기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오늘의 특가, 쿠팡 '쿠가세' 참여"
+   ],
+   "links": [
+    {
+     "t": "[오늘의 특가] 필립스코리아, 쿠팡 '쿠가세' 참여…전기면도기·전동칫...",
+     "u": "https://www.ibabynews.com/news/articleView.html?idxno=155345",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "전기면도기",
+   "shorts": true
+  },
+  {
+   "kw": "전동칫솔, 필립스 칫솔",
+   "products": [
+    "필립스 전동칫솔"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오늘의 특가, 쿠팡 '쿠가세' 참여"
+   ],
+   "links": [
+    {
+     "t": "[오늘의 특가] 필립스코리아, 쿠팡 '쿠가세' 참여…전기면도기·전동칫...",
+     "u": "https://www.ibabynews.com/news/articleView.html?idxno=155345",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "전동칫솔",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 키링, 애니 굿즈",
+   "products": [
+    "애니 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "SNS 유행, 오픈런 현상, 큰 인기"
+   ],
+   "links": [
+    {
+     "t": "애니 키링·육포 키캡… 식품업계 굿즈 마케팅 활발",
+     "u": "https://www.fnnews.com/news/202610191829293365",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "애니 키링",
+   "shorts": true
+  },
+  {
+   "kw": "키캡, 육포 키캡",
+   "products": [
+    "육포 키캡"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "SNS 유행, 오픈런 현상, 큰 인기"
+   ],
+   "links": [
+    {
+     "t": "애니 키링·육포 키캡… 식품업계 굿즈 마케팅 활발",
+     "u": "https://www.fnnews.com/news/202610191829293365",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "육포 키캡",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 카드, 트레이딩 카드",
+   "products": [
+    "캐릭터 카드"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "수집 열풍, 카드숍 오픈런"
+   ],
+   "links": [
+    {
+     "t": "만화 보고 자란 어른들, 캐릭터 카드에 열광…카드숍 열리자마자 오픈런",
+     "u": "http://www.mbn.co.kr/pages/news/newsView.php?news_seq_no=5225485",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "카드숍 열리자마자 오픈런",
+   "kw_clean": "캐릭터 카드",
+   "shorts": true
+  },
+  {
+   "kw": "GD 모자, 맥도날드 굿즈, 레트로 모자",
+   "products": [
+    "맥도날드 GD 모자"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "GD 모자, 싱가포르 들썩, 맥도날드 오픈런, 한정 판매"
+   ],
+   "links": [
+    {
+     "t": "[위클리비즈] ‘GD 모자’에 싱가포르 '들썩'...맥도날드 오픈런",
+     "u": "https://www.sentv.co.kr/article/view/sentv202610150069",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "맥도날드 오픈런",
+   "kw_clean": "GD 모자",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 굿즈, 캐릭터 굿즈",
+   "products": [
+    "치이카와 굿즈 (한정판 신제품)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "한정판 신제품 발매, 오픈런, 전날 밤부터 대기"
+   ],
+   "links": [
+    {
+     "t": "'치이카와'에 열광하는 20대…캐릭터·세계관 갖고 논다",
+     "u": "https://www.newsis.com/view/NISX20261015_0003828165",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "치이카와 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "스타벅스 스피커, 렉슨 스피커, 포터블 스피커",
+   "products": [
+    "스타벅스 렉슨 포터블 스피커"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "굿즈 대란, e-프리퀀시, 렉슨 협업"
+   ],
+   "links": [
+    {
+     "t": "\"굿즈 대란 또 올까\"…스타벅스, 실용성·IT 편의 더한 '2026 겨울 e-프리...",
+     "u": "https://www.dailyt.co.kr/newsView/dlt202610150013",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "굿즈 대란",
+   "kw_clean": "포터블 스피커",
+   "shorts": true
+  },
+  {
+   "kw": "스타벅스 키링, 몰스킨 키링, 미니 노트",
+   "products": [
+    "스타벅스 미니 노트 키링 (몰스킨 협업)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "굿즈 대란, e-프리퀀시, 몰스킨 협업"
+   ],
+   "links": [
+    {
+     "t": "\"굿즈 대란 또 올까\"…스타벅스, 실용성·IT 편의 더한 '2026 겨울 e-프리...",
+     "u": "https://www.dailyt.co.kr/newsView/dlt202610150013",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "굿즈 대란",
+   "kw_clean": "미니 노트 키링",
+   "shorts": true
+  },
+  {
+   "kw": "스타벅스 북커버, 다이어리 커버",
+   "products": [
+    "스타벅스 북 커버"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "굿즈 대란, e-프리퀀시"
+   ],
+   "links": [
+    {
+     "t": "\"굿즈 대란 또 올까\"…스타벅스, 실용성·IT 편의 더한 '2026 겨울 e-프리...",
+     "u": "https://www.dailyt.co.kr/newsView/dlt202610150013",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "굿즈 대란",
+   "kw_clean": "북 커버",
+   "shorts": true
+  },
+  {
+   "kw": "온 러닝화, 스위스 러닝화",
+   "products": [
+    "On 러닝화"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "직영점 개장 첫날 오픈런, 글로벌 러닝화 판도 뒤흔듦"
+   ],
+   "links": [
+    {
+     "t": "[안재형 기자의 트렌드가 된 브랜드] (47) On | 글로벌 러닝화 판도 뒤흔...",
+     "u": "https://www.mk.co.kr/article/12175777",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "러닝화",
+   "shorts": true
+  },
+  {
+   "kw": "젠틀몬스터 프라다, 명품 선글라스, 콜라보 안경",
+   "products": [
+    "젠틀몬스터 프라다 협업 컬렉션"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "한국 판매 물량 완판, 출시 이후 며칠간 오픈런"
+   ],
+   "links": [
+    {
+     "t": "젠틀몬스터, 프라다 협업 컬렉션 한국 판매 물량 완판",
+     "u": "http://www.apparelnews.co.kr/news/news_view/?idx=228234",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "한국 판매 물량 완판",
+   "kw_clean": "아이웨어",
+   "shorts": true
+  },
+  {
+   "kw": "로보락 로봇청소기, 스팀 로봇청소기",
+   "products": [
+    "로보락 S10 MaxV Ultra Steam 로봇청소기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "신제품 출시, 쿠가세 행사"
+   ],
+   "links": [
+    {
+     "t": "[가전트렌드] 쿠팡, 하반기 최대 가전·디지털 행사 '쿠가세' 개막 外",
+     "u": "https://www.ibabynews.com/news/articleView.html?idxno=155202",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로봇청소기",
+   "shorts": true
+  },
+  {
+   "kw": "닌텐도 스위치, 게임기",
+   "products": [
+    "닌텐도 스위치 2"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 초특가 상품, 고객 선호도 높음"
+   ],
+   "links": [
+    {
+     "t": "유통업계, 가을 맞이 대규모 할인 및 기획전 진행...쿠팡·SSG닷컴·오늘...",
+     "u": "http://www.dailypop.kr/news/articleView.html?idxno=103321",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "닌텐도 스위치",
+   "shorts": true
+  },
+  {
+   "kw": "먼작귀 팝콘통, 캐릭터 굿즈",
+   "products": [
+    "CGV 먼작귀 팝콘통"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "치이카와 열풍, 오픈런, 리셀, 38% 프리미엄 거래"
+   ],
+   "links": [
+    {
+     "t": "\"밤샘 대기에 5배 웃돈까지\"… '치이카와' 열풍이 남긴 키덜트 경제 명...",
+     "u": "http://www.economytalk.kr/news/articleView.html?idxno=424600",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "밤샘 대기에 5배 웃돈까지",
+   "kw_clean": "캐릭터 팝콘통",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 키링, 캐릭터 굿즈",
+   "products": [
+    "치이카와 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "치이카와 열풍, 오픈런, 리셀, 인기 키링 제품"
+   ],
+   "links": [
+    {
+     "t": "\"밤샘 대기에 5배 웃돈까지\"… '치이카와' 열풍이 남긴 키덜트 경제 명...",
+     "u": "http://www.economytalk.kr/news/articleView.html?idxno=424600",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "밤샘 대기에 5배 웃돈까지",
+   "kw_clean": "캐릭터 키링",
+   "shorts": true
+  },
+  {
+   "kw": "대형 가전, 냉장고",
+   "products": [
+    "냉장고"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "[유통家 단신] 다이소몰·쿠팡 등",
+     "u": "https://www.ezyeconomy.com/news/articleView.html?idxno=240685",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "냉장고",
+   "shorts": false
+  },
+  {
+   "kw": "대형 가전, 세탁기",
+   "products": [
+    "세탁기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "[유통家 단신] 다이소몰·쿠팡 등",
+     "u": "https://www.ezyeconomy.com/news/articleView.html?idxno=240685",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "세탁기",
+   "shorts": false
+  },
+  {
+   "kw": "대형 가전, TV",
+   "products": [
+    "TV"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "[유통家 단신] 다이소몰·쿠팡 등",
+     "u": "https://www.ezyeconomy.com/news/articleView.html?idxno=240685",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "TV",
+   "shorts": false
+  },
+  {
+   "kw": "디지털 기기, 노트북",
+   "products": [
+    "노트북"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "[유통家 단신] 다이소몰·쿠팡 등",
+     "u": "https://www.ezyeconomy.com/news/articleView.html?idxno=240685",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "노트북",
+   "shorts": false
+  },
+  {
+   "kw": "생활 가전, 로봇청소기",
+   "products": [
+    "로봇청소기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "[유통家 단신] 다이소몰·쿠팡 등",
+     "u": "https://www.ezyeconomy.com/news/articleView.html?idxno=240685",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "로봇청소기",
+   "shorts": true
+  },
+  {
+   "kw": "계절 가전, 전기히터",
+   "products": [
+    "전기히터"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 겨울철 수요, 2만원대"
+   ],
+   "links": [
+    {
+     "t": "쿠팡, 하반기 가전·디지털 행사에 300여 개 브랜드 참여",
+     "u": "https://www.lawissue.co.kr/view.php?ud=202610121544166780204ead0791_12",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "전기히터",
+   "shorts": true
+  },
+  {
+   "kw": "계절 가전, 가습기",
+   "products": [
+    "가습기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 겨울철 수요, 2만원대"
+   ],
+   "links": [
+    {
+     "t": "쿠팡, 하반기 가전·디지털 행사에 300여 개 브랜드 참여",
+     "u": "https://www.lawissue.co.kr/view.php?ud=202610121544166780204ead0791_12",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "가습기",
+   "shorts": true
+  },
+  {
+   "kw": "리버서블 매트리스, 현대리바트 매트리스",
+   "products": [
+    "현대리바트 210 리버서블 매트리스"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "신제품 출시, 쿠가세 행사"
+   ],
+   "links": [
+    {
+     "t": "쿠팡·현대리바트 '쿠가세' 개막·'210 리버서블 매트리스' 출시",
+     "u": "http://www.wsobi.com/news/articleView.html?idxno=319503",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "매트리스",
+   "shorts": false
+  },
+  {
+   "kw": "주방가전, 생활 가전",
+   "products": [
+    "주방가전"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "쿠가세, 2시 오픈런, 특가 상품 400여개"
+   ],
+   "links": [
+    {
+     "t": "쿠팡, 하반기 최대 가전·디지털 행사 ‘쿠가세’ 개막",
+     "u": "https://www.seoultimes.news/news/article.html?no=2000100767",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "주방가전",
+   "shorts": false
+  },
+  {
+   "kw": "캐릭터 굿즈, IP 상품",
+   "products": [
+    "IP 캐릭터 상품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "국내 첫 선, 오픈런, 일평균 매출 5000만원"
+   ],
+   "links": [
+    {
+     "t": "[현장]\"명품만으론 안 된다\"…日 파르코·韓 아이파크몰 홀린 IP 콘텐츠",
+     "u": "https://www.newsis.com/view/NISX20261012_0003821965",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "캐릭터 상품",
+   "shorts": true
+  },
+  {
+   "kw": "김치냉장고, 김장 가전",
+   "products": [
+    "김장철 가전"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 초특가 상품"
+   ],
+   "links": [
+    {
+     "t": "쿠팡 우아한형제들 롯데칠성음료 外(유통家 이모저모)",
+     "u": "https://www.newsclaim.co.kr/news/articleView.html?idxno=3078053",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "김장 가전",
+   "shorts": false
+  },
+  {
+   "kw": "쿠첸 밥솥, 주방가전",
+   "products": [
+    "쿠첸 밥솥"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 주력 제품 할인"
+   ],
+   "links": [
+    {
+     "t": "삼성·LG·애플까지 300개 브랜드 총출동…쿠팡 가전 할인전 열렸다",
+     "u": "https://www.segye.com/newsView/20261012509105?OutUrl=naver",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "밥솥",
+   "shorts": true
+  },
+  {
+   "kw": "쿠첸 인덕션, 주방가전",
+   "products": [
+    "쿠첸 인덕션"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 주력 제품 할인"
+   ],
+   "links": [
+    {
+     "t": "삼성·LG·애플까지 300개 브랜드 총출동…쿠팡 가전 할인전 열렸다",
+     "u": "https://www.segye.com/newsView/20261012509105?OutUrl=naver",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "인덕션",
+   "shorts": true
+  },
+  {
+   "kw": "쿠첸 음식물처리기, 주방가전",
+   "products": [
+    "쿠첸 음식물처리기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "2시 오픈런, 주력 제품 할인"
+   ],
+   "links": [
+    {
+     "t": "삼성·LG·애플까지 300개 브랜드 총출동…쿠팡 가전 할인전 열렸다",
+     "u": "https://www.segye.com/newsView/20261012509105?OutUrl=naver",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "음식물처리기",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 바인더, 굿즈 바인더",
+   "products": [
+    "9칸 양면 바인더 세트"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "행사가 시작되자마자 오픈런"
+   ],
+   "links": [
+    {
+     "t": "[취재] 열화와 같은 성원으로 일러스타 페스 14를 빛낸 '니벨아레나'",
+     "u": "https://game.donga.com/124609/",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "바인더 세트",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 키링, 굿즈 키링",
+   "products": [
+    "각종 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "행사가 시작되자마자 오픈런"
+   ],
+   "links": [
+    {
+     "t": "[취재] 열화와 같은 성원으로 일러스타 페스 14를 빛낸 '니벨아레나'",
+     "u": "https://game.donga.com/124609/",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "키링",
+   "shorts": true
+  },
+  {
+   "kw": "젬블로 보드게임, 보드게임",
+   "products": [
+    "보드 게임"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "행사가 시작되자마자 오픈런"
+   ],
+   "links": [
+    {
+     "t": "[취재] 열화와 같은 성원으로 일러스타 페스 14를 빛낸 '니벨아레나'",
+     "u": "https://game.donga.com/124609/",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "보드 게임",
+   "shorts": true
+  },
+  {
+   "kw": "로봇청소기, 로보락",
+   "products": [
+    "로보락 로봇청소기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "청소기 브랜드 대전 할인 판매"
+   ],
+   "links": [
+    {
+     "t": "롯데하이마트, 10월 가전 할인전···로보락·드리미 로봇청소기도 특...",
+     "u": "https://www.smartbizn.com/news/articleView.html?idxno=156016",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로봇청소기",
+   "shorts": true
+  },
+  {
+   "kw": "로봇청소기, 드리미",
+   "products": [
+    "드리미 로봇청소기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "청소기 브랜드 대전 할인 판매"
+   ],
+   "links": [
+    {
+     "t": "롯데하이마트, 10월 가전 할인전···로보락·드리미 로봇청소기도 특...",
+     "u": "https://www.smartbizn.com/news/articleView.html?idxno=156016",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로봇청소기",
+   "shorts": true
+  },
+  {
+   "kw": "다이슨 무선청소기, 청소기",
+   "products": [
+    "다이슨 청소기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "청소기 브랜드 대전 할인 판매"
+   ],
+   "links": [
+    {
+     "t": "롯데하이마트, 10월 가전 할인전···로보락·드리미 로봇청소기도 특...",
+     "u": "https://www.smartbizn.com/news/articleView.html?idxno=156016",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "청소기",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 캐릭터, 캐릭터 굿즈",
+   "products": [
+    "치이카와 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "밤샘 오픈런, 중고거래 플랫폼에서 웃돈 거래"
+   ],
+   "links": [
+    {
+     "t": "“어제 밤 11시반부터 기다렸어요”…밤샘 오픈런 ‘치이카와’, 그게 ...",
+     "u": "https://www.segye.com/newsView/20261008511196?OutUrl=naver",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "밤샘 오픈런",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "골전도 이어폰, 샥즈 이어폰",
+   "products": [
+    "샥즈 오픈런 에어 2"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "제품 크기와 무게를 20g대 중반까지 낮춰 장시간 착용 시 피로도 줄임"
+   ],
+   "links": [
+    {
+     "t": "단풍 라이딩부터 겨울 산행까지... '기록·배터리·착용감' 중심으로 본...",
+     "u": "https://www.insight.co.kr/news/576927",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "무선 이어폰",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 굿즈, 캐릭터 팝콘통",
+   "products": [
+    "치이카와 팝콘통"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "1인당 종류별 2개 구매 제한, 극장 오픈런"
+   ],
+   "links": [
+    {
+     "t": "'극장판 치이카와' 관객을 극장으로 이끈 귀여움의 힘",
+     "u": "https://news.jtbc.co.kr/article/NB12321822?influxDiv=NAVER",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "캐릭터 팝콘통",
+   "shorts": true
+  },
+  {
+   "kw": "영화 키링, 캐릭터 키링",
+   "products": [
+    "영화 굿즈 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-06",
+   "shortsable": true,
+   "buzz": [
+    "판매 3시간 전부터 40m 줄, 오픈런"
+   ],
+   "links": [
+    {
+     "t": "판매 3시간 전부터 40m 줄 선 씨네필 \"키링·배지 꼭 갖고 싶어요\" [BIFF ...",
+     "u": "https://www.busan.com/view/busan/view.php?code=2026100620071382842",
+     "d": "2026-10-06"
+    }
+   ],
+   "demand": true,
+   "evidence": "판매 3시간 전부터 40m 줄",
+   "kw_clean": "영화 키링",
+   "shorts": true
+  },
+  {
+   "kw": "영화 배지, 캐릭터 배지",
+   "products": [
+    "영화 굿즈 배지"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-06",
+   "shortsable": true,
+   "buzz": [
+    "판매 3시간 전부터 40m 줄, 오픈런"
+   ],
+   "links": [
+    {
+     "t": "판매 3시간 전부터 40m 줄 선 씨네필 \"키링·배지 꼭 갖고 싶어요\" [BIFF ...",
+     "u": "https://www.busan.com/view/busan/view.php?code=2026100620071382842",
+     "d": "2026-10-06"
+    }
+   ],
+   "demand": true,
+   "evidence": "판매 3시간 전부터 40m 줄",
+   "kw_clean": "영화 배지",
+   "shorts": true
+  },
+  {
+   "kw": "아이돌 굿즈, KPOP 굿즈",
+   "products": [
+    "아이돌 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "군백기 대응으로 미리 제작, 역주행"
+   ],
+   "links": [
+    {
+     "t": "[양성희의 문화참견] 패노메논, 여전히 남은 우려들",
+     "u": "https://www.joongang.co.kr/article/25469824",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "아이돌 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "먼작귀 게임, 캐릭터 게임",
+   "products": [
+    "먼작귀 포켓 게임"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "영화 흥행 계기로 역주행"
+   ],
+   "links": [
+    {
+     "t": "[데일리토픽] 영화 유행이 만들어낸 게임 역주행, '먼작귀 포켓' 게임 부...",
+     "u": "http://www.finomy.com/news/articleView.html?idxno=263564",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "게임 역주행",
+   "kw_clean": "포켓 게임",
+   "shorts": true
+  },
+  {
+   "kw": "스팀 게임, PC 게임",
+   "products": [
+    "아크 레이더스 게임"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "2.0 업데이트 및 할인 힘입어 역주행, 스팀 글로벌 매출 3위, 동시 접속자 15만 명 돌파"
+   ],
+   "links": [
+    {
+     "t": "'아크 레이더스', 2.0 업데이트·할인 힘입어 역주행… 스팀 글로벌 매출...",
+     "u": "https://www.khgames.co.kr/news/articleView.html?idxno=309245",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "역주행… 스팀 글로벌 매출",
+   "kw_clean": "PC 게임",
+   "shorts": true
+  },
+  {
+   "kw": "모바일 게임, 캐릭터 게임",
+   "products": [
+    "니케 게임"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "4주년 역대 최대 업데이트 예고, 역주행 신화 기대"
+   ],
+   "links": [
+    {
+     "t": "시프트업 '니케' 4주년 승부수…역대 최대 업데이트 예고",
+     "u": "https://sports.hankooki.com/news/articleView.html?idxno=6941477",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "모바일 게임",
+   "shorts": true
+  },
+  {
+   "kw": "비녀, 한복 장신구",
+   "products": [
+    "비녀"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "SNS 입소문, 판매 증가, 젊은 세대 인기"
+   ],
+   "links": [
+    {
+     "t": "할머니 장신구의 화려한 변신…SNS 타고 다시 뜨는 '비녀'",
+     "u": "https://view.asiae.co.kr/article/2026101909503410258",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "SNS 타고 다시 뜨는",
+   "kw_clean": "비녀",
+   "shorts": true
+  },
+  {
+   "kw": "초경량 게이밍 마우스",
+   "products": [
+    "커세어 세이버 v2 PRO 초경량 무선 게이밍 마우스"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "초경량 강세, 자주 판매"
+   ],
+   "links": [
+    {
+     "t": "여전한 초경량 강세, 가격대별 추천 게이밍 마우스는?",
+     "u": "https://www.gamemeca.com/mv.php?inflow=naver_s&gid=1781861",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "게이밍 마우스",
+   "shorts": true
+  },
+  {
+   "kw": "가성비 게이밍 마우스",
+   "products": [
+    "ATK F1 V3 Ultimate+ 게이밍 마우스"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "가성비로 입소문"
+   ],
+   "links": [
+    {
+     "t": "여전한 초경량 강세, 가격대별 추천 게이밍 마우스는?",
+     "u": "https://www.gamemeca.com/mv.php?inflow=naver_s&gid=1781861",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "게이밍 마우스",
+   "shorts": true
+  },
+  {
+   "kw": "나무 식판, 친환경 식판",
+   "products": [
+    "100% 나무 소재 식판"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "출시와 동시에 1500개 모두 판매, 입소문 타고 인기"
+   ],
+   "links": [
+    {
+     "t": "\"좋은 일자리‧사회 공헌, '제주의 삼성' 만들겠다\"",
+     "u": "https://www.jejumaeil.net/news/articleView.html?idxno=405417",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "나무 식판",
+   "shorts": true
+  },
+  {
+   "kw": "유행 비녀, 한복 비녀",
+   "products": [
+    "비녀"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "판매량 30% 이상 급증, 요즘 20대가 꽂힘, 유행"
+   ],
+   "links": [
+    {
+     "t": "[와글와글] \"할머니가 하던 건데?\"‥요즘 20대가 꽂힌 '비녀'",
+     "u": "https://imnews.imbc.com/replay/2026/nwtoday/article/6859183_37012.html",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘 20대가 꽂힌 '비녀'",
+   "kw_clean": "비녀",
+   "shorts": true
+  },
+  {
+   "kw": "휴대용 산소통, 비상 산소통",
+   "products": [
+    "산소통"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "수요 급증"
+   ],
+   "links": [
+    {
+     "t": "인도네시아 산불로 주변국 주민 고통...공기청정기·산소통 수요 급증",
+     "u": "https://www.ytn.co.kr/_ln/0104_202610191759205668",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "수요 급증",
+   "kw_clean": "산소통",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 굿즈",
+   "products": [
+    "캐릭터 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "판매량 급증, 즉시 배송 수요 증가"
+   ],
+   "links": [
+    {
+     "t": "립스틱 이어 굿즈까지...배민, 비식품 퀵커머스 '승부수'",
+     "u": "https://www.mediapen.com/news/view/1130962",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "비녀, 헤어 액세서리",
+   "products": [
+    "비녀"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "인스타그램에 올라간 뒤 판매량 30% 급증, SNS 유행, 젊은 손님 많음"
+   ],
+   "links": [
+    {
+     "t": "\"디자인 예뻐요\"…동대문시장서 '비녀' 찾는 2030세대",
+     "u": "https://www.jnilbo.com/news/articleView.html?idxno=90000074507",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "'비녀' 찾는 2030세대",
+   "kw_clean": "비녀",
+   "shorts": true
+  },
+  {
+   "kw": "뷰티 디바이스, 홈케어 기기",
+   "products": [
+    "메디큐브 에이지알 뷰티 디바이스"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030|5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "해외 시장 판매량 급증"
+   ],
+   "links": [
+    {
+     "t": "해외 유통망 확장과 리프팅 수요 증대… 미용의료기기 주가 훈풍",
+     "u": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=496345",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "뷰티 디바이스",
+   "shorts": true
+  },
+  {
+   "kw": "아이폰 케이스, 범퍼 케이스",
+   "products": [
+    "메이드모먼 아이폰 듀오 범퍼 케이스"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "폴더블 케이스 판매량 50% 이상 급증, 신제품 출시"
+   ],
+   "links": [
+    {
+     "t": "메이드모먼, 맥세이프 호환성 강화한 아이폰 듀오 전용 범퍼 케이스 출...",
+     "u": "https://www.job-post.co.kr/news/articleView.html?idxno=232880",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "아이폰 케이스",
+   "shorts": true
+  },
+  {
+   "kw": "뷰티 디바이스, 부스터 프로",
+   "products": [
+    "에이피알 부스터 프로"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030|5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "대표 제품, 판매량 증거, 유럽 매출 380.3% 급증"
+   ],
+   "links": [
+    {
+     "t": "[生기업TALK] 시가총액 14조…뛰는 화장품 위에 나는 디바이스 '에이피알...",
+     "u": "http://www.sisacast.kr/news/articleView.html?idxno=100956",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "뷰티 디바이스",
+   "shorts": true
+  },
+  {
+   "kw": "호신용품, 호루라기",
+   "products": [
+    "호신용 호루라기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "판매 급증, 1000원짜리 호루라기까지 품절"
+   ],
+   "links": [
+    {
+     "t": "“길 걷는 것도 무서워”…구월동 흉기사건에 ‘1000원 호루라기’ 동났...",
+     "u": "https://www.mk.co.kr/article/12178579",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": true,
+   "evidence": "'1000원 호루라기' 동났",
+   "kw_clean": "호신용 호루라기",
+   "shorts": true
+  },
+  {
+   "kw": "옥반지, 은반지, 할매니얼 반지",
+   "products": [
+    "옥반지, 은반지"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "BTS 뷔도 반함, MZ 사로잡음, 20대 판매액 급증, SNS 언급 증가, 판매량 2배 이상 증가"
+   ],
+   "links": [
+    {
+     "t": "BTS 뷔도 반한 ‘할머니 반지’…MZ 사로잡은 ‘옥코어’",
+     "u": "https://sports.donga.com/ent/article/all/20261016/134844232/1",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "MZ 사로잡은",
+   "kw_clean": "옥반지 은반지",
+   "shorts": true
+  },
+  {
+   "kw": "호신용품",
+   "products": [
+    "호신용품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "검색과 판매량 대폭 증가"
+   ],
+   "links": [
+    {
+     "t": "\"1000원 호루라기 못 구해요?\" 발동동...흉기난동에 호신용품 '불티'",
+     "u": "https://www.mt.co.kr/living/2026/10/15/2026101515092268608",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "호신용품 '불티'",
+   "kw_clean": "호신용품",
+   "shorts": true
+  },
+  {
+   "kw": "맥북",
+   "products": [
+    "맥"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "판매가격 상승 (수요 급증에 따른)"
+   ],
+   "links": [
+    {
+     "t": "애플, 사상 첫 종가 기준 시총 5조 달러 돌파... 엔비디아 이어 세계 2번...",
+     "u": "https://www.insight.co.kr/news/577913",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "맥북",
+   "shorts": false
+  },
+  {
+   "kw": "세라젬 의료기기, 척추 관리",
+   "products": [
+    "세라젬 척추 관리 의료기기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "의료가전 시장 확대, 영업이익 12배 급증"
+   ],
+   "links": [
+    {
+     "t": "사원으로 입사해 창업주 양자된 이경수 세라젬 대표...이환성 회장, 지...",
+     "u": "https://www.livebiz.today/news/articleView.html?idxno=205738",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "척추 의료기기",
+   "shorts": true
+  },
+  {
+   "kw": "팝마트 굿즈, 아트토이",
+   "products": [
+    "팝마트 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "해외 매출 291.9% 급증"
+   ],
+   "links": [
+    {
+     "t": "중국 IP·콘텐츠 산업: 굿즈 경제 2000억 위안 시대, ‘돈 버는 방식’의...",
+     "u": "http://dream.kotra.or.kr/kotranews/cms/news/actionKotraBoardDetail.do?SITE_NO=3&MENU_ID=180&CONTENTS_NO=1&bbsGbn=243&bbsSn=243&pNttSn=244690",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "모리나이바이 굿즈, 한정 굿즈",
+   "products": [
+    "모리나이바이 테마 한정 굿즈 번들"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "신제품 출시 첫 주 1100만 잔 판매 돌파"
+   ],
+   "links": [
+    {
+     "t": "중국 IP·콘텐츠 산업: 굿즈 경제 2000억 위안 시대, ‘돈 버는 방식’의...",
+     "u": "http://dream.kotra.or.kr/kotranews/cms/news/actionKotraBoardDetail.do?SITE_NO=3&MENU_ID=180&CONTENTS_NO=1&bbsGbn=243&bbsSn=243&pNttSn=244690",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "로프트 문구, 일본 문구",
+   "products": [
+    "일본 로프트 문구"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "29CM 이구홈 거래액 10배 급증"
+   ],
+   "links": [
+    {
+     "t": "日 인기 문구와 손잡았더니…29CM 이구홈, 거래액 10배 '껑충'",
+     "u": "https://www.hankyung.com/article/202610202068g",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "거래액 10배 '껑충'",
+   "kw_clean": "일본 문구",
+   "shorts": true
+  },
+  {
+   "kw": "코웨이 정수기, 렌탈 정수기",
+   "products": [
+    "코웨이 정수기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "태국 정수기 수요 급증, 사상 최대 실적"
+   ],
+   "links": [
+    {
+     "t": "K-렌털, 태국·말레이시아 공략 가속…성과도 뒷받침",
+     "u": "https://www.newspim.com/news/view/20261019001085",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "정수기",
+   "shorts": true
+  },
+  {
+   "kw": "핫팩, 손난로",
+   "products": [
+    "핫팩"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "매출 400.3% 급증"
+   ],
+   "links": [
+    {
+     "t": "찬바람 불자 패딩 수요 '쑥'…편의점까지 겨울옷 판매 나섰다",
+     "u": "https://www.etoday.co.kr/news/view/2637352",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "핫팩",
+   "shorts": true
+  },
+  {
+   "kw": "한정판 캐리어, 여행용 캐리어",
+   "products": [
+    "한국타이어 리드볼트 한정판 캐리어"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "한정판 출시, 협업 제품"
+   ],
+   "links": [
+    {
+     "t": "한국타이어, 리드볼트와 협업한 한정판 캐리어 출시",
+     "u": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=496453",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "여행용 캐리어",
+   "shorts": true
+  },
+  {
+   "kw": "김 접시, 주방용품",
+   "products": [
+    "김 전용 접시"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "MZ세대에게 인기, 남대문시장에서 화제"
+   ],
+   "links": [
+    {
+     "t": "'다큐 3일', MZ세대 몰린 남대문시장 조명…선우용여 내레이션 참여",
+     "u": "https://www.slist.kr/news/articleView.html?idxno=774542",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "김 접시",
+   "shorts": true
+  },
+  {
+   "kw": "달걀 받침대, 주방용품",
+   "products": [
+    "달걀 받침"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "MZ세대에게 인기, 남대문시장에서 화제"
+   ],
+   "links": [
+    {
+     "t": "'다큐 3일', MZ세대 몰린 남대문시장 조명…선우용여 내레이션 참여",
+     "u": "https://www.slist.kr/news/articleView.html?idxno=774542",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "달걀 받침",
+   "shorts": true
+  },
+  {
+   "kw": "아이폰, 스마트폰",
+   "products": [
+    "아이폰18 프로"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "로제 뮤직비디오 촬영에 사용, 카메라 성능 홍보"
+   ],
+   "links": [
+    {
+     "t": "삼성 \"폰 필요하면 말하지\"…로제 그 신곡 5,000만뷰 터졌다",
+     "u": "http://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610190026&t=NN",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "아이폰",
+   "shorts": false
+  },
+  {
+   "kw": "퓨레어 탈취제, 프리미엄 탈취제",
+   "products": [
+    "퓨레어 탈취제"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "5천 건 이상 판매, SNS 누적 조회수 100만 회 돌파"
+   ],
+   "links": [
+    {
+     "t": "뷰티·리빙 다 잡은 GS샵 '판타지에스'…프리미엄 리빙으로 흥행 굳힌다",
+     "u": "http://www.newsroad.co.kr/news/articleView.html?idxno=65980",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "",
+   "kw_clean": "탈취제",
+   "shorts": true
+  },
+  {
+   "kw": "옥 공예품, 웰니스 제품",
+   "products": [
+    "옥산백 (옥 공예 제품)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 5060, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "와디즈 펀딩 성공, 팝업스토어 화제, SNS 개발 과정 공개"
+   ],
+   "links": [
+    {
+     "t": "[인터뷰] 한국 웰니스 상품화로 주목받는 '옥산백'…와디즈 펀딩으로 성...",
+     "u": "http://www.apparelnews.co.kr/news/news_view/?idx=228293",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "와디즈 펀딩으로 성",
+   "kw_clean": "옥 공예 제품",
+   "shorts": true
+  },
+  {
+   "kw": "반려견 보살조끼, 강아지 옷",
+   "products": [
+    "BYC 개리야스 보살조끼 (반려견 의류)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "재치 있는 디자인으로 SNS 화제, 사전 예약 조기 품절"
+   ],
+   "links": [
+    {
+     "t": "\"우리 강아지 보살 됐네\"…조기 품절 BYC 보살조끼, 어디서 살까",
+     "u": "https://www.news1.kr/industry/general-industry/6322719",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "조기 품절",
+   "kw_clean": "반려견 보살조끼",
+   "shorts": true
+  },
+  {
+   "kw": "브리온베가 오디오, 명품 오디오",
+   "products": [
+    "브리온베가 (Brionvega) 오디오"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "장원영 취향 공개로 화제, 3000만원대 고가 제품"
+   ],
+   "links": [
+    {
+     "t": "억대 소파 이어 3000만원대 오디오…장원영 ‘취향 공개’ 눈길",
+     "u": "https://www.donga.com/news/Culture/article/all/20261016/134855399/2",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "오디오",
+   "shorts": false
+  },
+  {
+   "kw": "소형 냉장고, 절전 냉장고",
+   "products": [
+    "풀무원 148L 냉장고"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "전기료 절감 효과 뛰어남, 소비자 니즈 반영"
+   ],
+   "links": [
+    {
+     "t": "[잘먹잘살+]풀무원·풀무원푸드머스·이마트24·GS25·신세계라이브쇼핑...",
+     "u": "https://www.businessplus.kr/news/articleView.html?idxno=118265",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "소형 냉장고",
+   "shorts": false
+  },
+  {
+   "kw": "디자인 오디오, 명품 오디오",
+   "products": [
+    "브리온베가 라디오포노그라포"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "장원영 SNS 공개, 이탈리아 거장 디자이너 제품"
+   ],
+   "links": [
+    {
+     "t": "'137억 집 현금 매입' 장원영, 명품 가구 도배된 집 내부 공개…\"영앤리...",
+     "u": "https://mhnse.com/news/articleView.html?idxno=1594750",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "라디오포노그라포",
+   "shorts": false
+  },
+  {
+   "kw": "감자튀김 홀더, 차량용 홀더",
+   "products": [
+    "맥도날드 감자튀김 홀더"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "재출시 예고, SNS 화제, 지난 8월 완판"
+   ],
+   "links": [
+    {
+     "t": "맥도날드, '감튀 홀더' 재출시 예고... 언제부터 판매?",
+     "u": "https://www.ggilbo.com/news/articleView.html?idxno=1186672",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "완판",
+   "kw_clean": "감자튀김 홀더",
+   "shorts": true
+  },
+  {
+   "kw": "노글루 속눈썹, 아이돌 속눈썹",
+   "products": [
+    "K-노글루 속눈썹"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "K-팝 아이돌 메이크업, SNS 화제, 디자인 제품화"
+   ],
+   "links": [
+    {
+     "t": "온라인에서 먼저 검증된 K-노글루 속눈썹",
+     "u": "http://dream.kotra.or.kr/kotranews/cms/news/actionKotraBoardDetail.do?SITE_NO=3&MENU_ID=180&CONTENTS_NO=1&bbsGbn=243&bbsSn=243&pNttSn=244459",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "노글루 속눈썹",
+   "shorts": true
+  },
+  {
+   "kw": "휴머노이드 로봇, 피규어 AI",
+   "products": [
+    "피규어 AI F.02 Decomission"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "영상 화제"
+   ],
+   "links": [
+    {
+     "t": "[문화 속 산업이야기] 용광로에 뛰어든 로봇…인간을 닮은 로봇의 마지...",
+     "u": "https://kidd.co.kr/news/247682",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로봇 피규어",
+   "shorts": true
+  },
+  {
+   "kw": "정수리 가발, 바보털",
+   "products": [
+    "바보털 가발"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "틱톡/더우인 유행"
+   ],
+   "links": [
+    {
+     "t": "중국서 정수리에 ‘바보털’ 삐죽 유행⋯일부러 짧게 자르는 이유는?",
+     "u": "https://kormedi.com/?p=2886363",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "유행",
+   "kw_clean": "바보털 가발",
+   "shorts": true
+  },
+  {
+   "kw": "어덜트 퍼시파이어, 스트레스 완화",
+   "products": [
+    "성인용 공갈젖꼭지"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-06",
+   "shortsable": true,
+   "buzz": [
+    "틱톡 유행, 스트레스/불안 완화"
+   ],
+   "links": [
+    {
+     "t": "“다 큰 성인들이 입에 물고 ‘쪽쪽’?”…해외서 다시 뜬다는 황당 유...",
+     "u": "https://kormedi.com/?p=2879220",
+     "d": "2026-10-06"
+    }
+   ],
+   "demand": true,
+   "evidence": "유행",
+   "kw_clean": "성인 공갈젖꼭지",
+   "shorts": true
+  },
+  {
+   "kw": "호신용 호루라기, LED 호루라기",
+   "products": [
+    "다이소 비상용 LED 호루라기 세트"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "1000원, 일시 품절, 판매 급증"
+   ],
+   "links": [
+    {
+     "t": "호신용 스프레이 경찰 신고 필요?…구매 전 주의사항은",
+     "u": "https://www.newsis.com/view/NISX20261019_0003832173",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "일시 품절, 판매 급증",
+   "kw_clean": "비상용 호루라기",
+   "shorts": true
+  },
+  {
+   "kw": "편의점 굿즈, 헬로키티 가방",
+   "products": [
+    "편의점 가방 (한복 헬로키티 상품 포함)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "30만개 판매, 품절, 외국인 관광객 인기"
+   ],
+   "links": [
+    {
+     "t": "외국인이 쓸어가는 K굿즈…편의점 가방 30만개 팔리자 한복 입은 헬로키...",
+     "u": "https://www.segye.com/newsView/20261018504487?OutUrl=naver",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "30만개 판매, 품절",
+   "kw_clean": "편의점 가방",
+   "shorts": true
+  },
+  {
+   "kw": "호신용 삼단봉, 휴대용 삼단봉",
+   "products": [
+    "삼단봉"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "판매 급증"
+   ],
+   "links": [
+    {
+     "t": "테러 불똥끄는 유통가, 불티나는 호신용품",
+     "u": "https://www.mt.co.kr/living/2026/10/16/2026101520002210451",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": true,
+   "evidence": "판매 급증",
+   "kw_clean": "삼단봉",
+   "shorts": true
+  },
+  {
+   "kw": "다이소 키르시, 키르시 굿즈",
+   "products": [
+    "다이소 키르시 생활잡화 (키링, 로고 디자인, 위티버니 캐릭터 상품 포함)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "1000원~3000원 균일가, 출시 직후 품절, SNS 확산"
+   ],
+   "links": [
+    {
+     "t": "장원영 광고 키링 여기선 2천원?…다이소 또 난리 뭐길래",
+     "u": "https://biz.sbs.co.kr/article_hub/20000340241?division=NAVER",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": true,
+   "evidence": "출시 직후 품절",
+   "kw_clean": "키르시 키링",
+   "shorts": true
+  },
+  {
+   "kw": "사우나 모자, 찜질방 모자",
+   "products": [
+    "사우나 모자"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오픈 직후 일시 품절, 인증샷 아이템으로 주목"
+   ],
+   "links": [
+    {
+     "t": "2030세대 '웰니스 핫플'로 떠오른 사우나…SNS '사우나 가방 공개' 챌린...",
+     "u": "https://www.sportschosun.com/life/2026-10-19/202610190100117160007646",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "일시 품절",
+   "kw_clean": "사우나 모자",
+   "shorts": true
+  },
+  {
+   "kw": "수면 안대, 찜질방 안대",
+   "products": [
+    "수면안대"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오픈 직후 일시 품절, 인증샷 아이템으로 주목"
+   ],
+   "links": [
+    {
+     "t": "2030세대 '웰니스 핫플'로 떠오른 사우나…SNS '사우나 가방 공개' 챌린...",
+     "u": "https://www.sportschosun.com/life/2026-10-19/202610190100117160007646",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "일시 품절",
+   "kw_clean": "수면 안대",
+   "shorts": true
+  },
+  {
+   "kw": "아이폰 힌지 보호, 폴더블폰 보호",
+   "products": [
+    "아이폰 듀오 힌지 보호 패키지"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030|전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "T다이렉트샵 구매 고객 제공"
+   ],
+   "links": [
+    {
+     "t": "아이폰 듀오, 사전예약 품귀 조짐...이통 3사 지원 경쟁 시작",
+     "u": "https://zdnet.co.kr/view/?no=20261016095617",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "아이폰 힌지 보호",
+   "shorts": true
+  },
+  {
+   "kw": "까치호랑이 배지, 한국 전통 굿즈",
+   "products": [
+    "까치호랑이 배지"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "재입고 알림 신청 10만 건"
+   ],
+   "links": [
+    {
+     "t": "[이슈국감] 박물관 굿즈 '뮷즈' 매출 4년여간 1243억",
+     "u": "http://www.hansbiz.co.kr/news/articleView.html?idxno=874191",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "재입고 알림 신청 10만 건",
+   "kw_clean": "까치호랑이 배지",
+   "shorts": true
+  },
+  {
+   "kw": "곤룡포 비치타월, 한국 전통 타월",
+   "products": [
+    "곤룡포 비치타월"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "재입고 알림 신청 3만 건"
+   ],
+   "links": [
+    {
+     "t": "[이슈국감] 박물관 굿즈 '뮷즈' 매출 4년여간 1243억",
+     "u": "http://www.hansbiz.co.kr/news/articleView.html?idxno=874191",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "재입고 알림 신청 3만 건",
+   "kw_clean": "곤룡포 비치타월",
+   "shorts": true
+  },
+  {
+   "kw": "변색 잔 세트, 한국 전통 잔",
+   "products": [
+    "취객선비 변색 잔 세트"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "재입고 알림 신청 2만 건"
+   ],
+   "links": [
+    {
+     "t": "[이슈국감] 박물관 굿즈 '뮷즈' 매출 4년여간 1243억",
+     "u": "http://www.hansbiz.co.kr/news/articleView.html?idxno=874191",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "재입고 알림 신청 2만 건",
+   "kw_clean": "변색 잔 세트",
+   "shorts": true
+  },
+  {
+   "kw": "국새 키캡, 키링 세트",
+   "products": [
+    "국새 키캡 키링 세트"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "재입고 알림 신청 4만9000건"
+   ],
+   "links": [
+    {
+     "t": "[이슈국감] 박물관 굿즈 '뮷즈' 매출 4년여간 1243억",
+     "u": "http://www.hansbiz.co.kr/news/articleView.html?idxno=874191",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "재입고 알림 신청 4만9000건",
+   "kw_clean": "국새 키캡",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 굿즈, 일본 캐릭터 상품",
+   "products": [
+    "치이카와 캐릭터 상품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "일본 인기 캐릭터, 영화 박스오피스 1위, 2030 인기"
+   ],
+   "links": [
+    {
+     "t": "\"취향을 팝니다\"…아이파크몰의 '도파민' 승부수",
+     "u": "https://news.bizwatch.co.kr/article/consumer/2026/10/19/0041",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "치이카와 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "굿스마일 피규어, 캐릭터 피규어",
+   "products": [
+    "굿스마일컴퍼니 피규어"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "글로벌 피규어 1위 브랜드"
+   ],
+   "links": [
+    {
+     "t": "\"취향을 팝니다\"…아이파크몰의 '도파민' 승부수",
+     "u": "https://news.bizwatch.co.kr/article/consumer/2026/10/19/0041",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "피규어",
+   "shorts": true
+  },
+  {
+   "kw": "CU 토이캔디, 드라마 굿즈 캔디",
+   "products": [
+    "CU 토이캔디 (선재 업고 튀어 OST 소나기 에디션)"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "7월 토이캔디 매출 1위, 드라마 OST 담아 출시"
+   ],
+   "links": [
+    {
+     "t": "편의점, 겨울 성수기 앞두고 ‘수익성 승부’… 게임·K팝·뷰티로 객단...",
+     "u": "https://www.viva100.com/article/20261018500284",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "7월 토이캔디 매출 1위",
+   "kw_clean": "토이캔디",
+   "shorts": true
+  },
+  {
+   "kw": "양산프렌즈 굿즈, 공공 캐릭터 상품",
+   "products": [
+    "양산프렌즈 캐릭터 상품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "대한민국 공공캐릭터 페스티벌 대상, 온라인 투표 1위"
+   ],
+   "links": [
+    {
+     "t": "'양산프렌즈' 대한민국 공공캐릭터 페스티벌 대상",
+     "u": "https://www.gnnews.co.kr/news/articleView.html?idxno=647764",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "양산프렌즈 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "롯데시네마 굿즈, 영화관 콜라보 상품",
+   "products": [
+    "롯데시네마 콜라보레이션 특별 상품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "인기 순위 1위 게임 콜라보"
+   ],
+   "links": [
+    {
+     "t": "[게임뉴스] 해긴 및 플레이위드코리아 소식 외",
+     "u": "https://www.gamevu.co.kr/news/articleView.html?idxno=61561",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "영화관 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "바디프랜드 안마의자, 마사지기",
+   "products": [
+    "바디프랜드 안마의자"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "월 1만원 구독, 최대 15개월 적용"
+   ],
+   "links": [
+    {
+     "t": "[유통소식] 바디프랜드, 전 제품 월 1만원 구독…최대 15개월 적용",
+     "u": "http://www.4th.kr/news/articleView.html?idxno=2119954",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "안마의자",
+   "shorts": false
+  },
+  {
+   "kw": "시티버스 굿즈, 서울 굿즈",
+   "products": [
+    "시티버스 굿즈"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "경품으로 제공"
+   ],
+   "links": [
+    {
+     "t": "[똑똑한유통] CJ제일제당 비비고 캔김 출시·롯데칠성 와인 카니버 포레...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261019027408154",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "시티버스 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "휴대용 촬영 기기, 브이로그 카메라",
+   "products": [
+    "소형·휴대용 촬영 기기"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "세 자릿수 성장세, 영상 콘텐츠 제작 수요, 레트로·Y2K 트렌드"
+   ],
+   "links": [
+    {
+     "t": "이베이, 역직구 시장 공략 강화…韓 셀러 7분기 연속 성장",
+     "u": "https://www.sentv.co.kr/article/view/sentv202610190112",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "세 자릿수 성장세",
+   "kw_clean": "소형 촬영 기기",
+   "shorts": true
+  },
+  {
+   "kw": "드리미 청소기, 다이슨 헤어드라이어, 샤크 무선청소기",
+   "products": [
+    "드리미, 샤크, 다이슨 인기 가전제품"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "인터넷 최저가 수준, 최대 20만원 캐시백"
+   ],
+   "links": [
+    {
+     "t": "[Weekly 편의점·마트] 이마트24·CU·세븐·롯데하이마트·롯데마트",
+     "u": "https://www.startuptoday.co.kr/news/articleView.html?idxno=816250",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "무선 청소기",
+   "shorts": false
+  },
+  {
+   "kw": "치이카와 문구, 캐릭터 소품",
+   "products": [
+    "치이카와 문구류"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "입고 직후 품절, SNS 유행"
+   ],
+   "links": [
+    {
+     "t": "\"팝콘통 살게요\" 어른들 몰려갔다...3040이 '먼작귀'에 빠진 이유",
+     "u": "https://www.mt.co.kr/society/2026/10/19/2026101609142674265",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "입고 직후 품절",
+   "kw_clean": "치이카와 문구",
+   "shorts": true
+  },
+  {
+   "kw": "치이카와 문구, 캐릭터 문구",
+   "products": [
+    "치이카와 문구류"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "캐릭터 상품 인기"
+   ],
+   "links": [
+    {
+     "t": "‘치이카와’, ‘암살자(들)’ 3배 차로 제쳤다… 170만 돌파 눈앞",
+     "u": "https://www.edaily.co.kr/News/Read?newsId=01207046645614232&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "치이카와 문구",
+   "shorts": true
+  },
+  {
+   "kw": "슬라우치백, 여성 가방",
+   "products": [
+    "슬라우치백"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "29CM 여성 가방 카테고리 좋아요/조회수 1위"
+   ],
+   "links": [
+    {
+     "t": "[패션&뷰티]각 잡힌 가방 대신 축 늘어진 가방…올 FW '슬라우치백' 뜬다",
+     "u": "https://www.news1.kr/industry/distribution/6320126",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "슬라우치백",
+   "shorts": true
+  },
+  {
+   "kw": "웹툰 포토카드, 캐릭터 포토카드",
+   "products": [
+    "웹툰 '별정직 공무원' 공무원증 콘셉트 포토카드"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "신규 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "빌런 잡는 빌런, 이혼 꿈꾸는 신부…카카오 신작 웹툰 공개",
+     "u": "https://www.nocutnews.co.kr/news/6592597?utm_source=naver&utm_medium=article&utm_campaign=20261016021111",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "웹툰 포토카드",
+   "shorts": true
+  },
+  {
+   "kw": "웹툰 인형 브로치, 캐릭터 브로치",
+   "products": [
+    "웹툰 '별정직 공무원' 랜덤 봉제 인형 브로치"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "신규 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "빌런 잡는 빌런, 이혼 꿈꾸는 신부…카카오 신작 웹툰 공개",
+     "u": "https://www.nocutnews.co.kr/news/6592597?utm_source=naver&utm_medium=article&utm_campaign=20261016021111",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "웹툰 인형 브로치",
+   "shorts": true
+  },
+  {
+   "kw": "웹툰 키링, 캐릭터 키링",
+   "products": [
+    "웹툰 '별정직 공무원' 증명사진 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "신규 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "빌런 잡는 빌런, 이혼 꿈꾸는 신부…카카오 신작 웹툰 공개",
+     "u": "https://www.nocutnews.co.kr/news/6592597?utm_source=naver&utm_medium=article&utm_campaign=20261016021111",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "웹툰 키링",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 피규어, 지드래곤 굿즈",
+   "products": [
+    "지드래곤 협업 조아 캐릭터 피규어"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "지드래곤 협업 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "음악과 패션 넘나드는 개성... 지드래곤, 스타트렌드 1위 기록하며 독보...",
+     "u": "https://www.joongangenews.com/news/articleView.html?idxno=555620",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "조아 피규어",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 키링, 지드래곤 굿즈",
+   "products": [
+    "지드래곤 협업 조아 캐릭터 파우치 키링"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "지드래곤 협업 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "음악과 패션 넘나드는 개성... 지드래곤, 스타트렌드 1위 기록하며 독보...",
+     "u": "https://www.joongangenews.com/news/articleView.html?idxno=555620",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "조아 파우치 키링",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 러그, 지드래곤 굿즈",
+   "products": [
+    "지드래곤 협업 조아 캐릭터 러그"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "지드래곤 협업 상품 공개"
+   ],
+   "links": [
+    {
+     "t": "음악과 패션 넘나드는 개성... 지드래곤, 스타트렌드 1위 기록하며 독보...",
+     "u": "https://www.joongangenews.com/news/articleView.html?idxno=555620",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "조아 러그",
+   "shorts": true
+  },
+  {
+   "kw": "대형 윷놀이, 전통 놀이",
+   "products": [
+    "대형 윷놀이"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이, 전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "수업에 활용"
+   ],
+   "links": [
+    {
+     "t": "[시니어그룹] \"야, 너 긁?\" 뜻, 이 책 읽고 처음 알았어요",
+     "u": "https://www.ohmynews.com/NWS_Web/View/at_pg.aspx?CNTN_CD=A0003275886&CMPT_CD=P0010&utm_source=naver&utm_medium=newsearch&utm_campaign=naver_news",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "대형 윷놀이",
+   "shorts": true
+  },
+  {
+   "kw": "말랑이, 촉감 완구, 스트레스볼",
+   "products": [
+    "말랑이 (촉감완구)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 사이에 번진 유행, 아이들이 빠진 물건"
+   ],
+   "links": [
+    {
+     "t": "한국인터넷신문협회, 올해 8월 보도분 '이달의 기자상' 시상식",
+     "u": "https://www.getnews.co.kr/news/articleView.html?idxno=882920",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": true,
+   "evidence": "유행",
+   "kw_clean": "말랑이",
+   "shorts": true
+  },
+  {
+   "kw": "왁뿌볼, 촉감 장난감, 스트레스볼",
+   "products": [
+    "왁뿌볼 (촉감 장난감)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "SNS 유행, 초등학생들 사이에서 선풍적인 인기, 유해 물질 검출 논란"
+   ],
+   "links": [
+    {
+     "t": "매일 조물딱거리는 '왁뿌볼'에서 나온 유해 물질?환경부는 왜 '위반 0건...",
+     "u": "https://lawtalknews.co.kr/article/3QCW73HC47HH",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": true,
+   "evidence": "SNS 유행, 선풍적인 인기",
+   "kw_clean": "왁뿌볼",
+   "shorts": true
+  },
+  {
+   "kw": "포켓몬 카드, 트레이딩 카드",
+   "products": [
+    "포켓몬 트레이딩 카드"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "2030, 아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "2030 수집 열풍, 전문 카드숍 매출 2배 증가"
+   ],
+   "links": [
+    {
+     "t": "포켓몬 카드 수집에 빠진 2030…트레이딩 카드 매장 이용자 비중 70%",
+     "u": "https://www.news1.kr/industry/general-industry/6324786",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": true,
+   "evidence": "매출 2배 증가",
+   "kw_clean": "포켓몬 카드",
+   "shorts": true
+  },
+  {
+   "kw": "플레이모빌 피규어",
+   "products": [
+    "플레이 모빌"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "아이들에게 인기가 많은"
+   ],
+   "links": [
+    {
+     "t": "전 세계 청소년들의 읽기 능력이 퇴보한 까닭 [평범한 이웃, 유럽]",
+     "u": "https://www.sisain.co.kr/news/articleView.html?idxno=58584",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "플레이 모빌",
+   "shorts": true
+  },
+  {
+   "kw": "한샘 샘키즈 책장",
+   "products": [
+    "한샘 샘키즈 책장"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "인기 상품으로 선착순 최저가 행사 진행"
+   ],
+   "links": [
+    {
+     "t": "[위클리오늘] 바디프랜드, 한샘(10.19)",
+     "u": "http://www.weeklytoday.com/news/articleView.html?idxno=798529",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "샘키즈 책장",
+   "shorts": false
+  },
+  {
+   "kw": "바디프랜드 헬스케어로봇",
+   "products": [
+    "바디프랜드 헬스케어로봇"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오프라인 매장 인기 상품"
+   ],
+   "links": [
+    {
+     "t": "[민주 유통가] 바디프랜드·세라젬·한샘",
+     "u": "http://www.iminju.net/news/articleView.html?idxno=171028",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "헬스케어 로봇",
+   "shorts": false
+  },
+  {
+   "kw": "바디프랜드 모션베드",
+   "products": [
+    "바디프랜드 모션베드"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오프라인 매장 인기 상품"
+   ],
+   "links": [
+    {
+     "t": "[민주 유통가] 바디프랜드·세라젬·한샘",
+     "u": "http://www.iminju.net/news/articleView.html?idxno=171028",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "모션 베드",
+   "shorts": false
+  },
+  {
+   "kw": "바디프랜드 정수기",
+   "products": [
+    "바디프랜드 정수기"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "오프라인 매장 인기 상품"
+   ],
+   "links": [
+    {
+     "t": "[민주 유통가] 바디프랜드·세라젬·한샘",
+     "u": "http://www.iminju.net/news/articleView.html?idxno=171028",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "정수기",
+   "shorts": false
+  },
+  {
+   "kw": "탱글 스타터 키트",
+   "products": [
+    "탱글 스타터 키트"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "별도 판매존 마련"
+   ],
+   "links": [
+    {
+     "t": "빙그레 오뚜기 롯데칠성음료 外(유통家 이모저모)",
+     "u": "https://www.newsclaim.co.kr/news/articleView.html?idxno=3078845",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "탱글 스타터 키트",
+   "shorts": true
+  },
+  {
+   "kw": "스트레이 키즈 굿즈",
+   "products": [
+    "스트레이 키즈 굿즈"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "빼빼로 제품을 3만 원 이상 구매하면 증정"
+   ],
+   "links": [
+    {
+     "t": "롯데웰푸드, '2026 빼빼로데이' 시즌 기획 라인업 10종 출시",
+     "u": "http://www.newsdream.kr/news/articleView.html?idxno=119934",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "스트레이 키즈 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "신비아파트 장난감, 키즈 완구",
+   "products": [
+    "신비아파트 완구"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "CJ ENM 대표 키즈 IP, 국가 R&D 성과물 (판매금지 논란으로 화제)"
+   ],
+   "links": [
+    {
+     "t": "신비아파트 완구 분쟁, 국감 도마에… CJ ENM 불공정 계약 의혹 쟁점",
+     "u": "https://www.ibabynews.com/news/articleView.html?idxno=155146",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "신비아파트 완구",
+   "shorts": true
+  },
+  {
+   "kw": "애니메이션 장난감, 캐릭터 완구",
+   "products": [
+    "애니메이션·토이 관련 기업의 제품"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "기업 전시·판매존에서 선보임"
+   ],
+   "links": [
+    {
+     "t": "춘천 토박이도 몰랐던 이 축제, 왜 4만 명이 몰렸을까?",
+     "u": "https://www.ohmynews.com/NWS_Web/View/at_pg.aspx?CNTN_CD=A0003273830&CMPT_CD=P0010&utm_source=naver&utm_medium=newsearch&utm_campaign=naver_news",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "애니메이션 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "아마존 태블릿, 키즈 태블릿",
+   "products": [
+    "아마존 알렉사+ 탑재 태블릿"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "강력한 알렉사+ 탑재, 구글 플레이·AI 비서 결합, 신제품 공개"
+   ],
+   "links": [
+    {
+     "t": "아마존, 강력한 알렉사+ 탑재 태블릿 3종 공개…구글 플레이·AI 비서 결...",
+     "u": "https://www.aitimes.kr/news/articleView.html?idxno=42244",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "알렉사 태블릿",
+   "shorts": false
+  },
+  {
+   "kw": "키즈 태블릿 케이스, 캐릭터 범퍼",
+   "products": [
+    "어린이용 태블릿 범퍼 케이스"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "인기 캐릭터 디자인, 부드러운 범퍼 케이스"
+   ],
+   "links": [
+    {
+     "t": "아마존, 강력한 알렉사+ 탑재 태블릿 3종 공개…구글 플레이·AI 비서 결...",
+     "u": "https://www.aitimes.kr/news/articleView.html?idxno=42244",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "어린이 태블릿 케이스",
+   "shorts": true
+  },
+  {
+   "kw": "키즈 태블릿 케이스, 킥스탠드 케이스",
+   "products": [
+    "어린이용 태블릿 킥스탠드 케이스"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "킥스탠드 내장, 얇고 단단한 케이스"
+   ],
+   "links": [
+    {
+     "t": "아마존, 강력한 알렉사+ 탑재 태블릿 3종 공개…구글 플레이·AI 비서 결...",
+     "u": "https://www.aitimes.kr/news/articleView.html?idxno=42244",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "어린이 태블릿 케이스",
+   "shorts": true
+  },
+  {
+   "kw": "키즈 옷장, 한샘 옷장",
+   "products": [
+    "한샘 샘키즈 키큰옷장"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 제품, 파격 특가, 한정수량 선착순 최저가"
+   ],
+   "links": [
+    {
+     "t": "한샘, 하반기 '쌤페스타' 1주 차 열기 잇는다…2·3주 차 파격 특가 진행",
+     "u": "http://www.bizwnews.com/news/articleView.html?idxno=148453",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "샘키즈 옷장",
+   "shorts": false
+  },
+  {
+   "kw": "6인 식탁, 한샘 식탁",
+   "products": [
+    "한샘 포레 컴포트 6인 식탁"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 제품, 파격 특가, 한정수량 선착순 최저가"
+   ],
+   "links": [
+    {
+     "t": "한샘, 하반기 '쌤페스타' 1주 차 열기 잇는다…2·3주 차 파격 특가 진행",
+     "u": "http://www.bizwnews.com/news/articleView.html?idxno=148453",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "6인 식탁",
+   "shorts": false
+  },
+  {
+   "kw": "유아용품, 아기용품",
+   "products": [
+    "꿈비 육아용품"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 육아용품, 최대 80% 할인"
+   ],
+   "links": [
+    {
+     "t": "꿈비, 링크맘 용인본점서 '창고 대개방' 진행···\"최대 80% 할인\"",
+     "u": "https://www.enetnews.co.kr/news/articleView.html?idxno=55120",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "육아용품",
+   "shorts": true
+  },
+  {
+   "kw": "가죽 소파, 한샘 소파",
+   "products": [
+    "한샘 엠마 컴포트 천연가죽 소파"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "판매 상위 제품, 매출 103% 증가, 최대 70만원 할인"
+   ],
+   "links": [
+    {
+     "t": "한샘 '쌤페스타' 1주차 한샘몰 이용자 110% 증가",
+     "u": "http://www.koreastocknews.com/news/articleView.html?idxno=121652",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "매출 103% 증가",
+   "kw_clean": "천연가죽 소파",
+   "shorts": false
+  },
+  {
+   "kw": "수납 침대, 한샘 침대",
+   "products": [
+    "한샘 아임빅 수납침대"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "판매 상위 제품"
+   ],
+   "links": [
+    {
+     "t": "한샘 '쌤페스타' 1주차 한샘몰 이용자 110% 증가",
+     "u": "http://www.koreastocknews.com/news/articleView.html?idxno=121652",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "수납 침대",
+   "shorts": false
+  },
+  {
+   "kw": "스윙 소파, 한샘 소파",
+   "products": [
+    "한샘 엠마 컴포트 스윙 천연가죽 소파"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "판매 상위 제품"
+   ],
+   "links": [
+    {
+     "t": "한샘 '쌤페스타' 1주차 한샘몰 이용자 110% 증가",
+     "u": "http://www.koreastocknews.com/news/articleView.html?idxno=121652",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "스윙 소파",
+   "shorts": false
+  },
+  {
+   "kw": "호텔 침대, 매트리스 세트",
+   "products": [
+    "한샘 모노 호텔침대와 밸런스 매트리스 세트"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 조합, 결합 특가"
+   ],
+   "links": [
+    {
+     "t": "한샘 '쌤페스타' 1주차 한샘몰 유입 110% 급증…2~3주차 다이닝·옷장·키...",
+     "u": "https://www.nextdaily.co.kr/news/articleView.html?idxno=253692",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "호텔 침대 매트리스 세트",
+   "shorts": false
+  },
+  {
+   "kw": "드레스룸 세트, 한샘 드레스룸",
+   "products": [
+    "한샘 스테이 드레스룸 세트"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 조합, 결합 특가"
+   ],
+   "links": [
+    {
+     "t": "한샘 '쌤페스타' 1주차 한샘몰 유입 110% 급증…2~3주차 다이닝·옷장·키...",
+     "u": "https://www.nextdaily.co.kr/news/articleView.html?idxno=253692",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "드레스룸 세트",
+   "shorts": false
+  },
+  {
+   "kw": "이브자리 침구, 기능성 침구",
+   "products": [
+    "이브자리 라이젤"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "창립 50주년 기념 품목, 최대 50% 특별체험가"
+   ],
+   "links": [
+    {
+     "t": "[유통레이더] 농심, 쿠팡, 시몬스, 골프존, 이브자리, 뉴발란스, LG유니...",
+     "u": "https://daily.hankooki.com/news/articleView.html?idxno=1412542",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "침구 세트",
+   "shorts": true
+  },
+  {
+   "kw": "갤럭시 태블릿, 프리미엄 태블릿",
+   "products": [
+    "삼성전자 갤럭시 탭 S12 시리즈"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "판매 시작, 프리미엄 태블릿 신제품"
+   ],
+   "links": [
+    {
+     "t": "[유통소식] 이마트, 인기 간편식 최대 50% 할인",
+     "u": "http://www.4th.kr/news/articleView.html?idxno=2119292",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "갤럭시탭 태블릿",
+   "shorts": false
+  },
+  {
+   "kw": "아트박스 캐릭터, 문구 잡화",
+   "products": [
+    "아트박스 자체 캐릭터 상품"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "10대|2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-09",
+   "shortsable": true,
+   "buzz": [
+    "자체 캐릭터와 유행을 반영한 상품 확대"
+   ],
+   "links": [
+    {
+     "t": "[기획] 2030·외국인 잡은 아트박스…‘취향 소비’ 들고 해외로",
+     "u": "https://www.sentv.co.kr/article/view/sentv202610020067",
+     "d": "2026-10-09"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "픽시 자전거, 학생 자전거",
+   "products": [
+    "픽시자전거"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "학생들 사이에서 유행"
+   ],
+   "links": [
+    {
+     "t": "순천경찰, 동산초 등교맞이 캠페인 호응",
+     "u": "https://www.jnilbo.com/news/articleView.html?idxno=90000071655",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": true,
+   "evidence": "학생들 사이에서 유행",
+   "kw_clean": "픽시 자전거",
+   "shorts": true
+  },
+  {
+   "kw": "말랑이 장난감, 피젯 토이",
+   "products": [
+    "말랑이"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-18",
+   "shortsable": true,
+   "buzz": [
+    "아이들 사이에 유행"
+   ],
+   "links": [
+    {
+     "t": "출발 직전 환불된 KTX 좌석, 720만 석이 비어서 갔다.",
+     "u": "https://slownews.kr/168075",
+     "d": "2026-10-18"
+    }
+   ],
+   "demand": true,
+   "evidence": "아이들 사이에 유행",
+   "kw_clean": "말랑이 장난감",
+   "shorts": true
+  },
+  {
+   "kw": "픽시 자전거, 노브레이크 자전거",
+   "products": [
+    "픽시 자전거"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "10대": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "위험천만한 ‘노브레이크’ 픽시 자전거 유행이 청소년 사이에 퍼져 있어 우려스럽다"
+   ],
+   "links": [
+    {
+     "t": "[단독]브레이크 없는 ‘픽시 자전거’ 타다 적발 1269건",
+     "u": "https://www.donga.com/news/Society/article/all/20261007/134805645/2",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "유행이 청소년 사이에 퍼져 있어",
+   "kw_clean": "픽시 자전거",
+   "shorts": true
+  },
+  {
+   "kw": "파크골프 용품, 시니어 골프",
+   "products": [
+    "파크골프 상품"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "파크골프 상품 늘리고, 중장년층을 중심으로 인기를 끌고"
+   ],
+   "links": [
+    {
+     "t": "파크골프 상품 늘리고 쇼핑 편의 높이고…유통가 분주[큰손 액티브시니...",
+     "u": "https://www.newsis.com/view/NISX20261016_0003829718",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "파크골프 용품",
+   "shorts": true
+  },
+  {
+   "kw": "DDR5 램, 삼성 DDR5",
+   "products": [
+    "삼성전자 DDR5-5600 (16GB)"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "인기 제품, 4주차 대비 평균 구매 단가 +2%"
+   ],
+   "links": [
+    {
+     "t": "다나와 판매 데이터로 살펴보는 8월·9월 PC 시장 가격 동향",
+     "u": "https://www.ilovepc.co.kr/news/articleView.html?idxno=61016",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "평균 구매 단가 +2%",
+   "kw_clean": "DDR5 16GB 램",
+   "shorts": true
+  },
+  {
+   "kw": "레노버 게이밍 노트북, 리전 노트북",
+   "products": [
+    "레노버 리전 5 (게이밍 노트북)"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "인기 노트북, 최대 28% 할인"
+   ],
+   "links": [
+    {
+     "t": "HP·레노버, 노트북 최대 43% 할인… D램 폭등 속 단비 내린다",
+     "u": "https://www.econovill.com/news/articleView.html?idxno=753229",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "게이밍 노트북",
+   "shorts": false
+  },
+  {
+   "kw": "레노버 게이밍 노트북, LOQ 노트북",
+   "products": [
+    "레노버 LOQ (게이밍 노트북)"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-12",
+   "shortsable": true,
+   "buzz": [
+    "인기 노트북, 최대 28% 할인"
+   ],
+   "links": [
+    {
+     "t": "HP·레노버, 노트북 최대 43% 할인… D램 폭등 속 단비 내린다",
+     "u": "https://www.econovill.com/news/articleView.html?idxno=753229",
+     "d": "2026-10-12"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "게이밍 노트북",
+   "shorts": false
+  },
+  {
+   "kw": "AI 보일러, 스마트 난방",
+   "products": [
+    "귀뚜라미보일러 AI 방방 난방 시스템"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "출시"
+   ],
+   "links": [
+    {
+     "t": "[유통갤러리] 귀뚜라미, ‘귀뚜라미보일러 AI 방방 난방 시스템’ 출시...",
+     "u": "https://theviewers.co.kr/View.aspx?No=4268816",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "AI 난방 시스템",
+   "shorts": false
+  },
+  {
+   "kw": "목 관리기, 고음비책",
+   "products": [
+    "앤제이메디칼 목 관리 제품 '고음비책'"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "전속모델·마케팅 추진, 주요 소비층으로 설정하고 제품 홍보와 공동구매를 추진"
+   ],
+   "links": [
+    {
+     "t": "권영찬 교수, 앤제이메디칼 목 관리 제품 '고음비책' 전속모델·마케팅...",
+     "u": "http://www.the-biz.co.kr/news/articleView.html?idxno=729371",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "목 관리 제품",
+   "shorts": true
+  },
+  {
+   "kw": "아기 샤워 핸들, 유아 샤워 보조",
+   "products": [
+    "아기 샤워 핸들"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-16",
+   "shortsable": true,
+   "buzz": [
+    "사람들이 필요로 하는 상품을 만들면 수요(시장)는 자연스레 형성된다"
+   ],
+   "links": [
+    {
+     "t": "[CEO 길을 내다] “마케팅은 상술이 아닙니다”… 이동한 대표의 시장 만...",
+     "u": "https://www.womennews.co.kr/news/articleView.html?idxno=283260",
+     "d": "2026-10-16"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "아기 샤워 핸들",
+   "shorts": true
+  },
+  {
+   "kw": "베이비샤워 풍선, 파티 풍선",
+   "products": [
+    "베이비샤워 풍선 세트"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "베이비샤워 트렌드"
+   ],
+   "links": [
+    {
+     "t": "이다해, 남편과 함께한 베이비샤워…딸 '해븐이' 기다리는 설렘",
+     "u": "https://www.topstarnews.net/news/articleView.html?idxno=16248320",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "베이비샤워 풍선",
+   "shorts": true
+  },
+  {
+   "kw": "신라베어 키링, 태교 선물 키링",
+   "products": [
+    "신라베어 키링 포 맘 에디션"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "소장 가치를 높였다"
+   ],
+   "links": [
+    {
+     "t": "신라호텔, '태교 여행' 상품 대폭 강화…룸서비스·스파·브랜드 협업 혜...",
+     "u": "https://www.todayeconomic.com/news/article.html?no=32443",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "곰 키링",
+   "shorts": true
+  },
+  {
+   "kw": "신라호텔 에코백, 태교 에코백",
+   "products": [
+    "신라호텔 자체 제작 캔버스 에코백"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "소장 가치를 높였다"
+   ],
+   "links": [
+    {
+     "t": "신라호텔, '태교 여행' 상품 대폭 강화…룸서비스·스파·브랜드 협업 혜...",
+     "u": "https://www.todayeconomic.com/news/article.html?no=32443",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캔버스 에코백",
+   "shorts": true
+  },
+  {
+   "kw": "우정 팔찌, 친구 팔찌",
+   "products": [
+    "우정 팔찌"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "선물하고"
+   ],
+   "links": [
+    {
+     "t": "마음과 마음 이어 관계 회복… 존중과 공감으로 자라는 아이들",
+     "u": "https://www.joongdo.co.kr/web/view.php?key=20261014010003350",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "우정 팔찌",
+   "shorts": true
+  },
+  {
+   "kw": "브랜드 굿즈, 콜라보 굿즈",
+   "products": [
+    "인기 브랜드 재해석 굿즈"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "인기 브랜드를 재해석한 굿즈"
+   ],
+   "links": [
+    {
+     "t": "[MD라이프] 현대그린푸드, 직원 부모 돌봄까지 챙긴다…케어링과 맞손",
+     "u": "https://www.mydaily.co.kr/page/view/2026101314231181143",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "브랜드 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "코지마 안마의자, 실속형 안마의자",
+   "products": [
+    "코지마 안마의자 실속형 모델"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "9월 안마의자 매출 35%↑, 실속형 모델 인기"
+   ],
+   "links": [
+    {
+     "t": "코지마, 9월 안마의자 매출 35%↑…실속형 모델 인기",
+     "u": "https://view.asiae.co.kr/article/2026101308381001481",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "9월 안마의자 매출 35%↑",
+   "kw_clean": "안마의자",
+   "shorts": false
+  },
+  {
+   "kw": "명품 시계, 고급 시계",
+   "products": [
+    "명품시계"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "즉석 선물"
+   ],
+   "links": [
+    {
+     "t": "이순실, '트로트 왕자' 김용빈에 '명품시계' 즉석 선물..\"전재산 줄수있...",
+     "u": "http://www.osen.co.kr/article/G1112891311",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "명품 시계",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 선물, 어린이 캐릭터 선물",
+   "products": [
+    "캐릭터 선물"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "인기를 끌었다"
+   ],
+   "links": [
+    {
+     "t": "'600년 역사와 첨단 공연의 만남',서산해미읍성축제, 인산인해 속 열기...",
+     "u": "https://www.joongdo.co.kr/web/view.php?key=20261011010002296",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "써모스 텀블러, 보온병 텀블러",
+   "products": [
+    "써모스 인기 텀블러"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "인기 텀블러, 30% 할인"
+   ],
+   "links": [
+    {
+     "t": "[똑똑한소비] 일동후디스, bhc, 오뚜기, 동서식품, KT&G, 써모스, 코스메...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261008027563852",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "텀블러",
+   "shorts": true
+  },
+  {
+   "kw": "써모스 콜라보 텀블러, 이나피스퀘어 텀블러",
+   "products": [
+    "써모스 이나피스퀘어 협업 텀블러"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "협업 신제품, 30% 할인"
+   ],
+   "links": [
+    {
+     "t": "[똑똑한소비] 일동후디스, bhc, 오뚜기, 동서식품, KT&G, 써모스, 코스메...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261008027563852",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "협업 텀블러",
+   "shorts": true
+  },
+  {
+   "kw": "써모스 주방용품, 주방용품 할인",
+   "products": [
+    "써모스 주방용품"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "최대 60% 할인 판매"
+   ],
+   "links": [
+    {
+     "t": "[똑똑한소비] 일동후디스, bhc, 오뚜기, 동서식품, KT&G, 써모스, 코스메...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261008027563852",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "주방용품",
+   "shorts": true
+  },
+  {
+   "kw": "곰인형, 아기 곰인형",
+   "products": [
+    "곰인형"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "3만원 곰인형이 5000원"
+   ],
+   "links": [
+    {
+     "t": "“3만원 곰인형이 5000원”…나눔 더한 ‘상생금융마켓’ [헤럴드머니페...",
+     "u": "https://biz.heraldcorp.com/article/10895587?ref=naver",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "곰인형",
+   "shorts": true
+  },
+  {
+   "kw": "물고기 반지, 수능 반지",
+   "products": [
+    "물고기 반지"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "부모가 직접 착용하며 자녀의 합격을 기원하는 상품이 인기를 끌고 있다"
+   ],
+   "links": [
+    {
+     "t": "손가락에 끼운 ‘수능 부적’… 대치동 수능맘 휩쓴 물고기 반지",
+     "u": "https://www.dt.co.kr/article/12087718?ref=naver",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": true,
+   "evidence": "대치동 수능맘 휩쓴",
+   "kw_clean": "물고기 반지",
+   "shorts": true
+  },
+  {
+   "kw": "양모 베개, 프리미엄 베개",
+   "products": [
+    "92도씨 양모 베개"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "양모 베개가 완판된 것"
+   ],
+   "links": [
+    {
+     "t": "프리미엄 양모 수면 브랜드 '92도씨', 현대백화점 판교점 팝업 성료",
+     "u": "https://www.woodkorea.co.kr/news/articleView.html?idxno=91928",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "완판된 것",
+   "kw_clean": "양모 베개",
+   "shorts": true
+  },
+  {
+   "kw": "프리미엄 탈취제, 퓨레어",
+   "products": [
+    "퓨레어 탈취제"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "조기 완판됐다, 5000건 이상의 주문이 몰리며 약 3억3000만 원의 실적"
+   ],
+   "links": [
+    {
+     "t": "GS샵, 하반기 대형 행사 '판타지에스' 순항…뷰티·프리미엄 리빙이 흥...",
+     "u": "https://www.industrynews.co.kr/news/articleView.html?idxno=87749",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "조기 완판됐다",
+   "kw_clean": "탈취제",
+   "shorts": true
+  },
+  {
+   "kw": "주방 냄비, 프리미엄 냄비",
+   "products": [
+    "냄비"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "냄비 완판에 주문액 8억 돌파"
+   ],
+   "links": [
+    {
+     "t": "GS샵 '판타지에스' 뷰티·리빙 흥행...냄비 완판에 주문액 8억 돌파",
+     "u": "http://www.popcornnews.net/news/articleView.html?idxno=136365",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "냄비 완판",
+   "kw_clean": "냄비",
+   "shorts": true
+  },
+  {
+   "kw": "미니 김치냉장고, 소형 김치냉장고",
+   "products": [
+    "큐밍 미니 김치냉장고"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "사전 펀딩에서 ‘울트라 얼리버드’ 물량이 완판"
+   ],
+   "links": [
+    {
+     "t": "큐에이드, 큐밍 브랜드 신제품 2종 출시…미니 김치냉장고·가열식 가습...",
+     "u": "https://www.hankyung.com/article/202610167282O",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "물량이 완판",
+   "kw_clean": "미니 김치냉장고",
+   "shorts": true
+  },
+  {
+   "kw": "가열식 가습기, 큐밍 가습기",
+   "products": [
+    "큐밍 가열식 가습기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "사전 펀딩에서 ‘울트라 얼리버드’ 물량이 완판"
+   ],
+   "links": [
+    {
+     "t": "큐에이드, 큐밍 브랜드 신제품 2종 출시…미니 김치냉장고·가열식 가습...",
+     "u": "https://www.hankyung.com/article/202610167282O",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": true,
+   "evidence": "물량이 완판",
+   "kw_clean": "가열식 가습기",
+   "shorts": true
+  },
+  {
+   "kw": "세럼 파운데이션, 네리티아 파운데이션",
+   "products": [
+    "네리티아 세럼 파운데이션"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "CJ홈쇼핑 첫 방송서 전체매진 달성, 완판"
+   ],
+   "links": [
+    {
+     "t": "네리티아 세럼 파운데이션, CJ홈쇼핑 첫 방송서 전체매진 달성",
+     "u": "http://www.newsroad.co.kr/news/articleView.html?idxno=65777",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": true,
+   "evidence": "전체매진 달성",
+   "kw_clean": "세럼 파운데이션",
+   "shorts": true
+  },
+  {
+   "kw": "고체향수, 퍼퓸밤",
+   "products": [
+    "탐즈 고체향수 퍼퓸밤"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "홈쇼핑에서 5회 연속 완판"
+   ],
+   "links": [
+    {
+     "t": "헤어살롱서 키운 헤어케어…라이브엑스 ‘탐즈’로 해외시장 공략",
+     "u": "https://www.mk.co.kr/article/12171652",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "5회 연속 완판",
+   "kw_clean": "고체 향수",
+   "shorts": true
+  },
+  {
+   "kw": "헤어 에센스, 꿀 에센스",
+   "products": [
+    "탐즈 꿀리베 에센스"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "홈쇼핑에서 5회 연속 완판"
+   ],
+   "links": [
+    {
+     "t": "헤어살롱서 키운 헤어케어…라이브엑스 ‘탐즈’로 해외시장 공략",
+     "u": "https://www.mk.co.kr/article/12171652",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "5회 연속 완판",
+   "kw_clean": "헤어 에센스",
+   "shorts": true
+  },
+  {
+   "kw": "프리미엄 침구, 이브자리 침구",
+   "products": [
+    "이브자리 프리스티지 리미티드 에디션"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "TV홈쇼핑 최초로 프리미엄 침구 신제품 '프리스티지 리미티드 에디션'을 공개"
+   ],
+   "links": [
+    {
+     "t": "[신상브리핑] LG생활건강 숨37°, 피죤, 이브자리, 하나투어, 켄싱턴호텔...",
+     "u": "https://daily.hankooki.com/news/articleView.html?idxno=1413059",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "프리미엄 침구",
+   "shorts": true
+  },
+  {
+   "kw": "조아용 굿즈, 캐릭터 굿즈",
+   "products": [
+    "조아용 굿즈"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "매장 한쪽에 전시된 굿즈를 유심히 살피던 50대 양승옥씨도 거들었다"
+   ],
+   "links": [
+    {
+     "t": "“소박한 감성서 탄생··· K-공공캐릭터 상징으로”",
+     "u": "http://www.mdilbo.com/detail/EHdc4G/759747",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "조아용 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "냉동실 밀폐용기, 주방 밀폐용기",
+   "products": [
+    "냉동실 전용 밀폐용기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-19",
+   "shortsable": true,
+   "buzz": [
+    "SNS에서 인기를 끈 생활용품 브랜드 부스에는 발길이 이어졌다"
+   ],
+   "links": [
+    {
+     "t": "옷만 취향대로 사나요…그릇부터 시계까지 ‘나답게’",
+     "u": "https://www.kmib.co.kr/article/view.asp?arcid=9000023670&cp=nv",
+     "d": "2026-10-19"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "냉동실 밀폐용기",
+   "shorts": true
+  },
+  {
+   "kw": "주꾸미 낚시 장비, 낚시 장비",
+   "products": [
+    "주꾸미 낚시 장비"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "퇴근 후 간단한 장비로 주꾸미 낚시를... 출조객들에게 인기가 높다"
+   ],
+   "links": [
+    {
+     "t": "2040이 바꾼 경인 밤바다…퇴근길 ‘손맛’에 연안 야간 상권 ‘들썩’",
+     "u": "https://www.kyeonggi.com/article/20261015580149",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "주꾸미 낚시 장비",
+   "shorts": true
+  },
+  {
+   "kw": "스마트 학습지, 뇌새김 학습지",
+   "products": [
+    "위버스마인드 뇌새김 더위크"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-17",
+   "shortsable": true,
+   "buzz": [
+    "20~30대 사이 인기를 끌고 있다"
+   ],
+   "links": [
+    {
+     "t": "\"책장 넘기며 밑줄 쫙\"…'공부의 맛' 학습지 부활",
+     "u": "https://www.newsis.com/view/NISX20261014_0003826103",
+     "d": "2026-10-17"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "학습지",
+   "shorts": true
+  },
+  {
+   "kw": "향낭 만들기 키트, 방향 주머니",
+   "products": [
+    "향낭 만들기 키트"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "가장 인기를 끌었던 프로그램, 1900여 명 참여"
+   ],
+   "links": [
+    {
+     "t": "정조대왕의 애민정신, 수원 화성행궁에서 한의학으로 다시 꽃피우다",
+     "u": "https://www.newsmap.co.kr/news/articleView.html?idxno=3935",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": true,
+   "evidence": "1900여 명 참여",
+   "kw_clean": "향낭 만들기 키트",
+   "shorts": true
+  },
+  {
+   "kw": "프라임봇, 개발용 로봇, 교육용 로봇",
+   "products": [
+    "프라임봇 로봇"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "아이, 10대, 2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-11",
+   "shortsable": true,
+   "buzz": [
+    "로봇 매장 소비자 북적, 어린이들에게 인기, 대학생 2차 개발 관심"
+   ],
+   "links": [
+    {
+     "t": "상하이에 문 연 '프라임봇' 로봇 매장…국경절 연휴기간 소비자 '북적'",
+     "u": "https://www.irobotnews.com/news/articleView.html?idxno=48919",
+     "d": "2026-10-11"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "로봇 장난감",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 텀블러, 파우치",
+   "products": [
+    "세븐일레븐 캐릭터 굿즈 (텀블러, 파우치 등)"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "굿즈 매출 4배 성장, 실용형 상품 인기"
+   ],
+   "links": [
+    {
+     "t": "캐릭터에 쓸모를 더했다…세븐일레븐 굿즈 매출 4배 성장",
+     "u": "https://www.megaeconomy.co.kr/news/newsview.php?ncode=1065590673527486",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "굿즈 매출 4배 성장",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "조구만 굿즈, 캐릭터 굿즈",
+   "products": [
+    "세븐일레븐 '조구만' 협업 굿즈"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "굿즈 매출 4배 증가, 실용성과 수집 가치 결합 굿즈 인기"
+   ],
+   "links": [
+    {
+     "t": "세븐일레븐, 캐릭터 굿즈 매출 4배 증가…'조구만' 협업 상품 출시",
+     "u": "https://www.m-i.kr/news/articleView.html?idxno=2003861",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "굿즈 매출 4배 증가",
+   "kw_clean": "조구만 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 팬덤 굿즈",
+   "products": [
+    "세븐일레븐 캐릭터 굿즈"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "큰 인기를 얻었던 영향, 상품 수 증가"
+   ],
+   "links": [
+    {
+     "t": "세븐일레븐, 캐릭터 팬덤 소비 트렌드 공략 강화",
+     "u": "https://www.edaily.co.kr/News/Read?newsId=02768326645610952&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐릭터 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "목욕 용품, 사우나 용품",
+   "products": [
+    "목욕·사우나 용품"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "2030": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "판매점 성행, 2030 인기"
+   ],
+   "links": [
+    {
+     "t": "[Y르포] “혼자만의 공간이 좋아요”…사우나·세신샵에 흠뻑 빠진 대구...",
+     "u": "https://www.yeongnam.com/web/view.php?key=20261007020452642",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": true,
+   "evidence": "판매점 성행",
+   "kw_clean": "목욕 사우나 용품",
+   "shorts": true
+  },
+  {
+   "kw": "한샘 소파, 패브릭 소파",
+   "products": [
+    "한샘 '스위브' 소파"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "4050": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "꾸준한 인기, 40~50대 고객층 선호"
+   ],
+   "links": [
+    {
+     "t": "한샘, ‘스위브’ 5종으로 소파 선택지 확대…소재·기능 세분화",
+     "u": "http://www.newstomato.com/ReadNews.aspx?no=1315927&inflow=N",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "소파",
+   "shorts": false
+  },
+  {
+   "kw": "K-네일 키트, 네일아트 키트",
+   "products": [
+    "K-네일 체험 키트"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-20",
+   "shortsable": true,
+   "buzz": [
+    "K-네일 체험 이벤트 인기"
+   ],
+   "links": [
+    {
+     "t": "천안 '빵빵데이', 체험장엔 웃음꽃 활짝…동네빵집·농부장터 북적",
+     "u": "https://www.aflnews.co.kr/news/articleView.html?idxno=329966",
+     "d": "2026-10-20"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "네일 체험 키트",
+   "shorts": true
+  },
+  {
+   "kw": "캐릭터 굿즈, 꼬달이 굿즈",
+   "products": [
+    "꼬달이 굿즈"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "개장 3시간 만에 인기 품목 매진"
+   ],
+   "links": [
+    {
+     "t": "［김천 톺아보기］ 김천김밥축제, 김밥 60종에 셔틀버스 60대…대한민국...",
+     "u": "https://www.ekn.kr/web/view.php?key=20261008025473782",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": true,
+   "evidence": "개장 3시간 만에 인기 품목 매진",
+   "kw_clean": "꼬달이 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "베베핀 어린이용품, 락앤락 용기",
+   "products": [
+    "락앤락 베베핀 컬렉션 (실리콘 지퍼백, 푸드자, 보틀, 텀블러), 락앤락 전자레인지용 스테인리스 용기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "인기 캐릭터 베베핀 적용, 락앤락 출시"
+   ],
+   "links": [
+    {
+     "t": "[MD라이프] 쿠팡, 셰프·전국 맛집 모은 ‘미식관’ 오픈…800여개 상품...",
+     "u": "https://www.mydaily.co.kr/page/view/2026101419033213835",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "베베핀 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "파크골프 클럽, 파크골프 공",
+   "products": [
+    "볼빅 파크골프 클럽, 파크골프 공"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-15",
+   "shortsable": true,
+   "buzz": [
+    "파크골프 인기, 남녀노소 누구나 쉽게 배울 수 있어 인기"
+   ],
+   "links": [
+    {
+     "t": "볼빅, 19일 '볼빅 전국 파크골프 챔피언십' 개최",
+     "u": "http://www.newsprime.co.kr/news/article.html?no=751139",
+     "d": "2026-10-15"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "파크골프 클럽",
+   "shorts": true
+  },
+  {
+   "kw": "끼요 굿즈, 캐릭터 인형",
+   "products": [
+    "끼요 인형, 끼요 키링"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-14",
+   "shortsable": true,
+   "buzz": [
+    "큰 인기를 모았다"
+   ],
+   "links": [
+    {
+     "t": "12년 만에 제주서 전국체전 개막…\"안방서 메달 130개 이상 도전\"",
+     "u": "https://www.stnsports.co.kr/news/articleView.html?idxno=323786",
+     "d": "2026-10-14"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "끼요 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "AI 체형 관리, 스마트 피트니스",
+   "products": [
+    "원소프트다임 AI 체형 관리 기기, 쓰리아이 AI 체형 관리 기기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "K-Sports 산업 첨단 기술력"
+   ],
+   "links": [
+    {
+     "t": "‘K-Sports Beyond’ 한국 스포츠산업 첨단 기술력과 잠재력 조명",
+     "u": "https://sports.khan.co.kr/article/202610130744013?pt=nv",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "AI 체형 관리 기기",
+   "shorts": true
+  },
+  {
+   "kw": "운동 기구, 홈트 기구",
+   "products": [
+    "피트니스 기구"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-13",
+   "shortsable": true,
+   "buzz": [
+    "K-Sports 산업 첨단 기술력"
+   ],
+   "links": [
+    {
+     "t": "‘K-Sports Beyond’ 한국 스포츠산업 첨단 기술력과 잠재력 조명",
+     "u": "https://sports.khan.co.kr/article/202610130744013?pt=nv",
+     "d": "2026-10-13"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "피트니스 기구",
+   "shorts": true
+  },
+  {
+   "kw": "마스코트 인형, 캐릭터 키링",
+   "products": [
+    "끼요 인형, 끼요 키링"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-08",
+   "shortsable": true,
+   "buzz": [
+    "마스코트 ‘끼요’ 인형과 키링 등 굿즈는 지난달 장애인체육대회에서 큰 인기를 모았다."
+   ],
+   "links": [
+    {
+     "t": "전국체전 첫 ‘NFT 티켓’ 도입… “스포츠 축제 즐기러 옵서예” [지방...",
+     "u": "https://www.segye.com/newsView/20261005512768?OutUrl=naver",
+     "d": "2026-10-08"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "끼요 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "인형 만들기, DIY 인형",
+   "products": [
+    "광릉숲고마곰 인형 만들기 키트"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 1,
+   "n_yt": 0,
+   "first": "2026-10-07",
+   "shortsable": true,
+   "buzz": [
+    "기존 인기 프로그램에 새로운 체험도 더했다."
+   ],
+   "links": [
+    {
+     "t": "[패트롤] 구리시-남양주시-양평군-포천시-하남시",
+     "u": "https://www.ekn.kr/web/view.php?key=20261007029123263",
+     "d": "2026-10-07"
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "인형 만들기 키트",
+   "shorts": true
+  },
+  {
+   "kw": "수납 정리함, 공간활용",
+   "products": [
+    "공간 활용 정리템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "삶의질 상승템"
+   ],
+   "links": [
+    {
+     "t": "꿀템이 뭔지 제대로 보여드릴게요!! 광고❌ 2026ver 삶의질 상승템14가지! (치아템, 역대급 공간 활용",
+     "u": "https://youtu.be/mmJMZx0Aaio",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "공간 활용 정리템",
+   "shorts": true
+  },
+  {
+   "kw": "육아용품, 아기용품",
+   "products": [
+    "꼬물 인생템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "육아": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "삶의질 상승템"
+   ],
+   "links": [
+    {
+     "t": "꿀템이 뭔지 제대로 보여드릴게요!! 광고❌ 2026ver 삶의질 상승템14가지! (치아템, 역대급 공간 활용",
+     "u": "https://youtu.be/mmJMZx0Aaio",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "인생템",
+   "shorts": true
+  },
+  {
+   "kw": "신기한 장난감, 유행 장난감",
+   "products": [
+    "재밌는 장난감"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 난리난 꿀템, 핫템모음, 트렌드템"
+   ],
+   "links": [
+    {
+     "t": "이거 그냥 지나치면 손해! 요즘 난리난 꿀템 3종 소개!#핫템모음#재밌는장난감#트렌드템",
+     "u": "https://youtu.be/VCHVX2wNsqE",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘 난리난 꿀템",
+   "kw_clean": "재밌는 장난감",
+   "shorts": true
+  },
+  {
+   "kw": "주방용품, 살림템",
+   "products": [
+    "주방 꿀템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 난리난 주방꿀템, 주방필수템, 쿠팡꿀템"
+   ],
+   "links": [
+    {
+     "t": "아직도 주방에 이게 없다고? 요즘 난리난 주방꿀템 2가지! #주방필수템 #살림템 #쿠팡꿀템 #쿠팡추천템",
+     "u": "https://youtu.be/SwdViFy8DaA",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "주방용품",
+   "shorts": true
+  },
+  {
+   "kw": "살림용품, 생활용품",
+   "products": [
+    "살림 꿀템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란 후 드디어 재입고 되었습니다, 쿠팡에서 너무 잘 나가는"
+   ],
+   "links": [
+    {
+     "t": "품절 대란 후 드디어 재입고 되었습니다 | 쿠팡에서 너무 잘 나가는 살림 꿀템 32가지 몰아보기 | 삶의질 ",
+     "u": "https://youtu.be/gFcanhLOdCQ",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란 후 드디어 재입고 되었습니다",
+   "kw_clean": "생활용품",
+   "shorts": true
+  },
+  {
+   "kw": "생활용품, 살림템",
+   "products": [
+    "품절대란 꿀템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "쿠팡에서 난리난 품절대란 꿀템, 품절 대란 후 드디어 재입고 되었습니다"
+   ],
+   "links": [
+    {
+     "t": "쿠팡에서 난리난 품절대란 꿀템 71가지 몰아보기 | 내돈내산 | 놓치면 후회하는 삶의 질 수직 상승템 | 안",
+     "u": "https://youtu.be/EYyUlYDnJSs",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란 후 드디어 재입고 되었습니다",
+   "kw_clean": "생활용품",
+   "shorts": true
+  },
+  {
+   "kw": "플라이어, 렌치",
+   "products": [
+    "플라이어렌치"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란 인기템, 초저가 인기 아이템"
+   ],
+   "links": [
+    {
+     "t": "플라이어렌치 추천 | 품절 대란 인기템 서두르세요 | 초저가 인기 아이템   | 특가 세일",
+     "u": "https://youtu.be/I_sb5bVF49c",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란 인기템",
+   "kw_clean": "플라이어 렌치",
+   "shorts": true
+  },
+  {
+   "kw": "이케아 추천, 이케아 꿀템",
+   "products": [
+    "이케아 품절템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "completely sold out"
+   ],
+   "links": [
+    {
+     "t": "The IKEA item that's completely sold out",
+     "u": "https://youtu.be/jK4ITjp5cAk",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "completely sold out",
+   "kw_clean": "이케아 소품",
+   "shorts": true
+  },
+  {
+   "kw": "지드래곤 패션, GD 아이템",
+   "products": [
+    "지드래곤 브랜드 핫 아이템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "출시와 동시에 ‘품절 대란’ 일어나는"
+   ],
+   "links": [
+    {
+     "t": "출시와 동시에 ‘품절 대란’ 일어나는 ‘지드래곤’ 브랜드 핫 아이템",
+     "u": "https://youtu.be/IZUfS6dS-FA",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "출시와 동시에 ‘품절 대란’ 일어나는",
+   "kw_clean": "패션 아이템",
+   "shorts": true
+  },
+  {
+   "kw": "물풍선, 여름 물놀이",
+   "products": [
+    "물풍선 파우치 세트"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "아이, 전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 여름물놀이 최고아이템"
+   ],
+   "links": [
+    {
+     "t": "품절 대란 여름물놀이 최고아이템  물풍선 파우치 세트 자석 놀이 공",
+     "u": "https://youtu.be/Hxwb1_L8krI",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란",
+   "kw_clean": "물풍선 세트",
+   "shorts": true
+  },
+  {
+   "kw": "자석 공, 놀이 공",
+   "products": [
+    "자석 놀이 공"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "아이, 전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란, 여름물놀이 최고아이템"
+   ],
+   "links": [
+    {
+     "t": "품절 대란 여름물놀이 최고아이템  물풍선 파우치 세트 자석 놀이 공",
+     "u": "https://youtu.be/Hxwb1_L8krI",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란",
+   "kw_clean": "자석 공",
+   "shorts": true
+  },
+  {
+   "kw": "업사이클링 제품, DIY 업사이클",
+   "products": [
+    "핸드메이드 업사이클링 아이템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절대란"
+   ],
+   "links": [
+    {
+     "t": "품절대란❤️‍🔥핸드메이드 업사이클링 아이템 제작기✨with 드림킹 칠천이",
+     "u": "https://youtu.be/dL6tB4o3g9A",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란",
+   "kw_clean": "업사이클링 소품",
+   "shorts": true
+  },
+  {
+   "kw": "명품 가방, 연예인 가방",
+   "products": [
+    "제니가방"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란이었던"
+   ],
+   "links": [
+    {
+     "t": "품절❗️❗️ 대란이었던 제니가방 찾다가 해외 뷰티 아이템 쉽게 구매 가능한 사이트 찾았다!",
+     "u": "https://youtu.be/KI0Yv8RssXc",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절❗️❗️ 대란이었던",
+   "kw_clean": "여성 가방",
+   "shorts": true
+  },
+  {
+   "kw": "명품 가방, 루이비통 가방",
+   "products": [
+    "루이비통 멀티 포쉐트 악세수아"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "2030, 5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절대란, 갓성비 아이템"
+   ],
+   "links": [
+    {
+     "t": "품절대란 명품 #갓성비 아이템 ! 루이비통 멀티 포쉐트 악세수아 LOUIS VUITTON Multi Poch",
+     "u": "https://youtu.be/xhTQXcsZ8iY",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란",
+   "kw_clean": "명품 가방",
+   "shorts": true
+  },
+  {
+   "kw": "비즈공예, DIY 비즈",
+   "products": [
+    "비즈공예 부자재"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "10대, 2030": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절 대란 인기템, 핫 아이템, 득템 인기템"
+   ],
+   "links": [
+    {
+     "t": "비즈공예부자재 추천 | 품절 대란 인기템 서두르세요 | 핫 아이템   | 득템 인기템",
+     "u": "https://youtu.be/fbG1wq-00Dg",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절 대란 인기템",
+   "kw_clean": "비즈공예 부자재",
+   "shorts": true
+  },
+  {
+   "kw": "어닝 브라켓, 철판 브라켓",
+   "products": [
+    "어닝철판브라켓"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "품절대란 어렵게 구했다!"
+   ],
+   "links": [
+    {
+     "t": "품절대란 어닝철판브라켓 어렵게 구했다! 추천 리뷰 TOP5",
+     "u": "https://youtu.be/TdsL0LqcGFA",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "품절대란 어렵게 구했다!",
+   "kw_clean": "어닝 철판 브라켓",
+   "shorts": true
+  },
+  {
+   "kw": "곰돌이 빵틀, 식빵틀",
+   "products": [
+    "다이소 곰돌이 식빵틀"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "New Daiso Life Hacks"
+   ],
+   "links": [
+    {
+     "t": "7 New Daiso Life Hacks💡 Cute 🍞Bear Bread Mold & Bag Clips! ✈",
+     "u": "https://youtu.be/Kcsl48tYAHQ",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "식빵 틀",
+   "shorts": true
+  },
+  {
+   "kw": "여행용 저울, 휴대용 저울",
+   "products": [
+    "다이소 여행용 저울"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "New Daiso Life Hacks"
+   ],
+   "links": [
+    {
+     "t": "7 New Daiso Life Hacks💡 Cute 🍞Bear Bread Mold & Bag Clips! ✈",
+     "u": "https://youtu.be/Kcsl48tYAHQ",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "여행용 저울",
+   "shorts": true
+  },
+  {
+   "kw": "캐리어 바퀴 커버, 여행용 바퀴 커버",
+   "products": [
+    "다이소 캐리어 바퀴 커버"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "New Daiso Life Hacks"
+   ],
+   "links": [
+    {
+     "t": "7 New Daiso Life Hacks💡 Cute 🍞Bear Bread Mold & Bag Clips! ✈",
+     "u": "https://youtu.be/Kcsl48tYAHQ",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "캐리어 바퀴 커버",
+   "shorts": true
+  },
+  {
+   "kw": "전동 클렌저, 얼굴 세안기",
+   "products": [
+    "다이소 전동 클렌저"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 신상, 유용한 생활꿀템"
+   ],
+   "links": [
+    {
+     "t": "있으면 진짜 유용한! 다이소 생활꿀템 5가지 신상💕 전동 클렌저로 편한 세안 루틴!☕ 데스크 컵홀더로 커피 ",
+     "u": "https://youtu.be/v4QQ1eJTFJE",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "전동 클렌저",
+   "shorts": true
+  },
+  {
+   "kw": "데스크 컵홀더, 책상 컵홀더",
+   "products": [
+    "다이소 데스크 컵홀더"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 신상, 유용한 생활꿀템"
+   ],
+   "links": [
+    {
+     "t": "있으면 진짜 유용한! 다이소 생활꿀템 5가지 신상💕 전동 클렌저로 편한 세안 루틴!☕ 데스크 컵홀더로 커피 ",
+     "u": "https://youtu.be/v4QQ1eJTFJE",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "데스크 컵홀더",
+   "shorts": true
+  },
+  {
+   "kw": "공중부양 정리함, 부유 정리대",
+   "products": [
+    "다이소 공중부양 정리템"
+   ],
+   "grps": {
+    "화제": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "New arrivals, amazing items"
+   ],
+   "links": [
+    {
+     "t": "Wow, knee-slapping Daiso essentials! From new arrivals to am",
+     "u": "https://youtu.be/mj6QFd-IIok",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "정리 용품",
+   "shorts": true
+  },
+  {
+   "kw": "팝잇, 푸쉬팝",
+   "products": [
+    "팝잇 (Pop It)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 초딩들의 인싸템"
+   ],
+   "links": [
+    {
+     "t": "요즘 초딩들의 인싸템 팝잇!",
+     "u": "https://youtu.be/bAa7DSKZbGo",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘 초딩들의 인싸템",
+   "kw_clean": "팝잇",
+   "shorts": true
+  },
+  {
+   "kw": "브롤스타즈 키링, 캐릭터 열쇠고리",
+   "products": [
+    "브롤스타즈 열쇠고리"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 초등학생 남자아이들 인싸템"
+   ],
+   "links": [
+    {
+     "t": "요즘 초등학생 남자아이들 인싸템! 시안이가 소개해 드립니다. 브롤스타즈 열쇠고리!!",
+     "u": "https://youtu.be/jXTDFhSqIA8",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘 초등학생 남자아이들 인싸템",
+   "kw_clean": "브롤스타즈 굿즈",
+   "shorts": true
+  },
+  {
+   "kw": "손목 선풍기, 휴대용 선풍기",
+   "products": [
+    "손목밴드 선풍기 (LED 조명 USB 소형 선풍기)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초딩 인싸템"
+   ],
+   "links": [
+    {
+     "t": "손목밴드 선풍기 초딩인싸템 어린이용 성인용 7컬러 LED  조명 USB 소형 선풍기",
+     "u": "https://youtu.be/Z4SIhQqycXw",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "초딩인싸템",
+   "kw_clean": "손목 선풍기",
+   "shorts": true
+  },
+  {
+   "kw": "대형 필통, 색연필 파우치",
+   "products": [
+    "대형 필통 (스마트 파스텔 가죽 방수)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등 인싸템"
+   ],
+   "links": [
+    {
+     "t": "대형 필통 큰필통 초등인싸템 저학년 색연필 파우치 스마트 파스텔 깔끔한 가죽 방수",
+     "u": "https://youtu.be/b-FOrnLFefo",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "초등인싸템",
+   "kw_clean": "대형 필통",
+   "shorts": true
+  },
+  {
+   "kw": "오타마톤, 음표 악기 장난감",
+   "products": [
+    "오타마톤 (Otamatone)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 선물 인싸템, 하루 종일 연주"
+   ],
+   "links": [
+    {
+     "t": "초등학생 선물 인싸템 오타마톤 가볍게 살펴보고 연주해 보기!!! 생일 선물로 큰아들 선물해줬는데 하루 종일 ",
+     "u": "https://youtu.be/LG8_xskEsjA",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "초등학생 선물 인싸템",
+   "kw_clean": "오타마톤",
+   "shorts": true
+  },
+  {
+   "kw": "미니카, 장난감 자동차",
+   "products": [
+    "미니카"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 학용품 꿀템"
+   ],
+   "links": [
+    {
+     "t": "✨핵인싸템✨ 초등학생 학용품 꿀템 대방출! 지우개연필부터 색연필, 미니카까지!",
+     "u": "https://youtu.be/NyfGZjXJoh8",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "핵인싸템",
+   "kw_clean": "미니카",
+   "shorts": true
+  },
+  {
+   "kw": "슬라임, 말랑이",
+   "products": [
+    "슬라임 (Slime)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 인싸템, hot item"
+   ],
+   "links": [
+    {
+     "t": "말랑이자르기 & 슬라임 섞기 ,  Slime ASMR , 초등학생 인싸템 , soft , hot item ,",
+     "u": "https://youtu.be/9isyDay4c4g",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "초등학생 인싸템",
+   "kw_clean": "슬라임",
+   "shorts": true
+  },
+  {
+   "kw": "키즈 스마트워치, 어린이 스마트워치",
+   "products": [
+    "초등학생 스마트워치"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "인기템, 인싸템, 필수템"
+   ],
+   "links": [
+    {
+     "t": "초등학생스마트워치 TOP10 #인기템 #인싸템 #필수템",
+     "u": "https://youtu.be/GPhOvflnD3g",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "#인싸템",
+   "kw_clean": "초등학생 스마트워치",
+   "shorts": true
+  },
+  {
+   "kw": "가민 키즈 워치, 어린이 피트니스 트래커",
+   "products": [
+    "가민 비보핏 주니어2 (Garmin Vivofit Jr. 2)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "해외 초등학생 인싸템"
+   ],
+   "links": [
+    {
+     "t": "초등학생 인싸템 - 해외 초등학생은 전부 다 가지고 있는 초등학생 손목시계 가민비보핏 주니어2 개봉 리뷰",
+     "u": "https://youtu.be/sS0K4fZ6YGk",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "해외 초등학생은 전부 다 가지고 있는",
+   "kw_clean": "어린이 스마트워치",
+   "shorts": true
+  },
+  {
+   "kw": "클레이 지우개, 만들기 지우개",
+   "products": [
+    "클레이 지우개"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 인싸템"
+   ],
+   "links": [
+    {
+     "t": "초등학생 점토 놀이! 인싸템 클레이 지우개  점토 도구 리뷰",
+     "u": "https://youtu.be/mVSfx4n5liw",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "인싸템",
+   "kw_clean": "클레이 지우개",
+   "shorts": true
+  },
+  {
+   "kw": "점토 도구, 클레이 도구",
+   "products": [
+    "점토 도구"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등학생 인싸템"
+   ],
+   "links": [
+    {
+     "t": "초등학생 점토 놀이! 인싸템 클레이 지우개  점토 도구 리뷰",
+     "u": "https://youtu.be/mVSfx4n5liw",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "인싸템",
+   "kw_clean": "점토 도구",
+   "shorts": true
+  },
+  {
+   "kw": "변신 필통, 다기능 필통",
+   "products": [
+    "변신 필통 (다기능 대용량)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "신학기 신형"
+   ],
+   "links": [
+    {
+     "t": "신학기 신형 남아초등학생 변신 필통 다기능 대용량 H0119kdksd +사은품 증정",
+     "u": "https://youtu.be/2eUkfo41_nk",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "변신 필통",
+   "shorts": true
+  },
+  {
+   "kw": "콤파스 스피너, 피젯 콤파스",
+   "products": [
+    "콤파스피로 (Compass Fidget Spinner)"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "초등 중등 고등 인싸템"
+   ],
+   "links": [
+    {
+     "t": "초등 중등 고등 인싸템! 콤파스피로, 스피너처럼 돌리고, 동그라미 그리고, 미술놀이 까지",
+     "u": "https://youtu.be/Tc3uzoTfyEw",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "초등 중등 고등 인싸템",
+   "kw_clean": "콤파스 스피너",
+   "shorts": true
+  },
+  {
+   "kw": "브롤스타즈 뽑기, 캐릭터 뽑기",
+   "products": [
+    "브롤스타즈 뽑기"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘 초등학생 사이에 유행"
+   ],
+   "links": [
+    {
+     "t": "요즘 초등학생 사이에 유행하는 브롤스타즈 뽑기_게임 캐릭터와 비교하기",
+     "u": "https://youtu.be/hNms64PEi5A",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘 초등학생 사이에 유행하는",
+   "kw_clean": "캐릭터 뽑기",
+   "shorts": true
+  },
+  {
+   "kw": "슬라임 만들기",
+   "products": [
+    "슬라임"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "액체괴물 만들기"
+   ],
+   "links": [
+    {
+     "t": "슬라임으로 액체괴물 만들기",
+     "u": "https://youtu.be/pj0900I04rU",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "슬라임",
+   "shorts": true
+  },
+  {
+   "kw": "테이프공 만들기",
+   "products": [
+    "테이프공"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "유행템"
+   ],
+   "links": [
+    {
+     "t": "초딩 유행템 테이프공 만들기!",
+     "u": "https://youtu.be/pJ973k-xIHo",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "유행템",
+   "kw_clean": "테이프 공",
+   "shorts": true
+  },
+  {
+   "kw": "피규어 파우치, 가챠 파우치",
+   "products": [
+    "피규어 파우치"
+   ],
+   "grps": {
+    "아이": 1
+   },
+   "who": {
+    "아이": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "요즘유행, 필수템"
+   ],
+   "links": [
+    {
+     "t": "요즘유행💗 잼민이 필수템! 직접 만드는 피규어 파우치?! 싹싹 모아서 만들어보자!🎀 (가챠파우치 만들기)",
+     "u": "https://youtu.be/zR1m6nNrC84",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "요즘유행",
+   "kw_clean": "피규어 파우치",
+   "shorts": true
+  },
+  {
+   "kw": "안마의자, 전동 안마의자",
+   "products": [
+    "컴포르테 전동 안마의자"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "진짜 효도템, 추천"
+   ],
+   "links": [
+    {
+     "t": "[부모님 선물연구소] 진짜 효도템 안마의자 추천✨ 컴포르테 전동 안마의자 리뷰 | Best Massage C",
+     "u": "https://youtu.be/GPzvlrU-2M4",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "안마의자",
+   "shorts": false
+  },
+  {
+   "kw": "죽부인, 대나무 바디필로우",
+   "products": [
+    "대나무 죽부인"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "여름 효도템, 추천"
+   ],
+   "links": [
+    {
+     "t": "여름 효도템! 대나무 죽부인 비교  추천 (대형/소형 바디필로우)",
+     "u": "https://youtu.be/r2-xjsPBCEg",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "대나무 죽부인",
+   "shorts": true
+  },
+  {
+   "kw": "괄사 마사지기",
+   "products": [
+    "괄사"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "찐 추천템, 돈값하는"
+   ],
+   "links": [
+    {
+     "t": "[ENG/JPN] 광고❌️허튼 돈 쓰면 개빡치는 여자의 비싸도 돈값하는💸찐 추천템 6가지 | 입욕제 추천,괄",
+     "u": "https://youtu.be/zkI4TDWSrus",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "괄사",
+   "shorts": true
+  },
+  {
+   "kw": "전기 그릴, 주방 그릴",
+   "products": [
+    "그릴"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "찐 추천템, 돈값하는"
+   ],
+   "links": [
+    {
+     "t": "[ENG/JPN] 광고❌️허튼 돈 쓰면 개빡치는 여자의 비싸도 돈값하는💸찐 추천템 6가지 | 입욕제 추천,괄",
+     "u": "https://youtu.be/zkI4TDWSrus",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "그릴",
+   "shorts": true
+  },
+  {
+   "kw": "스텐팬, 스테인리스 프라이팬",
+   "products": [
+    "스텐팬"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "전체": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "찐 추천템, 돈값하는"
+   ],
+   "links": [
+    {
+     "t": "[ENG/JPN] 광고❌️허튼 돈 쓰면 개빡치는 여자의 비싸도 돈값하는💸찐 추천템 6가지 | 입욕제 추천,괄",
+     "u": "https://youtu.be/zkI4TDWSrus",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "스텐팬",
+   "shorts": true
+  },
+  {
+   "kw": "무선 손마사지기, 손 마사지기",
+   "products": [
+    "이야 무선 손마사지기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "효도템 추천, 실패없는 명절선물"
+   ],
+   "links": [
+    {
+     "t": "실패없는 명절선물 효도템 추천 이야 무선 손마사지기｜가덜트 리뷰",
+     "u": "https://youtu.be/IBFYfHylmQE",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "손 마사지기",
+   "shorts": true
+  },
+  {
+   "kw": "용돈박스, 서프라이즈 용돈박스",
+   "products": [
+    "용돈박스"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "필수템, 추천"
+   ],
+   "links": [
+    {
+     "t": "❤️용돈박스 추천, 부모님 환갑 칠순 필수템! 돈 뽑는 서프라이즈 용돈박스 💸✨",
+     "u": "https://youtu.be/9slzxriMUzc",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "용돈 박스",
+   "shorts": true
+  },
+  {
+   "kw": "미니배너, 생신 현수막",
+   "products": [
+    "미니배너"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "필수템, 추천"
+   ],
+   "links": [
+    {
+     "t": "❤️현수막 추천, 부모님 생신 필수템! 센스 폭발 미니배너 추천 🎂✨",
+     "u": "https://youtu.be/4_jnqMGGXjk",
+     "d": ""
+    }
+   ],
+   "demand": false,
+   "evidence": "",
+   "kw_clean": "미니 배너",
+   "shorts": true
+  },
+  {
+   "kw": "돌침대, 온열침대",
+   "products": [
+    "장수돌침대"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "만족도 1위, 효도선물"
+   ],
+   "links": [
+    {
+     "t": "어버이날 선물 추천! 장수돌침대 부모님 효도선물 만족도 1위 입니다 #어버이날선물 #효도선물 #장수돌침대 #",
+     "u": "https://youtu.be/8WQXAumuvFQ",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "만족도 1위",
+   "kw_clean": "돌침대",
+   "shorts": false
+  },
+  {
+   "kw": "돌소파, 온열소파",
+   "products": [
+    "돌소파"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "만족도 1위, 효도선물"
+   ],
+   "links": [
+    {
+     "t": "어버이날 선물 추천! 장수돌침대 부모님 효도선물 만족도 1위 입니다 #어버이날선물 #효도선물 #장수돌침대 #",
+     "u": "https://youtu.be/8WQXAumuvFQ",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "만족도 1위",
+   "kw_clean": "돌소파",
+   "shorts": false
+  },
+  {
+   "kw": "온열침대, 돌침대",
+   "products": [
+    "온열침대"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "만족도 1위, 효도선물"
+   ],
+   "links": [
+    {
+     "t": "어버이날 선물 추천! 장수돌침대 부모님 효도선물 만족도 1위 입니다 #어버이날선물 #효도선물 #장수돌침대 #",
+     "u": "https://youtu.be/8WQXAumuvFQ",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "만족도 1위",
+   "kw_clean": "온열침대",
+   "shorts": false
+  },
+  {
+   "kw": "시니어 돋보기",
+   "products": [
+    "다이소 돋보기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 시니어 꿀템 TOP 10, 어르신 필수템 추천"
+   ],
+   "links": [
+    {
+     "t": "\"다이소 시니어 꿀템 TOP 10! 어르신 필수템 추천 (가격, 사용법)\"    #다이소 #시니어 #꿀템 #",
+     "u": "https://youtu.be/hXR_PK2WStg",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "TOP 10",
+   "kw_clean": "돋보기",
+   "shorts": true
+  },
+  {
+   "kw": "미끄럼방지 용품",
+   "products": [
+    "다이소 미끄럼방지 제품"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 시니어 꿀템 TOP 10, 어르신 필수템 추천"
+   ],
+   "links": [
+    {
+     "t": "\"다이소 시니어 꿀템 TOP 10! 어르신 필수템 추천 (가격, 사용법)\"    #다이소 #시니어 #꿀템 #",
+     "u": "https://youtu.be/hXR_PK2WStg",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "TOP 10",
+   "kw_clean": "미끄럼 방지 제품",
+   "shorts": true
+  },
+  {
+   "kw": "시니어 안마기",
+   "products": [
+    "다이소 안마기"
+   ],
+   "grps": {
+    "5060": 1
+   },
+   "who": {
+    "5060": 1
+   },
+   "n_news": 0,
+   "n_yt": 1,
+   "first": "",
+   "shortsable": true,
+   "buzz": [
+    "다이소 시니어 꿀템 TOP 10, 어르신 필수템 추천"
+   ],
+   "links": [
+    {
+     "t": "\"다이소 시니어 꿀템 TOP 10! 어르신 필수템 추천 (가격, 사용법)\"    #다이소 #시니어 #꿀템 #",
+     "u": "https://youtu.be/hXR_PK2WStg",
+     "d": ""
+    }
+   ],
+   "demand": true,
+   "evidence": "TOP 10",
+   "kw_clean": "안마기",
+   "shorts": true
+  }
+ ]
+}

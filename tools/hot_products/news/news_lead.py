@@ -4,10 +4,9 @@
 import datetime, email.utils, json, os, statistics, sys, time, urllib.parse, urllib.request
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__)); WORK = os.path.join(HERE, "..", "work")
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
 H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"], "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"]}
 cache = {}
 def dates(kw):

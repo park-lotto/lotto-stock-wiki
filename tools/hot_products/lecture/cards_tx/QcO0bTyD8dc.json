@@ -1,0 +1,106 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "아마존",
+  "틱톡",
+  "쇼피",
+  "유튜브"
+ ],
+ "methods": [
+  {
+   "name": "틱톡 판매 여부 확인",
+   "goal": "바이럴·급상승",
+   "data_source": "틱톡 데이터 (탑뷰 연동)",
+   "steps": [
+    "제품 이미지를 클로드에 첨부한 뒤 틱톡에서 판매 여부 확인을 요청한다."
+   ],
+   "thresholds": [],
+   "signal": "제품이 틱톡에서 실제로 판매되고 있어",
+   "signal_quote": "제품이 틱톡에서 실제로 판매되고 있어",
+   "examples": [],
+   "signal_verified": true
+  },
+  {
+   "name": "카테고리별 베스트셀러 확인",
+   "goal": "꾸준히 팔림",
+   "data_source": "시장 데이터 (탑뷰 연동)",
+   "steps": [
+    "클로드에 특정 카테고리 내에서 많이 팔리는 제품 정보를 요청한다."
+   ],
+   "thresholds": [],
+   "signal": "어떤 제품이 많이 팔리고 있는지 알려줘",
+   "signal_quote": "어떤 제품이 많이 팔리고 있는지 알려줘",
+   "examples": [
+    {
+     "item": "비타민 제품",
+     "why": "강사가 예시로 든 카테고리",
+     "quote": "비타민 제품 중 어떤 제품이 많이 팔리고 있는지"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "시장 트렌드 및 판매 제품 확인",
+   "goal": "바이럴·급상승",
+   "data_source": "시장 데이터 (탑뷰 연동)",
+   "steps": [
+    "클로드 안에서 다양한 제품을 대상으로 시장을 조사하고 트렌드를 확인한다."
+   ],
+   "thresholds": [],
+   "signal": "트렌드를 빠르게 확인할 수 있습니다",
+   "signal_quote": "트렌드를 빠르게 확인할 수 있습니다",
+   "examples": [
+    {
+     "item": "패션",
+     "why": "다양한 제품 카테고리 예시",
+     "quote": "패션, 식품, 뷰티, 전자 제품 등 다양한 제품을"
+    },
+    {
+     "item": "식품",
+     "why": "다양한 제품 카테고리 예시",
+     "quote": "패션, 식품, 뷰티, 전자 제품 등 다양한 제품을"
+    },
+    {
+     "item": "뷰티",
+     "why": "다양한 제품 카테고리 예시",
+     "quote": "패션, 식품, 뷰티, 전자 제품 등 다양한 제품을"
+    },
+    {
+     "item": "전자 제품",
+     "why": "다양한 제품 카테고리 예시",
+     "quote": "패션, 식품, 뷰티, 전자 제품 등 다양한 제품을"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [],
+ "skipped": [
+  "AI 영상 제작 도구(클로드, 탑뷰, MCP)의 연결 및 설정 방법",
+  "AI 이미지 및 영상 생성의 기본 사용법, 해상도별 크레딧 소모량, 자막 처리 팁",
+  "AI 영상의 수정 및 편집 과정, 고품질 영상 제작을 위한 반복 작업의 중요성",
+  "브이로그 주제 추천 및 영상 컨셉 수정 방법",
+  "무료 스킬 다운로드 및 이벤트 정보"
+ ],
+ "unique_insight": "단순히 감이 아닌 실제 데이터를 기반으로 제품과 시장을 판단하는 것이 중요하다.",
+ "insight_quote": "감으로 제품을 선택하는 것이 아니라 실제 데이터를 확인",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 5,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 6389
+ },
+ "_video": {
+  "id": "QcO0bTyD8dc",
+  "title": "60 Days of Unlimited AI Video | 6 Ways to Use Topview MCP + Claude",
+  "channel": "돈디 AI",
+  "views": 22998,
+  "duration": 747,
+  "queries": [
+   "판다랭크 사용법"
+  ]
+ }
+}

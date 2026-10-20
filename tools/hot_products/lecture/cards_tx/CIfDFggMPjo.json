@@ -1,0 +1,66 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "유튜브"
+ ],
+ "methods": [
+  {
+   "name": "AI 프로그램 활용 떡상 영상 발굴",
+   "goal": "바이럴·급상승",
+   "data_source": "유튜브 서버 데이터",
+   "steps": [
+    "AI 프로그램 상단 필터에서 '네이티브 필터'를 활용한다.",
+    "길이 필터를 '20분 초과'로 설정한다.",
+    "정렬 기준을 '조회수'로 설정한다.",
+    "특정 키워드(예: 오디오북)를 검색하여 '디ep치' 클릭으로 결과를 확인한다."
+   ],
+   "thresholds": [
+    {
+     "rule": "구독자 대비 조회수 100배 이상",
+     "quote": "구독자 대비 조회수가 100배가 넘으면 눈에 확기게 빨간 배지를 달아줘."
+    }
+   ],
+   "signal": "빨간색 신의 간택 100백배 베지",
+   "signal_quote": "전부 다 빨간색 신의 간택 100백배 베지가 달려 있죠.",
+   "examples": [
+    {
+     "item": "흰뱀을 구한 농부 (오디오북)",
+     "why": "구독자 대비 조회수가 100배 이상으로 '빨간색 신의 간택 100백배 베지'가 달려 있음",
+     "quote": "첫 번째 흰뱀을 구한 농부. 구독자 3,900명의 조회수 41만 회."
+    },
+    {
+     "item": "여자는 왜 (오디오북)",
+     "why": "구독자 대비 조회수가 100배 이상으로 '빨간색 신의 간택 100백배 베지'가 달려 있음",
+     "quote": "두 번째 여자는 왜 구독자 8,명의 조회수 71만 회."
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [],
+ "skipped": [
+  "AI 프로그램 생성 및 API 키 발급, 코드 복사 및 저장 방법",
+  "AI를 활용한 영상 기획 및 대본 생성 방법"
+ ],
+ "unique_insight": "AI 시대에는 코딩 능력보다 기획력이 중요하며, 상상력을 통해 원하는 도구를 만들 수 있다.",
+ "insight_quote": "무엇을 만들 것인가를 상상하는 기획력입니다.",
+ "insight_verified": true,
+ "coverage_thirds": 2,
+ "read_to_end": false,
+ "_check": {
+  "kept": 3,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 2775
+ },
+ "_video": {
+  "id": "CIfDFggMPjo",
+  "title": "How to Create a Free YouTube Search Program, Boost Views Per Subscriber, and Find \"God's Choice\" ...",
+  "channel": "성장팩트 | AI 업무자동화 & 수익화",
+  "views": 27236,
+  "duration": 336,
+  "queries": [
+   "떡상 키워드 찾기"
+  ]
+ }
+}

@@ -5,14 +5,14 @@
 import datetime, json, os, sys, time, urllib.request
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
 H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"], "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"], "Content-Type": "application/json"}
 ANCHOR = "선물"
-AGES = {"전체": None, "아이10대": ["1", "2"], "2030": ["3", "4", "5", "6"], "5060": ["9", "10", "11"]}   # 1=0~12 2=13~18 … 9=50~54 10=55~59 11=60+
-kws = sys.argv[1:] or [a["kw"] for a in json.load(open(os.path.join(HERE, "news_hot.json"), encoding="utf-8"))["items"] if a["shortsable"]]
+AGES = {"전체": None, "아이10대": ["1", "2"], "5060": ["9", "10", "11"]}   # 데이터랩 하루 1,000회 한도 — 화면에 쓰는 갈래만   # 1=0~12 2=13~18 … 9=50~54 10=55~59 11=60+
+kws = (json.load(open(sys.argv[1], encoding="utf-8")) if len(sys.argv) == 2 and sys.argv[1].endswith(".json") else sys.argv[1:]) \
+      or [a["kw"] for a in json.load(open(os.path.join(HERE, "news_hot.json"), encoding="utf-8"))["items"] if a["shortsable"]]   # 목록 파일(.json)도 받는다(띄어쓴 키워드가 안 갈라지게)
 kws = list(dict.fromkeys(k for k in kws if k and k != ANCHOR))
 end = datetime.date.today() - datetime.timedelta(days=1); start = end - datetime.timedelta(weeks=20)
 def call(group, ages):
@@ -21,7 +21,7 @@ def call(group, ages):
     if ages: body["ages"] = ages
     for _ in range(3):
         try:
-            res = json.load(urllib.request.urlopen(urllib.request.Request("https://openapi.naver.com/v1/datalab/search", json.dumps(body).encode(), H), timeout=40))["results"]
+            res = gkeys.datalab(body)          # 데이터랩은 gkeys 한 곳에서(앱 키 순환)
             return {g["title"]: [x["ratio"] for x in g["data"]] for g in res}
         except Exception as e:
             err = str(e); time.sleep(2)
@@ -39,7 +39,7 @@ for i in range(0, len(kws), 4):
             row[name] = {"level": round(avg(v[-4:]) / max(avg(a[-4:]), 1e-6), 4),           # 기준어 대비 최근 크기
                          "rise": round(rec / prev - 1, 2) if prev > 0 else (9.99 if rec > 0 else None)}
         base = (row.get("전체") or {}).get("level")
-        for name in ("아이10대", "2030", "5060"):
+        for name in ("아이10대", "5060"):
             if name in row and base: row[name]["skew"] = round(row[name]["level"] / base, 2)
         out[k] = row
     print(f"{min(i + 4, len(kws))}/{len(kws)}", flush=True)

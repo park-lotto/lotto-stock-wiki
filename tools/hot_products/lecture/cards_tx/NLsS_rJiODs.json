@@ -1,0 +1,59 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "네이버",
+  "스마트 스토어"
+ ],
+ "methods": [
+  {
+   "name": "시즌 상품 준비",
+   "goal": "시즌",
+   "data_source": "",
+   "steps": [
+    "새로 진행할 제품의 샘플도 여러 개 구매하고 업체 대표님들과 미팅도 시작을 하는데요"
+   ],
+   "thresholds": [],
+   "signal": "시즌이 바뀔 준비를 하고 있는 거 같아요",
+   "signal_quote": "시즌이 바뀔 준비를 하고 있는 거 같아요",
+   "examples": [
+    {
+     "item": "여름 제품",
+     "why": "다가오는 시즌에 맞춰 준비",
+     "quote": "여름 제품 다들 준비 많이 하셨나요"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "상위 노출이 되더라도 상품의 설득력과 결이 맞지 않으면 판매가 어렵고 순위가 하락할 수 있음",
+   "quote": "상의 노출이 된다고 해도 설득력이 떨어지거나 결이 안 맞는 상품은 끝까지 안 팔리더라"
+  }
+ ],
+ "skipped": [
+  "제품 상위 노출 및 트래픽 생성 방법 (NLU 키워드 최적화, 경로 링크 활용 커뮤니티 바이럴 등)",
+  "강사 및 전문가 소개, 오프라인 모임 홍보, 채널 구독 요청"
+ ],
+ "unique_insight": "온라인 쇼핑몰 시장에서 폐업이 늘고 있지만, 본인 브랜드를 구축하는 셀러들은 오히려 매출이 증가하는 추세임",
+ "insight_quote": "본인의 브랜드를 하거나 그 단계를 밟고 계신 분들은 오히려 매출이 올라간 분들도 계시더라고요",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 2,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 3812
+ },
+ "_video": {
+  "id": "NLsS_rJiODs",
+  "title": "18억 셀러는 이 방법으로 광고비 0원, 상위노출 합니다.ㅣ스마트스토어 ,쿠팡**",
+  "channel": "일머니",
+  "views": 56609,
+  "duration": 565,
+  "queries": [
+   "바이럴 키워드 찾는법"
+  ]
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "네이버 쇼핑",
+  "스마트 스토어"
+ ],
+ "methods": [
+  {
+   "name": "키워드 검색량 확인",
+   "goal": "꾸준히 팔림|뜨는 키워드",
+   "data_source": "스마트오너 (네이버 키워드 도구 데이터 활용)",
+   "steps": [
+    "스마트오너 프로그램 실행",
+    "검색 키워드 입력",
+    "월별 PC 및 모바일 검색 수 확인"
+   ],
+   "thresholds": [],
+   "signal": "높은 월별 검색 수",
+   "signal_quote": "월계 준으로 pc 랑 모바일 검색 수가 따로 나오거든요",
+   "examples": [
+    {
+     "item": "매운 김치",
+     "why": "월별 검색 수 확인을 통해 키워드 관심도 파악",
+     "quote": "매운 김치 쳤을 때도 보면 밑에 이제 월계 준으로"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [],
+ "skipped": [
+  "비즈랭킹 및 스마트오너를 이용한 내 상품 및 경쟁 상품의 네이버 쇼핑 노출 순위 확인 방법 (광고/일반 상품, PC/모바일, 가격비교 상품 순위 포함)"
+ ],
+ "unique_insight": "스마트오너는 여러 세부 키워드의 조회수를 확인하여 상품 라인업 구상에 활용할 수 있다.",
+ "insight_quote": "그 t 워드가 이제 조회 수가 얼마인지 확인 하려고",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 1,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 3108
+ },
+ "_video": {
+  "id": "oMoPvM9JAZE",
+  "title": "How to Check Your Naver Shopping Product, Smart Store, and Shopping Ad Rankings in 5 Seconds",
+  "channel": "동비TV",
+  "views": 54512,
+  "duration": 492,
+  "queries": [
+   "네이버 쇼핑 키워드 찾기"
+  ]
+ }
+}

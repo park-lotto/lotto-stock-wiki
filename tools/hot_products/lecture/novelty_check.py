@@ -4,11 +4,9 @@
 import datetime, json, os, sys, time, urllib.request
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__)); WORK = os.path.join(HERE, "..", "work")
-env = {}
-for line in open(os.path.join(HERE, "..", "..", "..", ".env"), encoding="utf-8"):
-    if "=" in line and not line.startswith("#"):
-        k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"], "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"], "Content-Type": "application/json"}
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # gkeys = 키·환경값의 유일한 곳
+import gkeys
+env = gkeys.env()
 end = datetime.date.today() - datetime.timedelta(days=1); start = end - datetime.timedelta(days=365 * 2 + 60)
 def series(kws):
     out = {}
@@ -16,7 +14,7 @@ def series(kws):
         body = {"startDate": str(start), "endDate": str(end), "timeUnit": "week", "keywordGroups": [{"groupName": k, "keywords": [k]} for k in kws[i:i + 5]]}
         for _ in range(3):
             try:
-                res = json.load(urllib.request.urlopen(urllib.request.Request("https://openapi.naver.com/v1/datalab/search", json.dumps(body).encode(), H), timeout=40))["results"]
+                res = gkeys.datalab(body)
                 for g in res: out[g["title"]] = [(datetime.date.fromisoformat(x["period"]), x["ratio"]) for x in g["data"]]
                 break
             except Exception: time.sleep(2)

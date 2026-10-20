@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>인기상품 랭킹 — 시안 v4</title>
+<style>
+:root{--bg:#070b14;--card:#0f1624;--card2:#0b111c;--line:#1d2a3d;--txt:#e8edf7;--sub:#8b97ad;--mint:#3ee0bf;--aurora:#8c6ef0;--gold:#facc6b;--hot:#ff6b4a;--good:#3ee0bf;--mid:#facc6b;--bad:#ff8a73}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--txt);
+  background:radial-gradient(60% 50% at 20% 0%,rgba(62,224,191,.08),transparent 60%),radial-gradient(50% 45% at 90% 10%,rgba(140,110,240,.10),transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 16px 60px}
+.mock{display:inline-block;font-size:12px;color:#04201b;background:var(--gold);border-radius:6px;padding:3px 8px;font-weight:800;margin-bottom:10px}
+h1{margin:0 0 4px;font-size:26px;letter-spacing:-.5px}
+.lead{color:var(--sub);margin:0 0 16px;font-size:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:12px;padding:10px 14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;gap:7px;align-items:center}
+.tab em{font-style:normal;font-weight:500;color:var(--sub);font-size:12px}
+.tab.on{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint),0 0 18px rgba(62,224,191,.22)}
+.tabdesc{color:var(--sub);font-size:13px;margin:2px 0 12px;line-height:1.6}
+.tabdesc b{color:var(--txt)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--mint);color:#04201b;border-color:var(--mint);font-weight:800}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:9px;padding:7px 12px;font-size:13px;cursor:pointer}
+.search{flex:1;min-width:160px;background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 12px;font-size:14px}
+.asof{margin-left:auto;color:var(--sub);font-size:12px}
+.cols{display:none;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px}
+.cols.open{display:flex}
+.cols label{display:flex;gap:5px;align-items:center;color:var(--sub);cursor:pointer}
+table{width:100%;border-collapse:separate;border-spacing:0 6px}
+th{font-size:12px;color:var(--sub);font-weight:600;text-align:left;padding:4px 8px;white-space:nowrap;cursor:pointer;user-select:none}
+th.sorted{color:var(--mint)}
+td{background:var(--card);padding:9px 8px;font-size:13px;vertical-align:middle;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px}
+td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+tr.r{cursor:pointer}
+tr.r:hover td{background:#13203a}
+.rk{font-weight:900;font-size:15px;text-align:center;width:34px;color:var(--sub)}
+.rk.top{color:var(--gold)}
+.prod{display:flex;gap:10px;align-items:center;min-width:220px}
+.prod img{width:46px;height:46px;border-radius:9px;object-fit:cover;background:var(--card2);flex:none}
+.prod .ph{width:46px;height:46px;border-radius:9px;background:var(--card2);display:grid;place-items:center;font-size:20px;flex:none}
+.prod b{font-size:14.5px;display:block}
+.prod small{color:var(--sub);font-size:11.5px}
+.badges{display:flex;flex-wrap:wrap;gap:4px;max-width:230px}
+.bd{font-size:11px;border-radius:6px;padding:3px 6px;white-space:nowrap;background:#141e30;color:var(--sub)}
+.bd.hot{background:rgba(255,107,74,.16);color:#ffcabd}
+.bd.up{background:rgba(62,224,191,.13);color:#9ff3df}
+.bd.sea{background:rgba(250,204,107,.14);color:#ffe3a6}
+.bd.age{background:rgba(140,110,240,.16);color:#d3c7ff}
+.bd.news{background:rgba(120,170,255,.14);color:#c6dbff}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.grade{font-size:11px;font-weight:800;border-radius:5px;padding:2px 6px;margin-left:4px}
+.g-good{background:rgba(62,224,191,.15);color:var(--good)} .g-mid{background:rgba(250,204,107,.15);color:var(--mid)} .g-bad{background:rgba(255,138,115,.15);color:var(--bad)}
+.star{background:none;border:none;font-size:18px;cursor:pointer;color:#3a4a63}
+.star.on{color:var(--gold)}
+.go{white-space:nowrap;text-decoration:none;font-size:12.5px;font-weight:800;color:#04201b;background:linear-gradient(90deg,#3ee0bf,#7df5db);border-radius:8px;padding:7px 9px}
+.empty{color:var(--sub);padding:30px;text-align:center}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(560px,100vw);background:#0b1220;border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s;overflow-y:auto;z-index:20;padding:20px 18px 40px}
+.drawer.open{transform:none}
+.dim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:10}
+.dim.open{display:block}
+.dh{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.dh img{width:72px;height:72px;border-radius:12px;object-fit:cover;background:var(--card2)}
+.dh h2{margin:0;font-size:20px}
+.x{margin-left:auto;background:none;border:1px solid var(--line);color:var(--txt);border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.blk h3{margin:0 0 8px;font-size:13px;color:var(--sub);font-weight:700}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kv div{background:var(--card2);border-radius:9px;padding:8px}
+.kv small{display:block;color:var(--sub);font-size:11px}
+.kv b{font-size:16px}
+.agebar{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:4px 0}
+.agebar span:first-child{width:62px;color:var(--sub)}
+.agebar i{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,#8c6ef0,#3ee0bf)}
+.li{font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:8px}
+.li:last-child{border:none}
+.li a{color:var(--mint);text-decoration:none}
+.li small{color:var(--sub)}
+.why{font-size:12px;color:var(--sub);line-height:1.7}
+.note{margin-top:24px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--sub);font-size:13px;line-height:1.75}
+.note b{color:var(--txt)}
+@media(max-width:760px){
+  thead{display:none} table,tbody,tr,td{display:block;width:100%}
+  tr.r{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;padding:6px 4px;position:relative}
+  td{border:none!important;background:none!important;padding:4px 8px;border-radius:0!important}
+  td[data-c]:before{content:attr(data-c);color:var(--sub);font-size:11px;margin-right:8px}
+  .rk{position:absolute;top:8px;right:10px;width:auto}
+  .tab{padding:8px 11px;font-size:14px}
+  .asof{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="mock">시안 v4 · 실제 수집 데이터</span>
+  <h1>🔥 인기상품 랭킹</h1>
+  <p class="lead">지금 터지는 상품, 곧 뜰 시즌템을 보고 바로 <b>숏템파워</b>로 영상 소재를 찾으세요. 매일 오전 8시 갱신.</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="tabdesc" id="tabdesc"></div>
+  <div class="tools">
+    <input class="search" id="q" placeholder="상품·키워드 검색">
+    <span id="cats"></span>
+    <button class="btn" id="colbtn">⚙ 보기 옵션</button>
+    <button class="btn" id="csv">⬇ 엑셀(CSV)</button>
+    <span class="asof" id="asof"></span>
+  </div>
+  <div class="cols" id="cols"></div>
+  <table><thead><tr id="head"></tr></thead><tbody id="body"></tbody></table>
+  <div class="note">
+    <b>배지는 우리 정답지로 검증한 신호만 씁니다</b> (레퍼런스랭킹에서 실제로 터진 쇼츠와 대조)<br>
+    · <b>📈 검색 급상승</b>: 최근 4주 검색이 그 전보다 +50% 이상 — 터진 상품은 올리기 전에 이 상태였던 비율이 22%, 평소는 10%<br>
+    · <b>🆕 작년의 2배</b>: 작년 같은 때보다 검색 2배 이상 — 터진 상품 14%, 베스트셀러 후보 6%<br>
+    · <b>🔥 방금 터짐</b>: 최근 14일 안에 이 상품으로 쇼츠가 터짐 — 다시 터진 상품 25개 중 24개가 2주 안에 다시 터짐<br>
+    · <b>📅 곧 뜰 시즌</b>: 작년 이맘때부터 8주 동안 검색이 20% 이상 올랐음 (강사들: 피크 2~3달 전 제작)<br>
+    · <b>🧒/👵 쏠림</b>: 네이버 데이터랩 연령별 검색이 전체보다 1.5배 이상 그 연령대에 몰림 · <b>📰 수요 뉴스</b>: 품절·완판·판매 N배 기사(행사·증정 기사는 뺌)<br>
+    · <b>광고 경쟁</b>(좋음/보통/나쁨)은 네이버 검색광고의 경쟁 정도입니다. 매출 금액은 네이버·쿠팡이 공개하지 않아 넣지 않았습니다.
+  </div>
+</div>
+<div class="dim" id="dim"></div>
+<aside class="drawer" id="drawer"></aside>
+<script>
+__JS__
+</script>
+</body>
+</html>

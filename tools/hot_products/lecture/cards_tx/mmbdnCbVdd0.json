@@ -1,0 +1,95 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "YouTube Shopping",
+  "Coupang Partners",
+  "Instagram",
+  "TikTok",
+  "Naver Clip",
+  "Kakao Shoform"
+ ],
+ "methods": [
+  {
+   "name": "활성 커뮤니티 기반 틈새 상품 발굴",
+   "goal": "꾸준히 팔림|경쟁 틈새",
+   "data_source": "온라인 커뮤니티",
+   "steps": [
+    "특정 상품 카테고리의 온라인 커뮤니티를 찾는다.",
+    "커뮤니티의 멤버 수와 글 개수를 확인하여 활성도를 검증한다."
+   ],
+   "thresholds": [],
+   "signal": "멤버 수가 많고 글 개수가 많은 커뮤니티",
+   "signal_quote": "멤버수가 28만 뭐 6만 그죠? 글 개수가 100만 개가 넘어요.",
+   "examples": [
+    {
+     "item": "세차 용품",
+     "why": "멤버 수가 28만, 6만 명이고 글 개수가 100만 개가 넘는 활성 커뮤니티가 존재함",
+     "quote": "세차 용품 커뮤니티인데요. 멤버수가 28만 뭐 6만"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "GPT를 활용한 유행 상품 및 키워드 발굴",
+   "goal": "뜨는 키워드|잘 팔릴 상품",
+   "data_source": "GPT",
+   "steps": [
+    "GPT에게 특정 카테고리 내에서 유행하는 상품을 문의한다."
+   ],
+   "thresholds": [],
+   "signal": "GPT가 정리해 주는 인기 아이템",
+   "signal_quote": "GPT한테 요즘 세차 용품 중에서 유행하는 상품 세 가지 알려줘",
+   "examples": [
+    {
+     "item": "중성 카샴푸",
+     "why": "GPT가 세차 용품 중 유행하는 상품으로 추천함",
+     "quote": "중성 카샴푸. 이제 요거를 영상을 찾아야 되잖아요."
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "유튜브 추천 영상 소재 활용",
+   "goal": "바이럴·급상승|뜨는 키워드",
+   "data_source": "유튜브 플랫폼",
+   "steps": [
+    "유튜브에서 밀어주는 영상 소재를 찾는 꿀팁을 활용한다."
+   ],
+   "thresholds": [],
+   "signal": "유튜브에서 밀어주는 영상 소재",
+   "signal_quote": "유튜브에서 밀어주는 영상 소재 요거 찾는 꿀팁을 네. 이렇게 다 이렇게 하세요.",
+   "examples": [],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "시장이 레드오션이 될 것이라는 우려",
+   "quote": "아니 그러면 이렇게 많은 분들이 수익하려 하면이 시장 자체가 레드오션 되는 거 아니냐?"
+  }
+ ],
+ "skipped": [
+  "유튜브 쇼핑의 높은 수수료율 및 30일 쿠키 기간 설명, 브랜드의 낮은 원가율, 유튜브 쇼핑의 상품 수, 영상 제작 과정(영상 소스, 대본, 음성, 편집), 쇼츠의 다중 플랫폼 활용 장점, 수강생 수익 사례, 시장 레드오션 우려 반박, 오프라인 창업과 비교, 무료 라이브 및 전자책 홍보."
+ ],
+ "unique_insight": "유튜브 쇼핑은 쿠팡 파트너스보다 훨씬 높은 수수료율과 긴 쿠키 기간을 제공하여 수익 창출에 유리하다.",
+ "insight_quote": "쿠팡은 6.7%인데 지금 75%를 줄인데도 있는 거고",
+ "insight_verified": true,
+ "coverage_thirds": 2,
+ "read_to_end": false,
+ "_check": {
+  "kept": 3,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 14175
+ },
+ "_video": {
+  "id": "mmbdnCbVdd0",
+  "title": "\"26년 쇼츠 여기로 다 몰립니다\" 수수료 70% 쇼츠 하나로 하루1700버는 남자",
+  "channel": "현장속으로",
+  "views": 118886,
+  "duration": 1336,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

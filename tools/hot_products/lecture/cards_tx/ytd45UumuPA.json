@@ -1,0 +1,99 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "네이버",
+  "쿠팡",
+  "중국 구매대행"
+ ],
+ "methods": [
+  {
+   "name": "실시간 판매 상품 소싱",
+   "goal": "잘 팔릴 상품",
+   "data_source": "현재 판매되고 있는 상품 (실시간)",
+   "steps": [
+    "현재 판매되고 있는 상품 정보를 실시간으로 가져와 발굴"
+   ],
+   "thresholds": [],
+   "signal": "중국 구매대행 반자동 반대량 운영 시 필수적",
+   "signal_quote": "소싱기 활용이 필수적이라서 안 써 보신 구매 셀러분들은",
+   "examples": [],
+   "signal_verified": true
+  },
+  {
+   "name": "쿠팡 상위 상품 리스트 분석 (키워드/카테고리)",
+   "goal": "잘 팔릴 상품",
+   "data_source": "쿠팡 상위 상품 리스트 (가격, 클릭수, 판매량, 월매출, 구매 전환율)",
+   "steps": [
+    "상위 상품 리스트에서 가격, 클릭수, 판매량, 월매출, 구매 전환율을 확인",
+    "구매 전환율이 높은 상품을 찾아 벤치마킹"
+   ],
+   "thresholds": [
+    {
+     "rule": "구매 전환율 10% 이상",
+     "quote": "구매 전환율이 10%가 넘는 상품도 은근히 꽤 있어요."
+    }
+   ],
+   "signal": "가격 메리트 또는 상세 페이지가 잘 되어 있음",
+   "signal_quote": "가격에서 확실하게 메리트가 있거나 아니면 상세 페이지가 정말 잘 돼 있어요.",
+   "examples": [
+    {
+     "item": "목베개",
+     "why": "첫 페이지에 월 매출 594만원과 1.7억짜리 상품이 공존",
+     "quote": "월 매출이 594만 원짜리도 있고요. 1.7억짜리도 있죠."
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "쿠팡 상위 120개 상품 발굴",
+   "goal": "경쟁 틈새",
+   "data_source": "쿠팡 상위 120개 상품 리스트",
+   "steps": [
+    "상위 120개 상품 리스트를 확인하여 로켓 상품 외 일반 위탁 상품 발굴",
+    "상위 상품 중 구매대행 상품 발굴"
+   ],
+   "thresholds": [],
+   "signal": "시장성이 충분히 있는 윙 상품",
+   "signal_quote": "시장성이 충분히 있는 윙 상품이 보이면은 비싼 상품 군으로 시작해도",
+   "examples": [],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "월 매출액과 구매 전환율은 추정치임",
+   "quote": "물론 추정체이긴 하지만이 수치를 알 수 있다는 거 자체가 엄청난 거죠."
+  }
+ ],
+ "skipped": [
+  "멤버십 요금제 및 기능 설명",
+  "이전 영상 참조 안내",
+  "상품명 조합기 기능 설명",
+  "쿠팡 비즈니스 인사이트와의 비교",
+  "광고비 등 기타 요인 언급",
+  "요금제 상세 설정 및 추가 금액 안내",
+  "개인적인 사용 후기 및 만족도",
+  "무료 기능 및 가입 혜택 안내"
+ ],
+ "unique_insight": "쿠팡에서 상품 조회수는 누구나 알 수 있지만 구매 전환율을 알 수 없는데, 이 툴을 통해 전환율을 확인하고 벤치마킹할 수 있다는 점이 핵심이다.",
+ "insight_quote": "구매 전환율을 모르니까 우리가 적당하게 예상을 할 수밖에 없잖아요.",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 3,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 4886
+ },
+ "_video": {
+  "id": "ytd45UumuPA",
+  "title": "A Complete Breakdown of SellerLife's Insane New Features! (Check Coupang product sales & conversi...",
+  "channel": "디지털곰마드",
+  "views": 32537,
+  "duration": 531,
+  "queries": [
+   "셀러라이프 키워드"
+  ]
+ }
+}

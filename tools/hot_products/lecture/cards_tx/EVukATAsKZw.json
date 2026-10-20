@@ -1,0 +1,43 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "YouTube",
+  "Gemini",
+  "Coupang Partners (JupJup)",
+  "CapCut"
+ ],
+ "methods": [],
+ "pitfalls": [],
+ "skipped": [
+  "Gemini 유료 요금제 가입 및 기능 설명",
+  "줍줍(Coupang Partners 전용 프로그램) 가입 및 제휴 링크 생성 방법",
+  "제품 이미지 캡처 도구 사용법",
+  "재미나이 템플릿을 이용한 쇼핑 쇼츠 영상 제작 과정 (3가지 템플릿 활용)",
+  "재미나이 영상 생성 사용량 한도 확인 방법",
+  "캡컷(CapCut)을 이용한 영상 편집 및 합치기",
+  "유튜브 채널에 쇼핑 쇼츠 업로드 및 제목, 설명, 제휴 링크, 경제적 문구 추가 방법",
+  "유튜브 댓글에 제휴 링크 추가 방법",
+  "무료 특강 신청 안내"
+ ],
+ "unique_insight": "The lecture's primary focus is on the practical, step-by-step process of using AI tools like Gemini and CapCut to create shopping shorts and integrate Coupang affiliate links, rather than on methods for identifying profitable or trending products.",
+ "insight_quote": "오늘이 영상 하나면 왕초보도 그대로 따라하실 수 있습니다. 10분이면 완성돼요.",
+ "insight_verified": false,
+ "coverage_thirds": 0,
+ "read_to_end": false,
+ "_check": {
+  "kept": 0,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 5829
+ },
+ "_video": {
+  "id": "EVukATAsKZw",
+  "title": "제미나이 하나로 이게 가능하다고? 쇼핑쇼츠 만드는 법｜구글 AI 요금제부터 쿠팡 파트너스 상품 담기, AI 영상 생성까지 #제미나이 #ai영상 #쇼핑쇼츠 #쿠팡",
+  "channel": "테라아이",
+  "views": 33903,
+  "duration": 956,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

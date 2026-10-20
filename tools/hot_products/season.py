@@ -1,8 +1,8 @@
-"""시즌 예보 — 데이터랩 검색어트렌드 3년 주간값으로 '작년 이맘때 → 8주 뒤' 상승률과 작년 피크 시점을 잰다."""
-import datetime, json, sys, urllib.request
+"""시즌 예보(실행: 키워드 폴더에서 py -I <경로>/season.py — kws.json·enrich.json 을 읽어 season.json) — 데이터랩 검색어트렌드 3년 주간값으로 '작년 이맘때 → 8주 뒤' 상승률과 작년 피크 시점을 잰다."""
+import datetime, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gkeys                      # 데이터랩 호출의 유일한 곳
 sys.stdout.reconfigure(encoding="utf-8")
-env = dict(l.strip().split("=", 1) for l in open(r"C:/Users/TheRose/Desktop/로또의 주식/.env", encoding="utf-8") if l.startswith("NAVER_CLIENT"))
-H = {"X-Naver-Client-Id": env["NAVER_CLIENT_ID"].strip('"'), "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"].strip('"'), "Content-Type": "application/json"}
 today = datetime.date.today(); end = today - datetime.timedelta(days=1); start = end - datetime.timedelta(days=365 * 3)
 kws = json.load(open("kws.json", encoding="utf-8"))
 out = {}
@@ -10,7 +10,7 @@ for i in range(0, len(kws), 5):
     b = kws[i:i + 5]
     body = {"startDate": str(start), "endDate": str(end), "timeUnit": "week", "keywordGroups": [{"groupName": k, "keywords": [k]} for k in b]}
     try:
-        res = json.load(urllib.request.urlopen(urllib.request.Request("https://openapi.naver.com/v1/datalab/search", json.dumps(body).encode(), H), timeout=20))["results"]
+        res = gkeys.datalab(body, timeout=20)
     except Exception as e:
         print("ERR", b[0], str(e)[:80]); continue
     for g in res:

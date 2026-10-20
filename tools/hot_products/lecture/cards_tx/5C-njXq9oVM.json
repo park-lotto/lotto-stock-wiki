@@ -1,0 +1,82 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "네이버 스마트스토어",
+  "오픈마켓 (G마켓, 11번가 등)"
+ ],
+ "methods": [
+  {
+   "name": "상품명 키워드 검색량 확인",
+   "goal": "꾸준히 팔림",
+   "data_source": "검색량 데이터",
+   "steps": [
+    "판매할 상품명(키워드)을 정한다.",
+    "정해진 상품명(키워드)의 검색량을 확인한다.",
+    "띄어쓰기 등 키워드 조합에 따른 검색량 변화를 확인한다."
+   ],
+   "thresholds": [],
+   "signal": "키워드에 대한 검색량이 존재함",
+   "signal_quote": "문신 가리는 스티커 검색했을 때 1,4005야",
+   "examples": [
+    {
+     "item": "문신 가리는 스티커",
+     "why": "검색량이 1,405로 확인됨",
+     "quote": "문신 가리는 스티커 검색했을 때 1,4005야"
+    }
+   ],
+   "signal_verified": true
+  },
+  {
+   "name": "상품명 키워드 최적화 및 상표권 검토",
+   "goal": "꾸준히 팔림",
+   "data_source": "키워드 검색 품질 체크 도구, 키프리스(KIPRIS)",
+   "steps": [
+    "상품명에 다양한 관련 키워드를 조합하여 포함시킨다.",
+    "상품명에 포함된 특정 키워드(예: 고유명사)의 상표권 등록 여부를 키프리스에서 확인한다."
+   ],
+   "thresholds": [
+    {
+     "rule": "상품명에 30~35개 키워드 포함",
+     "quote": "30개에서 35개 정도가 적당하고 얘기해줬어"
+    }
+   ],
+   "signal": "상표권 문제가 없는 키워드",
+   "signal_quote": "키프리스라고 쳐코히토라는게 뭐 아무것도 없어이 상품명 쓰자",
+   "examples": [
+    {
+     "item": "가쿠시토",
+     "why": "키프리스에서 상표권 문제가 없어 사용 가능함",
+     "quote": "키프리스라고 쳐코히토라는게 뭐 아무것도 없어이 상품명 쓰자"
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [],
+ "skipped": [
+  "카테고리명 확인 (1등 판매자)",
+  "옵션 설정, 이미지/동영상 등록, 상세페이지 제작, 상품 주요 정보 입력, 배송 설정, 추가 상품 설정 (업셀링)",
+  "옵션가 설정 범위 제한"
+ ],
+ "unique_insight": "네이버 플랫폼 점수 획득을 위한 모든 등록 항목 작성의 중요성",
+ "insight_quote": "네이버가 주는 점수를 다 받아야 된다",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 3,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 3552
+ },
+ "_video": {
+  "id": "5C-njXq9oVM",
+  "title": "Smart Store Product Registration Guide: Everything You Need to Know, Plus Expert Product Naming T...",
+  "channel": "돈버는하마",
+  "views": 103274,
+  "duration": 496,
+  "queries": [
+   "스마트스토어 시즌상품 미리 준비"
+  ]
+ }
+}

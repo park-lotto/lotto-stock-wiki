@@ -2,11 +2,13 @@
   · 네이버 검색광고 키워드도구: 월 검색수(PC+모바일)·경쟁정도
   · 네이버 데이터랩 검색어트렌드: 최근 4주 vs 그 앞 8주 (상승률), 1년 최고 대비 지금
   · 유튜브(yt-dlp 검색, 키 불필요): "<키워드> 쇼츠" 상위 20개 조회수 합·중앙값
-입력: kws.json (["키워드", ...])  출력: enrich.json {kw: {...}}"""
+입력: 지금 폴더의 kws.json (["키워드", ...])  출력: 같은 폴더 enrich.json {kw: {...}}
+실행: cd work && py -I ../enrich.py  /  cd work/hits && py -I ../../enrich.py  (사본 enrich_run.py 는 지웠다)"""
 import base64, datetime, hashlib, hmac, json, os, statistics, subprocess, sys, time, urllib.parse, urllib.request
 sys.stdout.reconfigure(encoding="utf-8")
-ENV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")   # 저장소 루트 .env
-env = dict(l.strip().split("=", 1) for l in open(ENV, encoding="utf-8") if l.startswith("NAVER_"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gkeys                      # 키·환경값·데이터랩 호출의 유일한 곳
+env = gkeys.env()
 kws = json.load(open("kws.json", encoding="utf-8"))
 out = json.load(open("enrich.json", encoding="utf-8")) if os.path.exists("enrich.json") else {}
 todo = [k for k in kws if k not in out]
@@ -32,10 +34,8 @@ def datalab(batch):
     end = datetime.date.today() - datetime.timedelta(days=1); start = end - datetime.timedelta(days=365)
     body = {"startDate": str(start), "endDate": str(end), "timeUnit": "week",
             "keywordGroups": [{"groupName": b, "keywords": [b]} for b in batch]}
-    req = urllib.request.Request("https://openapi.naver.com/v1/datalab/search", json.dumps(body).encode(), {
-        "X-Naver-Client-Id": env["NAVER_CLIENT_ID"].strip('"'), "X-Naver-Client-Secret": env["NAVER_CLIENT_SECRET"].strip('"'), "Content-Type": "application/json"})
     res = {}
-    for g in json.load(urllib.request.urlopen(req, timeout=20))["results"]:
+    for g in gkeys.datalab(body, timeout=20):
         v = [x["ratio"] for x in g["data"]]
         if len(v) < 12: continue
         recent, before = sum(v[-4:]) / 4, sum(v[-12:-4]) / 8

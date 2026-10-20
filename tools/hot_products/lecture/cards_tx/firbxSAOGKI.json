@@ -1,0 +1,63 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "인스타그램",
+  "틱톡",
+  "유튜브 쇼츠",
+  "쿠팡 파트너스"
+ ],
+ "methods": [
+  {
+   "name": "인스타그램 채널 분석",
+   "goal": "바이럴·급상승",
+   "data_source": "인스타그램",
+   "steps": [
+    "인스타그램에서 소스를 많이 찾아보시기 바랍니다.",
+    "괜찮은 상품이 있으면 이런 식으로 편집을 해 가지고 상품 어, 꾸준하게 업로드 하시기 바랍니다."
+   ],
+   "thresholds": [],
+   "signal": "괜찮은 상품",
+   "signal_quote": "괜찮은 상품이 있으면",
+   "examples": [
+    {
+     "item": "템덕이라는 인스타그램 채널",
+     "why": "강사가 예시로 든 상품 소스 채널",
+     "quote": "템덕이라는 템덕이라는 인스타그램 채널 였는데요."
+    }
+   ],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [],
+ "skipped": [
+  "인포크 링크 DM 자동화 설정 및 비용 안내",
+  "인포크 링크에서 상품 찾기 및 쿠팡 파트너스 링크 생성",
+  "알리프라이스를 이용한 1688 상품 소싱 (이미 결정된 상품의 공급처 찾기)",
+  "ChatGPT를 이용한 상품명 영어 번역 (틱톡 영상 검색용)",
+  "틱톡에서 영상 다운로드 및 로고 제거 방법",
+  "캡컷을 이용한 영상 편집 (자르기, 음악 제거, 속도 조절, 화질 개선, 텍스트 추가)",
+  "ChatGPT를 이용한 후킹성 썸네일 문구 및 더보기 내용 작성",
+  "인스타그램 업로드 과정 (음악 추가, 커버 수정, 댓글 유도 문구)"
+ ],
+ "unique_insight": "나레이션 없이 영상을 만드는 방법으로 인스타그램에서 괜찮은 상품을 찾아 꾸준히 업로드하여 쇼핑 쇼츠를 제작할 수 있다.",
+ "insight_quote": "나레이션 없이 영상을 만드는 방법 어 설명을 해 드렸고요. 이러한 채널들 팔로우해 놓으셨다가 괜찮은 상품이 있으면 이런 식으로 편집을 해 가지고 상품 어, 꾸준하게 업로드 하시기 바랍니다.",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 1,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 5050
+ },
+ "_video": {
+  "id": "firbxSAOGKI",
+  "title": "Here's a full video on how to easily create a Coupang Shorts video by finding a video source on T...",
+  "channel": "AI 리더스 연구소",
+  "views": 36036,
+  "duration": 696,
+  "queries": [
+   "쿠팡파트너스 쇼츠 상품 찾기"
+  ]
+ }
+}

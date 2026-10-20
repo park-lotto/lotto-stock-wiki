@@ -1,0 +1,58 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "instagram"
+ ],
+ "methods": [
+  {
+   "name": "지금 뜨고 있는 영상을 쉽게 찾는 방법",
+   "goal": "바이럴·급상승",
+   "data_source": "인스타그램 추천 게시물",
+   "steps": [
+    "홈 화면에서 상단 줄 세 개 설정 및 활동 하단으로 내려가서 컨텐츠 기본 설정을 눌러 주세요.",
+    "히드에서 추천 게시물 잠시 숨기기가 활성화되어 있는게 아니라 꺼져 있으면 됩니다."
+   ],
+   "thresholds": [],
+   "signal": "요즘 트렌드한 아니면 내 주제와 관련된 잘 뜨고 있는 영상을 추천해 줍니다.",
+   "signal_quote": "요즘 트렌드한 아니면 내 주제와 관련된 잘 뜨고 있는 영상을 추천해 줍니다.",
+   "examples": [],
+   "signal_verified": true
+  }
+ ],
+ "pitfalls": [
+  {
+   "text": "추천 게시물 숨기기 기능이 활성화되어 있으면 트렌드한 영상을 볼 수 없음",
+   "quote": "요즘 뜨고 있는 추천 게시물을 숨기기 처리하면은 트렌드한 영상을 볼 수가 없거든요."
+  }
+ ],
+ "skipped": [
+  "팔로워 활동 시간 분석 및 업로드 시간 최적화",
+  "콘텐츠 노출을 위한 공유 및 다시 사용 옵션 설정",
+  "계정 알고리즘 리셋 및 재설정",
+  "탐색 탭 노출 확률을 높이는 계정 공개 범위 설정",
+  "해외 사용자 노출을 위한 자동 자막 및 번역 기능 설정",
+  "콘텐츠 화질 저하 방지를 위한 미디어 품질 설정",
+  "추천 계정으로 노출되도록 프로필 설정"
+ ],
+ "unique_insight": "인스타그램 계정 성장을 위한 기본 세팅의 중요성 강조",
+ "insight_quote": "그럼 여러분들의 인스타그램 계정이 성장하기 위해서의 모든 기본 세팅이 끝난 겁니다.",
+ "insight_verified": true,
+ "coverage_thirds": 1,
+ "read_to_end": false,
+ "_check": {
+  "kept": 1,
+  "dropped": 0,
+  "methods_dropped": 0,
+  "subs_chars": 3693
+ },
+ "_video": {
+  "id": "hYV97ax9Spc",
+  "title": "Most Instagram users fail because they miss this. 8 things you absolutely must set up (If you wan...",
+  "channel": "마케팅뷰 서별님",
+  "views": 79047,
+  "duration": 470,
+  "queries": [
+   "쇼핑쇼츠 키워드"
+  ]
+ }
+}
