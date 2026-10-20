@@ -47,7 +47,7 @@ with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1400, "height": 950})
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto("file:///" + HTML.replace("\\", "/")); pg.wait_for_timeout(500); pg.click("[data-tab='best']")
-    for s in ("temu", "amazon", "1688", "naver"):
+    for s in ("temu", "amazon", "1688", "naver", "coupang"):
         pg.click(f"[data-site='{s}']"); pg.wait_for_timeout(150)
         n = pg.eval_on_selector_all("tr.r", "e => e.length"); top = pg.eval_on_selector("tr.r", "e => e.dataset.kw") if n else None
         print(f"사이트 {s}: 행 {n}, 1위 {top}")
@@ -70,7 +70,7 @@ with sync_playwright() as p:
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1400, "height": 950})
     pg.goto("file:///" + HTML.replace("\\", "/")); pg.wait_for_timeout(500); pg.click("[data-tab='best']")
-    for s in ("temu", "amazon", "1688", "naver", "all"):
+    for s in ("temu", "amazon", "1688", "naver", "coupang", "all"):
         pg.click(f"[data-site='{s}']"); pg.wait_for_timeout(150)
         v = pg.eval_on_selector_all("td[data-c='판매 속도'] b.num", "e => e.map(x => +x.innerText)")
         print(f"정렬 {s}: 보이는 순서가 내림차순 {all(v[i] >= v[i+1] for i in range(len(v)-1))} (앞 8개 {v[:8]})")

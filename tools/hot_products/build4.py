@@ -13,7 +13,7 @@ def load(p, d=None):
     p = os.path.join(HERE, p)
     return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else d
 
-v3 = load("work/v3_data.json", [])
+v3 = load("work/day_data.json") or load("work/v3_data.json", [])   # 하루 비교(build_day)가 있으면 그것, 없으면 10-19 시안 데이터
 enr = {**load("work/enrich.json", {}), **load("work/hits/enrich.json", {}), **load("work/news/enrich.json", {})}   # news = 뉴스·기타 행(검색수 없던 것)
 season = {**load("work/season.json", {}), **load("work/hits/season.json", {}), **load("work/news/season.json", {})}
 nov = load("work/novelty_check.json", {"hits": {}, "cands": {}}); yoy = {**nov["cands"], **nov["hits"]}
@@ -34,7 +34,7 @@ for r in v3:
     if not r.get("kw") or r.get("cat") == "제외": continue
     x = row(r["kw"]); x["src"].add("best")
     x["sites"].append({"site": r["site"], "list": r.get("list"), "rank": r.get("rank"), "title": r.get("title"), "url": r.get("url"),
-                       "tags": r.get("tags") or [], "speed": (r.get("sc") or {}).get("speed")})   # speed = 같은 사이트 안 판매 속도 백분위(build3)
+                       "tags": r.get("tags") or [], "speed": (r.get("sc") or {}).get("speed"), "new": r.get("new"), "rank_up": r.get("rank_up")})   # speed = 같은 사이트 안 판매 속도 백분위(build3)
     if not x["img"]: x.update(img=r.get("img") or "", price=r.get("price") or "", url=r.get("url") or "", cat=r.get("cat") or "", wow=r.get("wow"))
 # 블라인드 평가(work/blind_scores.json): 터진 상품 키워드의 분류·막연함·신박함 — 식품·막연한 키워드는 화면에서 뺀다
 _items = dict(l.split("	", 1) for l in open(os.path.join(W, "blind_items.tsv"), encoding="utf-8").read().splitlines()) if os.path.exists(os.path.join(W, "blind_items.tsv")) else {}
@@ -60,7 +60,7 @@ for a in nr:
 # 데이터랩 52주 시리즈(행 안 추이선) — 받아 둔 것은 다시 받지 않는다
 SER = os.path.join(W, "series.json"); series = load("work/series.json", {})
 end = datetime.date.today() - datetime.timedelta(days=1); start = end - datetime.timedelta(weeks=52)
-need = [k for k in rows if k not in series]
+need = [k for k in rows if k not in series]; ser_fail = 0
 for i in range(0, len(need), 5):
     body = {"startDate": str(start), "endDate": str(end), "timeUnit": "week", "keywordGroups": [{"groupName": k, "keywords": [k]} for k in need[i:i + 5]]}
     for _ in range(3):
@@ -71,7 +71,7 @@ for i in range(0, len(need), 5):
         except Exception as e:
             err = str(e)[:80]; time.sleep(2)
     else:
-        print("★시리즈 실패", need[i:i + 5][:2], err)
+        print("★시리즈 실패", need[i:i + 5][:2], err); ser_fail += 1
     if i % 100 == 0: print("시리즈", i, "/", len(need), flush=True)
 json.dump(series, open(SER, "w", encoding="utf-8"), ensure_ascii=False)
 
@@ -96,4 +96,4 @@ for k, x in rows.items():
     })
 json.dump({"built": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), "rows": out}, open(os.path.join(W, "v4_data.json"), "w", encoding="utf-8"), ensure_ascii=False)
 print("행", len(out), "| 베스트", sum("best" in r["src"] for r in out), "터진", sum("hit" in r["src"] for r in out), "뉴스", sum("news" in r["src"] for r in out),
-      "| 시리즈 있음", sum(bool(r["ser"]) for r in out))
+      "| 시리즈 있음", sum(bool(r["ser"]) for r in out), f"| ★시리즈 실패 묶음 {ser_fail}" if ser_fail else "")

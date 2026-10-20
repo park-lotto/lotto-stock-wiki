@@ -16,7 +16,7 @@ const TABS = [
   {id:"senior", label:"👵 5060", f:r=>r.senior!=null && r.senior>=1.5, sort:"senior",
    d:"네이버 검색이 <b>50세 이상</b>에 전체보다 1.5배 이상 몰린 상품."},
   {id:"best", label:"🛒 사이트 베스트", f:r=>r.src.includes("best"), sort:"sell",
-   d:"네이버·1688·테무·아마존 베스트 중 <b>쇼츠로 만들 수 있는</b> 상품(식품·소모품·옷·광고 제외). 판매 속도 = 같은 사이트 안 백분위(테무 시간당 판매·1688 월판매·아마존 리뷰·네이버 구매순).", sites:true},
+   d:"네이버·쿠팡·1688·테무·아마존 베스트 중 <b>쇼츠로 만들 수 있는</b> 상품(식품·소모품·옷·광고 제외). 판매 속도 = 같은 사이트 안 백분위(테무 하루 판매·1688 월판매·아마존 리뷰 증가·네이버/쿠팡 순위와 하루 순위 상승). ▲ = 어제보다 오른 순위, 🆕 = 오늘 새로 들어옴.", sites:true},
   {id:"fav", label:"★ 즐겨찾기", f:r=>favs.has(r.kw), sort:"search", d:"별을 누른 상품. 이 브라우저에만 저장됩니다."},
 ];
 const COLS = [
@@ -103,7 +103,7 @@ function render(){
   $("tabs").innerHTML = TABS.map(x => `<button class="tab ${x.id===st.tab?"on":""}" data-tab="${x.id}">${x.label}<em>${R.filter(x.f).length}</em></button>`).join("");
   $("tabdesc").innerHTML = t.d;
   const cats = [...new Set(R.filter(t.f).map(r => r.cat).filter(Boolean))];
-  const sitesHtml = t.sites ? ["all","naver","1688","temu","amazon"].map(k => `<button class="chip ${st.site===k?"on":""}" data-site="${k}">${k==="all"?"모든 사이트":SN[k]} <small>${k==="all"?"":R.filter(t.f).filter(r=>r.site_set.includes(k)).length}</small></button>`).join(" ") + " │ " : "";
+  const sitesHtml = t.sites ? ["all","naver","coupang","1688","temu","amazon"].map(k => `<button class="chip ${st.site===k?"on":""}" data-site="${k}">${k==="all"?"모든 사이트":SN[k]} <small>${k==="all"?"":R.filter(t.f).filter(r=>r.site_set.includes(k)).length}</small></button>`).join(" ") + " │ " : "";
   $("cats").innerHTML = sitesHtml + (cats.length > 1 ? ["all", ...cats].map(c => `<button class="chip ${st.cat===c?"on":""}" data-cat="${c}">${c==="all"?"전체":esc(c)}</button>`).join(" ") : "");
   $("asof").textContent = `${DATA.built} 기준`;
   const cols = COLS.filter(c => c.always || !hidden.has(c.id));

@@ -11,7 +11,7 @@ import gkeys                      # 키·환경값·데이터랩 호출의 유�
 env = gkeys.env()
 kws = json.load(open("kws.json", encoding="utf-8"))
 out = json.load(open("enrich.json", encoding="utf-8")) if os.path.exists("enrich.json") else {}
-todo = [k for k in kws if k not in out]
+todo = [k for k in kws if k not in out or "search_month" not in out[k] or "trend_up" not in out[k]]   # 실패해 값이 빠진 것도 다시(10-20 한도 초과 뒤 영영 안 채워지던 것)
 print("할 일", len(todo), "/", len(kws))
 
 def searchad(batch):
