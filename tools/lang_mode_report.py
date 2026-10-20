@@ -119,7 +119,7 @@ def sync_report(job):
             else " ".join(x.get("word", "") for x in w)
         first = float(w[0]["start"]) if w else None
         print("  칸 %s ASR: %s | lang_of=%s | 첫 단어 %.2fs vs cap_lead %.2fs → 차 %s | 오류 %s" % (
-            b.get("beat_idx"), heard[:80], script_translate.lang_of(heard), first or -1, float(b.get("cap_lead") or 0),
+            b.get("beat_idx"), heard[:80], script_translate.lang_of(heard), (first if first is not None else -1), float(b.get("cap_lead") or 0),
             ("%.2f" % abs(first - float(b.get("cap_lead") or 0))) if first is not None else "-", getattr(asr_check._LAST, "error", "")))
 
 
