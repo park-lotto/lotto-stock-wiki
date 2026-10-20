@@ -172,6 +172,7 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
     def eff(l, a, b, tempo):
         return (b - a) - sum(e - s for s, e, _ in P.get(l["id"], [])) + sum(t * tempo for _, _, t in P.get(l["id"], []))
     tempo = NA.fixed_tempo(S["voice"]["voice_id"])   # 일레븐랩스(미나)는 서비스 배속 그대로(1.35) — 10-18 사장님 '잇썸홈판은 미나'
+    fixed = bool(tempo)
     if not tempo:
         tempo = 1.1
         for _ in range(5):
@@ -184,7 +185,7 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
         tl = tempo
         if c / d > mean * 1.03:
             tl = round(max(tempo * 0.9001, tempo * mean / (c / d)), 4)   # ±10% 경계는 반올림이 넘지 않게(10-18 김가연 1.3713/1.2466=+10.003% → B17 ×)
-        elif c / d < mean * 0.9:
+        elif c / d < mean * 0.9 and not fixed:   # 고정 배속 목소리는 더 빠르게 돌리지 않는다(사장님 10-20 '빠르면 발음 뭉개짐' — 레시피 3편 1.48배)
             tl = round(min(tempo * 1.0999, tempo * mean * 0.95 / (c / d)), 4)
         x = max(0, a - 0.02)
         cuts = sorted(P.get(l["id"], []))
