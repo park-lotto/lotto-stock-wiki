@@ -905,7 +905,11 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     clk = Clock()
     log = {"preset": str(pdir), "work": str(wdir), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     w = load_work(wdir, M, cfg)
-    out = Path(a.out) if a.out else w["data"] / "make"
+    if w["S"].get("hybrid"):   # 하이브리드(앞 칼카피 줄 + 뒤 체험 줄을 한 대본으로, 사장님 10-20) — 검사 기준만 manifest hybrid_checks 로 덮는다
+        if not cfg.get("hybrid_checks"):
+            raise SystemExit(f"{pdir}/manifest.json channel_rules.make 에 hybrid_checks 가 없다 — 하이브리드 길이·효과음 기준을 먼저 적어라")
+        cfg = {**cfg, "checks": {**cfg["checks"], **cfg["hybrid_checks"]}}
+    out = Path(a.out) if a.out else w["data"] / ("make_hybrid" if w["S"].get("hybrid") else "make")
     cache = Path(a.cache) if a.cache else w["data"] / "_make_cache"
     out.mkdir(parents=True, exist_ok=True)
     plan = plan_check(w, cfg)
@@ -983,7 +987,13 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
 
 
 def register(path: Path, M, w, final, fm, desk_name, pdir) -> str:
-    """통과작만 결과물 목록에 한 줄(같은 완성본 경로면 그 줄을 갱신)."""
+    """통과작만 결과물 목록에 한 줄(같은 완성본 경로면 그 줄을 갱신). 편 워커 여럿이 동시에 쓰므로 잠금 아래 읽기-수정-쓰기."""
+    from tools.calcopy.engine.filelock import locked
+    with locked(path):
+        return _register(path, M, w, final, fm, desk_name, pdir)
+
+
+def _register(path: Path, M, w, final, fm, desk_name, pdir) -> str:
     D = json.loads(path.read_text(encoding="utf-8"))
     items = D.setdefault("items", [])
     from tools.calcopy import brands as BR          # 목록 이름 = 브랜드 장부(channel/브랜드.json) 한 곳
