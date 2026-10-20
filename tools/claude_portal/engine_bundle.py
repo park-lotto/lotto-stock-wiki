@@ -71,7 +71,9 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py",
          # 함수 안에서만 부르는 것(추적이 아직 못 본 것) — ★함수 안 import 를 통째로 따라가면 프리셋 기술·관리 도구까지 딸려 온다(10-20 시험:
          #   channel_presets·channelkit/bench·live_admin). 그래서 하나씩 적는다. 빠지면 test_engine_installed(변수 많은 프리셋)가 잡는다
-         "shopping_shorts/calcopy_frame/per_video.py")
+         "shopping_shorts/calcopy_frame/per_video.py",
+         "shopping_shorts/channelkit/providers.py", "tools/calcopy/copy_render.py",   # 나레형 목소리(remake --make-tts, 고객 키 TYPECAST_API_KEY)
+         "shopping_shorts/channel_presets/banggu/rules.py")                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:
