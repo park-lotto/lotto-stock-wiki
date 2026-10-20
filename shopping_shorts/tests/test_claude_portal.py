@@ -581,3 +581,25 @@ def test_update_새판이면_서명주소_오래된엔진도_받는다(env, tmp_
     assert c.get("/api/claude/license", headers=_h(k, engine="1.0.0")).json()["code"] == "engine_old", "다른 창구는 그대로 막힌다"
     got = c.get(d["url"])
     assert got.status_code == 200 and got.content == b"PK-update"
+
+
+def test_install_키만으로_묶음_주소_기기지문_없이(env, tmp_path):
+    """exe 없이 까는 길(사장님 10-20) — 설치 전 연결 파일은 키만 있다. 키 없으면 막고, 키 있으면 플랫폼 묶음 서명 주소."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    bare = {"Authorization": f"Bearer {k}"}                       # 기기 지문·엔진 판 없음
+    assert c.get("/api/claude/install?plat=win-x64").json()["ok"] is False, "키 없으면 막는다"
+    assert c.get("/api/claude/install?plat=linux", headers=bare).json()["code"] == "bad_request"
+    assert c.get("/api/claude/install?plat=win-x64", headers=bare).json()["ready"] is False   # 올린 묶음 없음
+    z = tmp_path / "i.zip"
+    z.write_bytes(b"PK-install" * 1000)
+    sha, size = cp.put_blob(z)
+    assert size == 10000 and sha == __import__("hashlib").sha256(z.read_bytes()).hexdigest()
+    cp.install_path("win-x64").parent.mkdir(parents=True, exist_ok=True)
+    cp.install_path("win-x64").write_text(_json.dumps({"version": "1.0.0", "sha256": sha, "size": size}), encoding="utf-8")
+    d = c.get("/api/claude/install?plat=win-x64", headers=bare).json()
+    assert d["ready"] is True and d["sha256"] == sha and d["size"] == size, d
+    got = c.get(d["url"])
+    assert got.status_code == 200 and got.content == z.read_bytes()
+    assert c.get("/api/claude/license", headers=bare).json()["code"] == "bad_request", "다른 창구는 지문이 있어야 한다"

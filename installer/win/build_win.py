@@ -415,6 +415,48 @@ def build_plugin(stage: Path, report: dict) -> None:
     report["plugin"] = {"validate": res or "claude 없음 — 검사 생략"}
 
 
+def build_code_kit(dist: Path, stage: Path, version: str, report: dict) -> Path:
+    """Claude Code 용 시작 꾸러미(exe 없이, 스타터킷처럼 md 한 장 끌어다 놓기) — 플러그인 + 시작_코드.md + node.
+    ★설치 전 PC 엔 node 가 없을 수 있다 → 꾸러미 플러그인은 함께 든 node 로 연결 파일을 띄운다(설치 폴더 안 플러그인은 그대로 SHORTEM_NODE)."""
+    import zipfile
+    kit = dist / f"shortem-claude-code-{PLAT}-{version}.zip"
+    plug = stage / "claude-plugin"
+    pj_rel = Path("shortem") / ".claude-plugin" / "plugin.json"
+    pj = json.loads((plug / pj_rel).read_text(encoding="utf-8"))
+    pj["mcpServers"]["shortem"]["command"] = "${CLAUDE_PLUGIN_ROOT}/node/node.exe"
+    tmp = kit.with_suffix(".part")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in sorted(plug.rglob("*")):
+            rel = p.relative_to(plug)
+            if p.is_file() and rel != pj_rel:
+                z.write(p, ("숏템시작/claude-plugin" / rel).as_posix())
+        z.writestr(("숏템시작/claude-plugin" / pj_rel).as_posix(), json.dumps(pj, ensure_ascii=False, indent=2) + "\n")
+        z.write(stage / "tools" / "node" / "node.exe", "숏템시작/claude-plugin/shortem/node/node.exe")
+        z.write(ROOT / "시작_코드.md", "숏템시작/시작.md")
+    os.replace(tmp, kit)
+    report["code_kit"] = {"file": str(kit), "mb": round(kit.stat().st_size / 1e6, 1), "sha256": sha256_file(kit)}
+    log(f"Claude Code 시작 꾸러미 {report['code_kit']['mb']}MB → {kit}")
+    return kit
+
+
+def make_pack_zip(stage: Path, zp: Path) -> dict:
+    """설치 폴더 → zip(윈도 내장 tar 가 푼다 — 한글 이름은 UTF-8 표시로). 내용은 STAGE_TOP 안의 것만."""
+    import hashlib
+    import zipfile
+    tmp = zp.with_suffix(".part")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED, compresslevel=6, allowZip64=True) as z:
+        for p in sorted(stage.rglob("*")):
+            rel = p.relative_to(stage)
+            if p.is_file() and rel.parts[0] in STAGE_TOP:
+                z.write(p, rel.as_posix())
+    os.replace(tmp, zp)
+    h = hashlib.sha256()
+    with open(zp, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return {"path": str(zp), "sha256": h.hexdigest(), "mb": round(zp.stat().st_size / 1e6, 1)}
+
+
 def write_manifest(stage: Path, version: str) -> dict:
     """tools.manifest.json 은 common/write_manifest.js 한 곳이 쓴다(맥 빌드와 같은 주인). 동봉 node 로 돌린다."""
     node = stage / "tools" / "node" / "node.exe"
@@ -470,6 +512,7 @@ def main() -> None:
     ap.add_argument("--engine", default=str(ROOT.parent.parent / "칼카피숏템엔진"), help="엔진 트랙 폴더(엔진 묶음 원본)")
     ap.add_argument("--version", default=LOCK["installer_version"])
     ap.add_argument("--skip-exe", action="store_true")
+    ap.add_argument("--skip-zip", action="store_true")
     a = ap.parse_args()
 
     out = Path(a.out).resolve()
@@ -492,6 +535,7 @@ def main() -> None:
     shutil.copy2(ROOT / "guide" / "설치안내.html", stage / "설치안내.html")
     build_plugin(stage, report)
     build_mcpb(out, dist, stage, report)
+    build_code_kit(dist, stage, a.version, report)
     (stage / "app_version.json").write_text(json.dumps({"version": a.version}), encoding="utf-8")   # 켤 때 자동 업데이트가 비교하는 판(관제 234)
     # 설치 폴더는 다시 빌드할 때 통째로 비우지 않는다 → 정한 이름 밖(시험 파일 등)은 exe 에 넣기 전에 걷어낸다
     extra = sorted(p.name for p in stage.iterdir() if p.name not in STAGE_TOP)
@@ -512,6 +556,14 @@ def main() -> None:
     if ln > 160:
         raise SystemExit("[build_win] 설치 폴더 안 경로가 160자를 넘습니다 — 고객 PC(MAX_PATH 260)에서 깨질 수 있어 중단합니다.")
     report["stage_path_chars"] = len(str(stage))
+
+    # exe 없이 까는 묶음(사장님 10-20 "인증서 없이 스타터킷처럼") — 연결 파일(launcher.js installPack)이 받아 푼다.
+    #   설치 폴더 통째 = exe 와 같은 내용. 서버에 올리기: tools/claude_portal/publish_update.py --install
+    if not a.skip_zip:
+        zp = dist / f"shortem-{PLAT}-{a.version}.zip"
+        log("설치 묶음 zip 만드는 중(exe 없이 까는 길)")
+        report["zip"] = make_pack_zip(stage, zp)
+        log(f"설치 묶음 {report['zip']['mb']}MB → {zp}")
 
     if not a.skip_exe:
         mk = nsis(out)

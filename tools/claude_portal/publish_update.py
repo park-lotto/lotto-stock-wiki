@@ -2,6 +2,8 @@
 서버 저장소(claude_portal.store_dir)에 내용주소로 넣고 updates/latest.json 을 쓴다. 고객 PC 는 켤 때 /api/claude/update 로 받는다.
 
   py tools/claude_portal/publish_update.py --stage <빌드 폴더>/win-x64/Shortem --version 1.0.1 [--notes "…"]
+  py tools/claude_portal/publish_update.py --install <dist>/shortem-win-x64-1.0.0.zip --plat win-x64 --version 1.0.0
+    = exe 없이 까는 묶음(실행 도구까지 든 설치 폴더 통째, build_win 이 만든다) → install/latest-<plat>.json
   (서버에서 돌리거나, CLAUDE_STORE_DIR 를 서버 저장소와 같은 곳으로 두고 돌린다)
 
 판단 주인: 무엇을 묶나 = UPDATE_DIRS(server·engine) 한 곳. 실행 도구(tools/)·모델(models/)은 설치팩을 다시 받는다.
@@ -39,7 +41,9 @@ def make_zip(stage: Path, version: str) -> bytes:
 def main(argv=None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", required=True)
+    ap.add_argument("--stage")
+    ap.add_argument("--install", help="설치 묶음 zip(build_win 이 만든 것) — 주면 업데이트 대신 설치 묶음을 올린다")
+    ap.add_argument("--plat", default="win-x64")
     ap.add_argument("--version", required=True)
     ap.add_argument("--notes", default="")
     a = ap.parse_args(argv)
@@ -47,6 +51,16 @@ def main(argv=None) -> int:
         raise SystemExit("버전은 1.2.3 꼴")
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from shopping_shorts import claude_portal as cp
+    if a.install:
+        if a.plat not in cp.INSTALL_PLATS:
+            raise SystemExit(f"plat 은 {cp.INSTALL_PLATS} 중 하나")
+        sha, size = cp.put_blob(Path(a.install))
+        cp.install_path(a.plat).parent.mkdir(parents=True, exist_ok=True)
+        cp.install_path(a.plat).write_text(json.dumps({"version": a.version, "sha256": sha, "size": size}), encoding="utf-8")
+        print(json.dumps({"install": a.plat, "version": a.version, "sha256": sha, "mb": round(size / 1e6, 1)}, ensure_ascii=False))
+        return 0
+    if not a.stage:
+        raise SystemExit("--stage 또는 --install")
     data = make_zip(Path(a.stage), a.version)
     tmp = cp.store_dir() / "updates" / f"shortem-app-{a.version}.zip"
     tmp.parent.mkdir(parents=True, exist_ok=True)

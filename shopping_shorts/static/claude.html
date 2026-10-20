@@ -149,7 +149,7 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
   </section>
 
   <section id="install">
-    <h2>④ 설치팩 <small>실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)가 전부 들어 있습니다</small></h2>
+    <h2>④ 연결 파일 <small>작은 파일 하나만 받으면, 실행 도구(브라우저 엔진·ffmpeg·파이썬·노드)는 Claude 가 알아서 받아 깝니다 — 설치 프로그램·관리자 권한 없음</small></h2>
     <div class="grid" id="instCards"></div>
   </section>
 
@@ -158,14 +158,15 @@ video{width:100%;max-height:420px;background:#000;border-radius:10px;display:blo
     <div class="grid">
       <div class="card"><div class="nm">Claude 데스크탑</div>
         <ol style="padding-left:18px;margin:6px 0">
-          <li>설치팩 실행 → 끝에 뜨는 Claude 설치 화면에서 <b>라이선스 키</b> 붙여넣기</li>
+          <li>위 <b>Claude 데스크탑용</b> 파일(shortem.mcpb)을 두 번 누르기 → 뜨는 설치 화면에서 <b>라이선스 키</b> 붙여넣기</li>
+          <li>채팅에 <code>숏템 설치해줘</code> → 다 받으면(약 1GB) Claude 를 껐다 켜기</li>
           <li>채팅에 <code>숏템 준비 점검해줘</code></li>
           <li><code>내 채널(프로필 이름)로 이 영상 만들어줘 &lt;유튜브 주소&gt;</code></li>
         </ol></div>
       <div class="card"><div class="nm">Claude Code</div>
         <ol style="padding-left:18px;margin:6px 0">
-          <li>같은 설치팩 실행</li>
-          <li>설치 폴더의 <code>시작.md</code> 를 Claude Code 입력창에 끌어다 놓고 엔터</li>
+          <li>위 <b>Claude Code용</b> 꾸러미를 받아 바탕화면에 풀기</li>
+          <li>풀린 폴더의 <code>시작.md</code> 를 Claude Code 입력창에 끌어다 놓고 엔터</li>
           <li><code>/shortem:setup</code> → <code>/shortem:make &lt;프로필&gt; &lt;소재&gt;</code></li>
         </ol></div>
     </div>
@@ -351,12 +352,12 @@ function renderLicense(){
 
 function renderInstall(){
   const ua=navigator.userAgent||''; const isMac=/Mac/i.test(ua);
-  const names={'win-x64':'윈도 (64비트)','mac-arm64':'맥 (애플 실리콘 M1~)','mac-x64':'맥 (인텔)'};
-  const want=['win-x64','mac-arm64','mac-x64'];
+  const names={'desktop':'Claude 데스크탑용 (윈도·맥)','code-win-x64':'Claude Code용 (윈도)'};
+  const want=['desktop','code-win-x64'];
   const by={}; (H.installers||[]).forEach(i=>by[i.os]=i);
-  $('instCards').innerHTML=want.map(os=>{ const i=by[os]; const mine=(isMac&&os.startsWith('mac'))||(!isMac&&os==='win-x64');
-    return '<div class="card'+(mine?' sel':'')+'"><div class="nm">'+names[os]+(mine?' <small>내 컴퓨터</small>':'')+'</div>'
-      +(i&&i.ready?('<div class="sub">버전 '+esc(i.version||'')+(i.size?' · '+Math.round(i.size/1048576)+'MB':'')+'</div>'
+  $('instCards').innerHTML=want.map(os=>{ const i=by[os]; const mine=os==='desktop'||(!isMac&&os==='code-win-x64');
+    return '<div class="card'+(mine?' sel':'')+'"><div class="nm">'+names[os]+(mine?'<br><small>이 PC 에 맞는 것</small>':'')+'</div>'
+      +(i&&i.ready?('<div class="sub">버전 '+esc(i.version||'')+(i.size?' · '+(i.size<1048576?Math.max(1,Math.round(i.size/1024))+'KB':Math.round(i.size/1048576)+'MB'):'')+'</div>'
         +'<div class="mono" style="margin-top:6px">sha256 '+esc(i.sha256||'')+'</div>'
         +'<a class="btn pri" style="display:inline-block;margin-top:8px;text-decoration:none" href="'+esc(i.download)+'">내려받기</a>')
        :'<div class="empty" style="margin-top:6px">준비 중</div>')+'</div>'; }).join('');

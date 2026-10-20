@@ -18621,6 +18621,13 @@ def api_claude_update(request: Request, have: str = ""):
     return _claude_json(_cp.call(_cp.update_info, _cp.ctx_from_request(request, _client_ip(request)), have, Store(DB_PATH)))
 
 
+@app.get("/api/claude/install")
+def api_claude_install(request: Request, plat: str = ""):
+    """exe 없이 까는 길 — 연결 파일이 실행 도구 든 묶음을 받는다. 판단은 claude_portal.install_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.install_info, _cp.ctx_from_request(request, _client_ip(request)), plat, Store(DB_PATH)))
+
+
 @app.post("/api/claude/lease")
 async def api_claude_lease(request: Request):
     from shopping_shorts import claude_portal as _cp

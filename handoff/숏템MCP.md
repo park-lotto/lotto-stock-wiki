@@ -114,3 +114,11 @@
 - 최종 설치 exe 빌드 = 이번에 압축까지 끝났는지 확인 필요(scratchpad/installer_build/build_final.log). 끝났으면: test_install.py(/SANDBOX) → 설치 폴더에 _engine_test 섞였는지 확인(섞였으면 재빌드 — 점검 도구는 이미 밖으로 옮김) → test_engine_installed.py → 하이쿠 1편(scratchpad/haiku/prompt.txt, 시험 서버 FAKE_RENT_*).
 - 그 뒤: 짤 팩 동봉, 숏템메이커 서버 부담 0(결정 3 사장님), 프리셋 꾸러미 16개 서버 업로드(승인), 병합(승인).
 - 최종 빌드 끝(10-19 21:5x, 1271초): 설치 exe 805.9MB 미서명 · 설치 폴더 1809MB · 바이너리 237개 sha. ★빌드 폴더에 _engine_test(점검 도구가 만든 시험 파일)가 남아 있어 exe 에 섞였을 수 있다 → 설치 시험 때 설치 폴더에 _engine_test 있으면 지우고 재빌드.
+
+## 2026-10-20 (오전) — exe 없이 깔기 · 인스타 1080 · 이름 연예인꿀맛
+- 사장님 결정: ①이름 연예인레시피+후기형 → **연예인꿀맛**(claude_preset_names.json) ②인증서 없이 스타터킷처럼 → exe 내리고 연결 파일+자동 받기 ③1차로 내고 2차 병합에 짤·핀터레스트/샤오홍슈/도우인 검색 ④숏템회원 PC 이전 결정 3개(설계 문서 '사장님 결정 2026-10-20').
+- 됨(실측): 빈 PC 폴더에 연결 파일만으로 설치 30초(로컬 시험 서버) → 다시 켜면 숏템 도구 9개 · 키 저장 · 시작.md · 찌꺼기 0 (`node shortem_client/test/noexe_install_check.js --zip …`). 깔린 폴더로 test_engine_installed 통과(글꼴 86·템플릿 40·목소리 8·렌더 잉크 0.476·틱톡 3.8MB·받아쓰기 5구절). _engine_test 없음.
+- 됨: 빌드가 설치 폴더 맨 위 정한 이름 밖은 걷어냄(STAGE_TOP) · 설치 묶음 zip(987MB, 45초)·Claude Code 꾸러미(35MB, 플러그인 검사 2개 통과) 만드는 단계 · 서버 /api/claude/install(시험 26 통과) · 페이지 ④를 연결 파일 두 칸으로(브라우저로 그려 확인) · 시험 31 통과.
+- 엔진 트랙: 인스타 받기 형식 bestvideo → bv*(1080x1920 소리 섞인 원본) `5253f8e6b`. 다른 PC 가 같은 트랙에 10커밋 올려 그 위에 얹었다.
+- ⏭ 다음: ①최종 빌드(최신 엔진 = 인스타 수정 포함, 새 연결 파일) → noexe_install_check + test_engine_installed 다시 ②하이쿠/실제 1편(fake_server FAKE_RENT_* + FAKE_INSTALL_ZIP) ③승인 받을 것: 서버에 설치 묶음·연결 파일·프리셋 꾸러미 16개 올리기(publish_update.py --install, installers/manifest.json 에 desktop·code-win-x64) + finish(병합·라이브).
+- 알아 둘 것: 서버가 1GB 묶음을 회원마다 내준다(설치 1회). 부담이 크면 asset_url 한 곳만 R2/S3 서명 주소로 바꾸면 된다.

@@ -52,7 +52,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 
 function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f.layers; }
 
-export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update } = {}) {
+export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update, install } = {}) {
   const FT = fontTable();
   const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
@@ -202,6 +202,17 @@ print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode()
         if (!update || have === update.version) return send(res, 200, { ok: true, update: false });
         return send(res, 200, { ok: true, update: true, version: update.version, sha256: crypto.createHash('sha256').update(update.zip).digest('hex'), size: update.zip.length, url: '/__blob/update' });
       }
+      // exe 없이 까는 길(사장님 10-20) — 서버 claude_portal.install_info 와 같은 꼴(키만, 기기 지문 없음). FAKE_INSTALL_ZIP = 실물 설치 묶음
+      if (u.pathname === '/api/claude/install' && req.method === 'GET') {
+        const k = parseKey(req.headers.authorization);
+        if (!k || k.bad || k.exp < Date.now() / 1000) return fail(res, 401, 'no_key', '라이선스 키가 없습니다');
+        if (!install) return send(res, 200, { ok: true, ready: false });
+        return send(res, 200, { ok: true, ready: true, version: install.version, sha256: install.sha256, size: install.size, url: '/__blob/install' });
+      }
+      if (u.pathname === '/__blob/install' && install) {
+        res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': install.size });
+        return fs.createReadStream(install.file).pipe(res);
+      }
       if (u.pathname === '/__blob/update' && update) { res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': update.zip.length }); return res.end(update.zip); }
       if (u.pathname === '/__test/force_release') { for (const c of state.customers.values()) c.lease = null; return send(res, 200, { ok: true }); }
       if (u.pathname === '/__test/revoke') { const cid = +u.searchParams.get('cid'); cust(cid).revoked = true; return send(res, 200, { ok: true }); }
@@ -217,7 +228,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const port = Number(process.argv[2] || 18849);
   // 하이쿠 1편 시험(관제 234): FAKE_RENT_ZIP(실물 프리셋 꾸러미)·FAKE_RENT_PRESET(엔진 프리셋 경로)·FAKE_RENT_PID(고객용 id)
   const rent = process.env.FAKE_RENT_ZIP ? { zip: fs.readFileSync(process.env.FAKE_RENT_ZIP), preset_path: process.env.FAKE_RENT_PRESET, pid: process.env.FAKE_RENT_PID } : undefined;
-  startFakeServer({ port, rent }).then(s => {
+  // exe 없이 까는 시험: FAKE_INSTALL_ZIP(build_win 이 만든 설치 묶음) · FAKE_INSTALL_SHA(없으면 여기서 잰다)
+  let install;
+  if (process.env.FAKE_INSTALL_ZIP) {
+    const f = process.env.FAKE_INSTALL_ZIP;
+    const sha256 = process.env.FAKE_INSTALL_SHA || crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+    install = { file: f, size: fs.statSync(f).size, sha256, version: process.env.FAKE_INSTALL_VERSION || '1.0.0' };
+  }
+  startFakeServer({ port, rent, install }).then(s => {
     console.log(JSON.stringify({ url: s.url, key: makeKey(12, Math.floor(Date.now() / 1000) + 86400 * 30, 1) }));
   });
 }
