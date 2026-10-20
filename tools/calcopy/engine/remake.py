@@ -447,6 +447,8 @@ def main(argv=None):
     else:   # 고객 PC(관제 234)엔 뜯기 원본 영상이 없다 — 원본 대조는 우리 PC 에서만(완성본 검사는 이음매·소리 검사가 맡는다)
         v = {"verdict": "원본 없음 — 대조 생략", "n_in": None, "n_criteria": None, "out": None, "failed": []}
         log["steps"]["compare"] = {"skipped": "원본 영상 없음(고객 PC)"}
+        (out / "대조").mkdir(parents=True, exist_ok=True)      # 검사 단계(worker_steps.step_check)가 읽는 판정 자리 — 생략도 기록으로 남긴다
+        (out / "대조" / "verdict.json").write_text(json.dumps({"verdict": v, "skipped": "원본 영상 없음(고객 PC)"}, ensure_ascii=False, indent=1), encoding="utf-8")
     # 6) 이음매(되감김·점프 줌) — 검수 B16. 10-17 아이템홈 1판 17.77초 0.37초 되감김을 B표·compare 가 못 잡았다
     from tools.calcopy.engine import check_seams
     sw, sm = check_seams.from_frame(a.frame)   # 훅 카드 틀 말고 본편 틀
