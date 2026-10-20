@@ -1,0 +1,237 @@
+{
+ "cand_dir": "C:/숏템_칼카피/humorshowshow/작품8_불닭덴마크",
+ "_note": "하이브리드: 행 0~11 = 원 재료.json 행 0~11 그대로(앞 0~5줄) · 행 12~23 = 뒤 체험 6줄(줄마다 2조각). 새 영상은 cand_dir/hybrid/(screen.py 로 받음, 같은 제품 3배 매운맛 핵불닭 'Buldak 3x Spicy' 끓이고 먹는 쇼츠): Cs8BxteOdLs The Hungry Food Monsters 2024-05-20 · aXmEf513DG4 Yinrun's World 2025-04-09 · ksdS0xdNdmk The Gorilla Pack 2025-09-19 · 1MY7eoYRU1o 케이의맛 2025-12-14 · bk5F4bquDJ4 Aaron Yarbrough 2025-09-15 (전부 1080×1920). 원 소스 AP src_hZuQ6fAau9k 30.2 행 재사용(앞에서 안 쓴 행). 샷 경계 = ffmpeg scene>0.3 실측. src_crop = [x,y,w,h], 남의 자막·워터마크는 0.5~1초 시트로 위치 잼",
+ "shots": [
+  {
+   "src": "src_hZuQ6fAau9k.mp4",
+   "ss": 90.5,
+   "kind": "방송화면",
+   "seen": "불닭 국물형(스튜) 봉지 확대 — 면 먹으며 땀 흘리는 닭 캐릭터(AP 서울 마트, 샷 90.32~94.7, 아래 자막·위 워터마크 크롭) — 훅",
+   "src_crop": [
+    470,
+    130,
+    978,
+    795
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_hZuQ6fAau9k.mp4",
+   "ss": 4.4,
+   "kind": "방송화면",
+   "seen": "코펜하겐 매장 상자에 가득 담긴 불닭 봉지들(샷 4.17~8.34, 아래 지명 글자·위 워터마크 크롭)",
+   "src_crop": [
+    820,
+    120,
+    1100,
+    894
+   ]
+  },
+  {
+   "src": "src_hZuQ6fAau9k.mp4",
+   "ss": 23.45,
+   "kind": "방송화면",
+   "seen": "코펜하겐 매장 매대에서 2x Spicy 불닭 봉지를 집어 드는 손(샷 23.42~30.16 앞 1.4초 — 25초대 머리 흔들림·되감김 전에서 끊김)",
+   "src_crop": [
+    379,
+    134,
+    1162,
+    946
+   ]
+  },
+  {
+   "src": "src_hZuQ6fAau9k.mp4",
+   "ss": 67.0,
+   "kind": "방송화면",
+   "seen": "마트 매대에 쌓인 검정 불닭볶음면 봉지(샷 66.67~70.6, 아래 자막 크롭)",
+   "src_crop": [
+    470,
+    130,
+    978,
+    795
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "meme:fm_homealone",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "두 손으로 볼 감싸고 비명 지르는 나홀로집에 케빈 — '애들 먹으면 큰일 나 다 빼!!'"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "meme:fm_rockeyebrow",
+   "ss": 0.0,
+   "kind": "짤",
+   "seen": "눈썹 올리는 드웨인 존슨 — '이게 그렇게 매운 거였음..?'"
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "src_cN_uSWt06Jo.mp4",
+   "ss": 13.6,
+   "kind": "제품영상",
+   "seen": "냄비 위에 든 삼양 불닭볶음면 봉지(아래 글자 크롭)",
+   "src_crop": [
+    500,
+    0,
+    934,
+    760
+   ]
+  },
+  {
+   "cont": true
+  },
+  {
+   "src": "hybrid/Cs8BxteOdLs.mp4",
+   "ss": 0.05,
+   "kind": "제품영상",
+   "seen": "'3x Spicy' 핵불닭 봉지 앞면(The Hungry Food Monsters 쇼츠, 샷 0~1.73, 0.5초부터 뜨는 아래 'BULDAK 3X SPICY NOODLES' 글자 y≥1475 크롭)",
+   "src_crop": [
+    0,
+    400,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 4.6,
+   "kind": "제품영상",
+   "seen": "여자가 'TRIPLE spicy' 3x 봉지를 들어 보임(Yinrun's World 쇼츠, 샷 3.73~6.3, 아래 영어 자막 y≈1290·오른쪽 위 @워터마크 크롭)",
+   "src_crop": [
+    0,
+    220,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 17.3,
+   "kind": "제품영상",
+   "seen": "3x 봉지 들고 손가락 들며 자신만만(샷 14.87~22.8, 'I'm not even scared' 자막 크롭)",
+   "src_crop": [
+    0,
+    220,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/1MY7eoYRU1o.mp4",
+   "ss": 3.3,
+   "kind": "제품영상",
+   "seen": "남자가 3x 봉지 앞에서 손가락 1·2·3 세어 보임(케이의맛 쇼츠, 샷 3.2~5.43, 위 검은 제목 띠 y<345·아래 노란 자막 크롭)",
+   "src_crop": [
+    0,
+    350,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/ksdS0xdNdmk.mp4",
+   "ss": 9.45,
+   "kind": "제품영상",
+   "seen": "남자가 포크로 3x 면을 크게 한 입(The Gorilla Pack 쇼츠, 샷 9.37~13.97, 아래 영어 자막 y≥1320 크롭)",
+   "src_crop": [
+    0,
+    150,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 64.0,
+   "kind": "제품영상",
+   "seen": "먹다가 이마에 손 얹고 매워함(샷 63.63~72.23, 자막 크롭)",
+   "src_crop": [
+    0,
+    180,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/Cs8BxteOdLs.mp4",
+   "ss": 10.4,
+   "kind": "제품영상",
+   "seen": "그릇에서 젓가락으로 빨간 면발 들어올림(샷 10.33~끝, 글자 없음)",
+   "src_crop": [
+    0,
+    520,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/bk5F4bquDJ4.mp4",
+   "ss": 24.3,
+   "kind": "제품영상",
+   "seen": "여자가 젓가락으로 면을 계속 집어 먹음(Aaron Yarbrough 쇼츠, 샷 15.85~35.35, 위 로고 크롭)",
+   "src_crop": [
+    0,
+    300,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "src_hZuQ6fAau9k.mp4",
+   "ss": 30.2,
+   "kind": "방송화면",
+   "seen": "덴마크 매대의 2x Spicy 불닭 5팩 봉지들과 가격표 만지는 손(AP, 원 재료 행 — 앞에서 안 쓴 행, 샷 30.16~33.13)",
+   "src_crop": [
+    379,
+    134,
+    1162,
+    946
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 11.0,
+   "kind": "제품영상",
+   "seen": "3x 봉지 들고 '이게 얼마나 맵겠어' 하는 여자(샷 6.3~14.87 뒤쪽 — 4.77 행과 ±3초 겹침(B13) 피해 11.0, 아래 자막 크롭)",
+   "src_crop": [
+    0,
+    220,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 73.3,
+   "kind": "제품영상",
+   "seen": "친구 Luke 가 큰 냄비 째 3x 면을 한 입(샷 72.23~79.03, 위 'Famous last words' 상자 y≤310·아래 자막 크롭)",
+   "src_crop": [
+    0,
+    320,
+    1080,
+    878
+   ]
+  },
+  {
+   "src": "hybrid/aXmEf513DG4.mp4",
+   "ss": 80.9,
+   "kind": "제품영상",
+   "seen": "Luke 가 컵 우유를 들이킴(샷 80.8~끝, 아래 자막 크롭)",
+   "src_crop": [
+    0,
+    150,
+    1080,
+    878
+   ]
+  }
+ ]
+}
