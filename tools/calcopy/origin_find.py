@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -56,7 +57,9 @@ def load() -> dict:
 
 def save(L: dict):
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp = LEDGER.with_suffix(".json.tmp")   # 임시 파일에 다 쓴 뒤 바꿔 끼움 — 10-21 메모리 부족 강제 종료가 쓰는 도중에 와 장부 0바이트(git 에서 복구)
+    tmp.write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding="utf-8")
+    os.replace(tmp, LEDGER)
 
 
 # ── 판단 ───────────────────────────────────────────────────────────────
