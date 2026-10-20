@@ -37,7 +37,10 @@ fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: {
   env: { SHORTEM_INSTALL: inst, SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code',
     SHORTEM_LICENSE: fs.readFileSync(arg('--key-file'), 'utf8').trim(), SHORTEM_NO_BROWSER: '1' } } } }), { mode: 0o600 });
 
-const prompt = `숏템으로 숏폼 한 편 만들어줘. 나는 고객이고 이렇게 정했어:
+// --say "<회원이 친 한 줄>" 이면 그 문장 그대로(회원처럼) + 회원 몫 답만 덧붙인다
+const say = arg('--say');
+const prompt = say ? `${say}
+(내 답을 미리 적어 둘게: 소재 후보가 나오면 "1번", 대본 사인은 "좋아요, 진행해". 끝나면 완성본 경로를 알려줘.)` : `숏템으로 숏폼 한 편 만들어줘. 나는 고객이고 이렇게 정했어:
 - 먼저 shortem_setup 으로 준비를 확인해(자가점검은 하지 마).
 - 소재는 이 영상 하나로 해: ${video} (shortem_make step="start" 에 video 로)
 - 소재 후보가 나오면 표로 보여 주고, 내 선택은 "1번"이야.
@@ -59,6 +62,8 @@ const out = { rc: code, minutes: Math.round((Date.now() - t0) / 6000) / 10 };
 const lines = fs.readFileSync(log, 'utf8').split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 const uses = lines.flatMap(m => (m.message && m.message.content || []).filter(c => c.type === 'tool_use').map(c => c.name.replace('mcp__shortem__', '') + (c.input && c.input.step ? ':' + c.input.step : '')));
 out.tool_calls = uses.length;
+out.start_args = (lines.flatMap(m => (m.message && m.message.content || []).filter(c => c.type === 'tool_use' && /shortem_make$/.test(c.name) && c.input && c.input.step === 'start').map(c => c.input)))[0] || null;
+try { out.current_preset = JSON.parse(fs.readFileSync(path.join(HOME, 'settings.json'), 'utf8')).current || null; } catch { out.current_preset = null; }
 out.tools = [...new Set(uses)];
 out.other_tools = uses.filter(u => !u.startsWith('shortem_') && u !== 'ToolSearch');   // ToolSearch = 도구 불러오기(하네스)
 const res = lines.find(m => m.type === 'result');

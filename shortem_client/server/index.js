@@ -146,7 +146,10 @@ export function buildServer(ctx = makeCtx()) {
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, async args => {
-    const c = profilesCache() || {};
+    let c = profilesCache() || {};
+    // 프리셋 목록이 아직 없거나(준비 점검 없이 바로 만들기) 말한 이름이 목록에 없으면(새 프리셋) 서버에서 한 번 다시 받는다 — 10-20 회원 한 줄 시험
+    const miss = () => !(c.presets || []).length || (args.step === 'start' && args.preset_name && !args.preset && !presetByName(c.presets || [], args.preset_name));
+    if (args.step === 'start' && miss()) { const l = await licenseInfo(); if (!l.ok) return reply({ fail: { where: '소재', why: l.why, fix: l.fix, retry_ok: true } }); c = profilesCache() || {}; }
     let picked = null;
     if (args.preset_name && !args.preset) {   // 한 줄 요청("이 영상으로 ○○형으로 만들어줘") — 그 프리셋을 골라 두고(설정에 저장) 이 편부터 쓴다
       picked = presetByName(c.presets || [], args.preset_name);
