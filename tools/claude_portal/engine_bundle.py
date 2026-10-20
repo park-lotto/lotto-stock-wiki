@@ -68,7 +68,10 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "tools/calcopy/engine/topic_find.py", "tools/calcopy/engine/script_engine.py", "tools/calcopy/engine/yt_channel.py",
          "shopping_shorts/scene_style.py", "tools/calcopy/preview_request.py",   # 설정 화면 미리보기·검사(관제 234)
          "shopping_shorts/media_download.py", "shopping_shorts/grab_domains.py", "shopping_shorts/frame_extract.py",   # 인스타·틱톡 등 받기(숏템메이커와 같은 주인, 관제 234)
-         "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py")
+         "shopping_shorts/instagram_parse.py", "shopping_shorts/douyin_fetch.py", "shopping_shorts/threads_parse.py",
+         # 함수 안에서만 부르는 것(추적이 아직 못 본 것) — ★함수 안 import 를 통째로 따라가면 프리셋 기술·관리 도구까지 딸려 온다(10-20 시험:
+         #   channel_presets·channelkit/bench·live_admin). 그래서 하나씩 적는다. 빠지면 test_engine_installed(변수 많은 프리셋)가 잡는다
+         "shopping_shorts/calcopy_frame/per_video.py")
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:
@@ -104,31 +107,6 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
                     if m:
                         todo.append(m)
     return seen
-
-
-def lazy_imports(engine: Path, entries=ENTRY) -> list[str]:
-    """입구 모듈 **함수 안** import(우리 패키지)의 대상 모듈 경로 — 추적(시험 실행)에 안 걸린 갈래도 빠지지 않게.
-    10-20 실사고: calcopy_make.merge_preset_pack 에 함수 안 import(preset_save)를 새로 넣자 묶음에서 빠졌다(옛 추적에 없음)."""
-    import ast
-    out = []
-    for e in entries:
-        f = engine / e
-        if not f.is_file():
-            continue
-        tree = ast.parse(f.read_text(encoding="utf-8"))
-        top = set(map(id, tree.body))
-        for n in ast.walk(tree):
-            if id(n) in top or not isinstance(n, (ast.Import, ast.ImportFrom)) or (isinstance(n, ast.ImportFrom) and n.level):
-                continue
-            names = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module] + [f"{n.module}.{a.name}" for a in n.names]
-            for x in names:
-                if x and x.split(".")[0] in ("shopping_shorts", "tools", "pipeline"):
-                    p = engine / Path(*x.split("."))
-                    for c in (p.with_suffix(".py"), p / "__init__.py"):
-                        if c.is_file():
-                            out.append(c.relative_to(engine).as_posix())
-                            break
-    return sorted(set(out))
 
 
 def forbidden(rel: str) -> str | None:
@@ -182,9 +160,7 @@ def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
     mods, data = traced(traces, engine)
-    lazy = lazy_imports(engine)
-    want = sorted(mods | data | top_imports(engine) | top_imports(engine, tuple(lazy)) | set(RENDERER_EXTRA)
-                  | set(showcase_deps(engine)) | set(data_extra(engine)))
+    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)

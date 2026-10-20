@@ -1,6 +1,6 @@
 // 고객처럼 한 편(관제 234) — 깔린 설치 폴더 + 라이브 서버 + 진짜 키로, Claude(opus, 머리 없는 claude -p)가 숏템 도구만 써서 만든다.
 //   고객 몫 답(후보 1번 · "좋아요, 진행해")은 프롬프트로 준다. 결과물로 판정: 완성본 mp4(ffprobe 1080x1920·길이·소리) + 드라이브 복사.
-//   실행: node test/live_episode.js --install <설치 폴더> --key-file <키 파일> --dir <없는 폴더> [--video <주소>] [--drive]
+//   실행: node test/live_episode.js --install <설치 폴더> --key-file <키 파일> --dir <없는 폴더> [--video <주소>] [--drive] [--typecast-file <목소리 키 파일>]
 //   키·목소리 키는 파일·환경변수로만 넘기고 출력하지 않는다. 결과 JSON 한 줄, 어긋나면 rc=1.
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -24,6 +24,10 @@ try {
   const m = env.match(/^\s*([A-Z0-9_]*TYPECAST[A-Z0-9_]*)\s*=\s*(.+)\s*$/mi);
   if (m && m[2].trim()) { fs.mkdirSync(path.join(HOME, 'keys'), { recursive: true }); fs.writeFileSync(path.join(HOME, 'keys', 'typecast'), m[2].trim().replace(/^["']|["']$/g, ''), { mode: 0o600 }); }
 } catch { /* 없으면 목소리 단계가 알려 준다 */ }
+if (arg('--typecast-file')) {   // 고객 본인 키 자리 — 파일로만 옮기고 출력하지 않는다
+  fs.mkdirSync(path.join(HOME, 'keys'), { recursive: true });
+  fs.copyFileSync(arg('--typecast-file'), path.join(HOME, 'keys', 'typecast'));
+}
 if (process.argv.includes('--drive')) fs.writeFileSync(path.join(HOME, 'deliver.json'), JSON.stringify({ drive: { on: true } }), { mode: 0o600 });
 
 const cfg = path.join(dir, 'mcp.json');
