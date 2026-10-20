@@ -1136,3 +1136,82 @@ def guidebook_source(detail, ins):
             "체크인 전 도착(번호표) → 오션뷰 객실 → 저녁 수영장(노을·버블) → 룸서비스 → 침대에서 일출 → 이른 조식 → 숙소 앞 산책 → 셔틀로 귀가",
             "(동선은 위 후기 꿀팁을 시간순으로 엮은 것)"]
     return "\n".join(out)
+
+
+# ── 후기 카드(2026-10-20 사장님 "댓글을 캡처 예쁘게 해서 보여주고") ──────────────────────────────
+# 사이트 화면을 흉내 낸 캡처가 아니라 우리 디자인 카드로 다시 그린다(별점·가린 이름·출처 표기). 컷 한 장(1080×1920).
+# 주인 = review_card_png. 렌더·캡컷은 이 PNG 를 사진 컷처럼 쓴다(같은 파일 → 길마다 같은 그림).
+def _wrap(draw, text, font, width):
+    """띄어쓰기 단위로 줄바꿈(글자 단위로 자르면 '330 / 00원'처럼 단어가 끊긴다 — 실측 2026-10-20). 한 단어가 폭보다 길 때만 글자로."""
+    lines, cur = [], ""
+    for word in text.split(" "):
+        cand = (cur + " " + word) if cur else word
+        if draw.textlength(cand, font=font) <= width:
+            cur = cand
+            continue
+        if cur:
+            lines.append(cur)
+        cur = ""
+        for ch in word:
+            if draw.textlength(cur + ch, font=font) > width and cur:
+                lines.append(cur)
+                cur = ch
+            else:
+                cur += ch
+    return lines + ([cur] if cur else [])
+
+
+def review_card_png(item, out_path, bg_path=None, cat="", source="여기어때", rating=5):
+    """item = review_insights 한 항목 {item, count, quote}. 배경 = 숙소 사진(흐리게·어둡게) 위에 흰 말풍선 카드."""
+    from PIL import Image, ImageDraw, ImageFilter, ImageFont
+    from shopping_shorts.video_assemble import _resolve_font
+    W, H = 1080, 1920
+    fp = _resolve_font()
+    if not fp:
+        raise RuntimeError("후기 카드용 한글 폰트가 없다")
+    if bg_path:
+        bg = _load(bg_path).convert("RGB")
+        s = max(W / bg.width, H / bg.height)
+        bg = bg.resize((int(bg.width * s) + 1, int(bg.height * s) + 1))
+        bg = bg.crop(((bg.width - W) // 2, (bg.height - H) // 2, (bg.width - W) // 2 + W, (bg.height - H) // 2 + H))
+        bg = Image.blend(bg.filter(ImageFilter.GaussianBlur(18)), Image.new("RGB", (W, H), (20, 20, 24)), 0.45)
+    else:
+        bg = Image.new("RGB", (W, H), (30, 32, 38))
+    img = bg.convert("RGBA")
+    d = ImageDraw.Draw(img)
+    f_tag, f_q, f_item, f_meta = (ImageFont.truetype(fp, s) for s in (38, 64, 44, 34))
+    pad, cw = 64, W - 2 * 90
+    q = (item.get("quote") or item["item"]).strip("“”\" ")
+    if q and q[-1] not in ".!?~요다죠음함":     # 후기 분석이 인용을 40자에서 잘라 둔다 — 말이 끊긴 채 끝나면 말줄임표로
+        q += "…"
+    q = "“%s”" % q
+    q_lines = _wrap(d, q, f_q, cw - 2 * pad)[:6]
+    i_lines = _wrap(d, item["item"], f_item, cw - 2 * pad)[:3]
+    ch = pad + 60 + 30 + len(q_lines) * 88 + 40 + len(i_lines) * 62 + 40 + 50 + pad
+    x0, y0 = 90, (H - ch) // 2
+    shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle((x0 + 8, y0 + 14, x0 + cw + 8, y0 + ch + 14), 48, fill=(0, 0, 0, 110))
+    img = Image.alpha_composite(img, shadow.filter(ImageFilter.GaussianBlur(16)))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((x0, y0, x0 + cw, y0 + ch), 48, fill=(255, 255, 255, 250))
+    y = y0 + pad
+    tag = "실제 투숙 후기" + (" · " + cat if cat else "")
+    tw = d.textlength(tag, font=f_tag)
+    d.rounded_rectangle((x0 + pad, y, x0 + pad + tw + 44, y + 60), 30, fill=(255, 92, 53, 255))
+    d.text((x0 + pad + 22, y + 9), tag, font=f_tag, fill=(255, 255, 255, 255))
+    if rating and cat != "주의할 점":      # 단점 카드에 별 다섯 개는 어색하다 — 주의 카드는 별 없이
+        d.text((x0 + cw - pad - d.textlength("★" * rating, font=f_tag), y + 9), "★" * rating, font=f_tag, fill=(255, 184, 0, 255))
+    y += 60 + 30
+    for ln in q_lines:
+        d.text((x0 + pad, y), ln, font=f_q, fill=(28, 28, 32, 255))
+        y += 88
+    y += 40
+    for ln in i_lines:
+        d.text((x0 + pad, y), ln, font=f_item, fill=(90, 90, 98, 255))
+        y += 62
+    y += 40
+    meta = "후기 %s명이 같은 말 · 출처: %s" % (item.get("count", "?"), source)
+    d.text((x0 + pad, y), meta, font=f_meta, fill=(255, 92, 53, 255))
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    img.convert("RGB").save(out_path, quality=92)
+    return str(out_path)
