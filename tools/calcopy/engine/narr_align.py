@@ -183,6 +183,8 @@ def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: 
     import os
     tone = preset_id.rsplit("-", 1)[-1]
     customer = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
+    if customer and not os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("CALCOPY_DEV_MINA_SERVER") == "1":
+        customer = False      # 개발 PC 시험 전용(10-21) — 회원 일레븐랩스 키 자리를 서버 미나로 흉내. mina_tts(서버 SSH)는 설치본에 없다
     if customer and not os.environ.get("ELEVENLABS_API_KEY"):
         raise RuntimeError("이 목소리(미나)는 일레븐랩스 키가 필요합니다 — 설정 화면 '소리'의 '목소리 키(일레븐랩스)'에 넣어 주세요")
     if not customer and not preset_id.startswith("kr-mina-"):
