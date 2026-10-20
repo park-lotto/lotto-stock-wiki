@@ -2092,181 +2092,139 @@
     if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "천";
     return String(Math.round(n));
   }
-  var YT_TIER_COLOR = { "대박": "#ff3b30", "터짐": "#ff9500", "잘됨": "#34c759", "보통": "#8e8e93", "낮음": "#5a5a5e" };
+  var YT_TIER_COLOR = { "대박": "#ff2d55", "터짐": "#ff9f0a", "잘됨": "#30d158", "보통": "#64d2ff", "낮음": "#8e9bb5" };
   function _ytEl(tag, css, txt) {
     var e = document.createElement(tag);
     if (css) e.style.cssText = css;
     if (txt !== undefined) e.textContent = txt;
     return e;
   }
-  function _ytTile(label, val, sub) {
-    var t = _ytEl("div", "background:#2a2a2c;border-radius:8px;padding:7px 9px;min-width:0");
-    t.appendChild(_ytEl("div", "font-size:11px;color:#aaa", label));
-    t.appendChild(_ytEl("div", "font:800 17px system-ui,sans-serif;color:#fff;margin-top:2px", val));
-    if (sub) t.appendChild(_ytEl("div", "font-size:11px;color:#8e8e93;margin-top:1px", sub));
+  // 압축판(2026-10-20 사장님 "높이 줄이고·칙칙해·텍스트는 최대한 줄여"): 글은 숫자·짧은 이름만, 설명은 마우스 올리면(title).
+  function _ytTile(label, val, tip, color) {
+    var t = _ytEl("div", "background:rgba(255,255,255,.09);border-radius:8px;padding:5px 7px;min-width:0;border-top:2px solid " + (color || "#64d2ff"));
+    if (tip) t.title = tip;
+    t.appendChild(_ytEl("div", "font-size:10px;color:#b9c3dd", label));
+    t.appendChild(_ytEl("div", "font:800 15px system-ui,sans-serif;color:#fff;white-space:nowrap", val));
     return t;
   }
-  // 그래프 ① 채널 최근 쇼츠 조회수(올린 순서). 이 영상은 주황, 점선 = 채널 중앙값.
-  //   ★로그 눈금(1천·1만·10만·100만…): 직선 축은 대박 몇 편이 축을 먹어 나머지가 바닥에 붙고, 위를 자르면
-  //   막대 대부분이 잘렸다(실측 해외쇼쇼 49편 중 13편 잘림). 눈금마다 숫자를 적어 읽을 수 있게 한다.
+  function _ytSvg(W, H) {
+    var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.style.cssText = "width:100%;height:auto;display:block";
+    svg.add = function (tag, at, txt) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in at) if (k !== "tip") e.setAttribute(k, at[k]);
+      if (txt !== undefined) e.textContent = txt;
+      if (at && at.tip) { var tt = document.createElementNS(NS, "title"); tt.textContent = at.tip; e.appendChild(tt); }
+      svg.appendChild(e); return e;
+    };
+    return svg;
+  }
+  // 그래프 ① 채널 최근 쇼츠 조회수(올린 순서, 로그 눈금). 주황 = 이 영상, 노란 점선 = 채널 중앙값.
+  //   로그 눈금인 이유: 직선 축은 대박 몇 편이 축을 먹어 나머지가 바닥에 붙었다(실측 49편 중 13편 잘림).
   function _ytViewsChart(d) {
-    var NS = "http://www.w3.org/2000/svg", W = 600, H = 180, L = 44, B = 18, T = 10;
+    var W = 300, H = 118, L = 30, B = 4, T = 6, svg = _ytSvg(W, H);
     var ser = d.series || [], med = (d.median || {}).views || 0;
     var vals = ser.map(function (s) { return Math.max(1, s.views); });
     var lo = Math.floor(Math.log10(Math.min.apply(null, vals.concat([med || 1e9])))),
         hi = Math.ceil(Math.log10(Math.max.apply(null, vals.concat([10]))));
     if (hi <= lo) hi = lo + 1;
-    var n = Math.max(ser.length, 1), bw = (W - L - 4) / n, ph = H - B - T;
-    var svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.style.cssText = "width:100%;height:auto;display:block";
-    function add(tag, at, txt) {
-      var e = document.createElementNS(NS, tag);
-      for (var k in at) e.setAttribute(k, at[k]);
-      if (txt !== undefined) e.textContent = txt;
-      svg.appendChild(e); return e;
-    }
+    var bw = (W - L - 2) / Math.max(ser.length, 1), ph = H - B - T;
     function y(v) { return T + ph - (Math.log10(Math.max(1, v)) - lo) / (hi - lo) * ph; }
     for (var g = lo; g <= hi; g++) {
-      add("line", { x1: L, y1: y(Math.pow(10, g)), x2: W, y2: y(Math.pow(10, g)), stroke: g === lo ? "#555" : "#333" });
-      add("text", { x: L - 6, y: y(Math.pow(10, g)) + 4, fill: "#888", "font-size": 11, "text-anchor": "end" }, _ytNum(Math.pow(10, g)));
+      svg.add("line", { x1: L, y1: y(Math.pow(10, g)), x2: W, y2: y(Math.pow(10, g)), stroke: "rgba(255,255,255,.12)" });
+      svg.add("text", { x: L - 3, y: y(Math.pow(10, g)) + 3, fill: "#9fb0d6", "font-size": 9, "text-anchor": "end" }, _ytNum(Math.pow(10, g)));
     }
-    var meX = null, meY = null;
     for (var i = 0; i < ser.length; i++) {
-      var s = ser[i], x = L + 2 + i * bw, yy = y(s.views);
-      var r = add("rect", { x: x + bw * 0.12, y: yy, width: Math.max(1, bw * 0.76), height: Math.max(1, T + ph - yy), rx: 1.5,
-                            fill: s.me ? "#ff9500" : (s.views >= med ? "#5ac8fa" : "#3a6b80"), style: "cursor:pointer" });
-      var tt = document.createElementNS(NS, "title");
-      tt.textContent = (s.me ? "▶ 이 영상\n" : "") + s.title + "\n" + s.published + " · 조회 " + _ytNum(s.views); r.appendChild(tt);
+      var s = ser[i], x = L + 1 + i * bw, yy = y(s.views);
+      var r = svg.add("rect", { x: x + bw * 0.12, y: yy, width: Math.max(1, bw * 0.76), height: Math.max(1, T + ph - yy), rx: 1,
+                                fill: s.me ? "#ff9f0a" : (s.views >= med ? "#64d2ff" : "#3d6fb0"), style: "cursor:pointer",
+                                tip: (s.me ? "▶ 이 영상\n" : "") + s.title + "\n" + s.published + " · " + _ytNum(s.views) });
       (function (id) { r.addEventListener("click", function () { location.href = "https://www.youtube.com/shorts/" + id; }); })(s.id);
-      if (s.me) { meX = x + bw / 2; meY = yy; }
     }
-    if (med) {
-      add("line", { x1: L, y1: y(med), x2: W, y2: y(med), stroke: "#ffd60a", "stroke-dasharray": "5 4", "stroke-width": 1.5 });
-      // 중앙값 글자는 이 영상 반대쪽 끝에 — 같은 자리면 '이 영상' 글자와 겹쳤다(실측)
-      var left = meX !== null && meX > (L + W) / 2;
-      add("text", { x: left ? L + 4 : W - 2, y: y(med) - 4, fill: "#ffd60a", "font-size": 11,
-                    "text-anchor": left ? "start" : "end", "paint-order": "stroke", stroke: "#161616", "stroke-width": 3 },
-          "채널 중앙값 " + _ytNum(med));
-    }
-    if (meX !== null) {
-      var ly = Math.max(T + 10, meY - 6), anchor = meX > W - 40 ? "end" : (meX < L + 40 ? "start" : "middle");
-      add("text", { x: meX, y: ly, fill: "#ff9500", "font-size": 12, "font-weight": 800, "text-anchor": anchor,
-                    "paint-order": "stroke", stroke: "#161616", "stroke-width": 3 }, "▼ 이 영상");
-    }
-    if (ser.length) {
-      add("text", { x: L, y: H - 3, fill: "#888", "font-size": 10 }, ser[0].published);
-      add("text", { x: W, y: H - 3, fill: "#888", "font-size": 10, "text-anchor": "end" }, ser[ser.length - 1].published);
-    }
+    if (med) svg.add("line", { x1: L, y1: y(med), x2: W, y2: y(med), stroke: "#ffe14d", "stroke-dasharray": "4 3", "stroke-width": 1.3,
+                               tip: "채널 중앙값 " + _ytNum(med) });
     return svg;
   }
-  // 그래프 ⓪ 조회수 추세 — 서버가 열 때마다 적어 둔 (시각, 조회수). 가로축은 실제 시간 간격.
-  //   첫 점 = 올린 날 0회. 점이 2개뿐이면 '다시 열면 쌓인다'고 적는다(지어낸 곡선 금지).
+  // 그래프 ⓪ 조회수 추세 — 서버가 열 때마다 적은 (시각, 조회수). 첫 점 = 올린 날 0회. 가로축은 실제 시간.
   function _ytTrendChart(d) {
-    var NS = "http://www.w3.org/2000/svg", W = 600, H = 150, L = 44, B = 18, T = 12, R = 8;
+    var W = 300, H = 118, L = 30, B = 4, T = 14, R = 6, svg = _ytSvg(W, H);
     var pts = (d.trend || []).map(function (p) { return { t: Date.parse(p.t.replace(" ", "T")), v: p.views, s: p.t }; })
       .filter(function (p) { return !isNaN(p.t); });
-    var svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.style.cssText = "width:100%;height:auto;display:block";
     if (pts.length < 2) return svg;
-    function add(tag, at, txt) {
-      var e = document.createElementNS(NS, tag);
-      for (var k in at) e.setAttribute(k, at[k]);
-      if (txt !== undefined) e.textContent = txt;
-      svg.appendChild(e); return e;
-    }
     var t0 = pts[0].t, t1 = pts[pts.length - 1].t, vmax = 0;
     for (var i = 0; i < pts.length; i++) vmax = Math.max(vmax, pts[i].v);
-    vmax = vmax * 1.1 || 1;
+    vmax = vmax * 1.08 || 1;
     var ph = H - B - T;
     function x(t) { return L + (t1 > t0 ? (t - t0) / (t1 - t0) : 1) * (W - L - R); }
     function y(v) { return T + ph - v / vmax * ph; }
     for (var g = 0; g <= 2; g++) {
-      var gv = vmax / 1.1 * g / 2;
-      add("line", { x1: L, y1: y(gv), x2: W - R, y2: y(gv), stroke: g ? "#333" : "#555" });
-      add("text", { x: L - 6, y: y(gv) + 4, fill: "#888", "font-size": 11, "text-anchor": "end" }, _ytNum(gv));
+      var gv = vmax / 1.08 * g / 2;
+      svg.add("line", { x1: L, y1: y(gv), x2: W - R, y2: y(gv), stroke: "rgba(255,255,255,.12)" });
+      svg.add("text", { x: L - 3, y: y(gv) + 3, fill: "#9fb0d6", "font-size": 9, "text-anchor": "end" }, _ytNum(gv));
     }
-    var dpath = "", area = "M" + x(pts[0].t) + "," + y(0);
+    var line = "", area = "M" + x(t0) + "," + y(0);
     for (i = 0; i < pts.length; i++) {
-      dpath += (i ? "L" : "M") + x(pts[i].t).toFixed(1) + "," + y(pts[i].v).toFixed(1);
-      area += "L" + x(pts[i].t).toFixed(1) + "," + y(pts[i].v).toFixed(1);
+      var xy = x(pts[i].t).toFixed(1) + "," + y(pts[i].v).toFixed(1);
+      line += (i ? "L" : "M") + xy; area += "L" + xy;
     }
-    area += "L" + x(t1) + "," + y(0) + "Z";
-    add("path", { d: area, fill: "rgba(255,149,0,.15)" });
-    add("path", { d: dpath, fill: "none", stroke: "#ff9500", "stroke-width": 2.5, "stroke-linejoin": "round" });
-    for (i = 0; i < pts.length; i++) {
-      var c = add("circle", { cx: x(pts[i].t), cy: y(pts[i].v), r: 3.5, fill: "#ff9500" });
-      var tt = document.createElementNS(NS, "title"); tt.textContent = pts[i].s + " · 조회 " + _ytNum(pts[i].v); c.appendChild(tt);
-    }
-    var lp = pts[pts.length - 1];
-    add("text", { x: x(lp.t) - 4, y: Math.max(T + 10, y(lp.v) - 8), fill: "#ff9500", "font-size": 12, "font-weight": 800,
-                  "text-anchor": "end", "paint-order": "stroke", stroke: "#161616", "stroke-width": 3 }, "지금 " + _ytNum(lp.v));
-    add("text", { x: L, y: H - 3, fill: "#888", "font-size": 10 }, pts[0].s.slice(0, 10) + " 올림");
-    add("text", { x: W - R, y: H - 3, fill: "#888", "font-size": 10, "text-anchor": "end" }, lp.s);
+    svg.add("path", { d: area + "L" + x(t1) + "," + y(0) + "Z", fill: "rgba(255,159,10,.25)" });
+    svg.add("path", { d: line, fill: "none", stroke: "#ff9f0a", "stroke-width": 2.2, "stroke-linejoin": "round" });
+    for (i = 0; i < pts.length; i++)
+      svg.add("circle", { cx: x(pts[i].t), cy: y(pts[i].v), r: 3, fill: "#ffcf70", tip: pts[i].s + " · " + _ytNum(pts[i].v) });
     return svg;
   }
-  // 그래프 ② 이 영상 vs 채널 평소(중앙값) — 한 줄에 막대 두 개, 오른쪽에 몇 배인지.
-  function _ytCompareRow(label, me, med, fmt) {
-    var row = _ytEl("div", "display:grid;grid-template-columns:86px 1fr 52px;gap:8px;align-items:center;font-size:12px");
-    row.appendChild(_ytEl("div", "color:#ccc", label));
-    var bars = _ytEl("div", "display:flex;flex-direction:column;gap:3px");
-    var mx = Math.max(me || 0, med || 0) || 1;
-    function bar(v, color, who) {
-      var w = _ytEl("div", "display:flex;align-items:center;gap:6px");
-      var b = _ytEl("div", "height:10px;border-radius:3px;background:" + color + ";width:" + Math.max(2, (v || 0) / mx * 100) + "%;max-width:78%");
-      w.appendChild(b); w.appendChild(_ytEl("span", "font-size:11px;color:#bbb;white-space:nowrap", who + " " + (v === null || v === undefined ? "-" : fmt(v))));
-      return w;
-    }
-    bars.appendChild(bar(me, "#ff9500", "이 영상")); bars.appendChild(bar(med, "#636366", "채널"));
-    row.appendChild(bars);
-    var ratio = (me !== null && me !== undefined && med) ? me / med : null;
-    row.appendChild(_ytEl("div", "font:800 13px system-ui,sans-serif;text-align:right;color:" +
-      (ratio === null ? "#888" : ratio >= 1 ? "#34c759" : "#ff6961"), ratio === null ? "-" : ratio.toFixed(1) + "배"));
-    return row;
+  function _ytChip(label, me, med) {
+    var r = (me !== null && me !== undefined && med) ? me / med : null;
+    var up = r !== null && r >= 1;
+    var c = _ytEl("span", "border-radius:12px;padding:3px 9px;font:800 11px system-ui,sans-serif;white-space:nowrap;background:" +
+      (r === null ? "rgba(255,255,255,.08)" : up ? "rgba(48,209,88,.22)" : "rgba(255,69,58,.22)") + ";color:" +
+      (r === null ? "#b9c3dd" : up ? "#5cf28a" : "#ff8a80"), label + " " + (r === null ? "-" : r.toFixed(1) + "배" + (up ? "▲" : "▼")));
+    c.title = "채널 평소(중앙값) 대비";
+    return c;
   }
   function _ytStatsRender(p, d) {
     var body = p.querySelector(".ss-yt-body");
     while (body.firstChild) body.removeChild(body.firstChild);   // 유튜브는 Trusted Types 라 innerHTML 대입이 막힌다(실측)
-    if (!d || !d.ok) { body.appendChild(_ytEl("div", "font-size:12px;color:#aaa", (d && d.error) || "분석을 못 받았어요")); return; }
-    var v = d.video, m = d.median || {}, tier = d.tier || { name: "-", desc: "비교할 쇼츠가 없어요" };
-    var head = _ytEl("div", "display:flex;align-items:center;gap:10px;flex-wrap:wrap");
-    head.appendChild(_ytEl("div", "background:" + (YT_TIER_COLOR[tier.name] || "#555") +
-      ";color:#fff;border-radius:8px;padding:6px 12px;font:900 18px system-ui,sans-serif", tier.name));
-    var hx = _ytEl("div", "display:flex;flex-direction:column;gap:2px");
-    hx.appendChild(_ytEl("div", "font:800 15px system-ui,sans-serif;color:#fff",
-      d.multiplier === null ? "비교할 쇼츠가 없어요" : "채널 평소의 " + d.multiplier + "배 (총 조회)"));
-    hx.appendChild(_ytEl("div", "font-size:12px;color:#bbb", tier.desc +
-      (d.multiplier_day ? " · 하루 평균으로는 " + d.multiplier_day + "배" : "") +
-      (d.rank ? " · 최근 쇼츠 " + (d.compared + 1) + "편 중 " + d.rank + "위" : "")));
-    head.appendChild(hx);
+    if (!d || !d.ok) { body.appendChild(_ytEl("div", "font-size:12px;color:#b9c3dd", (d && d.error) || "분석 실패")); return; }
+    var v = d.video, m = d.median || {}, tier = d.tier || { name: "-", desc: "" };
+    var tc = YT_TIER_COLOR[tier.name] || "#64d2ff";
+    var head = _ytEl("div", "display:flex;align-items:center;gap:6px;flex-wrap:wrap");
+    var badge = _ytEl("span", "background:" + tc + ";color:#fff;border-radius:7px;padding:2px 9px;font:900 14px system-ui,sans-serif", tier.name);
+    badge.title = tier.desc + " · " + (d.source || "");
+    head.appendChild(badge);
+    var big = _ytEl("span", "font:900 19px system-ui,sans-serif;color:" + tc, d.multiplier === null ? "-" : d.multiplier + "배");
+    big.title = "채널 최근 쇼츠 " + d.compared + "편 조회수 중앙값 대비";
+    head.appendChild(big);
+    head.appendChild(_ytChip("하루", v.per_day, m.per_day));
+    head.appendChild(_ytChip("좋아요", v.like_rate, m.like_rate));
+    head.appendChild(_ytChip("댓글", v.comment_rate, m.comment_rate));
+    if (d.rank) head.appendChild(_ytEl("span", "font-size:11px;color:#b9c3dd", d.rank + "/" + (d.compared + 1) + "위"));
+    if (d.young) {
+      var yg = _ytEl("span", "font-size:11px;color:#ffe14d", "⏳" + v.days + "일");
+      yg.title = "올린 지 얼마 안 돼 총 조회 배수가 낮게 나올 수 있어요 — 하루 배수를 같이 보세요";
+      head.appendChild(yg);
+    }
     body.appendChild(head);
-    if (d.young) body.appendChild(_ytEl("div", "font-size:12px;color:#ffd60a;background:rgba(255,214,10,.1);border-radius:6px;padding:5px 8px",
-      "⏳ 올린 지 " + v.days + "일 — 아직 조회가 쌓이는 중이라 총 조회 배수는 낮게 나올 수 있어요. 하루 평균 배수를 같이 보세요."));
-    var tiles = _ytEl("div", "display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px");
-    tiles.appendChild(_ytTile("조회수", _ytNum(v.views), v.published));
-    tiles.appendChild(_ytTile("하루 평균", _ytNum(v.per_day), "올린 지 " + (v.days || "-") + "일"));
-    tiles.appendChild(_ytTile("좋아요율", v.like_rate === null ? "-" : v.like_rate + "%", "좋아요 " + _ytNum(v.likes)));
-    tiles.appendChild(_ytTile("댓글율", v.comment_rate === null ? "-" : v.comment_rate + "%", "댓글 " + _ytNum(v.comments)));
-    tiles.appendChild(_ytTile("구독자 대비", d.views_per_sub === null ? "-" : (d.views_per_sub >= 100 ? Math.round(d.views_per_sub) : d.views_per_sub) + "%", "구독 " + _ytNum((d.channel || {}).subs)));
+    var tiles = _ytEl("div", "display:grid;grid-template-columns:repeat(5,1fr);gap:5px");
+    tiles.appendChild(_ytTile("조회", _ytNum(v.views), v.published + " 올림", "#ff9f0a"));
+    tiles.appendChild(_ytTile("하루", _ytNum(v.per_day), "하루 평균 조회(올린 지 " + v.days + "일)", "#ffe14d"));
+    tiles.appendChild(_ytTile("좋아요", v.like_rate === null ? "-" : v.like_rate + "%", "좋아요 " + _ytNum(v.likes), "#ff2d55"));
+    tiles.appendChild(_ytTile("댓글", v.comment_rate === null ? "-" : v.comment_rate + "%", "댓글 " + _ytNum(v.comments), "#bf5af2"));
+    tiles.appendChild(_ytTile("구독대비", d.views_per_sub === null ? "-" : (d.views_per_sub >= 100 ? Math.round(d.views_per_sub) : d.views_per_sub) + "%",
+                              "구독자 " + _ytNum((d.channel || {}).subs) + " 대비 조회", "#30d158"));
     body.appendChild(tiles);
-    if ((d.trend || []).length >= 2) {
-      body.appendChild(_ytEl("div", "font:800 12px system-ui,sans-serif;color:#ddd;margin-top:4px", "📈 조회수 추세"));
-      body.appendChild(_ytTrendChart(d));
-      if (d.trend.length <= 2) body.appendChild(_ytEl("div", "font-size:11px;color:#8e8e93",
-        "올린 날(0회)과 지금 두 점이에요. 이 영상을 다시 열 때마다 조회수가 기록돼 추세 선이 촘촘해져요(30분에 한 번)."));
+    var charts = _ytEl("div", "display:grid;grid-template-columns:1fr 1fr;gap:6px");
+    function box(title, svg, tip) {
+      var c = _ytEl("div", "background:rgba(255,255,255,.07);border-radius:8px;padding:4px 6px");
+      c.appendChild(_ytEl("div", "font:800 11px system-ui,sans-serif;color:#dfe6ff", title));
+      if (tip) c.title = tip;
+      c.appendChild(svg); return c;
     }
-    if ((d.series || []).length > 1) {
-      body.appendChild(_ytEl("div", "font:800 12px system-ui,sans-serif;color:#ddd;margin-top:4px",
-        "📊 이 채널 최근 쇼츠 조회수 (막대를 누르면 그 영상으로)"));
-      body.appendChild(_ytViewsChart(d));
-      body.appendChild(_ytEl("div", "font:800 12px system-ui,sans-serif;color:#ddd;margin-top:4px", "⚖️ 채널 평소(중앙값)와 비교"));
-      var cmp = _ytEl("div", "display:flex;flex-direction:column;gap:6px");
-      cmp.appendChild(_ytCompareRow("하루 평균 조회", v.per_day, m.per_day, _ytNum));
-      cmp.appendChild(_ytCompareRow("좋아요율", v.like_rate, m.like_rate, function (x) { return x + "%"; }));
-      cmp.appendChild(_ytCompareRow("댓글율", v.comment_rate, m.comment_rate, function (x) { return x + "%"; }));
-      body.appendChild(cmp);
-    }
-    body.appendChild(_ytEl("div", "font-size:10px;color:#777;margin-top:2px",
-      "비교 대상: " + ((d.channel || {}).title || "") + " 최근 쇼츠 " + d.compared + "편 · " + (d.source || "")));
+    if ((d.trend || []).length >= 2)
+      charts.appendChild(box("📈 추세", _ytTrendChart(d), "올린 날(0회)부터. 열 때마다 기록돼 점이 늘어요(30분에 1번)"));
+    if ((d.series || []).length > 1)
+      charts.appendChild(box("📊 최근 " + (d.compared + 1) + "편", _ytViewsChart(d), "주황 = 이 영상 · 노란 점선 = 채널 중앙값 · 막대 누르면 이동"));
+    body.appendChild(charts);
   }
   var _ytStatsCache = {};
   // 자리 = 관련 검색어 상자(#ss-kwpost) 바로 아래, 왼쪽·폭을 똑같이(2026-10-20 사장님 "그 아래 정렬 맞춰서").
@@ -2296,12 +2254,12 @@
     p.id = "ss-ytstat"; p.setAttribute("data-v", vid);
     // 자리 = 사장님 캡처의 빨간 칸(영상 오른쪽, 관련 검색어 상자 아래). 끌어 옮기면 그 자리를 기억한다.
     p.style.cssText = "position:fixed;right:18px;top:260px;z-index:2147483645;box-sizing:border-box;width:min(640px,46vw);max-height:calc(100vh - 280px);overflow:auto;" +
-      "background:rgba(22,22,22,.94);color:#eee;border-radius:12px;padding:10px 12px;font-family:system-ui,sans-serif;" +
-      "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px";
+      "background:linear-gradient(135deg,#1d2b64 0%,#3a1c71 100%);color:#fff;border-radius:12px;padding:8px 10px;font-family:system-ui,sans-serif;" +
+      "box-shadow:0 4px 16px rgba(40,30,120,.45);display:flex;flex-direction:column;gap:6px";
     var hd = _ytEl("div", "display:flex;justify-content:space-between;align-items:center;gap:12px;font:800 13px system-ui,sans-serif");
-    hd.appendChild(_ytEl("span", "", "📈 영상 분석"));
+    hd.appendChild(_ytEl("span", "", "📈 분석"));
     hd.appendChild(_kwFoldBtn(p, "ss_ytstat_fold"));
-    var body = _ytEl("div", "display:flex;flex-direction:column;gap:8px"); body.className = "ss-yt-body";
+    var body = _ytEl("div", "display:flex;flex-direction:column;gap:6px"); body.className = "ss-yt-body";
     var st = _ytEl("div", "font-size:12px;color:#aaa"); body.appendChild(st);
     p.appendChild(hd); p.appendChild(body);
     _kwFoldApply(p, "ss_ytstat_fold");
@@ -2316,7 +2274,7 @@
     _ssDrag(p, hd);
     _ytStatsPlace(p);
     if (_ytStatsCache[vid]) { _ytStatsRender(p, _ytStatsCache[vid]); return; }
-    _kwTicking(st, "채널 최근 쇼츠와 비교하는 중…");
+    _kwTicking(st, "분석 중…");
     _gmPost(BASE + "/api/yt/analytics", { id: vid }, function (status, text) {
       if (p.getAttribute("data-v") !== vid || !document.body.contains(p)) return;
       var d = null;

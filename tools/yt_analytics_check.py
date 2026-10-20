@@ -45,7 +45,7 @@ def main(vid, png):
         pg.goto("https://www.youtube.com/shorts/" + vid, wait_until="domcontentloaded", timeout=60000)
         pg.wait_for_timeout(4000)
         # 사장님 화면(캡쳐 61)처럼 관련 검색어 상자를 오른쪽 위로 옮겨 둔 상태를 재현
-        pg.evaluate("localStorage.setItem('ss_drag:www.youtube.com:ss-kwpost', JSON.stringify({x: 1325, y: 55}))")
+        pg.evaluate("localStorage.setItem('ss_drag:www.youtube.com:ss-kwpost', JSON.stringify({x: 1325, y: 108}))")
         pg.evaluate("(function(){" + GM_SHIM + "})()")       # 유튜브는 Trusted Types 라 script 태그 주입이 막힌다 → evaluate 로
         pg.evaluate("(function(){" + logic + "\n})()")
         try:
