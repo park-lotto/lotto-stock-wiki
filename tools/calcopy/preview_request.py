@@ -110,16 +110,23 @@ def preset_defaults(preset: str | pathlib.Path) -> dict:
     out: dict = {}
     frame = json.loads((pdir / "frame.json").read_text(encoding="utf-8")) if (pdir / "frame.json").is_file() else None
     if frame:
+        man = json.loads((pdir / "manifest.json").read_text(encoding="utf-8")) if (pdir / "manifest.json").is_file() else {}
+        if man.get("variable_stats"):   # 편마다 값($per_video) = 프리셋이 잰 중앙값 — 만들 때와 같은 주인(per_video.fill_defaults)
+            from shopping_shorts.calcopy_frame import per_video as PV
+            frame, _ = PV.fill_defaults(frame, man["variable_stats"])
+        real = lambda v: v if isinstance(v, str) and v and "$per_video" not in v else None   # noqa: E731 — 못 채운 칸은 기본값으로 안 쓴다
         layers = [L for fr in (frame.get("frames") or [frame]) for L in fr.get("layers", []) if L.get("kind") == "text"]
-        title = next((L for L in layers if L.get("role") == "title" and L.get("font")), None)
-        cap = next((L for L in layers if L.get("role") == "caption" and L.get("font")), None)
+        title = next((L for L in layers if L.get("role") == "title" and real(L.get("font"))), None)
+        cap = next((L for L in layers if L.get("role") == "caption" and real(L.get("font"))), None)
         text = {}
         if title:
             text["title_font"] = title["font"]
         if cap:
             text["caption_font"] = cap["font"]
-            o = cap.get("outline") or {}
-            text["caption"] = {"outline_px": o.get("px") or 0, **({"outline_rgb": list(o["rgb"])} if o.get("rgb") else {})}
+            o = cap.get("outline")
+            if o is None or isinstance(o, dict):
+                o = o or {}
+                text["caption"] = {"outline_px": o.get("px") or 0, **({"outline_rgb": list(o["rgb"])} if isinstance(o.get("rgb"), list) else {})}
         if text:
             out["text"] = text
     own = pdir / "defaults.json"
