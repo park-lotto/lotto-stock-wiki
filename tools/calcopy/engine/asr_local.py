@@ -9,7 +9,7 @@
 - 위스퍼 = faster-whisper(CTranslate2, CPU int8). 모델 = SHORTEM_WHISPER_MODEL(기본 small) — 설치팩은 모델 폴더를 같이 깐다
   (SHORTEM_WHISPER_DIR, 처음부터 다 깔려 있게). 오디오는 ffmpeg 로 16kHz PCM 으로 풀어 배열로 넘긴다(av 의존 없음).
 - 구절 = 낱말 시각에서 쉼(≥ PAUSE_S)마다 끊는다(위스퍼 기본 구절은 6초 한 덩어리로 나온다 — 10-19 실측).
-- 스피치매틱스 = SHORTEM_ASR=speechmatics 이고 SPEECHMATICS_API_KEY 가 있을 때만(고객 키). 없으면 위스퍼.
+- 스피치매틱스 = transcribe(engine='speechmatics')(칼카피 내부) 또는 SHORTEM_ASR=speechmatics(고객) 이고 키가 있을 때(speechmatics_key — 환경변수·~/.volcano/keys/speechmatics). 없으면 위스퍼.
 """
 from __future__ import annotations
 
@@ -110,12 +110,22 @@ def _whisper(a) -> dict:
     return {"engine": f"whisper:{name}", "lang": info.language, "segments": out}
 
 
+def speechmatics_key() -> str:
+    """키 자리 한 곳: 환경변수 SPEECHMATICS_API_KEY → SPEECHMATICS_KEY → ~/.volcano/keys/speechmatics(볼케이노 실행기와 같은 자리, 값 한 줄).
+    10-21 사장님 '스피치매틱스 승인' — 서버(/etc/shopping-shorts.env·DB)에는 키가 없고 이 PC 볼케이노 키 파일에 있다(실측)."""
+    v = (os.environ.get("SPEECHMATICS_API_KEY") or os.environ.get("SPEECHMATICS_KEY") or "").strip()
+    if v:
+        return v
+    p = os.path.expanduser("~/.volcano/keys/speechmatics")
+    return open(p, encoding="utf-8").read().strip() if os.path.exists(p) else ""
+
+
 def _speechmatics(path: str) -> dict:
     """고객 키 스피치매틱스(batch). 실패하면 예외 — 부르는 쪽이 위스퍼로 다시."""
     import json
     import time
     import requests
-    key = os.environ["SPEECHMATICS_API_KEY"]
+    key = speechmatics_key()
     H = {"Authorization": f"Bearer {key}"}
     cfg = {"type": "transcription", "transcription_config": {"language": "auto", "operating_point": "enhanced"}}
     with open(path, "rb") as f:
@@ -150,10 +160,11 @@ def _speechmatics(path: str) -> dict:
             "segments": out}
 
 
-def transcribe(path: str) -> dict:
+def transcribe(path: str, engine: str | None = None) -> dict:
+    """engine='speechmatics' = 칼카피 내부(사장님 승인 10-21, 유료·가장 정확). 고객 설치는 SHORTEM_ASR=speechmatics 일 때만(고객 키 과금 — 기본 위스퍼 그대로)."""
     a = pcm(path)
     res = None
-    if os.environ.get("SHORTEM_ASR") == "speechmatics" and os.environ.get("SPEECHMATICS_API_KEY"):
+    if (engine or os.environ.get("SHORTEM_ASR")) == "speechmatics" and speechmatics_key():
         try:
             res = _speechmatics(path)
         except Exception as e:  # noqa: BLE001 — 고객 키 실패는 이유를 남기고 위스퍼로(조용히 삼키지 않는다)
