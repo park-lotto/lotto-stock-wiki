@@ -18,8 +18,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-KEY = "C:/Users/CH/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
-HOST = "ubuntu@3.35.251.172"
+KEY = str(Path.home() / "crawling_bot_client" / "LightsailDefaultKey-ap-northeast-2.pem")   # 집 PC(CH)·회사 PC 둘 다
+HOST = "ubuntu@shoppingshorts.duckdns.org"   # 서버 IP 는 바뀐다 — 도메인으로(CLAUDE.md)
 REPO = "/home/ubuntu/lotto-stock-wiki"
 
 REMOTE = r'''

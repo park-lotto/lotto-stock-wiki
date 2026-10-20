@@ -449,11 +449,29 @@ def st_script(P: Piece, version: str, fail: str = ""):
         jsave(vd / "대본.json", S); jsave(vd / "재료.json", M)
         (vd / "근거.md").write_text(r.get("근거_md") or "", encoding="utf-8")
         a = script_audit.audit(vd / "대본.json", version)
+        bad_title = _title_colors_bad(S, STY.load(version))
+        if bad_title:
+            a = {**a, "ok": False, "title": bad_title}
         if a.get("ok"):
             P.mark("script", version=version, tries=attempt + 1)
             return S
         ctx += "\n\n## 대본 검사에서 걸린 것(고쳐라)\n" + json.dumps(a, ensure_ascii=False)[:4000]
     raise StageError("대본 검사를 세 번 통과하지 못했다")
+
+
+def _title_colors_bad(S: dict, st: dict) -> list[str]:
+    """제목 줄마다 판 틀(frame.title[줄])에 있는 색만 썼나 — 'hi' 는 그 줄 틀에 hi 가 있을 때만(10-21 실측: 키치잇판 둘째 줄 상자에 hi → 렌더 KeyError)."""
+    spec = (st.get("frame") or {}).get("title") or []
+    out = []
+    for i, line in enumerate(S.get("title_lines") or []):
+        sp = spec[i] if i < len(spec) else {}
+        for chunk in line if isinstance(line, list) else []:
+            c = chunk[1] if isinstance(chunk, list) and len(chunk) > 1 else None
+            if c == "hi" and "hi" not in sp:
+                out.append(f"제목 {i + 1}줄 '{chunk[0]}' 에 'hi' — 이 판 제목 {i + 1}줄은 강조색이 없다(null 또는 '#hex')")
+    if len(S.get("title_lines") or []) > len(spec):
+        out.append(f"제목 줄 수 {len(S['title_lines'])} > 판 틀 {len(spec)}줄")
+    return out
 
 
 def _dur(p: Path) -> float | None:
@@ -465,15 +483,19 @@ def _dur(p: Path) -> float | None:
 
 
 PLAN_LOOK = """너는 장면 검수 담당이다(제작 순서 08). 계획 시트를 보고 컷마다: 대사와 화면이 맞나(A3) · 남의 신체 근접(A13) · 남의 글자·원본 자막 띠(A5) ·
-0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움. 고칠 것이 있으면 재료.json 전체를 고쳐서 돌려준다(없으면 null).
+0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
+★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
+자막·띠 밖을 잘라라(집 PC 예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료.json 전체를 고쳐서 돌려준다(없으면 null).
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
 
 
 def plan_sheet(P: Piece, version: str, T: dict) -> Path:
     """계획 시간표의 컷마다 가운데 한 장(크롭 그대로) → 모음 그림 — 렌더 전 눈 확인용(plan_only 는 시간표만 쓴다)."""
     from PIL import Image, ImageDraw
+    from tools.calcopy.hybrid import render_bench, styles as STY
     M = jload(P.D / version / "재료.json")
     cand = Path(M.get("cand_dir") or (P.W / "src"))
+    _, _, ww, wh = STY.load(version)["frame"]["window"]
     tiles = []
     for i, c in enumerate(T.get("cuts") or []):
         src = cand / str(c.get("src") or "")
@@ -481,9 +503,14 @@ def plan_sheet(P: Piece, version: str, T: dict) -> Path:
             continue
         f = P.W / "_plan" / f"c{i:02d}.jpg"
         f.parent.mkdir(exist_ok=True)
-        crop = c.get("crop") if isinstance(c.get("crop"), list) else None
+        # 렌더러와 똑같이 자른다(render_bench.render_window) — 'face' = face_crop(높이 전체 → 원본 아래 자막이 들어온다).
+        #   10-21 실측: 'face' 컷을 자르지 않은 원본으로 보여 줘 검수가 세 번 다 '자막 띠'를 짚고도 무엇이 렌더될지 몰랐다
+        crop = c.get("crop", "face")
         try:
-            frame(src, float(c.get("ss") or 0) + float(c.get("dur") or 0) / 2, f, crop)
+            if crop == "face" and src.suffix.lower() not in render_bench.IMG_EXT:
+                crop = render_bench.face_crop(src, float(c.get("ss") or 0) + min(0.5, float(c.get("dur") or 0) / 2), ww / wh)
+            crop = crop if isinstance(crop, list) else None
+            frame(src, float(c.get("ss") or 0) + min(0.5, float(c.get("dur") or 0) / 2), f, crop)
             im = Image.open(f).convert("RGB")
             im.thumbnail((220, 220))
             d = ImageDraw.Draw(im)
@@ -502,25 +529,37 @@ def plan_sheet(P: Piece, version: str, T: dict) -> Path:
     return out
 
 
+def _fix_materials(P: Piece, version: str, why: str, sheet_img: Path | None, tag: str) -> dict:
+    """계획 시트를 보고 재료.json 을 고치게 한다(제작순서 08). 답 = {ok, problems, 재료|null}."""
+    from tools.calcopy.hybrid import styles as STY
+    vd = P.D / version
+    _, _, ww, wh = STY.load(version)["frame"]["window"]
+    r = ask(tag, PLAN_LOOK.replace("{ar}", f"{ww}:{wh}") + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
+            (vd / "대본.json").read_text(encoding="utf-8")[:6000] + "\n\n재료:\n" + (vd / "재료.json").read_text(encoding="utf-8")[:8000],
+            [img(sheet_img)] if sheet_img else [], need=("ok",))
+    if r.get("재료"):
+        M = r["재료"]; M["cand_dir"] = str(P.W / "src")
+        jsave(vd / "재료.json", M)
+    return r
+
+
 def st_plan(P: Piece, version: str):
+    """계획 시트 → 검수 → 고침을 검수가 ok 일 때까지(최대 4번). ok 없이 렌더로 넘기지 않는다(10-21 실측: 세 번째도 자막 띠가 남은 채 넘어갔다)."""
     from tools.calcopy.hybrid import render_bench
     vd = P.D / version
-    for attempt in range(3):
+    for attempt in range(4):
         try:
             res, over = render_bench.render(version, vd, P.W / version, plan_only=True), ""
         except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다(제작순서 08)
             res, over = {"timeline": {"cuts": []}}, str(e)
-        sh = plan_sheet(P, version, res.get("timeline") or {})
-        r = ask(f"plan_{version}", PLAN_LOOK + (f"\n\n계획 단계가 멈췄다(재료를 고쳐라): {over}" if over else "") + "\n\n대본:\n" +
-                (vd / "대본.json").read_text(encoding="utf-8")[:6000] + "\n\n재료:\n" + (vd / "재료.json").read_text(encoding="utf-8")[:6000],
-                [img(sh)], need=("ok",))
+        sh = plan_sheet(P, version, res.get("timeline") or {}) if not over else None
+        r = _fix_materials(P, version, over, sh, f"plan_{version}")
+        if r.get("ok") and not over and not r.get("재료"):
+            P.mark("plan", version=version, tries=attempt + 1)
+            return
         if not r.get("재료"):
-            if over:
-                raise StageError(f"계획이 멈췄는데 재료를 고치지 못했다: {over}")
-            break
-        M = r["재료"]; M["cand_dir"] = str(P.W / "src")
-        jsave(vd / "재료.json", M)
-    P.mark("plan", version=version)
+            raise StageError(f"계획 검수가 통과하지 않았는데 재료를 고치지 못했다: {over or r.get('problems')}")
+    raise StageError("계획 검수를 네 번 통과하지 못했다")
 
 
 FINAL_LOOK = """너는 완성본 검수 담당이다(제작 순서 11 ③). 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나(A3), 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
@@ -532,7 +571,16 @@ def st_render_check(P: Piece, version: str) -> Path:
     from tools.calcopy.hybrid import bench_check, render_bench
     vd, wd = P.D / version, P.W / version
     P.stage("render")
-    render_bench.render(version, vd, wd)
+    for attempt in range(3):              # 실제 목소리 길이로 컷이 원본 샷보다 길어지면 멈춘다(어림 계획은 통과해도) → 재료를 고쳐 다시(제작순서 10 '로그에서 볼 것')
+        try:
+            render_bench.render(version, vd, wd)
+            break
+        except StageError as e:
+            if "원본 샷보다 길다" not in str(e) or attempt == 2:
+                raise
+            r = _fix_materials(P, version, str(e), None, f"render_fix_{version}")
+            if not r.get("재료"):
+                raise
     final = wd / "render" / "final.mp4"
     if not final.exists():
         raise StageError("완성본이 나오지 않았다")
