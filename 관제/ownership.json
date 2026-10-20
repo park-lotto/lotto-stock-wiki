@@ -804,6 +804,154 @@
    "검사도구": "tools/mograph/check_countdown.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "카드뉴스 장 구성·문구(개요→장별 문구→검사→한 번 다시 쓰기)",
+   "주인": [
+    "shopping_shorts/cardnews.py:build_carousel",
+    "shopping_shorts/cardnews.py:plan_outline"
+   ],
+   "시그니처": [
+    "def build_carousel\\b",
+    "def plan_outline\\b",
+    "_WRITE_RULES\\s*="
+   ],
+   "소비처": [
+    "/api/cardnews/build·outline·restyle",
+    "자동 규칙 run_rule_once"
+   ],
+   "검사도구": "tools/check_cardnews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "카드뉴스 글 검사 12가지(지어낸 날짜·빈 장·중복·길이·금지어·말투·마무리)",
+   "주인": [
+    "shopping_shorts/cardnews.py:check_carousel"
+   ],
+   "시그니처": [
+    "def check_carousel\\b",
+    "CHECK_LIST\\s*="
+   ],
+   "소비처": [
+    "build_carousel",
+    "/api/cardnews/check",
+    "편집기 검사 탭"
+   ],
+   "검사도구": "shopping_shorts/tests/test_cardnews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "카드뉴스 카드 그리기·글자 넘침 맞춤(미리보기·썸네일·다운로드 공용)",
+   "주인": [
+    "shopping_shorts/static/cardnews-render.js:render",
+    "shopping_shorts/static/cardnews-render.js:fit"
+   ],
+   "시그니처": [
+    "function render\\(s, i, total, ctx\\)",
+    "function fit\\(card\\)"
+   ],
+   "소비처": [
+    "cardnews.html 편집 캔버스·장 목록·보관함·자동 대기함·브랜드 미리보기",
+    "ZIP/JPEG 다운로드(exportZip·snapshot)"
+   ],
+   "검사도구": "tools/check_cardnews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 이번 편 원본 자산 고르기(참조분만·서명 URL)",
+   "주인": [
+    "shopping_shorts/claude_portal.py:assets_for"
+   ],
+   "시그니처": [
+    "def assets_for\b",
+    "def asset_url\b"
+   ],
+   "소비처": [
+    "고객 PC 로컬 MCP"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 견본 규격·토큰·거절",
+   "주인": [
+    "shopping_shorts/claude_portal.py:preview"
+   ],
+   "시그니처": [
+    "def preview\b"
+   ],
+   "소비처": [
+    "/claude 페이지"
+   ],
+   "검사도구": "tools/claude_portal/check_previews.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 동시 실행 1(임대·하트비트·강제 해제)",
+   "주인": [
+    "shopping_shorts/claude_portal.py:lease"
+   ],
+   "시그니처": [
+    "def lease\b",
+    "def force_release\b"
+   ],
+   "소비처": [
+    "고객 PC 로컬 MCP"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "클로드형 이상 행동 탐지 A1~A10",
+   "주인": [
+    "shopping_shorts/claude_portal.py:anomaly_check"
+   ],
+   "시그니처": [
+    "def anomaly_check\b"
+   ],
+   "소비처": [
+    "관리자 경보"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "채널 프로필 합치기(프리셋+팩+고객 옵션)",
+   "주인": [
+    "shopping_shorts/channel_profile.py:merge"
+   ],
+   "시그니처": [
+    "def merge\\(preset\b"
+   ],
+   "소비처": [
+    "assets_for 합본",
+    "고객 PC 렌더"
+   ],
+   "검사도구": "shopping_shorts/tests/test_claude_portal.py",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "고객 PC 제작 단계 전이·판정",
+   "주인": [
+    "shortem_client/server/engine/next_step.js:nextStep"
+   ],
+   "시그니처": [
+    "function nextStep\b"
+   ],
+   "소비처": [
+    "shortem_make"
+   ],
+   "검사도구": "shortem_client/test/e2e_make.js",
+   "과금": false,
+   "예외": {}
   }
  ]
 }

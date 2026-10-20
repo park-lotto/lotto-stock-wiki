@@ -1413,11 +1413,22 @@ def _enforce_total_tag_cap(text, cap):
     return kept + rest
 
 
+# 자막용 화살표 기호(▶·👇 등)는 목소리로 읽지 않는다(2026-10-19 Park님 — 비수창 CTA "아래 ▶관련 영상").
+#   자막은 대사 원문을 그대로 쓰므로 화살표가 남고, TTS 입력에서만 뺀다. 모든 합성(한 줄·통짜)이 여기를 지난다.
+_ARROW_RE = re.compile(r"[←-⇿▲-◅➡⬅-⬇👆-👉]️?")
+
+
+def strip_arrows(text):
+    t = str(text or "")
+    return " ".join(_ARROW_RE.sub(" ", t).split()) if _ARROW_RE.search(t) else text
+
+
 def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, beat_total=None):
     """naturalize와 같지만 {"text", "applied", "warnings"}를 반환.
 
     applied = 스테이지별 실제 적용 횟수. 작업대가 이걸 보여줘서 "슬라이더를 돌렸는데
     왜 그대로냐"가 화면에서 즉시 드러나게 한다(2026-07-15 사고의 재발방지)."""
+    text = strip_arrows(text)
     p = merge_profile(profile)
     ctx = {"beat_role": beat_role, "beat_index": beat_index, "beat_total": beat_total,
            "caps": p.get("caps", {}), "applied": {}, "warnings": [],

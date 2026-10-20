@@ -1,0 +1,297 @@
+{
+ "slug": "yummyknow",
+ "style": "게시글형",
+ "made_by": "preset_save v1",
+ "rule": "같은 자리 값이 편마다 기준(숫자 max(4, 3%) · 색 채널 12 · 글·참거짓 같음) 밖이면 $per_video, 제목 글자는 항상 $per_video, --exclude 로 뺀 층은 그 편에서 비교 안 함",
+ "created_at": "2026-10-16T10:54:26+09:00",
+ "sources": [
+  {
+   "id": "rGFXQlS9Cp4",
+   "tteutgi": "C:/숏템_칼카피/yummyknow/칼카피_rGFX/뜯기2/뜯기.json",
+   "engine": "뜯기 1판 2026-10-15",
+   "measured_at": "2026-10-16 06:22",
+   "frame_tool": "preset_multi: channel/yummyknow/칼카피_rGFX/frame_rGFX_hook.json + frame_rGFX_body.json (훅 길이 = timeline.hook_end 3.137초)",
+   "font": null,
+   "font_confidence": null,
+   "notes": [],
+   "unknown": [
+    "틀이 다른 구간(엔딩·전체화면 등): [[0.0, 1.5]] — 창 다수결에서 뺌",
+    "자막 크롭 끝에 글자가 걸림(줄 잘림 가능) 6개: [0, 3, 5, 8, 16, 17]",
+    "받아쓰기: 구절 미분할 0.0~10.9(10.9초)",
+    "효과음 솟음·피치 지표 문턱은 미검증(참고값)",
+    "overlay_rules: 건너뜀(--no-materials)"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "frames[hook].span",
+    "frames[hook].layers[text:title].text",
+    "frames[body].span"
+   ],
+   "caption_style": "게시글형",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "d5ef52320195"
+  },
+  {
+   "id": "shinramyun_gumi",
+   "tteutgi": "-",
+   "engine": "손질본(새소재 제작 — 뜯기 없음)",
+   "measured_at": null,
+   "frame_tool": "preset_multi: channel/yummyknow/새소재_shinramyun_gumi/frame_hook.json + frame_body.json (훅 길이 = timeline.hook_end 2.446초)",
+   "font": null,
+   "font_confidence": null,
+   "notes": [
+    "rGFX hook 틀 복사 — 글자만 새 소재로 교체(2곳). 색·자리·크기는 원본 그대로(틀 담당 소유 frame_rGFX_hook.json 은 안 건드림)",
+    "rGFX body 틀 복사 — 글자만 새 소재로 교체(1곳). 색·자리·크기는 원본 그대로(틀 담당 소유 frame_rGFX_body.json 은 안 건드림)"
+   ],
+   "unknown": [
+    "원본 뜯기 없음"
+   ],
+   "excluded_layers": [],
+   "became_variables": [
+    "frames[hook].layers[text:label].text",
+    "frames[body].layers[text:label#4].text"
+   ],
+   "caption_style": "게시글형",
+   "title_ink_w": null,
+   "title_fonts": null,
+   "title_pooled": null,
+   "frame_sha1": "1d418bf721e1"
+  }
+ ],
+ "updated_at": "2026-10-16T10:54:26+09:00",
+ "variables": [
+  "frames[hook].span",
+  "frames[hook].layers[text:title].text",
+  "frames[hook].layers[text:label].text",
+  "frames[body].span",
+  "frames[body].layers[text:label#4].text"
+ ],
+ "caption_styles": [
+  {
+   "name": "게시글형",
+   "layer": {
+    "kind": "text",
+    "role": "caption",
+    "x": 540,
+    "y": 555,
+    "w": 1000,
+    "align": "center",
+    "lines": 2,
+    "font": "BMDOHYEON",
+    "size": 67.5,
+    "line_h": 93,
+    "rgb": [
+     0,
+     0,
+     0
+    ],
+    "line_rgb": null,
+    "line_scale": null,
+    "outline": null,
+    "line_outline": null,
+    "shadow": null,
+    "box": null,
+    "italic": false,
+    "letter_spacing": 0,
+    "word_spacing": 0,
+    "valign": "center",
+    "enter": null,
+    "text": null
+   },
+   "status": "잰 편 rGFXQlS9Cp4",
+   "sources": [
+    "rGFXQlS9Cp4",
+    "shinramyun_gumi"
+   ],
+   "notes": [
+    "rGFXQlS9Cp4: 손질본(틀 여러 장)",
+    "shinramyun_gumi: 손질본(틀 여러 장)"
+   ]
+  }
+ ],
+ "variable_stats": {
+  "frames[hook].span": {
+   "values": {
+    "rGFXQlS9Cp4": [
+     0,
+     3.137
+    ],
+    "shinramyun_gumi": [
+     0,
+     2.446
+    ]
+   },
+   "default": [
+    0,
+    2.792
+   ],
+   "range": null,
+   "how": "자리별 중앙값(2/2편)"
+  },
+  "frames[hook].layers[text:title].text": {
+   "values": {
+    "rGFXQlS9Cp4": "한국인이 비벼버린\n두바이 스프레드",
+    "shinramyun_gumi": "구미공장 신라면만\n찾는 이유"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "frames[hook].layers[text:label].text": {
+   "values": {
+    "rGFXQlS9Cp4": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드",
+    "shinramyun_gumi": "같은 신라면인데 요즘 구미공장 것만 찾는 이유"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  },
+  "frames[body].span": {
+   "values": {
+    "rGFXQlS9Cp4": [
+     3.137,
+     null
+    ],
+    "shinramyun_gumi": [
+     2.446,
+     null
+    ]
+   },
+   "default": [
+    2.792,
+    null
+   ],
+   "range": null,
+   "how": "자리별 중앙값(2/2편)"
+  },
+  "frames[body].layers[text:label#4].text": {
+   "values": {
+    "rGFXQlS9Cp4": "한국에서 유독 맛 논란 난 코스트코 두바이 스프레드",
+    "shinramyun_gumi": "같은 신라면인데 요즘 구미공장 것만 찾는 이유"
+   },
+   "default": null,
+   "range": null,
+   "how": "내용 — 기본값 없음(새 소재는 --set)"
+  }
+ },
+ "rules": {
+  "formula": "title.size = size_cap(잰 크기 중앙값) — 가장 긴 줄이 fill_w(잰 폭 최대·화면 폭−48 중 큰 값)를 넘으면 자간부터(−15%까지), 그래도 넘으면 크기 · title.line_h = size×lh_ratio · title.y = title_top · video.y = (video_anchor) 'gap_ink' 면 제목 잉크 아래 끝 + gap_ink(고정), 'constant' 면 video_top, 'gap' 이면 title.y + lines×line_h + gap — 편마다 덜 흔들리는 쪽(데이터가 고름) · video.h = video_bottom − video.y · caption.y = video_bottom + cap_dy",
+  "keys": {}
+ },
+ "roles": [
+  "상황(훅 질문+무슨 일)",
+  "반응(사람들 반응)",
+  "진짜 이유(전언 ~다는데)",
+  "반전",
+  "댓글 반응(마무리)"
+ ],
+ "source_kind": "제품비하인드",
+ "source_choice": {
+  "used": "손질본(frame_rGFX_hook/body·신라면 frame_hook/body)를 틀 여러 장으로 묶음",
+  "why": "신라면 편은 새소재 제작이라 원본 뜯기가 없어 to_frame_multi 자동본을 만들 수 없다 — 두 출처를 같은 꼴(손질본)로 맞춤",
+  "auto_vs_hand_rGFX": [
+   "자동본(to_frame_multi, 2026-10-16 e8aeecd65): 훅 9층·본문 13층 / 손질본: 훅 7층·본문 11층",
+   "본문 영상 창: 자동 165,750,750×903 + 컷별 자리(cuts)·자막 아래 붙임(anchor gap 61) / 손질 0,660,1080×1260 한 칸(가변 그림 칸 없음)",
+   "훅 영상 창: 자동 y672 h1026 / 손질 y690 h1008",
+   "헤더 기호: 자동 »·🍽·채널명 따로 층(렌더 실측 크기) / 손질 한 층 \"» 맛잘알 친구들 🍽\" 125",
+   "훅 회색 띠: 자동 가로 그라데이션+위 번짐(grad_x·fade)+어두운 머리 띠 / 손질 평면 띠 하나",
+   "글꼴: 자동 제목 Pretendard·글 제목 BMDOHYEON / 손질 PretendardXBold·BMDOHYEON",
+   "본문 구분선: 자동 y515 h1 / 손질 y515 h2"
+  ],
+  "at": "2026-10-16"
+ },
+ "nearest_template": {
+  "tool": "template_match",
+  "at": "2026-10-16",
+  "close_max": 150,
+  "frames": {
+   "hook": {
+    "close": true,
+    "top": [
+     {
+      "id": "t08",
+      "name": "썰 스타일 10",
+      "kind": "훅+본문·훅",
+      "score": 64.0,
+      "parts": {
+       "win_top": 24.0,
+       "title_top": 16.0,
+       "bg": 24,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t16",
+      "name": "썰 스타일 17",
+      "kind": "훅+본문·훅",
+      "score": 90.0,
+      "parts": {
+       "win_top": 3.0,
+       "title_top": 11.0,
+       "bg": 76,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t07",
+      "name": "썰 스타일 09",
+      "kind": "훅+본문·훅",
+      "score": 94.0,
+      "parts": {
+       "win_top": 30.0,
+       "title_top": 8.0,
+       "bg": 56,
+       "title_lines": 0
+      }
+     }
+    ]
+   },
+   "body": {
+    "close": false,
+    "top": [
+     {
+      "id": "t06",
+      "name": "썰 스타일 08",
+      "kind": "훅+본문·본문",
+      "score": 263.0,
+      "parts": {
+       "win_top": 15.0,
+       "title_top": 208.0,
+       "cap_y": 14.0,
+       "bg": 26,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t08",
+      "name": "썰 스타일 10",
+      "kind": "훅+본문·본문",
+      "score": 269.0,
+      "parts": {
+       "win_top": 45.0,
+       "title_top": 193.0,
+       "cap_y": 11.0,
+       "bg": 20,
+       "title_lines": 0
+      }
+     },
+     {
+      "id": "t05",
+      "name": "썰 스타일 07",
+      "kind": "훅+본문·본문",
+      "score": 274.0,
+      "parts": {
+       "win_top": 42.0,
+       "title_top": 211.0,
+       "cap_y": 5.0,
+       "bg": 16,
+       "title_lines": 0
+      }
+     }
+    ]
+   }
+  }
+ }
+}

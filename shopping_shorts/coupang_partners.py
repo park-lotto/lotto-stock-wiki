@@ -129,6 +129,18 @@ PARTNERS_LINK_PAGE = "https://partners.coupang.com/#affiliate/ws/link"
 # 인포크링크(링크인바이오) 관리 화면 — 최종 링크를 버튼으로 올리는 곳.
 INPOCK_PAGE = "https://link.inpock.co.kr"
 
+# 링크 서비스(링크인바이오) — 회원이 고른다(2026-10-18 고객 제보 "인포크 말고 머닝도 — 더 싸고 틱톡 자동답글").
+#   둘 다 공개 등록 API 가 없어 하는 일은 같다: 최종 링크를 복사하고 그 서비스 관리 화면을 연다.
+LINK_HUBS = {
+    "inpock":   {"key": "inpock",   "name": "인포크", "page": INPOCK_PAGE, "admin": "https://link.inpock.co.kr/admin"},
+    "moneying": {"key": "moneying", "name": "머닝",   "page": "https://moneying.biz", "admin": "https://moneying.biz/my/multilink"},
+}
+
+
+def link_hub(key):
+    """링크 서비스 정보 — 모르는 값이면 인포크(종전 그대로)."""
+    return dict(LINK_HUBS.get(str(key or ""), LINK_HUBS["inpock"]))
+
 # 공정거래위원회 추천·보증 심사지침상 대가성 고지 문구(설명란·고정댓글 필수).
 DISCLOSURE = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
 

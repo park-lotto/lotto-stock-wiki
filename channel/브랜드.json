@@ -1,0 +1,51 @@
+{
+ "_about": "칼카피 우리 브랜드 장부(주인 데이터) — 벤치 채널(slug) ↔ 우리 브랜드 이름 (스타일은 channel/스타일.json). 사장님 2026-10-17. 읽는 곳: tools/calcopy/brands.py",
+ "brands": {
+  "evenshopping": {
+   "brand": "재미썸홈",
+   "bench": "이븐쇼핑"
+  },
+  "homedesignnote": {
+   "brand": "잇썸홈",
+   "bench": "두유노홈디노"
+  },
+  "hottemreport": {
+   "brand": "숏템리폿",
+   "bench": "핫템리포트"
+  },
+  "banggu": {
+   "brand": "썰템홈샷",
+   "bench": "방구석 친구들",
+   "old_names": [
+    "방구석(브랜드 골방)"
+   ]
+  },
+  "yummyknow": {
+   "brand": "맛템썰템",
+   "bench": "yummyknow"
+  },
+  "sseolpulda": {
+   "brand": "도파민썰템",
+   "bench": "썰풀다",
+   "old_names": [
+    "썰풀다"
+   ],
+   "styles_ref": "channel/스타일.json"
+  },
+  "foreignshowshow": {
+   "brand": "샥탬스토리",
+   "bench": "해외쇼츠(@foreignshowshow) 샤크탱크 쇼핑 편"
+  },
+  "humorshowshow": {
+   "brand": "썰템쇼",
+   "bench": "재밌쇼(@humorshowshow)",
+   "since": "2026-10-18",
+   "options": [
+    "화자대사줄",
+    "조회수줄",
+    "끝줄혼잣말웃음",
+    "연예인보증컷"
+   ]
+  }
+ }
+}

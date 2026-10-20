@@ -584,7 +584,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0, script_endings=False, dialogue=None):
+                      customer_id=0, script_endings=False, dialogue=None, joined=True):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
 
     script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
@@ -640,7 +640,9 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
     #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
     #   생길 자리가 없다. 실패하면 아래 비트별 경로로 그대로 내려간다(라이브 안전).
     #   기본 off — TTS_JOINED=1로 켠다(검증 안 된 플래그를 라이브에 켜지 않는다).
-    if tts_joined.enabled() and _try_joined(
+    # joined=False: 플랫폼별 CTA 판의 'CTA 칸만' 방식(cta_variants) — 통짜는 한 칸만 바뀌어도 전 칸을 다시 구워
+    #   본편 목소리·자막 타이밍이 판마다 달라졌다(2026-10-18 서버 사본 실측). 그 칸만 칸별 경로로 굽는다.
+    if joined and tts_joined.enabled() and _try_joined(
             beats, tts_dir, voice=voice, skip_existing=skip_existing,
             global_pron=global_pron, customer_id=customer_id,
             script_endings=script_endings):
@@ -6652,6 +6654,35 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
             store.update_mix_job(job_id, status="ready_for_review", video_path=None)
             return
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
+        # 📣 플랫폼별 CTA 판(2026-10-18 F1) — 본편이 끝난 **뒤** 같은 재료로 판마다 한 번 더 조립한다.
+        #   판단은 cta_variants 한 곳. 과금 없음(본편 1회에 포함). 실패해도 본편은 이미 done.
+        try:
+            from shopping_shorts import cta_variants as _cv
+            _cvcfg = _cv.load_config(store, job_id, job.get("customer_id", 0))
+            if _cv.chosen(_cvcfg):
+                def _cv_synth(vp, tts_dir, full):
+                    _synthesize_beats(vp["beats"], tts_dir, voice=job.get("voice"), skip_existing=not full,
+                                      global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                                      script_endings=job_script_endings(job), dialogue=_dialogue_of(job),
+                                      joined=full)
+
+                def _cv_render(vp, vout):
+                    _vwav = (work / f"cta_audio_{vout.stem}.wav") if (_intro_on and _intro_png is not None) else None
+                    assemble(vp, tts_paths_of(vp), source_video_paths, str(vout), clean_fn=final_clean_fn,
+                             headcopy=job.get("headcopy"), caption_style=caption_style,
+                             deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                             **({"audio_wav_out": str(_vwav)} if _vwav else {}))
+                    if _vwav is not None:
+                        try:
+                            prepend_still(str(vout), str(_intro_png), seconds=_intro_sec, audio_wav=str(_vwav))
+                        finally:
+                            _vwav.unlink(missing_ok=True)
+                    ensure_faststart(vout)
+
+                _cv.render_variants(cfg=_cvcfg, plan=_cv.marked_plan(plan_used, job), work=work,
+                                    render_one=_cv_render, synth=_cv_synth)
+        except Exception:      # noqa: BLE001 — 판 때문에 본편을 잃지 않는다
+            traceback.print_exc(file=sys.stderr)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))

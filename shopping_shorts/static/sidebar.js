@@ -57,6 +57,8 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 카드뉴스 제작소(관제 223, 2026-10-17) — 인스타 캐러셀 생성. 스위치 cardnews_enabled 열린 계정만(/api/me cardnews) 보인다.
+      { icon: "🗂", text: "카드뉴스 제작소", href: "/cardnews", cardnews: true },
       // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
@@ -83,6 +85,16 @@
       { icon: "🔤", text: "글꼴",            href: "/shortem_packs#font", admin: true },
       // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다. (관제 222: 제작 묶음 → 숏템팩 묶음)
       { icon: "🔒", text: "효과 견본(에펙)", href: "/fx_samples", admin: true },
+    ] },
+    // 🧬 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 벤치해 만든 브랜드·스타일·결과물 장부를 한 화면(/shortem_preset)에서.
+    //   묶음째 관리자 전용(admin) — 서버 라우트(_shortem_preset_page)도 관리자만 연다. 세부 칸은 그 화면의 #id 로 바로 간다.
+    { label: "숏템프리셋", admin: true, items: [
+      { icon: "🧬", text: "전체 보기",       href: "/shortem_preset", admin: true },
+      { icon: "🏷", text: "브랜드",          href: "/shortem_preset#brand", admin: true },
+      { icon: "🎙", text: "스타일",          href: "/shortem_preset#style", admin: true },
+      { icon: "📦", text: "결과물",          href: "/shortem_preset#result", admin: true },
+      { icon: "📺", text: "벤치 채널 보관함", href: "/admin/calcopy", admin: true },
+      { icon: "📑", text: "분석 문서",       href: "/shortem_preset#docs", admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -236,8 +248,8 @@
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
-      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "") + (it.cardnews ? " ss-cardnews-only" : "");
+      var hide = (it.admin || it.meme || it.cardnews) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -512,6 +524,8 @@
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
     if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
+    // 카드뉴스 제작소 스위치(cardnews_enabled) — 서버 /api/me cardnews 가 정본(서버 입구 _cn_gate와 같은 판정)
+    if (d.cardnews === true) document.querySelectorAll(".ss-cardnews-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;

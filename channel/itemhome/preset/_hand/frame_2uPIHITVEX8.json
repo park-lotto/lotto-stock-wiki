@@ -1,0 +1,108 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    6,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 480,
+   "w": 1080,
+   "h": 1440,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 213,
+   "lines": 2,
+   "font": "Pretendard",
+   "size": 103.3,
+   "line_h": 112,
+   "rgb": [
+    252,
+    250,
+    251
+   ],
+   "line_rgb": [
+    [
+     252,
+     250,
+     251
+    ],
+    [
+     251,
+     238,
+     4
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 4.7,
+   "enter": null,
+   "text": "서강준이 코 갖다 댄\n안은진의 애착 향수"
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "w": 1000,
+   "align": "center",
+   "y": 1222,
+   "lines": 1,
+   "font": "SBAggroB",
+   "size": 75.0,
+   "line_h": 86,
+   "rgb": [
+    252,
+    250,
+    250
+   ],
+   "line_rgb": null,
+   "outline": {
+    "px": 4,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "shadow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "2uPIHITVEX8",
+ "made_from": {
+  "tool": "ih_preset.hand",
+  "from": "2uPIHITVEX8_auto.json",
+  "notes": [
+   "자막 = 나레 굵은체로 통일(SBAggroB 75·검정 외곽 4)"
+  ]
+ }
+}

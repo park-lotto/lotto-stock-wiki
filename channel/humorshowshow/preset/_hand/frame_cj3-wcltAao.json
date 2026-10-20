@@ -1,0 +1,573 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "frames": [
+  {
+   "id": "hook",
+   "span": [
+    0,
+    1.9
+   ],
+   "layers": [
+    {
+     "kind": "bg",
+     "rgb": [
+      97,
+      97,
+      97
+     ]
+    },
+    {
+     "kind": "video",
+     "x": 0,
+     "y": 748,
+     "w": 1080,
+     "h": 1172,
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 0,
+     "w": 1080,
+     "h": 239,
+     "rgb": [
+      86,
+      93,
+      80
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 490,
+     "w": 1080,
+     "h": 38,
+     "rgb": [
+      227,
+      227,
+      227
+     ],
+     "radius": 0,
+     "fade": [
+      38,
+      0
+     ]
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 530,
+     "w": 1080,
+     "h": 3,
+     "rgb": [
+      55,
+      55,
+      55
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 533,
+     "w": 1080,
+     "h": 107,
+     "rgb": [
+      253,
+      253,
+      253
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 640,
+     "w": 1080,
+     "h": 64,
+     "rgb": [
+      237,
+      237,
+      237
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 704,
+     "w": 1080,
+     "h": 3,
+     "rgb": [
+      50,
+      50,
+      50
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 707,
+     "w": 1080,
+     "h": 26,
+     "rgb": [
+      205,
+      205,
+      205
+     ],
+     "radius": 0,
+     "fade": [
+      0,
+      26
+     ]
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 733,
+     "w": 1080,
+     "h": 15,
+     "rgb": [
+      52,
+      52,
+      52
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "text",
+     "role": "title",
+     "x": 540,
+     "y": 145,
+     "w": 1060,
+     "align": "center",
+     "lines": 2,
+     "font": "GmarketSansBold",
+     "size": 113.6,
+     "line_h": 126,
+     "rgb": [
+      255,
+      255,
+      255
+     ],
+     "line_rgb": [
+      [
+       255,
+       255,
+       255
+      ],
+      [
+       132,
+       253,
+       70
+      ]
+     ],
+     "outline": {
+      "px": 3,
+      "rgb": [
+       0,
+       0,
+       0
+      ]
+     },
+     "shadow": {
+      "dx": 6,
+      "dy": 6,
+      "blur": 0,
+      "rgb": [
+       20,
+       20,
+       20
+      ]
+     },
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "한국인들의 편견\n박살냈다는 디저트"
+    },
+    {
+     "kind": "text",
+     "role": "label",
+     "x": 540,
+     "y": 578,
+     "w": 1040,
+     "align": "center",
+     "lines": 1,
+     "font": "CcPretendard-SemiBold",
+     "size": 59.6,
+     "line_h": 68,
+     "rgb": [
+      0,
+      0,
+      0
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": -2.6,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "한국인들의 편견 박살냈다는 디저트"
+    }
+   ]
+  },
+  {
+   "id": "body",
+   "span": [
+    1.9,
+    null
+   ],
+   "layers": [
+    {
+     "kind": "bg",
+     "rgb": [
+      255,
+      255,
+      255
+     ]
+    },
+    {
+     "kind": "video",
+     "x": 0,
+     "y": 673,
+     "w": 1080,
+     "h": 878,
+     "radius": 0
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 0,
+     "w": 1080,
+     "h": 239,
+     "rgb": [
+      226,
+      238,
+      210
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "image",
+     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2058%2077%27%3E%3Cpath%20d=%27M54%204L4%2038L54%2073%27%20fill=%27none%27%20stroke=%27%2350822e%27%20stroke-width=%277%27%20stroke-linecap=%27round%27/%3E%3C/svg%3E",
+     "x": 172,
+     "y": 152,
+     "w": 58,
+     "h": 77
+    },
+    {
+     "kind": "image",
+     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2065%2085%27%3E%3Cpath%20d=%27M0%205Q0%200%205%200H60Q65%200%2065%205V83L32%2065L0%2083Z%27%20fill=%27%23538831%27/%3E%3C/svg%3E",
+     "x": 834,
+     "y": 144,
+     "w": 65,
+     "h": 85
+    },
+    {
+     "kind": "image",
+     "src": "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20247%2011%27%3E%3Cpath%20d=%27M2%202l2%207M7%202l2%207M236%203l2%207M241%203l2%207%27%20stroke=%27%23000%27%20stroke-width=%272.4%27%20stroke-linecap=%27round%27/%3E%3C/svg%3E",
+     "x": 419,
+     "y": 137,
+     "w": 247,
+     "h": 11
+    },
+    {
+     "kind": "text",
+     "role": "brand",
+     "x": 460,
+     "y": 136,
+     "w": 120,
+     "align": "center",
+     "lines": 1,
+     "font": "BMJUA",
+     "size": 92.7,
+     "line_h": 107,
+     "rgb": [
+      175,
+      218,
+      129
+     ],
+     "line_rgb": null,
+     "outline": {
+      "px": 4,
+      "rgb": [
+       0,
+       0,
+       0
+      ]
+     },
+     "shadow": {
+      "dx": 5,
+      "dy": 5,
+      "blur": 0,
+      "rgb": [
+       172,
+       196,
+       138
+      ]
+     },
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "썰"
+    },
+    {
+     "kind": "text",
+     "role": "brand",
+     "x": 541,
+     "y": 136,
+     "w": 120,
+     "align": "center",
+     "lines": 1,
+     "font": "BMJUA",
+     "size": 92.7,
+     "line_h": 107,
+     "rgb": [
+      255,
+      255,
+      255
+     ],
+     "line_rgb": null,
+     "outline": {
+      "px": 4,
+      "rgb": [
+       0,
+       0,
+       0
+      ]
+     },
+     "shadow": {
+      "dx": 5,
+      "dy": 5,
+      "blur": 0,
+      "rgb": [
+       172,
+       196,
+       138
+      ]
+     },
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "템"
+    },
+    {
+     "kind": "text",
+     "role": "brand",
+     "x": 622,
+     "y": 136,
+     "w": 120,
+     "align": "center",
+     "lines": 1,
+     "font": "BMJUA",
+     "size": 92.7,
+     "line_h": 107,
+     "rgb": [
+      175,
+      218,
+      129
+     ],
+     "line_rgb": null,
+     "outline": {
+      "px": 4,
+      "rgb": [
+       0,
+       0,
+       0
+      ]
+     },
+     "shadow": {
+      "dx": 5,
+      "dy": 5,
+      "blur": 0,
+      "rgb": [
+       172,
+       196,
+       138
+      ]
+     },
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "쇼"
+    },
+    {
+     "kind": "text",
+     "role": "label",
+     "x": 545,
+     "y": 272,
+     "w": 980,
+     "align": "center",
+     "lines": 1,
+     "font": "PretendardXBold",
+     "size": 76.9,
+     "line_h": 88,
+     "rgb": [
+      0,
+      0,
+      0
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "한국인들의 편견 박살냈다는 디저트"
+    },
+    {
+     "kind": "text",
+     "role": "label",
+     "x": 80,
+     "y": 374,
+     "w": 60,
+     "align": "left",
+     "lines": 1,
+     "font": "SUITBold",
+     "size": 23.3,
+     "line_h": 27,
+     "rgb": [
+      2,
+      0,
+      0
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "익명"
+    },
+    {
+     "kind": "text",
+     "role": "label",
+     "x": 137,
+     "y": 374,
+     "w": 470,
+     "align": "left",
+     "lines": 1,
+     "font": "SUITBold",
+     "size": 23.3,
+     "line_h": 27,
+     "rgb": [
+      156,
+      152,
+      153
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 3.2,
+     "enter": null,
+     "text": "추천891 조회 1,954,556 26.03.31 09:18 댓글"
+    },
+    {
+     "kind": "text",
+     "role": "label",
+     "x": 609,
+     "y": 376,
+     "w": 80,
+     "align": "left",
+     "lines": 1,
+     "font": "SUITBold",
+     "size": 20.0,
+     "line_h": 23,
+     "rgb": [
+      205,
+      112,
+      108
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": 0,
+     "word_spacing": 0,
+     "enter": null,
+     "text": "7544"
+    },
+    {
+     "kind": "band",
+     "x": 0,
+     "y": 402,
+     "w": 1080,
+     "h": 2,
+     "rgb": [
+      110,
+      102,
+      109
+     ],
+     "radius": 0
+    },
+    {
+     "kind": "text",
+     "role": "caption",
+     "x": 549,
+     "y": 488,
+     "w": 1000,
+     "align": "center",
+     "lines": 3,
+     "font": "CcPretendard-Bold",
+     "size": 60.1,
+     "line_h": 76,
+     "rgb": [
+      0,
+      0,
+      0
+     ],
+     "line_rgb": null,
+     "outline": null,
+     "shadow": null,
+     "box": null,
+     "italic": false,
+     "letter_spacing": -1.0,
+     "word_spacing": 0,
+     "enter": null,
+     "valign": "top"
+    }
+   ]
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "cj3-wcltAao",
+ "made_from": {
+  "tool": "channel/humorshowshow/preset/hs_preset.py hand (hs_measure 8편 실측 중앙값)",
+  "font": "CcPretendard-Bold",
+  "notes": [
+   "훅 길이 1.9초 = 머리띠 연두가 처음 뜨는 프레임(hs_measure.hook_end, 30fps)",
+   "본문 머리띠 0~238 [226, 238, 210] · 구분선 [402, 403] [110, 102, 109] · 그림 창 673~1550 (8편 중앙, measure/all.json)",
+   "로고 '썰템쇼' = 벤치 '재밌쇼' 자리(글자 채움 가운데 x [460, 541, 622], 채움 위 145 높이 76) · 색 초록 [175,218,129]/흰/초록 · 검정 외곽 4px(행 판독 KKK+번짐) · 연초록 그림자 [172,196,138] 5px(오른쪽 아래) · 글꼴 BMJUA(fontmatch 묶음 1위, 낮은 확신 raw 0.44)",
+   "게시글 제목 = 줄판독 post_title, PretendardXBold(fontmatch 8/8 1위 raw 0.78), 잉크 282~352 가운데 545",
+   "조회수 줄 = 벤치처럼 켬(사장님 10-18): 익명 검정 x80 · 회색 [156, 152, 153] x137~596 · 댓글 수 빨강 [205, 112, 108] x[610, 655] · 잉크 [376, 399] · 날짜 26.03.31",
+   "자막 = 누적형 2줄(valign top) 1줄 잉크 500~552 · 2줄 위 576 · 가운데 x 549 · 검정 외곽 없음 · CcPretendard-Bold",
+   "훅 제목 GmarketSansBold(fontmatch 16줄 1위 raw 0.81, 15/16 일치) 흰 잉크 [146, 244] · 연두 [132, 253, 70] 잉크 [272, 369] · 검정 외곽 3px + 그림자 (5,4) [20,20,20]",
+   "훅 띠: 490~527 밝아지는 회색(fade) · 530 검정 선 · 533~703 흰 칸 · 704 검정 선 · 707~732 어두워지는 회색 · 733~747 짙은 띠 · 그림 748~1919 (8편 같은 줄 밝기 std ≤7)",
+   "훅 라벨 = 줄판독 title_card 이어 붙임(화면과 같음) · 잉크 [585, 638]"
+  ]
+ }
+}

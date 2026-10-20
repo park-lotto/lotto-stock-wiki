@@ -27,7 +27,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse, PlainTextResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
@@ -1914,13 +1914,18 @@ def _fav_channel_decorate(items):
     return items
 
 
+def _fav_channel_cap(cid) -> int:
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
+
+
 @app.get("/api/fav_channel/list")
 def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
     items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
-    return {"ok": True, "items": items, "cap": store.FAV_CHANNEL_CAP}
+    return {"ok": True, "items": items, "cap": _fav_channel_cap(_cid(request))}
 
 
 @app.post("/api/fav_channel/add")
@@ -1951,10 +1956,10 @@ def api_fav_channel_add(request: Request, body: dict):
         avatar=(body.get("avatar") or ""),
         last_video_thumb=(body.get("thumb") or ""),
         last_video_url=(body.get("video_url") or ""),
-        customer_id=cid,
+        customer_id=cid, cap=_fav_channel_cap(cid),
     )
     if added is None:
-        return {"ok": False, "error": f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
+        return {"ok": False, "error": f"나만의 채널은 최대 {_fav_channel_cap(cid)}개까지예요"}
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -2453,11 +2458,12 @@ def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") ->
     if not plat or not chid or chid.isdigit():
         return {"status": "notfound", "platform": plat, "channel_id": ""}
     store = Store(DB_PATH)
+    cap = _fav_channel_cap(cid)
     added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
-                                  last_video_thumb=thumb, customer_id=cid)
+                                  last_video_thumb=thumb, customer_id=cid, cap=cap)
     status = "full" if added is None else ("added" if added else "exists")
     return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
-            "cap": store.FAV_CHANNEL_CAP}
+            "cap": cap}
 
 
 @app.get("/api/fav_channel/grab", response_class=HTMLResponse)
@@ -5832,6 +5838,27 @@ def api_coupang_identify(body: dict):
     return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used or ["썸네일"]}
 
 
+def _link_hub_key(cid) -> str:
+    return f"link_hub::{int(cid or 0)}"
+
+
+def _get_link_hub(cid) -> str:
+    """회원이 고른 링크 서비스 키(inpock/moneying). 안 골랐으면 inpock."""
+    v = (Store(DB_PATH).get_setting(_link_hub_key(cid), "") or "").strip()
+    return v if v in coupang_partners.LINK_HUBS else "inpock"
+
+
+@app.post("/api/link_hub")
+async def api_link_hub(request: Request):
+    """링크 서비스 고르기(인포크/머닝) — 회원마다 하나, 다음 작업에도 그대로."""
+    body = await request.json()
+    hub = str((body or {}).get("hub") or "")
+    if hub not in coupang_partners.LINK_HUBS:
+        return {"ok": False, "error": "모르는 링크 서비스입니다"}
+    Store(DB_PATH).set_setting(_link_hub_key(_cid(request)), hub)
+    return {"ok": True, "link_hub": coupang_partners.link_hub(hub)}
+
+
 def _inpock_next_number(store, customer_id):
     """이 회원이 쓴 인포크 번호의 최댓값 + 1. 하나도 없으면 1. 판단은 여기 한 곳(0순위-B)."""
     try:
@@ -6241,6 +6268,8 @@ def api_mix_product_get(job_id: str):
             "description_block": coupang_partners.description_block(product),
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
             "inpock_page": coupang_partners.INPOCK_PAGE,
+            # 회원이 고른 링크 서비스(인포크/머닝) — 등록 상자의 이름·여는 화면이 이걸 따른다
+            "link_hub": coupang_partners.link_hub(_get_link_hub(job.get("customer_id"))),
             # 회원 파트너스 키 유무 — 화면이 "파트너스에서 링크 만들기" 안내를 낼지 정한다(2026-09-04)
             "has_partner_key": bool(_coupang_member_key()[0]),
             "affiliate_target": target,
@@ -9168,14 +9197,11 @@ def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
     d = typecast_tts.list_voices()
     if not d.get("ok"):
         return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
-    key = (q or "").strip().lower()
-    out = []
-    for v in d.get("voices") or []:
-        if key and key not in str(v.get("name", "")).lower():
-            continue
-        out.append(v)
-        if len(out) >= max(1, min(int(limit or 60), 200)):
-            break
+    # 한글로 쳐도 찾는다 — API 이름은 영문 표기뿐(이현=Leehyun). 판단 주인 = typecast_tts.name_matches
+    hit = [v for v in d.get("voices") or [] if typecast_tts.name_matches(q, v.get("name", ""))]
+    forms = typecast_tts.query_forms(q)
+    hit.sort(key=lambda v: not any(str(v.get("name", "")).lower().startswith(f) for f in forms))
+    out = hit[:max(1, min(int(limit or 60), 200))]
     return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
 
 
@@ -10244,6 +10270,51 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
     return _range_mp4_response(str(out_p), request)
 
 
+# ── 📣 플랫폼별 CTA 판(2026-10-18 고객 제보 F1) ─────────────────────────────────────
+#   판단(설정·대본·렌더·상태)의 주인은 cta_variants 한 곳. 여기는 부르기만 한다. 판은 본편 렌더 때 같이 굽힌다(과금 없음).
+@app.get("/api/mix/cta_variants/{job_id}")
+def api_mix_cta_variants(job_id: str, request: Request):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    cfg = _cv.load_config(Store(DB_PATH), job_id, job.get("customer_id", 0))
+    st = _cv.read_status(_MIX_WORK_DIR / job_id)
+    # 본편보다 오래된 판은 옛 영상이다 — 화면이 '다시 렌더하면 새로 만들어져요'로 보인다
+    src = job.get("video_path")
+    for key, rec in (st.get("items") or {}).items():
+        f = _MIX_WORK_DIR / job_id / str(rec.get("file") or "")
+        rec["stale"] = bool(rec.get("file") and src and Path(src).exists() and f.exists()
+                            and f.stat().st_mtime + 1 < Path(src).stat().st_mtime)
+    has_cta = bool(_cv.cta_beat_indexes(_cv.marked_plan(job.get("edit_plan") or {}, job)))
+    return {"ok": True, "config": cfg, "status": st, "has_cta": has_cta}
+
+
+@app.post("/api/mix/cta_variants/{job_id}")
+async def api_mix_cta_variants_save(job_id: str, request: Request):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id) or {}
+    cfg = _cv.save_config(Store(DB_PATH), job_id, job.get("customer_id", 0), await request.json())
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/api/mix/cta_video/{job_id}/{key}")
+def api_mix_cta_video(job_id: str, key: str, request: Request, dl: int = 0):
+    from shopping_shorts import cta_variants as _cv
+    if not _job_owned(request, job_id) or key not in _cv._KEYS:
+        return JSONResponse(status_code=404, content={"ok": False})
+    out_p = _cv.out_path(_MIX_WORK_DIR / job_id, key)
+    if not out_p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    if dl:
+        label = next((p["label"] for p in _cv.PLATFORMS if p["key"] == key), key)
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + f"_{label}.mp4")
+    return _range_mp4_response(str(out_p), request)
+
+
 # ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05 고객 황선희 → 사장님 "오른쪽에 롱폼으로 렌더를 활성화해줘", 관제 132) ──
 #   쇼츠엔 누르는 구매링크를 못 달아서, 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 건다.
 #   ★구도·문구·"지금 것이 최신인가"는 link_longform 한 곳이 정한다(0순위-C). 여기는 부르기만 한다.
@@ -10372,11 +10443,14 @@ def api_mix_video_longform(job_id: str, request: Request, dl: int = 0, where: st
 # 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
 #       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.
 @app.get("/api/share/link/{job_id}")
-def api_share_link(job_id: str, request: Request):
-    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
+def api_share_link(job_id: str, request: Request, seo: int = 0):
+    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달).
+    seo=1(2026-10-18 '제목·태그를 폰 카톡으로'): 영상이 아직 없어도 발급 — 폰 페이지가 제목·설명·태그만 보여 준다."""
     job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not _job_owned(request, job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
     _gone = _video_gone_reason(job)
-    if _gone:
+    if _gone and not seo:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     sid = _share_put(job_id)
     if PUBLIC_BASE_URL:
@@ -10478,6 +10552,28 @@ def api_share_t(sid: str, dl: int = 0):
     return FileResponse(str(p), media_type="image/png")
 
 
+@app.get("/api/share/seo/{sid}")
+def api_share_seo(sid: str):
+    """단축 id로 제목·설명·태그(8단계 저장값) — 폰 페이지가 복사·카톡 보내기에 쓴다(로그인 불필요, 2026-10-18).
+    값의 주인은 job.seo(8단계 화면이 저장). 여기서 새로 만들지 않는다."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    seo = (Store(DB_PATH).get_mix_job(job_id) or {}).get("seo") or {}
+    if isinstance(seo, str):
+        try:
+            seo = json.loads(seo)
+        except Exception:      # noqa: BLE001
+            seo = {}
+    if not isinstance(seo, dict):
+        seo = {}
+    tags = [str(t).strip().lstrip("#") for t in (seo.get("tags") or []) if str(t).strip()]
+    hs = seo.get("hashtags") if isinstance(seo.get("hashtags"), dict) else {}
+    return {"ok": True, "title": str(seo.get("title") or ""), "description": str(seo.get("description") or ""),
+            "tags": tags, "hashtags": {k: [str(x) for x in (v or [])] for k, v in hs.items()},
+            "insta_caption": str(seo.get("insta_caption") or ""), "comment_bait": str(seo.get("comment_bait") or "")}
+
+
 @app.get("/s/{sid}", response_class=HTMLResponse)
 def share_page(sid: str):
     """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송.
@@ -10487,9 +10583,12 @@ def share_page(sid: str):
     job_id = _share_get(sid)
     if not job_id:
         return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
-    has_thumb = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id)) is not None
+    _job = Store(DB_PATH).get_mix_job(job_id)
+    has_thumb = _selected_thumb_path(_job) is not None
+    has_video = not _video_gone_reason(_job)
     return HTMLResponse(_SHARE_PAGE_HTML
-                        .replace("__VID__", f"/api/share/v/{sid}")
+                        .replace("__SEO__", f"/api/share/seo/{sid}")
+                        .replace("__VID__", f"/api/share/v/{sid}" if has_video else "")
                         .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
@@ -13123,6 +13222,27 @@ async def api_yt_details(request: Request, body: dict):
     return {"ok": True, "items": out}
 
 
+_YT_ANALYTICS_CACHE = {}        # video_id → (저장시각, 값) — 같은 영상은 1시간 동안 다시 안 묻는다
+
+
+@app.post("/api/yt/analytics")
+async def api_yt_analytics(body: dict):
+    """유튜브 쇼츠 한 편 성과 분석(관제 242, 2026-10-20 사장님) — 확장 영상 화면의 분석 상자가 부른다.
+    판단은 youtube_client.video_analytics 한 곳. 쿼터 4(무료), 실패는 캐시하지 않는다."""
+    from shopping_shorts.youtube_client import video_analytics
+    vid = str((body or {}).get("id") or "")
+    c = _YT_ANALYTICS_CACHE.get(vid)
+    if c and time.time() - c[0] < 3600:
+        return c[1]
+    r = await asyncio.to_thread(video_analytics, vid)
+    if r.get("ok"):
+        _YT_ANALYTICS_CACHE[vid] = (time.time(), r)
+        if len(_YT_ANALYTICS_CACHE) > 3000:
+            for k in sorted(_YT_ANALYTICS_CACHE, key=lambda k: _YT_ANALYTICS_CACHE[k][0])[:1000]:
+                _YT_ANALYTICS_CACHE.pop(k, None)
+    return r
+
+
 @app.post("/api/lens/kw/multi")
 async def api_lens_kw_multi(request: Request, body: dict):
     """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.
@@ -13773,7 +13893,9 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
             or path.startswith("/api/find/frame/")
-            or path.startswith("/api/help/media/")):
+            or path.startswith("/api/help/media/")
+            # 클로드형 고객 PC 경로(관제 234) — 등급은 라이선스 키로 판정한다(claude_portal). 미들웨어 공개 접두사와 짝
+            or (path.startswith("/api/claude/") and not path.startswith("/api/claude/me/"))):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
     #   위 submit·mine과 같은 이유로 등급 게이트에서 빼야 한다 — 권한은 핸들러가
@@ -13889,6 +14011,13 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
  a.dl{background:#1c2740;color:#dfe7f5}
  a.dl.sm{font-size:15px;padding:13px}
  .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
+ .seo{width:100%;max-width:420px;margin-top:22px;display:none}
+ .seo h2{font-size:17px;font-weight:800;margin-bottom:10px}
+ .fld{background:#161b24;border-radius:12px;padding:12px;margin-bottom:10px}
+ .fld .lb{display:flex;justify-content:space-between;align-items:center;color:#8b93a7;font-size:13px;font-weight:700;margin-bottom:6px}
+ .fld .tx{white-space:pre-wrap;word-break:break-all;font-size:15px;line-height:1.55;color:#eef2f6}
+ .fld button{font-size:14px;padding:8px 12px;border-radius:10px;background:#2b3547;color:#fff}
+ #seoShare{width:100%;background:#fee500;color:#191600;margin-top:4px}
 </style></head><body>
  <h1>완성 영상 📱</h1>
  <div class="sub" id="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
@@ -13905,8 +14034,42 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
    <a class="dl sm" id="thumbDl" href="#" download style="display:none">🖼 썸네일 저장(PNG)</a>
  </div>
  <div class="tip" id="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+ <!-- 📝 제목·설명·태그(2026-10-18 사장님 "폰으로 올리는 사람들 편하게") — 칸마다 복사, 한 번에 카톡 보내기 -->
+ <div class="seo" id="seoBox"><h2>📝 제목 · 설명 · 태그</h2><div id="seoList"></div>
+   <button id="seoShare">📤 제목·설명·태그 카톡으로 보내기</button>
+   <div class="tip">칸마다 ‘복사’를 누르고 유튜브·인스타 앱에 붙여 넣으세요.</div></div>
+<script>
+ // 제목·태그 — 값은 서버(8단계 저장값). 없으면 칸을 안 보인다.
+ (async()=>{
+   try{
+     const d=await (await fetch("__SEO__")).json(); if(!d||!d.ok) return;
+     const H=d.hashtags||{}, tagLine=(d.tags||[]).map(t=>'#'+t).join(' ');
+     const F=[["제목",d.title],["설명",d.description],["태그",tagLine],["인스타 본문",d.insta_caption],
+              ["인스타 해시태그",(H.instagram||[]).join(' ')],["댓글 유도",d.comment_bait]].filter(x=>x[1]);
+     if(!F.length) return;
+     const L=document.getElementById('seoList');
+     F.forEach(([k,v])=>{ const w=document.createElement('div'); w.className='fld';
+       w.innerHTML='<div class="lb"><span></span><button>복사</button></div><div class="tx"></div>';
+       w.querySelector('span').textContent=k; w.querySelector('.tx').textContent=v;
+       const b=w.querySelector('button');
+       b.onclick=async()=>{ try{ await navigator.clipboard.writeText(v); b.textContent='복사됨 ✓'; }
+         catch(e){ const r=document.createRange(); r.selectNodeContents(w.querySelector('.tx')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='길게 눌러 복사'; } };
+       L.appendChild(w); });
+     const NL=String.fromCharCode(10), all=F.map(([k,v])=>'['+k+']'+NL+v).join(NL+NL);
+     document.getElementById('seoShare').onclick=async()=>{
+       try{ if(navigator.share){ await navigator.share({text:all}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+       try{ await navigator.clipboard.writeText(all); alert('전체를 복사했어요 — 카톡에 붙여 넣으세요'); }catch(e){} };
+     document.getElementById('seoBox').style.display='block';
+   }catch(e){}
+ })();
+</script>
 <script>
  const V="__VID__", T="__THUMB__";
+ if(!V){   // 영상 없이 제목·태그만 보낸 링크(seo=1) — 영상 칸·버튼을 감춘다
+   document.querySelector('.media').style.display='none'; document.querySelector('.btns').style.display='none';
+   document.getElementById('tip').style.display='none';
+   document.querySelector('h1').textContent='제목 · 태그 📱'; document.getElementById('sub').textContent='복사해서 앱에 붙여 넣으세요';
+ }
  // 썸네일은 '있으면 얹는다'. 없거나(선택 안 함) 404면 예전 그대로 영상만 보낸다 —
  // 썸네일 때문에 공유 자체가 막히는 일은 없어야 한다.
  let THUMB_OK=false;
@@ -16145,7 +16308,11 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
-            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
+            or path.startswith("/api/share/seo/")   # 제목·설명·태그(폰에서 복사·카톡, 2026-10-18)
+            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")
+            # 클로드형(관제 234): 고객 PC 로컬 MCP 가 쿠키 없이 라이선스 키(Bearer)로 부른다 — 라우트(claude_portal)가 키를 직접 검사.
+            #   /api/claude/me/* 는 페이지용이라 여기서 빼고 로그인 세션을 그대로 요구한다.
+            or (path.startswith("/api/claude/") and not path.startswith("/api/claude/me/"))):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
@@ -16849,6 +17016,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
+            "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
             "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
@@ -16994,6 +17163,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체
+                       "cardnews_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
                        "signal_pool_enabled",
                        # 감정짤(관제 139, 2026-10-06) — 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤. ""끔(종전 그대로) · "admin" · "11,42" · "1" 전체
@@ -17009,7 +17180,21 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 모션그래픽팩(관제 222, 2026-10-17) — 효과 탭 '🎞 모션그래픽' 칸. ""끔 · "admin" · "11,42" · "1" 전체
                        "mograph_enabled",
                        # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
-                       "bgm_lib_enabled"}
+                       "bgm_lib_enabled",
+                       # 클로드형(관제 234, 숏템MCP) — 고객 PC 라이선스·자산·/claude 페이지. ""끔(기본) · "admin" 관리자만 · "11,42" · "1" 전체
+                       "claude_portal_enabled",
+                       # 클로드형 자산 내려받기 킬스위치 — ""켬(포털 스위치를 따른다) · "0" 전부 멈춤
+                       "claude_assets_enabled",
+                       # 라이선스 전역 판(kv) — 숫자를 올리면 전 고객 키가 무효(재발급 필요)
+                       "license_kv",
+                       # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
+                       "claude_presets_off",
+                       # 클로드형 프리셋 고객용 이름(JSON {프리셋 id 또는 slug/틀: {name, desc}}) — PC 로컬 설정 화면 목록(관제 234)
+                       "claude_preset_names",
+                       # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
+                       "claude_min_engine", "claude_min_installer",
+                       # 클로드형 이상 행동 임계값(JSON, 설계 §7-9 초기안을 덮어쓴다)
+                       "claude_anomaly_thresholds"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -18381,6 +18566,268 @@ def api_admin_calcopy(request: Request):
         return denied
     from shopping_shorts import calcopy_board as _cb
     return _cb.board()
+
+
+# ── 숏템프리셋(관제 224, 2026-10-17 사장님 "칼카피라고 하지 말고 숏템프리셋") — 관리자 전용 ──
+#    브랜드·스타일·결과물 장부를 한 화면에서. 판단은 calcopy_board.preset_home 하나, 여기는 관리자 확인만.
+@app.get("/shortem_preset", response_class=HTMLResponse)
+def _shortem_preset_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "shortem_preset.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/shortem_preset")
+def api_admin_shortem_preset(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    return _cb.preset_home()
+
+
+@app.get("/api/admin/shortem_preset/doc")
+def api_admin_shortem_preset_doc(request: Request, path: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import calcopy_board as _cb
+    try:
+        return PlainTextResponse(_cb.preset_doc(path), media_type="text/plain; charset=utf-8")
+    except KeyError:
+        return JSONResponse({"error": "목록에 없는 문서"}, status_code=404)
+    except OSError:
+        return JSONResponse({"error": "문서 파일이 서버에 없다"}, status_code=404)
+
+
+# ── 클로드형(관제 234, 숏템MCP) — 고객 PC(로컬 MCP) REST + 고객 페이지 /claude + 관리자 경보 ──
+#    판단은 전부 shopping_shorts/claude_portal.py(라이선스·기기·임대·자산·견본·탐지 각 주인 하나). 여기는 부르기만 한다.
+#    ★claude_portal 은 함수 안에서 import 한다(모듈 수준 import·호출을 늘리지 않는다 — 영상 관문 규약).
+#    ★고객 PC 경로(/api/claude/*, me 제외)는 미들웨어 공개 접두사 — 쿠키 대신 라이선스 키를 claude_portal 이 직접 본다.
+def _claude_json(st_body):
+    st, body = st_body
+    return JSONResponse(body, status_code=st, headers={"Cache-Control": "no-store"})
+
+
+def _claude_me(request):
+    """페이지 라우트 공통 — (cid, store, 거절응답|None). 로그인 세션 + claude_portal_enabled 스위치."""
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None:
+        return None, None, JSONResponse({"ok": False, "code": "no_key", "msg": "로그인이 필요합니다"}, status_code=401)
+    st = Store(DB_PATH)
+    if not _setting_gate(st, "claude_portal_enabled", cid):
+        return cid, st, JSONResponse({"ok": False, "code": "disabled", "msg": "클로드형은 아직 열리지 않았습니다"}, status_code=503)
+    return cid, st, None
+
+
+async def _claude_body(request):
+    try:
+        b = await request.json()
+    except Exception:      # noqa: BLE001 — 본문이 JSON 이 아니면 빈 본문(판단 함수가 bad_request 로 거절한다)
+        return {}
+    return b if isinstance(b, dict) else {}
+
+
+@app.get("/api/claude/license")
+def api_claude_license(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.license, _cp.ctx_from_request(request, _client_ip(request)), Store(DB_PATH)))
+
+
+@app.get("/api/claude/update")
+def api_claude_update(request: Request, have: str = ""):
+    """켤 때 자동 업데이트(관제 234 5판) — 판단은 claude_portal.update_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.update_info, _cp.ctx_from_request(request, _client_ip(request)), have, Store(DB_PATH)))
+
+
+@app.get("/api/claude/install")
+def api_claude_install(request: Request, plat: str = ""):
+    """exe 없이 까는 길 — 연결 파일이 실행 도구 든 묶음을 받는다. 판단은 claude_portal.install_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.install_info, _cp.ctx_from_request(request, _client_ip(request)), plat, Store(DB_PATH)))
+
+
+@app.post("/api/claude/lease")
+async def api_claude_lease(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.lease, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/api/claude/assets")
+def api_claude_assets(request: Request, profile: str = "", job: str = "", lease: str = "", extra: str = ""):
+    from shopping_shorts import claude_portal as _cp
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(_cp.call(_cp.assets, ctx, profile, job, lease or None, extra or None, Store(DB_PATH)))
+
+
+@app.post("/api/claude/rent")
+async def api_claude_rent(request: Request):
+    """편마다 프리셋 빌려주기(관제 234 5판) — 판단은 claude_portal.preset_rent(관문 _job_gate)."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.rent, ctx, str(body.get("profile") or ""), str(body.get("job") or ""),
+                                                body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
+
+
+@app.get("/api/claude/pack/{asset_id:path}")
+def api_claude_pack(request: Request, asset_id: str, job: str = ""):
+    from shopping_shorts import claude_portal as _cp
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(_cp.call(_cp.pack_route, ctx, asset_id, job, Store(DB_PATH)))
+
+
+@app.post("/api/claude/feedback")
+async def api_claude_feedback(request: Request):
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.feedback, ctx, body, Store(DB_PATH)))
+
+
+@app.get("/api/claude/blob/{token}")
+def api_claude_blob(token: str):
+    """원본 서명 URL(6h) — Range 허용. 견본(/api/claude/me/preview)과 다른 길·다른 저장소 접두사."""
+    from shopping_shorts import claude_portal as _cp
+    st, got = _cp.call(_cp.blob, token)
+    if st != 200:
+        return JSONResponse(got, status_code=st)
+    return FileResponse(str(got["file"]), media_type=got["media_type"], filename=got["name"],
+                        headers={"Cache-Control": "private, no-store"})
+
+
+@app.get("/claude", response_class=HTMLResponse)
+def _claude_page(request: Request):
+    return FileResponse(Path(__file__).parent / "static" / "claude.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/claude/me/home")
+def api_claude_me_home(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.home, cid, st))
+
+
+@app.post("/api/claude/me/profile")
+async def api_claude_me_profile(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.save_profile, cid, body, st))
+
+
+@app.post("/api/claude/me/license/issue")
+def api_claude_me_license_issue(request: Request):
+    """새 키(kv+1, 옛 키 즉시 무효). 키 원문은 이 응답에만 — 서버엔 해시만 남는다."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.issue_license, cid, st)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    return JSONResponse({"ok": True, "key": got["key"], "expires": got["expires"]}, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/claude/me/device/remove")
+async def api_claude_me_device_remove(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.remove_device, cid, body.get("device_id"), st))
+
+
+@app.post("/api/claude/me/lease/force_release")
+def api_claude_me_force_release(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.force_release, cid, st))
+
+
+@app.get("/api/claude/me/preview_token")
+def api_claude_me_preview_token(request: Request):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.preview_token, cid))
+
+
+@app.get("/api/claude/me/preview/{kind}/{pid}")
+def api_claude_me_preview(request: Request, kind: str, pid: str, t: str = ""):
+    """견본만(저해상도·짧게·워터마크) — 세션 + 10분 토큰, Range 거부. 원본은 여기로 안 나간다."""
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.preview, cid, kind, pid, t, dict(request.headers), st)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    # FileResponse 는 Range 를 보고 206 조각으로 답한다 — 견본은 늘 통째 200(Accept-Ranges: none)으로만 보낸다
+    return Response(content=Path(got["file"]).read_bytes(), media_type=got["media_type"], headers=got["headers"])
+
+
+@app.get("/api/claude/me/installer/{os_id}")
+def api_claude_me_installer(request: Request, os_id: str):
+    cid, st, denied = _claude_me(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    st_, got = _cp.call(_cp.installer_file, os_id)
+    if st_ != 200:
+        return JSONResponse(got, status_code=st_)
+    return FileResponse(str(got["file"]), media_type="application/octet-stream", filename=got["name"])
+
+
+@app.get("/api/admin/claude/alerts")
+def api_admin_claude_alerts(request: Request, all: int = 0):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    return {"ok": True, "alerts": _cp.list_alerts(Store(DB_PATH), include_resolved=bool(all))}
+
+
+@app.post("/api/admin/claude/alerts/resolve")
+async def api_admin_claude_alerts_resolve(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        aid = int(body.get("id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "id 가 필요합니다"}, status_code=400)
+    return _cp.resolve_alert(aid, Store(DB_PATH))
+
+
+@app.post("/api/admin/claude/license/revoke")
+async def api_admin_claude_license_revoke(request: Request):
+    """cid 별 라이선스 회수(킬스위치 ③) — {cid, revoked: true|false}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    try:
+        cid = int(body.get("cid"))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "msg": "cid 가 필요합니다"}, status_code=400)
+    return _cp.set_revoked(cid, body.get("revoked", True) is not False, Store(DB_PATH))
 
 
 def _calcopy_resolve(url):
@@ -28741,6 +29188,335 @@ class _NoCacheStaticFiles(StaticFiles):
         if self.is_not_modified(response.headers, request_headers):
             return NotModifiedResponse(response.headers)
         return response
+
+
+# -- 🗂 카드뉴스 제작소(관제 223, 2026-10-17) ──────────────────────────────────
+# 판단은 cardnews.py 한 곳 — 여기는 입구·저장·권한만. 스위치 cardnews_enabled(""끔·"admin"·"11,42"·"1")는
+# 사이드바 메뉴(/api/me "cardnews")와 이 입구가 같은 _setting_gate 하나를 본다(0순위-B).
+# 결제 등급: /cardnews·/api/cardnews/* 는 무료 화이트리스트에 넣지 않는다 — 랭킹 전용은 미들웨어가 402로 막는다.
+from shopping_shorts import cardnews as _cn
+from shopping_shorts import usage_meter
+
+_CN_DATA = str(Path(DB_PATH).parent)
+
+
+def _cn_gate(request):
+    """(cid, None) 또는 (cid, 막는 응답)."""
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "cardnews_enabled", cid):
+        return cid, JSONResponse({"ok": False, "error": "카드뉴스 제작소가 아직 열리지 않았어요"}, status_code=403)
+    return cid, None
+
+
+def _cn_page(request: Request):
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "cardnews_enabled", cid):
+        return RedirectResponse("/produce", status_code=302)
+    return FileResponse(_STATIC / "cardnews.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/cardnews", _cn_page, include_in_schema=False)
+app.add_api_route("/cardnews.html", _cn_page, include_in_schema=False)
+
+
+def _cn_err(why, code=400):
+    return JSONResponse({"ok": False, "error": why}, status_code=code)
+
+
+def _cn_ai_err(note):
+    r = (note or {}).get("reason")
+    if r in ("no_keys", "exhausted"):
+        return "지금 AI 사용량이 몰렸어요. 잠시 뒤 다시 눌러 주세요(버텍스를 등록하면 끊김 없이 돌아요)"
+    if r == "rate_limit":
+        return "잠깐 사용량이 몰렸어요. 10초 뒤 다시 눌러 주세요"
+    if _cn._busy(note):
+        return "구글 AI 서버가 지금 붐벼요(세 번 다시 시도했어요). 1분쯤 뒤 다시 눌러 주세요"
+    return None
+
+
+@app.get("/api/cardnews/boot")
+def api_cardnews_boot(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    from shopping_shorts import vertex_route
+    st = Store(DB_PATH)
+    ok_img, why_img = _cn.image_allowed(cid)
+    pend = st.cardnews_list(cid, statuses=("pending",), limit=100)
+    return {"ok": True, "brand": _cn.brand_of(st, cid), "image_allowed": ok_img, "image_why": why_img,
+            "ai_plan": vertex_route.plan(cid), "pending": len(pend),
+            "limits": {"min": _cn.MIN_SLIDES, "max": _cn.MAX_SLIDES, "cover_max": _cn.COVER_MAX,
+                       "title_max": _cn.TITLE_MAX, "body_max": _cn.BODY_MAX, "item_max": _cn.ITEM_MAX},
+            "checks": [{"code": c, "label": l} for c, l in _cn.CHECK_LIST],
+            "tones": list(_cn.TONES), "purposes": _cn.PURPOSES}
+
+
+@app.post("/api/cardnews/link")
+def api_cardnews_link(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return _cn.read_link(body.get("url"))
+
+
+@app.post("/api/cardnews/outline")
+def api_cardnews_outline(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    src, opts = body.get("src") or {}, body.get("opts") or {}
+    if not _cn.source_text(src):
+        return _cn_err("무엇으로 만들지 넣어 주세요")
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.plan_outline(src, opts, _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/build")
+def api_cardnews_build(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    st = Store(DB_PATH)
+    src, opts, outline = body.get("src") or {}, body.get("opts") or {}, body.get("outline") or []
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.build_carousel(src, outline, opts, _cn.brand_of(st, cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    car = got["carousel"]
+    # 링크 사진은 회원 폴더로 받아 같은 주소로 — 남의 사이트 사진은 다운로드(이미지 변환) 때 막힌다
+    ext_urls = {sl["bg"]["url"] for sl in car["slides"] if sl["bg"]["url"].startswith("https://")}
+    for u in ext_urls:
+        name, _why = _cn.fetch_remote_image(cid, u, _CN_DATA)
+        for sl in car["slides"]:
+            if sl["bg"]["url"] == u:
+                sl["bg"] = {"kind": "link", "url": "/api/cardnews/asset/" + name} if name else {"kind": "none", "url": ""}
+    title = str(body.get("title") or car.get("topic") or "카드뉴스")[:60]
+    wid = st.cardnews_save(body.get("work_id") or None, cid, car, status="draft", title=title)
+    if not wid:
+        return _cn_err("이 작품을 저장할 수 없어요", 403)
+    return {"ok": True, "work_id": wid, "carousel": car, "title": title}
+
+
+@app.post("/api/cardnews/check")
+def api_cardnews_check(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    car = _cn.normalize_carousel(body.get("carousel"))
+    issues = _cn.check_carousel(car, _cn.brand_of(Store(DB_PATH), cid))
+    return {"ok": True, "issues": issues, "report": _cn._check_report(issues, [])}
+
+
+@app.post("/api/cardnews/rewrite")
+def api_cardnews_rewrite(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.rewrite_text(str(body.get("text") or "")[:300], body.get("field") or "body", body.get("mode"),
+                               _cn.normalize_carousel(body.get("carousel")),
+                               _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/restyle")
+def api_cardnews_restyle(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    ins = str(body.get("instruction") or "").strip()
+    if not ins:
+        return _cn_err("어떻게 바꿀지 한 줄 적어 주세요")
+    note = {}
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        got = _cn.restyle_all(_cn.normalize_carousel(body.get("carousel")), ins,
+                              _cn.brand_of(Store(DB_PATH), cid), note=note)
+    if not got.get("ok"):
+        return _cn_err(_cn_ai_err(note) or got.get("why"), 422)
+    return got
+
+
+@app.post("/api/cardnews/bg")
+def api_cardnews_bg(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    model = Store(DB_PATH).get_setting("cardnews_image_model", "") or None
+    with usage_meter.track(op="카드뉴스그림", customer_id=cid):
+        name, why = _cn.gen_background(cid, str(body.get("prompt") or ""), _CN_DATA, model=model)
+    if not name:
+        return _cn_err(why, 422)
+    return {"ok": True, "url": "/api/cardnews/asset/" + name}
+
+
+@app.post("/api/cardnews/upload")
+async def api_cardnews_upload(request: Request, file: UploadFile = File(...)):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    raw = await file.read()
+    fn = file.filename or ""
+    ext = fn.rsplit(".", 1)[-1] if "." in fn else ""
+    name, why = _cn.save_upload(cid, raw, _CN_DATA, ext)
+    if not name:
+        return _cn_err(why)
+    return {"ok": True, "url": "/api/cardnews/asset/" + name}
+
+
+@app.get("/api/cardnews/asset/{name}")
+def api_cardnews_asset(request: Request, name: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    p = _cn.asset_path(_CN_DATA, cid, name)
+    if not p:
+        return _cn_err("파일이 없어요", 404)
+    return FileResponse(p, headers={"Cache-Control": "private, max-age=86400"})
+
+
+def _cn_summary(w):
+    return {"work_id": w["work_id"], "title": w["title"], "status": w["status"], "updated_at": w["updated_at"],
+            "created_at": w["created_at"], "rule_id": w.get("rule_id"), "carousel": w.get("state") or {}}
+
+
+@app.get("/api/cardnews/works")
+def api_cardnews_works(request: Request, status: str = "saved"):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    sts = ("pending",) if status == "pending" else ("draft", "approved")
+    return {"ok": True, "works": [_cn_summary(w) for w in Store(DB_PATH).cardnews_list(cid, statuses=sts)]}
+
+
+@app.get("/api/cardnews/works/{work_id}")
+def api_cardnews_work_get(request: Request, work_id: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    w = Store(DB_PATH).cardnews_get(work_id, cid)
+    if not w:
+        return _cn_err("작품을 찾지 못했어요", 404)
+    return {"ok": True, "work": _cn_summary(w)}
+
+
+@app.post("/api/cardnews/works/{work_id}")
+def api_cardnews_work_save(request: Request, work_id: str, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    car = _cn.normalize_carousel(body.get("carousel"))
+    status = body.get("status") if body.get("status") in ("draft", "approved") else None
+    title = str(body.get("title"))[:60] if body.get("title") else None
+    wid = Store(DB_PATH).cardnews_save(None if work_id == "new" else work_id, cid, car, status=status, title=title)
+    if not wid:
+        return _cn_err("이 작품을 저장할 수 없어요", 403)
+    return {"ok": True, "work_id": wid}
+
+
+@app.post("/api/cardnews/works/{work_id}/delete")
+def api_cardnews_work_delete(request: Request, work_id: str):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": Store(DB_PATH).cardnews_delete(work_id, cid)}
+
+
+@app.get("/api/cardnews/brand")
+def api_cardnews_brand_get(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": True, "brand": _cn.brand_of(Store(DB_PATH), cid)}
+
+
+@app.post("/api/cardnews/brand")
+def api_cardnews_brand_set(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    b = _cn.clean_brand(body.get("brand"))
+    Store(DB_PATH).cardnews_brand_set(cid, b)
+    return {"ok": True, "brand": b}
+
+
+@app.get("/api/cardnews/rules")
+def api_cardnews_rules(request: Request):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    rows = Store(DB_PATH).cardnews_rules(cid)
+    return {"ok": True, "rules": [{**r, "rule": _cn.clean_rule(r["rule"])} for r in rows]}
+
+
+@app.post("/api/cardnews/rules")
+def api_cardnews_rule_save(request: Request, body: dict):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    rule = _cn.clean_rule(body.get("rule"))
+    if not rule["topics"]:
+        return _cn_err("자동으로 만들 주제를 한 줄에 하나씩 넣어 주세요")
+    enabled = bool(body.get("enabled", True))
+    rid = Store(DB_PATH).cardnews_rule_save(cid, rule, _cn.next_run_at(rule) if enabled else 0,
+                                            rule_id=body.get("rule_id") or None, enabled=enabled)
+    if not rid:
+        return _cn_err("이 규칙을 저장할 수 없어요", 403)
+    return {"ok": True, "rule_id": rid}
+
+
+@app.post("/api/cardnews/rules/{rule_id}/delete")
+def api_cardnews_rule_delete(request: Request, rule_id: int):
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    return {"ok": Store(DB_PATH).cardnews_rule_delete(cid, rule_id)}
+
+
+@app.post("/api/cardnews/rules/{rule_id}/run")
+def api_cardnews_rule_run(request: Request, rule_id: int):
+    """'지금 한 편 만들기' — 예약을 기다리지 않고 승인 대기함에 하나 넣는다."""
+    cid, err = _cn_gate(request)
+    if err:
+        return err
+    st = Store(DB_PATH)
+    row = next((r for r in st.cardnews_rules(cid) if r["rule_id"] == rule_id), None)
+    if not row:
+        return _cn_err("규칙을 찾지 못했어요", 404)
+    with usage_meter.track(op="카드뉴스", customer_id=cid):
+        wid = _cn.run_rule_once(st, {"rule_id": rule_id, "customer_id": cid, "rule": row["rule"]}, _CN_DATA)
+    if not wid:
+        return _cn_err("만들지 못했어요. 잠시 뒤 다시 눌러 주세요", 422)
+    return {"ok": True, "work_id": wid}
+
+
+@app.on_event("startup")
+def _start_cardnews_rule_loop():
+    """카드뉴스 자동 규칙 루프 — 2분마다 시간이 된 규칙을 돈다. 스위치가 꺼져 있으면 아무것도 안 한다.
+    웹 프로세스가 여럿이어도 규칙 하나는 한 번만(store.cardnews_rule_claim)."""
+    import threading
+    import time as _t
+
+    def _loop():
+        while True:
+            _t.sleep(120)
+            try:
+                st = Store(DB_PATH)
+                if (st.get_setting("cardnews_enabled", "") or "").strip().lower() in ("", "0", "off", "false"):
+                    continue
+                n = _cn.run_due_rules(st, _CN_DATA)
+                if n:
+                    logging.warning("[cardnews] 자동 규칙 %d편 승인 대기함에 넣음", n)
+            except Exception as e:      # noqa: BLE001 — 루프는 죽지 않되 사실은 남긴다
+                logging.warning("[cardnews] 자동 규칙 루프 오류: %r", e)
+    threading.Thread(target=_loop, daemon=True, name="cardnews-rules").start()
 
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")
