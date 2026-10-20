@@ -213,3 +213,6 @@ out/lang_mode_check_*.json
 
 # 단어 강조 검사 결과물(tools/word_fx_check.py) — 영상·프레임이라 올리지 않는다
 /out/_word_fx_check/
+
+# 구글 렌즈 크롬 프로필(tools/calcopy/lens.py, 잠기면 _<pid> 사본)
+/.lens_profile*/

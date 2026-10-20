@@ -52,12 +52,26 @@ def lens_rows(pg, img: str, skip: re.Pattern = SKIP_SHOP, hl: str = "ko") -> lis
 @contextmanager
 def lens_page():
     """렌즈용 크롬 한 창(화면 뜸 — 헤드리스는 구글이 막는다)."""
+    import os
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(PROFILE, headless=False, channel="chrome", locale="ko-KR",
-                                                   viewport={"width": 1366, "height": 900},
-                                                   args=["--disable-blink-features=AutomationControlled"])
+        def launch(prof):
+            return p.chromium.launch_persistent_context(prof, headless=False, channel="chrome", locale="ko-KR",
+                                                        viewport={"width": 1366, "height": 900},
+                                                        args=["--disable-blink-features=AutomationControlled"])
+        try:
+            ctx = launch(PROFILE)
+        except Exception as e:  # noqa: BLE001 — 프로필이 다른 세션 크롬에 잠김('기존 브라우저 세션에서 여는 중', 10-21 워커 5명+원본찾기 충돌)
+            # 렌즈는 로그인이 필요 없어 빈 프로필이면 된다 → 이 프로세스 전용 사본 이름으로 연다(경보 한 줄 남김)
+            alt = f"{PROFILE}_{os.getpid()}"
+            print(f"[lens] 프로필 잠김 → {Path(alt).name} 로 연다 ({type(e).__name__})")
+            ctx = launch(alt)
+        else:
+            alt = None
         try:
             yield ctx.pages[0] if ctx.pages else ctx.new_page()
         finally:
             ctx.close()
+            if alt:
+                import shutil
+                shutil.rmtree(alt, ignore_errors=True)   # 사본은 한 번 쓰고 지운다(쌓이지 않게)
