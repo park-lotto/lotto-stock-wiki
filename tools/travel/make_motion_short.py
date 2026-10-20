@@ -464,7 +464,7 @@ def stage_build2(sb, work):
         ev = s.get("evidence")
         if ev:
             eid = "ev%d" % i
-            t_ev = (em_t or t + 0.3) + 0.05
+            t_ev = t + 0.2      # 컷 시작 0.2초 뒤 등장 → 컷 끝까지(사장님 10-20 "너무 늦게 나오고 빨리 사라진다": 강조 단어 시각에 띄우면 0.8~2.9초뿐이었다)
             thumb = ""
             if ev.get("photo"):
                 thumb = '<img class="th" src="assets/%s">' % _img(ev["photo"], a / ("ev_%d.jpg" % i), 480)
