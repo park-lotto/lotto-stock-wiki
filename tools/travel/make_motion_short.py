@@ -529,6 +529,196 @@ window.__timelines["main"] = tl;
 """
 
 
+# ── 3판: 보내주신 레퍼런스(2110019799342260630, 2초 간격 40장 실측)의 화면 문법을 그대로 ──
+#   크림 바탕 · 위 = 말하는 문장(굵은 검정 + 핵심 단어만 기울인 명조 주황, 말하는 순간 등장)
+#   가운데 = 둥근 카드 안 영상(컷마다 휙 밀려 들어옴, 첫 컷은 당겼다 빠지는 줌) · 카드 모서리 '후기 N건' 도장 쾅
+#   아래 = 칩(취소선 → 화살표 → 새 칩), 끝 = 막대가 자라는 정리 화면(후기 분석 숫자)
+ORANGE = "#E8542A"
+CREAM = "#F6F1EA"
+# 줄별 그림 요소 — 칩 글자는 후기 분석 항목·숙소 주소에 있는 말만(지어낸 사실 금지)
+_V3 = {1: {"chips": ["인천 영종구 운서동"]},
+       2: {"chips": ["누운 채로 보는 일출"]},
+       3: {"chips": ["해물짬뽕은 필수"]},
+       4: {"chips": ["사우나 · 노천탕 무료"]},
+       5: {"strike": "3시 체크인", "to": "2시 전 번호표"},
+       6: {"chips": ["호텔 바로 앞 산책로"]},
+       7: {"chart": ["한겨울에도 따뜻한 야외 인피니티 온수풀", "룸서비스 해물짬뽕은 필수, 치킨도 같이",
+                     "침대에 누운 채로 보는 바다와 일출", "호텔 바로 앞 갈대밭 바닷가 산책로"],
+           "labels": ["온수풀", "해물짬뽕", "누워서 일출", "갈대밭 산책"]}}
+
+
+def stage_build3(sb, work):
+    from shopping_shorts import video_assemble as va
+    sb, work = Path(sb), Path(work)
+    shots = _shots(sb)
+    voice = json.loads((work / "voice.json").read_text(encoding="utf-8"))
+    st = json.loads((ROOT / "tools/travel/work_nest/state.json").read_text(encoding="utf-8"))
+    counts = {x["item"]: x.get("count") for c, it in st["detail"]["review_insights"].items() if not c.startswith("_") for x in it}
+    a = work / "assets"
+    a.mkdir(exist_ok=True)
+    fonts = ROOT / "shopping_shorts/static/fonts"
+    for f in ("Pretendard-ExtraBold.otf", "NanumMyeongjo-ExtraBold.ttf"):
+        shutil.copy(fonts / f, a / f)
+    shutil.copy(Path.home() / "숏템자료/모션그래픽엔진/work/2026-10-20_라면레시피/ramen/brand/gsap.min.js", a / "gsap.min.js")
+    for f in ("whoosh.wav", "pop.wav", "dung.wav", "tick.wav"):
+        shutil.copy(SFX / f, a / f)
+    disc = va.disclosure_layer_png({"disclosure": {"ad": True, "ai": True, "source": "여기어때"}}, str(a / "disclosure.png"))
+    e = html.escape
+    body, js, sfx, tl, auds = [], [], [], [], []
+    t = 0.0
+    n = len(shots)
+    for i, (s, v) in enumerate(zip(shots, voice)):
+        words, dur = v["words"], v["dur"]
+        end = t + dur + GAP + (0.6 if i == n - 1 else 0.0)
+        g = _V3.get(s["n"], {})
+        shutil.copy(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i))
+        shutil.copy(work / v["mp3"], a / v["mp3"])
+        auds.append('<audio id="v%d" src="assets/%s" data-start="%.3f" data-duration="%.3f" data-track-index="10" data-volume="1"></audio>'
+                    % (i, v["mp3"], t, dur))
+        # 가운데 카드 영상 — 마지막 줄(정리 화면)은 카드를 작게 위로
+        small = bool(g.get("chart"))
+        body.append('<video id="vid%d" class="clip card%s" src="assets/clip_%d.mp4" data-start="%.3f" data-duration="%.3f" '
+                    'data-track-index="1" muted playsinline></video>' % (i, " small" if small else "", i, t, end - t))
+        if i == 0:      # 당겼다 빠지는 줌(pull-back) — 첫 화면 시선 잡기
+            js.append('tl.fromTo("#vid0",{scale:1.22},{scale:1,duration:0.55,ease:"power3.out"},0);')
+        else:           # 휙 밀려 들어옴(whip) — 흐림 12px→0, 0.32초
+            js.append('tl.fromTo("#vid%d",{x:340,filter:"blur(12px)"},{x:0,filter:"blur(0px)",duration:0.32,ease:"power3.out"},%.3f);' % (i, t))
+            sfx.append((t - 0.02, "whoosh.wav", 0.22))
+        if i < n - 1:   # 나갈 때 왼쪽으로
+            js.append('tl.to("#vid%d",{x:-260,filter:"blur(10px)",duration:0.14,ease:"power2.in"},%.3f);' % (i, end - 0.14))
+        # 위 제목 = 말하는 문장(반 문장씩), 단어는 들리는 순간
+        groups, k, em, em_t = _halves(s["line"]), 0, s["plan"]["emph"], None
+        caps = []
+        for gi, grp in enumerate(groups):
+            idx = list(range(k, k + len(grp)))
+            k += len(grp)
+            c0 = t if gi == 0 else t + words[idx[0]]["start"]
+            c1 = (t + words[k]["start"]) if gi + 1 < len(groups) else end
+            cid = "h%d_%d" % (i, gi)
+            spans = []
+            for wi in idx:
+                w, wt = words[wi]["word"], t + words[wi]["start"]
+                if em and em in w and em_t is None:
+                    em_t = wt
+                    p = w.find(em)
+                    inner = '%s<span class="acc">%s</span>%s' % (e(w[:p]), e(em), e(w[p + len(em):]))
+                else:
+                    inner = e(w)
+                spans.append('<span class="w" id="%s_%d">%s</span>' % (cid, wi, inner))
+                js.append('tl.fromTo("#%s_%d",{opacity:0,y:24,filter:"blur(6px)"},{opacity:1,y:0,filter:"blur(0px)",duration:0.2,ease:"power2.out"},%.3f);'
+                          % (cid, wi, max(c0, wt)))
+            body.append('<div id="%s" class="clip head" data-start="%.3f" data-duration="%.3f" data-track-index="5"><div class="ln">%s</div></div>'
+                        % (cid, c0, c1 - c0, " ".join(spans)))
+            caps.append({"t0": c0, "t1": c1, "words": [(words[w]["word"], t + words[w]["start"]) for w in idx]})
+        ev = s.get("evidence")
+        # 도장 '후기 N건' — 강조 단어 순간 쾅(1.6배→1, 기울기 -8°)
+        if ev:
+            sid = "st%d" % i
+            ts_ = (em_t or t + 0.4)
+            body.append('<div id="%s" class="clip stamp" data-start="%.3f" data-duration="%.3f" data-track-index="4">'
+                        '<div class="sp">후기 %s건</div></div>' % (sid, ts_, end - ts_, format(ev["count"], ",")))
+            js.append('tl.fromTo("#%s .sp",{scale:1.6,opacity:0,rotate:-14},{scale:1,opacity:1,rotate:-8,duration:0.22,ease:"power4.out"},%.3f);' % (sid, ts_))
+            sfx.append((ts_, "dung.wav", 0.3))
+        # 아래 칩 / 취소선→화살표→새 칩
+        if g.get("chips"):
+            tc = t + 0.35
+            body.append('<div id="ch%d" class="clip chips" data-start="%.3f" data-duration="%.3f" data-track-index="3">%s</div>'
+                        % (i, tc, end - tc, "".join('<span class="chip" id="ch%d_%d">%s</span>' % (i, j, e(c)) for j, c in enumerate(g["chips"]))))
+            for j in range(len(g["chips"])):
+                js.append('tl.fromTo("#ch%d_%d",{opacity:0,y:30,scale:0.9},{opacity:1,y:0,scale:1,duration:0.28,ease:"back.out(1.3)"},%.3f);' % (i, j, tc + j * 0.125))
+            sfx.append((tc - 0.068, "pop.wav", 0.24))
+        if g.get("strike"):
+            tc = t + 0.3
+            t_to = em_t or t + dur * 0.6
+            body.append('<div id="sk%d" class="clip chips" data-start="%.3f" data-duration="%.3f" data-track-index="3">'
+                        '<span class="chip old" id="sk%d_a"><i></i>%s</span><b class="arr" id="sk%d_r">→</b>'
+                        '<span class="chip new" id="sk%d_b">%s</span></div>' % (i, tc, end - tc, i, e(g["strike"]), i, i, e(g["to"])))
+            js.append('tl.fromTo("#sk%d_a",{opacity:0,y:24},{opacity:1,y:0,duration:0.25,ease:"power2.out"},%.3f);' % (i, tc))
+            js.append('tl.fromTo("#sk%d_a i",{scaleX:0},{scaleX:1,duration:0.3,ease:"power2.inOut"},%.3f);' % (i, tc + 0.5))
+            js.append('tl.fromTo("#sk%d_r",{opacity:0,x:-20},{opacity:1,x:0,duration:0.2,ease:"power2.out"},%.3f);' % (i, t_to - 0.15))
+            js.append('tl.fromTo("#sk%d_b",{opacity:0,scale:0.8},{opacity:1,scale:1,duration:0.28,ease:"back.out(1.4)"},%.3f);' % (i, t_to))
+            sfx.append((t_to - 0.068, "pop.wav", 0.26))
+        if g.get("chart"):      # 막대가 자라는 정리 화면 — 숫자는 후기 분석 그대로
+            tc = t + 0.25
+            vals = [counts[x] for x in g["chart"]]
+            mx = max(vals)
+            rows = "".join('<div class="row" id="cr%d"><span class="lb">%s</span><span class="bar"><i id="cb%d" style="width:%dpx"></i></span>'
+                           '<b class="nv" id="cn%d">0</b></div>' % (j, e(lb), j, round(560 * vv / mx), j)
+                           for j, (lb, vv) in enumerate(zip(g["labels"], vals)))
+            body.append('<div id="chart" class="clip chart" data-start="%.3f" data-duration="%.3f" data-track-index="3">'
+                        '<div class="ct">후기 %s건이 꼽은 것</div>%s</div>' % (tc, end - tc, format(st["detail"]["review_count"], ","), rows))
+            for j, vv in enumerate(vals):
+                tj = tc + 0.2 + j * 0.18
+                js.append('tl.fromTo("#cr%d",{opacity:0,x:-30},{opacity:1,x:0,duration:0.25,ease:"power2.out"},%.3f);' % (j, tj))
+                js.append('tl.fromTo("#cb%d",{scaleX:0},{scaleX:1,duration:0.55,ease:"power3.out"},%.3f);' % (j, tj + 0.05))
+                js.append('(function(){var o={v:0},el=document.getElementById("cn%d");tl.to(o,{v:%d,duration:0.55,ease:"power3.out",'
+                          'onUpdate:function(){el.textContent=Math.round(o.v)}},%.3f);})();' % (j, vv, tj + 0.05))
+                sfx.append((tj, "tick.wav", 0.2))
+        tl.append({"n": s["n"], "t": t, "dur": dur, "end": end, "split": t, "caps": caps, "emph": em,
+                   "probe": [200, 470, "orange"]})
+        t = end
+    auds += ['<audio id="s%d" src="assets/%s" data-start="%.3f" data-duration="%.2f" data-track-index="%d" data-volume="%.2f"></audio>'
+             % (k, f, max(0.0, t0), 0.5 if f.startswith("whoosh") else 0.4, 11 + k % 3, vol) for k, (t0, f, vol) in enumerate(sfx)]
+    doc = _PAGE3 % {"dur": "%.3f" % t, "body": "\n".join(body), "auds": "\n".join(auds), "grain": _GRAIN,
+                    "disc": '<img class="disc" src="assets/disclosure.png">' if disc else "", "js": "\n".join(js),
+                    "or": ORANGE, "cr": CREAM}
+    (work / "index.html").write_text(doc, encoding="utf-8")
+    (work / "timeline.json").write_text(json.dumps(tl, ensure_ascii=False, indent=1), encoding="utf-8")
+    print("만듦", work / "index.html", "길이 %.2f초, 효과음 %d개" % (t, len(sfx)))
+
+
+_PAGE3 = """<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=1080, height=1920">
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:"PretendardX";src:url("assets/Pretendard-ExtraBold.otf")}
+@font-face{font-family:"MyeongjoX";src:url("assets/NanumMyeongjo-ExtraBold.ttf")}
+html,body{margin:0;background:%(cr)s}
+#root{position:relative;width:100%%;height:100%%;overflow:hidden;background:%(cr)s}
+.clip{position:absolute}
+.card{left:90px;top:500px;width:900px;height:1060px;object-fit:cover;border-radius:36px;box-shadow:0 28px 60px rgba(40,25,10,.28);z-index:1}
+.card.small{left:240px;top:430px;width:600px;height:720px}
+.head{left:0;right:0;top:0;height:460px;z-index:3}
+.head .ln{position:absolute;left:70px;right:70px;top:235px;text-align:center;font-family:"PretendardX";font-size:80px;line-height:1.22;
+ color:#16130f;letter-spacing:-.03em;word-break:keep-all}
+.w{display:inline-block}
+.acc{font-family:"MyeongjoX";color:%(or)s;display:inline-block;transform:skewX(-11deg);letter-spacing:-.02em}
+.stamp{left:0;top:0;width:100%%;height:100%%;z-index:4;pointer-events:none}
+.stamp .sp{position:absolute;right:70px;top:468px;padding:12px 26px;border:6px solid %(or)s;border-radius:16px;color:%(or)s;
+ font-family:"PretendardX";font-size:54px;background:rgba(246,241,234,.92);letter-spacing:-.02em}
+.chips{left:0;right:0;top:1590px;display:flex;justify-content:center;align-items:center;gap:22px;z-index:4}
+.chip{position:relative;display:inline-block;font-family:"PretendardX";font-size:50px;color:#16130f;background:#fff;
+ padding:16px 34px;border-radius:999px;box-shadow:0 10px 24px rgba(40,25,10,.16)}
+.chip.old{color:#8b8279}
+.chip.old i{position:absolute;left:22px;right:22px;top:50%%;height:6px;margin-top:-3px;background:%(or)s;transform-origin:left center;display:block}
+.chip.new{background:%(or)s;color:#fff}
+.arr{font-family:"PretendardX";font-size:60px;color:%(or)s}
+.chart{left:90px;right:90px;top:1190px;z-index:4;background:#fff;border-radius:32px;padding:30px 36px;box-shadow:0 20px 44px rgba(40,25,10,.18)}
+.chart .ct{font-family:"PretendardX";font-size:40px;color:#8b8279;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:18px;height:74px}
+.row .lb{width:220px;font-family:"PretendardX";font-size:40px;color:#16130f}
+.row .bar{flex:1;height:30px}
+.row .bar i{display:block;height:30px;border-radius:15px;background:%(or)s;transform-origin:left center}
+.row .nv{width:90px;text-align:right;font-family:"PretendardX";font-size:42px;color:%(or)s}
+.grain{position:absolute;inset:0;z-index:5;background-image:url("%(grain)s");opacity:.05;mix-blend-mode:multiply;pointer-events:none}
+.disc{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none;z-index:6}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="%(dur)s" data-fps="30">
+%(body)s
+<div class="grain"></div>
+%(disc)s
+%(auds)s
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+%(js)s
+window.__timelines["main"] = tl;
+</script>
+</body></html>
+"""
+
+
 def stage_mix(work):
     """raw.mp4(목소리+효과음) + 배경음 — 목소리가 나올 때 배경음을 눌러(사이드체인) 깔고 -14 LUFS·TP -1.5 로."""
     work = Path(work)
@@ -575,10 +765,12 @@ def stage_check(work):
         if not hit:
             continue
         cnt = []
-        for dt in (-0.10, 0.25):
-            im = Image.open(_frame(mp4, hit[1] + dt, work / "chk.png")).convert("RGB").crop((0, 1380, 1080, 1760))
-            cnt.append(sum(1 for r, g, b in im.getdata() if r > 210 and g > 200 and b < 90))
-        good = cnt[0] < 300 and cnt[1] > 3000
+        y0, y1, col = L.get("probe") or [1380, 1760, "yellow"]
+        hitc = (lambda r, g, b: r > 210 and g > 200 and b < 90) if col == "yellow" else (lambda r, g, b: r > 200 and 55 < g < 125 and b < 85)
+        for dt in (-0.10, 0.30):
+            im = Image.open(_frame(mp4, hit[1] + dt, work / "chk.png")).convert("RGB").crop((0, y0, 1080, y1))
+            cnt.append(sum(1 for r, g, b in im.getdata() if hitc(r, g, b)))
+        good = cnt[0] < 300 and cnt[1] > (3000 if col == "yellow" else 1200)
         ok &= good
         rows.append({"줄": L["n"], "강조": em, "시각": round(hit[1], 2), "전 노란칸": cnt[0], "후 노란칸": cnt[1], "통과": good})
     rep["강조 상자"] = rows
@@ -635,6 +827,8 @@ if __name__ == "__main__":
         sys.exit(0 if stage_check(sys.argv[2]) else 1)
     elif st == "voice":
         stage_voice(sys.argv[2], sys.argv[3], *(float(x) for x in sys.argv[4:5]))
+    elif st == "build3":
+        stage_build3(sys.argv[2], sys.argv[3])
     elif st == "build2":
         stage_build2(sys.argv[2], sys.argv[3])
     elif st == "veo":
