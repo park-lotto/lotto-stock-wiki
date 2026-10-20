@@ -89,6 +89,8 @@
   "on": {"flash": "ding", "arrow_curve_red": "whoosh"},
   "lead": {"ding": 0.03, "whoosh": -0.05},
   "gain_db": -4.0,
+  "slot": {"whoosh": {"gain_db": 4.0, "duck_db": -6.0}},
+  "_slot_why": "10-20 엔진 요청(11편 휙 0/1·10편 휙 실패): 휙(넓은 띠 잡음, RMS −23.4dBFS)이 나레(−15 LUFS)에 묻힘 — 띠링(음높이 있는 소리)은 같은 크기로 들림. 휙만 +4dB, 휙 길이 동안 바닥(나레·원음)을 −6dB 낮춤(앞뒤 40ms 경사). 판단 = fx.add_sfx",
   "_gain_why": "6편 L11 띠링이 큰 원음(500,000 for 5%)과 겹쳐 AAC 넘침으로 소리 맞춤이 8번 안에 안 끝남(10-18) → 팩 목표 크기에서 −4dB. 번쩍 뒤 띠링 검출(compare_bench)은 유지되는지 같이 잰다"
  },
  "compare": {

@@ -574,6 +574,10 @@ def sfx_events(P: dict) -> list[dict]:
     return sorted(out, key=lambda x: x["t"])
 
 
+def _wav_dur(f: Path) -> float:
+    return float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(f)], capture_output=True, text=True).stdout.strip() or 0.5)
+
+
 def add_sfx(bed_mp4: Path, events: list[dict], R_: Path) -> Path:
     """소리 바닥(mp4 의 소리)에 효과음을 얹은 새 mp4(영상 복사). 크기 = sfx_pack 칸 목표 크기(_gain_for) + rules sfx.gain_db."""
     if not events:
@@ -584,14 +588,21 @@ def add_sfx(bed_mp4: Path, events: list[dict], R_: Path) -> Path:
     if Sx["pack"] not in packs:
         raise RuntimeError(f"효과음 팩 {Sx['pack']} 없음")
     d = Path(packs[Sx["pack"]])
-    ins, fc, lab = [], [], []
+    ins, fc, lab, duck = [], [], [], []
     for k, e in enumerate(events):
         f = d / f"{e['slot']}.wav"
-        g = sfx_pack._gain_for(str(f), e["slot"]) * 10 ** (Sx["gain_db"] / 20)
+        so = (Sx.get("slot") or {}).get(e["slot"]) or {}          # 칸별 덧셈(휙 = 나레에 묻힘 → 세기 +·바닥 덕킹, rules sfx.slot)
+        g = sfx_pack._gain_for(str(f), e["slot"]) * 10 ** ((Sx["gain_db"] + so.get("gain_db", 0.0)) / 20)
         ins += ["-i", str(f)]
         fc.append(f"[{k + 1}:a]aresample=48000,aformat=channel_layouts=mono,volume={g:.4f},adelay={int(e['t'] * 1000)}:all=1[s{k}]")
         lab.append(f"[s{k}]")
-    fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=mono[b];[b]{''.join(lab)}amix=inputs={len(lab) + 1}:normalize=0:duration=first[a]")
+        if so.get("duck_db"):
+            a, b, r = e["t"], e["t"] + _wav_dur(f), 0.04
+            k_ = 1 - 10 ** (so["duck_db"] / 20)
+            duck.append(f"(1-{k_:.4f}*clip(min((t-{a - r:.3f})/{r},({b + r:.3f}-t)/{r}),0,1))")
+            e["duck"] = [round(a, 3), round(b, 3), so["duck_db"]]
+    bed = f"volume='{'*'.join(duck)}':eval=frame," if duck else ""
+    fc.append(f"[0:a]aresample=48000,aformat=channel_layouts=mono,{bed}anull[b];[b]{''.join(lab)}amix=inputs={len(lab) + 1}:normalize=0:duration=first[a]")
     out = R_ / "final_src_sfx.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(bed_mp4), *ins, "-filter_complex", ";".join(fc), "-map", "0:v", "-map", "[a]",
                     "-c:v", "copy", "-c:a", "pcm_f32le", str(out.with_suffix(".mov"))], check=True)
