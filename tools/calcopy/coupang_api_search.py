@@ -33,6 +33,16 @@ print("@@JSON@@" + json.dumps(out, ensure_ascii=False))
 
 
 def search(queries: list[str]) -> dict:
+    """우리 PC = 서버 관리자 키(SSH). 회원 PC(CALCOPY_CUSTOMER_MODE=1, 사장님 10-21) = 회원 본인 파트너스 키로 직접 —
+    키가 없으면 회원 PC 크롬 검색(customer_chrome_search, 숏템 MCP 쪽이 띄운다)으로 넘긴다는 표식을 돌려준다."""
+    import os
+    if os.environ.get("CALCOPY_CUSTOMER_MODE") == "1":
+        ak, sk = os.environ.get("COUPANG_ACCESS_KEY", ""), os.environ.get("COUPANG_SECRET_KEY", "")
+        if not (ak and sk):
+            return {q: {"ok": False, "need": "chrome", "notice": "회원 파트너스 키 없음 — 크롬 검색", "items": []} for q in queries}
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+        from shopping_shorts import coupang_partners as cp
+        return {q: cp.search_products(q, limit=10, access_key=ak, secret_key=sk) for q in queries}
     cmd = ("cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env 2>/dev/null; set +a; "
            "timeout 120 /usr/bin/python3 -c " + _shq(_REMOTE) + " " + _shq(json.dumps(queries, ensure_ascii=False)))
     r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, f"ubuntu@{HOST}", cmd],

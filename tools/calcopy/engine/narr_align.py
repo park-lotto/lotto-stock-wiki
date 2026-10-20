@@ -147,17 +147,55 @@ def fixed_tempo(voice_id: str) -> float | None:
     return float(p["default_speed"])
 
 
+def eleven_direct(text: str, preset_id: str, out: Path, api_key: str) -> dict | None:
+    """회원 PC(사장님 10-21 '미나 = 회원 본인 일레븐랩스 키'): 회원 키로 일레븐랩스를 직접 — 요청 꼴은 서버 서비스와 같다
+    (shopping_shorts/tts.py synthesize_tts: POST /v1/text-to-speech/<voice>/with-timestamps · xi-api-key · {text, model_id, voice_settings}, v3 는 use_speaker_boost 뺌).
+    성우 값 주인 = voice_presets.json(base_voice_id·model_id·voice_settings). 속도는 1.0 — 배속은 렌더러 atempo(미나 1.35 고정)."""
+    import base64
+    import urllib.error
+    import urllib.request
+    d = json.loads((ROOT / "shopping_shorts/assets/voice_presets.json").read_text(encoding="utf-8"))
+    rows = d if isinstance(d, list) else next(iter(d.values()))
+    p = next((x for x in rows if x.get("preset_id") == preset_id), None)
+    if not p:
+        raise RuntimeError(f"voice_presets 에 없는 일레븐랩스 성우: {preset_id}")
+    settings = dict(p.get("voice_settings") or {})
+    if "v3" in (p.get("model_id") or ""):
+        settings.pop("use_speaker_boost", None)
+    body = json.dumps({"text": text, "model_id": p["model_id"], **({"voice_settings": settings} if settings else {})}).encode("utf-8")
+    req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{p['base_voice_id']}/with-timestamps", data=body, method="POST",
+                                 headers={"xi-api-key": api_key, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            data = json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        why = {401: "일레븐랩스 키가 맞지 않습니다", 402: "일레븐랩스 크레딧이 부족합니다", 429: "일레븐랩스 사용량 한도에 걸렸습니다"}.get(e.code, f"일레븐랩스 오류 {e.code}")
+        raise RuntimeError(why) from None
+    if not data.get("audio_base64"):
+        raise RuntimeError("일레븐랩스 응답에 소리가 없습니다")
+    Path(out).write_bytes(base64.b64decode(data["audio_base64"]))
+    return data.get("alignment")
+
+
 def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: str, log) -> dict | None:
-    """일레븐랩스는 서버에서 합성하고 mp3·글자 시각만 받는다(키 반출 금지 — 주인 tools/calcopy/mina_tts). 배속은 렌더러 atempo 가 맞춘다."""
-    from tools.calcopy import mina_tts
+    """일레븐랩스는 서버에서 합성하고 mp3·글자 시각만 받는다(키 반출 금지 — 주인 tools/calcopy/mina_tts). 배속은 렌더러 atempo 가 맞춘다.
+    회원 PC(CALCOPY_CUSTOMER_MODE=1) = 회원 일레븐랩스 키로 직접(eleven_direct) — 서버를 부르지 않는다."""
+    import os
     tone = preset_id.rsplit("-", 1)[-1]
-    if not preset_id.startswith("kr-mina-"):
+    customer = os.environ.get("CALCOPY_CUSTOMER_MODE") == "1"
+    if customer and not os.environ.get("ELEVENLABS_API_KEY"):
+        raise RuntimeError("이 목소리(미나)는 일레븐랩스 키가 필요합니다 — 설정 화면 '소리'의 '목소리 키(일레븐랩스)'에 넣어 주세요")
+    if not customer and not preset_id.startswith("kr-mina-"):
         raise RuntimeError(f"서버 합성 도구는 미나만 받는다: {preset_id}")
     locks = _proc_slots()
     try:
         with _TTS_SEM:
             t0 = time.time()
-            _, align = mina_tts.synth_align(text, str(out), tone)
+            if customer:
+                align = eleven_direct(text, preset_id, out, os.environ["ELEVENLABS_API_KEY"])
+            else:
+                from tools.calcopy import mina_tts
+                _, align = mina_tts.synth_align(text, str(out), tone)
     finally:
         for lk in locks:
             try:
@@ -165,7 +203,7 @@ def _synth_eleven(text: str, preset_id: str, tempo, out: Path, key: str, model: 
             except OSError:
                 pass
     meta = {"key": key, "text": text, "voice": preset_id, "tempo": tempo, "model": model, "align": align, "legacy": False,
-            "at": time.strftime("%Y-%m-%d %H:%M:%S"), "sec": round(time.time() - t0, 1), "engine": "elevenlabs(서버)"}
+            "at": time.strftime("%Y-%m-%d %H:%M:%S"), "sec": round(time.time() - t0, 1), "engine": "elevenlabs(회원 키)" if customer else "elevenlabs(서버)"}
     sidecar_of(out).write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     log(f"[tts] 일레븐랩스 {preset_id} 1회 {meta['sec']}초 → {out.name} (글자 시각 {'있음' if align else '없음'})")
     return align
