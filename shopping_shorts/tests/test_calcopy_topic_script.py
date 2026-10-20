@@ -194,7 +194,7 @@ def _fake_net():
             return shorts["ramen"]
         return []
 
-    def yt_detail(vid, n):
+    def yt_detail(vid, n, url=None):
         title = next(v["title"] for vs in shorts.values() for v in vs if v["id"] == vid)
         return {"id": vid, "url": f"https://www.youtube.com/shorts/{vid}", "title": title, "views": 100, "date": "20260101",
                 "description": "설명", "comments": [{"likes": 9, "text": "와 신기하다", "id": "c"}]}
@@ -248,7 +248,7 @@ def test_channel_fit_no_skips_scoring_and_promo_caps(tmp_path):
     shorts = {"spk": [{"id": "sp1", "duration": 30, "views": 900, "title": "신기한 스피커 원판", "channel": "Gadget Official", "url": "u/sp1"}],
               "dog": [{"id": "dg1", "duration": 30, "views": 800, "title": "강아지 춤 신라면", "channel": "dogs", "url": "u/dg1"}]}
     net = {**_fake_net(), "yt_search": lambda q, n, m: shorts["spk"] if "스피커" in q else shorts["dog"] if "신라면" in q else [],
-           "yt_detail": lambda vid, n: {"id": vid, "failed": "시험: 상세 없음"}}
+           "yt_detail": lambda vid, n, url=None: {"id": vid, "failed": "시험: 상세 없음"}}
     llm = FakeLLM({"fit": {"items": [{"id": "c1", "fit": "예", "why": "제품 시연"}, {"id": "c2", "fit": "아니오", "why": "동물 영상"}]},
                    "score": lambda p: _same_scores(["c1"]) if "c2." not in p else {"scores": []}})
     for c in ("c1", "c2"):
@@ -385,7 +385,7 @@ def test_relevance_rejects_other_brand_same_place():
 def test_bench_skips_fallback_marker_without_detail(tmp_path):
     seen = []
     net = {"yt_search": lambda q, n, m: [{"id": None, "fallback": "sp 필터 시간 초과 30초 → ytsearch 폴백 · 60초 이하 0편"}],
-           "yt_detail": lambda vid, n: seen.append(vid) or {"id": vid, "failed": "x"}}
+           "yt_detail": lambda vid, n, url=None: seen.append(vid) or {"id": vid, "failed": "x"}}
     r = T.bench({"id": "c1", "topic": "신라면", "query": "신라면"}, tmp_path, net, FakeLLM({}), limits=T.Limits(sleep=lambda s: None))
     assert seen == [] and any("폴백" in f for f in r["failed"])
 

@@ -21,10 +21,10 @@
   },
   "tts": {
    "provider": "typecast",
-   "voice_id": "tc_68257f68bc6e3c161ab5078d",
-   "name": "필재",
-   "preset_id": "tc-piljae-stable",
-   "tempo": 1.36,
+   "voice_id": "tc_6059dad0b83880769a50502f",
+   "name": "박창수",
+   "preset_id": "tc-changsu-stable",
+   "tempo": 1.25,
    "alternates": [
     {
      "voice_id": "tc_61c2f7741330d213c238cba6",
@@ -32,17 +32,12 @@
      "preset_id": "tc-gunn-stable"
     },
     {
-     "voice_id": "tc_6059dad0b83880769a50502f",
-     "name": "박창수",
-     "preset_id": "tc-changsu-stable"
-    },
-    {
      "voice_id": "tc_5feb2085cca1a479e73bac37",
      "name": "용식이",
      "preset_id": "tc-yongsik-stable"
     }
    ],
-   "_note": "이름·id = shopping_shorts/assets/voice_presets.json · 기본 빠르기 1.36 = remake 기본(copy_render.NARR)"
+   "_note": "이름·id = shopping_shorts/assets/voice_presets.json · 기본 빠르기 1.36 = remake 기본(copy_render.NARR) · 10-20 필재 금지(칼카피_시작.md:217) → 박창수(사장님 고름) · 프리셋마다 기본값은 preview_request.preset_defaults 가 이 위에 얹는다"
   },
   "meme_pool": {
    "dir": "C:/숏템_칼카피/packs/meme/meme_pack",
