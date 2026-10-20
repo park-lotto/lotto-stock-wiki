@@ -11,7 +11,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Gre
 입력: `$ARGUMENTS` — 영상 주소(유튜브·틱톡·인스타)면 `video`, 해외 원본 채널 주소면 `channel`, 그냥 글이면 `topic`, 비었으면 아무것도 안 넣는다.
 
 ## 순서 — 응답의 `need` 와 `next` 가 다음 할 일을 정한다(지어내지 않는다)
-1. `shortem_make(step="start", …)`. 프리셋은 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
+1. `shortem_make(step="start", …)`. 고객이 요청에 프리셋 이름을 말했으면(예: "이 영상으로 연예인상품+후기형으로 만들어줘") 그 이름을 그대로 `preset_name` 에 넣는다 — 그 프리셋으로 바뀌어 저장되고 이 편부터 쓴다. 이름을 못 찾았다고 나오면 보여 준 목록에서 고객에게 고르게 한다. 이름을 말하지 않았으면 설정 화면에서 고른 것을 쓴다(없다고 하면 `shortem_settings(action="open")`).
 2. `need` 에 따라:
    - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청의 `권장 모델`이 `opus` 면 오푸스가 답한다(지금 모델이 아니면 `Agent`(model=opus)에게 맡긴다 — `script` 스킬). 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
    - `choose` → 후보를 번호·제목·한 줄로 표를 만들어 보여 주고 **고객이 고른 번호**로 `step="choose"`. 대신 고르지 않는다.
