@@ -1,0 +1,387 @@
+{
+ "g:hdnA": {
+  "names": [
+   "두유노 체험형(지침서)"
+  ],
+  "pan": "",
+  "first_line_style": "집주인분이 이사 때 이거 놔두고 가라고 하시더라고요. — 검수 남은 문제: 지침서·참고 대본과 8자 이상 같음: '테이프두르고롤러…'",
+  "slots": [
+   {
+    "slot": "hook",
+    "need": "결과·오해로 여는 첫 줄",
+    "line": "집주인분이 이사 때 이거 놔두고 가라고 하시더라고요.",
+    "ids": [
+     "s16",
+     "s19"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "pain",
+    "need": "불편·사정",
+    "line": "전셋집이라 끈적이는 시트지는 자국 남을까 봐 못 붙였는데",
+    "ids": [
+     "s18",
+     "s20"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "authority",
+    "need": "조언자 — 권위를 인물의 입으로",
+    "line": "집주인분이 요즘 칠해서 가리는 제품 있다더라고요.",
+    "ids": [
+     "s14",
+     "s41"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "reveal",
+    "need": "정체 공개 — '바로 ~예요' 한 줄",
+    "line": "이게 바로 창에 롤러로 바르는 젖빛 페인트예요.",
+    "ids": [
+     "s40",
+     "s43"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "howto",
+    "need": "쓰는 동작 — 딱 1줄",
+    "line": "테이프 두르고 롤러로 쓱 밀어 칠해주기만 하면",
+    "ids": [
+     "s03",
+     "s22"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "effect",
+    "need": "와우 — 비교·감각·주변 반응",
+    "line": "시트지처럼 울지 않고 우유처럼 은은하게 가려져요.",
+    "ids": [
+     "s23",
+     "s50"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "extra",
+    "need": "심지어 — 다른 축의 장점",
+    "line": "심지어 나중에는 손으로 한 번에 깔끔히 떼어져요.",
+    "ids": [
+     "s04",
+     "s11"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "end",
+    "need": "닫기 — 첫 줄 그 사람으로 돌아와 비틀기",
+    "line": "집주인분은 진짜 비싼 유리를 새로 낀 줄 아시네요.",
+    "ids": [
+     "s28",
+     "s33"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "cta",
+    "need": "댓글 키워드(인스타판만)",
+    "line": "사생활 지키고 싶으시면 댓글에 페인트 남겨주세요",
+    "ids": [
+     "s29",
+     "s34"
+    ],
+    "weak": "",
+    "cta_mark": true
+   }
+  ],
+  "check": [
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.1,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.4,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.9,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.7,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.6,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.9,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.9,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.0,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.7,
+    "short": false
+   }
+  ],
+  "fixed": [],
+  "left_flags": {},
+  "star_missing": [],
+  "role_fixed": [],
+  "role_left": [],
+  "extra": [],
+  "extra_missing": [],
+  "sig_key": "test:g:hdnA",
+  "sig_yt": false,
+  "auth": [
+   null,
+   null
+  ],
+  "guide": {
+   "style": "A",
+   "mold": "A4",
+   "tries": 2,
+   "left": [
+    "지침서·참고 대본과 8자 이상 같음: '테이프두르고롤러…'"
+   ],
+   "gate": "",
+   "analysis": "집주인과의 전셋집 사정 이슈로 시작해 젖빛 유리 페인트의 손쉬운 시공성, 떼어낼 수 있는 장점, 감각적 시각 효과를 입증하고 집주인의 반응으로 비틀어 마무리함.",
+   "self_check": "A4 틀 준수, 인물 반영, 정체 4번째 줄 공개, 사용법 1줄, 비교 및 감각 묘사 포함, 176자 8줄 및 제약 조건 통과"
+  }
+ },
+ "g:hdnB": {
+  "names": [
+   "두유노 체험형(지침서)"
+  ],
+  "pan": "",
+  "first_line_style": "건축 일하는 삼촌 집 놀러 갔다가 창 보고 깜짝 놀랐어요 — 정보형 소재 관문: 화면 설명에 만든 사람·계기·사건 사실이 2개 미만이라 체험형으로 썼어요 · 검수 남은 문제: 지침서·참고 대본과 8자 이상 같음: '보고깜짝놀랐어요…'",
+  "slots": [
+   {
+    "slot": "hook",
+    "need": "결과·오해로 여는 첫 줄",
+    "line": "건축 일하는 삼촌 집 놀러 갔다가 창 보고 깜짝 놀랐어요",
+    "ids": [
+     "s15",
+     "s16"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "situation",
+    "need": "사건 펼치기 — 언제·누가·어디서(정체는 아직)",
+    "line": "창 너머가 훤히 보이는 위치라 늘 막아두고 사셨거든요",
+    "ids": [
+     "s18",
+     "s19"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "pain",
+    "need": "불편·사정",
+    "line": "통유리를 젖빛으로 바꾸려니 비용이 너무 든다더라고요",
+    "ids": [
+     "s42",
+     "s17"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "reveal",
+    "need": "정체 공개 — '바로 ~예요' 한 줄",
+    "line": "근데 이 칠하는 젖빛 액상을 창에 바르고 계셨어요",
+    "ids": [
+     "s01",
+     "s02"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "howto",
+    "need": "쓰는 동작 — 딱 1줄",
+    "line": "롤러로 쓱 밀어주면 금세 완성이더라고요",
+    "ids": [
+     "s03",
+     "s22"
+    ],
+    "weak": "",
+    "line_before": "동봉된 롤러로 쓱 밀어주면 금세 완성이더라고요",
+    "fixed_why": "화면에 롤러 사용 모습만 있고 동봉 여부는 나오지 않습니다."
+   },
+   {
+    "slot": "effect",
+    "need": "와우 — 비교·감각·주변 반응",
+    "line": "따뜻한 밀크빛으로 변해요",
+    "ids": [
+     "s25",
+     "s26"
+    ],
+    "weak": "",
+    "line_before": "시트지와 달리 기포 없이 따뜻한 밀크빛으로 변해요",
+    "fixed_why": "화면 설명에 시트지 비교나 기포 방지 기능에 대한 내용이 없습니다."
+   },
+   {
+    "slot": "result",
+    "need": "결과 — 공간·생활 변화",
+    "line": "외부 시선은 가려주면서 환한 채광은 훌륭하게 유지돼요",
+    "ids": [
+     "s28",
+     "s29"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "end",
+    "need": "닫기 — 첫 줄 그 사람으로 돌아와 비틀기",
+    "line": "삼촌은 비싼 특수 유리 주문한 줄 알고 칭찬하더라고요",
+    "ids": [
+     "s33",
+     "s34"
+    ],
+    "weak": ""
+   },
+   {
+    "slot": "cta",
+    "need": "댓글 키워드(인스타판만)",
+    "line": "사생활 보호하고 싶으시면 댓글에 창문 남겨주세요",
+    "ids": [
+     "s35",
+     "s36"
+    ],
+    "weak": "",
+    "cta_mark": true
+   }
+  ],
+  "check": [
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.4,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.1,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.0,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.9,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.0,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 1.9,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.1,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 4.1,
+    "short": false
+   },
+   {
+    "bad_ids": [],
+    "dup_ids": [],
+    "have": 4.0,
+    "need": 3.7,
+    "short": false
+   }
+  ],
+  "fixed": [
+   4,
+   5
+  ],
+  "left_flags": {},
+  "star_missing": [],
+  "role_fixed": [],
+  "role_left": [],
+  "extra": [],
+  "extra_missing": [],
+  "sig_key": "test:g:hdnB",
+  "sig_yt": false,
+  "auth": [
+   null,
+   null
+  ],
+  "guide": {
+   "style": "A",
+   "mold": "A1",
+   "tries": 2,
+   "left": [
+    "지침서·참고 대본과 8자 이상 같음: '보고깜짝놀랐어요…'"
+   ],
+   "gate": "정보형 소재 관문: 화면 설명에 만든 사람·계기·사건 사실이 2개 미만이라 체험형으로 썼어요",
+   "analysis": "건축 일하는 삼촌을 사건 주인공으로 설정하여 젖빛 액상 페인트의 시공 편의성과 차단 효과를 증명하는 A1 틀 기반 체험형 대본입니다.",
+   "self_check": "공백 제외 163자(140~190자 충족), 8칸+CTA 1칸, 8자 이상 동일 문구 없음, 영상 조각 시간 공식 및 중복 없음 검수 완료"
+  }
+ }
+}

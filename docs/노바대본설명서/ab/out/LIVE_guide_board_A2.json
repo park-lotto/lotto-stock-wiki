@@ -1,0 +1,196 @@
+{
+ "names": [
+  "두유노 체험형(지침서)"
+ ],
+ "pan": "",
+ "first_line_style": "저희 아내가 창문에 이런 걸 해놨는데 보는 사람마다 깜짝 놀라더라고요",
+ "slots": [
+  {
+   "slot": "hook",
+   "need": "결과·오해로 여는 첫 줄",
+   "line": "저희 아내가 창문에 이런 걸 해놨는데 보는 사람마다 깜짝 놀라더라고요",
+   "ids": [
+    "s28",
+    "s29",
+    "s31"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "situation",
+   "need": "사건 펼치기 — 언제·누가·어디서(정체는 아직)",
+   "line": "얼마 전에 놀러 온 친구가 유리 새로 바꿨냐고 묻는 거예요",
+   "ids": [
+    "s15",
+    "s16",
+    "s19"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "pain",
+   "need": "불편·사정",
+   "line": "이웃집과 너무 가까워서 매번 커튼 치는 게 답답했거든요",
+   "ids": [
+    "s17",
+    "s18"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "reveal",
+   "need": "정체 공개 — '바로 ~예요' 한 줄",
+   "line": "근데 이건 쓱 칠해주면 젖빛으로 바뀌는 페인트예요",
+   "ids": [
+    "s14",
+    "s40",
+    "s43"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "howto",
+   "need": "쓰는 동작 — 딱 1줄",
+   "line": "테이프 붙이고 롤러로 밀면 금방 가려지더라고요",
+   "ids": [
+    "s20",
+    "s22",
+    "s25"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "effect",
+   "need": "와우 — 비교·감각·주변 반응",
+   "line": "은은하게 빛만 환하게 들어와요",
+   "ids": [
+    "s26",
+    "s38",
+    "s39"
+   ],
+   "weak": "",
+   "line_before": "시트지와 달리 기포 없이 은은하게 빛만 환하게 들어와요",
+   "fixed_why": "화면 설명에 시트지나 기포에 대한 내용이 없는데 제품 기능 비교로 지어내었습니다."
+  },
+  {
+   "slot": "extra",
+   "need": "심지어 — 다른 축의 장점",
+   "line": "심지어 나중에 알코올을 뿌려 긁어내면 싹 지워져요",
+   "ids": [
+    "s10",
+    "s11",
+    "s12"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "end",
+   "need": "닫기 — 첫 줄 그 사람으로 돌아와 비틀기",
+   "line": "친구는 아직도 돈 들여 특수 유리를 깐 줄 알더라고요",
+   "ids": [
+    "s36",
+    "s50"
+   ],
+   "weak": ""
+  },
+  {
+   "slot": "cta",
+   "need": "댓글 키워드(인스타판만)",
+   "line": "욕실 사생활 가리고 싶으시면 댓글에 페인트 남겨주세요",
+   "ids": [
+    "s09"
+   ],
+   "weak": "",
+   "cta_mark": true
+  }
+ ],
+ "check": [
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 5.4,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 4.6,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 4.0,
+   "need": 4.3,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 3.9,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 3.6,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 2.3,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 6.0,
+   "need": 3.9,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 4.0,
+   "need": 4.1,
+   "short": false
+  },
+  {
+   "bad_ids": [],
+   "dup_ids": [],
+   "have": 2.0,
+   "need": 4.1,
+   "short": true
+  }
+ ],
+ "fixed": [
+  5
+ ],
+ "left_flags": {},
+ "star_missing": [],
+ "role_fixed": [],
+ "role_left": [],
+ "extra": [],
+ "extra_missing": [],
+ "sig_key": "test2",
+ "sig_yt": false,
+ "auth": [
+  null,
+  null
+ ],
+ "guide": {
+  "style": "A",
+  "mold": "A2",
+  "tries": 2,
+  "left": [],
+  "gate": "",
+  "analysis": "체험형 A2 첫 줄 틀을 적용하여 가족의 행동으로 유발된 지인의 오해 사건을 다루었습니다. 화면 설명에 기반한 젖빛 페인트 사용법과 감각 비유, 스크래퍼 제거 장점을 182자(8칸) 본문으로 작성했습니다.",
+  "self_check": "A2 틀 사용, 본문 182자 8칸, 베끼기 및 금지 낱말 없음, 조각 중복 없이 시간조건 충족 검수 완료."
+ }
+}

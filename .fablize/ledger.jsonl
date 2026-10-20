@@ -51,3 +51,9 @@
 {"ts": "2026-10-01T15:33:35.052788+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-10-01T15:33:35.233353+00:00", "event": "story_started", "id": "G003", "title": "기존실패분류"}
 {"ts": "2026-10-01T15:33:56.005238+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "단위 2갈래 + 실제 재실행", "verify_cmd": "py -m pytest shopping_shorts/tests/test_control_repair.py -q", "verify_evidence": "9 passed, 1 warning in 1.70s; _rerun_on_main 실제 실행 104초로 test_auto_deploy_pending을 origin/main 기존 실패로 분류"}
+{"ts": "2026-10-20T01:27:35.364131+00:00", "event": "plan_created", "brief": "대본 칼카피 엔진(tools/script_calcopy) - 두유노홈디노 600편", "count": 5}
+{"ts": "2026-10-20T06:04:42.838633+00:00", "event": "plan_created", "brief": "숏템메이커 라이브: 두유노 지침서 작가(버텍스) + 자동 검수 + 1회 재작성", "count": 5}
+{"ts": "2026-10-20T06:09:55.636985+00:00", "event": "story_started", "id": "G001", "title": "작가"}
+{"ts": "2026-10-20T06:09:55.753715+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "guide_writer.py + guides/ + storyboard._board_guide/families(guide)/make_boards g: + app 입구 3곳", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-20T06:09:55.876079+00:00", "event": "story_started", "id": "G002", "title": "검수"}
+{"ts": "2026-10-20T06:09:56.000274+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "check()·write() 1회 재작성 — test_guide_writer 5 passed, 회귀 78 passed", "verify_cmd": "", "verify_evidence": ""}

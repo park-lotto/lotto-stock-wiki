@@ -17142,6 +17142,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 지침서 작가(관제 241, 2026-10-20) — 2단계 스토리보드에 '두유노 체험형·정보형(지침서)' 스타일. 버텍스가 쓰고 코드가 검수·1회 재작성. ""끔 · "admin" · "11,42" · "1" 전체
+                       "guide_writer_enabled",
                        # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체
                        "cardnews_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
@@ -22529,7 +22531,8 @@ def api_storyboard_get(request: Request, job_id: str):
                                "seed": _sb.is_seed_source(ex)}
     _sb_expire(job_id)
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk not in ("t0", "gen", "timed_out")} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
-    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks,
+    _guide_on = _setting_gate(Store(DB_PATH), "guide_writer_enabled", getattr(request.state, "customer_id", 0))
+    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH, guide=_guide_on), "tasks": tasks,
             "min_clip": _sb._min_clip(),
             "role_ko": _sb.ROLE_KO,   # 칸 이름 한국어 — 주인 storyboard.ROLE_KO(관제 215)
             # 지금 재료 지문 — 보드에 찍힌 mat_sig(만든 때의 재료)와 화면이 견줘 '예전 재료로 만든 보드'를 가른다(판정은 storyboard.mat_sig 한 곳)
@@ -22622,7 +22625,10 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     _cid = getattr(request.state, "customer_id", 0)
     _use_seed = body.get("use_seed") is True               # 씨앗 영상도 2단계에 배치(관제 161)
+    _guide_on = _setting_gate(Store(DB_PATH), "guide_writer_enabled", _cid)    # 지침서 작가 스타일('g:…')은 스위치 켠 계정만 — 목록(families)과 같은 스위치
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
+        if k.startswith("g:") and not _guide_on:
+            continue
         _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex,
                                                                                          use_seed=_use_seed).get(k)))
     return {"ok": True}

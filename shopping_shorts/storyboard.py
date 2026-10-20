@@ -1113,6 +1113,46 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
             "sig_key": key, "sig_yt": yt, "auth": [n3.get("auth"), n4.get("auth")]}
 
 
+def _board_guide(key, r1, groups_txt, star, segs, texts, roles_pick="", jkey="", platform="ig"):
+    """지침서 작가 보드(guide_writer) — 채널 지침서를 입혀 버텍스가 쓰고 코드가 검수·1회 재작성한다(2026-10-20 사장님).
+    결과 모양은 _board 와 같다(slots[slot·line·ids·need] · check · fixed …) — 3단계·렌더·캡컷이 같은 길로 받는다.
+    신호어(apply_signals)는 붙이지 않는다 — 연결어는 지침서가 정한다(근데·특히·심지어)."""
+    from shopping_shorts import guide_writer as _gw
+    n3, n4 = {}, {}
+    scene_text = " ".join(texts.get(c, "") for c in segs)
+    r3, left, style, gate_note = _gw.write(lambda p, s: sg._call_json(p, s, note=n3, vertex=True), key, r1.get("kind") or "", groups_txt,
+                                           r1.get("missing") or [], star, roles_pick, platform=platform, scene_text=scene_text, segs=segs)
+    names = dict((s[0], s[1]) for s in _gw.SLOTS[style])
+    slots = []
+    for sl in r3.get("slots") or []:
+        ids = [c for c in (sl.get("ids") or []) if c in segs]
+        slots.append({"slot": str(sl.get("slot") or "free"), "need": names.get(str(sl.get("slot") or ""), ""), "line": str(sl.get("line") or ""),
+                      "ids": ids, "weak": str(sl.get("weak") or ""), **({"cta_mark": True} if sl.get("slot") == "cta" else {})})
+    flags = _code_flags(slots, lambda c: texts.get(c, ""))
+    block = "\n".join("칸 %d [%s — %s] 문장: %s\n   화면: %s" % (i, sl.get("slot"), sl.get("need") or "", sl.get("line"),
+                                                       " / ".join(texts.get(c, "?") for c in sl.get("ids") or [])) for i, sl in enumerate(slots))
+    r4 = sg._call_json(P4 % (json.dumps({str(k): v for k, v in flags.items()}, ensure_ascii=False), block), S4, note=n4, vertex=True) or {}
+    fixed = []
+    for fx in r4.get("fix") or []:
+        i = fx.get("i")
+        fl = re.sub(r"^\s*(칸\s*\d+\s*)?\[[^\]]*\]\s*(문장\s*:\s*)?", "", str(fx.get("line") or "")).strip()
+        if isinstance(i, int) and 0 <= i < len(slots) and fl and not _same_line(fl, slots[i].get("line")):
+            slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fl, fx.get("why") or ""
+            fixed.append(i)
+    check = slot_checks(slots, segs)
+    used = {c for sl in slots for c in (sl.get("ids") or [])}
+    role_fixed, role_left = _apply_role_picks(slots, roles_pick)
+    meta = _gw.STYLES["g:hdnA" if style == "A" else key]
+    style_line = r3.get("first_line_style") or ""
+    note = " · ".join(x for x in [gate_note, ("검수 남은 문제: " + " / ".join(left)) if left else ""] if x)
+    return {"names": [meta["name"]], "pan": "", "first_line_style": (style_line + (" — " + note if note else "")).strip(" —"), "slots": slots, "check": check,
+            "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
+            "star_missing": [c for c in star if c not in used], "role_fixed": role_fixed, "role_left": role_left, "extra": [], "extra_missing": [],
+            "sig_key": jkey, "sig_yt": platform != "ig", "auth": [n3.get("auth"), n4.get("auth")],
+            "guide": {"style": style, "mold": r3.get("mold") or "", "tries": r3.get("guide_tries"), "left": left, "gate": gate_note,
+                      "analysis": (r3.get("analysis") or "")[:600], "self_check": r3.get("check") or ""}}
+
+
 def inventory(db_path, jid, star_s="", role_s="", ex=None):
     """① 장면 목록 묶기 + ② 스타일 추천(3.6 2번). 결과는 data/storyboard/<작업>.json — 스토리보드 만들기가 이어 쓴다."""
     db = _ro(db_path)
@@ -1199,6 +1239,10 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             creative = _bk.parts_block(Store(db_path))
             out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","), prev=prev_s.split(","), key="%s:auto" % jid)
             out["auto"]["names"] = ["AI 자동"]
+        elif str(k).startswith("g:"):      # 지침서 작가(guide_writer) — 스위치 guide_writer_enabled 는 app 입구가 본다
+            from shopping_shorts import guide_writer as _gw
+            if str(k) in _gw.STYLES:
+                out[str(k)] = _board_guide(str(k), r1, groups_txt, star, segs, texts, roles_pick=roles_txt, jkey="%s:%s" % (jid, k))
         else:
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
@@ -1213,10 +1257,18 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     return out
 
 
-def families(db_path):
-    """[화면용] 스타일 카드 — 칸 구조가 같은 스타일을 한 카드로. 플랫폼·맞는 종류·첫 줄 틀들·칸 구조."""
+def families(db_path, guide=False):
+    """[화면용] 스타일 카드 — 칸 구조가 같은 스타일을 한 카드로. 플랫폼·맞는 종류·첫 줄 틀들·칸 구조.
+    guide=True(스위치 guide_writer_enabled 켠 계정)면 지침서 작가 스타일 카드를 앞에 붙인다 — 카드 id 는 'g:hdnA' 처럼 글자."""
     db = _ro(db_path)
     out = []
+    if guide:
+        from shopping_shorts import guide_writer as _gw
+        for gk, m in _gw.STYLES.items():
+            sl = [s for s in _gw.SLOTS[m["style"]] if s[0] != "cta"]
+            out.append({"id": gk, "names": [m["name"]], "yt": False, "fit": [], "guide": True,
+                        "first": ["지침서 첫 줄 틀 사전에서 고름"], "roles": [s[0] for s in sl], "chain": [s[1] for s in sl],
+                        "arc": "", "sit": "채널 600편 칼카피 지침서로 버텍스가 쓰고 코드가 검수(걸리면 1번 다시)"})
     for n, f, _ in _families(db):
         first = f["tpl"].get((f["roles"] or ["hook"])[0]) or []
         out.append({"id": n, "names": f["names"], "yt": any(str(x).startswith("유튜브") for x in f["names"]) or f["roles"][:1] == ["title"],
