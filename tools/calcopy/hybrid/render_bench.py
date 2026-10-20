@@ -460,9 +460,17 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
 
 
 def loud(src: Path, dst: Path, L: dict):
-    """2단 loudnorm(측정 → 선형 맞춤) — 판 설정 loudness(−14 LUFS · TP)."""
+    """2단 loudnorm(측정 → 선형 맞춤) — 판 설정 loudness(−14 LUFS · TP).
+    올릴 양만큼 최고점이 TP 를 넘으면 ffmpeg 가 선형을 버리고 동적으로 가 목표에 못 미친다(김나영 꿀템노트판 −21.6/−0.8 → −15.2).
+    그때는 먼저 올리고 리미터로 최고점을 눌러 둔 뒤 선형 맞춤."""
     import json as _j
     I, TP = L["lufs"], L["tp"]
+    pi, ptp = lufs(src)
+    if ptp + (I - pi) > TP:
+        pre = Path(dst).with_name(Path(dst).stem + "_lim.wav")
+        run(["ffmpeg", "-y", "-v", "error", "-i", src, "-af",
+             f"volume={I - pi:.2f}dB,alimiter=limit={10 ** ((TP - 1.0) / 20):.4f}:attack=2:release=50:level=disabled", "-ar", SR, pre])
+        src = pre
     m = run(["ffmpeg", "-hide_banner", "-i", src, "-af", f"loudnorm=I={I}:TP={TP}:LRA=11:print_format=json", "-f", "null", "-"], check=False).stderr
     j = _j.loads(m[m.rindex("{"):m.rindex("}") + 1])
     af = (f"loudnorm=I={I}:TP={TP}:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:"
