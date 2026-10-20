@@ -355,8 +355,10 @@ def cmd_run(n: int):
         for _ in range(n):
             L = load()
             if L.get("channel_queue"):   # 새 한국 채널이 나오면 그 채널 상위 영상 분류부터(사장님 10-21) — 대기열은 조회수 순으로 다시 선다
-                cq = L.pop("channel_queue"); save(L)
-                cmd_channel(cq, queue_top=100000)
+                cq = list(L["channel_queue"])   # 끝난 뒤에 지운다 — 분류 중 죽으면 다음 바퀴가 이어 한다(10-21 620편 채널 유실)
+                for cid in cq:
+                    cmd_channel([cid], queue_top=100000)
+                    L = load(); L["channel_queue"] = [c for c in L.get("channel_queue", []) if c != cid]; save(L)
                 L = load()
             L["queue"] = [x for x in L["queue"] if f"yt:{(vkey(x) or ('', ''))[1]}" not in L["done"]]
             if not L["queue"]:
@@ -417,15 +419,16 @@ def classify(titles: list[str], batch: int = 150, log=print) -> list[dict]:
 
     def one(ix):
         body = "\n".join(f"{i}. {titles[i]}" for i in ix)
-        for _ in range(3):
+        for k in range(5):
             out, err = CC.ask([], CAT_PROMPT + body, tag="of_cat", model="haiku")
             got = {r.get("i"): r for r in (out or {}).get("r", []) if isinstance(r, dict)}
             if all(i in got for i in ix):
                 return got
             log(f"  분류 다시({len(got)}/{len(ix)}) {err or ''}")
+            time.sleep(10 * (k + 1))   # 10-21 claude -p 가 동시에 뜰 때 1~2초 만에 rc=0xC0000409 로 죽음 — 쉬었다 다시
         return got
     res = {}
-    with ThreadPoolExecutor(4) as ex:
+    with ThreadPoolExecutor(2) as ex:
         for g in ex.map(one, chunks):
             res.update(g)
     out = []
