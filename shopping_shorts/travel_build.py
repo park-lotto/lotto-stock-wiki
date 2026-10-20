@@ -825,3 +825,78 @@ def download(url, out_path):
         raise RuntimeError("사진 받기 실패 %s %s" % (r.status_code, url))
     Path(out_path).write_bytes(r.content)
     return str(out_path)
+
+
+# ── 히트작 틀 옮기기(2026-10-20) ──────────────────────────────────────────────────
+# 사장님 확정 방식(2026-09-19 "대본 = 히트작 한 편 통째가 틀")을 여행에 쓴다.
+# 왜: 채점자 보정(tools/travel/judge_calibrate.py) 결과 우리 채점 기준은 터진 릴스(평균 25.2/50)와
+#     안 터진 릴스(24.0)를 못 가르고 우리 대본(33.5)을 더 높게 줬다 — 규칙을 쌓아 점수를 올리는 길은 품질 잣대가 아니다.
+#     그래서 실제로 터진 원문 한 편의 문장 순서·연결어·어미·첫 줄을 그대로 쓰고, 물건 이야기만 숙소 사실로 바꾼다.
+TRAVEL_SEEDS = [   # 대본창고(서버 reference.db script_extracts) 원문 — 숙소 이야기로 옮기기 좋은 결
+    {"sc": "DR35q8WE56m", "views": 6312972, "comments": 43642, "kind": "혼남형",
+     "text": "이것 때문에 시어머니한테 욕 바가지로 먹을 뻔했어요. 얼마 전에 시어머니가 집에 놀러 오셨는데 화장실 다녀오시더니 이게 뭐냐고 "
+             "물어보시는 거예요. 샤워할 때 속옷이나 양말 같은 거 가볍게 세탁하는 초소형 미니 세탁기라고 말씀드렸더니 표정이 싹 굳으시면서 "
+             "매번 속옷이나 양말은 손빨래하고 있었다고 왜 이런 게 있다고 말을 안 해줬냐 하시더라고요. 죄송하다고 하고 하나 바로 주문해 "
+             "드렸는데 한 번 써보시더니 방수도 되고 속옷도 엄청 잘 빨린다며 좋아하시는 거 있죠? 그래서 저희 친정엄마 것도 하나 더 "
+             "주문했는데 세탁 남겨주세요."},
+    {"sc": "DSw1z7WE57o", "views": 5361981, "comments": 4804, "kind": "손해 회피형",
+     "text": "이거 몰라서 500만 원 날릴 뻔했어요 부모님이 단독주택 살고 있는데 옥상에 물이 새는 것 같다고 하길래 업체 불러야겠다 하고 "
+             "있었거든요 근데 남편이 잠깐만 있어 봐 하면서 전화를 걸더라구요 다음 날 남편이 뭘 가져오더니 옥상에 슥슥 바르기 시작했는데 "
+             "와 진짜 신기하게도 완벽하게 방수 보수가 된 거 있죠? 알고 보니까 회사 인테리어 업체 사장님이 직접 할 거면 이거 써 보라고 "
+             "추천해 줬다는데 탄성 때문에 갈라짐도 없고 내구성도 좋아서 … 업체 부르면 최소 500만 원부터 시작하는데 엄마가 사위 하나는 "
+             "진짜 잘 얻었다고 하는 거 있죠? 누구나 어렵지 않게 셀프로 할 수 있으니까 꼭 남겨두세요"},
+    {"sc": "DTL9hlqE_Iu", "views": 3477254, "comments": 37851, "kind": "방문 충격형",
+     "text": "시댁갔다가 진짜 충격먹었어요 오래된 아파트인데도 욕실이 늘 새 집처럼 반짝이길래 어머니 비법이 뭐예요? 하고 물어봤더니 "
+             "미국사시는 이모님이 추천해준 이 세정제를 쓰신다는거에요 하나 챙겨주시길래 집와서 바로 써봤는데 와 더러운 줄눈에 뿌리고 슥 "
+             "밀어주니까 절대 안 지던 묵은때가 싹 지워지면서 시커먼 줄눈 색이 하얗게 사라지는거 있죠? 심지어 욕실부스 물 때 자국도 싹 "
+             "지워지는데 힘 줘서 닦을 필요없이 문질러만 주면 완전 깨끗해져요 알고보니 이게 미국에서 유명한 국민템이라 하던데 지워 남겨주세요"},
+    {"sc": "DajU5nWT_oh", "views": 686234, "comments": 34931, "kind": "후회형",
+     "text": "저 이거 사고 진짜 후회했어요 얼마 전에 일 때문에 일본에 다녀와야 했는데 친구가 이 가방 좀 꼭 사다달라고 부탁을 하길래 "
+             "별생각 없이 하나 사왔거든요? 근데 이게 쓱쓱 접으면 손바닥만 하게 작아지는데 펼치면 노트북에 아이패드까지 들어갈 정도로 "
+             "수납력 짱짱하고 완전방수소재라 비오는 날에도 물을 다 튕겨내니까 장마철 내내 가방 젖을일이 없겠더라구요 심지어 가방 자체가 "
+             "진짜 가벼워서 여행갈 때 들기도 딱 좋겠길래 내 것도 하나 더 사올 걸... 후회하면서 밤새 국내 판매처를 찾아봤는데 드디어 "
+             "구매 가능한 곳을 발견했어요 궁금하신 분들은 나도 남겨주세요"},
+]
+
+_TRANSPLANT_PROMPT = (
+    "인스타에서 실제로 크게 터진 쇼핑 릴스 대본 한 편을 **틀로 통째 옮겨** 여행 숙소 대본을 쓴다.\n"
+    "[원문 — 조회 %s회·댓글 %s개]\n%s\n\n"
+    "[옮기는 법 — 반드시]\n"
+    "1. 원문의 문장 순서·문장 수·연결어('~는데/~더니/~길래/~거 있죠?/알고 보니/심지어')·어미·말버릇을 그대로 둔다. "
+    "바꾸는 것은 물건 이야기(물건 이름·쓰는 법·효과)뿐 — 그 자리에 이 숙소의 사실을 넣는다.\n"
+    "2. 첫 줄은 원문 글자를 거의 그대로 두고 빈칸만 바꾼다(예: '이것 때문에 시어머니한테 욕 바가지로 먹을 뻔했어요' → "
+    "'여기 때문에 시어머니한테 욕 바가지로 먹을 뻔했어요'). 인물(시어머니·남편·친정엄마)·사건·반응·결말 꼴도 원문을 따른다.\n"
+    "3. 숙소 사실은 사진 7장(photo_1~7)과 아래 [숙소 사실]에 있는 것만. 지어내지 마라. 숙소 이름·지역명·숙소 가격 숫자는 쓰지 않는다.\n"
+    "4. 마지막 댓글 줄도 원문 꼴(‘○○ 남겨주세요’) 그대로, 키워드만 이 이야기의 말로.\n"
+    "5. 길이는 원문의 85~100%%(원문 %d자). 쓴 다음 7조각(lines)으로 나누고, 조각마다 맞는 사진 번호(order, 1~7 한 번씩)를 단다. "
+    "문장이 끝나는 조각에만 마침표·물음표.\n\n[숙소 사실]\n%s\n\n"
+    "JSON: {\"story\": \"옮긴 대본 전체\", \"lines\": [\"조각1\", ...], \"order\": [사진번호 7개]}")
+
+
+def write_script_transplant(picks, detail, seeds=None, model="opus"):
+    """히트작 원문마다 한 편씩 옮겨 쓴다 → 금지 검사(이름·지역·가격) + 사진·사실 대조(지적만, 점수로 고르지 않는다).
+    반환: {"versions": [{type, seed, lines, order, story}], "issues": {type: [...]}} — 고르는 건 사람(검토 화면)."""
+    seeds = seeds or TRAVEL_SEEDS
+    facts = story_facts_text(detail)
+    versions, issues = [], {}
+    for sd in seeds:
+        got = claude_call([q["path"] for q in picks],
+                          _TRANSPLANT_PROMPT % ("{:,}".format(sd["views"]), "{:,}".format(sd["comments"]), sd["text"],
+                                                len(sd["text"]), facts), model=model)
+        lines = got.get("lines")
+        if not (isinstance(lines, list) and len(lines) == len(picks)):
+            continue
+        o = got.get("order")
+        o = o if isinstance(o, list) and sorted(int(x) for x in o) == list(range(1, len(picks) + 1)) else list(range(1, len(picks) + 1))
+        v = {"type": "%s(%s)" % (sd["kind"], sd["sc"]), "seed": sd["sc"], "seed_text": sd["text"], "lines": lines, "order": o,
+             "story": got.get("story") or " ".join(lines)}
+        hard = [x for x in script_issues(lines, detail, len(picks)) if not x.startswith(("길이", "가 본 척", "말투"))]
+        n = len(" ".join(lines))
+        if not (0.8 * len(sd["text"]) <= n <= 1.05 * len(sd["text"])):
+            hard.append("길이 %d자 — 원문 %d자의 85~100%%를 벗어남" % (n, len(sd["text"])))
+        sc = judge_scripts([v], ordered_picks(picks, v), style="여행 숙소 인스타", facts=facts).get(v["type"]) or {}
+        hard += ["사진·사실 대조: " + b for b in sc.get("bad_lines") or []]
+        versions.append(v)
+        issues[v["type"]] = hard
+    return {"versions": versions, "issues": issues, "writer": "transplant-" + model,
+            "chosen": versions[0] if versions else None, "scores": {}}

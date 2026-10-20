@@ -127,8 +127,10 @@ def review_html(state, work):
     chosen = ((state["script"] or {}).get("chosen") or {}).get("type")
     rows = ""
     for i, p in enumerate(picks):
-        cells = "".join("<td class=sc>%s</td>" % e((v.get("lines") or [""] * 7)[i] if i < len(v.get("lines") or []) else "")
-                        for v in versions)
+        # 안마다 사진 순서(order)가 다르다 — 그 줄 위에 실제로 깔릴 사진을 같이 보인다(ordered_picks 한 곳)
+        cells = "".join("<td class=sc><img src='%s' style='width:96px;display:block;margin-bottom:4px'>%s</td>" % (
+            _thumb_b64(tb.ordered_picks(picks, v)[i]["path"], 120), e((v.get("lines") or [""] * 7)[i]))
+            if i < len(v.get("lines") or []) else "<td class=sc></td>" for v in versions)
         rows += ("<tr><td class=n>%d</td><td><img src='%s'><div class=s>후보 %d · %s · 화려함 %d</div></td>"
                  "<td><img src='%s' class=v><div class=s>%s</div></td><td class=d>%s<div class=s>카메라: %s</div></td>%s</tr>"
                  % (i + 1, _thumb_b64(p["path"]), p["no"], e(KO.get(p["kind"], p["kind"])), p["wow"],
@@ -138,8 +140,11 @@ def review_html(state, work):
         "★추천" if v.get("type") == chosen else "", e(v.get("type", "")), len(" ".join(v.get("lines") or [])),
         len(" ".join(v.get("lines") or [])) / tb.CHARS_PER_SEC, len(issues.get(v.get("type", ""), [])))
         for v in versions)
-    notes = "".join("<h3>%s</h3><ul>%s</ul>" % (e(v.get("type", "")), "".join("<li>%s</li>" % e(x) for x in issues.get(v.get("type", ""), []))
-                                                  or "<li>지적 없음</li>") for v in versions)
+    notes = "".join("<h3>%s</h3>%s<ul>%s</ul>" % (
+        e(v.get("type", "")),
+        ("<div class=s style='background:#f3efe6;padding:8px;border-radius:6px'><b>원문(히트작)</b> %s</div>" % e(v["seed_text"]))
+        if v.get("seed_text") else "",
+        "".join("<li>%s</li>" % e(x) for x in issues.get(v.get("type", ""), [])) or "<li>지적 없음</li>") for v in versions)
     others = "".join(
         "<div class=c%s><img src='%s'><div class=s>후보 %d · %s · %d%s</div></div>" % (
             " style='opacity:.45'" if (j["has_text"] or j["has_people"]) else "", _thumb_b64(j["path"], 200), j["no"],
