@@ -1,0 +1,509 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 연예인레시피판) · 시각은 final.mp4 기준 초",
+ "pack": "recipe",
+ "rows": [
+  {
+   "line": "O1",
+   "t0": 0.0,
+   "t1": 0.52,
+   "text": "이거 엄청",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 0.52,
+   "t1": 1.44,
+   "text": "달 것 같죠?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 1.44,
+   "t1": 2.94,
+   "text": "하나도 안 달아요",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.94,
+   "t1": 5.162,
+   "text": "연예계 최강 동안 김가연이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    2.94,
+    3.02,
+    3.1,
+    3.18,
+    3.26,
+    3.34,
+    3.42,
+    3.5,
+    3.58,
+    3.66,
+    3.74
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 5.162,
+   "t1": 6.703,
+   "text": "무를 꼬들꼬들하게 만든다는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    5.162,
+    5.242,
+    5.322,
+    5.402,
+    5.482,
+    5.562,
+    5.642,
+    5.722,
+    5.802,
+    5.882,
+    5.962,
+    6.042
+   ]
+  },
+  {
+   "line": "N1",
+   "t0": 6.703,
+   "t1": 7.611,
+   "text": "비법이 있다는데..?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    6.703,
+    6.78,
+    6.857,
+    6.935,
+    7.012,
+    7.089,
+    7.166,
+    7.243,
+    7.32,
+    7.398
+   ]
+  },
+  {
+   "line": "B1",
+   "t0": 7.611,
+   "t1": 8.615,
+   "text": "저도 이거 보고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    7.611,
+    7.691,
+    7.771,
+    7.851,
+    7.931,
+    8.011
+   ]
+  },
+  {
+   "line": "B1",
+   "t0": 8.615,
+   "t1": 9.866,
+   "text": "바로 오징어젓 사다가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    8.615,
+    8.695,
+    8.775,
+    8.855,
+    8.935,
+    9.015,
+    9.095,
+    9.175,
+    9.255
+   ]
+  },
+  {
+   "line": "B1",
+   "t0": 9.866,
+   "t1": 10.818,
+   "text": "따라 해 봤는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    9.866,
+    9.946,
+    10.026,
+    10.106,
+    10.186,
+    10.266,
+    10.346
+   ]
+  },
+  {
+   "line": "B2",
+   "t0": 10.818,
+   "t1": 11.909,
+   "text": "무를 채 썰어서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    10.818,
+    10.898,
+    10.978,
+    11.058,
+    11.138,
+    11.218
+   ]
+  },
+  {
+   "line": "B2",
+   "t0": 11.909,
+   "t1": 13.142,
+   "text": "물엿에 3시간 정도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    11.909,
+    11.989,
+    12.069,
+    12.149,
+    12.229,
+    12.309,
+    12.389,
+    12.469
+   ]
+  },
+  {
+   "line": "B2",
+   "t0": 13.142,
+   "t1": 14.696,
+   "text": "절여 두는 게 핵심이더라고요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    13.142,
+    13.222,
+    13.302,
+    13.382,
+    13.462,
+    13.542,
+    13.622,
+    13.702,
+    13.782,
+    13.862,
+    13.942,
+    14.022
+   ]
+  },
+  {
+   "line": "B3",
+   "t0": 14.696,
+   "t1": 16.433,
+   "text": "근데 진짜 놀라운 건",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    14.696,
+    14.776,
+    14.856,
+    14.936,
+    15.016,
+    15.096,
+    15.176,
+    15.256
+   ]
+  },
+  {
+   "line": "B3",
+   "t0": 16.433,
+   "t1": 17.457,
+   "text": "물이 쫙 빠져서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "chars": [
+    16.433,
+    16.513,
+    16.593,
+    16.673,
+    16.753,
+    16.833
+   ]
+  },
+  {
+   "line": "B3",
+   "t0": 17.457,
+   "t1": 19.155,
+   "text": "꼭 오독오독한 장아찌 같았어요",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B4",
+   "t0": 19.155,
+   "t1": 20.379,
+   "text": "심지어 참기름은",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B4",
+   "t0": 20.379,
+   "t1": 21.714,
+   "text": "액젓이 먼저 밴 다음에",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B4",
+   "t0": 21.714,
+   "t1": 22.893,
+   "text": "넣어야 한다더라고요",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B5",
+   "t0": 22.893,
+   "t1": 24.27,
+   "text": "오징어젓은 저염으로",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B5",
+   "t0": 24.27,
+   "t1": 25.477,
+   "text": "고르면 더 좋다고",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B5",
+   "t0": 25.477,
+   "t1": 26.91,
+   "text": "김가연 씨도 그러더라고요",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B6",
+   "t0": 26.91,
+   "t1": 27.928,
+   "text": "이 반찬 영상은",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B6",
+   "t0": 27.928,
+   "t1": 29.044,
+   "text": "조회수가 70만을",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "B6",
+   "t0": 29.044,
+   "t1": 29.669,
+   "text": "넘었대요",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 29.669,
+   "t1": 30.949,
+   "text": "물기를 빼내고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 30.949,
+   "t1": 31.829,
+   "text": "그래서 얘가",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 31.829,
+   "t1": 33.167,
+   "text": "꼬들꼬들해",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.52,
+   "kind": "pop",
+   "why": "cap"
+  },
+  {
+   "t": 1.44,
+   "kind": "pop",
+   "why": "cap"
+  },
+  {
+   "t": 2.94,
+   "kind": "pop",
+   "why": "cap"
+  }
+ ],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = r5XN6Eilfxs",
+  "효과음 3발(본보기 3) [(0.52, 'cap'), (1.44, 'cap'), (2.94, 'cap')]",
+  "등장 {'cut': 16, 'typing': 11} · 강조 0/27"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "r5XN6Eilfxs",
+  "worst_slot_diff": 0.071,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "typing": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "typing": 0.57,
+     "cut": 0.43
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "typing": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "typing": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 14
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 4
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 1
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 3,
+    "ours": 3
+   }
+  }
+ }
+}
