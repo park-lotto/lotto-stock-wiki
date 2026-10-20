@@ -253,7 +253,11 @@ def run_one(L: dict, pg, url: str, log=print) -> dict:
             if not any(x["copy"] == pr["copy"] and x["origin"] == pr["origin"] for x in L["pairs"]):
                 L["pairs"].append(pr)
     # 새 한국 재편집 영상은 다음 씨앗으로(그 영상의 렌즈가 또 다른 채널을 부른다)
-    for v in same:   # 같은 영상을 쓴 한국 채널만(뉴스·주제만 비슷한 채널 빼고) = 다음에 상위 영상 분류할 채널
+    o_first = min((o["date"] for o in origins), default=None)
+    for v in same:   # 같은 영상을 쓴 한국 채널만 = 다음에 상위 영상 분류할 채널
+        # 원본보다 먼저 올린 한국 채널은 재편집이 아니다(같은 출연자의 국내 방송·공연 — 10-21 SBS 예능 2,958편·NICKY·원더매직이 들어와 대기열을 덮음)
+        if not o_first or not v.get("date") or v["date"] < o_first:
+            continue
         if v["korean"] and v["platform"] == "yt" and v.get("channel_id"):
             L.setdefault("channel_queue", [])
             if v["channel_id"] not in L["channel_queue"] and not L["channels"].get(f"yt:{v['channel_id']}", {}).get("classified"):
@@ -269,7 +273,7 @@ def run_one(L: dict, pg, url: str, log=print) -> dict:
 JUDGE_PROMPT = ("맨 위 줄(S1~S4)은 씨앗 쇼츠의 장면이다. 그 아래 번호 붙은 칸은 구글 렌즈가 찾아 준 다른 영상의 썸네일이다.\n"
                 "씨앗과 **같은 원본 영상(같은 사람·같은 장소·같은 순간을 찍은 같은 촬영분)**을 쓴 칸 번호만 고른다. "
                 "자막·제목 띠·잘림·확대·좌우반전·뉴스 화면 속 삽입이 달라도 같은 촬영분이면 같다. "
-                "주제만 비슷한 다른 사람·다른 촬영(같은 제품을 다른 사람이 씀 등)은 다르다. 썸네일이 비었거나 판단 불가면 넣지 않는다.\n"
+                "주제만 비슷한 다른 사람·다른 촬영(같은 제품을 다른 사람이 씀, 같은 출연자의 다른 무대·다른 방송 등)은 다르다. 썸네일이 비었거나 판단 불가면 넣지 않는다.\n"
                 '답 = {"same":[번호,…], "why":"한 줄"}')
 
 
