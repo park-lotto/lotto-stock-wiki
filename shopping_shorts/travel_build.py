@@ -382,8 +382,13 @@ def story_facts_text(detail, limit=2200):
         parts.append("[숙소 소개] " + f["intro"])
     for x in f.get("faq") or []:
         parts.append("[문답] %s → %s" % (x.get("q", ""), x.get("a", "")))
-    for r in f.get("reviews") or []:
-        parts.append("[실제 후기] " + r)
+    ins = (detail or {}).get("review_insights")
+    if ins:        # 후기 전부를 가른 결과(review_insights)가 있으면 그게 먼저 — 후기 몇 개보다 4천 개 요약이 정확하다
+        parts.append(insights_text(ins))
+        limit += 2500
+    else:
+        for r in f.get("reviews") or []:
+            parts.append("[실제 후기] " + r)
     return "\n".join(parts)[:limit]
 
 
@@ -873,16 +878,18 @@ _TRANSPLANT_PROMPT = (
     "JSON: {\"story\": \"옮긴 대본 전체\", \"lines\": [\"조각1\", ...], \"order\": [사진번호 7개]}")
 
 
-def write_script_transplant(picks, detail, seeds=None, model="opus"):
+def write_script_transplant(picks, detail, seeds=None, model="opus", points=None):
     """히트작 원문마다 한 편씩 옮겨 쓴다 → 금지 검사(이름·지역·가격) + 사진·사실 대조(지적만, 점수로 고르지 않는다).
     반환: {"versions": [{type, seed, lines, order, story}], "issues": {type: [...]}} — 고르는 건 사람(검토 화면)."""
     seeds = seeds or TRAVEL_SEEDS
     facts = story_facts_text(detail)
+    points = points if points is not None else extract_points(picks, detail, model=model)
+    ptxt = points_text(points)
     versions, issues = [], {}
     for sd in seeds:
         got = claude_call([q["path"] for q in picks],
                           _TRANSPLANT_PROMPT % ("{:,}".format(sd["views"]), "{:,}".format(sd["comments"]), sd["text"],
-                                                len(sd["text"]), facts), model=model)
+                                                len(sd["text"]), ptxt + "\n\n" + facts), model=model)
         lines = got.get("lines")
         if not (isinstance(lines, list) and len(lines) == len(picks)):
             continue
@@ -890,7 +897,19 @@ def write_script_transplant(picks, detail, seeds=None, model="opus"):
         o = o if isinstance(o, list) and sorted(int(x) for x in o) == list(range(1, len(picks) + 1)) else list(range(1, len(picks) + 1))
         v = {"type": "%s(%s)" % (sd["kind"], sd["sc"]), "seed": sd["sc"], "seed_text": sd["text"], "lines": lines, "order": o,
              "story": got.get("story") or " ".join(lines)}
+        miss = points_issues(lines, points)
+        if miss:     # 빠진 소구점·와우를 짚어 한 번 고쳐 쓴다(틀·인물·결말은 그대로)
+            fix = claude_call([q["path"] for q in picks],
+                              "아래 대본은 히트작 틀을 숙소로 옮긴 것이다. 틀(문장 순서·연결어·어미·첫 줄·인물·결말)은 그대로 두고 "
+                              "빠진 것을 이야기 안에 넣어 다시 써라. 길이는 원문 %d자의 85~105%% — 넣는 만큼 다른 군말을 줄여라.\n"
+                              "[빠진 것]\n%s\n\n[지금 대본 7조각]\n%s\n\n%s\n\n[숙소 사실]\n%s\n\n"
+                              "JSON: {\"lines\": [\"조각1\", ...]}"
+                              % (len(sd["text"]), "\n".join(miss), "\n".join(lines), ptxt, facts), model=model)
+            fl = fix.get("lines")
+            if isinstance(fl, list) and len(fl) == len(picks) and len(points_issues(fl, points)) < len(miss):
+                lines = fl
         hard = [x for x in script_issues(lines, detail, len(picks)) if not x.startswith(("길이", "가 본 척", "말투"))]
+        hard += points_issues(lines, points)
         n = len(" ".join(lines))
         if not (0.8 * len(sd["text"]) <= n <= 1.05 * len(sd["text"])):
             hard.append("길이 %d자 — 원문 %d자의 85~100%%를 벗어남" % (n, len(sd["text"])))
@@ -898,5 +917,130 @@ def write_script_transplant(picks, detail, seeds=None, model="opus"):
         hard += ["사진·사실 대조: " + b for b in sc.get("bad_lines") or []]
         versions.append(v)
         issues[v["type"]] = hard
-    return {"versions": versions, "issues": issues, "writer": "transplant-" + model,
+    return {"versions": versions, "issues": issues, "writer": "transplant-" + model, "points": points,
             "chosen": versions[0] if versions else None, "scores": {}}
+
+
+# ── 소구점·와우포인트(2026-10-20 사장님 "소구점 와우포인트 모두 들어가야 한다") ─────────────────────
+# 주인 = extract_points(뽑기) · points_issues(대본이 다 담았나). 작가·검사·검토 화면이 이 목록 하나를 쓴다.
+_POINTS_PROMPT = (
+    "여행 숙소 쇼츠를 만들기 전에 이 숙소의 **소구점**과 **와우포인트**를 뽑는다. 재료 = 사진 photo_1~%d(순서대로 열어 봐라) + 아래 [숙소 사실].\n"
+    "- 와우포인트 = 처음 보는 사람이 '와' 하고 멈출 것(하나뿐인·처음 보는·믿기 어려운 장면이나 사실). 2~4개, 센 순서로.\n"
+    "- 소구점 = 그래서 여기를 예약할 이유(가족·커플이 겪는 불편을 없애는 것 — 계절·아이·이동·식사·서비스). 3~5개, 중요한 순서로.\n"
+    "- 각 항목: point(한 줄, 대본에 쓸 수 있는 쉬운 말), proof(근거: '사진 3' 또는 '소개'·'문답'·'후기'), "
+    "keys(대본에 이 말 중 하나가 나오면 담은 것으로 칠 핵심어 2~4개, 짧은 명사·동사 줄기 — 예 ['온수','따뜻']).\n"
+    "- 사진에도 사실에도 없는 것은 쓰지 마라. 숙소 이름·지역명·가격 숫자는 point 에 넣지 마라.\n\n[숙소 사실]\n%s\n\n"
+    "JSON: {\"wow\": [{\"point\": \"\", \"proof\": \"\", \"keys\": []}], \"sell\": [{\"point\": \"\", \"proof\": \"\", \"keys\": []}]}")
+
+
+def extract_points(picks, detail, model="opus"):
+    """숙소 소구점·와우포인트 목록 — 대본보다 먼저 한 번 뽑는다. 반환 {"wow": [...], "sell": [...]}."""
+    got = claude_call([q["path"] for q in picks], _POINTS_PROMPT % (len(picks), story_facts_text(detail)), model=model)
+    clean = lambda xs: [x for x in (xs or []) if isinstance(x, dict) and x.get("point") and x.get("keys")]
+    return {"wow": clean(got.get("wow")), "sell": clean(got.get("sell"))}
+
+
+def points_issues(lines, points):
+    """대본(줄 목록)이 소구점·와우포인트를 다 담았나 — 핵심어(keys) 중 하나라도 나오면 담은 것. 빠진 것마다 지적 한 줄."""
+    flat = "".join(lines or []).replace(" ", "")
+    out = []
+    # 여러 포인트에 겹치는 핵심어('바다'·'무료')는 그 포인트를 담았다는 증거가 못 된다 — 빼고 잰다(실측 2026-10-20:
+    # '바다' 하나로 인피니티 풀·욕조·침대 뷰가 전부 담긴 것으로 쳐졌다)
+    allk = [str(k).replace(" ", "") for kind in ("wow", "sell") for p in (points or {}).get(kind) or [] for k in p.get("keys") or []]
+    shared = {k for k in allk if allk.count(k) > 1}
+    for kind, label in (("wow", "와우포인트"), ("sell", "소구점")):
+        for p in (points or {}).get(kind) or []:
+            keys = [str(k).replace(" ", "") for k in p.get("keys") or [] if str(k).strip()]
+            keys = [k for k in keys if k not in shared] or keys
+            if not any(k in flat for k in keys):
+                out.append("%s 빠짐: %s (근거 %s)" % (label, p["point"], p.get("proof", "")))
+    return out
+
+
+def points_text(points):
+    """작가에게 줄 목록 글 — 와우 먼저(센 순서), 그다음 소구점."""
+    rows = ["[와우포인트 — 전부 넣는다, 고조 칸('근데 여기가'·'이게 대박인 게'·'심지어')에 센 순서로]"]
+    rows += ["- %s (근거 %s)" % (p["point"], p.get("proof", "")) for p in (points or {}).get("wow") or []]
+    rows += ["[소구점 — 전부 넣는다, 인물의 불편이 사라지는 장면으로(대놓고 나열 말고)]"]
+    rows += ["- %s (근거 %s)" % (p["point"], p.get("proof", "")) for p in (points or {}).get("sell") or []]
+    return "\n".join(rows)
+
+
+# ── 후기 전부 → 꿀팁·볼거리·식사·서비스(2026-10-20 사장님 "댓글을 모두 보고 꿀팁/숙소 앞 볼것/식사메뉴나 서비스 모두 활용") ──
+# 주인 = review_insights. 1차(묶음별 뽑기)는 무료 제미나이 — 끊기면 하이쿠(사장님 허락), 합치기는 오푸스.
+# 숏폼 대본(story_facts_text)과 롱폼이 이 결과 하나를 같이 쓴다.
+REVIEW_CATS = ("꿀팁", "숙소 앞 볼거리", "식사·메뉴", "서비스", "주의할 점", "와우 순간")
+_REVIEW_MAP_SCHEMA = {
+    "type": "object",
+    "properties": {"items": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"cat": {"type": "string", "enum": list(REVIEW_CATS)},
+                       "item": {"type": "string"}, "count": {"type": "integer"}, "quote": {"type": "string"}},
+        "required": ["cat", "item", "count", "quote"]}}},
+    "required": ["items"]}
+_REVIEW_MAP_PROMPT = (
+    "아래는 한 숙소의 실제 투숙 후기 묶음이다. 다음 범주로 **구체적인 것만** 뽑아라: " + " / ".join(REVIEW_CATS) + ".\n"
+    "- 꿀팁 = 다음 손님이 알면 좋은 요령(예: 몇 층 어느 방향 방, 체크인 전 짐 맡기기, 주차 자리, 수영장 붐비는 시간).\n"
+    "- 숙소 앞 볼거리 = 걸어서·차로 가까운 해변·산책로·맛집·명소(이름이 있으면 이름).\n"
+    "- 식사·메뉴 = 조식 메뉴·식당·룸서비스·근처 먹거리. 서비스 = 직원·셔틀·어메니티·이벤트.\n"
+    "- 주의할 점 = 불편·단점(주차 협소, 소음 등). 와우 순간 = 후기 쓴 사람이 감탄한 장면.\n"
+    "- item 은 한 줄 쉬운 말, count = 이 묶음에서 같은 말을 한 후기 수, quote = 실제 후기 한 구절(30자 안).\n"
+    "- '좋아요·깨끗해요·친절해요'처럼 어디나 붙는 말은 빼라. 묶음에서 2번 이상 나온 것 위주로, 범주당 최대 8개.\n\n후기:\n%s")
+_REVIEW_REDUCE_PROMPT = (
+    "한 숙소의 후기 %d개를 묶음별로 뽑은 항목들이다(범주 | 항목 | 언급 수 | 인용). 같은 뜻을 합치고 언급 수를 더해, "
+    "범주마다 언급 많은 순으로 최대 10개를 남겨라. 범주: " + " / ".join(REVIEW_CATS) + ".\n"
+    "각 항목: item(쇼츠 대본에 바로 쓸 쉬운 한 줄), count(합친 언급 수), quote(가장 생생한 인용 하나).\n\n%s\n\n"
+    "JSON: {\"꿀팁\": [{\"item\": \"\", \"count\": 0, \"quote\": \"\"}], \"숙소 앞 볼거리\": [...], \"식사·메뉴\": [...], "
+    "\"서비스\": [...], \"주의할 점\": [...], \"와우 순간\": [...]}")
+
+
+def _review_map_call(prompt):
+    """제미나이(무료 키풀) → 끊기면 하이쿠. 둘 다 실패면 None(그 묶음만 빠진다 — 호출부가 몇 묶음 빠졌는지 센다)."""
+    try:
+        from shopping_shorts.edit_plan import _vault_call
+        got = _vault_call(prompt, _REVIEW_MAP_SCHEMA)
+        if got and got.get("items") is not None:
+            return got, "gemini"
+    except Exception:
+        pass
+    try:
+        return claude_call([], prompt + '\n\nJSON: {"items": [{"cat": "", "item": "", "count": 0, "quote": ""}]}',
+                           model="haiku"), "haiku"
+    except Exception:
+        return None, "fail"
+
+
+def review_insights(reviews, chunk_chars=24000, progress=None):
+    """후기 목록 → {범주: [{item, count, quote}]} + "_meta"(몇 개·묶음·누가 뽑았나). 1차 = 묶음별, 2차 = 오푸스 합치기."""
+    chunks, cur, n = [], [], 0
+    for r in reviews:
+        t = (r.get("content") or "").replace("\n", " ")[:900]
+        if n + len(t) > chunk_chars and cur:
+            chunks.append(cur)
+            cur, n = [], 0
+        cur.append(t)
+        n += len(t)
+    if cur:
+        chunks.append(cur)
+    rows, who = [], {"gemini": 0, "haiku": 0, "fail": 0}
+    for i, c in enumerate(chunks):
+        got, by = _review_map_call(_REVIEW_MAP_PROMPT % "\n".join("- " + x for x in c))
+        who[by] += 1
+        for it in (got or {}).get("items") or []:
+            if isinstance(it, dict) and it.get("cat") in REVIEW_CATS and it.get("item"):
+                rows.append("%s | %s | %s | %s" % (it["cat"], it["item"], it.get("count") or 1, (it.get("quote") or "")[:40]))
+        if progress:
+            progress(i + 1, len(chunks), by)
+    merged = claude_call([], _REVIEW_REDUCE_PROMPT % (len(reviews), "\n".join(rows)[:120000]), model="opus")
+    out = {c: [x for x in (merged.get(c) or []) if isinstance(x, dict) and x.get("item")] for c in REVIEW_CATS}
+    out["_meta"] = {"reviews": len(reviews), "chunks": len(chunks), "map_by": who, "rows": len(rows)}
+    return out
+
+
+def insights_text(ins, per_cat=6):
+    """작가에게 줄 후기 요약 — 범주별 언급 많은 순."""
+    rows = []
+    for c in REVIEW_CATS:
+        for x in (ins or {}).get(c, [])[:per_cat]:
+            rows.append("[후기·%s · %s명] %s — \"%s\"" % (c, x.get("count", "?"), x["item"], x.get("quote", "")))
+    return "\n".join(rows)

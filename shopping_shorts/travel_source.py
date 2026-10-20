@@ -190,6 +190,36 @@ def _yeogi_stay(pid, html=None):
     }
 
 
+def yeogi_reviews(pid, max_pages=None, delay=0.4, on_page=None):
+    """여기어때 숙소 후기 전부(2026-10-20 사장님 "댓글을 모두 보고 꿀팁·볼거리·식사·서비스 활용").
+    실측: 화면 스크립트 PDP_COMMON.REVIEW_LIST = /api/gateway/content-review/v2/<서비스>/<숙소>/reviews,
+    서비스 = s.In.STAY_DOMESTIC = "STAY_DOMESTIC"('domestic' 은 "미지원 서비스"). 한 번에 20개가 최대(size 50·100도 20).
+    robots.txt 금지 목록에 없는 경로. 쪽 사이 delay 초 쉬며 hasNext 가 False 일 때까지."""
+    from curl_cffi import requests as cr
+    url = "https://www.yeogi.com/api/gateway/content-review/v2/STAY_DOMESTIC/%s/reviews" % pid
+    out, page = [], 0
+    while max_pages is None or page < max_pages:
+        r = cr.get(url, params={"sort": "highRankingScoreFirst", "page": page, "size": 20}, impersonate="chrome",
+                   timeout=_TIMEOUT, headers={"Referer": "https://www.yeogi.com/domestic-accommodations/%s" % pid})
+        j = r.json() if r.status_code == 200 else {}
+        if j.get("code") != 200:
+            raise RuntimeError("여기어때 후기 %s쪽 실패 http %s · %s" % (page, r.status_code, (j.get("msg") or r.text[:120])))
+        d = j.get("data") or {}
+        for x in d.get("reviews") or []:
+            c = (x.get("content") or "").strip()
+            if c:
+                out.append({"id": x.get("reviewId"), "created": x.get("createdAt"), "rating": x.get("rating"),
+                            "title": x.get("title") or "", "content": c, "likes": x.get("likeCount") or 0,
+                            "best": bool(x.get("isBestReview")), "images": len(x.get("images") or [])})
+        page += 1
+        if on_page:
+            on_page(page, len(out))
+        if not d.get("hasNext"):
+            break
+        time.sleep(delay)
+    return out
+
+
 def fetch(url):
     """상세 한 건. 지원하지 않는 사이트·화면이면 ValueError(이유를 담아) — 조용히 빈 값을 돌려주지 않는다."""
     t = travel_site(url)

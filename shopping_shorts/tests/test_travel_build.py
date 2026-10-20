@@ -83,3 +83,11 @@ def test_style_hdn_endings_and_persona_allowed():
     bad = ["풀이 정말 좋네요.", "바다가 보임.", "로비 최고임.", "침대 넓음.", "정원 예쁨.", "소파 좋음.", "댓글 주세요."]
     assert [x for x in tb.script_issues(bad, {}, 7, style="두유노홈디노") if x.startswith("말투")]
     assert [x for x in tb.script_issues(["다녀왔는데 좋았고요"] * 7, {}, 7) if x.startswith("가 본 척")]     # 기본 말투는 막는다
+
+
+def test_points_issues_flags_missing_wow_and_sell():
+    pts = {"wow": [{"point": "사계절 온수 풀", "keys": ["온수", "따뜻"], "proof": "문답"}],
+           "sell": [{"point": "공항 무료 셔틀", "keys": ["셔틀"], "proof": "문답"}]}
+    assert tb.points_issues(["수영장 물이 따뜻해서", "공항 셔틀 타고 왔는데"], pts) == []
+    miss = tb.points_issues(["수영장 물이 따뜻해서"], pts)
+    assert len(miss) == 1 and "소구점" in miss[0] and "셔틀" in miss[0]
