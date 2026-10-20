@@ -1,65 +1,32 @@
 {
- "_note": "뒤 화면 = 유튜브 riZ5prN4T90 'I Tried Bala Bangles'(개봉·착용, 원본 110~205초 구간, 720p, 한 컷짜리 탁자 위 영상) + 방송 클립 RADCBcHJO_k 두 토막(59.06~61.63 단체 운동·184.65~187.59 광고 요가, bala_shark_58/183.mp4 로 잘라 둠). 오른쪽 흰 글자 카드(x≥1150)는 크롭 [270,0,739,720] 밖. 앞 0~11.57초가 쓴 방송 207.45·95.3·109.2·55.0·240.3·173.95초(±3초) 피함.",
- "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/src3",
+ "_note": "뒤 화면 = 같은 제품(Bala Bangles) 영상 6편 — 유튜브 리뷰 RNOx3dMTwFs·Nyn2eXa2NGM(1080p) · 쇼츠/틱톡 hlGLiEMi4f4·VBNLOcv8d_U·OnLy_mTStXc(1080x1920) · riZ5prN4T90 토막(720p, 10-18판에서 받은 것). 컷마다 다른 사람·장소, 이웃 컷끼리 같은 영상 없음(X→Y→X 없음). 샷 경계 ffmpeg scene>0.3 실측(hl 16.3·18.13, OnLy 11.73, 나머지 경계 없음). 박힌 자막·로고는 크롭 밖. 앞 0~O2(방송 무대·광고)와 다른 영상. 뒤 효과 0개 — 아래 fx_skipped(R4).",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/5편_BalaBangles/src",
  "window": [
   0,
   434,
   1080,
   1052
  ],
- "sources": {
-  "bala_riZ5_110": {
-   "url": "https://www.youtube.com/watch?v=riZ5prN4T90",
-   "구간": "원본 110~205초",
-   "해상도": "1280x720"
-  },
-  "bala_shark_58": {
-   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
-   "구간": "원본 58~64초",
-   "해상도": "1920x1080"
-  },
-  "bala_shark_183": {
-   "url": "https://www.youtube.com/watch?v=RADCBcHJO_k",
-   "구간": "원본 183.5~188.5초",
-   "해상도": "1920x1080"
-  }
- },
  "shots": [
   {
-   "i": 0,
    "line": "B1",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 2.0,
+   "src": "RNOx3dMTwFs.mp4",
+   "ss": 5.0,
    "dur": 2.4,
    "src_crop": [
-    270,
+    405,
     0,
-    739,
-    720
+    1109,
+    1080
    ],
    "mute": true,
-   "ours": "초록 발라 뱅글을 펼쳐 손에 듦(개봉 영상)"
+   "ours": "Plaid Shirt Yoga Pants RNOx3dMTwFs@5.0(한 샷 0~64) 여성이 하늘색 발라 뱅글을 펼쳐 들어 보임(bala 로고)",
+   "i": 0
   },
   {
-   "i": 1,
    "line": "B1",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 21.5,
-   "dur": 2.4,
-   "src_crop": [
-    270,
-    0,
-    739,
-    720
-   ],
-   "mute": true,
-   "ours": "뱅글을 손목에 감는 손"
-  },
-  {
-   "i": 2,
-   "line": "B2",
-   "src": "bala_shark_58.mp4",
-   "ss": 1.2,
+   "src": "Nyn2eXa2NGM.mp4",
+   "ss": 14.0,
    "dur": 2.3,
    "src_crop": [
     405,
@@ -68,29 +35,59 @@
     1080
    ],
    "mute": true,
-   "ours": "방송 무대 — 손목·발목에 뱅글 찬 사람들 단체 운동(원본 59.2초)"
+   "ours": "CDP Fitness Nyn2eXa2NGM@14.0(한 샷) 분홍 발라 뱅글을 카메라 앞에 펼침",
+   "i": 1
   },
   {
-   "i": 3,
    "line": "B2",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 27.5,
+   "src": "hlGLiEMi4f4.mp4",
+   "ss": 0.8,
    "dur": 2.0,
    "src_crop": [
-    270,
     0,
-    739,
-    720
+    380,
+    1080,
+    1052
    ],
    "mute": true,
-   "ours": "손목에 찬 뱅글 근접"
+   "ours": "dana hlGLiEMi4f4@0.8(샷 0~16.3) 손에 든 bala 파우치 속 회색 뱅글(박힌 낱말 자막 y≥1435 크롭 밖)",
+   "i": 2
   },
   {
-   "i": 4,
+   "line": "B2",
+   "src": "VBNLOcv8d_U.mp4",
+   "ss": 4.0,
+   "dur": 1.6,
+   "src_crop": [
+    0,
+    250,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "Pilates Power VBNLOcv8d_U@4.0(한 샷) 필라테스 스튜디오에서 회색 뱅글 띠를 당겨 보임(박힌 'How to put…' y≈1460~1570·틱톡 로고 크롭 밖)",
+   "i": 3
+  },
+  {
    "line": "B3",
-   "src": "bala_shark_183.mp4",
-   "ss": 1.3,
-   "dur": 2.4,
+   "src": "RNOx3dMTwFs.mp4",
+   "ss": 33.0,
+   "dur": 1.7,
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "RNOx3dMTwFs@33.0 손목에 찬 하늘색 뱅글을 앞으로 내밈",
+   "i": 4
+  },
+  {
+   "line": "B3",
+   "src": "Nyn2eXa2NGM.mp4",
+   "ss": 60.0,
+   "dur": 2.0,
    "src_crop": [
     405,
     0,
@@ -98,28 +95,13 @@
     1080
    ],
    "mute": true,
-   "ours": "광고 — 손목·발목에 뱅글 차고 요가 동작(원본 184.8초)"
+   "ours": "Nyn2eXa2NGM@60.0 분홍 뱅글 찬 팔을 들어 올림",
+   "i": 5
   },
   {
-   "i": 5,
-   "line": "B3",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 33.5,
-   "dur": 2.2,
-   "src_crop": [
-    270,
-    0,
-    739,
-    720
-   ],
-   "mute": true,
-   "ours": "찬 뱅글을 손으로 감싸 보임"
-  },
-  {
-   "i": 6,
    "line": "B4",
    "src": "bala_riZ5_110.mp4",
-   "ss": 38.8,
+   "ss": 70.0,
    "dur": 2.2,
    "src_crop": [
     270,
@@ -128,38 +110,76 @@
     720
    ],
    "mute": true,
-   "ours": "말랑한 뱅글을 손으로 누름"
+   "ours": "The Fashion Try On riZ5prN4T90(원본 180초 부근, 받은 토막 110~)@70.0 두 손목에 세이지 뱅글을 팔찌처럼 참(오른쪽 글자 카드 크롭 밖)",
+   "i": 6
   },
   {
-   "i": 7,
    "line": "B4",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 63.0,
-   "dur": 2.2,
+   "src": "OnLy_mTStXc.mp4",
+   "ss": 3.0,
+   "dur": 2.0,
    "src_crop": [
-    270,
     0,
-    739,
-    720
+    600,
+    1080,
+    1052
    ],
    "mute": true,
-   "ours": "두 손목에 뱅글을 팔찌처럼 참"
+   "ours": "Sarah Stusek OnLy_mTStXc@3.0(샷 0~11.73) 주방에서 두 손목에 베이지 뱅글(박힌 윗자막 y<600 크롭 밖)",
+   "i": 7
   },
   {
-   "i": 8,
    "line": "B5",
-   "src": "bala_riZ5_110.mp4",
-   "ss": 68.6,
-   "dur": 3.0,
+   "src": "Nyn2eXa2NGM.mp4",
+   "ss": 86.0,
+   "dur": 2.0,
    "src_crop": [
-    270,
+    405,
     0,
-    739,
-    720
+    1109,
+    1080
    ],
    "mute": true,
-   "ours": "뱅글 찬 손목을 흔들어 보임"
+   "ours": "Nyn2eXa2NGM@86.0 두 손목에 분홍 뱅글 차고 손짓하며 이야기",
+   "i": 8
+  },
+  {
+   "line": "B5",
+   "src": "hlGLiEMi4f4.mp4",
+   "ss": 16.4,
+   "dur": 1.7,
+   "src_crop": [
+    0,
+    300,
+    1080,
+    1052
+   ],
+   "mute": true,
+   "ours": "hlGLiEMi4f4@16.4(샷 16.3~18.13) 침대 위에서 손목에 찬 회색 뱅글",
+   "i": 9
   }
  ],
- "effects": []
+ "effects": [],
+ "fx_skipped": [
+  {
+   "line": "B3",
+   "shot": "RNO@33 손목 뱅글",
+   "why": "뱅글이 창 아래쪽 크게(y714~1474) — 위에서 가리키면 화살표가 얼굴 위, 대상 확실한 자리 없음(R4)"
+  },
+  {
+   "line": "B4",
+   "shot": "riZ@70 두 손목",
+   "why": "뱅글이 자막 띠(y895~1022)를 가로지름 — 화살표가 띠에 묻힘(11편 같은 꼴)"
+  },
+  {
+   "line": "B5",
+   "shot": "hl@16.4 손목",
+   "why": "뱅글이 창 아래 끝에 잘림 — 물건 전체 대상 아님"
+  },
+  {
+   "line": "B1·B2·B4",
+   "shot": "손에 들고 흔듦",
+   "why": "움직임 커서 넣지 않음"
+  }
+ ]
 }
