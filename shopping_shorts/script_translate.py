@@ -41,6 +41,12 @@ Keep meaning, product name{product_hint}, numbers and calls to action.
 One output line per input line, never merge/split, never empty.
 Output Japanese only (no Korean, no romaji-only lines, no notes).
 
+Style rules (2026-10-21, checked against real scripts):
+- ONE consistent polite register across all lines: です・ます (〜なんです / 〜ますよ are fine). Sentence-final noun phrases (体言止め) are fine for punch. Never switch to casual imperatives (〜してね / 〜しろ); for calls to action use 〜してください(ね).
+- Do not add anything that is not in the Korean line (no 「紹介します」, no 「SNSで」, no extra adjectives or framing) and do not drop anything.
+- Keep product nouns faithful to the Korean words (e.g. 발난로 → 足元ヒーター, not a different product category). Keep numbers exactly; keep currency as written (원 → ウォン — never convert to 円).
+- Each line must read like one short, rhythmic voice-over line (no long compound sentences).
+
 Input lines (JSON array):
 {lines}
 """
