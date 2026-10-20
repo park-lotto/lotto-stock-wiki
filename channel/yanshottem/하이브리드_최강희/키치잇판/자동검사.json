@@ -1,0 +1,113 @@
+{
+ "style": "키치잇판",
+ "ok": true,
+ "rows": [
+  {
+   "what": "길이",
+   "ok": true,
+   "value": "29.86초 (판 25~30)"
+  },
+  {
+   "what": "화면=시간표",
+   "ok": true,
+   "value": "29.863 vs 29.8667"
+  },
+  {
+   "what": "음량",
+   "ok": true,
+   "value": "-14.0 LUFS (목표 -14.0)"
+  },
+  {
+   "what": "최고점",
+   "ok": true,
+   "value": "-1.3 dBFS (≤ -1.5+0.5)"
+  },
+  {
+   "what": "0초·첫 줄 얼굴",
+   "ok": true,
+   "value": "0.0s:○ 0.1s:○ 0.6s:○ 1.1s:○ 1.6s:○ 2.1s:○ 2.6s:○ 3.1s:○ 3.6s:○ 4.1s:○"
+  },
+  {
+   "what": "배치(본보기 벤치 편 대조)",
+   "ok": true,
+   "value": "본보기 _Wa4IehA6yE · 칸 최대 차 0.121"
+  }
+ ],
+ "placement": {
+  "ok": true,
+  "reference": "_Wa4IehA6yE",
+  "worst_slot_diff": 0.121,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "ours": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 12
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "pop": 0.55,
+     "cut": 0.45
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 0.82,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "kk_doodle": 1
+    },
+    "ours": {
+     "kk_doodle": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ },
+ "log": [
+  "본보기 벤치 편 = _Wa4IehA6yE",
+  "스티커 kk_doodle → N4「근데 진짜 놀라운 건」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 12, 'cut': 11} · 강조 22/23"
+ ]
+}
