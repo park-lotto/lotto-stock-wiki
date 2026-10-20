@@ -8,6 +8,7 @@ import { rentPreset } from './preset_rent.js';
 import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
+import { deliverInBackground } from './deliver.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
@@ -55,6 +56,7 @@ export function shapeSession(S) {
       video = path.join(ensureDir(workDir(), '완성본'), name);
       if (!fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(src, video);   // 다시 만들기(restyle) 뒤엔 새 완성본으로
       try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: S.sid, title: String(t.name || ''), preset: S.preset_id || null, topic_dir: path.dirname(src) })); } catch { /* 표식 없이도 영상은 본다 */ }
+      deliverInBackground(video, { title: String(t.name || '') });   // 텔레그램·구글 드라이브(켜 둔 곳만, 이미 보낸 것은 건너뜀) — deliver.js
     }
     if (!video) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
     return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요(파일을 열어 보라고 안내)', `겉모습을 바꾸고 싶다고 하면 shortem_settings 로 바꾼 뒤 shortem_make(step="restyle", sid="${S.sid}") — 대본·재료는 그대로, 렌더만 다시`] };

@@ -14,6 +14,7 @@ import { readSettings, packFor, savePack, select, resetPack, catalog, PID_RE } f
 import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
+import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -128,7 +129,7 @@ async function route(req, res, token, port) {
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined }, videos: videos(), error: err, logins: loginStatus(),
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
   const body = await readBody(req);
@@ -138,6 +139,15 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/reset') { if (PID_RE.test(String(body.preset || ''))) resetPack(body.preset); return send(res, 200, { ok: true }); }
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });
+  // 완성본 받기(텔레그램·구글 드라이브) — 판단은 deliver.js. 봇 토큰은 이 화면에만 넣는다(채팅에 붙여 넣지 않게)
+  if (u.pathname === '/api/deliver/link') return send(res, 200, await linkTelegram(body.token));
+  if (u.pathname === '/api/deliver/confirm') return send(res, 200, await confirmTelegram());
+  if (u.pathname === '/api/deliver/set') return send(res, 200, { ok: true, deliver: setDeliver(body) });
+  if (u.pathname === '/api/deliver/test') {
+    const v = videos().find(x => x.name === body.video) || videos()[0];
+    if (!v) return send(res, 200, { error: '보낼 완성본이 아직 없습니다' });
+    return send(res, 200, { ok: true, video: v.name, result: await deliverFinal(path.join(workDir(), '완성본', v.name), { title: v.title, force: true }) });
+  }
   if (u.pathname === '/api/restyle') {   // 완성본을 지금 설정으로 다시(엔진 calcopy_make.restyle) — AI 판독이 필요하면 Claude 가 이어 받는다
     const v = videos().find(x => x.name === body.video);
     if (!v || !v.sid) return send(res, 200, { error: '이 영상은 다시 만들 수 없습니다(옛 영상)' });
