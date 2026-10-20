@@ -1,0 +1,413 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.27,
+   "text": "손태영이 요즘",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "손태영이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.27,
+   "t1": 2.096,
+   "text": "계란말이 할 때",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "계란말이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.096,
+   "t1": 3.659,
+   "text": "꺼내 쓰는 미니팬이 있다네요?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "미니팬이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.659,
+   "t1": 4.849,
+   "text": "이거 은근히 괜찮다?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "괜찮다?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.849,
+   "t1": 6.199,
+   "text": "나 요즘 바꿨잖아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "바꿨잖아"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 6.199,
+   "t1": 7.243,
+   "text": "대체 어떤 팬으로",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "어떤"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 7.243,
+   "t1": 8.007,
+   "text": "바꿨길래?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "바꿨길래?"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 8.007,
+   "t1": 10.127,
+   "text": "계란을 풀어 소금 넣지",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "소금"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 10.127,
+   "t1": 11.287,
+   "text": "그리고 얘를 탁 올려",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 11.287,
+   "t1": 12.527,
+   "text": "이제 탁 뒤집어서",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 12.527,
+   "t1": 13.987,
+   "text": "얘가 또 부풀어 오르더라",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [
+    {
+     "word": "부풀어"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 13.987,
+   "t1": 15.36,
+   "text": "저도 영상 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "보자마자"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 15.36,
+   "t1": 16.579,
+   "text": "바로 따라 사 봤는데요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 16.579,
+   "t1": 18.26,
+   "text": "손바닥만 한 5인치라",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "손바닥만"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 18.26,
+   "t1": 19.327,
+   "text": "계란 하나 깨면",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "하나"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 19.327,
+   "t1": 20.218,
+   "text": "딱 꽉 차더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "꽉"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 20.218,
+   "t1": 21.603,
+   "text": "벨기에 학교 친구 둘이",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "벨기에"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.603,
+   "t1": 22.788,
+   "text": "만든 그린팬이란",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "그린팬이란"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 22.788,
+   "t1": 23.987,
+   "text": "세라믹 팬 브랜드래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "세라믹"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 23.987,
+   "t1": 25.261,
+   "text": "그래서 그 미니팬",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "미니팬"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.261,
+   "t1": 26.15,
+   "text": "요즘 쇼츠에서",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "쇼츠에서"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 26.15,
+   "t1": 26.9,
+   "text": "난리래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "난리래요"
+    }
+   ],
+   "sticker": "",
+   "stickers": [
+    {
+     "kind": "spark_lines",
+     "word": "난리래요"
+    }
+   ]
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = Cs-Ka_S8nDM",
+  "스티커 spark_lines → N6「난리래요」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'pop': 17, 'cut': 5} · 강조 20/22"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "Cs-Ka_S8nDM",
+  "worst_slot_diff": 0.212,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "pop": 1.0
+    },
+    "ours": {
+     "pop": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 1.0,
+    "n": 10
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.45,
+     "pop": 0.45,
+     "typing": 0.09
+    },
+    "ours": {
+     "cut": 0.67,
+     "pop": 0.33
+    },
+    "bench_emph": 0.73,
+    "ours_emph": 0.67,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "spark_lines": 1
+    },
+    "ours": {
+     "spark_lines": 1
+    }
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

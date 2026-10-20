@@ -1,0 +1,382 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 키치잇판) · 시각은 final.mp4 기준 초",
+ "pack": "kitchit",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.834,
+   "text": "입맛 까다로운",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.834,
+   "t1": 2.781,
+   "text": "신세경이 드디어 정착한",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.781,
+   "t1": 3.525,
+   "text": "꿀떡이 있다네요?",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "꿀떡이"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.525,
+   "t1": 4.625,
+   "text": "헤맸어!",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.625,
+   "t1": 6.505,
+   "text": "근데 이걸 만나고",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 6.505,
+   "t1": 7.395,
+   "text": "광명을 찾았지",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 7.395,
+   "t1": 8.518,
+   "text": "도대체 어떤",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 8.518,
+   "t1": 9.017,
+   "text": "꿀떡이길래?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 9.017,
+   "t1": 10.197,
+   "text": "언제 어디서나",
+   "speaker": "orig",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 10.197,
+   "t1": 11.347,
+   "text": "누구에게 추천을 해도",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 11.347,
+   "t1": 12.487,
+   "text": "무조건 맛있다고 할",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 12.487,
+   "t1": 13.367,
+   "text": "그런 품목",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 13.367,
+   "t1": 14.327,
+   "text": "먹어보면 정말",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 14.327,
+   "t1": 15.217,
+   "text": "후회하지 않을 거야",
+   "speaker": "orig",
+   "variant": "pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 15.217,
+   "t1": 16.33,
+   "text": "저도 보자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 16.33,
+   "t1": 17.534,
+   "text": "바로 따라 사 봤거든요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "따라"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.534,
+   "t1": 19.297,
+   "text": "한두 시간 상온에 두면",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 19.297,
+   "t1": 20.225,
+   "text": "치즈처럼 쭉",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 20.225,
+   "t1": 20.96,
+   "text": "늘어나더라고요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "늘어나더라고요"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 20.96,
+   "t1": 22.476,
+   "text": "자색고구마랑 쑥으로만",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 22.476,
+   "t1": 23.292,
+   "text": "색을 내서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 23.292,
+   "t1": 24.497,
+   "text": "미국까지 수출한대요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "미국까지"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 24.497,
+   "t1": 26.393,
+   "text": "그래서 마켓컬리에서만",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 26.393,
+   "t1": 27.816,
+   "text": "후기가 3만 개 넘은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 27.816,
+   "t1": 28.967,
+   "text": "인기 꿀떡이래요",
+   "speaker": "narr",
+   "variant": "pop",
+   "emph": [
+    {
+     "word": "인기"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.834,
+   "kind": "ding",
+   "why": "cap"
+  }
+ ],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = Nv99RyxmrfU",
+  "효과음 1발(본보기 1) [(0.834, 'cap')]",
+  "등장 {'pop': 13, 'cut': 12} · 강조 5/25"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "Nv99RyxmrfU",
+  "worst_slot_diff": 0.167,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "ours": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "bench_emph": 0.5,
+    "ours_emph": 0.5,
+    "n": 10
+   },
+   "orig.first": {
+    "bench": {
+     "pop": 0.5,
+     "cut": 0.5
+    },
+    "ours": {
+     "pop": 0.67,
+     "cut": 0.33
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "ours": {
+     "cut": 0.5,
+     "pop": 0.5
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 1,
+    "ours": 1
+   }
+  }
+ }
+}

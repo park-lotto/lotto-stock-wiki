@@ -44,15 +44,16 @@ def sh(cmd, **kw):
 def channel_shorts(url: str, n: int = 120) -> list[dict]:
     r = sh(["yt-dlp", "--flat-playlist", "-J", "--no-warnings", "--playlist-end", n, url], timeout=300)
     d = json.loads(r.stdout or "{}")
-    return [{"id": e["id"], "title": e.get("title") or "", "views": e.get("view_count") or 0,
+    return [{"id": e["id"], "title": e.get("title") or e.get("description") or "", "views": e.get("view_count") or 0,
+             "url": e.get("url") if "tiktok.com" in url else f"https://www.youtube.com/shorts/{e['id']}",
              "channel": d.get("channel") or d.get("uploader") or url} for e in d.get("entries") or []]
 
 
-def fetch_clip(vid: str, out: Path) -> Path | None:
+def fetch_clip(vid: str, out: Path, url: str | None = None) -> Path | None:
     p = out / f"{vid}.mp4"
     if not p.exists():
         sh(["yt-dlp", "-q", "--no-warnings", "-f", "b[height<=480][ext=mp4]/bv*[height<=480]+ba/b", "--merge-output-format", "mp4",
-            "-o", str(p), f"https://www.youtube.com/shorts/{vid}"], timeout=180)
+            "-o", str(p), url or f"https://www.youtube.com/shorts/{vid}"], timeout=180)
     return p if p.exists() else None
 
 
@@ -125,7 +126,7 @@ def owner_of(href: str, text: str) -> dict:
             "lang": "ko" if HANGUL.search((name or "") + " " + text) else "foreign", "title": text}
 
 
-def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en"):
+def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en", foreign: bool = False):
     from tools.calcopy import lens as L
     from tools.calcopy.lens import SKIP_VIDEO, lens_page, lens_rows
     L.PROFILE = str(ROOT / ".lens_profile_snowball")   # 다른 세션이 .lens_profile 크롬을 쥐고 있으면 못 연다(10-21 실측) — 이 도구는 따로
@@ -139,12 +140,14 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
 
     with lens_page() as pg:
         for rnd in range(rounds):
-            todo = [k for k, c in S["channels"].items() if c["lang"] == "ko" and not c.get("done") and k.startswith("http")]
+            # 넓힐 채널 = 한국(기본) + --foreign 이면 해외 유튜브·틱톡 계정도(인스타 계정 목록은 로그인 없이 안 받아짐 — 10-21 실측)
+            todo = [k for k, c in S["channels"].items() if k.startswith("http") and not c.get(f"done_{'all' if foreign else 'ko'}", c.get("done") if not foreign else False)
+                    and (c["lang"] == "ko" or (foreign and re.search(r"youtube\.com/(channel|@)|tiktok\.com/@", k)))]
             if not todo:
                 break
             for ck in todo:
                 c = S["channels"][ck]
-                url = ck if "/shorts" in ck or "/videos" in ck else ck.rstrip("/") + "/shorts"
+                url = ck if ("/shorts" in ck or "/videos" in ck or "tiktok.com" in ck) else ck.rstrip("/") + "/shorts"
                 vids = [v for v in channel_shorts(url) if v["views"] >= min_views]
                 vids.sort(key=lambda v: -v["views"])
                 print(f"[바퀴{rnd + 1}] {c['name']} — {min_views:,}회 이상 {len(vids)}편")
@@ -158,7 +161,7 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
                         picked += bool(S["videos"][v["id"]].get("matches") is not None and S["videos"][v["id"]].get("lensed"))
                         if S["videos"][v["id"]].get("lensed") or (orig_only and not S["videos"][v["id"]].get("orig")):
                             continue
-                    p = fetch_clip(v["id"], tmp)
+                    p = fetch_clip(v["id"], tmp, v.get("url"))
                     if not p:
                         continue
                     a = is_orig_audio(p)
@@ -191,7 +194,7 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
                     ko = sum(m["lang"] == "ko" for m in rec["matches"]); fo = len(rec["matches"]) - ko
                     print(f"  원음 {v['id']} {v['title'][:30]} → 한국 {ko} · 해외 {fo}")
                     save()
-                c["done"] = True; save()
+                c["done"] = True; c["done_all" if foreign else "done_ko"] = True; save()
     save()
 
 
@@ -218,7 +221,7 @@ def report(state_p: Path):
         out += [head, "", "| 채널 | 곳 | 잡힌 영상 | 링크 |", "|---|---|---|---|"]
         for k, c in sorted(V.items(), key=lambda kv: -len(kv[1]["videos"])):
             if c["lang"] == lang:
-                vids = ", ".join(f"[{S['videos'][x]['title'][:18]}](https://www.youtube.com/shorts/{x})" for x in c["videos"])
+                vids = ", ".join(f"[{S['videos'][x]['title'][:18]}]({S['videos'][x].get('url') or 'https://www.youtube.com/shorts/' + x})" for x in c["videos"])
                 out.append(f"| [{c['name']}]({k}) | {c['site']} | {vids} | [영상]({c['links'][0]}) |")
         out.append("")
     md = state_p.with_suffix(".md")
@@ -234,9 +237,10 @@ if __name__ == "__main__":
     ap.add_argument("--top", type=int, default=8)
     ap.add_argument("--min-views", type=int, default=1_000_000)
     ap.add_argument("--rounds", type=int, default=1)
+    ap.add_argument("--foreign", action="store_true", help="검증된 해외 유튜브·틱톡 계정도 넓힌다(그 계정의 다른 터진 영상 → 렌즈)")
     ap.add_argument("--hl", default="en", help="렌즈 화면 언어 — en 이면 해외 원본이 더 잡힌다(ko 는 한국 재업 위주, 10-21 떠튜브)")
     ap.add_argument("--orig-only", action="store_true", help="앞 12초 한국어 나레 있는 영상은 렌즈 안 돌림(떠튜브처럼 전부 나레 훅이면 0편이 된다 — 10-21 실측 38/38)")
     a = ap.parse_args()
     if a.cmd == "run":
-        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl)
+        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl, a.foreign)
     report(Path(a.state))
