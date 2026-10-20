@@ -1,0 +1,661 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0"><title>숏템 카드뉴스 제작소</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gowun+Dodum&family=Nanum+Pen+Script&family=Gothic+A1:wght@800&display=swap">
+<style>
+/* 레이아웃: 숏템메이커 그대로 — 왼쪽 사이드바 + 본문(머리 → 단계 아이콘 줄 → 패널). 색은 숏템 produce.html 토큰(민트-블랙, 다크 기본) */
+:root{
+  --bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
+  --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
+  --inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;
+  --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;--onacc:#06231c;
+  --note-bg:#2a2410;--note-fg:#f0c453;--shadow:0 12px 40px rgba(0,0,0,.5);
+  --f-ui:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+  --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+  --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
+  --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;--onacc:#ffffff;
+  --note-bg:#fff6d6;--note-fg:#8a6400;--shadow:0 12px 40px rgba(0,0,0,.15);color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+  --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+  --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
+  --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;--onacc:#ffffff;
+  --note-bg:#fff6d6;--note-fg:#8a6400;--shadow:0 12px 40px rgba(0,0,0,.15);color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:var(--f-ui);margin:0;font-size:15px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font-family:inherit;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;font-size:14px;width:100%}
+textarea{min-height:110px;resize:vertical}
+.app{display:flex;min-height:100vh}
+
+/* 사이드바 (숏템 구조) */
+.side{width:236px;flex:none;border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:22px;color:var(--accent);padding:4px 6px}
+.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(#ff6b6b,#f0c453,#37e0bd,#4dabf7,#ff6b6b);display:block}
+.ucard{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel);display:flex;flex-direction:column;gap:8px;font-size:13px}
+.ucard .who{display:flex;gap:10px;align-items:center}
+.ucard .av{width:34px;height:34px;border-radius:50%;background:var(--grad);color:var(--onacc);display:grid;place-items:center;font-weight:700}
+.credit{display:flex;justify-content:space-between;align-items:center;background:var(--inset);border-radius:8px;padding:7px 10px}
+.credit b{color:var(--accent);font-variant-numeric:tabular-nums}
+.grp{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel)}
+.grp h4{margin:2px 6px 6px;font-size:12px;color:var(--accent)}
+.grp a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;color:var(--txt);text-decoration:none;font-size:14px;font-weight:500}
+.grp a.dim{color:var(--sub)}
+.grp a.on{background:var(--sel-bg);color:var(--sel-fg);font-weight:700}
+.new{font-size:10px;font-weight:700;background:var(--fire);color:#fff;border-radius:5px;padding:1px 5px;margin-left:auto}
+.themeBtn{border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:10px;padding:9px;font-size:13px}
+
+/* 본문 */
+.main{flex:1;min-width:0;padding:24px 32px 60px;display:flex;flex-direction:column;gap:16px}
+.head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.head h2{margin:0;font-size:22px}
+.head .desc{color:var(--sub);font-size:13px;margin-top:4px}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--panel);border:1px solid var(--line);color:var(--txt);font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--grad);color:var(--onacc);border:0;font-weight:700}
+.btn.pri:hover{color:var(--onacc);filter:brightness(1.08)}
+.btn.warn{border-color:var(--fire);color:var(--fire)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.noteToggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--note-fg);background:var(--note-bg);border:1px solid var(--gold);border-radius:9px;padding:7px 10px}
+
+/* 단계 아이콘 줄 (숏템 단계바) */
+.steps{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding-top:14px}
+.steps::before{content:"";position:absolute;left:4%;right:4%;top:0;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent2),#4dabf7,#cc5de8,#f0c453)}
+.step{background:none;border:0;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px;font-size:12px;font-weight:600}
+.step .ic{width:52px;height:52px;border-radius:14px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center}
+.step .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.step.on{color:var(--txt)}
+.step.on .ic{width:60px;height:60px;background:var(--grad);color:var(--onacc);border:0;box-shadow:0 0 0 4px rgba(55,224,189,.18)}
+.step .nb{font-family:ui-monospace,Consolas,monospace;font-size:10px;color:var(--sub)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel>h3{margin:0;font-size:18px}
+.panel>.pdesc{color:var(--sub);font-size:13px;margin-top:-10px}
+.sub{color:var(--sub);font-size:13px}
+.box{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--inset);display:flex;flex-direction:column;gap:10px;min-width:0}
+.box h4{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:999px;padding:6px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-fg);border-color:var(--accent);font-weight:700}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs2 button{background:none;border:0;border-bottom:2px solid transparent;color:var(--sub);padding:9px 14px;font-size:14px;font-weight:600}
+.tabs2 button[aria-selected="true"]{color:var(--accent);border-color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--sel-bg);color:var(--sel-fg)}
+.pill.w{background:rgba(240,196,83,.15);color:var(--gold)}
+.pill.f{background:rgba(255,107,107,.15);color:var(--fire)}
+.ex{font-size:11px;color:var(--sub);border:1px dashed var(--line);border-radius:6px;padding:1px 6px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:600}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+.scroll{overflow-x:auto}
+
+/* 기획 메모 */
+.note{display:none;font-size:12px;line-height:1.45;color:var(--note-fg);background:var(--note-bg);border:1px dashed var(--gold);border-radius:8px;padding:6px 9px}
+.note b{font-weight:700}
+body.notes .note{display:block}
+.note .lv{font-family:ui-monospace,Consolas,monospace;font-weight:700;margin-right:6px}
+
+/* 소재 */
+.issue{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}
+.score{font-size:20px;font-weight:900;color:var(--accent);text-align:center;font-variant-numeric:tabular-nums}
+.score small{display:block;font-size:10px;color:var(--sub);font-weight:500}
+.issue .t{font-weight:700;font-size:14px}
+.issue .m{font-size:12px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+
+/* 만들기 */
+.optsum{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;width:100%;color:var(--txt);text-align:left}
+.optsum b{color:var(--accent)}
+.packs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.pack{border:2px solid var(--line);border-radius:12px;padding:6px;background:var(--panel);display:flex;flex-direction:column;gap:6px;color:var(--txt);font-size:12px;font-weight:600}
+.pack[aria-pressed="true"]{border-color:var(--accent)}
+.fonts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.font{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel);color:var(--txt);text-align:left;display:flex;flex-direction:column;gap:2px}
+.font span{font-size:20px;line-height:1.2}
+.font small{font-size:11px;color:var(--sub)}
+.font[aria-pressed="true"]{border-color:var(--accent);background:var(--sel-bg)}
+.imgopt{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);color:var(--txt);text-align:left;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.imgopt[aria-pressed="true"]{border-color:var(--accent);background:var(--sel-bg)}
+.imgopt small{color:var(--sub);font-size:11px}
+.cost{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
+.cost .sum{font-size:13px;color:var(--sub)}
+.cost .sum b{color:var(--accent);font-size:16px;font-variant-numeric:tabular-nums}
+.outline{display:flex;flex-direction:column;gap:6px}
+.ol{display:grid;grid-template-columns:28px 92px minmax(0,1fr) auto;gap:8px;align-items:center}
+.ol .no{font-size:12px;color:var(--sub);text-align:center;font-variant-numeric:tabular-nums}
+.ol select,.ol input{padding:7px 9px;font-size:13px}
+.prog{display:flex;flex-direction:column;gap:8px}
+.pstep{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.pstep .dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:11px;font-weight:700}
+.pstep.done .dot{background:var(--accent);border-color:var(--accent);color:var(--onacc)}
+.pstep.run .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px;font-size:12px;color:var(--sub);margin-top:4px}
+.checks .ok{color:var(--ok)} .checks .fx{color:var(--gold)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--grad);width:0;transition:width .3s}
+
+/* 카드 렌더 (4:5, 폭에 따라 글자 크기가 따라감) */
+.cardwrap{container-type:inline-size;width:100%}
+.card{position:relative;aspect-ratio:4/5;width:100%;overflow:hidden;border-radius:6px;display:flex;flex-direction:column;padding:7cqw 7cqw 6cqw;gap:3cqw;--hl:#ffd43b;--hlt:#111;--ac:#37e0bd}
+.card .k{font-size:3.6cqw;font-weight:700;letter-spacing:.06em;opacity:.85}
+.card .tt{font-size:var(--ts,9.6cqw);line-height:1.18;font-weight:400;word-break:keep-all;text-wrap:balance}
+.card .bd{font-size:4.3cqw;line-height:1.5;word-break:keep-all;opacity:.92}
+.card .hl{background:var(--hl);color:var(--hlt);padding:0 .12em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.card .pg{position:absolute;right:5cqw;bottom:4cqw;font-size:3cqw;opacity:.6;font-family:ui-monospace,Consolas,monospace}
+.card .brand{position:absolute;left:7cqw;bottom:4cqw;font-size:3.2cqw;font-weight:700;opacity:.75;display:flex;gap:1.5cqw;align-items:center}
+.card .brand i{width:4cqw;height:4cqw;border-radius:1cqw;background:var(--ac);display:block}
+.card .num{font-size:24cqw;line-height:1;font-weight:900;color:var(--ac)}
+.card .cmp{display:grid;grid-template-columns:1fr 1fr;gap:3cqw;margin-top:2cqw}
+.card .cmp div{border-radius:3cqw;padding:4cqw;font-size:4cqw;line-height:1.45;display:flex;flex-direction:column;gap:1.5cqw}
+.card .cmp b{font-size:5.4cqw}
+.card ol,.card ul{margin:1cqw 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2.6cqw}
+.card li{display:flex;gap:3cqw;align-items:center;font-size:5cqw;font-weight:700}
+.card li i{font-style:normal;width:8cqw;height:8cqw;border-radius:50%;display:grid;place-items:center;font-size:4cqw;flex:none;background:var(--ac);color:#0b0f0e}
+.card .spacer{flex:1}
+.card .save{display:inline-flex;gap:2cqw;align-items:center;font-size:4cqw;border:.5cqw solid currentColor;border-radius:99px;padding:1.6cqw 4cqw;align-self:flex-start}
+.card .ph{position:absolute;inset:0;z-index:0}
+.card>*:not(.ph){position:relative;z-index:1}
+.card .pg,.card .brand{position:absolute}
+/* 디자인 팩 */
+.p-info{background:#0e1513;color:#f4f7f6}
+.p-info .ph{background:radial-gradient(120% 70% at 100% 0%,rgba(55,224,189,.22),transparent 60%),repeating-linear-gradient(0deg,transparent 0 6cqw,rgba(255,255,255,.04) 6cqw calc(6cqw + 1px)),repeating-linear-gradient(90deg,transparent 0 6cqw,rgba(255,255,255,.04) 6cqw calc(6cqw + 1px))}
+.p-info .cmp div{background:rgba(255,255,255,.07)}
+.p-prod{color:#fff;--hl:#37e0bd;--hlt:#06231c;--ac:#37e0bd;justify-content:flex-end}
+.p-prod .ph{background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.25) 55%,rgba(0,0,0,0) 75%),var(--photo,linear-gradient(135deg,#7a5c3e,#c9a27a 40%,#e9d8c0 60%,#8b6b4a))}
+.p-prod .cmp div{background:rgba(0,0,0,.45)}
+.p-tip{background:#fff6ea;color:#2b2420;--hl:#ffc9b5;--hlt:#2b2420;--ac:#ff7a59}
+.p-tip .ph{background:radial-gradient(60% 40% at 0% 100%,rgba(255,122,89,.18),transparent 70%),radial-gradient(50% 35% at 100% 0%,rgba(255,212,59,.25),transparent 70%)}
+.p-tip .cmp div{background:#fff;border:.5cqw solid #f1dfcf}
+.p-tip li i{color:#fff}
+.sel-el{outline:.8cqw dashed var(--ac);outline-offset:1cqw;border-radius:1cqw;cursor:pointer}
+.edit-el{cursor:pointer;border-radius:1cqw}
+.edit-el:hover{outline:.5cqw solid rgba(127,127,127,.5);outline-offset:1cqw}
+
+/* 편집 */
+.editor{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bigcard{max-width:420px;width:100%;margin:0 auto}
+.strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.thumb{flex:none;width:86px;border:2px solid transparent;border-radius:8px;padding:2px;background:none;position:relative}
+.thumb[aria-current="true"]{border-color:var(--accent)}
+.thumb .badge{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#111;font-size:10px;font-weight:900;display:grid;place-items:center}
+.addslide{flex:none;width:86px;aspect-ratio:4/5;border:1px dashed var(--line);border-radius:8px;background:none;color:var(--sub);font-size:22px}
+.aiall{display:flex;gap:8px}
+.aiall input{flex:1}
+.side2{display:flex;flex-direction:column;gap:12px;position:sticky;top:12px}
+.checklist{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.checklist div{display:flex;gap:8px;align-items:flex-start}
+.checklist .ic{width:18px;flex:none;text-align:center;font-weight:900}
+.checklist .ok{color:var(--ok)} .checklist .w{color:var(--gold)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:500;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;width:100%;max-width:440px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.modal h3{margin:0;font-size:17px}
+
+/* 보관함 */
+.arch{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.aitem{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:8px}
+.aitem .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.aitem .t{font-weight:700;font-size:14px}
+.aitem .m{font-size:12px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap}
+
+/* 자동 */
+.rule{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel)}
+.sw{width:42px;height:24px;border-radius:12px;background:var(--line);border:0;position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.sw[aria-checked="true"]{background:var(--accent)}
+.sw[aria-checked="true"]::after{left:21px}
+.qitem{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+.qitem .acts{display:flex;gap:6px;flex-wrap:wrap}
+
+/* 브랜드 */
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw2{width:40px;height:40px;border-radius:10px;border:2px solid var(--line)}
+.logoBox{width:72px;height:72px;border-radius:14px;border:1px dashed var(--line);display:grid;place-items:center;color:var(--sub);font-size:12px;text-align:center}
+.tmake{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tmake button{border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:10px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.tmake small{color:var(--sub)}
+
+.mobileTop{display:none}
+@media (max-width:980px){
+  .editor{grid-template-columns:1fr}
+  .side2{position:static}
+}
+@media (max-width:860px){
+  .side{display:none}
+  .mobileTop{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0}
+  .main{padding:12px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+  .grid2,.grid3,.tmake{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .issue{grid-template-columns:44px minmax(0,1fr)}
+  .issue .go{grid-column:1/-1}
+  .ol{grid-template-columns:24px minmax(0,1fr) auto}
+  .ol select{grid-column:2/-1}
+  .qitem{grid-template-columns:90px minmax(0,1fr)}
+}
+@media (min-width:861px){.app{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="숏템 메뉴">
+    <div class="logo"><i></i>숏템메이커.</div>
+    <div class="ucard">
+      <div class="who"><div class="av">회</div><div><b>회원</b><div class="sub" style="font-size:12px">프로 요금제</div></div></div>
+      <div class="credit"><span>크레딧</span><b id="credSide">240</b></div>
+    </div>
+    <nav class="grp"><h4>리서처</h4><a class="dim" href="#" tabindex="-1">레퍼런스 랭킹</a><a class="dim" href="#" tabindex="-1">나만의 채널등록</a><a class="dim" href="#" tabindex="-1">장면 라이브러리</a></nav>
+    <nav class="grp"><h4>제작</h4><a class="dim" href="#" tabindex="-1">숏템 제작소</a><a class="on" href="#" aria-current="page">카드뉴스 제작소<span class="new">NEW</span></a><a class="dim" href="#" tabindex="-1">챌린지</a><a class="dim" href="#" tabindex="-1">유튜브제작</a></nav>
+    <nav class="grp"><h4>소통</h4><a class="dim" href="#" tabindex="-1">인스타 소통공간</a><a class="dim" href="#" tabindex="-1">도움말</a></nav>
+    <div class="note"><span class="lv">위치</span>숏템 사이드바 "제작" 묶음에 새 메뉴로. 로그인·결제·버텍스 등록(vertex_route)·사용량 기록(usage_meter)을 숏템 것 그대로 씁니다.</div>
+    <button class="themeBtn" id="themeBtn" type="button">민트·블랙 / 라이트 바꾸기</button>
+  </aside>
+
+  <main class="main">
+    <div class="mobileTop"><b style="color:var(--accent)">숏템메이커.</b><span class="credit" style="font-size:13px">크레딧 <b id="credTop" style="margin-left:6px">240</b></span></div>
+    <div class="head">
+      <div><h2>카드뉴스 제작소</h2><div class="desc">주제·링크·내 상품으로 인스타 카드뉴스를 만들고, 매일 자동으로도 만듭니다.</div></div>
+      <div class="hbtns">
+        <label class="noteToggle"><input type="checkbox" id="noteChk" checked style="width:auto"> 기획 메모 보기</label>
+        <button class="btn" type="button" data-go="archive">보관함</button>
+        <button class="btn pri" type="button" data-go="make">+ 새 카드뉴스</button>
+      </div>
+    </div>
+    <div class="note"><span class="lv">보는 법</span>이 화면은 기획 시안입니다. 모든 탭과 버튼을 눌러 볼 수 있고, 숫자·이슈·상품은 <b>예시</b>입니다. 노란 메모의 "1차/2차/나중"은 만드는 순서, 괄호는 가져온 서비스입니다.</div>
+
+    <div class="steps" role="tablist" aria-label="카드뉴스 제작소 탭" id="steps"></div>
+    <section id="view"></section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="modalRoot"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hl=s=>esc(s).replace(/\{([^}]+)\}/g,'<span class="hl">$1</span>');
+const ICON={
+ src:'<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0"/><path d="M12 12l5-3"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2"/></svg>',
+ make:'<svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.8-.8z"/></svg>',
+ edit:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>',
+ archive:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg>',
+ auto:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v4l2 1"/></svg>',
+ brand:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="9" cy="10" r="1.2"/><circle cx="14.5" cy="9" r="1.2"/><circle cx="15" cy="14" r="1.2"/><path d="M10 17a2 2 0 0 1 0-4"/></svg>'
+};
+const TABS=[["src","소재"],["make","만들기"],["edit","편집"],["archive","보관함"],["auto","자동"],["brand","브랜드·설정"]];
+
+const PACKS={info:{n:"정보형 다크",c:"p-info",d:"뉴스·정보"},prod:{n:"상품 홍보",c:"p-prod",d:"사진 중심"},tip:{n:"생활 팁",c:"p-tip",d:"밝은 색"}};
+const FONTS=[["Black Han Sans","블랙한산스","강한 임팩트"],["Do Hyeon","도현","굵고 단정"],["Jua","주아","둥글고 귀여움"],["Gothic A1","고딕 A1","깔끔한 정보"],["Gowun Dodum","고운돋움","부드러운 본문"],["Nanum Pen Script","나눔펜","손글씨 느낌"]];
+const IMG={none:{n:"그림 없음",s:"글과 도형만",c:0},stock:{n:"무료 사진",s:"상업 이용 가능 사진을 먼저 찾음",c:0},vfast:{n:"버텍스 Imagen 4 Fast",s:"1장 원가 $0.02",c:2},vnb:{n:"버텍스 Nano Banana 2",s:"1장 원가 $0.067 · 더 자연스러움",c:6}};
+const PHOTOS=["linear-gradient(135deg,#7a5c3e,#c9a27a 40%,#e9d8c0 60%,#8b6b4a)","linear-gradient(160deg,#30475e,#6b8fa3 45%,#cfd8dc 70%,#455a64)","linear-gradient(120deg,#5d4037,#a1887f 35%,#efebe9 55%,#795548)","linear-gradient(140deg,#2e5d4b,#7fb59a 45%,#e0efe6 65%,#3d6b58)","linear-gradient(150deg,#6d4c7d,#b39ddb 40%,#ede7f6 62%,#5e4b75)","linear-gradient(130deg,#8d5a2b,#e0a96d 40%,#fbe9d0 60%,#9a6b3a)"];
+
+const S={
+  tab:"src", credits:240, pack:"info", font:"Black Han Sans", coverFont:"Black Han Sans", size:"M", ratio:"4:5", count:"자동", purpose:"정보 전달",
+  img:"vfast", input:"topic", topic:"좁은 주방 수납 2배 늘리는 정리 순서", optOpen:false, phase:"form",
+  brand:{name:"살림연구소",color:"#37e0bd",tone:"친근한 존댓말",ban:"최고, 무조건, 100%",cta:"저장해 두고 주말에 해 보세요"},
+  slides:null, cur:0, selEl:null, outline:null, issueTab:"issue",
+  rules:[{on:true,t:"평일 오전 9시 · 살림 꿀팁 · 하루 1편",d:"소재: 오늘 이슈 중 '살림' 분야 1위 · 정보형 다크 · 6장 · 그림 없음"},{on:false,t:"토요일 오전 10시 · 내 상품 홍보 · 1편",d:"소재: 내 상품 목록 차례대로 · 상품 홍보 팩 · 5장 · 상품 사진"}],
+  queue:null, archive:null, feedback:[]
+};
+function baseSlides(){return [
+ {type:"cover",k:"살림 꿀팁",t:"좁은 주방 {수납 2배} 늘리는 정리 순서",b:"버리기 전에 이것부터 보세요"},
+ {type:"number",k:"하루 루틴",n:"10분",t:"하루 {10분}, 한 칸씩",b:"주말에 몰아서 하면 지칩니다. 하루 한 칸만 비우고 다시 채우세요."},
+ {type:"compare",k:"고르기",t:"선반형 vs 서랍형",l:["선반형","한눈에 보임","먼지가 쌓임"],r:["서랍형","깔끔해 보임","안쪽이 안 보임"]},
+ {type:"steps",k:"순서",t:"정리는 {이 순서로}",items:["전부 꺼내기","종류별로 묶기","자주 쓰는 것부터 넣기"]},
+ {type:"list",k:"정리템",t:"있으면 편한 정리템",items:["틈새 수납장","문걸이 선반","칸막이 트레이"]},
+ {type:"cta",k:"마무리",t:"저장해 두고 {주말에} 해 보세요",b:"다음 편: 냉장고 정리 순서"}
+];}
+const LAYOUTS=["cover","number","compare","steps","list","cta"];
+
+function cardHTML(sl,i,total,opt={}){
+  const p=PACKS[opt.pack||S.pack]; const ts={S:"8.4cqw",M:"9.6cqw",L:"11cqw"}[S.size];
+  const tf=`font-family:'${i===0?S.coverFont:S.font}',var(--f-ui)`;
+  const ed=(f,inner,tag="div",cls="")=>opt.edit?`<${tag} class="${cls} edit-el${S.selEl===f&&S.cur===i?' sel-el':''}" data-f="${f}">${inner}</${tag}>`:`<${tag} class="${cls}">${inner}</${tag}>`;
+  let body="";
+  if(sl.type==="cover"){body=`<div class="spacer"></div>${ed("k",esc(sl.k),"div","k")}${ed("t",hl(sl.t),"div","tt")}${ed("b",esc(sl.b),"div","bd")}<div style="height:6cqw"></div>`}
+  else if(sl.type==="number"){body=`${ed("k",esc(sl.k),"div","k")}<div class="num">${esc(sl.n)}</div>${ed("t",hl(sl.t),"div","tt")}${ed("b",esc(sl.b),"div","bd")}`}
+  else if(sl.type==="compare"){body=`${ed("k",esc(sl.k),"div","k")}${ed("t",hl(sl.t),"div","tt")}<div class="cmp"><div><b>${esc(sl.l[0])}</b><span>+ ${esc(sl.l[1])}</span><span>− ${esc(sl.l[2])}</span></div><div><b>${esc(sl.r[0])}</b><span>+ ${esc(sl.r[1])}</span><span>− ${esc(sl.r[2])}</span></div></div>`}
+  else if(sl.type==="steps"||sl.type==="list"){body=`${ed("k",esc(sl.k),"div","k")}${ed("t",hl(sl.t),"div","tt")}<ol>${sl.items.map((x,j)=>`<li><i>${sl.type==="steps"?j+1:"✓"}</i>${esc(x)}</li>`).join("")}</ol>`}
+  else {body=`<div class="spacer"></div>${ed("t",hl(sl.t),"div","tt")}${ed("b",esc(sl.b),"div","bd")}<span class="save">저장하기 ↓</span><div style="height:6cqw"></div>`}
+  const photo=(opt.pack||S.pack)==="prod"||S.img!=="none"&&(opt.pack||S.pack)==="prod"?`--photo:${PHOTOS[(i+(sl.seed||0))%PHOTOS.length]};`:"";
+  return `<div class="cardwrap"><div class="card ${p.c}" style="--ts:${ts};--ac:${(opt.pack||S.pack)==="tip"?"#ff7a59":S.brand.color};${photo}"><div class="ph"></div>${body.replace(/class="tt/g,`style="${tf}" class="tt`)}<div class="brand"><i></i>${esc(S.brand.name)}</div><div class="pg">${i+1}/${total}</div></div></div>`;
+}
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2200)}
+function spend(n,why){S.credits=Math.max(0,S.credits-n);$("#credSide").textContent=S.credits;$("#credTop").textContent=S.credits;if(n)toast(`${why} · 크레딧 ${n} 사용 (남은 ${S.credits})`)}
+function note(lv,txt){return `<div class="note"><span class="lv">${lv}</span>${txt}</div>`}
+function go(tab){S.tab=tab;render();window.scrollTo({top:0,behavior:"smooth"})}
+
+function renderSteps(){
+  $("#steps").innerHTML=TABS.map(([k,n],i)=>`<button class="step${S.tab===k?" on":""}" role="tab" id="tab-${k}" aria-selected="${S.tab===k}" data-go="${k}" type="button"><span class="ic">${ICON[k]}</span>${n}<span class="nb">${i+1}</span></button>`).join("");
+}
+
+/* ── 탭 1 소재 ── */
+const ISSUES=[
+ [92,"이사철 '정리 수납' 검색이 늘고 있어요","검색 트렌드","살림","전국"],
+ [88,"이번 주 홈쇼핑 편성: 무선 청소기 특가 방송 3회","홈쇼핑 편성","가전","전국"],
+ [84,"김장철 대용량 밀폐용기 문의 증가","쇼핑몰 순위","주방","전국"],
+ [79,"환절기 가습기 세척 방법 찾는 글 증가","블로그·카페","가전","전국"],
+ [71,"가을 캠핑 접이식 테이블 인기","쇼핑몰 순위","캠핑","전국"]];
+const PRODUCTS=[["접이식 틈새 수납장","쿠팡","판매 링크 등록됨"],["문걸이 선반 2단","스마트스토어","판매 링크 등록됨"],["칸막이 트레이 6p","쿠팡","판매 링크 등록됨"]];
+const IDEAS=["냉장고 정리 순서 (다음 편 예고)","현관 신발장 공간 늘리기","욕실 수납 실수 3가지"];
+function vSrc(){
+  const t=S.issueTab;
+  let list="";
+  if(t==="issue") list=ISSUES.map(([s,ti,src,cat,reg],i)=>`<div class="issue"><div class="score">${s}<small>점수</small></div><div><div class="t">${esc(ti)}</div><div class="m"><span class="pill">${cat}</span><span>${src}</span><span>· ${reg}</span><span class="ex">예시</span></div></div><button class="btn pri sm go" type="button" data-mk="${esc(ti)}">카드로 만들기</button></div>`).join("");
+  if(t==="prod") list=PRODUCTS.map(([n,m,s])=>`<div class="issue"><div class="score" style="font-size:13px">${m}</div><div><div class="t">${esc(n)}</div><div class="m"><span>${s}</span><span class="ex">예시</span></div></div><button class="btn pri sm go" type="button" data-mkp="${esc(n)}">홍보 카드 만들기</button></div>`).join("");
+  if(t==="idea") list=IDEAS.map(n=>`<div class="issue"><div class="score" style="font-size:13px">저장</div><div><div class="t">${esc(n)}</div></div><button class="btn pri sm go" type="button" data-mk="${esc(n)}">카드로 만들기</button></div>`).join("");
+  return `<div class="panel"><h3>1 · 소재</h3><div class="pdesc">오늘 무엇을 만들지 고릅니다. 점수가 높은 순서입니다.</div>
+  <div class="tabs2" role="tablist">${[["issue","오늘 뜨는 이슈"],["prod","내 상품"],["idea","저장한 아이디어"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${t===k}" data-it="${k}">${n}</button>`).join("")}</div>
+  ${t==="issue"?note("2차","이슈 점수·출처·분야 표시, 줄마다 바로 만들기 (펄스카드 레이더). 출처: 검색 트렌드·홈쇼핑 편성·쇼핑몰 순위·블로그. 키워드 대량 기획은 레비오사 방식"):""}
+  ${t==="prod"?note("2차","숏템에 등록한 판매 링크(쿠팡·스마트스토어)를 그대로 불러옵니다. 링크 속 상품 사진을 가져와 홍보 카드로 (Mirra 링크 입력, 펄스카드 상품 홍보)"):""}
+  <div style="display:flex;flex-direction:column;gap:8px">${list}</div></div>`;
+}
+
+/* ── 탭 2 만들기 ── */
+function costCalc(){const n=S.count==="자동"?6:+S.count;return {gen:10,img:IMG[S.img].c*n,n}}
+function vMake(){
+  if(S.phase==="outline") return vOutline();
+  if(S.phase==="gen") return vGen();
+  const c=costCalc();
+  const inputs={topic:`<input id="inTopic" value="${esc(S.topic)}" aria-label="주제" placeholder="예: 좁은 주방 수납 늘리는 법">`,
+    link:`<input id="inLink" placeholder="https://www.coupang.com/... 또는 유튜브·블로그·스마트스토어 링크" aria-label="링크"><div class="sub">링크 속 글과 사진을 가져옵니다. 사진은 아래 '그림' 설정에서 어떻게 쓸지 고릅니다.</div>`,
+    text:`<textarea id="inText" aria-label="글 붙여넣기" placeholder="기획안·원고·메모를 붙여 넣으면 장별로 나눕니다 (30자 이상)"></textarea>`,
+    prod:`<div class="grid2"><input id="inProd" placeholder="상품 이름 또는 판매 링크" aria-label="상품"><select aria-label="홍보 방식" id="inProdWay"><option>문제 해결형</option><option>사용 장면형</option><option>비교형</option><option>후기형</option></select></div><div class="sub">브랜드·모델을 읽고 실제 상품 사진을 찾아옵니다.</div>`};
+  return `<div class="panel"><h3>2 · 만들기</h3><div class="pdesc">무엇으로 만들지 넣고, 개요를 확인한 뒤 만듭니다. 개요까지는 크레딧이 들지 않습니다.</div>
+  <div class="tabs2" role="tablist">${[["topic","주제"],["link","링크"],["text","글 붙여넣기"],["prod","상품 홍보"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${S.input===k}" data-in="${k}">${n}</button>`).join("")}</div>
+  ${inputs[S.input]}
+  ${note("1차","입력 4종: 주제 / 링크(유튜브·블로그·쿠팡·스마트스토어) / 글 / 상품 홍보 (Mirra·aiCarousels·Predis·펄스카드)")}
+  <button class="optsum" type="button" id="optToggle" aria-expanded="${S.optOpen}"><span>설정 · <b>${S.purpose}</b> · ${S.count==="자동"?"장수 자동":S.count+"장"} · ${S.ratio} · <b>${PACKS[S.pack].n}</b> · ${FONTS.find(f=>f[0]===S.font)[1]} ${S.size} · ${IMG[S.img].n}</span><span>${S.optOpen?"접기 ▲":"펼치기 ▼"}</span></button>
+  ${note("1차","설정은 한 줄로 요약, 누르면 펼침. 다음 카드부터 적용 (펄스카드 디자인 패널)")}
+  ${S.optOpen?vOpts():""}
+  <div class="cost"><div class="sum">예상 · 생성 <b>${c.gen}</b> + 그림 <b>${c.img}</b> = <b>${c.gen+c.img}</b> 크레딧 <span class="ex">예시 단가</span></div><button class="btn pri" type="button" id="toOutline">개요 만들기 (무료)</button></div>
+  ${note("1차","버튼에 예상 크레딧 표시 (레비오사·Mirra). 크레딧은 개요 확인 뒤 '이대로 만들기'에서만 차감 (망고보드)")}
+  </div>`;
+}
+function vOpts(){
+  return `<div class="grid2">
+   <div class="box"><h4>목적</h4><div class="chips">${["정보 전달","상품 홍보","저장 유도","팔로우 유도"].map(x=>`<button type="button" class="chip" aria-pressed="${S.purpose===x}" data-purpose="${x}">${x}</button>`).join("")}</div>
+     <h4>장수</h4><div class="chips">${["자동","5","6","8","10"].map(x=>`<button type="button" class="chip" aria-pressed="${S.count===x}" data-count="${x}">${x==="자동"?"자동 (5~10)":x+"장"}</button>`).join("")}</div>
+     <h4>비율</h4><div class="chips">${["4:5","1:1","9:16"].map(x=>`<button type="button" class="chip" aria-pressed="${S.ratio===x}" data-ratio="${x}">${x}${x==="4:5"?" 인스타 권장":""}</button>`).join("")}</div>
+     ${note("1차","장수 자동이면 주제를 보고 5~10장. 첫 장 표지, 마지막 장 저장 유도는 고정, 가운데는 주제 따라 숫자·비교·단계·목록 (펄스카드·aiCarousels)")}
+   </div>
+   <div class="box"><h4>디자인 팩</h4><div class="packs">${Object.entries(PACKS).map(([k,p])=>`<button type="button" class="pack" aria-pressed="${S.pack===k}" data-pack="${k}">${cardHTML(baseSlides()[0],0,6,{pack:k})}<span>${p.n} · ${p.d}</span></button>`).join("")}</div>
+     ${note("1차","팩 3종으로 시작. '자동'이면 주제를 읽고 팩을 고름 (펄스카드 프로·큐트·자동)")}
+   </div></div>
+   <div class="box"><h4>글씨 <span class="sub" style="font-weight:400">— 샘플 문구 그대로 보고 고르세요</span></h4>
+     <div class="fonts">${FONTS.map(([f,n,d])=>`<button type="button" class="font" aria-pressed="${S.font===f}" data-font="${f}"><span style="font-family:'${f}',var(--f-ui)">수납 2배 늘리기</span><small>${n} · ${d}</small></button>`).join("")}</div>
+     <div class="row"><span class="sub">표지 글씨</span><select id="coverFont" style="width:auto">${FONTS.map(([f,n])=>`<option value="${f}"${S.coverFont===f?" selected":""}>${n}</option>`).join("")}</select><span class="sub">크기</span><div class="chips">${["S","M","L"].map(x=>`<button type="button" class="chip" aria-pressed="${S.size===x}" data-size="${x}">${x}</button>`).join("")}</div></div>
+     ${note("1차","폰트 미리보기, 표지 폰트 따로, 크기 S·M·L (펄스카드)")}
+   </div>
+   <div class="box"><h4>그림</h4><div class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">${Object.entries(IMG).map(([k,v])=>`<button type="button" class="imgopt" aria-pressed="${S.img===k}" data-img="${k}"><b>${v.n}</b><small>${v.s}</small><small>장당 ${v.c} 크레딧 <span class="ex">예시</span></small></button>`).join("")}</div>
+     ${note("1차","무료 사진 먼저, 없으면 버텍스 생성. 생성된 그림은 AI가 주제와 맞는지 한 번 더 확인 (펄스카드·Mirra). 원가는 버텍스 공식 단가")}
+   </div>`;
+}
+function makeOutline(){
+  const n=S.count==="자동"?6:+S.count; const b=baseSlides();
+  const roles={cover:"표지",number:"숫자",compare:"비교",steps:"단계",list:"목록",cta:"저장 유도"};
+  const out=[];for(let i=0;i<n;i++){const sl=b[Math.min(i,b.length-2)]; out.push({role:i===0?"cover":i===n-1?"cta":(["number","compare","steps","list"][(i-1)%4]),line:i===0?b[0].t.replace(/[{}]/g,""):i===n-1?b[5].t.replace(/[{}]/g,""):[b[1],b[2],b[3],b[4]][(i-1)%4].t.replace(/[{}]/g,"")})}
+  S.outline=out;S._roles=roles;
+}
+function vOutline(){
+  const roles=S._roles;
+  return `<div class="panel"><h3>2 · 만들기 — 개요 확인</h3><div class="pdesc">장마다 한 줄씩 고칠 수 있습니다. 여기서 그만두면 크레딧이 들지 않습니다.</div>
+  <div class="outline">${S.outline.map((o,i)=>`<div class="ol"><span class="no">${i+1}</span><select data-orole="${i}" aria-label="${i+1}장 종류">${Object.entries(roles).map(([k,v])=>`<option value="${k}"${o.role===k?" selected":""}>${v}</option>`).join("")}</select><input data-oline="${i}" value="${esc(o.line)}" aria-label="${i+1}장 내용"><button class="btn sm" type="button" data-odel="${i}" aria-label="${i+1}장 빼기">빼기</button></div>`).join("")}</div>
+  <div class="row"><button class="btn sm" type="button" id="oAdd">+ 장 추가</button><span class="sub">${S.outline.length}장</span></div>
+  ${note("1차","생성 전 개요 수정 (망고보드 7장 개요, Predis 장별 대본, Mirra 기획 검토)")}
+  <div class="cost"><button class="btn" type="button" id="oBack">← 설정으로</button><div class="row"><span class="sum">차감 <b>${costCalc().gen+IMG[S.img].c*S.outline.length}</b> 크레딧</span><button class="btn pri" type="button" id="oGo">이대로 만들기</button></div></div></div>`;
+}
+const GSTEPS=["문구 쓰기 — 핵심 단어가 장마다 들어갔는지 맞추며","자동 검사 — 걸리면 이유를 짚어 다시 쓰기","그림 — 무료 사진 먼저, 없으면 버텍스 생성 후 맞는지 확인","카드 그리기 — 화면 미리보기와 같은 렌더로 JPEG 1080×1350"];
+const CHECKS=["주제에 없는 날짜·숫자를 지어냈나","내용이 빈 장이 있나","제목이 앞 장과 겹치나","글자가 칸을 넘치나","첫 장 글자 수(20자 이하)","금지어(브랜드 설정)","존댓말·반말 섞임","같은 문장 반복","마지막 장 저장 유도 있음","그림이 주제와 맞나","사람 성별·인물 오류","캡션 해시태그 중복"];
+function vGen(){
+  const st=S._g||0;
+  return `<div class="panel"><h3>2 · 만들기 — 만드는 중</h3><div class="pdesc">이 화면을 떠나도 보관함에 저장됩니다.</div>
+  <div class="bar"><i style="width:${Math.min(100,st*25)}%"></i></div>
+  <div class="prog">${GSTEPS.map((g,i)=>`<div class="pstep ${i<st?"done":i===st?"run":""}"><span class="dot">${i<st?"✓":""}</span><div>${g}${i===1&&st>=1?`<div class="checks">${CHECKS.map((c,j)=>`<span class="${j===4&&st>1?"fx":"ok"}">${j===4&&st>1?"↻ 고침":"✓"} ${c}</span>`).join("")}</div>`:""}</div></div>`).join("")}</div>
+  ${note("1차","12가지 자동 검사 후 다시 쓰기 (펄스카드). 첫 장 글자 수는 aiCarousels 점검표. 렌더는 미리보기와 다운로드가 같은 함수")}
+  </div>`;
+}
+function runGen(){
+  S.phase="gen";S._g=0;render();
+  const tick=()=>{S._g++; if(S._g<=4){render();setTimeout(tick,S._g===4?500:850)} else {S.phase="form";S.slides=buildFromOutline();S.cur=0;S.selEl=null;addArchive();go("edit");toast("다 만들었어요 · 보관함에도 저장됨")}};
+  setTimeout(tick,700);
+}
+function buildFromOutline(){
+  const b=baseSlides(); const map={cover:b[0],number:b[1],compare:b[2],steps:b[3],list:b[4],cta:b[5]};
+  return S.outline.map((o,i)=>{const s=JSON.parse(JSON.stringify(map[o.role]));s.seed=i;if(o.role!=="compare"&&o.line&&!o.line.startsWith(s.t.replace(/[{}]/g,"")))s.t=o.line;return s});
+}
+
+/* ── 탭 3 편집 ── */
+function curSlide(){return S.slides[S.cur]}
+function vEdit(){
+  if(!S.slides){S.outline=null;S.count="자동";makeOutline();S.slides=buildFromOutline()}
+  const sl=curSlide(), n=S.slides.length;
+  const f=S.selEl; const val=f?(Array.isArray(sl[f])?sl[f].join(", "):sl[f]):"";
+  return `<div class="panel"><h3>3 · 편집</h3><div class="pdesc">글을 누르면 그 글만, 아래 버튼은 이 장만 바꿉니다. 화면에 보이는 그대로 파일로 받습니다.</div>
+  <div class="editor"><div class="stage">
+    <div class="bigcard" id="bigcard">${cardHTML(sl,S.cur,n,{edit:true})}</div>
+    <div class="row" style="justify-content:center"><button class="btn sm" type="button" id="prevS">← 이전 장</button><span class="sub">${S.cur+1} / ${n}</span><button class="btn sm" type="button" id="nextS">다음 장 →</button></div>
+    <div class="strip">${S.slides.map((s,i)=>`<button type="button" class="thumb" data-th="${i}" aria-current="${i===S.cur}" aria-label="${i+1}장">${cardHTML(s,i,n)}${s.warn?'<span class="badge">!</span>':""}</button>`).join("")}<button type="button" class="addslide" id="addS" aria-label="장 추가">+</button></div>
+    ${note("1차","아래 썸네일 줄 + 큰 미리보기 + 장 추가 (Mirra·aiCarousels·PostNitro)")}
+    <div class="aiall"><input id="aiAll" placeholder="AI로 전체 수정 — 예: 더 어둡게, 문장을 짧게, 반말로" aria-label="AI로 전체 수정"><button class="btn" type="button" id="aiAllGo">전체 수정 · 5</button></div>
+    ${note("2차","한 줄 지시로 전체 다시 (Mirra 'AI로 전체 수정', Contentdrips AI 에이전트). 부분 수정보다 크레딧이 큼")}
+  </div>
+  <div class="side2">
+    <div class="box"><h4>선택한 글</h4>${f?`<textarea id="elTxt" style="min-height:80px" aria-label="선택한 글">${esc(val)}</textarea>
+      <div class="chips"><button class="chip" type="button" data-rw="re">다시 쓰기 · 1</button><button class="chip" type="button" data-rw="short">짧게 · 1</button><button class="chip" type="button" data-rw="long">길게 · 1</button><button class="chip" type="button" data-rw="easy">쉽게 · 1</button></div>
+      <div class="sub">강조할 단어는 {중괄호}로 감싸면 강조색이 들어갑니다.</div>`:`<div class="sub">카드 위의 글(제목·본문·머리말)을 누르세요.</div>`}
+      ${note("1차","요소 하나만 다시 쓰기·짧게·길게·쉽게 (aiCarousels). 부분 수정은 1크레딧 — '고칠 때마다 크게 깎인다'는 Canva 불만 반영. {강조} 문법은 인피디 프로그램")}
+    </div>
+    <div class="box"><h4>이 장</h4><div class="chips"><button class="chip" type="button" id="swapLay">레이아웃 바꾸기 (글 유지) · 0</button><button class="chip" type="button" id="regenBg">배경 다시 생성 · ${IMG[S.img].c||2}</button><button class="chip" type="button" id="dupS">복제</button><button class="chip" type="button" id="delS">삭제</button></div>
+      <div class="row"><span class="sub">팩</span><div class="chips">${Object.entries(PACKS).map(([k,p])=>`<button type="button" class="chip" aria-pressed="${S.pack===k}" data-pack2="${k}">${p.n}</button>`).join("")}</div></div>
+      ${note("2차","레이아웃만 교체, 글 유지 (aiCarousels 239 레이아웃). 배경만 다시 생성은 버텍스 1장 비용만")}
+    </div>
+    <div class="box"><h4>틀렸어요</h4><div class="chips"><button class="chip" type="button" data-fb="img">이미지 틀림</button><button class="chip" type="button" data-fb="copy">카피 틀림</button></div>
+      <div class="sub">이유를 고르면 다음 생성부터 그 조건을 피합니다.${S.feedback.length?` 지금까지 ${S.feedback.length}건 반영.`:""}</div>
+      ${note("2차","틀림 신고 → 학습 (펄스카드). 성별 반대·엉뚱한 인물·주제 무관 / 사실 틀림·문장 어색")}
+    </div>
+    <div class="box"><h4>내보내기 전 점검</h4><div class="checklist">${checklist().map(([ok,t])=>`<div><span class="ic ${ok?"ok":"w"}">${ok?"✓":"!"}</span><span>${t}</span></div>`).join("")}</div>
+      ${note("1차","게시 전 점검표 (aiCarousels 'Ready to post?')")}
+      <div class="chips"><button class="btn pri sm" type="button" data-dl="zip">JPEG ZIP 받기</button><button class="btn sm" type="button" data-dl="pdf">PDF</button><button class="btn sm" type="button" data-dl="cap">캡션 복사</button></div>
+    </div>
+  </div></div></div>`;
+}
+function checklist(){
+  const s=S.slides; const first=s[0].t.replace(/[{}]/g,"");
+  return [[s.length>=2&&s.length<=10,`장수 ${s.length}장 (2~10장)`],[first.length<=22,`첫 장 제목 ${first.length}자 ${first.length<=22?"":"— 22자 이하 권장"}`],[s[s.length-1].type==="cta","마지막 장 저장 유도"],[true,"비율 4:5 · 1080×1350"],[true,"캡션·해시태그 준비됨"]];
+}
+function rewrite(kind){
+  const sl=curSlide(),f=S.selEl; if(!f)return;
+  const v=sl[f]; if(typeof v!=="string")return;
+  const raw=v;
+  const m={re:{t:["좁은 주방도 {넓게} 쓰는 정리 순서","하루 {10분}이면 충분해요","정리는 {순서}가 전부입니다"],b:["버리기 전에 순서부터 정하세요","작게 시작해야 오래 갑니다"]},
+    short:{t:[raw.length>12?raw.slice(0,Math.max(8,Math.floor(raw.length*.6))).trim():raw]},
+    long:{t:[raw+" — 오늘 바로"]},
+    easy:{t:[raw.replace("늘리는","늘리는 쉬운")]}};
+  const pool=(m[kind][f]||m[kind].t||[raw]);
+  sl[f]=pool[Math.floor(Math.random()*pool.length)]||raw;
+  spend(1,{re:"다시 쓰기",short:"짧게",long:"길게",easy:"쉽게"}[kind]);render();
+}
+
+/* ── 탭 4 보관함 ── */
+function addArchive(){S.archive=S.archive||seedArchive(); S.archive.unshift({t:S.topic,pack:S.pack,n:S.slides.length,d:"방금",tag:"수동",slides:JSON.parse(JSON.stringify(S.slides))})}
+function seedArchive(){const b=baseSlides();return [
+ {t:"현관 신발장 공간 늘리기",pack:"tip",n:6,d:"10월 16일",tag:"자동",slides:b},
+ {t:"접이식 틈새 수납장 홍보",pack:"prod",n:5,d:"10월 15일",tag:"상품 홍보",slides:b},
+ {t:"환절기 가습기 세척 순서",pack:"info",n:7,d:"10월 14일",tag:"자동",slides:b},
+ {t:"욕실 수납 실수 3가지",pack:"tip",n:6,d:"10월 12일",tag:"수동",slides:b}]}
+function vArchive(){
+  S.archive=S.archive||seedArchive();
+  return `<div class="panel"><h3>4 · 보관함</h3><div class="pdesc">만든 즉시 저장됩니다. 화면을 나가도 사라지지 않습니다.</div>
+  ${note("1차","자동 저장 — 망고보드는 저장 전에 화면을 벗어나면 결과가 사라지는 한계가 공식 가이드에 있음")}
+  <div class="arch">${S.archive.map((a,i)=>`<div class="aitem"><div class="mini">${a.slides.slice(0,3).map((s,j)=>cardHTML(s,j,a.n,{pack:a.pack})).join("")}</div><div class="t">${esc(a.t)}</div><div class="m"><span class="pill">${a.tag}</span><span>${PACKS[a.pack].n} · ${a.n}장 · ${a.d}</span></div>
+   <div class="chips"><button class="btn sm" type="button" data-aopen="${i}">열기</button><button class="btn sm" type="button" data-dl="zip">ZIP</button><button class="btn sm" type="button" data-dl="cap">캡션 복사</button></div>
+   <div class="chips"><button class="chip" type="button" data-amore="tpl">템플릿으로 저장</button><button class="chip" type="button" data-amore="ratio">비율 바꾸기</button><button class="chip" type="button" data-amore="jp">일본어판</button><button class="chip" type="button" data-amore="reel">릴스로</button></div></div>`).join("")}</div>
+  ${note("2차·나중","템플릿 저장·비율 바꾸기(2차, Mirra) · 번역본(나중, 인피디) · 릴스 변환(나중, 숏템 영상 엔진 연결)")}
+  </div>`;
+}
+
+/* ── 탭 5 자동 ── */
+function seedQueue(){const b=baseSlides();return [
+ {t:"이사철 정리 수납 체크리스트",st:"ok",msg:"검사 12개 통과",pack:"info",slides:b},
+ {t:"김장철 밀폐용기 고르는 법",st:"fix",msg:"첫 장 26자 → 18자로 다시 씀",pack:"tip",slides:b},
+ {t:"무선 청소기 특가 방송 정리",st:"fail",msg:"방송 날짜를 지어냈을 수 있음 — 확인 필요",pack:"info",slides:b}]}
+function vAuto(){
+  S.queue=S.queue||seedQueue();
+  return `<div class="panel"><h3>5 · 자동</h3><div class="pdesc">규칙대로 서버가 매일 만들어 승인 대기함에 넣습니다. 내 컴퓨터가 꺼져 있어도 됩니다.</div>
+  <div class="box"><h4>규칙</h4>${S.rules.map((r,i)=>`<div class="rule"><button type="button" class="sw" role="switch" aria-checked="${r.on}" data-rule="${i}" aria-label="${esc(r.t)} 켜기"></button><div><b style="font-size:14px">${esc(r.t)}</b><div class="sub">${esc(r.d)}</div></div><button class="btn sm" type="button" data-redit="${i}">고치기</button></div>`).join("")}
+   <details><summary class="sub" style="cursor:pointer">+ 새 규칙</summary><div class="grid3" style="margin-top:10px">
+    <label class="sub">소재<select><option>오늘 이슈 · 분야 고르기</option><option>내 상품 차례대로</option><option>저장한 아이디어</option></select></label>
+    <label class="sub">언제<select><option>평일 오전 9시</option><option>매일 저녁 7시</option><option>토요일 오전 10시</option></select></label>
+    <label class="sub">하루 몇 편<select><option>1</option><option>2</option><option>3</option></select></label>
+    <label class="sub">디자인 팩<select>${Object.values(PACKS).map(p=>`<option>${p.n}</option>`).join("")}</select></label>
+    <label class="sub">그림<select>${Object.values(IMG).map(p=>`<option>${p.n}</option>`).join("")}</select></label>
+    <label class="sub">한 달 최대 크레딧<input value="300" inputmode="numeric"></label></div>
+    <div class="row" style="margin-top:10px"><button class="btn pri sm" type="button" id="ruleAdd">규칙 저장</button></div></details>
+   ${note("2차","서버 크론이 돌림 → PC 꺼져도 됨. Claude 코워크 예약·Antigravity 캘린더는 PC가 켜져 있어야 돈다(강의 2·4). 한 달 크레딧 상한으로 과금 사고 방지")}
+  </div>
+  <div class="box"><h4>승인 대기함 <span class="pill">${S.queue.length}</span></h4>
+   ${S.queue.map((q,i)=>`<div class="qitem">${cardHTML(q.slides[0],0,6,{pack:q.pack})}<div style="display:flex;flex-direction:column;gap:8px;min-width:0"><b>${esc(q.t)}</b><div><span class="pill ${q.st==="ok"?"":q.st==="fix"?"w":"f"}">${q.st==="ok"?"검사 통과":q.st==="fix"?"고쳐서 통과":"확인 필요"}</span> <span class="sub">${esc(q.msg)}</span></div><div class="acts"><button class="btn pri sm" type="button" data-qa="ok" data-q="${i}">승인</button><button class="btn sm" type="button" data-qa="edit" data-q="${i}">고치기</button><button class="btn sm warn" type="button" data-qa="del" data-q="${i}">버리기</button></div></div></div>`).join("")||`<div class="sub">대기 중인 카드가 없습니다.</div>`}
+   ${note("2차","승인 대기함: 승인 / 고치기 / 버리기 (강의 6 승인 버튼, Predis·PostNitro 승인 흐름). 검사 탈락분은 '확인 필요'로 표시")}
+   ${note("나중","승인한 카드를 인스타에 바로 게시 — 메타 앱 검수·비즈니스 인증 뒤 붙임")}
+  </div></div>`;
+}
+
+/* ── 탭 6 브랜드·설정 ── */
+function vBrand(){
+  const b=S.brand;
+  return `<div class="panel"><h3>6 · 브랜드·설정</h3><div class="pdesc">여기서 정한 것이 모든 카드에 들어갑니다.</div>
+  <div class="grid2"><div class="box"><h4>브랜드 키트</h4>
+    <div class="row"><div class="logoBox">로고<br>올리기</div><div style="flex:1;display:flex;flex-direction:column;gap:8px"><input id="bName" value="${esc(b.name)}" aria-label="브랜드 이름"><div class="swatches">${["#37e0bd","#ff7a59","#4dabf7","#f0c453","#cc5de8"].map(c=>`<button type="button" class="sw2" style="background:${c};${b.color===c?"border-color:var(--txt)":""}" data-color="${c}" aria-label="색 ${c}"></button>`).join("")}</div></div></div>
+    <label class="sub">말투<select id="bTone">${["친근한 존댓말","전문가 존댓말","짧고 강한 반말"].map(t=>`<option${b.tone===t?" selected":""}>${t}</option>`).join("")}</select></label>
+    <label class="sub">쓰지 않을 말<input id="bBan" value="${esc(b.ban)}"></label>
+    <label class="sub">마지막 장 문구<input id="bCta" value="${esc(b.cta)}"></label>
+    ${note("2차","로고·색·말투·금지어·마지막 장 (PostNitro·aiCarousels 브랜드 키트, 레비오사 카드뉴스 페르소나). 금지어는 자동 검사 항목에 들어감")}
+  </div>
+  <div class="box"><h4>미리보기</h4><div style="max-width:220px">${cardHTML(baseSlides()[5],5,6,{})}</div></div></div>
+  <div class="box"><h4>템플릿 만들기</h4><div class="tmake">
+    <button type="button" data-tm="mine"><b>내 게시물로</b><small>잘된 내 게시물 사진을 올리면 배치·색·글씨를 읽어 템플릿으로</small></button>
+    <button type="button" data-tm="ref"><b>레퍼런스 이미지로</b><small>따라 하고 싶은 카드 이미지를 올리면 비슷한 틀로</small></button>
+    <button type="button" data-tm="self"><b>직접 만들기</b><small>편집기에서 만든 카드를 템플릿으로 저장</small></button></div>
+    ${note("2차","템플릿 만들기 3방식 (레비오사). 망고보드는 첨부 이미지가 디자인에 반영 안 됨 → 우리 차별점")}
+  </div>
+  <div class="grid2"><div class="box"><h4>크레딧</h4>
+    <div class="row" style="justify-content:space-between"><span>남은 크레딧</span><b style="font-size:20px;color:var(--accent)">${S.credits}</b></div>
+    <div class="scroll"><table><thead><tr><th>날짜</th><th>내용</th><th style="text-align:right">크레딧</th></tr></thead><tbody>
+     <tr><td>10월 17일</td><td>카드뉴스 생성 (6장, Imagen 4 Fast)</td><td class="n">−22</td></tr>
+     <tr><td>10월 17일</td><td>제목 다시 쓰기</td><td class="n">−1</td></tr>
+     <tr><td>10월 16일</td><td>자동 규칙: 살림 꿀팁</td><td class="n">−10</td></tr>
+     <tr><td>10월 1일</td><td>프로 요금제 충전</td><td class="n">+300</td></tr></tbody></table></div>
+    <span class="ex" style="align-self:flex-start">예시 값</span>
+    ${note("1차","잔액·사용 내역·예상 차감을 숨기지 않음 (펄스카드 비용 표시)")}
+  </div>
+  <div class="box"><h4>연결·요금제</h4>
+    <div class="row" style="justify-content:space-between"><span>버텍스(그림 생성)</span><span class="pill">연결됨</span></div>
+    <div class="row" style="justify-content:space-between"><span>인스타 계정</span><span class="pill w">나중에 열림</span></div>
+    <div class="row" style="justify-content:space-between"><span>요금제</span><b>프로</b></div>
+    <div class="row"><button class="btn sm" type="button" data-plan="change">요금제 바꾸기</button><button class="btn sm warn" type="button" data-plan="cancel">해지하기</button></div>
+    ${note("1차","해지 버튼을 숨기지 않음 — aiCarousels·Predis Trustpilot 1점 후기 다수가 해지·환불 문제")}
+    ${note("미정","버텍스 비용을 회원 키로 낼지, 사장님 키로 그리고 크레딧을 팔지")}
+  </div></div></div>`;
+}
+
+/* ── 렌더와 이벤트 ── */
+function render(){
+  renderSteps();
+  const v={src:vSrc,make:vMake,edit:vEdit,archive:vArchive,auto:vAuto,brand:vBrand}[S.tab]();
+  $("#view").innerHTML=v;
+}
+function modal(html){$("#modalRoot").innerHTML=`<div class="modalBg" id="mbg"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;const f=$("#modalRoot .modal button, #modalRoot .modal input");f&&f.focus()}
+function closeModal(){$("#modalRoot").innerHTML=""}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,[data-f],a");
+  if(e.target.id==="mbg"){closeModal();return}
+  if(!t)return;
+  if(t.tagName==="A"){e.preventDefault();return}
+  const d=t.dataset;
+  if(d.go){if(d.go==="make"){S.phase="form"} go(d.go);return}
+  if(d.it){S.issueTab=d.it;render();return}
+  if(d.mk){S.topic=d.mk;S.input="topic";S.phase="form";go("make");toast("소재를 만들기로 가져왔어요");return}
+  if(d.mkp){S.topic=d.mkp+" 홍보";S.input="prod";S.pack="prod";S.purpose="상품 홍보";S.phase="form";go("make");setTimeout(()=>{const i=$("#inProd");i&&(i.value=d.mkp)},0);return}
+  if(d.in){S.input=d.in;render();return}
+  if(t.id==="optToggle"){S.optOpen=!S.optOpen;render();return}
+  if(d.purpose){S.purpose=d.purpose;render();return}
+  if(d.count){S.count=d.count;render();return}
+  if(d.ratio){S.ratio=d.ratio;render();return}
+  if(d.pack){S.pack=d.pack;render();return}
+  if(d.font){S.font=d.font;render();return}
+  if(d.size){S.size=d.size;render();return}
+  if(d.img){S.img=d.img;render();return}
+  if(t.id==="toOutline"){const i=$("#inTopic");if(i&&i.value.trim())S.topic=i.value.trim();makeOutline();S.phase="outline";render();return}
+  if(t.id==="oBack"){S.phase="form";render();return}
+  if(t.id==="oAdd"){S.outline.splice(S.outline.length-1,0,{role:"list",line:"새 장"});render();return}
+  if(d.odel){if(S.outline.length>2){S.outline.splice(+d.odel,1);render()}else toast("최소 2장은 있어야 해요");return}
+  if(t.id==="oGo"){const c=costCalc().gen+IMG[S.img].c*S.outline.length;if(S.credits<c){toast("크레딧이 모자라요");return}spend(c,"카드뉴스 생성");runGen();return}
+  if(d.f!==undefined&&t.closest("#bigcard")){S.selEl=d.f;render();return}
+  if(d.th){S.cur=+d.th;S.selEl=null;render();return}
+  if(t.id==="prevS"){S.cur=(S.cur-1+S.slides.length)%S.slides.length;S.selEl=null;render();return}
+  if(t.id==="nextS"){S.cur=(S.cur+1)%S.slides.length;S.selEl=null;render();return}
+  if(t.id==="addS"){S.slides.splice(S.slides.length-1,0,{type:"list",k:"추가",t:"새 장 제목",items:["항목 하나","항목 둘"],seed:S.slides.length});S.cur=S.slides.length-2;render();return}
+  if(d.rw){rewrite(d.rw);return}
+  if(t.id==="swapLay"){const sl=curSlide();const b=baseSlides();const nx=LAYOUTS[(LAYOUTS.indexOf(sl.type)+1)%LAYOUTS.length];const keep=sl.t;S.slides[S.cur]=Object.assign(JSON.parse(JSON.stringify(b[LAYOUTS.indexOf(nx)])),{t:keep,seed:sl.seed});S.selEl=null;render();toast("레이아웃만 바꿨어요 · 제목은 그대로");return}
+  if(t.id==="regenBg"){const sl=curSlide();sl.seed=(sl.seed||0)+1;if(S.pack!=="prod"){S.pack="prod"}spend(IMG[S.img].c||2,"배경 다시 생성");render();return}
+  if(t.id==="dupS"){S.slides.splice(S.cur+1,0,JSON.parse(JSON.stringify(curSlide())));S.cur++;render();return}
+  if(t.id==="delS"){if(S.slides.length>2){S.slides.splice(S.cur,1);S.cur=Math.max(0,S.cur-1);S.selEl=null;render()}else toast("최소 2장은 있어야 해요");return}
+  if(d.pack2){S.pack=d.pack2;render();return}
+  if(t.id==="aiAllGo"){const v=$("#aiAll").value.trim();if(!v){toast("어떻게 바꿀지 한 줄 적어 주세요");return}if(/어둡/.test(v))S.pack="info";if(/밝/.test(v))S.pack="tip";spend(5,`전체 수정 "${v}"`);render();return}
+  if(d.fb){const reasons=d.fb==="img"?["성별이 반대","엉뚱한 인물","주제와 무관한 사진","너무 AI 같음"]:["사실이 틀림","문장이 어색함","너무 길다","말투가 다름"];
+    modal(`<h3>${d.fb==="img"?"이미지":"카피"}가 어떻게 틀렸나요?</h3><div class="sub">${S.cur+1}장 · 다음 생성부터 이 조건을 피합니다.</div><div class="chips">${reasons.map(r=>`<button type="button" class="chip" data-fbr="${r}">${r}</button>`).join("")}</div><div class="row" style="justify-content:flex-end"><button class="btn" type="button" id="mClose">닫기</button></div>`);return}
+  if(d.fbr){S.feedback.push(d.fbr);curSlide().warn=true;closeModal();render();toast(`기억했어요: "${d.fbr}" · 다음부터 반영`);return}
+  if(t.id==="mClose"){closeModal();return}
+  if(d.dl){const m={zip:"JPEG 1080×1350 ZIP을 받는 자리입니다 (시안)",pdf:"PDF를 받는 자리입니다 (시안)",cap:"캡션·해시태그를 복사하는 자리입니다 (시안)"};toast(m[d.dl]);return}
+  if(d.aopen){const a=S.archive[+d.aopen];S.slides=JSON.parse(JSON.stringify(a.slides));S.pack=a.pack;S.cur=0;S.selEl=null;go("edit");return}
+  if(d.amore){const m={tpl:"템플릿으로 저장 — 배치·색·글씨만 남기고 글은 비웁니다",ratio:"비율 바꾸기 — 4:5를 1:1·9:16으로 AI가 다시 배치",jp:"일본어판 — 같은 카드를 번역해 새 묶음으로",reel:"릴스로 — 숏템 영상 엔진으로 짧은 영상 만들기"};toast(m[d.amore]);return}
+  if(d.rule){const r=S.rules[+d.rule];r.on=!r.on;render();toast(r.on?"규칙을 켰어요":"규칙을 껐어요");return}
+  if(d.redit){toast("규칙 고치기 화면 (새 규칙과 같은 칸)");return}
+  if(t.id==="ruleAdd"){S.rules.push({on:true,t:"새 규칙 · 매일 저녁 7시 · 1편",d:"소재: 오늘 이슈 · 정보형 다크 · 그림 없음 · 한 달 최대 300크레딧"});render();toast("규칙을 저장했어요");return}
+  if(d.qa){const i=+d.q,q=S.queue[i];if(d.qa==="ok"){S.archive=S.archive||seedArchive();S.archive.unshift({t:q.t,pack:q.pack,n:6,d:"방금",tag:"자동",slides:q.slides});S.queue.splice(i,1);render();toast("승인 · 보관함으로 옮겼어요")}
+    if(d.qa==="del"){S.queue.splice(i,1);render();toast("버렸어요 · 크레딧은 돌려드리지 않는 시안")}
+    if(d.qa==="edit"){S.slides=JSON.parse(JSON.stringify(q.slides));S.pack=q.pack;S.cur=0;go("edit")}return}
+  if(d.color){S.brand.color=d.color;render();return}
+  if(d.tm){toast({mine:"내 게시물 사진을 올리는 창이 열리는 자리",ref:"레퍼런스 이미지를 올리는 창이 열리는 자리",self:"편집기에서 '템플릿으로 저장'과 같은 기능"}[d.tm]);return}
+  if(d.plan){if(d.plan==="cancel"){modal(`<h3>해지할까요?</h3><div class="sub">남은 기간까지는 그대로 쓸 수 있고, 다음 결제부터 멈춥니다. 보관함은 30일간 남습니다. (시안 문구)</div><div class="row" style="justify-content:flex-end"><button class="btn" type="button" id="mClose">계속 쓰기</button><button class="btn warn" type="button" id="mCancel">해지하기</button></div>`)}else toast("요금제 바꾸기 화면 자리");return}
+  if(t.id==="mCancel"){closeModal();toast("해지 예약됨 (시안)");return}
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="inTopic")S.topic=t.value;
+  if(t.dataset.oline!==undefined)S.outline[+t.dataset.oline].line=t.value;
+  if(t.id==="elTxt"&&S.selEl){const sl=curSlide();if(Array.isArray(sl[S.selEl]))return;sl[S.selEl]=t.value;const bc=$("#bigcard");bc.innerHTML=cardHTML(sl,S.cur,S.slides.length,{edit:true})}
+  if(t.id==="bName"){S.brand.name=t.value}
+  if(t.id==="bCta"){S.brand.cta=t.value}
+  if(t.id==="bBan"){S.brand.ban=t.value}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="coverFont"){S.coverFont=t.value;render()}
+  if(t.dataset.orole!==undefined){S.outline[+t.dataset.orole].role=t.value}
+  if(t.id==="bTone"){S.brand.tone=t.value}
+  if(t.id==="elTxt"||t.id==="bName")render();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+$("#noteChk").addEventListener("change",e=>{document.body.classList.toggle("notes",e.target.checked)});
+document.body.classList.add("notes");
+$("#themeBtn").addEventListener("click",()=>{const r=document.documentElement;const dark=getComputedStyle(r).colorScheme.includes("dark");r.setAttribute("data-theme",dark?"light":"dark")});
+render();
+</script>
+</body></html>
