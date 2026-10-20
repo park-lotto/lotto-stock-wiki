@@ -1215,3 +1215,91 @@ def review_card_png(item, out_path, bg_path=None, cat="", source="여기어때",
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     img.convert("RGB").save(out_path, quality=92)
     return str(out_path)
+
+
+# ── 예능 자막 스타일 댓글(2026-10-20 사장님 "예능 스타일 댓글효과처럼 센스 위트있게 실제 말투로") ─────────────
+# 후기 원문의 한 구절(punch)은 **글자 그대로**(실제 말투) — 편집자 한마디(react)는 다른 색·작은 글씨로 갈라 둔다.
+# 주인 = variety_lines(뽑기·검사) · variety_caption_png(그리기). 그림은 투명 1080×1920 → 사진 컷 위에 얹는다(렌더·캡컷 같은 PNG).
+_VARIETY_PROMPT = (
+    "숙소 후기 항목들이다. 각 항목마다 예능 자막을 만든다.\n"
+    "- punch: 인용(quote) 안에서 가장 웃기거나 센 구절 하나를 **글자 하나 바꾸지 말고 그대로** 잘라 온다(4~18자). 맞춤법·띄어쓰기도 원문 그대로.\n"
+    "- react: 예능 PD 가 붙이는 위트 한마디(2~10자, 예 '(진심)', '찐후기', '33,000원의 행복', '이게 호텔 짬뽕?'). 지어낸 사실 금지, 감탄·추임새만.\n"
+    "- emoji: 어울리는 이모지 1개.\n\n%s\n\nJSON: {\"items\": [{\"n\": 번호, \"punch\": \"\", \"react\": \"\", \"emoji\": \"\"}]}")
+
+
+def variety_lines(items):
+    """items = review_insights 항목들 → [{punch, react, emoji, count, item}]. punch 가 인용에 그대로 없으면 버린다(실제 말투 검사)."""
+    body = "\n".join("%d) %s — 인용: %s" % (i + 1, x["item"], x.get("quote", "")) for i, x in enumerate(items))
+    got = claude_call([], _VARIETY_PROMPT % body, model="opus")
+    out = []
+    for g in got.get("items") or []:
+        k = int(g.get("n", 0)) - 1
+        if not (0 <= k < len(items)):
+            continue
+        src = items[k].get("quote", "")
+        p = (g.get("punch") or "").strip()
+        if p and p in src:
+            out.append({"punch": p, "react": (g.get("react") or "").strip()[:12], "emoji": (g.get("emoji") or "").strip()[:2],
+                        "count": items[k].get("count"), "item": items[k]["item"]})
+    return out
+
+
+def _emoji_font():
+    for f in ("C:/Windows/Fonts/seguiemj.ttf", "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"):
+        if Path(f).exists():
+            return f
+    return None
+
+
+def variety_caption_png(v, out_path, palette=0, y_ratio=0.62, stamp=True):
+    """예능 자막 한 장(투명 1080×1920). punch = 노랑/분홍 굵은 글자 + 검은 외곽선, 살짝 기울임 / react = 흰 말풍선 / '후기 N명' 도장."""
+    from PIL import Image, ImageDraw, ImageFont
+    from shopping_shorts.video_assemble import _resolve_font
+    W, H = 1080, 1920
+    fp = _resolve_font()
+    pal = [((255, 228, 0), (40, 20, 0)), ((255, 92, 160), (60, 0, 30)), ((90, 220, 255), (0, 30, 60))][palette % 3]
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # punch — 크게, 외곽선 두껍게, 기울여 붙인다
+    size = 112 if len(v["punch"]) <= 9 else 92 if len(v["punch"]) <= 13 else 76
+    f_p = ImageFont.truetype(fp, size)
+    tmp = ImageDraw.Draw(layer)
+    lines = _wrap(tmp, "“" + v["punch"] + "”", f_p, W - 160)[:3]
+    blk = Image.new("RGBA", (W, (size + 30) * len(lines) + 40), (0, 0, 0, 0))
+    d = ImageDraw.Draw(blk)
+    for i, ln in enumerate(lines):
+        tw = d.textlength(ln, font=f_p)
+        d.text(((W - tw) / 2, 20 + i * (size + 30)), ln, font=f_p, fill=pal[0] + (255,), stroke_width=12, stroke_fill=pal[1] + (255,))
+    blk = blk.rotate(-4, resample=Image.BICUBIC, expand=True)
+    y = int(H * y_ratio) - blk.height // 2
+    layer.alpha_composite(blk, ((W - blk.width) // 2, max(0, y)))
+    d = ImageDraw.Draw(layer)
+    # react — 흰 말풍선, 오른쪽 위
+    if v.get("react"):
+        f_r = ImageFont.truetype(fp, 54)
+        tw = d.textlength(v["react"], font=f_r)
+        rx, ry = W - tw - 150, max(40, y - 110)
+        d.rounded_rectangle((rx - 28, ry - 14, rx + tw + 28, ry + 76), 38, fill=(255, 255, 255, 245), outline=(30, 30, 30, 255), width=5)
+        d.polygon([(rx + 30, ry + 74), (rx + 70, ry + 74), (rx + 20, ry + 118)], fill=(255, 255, 255, 245), outline=(30, 30, 30, 255))
+        d.text((rx, ry), v["react"], font=f_r, fill=(30, 30, 30, 255))
+    # 이모지 — 위트 말풍선 왼쪽에 붙인다(왼쪽 위 고정 자리는 장면의 말풍선·손글씨와 겹쳤다, 실측 2026-10-20)
+    ef = _emoji_font()
+    if ef and v.get("emoji"):
+        try:
+            ex = (W - d.textlength(v.get("react") or "", font=ImageFont.truetype(fp, 54)) - 150 - 150) if v.get("react") else 90
+            d.text((max(30, ex), max(30, y - 130)), v["emoji"], font=ImageFont.truetype(ef, 109), embedded_color=True)
+        except Exception:
+            pass
+    # 도장 — '후기 N명이 한 말'(장면 틀이 출처 표기에 후기 수를 합쳐 넣을 땐 stamp=False — 두 줄이 부딪힌 실측 2026-10-20)
+    if not stamp:
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        layer.save(out_path)
+        return str(out_path)
+    f_s = ImageFont.truetype(fp, 40)
+    stamp = "실제 후기 · %s명이 같은 말" % v.get("count", "?")
+    sw = d.textlength(stamp, font=f_s)
+    sy = min(H - 120, y + blk.height + 20)
+    d.rounded_rectangle(((W - sw) / 2 - 26, sy, (W + sw) / 2 + 26, sy + 66), 33, fill=(20, 20, 20, 210))
+    d.text(((W - sw) / 2, sy + 9), stamp, font=f_s, fill=(255, 255, 255, 255))
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    layer.save(out_path)
+    return str(out_path)

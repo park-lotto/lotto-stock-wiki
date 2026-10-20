@@ -210,7 +210,9 @@ def yeogi_reviews(pid, max_pages=None, delay=0.4, on_page=None):
             if c:
                 out.append({"id": x.get("reviewId"), "created": x.get("createdAt"), "rating": x.get("rating"),
                             "title": x.get("title") or "", "content": c, "likes": x.get("likeCount") or 0,
-                            "best": bool(x.get("isBestReview")), "images": len(x.get("images") or [])})
+                            "best": bool(x.get("isBestReview")),
+                            # 실제 투숙객 사진 주소(장면 만들 때 '고객 사진 여러 장'으로 쓴다 — 출처 표기와 함께, 2026-10-20 사장님)
+                            "images": [i.get("url") for i in (x.get("images") or []) if isinstance(i, dict) and i.get("url")]})
         page += 1
         if on_page:
             on_page(page, len(out))
