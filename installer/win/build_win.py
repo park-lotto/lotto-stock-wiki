@@ -337,7 +337,7 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
     from preset_pack import pack_name
     #   모든 프리셋(이름 붙은 5개만이 아니다 — 10-20 실측 회원 목록 18개): 엔진 channel/*/preset/* 중 틀이 있는 것 전부
-    presets = sorted(p.parent.relative_to(engine).as_posix() for p in engine.glob("channel/*/preset/*/frame.json")
+    presets = sorted(p.parent.relative_to(engine).as_posix() for p in engine.glob("channel/*/preset/**/frame.json")
                      if (p.parent / "manifest.json").is_file())
     code = ("import json,sys;sys.path.insert(0,'.');from tools.calcopy.preview_request import preset_defaults as D;"
             "print(json.dumps({p: D(p) for p in json.loads(sys.argv[1])}, ensure_ascii=False))")
