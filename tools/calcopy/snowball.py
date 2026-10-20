@@ -27,12 +27,18 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+MIN_HITS = 2   # 검증 = 장면 3장 중 2장 이상에서 같은 링크(1장만은 엉뚱한 것 많음 — 10-21 핫템리포트 주걱·잠자리 편 실측)
 HANGUL = re.compile(r"[가-힣]")
+NOISE = re.compile(r"/discover/|/popular/|/hashtag/|/explore/|/marketplace/|/search|/tag/|/groups/")   # 검색·태그 페이지 = 남의 채널 아님(10-21 떠튜브 실측)
 VIDEO_SITE = re.compile(r"youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|douyin\.com|bilibili\.com")
 
 
 def sh(cmd, **kw):
-    return subprocess.run([str(c) for c in cmd], capture_output=True, text=True, encoding="utf-8", errors="replace", **kw)
+    """시간 초과는 그 명령만 실패로(빈 출력) — 한 링크 조회가 바퀴 전체를 죽이지 않게(10-21 핫템리포트 실측)."""
+    try:
+        return subprocess.run([str(c) for c in cmd], capture_output=True, text=True, encoding="utf-8", errors="replace", **kw)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(cmd, 124, "", "timeout")
 
 
 def channel_shorts(url: str, n: int = 120) -> list[dict]:
@@ -91,26 +97,35 @@ def frames(p: Path, out: Path, vid: str) -> list[Path]:
 
 
 def owner_of(href: str, text: str) -> dict:
-    """링크 → {site, key(채널/계정 식별), lang}. 유튜브 영상은 yt-dlp 로 채널을 묻는다(그 영상만 1회)."""
-    site = re.sub(r"^https?://(www\.|m\.)?", "", href).split("/")[0]
-    key, name = None, None
-    m = re.search(r"tiktok\.com/@([\w.]+)", href) or re.search(r"instagram\.com/([\w.]+)/?(?:reel|p)?", href)
-    if m and m.group(1) not in ("reel", "p", "reels"):
-        key = name = "@" + m.group(1)
-    yid = re.search(r"(?:watch\?v=|shorts/|youtu\.be/)([\w-]{11})", href)
-    if yid:
-        r = sh(["yt-dlp", "--no-warnings", "--skip-download", "--print", "%(channel)s\t%(channel_url)s\t%(view_count)s\t%(title)s", href], timeout=60)
-        parts = (r.stdout.strip().split("\t") + ["", "", "", ""])[:4]
-        if parts[1]:
+    """링크 → {site, key(채널/계정 식별), name, lang}. 주인 = 이 함수 한 곳.
+    틱톡 = 주소의 @계정 / 유튜브·인스타 = yt-dlp 로 그 영상 1회 물어 채널(인스타도 로그인 없이 됨, 10-21 실측 mz_healing_) /
+    페이스북 = 주소 첫 칸(페이지 이름). 언어 = 채널명+제목에 한글이 있으면 한국."""
+    site = re.sub(r"^https?://(www\.|m\.|web\.)?", "", href).split("/")[0]
+    name = key = None; views = None
+    m = re.search(r"tiktok\.com/@([\w.]+)", href)
+    if m:
+        key = f"https://www.tiktok.com/@{m.group(1)}"; name = "@" + m.group(1)
+    elif re.search(r"youtube\.com|youtu\.be|instagram\.com/(reel|p|reels)/", href):
+        r = sh(["yt-dlp", "--no-warnings", "--skip-download", "--print",
+                "%(channel)s|||%(channel_url)s|||%(view_count)s|||%(title)s|||%(uploader_id)s", href], timeout=60)
+        parts = ((r.stdout.strip().splitlines() or [""])[-1].split("|||") + [""] * 5)[:5]
+        if "instagram" in site and parts[0] not in ("", "NA"):
+            name = "@" + parts[0]; key = f"https://www.instagram.com/{parts[0]}/"
+        elif parts[1] not in ("", "NA"):
             name, key = parts[0], parts[1]
-            text = parts[3] or text
-            return {"site": "youtube", "key": key, "name": name, "views": int(parts[2]) if parts[2].isdigit() else None,
-                    "lang": "ko" if HANGUL.search(name + text) else "foreign", "title": text}
-    return {"site": site, "key": key or href, "name": name or site, "views": None,
-            "lang": "ko" if HANGUL.search((name or "") + text) else "foreign", "title": text}
+        if parts[2].isdigit():
+            views = int(parts[2])
+        if parts[3] not in ("", "NA"):
+            text = parts[3]
+    else:
+        m = re.search(r"facebook\.com/([^/?]+)/(videos|reel|posts)", href)
+        if m:
+            key = f"https://www.facebook.com/{m.group(1)}"; name = m.group(1)
+    return {"site": site, "key": key or href, "name": name or site, "views": views, "resolved": bool(key),
+            "lang": "ko" if HANGUL.search((name or "") + " " + text) else "foreign", "title": text}
 
 
-def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False):
+def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en"):
     from tools.calcopy import lens as L
     from tools.calcopy.lens import SKIP_VIDEO, lens_page, lens_rows
     L.PROFILE = str(ROOT / ".lens_profile_snowball")   # 다른 세션이 .lens_profile 크롬을 쥐고 있으면 못 연다(10-21 실측) — 이 도구는 따로
@@ -155,16 +170,20 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
                     hits = Counter(); info = {}
                     for f in frames(p, tmp, v["id"]):
                         try:
-                            for r in lens_rows(pg, str(f), skip=SKIP_VIDEO):
-                                if VIDEO_SITE.search(r["shop"]) and v["id"] not in r["href"]:
+                            for r in lens_rows(pg, str(f), skip=SKIP_VIDEO, hl=hl):
+                                if VIDEO_SITE.search(r["shop"]) and not NOISE.search(r["href"]) and v["id"] not in r["href"]:
                                     hits[r["href"]] += 1; info[r["href"]] = r["text"]
                         except Exception as e:  # 렌즈 한 장 실패는 그 장만 — 기록은 남긴다
                             rec.setdefault("errors", []).append(str(e)[:200])
                     rec["lensed"] = True
+                    rec["raw_hits"] = [[h, n, info[h]] for h, n in hits.most_common(15)]
+                    save()
                     for h, n in hits.most_common(15):
                         o = owner_of(h, info[h])
                         rec["matches"].append({"href": h, "hits": n, **o})
                         if o["key"] == ck or (o["site"] == "youtube" and o["key"] in (c.get("url"), ck)):
+                            continue
+                        if not o["resolved"] or n < MIN_HITS:
                             continue
                         ch = S["channels"].setdefault(o["key"], {"name": o["name"], "lang": o["lang"], "site": o["site"],
                                                                  "depth": c["depth"] + 1, "from": v["id"], "done": o["lang"] != "ko", "found": 0})
@@ -176,23 +195,34 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
     save()
 
 
+def verified(S: dict) -> dict:
+    """검증 채널 = 원음 영상 장면 MIN_HITS 장 이상에서 겹쳐 잡힌 계정(주인 한 곳 — 다음 바퀴 씨앗도 여기서)."""
+    out = {}
+    for vid, v in S["videos"].items():
+        for m in v.get("matches") or []:
+            if m["hits"] < MIN_HITS or not m.get("resolved"):
+                continue
+            c = out.setdefault(m["key"], {"name": m["name"], "site": m["site"], "lang": m["lang"], "videos": [], "links": []})
+            if vid not in c["videos"]:
+                c["videos"].append(vid)
+            c["links"].append(m["href"])
+    return out
+
+
 def report(state_p: Path):
     S = json.loads(state_p.read_text(encoding="utf-8"))
-    chs = S["channels"]
-    out = ["# 눈덩이 발굴 결과", "", f"채널 {len(chs)} · 영상 {len(S['videos'])} (렌즈 {sum(bool(v.get('lensed')) for v in S['videos'].values())})", ""]
+    V = verified(S)
+    out = ["# 눈덩이 발굴 결과", "", f"렌즈 돌린 영상 {sum(bool(v.get('lensed')) for v in S['videos'].values())}편 · 검증 채널 {len(V)} "
+           f"(장면 {MIN_HITS}장 이상 겹침)", ""]
     for lang, head in (("foreign", "## 해외 원본 채널(자산 후보)"), ("ko", "## 한국 채널(다음 씨앗)")):
-        out += [head, "", "| 채널 | 곳 | 렌즈로 잡힌 수 | 처음 잡힌 영상 | 깊이 |", "|---|---|---|---|---|"]
-        for k, c in sorted(chs.items(), key=lambda kv: -kv[1].get("found", 0)):
+        out += [head, "", "| 채널 | 곳 | 잡힌 영상 | 링크 |", "|---|---|---|---|"]
+        for k, c in sorted(V.items(), key=lambda kv: -len(kv[1]["videos"])):
             if c["lang"] == lang:
-                out.append(f"| [{c['name']}]({k}) | {c.get('site', 'youtube')} | {c.get('found', '씨앗')} | {c['from']} | {c['depth']} |")
+                vids = ", ".join(f"[{S['videos'][x]['title'][:18]}](https://www.youtube.com/shorts/{x})" for x in c["videos"])
+                out.append(f"| [{c['name']}]({k}) | {c['site']} | {vids} | [영상]({c['links'][0]}) |")
         out.append("")
-    out += ["## 원음 영상 → 렌즈 결과", ""]
-    for vid, v in S["videos"].items():
-        if v.get("orig"):
-            out.append(f"- [{v['title']}](https://www.youtube.com/shorts/{vid}) {v['views']:,}회 — " +
-                       ", ".join(f"[{m['name']}]({m['href']})({'한' if m['lang'] == 'ko' else '외'}{'·' + format(m['views'], ',') if m.get('views') else ''})" for m in v["matches"][:8]))
     md = state_p.with_suffix(".md")
-    md.write_text("\n".join(out), encoding="utf-8")
+    md.write_text(chr(10).join(out), encoding="utf-8")
     print(md)
 
 
@@ -204,8 +234,9 @@ if __name__ == "__main__":
     ap.add_argument("--top", type=int, default=8)
     ap.add_argument("--min-views", type=int, default=1_000_000)
     ap.add_argument("--rounds", type=int, default=1)
+    ap.add_argument("--hl", default="en", help="렌즈 화면 언어 — en 이면 해외 원본이 더 잡힌다(ko 는 한국 재업 위주, 10-21 떠튜브)")
     ap.add_argument("--orig-only", action="store_true", help="앞 12초 한국어 나레 있는 영상은 렌즈 안 돌림(떠튜브처럼 전부 나레 훅이면 0편이 된다 — 10-21 실측 38/38)")
     a = ap.parse_args()
     if a.cmd == "run":
-        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only)
+        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl)
     report(Path(a.state))

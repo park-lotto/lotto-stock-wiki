@@ -1,0 +1,1711 @@
+{
+ "channels": {
+  "https://www.youtube.com/@핫템리포트": {
+   "name": "https://www.youtube.com/@핫템리포트",
+   "lang": "ko",
+   "depth": 0,
+   "from": "씨앗",
+   "done": true
+  },
+  "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A": {
+   "name": "지구촌픽",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "vLcKevaKfNI",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/@pedroviturbe12": {
+   "name": "@pedroviturbe12",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "vLcKevaKfNI",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/5.min.usa": {
+   "name": "5.min.usa",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/fvture.enterprise/": {
+   "name": "@fvture.enterprise",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/art_viral/": {
+   "name": "@art_viral",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/africanfolder": {
+   "name": "africanfolder",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@adamecrossbyw": {
+   "name": "@adamecrossbyw",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/neverboringnews/": {
+   "name": "@neverboringnews",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/jarpmedia/": {
+   "name": "@jarpmedia",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "eALs7BdBCQ0",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCPZJ0r0VnOEjqZ6AvQe9eqw": {
+   "name": "직장인 장비빨",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": false,
+   "found": 1
+  },
+  "https://www.tiktok.com/@_jrat": {
+   "name": "@_jrat",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCh9eNfPKoMwr8mYWLwzrG-g": {
+   "name": "일상케어템",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/affordasale": {
+   "name": "affordasale",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCiA6xoo2JzG5RlYbrDQxWpA": {
+   "name": "남다른 픽",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCsf6zMC7kGGbdMXyex3Fa0g": {
+   "name": "홈인온",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": false,
+   "found": 1
+  },
+  "https://www.facebook.com/supercarblondie": {
+   "name": "supercarblondie",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/_jrat/": {
+   "name": "@_jrat",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/jjoha_joha82/": {
+   "name": "@jjoha_joha82",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 1,
+   "from": "RWS43GF1A_U",
+   "done": true,
+   "found": 1
+  }
+ },
+ "videos": {
+  "vLcKevaKfNI": {
+   "id": "vLcKevaKfNI",
+   "title": "6년을 기다려 만든 18초 감동..",
+   "views": 8200000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/_knjLhbcpTE",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A",
+     "name": "지구촌픽",
+     "views": 506782,
+     "resolved": true,
+     "lang": "ko",
+     "title": "6년 뒤에야 완성된 선생님의 선물"
+    },
+    {
+     "href": "https://www.tiktok.com/@pedroviturbe12/video/7386694993555115270",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@pedroviturbe12",
+     "name": "@pedroviturbe12",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video de 6 Años: Así Entramos y Así Salimos de la Primaria ..."
+    },
+    {
+     "href": "https://www.youtube.com/@chcnedu/videos",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/@chcnedu/videos",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "충남교육청 교육자료채널 - YouTube"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdAMBrXOh0p/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/thedhrook/",
+     "name": "@thedhrook",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by thedhrook"
+    },
+    {
+     "href": "https://www.tiktok.com/@jesse_mac.e3/video/7384155467422993670",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jesse_mac.e3",
+     "name": "@jesse_mac.e3",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Niños de primaria: 6 años mostrando cómo crecen hasta salir ..."
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV1iV411e7QK/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV1iV411e7QK/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "可爱主义'汉星，活泼的魅力! 'All About That Bass' ｜《KPOP ..."
+    },
+    {
+     "href": "https://www.facebook.com/singhalstars/photos/1000418658764895/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/singhalstars/photos/1000418658764895/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Singhal Stars Sen.... - Singhal Stars Sen. Sec. School, Mansa"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=AVhlrNahes0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC67fiHp9f1npmtW6_gei2Mg",
+     "name": "럭키가율",
+     "views": 355,
+     "resolved": true,
+     "lang": "ko",
+     "title": "귀엽기만 하면 안되나요? (댄스 버스킹) #귀엽기만하면안되나요 #큐티스트리트 #돼지댄서 #랜덤플레이댄스 #버스킹 #dance #busking #크림은종 #서산 #호수공원"
+    },
+    {
+     "href": "https://www.facebook.com/100063740391746/videos/عدنا-إلى-المدرسة-مع-فراشات-قسم-السنة-الأولى-ب/1974114876517648/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100063740391746",
+     "name": "100063740391746",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "عدنا إلى المدرسة #مع فراشات قسم السنة الأولى \\"
+    },
+    {
+     "href": "https://www.instagram.com/p/CsVxLjtSnGy/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/moriigirls.project/",
+     "name": "@moriigirls.project",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by moriigirls.project"
+    },
+    {
+     "href": "https://www.youtube.com/playlist?list=PL9vYxmwaoAbrfjZsG3hQSLwCKu0fEheDM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/playlist?list=PL9vYxmwaoAbrfjZsG3hQSLwCKu0fEheDM",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "초등홍선생 ✌ 체육놀이 - YouTube"
+    },
+    {
+     "href": "https://www.tiktok.com/@c.l.y97",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@c.l.y97",
+     "name": "@c.l.y97",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🙉Htay 🙈 (@c.l.y97) | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/100057663301048/videos/고딩-틱톡-26탄/446526412652998/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100057663301048",
+     "name": "100057663301048",
+     "views": null,
+     "resolved": true,
+     "lang": "ko",
+     "title": "여고딩 교복 틱톡 26탄 | 남자의 관리"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DAtmSZdspFS/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/zharkynai_azhigali17/",
+     "name": "@zharkynai_azhigali17",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by zharkynai_azhigali17"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcivN2KTagt/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/txtbighit_fanbase/",
+     "name": "@txtbighit_fanbase",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by txtbighit_fanbase"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/_knjLhbcpTE",
+     3,
+     "My Teacher's Gift, Completed After 6 Years - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@pedroviturbe12/video/7386694993555115270",
+     2,
+     "Video de 6 Años: Así Entramos y Así Salimos de la Primaria ..."
+    ],
+    [
+     "https://www.youtube.com/@chcnedu/videos",
+     2,
+     "충남교육청 교육자료채널 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DdAMBrXOh0p/",
+     1,
+     "This is why you never celebrate before the game is actually ..."
+    ],
+    [
+     "https://www.tiktok.com/@jesse_mac.e3/video/7384155467422993670",
+     1,
+     "Niños de primaria: 6 años mostrando cómo crecen hasta salir ..."
+    ],
+    [
+     "https://www.bilibili.com/video/BV1iV411e7QK/",
+     1,
+     "可爱主义'汉星，活泼的魅力! 'All About That Bass' ｜《KPOP ..."
+    ],
+    [
+     "https://www.facebook.com/singhalstars/photos/1000418658764895/",
+     1,
+     "Singhal Stars Sen.... - Singhal Stars Sen. Sec. School, Mansa"
+    ],
+    [
+     "https://www.youtube.com/watch?v=AVhlrNahes0",
+     1,
+     "귀엽기만 하면 안되나요? (댄스 버스킹) #귀엽기만하면안되나요 ..."
+    ],
+    [
+     "https://www.facebook.com/100063740391746/videos/عدنا-إلى-المدرسة-مع-فراشات-قسم-السنة-الأولى-ب/1974114876517648/",
+     1,
+     "عدنا إلى المدرسة #مع فراشات قسم السنة الأولى \\"
+    ],
+    [
+     "https://www.instagram.com/p/CsVxLjtSnGy/",
+     1,
+     "📹𓈒𓏸𓈒𓂂𓂃♡ #moriigirlshk#moriigirlsproject"
+    ],
+    [
+     "https://www.youtube.com/playlist?list=PL9vYxmwaoAbrfjZsG3hQSLwCKu0fEheDM",
+     1,
+     "초등홍선생 ✌ 체육놀이 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@c.l.y97",
+     1,
+     "🙉Htay 🙈 (@c.l.y97) | TikTok"
+    ],
+    [
+     "https://www.facebook.com/100057663301048/videos/고딩-틱톡-26탄/446526412652998/",
+     1,
+     "여고딩 교복 틱톡 26탄 | 남자의 관리"
+    ],
+    [
+     "https://www.instagram.com/reel/DAtmSZdspFS/",
+     1,
+     "Reel by Жарқынай Әжіғали (@zharkynai_azhigali17) · October 4 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DcivN2KTagt/",
+     1,
+     "Random play dance - 🎵 ATEEZ - 'Adrenaline'"
+    ]
+   ]
+  },
+  "eALs7BdBCQ0": {
+   "id": "eALs7BdBCQ0",
+   "title": "명품이 반한 아프리카 천재 소년",
+   "views": 7800000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/5.min.usa/posts/meet-kalu-putic-the-young-designer-from-ethiopia-whos-taking-social-media-by-sto/1308540754710738/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/5.min.usa",
+     "name": "5.min.usa",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Meet Kalu Putic, the young designer from Ethiopia who's ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DXd6zkKjbA7/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/fvture.enterprise/",
+     "name": "@fvture.enterprise",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by fvture.enterprise"
+    },
+    {
+     "href": "https://www.instagram.com/p/DXj-YMoCMQU/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/art_viral/",
+     "name": "@art_viral",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by art_viral"
+    },
+    {
+     "href": "https://www.facebook.com/61576406185458/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61576406185458/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Monica Paulos"
+    },
+    {
+     "href": "https://www.facebook.com/africanfolder/posts/kalu-putik-from-ethiopia-shows-that-creativity-matters-more-than-having-expensiv/933886649253842/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/africanfolder",
+     "name": "africanfolder",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Kalu Putik from Ethiopia shows that creativity matters more ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@adamecrossbyw/video/7629447225399119134",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@adamecrossbyw",
+     "name": "@adamecrossbyw",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This young Ethiopian creative, @@\\"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DXMPe2tDSDb/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/neverboringnews/",
+     "name": "@neverboringnews",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by neverboringnews"
+    },
+    {
+     "href": "https://www.instagram.com/p/DXJiTWdEUzF/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/jarpmedia/",
+     "name": "@jarpmedia",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by jarpmedia"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DXwBixBhuXf/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/airohit.tech/",
+     "name": "@airohit.tech",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by airohit.tech"
+    },
+    {
+     "href": "https://www.tiktok.com/@odd_spark_official/video/7645090496414600481",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@odd_spark_official",
+     "name": "@odd_spark_official",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ethiopian Boy Creates Viral Fashion Style Brands Beg For ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DZAFSVuDv9z/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DZAFSVuDv9z/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "🇪🇹 What started as a creative vision at home has turned ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/vtOOqL4Z4S0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCnN0vaBcYqJTipIzlxFWPZQ",
+     "name": "Ethiopia",
+     "views": 2280,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "kalu putic ቃሉ ፑቲክ 21 April 2026"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/PxVB0g56H_4",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC18xt0QBfBMiJ-svu07khcA",
+     "name": "Asquala life",
+     "views": 35184,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "kalu putic #fashion #ethiopiantiktok #viral #viralvideo #viralshort #fyp #shorts"
+    },
+    {
+     "href": "https://www.tiktok.com/@kalu.putik84",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@kalu.putik84",
+     "name": "@kalu.putik84",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Kalu Putik (@kalu.putik84) | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/HuA7P5zSaRQ",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC0ghNfEIvZAMo2QWySgOKlQ",
+     "name": "Dpk Verma ",
+     "views": 396,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Viral Boy Make dress with Garbage Clothes | #viral #trending #poorboy"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.facebook.com/5.min.usa/posts/meet-kalu-putic-the-young-designer-from-ethiopia-whos-taking-social-media-by-sto/1308540754710738/",
+     2,
+     "Meet Kalu Putic, the young designer from Ethiopia who's ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DXd6zkKjbA7/",
+     2,
+     "FVTURE SELECTS Ethiopian fashion creator Kalu Putik is ..."
+    ],
+    [
+     "https://www.instagram.com/p/DXj-YMoCMQU/",
+     2,
+     "Art Viral 🎨 | Ethiopian creator Kalu Putik (@kaluputics) is ..."
+    ],
+    [
+     "https://www.facebook.com/61576406185458/",
+     2,
+     "Monica Paulos"
+    ],
+    [
+     "https://www.facebook.com/africanfolder/posts/kalu-putik-from-ethiopia-shows-that-creativity-matters-more-than-having-expensiv/933886649253842/",
+     2,
+     "Kalu Putik from Ethiopia shows that creativity matters more ..."
+    ],
+    [
+     "https://www.tiktok.com/@adamecrossbyw/video/7629447225399119134",
+     2,
+     "This young Ethiopian creative, @@\\"
+    ],
+    [
+     "https://www.instagram.com/reel/DXMPe2tDSDb/",
+     2,
+     "Ποιος είπε ότι η υψηλή ραπτική απαιτεί χιλιάδες ευρώ και ..."
+    ],
+    [
+     "https://www.instagram.com/p/DXJiTWdEUzF/",
+     2,
+     "Kalu Putik from Ethiopia shows that creativity matters more ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DXwBixBhuXf/",
+     1,
+     "kaluputics gave me this prompt. . . . . . #ai #kaluputics ..."
+    ],
+    [
+     "https://www.tiktok.com/@odd_spark_official/video/7645090496414600481",
+     1,
+     "Ethiopian Boy Creates Viral Fashion Style Brands Beg For ..."
+    ],
+    [
+     "https://www.instagram.com/p/DZAFSVuDv9z/",
+     1,
+     "🇪🇹 What started as a creative vision at home has turned ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/vtOOqL4Z4S0",
+     1,
+     "kalu putic ቃሉ ፑቲክ 21 April 2026 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/PxVB0g56H_4",
+     1,
+     "kalu putic #fashion #ethiopiantiktok #viral #viralvideo ..."
+    ],
+    [
+     "https://www.tiktok.com/@kalu.putik84",
+     1,
+     "Kalu Putik (@kalu.putik84) | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/HuA7P5zSaRQ",
+     1,
+     "Viral Boy Make dress with Garbage Clothes | #viral #trending ..."
+    ]
+   ]
+  },
+  "OE-11wb7vdY": {
+   "id": "OE-11wb7vdY",
+   "title": "AI 주작 논란 터진 아이언맨 헬멧",
+   "views": 4800000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 47,
+   "text": "요즘 미국에서 난리난 아이언맨 헬멧으로 사람들이 환장하는 이유가 있는데요 말 한마디의 페이스 플레이트가 자동",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/uhf5O21zahk",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCKGPfXBrVlXgnqefUkDmJ9A",
+     "name": "이거사자",
+     "views": 2345,
+     "resolved": true,
+     "lang": "ko",
+     "title": "음성 인식으로 마스크가 저절로 열리는 미친 가성비 아이언맨 헬멧"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/RwUo0cNBo14",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC0-1gXk2T2qijH9-eYzt2eA",
+     "name": "ShortsPick",
+     "views": 93321,
+     "resolved": true,
+     "lang": "ko",
+     "title": "음성 인식되는 아이언맨 헬멧"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/pLWF-oxBqsw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC2t7EX1tSPp-sBSKm4OfExA",
+     "name": "상상초월하우스",
+     "views": 1611,
+     "resolved": true,
+     "lang": "ko",
+     "title": "AI 합성 아님? 아이언맨 헬멧 실물 반응 ㄷㄷ"
+    },
+    {
+     "href": "https://www.instagram.com/reel/Dd9NntPucpc/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/igeosaja/",
+     "name": "@igeosaja",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by igeosaja"
+    },
+    {
+     "href": "https://www.tiktok.com/@xcheckitoutx/video/7616928209132653854",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@xcheckitoutx",
+     "name": "@xcheckitoutx",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "helmet #comiclovers #superheroesirl #fullfacemask #fyp ..."
+    },
+    {
+     "href": "https://www.facebook.com/supercarblondie/videos/an-iron-man-motorcycle-helmet/1250421009407870/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/supercarblondie",
+     "name": "supercarblondie",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "When Iron Man meets the open road! 🏍️ | Supercar Blondie"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=kYIMhHx3jb8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCTUuUdMf7Mb-Lo4luda_sBw",
+     "name": "TS4 CHANNEL ",
+     "views": 7421,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Iron Man MK 5 Black Edition Helmet"
+    },
+    {
+     "href": "https://www.facebook.com/100064268524660/posts/iron-man-helmet-detail-review-is-it-safe-for-bike-scooter-riding/1315347780617494/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100064268524660",
+     "name": "100064268524660",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Iron Man Helmet Detail Review | Is It Safe For Bike ..."
+    },
+    {
+     "href": "https://www.facebook.com/thehacksmith/videos/full-metal-iron-man-helmetthis-is-awesomewho-wants-to-see-a-video-on-upgrading-i/380569419395659/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/thehacksmith",
+     "name": "thehacksmith",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Full metal Iron Man helmet. This. Is. Awesome. Who wants to ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@tigermiyaw",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@tigermiyaw",
+     "name": "@tigermiyaw",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "tigermiyaw🐯 (@tigermiyaw) | TikTok"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/042LonOzWRE",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCh8bTHe4T8o7RIU7R5EPX-w",
+     "name": "EnzoKnol",
+     "views": 120681,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Een dag in het leven van een superheld 🦸🏼"
+    },
+    {
+     "href": "https://www.instagram.com/p/Dd8SxPbiLnV/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/Dd8SxPbiLnV/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Thought I'd share some photos of my collection both Current ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DZBE5PeCSqL/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/levy3d/",
+     "name": "@levy3d",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by levy3d"
+    },
+    {
+     "href": "https://www.facebook.com/Momentegy2/videos/marvel-fans-this-ones-for-you-iron-man-masks-bumblebee-and-the-legendary-iron-ma/1864671757858062/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Momentegy2",
+     "name": "Momentegy2",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "MARVEL FANS, THIS ONE'S FOR YOU! 🔥⚡ Iron Man masks ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@frankie_aka/video/7657391042475429134",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@frankie_aka",
+     "name": "@frankie_aka",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Unleash your dark side with the new black on black MK5 ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/uhf5O21zahk",
+     1,
+     "This Insane Budget-Friendly Iron Man Helmet with Voice ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/RwUo0cNBo14",
+     1,
+     "Voice-Activated Iron Man Helmet - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/pLWF-oxBqsw",
+     1,
+     "AI 합성 아님? 아이언맨 헬멧 실물 반응 ㄷㄷ - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/Dd9NntPucpc/",
+     1,
+     "💌 댓글에 '아이언맨' 남겨주세요! 📍 팔로우 후 댓글 남겨 ..."
+    ],
+    [
+     "https://www.tiktok.com/@xcheckitoutx/video/7616928209132653854",
+     1,
+     "helmet #comiclovers #superheroesirl #fullfacemask #fyp ..."
+    ],
+    [
+     "https://www.facebook.com/supercarblondie/videos/an-iron-man-motorcycle-helmet/1250421009407870/",
+     1,
+     "When Iron Man meets the open road! 🏍️ | Supercar Blondie"
+    ],
+    [
+     "https://www.youtube.com/watch?v=kYIMhHx3jb8",
+     1,
+     "Iron Man MK 5 Black Edition Helmet"
+    ],
+    [
+     "https://www.facebook.com/100064268524660/posts/iron-man-helmet-detail-review-is-it-safe-for-bike-scooter-riding/1315347780617494/",
+     1,
+     "Iron Man Helmet Detail Review | Is It Safe For Bike ..."
+    ],
+    [
+     "https://www.facebook.com/thehacksmith/videos/full-metal-iron-man-helmetthis-is-awesomewho-wants-to-see-a-video-on-upgrading-i/380569419395659/",
+     1,
+     "Full metal Iron Man helmet. This. Is. Awesome. Who wants to ..."
+    ],
+    [
+     "https://www.tiktok.com/@tigermiyaw",
+     1,
+     "tigermiyaw🐯 (@tigermiyaw) | TikTok"
+    ],
+    [
+     "https://m.youtube.com/shorts/042LonOzWRE",
+     1,
+     "A day in the life of a superhero 🦸🏼 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/Dd8SxPbiLnV/",
+     1,
+     "Thought I'd share some photos of my collection both Current ..."
+    ],
+    [
+     "https://www.instagram.com/p/DZBE5PeCSqL/",
+     1,
+     "Mk15 is finally here and available on wireframe ..."
+    ],
+    [
+     "https://www.facebook.com/Momentegy2/videos/marvel-fans-this-ones-for-you-iron-man-masks-bumblebee-and-the-legendary-iron-ma/1864671757858062/",
+     1,
+     "MARVEL FANS, THIS ONE'S FOR YOU! 🔥⚡ Iron Man masks ..."
+    ],
+    [
+     "https://www.tiktok.com/@frankie_aka/video/7657391042475429134",
+     1,
+     "Unleash your dark side with the new black on black MK5 ..."
+    ]
+   ]
+  },
+  "ZqVgAg99gRI": {
+   "id": "ZqVgAg99gRI",
+   "title": "미국에서 2,600만 뷰 찍은 주걱 영상",
+   "views": 4400000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 48,
+   "text": "2년 개발한 주거기 테무 제품으로 의심받자 빡쳐서 만든 영상이 대박을 쳤는데요 설명을 듣다 보면 괜히 하나 필요할 것 같...",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=sB5YsreLAI0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCEGNKwF-mH4oUekWRU1IZ3g",
+     "name": "KuriOSS 큐리오스",
+     "views": 790,
+     "resolved": true,
+     "lang": "ko",
+     "title": "BETAFPV Air 65 언빡싱 ! - 실내 FPV 드론"
+    },
+    {
+     "href": "https://www.tiktok.com/@tiktokshopdad/video/7461388866151337258",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@tiktokshopdad",
+     "name": "@tiktokshopdad",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "3d printing for beginners part 4: how to clear a clogged ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=dJbb0p7wzrg",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCb7KNFvMuvQz9LPRK4xyzfA",
+     "name": "wineking",
+     "views": 88514,
+     "resolved": true,
+     "lang": "ko",
+     "title": "다이소 와인용품 리뷰, 직원에게 법카 줘서 다이소 보냈더니.."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/jTNOLkRVl1M",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC7QpulteHAxk4S1AASzCjvw",
+     "name": "Mykoreandic",
+     "views": 10773541,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Soda or Chocolate ice cream🧐"
+    },
+    {
+     "href": "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-cap%EF%B8%8Ftalla-ajustable-verde-claro-repelente-al-aguadispo/1783631223379427/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Blacklioncasualwear",
+     "name": "Blacklioncasualwear",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🇬🇧Weekend Offender Natadola Cap🇬🇧 🏷️Talla: Ajustable ..."
+    },
+    {
+     "href": "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-baseball-cap%EF%B8%8Ftalla-ajustable-menta-disponible-para-ent/1563508785391673/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Blacklioncasualwear",
+     "name": "Blacklioncasualwear",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🇬🇧Weekend Offender Natadola Baseball Cap🇬🇧 🏷️Talla ..."
+    },
+    {
+     "href": "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-cap️talla-ajustable-verde-claro-repelente-al-aguadispo/1783631223379427/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Blacklioncasualwear",
+     "name": "Blacklioncasualwear",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🇬🇧Weekend Offender Natadola Cap🇬🇧 🏷️Talla: Ajustable ..."
+    },
+    {
+     "href": "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-baseball-cap️talla-ajustable-menta-disponible-para-ent/1563508785391673/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Blacklioncasualwear",
+     "name": "Blacklioncasualwear",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🇬🇧Weekend Offender Natadola Baseball Cap🇬🇧 🏷️Talla ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/FB6GlBpOuBc",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCRLM0MWS7m8vXzQ_5z2e7fA",
+     "name": "히스토리",
+     "views": 3152,
+     "resolved": true,
+     "lang": "ko",
+     "title": "이름 짓는 척하면서 대머리 돌려까는 첨리"
+    },
+    {
+     "href": "https://www.youtube.com/playlist?list=PLxHWLy3idcHUoLa3H230-uqIaON5T1Yv3",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/playlist?list=PLxHWLy3idcHUoLa3H230-uqIaON5T1Yv3",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "SHORTS - YouTube"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/ip9mEBaEDdM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCoiBLQ6Uj7n1q-DQKntys9Q",
+     "name": "티발라마",
+     "views": 20666,
+     "resolved": true,
+     "lang": "ko",
+     "title": "문 앞에 서 있으면 안되는 이유"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=ql6AyGmRGOo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCtR6tNzY3409v-Wbv_Llkxw",
+     "name": "일산사나이 HalfTime",
+     "views": 620,
+     "resolved": true,
+     "lang": "ko",
+     "title": "(BOOM)1부 붐을 적절하게 잡고 구동 하는 방법"
+    },
+    {
+     "href": "https://www.instagram.com/p/DdSRp8zk1D0/?hl=en-gb",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DdSRp8zk1D0/?hl=en-gb",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "DJ DOC 이하늘이 한동훈 무소속 의원의 정치적 경쟁력을 높게 ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DOlYc07EU9l/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/thedadbriefs/",
+     "name": "@thedadbriefs",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by thedadbriefs"
+    },
+    {
+     "href": "https://www.youtube.com/@투윤파파TV/videos",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/@투윤파파TV/videos",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "투윤파퍼TV - YouTube"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/watch?v=sB5YsreLAI0",
+     1,
+     "BETAFPV Air 65 언빡싱 ! - 실내 FPV 드론 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@tiktokshopdad/video/7461388866151337258",
+     1,
+     "3d printing for beginners part 4: how to clear a clogged ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=dJbb0p7wzrg",
+     1,
+     "I Tested Korean Dollar Store Wine Goods - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/jTNOLkRVl1M",
+     1,
+     "Soda or Chocolate ice cream   - YouTube"
+    ],
+    [
+     "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-cap%EF%B8%8Ftalla-ajustable-verde-claro-repelente-al-aguadispo/1783631223379427/",
+     1,
+     "🇬🇧Weekend Offender Natadola Cap🇬🇧 🏷️Talla: Ajustable ..."
+    ],
+    [
+     "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-baseball-cap%EF%B8%8Ftalla-ajustable-menta-disponible-para-ent/1563508785391673/",
+     1,
+     "🇬🇧Weekend Offender Natadola Baseball Cap🇬🇧 🏷️Talla ..."
+    ],
+    [
+     "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-cap️talla-ajustable-verde-claro-repelente-al-aguadispo/1783631223379427/",
+     1,
+     "🇬🇧Weekend Offender Natadola Cap🇬🇧 🏷️Talla: Ajustable ..."
+    ],
+    [
+     "https://www.facebook.com/Blacklioncasualwear/posts/weekend-offender-natadola-baseball-cap️talla-ajustable-menta-disponible-para-ent/1563508785391673/",
+     1,
+     "🇬🇧Weekend Offender Natadola Baseball Cap🇬🇧 🏷️Talla ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/FB6GlBpOuBc",
+     1,
+     "이름 짓는 척하면서 대머리 돌려까는 첨리 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/playlist?list=PLxHWLy3idcHUoLa3H230-uqIaON5T1Yv3",
+     1,
+     "SHORTS - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/ip9mEBaEDdM",
+     1,
+     "문 앞에 서 있으면 안되는 이유 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/watch?v=ql6AyGmRGOo",
+     1,
+     "BOOM)1부 붐을 적절하게 잡고 구동 하는 방법 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/DdSRp8zk1D0/?hl=en-gb",
+     1,
+     "DJ DOC 이하늘이 한동훈 무소속 의원의 정치적 경쟁력을 높게 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DOlYc07EU9l/",
+     1,
+     "Be kind and wash your behind. Comment LINK if you want me to ..."
+    ],
+    [
+     "https://www.youtube.com/@투윤파파TV/videos",
+     1,
+     "투윤파퍼TV - YouTube"
+    ]
+   ]
+  },
+  "PIHCaioKSp4": {
+   "id": "PIHCaioKSp4",
+   "title": "모기 잡는 잠자리로 20억 번 초등학생",
+   "views": 2300000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 78,
+   "text": "모기 잡는 잠자리로 20억 번 초등학생? 모기 천적이 잠자리인 거 알고 있음? 미국의 한 초등학생이 수업시간에 배운 걸로 모형 잠자리를 만들었는데 문어 100만 개나 팔아버림 아니 모형인데 모기가 속겠어",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/p/DdNpzjFDxWW/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DdNpzjFDxWW/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Serving Dish💖"
+    },
+    {
+     "href": "https://www.facebook.com/kamukunjimarket/posts/melamine-plates-at-sh-1100-for-12pieces/1243830565959261/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/kamukunjimarket",
+     "name": "kamukunjimarket",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Melamine plates at sh 1100 for 12pieces"
+    },
+    {
+     "href": "https://www.instagram.com/p/DYuFjnNDxzu/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DYuFjnNDxzu/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "과일플레이팅 얼마전 과일 플레이팅 원데이클래스에서만든 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=NsXZiRjuslw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCLaOTYqtPKRvzkBJhRvKdFQ",
+     "name": "The Masked Singer US Recap",
+     "views": 310,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ken Jeong Thinks Galaxy Girl Could Be Anne Hathaway / The Masked Singer USA Season 14 Ep. 4"
+    },
+    {
+     "href": "https://www.facebook.com/itv/videos/tonight/444308193418855/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/itv",
+     "name": "itv",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "5 MASKED SINGERS 🎭 1 will be UNMASKED 👀✨ Who's BEHIND THE ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=ImLNX5m19ac",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCyfREPwjXz5XP8azjYYC_ZQ",
+     "name": "Masked Orbit",
+     "views": 716,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "RANKING | Season 2, FINAL; episode 8 | TMS UK | Masked Orbit"
+    },
+    {
+     "href": "https://www.facebook.com/61574611167437/posts/i-went-to-my-husband-and-sobbed-it-was-20-years-of-my-life-claudia-winkleman-rev/122156267156820372/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61574611167437",
+     "name": "61574611167437",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I went to my husband and sobbed. It was 20 years of my life ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DeuEaZ_iGAf/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DeuEaZ_iGAf/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "A new era in the Strictly ballroom has sparked a fierce ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/oRouKNFN1v4",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCPLprhhvUopJOf3Lvv1hNZQ",
+     "name": "The Big Fat Quiz Channel",
+     "views": 40788,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Greg Davies DOES Look Different #shorts"
+    },
+    {
+     "href": "https://www.tiktok.com/@pabanpanday/video/7683941046073429268",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@pabanpanday",
+     "name": "@pabanpanday",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "فيديوهات أنشأها 🎧️ Ｉaｍ paban ＆ you ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=FHWoavc22D0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCAypvelc1DORm6XUivfiRVQ",
+     "name": "@kbonlinetv",
+     "views": 4,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "आज को यात्रा।नेपाली पुलिस को सम्मान को लागि सबै ले ।। भिडियो हेर्नू होला ।।यस्तो ।दायालु पुलिस 😍"
+    },
+    {
+     "href": "https://www.instagram.com/p/Ddd_aNPAro0/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/Ddd_aNPAro0/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "recharge 🔋"
+    },
+    {
+     "href": "https://www.instagram.com/p/Dd4biDuAPqJ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/Dd4biDuAPqJ/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Jewelry from @sava 🦋"
+    },
+    {
+     "href": "https://www.facebook.com/LaMarka90.9Fm/videos/ya-en-nicaragua-andres-fresko-/1006913812682539/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/LaMarka90.9Fm",
+     "name": "LaMarka90.9Fm",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ya en Nicaragua Andres Fresko ! | La Marka 90.9 Fm"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/250fL9h4sAo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCizvivF0C9EkX24a1eevTDQ",
+     "name": "Divot",
+     "views": 1148,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Heartbreak Behind a Grammy, an Emmy and a Nike Contract | Charlie Rocket"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/p/DdNpzjFDxWW/",
+     1,
+     "Serving Dish💖"
+    ],
+    [
+     "https://www.facebook.com/kamukunjimarket/posts/melamine-plates-at-sh-1100-for-12pieces/1243830565959261/",
+     1,
+     "Melamine plates at sh 1100 for 12pieces"
+    ],
+    [
+     "https://www.instagram.com/p/DYuFjnNDxzu/",
+     1,
+     "과일플레이팅 얼마전 과일 플레이팅 원데이클래스에서만든 ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=NsXZiRjuslw",
+     1,
+     "Ken Jeong Thinks Galaxy Girl Could Be Anne Hathaway / The ..."
+    ],
+    [
+     "https://www.facebook.com/itv/videos/tonight/444308193418855/",
+     1,
+     "5 MASKED SINGERS 🎭 1 will be UNMASKED 👀✨ Who's BEHIND THE ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=ImLNX5m19ac",
+     1,
+     "RANKING | Season 2, FINAL; episode 8 | TMS UK | Masked Orbit ..."
+    ],
+    [
+     "https://www.facebook.com/61574611167437/posts/i-went-to-my-husband-and-sobbed-it-was-20-years-of-my-life-claudia-winkleman-rev/122156267156820372/",
+     1,
+     "I went to my husband and sobbed. It was 20 years of my life ..."
+    ],
+    [
+     "https://www.instagram.com/p/DeuEaZ_iGAf/",
+     1,
+     "A new era in the Strictly ballroom has sparked a fierce ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/oRouKNFN1v4",
+     1,
+     "Greg Davies DOES Look Different #shorts - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@pabanpanday/video/7683941046073429268",
+     1,
+     "فيديوهات أنشأها 🎧️ Ｉaｍ paban ＆ you ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=FHWoavc22D0",
+     1,
+     "आज को यात्रा।नेपाली पुलिस को ..."
+    ],
+    [
+     "https://www.instagram.com/p/Ddd_aNPAro0/",
+     1,
+     "recharge 🔋"
+    ],
+    [
+     "https://www.instagram.com/p/Dd4biDuAPqJ/",
+     1,
+     "Jewelry from @sava 🦋"
+    ],
+    [
+     "https://www.facebook.com/LaMarka90.9Fm/videos/ya-en-nicaragua-andres-fresko-/1006913812682539/",
+     1,
+     "Ya en Nicaragua Andres Fresko ! | La Marka 90.9 Fm"
+    ],
+    [
+     "https://www.youtube.com/shorts/250fL9h4sAo",
+     1,
+     "YouTube"
+    ]
+   ]
+  },
+  "RWS43GF1A_U": {
+   "id": "RWS43GF1A_U",
+   "title": "The E-Bike Gen Z Americans Are Obsessed With",
+   "views": 2100000,
+   "channel": "Hot Item Report",
+   "from_channel": "https://www.youtube.com/@핫템리포트",
+   "orig": false,
+   "lang": "ko",
+   "ko_chars": 74,
+   "text": "미국에서 난리난 전기자전거가 있는데요 래퍼들이 자기차 컬러에 맞춰 제작하면서 유명해졌는데 특히 r&b popstar gris brown이 타면서 바이러리 제대로 터졌는데요 겉은 글래식한 올드스쿨인데 속은 완전",
+   "matches": [
+    {
+     "href": "https://m.youtube.com/shorts/7-H8xqoLhBg",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCPZJ0r0VnOEjqZ6AvQe9eqw",
+     "name": "직장인 장비빨",
+     "views": 21119,
+     "resolved": true,
+     "lang": "ko",
+     "title": "크리스 브라운도 탔다? 시속 97km 커스텀 전기바이크 ⚡ #전기자전거 #커스텀바이크 #크리스브라운 #JRAT #쇼츠"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7639379015618383135",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "72V 3000W JRAT Customs Ebike Top Speed & Price Guide | TikTok"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/iSF9kYNKhkg",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCh9eNfPKoMwr8mYWLwzrG-g",
+     "name": "일상케어템",
+     "views": 2019,
+     "resolved": true,
+     "lang": "ko",
+     "title": "바닥에 붙어 달리는 시선강탈 나만의 커스텀 전기 바이크#커스텀바이크 #전기바이크 #전동바이크 #마실용바이크 #커스텀전동스쿠터 #나만의바이크 #네온바이크"
+    },
+    {
+     "href": "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     "hits": 3,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/affordasale",
+     "name": "affordasale",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The JRAT Custom Designed E-Bikes are built for simple ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/_DMTyRf8vH0",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCiA6xoo2JzG5RlYbrDQxWpA",
+     "name": "남다른 픽",
+     "views": 6052,
+     "resolved": true,
+     "lang": "ko",
+     "title": "요즘 해외서 난리 난 커스텀 전기 자전거 실물 포스 미쳤다"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/9Sukkh8N47M",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCsf6zMC7kGGbdMXyex3Fa0g",
+     "name": "홈인온",
+     "views": 2505,
+     "resolved": true,
+     "lang": "ko",
+     "title": "오토바이인 줄 알았는데 전기자전거라고? 바이크 감성 제대로 살린 전기자전거"
+    },
+    {
+     "href": "https://www.facebook.com/supercarblondie/videos/the-coolest-custom-e-bikes-/29293641286901525/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/supercarblondie",
+     "name": "supercarblondie",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I'll take every single one of them 😍 | Supercar Blondie"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQbtlQ9kXwy/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7276483434023849258",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "www.jratcustoms.com insta @_jrat insta @jrat_customs ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeAlGN6R68A/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/jjoha_joha82/",
+     "name": "@jjoha_joha82",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by jjoha_joha82"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7647515263251827998",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Chopper Style E‑Bike for Adults: Electric Chopper Bike Look ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/Cwz3X05gAqM/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYhz48VRL5G/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7559976962035387678",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Discover the Unique Jrat Custom Ebike Experience | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7198608137962786091",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The only way to get in contact with me is on instagram @_ ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://m.youtube.com/shorts/7-H8xqoLhBg",
+     3,
+     "Even Chris Brown rides it? 60mph custom e-bike ⚡ #ebike ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7639379015618383135",
+     3,
+     "72V 3000W JRAT Customs Ebike Top Speed & Price Guide | TikTok"
+    ],
+    [
+     "https://m.youtube.com/shorts/iSF9kYNKhkg",
+     3,
+     "Head-Turning Custom Electric Bike That Hugs the Ground ..."
+    ],
+    [
+     "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     3,
+     "The JRAT Custom Designed E-Bikes are built for simple ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/_DMTyRf8vH0",
+     2,
+     "The custom e-bike going viral overseas has an insane real ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/9Sukkh8N47M",
+     2,
+     "Thought it was a motorcycle, but it's an e-bike? An e-bike ..."
+    ],
+    [
+     "https://www.facebook.com/supercarblondie/videos/the-coolest-custom-e-bikes-/29293641286901525/",
+     2,
+     "I'll take every single one of them 😍 | Supercar Blondie"
+    ],
+    [
+     "https://www.instagram.com/reel/DQbtlQ9kXwy/",
+     2,
+     "JRAT CUSTOMS custom built #ebikes"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7276483434023849258",
+     2,
+     "www.jratcustoms.com insta @_jrat insta @jrat_customs ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DeAlGN6R68A/",
+     2,
+     "이게 오토바이가 아니라 전동 스쿠터라고요? 비주얼 진짜 미쳤 ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7647515263251827998",
+     1,
+     "Chopper Style E‑Bike for Adults: Electric Chopper Bike Look ..."
+    ],
+    [
+     "https://www.instagram.com/reel/Cwz3X05gAqM/",
+     1,
+     "@jrat_customs One of my favorite bikes . #jratcustoms ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DYhz48VRL5G/",
+     1,
+     "Jrat Customs, DM for custom #ebike"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7559976962035387678",
+     1,
+     "Discover the Unique Jrat Custom Ebike Experience | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7198608137962786091",
+     1,
+     "The only way to get in contact with me is on instagram @_ ..."
+    ]
+   ]
+  }
+ }
+}
