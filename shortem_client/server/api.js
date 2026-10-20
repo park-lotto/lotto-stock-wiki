@@ -1,4 +1,4 @@
-// 우리 서버 REST(계약 §1~§5) — 고객 PC 가 부르는 곳은 license·lease·assets·pack·feedback·blob 뿐(제작 호출 0).
+// 우리 서버 REST(계약 §1~§5) — 고객 PC 가 부르는 곳은 license·lease·assets·pack·rent·feedback·blob 뿐(제작 호출 0).
 //   네트워크 허용 목록: SHORTEM_BASE 의 origin + SHORTEM_ASSET_HOSTS(자산 저장소) 만. 밖이면 요청하지 않는다.
 import { readLicense, deviceFingerprint, deviceName, ENGINE_VERSION } from './license.js';
 
@@ -80,5 +80,7 @@ export const api = {
   lease: body => call('POST', '/api/claude/lease', { body }),
   assets: (profile, job, lease, extra) => call('GET', '/api/claude/assets', { query: { profile, job, lease, extra } }),
   pack: (assetId, job) => call('GET', '/api/claude/pack/' + encodeURIComponent(assetId), { query: { job } }),
+  rent: (profile, job, lease, preset) => call('POST', '/api/claude/rent', { body: { ...(profile ? { profile } : {}), ...(preset ? { preset } : {}), job, lease }, timeoutMs: 60000 }),   // 편마다 프리셋(관제 234)
+  update: have => call('GET', '/api/claude/update', { query: { have } }),   // 켤 때 자동 업데이트(관제 234)
   feedback: body => call('POST', '/api/claude/feedback', { body }),
 };

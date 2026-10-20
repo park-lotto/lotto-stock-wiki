@@ -1,39 +1,53 @@
 {
- "brief": "숏템메이커 라이브: 두유노 지침서 작가(버텍스) + 자동 검수 + 1회 재작성",
- "created": "2026-10-20T06:04:42.836426+00:00",
+ "brief": "관제234 5판: 고객PC 칼카피 완본 그대로(설계 docs/superpowers/specs/2026-10-19-숏템MCP-완본엔진-design.md)",
+ "created": "2026-10-19T06:12:43.770904+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "작가",
-   "objective": "guide_writer 모듈(지침서·참고 묶음을 패키지에) + storyboard 두유노 2스타일 연결",
-   "status": "complete",
-   "evidence": "guide_writer.py + guides/ + storyboard._board_guide/families(guide)/make_boards g: + app 입구 3곳"
+   "title": "엔진묶음",
+   "objective": "고정 커밋 엔진 코드+임베디드 파이썬+의존성 묶음, 저장소 없이 렌더 검사 통과",
+   "status": "pending",
+   "evidence": null
   },
   {
    "id": "G002",
-   "title": "검수",
-   "objective": "자동 검수(길이·겹침·예 낱말·화면 없는 숫자) + 1회 재작성 + 남은 문제 표시",
-   "status": "complete",
-   "evidence": "check()·write() 1회 재작성 — test_guide_writer 5 passed, 회귀 78 passed"
+   "title": "고객모드",
+   "objective": "제미나이·타입캐스트·키 경로를 고객 키로, 서버 키풀·우리 키 0(묶음 검사 도구)",
+   "status": "pending",
+   "evidence": null
   },
   {
    "id": "G003",
-   "title": "시험",
-   "objective": "단위 시험 + 실제 버텍스 1~2회로 보드 모양 확인",
+   "title": "프로필팩",
+   "objective": "웹 프로필(프리셋+옵션)을 엔진 팩으로 바꾸는 주인 함수, merge_preset_pack 결과 대조",
    "status": "pending",
    "evidence": null
   },
   {
    "id": "G004",
-   "title": "하류",
-   "objective": "확정→대본·장면→렌더·캡컷 경로가 새 보드를 그대로 받는지 확인",
+   "title": "PC흐름",
+   "objective": "MCP 도구 후보→고르기→검수→사인→완성 + 말로 바꾸기, 하이쿠에서도 도는 결정적 상태기계",
    "status": "pending",
    "evidence": null
   },
   {
    "id": "G005",
-   "title": "배포",
-   "objective": "스위치(계정) + 커밋·배포·보고",
+   "title": "웹설정",
+   "objective": "제작소형 탭 페이지 + 같은 렌더러 미리보기·5초 재생, 버튼 전수 전/후 그림 대조 도구",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G006",
+   "title": "설치팩전부",
+   "objective": "자산·글꼴·렌더러·런타임 모두 동봉, 깨끗한 상태 설치 후 1편 완성",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G007",
+   "title": "라이브e2e",
+   "objective": "관리자로 /claude 선택→설치본으로 1편, 완본과 프레임 대조 후 한 번에 finish",
    "status": "pending",
    "evidence": null
   }

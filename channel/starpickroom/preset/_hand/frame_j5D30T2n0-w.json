@@ -1,0 +1,202 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 0,
+   "y": 483,
+   "w": 1080,
+   "h": 1058,
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": true,
+   "letter_spacing": -1.0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "title",
+   "x": 540,
+   "y": 236,
+   "w": 1040,
+   "lines": 2,
+   "font": "Cafe24Ohsquare",
+   "size": 92.0,
+   "line_h": 104,
+   "rgb": [
+    252,
+    252,
+    252
+   ],
+   "text": "\"이건 역대급이야!\"\n최화정도 반한 SNS 레시피"
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 7,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "none",
+    "ms": 300
+   },
+   "emphasis": null,
+   "role": "caption",
+   "x": 540,
+   "y": 1106,
+   "w": 1000,
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 62.0,
+   "line_h": 70,
+   "rgb": [
+    255,
+    255,
+    255
+   ]
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "label",
+   "x": 540,
+   "y": 1604,
+   "w": 900,
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 36.0,
+   "line_h": 44,
+   "rgb": [
+    139,
+    139,
+    136
+   ],
+   "text": "출처: 안녕하세요 최화정이에요"
+  },
+  {
+   "kind": "text",
+   "align": "center",
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "role": "brand",
+   "x": 910,
+   "y": 522,
+   "w": 260,
+   "lines": 1,
+   "font": "GmarketSansBold",
+   "size": 56.0,
+   "line_h": 60,
+   "rgb": [
+    200,
+    200,
+    200
+   ],
+   "text": "스타픽룸"
+  },
+  {
+   "kind": "image",
+   "src": "channel/starpickroom/preset/assets/logo_yanshottem.png",
+   "x": 0,
+   "y": 1666,
+   "w": 1080,
+   "h": 254
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "j5D30T2n0-w",
+ "made_from": {
+  "tool": "spr_preset.hand",
+  "engine": "뜯기 1판 2026-10-15",
+  "font": {
+   "top1": "YeonSung-Regular.ttf",
+   "top1_score": 0.1017,
+   "picked_from": {
+    "file": "YeonSung-Regular.ttf",
+    "score": 0.1017
+   },
+   "font_confidence": "low",
+   "skipped": []
+  },
+  "title_ink_w": 958,
+  "font_confidence": "low",
+  "notes": [
+   "바탕색 = 프레임 실제 칠 [0, 0, 0] (뜯기 잰 값 [0, 0, 0])",
+   "글꼴 1위 YeonSung-Regular.ttf(0.1017) < 0.5 — 확신 낮음. 쓴 글꼴 CcYeonSung-Regular({'file': 'YeonSung-Regular.ttf', 'score': 0.1017})",
+   "제목 글꼴 Cafe24Ohsquare — 분석기 fonts.title 1위 Cafe24Ohsquare.ttf(0.3612), 신뢰 low",
+   "제목 줄별 외곽선 [None, [2, 73, 68, 0]] (창 위로 걸친 고리만 잼)",
+   "제목 기울기 +10도(기둥 전단 투영) → 기울임",
+   "자막 잰 높이 67px 에서 외곽선 6px×2 를 빼고 크기 역산",
+   "자막 자간·낱말 간격 0 — 잰 폭이 글 길이를 안 따른다(잰 폭/그린 폭 사분위 폭 0.70 > 0.15, 10개) — 창 안 자막이 영상 내용까지 잡힌 것으로 본다",
+   "자막 줄 수 {1: 13, 2: 1} → 최빈 1줄 칸",
+   "자막 외곽선 2px [4, 2, 4] — 프레임 자막 줄 열 (679, 745) 에서 직접 잼(분석기 요약 6px [170, 175, 167])",
+   "자막 등장 pop — 뜯기 등장 표본 3개 중 '확대/축소' 1개",
+   "자막 낱말 강조: 뜯기에 강조 낱말·색 항목이 없다(text_fx 는 자막 전체 채움색만) — 분석기에 넘길 목록",
+   "제목·자막 글꼴/크기 손질(실측 근거는 이 파일 머리) · 출처·워터마크(brand)·로고(image) 층 손으로 추가",
+   "제목 낱말별 색·워터마크 투명도·로고는 spr_overlay 로 덮는다(스키마 빈칸)",
+   "나레 줄 = 타이핑(10~15자/초), 원음 줄 = 즉시 — 층 하나라 enter none 으로 두고 자막팩 보강안에 갈라 적음"
+  ],
+  "ocr_model": "gemini-3.5-flash",
+  "from": "j5D30T2n0-w_auto.json"
+ }
+}

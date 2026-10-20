@@ -86,7 +86,7 @@ def env(monkeypatch, tmp_path):
         f.write_bytes(b"PREVIEW-" + pid.encode())
     client = TestClient(app_module.app)
     preset_id = cp.presets(st)[0]["id"]
-    return {"client": client, "store": st, "preset": preset_id, "sdir": sdir}
+    return {"client": client, "store": st, "preset": preset_id, "sdir": sdir, "monkeypatch": monkeypatch}
 
 
 def _h(key, fp=FP1, engine="1.0.0", name="사무실 PC", country=None):
@@ -158,8 +158,23 @@ def test_엔진_낮으면_거절(env):
     assert r.json()["code"] == "engine_old"
 
 
-# ── 2. 기기 2대 ──────────────────────────────────────────────────────────
-def test_기기_3대째_거절(env):
+# ── 2. 기기 대수 ─────────────────────────────────────────────────────────
+def test_기본은_PC_1대_두번째_기기_거절(env):
+    """5판 사장님 결정: PC 1대만. 두 번째 기기는 거절, 첫 기기를 빼면 들어온다."""
+    from shopping_shorts import claude_portal as cp
+    assert cp.DEVICES_MAX == 1
+    c = env["client"]
+    k = _key(env)
+    assert c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()["devices_max"] == 1
+    r = c.get("/api/claude/license", headers=_h(k, FP2, name="집"))
+    assert r.status_code == 403 and r.json()["code"] == "device_limit"
+    assert c.post("/api/claude/me/device/remove", json={"device_id": FP1[:12]}).json()["ok"]
+    assert c.get("/api/claude/license", headers=_h(k, FP2)).json()["device"]["slot"] == 1
+
+
+def test_기기_3대째_거절(env, monkeypatch):
+    from shopping_shorts import claude_portal as cp
+    monkeypatch.setattr(cp, "DEVICES_MAX", 2)   # 상한이 2일 때의 규칙(교체는 사람이)
     c = env["client"]
     k = _key(env)
     a = c.get("/api/claude/license", headers=_h(k, FP1, name="사무실")).json()
@@ -177,6 +192,8 @@ def test_기기_3대째_거절(env):
 
 # ── 3. lease ────────────────────────────────────────────────────────────
 def _two_devices(env):
+    from shopping_shorts import claude_portal as cp
+    env["monkeypatch"].setattr(cp, "DEVICES_MAX", 2)   # 동시 작업 막기 규칙은 기기 상한과 무관 — 두 기기로 시험
     k = _key(env)
     for fp in (FP1, FP2):
         assert env["client"].get("/api/claude/license", headers=_h(k, fp)).status_code == 200
@@ -482,3 +499,107 @@ def test_merge_blanks_bench_label_text():
     assert L[2]["text"] == "내채널 | 14:25"
     assert L[3]["text"] == "»"
     assert any("label" in p for p in out["per_video"])
+
+
+def test_rent_편마다_잠근_꾸러미_풀면_원본과_같다(env):
+    """편마다 프리셋 빌려주기(관제 234 5판) — 관문(작업 권한·구매) 뒤 잠근 꾸러미, 그 편 열쇠로만 풀린다."""
+    import base64, hashlib, io, zipfile
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    c = env["client"]
+    k = _two_devices(env)
+    pid = _profile(env)
+    body = {"profile": pid, "job": "j1"}
+    assert c.post("/api/claude/rent", headers=_h(k), json=body).json()["code"] == "lease_lost"   # 작업 권한 없음
+    lid = c.post("/api/claude/lease", headers=_h(k), json={"action": "acquire", "job_id": "j1"}).json()["lease_id"]
+    body["lease"] = lid
+    assert c.post("/api/claude/rent", headers=_h(k), json=body).json()["code"] == "not_ready"    # 꾸러미 아직 없음
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("channel/benchslug/preset/A_흰바탕창/창아래_검정/frame.json", '{"layers":[]}')
+    data = buf.getvalue()
+    f = cp.preset_pack_path(env["preset"])
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(data)
+    assert c.post("/api/claude/rent", headers=_h(k, FP2), json=body).json()["code"] == "lease_lost"   # 다른 기기
+    assert c.post("/api/claude/rent", headers=_h(k), json={**body, "job": "j9"}).json()["code"] == "lease_lost"
+    r = c.post("/api/claude/rent", headers=_h(k), json=body)
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["preset_path"] == "channel/benchslug/preset/A_흰바탕창/창아래_검정"
+    blob = base64.b64decode(d["pack"])
+    assert data not in blob, "꾸러미가 잠기지 않은 채 나갔다"
+    plain = AESGCM(base64.b64decode(d["key"])).decrypt(blob[:12], blob[12:], d["aad"].encode())
+    assert plain == data and hashlib.sha256(plain).hexdigest() == d["sha256"]
+    import pytest
+    with pytest.raises(Exception):   # 덧붙임 글(cid|job)이 다르면 같은 열쇠로도 못 푼다 — 다른 편에 재사용 불가
+        AESGCM(base64.b64decode(d["key"])).decrypt(blob[:12], blob[12:], d["aad"].replace("j1", "j2").encode())
+    d2 = c.post("/api/claude/rent", headers=_h(k), json=body).json()
+    assert d2["key"] != d["key"], "요청마다 새 열쇠여야 한다"
+    env["monkeypatch"].setattr(cp, "_entitled", lambda *a, **kw: set())   # 등급이 내려간 회원
+    assert c.post("/api/claude/rent", headers=_h(k), json=body).json()["code"] == "not_entitled"
+    with cp._tx(env["store"]) as con:
+        n = con.execute("SELECT COUNT(*) FROM claude_lease_log WHERE action='rent'").fetchone()[0]
+    assert n == 2
+
+
+def test_rent_로컬설정은_프리셋id로_빌리고_이름목록은_관리자설정(env):
+    """PC 로컬 설정(관제 234 5판) — 서버 프로필 없이 고객용 프리셋 id 로 빌린다. 이름은 claude_preset_names, 없으면 틀 설명."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    lic = c.get("/api/claude/license", headers=_h(k)).json()
+    assert lic["presets"] == [{"id": env["preset"], "name": "흰바탕창 · 창아래 검정", "desc": ""}]
+    assert "benchslug" not in _json.dumps(lic["presets"]), "벤치 slug 가 이름에 새면 안 된다"
+    env["store"].set_setting("claude_preset_names", _json.dumps({"benchslug/A_흰바탕창/창아래_검정": {"name": "제품비하인드썰형", "desc": "뒷이야기 썰"}}))
+    assert c.get("/api/claude/license", headers=_h(k)).json()["presets"][0]["name"] == "제품비하인드썰형"
+    lid = c.post("/api/claude/lease", headers=_h(k), json={"action": "acquire", "job_id": "j1"}).json()["lease_id"]
+    f = cp.preset_pack_path(env["preset"])
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(b"PK-test")
+    r = c.post("/api/claude/rent", headers=_h(k), json={"preset": env["preset"], "job": "j1", "lease": lid})
+    assert r.status_code == 200 and r.json()["sha256"], r.text
+    assert c.post("/api/claude/rent", headers=_h(k), json={"preset": "p_0000000000", "job": "j1", "lease": lid}).json()["code"] == "not_entitled"
+    assert c.post("/api/claude/rent", headers=_h(k), json={"job": "j1", "lease": lid}).json()["code"] == "bad_request"
+
+
+def test_update_새판이면_서명주소_오래된엔진도_받는다(env, tmp_path):
+    """켤 때 자동 업데이트(관제 234 5판) — 더 새 판만 주고, 엔진이 최소 판보다 낮아도 업데이트 창구는 열린다."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    assert c.get("/api/claude/update?have=1.0.0", headers=_h(k)).json()["update"] is False   # 올린 판 없음
+    z = tmp_path / "u.zip"
+    z.write_bytes(b"PK-update")
+    sha, size = cp.put_blob(z)
+    cp.update_path().parent.mkdir(parents=True, exist_ok=True)
+    cp.update_path().write_text(_json.dumps({"version": "1.0.2", "sha256": sha, "size": size}), encoding="utf-8")
+    assert c.get("/api/claude/update?have=1.0.2", headers=_h(k)).json()["update"] is False
+    env["store"].set_setting("claude_min_engine", "1.0.1")
+    old = c.get("/api/claude/update?have=1.0.0", headers=_h(k, engine="1.0.0"))
+    d = old.json()
+    assert old.status_code == 200 and d["update"] is True and d["sha256"] == sha, d
+    assert c.get("/api/claude/license", headers=_h(k, engine="1.0.0")).json()["code"] == "engine_old", "다른 창구는 그대로 막힌다"
+    got = c.get(d["url"])
+    assert got.status_code == 200 and got.content == b"PK-update"
+
+
+def test_install_키만으로_묶음_주소_기기지문_없이(env, tmp_path):
+    """exe 없이 까는 길(사장님 10-20) — 설치 전 연결 파일은 키만 있다. 키 없으면 막고, 키 있으면 플랫폼 묶음 서명 주소."""
+    import json as _json
+    c = env["client"]
+    k = _two_devices(env)
+    bare = {"Authorization": f"Bearer {k}"}                       # 기기 지문·엔진 판 없음
+    assert c.get("/api/claude/install?plat=win-x64").json()["ok"] is False, "키 없으면 막는다"
+    assert c.get("/api/claude/install?plat=linux", headers=bare).json()["code"] == "bad_request"
+    assert c.get("/api/claude/install?plat=win-x64", headers=bare).json()["ready"] is False   # 올린 묶음 없음
+    z = tmp_path / "i.zip"
+    z.write_bytes(b"PK-install" * 1000)
+    sha, size = cp.put_blob(z)
+    assert size == 10000 and sha == __import__("hashlib").sha256(z.read_bytes()).hexdigest()
+    cp.install_path("win-x64").parent.mkdir(parents=True, exist_ok=True)
+    cp.install_path("win-x64").write_text(_json.dumps({"version": "1.0.0", "sha256": sha, "size": size}), encoding="utf-8")
+    d = c.get("/api/claude/install?plat=win-x64", headers=bare).json()
+    assert d["ready"] is True and d["sha256"] == sha and d["size"] == size, d
+    got = c.get(d["url"])
+    assert got.status_code == 200 and got.content == z.read_bytes()
+    assert c.get("/api/claude/license", headers=bare).json()["code"] == "bad_request", "다른 창구는 지문이 있어야 한다"

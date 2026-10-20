@@ -7,8 +7,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { homeDir, writeFileIn } from './paths.js';
+import { toolsDir } from './tools_paths.js';
 
-export const ENGINE_VERSION = '1.0.0';
+// 설치 판 = 설치 폴더 app_version.json(빌드·자동 업데이트가 쓴다) — 없으면 코드 기본값(개발)
+function appVersion() {
+  try {
+    const v = JSON.parse(fs.readFileSync(path.join(toolsDir(), '..', 'app_version.json'), 'utf8')).version;
+    if (/^\d+\.\d+\.\d+$/.test(String(v))) return String(v);
+  } catch { /* 개발 PC */ }
+  return '1.0.0';
+}
+export const ENGINE_VERSION = appVersion();
 const KEY_RE = /^SHORTEM-L1\.\d{1,12}\.\d{1,12}\.\d{1,6}\.[0-9a-f]{32}$/;
 
 export const keyPrint = v => crypto.createHash('sha256').update(String(v)).digest('hex').slice(0, 12);
