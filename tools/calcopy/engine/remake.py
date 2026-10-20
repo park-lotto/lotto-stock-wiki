@@ -109,20 +109,27 @@ def orig_grid(J: dict, spec: dict, dst: Path):
     import io
     v = next(l for l in spec["layers"] if l["kind"] == "video")
     cuts = [0.0] + list((J.get("cuts") or {}).get("times") or []) + [float(J["probe"]["duration"])]
+    shots = [(round(a, 3), round(b, 3)) for a, b in zip(cuts, cuts[1:])]
+    # ★원본 영상(J["source"])은 뜯기를 한 우리 PC 에만 있다 — 고객 PC(관제 234)엔 없어서 ffmpeg 가 빈 값을 주고 Image.open 이 죽었다
+    #   (10-20 라이브 시험 'cannot identify image file'). 컷 시각(shots)은 뜯기에 있으니 늘 돌려주고, 그림은 그릴 수 있을 때만.
     tiles = []
-    for i, (a, b) in enumerate(zip(cuts, cuts[1:])):
-        t = (a + b) / 2
-        png = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", J["source"], "-frames:v", "1", "-vf",
-                              f"crop={v['w']}:{v['h']}:{v['x']}:{v['y']},scale=270:-2", "-f", "image2pipe", "-vcodec", "png", "-"],
-                             capture_output=True, stdin=subprocess.DEVNULL).stdout
-        im = Image.open(io.BytesIO(png)).convert("RGB"); ImageDraw.Draw(im).text((4, 4), f"#{i} {a:.2f}-{b:.2f}", fill=(255, 0, 0))
-        tiles.append(im)
-    S = Image.new("RGB", (sum(t.width for t in tiles), max(t.height for t in tiles)), "white")
-    x = 0
-    for t in tiles:
-        S.paste(t, (x, 0)); x += t.width
-    S.save(dst / "원본컷.jpg", quality=88)
-    return [(round(a, 3), round(b, 3)) for a, b in zip(cuts, cuts[1:])]
+    if J.get("source") and Path(J["source"]).is_file():
+        for i, (a, b) in enumerate(shots):
+            t = (a + b) / 2
+            png = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", J["source"], "-frames:v", "1", "-vf",
+                                  f"crop={v['w']}:{v['h']}:{v['x']}:{v['y']},scale=270:-2", "-f", "image2pipe", "-vcodec", "png", "-"],
+                                 capture_output=True, stdin=subprocess.DEVNULL).stdout
+            if not png:
+                continue
+            im = Image.open(io.BytesIO(png)).convert("RGB"); ImageDraw.Draw(im).text((4, 4), f"#{i} {a:.2f}-{b:.2f}", fill=(255, 0, 0))
+            tiles.append(im)
+    if tiles:
+        S = Image.new("RGB", (sum(t.width for t in tiles), max(t.height for t in tiles)), "white")
+        x = 0
+        for t in tiles:
+            S.paste(t, (x, 0)); x += t.width
+        S.save(dst / "원본컷.jpg", quality=88)
+    return shots
 
 
 def gather_candidates(J: dict, spec: dict, queries: list[str], out: Path) -> Path:
@@ -432,10 +439,14 @@ def main(argv=None):
         final = narr_video.build(plan)
     # 5) 대조 + 1초 시트
     from tools.calcopy.engine import compare
-    res = compare.compare(J["source"], str(final), str(out / "대조"), "single")
     sheet_1s(final, out / "final_sheet_1s.jpg")
-    v = res["verdict"]
-    log["steps"]["compare"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"], "failed": v["failed"]}
+    if J.get("source") and Path(J["source"]).is_file():
+        res = compare.compare(J["source"], str(final), str(out / "대조"), "single")
+        v = res["verdict"]
+        log["steps"]["compare"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"], "failed": v["failed"]}
+    else:   # 고객 PC(관제 234)엔 뜯기 원본 영상이 없다 — 원본 대조는 우리 PC 에서만(완성본 검사는 이음매·소리 검사가 맡는다)
+        v = {"verdict": "원본 없음 — 대조 생략", "n_in": None, "n_criteria": None, "out": None, "failed": []}
+        log["steps"]["compare"] = {"skipped": "원본 영상 없음(고객 PC)"}
     # 6) 이음매(되감김·점프 줌) — 검수 B16. 10-17 아이템홈 1판 17.77초 0.37초 되감김을 B표·compare 가 못 잡았다
     from tools.calcopy.engine import check_seams
     sw, sm = check_seams.from_frame(a.frame)   # 훅 카드 틀 말고 본편 틀
@@ -445,7 +456,7 @@ def main(argv=None):
     print(f"판정(① 픽셀): {v['verdict']} (기준 {v['n_criteria']} 중 안 {v['n_in']}) · 밖 {v['out'] or '없음'}")
     print(f"이음매(B16 되감김·점프줌): {'통과' if seam['ok'] else '걸림 ' + str(seam['되감김'])}")
     print("final:", final)
-    return 0 if v["verdict"] == "통과" and seam["ok"] else 1
+    return 0 if v["verdict"] in ("통과", "원본 없음 — 대조 생략") and seam["ok"] else 1
 
 
 if __name__ == "__main__":
