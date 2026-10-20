@@ -134,9 +134,9 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
     brand, text, cap = pack.get("brand") or {}, pack.get("text") or {}, (pack.get("text") or {}).get("caption") or {}
     if frame is not None:
         frame = copy.deepcopy(frame)
-        if man.get("variable_stats"):     # 편마다 값(제목 크기·위치 …) = 프리셋이 잰 값 — 판단은 preset_save.fill_defaults 한 곳
-            from tools.calcopy.engine import preset_save as PS
-            frame, filled = PS.fill_defaults(frame, man["variable_stats"])
+        if man.get("variable_stats"):     # 편마다 값(제목 크기·위치 …) = 프리셋이 잰 값 — 판단은 calcopy_frame.per_video.fill_defaults 한 곳
+            from shopping_shorts.calcopy_frame import per_video as PV   # ★preset_save 는 고객 묶음 밖(만들기 기술) — 묶음 쪽 모듈만 부른다
+            frame, filled = PV.fill_defaults(frame, man["variable_stats"])
             if filled:
                 applied.append(f"편마다 값 {len(filled)}칸 = 프리셋 잰 값(중앙값)")
         old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")
