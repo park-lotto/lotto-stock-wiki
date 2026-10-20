@@ -169,7 +169,13 @@ def audit(path: Path, version: str | None = None) -> dict:
         res["rules"].append({"kind": r["kind"], "ok": good, "why": why, **({"rule": r["why"]} if r.get("why") else {})})
         ok &= good
     for f in st["script"].get("forbid") or []:
-        bad = [l["id"] for l in d.get("lines") or [] if re.search(f["pattern"], (l.get("text") or l.get("tts") or "") + " " + " ".join(_caps(l)))]
+        if f.get("of") == "tts":      # of: tts = 나레 줄만(원음 번역 자막은 방송 내용) · 샥탬 앞 칼카피(final.lines, hybrid 칸 없음)는 벤치 내용이라 대상 아님
+            if (d.get("final") or {}).get("lines") and not d.get("hybrid"):
+                continue
+            sel = lines
+        else:
+            sel = d.get("lines") or []
+        bad = [l.get("id", k) for k, l in enumerate(sel) if re.search(f["pattern"], (l.get("text") or l.get("tts") or "") + " " + " ".join(_caps(l)))]
         if bad:
             res["rules"].append({"kind": "forbid", "ok": False, "why": f"{f['why']} {bad}"}); ok = False
     res["narr"] = [SF.narr_rules(l["text"]) for l in lines]
