@@ -299,7 +299,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 2
+   "found": 2,
+   "done_all": true
   },
   "https://www.instagram.com/therealdarwin5/": {
    "name": "@therealdarwin5",
@@ -317,7 +318,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@leeroysane2": {
    "name": "@leeroysane2",
@@ -326,7 +328,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@fatherdollars": {
    "name": "@fatherdollars",
@@ -335,7 +338,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 2
+   "found": 2,
+   "done_all": true
   },
   "https://www.tiktok.com/@etaybeaton": {
    "name": "@etaybeaton",
@@ -344,7 +348,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCjStUkQiLADnLa_FozRtSCg": {
    "name": "JayRealFunny",
@@ -371,7 +376,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@velocityskits0": {
    "name": "@velocityskits0",
@@ -380,7 +386,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@thoriwrld10": {
    "name": "@thoriwrld10",
@@ -389,7 +396,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@bashversusbash": {
    "name": "@bashversusbash",
@@ -398,7 +406,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@stycollin": {
    "name": "@stycollin",
@@ -407,7 +416,8 @@
    "depth": 2,
    "from": "7679168204035362078",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UC23SELZv2KKYvqwB02c_I0A": {
    "name": "Electric Vehicles Space",
@@ -452,7 +462,8 @@
    "depth": 2,
    "from": "7312996396766907679",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/100089822637059": {
    "name": "100089822637059",
@@ -515,7 +526,8 @@
    "depth": 2,
    "from": "7447157134266993966",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCYpjpRtQP6YOjA3EUo7ZzUg": {
    "name": "Linda Kiều",
@@ -560,7 +572,8 @@
    "depth": 3,
    "from": "eHu5XkiNMfA",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@user8585551986522": {
    "name": "@user8585551986522",
@@ -569,7 +582,8 @@
    "depth": 3,
    "from": "e5e7VZCcEBM",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UC6Nj-MWxC6bgcftYUtxDhMw": {
    "name": "ViiZ",
@@ -641,7 +655,8 @@
    "depth": 3,
    "from": "e5e7VZCcEBM",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UC20L_9nsql8Omu9IAwVe9sg": {
    "name": "TAS Media",
@@ -668,7 +683,8 @@
    "depth": 3,
    "from": "AGn-xIEKIOQ",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.instagram.com/yo.vizag/": {
    "name": "@yo.vizag",
@@ -694,6 +710,303 @@
    "site": "facebook.com",
    "depth": 3,
    "from": "lW139nYfeEc",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@3nergyzeek": {
+   "name": "@3nergyzeek",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCFGBQdzpBoKTPe2NbRGyWBw": {
+   "name": "vx2jay",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@itsrhyig": {
+   "name": "@itsrhyig",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@bgluxe_19": {
+   "name": "@bgluxe_19",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@elmalito.10": {
+   "name": "@elmalito.10",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCBZwVMWELdONfG506493_vg": {
+   "name": "Ryfkv122",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7653116646667734285",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@jr.kalvin12": {
+   "name": "@jr.kalvin12",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 3
+  },
+  "https://www.tiktok.com/@sahy818": {
+   "name": "@sahy818",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@r3dmannn": {
+   "name": "@r3dmannn",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@whosshubert": {
+   "name": "@whosshubert",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCyddsn2K1ggRA1iIUVCqZMA": {
+   "name": "Villaluazo Sora",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@jay.mixs2": {
+   "name": "@jay.mixs2",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@gabriel08__": {
+   "name": "@gabriel08__",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@user819423290": {
+   "name": "@user819423290",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 2
+  },
+  "https://www.tiktok.com/@ayman_sieth44": {
+   "name": "@ayman_sieth44",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7642801494810512654",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCn18SpUmVrDVMWwJi9WCWGA": {
+   "name": "최상엽엽",
+   "lang": "ko",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7675786802468375838",
+   "done": false,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCZKLK6DnAKC81vc-B-0Cy3Q": {
+   "name": "Tetiana Walks",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7692649789812673812",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/abc13Houston": {
+   "name": "abc13Houston",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "7692649789812673812",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@divbi23": {
+   "name": "@divbi23",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7692649789812673812",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/nick.lin.351": {
+   "name": "nick.lin.351",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "7692649789812673812",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCz0aCn-6AJ0AO2EtOmiEeGw": {
+   "name": "Shakeel Murtaza",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7659502199487270146",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@thorisho_masina": {
+   "name": "@thorisho_masina",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7688725617701047572",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@oops_odeed": {
+   "name": "@oops_odeed",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@iamkamaribonds": {
+   "name": "@iamkamaribonds",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@theblackcarguru": {
+   "name": "@theblackcarguru",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 2
+  },
+  "https://www.tiktok.com/@6stayfly": {
+   "name": "@6stayfly",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@tsmurkz": {
+   "name": "@tsmurkz",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@chazsmith": {
+   "name": "@chazsmith",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@gratien_official": {
+   "name": "@gratien_official",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@tchuculinhaa": {
+   "name": "@tchuculinhaa",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCA2opjksKkG5pbW2CL2DNGA": {
+   "name": "Islandboy Afrik i",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/starcrossdons": {
+   "name": "starcrossdons",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "7690396672093867277",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@joespired1": {
+   "name": "@joespired1",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "7690396672093867277",
    "done": true,
    "found": 1
   }
@@ -5827,6 +6140,3090 @@
      "https://www.instagram.com/p/DR9Jv_0Dfj0/",
      1,
      "First little getaway with our baby🫶🏻"
+    ]
+   ]
+  },
+  "7653116646667734285": {
+   "id": "7653116646667734285",
+   "title": "And I was running far away! #fyp #viral #xyzbca",
+   "views": 14900000,
+   "url": "https://www.tiktok.com/@energyzeeky/video/7653116646667734285",
+   "channel": "https://www.tiktok.com/@energyzeeky",
+   "from_channel": "https://www.tiktok.com/@energyzeeky",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/energyzeeky7/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/energyzeeky7/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "energyzeeky (@energyzeeky7) • Instagram photos and videos"
+    },
+    {
+     "href": "https://www.tiktok.com/@3nergyzeek",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@3nergyzeek",
+     "name": "@3nergyzeek",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "3nergyzeek (@3nergyzeek) | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7660262422304902431",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "LIKE WERE GONNA DIE YOUNG!! #fyp #viral #xyzbca | Die Young ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/RgVdJ7fWu9k",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCFGBQdzpBoKTPe2NbRGyWBw",
+     "name": "vx2jay",
+     "views": 636,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "song on replay 😭🙏🏽 #relatable #shorts #viral"
+    },
+    {
+     "href": "https://www.tiktok.com/topic/a-seal-pushed-me-into-the-shower?lang=de-DE",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/topic/a-seal-pushed-me-into-the-shower?lang=de-DE",
+     "name": "tiktok.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "A Seal Pushed Me into The Shower | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@itsrhyig/video/7665008298755689758",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@itsrhyig",
+     "name": "@itsrhyig",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Day \\u0026 Night Droppin 7/27 — Day and Night Rhyrhy | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@/video/7576769783547333901?_r=1",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@/video/7576769783547333901?_r=1",
+     "name": "tiktok.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "3enlitened (@3enlitened)'s videos with original sound ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@bgluxe_19/video/7695489232571272468",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@bgluxe_19",
+     "name": "@bgluxe_19",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Lieta Karabo: The 'Okay' Moment That Has Everyone Talking ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@elmalito.10/video/7543431826359061790",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@elmalito.10",
+     "name": "@elmalito.10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "El malitooo🤟🏽 (@elmalito.10)'s videos with Moonlight ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/rWCxtkfqnBU",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCBZwVMWELdONfG506493_vg",
+     "name": "Ryfkv122",
+     "views": 8,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "August 8, 2026"
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7664694807545007374",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Candy Rain Soul For Real song video | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7570874778219760926",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "4😎😤#fyp #foryoupage #viral #xyzbca | mr beast donates to ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/EfRtjIDWR_o",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/shorts/EfRtjIDWR_o",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "July 24, 2026 - YouTube"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=Km2rtjAILew",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCzBg1I3H2rrCMXlenEA9WGg",
+     "name": "TRC Reactions",
+     "views": 8253,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Offset feat. Cardi B \"Clout\" Music Video Reaction"
+    },
+    {
+     "href": "https://www.instagram.com/p/DYX9FMpBtXQ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/energyzeeky7/",
+     "name": "@energyzeeky7",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by energyzeeky7"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/energyzeeky7/",
+     3,
+     "energyzeeky (@energyzeeky7) • Instagram photos and videos"
+    ],
+    [
+     "https://www.tiktok.com/@3nergyzeek",
+     3,
+     "3nergyzeek (@3nergyzeek) | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7660262422304902431",
+     2,
+     "LIKE WERE GONNA DIE YOUNG!! #fyp #viral #xyzbca | Die Young ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/RgVdJ7fWu9k",
+     2,
+     "song on replay 😭🙏🏽 #relatable #shorts #viral - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/topic/a-seal-pushed-me-into-the-shower?lang=de-DE",
+     2,
+     "A Seal Pushed Me into The Shower | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@itsrhyig/video/7665008298755689758",
+     2,
+     "Day \\u0026 Night Droppin 7/27 — Day and Night Rhyrhy | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@/video/7576769783547333901?_r=1",
+     2,
+     "3enlitened (@3enlitened)'s videos with original sound ..."
+    ],
+    [
+     "https://www.tiktok.com/@bgluxe_19/video/7695489232571272468",
+     2,
+     "Lieta Karabo: The 'Okay' Moment That Has Everyone Talking ..."
+    ],
+    [
+     "https://www.tiktok.com/@elmalito.10/video/7543431826359061790",
+     2,
+     "El malitooo🤟🏽 (@elmalito.10)'s videos with Moonlight ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/rWCxtkfqnBU",
+     2,
+     "August 8, 2026 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7664694807545007374",
+     1,
+     "Candy Rain Soul For Real song video | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7570874778219760926",
+     1,
+     "4😎😤#fyp #foryoupage #viral #xyzbca | mr beast donates to ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/EfRtjIDWR_o",
+     1,
+     "July 24, 2026 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/watch?v=Km2rtjAILew",
+     1,
+     "Offset feat. Cardi B \\"
+    ],
+    [
+     "https://www.instagram.com/p/DYX9FMpBtXQ/",
+     1,
+     "Black space - Taylor swift #zyxcba #viral #fyp"
+    ]
+   ]
+  },
+  "7642801494810512654": {
+   "id": "7642801494810512654",
+   "title": "Lucy - Carbon Amodio! #xyzbca #fyp #viral",
+   "views": 9300000,
+   "url": "https://www.tiktok.com/@energyzeeky/video/7642801494810512654",
+   "channel": "https://www.tiktok.com/@energyzeeky",
+   "from_channel": "https://www.tiktok.com/@energyzeeky",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "it is a",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7642086108834123021",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Deep Sea Diver lyrics, reaction & dance - finish the lyrics ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7573708657146318111",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Wit dis nuhh#viral #foryoupage #fyp #xyzbca | zeeky and ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@jr.kalvin12/video/7686884981108378912",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jr.kalvin12",
+     "name": "@jr.kalvin12",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Vidéos de jr.kalvin12 (@jr.kalvin12) avec son original ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@jr.kalvin12/video/7683974843401768225",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jr.kalvin12",
+     "name": "@jr.kalvin12",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Je relance la propagande ? | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@sahy818/video/7685087055944191250",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@sahy818",
+     "name": "@sahy818",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "حماده cme | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@r3dmannn/video/7683308933192125709",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@r3dmannn",
+     "name": "@r3dmannn",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fyp #viral #nbayoungboy #birmingham #205 | young nba boy ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@whosshubert/video/7661580278640561422",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@whosshubert",
+     "name": "@whosshubert",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ethan Hubert demo: Let me show you | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7642079644664990990",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Tiki Tiki Dance Trend: How to Do the Tiki Tiki Tikitiki Move ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=Smq57wqDUIE",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCyddsn2K1ggRA1iIUVCqZMA",
+     "name": "Villaluazo Sora",
+     "views": 1237,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Funniest Fun Top New Comedy Video 2026🤣Amazing best of funny video #humor #fypシ #pov #fyp #foryou 😍😜"
+    },
+    {
+     "href": "https://www.tiktok.com/@jay.mixs2/video/7680625832276053278",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jay.mixs2",
+     "name": "@jay.mixs2",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "creatorsearchinsights #viralshortvideotrends #jamorant ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@gabriel08__/video/7687434018484227346",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@gabriel08__",
+     "name": "@gabriel08__",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Os vídeos de Miqueias (@gabriel08__) com som original - G ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@jr.kalvin12/video/7683442582218706208",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jr.kalvin12",
+     "name": "@jr.kalvin12",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Vidéos de jr.kalvin12 (@jr.kalvin12) avec Amiri - Le Crime ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@user819423290/video/7559399917886704909",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user819423290",
+     "name": "@user819423290",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Celebrating Brown Skin Beauty and Diversity | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@user819423290/video/7559725899956997407",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user819423290",
+     "name": "@user819423290",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fyp #brownskin #viral #trending #trendingvideo | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@ayman_sieth44/video/7689352040056622349",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ayman_sieth44",
+     "name": "@ayman_sieth44",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🕷️ (@ayman_sieth44)'s videos with original sound ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7642086108834123021",
+     3,
+     "Deep Sea Diver lyrics, reaction & dance - finish the lyrics ..."
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7573708657146318111",
+     2,
+     "Wit dis nuhh#viral #foryoupage #fyp #xyzbca | zeeky and ..."
+    ],
+    [
+     "https://www.tiktok.com/@jr.kalvin12/video/7686884981108378912",
+     2,
+     "Vidéos de jr.kalvin12 (@jr.kalvin12) avec son original ..."
+    ],
+    [
+     "https://www.tiktok.com/@jr.kalvin12/video/7683974843401768225",
+     2,
+     "Je relance la propagande ? | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@sahy818/video/7685087055944191250",
+     2,
+     "حماده cme | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@r3dmannn/video/7683308933192125709",
+     2,
+     "fyp #viral #nbayoungboy #birmingham #205 | young nba boy ..."
+    ],
+    [
+     "https://www.tiktok.com/@whosshubert/video/7661580278640561422",
+     2,
+     "Ethan Hubert demo: Let me show you | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7642079644664990990",
+     2,
+     "Tiki Tiki Dance Trend: How to Do the Tiki Tiki Tikitiki Move ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=Smq57wqDUIE",
+     2,
+     "Funniest Fun Top New Comedy Video 2026🤣Amazing best of ..."
+    ],
+    [
+     "https://www.tiktok.com/@jay.mixs2/video/7680625832276053278",
+     2,
+     "creatorsearchinsights #viralshortvideotrends #jamorant ..."
+    ],
+    [
+     "https://www.tiktok.com/@gabriel08__/video/7687434018484227346",
+     2,
+     "Os vídeos de Miqueias (@gabriel08__) com som original - G ..."
+    ],
+    [
+     "https://www.tiktok.com/@jr.kalvin12/video/7683442582218706208",
+     2,
+     "Vidéos de jr.kalvin12 (@jr.kalvin12) avec Amiri - Le Crime ..."
+    ],
+    [
+     "https://www.tiktok.com/@user819423290/video/7559399917886704909",
+     2,
+     "Celebrating Brown Skin Beauty and Diversity | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@user819423290/video/7559725899956997407",
+     2,
+     "fyp #brownskin #viral #trending #trendingvideo | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@ayman_sieth44/video/7689352040056622349",
+     2,
+     "🕷️ (@ayman_sieth44)'s videos with original sound ..."
+    ]
+   ]
+  },
+  "7675786802468375838": {
+   "id": "7675786802468375838",
+   "title": "Ima dog like rin tin tin 🔥#fyp #viral #xyzbca ",
+   "views": 9100000,
+   "url": "https://www.tiktok.com/@energyzeeky/video/7675786802468375838",
+   "channel": "https://www.tiktok.com/@energyzeeky",
+   "from_channel": "https://www.tiktok.com/@energyzeeky",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "I hit what I hit what I hit like cinnamon JJ",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=DFWU0BlR9YQ",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCn18SpUmVrDVMWwJi9WCWGA",
+     "name": "최상엽엽",
+     "views": 3674,
+     "resolved": true,
+     "lang": "ko",
+     "title": "[엽터디] 207회차"
+    },
+    {
+     "href": "https://www.tiktok.com/@caddadtheo/video/7694565076006702367",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@caddadtheo",
+     "name": "@caddadtheo",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Hurricane Isaias update 6 #caddadtheo | hurricane | TikTok"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV16TKU6WEs8/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV16TKU6WEs8/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "B_梦俊（旭旭宝宝传媒）_20260715_00.19.40-00.32.10_建会实战 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=Xw9UUiXqzvg",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCmcy2UgwMujDiLIegAiL6OQ",
+     "name": "梦幻西游不俗雁门关",
+     "views": 5,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "畅玩服龙拳，什么神兽最厉害？  #梦幻西游电脑版 #梦幻西游创梦计划 #梦幻西游畅玩服"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DbNvOKzBCIv/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/tomascarreraok7/",
+     "name": "@tomascarreraok7",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by tomascarreraok7"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=l_ZUd2aLOeE",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCxXuQqPd6mou3r5B16Ow3yw",
+     "name": "两只咸鱼",
+     "views": 5,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "没啥原因，就是莫名其妙的想吃汉堡了两只咸鱼"
+    },
+    {
+     "href": "https://www.facebook.com/bavarianinn9181/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/bavarianinn9181/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Bavarian Inn | Bruce Mines ON"
+    },
+    {
+     "href": "https://www.facebook.com/samubarboteo/posts/hello-everyone-im-organizing-an-amazing-tour-through-the-routes-of-andalusia-in/2059509887836888/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/samubarboteo",
+     "name": "samubarboteo",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Hello everyone! I'm organizing an amazing tour through the ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=2UqZ2aTQFGk",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/watch?v=2UqZ2aTQFGk",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "なぁ。おれ、、オーラリー、着たら、さ、モテる、かな ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdPZq5rylxZ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/malechemie/",
+     "name": "@malechemie",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by malechemie"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV15U4y147rX/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV15U4y147rX/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "额头又大又鼓的女人具有什么特点？_哔哩哔哩_bilibili"
+    },
+    {
+     "href": "https://www.facebook.com/nackfusionblog/videos/วิธีดึงศักยภาพของคุณ-มาใช้ให้คุ้มค่าที่สุด-แบบจริง-ๆ/1096144726112689/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/nackfusionblog",
+     "name": "nackfusionblog",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "วิธีดึงศักยภาพของคุณ มาใช้ให้คุ้มค่าที่สุด (แบบจริง ๆ ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@brycepotato/video/7677061784930569492",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@brycepotato",
+     "name": "@brycepotato",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Men's Medium Compression Shirt for 5'8\\"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DP80jzZCIYQ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/alisherbeisebai/",
+     "name": "@alisherbeisebai",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by alisherbeisebai"
+    },
+    {
+     "href": "https://www.tiktok.com/@rslichase/video/7683629334560558366",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@rslichase",
+     "name": "@rslichase",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "atl #lilchase #fyp #viral #unreleased | atl yelling rapping ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/watch?v=DFWU0BlR9YQ",
+     2,
+     "엽터디] 207회차 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@caddadtheo/video/7694565076006702367",
+     1,
+     "Hurricane Isaias update 6 #caddadtheo | hurricane | TikTok"
+    ],
+    [
+     "https://www.bilibili.com/video/BV16TKU6WEs8/",
+     1,
+     "B_梦俊（旭旭宝宝传媒）_20260715_00.19.40-00.32.10_建会实战 ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=Xw9UUiXqzvg",
+     1,
+     "畅玩服龙拳，什么神兽最厉害？ #梦幻西游电脑版#梦幻西游创梦 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DbNvOKzBCIv/",
+     1,
+     "estilorural.ok #ropa #moda #viral MUCHAS GRACIAS!!!"
+    ],
+    [
+     "https://www.youtube.com/watch?v=l_ZUd2aLOeE",
+     1,
+     "没啥原因，就是莫名其妙的想吃汉堡了两只咸鱼- YouTube"
+    ],
+    [
+     "https://www.facebook.com/bavarianinn9181/",
+     1,
+     "Bavarian Inn | Bruce Mines ON"
+    ],
+    [
+     "https://www.facebook.com/samubarboteo/posts/hello-everyone-im-organizing-an-amazing-tour-through-the-routes-of-andalusia-in/2059509887836888/",
+     1,
+     "Hello everyone! I'm organizing an amazing tour through the ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=2UqZ2aTQFGk",
+     1,
+     "なぁ。おれ、、オーラリー、着たら、さ、モテる、かな ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DdPZq5rylxZ/",
+     1,
+     "fragrancecollection #fragrancelover #nichefragrance ..."
+    ],
+    [
+     "https://www.bilibili.com/video/BV15U4y147rX/",
+     1,
+     "额头又大又鼓的女人具有什么特点？_哔哩哔哩_bilibili"
+    ],
+    [
+     "https://www.facebook.com/nackfusionblog/videos/วิธีดึงศักยภาพของคุณ-มาใช้ให้คุ้มค่าที่สุด-แบบจริง-ๆ/1096144726112689/",
+     1,
+     "วิธีดึงศักยภาพของคุณ มาใช้ให้คุ้มค่าที่สุด (แบบจริง ๆ ..."
+    ],
+    [
+     "https://www.tiktok.com/@brycepotato/video/7677061784930569492",
+     1,
+     "Men's Medium Compression Shirt for 5'8\\"
+    ],
+    [
+     "https://www.instagram.com/reel/DP80jzZCIYQ/",
+     1,
+     "ОС Северной Кореи 🤯 #операционка #программирование #обзор ..."
+    ],
+    [
+     "https://www.tiktok.com/@rslichase/video/7683629334560558366",
+     1,
+     "atl #lilchase #fyp #viral #unreleased | atl yelling rapping ..."
+    ]
+   ]
+  },
+  "7690553412190096660": {
+   "id": "7690553412190096660",
+   "title": "This was a banger #moonrello_ #funny #relatable #trending #fyp",
+   "views": 1700000,
+   "url": "https://www.tiktok.com/@leeroysane2/video/7690553412190096660",
+   "channel": "https://www.tiktok.com/@leeroysane2",
+   "from_channel": "https://www.tiktok.com/@leeroysane2",
+   "orig": true,
+   "lang": "af",
+   "ko_chars": 0,
+   "text": "Who remembers this ringtone right you over, listen.",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/p/DWOQBVxCRhW/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DWOQBVxCRhW/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Sailor hats created for BTS 'SWIM' music video. @bts ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@pococino.craft/video/7517916832565693704",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@pococino.craft",
+     "name": "@pococino.craft",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "How to make a paper captain's hat #captain #marine #sea ..."
+    },
+    {
+     "href": "https://www.facebook.com/61590343913074/videos/mankasitraka-less-bradaabonn%C3%A9s-vous-a-la-page-karim-jah-of-316-/2477305872748930/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61590343913074",
+     "name": "61590343913074",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Mankasitraka less brada🙌🏻🚨🔥 Abonnés vous a la page Karim ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@mob2x_/video/7684772698072845598",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@mob2x_",
+     "name": "@mob2x_",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fyp #mob2x #viral #nycdrill #nyc | nyc drip | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/61590343913074/videos/mankasitraka-less-bradaabonnés-vous-a-la-page-karim-jah-of-316-/2477305872748930/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61590343913074",
+     "name": "61590343913074",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Mankasitraka less brada🙌🏻🚨🔥 Abonnés vous a la page Karim ..."
+    },
+    {
+     "href": "https://www.instagram.com/deavian_/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/deavian_/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Deavian (@deavian_) • Instagram photos and videos"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=a5WRkZoErbQ",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCSypO44Dpn0lEWep-1CZPbA",
+     "name": "FlashieBoi",
+     "views": 253,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Give me ur Rent Money..."
+    },
+    {
+     "href": "https://www.tiktok.com/@motionmademontiooo/video/7692902739755404574",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@motionmademontiooo",
+     "name": "@motionmademontiooo",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "foryoupage #viralvideo #sexy | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/wZigjpxyaJY",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC3TLctz8xw9vVQwhNeCT6Ag",
+     "name": "NJ da Greatxst",
+     "views": 179,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Somebody teach me how to do the RESTART DANCE CHALLENGE #squadchallenge #primesponsor #dc #bts #fun"
+    },
+    {
+     "href": "https://www.tiktok.com/@matriarchalparty/video/7695054767239875853",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@matriarchalparty",
+     "name": "@matriarchalparty",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Have a great day — short positive message | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@jaguarofficial5/video/7556746961769057592",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@jaguarofficial5",
+     "name": "@jaguarofficial5",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Sekle Moses 😂😂😂@Shatta wale #goviral #godishere #fyp ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@blavk_coffee.rd2.0/video/7684597885299608840",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@blavk_coffee.rd2.0",
+     "name": "@blavk_coffee.rd2.0",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Left N Right Then Shake!!!🥹🔥👅#kalzmaestro #fypシ゚viral ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@aceeunlimited/video/7695852245513964813",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@aceeunlimited",
+     "name": "@aceeunlimited",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "What yall think? And if you have tips lmk ⬇️ #tiktoklive ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@norratamo/video/7549589507130019103",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@norratamo",
+     "name": "@norratamo",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Clarification on Pronunciation: Tamo | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@itzjstchiddy",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@itzjstchiddy",
+     "name": "@itzjstchiddy",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "itzjstchiddy (@itzjstchiddy) | TikTok"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/p/DWOQBVxCRhW/",
+     1,
+     "Sailor hats created for BTS 'SWIM' music video. @bts ..."
+    ],
+    [
+     "https://www.tiktok.com/@pococino.craft/video/7517916832565693704",
+     1,
+     "How to make a paper captain's hat #captain #marine #sea ..."
+    ],
+    [
+     "https://www.facebook.com/61590343913074/videos/mankasitraka-less-bradaabonn%C3%A9s-vous-a-la-page-karim-jah-of-316-/2477305872748930/",
+     1,
+     "Mankasitraka less brada🙌🏻🚨🔥 Abonnés vous a la page Karim ..."
+    ],
+    [
+     "https://www.tiktok.com/@mob2x_/video/7684772698072845598",
+     1,
+     "fyp #mob2x #viral #nycdrill #nyc | nyc drip | TikTok"
+    ],
+    [
+     "https://www.facebook.com/61590343913074/videos/mankasitraka-less-bradaabonnés-vous-a-la-page-karim-jah-of-316-/2477305872748930/",
+     1,
+     "Mankasitraka less brada🙌🏻🚨🔥 Abonnés vous a la page Karim ..."
+    ],
+    [
+     "https://www.instagram.com/deavian_/",
+     1,
+     "Deavian (@deavian_) • Instagram photos and videos"
+    ],
+    [
+     "https://www.youtube.com/watch?v=a5WRkZoErbQ",
+     1,
+     "YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@motionmademontiooo/video/7692902739755404574",
+     1,
+     "foryoupage #viralvideo #sexy | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/wZigjpxyaJY",
+     1,
+     "Somebody teach me how to do the RESTART DANCE CHALLENGE ..."
+    ],
+    [
+     "https://www.tiktok.com/@matriarchalparty/video/7695054767239875853",
+     1,
+     "Have a great day — short positive message | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@jaguarofficial5/video/7556746961769057592",
+     1,
+     "Sekle Moses 😂😂😂@Shatta wale #goviral #godishere #fyp ..."
+    ],
+    [
+     "https://www.tiktok.com/@blavk_coffee.rd2.0/video/7684597885299608840",
+     1,
+     "Left N Right Then Shake!!!🥹🔥👅#kalzmaestro #fypシ゚viral ..."
+    ],
+    [
+     "https://www.tiktok.com/@aceeunlimited/video/7695852245513964813",
+     1,
+     "What yall think? And if you have tips lmk ⬇️ #tiktoklive ..."
+    ],
+    [
+     "https://www.tiktok.com/@norratamo/video/7549589507130019103",
+     1,
+     "Clarification on Pronunciation: Tamo | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@itzjstchiddy",
+     1,
+     "itzjstchiddy (@itzjstchiddy) | TikTok"
+    ]
+   ]
+  },
+  "7692649789812673812": {
+   "id": "7692649789812673812",
+   "title": "What’s going on in my city? 😭 #thelotionguy #toronto #torontotiktok #...",
+   "views": 4400000,
+   "url": "https://www.tiktok.com/@etaybeaton/video/7692649789812673812",
+   "channel": "https://www.tiktok.com/@etaybeaton",
+   "from_channel": "https://www.tiktok.com/@etaybeaton",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "yo tell me why they just dropped a damn UFO in our city bro what is going on in Toronto bro it's like the whole street i",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/p/DeIMhF5kacV/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DeIMhF5kacV/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "One night, Toronto looked completely different. 🌙🎨 A ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DeDb7OqjpE0/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DeDb7OqjpE0/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Nuit Blanche art installations near City Hall ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/sJt67A41ypA",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCZKLK6DnAKC81vc-B-0Cy3Q",
+     "name": "Tetiana Walks",
+     "views": 119,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "What Is This Car Doing?! 😳💨 #NuitBlanche #Toronto #Shorts"
+    },
+    {
+     "href": "https://www.facebook.com/abc13Houston/videos/theyre-very-large-theyre-like-eight-foot-nine-foot-10-foot-the-caller-told-the-9/2050022475389684/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/abc13Houston",
+     "name": "abc13Houston",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "They're very large. They're like eight foot, nine foot, 10 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@divbi23/photo/7692687931072433416",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@divbi23",
+     "name": "@divbi23",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "What a wholesome experience. Didn't understand a lot but ..."
+    },
+    {
+     "href": "https://www.facebook.com/nick.lin.351/videos/nuit-blanche-a-ufo-crashed-into-a-car-near-nathan-phillips-square-toronto-by-nic/1117233734193764/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/nick.lin.351",
+     "name": "nick.lin.351",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Nuit Blanche ~ A UFO crashed into a car near Nathan Phillips ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeFI2-US92I/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DeFI2-US92I/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "🛸🚔 TORONTO POLICE “PULL OVER” A UFO! A hilarious scene at ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DednFjhnHPm/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DednFjhnHPm/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "my 5th year of Nuit Blanche since 2022 💫 and it never gets ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeDbQ5sxUfK/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/thenorthvoice/",
+     "name": "@thenorthvoice",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by thenorthvoice"
+    },
+    {
+     "href": "https://www.instagram.com/p/DePUry-Ffw1/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/dsslight/",
+     "name": "@dsslight",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by dsslight"
+    },
+    {
+     "href": "https://www.instagram.com/p/DRQYDPakb5W/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DRQYDPakb5W/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Before the Seeds” On view starting: November 22, 2025 ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=OGPYCoMNPOM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCgVZ0mrM3liHNhRYC5Mchgg",
+     "name": "WPLG Local 10",
+     "views": 219,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Arizona woman rescued from burning car"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/sqju1ckcuF8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC2NjCqLzqc-4mg99zQ1hVmQ",
+     "name": "OZAIR • EDITz",
+     "views": 4538,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "umair shared story of car crash #ozaireditz"
+    },
+    {
+     "href": "https://www.instagram.com/p/DeHlOD8EQb4/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/stephrc29/",
+     "name": "@stephrc29",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by stephrc29"
+    },
+    {
+     "href": "https://www.tiktok.com/@_runituptv/video/7693839305290124574",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_runituptv",
+     "name": "@_runituptv",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "UFO CRASHED NUIT BLANCHE TORONTO 2026 #UFO #nbto26 ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/p/DeIMhF5kacV/",
+     2,
+     "One night, Toronto looked completely different. 🌙🎨 A ..."
+    ],
+    [
+     "https://www.instagram.com/p/DeDb7OqjpE0/",
+     2,
+     "Nuit Blanche art installations near City Hall ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/sJt67A41ypA",
+     2,
+     "What Is This Car Doing?! 😳💨 #NuitBlanche #Toronto #Shorts ..."
+    ],
+    [
+     "https://www.facebook.com/abc13Houston/videos/theyre-very-large-theyre-like-eight-foot-nine-foot-10-foot-the-caller-told-the-9/2050022475389684/",
+     2,
+     "They're very large. They're like eight foot, nine foot, 10 ..."
+    ],
+    [
+     "https://www.tiktok.com/@divbi23/photo/7692687931072433416",
+     2,
+     "What a wholesome experience. Didn't understand a lot but ..."
+    ],
+    [
+     "https://www.facebook.com/nick.lin.351/videos/nuit-blanche-a-ufo-crashed-into-a-car-near-nathan-phillips-square-toronto-by-nic/1117233734193764/",
+     2,
+     "Nuit Blanche ~ A UFO crashed into a car near Nathan Phillips ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DeFI2-US92I/",
+     2,
+     "🛸🚔 TORONTO POLICE “PULL OVER” A UFO! A hilarious scene at ..."
+    ],
+    [
+     "https://www.instagram.com/p/DednFjhnHPm/",
+     1,
+     "my 5th year of Nuit Blanche since 2022 💫 and it never gets ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DeDbQ5sxUfK/",
+     1,
+     "Follow @thenorthvoice A UFO just crashed into a car in ..."
+    ],
+    [
+     "https://www.instagram.com/p/DePUry-Ffw1/",
+     1,
+     "The Fall/Halloween season has begun 🍂🎃 Legends of Horror ..."
+    ],
+    [
+     "https://www.instagram.com/p/DRQYDPakb5W/",
+     1,
+     "Before the Seeds” On view starting: November 22, 2025 ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=OGPYCoMNPOM",
+     1,
+     "Arizona woman rescued from burning car - YouTube"
+    ],
+    [
+     "https://m.youtube.com/shorts/sqju1ckcuF8",
+     1,
+     "umair shared story of car crash #ozaireditz - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/DeHlOD8EQb4/",
+     1,
+     "Stephanie Rose 🌹 | Yesterday's nostalgia, tomorrow's ..."
+    ],
+    [
+     "https://www.tiktok.com/@_runituptv/video/7693839305290124574",
+     1,
+     "UFO CRASHED NUIT BLANCHE TORONTO 2026 #UFO #nbto26 ..."
+    ]
+   ]
+  },
+  "7659502199487270146": {
+   "id": "7659502199487270146",
+   "title": "@Karacosmetic.fr colonised ALL of our fyp’s 😭 @BASED #curlyhair #hair...",
+   "views": 1300000,
+   "url": "https://www.tiktok.com/@joshldc/video/7659502199487270146",
+   "channel": "https://www.tiktok.com/@joshldc",
+   "from_channel": "https://www.tiktok.com/@joshldc",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "W, spray, diamonds, leave in condition air.",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7674560857094884630",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "How I Speak to My Hair After a Bad Hair Day: A Relatable ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7493581794307050774",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Too many people arguing over my hair type its 1b guys ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7656165320909950230",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Which decade was your favourite?! Comment ⬇️ @BASED #hair ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7637945623941041430",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Wavy Frizzy Hair Before & After: Back Brace Transformation ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7641683230608985366",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Who should I try next?! @BASED #curlyhair #wavyhair #hair ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7624533472228527382",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Scalp Armor insane 90+5 equaliser #curlyhair #wavyhair ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/K4s-tEZFzlo",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCz0aCn-6AJ0AO2EtOmiEeGw",
+     "name": "Shakeel Murtaza",
+     "views": 434670,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Hair clips for men?? #hairtutorial"
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7590511825217670422",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Combat Balding with Curly and Wavy Hair Solutions | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7674990358098431254",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Expired Cactus Haunting POV — Funny Curly/Wavy Hair Closet ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7677313584052981014",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "We Are Not Balding Twins — Curly \\u0026 Wavy Hair Response | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@zaionjanoski/video/7512509502302850311",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@zaionjanoski",
+     "name": "@zaionjanoski",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "just a little haircare routine… in front of the white house ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thechosen.mo/video/7672827641036098848",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thechosen.mo",
+     "name": "@thechosen.mo",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Curly Hair Routine: Step-by-Step Curly Hair Tutorial | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@johnnybiggio/video/7636094028894850318",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@johnnybiggio",
+     "name": "@johnnybiggio",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "BASED \\u003e | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/-9pJO_re8a8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCqsIQ5nH5wahFpK9mrsoZ_g",
+     "name": "Gabriel lee",
+     "views": 502094,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "#foryou #curlyhair #howtocutcurlyhair #hairstyle #curly #trending #hair #shortsviral #shortsfeed."
+    },
+    {
+     "href": "https://www.tiktok.com/@zaionjanoski/video/7488389349382327557",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@zaionjanoski",
+     "name": "@zaionjanoski",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "BASED 💜🤩 @Based Bodyworks #curlyhair #curls #fyp ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@joshldc/video/7674560857094884630",
+     2,
+     "How I Speak to My Hair After a Bad Hair Day: A Relatable ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7493581794307050774",
+     2,
+     "Too many people arguing over my hair type its 1b guys ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7656165320909950230",
+     2,
+     "Which decade was your favourite?! Comment ⬇️ @BASED #hair ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7637945623941041430",
+     2,
+     "Wavy Frizzy Hair Before & After: Back Brace Transformation ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7641683230608985366",
+     2,
+     "Who should I try next?! @BASED #curlyhair #wavyhair #hair ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7624533472228527382",
+     2,
+     "Scalp Armor insane 90+5 equaliser #curlyhair #wavyhair ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/K4s-tEZFzlo",
+     2,
+     "Hair clips for men?? #hairtutorial - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7590511825217670422",
+     2,
+     "Combat Balding with Curly and Wavy Hair Solutions | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7674990358098431254",
+     2,
+     "Expired Cactus Haunting POV — Funny Curly/Wavy Hair Closet ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7677313584052981014",
+     2,
+     "We Are Not Balding Twins — Curly \\u0026 Wavy Hair Response | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@zaionjanoski/video/7512509502302850311",
+     1,
+     "just a little haircare routine… in front of the white house ..."
+    ],
+    [
+     "https://www.tiktok.com/@thechosen.mo/video/7672827641036098848",
+     1,
+     "Curly Hair Routine: Step-by-Step Curly Hair Tutorial | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@johnnybiggio/video/7636094028894850318",
+     1,
+     "BASED \\u003e | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/-9pJO_re8a8",
+     1,
+     "foryou #curlyhair #howtocutcurlyhair #hairstyle #curly ..."
+    ],
+    [
+     "https://www.tiktok.com/@zaionjanoski/video/7488389349382327557",
+     1,
+     "BASED 💜🤩 @Based Bodyworks #curlyhair #curls #fyp ..."
+    ]
+   ]
+  },
+  "7668681702843223318": {
+   "id": "7668681702843223318",
+   "title": "I think I’d look good at 60 if I still have my hair 👀 @BASED #curlyha...",
+   "views": 1200000,
+   "url": "https://www.tiktok.com/@joshldc/video/7668681702843223318",
+   "channel": "https://www.tiktok.com/@joshldc",
+   "from_channel": "https://www.tiktok.com/@joshldc",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "I have curly hair and we all know that all curly heads go bald by third. I've never seen a curly head with grey hair so ",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/MetinAkdulgerFan/photos/916895651666065/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/MetinAkdulgerFan/photos/916895651666065/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Metin Akdülger - Metin Akdülger added a new photo."
+    },
+    {
+     "href": "https://www.instagram.com/p/DcEDez-k2c_/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DcEDez-k2c_/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "90s Pro Spirit Faded Plum USA Blank Full Zip Up Hoodie 90 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7684987692374969622",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I was not expecting it to look like that #BASEDPartner ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@dhivya.srii/video/7603116493861162258",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@dhivya.srii",
+     "name": "@dhivya.srii",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "we're doing blue this time💙 lemme know what you guys think ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/HS7v2yL8sbs",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCFQkytfghLaRszoC8zIt-Ng",
+     "name": "엔보스 EnBoss",
+     "views": 80669,
+     "resolved": true,
+     "lang": "ko",
+     "title": "다이소 모래로 슬라임 만들기"
+    },
+    {
+     "href": "https://www.instagram.com/p/DZfl8ackagS/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/chase.dexter/",
+     "name": "@chase.dexter",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by chase.dexter"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=8-BcbUtwkNM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC4FNz13xS1FlhLcutVhhijQ",
+     "name": "Ishita Bhagat",
+     "views": 34589,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I Finally Dyed My Hair Blue"
+    },
+    {
+     "href": "https://www.tiktok.com/@plmakeupacademy/video/7650603668949011735",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@plmakeupacademy",
+     "name": "@plmakeupacademy",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Obsessed For Less Bundle: 3-Step Routine for Glowing Skin ..."
+    },
+    {
+     "href": "https://www.facebook.com/Insiderbeauty/videos/hair-makeup-changes-hair-color-in-seconds/353669242454192/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Insiderbeauty",
+     "name": "Insiderbeauty",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This hair makeup changes hair color in seconds. 🌈 Find the ..."
+    },
+    {
+     "href": "https://www.facebook.com/Insiderbeauty/videos/shampoos-keep-hair-color-vibrant/578531602517242/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Insiderbeauty",
+     "name": "Insiderbeauty",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "These colorful shampoos keep your hair color vibrant ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@atarahmayhew/video/7554731406560169238",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@atarahmayhew",
+     "name": "@atarahmayhew",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Take Off My 3D Blueberry Cow Makeup With Me | e.l.f. Balm ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=o9UGPJMUwPo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UChWHTbtPhSWm4IOYI0lZvoA",
+     "name": "Doarda",
+     "views": 1019799,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "pintando o cabelo.. novamente"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=JZjlIoKQZVM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC_6lQ88e0OpfAjGPOZMQoFg",
+     "name": "Vimarco MUA",
+     "views": 43473,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Removing heavy makeup with one product"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdcWfWkv-Cc/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/gurgleusa/",
+     "name": "@gurgleusa",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by gurgleusa"
+    },
+    {
+     "href": "https://www.facebook.com/fb-answers/can-a-diffuser-attach-to-any-hair-dryer/?locale=ko_KR",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/fb-answers/can-a-diffuser-attach-to-any-hair-dryer/?locale=ko_KR",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "디퓨저가 어떤 헤어 드라이기에 부착할 수 있나요?"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.facebook.com/MetinAkdulgerFan/photos/916895651666065/",
+     1,
+     "Metin Akdülger - Metin Akdülger added a new photo."
+    ],
+    [
+     "https://www.instagram.com/p/DcEDez-k2c_/",
+     1,
+     "90s Pro Spirit Faded Plum USA Blank Full Zip Up Hoodie 90 ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7684987692374969622",
+     1,
+     "I was not expecting it to look like that #BASEDPartner ..."
+    ],
+    [
+     "https://www.tiktok.com/@dhivya.srii/video/7603116493861162258",
+     1,
+     "we're doing blue this time💙 lemme know what you guys think ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/HS7v2yL8sbs",
+     1,
+     "Making Slime with Daiso Sand - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/DZfl8ackagS/",
+     1,
+     "Woooof lately💨💨"
+    ],
+    [
+     "https://www.youtube.com/watch?v=8-BcbUtwkNM",
+     1,
+     "I Finally Dyed My Hair Blue - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@plmakeupacademy/video/7650603668949011735",
+     1,
+     "Obsessed For Less Bundle: 3-Step Routine for Glowing Skin ..."
+    ],
+    [
+     "https://www.facebook.com/Insiderbeauty/videos/hair-makeup-changes-hair-color-in-seconds/353669242454192/",
+     1,
+     "This hair makeup changes hair color in seconds. 🌈 Find the ..."
+    ],
+    [
+     "https://www.facebook.com/Insiderbeauty/videos/shampoos-keep-hair-color-vibrant/578531602517242/",
+     1,
+     "These colorful shampoos keep your hair color vibrant ..."
+    ],
+    [
+     "https://www.tiktok.com/@atarahmayhew/video/7554731406560169238",
+     1,
+     "Take Off My 3D Blueberry Cow Makeup With Me | e.l.f. Balm ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=o9UGPJMUwPo",
+     1,
+     "dyeing my hair.. again - YouTube"
+    ],
+    [
+     "https://www.youtube.com/watch?v=JZjlIoKQZVM",
+     1,
+     "Removing heavy makeup with one product - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DdcWfWkv-Cc/",
+     1,
+     "Live laugh blue #skit #funny #prank #coworker #blue"
+    ],
+    [
+     "https://www.facebook.com/fb-answers/can-a-diffuser-attach-to-any-hair-dryer/?locale=ko_KR",
+     1,
+     "디퓨저가 어떤 헤어 드라이기에 부착할 수 있나요?"
+    ]
+   ]
+  },
+  "7688725617701047572": {
+   "id": "7688725617701047572",
+   "title": "I suggest Air Max 95 😭🤞🏽#fyp #trending #sneaker #2026 ",
+   "views": 1600000,
+   "url": "https://www.tiktok.com/@thoriwrld10/video/7688725617701047572",
+   "channel": "https://www.tiktok.com/@thoriwrld10",
+   "from_channel": "https://www.tiktok.com/@thoriwrld10",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "Guys, which sneaker we buying this year guys, which sneaker we buying this year. I wanna be I wanna come prepared I want",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@thorisho_masina/video/7680608427755752724",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thorisho_masina",
+     "name": "@thorisho_masina",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "You be acting like a celebrity 😭 #fypシ #foryoupage #viral ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7674706999535291669",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Days Before a School Trip: Funny Student Moments | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7688766448646475028",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Nah yall doing too much 😭😭 #fyp #foryoupage #viralvideo ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7637975358813375764",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Glory hunting at peak 🤞🏽😭 #fyp #foryoupage #viralvideo ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7686586164282756373",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "That shii genuinely doesn't care about you 😭😭🤞🏽 #fyp ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thorisho_masina/video/7644637260264099092",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thorisho_masina",
+     "name": "@thorisho_masina",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Lock in!!! #fyp #foryoupage #relatablecontent #viralvideo ..."
+    },
+    {
+     "href": "https://www.instagram.com/only.exotik/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/only.exotik/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Latrelle Jackson (@only.exotik) • Instagram photos and videos"
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7668005366998895893",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Yall can't get creative nowadays 😭💀 #fypシ #foryoupage ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7674244537136467221",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Biggest fear fr — relatable reactions and why it scares us ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@banzo.lo8/video/7692854625971506450",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@banzo.lo8",
+     "name": "@banzo.lo8",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Kamomphela's GTA Song: The Duo Fans Want Back 🔥 | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@elomso._.diko/video/7616441299532664085",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@elomso._.diko",
+     "name": "@elomso._.diko",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "someone sent me this 👀 #creatorsearchinsights ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@elomso._.diko/video/7695847504528542996",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@elomso._.diko",
+     "name": "@elomso._.diko",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "️ (@elomso._.diko)'s videos with original sound - ️ | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@enzokuhle_sdk/video/7686507449976753416",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@enzokuhle_sdk",
+     "name": "@enzokuhle_sdk",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "💜💜💜💜💜Real men don't hurt women, they protect them ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@messiahdixonn/video/7121788232496450862",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@messiahdixonn",
+     "name": "@messiahdixonn",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "i promise you my face will speak first 😭 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/p/Bankrolldyl-Fan-Club-100084336745462/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/p/Bankrolldyl-Fan-Club-100084336745462/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Bankrolldyl Fan Club"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@thorisho_masina/video/7680608427755752724",
+     2,
+     "You be acting like a celebrity 😭 #fypシ #foryoupage #viral ..."
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7674706999535291669",
+     2,
+     "Days Before a School Trip: Funny Student Moments | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7688766448646475028",
+     1,
+     "Nah yall doing too much 😭😭 #fyp #foryoupage #viralvideo ..."
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7637975358813375764",
+     1,
+     "Glory hunting at peak 🤞🏽😭 #fyp #foryoupage #viralvideo ..."
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7686586164282756373",
+     1,
+     "That shii genuinely doesn't care about you 😭😭🤞🏽 #fyp ..."
+    ],
+    [
+     "https://www.tiktok.com/@thorisho_masina/video/7644637260264099092",
+     1,
+     "Lock in!!! #fyp #foryoupage #relatablecontent #viralvideo ..."
+    ],
+    [
+     "https://www.instagram.com/only.exotik/",
+     1,
+     "Latrelle Jackson (@only.exotik) • Instagram photos and videos"
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7668005366998895893",
+     1,
+     "Yall can't get creative nowadays 😭💀 #fypシ #foryoupage ..."
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7674244537136467221",
+     1,
+     "Biggest fear fr — relatable reactions and why it scares us ..."
+    ],
+    [
+     "https://www.tiktok.com/@banzo.lo8/video/7692854625971506450",
+     1,
+     "Kamomphela's GTA Song: The Duo Fans Want Back 🔥 | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@elomso._.diko/video/7616441299532664085",
+     1,
+     "someone sent me this 👀 #creatorsearchinsights ..."
+    ],
+    [
+     "https://www.tiktok.com/@elomso._.diko/video/7695847504528542996",
+     1,
+     "️ (@elomso._.diko)'s videos with original sound - ️ | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@enzokuhle_sdk/video/7686507449976753416",
+     1,
+     "💜💜💜💜💜Real men don't hurt women, they protect them ..."
+    ],
+    [
+     "https://www.tiktok.com/@messiahdixonn/video/7121788232496450862",
+     1,
+     "i promise you my face will speak first 😭 | TikTok"
+    ],
+    [
+     "https://www.facebook.com/p/Bankrolldyl-Fan-Club-100084336745462/",
+     1,
+     "Bankrolldyl Fan Club"
+    ]
+   ]
+  },
+  "7690396672093867277": {
+   "id": "7690396672093867277",
+   "title": "i had fun but i would’ve had a wayyyy better time if i was 18",
+   "views": 1400000,
+   "url": "https://www.tiktok.com/@bashversusbash/video/7690396672093867277",
+   "channel": "https://www.tiktok.com/@bashversusbash",
+   "from_channel": "https://www.tiktok.com/@bashversusbash",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "I'm not going to lie, if you like 18, 19, 20, the best trip that you could possibly take is to go to Puerto Rico. Like, ",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@oops_odeed/video/7437306033669819679",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@oops_odeed",
+     "name": "@oops_odeed",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Somebody help me idk whats happening #cod #codupdate ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@iamkamaribonds",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@iamkamaribonds",
+     "name": "@iamkamaribonds",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Kamari (@iamkamaribonds) | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@theblackcarguru/video/7433621280022154526",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@theblackcarguru",
+     "name": "@theblackcarguru",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "A MESSAGE FROM I.G.L.O.R.N⚡️⚠️❤️ #ford #mustang #f ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@6stayfly/video/7675712168834190614",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@6stayfly",
+     "name": "@6stayfly",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I can see it #fyp #read #seekdonthide #6stayfly | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@tsmurkz/video/7475847706414484758",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@tsmurkz",
+     "name": "@tsmurkz",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Explore 2021's Best TikTok Songs and Lyrics | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@chazsmith/video/7179292230367120682",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@chazsmith",
+     "name": "@chazsmith",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Okay what was that in the back tho | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@gratien_official/video/7097987522751483142",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@gratien_official",
+     "name": "@gratien_official",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Cat Babalao Comedy - Hilarious Moments | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@tchuculinhaa/video/7585261719706963212",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@tchuculinhaa",
+     "name": "@tchuculinhaa",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Música do Preto Show: O Melhor Cantor de Angola | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@theblackcarguru/video/7438776934168939806",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@theblackcarguru",
+     "name": "@theblackcarguru",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "A CODE RED⭕️ MESSAGE FROM I.G.L.O.R.N ⚠️⚡️ #srt #dodge ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=_SH9hCZJiWQ",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCA2opjksKkG5pbW2CL2DNGA",
+     "name": "Islandboy Afrik i",
+     "views": 705,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I’m Excited To Announce This!"
+    },
+    {
+     "href": "https://www.facebook.com/starcrossdons/videos/youtuber-emansv2-knows-the-score-and-recently-sent-this-message-of-support-in-to/315724820484364/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/starcrossdons",
+     "name": "starcrossdons",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Youtuber eman/SV2 knows the score and recently sent this ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joespired1/video/7696190516022693141",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joespired1",
+     "name": "@joespired1",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "relatable #joespired1 | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=HEqvMfWxmBM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCdDzVQvu8tlqZg05-fFhmDg",
+     "name": "elisocray",
+     "views": 997,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "its over im done."
+    },
+    {
+     "href": "https://www.facebook.com/Zambianaccurateinformation/photos/what-makes-lips-change-like-this/1570445640055068/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Zambianaccurateinformation/photos/what-makes-lips-change-like-this/1570445640055068/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Zambian - What makes lips change like this??? | Facebook"
+    },
+    {
+     "href": "https://www.tiktok.com/@buzoongrose/video/7650170705396419871",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@buzoongrose",
+     "name": "@buzoongrose",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I Surprised Him With A WORLD RECORD TEAM on FC MOBILE_000 ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@oops_odeed/video/7437306033669819679",
+     2,
+     "Somebody help me idk whats happening #cod #codupdate ..."
+    ],
+    [
+     "https://www.tiktok.com/@iamkamaribonds",
+     2,
+     "Kamari (@iamkamaribonds) | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@theblackcarguru/video/7433621280022154526",
+     2,
+     "A MESSAGE FROM I.G.L.O.R.N⚡️⚠️❤️ #ford #mustang #f ..."
+    ],
+    [
+     "https://www.tiktok.com/@6stayfly/video/7675712168834190614",
+     2,
+     "I can see it #fyp #read #seekdonthide #6stayfly | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@tsmurkz/video/7475847706414484758",
+     2,
+     "Explore 2021's Best TikTok Songs and Lyrics | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@chazsmith/video/7179292230367120682",
+     2,
+     "Okay what was that in the back tho | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@gratien_official/video/7097987522751483142",
+     2,
+     "The Cat Babalao Comedy - Hilarious Moments | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@tchuculinhaa/video/7585261719706963212",
+     2,
+     "Música do Preto Show: O Melhor Cantor de Angola | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@theblackcarguru/video/7438776934168939806",
+     2,
+     "A CODE RED⭕️ MESSAGE FROM I.G.L.O.R.N ⚠️⚡️ #srt #dodge ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=_SH9hCZJiWQ",
+     2,
+     "I'm Excited To Announce This! - YouTube"
+    ],
+    [
+     "https://www.facebook.com/starcrossdons/videos/youtuber-emansv2-knows-the-score-and-recently-sent-this-message-of-support-in-to/315724820484364/",
+     2,
+     "Youtuber eman/SV2 knows the score and recently sent this ..."
+    ],
+    [
+     "https://www.tiktok.com/@joespired1/video/7696190516022693141",
+     2,
+     "relatable #joespired1 | TikTok"
+    ],
+    [
+     "https://www.youtube.com/watch?v=HEqvMfWxmBM",
+     1,
+     "its over im done. - YouTube"
+    ],
+    [
+     "https://www.facebook.com/Zambianaccurateinformation/photos/what-makes-lips-change-like-this/1570445640055068/",
+     1,
+     "Zambian - What makes lips change like this??? | Facebook"
+    ],
+    [
+     "https://www.tiktok.com/@buzoongrose/video/7650170705396419871",
+     1,
+     "I Surprised Him With A WORLD RECORD TEAM on FC MOBILE_000 ..."
+    ]
+   ]
+  },
+  "7694524891864796468": {
+   "id": "7694524891864796468",
+   "title": "#unfrezzmyaccount #trending #viralvideo #viraltiktok ",
+   "views": 2100000,
+   "url": "https://www.tiktok.com/@obimani.mon036/video/7694524891864796468",
+   "channel": "https://www.tiktok.com/@obimani.mon036",
+   "from_channel": "https://www.tiktok.com/@obimani.mon036",
+   "orig": true,
+   "lang": "bn",
+   "ko_chars": 0,
+   "text": "ನ senteತೋತUNGತ್ಲು ಀಳದಕ ಕೋತೋ್ತ ಾರಿಂತ್ ರೂಗತು ಕಂವಾ ಀಾಸ лесಲು ಕೆರುೆ ಎಗಾತರ್ಲ ಮ್ಲು ಆಮಿಯ ಑ಟಮ ಕೋತೂ ಮ್ಲಾ್ಲು ಮಮು ಈಂದತ್ಸೂತ travelli",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/reel/DZxCcdhqc-E/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/alinakupila0/",
+     "name": "@alinakupila0",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by alinakupila0"
+    },
+    {
+     "href": "https://www.tiktok.com/@ucvtbj/video/7635507254338260238",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ucvtbj",
+     "name": "@ucvtbj",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "If you like this book Search' 631686' on NovelShort to read ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@vfodn/video/7695396244025314593",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@vfodn",
+     "name": "@vfodn",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fyp #funn #video | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@poku_pashka/video/7653070691679341857",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@poku_pashka",
+     "name": "@poku_pashka",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Найдено для кухни: лучшие покупки с Wildberries, AliExpress ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DOhPhmbgF2I/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DOhPhmbgF2I/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Una pecera de puro sabor, frescura y flow 😎❄️. En ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DRqL_1_j65I/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DRqL_1_j65I/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "🍽️✨ Ven a vivir la experiencia @huzloungegrill Disfruta ..."
+    },
+    {
+     "href": "https://www.facebook.com/townleixlip/posts/skittle-bomb-cocktails-town/2864380660288715/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/townleixlip",
+     "name": "townleixlip",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Skittle Bomb ! #cocktails #town"
+    },
+    {
+     "href": "https://www.tiktok.com/@arabia.hossain4/video/7680364864451218708",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@arabia.hossain4",
+     "name": "@arabia.hossain4",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "ইসলামিক_ভিডিও_🤲🕋🤲 #foryou | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/p/DDKJ1B7paAf/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DDKJ1B7paAf/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "⚜️ شربت نوستالژی ، شربتی با طعمی به یاد ماندنی ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@academiakatihuscasampaio/video/7285498186616032518",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@academiakatihuscasampaio",
+     "name": "@academiakatihuscasampaio",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Curso Presencial de Bubble Tea: Aprende a Innovar tu Negocio ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=uNCPiBUVa58",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCaDY8WjYWy36bnt0RVzSklw",
+     "name": "Tipsy Bartender",
+     "views": 55654,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Green Henny Slush"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DEz5CdMCa-s/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/sweetohemaaofficial/",
+     "name": "@sweetohemaaofficial",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by sweetohemaaofficial"
+    },
+    {
+     "href": "https://www.facebook.com/Mirabel.Lillestrom/posts/vi-på-mirabel-lillestrøm-har-åpent-selv-om-det-er-skjenkestopp-hos-oss-kan-du-få/1502519819939211/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Mirabel.Lillestrom",
+     "name": "Mirabel.Lillestrom",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Vi på Mirabel Lillestrøm har åpent selv om det er ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@halen.stories/video/7681447872281333000",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@halen.stories",
+     "name": "@halen.stories",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Goodnovel book storytime — best scenes from my favorite ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=PXuN6xQw4aU",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCK9tWNTcNYDRC7i2F1Oyi5Q",
+     "name": "Wolfcraft Brasil",
+     "views": 934,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Serra copo ajustável Wolfcraft 5986000"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/reel/DZxCcdhqc-E/",
+     1,
+     "AlinaKupila | Девочки, я просто заново влюбилась в свою ..."
+    ],
+    [
+     "https://www.tiktok.com/@ucvtbj/video/7635507254338260238",
+     1,
+     "If you like this book Search' 631686' on NovelShort to read ..."
+    ],
+    [
+     "https://www.tiktok.com/@vfodn/video/7695396244025314593",
+     1,
+     "fyp #funn #video | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@poku_pashka/video/7653070691679341857",
+     1,
+     "Найдено для кухни: лучшие покупки с Wildberries, AliExpress ..."
+    ],
+    [
+     "https://www.instagram.com/p/DOhPhmbgF2I/",
+     1,
+     "Una pecera de puro sabor, frescura y flow 😎❄️. En ..."
+    ],
+    [
+     "https://www.instagram.com/p/DRqL_1_j65I/",
+     1,
+     "🍽️✨ Ven a vivir la experiencia @huzloungegrill Disfruta ..."
+    ],
+    [
+     "https://www.facebook.com/townleixlip/posts/skittle-bomb-cocktails-town/2864380660288715/",
+     1,
+     "Skittle Bomb ! #cocktails #town"
+    ],
+    [
+     "https://www.tiktok.com/@arabia.hossain4/video/7680364864451218708",
+     1,
+     "ইসলামিক_ভিডিও_🤲🕋🤲 #foryou | TikTok"
+    ],
+    [
+     "https://www.instagram.com/p/DDKJ1B7paAf/",
+     1,
+     "⚜️ شربت نوستالژی ، شربتی با طعمی به یاد ماندنی ..."
+    ],
+    [
+     "https://www.tiktok.com/@academiakatihuscasampaio/video/7285498186616032518",
+     1,
+     "Curso Presencial de Bubble Tea: Aprende a Innovar tu Negocio ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=uNCPiBUVa58",
+     1,
+     "Green Henny Slush - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DEz5CdMCa-s/",
+     1,
+     "I'm spending my last 40 cedis,Esa na asa ..."
+    ],
+    [
+     "https://www.facebook.com/Mirabel.Lillestrom/posts/vi-på-mirabel-lillestrøm-har-åpent-selv-om-det-er-skjenkestopp-hos-oss-kan-du-få/1502519819939211/",
+     1,
+     "Vi på Mirabel Lillestrøm har åpent selv om det er ..."
+    ],
+    [
+     "https://www.tiktok.com/@halen.stories/video/7681447872281333000",
+     1,
+     "Goodnovel book storytime — best scenes from my favorite ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=PXuN6xQw4aU",
+     1,
+     "Serra copo ajustável Wolfcraft 5986000 - YouTube"
+    ]
+   ]
+  },
+  "7695014360355261717": {
+   "id": "7695014360355261717",
+   "title": "#unfrezzmyaccount #trending #viralvideo #viraltiktok ",
+   "views": 1500000,
+   "url": "https://www.tiktok.com/@obimani.mon036/video/7695014360355261717",
+   "channel": "https://www.tiktok.com/@obimani.mon036",
+   "from_channel": "https://www.tiktok.com/@obimani.mon036",
+   "orig": true,
+   "lang": "bn",
+   "ko_chars": 0,
+   "text": "ज़र सेल्फी उठाए, माने नीजर चवी नीजर उठाए, अ तार्षी राग. अप्रोती बूंग, और ब्रेली समुष्चा, अ बालोड अक्तर देखनो दाए.",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/p/DGmX6gEy92Q/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DGmX6gEy92Q/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "📍 Location: Sheng Siong Supermarket @ 19 Serangoon North ..."
+    },
+    {
+     "href": "https://www.facebook.com/61557061265559/videos/best-manual-apple-cutting-machine-सेब-काटने-की-कमाल-की-हाथ-से-चलने-वाली-मशीनshor/1018145399906739/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61557061265559",
+     "name": "61557061265559",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Best Manual Apple Cutting Machine | सेब काटने की ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DdFnfTGzYqB/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DdFnfTGzYqB/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Comment \\"
+    },
+    {
+     "href": "https://www.facebook.com/trendishopsbd/videos/-মাত্র-এক-চাপেই-আপেল-কাটার-নিখুঁত-সমাধান-পান-স্মার্ট-কিচেন-লাইফ-আপনার-প্রতিদিনের/1061707403254089/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/trendishopsbd",
+     "name": "trendishopsbd",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🍎 মাত্র এক চাপেই আপেল কাটার ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/PjNrkNpgkcc",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCoMixgbGQXHzmTXrdAxDd6A",
+     "name": "레오꿀템 | 쿠팡추천템",
+     "views": 1054,
+     "resolved": true,
+     "lang": "ko",
+     "title": "스테인리스 과일 사과 커터기"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=1XCol-vyaC8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCMmINX2ziq3ch6UsbpkbFqw",
+     "name": "Mr.Wrath",
+     "views": 3335,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "How to Use an Apple Corer"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYOuy-PPx5d/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/jaganinternational/",
+     "name": "@jaganinternational",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by jaganinternational"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/fOYvH_INOPY",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC2JojwfGJxrr6hlS8h283Uw",
+     "name": "Scottsreality2",
+     "views": 1766465,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Faster way to whisk your eggs!"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DbKOdioAUk1/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/faizmeeran_ig/",
+     "name": "@faizmeeran_ig",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by faizmeeran_ig"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV15yGC6LEBH/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV15yGC6LEBH/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "哇哈哈，低成本打蛋器水灵灵的出现了！_哔哩哔哩_bilibili"
+    },
+    {
+     "href": "https://www.instagram.com/p/DA9kFp1xJeg/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/kailynklein103/",
+     "name": "@kailynklein103",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by kailynklein103"
+    },
+    {
+     "href": "https://www.tiktok.com/@ucvtbj/video/7635507254338260238",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ucvtbj",
+     "name": "@ucvtbj",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "If you like this book Search' 631686' on NovelShort to read ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/oWNoBkoeSxM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCIBtreKWMqFO6JG6bNe0GIw",
+     "name": "Heat Theory ",
+     "views": 5349,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "“The Hot Ball Went Through All 3 😳🔥” #shorts"
+    },
+    {
+     "href": "https://www.tiktok.com/@halen.stories/video/7681447872281333000",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@halen.stories",
+     "name": "@halen.stories",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Goodnovel book storytime — best scenes from my favorite ..."
+    },
+    {
+     "href": "https://www.facebook.com/61555705636338/posts/motivational-facts-changeyourmindsetchangeyourlife/122298844286190187/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61555705636338",
+     "name": "61555705636338",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "motivational #facts #changeyourmindsetchangeyourlife"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/p/DGmX6gEy92Q/",
+     1,
+     "📍 Location: Sheng Siong Supermarket @ 19 Serangoon North ..."
+    ],
+    [
+     "https://www.facebook.com/61557061265559/videos/best-manual-apple-cutting-machine-सेब-काटने-की-कमाल-की-हाथ-से-चलने-वाली-मशीनshor/1018145399906739/",
+     1,
+     "Best Manual Apple Cutting Machine | सेब काटने की ..."
+    ],
+    [
+     "https://www.instagram.com/p/DdFnfTGzYqB/",
+     1,
+     "Comment \\"
+    ],
+    [
+     "https://www.facebook.com/trendishopsbd/videos/-মাত্র-এক-চাপেই-আপেল-কাটার-নিখুঁত-সমাধান-পান-স্মার্ট-কিচেন-লাইফ-আপনার-প্রতিদিনের/1061707403254089/",
+     1,
+     "🍎 মাত্র এক চাপেই আপেল কাটার ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/PjNrkNpgkcc",
+     1,
+     "스테인리스 과일 사과 커터기 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/watch?v=1XCol-vyaC8",
+     1,
+     "How to Use an Apple Corer - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DYOuy-PPx5d/",
+     1,
+     "🍎✨ Slice smarter with our Imported Apple Cutter \\u0026 Crinkle ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/fOYvH_INOPY",
+     1,
+     "Faster way to whisk your eggs! - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DbKOdioAUk1/",
+     1,
+     "Easier way to mix your eggs!"
+    ],
+    [
+     "https://www.bilibili.com/video/BV15yGC6LEBH/",
+     1,
+     "哇哈哈，低成本打蛋器水灵灵的出现了！_哔哩哔哩_bilibili"
+    ],
+    [
+     "https://www.instagram.com/p/DA9kFp1xJeg/",
+     1,
+     "This is the easiest way to make reeses peanut butter ..."
+    ],
+    [
+     "https://www.tiktok.com/@ucvtbj/video/7635507254338260238",
+     1,
+     "If you like this book Search' 631686' on NovelShort to read ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/oWNoBkoeSxM",
+     1,
+     "The Hot Ball Went Through All 3 😳🔥” #shorts - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@halen.stories/video/7681447872281333000",
+     1,
+     "Goodnovel book storytime — best scenes from my favorite ..."
+    ],
+    [
+     "https://www.facebook.com/61555705636338/posts/motivational-facts-changeyourmindsetchangeyourlife/122298844286190187/",
+     1,
+     "motivational #facts #changeyourmindsetchangeyourlife"
+    ]
+   ]
+  },
+  "7694588662926904596": {
+   "id": "7694588662926904596",
+   "title": "#unfrezzmyaccount #trending #viralvideo #viraltiktok ",
+   "views": 1500000,
+   "url": "https://www.tiktok.com/@obimani.mon036/video/7694588662926904596",
+   "channel": "https://www.tiktok.com/@obimani.mon036",
+   "from_channel": "https://www.tiktok.com/@obimani.mon036",
+   "orig": true,
+   "lang": "bn",
+   "ko_chars": 0,
+   "text": "आमार स्थे अन्नायार जुलूम करा मनुष्भूलोके आमें दूनियाते इखमा करे दिवो जाते हाशोरे दिन तदेर स्थे दितिवार देखाना है",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/reel/DXtaQwdDf3r/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/dhgate_gadget/",
+     "name": "@dhgate_gadget",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by dhgate_gadget"
+    },
+    {
+     "href": "https://www.facebook.com/deezlips/videos/best-squishy-cheese/27989477770684732/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/deezlips",
+     "name": "deezlips",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Best squishy cheese! | Deez Finds"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/E1CzSYsBgJY",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCt9l88ooT-cnRauEP52AkNQ",
+     "name": "까니",
+     "views": 836,
+     "resolved": true,
+     "lang": "ko",
+     "title": "목삼 계란토스트"
+    },
+    {
+     "href": "https://www.facebook.com/mysensoryspaceaustralia/videos/this-is-the-kind-of-cheese-i-need-in-my-life-squishycheese-squishytok-stressreli/1058268109580651/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/mysensoryspaceaustralia",
+     "name": "mysensoryspaceaustralia",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This is the kind of cheese I need in my life ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/CKYeL-UFw-G/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/CKYeL-UFw-G/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Привет друзья! А у нас ещё одна новиночка ;) Пирожное ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/hI3BWEMMZBw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCcfs-PwOxjgn_siTEhG64oA",
+     "name": "Arelor Oakbourne",
+     "views": 0,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "一团苹果味的干泡沫 #戳一团苹果味的干泡史莱姆 #解压 #随手拍 #声控 #asmr沫"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/7bQAxRa85i0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCyR24i6K97kjxaFZdvF9vIw",
+     "name": "SquishHub",
+     "views": 6097,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "My Squishy Cheese Finally Came!! 😋😇  #toys #squishy #satisfying #viral #shorts #squishies"
+    },
+    {
+     "href": "https://www.instagram.com/p/DZcastTGc3Z/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DZcastTGc3Z/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "ko",
+     "title": "🧀 기존 치즈 말랑이와는 비교 불가! 속재료가 바셀린이라 손에 ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@tiyra30ik0/video/7684588295480790303",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@tiyra30ik0",
+     "name": "@tiyra30ik0",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "i'm obsessed #cheesesquishy #asmr #fyp #squishy ..."
+    },
+    {
+     "href": "https://www.facebook.com/100090848858577/videos/935917119199674/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100090848858577",
+     "name": "100090848858577",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Sabitri Dutta on Reels"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/Sn-rgFGGz6s",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC-DXgD8qRAMoMuMkhK2Vaqg",
+     "name": "ASMR \"slime lovers\"",
+     "views": 146,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "#asmr #slime #asmrsounds #relax #relaxing #slimeasmr #colors #راحة_نفسية #راحه #سلايم"
+    },
+    {
+     "href": "https://www.facebook.com/5Minute.Crafts.Men/videos/wall-restoration-takes-a-creative-turn/1434065544398213/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/5Minute.Crafts.Men",
+     "name": "5Minute.Crafts.Men",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Wall restoration takes a creative turn! | 5-Minute Crafts Men"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/7zeLmuk0d90",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC1XCIWP6CDq15JlcEjoLUhA",
+     "name": "aimechanic",
+     "views": 2,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Repairing a blown-out wall anchor hole step-by-step using expanding foam for a rock-solid patch 🪄🖨️"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/O7aHOsBo85g",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCImOXLcXPHGf_P5b0kOeyzA",
+     "name": "ShortScope",
+     "views": 37773,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🛠️✨ Watch this wall repair come together step by step for a clean, professional finish."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYvMOlsvYle/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/annavatuone/",
+     "name": "@annavatuone",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by annavatuone"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/reel/DXtaQwdDf3r/",
+     1,
+     "🧀✨Squeeze the stress away! ✓ Super soft & slow‑rising ..."
+    ],
+    [
+     "https://www.facebook.com/deezlips/videos/best-squishy-cheese/27989477770684732/",
+     1,
+     "Best squishy cheese! | Deez Finds"
+    ],
+    [
+     "https://www.youtube.com/shorts/E1CzSYsBgJY",
+     1,
+     "목삼 계란토스트 - YouTube"
+    ],
+    [
+     "https://www.facebook.com/mysensoryspaceaustralia/videos/this-is-the-kind-of-cheese-i-need-in-my-life-squishycheese-squishytok-stressreli/1058268109580651/",
+     1,
+     "This is the kind of cheese I need in my life ..."
+    ],
+    [
+     "https://www.instagram.com/p/CKYeL-UFw-G/",
+     1,
+     "Привет друзья! А у нас ещё одна новиночка ;) Пирожное ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/hI3BWEMMZBw",
+     1,
+     "一团苹果味的干泡沫#戳一团苹果味的干泡史莱姆#解压#随手拍#声控 ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/7bQAxRa85i0",
+     1,
+     "My Squishy Cheese Finally Came!! 😋😇 #toys #squishy ..."
+    ],
+    [
+     "https://www.instagram.com/p/DZcastTGc3Z/",
+     1,
+     "🧀 기존 치즈 말랑이와는 비교 불가! 속재료가 바셀린이라 손에 ..."
+    ],
+    [
+     "https://www.tiktok.com/@tiyra30ik0/video/7684588295480790303",
+     1,
+     "i'm obsessed #cheesesquishy #asmr #fyp #squishy ..."
+    ],
+    [
+     "https://www.facebook.com/100090848858577/videos/935917119199674/",
+     1,
+     "Sabitri Dutta on Reels"
+    ],
+    [
+     "https://www.youtube.com/shorts/Sn-rgFGGz6s",
+     1,
+     "asmr #slime #asmrsounds #relax #relaxing #slimeasmr #colors ..."
+    ],
+    [
+     "https://www.facebook.com/5Minute.Crafts.Men/videos/wall-restoration-takes-a-creative-turn/1434065544398213/",
+     1,
+     "Wall restoration takes a creative turn! | 5-Minute Crafts Men"
+    ],
+    [
+     "https://www.youtube.com/shorts/7zeLmuk0d90",
+     1,
+     "Repairing a blown-out wall anchor hole step-by-step using ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/O7aHOsBo85g",
+     1,
+     "🛠️✨ Watch this wall repair come together step by step for ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DYvMOlsvYle/",
+     1,
+     "When choosing a paint color I've learned not to rush the ..."
     ]
    ]
   }
