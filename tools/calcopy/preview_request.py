@@ -71,6 +71,7 @@ def catalog() -> dict:
             voices.append({"voice_id": vid, "name": v["name"], "preset_id": v.get("preset_id"), "about": v.get("one_liner") or ""})
     return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
             "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
+            "preset_defaults": preset_defaults_table(),   # 프리셋마다 기본값(원본 영상 기준) — packFor 가 엔진 기본 팩 위에 얹는다
             # 숏템메이커 템플릿(썰20·고정20) — 이름만(견본 그림은 벤치 화면이라 고객에게 안 보낸다). 고르면 렌더러가 그 자리에서 그린다
             "templates": [{"mode": m, "id": r["id"], "name": r["name"]} for m in ("story", "continuous") for r in to_snapshot.template_rows(m)]}
 
@@ -93,6 +94,57 @@ def default_pack() -> dict:
     out["brand"] = {k: v for k, v in (out.get("brand") or {}).items() if not k.startswith("_")}
     out["tts"] = {k: v for k, v in (out.get("tts") or {}).items() if not k.startswith("_")}
     return out
+
+
+PRESET_DEFAULTS_FILE = ROOT / "tools" / "calcopy" / "preset_defaults.json"   # 설치본: 빌드 때 프리셋마다 만든 표({고객용 id: 기본값})
+
+
+def preset_defaults(preset: str | pathlib.Path) -> dict:
+    """★규칙(사장님 10-20): 기본값은 **그 프리셋의 원본 영상에 맞춘다 — 모든 프리셋**. 회원이 설정에서 바꾼 칸만 회원 값
+    (shortem_client local_settings.packFor = 엔진 기본 팩 ← 이 값 ← 회원이 바꾼 칸). 엔진 기본 팩(my_packs "1")은 프리셋에 없는 칸만 채운다.
+      글꼴·자막 외곽선 = 프리셋 틀(frame.json — 원본 실측) 그대로.
+      목소리·빠르기·배경음악·자막 쌓기 = 프리셋 폴더 defaults.json(사장님이 그 프리셋으로 만든 편 기록, 근거는 그 파일 _from).
+    10-20 실측 사고: 프리셋 5개가 모두 팩 하나(잘난고딕·프리텐다드·외곽선 0·남자 필재)로 덮여 4개가 원본과 달랐다(숏템리폿 외곽선 13→0)."""
+    pdir = pathlib.Path(preset)
+    pdir = pdir if pdir.is_absolute() else ROOT / pdir
+    out: dict = {}
+    frame = json.loads((pdir / "frame.json").read_text(encoding="utf-8")) if (pdir / "frame.json").is_file() else None
+    if frame:
+        man = json.loads((pdir / "manifest.json").read_text(encoding="utf-8")) if (pdir / "manifest.json").is_file() else {}
+        if man.get("variable_stats"):   # 편마다 값($per_video) = 프리셋이 잰 중앙값 — 만들 때와 같은 주인(per_video.fill_defaults)
+            from shopping_shorts.calcopy_frame import per_video as PV
+            frame, _ = PV.fill_defaults(frame, man["variable_stats"])
+        real = lambda v: v if isinstance(v, str) and v and "$per_video" not in v else None   # noqa: E731 — 못 채운 칸은 기본값으로 안 쓴다
+        layers = [L for fr in (frame.get("frames") or [frame]) for L in fr.get("layers", []) if L.get("kind") == "text"]
+        title = next((L for L in layers if L.get("role") == "title" and real(L.get("font"))), None)
+        cap = next((L for L in layers if L.get("role") == "caption" and real(L.get("font"))), None)
+        text = {}
+        if title:
+            text["title_font"] = title["font"]
+        if cap:
+            text["caption_font"] = cap["font"]
+            o = cap.get("outline")
+            if o is None or isinstance(o, dict):
+                o = o or {}
+                text["caption"] = {"outline_px": o.get("px") or 0, **({"outline_rgb": list(o["rgb"])} if isinstance(o.get("rgb"), list) else {})}
+        if text:
+            out["text"] = text
+    own = pdir / "defaults.json"
+    if own.is_file():
+        d = json.loads(own.read_text(encoding="utf-8"))
+        for k in ("tts", "bgm"):
+            if isinstance(d.get(k), dict):
+                out[k] = {x: v for x, v in d[k].items() if not x.startswith("_")}
+        if (d.get("caption") or {}).get("mode"):
+            out.setdefault("text", {}).setdefault("caption", {})["mode"] = d["caption"]["mode"]
+    return out
+
+
+def preset_defaults_table() -> dict:
+    try:
+        return json.loads(PRESET_DEFAULTS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
 
 
 EDITABLE = {"brand": ("channel_name", "colors"), "text": ("title_font", "caption_font", "caption"),

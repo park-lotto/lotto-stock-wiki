@@ -362,15 +362,18 @@ def step_check(topic, ctx: Ctx) -> dict:
     _engine("compare")
     cmd, out = _remake_args(TF, ctx, topic)
     arts = _produce_arts(out)
-    need = [k for k in ("final_sheet_1s.jpg", "차이표.md", "side_by_side.jpg") if k not in arts]
+    J = json.loads(Path(cmd[2]).read_text(encoding="utf-8"))
+    has_orig = bool(J.get("source") and Path(J["source"]).exists())
+    # 고객 PC(관제 234)엔 뜯기 원본이 없어 원본 대조(차이표·나란히)를 만들지 않는다 — remake 가 '생략' 판정만 남긴다
+    want = ("final_sheet_1s.jpg", "차이표.md", "side_by_side.jpg") if has_orig else ("final_sheet_1s.jpg",)
+    need = [k for k in want if k not in arts]
     vj = out / "대조" / "verdict.json"
     if need or not vj.exists():
         raise StepError(f"대조 산출물 없음: {need + ([] if vj.exists() else ['대조/verdict.json'])}", arts)
     arts = {k: v for k, v in arts.items() if k != "final.mp4"}        # 완성본은 produce 때 이미 올렸다
     arts["verdict.json"] = str(vj)
     outs = {**_produce_outputs(arts), "verdict": "verdict.json"}
-    J = json.loads(Path(cmd[2]).read_text(encoding="utf-8"))
-    if J.get("source") and Path(J["source"]).exists():
+    if has_orig:
         arts["original" + Path(J["source"]).suffix] = str(J["source"])
         outs["original"] = "original" + Path(J["source"]).suffix
     return {"artifacts": arts, "outputs": outs}

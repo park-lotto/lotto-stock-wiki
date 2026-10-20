@@ -154,14 +154,14 @@ def test_start_후보_choose_plan_review_approve_final_review(env):
     assert {L["font"] for L in frame_layers if L.get("role") == "title"} == {"JalnanGothic"}
     M = fake.plan_materials
     assert [x["asset_id"] for x in M["sfx"]] == [80, 78] and M["meme_pool"]["ids"][:2] == [1026, 1005]
-    assert M["tts"]["voice_id"] == "tc_68257f68bc6e3c161ab5078d" and all(s["src"] for s in M["shots"])
+    assert M["tts"]["voice_id"] == "tc_6059dad0b83880769a50502f" and all(s["src"] for s in M["shots"])
     files = {f["name"] for f in st["files"]}
     assert {"계획.md", "계획_시트.jpg", "대본.json", "재료_뼈대.json", "재료.json"} <= files
     S = MK.approve(S["sid"], by="페이블", data_dir=d, deps=deps)
     st = MK.status(S["sid"], data_dir=d)
     assert st["state"] == "final_review", st.get("error")
     cmd = fake.produce_cmd
-    assert cmd[cmd.index("--voice") + 1] == "tc_68257f68bc6e3c161ab5078d" and cmd[cmd.index("--tempo") + 1] == "1.36"
+    assert cmd[cmd.index("--voice") + 1] == "tc_6059dad0b83880769a50502f" and cmd[cmd.index("--tempo") + 1] == "1.25"
     assert cmd[cmd.index("--bgm") + 1] == "qiuqiu"
 
 
@@ -298,7 +298,7 @@ def test_응용_소재1_제작물N_중복은_거절(env):
     assert "produce" not in [c[0] for c in fake.calls]
     # 목소리 + 틀(채널명) 다르게 → 승인 통과
     S3 = MK.start(PRESET, "1", reuse_of=root, data_dir=d, deps=deps,
-                  pack_patch={"tts": {"voice_id": "tc_6059dad0b83880769a50502f", "name": "박창수"}, "brand": {"channel_name": "둘째채널"}})
+                  pack_patch={"tts": {"voice_id": "tc_61f0859907085fc68561c9a1", "name": "지훈"}, "brand": {"channel_name": "둘째채널"}})
     assert MK.status(S3["sid"], data_dir=d)["variant_warn"] == []
     MK.approve(S3["sid"], by="사장님", data_dir=d, deps=deps)
     st3 = MK.status(S3["sid"], data_dir=d)
