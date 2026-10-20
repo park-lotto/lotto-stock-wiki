@@ -603,6 +603,72 @@
   "pack": true,
   "bench": "키치잇 Cs-Ka_S8nDM 0~0.433초 '1년 내내' 잉크 폭 30fps 13프레임(22%→109%→100%) — 스타일분석 §1"
  },
+ "itlHookPop": {
+  "label": "훅 팝+빨강 잔상(잇템로그)",
+  "pack": true,
+  "why": "잇템로그 ro1l 1.267~1.70초 실측(줄판독): 작게→110% 넘침 5프레임 → 가로 빨강 잔상 글리치, 총 370~433ms",
+  "origin": true,
+  "ms": 430,
+  "easing": "linear",
+  "frames": [
+   {
+    "opacity": 1,
+    "scale": "0.55",
+    "offset": 0.0
+   },
+   {
+    "opacity": 1,
+    "scale": "1.1",
+    "offset": 0.38
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 0.5
+   },
+   {
+    "opacity": 1,
+    "scale": "1",
+    "offset": 1.0
+   }
+  ],
+  "glitch": {
+   "colors": [
+    [
+     "#FF1A1A",
+     -1
+    ],
+    [
+     "#B00000",
+     1
+    ]
+   ],
+   "amp": 0.06,
+   "alpha": 0.7,
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.6,
+     0
+    ],
+    [
+     0.68,
+     1
+    ],
+    [
+     0.85,
+     0.5
+    ],
+    [
+     1,
+     0
+    ]
+   ]
+  }
+ },
  "overPopBig": {
   "label": "크게 넘쳤다 안착",
   "origin": true,
@@ -1630,6 +1696,85 @@
   "place": {
    "y": 68.75,
    "bench": "새 틀 자막 잉크 가운데 y≈1320/1920(sMx9 1288~1353) · 옛 틀은 y≈1396(72.7%) — 판 설정 frame 이 틀마다 덮는다"
+  }
+ },
+ "ititemlog": {
+  "label": "잇템로그 화자색",
+  "desc": "굵은 고딕 + 두꺼운 검정 테 · 화자마다 색(나레 노랑·원음 흰) · 전부 즉시 · 편 첫 나레 줄만 빨강, 그 끝 덩어리 팝+빨강 잔상",
+  "font": "GmarketSansBold",
+  "size": 84,
+  "flat": true,
+  "look": "none",
+  "text": {
+   "color": "#FDFCFD",
+   "style": {
+    "WebkitTextStroke": "0.24em #000000",
+    "paintOrder": "stroke fill",
+    "strokeLinejoin": "round",
+    "textShadow": "none"
+   }
+  },
+  "wordFx": {
+   "style": "mark",
+   "color": "",
+   "grow": ""
+  },
+  "mark": {
+   "colors": [
+    "#F07A09"
+   ]
+  },
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 84,
+   "color": "#F07A09",
+   "style": {
+    "WebkitTextStroke": "0.24em #000000",
+    "paintOrder": "stroke fill"
+   }
+  },
+  "motion": {
+   "first": "",
+   "body": "",
+   "cont": "",
+   "price": "",
+   "problem": "",
+   "reveal": "",
+   "end": "",
+   "emph": ""
+  },
+  "speakers": {
+   "narr": {
+    "text": {
+     "color": "#F7EB0E"
+    },
+    "enter": ""
+   },
+   "orig": {
+    "enter": ""
+   }
+  },
+  "variants": {
+   "hook": {
+    "text": {
+     "color": "#E30004"
+    },
+    "enter": "",
+    "why": "훅 나레 빨강(ro1l #E30004 · aUic #DA0009) — 편 첫 나레 줄 덩어리 전부(판 설정 placement.rules.hook)"
+   },
+   "hook_pop": {
+    "text": {
+     "color": "#E30004"
+    },
+    "enter": "itlHookPop",
+    "why": "훅 줄 끝 덩어리 팝+빨강 잔상(ro1l 1.27초 · aUic 0.70초)"
+   }
+  },
+  "stickers": {},
+  "bench": "channel/ititemlog/스타일분석.md §2 · 줄판독/",
+  "place": {
+   "y": 67.34,
+   "bench": "채움 잉크 y≈1249~1338(가운데 1293/1920) — 2편 같음, 나레·원음 같은 자리"
   }
  }
 }/*PACKS*/;

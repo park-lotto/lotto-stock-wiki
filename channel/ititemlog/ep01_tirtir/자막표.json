@@ -1,0 +1,343 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.363,
+   "text": "한국 쿠션 파데를 바르고",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.363,
+   "t1": 2.773,
+   "text": "충격 받은 외국인이 있는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 2.773,
+   "t1": 3.973,
+   "text": "이게 한국 파데",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.973,
+   "t1": 5.323,
+   "text": "제일 어두운 호수야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 5.323,
+   "t1": 6.472,
+   "text": "가장 어두운 색인데도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 6.472,
+   "t1": 7.439,
+   "text": "하얗게 떴는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 7.439,
+   "t1": 8.619,
+   "text": "그런데 한 달 뒤",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 8.619,
+   "t1": 9.36,
+   "text": "티르티르에서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "티르티르"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 9.36,
+   "t1": 10.278,
+   "text": "새 호수 11개를",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 10.278,
+   "t1": 10.863,
+   "text": "내놨는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 10.863,
+   "t1": 11.944,
+   "text": "그중 제일 어두운",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 11.944,
+   "t1": 13.265,
+   "text": "43N을 발라 봤더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 13.265,
+   "t1": 15.815,
+   "text": "세상에 말도 안 돼",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 15.815,
+   "t1": 17.995,
+   "text": "완전 내 피부색이잖아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 17.995,
+   "t1": 18.57,
+   "text": "컨실러도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 18.57,
+   "t1": 19.859,
+   "text": "필요 없을 정도였는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 19.859,
+   "t1": 20.765,
+   "text": "드디어 쿠션을",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 20.765,
+   "t1": 21.594,
+   "text": "쓸 수 있게 됐다며",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 21.594,
+   "t1": 22.347,
+   "text": "기뻐했는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 22.347,
+   "t1": 23.797,
+   "text": "세상에 내 얼굴 좀 봐",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 23.797,
+   "t1": 25.627,
+   "text": "필터 씌운 것 같아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 25.627,
+   "t1": 26.195,
+   "text": "다음 달엔",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 26.195,
+   "t1": 26.936,
+   "text": "호수 10개가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 26.936,
+   "t1": 28.067,
+   "text": "더 나온다고 하네요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = ro1l3u734v4",
+  "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 24} · 강조 1/24"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "ro1l3u734v4",
+  "worst_slot_diff": 0.056,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.94,
+     "pop": 0.06
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.09,
+    "n": 11
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

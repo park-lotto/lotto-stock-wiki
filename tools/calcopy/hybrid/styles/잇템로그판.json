@@ -1,0 +1,307 @@
+{
+ "name": "잇템로그판",
+ "renderer": "bench",
+ "_note": "잇템로그(@it_item_log) 칼카피 1차 판 — 외국인이 한국 제품 쓰고 놀람 반응(해외 원본 재편집). 근거 channel/ititemlog/{스타일분석.md, 줄판독/}. 렌더 = render_bench.py. 1차 = 벤치와 같게(틀·자막·박자), 출처·로고 줄 없음(벤치에 없음). 표본 2편 기준(§9).",
+ "bench": {
+  "ko": "잇템로그",
+  "channel": "ititemlog",
+  "analysis": "channel/ititemlog/스타일분석.md",
+  "line_reads": "channel/ititemlog/줄판독",
+  "src_dir": "C:/숏템_칼카피/ititemlog/src"
+ },
+ "voice": {
+  "name": "미나",
+  "voice_id": "kr-mina-expressive",
+  "candidates": [
+   "tc_68f9c6a72f0f04a417bb136f",
+   "tc_61130d6cf89dd58a4c13295d"
+  ],
+  "why": "사장님 10-20 여자 목소리 명단 = 미나·문정·유라(필재 금지). 벤치 나레 성별은 귀로 미확인(스타일분석 §9) — 1편은 미나(서비스 배속 1.35 고정, 더 빠르게 하지 않는다)"
+ },
+ "cps_target": 8.6,
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 12.0,
+  "duck_orig_db": -6.0,
+  "fade_out": 0.4,
+  "why": "벤치 BGM 미측정(스타일분석 §6) — 원음을 가리지 않게 가볍게 깔고 원음 줄에서 −6dB"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 26,
+  "max": 31
+ },
+ "timing": {
+  "gap": 0.08,
+  "tail": 0.3
+ },
+ "frame": {
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   486,
+   1080,
+   1434
+  ],
+  "title": [
+   {
+    "font": "TmonMonsori.ttf",
+    "px": 132,
+    "center": 271,
+    "color": "#FDFDFD",
+    "max_w": 1010
+   },
+   {
+    "font": "TmonMonsori.ttf",
+    "px": 120,
+    "center": 408,
+    "color": "#FDDE01",
+    "max_w": 1020
+   }
+  ],
+  "logo": null,
+  "credit": null,
+  "flash_sec": 0.1
+ },
+ "caption": {
+  "pack": "ititemlog",
+  "pack_default": {
+   "narr.first": "cut",
+   "orig.first": "cut",
+   "narr.rest": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0
+ },
+ "sfx_files": {
+  "pop": "팩01/pop.wav",
+  "gain_db": -8
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "narr.first": "cut",
+    "narr.rest": "cut",
+    "orig.first": "cut",
+    "orig.rest": "cut"
+   },
+   "hook": {
+    "speaker": "narr",
+    "variant": "hook",
+    "pop_variant": "hook_pop",
+    "why": "훅 = 편 첫 나레 줄 빨강, 끝 덩어리 팝+글리치(2편 2/2) — 본문·끝 꾸밈 없음 54/55"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/ititemlog/줄판독",
+   "n_videos": 2,
+   "slots": {
+    "narr.first": {
+     "n": 13,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 28,
+     "enter": {
+      "cut": 0.929,
+      "pop": 0.071
+     },
+     "emph": 0.036
+    },
+    "orig.first": {
+     "n": 13,
+     "enter": {
+      "cut": 0.923,
+      "other": 0.077
+     },
+     "emph": 0.0
+    },
+    "orig.rest": {
+     "n": 9,
+     "enter": {
+      "cut": 1.0
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.5,
+    "typing": 0.0,
+    "sfx": 0.0
+   },
+   "stickers": {
+    "circle_arrow": 0.5,
+    "other": 0.5
+   },
+   "videos": [
+    {
+     "id": "aUicTeDoW04",
+     "n": 31,
+     "slots": {
+      "orig.first": {
+       "n": 8,
+       "enter": {
+        "cut": 8
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 8,
+       "enter": {
+        "cut": 8
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 10,
+       "enter": {
+        "cut": 9,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "circle_arrow": 1,
+      "other": 9
+     },
+     "sticker_lex": {
+      "circle_arrow": {
+       "excl": 1,
+       "ask": 1
+      },
+      "other": {
+       "none": 9
+      }
+     },
+     "variants": {
+      "썸네일 첫 2프레임(빨강 채움+검정 굵은 외곽+번진 그림자, 굵은 고딕·흐림), 창 왼쪽 아래": 1,
+      "빨강(훅 전용, 채움 잉크 80px ≈ 92px)": 1,
+      "빨강+팝+글리치": 1,
+      "빨강 물음표 반응(창 왼쪽 위, 가운데 아님)": 1,
+      "손글씨체(흰 채움+얇은 검정 외곽 ~3px)": 1,
+      "의성어 '톡' 한 글자가 퍼프 따라 0.1~0.2초마다 자리 바꿔 9번 튐(가운데 자막 아님)": 1
+     },
+     "sfx": [],
+     "no_caption": 2
+    },
+    {
+     "id": "ro1l3u734v4",
+     "n": 32,
+     "slots": {
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "other": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 5,
+       "enter": {
+        "cut": 5
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 17,
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.rest": {
+       "n": 4,
+       "enter": {
+        "cut": 4
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기타(크게·기울임·번진 그림자, 자리 y≈1440~1560)": 1,
+      "빨강": 3,
+      "기타(흰 채움 = 원음 번역 줄)": 7
+     },
+     "sfx": [],
+     "no_caption": 0
+    }
+   ]
+  }
+ },
+ "title_form": "1줄 흰 = 제품·상황('한국 쿠션 바르고') / 2줄 노랑 = 반응('충격받은 외국인 ㄷㄷ') · 줄별 색(낱말 색 아님)",
+ "script": {
+  "brief": [
+   "박자(잇템로그 2편): 나레 훅 빨강 2덩어리('한국 ~를 ~하자/쓰고' + '충격 받은 외국인이 있는데요') → 원음 반응(번역 자막 흰) → 나레 '알고보니/사실' 공개 → 제품 근거 나레(전언) → 원음 반응 → 끝 나레 '~하네요' 후일담. CTA 없음.",
+   "나레 줄 비율 0.55~0.72. 덩어리 = 8~9자 안팎(12자 안), 나레 어미 '~는데요·~네요·~데요'. 원음 번역은 반말·감탄('세상에·말도 안 돼').",
+   "사실만: 원본 출연자가 말한 것·화면에 보이는 것만. 효능 단정 금지, 금액 말 금지."
+  ],
+  "audit": [
+   {
+    "kind": "first_line",
+    "is": "tts"
+   },
+   {
+    "kind": "count",
+    "of": "tts",
+    "min": 5,
+    "max": 8
+   },
+   {
+    "kind": "count",
+    "of": "orig",
+    "min": 2,
+    "max": 4
+   },
+   {
+    "kind": "ending",
+    "which": "first_tts",
+    "pattern": "(있는데요|는데요)\\s*[?？.!]*$",
+    "why": "훅 = '~외국인이 있는데요'"
+   },
+   {
+    "kind": "ending",
+    "which": "last_tts",
+    "pattern": "(네요|데요)\\s*[.!]*$",
+    "why": "끝 = 후일담 '~하네요'"
+   },
+   {
+    "kind": "cap_chars",
+    "max": 14
+   },
+   {
+    "kind": "est_length",
+    "min": 26,
+    "max": 31
+   }
+  ]
+ }
+}

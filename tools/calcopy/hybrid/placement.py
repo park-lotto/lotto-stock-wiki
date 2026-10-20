@@ -243,6 +243,16 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
         for i in _spread(cand, have):
             out[i]["variant_force"] = name
             log.append(f"변형 {name} → {out[i]['line']}「{out[i]['text']}」")
+    # ③' 훅 줄 변형(잇템로그 빨강 훅): 편 첫 그 화자 줄의 덩어리 전부 = variant, 그 줄 마지막 덩어리 = pop_variant(팝+글리치)
+    HK = R.get("hook")
+    if HK:
+        first = next((r["line"] for r in out if r["speaker"] == HK.get("speaker", "narr")), None)
+        idx = [i for i, r in enumerate(out) if r["line"] == first]
+        for i in idx:
+            out[i].setdefault("variant_force", HK["variant"])
+        if idx and HK.get("pop_variant"):
+            out[idx[-1]]["variant_force"] = HK["pop_variant"]
+        log.append(f"훅 {first} 덩어리 {len(idx)}개 → {HK['variant']}" + (f" (끝 {HK['pop_variant']})" if HK.get("pop_variant") else ""))
     # ④ 스티커: 본보기 편의 종류·개수(규칙에 있는 종류만 — 그릴 수 있는 것), 조건 맞는 덩어리
     for kind, rule in (R.get("stickers") or {}).items():
         if kind == "comment_card":
