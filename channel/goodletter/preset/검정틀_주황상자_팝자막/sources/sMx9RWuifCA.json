@@ -1,0 +1,213 @@
+{
+ "canvas": [
+  1080,
+  1920
+ ],
+ "layers": [
+  {
+   "kind": "bg",
+   "rgb": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "kind": "video",
+   "x": 6,
+   "y": 464,
+   "w": 1068,
+   "h": 1096,
+   "radius": 0,
+   "cuts": null,
+   "anchor": null
+  },
+  {
+   "kind": "text",
+   "role": "title",
+   "x": 540,
+   "y": 168,
+   "w": 1040,
+   "align": "center",
+   "lines": 2,
+   "font": "Jalnan2",
+   "size": 96,
+   "line_h": 124,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": [
+    [
+     255,
+     255,
+     255
+    ],
+    [
+     11,
+     15,
+     15
+    ]
+   ],
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "1등 레시피로 끓인\n성시경 신라면"
+  },
+  {
+   "kind": "band",
+   "x": 182,
+   "y": 288,
+   "w": 715,
+   "h": 123,
+   "rgb": [
+    254,
+    120,
+    19
+   ],
+   "radius": 14
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 464,
+   "w": 1080,
+   "h": 12,
+   "rgb": [
+    254,
+    120,
+    19
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "band",
+   "x": 0,
+   "y": 1546,
+   "w": 1080,
+   "h": 12,
+   "rgb": [
+    254,
+    120,
+    19
+   ],
+   "radius": 0
+  },
+  {
+   "kind": "text",
+   "role": "caption",
+   "x": 540,
+   "y": 1280,
+   "w": 1020,
+   "align": "center",
+   "lines": 1,
+   "font": "BinggraeBold",
+   "size": 70,
+   "line_h": 80,
+   "rgb": [
+    253,
+    253,
+    253
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": {
+    "px": 6,
+    "rgb": [
+     0,
+     0,
+     0
+    ]
+   },
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": {
+    "kind": "pop",
+    "ms": 170
+   },
+   "emphasis": null,
+   "text": null
+  },
+  {
+   "kind": "text",
+   "role": "label",
+   "x": 540,
+   "y": 1580,
+   "w": 1000,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 40,
+   "line_h": 48,
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "출처 · 성시경 SUNG SI KYUNG (YouTube)"
+  },
+  {
+   "kind": "text",
+   "role": "brand",
+   "x": 940,
+   "y": 500,
+   "w": 220,
+   "align": "center",
+   "lines": 1,
+   "font": "CcPretendard-Bold",
+   "size": 34,
+   "line_h": 40,
+   "rgb": [
+    230,
+    230,
+    230
+   ],
+   "line_rgb": null,
+   "line_scale": null,
+   "outline": null,
+   "line_outline": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "italic": false,
+   "letter_spacing": 0,
+   "word_spacing": 0,
+   "valign": "center",
+   "enter": null,
+   "emphasis": null,
+   "text": "✉ 굿레터"
+  }
+ ],
+ "template_off": null,
+ "made_by": "calcopy_frame v1",
+ "source": "sMx9RWuifCA"
+}
