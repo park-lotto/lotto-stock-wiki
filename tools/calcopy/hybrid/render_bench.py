@@ -294,9 +294,13 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
         from tools.calcopy import narr_video as nv
         x, y, cw, ch = crop
         mv = nv.still_move(src, crop, ww / wh, n / FPS, move or "in")
-        vf = f"crop={cw}:{ch}:{x}:{y},{mv}scale={ww}:{wh}:flags=lanczos,setsar=1"
+        # 사진(JPG)은 yuvj420p·pc·bt470bg 로 나온다 → 영상 조각(yuv420p·tv·bt709)과 이어 붙이면 render_base 가 그 경계에서
+        # 필터를 다시 세우며 틀(제목·로고·출처 줄)을 2~4프레임 빠뜨린다(10-21 장윤주 실측: 쿠팡 사진 컷 앞뒤 2+4프레임 → 고친 뒤 0.
+        # 최화정_피부 완성본에도 제목 빠짐 2+2프레임이 있었다 — 원인 대조는 안 함). 영상 조각과 같은 꼴로 맞춘다.
+        vf = (f"crop={cw}:{ch}:{x}:{y},{mv}scale={ww}:{wh}:flags=lanczos:out_range=tv:out_color_matrix=bt709,"
+              f"format=yuv420p,setsar=1")
         run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", src, "-vf", vf, "-frames:v", n, "-r", FPS, "-c:v", "libx264", "-crf", "16",
-             "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
+             "-preset", "veryfast", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
         return
     x, y, cw, ch = crop
     vf = f"crop={cw}:{ch}:{x}:{y},scale={ww}:{wh}:flags=lanczos,setsar=1,fps={FPS}"
