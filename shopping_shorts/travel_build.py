@@ -1108,3 +1108,31 @@ def write_script_format(picks, detail, fmt, model="opus", chars=(170, 260)):
     if not (lo - 10 <= n <= hi + 15):
         iss.append("길이 %d자 ≈ %.1f초(권장 %d~%d자)" % (n, n / CHARS_PER_SEC, lo, hi))
     return v, iss
+
+
+# ── 핵심 꿀팁 가이드북 원고(2026-10-20 사장님 "숙소정보부터 꿀팁까지 정리되는 핵심가이드북 — 노트북LM 인포그래픽·슬라이드") ──
+# 숏폼(마지막에 살짝 보여 줌) → 롱폼 → 고정댓글 링크(쿠팡파트너스·여행 예약) → 이 가이드북을 준다.
+# 원고 주인 = guidebook_source(재료 = 숙소 상세 + review_insights 하나). 그림·슬라이드는 NotebookLM 이 이 원고로 만든다.
+def guidebook_source(detail, ins):
+    d, f = detail or {}, (detail or {}).get("story_facts") or {}
+    out = ["# %s 핵심 꿀팁 가이드북" % d.get("name", ""),
+           "실제 투숙객 후기 %s개를 전부 읽고 정리한 '가기 전에 꼭 알아야 할 것'. 출처: %s" %
+           ((ins or {}).get("_meta", {}).get("reviews", "?"), d.get("site_name", "")), "",
+           "## 1. 숙소 한눈에",
+           "- 등급: %s · 평점 %s/10 (후기 %s개)" % (d.get("grade", ""), d.get("rating", ""), d.get("review_count", "")),
+           "- 위치: %s" % d.get("address", ""),
+           "- 시설: %s" % ", ".join(d.get("facilities") or [])]
+    if f.get("intro"):
+        out += ["- 소개: " + f["intro"]]
+    if f.get("faq"):
+        out += ["", "## 2. 자주 묻는 것"] + ["- **%s** %s" % (x.get("q", ""), x.get("a", "")) for x in f["faq"]]
+    sec = {"와우 순간": "3. 여기서만 볼 수 있는 순간", "꿀팁": "4. 가기 전에 꼭 알아야 할 꿀팁", "식사·메뉴": "5. 뭐 먹지 — 식사·메뉴",
+           "숙소 앞 볼거리": "6. 숙소 앞 볼거리", "서비스": "7. 이런 서비스도 있어요", "주의할 점": "8. 주의할 점과 해결법"}
+    for c in ("와우 순간", "꿀팁", "식사·메뉴", "숙소 앞 볼거리", "서비스", "주의할 점"):
+        rows = (ins or {}).get(c) or []
+        if rows:
+            out += ["", "## " + sec[c]] + ["- **%s** (후기 %s명) — \"%s\"" % (x["item"], x.get("count", "?"), x.get("quote", "")) for x in rows]
+    out += ["", "## 9. 추천 1박 동선",
+            "체크인 전 도착(번호표) → 오션뷰 객실 → 저녁 수영장(노을·버블) → 룸서비스 → 침대에서 일출 → 이른 조식 → 숙소 앞 산책 → 셔틀로 귀가",
+            "(동선은 위 후기 꿀팁을 시간순으로 엮은 것)"]
+    return "\n".join(out)
