@@ -94,7 +94,10 @@ def scene_photos(reviews, keys, topic, work, want=5, pool=120, call=None):
     call = call or tb.claude_call
     work = Path(work)
     cands = [r for r in reviews if r.get("images") and any(k in r.get("content", "") for k in keys)]
-    cands.sort(key=lambda r: (-(r.get("best") or 0), -(r.get("likes") or 0)))   # 공감 많고 베스트인 후기 먼저
+    # 앞 핵심어(가장 좁은 말)가 든 후기 먼저, 그 안에서 베스트·공감 순 — 넓은 말(룸서비스)이 앞자리를 다 차지하면
+    # 받은 120장에 짬뽕이 0장이 된다(실측 2026-10-20 keys=[짬뽕,해물짬뽕,룸서비스] → 0장, [짬뽕]만 → 5장)
+    first = lambda r: min(i for i, k in enumerate(keys) if k in r.get("content", ""))
+    cands.sort(key=lambda r: (first(r), -(r.get("best") or 0), -(r.get("likes") or 0)))
     jobs = [(url, r) for r in cands for url in r["images"]][:pool]
 
     def fetch(job):
@@ -323,7 +326,7 @@ def style_gallery(photos, title, snippets, source, seed=0, **_):
             cx, cy = x + w / 2 - tw / 2 - 18, y + h + 22
             d.rectangle((cx, cy, cx + tw + 36, cy + 62), fill=(255, 255, 255, 240), outline=(200, 200, 200, 255))
             d.text((cx + 18, cy + 8), snippets[i], font=f, fill=(50, 50, 60, 255))
-    _source_tag(layer, SOURCE_NOTE % source, y=1760)
+    _source_tag(layer, SOURCE_NOTE % source)   # 맨 아래 — 1760 은 말 자막 띠와 겹쳤다(2026-10-20 콘티)
     return layer
 
 
@@ -430,10 +433,67 @@ def make_scene(style, photos, title, texts, out_path, source="여기어때", see
     from PIL import Image
     src = source if not (variety and variety.get("count")) else "%s · 후기 %s명이 같은 말" % (source, variety["count"])
     layer = STYLES[style](photos[:4] if variety else photos, title, texts, src, seed=seed, reserve_bottom=bool(variety))
-    if variety:      # 자막은 아래 비워 둔 자리에, 도장은 출처 표기에 합쳤으니 끈다(겹침 실측 2026-10-20)
+    if variety:      # 자막은 아래 비워 둔 자리에(맨 아래 띠는 말 자막 자리 — 0.83→0.80, 2026-10-20 콘티), 도장은 출처 표기에 합쳤으니 끈다(겹침 실측 2026-10-20)
         from shopping_shorts import travel_build as tb
-        ov = tb.variety_caption_png(variety, str(Path(out_path).with_suffix(".cap.png")), palette=seed, y_ratio=0.83, stamp=False)
+        ov = tb.variety_caption_png(variety, str(Path(out_path).with_suffix(".cap.png")), palette=seed, y_ratio=0.80, stamp=False)
         layer.alpha_composite(Image.open(ov))
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     layer.convert("RGB").save(out_path, quality=92)
+    return str(out_path)
+
+
+# ── 말 자막(우리 자막팩) ─────────────────────────────────────────────────────────
+def caption_pack(key="tension"):
+    """자막팩 정의는 static/caption-motions.js 의 CAPTION_PACKS(/*PACKS*/ 표식 사이 JSON) 한 곳 — 장면꾸미기와 같은 것을 읽는다."""
+    src = (Path(__file__).parent / "static" / "caption-motions.js").read_text(encoding="utf-8")
+    m = re.search(r"/\*PACKS\*/(\{.*?\n\})\s*;?\s*/\*PACKS\*/", src, re.S) or re.search(r"/\*PACKS\*/(\{.*?\n \}\n\})", src, re.S)
+    return json.loads(m.group(1))[key]
+
+
+def _hex(c, a=255):
+    c = c.lstrip("#")
+    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4)) + (a,)
+
+
+def narration_caption_png(text, out_path, emph="", pack="tension", y_ratio=0.70, scale=0.85):
+    """말 자막 한 장(투명 1080×1920) — 자막팩 글꼴·크기·외곽선 그대로, 강조 단어 뒤에 팩 색 상자(예능 텐션 = 노란 상자).
+    미리보기용 정지 그림이다. 영상의 자막은 장면꾸미기 자막팩 엔진이 같은 팩으로 그린다."""
+    from PIL import Image, ImageDraw, ImageFilter, ImageFont
+    p = caption_pack(pack)
+    W, H = 1080, 1920
+    size = int(p.get("size", 112) * scale)
+    f = ImageFont.truetype(str(next(_FONT_DIR.glob(p["font"] + ".*"))), size)
+    col = _hex(p["text"]["color"])
+    stroke = max(4, int(size * 0.07))
+    box = _hex((p.get("wordFx") or {}).get("color", "#FFE600"))
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    words, lines, cur = text.split(), [], ""
+    for w in words:                                   # 폭에 맞춰 어절 단위로 줄바꿈(최대 2줄)
+        t = (cur + " " + w).strip()
+        if cur and d.textlength(t, font=f) > W - 140:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = t
+    lines.append(cur)
+    lh = int(size * 1.25)
+    y0 = int(H * y_ratio) - lh * len(lines) // 2
+    sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sh)
+    for i, ln in enumerate(lines):
+        x = (W - d.textlength(ln, font=f)) / 2
+        y = y0 + i * lh
+        if emph and emph in ln:                       # 강조 단어 상자 — 글자보다 먼저(뒤에) 깐다
+            ex = x + d.textlength(ln[:ln.find(emph)], font=f)
+            ew = d.textlength(emph, font=f)
+            d.rounded_rectangle((ex - 14, y - 6, ex + ew + 14, y + size + 16), 14, fill=box)
+        sd.text((x, y + size * 0.05), ln, font=f, fill=(0, 0, 0, 180), stroke_width=stroke, stroke_fill=(0, 0, 0, 180))
+    layer = Image.alpha_composite(sh.filter(ImageFilter.GaussianBlur(size * 0.08)), layer)
+    d = ImageDraw.Draw(layer)
+    for i, ln in enumerate(lines):
+        x = (W - d.textlength(ln, font=f)) / 2
+        d.text((x, y0 + i * lh), ln, font=f, fill=col, stroke_width=stroke, stroke_fill=(0, 0, 0, 255))
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    layer.save(out_path)
     return str(out_path)
