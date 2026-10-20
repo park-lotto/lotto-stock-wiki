@@ -510,6 +510,43 @@ def _days_since(date_iso, today):
     return max(1, (today - d).days)
 
 
+def _view_trend(video_id, published, views):
+    """조회수 추세 점들 — 공개 API엔 조회수 이력이 없다(실측: videos.list 는 지금 값만).
+    그래서 분석을 열 때마다 (시각, 조회수)를 data/yt_view_snap.db 에 적어 둔다(같은 영상 30분에 1번).
+    첫 점 = 올린 날 0회(사실값). 반환: [{"t": "YYYY-MM-DD HH:MM", "views": n}, …] 오래된 순."""
+    import sqlite3
+    import time as _t
+    from pathlib import Path
+    pts = [{"t": published + " 00:00", "views": 0}] if published else []
+    try:
+        db = Path(__file__).parent / "data" / "yt_view_snap.db"
+        db.parent.mkdir(parents=True, exist_ok=True)
+        con = sqlite3.connect(str(db), timeout=5)
+        try:
+            con.execute("CREATE TABLE IF NOT EXISTS snap(vid TEXT, ts INTEGER, views INTEGER)")
+            con.execute("CREATE INDEX IF NOT EXISTS snap_vid ON snap(vid, ts)")
+            now = int(_t.time())
+            last = con.execute("SELECT MAX(ts) FROM snap WHERE vid=?", (video_id,)).fetchone()[0]
+            if not last or now - last >= 1800:
+                con.execute("INSERT INTO snap VALUES(?,?,?)", (video_id, now, int(views)))
+                con.commit()
+            rows = con.execute("SELECT ts, views FROM snap WHERE vid=? ORDER BY ts", (video_id,)).fetchall()
+        finally:
+            con.close()
+        for ts, v in rows:
+            pts.append({"t": _t.strftime("%Y-%m-%d %H:%M", _t.localtime(ts)), "views": v})
+    except Exception as e:                  # noqa: BLE001 — 기록 실패해도 분석은 나간다(점 2개로)
+        import sys as _s
+        print(f"[yt/trend] 기록 실패: {e!r}", file=_s.stderr)
+        pts.append({"t": _dt_now_str(), "views": int(views)})
+    return pts
+
+
+def _dt_now_str():
+    import time as _t
+    return _t.strftime("%Y-%m-%d %H:%M")
+
+
 def video_analytics(video_id, today=None):
     """영상 하나 → 성과 분석(조회·비율·채널 최근 쇼츠 대비 배수·그래프용 목록).
 
@@ -592,5 +629,5 @@ def video_analytics(video_id, today=None):
     return {"ok": True, "video": me, "channel": channel, "median": med, "multiplier": mult, "multiplier_day": mult_day, "tier": tier,
             "young": bool(me["days"] and me["days"] < YOUNG_DAYS),
             "rank": rank, "compared": len(recent), "views_per_sub": _rate(me["views"], channel["subs"]),
-            "series": series,
+            "series": series, "trend": _view_trend(video_id, me["published"], me["views"]),
             "source": "배수 기준: 1of10(중앙값 비교)·OutlierKit(2·3·5배 구간)"}

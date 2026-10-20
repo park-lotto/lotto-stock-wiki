@@ -31,37 +31,47 @@ def main(vid, png):
 
     def handle(route):
         body = route.request.post_data or "{}"
-        r = client.post("/api/yt/analytics", content=body, headers={"Content-Type": "application/json"})
+        path = "/" + route.request.url.split("/", 3)[3]
+        r = client.post(path, content=body, headers={"Content-Type": "application/json"})
         route.fulfill(status=r.status_code, body=r.text,
                       headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*",
                                "Access-Control-Allow-Headers": "*"})
 
     with sync_playwright() as p:
-        b = p.chromium.launch(headless=True)
+        b = p.chromium.launch(headless=True, args=["--autoplay-policy=no-user-gesture-required", "--mute-audio"])   # 재생 안 되면 <video> 가 화면 밖에 있어 버튼 줄이 숨는다(실측)
         pg = b.new_page(viewport={"width": 1900, "height": 950}, locale="ko-KR")
-        pg.route("https://shoppingshorts.duckdns.org/api/**",
-                 lambda r: r.fulfill(status=200, body='{"ok":true}', headers={"Access-Control-Allow-Origin": "*"}))
-        # 나중에 등록한 route 가 먼저 잡는다(playwright) — 분석 경로를 뒤에
-        pg.route("https://shoppingshorts.duckdns.org/api/yt/analytics", handle)
+        # 관련 검색어 상자(/api/lens/kw/*)까지 이 트랙 app 으로 그대로 — 실제 자리 정렬을 보려면 그 상자가 있어야 한다
+        pg.route("https://shoppingshorts.duckdns.org/api/**", handle)
         pg.goto("https://www.youtube.com/shorts/" + vid, wait_until="domcontentloaded", timeout=60000)
         pg.wait_for_timeout(4000)
+        # 사장님 화면(캡쳐 61)처럼 관련 검색어 상자를 오른쪽 위로 옮겨 둔 상태를 재현
+        pg.evaluate("localStorage.setItem('ss_drag:www.youtube.com:ss-kwpost', JSON.stringify({x: 1325, y: 55}))")
         pg.evaluate("(function(){" + GM_SHIM + "})()")       # 유튜브는 Trusted Types 라 script 태그 주입이 막힌다 → evaluate 로
         pg.evaluate("(function(){" + logic + "\n})()")
         try:
             pg.wait_for_selector("#ss-ytstat svg rect", timeout=60000)
         except Exception:
             pg.screenshot(path=png.replace(".png", "_fail.png"))
+            print("VIDEOS", pg.evaluate("() => [...document.querySelectorAll('video')].map(v => { var r = v.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.bottom), Math.round(r.width), Math.round(r.height)]; })"))
             print("FAIL", pg.evaluate("""() => ({ver: window.__ssGrabVer, path: location.pathname,
                 box: (document.getElementById('ss-ytstat') || {}).innerText || null,
                 kw: !!document.getElementById('ss-kwpost')})"""))
             raise
-        pg.wait_for_timeout(800)
+        try:
+            pg.wait_for_function("() => { var k = document.querySelector('#ss-kwpost'); return k && k.querySelector('button.ss-kw-fold') && !/중…/.test(k.innerText); }", timeout=90000)
+        except Exception:
+            print("관련 검색어 상자 다 안 뜸(그대로 찍음)")
+        pg.wait_for_timeout(1500)
         pg.locator("#ss-ytstat").screenshot(path=png)
         pg.screenshot(path=png.replace(".png", "_full.png"))
         info = pg.evaluate("""() => { var p = document.getElementById('ss-ytstat');
             return {text: p.innerText.slice(0, 600), bars: p.querySelectorAll('svg rect').length,
-                    me: p.querySelectorAll('svg rect[fill="#ff9500"]').length}; }""")
+                    me: p.querySelectorAll('svg rect[fill="#ff9500"]').length,
+                    box: p.getBoundingClientRect().toJSON(),
+                    kw: (document.getElementById('ss-kwpost') || {getBoundingClientRect: () => null}).getBoundingClientRect()}; }""")
         print(json.dumps(info, ensure_ascii=False, indent=1))
+        print("KW", pg.evaluate("""() => { var k = document.getElementById('ss-kwpost'); if (!k) return null;
+            var cs = getComputedStyle(k); return {disp: cs.display, rect: k.getBoundingClientRect().toJSON(), style: k.getAttribute('style').slice(0, 300), text: k.innerText.slice(0, 300)}; }"""))
         b.close()
 
 
