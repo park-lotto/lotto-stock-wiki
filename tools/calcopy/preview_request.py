@@ -63,12 +63,17 @@ def catalog() -> dict:
     from shopping_shorts.calcopy_frame import schema, to_snapshot
     html = (ROOT / "out" / "scene-style-ui-showcase.html").read_text(encoding="utf-8")
     fonts = sorted({m.group(1) for m in re.finditer(r'@font-face\s*\{[^}]*?font-family:\s*"?([A-Za-z0-9_-]+)"?;', html)})
-    voices, seen = [], set()
-    for v in json.loads((ROOT / "shopping_shorts" / "assets" / "voice_presets.json").read_text(encoding="utf-8")):
-        vid = str(v.get("base_voice_id") or "")
-        if vid.startswith("tc_") and vid not in seen:                 # 목소리 = 타입캐스트(고객 키)
-            seen.add(vid)
-            voices.append({"voice_id": vid, "name": v["name"], "preset_id": v.get("preset_id"), "about": v.get("one_liner") or ""})
+    # 목소리 = 칼카피 명단(engine/voices.py — 사장님 10-20 확정, 필재 금지)만. 10-21 실측: 설정 화면에 필재·명단 밖(김건·용식이·발키리)이 나오고 미나가 없었다.
+    #   타입캐스트 = 회원 타입캐스트 키 · 미나(일레븐랩스) = 회원 일레븐랩스 키(사장님 10-21)
+    from tools.calcopy.engine.voices import KNOWN_VOICES, BANNED_VOICES
+    presets = json.loads((ROOT / "shopping_shorts" / "assets" / "voice_presets.json").read_text(encoding="utf-8"))
+    voices = []
+    for k in KNOWN_VOICES:
+        if k["voice_id"] in BANNED_VOICES:
+            continue
+        p = next((v for v in presets if v.get("base_voice_id") == k["voice_id"] or v.get("preset_id") == k["voice_id"]), {})
+        voices.append({"voice_id": k["voice_id"], "name": k["name"], "preset_id": p.get("preset_id") or k["voice_id"],
+                       "engine": "elevenlabs" if k["engine"] == "일레븐랩스" else "typecast", "about": p.get("one_liner") or k.get("note") or ""})
     return {"fonts": fonts, "caption_enter": list(schema.CAPTION_ENTER_KINDS), "emphasis": list(schema.EMPH_STYLES),
             "caption_mode": ["accumulate", "replace"], "voices": voices, "bgm": bgm_lib.list_tracks(), "default_pack": default_pack(),
             "preset_defaults": preset_defaults_table(),   # 프리셋마다 기본값(원본 영상 기준) — packFor 가 엔진 기본 팩 위에 얹는다
