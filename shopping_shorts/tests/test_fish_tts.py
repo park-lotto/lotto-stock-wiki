@@ -115,7 +115,7 @@ def test_엔진분기_fish로_나간다(store, monkeypatch, tmp_path):
 
 def test_프리셋_8명_샘플_있음():
     rows = [r for r in voice_presets.load_presets_file() if fish_tts.is_fish(r.get("model_id"))]
-    assert [r["name"] for r in rows] == ["하늘", "소연", "다인", "정숙", "태호", "민준", "도윤", "지성"]
+    assert [r["name"] for r in rows] == ["하늘", "소연", "다인", "정숙", "태호", "민준", "도윤", "지성", "일반여성2"]
     for r in rows:
         assert (voice_presets.SAMPLES_DIR / r["sample_file"]).exists()
     assert fish_tts.FISH_DEFAULT_VOICE["voice_id"] == rows[0]["base_voice_id"]

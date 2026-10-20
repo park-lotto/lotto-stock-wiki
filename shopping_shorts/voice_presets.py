@@ -30,6 +30,8 @@ _FISH_SPEED = {
     "5a53fa5e9d3147c692abbc9327e588ba": 0.95,  # 민준
     "f5ce3e1771d44d6eae3749a1be49117b": 0.95,  # 도윤
     "67ede89a20a0433fb4c8d3de046e03ae": 1.0,   # 지성
+    # 일반여성2(2026-10-20 회원 요청, 관제 247) — API 1.0 에서 쇼핑 3줄 무음 뺀 7.13~7.30자/초 = 이미 목표 근처
+    "4a81bbbb5cd44f22922bf934cb93b369": 1.0,   # 일반여성2
 }
 _SPEED_BY_VOICE = {MINA_VOICE_ID: 1.35, **_FISH_SPEED}
 DEFAULT_SPEED = 1.25
