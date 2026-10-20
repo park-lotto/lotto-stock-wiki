@@ -66,6 +66,20 @@ a:focus-visible,button:focus-visible,.chk:focus-within{outline:3px solid var(--m
 .warn h2{color:var(--warn);font-size:19px}
 .warn ul{margin:8px 0 0;padding-left:22px}
 .foot{color:var(--sub);font-size:14px;margin-top:20px}
+.multi-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px}
+.multi-sum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.multi-sum b{display:block;font-size:17px}
+.multi-sum .easy b{color:var(--ok)}.multi-sum .one b{color:var(--warn)}
+.multi-sum small{color:var(--sub);font-size:15px}
+.tbl{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tbl table{border-collapse:collapse;width:100%;min-width:620px;font-size:15px}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl th{font-size:14px;color:var(--sub);font-weight:700;letter-spacing:.02em}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.src{font-size:13px;color:var(--sub);white-space:nowrap}
+.tips{margin:12px 0 0;padding-left:22px;max-width:72ch}
+.tips li{margin:4px 0}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
 </style>
 
@@ -114,6 +128,35 @@ a:focus-visible,button:focus-visible,.chk:focus-within{outline:3px solid var(--m
 <section>
   <div class="stage"><b>4단계</b><h2>한 번에 올리기 도구</h2></div>
   <div class="grid" id="g-tool"></div>
+</section>
+
+<section id="multi">
+  <div class="stage"><b>참고</b><h2>계정을 여러 개 만들 때</h2></div>
+  <p class="note">휴대폰이 여러 대이거나 채널을 나눠 운영하려는 분을 위한 표입니다. 곳마다 계정을 늘리는 방법과 전화번호 규칙이 다릅니다.</p>
+  <div class="multi-sum">
+    <div class="easy"><b>늘리기 쉬운 곳</b><small>유튜브는 구글 계정 1개에 채널 최대 100개, 인스타는 기존 계정에서 바로 추가. 새 번호가 필요 없습니다</small></div>
+    <div class="one"><b>번호·이메일 1개 = 계정 1개</b><small>틱톡·카카오·당근은 계정마다 다른 번호(틱톡은 이메일도 가능)가 필요합니다</small></div>
+    <div><b>돈은 본인 명의 하나로</b><small>쿠팡·토스·네이버 정산은 실명 기준입니다. 계정이 여러 개여도 받는 사람은 한 명입니다</small></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>플랫폼</th><th>계정 늘리는 법</th><th>전화번호·인증</th><th>근거</th></tr></thead>
+    <tbody>
+      <tr><td>유튜브</td><td>구글 계정 하나 안에 채널 최대 100개(브랜드 계정). 채널마다 새 구글 계정을 만들 필요 없음</td><td>구글 계정을 새로 만들 때는 번호당 계정 수·인증 횟수 제한 있음(개수 비공개)</td><td class="src"><a href="https://support.google.com/youtube/answer/4642409?hl=ko" target="_blank" rel="noopener">구글 공식</a></td></tr>
+      <tr><td>인스타그램</td><td>앱 하나에 최대 5개. 설정 → 계정 추가 → 새 계정 만들기</td><td>기존 계정에서 만들면 같은 번호·이메일로 연결 가능</td><td class="src"><a href="https://help.instagram.com/1682672155283228" target="_blank" rel="noopener">인스타 공식</a></td></tr>
+      <tr><td>스레드</td><td>인스타 계정마다 1개</td><td>인스타 계정을 따라감</td><td class="src">인스타 공식</td></tr>
+      <tr><td>틱톡</td><td>이메일·전화번호·소셜 계정 하나당 틱톡 1개. 앱에서 계정 추가·전환은 가능</td><td>탈퇴한 번호·이메일은 30일 뒤 다시 사용 가능</td><td class="src"><a href="https://support.tiktok.com/en/log-in-troubleshoot/log-in/email-and-phone-number" target="_blank" rel="noopener">틱톡 공식</a></td></tr>
+      <tr><td>페이스북</td><td>한 사람당 개인 계정 1개. '추가 프로필'은 이제 새로 만들 수 없음</td><td>실명 기준</td><td class="src"><a href="https://www.facebook.com/help/967154637433480" target="_blank" rel="noopener">페이스북 공식</a></td></tr>
+      <tr><td>핀터레스트</td><td>이메일마다 계정 1개. 만든 계정끼리 연결해 전환 가능</td><td>이메일로 가입</td><td class="src"><a href="https://help.pinterest.com/en/article/switch-between-accounts" target="_blank" rel="noopener">핀터레스트 공식</a></td></tr>
+      <tr><td>네이버 클립</td><td>한 사람당 네이버 아이디 최대 3개. 아이디 1개에 클립 채널이 몇 개까지인지는 공식 안내 없음</td><td>실명 인증. 네이버페이는 1인 1아이디로 바뀌는 중(2026년 8월 시행 예고)이라 활동비 받는 아이디는 하나로 정하세요</td><td class="src"><a href="https://news.mtn.co.kr/news-detail/2026063011552084601" target="_blank" rel="noopener">언론 보도</a></td></tr>
+      <tr><td>카카오</td><td>번호 1개에 카카오계정 1개</td><td>같은 번호를 다른 계정에 인증하면 앞 계정에서 번호가 빠짐</td><td class="src"><a href="https://devtalk.kakao.com/t/topic/150475" target="_blank" rel="noopener">카카오 커뮤니티</a></td></tr>
+      <tr><td>당근</td><td>번호 1개에 계정 1개</td><td>탈퇴하면 7일 동안 재가입 불가. 번호를 바꿔도 이용정지는 이어짐</td><td class="src">이용자 안내 글</td></tr>
+      <tr><td>쿠팡파트너스</td><td>쿠팡 아이디는 여러 개 가능하나 본인인증 때문에 사실상 1인 1계정</td><td>본인인증·본인 명의 정산 계좌</td><td class="src">이용자 후기</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="tips">
+    <li><b>유심 없는 휴대폰(공기계)</b>이라면: 유튜브는 같은 구글 계정으로 로그인하고 폰마다 채널만 다르게, 인스타는 기존 계정에서 추가, 틱톡·핀터레스트는 폰마다 다른 이메일로 가입하세요. 카카오·당근은 번호가 있는 만큼만 만들 수 있습니다.</li>
+    <li>계정을 여러 개 운영해도 <b>영상은 계정마다 다르게</b> 올리세요. 같은 영상을 돌려 올리면 중복 콘텐츠로 묶여 노출과 수익이 줄 수 있습니다.</li>
+  </ul>
 </section>
 
 <div class="warn">
