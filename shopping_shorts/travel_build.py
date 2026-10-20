@@ -1044,3 +1044,67 @@ def insights_text(ins, per_cat=6):
         for x in (ins or {}).get(c, [])[:per_cat]:
             rows.append("[후기·%s · %s명] %s — \"%s\"" % (c, x.get("count", "?"), x["item"], x.get("quote", "")))
     return "\n".join(rows)
+
+
+# ── 후기 기반 숏폼 두 꼴(2026-10-20 사장님) ────────────────────────────────────────────────
+# "핵심은 댓글 — 사용자 입장에서 어떻게 하면 좋은 시설을 제대로 누리나" → 재료 = review_insights(후기 전부).
+#  · 꿀팁 가이드형: 체크인→저녁→밤→새벽→아침→퇴실 시간순, 컷마다 시설 + 그걸 제대로 누리는 꿀팁 + 후기 수
+#  · 주의형: 첫 줄 "제발 ○○호텔 가면 ○○하지 마세요"(사장님 문구) → 손해(후기 수) → 대신 이렇게(해결책·대안)
+#    ★주의형 첫 줄만 숙소 이름 허용(사장님 문구에 이름이 들어 있다). 나머지 줄·꼴은 이름 금지 그대로.
+# 줄마다 근거 후기 수(badge)를 같이 받는다 → 나중에 화면 배지 "후기 141명"(렌더·캡컷 같은 그림)으로 쓴다.
+TRAVEL_FORMATS = {
+    "꿀팁 가이드형": (
+        "숙소 하루를 실제 손님 동선 그대로 따라간다(체크인 전 → 객실 → 저녁 → 밤 → 새벽 → 아침 → 퇴실 중 맞는 것). "
+        "줄마다 '그 시설 + 그걸 제대로 누리는 꿀팁' 하나. 꿀팁은 [후기 분석]의 꿀팁·식사·서비스·볼거리·와우에서 언급 많은 것을 쓴다. "
+        "첫 줄은 손해 회피로 연다(예: '여기 가는 분들, 체크인 1시간 기다리지 마세요' / '여기 가면 이 순서대로만 하세요'). "
+        "마지막 줄은 댓글 유도(키워드는 이 영상의 말, 예 '순서').",
+        False),
+    "주의형": (
+        "첫 줄은 반드시 '제발 {숙소 이름} 가면 {하면 손해인 행동} 하지 마세요' 꼴(숙소 이름을 그대로 쓴다). "
+        "그 뒤는 [후기 분석]의 '주의할 점' 중 해결책이 후기에 있는 것 2~3개를 골라 '그렇게 하면 이렇게 손해 → 대신 이렇게 하세요' 로 푼다. "
+        "해결책·대안도 반드시 후기에 있는 것만(예: 주차 부족 → 공항 무료 셔틀 / 체크인 대기 → 2시 전 번호표 / 주변 식당 없음 → "
+        "룸서비스 짬뽕·미리 포장). 단점을 겁주는 데서 끝내지 말고 '그래도 이렇게 하면 최고'로 닫는다(와우 하나로 마무리). "
+        "마지막 줄은 댓글 유도(키워드는 이 영상의 말).",
+        True),
+}
+_FORMAT_PROMPT = (
+    "여행 숙소 인스타 숏폼 대본을 쓴다 — 꼴: %s.\n[꼴 규칙]\n%s\n\n"
+    "[공통] 1인칭 존댓말 수다체(예: ~거든요·~더라고요·~거 있죠·~세요). 실제 투숙객 후기 4천여 개에서 나온 것만 말한다 — 지어내지 마라. "
+    "숙소 가격 숫자·지역명은 쓰지 않는다%s. 시간·층·인원 같은 숫자는 후기에 있으면 써도 된다. "
+    "전체 %d~%d자(미나 목소리 1.35배 ≈ %d~%d초). 7조각(lines)으로 나누고, 조각마다 맞는 사진 번호(order, 1~7 한 번씩)와 "
+    "그 조각의 근거 후기 수(badge, 없으면 0)를 단다. 사진 photo_1~7 을 열어 보고 조각과 맞는 장면을 붙여라.\n\n"
+    "[숙소 이름] %s\n\n[후기 분석 — 범주 · 언급 수 · 항목 · 인용]\n%s\n\n[숙소 사실]\n%s\n\n"
+    "JSON: {\"lines\": [\"조각1\", ...], \"order\": [사진번호 7개], \"badge\": [후기수 7개]}")
+
+
+def write_script_format(picks, detail, fmt, model="opus", chars=(170, 260)):
+    """후기 기반 꼴(TRAVEL_FORMATS) 한 편 → {type, lines, order, badge} + 금지 검사 지적."""
+    rule, name_in_hook = TRAVEL_FORMATS[fmt]
+    ins = (detail or {}).get("review_insights") or {}
+    lo, hi = chars
+    prompt = _FORMAT_PROMPT % (fmt, rule, "" if name_in_hook else "·숙소 이름", lo, hi, round(lo / CHARS_PER_SEC),
+                               round(hi / CHARS_PER_SEC), (detail or {}).get("name", ""), insights_text(ins, per_cat=10),
+                               story_facts_text(dict(detail or {}, review_insights=None)))
+    got = claude_call([q["path"] for q in picks], prompt, model=model)
+    lines = got.get("lines")
+    if not (isinstance(lines, list) and len(lines) == len(picks)):
+        raise RuntimeError("%s: 7조각이 아닌 답 — %s" % (fmt, str(got)[:200]))
+    o = got.get("order")
+    o = o if isinstance(o, list) and sorted(int(x) for x in o) == list(range(1, len(picks) + 1)) else list(range(1, len(picks) + 1))
+    b = got.get("badge") if isinstance(got.get("badge"), list) and len(got.get("badge")) == len(picks) else [0] * len(picks)
+    v = {"type": fmt, "lines": lines, "order": o, "badge": [int(x or 0) for x in b]}
+    check = list(lines)
+    if name_in_hook:      # 이름은 첫 줄에서만 허용 — 첫 줄에서 이름을 지우고 잰다(이름 속 '인천'이 지역명으로 잡힌 실측 2026-10-20)
+        check[0] = lines[0].replace((detail or {}).get("name", ""), "")
+        if not re.match(r"^\s*제발", lines[0]) or not re.search(r"지\s*마(세요|요)", lines[0]):
+            # '하지 마세요'·'가지 마세요'·'맞추지 마세요' 모두 같은 꼴(실측: '가지 마세요'를 거짓으로 잡았다)
+            iss_hook = ["첫 줄 꼴: '제발 ○○ 가면 ○○지 마세요'가 아님"]
+        else:
+            iss_hook = []
+    iss = [x for x in script_issues(check, detail, len(picks)) if not x.startswith(("길이", "가 본 척", "말투"))]
+    if name_in_hook:
+        iss += iss_hook
+    n = len(" ".join(lines))
+    if not (lo - 10 <= n <= hi + 15):
+        iss.append("길이 %d자 ≈ %.1f초(권장 %d~%d자)" % (n, n / CHARS_PER_SEC, lo, hi))
+    return v, iss

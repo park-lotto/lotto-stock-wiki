@@ -91,3 +91,18 @@ def test_points_issues_flags_missing_wow_and_sell():
     assert tb.points_issues(["수영장 물이 따뜻해서", "공항 셔틀 타고 왔는데"], pts) == []
     miss = tb.points_issues(["수영장 물이 따뜻해서"], pts)
     assert len(miss) == 1 and "소구점" in miss[0] and "셔틀" in miss[0]
+
+
+def test_caution_hook_allows_name_only_in_first_line(monkeypatch):
+    det = {"name": "네스트호텔 인천", "address": "인천 영종구 운서동"}
+    lines = ["제발 네스트호텔 인천 가면 3시 딱 맞춰 체크인하러 가지 마세요", "체크인 대기가 1시간까지 걸리거든요",
+             "2시 전에 와서 번호표부터 뽑으세요", "주변에 식당이 거의 없어서", "룸서비스 해물짬뽕 시키세요",
+             "저녁 수영장은 한적하더라고요", "댓글에 '번호표' 남겨주세요"]
+    monkeypatch.setattr(tb, "claude_call", lambda *a, **k: {"lines": lines, "order": list(range(1, 8)), "badge": [0] * 7})
+    picks = [{"path": "x"}] * 7
+    v, iss = tb.write_script_format(picks, det, "주의형", chars=(150, 260))
+    assert not [x for x in iss if "지역명" in x or "숙소 이름" in x or "첫 줄 꼴" in x], iss
+    lines2 = lines[:3] + ["네스트 근처엔 식당이 없어서"] + lines[4:]
+    monkeypatch.setattr(tb, "claude_call", lambda *a, **k: {"lines": lines2, "order": list(range(1, 8)), "badge": [0] * 7})
+    v, iss = tb.write_script_format(picks, det, "주의형", chars=(150, 260))
+    assert [x for x in iss if "숙소 이름" in x], iss
