@@ -14,9 +14,11 @@
   D mix_jobs/<job>/{pvproxy,capcut,seg_thumbs}   완료(done) 7일 지난 작업의 재생성 가능 조각
                          pvproxy=편집 화면 합본(열면 _pvproxy_prewarm 이 다시 굽는다) · capcut=내보내기 폴더
                          (버튼 누르면 다시 만든다) · seg_thumbs=구간 썸네일(요청 시 다시 뽑는다)
-★지우지 않는 것: final*.mp4 · preview.mp4 · s0~s5(원본 — 인스타 재다운로드는 자주 실패) · join*(VMake 유료
-  청소 합본, 재사용해 과금 0) · clean_preview.mp4(청소본 정본) · tts · json 전부 · wiki_media(도서관 영구보관)
-  · ready_for_review(미완) 작업 — 고객 데이터라 사장님 기준이 나오면 그때.
+  E mix_jobs/<job>/{완성 영상·원본·합본}  완료(done) 7일 지난 작업 — final*.mp4·preview·clean_preview·clean_src_*·
+                         edited·capcut_*·beatframes·s0~·join*(관제 243, 사장님 10-20 기준: "완료 7일 = 영상·조각·원본·합본 다")
+  F mix_jobs/<job>/{같은 큰 파일}       검토 대기(ready_for_review) 30일 지난 작업 — 폴더는 남긴다(목록이 안 깨지게 json·썸네일 유지)
+★지우지 않는 것: json 전부 · thumb/cover 그림 · tts · 7일 안 완료 작업 · 30일 안 검토 대기 · 진행 중 작업
+  · wiki_media(도서관 영구보관). ★나이는 DB updated_at(없으면 폴더 시각) — D 와 같은 잣대.
 
 쓰는 법(서버):
   cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env && set +a
@@ -46,6 +48,11 @@ FAILED_DAYS = 1
 ORPHAN_DAYS = 1
 DONE_INTERMEDIATE_DAYS = 7
 DONE_INTERMEDIATE_NAMES = ("pvproxy", "capcut", "seg_thumbs")
+# E·F 가 지우는 큰 파일·폴더(이름으로 화이트리스트 — 모르는 이름은 남긴다). D 이름은 D 가 먼저 가져간다
+BIG_RE = __import__("re").compile(r"^(final.*\.mp4|preview\.mp4|clean_preview\.mp4|clean_src_.*\.mp4|edited\.mp4"
+                                  r"|capcut_.*|beatframes|s\d+|join.*)$")
+DONE_BIG_DAYS = 7
+REVIEW_BIG_DAYS = 30
 KIND = "disk_free"           # ops_alert 종류 키
 _JOB_ID_RE = __import__("re").compile(r"^[0-9a-f]{12}$")
 
@@ -144,6 +151,19 @@ def plan(data_dir: Path, jobs: dict, relay: dict, now: float | None = None) -> l
                     sub = d / name
                     if sub.exists():
                         out.append(Candidate(sub, _size(sub), "D", "done %d일+ 재생성 가능 조각" % DONE_INTERMEDIATE_DAYS))
+            if status == "done" and age > DONE_BIG_DAYS:
+                out += _big(d, "E", "done %d일+ 영상·원본·합본" % DONE_BIG_DAYS)
+            elif status == "ready_for_review" and age > REVIEW_BIG_DAYS:
+                out += _big(d, "F", "검토대기 %d일+ 큰 파일" % REVIEW_BIG_DAYS)
+    return out
+
+
+def _big(d: Path, rule: str, why: str) -> list[Candidate]:
+    out = []
+    for p in d.iterdir():
+        if p.is_symlink() or p.name in DONE_INTERMEDIATE_NAMES or not BIG_RE.match(p.name):
+            continue
+        out.append(Candidate(p, _size(p), rule, why))
     return out
 
 
