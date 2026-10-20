@@ -1,0 +1,93 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "쿠팡"
+ ],
+ "methods": [
+  {
+   "name": "AI 스마트 광고",
+   "goal": "꾸준히 팔림",
+   "data_source": "쿠팡 AI",
+   "steps": [
+    "일 예산 설정",
+    "목표 광고 수익률 설정",
+    "쿠팡 AI가 잘 팔리는 상품을 자동으로 선택하여 광고 운영"
+   ],
+   "filters_and_thresholds": [
+    "일 예산 (예: 최소 3만원 이상)",
+    "목표 광고 수익률 (ROAS)"
+   ],
+   "signal": "쿠팡 AI가 '잘 팔리는 상품'과 '잘 팔리는 상품의 옵션'을 찾아줌",
+   "examples": [],
+   "timestamp": "00:35",
+   "guess": false
+  },
+  {
+   "name": "매출 최적화 광고",
+   "goal": "뜨는 키워드",
+   "data_source": "쿠팡 광고 플랫폼 (AI 스마트 광고 후)",
+   "steps": [
+    "AI 스마트 광고를 통해 잘 팔리는 제품을 추려낸 후, 해당 제품으로 매출 최적화 광고 진행",
+    "어떤 키워드에서 구매 전환이 잘 되는지 검증"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "내 상품이 어떤 키워드에서 잘 팔리는지 알 수 있음 (황금 키워드 발견)",
+   "examples": [],
+   "timestamp": "01:07",
+   "guess": false
+  },
+  {
+   "name": "전략적 제외 키워드 관리 (가지치기)",
+   "goal": "경쟁 틈새",
+   "data_source": "쿠팡 광고 플랫폼 (광고 운영 데이터)",
+   "steps": [
+    "광고 운영 과정에서 전환 기여도가 낮은 키워드들을 제외",
+    "예산이 많지 않은 경우, CPC 비용이 너무 높은 키워드를 제외"
+   ],
+   "filters_and_thresholds": [
+    "전환 기여도가 낮은 키워드 (클릭만 발생하고 구매로 연결되지 않는 키워드)",
+    "CPC 비용이 너무 높은 키워드"
+   ],
+   "signal": "메인 키워드보다 세부 키워드를 공략하여 전환율을 높이는 전략. 다른 키워드의 노출이나 클릭 기회를 높여 예산 활용 효율을 높임.",
+   "examples": [
+    {
+     "item": "무선 청소기",
+     "why": "대형 키워드로 검색량이 많고 CPC 단가가 높아 예산이 적은 초보 셀러에게는 비효율적",
+     "result": null
+    },
+    {
+     "item": "미니 무선 청소기",
+     "why": "소형 키워드로 CPC 단가가 상대적으로 낮아 효율적",
+     "result": null
+    },
+    {
+     "item": "차량용 무선 청소기",
+     "why": "소형 키워드로 CPC 단가가 상대적으로 낮아 효율적",
+     "result": null
+    }
+   ],
+   "timestamp": "05:32",
+   "guess": false
+  }
+ ],
+ "viral_or_season_keywords": [],
+ "pitfalls": [
+  "목표 광고 수익률을 너무 높게 잡으면 입찰가가 낮아져 광고 노출 자체가 잘 안 됨 (예: 350%에서 600%로 급격히 올릴 경우)",
+  "일 예산을 너무 적게 설정하면 데이터가 충분히 쌓이지 않아 쿠팡 AI의 학습이 제대로 안 되고 광고 효율이 애매해짐 (예: 1만원)",
+  "리뷰가 없는 상태에서 광고를 시작하면 구매 전환율이 낮을 수 있음"
+ ],
+ "unique_insight": "쿠팡 광고는 단순히 세팅으로 끝나는 것이 아니라, AI의 학습을 기반으로 지속적인 최적화 작업(ROAS 단계적 조정, 제외 키워드 관리)이 매출을 결정한다. 특히, 초반에 광고를 통해 노출을 확보하고 판매 데이터와 리뷰를 빠르게 만드는 전략이 장기적인 매출 성장에 유리하다.",
+ "evidence_level": "사례만",
+ "_video": {
+  "id": "BSDxelji0yk",
+  "title": "This is all there is to setting up Coupang ads for skyrocketing sales! Try running it 3 times.",
+  "channel": "쿠팡으로 3개월 10억, 돈벌자옹",
+  "views": 45019,
+  "duration": 522,
+  "queries": [
+   "쿠팡 키워드 찾기",
+   "쿠팡 판매량 확인 방법"
+  ]
+ },
+ "_model": "gemini-2.5-flash"
+}

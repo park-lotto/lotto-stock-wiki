@@ -1,0 +1,301 @@
+{
+ "is_lecture": true,
+ "platforms": [
+  "네이버",
+  "쿠팡",
+  "1688",
+  "알리익스프레스",
+  "테무"
+ ],
+ "methods": [
+  {
+   "name": "Test & Scale (소량 테스트 후 확장)",
+   "goal": "꾸준히 팔림",
+   "data_source": "General market observation",
+   "steps": [
+    "자기만의 소싱 기준을 가진 다음 여러 종류의 제품을 소량씩 수입해서 팔아보고",
+    "잘 팔리면 그 상품을 공부하고 키운다",
+    "계속 소싱해서 테스트해 보면서 반응이 나오는 상품을 키운다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "예측보다는 실제 시장 반응을 통해 성공 가능성을 높인다.",
+   "examples": [],
+   "timestamp": "00:57",
+   "guess": false
+  },
+  {
+   "name": "Analyze Successful Products (성공 상품 분석)",
+   "goal": "경쟁 틈새, 꾸준히 팔림",
+   "data_source": "자신의 성공 상품 또는 경쟁사 상품",
+   "steps": [
+    "잘 팔린 상품의 성공 이유를 분석한다 (예: 로켓/크로스 판매자 적음, 낮은 진입 가격, 트렌드 초기 진입 등)",
+    "유사한 특징을 가진 상품을 집중적으로 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "과거 성공 요인을 활용하여 미래 소싱 시간을 단축하고 확률을 높인다.",
+   "examples": [],
+   "timestamp": "02:22",
+   "guess": false
+  },
+  {
+   "name": "High-Wing Products (쿠팡 윙 많은 상품 공략)",
+   "goal": "경쟁 틈새",
+   "data_source": "쿠팡 (1페이지)",
+   "steps": [
+    "쿠팡 1페이지에 윙(판매자)이 많은 상품을 공략한다"
+   ],
+   "filters_and_thresholds": [
+    "1페이지"
+   ],
+   "signal": "수요가 많지만 경쟁이 치열한 상품에서 차별화 포인트를 찾아 진입한다.",
+   "examples": [],
+   "timestamp": "03:15",
+   "guess": false
+  },
+  {
+   "name": "Domac Best (도매꾹 베스트)",
+   "goal": "꾸준히 팔림",
+   "data_source": "도매꾹 베스트셀러 목록",
+   "steps": [
+    "도매꾹 베스트 상품을 쿠팡 로켓그로스로 가져와 판매한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "이미 검증된 인기 상품을 활용하여 판매한다.",
+   "examples": [],
+   "timestamp": "03:21",
+   "guess": false
+  },
+  {
+   "name": "Coupang Popular Products (쿠팡 인기 상품)",
+   "goal": "꾸준히 팔림",
+   "data_source": "쿠팡 인기 상품 검색",
+   "steps": [
+    "쿠팡에서 인기 상품을 검색하여 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "플랫폼 내에서 이미 높은 수요가 있는 상품을 발굴한다.",
+   "examples": [],
+   "timestamp": "03:32",
+   "guess": false
+  },
+  {
+   "name": "KC Certified Products (KC 인증)",
+   "goal": "경쟁 틈새",
+   "data_source": "일반 상품 검색 및 KC 인증 여부 확인",
+   "steps": [
+    "KC 인증이 필요해 보이지만 실제로는 인증이 없거나, 인증 비용이 높지 않은 제품을 찾아 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "인증 장벽을 활용하여 경쟁 우위를 확보한다.",
+   "examples": [],
+   "timestamp": "03:37",
+   "guess": false
+  },
+  {
+   "name": "Strategic Sourcing (전략 소싱)",
+   "goal": "기타",
+   "data_source": "Not specified",
+   "steps": [],
+   "filters_and_thresholds": [],
+   "signal": "Not detailed",
+   "examples": [],
+   "timestamp": "03:48",
+   "guess": false
+  },
+  {
+   "name": "Business Insight (비즈니스 인사이트)",
+   "goal": "기타",
+   "data_source": "비즈니스 인사이트 도구 (예: 쿠팡 비즈니스 인사이트, 네이버 데이터랩)",
+   "steps": [
+    "비즈니스 인사이트를 활용하여 상품을 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "데이터 기반으로 시장 트렌드와 수요를 파악한다.",
+   "examples": [],
+   "timestamp": "03:51",
+   "guess": false
+  },
+  {
+   "name": "SNS Sourcing (SNS 소싱)",
+   "goal": "바이럴·급상승",
+   "data_source": "SNS (인스타그램, 유튜브, 틱톡)",
+   "steps": [
+    "SNS를 보고 있다가 핫템이 괜찮은 것이 있으면 빠르게 따라가 보자"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "바이럴 트렌드를 빠르게 포착하여 시장에 진입한다.",
+   "examples": [],
+   "timestamp": "04:17",
+   "guess": false
+  },
+  {
+   "name": "Ali/Temu Sourcing (알리/테무 소싱)",
+   "goal": "바이럴·급상승",
+   "data_source": "알리익스프레스, 테무",
+   "steps": [
+    "알리익스프레스나 테무에서 신기한 신제품이 나오면 빨리 보고 소싱하자"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "신제품을 빠르게 발굴하여 시장 선점 효과를 노린다.",
+   "examples": [],
+   "timestamp": "04:25",
+   "guess": false
+  },
+  {
+   "name": "Seasonal Sourcing (시즌 소싱)",
+   "goal": "시즌",
+   "data_source": "Not specified",
+   "steps": [
+    "시즌성 상품을 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "계절적 수요를 활용한다.",
+   "examples": [],
+   "timestamp": "04:43",
+   "guess": false
+  },
+  {
+   "name": "Niche Category Focus (주력 카테고리 집중)",
+   "goal": "꾸준히 팔림, 경쟁 틈새",
+   "data_source": "자신의 판매 데이터, 시장 트렌드",
+   "steps": [
+    "자신에게 잘 팔리는 '주력 카테고리'를 설정하고",
+    "해당 카테고리의 트렌드와 신제품에 민감하게 반응한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "특정 분야에 대한 깊은 이해와 전문성을 바탕으로 제품 발굴 및 개발 기회를 찾는다.",
+   "examples": [
+    {
+     "item": "간호사 신발",
+     "why": "주력 카테고리 예시 (옛날에 크록스가 짱이었는데 요즘에 어떤 게 편한지 등)",
+     "result": null
+    }
+   ],
+   "timestamp": "05:40",
+   "guess": false
+  },
+  {
+   "name": "Community Sourcing (커뮤니티 소싱)",
+   "goal": "경쟁 틈새, 바이럴·급상승",
+   "data_source": "네이버 카페, 캠핑 포럼 등 온라인 커뮤니티",
+   "steps": [
+    "주력 카테고리 관련 커뮤니티에 가입하여 사람들이 무엇을 좋아하고 싫어하는지, 어떤 제품이 '대륙의 실수'로 불리는지 파악한다",
+    "아직 정식 수입/인증되지 않은 인기 제품을 빠르게 소싱한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "소비자의 직접적인 의견과 숨겨진 니즈, 초기 바이럴 트렌드를 파악한다.",
+   "examples": [
+    {
+     "item": "캠핑용품",
+     "why": "커뮤니티에서 '대륙의 실수'로 불리는 제품 발굴",
+     "result": null
+    }
+   ],
+   "timestamp": "06:05",
+   "guess": false
+  },
+  {
+   "name": "Product Differentiation (상품 차별화)",
+   "goal": "꾸준히 팔림, 경쟁 틈새",
+   "data_source": "고객 피드백 (커뮤니티, 리뷰), 경쟁사 제품",
+   "steps": [
+    "잘 팔리는 제품을 찾는다",
+    "고객 피드백(커뮤니티, 리뷰)에서 불만 포인트를 파악한다",
+    "불만 포인트를 개선하거나 추가 기능을 더해 제품을 업그레이드한다",
+    "자신만의 브랜드로 제품을 차별화한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "고객의 문제를 해결하여 독점적인 가치를 제공하고 가격 경쟁에서 우위를 점한다.",
+   "examples": [
+    {
+     "item": "우드 롤 테이블",
+     "why": "기존 검정 가방을 흰색 캔버스 가방+가죽끈으로 변경하여 감성 강조. 젓가락 빠짐, 국물 샘, 뜨거운 자국 등 불만 해소를 위해 가죽 테이블 보를 제작하여 세트로 판매.",
+     "result": "경쟁사 가격 인하에도 불구하고 가격 유지 및 높은 판매량 (4천~5천개)"
+    },
+    {
+     "item": "우드 무늬 폴대",
+     "why": "알루미늄 폴대에 나무 시트지를 붙이는 유행을 보고, 공장에 직접 나무 무늬 폴대 제작 요청 및 로고 각인 (감성 캠핑 트렌드에 맞춰)",
+     "result": "우드 폴대로 판매 성공"
+    }
+   ],
+   "timestamp": "10:40",
+   "guess": false
+  },
+  {
+   "name": "Targeted SNS Following (타겟 SNS 팔로우)",
+   "goal": "바이럴·급상승, 경쟁 틈새",
+   "data_source": "인스타그램, 유튜브, 틱톡",
+   "steps": [
+    "관심 있는 제품 카테고리의 리뷰어/인플루언서를 팔로우한다",
+    "다른 콘텐츠는 클릭하지 않아 해당 분야의 신규 콘텐츠만 계속 시청한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "특정 분야의 트렌드와 소비자 선호도를 빠르게 파악하여 트렌디한 제품을 발굴한다.",
+   "examples": [],
+   "timestamp": "12:46",
+   "guess": false
+  },
+  {
+   "name": "Review Analysis for Bundling (리뷰 분석을 통한 번들링)",
+   "goal": "경쟁 틈새, 꾸준히 팔림",
+   "data_source": "잘 팔리는 제품의 고객 리뷰 (쿠팡 등)",
+   "steps": [
+    "잘 팔리는 제품의 리뷰에서 고객 불만 포인트를 찾는다",
+    "이를 보완할 수 있는 저렴한 보완재(원가 낮은)를 1688에서 찾아 함께 구성하여 판매한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "고객의 불만을 해결하는 부가 상품을 제공하여 제품의 가치를 높이고 경쟁력을 확보한다.",
+   "examples": [
+    {
+     "item": "일본 동전 지갑",
+     "why": "일본 여행 시 필수품인 돼지코(여행용 어댑터)를 함께 구성하여 판매. 최근에는 가방에 걸 수 있는 투명 케이스도 추가.",
+     "result": null
+    }
+   ],
+   "timestamp": "14:13",
+   "guess": false
+  },
+  {
+   "name": "Manufacturer Collaboration for Improvement (제조사 협업 개선)",
+   "goal": "꾸준히 팔림, 경쟁 틈새",
+   "data_source": "제조사 (1688 등)",
+   "steps": [
+    "대량 생산이 가능해지면 제조사와 협의하여 제품을 개선한다",
+    "이때 원가를 크게 높이지 않는 선에서 차별점을 부여한다"
+   ],
+   "filters_and_thresholds": [],
+   "signal": "규모의 경제를 활용하여 제품을 직접 개선하고 독점적인 경쟁력을 확보한다.",
+   "examples": [],
+   "timestamp": "14:42",
+   "guess": false
+  }
+ ],
+ "viral_or_season_keywords": [],
+ "pitfalls": [
+  "하나의 상품이 대박 나야 한다는 부담감 (모든 소싱 상품이 성공할 것이라는 기대를 버려야 한다)",
+  "단순히 중국 도매 사이트에서 물건을 떼다 파는 것 (누구나 할 수 있어 오래가지 못한다)",
+  "시장 검증 없이 스스로 제품을 기획하고 디자인하는 것 (시장의 니즈와 트렌드 변화를 놓쳐 실패할 수 있다)",
+  "과도한 기능 추가로 인한 제품의 단점 발생 (너무 많은 기능을 추가하려다 제품의 본질적 단점(예: 너무 무거움)을 간과할 수 있다)",
+  "개인적인 판단에만 의존 (시장의 불만이나 트렌드 변화를 무시하고 '이 정도면 괜찮겠지'라고 생각하는 것)",
+  "트렌드 변화에 대한 무지 (시장 트렌드가 바뀌면 아무리 잘 만든 제품도 팔리지 않을 수 있다)",
+  "큰 규모의 미검증 아이디어에 투자 (검증되지 않은 아이디어에 큰 자본을 투자하면 큰 손실을 볼 수 있다)",
+  "상위 0.1%의 성공에만 집착 (비현실적인 목표 설정은 좌절감을 유발한다)",
+  "회사 월급만 저축하는 방식 (투자나 부업 없이 월급만으로는 자산 증식에 한계가 있다)",
+  "소싱 방법만 알아보고 실행하지 않는 것 (막막함 때문에 실행을 미루면 시간만 낭비된다)"
+ ],
+ "unique_insight": "온라인 판매 성공은 하나의 완벽한 상품을 발굴하는 것이 아니라, 다양한 소싱 방법을 통해 시장의 반응을 테스트하고, 잘 팔리는 상품의 고객 불만 포인트를 개선하거나 보완재를 추가하여 자신만의 차별화된 제품으로 발전시키는 꾸준한 노력에 달려있다.",
+ "evidence_level": "실제 매출·화면 증거 있음",
+ "_video": {
+  "id": "6OH5UFz7Prc",
+  "title": "\"Sourcing is hard?\" How anyone can find best-selling products: Sourcing tips | Online Sales",
+  "channel": "돈버는하마",
+  "views": 31778,
+  "duration": 1620,
+  "queries": [
+   "스마트스토어 잘팔리는 상품 찾기",
+   "쿠팡 잘팔리는 상품 찾는법",
+   "쿠팡 소싱 아이템 찾기"
+  ]
+ },
+ "_model": "gemini-2.5-flash"
+}

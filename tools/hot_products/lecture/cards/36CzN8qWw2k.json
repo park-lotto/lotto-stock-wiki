@@ -1,0 +1,21 @@
+{
+ "is_lecture": false,
+ "platforms": [],
+ "methods": [],
+ "viral_or_season_keywords": [],
+ "pitfalls": [],
+ "unique_insight": "This video provides guidance on optimizing YouTube channel settings (keywords, categories, default descriptions, comment moderation, and subscribe button watermarks) to improve channel visibility and engagement, rather than methods for finding e-commerce products.",
+ "evidence_level": "주장만",
+ "_video": {
+  "id": "36CzN8qWw2k",
+  "title": "99% of people fail because they don't do this! 6 things you absolutely must set up before startin...",
+  "channel": "마케팅뷰 서별님",
+  "views": 169831,
+  "duration": 647,
+  "queries": [
+   "떡상 키워드 찾기",
+   "쇼핑쇼츠 키워드"
+  ]
+ },
+ "_model": "gemini-2.5-flash"
+}
