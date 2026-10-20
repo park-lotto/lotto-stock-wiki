@@ -21,6 +21,16 @@ function aiNeed(runId) {
 
 const cand = c => ({ n: c.n, title: c.title, total: c.total, line: c.line, scores: c.scores, made: c.made || 0 });
 
+// 고객이 사인하기 전에 볼 대본(제목·줄) — 엔진이 쓴 소재 폴더 대본.json 의 final(관제 234, 10-20: 파일 이름만 줘서 고객이 대본을 못 봤다)
+function scriptOf(S) {
+  if (S.topic_id == null) return undefined;
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(dataDir(), 'calcopy', 'topics', String(S.topic_id), '대본.json'), 'utf8'));
+    const f = d.final || {};
+    return { title: String(f.title || d.title || ''), lines: (f.lines || []).map(l => String(l.text || '')) };
+  } catch { return undefined; }
+}
+
 // 엔진 세션 → 응답
 // 엔진 오류 글 → 고객용(경로·내부 파일 이름·벤치 경로를 지우고 짧게) — 숏템 내부를 설명하지 않는다(관제 234)
 export function cleanWhy(msg) {
@@ -41,10 +51,10 @@ export function shapeSession(S) {
   }
   const t = S.topic || {};
   if (S.state === 'failed' || S.state === 'stopped') return { ...base, fail: { why: cleanWhy(S.error || '만들기가 멈췄습니다'), fix: '같은 단계를 다시 부르거나 다른 후보를 고르세요' } };
-  if ((t.state || '') === 'plan_review') {
+  if ((t.state || '') === 'plan_review' || S.state === 'plan_review') {
     const files = (S.files || []).map(f => f.name);
-    return { ...base, need: 'approve', plan_files: files,
-      next: `고객에게 대본·계획을 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${S.sid}")`,
+    return { ...base, need: 'approve', plan_files: files, script: scriptOf(S),
+      next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${S.sid}")`,
       hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
   }
   if ((t.state || '') === 'final_review' || S.state === 'final_review') {
