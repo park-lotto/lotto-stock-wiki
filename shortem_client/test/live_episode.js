@@ -43,10 +43,11 @@ const prompt = `숏템으로 숏폼 한 편 만들어줘. 나는 고객이고 �
 
 const t0 = Date.now();
 const log = path.join(dir, 'claude.jsonl');
-const claude = process.env.CLAUDE_BIN || 'claude';
+// ★셸을 거치면(shell:true) 여러 줄 프롬프트·옵션이 잘려 숏템 설정이 안 붙는다(10-20 첫 시도: 다른 MCP 를 부름) → 실행 파일을 직접
+const claude = process.env.CLAUDE_BIN || (process.platform === 'win32' ? path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe') : 'claude');
 const p = spawn(claude, ['-p', prompt, '--mcp-config', cfg, '--strict-mcp-config', '--model', 'opus', '--output-format', 'stream-json', '--verbose',
   '--allowedTools', 'mcp__shortem__shortem_setup,mcp__shortem__shortem_presets,mcp__shortem__shortem_make,mcp__shortem__shortem_ai,mcp__shortem__shortem_job,mcp__shortem__shortem_settings',
-  '--max-turns', '400'], { cwd: CWD, stdio: ['ignore', fs.openSync(log, 'w'), 'pipe'], shell: process.platform === 'win32' });
+  '--max-turns', '400'], { cwd: CWD, stdio: ['ignore', fs.openSync(log, 'w'), 'pipe'], windowsHide: true });
 let err = ''; p.stderr.on('data', d => { err += d; });
 const code = await new Promise(r => p.on('close', r));
 
@@ -55,7 +56,7 @@ const lines = fs.readFileSync(log, 'utf8').split('\n').filter(Boolean).map(l => 
 const uses = lines.flatMap(m => (m.message && m.message.content || []).filter(c => c.type === 'tool_use').map(c => c.name.replace('mcp__shortem__', '') + (c.input && c.input.step ? ':' + c.input.step : '')));
 out.tool_calls = uses.length;
 out.tools = [...new Set(uses)];
-out.other_tools = uses.filter(u => !u.startsWith('shortem_'));
+out.other_tools = uses.filter(u => !u.startsWith('shortem_') && u !== 'ToolSearch');   // ToolSearch = 도구 불러오기(하네스)
 const res = lines.find(m => m.type === 'result');
 out.final_text = res ? String(res.result || '').slice(0, 400) : null;
 const vdir = path.join(WORK, '완성본');
@@ -69,6 +70,7 @@ if (vids[0]) {
   try { out.sent = JSON.parse(fs.readFileSync(f + '.sent.json', 'utf8')); } catch { out.sent = null; }
 }
 if (code !== 0) out.stderr = err.slice(-500);
+out.mcp = (lines.find(m => m.type === 'system' && m.subtype === 'init') || {}).mcp_servers || null;   // 숏템이 붙었나
 out.ok = code === 0 && !!out.final && out.final.w === 1080 && out.final.h === 1920 && out.final.audio && out.other_tools.length === 0;
 console.log(JSON.stringify(out));
 process.exit(out.ok ? 0 : 1);

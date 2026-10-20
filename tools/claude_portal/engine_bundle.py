@@ -106,6 +106,31 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
     return seen
 
 
+def lazy_imports(engine: Path, entries=ENTRY) -> list[str]:
+    """입구 모듈 **함수 안** import(우리 패키지)의 대상 모듈 경로 — 추적(시험 실행)에 안 걸린 갈래도 빠지지 않게.
+    10-20 실사고: calcopy_make.merge_preset_pack 에 함수 안 import(preset_save)를 새로 넣자 묶음에서 빠졌다(옛 추적에 없음)."""
+    import ast
+    out = []
+    for e in entries:
+        f = engine / e
+        if not f.is_file():
+            continue
+        tree = ast.parse(f.read_text(encoding="utf-8"))
+        top = set(map(id, tree.body))
+        for n in ast.walk(tree):
+            if id(n) in top or not isinstance(n, (ast.Import, ast.ImportFrom)) or (isinstance(n, ast.ImportFrom) and n.level):
+                continue
+            names = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module] + [f"{n.module}.{a.name}" for a in n.names]
+            for x in names:
+                if x and x.split(".")[0] in ("shopping_shorts", "tools", "pipeline"):
+                    p = engine / Path(*x.split("."))
+                    for c in (p.with_suffix(".py"), p / "__init__.py"):
+                        if c.is_file():
+                            out.append(c.relative_to(engine).as_posix())
+                            break
+    return sorted(set(out))
+
+
 def forbidden(rel: str) -> str | None:
     for pat in FORBIDDEN:
         if fnmatch.fnmatch(rel, pat) or rel == pat:
@@ -157,7 +182,9 @@ def traced(traces: Path, engine: Path | None = None) -> tuple[set[str], set[str]
 
 def build(engine: Path, traces: Path, out: Path) -> dict:
     mods, data = traced(traces, engine)
-    want = sorted(mods | data | top_imports(engine) | set(RENDERER_EXTRA) | set(showcase_deps(engine)) | set(data_extra(engine)))
+    lazy = lazy_imports(engine)
+    want = sorted(mods | data | top_imports(engine) | top_imports(engine, tuple(lazy)) | set(RENDERER_EXTRA)
+                  | set(showcase_deps(engine)) | set(data_extra(engine)))
     kept, dropped, missing = [], [], []
     if out.exists():
         shutil.rmtree(out)
