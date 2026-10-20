@@ -473,3 +473,163 @@ def fetch_subscribers(channel_ids, tokens=None):
                     out[it["id"]] = n
             break
     return out
+
+
+# ── 영상 성과 분석(관제 242, 2026-10-20 사장님) ─────────────────────────────
+# 기준은 조사로 정했다(제미나이 검색 2026-10-20 — 1of10·OutlierKit·vidIQ 도움말, creator-hero):
+#   · 터진 정도 = 이 영상 조회수 ÷ 같은 채널 최근 쇼츠 조회수 **중앙값**(1of10 방식, 평균은 대박 1편에 끌려간다).
+#   · 배수 구간(OutlierKit): 2배 미만 보통 / 2~3배 평소보다 잘됨 / 3~5배 의미 있게 터짐 / 5배 이상 대박.
+#   · 좋아요율·댓글율은 **같은 채널 중앙값과만** 비교한다. 조사에서 나온 일반 평균(좋아요율 약 4%,
+#     creator-hero)은 롱폼 포함 수치라 쇼츠에 대면 늘 낮게 보였다(실측 해외쇼쇼 채널 중앙값 1.0%).
+#   · 총 조회 배수는 갓 올린 영상에 불리하다(실측: 11일 된 영상 총 0.7배 / 하루 평균 2.3배) →
+#     하루 평균 배수를 같이 주고, 14일 미만이면 young=True(화면에 '아직 쌓이는 중').
+#   스와이프 이탈률·시청 지속률은 채널 주인만 보는 값이라 넣지 않는다(공개 API에 없음).
+OUTLIER_TIERS = [(5, "대박", "채널 평소의 5배 이상 — 터진 영상"),
+                 (3, "터짐", "채널 평소의 3~5배 — 의미 있게 잘됨"),
+                 (2, "잘됨", "채널 평소의 2~3배 — 평소보다 잘됨"),
+                 (1, "보통", "채널 평소 수준"),
+                 (0, "낮음", "채널 평소보다 낮음")]
+YOUNG_DAYS = 14
+_SHORTS_MAX_SECS = 180          # 유튜브 쇼츠 최대 길이(2024-10부터 3분)
+
+
+def _median(xs):
+    xs = sorted(x for x in xs if x is not None)
+    if not xs:
+        return None
+    n = len(xs)
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
+
+
+def _days_since(date_iso, today):
+    import datetime as _dt
+    try:
+        d = _dt.date.fromisoformat(date_iso[:10])
+    except (TypeError, ValueError):
+        return None
+    return max(1, (today - d).days)
+
+
+def _view_trend(video_id, published, views):
+    """조회수 추세 점들 — 공개 API엔 조회수 이력이 없다(실측: videos.list 는 지금 값만).
+    그래서 분석을 열 때마다 (시각, 조회수)를 data/yt_view_snap.db 에 적어 둔다(같은 영상 30분에 1번).
+    첫 점 = 올린 날 0회(사실값). 반환: [{"t": "YYYY-MM-DD HH:MM", "views": n}, …] 오래된 순."""
+    import sqlite3
+    import time as _t
+    from pathlib import Path
+    pts = [{"t": published + " 00:00", "views": 0}] if published else []
+    try:
+        db = Path(__file__).parent / "data" / "yt_view_snap.db"
+        db.parent.mkdir(parents=True, exist_ok=True)
+        con = sqlite3.connect(str(db), timeout=5)
+        try:
+            con.execute("CREATE TABLE IF NOT EXISTS snap(vid TEXT, ts INTEGER, views INTEGER)")
+            con.execute("CREATE INDEX IF NOT EXISTS snap_vid ON snap(vid, ts)")
+            now = int(_t.time())
+            last = con.execute("SELECT MAX(ts) FROM snap WHERE vid=?", (video_id,)).fetchone()[0]
+            if not last or now - last >= 1800:
+                con.execute("INSERT INTO snap VALUES(?,?,?)", (video_id, now, int(views)))
+                con.commit()
+            rows = con.execute("SELECT ts, views FROM snap WHERE vid=? ORDER BY ts", (video_id,)).fetchall()
+        finally:
+            con.close()
+        for ts, v in rows:
+            pts.append({"t": _t.strftime("%Y-%m-%d %H:%M", _t.localtime(ts)), "views": v})
+    except Exception as e:                  # noqa: BLE001 — 기록 실패해도 분석은 나간다(점 2개로)
+        import sys as _s
+        print(f"[yt/trend] 기록 실패: {e!r}", file=_s.stderr)
+        pts.append({"t": _dt_now_str(), "views": int(views)})
+    return pts
+
+
+def _dt_now_str():
+    import time as _t
+    return _t.strftime("%Y-%m-%d %H:%M")
+
+
+def video_analytics(video_id, today=None):
+    """영상 하나 → 성과 분석(조회·비율·채널 최근 쇼츠 대비 배수·그래프용 목록).
+
+    판단의 주인은 여기 한 곳 — 확장(grab_logic.js)은 받은 값을 그리기만 한다.
+    쿼터: channels 1 + playlistItems 1 + videos 2 = 4. 실패면 {"ok": False, "error": …}."""
+    import datetime as _dt
+    today = today or _dt.date.today()
+    if not (isinstance(video_id, str) and re.fullmatch(r"[\w-]{11}", video_id)):
+        return {"ok": False, "error": "영상 주소를 못 읽었어요"}
+    vd, _ = _first_ok(_VIDEOS_URL, {"part": "snippet,statistics,contentDetails", "id": video_id})
+    items = (vd or {}).get("items") or []
+    if not items:
+        return {"ok": False, "error": "유튜브에서 영상 정보를 못 받았어요"}
+    it = items[0]
+    sn, st = it.get("snippet") or {}, it.get("statistics") or {}
+
+    def _num(d, k):
+        return int(d[k]) if d.get(k) is not None else None
+    me = {"id": video_id, "title": sn.get("title", ""), "published": (sn.get("publishedAt") or "")[:10],
+          "views": _num(st, "viewCount") or 0, "likes": _num(st, "likeCount"),
+          "comments": _num(st, "commentCount"),
+          "dur": _parse_duration_secs((it.get("contentDetails") or {}).get("duration"))}
+
+    ch_id = sn.get("channelId", "")
+    ch, _ = _first_ok(_CHANNELS_URL, {"part": "snippet,statistics,contentDetails", "id": ch_id})
+    chi = ((ch or {}).get("items") or [{}])[0]
+    cst = chi.get("statistics") or {}
+    channel = {"id": ch_id, "title": (chi.get("snippet") or {}).get("title", sn.get("channelTitle", "")),
+               "subs": None if cst.get("hiddenSubscriberCount") else _num(cst, "subscriberCount"),
+               "videos": _num(cst, "videoCount")}
+    uploads = ((chi.get("contentDetails") or {}).get("relatedPlaylists") or {}).get("uploads")
+
+    recent = []
+    if uploads:
+        pl, _ = _first_ok(_PLAYLIST_ITEMS_URL, {"part": "contentDetails", "playlistId": uploads, "maxResults": 50})
+        vids = [((x.get("contentDetails") or {}).get("videoId")) for x in ((pl or {}).get("items") or [])]
+        vids = [v for v in vids if v and v != video_id][:50]
+        if vids:
+            rv, _ = _first_ok(_VIDEOS_URL, {"part": "snippet,statistics,contentDetails", "id": ",".join(vids)})
+            for x in ((rv or {}).get("items") or []):
+                secs = _parse_duration_secs((x.get("contentDetails") or {}).get("duration"))
+                if not secs or secs > _SHORTS_MAX_SECS:
+                    continue                        # 롱폼은 쇼츠와 조회 구조가 달라 비교에서 뺀다
+                xs = x.get("statistics") or {}
+                recent.append({"id": x["id"], "title": (x.get("snippet") or {}).get("title", ""),
+                               "published": ((x.get("snippet") or {}).get("publishedAt") or "")[:10],
+                               "views": _num(xs, "viewCount") or 0, "likes": _num(xs, "likeCount"),
+                               "comments": _num(xs, "commentCount")})
+
+    def _rate(n, v):
+        return round(n * 100.0 / v, 2) if (n is not None and v) else None
+
+    def _per_day(r):
+        d = _days_since(r["published"], today)
+        return round(r["views"] / d) if d else None
+    for r in [me] + recent:
+        r["like_rate"] = _rate(r["likes"], r["views"])
+        r["comment_rate"] = _rate(r["comments"], r["views"])
+        r["per_day"] = _per_day(r)
+    me["days"] = _days_since(me["published"], today)
+
+    med = {"views": _median([r["views"] for r in recent]),
+           "like_rate": _median([r["like_rate"] for r in recent]),
+           "comment_rate": _median([r["comment_rate"] for r in recent]),
+           "per_day": _median([r["per_day"] for r in recent])}
+    mult = round(me["views"] / med["views"], 1) if med["views"] else None
+    tier = None
+    if mult is not None:
+        for th, name, desc in OUTLIER_TIERS:
+            if mult >= th:
+                tier = {"name": name, "desc": desc}
+                break
+    mult_day = round(me["per_day"] / med["per_day"], 1) if (med["per_day"] and me["per_day"]) else None
+    rank = 1 + sum(1 for r in recent if r["views"] > me["views"]) if recent else None
+
+    # 그래프: 올린 날짜 순(오래된 → 최신), 이 영상도 제자리에 끼운다
+    series = sorted(recent + [dict(me, me=True)], key=lambda r: r["published"])
+    series = [{"id": r["id"], "title": r["title"][:60], "published": r["published"], "views": r["views"],
+               "me": bool(r.get("me"))} for r in series]
+    return {"ok": True, "video": me, "channel": channel, "median": med, "multiplier": mult, "multiplier_day": mult_day, "tier": tier,
+            "young": bool(me["days"] and me["days"] < YOUNG_DAYS),
+            "rank": rank, "compared": len(recent),
+            "top_pct": (max(1, round(rank * 100 / (len(recent) + 1))) if rank else None),   # 채널 최근 쇼츠 중 상위 몇 %
+            "views_per_sub": _rate(me["views"], channel["subs"]),
+            "series": series, "trend": _view_trend(video_id, me["published"], me["views"]),
+            "source": "배수 기준: 1of10(중앙값 비교)·OutlierKit(2·3·5배 구간)"}
