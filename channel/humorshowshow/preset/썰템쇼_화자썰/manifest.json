@@ -1026,6 +1026,17 @@
     "min_speed": 0.75,
     "flash_s": 0.4,
     "why": "10-18 박창수로 말이 느려져 컷이 원본 샷보다 길어짐 → 그 샷만 0.75배까지 늘려 채움(preset_make.fit_shot, 경계 판단 check_shot_cross.shot_cuts)"
+   },
+   "hybrid_checks": {
+    "length_s": {
+     "allow": [
+      30.0,
+      42.0
+     ],
+     "from": "하이브리드 선례 실측 — 현장썰 32.8·35.2·36.1·36.4·38.2초(10-18~19) ±여유, 앞 칼카피 ~15초 + 뒤 체험 15~20초"
+    },
+    "sfx_max": 10,
+    "hybrid_why": "사장님 10-20 '앞으로 모든 채널 완성본은 하이브리드만' — 대본.json hybrid{front_lines,product,...} 이 있으면 preset_make 가 이 값으로 checks 를 덮는다(줄 수가 늘어 효과음 ring_every 2 기준 ≤10)"
    }
   }
  },
