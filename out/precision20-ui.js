@@ -1750,7 +1750,7 @@
       const cap=specLayers(frame,i).find(l=>l.kind==='text'&&l.role==='caption');
       if(cap){const txt=specCaption(i).trim();const n=txt?Math.min(cap.lines,txt.split(String.fromCharCode(10)).length):0;y=cap.y+n*cap.line_h+v.anchor.gap;}
     }
-    return {x,y,w,h};
+    return {x,y,w,h,r:v.radius||0};
   }
   // 틀을 끄는 장면(설명서 template_off)인가 — 판단은 이 함수 하나. 그리기(renderSpec)·영상 칸(specMedia)이 모두 여기에 묻는다.
   //   scenes = 장면 번호 목록(context.scenes 순번, 자막 단위) / tail_sec = 영상 끝에서 이 초 안에 **시작하는** 장면(걸친 장면은 켠 채). 0 은 '끄는 장면 없음'.
@@ -1764,7 +1764,10 @@
   }
   function specMedia(frame,index=sceneIndex){
     if(specOffAt(frame,index))return {top:0,height:100};   // 틀 끈 장면 = 영상 전체 화면
-    const r=specRect(frame,index),H=frame.height;return r?{top:r.y/H*100,height:r.h/H*100}:{top:0,height:100};}
+    // 영상 칸은 짝수 줄로 **바깥쪽** 맞춤 — 렌더(media_geometry)가 위끝을 짝수로 반올림해 홀수 창(신박발견 y541)이면 위 한 줄이 비어 검정 1px 줄이 찍혔다(10-20 실측).
+    //   넘친 한 줄은 바탕 가림(renderSpec) 밑에 숨는다
+    const r=specRect(frame,index),H=frame.height;if(!r)return {top:0,height:100};
+    const y0=Math.floor(r.y/2)*2,y1=Math.min(H,Math.ceil((r.y+r.h)/2)*2);return {top:y0/H*100,height:(y1-y0)/H*100};}
   const specRgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
   // 줄 n 의 외곽선 — line_outline(줄마다 [px,r,g,b]|null)이 있으면 그것, 없으면 층 outline. 값의 주인은 schema.validate
   const specOutline=(l,n)=>Array.isArray(l.line_outline)?(l.line_outline[n]?{px:l.line_outline[n][0],rgb:l.line_outline[n].slice(1)}:null):l.outline;
@@ -1781,6 +1784,12 @@
         if(vy1<H)addPatch(pct(vy1,H),pct(H-vy1,H),c,0,100,'spec-bg');
         if(vx0>0)addPatch(pct(vy0,H),pct(vy1-vy0,H),c,0,pct(vx0,W),'spec-bg');
         if(vx1<W)addPatch(pct(vy0,H),pct(vy1-vy0,H),c,pct(vx1,W),pct(W-vx1,W),'spec-bg');
+        // 영상 창 둥근 모서리(설명서 video.radius) — 네 모서리를 바탕색으로 깎는다(10-20 신박발견 반경 87: 종전엔 radius 를 안 읽어 0 과 픽셀 동일)
+        const r=Math.min(v.r,v.w/2,v.h/2);
+        if(r>0)for(const [cx,cy] of [[0,0],[1,0],[0,1],[1,1]]){
+          const el=addPatch(pct(v.y+cy*(v.h-r),H),pct(r,H),c,pct(v.x+cx*(v.w-r),W),pct(r,W),'spec-bg'),R=r*scale;
+          el.style.background=`radial-gradient(circle at ${cx?0:100}% ${cy?0:100}%,transparent ${R-.5}px,${c} ${R+.5}px)`;
+        }
       }else if(l.kind==='band'){
         const el=addPatch(pct(l.y,H),pct(l.h,H),specRgb(l.rgb),pct(l.x,W),pct(l.w,W),'spec-band');el.style.borderRadius=l.radius*scale+'px';
         if(l.grad_x)el.style.background=`linear-gradient(90deg,${l.grad_x.map(s=>`${specRgb(s[1])} ${(s[0]*100).toFixed(2)}%`).join(',')})`;
@@ -1805,7 +1814,9 @@
   function specTexts(l,frame,scale){
     const W=frame.width,H=frame.height,pct=(n,d)=>n/d*100,fixed=String(l.text||'').split('\n');
     const items=[];
-    if(l.role==='title'){for(let n=0;n<l.lines;n++){const bind=n===0?'hook1':n===1?'hook2':'';items.push({bind:bind||'spec-title',text:bind?String(value(bind)).trim():(fixed[n]||''),n,rows:1});}}
+    // 한 줄 제목(lines 1) = 작업 제목 두 칸을 이어 한 줄에(10-20 신박발견: split_hook 이 '한 번 보면 / 절대 안 까먹음'으로 나눠 앞 절반만 그렸다)
+    if(l.role==='title'&&l.lines===1)items.push({bind:'hook1',text:[value('hook1'),value('hook2')].map(s=>String(s||'').trim()).filter(Boolean).join(' '),n:0,rows:1});
+    else if(l.role==='title'){for(let n=0;n<l.lines;n++){const bind=n===0?'hook1':n===1?'hook2':'';items.push({bind:bind||'spec-title',text:bind?String(value(bind)).trim():(fixed[n]||''),n,rows:1});}}
     else if(l.role==='caption'){if(captionVisible())items.push({bind:'caption',text:specCaption().trim(),n:0,rows:l.lines});}
     else items.push({bind:'spec-'+l.role,text:fixed.join(' '),n:0,rows:1});
     const x0=l.align==='center'?l.x-l.w/2:l.align==='left'?l.x:l.x-l.w;
