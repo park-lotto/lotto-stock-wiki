@@ -1,0 +1,238 @@
+{
+ "농심 새우깡": {
+  "search_url": "https://www.coupang.com/np/search?q=%EB%86%8D%EC%8B%AC%20%EC%83%88%EC%9A%B0%EA%B9%A1",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=19421888981&vendorItemId=93895024642&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/9oX7OEAEthnJMyLP9mZHXQiR1IpVLj5uRqq3g7dk5Gi0qYBR_pRzbFg4YlFfzww_-GWhgeKvXk2YPAB0Z-i3oJz1x_pC7IVh6cxKZsfAdvAsloOky8SUll_YoEzqO9zy3Cc7FbTUFmdofF1475uO46aAWMAsKBpHD0fmuGJyS1TvmaLMJxHviT7sD-kzybEIbPatzaUyZZjR-cMemqpwJwCjioMxIkJaLc-MdFf-xQs2I4r0ag1ByDqWaPbaDxCT9lPOSE1UhSZWvt90n2WxeSmXelWFSCrZ3yR2ztjVFkR9mlUjNlBKAlYNZ8uQxUz7oaWBO6UHIoqU1mwrCpzvmB8TD7Km6sXKgPzrQ02USrluo44Hc99xIv27jst4PY-FRJmKa_AKIOurngJ96jXC5NnCeO4-J7oumhbb0V49ns_oKEZchyqsNl6hYCiF5Iy9HBbGulODYgQKtgdsTmusjaVEVy6P5ashRBdo4I1coQPyH8hJPuWlVhLfAmqXZx4wPvSGPC75-F9oiQPbow==",
+    "price": "19,730원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9424588044",
+    "name": "농심 봉지과자 선물세트 10종+꽃새우, 1세트, 6호",
+    "url": "https://www.coupang.com/vp/products/9424588044",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9424588044&itemId=27965831450&vendorItemId=88387499068&traceid=V0-153-96b6843167fd3b0f&clickBeacon=a45c5500-cc3a-11f1-ba7e-69067d79ccd3%7E3&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=1&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/ioj0-bnHt6hN_16wiuIdlLHZzB_x8SpK1tFvvW5AfnGMb701POcMkeROVFYVXsgy3MB2R90nRWRXi4kS84XSRoeGCNgAOIOYxx3lnSl4Z9N53BBNQ4KU14lr_qVIo6_p4X82A8YVfEzpFVr7s_2Y53ONdjk0AC5FOWq4XiqJxs4cF9zFJm-G-LSuzFQBMYvNei6_K2x25s_8kHld1a76uq0YpR91r0nhalbakbET9Ewg2GVvTxCpjIwHWh5dmivuPU2WYZl087E6FutRg9m0s2n7zf_00OfOocWMJnCbWoxl5A19d0OomZK4XAC91ez8H5oel2bnCjuZ4X-wjU9T1hSWQN-YevusZvVn5lZjIHNoDPjZ6SLmslIBUS_gzDCCzT8fP1BA1bhXs-jFFQP6Jf3mCsfhI78BXwDL3Dp4MyWSm7CYbGaOozsuKGO-m6XV-k1jJ_M6xBhwfWClv4fWq54vTRV6R2VPBNYc-dwEz7nWAEgRjf2l0gSBm_OrSXzIvTy1LcnzvIwIOQB9-DzOE9PiYjVqO6O1UQ==",
+    "price": "19,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9615266044",
+    "name": "농심 과자 선물세트, 1박스, 17종",
+    "url": "https://www.coupang.com/vp/products/9615266044",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9615266044&itemId=28709570422&vendorItemId=95650400066&traceid=V0-153-0fce36419a38d962&clickBeacon=a45c5500-cc3a-11f1-a488-8216ce758c10%7E3&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=1&slot=3",
+    "image": "https://ads-partners.coupang.com/image1/yykuG6nNHyf4tMBIy86Bv2LZQm_XFWkb8aig9jnsFgUNf0xKbOl6sl3Q844ZZaDGM4TzAppAPpRdsolevmHIqkTLZVEeTDmfyDX1ll-DLBe1vNAqJAF-RtxS8I3JObBXW5xoTrGGdQDLT9VmDszoGMpIGJXyv499jdFPIxWMt1D0VlIqxWB6l3fAnEKdGblHwObJFTc_Svz19GuLoj5vDy9NuXd2furU7UCWDXXub7qnaMz9A1frMDSqFcyHaL5P80Jt6OSFEgDRPQTH6l51KIMvKTuzOSC7gmQWb0Vn7gpu3WkcxZUhTCzZHvxHxdS3CggWrMgZpmgTaJ_f9-gtFkBez32a19s9KnqZV1fLUzZtiRgeKQv_iN2ryLgQlJrUsEbOaZMcFre5kjKFlE48BNLAQyneSXWIkOUbEw05fZYSkrA2q5Zol60TQAr5umCIq8tESv8tiRs6clI7s8kFY7RRHK8hSa7qD_orsnSITgS3Y3nPr5iuiRncQnV_b-S3j8U12xAVBMWpbtod-XVYW6DYtAgRQJVD",
+    "price": "27,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9732978282",
+    "name": "농심 새우깡, 1.8kg",
+    "url": "https://www.coupang.com/vp/products/9732978282",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9732978282&itemId=28824144052&vendorItemId=95918488294&traceid=V0-153-1705007120fe879e&clickBeacon=a45c7c10-cc3a-11f1-9eaf-e436bde891b2%7E3&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=1&slot=4",
+    "image": "https://ads-partners.coupang.com/image1/O07H9za2_3vqrw-cO8E7JdCbcKOgFR9kJKGkuN-0UBzs7nORuBC0gA6UXg77DzTdm57ByVvL-IRJEGNfwCt8-69pkokYUFfwWNwD9Lqkxq2qu5PjDQK-7wvaDOj-lvRkKHMKn0t-TdZX1uw-n_atW1X4CP8h2PMV-lx_XzyzPGzpcgDtBHI1v4rj2RwJs4DxqcyDNd7oXixp61LLbyTN33SBBzTyIfD9UUpRTUTMdHpoRomf9Lwk3NYIOcHfxTDb4kNhQ8PmUZd5wS2kj4R4dMS4DpW1YGvxrbYpQKBBGUvA6K71fAlrlCO9jxGNvNl5Np71O-Lkd-bdDNpy82FMrglLTyJ-LKQGZfLZnE5kH3H-aroT_rxvLmSF-JacZLX5I-nNMosrsEqweyKndeQ9Jik38XahXOatZh6kxJg9gH29U4MWfLr2pav0rnQHhliRaR8yfEsCcmLYrxLP3zyvw65YLewsdNAeStzahjcUFKgDzoGKbIKQNtZR83V0mr4o3QUg4cq3f2bcqZ2aognBJy1M8_8y7CnngA==",
+    "price": "95,700원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "9021731379",
+    "name": "스낵 13종세트 1호{새우깡+양파링+바나나킥+꿀꽈배기+자갈치+감자깡+고구마깡+오감자+꼬북칩+스윙칩+왕고래밥+눈을감자+꼬깔콘}+메세지카드, 1박스, 과자세트",
+    "url": "https://www.coupang.com/vp/products/9021731379",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9021731379&itemId=26452963404&vendorItemId=93428382269&traceid=V0-153-49f4506f5848bfd8&clickBeacon=a45c7c10-cc3a-11f1-9a2a-87c55fdfb6ce%7E3&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=1&slot=5",
+    "image": "https://ads-partners.coupang.com/image1/bg9mNT5WTQpBJtJ6bhbJy9U9tSnaBwtYq6d9D34Avmsf1gkpi3Nm_Cm_ld53EQ5OyeV6ZSv9Gw-_dm65EeUYx5sCZZ3etlVGLPc6gz0glThELx1lVes2qzpOz0H0xJ4tWC_73CWtY1ri8TIh-ppjX90O-6-Z58jgmcNmXdimwNvho4sOpD9-kfEIvSf9Lj78RhmHcXuyaVzRmud7SN9AGryi4P7Xq6H5T9jNT9jrgQAub5aMstslE1krWmbJy6__4F5tdjWfslZaPU8_DAnK63wh6gO9Rvtt6GX8d5CWGVAbKZltEgB1knJ02ZAPUcdmhzAkI08fJgTeERTDK9YNrrrBDsaY999mrjJOHG6tArHFpWPLkp3yx1-at3FdaOfReEC0_Fh-0G5rGY3itmrsfCc16VGzv70Pzi4NdIlmCx3WoZTPiZqln1PyFScRCaIkEi807yv2XH-t-hnFiLG3GydBBj8H2H28rOMDesfPWgjG9Rc3nrjYe40lpSzl24F-8yaJT_n3VSW-VQBCmgJNs-FN-iVq0X0=",
+    "price": "19,900원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=13501790959&vendorItemId=3533956986&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=6",
+    "image": "https://ads-partners.coupang.com/image1/ThjDHof6RbstryOiTsf29E2WzU9x6x5fdU-nFEMuJas5ZWABOSxA81-go3HaA_dsgSmNzL11vW7JBeGOC2pI2Fko29P3dhxQk_YYqOmlhpNAvxmfJldwHF_agV3_iclytIKVtRstaROd_7Vn4l3rzra9MWFhrKaagi1t-aO2AoGq8WJObOppDiZ7Z8AFZ3NhhFiYeHPsmzW7m2uoty9adB0N5VJ9EF94a0hqGw-qiHpABZ_6BAZ3du3cAN_kkHpLNTd6-C1OiAG7o-7NUJJS9YtsnXiZX2wo3j92Qune-tP74P0hBeWc95m0XMkhK0-iHOBMyz2oSUDGruHH9FbblCyjWhVXIdHbfwUq6nmQlXo9Pf0THKWIpxfw7xPiJHotG9xDyk6z63q3IBN2fOeeR19av8AbeIaAUuJnDqQffIfKI6UYPEM9YOvvhUR4fnh9x5D2nlpBfVtixTwT82Ph8-O0wpEKstCXHk546Q-lKIhaC5O4kf0gA8XV-xrLPrMxx_OjGwGn24sUXoGIlUw=",
+    "price": "28,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=20997924474&vendorItemId=93895024538&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=7",
+    "image": "https://ads-partners.coupang.com/image1/izLr6TIdK2xctN8Ci9CCYL-x3UgJ3-pnyd8ObkD6wrseFm0fJ03IqAmwTwaFppC5aDHeRw30cZyZr0qRh0Uf41JcHIHrNxRUPpvpgLzHHMoz1_aGJXcaj5bvk2G3fwEpwJVv3kdzEt80p-4EtXzldF_YUAjB7TxRnkVfFCUzzzFu6TspfmkK0g8gVVd0XyYZY2Coga7grFc0P8ImumCEPgQx7qnWxm7zrE0XZJnoKbP8h2nwhbuyXfOlle9-HxvQY0mtD7TOIy6kUDedLoJKarcLIp0HqZHHsn-N0M7Gv8TGTGVeSoDp48Ioxq_bwGNCf74fIcXldyA5kii6-0L_bReQ0AJH5CizRwdt_yHSlmB2vXhcnFaovNOwwmtTdWVjoiAG0SpwnZ_gcINfOBQlT7ajVbIVCqUjl8ihV1p_rmxJAcJBDFL4x5l6FDBlvH72LCBtJ7KR82PlEvokdDrwTHmXgwpEeytU8luP8btCLn5Fw8wJDN7KfDCiJU8w3r_DuuDdnKRKAckykYUz_w==",
+    "price": "15,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=1043475&vendorItemId=84993756515&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=8",
+    "image": "https://ads-partners.coupang.com/image1/vWv7vJSuAqOz76gKvZ7ofz23DcqHF6cyltUVOm7-7Dd-zr3XT38wHqLlMCGMSlrzCegK92223NTgz-tz4Sd3hO7-4JLzRYnF4JkXa5DJ3HbqumhpMSdvxelG2pkjpCL4CqrFScuiYPRjIzWCY8vE3URhB-royJhx271TCpbaLTlmAMvOhX1VjJlQtS038f-gXK5xMvHbT75OKVVc_HQN0xT9hBKibK4jWwu82_byo3dQF007je72DjIxDADzgxFcUDj7APwpxLNgjPGIqvL4zHIs86khI1_ZLYmXETBQkTEAalvJ_mQGE8v83BmYIiZ1F36VTRiSKSwF9jqbOPgD3ORfoFGtvtiNc25CDTJflNibf06ZiB31fTSopSLWiwMK9DZGaz-5jL8aqEw28jbcxYIKnmlFPpirD_nX-d_Q0JRc6uxdwBK5S6vT0Ly1gOuBxGcHTY9BwZLfzaHSIrL4kScT5WYvVcob-dTPkl5W4FGGXcNsSQxKeuLrPqYagtXoyFggw8vEAZqZ_uo2jAU=",
+    "price": "5,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=22426090389&vendorItemId=3000100543&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=9",
+    "image": "https://ads-partners.coupang.com/image1/jWZDwyNWcqVI3DRhjQVehmZm04fe-PxDl-Z2Qn_jFkAhNHbFlBrQ1zyz55HaeTekOS_2KdO0JSRj6c2-1mklB4yquh2qvFUqspCNTVbmvbHoWzz4gQ3GrmFYmpXr_fZmxfJCGaRb11xwm34tr1s0h5sFwLJtru7sDemoWxKioCo5K3r2b0BKsh-d_Z9AYmuzVcy0c4fhr1XH8wyL4Q9NzE7ExLZhO50WoXIC4P8_7MWD2CaUOlEvkMBG2_C6zNQvB5AsuK6-47G69E_PcO7HFqK-nsXAgY-3Gv7tIdmknV5t6hU76AoRBlSNvKFRDuZADo684zuW9Om_zKPIQCUFw_5O6WcG9WO1U01uCl0bDXXBZcltbiUnQ2rGmxIWnkrtuIKGqPM2t6maCM2QYSdEvdo8TAyQDPhR4Ko3KiSTs4ZL0jG6FpuRBF-n-72V8pULfaXiRuRt5dvQnqzGCTiXSXufxFyaLcfcKpHVnqmTrONvSKaQXi9UQnrrfDFrn4h3r7DjPAUgm-ya8q8=",
+    "price": "4,820원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=17569976490&vendorItemId=84993760088&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926270244631795&token=31850C%7CMIXED&pt=0&slot=10",
+    "image": "https://ads-partners.coupang.com/image1/pUJJtoxEM3NVywKOpRNNEvhFBVPeC8AzgxCP15zmqyAi6YYgMj076hKHf-39oOYmuCH6pxCxmfoKheH0cqFgMkiUk36iOdurZTmJDjxfHkBtZHHKFvFRo2r0NXwhm3X5aflHT5rjP7F2rVHcQms-0KyWr2Q1UxnNa3MUjk4Unnz4JCaADq7eoNmO4fqARdz07cZzH4CJKPXrZ399t-v-f3Wyx_ovStTR7P8bpXT4OWwh5du10aNf1RWOViMSoxehsK6kLWeu0tgc21RsGnZj6pHzIogQXEOU4RZMyvt2J9aINrpdLHRQT5m-RCXyRVjuBgiY790WOJCk45ZKeKW_XJOk9vfHMv3-1EUHps1hAATnrNqvMrs1wrxg2uQcqP3EuQ7C90qyfjIvpW_Ix4bGc2qHutNmyUYrOLBGmXoNJ8TU3mVads36WyQk1YmZLEK49xdlagGwTjIkXWFeeLRaF8lNR5LaD3ARon8OGmMJqf4YlZ3UdSW0eC7GoXARdtA4OhLyOJ4v07tsAOQ1PA==",
+    "price": "9,640원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   }
+  ]
+ },
+ "새우깡 90g": {
+  "search_url": "https://www.coupang.com/np/search?q=%EC%83%88%EC%9A%B0%EA%B9%A1%2090g",
+  "requires_approval": false,
+  "source": "api",
+  "ok": true,
+  "items": [
+   {
+    "product_id": "9205321653",
+    "name": "농심 새우깡 90g+자갈치 90g+오징어집 78g+알새우칩 68g+먹태깡 청양마요 60g, 386g",
+    "url": "https://www.coupang.com/vp/products/9205321653",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9205321653&itemId=28810160670&vendorItemId=94151805078&traceid=V0-153-2d7e19d82d83ec08&clickBeacon=a47cd550-cc3a-11f1-b9db-8e23d73e4412%7E3&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=1&slot=1",
+    "image": "https://ads-partners.coupang.com/image1/uwbQkIjizQRimtAru9CzC2FdmlMpUzlkPbnyEotxZjg6mwThCLTN62plSRbXoIc1OpmruxpqJH7Ibm-90zuDCkm_dFuzqDGkDJLTntPKMW_4nzxGQ70ZTy4L2jBC3lTa4K8Su-JykApaQMatSxqC2uHDJiBfKn6Ga5zMyEbEFy9SEXf7f9f01-ciVdsH5DQbnQ9FVctz67N9LreAZ9UoaUnyaea3SkT6lfr8eR0YBw56Q0T9npmxzxim8uz-KA8G7f13bg9dpQz6E2Mt7QSqKeewmyhekVWXl_7-x_e4Cvu6UEvwhqG2iJCKscLJT6tL9oZadZ8-RH6j-CkQPIkMaz69zU-UeVOdQmRVW8_C5Sd6krdp1KkyCvlqbNUSE3mGtVVv2hq1uZ248N6vztTrSKctj08QdirUMqPA4hJzPwFubgygjCZbMnK-ZYe35mqs1SlYSuWg_OpWPItv6LEUs4rW7fFz3CS_5YVJkc2_ccIQiLc7YIQOt3lyzlP49GBNpsY0T--CBhlYhWKwkid9Rxgyj25YjzI=",
+    "price": "20,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": false
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=20997924474&vendorItemId=93895024538&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=2",
+    "image": "https://ads-partners.coupang.com/image1/b_R4XJuMpWDaVo-rb2V4WtZRVltXUvNDBymbPL4cHfrxt77QoZL5ntyge-kE4ZZw9xwHiErFOGjZbumSZmlwP2kKNNu56NiQxYZTd-rakOIDrYRBVZVzunfOh4zNSxDrTFzfI8W4TK4p_7dgT90QchhUYcHfu0haS5UG80QexVrYEmR92XxqoV0HPmO1e-Ba3Vr__8UMrQVxxYM5UYvk-T7gxoAwIfTqr7h5B21Bctx7_zhoEnqtfWNUU_tuiBfrGfzI_mBP9_q4JuOpOeuNEEh4rFh0InJvXGpjOYGZU-MVj3_-M6Ygbu-33SdINNj_PiUGef1K2r-PCUT37ot7-0KtB7smEqQeFNjUVG_UzBLtlBoTd4hl_hFBaYKT7mwfl1jWWV24KyurSa74KVAwPSysenjHYH40MYlOxCjIbf5GxIx08wn57tYOvrxDlvgWdkEo6Re3a5KPnVu3bKyC9kjgZiwpE-aYJwEvu0zfmulLIWEQFknqiruC-FnqxQXXaMqhYSDrvCQiLtyajQ==",
+    "price": "15,000원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "7706953843",
+    "name": "정량 인기스낵 새우깡1 감깡1 고깡1 자갈1 포스1 오집1 바나킥1 나초1 포카1 스윙1 꼬북1 꽃게1 콘칲1 신짱1 카땅1 꿀꽈1 조청1 먹태1 츄러스1 포테토1 벌집1 몽실1, 22개, 90g",
+    "url": "https://www.coupang.com/vp/products/7706953843",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=7706953843&itemId=20648932325&vendorItemId=87696965545&traceid=V0-153-e334c996f731a41b&clickBeacon=a47cfc60-cc3a-11f1-8ece-ff5212c6405b%7E3&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=1&slot=3",
+    "image": "https://ads-partners.coupang.com/image1/iAujgE6FE6EljxuLiJV6UrgQG_M9KkJHNRUujfVtHkeRyGFWRJ5Ime5atS1Kh7CI0QhIX5Aljnt1Q1xHR36qHjkSzGuKsM6X_NWxd-x5C4dkaPIamsshm-jrXzU6sXZN7GEMhONEhMMz6qY2ne3ZPdq0fJSJOCAfE8CLVT8W-xEwHhY3YCGtoJV1eof-rawguW56-mN7DSTnDSGCe9YIXUxa5WE8z6sdRuoxFBU0A0WYhhNJif88KIJLoHYKVnUSsf0ZP4VrpKZ0okAAQXnLoT6jwTf8R-BePMJeEP7-49pGEOAOXdDdwXBZnYpjcQ8zHlyzD4yqkgxULGz2izFSbE3zltE5JjTbp8hyQL24Ixjc_iXf8lxT7oHoCDqJTuPmxccJFWFMqc4_yHCTQKv1oJxYF3N_wDVmOEwkuaWLgZnEgJIbcQHx_h1ErFoRzvUzliWKV4a2HcZvKgkJzGNvNKAkEiMy-xsSqiPym5fe4-dkYymSccwyODZ0OsS9n6_VUZQC33sAnq69aQHXF6rWY4INGT-caHOY",
+    "price": "36,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "9734515532",
+    "name": "[블루존] 감자 과자 A세트 몽실+(프링글스 어니언19g + 오리지널 19g) x10",
+    "url": "https://www.coupang.com/vp/products/9734515532",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9734515532&itemId=29131750107&vendorItemId=92523002617&traceid=V0-153-1b4a89a463dd9410&clickBeacon=a47cfc60-cc3a-11f1-bc9e-1406b9fb7198%7E3&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=1&slot=4",
+    "image": "https://ads-partners.coupang.com/image1/DuOwLTV_QKP3pumdDpOu9KpbupOcggUxfVLRniWk171Gt7IHx-l2mWdL0Mlbrd676vgRZtF8RptmbVnffnouBkQLu15818LHiWH8K_XCYm2nKxhgXnviPrmFbxfH5sdYCPtB-Zmv6TIe-uxR-oAGxn7PQe48bZUrebVH8pu9NEfDFkTMyso_GyqRax5g4fWCe3AzGGaD5cq9aiL0wmxfasOg0sfpG-zxtTjZqXSnRYj0crTpPrR5z8rcCX0y8z3eyJlZZxbhj4OATYTVeDTwcMu7_DJWYC2Sqkuk8x6s228Oe5tgzP4OIRI7licQmYvHmOMiNOqmIXwflEyZBeHqk7EvnUHV29vCGjGE0uE5G53-GcZKOp_t0hhPmKKIGdTM2xB17s2T7JsPp1Jf8Bs4MHIERLBtsFEbqr2JQvo-NNfVLBvl8-Q8RvLjNmtzARX9Wbdpr_41brupyhnbnq63RlyzstS0LVPuLXXcC9TT4pjprfyocnrGivMH-M6W9eKOPg4-947AaQYOU7UkEqvJwvCrxymOB8I=",
+    "price": "18,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "7079942908",
+    "name": "인기 봉지 과자 10종 세트 ( 농심 새우깡 고구마깡 자갈치 꿀꽈배기 포스틱 롯데 꼬깔콘 (군옥수수) 크라운 콘칲 빙그레 꽃게랑 양파링 오징어집 ) 스낵 세트, 안녕종합스낵 10종, 1세트",
+    "url": "https://www.coupang.com/vp/products/7079942908",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=7079942908&itemId=17608925777&vendorItemId=84233562366&traceid=V0-153-c3a61b01965f17a4&clickBeacon=a47cfc60-cc3a-11f1-8171-8295c14e63ea%7E3&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=1&slot=5",
+    "image": "https://ads-partners.coupang.com/image1/hQkmjD5ZZhGF3oeYhZxEgGrkjUgLjW5cJQH3bZC3LQuqKUPEhyNR493dX0HPROOHZRt9QAM3SbUtZhGEr9izFR2yRJmwxc6O_baBacLDIXI66US57LzCwvlqU39gxu3tQ99eJF4iI64w9FjX842P7KNjK1bAkTN1bbt5E3ncCTx--lochmOhVy-0H9K1TyOsNrzNMiggNHq44J0z8ChsB7AW8ZMG1iZNRn9X46nXHtdgW0DmlJEot0BdsGP5Vt6bgTrig1QchA8oiLwFRG-RQIw0h5d5_qUhm_bc0lD2ljxe_yao1OzBptHHUcFaVnhnUanthHDFudS_eK6QvDV1DtlMCUMgdYNNng9YjAGdhGS7mUZ0e0OnJYe90ouC5cA-SZR67BKQJExe0XtPNbOkF07QmoskmF1P3xEgk6JTIrMC2h7ubt_0mAFreRKwDtv1BwSdgz3W6YMIwYdj7bGY3bKL7Z7Qk7-4OYP3CWkD05vXdatN5rWbDIutY2qoh1lkPmrQPYqqnx2N1GbSQgGckL4pJ4n-OkE=",
+    "price": "20,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=32274759&vendorItemId=84993760320&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=6",
+    "image": "https://ads-partners.coupang.com/image1/L2oxPlagEWMrG7iZL_nOhaMCsU_TkwAS_EpD4K0Be9C2nF2r5_7Y1aWwt17G5JXeF9GGsgqDtNY_7iRQx5Lg8t6xXaSxN1HNngkXfofp51DvMIwJfydFX5HVUJWC55fueR2kCKHCnfNewURhzqpcqQe-3DSPRlRSd0UILJBvI8NDupsHVH0-82R6k60ZsHG65i2vj8MXT2dWxRgoF45dWKeetxcfNt-j9ibSGVVcYHdQUtjKP6G3F7q-YzpzTtviB1wWf59_9aDCY5kxuQc2wBLbjgubw434JTfIQH04-3CXd6AReY-pQBLAw47ToCMhaYBstWQvogoQT6s45ba_wSzDbmZgqbT6xnWVwGMT1SHGgVGnsP1u60BslR0ZredMgdZbahiy2kirkz5c0a_dwzBq-uGOACgsW5rQDfUIg7T-X9lM7WCrKMWfkQx90ul7CJyvJEx5aYjW90kFXxd3TdFxyupzCFfnHNwzgizWvFzHIo7ziuA5zksXIYK8lBFzF0StD2QEc3lYnzbewG4=",
+    "price": "4,540원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=1043475&vendorItemId=84993756515&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=7",
+    "image": "https://ads-partners.coupang.com/image1/8fsSQuDPuko4sQXH8SBt4H8hR1fChEM6Ltxo7hPVBYZ1C727U8QMnDdasCmM31ZlPCTDZ1Iym7Tap2bzvackkLIq02YMzy-CvcOJHHYCKc55mdYrVTjzFhxQQF286kbga9fbVMwgMWN8Cskj8OSbCDWpabpg2sbsk8vRZqoHMBX3dO_c-3y-4q8edB4NuUlCyzTpVUxWJhySoOhFGMR54pGr0iMWCksDi3f9qnNzzIEgvecsWFDpDdoyq8571wVyfQxqOvNSoM0Y8zdfBj5N3jPvHcPOZnV9VUh97AxV98MypPJPmJWm8on6B0l7NWu6NwZanubwISJuQ4Th5amjntgS-30Zfp3MaElQ-gygzAyRjbj8RckD2W30bC4MxEB6CuzS3OGfcETCOOhe7YbunQbO4fxHJq71TsKuHD-c43yDqSyzo5YVRYBH2CqhNP2mVJMaFp4tcTmLvm-5EGAB7MdywMVi4p8huQZhW85Tb4WPoeMtY_J97IYRKM3xmdAjC_f4zcXqpz4B-4vYF3FS",
+    "price": "5,800원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=72362795&vendorItemId=85072689225&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=8",
+    "image": "https://ads-partners.coupang.com/image1/kTM8EtjIXQXk-Qkzkf8OuiqiPjZHn3NOTw5FCj8mzvafyh3IVRuwXNtQ8F2XAiCqeRgO_kQLlUESZiOj4L47RT_Bw_dVC97WQB67Jzt3kAnClxqepJqqOQKN-__bLOHvxe4oC0P_wQtudbTPbg43w26UYvU0S9ElqUmlzh8cPTAxh5jxxu9DeVgKgqK_NfklSJt00roRQvAGqqlGDKE0jcSXxLQwJifKZhY88P54mNRxP3iqLZMfFZIUKWumZMJe4OzD-m2-zztd89kr08EM3TAb6rGRIGagQzKZOdqGCeVkmmyuNi0hO1Aj7xYSdOXKzDzVPsGCdbIoGNKQVWc7ykIUxN5cm0Oj1PxI1YWh7_jUXYpyZaHl6vqs8x6BHWV_QJx8uRYw40qS_8i5C2kX1ExVmNHqxtwTShuYG0ThVu4ZJEvXzfeFWu_p_e1duMcLoo3rt8o0XiOmo3Wphu6Bp7Cc-gPM0vZds3FJRhau1E20a3IKN9rjy4_tl-kyNKoKt0VLmezxl3XjEbENDBs=",
+    "price": "11,030원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=3235894&vendorItemId=93895024632&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=9",
+    "image": "https://ads-partners.coupang.com/image1/JM9gFLAwYgvg1U7mJAbmdl6YgZdXhEGh7h4ed2ahqUtrpPdgPuQc5uGlp_4K7nDCV8IK3ECWqDCkhS8ikDtetrwxVvNHWpkZdC2OljKGa98zYpe7drsuvPkri8qkyR5frpiIwsylmY3q5FvRpVl5g6kc0rBMidfG2FRKq4QIv8_RF2DHl2Vkn5s8xjCyAhd9Bp4cnDQ_dFTWHyNS1YuOR07XTpeKpDDE0vMiUFBb7V5kvTMlX6DLeCbTICKkSUPjbO8lx8GEXcoVg8TRSvs0ffssXCDN0iZHp7gsXgafxHkXeqNISnyUIqNqKAaqnHhuhyshEZicxlwJZA3V4AHfNg-17CO2JJhwl689lpoNIlErBoJkh5g6LKYib0dRlIH3v9ja27vQiUOl2mHuJSx_veMjJURKQLwiAFPiIzcSKZ_TSkmoPDlSd7_obfG-DxoVkXY9DtZN1BOlbRM5jJPPNyoirXgrtEbp3iUKAy0xSdkoVhSwRmxjDeiZpyIsVoWWN9QMWfkzuiLdUs9rbg==",
+    "price": "27,150원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   },
+   {
+    "product_id": "94817",
+    "name": "새우깡",
+    "url": "https://www.coupang.com/vp/products/94817",
+    "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=94817&itemId=26925753618&vendorItemId=93895024636&traceid=V0-153-c1ad6a497572ec6e&requestid=20261020125926437086901796&token=31850C%7CMIXED&pt=0&slot=10",
+    "image": "https://ads-partners.coupang.com/image1/OALdSCrWIjO4nXdvOBsPPNsS_uYQ2o66saZGiPpI6IQDnPJNzSNUXOMaw7sYur5DF4-FklxFMJR34Fe9ykjIM3XmKy0KXqfAcRcyoL539Utwxzd7DjKXYviKkC7BzKmsNoSp87E-bQQLYHpEkxgfbb-gay2-09LkyRgRqrpjP07jQ9YNgJeClbvOY_DLpx0ONKLYQfijtHLoNhTJf-XN9QamoV4rXoWDrfIxy1sCiKF__-ozG9aGRQWkiq0sf3IUBzZT6FKFT7A5Uoq2QHsgeBnm-99eNog9Ovah2gjfCOuMRyoRPmAqNDgaKHWm6nmINmjzKGDKZkwSq3QpImvFtXkO7YaiVgJe0dv9x_QukU2DFkRZ0s4tS9Eq-9n4MpW0ehwhLdKHBa8TCHmgrOtVFUwu4vGYKnP7d-L0fv-WPOEhVjF9e4duqN5EhyZQTfJqDn1iWT1wScplalZw_XLki-dSMnR3lJtFQyQaeo2l9Ze9o2dGLxg4uN8Rlo9m0L7kJ_fS2FaLtAdugSqGbewa",
+    "price": "23,410원",
+    "rating": "",
+    "is_ad": false,
+    "is_rocket": true
+   }
+  ]
+ }
+}
