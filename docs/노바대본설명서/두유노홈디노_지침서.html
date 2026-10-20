@@ -1,0 +1,150 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>두유노홈디노 대본 지침서</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Black+Han+Sans&display=swap">
+<style>
+:root{--bg:#f3f2ee;--paper:#fff;--ink:#1d1b18;--muted:#6a655c;--line:#dcd8cf;--frost:#ece9e1;--a:#0f6e5d;--a-soft:#e1f1ec;--b:#1d5fa8;--b-soft:#e3eefa;--bad:#b4401a;--bad-soft:#fbe8df;
+--fd:"Black Han Sans","IBM Plex Sans KR",sans-serif;--fb:"IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141310;--paper:#1d1b18;--ink:#ebe7df;--muted:#a49e93;--line:#38342d;--frost:#26231e;--a:#5cc4ab;--a-soft:#1b3530;--b:#8ab8f0;--b-soft:#1b2c42;--bad:#f39a72;--bad-soft:#3d2219;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:15px;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto;padding:22px 16px 70px}
+h1{font-family:var(--fd);font-weight:400;font-size:30px;margin:0 0 4px}h2{font-family:var(--fd);font-weight:400;font-size:24px;margin:0 0 8px}
+h3{font-size:16px;margin:18px 0 6px}.mut{color:var(--muted);font-size:13px}
+section{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:18px}
+section.A{border-top:5px solid var(--a)}section.B{border-top:5px solid var(--b)}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:var(--frost);white-space:nowrap}
+.star{color:var(--a);font-weight:700}.avoid td{background:var(--bad-soft)}.tagA{background:var(--a-soft);color:var(--a)}.tagB{background:var(--b-soft);color:var(--b)}
+.tag{display:inline-block;border-radius:999px;padding:0 9px;font-size:12.5px;font-weight:700}
+ol,ul{margin:6px 0;padding-left:22px}li{margin:3px 0}code{background:var(--frost);border-radius:4px;padding:0 5px;font-size:13px}
+.box{background:var(--frost);border-radius:10px;padding:10px 14px;margin:8px 0}.no{background:var(--bad-soft);border-radius:10px;padding:10px 14px;margin:8px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.nav a{margin-right:12px;display:inline-block}
+code{white-space:normal;overflow-wrap:anywhere}.grid2>*{min-width:0}section{min-width:0}p,li,td{overflow-wrap:anywhere}
+</style></head><body><div class="wrap">
+<h1>두유노홈디노 대본 지침서</h1>
+<p class="mut">근거: 채널 쇼츠 600편 → 음성 578편 받아쓰기 → 대본 482편 줄 단위 태깅 · 잘된 편 = 조회 10만+ / 안된 편 = 2만 미만 · 첫 줄 틀 분류는 버텍스 분류 + Claude 원문 확인 · 2026-10-20</p>
+<p class="nav"><a href="#common">공통</a><a href="#A">스타일 A 체험형</a><a href="#B">스타일 B 정보형</a><a href="#check">검수</a></p>
+
+<section id="common"><h2>0. 공통 — 두 스타일 모두</h2>
+<h3>최우선 원칙 (채널 전체 잘된 90편 vs 안된 184편)</h3>
+<div class="tbl"><table><tr><th>원칙</th><th>잘된 편</th><th>안된 편</th></tr>
+<tr><td><b>인물에 꾸밈말을 붙인다</b> — 커피 회사 다니는 친구 · 정리업체 알바하는 친구 · 30년째 식당을 운영하신 장모님 · 공대 나온 엔지니어</td><td>60%</td><td>31%</td></tr>
+<tr><td><b>감각으로 보여 준다</b> — 질감·색감·분위기(거친 질감이 비주얼 진짜 미쳤는데)</td><td>72%</td><td>44%</td></tr>
+<tr><td><b>권위를 넣는다</b> — 대부분 '직업을 가진 인물'의 입으로</td><td>60%</td><td>35%</td></tr>
+<tr><td><b>기존 것과 비교한다</b> — 캡슐커피가 편의점 느낌이라면 이건 바리스타</td><td>60%</td><td>35%</td></tr>
+<tr><td><b>남의 말로 전한다</b> — ~대요 · ~라고 하더라고요</td><td>58%</td><td>33%</td></tr>
+<tr><td><b>정체는 늦게</b> — 앞 3칸 안에 제품 이름을 밝히지 않는다</td><td>39%</td><td>54%</td></tr>
+<tr><td><b>질문으로 끌고 가지 않는다</b></td><td>23%</td><td>45%</td></tr>
+<tr><td><b>'~해보세요' 권유로 닫지 않는다</b> — 결과·변화로 닫는다</td><td>8%</td><td>22%</td></tr>
+</table></div>
+<h3>말투·표기</h3>
+<ul><li>존댓말 1인칭 체험·전언. 말끝 순서: <code>~더라고요</code> &gt; <code>~어요</code> &gt; <code>~대요</code> &gt; <code>~잖아요</code>(공감 줄) &gt; <code>~거예요</code>(사건 묘사)</li>
+<li>한 줄 = 한 호흡(15~45자). 긴 문장은 <code>~는데 · ~니까 · ~해서 · ~면서</code>로 이어 붙이고 줄을 나눈다</li>
+<li>연결어는 많이 쓰지 않는다 — 대부분 줄은 연결어 없이 시작한다. 쓰는 것: <b>심지어</b>(덤, 잘된 편 37편) · <b>근데</b>(전환·조언자 등장·정체) · <b>특히</b> · <b>얼마 전에</b>(사건 시작). '진짜 핵심은'은 거의 없다</li></ul>
+<h3>스타일 고르기</h3>
+<div class="grid2"><div class="box"><span class="tag tagA">A 체험형</span> 사람·사건으로 증명한다. 자료조사 없이 쓸 수 있다. 잘된 편 51 · 길이 중앙 160자 · 8줄. <b>이 채널의 주력</b></div>
+<div class="box"><span class="tag tagB">B 정보형</span> 사실·원리로 증명한다. <b>자료조사가 반드시 필요하다</b>(만든 사람·출시 배경·수치·사건). 잘된 편 38 · 길이 중앙 203자 · 8줄</div></div>
+<p class="mut">시안은 스타일마다 2개. 두 시안은 서로 다른 첫 줄 틀을 쓴다.</p>
+</section>
+
+<section class="A" id="A"><h2><span class="tag tagA">A</span> 체험형 — "내가·지인이 겪은 일"로 파는 대본</h2>
+<h3>1. 역할</h3>
+<p>제품을 설명하지 않는다. <b>지인 집에서 본 것 · 가족이 사 온 것 · 내가 사려다 혼난 일</b> 같은 작은 사건을 전하고, 그 사건의 답으로 제품이 나온다. 증명은 숫자가 아니라 <b>사람의 반응</b>(보는 사람마다 맞춤 가구인 줄 알더라고요)이다.</p>
+<h3>2. 재료 확보 (쓰기 전에 채운다)</h3>
+<div class="tbl"><table><tr><th>재료</th><th>쓰일 곳</th><th>근거</th></tr>
+<tr><td>사건의 주인공 + 꾸밈말(직업·처지)</td><td>훅·상황</td><td>꾸밈말 61% vs 31% · 친구 45% vs 12% · 등장인물 86% vs 62%</td></tr>
+<tr><td>그 사람이 겪던 불편 한 장면 / 돈 문제(공사비·가격)</td><td>상황·불편</td><td>가격 언급 43% vs 20%</td></tr>
+<tr><td>기존 것과의 비교 한 쌍</td><td>와우</td><td>비교 59% vs 26% — 이 스타일 최대 차이</td></tr>
+<tr><td>감각 묘사(질감·분위기)와 공간 비유(카페·호텔·갤러리)</td><td>와우·결과</td><td>감각 76% vs 49%</td></tr>
+<tr><td>주변 반응 한 마디</td><td>와우·결과</td><td>"보는 사람마다 ~인 줄 알더라고요"</td></tr></table></div>
+<h3>3. 첫 줄 틀 사전 — 틀을 먼저 고르고 빈칸만 채운다</h3>
+<div class="tbl"><table><tr><th>번호</th><th>틀</th><th>편수</th><th>10만+</th><th>조회 중앙</th><th>최고 원본</th></tr>
+<tr><td class="star">A1 ★</td><td><code>{꾸밈 지인} 집·카페 놀러 갔다가 {대상} 보고 진짜 깜짝 놀랐어요</code></td><td>33</td><td>11 (33%)</td><td>3.8만</td><td>친구집 놀러갔는데 소파보고 깜짝 놀랐어요 (190만)</td></tr>
+<tr><td class="star">A2 ★</td><td><code>{가족}가 {장소}에 이런 걸 해놨는데 보는 사람마다 깜짝 놀라더라고요</code> / <code>{가족}가 갑자기 {제품군}을 사왔는데</code></td><td>40</td><td>10 (25%)</td><td>3.1만</td><td>저희 와이프가 벽 코너에 이런 걸 해놨는데… (600만)</td></tr>
+<tr><td class="star">A3 ★</td><td><code>{비싼 대안} 사려고 했다가 {인물}한테 혼났어요</code> / <code>저 이거 {써보고} {기존 것} 바로 버렸어요</code> / <code>{큰돈} 쓰고 이거 보고 바로 후회했어요</code></td><td>23</td><td>7 (30%)</td><td>3.0만</td><td>스탠바이미 사려고 했다가 와이프한테 혼났어요 (400만)</td></tr>
+<tr><td class="star">A4 ★</td><td><code>이것 때문에 집주인이랑 싸울 뻔했어요</code> / <code>집주인이 이사 갈 때 이거 놔두고 가래요</code> / <code>저 {직업} 친구한테 원시인 취급당했어요</code></td><td>9</td><td>4 (44%)</td><td>5.0만</td><td>이것 때문에 집주인이랑 싸울 뻔했어요 (24만)</td></tr>
+<tr><td>A5</td><td><code>{목적} 알아보다가 {소재}로 된 걸 발견했는데 이게 진짜 좋더라고요</code> / <code>오랜만에 {물건} 꺼냈는데 너무 더러워진 거예요</code></td><td>27</td><td>5 (19%)</td><td>3.2만</td><td>집에 철봉 하나 달려고 알아보다가… (120만)</td></tr>
+<tr><td>A6</td><td><code>이제 비싸게 {공사} 하지 말고 이거 먼저 해보세요</code> / <code>여러분 {작업}할 때 {흔한 도구} 절대 쓰지 마세요</code></td><td>48</td><td>8 (17%)</td><td>2.4만</td><td>이제 비싸게 바닥 공사하지 말고… (120만)</td></tr>
+<tr><td>A7</td><td><code>{공간}에 {제품군} 하나 샀는데 보는 사람마다 어디서 샀냐고 물어봐요</code></td><td>23</td><td>4 (17%)</td><td>2.2만</td><td>서재방에 책상 하나 새로 샀는데… (100만)</td></tr>
+<tr class="avoid"><td>✗</td><td>말 걸기 감탄 — <code>와, 서랍 왜 이렇게 깔끔해?</code> · <code>이거 만든 사람 천재 아니에요?</code></td><td>28</td><td>0 (0%)</td><td>2.2만</td><td>최고 9만 — 쓰지 않는다</td></tr>
+<tr class="avoid"><td>✗</td><td>발견·반함 — <code>~찾았어요</code> · <code>한눈에 반했어요</code></td><td>19</td><td>1 (5%)</td><td>2.8만</td><td>최고 19만 — 쓰지 않는다</td></tr>
+</table></div>
+<p class="mut">★ = 10만+ 비율 25% 이상. 빈칸 슬롯: {꾸밈 지인}은 제품과 맞는 직업·처지(인테리어 하는·정리업체 알바하는·신혼인·자취하는), {가족}은 와이프·아내·엄마·장모님.</p>
+<h3>4. 블록 배치 — 이 순서대로 (잘된 51편 실측: 등장 비율 · 대본 안 위치)</h3>
+<div class="tbl"><table><tr><th>블록</th><th>하는 일</th><th>문장 틀(원본에서 뽑음)</th><th>등장</th></tr>
+<tr><td>B1 훅</td><td>사건 한 줄 — 첫 줄 틀 사전에서</td><td>위 A1~A7</td><td>98%</td></tr>
+<tr><td>B2 사건 펼치기</td><td>언제·누가·어디서 — <b>정체는 아직</b></td><td><code>얼마 전에 {꾸밈 친구}가 {가게 오픈·이사}한다고 해서 놀러 갔는데 갑자기 {대상}을 보여주는 거예요</code></td><td>71% (안된 편 39%)</td></tr>
+<tr><td>B3 불편·사정</td><td>왜 고민이었나 — 돈·전셋집·집주인</td><td><code>{전셋집이라·집주인이 ~ 못 하게 해서} {대안} 해야 되나 고민했는데</code> · <code>{공간}만 예뻐도 반은 먹고 가는데 공사비 생각하면 손이 안 나가잖아요</code></td><td>41%</td></tr>
+<tr><td>B4 조언자</td><td>권위를 인물의 입으로</td><td><code>근데 {직업} 친구가 {분야}에 누가 돈 쓰냐고 하면서 이런 걸 추천해줬어요</code> · <code>{꾸밈 가족}이 아직도 이걸 모르냐면서 보여주셨어요</code></td><td>(친구 45% vs 12%)</td></tr>
+<tr><td>B5 정체 공개</td><td>대본 40% 지점 즈음</td><td><code>이게 요즘 딱 유행하는 {소재·콘셉트} {제품군}인데</code> · <code>{벽·옆}에 엄청 고급스러운 {제품군}을 달고 있는 거예요</code></td><td>63% · 위치 0.38</td></tr>
+<tr><td>B6 원리</td><td>왜 되는지 한 줄</td><td><code>{소재}로 되어 있어서</code> · <code>{방식}이라</code></td><td>69%</td></tr>
+<tr><td>B7 쓰는 동작</td><td>손으로 하는 한 동작</td><td><code>{물건} 딱 올려두니까 / 끼워만 주면 / 붙여만 주면</code></td><td>55% (안된 편 35%)</td></tr>
+<tr><td>B8 와우</td><td>비교 + 감각 + 주변 반응</td><td><code>거친 질감이 비주얼 진짜 미쳤는데</code> · <code>다들 보더니 비싸게 공사한 줄 알더라고요</code> · <code>무슨 {고급 공간}에 온 것 같더라고요</code></td><td>76%</td></tr>
+<tr><td>B9 심지어</td><td>다른 축의 장점 하나</td><td><code>심지어 {추가 기능}까지 있어서 {좋은 점}</code></td><td>71% · 심지어 19편</td></tr>
+<tr><td>B10 결과</td><td>공간·생활의 변화</td><td><code>이거 하나만으로도 허전했던 {공간}이 딱 완성되더라고요</code> · <code>오히려 {기존 것}보다 편하더라고요</code></td><td>53% (안된 편 32%)</td></tr>
+<tr><td>B11 닫기</td><td>만족 한마디 <b>또는</b> 댓글 키워드</td><td><code>{바라는 것} 하고 싶으시면 댓글에 {키워드} 남겨주세요</code> · <code>이건 진짜 사고 싶어서 구매처 알아왔어요</code></td><td>만족 39% · CTA 29%(댓글 12)</td></tr>
+</table></div>
+<h3>5. 인물 역할 사전</h3>
+<ul><li><b>친구</b> — 계기를 준다(집에서 보여 줌·선물·추천). 잘된 편 23회로 가장 많다</li>
+<li><b>와이프·아내·엄마·장모님</b> — 사 오거나 꾸짖는다("왜 돈 쓰냐면서 한소리")</li>
+<li><b>집주인</b> — 갈등을 만든다(공사 금지 → 나중에 "놔두고 가래요"로 반전)</li>
+<li><b>직업 가진 사람</b>(인테리어 하는 친구·인테리어 사장님·건축하는 친구) — 조언자 = 권위</li></ul>
+<div class="no"><b>하지 말 것</b> — 정체를 앞 3칸 안에 밝히기(33% vs 54%) · 질문으로 끌기(14% vs 31%) · "~해보세요"로 닫기(4% vs 19%) · 인물 없이 화자 혼자 설명</div>
+</section>
+
+<section class="B" id="B"><h2><span class="tag tagB">B</span> 정보형 — "만든 사람·권위·원리"로 파는 대본</h2>
+<h3>1. 역할</h3>
+<p>제품이 <b>왜 화제가 됐는지</b>를 이야기로 푼다. 누가(꾸밈말 붙은 만든 사람·브랜드) → 무엇이 문제였고 → 어떤 원리로 풀었고 → 그래서 어떤 집단 사이에서 품절이 났나. 증명은 <b>권위와 사실</b>이다(권위 84% vs 46%).</p>
+<h3>2. 재료 확보 — ★자료조사 필수</h3>
+<div class="tbl"><table><tr><th>재료</th><th>쓰일 곳</th><th>없을 때</th></tr>
+<tr><td>만든 사람·회사 + 꾸밈말(공대 나온 엔지니어 · 자동차에 환장한 덕후 · 일본에서 문구로 1등한)</td><td>훅·권위</td><td>웹 검색: <code>{제품} 개발자</code> <code>{제품} 출시 배경</code></td></tr>
+<tr><td>출시 계기·화제 사건(AI 데이 공개·하루 만에 품절·5년 만에 판매 1위)</td><td>권위·사회 반응</td><td>웹 검색. <b>숫자·사건은 확인된 것만</b> — 없으면 숫자 없이 "~사이에서 난리"로</td></tr>
+<tr><td>기존 것의 불편 + 이 제품의 원리</td><td>불편·원리</td><td>제품 설명·리뷰</td></tr>
+<tr><td>비교 대상(경쟁 브랜드·기존 제품)</td><td>와우</td><td>비교 63% vs 42%</td></tr>
+<tr><td>그 제품이 퍼진 집단(집사들·컬렉터들·미대생들·학부모들)</td><td>사회 반응</td><td>사회 반응 칸 50% vs 28%</td></tr></table></div>
+<h3>3. 첫 줄 틀 사전</h3>
+<div class="tbl"><table><tr><th>번호</th><th>틀</th><th>편수</th><th>10만+</th><th>조회 중앙</th><th>최고 원본</th></tr>
+<tr><td class="star">B1 ★</td><td><code>{꾸밈 주체}가 만들어서 {집단}들이 난리 났다는 {제품군}이 있어요</code> / <code>{재료}를 {동작}해 {제품}을 만들어버린 미친 {나라} 회사가 있어요</code> / <code>이게 천재 {직업}가 만든 {제품군}이라는데</code></td><td>59</td><td>14 (24%)</td><td>3.6만</td><td>개발자도 이렇게 쓸 거라고는 예상 못했대요 (230만)</td></tr>
+<tr><td class="star">B2 ★</td><td><code>이제 {1등 브랜드} 망할 것 같은데요?</code> / <code>아니 잠깐만요. {브랜드}가 이제 큰일났습니다</code></td><td>5</td><td>2 (40%)</td><td>3.8만</td><td>아니 잠깐만요. 다이슨이 이제 큰일났습니다 (160만)</td></tr>
+<tr><td class="star">B3 ★</td><td><code>와 이거 {흔한 것}이 아니라 {정체}입니다</code> / <code>여러분 이게 {정체}예요</code> — 반전을 <b>단정</b>으로</td><td>3</td><td>2 (67%)</td><td>13.1만</td><td>와 이거 피규어가 아니라 키캡입니다 (150만) — 편수 적음</td></tr>
+<tr><td>B4</td><td><code>와 여러분 {공간}이 좁아 죽겠나요? 그러면 무조건 이거 쓰세요</code></td><td>17</td><td>4 (24%)</td><td>2.9만</td><td>와 여러분 책상이 좁아 죽겠나요? (300만)</td></tr>
+<tr><td>B5</td><td><code>왜 {현상}은 아직도 {옛 방식}일까요?</code> / <code>사람들이 {대상}을 보고 혀를 내두른 이유?</code></td><td>10</td><td>2 (20%)</td><td>1.1만</td><td>왜 21세기에도 피아노 배우는 방식은… (65만) — 자료조사 깊이가 갈린다</td></tr>
+<tr><td>B6</td><td><code>요즘 고급 {장소} 가면 많이 보이는 {제품군}이에요</code> / <code>{직업}들이 {상황}할 때 쓴다는 {제품군}이에요</code> / <code>{몇천 년 전 어디}에서부터 썼다는데</code></td><td>81</td><td>13 (16%)</td><td>2.4만</td><td>7,000년 전 바빌로니아에서부터 썼다는데 (210만)</td></tr>
+<tr class="avoid"><td>✗</td><td>되묻기 — <code>아니 이게 ~가 아니라 ~라고요?</code> · <code>~할 수 있다고요?</code></td><td>16</td><td>0 (0%)</td><td>0.9만</td><td>같은 반전을 질문으로 하면 안 된다(B3 단정과 대비)</td></tr>
+<tr class="avoid"><td>✗</td><td>지식 질문 — <code>~를 아시나요?</code> · <code>들어보셨나요?</code></td><td>23</td><td>1 (4%)</td><td>1.4만</td><td>쓰지 않는다</td></tr>
+</table></div>
+<h3>4. 블록 배치 (잘된 38편 실측)</h3>
+<div class="tbl"><table><tr><th>블록</th><th>하는 일</th><th>문장 틀(원본에서 뽑음)</th><th>등장</th></tr>
+<tr><td>B1 훅</td><td>첫 줄 틀 사전에서</td><td>위 B1~B6</td><td>100%</td></tr>
+<tr><td>B2 화제·정체 숨김</td><td>집단 반응을 꾸밈말로 붙여 정체를 숨긴다</td><td><code>{집단}들이 단체로 소리 질렀다는 초신상 {제품군}이 출시돼버렸는데</code></td><td>(사회 반응 칸 50% vs 28%)</td></tr>
+<tr><td>B3 배경·불편</td><td>원래 무엇이었나 / 기존 것의 불편</td><td><code>이게 원래는 {원래 용도}로 만든 {제품군}이거든요</code> · <code>그동안 {기존 것}은 {불편}해서 진짜 짜증나잖아요</code></td><td>배경 47% · 불편 45%</td></tr>
+<tr><td>B4 권위·정체</td><td>누가 만들었나 — <b>근데</b>로 꺾는다</td><td><code>근데 {꾸밈 회사·사람}에서 {원리}를 넣어버렸는데</code> · <code>{업계}에서 표준으로 쓴다는 {브랜드}랑 정식 파트너십을 맺고</code></td><td>정체 68% · 권위 50% (31%)</td></tr>
+<tr><td>B5 원리</td><td>어떻게 되는지 — 비교로</td><td><code>근데 이건 {원리}라 {기존 것}보다 두 배는 {효과}</code></td><td>76%</td></tr>
+<tr><td>B6 동작·숫자</td><td>숫자 하나를 눈에 보이는 동작과 함께</td><td><code>{부품}이 {0.8초} 만에 튀어나와 {효과}해 주는데</code></td><td>42%</td></tr>
+<tr><td>B7 사회 반응</td><td>어떤 집단 사이에서 퍼졌나</td><td><code>요즘 {집단}들 사이에서 품절대란 나고 있대요</code> · <code>{집단}들까지 이걸로 쓴대요</code></td><td>50%</td></tr>
+<tr><td>B8 와우</td><td>감각 + 비교</td><td><code>마치 {고급 대상}처럼 {효과}가 느껴지고</code></td><td>71%</td></tr>
+<tr><td>B9 심지어</td><td>두 번째 반전 — 반전 사다리</td><td><code>심지어 더 미친 포인트가 {반전}이라는 건데</code> · <code>더 말도 안 되는 건 이게 단순히 {기능}만 하는 게 아니라</code></td><td>76% · 심지어 53% vs 25%</td></tr>
+<tr><td>B10 닫기</td><td>전언으로 — 정체성을 바꾸며</td><td><code>{제품군}이 아니라 {새 정체}라는 소리까지 나오더라고요</code> · <code>~라고 하더라고요</code></td><td>CTA 거의 없음(32/38 없음)</td></tr>
+</table></div>
+<h3>5. 디테일 기법 사전 — 한 편에 2~3개만</h3>
+<div class="tbl"><table><tr><th>기법</th><th>원본</th><th>잘된 / 안된</th></tr>
+<tr><td>결합 엥 — A에 B를 통째로</td><td>짐벌을 스마트폰에 그대로 때려박았더라고요</td><td>9% / 1%</td></tr>
+<tr><td>집단 반응 꾸밈</td><td>인플루언서들이 단체로 소리 질렀다는</td><td>9% / 5%</td></tr>
+<tr><td>이름 숨긴 권위</td><td>헐리우드에서 표준으로 쓴다는 카메라 브랜드</td><td>8% / 2%</td></tr>
+<tr><td>의인화</td><td>음악에 맞춰 헤드가 춤을 추고 고개를 젓기까지</td><td>4% / 0%</td></tr>
+<tr><td>숫자+동작</td><td>0.8초 만에 튀어나와</td><td>3% / 1%</td></tr>
+<tr><td>정체성 전환 닫기</td><td>스마트폰이 아니라 반려로봇이라는 소리까지</td><td>드묾 — DJI 70만</td></tr></table></div>
+<div class="no"><b>하지 말 것</b> — 확인 안 된 수치·사건 지어내기(정보형은 사실이 생명) · 지난 영상을 알아야 하는 시작("얼마 전에 소개해드렸던") · 사양 나열(100인치·몇 와트) · 같은 반전을 "~라고요?" 질문으로</div>
+</section>
+
+<section id="check"><h2>검수 — 시안마다</h2>
+<div class="grid2"><div><h3>공통</h3><ul>
+<li>첫 줄이 틀 사전(A1~A7 · B1~B6)의 틀을 따랐나 — ✗ 틀은 0개</li>
+<li>인물에 꾸밈말이 붙었나</li><li>감각 묘사 1줄 이상 · 비교 1쌍 이상</li>
+<li>정체가 앞 3칸 안에 안 나왔나</li><li>질문은 첫 줄(정보형 B2·B4·B5)에서만 · 본문에 질문 없음</li>
+<li>"~해보세요"로 닫지 않았나</li><li>심지어 줄이 있나</li><li>말끝이 존댓말 체험·전언 한 가지로 이어졌나</li></ul></div>
+<div><h3>스타일별</h3><ul>
+<li><span class="tag tagA">A</span> 조언자·가족·친구 중 한 명이 사건을 만들었나 · 결과 블록(공간 변화)이 있나 · 150~170자 근처</li>
+<li><span class="tag tagB">B</span> 만든 사람·브랜드 권위가 있나 · <b>숫자·사건마다 근거(조사 출처)가 있나</b> · 사회 반응 집단이 있나 · 200자 근처 · 디테일 기법 2~3개</li></ul></div></div>
+<p class="mut">숫자 출처: <code>out/script_calcopy/homedesignnote/</code> — tags.jsonl(줄별 태그) · hook_molds.json(첫 줄 틀 분류) · cards_all.json(유형별 비교). 첫 줄 틀 분류는 버텍스로 두 번 돌려 애매한 첫 줄이 틀 사이를 오갔다 — A1·A3·A4·B1 강함, 말 걸기·되묻기·지식 질문·발견 약함은 두 번 모두 같았다. 편수 10편 미만인 틀(A4·B2·B3)은 방향만 본다.</p>
+</section>
+</div></body></html>
