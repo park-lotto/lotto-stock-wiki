@@ -1,0 +1,613 @@
+# -*- coding: utf-8 -*-
+"""회원 PC(숏템 MCP) — 집 PC 제작 순서(channel/칼카피_제작순서 01~12) 그대로 한 편 (관제 234·097, 2026-10-21 사장님
+"집에서는 한마디면 영상이 만들어지는데 여기서도 똑같애야 된다" / "볼케이노처럼 어떤 단계인지만 간략하게").
+
+    python tools/calcopy/make.py --json hybrid start --ref <벤치 쇼츠 URL> --version 키치잇판
+    python tools/calcopy/make.py --json hybrid approve <sid>
+    python tools/calcopy/make.py --json hybrid status <sid>
+
+판단 주인은 집 PC 와 같다(새로 적지 않는다): 판 = styles · 렌더 = render_bench · 배치 = placement · 대본 검사 = script_audit ·
+자동 검사 = bench_check · 받기·가려내기 = screen. 집 PC 에서 Claude 워커가 브리프를 보고 하던 판단은 여기서
+회원 Claude 에게 AI 요청(engine/client_llm.ask)으로 묻는다 — 지시문 = 제작순서 단계 파일·hybrid/briefs 의 기준 그대로.
+회원 PC 에 없는 것(사장님 10-21): 서버 유튜브 API·제미나이·스피치매틱스 → yt-dlp·위스퍼 / 미나 → 회원 일레븐랩스 키 / 쿠팡 → 회원 파트너스 키(없으면 크롬).
+진행 안내 = 작업 폴더 progress.json {step, total, stage} 한 곳 — MCP 는 stage 한 줄만 회원에게 보인다(세부 금지).
+"""
+from __future__ import annotations
+
+import difflib
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from tools.calcopy.hybrid.common import ROOT, StageError, jload, jsave, run  # noqa: E402
+
+STAGES = [   # (키, 회원에게 보이는 한 줄) — 제작순서 99_회원PC_MCP.md 표와 같은 순서
+    ("bench", "영상 확인 중"), ("origin", "원본 영상 찾는 중"), ("product", "제품 확인 중"), ("research", "자료 조사 중"),
+    ("material", "재료 영상 모으는 중"), ("asr", "원음 정리 중"), ("script", "대본 쓰는 중"), ("sign", "대본 확인을 기다립니다"),
+    ("plan", "장면 맞추는 중"), ("render", "목소리·영상 만드는 중"), ("check", "완성본 검사 중"), ("done", "완성"),
+]
+STAGE_TEXT = dict(STAGES)
+
+
+class Stop(Exception):
+    """제작순서 '멈출 때' — 그 편은 만들지 않는다. why = 회원에게 보이는 이유, fix = 회원이 할 수 있는 일."""
+    def __init__(self, why: str, fix: str = ""):
+        super().__init__(why)
+        self.why, self.fix = why, fix
+
+
+def base() -> Path:
+    return Path(os.environ.get("CALCOPY_DATA_DIR") or (ROOT / "_data")) / "hybrid"
+
+
+class Piece:
+    def __init__(self, sid: str):
+        self.sid = sid
+        self.W = base() / sid                    # 작업물(받은 영상·시트·렌더)
+        self.D = self.W / "doc"                  # 문서(조사·대본·재료·근거) — 집 PC channel/yanshottem/하이브리드_<키>/ 자리
+        self.W.mkdir(parents=True, exist_ok=True)
+        self.p = self.W / "piece.json"
+        self.s = jload(self.p) if self.p.exists() else {"sid": sid, "done": {}, "at": time.time()}
+
+    def save(self):
+        jsave(self.p, self.s)
+
+    def stage(self, key: str):
+        i = [k for k, _ in STAGES].index(key) + 1
+        jsave(self.W / "progress.json", {"step": i, "total": len(STAGES), "stage": STAGE_TEXT[key], "key": key, "at": time.time()})
+
+    def mark(self, key: str, **info):
+        self.s["done"][key] = {"at": time.strftime("%Y-%m-%d %H:%M:%S"), **info}
+        self.save()
+
+    def did(self, key: str) -> bool:
+        return key in self.s["done"]
+
+
+# ── AI 요청(회원 Claude) ────────────────────────────────────────────────
+def ask(tag: str, prompt: str, parts: list | None = None, need: tuple = ()) -> dict:
+    from tools.calcopy.engine import client_llm
+    r, why = client_llm.ask(parts or [], prompt, tag)
+    if r is None:
+        raise StageError(f"AI 요청 실패({tag}): {why}")
+    miss = [k for k in need if k not in r]
+    if miss:
+        raise StageError(f"AI 답에 칸이 없다({tag}): {miss}")
+    return r
+
+
+def img(p: Path) -> tuple:
+    """그림 파트 = (바이트, mime) — client_llm._write_parts 꼴."""
+    p = Path(p)
+    return (p.read_bytes(), "image/png" if p.suffix.lower() == ".png" else "image/jpeg")
+
+
+def brief_text(*rel: str) -> str:
+    """지시문 = 집 PC 문서 그대로(빌린 기술 꾸러미 안) — 회원에게 설명하지 않는다(요청 글로만)."""
+    out = []
+    for r in rel:
+        p = ROOT / r
+        if p.is_file():
+            out.append(f"### {p.name}\n" + p.read_text(encoding="utf-8"))
+    return "\n\n".join(out)
+
+
+# ── 도구(기계적) ────────────────────────────────────────────────────────
+def ytdlp(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
+    return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", *args], capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", timeout=timeout)
+
+
+def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5, w: int = 300, ss: float | None = None, t: float | None = None) -> Path:
+    pre = (["-ss", f"{ss:.2f}"] if ss is not None else []) + (["-t", f"{t:.2f}"] if t is not None else [])
+    run(["ffmpeg", "-y", "-v", "error", *pre, "-i", str(video), "-vf", f"fps={fps},scale={w}:-1,tile={cols}x{rows}", "-frames:v", "1", str(dst)])
+    return dst
+
+
+def frame(video: Path, t: float, dst: Path, crop: list | None = None) -> Path:
+    vf = ["-vf", f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}"] if crop else []
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1", *vf, str(dst)])
+    return dst
+
+
+def whisper(path: Path) -> list[dict]:
+    """위스퍼 받아쓰기(회원 PC 결정 10-21) → [{t0, t1, text}]."""
+    from tools.calcopy.engine import asr_local
+    r = asr_local.transcribe(str(path))
+    return [{"t0": s.get("start", s.get("t0", 0)), "t1": s.get("end", s.get("t1", 0)), "text": s.get("text", "")} for s in (r.get("segments") or [])]
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", (s or "").lower())
+
+
+def fingerprint(bench_lines: list[dict], vtt: list[tuple[float, str]]) -> list[dict]:
+    """벤치 말(받아쓰기) ↔ 원본 자동자막 — 같은 말이 원본 몇 초에 있나(제작순서 02 §4 '두세 줄 이상 맞으면 확정'). 맞은 줄만."""
+    words = [(t, _norm(w)) for t, w in vtt if _norm(w)]
+    out = []
+    # 위스퍼는 나레·원음을 한 덩어리로 묶는다(10-21 실측: 2줄, 둘째 줄 80자) → 문장·쉼표·10~16자 토막으로 갈라 토막마다 대조
+    chunks = []
+    for b in bench_lines:
+        for s in re.split(r"[.?!,]\s*", b["text"]):
+            n = _norm(s)
+            while len(n) > 16:
+                chunks.append(n[:14]); n = n[10:]
+            if len(n) >= 6:
+                chunks.append(n)
+    for q in dict.fromkeys(chunks):
+        if not words:
+            break
+        best = (0.0, None)
+        for i in range(len(words)):
+            acc, j = "", i
+            while j < len(words) and len(acc) < len(q) + 4:
+                acc += words[j][1]; j += 1
+            r = difflib.SequenceMatcher(None, q, acc[:len(q) + 4]).ratio()
+            if r > best[0]:
+                best = (r, words[i][0])
+        if best[0] >= 0.7:
+            out.append({"bench": q, "origin_t": round(best[1], 2), "score": round(best[0], 2)})
+    return out
+
+
+# ── 단계 ───────────────────────────────────────────────────────────────
+def st_bench(P: Piece, ref: str):
+    bd = P.W / "bench"; bd.mkdir(exist_ok=True)
+    r = ytdlp(["-f", "bv*[height>=720]+ba/b", "--merge-output-format", "mp4", "--write-info-json", "--write-auto-subs", "--sub-langs", "ko",
+               "-o", str(bd / "bench.%(ext)s"), ref])
+    mp4 = bd / "bench.mp4"
+    if not mp4.exists():
+        raise Stop("영상을 받지 못했습니다", "영상 주소가 맞는지, 또는 유튜브 로그인 연결을 확인해 주세요")
+    info = jload(bd / "bench.info.json") if (bd / "bench.info.json").exists() else {}
+    sheet(mp4, bd / "sheet.jpg")
+    lines = whisper(mp4)
+    jsave(bd / "asr.json", lines)
+    P.s["bench"] = {"url": ref, "id": info.get("id"), "title": info.get("title"), "channel": info.get("channel"), "date": info.get("upload_date"),
+                    "dur": info.get("duration"), "desc": (info.get("description") or "")[:1500]}
+    P.mark("bench")
+
+
+ORIGIN_READ = """너는 쇼츠 원본 추적 담당이다. 아래는 남의 채널이 만든 연예인 쇼핑 쇼츠(벤치)의 1초 간격 장면 시트와 제목·설명·받아쓰기다.
+제작 순서 문서(02 원본 찾기) 기준으로, 이 쇼츠가 따온 **연예인 본인 원본 영상**(본인 유튜브·방송)을 찾기 위한 단서를 읽어라.
+- 화면 위·아래의 '출처: ○○' 글자 = 원본 채널. 방송 로고·프로그램 이름도 본다. 이름표·자막으로 말하는 사람을 확인(얼굴로 짐작한 이름은 '불명').
+- 설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다.
+- 연예인이 쓰는 물건(쇼핑 소재)이 아니면 is_shopping=false.
+JSON 하나: {"celeb": "이름 또는 불명", "source_label": "화면 출처 글자 그대로 또는 ''", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
+ "product_words": ["제품을 가리키는 낱말"], "queries": ["유튜브 검색어 3~5개 — '<연예인> <제품 낱말>' 꼴"], "is_shopping": true}"""
+
+ORIGIN_PICK = """너는 원본 판정 담당이다. 벤치 쇼츠의 말과 같은 말이 들어 있는 후보 원본 영상들이다(자동자막 지문 대조 결과).
+제작 순서 02 §4·§5 기준: 두세 줄 이상 같은 말이 맞고, 그 제품을 말한 사람이 연예인 **본인**이어야 확정. 후보 썸네일·제목·채널·날짜도 본다
+(원본은 벤치보다 먼저 올라왔다). 확정 못 하면 origin_id 를 ''.
+JSON 하나: {"origin_id": "유튜브 id 또는 ''", "matched": [{"bench": "벤치 말", "origin_t": 초}], "self_spoken": true, "why": "한 줄"}"""
+
+
+ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다(제작 순서 02 §3). 연예인 본인 채널의 영상 목록(제목)에서, 벤치 쇼츠가 따온 원본일 만한 영상을 최대 8개 골라라 —
+제목에 그 제품·쓰임(주방·청소·살림템·추천템 등)·계절이 맞는 것. 벤치보다 먼저 올라온 것.
+JSON 하나: {"ids": ["유튜브 id", …]}"""
+
+
+def _channels_of(found: list[dict], r: dict) -> list[str]:
+    """검색 결과 중 출처 글자·채널 단서와 이름이 맞는 채널 id — 맞는 것부터."""
+    hint = _norm((r.get("source_label") or "").replace("출처", "") + (r.get("channel_hint") or ""))
+    out = []
+    for c in found:
+        name, cid = _norm(c.get("channel") or ""), c.get("channel_id")
+        if cid and name and (name in hint or hint[:6] in name) and cid not in out:
+            out.append(cid)
+    return out
+
+
+def _search(qs: list[str], n: int = 12) -> list[dict]:
+    seen: dict[str, dict] = {}
+    for q in qs[:6]:
+        r = ytdlp(["--flat-playlist", "-J", f"ytsearch{n}:{q}"], timeout=180)
+        if r.returncode != 0 or not r.stdout.strip():
+            continue
+        for e in json.loads(r.stdout).get("entries") or []:
+            if e.get("id") and e["id"] not in seen:
+                seen[e["id"]] = {"id": e["id"], "title": e.get("title"), "channel": e.get("channel") or e.get("uploader"), "dur": e.get("duration"),
+                                 "views": e.get("view_count"), "q": q, "channel_id": e.get("channel_id")}
+    return list(seen.values())
+
+
+def st_origin(P: Piece):
+    bd = P.W / "bench"
+    B = P.s["bench"]
+    lines = jload(bd / "asr.json")
+    r = ask("origin_read", ORIGIN_READ + "\n\n제목: " + str(B.get("title")) + "\n채널: " + str(B.get("channel")) + "\n설명: " + str(B.get("desc")) +
+            "\n받아쓰기: " + " / ".join(l["text"] for l in lines)[:3000], [img(bd / "sheet.jpg")], need=("celeb", "queries", "is_shopping"))
+    if not r.get("is_shopping"):
+        raise Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요")
+    P.s["origin_read"] = r; P.save()
+    label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
+    qs = ([label] if label else []) + [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else [])
+    found = _search(qs)
+    cands = [c for c in found if c["id"] != B.get("id") and (c.get("dur") or 0) > (B.get("dur") or 0) + 20]
+    # 제작순서 02 §3 — 본인 유튜브면 **채널 영상 목록**에서 찾는다(10-21 실측: 이미도 원본 '[미도주방] 찐 살림템'은 검색 15편 어디에도 없었다)
+    ch_ids = _channels_of(found, r)
+    titles = []
+    for cid in ch_ids[:2]:
+        lr = ytdlp(["--flat-playlist", "-J", "--playlist-end", "300", f"https://www.youtube.com/channel/{cid}/videos"], timeout=240)
+        if lr.returncode == 0 and lr.stdout.strip():
+            titles += [{"id": e["id"], "title": e.get("title"), "dur": e.get("duration")} for e in json.loads(lr.stdout).get("entries") or [] if e.get("id")]
+    if titles:
+        pick = ask("origin_titles", ORIGIN_TITLES + f"\n\n벤치 제목: {B.get('title')}\n제품 낱말: {r.get('product_words')}\n채널 영상 목록:\n" +
+                   json.dumps(titles, ensure_ascii=False), need=("ids",))
+        ids = [i for i in pick.get("ids") or [] if any(t["id"] == i for t in titles)][:8]
+        cands = [t for t in titles if t["id"] in ids] + [c for c in cands if c["id"] not in ids]
+    od = P.W / "origin"; od.mkdir(exist_ok=True)
+    from tools.calcopy.yanshot.common import vtt_words
+    scored = []
+    for c in cands[:10]:
+        ytdlp(["--skip-download", "--write-auto-subs", "--sub-langs", "ko", "-o", str(od / f"{c['id']}.%(ext)s"), f"https://www.youtube.com/watch?v={c['id']}"],
+              timeout=180)
+        vtt = next(od.glob(f"{c['id']}*.ko.vtt"), None)
+        if not vtt:
+            continue
+        m = fingerprint(lines, vtt_words(vtt))
+        if m:
+            scored.append({**c, "matched": m})
+    scored.sort(key=lambda c: -len(c["matched"]))
+    if not scored:
+        raise Stop("원본 영상을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+    pick = ask("origin_pick", ORIGIN_PICK + "\n\n후보:\n" + json.dumps(scored[:5], ensure_ascii=False, indent=1), [img(bd / "sheet.jpg")],
+               need=("origin_id", "self_spoken"))
+    if not pick.get("origin_id") or not pick.get("self_spoken"):
+        raise Stop("연예인 본인이 말한 원본을 확정하지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+    oid = pick["origin_id"]
+    ts = [m["origin_t"] for m in pick.get("matched") or [] if isinstance(m.get("origin_t"), (int, float))]
+    a, b = (max(0, min(ts) - 90), max(ts) + 90) if ts else (None, None)
+    from tools.calcopy.hybrid import screen
+    files = screen.download(P.W, [oid], [(a, b)] if ts else None, prefix="")
+    P.s["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": pick.get("matched"), "files": [str(f) for f in files],
+                     "info": next((c for c in scored if c["id"] == oid), {}), "window": [a, b]}
+    P.mark("origin")
+
+
+PRODUCT_PICK = """너는 제품 특정 담당이다(제작 순서 03). 원본 영상 장면 시트에서 연예인이 쓰는 그 제품의 **전체 모양**이 보이는 장면을 2~4개 골라라
+(포장 라벨·로고가 보이는 장면이 최고, 너무 작게 부분만 자르지 않는다). 시트는 1초 간격, 왼쪽 위부터 0초(시트 시작 초는 아래 적힘).
+JSON 하나: {"scenes": [{"t": 원본 초, "crop": [x, y, w, h]  (원본 영상 픽셀)}], "brand_words": ["원본 대사·화면에 나온 브랜드·제품 이름"], "coupang_queries": ["쿠팡 검색어 2~4개"]}"""
+
+PRODUCT_SAME = """너는 같은 제품 판정 담당이다(제작 순서 03 §4 — 사장님 10-21 "쿠팡에서 정확한 거"). 원본 장면 사진과 쿠팡 후보(이름·대표 이미지)를 대조해
+포장·로고·모양·색이 **같은 제품**인 후보 하나를 골라라. 비슷한 제품 대체 금지. 없으면 product_id ''.
+JSON 하나: {"product_id": "쿠팡 상품번호 또는 ''", "name": "정식 제품명(브랜드·모델·색)", "why": "대조 근거 한 줄", "category": "화장품|식품|생활|의약품|의료기기|기타"}"""
+
+
+def coupang_chrome(queries: list[str], out: Path) -> dict:
+    """회원 파트너스 키가 없을 때(사장님 10-21) — 회원 PC 크롬 창(화면 뜸, 쿠팡은 헤드리스를 막는다)으로 검색 결과 카드만 읽는다."""
+    # 동선·추출·파싱 = 서비스 크롤러(shopping_shorts/coupang_search) 그대로 — 홈 먼저 → 검색 → 상품 칸 기다림 → _EXTRACT_JS → parse_items
+    #   (10-21 실측: 이것 없이 검색 주소로 바로 가니 0개)
+    from playwright.sync_api import sync_playwright
+    from shopping_shorts import coupang_partners as cp, coupang_search as cs
+    res = {}
+    prof = Path(os.environ.get("SHORTEM_HOME") or (base() / "_home")) / "browser" / "coupang"
+    prof.mkdir(parents=True, exist_ok=True)
+    with sync_playwright() as p:
+        ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
+                                                   args=["--disable-blink-features=AutomationControlled"])
+        try:
+            pg = ctx.pages[0] if ctx.pages else ctx.new_page()
+            try:
+                pg.goto("https://www.coupang.com/", wait_until="domcontentloaded", timeout=30000)
+                pg.wait_for_timeout(900)
+            except Exception:  # noqa: BLE001 — 홈이 늦어도 검색은 해 본다
+                pass
+            for q in queries[:4]:
+                pg.goto(cp.search_url(q), wait_until="domcontentloaded", timeout=30000)
+                try:
+                    pg.wait_for_selector("li[class*=ProductUnit_productUnit]", timeout=15000)
+                except Exception:  # noqa: BLE001
+                    pass
+                items = cs.parse_items(pg.evaluate(cs._EXTRACT_JS, 12), limit=12)
+                res[q] = {"ok": bool(items), "items": items, **({} if items else {"notice": pg.inner_text("body")[:200]})}
+                pg.wait_for_timeout(1500)                     # 몰아치면 쿠팡이 잠시 막는다(서비스 크롤러 실측)
+        finally:
+            ctx.close()
+    jsave(out, res)
+    return res
+
+
+def st_product(P: Piece):
+    O = P.s["origin"]
+    src = Path(O["files"][-1]) if O.get("files") else None
+    if not src or not src.exists():
+        raise StageError("원본 영상 파일이 없다")
+    ld = P.W / "look"; ld.mkdir(exist_ok=True)
+    a = (O.get("window") or [0, None])[0] or 0
+    # 벤치 말이 맞은 원본 시각 근처만 본다(10-21 실측: 받은 구간 전체 시트를 주자 주방 도구 영상 앞머리의 식칼을 골랐다)
+    ts = [float(m["origin_t"]) - a for m in O.get("matched") or [] if isinstance(m.get("origin_t"), (int, float))]
+    s0 = max(0.0, (min(ts) if ts else 0) - 25)
+    sh = sheet(src, ld / "origin_sheet.jpg", fps=1, cols=6, rows=6, w=320, ss=s0, t=36)
+    R0 = P.s.get("origin_read") or {}
+    r = ask("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 원본 파일 {s0:.0f}초부터 1초 간격(왼쪽 위부터) — 답의 t 는 **파일 초**({s0:.0f} + 칸 번호).\n"
+            f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}\n"
+            f"벤치 말과 원본이 맞은 원본 초: {[m.get('origin_t') for m in O.get('matched') or []]}",
+            [img(sh), img(P.W / "bench" / "sheet.jpg")], need=("scenes", "coupang_queries"))
+    shots = []
+    for i, s in enumerate(r.get("scenes") or []):
+        try:
+            shots.append(frame(src, float(s["t"]), ld / f"p{i + 1}.jpg", s.get("crop")))
+        except Exception:  # noqa: BLE001 — 자르기 실패한 장면은 빼고 나머지로
+            continue
+    if not shots:
+        raise Stop("제품이 보이는 장면을 찾지 못했습니다", "")
+    from tools.calcopy import coupang_customer as C
+    qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
+    found = C.search(qs)
+    if any((v or {}).get("need") == "chrome" for v in found.values()):
+        found = coupang_chrome(qs, ld / "coupang.json")
+    jsave(ld / "coupang.json", found)
+    cands = [it for v in found.values() for it in (v or {}).get("items", [])][:16]
+    if not cands:
+        raise Stop("쿠팡에서 같은 제품을 찾지 못했습니다", "")
+    same = ask("product_same", PRODUCT_SAME + "\n\n쿠팡 후보:\n" + json.dumps(cands, ensure_ascii=False, indent=1), [img(x) for x in shots],
+               need=("product_id", "name", "category"))
+    if not same.get("product_id"):
+        raise Stop("쿠팡에서 같은 제품을 찾지 못했습니다", "")
+    if same.get("category") in ("의약품", "의료기기"):
+        raise Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요")
+    P.s["product"] = {**same, "brand_words": r.get("brand_words"), "shots": [str(x) for x in shots]}
+    P.mark("product")
+
+
+RESEARCH = """너는 조사 담당이다. 아래 제작 순서 04(조사)·브리프(research)의 기준 그대로 `조사.md` 한 파일 내용을 써라. 필요하면 웹 검색으로 사실을 확인하고 출처 URL 을 적는다.
+지어내기 금지·수치 어림 금지·원본에 없는 말을 본인 말로 적기 금지. 멈출 이유(전문의약품·의료기기 효능 등)가 있으면 stop 에 적는다.
+원본 자동자막(원본 초·말)과 벤치 지문 대조, 제품 판정 결과가 아래에 있다.
+JSON 하나: {"stop": "" , "조사_md": "마크다운 전문(0 결론 ~ 6 확인 못 한 것)", "keywords": ["제품명", "영문명", "모델"], "queries": ["재료 영상 유튜브 검색어 5~8개"],
+ "exclude": ["모음", "TOP", "가성비"], "spans": [{"a": 원본 파일 초, "b": 초, "tag": "O1"}], "facts": [{"id": "f1", "fact": "…", "src": "URL 또는 '원본 n초'"}]}"""
+
+
+def st_research(P: Piece):
+    from tools.calcopy.yanshot.common import vtt_words
+    O, PR = P.s["origin"], P.s["product"]
+    vtt = next((P.W / "origin").glob(f"{O['id']}*.ko.vtt"), None)
+    words = vtt_words(vtt) if vtt else []
+    a, b = O.get("window") or [None, None]
+    near = [(round(t, 1), w) for t, w in words if a is None or (a <= t <= b)]
+    txt = " ".join(f"[{t}]{w}" for t, w in near)[:9000]
+    r = ask("research", RESEARCH + "\n\n" + brief_text("channel/칼카피_제작순서/04_조사.md", "tools/calcopy/hybrid/briefs/research.md") +
+            f"\n\n## 원본\n{O['url']} (받은 파일은 원본 {a or 0:.0f}초부터 — spans 는 파일 초)\n지문 대조: {json.dumps(O.get('matched'), ensure_ascii=False)}\n"
+            f"자동자막(원본 초):\n{txt}\n\n## 제품\n{json.dumps(PR, ensure_ascii=False)}",
+            [img(Path(x)) for x in PR.get("shots", [])[:3]], need=("조사_md", "keywords", "queries", "spans"))
+    if r.get("stop"):
+        raise Stop(str(r["stop"])[:200], "다른 소재 영상을 주세요")
+    (P.D / "조사").mkdir(parents=True, exist_ok=True)
+    (P.D / "조사" / "조사.md").write_text(r["조사_md"], encoding="utf-8")
+    P.s["research"] = {k: r.get(k) for k in ("keywords", "queries", "exclude", "spans", "facts")}
+    P.mark("research")
+
+
+SCREEN_PICK = """너는 제품 영상 고르기 담당이다(브리프 screen_pick · 제작 순서 05). 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 2~4개.
+각 후보의 360p 토막 시트(키워드 구간)와 메타가 있다.
+JSON 하나: {"chosen": [{"id": "…", "why": "…", "sections": [[a, b]]}], "rejected": [{"id": "…", "why": "…"}]}"""
+
+
+def st_material(P: Piece):
+    from tools.calcopy.hybrid import screen
+    R = P.s["research"]
+    screen.search(P.W, R.get("queries") or [], n=10, exclude=R.get("exclude"), server=False)
+    sj = screen.screen(P.W, R.get("keywords") or [], top=8)
+    rows = sj.get("rows") or []
+    sheets = [P.W / "screen" / f"{x['id']}_sheet.jpg" for x in rows if (P.W / "screen" / f"{x['id']}_sheet.jpg").exists()][:8]
+    meta = [{k: x.get(k) for k in ("id", "title", "channel", "max_height", "dur", "hits", "score")} for x in rows][:8]
+    r = ask("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(meta, ensure_ascii=False, indent=1) +
+            f"\n\n제품: {P.s['product'].get('name')}", [img(s) for s in sheets], need=("chosen",))
+    sp = P.W / "screen.json"
+    d = jload(sp) if sp.exists() else {}
+    d.update(chosen=r.get("chosen") or [], rejected=r.get("rejected") or [])
+    jsave(sp, d)
+    files = []
+    for c in d["chosen"]:
+        secs = [tuple(s) for s in c.get("sections") or []] or None
+        files += screen.download(P.W, [c["id"]], secs, prefix="")
+    P.s["material"] = {"files": [str(f) for f in files]}
+    P.mark("material")
+
+
+def st_asr(P: Piece):
+    O = P.s["origin"]
+    src = Path(O["files"][-1])
+    out = []
+    ad = P.W / "asr"; ad.mkdir(exist_ok=True)
+    for s in P.s["research"].get("spans") or []:
+        wav = ad / f"{s.get('tag', 'O')}.wav"
+        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{float(s['a']):.2f}", "-to", f"{float(s['b']):.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wav)])
+        out.append({**s, "src": src.name, "heard": " ".join(x["text"] for x in whisper(wav))})
+    jsave(ad / "result.json", {"spans": out, "engine": "whisper"})
+    P.mark("asr", n=len(out))
+
+
+SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙(styles brief)·브리프(script)·제작 순서 07 기준 그대로 이 편의 `대본.json`·`재료.json`·`근거.md` 를 써라.
+꼴은 렌더러 설명(render_bench docstring)과 같다. 대본 검사(script_audit)를 통과해야 한다 — 통과 못 한 이유가 아래에 있으면 고쳐서 다시.
+원음 줄(kind orig)의 src 는 원본 파일 이름, spans 는 그 파일 초. 재료.json 의 cand_dir 는 비워 둔다(엔진이 채운다), 컷 src 는 재료 파일 이름.
+JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
+
+
+def st_script(P: Piece, version: str, fail: str = ""):
+    from tools.calcopy.hybrid import render_bench, script_audit, styles as STY
+    vd = P.D / version; vd.mkdir(parents=True, exist_ok=True)
+    mats = [Path(f) for f in P.s["material"]["files"]] + [Path(f) for f in P.s["origin"]["files"]]
+    mat_list = [{"file": m.name, "dur": _dur(m)} for m in mats if m.exists()]
+    sheets = []
+    for m in mats[:5]:
+        if m.exists():
+            sheets.append(sheet(m, P.W / f"_sheet_{m.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240))
+    ctx = (STY.brief(version) + "\n\n" + brief_text("tools/calcopy/hybrid/briefs/script.md", "channel/칼카피_제작순서/07_대본.md") +
+           "\n\n## 렌더러 꼴\n" + (render_bench.__doc__ or "") + "\n\n## 조사.md\n" + (P.D / "조사" / "조사.md").read_text(encoding="utf-8") +
+           "\n\n## 원음 받아쓰기\n" + json.dumps(jload(P.W / "asr" / "result.json"), ensure_ascii=False) +
+           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(mat_list, ensure_ascii=False) + (f"\n\n## 지난 검사에서 걸린 것\n{fail}" if fail else ""))
+    for attempt in range(3):
+        r = ask(f"script_{version}", SCRIPT + "\n\n" + ctx, [img(s) for s in sheets], need=("대본", "재료"))
+        S, M = r["대본"], r["재료"]
+        M["cand_dir"] = str(P.W / "src")
+        jsave(vd / "대본.json", S); jsave(vd / "재료.json", M)
+        (vd / "근거.md").write_text(r.get("근거_md") or "", encoding="utf-8")
+        a = script_audit.audit(vd / "대본.json", version)
+        if a.get("ok"):
+            P.mark("script", version=version, tries=attempt + 1)
+            return S
+        ctx += "\n\n## 대본 검사에서 걸린 것(고쳐라)\n" + json.dumps(a, ensure_ascii=False)[:4000]
+    raise StageError("대본 검사를 세 번 통과하지 못했다")
+
+
+def _dur(p: Path) -> float | None:
+    try:
+        from tools.calcopy.hybrid.common import dur_of
+        return round(dur_of(p), 2)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+PLAN_LOOK = """너는 장면 검수 담당이다(제작 순서 08). 계획 시트를 보고 컷마다: 대사와 화면이 맞나(A3) · 남의 신체 근접(A13) · 남의 글자·원본 자막 띠(A5) ·
+0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움. 고칠 것이 있으면 재료.json 전체를 고쳐서 돌려준다(없으면 null).
+JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
+
+
+def plan_sheet(P: Piece, version: str, T: dict) -> Path:
+    """계획 시간표의 컷마다 가운데 한 장(크롭 그대로) → 모음 그림 — 렌더 전 눈 확인용(plan_only 는 시간표만 쓴다)."""
+    from PIL import Image, ImageDraw
+    M = jload(P.D / version / "재료.json")
+    cand = Path(M.get("cand_dir") or (P.W / "src"))
+    tiles = []
+    for i, c in enumerate(T.get("cuts") or []):
+        src = cand / str(c.get("src") or "")
+        if not src.exists():
+            continue
+        f = P.W / "_plan" / f"c{i:02d}.jpg"
+        f.parent.mkdir(exist_ok=True)
+        crop = c.get("crop") if isinstance(c.get("crop"), list) else None
+        try:
+            frame(src, float(c.get("ss") or 0) + float(c.get("dur") or 0) / 2, f, crop)
+            im = Image.open(f).convert("RGB")
+            im.thumbnail((220, 220))
+            d = ImageDraw.Draw(im)
+            d.rectangle((0, 0, im.width, 18), fill=(0, 0, 0))
+            d.text((3, 2), f"{c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))
+            tiles.append(im)
+        except Exception:  # noqa: BLE001 — 못 뜬 컷은 시트에서 빠진다(검수가 본다)
+            continue
+    out = P.W / version / "plan_sheet.jpg"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    cols = 6
+    sh = Image.new("RGB", (220 * cols, 220 * max(1, -(-len(tiles) // cols))), (20, 20, 20))
+    for k, im in enumerate(tiles):
+        sh.paste(im, ((k % cols) * 220, (k // cols) * 220))
+    sh.save(out, quality=85)
+    return out
+
+
+def st_plan(P: Piece, version: str):
+    from tools.calcopy.hybrid import render_bench
+    vd = P.D / version
+    for attempt in range(3):
+        try:
+            res, over = render_bench.render(version, vd, P.W / version, plan_only=True), ""
+        except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다(제작순서 08)
+            res, over = {"timeline": {"cuts": []}}, str(e)
+        sh = plan_sheet(P, version, res.get("timeline") or {})
+        r = ask(f"plan_{version}", PLAN_LOOK + (f"\n\n계획 단계가 멈췄다(재료를 고쳐라): {over}" if over else "") + "\n\n대본:\n" +
+                (vd / "대본.json").read_text(encoding="utf-8")[:6000] + "\n\n재료:\n" + (vd / "재료.json").read_text(encoding="utf-8")[:6000],
+                [img(sh)], need=("ok",))
+        if not r.get("재료"):
+            if over:
+                raise StageError(f"계획이 멈췄는데 재료를 고치지 못했다: {over}")
+            break
+        M = r["재료"]; M["cand_dir"] = str(P.W / "src")
+        jsave(vd / "재료.json", M)
+    P.mark("plan", version=version)
+
+
+FINAL_LOOK = """너는 완성본 검수 담당이다(제작 순서 11 ③). 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나(A3), 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
+0초 = 연예인 얼굴 크게. 받아쓰기(위스퍼 — 혼자 틀린 건 결함이 아닐 수 있다)와 대본 글자도 대조한다.
+JSON 하나: {"ok": true, "problems": ["…"]}"""
+
+
+def st_render_check(P: Piece, version: str) -> Path:
+    from tools.calcopy.hybrid import bench_check, render_bench
+    vd, wd = P.D / version, P.W / version
+    P.stage("render")
+    render_bench.render(version, vd, wd)
+    final = wd / "render" / "final.mp4"
+    if not final.exists():
+        raise StageError("완성본이 나오지 않았다")
+    P.stage("check")
+    auto = bench_check.check(version, vd, wd)
+    heard = " ".join(x["text"] for x in whisper(final))
+    sh = vd / "final_sheet_1s.jpg"
+    look = ask(f"final_{version}", FINAL_LOOK + f"\n\n자동 검사: {json.dumps(auto.get('report'), ensure_ascii=False)[:2500]}\n받아쓰기: {heard[:2500]}\n대본:\n" +
+               (vd / "대본.json").read_text(encoding="utf-8")[:5000], [img(sh)] if sh.exists() else [], need=("ok",))
+    P.mark("check", auto_ok=bool(auto.get("ok")), look_ok=bool(look.get("ok")), problems=look.get("problems"))
+    return final
+
+
+# ── 바깥 진입 ───────────────────────────────────────────────────────────
+def _out(P: Piece, need: str, **kw) -> dict:
+    pr = jload(P.W / "progress.json") if (P.W / "progress.json").exists() else {}
+    return {"sid": P.sid, "need": need, "stage": pr.get("stage"), "step": pr.get("step"), "total": pr.get("total"), **kw}
+
+
+def _script_view(P: Piece, version: str) -> dict:
+    S = jload(P.D / version / "대본.json")
+    title = " ".join("".join(c[0] for c in l) if isinstance(l, list) else str(l) for l in S.get("title_lines") or [])
+    lines = [(l.get("tts") or l.get("text") or " ".join(c[0] for c in l.get("caps_rel") or []) or "").strip() for l in S.get("lines") or []]
+    return {"title": title, "lines": [x for x in lines if x][:30]}
+
+
+def start(ref: str, version: str) -> dict:
+    P = Piece(uuid.uuid4().hex[:12])
+    P.s.update(ref=ref, version=version); P.save()
+    return advance(P)
+
+
+def advance(P: Piece) -> dict:
+    v = P.s["version"]
+    try:
+        for key, fn in (("bench", lambda: st_bench(P, P.s["ref"])), ("origin", lambda: st_origin(P)), ("product", lambda: st_product(P)),
+                        ("research", lambda: st_research(P)), ("material", lambda: st_material(P)), ("asr", lambda: st_asr(P)),
+                        ("script", lambda: st_script(P, v))):
+            if not P.did(key):
+                P.stage(key)
+                fn()
+        if not P.s.get("approved"):
+            P.stage("sign")
+            return _out(P, "approve", script=_script_view(P, v))
+        if not P.did("plan"):
+            P.stage("plan")
+            st_plan(P, v)
+        final = st_render_check(P, v) if not P.did("check") else P.W / v / "render" / "final.mp4"
+        P.stage("done")
+        c = P.s["done"].get("check", {})
+        return _out(P, "done", video=str(final), title=_script_view(P, v)["title"], auto_ok=c.get("auto_ok"), look_ok=c.get("look_ok"))
+    except Stop as e:
+        P.s["stopped"] = {"why": e.why, "fix": e.fix}; P.save()
+        return _out(P, "fail", why=e.why, fix=e.fix, retry_ok=False)
+
+
+def approve(sid: str) -> dict:
+    P = Piece(sid)
+    P.s["approved"] = True; P.save()
+    return advance(P)
+
+
+def resume(sid: str) -> dict:
+    """멈춘 단계(오류)부터 다시 — 끝난 단계는 건너뛴다(집 PC run.py 와 같은 이어 돌리기)."""
+    if not (base() / sid / "piece.json").exists():
+        return {"sid": sid, "need": "fail", "why": "그 작업이 없습니다", "fix": "", "retry_ok": False}
+    return advance(Piece(sid))
+
+
+def status(sid: str) -> dict:
+    if not (base() / sid / "piece.json").exists():
+        return {"sid": sid, "need": "fail", "why": "그 작업이 없습니다", "fix": "", "retry_ok": False}
+    P = Piece(sid)
+    if P.s.get("stopped"):
+        return _out(P, "fail", **P.s["stopped"])
+    if P.did("check"):
+        return _out(P, "done", video=str(P.W / P.s["version"] / "render" / "final.mp4"))
+    return _out(P, "wait")

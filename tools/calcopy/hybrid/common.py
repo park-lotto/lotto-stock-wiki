@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -14,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+# 얼굴 검출 모델(YuNet) — 주인 한 곳(render_bench·thumb). 회원 PC = 설치본 models/face(환경변수, 숏템 MCP 가 넣는다). OpenCV 는 한글 경로를 못 읽는다
+FACE_MODEL = os.environ.get("CALCOPY_FACE_MODEL") or "C:/calcopy_models/face_detection_yunet_2023mar.onnx"
 WORK_BASE = Path("C:/숏템_칼카피/yanshottem")
 DOC_BASE = ROOT / "channel" / "yanshottem"
 DESK_DIR = Path("C:/Users/CH/Desktop/칼카피영상/얜샷템/하이브리드")
