@@ -1,0 +1,232 @@
+{
+ "_note": "잇템로그판 1편 — TIRTIR 마스크핏 레드 쿠션(2026-10-20, 관제 097). 원본 = MissDarcei 'YOLbmBYU-3E'(6,504만 회). 박자 = 잇템로그 2편: 나레 훅 빨강 → 원음 → 나레 공개 → 나레 근거 → 원음 반응 → 나레 → 원음 → 끝 나레 후일담. 사실 근거 = 원본 자동자막 낱말 시각(src/YOLbmBYU-3E.en.vtt)·화면. | 유라 비교판(10-20 사장님 \"미나 유라 하나씩\")",
+ "slug": "ititemlog_ep01_tirtir_yura",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "TIRTIR 마스크핏 레드 쿠션(한국 화장품)",
+ "title_lines": [
+  [
+   [
+    "한국 쿠션 파데 쓰고"
+   ]
+  ],
+  [
+   [
+    "인생 색 찾은 외국인"
+   ]
+  ]
+ ],
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 쿠션 파데를 바르고 충격 받은 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 쿠션 파데를 바르고"
+    },
+    {
+     "text": "충격 받은 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(문제)",
+   "src": "YOLbmBYU-3E.mp4",
+   "spans": [
+    [
+     0.25,
+     2.72
+    ]
+   ],
+   "said": "this is the darkest shade of a Korean foundation",
+   "caps_rel": [
+    [
+     "이게 한국 파데",
+     0.0,
+     1.2
+    ],
+    [
+     "제일 어두운 호수야",
+     1.2,
+     2.47,
+     "어두운"
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 문제",
+   "tts": "가장 어두운 색인데도 하얗게 떴는데요.",
+   "caps": [
+    {
+     "text": "가장 어두운 색인데도"
+    },
+    {
+     "text": "하얗게 떴는데요"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 공개(전언)",
+   "tts": "그런데 한 달 뒤 티르티르에서 새 호수 열한 개를 내놨는데요.",
+   "caps": [
+    {
+     "text": "그런데 한 달 뒤"
+    },
+    {
+     "text": "티르티르에서",
+     "key": "티르티르"
+    },
+    {
+     "text": "새 호수 11개를"
+    },
+    {
+     "text": "내놨는데요"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 시도",
+   "tts": "그중 제일 어두운 사십삼 엔을 발라 봤더니.",
+   "caps": [
+    {
+     "text": "그중 제일 어두운"
+    },
+    {
+     "text": "43N을 발라 봤더니"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "YOLbmBYU-3E.mp4",
+   "spans": [
+    [
+     26.4,
+     28.95
+    ],
+    [
+     29.45,
+     31.55
+    ]
+   ],
+   "said": "oh my God no way / oh my God that's literally my skin tone",
+   "caps_rel": [
+    [
+     "세상에 말도 안 돼",
+     0.0,
+     2.55
+    ],
+    [
+     "완전 내 피부색이잖아",
+     2.55,
+     4.65,
+     "피부색"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 근거(전언)",
+   "tts": "컨실러도 필요 없을 정도였는데요.",
+   "caps": [
+    {
+     "text": "컨실러도"
+    },
+    {
+     "text": "필요 없을 정도였는데요"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "나레 고조",
+   "tts": "드디어 쿠션을 쓸 수 있게 됐다며 기뻐했는데요.",
+   "caps": [
+    {
+     "text": "드디어 쿠션을"
+    },
+    {
+     "text": "쓸 수 있게 됐다며"
+    },
+    {
+     "text": "기뻐했는데요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응(끝)",
+   "src": "YOLbmBYU-3E.mp4",
+   "spans": [
+    [
+     50.5,
+     51.95
+    ],
+    [
+     52.5,
+     54.25
+    ]
+   ],
+   "said": "oh my God look at my face / I look like I have a filter on",
+   "caps_rel": [
+    [
+     "세상에 내 얼굴 좀 봐",
+     0.0,
+     1.45
+    ],
+    [
+     "필터 씌운 것 같아",
+     1.45,
+     3.2,
+     "필터"
+    ]
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "다음 달엔 호수 열 개가 더 나온다고 하네요.",
+   "caps": [
+    {
+     "text": "다음 달엔"
+    },
+    {
+     "text": "호수 10개가"
+    },
+    {
+     "text": "더 나온다고 하네요"
+    }
+   ]
+  }
+ ],
+ "facts": {
+  "f1": "0.32~2.32 'this is the darkest shade of a Korean Foundation' — 화면 0~7초 뺨에 밝은 동그라미·얼굴 반 밝게(원본 박힌 글 'One month ago...')",
+  "f2": "8.00~13.64 'TIRTIR just came out with 11 new shades of their Foundation bringing it up to 20 Shades'",
+  "f3": "17.64~19.88 'this is the shade 43N deep cocoa'",
+  "f4": "26.44~33.60 'oh my God no way oh my God that's literally my skin tone did they Swatch me in my sleep'",
+  "f5": "36.56~39.88 'I don't even think I need concealer with this' · 45.28~48.16 'I can finally use a cushion Foundation'",
+  "f6": "50.56~54.04 'oh my God look at my face I look like I have a filter on' · 57.28~58.64 '10 more shades are coming out next month'"
+ },
+ "cta": "없음",
+ "_tts_log": "1차 33.47초(미나 1.35 이하, 평균 7.29자/초) → 속도는 그대로 두고 글을 줄임(N2·N4·N5·N6, O2 셋째 구간 뺌)",
+ "voice": {
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d"
+ }
+}

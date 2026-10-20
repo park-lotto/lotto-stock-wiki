@@ -114,6 +114,16 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
     return spans
 
 
+def inner_silences(full, thresh="-40dB", min_len=0.16) -> list:
+    """앞뒤 무음을 뺀 안쪽 쉼만(쉼 고치기용). 문장 경계를 따로 아는 길(손 tts_spans·글자 시각 align)이 쓴다 —
+    10-20 잇템로그 유라: 쉼이 적은 목소리(안쪽 쉼 < 줄 수-1)에서 split_sentences 의 경계 고르기가 IndexError 로 죽었다(경계는 안 쓰는데)."""
+    sil = silences(full, thresh, min_len)
+    total = dur_of(full)
+    head = sil[0][1] if sil and sil[0][0] <= 0.02 else 0.0
+    tail = sil[-1][0] if sil and sil[-1][1] >= total - 0.02 else total
+    return [s for s in sil if s[0] > head + 0.05 and s[1] < tail - 0.05]
+
+
 def split_sentences(full, n, chars: list[int] | None = None):
     """문장 경계(자동, align 없을 때). 손으로 확인한 tts_spans 가 있으면 그것이, 글자 시각(align)이 있으면 split_by_align 이 이긴다.
     10-18 김가연 편: '긴 무음 n-1개' 방식은 쉼표 쉼(0.42초 '최강 동안,')이 문장 끝 쉼보다 길어 H 를 '최강 동안' 으로 자르고도 조용히 렌더했다.
@@ -124,6 +134,8 @@ def split_sentences(full, n, chars: list[int] | None = None):
     tail = sil[-1][0] if sil and sil[-1][1] >= total - 0.02 else total
     inner = [s for s in sil if s[0] > head + 0.05 and s[1] < tail - 0.05]
     if not chars:
+        if len(inner) < n - 1:
+            raise StageError(f"문장 경계 무음이 모자란다({len(inner)} < {n - 1}) — 대본 tts_spans 를 손으로")
         cut = sorted(sorted(inner, key=lambda s: s[1] - s[0], reverse=True)[:n - 1])
     else:                                   # 무음 n-1개 고르기 전수(조합 수 작음): 줄마다 '말한 시간(안쪽 쉼 뺌) 당 글자'가 가장 고른 조합
         from itertools import combinations
@@ -157,10 +169,10 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
     from tools.calcopy.engine import narr_align as NA
     L = tts_lines(S)
     if S.get("tts_spans"):
-        spans, inner = [tuple(S["tts_spans"][l["id"]]) for l in L], split_sentences(full, len(L))[1]
+        spans, inner = [tuple(S["tts_spans"][l["id"]]) for l in L], inner_silences(full)
         how = "hand"
     elif align:
-        spans, inner, how = split_by_align(S, align), split_sentences(full, len(L))[1], "align"
+        spans, inner, how = split_by_align(S, align), inner_silences(full), "align"
     else:
         spans, inner = split_sentences(full, len(L), [nchar(l["tts"]) for l in L])
         how = "silence_guess"
