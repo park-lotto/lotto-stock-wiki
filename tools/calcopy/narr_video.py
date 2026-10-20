@@ -14,6 +14,7 @@ plan = {"tteutgi","frames":[{"frame","t_end"}...],"script","tts","materials","ou
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -178,6 +179,17 @@ def tts_transcript(audio: str, ask=None) -> tuple[list[dict] | None, str]:
                 return seg, f"캐시 {cache.name}{how}"
         except ValueError:
             pass
+    if ask is None and os.environ.get("CALCOPY_CUSTOMER_MODE") == "1":
+        # 고객 PC(관제 234): 서버 무료 제미나이 키 묶음(gemini_free·gemini_keys)은 고객 묶음 밖 — 동봉 위스퍼(asr_local)로 받아쓴다.
+        #   10-20 라이브 시험 추적: 나레 시간 맞추기가 gemini_keys 를 불러 고객 PC 에서 멈출 자리였다
+        from tools.calcopy.engine import asr_local
+        r = asr_local.transcribe(str(ap))
+        seg = [{"start": s["start"], "end": s["end"], "text": s["text"]} for s in r.get("segments") or [] if s.get("text")]
+        if not seg:
+            return None, "받아쓰기 실패: 로컬 위스퍼 빈 답"
+        cache.write_text(json.dumps({"md5": md5, "model": r.get("engine"), "segments": seg}, ensure_ascii=False, indent=1), encoding="utf-8")
+        seg, how = _fit_asr_len(seg, audio)
+        return seg, f"받아쓰기 {r.get('engine')}{how}"
     if ask is None:
         from tools.calcopy.engine.gemini_free import ask
     from tools.calcopy.transcribe_free import P
