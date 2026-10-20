@@ -381,8 +381,19 @@ def still_move(src, src_crop, ar, dur: float, move) -> str:
     return f"scale={ow * 2}:{oh * 2},zoompan=z='{z}':x='{x}':y='(ih-ih/zoom)/2':d=1:s={ow}x{oh}:fps={FPS},"
 
 
+def box_top(by: int, min_y: int, anchor: bool = True, cap_top: int | None = None) -> int:
+    """그림 칸 윗변. 기본(anchor) = 자막 바로 밑에 붙임(10-16 조율자: 게시글형 y1185 칸이 빈칸 위에 떠 아마추어처럼 보였다).
+    ★자막이 그림 **안에서 시작하는** 틀(자막 윗변 cap_top > 칸 윗변 — 얜샷템 창 y420·자막 y1206, 영상 위에 자막이 겹친다)은 원본 자리 그대로:
+    10-20 회원 실시험에서 무조건 끌어내려 창 1080 중 870px 가 흰 바탕이 됐다. anchor=False = 자막 밑으로만 밀어냄(겹치지 않게)."""
+    if not anchor:
+        return max(by, min_y)
+    if cap_top is not None and cap_top > by:
+        return by
+    return min_y
+
+
 def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover", min_y=0, src_crop=None, loop=False, anchor=True, overlays=None,
-              frames=None, move=None):
+              frames=None, move=None, cap_top=None):
     """창(win = video 층) 크기 캔버스: full=True 면 꽉 채움(cover), 아니면 흰 바탕 위 box_w 폭 그림을 맨 위 가운데.
     ar = 가로/세로 비율로 먼저 가운데 자르기(가로 소스를 원본 그림 칸처럼 세로로). src 가 그림 파일이면 dur 동안 멈춘 그림."""
     W, H = 1080, 1920
@@ -394,7 +405,7 @@ def shot_clip(src, ss, dur, win, box_w, full, out, ar=None, box=None, fit="cover
         pre = f"crop={w_}:{h_}:{x}:{y}," + pre
     if box:   # 원본 그 컷의 그림 칸 [x,y,w,h](캔버스 좌표, 뜯기 cuts.picture_boxes) — cover=꽉 채워 자름 / contain=다 보이게 줄임
         bx, by, bw, bh = box
-        by = min_y if anchor else max(by, min_y)   # ★기본 = 자막 바로 아래에 붙임(10-16 조율자: y1185 칸이 빈칸 위에 떠 아마추어처럼 보였다). 크기는 원본 그대로
+        by = box_top(by, min_y, anchor, cap_top)
         bh = min(bh, win["y"] + win["h"] - by)
         oy = max(0, by - win["y"])
         if fit == "contain":
@@ -493,7 +504,8 @@ def _shift_overlays(overlays, dt: float):
             if o.get("t") else o for o in overlays or []] or None
 
 
-def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: bool, box, min_y: int, out: Path, seg_t0: float | None = None) -> Path:
+def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: bool, box, min_y: int, out: Path, seg_t0: float | None = None,
+                cap_top: int | None = None) -> Path:
     """컷 하나 → 영상 파일 하나. 토막(shot_pieces)마다 shot_clip 으로 같은 칸·같은 크기로 그리고 이어 붙인다(같은 인코딩이라 복사로 잇는다).
     seg_t0 = 이 컷이 틀 구간 안에서 시작하는 초 — 주면 토막마다 프레임 수를 frame_at(끝)−frame_at(시작)으로 정해 합이 구간 시각과 맞는다."""
     pcs = shot_pieces(sh, off, dur)
@@ -509,7 +521,8 @@ def render_shot(base: Path, sh: dict, off: float, dur: float, win: dict, full: b
             if nf <= 0:
                 continue
         shot_clip(base / p["src"], pc["ss"], pc["dur"], win, p.get("box_w", 750), full, f, p.get("ar"), box, p.get("fit", "cover"), min_y,
-                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]), nf, p.get("move"))
+                  p.get("src_crop"), p.get("kind") == "짤", p.get("anchor", True), _shift_overlays(sh.get("overlays"), pc["t"]), nf, p.get("move"),
+                  cap_top=cap_top)
         files.append(f)
     if len(files) > 1:
         lst = out.with_suffix(".txt")
@@ -620,7 +633,7 @@ def build(plan: dict):
             p = out / "work" / f"f{fi}_s{k:02d}.mp4"
             # 컷이 틀 경계로 잘려 늦게 시작하면(a2 > a) 소스 시작·꾸밈 시각을 그만큼 — 페이지 안 다중 컷(sh.cuts)도 render_shot 한 곳에서
             parts.append(render_shot(base, sh, a2 - a, b2 - a2, win, sh.get("full", fi == 0 and not one), None if (fi == 0 and not one) else box,
-                                     min_y, p, seg_t0=a2 - t_a))
+                                     min_y, p, seg_t0=a2 - t_a, cap_top=int(cap["y"]) if cap else None))
         lst = out / "work" / f"f{fi}.txt"
         lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
         mat = out / "work" / f"f{fi}_mat.mp4"
