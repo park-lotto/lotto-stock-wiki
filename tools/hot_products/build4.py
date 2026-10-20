@@ -14,8 +14,8 @@ def load(p, d=None):
     return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else d
 
 v3 = load("work/v3_data.json", [])
-enr = {**load("work/enrich.json", {}), **load("work/hits/enrich.json", {})}
-season = {**load("work/season.json", {}), **load("work/hits/season.json", {})}
+enr = {**load("work/enrich.json", {}), **load("work/hits/enrich.json", {}), **load("work/news/enrich.json", {})}   # news = 뉴스·기타 행(검색수 없던 것)
+season = {**load("work/season.json", {}), **load("work/hits/season.json", {}), **load("work/news/season.json", {})}
 nov = load("work/novelty_check.json", {"hits": {}, "cands": {}}); yoy = {**nov["cands"], **nov["hits"]}
 age = load("news/age_trend.json", {})
 nr = load("news/news_rank.json", {"items": []})["items"]
@@ -33,7 +33,8 @@ def row(kw):
 for r in v3:
     if not r.get("kw") or r.get("cat") == "제외": continue
     x = row(r["kw"]); x["src"].add("best")
-    x["sites"].append({"site": r["site"], "list": r.get("list"), "rank": r.get("rank"), "title": r.get("title"), "url": r.get("url")})
+    x["sites"].append({"site": r["site"], "list": r.get("list"), "rank": r.get("rank"), "title": r.get("title"), "url": r.get("url"),
+                       "tags": r.get("tags") or [], "speed": (r.get("sc") or {}).get("speed")})   # speed = 같은 사이트 안 판매 속도 백분위(build3)
     if not x["img"]: x.update(img=r.get("img") or "", price=r.get("price") or "", url=r.get("url") or "", cat=r.get("cat") or "", wow=r.get("wow"))
 # 블라인드 평가(work/blind_scores.json): 터진 상품 키워드의 분류·막연함·신박함 — 식품·막연한 키워드는 화면에서 뺀다
 _items = dict(l.split("	", 1) for l in open(os.path.join(W, "blind_items.tsv"), encoding="utf-8").read().splitlines()) if os.path.exists(os.path.join(W, "blind_items.tsv")) else {}
@@ -78,11 +79,13 @@ today = datetime.date.today(); out = []
 for k, x in rows.items():
     e = enr.get(k, {}); s = season.get(k, {}); a = age.get(k, {}); y = yoy.get(k)
     hits = sorted(x["hits"], key=lambda h: h["date"], reverse=True)
+    best = max(x["sites"], key=lambda q: q.get("speed") or -1, default=None)
     last = max((h["date"] for h in hits if h["date"]), default="")
     days_since = (today - datetime.date.fromisoformat(last)).days if last else None
     out.append({
         "kw": k, "img": x["img"], "price": x["price"], "url": x["url"], "cat": x["cat"], "wow": x["wow"],
-        "src": sorted(x["src"]), "sites": x["sites"][:4], "news": x["news"][:3],
+        "src": sorted(x["src"]), "sites": x["sites"][:4], "site_set": sorted({q["site"] for q in x["sites"]}),
+        "sell": best.get("speed") if best else None, "sell_site": best["site"] if best else "", "sell_tags": (best or {}).get("tags", [])[:2], "news": x["news"][:3],
         "search": e.get("search_month"), "comp": e.get("comp"), "trend": e.get("trend_up"), "vs_peak": e.get("vs_peak"),
         "yt_med": e.get("yt_views_med"),
         "season_up": s.get("season_up"), "peak_ly": s.get("peak_ly"),

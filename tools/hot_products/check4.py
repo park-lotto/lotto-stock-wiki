@@ -42,3 +42,36 @@ with sync_playwright() as p:
     m.screenshot(path=os.path.join(SH, "v4_mobile.png"))
     b.close()
 print("콘솔 오류:", errs or "없음")
+# 사이트 베스트: 사이트 칩으로 테무·아마존만 보기 + 판매 속도 정렬
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1400, "height": 950})
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto("file:///" + HTML.replace("\\", "/")); pg.wait_for_timeout(500); pg.click("[data-tab='best']")
+    for s in ("temu", "amazon", "1688", "naver"):
+        pg.click(f"[data-site='{s}']"); pg.wait_for_timeout(150)
+        n = pg.eval_on_selector_all("tr.r", "e => e.length"); top = pg.eval_on_selector("tr.r", "e => e.dataset.kw") if n else None
+        print(f"사이트 {s}: 행 {n}, 1위 {top}")
+    pg.screenshot(path=os.path.join(SH, "v4_best_temu.png")) if False else None
+    pg.click("[data-site='temu']"); pg.wait_for_timeout(150); pg.screenshot(path=os.path.join(SH, "v4_best_temu.png"))
+    b.close()
+print("사이트 점검 뒤 오류:", errs or "없음")
+# 데스크톱 1400px 가로 넘침 + 테무를 고르면 판매 속도 칸이 전부 테무 숫자인가
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1400, "height": 950})
+    pg.goto("file:///" + HTML.replace("\\", "/")); pg.wait_for_timeout(500)
+    for t in ("hot", "best"):
+        pg.click(f"[data-tab='{t}']"); pg.wait_for_timeout(150)
+        print(f"PC 1400 {t} 가로 넘침:", pg.evaluate("document.documentElement.scrollWidth > innerWidth"), pg.evaluate("document.documentElement.scrollWidth"))
+    pg.click("[data-site='temu']"); pg.wait_for_timeout(150)
+    tags = pg.eval_on_selector_all("td[data-c='판매 속도'] .bd", "e => e.map(x => x.innerText)")
+    print("테무 선택 시 판매 속도 칸 사이트:", sorted(set(tags)))
+    pg.screenshot(path=os.path.join(SH, "v4_best_temu.png")); b.close()
+# 사이트를 고른 판매 속도 정렬이 보이는 숫자 순서와 같은가(내림차순)
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1400, "height": 950})
+    pg.goto("file:///" + HTML.replace("\\", "/")); pg.wait_for_timeout(500); pg.click("[data-tab='best']")
+    for s in ("temu", "amazon", "1688", "naver", "all"):
+        pg.click(f"[data-site='{s}']"); pg.wait_for_timeout(150)
+        v = pg.eval_on_selector_all("td[data-c='판매 속도'] b.num", "e => e.map(x => +x.innerText)")
+        print(f"정렬 {s}: 보이는 순서가 내림차순 {all(v[i] >= v[i+1] for i in range(len(v)-1))} (앞 8개 {v[:8]})")
+    b.close()

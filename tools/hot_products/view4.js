@@ -15,13 +15,14 @@ const TABS = [
    d:"네이버 검색이 <b>0~18세</b>에 전체보다 1.5배 이상 몰린 상품."},
   {id:"senior", label:"👵 5060", f:r=>r.senior!=null && r.senior>=1.5, sort:"senior",
    d:"네이버 검색이 <b>50세 이상</b>에 전체보다 1.5배 이상 몰린 상품."},
-  {id:"best", label:"🛒 사이트 베스트", f:r=>r.src.includes("best"), sort:"search",
-   d:"네이버·1688·테무·아마존 베스트 중 <b>쇼츠로 만들 수 있는</b> 상품(식품·소모품·옷·광고 제외)."},
+  {id:"best", label:"🛒 사이트 베스트", f:r=>r.src.includes("best"), sort:"sell",
+   d:"네이버·1688·테무·아마존 베스트 중 <b>쇼츠로 만들 수 있는</b> 상품(식품·소모품·옷·광고 제외). 판매 속도 = 같은 사이트 안 백분위(테무 시간당 판매·1688 월판매·아마존 리뷰·네이버 구매순).", sites:true},
   {id:"fav", label:"★ 즐겨찾기", f:r=>favs.has(r.kw), sort:"search", d:"별을 누른 상품. 이 브라우저에만 저장됩니다."},
 ];
 const COLS = [
   {id:"rk", label:"순위", always:true},
   {id:"prod", label:"상품", always:true},
+  {id:"sell", label:"판매 속도", sort:true},
   {id:"badges", label:"신호"},
   {id:"ser", label:"1년 추이"},
   {id:"search", label:"월 검색", sort:true},
@@ -40,8 +41,9 @@ const fmt = n => n == null ? "–" : n >= 10000 ? (n/10000).toFixed(n>=100000?0:
 const pct = n => n == null ? "–" : `<span class="${n>0?"pos":n<0?"neg":""}">${n>0?"+":""}${n}%</span>`;
 function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e) { return null; } }
 let favs = new Set(JSON.parse(store("hp_favs") || "[]"));
-let hidden = new Set(JSON.parse(store("hp_cols") || "[]"));
-const st = {tab: store("hp_tab") || "hot", sort: null, dir: -1, q: "", cat: "all"};
+let hidden = new Set(JSON.parse(store("hp_cols") || '["price"]'));   // 가격은 상품 이름 밑에 이미 있다 — 기본 숨김
+const st = {tab: store("hp_tab") || "hot", sort: null, dir: -1, q: "", cat: "all", site: "all"};
+const SN = {naver:"네이버", "1688":"1688", temu:"테무", amazon:"아마존", coupang:"쿠팡", ali:"알리"};
 R.forEach(r => { r.n_news = r.news.length; });
 
 function badges(r){
@@ -55,7 +57,7 @@ function badges(r){
   if (r.news.length) b.push(`<span class="bd news">📰 수요 뉴스</span>`);
   return b.join("");
 }
-function spark(s, w=110, h=30){
+function spark(s, w=90, h=30){
   if (!s || s.length < 4) return `<span style="color:var(--sub);font-size:11px">자료 없음</span>`;
   const mx = Math.max(...s, 1), step = w / (s.length - 1);
   const pts = s.map((v,i) => `${(i*step).toFixed(1)},${(h - 2 - v/mx*(h-4)).toFixed(1)}`).join(" ");
@@ -68,6 +70,9 @@ function cell(id, r, i){
   switch(id){
     case "rk": return `<td class="rk ${i<3?"top":""}">${i+1}</td>`;
     case "prod": return `<td><div class="prod">${r.img?`<img src="${esc(r.img)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'📦'}))">`:`<div class="ph">📦</div>`}<div><b>${esc(r.kw)}</b><small>${esc(r.cat||"")}${r.price?" · "+esc(r.price):""}</small></div></div></td>`;
+    case "sell": {                       // 사이트를 골랐으면 그 사이트 숫자를, 아니면 가장 빨리 팔리는 사이트 숫자를
+      const e = st.site !== "all" ? (r.sites.find(q => q.site === st.site) || null) : (r.sell == null ? null : {site: r.sell_site, speed: r.sell, tags: r.sell_tags});
+      return `<td data-c="판매 속도" style="min-width:140px">${!e || e.speed == null ? "–" : `<span class="bd">${SN[e.site]||e.site}</span> <b class="num">${e.speed}</b>${(e.tags||[]).slice(0,2).map(t => `<div style="color:var(--sub);font-size:11.5px;white-space:nowrap">${esc(t)}</div>`).join("")}`}</td>`; }
     case "badges": return `<td data-c="신호"><div class="badges">${badges(r)||`<span class="bd">–</span>`}</div></td>`;
     case "ser": return `<td data-c="1년 추이">${spark(r.ser)}</td>`;
     case "search": return `<td class="num" data-c="월 검색">${fmt(r.search)}</td>`;
@@ -78,16 +83,18 @@ function cell(id, r, i){
     case "hits": return `<td class="num" data-c="터진 쇼츠">${r.n_hits?`${r.n_hits}개 · 최고 ${fmt(r.hit_max)}`:"–"}</td>`;
     case "comp": return `<td data-c="광고 경쟁">${grade(r.comp)}</td>`;
     case "price": return `<td class="num" data-c="가격">${esc(r.price||"–")}</td>`;
-    case "act": return `<td style="white-space:nowrap"><button class="star ${favs.has(r.kw)?"on":""}" data-fav="${esc(r.kw)}" title="즐겨찾기">★</button> <a class="go" target="_blank" href="${POWER+encodeURIComponent(r.kw)}" onclick="event.stopPropagation()">숏템파워로 찾기</a></td>`;
+    case "act": return `<td style="white-space:nowrap"><button class="star ${favs.has(r.kw)?"on":""}" data-fav="${esc(r.kw)}" title="즐겨찾기">★</button> <a class="go" target="_blank" href="${POWER+encodeURIComponent(r.kw)}" onclick="event.stopPropagation()" title="숏템파워로 이 상품 영상 찾기">🔎 숏템파워</a></td>`;
   }
 }
 function current(){
   const t = TABS.find(x => x.id === st.tab) || TABS[0];
   let rows = R.filter(t.f);
   if (st.cat !== "all") rows = rows.filter(r => r.cat === st.cat);
+  if (t.sites && st.site !== "all") rows = rows.filter(r => r.site_set.includes(st.site));
   if (st.q) rows = rows.filter(r => r.kw.includes(st.q) || (r.sites||[]).some(s => (s.title||"").includes(st.q)));
   const key = st.sort || t.sort, dir = st.sort ? st.dir : -1;
-  const v = r => key === "hit_last" ? (r.hit_last || "") : (r[key] ?? -1e9);
+  const siteSpeed = r => { const e = r.sites.find(q => q.site === st.site); return e && e.speed != null ? e.speed : -1e9; };
+  const v = r => key === "hit_last" ? (r.hit_last || "") : (key === "sell" && t.sites && st.site !== "all") ? siteSpeed(r) : (r[key] ?? -1e9);   // 보이는 숫자로 정렬
   rows.sort((a,b) => { const x = v(a), y = v(b); return (x > y ? 1 : x < y ? -1 : 0) * dir || (b.hit_max - a.hit_max); });
   return {t, rows: rows.slice(0, 200), key};
 }
@@ -96,7 +103,8 @@ function render(){
   $("tabs").innerHTML = TABS.map(x => `<button class="tab ${x.id===st.tab?"on":""}" data-tab="${x.id}">${x.label}<em>${R.filter(x.f).length}</em></button>`).join("");
   $("tabdesc").innerHTML = t.d;
   const cats = [...new Set(R.filter(t.f).map(r => r.cat).filter(Boolean))];
-  $("cats").innerHTML = cats.length > 1 ? ["all", ...cats].map(c => `<button class="chip ${st.cat===c?"on":""}" data-cat="${c}">${c==="all"?"전체":esc(c)}</button>`).join(" ") : "";
+  const sitesHtml = t.sites ? ["all","naver","1688","temu","amazon"].map(k => `<button class="chip ${st.site===k?"on":""}" data-site="${k}">${k==="all"?"모든 사이트":SN[k]} <small>${k==="all"?"":R.filter(t.f).filter(r=>r.site_set.includes(k)).length}</small></button>`).join(" ") + " │ " : "";
+  $("cats").innerHTML = sitesHtml + (cats.length > 1 ? ["all", ...cats].map(c => `<button class="chip ${st.cat===c?"on":""}" data-cat="${c}">${c==="all"?"전체":esc(c)}</button>`).join(" ") : "");
   $("asof").textContent = `${DATA.built} 기준`;
   const cols = COLS.filter(c => c.always || !hidden.has(c.id));
   $("cols").innerHTML = COLS.filter(c => !c.always).map(c => `<label><input type="checkbox" data-col="${c.id}" ${hidden.has(c.id)?"":"checked"}> ${c.label}</label>`).join("");
@@ -130,8 +138,8 @@ function openDrawer(kw){
 function closeDrawer(){ $("drawer").classList.remove("open"); $("dim").classList.remove("open"); }
 function csv(){
   const {rows} = current();
-  const head = ["키워드","분류","월검색","4주추세%","작년대비배","곧뜰시즌%","작년피크","아이쏠림","5060쏠림","터진쇼츠수","터진최고조회","광고경쟁","가격"];
-  const lines = [head].concat(rows.map(r => [r.kw,r.cat,r.search,r.trend,r.yoy,r.season_up,r.peak_ly,r.kids,r.senior,r.n_hits,r.hit_max,r.comp,r.price]))
+  const head = ["키워드","분류","판매속도","판매사이트","월검색","4주추세%","작년대비배","곧뜰시즌%","작년피크","아이쏠림","5060쏠림","터진쇼츠수","터진최고조회","광고경쟁","가격"];
+  const lines = [head].concat(rows.map(r => [r.kw,r.cat,r.sell,SN[r.sell_site]||"",r.search,r.trend,r.yoy,r.season_up,r.peak_ly,r.kids,r.senior,r.n_hits,r.hit_max,r.comp,r.price]))
     .map(a => a.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(","));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], {type:"text/csv"}));
@@ -141,8 +149,9 @@ document.addEventListener("click", e => {
   const g = e.target.closest.bind(e.target);
   if (g("[data-close]") || e.target.id === "dim") return closeDrawer();
   const fav = g("[data-fav]"); if (fav) { e.stopPropagation(); const k = fav.dataset.fav; favs.has(k) ? favs.delete(k) : favs.add(k); store("hp_favs", JSON.stringify([...favs])); return render(); }
-  const tb = g("[data-tab]"); if (tb) { st.tab = tb.dataset.tab; st.sort = null; st.cat = "all"; store("hp_tab", st.tab); return render(); }
+  const tb = g("[data-tab]"); if (tb) { st.tab = tb.dataset.tab; st.sort = null; st.cat = "all"; st.site = "all"; store("hp_tab", st.tab); return render(); }
   const ct = g("[data-cat]"); if (ct) { st.cat = ct.dataset.cat; return render(); }
+  const sb = g("[data-site]"); if (sb) { st.site = sb.dataset.site; return render(); }
   const th = g("th[data-sort]"); if (th) { const k = th.dataset.sort; st.dir = st.sort === k ? -st.dir : -1; st.sort = k; return render(); }
   if (e.target.id === "colbtn") return $("cols").classList.toggle("open");
   if (e.target.id === "csv") return csv();
