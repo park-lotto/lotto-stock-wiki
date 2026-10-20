@@ -130,7 +130,7 @@ async function route(req, res, token, port) {
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: { typecast: keyStatus('typecast') },
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: { typecast: keyStatus('typecast') },
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
   const body = await readBody(req);

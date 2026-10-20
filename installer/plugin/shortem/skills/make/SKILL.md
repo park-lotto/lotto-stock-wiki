@@ -16,7 +16,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit WebFetch Read Glob Gre
    - `ai` → `shortem_ai(action="list")` 로 요청을 받아 **지시대로 JSON 한 개**를 만들어 `shortem_ai(action="answer", id, answer)`. 요청의 `권장 모델`이 `opus` 면 오푸스가 답한다(지금 모델이 아니면 `Agent`(model=opus)에게 맡긴다 — `script` 스킬). 요청이 더 없으면 `shortem_make(step="wait", run_id)`. 이 일은 고객에게 묻지 않고 바로 한다.
    - `choose` → 후보를 번호·제목·한 줄로 표를 만들어 보여 주고 **고객이 고른 번호**로 `step="choose"`. 대신 고르지 않는다.
    - `approve` → 대본·계획을 보여 주고 **고객이 "좋아요"라고 하면** `step="approve"`(목소리·렌더는 고객 키 비용).
-   - `wait` → `next` 를 그대로 부른다.
+   - `wait` → `next` 를 그대로 부른다(목소리·렌더는 몇 분 걸린다 — 그 단계가 기다려 주니 끝날 때까지 되풀이한다. 다른 도구로 기다리지 않는다).
    - `done` → 완성본 경로를 알려 준다.
    - `fail` → `why`·`fix` 를 그대로 전한다.
 3. 고객이 완성본의 글꼴·자막·채널명·틀 등을 바꾸고 싶다고 하면 `shortem_settings(action="set", patch)` 로 바꾼 뒤 `shortem_make(step="restyle", sid)`. 대본·재료는 그대로, 겉모습만 다시 만든다.

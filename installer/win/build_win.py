@@ -332,6 +332,20 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     bad = EB.check(dst)
     if bad:
         raise SystemExit("[build_win] 엔진 묶음 검사 빨강 — " + " / ".join(bad[:5]))
+    # 프리셋마다 기본값 표(사장님 10-20 "기본값은 모든 프리셋 원본 영상에 맞춘다") — 값을 정하는 것은 엔진 preview_request.preset_defaults 한 곳,
+    #   여기는 고객 프리셋 목록(claude_preset_names.json)마다 불러 표로 묶기만. 설정 화면·만들기가 이 표를 엔진 기본 팩 위에 얹는다(local_settings.packFor)
+    sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
+    from preset_pack import pack_name
+    keys = [k for k in json.loads((ROOT.parent / "shopping_shorts" / "claude_preset_names.json").read_text(encoding="utf-8")) if not k.startswith("_")]
+    presets = [f"channel/{k.split('/', 1)[0]}/preset/{k.split('/', 1)[1]}" for k in keys]
+    code = ("import json,sys;sys.path.insert(0,'.');from tools.calcopy.preview_request import preset_defaults as D;"
+            "print(json.dumps({p: D(p) for p in json.loads(sys.argv[1])}, ensure_ascii=False))")
+    got = json.loads(subprocess.run([sys.executable, "-c", code, json.dumps(presets)], cwd=engine, capture_output=True, check=True,
+                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"}).stdout.decode("utf-8"))
+    table = {pack_name(p).removesuffix(".zip"): got[p] for p in presets}
+    (dst / "tools" / "calcopy" / "preset_defaults.json").write_text(json.dumps(table, ensure_ascii=False, indent=1), encoding="utf-8")
+    report["preset_defaults"] = {pid: sorted(v) for pid, v in table.items()}
+    log("프리셋 기본값 " + " · ".join(f"{pid}:{'+'.join(sorted(v))}" for pid, v in table.items()))
     shim = dst / "node_modules" / "puppeteer"
     shim.mkdir(parents=True, exist_ok=True)
     (shim / "index.js").write_text(PUPPETEER_SHIM, encoding="utf-8")

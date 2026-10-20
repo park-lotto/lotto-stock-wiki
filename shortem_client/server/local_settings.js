@@ -23,6 +23,8 @@ export async function catalog() {
   return catCache;
 }
 
+export function useCatalog(c) { catCache = c; }   // 시험용 — 엔진을 띄우지 않고 표를 넣는다
+
 function merge(base, over) {
   if (Array.isArray(over) || over === null || typeof over !== 'object') return over;
   const out = { ...(base && typeof base === 'object' && !Array.isArray(base) ? base : {}) };
@@ -30,10 +32,13 @@ function merge(base, over) {
   return out;
 }
 
+// ★기본값은 그 프리셋의 원본 영상에 맞춘다 — 모든 프리셋(사장님 10-20). 엔진 기본 팩 ← 프리셋 기본값(엔진 preview_request.preset_defaults 가
+//   빌드 때 만든 표) ← 회원이 바꾼 칸. 회원이 안 바꾼 칸은 프리셋 값을 따른다(프리셋 기본값이 바뀌면 같이 바뀐다)
 export async function packFor(pid) {
   const s = readSettings();
   const own = (s.channels[pid] || {}).pack;
-  return merge((await catalog()).default_pack, own || {});
+  const cat = await catalog();
+  return merge(merge(cat.default_pack, (cat.preset_defaults || {})[pid] || {}), own || {});
 }
 
 // patch 를 합쳐 검사 → 통과하면 저장. 반환 {ok, pack} 또는 {ok:false, errors}

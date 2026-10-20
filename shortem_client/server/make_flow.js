@@ -14,6 +14,9 @@ export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
 function aiNeed(runId) {
   const n = pending().length;
+  // 물을 것이 없는데 아직 도는 중(목소리·렌더) — 'AI 0건에 답하라'고 하면 Claude 가 헤매다 셸 sleep 으로 기다렸다(10-20 회원 한 줄 실시험)
+  if (!n) return { need: 'wait', run_id: runId, next: `shortem_make(step="wait", run_id="${runId}")`,
+    hints: ['아직 만드는 중입니다(목소리·렌더는 몇 분 걸립니다) — 같은 wait 를 다시 부르면 끝날 때까지 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
   return { need: 'ai', ai_requests: n, run_id: runId,
     next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
     hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
