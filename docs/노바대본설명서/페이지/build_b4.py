@@ -5,10 +5,11 @@ AB = r"C:\Users\TheRose\Desktop\로또의 주식\.tracks\노바대본설명서\d
 CARDS = os.path.join(AB, "..", "cards_v4")
 SIDE = sys.argv[1] if len(sys.argv) > 1 else "B4fix"
 OUT = os.path.join(r"C:\Users\TheRose\Desktop", "대본_%s.html" % (sys.argv[2] if len(sys.argv) > 2 else "4차_5개씩"))
-NAME = {"even": "이븐쇼핑", "jungche": "정체숨김"}
+NAME = {"even": "이븐쇼핑", "jungche": "정체숨김", "hdn": "두유노홈디노"}
+CIDS = os.environ.get("CIDS", "even,jungche").split(",")
 SRC = {"glasspaint": "유리 페인트", "wrap": "밀착랩"}
 A_FIRST = {("even", "glasspaint"): "A_even_glasspaint", ("even", "wrap"): "A_even_wrap",
-           ("jungche", "glasspaint"): "A_55_glasspaint", ("jungche", "wrap"): "A_55_wrap"}
+           ("jungche", "glasspaint"): "A_55_glasspaint", ("jungche", "wrap"): "A_55_wrap", ("hdn", "glasspaint"): "A_hdn_glasspaint", ("hdn", "wrap"): "A_hdn_wrap"}
 
 pts = json.load(open(os.path.join(AB, "points_%s.json" % SIDE), encoding="utf-8"))
 awk = {x["key"]: x for x in json.load(open(os.path.join(AB, "awkward_%s.json" % SIDE), encoding="utf-8"))["flags"]}
@@ -24,7 +25,7 @@ def a_lines(cid, src):
 
 
 sections = []
-for cid in ["even", "jungche"]:
+for cid in CIDS:
     pm = json.load(open(os.path.join(CARDS, NAME[cid] + ".json"), encoding="utf-8"))["ing_wow"]["이 스타일 칸"]
     ing = set(pm["ing"]); wow = set(sum((k.split("|") for k in pm["wow"]), []))
     for src in ["glasspaint", "wrap"]:
@@ -45,7 +46,7 @@ for cid in ["even", "jungche"]:
                 rows.append('<li class="%s"><span class="slot">%s</span>%s %s%s%s</li>' % ("fixed" if fix else "", e(l.get("slot", "")), "".join(tags), e(l["text"]), fix, still))
             probs = pts.get(key) or []
             f = fl.get((cid, src, i))
-            if f and not f["keep"]:
+            if f and not f["keep"] and cid != "hdn":   # 두유노 틀은 문장형이라 낱말 일치로 못 잰다 — 사람이 읽는다
                 probs = probs + ["첫 줄 틀 벗어남"]
             badge = ('<span class="bad">%s</span>' % e(" · ".join(probs))) if probs else '<span class="ok">잉·와우·첫 줄 통과</span>'
             cards.append('<article class="draft"><header><b>시안 %d</b> <span class="ht">%s</span> %s</header><ol>%s</ol></article>'
@@ -62,6 +63,6 @@ if len(sys.argv) > 3:   # 반복 측정 — 같은 입력 3번
             ls = [l["text"] for l in dd["lines"]]
             rows.append("<tr><td>%s 시안%d</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (e(r), i + 1, e(ls[0]), e(ls[1]), e(ls[-1])))
     sections.append('<section><h2>같은 소재를 3번 따로 돌리면 (이븐쇼핑 · 밀착랩 · 15편)</h2><div class="tbl"><table><tr><th>회차</th><th>첫 줄</th><th>미끼</th><th>마무리</th></tr>%s</table></div></section>' % "".join(rows))
-tpl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "b4_tpl.html"), encoding="utf-8").read()
+tpl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.environ.get("TPL", "b4_tpl.html")), encoding="utf-8").read()
 open(OUT, "w", encoding="utf-8").write(tpl.replace("@@BODY@@", "\n".join(sections)))
 print(OUT)

@@ -9,6 +9,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": true,
    "fits": true,
    "chars": 20,
    "pain": true
@@ -22,6 +23,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": true,
    "fits": true,
    "chars": 20,
    "pain": true
@@ -35,6 +37,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 21,
    "pain": true
@@ -45,9 +48,10 @@
    "i": 3,
    "line": "사생활 침해 끝내버린 페인트의 정체",
    "mold": "H5",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.57,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 19,
    "pain": true
@@ -61,6 +65,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 25,
    "pain": true
@@ -74,6 +79,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 24,
    "pain": true
@@ -87,6 +93,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": true,
    "fits": true,
    "chars": 16,
    "pain": true
@@ -100,6 +107,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": true,
    "fits": true,
    "chars": 18,
    "pain": true
@@ -110,9 +118,10 @@
    "i": 3,
    "line": "국물 샘 노이로제 끝내버린 랩의 정체",
    "mold": "H5",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.57,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 20,
    "pain": true
@@ -126,6 +135,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 24,
    "pain": true
@@ -139,6 +149,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 27,
    "pain": true
@@ -152,6 +163,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": true,
    "fits": true,
    "chars": 19,
    "pain": true
@@ -165,6 +177,7 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 18,
    "pain": true
@@ -175,9 +188,10 @@
    "i": 3,
    "line": "창문 시선에 지친 자취생 구원한 발명품",
    "mold": "H2",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.5,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 21,
    "pain": true
@@ -188,9 +202,10 @@
    "i": 4,
    "line": "사생활 침해 끝낸 기가 막힌 해답",
    "mold": "H5",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.18,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 18,
    "pain": true
@@ -204,6 +219,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 29,
    "pain": true
@@ -214,9 +230,10 @@
    "i": 1,
    "line": "국물 샘에 지친 주부들 구원한 발명품",
    "mold": "H2",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.5,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 20,
    "pain": true
@@ -230,6 +247,7 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 27,
    "pain": true
@@ -243,6 +261,7 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 16,
    "pain": true
@@ -253,9 +272,10 @@
    "i": 4,
    "line": "국물 샘 끝낸 기가 막힌 해답",
    "mold": "H5",
-   "score": 1.0,
-   "keep": true,
+   "score": 0.18,
+   "keep": false,
    "nations": [],
+   "modifier": false,
    "fits": true,
    "chars": 16,
    "pain": true

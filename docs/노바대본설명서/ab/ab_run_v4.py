@@ -9,7 +9,7 @@ import ab_run_v2 as V2
 
 V2.V2 = os.path.join(C.HERE, "..", "cards_v4")
 i = [t for t, _ in V2.ORDER_V2].index("3단계 — 후킹 유형(시안마다 다른 유형)")
-V2.ORDER_V2.insert(i + 1, ("3-1단계 — 미끼·연결어: 이븐쇼핑 78편 실측 틀(이 틀 안에서만 고른다)", ["title_fit", "even_bait", "bait_with", "even_signals", "bait_rule", "wow_rule"]))
+V2.ORDER_V2.insert(i + 1, ("3-1단계 — 미끼·연결어: 이븐쇼핑 78편 실측 틀(이 틀 안에서만 고른다)", ["title_fit", "even_bait", "bait_with", "even_signals", "bait_rule", "wow_rule", "hdn_measured"]))
 V2.ORDER_V2.insert(1, ("★공통 — 잉?·와우 포인트(빠지면 다시 쓴다)", ["ing_wow"]))
 _li = R.B_SCHEMA["properties"]["drafts"]["items"]["properties"]["lines"]["items"]["properties"]
 _li["point"] = {"type": "string"}
