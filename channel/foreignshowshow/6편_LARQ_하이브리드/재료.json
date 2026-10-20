@@ -1,6 +1,6 @@
 {
- "_note": "뒤 화면 = LARQ 공식(85Dy9RIAvmo demo_0, 1080p) + 방송 클립(fuM1Vh7OgfY fuM1_10) 제품 장면. 앞 0~14.42초가 쓴 demo_0 86.02·fuM1_10 14.4·23.5·24.6·63.4·84.6~91.9 (±3초) 피함. 공식 영상 61~64·143~147초 LARQ 글자·95~102 노란 글자 안 씀, 79~81 오른쪽 글자는 크롭으로 뺌.",
- "cand_dir": "C:/숏템_칼카피/foreignshowshow/6편_LARQ/src",
+ "_note": "뒤 화면 = 같은 제품(LARQ Bottle PureVis) 유튜브 리뷰 영상 4편(FYMVMi1Fg1M Connect The Watts 흰 물병 · SlKq03e0Ejk 'LARQ Bottle Review' · FQnO0hv6j9k Josh McDarris · X9PIGRruuSs Ten Thousand Lines) — 방송·공식 데모 안 씀(사장님 10-19). 컷마다 다른 장면, 4명 번갈아, 원본 샷 경계(scene>0.3, screen/<id>_scenes.txt) 안. 박힌 글자: FYMV 0~10초 채널 띠·인스타 글자, FQnO 12~20초 노란 글자, X9PI 6~9초 방송 화면 = 안 씀.",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/6편_LARQ/src",
  "window": [
   0,
   434,
@@ -11,54 +11,24 @@
   {
    "i": 0,
    "line": "B1",
-   "src": "fuM1_10.mp4",
-   "ss": 138.4,
-   "dur": 2.0,
+   "src": "FYMVMi1Fg1M.mp4",
+   "ss": 159.6,
+   "dur": 2.6,
    "src_crop": [
-    300,
+    295,
     0,
     1109,
     1080
    ],
    "mute": true,
-   "ours": "방송: 창업자가 흰 물병을 들어 보임"
+   "ours": "리뷰(FYMV Connect The Watts, 1080p): 책상 위에 선 흰 LARQ PureVis 물병(샷 154.15~162.50) — 방송과 같은 흰색"
   },
   {
    "i": 1,
    "line": "B1",
-   "src": "demo_0.mp4",
-   "ss": 140.6,
-   "dur": 2.0,
-   "src_crop": [
-    760,
-    0,
-    1109,
-    1080
-   ],
-   "mute": true,
-   "ours": "공식: 색깔별 물병이 놓인 테이블(LARQ 글자 뜨기 전)"
-  },
-  {
-   "i": 2,
-   "line": "B2",
-   "src": "fuM1_10.mp4",
-   "ss": 132.6,
-   "dur": 2.0,
-   "src_crop": [
-    100,
-    0,
-    1109,
-    1080
-   ],
-   "mute": true,
-   "ours": "방송: 파란 재킷 투자자가 물병 뚜껑을 열어 봄"
-  },
-  {
-   "i": 3,
-   "line": "B2",
-   "src": "fuM1_10.mp4",
-   "ss": 148.4,
-   "dur": 2.0,
+   "src": "SlKq03e0Ejk.mp4",
+   "ss": 49.4,
+   "dur": 2.6,
    "src_crop": [
     500,
     0,
@@ -66,73 +36,43 @@
     1080
    ],
    "mute": true,
-   "ours": "방송: 창업자가 물병을 손에 쥐고 설명"
+   "ours": "리뷰(SlKq, 1080p): 손에 든 검정 LARQ 물병을 돌려 'LARQ' 글자가 보임(샷 48.33~58.53)"
+  },
+  {
+   "i": 2,
+   "line": "B2",
+   "src": "X9PIGRruuSs.mp4",
+   "ss": 52.5,
+   "dur": 2.4,
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(X9PI, 1080p): 'LARQ' 글자가 보이는 검정 물병 근접(샷 48.92~56.60, 'Design' 제목 글자 50~51초 뒤)"
+  },
+  {
+   "i": 3,
+   "line": "B2",
+   "src": "FYMVMi1Fg1M.mp4",
+   "ss": 172.0,
+   "dur": 2.6,
+   "src_crop": [
+    285,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(FYMV): 흰 물병 뚜껑 윗면 근접(샷 171.50~184.02)"
   },
   {
    "i": 4,
    "line": "B3",
-   "src": "demo_0.mp4",
-   "ss": 79.7,
-   "dur": 2.0,
-   "src_crop": [
-    332,
-    108,
-    887,
-    864
-   ],
-   "mute": true,
-   "ours": "공식: 뚜껑 안쪽 UV 빛 근접(오른쪽 노란 글자 크롭 밖)"
-  },
-  {
-   "i": 5,
-   "line": "B3",
-   "src": "demo_0.mp4",
-   "ss": 111.2,
-   "dur": 2.0,
-   "src_crop": [
-    400,
-    0,
-    1109,
-    1080
-   ],
-   "mute": true,
-   "ours": "공식: 남자가 물병 들고 웃음"
-  },
-  {
-   "i": 6,
-   "line": "B4",
-   "src": "fuM1_10.mp4",
-   "ss": 154.0,
-   "dur": 2.0,
-   "src_crop": [
-    400,
-    0,
-    1109,
-    1080
-   ],
-   "mute": true,
-   "ours": "방송: 투자자가 물병 뚜껑을 손에 들고 봄"
-  },
-  {
-   "i": 7,
-   "line": "B4",
-   "src": "demo_0.mp4",
-   "ss": 123.6,
-   "dur": 2.0,
-   "src_crop": [
-    700,
-    0,
-    1109,
-    1080
-   ],
-   "mute": true,
-   "ours": "공식: 분홍 팔이 남자에게 물병을 건넴"
-  },
-  {
-   "i": 8,
-   "line": "B5",
-   "src": "demo_0.mp4",
-   "ss": 134.0,
+   "src": "SlKq03e0Ejk.mp4",
+   "ss": 262.6,
    "dur": 2.6,
    "src_crop": [
     405,
@@ -141,8 +81,118 @@
     1080
    ],
    "mute": true,
-   "ours": "공식: 흰 옷 남자가 LARQ 물병으로 물 마심"
+   "ours": "리뷰(SlKq): 손가락으로 뚜껑 버튼을 누르자 파란 불 고리가 켜짐(샷 260.20~267.70)"
+  },
+  {
+   "i": 5,
+   "line": "B3",
+   "src": "FYMVMi1Fg1M.mp4",
+   "ss": 44.6,
+   "dur": 2.6,
+   "src_crop": [
+    260,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(FYMV): 흰 뚜껑을 뒤집어 안쪽 UV LED를 보여 줌(샷 41.25~48.01)"
+  },
+  {
+   "i": 6,
+   "line": "B4",
+   "src": "FQnO0hv6j9k.mp4",
+   "ss": 168.8,
+   "dur": 2.6,
+   "src_crop": [
+    190,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(FQnO Josh McDarris, 1080p): 탁자 위 검정 물병 뚜껑에 충전 줄을 꽂음(샷 168.63~173.67)"
+  },
+  {
+   "i": 7,
+   "line": "B4",
+   "src": "X9PIGRruuSs.mp4",
+   "ss": 62.3,
+   "dur": 2.6,
+   "src_crop": [
+    345,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(X9PI): 밖에서 LARQ 물병으로 물을 마심(샷 62.19~68.23)"
+  },
+  {
+   "i": 8,
+   "line": "B5",
+   "src": "SlKq03e0Ejk.mp4",
+   "ss": 352.7,
+   "dur": 2.6,
+   "src_crop": [
+    550,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(SlKq): 손에 든 물병 뚜껑에 파란 불 고리(샷 352.60~357.47)"
+  },
+  {
+   "i": 9,
+   "line": "B5",
+   "src": "FQnO0hv6j9k.mp4",
+   "ss": 142.0,
+   "dur": 2.6,
+   "src_crop": [
+    380,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰(FQnO): 두 손에 쥔 물병 뚜껑 위 파란 불 고리(샷 128.04~146.19)"
   }
  ],
- "effects": []
+ "effects": [
+  {
+   "line": "B5",
+   "kind": "arrow_green_down",
+   "at": [
+    562,
+    638
+   ],
+   "t": [
+    1.75,
+    2.75
+   ],
+   "how": "target",
+   "target": [
+    378,
+    731,
+    747,
+    1082
+   ],
+   "target_box": [
+    378,
+    731,
+    747,
+    1082
+   ],
+   "target_src_box": [
+    768,
+    305,
+    1147,
+    665
+   ],
+   "target_what": "두 손에 쥔 물병 뚜껑 위 파란 불 고리(FQnO 142.0·142.8·143.6 프레임 같은 자리 ±5px, 카메라 고정)",
+   "why": "'뚜껑 불빛 보면' — 켜진 파란 고리를 짚는다(벤치 QMJ 제품 위 초록 아래 화살표 꼴). 시트 pick/fq_grid.jpg",
+   "at_note": "at = 그림 가운데, 끝점 = at+(0, h/2≈107) → 끝 ≈ (562,745) = 고리 윗가장자리 안쪽"
+  }
+ ]
 }

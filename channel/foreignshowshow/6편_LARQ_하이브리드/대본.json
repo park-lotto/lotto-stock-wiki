@@ -1,60 +1,71 @@
 {
- "_note": "샥탬스토리 하이브리드 6편 LARQ — 앞 0~14.42초(L1~L4) = 완성 칼카피 그대로(끝 원음 '우웩!'), 뒤 = 같은 옷(지훈·샥탬 프리셋 제목 그대로·BGM sweets 이어서) 1인칭 체험 나레. CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
- "product": "LARQ Bottle PureVis 17온스(쿠팡 9120520253·8030597129 등, 방송 제품과 같은 PureVis — 해외 판매, 리뷰 0)",
+ "_note": "샥탬스토리 하이브리드 6편 LARQ (10-20 새 규칙판 — 10-18판 대체) — 앞 0~L4 끝(원음 '우웩!') = 칼카피 새 엔진 재렌더 그대로, 뒤 = 지훈·같은 제목·BGM 이어서 1인칭 체험 나레(잇썸홈판 존댓말). CTA 없음. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "LARQ Bottle PureVis 17온스(쿠팡 9120520253, 219,300원 — 방송 제품과 같은 PureVis UV 자가세척 물병, 파트너스 API 'LARQ PureVis' 2026-10-20) · 같은 줄 8030597129·8814077381·8862213784(238,900원)·25온스 9774366170 · 구글 렌즈 원본 3장 → 쿠팡 7300260948 '라르크 정수 보틀 텀블러 물통 740ml' 3/3장, G마켓 'LARQ 라크 보틀 퓨어비스 자가 세척 … UV' 3/3장",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "오래 쓴 물병 냄새(앞 L3·L4 '냄새 맡고 우웩!') — 뚜껑 버튼 한 번에 UV 빛이 세균·냄새를 잡는 물병(앞 L2 '버튼 한 번만 누르면 60초 만에 세균을')",
+  "뒤흥미": "같은 제품 리뷰 영상에서 그 장면이 눈에 보임 — SlKq03e0Ejk 262~265초 손가락으로 뚜껑 버튼을 누르자 파란 불 고리가 켜짐, FYMVMi1Fg1M 44~47초 흰 뚜껑 안쪽 UV LED, FQnO0hv6j9k 141~146초 탁자 위 뚜껑 누르고 파란 고리, SlKq 352~356초 손에 든 물병 파란 고리",
+  "판정": "같음",
+  "근거": "같은 제품(LARQ PureVis) — 쿠팡 파트너스 API 9120520253 외(C:/숏템_칼카피/foreignshowshow/하이브리드/6편_LARQ/쿠팡API_2026-10-20.json) + 렌즈 3/3장. 리뷰 프레임 시트 C:/숏템_칼카피/foreignshowshow/하이브리드/6편_LARQ/sheet/{SlKq03e0Ejk_255,FYMVMi1Fg1M_40,FQnO0hv6j9k_126,SlKq03e0Ejk_345}.jpg"
+ },
  "hybrid": {
   "front_doc": "../6편_LARQ",
   "front_src": "C:/Users/CH/Desktop/칼카피영상/샥탬스토리/샥탬스토리_6편_LARQ.mp4",
   "front_render_info": "C:/숏템_칼카피/foreignshowshow/6편_LARQ/work/render/render_info.json",
   "cut_after": "L4",
-  "cut_why": "L4 원음 '우웩!'(냄새 맡고 젖히는 반응) 끝(14.42) — 다음 L5 나레 전. 반응으로 끝나 '근데 저 냄새가'로 잇는다",
+  "cut_why": "L4 원음 '우웩!'(냄새 맡고 고개 젖히는 반응) 끝 — 다음 L5(UV 99.99%) 나레 전. 냄새 반응으로 끝나 '근데 버튼 하나로 냄새가 진짜 없어지나'로 잇는다. L5 이후 사실은 뒤가 체험으로 받는다",
   "transition": {
    "kind": "slideleft",
    "dur": 0.25,
    "keep_top": 434,
-   "why": "현장썰 하이브리드 4편 2차와 같은 이음(제목 띠 고정)"
+   "why": "샥탬 하이브리드 3~12편과 같은 이음(제목 띠 고정)"
   }
- },
- "titles": {
-  "line1": "1%에 50만 달러",
-  "line2": "스스로 씻는 물병?!",
-  "rule": "앞과 같은 제목(띠 고정)"
  },
  "voice": {
   "voice_id": "tc_61f0859907085fc68561c9a1",
   "name": "지훈",
   "engine": "typecast",
   "speed": 1.25,
-  "why": "앞 편과 같은 목소리·같은 speed"
+  "why": "앞 편과 같은 목소리·같은 speed(R2)"
  },
  "bench": {},
  "final": {
-  "cps_target": 9.49,
-  "cps_note": "앞 6편 완성본 나레 실측 cps_out 9.49(tempo 1.0)",
+  "cps_target": 9.15,
+  "cps_note": "앞 6편 새 엔진 tts-only 나레 실측 cps_out 9.15(엔진v2 render_info narr)",
   "lines": [
    {
     "id": "B1",
     "kind": "나레",
     "fn": "이음(연결어)+잉?",
-    "text": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니 방송에 나온 그 라크 물병이 있더라고요",
-    "tts": "근데 저 냄새가 진짜 없어지나 궁금해서 쿠팡에 쳐 봤더니 방송에 나온 그 라크 물병이 있더라고요",
+    "text": "근데 버튼 하나로 냄새가 진짜 없어지나 싶어서 쿠팡에 쳐 봤더니 똑같은 물병이 있더라고요",
+    "tts": "근데 버튼 하나로 냄새가 진짜 없어지나 싶어서 쿠팡에 쳐 봤더니 똑같은 물병이 있더라고요",
     "caps": [
-     "근데 저 냄새가",
-     "진짜 없어지나",
-     "궁금해서",
+     "근데 버튼 하나로",
+     "냄새가 진짜",
+     "없어지나 싶어서",
      "쿠팡에 쳐 봤더니",
-     "방송에 나온",
-     "그 라크 물병이",
+     "똑같은 물병이",
      "있더라고요"
     ],
     "facts": [
      "c1"
     ],
+    "emph_words": [
+     "똑같은"
+    ],
     "point": "잉",
-    "answer_at": 2,
+    "answer_at": 3,
     "emph": [
      {
-      "cap": "근데 저 냄새가",
-      "span": "냄새가",
+      "cap": "근데 버튼 하나로",
+      "span": "버튼 하나로",
       "color": "초록",
       "whole": false,
       "why": "서술 꼬리",
@@ -62,8 +73,8 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "진짜 없어지나",
-      "span": "진짜 없어지나",
+      "cap": "냄새가 진짜",
+      "span": "냄새가 진짜",
       "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
@@ -71,8 +82,8 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "궁금해서",
-      "span": "궁금해서",
+      "cap": "없어지나 싶어서",
+      "span": "없어지나 싶어서",
       "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
@@ -89,8 +100,8 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "방송에 나온",
-      "span": "방송에 나온",
+      "cap": "똑같은 물병이",
+      "span": "똑같은 물병이",
       "color": "주황",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
@@ -98,18 +109,9 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "그 라크 물병이",
-      "span": "물병이",
-      "color": "분홍",
-      "whole": false,
-      "why": "서술 꼬리",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
       "cap": "있더라고요",
       "span": "있더라고요",
-      "color": "파랑",
+      "color": "분홍",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -121,61 +123,64 @@
     "id": "B2",
     "kind": "나레",
     "fn": "②권위(와우1)",
-    "text": "이게 말도 안 되는 게 정수 필터로 유명한 독일 브리타가 이 회사를 통째로 샀다더라고요",
-    "tts": "이게 말도 안 되는 게 정수 필터로 유명한 독일 브리타가 이 회사를 통째로 샀다더라고요",
+    "text": "이게 말도 안 되는 게 정수기 필터로 유명한 브리타가 이 회사를 통째로 샀다더라고요",
+    "tts": "이게 말도 안 되는 게 정수기 필터로 유명한 브리타가 이 회사를 통째로 샀다더라고요",
     "caps": [
      "이게 말도 안 되는 게",
-     "정수 필터로 유명한",
-     "독일 브리타가",
-     "이 회사를",
-     "통째로 샀다더라고요"
+     "정수기 필터로 유명한",
+     "브리타가",
+     "이 회사를 통째로",
+     "샀다더라고요"
     ],
     "facts": [
      "f9"
+    ],
+    "emph_words": [
+     "브리타"
     ],
     "emph": [
      {
       "cap": "이게 말도 안 되는 게",
       "span": "이게 말도",
-      "color": "초록",
+      "color": "파랑",
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "정수 필터로 유명한",
+      "cap": "정수기 필터로 유명한",
       "span": "필터로 유명한",
-      "color": "노랑",
+      "color": "초록",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "독일 브리타가",
-      "span": "독일 브리타가",
-      "color": "빨강",
+      "cap": "브리타가",
+      "span": "브리타가",
+      "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "이 회사를",
-      "span": "이 회사를",
+      "cap": "이 회사를 통째로",
+      "span": "회사를 통째로",
+      "color": "빨강",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "샀다더라고요",
+      "span": "샀다더라고요",
       "color": "민트",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "통째로 샀다더라고요",
-      "span": "샀다더라고요",
-      "color": "주황",
-      "whole": false,
-      "why": "서술 꼬리",
       "how": "auto",
       "rules": "shark/rules.json v2"
      }
@@ -185,24 +190,36 @@
     "id": "B3",
     "kind": "나레",
     "fn": "③핵심(와우2, 잉 답)",
-    "text": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
-    "tts": "진짜 핵심은 이건데, 뚜껑 버튼 한 번 누르면 파란 불이 켜지고 입구 냄새가 싹 없어졌어요",
+    "text": "진짜 핵심은 이건데, 뚜껑 버튼을 누르면 파란 불이 켜지면서 입구 냄새가 싹 없어져요",
+    "tts": "진짜 핵심은 이건데, 뚜껑 버튼을 누르면 파란 불이 켜지면서 입구 냄새가 싹 없어져요",
     "caps": [
      "진짜 핵심은 이건데",
-     "뚜껑 버튼",
-     "한 번 누르면",
-     "파란 불이 켜지고",
+     "뚜껑 버튼을 누르면",
+     "파란 불이 켜지면서",
      "입구 냄새가",
-     "싹 없어졌어요"
+     "싹 없어져요"
     ],
     "facts": [
      "f2",
-     "f3"
+     "f3",
+     "s1"
+    ],
+    "emph_words": [
+     "파란 불"
     ],
     "emph": [
      {
       "cap": "진짜 핵심은 이건데",
       "span": "핵심은 이건데",
+      "color": "주황",
+      "whole": false,
+      "why": "서술 꼬리",
+      "how": "auto",
+      "rules": "shark/rules.json v2"
+     },
+     {
+      "cap": "뚜껑 버튼을 누르면",
+      "span": "버튼을 누르면",
       "color": "초록",
       "whole": false,
       "why": "서술 꼬리",
@@ -210,27 +227,9 @@
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "뚜껑 버튼",
-      "span": "뚜껑 버튼",
+      "cap": "파란 불이 켜지면서",
+      "span": "켜지면서",
       "color": "노랑",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "한 번 누르면",
-      "span": "한 번 누르면",
-      "color": "빨강",
-      "whole": true,
-      "why": "줄 전체(≤5자·한 낱말)",
-      "how": "auto",
-      "rules": "shark/rules.json v2"
-     },
-     {
-      "cap": "파란 불이 켜지고",
-      "span": "불이 켜지고",
-      "color": "민트",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
@@ -239,16 +238,16 @@
      {
       "cap": "입구 냄새가",
       "span": "입구 냄새가",
-      "color": "분홍",
+      "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "싹 없어졌어요",
-      "span": "싹 없어졌어요",
-      "color": "초록",
+      "cap": "싹 없어져요",
+      "span": "싹 없어져요",
+      "color": "민트",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -259,24 +258,27 @@
    {
     "id": "B4",
     "kind": "나레",
-    "fn": "④심지어(와우3)+비유",
-    "text": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서 그냥 텀블러처럼 들고만 다녀요",
-    "tts": "심지어 이게 대박인 게 충전 한 번에 두 달은 간다고 해서 그냥 텀블러처럼 들고만 다녀요",
+    "fn": "④심지어(와우3)",
+    "text": "심지어 이게 대박인 게 충전 한 번에 두 달은 간대서 그냥 텀블러처럼 들고 다녀요",
+    "tts": "심지어 이게 대박인 게 충전 한 번에 두 달은 간대서 그냥 텀블러처럼 들고 다녀요",
     "caps": [
      "심지어 이게 대박인 게",
      "충전 한 번에",
-     "두 달은 간다고 해서",
+     "두 달은 간대서",
      "그냥 텀블러처럼",
-     "들고만 다녀요"
+     "들고 다녀요"
     ],
     "facts": [
      "f10"
+    ],
+    "emph_words": [
+     "두 달"
     ],
     "emph": [
      {
       "cap": "심지어 이게 대박인 게",
       "span": "심지어 이게",
-      "color": "주황",
+      "color": "분홍",
       "whole": false,
       "why": "머리(꼬리 약함)",
       "how": "auto",
@@ -285,16 +287,16 @@
      {
       "cap": "충전 한 번에",
       "span": "충전 한 번에",
-      "color": "노랑",
+      "color": "초록",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "두 달은 간다고 해서",
+      "cap": "두 달은 간대서",
       "span": "두 달은",
-      "color": "빨강",
+      "color": "주황",
       "whole": false,
       "why": "숫자 덩어리",
       "how": "auto",
@@ -303,16 +305,16 @@
      {
       "cap": "그냥 텀블러처럼",
       "span": "그냥 텀블러처럼",
-      "color": "민트",
+      "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
       "rules": "shark/rules.json v2"
      },
      {
-      "cap": "들고만 다녀요",
-      "span": "들고만 다녀요",
-      "color": "파랑",
+      "cap": "들고 다녀요",
+      "span": "들고 다녀요",
+      "color": "빨강",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -332,12 +334,17 @@
      "다들 어디 거냐고",
      "난리예요"
     ],
-    "facts": [],
+    "facts": [
+     "창작"
+    ],
+    "emph_words": [
+     "난리"
+    ],
     "emph": [
      {
       "cap": "사무실에서",
       "span": "사무실에서",
-      "color": "초록",
+      "color": "민트",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -346,7 +353,7 @@
      {
       "cap": "뚜껑 불빛 보면",
       "span": "불빛 보면",
-      "color": "노랑",
+      "color": "파랑",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
@@ -355,7 +362,7 @@
      {
       "cap": "다들 어디 거냐고",
       "span": "어디 거냐고",
-      "color": "빨강",
+      "color": "초록",
       "whole": false,
       "why": "서술 꼬리",
       "how": "auto",
@@ -364,7 +371,7 @@
      {
       "cap": "난리예요",
       "span": "난리예요",
-      "color": "주황",
+      "color": "노랑",
       "whole": true,
       "why": "줄 전체(≤5자·한 낱말)",
       "how": "auto",
@@ -372,14 +379,20 @@
      }
     ]
    }
-  ],
-  "len_note": "페이블 10-18 '뒤 20초 이하' — 군더더기 어절·쉼표를 덜어 추정 19.x초(뜻·근거 그대로)"
+  ]
  },
  "facts": {
-  "c1": "쿠팡 검색 'LARQ UV'·'LARQ 퓨어비스'(2026-10-18 이 PC 회선) → 9120520253·8030597129·8862213784·8814077381 'LARQ Bottle PureVis 17온스 - UV 정수기…자가 청소 및 단열 스테인리스 스틸', 9774366170 'LARQ 라크 퓨어비스 25온스'. 상품 페이지는 403(쿠팡 차단)이라 검색 결과까지만 확인. 쿠팡검색_2026-10-18.json",
-  "f2": "앞 편 근거 f2: 창업자 'With a simple press of a button, and in just 60 seconds … UVC LED … eradicate 99.99% of harmful and odor-causing bacteria'(방송 원음 2모델 일치) — '냄새가 없어졌다'는 체감 감상, 근거는 odor-causing bacteria 주장",
+  "c1": "쿠팡 파트너스 API(tools/calcopy/coupang_api_search.py, 2026-10-20) 'LARQ PureVis' → 9120520253 'LARQ Bottle PureVis 17온스 - UV 정수기와 … 자가 청소 및 단열 스테인리스 스틸' 219,300원 · 8030597129·8814077381·8862213784 같은 이름 238,900원 · 'LARQ 퓨어비스' → 9774366170 25온스. 구글 렌즈(lens/6_a·b·c 원본 3장) 쿠팡 7300260948 3/3장. 상품평 글은 API 에 없음(리뷰 수 미확인)",
+  "f2": "앞 편 근거 f2: 창업자 'With a simple press of a button, and in just 60 seconds … UVC LED … eradicate 99.99% of harmful and odor-causing bacteria'(방송 원음) — '냄새가 싹 없어져요'는 체감 감상(창작), 근거는 odor-causing bacteria 주장",
   "f3": "앞 편 근거 f3: 'that funky smell … sniff test'(방송 원음)",
-  "f9": "앞 편 근거 L14: BRITA SE 보도자료 2024-02-08 'BRITA SE has acquired LARQ, Inc.'(독일 Taunusstein, 정수 필터 회사) https://insider.fitt.co/press-release/brita-se-germany-acquires-innovative-hydration-company-larq-inc/",
-  "f10": "LARQ 공식 영상 85Dy9RIAvmo 80.3초 화면 글자 'USB RECHARGEABLE / lasts 2 months per charge'(1080p 눈 판독, 하이브리드/sheet/larq_txt.png) — 회사 주장이라 '~간다고 해서' 전언"
+  "s1": "리뷰 영상 화면: SlKq03e0Ejk 262.6~265.0 뚜껑 버튼 누름 → 파란 고리 켜짐, FQnO0hv6j9k 141~146 같은 동작(눈 판독)",
+  "f9": "앞 편 근거 L14: BRITA SE 보도자료 2024-02-08 'BRITA SE has acquired LARQ, Inc.'(독일 정수 필터 회사) https://insider.fitt.co/press-release/brita-se-germany-acquires-innovative-hydration-company-larq-inc/",
+  "f10": "LARQ 공식 영상 85Dy9RIAvmo 80.3초 화면 글자 'USB RECHARGEABLE / lasts 2 months per charge'(10-18 눈 판독, 하이브리드/sheet/larq_txt.png) — 회사 주장이라 '~간대서' 전언",
+  "창작": "B3 '입구 냄새가 싹'·B4 '텀블러처럼 들고 다녀요'·B5 '사무실에서 … 난리' = 화자 감상·사회 반응(설명서 §4 창작 허용선)"
+ },
+ "titles": {
+  "line1": "1%에 50만 달러",
+  "line2": "스스로 씻는 물병?!",
+  "rule": "앞과 같은 제목(띠 고정)"
  }
 }
