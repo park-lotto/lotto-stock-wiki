@@ -233,7 +233,9 @@ def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
     쇼츠 길이 YT_SHORT(60초) 넘는 것은 뺀다."""
     fmt = "%(id)s	%(duration)s	%(view_count)s	%(title)s	%(channel)s"
     url = "https://www.youtube.com/results?search_query=" + up.quote(q) + "&sp=" + _yt_sp(months)
-    sp_cmd = ["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--flat-playlist", "-I", f"1:{n}", "--print", fmt, url]
+    # ★n 편만 받고 60초로 거르면 0편이 된다(10-20 실측 '전자레인지 파스타 쿠커': 앞 4편 178·213·103·167초, 10편 안에 ≤60초 3편)
+    #   → 넉넉히(4n, 30 상한) 받아 거른 뒤 앞 n 편만. sp 필터 '짧은 영상'은 4분 이하라 60초 넘는 것이 섞인다
+    sp_cmd = ["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--flat-playlist", "-I", f"1:{min(30, 4 * n)}", "--print", fmt, url]
     items, why = _flat(sp_cmd, 30)
     if not items:   # 10-16 실측: 같은 sp 검색이 한 번 멈췄다가 다음엔 바로 나온다 — 한 번만 다시
         time.sleep(3)
@@ -246,7 +248,7 @@ def yt_search(q: str, n: int = 10, months: int | None = None) -> list[dict]:
         via = "ytsearch"
         if why2:
             fb += f" ({why2})"
-    out = [{**v, "via": via, "fallback": fb} for v in items if v["duration"] <= YT_SHORT]
+    out = [{**v, "via": via, "fallback": fb} for v in items if v["duration"] <= YT_SHORT][:n]
     if not out and fb:
         out = [{"id": None, "fallback": fb + f" · {YT_SHORT}초 이하 0편"}]   # 이유만 전달(gather 가 failed 로)
     return out
@@ -264,12 +266,13 @@ def yt_upload_date(vid: str) -> str | None:
     return d[-1] if d and d[-1].isdigit() and len(d[-1]) == 8 else None
 
 
-def yt_detail(vid: str, n_comments: int = 50) -> dict:
-    """제목·설명·조회·날짜 + 댓글(좋아요 순 n). 10-16 실측: 기본 클라이언트는 '로봇 확인'으로 막혀 android 로 받는다."""
+def yt_detail(vid: str, n_comments: int = 50, url: str | None = None) -> dict:
+    """제목·설명·조회·날짜 + 댓글(좋아요 순 n). 10-16 실측: 기본 클라이언트는 '로봇 확인'으로 막혀 android 로 받는다.
+    url 을 주면 그 주소(틱톡·인스타 참고 영상, 관제 234)로 — 유튜브 전용 인자는 다른 곳에선 무시된다."""
     try:
         r = subprocess.run(["yt-dlp", "--encoding", "utf-8", "--socket-timeout", "15", "--skip-download", "--write-comments", "--extractor-args",
                             f"youtube:player_client=android;comment_sort=top;max_comments={n_comments},{n_comments},0,0", "-J",
-                            f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", errors="replace",
+                            url or f"https://www.youtube.com/watch?v={vid}"], capture_output=True, encoding="utf-8", errors="replace",
                            stdin=subprocess.DEVNULL, timeout=150)
     except subprocess.TimeoutExpired:   # 10-16 실측: 한 편이 180초 멈춰 실행 전체가 죽었다 → 그 편만 실패로
         return {"id": vid, "failed": "시간 초과(150초)"}
@@ -280,7 +283,7 @@ def yt_detail(vid: str, n_comments: int = 50) -> dict:
     if not d:
         return {"id": vid, "failed": (r.stderr or "")[-200:].strip() or "빈 응답"}
     cm = sorted(d.get("comments") or [], key=lambda c: -(c.get("like_count") or 0))[:n_comments]
-    return {"id": vid, "url": f"https://www.youtube.com/shorts/{vid}", "title": d.get("title"), "views": d.get("view_count"),
+    return {"id": vid, "url": url or f"https://www.youtube.com/shorts/{vid}", "title": d.get("title"), "views": d.get("view_count"),
             "channel": d.get("channel") or d.get("uploader"), "verified": bool(d.get("channel_is_verified")),
             "date": d.get("upload_date"), "description": (d.get("description") or "")[:600],
             "comments": [{"likes": c.get("like_count") or 0, "text": (c.get("text") or "")[:200], "id": c.get("id")} for c in cm]}
@@ -822,13 +825,17 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     seed = src.get("id") if src.get("kind") in ("채널", "해외원본") else None
     if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
         lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
+    elif src.get("kind") == "참고영상" and src.get("url"):
+        # 고객이 준 틱톡·인스타 영상(관제 234) = 첫 벤치 — 10-20 실측: 그 영상 설명 전체로 유튜브를 찾으면 0편이라 벤치 0 으로 멈췄다
+        seed = "ref"
+        lst = [{"id": seed, "url": src["url"]}] + lst
     for v in lst[:n_videos]:
         try:
             limits.take(1, f"벤치 상세 {v['id']}")
         except LimitHit as e:
             failed.append(f"멈춤: {e}")
             break
-        d = net["yt_detail"](v["id"], n_comments)
+        d = net["yt_detail"](v["id"], n_comments, url=v["url"]) if v.get("url") else net["yt_detail"](v["id"], n_comments)
         if d.get("failed"):
             failed.append(f"{v['id']}: {d['failed'][:100]}")
             continue
@@ -836,7 +843,7 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
         if off:
             failed.append(f"{v['id']}: 공식·광고 제외 — {off}")
             continue
-        ok, why = (True, "채널 원본 편") if v["id"] == seed else relevance(d, c.get("key") or c["query"], c["topic"])
+        ok, why = (True, "고객이 준 영상" if seed == "ref" else "채널 원본 편") if v["id"] == seed else relevance(d, c.get("key") or c["query"], c["topic"])
         if not ok:
             failed.append(f"{v['id']}: 무관 영상 제외({(d.get('title') or '')[:40]}) — {why}")
             continue
