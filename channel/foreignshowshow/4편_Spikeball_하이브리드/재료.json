@@ -1,0 +1,149 @@
+{
+ "_note": "뒤 화면 = 같은 제품 Spikeball 표준 세트의 남의 리뷰·놀이 유튜브 영상 5편(방송·판매사 공식 아님): A xp58eI5qHzI Watch Before You Buy 언박싱(1080p) · B W8lW15LWr7E Jay Reviews 'Spikeball Original Kit Review'(앞 120초, 1080p) · C VZ9MIii7UX8 Always Read The Reviews(1080p) · D PmADqbdSTng Peggy Wright 'Spike Ball in the Park'(1080p) · E GfuGwE2ypEM The Spikeball Guys 공원 설치(앞 120초+, 1080p). 앞 0~16.835초(CNBC vyvIN8J_vj0·공식 6pC9CovZuBY)와 같은 원본 없음. 사람 순서 A E / C B / A E / D E / D — 같은 사람 연속 컷 없음. 샷 경계 scene>0.3: B 6.39·19.22 · E 3.04·6.41(E 10.5 상자 컷은 3.4 컷과 ±3초 밖)(A·C·D 한 샷 연속 촬영). 박힌 글자 없음(시트 확인).",
+ "cand_dir": "C:/숏템_칼카피/foreignshowshow/하이브리드/4편_Spikeball/src",
+ "window": [
+  0,
+  434,
+  1080,
+  1052
+ ],
+ "shots": [
+  {
+   "i": 0,
+   "line": "B1",
+   "src": "xp58eI5qHzI.mp4",
+   "ss": 0.0,
+   "dur": 2.4,
+   "src_crop": [
+    450,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 A(Watch Before You Buy, 언박싱): 바닥에 Spikeball 가방·포장된 노란 공들·뒤에 Spikeball 상자"
+  },
+  {
+   "i": 1,
+   "line": "B1",
+   "src": "GfuGwE2ypEM.mp4",
+   "ss": 10.5,
+   "dur": 2.5,
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 E(The Spikeball Guys, 공원): Spikeball 상자를 들어 보임(옆에 친구·발밑 가방)"
+  },
+  {
+   "i": 2,
+   "line": "B2",
+   "src": "VZ9MIii7UX8.mp4",
+   "ss": 24.5,
+   "dur": 2.5,
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 C(Always Read The Reviews): 손으로 노란 공을 그물에 튕김(1인칭 근접)"
+  },
+  {
+   "i": 3,
+   "line": "B2",
+   "src": "W8lW15LWr7E.mp4",
+   "ss": 10.5,
+   "dur": 2.5,
+   "src_crop": [
+    400,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 B(Jay Reviews, 마당): 노란 다리 'SPIKE BALL' 그물 위로 공이 튀어 오름(샷 6.39~19.22 안)"
+  },
+  {
+   "i": 4,
+   "line": "B3",
+   "src": "xp58eI5qHzI.mp4",
+   "ss": 44.3,
+   "dur": 2.3,
+   "src_crop": [
+    500,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 A: 바닥에 펼친 구성품 — 검정 그물·접는 테 조각·노란 공 3개·가방"
+  },
+  {
+   "i": 5,
+   "line": "B3",
+   "src": "GfuGwE2ypEM.mp4",
+   "ss": 3.4,
+   "dur": 2.3,
+   "src_crop": [
+    300,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 E(The Spikeball Guys, 공원): 잔디밭 위 그물과 공 근접(샷 3.04~6.41 안)"
+  },
+  {
+   "i": 6,
+   "line": "B4",
+   "src": "PmADqbdSTng.mp4",
+   "ss": 0.3,
+   "dur": 2.3,
+   "src_crop": [
+    200,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 D(Peggy Wright, 공원): 네 명이 그물 둘레를 사방으로 뛰며 경기"
+  },
+  {
+   "i": 7,
+   "line": "B4",
+   "src": "GfuGwE2ypEM.mp4",
+   "ss": 123.0,
+   "dur": 2.3,
+   "src_crop": [
+    290,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 E: 공원 잔디에 세운 그물 옆에서 두 사람이 공을 주고받음"
+  },
+  {
+   "i": 8,
+   "line": "B5",
+   "src": "PmADqbdSTng.mp4",
+   "ss": 24.2,
+   "dur": 3.6,
+   "src_crop": [
+    250,
+    0,
+    1109,
+    1080
+   ],
+   "mute": true,
+   "ours": "리뷰어 D: 공원 잔디밭 경기 넓은 장면(흰 티 선수·뒤 사람들) — 끝 줄 사회 반응"
+  }
+ ],
+ "effects": [],
+ "effects_dropped": []
+}

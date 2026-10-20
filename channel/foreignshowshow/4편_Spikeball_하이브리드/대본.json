@@ -1,0 +1,170 @@
+{
+ "_note": "샥탬스토리 하이브리드 4편 Spikeball(10-20 새 규칙판 — 10-18 옛판은 channel/foreignshowshow/4편_Spikeball/하이브리드/ 참고만) — 앞 0~16.835초(L1~L5) = 새 엔진 재렌더 칼카피(0초 원 = 창업자 손의 Spikeball 공, 끝 원음 '배우긴 쉬운데 / 마스터하긴 진짜 어려워요'), 뒤 = 지훈·샥탬 프리셋 제목·BGM sweets 이어서 잇썸홈판 존댓말 1인칭 체험 나레. CTA 없음. 뒤 화면 = 같은 제품 Spikeball 세트의 남의 리뷰·놀이 유튜브 영상. 렌더 tools/calcopy/shark/hybrid.py.",
+ "product": "Spikeball 스파이크볼 3볼 게임 세트(쿠팡 9572008898, 153,700원 — 방송 제품과 같은 Spikeball 브랜드 표준 세트, 해외 판매자·리뷰 0)",
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "흥미이음": {
+  "원본흥미": "공 하나·동그란 그물 하나로 하는 새 공놀이 — 그물에 공을 튕기는 게 규칙이고, 가방 하나에 다 들어가 어디든 들고 가며, 배우긴 쉬운데 마스터는 어렵다(앞 L1~L5, 근거 f1·f3·f4·f5)",
+  "뒤흥미": "같은 Spikeball 표준 세트를 남들이 뜯어(노란 공 3개·검정 그물·가방) 펼치고, 노란 다리 'SPIKE BALL' 그물에 공을 튕기며 공원에서 뛰어다니는 장면이 화면에 보인다(재료.json 컷 설명)",
+  "판정": "같음",
+  "근거": "쿠팡 파트너스 API 검색 '스파이크볼'·'스파이크볼 세트'(2026-10-20) → 9572008898 'Spikeball 스파이크볼 3볼 게임 세트 야외 실내 스포츠' = 방송 브랜드·같은 표준 세트 · 구글 렌즈 4장 hits: 쿠팡 9572008898(1장)·partycity 'Spikeball Outdoor Portable Game Set'(3장)·amazon.ae 'Spikeball Game - as seen on Shark Tank'(2장) · 뒤 화면 = 같은 제품 리뷰·놀이 영상"
+ },
+ "hybrid": {
+  "front_doc": "../4편_Spikeball",
+  "front_src": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/엔진v2/render/final.mp4",
+  "front_render_info": "C:/숏템_칼카피/foreignshowshow/4편_Spikeball/엔진v2/render/render_info.json",
+  "cut_after": "L5",
+  "cut_why": "L5 원음 '배우긴 쉬운데 / 마스터하긴 진짜 어려워요' 끝(16.835) — 다음 L6 나레 전. 원음 반응으로 끝나 '근데 저게 왜 그렇게 팔렸나'로 잇는다",
+  "transition": {
+   "kind": "slideleft",
+   "dur": 0.25,
+   "keep_top": 434,
+   "why": "6·8~12편 하이브리드와 같은 이음(제목 띠 고정)"
+  }
+ },
+ "titles": {
+  "line1": "딜 깨지고 오히려",
+  "line2": "대박 난 공놀이?!",
+  "rule": "앞과 같은 제목(띠 고정)"
+ },
+ "voice": {
+  "voice_id": "tc_61f0859907085fc68561c9a1",
+  "name": "지훈",
+  "engine": "typecast",
+  "speed": 1.25,
+  "why": "앞 편과 같은 목소리·같은 speed(사장님 10-19 지훈 확정)"
+ },
+ "bench": {},
+ "final": {
+  "cps_target": 7.87,
+  "cps_note": "앞 4편 새 엔진 렌더 나레 실측 cps_out 7.87(render_info narr)",
+  "lines": [
+   {
+    "id": "B1",
+    "kind": "나레",
+    "fn": "공개(이음)+잉?",
+    "point": "잉",
+    "text": "근데 저게 왜 그렇게 팔렸나 궁금해서 쿠팡에 쳐 봤더니 그 스파이크볼이 그대로 있더라고요",
+    "tts": "근데 저게 왜 그렇게 팔렸나 궁금해서 쿠팡에 쳐 봤더니 그 스파이크볼이 그대로 있더라고요",
+    "caps": [
+     "근데 저게",
+     "왜 그렇게 팔렸나",
+     "궁금해서",
+     "쿠팡에 쳐 봤더니",
+     "그 스파이크볼이",
+     "그대로 있더라고요"
+    ],
+    "emph_words": [
+     "그대로"
+    ],
+    "facts": [
+     "c1",
+     "f10"
+    ],
+    "answer_at": 1
+   },
+   {
+    "id": "B2",
+    "kind": "나레",
+    "fn": "고조 와우1(잉 답)",
+    "point": "와우",
+    "text": "진짜 핵심은 이건데, 동그란 그물에 공을 튕기기만 하면 돼서 처음 해도 바로 따라 하더라고요",
+    "tts": "진짜 핵심은 이건데, 동그란 그물에 공을 튕기기만 하면 돼서 처음 해도 바로 따라 하더라고요",
+    "caps": [
+     "진짜 핵심은 이건데",
+     "동그란 그물에",
+     "공을 튕기기만",
+     "하면 돼서",
+     "처음 해도",
+     "바로 따라 하더라고요"
+    ],
+    "emph_words": [
+     "튕기기만"
+    ],
+    "facts": [
+     "f3",
+     "f4"
+    ]
+   },
+   {
+    "id": "B3",
+    "kind": "나레",
+    "fn": "고조 와우2(숫자)",
+    "point": "와우",
+    "text": "심지어 이게 대박인 게 공 3개에 그물이랑 가방까지 한 세트라 어디든 들고 가거든요",
+    "tts": "심지어 이게 대박인 게 공 세 개에 그물이랑 가방까지 한 세트라 어디든 들고 가거든요",
+    "caps": [
+     "심지어 이게 대박인 게",
+     "공 3개에",
+     "그물이랑 가방까지",
+     "한 세트라",
+     "어디든 들고 가거든요"
+    ],
+    "emph_words": [
+     "공 3개"
+    ],
+    "facts": [
+     "c1",
+     "f5",
+     "f12"
+    ]
+   },
+   {
+    "id": "B4",
+    "kind": "나레",
+    "fn": "고조 와우3+비유",
+    "point": "와우",
+    "text": "이게 말도 안 되는 게 편이 따로 없어서 사방으로 뛰다 보면 배드민턴보다 땀이 더 나요",
+    "tts": "이게 말도 안 되는 게 편이 따로 없어서 사방으로 뛰다 보면 배드민턴보다 땀이 더 나요",
+    "caps": [
+     "이게 말도 안 되는 게",
+     "편이 따로 없어서",
+     "사방으로 뛰다 보면",
+     "배드민턴보다",
+     "땀이 더 나요"
+    ],
+    "emph_words": [
+     "배드민턴보다"
+    ],
+    "facts": [
+     "f4"
+    ]
+   },
+   {
+    "id": "B5",
+    "kind": "나레",
+    "fn": "끝=사회 반응",
+    "point": "",
+    "text": "공원에서 하면 지나가던 사람들 사이에서 이거 뭐냐고 난리예요",
+    "tts": "공원에서 하면 지나가던 사람들 사이에서 이거 뭐냐고 난리예요",
+    "caps": [
+     "공원에서 하면",
+     "지나가던 사람들",
+     "사이에서",
+     "이거 뭐냐고",
+     "난리예요"
+    ],
+    "emph_words": [
+     "난리예요"
+    ],
+    "facts": []
+   }
+  ],
+  "len_note": "잇썸홈판 points 편 길이 150~246자"
+ },
+ "facts": {
+  "c1": "쿠팡 파트너스 오픈API(tools/calcopy/coupang_api_search.py, 2026-10-20) '스파이크볼'·'스파이크볼 세트' → 9572008898 'Spikeball 스파이크볼 3볼 게임 세트 야외 실내 스포츠' 153,700원(로켓 아님). C:/숏템_칼카피/foreignshowshow/하이브리드/4편_Spikeball/쿠팡api_4편.json · 10-18 상품 페이지(판매자 at_shop_12·우체국 EMS·상품평 0) channel/foreignshowshow/하이브리드/쿠팡상품/9572008898.txt",
+  "f10": "구글 렌즈(방송 프레임 3장+공식 영상 1장, 2026-10-20) 렌즈_샥탬4_Spikeball.json — 쿠팡 9572008898 1장 · partycity 'Spikeball Outdoor Portable Game Set, with Storage Bag' 3장 · amazon.ae 'Spikeball Game - as seen on Shark Tank TV' 2장",
+  "f3": "앞 편 f3: CNBC 20.9~24.2 창업자 'very easy to learn, but really, really difficult to master'",
+  "f4": "앞 편 f4: CNBC 53.0~70.0 'serve the ball basically just by bouncing it off the net … up to three hits … spike it back on the net' · 72~77 'once the ball is in play there are no sides, all four players can run absolutely anywhere'",
+  "f5": "앞 편 f5: CNBC 32.6~37.1 'All you need is this ball, that net, one of these backpacks, and you can take it absolutely anywhere'",
+  "f12": "상품명 '3볼 게임 세트'(c1) + 리뷰 영상 xp58eI5qHzI 언박싱 화면: 노란 공 3개·검정 그물·접는 테 조각·Spikeball 가방",
+  "창작": "B1 계기 · B2 '처음 해도 바로 따라 한다' 체감(근거 f3 'easy to learn') · B4 '배드민턴보다 땀이 더 난다' 체감 비유 · B5 공원 사람들 반응 = 창작(대본설명서 §4 허용선)"
+ }
+}

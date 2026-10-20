@@ -26,16 +26,47 @@
   {
    "i": 0,
    "line": "L1",
-   "src": "cnbc170a.mp4",
+   "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
-   "ss": 50.4,
-   "dur": 1.77,
+   "ss": 27.42,
+   "dur": 0.4,
    "src_orig_span": [
-    220.4,
-    222.17
+    42.42,
+    42.82
    ],
    "t_final_est": [
     0.0,
+    0.4
+   ],
+   "res": "1920x1080",
+   "src_crop": [
+    811,
+    0,
+    1109,
+    1080
+   ],
+   "scale": 0.9738,
+   "mute": false,
+   "audio_src": "cnbc170a.mp4",
+   "audio_ss": 50.4,
+   "audio_dur": 1.77,
+   "cover": true,
+   "ours": "[R3 10-20 하이브리드] 화면 = 같은 방송 42.41~45.51 샷 창업자가 노란 Spikeball 공을 손에 든 순간(42.42~42.82, 공이 화면 아래쪽 — 자막 띠 밖, 얼굴은 위) · 소리 = 대머리 투자자 원음 'a ball in a net'(220.4, cover)",
+   "why_crop": "R3(사장님 10-19 '처음에 빨간원 얼굴에 하지말고'): 원래 220.4 샷은 투자자 얼굴뿐 → 0~0.8초를 공을 든 샷으로 덮음(8·9·12편 cover 선례). 37.84 순간은 L3(원본 32.6~37.1)과 3초 안이라 B13 → 42.42 로. 42.86 부터 가리키는 손을 YuNet 이 얼굴로 잡고(원과 겹침 거절) 42.94 뒤는 공이 내려가 원이 창 아래로 넘쳐 0.4초만. 크롭 x811~ = 왼쪽 아래 CNBC.COM/CHANNELFINDER 글자 뺌. 그물 근접 16.4초는 그물이 넓어 원(지름 ~850)이 창에 안 들어가고 자막 띠가 그물 위 테를 덮어 안 씀"
+  },
+  {
+   "i": 1,
+   "line": "L1",
+   "src": "cnbc170a.mp4",
+   "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
+   "ss": 50.8,
+   "dur": 1.37,
+   "src_orig_span": [
+    220.8,
+    222.17
+   ],
+   "t_final_est": [
+    0.4,
     1.77
    ],
    "res": "1920x1080",
@@ -46,19 +77,17 @@
     1080
    ],
    "scale": 0.9741,
-   "ours": "검은 정장 대머리 투자자(이름 자막 없음 — 불명) 정면, 말하는 본인",
+   "ours": "검은 정장 대머리 투자자(이름 자막 없음 — 불명) 정면, 말하는 본인(원래 샷 뒤 1.37초)",
    "why": "원음 'a ball in a net' — 같은 시각 말하는 본인(sync 0). 벤치 0초 투자자 반응 자리",
-   "fx": "빨간 원(얼굴)",
+   "fx": null,
    "mute": false,
    "audio_src": "cnbc170a.mp4",
-   "audio_span": [
-    50.4,
-    52.17
-   ],
-   "why_crop": "fx_place.hook_circle: 얼굴 검출(YuNet 3프레임) 얼굴 높이 404px×0.974 = 창 폭 0.36 · 원 중심 = 얼굴 가운데·눈+0.05fh"
+   "why_crop": "fx_place.hook_circle: 얼굴 검출(YuNet 3프레임) 얼굴 높이 404px×0.974 = 창 폭 0.36 · 원 중심 = 얼굴 가운데·눈+0.05fh",
+   "audio_ss": 50.8,
+   "audio_dur": 1.37
   },
   {
-   "i": 1,
+   "i": 2,
    "line": "L2",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -86,7 +115,7 @@
    "mute": true
   },
   {
-   "i": 2,
+   "i": 3,
    "line": "L2",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -114,7 +143,7 @@
    "mute": true
   },
   {
-   "i": 3,
+   "i": 4,
    "line": "L3",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -147,7 +176,7 @@
    ]
   },
   {
-   "i": 4,
+   "i": 5,
    "line": "L3",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -180,7 +209,7 @@
    ]
   },
   {
-   "i": 5,
+   "i": 6,
    "line": "L4",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -208,7 +237,7 @@
    "mute": true
   },
   {
-   "i": 6,
+   "i": 7,
    "line": "L4",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -236,7 +265,7 @@
    "mute": true
   },
   {
-   "i": 7,
+   "i": 8,
    "line": "L5",
    "src": "cnbc15a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -269,7 +298,7 @@
    ]
   },
   {
-   "i": 8,
+   "i": 9,
    "line": "L6",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -297,7 +326,7 @@
    "mute": true
   },
   {
-   "i": 9,
+   "i": 10,
    "line": "L6",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -325,7 +354,7 @@
    "mute": true
   },
   {
-   "i": 10,
+   "i": 11,
    "line": "L7",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -353,7 +382,7 @@
    "mute": true
   },
   {
-   "i": 11,
+   "i": 12,
    "line": "L7",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -381,7 +410,7 @@
    "mute": true
   },
   {
-   "i": 12,
+   "i": 13,
    "line": "L8",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -414,7 +443,7 @@
    ]
   },
   {
-   "i": 13,
+   "i": 14,
    "line": "L9",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -442,7 +471,7 @@
    "mute": true
   },
   {
-   "i": 14,
+   "i": 15,
    "line": "L9",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -470,7 +499,7 @@
    "mute": true
   },
   {
-   "i": 15,
+   "i": 16,
    "line": "L10",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -498,7 +527,7 @@
    "mute": true
   },
   {
-   "i": 16,
+   "i": 17,
    "line": "L11",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -531,7 +560,7 @@
    ]
   },
   {
-   "i": 17,
+   "i": 18,
    "line": "L12",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -564,7 +593,7 @@
    ]
   },
   {
-   "i": 18,
+   "i": 19,
    "line": "L12",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -597,7 +626,7 @@
    ]
   },
   {
-   "i": 19,
+   "i": 20,
    "line": "L13",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -630,7 +659,7 @@
    ]
   },
   {
-   "i": 20,
+   "i": 21,
    "line": "L14",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -658,7 +687,7 @@
    "mute": true
   },
   {
-   "i": 21,
+   "i": 22,
    "line": "L14",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -686,7 +715,7 @@
    "mute": true
   },
   {
-   "i": 22,
+   "i": 23,
    "line": "L15",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -714,7 +743,7 @@
    "mute": true
   },
   {
-   "i": 23,
+   "i": 24,
    "line": "L15",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -742,7 +771,7 @@
    "mute": true
   },
   {
-   "i": 24,
+   "i": 25,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -770,7 +799,7 @@
    "mute": true
   },
   {
-   "i": 25,
+   "i": 26,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -798,7 +827,7 @@
    "mute": true
   },
   {
-   "i": 26,
+   "i": 27,
    "line": "L16",
    "src": "cnbc170a.mp4",
    "url": "https://www.youtube.com/watch?v=vyvIN8J_vj0",
@@ -826,7 +855,7 @@
    "mute": true
   },
   {
-   "i": 27,
+   "i": 28,
    "line": "L17",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -854,7 +883,7 @@
    "mute": true
   },
   {
-   "i": 28,
+   "i": 29,
    "line": "L17",
    "src": "demo76_6pC9CovZuBY.mp4",
    "url": "https://www.youtube.com/watch?v=6pC9CovZuBY",
@@ -886,31 +915,118 @@
   {
    "line": "L1",
    "kind": "red_circle",
-   "at": [
-    510,
-    732
-   ],
+   "stroke": 11,
    "t": [
     0.0,
-    1.85
+    0.37
    ],
-   "why": "벤치 0초 결말 반응 얼굴 빨간 원(첫 컷 내내) — 얼굴 자리는 눈으로 · 자리 눈으로(1차 완성본 프레임 격자, 품질 담당 10-18)",
-   "how": "face",
-   "size": 430,
-   "face_src": {
-    "cx": 946.3,
-    "eye_y": 285.3,
-    "h": 404.5,
-    "n": 3
-   },
-   "fh_win": 0.365
+   "how": "object",
+   "target": [
+    332,
+    1283,
+    451,
+    1391
+   ],
+   "target_what": "창업자 손에 든 노란 Spikeball 공 전체 — 원본 42.44초 상자 [1152,872,1274,983] → 크롭 [811,0,1109,1080]·×0.9738 → 완성본 [332,1283,451,1391]",
+   "why": "R3: 0초 빨간 원 = 물건(Spikeball 공, 투자자 원음 'a ball in a net' 순간) — fx_place.hook_object 손 상자·추적·얼굴 겹침 거절 · 0.4초 컷이라 t ≤0.37",
+   "at": [
+    392,
+    1337
+   ],
+   "size": 196,
+   "face_clear": true,
+   "target_box": [
+    332,
+    1283,
+    451,
+    1391
+   ],
+   "target_path": [
+    [
+     0.0,
+     332.0,
+     1283.0,
+     451.0,
+     1391.0
+    ],
+    [
+     0.067,
+     338.0,
+     1286.3,
+     457.0,
+     1394.3
+    ],
+    [
+     0.133,
+     340.7,
+     1296.3,
+     459.7,
+     1404.3
+    ],
+    [
+     0.2,
+     339.0,
+     1309.0,
+     459.7,
+     1418.3
+    ],
+    [
+     0.267,
+     335.3,
+     1315.3,
+     457.7,
+     1426.0
+    ],
+    [
+     0.333,
+     330.0,
+     1313.0,
+     454.0,
+     1425.0
+    ]
+   ],
+   "track": [
+    [
+     0.0,
+     392,
+     1337
+    ],
+    [
+     0.067,
+     398,
+     1340
+    ],
+    [
+     0.133,
+     400,
+     1350
+    ],
+    [
+     0.2,
+     399,
+     1364
+    ],
+    [
+     0.267,
+     396,
+     1371
+    ],
+    [
+     0.333,
+     392,
+     1369
+    ]
+   ],
+   "track_conf": 0.963,
+   "track_how": "template",
+   "why_target": "손 상자(재료 target) · 추적 template 신뢰 0.963 · 원 196px = 물건 반대각선 84×1.04+선 · 얼굴 3프레임 겹침 0"
   },
   {
    "line": "L4",
    "kind": "arrow_green_down",
    "at": [
     535,
-    1142
+    1146
    ],
    "t": [
     0.0,
@@ -924,7 +1040,99 @@
     670,
     1300
    ],
-   "target_what": "바닥의 스파이크볼 그물"
+   "target_what": "바닥의 스파이크볼 그물",
+   "tip_in": [
+    535,
+    1245
+   ],
+   "target_box": [
+    400,
+    1190,
+    670,
+    1300
+   ],
+   "target_path": [
+    [
+     0.0,
+     400.0,
+     1190.0,
+     670.0,
+     1300.0
+    ],
+    [
+     0.067,
+     400.0,
+     1190.0,
+     670.0,
+     1300.0
+    ],
+    [
+     0.133,
+     400.0,
+     1189.7,
+     670.0,
+     1299.7
+    ],
+    [
+     0.2,
+     400.0,
+     1189.3,
+     670.0,
+     1299.3
+    ],
+    [
+     0.267,
+     400.0,
+     1189.0,
+     670.0,
+     1299.0
+    ],
+    [
+     0.333,
+     400.0,
+     1189.0,
+     670.0,
+     1299.0
+    ],
+    [
+     0.4,
+     400.0,
+     1189.0,
+     670.0,
+     1299.0
+    ],
+    [
+     0.467,
+     400.0,
+     1188.7,
+     670.0,
+     1298.7
+    ],
+    [
+     0.533,
+     400.0,
+     1188.3,
+     670.0,
+     1298.3
+    ],
+    [
+     0.6,
+     400.0,
+     1188.0,
+     670.0,
+     1298.0
+    ],
+    [
+     0.667,
+     400.0,
+     1188.0,
+     670.0,
+     1298.0
+    ]
+   ],
+   "track_conf": 0.942,
+   "track_how": "template",
+   "why_target": "손 상자 · 추적 template 신뢰 0.942"
   },
   {
    "line": "L2",
@@ -938,7 +1146,8 @@
     2.455
    ],
    "why": "벤치 12.017~13.82 숫자 조각 분홍 위 화살표 — '한 해 140만 달러어치를' · 자리 눈으로(1차 완성본 프레임 격자, 품질 담당 10-18)",
-   "how": "hand"
+   "how": "hand",
+   "drop": "대상 없음(target) — R4 확실할 때만"
   },
   {
    "line": "L11",
@@ -967,7 +1176,8 @@
     1.333
    ],
    "why": "벤치 38.7~40.0 날개 돈다발",
-   "how": "auto"
+   "how": "auto",
+   "face_cover": 0.0
   },
   {
    "line": "L14",
