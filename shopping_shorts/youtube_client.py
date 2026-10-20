@@ -628,6 +628,8 @@ def video_analytics(video_id, today=None):
                "me": bool(r.get("me"))} for r in series]
     return {"ok": True, "video": me, "channel": channel, "median": med, "multiplier": mult, "multiplier_day": mult_day, "tier": tier,
             "young": bool(me["days"] and me["days"] < YOUNG_DAYS),
-            "rank": rank, "compared": len(recent), "views_per_sub": _rate(me["views"], channel["subs"]),
+            "rank": rank, "compared": len(recent),
+            "top_pct": (max(1, round(rank * 100 / (len(recent) + 1))) if rank else None),   # 채널 최근 쇼츠 중 상위 몇 %
+            "views_per_sub": _rate(me["views"], channel["subs"]),
             "series": series, "trend": _view_trend(video_id, me["published"], me["views"]),
             "source": "배수 기준: 1of10(중앙값 비교)·OutlierKit(2·3·5배 구간)"}
