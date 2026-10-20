@@ -28720,6 +28720,118 @@ def _mograph_work_file(wid: str, path: str, request: Request):
     return FileResponse(str(p), media_type=mt, headers=_NOCACHE)
 
 
+# ── 레퍼런스 역설계(2026-10-20 사장님 "프롬프트 없는 레퍼런스도 역설계해서 진행해") — 주인 mograph/reverse.py:reverse_engineer ──
+# JasonZhu 원본 mp4·프레임은 저장소 밖(MOGRAPH_JZ_DIR)에서 관리자만 본다(영상 권리 = 제작자, ref_only). 장부 refs.jsonl 엔 메타·실측·지시서만.
+_MOGRAPH_REF_ID = re.compile(r"^[0-9]{10,25}$")
+_MOGRAPH_REF_OUT = {"sheet.png": "image/png", "strip.png": "image/png", "measure.json": "application/json", "brief.md": "text/plain; charset=utf-8",
+                    "brief.json": "application/json", "claude.log": "text/plain; charset=utf-8"}
+
+
+def _mograph_refs(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv, sources as _ms
+    return JSONResponse({"ok": True, "refs": _rv.list_refs(), "jz_dir": str(_ms.jasonzhu_dir()), "jz_dir_ok": (_ms.jasonzhu_dir() / "motion").is_dir()}, headers=_NOCACHE)
+
+
+def _mograph_ref_detail(ref_id: str, request: Request):
+    """프롬프트 본문(있으면)·장부 레코드(실측·지시서)·역설계 상태."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv, sources as _ms
+    if not _MOGRAPH_REF_ID.match(ref_id or ""):
+        return JSONResponse({"error": "레퍼런스 id 가 아닙니다"}, status_code=400)
+    meta = _ms.jasonzhu_meta(ref_id)
+    if not meta:
+        return JSONResponse({"error": "없는 레퍼런스"}, status_code=404)
+    return JSONResponse({"ok": True, "meta": meta, "prompt": _ms.jasonzhu_prompt(ref_id), "has_video": bool(_ms.jasonzhu_video(ref_id)),
+                         "rec": _rv.find_ref(ref_id), "status": _rv.status(ref_id)}, headers=_NOCACHE)
+
+
+def _mograph_ref_video(ref_id: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import sources as _ms
+    p = _ms.jasonzhu_video(ref_id) if _MOGRAPH_REF_ID.match(ref_id or "") else None
+    if not p:
+        return JSONResponse({"error": "원본 없음"}, status_code=404)
+    return FileResponse(str(p), media_type="video/mp4", headers=_NOCACHE)
+
+
+def _mograph_ref_out(ref_id: str, name: str, request: Request):
+    """역설계 산출물(시트·띠·실측·지시서·장면 프레임 scenes/sNN.png)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv
+    if not _MOGRAPH_REF_ID.match(ref_id or ""):
+        return JSONResponse({"error": "레퍼런스 id 가 아닙니다"}, status_code=400)
+    rel = (name or "").replace("\\", "/")
+    if rel in _MOGRAPH_REF_OUT:
+        mt = _MOGRAPH_REF_OUT[rel]
+    elif re.match(r"^scenes/s[0-9]{2}(_a)?\.png$", rel):
+        mt = "image/png"
+    else:
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    p = _rv.out_dir(ref_id) / rel
+    if not p.is_file():
+        return JSONResponse({"error": "아직 없음"}, status_code=404)
+    return FileResponse(str(p), media_type=mt, headers=_NOCACHE)
+
+
+async def _mograph_reverse_start(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv, sources as _ms
+    body = await request.json() or {}
+    ref_id = str(body.get("id") or "")
+    if not _MOGRAPH_REF_ID.match(ref_id) or not _ms.jasonzhu_video(ref_id):
+        return JSONResponse({"error": "원본 영상이 없는 레퍼런스"}, status_code=404)
+    writer = "claude" if body.get("writer", "claude") == "claude" else "none"
+    started = _rv.reverse_async(ref_id, writer=writer, model=str(body.get("model") or "opus"), product_hint=str(body.get("hint") or "")[:500],
+                                force=bool(body.get("force")))
+    return JSONResponse({"ok": True, "started": started, "status": _rv.status(ref_id)}, headers=_NOCACHE)
+
+
+def _mograph_reverse_status(ref_id: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv
+    if not _MOGRAPH_REF_ID.match(ref_id or ""):
+        return JSONResponse({"error": "레퍼런스 id 가 아닙니다"}, status_code=400)
+    st = _rv.status(ref_id)
+    st["rec"] = _rv.find_ref(ref_id) if st.get("state") == "done" else None
+    return JSONResponse(st, headers=_NOCACHE)
+
+
+async def _mograph_ref_approve(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import reverse as _rv
+    body = await request.json() or {}
+    ref_id = str(body.get("id") or "")
+    if not _MOGRAPH_REF_ID.match(ref_id):
+        return JSONResponse({"error": "레퍼런스 id 가 아닙니다"}, status_code=400)
+    try:
+        rec = _rv.approve_ref(ref_id, approved=bool(body.get("approved", True)), note=str(body.get("note") or ""))
+    except KeyError:
+        return JSONResponse({"error": "역설계되지 않은 레퍼런스"}, status_code=404)
+    return JSONResponse({"ok": True, "rec": rec}, headers=_NOCACHE)
+
+
+app.add_api_route("/api/admin/mograph/refs", _mograph_refs, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/refs/{ref_id}", _mograph_ref_detail, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/refs/{ref_id}/video", _mograph_ref_video, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/refs/{ref_id}/out/{name:path}", _mograph_ref_out, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/reverse", _mograph_reverse_start, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/mograph/reverse/{ref_id}", _mograph_reverse_status, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/ref_approve", _mograph_ref_approve, methods=["POST"], include_in_schema=False)
 app.add_api_route("/api/admin/mograph/work", _mograph_work_build, methods=["POST"], include_in_schema=False)
 app.add_api_route("/api/admin/mograph/works", _mograph_works, include_in_schema=False)
 app.add_api_route("/api/admin/mograph/work/{wid}/src/{path:path}", _mograph_work_file, include_in_schema=False)

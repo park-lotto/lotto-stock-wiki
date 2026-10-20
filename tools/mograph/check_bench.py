@@ -80,8 +80,9 @@ def run(base, shot=None, make=False, render=False, verdict=None, live=False):
         page.goto(base + "/mograph_bench", wait_until="domcontentloaded")
         out["gallery"] = g = page.evaluate(JS_GALLERY)
         api = page.evaluate("async()=>{const r=await fetch('/api/admin/mograph/parts');return await r.json();}")
-        n = len(api.get("parts") or [])
-        if g["cards"] != n: fails.append(f"카드 {g['cards']} ≠ 장부 {n}")
+        refs = page.evaluate("async()=>{const r=await fetch('/api/admin/mograph/refs');return (await r.json()).refs.length;}")
+        n = len(api.get("parts") or []) + refs        # 카드 = 부품 장부 + 레퍼런스(JasonZhu, 2026-10-20 추가)
+        if g["cards"] != n: fails.append(f"카드 {g['cards']} ≠ 장부 {len(api.get('parts') or [])} + 레퍼런스 {refs}")
         if not g["mg"] or min(g["mg"]) == 0: fails.append(f"팩 캔버스 잉크 0 {g['mg']}")
         if not g["shapes"] or min(g["shapes"]) == 0: fails.append(f"도형 캔버스 잉크 0 {g['shapes']}")
         if api.get("ref_dir_ok"):

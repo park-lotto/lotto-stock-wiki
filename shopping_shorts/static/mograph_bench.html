@@ -6,7 +6,8 @@
 <title>모션 자산 작업대 · 숏템메이커</title>
 <!-- 🛠 모션 자산 작업대(관제 244, 2026-10-20 사장님 "내가 눈으로 우리 자산들을 보고 실제로 구현하면서 할 수 있는 페이지") — 관리자 전용.
      ★여기엔 부품 목록·모양을 적지 않는다. 목록·판정 = /api/admin/mograph/parts(mograph/ledger.py) / overlay 그림 = motion-graphics-pack.js /
-       scene 그림 = 원본 조각을 같은 출처 iframe 으로 열어 __timelines[slug] 를 작업대가 돌린다 / 작업물 = /api/admin/mograph/work(mograph/compose.py).
+       scene 그림 = 원본 조각을 같은 출처 iframe 으로 열어 __timelines[slug] 를 작업대가 돌린다 / 작업물 = /api/admin/mograph/work(mograph/compose.py) /
+       레퍼런스(JasonZhu) = /api/admin/mograph/refs(mograph/reverse.py) — 프롬프트 있으면 본문, 없으면 "역설계" 버튼 → 지시서(실측/추정 구분) → 승인.
      사용성 원칙(10-20 사장님 "사용자가 영상과 자료들을 편하게 만들 수 있게"): 만들기 탭은 칸 채우고 버튼 하나, 레퍼런스는 옆에 붙어 보인다, 어려운 값은 기본값. -->
 <style>
   :root{--bg:#0a0f0d;--panel:#0f1512;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#37e0bd;--warn:#e0b23a;--good:#9be36b;--bad:#ff8a8a}
@@ -33,6 +34,13 @@
   .pv iframe{position:absolute;left:0;top:0;width:1080px;height:830px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
   .pv .mg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   .pv .mg>div{width:70%;height:70%}
+  .pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+  .pv.ref{aspect-ratio:16/9}
+  .brief h4{margin:12px 0 4px;font-size:13px;color:#bfe9ff;letter-spacing:.04em}
+  .brief ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.45} .brief li{margin:2px 0}
+  .brief .m{color:var(--good);font-weight:700;font-size:11px;margin-right:4px} .brief .e{color:var(--warn);font-weight:700;font-size:11px;margin-right:4px}
+  .brief img{width:100%;border-radius:8px;border:1px solid var(--line);margin-top:6px}
+  pre.prompt{white-space:pre-wrap;font-size:12px;background:#0b1210;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:360px;overflow:auto}
   .pv canvas.shape{position:absolute;left:50%;top:50%;width:70%;height:52%;transform:translate(-50%,-50%)}
   .pv .noref{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;text-align:center;padding:10px}
   .badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
@@ -127,9 +135,9 @@ USB-C 충전
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MG=window.MOTION_GRAPHICS,CAT=window.SCENE_DECORATION_CATALOG;
 const api=async(u,o)=>{const r=await fetch(u,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.status);return j;};
-let PARTS=[],TAGS=[],REFOK=false,SEL=null,PRESETS=[],CURWORK=null;
-const F={kind:'',status:'',verdict:'',pack:'',q:''};
-const KIND_KO={overlay:'얹는 효과',scene:'장면(원본 HTML)',transition:'전환',caption:'자막',preset:'프리셋'};
+let PARTS=[],TAGS=[],REFOK=false,SEL=null,PRESETS=[],CURWORK=null,REFS=[],JZOK=false;
+const F={kind:'',status:'',verdict:'',pack:'',q:'',prompt:''};
+const KIND_KO={overlay:'얹는 효과',scene:'장면(원본 HTML)',transition:'전환',caption:'자막',preset:'프리셋',reference:'레퍼런스(JasonZhu)'};
 const LIC_KO={ours:'우리 것',rewritten:'다시 짠 것',ref_only:'참고만(회원 금지)'};
 const lastV=p=>(p.verdicts||[]).slice(-1)[0];
 
@@ -151,6 +159,9 @@ function tlOf(f,slug){try{const w=f.contentWindow;return w&&w.__timelines&&(w.__
     const t=s.playing?((now-s.t0)/1000)%s.dur:s.key;tl.time(t);f.dataset.t=t.toFixed(2);});
   requestAnimationFrame(loop);
 })();
+function refVideoUrl(id){return `/api/admin/mograph/refs/${id}/video`;}
+function mountRef(pv,p){if(pv.querySelector('video'))return;const v=document.createElement('video');v.src=refVideoUrl(p.ref.id);v.muted=true;v.loop=true;v.playsInline=true;v.preload='metadata';pv.appendChild(v);}
+const IOV=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const p=PARTS.find(x=>x.slug===e.target.dataset.ref);if(p)mountRef(e.target,p);}}),{rootMargin:'200px'});
 const IO=new IntersectionObserver(es=>es.forEach(e=>{const pv=e.target;if(e.isIntersecting&&pv.dataset.scene){const p=PARTS.find(x=>x.slug===pv.dataset.scene);if(p&&p.ref_ok)mountScene(pv,p,false);}}),{rootMargin:'200px'});
 function setPlaying(pv,on){const f=pv.querySelector('iframe');if(!f)return;const s=LIVE.get(f);if(s){s.playing=on;s.t0=performance.now();}}
 
@@ -163,6 +174,7 @@ function filterChips(){
     mk('라이선스','status',[['','전부'],...Object.entries(LIC_KO).filter(([k])=>PARTS.some(p=>(p.license||{}).status===k))])+
     mk('판정','verdict',[['','전부'],['good','👍 좋음'],['bad','👎 별로'],['none','미판정']])+
     mk('출처','pack',[['','전부'],['pack','모션그래픽팩'],...packs.map(x=>[x,x])])+
+    (PARTS.some(p=>p.kind==='reference')?mk('레퍼런스','prompt',[['','전부'],['has','프롬프트 있음'],['none','프롬프트 없음(역설계 대상)'],['brief','지시서 있음'],['approved','승인됨']]):'')+
     `<input type="text" id="q" placeholder="이름·설명 검색" value="${esc(F.q)}" style="width:180px;margin-left:8px">`;
   document.querySelectorAll('#filters .chip').forEach(c=>c.onclick=()=>{F[c.dataset.k]=c.dataset.v;filterChips();renderGrid();});
   document.getElementById('q').oninput=e=>{F.q=e.target.value;renderGrid();};
@@ -172,12 +184,16 @@ function visible(){return PARTS.filter(p=>{
   if(F.status&&(p.license||{}).status!==F.status)return false;
   const v=lastV(p);if(F.verdict==='none'&&v)return false;if((F.verdict==='good'||F.verdict==='bad')&&(!v||v.verdict!==F.verdict))return false;
   const pk=(p.src||{}).pack||'pack';if(F.pack&&pk!==F.pack)return false;
+  if(F.prompt){if(p.kind!=='reference')return false;const r=p.ref;if(F.prompt==='has'&&!r.has_prompt)return false;if(F.prompt==='none'&&r.has_prompt)return false;if(F.prompt==='brief'&&!r.has_brief)return false;if(F.prompt==='approved'&&r.status!=='approved')return false;}
   if(F.q){const s=(p.slug+' '+(p.label||'')+' '+(p.what||'')+' '+(p.group||'')).toLowerCase();if(!s.includes(F.q.toLowerCase()))return false;}
   return true;});}
-function badges(p){const v=lastV(p),st=(p.license||{}).status;return `<div class="badges"><span class="bd ${st==='ref_only'?'ref':'ours'}">${esc(LIC_KO[st]||st||'')}</span><span class="bd">${esc(p.ratio||'')}</span>`+(p.duration_ms?`<span class="bd">${(p.duration_ms/1000).toFixed(1)}초</span>`:'')+(v?`<span class="bd ${v.verdict}">${v.verdict==='good'?'👍 좋음':'👎 별로'}</span>`:'<span class="bd">미판정</span>')+(p.render==='done'?'<span class="bd ours">렌더됨</span>':'')+`</div>`;}
-function labelOf(p){if(p.kind==='overlay'&&MG&&p.impl&&p.impl.file.endsWith('motion-graphics-pack.js')){const it=MG.items[p.impl.key];if(it)return it.label;}
+function badges(p){const v=lastV(p),st=(p.license||{}).status;
+  if(p.kind==='reference'){const r=p.ref;return `<div class="badges"><span class="bd ref">참고만(권리 제작자)</span><span class="bd">${esc(r.duration_s||'')}초</span>${r.has_prompt?'<span class="bd ours">프롬프트</span>':'<span class="bd">프롬프트 없음</span>'}${r.has_brief?'<span class="bd ours">지시서</span>':''}${r.status==='approved'?'<span class="bd good">승인</span>':r.status==='rejected'?'<span class="bd bad">반려</span>':''}${r.reverse==='running'?'<span class="bd ref">역설계 중</span>':''}<span class="bd">조회 ${Number(r.views||0).toLocaleString()}</span></div>`;}
+  return `<div class="badges"><span class="bd ${st==='ref_only'?'ref':'ours'}">${esc(LIC_KO[st]||st||'')}</span><span class="bd">${esc(p.ratio||'')}</span>`+(p.duration_ms?`<span class="bd">${(p.duration_ms/1000).toFixed(1)}초</span>`:'')+(v?`<span class="bd ${v.verdict}">${v.verdict==='good'?'👍 좋음':'👎 별로'}</span>`:'<span class="bd">미판정</span>')+(p.render==='done'?'<span class="bd ours">렌더됨</span>':'')+`</div>`;}
+function labelOf(p){if(p.kind==='reference')return p.ref.title||p.ref.title_zh||p.ref.id;if(p.kind==='overlay'&&MG&&p.impl&&p.impl.file.endsWith('motion-graphics-pack.js')){const it=MG.items[p.impl.key];if(it)return it.label;}
   if(p.kind==='overlay'&&CAT&&p.impl){const d=(CAT.shapes||[]).find(s=>s.key===p.impl.key);if(d)return d.label;}return p.label||p.slug;}
 function previewHtml(p){
+  if(p.kind==='reference')return `<div class="pv ref" data-ref="${esc(p.slug)}">${p.ref.has_video?'':'<div class="noref">아직 안 받아짐</div>'}</div>`;
   if(p.kind==='scene')return `<div class="pv" data-scene="${esc(p.slug)}">${p.ref_ok?'':'<div class="noref">원본 폴더 없음<br>'+esc((p.impl||{}).folder||'')+'</div>'}</div>`;
   if(p.kind==='overlay'&&p.impl&&p.impl.file.endsWith('motion-graphics-pack.js'))return `<div class="pv v"><div class="mg"><div data-mg="${esc(p.impl.key)}"></div></div></div>`;
   if(p.kind==='overlay')return `<div class="pv v"><canvas class="shape" width="192" height="144" data-shape="${esc(p.impl.key)}"></canvas></div>`;
@@ -187,10 +203,12 @@ function wire(root){
   root.querySelectorAll('[data-mg]').forEach(el=>{if(!MG)return;el.className+=' scene-decoration';MG.poster(el,{mograph:el.dataset.mg,w:100},160);MG.clock(el,{mograph:el.dataset.mg},0);});
   // 옛 도형 = scene-decoration-catalog.js shapeDraw[key](ctx, 반지름, 색) — shortem_packs.html 과 같은 호출
   root.querySelectorAll('canvas.shape').forEach(c=>{try{const ctx=c.getContext('2d');const d=(CAT.shapes||[]).find(s=>s.key===c.dataset.shape);if(d&&CAT.shapeDraw[d.key]){ctx.translate(c.width/2,c.height/2);CAT.shapeDraw[d.key](ctx,c.height*0.36,d.color);}}catch(e){}});
+  root.querySelectorAll('.pv[data-ref]').forEach(pv=>{const p=PARTS.find(x=>x.slug===pv.dataset.ref);if(!p||!p.ref.has_video)return;IOV.observe(pv);
+    const host=pv.closest('.card,.panel,.refpin');host?.addEventListener('mouseenter',()=>{mountRef(pv,p);const v=pv.querySelector('video');if(v){v.muted=true;v.play().catch(()=>{});}});host?.addEventListener('mouseleave',()=>{const v=pv.querySelector('video');if(v&&pv.closest('.card')){v.pause();}});});
   root.querySelectorAll('.pv[data-scene]').forEach(pv=>{IO.observe(pv);pv.closest('.card,.panel,.refpin')?.addEventListener('mouseenter',()=>{const p=PARTS.find(x=>x.slug===pv.dataset.scene);if(p&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);}});pv.closest('.card')?.addEventListener('mouseleave',()=>setPlaying(pv,false));});
 }
 function renderGrid(){
-  const rows=visible();document.getElementById('count').textContent=`${rows.length}개 보임 · 전체 ${PARTS.length}개 (scene ${PARTS.filter(p=>p.kind==='scene').length} · overlay ${PARTS.filter(p=>p.kind==='overlay').length}) · 원본 폴더 ${REFOK?'연결됨':'없음'}`;
+  const rows=visible();document.getElementById('count').textContent=`${rows.length}개 보임 · 전체 ${PARTS.length}개 (scene ${PARTS.filter(p=>p.kind==='scene').length} · overlay ${PARTS.filter(p=>p.kind==='overlay').length} · 레퍼런스 ${PARTS.filter(p=>p.kind==='reference').length}, 받아진 영상 ${PARTS.filter(p=>p.kind==='reference'&&p.ref.has_video).length}) · 원본 폴더 ${REFOK?'연결됨':'없음'} · JasonZhu ${JZOK?'연결됨':'없음'}`;
   const g=document.getElementById('grid');
   g.innerHTML=rows.map(p=>`<div class="card ${SEL===p.slug?'sel':''}" data-slug="${esc(p.slug)}">${previewHtml(p)}<b>${esc(labelOf(p))}</b><small>${esc(KIND_KO[p.kind]||p.kind)} · ${esc(p.group||'')}</small>${badges(p)}</div>`).join('');
   wire(g);
@@ -199,6 +217,7 @@ function renderGrid(){
 function select(slug){
   SEL=slug;const p=PARTS.find(x=>x.slug===slug);if(!p)return;
   document.querySelectorAll('#grid .card').forEach(c=>c.classList.toggle('sel',c.dataset.slug===slug));
+  if(p.kind==='reference')return selectRef(p);
   const d=document.getElementById('detail'),v=lastV(p),src=p.src||{},im=p.impl||{};
   d.innerHTML=`<h2>${esc(labelOf(p))}</h2>${badges(p)}
     ${previewHtml(p)}
@@ -233,6 +252,56 @@ function select(slug){
   const rb=d.querySelector('#rbtn');if(rb)rb.onclick=()=>startRender(slug,d.querySelector('#rmsg'),d.querySelector('#rres'),()=>{p.render='done';renderGrid();});
   if(p.render==='done')showRender(slug,d.querySelector('#rres'));
 }
+// ── 레퍼런스 상세: 프롬프트 본문 / 역설계 버튼 → 지시서 / 승인 ──
+function briefHtml(rec){
+  if(!rec||!rec.brief)return '';
+  const b=rec.brief,id=rec.id,q='?t='+Date.now();
+  const line=x=>{x=String(x);const m=x.match(/^\[(실측|추정)\]\s*/);return (m?`<span class="${m[1]==='실측'?'m':'e'}">[${m[1]}]</span>`:'')+esc(m?x.slice(m[0].length):x);};
+  const secs=['PRODUCT','STORY','FORMAT','LOOK','MOTION','SOUND','QUALITY_CHECK','RULES','FORBIDDEN'];
+  const ms=rec.measure||{};
+  return `<div class="brief"><div class="lead">실측: ${ms.probe?ms.probe.w+'×'+ms.probe.h+' '+Number(ms.probe.duration).toFixed(2)+'초':''} · 장면 ${ms.scene_count} · 컷/초 ${ms.cuts_per_s} · 바탕 전환 ${ms.bg_flips}회 · 쓴 이 ${esc((rec.brief_log||{}).writer||'')} ${esc(((rec.brief_log||{}).model_used||[]).join(','))}</div>
+    <img src="/api/admin/mograph/refs/${id}/out/strip.png${q}" alt="장면 띠">
+    ${secs.map(k=>`<h4>${k}</h4><ul>${(b[k]||[]).map(x=>`<li>${line(x)}</li>`).join('')||'<li>없음</li>'}</ul>`).join('')}
+    ${b.grammar?`<h4>grammar</h4><pre class="prompt">${esc(JSON.stringify(b.grammar,null,1))}</pre>`:''}
+    ${b.score_ref?`<h4>score_ref</h4><pre class="prompt">${esc(JSON.stringify(b.score_ref))}</pre>`:''}
+    <img src="/api/admin/mograph/refs/${id}/out/sheet.png${q}" alt="16칸 시트">
+    <div class="lead"><a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/refs/${id}/out/brief.md">brief.md</a> · <a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/refs/${id}/out/measure.json">measure.json</a></div></div>`;
+}
+async function selectRef(p){
+  const d=document.getElementById('detail'),r=p.ref;
+  d.innerHTML=`<h2>${esc(labelOf(p))}</h2>${badges(p)}${previewHtml(p)}
+    <div class="kv"><span>제작자</span><span><a style="color:var(--accent)" target="_blank" href="${esc(r.url)}">@${esc(r.creator)}</a> · ${esc((r.models||[]).join(','))}</span><span>라이선스</span><span>참고만 — 영상 권리는 제작자. 문법만 배운다(회원 노출 금지)</span><span>원본</span><span>${r.has_video?'받아짐':'아직 안 받아짐'}</span></div>
+    <div id="refbody" class="lead">불러오는 중…</div>`;
+  wire(d);const pv=d.querySelector('.pv[data-ref]');if(pv&&r.has_video){mountRef(pv,p);const v=pv.querySelector('video');v.controls=true;v.play().catch(()=>{});}
+  let j;try{j=await api('/api/admin/mograph/refs/'+r.id);}catch(e){d.querySelector('#refbody').innerHTML='<span class="err">'+esc(e.message)+'</span>';return;}
+  renderRefBody(p,j);
+}
+function renderRefBody(p,j){
+  const d=document.getElementById('detail'),r=p.ref,body=d.querySelector('#refbody');if(!body)return;
+  const rec=j.rec,st=j.status||{};
+  let h='';
+  if(j.prompt)h+=`<h3>프롬프트 원문(제작자 공개)</h3><pre class="prompt">${esc(j.prompt)}</pre>`;
+  h+=`<h3>역설계 — 프레임 실측 + Opus 지시서</h3>`;
+  if(st.state==='running')h+=`<div class="lead">역설계 중(${esc(st.step||'')})… <span id="rvmsg"></span></div>`;
+  else h+=`<div class="row"><button class="btn pri" id="rvbtn" ${r.has_video?'':'disabled'}>🔁 ${rec&&rec.brief?'다시 ':''}역설계</button><input type="text" id="rvhint" placeholder="우리가 만들 것 한 줄(선택) — 예: 미니 가습기 세로 15초" style="flex:1;min-width:200px"><span id="rvmsg" class="lead"></span></div>`;
+  if(st.state==='error')h+=`<div class="err">지난 실행 실패: ${esc(st.error||'')}</div>`;
+  if(rec&&rec.brief){h+=briefHtml(rec);
+    h+=`<h3>지시서 판정</h3><div class="row"><button class="btn good" id="rvok">👍 승인(이 문법으로 만든다)</button><button class="btn bad" id="rvno">👎 반려</button><button class="btn pri" id="rvuse">🎬 이 지시서로 만들기</button><span id="rvvmsg" class="lead"></span></div>
+      ${(rec.verdicts||[]).length?`<div class="hist">${rec.verdicts.slice(-5).reverse().map(x=>`<div>${esc(x.at)} ${x.verdict==='good'?'👍':'👎'} ${esc(x.note||'')}</div>`).join('')}</div>`:''}`;}
+  body.className='';body.innerHTML=h;
+  const bt=body.querySelector('#rvbtn');if(bt)bt.onclick=async()=>{const m=body.querySelector('#rvmsg');m.textContent='시작…';
+    try{await api('/api/admin/mograph/reverse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,hint:body.querySelector('#rvhint').value,force:!!(rec&&rec.brief)})});}catch(e){m.innerHTML='<span class="err">'+esc(e.message)+'</span>';return;}
+    r.reverse='running';renderGrid();const t0=Date.now();
+    const poll=async()=>{const s=await api('/api/admin/mograph/reverse/'+r.id);
+      if(s.state==='done'){r.reverse='done';r.has_brief=!!s.has_brief;r.status=(s.rec||{}).status||r.status;renderGrid();renderRefBody(p,{...j,rec:s.rec,status:s});return;}
+      if(s.state==='error'){r.reverse='error';renderGrid();renderRefBody(p,{...j,status:s});return;}
+      const mm=document.querySelector('#detail #rvmsg');if(mm)mm.textContent=`${s.step||''} ${Math.round((Date.now()-t0)/1000)}초…`;
+      if(!document.querySelector('#detail #refbody')||SEL!==p.slug)return;setTimeout(poll,2000);};
+    renderRefBody(p,{...j,status:{state:'running',step:'measure'}});poll();};
+  const vd=async ok=>{const m=body.querySelector('#rvvmsg');m.textContent='저장 중…';try{const s=await api('/api/admin/mograph/ref_approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,approved:ok,note:'작업대'})});r.status=s.rec.status;renderGrid();renderRefBody(p,{...j,rec:s.rec});document.querySelector('#detail #rvvmsg').innerHTML='<span class="ok">저장됨(refs.jsonl)</span>';}catch(e){m.innerHTML='<span class="err">'+esc(e.message)+'</span>';}};
+  const ok=body.querySelector('#rvok');if(ok)ok.onclick=()=>vd(true);const no=body.querySelector('#rvno');if(no)no.onclick=()=>vd(false);
+  const use=body.querySelector('#rvuse');if(use)use.onclick=()=>{pinRef(p);const chip=[...document.querySelectorAll('#presets .chip')].find(c=>(c.dataset.ref||'')===r.id);if(chip){document.querySelectorAll('#presets .chip').forEach(x=>x.classList.remove('on'));chip.classList.add('on');}showTab('make');};
+}
 async function startRender(slug,msg,res,done){
   msg.textContent='렌더 시작…';try{await api('/api/admin/mograph/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug})});}catch(e){msg.innerHTML='<span class="err">'+esc(e.message)+'</span>';return;}
   const t0=Date.now();const poll=async()=>{const st=await api('/api/admin/mograph/render/'+slug);
@@ -245,7 +314,8 @@ function showRender(slug,res){const q='?t='+Date.now();res.innerHTML=`<video con
 // ── 만들기 ──
 function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));document.getElementById('gallery').style.display=t==='gallery'?'':'none';document.getElementById('make').style.display=t==='make'?'':'none';if(t==='make')fitStage();}
 document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>showTab(x.dataset.tab));
-function pinRef(p){const r=document.getElementById('refpin');r.innerHTML=`<b style="display:block;margin-bottom:6px">${esc(labelOf(p))}</b>${previewHtml(p)}<div class="lead" style="margin-top:6px">${esc(p.how_to_use||p.what||'')}</div>`;wire(r);const pv=r.querySelector('.pv[data-scene]');if(pv&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);}}
+function pinRef(p){const r=document.getElementById('refpin');r.innerHTML=`<b style="display:block;margin-bottom:6px">${esc(labelOf(p))}</b>${previewHtml(p)}<div class="lead" style="margin-top:6px">${esc(p.how_to_use||p.what||'')}</div>`+(p.kind==='reference'&&p.ref.has_brief?`<img src="/api/admin/mograph/refs/${p.ref.id}/out/strip.png" style="width:100%;margin-top:6px;border-radius:6px"><div class="lead">지시서 승인: ${p.ref.status==='approved'?'👍':'미승인'}</div>`:'');wire(r);const pv=r.querySelector('.pv[data-scene]');if(pv&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);}
+  const pr=r.querySelector('.pv[data-ref]');if(pr&&p.ref.has_video){mountRef(pr,p);const v=pr.querySelector('video');v.controls=true;v.play().catch(()=>{});}}
 function fitStage(){const st=document.getElementById('stage'),f=st.querySelector('iframe');if(!f)return;const k=st.clientWidth/1080;f.style.transform=`scale(${k})`;}
 window.addEventListener('resize',fitStage);
 let STAGE=null; // {f,dur,playing,t0,scrub}
@@ -269,13 +339,17 @@ document.getElementById('scrub').oninput=e=>{if(!STAGE)return;STAGE.scrub=Number
 document.getElementById('btnPlay').onclick=()=>{if(!STAGE)return;if(STAGE.scrub!=null||!STAGE.playing){STAGE.scrub=null;STAGE.playing=true;STAGE.t0=performance.now()-(STAGE.last||0)*1000;document.getElementById('btnPlay').textContent='⏸ 멈춤';}else{STAGE.playing=false;document.getElementById('btnPlay').textContent='▶ 재생';}};
 document.getElementById('btnRender').onclick=()=>{if(!CURWORK)return;document.getElementById('st3').classList.add('on');startRender(CURWORK,document.getElementById('renderMsg'),document.getElementById('result'),()=>{document.getElementById('st4').classList.add('on');loadWorks();});};
 async function loadWorks(){try{const j=await api('/api/admin/mograph/works');PRESETS=j.presets||[];
-  document.getElementById('presets').innerHTML=PRESETS.map((p,i)=>`<span class="chip ${i===0?'on':''}" data-id="${esc(p.preset_id)}" title="${esc(p.use||'')}">${esc(p.label||p.preset_id)}</span>`).join('')||'<span class="lead">프리셋 장부 비어 있음</span>';
+  document.getElementById('presets').innerHTML=PRESETS.map((p,i)=>`<span class="chip ${i===0?'on':''}" data-id="${esc(p.preset_id)}" data-ref="${esc((p.design_ref||{}).ref_id||'')}" title="${esc(p.use||'')}">${esc(p.label||p.preset_id)}</span>`).join('')||'<span class="lead">프리셋 장부 비어 있음</span>';
   document.querySelectorAll('#presets .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#presets .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
   document.getElementById('works').innerHTML=(j.works||[]).slice(0,8).map(w=>`<div>${esc(w.made)} · ${esc(w.product?.name||'')} · ${w.total}초 · ${w.render?.state==='done'?`<a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/out/${w.id}/out.mp4">mp4</a> · <a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/out/${w.id}/sheet.png">시트</a>`:'미렌더'}</div>`).join('')||'아직 없음';}catch(e){}}
 
 (async()=>{
   try{const j=await api('/api/admin/mograph/parts');PARTS=j.parts||[];TAGS=j.tags||[];REFOK=!!j.ref_dir_ok;}
   catch(e){document.getElementById('count').innerHTML='<span class="err">목록 실패: '+esc(e.message)+'</span>';}
+  try{const j=await api('/api/admin/mograph/refs');REFS=j.refs||[];JZOK=!!j.jz_dir_ok;
+    // 레퍼런스는 부품이 아니다 — 카드 모양만 빌린다(kind 'reference', slug 'ref-<id>', 장부 parts.jsonl 에 안 들어간다)
+    PARTS=PARTS.concat(REFS.map(r=>({slug:'ref-'+r.id,kind:'reference',group:'@'+r.creator,label:r.title,license:{status:'ref_only',origin:'JasonZhu'},src:{pack:'jasonzhu',url:r.url},verdicts:r.verdicts||[],ref:r})));}
+  catch(e){document.getElementById('count').innerHTML+=' <span class="err">레퍼런스 목록 실패: '+esc(e.message)+'</span>';}
   filterChips();renderGrid();loadWorks();window.__mographBenchReady=true;
 })();
 </script>

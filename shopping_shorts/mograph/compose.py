@@ -13,8 +13,8 @@ from shopping_shorts.mograph import plan as _plan, render as _render
 
 TEMPLATES = Path(__file__).parent / "templates"
 STATIC = Path(__file__).resolve().parents[1] / "static"
-FONTS = ["Pretendard-Regular.otf", "Pretendard-SemiBold.otf", "Pretendard-Bold.otf", "Pretendard-ExtraBold.otf"]
-TEMPLATE_VERSION = "shop_intro.v1"
+FONTS = ["Pretendard-Regular.otf", "Pretendard-SemiBold.otf", "Pretendard-Bold.otf", "Pretendard-ExtraBold.otf", "NanumMyeongjo-ExtraBold.ttf"]
+TEMPLATE_VERSION = {"shop_intro": "shop_intro.v1", "shop_pocket": "shop_pocket.v1"}
 
 
 def work_id(lines, product, preset_id):
@@ -22,9 +22,12 @@ def work_id(lines, product, preset_id):
     return "work-" + hashlib.sha1(raw.encode("utf-8")).hexdigest()[:10]
 
 
-def build_work(lines, product=None, preset_id=_plan.DEFAULT_PRESET, template="shop_intro", timings=None):
-    """되돌려 주는 값 = {id, dir, plan}. 같은 입력이면 같은 id(다시 만들어도 덮어쓴다)."""
+def build_work(lines, product=None, preset_id=_plan.DEFAULT_PRESET, template=None, timings=None):
+    """되돌려 주는 값 = {id, dir, plan}. 같은 입력이면 같은 id(다시 만들어도 덮어쓴다). 템플릿은 프리셋(template 칸)이 정한다 — 없으면 shop_intro."""
     pl = _plan.plan_from_lines(lines, product, preset_id, timings)
+    template = template or _plan._preset(preset_id).get("template") or "shop_intro"
+    if not (TEMPLATES / (template + ".html")).exists():
+        raise ValueError("없는 템플릿: %s" % template)
     wid = work_id(lines, pl["product"], preset_id)
     d = _render.out_dir(wid)
     src = d / "src"
@@ -40,7 +43,7 @@ def build_work(lines, product=None, preset_id=_plan.DEFAULT_PRESET, template="sh
     # 길이는 루트 속성에 박는다 — HyperFrames 는 JS 가 바꾼 dataset 이 아니라 파일의 속성값을 읽는다(실측: 9.7초 작업이 15초로 렌더돼 뒤 5초가 검정)
     html = html.replace('data-duration="15"', 'data-duration="%s"' % pl["total"]).replace("__PLAN__", json.dumps(pl, ensure_ascii=False))
     (src / "index.html").write_text(html, encoding="utf-8")
-    meta = {"id": wid, "template": TEMPLATE_VERSION, "made": time.strftime("%Y-%m-%d %H:%M:%S"), "lines": lines,
+    meta = {"id": wid, "template": TEMPLATE_VERSION.get(template, template), "made": time.strftime("%Y-%m-%d %H:%M:%S"), "lines": lines,
             "product": pl["product"], "preset": preset_id, "total": pl["total"], "scenes": len(pl["scenes"])}
     (d / "work.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     (d / "plan.json").write_text(json.dumps(pl, ensure_ascii=False, indent=1), encoding="utf-8")

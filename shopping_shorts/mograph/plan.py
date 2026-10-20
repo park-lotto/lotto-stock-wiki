@@ -28,6 +28,26 @@ def _preset(preset_id):
     return {"preset_id": preset_id, "design_ref": {}, "motion_character": {}}
 
 
+def _plan_from_beats(lines, product, preset, timings):
+    """레퍼런스 박자표(preset.beats = [{type, dur}], 역설계 실측에서 옮긴 값)로 장면표를 짠다 — 장면 수·길이는 레퍼런스가 주인.
+    대사 줄은 종류별로 붙는다(hook→1줄, product→2줄, price→3줄, features→4줄, cta→5줄). stamp·claim 은 상품 칸(stamp·claim)에서.
+    TTS 실측(timings)이 오면 그 종류 장면의 길이를 실측으로 늘린다(줄이지는 않는다 — 레퍼런스 박자가 하한)."""
+    by_type = dict(zip(SCENE_ORDER, lines))
+    tts = {typ: timings[i] for i, typ in enumerate(SCENE_ORDER) if timings and i < len(timings) and timings[i].get("dur")}
+    scenes, t = [], 0.0
+    for i, b in enumerate(preset["beats"]):
+        typ, dur = b["type"], float(b["dur"])
+        if typ in tts:
+            dur = max(dur, float(tts[typ]["dur"]))
+        text = by_type.get(typ) or (product.get("stamp") if typ == "stamp" else product.get("claim") if typ == "claim" else "") or ""
+        scenes.append({"i": i, "type": typ, "t0": round(t, 2), "dur": round(dur, 2), "text": str(text)})
+        t += dur
+    return {"preset": preset.get("preset_id"), "design_ref": preset.get("design_ref") or {},
+            "motion_character": preset.get("motion_character") or {}, "product": product,
+            "scenes": scenes, "total": round(t, 2), "width": 1080, "height": 1920, "fps": 30,
+            "safe": {"w": 900, "h": 1400, "note": "iart tiktok short-form 후보값 — 우리 자막 위치 실측으로 확정 전"}}
+
+
 def plan_from_lines(lines, product=None, preset_id=DEFAULT_PRESET, timings=None):
     """lines: 대사 줄 / product: {name, price, discount_pct, features[], brand, cta} / timings: [{t0,dur}] TTS 실측(있으면 우선)."""
     lines = [str(x).strip() for x in (lines or []) if str(x).strip()]
@@ -39,6 +59,8 @@ def plan_from_lines(lines, product=None, preset_id=DEFAULT_PRESET, timings=None)
     sale = int(round(price * (100 - pct) / 100 / 10) * 10) if price else 0    # 할인가 = 계산만(10원 단위)
     product.update({"price": price, "discount_pct": pct, "sale_price": sale})
     preset = _preset(preset_id)
+    if preset.get("beats"):
+        return _plan_from_beats(lines, product, preset, timings)
     n = len(lines)
     types = list(SCENE_ORDER)
     if n < len(types):

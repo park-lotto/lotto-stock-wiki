@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<!-- 모션그래픽 작업물 템플릿 shop_pocket (관제 244, 2026-10-20) — 1080×1920, 레퍼런스 Pocketsflow(JasonZhu 2103918792845963545) 역설계 지시서대로.
+     지시서(brief.md, Opus) 에서 가져온 문법: 장면마다 바탕 통째 전환(흰→파랑→흰→회백→검정→흰, 하드컷) · 강조색 1개 · 연결 물체 1개(하프톤 가습기 도형, 전 장면) ·
+     장면당 메시지 한 줄(단어 단위 팝) · 정보 장면만 길게 + 0.6초 도장 펀치 · 산세리프+이탤릭 세리프 혼용 · 모노 라벨 '// 01 — hook'.
+     박자(초)·바탕 HEX 는 플랜(프리셋 beats·design_ref)이 주인 — 여기엔 안 적는다. 상품 실사 이미지는 없다 → 도형(SVG)만. 가짜 결제·실제 로고·근거 없는 수치 금지(FORBIDDEN).
+     HyperFrames 0.8.105 규격: 루트 data-composition-* + 멈춘 GSAP 타임라인 하나(window.__timelines.main). 모든 프레임은 t 만의 함수. 미리보기·렌더가 이 한 파일을 읽는다. -->
+<script src="vendor/gsap.min.js"></script>
+<style>
+@font-face{font-family:"Pretendard";src:url("fonts/Pretendard-Regular.otf") format("opentype");font-weight:400}
+@font-face{font-family:"Pretendard";src:url("fonts/Pretendard-SemiBold.otf") format("opentype");font-weight:600}
+@font-face{font-family:"Pretendard";src:url("fonts/Pretendard-Bold.otf") format("opentype");font-weight:700}
+@font-face{font-family:"Pretendard";src:url("fonts/Pretendard-ExtraBold.otf") format("opentype");font-weight:800}
+@font-face{font-family:"NanumMyeongjo";src:url("fonts/NanumMyeongjo-ExtraBold.ttf") format("truetype");font-weight:800}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Pretendard",sans-serif;letter-spacing:-0.02em}
+.scene{position:absolute;inset:0;opacity:0;background:var(--sbg)}
+.lab{position:absolute;left:70px;top:120px;font-size:30px;font-weight:600;color:var(--muted);letter-spacing:.12em;opacity:0}
+.lab.r{left:auto;right:70px;text-align:right}
+.dark .lab{color:#8a8f99}
+.serif{font-family:"NanumMyeongjo",serif;font-style:italic;font-weight:800}
+.w{display:inline-block;margin-right:.24em;opacity:0;will-change:transform}
+.head{position:absolute;left:70px;right:70px;top:360px;font-size:150px;font-weight:800;line-height:1.08;word-break:keep-all}
+.head small{display:block;font-size:56px;font-weight:600;color:var(--muted);margin-bottom:26px;letter-spacing:0}
+/* 연결 물체 — 하프톤 가습기 도형 */
+.obj{position:absolute;opacity:0;will-change:transform}
+.obj svg{width:100%;height:100%;display:block}
+/* 장면 1 — 파란 바탕 카드 3장 */
+.cards{position:absolute;left:60px;top:930px;width:960px;display:flex;gap:30px}
+.card{flex:1;height:420px;background:#fff;border-radius:28px;box-shadow:0 30px 60px rgba(0,0,0,.18);padding:34px 30px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;opacity:0;will-change:transform}
+.card .ic{width:120px;height:120px;border-radius:24px;background:#F2F3F5;display:flex;align-items:center;justify-content:center}
+.card .ic svg{width:78px;height:78px}
+.card b{display:block;font-size:40px;font-weight:800;color:#111;line-height:1.15;word-break:keep-all;letter-spacing:-0.03em}
+.card small{display:block;margin-top:8px;font-size:26px;color:#5D626D;font-weight:600}
+.blue .head{color:#fff} .blue .head small{color:#C9D6F7}
+/* 장면 2 — 스토어 카드 */
+.store{position:absolute;left:150px;top:760px;width:780px;height:960px;background:#fff;border-radius:48px;box-shadow:0 40px 90px rgba(0,0,0,.16);border:3px solid var(--line);overflow:hidden;opacity:0;will-change:transform}
+.store .top{height:150px;background:var(--accent);color:#fff;display:flex;align-items:center;padding:0 48px;font-size:42px;font-weight:800;letter-spacing:.02em}
+.store .top i{display:inline-block;width:22px;height:22px;border-radius:50%;background:#fff;margin-right:18px}
+.store .name{position:absolute;left:48px;right:48px;top:660px;font-size:62px;font-weight:800;color:#111;line-height:1.15;word-break:keep-all}
+.store .row{position:absolute;left:48px;right:48px;top:820px;display:flex;justify-content:space-between;align-items:center}
+.store .row b{font-size:56px;font-weight:800;color:#111;font-variant-numeric:tabular-nums}
+.store .row span{font-size:34px;background:var(--accent);color:#fff;padding:14px 34px;border-radius:999px;font-weight:800}
+/* 장면 3 — 격자(주문 요약·특징·도형·시간) + 커서 줌 */
+.grid{position:absolute;left:60px;top:560px;width:960px;display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.cell{background:#fff;border:2px solid var(--line);border-radius:30px;padding:36px;box-sizing:border-box;min-height:380px;opacity:0;will-change:transform;position:relative;overflow:hidden}
+.cell h5{margin:0 0 20px;font-size:26px;font-weight:600;color:var(--muted);letter-spacing:.1em}
+.cell.wide{grid-column:1/3;min-height:300px}
+.cell .was{font-size:44px;color:var(--muted);font-weight:600;position:relative;display:inline-block}
+.cell .was i{position:absolute;left:0;right:0;top:52%;height:6px;background:#E5484D;transform:scaleX(0);transform-origin:left center;border-radius:3px}
+.cell .pct{display:inline-block;margin-left:18px;background:var(--accent);color:#fff;font-size:34px;font-weight:800;padding:8px 24px;border-radius:999px;opacity:0;vertical-align:middle}
+.cell .now{white-space:nowrap;font-size:96px;font-weight:800;letter-spacing:-0.05em;line-height:1.05;margin-top:14px;font-variant-numeric:tabular-nums;color:#111}
+.cell .now small{font-size:52px;font-weight:700;margin-left:6px}
+.cell .btn{display:inline-block;margin-top:26px;background:var(--accent);color:#fff;font-size:40px;font-weight:800;padding:22px 60px;border-radius:18px}
+.cell .li{font-size:40px;font-weight:700;color:#111;padding:14px 0;border-top:2px solid #EEF0F4;display:flex;gap:18px;align-items:center;opacity:0}
+.cell .li:first-of-type{border-top:0}
+.cell .li i{width:34px;height:34px;border-radius:50%;background:var(--accent);flex:none;display:inline-flex;align-items:center;justify-content:center}
+.cell .li i::after{content:"";width:14px;height:8px;border-left:4px solid #fff;border-bottom:4px solid #fff;transform:rotate(-45deg) translate(1px,-2px)}
+.cell .clock{width:120px;height:120px;transform:scale(0);transform-origin:center} .cell .clock svg{width:120px;height:120px}
+.cell .hrs{font-size:60px;font-weight:800;color:#111;margin-top:10px;letter-spacing:-0.03em}
+.zoom{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;will-change:transform,filter}
+.zoom .big{background:var(--accent);color:#fff;font-size:150px;font-weight:800;padding:60px 140px;border-radius:40px;box-shadow:0 60px 120px rgba(34,97,233,.35)}
+.cursor{position:absolute;left:600px;top:1040px;width:90px;height:110px;opacity:0;will-change:transform}
+/* 장면 4 — 도장 */
+.stampbox{position:absolute;left:140px;top:640px;width:800px;height:800px;display:flex;align-items:center;justify-content:center;opacity:0;will-change:transform}
+.stampbox .ring{position:absolute;inset:0;border:16px solid var(--accent);border-radius:50%;opacity:.9}
+.stampbox .txt{font-size:200px;color:var(--accent);border:14px solid var(--accent);padding:10px 60px;border-radius:18px;background:rgba(255,255,255,.9);transform:rotate(-8deg);box-shadow:0 20px 50px rgba(34,97,233,.25)}
+/* 장면 5 — 검정 타이포 */
+.claimtxt{position:absolute;left:70px;right:70px;top:560px;color:#fff;font-size:140px;font-weight:800;line-height:1.15;word-break:keep-all}
+.claimtxt .l2{display:block;margin-top:30px}
+/* 장면 6 — 로고·CTA */
+.logo{position:absolute;left:0;right:0;top:720px;text-align:center;font-size:190px;font-weight:800;letter-spacing:-0.04em;color:#111}
+.logo .c{display:inline-block;will-change:transform;opacity:0}
+.tag{position:absolute;left:0;right:0;top:980px;text-align:center;font-size:50px;color:var(--muted);font-weight:600;opacity:0}
+.tag em{font-family:"NanumMyeongjo",serif;font-style:italic;color:#111}
+.pill{position:absolute;left:50%;top:1120px;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:60px;font-weight:800;padding:34px 90px;border-radius:999px;opacity:0;white-space:nowrap}
+.stats{position:absolute;left:0;right:0;top:1560px;text-align:center;font-size:32px;color:var(--muted);letter-spacing:.14em;font-weight:600;opacity:0}
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="main" data-start="0" data-duration="15" data-width="1080" data-height="1920"></div>
+<script>
+const PLAN = __PLAN__;
+(() => {
+  const S = document.getElementById("stage"), D = PLAN.design_ref || {}, M = PLAN.motion_character || {}, P = PLAN.product || {};
+  const css = (k, v) => S.style.setProperty(k, v);
+  const BG = D.bg || "#FDFDFD", BG2 = D.bg2 || "#2261E9", BG3 = D.bg3 || "#090909", PANEL = D.panel || "#F9F9F9";
+  css("--bg", BG); css("--ink", D.ink || "#111111"); css("--accent", D.accent || "#2261E9"); css("--muted", D.muted || "#5D626D"); css("--line", D.line || "#CECFCF");
+  const EASE = M.ease_in || "expo.out", POP = M.ease_pop || "back.out(1.7)", STAG = M.stagger_s || 0.08, IMP = M.impact_s || 0.5;
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const won = n => Number(n || 0).toLocaleString("ko-KR");
+  const words = t => String(t || "").split(/\s+/).filter(Boolean).map(w => `<span class="w">${esc(w)}</span>`).join("");
+  const feats = (P.features && P.features.length ? P.features : ["특징 1", "특징 2", "특징 3"]).slice(0, 3);
+  const ICONS = [ // 특징 아이콘 3개 — 도형만(지어낸 실사 없음): 소리 없음 / 충전 / 시간
+    `<svg viewBox="0 0 80 80" fill="none" stroke="#2261E9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30h14l18-14v48L28 50H14z"/><path d="M58 30l14 20M72 30L58 50"/></svg>`,
+    `<svg viewBox="0 0 80 80" fill="none" stroke="#2261E9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="24" width="48" height="32" rx="8"/><path d="M60 34h8v12h-8M44 16v-8M28 16v-8"/><path d="M40 30l-8 12h12l-8 12"/></svg>`,
+    `<svg viewBox="0 0 80 80" fill="none" stroke="#2261E9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><circle cx="40" cy="42" r="26"/><path d="M40 24v18l12 8M30 8h20"/></svg>`,
+  ];
+  // 연결 물체: 하프톤 가습기 도형(원통 몸통 + 뚜껑 + 김). 하프톤 = 점 패턴을 그라데이션 마스크로 한쪽만 짙게.
+  let uid = 0;
+  const OBJ = (w, h, extra) => { const id = "o" + (uid++); return `<div class="obj ${extra || ""}" style="width:${w}px;height:${h}px">
+    <svg viewBox="0 0 300 420"><defs>
+      <pattern id="d${id}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="2.4" fill="#111"/></pattern>
+      <linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity=".95"/></linearGradient>
+      <mask id="m${id}"><rect width="300" height="420" fill="url(#g${id})"/></mask>
+      <clipPath id="c${id}"><rect x="60" y="130" width="180" height="250" rx="40"/></clipPath>
+    </defs>
+    <g class="mist" opacity="0">
+      <path d="M150 112c-22-24 18-40 0-62" stroke="#9BAFDB" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="4 14"/>
+      <path d="M118 118c-20-20 14-36 0-56" stroke="#9BAFDB" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="4 14"/>
+      <path d="M182 118c-20-20 14-36 0-56" stroke="#9BAFDB" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="4 14"/>
+    </g>
+    <rect x="60" y="130" width="180" height="250" rx="40" fill="#F2F3F5" stroke="#111" stroke-width="7"/>
+    <rect x="60" y="130" width="180" height="250" fill="url(#d${id})" mask="url(#m${id})" clip-path="url(#c${id})"/>
+    <rect x="84" y="118" width="132" height="34" rx="14" fill="#fff" stroke="#111" stroke-width="7"/>
+    <circle cx="150" cy="128" r="10" fill="#2261E9"/>
+    <rect x="96" y="200" width="108" height="120" rx="22" fill="#fff" stroke="#111" stroke-width="6"/>
+    <path d="M150 232c-16 22-26 34-26 48a26 26 0 0 0 52 0c0-14-10-26-26-48z" fill="#2261E9"/>
+    <rect x="72" y="380" width="156" height="20" rx="8" fill="#111"/>
+  </svg></div>`; };
+  const CURSOR = `<svg viewBox="0 0 90 110"><path d="M8 6l64 52-26 4 16 36-14 6-16-36-20 20z" fill="#fff" stroke="#111" stroke-width="7" stroke-linejoin="round"/></svg>`;
+  const lines = PLAN.scenes.reduce((a, s) => (a[s.type] = s.text, a), {});
+  const claim = String(lines.claim || "당신은 쉬고.|우리는 촉촉.").split("|");
+  const stampText = String(lines.stamp || "해결.");
+  const sale = P.sale_price != null ? P.sale_price : P.price;
+  const n2 = i => String(i + 1).padStart(2, "0");
+  const LABEL = { hook: "hook", features: "features", product: "store", price: "order", stamp: "handled", claim: "claim", cta: "cta" };
+
+  const els = {};
+  PLAN.scenes.forEach((sc, i) => {
+    const el = document.createElement("div"); el.className = "scene " + sc.type; el.dataset.i = sc.i;
+    const sbg = sc.type === "features" ? BG2 : sc.type === "claim" ? BG3 : (sc.type === "price" || sc.type === "stamp") ? PANEL : BG;
+    el.style.setProperty("--sbg", sbg);
+    if (sc.type === "features") el.classList.add("blue"); if (sc.type === "claim") el.classList.add("dark");
+    const lab = `<div class="lab">// ${n2(i)} — ${LABEL[sc.type] || sc.type}</div><div class="lab r">${(sc.t0).toFixed(2)}s</div>`;
+    if (sc.type === "hook") {
+      el.innerHTML = lab + `<div class="head"><small>${esc(P.brand || "")}</small>${words(sc.text)}</div>` + OBJ(480, 672, "main").replace('class="obj main"', 'class="obj main" style="width:480px;height:672px;left:300px;top:960px"');
+    } else if (sc.type === "features") {
+      el.innerHTML = lab + `<div class="head">${words(sc.text)}</div><div class="cards">${feats.map((f, k) => `<div class="card"><div class="ic">${ICONS[k % 3]}</div><div><b>${esc(f)}</b><small>포함</small></div></div>`).join("")}</div>`
+        + OBJ(280, 392, "side").replace('class="obj side"', 'class="obj side" style="width:280px;height:392px;left:60px;top:1470px"');
+    } else if (sc.type === "product") {
+      el.innerHTML = lab + `<div class="head" style="font-size:110px">${words(sc.text)}</div><div class="store"><div class="top"><i></i>${esc(P.brand || "")} 스토어</div>
+        ${OBJ(360, 504, "in").replace('class="obj in"', 'class="obj in" style="width:360px;height:504px;left:210px;top:150px;opacity:1"')}
+        <div class="name">${esc(P.name || "")}</div><div class="row"><b>${won(sale)}원</b><span>담기</span></div></div>`;
+    } else if (sc.type === "price") {
+      el.innerHTML = lab + `<div class="head" style="font-size:96px;top:300px">${words(sc.text)}</div>
+        <div class="grid">
+          <div class="cell"><h5>ORDER</h5><div><span class="was">${won(P.price)}원<i></i></span><span class="pct">${P.discount_pct}%</span></div><div class="now"><span class="num">${won(P.price)}</span><small>원</small></div><div class="btn">${esc(P.cta || "지금 담기")}</div></div>
+          <div class="cell"><h5>INCLUDED</h5>${feats.map(f => `<div class="li"><i></i>${esc(f)}</div>`).join("")}</div>
+          <div class="cell" style="min-height:300px">${OBJ(200, 280, "cell").replace('class="obj cell"', 'class="obj cell" style="width:200px;height:280px;left:120px;top:14px;opacity:1"')}</div>
+          <div class="cell" style="min-height:300px"><h5>RUNTIME</h5><div class="clock">${ICONS[2]}</div><div class="hrs">${esc(feats[2] || "")}</div></div>
+        </div>
+        <div class="zoom"><div class="big">${esc(P.cta || "지금 담기")}</div></div><div class="cursor">${CURSOR}</div>`;
+    } else if (sc.type === "stamp") {
+      el.innerHTML = `<div class="stampbox"><div class="ring"></div><div class="txt serif">${esc(stampText)}</div></div>`;
+      el.style.background = "transparent";    // 도장은 앞 장면(격자) 위에 찍힌다 — 바탕을 가리지 않는다
+    } else if (sc.type === "claim") {
+      el.innerHTML = lab + `<div class="claimtxt"><span class="l1">${words(claim[0])}</span><span class="l2 serif">${words(claim[1] || "")}</span></div>` + OBJ(420, 588, "side").replace('class="obj side"', 'class="obj side" style="width:420px;height:588px;left:620px;top:1240px"');
+    } else {
+      const brand = String(P.brand || "숏템샵");
+      el.innerHTML = lab + `<div class="logo">${[...brand].map(c => `<span class="c">${esc(c)}</span>`).join("")}</div><div class="tag">${esc(sc.text)}</div><div class="pill">${esc(P.cta || "지금 확인하기")}</div>
+        <div class="stats">${feats.map(esc).join(" · ")}</div>` + OBJ(300, 420, "peek").replace('class="obj peek"', 'class="obj peek" style="width:300px;height:420px;left:390px;top:330px"');
+    }
+    S.appendChild(el); els[sc.i] = { sc, el };
+  });
+
+  const fontsReady = Promise.all(["400", "600", "700", "800"].map(w => document.fonts.load(`${w} 60px "Pretendard"`, "가격 123")).concat([document.fonts.load(`800 60px "NanumMyeongjo"`, "촉촉")])).then(() => document.fonts.ready).catch(() => {});
+  fontsReady.then(() => {
+    const tl = gsap.timeline({ paused: true });
+    const scs = PLAN.scenes;
+    scs.forEach((sc, idx) => {
+      const el = els[sc.i].el, t0 = sc.t0, t1 = sc.t0 + sc.dur, q = s => el.querySelectorAll(s), q1 = s => el.querySelector(s);
+      // 장면 켜고 끄기 = 하드컷(지시서 RULES: 그라데이션 전환 금지). 도장(stamp)은 앞 장면을 끝까지 두고 그 위에 찍힌다.
+      const next = scs[idx + 1];
+      const holdTo = (next && next.type === "stamp") ? next.t0 + next.dur : t1;
+      tl.set(el, { opacity: 1 }, t0); tl.set(el, { opacity: 0 }, holdTo);
+      tl.fromTo(q(".lab"), { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: .3, ease: "power2.out", immediateRender: false }, t0 + .05);
+      const obj = q1(".obj.main,.obj.side,.obj.peek");
+      if (sc.type === "hook") {
+        tl.fromTo(obj, { opacity: 0, y: 420, scale: .85 }, { opacity: 1, y: 0, scale: 1, duration: IMP + .2, ease: POP, immediateRender: false }, t0 + .05);
+        tl.fromTo(q(".mist"), { opacity: 0 }, { opacity: 1, duration: .4, immediateRender: false }, t0 + .7);
+        tl.fromTo(q(".head small"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .35, ease: EASE, immediateRender: false }, t0 + .1);
+        tl.fromTo(q(".w"), { opacity: 0, y: 110, rotate: -5, scale: .8 }, { opacity: 1, y: 0, rotate: 0, scale: 1, duration: IMP, ease: POP, stagger: STAG, immediateRender: false }, t0 + .25);
+      } else if (sc.type === "features") {
+        tl.fromTo(q(".w"), { opacity: 0, y: 80, scale: .85 }, { opacity: 1, y: 0, scale: 1, duration: IMP, ease: POP, stagger: STAG, immediateRender: false }, t0 + .05);
+        tl.fromTo(q(".card"), { opacity: 0, x: 700, rotate: 14, scale: .9 }, { opacity: 1, x: 0, rotate: 0, scale: 1, duration: .6, ease: EASE, stagger: .12, immediateRender: false }, t0 + .2);
+        tl.fromTo(obj, { opacity: 0, y: 200 }, { opacity: 1, y: 0, duration: .5, ease: EASE, immediateRender: false }, t0 + .45);
+        tl.set(q(".mist"), { opacity: 1 }, t0 + .9);
+      } else if (sc.type === "product") {
+        tl.fromTo(q(".w"), { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: .45, ease: EASE, stagger: STAG, immediateRender: false }, t0 + .05);
+        tl.fromTo(q1(".store"), { opacity: 0, y: 500 }, { opacity: 1, y: 0, duration: .7, ease: EASE, immediateRender: false }, t0 + .25);
+        tl.fromTo(q1(".store .obj"), { y: 60, scale: .9 }, { y: 0, scale: 1, duration: .6, ease: POP, immediateRender: false }, t0 + .55);
+        tl.set(q(".mist"), { opacity: 1 }, t0 + .9);
+        tl.fromTo(q1(".store .row span"), { scale: 1 }, { scale: 1.08, duration: .35, ease: "sine.inOut", yoyo: true, repeat: 1, immediateRender: false }, t0 + 1.5);
+      } else if (sc.type === "price") {
+        // 0~0.9초: 버튼 클로즈업(줌+블러) + 커서 클릭 → 0.9초~: 격자 칸 스태거 + 가격 카운트(할인가는 플랜 계산값만)
+        tl.fromTo(q1(".zoom"), { opacity: 1, scale: 2.4, filter: "blur(18px)" }, { scale: 1.1, filter: "blur(0px)", duration: .45, ease: "power4.out", immediateRender: false }, t0);
+        tl.fromTo(q1(".cursor"), { opacity: 1, x: 120, y: 140 }, { x: 0, y: 0, duration: .4, ease: "power2.out", immediateRender: false }, t0 + .15);
+        tl.to(q1(".zoom"), { scale: .96, duration: .1, ease: "power1.in", immediateRender: false }, t0 + .6);
+        tl.to(q1(".zoom"), { opacity: 0, scale: .3, filter: "blur(12px)", duration: .25, ease: "power3.in", immediateRender: false }, t0 + .72);
+        tl.to(q1(".cursor"), { opacity: 0, duration: .15, immediateRender: false }, t0 + .72);
+        tl.fromTo(q(".w"), { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: .4, ease: EASE, stagger: STAG, immediateRender: false }, t0 + .9);
+        tl.fromTo(q(".cell"), { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: .5, ease: EASE, stagger: .1, immediateRender: false }, t0 + .95);
+        tl.fromTo(q1(".was i"), { scaleX: 0 }, { scaleX: 1, duration: .3, ease: "power3.inOut", immediateRender: false }, t0 + 1.4);
+        tl.fromTo(q1(".pct"), { opacity: 0, scale: .5 }, { opacity: 1, scale: 1, duration: .4, ease: POP, immediateRender: false }, t0 + 1.55);
+        const num = q1(".num"), from = Number(P.price || 0), to = Number(sale || from), o = { v: from };
+        tl.to(o, { v: to, duration: .8, ease: "power3.out", immediateRender: false, onUpdate: () => { num.textContent = won(Math.round(o.v / 10) * 10); } }, t0 + 1.6);
+        tl.fromTo(q(".li"), { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: .35, ease: EASE, stagger: .1, immediateRender: false }, t0 + 1.3);
+        tl.fromTo(q1(".clock"), { scale: 0, rotate: -30 }, { scale: 1, rotate: 0, duration: .5, ease: POP, immediateRender: false }, t0 + 1.5);
+        tl.set(q(".mist"), { opacity: 1 }, t0 + 1.6);
+      } else if (sc.type === "stamp") {
+        tl.fromTo(q1(".stampbox"), { opacity: 0, scale: 1.6, rotate: 6 }, { opacity: 1, scale: 1, rotate: 0, duration: .22, ease: "power4.in", immediateRender: false }, t0);
+        tl.fromTo(q1(".stampbox .txt"), { scale: 1.15 }, { scale: 1, duration: .25, ease: "back.out(3)", immediateRender: false }, t0 + .22);
+        tl.fromTo(q1(".stampbox .ring"), { scale: .9 }, { scale: 1, duration: .3, ease: POP, immediateRender: false }, t0 + .22);
+      } else if (sc.type === "claim") {
+        tl.fromTo(q(".l1 .w"), { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: .45, ease: EASE, stagger: STAG * 1.5, immediateRender: false }, t0 + .1);
+        tl.fromTo(q(".l2 .w"), { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: .5, ease: EASE, stagger: STAG * 1.5, immediateRender: false }, t0 + .9);
+        tl.fromTo(obj, { opacity: 0, y: 260 }, { opacity: 1, y: 0, duration: .6, ease: EASE, immediateRender: false }, t0 + .3);
+        tl.set(q(".mist"), { opacity: 1 }, t0 + .9);
+      } else {
+        const cs = q(".logo .c"), n = cs.length;
+        cs.forEach((c, k) => tl.fromTo(c, { opacity: 0, x: (k - (n - 1) / 2) * 160, y: (k % 2 ? -1 : 1) * 220, rotate: (k % 2 ? -1 : 1) * 40, scale: .4 },
+          { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1, duration: .7, ease: "expo.inOut", immediateRender: false }, t0 + .05 + k * .04));
+        tl.fromTo(q1(".tag"), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .4, ease: EASE, immediateRender: false }, t0 + .75);
+        tl.fromTo(q1(".pill"), { opacity: 0, scale: .6, xPercent: -50 }, { opacity: 1, scale: 1, xPercent: -50, duration: .45, ease: POP, immediateRender: false }, t0 + .95);
+        tl.fromTo(q1(".stats"), { opacity: 0 }, { opacity: 1, duration: .4, immediateRender: false }, t0 + 1.2);
+        tl.fromTo(obj, { opacity: 0, y: 200 }, { opacity: 1, y: 0, duration: .5, ease: POP, immediateRender: false }, t0 + .6);
+        tl.set(q(".mist"), { opacity: 1 }, t0 + 1.0);
+      }
+    });
+    tl.time(0);
+    window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+  });
+})();
+</script>
+</body>
+</html>

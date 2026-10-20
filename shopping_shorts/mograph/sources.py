@@ -6,6 +6,7 @@
 폴더가 없으면 빈 목록 — 장부는 그대로 읽히고 작업대 미리보기만 "원본 없음"으로 뜬다."""
 import json
 import os
+import re
 from pathlib import Path
 
 _DEFAULT_REF_DIR = Path(r"C:\Users\TheRose\숏템자료\모션그래픽엔진\CHA")
@@ -84,3 +85,54 @@ def scan_sources():
                 "techniques": list(meta.get("techniques") or []),
             })
     return out
+
+
+# ── JasonZhu 라이브러리(motion 분야 263편, 2026-10-20 내려받음) — 영상 권리는 제작자, ref_only ──
+_DEFAULT_JZ_DIR = Path(r"C:\Users\TheRose\숏템자료\모션그래픽엔진\jasonzhu")
+_JZ_ID = re.compile(r"^[0-9]{10,25}$")
+_JZ_CACHE = {"mtime": None, "rows": []}
+
+
+def jasonzhu_dir():
+    return Path(os.environ.get("MOGRAPH_JZ_DIR") or _DEFAULT_JZ_DIR)
+
+
+def jasonzhu_index():
+    """motion/_index.json(조회순, 제작자·도구·prompt 메타) 그대로. 없으면 빈 목록. 파일 mtime 으로 캐시."""
+    p = jasonzhu_dir() / "motion" / "_index.json"
+    if not p.exists():
+        return []
+    mt = p.stat().st_mtime
+    if _JZ_CACHE["mtime"] != mt:
+        try:
+            rows = json.loads(p.read_text(encoding="utf-8"))
+        except Exception as e:      # noqa: BLE001
+            print("[mograph.sources] jasonzhu _index.json 읽기 실패: %r" % e)
+            rows = []
+        _JZ_CACHE.update(mtime=mt, rows=[r for r in rows if _JZ_ID.match(str(r.get("id") or ""))])
+    return _JZ_CACHE["rows"]
+
+
+def jasonzhu_meta(ref_id):
+    for r in jasonzhu_index():
+        if str(r.get("id")) == ref_id:
+            return r
+    return None
+
+
+def jasonzhu_video(ref_id):
+    """받아진 mp4 경로(motion/<id>.mp4, 없으면 상위 작품 폴더 v/<id>.mp4). 없으면 None."""
+    if not _JZ_ID.match(ref_id or ""):
+        return None
+    for p in (jasonzhu_dir() / "motion" / (ref_id + ".mp4"), jasonzhu_dir() / "v" / (ref_id + ".mp4")):
+        if p.is_file() and p.stat().st_size > 0:
+            return p
+    return None
+
+
+def jasonzhu_prompt(ref_id):
+    """프롬프트 본문(motion/<id>.prompt.txt). 없으면 None — 그때 역설계 대상이다."""
+    if not _JZ_ID.match(ref_id or ""):
+        return None
+    p = jasonzhu_dir() / "motion" / (ref_id + ".prompt.txt")
+    return p.read_text(encoding="utf-8", errors="replace") if p.is_file() else None

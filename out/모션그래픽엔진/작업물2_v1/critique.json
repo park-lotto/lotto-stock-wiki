@@ -1,0 +1,73 @@
+{
+ "mp4": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\모션그래픽팩\\shopping_shorts\\data\\mograph\\renders\\work-298bdc5dc0\\out.mp4",
+ "label": "v1",
+ "probe": {
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "frames": 450,
+  "duration": 15.0,
+  "has_audio": false
+ },
+ "auto": {
+  "scene_count": 6,
+  "bg_flips": 4,
+  "bg_sequence": [
+   "#FBFBFB",
+   "#1F5EE7",
+   "#FBFBFB",
+   "#F7F7F7",
+   "#080808",
+   "#FBFBFB"
+  ],
+  "cuts_per_s": 0.333,
+  "scene_dur": {
+   "min": 2.0,
+   "max": 3.6,
+   "mean": 2.5
+  },
+  "blank_runs_s": [],
+  "accent_hues": [
+   5,
+   6,
+   7
+  ],
+  "last_1s_max_diff": 3.38,
+  "duration": 15.0,
+  "size": [
+   1080,
+   1920
+  ]
+ },
+ "sheet": "out\\모션그래픽엔진\\작업물2_v1\\frames_0.5s.png",
+ "compare": "out\\모션그래픽엔진\\작업물2_v1\\compare_ref_vs_work.png",
+ "ref_measure": {
+  "probe": {
+   "w": 1280,
+   "h": 720,
+   "fps": 60.0,
+   "frames": 900,
+   "duration": 15.061333,
+   "has_audio": true
+  },
+  "ratio": "16:9",
+  "scene_count": 7,
+  "scene_dur": {
+   "min": 0.4,
+   "max": 3.6,
+   "mean": 2.152
+  },
+  "cuts_per_s": 0.398,
+  "bg_flips": 4,
+  "bg_sequence": [
+   "#FDFDFD",
+   "#2261E9",
+   "#FDFDFD",
+   "#F9F9F9",
+   "#FAFAFA",
+   "#090909",
+   "#FDFDFD"
+  ],
+  "measured_at": "2026-10-20 13:40:32"
+ }
+}

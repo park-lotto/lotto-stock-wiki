@@ -1,0 +1,37 @@
+{
+ "mp4": "out\\모션그래픽엔진\\작업물1_미니가습기_1080x1920.mp4",
+ "label": "작업물1",
+ "probe": {
+  "w": 1080,
+  "h": 1920,
+  "fps": 30.0,
+  "frames": 372,
+  "duration": 12.4,
+  "has_audio": false
+ },
+ "auto": {
+  "scene_count": 1,
+  "bg_flips": 0,
+  "bg_sequence": [
+   "#080D0C"
+  ],
+  "cuts_per_s": 0.0,
+  "scene_dur": {
+   "min": 12.4,
+   "max": 12.4,
+   "mean": 12.4
+  },
+  "blank_runs_s": [],
+  "accent_hues": [
+   2,
+   3
+  ],
+  "last_1s_max_diff": 1.06,
+  "duration": 12.4,
+  "size": [
+   1080,
+   1920
+  ]
+ },
+ "sheet": "out\\모션그래픽엔진\\작업물1_비평\\frames_0.5s.png"
+}
