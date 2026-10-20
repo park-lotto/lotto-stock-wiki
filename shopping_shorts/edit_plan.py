@@ -1625,6 +1625,10 @@ _EN_CHARS_PER_SEC = 14.9        # 공백·문장부호 **제외**(norm) — 화�
 _EN_RAW_CHARS_PER_SEC = 18.0    # 공백 **포함**(raw) — narr_secs(len(text))용. 같은 실측 65.2초: raw 1176자 = 18.04
 #   ★두 값은 같은 실측의 두 기준이다(raw/norm = 1.21). 한국어는 계수 하나(7.41)를 raw 기준 narr_secs 와 norm 기준 화면이
 #   같이 써서 화면이 1.33배 후하게 나오는데(종전 동작, 여기서 안 건드린다), 영어는 사장님 제보가 "표시"라 정확히 가른다.
+# 일본어모드(2026-10-21 관제 248). 실측: 2026-10-21 서버 eleven_v3 speed 1.0 일본어 5줄 14.34초:
+#   norm 97자 → 6.76, raw 106자 → 7.39 (페이블 실측, 음성 Rachel 21m00…). 영어와 같이 norm/raw 두 기준.
+_JA_CHARS_PER_SEC = 6.8         # 공백·문장부호 **제외**(norm) — 화면 s2SecOf 용(produce.html JA_CHARS_PER_SEC 와 짝)
+_JA_RAW_CHARS_PER_SEC = 7.4     # len(text)(raw) — narr_secs 용
 
 
 def speech_cps(text=None, lang=None, norm=False):
@@ -1632,13 +1636,16 @@ def speech_cps(text=None, lang=None, norm=False):
 
     lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로, norm 무시)
     lang="en" → norm=True(공백·문장부호 제외 글자수로 나눌 때) _EN_CHARS_PER_SEC · norm=False(len(text)) _EN_RAW_CHARS_PER_SEC
-    lang이 없으면 text로 판정한다(script_translate.is_english_sentence: 영어 단어 3개 이상·한글 0)."""
+    lang="ja" → norm=True _JA_CHARS_PER_SEC · norm=False _JA_RAW_CHARS_PER_SEC (2026-10-21 관제 248)
+    lang이 없으면 text로 판정한다(script_translate.lang_of — 언어 판정의 유일한 주인)."""
     if lang is None and text:
         try:
-            from shopping_shorts.script_translate import is_english_sentence
-            lang = "en" if is_english_sentence(text) else "ko"
+            from shopping_shorts.script_translate import lang_of
+            lang = lang_of(text)
         except Exception:      # noqa: BLE001 — 판정 실패는 종전(한국어) 동작
             lang = "ko"
+    if lang == "ja":
+        return float(_JA_CHARS_PER_SEC if norm else _JA_RAW_CHARS_PER_SEC)
     if lang == "en":
         return float(_EN_CHARS_PER_SEC if norm else _EN_RAW_CHARS_PER_SEC)
     return _SYLLABLES_PER_SEC * _speech_speed()

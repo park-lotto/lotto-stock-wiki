@@ -1804,7 +1804,15 @@ def simple_caption_split(text, max_chars):
          없으면 창 안 마지막 어절 뒤에서 끊는다.
       4. 한 글자 관형사·부사(이 그 저 안 못 더 잘 꼭 딱 …) 뒤에서는 끊지 않는다 — 다음 어절과 같이 넘긴다.
       5. 마지막 줄이 한 어절이면 앞 줄에서 한 어절을 가져온다(앞 줄이 세 어절 이상일 때).
-    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다)."""
+    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다).
+    ★일본어는 띄어쓰기가 없어 이 규칙이 문장 통째를 한 어절로 본다 → _caption_segments_ja(폭=max_chars)로 보낸다(관제 248)."""
+    from shopping_shorts.script_translate import lang_of
+    if lang_of(text) == "ja":
+        try:
+            _mx = int(max_chars or 0)
+        except (TypeError, ValueError):
+            _mx = 0
+        return _caption_segments_ja(text, width=_mx if _mx > 0 else None)
     words = (text or "").split()
     try:
         mx = int(max_chars or 0)
@@ -1846,6 +1854,67 @@ def simple_caption_split(text, max_chars):
     return [x for x in lines if x.strip()]
 
 
+# ── 일본어 자막 나누기(2026-10-21 관제 248) ──────────────────────────────────────
+# 일본어는 띄어쓰기가 없어 어절 규칙(_caption_segments)이 문장 통째를 한 덩어리로 보고, 그 뒤 _wrap_long 의
+# textwrap 이 19자에서 기계적으로 자른다("…使い道が多すぎ | てびっくり"). 그래서 ①문장부호 ②조사 뒤 ③가운데 순으로 나눈다.
+_JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "ね", "よ")
+_JA_MIN_HEAD = 6      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
+_JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+
+
+def _ja_split_long(seg, width=None):
+    """_CAP_WRAP 를 넘는 일본어 조각 하나 → 조각들. 조사 바로 뒤 중 두 조각 길이 차가 가장 작은 곳에서 끊고,
+    조사가 없으면 가운데 가까운 곳에서 _CAP_WRAP 이내로 자른다. 결과 조각이 또 길면 다시 나눈다."""
+    width = width or _CAP_WRAP
+    if len(seg) <= width:
+        return [seg]
+    n = len(seg)
+    best = None
+    _hira = lambda c: "\u3040" <= c <= "\u309f"          # noqa: E731
+    for i in range(1, n):
+        head = seg[:i]
+        pt = next((p for p in _JA_PARTICLES if head.endswith(p)), None)
+        if not pt:
+            continue
+        if i < _JA_MIN_HEAD or n - i < _JA_MIN_TAIL:
+            continue
+        # 조사처럼 보이는 가나가 낱말 속 글자일 수 있다("もう"의 も·"もの"의 の). 앞이 한자·가타카나거나
+        # 뒤가 히라가나가 아닐 때만 조사 뒤로 본다("グッズを|一度"·"使い道が|多すぎ"·"のに|使い"는 통과).
+        before = seg[i - len(pt) - 1] if i - len(pt) - 1 >= 0 else ""
+        if before and _hira(before) and _hira(seg[i]):
+            continue
+        diff = abs(i - (n - i))
+        if best is None or diff < best[0]:
+            best = (diff, i)
+    if best is not None:
+        cut = best[1]
+    else:
+        cut = min(width, max(1, n // 2 + (n % 2)))
+    return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
+
+
+def _caption_segments_ja(narr, width=None):
+    """일본어 나레이션 → 자막 줄 목록. ①。！？!? 와 、, 뒤에서 끊는다 ②그래도 _CAP_WRAP(19)자를 넘으면
+    조사 뒤에서(앞 6자+·뒤 4자+, 가장 균형) 끊고, 조사가 없으면 가운데 가까운 곳에서 19자 이내로 자른다
+    ③끝 조각이 4자 미만이면 앞 조각에 붙인다. 각 조각 끝 마침표·쉼표는 _strip_cap_tail 로 뗀다.
+    width: 한 줄 상한(기본 _CAP_WRAP) — simple_caption_split 이 칸 글자 상한을 넘긴다."""
+    t = (narr or "").strip()
+    if not t:
+        return []
+    parts = [p for p in re.split(r"(?<=[。！？!?、,])", t)]
+    pieces = []
+    for p in parts:
+        p = _strip_cap_tail(p.strip())
+        if not p:
+            continue
+        pieces.extend(_ja_split_long(p, width))
+    pieces = [p for p in pieces if p.strip()]
+    if len(pieces) >= 2 and len(pieces[-1]) < _JA_MIN_TAIL:
+        last = pieces.pop()
+        pieces[-1] = pieces[-1] + last
+    return pieces
+
+
 def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
     각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
@@ -1864,10 +1933,19 @@ def _wrap_long(segs, manual=False):
       (_segmented_drawtext, 사장님 "자막은 무조건 한 줄"). 즉 화면 밖으로 안 나간다.
       그래서 manual일 때도 **띄어쓰기 없는 단일 어절**만은 방어를 남긴다(줄일 수 없는 것).
     """
+    from shopping_shorts.script_translate import lang_of
     out = []
     for s in segs:
         s = _strip_cap_tail(s)
         if not s:
+            continue
+        # ★일본어는 어절(띄어쓰기)이 없다 — textwrap 19자 기계 절단 대신 조사 뒤에서 나눈다(관제 248).
+        #   manual 이어도 19자 넘는 덩어리는 나눈다("어절 둘 이상이면 존중" 규칙이 일본어엔 안 맞는다).
+        if lang_of(s) == "ja":
+            if len(s.replace(" ", "")) > _CAP_WRAP:
+                out.extend(_caption_segments_ja(s) or [s])
+            else:
+                out.append(s)
             continue
         too_long = len(s.replace(" ", "")) > _CAP_WRAP
         # 사람이 정한 줄은 어절이 둘 이상이면 그대로 존중한다.
@@ -1906,6 +1984,11 @@ def _caption_segments(narration, preset=None):
         if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
             # 사람(또는 대본 AI)이 정한 줄 → 재분할하지 않는다(2026-09-07 경계 버그).
             return _wrap_long(lines, manual=True)
+    # ★일본어는 띄어쓰기가 없어 아래 어절 규칙이 통째로 한 덩어리가 된다 → 일본어 규칙으로(관제 248).
+    #   언어 판정은 script_translate.lang_of 한 곳.
+    from shopping_shorts.script_translate import lang_of
+    if lang_of(narr) == "ja":
+        return _caption_segments_ja(narr) or [narr]
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -3126,6 +3209,20 @@ def _missing_glyphs(font_path, text):
 
 
 
+def _default_or_lang_font(work, text):
+    """_font_ref 가 기본폰트로 되돌릴 때의 출구 — 규칙 ④(언어 폴백 폰트). 판단은 font_glyphs.fallback_font_for 한 곳."""
+    jp = _fg.fallback_font_for(text)
+    if jp:
+        base = _resolve_font()
+        if not base or _fg.too_broken(base, text, label="기본폰트"):
+            try:
+                shutil.copy(jp, Path(work) / "font_ja.ttf")
+                return "font_ja.ttf"
+            except Exception as e:      # noqa: BLE001 — 복사 실패는 종전(기본폰트)으로, 흔적은 남긴다
+                print(f"[폰트] 일본어 폴백 폰트 복사 실패 — 기본폰트로: {e!r}", file=sys.stderr)
+    return "font.ttf"
+
+
 def _font_ref(font_name, work, key, text=""):
     """폰트 파일명 → work에 복사한 뒤 쓸 ffmpeg fontfile 참조명(상대경로).
 
@@ -3141,20 +3238,24 @@ def _font_ref(font_name, work, key, text=""):
       두부 한 글자보다 글꼴이 통째로 바뀌는 쪽이 더 큰 사고다.
       막으려는 건 '옥 말랑'처럼 **한글이 아예 없는 폰트**다(그 경우 100% 누락).
       실사용 글자 121자 점검에서 정상 폰트의 최대 누락은 3자(2.5%)였다.
+
+      ④ ①②와 폰트 이름이 비었을 때 기본폰트로 되돌리는데 **기본폰트(NanumGothic)도 그 문구를 못 그리면**
+        (일본어 — 23자 중 19자 두부, 2026-10-21 관제 248) font_glyphs.fallback_font_for(text) 가 주는
+        언어 폴백 폰트(NotoSansJP-Bold)를 work/font_ja.ttf 로 복사해 쓴다. 한국어·영어는 종전 그대로 font.ttf.
     """
     fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
     fname = os.path.basename(font_name or "")
     if not fname:
-        return fontref
+        return _default_or_lang_font(work, text)
     fpath = _FONT_DIR / fname
     if not fpath.exists():
-        return fontref
+        return _default_or_lang_font(work, text)
     body = "".join(dict.fromkeys((text or "").replace(" ", "")))
     miss = _missing_glyphs(fpath, text)
     if miss and body and len(miss) / len(body) >= _FONT_FALLBACK_RATIO:
         print(f"[폰트] {fname} 이 문구의 {len(miss)}/{len(body)}자를 못 그린다"
               f"({miss[:12]}) — 기본폰트로 대체한다(두부 방지)", file=sys.stderr)
-        return fontref
+        return _default_or_lang_font(work, text)
     if miss:
         # 몇 글자만 빠졌다 — 글꼴은 지키고 흔적만 남긴다(그 글자만 두부가 된다).
         print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "

@@ -111,7 +111,7 @@ def copy(src_mp3, dst_mp3):
 
 
 def words_from_alignment(alignment):
-    """ElevenLabs alignment → [{"word", "start", "end"}]. 공백으로 단어를 끊는다.
+    """ElevenLabs alignment → [{"word", "start", "end"}]. 공백으로 단어를 끊는다(일본어는 글자 단위 — 아래).
 
     alignment = {"characters": [...], "character_start_times_seconds": [...],
                  "character_end_times_seconds": [...]}
@@ -126,6 +126,18 @@ def words_from_alignment(alignment):
     if not chars or not starts or not ends:
         return None
     n = min(len(chars), len(starts), len(ends))
+    # ★일본어는 띄어쓰기가 없다 — 공백으로 끊으면 문장 통째가 단어 1개가 되어 첫 자막 구절이 전체 시간을
+    #   독식한다(2026-10-21 관제 248). 일본어면 **글자 하나 = 단어 하나**(공백·문장부호는 경계로만 쓰고 버린다).
+    #   언어 판정·건너뛸 글자 집합은 script_translate 한 곳(lang_of·_TOKEN_SKIP — caption_tokens 와 같은 집합).
+    from shopping_shorts.script_translate import lang_of, _TOKEN_SKIP
+    if lang_of("".join(c for c in chars[:n] if isinstance(c, str))) == "ja":
+        out = []
+        for i in range(n):
+            ch = chars[i]
+            if not isinstance(ch, str) or not ch or _TOKEN_SKIP.match(ch):
+                continue
+            out.append({"word": ch, "start": float(starts[i]), "end": float(ends[i])})
+        return out or None
     words, cur, w_start, w_end = [], [], None, None
     for i in range(n):
         ch = chars[i]

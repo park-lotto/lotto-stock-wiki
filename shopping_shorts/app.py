@@ -9957,13 +9957,16 @@ def _voice_snapshot(store, body):
 
 @app.post("/api/script/translate")
 def api_script_translate(request: Request, body: dict):
-    """2단계 대본 영어모드 변환(2026-09-29 사장님 "대본생성에 두어야 맞는 거 아니야", 관제 029).
+    """2단계 대본 영어·일본어모드 변환(2026-09-29 관제 029 영어 · 2026-10-21 관제 248 일본어).
 
-    body: {lines: [...], product?: str} → {ok, lines: [...]} 같은 길이. 화면(2단계 카드)이 줄을 갈아끼우고
-    사람이 고친 뒤 확정하면 given_script가 영어로 3단계에 간다. 판단 주인은 script_translate.to_english
+    body: {lines: [...], product?: str, lang?: 'en'|'ja'(기본 en)} → {ok, lines: [...], lang, cps(+en이면 cps_en)} 같은 길이. 화면(2단계 카드)이 줄을 갈아끼우고
+    사람이 고친 뒤 확정하면 given_script가 그 언어로 3단계에 간다. 판단 주인은 script_translate.translate
     (줄 수 계약·한글 잔존 거부). 작업(job)을 건드리지 않는다 — 순수 문장 변환.
     """
     from shopping_shorts import script_translate
+    lang = body.get("lang") or "en"
+    if lang not in ("en", "ja"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "지원하지 않는 언어예요"})
     lines = [str(x or "") for x in (body.get("lines") or []) if isinstance(x, (str, int, float))]
     if not lines:
         return JSONResponse(status_code=422, content={"ok": False, "error": "번역할 문장이 없어요"})
@@ -9973,12 +9976,16 @@ def api_script_translate(request: Request, body: dict):
     if _blocked:
         return _blocked
     try:
-        out = script_translate.to_english(lines, str(body.get("product") or ""))
+        out = script_translate.translate(lines, lang, str(body.get("product") or ""))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
-    # 화면이 "몇 초"를 영어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
+    # 화면이 "몇 초"를 그 언어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
     from shopping_shorts import edit_plan as _ep
-    return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en", norm=True)}   # 화면 s2SecOf는 norm 글자를 센다
+    cps = _ep.speech_cps(lang=lang, norm=True)          # 화면 s2SecOf는 norm 글자를 센다
+    res = {"ok": True, "lines": out, "lang": lang, "cps": cps}
+    if lang == "en":
+        res["cps_en"] = cps                              # 옛 화면·저장본 호환(관제 029)
+    return res
 
 
 @app.post("/api/script/cta_guess")
@@ -10000,17 +10007,19 @@ def api_script_cta_guess(body: dict):
 
 
 def _lang_voice_block(job, voice):
-    """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None.
-    언어 판정은 script_translate.job_lang 한 곳(2단계에서 영어로 확정한 작업 = given_script가 영어)."""
+    """영어·일본어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
+    언어 판정은 script_translate.job_lang 한 곳(2단계에서 외국어로 확정한 작업 = given_script가 그 언어)."""
     from shopping_shorts import script_translate
-    if script_translate.job_lang(job) != "en":
+    lang = script_translate.job_lang(job)
+    if lang not in ("en", "ja"):
         return None
+    label = script_translate.LANG_LABEL[lang]
     if fish_tts.is_fish((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
-            "ok": False, "error": "영어모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
+            "ok": False, "error": f"{label}모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     if typecast_tts.is_typecast((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
-            "ok": False, "error": "영어모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
+            "ok": False, "error": f"{label}모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     return None
 
 
