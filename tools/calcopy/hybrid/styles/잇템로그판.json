@@ -10,13 +10,13 @@
   "src_dir": "C:/숏템_칼카피/ititemlog/src"
  },
  "voice": {
-  "name": "미나",
-  "voice_id": "kr-mina-expressive",
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
   "candidates": [
-   "tc_68f9c6a72f0f04a417bb136f",
-   "tc_61130d6cf89dd58a4c13295d"
+   "kr-mina-expressive",
+   "tc_68f9c6a72f0f04a417bb136f"
   ],
-  "why": "사장님 10-20 여자 목소리 명단 = 미나·문정·유라(필재 금지). 벤치 나레 성별은 귀로 미확인(스타일분석 §9) — 1편은 미나(서비스 배속 1.35 고정, 더 빠르게 하지 않는다)"
+  "why": "사장님 10-20 1편 미나·유라 비교 뒤 '유라가 괜찮고' → 기본 유라(Typecast, 배속 = cps_target 8.6 맞춤 ≤1.25). 미나·문정은 후보. 타입캐스트 첫 합성 오독 사례 있음 → 렌더 뒤 받아쓰기 대조 필수"
  },
  "cps_target": 8.6,
  "bgm": {
