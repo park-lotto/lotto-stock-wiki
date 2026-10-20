@@ -2101,10 +2101,10 @@
   }
   // 압축판(2026-10-20 사장님 "높이 줄이고·칙칙해·텍스트는 최대한 줄여"): 글은 숫자·짧은 이름만, 설명은 마우스 올리면(title).
   function _ytTile(label, val, tip, color) {
-    var t = _ytEl("div", "background:#1f1f1f;border-radius:8px;padding:5px 7px;min-width:0;border-top:2px solid " + (color || "#64d2ff"));
+    var t = _ytEl("div", "background:#1f1f1f;border-radius:10px;padding:9px 12px;min-width:0;border-top:2px solid " + (color || "#64d2ff"));
     if (tip) t.title = tip;
-    t.appendChild(_ytEl("div", "font-size:10px;color:#b9c3dd", label));
-    t.appendChild(_ytEl("div", "font:800 15px system-ui,sans-serif;color:#fff;white-space:nowrap", val));
+    t.appendChild(_ytEl("div", "font-size:12px;color:#b9c3dd", label));
+    t.appendChild(_ytEl("div", "font:900 24px system-ui,sans-serif;color:#fff;white-space:nowrap;margin-top:2px", val));
     return t;
   }
   function _ytSvg(W, H) {
@@ -2122,7 +2122,7 @@
   // 그래프 ① 채널 최근 쇼츠 조회수(올린 순서, 로그 눈금). 주황 = 이 영상, 노란 점선 = 채널 중앙값.
   //   로그 눈금인 이유: 직선 축은 대박 몇 편이 축을 먹어 나머지가 바닥에 붙었다(실측 49편 중 13편 잘림).
   function _ytViewsChart(d) {
-    var W = 300, H = 118, L = 30, B = 4, T = 6, svg = _ytSvg(W, H);
+    var W = 300, H = 170, L = 30, B = 4, T = 6, svg = _ytSvg(W, H);
     var ser = d.series || [], med = (d.median || {}).views || 0;
     var vals = ser.map(function (s) { return Math.max(1, s.views); });
     var lo = Math.floor(Math.log10(Math.min.apply(null, vals.concat([med || 1e9])))),
@@ -2132,7 +2132,7 @@
     function y(v) { return T + ph - (Math.log10(Math.max(1, v)) - lo) / (hi - lo) * ph; }
     for (var g = lo; g <= hi; g++) {
       svg.add("line", { x1: L, y1: y(Math.pow(10, g)), x2: W, y2: y(Math.pow(10, g)), stroke: "rgba(255,255,255,.12)" });
-      svg.add("text", { x: L - 3, y: y(Math.pow(10, g)) + 3, fill: "#9fb0d6", "font-size": 9, "text-anchor": "end" }, _ytNum(Math.pow(10, g)));
+      svg.add("text", { x: L - 3, y: y(Math.pow(10, g)) + 3, fill: "#9fb0d6", "font-size": 11, "text-anchor": "end" }, _ytNum(Math.pow(10, g)));
     }
     for (var i = 0; i < ser.length; i++) {
       var s = ser[i], x = L + 1 + i * bw, yy = y(s.views);
@@ -2147,7 +2147,7 @@
   }
   // 그래프 ⓪ 조회수 추세 — 서버가 열 때마다 적은 (시각, 조회수). 첫 점 = 올린 날 0회. 가로축은 실제 시간.
   function _ytTrendChart(d) {
-    var W = 300, H = 118, L = 30, B = 4, T = 14, R = 6, svg = _ytSvg(W, H);
+    var W = 300, H = 170, L = 30, B = 4, T = 14, R = 6, svg = _ytSvg(W, H);
     var pts = (d.trend || []).map(function (p) { return { t: Date.parse(p.t.replace(" ", "T")), v: p.views, s: p.t }; })
       .filter(function (p) { return !isNaN(p.t); });
     if (pts.length < 2) return svg;
@@ -2160,7 +2160,7 @@
     for (var g = 0; g <= 2; g++) {
       var gv = vmax / 1.08 * g / 2;
       svg.add("line", { x1: L, y1: y(gv), x2: W - R, y2: y(gv), stroke: "rgba(255,255,255,.12)" });
-      svg.add("text", { x: L - 3, y: y(gv) + 3, fill: "#9fb0d6", "font-size": 9, "text-anchor": "end" }, _ytNum(gv));
+      svg.add("text", { x: L - 3, y: y(gv) + 3, fill: "#9fb0d6", "font-size": 11, "text-anchor": "end" }, _ytNum(gv));
     }
     var line = "", area = "M" + x(t0) + "," + y(0);
     for (i = 0; i < pts.length; i++) {
@@ -2176,7 +2176,7 @@
   function _ytChip(label, me, med) {
     var r = (me !== null && me !== undefined && med) ? me / med : null;
     var up = r !== null && r >= 1;
-    var c = _ytEl("span", "border-radius:12px;padding:3px 9px;font:800 11px system-ui,sans-serif;white-space:nowrap;background:" +
+    var c = _ytEl("span", "border-radius:14px;padding:5px 12px;font:800 15px system-ui,sans-serif;white-space:nowrap;background:" +
       (r === null ? "rgba(255,255,255,.08)" : up ? "rgba(48,209,88,.22)" : "rgba(255,69,58,.22)") + ";color:" +
       (r === null ? "#b9c3dd" : up ? "#5cf28a" : "#ff8a80"), label + " " + (r === null ? "-" : r.toFixed(1) + "배" + (up ? "▲" : "▼")));
     c.title = "채널 평소(중앙값) 대비";
@@ -2188,16 +2188,16 @@
     if (!d || !d.ok) { body.appendChild(_ytEl("div", "font-size:12px;color:#b9c3dd", (d && d.error) || "분석 실패")); return; }
     var v = d.video, m = d.median || {}, tier = d.tier || { name: "-", desc: "" };
     var tc = YT_TIER_COLOR[tier.name] || "#64d2ff";
-    var head = _ytEl("div", "display:flex;align-items:center;gap:6px;flex-wrap:wrap");
-    var badge = _ytEl("span", "background:" + tc + ";color:#fff;border-radius:7px;padding:2px 9px;font:900 14px system-ui,sans-serif", tier.name);
+    var head = _ytEl("div", "display:flex;align-items:center;gap:10px;flex-wrap:wrap");
+    var badge = _ytEl("span", "background:" + tc + ";color:#fff;border-radius:9px;padding:4px 14px;font:900 20px system-ui,sans-serif", tier.name);
     badge.title = tier.desc + " · " + (d.source || "");
     head.appendChild(badge);
-    var big = _ytEl("span", "font:900 19px system-ui,sans-serif;color:" + tc, d.multiplier === null ? "-" : d.multiplier + "배");
+    var big = _ytEl("span", "font:900 32px system-ui,sans-serif;line-height:1;color:" + tc, d.multiplier === null ? "-" : d.multiplier + "배");
     big.title = "채널 최근 쇼츠 " + d.compared + "편 조회수 중앙값 대비";
     head.appendChild(big);
     // 좋아요율·댓글율은 뺐다(2026-10-20 사장님 "필요없고 채널 영상 대비 상위 몇으로인지")
     if (d.top_pct) {
-      var tp = _ytEl("span", "border-radius:12px;padding:3px 10px;font:900 13px system-ui,sans-serif;white-space:nowrap;background:" +
+      var tp = _ytEl("span", "border-radius:14px;padding:5px 14px;font:900 17px system-ui,sans-serif;white-space:nowrap;background:" +
         (d.top_pct <= 20 ? "rgba(255,45,85,.25);color:#ff6b8a" : d.top_pct <= 50 ? "rgba(48,209,88,.22);color:#5cf28a" : "rgba(255,255,255,.1);color:#d0d0d0"),
         "채널 상위 " + d.top_pct + "%");
       tp.title = "채널 최근 쇼츠 " + (d.compared + 1) + "편 중 " + d.rank + "위";
@@ -2205,22 +2205,22 @@
     }
     head.appendChild(_ytChip("하루", v.per_day, m.per_day));
     if (d.young) {
-      var yg = _ytEl("span", "font-size:11px;color:#ffe14d", "⏳" + v.days + "일");
+      var yg = _ytEl("span", "font:800 14px system-ui,sans-serif;color:#ffe14d", "⏳" + v.days + "일");
       yg.title = "올린 지 얼마 안 돼 총 조회 배수가 낮게 나올 수 있어요 — 하루 배수를 같이 보세요";
       head.appendChild(yg);
     }
     body.appendChild(head);
-    var tiles = _ytEl("div", "display:grid;grid-template-columns:repeat(4,1fr);gap:5px");
+    var tiles = _ytEl("div", "display:grid;grid-template-columns:repeat(4,1fr);gap:8px");
     tiles.appendChild(_ytTile("조회", _ytNum(v.views), v.published + " 올림", "#ff9f0a"));
     tiles.appendChild(_ytTile("하루", _ytNum(v.per_day), "하루 평균 조회(올린 지 " + v.days + "일)", "#ffe14d"));
     tiles.appendChild(_ytTile("채널 순위", d.rank ? d.rank + "/" + (d.compared + 1) : "-", "채널 최근 쇼츠 중 조회수 순위", "#ff2d55"));
     tiles.appendChild(_ytTile("구독대비", d.views_per_sub === null ? "-" : (d.views_per_sub >= 100 ? Math.round(d.views_per_sub) : d.views_per_sub) + "%",
                               "구독자 " + _ytNum((d.channel || {}).subs) + " 대비 조회", "#30d158"));
     body.appendChild(tiles);
-    var charts = _ytEl("div", "display:grid;grid-template-columns:1fr 1fr;gap:6px");
+    var charts = _ytEl("div", "display:grid;grid-template-columns:1fr 1fr;gap:10px");
     function box(title, svg, tip) {
-      var c = _ytEl("div", "background:#1a1a1a;border-radius:8px;padding:4px 6px");
-      c.appendChild(_ytEl("div", "font:800 11px system-ui,sans-serif;color:#dfe6ff", title));
+      var c = _ytEl("div", "background:#1a1a1a;border-radius:10px;padding:8px 10px");
+      c.appendChild(_ytEl("div", "font:800 14px system-ui,sans-serif;color:#dfe6ff;margin-bottom:4px", title));
       if (tip) c.title = tip;
       c.appendChild(svg); return c;
     }
@@ -2241,8 +2241,7 @@
     if (_ssDragged(p)) return;
     var q = kw && kw.getBoundingClientRect();
     if (!q || q.width < 100 || q.height < 10) return;
-    var w = Math.max(q.width, 520), lx = q.left;
-    if (lx + w > window.innerWidth - 12) w = Math.max(q.width, window.innerWidth - 12 - lx);
+    var lx = q.left, w = Math.max(q.width, window.innerWidth - 18 - lx);   // 화면 오른쪽 끝까지(캡쳐 65 빨간 칸)
     var vb = window.innerHeight - 12, vs = document.querySelectorAll("video");
     for (var i = 0; i < vs.length; i++) {
       var r = vs[i].getBoundingClientRect();
@@ -2263,12 +2262,12 @@
     p.id = "ss-ytstat"; p.setAttribute("data-v", vid);
     // 자리 = 사장님 캡처의 빨간 칸(영상 오른쪽, 관련 검색어 상자 아래). 끌어 옮기면 그 자리를 기억한다.
     p.style.cssText = "position:fixed;right:18px;top:260px;z-index:2147483645;box-sizing:border-box;width:min(640px,46vw);max-height:calc(100vh - 280px);overflow:auto;" +
-      "background:rgba(14,14,14,.96);color:#fff;border-radius:12px;padding:8px 10px;font-family:system-ui,sans-serif;" +
+      "background:rgba(14,14,14,.97);color:#fff;border-radius:14px;padding:12px 14px;font-family:system-ui,sans-serif;" +
       "box-shadow:0 4px 16px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:6px";
     var hd = _ytEl("div", "display:flex;justify-content:space-between;align-items:center;gap:12px;font:800 13px system-ui,sans-serif");
-    hd.appendChild(_ytEl("span", "", "📈 분석"));
+    hd.appendChild(_ytEl("span", "font:900 15px system-ui,sans-serif", "📈 영상 분석"));
     hd.appendChild(_kwFoldBtn(p, "ss_ytstat_fold"));
-    var body = _ytEl("div", "display:flex;flex-direction:column;gap:6px"); body.className = "ss-yt-body";
+    var body = _ytEl("div", "display:flex;flex-direction:column;gap:10px"); body.className = "ss-yt-body";
     var st = _ytEl("div", "font-size:12px;color:#aaa"); body.appendChild(st);
     p.appendChild(hd); p.appendChild(body);
     _kwFoldApply(p, "ss_ytstat_fold");
