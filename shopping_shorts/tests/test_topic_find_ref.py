@@ -24,6 +24,18 @@ def test_ref_video_is_first_bench_even_when_search_is_empty(tmp_path):
     assert b["videos"][0]["relevance"] == "고객이 준 영상"
 
 
+def test_youtube_ref_url_is_first_bench_too(tmp_path):
+    # 10-20 회원 한 줄 실시험: 유튜브 주소는 kind 없이 via='참고 URL' 만 붙어 긴 제목 검색 0편 → 벤치 0 으로 멈췄다
+    calls = []
+    net = {"yt_search": lambda q, n, m: [],
+           "yt_detail": lambda vid, n, url=None: calls.append((vid, url)) or {"id": vid, "url": url, "title": "인덕션 얼룩", "description": "", "comments": []}}
+    u = "https://www.youtube.com/watch?v=dL1t0o9k2Gk"
+    c = {"id": "c1", "topic": "갖은 방법 다 해도 안 지던 인덕션 얼룩, 이미도가 단숨에 지운 키친 리무버", "query": "x", "key": "",
+         "source": {"via": "참고 URL", "url": u}}
+    b = T.bench(c, tmp_path, net, _llm, 4, limits=T.Limits())
+    assert calls == [("ref", u)] and [v["id"] for v in b["videos"]] == ["ref"] and b["points"], b["failed"]
+
+
 def test_youtube_topic_without_ref_still_needs_search(tmp_path):
     net = {"yt_search": lambda q, n, m: [], "yt_detail": lambda vid, n, url=None: {"id": vid}}
     b = T.bench({"id": "c1", "topic": "t", "query": "q", "key": "", "source": {}}, tmp_path, net, _llm, 4, limits=T.Limits())
