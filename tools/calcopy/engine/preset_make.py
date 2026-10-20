@@ -908,6 +908,8 @@ def make_one(pdir: Path, wdir: Path, a) -> dict:
     if w["S"].get("hybrid"):   # 하이브리드(앞 칼카피 줄 + 뒤 체험 줄을 한 대본으로, 사장님 10-20) — 검사 기준만 manifest hybrid_checks 로 덮는다
         if not cfg.get("hybrid_checks"):
             raise SystemExit(f"{pdir}/manifest.json channel_rules.make 에 hybrid_checks 가 없다 — 하이브리드 길이·효과음 기준을 먼저 적어라")
+        if (w["S"].get("흥미이음") or {}).get("판정") != "같음":   # 칼카피_시작 §14 '흥미 이음 같음만 렌더'(render_front.interest_gate 와 같은 규칙)
+            raise SystemExit(f"{wdir}/대본.json 흥미이음.판정 이 '같음'이 아니다({(w['S'].get('흥미이음') or {}).get('판정')}) — 같은 제품을 다시 찾거나 이 편은 만들지 않는다")
         cfg = {**cfg, "checks": {**cfg["checks"], **cfg["hybrid_checks"]}}
     out = Path(a.out) if a.out else w["data"] / ("make_hybrid" if w["S"].get("hybrid") else "make")
     cache = Path(a.cache) if a.cache else w["data"] / "_make_cache"
