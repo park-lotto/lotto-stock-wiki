@@ -17189,6 +17189,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "license_kv",
                        # 클로드형 프리셋 끄기 — 프리셋 id(p_…)를 쉼표로. 적힌 것은 페이지·자산에서 빠진다
                        "claude_presets_off",
+                       # 클로드형 프리셋 고객용 이름(JSON {프리셋 id 또는 slug/틀: {name, desc}}) — PC 로컬 설정 화면 목록(관제 234)
+                       "claude_preset_names",
                        # 클로드형 최소 엔진·설치팩 버전(semver, 기본 1.0.0) — 낮은 PC 는 자산을 못 받는다
                        "claude_min_engine", "claude_min_installer",
                        # 클로드형 이상 행동 임계값(JSON, 설계 §7-9 초기안을 덮어쓴다)
@@ -18633,6 +18635,20 @@ def api_claude_license(request: Request):
     return _claude_json(_cp.call(_cp.license, _cp.ctx_from_request(request, _client_ip(request)), Store(DB_PATH)))
 
 
+@app.get("/api/claude/update")
+def api_claude_update(request: Request, have: str = ""):
+    """켤 때 자동 업데이트(관제 234 5판) — 판단은 claude_portal.update_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.update_info, _cp.ctx_from_request(request, _client_ip(request)), have, Store(DB_PATH)))
+
+
+@app.get("/api/claude/install")
+def api_claude_install(request: Request, plat: str = ""):
+    """exe 없이 까는 길 — 연결 파일이 실행 도구 든 묶음을 받는다. 판단은 claude_portal.install_info."""
+    from shopping_shorts import claude_portal as _cp
+    return _claude_json(_cp.call(_cp.install_info, _cp.ctx_from_request(request, _client_ip(request)), plat, Store(DB_PATH)))
+
+
 @app.post("/api/claude/lease")
 async def api_claude_lease(request: Request):
     from shopping_shorts import claude_portal as _cp
@@ -18646,6 +18662,16 @@ def api_claude_assets(request: Request, profile: str = "", job: str = "", lease:
     from shopping_shorts import claude_portal as _cp
     ctx = _cp.ctx_from_request(request, _client_ip(request))
     return _claude_json(_cp.call(_cp.assets, ctx, profile, job, lease or None, extra or None, Store(DB_PATH)))
+
+
+@app.post("/api/claude/rent")
+async def api_claude_rent(request: Request):
+    """편마다 프리셋 빌려주기(관제 234 5판) — 판단은 claude_portal.preset_rent(관문 _job_gate)."""
+    from shopping_shorts import claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cp.rent, ctx, str(body.get("profile") or ""), str(body.get("job") or ""),
+                                                body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
 @app.get("/api/claude/pack/{asset_id:path}")

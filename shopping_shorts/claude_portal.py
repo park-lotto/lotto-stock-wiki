@@ -5,7 +5,7 @@
 
 판단 주인(각 하나 — 라우트는 부르기만, 0순위-C):
   issue_license / verify_license  라이선스 키 발급·검증(SHORTEM-L1.<cid>.<exp>.<kv>.<sig>, 서버는 키 해시만)
-  license                         기기 지문 2대·회수·정지·엔진 버전
+  license                         기기 지문 DEVICES_MAX(1)대·회수·정지·엔진 버전
   lease                           cid 당 활성 작업 1개(TTL 180초, 하트비트 60초, 다른 기기 거절, 강제 해제)
   assets_for                      이번 작업이 **참조하는 자산만** 서명 URL(6h) — 통째로 안 준다
   pack                            그 job 의 발급 목록 안 자산만 재발급
@@ -26,6 +26,7 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import sqlite3
 import threading
 import time
@@ -47,7 +48,7 @@ LEASE_TTL = 180
 HEARTBEAT_EVERY = 60
 ASSET_URL_TTL = 6 * 3600
 PREVIEW_TOKEN_TTL = 600
-DEVICES_MAX = 2
+DEVICES_MAX = 1          # PC 1대만(2026-10-19 사장님 결정, 관제 234 5판). 교체는 마이페이지 '기기 빼기'
 PROFILES_MAX = 10
 ASSET_KINDS = ("font", "sfx", "bgm", "template", "meme")
 # 견본 종류 → 허용 확장자(앞이 우선). 원본 kind 와 별개로 목소리·통과작도 견본만 있다.
@@ -380,12 +381,14 @@ def _front(store, ctx, route, need_device=True):
     if not _gate(store, "claude_portal_enabled", cid):
         raise PortalError("disabled", "클로드형 서비스가 지금 꺼져 있습니다")
     _raise_on(anomaly_check(cid, {"type": "request", "route": route, **_ev(ctx)}, store=store))
+    if route == "install":                       # 설치 전 연결 파일 — 아직 엔진·기기 지문 계산기가 없다(키만 본다)
+        return cid, info, None
     fp = ctx.get("device") or ""
     if not _FP_RE.match(fp):
         raise PortalError("bad_request", "기기 지문이 올바르지 않습니다 — 설치팩을 다시 확인하세요")
     want = _semver(str(_setting(store, "claude_min_engine", "1.0.0")))
     have = _semver(ctx.get("engine"))
-    if have is None or (want and have < want):
+    if route != "update" and (have is None or (want and have < want)):   # 업데이트 창구는 오래된 엔진도 들어와야 새 판을 받는다
         anomaly_check(cid, {"type": "engine_old", "route": route, **_ev(ctx)}, store=store)
         raise PortalError("engine_old", "숏템 엔진이 오래됐습니다 — 설치팩을 새로 받아 주세요")
     dev = None
@@ -447,6 +450,24 @@ def _style_label(style: str) -> str:
     return " · ".join(p for p in parts if p)
 
 
+def preset_names(store, ids) -> list:
+    """고객에게 보이는 프리셋 이름(관제 234 5판 — PC 로컬 설정 화면이 쓴다). 이름표 = shopping_shorts/claude_preset_names.json
+    ({내부 slug/틀 또는 고객용 id: {name, desc}}), 관리자 설정 claude_preset_names 가 칸 단위로 덮는다. 없으면 틀 설명. 벤치 slug 는 안 내보낸다."""
+    names = json.loads((Path(__file__).resolve().parent / "claude_preset_names.json").read_text(encoding="utf-8"))
+    try:
+        names.update(json.loads(str(_setting(store, "claude_preset_names", "") or "{}")))
+    except ValueError:
+        log.warning("claude_portal: 관리자 설정 claude_preset_names 가 깨졌다 — 기본 이름표만 쓴다")
+    out = []
+    for pid in ids:
+        p = _preset_by_id(store, pid)
+        if not p:
+            continue
+        n = names.get(pid) or names.get(p["internal"]) or {}
+        out.append({"id": pid, "name": str(n.get("name") or _style_label(p["style"]))[:40], "desc": str(n.get("desc") or "")[:120]})
+    return out
+
+
 def _ledgers():
     from shopping_shorts import calcopy_board
     return calcopy_board.preset_home(channel_root())
@@ -468,15 +489,19 @@ def _entitled(store, cid, row=None) -> list:
 # ── 자산 카탈로그·저장소 ──────────────────────────────────────────────────
 def put_blob(path: Path) -> tuple:
     """원본 파일 → assets/<sha256>(내용주소). (sha256, size). 같은 내용은 한 번만 저장."""
-    data = Path(path).read_bytes()
-    sha = hashlib.sha256(data).hexdigest()
+    h, size = hashlib.sha256(), 0
+    with open(path, "rb") as f:                       # 조각으로 — 설치 묶음(수백 MB)도 메모리에 다 올리지 않는다
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+    sha = h.hexdigest()
     dst = store_dir() / "assets" / sha
-    if not dst.exists() or dst.stat().st_size != len(data):
+    if not dst.exists() or dst.stat().st_size != size:
         dst.parent.mkdir(parents=True, exist_ok=True)
         tmp = dst.with_suffix(".tmp")
-        tmp.write_bytes(data)
+        shutil.copyfile(path, tmp)
         os.replace(tmp, dst)
-    return sha, len(data)
+    return sha, size
 
 
 def upsert_asset(store, aid, kind, name, sha, size, grp="", preview_id=None, meta=None):
@@ -601,7 +626,7 @@ def _rules_of(pdir: Path, man: dict) -> dict:
 
 # ── license ─────────────────────────────────────────────────────────────
 def license(ctx: dict, store=None) -> dict:
-    """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, 2대 차면 거절·자동 교체 없음)."""
+    """GET /api/claude/license — 확인 + 이 기기 등록(빈 칸이 있으면 자동, DEVICES_MAX 차면 거절·자동 교체 없음)."""
     store = _store(store)
     ensure_schema(store)
     cid, info, _ = _front(store, ctx, "license", need_device=False)
@@ -625,13 +650,14 @@ def license(ctx: dict, store=None) -> dict:
             live.append({"slot": slot})
     if not dev:
         _raise_on(anomaly_check(cid, {"type": "device_limit", "route": "license", **_ev(ctx)}, store=store))
-        raise PortalError("device_limit", "기기 2대가 이미 등록돼 있습니다 — 마이페이지에서 기기 교체 후 다시 시도하세요")
+        raise PortalError("device_limit", f"기기 {DEVICES_MAX}대가 이미 등록돼 있습니다 — 마이페이지에서 기기를 빼고 다시 시도하세요")
     _raise_on(anomaly_check(cid, {"type": "license", "route": "license", **_ev(ctx)}, store=store))
     row = info["row"]
     return {"ok": True, "cid": cid, "plan": row.get("plan") or "claude", "expires": info["exp"],
             "device": {"id": fp[:12], "name": name, "slot": dev["slot"], "registered_now": registered_now},
             "devices_used": len(live), "devices_max": DEVICES_MAX,
             "entitled_presets": _entitled(store, cid, row),
+            "presets": preset_names(store, _entitled(store, cid, row)),
             "profiles": [{"profile_id": p["profile_id"], "name": p["name"], "preset_id": p["preset_id"],
                           "version": p["version"]} for p in list_profiles(cid, store)],
             "min_engine": str(_setting(store, "claude_min_engine", "1.0.0")),
@@ -737,13 +763,10 @@ def _profile_row(c, cid, profile_id):
     return _row(c, "SELECT * FROM claude_profiles WHERE id=? AND customer_id=?", (profile_id, int(cid)))
 
 
-def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
-    """이번 작업에 필요한 것만 — 합본(channel_profile.merge) → 합본이 참조하는 자산만 서명 URL(6h).
-
-    job_request = {"job_id", "lease_id"?, "extra"?, "device_hash"}. 유효 lease(job 일치) 필수."""
-    store = _store(store)
-    ensure_schema(store)
-    cid = int(cid)
+def _job_gate(store, cid, profile_id, job_request: dict, preset_id=None) -> tuple:
+    """편 하나에 무언가를 내줄 때의 관문 — 판단 한 곳(assets_for·preset_rent 공용, 관제 234 5판).
+    스위치 → 유효 작업 권한(그 job·그 기기·그 lease) → 내 프로필(또는 PC 로컬 설정이 고른 프리셋 id) → 구매(등급)한 프리셋.
+    반환 (프로필 행 또는 None, 프리셋, 라이선스 행)."""
     job_id = str(job_request.get("job_id") or "")
     if not _JOB_RE.match(job_id):
         raise PortalError("bad_request", "job_id 가 올바르지 않습니다")
@@ -756,13 +779,117 @@ def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
     if (not cur or cur["job_id"] != job_id or cur["fp_hash"] != job_request.get("device_hash")
             or (job_request.get("lease_id") and cur["lease_id"] != job_request.get("lease_id"))):
         raise PortalError("lease_lost", "작업 권한이 없습니다 — 작업을 다시 시작하세요")
-    if not prof:
+    if not prof and not preset_id:
         raise PortalError("bad_request", "채널 프로필을 찾을 수 없습니다 — 페이지에서 프로필을 저장하세요")
-    if prof["preset_id"] not in _entitled(store, cid, lic):
+    want = prof["preset_id"] if prof else str(preset_id)
+    if want not in _entitled(store, cid, lic):
         raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
-    p = _preset_by_id(store, prof["preset_id"])
+    p = _preset_by_id(store, want)
     if not p:
         raise PortalError("not_entitled", "이 프리셋은 지금 쓸 수 없습니다")
+    return prof, p, lic
+
+
+def preset_pack_path(pid: str) -> Path:
+    """서버가 보관하는 프리셋 꾸러미(tools/claude_portal/preset_pack.py 가 우리 PC 에서 만든 zip). 고객에게는 preset_rent 로만 나간다."""
+    return store_dir() / "preset_packs" / f"{pid}.zip"
+
+
+def preset_rent(cid, profile_id, job_request: dict, store=None, preset_id=None) -> dict:
+    """편마다 프리셋 빌려주기(관제 234 5판, 사장님 '프리셋 만드는 노하우가 자산'). 관문(_job_gate) 뒤 그 편 프리셋 꾸러미 하나를
+    이 요청 전용 열쇠(AES-256-GCM, 덧붙임 글 = cid|job)로 잠가 보낸다. PC 는 잠근 채 두고 엔진이 도는 동안만 푼다(열쇠는 메모리만)."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, _ = _job_gate(store, cid, profile_id, job_request, preset_id=preset_id)
+    f = preset_pack_path(p["id"])
+    if not f.is_file():
+        log.warning("claude_portal: 프리셋 꾸러미 없음 %s(%s) — preset_pack.py 로 만들어 올려라", p["id"], p["internal"])
+        raise PortalError("not_ready", "이 프리셋을 지금 준비할 수 없습니다 — 잠시 뒤 다시 시도하세요")
+    data = f.read_bytes()
+    key, nonce = AESGCM.generate_key(bit_length=256), os.urandom(12)
+    aad = f"{cid}|{job_id}".encode()
+    sealed = AESGCM(key).encrypt(nonce, data, aad)
+    with _tx(store, write=True) as c:
+        _lease_log(c, cid, job_request.get("device_hash"), "rent", job_id, job_request.get("lease_id"), None, p["id"])
+    return {"ok": True, "preset_path": f"channel/{p['slug']}/preset/{p['style']}", "aad": aad.decode(),
+            "pack": base64.b64encode(nonce + sealed).decode(), "key": base64.b64encode(key).decode(),
+            "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def rent(ctx: dict, profile_id, job_id, lease_id=None, store=None, preset_id=None) -> dict:
+    """POST /api/claude/rent — 관문 뒤 preset_rent. PC 로컬 설정이면 profile 없이 preset(고객용 프리셋 id)."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, dev = _front(store, ctx, "rent")
+    return preset_rent(cid, profile_id, {"job_id": job_id, "lease_id": lease_id, "device_hash": dev["fp_hash"]}, store=store,
+                       preset_id=preset_id or None)
+
+
+# ── 켤 때 자동 업데이트(관제 234 5판, 사장님 10-19 "업데이트는 자동으로 켤 때 받을 수 있게") ───────────────
+def update_path() -> Path:
+    """최신 앱(서버+엔진) 묶음 표 — tools/claude_portal/publish_update.py 가 쓴다. {version, sha256, size, notes}"""
+    return store_dir() / "updates" / "latest.json"
+
+
+def update_info(ctx: dict, have: str, store=None) -> dict:
+    """GET /api/claude/update?have=<버전> — 라이선스·기기 관문 뒤, 더 새 판이 있으면 서명 받기 주소. 판단은 이 함수 하나."""
+    store = _store(store)
+    ensure_schema(store)
+    cid, _, _ = _front(store, ctx, "update")
+    p = update_path()
+    if not p.is_file():
+        return {"ok": True, "update": False}
+    d = json.loads(p.read_text(encoding="utf-8"))
+    if not re.fullmatch(r"\d+\.\d+\.\d+", str(have or "")) or _semver(d["version"]) <= _semver(have):
+        return {"ok": True, "update": False, "latest": d["version"]}
+    if not (store_dir() / "assets" / d["sha256"]).is_file():
+        log.warning("claude_portal: 업데이트 %s 묶음 파일이 저장소에 없다", d["version"])
+        return {"ok": True, "update": False}
+    url, exp = asset_url({"sha256": d["sha256"], "id": f"update:shortem-app-{d['version']}.zip"}, cid, "update")
+    return {"ok": True, "update": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url,
+            "expires": exp, "notes": str(d.get("notes") or "")[:200]}
+
+
+INSTALL_PLATS = ("win-x64", "mac-arm64", "mac-x64")
+
+
+def install_path(plat: str) -> Path:
+    """설치 묶음 표(플랫폼별) — tools/claude_portal/publish_update.py --install 이 쓴다. {version, sha256, size}"""
+    return store_dir() / "install" / f"latest-{plat}.json"
+
+
+def install_info(ctx: dict, plat: str, store=None) -> dict:
+    """GET /api/claude/install?plat= — exe 없이 까는 길(사장님 10-20 "인증서 없이 스타터킷처럼 바로").
+    연결 파일(.mcpb·플러그인)이 키만 들고 와서 실행 도구까지 든 묶음을 받아 직접 푼다(브라우저로 받지 않으니
+    '인터넷에서 받은 파일' 표시가 없고, 서명 안 된 exe 를 고객이 두 번 누를 일도 없다). 판단은 이 함수 하나."""
+    store = _store(store)
+    ensure_schema(store)
+    if plat not in INSTALL_PLATS:
+        raise PortalError("bad_request", "지원하지 않는 컴퓨터 종류입니다")
+    cid, _, _ = _front(store, ctx, "install")
+    p = install_path(plat)
+    if not p.is_file():
+        return {"ok": True, "ready": False}
+    d = json.loads(p.read_text(encoding="utf-8"))
+    if not (store_dir() / "assets" / d["sha256"]).is_file():
+        log.warning("claude_portal: 설치 묶음 %s %s 파일이 저장소에 없다", plat, d["version"])
+        return {"ok": True, "ready": False}
+    url, exp = asset_url({"sha256": d["sha256"], "id": f"install:shortem-{plat}-{d['version']}.zip"}, cid, "install")
+    return {"ok": True, "ready": True, "version": d["version"], "sha256": d["sha256"], "size": d["size"], "url": url, "expires": exp}
+
+
+def assets_for(cid, profile_id, job_request: dict, store=None) -> dict:
+    """이번 작업에 필요한 것만 — 합본(channel_profile.merge) → 합본이 참조하는 자산만 서명 URL(6h).
+
+    job_request = {"job_id", "lease_id"?, "extra"?, "device_hash"}. 유효 lease(job 일치) 필수."""
+    store = _store(store)
+    ensure_schema(store)
+    cid = int(cid)
+    job_id = str(job_request.get("job_id") or "")
+    prof, p, lic = _job_gate(store, cid, profile_id, job_request)
     try:
         frame = json.loads((p["dir"] / "frame.json").read_text(encoding="utf-8"))
         man = json.loads((p["dir"] / "manifest.json").read_text(encoding="utf-8"))
@@ -1026,7 +1153,7 @@ def anomaly_check(cid, event: dict, store=None) -> dict:
         elif typ in ("license", "device_limit"):
             hit, detail = False, ""
             if typ == "device_limit":
-                hit, detail = True, "등록 안 된 기기에서 키 사용(기기 2대 찬 상태)"
+                hit, detail = True, f"등록 안 된 기기에서 키 사용(기기 {DEVICES_MAX}대 찬 상태)"
             else:
                 n = c.execute("SELECT COUNT(DISTINCT country) FROM claude_license_log WHERE cid=? AND kind='request' AND route='license' "
                               "AND ts>=? AND country<>''", (cid, now - 86400)).fetchone()[0]
@@ -1225,6 +1352,12 @@ def remove_device(cid, device_id, store=None) -> dict:
     return {"ok": True}
 
 
+# 페이지 내려받기 칸(사장님 10-20 exe 없이) — desktop = shortem.mcpb(윈도·맥 공용, 두 번 누르면 Claude 데스크탑이 받는다)
+#   code-win-x64 = Claude Code 시작 꾸러미(플러그인+시작.md+node). 실행 도구는 둘 다 연결 파일이 /api/claude/install 로 받는다.
+#   win-x64·mac-* = 예전 설치 프로그램(서명 전엔 페이지에 안 띄운다 — 남겨 두기만)
+INSTALLER_KINDS = ("desktop", "code-win-x64", "win-x64", "mac-arm64", "mac-x64")
+
+
 def _installers() -> list:
     mf = store_dir() / "installers" / "manifest.json"
     try:
@@ -1233,7 +1366,7 @@ def _installers() -> list:
         return []
     out = []
     for it in d.get("items") or []:
-        if not isinstance(it, dict) or it.get("os") not in ("win-x64", "mac-arm64", "mac-x64"):
+        if not isinstance(it, dict) or it.get("os") not in INSTALLER_KINDS:
             continue
         f = store_dir() / "installers" / Path(str(it.get("file") or "")).name
         out.append({"os": it["os"], "version": it.get("version"), "sha256": it.get("sha256"), "size": it.get("size"),
@@ -1243,7 +1376,7 @@ def _installers() -> list:
 
 def installer_file(os_id) -> dict:
     for it in json.loads((store_dir() / "installers" / "manifest.json").read_text(encoding="utf-8")).get("items") or []:
-        if it.get("os") == os_id:
+        if it.get("os") == os_id and os_id in INSTALLER_KINDS:
             f = store_dir() / "installers" / Path(str(it.get("file") or "")).name
             if f.is_file():
                 return {"file": f, "name": f.name}

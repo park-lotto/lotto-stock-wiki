@@ -5,6 +5,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,7 +52,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 
 function framesLayers(f) { return f.frames ? f.frames.flatMap(x => x.layers) : f.layers; }
 
-export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride } = {}) {
+export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60, devicesMax = 2, blobTtl = 6 * 3600, fonts: fontOverride, rent, update, install } = {}) {
   const FT = fontTable();
   const state = { customers: new Map(), blobs: new Map(), log: [], feedback: [], leaseSeq: 0, assetsCalls: 0, blobTtl };
   const cust = cid => { if (!state.customers.has(cid)) state.customers.set(cid, { kv: 1, revoked: false, devices: [], lease: null }); return state.customers.get(cid); };
@@ -117,6 +118,7 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         }
         return send(res, 200, { ok: true, cid: a.cid, plan: 'claude', expires: a.exp, device: { id: a.fp.slice(0, 12), name: dev.name, slot: dev.slot, registered_now: now },
           devices_used: a.c.devices.length, devices_max: devicesMax, entitled_presets: PROFILES.map(p => p.preset_id),
+          presets: rent && rent.pid ? [{ id: rent.pid, name: rent.name || '제품비하인드썰형', desc: '' }] : [],
           profiles: PROFILES.map(({ frame, ...p }) => p), min_engine: '1.0.0', min_installer: '1.0.0', server_time: Math.floor(Date.now() / 1000) });
       }
       if (u.pathname === '/api/claude/lease' && req.method === 'POST') {
@@ -168,6 +170,24 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         const buf = fs.readFileSync(b.file);
         res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': buf.length }); return res.end(buf);
       }
+      // 편마다 프리셋(관제 234) — 잠그기는 서버와 같은 파이썬 AESGCM(nonce 12 + 암호문 + 태그, 덧붙임 글 cid|job)로 한다(언어 사이 호환 확인)
+      if (u.pathname === '/api/claude/rent' && req.method === 'POST') {
+        const a = auth(req, res); if (!a) return;
+        const b = await body(req);
+        const L = a.c.lease;
+        if (!L || L.exp <= Date.now() || L.job_id !== b.job || L.fp !== a.fp || (b.lease && b.lease !== L.lease_id)) return fail(res, 409, 'lease_lost', '작업 권한이 없습니다');
+        if (!rent) return fail(res, 503, 'not_ready', '이 프리셋을 지금 준비할 수 없습니다');
+        if (rent.deny) return fail(res, 403, 'not_entitled', '이 프리셋은 지금 쓸 수 없습니다');
+        const aad = `${a.cid}|${b.job}`;
+        const py = `import sys,os,json,base64,hashlib
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+d=sys.stdin.buffer.read();aad=sys.argv[1].encode()
+k=AESGCM.generate_key(bit_length=256);n=os.urandom(12)
+print(json.dumps({"pack":base64.b64encode(n+AESGCM(k).encrypt(n,d,aad)).decode(),"key":base64.b64encode(k).decode(),"sha256":hashlib.sha256(d).hexdigest()}))`;
+        const out = JSON.parse(execFileSync(process.platform === 'win32' ? 'py' : 'python3', ['-c', py, aad], { input: rent.zip }).toString());
+        state.rents = (state.rents || 0) + 1;
+        return send(res, 200, { ok: true, preset_path: rent.preset_path, aad, ...(rent.tamper ? { ...out, key: Buffer.alloc(32).toString('base64') } : out) });
+      }
       if (u.pathname === '/api/claude/feedback' && req.method === 'POST') {
         const a = auth(req, res); if (!a) return;
         const b = await body(req);
@@ -175,6 +195,25 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
         state.feedback.push(b); return send(res, 200, { ok: true, id: state.feedback.length });
       }
       // 시험 손잡이
+      // 켤 때 자동 업데이트(관제 234) — 서버 claude_portal.update_info 와 같은 꼴
+      if (u.pathname === '/api/claude/update' && req.method === 'GET') {
+        const a = auth(req, res); if (!a) return;
+        const have = u.searchParams.get('have') || '';
+        if (!update || have === update.version) return send(res, 200, { ok: true, update: false });
+        return send(res, 200, { ok: true, update: true, version: update.version, sha256: crypto.createHash('sha256').update(update.zip).digest('hex'), size: update.zip.length, url: '/__blob/update' });
+      }
+      // exe 없이 까는 길(사장님 10-20) — 서버 claude_portal.install_info 와 같은 꼴(키만, 기기 지문 없음). FAKE_INSTALL_ZIP = 실물 설치 묶음
+      if (u.pathname === '/api/claude/install' && req.method === 'GET') {
+        const k = parseKey(req.headers.authorization);
+        if (!k || k.bad || k.exp < Date.now() / 1000) return fail(res, 401, 'no_key', '라이선스 키가 없습니다');
+        if (!install) return send(res, 200, { ok: true, ready: false });
+        return send(res, 200, { ok: true, ready: true, version: install.version, sha256: install.sha256, size: install.size, url: '/__blob/install' });
+      }
+      if (u.pathname === '/__blob/install' && install) {
+        res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': install.size });
+        return fs.createReadStream(install.file).pipe(res);
+      }
+      if (u.pathname === '/__blob/update' && update) { res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': update.zip.length }); return res.end(update.zip); }
       if (u.pathname === '/__test/force_release') { for (const c of state.customers.values()) c.lease = null; return send(res, 200, { ok: true }); }
       if (u.pathname === '/__test/revoke') { const cid = +u.searchParams.get('cid'); cust(cid).revoked = true; return send(res, 200, { ok: true }); }
       return fail(res, 404, 'bad_request', '없는 경로');
@@ -187,7 +226,16 @@ export async function startFakeServer({ port = 0, ttl = 180, heartbeatEvery = 60
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const port = Number(process.argv[2] || 18849);
-  startFakeServer({ port }).then(s => {
+  // 하이쿠 1편 시험(관제 234): FAKE_RENT_ZIP(실물 프리셋 꾸러미)·FAKE_RENT_PRESET(엔진 프리셋 경로)·FAKE_RENT_PID(고객용 id)
+  const rent = process.env.FAKE_RENT_ZIP ? { zip: fs.readFileSync(process.env.FAKE_RENT_ZIP), preset_path: process.env.FAKE_RENT_PRESET, pid: process.env.FAKE_RENT_PID } : undefined;
+  // exe 없이 까는 시험: FAKE_INSTALL_ZIP(build_win 이 만든 설치 묶음) · FAKE_INSTALL_SHA(없으면 여기서 잰다)
+  let install;
+  if (process.env.FAKE_INSTALL_ZIP) {
+    const f = process.env.FAKE_INSTALL_ZIP;
+    const sha256 = process.env.FAKE_INSTALL_SHA || crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+    install = { file: f, size: fs.statSync(f).size, sha256, version: process.env.FAKE_INSTALL_VERSION || '1.0.0' };
+  }
+  startFakeServer({ port, rent, install }).then(s => {
     console.log(JSON.stringify({ url: s.url, key: makeKey(12, Math.floor(Date.now() / 1000) + 86400 * 30, 1) }));
   });
 }
