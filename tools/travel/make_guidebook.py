@@ -6,6 +6,11 @@
 
 사용: py tools/travel/make_guidebook.py <state.json(detail.review_insights 포함)> <출력폴더> [--style bento_grid]
 필요: nlm(uv tool install notebooklm-mcp-cli) 로그인 — `nlm login --check` 가 실패면 `nlm login`(구글 로그인만 사장님)
+
+★실측(2026-10-20 네스트호텔): 슬라이드 = 한글 깨끗·후기 숫자 원고 그대로(11장 전부 확인) → **고객용은 슬라이드**.
+  인포그래픽 = 글자까지 그림으로 그려 한글이 깨지고('후기'→'추기', '해물짬뽕'→'해폴펌퐁') 숫자가 바뀐다(169→150, 66→99) → 쓰지 마라.
+  슬라이드도 원고에 없는 말을 덧붙인다(실측 3곳: '갓길 주차 공식 허용'·'카카오택시 호출 불가'·'07:30 조식 오픈런' — 조식은 06:30).
+  → 내보내기 전에 사람이 원고와 대조해 고친다(slides revise 또는 원고 보강 후 다시 만들기).
 """
 import json
 import re
