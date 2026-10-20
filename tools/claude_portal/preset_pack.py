@@ -41,7 +41,37 @@ def files_for(engine: Path, preset: str) -> list[str]:
         t = s.get("tteutgi") if isinstance(s, dict) else None
         if t and (engine / t).is_file():
             out.append(Path(t).as_posix())
-    return [x for x in dict.fromkeys(out) if (engine / x).is_file()]
+    return [x for x in dict.fromkeys(out + tech_files(engine, preset)) if (engine / x).is_file()]
+
+
+TECH_CODE = ("__init__", "common", "customer", "styles", "screen", "render_bench", "render_itssum", "placement", "bench_check", "script_audit", "thumb")
+TECH_DOCS = ("02_원본찾기", "03_제품_쿠팡", "04_조사", "05_재료영상", "07_대본", "08_계획", "11_검사")
+
+
+def tech_files(engine: Path, preset: str) -> list[str]:
+    """기술 꾸러미(사장님 10-21 '프리셋처럼 편마다 빌려주기') — 프리셋 폴더 line.json 이 hybrid 이면 집 PC 제작 라인을 같이 담는다.
+    코드 = tools/calcopy/hybrid/*(설치본 금지 목록 — 편마다만) · 판 설정 = styles/<판>.json(+_common) · 지시문 = briefs·제작순서 단계 파일 ·
+    판이 부르는 벤치 자료 = 판 설정 bench.line_reads·sfx_events. 회원 PC 는 이것을 풀고(preset_rent.js) 편이 끝나면 지운다."""
+    lp = engine / preset / "line.json"
+    if not lp.is_file():
+        return []
+    line = json.loads(lp.read_text(encoding="utf-8"))
+    if line.get("line") != "hybrid":
+        return []
+    v = line["version"]
+    h = "tools/calcopy/hybrid"
+    out = [f"{preset}/line.json", "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py"]
+    out += [f"{h}/{m}.py" for m in TECH_CODE]
+    out += [f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
+    out += [f"{h}/briefs/{b}.md" for b in ("research", "screen_pick", "script", "review")]
+    out += [p.relative_to(engine).as_posix() for d in TECH_DOCS for p in (engine / "channel/칼카피_제작순서").glob(f"{d}*.md")]
+    st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
+    b = st.get("bench") or {}
+    if b.get("line_reads"):
+        out += [p.relative_to(engine).as_posix() for p in sorted((engine / b["line_reads"]).glob("*.json"))]
+    if b.get("sfx_events"):
+        out.append(b["sfx_events"])
+    return out
 
 
 def pack_name(preset: str) -> str:

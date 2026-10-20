@@ -108,6 +108,7 @@ export function shape(out, secret) {
   if (Array.isArray(src.plan_files)) r.plan_files = src.plan_files.slice(0, 20).map(f => clean(f, null, 60));
   if (isObj(src.script)) r.script = { title: clean(src.script.title, null, 100), lines: (src.script.lines || []).slice(0, 30).map(l => clean(l, null, 200)) };
   if (typeof src.video === 'string') r.video = clean(src.video, null, 600);
+  if (typeof src.stage === 'string') { r.stage = clean(src.stage, null, 40); if (src.step != null) r.step = int(src.step, 0, 99); if (src.step_total != null) r.step_total = int(src.step_total, 0, 99); }   // 진행 한 줄(볼케이노처럼 단계만)
   if (typeof src.preset_used === 'string') r.preset_used = clean(src.preset_used, null, 40);   // 한 줄 요청으로 고른 프리셋 이름(고객용 이름)
   if (Array.isArray(src.hints) && src.hints.length) r.hints = src.hints.slice(0, 12).map(h => clean(h, secret, 200)).filter(Boolean);
   if (isObj(src.fail)) r.fail = { where: STEP_NAMES.includes(src.fail.where) ? src.fail.where : clean(src.fail.where, secret, 20), why: clean(src.fail.why, secret, 200), fix: clean(src.fail.fix, secret, 200), retry_ok: !!src.fail.retry_ok };

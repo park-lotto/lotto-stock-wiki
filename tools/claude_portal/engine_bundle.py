@@ -73,7 +73,11 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          #   channel_presets·channelkit/bench·live_admin). 그래서 하나씩 적는다. 빠지면 test_engine_installed(변수 많은 프리셋)가 잡는다
          "shopping_shorts/calcopy_frame/per_video.py",
          "shopping_shorts/channelkit/providers.py", "tools/calcopy/copy_render.py",   # 나레형 목소리(remake --make-tts, 고객 키 TYPECAST_API_KEY)
-         "shopping_shorts/channel_presets/banggu/rules.py")                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
+         "shopping_shorts/channel_presets/banggu/rules.py",                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
+         # 하이브리드 제작 라인(집 PC 제작순서 그대로, 10-21 재정비)이 부르는 엔진 쪽 — 라인 자체(tools/calcopy/hybrid/*)는 편마다 빌린다(기술 꾸러미)
+         "tools/calcopy/engine/stage_log.py", "tools/calcopy/engine/yt_fetch.py", "tools/calcopy/engine/narr_align.py",
+         "tools/calcopy/engine/master_guard.py", "tools/calcopy/engine/script_frame.py", "tools/calcopy/engine/voices.py",
+         "tools/calcopy/coupang_customer.py", "shopping_shorts/coupang_partners.py", "tools/caption_pack/check_bench_packs.py")
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:
