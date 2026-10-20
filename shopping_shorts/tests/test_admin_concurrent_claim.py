@@ -17,7 +17,10 @@ def test_관리자는_동시_2개까지_집는다(tmp_path):
     assert c is None                # 3개째는 대기 (기본 ADMIN_CONCURRENT_JOBS=2)
 
 
-def test_일반고객은_여전히_1개(tmp_path):
+def test_일반고객은_여전히_1개(tmp_path, monkeypatch):
+    # 2026-10-20(관제 246): 놀 때는 같은 고객의 다른 영상 2개까지 허용으로 바뀌었다 —
+    # 이 시험은 '바쁠 때 고객당 1개' 공평 분배를 지킨다(가동 기준 1 = 늘 바쁜 것으로 본다).
+    monkeypatch.setenv("OWNER_BURST_IDLE_BELOW", "1")
     s = _mk(tmp_path)
     for i in range(2):
         s.enqueue("mix", {"job_id": f"j{i}", "customer_id": 7})

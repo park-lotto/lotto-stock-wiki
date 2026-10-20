@@ -7986,14 +7986,25 @@ class Store:
                 "                      WHERE w.state='running' AND w.owner=q.owner "
                 f"                       AND (w.task IN (" + lph + ")) = (q.task IN (" + lph + "))) "
                 f"                    < CASE WHEN q.owner='0' THEN ? "
-                f"                           WHEN q.task IN (" + lph + ") THEN ? ELSE 1 END) "
+                f"                           WHEN q.task IN (" + lph + ") THEN ? "
+                # ★놀 때만 같은 고객의 '다른 영상' 동시 N개(2026-10-20 관제 246 사장님).
+                #   실측 7일: 워커 12개 중 평균 1.47개 가동인데 고객 제작작업 60초+ 대기 126건이
+                #   전부 이 고객당-1개 칸 때문이었고, 그중 119건은 같은 고객의 **다른 영상**을 기다렸다.
+                #   같은 영상(job_id)은 단계 순서가 있어 여전히 하나씩 — job_id 가 없는 작업이
+                #   하나라도 끼면(판별 불가) 종전대로 1개.
+                "                           WHEN json_extract(q.args_json,'$.job_id') IS NOT NULL "
+                "                            AND NOT EXISTS (SELECT 1 FROM job_queue s WHERE s.state='running' "
+                "                                 AND s.owner=q.owner AND (json_extract(s.args_json,'$.job_id') IS NULL "
+                "                                  OR json_extract(s.args_json,'$.job_id') = json_extract(q.args_json,'$.job_id'))) "
+                "                            AND (SELECT COUNT(*) FROM job_queue a WHERE a.state='running') < ? "
+                "                           THEN ? ELSE 1 END) "
                 f"               AND (q.task NOT IN ({ph}) OR {_safe} OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
                 f"                     WHERE r.state='running' AND r.task IN ({ph}) "
                 f"                       AND NOT ({_safe_r}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다:
+                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다(10-20: light 다음에 burst 2개 추가):
                 #   lph, lph (카운트 조건) → admin (CASE 첫 THEN) → lph → light → ph, ph
                 #   한 칸이라도 어긋나면 조건이 조용히 뒤집힌다(2026-09-02에 실제로 어긋나
                 #   관리자 동시 2개 제한이 풀렸고, 회귀 테스트가 그걸 잡았다).
@@ -8001,6 +8012,8 @@ class Store:
                  + (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
                  + self._LIGHT_TASKS
                  + (int(os.environ.get("LIGHT_CONCURRENT_JOBS", "3") or 3),)
+                 + (int(os.environ.get("OWNER_BURST_IDLE_BELOW", "6") or 6),     # 전체 가동이 이 수 미만일 때만
+                    int(os.environ.get("OWNER_BURST_JOBS", "2") or 2))           # 같은 고객 다른 영상 동시 상한
                  + self._EXCLUSIVE_TASKS * 2)).fetchone()
             if not row:
                 return None

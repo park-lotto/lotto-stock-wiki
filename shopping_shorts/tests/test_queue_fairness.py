@@ -73,3 +73,38 @@ def test_owner_resolved_from_mix_job(store):
     store.enqueue("mix", {"job_id": "J1"})
     with store._conn() as c:
         assert c.execute("SELECT owner FROM job_queue WHERE task='mix'").fetchone()[0] == "42"
+
+
+# ── 놀 때 같은 고객의 다른 영상 동시 실행(2026-10-20 관제 246) ──────────────────
+def test_idle_allows_same_customer_different_videos(store):
+    """워커가 놀 때 같은 고객의 '다른 영상(job_id)' 2개는 동시에 돈다 — 실측 대기 119건의 원인."""
+    store.enqueue("render", {"customer_id": "7", "job_id": "A"})
+    store.enqueue("render", {"customer_id": "7", "job_id": "B"})
+    store.enqueue("render", {"customer_id": "7", "job_id": "C"})
+    assert store.claim_next() and store.claim_next(), "놀고 있는데 다른 영상 2번째를 못 집는다"
+    assert store.claim_next() is None, "상한(2)을 넘어 3개째를 집었다"
+
+
+def test_same_video_still_serial(store):
+    """같은 영상(job_id)은 단계 순서가 있어 여전히 하나씩."""
+    store.enqueue("mix", {"customer_id": "7", "job_id": "A"})
+    store.enqueue("render", {"customer_id": "7", "job_id": "A"})
+    assert store.claim_next()
+    assert store.claim_next() is None, "같은 영상의 다음 단계를 동시에 집었다"
+
+
+def test_busy_server_keeps_one_per_customer(store, monkeypatch):
+    """바쁠 땐(가동 수가 기준 이상) 종전대로 고객당 1개 — 공평 분배 유지."""
+    monkeypatch.setenv("OWNER_BURST_IDLE_BELOW", "1")
+    store.enqueue("render", {"customer_id": "7", "job_id": "A"})
+    store.enqueue("render", {"customer_id": "7", "job_id": "B"})
+    assert store.claim_next()
+    assert store.claim_next() is None, "바쁜데도 같은 고객이 두 자리를 먹었다"
+
+
+def test_unknown_job_id_running_blocks_burst(store):
+    """job_id 없는(판별 불가) 작업이 돌고 있으면 같은 고객 추가 동시 실행 안 함."""
+    store.enqueue("render", {"customer_id": "7"})
+    store.enqueue("render", {"customer_id": "7", "job_id": "B"})
+    assert store.claim_next()
+    assert store.claim_next() is None
