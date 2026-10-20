@@ -32,8 +32,9 @@
    "site": "tiktok.com",
    "depth": 1,
    "from": "z_bhop6thkc",
-   "done": false,
-   "found": 1
+   "done": true,
+   "found": 1,
+   "done_all": true
   },
   "https://www.instagram.com/wonder.picks.kr/": {
    "name": "@wonder.picks.kr",
@@ -68,7 +69,80 @@
    "site": "tiktok.com",
    "depth": 1,
    "from": "d7X0pxaaqQQ",
-   "done": false,
+   "done": true,
+   "found": 1,
+   "done_all": true
+  },
+  "https://www.facebook.com/Fox4DFW": {
+   "name": "Fox4DFW",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/alyciaevans1/": {
+   "name": "@alyciaevans1",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@chochopanda01": {
+   "name": "@chochopanda01",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCFSPyTDChWbOn7zvoa_xG_g": {
+   "name": "TensionSpot",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/onlygoodnewseveryday/": {
+   "name": "@onlygoodnewseveryday",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCFmofUYwZd1Ibf_O3PF71jg": {
+   "name": "FOX 32 Chicago",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCoT_jzQRkYChOGGSt5m-PSg": {
+   "name": "Urban Shorts ",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC66tpEweX6yiSYCgtgNIWrA": {
+   "name": "Auri",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7649281877244644615",
+   "done": true,
    "found": 1
   }
  },
@@ -1580,6 +1654,520 @@
      "https://www.youtube.com/shorts/dHOAafpWkwI",
      1,
      "막내의 패션 줏대 할 말 잃은 큰 형 #어서와한국은처음이지 ..."
+    ]
+   ]
+  },
+  "7630850206237494535": {
+   "id": "7630850206237494535",
+   "title": "이쁜 얼굴을 더 이쁘게 만들어주는 최고의 스타일리스트 #노하우 #꿀팁 #스타일링 #숏컷 #단발펌 ",
+   "views": 1300000,
+   "url": "https://www.tiktok.com/@shoutkjswing/video/7630850206237494535",
+   "channel": "https://www.tiktok.com/@shoutkjswing",
+   "from_channel": "https://www.tiktok.com/@shoutkjswing",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "B, let's go. Go, go, go, go.",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/p/DanS-YgiE50/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/kycutwilson/",
+     "name": "@kycutwilson",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by kycutwilson"
+    },
+    {
+     "href": "https://www.instagram.com/p/CGZnkSisluR/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/CGZnkSisluR/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "BLOWOUT + STYLING + HAIRCARE = 🔝🔝🔝 The brand new Hot ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DYE3jVaiKEs/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DYE3jVaiKEs/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "I think during my 7 years running this account I have ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DdW_1dDgf45/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DdW_1dDgf45/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "A quick 36 🍎"
+    },
+    {
+     "href": "https://www.facebook.com/terry.mcdonald.524/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/terry.mcdonald.524/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Terry Mcdonald (@terry.mcdonald.524) • Facebook"
+    },
+    {
+     "href": "https://www-fallback.instagram.com/reel/CmwPq-ZBqXm/",
+     "hits": 1,
+     "site": "www-fallback.instagram.com",
+     "key": "https://www-fallback.instagram.com/reel/CmwPq-ZBqXm/",
+     "name": "www-fallback.instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Waves on waves on waves!!! @ralizabeth has the most gorgeous ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DDKx-V0KmsI/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/morgane_martini/",
+     "name": "@morgane_martini",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by morgane_martini"
+    },
+    {
+     "href": "https://www.tiktok.com/@hershesons/video/7683954433759169825",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@hershesons",
+     "name": "@hershesons",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Bixie Haircut: Short Hair Inspo Between Bob and Pixie | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/colegiosevc1/?locale=pt_BR",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/colegiosevc1/?locale=pt_BR",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Colégio Sevc | Rio de Janeiro RJ"
+    },
+    {
+     "href": "https://www.instagram.com/p/DeBwR6XjLYy/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DeBwR6XjLYy/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "✭・merci・✫・゜. @messika @valeriemessika #ad"
+    },
+    {
+     "href": "https://www.tiktok.com/@c0rtex4/video/7647343278890749191",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@c0rtex4",
+     "name": "@c0rtex4",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "creatorsearchinsights #re4 #residentevil #gaming | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/p/STYLE-n-SMILE-100028611077519/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/p/STYLE-n-SMILE-100028611077519/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "STYLE n' SMILE | Tirana"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=AIOAlaACuv4",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC-rX_f6vueiRY0E75gBNQ0g",
+     "name": "Tracy Chapman",
+     "views": 147389201,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Tracy Chapman - Fast Car (Official Music Video)"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DS5c4fwCB71/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/huseyinpolatofficial/",
+     "name": "@huseyinpolatofficial",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by huseyinpolatofficial"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/oA_0QnNZ_B8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCucO9OMSH5piulyaDaaoqTw",
+     "name": "Nell Carmo",
+     "views": 23683,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Cabelo grosso com progressiva e curto, olha esse resultado bb!   #cabelo #chanel  #progressiva"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/p/DanS-YgiE50/",
+     1,
+     "Custom cut wig by @kycutwilson , fitted and styled but the ..."
+    ],
+    [
+     "https://www.instagram.com/p/CGZnkSisluR/",
+     1,
+     "BLOWOUT + STYLING + HAIRCARE = 🔝🔝🔝 The brand new Hot ..."
+    ],
+    [
+     "https://www.instagram.com/p/DYE3jVaiKEs/",
+     1,
+     "I think during my 7 years running this account I have ..."
+    ],
+    [
+     "https://www.instagram.com/p/DdW_1dDgf45/",
+     1,
+     "A quick 36 🍎"
+    ],
+    [
+     "https://www.facebook.com/terry.mcdonald.524/",
+     1,
+     "Terry Mcdonald (@terry.mcdonald.524) • Facebook"
+    ],
+    [
+     "https://www-fallback.instagram.com/reel/CmwPq-ZBqXm/",
+     1,
+     "Waves on waves on waves!!! @ralizabeth has the most gorgeous ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DDKx-V0KmsI/",
+     1,
+     "avahadams_ ✨ #makeup #beauty #tutorial Thanks @lisvdn for ..."
+    ],
+    [
+     "https://www.tiktok.com/@hershesons/video/7683954433759169825",
+     1,
+     "Bixie Haircut: Short Hair Inspo Between Bob and Pixie | TikTok"
+    ],
+    [
+     "https://www.facebook.com/colegiosevc1/?locale=pt_BR",
+     1,
+     "Colégio Sevc | Rio de Janeiro RJ"
+    ],
+    [
+     "https://www.instagram.com/p/DeBwR6XjLYy/",
+     1,
+     "✭・merci・✫・゜. @messika @valeriemessika #ad"
+    ],
+    [
+     "https://www.tiktok.com/@c0rtex4/video/7647343278890749191",
+     1,
+     "creatorsearchinsights #re4 #residentevil #gaming | TikTok"
+    ],
+    [
+     "https://www.facebook.com/p/STYLE-n-SMILE-100028611077519/",
+     1,
+     "STYLE n' SMILE | Tirana"
+    ],
+    [
+     "https://www.youtube.com/watch?v=AIOAlaACuv4",
+     1,
+     "Tracy Chapman - Fast Car (Official Music Video) - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DS5c4fwCB71/",
+     1,
+     "Not just a haircut. It's a transformation ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/oA_0QnNZ_B8",
+     1,
+     "Thick, short hair with a Brazilian blowout, look at this ..."
+    ]
+   ]
+  },
+  "7649281877244644615": {
+   "id": "7649281877244644615",
+   "title": "싱글벙글 해외 못말리는 반려동물 일상 #고양이 #말벌 #리트리버 #양떼  #웃긴동물영상 ",
+   "views": 1200000,
+   "url": "https://www.tiktok.com/@shoutkjswing/video/7649281877244644615",
+   "channel": "https://www.tiktok.com/@shoutkjswing",
+   "from_channel": "https://www.tiktok.com/@shoutkjswing",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "Wait, wait, wait, listen.",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/Fox4DFW/videos/golden-retrievers-1010-for-retrieving-010-for-situational-awarenesstwo-year-old-/976926014980906/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Fox4DFW",
+     "name": "Fox4DFW",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Golden Retrievers: 10/10 for retrieving, 0/10 for ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DZN_JuUhM6-/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/alyciaevans1/",
+     "name": "@alyciaevans1",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by alyciaevans1"
+    },
+    {
+     "href": "https://www.tiktok.com/@chochopanda01/video/7685048721226108191",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@chochopanda01",
+     "name": "@chochopanda01",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Dogs Bring New Friends Home: Funny Dog Reactions and Tips ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/u90toy4zdYo",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCFSPyTDChWbOn7zvoa_xG_g",
+     "name": "TensionSpot",
+     "views": 16899727,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Dog Brought Home a Surprise…"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DbRcVsUlJON/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/onlygoodnewseveryday/",
+     "name": "@onlygoodnewseveryday",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by onlygoodnewseveryday"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/z5_jPQPlrCk",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCFmofUYwZd1Ibf_O3PF71jg",
+     "name": "FOX 32 Chicago",
+     "views": 10889,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Golden retriever brings live armadillo into Oklahoma family's living room"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/KmQm8aemk-U",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCoT_jzQRkYChOGGSt5m-PSg",
+     "name": "Urban Shorts ",
+     "views": 2538,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Dog decided to keep everyone busy"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/G5S9M6O5Svs",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC66tpEweX6yiSYCgtgNIWrA",
+     "name": "Auri",
+     "views": 62,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "HE REGRETTED RUNNING AWAY INSTANTLY💀"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/Q_u6_soZhMU",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCMKxiH6WaCKNg3C3eypxtLw",
+     "name": "Daily Flash",
+     "views": 238,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Dog Carries Live Armadillo Into House, Chaos Ensues! #shorts"
+    },
+    {
+     "href": "https://www.tiktok.com/@doggo.fun.8/video/7688218720216419615",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@doggo.fun.8",
+     "name": "@doggo.fun.8",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "prankwithdog #dogfunny #dogprank #animls | dog | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@user32490942133695/video/7675917403510836502",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user32490942133695",
+     "name": "@user32490942133695",
+     "views": null,
+     "resolved": true,
+     "lang": "ko",
+     "title": "강아지가 뮬고 집에 데려온 서프라이즈 선물 | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@movi_min4/video/7690936654504152333",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@movi_min4",
+     "name": "@movi_min4",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "You Won't Believe This Fact Exists #viral #followme #foryou ..."
+    },
+    {
+     "href": "https://www.facebook.com/include.us.now/videos/bingo-the-golden-retriever-gave-his-oklahoma-family-the-surprise-of-a-lifetime-w/2213294589511217/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/include.us.now",
+     "name": "include.us.now",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Bingo the Golden Retriever gave his Oklahoma family the ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=757I3JD4y-o",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCFOq-dKCPu3PcmaCMEGDzTA",
+     "name": "WKRG",
+     "views": 3986,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "EXCLUSIVE: Semmes grocery deliverer finds woman having a stroke (News 5 exclusive)"
+    },
+    {
+     "href": "https://www.tiktok.com/@nochillcomedy1/video/7687918425242389782",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@nochillcomedy1",
+     "name": "@nochillcomedy1",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "My Dog Brought a New Friend Home… I Was Shocked ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.facebook.com/Fox4DFW/videos/golden-retrievers-1010-for-retrieving-010-for-situational-awarenesstwo-year-old-/976926014980906/",
+     2,
+     "Golden Retrievers: 10/10 for retrieving, 0/10 for ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DZN_JuUhM6-/",
+     2,
+     "Incase yall need a good laugh, here is my dog bringing and ..."
+    ],
+    [
+     "https://www.tiktok.com/@chochopanda01/video/7685048721226108191",
+     2,
+     "Dogs Bring New Friends Home: Funny Dog Reactions and Tips ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/u90toy4zdYo",
+     2,
+     "The Dog Brought Home a Surprise… - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DbRcVsUlJON/",
+     2,
+     "He Dropped an Armadillo in the House! (alyciaevans on IG ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/z5_jPQPlrCk",
+     2,
+     "Golden retriever brings live armadillo into Oklahoma ..."
+    ],
+    [
+     "https://m.youtube.com/shorts/KmQm8aemk-U",
+     2,
+     "The Dog decided to keep everyone busy - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/G5S9M6O5Svs",
+     2,
+     "HE REGRETTED RUNNING AWAY INSTANTLY💀 - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/Q_u6_soZhMU",
+     1,
+     "Dog Carries Live Armadillo Into House, Chaos Ensues! #shorts ..."
+    ],
+    [
+     "https://www.tiktok.com/@doggo.fun.8/video/7688218720216419615",
+     1,
+     "prankwithdog #dogfunny #dogprank #animls | dog | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@user32490942133695/video/7675917403510836502",
+     1,
+     "강아지가 뮬고 집에 데려온 서프라이즈 선물 | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@movi_min4/video/7690936654504152333",
+     1,
+     "You Won't Believe This Fact Exists #viral #followme #foryou ..."
+    ],
+    [
+     "https://www.facebook.com/include.us.now/videos/bingo-the-golden-retriever-gave-his-oklahoma-family-the-surprise-of-a-lifetime-w/2213294589511217/",
+     1,
+     "Bingo the Golden Retriever gave his Oklahoma family the ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=757I3JD4y-o",
+     1,
+     "EXCLUSIVE: Semmes grocery deliverer finds woman having a ..."
+    ],
+    [
+     "https://www.tiktok.com/@nochillcomedy1/video/7687918425242389782",
+     1,
+     "My Dog Brought a New Friend Home… I Was Shocked ..."
     ]
    ]
   }

@@ -126,7 +126,7 @@ def owner_of(href: str, text: str) -> dict:
             "lang": "ko" if HANGUL.search((name or "") + " " + text) else "foreign", "title": text}
 
 
-def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en", foreign: bool = False):
+def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en", foreign: bool = False, site: str | None = None):
     from tools.calcopy import lens as L
     from tools.calcopy.lens import SKIP_VIDEO, lens_page, lens_rows
     L.PROFILE = str(ROOT / ".lens_profile_snowball")   # 다른 세션이 .lens_profile 크롬을 쥐고 있으면 못 연다(10-21 실측) — 이 도구는 따로
@@ -142,7 +142,8 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
         for rnd in range(rounds):
             # 넓힐 채널 = 한국(기본) + --foreign 이면 해외 유튜브·틱톡 계정도(인스타 계정 목록은 로그인 없이 안 받아짐 — 10-21 실측)
             todo = [k for k, c in S["channels"].items() if k.startswith("http") and not c.get(f"done_{'all' if foreign else 'ko'}", c.get("done") if not foreign else False)
-                    and (c["lang"] == "ko" or (foreign and re.search(r"youtube\.com/(channel|@)|tiktok\.com/@", k)))]
+                    and (c["lang"] == "ko" or (foreign and re.search(r"youtube\.com/(channel|@)|tiktok\.com/@", k)))
+                    and (not site or site in k)]
             if not todo:
                 break
             for ck in todo:
@@ -238,9 +239,10 @@ if __name__ == "__main__":
     ap.add_argument("--min-views", type=int, default=1_000_000)
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--foreign", action="store_true", help="검증된 해외 유튜브·틱톡 계정도 넓힌다(그 계정의 다른 터진 영상 → 렌즈)")
+    ap.add_argument("--site", help="이 곳 계정만 넓힘(예 tiktok.com — 제품 원본이 틱톡·인스타에 몰림, 10-21)")
     ap.add_argument("--hl", default="en", help="렌즈 화면 언어 — en 이면 해외 원본이 더 잡힌다(ko 는 한국 재업 위주, 10-21 떠튜브)")
     ap.add_argument("--orig-only", action="store_true", help="앞 12초 한국어 나레 있는 영상은 렌즈 안 돌림(떠튜브처럼 전부 나레 훅이면 0편이 된다 — 10-21 실측 38/38)")
     a = ap.parse_args()
     if a.cmd == "run":
-        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl, a.foreign)
+        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl, a.foreign, a.site)
     report(Path(a.state))
