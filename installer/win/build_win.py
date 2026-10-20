@@ -336,8 +336,9 @@ def build_engine(stage: Path, engine: Path, report: dict) -> None:
     #   여기는 고객 프리셋 목록(claude_preset_names.json)마다 불러 표로 묶기만. 설정 화면·만들기가 이 표를 엔진 기본 팩 위에 얹는다(local_settings.packFor)
     sys.path.insert(0, str(ROOT.parent / "tools" / "claude_portal"))
     from preset_pack import pack_name
-    keys = [k for k in json.loads((ROOT.parent / "shopping_shorts" / "claude_preset_names.json").read_text(encoding="utf-8")) if not k.startswith("_")]
-    presets = [f"channel/{k.split('/', 1)[0]}/preset/{k.split('/', 1)[1]}" for k in keys]
+    #   모든 프리셋(이름 붙은 5개만이 아니다 — 10-20 실측 회원 목록 18개): 엔진 channel/*/preset/* 중 틀이 있는 것 전부
+    presets = sorted(p.parent.relative_to(engine).as_posix() for p in engine.glob("channel/*/preset/*/frame.json")
+                     if (p.parent / "manifest.json").is_file())
     code = ("import json,sys;sys.path.insert(0,'.');from tools.calcopy.preview_request import preset_defaults as D;"
             "print(json.dumps({p: D(p) for p in json.loads(sys.argv[1])}, ensure_ascii=False))")
     got = json.loads(subprocess.run([sys.executable, "-c", code, json.dumps(presets)], cwd=engine, capture_output=True, check=True,
