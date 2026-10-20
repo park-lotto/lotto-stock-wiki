@@ -96,6 +96,9 @@ def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
     return full, align
 
 
+END_PAD, HEAD_PAD = 0.15, 0.25      # 줄 경계 여유(초) — split_by_align 한 곳
+
+
 def split_by_align(S, align) -> list[tuple[float, float]]:
     """글자 시각으로 문장 경계 — 줄마다 마지막 문장부호의 (앞 글자 끝)까지, 다음 줄은 (뒤 글자 시작)부터. 소리 짐작 없음."""
     from tools.calcopy.engine import narr_align as NA
@@ -110,7 +113,10 @@ def split_by_align(S, align) -> list[tuple[float, float]]:
         if i == 0:
             raise StageError(f"줄 {l['id']} 끝에 문장부호가 없다 — tts 끝을 마침표로")
         a, b = slots[i - 1][1], slots[i - 1][2]
-        spans.append((start, a)); start = b
+        # 글자 시각은 소리보다 늦게 끝나고 늦게 시작한다(10-21 손태영 미나: '벨기에'→'기의', '대체'→'차에', 줄 끝 음절 잘림 —
+        # 받아쓰기로 맞춘 손 경계가 끝 +0.12~0.17·시작 −0.07~0.25초). 그 틈 안에서만 여유를 준다(넘치는 무음은 쉼 고치기가 줄인다).
+        end = min(b, a + END_PAD)
+        spans.append((start, end)); start = max(end, b - HEAD_PAD)
     return spans
 
 

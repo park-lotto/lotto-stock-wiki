@@ -180,8 +180,11 @@ def test_itssum_split_by_align_uses_line_end_periods():
                                                              {"id": "B2", "seg": "B", "kind": "tts", "tts": "셋째 줄?"}]}
     al = _align(RI.tts_text(S))
     spans = RI.split_by_align(S, al)
-    assert len(spans) == 3 and spans[0][0] == pytest.approx(0.2) and spans[0][1] < spans[1][0] < spans[1][1] < spans[2][0]
-    assert spans[1][0] - spans[0][1] == pytest.approx(0.3, abs=1e-6)     # 쉼표(첫 줄 안)는 경계가 아니다 — 마침표 쉼 0.3 만큼 띄움
+    assert len(spans) == 3 and spans[0][0] == pytest.approx(0.2) and spans[0][1] <= spans[1][0] < spans[1][1] <= spans[2][0]
+    # 쉼표(첫 줄 안)는 경계가 아니다. 경계 = 마침표 쉼(0.3초) 안에서 끝 +END_PAD·시작 −HEAD_PAD 여유(10-21 손태영 첫 음절 잘림) — 겹치지 않는다
+    slots = [s for s in __import__("tools.calcopy.engine.narr_align", fromlist=["x"]).punct_slots(RI.tts_text(S), al) if s[0] == "."]
+    a0, b0 = slots[0][1], slots[0][2]
+    assert spans[0][1] == pytest.approx(min(b0, a0 + RI.END_PAD)) and a0 < spans[0][1] <= b0 and spans[1][0] >= max(spans[0][1], b0 - RI.HEAD_PAD) - 1e-9
 
 
 def test_itssum_align_boundary_vs_silence_guess_on_real_tts():
