@@ -79,6 +79,8 @@
       { icon: "💬", text: "자막 스타일",     href: "/shortem_packs#caption", admin: true },
       { icon: "✨", text: "등장 효과팩",     href: "/shortem_packs#motion", admin: true },
       { icon: "🎞", text: "모션그래픽팩",    href: "/shortem_packs#mograph", admin: true },
+      // 모션 자산 작업대(관제 244, 2026-10-20 사장님 "눈으로 자산을 보고 실제로 구현하면서 키우는 페이지") — 서버 라우트(_mograph_bench_page)도 관리자만 연다.
+      { icon: "🛠", text: "모션 자산 작업대", href: "/mograph_bench", admin: true },
       { icon: "😀", text: "스티커·배지·도형", href: "/shortem_packs#deco", admin: true },
       { icon: "🖼", text: "템플릿",          href: "/shortem_packs#template", admin: true },
       { icon: "😂", text: "감정짤팩",        href: "/shortem_packs#meme", admin: true },

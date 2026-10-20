@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 WANT = ["sfx", "drawer", "bgm", "voice", "caption", "motion", "caption-parts", "mograph", "deco", "template", "meme", "font", "fxsample"]
-SIDEBAR = ["전체 보기", "효과음팩", "효과음 서랍", "배경음", "성우", "자막 스타일", "등장 효과팩", "모션그래픽팩", "스티커·배지·도형", "템플릿", "감정짤팩", "글꼴", "효과 견본(에펙)"]
+SIDEBAR = ["전체 보기", "효과음팩", "효과음 서랍", "배경음", "성우", "자막 스타일", "등장 효과팩", "모션그래픽팩", "모션 자산 작업대", "스티커·배지·도형", "템플릿", "감정짤팩", "글꼴", "효과 견본(에펙)"]
 
 JS = r"""async()=>{
   for(let i=0;i<80&&!window.__shortemPacksReady;i++)await new Promise(r=>setTimeout(r,250));

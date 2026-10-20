@@ -28552,6 +28552,187 @@ app.add_api_route("/shortem_packs.html", _shortem_packs_page, include_in_schema=
 app.add_api_route("/api/admin/shortem_packs", _shortem_packs_list, include_in_schema=False)
 
 
+# ── 🛠 모션 자산 작업대(관제 244, 2026-10-20 사장님 "내가 눈으로 우리 자산들을 보고 실제로 구현하면서 할 수 있는 페이지") — 관리자 전용 ──
+# 여기는 길목만. 장부 = mograph/ledger.py(load_parts·save_verdict) · 원본 찾기 = mograph/sources.py · 렌더 = mograph/render.py.
+# ★CHA 원본 HTML 은 회원 노출 금지(라이선스 ref_only) — ref 서빙 길도 관리자만, 저장소 밖 폴더(MOGRAPH_REF_DIR)에서만 읽는다.
+# 설계: docs/superpowers/specs/2026-10-20-모션자산작업대-design.md
+_MOGRAPH_SLUG = re.compile(r"^[a-z0-9][a-z0-9_-]{0,80}$")
+_MOGRAPH_OUT_FILES = {"out.mp4": "video/mp4", "sheet.png": "image/png", "render.log": "text/plain; charset=utf-8"}
+_MOGRAPH_REF_TYPES = {".html": "text/html; charset=utf-8", ".js": "application/javascript", ".css": "text/css", ".json": "application/json",
+                      ".md": "text/plain; charset=utf-8", ".woff2": "font/woff2", ".woff": "font/woff", ".ttf": "font/ttf",
+                      ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".mp4": "video/mp4", ".webp": "image/webp"}
+
+
+def _mograph_bench_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "mograph_bench.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _mograph_parts(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import ledger as _ml, sources as _ms, render as _mr
+    parts = _ml.load_parts()
+    for p in parts:
+        p["render"] = _mr.status(p["slug"]).get("state", "none")
+        if p.get("kind") == "scene":
+            impl = p.get("impl") or {}
+            p["ref_ok"] = _ms.piece_dir(impl.get("pack"), impl.get("folder")) is not None
+    return JSONResponse({"ok": True, "parts": parts, "tags": list(_ml.VERDICT_TAGS), "ref_dir": str(_ms.ref_dir()),
+                         "ref_dir_ok": _ms.ref_dir().is_dir(), "renders": _mr.recent(20)}, headers=_NOCACHE)
+
+
+async def _mograph_verdict(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import ledger as _ml
+    body = await request.json()
+    slug = str((body or {}).get("slug") or "")
+    if not _MOGRAPH_SLUG.match(slug):
+        return JSONResponse({"error": "부품 이름이 아닙니다"}, status_code=400)
+    try:
+        rec = _ml.save_verdict(slug, (body or {}).get("verdict"), (body or {}).get("tags") or [], (body or {}).get("note") or "")
+    except KeyError:
+        return JSONResponse({"error": "없는 부품"}, status_code=404)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, "part": rec}, headers=_NOCACHE)
+
+
+async def _mograph_render_start(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import ledger as _ml, render as _mr
+    body = await request.json()
+    slug = str((body or {}).get("slug") or "")
+    is_work = slug.startswith("work-") and (_mr.out_dir(slug) / "src" / "index.html").exists()
+    if not _MOGRAPH_SLUG.match(slug) or not (is_work or _ml.find_part(slug)):
+        return JSONResponse({"error": "없는 부품"}, status_code=404)
+    started = _mr.render_async(slug)
+    return JSONResponse({"ok": True, "started": started, "status": _mr.status(slug)}, headers=_NOCACHE)
+
+
+def _mograph_render_status(slug: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import render as _mr
+    if not _MOGRAPH_SLUG.match(slug or ""):
+        return JSONResponse({"error": "부품 이름이 아닙니다"}, status_code=400)
+    return JSONResponse(_mr.status(slug), headers=_NOCACHE)
+
+
+def _mograph_render_file(slug: str, name: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import render as _mr
+    if not _MOGRAPH_SLUG.match(slug or "") or name not in _MOGRAPH_OUT_FILES:
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    path = _mr.out_dir(slug) / name
+    if not path.exists():
+        return JSONResponse({"error": "아직 없음"}, status_code=404)
+    return FileResponse(str(path), media_type=_MOGRAPH_OUT_FILES[name], headers=_NOCACHE)
+
+
+def _mograph_ref_file(pack: str, slug: str, path: str, request: Request):
+    """원본 조각 파일(관리자 전용). brand/… 는 조각 폴더에 없으면 팩의 brand 폴더에서 — CHA 규격(README: brand/ 를 조각에 복사해 쓴다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import sources as _ms
+    piece = _ms.piece_dir(pack, slug)
+    if not piece:
+        return JSONResponse({"error": "없는 조각"}, status_code=404)
+    rel = (path or "index.html").replace("\\", "/")
+    if rel.startswith("/") or ".." in rel.split("/"):
+        return JSONResponse({"error": "경로"}, status_code=400)
+    ext = os.path.splitext(rel)[1].lower()
+    if ext not in _MOGRAPH_REF_TYPES:
+        return JSONResponse({"error": "허용 안 된 파일"}, status_code=404)
+    cands = [piece / rel]
+    if rel.startswith("brand/") and _ms.brand_dir(pack):
+        cands.append(_ms.brand_dir(pack) / rel[len("brand/"):])
+    for p in cands:
+        try:
+            p.resolve().relative_to(_ms.ref_dir().resolve())
+        except ValueError:
+            continue
+        if p.is_file():
+            if ext == ".html":
+                # 미리보기용 한 줄: HyperFrames 런타임이 만들어 두는 window.__timelines 를 빈 객체로 미리 둔다(조각은 __timelines["slug"]=tl 로 직접 쓴다 —
+                # 런타임 없는 iframe 에선 undefined 라 "Cannot set properties of undefined" 로 죽는다, 2026-10-20 실측). 원본 파일은 안 바꾼다.
+                html = p.read_text(encoding="utf-8", errors="replace")
+                html = html.replace("<head>", "<head><script>window.__timelines=window.__timelines||{};</script>", 1)
+                return HTMLResponse(html, headers=_NOCACHE)
+            return FileResponse(str(p), media_type=_MOGRAPH_REF_TYPES[ext], headers=_NOCACHE)
+    return JSONResponse({"error": "없는 파일"}, status_code=404)
+
+
+_MOGRAPH_WORK_ID = re.compile(r"^work-[0-9a-f]{10}$")
+
+
+async def _mograph_work_build(request: Request):
+    """조립대: 대사 줄 + 상품 정보 + 프리셋 → 작업 폴더(src/index.html 하나). 미리보기·렌더가 같은 파일을 읽는다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import compose as _mc
+    body = await request.json() or {}
+    lines = [str(x) for x in (body.get("lines") or []) if str(x).strip()][:12]
+    try:
+        w = _mc.build_work(lines, body.get("product") or {}, str(body.get("preset") or "shop-basic"))
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+    return JSONResponse({"ok": True, "id": w["id"], "plan": w["plan"], "meta": w["meta"]}, headers=_NOCACHE)
+
+
+def _mograph_works(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import compose as _mc, ledger as _ml
+    return JSONResponse({"ok": True, "works": _mc.list_works(), "presets": _ml.load_presets()}, headers=_NOCACHE)
+
+
+def _mograph_work_file(wid: str, path: str, request: Request):
+    """작업물 src 파일(미리보기 iframe 용) — index.html·vendor·fonts 만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.mograph import render as _mr
+    if not _MOGRAPH_WORK_ID.match(wid or ""):
+        return JSONResponse({"error": "작업 번호가 아닙니다"}, status_code=404)
+    rel = (path or "index.html").replace("\\", "/")
+    ext = os.path.splitext(rel)[1].lower()
+    if rel.startswith("/") or ".." in rel.split("/") or ext not in (".html", ".js", ".otf", ".ttf", ".woff2", ".png", ".jpg"):
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    p = _mr.out_dir(wid) / "src" / rel
+    if not p.is_file():
+        return JSONResponse({"error": "없는 파일"}, status_code=404)
+    mt = {".html": "text/html; charset=utf-8", ".js": "application/javascript", ".otf": "font/otf", ".ttf": "font/ttf",
+          ".woff2": "font/woff2", ".png": "image/png", ".jpg": "image/jpeg"}[ext]
+    return FileResponse(str(p), media_type=mt, headers=_NOCACHE)
+
+
+app.add_api_route("/api/admin/mograph/work", _mograph_work_build, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/mograph/works", _mograph_works, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/work/{wid}/src/{path:path}", _mograph_work_file, include_in_schema=False)
+app.add_api_route("/mograph_bench", _mograph_bench_page, include_in_schema=False)
+app.add_api_route("/mograph_bench.html", _mograph_bench_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/mograph/parts", _mograph_parts, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/verdict", _mograph_verdict, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/mograph/render", _mograph_render_start, methods=["POST"], include_in_schema=False)
+app.add_api_route("/api/admin/mograph/render/{slug}", _mograph_render_status, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/out/{slug}/{name}", _mograph_render_file, include_in_schema=False)
+app.add_api_route("/api/admin/mograph/ref/{pack}/{slug}/{path:path}", _mograph_ref_file, include_in_schema=False)
+
+
 # ── 효과 견본(2026-10-04, 관제 118) — 관리자 전용 ───────────────────────────
 # 에펙으로 만든 효과 견본 영상(스크립트 견본 + 에펙 기본 글자 프리셋)을 카테고리별로 본다.
 # 영상·목록(manifest.json)은 git 밖 data/fx_samples 에 둔다 — 견본이 늘어도 배포가 필요 없다

@@ -952,6 +952,77 @@
    "검사도구": "shortem_client/test/e2e_make.js",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "모션 부품·레퍼런스·프리셋 장부(목록·라이선스·판정·실적) — 관제 244",
+   "주인": [
+    "shopping_shorts/mograph/ledger.py:load_parts",
+    "shopping_shorts/mograph/ledger.py:save_verdict"
+   ],
+   "시그니처": [
+    "def load_parts\b",
+    "def save_verdict\b",
+    "VERDICT_TAGS\\s*="
+   ],
+   "소비처": [
+    "작업대 /api/admin/mograph/parts·verdict",
+    "(2차) 프리셋 추천·조립대"
+   ],
+   "검사도구": "tools/mograph/check_bench.py --verdict",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "모션 원본 소스(CHA 등) 찾기·메타 읽기 — 관제 244",
+   "주인": [
+    "shopping_shorts/mograph/sources.py:scan_sources"
+   ],
+   "시그니처": [
+    "def scan_sources\b",
+    "PACKS\\s*=\\s*\\{"
+   ],
+   "소비처": [
+    "장부 동기화",
+    "ref 서빙(_mograph_ref_file)",
+    "렌더 폴더 준비"
+   ],
+   "검사도구": "tools/mograph/check_bench.py(카드 수=장부 수)",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "모션 렌더(HyperFrames → mp4 → 프레임 시트 → 시간 기록) — 관제 244",
+   "주인": [
+    "shopping_shorts/mograph/render.py:render_part"
+   ],
+   "시그니처": [
+    "def render_part\b",
+    "def contact_sheet\b",
+    "HF_VERSION\\s*="
+   ],
+   "소비처": [
+    "작업대 [렌더]·작업물 렌더"
+   ],
+   "검사도구": "tools/mograph/check_bench.py --make --render(ffprobe 1080×1920·sheet.png)",
+   "과금": false,
+   "예외": {}
+  },
+  {
+   "이름": "대사 → 장면 시간표·장면 종류·할인가 계산 — 관제 244",
+   "주인": [
+    "shopping_shorts/mograph/plan.py:plan_from_lines"
+   ],
+   "시그니처": [
+    "def plan_from_lines\b",
+    "MIN_BY_TYPE\\s*=",
+    "SCENE_ORDER\\s*="
+   ],
+   "소비처": [
+    "compose.build_work(미리보기·렌더가 같은 index.html)"
+   ],
+   "검사도구": "tests/test_mograph_bench.py(할인가 계산·최소 길이)",
+   "과금": false,
+   "예외": {}
   }
  ]
 }

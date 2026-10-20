@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모션 자산 작업대 · 숏템메이커</title>
+<!-- 🛠 모션 자산 작업대(관제 244, 2026-10-20 사장님 "내가 눈으로 우리 자산들을 보고 실제로 구현하면서 할 수 있는 페이지") — 관리자 전용.
+     ★여기엔 부품 목록·모양을 적지 않는다. 목록·판정 = /api/admin/mograph/parts(mograph/ledger.py) / overlay 그림 = motion-graphics-pack.js /
+       scene 그림 = 원본 조각을 같은 출처 iframe 으로 열어 __timelines[slug] 를 작업대가 돌린다 / 작업물 = /api/admin/mograph/work(mograph/compose.py).
+     사용성 원칙(10-20 사장님 "사용자가 영상과 자료들을 편하게 만들 수 있게"): 만들기 탭은 칸 채우고 버튼 하나, 레퍼런스는 옆에 붙어 보인다, 어려운 값은 기본값. -->
+<style>
+  :root{--bg:#0a0f0d;--panel:#0f1512;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#37e0bd;--warn:#e0b23a;--good:#9be36b;--bad:#ff8a8a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1600px;margin:0 auto;padding:22px 20px 90px}
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 12px}
+  .tabs{display:flex;gap:8px;margin:10px 0 16px}
+  .tab{font-size:16px;font-weight:700;padding:10px 20px;border-radius:12px;border:1px solid var(--line);background:var(--panel);cursor:pointer}
+  .tab.on{background:var(--accent);color:#06221b;border-color:var(--accent)}
+  .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+  .chip{border:1px solid var(--line);background:#0b1210;color:var(--txt);border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;user-select:none}
+  .chip.on{background:var(--accent);color:#06221b;border-color:var(--accent)} .chip:hover{border-color:var(--accent)}
+  .bar b{color:var(--sub);font-size:12px;margin-left:8px}
+  .layout{display:grid;grid-template-columns:1fr 420px;gap:16px;align-items:start}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;position:relative}
+  .card:hover,.card.sel{border-color:var(--accent)}
+  .card b{display:block;font-weight:700;margin:6px 0 2px;font-size:14px;line-height:1.3}
+  .card small{color:var(--sub);display:block}
+  .pv{position:relative;width:100%;aspect-ratio:1080/830;background:#000;border-radius:8px;overflow:hidden}
+  .pv.v{aspect-ratio:1/1}
+  .pv iframe{position:absolute;left:0;top:0;width:1080px;height:830px;border:0;transform-origin:0 0;pointer-events:none;background:#000}
+  .pv .mg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .pv .mg>div{width:70%;height:70%}
+  .pv canvas.shape{position:absolute;left:50%;top:50%;width:70%;height:52%;transform:translate(-50%,-50%)}
+  .pv .noref{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;text-align:center;padding:10px}
+  .badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+  .bd{font-size:11px;border-radius:99px;padding:1px 8px;border:1px solid var(--line);color:var(--sub)}
+  .bd.good{color:#06221b;background:var(--good);border-color:var(--good)} .bd.bad{color:#06221b;background:var(--bad);border-color:var(--bad)}
+  .bd.ref{color:var(--warn);border-color:var(--warn)} .bd.ours{color:var(--accent);border-color:var(--accent)}
+  .panel{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:13.5px;max-height:calc(100vh - 24px);overflow:auto}
+  .panel h2{margin:0 0 6px;font-size:18px} .panel h3{margin:14px 0 6px;font-size:13px;color:#bfe9ff}
+  .panel .pv{aspect-ratio:1080/830}
+  .panel .pv iframe{pointer-events:auto}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+  .btn{border:1px solid var(--line);background:#0b1210;color:var(--txt);border-radius:10px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .btn:hover{border-color:var(--accent)} .btn.pri{background:var(--accent);color:#06221b;border-color:var(--accent);font-size:16px;padding:12px 22px}
+  .btn.good{background:var(--good);color:#06221b;border-color:var(--good)} .btn.bad{background:var(--bad);color:#06221b;border-color:var(--bad)}
+  .btn:disabled{opacity:.5;cursor:default}
+  input[type=range]{width:100%}
+  textarea,input[type=text],input[type=number]{width:100%;background:#0b1210;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit}
+  textarea{min-height:120px;resize:vertical}
+  label.f{display:block;font-size:12px;color:var(--sub);margin:8px 0 2px}
+  .kv{display:grid;grid-template-columns:90px 1fr;gap:2px 8px;font-size:12.5px} .kv span:nth-child(odd){color:var(--sub)}
+  .hist{font-size:12px;color:var(--sub);margin-top:4px} .hist div{padding:2px 0;border-top:1px dashed var(--line)}
+  .err{color:var(--bad)} .ok{color:var(--good)}
+  /* 만들기 탭 */
+  .make{display:grid;grid-template-columns:420px 1fr 360px;gap:16px;align-items:start}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .box h2{margin:0 0 8px;font-size:18px}
+  .stage{position:relative;width:100%;aspect-ratio:9/16;background:#000;border-radius:12px;overflow:hidden;max-height:78vh;margin:0 auto}
+  .stage iframe{position:absolute;left:0;top:0;width:1080px;height:1920px;border:0;transform-origin:0 0;background:#000}
+  .stage .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);text-align:center;padding:20px;font-size:15px}
+  .steps{display:flex;gap:8px;margin:0 0 10px;font-size:13px;color:var(--sub)} .steps span{padding:3px 10px;border-radius:99px;border:1px solid var(--line)} .steps span.on{color:var(--accent);border-color:var(--accent)}
+  .refpin .pv{aspect-ratio:1080/830}
+  .refpin .pv iframe{pointer-events:auto}
+  .result video{width:100%;border-radius:10px;background:#000} .result img{width:100%;border-radius:10px;margin-top:8px;border:1px solid var(--line)}
+  @media(max-width:1100px){.layout,.make{grid-template-columns:1fr}.panel{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛠 모션 자산 작업대</h1>
+  <p class="lead">우리 모션 자산(부품·레퍼런스·프리셋)을 <b>움직이는 그대로</b> 보고, 좋음/별로를 찍고, 바로 작업물을 만들어 렌더해 본다. 개수·판정은 장부(parts.jsonl)를 그대로 읽은 값이다.</p>
+  <div class="tabs"><div class="tab on" data-tab="gallery">🧩 자산 갤러리</div><div class="tab" data-tab="make">🎬 만들기</div></div>
+
+  <div id="gallery">
+    <div class="bar" id="filters"></div>
+    <div class="layout">
+      <div><div id="count" class="lead"></div><div class="grid" id="grid"></div></div>
+      <div class="panel" id="detail"><h2>부품을 고르세요</h2><p class="lead">카드에 마우스를 올리면 움직이고, 누르면 여기에 자세히 뜹니다.</p></div>
+    </div>
+  </div>
+
+  <div id="make" style="display:none">
+    <div class="steps"><span class="on">① 프리셋·내용 넣기</span><span id="st2">② 미리보기</span><span id="st3">③ 영상 렌더</span><span id="st4">④ 시트 보고 판정</span></div>
+    <div class="make">
+      <div class="box">
+        <h2>① 내용 넣기</h2>
+        <div class="row" id="presets"></div>
+        <label class="f">상품 이름</label><input type="text" id="p_name" value="미니 무선 가습기">
+        <label class="f">브랜드·채널</label><input type="text" id="p_brand" value="숏템샵">
+        <div class="row" style="gap:12px"><div style="flex:1"><label class="f">정가(원)</label><input type="number" id="p_price" value="39900"></div><div style="flex:1"><label class="f">할인율(%) — 할인가는 자동 계산</label><input type="number" id="p_pct" value="35"></div></div>
+        <label class="f">특징 3가지(줄마다 하나)</label><textarea id="p_feat" style="min-height:70px">무소음 25dB
+USB-C 충전
+12시간 연속</textarea>
+        <label class="f">버튼 문구</label><input type="text" id="p_cta" value="지금 확인하기">
+        <label class="f">대사(줄마다 장면 하나 — 훅 · 상품 · 가격 · 특징 · 마무리 순)</label><textarea id="lines">이 가격에 이 성능? 진짜 됩니다
+휴대용 미니 가습기, 한 손에 쏙
+오늘만 이 가격
+조용하고 가볍고 밤새 촉촉
+지금 안 보면 후회합니다</textarea>
+        <div class="row" style="margin-top:12px"><button class="btn pri" id="btnMake">▶ 만들어 보기</button><span id="makeMsg" class="lead"></span></div>
+        <p class="lead">글자→초는 숏템메이커 말속도(edit_plan.speech_cps)로 잰다. TTS·배경음은 아직 안 붙는다(무음본).</p>
+      </div>
+      <div class="box">
+        <h2>② 미리보기 <small id="pvInfo" style="color:var(--sub);font-weight:400;font-size:12px"></small></h2>
+        <div class="stage" id="stage"><div class="hint">왼쪽 칸을 채우고 <b>▶ 만들어 보기</b>를 누르면 여기서 바로 움직입니다</div></div>
+        <div class="row"><input type="range" id="scrub" min="0" max="1000" value="0" disabled><span id="scrubT" class="lead">0.0초</span></div>
+        <div class="row"><button class="btn" id="btnPlay" disabled>⏸ 멈춤</button><button class="btn pri" id="btnRender" disabled>🎬 영상으로 렌더</button><span id="renderMsg" class="lead"></span></div>
+        <div class="result" id="result"></div>
+      </div>
+      <div class="box refpin">
+        <h2>레퍼런스</h2>
+        <div id="refpin"><p class="lead">갤러리 카드의 <b>이걸로 만들기</b>를 누르면 여기 붙어서 보면서 만들 수 있습니다.</p></div>
+        <h3 style="margin:14px 0 6px;font-size:13px;color:#bfe9ff">최근 작업물</h3>
+        <div id="works" class="lead"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/sidebar.js"></script>
+<script src="/scene-decoration-catalog.js"></script>
+<script src="/motion-graphics-pack.js"></script>
+<script>
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MG=window.MOTION_GRAPHICS,CAT=window.SCENE_DECORATION_CATALOG;
+const api=async(u,o)=>{const r=await fetch(u,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||r.status);return j;};
+let PARTS=[],TAGS=[],REFOK=false,SEL=null,PRESETS=[],CURWORK=null;
+const F={kind:'',status:'',verdict:'',pack:'',q:''};
+const KIND_KO={overlay:'얹는 효과',scene:'장면(원본 HTML)',transition:'전환',caption:'자막',preset:'프리셋'};
+const LIC_KO={ours:'우리 것',rewritten:'다시 짠 것',ref_only:'참고만(회원 금지)'};
+const lastV=p=>(p.verdicts||[]).slice(-1)[0];
+
+// ── 재생 엔진: 보이는 카드의 iframe 만 만들고, 마우스를 올린 것만 돈다(나머지는 대표 시각에 멈춤) ──
+const LIVE=new Map(); // iframe -> {slug,dur,playing,t0}
+function refUrl(p,file){const im=p.impl||{};return `/api/admin/mograph/ref/${im.pack}/${im.folder}/${file||'index.html'}`;}
+function mountScene(pv,p,interactive){
+  if(pv.querySelector('iframe'))return;
+  const f=document.createElement('iframe');f.src=refUrl(p);pv.appendChild(f);fitFrame(pv,f);
+  const dur=(p.duration_ms||6000)/1000,key=(p.key_at&&p.key_at[0])||0.5;
+  LIVE.set(f,{slug:p.slug,dur,key,playing:!!interactive,t0:performance.now(),p});
+}
+function fitFrame(pv,f){const w=pv.clientWidth||230;const k=w/1080;f.style.transform=`scale(${k})`;f.style.height=(pv.clientHeight/k)+'px';}
+function tlOf(f,slug){try{const w=f.contentWindow;return w&&w.__timelines&&(w.__timelines[slug]||Object.values(w.__timelines)[0]);}catch(e){return null;}}
+(function loop(){
+  const now=performance.now();
+  LIVE.forEach((s,f)=>{if(!f.isConnected){LIVE.delete(f);return;}const tl=tlOf(f,s.slug);if(!tl)return;
+    if(s.scrub!=null){tl.time(s.scrub);return;}
+    const t=s.playing?((now-s.t0)/1000)%s.dur:s.key;tl.time(t);f.dataset.t=t.toFixed(2);});
+  requestAnimationFrame(loop);
+})();
+const IO=new IntersectionObserver(es=>es.forEach(e=>{const pv=e.target;if(e.isIntersecting&&pv.dataset.scene){const p=PARTS.find(x=>x.slug===pv.dataset.scene);if(p&&p.ref_ok)mountScene(pv,p,false);}}),{rootMargin:'200px'});
+function setPlaying(pv,on){const f=pv.querySelector('iframe');if(!f)return;const s=LIVE.get(f);if(s){s.playing=on;s.t0=performance.now();}}
+
+// ── 갤러리 ──
+function filterChips(){
+  const packs=[...new Set(PARTS.map(p=>(p.src||{}).pack).filter(Boolean))];
+  const mk=(name,key,opts)=>`<b>${name}</b>`+opts.map(([v,l])=>`<span class="chip ${F[key]===v?'on':''}" data-k="${key}" data-v="${esc(v)}">${esc(l)}</span>`).join('');
+  document.getElementById('filters').innerHTML=
+    mk('종류','kind',[['','전부'],...Object.entries(KIND_KO).filter(([k])=>PARTS.some(p=>p.kind===k))])+
+    mk('라이선스','status',[['','전부'],...Object.entries(LIC_KO).filter(([k])=>PARTS.some(p=>(p.license||{}).status===k))])+
+    mk('판정','verdict',[['','전부'],['good','👍 좋음'],['bad','👎 별로'],['none','미판정']])+
+    mk('출처','pack',[['','전부'],['pack','모션그래픽팩'],...packs.map(x=>[x,x])])+
+    `<input type="text" id="q" placeholder="이름·설명 검색" value="${esc(F.q)}" style="width:180px;margin-left:8px">`;
+  document.querySelectorAll('#filters .chip').forEach(c=>c.onclick=()=>{F[c.dataset.k]=c.dataset.v;filterChips();renderGrid();});
+  document.getElementById('q').oninput=e=>{F.q=e.target.value;renderGrid();};
+}
+function visible(){return PARTS.filter(p=>{
+  if(F.kind&&p.kind!==F.kind)return false;
+  if(F.status&&(p.license||{}).status!==F.status)return false;
+  const v=lastV(p);if(F.verdict==='none'&&v)return false;if((F.verdict==='good'||F.verdict==='bad')&&(!v||v.verdict!==F.verdict))return false;
+  const pk=(p.src||{}).pack||'pack';if(F.pack&&pk!==F.pack)return false;
+  if(F.q){const s=(p.slug+' '+(p.label||'')+' '+(p.what||'')+' '+(p.group||'')).toLowerCase();if(!s.includes(F.q.toLowerCase()))return false;}
+  return true;});}
+function badges(p){const v=lastV(p),st=(p.license||{}).status;return `<div class="badges"><span class="bd ${st==='ref_only'?'ref':'ours'}">${esc(LIC_KO[st]||st||'')}</span><span class="bd">${esc(p.ratio||'')}</span>`+(p.duration_ms?`<span class="bd">${(p.duration_ms/1000).toFixed(1)}초</span>`:'')+(v?`<span class="bd ${v.verdict}">${v.verdict==='good'?'👍 좋음':'👎 별로'}</span>`:'<span class="bd">미판정</span>')+(p.render==='done'?'<span class="bd ours">렌더됨</span>':'')+`</div>`;}
+function labelOf(p){if(p.kind==='overlay'&&MG&&p.impl&&p.impl.file.endsWith('motion-graphics-pack.js')){const it=MG.items[p.impl.key];if(it)return it.label;}
+  if(p.kind==='overlay'&&CAT&&p.impl){const d=(CAT.shapes||[]).find(s=>s.key===p.impl.key);if(d)return d.label;}return p.label||p.slug;}
+function previewHtml(p){
+  if(p.kind==='scene')return `<div class="pv" data-scene="${esc(p.slug)}">${p.ref_ok?'':'<div class="noref">원본 폴더 없음<br>'+esc((p.impl||{}).folder||'')+'</div>'}</div>`;
+  if(p.kind==='overlay'&&p.impl&&p.impl.file.endsWith('motion-graphics-pack.js'))return `<div class="pv v"><div class="mg"><div data-mg="${esc(p.impl.key)}"></div></div></div>`;
+  if(p.kind==='overlay')return `<div class="pv v"><canvas class="shape" width="192" height="144" data-shape="${esc(p.impl.key)}"></canvas></div>`;
+  return `<div class="pv v"><div class="noref">미리보기 없음</div></div>`;
+}
+function wire(root){
+  root.querySelectorAll('[data-mg]').forEach(el=>{if(!MG)return;el.className+=' scene-decoration';MG.poster(el,{mograph:el.dataset.mg,w:100},160);MG.clock(el,{mograph:el.dataset.mg},0);});
+  // 옛 도형 = scene-decoration-catalog.js shapeDraw[key](ctx, 반지름, 색) — shortem_packs.html 과 같은 호출
+  root.querySelectorAll('canvas.shape').forEach(c=>{try{const ctx=c.getContext('2d');const d=(CAT.shapes||[]).find(s=>s.key===c.dataset.shape);if(d&&CAT.shapeDraw[d.key]){ctx.translate(c.width/2,c.height/2);CAT.shapeDraw[d.key](ctx,c.height*0.36,d.color);}}catch(e){}});
+  root.querySelectorAll('.pv[data-scene]').forEach(pv=>{IO.observe(pv);pv.closest('.card,.panel,.refpin')?.addEventListener('mouseenter',()=>{const p=PARTS.find(x=>x.slug===pv.dataset.scene);if(p&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);}});pv.closest('.card')?.addEventListener('mouseleave',()=>setPlaying(pv,false));});
+}
+function renderGrid(){
+  const rows=visible();document.getElementById('count').textContent=`${rows.length}개 보임 · 전체 ${PARTS.length}개 (scene ${PARTS.filter(p=>p.kind==='scene').length} · overlay ${PARTS.filter(p=>p.kind==='overlay').length}) · 원본 폴더 ${REFOK?'연결됨':'없음'}`;
+  const g=document.getElementById('grid');
+  g.innerHTML=rows.map(p=>`<div class="card ${SEL===p.slug?'sel':''}" data-slug="${esc(p.slug)}">${previewHtml(p)}<b>${esc(labelOf(p))}</b><small>${esc(KIND_KO[p.kind]||p.kind)} · ${esc(p.group||'')}</small>${badges(p)}</div>`).join('');
+  wire(g);
+  g.querySelectorAll('.card').forEach(c=>c.onclick=()=>select(c.dataset.slug));
+}
+function select(slug){
+  SEL=slug;const p=PARTS.find(x=>x.slug===slug);if(!p)return;
+  document.querySelectorAll('#grid .card').forEach(c=>c.classList.toggle('sel',c.dataset.slug===slug));
+  const d=document.getElementById('detail'),v=lastV(p),src=p.src||{},im=p.impl||{};
+  d.innerHTML=`<h2>${esc(labelOf(p))}</h2>${badges(p)}
+    ${previewHtml(p)}
+    ${p.kind==='scene'?`<div class="row"><input type="range" id="dscrub" min="0" max="${p.duration_ms||6000}" value="0"><span id="dscrubT" class="lead">재생 중</span></div><div class="row"><button class="btn" id="dplay">⏸ 멈추고 끌어 보기</button></div>`:''}
+    <div class="kv"><span>종류</span><span>${esc(KIND_KO[p.kind]||p.kind)} · ${esc(p.group||'')}</span><span>출처</span><span>${src.url?`<a style="color:var(--accent)" target="_blank" href="${esc(src.url)}">${esc(src.pack||src.url)}</a> ${esc(src.span||'')}`:'—'}</span>
+      <span>라이선스</span><span>${esc(LIC_KO[(p.license||{}).status]||'')} — ${esc((p.license||{}).origin||'')}</span><span>코드</span><span>${esc(im.file||((im.pack||'')+'/'+(im.folder||'')))} ${im.key?'· '+esc(im.key):''}</span>
+      <span>크기·길이</span><span>${p.geometry?p.geometry.w+'×'+p.geometry.h:''} ${p.duration_ms?(p.duration_ms/1000).toFixed(1)+'초':''}</span></div>
+    ${p.what?`<h3>무엇을 하나</h3><div style="font-size:12.5px;color:var(--sub)">${esc(p.what)}</div>`:''}
+    ${p.how_to_use?`<h3>쓰는 법</h3><div style="font-size:12.5px;color:var(--sub)">${esc(p.how_to_use)}</div>`:''}
+    ${(p.vars||[]).length?`<h3>바꿀 수 있는 값</h3><div class="row">${p.vars.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`:''}
+    <h3>판정 — 사장님 눈으로</h3>
+    <div class="row" id="vtags">${TAGS.map(t=>`<span class="chip" data-t="${esc(t)}">${esc(t)}</span>`).join('')}</div>
+    <input type="text" id="vnote" placeholder="한 줄 메모(선택)">
+    <div class="row"><button class="btn good" id="vgood">👍 좋음</button><button class="btn bad" id="vbad">👎 별로</button><span id="vmsg" class="lead"></span></div>
+    ${(p.verdicts||[]).length?`<div class="hist">${p.verdicts.slice(-5).reverse().map(x=>`<div>${esc(x.at)} ${x.verdict==='good'?'👍':'👎'} ${esc((x.tags||[]).join(' '))} ${esc(x.note||'')}</div>`).join('')}</div>`:''}
+    <h3>해 보기</h3>
+    <div class="row"><button class="btn pri" id="useit">🎬 이걸로 만들기</button>${p.kind==='scene'?`<button class="btn" id="rbtn" ${p.ref_ok?'':'disabled'}>🎞 HyperFrames 렌더</button>`:''}<span id="rmsg" class="lead"></span></div>
+    <div class="result" id="rres"></div>`;
+  wire(d);
+  const pv=d.querySelector('.pv[data-scene]');if(pv&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);
+    const f=pv.querySelector('iframe'),s=LIVE.get(f);const sc=d.querySelector('#dscrub');
+    d.querySelector('#dplay').onclick=()=>{if(s.scrub==null){s.scrub=Number(sc.value)/1000;d.querySelector('#dplay').textContent='▶ 다시 재생';}else{s.scrub=null;s.playing=true;s.t0=performance.now();d.querySelector('#dplay').textContent='⏸ 멈추고 끌어 보기';}};
+    sc.oninput=()=>{s.scrub=Number(sc.value)/1000;d.querySelector('#dscrubT').textContent=(sc.value/1000).toFixed(2)+'초';d.querySelector('#dplay').textContent='▶ 다시 재생';};
+    setInterval(()=>{if(s.scrub==null&&f.dataset.t){sc.value=Math.round(f.dataset.t*1000);d.querySelector('#dscrubT').textContent=f.dataset.t+'초';}},200);}
+  d.querySelectorAll('#vtags .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  const verdict=async v=>{const tags=[...d.querySelectorAll('#vtags .chip.on')].map(c=>c.dataset.t);const m=d.querySelector('#vmsg');m.textContent='저장 중…';
+    try{const j=await api('/api/admin/mograph/verdict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug,verdict:v,tags,note:d.querySelector('#vnote').value})});
+      Object.assign(p,j.part);renderGrid();select(slug);   // 패널을 다시 그린 뒤에 메시지를 쓴다(먼저 쓰면 지워진다 — 실측)
+      document.querySelector('#detail #vmsg').innerHTML='<span class="ok">저장됨 — 장부에 '+p.verdicts.length+'건</span>';}catch(e){m.innerHTML='<span class="err">실패: '+esc(e.message)+'</span>';}};
+  d.querySelector('#vgood').onclick=()=>verdict('good');d.querySelector('#vbad').onclick=()=>verdict('bad');
+  d.querySelector('#useit').onclick=()=>{pinRef(p);showTab('make');};
+  const rb=d.querySelector('#rbtn');if(rb)rb.onclick=()=>startRender(slug,d.querySelector('#rmsg'),d.querySelector('#rres'),()=>{p.render='done';renderGrid();});
+  if(p.render==='done')showRender(slug,d.querySelector('#rres'));
+}
+async function startRender(slug,msg,res,done){
+  msg.textContent='렌더 시작…';try{await api('/api/admin/mograph/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug})});}catch(e){msg.innerHTML='<span class="err">'+esc(e.message)+'</span>';return;}
+  const t0=Date.now();const poll=async()=>{const st=await api('/api/admin/mograph/render/'+slug);
+    if(st.state==='done'){msg.innerHTML=`<span class="ok">완료 — HyperFrames ${st.hyperframes_s}초 · 전체 ${st.elapsed_s}초 · ${st.probe.w}×${st.probe.h} ${st.probe.frames}프레임 ${st.probe.duration}초</span>`;showRender(slug,res);done&&done();return;}
+    if(st.state==='error'){msg.innerHTML='<span class="err">실패: '+esc(st.error)+'</span>';return;}
+    msg.textContent=`렌더 중(${st.step||''}) ${Math.round((Date.now()-t0)/1000)}초…`;setTimeout(poll,1500);};poll();
+}
+function showRender(slug,res){const q='?t='+Date.now();res.innerHTML=`<video controls loop playsinline src="/api/admin/mograph/out/${slug}/out.mp4${q}"></video><img src="/api/admin/mograph/out/${slug}/sheet.png${q}" alt="프레임 시트"><div class="lead"><a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/out/${slug}/render.log">렌더 로그</a></div>`;}
+
+// ── 만들기 ──
+function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));document.getElementById('gallery').style.display=t==='gallery'?'':'none';document.getElementById('make').style.display=t==='make'?'':'none';if(t==='make')fitStage();}
+document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>showTab(x.dataset.tab));
+function pinRef(p){const r=document.getElementById('refpin');r.innerHTML=`<b style="display:block;margin-bottom:6px">${esc(labelOf(p))}</b>${previewHtml(p)}<div class="lead" style="margin-top:6px">${esc(p.how_to_use||p.what||'')}</div>`;wire(r);const pv=r.querySelector('.pv[data-scene]');if(pv&&p.ref_ok){mountScene(pv,p,true);setPlaying(pv,true);}}
+function fitStage(){const st=document.getElementById('stage'),f=st.querySelector('iframe');if(!f)return;const k=st.clientWidth/1080;f.style.transform=`scale(${k})`;}
+window.addEventListener('resize',fitStage);
+let STAGE=null; // {f,dur,playing,t0,scrub}
+(function stageLoop(){if(STAGE){const tl=tlOf(STAGE.f,'main');if(tl){const t=STAGE.scrub!=null?STAGE.scrub:(STAGE.playing?((performance.now()-STAGE.t0)/1000)%STAGE.dur:STAGE.last||0);STAGE.last=t;tl.time(t);const sc=document.getElementById('scrub');if(STAGE.scrub==null){sc.value=Math.round(t/STAGE.dur*1000);}document.getElementById('scrubT').textContent=t.toFixed(1)+'초 / '+STAGE.dur+'초';}}requestAnimationFrame(stageLoop);})();
+document.getElementById('btnMake').onclick=async()=>{
+  const m=document.getElementById('makeMsg');m.textContent='조립 중…';
+  const body={preset:(document.querySelector('#presets .chip.on')||{}).dataset?.id||'shop-basic',
+    lines:document.getElementById('lines').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    product:{name:document.getElementById('p_name').value,brand:document.getElementById('p_brand').value,price:Number(document.getElementById('p_price').value||0),discount_pct:Number(document.getElementById('p_pct').value||0),
+      features:document.getElementById('p_feat').value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,4),cta:document.getElementById('p_cta').value}};
+  try{const j=await api('/api/admin/mograph/work',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    CURWORK=j.id;m.innerHTML=`<span class="ok">${j.plan.scenes.length}장면 · ${j.plan.total}초</span>`;
+    document.getElementById('pvInfo').textContent=`${j.id} · ${j.plan.scenes.map(s=>s.type+' '+s.dur+'초').join(' → ')}`;
+    const st=document.getElementById('stage');st.innerHTML='';const f=document.createElement('iframe');f.src=`/api/admin/mograph/work/${j.id}/src/index.html`;st.appendChild(f);fitStage();
+    STAGE={f,dur:j.plan.total,playing:true,t0:performance.now(),scrub:null};
+    ['scrub','btnPlay','btnRender'].forEach(id=>document.getElementById(id).disabled=false);document.getElementById('result').innerHTML='';document.getElementById('renderMsg').textContent='';
+    document.getElementById('st2').classList.add('on');document.getElementById('st3').classList.remove('on');document.getElementById('st4').classList.remove('on');
+  }catch(e){m.innerHTML='<span class="err">'+esc(e.message)+'</span>';}
+};
+document.getElementById('scrub').oninput=e=>{if(!STAGE)return;STAGE.scrub=Number(e.target.value)/1000*STAGE.dur;document.getElementById('btnPlay').textContent='▶ 재생';};
+document.getElementById('btnPlay').onclick=()=>{if(!STAGE)return;if(STAGE.scrub!=null||!STAGE.playing){STAGE.scrub=null;STAGE.playing=true;STAGE.t0=performance.now()-(STAGE.last||0)*1000;document.getElementById('btnPlay').textContent='⏸ 멈춤';}else{STAGE.playing=false;document.getElementById('btnPlay').textContent='▶ 재생';}};
+document.getElementById('btnRender').onclick=()=>{if(!CURWORK)return;document.getElementById('st3').classList.add('on');startRender(CURWORK,document.getElementById('renderMsg'),document.getElementById('result'),()=>{document.getElementById('st4').classList.add('on');loadWorks();});};
+async function loadWorks(){try{const j=await api('/api/admin/mograph/works');PRESETS=j.presets||[];
+  document.getElementById('presets').innerHTML=PRESETS.map((p,i)=>`<span class="chip ${i===0?'on':''}" data-id="${esc(p.preset_id)}" title="${esc(p.use||'')}">${esc(p.label||p.preset_id)}</span>`).join('')||'<span class="lead">프리셋 장부 비어 있음</span>';
+  document.querySelectorAll('#presets .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#presets .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
+  document.getElementById('works').innerHTML=(j.works||[]).slice(0,8).map(w=>`<div>${esc(w.made)} · ${esc(w.product?.name||'')} · ${w.total}초 · ${w.render?.state==='done'?`<a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/out/${w.id}/out.mp4">mp4</a> · <a style="color:var(--accent)" target="_blank" href="/api/admin/mograph/out/${w.id}/sheet.png">시트</a>`:'미렌더'}</div>`).join('')||'아직 없음';}catch(e){}}
+
+(async()=>{
+  try{const j=await api('/api/admin/mograph/parts');PARTS=j.parts||[];TAGS=j.tags||[];REFOK=!!j.ref_dir_ok;}
+  catch(e){document.getElementById('count').innerHTML='<span class="err">목록 실패: '+esc(e.message)+'</span>';}
+  filterChips();renderGrid();loadWorks();window.__mographBenchReady=true;
+})();
+</script>
+</body>
+</html>
