@@ -12,7 +12,6 @@
 실행: py channel/hottemreport/현장썰하이브리드/렌즈쿠팡.py <이름> <사진1> [<사진2> …]
 결과: 같은 폴더 렌즈_<이름>.json (+ 마지막 화면 렌즈_<이름>.png)
 """
-import html as H
 import json
 import re
 import sys
@@ -20,48 +19,13 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = Path(__file__).resolve().parent
-PROFILE = str(HERE.parents[2] / ".lens_profile")   # 렌즈는 로그인이 필요 없다 — 다른 도구 프로필과 안 겹치게 따로
-_SKIP = re.compile(r"google|gstatic|coupangcdn|youtube|googleusercontent|instagram|blog\.naver|zdnet")
-
-
-def lens_rows(pg, img: str) -> list[dict]:
-    """사진 한 장 → [{href, text, shop}]. 결과는 <a href> 가 아니라 페이지 속 데이터에 "주소","제목" 쌍으로 들어 있다(10-18 실측)."""
-    pg.goto("https://www.google.com/?hl=ko", wait_until="domcontentloaded", timeout=40000)
-    pg.wait_for_timeout(1500)
-    for sel in ['div[aria-label="이미지로 검색"]', 'div[aria-label="Search by image"]']:
-        if pg.locator(sel).count():
-            pg.locator(sel).first.click()
-            break
-    pg.wait_for_timeout(1500)
-    # 페이지에 file 칸이 여럿이라 첫 칸에 넣으면 안 올라간다(10-18 실측) → '파일을 업로드'를 눌러 뜨는 선택 창으로
-    with pg.expect_file_chooser(timeout=15000) as fc:
-        pg.get_by_text(re.compile("파일을 업로드|upload a file", re.I)).first.click()
-    fc.value.set_files(img)
-    pg.wait_for_url(re.compile(r"(lens|search)"), timeout=40000)
-    pg.wait_for_timeout(7000)
-    for _ in range(6):
-        pg.mouse.wheel(0, 1500)
-        pg.wait_for_timeout(700)
-    raw = H.unescape(pg.content())
-    seen, rows = set(), []
-    for m in re.finditer(r'"(https?://[^"\s]+)","([^"]{4,200})"', raw):
-        h, t = m.group(1).split("\\u0026")[0].replace("\\u003d", "="), m.group(2)
-        shop = re.sub(r"^https?://(www\.|m\.)?", "", h).split("/")[0]
-        if h in seen or _SKIP.search(shop) or t.startswith("http"):
-            continue
-        seen.add(h)
-        rows.append({"href": h, "text": t, "shop": shop})
-    return rows
+sys.path.insert(0, str(HERE.parents[2]))
+from tools.calcopy.lens import lens_page, lens_rows  # noqa: E402  — 렌즈 주인 = tools/calcopy/lens.py(원본찾기와 같이 쓴다, 10-21)
 
 
 def main(name: str, imgs: list[str]):
-    from playwright.sync_api import sync_playwright
     per = {}
-    with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(PROFILE, headless=False, channel="chrome", locale="ko-KR",
-                                                   viewport={"width": 1366, "height": 900},
-                                                   args=["--disable-blink-features=AutomationControlled"])
-        pg = ctx.pages[0] if ctx.pages else ctx.new_page()
+    with lens_page() as pg:
         for img in imgs:
             img = str(Path(img).resolve())
             try:
@@ -71,7 +35,6 @@ def main(name: str, imgs: list[str]):
                 print("실패", Path(img).name, type(e).__name__, str(e)[:80])
             print(f"  {Path(img).name}: {len(per[img])}개")
         pg.screenshot(path=str(HERE / f"렌즈_{name}.png"))
-        ctx.close()
     agg = {}
     for img, rows in per.items():
         for r in rows:
