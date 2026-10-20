@@ -1,0 +1,1172 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    3.333
+   ],
+   "O1": [
+    3.433,
+    6.233
+   ],
+   "N2": [
+    6.333,
+    7.492
+   ],
+   "O2": [
+    7.592,
+    10.912
+   ],
+   "O3": [
+    11.012,
+    13.232
+   ],
+   "N3": [
+    13.332,
+    16.086
+   ],
+   "N4": [
+    16.186,
+    19.809
+   ],
+   "N5": [
+    19.909,
+    23.387
+   ],
+   "N6": [
+    23.487,
+    25.951
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "옷 갈아입기 귀찮다던",
+    "t0": 0.0,
+    "t1": 1.286,
+    "key": "귀찮다던",
+    "show": [
+     0.0,
+     1.286
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "고현정이",
+    "t0": 1.286,
+    "t1": 1.857,
+    "key": "고현정이",
+    "show": [
+     1.286,
+     1.857
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "입을 때마다",
+    "t0": 1.857,
+    "t1": 2.571,
+    "key": "때마다",
+    "show": [
+     1.857,
+     2.571
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "신난다네요?",
+    "t0": 2.571,
+    "t1": 3.333,
+    "key": "신난다네요?",
+    "show": [
+     2.571,
+     3.433
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "원래 옷 갈아입는 걸",
+    "t0": 3.433,
+    "t1": 4.763,
+    "show": [
+     3.433,
+     4.763
+    ]
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "별로 안 좋아해서",
+    "t0": 4.763,
+    "t1": 6.233,
+    "key": "좋아해서",
+    "show": [
+     4.763,
+     6.333
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 옷이길래?",
+    "t0": 6.333,
+    "t1": 7.492,
+    "key": "옷이길래?",
+    "show": [
+     6.333,
+     7.592
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "근데 퀄리티가",
+    "t0": 7.592,
+    "t1": 9.592,
+    "key": "퀄리티가",
+    "show": [
+     7.592,
+     9.592
+    ]
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "너무 좋다",
+    "t0": 9.592,
+    "t1": 10.912,
+    "key": "좋다",
+    "show": [
+     9.592,
+     11.012
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "입을 때마다",
+    "t0": 11.012,
+    "t1": 11.802,
+    "show": [
+     11.012,
+     11.802
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "신이 나네요",
+    "t0": 11.802,
+    "t1": 12.522,
+    "key": "신이",
+    "show": [
+     11.802,
+     12.522
+    ]
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "여기 옷은",
+    "t0": 12.522,
+    "t1": 13.232,
+    "show": [
+     12.522,
+     13.332
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 가죽 칼라에",
+    "t0": 13.332,
+    "t1": 14.332,
+    "key": "가죽",
+    "show": [
+     13.332,
+     14.332
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "반해서",
+    "t0": 14.332,
+    "t1": 14.761,
+    "key": "반해서",
+    "show": [
+     14.332,
+     14.761
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 14.761,
+    "t1": 16.086,
+    "key": "따라",
+    "show": [
+     14.761,
+     16.186
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "엉덩이까지 덮는",
+    "t0": 16.186,
+    "t1": 17.186,
+    "key": "엉덩이까지",
+    "show": [
+     16.186,
+     17.186
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넉넉한 기장이라",
+    "t0": 17.186,
+    "t1": 18.186,
+    "key": "넉넉한",
+    "show": [
+     17.186,
+     18.186
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "담요처럼 포근하더라고요",
+    "t0": 18.186,
+    "t1": 19.809,
+    "key": "담요처럼",
+    "show": [
+     18.186,
+     19.909
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "랄프 로렌 출신",
+    "t0": 19.909,
+    "t1": 20.766,
+    "key": "랄프",
+    "show": [
+     19.909,
+     20.766
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "디자이너가 뉴욕에서",
+    "t0": 20.766,
+    "t1": 22.052,
+    "key": "뉴욕에서",
+    "show": [
+     20.766,
+     22.052
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "차린 닐리로탄이래요",
+    "t0": 22.052,
+    "t1": 23.387,
+    "key": "닐리로탄이래요",
+    "show": [
+     22.052,
+     23.487
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 국내 공식 몰에선",
+    "t0": 23.487,
+    "t1": 24.916,
+    "key": "공식",
+    "show": [
+     23.487,
+     24.916
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "벌써 품절이래요",
+    "t0": 24.916,
+    "t1": 25.951,
+    "key": "품절이래요",
+    "show": [
+     24.916,
+     26.3
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "qjEXzAxkrvI.mp4",
+    "ss": 147.6,
+    "crop": [
+     560,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 케뎀 재킷 입고 정면 얼굴 근접(매장)",
+    "face": "고현정",
+    "text": "없음(아래 자막 크롭 밖)",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.716,
+    "dur": 1.716,
+    "over": 0.0
+   },
+   {
+    "src": "qjEXzAxkrvI.mp4",
+    "ss": 151.3,
+    "crop": [
+     440,
+     0,
+     820,
+     820
+    ],
+    "see": "고현정 케뎀 재킷 얼굴 근접(감탄 컷)",
+    "face": "고현정",
+    "text": "'감탄' 글자 x1280+ 크롭 밖",
+    "line": "N1",
+    "t0": 1.716,
+    "kind": "tts",
+    "t1": 3.433,
+    "dur": 1.717,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     480,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 옆얼굴(검정 셔츠) — 본인 내레이션 구간",
+    "face": "고현정",
+    "line": "O1",
+    "ss": 485.3,
+    "src": "qjEXzAxkrvI.mp4",
+    "t0": 3.433,
+    "kind": "orig",
+    "t1": 4.983,
+    "dur": 1.55,
+    "over": 0.0
+   },
+   {
+    "at": 1.55,
+    "ss": 487.9,
+    "crop": [
+     560,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 허리 벨트 컷(검정)",
+    "face": "없음",
+    "line": "O1",
+    "src": "qjEXzAxkrvI.mp4",
+    "t0": 4.983,
+    "kind": "orig",
+    "t1": 6.333,
+    "dur": 1.35,
+    "over": 0.0
+   },
+   {
+    "src": "qjEXzAxkrvI.mp4",
+    "ss": 139.0,
+    "crop": [
+     400,
+     0,
+     840,
+     840
+    ],
+    "see": "행거에서 꺼내는 케뎀 재킷(짙은 갈색 가죽 칼라)",
+    "face": "없음",
+    "text": "아래 자막 크롭 밖",
+    "line": "N2",
+    "t0": 6.333,
+    "kind": "tts",
+    "t1": 7.592,
+    "dur": 1.259,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     560,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 케뎀 재킷 입고 '근데 퀄리티가 너무 좋다'(입 맞음·원본 같은 샷)",
+    "face": "고현정",
+    "line": "O2",
+    "ss": 144.1,
+    "src": "qjEXzAxkrvI.mp4",
+    "t0": 7.592,
+    "kind": "orig",
+    "t1": 11.012,
+    "dur": 3.42,
+    "over": 0.0
+   },
+   {
+    "at": 0.0,
+    "crop": [
+     760,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 '입을 때마다 신이 나네요'(입 맞음, 검정 옷)",
+    "face": "고현정",
+    "line": "O3",
+    "ss": 492.78,
+    "src": "qjEXzAxkrvI.mp4",
+    "t0": 11.012,
+    "kind": "orig",
+    "t1": 13.332,
+    "dur": 2.32,
+    "over": 0.0
+   },
+   {
+    "src": "kd/p5.jpg",
+    "ss": 0,
+    "crop": [
+     760,
+     420,
+     900,
+     900
+    ],
+    "move": "in",
+    "see": "케뎀 가죽 칼라 근접(한섬 상품 사진)",
+    "face": "없음",
+    "line": "N3",
+    "t0": 13.332,
+    "kind": "tts",
+    "t1": 14.759,
+    "dur": 1.427,
+    "over": 0.0
+   },
+   {
+    "src": "kd/cp_main.jpg",
+    "ss": 0,
+    "crop": [
+     0,
+     0,
+     1334,
+     1334
+    ],
+    "move": "out",
+    "see": "쿠팡 9691066869 대표 사진(케뎀 재킷 전체)",
+    "face": "없음",
+    "line": "N3",
+    "t0": 14.759,
+    "kind": "tts",
+    "t1": 16.186,
+    "dur": 1.427,
+    "over": 0.0
+   },
+   {
+    "src": "kd/p2.jpg",
+    "ss": 0,
+    "crop": [
+     200,
+     780,
+     2000,
+     2000
+    ],
+    "move": "in",
+    "see": "케뎀 착용 앞면(모델 얼굴 크롭 밖) — 넉넉한 기장",
+    "face": "없음",
+    "line": "N4",
+    "t0": 16.186,
+    "kind": "tts",
+    "t1": 18.047,
+    "dur": 1.861,
+    "over": 0.0
+   },
+   {
+    "src": "kd/p3.jpg",
+    "ss": 0,
+    "crop": [
+     200,
+     760,
+     2000,
+     2000
+    ],
+    "move": "left",
+    "see": "케뎀 옆모습(모델 얼굴 크롭 밖)",
+    "face": "없음",
+    "line": "N4",
+    "t0": 18.047,
+    "kind": "tts",
+    "t1": 19.909,
+    "dur": 1.862,
+    "over": 0.0
+   },
+   {
+    "src": "kd/p4.jpg",
+    "ss": 0,
+    "crop": [
+     200,
+     600,
+     2000,
+     2000
+    ],
+    "move": "right",
+    "see": "케뎀 뒷면(가죽 칼라)",
+    "face": "없음(뒷머리)",
+    "line": "N5",
+    "t0": 19.909,
+    "kind": "tts",
+    "t1": 21.698,
+    "dur": 1.789,
+    "over": 0.0
+   },
+   {
+    "src": "kd/p1.jpg",
+    "ss": 0,
+    "crop": [
+     0,
+     700,
+     2400,
+     2400
+    ],
+    "move": "in",
+    "see": "케뎀 착용 전신(모델 얼굴 크롭 밖)",
+    "face": "없음",
+    "line": "N5",
+    "t0": 21.698,
+    "kind": "tts",
+    "t1": 23.487,
+    "dur": 1.789,
+    "over": 0.0
+   },
+   {
+    "src": "qjEXzAxkrvI.mp4",
+    "ss": 155.1,
+    "crop": [
+     520,
+     0,
+     800,
+     800
+    ],
+    "see": "고현정 케뎀 재킷 입고 매장(얼굴·몸, 끝)",
+    "face": "고현정",
+    "line": "N6",
+    "t0": 23.487,
+    "kind": "tts",
+    "t1": 26.3,
+    "dur": 2.813,
+    "over": 0.0
+   }
+  ],
+  "opos": [
+   {
+    "line": "O1",
+    "k": 0,
+    "src": "qjEXzAxkrvI.mp4",
+    "span": [
+     485.3,
+     488.1
+    ],
+    "t0": 3.433,
+    "t1": 6.233
+   },
+   {
+    "line": "O2",
+    "k": 0,
+    "src": "qjEXzAxkrvI.mp4",
+    "span": [
+     144.1,
+     147.42
+    ],
+    "t0": 7.592,
+    "t1": 10.912
+   },
+   {
+    "line": "O3",
+    "k": 0,
+    "src": "qjEXzAxkrvI.mp4",
+    "span": [
+     492.78,
+     495.0
+    ],
+    "t0": 11.012,
+    "t1": 13.232
+   }
+  ],
+  "end": 26.3
+ },
+ "placement": {
+  "reference": "oTi41R74WIY",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "옷 갈아입기 귀찮다던",
+    "t0": 0.0,
+    "t1": 1.286,
+    "key": "귀찮다던",
+    "show": [
+     0.0,
+     1.286
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "귀찮다던"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "고현정이",
+    "t0": 1.286,
+    "t1": 1.857,
+    "key": "고현정이",
+    "show": [
+     1.286,
+     1.857
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "고현정이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N1",
+    "j": 2,
+    "speaker": "narr",
+    "text": "입을 때마다",
+    "t0": 1.857,
+    "t1": 2.571,
+    "key": "때마다",
+    "show": [
+     1.857,
+     2.571
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N1",
+    "j": 3,
+    "speaker": "narr",
+    "text": "신난다네요?",
+    "t0": 2.571,
+    "t1": 3.333,
+    "key": "신난다네요?",
+    "show": [
+     2.571,
+     3.433
+    ],
+    "first": false,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "신난다네요?"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O1",
+    "j": 0,
+    "speaker": "orig",
+    "text": "원래 옷 갈아입는 걸",
+    "t0": 3.433,
+    "t1": 4.763,
+    "show": [
+     3.433,
+     4.763
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "pop",
+    "variant": ""
+   },
+   {
+    "line": "O1",
+    "j": 1,
+    "speaker": "orig",
+    "text": "별로 안 좋아해서",
+    "t0": 4.763,
+    "t1": 6.233,
+    "key": "좋아해서",
+    "show": [
+     4.763,
+     6.333
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "typing",
+    "emph": [
+     {
+      "word": "좋아해서"
+     }
+    ],
+    "variant": "typing"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "대체 어떤 옷이길래?",
+    "t0": 6.333,
+    "t1": 7.492,
+    "key": "옷이길래?",
+    "show": [
+     6.333,
+     7.592
+    ],
+    "first": true,
+    "lex": [
+     "ask"
+    ],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "옷이길래?"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "O2",
+    "j": 0,
+    "speaker": "orig",
+    "text": "근데 퀄리티가",
+    "t0": 7.592,
+    "t1": 9.592,
+    "key": "퀄리티가",
+    "show": [
+     7.592,
+     9.592
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "cut",
+    "emph": [
+     {
+      "word": "퀄리티가"
+     }
+    ],
+    "variant": "cut"
+   },
+   {
+    "line": "O2",
+    "j": 1,
+    "speaker": "orig",
+    "text": "너무 좋다",
+    "t0": 9.592,
+    "t1": 10.912,
+    "key": "좋다",
+    "show": [
+     9.592,
+     11.012
+    ],
+    "first": false,
+    "lex": [
+     "excl"
+    ],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 0,
+    "speaker": "orig",
+    "text": "입을 때마다",
+    "t0": 11.012,
+    "t1": 11.802,
+    "show": [
+     11.012,
+     11.802
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.first",
+    "enter": "fade",
+    "variant": ""
+   },
+   {
+    "line": "O3",
+    "j": 1,
+    "speaker": "orig",
+    "text": "신이 나네요",
+    "t0": 11.802,
+    "t1": 12.522,
+    "key": "신이",
+    "show": [
+     11.802,
+     12.522
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "신이"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "O3",
+    "j": 2,
+    "speaker": "orig",
+    "text": "여기 옷은",
+    "t0": 12.522,
+    "t1": 13.232,
+    "show": [
+     12.522,
+     13.332
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "orig.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "저도 가죽 칼라에",
+    "t0": 13.332,
+    "t1": 14.332,
+    "key": "가죽",
+    "show": [
+     13.332,
+     14.332
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "가죽"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "반해서",
+    "t0": 14.332,
+    "t1": 14.761,
+    "key": "반해서",
+    "show": [
+     14.332,
+     14.761
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N3",
+    "j": 2,
+    "speaker": "narr",
+    "text": "바로 따라 사 봤는데요",
+    "t0": 14.761,
+    "t1": 16.086,
+    "key": "따라",
+    "show": [
+     14.761,
+     16.186
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "따라"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "엉덩이까지 덮는",
+    "t0": 16.186,
+    "t1": 17.186,
+    "key": "엉덩이까지",
+    "show": [
+     16.186,
+     17.186
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "엉덩이까지"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "넉넉한 기장이라",
+    "t0": 17.186,
+    "t1": 18.186,
+    "key": "넉넉한",
+    "show": [
+     17.186,
+     18.186
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "넉넉한"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N4",
+    "j": 2,
+    "speaker": "narr",
+    "text": "담요처럼 포근하더라고요",
+    "t0": 18.186,
+    "t1": 19.809,
+    "key": "담요처럼",
+    "show": [
+     18.186,
+     19.909
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "랄프 로렌 출신",
+    "t0": 19.909,
+    "t1": 20.766,
+    "key": "랄프",
+    "show": [
+     19.909,
+     20.766
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "랄프"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "디자이너가 뉴욕에서",
+    "t0": 20.766,
+    "t1": 22.052,
+    "key": "뉴욕에서",
+    "show": [
+     20.766,
+     22.052
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "뉴욕에서"
+     }
+    ],
+    "variant": "pop"
+   },
+   {
+    "line": "N5",
+    "j": 2,
+    "speaker": "narr",
+    "text": "차린 닐리로탄이래요",
+    "t0": 22.052,
+    "t1": 23.387,
+    "key": "닐리로탄이래요",
+    "show": [
+     22.052,
+     23.487
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "variant": "pop"
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "그래서 국내 공식 몰에선",
+    "t0": 23.487,
+    "t1": 24.916,
+    "key": "공식",
+    "show": [
+     23.487,
+     24.916
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "공식"
+     }
+    ],
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "벌써 품절이래요",
+    "t0": 24.916,
+    "t1": 25.951,
+    "key": "품절이래요",
+    "show": [
+     24.916,
+     26.3
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "pop",
+    "emph": [
+     {
+      "word": "품절이래요"
+     }
+    ],
+    "variant": "pop"
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = oTi41R74WIY",
+   "효과음 0발(본보기 0) []",
+   "등장 {'pop': 18, 'typing': 1, 'cut': 3, 'fade': 1} · 강조 15/23"
+  ]
+ }
+}
