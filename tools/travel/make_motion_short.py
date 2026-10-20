@@ -111,7 +111,7 @@ def _align_words(line, heard):
     return out
 
 
-def stage_voice(sb, work):
+def stage_voice(sb, work, gem_tempo=1.12):
     """줄마다 음성 + 어절별 시작 시각. 키 있으면 미나(일레븐 정렬), 없으면 제미나이 대역 + GROQ 받아쓰기 정렬."""
     from dotenv import load_dotenv
     load_dotenv(ROOT / ".env", override=False)
@@ -138,7 +138,7 @@ def stage_voice(sb, work):
                 wav = work / ("tts_%d.wav" % i)
                 _gemini_tts(line, wav)
                 subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-ar", "44100", "-b:a", "192k", str(mp3)], check=True)
-            audio_post.finish_line_audio(str(mp3), tempo=MINA["tempo"] if mina else 1.12, silence_trim="mid")
+            audio_post.finish_line_audio(str(mp3), tempo=MINA["tempo"] if mina else gem_tempo, silence_trim="mid")
         dur = float(va._probe_duration(str(mp3)))
         if mina:
             words = tt.words_from_mp3(str(mp3))
@@ -367,6 +367,168 @@ window.__timelines["main"] = tl;
 """
 
 
+def stage_veo(sb, work, sec=4):
+    """공식 사진 → 세로 시작 화면(travel_build.start_frame) → Veo(ai_scene.generate, 여행 프롬프트 build_travel_prompt). 7컷 동시."""
+    from concurrent.futures import ThreadPoolExecutor
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env", override=False)
+    from shopping_shorts import ai_scene, travel_build as tb
+    work = Path(work)
+    shots = _shots(sb)
+
+    def one(i):
+        s = shots[i]
+        out = work / ("clip_%d.mp4" % i)
+        if out.exists():
+            return i, "있음"
+        fp, mode = tb.start_frame(s["official"]["path"], work / ("start_%d.png" % i))
+        prompt = ai_scene.build_travel_prompt(s["official"]["kind"], s["official"]["desc_en"], sec)
+        (work / ("prompt_%d.txt" % i)).write_text(prompt, encoding="utf-8")
+        t0 = __import__("time").time()
+        ai_scene.generate(fp, prompt, sec, str(out))
+        return i, "%.0f초(%s)" % (__import__("time").time() - t0, mode)
+    with ThreadPoolExecutor(7) as ex:
+        for i, msg in ex.map(one, range(len(shots))):
+            print("클립 %d %s" % (i + 1, msg), flush=True)
+
+
+# ── 2판(사장님 2026-10-20 "집중이 안 되고 정보를 받는 느낌이 없다 / 자막 너무 짧게 끊지 말고") ──
+# 한 문장 = 한 컷(Veo 영상) · 자막은 반 문장씩 통째로 · 주장마다 근거 카드(후기 N건, 숫자 올라감)
+def _halves(line):
+    """자막 덩어리 — 짧으면 한 덩어리, 길면 자연 경계에서 두 덩어리(한 화면 1~2초에 휙 지나가지 않게)."""
+    from shopping_shorts.video_assemble import simple_caption_split
+    n = len(line.replace(" ", ""))
+    if n <= 13:
+        return [line.split()]
+    parts = simple_caption_split(line, (n + 1) // 2 + 3)
+    while len(parts) > 2:                      # 셋 이상이면 짧은 쪽끼리 붙인다
+        k = min(range(len(parts) - 1), key=lambda j: len(parts[j]) + len(parts[j + 1]))
+        parts[k:k + 2] = [parts[k] + " " + parts[k + 1]]
+    return [p.split() for p in parts]
+
+
+def stage_build2(sb, work):
+    from shopping_shorts import video_assemble as va
+    sb, work = Path(sb), Path(work)
+    shots = _shots(sb)
+    voice = json.loads((work / "voice.json").read_text(encoding="utf-8"))
+    a = work / "assets"
+    a.mkdir(exist_ok=True)
+    fonts = ROOT / "shopping_shorts/static/fonts"
+    for f in ("SBAggroB.ttf", "Pretendard-ExtraBold.otf"):
+        shutil.copy(fonts / f, a / f)
+    shutil.copy(Path.home() / "숏템자료/모션그래픽엔진/work/2026-10-20_라면레시피/ramen/brand/gsap.min.js", a / "gsap.min.js")
+    for f in ("whoosh.wav", "pop.wav"):
+        shutil.copy(SFX / f, a / f)
+    disc = va.disclosure_layer_png({"disclosure": {"ad": True, "ai": True, "source": "여기어때"}}, str(a / "disclosure.png"))
+    e = html.escape
+    body, js, sfx, tl, auds = [], [], [], [], []
+    t = 0.0
+    for i, (s, v) in enumerate(zip(shots, voice)):
+        words, dur = v["words"], v["dur"]
+        end = t + dur + GAP + (0.5 if i == len(shots) - 1 else 0.0)
+        shutil.copy(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i))
+        shutil.copy(work / v["mp3"], a / v["mp3"])
+        body.append('<video id="vid%d" class="clip vid" src="assets/clip_%d.mp4" data-start="%.3f" data-duration="%.3f" '
+                    'data-track-index="1" muted playsinline></video>' % (i, i, t, end - t))
+        if i:
+            sfx.append((t - 0.02, "whoosh.wav", 0.2))
+        auds.append('<audio id="v%d" src="assets/%s" data-start="%.3f" data-duration="%.3f" data-track-index="10" data-volume="1"></audio>'
+                    % (i, v["mp3"], t, dur))
+        # 자막(반 문장씩 통째로)
+        groups, k = _halves(s["line"]), 0
+        caps, em = [], s["plan"]["emph"]
+        em_t = None
+        for gi, g in enumerate(groups):
+            idx = list(range(k, k + len(g)))
+            k += len(g)
+            c0 = t if gi == 0 else t + words[idx[0]]["start"]
+            c1 = (t + words[k]["start"]) if gi + 1 < len(groups) else end
+            cid = "c%d_%d" % (i, gi)
+            spans = []
+            for wi in idx:
+                w = words[wi]["word"]
+                if em and em in w and em_t is None:
+                    em_t = t + words[wi]["start"]
+                    p = w.find(em)
+                    spans.append('%s<span class="em"><i></i><span>%s</span></span>%s' % (e(w[:p]), e(em), e(w[p + len(em):])))
+                    js.append('tl.fromTo("#%s .em i",{scaleX:0},{scaleX:1,duration:0.2,ease:"power2.out"},%.3f);' % (cid, em_t))
+                    js.append('tl.set("#%s .em span",{color:"#111",webkitTextStroke:"0px #000"},%.3f);' % (cid, em_t))
+                else:
+                    spans.append(e(w))
+            body.append('<div id="%s" class="clip cap" data-start="%.3f" data-duration="%.3f" data-track-index="5"><div class="ln">%s</div></div>'
+                        % (cid, c0, c1 - c0, " ".join(spans)))
+            js.append('tl.fromTo("#%s .ln",{opacity:0,y:22},{opacity:1,y:0,duration:0.18,ease:"power2.out"},%.3f);' % (cid, c0))
+            caps.append({"t0": c0, "t1": c1, "words": [(words[w]["word"], t + words[w]["start"]) for w in idx]})
+        # 근거 카드 — 강조 단어가 들리는 순간, 숫자가 0에서 올라간다(레퍼런스 count-up)
+        ev = s.get("evidence")
+        if ev:
+            eid = "ev%d" % i
+            t_ev = (em_t or t + 0.3) + 0.05
+            thumb = ""
+            if ev.get("photo"):
+                thumb = '<img class="th" src="assets/%s">' % _img(ev["photo"], a / ("ev_%d.jpg" % i), 480)
+            body.append('<div id="%s" class="clip evc" data-start="%.3f" data-duration="%.3f" data-track-index="4">'
+                        '<div class="box">%s<div class="tx"><b class="pill">후기 <span class="num">0</span>건</b>'
+                        '<span class="it">%s</span></div></div></div>' % (eid, t_ev, end - t_ev, thumb, e(ev["item"])))
+            js.append('tl.fromTo("#%s .box",{opacity:0,y:40,scale:0.95,filter:"blur(6px)"},{opacity:1,y:0,scale:1,filter:"blur(0px)",duration:0.32,ease:"power3.out"},%.3f);' % (eid, t_ev))
+            js.append('(function(){var o={v:0},el=document.querySelector("#%s .num");tl.to(o,{v:%d,duration:0.6,ease:"power2.out",'
+                      'onUpdate:function(){el.textContent=Math.round(o.v).toLocaleString("ko-KR")}},%.3f);})();' % (eid, ev["count"], t_ev + 0.05))
+            sfx.append((t_ev - 0.068, "pop.wav", 0.28))
+        tl.append({"n": s["n"], "t": t, "dur": dur, "end": end, "split": t, "caps": caps, "emph": em})
+        t = end
+    auds += ['<audio id="s%d" src="assets/%s" data-start="%.3f" data-duration="%.2f" data-track-index="%d" data-volume="%.2f"></audio>'
+             % (k, f, max(0.0, t0), 0.5 if f.startswith("whoosh") else 0.3, 11 + k % 2, vol) for k, (t0, f, vol) in enumerate(sfx)]
+    doc = _PAGE2 % {"dur": "%.3f" % t, "body": "\n".join(body), "auds": "\n".join(auds), "grain": _GRAIN,
+                    "disc": '<img class="disc" src="assets/disclosure.png">' if disc else "", "js": "\n".join(js), "acc": ACCENT}
+    (work / "index.html").write_text(doc, encoding="utf-8")
+    (work / "timeline.json").write_text(json.dumps(tl, ensure_ascii=False, indent=1), encoding="utf-8")
+    print("만듦", work / "index.html", "길이 %.2f초, 컷 %d, 효과음 %d개" % (t, len(shots), len(sfx)))
+
+
+_PAGE2 = """<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=1080, height=1920">
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:"Aggro";src:url("assets/SBAggroB.ttf")}
+@font-face{font-family:"PretendardX";src:url("assets/Pretendard-ExtraBold.otf")}
+html,body{margin:0;background:#000}
+#root{position:relative;width:100%%;height:100%%;overflow:hidden;background:#000}
+.clip{position:absolute;inset:0}
+.vid{width:100%%;height:100%%;object-fit:cover;z-index:0}
+.cap,.evc{z-index:3}
+.shade{z-index:1;position:absolute;left:0;right:0;bottom:0;height:900px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55));pointer-events:none}
+.cap .ln{position:absolute;left:60px;right:60px;top:1420px;text-align:center;font-family:"Aggro";font-size:84px;line-height:1.25;color:#fff;
+ -webkit-text-stroke:.07em #000;paint-order:stroke fill;text-shadow:0 .05em .1em rgba(0,0,0,.7);word-break:keep-all}
+.em{position:relative;display:inline-block}
+.em i{position:absolute;left:-8px;right:-3px;top:4px;bottom:-2px;background:%(acc)s;border-radius:12px;z-index:-1;transform-origin:left center;display:block}
+.em span{position:relative}
+.evc .box{position:absolute;left:70px;right:70px;top:1110px;height:230px;box-sizing:border-box;display:flex;align-items:center;gap:26px;
+ padding:22px 28px;border-radius:30px;background:rgba(14,14,14,.72);box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.evc .th{width:186px;height:186px;object-fit:cover;border-radius:20px;flex:none;border:4px solid #fff}
+.evc .tx{display:flex;flex-direction:column;gap:12px;min-width:0}
+.evc .pill{align-self:flex-start;background:%(acc)s;color:#111;font-family:"PretendardX";font-size:44px;padding:6px 20px;border-radius:999px}
+.evc .it{font-family:"PretendardX";font-size:40px;line-height:1.25;color:#fff;letter-spacing:-.02em;word-break:keep-all}
+.grain{position:absolute;inset:0;z-index:2;background-image:url("%(grain)s");opacity:.06;mix-blend-mode:overlay;pointer-events:none}
+.disc{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none;z-index:4}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="%(dur)s" data-fps="30">
+%(body)s
+<div class="shade"></div>
+<div class="grain"></div>
+%(disc)s
+%(auds)s
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+%(js)s
+window.__timelines["main"] = tl;
+</script>
+</body></html>
+"""
+
+
 def stage_mix(work):
     """raw.mp4(목소리+효과음) + 배경음 — 목소리가 나올 때 배경음을 눌러(사이드체인) 깔고 -14 LUFS·TP -1.5 로."""
     work = Path(work)
@@ -472,6 +634,10 @@ if __name__ == "__main__":
     elif st == "check":
         sys.exit(0 if stage_check(sys.argv[2]) else 1)
     elif st == "voice":
-        stage_voice(sys.argv[2], sys.argv[3])
+        stage_voice(sys.argv[2], sys.argv[3], *(float(x) for x in sys.argv[4:5]))
+    elif st == "build2":
+        stage_build2(sys.argv[2], sys.argv[3])
+    elif st == "veo":
+        stage_veo(sys.argv[2], sys.argv[3])
     elif st == "build":
         stage_build(sys.argv[2], sys.argv[3])
