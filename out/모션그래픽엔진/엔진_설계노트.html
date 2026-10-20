@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모션그래픽 엔진 설계노트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1b1b1b;--sub:#5d5d5d;--line:#e2e0d8;--acc:#d4f527;--acc-ink:#3d4a00;--warn:#c2410c;--ok:#15803d;--tag:#eef0e6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--card:#1c1c1c;--ink:#ececec;--sub:#a3a3a3;--line:#2e2e2e;--acc:#d4f527;--acc-ink:#d4f527;--warn:#fb923c;--ok:#4ade80;--tag:#262a1c}}
+:root[data-theme="dark"]{--bg:#121212;--card:#1c1c1c;--ink:#ececec;--sub:#a3a3a3;--line:#2e2e2e;--acc:#d4f527;--acc-ink:#d4f527;--warn:#fb923c;--ok:#4ade80;--tag:#262a1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 16px 80px}
+header{border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:24px}
+h1{font-size:28px;margin:0 0 6px;font-weight:800}
+.meta{color:var(--sub);font-size:13px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 0}
+nav a{font-size:13px;padding:3px 10px;border:1px solid var(--line);border-radius:99px;color:var(--ink);text-decoration:none;background:var(--card)}
+h2{font-size:20px;margin:40px 0 12px;padding-left:10px;border-left:6px solid var(--acc)}
+h3{font-size:16px;margin:20px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.decide{border-left:6px solid var(--ok)}
+.warn{border-left:6px solid var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--sub);white-space:nowrap}
+.tbl{overflow-x:auto}
+.tbl table{min-width:680px}
+code,pre{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+code{background:var(--tag);padding:1px 5px;border-radius:4px;word-break:break-all}
+pre{background:var(--tag);padding:12px;border-radius:8px;overflow-x:auto;white-space:pre-wrap}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:99px;background:var(--tag);color:var(--acc-ink);font-weight:600;margin-right:4px}
+.t-ok{color:var(--ok);font-weight:600}.t-warn{color:var(--warn);font-weight:600}
+ol,ul{padding-left:22px;margin:6px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.cell b{display:block;font-size:14px;margin-bottom:4px}
+.cell small{color:var(--sub)}
+a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>모션그래픽 엔진 설계노트</h1>
+  <div class="meta">시작 2026-10-20 · 방식 C안(자동 생성 + 부품 팩) · 이 문서는 자료를 받을 때마다 갱신한다 · 기존 트랙 <code>모션그래픽팩</code>(관제 222) 이어서</div>
+  <nav>
+    <a href="#decide">결정</a><a href="#ledger">접수 장부</a><a href="#videos">영상별 사용법</a>
+    <a href="#assets">받은 자료</a><a href="#pattern">공통 원리</a><a href="#engine">엔진 구조</a>
+    <a href="#license">라이선스</a><a href="#review">페이블 검토</a><a href="#github">깃허브 61</a><a href="#youtube">유튜브 14</a><a href="#decide-boss">결정할 것</a><a href="#next">다음</a>
+  </nav>
+</header>
+
+<h2 id="decide">0. 정해진 것</h2>
+<div class="card decide">
+<ul>
+  <li><b>최종 목표 = 숯템메이커 같은 서비스</b>(2026-10-20 사장님): 내부 도구가 아니라 회원이 프리셋을 골라 단계별로 모션그래픽 영상을 만드는 서비스. 그래서 회원에게 팔 수 있는 자료만 엔진에 넣고, 100명이 같은 프리셋을 써도 결과가 갈라져야 한다.</li>
+  <li><b>C안</b>: 대사·음성·이미지를 넣으면 Opus가 코드로 모션그래픽 영상을 만든다(생성). 쓸 만한 효과는 떼어 <code>motion-graphics-pack.js</code> 부품으로 쌓는다(팩).</li>
+  <li><b>렌더 바탕 = HyperFrames</b>: 받은 CHA 소스 전부가 HyperFrames <code>0.8.105</code> 규격이고, 이 PC에 HyperFrames 스킬이 깔려 있다. Remotion은 엔진 몫에서 뺀다(같은 일을 하는 두 벌 금지).</li>
+  <li><b>판단 주인</b>: 효과 모양·시간표 = <code>shopping_shorts/static/motion-graphics-pack.js</code> 한 곳(기존). 생성 규칙(지침) = 엔진 지침 파일 한 곳(새로 만들 것).</li>
+  <li><b>프리셋 + 단계별 제작 페이지</b>(2026-10-20 사장님): 숯템메이커처럼 스타일을 정해 둔 <b>모션 프리셋</b>을 고르고, 그 프리셋대로 영상·작업물을 <b>단계별로</b> 만드는 엔진 페이지가 필요하다. 흐름·데이터 구조는 페이블 검토 뒤 확정.</li>
+  <li><b>모션그래픽만으로 완결</b>(2026-10-20 사장님): 실사 소스 없이도 모션그래픽만으로 완성 영상(쇼츠·설명·광고·자료)을 처음부터 끝까지 만들 수 있어야 한다. 기존 쇼츠에 얹는 보조 효과가 아니다 → 장면 유형 전부(훅·상품 화면·숫자·비교·리스트·전환·엔드카드·자막)와 소리까지 엔진이 책임진다.</li>
+  <li><b>원칙 유지</b>: 창작하지 말고 찾아서 쓴다 → 레퍼런스·공개 소스를 실측해 옮긴다. 출처에 없는 수치는 지어내지 않는다.</li>
+</ul>
+</div>
+
+<h2 id="ledger">1. 접수 장부</h2>
+<div class="tbl card">
+<table>
+<tr><th>#</th><th>자료</th><th>종류</th><th>무엇을 하나</th><th>엔진 칸</th><th>상태</th></tr>
+<tr><td>1</td><td>오퍼스5.5 모션그래픽 6가지 방법 (<code>wOF1EDpWxQw</code>)</td><td>영상</td><td>대사+초 / 레퍼런스 영상 / 음악 / 내레이션+이미지 / 광고 / 링크→광고</td><td>③ 연출</td><td class="t-ok">정리 완료</td></tr>
+<tr><td>2</td><td>JasonZhu.AI 프롬프트 라이브러리</td><td>사이트</td><td>작품 1,876 · 프롬프트 471(전문 207) · GitHub 데이터 공개</td><td>② 부품 / ③ 연출</td><td class="t-ok">정리 완료</td></tr>
+<tr><td>3</td><td>존코바 트랜지션 5가지 (<code>xNm4oo7s1PY</code>)</td><td>영상+노션</td><td>Newtake + Seedance 2.5 영상 생성 AI 프롬프트(코드 아님)</td><td>참고만</td><td class="t-warn">상업·2차 가공 금지</td></tr>
+<tr><td>4</td><td>커리어해커 알렉스 모션 172 (<code>gd1I5dIX3bo</code>)</td><td>영상+사이트+소스</td><td>HyperFrames 원본 소스 + 프롬프트(<code>prompt.md</code>) + 변수(<code>meta.json</code>)</td><td>② 부품 ★핵심</td><td class="t-ok">소스 73개 받음</td></tr>
+<tr><td>5</td><td>GPT PARK 15초 키네틱 타이포 (<code>jv8MtZ-T1iw</code>)</td><td>영상+블로그</td><td>Claude 프로젝트 지침 8섹션 전문(박자 싱크·자체 검수)</td><td>③ 연출 ★지침 골격</td><td class="t-ok">지침 전문 확보</td></tr>
+<tr><td>6</td><td>Deno Vox 스타일 스킬 (<code>NakjVT5OPWE</code>)</td><td>영상+스킬</td><td>Claude 스킬 + Higgsfield MCP로 Vox 콜라주 영상(영상 생성 AI, 유료 크레딧)</td><td>③ 연출(스타일 문법)</td><td class="t-ok">스킬 받음</td></tr>
+<tr><td>7</td><td>prompt-motion.com (CHA 소스 안에서 발견 · ⑧ 영상이 소개)</td><td>사이트</td><td>Opus 5.5 모션 작품 235개 + 프롬프트(231)·스킬(4). 11개 분류 필터</td><td>② 부품 / ③ 연출</td><td class="t-ok">구조 확인</td></tr>
+<tr><td>8</td><td>게으른빌더 클로드 디자인 스킬 5개 (<code>49Yc4rS6sIU</code>)</td><td>영상+가이드</td><td>DESIGN.md 기준 파일 · image-to-code · taste · agent-browser · web-design-guidelines</td><td>③ 연출(디자인 기준) / ④ 검사</td><td class="t-ok">설치 명령 확보</td></tr>
+<tr><td>9</td><td>게으른빌더 Recordly (<code>ej5dt4mEDD0</code>)</td><td>영상+가이드</td><td>화면 녹화에 자동 줌·커서 보정·배경 프레임·얼굴 버블 (무료 오픈소스 앱)</td><td>재료 만들기(시연 녹화)</td><td class="t-ok">정리 완료</td></tr>
+<tr><td>10</td><td>투더제이 prompt-motion 갤러리 소개 (<code>XCD3jLz1pj0</code>)</td><td>영상</td><td>prompt-motion.com 소개(7번과 같은 곳)</td><td>—</td><td class="t-ok">7번에 합침</td></tr>
+<tr><td>11</td><td>AI Matters 2문장 모션그래픽 (<code>yKIe7SbjabM</code>)</td><td>영상</td><td>2문장 프롬프트로 30초 쇼릴 — “세세한 장면 지정보다 2문장이 더 잘 나왔다”</td><td>③ 연출(시험 기준)</td><td class="t-ok">프롬프트 확보</td></tr>
+</table>
+</div>
+
+<h2 id="videos">2. 영상별 사용법 (자막·설명란·고정댓글 실측)</h2>
+
+<div class="card">
+<h3>① 오퍼스5.5로 모션그래픽 만들기 — PPT프로젝트 채널</h3>
+<p><span class="tag">설정</span>claude.ai · Opus 5.5 · 노력 <b>높음 또는 엑스트라</b>. 한 편에 10분~1시간 30분.</p>
+<ol>
+  <li><b>대사+초만 주기</b>: “(대사) / 11초 / 텍스트 없이 모션그래픽으로” → 대사 타이밍에 맞춰 화면 구성. 자막은 사람이 따로 얹음.</li>
+  <li><b>레퍼런스 영상 따라하기</b>: JasonZhu 사이트 → Opus 5.5 → 모션그래픽 → 영상을 받아 <b>파일째 올림</b> → “참고해서 만들어 줘, 주제는 물방울의 여행”. 핵심 주장: <i>높은 퀄리티 레퍼런스를 보여주는 게 최선</i>.</li>
+  <li><b>음악에 맞추기</b>: 음악 파일+가사 → 박자·단어에 맞춰 움직임. 가사를 화면에 보여주기 좋은 단어(키프레임·커브·픽셀)로 지음.</li>
+  <li><b>내레이션+이미지</b>: 15초 대본 → AI 음성 → GPT 이미지 6장 첨부 → “종이 찢어지는 레퍼런스처럼” / “복스 스타일로”. 이미지·음성 무료 → 클로드 구독 외 비용 0.</li>
+  <li><b>광고</b>: 내레이션+콘셉트 → 광고. “세로로” 한마디로 9:16 재조정.</li>
+  <li><b>웹사이트 링크→광고</b>: “이 브랜드 15초 광고, 콘셉트는 PPT 편집 화면에서 커서가 기능만으로 광고를 완성하고 슬라이드쇼로 열리며 끝”.</li>
+</ol>
+</div>
+
+<div class="card">
+<h3>② 무조건 작동하는 5가지 트랜지션 — 존코바 (34초)</h3>
+<p>트랜지션 이름: <b>Shape Morphing · Push · Pull Back · Liquid Transition · Swipe</b>(가장 많이 씀).</p>
+<p><span class="tag">고정댓글</span>노션 링크 → 사용법:</p>
+<ol>
+  <li>Newtake 접속 → 새 프로젝트 → 캐릭터 이미지를 캔버스에 올림</li>
+  <li>‘텍스트’ 노드: <code>무조건 컷 전환에서 아래 트랜지션 활용, Shape Morphing, Push, Pull Back, Liquid Transition, Swipe</code></li>
+  <li>‘비디오’ 노드에 텍스트·이미지 노드 연결 → Seedance 2.5 · 16:9 · 480p · 15s 로 생성 (본 프롬프트는 노션에 이미지로만 있음)</li>
+</ol>
+<p class="t-warn">엔진 관점: 코드 렌더가 아니라 영상 생성 AI다. 쓸 것은 트랜지션 이름 5개(용어)뿐 — CHA 소스에 같은 전환(풀백·스와이프·매치컷)이 코드로 있다. 자료는 상업·2차 가공 금지.</p>
+</div>
+
+<div class="card">
+<h3>③ 숏츠에 쓰는 모션그래픽 72개 무료 — 커리어해커 알렉스 (42초)</h3>
+<p><span class="tag">설명란</span>쓰는 법:</p>
+<ol>
+  <li>마음에 드는 모션 누르기 → ‘프롬프트 복사’</li>
+  <li>Claude에 붙여넣고 끝에 <code>HTML 파일 하나로 만들어줘</code> 한 줄 추가</li>
+  <li>문구·색만 바꿔 달라고 다시 요청 (노트북 데모 기준 약 8분, 결과는 매번 조금씩 다름)</li>
+</ol>
+<p><span class="tag">고정댓글</span><code>bit.ly/3VrCzoO</code> → 실제 페이지 <code>careerhackeralex.com/sharings/cha-motion-kit</code>. 지금은 <b>172개</b>로 늘었다(영상 당시 72개).</p>
+<p>분류: 리믹스 7 · 제너레이티브 5 · 화면 속 작업 20 · 창작 변환 21 · 녹화·설명 20 · 모션 용어 25 · 필름 5 · 컴포넌트 17 · 기법 20 · 트랜지션 9 · 타이포 23. 대부분 1080×830·30fps·무음, 일부 1080×1920.</p>
+</div>
+
+<div class="card">
+<h3>④ Claude로 15초 모션그래픽 — GPT PARK (7분 34초)</h3>
+<p><span class="tag">준비물</span>Claude 데스크탑 · Opus 5.5 유료 플랜 · 설정 → 기능 → <b>코드 실행 및 파일 생성</b> 켜기.</p>
+<ol>
+  <li>프로젝트 생성 → 지침(+)에 <b>8섹션 지침 전문</b>을 붙여넣음 (블로그에 전문, 아래 5절에 요약)</li>
+  <li>첫 메시지: 이름 · <b>출처(공식 사이트·소개글)</b> · 브랜드 색 · 분위기 · 사진·로고 사용 여부 · 비율</li>
+  <li>Claude가 바로 만들지 않고 <b>문구 표([인용]/[요약]/[창작] 표시)+팔레트·폰트·도형·모션 제안</b>을 먼저 보여줌 → “알아서 해 줘”면 이후 확인 없이 제작</li>
+  <li>음악: 무료 상업 음원 찾기 → 못 받으면 직접 작곡·합성. 128BPM · 8마디 = 정확히 15초</li>
+  <li>렌더 뒤 자체 검수: 마디별 대표 프레임(겹침·잘림·오탈자·대비) + ffprobe(해상도·길이·오디오) → MP4+WAV 전달</li>
+  <li>수정은 <b>장면 번호+바꿀 내용</b>으로, 같은 대화에서. 예: “3번 장면 두 번째 키워드를 ‘실전 가이드’로, 나머지는 바꾸지 마”</li>
+</ol>
+<p>핵심 문장: <b>고정 규칙은 지침에, 바뀌는 값은 메시지에.</b> 신뢰도의 핵심은 1번(출처만)과 7번(자체 검수).</p>
+<p><span class="tag">고정댓글</span>지침은 블로그 무료 · 그 외는 유료 멤버십(월 5,900원) 홍보 — 받을 것 없음.</p>
+</div>
+
+<div class="card">
+<h3>⑤ AI에게 모션그래픽 연출시키기 — Skill 활용 · Deno (10분 9초)</h3>
+<ol>
+  <li>Claude(채팅)에 영상 아이디어를 주고 구현 초안을 받음</li>
+  <li>초안을 Claude Code에 붙여넣고 <b>스킬 파일</b>을 함께 줌 (“ComfyUI의 워크플로 같은 설명서”)</li>
+  <li>Claude Code가 계획대로 영상 클립 → 내레이션 → 조립까지 자동 진행. 사람은 결과만 판단(감독)</li>
+  <li>후속편: 스킬은 그대로, 주제만 바꿔 다시 “구현해 줘”</li>
+  <li>손발 붙이기: Higgsfield 사이트 → MCP 주소 복사 → Claude 설정 → 커넥터 → 커스텀 커넥터 추가</li>
+</ol>
+<p>실측(본인 주장): 약 2분 영상 · 700크레딧(연간 플랜 약 3만 5천 원) · 1시간 · 프롬프트 2번. 주장: <b>핵심 자산은 스킬</b> — 계속 모으고 쌓아야 한다.</p>
+<p><span class="tag">고정댓글</span>Higgsfield 연동 링크 + 구글드라이브 스킬 폴더 → <b>받음</b>(3절).</p>
+<p class="t-warn">엔진 관점: 그림은 Higgsfield(유료 영상 생성)가 만든다. 우리가 가져올 것은 스킬 구조(스타일 키·블록 프롬프트·스토리 엔진·자동 진행 규칙)와 Vox 시각·움직임 문법이다.</p>
+</div>
+
+<div class="card">
+<h3>⑥ 무조건 설치해야 하는 클로드 디자인 스킬 — 게으른빌더 (46초, 조회 5.9만)</h3>
+<p>주장: 클로드 디자인이 밋밋한 건 모델이 약해서가 아니라 <b>따라 할 기준·참고 화면·스스로 확인할 방법</b>이 없어서다.</p>
+<p><span class="tag">고정댓글</span><code>lazyowen.com/guides/claude-design-top-5-skill</code> — 아래는 가이드 전문 실측(2026-10-20 이메일 등록으로 전체 열람, STEP 7개 · 약 28분).</p>
+<div class="tbl"><table>
+<tr><th>순서</th><th>도구</th><th>하는 일</th><th>설치</th></tr>
+<tr><td>1</td><td>Awesome DESIGN.md (MIT, 74개 사이트)</td><td>잘 만든 사이트의 색·글꼴·간격·버튼을 기준 파일로 고정. <b>효과가 가장 큼</b></td><td><code>curl -o DESIGN.md https://raw.githubusercontent.com/VoltAgent/awesome-design-md/main/design-md/linear.app/DESIGN.md</code></td></tr>
+<tr><td>2</td><td>image-to-code (taste-skill)</td><td>참고 화면을 먼저 만들고 → 분석 → 코드. 섹션마다 한 장</td><td><code>npx --yes skills@latest add https://github.com/Leonxlnx/taste-skill --skill "image-to-code" --agent claude-code --yes --copy</code></td></tr>
+<tr><td>3</td><td>design-taste-frontend (MIT)</td><td>AI 기본값(보라 그라데이션·카드 3장·Inter) 밀어내기. 다이얼 3개: VARIANCE 8 · MOTION_INTENSITY 6 · DENSITY 4</td><td><code>... --skill "design-taste-frontend" ...</code></td></tr>
+<tr><td>4</td><td>agent-browser (Vercel)</td><td>클로드가 크롬을 열어 캡처하고 스스로 고침</td><td><code>npx --yes skills@latest add vercel-labs/agent-browser ...</code> + <code>npm install -g agent-browser</code></td></tr>
+<tr><td>5</td><td>web-design-guidelines (Vercel)</td><td>배포 전 100+ 규칙 검사(접근성·애니메이션·<code>prefers-reduced-motion</code> 등)</td><td><code>npx --yes skills@latest add vercel-labs/agent-skills --skill "web-design-guidelines" ...</code></td></tr>
+</table></div>
+<p><b>STEP 7 한 흐름</b>(순서가 어긋나면 앞 단계 효과가 사라짐): ① DESIGN.md 읽고 기준 파악 → ② image-to-code로 참고 화면 먼저 만들고 분석 → ③ taste 기준으로 구현 → ④ agent-browser로 열어 캡처·수정 → ⑤ web-design-guidelines 검사·수정. 단계마다 한 줄 보고.</p>
+<p><b>자주 막히는 곳</b>: 스킬만 깔고 DESIGN.md를 안 두면 결과가 그대로 / <code>--skill</code> 없이 설치하면 스킬 10개+가 한꺼번에 들어옴 / 설치 후 클로드 코드 재시작 필요. FAQ: 다섯 개 전부 무료, 가장 크게 바뀌는 건 DESIGN.md 하나 / DESIGN.md는 로고·문구가 아니라 색·크기·간격 규칙이라 그대로 써도 되고, 색 하나만 브랜드 색으로 바꾸면 좋다.</p>
+<p class="meta">엔진 관점: 웹사이트용 도구지만 원리는 같다 — <b>1번(기준 파일)</b>은 우리 엔진의 “스타일 파일”로 그대로 쓴다(채널 스타일마다 DESIGN.md 1개). 4번은 우리가 이미 Playwright로 하는 일. 이 PC에는 다섯 개 모두 설치 안 됨(2026-10-20 확인: 스킬 폴더·agent-browser 명령 없음).</p>
+</div>
+
+<div class="card">
+<h3>⑦ Recordly — 화면 녹화를 모션 디자이너처럼 — 게으른빌더 (41초)</h3>
+<p><span class="tag">고정댓글</span><code>lazyowen.com/guides/recordly-screen-recorder-setup</code> (2026-09-27 기준 v1.4.0 · 이메일 등록으로 전문 열람, STEP 5개 · 약 17분)</p>
+<ul>
+  <li>무료 오픈소스 데스크톱 앱(GitHub <code>webadderallorg/Recordly</code>, 스타 31,472). 윈도우: <code>Recordly-windows-x64.exe</code> (Win10 빌드 19041+)</li>
+  <li>녹화를 멈추면 <b>커서 기록으로 자동 줌</b>이 잡힘 → 2~3개만 남기기. 커서 보정·클릭 바운스·모션 블러</li>
+  <li>배경(이미지·영상·색·그라데이션)·그림자·둥근 모서리·여백 기본 적용, 줌에 따라 커지는 얼굴 버블</li>
+  <li>9:16 쇼츠는 <b>녹화 전에 앱 창을 세로로 줄여 그 창만</b> 녹화 (전체 녹화 후 자르면 글자가 작아짐)</li>
+  <li>한계: 확장 마켓 중단(2026-08), 다른 앱 녹화본은 커서 기록이 없어 자동 줌 불가</li>
+</ul>
+<p class="t-warn">라이선스 AGPL 3.0 — 영상 만드는 데 쓰는 건 자유. 앱 코드를 우리 서비스에 넣으면 소스 공개 의무 → <b>엔진에 넣지 않고</b> 우리 시연 영상(숏템메이커 광고) 촬영 도구로만 쓴다. 자동 줌·커서 따라가기 <i>기법</i>은 CHA <code>cursor-autozoom</code>·<code>record-*</code> 소스로 부품화.</p>
+</div>
+
+<div class="card">
+<h3>⑧ 클로드 모션그래픽 230개+ 갤러리 — 투더제이 (17초)</h3>
+<p>prompt-motion.com 소개: 영상을 누르면 옆에 프롬프트 → 복사해 클로드에 넣고 따라 만들기. 새 영상 메일 구독. <b>영상 권리는 만든 사람</b>.</p>
+<p>실측(2026-10-20): 작품 <b>235개</b> (프롬프트 231 · 스킬 4). 분류: Product UI 102 · Phone 22 · Charts 33 · Diagrams 31 · Kinetic type 98 · Shapes 44 · Particles 43 · Characters 27 · Photos 23 · Music 51 · Code 21. “내 프로젝트용으로 프롬프트 바꾸기” 기능(<code>/customize</code>) 있음.</p>
+</div>
+
+<div class="card">
+<h3>⑨ Opus 5.5, 2문장 모션그래픽 — AI Matters (39초)</h3>
+<p><span class="tag">고정댓글 프롬프트</span></p>
+<pre>너가 얼마나 대단한 모션그래픽 디자이너인지 보여주는 30초 모션그래픽 영상을 만들어. 경력직 이력서용 쇼릴처럼 역동적으로, 전부 쏟아부어봐.</pre>
+<p>= JasonZhu의 최다 조회 프롬프트(“15-second … showreel for a résumé. go all out.”, 같은 문장 22편)의 한국어판. MCP·외부 API·영상 생성 AI 없이 키네틱 타이포·3D 파티클·데이터 시각화가 나옴.</p>
+<p>주장: <b>장면을 세세하게 지정한 프롬프트보다 2문장이 더 잘 나왔다.</b> → 엔진 시험 항목: “자유 지시” vs “장면표 지정” 같은 소재로 비교.</p>
+</div>
+
+<h2 id="assets">3. 받은 자료 (저장 위치 <code>C:\Users\TheRose\숏템자료\모션그래픽엔진\</code>)</h2>
+<div class="tbl card">
+<table>
+<tr><th>폴더</th><th>내용</th><th>파일</th><th>쓰는 법</th></tr>
+<tr><td><code>CHA\remix-7-source</code></td><td>리믹스 7 (UI 모프·토큰 버킷·링 탈출·오실로스코프·리소 인쇄·마커 메모·단어 건축)</td><td>28</td><td>작품마다 <code>index.html</code>(전체)·<code>prompt.md</code>(다시 만드는 프롬프트)·<code>meta.json</code>(변수). <code>npx -y hyperframes@0.8.105 render &lt;폴더&gt;</code></td></tr>
+<tr><td><code>CHA\generative-5-source</code></td><td>제너레이티브 5 (텍스트 리플로우·한글 ASCII·점균·리퀴드 글래스·산호 타이포)</td><td>22</td><td>시간 t만으로 매 프레임 계산(고정 시드) → 아무 시점이나 같은 화면</td></tr>
+<tr><td><code>CHA\immersive-61-source</code></td><td>화면 작업 20·창작 변환 21·녹화·설명 20</td><td>242</td><td><code>python3 scripts/motion-kit/immersive.py render &lt;이름&gt; [--media 녹화.mp4]</code></td></tr>
+<tr><td><code>Deno\vox\vox-motion-graphics</code></td><td>Vox 스킬 본체 + Vox 프롬프트 + 페이퍼 디오라마 문서</td><td>3</td><td>Higgsfield MCP 전제. 시각·움직임 어휘와 “스토리 엔진” 규칙만 추출</td></tr>
+<tr><td><code>Deno\seedance-director-SKILL.md</code></td><td>Seedance 2.0 연출 스킬(캐릭터 시트·스토리보드 2관문, 크레딧 표)</td><td>1 (470줄)</td><td>영상 생성 AI용 — 참고</td></tr>
+<tr><td><code>Deno\seedance25_prompt_guide</code> · <code>창작 파이프라인 구축 문서</code></td><td>Seedance 프롬프트 가이드 · 에이전트 창작 시스템 가이드</td><td>2</td><td>미독</td></tr>
+<tr><td><code>Deno\codex-telegram-...zip</code></td><td>텔레그램 비서 키트 — 모션그래픽과 무관</td><td>1</td><td>제외</td></tr>
+</table>
+</div>
+<p class="meta">CHA 아직 못 받은 것: 61개 MP4 ZIP(미리보기용), 모션 용어 25·컴포넌트 17·기법 20·트랜지션 9·타이포 23·필름 5는 페이지에 프롬프트만 있음(소스 ZIP 없음) → 다음 단계에서 페이지에서 프롬프트 수집.</p>
+
+<h2 id="pattern">4. 다섯 영상의 공통 원리</h2>
+<div class="grid">
+  <div class="cell"><b>레퍼런스가 품질을 정한다</b><small>영상째 올리기(①), 공개 소스 그대로(③), 스타일 키 이미지(⑤). 우리 원칙 “찾아서 쓴다”와 같다.</small></div>
+  <div class="cell"><b>고정 규칙 / 바뀌는 값 분리</b><small>지침·스킬은 고정, 주제·출처·색은 메시지(④⑤). 엔진 = 지침 파일 1개 + 작업마다 입력.</small></div>
+  <div class="cell"><b>시간은 박자·대사 기준</b><small>128BPM 8마디=15초, 다운비트=장면 전환(④). 대사 길이에 맞춤(①). 우리 쇼츠는 TTS 줄 타이밍이 박자 역할.</small></div>
+  <div class="cell"><b>먼저 확인, 그다음 제작</b><small>문구 표+디자인 제안 → 승인(④). 스토리보드 관문(⑤ Seedance). 비싼 렌더 전에 싼 단계에서 확정.</small></div>
+  <div class="cell"><b>스스로 검수</b><small>대표 프레임 뽑아 겹침·잘림·오탈자, ffprobe(④). JasonZhu “검증 부분을 지우지 마라”.</small></div>
+  <div class="cell"><b>기준 파일 하나가 제일 크다</b><small>DESIGN.md(⑥ 1번) = 색·글꼴·간격 고정. GPT PARK 2절·Vox 스타일 키와 같은 역할. 엔진은 스타일마다 기준 파일 1개.</small></div>
+  <div class="cell"><b>지시는 짧게, 자유를 줘라(시험 필요)</b><small>2문장이 장면 지정보다 낫다는 주장(⑨) vs 8섹션 지침(④). 둘 다 같은 소재로 렌더해 비교해서 정한다.</small></div>
+  <div class="cell"><b>결정적 렌더</b><small>CHA: 시간 t만으로 계산, 하나의 멈춘 GSAP 타임라인. 렌더할 때마다 같은 화면 → 편집기·완성본·캡컷 대조 가능.</small></div>
+</div>
+
+<h2 id="engine">5. 엔진 구조 (C안)</h2>
+<div class="card">
+<pre>입력: 대사(TTS 줄 타이밍) · 상품/주제 출처 · 스타일 선택 · (선택) 레퍼런스 영상·이미지
+   │
+   ▼  ③ 연출 두뇌 — 엔진 지침 1개 (GPT PARK 8섹션 골격 + Vox 시각 문법 + JasonZhu 검증 규칙)
+   │     1 출처만  2 비주얼 시스템  3 소리  4 박자/대사 싱크  5 장면 구성  6 규격(1080×1920)
+   │     7 자체 검수  8 목표 수준   → 문구 표 + 장면표 먼저 확정
+   ▼  ② 부품 — 장면마다 부품 고르기 (CHA 73 소스 + 모션그래픽팩 ITEMS) → 변수만 바꿔 조립
+   │     없으면 Opus가 새로 작성 → 합격하면 부품으로 등록 (팩이 자란다)
+   ▼  ① 렌더 — HyperFrames 0.8.105 → mp4
+   ▼  ④ 검사 — 대표 프레임 · ffprobe · 레퍼런스 대조 → 편집기/완성본/썸네일/캡컷 길마다</pre>
+<p><b>주인 정리</b>: 장면 판단 = 엔진 지침 / 부품 모양·시간표 = <code>motion-graphics-pack.js</code> / 렌더 = HyperFrames 한 가지.</p>
+<p><b>미결</b>: CHA 소스는 1080×830 가로 — 쇼츠(1080×1920) 안에 판으로 넣을지, 세로로 다시 짤지 시험해 정한다.</p>
+</div>
+
+<h2 id="license">6. 라이선스 (회원에게 파는 서비스라 중요)</h2>
+<div class="card warn">
+<ul>
+  <li><b>존코바</b>: 개인 참고만. 상업 활용·2차 가공 금지 → 엔진에 내용을 넣지 않는다(트랜지션 일반 용어만).</li>
+  <li><b>CHA</b>: “개인 학습과 콘텐츠 제작에 영상·프롬프트 사용 허용”, 저작권은 CHA. 회원에게 부품으로 <b>재배포·판매</b>하는 것은 허용 문구에 없다 → <span class="t-warn">원본 그대로 팩에 넣지 말고, 기법을 참고해 우리 것으로 다시 짠다(CHA가 prompt-motion에 한 방식과 같음). 필요하면 사장님이 문의.</span> 폰트 Pretendard·Geist는 OFL(가능), GSAP는 표준 라이선스.</li>
+  <li><b>GPT PARK 지침</b>: 무료 공개 글. 문장 그대로 복제 대신 구조를 참고해 우리 지침을 쓴다.</li>
+  <li><b>Deno 스킬</b>: 무료 공유. 라이선스 표기 없음 → 내부 참고·구조 차용만.</li>
+  <li><b>prompt-motion · JasonZhu</b>: 영상 권리는 만든 사람. 프롬프트는 참고해 우리 것으로 다시 쓴다.</li>
+  <li><b>Awesome DESIGN.md · taste-skill</b>: MIT — 사용 가능. <b>Recordly</b>: AGPL 3.0 — 촬영 도구로만, 코드 편입 금지.</li>
+</ul>
+</div>
+
+<h2 id="review">7. 페이블 설계 검토 (2026-10-20, 읽기 전용 검토)</h2>
+<div class="card">
+<h3>빈틈 — “자라는 엔진”에 아직 없는 것</h3>
+<ul>
+  <li><b>부품 장부 없음</b>: “합격하면 부품 등록”만 있고 장부·필드·승격 조건이 없다. 지금 부품은 <code>motion-graphics-pack.js</code> 안 JS 객체(주석)라 검색·집계 불가.</li>
+  <li><b>부품 두 종류가 섞임</b>: 팩 ITEMS = 장면 위에 얹는 오버레이(2초, 캔버스 draw) / CHA = 장면 전체 HTML(6~12초, 1080×830). 실행 방식이 달라 <code>kind</code>(overlay·scene·transition)로 가른다.</li>
+  <li><b>대사 타이밍 → 장면 시간 변환 주인 없음</b>: <code>edit_plan.beats[{t0,dur}]</code> → HyperFrames <code>data-start/duration</code>를 <code>plan_from_beats</code> 한 함수가 맡는다. 미리보기와 렌더가 같은 컴포지션 파일을 읽게 해 두 벌 차단.</li>
+  <li><b>검사가 효과마다 따로</b>(<code>check_countdown.py</code>) → 공용 <code>check_render.py</code>(레퍼런스 mp4 vs 렌더 mp4)가 먼저.</li>
+  <li><b>기록 어긋남</b>: 핸드오프는 “main 미병합”이나 main에 <code>4325c0022</code>·<code>9b04f1e15</code> 있음(병합됨). 라이브 확인은 미실시.</li>
+</ul>
+
+<h3>디벨롭 루프 — 학습 = 모델이 아니라 예문·순위·임계값이 자란다</h3>
+<div class="tbl"><table>
+<tr><th>단계</th><th>산출물</th><th>저장소(제안)</th></tr>
+<tr><td>① 수집</td><td>레퍼런스 url·구간·mp4·분류</td><td><code>data/mograph/refs.jsonl</code></td></tr>
+<tr><td>② 실측</td><td>프레임 시트+수치표(색·좌표·시간표·이징)</td><td><code>refs/&lt;id&gt;/measure.json</code></td></tr>
+<tr><td>③ 부품화</td><td>부품 레코드 + 코드</td><td>메타 <code>parts.jsonl</code> / 코드는 팩 파일(오버레이)·<code>static/mograph/&lt;slug&gt;/</code>(장면), 잇는 키 = slug</td></tr>
+<tr><td>④ 생성</td><td>장면표 → 컴포지션 → mp4</td><td><code>jobs/&lt;job&gt;/mograph_plan.json</code></td></tr>
+<tr><td>⑤ 검사</td><td>숫자 보고서</td><td><code>mograph_check.json</code></td></tr>
+<tr><td>⑥ 판정</td><td>좋음/별로+이유 태그</td><td><code>parts.jsonl</code>의 <code>verdicts[]</code></td></tr>
+<tr><td>⑦ 학습</td><td>판정·사용 실적 집계 → 좋은 부품 먼저 뽑힘, ‘별로’ 사유 → 검사 기준</td><td>지침 예문(사람 승인 후 반영)</td></tr>
+</table></div>
+<p class="meta">부품 레코드 필드: slug · kind · label · group · src{url,span,measure} · license{origin,status(ours|rewritten|ref_only)} · geometry · duration_ms · min_scene_ms · ratio · vars[] · beats[] · sfx_cues[] · timing_policy · fonts · check{tool,last_pass} · verdicts[] · usage{jobs_60d,members_60d} · version. 전부 팩 ITEMS·CHA meta.json·라이브 집계에 이미 있는 값의 합집합.</p>
+
+<h3>검사 숫자</h3>
+<ul>
+  <li>레퍼런스 대조: 중심 ±4px · 각도 ±9° · 겹침 ≥0.6 (카운트다운 실측 기준 공용화)</li>
+  <li>겹침·잘림: 글자 상자가 1080×1920 안전영역 밖이면 실패 (안전영역 값은 우리 자막 위치로 실측 필요)</li>
+  <li>박자: 부품 동작 시각이 TTS 줄 시작 ±100ms · 가독성 대비 ≥4.5 · 같은 입력 2회 렌더 프레임 동일(결정성)</li>
+  <li>사장님 판정을 검사 결과와 같은 레코드에 → “검사 통과인데 사장님은 별로” 건수가 기준을 고칠 신호</li>
+</ul>
+
+<h3>프리셋 + 단계별 제작 페이지</h3>
+<p><b>모션 프리셋 장부</b> <code>channel/모션프리셋.json</code>: preset_id · 용도(쇼츠·광고·설명·자료) · 9:16 · <b>design_ref</b>(DESIGN.md식 팔레트·글꼴 2개·간격) · <b>motion_character</b>(기본 이징·임팩트 간격·카메라·전환 집합) · <b>parts</b>(장면 유형별 허용 부품 묶음) · prompt_delta(지침 위에 얹는 스타일 어휘·금지어) · <b>sound</b>(성우·배경음·효과음팩 = 기존 숏템메이커 자원 id) · verdicts · usage</p>
+<div class="tbl"><table>
+<tr><th>단계</th><th>화면</th><th>누르는 것</th></tr>
+<tr><td>1 프리셋</td><td>프리셋 카드(4초 미리보기·색·글꼴)</td><td>고르기 / 관리자: 새 프리셋</td></tr>
+<tr><td>2 입력</td><td>대사 또는 출처 URL·상품 사진·길이·목적</td><td>다음 → TTS 줄 타이밍 생성</td></tr>
+<tr><td>3 문구표·장면표</td><td>줄마다 [인용/요약/창작]·장면 유형·부품 후보·시간</td><td>줄 편집·부품 바꾸기·“알아서 해”</td></tr>
+<tr><td>4 배치 미리보기</td><td>1080×1920 브라우저 미리보기(렌더 전, 서버 부하 0)</td><td>장면 번호+바꿀 내용으로 수정</td></tr>
+<tr><td>5 렌더</td><td>대기열 순번·진행</td><td>렌더 시작(크레딧 차감)</td></tr>
+<tr><td>6 검수</td><td>대표 프레임 시트+검사 숫자</td><td>좋음/별로 · 다운로드 · 캡컷</td></tr>
+</table></div>
+<p>재사용: 회원·로그인·크레딧·작업 대기열·TTS 줄 타이밍·소리 팩·단계 패널 화면 꼴·관리자 스위치. 분리: 장면 편집기(실사 좌표계)는 안 씀, 프리셋 장부는 칼카피 장부와 별도 파일(보여 주는 곳은 <code>/shortem_preset</code> 탭 하나).</p>
+
+<h3>모션그래픽만으로 완성 — 장면 유형별 채움/빈칸</h3>
+<div class="tbl"><table>
+<tr><th>장면 유형</th><th>채워짐</th><th>빈 칸</th></tr>
+<tr><td>훅·키네틱 타이포</td><td>prompt-motion Kinetic type 98 · CHA 타이포 23(프롬프트만)</td><td>세로 버전 없음</td></tr>
+<tr><td><b>상품 사진 장면</b></td><td>Photos 23 정도</td><td class="t-warn">★쇼핑 쇼츠 뼈대인데 거의 빔(사진 컷아웃·회전·줌)</td></tr>
+<tr><td>숫자·데이터</td><td>Charts 33 · CHA 숫자 롤</td><td>가격·할인율 전용 카드 없음</td></tr>
+<tr><td>비교(전/후)</td><td>Diagrams 31 일부</td><td class="t-warn">전용 부품 없음</td></tr>
+<tr><td>단계·리스트</td><td>CHA UI 모프 · 컴포넌트 17(프롬프트만)</td><td>세로형 없음</td></tr>
+<tr><td>전환</td><td>CHA 트랜지션 9(프롬프트만)</td><td class="t-warn">소스 0</td></tr>
+<tr><td>엔드카드·CTA</td><td>—</td><td class="t-warn">비어 있음</td></tr>
+<tr><td>배경·텍스처</td><td>CHA 제너레이티브 5 · Particles 43 · Shapes 44</td><td>충분</td></tr>
+<tr><td>카운트다운·강조</td><td>팩 countdown321 + 옛 도형 4</td><td>레퍼런스 실측 대기</td></tr>
+</table></div>
+<p><b>소리·박자</b>: 박자의 주인 = TTS 줄 타이밍 하나(음악 BPM 맞춤 안 함). 성우·배경음·효과음팩·합성(<code>mix_pipeline</code>)은 기존 것. 엔진은 부품의 <code>sfx_cues</code>를 효과음 자동배치에 넘기는 것만 새로 맡는다. 렌더는 무음 mp4 → 기존 믹스 길.</p>
+<p><b>비용</b>: 영상 생성 AI가 아니라 코드 렌더라 한계비용 = 서버 CPU 시간뿐(C안 최대 장점). 렌더 시간 1~3분/15초는 <span class="t-warn">추측</span> — 첫 작업에서 실측.</p>
+
+<h3>서비스 구조 (최종 목표: 숏템메이커 같은 서비스)</h3>
+<ul>
+  <li><b>추천: 숏템메이커 안의 새 메뉴</b> — 회원·크레딧·대기열·소리가 이미 <code>app.py</code>에 있어 재사용. 별도 서비스면 로그인·크레딧이 두 벌. 엔진 코드는 <code>shopping_shorts/mograph/</code> 패키지, app.py엔 길목만.</li>
+  <li><b>렌더 부하</b>: 모션 렌더는 별도 대기열(<code>mograph_render</code>, 동시 1개)로 쇼츠 렌더와 안 밀리게. 베타에서 대기시간 실측 후 클라우드 렌더 여부 결정. PC 렌더는 PC가 켜져 있어야 해 서비스 부적합.</li>
+  <li><b>100명이 같은 프리셋 → 다 다르게</b>: ① 회원 입력(대사·사진)이 변수 ② 장면 유형마다 허용 부품 ≥3, 선택 씨앗 = 작업 id 해시(순번 아님) ③ 색 1개·이징·카메라·길이 자유도를 씨앗으로 흔듦 ④ <b>측정 먼저</b>: 같은 프리셋·다른 대사 100건 장면표의 조합 종류 수·첫 장면 겹침을 센다.</li>
+  <li><b>출시 관문</b>: 관리자 전용(스위치) → 베타 5~10명(크레딧 0원, 대기열 실측·판정·100건 다양성 통과) → 공개(과금 = 돈 카드라 사장님 승인, 라이선스 확정 뒤).</li>
+</ul>
+</div>
+
+<h2 id="github">8. 깃허브·해외 레퍼런스 (61개, 2026-10-20)</h2>
+<div class="card">
+<p>전문: <code>C:\Users\TheRose\숏템자료\모션그래픽엔진\레퍼런스_조사_2026-10-20.md</code> · 스타·라이선스는 GitHub API 실측값.</p>
+<div class="tbl"><table>
+<tr><th>#</th><th>이름</th><th>무엇</th><th>스타</th><th>라이선스</th><th>쓸 곳</th></tr>
+<tr><td>1</td><td>iart-ai/motion-skills</td><td>모션 스킬 50+ (키네틱 타이포·차트·릴스·상품 데모) + 렌더 프레임 검사 스크립트</td><td>905</td><td class="t-ok">MIT</td><td>연출 규칙·검사 ★</td></tr>
+<tr><td>2</td><td>haidrrrry/claude-remotion-skill</td><td>연출 규칙(평평한 페이드·직선 움직임 금지) + 렌더 뒤 프레임 확인</td><td>545</td><td class="t-ok">MIT</td><td>연출 규칙·검사</td></tr>
+<tr><td>3</td><td>digitalsamba/claude-code-video-toolkit</td><td>음성·음악·FFmpeg까지 끝까지 제작</td><td>2,283</td><td class="t-ok">MIT</td><td>제작 흐름</td></tr>
+<tr><td>4</td><td>diffusionstudio/lottie</td><td>Claude로 Lottie 애니메이션 생성</td><td>5,606</td><td class="t-ok">MIT</td><td>아이콘·스티커 부품</td></tr>
+<tr><td>5</td><td>airbnb/lottie-web</td><td>Lottie 재생기</td><td>32,250</td><td class="t-ok">MIT</td><td>부품 재생</td></tr>
+<tr><td>6</td><td>mojs/mojs</td><td>버스트·도형 폭발</td><td>18,821</td><td class="t-ok">MIT</td><td>가격·할인 강조</td></tr>
+<tr><td>7</td><td>rough-stuff/rough-notation</td><td>손그림 밑줄·동그라미</td><td>9,715</td><td class="t-ok">MIT</td><td>“여기 보세요” 강조</td></tr>
+<tr><td>8</td><td>gl-transitions</td><td>GLSL 장면 전환 모음</td><td>2,158</td><td class="t-warn">미확인</td><td>전환 부품(빈칸) — 전환마다 라이선스 확인</td></tr>
+<tr><td>9</td><td>anime.js</td><td>JS 애니메이션 엔진</td><td>73,712</td><td class="t-ok">MIT</td><td>GSAP 대안 후보</td></tr>
+<tr><td>10</td><td>Motion Canvas / Revideo</td><td>렌더 엔진</td><td>19,394 / 4,123</td><td class="t-ok">MIT</td><td>HyperFrames 대안</td></tr>
+</table></div>
+<p class="t-warn">주의: OpenMontage(69,999)는 AGPL — 구조만 참고. Remotion·GSAP·animate.css·gl-transitions·remotion-dev/skills는 GitHub가 라이선스 판정 못 함 → 원문 미확인. 해외 갤러리 5곳(motion.zajno.com·motion.dev/ui·stashmedia.tv 등)은 검색 요약만 봄, 숏폼 광고 전용 갤러리는 못 찾음.</p>
+</div>
+
+<h2 id="youtube">8-2. 유튜브 추가 조사 (14편, 2026-10-20)</h2>
+<div class="card">
+<p>전문: <code>C:\Users\TheRose\숏템자료\모션그래픽엔진\youtube\유튜브_조사_2026-10-20.md</code> · 자막까지 본 것은 6편, 나머지는 설명란·댓글만.</p>
+<div class="tbl"><table>
+<tr><th>#</th><th>영상</th><th>채널·조회</th><th>핵심</th><th>자료</th></tr>
+<tr><td>1</td><td><code>rscb1DgJtNg</code></td><td>Chase AI · 17.4만</td><td>캔버스+Playwright+FFmpeg 무료 렌더. 프롬프트 → <b>자가검증 루프 → 레퍼런스 → 스킬화</b> 4단계. 코딩 전 스토리보드(장면별 키프레임) 먼저. 노력 수준 차이는 작다고 함</td><td class="t-ok">GitHub <code>cth9191/animate</code> MIT 받음 — 승인 관문 3개(스토리→룩→스토리보드)·스타일 7종</td></tr>
+<tr><td>2</td><td><code>747ZnEtsRbg</code></td><td>Lukas Margerie · 62.4만</td><td>“<b>프롬프트 10%, 하네스 90%</b>”. 규칙 파일 4범주(렌더 규칙·룩 금지목록·사운드·피드백 루프), 점수 매기는 비평 루프</td><td>전체 키트 유료(가격 미확인)</td></tr>
+<tr><td>3</td><td><code>Ll45R_Z8tQc</code></td><td>Matt Loui · 8.1만</td><td>실제 화면 녹화·스크린샷을 재료로 Remotion → CapCut 마무리. 프롬프트마다 “질문부터”</td><td class="t-ok">구글 문서 무료, 프롬프트 3개 원문 확보</td></tr>
+<tr><td>4</td><td><code>-YySYOBbhD8</code></td><td>AI 투데이 · 2.7만</td><td>레퍼런스 영상+그 프롬프트를 같이 줌. 배민·구글·카카오 광고·세로 쇼츠판</td><td>레퍼런스 350개 키트 = 개인정보 신청 필요(안 받음)</td></tr>
+<tr><td>5</td><td><code>7jHXoPGnA4c</code></td><td>Nate Herk · 28.7만</td><td>Claude Code+<b>HyperFrames</b> 편집 5원칙: 전사→실수·무음 컷→비트 계획→<b>피드백마다 스킬 갱신</b>→스크린샷 검증</td><td>skool 가입 필요</td></tr>
+<tr><td>6</td><td><code>AsvN_feasyY</code></td><td>kaye.creatives · 29.6만</td><td>토킹헤드 위 모션 오버레이(34분 vs 디자이너 5시간). Claude Motion은 Team·Enterprise만</td><td>Higgsfield 제휴</td></tr>
+<tr><td>7</td><td><code>yf2OwchM9nw</code></td><td>Tristen O'Brien · 56.2만</td><td>Claude Motion 기능(Tweaks·코멘트 수정) / 대안 Claude Code+Remotion</td><td>이메일 필요</td></tr>
+<tr><td>8</td><td><code>_kc0riDpxOY</code></td><td>Jay Choi · 6.9만</td><td>한 문장 → 애플식 런칭 → 채널 브랜드 영상</td><td>X 링크(미열람)</td></tr>
+</table></div>
+<p><b>엔진에 가져올 것</b>: ① animate 스킬의 <b>승인 관문 3개</b>(스토리→룩→스토리보드) = 제작 페이지 3단계와 같은 구조 ② <b>규칙 파일 4범주 + 점수 비평 루프</b> = 부품 검사·판정 ③ 실제 상품 화면·사진을 재료로 주기 = 상품 사진 장면 빈칸 ④ 피드백마다 스킬 갱신 = 디벨롭 루프 ⑦.</p>
+<p class="meta">못 본 후보: HzXD4GVqXwM(58.7만) · qvhuZ9RW0wo(Gemini·Claude·GPT 모션 비교) · OX80FZjHJ7o(Remotion 총정리) · en0GuyhieQk(Anthropic 공식 Claude Motion 소개) 등 — 다음 조사 차례.</p>
+</div>
+
+<h2 id="decide-boss">9. 사장님 결정 (2026-10-20 확정)</h2>
+<div class="card decide">
+<ol>
+  <li><b>GSAP 사용 OK</b> (사장님 “해도 된다”)</li>
+  <li><b>서비스 위치</b>: 숯템메이커 페이지 내부에서 <b>관리자로 테스트</b> → 그 뒤 <b>별도 서비스</b>로 분리</li>
+  <li><b>세로 처리</b>: 두 벌 그림 비교 방식 OK</li>
+  <li><b>해외 사이트·유튜브</b>: 검색 요약 말고 직접 열어 파고든다</li>
+  <li><b>자산 작업대 페이지</b>: 사장님이 우리 자산(부품·레퍼런스·프리셋)을 눈으로 보고 실제로 구현하면서 키우는 페이지 — 페이블이 설계·진행</li>
+</ol>
+</div>
+<p class="meta">아래는 결정 전 제안 원문(기록용)</p>
+<div class="card warn">
+<ol>
+  <li><b>GSAP 상업 조건</b>: CHA 소스가 전부 GSAP. 회원 판매 서비스에 써도 되는지 원문 확인 전엔 회원 노출 금지 — 대안은 anime.js(MIT)·CSS/WAAPI. (확인은 Claude가 원문을 읽어 보고드림, 최종 결정은 사장님)</li>
+  <li><b>세로 처리</b>: 새 부품은 처음부터 1080×1920로 짠다(페이블 권고). CHA 가로 소스를 판으로 넣은 것 vs 세로 재작성 두 벌을 그림으로 보여드리고 고르시게.</li>
+  <li><b>서비스 위치</b>: 숏템메이커 안 새 메뉴(추천) vs 별도 서비스.</li>
+  <li><b>과금</b>: 공개 단계의 크레딧 가격 — 베타 실측 뒤.</li>
+</ol>
+</div>
+
+<h2 id="next">10. 다음 할 일 (2주, 페이블 재조정안)</h2>
+<div class="card">
+<ol>
+  <li>관제 카드 등록 → 트랙 <code>모션그래픽팩</code> 이어서 · 핸드오프 “미병합” 기록 바로잡기</li>
+  <li><b>HyperFrames 렌더 실측</b>: CHA 소스 1개를 PC → 서버에서 렌더, 시간·성공 여부</li>
+  <li><b>빈 칸부터 세로 부품</b>: 상품 사진 장면 1개(레퍼런스 실측) + 엔드카드 1개</li>
+  <li><code>plan_from_beats</code> + 무음 mp4 → <code>mix_pipeline</code> 합성 = 소리까지 완성본 1편 → 네 길 대조</li>
+  <li>모션 프리셋 장부 1건 + 1단계(프리셋 고르기) 화면 · 부품 장부 <code>parts.jsonl</code> + 공용 검사</li>
+  <li>그 뒤: iart-ai/motion-skills·claude-remotion-skill 연출 규칙 흡수 → 엔진 지침 초안 → “2문장 vs 8섹션” 비교 → 100건 다양성 측정 도구</li>
+</ol>
+<p class="meta">흡수 1순위 공개 자료: iart-ai/motion-skills(MIT) · cth9191/animate(MIT, 받음) · claude-remotion-skill(MIT) · Matt Loui 프롬프트 3개.</p>
+</div>
+
+</div>
+</body>
+</html>
