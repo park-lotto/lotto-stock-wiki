@@ -108,45 +108,71 @@ def coverage(lines, text):
 
 
 # ── tag ───────────────────────────────────────────────────────────────
+def _tag_batch(cl, ids, tr):
+    body = "\n\n".join("[%s]\n%s" % (k, tr[k]["text"]) for k in ids)
+    prompt = PROMPT.format(beats=" · ".join("%s=%s" % kv for kv in BEATS.items()), devices=" · ".join(DEVICES),
+                           auth=" · ".join(x for x in AUTH_KINDS if x), hooks=" · ".join("%s(%s)" % kv for kv in HOOKS.items()), scripts=body)
+    return _call(cl, prompt)
+
+
 def cmd_tag(a):
+    """--workers N: 버텍스 묶음 N개를 동시에 부른다(호출 수는 같다). --follow: 받아쓰기가 따라오는 동안 새 편이 생기면 계속 태깅."""
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     d = out_dir(a.slug)
-    tr = load_json(os.path.join(d, "transcripts.json"), {})
     path = os.path.join(d, "tags.jsonl")
-    done = set()
-    if os.path.exists(path):
-        done = {json.loads(l)["id"] for l in open(path, encoding="utf-8") if l.strip()}
     views = {r["id"]: r["views"] for r in read_list(a.slug)}
-    todo = [k for k in sorted(tr, key=lambda k: -views.get(k, 0)) if k not in done and len(ns(tr[k]["text"])) >= 40]
-    skip = [k for k in tr if k not in done and len(ns(tr[k]["text"])) < 40]
-    with open(path, "a", encoding="utf-8") as f:
-        for k in skip:     # 말이 거의 없는 편 — 버텍스 안 부르고 표시만
-            f.write(json.dumps({"id": k, "usable": False, "reason": "말 40자 미만", "views": views.get(k, 0)}, ensure_ascii=False) + "\n")
-    if a.limit:
-        todo = todo[:a.limit]
-    print("태깅할 것 %d편(이미 %d · 말 없음 %d) · 묶음 %d → 버텍스 %d회 예정" % (len(todo), len(done), len(skip), a.batch, -(-len(todo) // a.batch)), flush=True)
     cl = _client()
-    calls = 0
-    for i in range(0, len(todo), a.batch):
-        ids = todo[i:i + a.batch]
-        body = "\n\n".join("[%s]\n%s" % (k, tr[k]["text"]) for k in ids)
-        prompt = PROMPT.format(beats=" · ".join("%s=%s" % kv for kv in BEATS.items()), devices=" · ".join(DEVICES),
-                               auth=" · ".join(x for x in AUTH_KINDS if x), hooks=" · ".join("%s(%s)" % kv for kv in HOOKS.items()), scripts=body)
-        try:
-            r = _call(cl, prompt)
-        except RuntimeError as e:
-            print("실패 묶음", ids[0], e, flush=True)
-            continue
-        calls += 1
-        got = {s.get("id"): s for s in r.get("scripts") or []}
+    lock = threading.Lock()
+    calls = [0]
+    while True:
+        tr = load_json(os.path.join(d, "transcripts.json"), {})
+        done = set()
+        if os.path.exists(path):
+            done = {json.loads(l)["id"] for l in open(path, encoding="utf-8") if l.strip()}
+        todo = [k for k in sorted(tr, key=lambda k: -views.get(k, 0)) if k not in done and len(ns(tr[k]["text"])) >= 40]
+        skip = [k for k in tr if k not in done and len(ns(tr[k]["text"])) < 40]
         with open(path, "a", encoding="utf-8") as f:
-            for k in ids:
-                s = got.get(k)
-                if not s:
-                    continue      # 빠진 편은 다음 실행에서 다시
-                s["views"] = views.get(k, 0)
-                s["coverage"] = coverage(s.get("lines") or [], tr[k]["text"]) if s.get("usable") else None
-                f.write(json.dumps(s, ensure_ascii=False) + "\n")
-        print("묶음 %d/%d 완료(누적 버텍스 %d회)" % (i // a.batch + 1, -(-len(todo) // a.batch), calls), flush=True)
+            for k in skip:     # 말이 거의 없는 편 — 버텍스 안 부르고 표시만
+                f.write(json.dumps({"id": k, "usable": False, "reason": "말 40자 미만", "views": views.get(k, 0)}, ensure_ascii=False) + "\n")
+        if a.limit:
+            todo = todo[:a.limit]
+        batches = [todo[i:i + a.batch] for i in range(0, len(todo), a.batch)]
+        if a.follow and len(todo) % a.batch:
+            batches = batches[:-1]       # 따라가는 중엔 덜 찬 묶음은 다음 바퀴로(호출 수 아끼기) — 2026-10-20 덜 찬 묶음을 보내 호출이 34회로 늘었던 것 고침
+        print("태깅할 것 %d편(이미 %d · 말 없음 %d) · 묶음 %d개 · 동시 %d" % (len(todo), len(done), len(skip), len(batches), a.workers), flush=True)
+
+        def run(ids):
+            try:
+                r = _tag_batch(cl, ids, tr)
+            except RuntimeError as e:
+                return ids, None, str(e)
+            return ids, r, ""
+        with ThreadPoolExecutor(max_workers=a.workers) as ex:
+            for fut in as_completed([ex.submit(run, b) for b in batches]):
+                ids, r, err = fut.result()
+                if r is None:
+                    print("실패 묶음", ids[0], err, flush=True)
+                    continue
+                got = {s.get("id"): s for s in r.get("scripts") or []}
+                with lock, open(path, "a", encoding="utf-8") as f:
+                    calls[0] += 1
+                    for k in ids:
+                        s = got.get(k)
+                        if not s:
+                            continue      # 빠진 편은 다음 바퀴에 다시
+                        s["views"] = views.get(k, 0)
+                        s["coverage"] = coverage(s.get("lines") or [], tr[k]["text"]) if s.get("usable") else None
+                        f.write(json.dumps(s, ensure_ascii=False) + "\n")
+                print("묶음 완료(누적 버텍스 %d회)" % calls[0], flush=True)
+        if not a.follow:
+            break
+        n_audio = len([x for x in os.listdir(os.path.join(d, "audio")) if x.endswith(".m4a")])
+        if not batches and os.path.exists(os.path.join(d, "_pull_done")) and len(tr) >= n_audio:
+            a.follow = False              # 받아쓰기도 끝났다 — 남은 덜 찬 묶음까지 한 바퀴 더 돌고 끝
+            continue
+        if not batches:
+            time.sleep(60)
 
 
 def load_tags(slug, min_cov=0.85):
@@ -203,6 +229,110 @@ def cmd_cluster(a):
 # ── card ──────────────────────────────────────────────────────────────
 def _top(counter, n=12, min_n=2):
     return [{"v": k, "n": c} for k, c in counter.most_common(n) if k and c >= min_n]
+
+
+# ── 원문 규칙 세기(버텍스 0) — 모델 태그와 별개로 받아쓰기 원문에서 직접 센다 ──────────────
+RAW_CONN = ["근데", "그런데", "심지어", "특히", "알고 보니", "알고보니", "그래서", "게다가", "무엇보다", "진짜", "이게", "바로", "그리고", "덕분에",
+            "아니", "와", "솔직히", "요즘", "얼마 전", "평소에", "이제", "오히려", "역시", "근데 진짜", "더 놀라운", "더 미친", "제일 좋은"]
+RAW_END = ["더라고요", "더라구요", "거든요", "잖아요", "대요", "래요", "다던데", "는데요", "거예요", "이에요", "예요", "어요", "아요", "해요",
+           "습니다", "죠", "네요", "군요", "거 있죠", "주세요", "보세요"]
+RAW_CTA = {"댓글 키워드": r"댓글에|댓글로|남겨\s*주", "링크": r"링크|프로필|찾아왔|알아왔", "팔로우·저장": r"팔로우|저장해|구독"}
+
+
+def _sents(t):
+    return [x.strip() for x in re.split(r"(?<=[.?!])\s+", t or "") if x.strip()]
+
+
+def raw_measure(rs, tr):
+    conn, end, cta, first_len, total = Counter(), Counter(), Counter(), [], []
+    for r in rs:
+        t = (tr.get(r["id"]) or {}).get("text", "")
+        ss = _sents(t)
+        total.append(len(ns(t)))
+        if ss:
+            first_len.append(len(ss[0]))
+        for x in ss:
+            for c in sorted(RAW_CONN, key=len, reverse=True):
+                if x.startswith(c + " ") or x.startswith(c + ","):
+                    conn[c] += 1
+                    break
+            # 문장 안 절 머리(", 근데" " 심지어 ")도 센다
+            for c in ("근데", "심지어", "특히", "알고 보니", "게다가", "덕분에", "오히려"):
+                conn[c + "(문장 안)"] += len(re.findall(r"(?<=[가-힣요다]) %s " % c, x))
+            for e in sorted(RAW_END, key=len, reverse=True):
+                if re.search(e + r"[.?!]*$", x):
+                    end[e] += 1
+                    break
+        for k, p in RAW_CTA.items():
+            if re.search(p, " ".join(ss[-2:])):
+                cta[k] += 1
+    n = max(1, len(rs))
+    return {"connectors_sentence_head": _top(conn, 20, 1), "endings_sentence": _top(end, 15, 1),
+            "cta": [{"v": k, "n": c, "share": round(c / n, 2)} for k, c in cta.most_common()],
+            "first_sentence_chars": {"p10": sorted(first_len)[len(first_len) // 10] if first_len else 0, "median": int(statistics.median(first_len)) if first_len else 0},
+            "chars": {"median": int(statistics.median(total)) if total else 0}}
+
+
+def agreement(card):
+    """모델 태그 연결어 상위 vs 원문 규칙 세기 상위 — 겹치는 비율. 낮으면 태그를 의심한다."""
+    a = {x["v"] for x in card["connectors"][:6]}
+    b = {x["v"] for x in card["raw"]["connectors_sentence_head"][:8]} | {x["v"].replace("(문장 안)", "") for x in card["raw"]["connectors_sentence_head"]}
+    return round(len(a & b) / max(1, len(a)), 2)
+
+
+# ── 잘된 편 vs 안된 편 비교(버텍스 0) ─────────────────────────────────
+def features(r):
+    """편 하나의 특징 묶음(있다/없다). 잘된 편과 안된 편의 비율 차이를 잰다."""
+    arc = arc_of(r)
+    ls = r["lines"]
+    f = {}
+    for b in BEATS:
+        f["칸: " + b] = b in arc
+    f["정체 공개가 앞 3칸 안"] = "reveal" in arc[:3]
+    f["권위 줄 있음"] = any(l.get("authority_kind") for l in ls)
+    for k in AUTH_KINDS:
+        if k:
+            f["권위: " + k] = any(l.get("authority_kind") == k for l in ls)
+    w = sum(1 for l in ls if l.get("wow_kind"))
+    f["와우 0줄"], f["와우 1줄"], f["와우 2줄+"] = w == 0, w == 1, w >= 2
+    for dv in DEVICES:
+        f["장치: " + dv] = any(dv in (l.get("devices") or []) for l in ls)
+    f["인물 꾸밈말 있음"] = any(c.get("modifier") for c in r.get("characters") or [])
+    f["등장인물 있음(화자 말고)"] = bool(r.get("characters"))
+    for c in r.get("characters") or []:
+        f["인물: " + c.get("role", "")] = True
+    f["CTA: " + (r["cta"].get("kind") or "없음")] = True
+    f["닫기: " + (arc[-1] if arc else "")] = True
+    f["화자: " + r["narrator"].get("persona", "")] = True
+    n = len(ns("".join(l["text"] for l in ls)))
+    f["글자 150 미만"], f["글자 150~220"], f["글자 220+"] = n < 150, 150 <= n < 220, n >= 220
+    f0 = len(ns(ls[0]["text"])) if ls else 0
+    f["첫 줄 25자 미만"], f["첫 줄 25~40자"], f["첫 줄 40자+"] = f0 < 25, 25 <= f0 < 40, f0 >= 40
+    for l in ls:
+        if l.get("connector"):
+            f["연결어: " + l["connector"]] = True
+    return f
+
+
+def contrast(hits, flops, min_diff=0.12, min_n=3):
+    fh, ff = Counter(), Counter()
+    for r in hits:
+        for k, v in features(r).items():
+            if v:
+                fh[k] += 1
+    for r in flops:
+        for k, v in features(r).items():
+            if v:
+                ff[k] += 1
+    nh, nf = max(1, len(hits)), max(1, len(flops))
+    rows = []
+    for k in set(fh) | set(ff):
+        if fh[k] + ff[k] < min_n:
+            continue
+        a, b = fh[k] / nh, ff[k] / nf
+        if abs(a - b) >= min_diff:
+            rows.append({"f": k, "hit": round(a, 2), "flop": round(b, 2), "diff": round(a - b, 2), "n_hit": fh[k], "n_flop": ff[k]})
+    return sorted(rows, key=lambda x: -abs(x["diff"]))
 
 
 def build_card(ht, rs):
@@ -288,7 +418,12 @@ def build_card(ht, rs):
 
 
 def card_md(c):
-    L = ["# %s — %s (%d편 · 조회 중앙 %d만)" % (c["type"], c["desc"], c["n"], c["views_median"] // 10000), ""]
+    L = ["# %s — %s (잘된 편 %d · 조회 중앙 %d만)" % (c["type"], c["desc"], c["n"], c["views_median"] // 10000), ""]
+    if c.get("base"):
+        L += ["전체 %(all)d편 중 잘된 편 %(hits)d(%(hit_rate).0f%%) · 안된 편 %(flops)d — 카드 숫자·예문은 잘된 편만" % dict(c["base"], hit_rate=c["base"]["hit_rate"] * 100), ""]
+    if c.get("contrast"):
+        L += ["## 잘된 편 vs 안된 편 — 차이 20%p 이상", "| 특징 | 잘된 편 | 안된 편 | 차이 |", "|---|---|---|---|"]
+        L += ["| %s | %.0f%% (%d) | %.0f%% (%d) | %+.0f%%p |" % (x["f"], x["hit"] * 100, x["n_hit"], x["flop"] * 100, x["n_flop"], x["diff"] * 100) for x in c["contrast"][:20]] + [""]
     L += ["## 전개(가장 많은 줄 배치)", " → ".join(c["arc_main"]), ""] + ["- %s (%d편)" % (x["arc"], x["n"]) for x in c["arcs"]] + [""]
     L += ["## 칸별 칼카피"]
     for s in c["slots"]:
@@ -308,22 +443,44 @@ def card_md(c):
     L += ["- [%s · %s] %s" % (x["kind"], x["connector"] or "-", x["text"]) for x in c["wow"]["lines"]]
     L += ["", "## CTA", ", ".join("%s %d" % (x["v"], x["n"]) for x in c["cta"]["kinds"])] + ["- " + t for t in c["cta"]["texts"]]
     L += ["", "## 길이", "글자 %(chars_p10)d~%(chars_p90)d(중앙 %(chars_median)d) · 줄 중앙 %(lines_median)s" % c["length"]]
+    if c.get("raw"):
+        r = c["raw"]
+        L += ["", "## 원문 규칙 세기(버텍스 0 — 모델 태그 검산)",
+              "문장 머리 연결어: " + ", ".join("%s %d" % (x["v"], x["n"]) for x in r["connectors_sentence_head"]),
+              "문장 끝 어미: " + ", ".join("%s %d" % (x["v"], x["n"]) for x in r["endings_sentence"]),
+              "CTA(끝 두 문장): " + ", ".join("%s %d편(%.0f%%)" % (x["v"], x["n"], x["share"] * 100) for x in r["cta"]),
+              "첫 문장 글자 중앙 %d · 전체 글자 중앙 %d" % (r["first_sentence_chars"]["median"], r["chars"]["median"]),
+              "태그 연결어 상위 6개 중 원문에서도 확인된 비율: %.0f%%" % (c.get("tag_vs_raw_connectors", 0) * 100)]
     return "\n".join(L)
 
 
 def cmd_card(a):
     d = out_dir(a.slug)
     ok, _ = load_tags(a.slug)
+    tr = load_json(os.path.join(d, "transcripts.json"), {})
     by = defaultdict(list)
     for r in ok:
         by[r.get("hook_type") if r.get("hook_type") in HOOKS else "기타"].append(r)
     cd = os.path.join(d, "cards")
     os.makedirs(cd, exist_ok=True)
     allc = {}
+    hit_th, flop_th = a.hit, a.flop
+    allu = [r for rs in by.values() for r in rs]
+    channel = {"hit_th": hit_th, "flop_th": flop_th, "n_hit": sum(r["views"] >= hit_th for r in allu), "n_flop": sum(r["views"] < flop_th for r in allu),
+               "contrast": contrast([r for r in allu if r["views"] >= hit_th], [r for r in allu if r["views"] < flop_th])}
+    save_json(os.path.join(d, "contrast_channel.json"), channel)
     for ht, rs in by.items():
-        if len(rs) < 3:
+        hits = [r for r in rs if r["views"] >= hit_th]
+        flops = [r for r in rs if r["views"] < flop_th]
+        if len(hits) < 3:
+            print("카드 건너뜀 %s — 잘된 편 %d" % (ht, len(hits)))
             continue
-        c = build_card(ht, rs)
+        c = build_card(ht, hits)          # ★카드 = 잘된 편만으로
+        c["base"] = {"all": len(rs), "hits": len(hits), "flops": len(flops), "hit_rate": round(len(hits) / len(rs), 2)}
+        c["contrast"] = contrast(hits, flops, min_diff=0.2)
+        rs = hits
+        c["raw"] = raw_measure(rs, tr)
+        c["tag_vs_raw_connectors"] = agreement(c)
         # 검증: 카드 숫자 = 태그 집계(다시 세서 맞는지)
         assert c["n"] == len(rs) and sum(x["n"] for x in c["cta"]["kinds"]) <= len(rs)
         save_json(os.path.join(cd, ht + ".json"), c)
@@ -342,21 +499,36 @@ def cmd_report(a):
 
     def chips(xs, n=10):
         return " ".join('<span class="chip">%s <b>%d</b></span>' % (e(x["v"] or "(없음)"), x["n"]) for x in xs[:n])
+    rec = load_json(os.path.join(d, "recipes.json"), {})   # 사람이(또는 Claude가) 잘된 편을 읽고 쓴 공식 — 있으면 유형 맨 앞에
     secs = []
-    for ht, c in sorted(allc.items(), key=lambda kv: -kv[1]["n"]):
+    if rec.get("channel"):
+        ch = rec["channel"]
+        secs.append('<section class="rec"><h2>채널 공통 — 잘된 편 vs 안된 편</h2>%s</section>' % "".join(
+            "<h3>%s</h3>%s" % (e(k), ("<ul>%s</ul>" % "".join("<li>%s</li>" % e(x) for x in v)) if isinstance(v, list) else "<p>%s</p>" % e(v)) for k, v in ch.items()))
+    for ht, c in sorted(allc.items(), key=lambda kv: -kv[1]["base"]["hits"] if kv[1].get("base") else -kv[1]["n"]):
+        r = (rec.get("types") or {}).get(ht)
+        rhtml = ""
+        if r:
+            rhtml = '<div class="recipe"><h3>칼카피 공식 — %s</h3><p class="mut">%s</p><ol>%s</ol>%s</div>' % (
+                e(r.get("한 줄 정의", "")), e(r.get("히트율", "")), "".join("<li>%s</li>" % e(x) for x in r.get("공식", [])),
+                "".join("<p><b>%s</b> %s</p>" % (e(k), e(v)) for k, v in r.items() if k not in ("한 줄 정의", "히트율", "공식")))
         slots = "".join('<tr><td><b>%s</b><div class="mut">%s</div></td><td>%d%%<br>%d자</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (
             e(s["beat"]), e(s["does"]), s["share"] * 100, s["chars_median"], chips(s["connectors"], 4), chips(s["endings"], 4),
             "<br>".join("%s <span class='mut'>← %s</span>" % (e(x["skel"]), e(x["src"])) for x in s["skeletons"][:3])) for s in c["slots"])
         refs = "".join('<details><summary>%d만 · %s</summary><ol>%s</ol></details>' % (
             r["views"] // 10000, e(r["id"]), "".join("<li><span class='beat'>%s</span> %s</li>" % (e(l["beat"]), e(l["text"])) for l in r["lines"])) for r in c["refs"])
-        secs.append('''<section><h2>%s <span class="mut">%s · %d편 · 조회 중앙 %d만</span></h2>
+        base = c.get("base") or {}
+        secs.append('''<section><h2>%s <span class="mut">%s · 잘된 편 %d · 조회 중앙 %d만</span></h2>''' % (e(ht), e(c["desc"]), c["n"], c["views_median"] // 10000)
+                    + rhtml + ('<h3>잘된 편 vs 안된 편 (전체 %d · 잘된 %d · 안된 %d)</h3><div class="tbl"><table><tr><th>특징</th><th>잘된 편</th><th>안된 편</th><th>차이</th></tr>%s</table></div>' % (
+                        base.get("all", 0), base.get("hits", 0), base.get("flops", 0), "".join('<tr><td>%s</td><td>%.0f%%</td><td>%.0f%%</td><td><b>%+.0f%%p</b></td></tr>' % (e(x["f"]), x["hit"] * 100, x["flop"] * 100, x["diff"] * 100) for x in (c.get("contrast") or [])[:12])) if c.get("contrast") else "")
+                    + '''
 <p><b>전개</b> %s</p><div class="mut">%s</div>
 <div class="tbl"><table><tr><th>칸</th><th>비율·길이</th><th>연결어</th><th>어미</th><th>틀 ← 원문</th></tr>%s</table></div>
 <div class="grid2"><div><h3>첫 줄 틀</h3><ul>%s</ul></div><div><h3>스토리 만드는 법</h3><ul>%s</ul></div></div>
 <div class="grid2"><div><h3>권위 — %d%% 편</h3>%s<ul>%s</ul></div><div><h3>와우 — 편당 %s줄</h3>%s<ul>%s</ul></div></div>
 <div class="grid2"><div><h3>꾸밈말</h3>%s<h3>인물 역할</h3>%s<h3>화자</h3>%s</div><div><h3>연결어</h3>%s<h3>어미</h3>%s<h3>CTA</h3>%s<ul>%s</ul><h3>길이</h3>%d~%d자(중앙 %d)</div></div>
 <h3>원문 대본(조회 상위)</h3>%s</section>''' % (
-            e(ht), e(c["desc"]), c["n"], c["views_median"] // 10000, e(" → ".join(c["arc_main"])),
+            e(" → ".join(c["arc_main"])),
             " · ".join("%s(%d)" % (e(" → ".join(x["arc"].split(" → "))), x["n"]) for x in c["arcs"][:4]), slots,
             "".join("<li>%s <span class='mut'>← %s (%d만)</span></li>" % (e(x["skel"]), e(x["src"]), x["views"] // 10000) for x in c["hook_skeletons"][:8]),
             "".join("<li>%s <span class='mut'>전환: %s · 닫기: %s</span></li>" % (e(x["arc"]), e(x["turn"]), e(x["payoff"])) for x in c["story_examples"][:6]),

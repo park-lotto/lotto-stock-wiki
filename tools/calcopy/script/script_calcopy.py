@@ -72,25 +72,41 @@ def cmd_pull(a):
     have = {f.split(".")[0] for f in os.listdir(ad)}
     todo = [r["id"] for r in read_list(a.slug) if r["id"] not in have]
     print("받을 것 %d편(이미 %d)" % (len(todo), len(have)), flush=True)
+    done_mark = os.path.join(d, "_pull_done")
+    if os.path.exists(done_mark):
+        os.remove(done_mark)
     if not todo:
+        open(done_mark, "w").write(time.strftime("%Y-%m-%d %H:%M"))
         return
     lst = os.path.join(d, "_pull_ids.txt")
     open(lst, "w", encoding="utf-8").write("\n".join("https://www.youtube.com/shorts/" + i for i in todo))
     subprocess.run(["yt-dlp", "-f", "bestaudio[ext=m4a]/bestaudio", "--sleep-requests", "1", "--sleep-interval", "1",
                     "--ignore-errors", "--no-progress", "-o", os.path.join(ad, "%(id)s.%(ext)s"), "-a", lst])
     print("받음 %d편" % len(os.listdir(ad)))
+    open(done_mark, "w").write(time.strftime("%Y-%m-%d %H:%M"))   # transcribe --follow 가 이걸 보고 끝낸다
 
 
 # ── transcribe ────────────────────────────────────────────────────────
 def cmd_transcribe(a):
+    """--follow: pull 과 동시에 돌린다 — 새 음성이 생기면 받아쓰고, pull 이 끝났고(_pull_done) 남은 게 없으면 끝낸다."""
     from faster_whisper import WhisperModel   # 이 단계만 무거운 패키지가 필요하다
+    m = WhisperModel(a.model, device="cpu", compute_type="int8")
+    while True:
+        n = _transcribe_pass(a, m)
+        if not a.follow or (n == 0 and os.path.exists(os.path.join(out_dir(a.slug), "_pull_done"))):
+            break
+        if n == 0:
+            time.sleep(30)
+
+
+def _transcribe_pass(a, m):
     d = out_dir(a.slug)
     path = os.path.join(d, "transcripts.json")
     done = load_json(path, {})
     ad = os.path.join(d, "audio")
     files = sorted(f for f in os.listdir(ad) if f.split(".")[0] not in done and not f.endswith(".part"))
+    files = [f for f in files if not f.endswith((".ytdl", ".temp"))]
     print("받아쓸 것 %d편(이미 %d)" % (len(files), len(done)), flush=True)
-    m = WhisperModel(a.model, device="cpu", compute_type="int8")
     for i, f in enumerate(files):
         vid = f.split(".")[0]
         try:
@@ -103,6 +119,7 @@ def cmd_transcribe(a):
             save_json(path, done)
         print("%d/%d %s %s" % (i + 1, len(files), vid, done[vid]["text"][:40]), flush=True)
     save_json(path, done)
+    return len(files)
 
 
 def main():
@@ -111,10 +128,13 @@ def main():
     p = sp.add_parser("list"); p.add_argument("--url", required=True); p.add_argument("--slug", required=True)
     p = sp.add_parser("pull"); p.add_argument("--slug", required=True)
     p = sp.add_parser("transcribe"); p.add_argument("--slug", required=True)
+    p.add_argument("--follow", action="store_true", help="pull 과 동시에 — 새 음성을 기다리며 계속")
     p.add_argument("--model", default=os.environ.get("FASTER_WHISPER_MODEL", "deepdml/faster-whisper-large-v3-turbo-ct2"))
     for name in ("tag", "cluster", "card", "report"):
         p = sp.add_parser(name); p.add_argument("--slug", required=True)
         p.add_argument("--batch", type=int, default=8); p.add_argument("--limit", type=int, default=0)
+        p.add_argument("--workers", type=int, default=1); p.add_argument("--follow", action="store_true")
+        p.add_argument("--hit", type=int, default=100000, help="잘된 편 기준 조회수"); p.add_argument("--flop", type=int, default=20000, help="안된 편 기준 조회수(미만)")
     a = ap.parse_args()
     if a.cmd in ("tag", "cluster", "card", "report"):
         import script_calcopy_stages as ST

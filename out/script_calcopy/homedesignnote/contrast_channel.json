@@ -1,0 +1,168 @@
+{
+ "hit_th": 100000,
+ "flop_th": 20000,
+ "n_hit": 90,
+ "n_flop": 184,
+ "contrast": [
+  {
+   "f": "인물 꾸밈말 있음",
+   "hit": 0.6,
+   "flop": 0.31,
+   "diff": 0.29,
+   "n_hit": 54,
+   "n_flop": 57
+  },
+  {
+   "f": "장치: sensory",
+   "hit": 0.72,
+   "flop": 0.44,
+   "diff": 0.28,
+   "n_hit": 65,
+   "n_flop": 81
+  },
+  {
+   "f": "장치: authority",
+   "hit": 0.6,
+   "flop": 0.35,
+   "diff": 0.25,
+   "n_hit": 54,
+   "n_flop": 64
+  },
+  {
+   "f": "장치: comparison",
+   "hit": 0.6,
+   "flop": 0.35,
+   "diff": 0.25,
+   "n_hit": 54,
+   "n_flop": 64
+  },
+  {
+   "f": "장치: hearsay",
+   "hit": 0.58,
+   "flop": 0.33,
+   "diff": 0.25,
+   "n_hit": 52,
+   "n_flop": 61
+  },
+  {
+   "f": "등장인물 있음(화자 말고)",
+   "hit": 0.81,
+   "flop": 0.58,
+   "diff": 0.24,
+   "n_hit": 73,
+   "n_flop": 106
+  },
+  {
+   "f": "칸: setup",
+   "hit": 0.6,
+   "flop": 0.38,
+   "diff": 0.22,
+   "n_hit": 54,
+   "n_flop": 69
+  },
+  {
+   "f": "인물: 친구",
+   "hit": 0.28,
+   "flop": 0.07,
+   "diff": 0.21,
+   "n_hit": 25,
+   "n_flop": 13
+  },
+  {
+   "f": "장치: question",
+   "hit": 0.23,
+   "flop": 0.45,
+   "diff": -0.21,
+   "n_hit": 21,
+   "n_flop": 82
+  },
+  {
+   "f": "연결어: 심지어",
+   "hit": 0.42,
+   "flop": 0.24,
+   "diff": 0.18,
+   "n_hit": 38,
+   "n_flop": 45
+  },
+  {
+   "f": "권위 줄 있음",
+   "hit": 0.7,
+   "flop": 0.54,
+   "diff": 0.16,
+   "n_hit": 63,
+   "n_flop": 100
+  },
+  {
+   "f": "권위: 전문가·직업",
+   "hit": 0.31,
+   "flop": 0.15,
+   "diff": 0.16,
+   "n_hit": 28,
+   "n_flop": 27
+  },
+  {
+   "f": "칸: result",
+   "hit": 0.46,
+   "flop": 0.3,
+   "diff": 0.16,
+   "n_hit": 41,
+   "n_flop": 55
+  },
+  {
+   "f": "장치: social_proof",
+   "hit": 0.5,
+   "flop": 0.34,
+   "diff": 0.16,
+   "n_hit": 45,
+   "n_flop": 62
+  },
+  {
+   "f": "닫기: recommend",
+   "hit": 0.08,
+   "flop": 0.22,
+   "diff": -0.15,
+   "n_hit": 7,
+   "n_flop": 41
+  },
+  {
+   "f": "정체 공개가 앞 3칸 안",
+   "hit": 0.39,
+   "flop": 0.54,
+   "diff": -0.15,
+   "n_hit": 35,
+   "n_flop": 100
+  },
+  {
+   "f": "칸: social",
+   "hit": 0.32,
+   "flop": 0.18,
+   "diff": 0.14,
+   "n_hit": 29,
+   "n_flop": 33
+  },
+  {
+   "f": "와우 2줄+",
+   "hit": 0.76,
+   "flop": 0.62,
+   "diff": 0.13,
+   "n_hit": 68,
+   "n_flop": 115
+  },
+  {
+   "f": "닫기: result",
+   "hit": 0.19,
+   "flop": 0.06,
+   "diff": 0.13,
+   "n_hit": 17,
+   "n_flop": 11
+  },
+  {
+   "f": "칸: authority",
+   "hit": 0.34,
+   "flop": 0.22,
+   "diff": 0.12,
+   "n_hit": 31,
+   "n_flop": 41
+  }
+ ]
+}

@@ -1,0 +1,1305 @@
+{
+ "meta": {
+  "tagged": 574,
+  "usable": 478,
+  "dropped_low_coverage": 0,
+  "not_usable": 96
+ },
+ "types": [
+  {
+   "type": "지인사건",
+   "desc": "가족·지인이 해 둔·사 온·보여 준 물건 + 반응",
+   "n": 93,
+   "views_median": 35000,
+   "views_sum": 19806000,
+   "families": [
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     12
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     12
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     10
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     7
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · 만족닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · CTA닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · CTA닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 만족닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 변화닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 만족닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · 만족닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 만족닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우0 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "_QqLEH4qlFQ",
+    "EINoAh8C9rQ",
+    "R6mfkN814n8",
+    "kybnOuZeoo0",
+    "WZgM5Ca8_eM",
+    "WGqAq3qtf00",
+    "LcnftCEwjbs",
+    "wddJCFa4nAc",
+    "4j38pi7RaLk",
+    "ScBMkUUm5Io",
+    "meLBzsrlRZQ",
+    "M2TJkSXD0yk",
+    "_n5LxSE_mfQ",
+    "WUDQ2Q0HM_E",
+    "nvhp8-5wido",
+    "lnChNCTLgtw",
+    "YPHeNgINM6w",
+    "4UBJpDDQ8Pk",
+    "OtzvpXGlegk",
+    "Ohh_6em6BIc",
+    "sgLvY1tShcY",
+    "zPqVHmCdD_M",
+    "-p1Yd5XYTjI",
+    "RSbtRo117Q8",
+    "Xh5xYw74Oes",
+    "diJN33mrkQA",
+    "1Cu0lCNRJY4",
+    "3XKkBT0MbRc",
+    "Q_qWX3akdSA",
+    "kmEd1j2OFCo",
+    "3GPqwk0GC1E",
+    "3znJt2uC4OI",
+    "glMgvm4SaI8",
+    "Iw4s4PwezmY",
+    "xI9WAZct2_4",
+    "HN6owJSPU9M",
+    "RLPAN46uvEo",
+    "ahsODN4Kxgc",
+    "dOiGcYUN4fo",
+    "f2Bi80P8iQk",
+    "seI0Xf-B1JI",
+    "xrURs4syNH0",
+    "unL7SCTG0rc",
+    "0y3koz553BQ",
+    "mSGBP9gynLU",
+    "se_36R_OIYM",
+    "2izzl4CQdgs",
+    "bF21uMYb6Xs",
+    "yr3cYC8rrbw",
+    "WT-8ZlXr8L8",
+    "at4PDC8CFlo",
+    "QAFVYqfNzeE",
+    "g4OMz184otc",
+    "69h6cob2-Z8",
+    "HDHgDmJIMyY",
+    "P5pUs5mgVRg",
+    "O8FliZAOB5E",
+    "k0fMw7ZfyRs",
+    "ADyzu5xTAYw",
+    "-Wxmsv6oFro",
+    "yQIVpKjeT-Y",
+    "0yHK-LHIUF0",
+    "WbA7UjrOrjc",
+    "yHRbEBr20xQ",
+    "2Wufm7IEA5o",
+    "wQqAhUwy4gs",
+    "v_ed44ZIuas",
+    "GOGAS5VFs1Q",
+    "1Dt5KKevvE4",
+    "OnE_b8eS2DU",
+    "b-Lp9yzlZFI",
+    "iQ90SPXNXkk",
+    "QlTc83nRQLA",
+    "2aF2qEBGljU",
+    "6I0MaYKxK1Y",
+    "mufNo-76_pA",
+    "XGn1-Hhi-78",
+    "kwPB9xQ8EPI",
+    "uU9m0DWeUzU",
+    "RAlDmA4vfsE",
+    "Zo_aB3ivNwI",
+    "fimddY7gSZc",
+    "JSeGuHitd_Q",
+    "ZgvNSS_imO0",
+    "pn_ZGnwDDx8",
+    "kOiJt3UznqQ",
+    "biZw3tYbTH8",
+    "E-CfWDrQKzA",
+    "Ydc1ztsarHk",
+    "DDA8GKJUCuA",
+    "Z6J4G7gVAjY",
+    "HxMMoaP5iog",
+    "EzllkG9Yf0A"
+   ]
+  },
+  {
+   "type": "고백체험",
+   "desc": "내가 겪고 생각이 바뀐 일(혼났어요·안 사요·~인 줄 알았어요)",
+   "n": 93,
+   "views_median": 24000,
+   "views_sum": 15918800,
+   "families": [
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     13
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     11
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     11
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     7
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · CTA닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 권유닫기",
+     4
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 사회반응닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · 변화닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 만족닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 변화닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · CTA닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · 만족닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · CTA닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우0 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · CTA닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "DCXQjaWcZ-g",
+    "orBlWWhejtc",
+    "eiWxEvVmDz8",
+    "0gW52i3BIuQ",
+    "VJqT7D-zENY",
+    "TJ_QK_MN2js",
+    "zEyHZDkU-gY",
+    "cHGEj3Nh0AY",
+    "Py39fEhup7E",
+    "kQK1c9o2K9o",
+    "7LXEXTn-vnY",
+    "_FiocFRYFME",
+    "1kbfX780lV8",
+    "cRSU-6jyTE0",
+    "ilJh1x4PzME",
+    "PlRgH6yketc",
+    "POXy2q-P08M",
+    "_nvfmIMKshk",
+    "L5LrJmDkab4",
+    "vuga6cyw4xo",
+    "VLu99cqm4_k",
+    "VPCkLgWYFTo",
+    "o5e-OZnKeL8",
+    "Jk4MnAEN6HA",
+    "GtTtu-WMhcU",
+    "FAtRMkCdSmo",
+    "x09R2VVF9zE",
+    "--Cs-PKUFoU",
+    "tiqN2tcz9fA",
+    "tga2CbjRBqA",
+    "lm5udg5Nl9M",
+    "7pnGR7HNhak",
+    "u-cqGeXz5yM",
+    "vLjoD7B-re0",
+    "CF7whEKWE8U",
+    "1MrXIh9RRxo",
+    "XbE6NNqY2C4",
+    "QtXBY0xxDR8",
+    "wgyQ8SOoLDc",
+    "YlUxJemorhA",
+    "xSbjiiUB4e8",
+    "YcQINOq2n3s",
+    "k4jYacScWMo",
+    "0MIvcN8gj_8",
+    "G2rkgrV1nA4",
+    "Qz9hWgXv3WE",
+    "4N-2pMX6hH8",
+    "JoUQ-WUGj_E",
+    "ZuF_PrpZ4Rk",
+    "4Ff_YDoqjYE",
+    "nd0JNuJgPpw",
+    "-6vklpaPIXM",
+    "q3lfsAQKL9Y",
+    "theBp2AqRtU",
+    "lYlRv0SLVaM",
+    "FVUPwtBKKjw",
+    "YG4tHek4wSE",
+    "-Yqc0v27_rU",
+    "I3glPvA9a-I",
+    "QkkZ19W6YNg",
+    "RAAri5KHlX4",
+    "hHBlOBThjw4",
+    "4EH2IaWryhg",
+    "8bw97zn5nGg",
+    "ET5zj0734lg",
+    "iq_toyHT9F8",
+    "wNjt_kIEliM",
+    "ctZHulaom58",
+    "Uywf2bpM8Hk",
+    "YghDQZMorJo",
+    "XR_pYzqneU0",
+    "pHzqseh_Nqc",
+    "0Ruot0jURiM",
+    "dQDcD1JHVYo",
+    "Xwp2b3u46Qc",
+    "rRCYY00eVaM",
+    "V8xnnTPR_Cg",
+    "IARZVm3jRdo",
+    "RlSuEFYXNeI",
+    "R4LkB9CJmXo",
+    "8bnrEEXrAFI",
+    "uN4uDFAS50k",
+    "etTFownqF4Q",
+    "AQZc6ttj7uQ",
+    "cNN2Jdo0fGk",
+    "SdbiyK7PCts",
+    "3KYEwYHc3Pw",
+    "LegZBmiNqhw",
+    "pMfaj6ZX5WU",
+    "6eqVD4Ysn8I",
+    "GnGU5PNkY0E",
+    "c5lXSQwLNtY",
+    "JK_txY3eEQY"
+   ]
+  },
+  {
+   "type": "질문도발",
+   "desc": "질문·도발(아니 잠깐만요·망할 것 같은데요?)",
+   "n": 79,
+   "views_median": 21000,
+   "views_sum": 9573600,
+   "families": [
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     9
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     7
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     7
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 권유닫기",
+     7
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     6
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 만족닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · CTA닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 권유닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · 만족닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 만족닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · CTA닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "WTgQPFfdSOQ",
+    "2Y20YAQmit0",
+    "zGHw-CfL_uI",
+    "YmiyRMxn6bI",
+    "QuWUp2gEQ80",
+    "6LHz-AhH-Gg",
+    "SLCG8nbBLec",
+    "MVASO26PAdU",
+    "rn8D3gtHLhU",
+    "iu5L7N4UX40",
+    "X9FUBjAIEzM",
+    "9E3iSzujpyY",
+    "vXtswCmTvjM",
+    "drjYocHeCk0",
+    "3sOBKQPN9qg",
+    "mHdU1cyzXZU",
+    "mLOAoD-pH98",
+    "8I96Dvy-Bh8",
+    "4DeSIInRSak",
+    "Zgjl2VsrbNs",
+    "QKrcXPHh-2c",
+    "HWSD1USz0aQ",
+    "GViwFC9VyFM",
+    "57OgcoedPLU",
+    "aoW-fcwPKZs",
+    "JTC8Cbf8lkw",
+    "G6VVImMgwes",
+    "pe7gumRJfsA",
+    "6GKKaxW8EMQ",
+    "LYvhiBPPqpI",
+    "ejbwKFkguos",
+    "LYlG22USiLA",
+    "OEwdLTRAAMI",
+    "owpUPOzMoSs",
+    "NSj93ylXQ2w",
+    "IXP8KP-a7ns",
+    "030LGdknfPA",
+    "ABb1UX2fyCo",
+    "Et2R6xuBlwU",
+    "bxhNtXITUHE",
+    "L0xZAXnFXlk",
+    "OFXshtfh1jw",
+    "R4VEmenM6gY",
+    "vyDW5ygzLpI",
+    "0FfbqB1y5Jo",
+    "BtWdyf0PhiU",
+    "WvSCk95I0uQ",
+    "nLyK5iUNrDo",
+    "pRJ8G0_C06w",
+    "VPMyDk1W1bA",
+    "j0hFBHJ2xDU",
+    "2KQv-2y2uuc",
+    "lmFlRNm9F2k",
+    "GFE1aNrcrOg",
+    "Owm-DTk1tWs",
+    "NBgAMH7VPFE",
+    "Wfpb52lh5OU",
+    "xBChrU8g8ao",
+    "r-9_8Bw6N_0",
+    "iAhgm3JwZJc",
+    "eY-IV6iPe-Y",
+    "VG7_gC7jROk",
+    "yk7fwGHRfvM",
+    "lMigUOKVtzM",
+    "Ubggx17u-Gk",
+    "7jV51rfij20",
+    "aKEs_MAU9q0",
+    "f_cYCwPJjUg",
+    "CdXc1Cat1nc",
+    "xJMAcpk82p0",
+    "FQUHrMVTksg",
+    "he1DNbU9iJQ",
+    "uoshrA-Agv8",
+    "SMIHiRKc9Nw",
+    "sFQSyPht0qA",
+    "YQPFOVpSfHs",
+    "WlPnSVp4RIA",
+    "n9eQgUGkx80",
+    "CHTmO6iPaH8"
+   ]
+  },
+  {
+   "type": "권위장소",
+   "desc": "고급 장소·전문가·유행에서 쓴다는 물건",
+   "n": 70,
+   "views_median": 25000,
+   "views_sum": 9703200,
+   "families": [
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     7
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     6
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 만족닫기",
+     6
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     5
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     4
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 변화닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · CTA닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 권유닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · CTA닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · CTA닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 권유닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "e15KZ_nO1_Y",
+    "1ZAg82zzbgo",
+    "7Nj6b0mX4HM",
+    "g5F4WrRNyE4",
+    "KF0v8WcnYN0",
+    "fKczFd2yP_0",
+    "ZPIrB9KOhFY",
+    "jhdynRDmg4g",
+    "FmmEEcOr2aw",
+    "vwGyQ7OXNUw",
+    "SszaZITo3TQ",
+    "BQkRhwiHVIU",
+    "24-tLNN9eRM",
+    "GkAYFw7PimI",
+    "mrL8mb1wYwM",
+    "nLYROgTI-dE",
+    "4QF198PSji4",
+    "LR99UexL2DY",
+    "PMbCSVG8Ytc",
+    "OsIxm_T5dzo",
+    "z6bZhWukwqg",
+    "CppDdAlBGjQ",
+    "SEbkKU6MA1Y",
+    "5OLyy-oCfTg",
+    "EwCBDoZXBjU",
+    "bdeh3YpN_0A",
+    "PD6K4c8-u48",
+    "Yn89d8ZVkw8",
+    "gHkfqVDt_S0",
+    "sE1e9QUPOo0",
+    "DmL9YTqSpac",
+    "qiW60QLcL_w",
+    "V8jxPFVx-fQ",
+    "RtOzBmDDiKA",
+    "U6-GdIV_oAI",
+    "yb8nvIi3exA",
+    "Czwxjcz1SYI",
+    "IgOI5kgC6jE",
+    "i_PUC_0WiJs",
+    "v7kfuXLNfWc",
+    "-x1G781-pxA",
+    "nFU12VtywAY",
+    "t6z---oXPqc",
+    "N402z4X-Xfs",
+    "GeLkRl4JxSk",
+    "XvhDqE7fqcI",
+    "_qnrAj3USWk",
+    "nXDt8--CBvY",
+    "xZ6PN0Ppp1I",
+    "26QtdtB1T0A",
+    "MDjByyBMtV0",
+    "z7Gv6Y78rUc",
+    "6ihCnKpnGcI",
+    "G4tZ-uO1c7o",
+    "9k7k7XndZgY",
+    "uUqANr_Jjaw",
+    "7gyDmh_wL2w",
+    "nj6-Rl9KSuI",
+    "WuoFEoxkqeU",
+    "M0rJGqhK-QQ",
+    "rTibTflOQD8",
+    "lq-XzTM8TTg",
+    "akwCGTI4m_Y",
+    "wP_eV2zvGZI",
+    "XE_2SHROHck",
+    "uOC_vlnx1Wo",
+    "5enndO52CE0",
+    "XD10_JLA31U",
+    "DUdEj7byNxA",
+    "rGv0A_nKQec"
+   ]
+  },
+  {
+   "type": "경고명령",
+   "desc": "~하지 마세요·~하지 말고 이거 해보세요",
+   "n": 65,
+   "views_median": 23000,
+   "views_sum": 5541600,
+   "families": [
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     9
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · CTA닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     4
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     4
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     4
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 권유닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · CTA닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 변화닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · CTA닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 권유닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 권유닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우0 · CTA닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "2exspDiHhCM",
+    "8Tm_sfEoc2c",
+    "seFkrVR-nYs",
+    "R0-bfj7JarA",
+    "r3Sjk_-aC4k",
+    "wEgYZyR3S3g",
+    "6YvqPjgex3g",
+    "OFyJ2JV9tRo",
+    "gHf8GJS_PWg",
+    "XuPDK_O_OkI",
+    "3UQSqxu869w",
+    "vwk60zIdi_k",
+    "h1qXB8r-2-s",
+    "6Q94vs13Jvk",
+    "O81QM3U4qes",
+    "qXcvxAc7fno",
+    "Znbzn41oOrA",
+    "jrET4wijfik",
+    "CvFxSlY2KbU",
+    "sFtUdZz8xlI",
+    "L3_b2AYFlIU",
+    "EnoLwZaRKwA",
+    "JJ4YBTL9THM",
+    "KVG_eVYg_LU",
+    "wQySTMAg_kg",
+    "qfxMrFJAzb8",
+    "BKXaLjaHyeg",
+    "DBISJUS2sRs",
+    "FzQbppjkyZc",
+    "TJGn9QrfFfY",
+    "5yAIJX68wR8",
+    "TWmIYC_QcWI",
+    "BU6_iDCO9yw",
+    "hsVYSAulQmE",
+    "gV0DZ5sEkoQ",
+    "JKKRHW6nsDY",
+    "QaKkZx__Zag",
+    "QJ3nDzP40oc",
+    "eKypiLz9olk",
+    "-EkM69lt3tM",
+    "1O160DCxyCI",
+    "nrgpn5E02EA",
+    "U5-bgVz0SFs",
+    "S5Cx0_CgdQY",
+    "-aHUj8YXK-4",
+    "5zWDwS00paw",
+    "HtEUUyQreSs",
+    "cDiz2kP_Ed8",
+    "81Aqcj-CjqU",
+    "ITbYa6MYYP4",
+    "8QogetC72AY",
+    "_u3kh4kA-WM",
+    "ulrymwX0MQg",
+    "n-hAPHyg-iM",
+    "kYoXVwK4FMw",
+    "UOjCPw-y0cg",
+    "l4sBbW7-XHU",
+    "O6kSvCdMOHM",
+    "5sZluVN47U0",
+    "6qh9HULORkM",
+    "WC0RWWp3zQw",
+    "RgFZ1pkJnqc",
+    "U_IVrjiZ_K4",
+    "IpvQL4xOY2Y",
+    "lQrYk73p5lc"
+   ]
+  },
+  {
+   "type": "만든사람",
+   "desc": "개발자·회사·덕후가 만든 미친 제품(~버렸대요·~있어요)",
+   "n": 51,
+   "views_median": 32000,
+   "views_sum": 10394300,
+   "families": [
+    [
+     "정체 늦게 · 권위O · 와우2+ · 만족닫기",
+     6
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     5
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     4
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · CTA닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 만족닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · CTA닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 사회반응닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 만족닫기",
+     2
+    ],
+    [
+     "정체 먼저 · 권위O · 와우1 · 만족닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 사회반응닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · CTA닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우0 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우0 · 만족닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위O · 와우2+ · 권유닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · CTA닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "SU9YofB1IoI",
+    "fQPX6XeXeN0",
+    "Ez7KsS2K_Pk",
+    "usgzHg_zH9I",
+    "1wY0PIeFAWw",
+    "qIcswKhm-Dk",
+    "Hl-yyLqexos",
+    "DSyKBD4KGjA",
+    "fHAUkd0ILkE",
+    "fJtv4eXPJfs",
+    "Bo1dl7dN9bc",
+    "JewDFIqM3j8",
+    "XIDaWijd_Dw",
+    "Qx40IrHBFs8",
+    "WwzjMzj-y2Q",
+    "ZVwbKuAGHn8",
+    "EfX2hQ3u8Wo",
+    "eDT9EPuFVZ4",
+    "QLyEYFpDYbM",
+    "BYIgtDU0f_w",
+    "zqAdVcDjad8",
+    "0qLNlrGzsoU",
+    "d9MGOTuFAwE",
+    "rO-vYLo4xwc",
+    "Li5seP8u1Bw",
+    "I5fSWVouRz0",
+    "2fO-4zpz8vY",
+    "L5frFHHf6jI",
+    "VgFgPUDxjrk",
+    "fBNIpUMWBuU",
+    "1d1sym3mZ2M",
+    "kB-4L0Xn82k",
+    "xCy2W166wQ8",
+    "iwjHLaUylI0",
+    "B-T1bCb7Lkk",
+    "-kCTZEyq6u4",
+    "ds_eWzmGSHQ",
+    "D4mrGMehmu8",
+    "upVdJhFjRC8",
+    "EfbKsS809as",
+    "YmD1SIaAohc",
+    "l5qWcI_sXPc",
+    "gKEGQ6tuhKw",
+    "qj-_n69fhHE",
+    "L_rtohg8qP4",
+    "RRZ71b9_iRg",
+    "A9BWpADaeAM",
+    "2-EMaNqZnL8",
+    "IcCKE4can0Q",
+    "YrqbbgOqgPM",
+    "PgYgyLzM4kE"
+   ]
+  },
+  {
+   "type": "기타",
+   "desc": "위에 없음",
+   "n": 27,
+   "views_median": 23000,
+   "views_sum": 5467400,
+   "families": [
+    [
+     "정체 늦게 · 권위X · 와우2+ · 만족닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 권유닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 만족닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 만족닫기",
+     3
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 권유닫기",
+     3
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · CTA닫기",
+     2
+    ],
+    [
+     "정체 늦게 · 권위O · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위O · 와우2+ · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · CTA닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 만족닫기",
+     1
+    ],
+    [
+     "정체 먼저 · 권위X · 와우2+ · 사회반응닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우0 · 권유닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우1 · 변화닫기",
+     1
+    ],
+    [
+     "정체 늦게 · 권위X · 와우2+ · 권유닫기",
+     1
+    ]
+   ],
+   "ids": [
+    "kLqVHz6Frgo",
+    "lDUbgNUYFg0",
+    "2_W3Azg9wV4",
+    "h3dTisbioec",
+    "-RjSwFBwIZY",
+    "ct9y0fPCl84",
+    "VBEJTAjnas8",
+    "9PMAgItqX94",
+    "8vfWGoFURUI",
+    "vKmaqVEHcEg",
+    "l1r9POwvsfI",
+    "0-1wpc2qMKk",
+    "cFry0scoE3U",
+    "E49ttbsXV3o",
+    "fburvsXAbaY",
+    "tWvpSYvvUiE",
+    "UQ5BdbW2sPE",
+    "jGXWBRoxiD4",
+    "uM9jigNud2I",
+    "2UKADERhTL8",
+    "DkGbVxmIu1Y",
+    "CwBET14BtjM",
+    "dNxUNDugbOM",
+    "xsV4QNAZ7Og",
+    "w4sqNiExkRU",
+    "yB1hOB7wYPQ",
+    "6mU2EyZ2Ul4"
+   ]
+  }
+ ]
+}
