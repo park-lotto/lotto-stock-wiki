@@ -9,6 +9,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 24,
    "pain": null
   },
   {
@@ -20,6 +22,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 31,
    "pain": null
   },
   {
@@ -31,6 +35,8 @@
    "score": 0.23,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": null
   },
   {
@@ -42,6 +48,8 @@
    "score": 0.23,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 28,
    "pain": null
   },
   {
@@ -55,6 +63,8 @@
    "nations": [
     "해외"
    ],
+   "fits": false,
+   "chars": 38,
    "pain": null
   },
   {
@@ -68,6 +78,8 @@
    "nations": [
     "미국"
    ],
+   "fits": false,
+   "chars": 32,
    "pain": null
   },
   {
@@ -75,10 +87,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "집 안 훤히 들여다보여 빡친 사람들 환장하게 만든 천재의 발명품",
-   "mold": "T1",
-   "score": 0.8,
-   "keep": true,
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 35,
    "pain": true
   },
   {
@@ -86,12 +100,14 @@
    "src": "wrap",
    "i": 0,
    "line": "주부들 환장하게 만든 미국 천재의 발명품",
-   "mold": "T7",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -99,12 +115,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 23,
    "pain": false
   },
   {
@@ -112,12 +130,14 @@
    "src": "wrap",
    "i": 0,
    "line": "제조사도 감탄한 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -129,6 +149,8 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "fits": false,
+   "chars": 32,
    "pain": null
   },
   {
@@ -140,6 +162,8 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "fits": true,
+   "chars": 28,
    "pain": null
   },
   {
@@ -151,6 +175,8 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "fits": true,
+   "chars": 29,
    "pain": null
   },
   {
@@ -162,6 +188,8 @@
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "fits": true,
+   "chars": 29,
    "pain": null
   },
   {
@@ -169,10 +197,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "역발상으로 돈방석 앉은 천재의 발명품",
-   "mold": "D2",
-   "score": 1.0,
-   "keep": true,
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 20,
    "pain": false
   },
   {
@@ -180,10 +210,12 @@
    "src": "wrap",
    "i": 0,
    "line": "모두가 무릎 탁 친 천재의 발명품",
-   "mold": "D2",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 18,
    "pain": false
   },
   {
@@ -195,6 +227,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 31,
    "pain": null
   },
   {
@@ -206,6 +240,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": null
   },
   {
@@ -217,6 +253,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 37,
    "pain": null
   },
   {
@@ -228,6 +266,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 25,
    "pain": null
   },
   {
@@ -235,10 +275,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "이케아도 당황하게 만든 천재의 발명품",
-   "mold": "T7",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 20,
    "pain": false
   },
   {
@@ -252,6 +294,8 @@
    "nations": [
     "미국"
    ],
+   "fits": false,
+   "chars": 31,
    "pain": false
   },
   {
@@ -259,10 +303,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "옆집 시선 때문에 고생했으면 이거 보면 됨",
-   "mold": "P2",
+   "mold": "P1",
    "score": 1.0,
    "keep": true,
    "nations": [],
+   "fits": true,
+   "chars": 23,
    "pain": true
   },
   {
@@ -270,10 +316,12 @@
    "src": "wrap",
    "i": 0,
    "line": "주부들 구원한 천재의 발명품 정체라는데",
-   "mold": "P3",
-   "score": 1.0,
-   "keep": true,
+   "mold": "P2",
+   "score": 0.6,
+   "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 21,
    "pain": false
   },
   {
@@ -285,6 +333,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 26,
    "pain": null
   },
   {
@@ -296,6 +346,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": null
   },
   {
@@ -307,6 +359,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 37,
    "pain": null
   },
   {
@@ -318,6 +372,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 21,
    "pain": null
   },
   {
@@ -329,6 +385,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": null
   },
   {
@@ -340,6 +398,8 @@
    "score": 0.0,
    "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 29,
    "pain": null
   },
   {
@@ -347,12 +407,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 23,
    "pain": false
   },
   {
@@ -360,12 +422,14 @@
    "src": "wrap",
    "i": 0,
    "line": "제조사도 감탄한 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -373,12 +437,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 23,
    "pain": false
   },
   {
@@ -386,12 +452,14 @@
    "src": "wrap",
    "i": 0,
    "line": "제조사도 감탄한 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -399,12 +467,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 23,
    "pain": false
   },
   {
@@ -412,12 +482,14 @@
    "src": "wrap",
    "i": 0,
    "line": "제조사도 감탄한 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -425,12 +497,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "건축가도 놀라버린 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 23,
    "pain": false
   },
   {
@@ -438,12 +512,14 @@
    "src": "wrap",
    "i": 0,
    "line": "제조사도 감탄한 미국 천재의 미친 활용법",
-   "mold": "M2",
-   "score": 0.4,
+   "mold": "M1",
+   "score": 0.6,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -451,10 +527,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
-   "mold": "T2",
-   "score": 0.75,
-   "keep": true,
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": true
   },
   {
@@ -462,12 +540,14 @@
    "src": "wrap",
    "i": 0,
    "line": "주부들 환장하게 만든 미국 천재의 발명품",
-   "mold": "T7",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -475,10 +555,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
-   "mold": "T2",
-   "score": 0.75,
-   "keep": true,
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": true
   },
   {
@@ -486,12 +568,14 @@
    "src": "wrap",
    "i": 0,
    "line": "주부들 환장하게 만든 미국 천재의 발명품",
-   "mold": "T7",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -499,10 +583,12 @@
    "src": "glasspaint",
    "i": 0,
    "line": "사생활 침해로 빡쳤던 사람들 구원한 천재의 발명품",
-   "mold": "T2",
-   "score": 0.75,
-   "keep": true,
+   "mold": "",
+   "score": 0.0,
+   "keep": false,
    "nations": [],
+   "fits": true,
+   "chars": 27,
    "pain": true
   },
   {
@@ -510,12 +596,14 @@
    "src": "wrap",
    "i": 0,
    "line": "주부들 환장하게 만든 미국 천재의 발명품",
-   "mold": "T7",
-   "score": 0.38,
+   "mold": "",
+   "score": 0.0,
    "keep": false,
    "nations": [
     "미국"
    ],
+   "fits": true,
+   "chars": 22,
    "pain": false
   },
   {
@@ -523,12 +611,14 @@
    "src": "glasspaint",
    "i": 0,
    "line": "집 안 들여다보여서 답답했던 한국 천재가 만들어 떼돈 번 페인트의 정체.",
-   "mold": "T1",
-   "score": 1.0,
-   "keep": true,
+   "mold": "H5",
+   "score": 0.43,
+   "keep": false,
    "nations": [
     "한국"
    ],
+   "fits": false,
+   "chars": 40,
    "pain": true
   },
   {
@@ -536,10 +626,12 @@
    "src": "wrap",
    "i": 0,
    "line": "남은 음식 포장하다 답답했던 천재가 만들어 떼돈 번 랩의 정체.",
-   "mold": "T1",
-   "score": 1.0,
-   "keep": true,
+   "mold": "H5",
+   "score": 0.43,
+   "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 35,
    "pain": true
   },
   {
@@ -551,6 +643,8 @@
    "score": 0.4,
    "keep": false,
    "nations": [],
+   "fits": false,
+   "chars": 48,
    "pain": null
   },
   {
@@ -562,6 +656,8 @@
    "score": 0.7,
    "keep": true,
    "nations": [],
+   "fits": false,
+   "chars": 45,
    "pain": null
   }
  ],

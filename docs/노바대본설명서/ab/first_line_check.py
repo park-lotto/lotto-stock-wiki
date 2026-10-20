@@ -3,9 +3,13 @@
 ① 틀 뼈대 유지: 첫 줄이 그 카드 「제목 틀 사전」 중 하나의 고정 낱말({슬롯} 밖 글자)을 70% 이상 담았나
 ② 스타일끼리 같은 구절: 같은 소재에서 서로 다른 스타일 3곳 이상 첫 줄에 나온 공백 뺀 6자+ 구절(설명서 예문이 퍼진 흔적)
 ③ 근거 없는 나라
+⑤ 템플릿에 담기나: 라이브 split_hook(11자+10자)으로 잘라 낱말이 하나도 안 버려지나(버려지면 라이브가 대본 제목 대신 AI 후보를 넣는다)
 ④ 불편 원인 앞(발명품·정체·해답·활용법 계열): 첫 줄 앞 2/3 안에 불편 낱말이 있나 — 사장님 10-20 '사생활 침해로 빡쳤던 사람들 구원한' O / '자취생 구원한' X
 사용: py first_line_check.py --side B2 [--cards ../cards_v2]   (A 는 --side A, 카드는 같은 이름 카드의 틀로 잰다)"""
-import argparse, glob, json, os, re
+import argparse, glob, json, os, re, sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+from shopping_shorts.template_copy import split_hook  # noqa: E402  라이브 템플릿 제목 자르기(11+10)
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +18,7 @@ CARD_OF = {"jungche": "정체숨김", "oyong": "오용활용법", "even": "이�
            "55": "정체숨김", "65": "정체숨김", "74": "정체숨김", "75": "정체숨김", "76": "정체숨김",
            "56": "오용활용법", "70": "오용활용법", "71": "오용활용법", "72": "오용활용법", "73": "오용활용법"}
 PAIN_FAMILY = {"jungche", "even", "60", "66", "oyong", "55", "65", "74", "75", "76", "56", "70", "71", "72", "73"}
-PAIN_RE = re.compile(r"답답|빡|짜증|귀찮|불편|싫|고생|현타|스트레스|지옥|노이로제|조마조마|보일까|사생활 없|훤히|서러|침해|노출|새서|새던|들뜨|흘러|번지|엉켜|풀려|안 붙|못 |하다가?\s|때문에|하다 |씌우다|포장하다|덮다|붙이다")
+PAIN_RE = re.compile(r"답답|빡|짜증|귀찮|불편|싫|고생|현타|스트레스|지옥|노이로제|조마조마|샘|들뜸|엿보|끈적|시선|새는|기포|자국|보일까|사생활 없|훤히|서러|침해|노출|새서|새던|들뜨|흘러|번지|엉켜|풀려|안 붙|못 |하다가?\s|때문에|하다 |씌우다|포장하다|덮다|붙이다")
 NATIONS = ["일본", "미국", "독일", "중국", "한국", "프랑스", "영국", "해외"]
 
 
@@ -79,6 +83,7 @@ def main():
             sc, no = mold_score(line, molds)
             rows.append(dict(id=cid, src=src, i=i, line=line, mold=no, score=round(sc, 2), keep=sc >= a.th,
                              nations=[n for n in NATIONS if n in line and n not in ev],
+                             fits=len(" ".join(split_hook(line)).split()) == len(line.split()), chars=len(line.strip()),
                              pain=(None if str(cid) not in PAIN_FAMILY else bool(PAIN_RE.search(line[:max(8, len(line) * 2 // 3)])))))
             by_src[src].append((cid, ns(line)))
     spread = {}
@@ -96,9 +101,10 @@ def main():
         spread[src] = {g: sorted(seen[g]) for g in keep}
     n = len(rows)
     fam = [r for r in rows if r["pain"] is not None]
+    print("[%s] 템플릿 담김 %d/%d" % (a.side, sum(r["fits"] for r in rows), len(rows)))
     print("[%s] 첫 줄 %d개 · 틀 뼈대 유지 %d · 근거 없는 나라 %d · 불편 원인 앞 %d/%d(발명품 계열)" % (a.side, n, sum(r["keep"] for r in rows), sum(bool(r["nations"]) for r in rows), sum(r["pain"] for r in fam), len(fam)))
     for r in rows:
-        flag = ("" if r["keep"] else " ✗틀") + (" ✗원인없음" if r["pain"] is False else "") + (" ✗나라:" + ",".join(r["nations"]) if r["nations"] else "")
+        flag = ("" if r["keep"] else " ✗틀") + ("" if r["fits"] else " ✗템플릿 안 담김(%d자)" % r["chars"]) + (" ✗원인없음" if r["pain"] is False else "") + (" ✗나라:" + ",".join(r["nations"]) if r["nations"] else "")
         print("  %-8s %-10s %d %.2f%-4s %s%s" % (r["id"], r["src"], r["i"], r["score"], r["mold"], r["line"], flag))
     for src, sp in spread.items():
         print("[%s] 스타일 3곳+ 첫 줄에 같은 구절: %s" % (src, "; ".join("%s(%d)" % (g, len(s)) for g, s in sp.items()) or "없음"))

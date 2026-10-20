@@ -9,7 +9,7 @@ import ab_run_v2 as V2
 
 V2.V2 = os.path.join(C.HERE, "..", "cards_v4")
 i = [t for t, _ in V2.ORDER_V2].index("3단계 — 후킹 유형(시안마다 다른 유형)")
-V2.ORDER_V2.insert(i + 1, ("3-1단계 — 미끼·연결어: 이븐쇼핑 78편 실측 틀(이 틀 안에서만 고른다)", ["even_bait", "even_signals", "bait_rule", "wow_rule"]))
+V2.ORDER_V2.insert(i + 1, ("3-1단계 — 미끼·연결어: 이븐쇼핑 78편 실측 틀(이 틀 안에서만 고른다)", ["title_fit", "even_bait", "bait_with", "even_signals", "bait_rule", "wow_rule"]))
 V2.ORDER_V2.insert(1, ("★공통 — 잉?·와우 포인트(빠지면 다시 쓴다)", ["ing_wow"]))
 _li = R.B_SCHEMA["properties"]["drafts"]["items"]["properties"]["lines"]["items"]["properties"]
 _li["point"] = {"type": "string"}
@@ -41,17 +41,18 @@ def main():
     ap.add_argument("--ids", default="even,jungche")
     ap.add_argument("--src", default="glasspaint,wrap")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--side", default="B4", help="결과 이름 앞머리(B5·B5r2 …) — 같은 입력 반복 측정용")
     a = ap.parse_args()
     for src in a.src.split(","):
         inp = R.load_input(src)
         for cid in a.ids.split(","):
-            dst = os.path.join(R.OUT, "B4_%s_%s.json" % (cid, src))
+            dst = os.path.join(R.OUT, "%s_%s_%s.json" % (a.side, cid, src))
             if os.path.exists(dst) and not a.force:
                 print("건너뜀(있음)", dst); continue
             r = V2.run_B2(cid, inp)
-            r.update(side="B4", id=cid, src=src)
+            r.update(side=a.side, id=cid, src=src)
             json.dump(r, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-            print("B4 %s %s 시안 %d" % (cid, src, len(r["drafts"])), flush=True)
+            print("%s %s %s 시안 %d" % (a.side, cid, src, len(r["drafts"])), flush=True)
     json.dump(C.CALLS, open(os.path.join(R.OUT, "_calls_B4_%d.json" % int(time.time())), "w", encoding="utf-8"), ensure_ascii=False)
     print("버텍스 호출 %d (실패 %d)" % (len(C.CALLS), sum(not c["ok"] for c in C.CALLS)))
 

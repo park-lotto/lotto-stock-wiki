@@ -3,16 +3,17 @@ import html, json, os, re, sys
 
 AB = r"C:\Users\TheRose\Desktop\로또의 주식\.tracks\노바대본설명서\docs\노바대본설명서\ab"
 CARDS = os.path.join(AB, "..", "cards_v4")
-OUT = r"C:\Users\TheRose\Desktop\대본_4차_5개씩.html"
+SIDE = sys.argv[1] if len(sys.argv) > 1 else "B4fix"
+OUT = os.path.join(r"C:\Users\TheRose\Desktop", "대본_%s.html" % (sys.argv[2] if len(sys.argv) > 2 else "4차_5개씩"))
 NAME = {"even": "이븐쇼핑", "jungche": "정체숨김"}
 SRC = {"glasspaint": "유리 페인트", "wrap": "밀착랩"}
 A_FIRST = {("even", "glasspaint"): "A_even_glasspaint", ("even", "wrap"): "A_even_wrap",
            ("jungche", "glasspaint"): "A_55_glasspaint", ("jungche", "wrap"): "A_55_wrap"}
 
-pts = json.load(open(os.path.join(AB, "points_B4fix.json"), encoding="utf-8"))
-awk = {x["key"]: x for x in json.load(open(os.path.join(AB, "awkward_B4fix.json"), encoding="utf-8"))["flags"]}
-fl = {(r["id"], r["src"], r["i"]): r for r in json.load(open(os.path.join(AB, "first_line_B4fix.json"), encoding="utf-8"))["rows"]} \
-    if os.path.exists(os.path.join(AB, "first_line_B4fix.json")) else {}
+pts = json.load(open(os.path.join(AB, "points_%s.json" % SIDE), encoding="utf-8"))
+awk = {x["key"]: x for x in json.load(open(os.path.join(AB, "awkward_%s.json" % SIDE), encoding="utf-8"))["flags"]}
+fl = {(r["id"], r["src"], r["i"]): r for r in json.load(open(os.path.join(AB, "first_line_%s.json" % SIDE), encoding="utf-8"))["rows"]} \
+    if os.path.exists(os.path.join(AB, "first_line_%s.json" % SIDE)) else {}
 e = html.escape
 
 
@@ -27,7 +28,7 @@ for cid in ["even", "jungche"]:
     pm = json.load(open(os.path.join(CARDS, NAME[cid] + ".json"), encoding="utf-8"))["ing_wow"]["이 스타일 칸"]
     ing = set(pm["ing"]); wow = set(sum((k.split("|") for k in pm["wow"]), []))
     for src in ["glasspaint", "wrap"]:
-        base = "B4fix_%s_%s" % (cid, src)
+        base = "%s_%s_%s" % (SIDE, cid, src)
         d = json.load(open(os.path.join(AB, "out", base + ".json"), encoding="utf-8"))
         cards = []
         for i, dd in enumerate(d["drafts"]):
@@ -53,6 +54,14 @@ for cid in ["even", "jungche"]:
         sections.append('<section><h2>%s · %s</h2><details class="a"><summary>비교: 지금 라이브(A) 대본</summary><ol>%s</ol></details><div class="grid">%s</div></section>'
                         % (NAME[cid], SRC[src], "".join("<li>%s</li>" % e(x) for x in al), "".join(cards)))
 
+if len(sys.argv) > 3:   # 반복 측정 — 같은 입력 3번
+    rows = []
+    for r in sys.argv[3].split(","):
+        d = json.load(open(os.path.join(AB, "out", r + "_even_wrap.json"), encoding="utf-8"))
+        for i, dd in enumerate(d["drafts"]):
+            ls = [l["text"] for l in dd["lines"]]
+            rows.append("<tr><td>%s 시안%d</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (e(r), i + 1, e(ls[0]), e(ls[1]), e(ls[-1])))
+    sections.append('<section><h2>같은 소재를 3번 따로 돌리면 (이븐쇼핑 · 밀착랩 · 15편)</h2><div class="tbl"><table><tr><th>회차</th><th>첫 줄</th><th>미끼</th><th>마무리</th></tr>%s</table></div></section>' % "".join(rows))
 tpl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "b4_tpl.html"), encoding="utf-8").read()
 open(OUT, "w", encoding="utf-8").write(tpl.replace("@@BODY@@", "\n".join(sections)))
 print(OUT)
