@@ -825,9 +825,8 @@ def bench(c: dict, out: Path, net: dict, llm: LLM, n_videos: int = 4, n_comments
     seed = src.get("id") if src.get("kind") in ("채널", "해외원본") else None
     if seed:   # 채널 기준 후보(관제 234): 그 채널에서 터진 원본 편이 첫 벤치 — 10-19 실측: 채널 제목으로 다시 찾으면 0건이라 5후보 모두 벤치 0
         lst = [{"id": seed}] + [v for v in lst if v["id"] != seed]
-    elif src.get("url") and (src.get("kind") == "참고영상" or src.get("via") == "참고 URL"):
-        # 고객이 준 영상(틱톡·인스타·유튜브, 관제 234) = 첫 벤치 — 10-20 실측: 그 영상 설명·긴 제목 전체로 유튜브를 찾으면 0편이라 벤치 0 으로 멈췄다
-        #   (유튜브 주소는 처음에 빠져 있었다: '갖은 방법 다 해도 안 지던 인덕션 얼룩, …' 제목 검색 0편 → 벤치 0)
+    elif src.get("kind") == "참고영상" and src.get("url"):
+        # 고객이 준 영상(틱톡·인스타·유튜브, 관제 234 — 표식은 calcopy_make.start 한 곳) = 첫 벤치 — 10-20 실측: 그 영상 설명·긴 제목 전체로 유튜브를 찾으면 0편이라 벤치 0 으로 멈췄다
         seed = "ref"
         lst = [{"id": seed, "url": src["url"]}] + lst
     for v in lst[:n_videos]:

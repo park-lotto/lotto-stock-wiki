@@ -445,8 +445,9 @@ def start(preset: str, pack: str | int = "1", topic: str | None = None, ref_url:
             f2, title = (deps.get("ref_facts") or ref_facts)(ref_url)
             facts = {**f2, **facts}
             src = {"via": "참고 URL", "url": ref_url}
-            if not is_youtube(ref_url):
-                src["kind"] = "참고영상"      # 유튜브 밖은 검색할 곳이 없다 — 그 영상이 곧 재료(worker_steps.step_source)
+            # 고객이 준 영상 = 첫 벤치·재료(topic_find.bench · worker_steps.step_source 가 이 표식 하나만 본다).
+            #   10-20 회원 한 줄 실시험: 유튜브 주소만 표식이 없어 긴 제목 검색 0편 → 벤치 0 · 재료 0 으로 두 단계가 다 멈췄다
+            src["kind"] = "참고영상"
             topic = topic or title
         if facts:
             src["facts_n"] = len(facts)

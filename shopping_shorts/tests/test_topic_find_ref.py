@@ -24,14 +24,29 @@ def test_ref_video_is_first_bench_even_when_search_is_empty(tmp_path):
     assert b["videos"][0]["relevance"] == "고객이 준 영상"
 
 
+def test_start_marks_youtube_ref_as_customer_video(tmp_path, monkeypatch):
+    # 10-20 회원 한 줄 실시험: 유튜브 주소만 표식이 없어 벤치 0 · 재료 0 — 표식의 주인 = calcopy_make.start
+    from shopping_shorts import calcopy_make as CM
+    got = {}
+    monkeypatch.setattr(CM.CT, "add", lambda topic, cat, state, source=None, **k: got.update(source=source) or {"id": 1})
+    monkeypatch.setattr(CM, "_candidate", lambda t, d: {})
+    monkeypatch.setattr(CM, "choose", lambda *a, **k: {})
+    monkeypatch.setattr(CM, "merge_preset_pack", lambda p, pk: {})
+    monkeypatch.setattr(CM, "_new_session", lambda *a: {"sid": "s", "slug": "mantem"})
+    monkeypatch.setattr(CM, "_save", lambda S, d: S)
+    monkeypatch.setattr(CM, "load_packs", lambda: {"1": {}})
+    for u in ("https://www.youtube.com/watch?v=dL1t0o9k2Gk", "https://www.tiktok.com/@a/video/1"):
+        CM.start("p", "1", ref_url=u, data_dir=tmp_path, deps={"ref_facts": lambda url: ({}, "제목")})
+        assert got["source"]["kind"] == "참고영상" and got["source"]["url"] == u, got
+
+
 def test_youtube_ref_url_is_first_bench_too(tmp_path):
-    # 10-20 회원 한 줄 실시험: 유튜브 주소는 kind 없이 via='참고 URL' 만 붙어 긴 제목 검색 0편 → 벤치 0 으로 멈췄다
     calls = []
     net = {"yt_search": lambda q, n, m: [],
            "yt_detail": lambda vid, n, url=None: calls.append((vid, url)) or {"id": vid, "url": url, "title": "인덕션 얼룩", "description": "", "comments": []}}
     u = "https://www.youtube.com/watch?v=dL1t0o9k2Gk"
     c = {"id": "c1", "topic": "갖은 방법 다 해도 안 지던 인덕션 얼룩, 이미도가 단숨에 지운 키친 리무버", "query": "x", "key": "",
-         "source": {"via": "참고 URL", "url": u}}
+         "source": {"via": "참고 URL", "kind": "참고영상", "url": u}}
     b = T.bench(c, tmp_path, net, _llm, 4, limits=T.Limits())
     assert calls == [("ref", u)] and [v["id"] for v in b["videos"]] == ["ref"] and b["points"], b["failed"]
 
