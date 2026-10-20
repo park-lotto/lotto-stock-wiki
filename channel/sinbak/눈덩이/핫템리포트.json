@@ -5,7 +5,8 @@
    "lang": "ko",
    "depth": 0,
    "from": "씨앗",
-   "done": true
+   "done": true,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCm_OUV4rklADjvXtOvvlN8A": {
    "name": "지구촌픽",
@@ -14,7 +15,8 @@
    "depth": 1,
    "from": "vLcKevaKfNI",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@pedroviturbe12": {
    "name": "@pedroviturbe12",
@@ -23,7 +25,8 @@
    "depth": 1,
    "from": "vLcKevaKfNI",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/5.min.usa": {
    "name": "5.min.usa",
@@ -68,7 +71,8 @@
    "depth": 1,
    "from": "eALs7BdBCQ0",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.instagram.com/neverboringnews/": {
    "name": "@neverboringnews",
@@ -95,7 +99,8 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.tiktok.com/@_jrat": {
    "name": "@_jrat",
@@ -104,7 +109,8 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCh9eNfPKoMwr8mYWLwzrG-g": {
    "name": "일상케어템",
@@ -113,7 +119,8 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/affordasale": {
    "name": "affordasale",
@@ -122,7 +129,7 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 4
   },
   "https://www.youtube.com/channel/UCiA6xoo2JzG5RlYbrDQxWpA": {
    "name": "남다른 픽",
@@ -131,7 +138,8 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCsf6zMC7kGGbdMXyex3Fa0g": {
    "name": "홈인온",
@@ -140,7 +148,8 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/supercarblondie": {
    "name": "supercarblondie",
@@ -149,7 +158,7 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 2
   },
   "https://www.instagram.com/_jrat/": {
    "name": "@_jrat",
@@ -158,7 +167,7 @@
    "depth": 1,
    "from": "RWS43GF1A_U",
    "done": true,
-   "found": 1
+   "found": 5
   },
   "https://www.instagram.com/jjoha_joha82/": {
    "name": "@jjoha_joha82",
@@ -176,7 +185,8 @@
    "depth": 2,
    "from": "yL-dznQzRA4",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/yet.melody": {
    "name": "yet.melody",
@@ -203,7 +213,8 @@
    "depth": 2,
    "from": "yL-dznQzRA4",
    "done": true,
-   "found": 2
+   "found": 2,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA": {
    "name": "WholesomeEspanol",
@@ -212,7 +223,8 @@
    "depth": 2,
    "from": "yL-dznQzRA4",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.youtube.com/channel/UCK-277y3s6cqNF3cFQtJrig": {
    "name": "月光夫妇",
@@ -221,7 +233,8 @@
    "depth": 2,
    "from": "k7v-iPQFPyY",
    "done": true,
-   "found": 1
+   "found": 1,
+   "done_all": true
   },
   "https://www.facebook.com/upsoclsupermommy": {
    "name": "upsoclsupermommy",
@@ -256,8 +269,9 @@
    "site": "youtube.com",
    "depth": 2,
    "from": "k7v-iPQFPyY",
-   "done": false,
-   "found": 1
+   "done": true,
+   "found": 1,
+   "done_all": true
   },
   "https://www.instagram.com/daaaae_y/": {
    "name": "@daaaae_y",
@@ -274,7 +288,413 @@
    "site": "youtube.com",
    "depth": 2,
    "from": "k7v-iPQFPyY",
-   "done": false,
+   "done": true,
+   "found": 1,
+   "done_all": true
+  },
+  "https://www.tiktok.com/@energyzeeky": {
+   "name": "@energyzeeky",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 2
+  },
+  "https://www.instagram.com/therealdarwin5/": {
+   "name": "@therealdarwin5",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@roogahboogah": {
+   "name": "@roogahboogah",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@leeroysane2": {
+   "name": "@leeroysane2",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@fatherdollars": {
+   "name": "@fatherdollars",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 2
+  },
+  "https://www.tiktok.com/@etaybeaton": {
+   "name": "@etaybeaton",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCjStUkQiLADnLa_FozRtSCg": {
+   "name": "JayRealFunny",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/61588446220192": {
+   "name": "61588446220192",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@joshldc": {
+   "name": "@joshldc",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@velocityskits0": {
+   "name": "@velocityskits0",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@thoriwrld10": {
+   "name": "@thoriwrld10",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@bashversusbash": {
+   "name": "@bashversusbash",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@stycollin": {
+   "name": "@stycollin",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7679168204035362078",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC23SELZv2KKYvqwB02c_I0A": {
+   "name": "Electric Vehicles Space",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7639197384890748190",
+   "done": true,
+   "found": 2
+  },
+  "https://www.youtube.com/channel/UCUsbfdhYigUiXCaLnHareuQ": {
+   "name": "BK42",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7639197384890748190",
+   "done": true,
+   "found": 4
+  },
+  "https://www.facebook.com/LexstarMobile": {
+   "name": "LexstarMobile",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7639197384890748190",
+   "done": true,
+   "found": 2
+  },
+  "https://www.facebook.com/61580719244276": {
+   "name": "61580719244276",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7639197384890748190",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@user58019183924081": {
+   "name": "@user58019183924081",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7312996396766907679",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/100089822637059": {
+   "name": "100089822637059",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCC0jV7Bo-VD4Tjlrczqdj5g": {
+   "name": "wider ",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCazlSPqeYlqRYynASgCRYRg": {
+   "name": "TechZone",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/industrialdesignideas": {
+   "name": "industrialdesignideas",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/61588736593407": {
+   "name": "61588736593407",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCUs0VXoU7nIRkgX6aAWL7gQ": {
+   "name": "GadgetPulse",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@trikesnow": {
+   "name": "@trikesnow",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 2,
+   "from": "7447157134266993966",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCYpjpRtQP6YOjA3EUo7ZzUg": {
+   "name": "Linda Kiều",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "8oQtwnxFOss",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC075VydJ-26PHcxjG1XHP1A": {
+   "name": "為你說漫",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "8oQtwnxFOss",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/kenh14official/": {
+   "name": "@kenh14official",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 3,
+   "from": "8oQtwnxFOss",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/cnmnoticias2/": {
+   "name": "@cnmnoticias2",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 3,
+   "from": "kPxCnzJaDGc",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@obimani.mon036": {
+   "name": "@obimani.mon036",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "eHu5XkiNMfA",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@user8585551986522": {
+   "name": "@user8585551986522",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC6Nj-MWxC6bgcftYUtxDhMw": {
+   "name": "ViiZ",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 3
+  },
+  "https://www.instagram.com/gymco2002/": {
+   "name": "@gymco2002",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/upsocljuegodeninos": {
+   "name": "upsocljuegodeninos",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC1IRs70Doav_GHdcAXbbBcQ": {
+   "name": "Varizz",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UCDc1UerYL73gScmcQrnpv6w": {
+   "name": "MediaConquer",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC9-9hClYDc4e_xDRtMtLGqg": {
+   "name": "Trendy Facts Ai",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/wtp_hockey/": {
+   "name": "@wtp_hockey",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@0dntsmaya": {
+   "name": "@0dntsmaya",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC20L_9nsql8Omu9IAwVe9sg": {
+   "name": "TAS Media",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "e5e7VZCcEBM",
+   "done": true,
+   "found": 1
+  },
+  "https://www.youtube.com/channel/UC1TX-BzjX79nzpeMYr14QuA": {
+   "name": "Rao Sahabaple ",
+   "lang": "foreign",
+   "site": "youtube.com",
+   "depth": 3,
+   "from": "AGn-xIEKIOQ",
+   "done": true,
+   "found": 1
+  },
+  "https://www.tiktok.com/@wqzjcocwlt": {
+   "name": "@wqzjcocwlt",
+   "lang": "foreign",
+   "site": "tiktok.com",
+   "depth": 3,
+   "from": "AGn-xIEKIOQ",
+   "done": true,
+   "found": 1
+  },
+  "https://www.instagram.com/yo.vizag/": {
+   "name": "@yo.vizag",
+   "lang": "foreign",
+   "site": "instagram.com",
+   "depth": 3,
+   "from": "AGn-xIEKIOQ",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/BSS.Qasimabad": {
+   "name": "BSS.Qasimabad",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "AGn-xIEKIOQ",
+   "done": true,
+   "found": 1
+  },
+  "https://www.facebook.com/runwaypakistan": {
+   "name": "runwaypakistan",
+   "lang": "foreign",
+   "site": "facebook.com",
+   "depth": 3,
+   "from": "lW139nYfeEc",
+   "done": true,
    "found": 1
   }
  },
@@ -2580,6 +3000,2833 @@
      "https://www.tiktok.com/@shopmebimsua2023/video/7392172242064510226",
      1,
      "Ngày nào con cũng tập luyện chăm chỉ để sau còn múa cho đẹp ..."
+    ]
+   ]
+  },
+  "7679168204035362078": {
+   "id": "7679168204035362078",
+   "title": "And obviously it should go without saying there is no issue with havi...",
+   "views": 1200000,
+   "url": "https://www.tiktok.com/@adamecrossbyw/video/7679168204035362078",
+   "channel": "https://www.tiktok.com/@adamecrossbyw",
+   "from_channel": "https://www.tiktok.com/@adamecrossbyw",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "There is really an entire world of people out there who wait for the likes of Kendall and Kylie Jenner and Hailey Bieber",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7582778590475865375",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fyp #viral #foryoupage #foryoupage | live direct | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DS4J6g7DoB7/?hl=zh-cn",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/therealdarwin5/",
+     "name": "@therealdarwin5",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by therealdarwin5"
+    },
+    {
+     "href": "https://www.tiktok.com/@roogahboogah/video/7682428824432266510",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@roogahboogah",
+     "name": "@roogahboogah",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "foryoupage #abcxyz #funny #viral #fypシ゚ | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@energyzeeky/video/7675457520839773470",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@energyzeeky",
+     "name": "@energyzeeky",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "SAY YEAAAAAAAH #fyp #viral #xyzbca #trend | if you want a ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@leeroysane2/video/7673261391469366549",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@leeroysane2",
+     "name": "@leeroysane2",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Do you also struggle to sleep? Relatable funny insomnia ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@fatherdollars/video/7695992506223201550",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@fatherdollars",
+     "name": "@fatherdollars",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fpryoupage #jamaicatiktok #viral #fyp #explorepage ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@fatherdollars/video/7695996602196053261",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@fatherdollars",
+     "name": "@fatherdollars",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fpryoupage #jamaicatiktok #viral #fyp #explorepage ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@etaybeaton/video/7664293194435218709",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@etaybeaton",
+     "name": "@etaybeaton",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I'm making this a new yap sound idc #thelotionguy #yap ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/q0CRB-pDkEc",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCjStUkQiLADnLa_FozRtSCg",
+     "name": "JayRealFunny",
+     "views": 963,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Our moms were crazy 😂 #jayrealfunny #funny #mom #momlife #youtubeshorts"
+    },
+    {
+     "href": "https://www.facebook.com/61588446220192/videos/funky-beat-explore-memes-reaction-wrestling-music/1340726497901464/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61588446220192",
+     "name": "61588446220192",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Funky beat... #explore #memes #reaction #wrestling #music ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@joshldc/video/7462465576456211745",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@joshldc",
+     "name": "@joshldc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "AI Hair Styling: Transform Your Curly and Wavy Hair | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@velocityskits0/video/7690720014734806286",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@velocityskits0",
+     "name": "@velocityskits0",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "My haul arrived!!! #kakobuy #chromehearts #velocityskits ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@thoriwrld10/video/7696585612568333589",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@thoriwrld10",
+     "name": "@thoriwrld10",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Naaa this heat is too much 😭😭 #fyp #viral #explorepage ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@bashversusbash/video/7696585680515894541",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@bashversusbash",
+     "name": "@bashversusbash",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Nihilism vs. Existentialism: Why I Need Something to Look ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@stycollin/video/7625051313230990605",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@stycollin",
+     "name": "@stycollin",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Twitch: stycollin #marvelrivals #stycollin | TikTok"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7582778590475865375",
+     2,
+     "fyp #viral #foryoupage #foryoupage | live direct | TikTok"
+    ],
+    [
+     "https://www.instagram.com/reel/DS4J6g7DoB7/?hl=zh-cn",
+     2,
+     "DARWINS WORLD✨（@therealdarwin5）的Reels · 2025年12月30日"
+    ],
+    [
+     "https://www.tiktok.com/@roogahboogah/video/7682428824432266510",
+     2,
+     "foryoupage #abcxyz #funny #viral #fypシ゚ | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@energyzeeky/video/7675457520839773470",
+     2,
+     "SAY YEAAAAAAAH #fyp #viral #xyzbca #trend | if you want a ..."
+    ],
+    [
+     "https://www.tiktok.com/@leeroysane2/video/7673261391469366549",
+     2,
+     "Do you also struggle to sleep? Relatable funny insomnia ..."
+    ],
+    [
+     "https://www.tiktok.com/@fatherdollars/video/7695992506223201550",
+     2,
+     "fpryoupage #jamaicatiktok #viral #fyp #explorepage ..."
+    ],
+    [
+     "https://www.tiktok.com/@fatherdollars/video/7695996602196053261",
+     2,
+     "fpryoupage #jamaicatiktok #viral #fyp #explorepage ..."
+    ],
+    [
+     "https://www.tiktok.com/@etaybeaton/video/7664293194435218709",
+     2,
+     "I'm making this a new yap sound idc #thelotionguy #yap ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/q0CRB-pDkEc",
+     2,
+     "Our moms were crazy 😂 #jayrealfunny #funny #mom #momlife ..."
+    ],
+    [
+     "https://www.facebook.com/61588446220192/videos/funky-beat-explore-memes-reaction-wrestling-music/1340726497901464/",
+     2,
+     "Funky beat... #explore #memes #reaction #wrestling #music ..."
+    ],
+    [
+     "https://www.tiktok.com/@joshldc/video/7462465576456211745",
+     2,
+     "AI Hair Styling: Transform Your Curly and Wavy Hair | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@velocityskits0/video/7690720014734806286",
+     2,
+     "My haul arrived!!! #kakobuy #chromehearts #velocityskits ..."
+    ],
+    [
+     "https://www.tiktok.com/@thoriwrld10/video/7696585612568333589",
+     2,
+     "Naaa this heat is too much 😭😭 #fyp #viral #explorepage ..."
+    ],
+    [
+     "https://www.tiktok.com/@bashversusbash/video/7696585680515894541",
+     2,
+     "Nihilism vs. Existentialism: Why I Need Something to Look ..."
+    ],
+    [
+     "https://www.tiktok.com/@stycollin/video/7625051313230990605",
+     2,
+     "Twitch: stycollin #marvelrivals #stycollin | TikTok"
+    ]
+   ]
+  },
+  "7639197384890748190": {
+   "id": "7639197384890748190",
+   "title": "front wheel and rear wheel drive #jratcustoms #ebike #fyp",
+   "views": 19000000,
+   "url": "https://www.tiktok.com/@_jrat/video/7639197384890748190",
+   "channel": "https://www.tiktok.com/@_jrat",
+   "from_channel": "https://www.tiktok.com/@_jrat",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=Ja8cXs7JQhY",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC23SELZv2KKYvqwB02c_I0A",
+     "name": "Electric Vehicles Space",
+     "views": 3889037,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "DIY Insane CUSTOM Ebikes"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/RH_NDQI70rg",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUsbfdhYigUiXCaLnHareuQ",
+     "name": "BK42",
+     "views": 6586,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This Isn’t Just an E-Bike… It’s a Whole New Beast! #shorts #bikelife"
+    },
+    {
+     "href": "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/affordasale",
+     "name": "affordasale",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The JRAT Custom Designed E-Bikes are built for simple ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7646221922862189855",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Glow-in-the-Dark Tangerine E-bike | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/LexstarMobile/videos/jrat-customs-e-bike-ebike-ig-jrat-carter/787286382392922/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/LexstarMobile",
+     "name": "LexstarMobile",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "JRAT Customs E-Bike #EBiKE IG : Jrat Carter | Lexstar Mobile"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7638450401083182366",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "J-Rat Customs E-Bike: Night Riding \\u0026 Price Info | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/61580719244276/videos/straight-pipe-no-cat-ebike/689236444284700/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61580719244276",
+     "name": "61580719244276",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Straight pipe no cat #ebike | Jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7642345160289881374",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "latest build sold to a casino in California TASHI that will ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7639864503601089822",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "My Current Ebike Lineup by JRAT Customs | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7647515263251827998",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Chopper Style E‑Bike for Adults: Electric Chopper Bike Look ..."
+    },
+    {
+     "href": "https://www.facebook.com/smartdepottech/videos/i-want-one-of-these-bike-flex-special/1627356885157472/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/smartdepottech",
+     "name": "smartdepottech",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I want one of these 🔥 😍 #bike #flex #special | Smart Depot ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/v1WqmaAkICg",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUs0VXoU7nIRkgX6aAWL7gQ",
+     "name": "GadgetPulse",
+     "views": 1857,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "3 Mind-Blowing Futuristic Bicycles You Need to See! 🚲⚡"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7276483434023849258",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "www.jratcustoms.com insta @_jrat insta @jrat_customs ..."
+    },
+    {
+     "href": "https://www.facebook.com/SuperFlyAutos/posts/love-these-custom-bikes-by-_jrat/5756125177744676/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/SuperFlyAutos",
+     "name": "SuperFlyAutos",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Love these custom bikes by @_jrat"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/watch?v=Ja8cXs7JQhY",
+     3,
+     "DIY Insane CUSTOM Ebikes - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/RH_NDQI70rg",
+     3,
+     "This Isn't Just an E-Bike… It's a Whole New Beast! #shorts ..."
+    ],
+    [
+     "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     2,
+     "The JRAT Custom Designed E-Bikes are built for simple ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7646221922862189855",
+     2,
+     "Glow-in-the-Dark Tangerine E-bike | TikTok"
+    ],
+    [
+     "https://www.facebook.com/LexstarMobile/videos/jrat-customs-e-bike-ebike-ig-jrat-carter/787286382392922/",
+     2,
+     "JRAT Customs E-Bike #EBiKE IG : Jrat Carter | Lexstar Mobile"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7638450401083182366",
+     2,
+     "J-Rat Customs E-Bike: Night Riding \\u0026 Price Info | TikTok"
+    ],
+    [
+     "https://www.facebook.com/61580719244276/videos/straight-pipe-no-cat-ebike/689236444284700/",
+     2,
+     "Straight pipe no cat #ebike | Jrat"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7642345160289881374",
+     2,
+     "latest build sold to a casino in California TASHI that will ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     1,
+     "My first single sided rear wheel drive hub motor. @jrat_customs"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7639864503601089822",
+     1,
+     "My Current Ebike Lineup by JRAT Customs | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7647515263251827998",
+     1,
+     "Chopper Style E‑Bike for Adults: Electric Chopper Bike Look ..."
+    ],
+    [
+     "https://www.facebook.com/smartdepottech/videos/i-want-one-of-these-bike-flex-special/1627356885157472/",
+     1,
+     "I want one of these 🔥 😍 #bike #flex #special | Smart Depot ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/v1WqmaAkICg",
+     1,
+     "3 Mind-Blowing Futuristic Bicycles You Need to See ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7276483434023849258",
+     1,
+     "www.jratcustoms.com insta @_jrat insta @jrat_customs ..."
+    ],
+    [
+     "https://www.facebook.com/SuperFlyAutos/posts/love-these-custom-bikes-by-_jrat/5756125177744676/",
+     1,
+     "Love these custom bikes by @_jrat"
+    ]
+   ]
+  },
+  "7312996396766907679": {
+   "id": "7312996396766907679",
+   "title": "",
+   "views": 5500000,
+   "url": "https://www.tiktok.com/@_jrat/video/7312996396766907679",
+   "channel": "https://www.tiktok.com/@_jrat",
+   "from_channel": "https://www.tiktok.com/@_jrat",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/watch?v=Ja8cXs7JQhY",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC23SELZv2KKYvqwB02c_I0A",
+     "name": "Electric Vehicles Space",
+     "views": 3889037,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "DIY Insane CUSTOM Ebikes"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/RH_NDQI70rg",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUsbfdhYigUiXCaLnHareuQ",
+     "name": "BK42",
+     "views": 6586,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This Isn’t Just an E-Bike… It’s a Whole New Beast! #shorts #bikelife"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/9GR36BQfMpA",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUsbfdhYigUiXCaLnHareuQ",
+     "name": "BK42",
+     "views": 59674,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Unveiling the Custom E-Bikes from Jrat Customs #shorts #ebike"
+    },
+    {
+     "href": "https://www.instagram.com/reel/Cw74Q2XObhu/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7195189857533300014",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Custom Electric Bikes and Scooters by JRat Customs | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/fb-answers/jrat-customs-electric-motorcycle-full-review/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/fb-answers/jrat-customs-electric-motorcycle-full-review/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "JRAT Customs Electric Motorcycle Full Review"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYGYRQJNyZh/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7457194034269015342",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Jrat Customs Ebike Price \\u0026 Custom Electric Bike Build | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/supercarblondie/videos/the-coolest-custom-e-bikes-/29293641286901525/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/supercarblondie",
+     "name": "supercarblondie",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "I'll take every single one of them 😍 | Supercar Blondie"
+    },
+    {
+     "href": "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/affordasale",
+     "name": "affordasale",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The JRAT Custom Designed E-Bikes are built for simple ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@user58019183924081/video/7675232863737941278",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user58019183924081",
+     "name": "@user58019183924081",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Cyberpunk Electric Bikes of the Future 🤯 | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/SuperFlyAutos/posts/another-epic-custom-bike-by-_jrat-thisishowweroll-superflyautos-superflymagazine/5162494673774399/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/SuperFlyAutos",
+     "name": "SuperFlyAutos",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Another epic custom bike by @_jrat #thisishowweroll ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7447157134266993966",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "insta @_jrat . #ebike #electricbike #ebikes #bike #bikelife ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=G9G6eoRPSVM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCazlSPqeYlqRYynASgCRYRg",
+     "name": "TechZone",
+     "views": 663763,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "8 VEÍCULOS LEGAIS QUE VOCÊ VERÁ PELA PRIMEIRA VEZ"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/watch?v=Ja8cXs7JQhY",
+     3,
+     "DIY Insane CUSTOM Ebikes - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/RH_NDQI70rg",
+     3,
+     "This Isn't Just an E-Bike… It's a Whole New Beast! #shorts ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/9GR36BQfMpA",
+     3,
+     "Unveiling the Custom E-Bikes from Jrat Customs #shorts ..."
+    ],
+    [
+     "https://www.instagram.com/reel/Cw74Q2XObhu/",
+     2,
+     "SOLD! headed to North Carolina. @jrat_customs . #jratcustoms ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7195189857533300014",
+     2,
+     "Custom Electric Bikes and Scooters by JRat Customs | TikTok"
+    ],
+    [
+     "https://www.facebook.com/fb-answers/jrat-customs-electric-motorcycle-full-review/",
+     2,
+     "JRAT Customs Electric Motorcycle Full Review"
+    ],
+    [
+     "https://www.instagram.com/reel/DYGYRQJNyZh/",
+     2,
+     "Made over 100 different bikes"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7457194034269015342",
+     2,
+     "Jrat Customs Ebike Price \\u0026 Custom Electric Bike Build | TikTok"
+    ],
+    [
+     "https://www.facebook.com/supercarblondie/videos/the-coolest-custom-e-bikes-/29293641286901525/",
+     2,
+     "I'll take every single one of them 😍 | Supercar Blondie"
+    ],
+    [
+     "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     2,
+     "The JRAT Custom Designed E-Bikes are built for simple ..."
+    ],
+    [
+     "https://www.tiktok.com/@user58019183924081/video/7675232863737941278",
+     2,
+     "Cyberpunk Electric Bikes of the Future 🤯 | TikTok"
+    ],
+    [
+     "https://www.facebook.com/SuperFlyAutos/posts/another-epic-custom-bike-by-_jrat-thisishowweroll-superflyautos-superflymagazine/5162494673774399/",
+     1,
+     "Another epic custom bike by @_jrat #thisishowweroll ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7447157134266993966",
+     1,
+     "insta @_jrat . #ebike #electricbike #ebikes #bike #bikelife ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=G9G6eoRPSVM",
+     1,
+     "8 COOL VEHICLES YOU'LL SEE FOR THE FIRST TIME - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     1,
+     "My first single sided rear wheel drive hub motor. @jrat_customs"
+    ]
+   ]
+  },
+  "7447157134266993966": {
+   "id": "7447157134266993966",
+   "title": "insta @_jrat . #ebike #electricbike #ebikes #bike #bikelife #cycling ...",
+   "views": 3900000,
+   "url": "https://www.tiktok.com/@_jrat/video/7447157134266993966",
+   "channel": "https://www.tiktok.com/@_jrat",
+   "from_channel": "https://www.tiktok.com/@_jrat",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7567003235861531935",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "first single sided rear wheel drive hub motor. 72v 3000w ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.facebook.com/LexstarMobile/posts/jrat-customs-e-bike-ebike-ig-jrat-carter/1046790992663819/",
+     "hits": 3,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/LexstarMobile",
+     "name": "LexstarMobile",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "JRAT Customs E-Bike #EBiKE IG : Jrat Carter"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DN6yZWLjaiP/",
+     "hits": 3,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_jrat/",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _jrat"
+    },
+    {
+     "href": "https://www.facebook.com/100089822637059/videos/e-bikes/1640711567242942/",
+     "hits": 3,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100089822637059",
+     "name": "100089822637059",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "E-bikes | Jrat Custom ebikes"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/RH_NDQI70rg",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUsbfdhYigUiXCaLnHareuQ",
+     "name": "BK42",
+     "views": 6586,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This Isn’t Just an E-Bike… It’s a Whole New Beast! #shorts #bikelife"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/hI9m8TPjVw4",
+     "hits": 3,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCC0jV7Bo-VD4Tjlrczqdj5g",
+     "name": "wider ",
+     "views": 1210,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "#gadgets #new #ilovegadgets #shorts #shortvideo #wow"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=G9G6eoRPSVM",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCazlSPqeYlqRYynASgCRYRg",
+     "name": "TechZone",
+     "views": 663763,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "8 VEÍCULOS LEGAIS QUE VOCÊ VERÁ PELA PRIMEIRA VEZ"
+    },
+    {
+     "href": "https://www.facebook.com/industrialdesignideas/videos/electric-bike-diseñada-por-jrat-customs/228938415352496/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/industrialdesignideas",
+     "name": "industrialdesignideas",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Electric Bike diseñada por JRAT CUSTOMS | IdeasDi"
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7551953550755024158",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "JRAT Customs: Personalización de E-bikes en Nueva York | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/61588736593407/videos/not-mass-produced-not-ordinary-custom-built-with-a-unique-design-for-riders-who-/1066421889169037/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61588736593407",
+     "name": "61588736593407",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Not mass-produced. Not ordinary. Custom-built with a unique ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@_jrat/video/7639864503601089822",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@_jrat",
+     "name": "@_jrat",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "My Current Ebike Lineup by JRAT Customs | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/v1WqmaAkICg",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCUs0VXoU7nIRkgX6aAWL7gQ",
+     "name": "GadgetPulse",
+     "views": 1857,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "3 Mind-Blowing Futuristic Bicycles You Need to See! 🚲⚡"
+    },
+    {
+     "href": "https://www.tiktok.com/@trikesnow/video/7397895863646932229",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@trikesnow",
+     "name": "@trikesnow",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Electric Mini Chopper Bike - Fast, Classy Ride | TrikeSnow ..."
+    },
+    {
+     "href": "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/affordasale",
+     "name": "affordasale",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The JRAT Custom Designed E-Bikes are built for simple ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@_jrat/video/7567003235861531935",
+     3,
+     "first single sided rear wheel drive hub motor. 72v 3000w ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DQbyaLGkeHw/",
+     3,
+     "My first single sided rear wheel drive hub motor. @jrat_customs"
+    ],
+    [
+     "https://www.facebook.com/LexstarMobile/posts/jrat-customs-e-bike-ebike-ig-jrat-carter/1046790992663819/",
+     3,
+     "JRAT Customs E-Bike #EBiKE IG : Jrat Carter"
+    ],
+    [
+     "https://www.instagram.com/reel/DN6yZWLjaiP/",
+     3,
+     "jrat_customs DM for inquiries #ebike #electricbike #ebikes ..."
+    ],
+    [
+     "https://www.facebook.com/100089822637059/videos/e-bikes/1640711567242942/",
+     3,
+     "E-bikes | Jrat Custom ebikes"
+    ],
+    [
+     "https://www.youtube.com/shorts/RH_NDQI70rg",
+     3,
+     "This Isn't Just an E-Bike… It's a Whole New Beast! #shorts ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/hI9m8TPjVw4",
+     3,
+     "gadgets #new #ilovegadgets #shorts #shortvideo #wow - YouTube"
+    ],
+    [
+     "https://www.youtube.com/watch?v=G9G6eoRPSVM",
+     2,
+     "8 COOL VEHICLES YOU'LL SEE FOR THE FIRST TIME - YouTube"
+    ],
+    [
+     "https://www.facebook.com/industrialdesignideas/videos/electric-bike-diseñada-por-jrat-customs/228938415352496/",
+     2,
+     "Electric Bike diseñada por JRAT CUSTOMS | IdeasDi"
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7551953550755024158",
+     2,
+     "JRAT Customs: Personalización de E-bikes en Nueva York | TikTok"
+    ],
+    [
+     "https://www.facebook.com/61588736593407/videos/not-mass-produced-not-ordinary-custom-built-with-a-unique-design-for-riders-who-/1066421889169037/",
+     2,
+     "Not mass-produced. Not ordinary. Custom-built with a unique ..."
+    ],
+    [
+     "https://www.tiktok.com/@_jrat/video/7639864503601089822",
+     2,
+     "My Current Ebike Lineup by JRAT Customs | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/v1WqmaAkICg",
+     2,
+     "3 Mind-Blowing Futuristic Bicycles You Need to See ..."
+    ],
+    [
+     "https://www.tiktok.com/@trikesnow/video/7397895863646932229",
+     2,
+     "Electric Mini Chopper Bike - Fast, Classy Ride | TrikeSnow ..."
+    ],
+    [
+     "https://www.facebook.com/affordasale/videos/the-jrat-custom-designed-e-bikes-are-built-for-simple-practical-electric-mobilit/2088863691658696/",
+     2,
+     "The JRAT Custom Designed E-Bikes are built for simple ..."
+    ]
+   ]
+  },
+  "8oQtwnxFOss": {
+   "id": "8oQtwnxFOss",
+   "title": "A daughter worth her weight in gold ❤️",
+   "views": 11000000,
+   "url": "https://www.youtube.com/shorts/8oQtwnxFOss",
+   "channel": "Mỗi Ngày Một Chút",
+   "from_channel": "https://www.youtube.com/channel/UC2xrLnFoc8RbAkxVUi_VxGA",
+   "orig": true,
+   "lang": "vi",
+   "ko_chars": 0,
+   "text": "Vừa cất tiếng gọi bà, cô bé này vừa hối hả thu gom số lúa đang phơi ngoài sinh vì tin chắc rằng trời sắp mưa. Khi bước r",
+   "matches": [
+    {
+     "href": "https://www.youtube.com/shorts/d9Mrq3R3TMc",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCYpjpRtQP6YOjA3EUo7ZzUg",
+     "name": "Linda Kiều",
+     "views": 119,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Mùa này phơi lúa hồi hợp quá"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/OkvaWOXLPGA",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC075VydJ-26PHcxjG1XHP1A",
+     "name": "為你說漫",
+     "views": 140,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "小孩子之間的純真友誼，真的太美好了#友誼 #童年 #純真 #美好"
+    },
+    {
+     "href": "https://www.tiktok.com/music/Cảnh-này-thật-quen-thuộc-7258245733529537286",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/music/Cảnh-này-thật-quen-thuộc-7258245733529537286",
+     "name": "tiktok.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Janshare.com _ Tạo ảnh free - Cảnh này thật quen thuộc | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DZRMICSySpQ/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/kenh14official/",
+     "name": "@kenh14official",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by kenh14official"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/M3urTYCLVsM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCcskM9nbMEJc_yiBX-PG-Ow",
+     "name": "Entertainment Kp",
+     "views": 1181,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "“The Rain Ruined Her Rice 😢🌧️ | A Little Girl’s Heartbreaking Moment”"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/uOYK147pNIQ",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC1zO_CCoMAV6ZhWP1Z2iXmw",
+     "name": "Haiwainet",
+     "views": 23,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "大雨将至，独自在家的5岁女孩哭着抢收稻谷，小伙伴们纷纷赶来帮忙 #暴雨将至 #纯真友谊 #暖心视频 #感动瞬间 #中国正能量"
+    },
+    {
+     "href": "https://www.instagram.com/reel/Dc23gdilCfB/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/zhangxinxin784/",
+     "name": "@zhangxinxin784",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by zhangxinxin784"
+    },
+    {
+     "href": "https://www.facebook.com/61574175535741/videos/真的好像看了一集动画片啊像那种老式小孩的友谊-萌娃-搞笑-感动-友谊-美好/1088741187064181/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61574175535741",
+     "name": "61574175535741",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "真的好像看了一集动画片啊，像那种老式小孩的友谊~ #萌娃#搞笑 ..."
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV1xbub6EEir/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV1xbub6EEir/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "各部门注意，这不是演习_哔哩哔哩_bilibili"
+    },
+    {
+     "href": "https://www.instagram.com/reel/Dc-aLhWETd1/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/voiceofthebund/",
+     "name": "@voiceofthebund",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by voiceofthebund"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdC6UBpvq5N/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/moh_in_shenzhen/",
+     "name": "@moh_in_shenzhen",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by moh_in_shenzhen"
+    },
+    {
+     "href": "https://www.facebook.com/61578146355647/videos/những-người-bạn-nhỏ-và-chú-chó-đã-cùng-nhau-cứu-cả-sân-thócxuhuong-viral-reels-k/1357577176528975/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61578146355647",
+     "name": "61578146355647",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Những người bạn nhỏ và chú chó đã cùng nhau cứu cả sân thóc ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@kin.ruby50/video/7675409576707034386",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@kin.ruby50",
+     "name": "@kin.ruby50",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video của kiên baby (@kin.ruby50) với bản nhạc âm thanh gốc ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@ouo0730/video/7683109779031592213",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@ouo0730",
+     "name": "@ouo0730",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "搬運@抖音流量傳播員（台灣🇹🇼） | TikTok"
+    },
+    {
+     "href": "https://www.facebook.com/theinternettodaybd/videos/5-year-old-girl-breaks-down-while-harvesting-rice-alone-before-friends-arrive-to/1617397026395934/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/theinternettodaybd",
+     "name": "theinternettodaybd",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "5-Year-Old Girl Breaks Down While Harvesting Rice Alone ..."
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.youtube.com/shorts/d9Mrq3R3TMc",
+     2,
+     "Drying rice this season is so nerve-wracking - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/OkvaWOXLPGA",
+     2,
+     "The pure friendship between these kids is so beautiful ..."
+    ],
+    [
+     "https://www.tiktok.com/music/Cảnh-này-thật-quen-thuộc-7258245733529537286",
+     2,
+     "Janshare.com _ Tạo ảnh free - Cảnh này thật quen thuộc | TikTok"
+    ],
+    [
+     "https://www.instagram.com/reel/DZRMICSySpQ/",
+     2,
+     "Kenh14.vn | Trời chuẩn bị mưa mà bà chỉ có 1 mình, các thanh ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/M3urTYCLVsM",
+     1,
+     "The Rain Ruined Her Rice 😢🌧️ | A Little Girl's ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/uOYK147pNIQ",
+     1,
+     "大雨将至，独自在家的5岁女孩哭着抢收稻谷，小伙伴们纷纷赶来 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/Dc23gdilCfB/",
+     1,
+     "被这一幕感动哭了。"
+    ],
+    [
+     "https://www.facebook.com/61574175535741/videos/真的好像看了一集动画片啊像那种老式小孩的友谊-萌娃-搞笑-感动-友谊-美好/1088741187064181/",
+     1,
+     "真的好像看了一集动画片啊，像那种老式小孩的友谊~ #萌娃#搞笑 ..."
+    ],
+    [
+     "https://www.bilibili.com/video/BV1xbub6EEir/",
+     1,
+     "各部门注意，这不是演习_哔哩哔哩_bilibili"
+    ],
+    [
+     "https://www.instagram.com/reel/Dc-aLhWETd1/",
+     1,
+     "暖心！大雨将至，独自在家的5岁女孩哭着收稻谷……小伙伴们赶来了 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DdC6UBpvq5N/",
+     1,
+     "A 5-YEAR-OLD GIRL BURST INTO TEARS TRYING TO HARVEST RICE ..."
+    ],
+    [
+     "https://www.facebook.com/61578146355647/videos/những-người-bạn-nhỏ-và-chú-chó-đã-cùng-nhau-cứu-cả-sân-thócxuhuong-viral-reels-k/1357577176528975/",
+     1,
+     "Những người bạn nhỏ và chú chó đã cùng nhau cứu cả sân thóc ..."
+    ],
+    [
+     "https://www.tiktok.com/@kin.ruby50/video/7675409576707034386",
+     1,
+     "Video của kiên baby (@kin.ruby50) với bản nhạc âm thanh gốc ..."
+    ],
+    [
+     "https://www.tiktok.com/@ouo0730/video/7683109779031592213",
+     1,
+     "搬運@抖音流量傳播員（台灣🇹🇼） | TikTok"
+    ],
+    [
+     "https://www.facebook.com/theinternettodaybd/videos/5-year-old-girl-breaks-down-while-harvesting-rice-alone-before-friends-arrive-to/1617397026395934/",
+     1,
+     "5-Year-Old Girl Breaks Down While Harvesting Rice Alone ..."
+    ]
+   ]
+  },
+  "1kkKn1q-JCY": {
+   "id": "1kkKn1q-JCY",
+   "title": "Responsibility in the Smallest Acts ❤️",
+   "views": 10000000,
+   "url": "https://www.youtube.com/shorts/1kkKn1q-JCY",
+   "channel": "Mỗi Ngày Một Chút",
+   "from_channel": "https://www.youtube.com/channel/UC2xrLnFoc8RbAkxVUi_VxGA",
+   "orig": true,
+   "lang": "vi",
+   "ko_chars": 0,
+   "text": "Để ngăn học sinh quay cóp bài của nhau trong giờ kiểm tra, bàn ghế trong lớp đã được cố ý tách ra và cô giáo dự định sẽ ",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/61583431176102/videos/1791057475571960/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/61583431176102",
+     "name": "61583431176102",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ba Vạn Dặm Dưới Đáy Biển on Reels | Facebook"
+    },
+    {
+     "href": "https://www.tiktok.com/@h_daryl_2mf_1001",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@h_daryl_2mf_1001",
+     "name": "@h_daryl_2mf_1001",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "h_daryl_2mf_1001 (@h_daryl_2mf_1001) | TikTok"
+    },
+    {
+     "href": "https://youtu.be/1KbvBy7cZjs?si=qQfT3t988nj45IDe",
+     "hits": 1,
+     "site": "youtu.be",
+     "key": "https://www.youtube.com/channel/UCXrdAHPGE72mr7wUE3MZACA",
+     "name": "동그란송형준",
+     "views": 112973,
+     "resolved": true,
+     "lang": "ko",
+     "title": "남의 집에서 1박 2일"
+    },
+    {
+     "href": "https://www.tiktok.com/@huythong111989/video/7693559024733850888",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@huythong111989",
+     "name": "@huythong111989",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "CapCut chúc cho tương lai gặp nhiều may mắn . chẳng cần lo ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/DFNcmeDSn8Y/?hl=ar",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DFNcmeDSn8Y/?hl=ar",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Itna andha paisa kamao 👊👊 #instagram #trending #reels #video"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/pDujbI04UOc",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC7ty-NXaoZpbrpt6XObW1cg",
+     "name": "Gió Đông Lào",
+     "views": 299824,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Đến chó còn Chê #gio_dong_lao #giodonglao @gio_dong_lao #hai"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/XPHWcxSQluE",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCs9i-_Kk0EyRRzGHrGUpnYA",
+     "name": "24h7@365",
+     "views": 776,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "tôi cũng đến chịu"
+    },
+    {
+     "href": "https://www.facebook.com/100090517309714/videos/1938513784201202/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100090517309714",
+     "name": "100090517309714",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Aslam Bhaagat on Reels"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DF5n8s1y89-/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/dsa890007/",
+     "name": "@dsa890007",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by dsa890007"
+    },
+    {
+     "href": "https://www.tiktok.com/@hiennguyen931/video/7480429513084554514?lang=fr",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@hiennguyen931",
+     "name": "@hiennguyen931",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "CapCut | TikTok"
+    },
+    {
+     "href": "https://m.youtube.com/playlist?list=PLEqcIQ3m4rQ4",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCiSEro_3aN_oURDTIxDcu6g",
+     "name": "AuraAPT",
+     "views": 10605,
+     "resolved": true,
+     "lang": "ko",
+     "title": "환희 (1988) - 정수라｜[원곡감성] 여자보컬 리메이크｜80년대 추억의 명곡｜AuraAPT"
+    },
+    {
+     "href": "https://www.tiktok.com/@vuthiphuc34/video/7669239187463310599?lang=fi-FI",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@vuthiphuc34",
+     "name": "@vuthiphuc34",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "CapCut | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/1WPr1upx2Fo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCXxsah1B3Um6osivhEc9AoA",
+     "name": "Hoàn MeoW MeoW",
+     "views": 105,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "6 tháng 9, 2026"
+    },
+    {
+     "href": "https://www.facebook.com/lovescenario32/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/lovescenario32/",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Love Scenario + (@lovescenario32) • Facebook"
+    },
+    {
+     "href": "https://youtu.be/8VOCN4iR4n8?is=EJO04el3mqliA-P6",
+     "hits": 1,
+     "site": "youtu.be",
+     "key": "https://www.youtube.com/channel/UC8DDUscLJg-wQ0ZIXHxsbBA",
+     "name": "Nam Changmin",
+     "views": 2525,
+     "resolved": true,
+     "lang": "ko",
+     "title": "김재중 \"Hug (포옹) + Love is...\" @ 2008.09.13 SMTOWN LIVE in Shanghai"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.facebook.com/61583431176102/videos/1791057475571960/",
+     1,
+     "Ba Vạn Dặm Dưới Đáy Biển on Reels | Facebook"
+    ],
+    [
+     "https://www.tiktok.com/@h_daryl_2mf_1001",
+     1,
+     "h_daryl_2mf_1001 (@h_daryl_2mf_1001) | TikTok"
+    ],
+    [
+     "https://youtu.be/1KbvBy7cZjs?si=qQfT3t988nj45IDe",
+     1,
+     "YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@huythong111989/video/7693559024733850888",
+     1,
+     "CapCut chúc cho tương lai gặp nhiều may mắn . chẳng cần lo ..."
+    ],
+    [
+     "https://www.instagram.com/p/DFNcmeDSn8Y/?hl=ar",
+     1,
+     "Itna andha paisa kamao 👊👊 #instagram #trending #reels #video"
+    ],
+    [
+     "https://m.youtube.com/shorts/pDujbI04UOc",
+     1,
+     "Even the dog rejects me #gio_dong_lao #giodonglao ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/XPHWcxSQluE",
+     1,
+     "tôi cũng đến chịu - YouTube"
+    ],
+    [
+     "https://www.facebook.com/100090517309714/videos/1938513784201202/",
+     1,
+     "Aslam Bhaagat on Reels"
+    ],
+    [
+     "https://www.instagram.com/reel/DF5n8s1y89-/",
+     1,
+     "Reel by ນ້ອງ ເຂົ້າຫອມ (@dsa890007) · February 10 ..."
+    ],
+    [
+     "https://www.tiktok.com/@hiennguyen931/video/7480429513084554514?lang=fr",
+     1,
+     "CapCut | TikTok"
+    ],
+    [
+     "https://m.youtube.com/playlist?list=PLEqcIQ3m4rQ4",
+     1,
+     "hh - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@vuthiphuc34/video/7669239187463310599?lang=fi-FI",
+     1,
+     "CapCut | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/1WPr1upx2Fo",
+     1,
+     "6 tháng 9, 2026 - YouTube"
+    ],
+    [
+     "https://www.facebook.com/lovescenario32/",
+     1,
+     "Love Scenario + (@lovescenario32) • Facebook"
+    ],
+    [
+     "https://youtu.be/8VOCN4iR4n8?is=EJO04el3mqliA-P6",
+     1,
+     "YouTube"
+    ]
+   ]
+  },
+  "kPxCnzJaDGc": {
+   "id": "kPxCnzJaDGc",
+   "title": "A beautiful moment in sports ❤️",
+   "views": 9500000,
+   "url": "https://www.youtube.com/shorts/kPxCnzJaDGc",
+   "channel": "Mỗi Ngày Một Chút",
+   "from_channel": "https://www.youtube.com/channel/UC2xrLnFoc8RbAkxVUi_VxGA",
+   "orig": true,
+   "lang": "vi",
+   "ko_chars": 0,
+   "text": "Khi vận động viên này sắp hoàn thành một cuộc đua Marathon, anh ấy tiến đến vạch đích và bắt đầu ăn mừng. Thế nhưng ngay",
+   "matches": [
+    {
+     "href": "https://www.instagram.com/reel/DSir8LFCbZY/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/cnmnoticias2/",
+     "name": "@cnmnoticias2",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by cnmnoticias2"
+    },
+    {
+     "href": "https://www.instagram.com/p/DccVo3bgf2J/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/DccVo3bgf2J/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Hace unos días, en el ultramaratón de la Montaña Haituo (海 ..."
+    },
+    {
+     "href": "https://www.facebook.com/ShanghaiDaily1999/videos/youre-almost-at-the-finish-line-when-the-national-anthem-suddenly-starts-playing/1630591165447171/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/ShanghaiDaily1999",
+     "name": "ShanghaiDaily1999",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "You're almost at the finish line when the national anthem ..."
+    },
+    {
+     "href": "https://www.facebook.com/JosephStannardOnChina/videos/when-the-chinese-national-anthem-suddenly-starts-playing-mid-sprint-at-the-ultra/27751888091106236/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/JosephStannardOnChina",
+     "name": "JosephStannardOnChina",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "When the Chinese national anthem suddenly starts playing mid ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/vcvCGz8HdpI",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCXW15Fki_g-3PuCai60FECQ",
+     "name": "好看新闻",
+     "views": 11,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "選手沖線之時，恰逢越野賽彩排響起國歌，終點線前兩位選手駐足跟唱。（人民日報）#新華每日電訊"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcJ-p7kiiwH/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/reel/DcJ-p7kiiwH/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "لحظة إنسانية لا تُنسى في منتصف الماراثون! النشيد الوطني يبدأ ..."
+    },
+    {
+     "href": "https://www.facebook.com/melody1007fm/videos/during-a-marathon-race-in-china-the-athlete-who-crossed-the-finish-line-first-be/1085631767458853/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/melody1007fm",
+     "name": "melody1007fm",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "During a marathon race in China, the athlete who crossed the ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcG_jMnon5g/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/global.aze/",
+     "name": "@global.aze",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by global.aze"
+    },
+    {
+     "href": "https://www.tiktok.com/@bruhmomentummoment/video/7675587002183552287",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@bruhmomentummoment",
+     "name": "@bruhmomentummoment",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Ultra marathon runner stops to salute Chinese anthem ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcJNM3jtTFo/?__d=1%3Futm_source%3Dig_embed!",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_thefluc/",
+     "name": "@_thefluc",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _thefluc"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcGurczxyjl/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/tosglobalx/",
+     "name": "@tosglobalx",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by tosglobalx"
+    },
+    {
+     "href": "https://www.facebook.com/Masdeporteweb/videos/los-chinos-son-de-otro-mundo-️-en-una-maratón-en-china-ocurrió-un-momento-impact/1726244235299070/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/Masdeporteweb",
+     "name": "Masdeporteweb",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Los chinos son de otro mundo! 🇨🇳🏃\\u200d♂️✨ En una maratón ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=ttNCV44XJKo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC4LjkybVKXCDlneVXlKAbmw",
+     "name": "鏡新聞",
+     "views": 5377,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "中國極限體能賽衝線前奏響國歌　選手被迫停賽網笑翻｜#鏡新聞"
+    },
+    {
+     "href": "https://www.bilibili.com/video/BV1G6RyYdEDZ/",
+     "hits": 1,
+     "site": "bilibili.com",
+     "key": "https://www.bilibili.com/video/BV1G6RyYdEDZ/",
+     "name": "bilibili.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "SB25-0402-UE-移动-黄崇珉-蝴蝶刀-巨人王座-胖妞_67f3575abdea3_ ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/n2O2Ca2AyE8",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UChdj5xt0kobyRSgSjGH57zg",
+     "name": "BackBone",
+     "views": 29624,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Worst Timing Possible"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.instagram.com/reel/DSir8LFCbZY/",
+     2,
+     "CNM Noticias | Agotado tras correr una #maratón, se detuvo ..."
+    ],
+    [
+     "https://www.instagram.com/p/DccVo3bgf2J/",
+     2,
+     "Hace unos días, en el ultramaratón de la Montaña Haituo (海 ..."
+    ],
+    [
+     "https://www.facebook.com/ShanghaiDaily1999/videos/youre-almost-at-the-finish-line-when-the-national-anthem-suddenly-starts-playing/1630591165447171/",
+     1,
+     "You're almost at the finish line when the national anthem ..."
+    ],
+    [
+     "https://www.facebook.com/JosephStannardOnChina/videos/when-the-chinese-national-anthem-suddenly-starts-playing-mid-sprint-at-the-ultra/27751888091106236/",
+     1,
+     "When the Chinese national anthem suddenly starts playing mid ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/vcvCGz8HdpI",
+     1,
+     "選手沖線之時，恰逢越野賽彩排響起國歌，終點線前兩位選手駐足跟 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DcJ-p7kiiwH/",
+     1,
+     "لحظة إنسانية لا تُنسى في منتصف الماراثون! النشيد الوطني يبدأ ..."
+    ],
+    [
+     "https://www.facebook.com/melody1007fm/videos/during-a-marathon-race-in-china-the-athlete-who-crossed-the-finish-line-first-be/1085631767458853/",
+     1,
+     "During a marathon race in China, the athlete who crossed the ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DcG_jMnon5g/",
+     1,
+     "Hadisə 15 avqust 2026-cı ildə Çinin Hebey əyalətinin ..."
+    ],
+    [
+     "https://www.tiktok.com/@bruhmomentummoment/video/7675587002183552287",
+     1,
+     "Ultra marathon runner stops to salute Chinese anthem ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DcJNM3jtTFo/?__d=1%3Futm_source%3Dig_embed!",
+     1,
+     "Reel by TheFluc (@_thefluc) · August 17, 2026"
+    ],
+    [
+     "https://www.instagram.com/reel/DcGurczxyjl/",
+     1,
+     "🇨🇳 🏃 RUNNERS PAUSE FOR CHINESE NATIONAL ANTHEM NEAR ..."
+    ],
+    [
+     "https://www.facebook.com/Masdeporteweb/videos/los-chinos-son-de-otro-mundo-️-en-una-maratón-en-china-ocurrió-un-momento-impact/1726244235299070/",
+     1,
+     "Los chinos son de otro mundo! 🇨🇳🏃\\u200d♂️✨ En una maratón ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=ttNCV44XJKo",
+     1,
+     "National Anthem Plays During Chinese Obstacle Course Finish ..."
+    ],
+    [
+     "https://www.bilibili.com/video/BV1G6RyYdEDZ/",
+     1,
+     "SB25-0402-UE-移动-黄崇珉-蝴蝶刀-巨人王座-胖妞_67f3575abdea3_ ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/n2O2Ca2AyE8",
+     1,
+     "The Worst Timing Possible - YouTube"
+    ]
+   ]
+  },
+  "eHu5XkiNMfA": {
+   "id": "eHu5XkiNMfA",
+   "title": "Sus instintos salvan la cosecha de los padres #bondad",
+   "views": 9100000,
+   "url": "https://www.youtube.com/shorts/eHu5XkiNMfA",
+   "channel": "WholesomeEspanol",
+   "from_channel": "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA",
+   "orig": true,
+   "lang": "es",
+   "ko_chars": 0,
+   "text": "Mientras llamaba a su abuela, esta pequeña niña se apresuró a recoger el arroz que estaba secándose afuera porque estaba",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@obimani.mon036/video/7696367043246886165",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@obimani.mon036",
+     "name": "@obimani.mon036",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "unfrezzmyaccount #trending #viralvideo #viraltiktok | TikTok"
+    },
+    {
+     "href": "https://www.tiktok.com/@user949359646/video/7669872572368096519",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user949359646",
+     "name": "@user949359646",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "CapCut @ቆርያንስ ኢ.ን. ቴ..xx.h.ሊ | TikTok"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYC10uphx2w/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/bengali_girl_sharmistha/",
+     "name": "@bengali_girl_sharmistha",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by bengali_girl_sharmistha"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdbSJskKp5-/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/133mirzakamal8231/",
+     "name": "@133mirzakamal8231",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by 133mirzakamal8231"
+    },
+    {
+     "href": "https://www.facebook.com/vikash.kumar.442247/videos/mumbai-to-shopping-mall/1743003000045243/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/vikash.kumar.442247",
+     "name": "vikash.kumar.442247",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Mumbai to shopping mall | Vikash Kumar"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/TjoC8ga25Fo",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCp8MnEg93vzWdKIpq8wKUsg",
+     "name": "Teman Cyra",
+     "views": 6979,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Celine lagi ngamen sambil joged 😅"
+    },
+    {
+     "href": "https://www.tiktok.com/@irenerenny07/video/7680465125031070983",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@irenerenny07",
+     "name": "@irenerenny07",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "😜😜@💦Songea lady ✨👸 @💮Alliey 💖✨ @💦Aiem ..."
+    },
+    {
+     "href": "https://www.facebook.com/zola.hashatsi/posts/we-need-to-have-an-open-and-honest-conversation-about-toxic-mothers-i-am-glad-br/10164885483473266/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/zola.hashatsi",
+     "name": "zola.hashatsi",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "We need to have an open and honest conversation about toxic ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/Dc8PCZUpS_J/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/jaiml.uddin/",
+     "name": "@jaiml.uddin",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by jaiml.uddin"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/PGGFobvMSrM",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCAILfFXyPKEmZUC4bghQcUA",
+     "name": "Familia Tube ",
+     "views": 96348,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "New escape obby roblox"
+    },
+    {
+     "href": "https://www.tiktok.com/@reychel2280/photo/7538633140089130296",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@reychel2280",
+     "name": "@reychel2280",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Reychel (@reychel2280)'s videos with sonido original - La ..."
+    },
+    {
+     "href": "https://www.facebook.com/100064563915003/videos/современная-бабушка-улыбатор/587392005467021/?locale=ro_RO",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/100064563915003",
+     "name": "100064563915003",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Современная бабушка 😂 🍿Улыбатор | rabota_v_seti_20"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DYbeLOsp2QC/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/sk_kafi_vai/",
+     "name": "@sk_kafi_vai",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by sk_kafi_vai"
+    },
+    {
+     "href": "https://www.tiktok.com/@peakd8ctr/video/7632644385057934622",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@peakd8ctr",
+     "name": "@peakd8ctr",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "peakgame #достижения #пик #peak | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=OWKef7vhk2c",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCPgLNge0xqQHWM5B5EFH9Cg",
+     "name": "The Telegraph",
+     "views": 3123,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Witness films bank robbery"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@obimani.mon036/video/7696367043246886165",
+     2,
+     "unfrezzmyaccount #trending #viralvideo #viraltiktok | TikTok"
+    ],
+    [
+     "https://www.tiktok.com/@user949359646/video/7669872572368096519",
+     1,
+     "CapCut @ቆርያንስ ኢ.ን. ቴ..xx.h.ሊ | TikTok"
+    ],
+    [
+     "https://www.instagram.com/reel/DYC10uphx2w/",
+     1,
+     "Reel by 💫SHARMISTHA💫(বাঙালি মেয়ে ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DdbSJskKp5-/",
+     1,
+     "Reel by Mirza Imran Kamal (@133mirzakamal8231) · September ..."
+    ],
+    [
+     "https://www.facebook.com/vikash.kumar.442247/videos/mumbai-to-shopping-mall/1743003000045243/",
+     1,
+     "Mumbai to shopping mall | Vikash Kumar"
+    ],
+    [
+     "https://www.youtube.com/shorts/TjoC8ga25Fo",
+     1,
+     "Celine is busking while dancing 😅 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@irenerenny07/video/7680465125031070983",
+     1,
+     "😜😜@💦Songea lady ✨👸 @💮Alliey 💖✨ @💦Aiem ..."
+    ],
+    [
+     "https://www.facebook.com/zola.hashatsi/posts/we-need-to-have-an-open-and-honest-conversation-about-toxic-mothers-i-am-glad-br/10164885483473266/",
+     1,
+     "We need to have an open and honest conversation about toxic ..."
+    ],
+    [
+     "https://www.instagram.com/reel/Dc8PCZUpS_J/",
+     1,
+     "Reel by jamaluddin🥰🥰🥰 (@jaiml.uddin) · September 6, 2026"
+    ],
+    [
+     "https://www.youtube.com/shorts/PGGFobvMSrM",
+     1,
+     "New escape obby roblox - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@reychel2280/photo/7538633140089130296",
+     1,
+     "Reychel (@reychel2280)'s videos with sonido original - La ..."
+    ],
+    [
+     "https://www.facebook.com/100064563915003/videos/современная-бабушка-улыбатор/587392005467021/?locale=ro_RO",
+     1,
+     "Современная бабушка 😂 🍿Улыбатор | rabota_v_seti_20"
+    ],
+    [
+     "https://www.instagram.com/reel/DYbeLOsp2QC/",
+     1,
+     "Reel by SK KAFI (@sk_kafi_vai) · May 17, 2026"
+    ],
+    [
+     "https://www.tiktok.com/@peakd8ctr/video/7632644385057934622",
+     1,
+     "peakgame #достижения #пик #peak | TikTok"
+    ],
+    [
+     "https://www.youtube.com/watch?v=OWKef7vhk2c",
+     1,
+     "Witness films bank robbery - YouTube"
+    ]
+   ]
+  },
+  "e5e7VZCcEBM": {
+   "id": "e5e7VZCcEBM",
+   "title": "El jugador se ganó su respeto #bondad",
+   "views": 8800000,
+   "url": "https://www.youtube.com/shorts/e5e7VZCcEBM",
+   "channel": "WholesomeEspanol",
+   "from_channel": "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA",
+   "orig": true,
+   "lang": "en",
+   "ko_chars": 0,
+   "text": "And sit with",
+   "matches": [
+    {
+     "href": "https://www.tiktok.com/@user8585551986522/video/7694699241762983190",
+     "hits": 3,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user8585551986522",
+     "name": "@user8585551986522",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "GENTE MALA de la que AHORA ABUNDA 🏒❤️⭐ PdT8weJrOMI | TikTok"
+    },
+    {
+     "href": "https://m.youtube.com/shorts/tUlv0E1JICU",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC6Nj-MWxC6bgcftYUtxDhMw",
+     "name": "ViiZ",
+     "views": 30847,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "La Niña Consiguió El Disco De Hockey 😲❤️"
+    },
+    {
+     "href": "https://www.instagram.com/p/DeB25eTnyqp/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/gymco2002/",
+     "name": "@gymco2002",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by gymco2002"
+    },
+    {
+     "href": "https://www.facebook.com/upsocljuegodeninos/videos/esta-kiss-cam-generó-conflicto-de-vuelta-a-casa/959566346805087/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/upsocljuegodeninos",
+     "name": "upsocljuegodeninos",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Durante un partido de hockey, la famosa kiss cam hizo de las ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/tUlv0E1JICU",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC6Nj-MWxC6bgcftYUtxDhMw",
+     "name": "ViiZ",
+     "views": 30847,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "La Niña Consiguió El Disco De Hockey 😲❤️"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/2ZtUfrWP5Uc",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC1IRs70Doav_GHdcAXbbBcQ",
+     "name": "Varizz",
+     "views": 22555874,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "The Girl Who Was Crying Finally Got The Hockey Puck ❤️"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/1LknMl3V4qs",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCDc1UerYL73gScmcQrnpv6w",
+     "name": "MediaConquer",
+     "views": 41538,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Karen Stole Her Puck 💀😢 (@omsk_putevoditel)"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/zsciJMj3--Y",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC9-9hClYDc4e_xDRtMtLGqg",
+     "name": "Trendy Facts Ai",
+     "views": 6839,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Girl Gets Puck 😭"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DXmzK6TCNnJ/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/wtp_hockey/",
+     "name": "@wtp_hockey",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by wtp_hockey"
+    },
+    {
+     "href": "https://www.tiktok.com/@0dntsmaya/video/7693111970987347213",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@0dntsmaya",
+     "name": "@0dntsmaya",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "O JOGADOR DE HÓQUEI JOGOU A BOLA PARA ELE… QUE MOMENTO ..."
+    },
+    {
+     "href": "https://www.youtube.com/shorts/OAjCbU2xuNI",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC20L_9nsql8Omu9IAwVe9sg",
+     "name": "TAS Media",
+     "views": 36994,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "They Stole It From Her"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/ET9nYN7w05Y",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC6Nj-MWxC6bgcftYUtxDhMw",
+     "name": "ViiZ",
+     "views": 215248,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Esta Niña Llorona Consiguió El Disco De Hockey 😲❤️"
+    },
+    {
+     "href": "https://www.tiktok.com/@mx.facts5/video/7692127477983890691",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@mx.facts5",
+     "name": "@mx.facts5",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "foryoupage #followerstiktok100k #folloersproblem ..."
+    },
+    {
+     "href": "https://m.youtube.com/shorts/9Ie-PJzqmzE",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCXwT64qmYubi-r3foLnDTtg",
+     "name": "FitPro",
+     "views": 28625,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Por ESTO amamos el deporte ❤️🥹"
+    },
+    {
+     "href": "https://www.tiktok.com/@wave.pulse/video/7566273913991269662",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@wave.pulse",
+     "name": "@wave.pulse",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Did She Steal The Puck? Hilarious Hockey Moment | TikTok"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.tiktok.com/@user8585551986522/video/7694699241762983190",
+     3,
+     "GENTE MALA de la que AHORA ABUNDA 🏒❤️⭐ PdT8weJrOMI | TikTok"
+    ],
+    [
+     "https://m.youtube.com/shorts/tUlv0E1JICU",
+     2,
+     "The Little Girl Got The Hockey Puck 😲❤️ - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/DeB25eTnyqp/",
+     2,
+     "LỚN RỒI CÒN TRANH GIÀNH VỚI TRẺ CON! #gymcỏ #gymco ..."
+    ],
+    [
+     "https://www.facebook.com/upsocljuegodeninos/videos/esta-kiss-cam-generó-conflicto-de-vuelta-a-casa/959566346805087/",
+     2,
+     "Durante un partido de hockey, la famosa kiss cam hizo de las ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/tUlv0E1JICU",
+     2,
+     "The Little Girl Got The Hockey Puck 😲❤️ - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/2ZtUfrWP5Uc",
+     2,
+     "The Girl Who Was Crying Finally Got The Hockey Puck ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/1LknMl3V4qs",
+     2,
+     "Karen Stole Her Puck 💀😢 (@omsk_putevoditel) - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/zsciJMj3--Y",
+     2,
+     "Girl Gets Puck 😭 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DXmzK6TCNnJ/",
+     2,
+     "Player Gifts a Puck to a Crying Little Girl! Get $20 on ..."
+    ],
+    [
+     "https://www.tiktok.com/@0dntsmaya/video/7693111970987347213",
+     2,
+     "O JOGADOR DE HÓQUEI JOGOU A BOLA PARA ELE… QUE MOMENTO ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/OAjCbU2xuNI",
+     2,
+     "They Stole It From Her - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/ET9nYN7w05Y",
+     2,
+     "This Crying Little Girl Got The Hockey Puck 😲❤️ - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@mx.facts5/video/7692127477983890691",
+     1,
+     "foryoupage #followerstiktok100k #folloersproblem ..."
+    ],
+    [
+     "https://m.youtube.com/shorts/9Ie-PJzqmzE",
+     1,
+     "THIS is why we love sports ❤️🥹 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@wave.pulse/video/7566273913991269662",
+     1,
+     "Did She Steal The Puck? Hilarious Hockey Moment | TikTok"
+    ]
+   ]
+  },
+  "AGn-xIEKIOQ": {
+   "id": "AGn-xIEKIOQ",
+   "title": "Él llega temprano y limpia su aula #bondad",
+   "views": 8700000,
+   "url": "https://www.youtube.com/shorts/AGn-xIEKIOQ",
+   "channel": "WholesomeEspanol",
+   "from_channel": "https://www.youtube.com/channel/UCCdtb9Ajd5jUjL4x3z3lTuA",
+   "orig": true,
+   "lang": "es",
+   "ko_chars": 0,
+   "text": "Después de terminar su examen, los escritorios y las sillas de este salón de clases fueron separados intencionalmente pa",
+   "matches": [
+    {
+     "href": "https://m.youtube.com/shorts/u1q1AyoDgXw",
+     "hits": 2,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UC1TX-BzjX79nzpeMYr14QuA",
+     "name": "Rao Sahabaple ",
+     "views": 60640,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This Student Did Something Nobody Asked Him To #shorts #wholesome #hearttouching #heartwarming #usa"
+    },
+    {
+     "href": "https://www.tiktok.com/@wqzjcocwlt/video/7683072469090995487",
+     "hits": 2,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@wqzjcocwlt",
+     "name": "@wqzjcocwlt",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This student arrived early just to clean up the classroom ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DcSz-3YPtCb/",
+     "hits": 2,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/yo.vizag/",
+     "name": "@yo.vizag",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by yo.vizag"
+    },
+    {
+     "href": "https://www.facebook.com/BSS.Qasimabad/videos/-what-happens-when-all-the-rules-disappearas-an-entry-event-for-the-social-studi/1775714493766787/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/BSS.Qasimabad",
+     "name": "BSS.Qasimabad",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "🚨 What happens when all the rules disappear? As an entry ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=8SSwcGCfNh0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCKosTo5bqKm4v264z2zDnFQ",
+     "name": "스마트튜브(스튜TV)",
+     "views": 24323,
+     "resolved": true,
+     "lang": "ko",
+     "title": "반도체 벨트에 중심이 되는 도시! 대한민국 최대 프로젝트가 있는 곳!"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=nZnUT86lO-I",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCIh431O7x00rZke3oNBuRRA",
+     "name": "주식원샷",
+     "views": 842,
+     "resolved": true,
+     "lang": "ko",
+     "title": "삼성전기, 손절선 135만원, 10월 목표가 165만원. 최적의 매수 타이밍 (김덕호 주식회사플레처 대표)"
+    },
+    {
+     "href": "https://www.tiktok.com/@mk.boy382/video/7696783624137493780",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@mk.boy382",
+     "name": "@mk.boy382",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "fypシ #recap #Japanacc🇯🇵 #fyp #foryou | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=UHiWMG7me6A",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCgVZ0mrM3liHNhRYC5Mchgg",
+     "name": "WPLG Local 10",
+     "views": 943957,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video shows Boca Raton teacher kissing student"
+    },
+    {
+     "href": "https://www.facebook.com/media/set/?vanity=abdon.calderon.1420",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/media/set/?vanity=abdon.calderon.1420",
+     "name": "facebook.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Escuela-de Educación-Básica Fiscal Abdón Calderón (@abdon ..."
+    },
+    {
+     "href": "https://www.instagram.com/reel/DSOfds5EeuP/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/bookbagtours/",
+     "name": "@bookbagtours",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by bookbagtours"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/QFgdPX9N_5E",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCoBJpnlkRX_h6MtJqhhI-4Q",
+     "name": "Cantar & Alfabetizar",
+     "views": 26,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Cantando com a Letra X"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/coHGIpoG7_c",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCMIb8scuvoeEaxu_E2E5jRQ",
+     "name": "人物 | 电影 | 社会",
+     "views": 1972,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "班主任提前30分鐘到校，擔心桌凳未歸位，結果發現已全部恢復。"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DeOlGGnIsxA/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/kavkaz_insta_day/",
+     "name": "@kavkaz_insta_day",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by kavkaz_insta_day"
+    },
+    {
+     "href": "https://www.tiktok.com/@user6118498730751/video/7689312234161343757",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@user6118498730751",
+     "name": "@user6118498730751",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "This Student Did Something Nobody Asked Him To #shorts ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=uNMBF4ykHCY",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/watch?v=uNMBF4ykHCY",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "ID1310804379_K4 _Ca 1_Phong Tin Hoc _Video 6 - YouTube"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://m.youtube.com/shorts/u1q1AyoDgXw",
+     2,
+     "This Student Did Something Nobody Asked Him To #shorts ..."
+    ],
+    [
+     "https://www.tiktok.com/@wqzjcocwlt/video/7683072469090995487",
+     2,
+     "This student arrived early just to clean up the classroom ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DcSz-3YPtCb/",
+     2,
+     "Taking a serious view of the death of a minor student after ..."
+    ],
+    [
+     "https://www.facebook.com/BSS.Qasimabad/videos/-what-happens-when-all-the-rules-disappearas-an-entry-event-for-the-social-studi/1775714493766787/",
+     2,
+     "🚨 What happens when all the rules disappear? As an entry ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=8SSwcGCfNh0",
+     1,
+     "The City at the Heart of the Semiconductor Belt! Home to ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=nZnUT86lO-I",
+     1,
+     "1002 Clip 3 - YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@mk.boy382/video/7696783624137493780",
+     1,
+     "fypシ #recap #Japanacc🇯🇵 #fyp #foryou | TikTok"
+    ],
+    [
+     "https://www.youtube.com/watch?v=UHiWMG7me6A",
+     1,
+     "Video shows Boca Raton teacher kissing student - YouTube"
+    ],
+    [
+     "https://www.facebook.com/media/set/?vanity=abdon.calderon.1420",
+     1,
+     "Escuela-de Educación-Básica Fiscal Abdón Calderón (@abdon ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DSOfds5EeuP/",
+     1,
+     "Visiting an all-girls school in South Korea was such a ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/QFgdPX9N_5E",
+     1,
+     "Cantando com a Letra X - YouTube"
+    ],
+    [
+     "https://www.youtube.com/shorts/coHGIpoG7_c",
+     1,
+     "班主任提前30分鐘到校，擔心桌凳未歸位，結果發現已全部恢復 ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DeOlGGnIsxA/",
+     1,
+     "Reel by 💂ТеРрИтОрИЯ КаВкАзА💂 (@kavkaz_insta_day) · October ..."
+    ],
+    [
+     "https://www.tiktok.com/@user6118498730751/video/7689312234161343757",
+     1,
+     "This Student Did Something Nobody Asked Him To #shorts ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=uNMBF4ykHCY",
+     1,
+     "ID1310804379_K4 _Ca 1_Phong Tin Hoc _Video 6 - YouTube"
+    ]
+   ]
+  },
+  "lW139nYfeEc": {
+   "id": "lW139nYfeEc",
+   "title": "⭐️109만⭐️ 뒤집기 연습 시키려는 아빠의 재롱에 리액션 해주는 효자 아들",
+   "views": 1000000,
+   "url": "https://www.youtube.com/shorts/lW139nYfeEc",
+   "channel": "다원노트",
+   "from_channel": "https://www.youtube.com/channel/UCDshKkw606gAh_NDtWLK1Ew",
+   "orig": true,
+   "lang": "ko",
+   "ko_chars": 9,
+   "text": "3 자 이렇게 한 번 더 으아",
+   "matches": [
+    {
+     "href": "https://www.facebook.com/runwaypakistan/videos/where-did-the-kid-go-runwaypakistan-runwayreels-reels-kid-dad-son-daughter-child/1634659291626161/",
+     "hits": 2,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/runwaypakistan",
+     "name": "runwaypakistan",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Where did the kid go? 🫣 #runwaypakistan #runwayreels [reels ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=CieUYHQaxhk",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCLRRp2_Otn4wddHt3XebeEA",
+     "name": "유남심",
+     "views": 2992441,
+     "resolved": true,
+     "lang": "ko",
+     "title": "첫걸음마"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DdqNmEHzGK6/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/_mdmauzaffr/",
+     "name": "@_mdmauzaffr",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by _mdmauzaffr"
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=B75-R7iRcuk",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCJWD1UKWLtbXSNS_ALBKorQ",
+     "name": "Satsuki Kiryuin",
+     "views": 179738,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Homestuck Gif Party (2)"
+    },
+    {
+     "href": "https://www.instagram.com/reel/CF4vTuhAayL/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/derekhough/",
+     "name": "@derekhough",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by derekhough"
+    },
+    {
+     "href": "https://www.facebook.com/atlanticmediaandtv/videos/a-follow-up-post-by-user-tcuffy-claims-to-show-the-moment-police-responded-to-an/982821841241722/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/atlanticmediaandtv",
+     "name": "atlanticmediaandtv",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "A follow-up post by user tcuffy claims to show the moment ..."
+    },
+    {
+     "href": "https://www.tiktok.com/@inna_zigov/video/7694266384196455702",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@inna_zigov",
+     "name": "@inna_zigov",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Čajory – vtipné momenty so šálkou čaju | TikTok"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/A6_xu8PS8w0",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/shorts/A6_xu8PS8w0",
+     "name": "youtube.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "2025年8月10日- YouTube"
+    },
+    {
+     "href": "https://www.tiktok.com/@parrot.reel.facto/video/7690656579602926862",
+     "hits": 1,
+     "site": "tiktok.com",
+     "key": "https://www.tiktok.com/@parrot.reel.facto",
+     "name": "@parrot.reel.facto",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Daddy Says “Mommy Is Mine,” Baby Starts Arguing ..."
+    },
+    {
+     "href": "https://www.facebook.com/JordanFlomPage/posts/how-triplet-boy-moms-have-to-leave-the-house-i-saw-this-life-hack-posted-by-the-/1494943969346235/",
+     "hits": 1,
+     "site": "facebook.com",
+     "key": "https://www.facebook.com/JordanFlomPage",
+     "name": "JordanFlomPage",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "How Triplet Boy Moms have to leave the House! 🤣. I saw this ..."
+    },
+    {
+     "href": "https://www.instagram.com/p/COOLWP-lsyR/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/p/COOLWP-lsyR/",
+     "name": "instagram.com",
+     "views": null,
+     "resolved": false,
+     "lang": "foreign",
+     "title": "Ooofff🥵🥵🥵 #catherinepaiz #catherine #catherinemcbroom ..."
+    },
+    {
+     "href": "https://www.youtube.com/watch?v=3g2YIAuGIuw",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCdAeRRjq6vjnAkxatZVxxxg",
+     "name": "RM Videos",
+     "views": 567,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Toddler Bursts Into Giggles as Dog Gets the Zoomies - 1839041"
+    },
+    {
+     "href": "https://www.instagram.com/reel/DZwwtV4CaHQ/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/nikkiwestcottt/",
+     "name": "@nikkiwestcottt",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by nikkiwestcottt"
+    },
+    {
+     "href": "https://www.youtube.com/shorts/ZGiO6a4n_mQ",
+     "hits": 1,
+     "site": "youtube.com",
+     "key": "https://www.youtube.com/channel/UCoLCLKfzcaL2t2rBnGlaHBw",
+     "name": "WBB Clips",
+     "views": 2065,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Zach Ellwanger on The Real Househusbands of the WNBA"
+    },
+    {
+     "href": "https://www.instagram.com/p/DR9Jv_0Dfj0/",
+     "hits": 1,
+     "site": "instagram.com",
+     "key": "https://www.instagram.com/veronicaferraro/",
+     "name": "@veronicaferraro",
+     "views": null,
+     "resolved": true,
+     "lang": "foreign",
+     "title": "Video by veronicaferraro"
+    }
+   ],
+   "lensed": true,
+   "raw_hits": [
+    [
+     "https://www.facebook.com/runwaypakistan/videos/where-did-the-kid-go-runwaypakistan-runwayreels-reels-kid-dad-son-daughter-child/1634659291626161/",
+     2,
+     "Where did the kid go? 🫣 #runwaypakistan #runwayreels [reels ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=CieUYHQaxhk",
+     1,
+     "첫걸음마 - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/DdqNmEHzGK6/",
+     1,
+     "Video Facebook follow"
+    ],
+    [
+     "https://www.youtube.com/watch?v=B75-R7iRcuk",
+     1,
+     "Homestuck Gif Party (2) - YouTube"
+    ],
+    [
+     "https://www.instagram.com/reel/CF4vTuhAayL/",
+     1,
+     "Flash forward to mine and @hayley.erbert child. First steps ..."
+    ],
+    [
+     "https://www.facebook.com/atlanticmediaandtv/videos/a-follow-up-post-by-user-tcuffy-claims-to-show-the-moment-police-responded-to-an/982821841241722/",
+     1,
+     "A follow-up post by user tcuffy claims to show the moment ..."
+    ],
+    [
+     "https://www.tiktok.com/@inna_zigov/video/7694266384196455702",
+     1,
+     "Čajory – vtipné momenty so šálkou čaju | TikTok"
+    ],
+    [
+     "https://www.youtube.com/shorts/A6_xu8PS8w0",
+     1,
+     "2025年8月10日- YouTube"
+    ],
+    [
+     "https://www.tiktok.com/@parrot.reel.facto/video/7690656579602926862",
+     1,
+     "Daddy Says “Mommy Is Mine,” Baby Starts Arguing ..."
+    ],
+    [
+     "https://www.facebook.com/JordanFlomPage/posts/how-triplet-boy-moms-have-to-leave-the-house-i-saw-this-life-hack-posted-by-the-/1494943969346235/",
+     1,
+     "How Triplet Boy Moms have to leave the House! 🤣. I saw this ..."
+    ],
+    [
+     "https://www.instagram.com/p/COOLWP-lsyR/",
+     1,
+     "Ooofff🥵🥵🥵 #catherinepaiz #catherine #catherinemcbroom ..."
+    ],
+    [
+     "https://www.youtube.com/watch?v=3g2YIAuGIuw",
+     1,
+     "Toddler Bursts Into Giggles as Dog Gets the Zoomies ..."
+    ],
+    [
+     "https://www.instagram.com/reel/DZwwtV4CaHQ/",
+     1,
+     "Just 2 divas going on vacay 💅 Hit me with your Queenstown ..."
+    ],
+    [
+     "https://www.youtube.com/shorts/ZGiO6a4n_mQ",
+     1,
+     "Zach Ellwanger on The Real Househusbands of the WNBA - YouTube"
+    ],
+    [
+     "https://www.instagram.com/p/DR9Jv_0Dfj0/",
+     1,
+     "First little getaway with our baby🫶🏻"
     ]
    ]
   }
