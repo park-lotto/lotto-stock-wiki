@@ -134,6 +134,11 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
     brand, text, cap = pack.get("brand") or {}, pack.get("text") or {}, (pack.get("text") or {}).get("caption") or {}
     if frame is not None:
         frame = copy.deepcopy(frame)
+        if man.get("variable_stats"):     # 편마다 값(제목 크기·위치 …) = 프리셋이 잰 값 — 판단은 preset_save.fill_defaults 한 곳
+            from tools.calcopy.engine import preset_save as PS
+            frame, filled = PS.fill_defaults(frame, man["variable_stats"])
+            if filled:
+                applied.append(f"편마다 값 {len(filled)}칸 = 프리셋 잰 값(중앙값)")
         old_names = {L.get("text") for fr in _frames(frame) for L in fr.get("layers", []) if L.get("kind") == "text" and L.get("role") == "brand" and L.get("text")
                      and not is_disclosure(L.get("text"))}
         new_name = brand.get("channel_name")
@@ -170,6 +175,13 @@ def merge_preset_pack(preset: str, pack: dict) -> dict:
                     c = c.get(fid) if isinstance(c, dict) else c
                     if c:
                         applied.append(f"{fid} 머리 띠 색 {L.get('rgb')} → {c}"); L["rgb"] = list(c)
+        # 제목 밖 '편마다 글'(출처 : $per_video 등)은 채울 곳이 없다 — 10-20 렌더 실측: '$per_video' 글자가 그대로 찍혔다 → 이 편에선 뺀다
+        #   (제목 글은 remake_video.title_text 가 대본 제목, 채널명 칸은 위에서 고객 채널명으로 — 그 뒤에도 남은 것만). 다음: 출처 = 그 편 원본 채널로 채우기
+        for fr in _frames(frame):
+            keep = [L for L in fr.get("layers", []) if not (L.get("kind") == "text" and L.get("role") != "title" and "$per_video" in str(L.get("text") or ""))]
+            if len(keep) != len(fr.get("layers", [])):
+                applied.append(f"{fr.get('id') or 'frame'} 편마다 글 칸 {len(fr['layers']) - len(keep)}개 뺌(채울 글 없음)")
+                fr["layers"] = keep
         tpl = pack.get("template")
         if isinstance(tpl, dict) and tpl.get("id"):          # 숏템메이커 템플릿으로 그리기(관제 234 5판) — 그리는 판단은 to_snapshot.template_snapshot 한 곳
             ad = next((L.get("text") for fr in _frames(frame) for L in fr.get("layers", [])

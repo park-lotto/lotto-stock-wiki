@@ -536,6 +536,22 @@ def load(preset_dir: Path) -> tuple[dict, dict]:
     return frame, M
 
 
+def fill_defaults(frame: dict, defaults: dict | None) -> tuple[dict, list[str]]:
+    """새 소재로 만들 때 — 변수 자리 중 **잰 기본값이 있는 것만**(제목 크기·위치·색 …) manifest variable_stats 값으로 채운다.
+    글 내용 자리(.text, 제목 글자)는 대본이 정하니 그대로 $per_video 로 남긴다(apply 와 달리 멈추지 않는다).
+    10-20 라이브 시험(관제 234): 고객 제작 길(calcopy_make.merge_preset_pack)이 이걸 안 해 'layers[2].y = $per_video' 로 틀 검사에서 멈췄다."""
+    P = flat(frame)
+    filled = []
+    for path, v in P.items():
+        if v == VAR and not path.endswith(".text") and defaults and path in defaults and defaults[path].get("how") != NO_DEFAULT:
+            P[path] = defaults[path]["default"]
+            filled.append(path)
+    out = unflat(P, layer_order(frame))
+    if "made_from" in frame:
+        out["made_from"] = frame["made_from"]
+    return out, filled
+
+
 def apply(preset: dict, per_video: dict | None = None, overrides: dict | None = None,
           defaults: dict | None = None, caption_style: dict | None = None, rules: dict | None = None) -> dict:
     """프리셋의 변수 자리를 채운 설명서. 순서: overrides({자리: 값}) → per_video(그 편 설명서, to_frame 결과)
