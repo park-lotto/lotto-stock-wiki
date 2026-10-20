@@ -1030,9 +1030,9 @@
     "shopping_shorts/mograph/reverse.py:reverse_engineer"
    ],
    "시그니처": [
-    "def reverse_engineer\b",
-    "def scene_cuts\b",
-    "def write_brief_claude\b",
+    "def reverse_engineer\\b",
+    "def scene_cuts\\b",
+    "def write_brief_claude\\b",
     "SCENE_THRESHOLD\\s*="
    ],
    "소비처": [
