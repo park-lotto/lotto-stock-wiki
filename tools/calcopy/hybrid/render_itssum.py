@@ -97,6 +97,7 @@ def tts_once(S, R: Path, log=print) -> tuple[Path, dict | None]:
 
 
 END_PAD, HEAD_PAD = 0.15, 0.25      # 줄 경계 여유(초) — split_by_align 한 곳
+TEMPO_MAX = 1.25                    # 고정 배속이 아닌 목소리(타입캐스트)의 배속 상한 — 기본·줄별 모두(사장님 10-21). 미나 1.35 는 narr_align.fixed_tempo 가 정한다
 
 
 def split_by_align(S, align) -> list[tuple[float, float]]:
@@ -195,7 +196,7 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
         tempo = 1.1
         for _ in range(5):
             speech = sum(eff(l, a, b, tempo) for l, (a, b) in zip(L, spans))
-            tempo = round(min(1.25, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
+            tempo = round(min(TEMPO_MAX, max(0.85, S["cps_target"] / (sum(chars) / speech))), 4)
     durs = [eff(l, a, b, tempo) / tempo for l, (a, b) in zip(L, spans)]
     mean = sum(chars) / sum(durs)
     out = []
@@ -204,7 +205,7 @@ def make_sentences(S, full: Path, R: Path, log=print, align: dict | None = None)
         if c / d > mean * 1.03:
             tl = round(max(tempo * 0.9001, tempo * mean / (c / d)), 4)   # ±10% 경계는 반올림이 넘지 않게(10-18 김가연 1.3713/1.2466=+10.003% → B17 ×)
         elif c / d < mean * 0.9 and not fixed:   # 고정 배속 목소리는 더 빠르게 돌리지 않는다(사장님 10-20 '빠르면 발음 뭉개짐' — 레시피 3편 1.48배)
-            tl = round(min(tempo * 1.0999, tempo * mean * 0.95 / (c / d)), 4)
+            tl = round(min(tempo * 1.0999, tempo * mean * 0.95 / (c / d), TEMPO_MAX), 4)   # 줄별 당김도 1.25 넘지 않게(사장님 10-21 "1.25가 자연스러우면 그렇게")
         x = max(0, a - 0.02)
         cuts = sorted(P.get(l["id"], []))
         fc, lab = [], []
