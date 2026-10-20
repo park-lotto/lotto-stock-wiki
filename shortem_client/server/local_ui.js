@@ -15,7 +15,7 @@ import { rentPreset } from './preset_rent.js';
 import { makeStep } from './make_flow.js';
 import { openLogin, status as loginStatus, PLATFORMS } from './logins.js';
 import { deliverStatus, linkTelegram, confirmTelegram, setDeliver, deliverFinal } from './deliver.js';
-import { keyStatus, saveKey } from './engine/voice.js';
+import { keyStatuses, saveKey } from './engine/voice.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC_OK = /^(out|shopping_shorts\/static)\/[0-9A-Za-z가-힣_.\-/]+\.(html|js|css|woff2?|ttf|otf|png|jpe?g|webp|gif|svg|json)$/;
@@ -130,7 +130,7 @@ async function route(req, res, token, port) {
     let cat = null, pack = null, err = null;
     try { cat = await catalog(); pack = cur ? await packFor(cur) : null; } catch (e) { err = String(e.message || e); }
     const changed = cur ? ((s.channels[cur] || {}).pack || {}) : {};
-    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: { typecast: keyStatus('typecast') },
+    return send(res, 200, { presets: list, current: cur, pack, changed, catalog: cat && { ...cat, default_pack: undefined, preset_defaults: undefined }, videos: videos(), error: err, logins: loginStatus(), deliver: deliverStatus(), keys: keyStatuses(),
       stamp: (s.channels[cur] || {}).updated || 0 });
   }
   const body = await readBody(req);
@@ -141,7 +141,8 @@ async function route(req, res, token, port) {
   if (u.pathname === '/api/preview') return send(res, 200, await preview(body));
   if (u.pathname === '/api/login') return send(res, 200, PLATFORMS[body.platform] ? await openLogin(body.platform) : { ok: false, why: '모르는 곳입니다' });
   // 완성본 받기(텔레그램·구글 드라이브) — 판단은 deliver.js. 봇 토큰은 이 화면에만 넣는다(채팅에 붙여 넣지 않게)
-  if (u.pathname === '/api/key/typecast') return send(res, 200, saveKey('typecast', body.key));   // 목소리 = 고객 본인 키
+  const km = u.pathname.match(/^\/api\/key\/([a-z_]{2,20})$/);
+  if (km) return send(res, 200, saveKey(km[1], body.key));   // 회원 본인 키(목록 = voice.js KEY_SERVICES)
   if (u.pathname === '/api/deliver/link') return send(res, 200, await linkTelegram(body.token));
   if (u.pathname === '/api/deliver/confirm') return send(res, 200, await confirmTelegram());
   if (u.pathname === '/api/deliver/set') return send(res, 200, { ok: true, deliver: setDeliver(body) });

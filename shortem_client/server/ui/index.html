@@ -44,6 +44,7 @@ body{margin:0;background:radial-gradient(1200px 600px at 70% -200px,#1d1840 0%,t
 select,input[type=text],input[type=password]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
 .row{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:10px;align-items:center}
 .inrow{display:flex;gap:10px;align-items:center}.inrow input{flex:1;min-width:0}.inrow .btn{flex:0 0 auto}   /* 글 넣기 + 단추 한 줄(키·토큰) */
+.krow{margin:10px 0}.krow .sec-h{margin-bottom:6px}   /* 키 한 줄씩 */
 .row output{color:var(--mute);font-size:12.5px;text-align:right}
 input[type=range]{width:100%;accent-color:var(--violet)}
 .fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:260px;overflow:auto;padding-right:4px}
@@ -144,7 +145,7 @@ function render(){
         <div class="row"><b>외곽선 색</b><input type="color" id="olcolor" value="#${(cap.outline_rgb||[0,0,0]).map(v=>v.toString(16).padStart(2,'0')).join('')}"><output></output></div></div>
       <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div>`;
   }else if(S.step==='sound'){
-    h=`<h2>소리 <small>목소리는 고객님 타입캐스트 키로 만듭니다</small></h2>
+    h=`<h2>소리 <small>목소리는 고객님 키(타입캐스트·일레븐랩스)로 만듭니다</small></h2>
       ${keyBox(st.keys)}
       <div class="sec"><div class="sec-h"><b>목소리</b>${badge('tts','voice_id')}</div>
         <div class="chips">${cat.voices.map(v=>`<button class="chip${v.voice_id===tts.voice_id?' on':''}" data-voice="${esc(v.voice_id)}" title="${esc(v.about)}">${esc(v.name)}</button>`).join('')}</div></div>
@@ -172,11 +173,11 @@ function loginsBox(l){
     <div class="chips">${Object.keys(P).map(k=>`<button class="chip${l.connected[k]?' on':''}" data-login="${k}">${l.connected[k]?'✓ ':''}${P[k]} ${l.connected[k]?'연결됨':'연결하기'}</button>`).join('')}</div>
     ${l.waiting?`<div class="note">열린 크롬 창에서 ${P[l.waiting]}에 로그인한 뒤 <b>창을 닫아 주세요</b>. 닫으면 여기에 '연결됨'이 뜹니다.</div>`:''}</div>`;
 }
-// 목소리 키(타입캐스트) — 고객 본인 키. 값은 이 PC 파일에만, 화면엔 지문만(server/engine/voice.js saveKey)
+// 회원 본인 키(타입캐스트·일레븐랩스·쿠팡 파트너스) — 목록·이름은 서버(voice.js KEY_SERVICES). 값은 이 PC 파일에만, 화면엔 지문만
 function keyBox(k){
-  const t=(k||{}).typecast||{};
-  return `<div class="sec"><div class="sec-h"><b>목소리 키(타입캐스트)</b>${t.present?`<span class="chg">✓ 넣음 · ${esc(t.fp||'')}</span>`:'<small>없으면 목소리를 만들 수 없습니다</small>'}</div>
-    <div class="inrow"><input type="password" id="tckey" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':'typecast.ai ▸ 개발자 ▸ API 키를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="typecast">저장</button></div>
+  return `<div class="sec"><div class="sec-h"><b>내 키</b><small>값은 이 PC 에만 저장되고 화면엔 지문만 보입니다</small></div>
+    ${Object.entries(k||{}).map(([s,t])=>`<div class="krow"><div class="sec-h"><b>${esc(t.label)}</b>${t.present?`<span class="chg">✓ 넣음 · ${esc(t.fp||'')}</span>`:`<small>${esc(t.need)}</small>`}</div>
+    <div class="inrow"><input type="password" id="key_${s}" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':esc(t.where)+' 를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="${s}">저장</button></div></div>`).join('')}
     ${S.keymsg?`<div class="note">${esc(S.keymsg)}</div>`:''}</div>`;
 }
 // 완성본 받기 — 판단은 server/deliver.js. 봇 토큰은 여기에만 넣는다
@@ -218,7 +219,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
-  if(t.dataset.key){const r=await api('/api/key/typecast',{key:($('tckey')||{}).value||''});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키로 목소리를 만듭니다':r.why;await load(true);return}
+  if(t.dataset.key){const s=t.dataset.key;const r=await api('/api/key/'+s,{key:($('key_'+s)||{}).value||''});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키를 씁니다':r.why;await load(true);return}
   if(t.dataset.dl){const k=t.dataset.dl;let r;
     if(k==='link')r=await api('/api/deliver/link',{token:($('tgtoken')||{}).value||''});
     else if(k==='confirm')r=await api('/api/deliver/confirm',{});

@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { homeDir, ensureDir, jail } from './paths.js';
 import { toolPath, toolsDir, devMode } from './tools_paths.js';
-import { readKey } from './engine/voice.js';
+import { readKey, keyEnv } from './engine/voice.js';
 import { engineCookieEnv } from './logins.js';
 
 export const SID_RE = /^[0-9a-f]{12}$/;
@@ -35,8 +35,7 @@ function engineEnv(queue, packFile, extraEnv) {
   if (packFile) env.CALCOPY_PACKS = packFile;
   Object.assign(env, engineCookieEnv());                 // 회원이 연결한 인스타·틱톡·유튜브 로그인(logins.js) — yt-dlp·media_download 가 쓴다
   Object.assign(env, extraEnv || {});
-  const tc = readKey('typecast');                        // 목소리 = 고객 본인 키(~/.shortem/keys) — 값은 출력하지 않는다
-  if (tc) env.TYPECAST_API_KEY = tc;
+  Object.assign(env, keyEnv());                          // 회원 본인 키(타입캐스트·일레븐랩스·쿠팡 파트너스 — voice.js KEY_SERVICES) — 값은 출력하지 않는다
   const sm = readKey('speechmatics');
   if (sm) { env.SPEECHMATICS_API_KEY = sm; env.SHORTEM_ASR = 'speechmatics'; }
   if (!devMode()) {                                      // 설치본: 동봉 도구만 PATH 에(ffmpeg·yt-dlp + 이 MCP 를 돌리는 동봉 node — 엔진 렌더러가 node 를 부른다)
