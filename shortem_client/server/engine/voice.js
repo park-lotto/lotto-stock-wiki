@@ -23,6 +23,14 @@ export function readKey(service = 'typecast') {
   try { return fs.readFileSync(keyFile(service), 'utf8').trim(); } catch { return ''; }
 }
 
+// 고객이 설정 화면에서 넣는 키(관제 234, 10-20: 키 넣는 화면이 없어 고객이 파일을 직접 만들어야 했다) — 값은 파일에만(0600), 응답엔 지문만
+export function saveKey(service, value) {
+  const k = String(value || '').trim();
+  if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { ok: false, why: '키 모양이 아닙니다 — typecast.ai 개발자 화면의 API 키 전체를 붙여 넣으세요' };
+  writeFileIn(homeDir(), 'keys/' + service, k, 0o600);
+  return { ok: true, ...keyStatus(service) };
+}
+
 export function keyStatus(service = 'typecast') {
   const k = readKey(service);
   return k ? { present: true, fp: keyPrint(k) } : { present: false };

@@ -41,8 +41,9 @@ body{margin:0;background:radial-gradient(1200px 600px at 70% -200px,#1d1840 0%,t
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{font:inherit;font-size:13px;border-radius:10px;padding:7px 12px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);cursor:pointer}
 .chip.on{border-color:var(--mint);background:rgba(63,224,192,.12);color:var(--mint)}
-select,input[type=text]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
+select,input[type=text],input[type=password]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
 .row{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:10px;align-items:center}
+.inrow{display:flex;gap:10px;align-items:center}.inrow input{flex:1;min-width:0}.inrow .btn{flex:0 0 auto}   /* 글 넣기 + 단추 한 줄(키·토큰) */
 .row output{color:var(--mute);font-size:12.5px;text-align:right}
 input[type=range]{width:100%;accent-color:var(--violet)}
 .fontgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:260px;overflow:auto;padding-right:4px}
@@ -103,7 +104,7 @@ function state(msg,bad){const e=$('state');e.className='state'+(bad?' err':'');e
 async function load(force){
   const st=await api('/api/state');
   if(st.error)state(st.error,true);
-  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length||JSON.stringify(st.logins)!==JSON.stringify(S.st.logins)||JSON.stringify(st.deliver)!==JSON.stringify(S.st.deliver);
+  const changed=!S.st||force||st.stamp!==S.stamp||st.current!==S.st.current||st.videos.length!==S.st.videos.length||JSON.stringify(st.logins)!==JSON.stringify(S.st.logins)||JSON.stringify(st.deliver)!==JSON.stringify(S.st.deliver)||JSON.stringify(st.keys)!==JSON.stringify(S.st.keys);
   S.st=st;S.stamp=st.stamp;
   if(changed&&!S.saving){render();preview()}
   if(!st.error)state('이 PC 에 저장됨');
@@ -144,6 +145,7 @@ function render(){
       <div class="sec"><div class="sec-h"><b>자막 쌓기</b></div><div class="chips">${cat.caption_mode.map(k=>`<button class="chip${k===(cap.mode||'accumulate')?' on':''}" data-mode="${k}">${({accumulate:'한 줄씩 쌓기',replace:'한 줄씩 바꾸기'})[k]}</button>`).join('')}</div></div>`;
   }else if(S.step==='sound'){
     h=`<h2>소리 <small>목소리는 고객님 타입캐스트 키로 만듭니다</small></h2>
+      ${keyBox(st.keys)}
       <div class="sec"><div class="sec-h"><b>목소리</b>${badge('tts','voice_id')}</div>
         <div class="chips">${cat.voices.map(v=>`<button class="chip${v.voice_id===tts.voice_id?' on':''}" data-voice="${esc(v.voice_id)}" title="${esc(v.about)}">${esc(v.name)}</button>`).join('')}</div></div>
       <div class="sec"><div class="row"><b>말 빠르기</b><input type="range" id="tempo" min="0.8" max="1.8" step="0.02" value="${tts.tempo??1.36}"><output>${(tts.tempo??1.36).toFixed(2)}배</output></div></div>
@@ -170,13 +172,20 @@ function loginsBox(l){
     <div class="chips">${Object.keys(P).map(k=>`<button class="chip${l.connected[k]?' on':''}" data-login="${k}">${l.connected[k]?'✓ ':''}${P[k]} ${l.connected[k]?'연결됨':'연결하기'}</button>`).join('')}</div>
     ${l.waiting?`<div class="note">열린 크롬 창에서 ${P[l.waiting]}에 로그인한 뒤 <b>창을 닫아 주세요</b>. 닫으면 여기에 '연결됨'이 뜹니다.</div>`:''}</div>`;
 }
+// 목소리 키(타입캐스트) — 고객 본인 키. 값은 이 PC 파일에만, 화면엔 지문만(server/engine/voice.js saveKey)
+function keyBox(k){
+  const t=(k||{}).typecast||{};
+  return `<div class="sec"><div class="sec-h"><b>목소리 키(타입캐스트)</b>${t.present?`<span class="chg">✓ 넣음 · ${esc(t.fp||'')}</span>`:'<small>없으면 목소리를 만들 수 없습니다</small>'}</div>
+    <div class="inrow"><input type="password" id="tckey" placeholder="${t.present?'바꾸려면 새 키를 붙여 넣으세요':'typecast.ai ▸ 개발자 ▸ API 키를 붙여 넣으세요'}" autocomplete="off"><button class="btn pri" data-key="typecast">저장</button></div>
+    ${S.keymsg?`<div class="note">${esc(S.keymsg)}</div>`:''}</div>`;
+}
 // 완성본 받기 — 판단은 server/deliver.js. 봇 토큰은 여기에만 넣는다
 function deliverBox(d){
   if(!d)return'';
   const T=d.telegram,G=d.drive;
   const tg=T.linked?`<button class="chip${T.on?' on':''}" data-dl="tg">${T.on?'✓ ':''}텔레그램 @${esc(T.bot||'')} 으로 받기</button> <button class="chip" data-dl="tgoff">연결 끊기</button>`
     :T.waiting?`<div class="note">텔레그램에서 <b>@${esc(T.bot||'')}</b> 을 찾아 <b>시작</b>(또는 아무 말)을 보낸 뒤 → <button class="btn pri" data-dl="confirm">확인</button></div>`
-    :`<div class="row"><input type="password" id="tgtoken" placeholder="텔레그램 @BotFather 가 준 봇 토큰(숫자:글자)" autocomplete="off" style="flex:1"><button class="btn pri" data-dl="link">연결</button></div>
+    :`<div class="inrow"><input type="password" id="tgtoken" placeholder="텔레그램 @BotFather 가 준 봇 토큰(숫자:글자)" autocomplete="off"><button class="btn pri" data-dl="link">연결</button></div>
       <small style="color:var(--mute)">텔레그램에서 @BotFather → /newbot → 이름 두 번 → 받은 토큰을 붙여 넣으세요. 고객님 봇이라 영상은 고객님께만 갑니다.</small>`;
   const gd=G.found?`<button class="chip${G.on?' on':''}" data-dl="drive">${G.on?'✓ ':''}구글 드라이브에 자동 저장</button> <small style="color:var(--mute)">${esc(G.folder||'')}</small>`
     :`<small style="color:var(--mute)">이 PC 에 'Google Drive 데스크톱'이 없습니다 — <a href="https://www.google.com/drive/download/" target="_blank" rel="noopener">설치</a>하고 로그인하면 여기에 켜는 칸이 생깁니다.</small>`;
@@ -209,6 +218,7 @@ $('board').addEventListener('click',async e=>{
   if(t.dataset.mode)return save({text:{caption:{mode:t.dataset.mode}}});
   if(t.dataset.tpl){const [m,id]=t.dataset.tpl.split(':');return save({template:t.dataset.tpl==='none'?'none':{mode:m,id}})}
   if(t.dataset.voice){const v=S.st.catalog.voices.find(x=>x.voice_id===t.dataset.voice);return save({tts:{voice_id:v.voice_id,name:v.name,preset_id:v.preset_id}})}
+  if(t.dataset.key){const r=await api('/api/key/typecast',{key:($('tckey')||{}).value||''});S.keymsg=r.ok?'저장했습니다 — 다음 영상부터 이 키로 목소리를 만듭니다':r.why;await load(true);return}
   if(t.dataset.dl){const k=t.dataset.dl;let r;
     if(k==='link')r=await api('/api/deliver/link',{token:($('tgtoken')||{}).value||''});
     else if(k==='confirm')r=await api('/api/deliver/confirm',{});

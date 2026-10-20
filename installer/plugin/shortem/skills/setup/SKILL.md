@@ -13,6 +13,7 @@ disallowed-tools: Bash PowerShell Write Edit NotebookEdit
    - 안 된 항목이 있으면 도구가 돌려준 `fix` 문장을 그대로 전한다. 다른 해결책을 지어내지 않는다.
    - 도구가 "실행 도구가 아직 없습니다"라고 하면: `shortem_setup` 을 `{"install": true}` 로 불러 설치를 시작하고(설정에 키가 없다고 나오면 사용자에게 `/plugin configure shortem@shortem` 으로 키를 넣게 한 뒤 다시), 30초마다 `shortem_setup` 을 다시 불러 진행(받는 중 몇 %)을 한 줄로 알린다. "설치를 마쳤습니다"가 나오면 Claude Code 를 완전히 껐다 켜 달라고 안내한다.
    - 라이선스 키가 없다고 나오면: `/plugin configure shortem@shortem` 을 입력해 키를 붙여 넣으라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
+   - 목소리 키(타입캐스트)가 없다고 나오면: 설정 화면(`shortem_settings(action="open")`)의 **소리** 칸 '목소리 키'에 typecast.ai 개발자 화면의 API 키를 붙여 넣고 저장하라고 안내한다. **키를 채팅에 붙여 넣으라고 하지 않는다.**
 3. 다 됐으면 `shortem_settings(action="open")` 으로 내 채널 설정 화면을 연다 — 고객이 프리셋을 고르고 글꼴·자막·소리를 고른다(이 PC 에 저장).
 4. 인스타·틱톡 영상도 쓰려면 같은 화면의 '영상 받기 계정'에서 연결하거나 `shortem_login(action="open", platform)` — 고객이 열린 창에서 직접 로그인하고 창을 닫는다.
 5. 다음 한 줄을 안내한다: `/shortem:make <영상 주소 또는 소재>`
