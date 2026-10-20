@@ -363,7 +363,8 @@ def frame_kind(index, rule):
 
 
 def _word_key(text):
-    return re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")
+    from .script_translate import letters_only      # 글자의 정의는 한 곳(가나·한자 포함, 관제 248)
+    return letters_only(text)
 
 
 def attach_scene_words(scenes, timeline):

@@ -21,6 +21,17 @@ _JA_CHARS = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
 _TOKEN_SKIP = re.compile(r"[\s、。！？!?,.…「」『』～~'\"()（）]")
 
 LANG_LABEL = {"en": "영어", "ja": "일본어", "ko": "한국어"}   # 화면 문구 공용
+# "글자로 치는 문자"(비교·중복 판정용 정규화) — 한글·숫자·라틴 + 가나·CJK 한자. 2026-10-21 라이브 e2e(job e582f0e0c9b4)에서
+#   edit_plan._narr_key 가 [^0-9A-Za-z가-힣] 만 남겨 일본어 줄 11개 중 10개가 빈 키("")가 되어 enforce_script_order 가
+#   칸 11 → 1 로 뭉갰다. 같은 정규식이 edit_plan(_narr_key·_dup_key)·scene_style(_word_key)·storyboard(_compact) 4벌이라
+#   여기 한 곳(letters_only)으로 모은다(0순위-B).
+LETTERS = "0-9A-Za-z가-힣぀-ヿ一-鿿"
+_NOT_LETTERS = re.compile("[^" + LETTERS + "]+")
+
+
+def letters_only(text):
+    """비교·중복 판정용 정규화 — 공백·문장부호를 걷어내고 글자(한글·숫자·라틴·가나·한자)만 남긴다."""
+    return _NOT_LETTERS.sub("", text or "")
 
 _PROMPT = """You are translating a Korean short-form shopping video narration into natural spoken American English.
 Translate EACH line separately and return exactly {n} lines in the same order.

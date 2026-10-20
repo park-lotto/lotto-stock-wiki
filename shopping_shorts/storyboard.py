@@ -504,7 +504,8 @@ def meme_emotion(rank, signal):
 
 
 def _compact(t):
-    return re.sub(r"[^0-9A-Za-z가-힣]", "", t or "")
+    from shopping_shorts.script_translate import letters_only      # 글자의 정의는 한 곳(가나·한자 포함, 관제 248)
+    return letters_only(t)
 
 
 def signal_end_sec(narration, signal, words):

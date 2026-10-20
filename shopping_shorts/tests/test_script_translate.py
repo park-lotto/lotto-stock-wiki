@@ -271,3 +271,33 @@ def test_api_script_translate_rejects_unknown_lang(client):
     st.add_customer_key(c.cid, "elevenlabs", "EL")
     r = c.post("/api/script/translate", json={"lines": KO, "lang": "xx"})
     assert r.status_code == 422 and r.json()["error"] == "지원하지 않는 언어예요"
+
+
+# ── 글자 정규화가 일본어를 지우지 않는다(2026-10-21 라이브 e2e job e582f0e0c9b4: 칸 11→1 사고) ──
+JA3 = ["イタリアも驚いた天才的発明品！", "スイーツを買いに行ったらカップ目当てで爆買いしちゃうと噂ですが、", "これが噂のEMMIティラミス。"]
+
+
+def test_letters_only_keeps_kana_and_kanji():
+    assert script_translate.letters_only(JA3[0]) == "イタリアも驚いた天才的発明品"
+    assert script_translate.letters_only("이거 진짜, 대박!") == "이거진짜대박"
+    assert script_translate.letters_only("Go check it out!") == "Gocheckitout"
+    assert script_translate.letters_only("") == ""
+
+
+def test_narr_key_and_dup_key_follow_letters_only():
+    from shopping_shorts import edit_plan, scene_style, storyboard
+    for s in JA3 + KO + EN:
+        assert edit_plan._narr_key(s) == script_translate.letters_only(s) != ""
+        assert edit_plan._dup_key(s) == script_translate.letters_only(s)
+        assert scene_style._word_key(s) == storyboard._compact(s) == script_translate.letters_only(s)
+
+
+def test_enforce_script_order_keeps_japanese_beats():
+    """일본어 확정 대본 3줄·칸 3개 → 그대로 3칸(종전엔 10줄이 빈 키라 1칸으로 뭉갰다)."""
+    from shopping_shorts import edit_plan
+    given = "\n".join(JA3)
+    beats = [{"beat_idx": i, "narration": t} for i, t in enumerate(JA3)]
+    out, changed = edit_plan.enforce_script_order([dict(b) for b in beats], given)
+    assert [b["narration"] for b in out] == JA3 and changed == 0
+    fixed, n = edit_plan.enforce_scripted_narration([dict(b) for b in beats], given)
+    assert [b["narration"] for b in fixed] == JA3 and n == 0
