@@ -487,8 +487,11 @@ def ph_origin_fetch(st, m, rp, u):
 def ph_stopped(st, m, rp, u):
     """멈춘 편 — 다시 시도(retry)할 수 있는 멈춤이면 그 단계부터, 아니면 그대로 멈춤."""
     r = (st.get("stopped") or {}).get("retry")
-    if not r and str((st.get("stopped") or {}).get("why") or "").startswith("원본 영상을 받지 못했습니다"):
+    why0 = str((st.get("stopped") or {}).get("why") or "")
+    if not r and why0.startswith("원본 영상을 받지 못했습니다"):
         r = "origin_fetch"                       # 10-21 이전 판이 멈춘 편(retry 칸 없음)도 받기부터 이어 가게
+    if not r and why0.startswith("look 단계를"):
+        r = "check_retry"
     if u.get("retry") and r:
         st.pop("stopped", None)
         return {"goto": r}
@@ -986,10 +989,34 @@ def ph_check_look(st, m, rp, u):
         st["approved"] = False
         return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {long[0].get('value')} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
                 "then": "script_got"}
+    if st["tries"].get("look", 0) >= LIMITS["look"]:
+        raise _Stop("완성본 검사를 고쳐도 통과하지 못했습니다", "다시 시도(retry)하면 검사에서 걸린 곳부터 다시 고칩니다", retry="check_retry")
     _tries(st, "look", LIMITS["look"])
     probs = json.dumps({"자동검사": {k: x for k, x in (st.get("auto") or {}).items() if k != "ok"} if not auto_ok else None,
                         "눈 검수": look.get("problems")}, ensure_ascii=False)[:3000]
-    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs, None, f"final_fix_{v}")], "then": "check_fix"}
+    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+
+
+def _face_hint(st) -> str:
+    """'0초·첫 줄 얼굴'이 걸렸을 때 — 첫 줄 길이보다 오래 주인공이 화면에 머무는 원본 샷 목록(10-22 정재형: 짐작으로 바꾼 샷마다 주인공이 걸어 나감)."""
+    rows = (st.get("auto") or {}).get("rows") or []
+    bad = next((r for r in rows if "얼굴" in str(r.get("what")) and not r.get("ok")), None)
+    if not bad:
+        return ""
+    long = [f"{stem}.mp4 #{x['i']} {x['a']:.1f}~{x['b']:.1f}초({x['b'] - x['a']:.1f}초) {x.get('desc', '')}"
+            for stem, shots in (st.get("shots") or {}).items() for x in shots if x.get("who") == "main" and x["b"] - x["a"] >= 3.0][:12]
+    return (f"\n\n★자동 검사 '{bad.get('what')}' 걸림: {bad.get('value')} — 첫 줄 컷 전체가 주인공 얼굴이어야 한다. 한 컷으로, 아래처럼 주인공이 오래 머무는 샷에서 고른다"
+            f"(샷 안에서 ss·길이를 잡아 샷 끝을 넘지 않게):\n" + "\n".join(long)) if long else ""
+
+
+def ph_check_retry(st, m, rp, u):
+    """완성본 검사에서 멈춘 편을 다시 시도 — 걸린 곳부터 다시 고친다(받기·대본은 그대로)."""
+    st["tries"]["look"] = 0
+    v = st["version"]
+    look = st.get("look") or {}
+    probs = json.dumps({"자동검사": [r for r in (st.get("auto") or {}).get("rows") or [] if not r.get("ok")], "눈 검수": look.get("problems")},
+                       ensure_ascii=False)[:3000]
+    return {"review": [_fix_review(st, "완성본 검사에서 걸린 것: " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
 
 
 def ph_check_fix(st, m, rp, u):
@@ -1027,7 +1054,7 @@ PHASES = {
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
-    "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "deliver": ph_deliver, "finished": ph_finished,
+    "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"origin_fetch": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
