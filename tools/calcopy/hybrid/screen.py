@@ -214,6 +214,11 @@ def download(work: Path, ids: list[str], sections: list[tuple[float, float]] | N
             if sections:
                 r = YF.download_sections(url, sections, dst, fmts=(YT_FMT_SECTION, YT_FMT_FULL), pad=pad, timeout=1800, extra=["--write-info-json"], log=log)
                 err = r.stderr[-400:] if r else "형식 전부 실패(멈춤·시간초과)"
+                if not dst.exists():
+                    # 구간 받기(ffmpeg 가 영상 주소를 직접 읽음)만 0바이트로 멈추는 회선·계정이 있다 — 통째로(yt-dlp 가 직접) 받는다(10-21 yt3: 구간 0B·통째 80초 200MB)
+                    log(f"[download] 구간 받기 실패 → 통째로 {vid}")
+                    r2 = YF.download_full(url, dst, fmt=YT_FMT_FULL, timeout=1800, log=log)
+                    err = (r2.stderr or "")[-400:]
             else:
                 r = YF.download_full(url, dst, fmt=YT_FMT_FULL, timeout=1800, log=log)
                 err = r.stderr[-400:]

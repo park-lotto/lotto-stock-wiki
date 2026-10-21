@@ -357,6 +357,8 @@ def c_origin_subs(W, d):
         m = RU.fingerprint(lines, words)
         if m:
             matched[vid] = m
+            if len(m) >= 3:                          # 세 줄 이상 맞은 후보가 나왔다 — 나머지 자막은 받지 않는다(계정 한도 아끼기, 확정은 서버·판정이)
+                break
     return {"matched": matched, "blocked": blocked, "nosub": nosub}
 
 
@@ -395,7 +397,10 @@ def c_origin_get(W, d):
     files = screen.download(W, [vid], [(a, b)], prefix="")
     if not files:
         return {"error": "원본 받기 실패"}
-    off, ok = origin_offset(W, vid, Path(files[-1]), a, [float(x) for x in d.get("ts") or []])
+    guess = a
+    if dims(Path(files[-1]))["dur"] > (b - a) + 120:   # 구간 대신 통째로 받았다(screen.download 대체 길) → 파일 0초 = 원본 0초에서 잰다
+        guess = 0.0
+    off, ok = origin_offset(W, vid, Path(files[-1]), guess, [float(x) for x in d.get("ts") or []])
     return {"files": [dims(Path(f)) for f in files], "offset": off, "measured": ok}
 
 

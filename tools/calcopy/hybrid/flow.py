@@ -193,9 +193,10 @@ def _txt(s: str) -> dict:
 
 
 class _Stop(Exception):
-    def __init__(self, why: str, fix: str = ""):
+    """멈춤. retry = 다시 시도하면 이어 갈 세부 단계(받기 실패처럼 잠깐의 문제 — 앞 단계 유튜브 요청을 다시 쓰지 않게)."""
+    def __init__(self, why: str, fix: str = "", retry: str | None = None):
         super().__init__(why)
-        self.why, self.fix = why, fix
+        self.why, self.fix, self.retry = why, fix, retry
 
 
 def start(ref: str, version: str, sid: str) -> dict:
@@ -215,8 +216,8 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
             r = h(st, m, rp, user)
         except _Stop as e:
             st["phase"] = "stopped"
-            st["stopped"] = {"why": e.why, "fix": e.fix}
-            return _out(st, "stop", ph, why=e.why, fix=e.fix)
+            st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": e.retry} if e.retry else {})}
+            return _out(st, "stop", ph, why=e.why, fix=e.fix, retry_ok=True if e.retry else None)
         m, rp, user = {}, {}, {}           # 한 번 먹은 입력은 다음 단계로 넘기지 않는다
         if "goto" in r:
             st["phase"] = r["goto"]
@@ -319,6 +320,8 @@ def ph_origin_read(st, m, rp, u):
     celeb = str(r.get("celeb") or "")
     if not celeb or celeb == "불명":
         return {"goto": "search"}
+    if re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip():
+        return {"goto": "search"}            # 화면 출처 글자를 이미 읽었다 — 남의 쇼츠 출처 읽기(유튜브 약 11건)는 출처가 안 보일 때만(계정 한도 아끼기)
     words = [w for w in r.get("product_words") or [] if w][:2] or [""]
     return {"do": [{"id": "peer", "cmd": "peer_sheet", "queries": [f"{celeb} {w}".strip() for w in words], "bench_id": (st.get("bench") or {}).get("id")}],
             "then": "peer"}
@@ -474,10 +477,28 @@ def ph_pick_got(st, m, rp, u):
     return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": a, "b": b, "ts": ts}], "then": "origin_got"}
 
 
+def ph_origin_fetch(st, m, rp, u):
+    """원본 받기만 다시(다시 시도) — 원본 판정까지 한 일은 그대로 둔다."""
+    O = st["origin"]
+    ts = [float(x["origin_t"]) for x in O.get("matched") or [] if isinstance(x.get("origin_t"), (int, float))]
+    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": O["id"], "a": O["window"][0], "b": O["window"][1], "ts": ts}], "then": "origin_got"}
+
+
+def ph_stopped(st, m, rp, u):
+    """멈춘 편 — 다시 시도(retry)할 수 있는 멈춤이면 그 단계부터, 아니면 그대로 멈춤."""
+    r = (st.get("stopped") or {}).get("retry")
+    if not r and str((st.get("stopped") or {}).get("why") or "").startswith("원본 영상을 받지 못했습니다"):
+        r = "origin_fetch"                       # 10-21 이전 판이 멈춘 편(retry 칸 없음)도 받기부터 이어 가게
+    if u.get("retry") and r:
+        st.pop("stopped", None)
+        return {"goto": r}
+    raise _Stop((st.get("stopped") or {}).get("why") or "멈춘 편입니다", (st.get("stopped") or {}).get("fix") or "", retry=r)
+
+
 def ph_origin_got(st, m, rp, u):
     o = m.get("origin") or {}
     if o.get("error") or not o.get("files"):
-        raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 이어서 부르세요")
+        raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="origin_fetch")
     st["origin"].update(files=o["files"], offset=o.get("offset"), offset_measured=o.get("measured"))
     if not o.get("measured"):
         st["log"].append("원본 시작 시각을 재지 못해 요청 구간 시작으로 씀")
@@ -998,7 +1019,7 @@ def ph_finished(st, m, rp, u):
 PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
-    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_got": ph_origin_got,
+    "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "research": ph_research, "research_got": ph_research_got,
@@ -1008,5 +1029,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"origin_fetch": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
