@@ -384,6 +384,7 @@ def st_research(P: Piece):
 
 
 SCREEN_PICK = """너는 제품 영상 고르기 담당이다(브리프 screen_pick · 제작 순서 05). 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 2~4개.
+★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지(사장님 10-21). 후보에 그 연예인이 나오면 rejected.
 각 후보의 360p 토막 시트(키워드 구간)와 메타가 있다.
 JSON 하나: {"chosen": [{"id": "…", "why": "…", "sections": [[a, b]]}], "rejected": [{"id": "…", "why": "…"}]}"""
 
@@ -452,6 +453,9 @@ def st_script(P: Piece, version: str, fail: str = ""):
         bad_title = _title_colors_bad(S, STY.load(version))
         if bad_title:
             a = {**a, "ok": False, "title": bad_title}
+        bad_src = source_rule_bad(P, M)
+        if bad_src:
+            a = {**a, "ok": False, "source_rule": bad_src}
         if a.get("ok"):
             P.mark("script", version=version, tries=attempt + 1)
             return S
@@ -483,7 +487,8 @@ def _dur(p: Path) -> float | None:
 
 
 PLAN_LOOK = """너는 장면 검수 담당이다(제작 순서 08). 계획 시트를 보고 컷마다: 대사와 화면이 맞나(A3) · 남의 신체 근접(A13) · 남의 글자·원본 자막 띠(A5) ·
-0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
+0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움.
+★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지(사장님 10-21). 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
 자막·띠 밖을 잘라라(집 PC 예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료.json 전체를 고쳐서 돌려준다(없으면 null).
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
@@ -529,6 +534,46 @@ def plan_sheet(P: Piece, version: str, T: dict) -> Path:
     return out
 
 
+NO_FACE = {"", "없음", "none", "None"}
+
+
+def _cut_jumps(src: Path, ss: float, dur: float, fps: int = 10, n: int = 64) -> list[float]:
+    """컷 구간 안 프레임끼리 바뀐 정도(회색 64칸 평균 차) — 장면 전환·끊김을 잰다(1초 시트 사이로 지나가는 0.5초 전환은 눈 검수가 못 본다)."""
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{ss:.2f}", "-t", f"{dur:.2f}", "-i", str(src), "-vf", f"fps={fps},scale={n}:{n}",
+                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, stdin=subprocess.DEVNULL, timeout=120).stdout
+    a = np.frombuffer(raw, np.uint8)
+    if a.size < 2 * n * n:
+        return []
+    a = a[: a.size // (n * n) * n * n].reshape(-1, n, n).astype(float)
+    return [float(x) for x in np.abs(np.diff(a, axis=0)).mean((1, 2))]
+
+
+def source_rule_bad(P: Piece, M: dict, T: dict | None = None) -> list[str]:
+    """재료 출처 규칙(사장님 10-21 "반드시 원본을 찾아서 / 다른 채널의 연예인 영상을 그대로 가져다 쓰면 절대 안 된다") — 판단 주인은 이 함수 하나.
+    ① 벤치(남의 쇼츠)는 재료가 아니다 ② 사람 얼굴 컷은 원본 파일만 ③ T(계획·렌더 시간표)가 있으면 원본 밖 재료 컷에 장면 전환이 섞였나
+    (10-21 이미도 실측: 리뷰여왕 0.3~2.5초 = 별 전환, 프레임 차 최고 73 · 상위10% 53 / 다른 재료 컷 최고 28 이하)."""
+    origin = {Path(f).name for f in (P.s.get("origin") or {}).get("files") or []}
+    bench = str((P.s.get("bench") or {}).get("id") or "")
+    out = []
+    for line, cuts in (M.get("cuts") or {}).items():
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            src = str(c.get("src") or "")
+            if src.startswith("bench") or (bench and src.startswith(bench)):
+                out.append(f"{line}: 벤치(남의 쇼츠) {src} 를 재료로 썼다 — 원본·제품 영상만 쓴다")
+            elif str(c.get("face") or "").strip() not in NO_FACE and src not in origin:
+                out.append(f"{line}: 사람 얼굴 컷({c.get('face')})이 원본이 아닌 {src} 에서 왔다 — 연예인 장면은 원본 파일({', '.join(sorted(origin))})에서만")
+    cand = Path(M.get("cand_dir") or (P.W / "src"))
+    for c in (T or {}).get("cuts") or []:
+        src = str(c.get("src") or "")
+        if not src or src in origin or not (cand / src).exists() or not c.get("dur"):
+            continue
+        d = _cut_jumps(cand / src, float(c.get("ss") or 0), float(c["dur"]))
+        if d and (max(d) > 40 or sum(x > 25 for x in d) >= 3):
+            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
+    return out
+
+
 def _fix_materials(P: Piece, version: str, why: str, sheet_img: Path | None, tag: str) -> dict:
     """계획 시트를 보고 재료.json 을 고치게 한다(제작순서 08). 답 = {ok, problems, 재료|null}."""
     from tools.calcopy.hybrid import styles as STY
@@ -552,7 +597,9 @@ def st_plan(P: Piece, version: str):
             res, over = render_bench.render(version, vd, P.W / version, plan_only=True), ""
         except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다(제작순서 08)
             res, over = {"timeline": {"cuts": []}}, str(e)
-        sh = plan_sheet(P, version, res.get("timeline") or {}) if not over else None
+        if not over:
+            over = "; ".join(source_rule_bad(P, jload(vd / "재료.json"), res.get("timeline") or {}))
+        sh = plan_sheet(P, version, res.get("timeline") or {}) if (res.get("timeline") or {}).get("cuts") else None
         r = _fix_materials(P, version, over, sh, f"plan_{version}")
         if r.get("ok") and not over and not r.get("재료"):
             P.mark("plan", version=version, tries=attempt + 1)
@@ -563,7 +610,7 @@ def st_plan(P: Piece, version: str):
 
 
 FINAL_LOOK = """너는 완성본 검수 담당이다(제작 순서 11 ③). 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나(A3), 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
-0초 = 연예인 얼굴 크게. 받아쓰기(위스퍼 — 혼자 틀린 건 결함이 아닐 수 있다)와 대본 글자도 대조한다.
+0초 = 연예인 얼굴 크게. 남의 채널 연예인 장면·장면 전환 효과(별·와이프)가 섞였나. 받아쓰기(위스퍼 — 혼자 틀린 건 결함이 아닐 수 있다)와 대본 글자도 대조한다.
 JSON 하나: {"ok": true, "problems": ["…"]}"""
 
 
@@ -574,13 +621,19 @@ def st_render_check(P: Piece, version: str) -> Path:
     for attempt in range(3):              # 실제 목소리 길이로 컷이 원본 샷보다 길어지면 멈춘다(어림 계획은 통과해도) → 재료를 고쳐 다시(제작순서 10 '로그에서 볼 것')
         try:
             render_bench.render(version, vd, wd)
-            break
+            bad = source_rule_bad(P, jload(vd / "재료.json"), jload(wd / "render" / "timeline.json"))
+            if not bad:
+                break
+            if attempt == 2:
+                raise StageError("재료 출처 규칙을 세 번 못 지켰다: " + "; ".join(bad))
+            why = "; ".join(bad)
         except StageError as e:
             if "원본 샷보다 길다" not in str(e) or attempt == 2:
                 raise
-            r = _fix_materials(P, version, str(e), None, f"render_fix_{version}")
-            if not r.get("재료"):
-                raise
+            why = str(e)
+        r = _fix_materials(P, version, why, None, f"render_fix_{version}")
+        if not r.get("재료"):
+            raise StageError(f"렌더 뒤 재료를 고치지 못했다: {why}")
     final = wd / "render" / "final.mp4"
     if not final.exists():
         raise StageError("완성본이 나오지 않았다")
