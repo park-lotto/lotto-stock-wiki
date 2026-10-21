@@ -74,6 +74,11 @@ def vid_of(url: str) -> str:
 
 # ── 기계 도구 ─────────────────────────────────────────────────────────────
 def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5, w: int = 300, ss: float | None = None, t: float | None = None) -> Path:
+    if Path(video).suffix.lower() in RU.STILL_EXT:      # 사진 재료는 줄여 쓰기만(ffmpeg fps·tile 은 사진 한 장에서 실패 — 98 #23)
+        from PIL import Image
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        im = Image.open(video).convert("RGB"); im.thumbnail((w * 2, w * 2)); im.save(dst, quality=85)
+        return dst
     pre = (["-ss", f"{ss:.2f}"] if ss is not None else []) + (["-t", f"{t:.2f}"] if t is not None else [])
     dst.parent.mkdir(parents=True, exist_ok=True)
     run(["ffmpeg", "-y", "-v", "error", *pre, "-i", str(video), "-vf", f"fps={fps},scale={w}:-1,tile={cols}x{rows}", "-frames:v", "1", str(dst)])
@@ -477,6 +482,70 @@ def c_download(W, d):
     return {"files": files}
 
 
+def c_product_stills(W, d):
+    """고른 쿠팡 상품의 사진(쿠팡 검색 결과 image) → src/prod_<id>_<k>.jpg — 제작순서 05 '리뷰 영상이 없으면 쿠팡 상품 사진을 움직이는 컷으로'
+    (10-21 선우용여: 제품 영상이 약사 설명·연출뿐이라 제품 컷 0개, 98 #22). 주소만 다르고 같은 사진은 거른다."""
+    import hashlib
+    import urllib.request
+    pid = str(d.get("product_id") or "")
+    if not pid:
+        return {"files": []}
+    urls = []
+    for f in sorted((W / "look").glob("coupang*.json")):
+        for v in jload(f).values():
+            for it in (v or {}).get("items") or []:
+                if str(it.get("product_id") or it.get("productId") or "") == pid and it.get("image") and it["image"] not in urls:
+                    urls.append(it["image"])
+    (W / "src").mkdir(exist_ok=True)
+    out, seen, fail = [], set(), []
+    for k, u in enumerate(urls[:int(d.get("n") or 4)]):
+        dst = W / "src" / f"prod_{pid}_{k}.jpg"
+        try:
+            if not dst.exists():
+                req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})
+                dst.write_bytes(urllib.request.urlopen(req, timeout=20).read())
+            h = hashlib.sha1(dst.read_bytes()).hexdigest()
+            if h in seen:
+                dst.unlink(); continue
+            seen.add(h)
+            if dst.stat().st_size > 2000:
+                out.append(dims(dst))
+        except Exception as e:  # noqa: BLE001 — 사진 하나 실패는 건너뛰되 남긴다
+            fail.append(f"{u[:60]}: {type(e).__name__}")
+    return {"files": out, **({"fail": fail} if fail else {})}
+
+
+HEARD_MIN = 0.6       # 원음 줄 자막 ↔ 그 구간 받아쓰기 닮음 최소(10-21 선우용여: 맞는 줄 0.8+, 어긋난 줄 0.3~0.5)
+
+
+def c_orig_heard(W, d):
+    """원음 줄마다 그 구간을 **실제로 받아써** 자막과 대조 — 집 PC 워커가 귀로 하던 확인(98 #20). 다르면 앞뒤 3초 받아쓰기(파일 초)를 붙인다."""
+    import difflib
+    S = jload(W / "doc" / d["version"] / "대본.json")
+    ad = W / "asr"; ad.mkdir(exist_ok=True)
+    bad = []
+    for l in S.get("lines") or []:
+        if l.get("kind") != "orig" or not l.get("spans"):
+            continue
+        src = W / "src" / str(l.get("src") or "")
+        if not src.exists():
+            continue
+        a, b = float(l["spans"][0][0]), float(l["spans"][-1][1])
+        cap = RU.norm("".join(str(c[0]) for c in l.get("caps_rel") or []))
+        w = ad / f"chk_{l['id']}.wav"
+        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.2f}", "-to", f"{b:.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(w)])
+        heard = " ".join(x["text"] for x in asr(w))
+        r = difflib.SequenceMatcher(None, cap, RU.norm(heard)).ratio() if cap else 1.0
+        if r < HEARD_MIN:
+            wide = ad / f"chk_{l['id']}_wide.wav"
+            w0 = max(0.0, a - 3)
+            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{w0:.2f}", "-to", f"{b + 3:.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wide)])
+            near = " / ".join(f"{w0 + float(x['t0']):.2f}~{w0 + float(x['t1']):.2f} {x['text']}" for x in asr(wide))
+            bad.append(f"{l['id']}: 자막 '{' '.join(str(c[0]) for c in l.get('caps_rel') or [])}' 인데 {a:.2f}~{b:.2f}초에 실제로 들리는 말은 '{heard}'(닮음 {r:.2f}). "
+                       f"앞뒤 받아쓰기(파일 초): {near} — 구간을 그 말이 들리는 자리로 옮기고, 다른 출연자 말이 섞이면 빼라")
+    return {"bad": bad}
+
+
 def c_asr_spans(W, d):
     """원음 구간 받아쓰기 — 스피치매틱스(키 있으면) + 위스퍼 교차(사장님 10-21)."""
     src = W / d["src"]
@@ -670,7 +739,7 @@ def c_finish(W, d):
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
         "origin_get": c_origin_get, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "naver": c_naver, "origin_words": c_origin_words,
-        "screen": c_screen, "download": c_download, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
+        "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish}
 
 

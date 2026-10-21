@@ -40,7 +40,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
-LIMITS = {"script": 5, "plan": 4, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
+LIMITS = {"script": 5, "plan": 8, "render": 3, "look": 2, "pick": 2, "review_bad": 2}
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자 — 10-21 300편 통째 4.2만 자로 40분 멈춤)
 ORIGIN_TRY = 16       # 자막 대조할 후보 수
 
@@ -124,8 +124,8 @@ JSON 하나: {"chosen": [{"id": "…", "why": "…", "sections": [[a, b]]}], "re
 
 SHOT_READ = """너는 원본 샷 판독 담당이다. 방송·영상 원본을 카메라가 바뀌는 곳마다 나눈 샷들의 가운데 장면이다(칸마다 '#번호 시작~끝초').
 샷마다: who = "main"(주인공 {celeb} 혼자 또는 크게) · "both"({celeb}와 다른 사람 함께) · "other"({celeb} 없이 다른 사람만) · "none"(사람 없음),
-product = 그 제품({kind})이 또렷이 보이면 true, cx = 주인공 얼굴 가운데의 가로 위치(0=왼쪽 끝~1=오른쪽 끝, 주인공이 없으면 null), desc = 한국어 10자 안팎. 주인공은 옷·머리·얼굴로 알아본다(같은 영상 안 다른 칸과 비교).
-JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "cx": 0.5, "desc": "…"}}]}}"""
+product = 그 제품({kind})이 또렷이 보이면 true, text = 영상 위에 덧씌운 글자·자막·로고·프로그램 제목 띠마다 [x0,y0,x1,y1](0~1, 왼쪽 위 기준, 없으면 []), cx = 주인공 얼굴 가운데의 가로 위치(0=왼쪽 끝~1=오른쪽 끝, 주인공이 없으면 null), desc = 한국어 10자 안팎. 주인공은 옷·머리·얼굴로 알아본다(같은 영상 안 다른 칸과 비교).
+JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "text": [[0.1, 0.85, 0.9, 0.95]], "cx": 0.5, "desc": "…"}}]}}"""
 
 SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 그대로 이 편의 대본·재료·근거를 써라. 대본 검사를 통과해야 한다 — 걸린 이유가 아래에 있으면 고쳐서 다시.
 원음 줄(kind orig)의 src 는 원본 파일 이름, spans 는 그 파일 초. 원음 자막(caps_rel)은 받아쓰기 오류를 문맥으로 바로잡아 적는다(예: '눈꽃'→'눈곱').
@@ -151,6 +151,7 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
 
 PLAN_LOOK = """너는 장면 검수 담당이다. 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 신체 근접 · 남의 글자·원본 자막 띠 · 0초·훅 = 연예인 얼굴 · A-B-A 끼움.
+★주인공은 칸 가운데. 원본 샷 표의 '글자'(박힌 글자 상자, 0~1)를 보고 칸이 그 글자를 피하게 숫자 crop 을 정한다 — 숫자 crop 은 엔진이 바꾸지 않는다(정한 그대로 렌더).
 ★연예인이 나오는 영상은 찾은 원본에서만 — 다른 채널 연예인 영상 절대 금지. 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
 자막·띠 밖을 잘라라(예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
@@ -661,8 +662,7 @@ def ph_material_got(st, m, rp, u):
     rows = s.get("rows") or []
     st["screen_rows"] = rows
     if not rows:
-        st["material"] = {"files": []}
-        return {"goto": "asr"}
+        return {"do": [{"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}], "then": "material_dl"}
     return {"review": [_rv("screen_pick", SCREEN_PICK + "\n\n후보(시트 순서와 같다):\n" + json.dumps(rows, ensure_ascii=False, indent=1) +
                            f"\n\n제품: {st['product'].get('name')} / 연예인: {st['read'].get('celeb')}", [_img(x) for x in s.get("sheets") or []][:8],
                            need=("chosen",))], "then": "material_pick"}
@@ -675,14 +675,14 @@ def ph_material_pick(st, m, rp, u):
     chosen = [c for c in r.get("chosen") or [] if isinstance(c, dict) and c.get("id") in known and c["id"] not in (st["bench"].get("id"), st["origin"]["id"])
               and not (celeb and celeb in str(c.get("why") or ""))]
     st["screen_pick"] = {"chosen": chosen, "rejected": r.get("rejected") or []}
-    if not chosen:
-        st["material"] = {"files": []}
-        return {"goto": "asr"}
-    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}], "then": "material_dl"}
+    stills = {"id": "stills", "cmd": "product_stills", "product_id": (st.get("product") or {}).get("product_id"), "n": 4}
+    return {"do": [{"id": "dl", "cmd": "download", "items": [{"id": c["id"], "sections": c.get("sections") or []} for c in chosen]}, stills] if chosen else [stills],
+            "then": "material_dl"}
 
 
 def ph_material_dl(st, m, rp, u):
-    st["material"] = {"files": (m.get("dl") or {}).get("files") or []}
+    # 쿠팡 상품 사진도 재료 — 제작순서 05 '리뷰 영상이 없으면 쿠팡 상품 사진을 움직이는 컷으로'(10-21 선우용여 제품 컷 0개, 98 #22)
+    st["material"] = {"files": ((m.get("dl") or {}).get("files") or []) + ((m.get("stills") or {}).get("files") or [])}
     return {"goto": "asr"}
 
 
@@ -722,8 +722,9 @@ def ph_shots_got(st, m, rp, u):
         for s in shots:
             g = got.get(s["i"]) or {}
             cx = g.get("cx")
+            boxes = [b for b in g.get("text") or [] if isinstance(b, list) and len(b) == 4 and all(isinstance(v, (int, float)) for v in b)]
             s.update(who=g.get("who") or "?", product=bool(g.get("product")), desc=str(g.get("desc") or "")[:30],
-                     cx=float(cx) if isinstance(cx, (int, float)) and 0 <= cx <= 1 else None)
+                     cx=float(cx) if isinstance(cx, (int, float)) and 0 <= cx <= 1 else None, text=boxes)
     return {"goto": "script"}
 
 
@@ -780,6 +781,10 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
             a = {"ok": False, "error": f"대본 꼴이 틀렸다: {type(e).__name__}: {str(e)[:200]}"}
     extra = {"title": RU.title_colors_bad(S, _style(v)), "caps_vs_tts": RU.caps_vs_tts(S),
              "source_rule": RU.source_rule_static(M, _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})}
+    on = _origin_names(st)
+    if not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
+        extra["product_cut"] = ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right)로. "
+                                "원본 방송 화면만으로 우리 제품 이야기를 하지 않는다(98 #22)"]
     bad = {k: x for k, x in extra.items() if x}
     return {**a, **bad, "ok": bool(a.get("ok")) and not bad}
 
@@ -802,7 +807,18 @@ def ph_script_got(st, m, rp, u):
         return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": why[:400], "fix": "대본을 고쳐 다시"}}
     st["script"] = {"S": S, "M": M, "G": r.get("근거_md") or ""}
     return {"do": [{"id": "save_script", "cmd": "write_doc", "files": {f"{v}/대본.json": S, f"{v}/재료.json": M, f"{v}/근거.md": st["script"]["G"]},
-                    "cand_dir": True, "version": v}], "then": "sign"}
+                    "cand_dir": True, "version": v},
+                   {"id": "heard", "cmd": "orig_heard", "version": v}], "then": "script_heard"}
+
+
+def ph_script_heard(st, m, rp, u):
+    """원음 줄마다 그 구간을 **실제로 받아써** 자막과 대조 — 집 PC 워커가 귀로 하던 확인(98 #20). 다르면 앞뒤 받아쓰기를 붙여 대본 다시."""
+    bad = (m.get("heard") or {}).get("bad") or []
+    if not bad:
+        return {"goto": "sign"}
+    _tries(st, "script", LIMITS["script"])
+    why = json.dumps({"orig_heard": bad}, ensure_ascii=False)[:4000]
+    return {"review": [_script_ask(st, why)], "then": "script_got", "reject": {"why": why[:400], "fix": "원음 구간을 그 말이 들리는 자리로"}}
 
 
 def script_view(st) -> dict:
@@ -967,9 +983,9 @@ PHASES = {
     "named_same": ph_named_same, "best": ph_best, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
-    "script_ask": ph_script_ask, "script_got": ph_script_got, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
+    "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k in ("research_check", "script_ask", "best", "deliver", "finished"):
-    PHASE_STAGE.setdefault(_k, {"research_check": "research", "script_ask": "script", "best": "product", "deliver": "done", "finished": "done"}[_k])
+for _k, _v in {"research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+    PHASE_STAGE.setdefault(_k, _v)

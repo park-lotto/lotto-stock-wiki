@@ -50,3 +50,23 @@ def test_fill_shot_max_centers_main():
     c = M["cuts"]["N1"][0]
     assert c["max"] == 3.0 and c["center"] == "주인공"
     assert abs((c["crop"][0] + c["crop"][2] / 2) - 0.75 * 1920) <= 1      # 주인공 얼굴 가운데
+
+
+def test_avoid_text_cuts_band_and_caption_keeps_face_center():
+    """박힌 글자 피하기(rules.avoid_text) — 위 제목 띠·아래 자막을 칸 밖으로, 창 비율·주인공 가운데 유지(10-21 선우용여, 98 #24)."""
+    sw, sh, ar = 1920, 1080, 1.0
+    band, cap = [240, 0, 630, 90], [300, 900, 1600, 1000]
+    x, y, w, h = c = RU.avoid_text([420, 0, 1080, 1080], [band, cap], 960.0, sw, sh, ar)
+    assert y >= 90 and y + h <= 900, c                      # 띠 아래 · 자막 위
+    assert abs(w - h * ar) <= 1 and abs((x + w / 2) - 960) <= 1, c
+    assert RU.avoid_text([0, 0, 1080, 1080], [[0, 0, 1920, 700]], 500.0, sw, sh, ar) == [0, 0, 1080, 1080]   # 너무 줄어들면 그대로
+
+
+def test_fill_shot_max_keeps_numeric_crop_and_alternates_stills():
+    """숫자로 정한 칸은 엔진이 덮지 않는다(98 #21·#25) · 같은 상품 사진이 이어지면 움직임 번갈아."""
+    shots = {"o": [{"i": 0, "a": 0.0, "b": 4.0, "who": "main", "cx": 0.3, "text": [[0.0, 0.8, 1.0, 0.95]]}]}
+    M = {"cuts": {"N1": [{"src": "o.mp4", "ss": 1.0, "face": "주인공", "crop": [680, 0, 600, 1080]}],
+                  "N2": [{"src": "prod_1_0.jpg"}, {"src": "prod_1_0.jpg"}]}}
+    RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 9 / 16)
+    assert M["cuts"]["N1"][0]["crop"] == [680, 0, 600, 1080] and M["cuts"]["N1"][0]["max"] == 3.0
+    assert [c["move"] for c in M["cuts"]["N2"]] == ["in", "left"]

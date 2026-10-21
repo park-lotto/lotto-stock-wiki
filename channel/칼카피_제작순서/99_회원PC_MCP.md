@@ -26,11 +26,11 @@
 | 3 | 원본 영상 찾기 | peer_sheet · search(고정 검색어 먼저) · channel_list(본인 채널) · origin_subs(지문 대조) · origin_get(구간 받기·**시작 시각 재기**) | peer_read · titles(120편씩) · origin_pick | 후보 0 · 본인 말 아님 |
 | 4 | 제품 확인 | sheet(맞은 초 −25부터) · frames · coupang(키 → 크롬) · naver | product_pick · product_same → name_find → named_same → best_same | 같은 종류도 없음 · 의약품 |
 | 5 | 자료 조사 | origin_words(자막 또는 받아쓰기) | research(조사.md 6절·spans·facts, 웹 검색) | 절 빠짐·구간이 파일 밖·출처 없는 사실(3번) |
-| 6 | 재료 영상 모으기 | screen · download | screen_pick(연예인 나오는 남의 영상 금지) | — |
+| 6 | 재료 영상 모으기 | screen · download · product_stills(쿠팡 상품 사진 → prod_*.jpg) | screen_pick(연예인 나오는 남의 영상 금지) | — |
 | 7 | 원음 정리 | asr_spans(스피치매틱스+위스퍼 교차) · shot_sheets | shot_*(샷마다 누가·제품·얼굴 가로 위치) | — |
-| 8 | 대본 쓰기 | mat_sheets · write_doc | script(판 brief + 결 기준 + 미나 오독 대체어) | script_audit · 제목 색 · 자막↔목소리 · 출처 규칙(5번) — 출처 줄은 서버가 원본 채널 이름으로 |
+| 8 | 대본 쓰기 | mat_sheets · write_doc · orig_heard(원음 줄 실제 받아쓰기 ↔ 자막) | script(판 brief + 결 기준 + 미나 오독 대체어) | script_audit · 제목 색 · 자막↔목소리 · 출처 규칙 · 제품 컷 0개 · 원음 귀 확인(5번) — 출처 줄은 서버가 원본 채널 이름으로 |
 | 9 | 대본 확인 | — | (회원 사인) | 사인 전 목소리·렌더 0 |
-| 10 | 장면 맞추기 | plan(시간표·계획 시트·장면 전환 재기) | plan_*(컷마다 대사↔화면·남의 글자·주인공 가운데) | 샷 초과·출처 규칙(4번) |
+| 10 | 장면 맞추기 | plan(시간표·계획 시트·장면 전환 재기) | plan_*(컷마다 대사↔화면·남의 글자·주인공 가운데 — 샷 표에 박힌 글자 상자) | 샷 초과·출처 규칙(8번 — 집 PC VERIFY_ROUNDS) |
 | 11 | 목소리·영상 만들기 | render | render_fix_* | 샷 초과(3번) |
 | 12 | 완성본 검사 | check(bench_check 6항목·되받아쓰기 교차·1초 시트) | final_* | 6항목 × 또는 눈 × → 재료 고쳐 다시(2번) → 그래도면 멈춤 |
 | 13 | 완성 | finish | — | 키 없으면 "귀 확인 없음" 한 줄 |

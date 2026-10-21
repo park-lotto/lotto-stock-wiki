@@ -81,8 +81,11 @@ def shot_at(shots: list[dict], t: float) -> dict | None:
 
 
 def shot_text(shots: list[dict]) -> str:
-    return "\n".join(f"#{s['i']} {s['a']:.2f}~{s['b']:.2f} ({s['b'] - s['a']:.1f}초) {s.get('who')}{' 제품' if s.get('product') else ''} {s.get('desc', '')}"
-                     for s in shots or [])
+    def one(s):
+        cx = f" 주인공x {s['cx']:.2f}" if s.get("cx") is not None else ""
+        tx = " 글자 " + ",".join("[" + ",".join(f"{v:.2f}" for v in b) + "]" for b in s.get("text") or []) if s.get("text") else ""
+        return f"#{s['i']} {s['a']:.2f}~{s['b']:.2f} ({s['b'] - s['a']:.1f}초) {s.get('who')}{' 제품' if s.get('product') else ''}{cx}{tx} {s.get('desc', '')}"
+    return "\n".join(one(s) for s in shots or [])
 
 
 def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: dict) -> list[str]:
@@ -106,15 +109,46 @@ def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: 
     return out
 
 
+TEXT_MIN_H = 0.45     # 박힌 글자를 피해 줄일 때 칸 높이 하한(원본 높이 비율) — 더 줄면 화질이 떨어져 그대로 두고 검수에 맡긴다
+STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def avoid_text(crop: list, boxes: list, fx: float | None, sw: int, sh: int, ar: float) -> list:
+    """박힌 글자 상자(원본 픽셀)를 피해 칸을 줄인다 — 위 띠면 칸 위를 띠 아래로, 아래 자막이면 칸 아래를 자막 위로(창 비율 유지, 주인공 가로 가운데 유지).
+    집 PC yanshot/plan 이 샷마다 글자 상자를 읽어 크롭 밖으로 빼던 것(10-21 선우용여: 위 제목 띠·아래 자막이 검수마다 새로 걸림, 98 #24)."""
+    x, y, w, h = [float(v) for v in crop]
+    for _ in range(6):
+        hit = [b for b in boxes if b[0] < x + w and b[2] > x and b[1] < y + h and b[3] > y]
+        if not hit:
+            break
+        b = max(hit, key=lambda b: (min(b[2], x + w) - max(b[0], x)) * (min(b[3], y + h) - max(b[1], y)))
+        top = (b[1] + b[3]) / 2 < y + h / 2
+        ny0, ny1 = (b[3], y + h) if top else (y, b[1])
+        nh = ny1 - ny0
+        if nh < TEXT_MIN_H * sh:
+            break
+        nw = min(sw, nh * ar)
+        cx = fx if fx is not None else x + w / 2
+        x, y, w, h = max(0.0, min(sw - nw, cx - nw / 2)), ny0, nw, nh
+    return [int(round(x)), int(round(y)), int(round(w)), int(round(h))]
+
+
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
-    """원본 컷마다 샷 표로 두 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸):
+    """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
     ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다
-    ② 주인공 컷(face)은 크롭을 **주인공 얼굴 가운데**로 좌우 이동(사장님 10-21 "등장인물 주인공이 가운데 정렬되게") — 위아래(자막 피하기)는 그대로.
-       'face'(자동 얼굴 크롭 = 가장 큰 얼굴)는 다른 출연자에 맞춰질 수 있어 숫자 크롭(높이 전체, 창 비율 ar)으로 바꾼다.
-    origin_dims = {파일 이름: [가로, 세로]} (PC 가 잰 값)."""
+    ② 칸이 정해지지 않은 주인공 컷('face'·없음)만 **주인공 얼굴 가운데 + 박힌 글자 피하기**(사장님 10-21 "주인공 가운데").
+       숫자로 정한 칸은 절대 덮지 않는다 — 대본·재료 고치기가 정한 칸을 엔진이 되돌리면 같은 칸을 두 곳이 정한다(98 #21·#25, 0순위-B).
+    ③ 사진 재료(쿠팡 상품 사진)가 이어지면 움직임을 번갈아(in·left·out·right) — 대본이 정한 move 는 그대로."""
     orig_at = {l["id"]: (l.get("src"), float(l["spans"][0][0])) for l in (S or {}).get("lines") or [] if l.get("kind") == "orig" and l.get("spans")}
+    moves, last_still, k = ("in", "left", "out", "right"), None, 0
     for lid, cuts in (M.get("cuts") or {}).items():
         for c in cuts if isinstance(cuts, list) else [cuts]:
+            if str(c.get("src") or "").lower().endswith(STILL_EXT):
+                k = k + 1 if c.get("src") == last_still else 0
+                c.setdefault("move", moves[k % len(moves)])
+                last_still = c.get("src")
+                continue
+            last_still = None
             ss = c.get("ss")
             if ss is None and lid in orig_at:            # 원음 컷 = 그 줄 원음 구간 시작 + at
                 ss = orig_at[lid][1] + float(c.get("at") or 0)
@@ -127,17 +161,16 @@ def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict
             if not s:
                 continue
             c["max"] = round(s["b"] - ss, 3)
-            if s.get("cx") is None or str(c.get("face") or "").strip() in NO_FACE:
+            if isinstance(c.get("crop"), list) and len(c["crop"]) == 4:
+                continue
+            if not ar or str(c.get("face") or "").strip() in NO_FACE:
                 continue
             sw, sh = origin_dims[src]
-            crop = c.get("crop")
-            if not isinstance(crop, list) or len(crop) != 4:
-                if not ar:
-                    continue
-                cw = min(sw, int(round(sh * ar)))
-                crop = [0, 0, cw, sh]
-            x = int(round(s["cx"] * sw - crop[2] / 2))
-            c["crop"] = [max(0, min(sw - int(crop[2]), x)), int(crop[1]), int(crop[2]), int(crop[3])]
+            cw = min(sw, int(round(sh * ar)))
+            fx = s["cx"] * sw if s.get("cx") is not None else sw / 2
+            crop = [max(0, min(sw - cw, int(round(fx - cw / 2)))), 0, cw, sh]
+            boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
+            c["crop"] = avoid_text(crop, boxes, fx, sw, sh, ar) if boxes else crop
             c["center"] = "주인공"
     return M
 
