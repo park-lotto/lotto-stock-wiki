@@ -197,6 +197,7 @@ ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다(제작 순서 02 
 JSON 하나: {"ids": ["유튜브 id", …]}"""
 
 
+PLAN_ROUNDS = 8        # 계획 검수 최대 횟수 — 집 PC yanshot/plan.VERIFY_ROUNDS 와 같다(자막 많은 방송 원본은 4번으로 모자랐다, 10-21 선우용여)
 LOOK_FIXES = 2         # 완성본 눈 검수 실패 시 재료 고쳐 다시 렌더 횟수
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자)
 ORIGIN_TRY = 16       # 자막 대조할 후보 수(자막만 받는다 — 편당 몇 초)
@@ -850,8 +851,8 @@ def plan_sheet(P: Piece, version: str, T: dict) -> Path:
 
 SHOT_READ = """너는 원본 샷 판독 담당이다. 방송·영상 원본을 카메라가 바뀌는 곳마다 나눈 샷들의 가운데 장면이다(칸마다 '#번호 시작~끝초').
 샷마다: who = "main"(주인공 {celeb} 혼자 또는 크게) · "both"({celeb}와 다른 사람 함께) · "other"({celeb} 없이 다른 사람만) · "none"(사람 없음),
-product = 그 제품({kind})이 또렷이 보이면 true, cx = 주인공 얼굴 가운데의 가로 위치(0=왼쪽 끝~1=오른쪽 끝, 주인공이 없으면 null), desc = 한국어 10자 안팎. 주인공은 옷·머리·얼굴로 알아본다(같은 영상 안 다른 칸과 비교).
-JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "cx": 0.5, "desc": "…"}}]}}"""
+product = 그 제품({kind})이 또렷이 보이면 true, text = 영상 위에 덧씌운 글자·자막·로고·프로그램 제목 띠마다 [x0,y0,x1,y1](0~1, 왼쪽 위 기준, 없으면 []), cx = 주인공 얼굴 가운데의 가로 위치(0=왼쪽 끝~1=오른쪽 끝, 주인공이 없으면 null), desc = 한국어 10자 안팎. 주인공은 옷·머리·얼굴로 알아본다(같은 영상 안 다른 칸과 비교).
+JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "text": [[0.1, 0.85, 0.9, 0.95]], "cx": 0.5, "desc": "…"}}]}}"""
 SHOT_TILES = 40       # 샷 모음 한 장에 들어가는 칸(8×5)
 
 
@@ -888,8 +889,9 @@ def shot_table(P: Piece, src: Path) -> list[dict]:
         for s in part:
             g = got.get(s["i"]) or {}
             cx = g.get("cx")
+            boxes = [b for b in g.get("text") or [] if isinstance(b, list) and len(b) == 4 and all(isinstance(v, (int, float)) for v in b)]
             s.update(who=g.get("who") or "?", product=bool(g.get("product")), desc=str(g.get("desc") or "")[:30],
-                     cx=float(cx) if isinstance(cx, (int, float)) and 0 <= cx <= 1 else None)
+                     cx=float(cx) if isinstance(cx, (int, float)) and 0 <= cx <= 1 else None, text=boxes)
     jsave(cache, shots)
     return shots
 
@@ -900,6 +902,29 @@ def shot_text(shots: list[dict]) -> str:
 
 def _shot_at(shots: list[dict], t: float) -> dict | None:
     return next((s for s in shots if s["a"] - 0.05 <= t < s["b"]), None)
+
+
+TEXT_MIN_H = 0.45     # 박힌 글자를 피해 줄일 때 칸 높이 하한(원본 높이 비율) — 더 줄면 화질이 떨어져 그대로 두고 검수에 맡긴다
+
+
+def avoid_text(crop: list, boxes: list, fx: float | None, sw: int, sh: int, ar: float) -> list:
+    """박힌 글자 상자(원본 픽셀)를 피해 칸을 줄인다 — 위 띠면 칸 위를 띠 아래로, 아래 자막이면 칸 아래를 자막 위로(창 비율 유지, 주인공 가로 가운데 유지).
+    집 PC yanshot/plan 이 샷마다 글자 상자를 읽어 크롭 밖으로 빼던 것(10-21 선우용여: 위 제목 띠·아래 자막이 검수마다 새로 걸림)."""
+    x, y, w, h = [float(v) for v in crop]
+    for _ in range(6):
+        hit = [b for b in boxes if b[0] < x + w and b[2] > x and b[1] < y + h and b[3] > y]
+        if not hit:
+            break
+        b = max(hit, key=lambda b: (min(b[2], x + w) - max(b[0], x)) * (min(b[3], y + h) - max(b[1], y)))
+        top = (b[1] + b[3]) / 2 < y + h / 2
+        ny0, ny1 = (b[3], y + h) if top else (y, b[1])
+        nh = ny1 - ny0
+        if nh < TEXT_MIN_H * sh:
+            break
+        nw = min(sw, nh * ar)
+        cx = fx if fx is not None else x + w / 2
+        x, y, w, h = max(0.0, min(sw - nw, cx - nw / 2)), ny0, nw, nh
+    return [int(round(x)), int(round(y)), int(round(w)), int(round(h))]
 
 
 def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = None) -> dict:
@@ -932,9 +957,16 @@ def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = N
             if not s:
                 continue
             c["max"] = round(s["b"] - ss, 3)
+            sw, sh, _ = probe(src)
+            boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
+            if boxes and ar:
+                base = c.get("crop") if isinstance(c.get("crop"), list) and len(c["crop"]) == 4 else [0, 0, min(sw, int(round(sh * ar))), sh]
+                fx0 = s["cx"] * sw if s.get("cx") is not None else None
+                new = avoid_text(base, boxes, fx0, sw, sh, ar)
+                if new != base:
+                    c["crop"], c["text_avoid"] = new, True
             if s.get("cx") is None or str(c.get("face") or "").strip() in NO_FACE:
                 continue
-            sw, sh, _ = probe(src)
             crop = c.get("crop")
             if not isinstance(crop, list) or len(crop) != 4:
                 if not ar:
@@ -1029,7 +1061,7 @@ def st_plan(P: Piece, version: str):
     from tools.calcopy.hybrid import render_bench
     vd = P.D / version
     jsave(vd / "재료.json", fill_shot_max(P, jload(vd / "재료.json"), _ar(version), jload(vd / "대본.json")))      # 샷 끝(max)을 채운 뒤 계획 — 샷을 넘는 컷은 계획이 바로 짚는다
-    for attempt in range(4):
+    for attempt in range(PLAN_ROUNDS):
         try:
             res, over = render_bench.render(version, vd, P.W / version, plan_only=True), ""
         except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다(제작순서 08)
@@ -1043,7 +1075,7 @@ def st_plan(P: Piece, version: str):
             return
         if not r.get("재료"):
             raise StageError(f"계획 검수가 통과하지 않았는데 재료를 고치지 못했다: {over or r.get('problems')}")
-    raise StageError("계획 검수를 네 번 통과하지 못했다")
+    raise StageError(f"계획 검수를 {PLAN_ROUNDS}번 통과하지 못했다")
 
 
 FINAL_LOOK = """너는 완성본 검수 담당이다(제작 순서 11 ③). 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나(A3), 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,

@@ -43,3 +43,15 @@ def test_transition_inside_other_channel_cut(tmp_path):
     T = {"cuts": [{"line": "N3", "src": "wipe.mp4", "ss": 0.3, "dur": 1.6}, {"line": "N4", "src": "calm.mp4", "ss": 0.3, "dur": 1.6}]}
     bad = C.source_rule_bad(P, M, T)
     assert [b.split(":")[0] for b in bad] == ["N3"], bad
+
+
+def test_avoid_text_cuts_band_and_caption_keeps_face_center():
+    """박힌 글자 피하기(customer.avoid_text) — 위 제목 띠·아래 자막을 칸 밖으로, 창 비율·주인공 가운데 유지(10-21 선우용여)."""
+    from tools.calcopy.hybrid.customer import avoid_text
+    sw, sh, ar = 1920, 1080, 1.0
+    band, cap = [240, 0, 630, 90], [300, 900, 1600, 1000]
+    c = avoid_text([420, 0, 1080, 1080], [band, cap], 960.0, sw, sh, ar)
+    x, y, w, h = c
+    assert y >= 90 and y + h <= 900, c                      # 띠 아래 · 자막 위
+    assert abs(w - h * ar) <= 1 and abs((x + w / 2) - 960) <= 1, c
+    assert avoid_text([0, 0, 1080, 1080], [[0, 0, 1920, 700]], 500.0, sw, sh, ar) == [0, 0, 1080, 1080]   # 너무 줄어들면 그대로
