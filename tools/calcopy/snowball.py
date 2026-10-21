@@ -43,10 +43,11 @@ def sh(cmd, **kw):
 
 def channel_shorts(url: str, n: int = 120) -> list[dict]:
     r = sh(["yt-dlp", "--flat-playlist", "-J", "--no-warnings", "--playlist-end", n, url], timeout=300)
-    d = json.loads(r.stdout or "{}")
+    d = json.loads(r.stdout or "{}") or {}   # yt-dlp 가 null 을 주는 채널이 있다(10-21 wider)
     return [{"id": e["id"], "title": e.get("title") or e.get("description") or "", "views": e.get("view_count") or 0,
              "url": e.get("url") if "tiktok.com" in url else f"https://www.youtube.com/shorts/{e['id']}",
-             "channel": d.get("channel") or d.get("uploader") or url} for e in d.get("entries") or []]
+             "thumb": ((e.get("thumbnails") or [{}])[0].get("url") if "tiktok.com" in url else f"https://i.ytimg.com/vi/{e['id']}/oardefault.jpg"),
+             "channel": d.get("channel") or d.get("uploader") or url} for e in d.get("entries") or [] if e]
 
 
 def fetch_clip(vid: str, out: Path, url: str | None = None) -> Path | None:
@@ -118,6 +119,13 @@ def owner_of(href: str, text: str) -> dict:
             views = int(parts[2])
         if parts[3] not in ("", "NA"):
             text = parts[3]
+        if not key and "instagram" not in site:   # 유튜브가 봇 확인으로 막으면(10-21 실측) 공개 oEmbed 로 채널만
+            try:
+                import urllib.parse, urllib.request
+                o = json.loads(urllib.request.urlopen("https://www.youtube.com/oembed?format=json&url=" + urllib.parse.quote(href, safe=""), timeout=20).read())
+                name, key, text = o["author_name"], o["author_url"], o.get("title") or text
+            except Exception as e:
+                print("  oEmbed 실패", href[:60], str(e)[:60])
     else:
         m = re.search(r"facebook\.com/([^/?]+)/(videos|reel|posts)", href)
         if m:
@@ -126,7 +134,7 @@ def owner_of(href: str, text: str) -> dict:
             "lang": "ko" if HANGUL.search((name or "") + " " + text) else "foreign", "title": text}
 
 
-def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en", foreign: bool = False, site: str | None = None):
+def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, orig_only: bool = False, hl: str = "en", foreign: bool = False, site: str | None = None, judged: bool = False):
     from tools.calcopy import lens as L
     from tools.calcopy.lens import SKIP_VIDEO, lens_page, lens_rows
     L.PROFILE = str(ROOT / ".lens_profile_snowball")   # 다른 세션이 .lens_profile 크롬을 쥐고 있으면 못 연다(10-21 실측) — 이 도구는 따로
@@ -144,12 +152,17 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
             todo = [k for k, c in S["channels"].items() if k.startswith("http") and not c.get(f"done_{'all' if foreign else 'ko'}", c.get("done") if not foreign else False)
                     and (c["lang"] == "ko" or (foreign and re.search(r"youtube\.com/(channel|@)|tiktok\.com/@", k)))
                     and (not site or site in k)]
+            if judged:   # 제품 판정(judge)에서 '제품'으로 고른 영상의 채널만 — 목록도 다시 안 받는다
+                todo = sorted({v["from_channel"] for v in S["videos"].values() if v.get("product") and not v.get("lensed")})
             if not todo:
                 break
             for ck in todo:
                 c = S["channels"][ck]
                 url = ck if ("/shorts" in ck or "/videos" in ck or "tiktok.com" in ck) else ck.rstrip("/") + "/shorts"
-                vids = [v for v in channel_shorts(url) if v["views"] >= min_views]
+                if judged:
+                    vids = [v for v in S["videos"].values() if v.get("from_channel") == ck and v.get("product") and not v.get("lensed")]
+                else:
+                    vids = [v for v in channel_shorts(url) if v["views"] >= min_views and S["videos"].get(v["id"], {}).get("product") is not False]
                 vids.sort(key=lambda v: -v["views"])
                 print(f"[바퀴{rnd + 1}] {c['name']} — {min_views:,}회 이상 {len(vids)}편")
                 picked = 0
@@ -166,7 +179,7 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
                     if not p:
                         continue
                     a = is_orig_audio(p)
-                    rec = {**S["videos"].get(v["id"], {}), **v, "from_channel": ck, **a, "matches": []}
+                    rec = {**S["videos"].get(v["id"], {}), **{k: x for k, x in v.items() if k != "matches"}, "from_channel": ck, **a, "matches": []}
                     S["videos"][v["id"]] = rec
                     if orig_only and not a["orig"]:
                         print(f"  나레 빼기 {v['id']} {v['title'][:30]} ({a['ko_chars']}자)"); save(); continue
@@ -182,21 +195,110 @@ def run(state_p: Path, seed: str | None, top: int, min_views: int, rounds: int, 
                     rec["lensed"] = True
                     rec["raw_hits"] = [[h, n, info[h]] for h, n in hits.most_common(15)]
                     save()
-                    for h, n in hits.most_common(15):
-                        o = owner_of(h, info[h])
-                        rec["matches"].append({"href": h, "hits": n, **o})
-                        if o["key"] == ck or (o["site"] == "youtube" and o["key"] in (c.get("url"), ck)):
-                            continue
-                        if not o["resolved"] or n < MIN_HITS:
-                            continue
-                        ch = S["channels"].setdefault(o["key"], {"name": o["name"], "lang": o["lang"], "site": o["site"],
-                                                                 "depth": c["depth"] + 1, "from": v["id"], "done": o["lang"] != "ko", "found": 0})
-                        ch["found"] = ch.get("found", 0) + 1
+                    resolve(S, v["id"])
                     ko = sum(m["lang"] == "ko" for m in rec["matches"]); fo = len(rec["matches"]) - ko
                     print(f"  원음 {v['id']} {v['title'][:30]} → 한국 {ko} · 해외 {fo}")
                     save()
                 c["done"] = True; c["done_all" if foreign else "done_ko"] = True; save()
+            if judged:
+                break   # 렌즈로 새로 잡힌 채널은 다시 sheet → judge(클로드 눈) 를 거쳐야 넓힌다
     save()
+
+
+def resolve(S: dict, vid: str):
+    """렌즈 원자료(raw_hits) → 채널 주인 매칭 + 검증 채널 등록. 주인 = 이 함수 한 곳(run 과 reowner 가 부른다)."""
+    rec = S["videos"][vid]; ck = rec["from_channel"]; c = S["channels"][ck]
+    rec["matches"] = []
+    for h, n, text in rec.get("raw_hits") or []:
+        o = owner_of(h, text)
+        rec["matches"].append({"href": h, "hits": n, **o})
+        if o["key"] == ck or not o["resolved"] or n < MIN_HITS:
+            continue
+        ch = S["channels"].setdefault(o["key"], {"name": o["name"], "lang": o["lang"], "site": o["site"],
+                                                 "depth": c.get("depth", 0) + 1, "from": vid, "done": o["lang"] != "ko", "found": 0})
+        ch["found"] = ch.get("found", 0) + 1
+
+
+def reowner(state_p: Path, only_unresolved: bool = True):
+    """주인 조회가 막혔던 영상(유튜브 봇 확인 등)을 렌즈 다시 안 돌리고 raw_hits 로 다시 푼다."""
+    S = json.loads(state_p.read_text(encoding="utf-8"))
+    for vid, v in S["videos"].items():
+        if v.get("raw_hits") and (not only_unresolved or any(not m.get("resolved") for m in v.get("matches") or [])):
+            resolve(S, vid)
+            print(vid, "→", sum(m["resolved"] for m in v["matches"]), "/", len(v["matches"]))
+            state_p.write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+SHEET_SITE = re.compile(r"youtube\.com/(channel|@)|tiktok\.com/@")   # 인스타·페북 계정 목록은 로그인 없이 안 받아진다(10-21 실측)
+
+
+def sheet(state_p: Path, chans: list[str] | None, top: int, min_views: int):
+    """제품 거르기 1단계(사장님 10-21 '터진 것만', 제미나이 금지 → 클로드 눈): 넓힐 채널의 터진 영상 썸네일+제목을 번호 붙인 표로.
+    채널 = 검증 채널(verified) 중 아직 표에 안 올린 유튜브·틱톡 계정(--chan 이면 그것만). 판정은 judge 로 적는다."""
+    import urllib.request
+    from PIL import Image, ImageDraw, ImageFont
+    S = json.loads(state_p.read_text(encoding="utf-8"))
+    V = verified(S)
+    # 같은 유튜브 채널이 /channel/UC… 와 /@핸들(oEmbed) 두 주소로 들어온다 → 이름으로도 한 번만(10-21 지구촌픽 두 번 올라감)
+    done_names = {c.get("name") for c in S["channels"].values() if c.get("sheeted")}
+    keys = chans or [k for k in V if SHEET_SITE.search(k) and not S["channels"].get(k, {}).get("sheeted") and V[k]["name"] not in done_names]
+    tmp = Path(tempfile.gettempdir()) / "snowball" / "thumb"; tmp.mkdir(parents=True, exist_ok=True)
+    rows = [r for r in S.get("sheet") or [] if "product" not in S["videos"].get(r["id"], {})]   # 이어 돌리기: 아직 판정 안 한 줄은 남긴다
+    for ck in keys:
+        c = S["channels"].setdefault(ck, {"name": V.get(ck, {}).get("name", ck), "lang": V.get(ck, {}).get("lang", "foreign"),
+                                          "depth": 1, "from": "sheet", "done": False})
+        url = ck if ("/shorts" in ck or "tiktok.com" in ck) else ck.rstrip("/") + "/shorts"
+        vids = sorted((v for v in channel_shorts(url) if v["views"] >= min_views), key=lambda v: -v["views"])[:top]
+        c["sheeted"] = True; c["hot"] = len(vids)
+        print(f"{c['name']} — {min_views:,}회 이상 {len(vids)}편")
+        for v in vids:
+            old = S["videos"].get(v["id"], {})
+            if old.get("lensed") or "product" in old:
+                continue
+            S["videos"][v["id"]] = {**old, **v, "from_channel": ck}
+            rows.append({"id": v["id"], "chan": c["name"]})
+        S["sheet"] = rows; state_p.write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")   # 채널마다 저장(중간에 죽어도 받은 목록 남김)
+    S["sheet"] = rows
+    state_p.write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
+    W, H, cols, per = 180, 320, 8, 24
+    f = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 15)
+    for p0 in range(0, len(rows), per):
+        part = rows[p0:p0 + per]
+        im = Image.new("RGB", (W * cols, (H + 56) * ((len(part) + cols - 1) // cols)), "white"); d = ImageDraw.Draw(im)
+        for i, r in enumerate(part):
+            v = S["videos"][r["id"]]; x, y = (i % cols) * W, (i // cols) * (H + 56)
+            q = tmp / f"{r['id']}.jpg"
+            # 유튜브 세로 썸네일(oardefault)은 없는 편이 있다 → hqdefault(10-21 실측 404 2편)
+            for u in [v.get("thumb"), f"https://i.ytimg.com/vi/{r['id']}/hqdefault.jpg" if "ytimg" in (v.get("thumb") or "") else None]:
+                if q.exists() or not u:
+                    continue
+                try:
+                    q.write_bytes(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=20).read())
+                except Exception as e:  # 썸네일 실패는 회색 칸으로 — 판정 때 보인다
+                    print("  썸네일 실패", r["id"], str(e)[:80])
+            try:
+                t = Image.open(q).convert("RGB"); cw = t.height * 9 // 16
+                if t.width > cw:
+                    t = t.crop(((t.width - cw) // 2, 0, (t.width + cw) // 2, t.height))
+                im.paste(t.resize((W - 6, H)), (x + 3, y))
+            except Exception:
+                d.rectangle([x + 3, y, x + W - 3, y + H], fill="#ccc")
+            d.rectangle([x + 3, y, x + 46, y + 24], fill="black"); d.text((x + 7, y + 2), str(p0 + i + 1), fill="yellow", font=f)
+            title = v.get("title") or ""
+            d.text((x + 4, y + H + 2), f"{v['views'] // 10000}만 {r['chan'][:12]}", fill="black", font=f)
+            d.text((x + 4, y + H + 20), title[:16], fill="#333", font=f)
+            d.text((x + 4, y + H + 37), title[16:32], fill="#333", font=f)
+        out = state_p.with_name(f"{state_p.stem}_sheet{p0 // per + 1}.jpg"); im.save(out, quality=85); print(out)
+
+
+def judge(state_p: Path, yes: str):
+    """제품 거르기 2단계: sheet 번호 중 '물건을 손으로 보여 주는 제품 영상'만 yes(쉼표). 나머지는 product=False — run --judged 는 yes 만 렌즈."""
+    S = json.loads(state_p.read_text(encoding="utf-8"))
+    ok = {int(x) for x in yes.split(",") if x.strip()}
+    for n, r in enumerate(S.get("sheet") or [], 1):
+        S["videos"][r["id"]]["product"] = n in ok
+    state_p.write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"제품 {len(ok)} / {len(S.get('sheet') or [])}")
 
 
 def verified(S: dict) -> dict:
@@ -232,7 +334,10 @@ def report(state_p: Path):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "report"])
+    ap.add_argument("cmd", choices=["run", "report", "sheet", "judge", "reowner"])
+    ap.add_argument("--chan", action="append", help="sheet: 이 채널만(여러 번)")
+    ap.add_argument("--yes", default="", help="judge: 제품 영상 번호(쉼표)")
+    ap.add_argument("--judged", action="store_true", help="run: judge 에서 제품으로 고른 영상만 렌즈")
     ap.add_argument("state")
     ap.add_argument("--seed")
     ap.add_argument("--top", type=int, default=8)
@@ -244,5 +349,11 @@ if __name__ == "__main__":
     ap.add_argument("--orig-only", action="store_true", help="앞 12초 한국어 나레 있는 영상은 렌즈 안 돌림(떠튜브처럼 전부 나레 훅이면 0편이 된다 — 10-21 실측 38/38)")
     a = ap.parse_args()
     if a.cmd == "run":
-        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl, a.foreign, a.site)
+        run(Path(a.state), a.seed, a.top, a.min_views, a.rounds, a.orig_only, a.hl, a.foreign, a.site, a.judged)
+    elif a.cmd == "sheet":
+        sheet(Path(a.state), a.chan, a.top, a.min_views); sys.exit()
+    elif a.cmd == "reowner":
+        reowner(Path(a.state))
+    elif a.cmd == "judge":
+        judge(Path(a.state), a.yes); sys.exit()
     report(Path(a.state))
