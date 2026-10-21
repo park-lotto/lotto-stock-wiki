@@ -56,6 +56,8 @@ def ytdlp(args: list, timeout: float = 600, stall_sec: float | None = None, watc
         try:
             from tools.calcopy.origin_find import yt_auth
             auth = yt_auth(url)
+        except PermissionError:
+            raise                                  # 전용 계정이 없으면 받지 않는다(로그인 없이 회선 두드리기 금지)
         except Exception as e:  # noqa: BLE001 — 로그인 길을 못 쓰면 그대로 받되 이유를 남긴다
             if log:
                 log(f"[yt_fetch] 로그인 쿠키 못 씀: {type(e).__name__}")

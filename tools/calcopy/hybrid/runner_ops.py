@@ -42,9 +42,12 @@ def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     wait = YT_GAP - (time.time() - _last_yt[0])
     if wait > 0:
         time.sleep(wait)
-    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키(파이어폭스 yt* 프로필)·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
+    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키(파이어폭스 프로필)·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
     url = next((str(a) for a in reversed(args) if "youtu" in str(a) or str(a).startswith("ytsearch")), "https://www.youtube.com/")
-    auth = yt_auth(url if "youtu" in url else "https://www.youtube.com/")
+    try:
+        auth = yt_auth(url if "youtu" in url else "https://www.youtube.com/")
+    except PermissionError as e:                 # 전용 프로필에 로그인이 없으면 받지 않는다(주인 = origin_find.yt_auth)
+        raise CacheMiss(str(e))
     try:
         return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--sleep-requests", "2", "--extractor-args", "youtube:lang=ko", *auth, *args],
                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
@@ -68,6 +71,21 @@ def _guard_cache_mode():
 
 def cache_path(*parts) -> Path:
     return Path(CACHE, *parts)
+
+
+def _safe(q: str) -> str:
+    return re.sub(r'[\/:*?"<>|\s]+', "_", q).strip("_")[:80]
+
+
+def _need(kind: str, items: list):
+    """캐시 모드에서 없던 것 — 대신 받기 목록(cache/_need.json)에 쌓는다(10-21: 유튜브는 원본찾기 세션만 쓴다 → 그 세션에 부탁할 목록)."""
+    if not CACHE or not items:
+        return
+    f = cache_path("_need.json")
+    cur = jload(f) if f.exists() else {}
+    cur.setdefault(kind, [])
+    cur[kind] = list(dict.fromkeys(cur[kind] + list(items)))
+    jsave(f, cur)
 
 
 def vid_of(url: str) -> str:
@@ -192,9 +210,20 @@ def c_bench(W, d):
 
 def _search(qs: list[str], n: int = 12, shorts: bool = False) -> list[dict]:
     """유튜브 검색(한국어 제목). shorts=True 면 '4분 이하' 필터 — 그냥 검색은 긴 영상만 줬다(10-21 선우용여)."""
-    if CACHE:
-        f = cache_path("search", "_default.json")
-        return jload(f) if f.exists() else []
+    if CACHE:                       # 받아 둔 검색 결과 — 검색어별(search/<검색어>.json, 대신 받기) 있으면 그것, 없으면 _default(정답지 시험)
+        out, seen, miss = [], set(), []
+        for q in qs[:10]:
+            f = cache_path("search", _safe(q) + ".json")
+            if not f.exists():
+                miss.append(q); continue
+            for e in jload(f):
+                if e.get("id") in seen:
+                    next(x for x in out if x["id"] == e["id"])["qs"].append(q); continue
+                seen.add(e.get("id")); out.append({**e, "q": q, "qs": [q]})
+        if out or not cache_path("search", "_default.json").exists():
+            _need("search", miss)
+            return out
+        return jload(cache_path("search", "_default.json"))
     from urllib.parse import quote
     seen: dict[str, dict] = {}
     for q in qs[:10]:
@@ -265,8 +294,17 @@ def c_peer_sheet(W, d):
 
 def c_channel_list(W, d):
     if CACHE:
-        f = cache_path("channel", "_default.json")
-        return {"titles": jload(f) if f.exists() else []}
+        titles, miss = [], []
+        for cid in (d.get("channels") or [])[:3]:
+            f = cache_path("channel", f"{cid}.json")
+            if f.exists():
+                titles += jload(f)
+            else:
+                miss.append(cid)
+        if not titles and cache_path("channel", "_default.json").exists():
+            return {"titles": jload(cache_path("channel", "_default.json"))}
+        _need("channel", miss)
+        return {"titles": titles}
     titles = []
     for cid in (d.get("channels") or [])[:3]:
         r = yt(["--flat-playlist", "-J", "--playlist-end", str(int(d.get("n") or 300)), f"https://www.youtube.com/channel/{cid}/videos"], timeout=240)

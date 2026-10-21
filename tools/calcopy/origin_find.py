@@ -57,6 +57,9 @@ def yt_auth(url: str) -> list:
     # 프로필 묶음 = 이름 앞글자(기본 yt — 원본찾기 세션). 회원 라인 시험 세션은 SHORTEM_YT_PROFILES=mcp(10-21 사장님 '여기 전용 두 개') — 계정 한도를 나눠 쓴다
     live = [p for p in _firefox_profile_paths(os.environ.get("SHORTEM_YT_PROFILES") or "yt") if _yt_logged_in(p) and (not only or Path(p).name.split(".")[-1] in only)]
     args = ["--js-runtimes", "node", "--remote-components", "ejs:github"]
+    if not live and os.environ.get("SHORTEM_YT_PROFILES"):
+        # 전용 프로필 묶음을 정했는데 로그인된 게 없으면 로그인 없이 회선을 두드리지 않는다(10-21 사장님: 그 세션은 자기 계정만, yt* 는 건드리지 말 것)
+        raise PermissionError(f"유튜브 전용 프로필({os.environ['SHORTEM_YT_PROFILES']}*)에 로그인된 계정이 없다")
     if not live:
         return args
     _YT_SEQ[0] += 1
