@@ -213,10 +213,13 @@ def _channels_of(found: list[dict], r: dict) -> list[str]:
     return own + other
 
 
-def _search(qs: list[str], n: int = 12) -> list[dict]:
+def _search(qs: list[str], n: int = 12, shorts: bool = False) -> list[dict]:
+    """유튜브 검색(한국어 제목). shorts=True 면 '4분 이하' 필터 검색 — 그냥 검색은 긴 영상만 줬다(10-21 선우용여 눈 세정 티슈 10편 모두 20분대)."""
+    from urllib.parse import quote
     seen: dict[str, dict] = {}
-    for q in qs[:8]:
-        r = ytdlp(["--flat-playlist", "-J", f"ytsearch{n}:{q}"], timeout=180)
+    for q in qs[:10]:
+        src = (f"https://www.youtube.com/results?search_query={quote(q)}&sp=EgIYAQ%253D%253D" if shorts else f"ytsearch{n}:{q}")
+        r = ytdlp(["--flat-playlist", "-J", "--playlist-end", str(n), src], timeout=180)
         if r.returncode != 0 or not r.stdout.strip():
             continue
         for e in json.loads(r.stdout).get("entries") or []:
@@ -224,6 +227,63 @@ def _search(qs: list[str], n: int = 12) -> list[dict]:
                 seen[e["id"]] = {"id": e["id"], "title": e.get("title"), "channel": e.get("channel") or e.get("uploader"), "dur": e.get("duration"),
                                  "views": e.get("view_count"), "q": q, "channel_id": e.get("channel_id")}
     return list(seen.values())
+
+
+PEER_READ = """너는 출처 글자 읽기 담당이다. 같은 연예인·제품을 다룬 **다른 채널 쇼츠**들의 장면 모음이다(쇼츠마다 한 줄, 왼쪽에 번호).
+화면 위·아래의 '출처: ○○' 글자, 방송 로고·프로그램 이름을 그대로 읽어라. 안 보이면 빈 값. 지어내지 마라.
+JSON 하나: {"labels": [{"n": 번호, "source": "출처 글자 그대로 또는 ''", "program": "방송·채널 이름 또는 ''"}]}"""
+PEER_N = 5            # 출처를 읽을 남의 쇼츠 수(360p 로 앞 20초만 받는다)
+
+
+def _peer_labels(P: Piece, r: dict) -> list[str]:
+    """같은 연예인+제품을 다룬 다른 사람 쇼츠의 '출처:' 글자 → 원본 검색 단서(사장님 10-21 "이렇게 치면 다른 사람이 만든 영상에 원본 출처가 나온다 / 그걸 활용").
+    그 쇼츠 영상은 재료로 쓰지 않는다(출처 읽기만 — 다른 채널 연예인 영상 금지)."""
+    from PIL import Image, ImageDraw
+    celeb = str(r.get("celeb") or "")
+    if not celeb or celeb == "불명":
+        return []
+    words = [w for w in r.get("product_words") or [] if w][:2] or [""]
+    found = _search([f"{celeb} {w}".strip() for w in words], n=10, shorts=True)
+    bench = str((P.s.get("bench") or {}).get("id") or "")
+    shorts = [c for c in found if c["id"] != bench and 0 < (c.get("dur") or 0) <= 75][:PEER_N]
+    pd = P.W / "peer"; pd.mkdir(exist_ok=True)
+    rows = []
+    for i, c in enumerate(shorts, 1):
+        mp4 = pd / f"{c['id']}.mp4"
+        if not mp4.exists():
+            ytdlp(["-f", "worst[height>=360][ext=mp4]/worst[ext=mp4]/worst", "--download-sections", "*0-20", "-o", str(mp4),
+                   f"https://www.youtube.com/watch?v={c['id']}"], timeout=180)
+        if not mp4.exists():
+            continue
+        tiles = []
+        for t in (1.5, 6.0, 12.0):
+            f = pd / f"{c['id']}_{t}.jpg"
+            try:
+                frame(mp4, t, f)
+                im = Image.open(f).convert("RGB"); im.thumbnail((200, 360)); tiles.append(im)
+            except Exception:  # noqa: BLE001 — 짧은 쇼츠는 뒤 장면이 없을 수 있다
+                pass
+        if tiles:
+            row = Image.new("RGB", (40 + 200 * len(tiles), 360), (0, 0, 0))
+            ImageDraw.Draw(row).text((8, 170), str(i), fill=(255, 255, 0))
+            for k, im in enumerate(tiles):
+                row.paste(im, (40 + 200 * k, 0))
+            rows.append(row)
+    if not rows:
+        return []
+    sh = Image.new("RGB", (max(x.width for x in rows), 360 * len(rows)), (0, 0, 0))
+    for k, row in enumerate(rows):
+        sh.paste(row, (0, 360 * k))
+    sp = pd / "peer_sheet.jpg"; sh.save(sp, quality=85)
+    a = ask("origin_peer", PEER_READ + f"\n\n연예인: {celeb}", [img(sp)], need=("labels",))
+    out = []
+    for x in a.get("labels") or []:
+        for k in ("source", "program"):
+            v = re.sub(r"^\s*출처\s*[:：]?\s*", "", str(x.get(k) or "")).strip()
+            if v and v not in out:
+                out.append(v)
+    P.s["origin_peer"] = out; P.save()
+    return out
 
 
 def st_origin(P: Piece):
@@ -236,8 +296,16 @@ def st_origin(P: Piece):
         raise Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요")
     P.s["origin_read"] = r; P.save()
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
-    qs = ([str(r["celeb"])] if r.get("celeb") and r["celeb"] != "불명" else []) + ([label] if label else []) + \
-        [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else [])     # 이름만 검색 = 본인 채널 찾기
+    name = str(r["celeb"]) if r.get("celeb") and r["celeb"] != "불명" else ""
+    # 고정 검색어를 늘 먼저 — AI 가 판마다 검색어를 새로 지어 같은 영상인데 원본이 걸렸다 안 걸렸다 했다(10-21 선우용여 2판 걸림·3판 빠짐)
+    fixed = [name, f"{name} {label}".strip(), f"{name} 꿀템"] if name else []
+    qs = [q for q in fixed + ([label] if label else []) + [q for q in r.get("queries") or [] if q] +
+          ([r["channel_hint"]] if r.get("channel_hint") else []) if q]                               # 이름만 검색 = 본인 채널 찾기
+    qs = list(dict.fromkeys(qs))
+    peers = [p for p in _peer_labels(P, r) if _norm(p) not in _norm(label)]      # 남의 쇼츠가 적은 출처(우리 벤치와 다른 것만 더한다)
+    if peers:
+        r["channel_hint"] = " / ".join([r.get("channel_hint") or ""] + peers)
+        qs = qs[:3] + [f"{name} {p}".strip() for p in peers[:2]] + qs[3:]
     found = _search(qs)
     celeb = _norm(r.get("celeb") or "")
     own = lambda c: len(celeb) >= 2 and celeb in _norm(c.get("channel") or "")
