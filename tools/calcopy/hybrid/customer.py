@@ -361,7 +361,50 @@ def st_origin(P: Piece):
     files = screen.download(P.W, [oid], [(a, b)] if ts else None, prefix="")
     P.s["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": pick.get("matched"), "files": [str(f) for f in files],
                      "info": next((c for c in scored if c["id"] == oid), {}), "window": [a, b]}
-    P.mark("origin")
+    if files and ts:
+        P.s["origin"]["offset"] = origin_offset(P, Path(files[-1]), a or 0.0)
+    P.mark("origin", offset=P.s["origin"].get("offset"))
+
+
+def origin_offset(P: Piece, src: Path, guess: float) -> float:
+    """받은 원본 파일 0초 = 원본 몇 초인가 — **잰다**(판단 주인). 구간 받기는 조각 단위로 잘려 요청보다 앞에서 시작한다
+    (10-21 선우용여: 요청 360.5초 → 실제 약 340초, 파일 231초 vs 요청 191초) → 그 차이만큼 원음 줄이 엉뚱한 말을 틀었다.
+    방법: 벤치 말이 맞은 자리 근처를 받아쓰고, 그 말이 원본 자동자막 몇 초에 있나 대조 → (원본 초 − 파일 초)의 가운데 값."""
+    from statistics import median
+    from tools.calcopy.yanshot.common import vtt_words
+    O = P.s["origin"]
+    vtt = next(iter(sorted((P.W / "origin").glob(f"{O['id']}*.ko-orig.vtt")) + sorted((P.W / "origin").glob(f"{O['id']}*.ko.vtt"))), None)
+    ts = [float(m["origin_t"]) for m in O.get("matched") or [] if isinstance(m.get("origin_t"), (int, float))]
+    if not vtt or not ts:
+        return guess
+    words = vtt_words(vtt)
+    f0 = max(0.0, min(ts) - guess - 45)
+    wav = P.W / "origin" / "offset.wav"
+    run(["ffmpeg", "-y", "-v", "error", "-ss", f"{f0:.2f}", "-t", "90", "-i", str(src), "-ac", "1", "-ar", "16000", str(wav)])
+    diffs = []
+    for seg in whisper(wav):
+        m = fingerprint([seg], words)
+        if m:
+            diffs.append(m[0]["origin_t"] - (f0 + float(seg["t0"])))
+    if len(diffs) < 2:
+        return guess
+    off = round(median(diffs), 2)
+    P.s.setdefault("origin_offset_log", {}).update(guess=guess, measured=off, n=len(diffs))
+    return off
+
+
+def origin_t0(P: Piece) -> float:
+    """받은 원본 파일 0초의 원본 초 — 잰 offset, 없으면 요청 구간 시작."""
+    O = P.s.get("origin") or {}
+    off = O.get("offset")
+    return float(off if off is not None else (O.get("window") or [0])[0] or 0)
+
+
+def file_t(P: Piece, origin_t: float) -> float:
+    """원본 초 → 받은 파일 초(잰 offset 기준, 없으면 요청 구간 시작)."""
+    O = P.s.get("origin") or {}
+    off = O.get("offset")
+    return float(origin_t) - float(off if off is not None else (O.get("window") or [0])[0] or 0)
 
 
 PRODUCT_PICK = """너는 제품 특정 담당이다(제작 순서 03). 원본 영상 장면 시트에서 연예인이 쓰는 그 제품의 **전체 모양**이 보이는 장면을 2~4개 골라라
@@ -462,7 +505,7 @@ def st_product(P: Piece):
     if not src or not src.exists():
         raise StageError("원본 영상 파일이 없다")
     ld = P.W / "look"; ld.mkdir(exist_ok=True)
-    a = (O.get("window") or [0, None])[0] or 0
+    a = float(origin_t0(P))
     # 벤치 말이 맞은 원본 시각 근처만 본다(10-21 실측: 받은 구간 전체 시트를 주자 주방 도구 영상 앞머리의 식칼을 골랐다)
     ts = [float(m["origin_t"]) - a for m in O.get("matched") or [] if isinstance(m.get("origin_t"), (int, float))]
     s0 = max(0.0, (min(ts) if ts else 0) - 25)
@@ -530,11 +573,12 @@ def st_research(P: Piece):
     O, PR = P.s["origin"], P.s["product"]
     vtt = next((P.W / "origin").glob(f"{O['id']}*.ko.vtt"), None)
     words = vtt_words(vtt) if vtt else []
-    a, b = O.get("window") or [None, None]
-    near = [(round(t, 1), w) for t, w in words if a is None or (a <= t <= b)]
+    a = origin_t0(P)
+    b = a + (_dur(Path(O["files"][-1])) or 0) if O.get("files") else None
+    near = [(round(t, 1), w) for t, w in words if b is None or (a <= t <= b)]
     txt = " ".join(f"[{t}]{w}" for t, w in near)[:9000]
     r = ask("research", RESEARCH + "\n\n" + brief_text("channel/칼카피_제작순서/04_조사.md", "tools/calcopy/hybrid/briefs/research.md") +
-            f"\n\n## 원본\n{O['url']} (받은 파일은 원본 {a or 0:.0f}초부터 — spans 는 파일 초)\n지문 대조: {json.dumps(O.get('matched'), ensure_ascii=False)}\n"
+            f"\n\n## 원본\n{O['url']} (받은 파일 0초 = 원본 {a:.2f}초 — 잰 값. spans 는 파일 초 = 원본 초 − {a:.2f})\n지문 대조: {json.dumps(O.get('matched'), ensure_ascii=False)}\n"
             f"자동자막(원본 초):\n{txt}\n\n## 제품\n{json.dumps(PR, ensure_ascii=False)}",
             [img(Path(x)) for x in PR.get("shots", [])[:3]], need=("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
