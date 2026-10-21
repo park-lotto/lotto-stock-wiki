@@ -588,7 +588,7 @@ def st_asr(P: Piece):
 
 SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙(styles brief)·브리프(script)·제작 순서 07 기준 그대로 이 편의 `대본.json`·`재료.json`·`근거.md` 를 써라.
 꼴은 렌더러 설명(render_bench docstring)과 같다. 대본 검사(script_audit)를 통과해야 한다 — 통과 못 한 이유가 아래에 있으면 고쳐서 다시.
-원음 줄(kind orig)의 src 는 원본 파일 이름, spans 는 그 파일 초. 재료.json 의 cand_dir 는 비워 둔다(엔진이 채운다), 컷 src 는 재료 파일 이름.
+원음 줄(kind orig)의 src 는 원본 파일 이름, spans 는 그 파일 초. 원음 자막(caps_rel)은 받아쓰기 오류를 문맥으로 바로잡아 적는다(10-21 선우용여: 자동자막·위스퍼 둘 다 '눈곱'을 '눈꽃'으로). 재료.json 의 cand_dir 는 비워 둔다(엔진이 채운다), 컷 src 는 재료 파일 이름.
 JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
 
 
