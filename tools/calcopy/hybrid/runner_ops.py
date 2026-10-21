@@ -456,8 +456,19 @@ def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
     found = C.search(qs)
+    home = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home"))
     if any((v or {}).get("need") == "chrome" for v in found.values()):
-        found = coupang_chrome(qs, Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home")))
+        found = coupang_chrome(qs, home)
+    elif not any(it.get("rating") for v in found.values() for it in (v or {}).get("items") or []):
+        # 파트너스 API 는 후기 수 칸이 없다(98 #11) → 같은 검색어 크롬 카드에서 후기 수만 product_id 로 채운다. 막히면 빈 채로(대본에 '후기 많은'을 못 쓴다)
+        try:
+            rate = {str(it.get("product_id")): it.get("rating") for v in coupang_chrome(qs, home).values() for it in (v or {}).get("items") or [] if it.get("rating")}
+        except Exception as e:  # noqa: BLE001
+            rate = {}
+            sys.stderr.write(f"[coupang] 후기 수 크롬 읽기 실패: {type(e).__name__}: {e}\n")
+        for v in found.values():
+            for it in (v or {}).get("items") or []:
+                it["rating"] = rate.get(str(it.get("product_id")), it.get("rating") or "")
     jsave(W / "look" / f"coupang_{int(time.time())}.json", found)
     items, seen = [], set()
     for v in found.values():
