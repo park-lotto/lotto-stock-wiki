@@ -34,13 +34,17 @@ def answer_loop(q: Path, stop: threading.Event, log: Path):
                       ("\n\n그림 파일(Read 로 열어 본다):\n" + "\n".join(imgs) if imgs else "") +
                       "\n\n답은 JSON 객체 하나만, 다른 글 없이.")
             t0 = time.time()
-            r = subprocess.run([CLAUDE, "-p", prompt, "--model", "opus", "--allowedTools", "Read,WebSearch,WebFetch", "--output-format", "json",
-                                "--max-turns", "30"], capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(d), timeout=1800)
+            # 질문은 표준입력으로 — 명령줄은 윈도우에서 3.2만 자까지라 원본 후보 제목 목록(4만 자)에서 실행조차 못 하고 답하는 쪽이 조용히 죽었다(10-21 선우용여)
             txt = ""
             try:
-                txt = json.loads(r.stdout).get("result") or ""
-            except Exception:  # noqa: BLE001
-                txt = r.stdout
+                r = subprocess.run([CLAUDE, "-p", "--model", "opus", "--allowedTools", "Read,WebSearch,WebFetch", "--output-format", "json",
+                                    "--max-turns", "30"], input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(d), timeout=1800)
+                try:
+                    txt = json.loads(r.stdout).get("result") or ""
+                except Exception:  # noqa: BLE001
+                    txt = r.stdout
+            except Exception as e:  # noqa: BLE001 — 한 요청이 실패해도 고리는 산다(답에 사유를 남긴다)
+                txt = json.dumps({"_error": f"{type(e).__name__}: {e}"[:500]})
             s, e = txt.find("{"), txt.rfind("}")
             body = txt[s:e + 1] if s >= 0 else "{}"
             try:
