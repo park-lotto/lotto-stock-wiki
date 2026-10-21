@@ -655,7 +655,11 @@ def c_check(W, d):
     sh = W / "doc" / v / "final_sheet_1s.jpg"
     if not sh.exists():
         sheet(final, sh, fps=1, cols=6, rows=6, w=240)
-    return {"auto": {"ok": bool(auto.get("ok")), "report": auto.get("report")}, "heard": asr_cross(final), "sheet": rel(W, sh)}
+    rep = auto.get("report")
+    if isinstance(rep, (str, Path)) and Path(rep).exists():          # bench_check 는 보고서 파일 경로를 준다 — 내용(6항목)을 싣는다(10-21: 경로만 가서 검수가 못 봤다)
+        rep = jload(rep)
+    rows = [{k: r.get(k) for k in ("what", "ok", "value")} for r in (rep or {}).get("rows") or []] if isinstance(rep, dict) else []
+    return {"auto": {"ok": bool(auto.get("ok")), "rows": rows}, "heard": asr_cross(final), "sheet": rel(W, sh)}
 
 
 def c_finish(W, d):

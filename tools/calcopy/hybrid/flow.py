@@ -154,10 +154,12 @@ PLAN_LOOK = """너는 장면 검수 담당이다. 계획 시트를 보고 컷마
 ★연예인이 나오는 영상은 찾은 원본에서만 — 다른 채널 연예인 영상 절대 금지. 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
 자막·띠 밖을 잘라라(예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
+★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 왼쪽 위 '얜샷템' 로고 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
 JSON 하나: {"ok": true, "problems": ["…"], "재료": null}"""
 
 FINAL_LOOK = """너는 완성본 검수 담당이다. 1초 시트를 보고: 틀·제목·자막 자리·출처 줄, 줄마다 화면이 대사와 맞나, 남의 얼굴·손·글자(원본 편집 자막·워터마크) 없나,
 0초 = 연예인 얼굴 크게. 남의 채널 연예인 장면·장면 전환 효과(별·와이프)가 섞였나. 받아쓰기와 대본 글자도 대조한다(받아쓰기 한 모델만 틀린 건 결함이 아닐 수 있다).
+★우리 틀(결함 아님): 맨 위 제목 2줄 · 화면 왼쪽 위 '얜샷템' 로고 · 화면 아래 '출처: …' 줄 · 우리 자막(가운데 아래, 색 강조) — 이것들은 남의 글자·워터마크가 아니다.
 JSON 하나: {"ok": true, "problems": ["…"]}"""
 
 
@@ -919,6 +921,13 @@ def ph_check_look(st, m, rp, u):
     auto_ok = bool(st.get("auto", {}).get("ok"))
     if look.get("ok") and auto_ok:
         return {"goto": "deliver"}
+    long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and not r.get("ok")]
+    if long:                                    # 길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시
+        _tries(st, "length", 2)
+        st["tries"]["script"] = 0
+        st["approved"] = False
+        return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {long[0].get('value')} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
+                "then": "script_got"}
     _tries(st, "look", LIMITS["look"])
     probs = json.dumps({"자동검사": {k: x for k, x in (st.get("auto") or {}).items() if k != "ok"} if not auto_ok else None,
                         "눈 검수": look.get("problems")}, ensure_ascii=False)[:3000]
