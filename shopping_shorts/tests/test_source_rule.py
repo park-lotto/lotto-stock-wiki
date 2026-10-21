@@ -80,3 +80,15 @@ def test_fix_crop_units_ratio_to_pixels():
     assert M["cuts"]["N1"][0]["crop"] == [528, 0, 864, 864], M
     assert M["cuts"]["N2"][0]["crop"] == [1320, 0, 600, 1080]
     assert M["cuts"]["N3"][0]["crop"] == [100, 0, 600, 1080] and len(ch) == 2
+
+
+def test_origin_candidates_product_word_first():
+    """원본 후보 순서 — 제품 낱말 검색어에 걸린 본인 채널 영상이 이름만 검색한 일반 영상보다 앞(10-21 정재형 실전: 후보 16개가 전부 토크·룸투어)."""
+    from tools.calcopy.hybrid import flow
+    st = {"read": {"celeb": "정재형", "product_words": ["팔로산토"], "source_label": "출처: 요정재형", "channel_hint": "요정재형", "queries": []},
+          "bench": {"id": "b", "dur": 19}, "tries": {}, "log": []}
+    found = [{"id": f"talk{i}", "title": "토크", "channel": "요정재형", "dur": 3000, "qs": ["정재형"]} for i in range(20)] + \
+            [{"id": "orig", "title": "근데 인테리어 아이템도 알려줌", "channel": "요정재형", "dur": 1000, "qs": ["정재형 팔로산토", "요정재형 화장실 냄새"]}]
+    flow.ph_search_got(st, {"search": {"found": found}}, {}, {})
+    assert st["cands"][0]["id"] == "orig"
+    assert flow._queries(st)[0] == "정재형 팔로산토"

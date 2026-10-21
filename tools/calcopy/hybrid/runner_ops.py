@@ -203,10 +203,20 @@ def _search(qs: list[str], n: int = 12, shorts: bool = False) -> list[dict]:
         if r.returncode != 0 or not r.stdout.strip():
             continue
         for e in json.loads(r.stdout).get("entries") or []:
-            if e.get("id") and e["id"] not in seen:
-                seen[e["id"]] = {"id": e["id"], "title": e.get("title"), "channel": e.get("channel") or e.get("uploader"), "dur": e.get("duration"),
-                                 "views": e.get("view_count"), "q": q, "channel_id": e.get("channel_id")}
+            if not e.get("id"):
+                continue
+            if e["id"] in seen:                       # 여러 검색어에 걸린 영상 = 원본일 가능성이 높다 — 걸린 검색어를 다 남긴다(서버가 순서를 정한다)
+                seen[e["id"]]["qs"].append(q)
+                continue
+            seen[e["id"]] = {"id": e["id"], "title": e.get("title"), "channel": e.get("channel") or e.get("uploader"), "dur": e.get("duration"),
+                             "views": e.get("view_count"), "q": q, "qs": [q], "channel_id": e.get("channel_id")}
     return list(seen.values())
+
+
+def _blocked(r) -> bool:
+    """유튜브 봇 확인(회선·계정 차단) — '원본 없음'과 갈라서 알린다(10-21 yt1 계정까지 막힘)."""
+    t = (getattr(r, "stderr", "") or "")
+    return "not a bot" in t or "봇이 아님" in t or "Sign in to confirm" in t
 
 
 def c_search(W, d):
@@ -286,21 +296,30 @@ def _origin_words(W: Path, vid: str) -> tuple[list, str]:
         return [], ""
     vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
     if not vtt:
-        yt(["--skip-download", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
+        r = yt(["--skip-download", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{vid}.%(ext)s"), f"https://www.youtube.com/watch?v={vid}"], timeout=180)
+        if _blocked(r):
+            return [], "blocked"
         vtt = next(iter(sorted(od.glob(f"{vid}*.ko-orig.vtt")) + sorted(od.glob(f"{vid}*.ko.vtt"))), None)
     return (vtt_words(vtt), "자동자막") if vtt else ([], "")
 
 
 def c_origin_subs(W, d):
     lines = jload(W / "bench" / "asr.json") if (W / "bench" / "asr.json").exists() else []
-    matched = {}
+    matched, blocked, nosub = {}, [], []
     for vid in d.get("ids") or []:
-        words, _ = _origin_words(W, vid)
-        if words:
-            m = RU.fingerprint(lines, words)
-            if m:
-                matched[vid] = m
-    return {"matched": matched}
+        words, how = _origin_words(W, vid)
+        if how == "blocked":
+            blocked.append(vid)
+            if len(blocked) >= 2:                     # 막히면 더 두드리지 않는다(계정 보호)
+                break
+            continue
+        if not words:
+            nosub.append(vid)
+            continue
+        m = RU.fingerprint(lines, words)
+        if m:
+            matched[vid] = m
+    return {"matched": matched, "blocked": blocked, "nosub": nosub}
 
 
 def origin_offset(W: Path, vid: str, src: Path, guess: float, ts: list[float]) -> tuple[float, bool]:

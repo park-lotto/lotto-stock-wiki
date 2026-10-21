@@ -350,7 +350,10 @@ def _queries(st) -> list[str]:
     name = str(r["celeb"]) if r.get("celeb") and r["celeb"] != "불명" else ""
     # 고정 검색어를 늘 먼저 — AI 가 판마다 검색어를 새로 지어 같은 영상인데 원본이 걸렸다 안 걸렸다 했다(10-21 #7)
     fixed = [name, f"{name} {label}".strip(), f"{name} 꿀템"] if name else []
-    qs = [q for q in fixed + ([label] if label else []) + [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else []) if q]
+    words = [w for w in r.get("product_words") or [] if w]
+    prod_q = ([f"{name} {w}".strip() for w in words[:2]] if name else []) + [q for q in r.get("queries") or [] if q]
+    # 제품 낱말 검색어 먼저 — 이름만 검색하면 그 채널 일반 영상이 후보 자리를 다 차지한다(10-21 정재형 실전: 원본 후보 16개가 전부 토크·룸투어)
+    qs = [q for q in prod_q + fixed + ([label] if label else []) + ([r["channel_hint"]] if r.get("channel_hint") else []) if q]
     peers = [p for p in st.get("peers") or [] if RU.norm(p) not in RU.norm(label)]
     if peers:
         r["channel_hint"] = " / ".join([r.get("channel_hint") or ""] + peers)
@@ -385,7 +388,11 @@ def ph_search_got(st, m, rp, u):
     hint = RU.norm((r.get("source_label") or "").replace("출처", "") + (r.get("channel_hint") or ""))
     own = lambda c: len(celeb) >= 2 and celeb in RU.norm(c.get("channel") or "")
     cands = [c for c in found if c["id"] != B.get("id") and (c.get("dur") or 0) > (B.get("dur") or 0) + 20]
-    cands.sort(key=lambda c: (not own(c), (celeb[-2:] not in RU.norm(c.get("title") or "")) if celeb else 0,
+    pw = [RU.norm(w) for w in r.get("product_words") or [] if len(RU.norm(w)) >= 2]
+    def prod_hits(c):          # 제품 낱말이 든 검색어 몇 개에 걸렸나 + 제목에 제품 낱말
+        qs = c.get("qs") or [c.get("q")]
+        return sum(1 for q in qs if any(w in RU.norm(q or "") for w in pw)) + (2 if any(w in RU.norm(c.get("title") or "") for w in pw) else 0)
+    cands.sort(key=lambda c: (not own(c), -prod_hits(c), (celeb[-2:] not in RU.norm(c.get("title") or "")) if celeb else 0,
                               not (RU.norm(c.get("channel") or "") and RU.norm(c.get("channel") or "") in hint)))
     st["cands"] = cands
     ch = _channels_of(found, r)[:3]
@@ -434,7 +441,10 @@ def ph_subs(st, m, rp, u):
 
 
 def ph_subs_got(st, m, rp, u):
-    got = (m.get("subs") or {}).get("matched") or {}        # 지문 대조 = PC 가 rules.fingerprint 로(자막 낱말은 PC 에 남긴다)
+    sub = m.get("subs") or {}
+    got = sub.get("matched") or {}        # 지문 대조 = PC 가 rules.fingerprint 로(자막 낱말은 PC 에 남긴다)
+    if sub.get("blocked") and not got:
+        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
     scored = []
     for c in st.get("mixed") or []:
         mt = got.get(c["id"])
