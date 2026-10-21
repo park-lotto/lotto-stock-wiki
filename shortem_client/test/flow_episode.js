@@ -18,6 +18,7 @@ const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-co
   SHORTEM_ENGINE: path.resolve(arg('--engine')), SHORTEM_BASE: arg('--base'), SHORTEM_LICENSE: fs.readFileSync(arg('--key-file'), 'utf8').trim(),
   CALCOPY_DEV_MINA_SERVER: '1', CALCOPY_DEV_COUPANG_SERVER: '1', SHORTEM_WAIT_SEC: '50', SHORTEM_YT_PROFILES: process.env.SHORTEM_YT_PROFILES || 'mcp' };   // 이 시험은 전용 파이어폭스 프로필 mcp* 로그인만(원본찾기 세션 yt* 와 계정 한도 나눔)
 if (arg('--cache')) env.SHORTEM_SOURCE_CACHE = path.resolve(arg('--cache'));
+for (const k of ['ORIGIN_YT_ONLY', 'SHORTEM_YT_GAP']) if (process.env[k]) env[k] = process.env[k];   // 쓸 계정·요청 간격 — MCP 서버는 부모 환경을 다 물려받지 않는다(넘길 것만 적는다)
 const cfg = path.join(dir, 'mcp.json');
 fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
 
