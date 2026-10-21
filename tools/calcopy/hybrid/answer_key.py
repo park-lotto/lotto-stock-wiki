@@ -71,9 +71,19 @@ def _overlap(a: list, b: list) -> float:
     return got / tot
 
 
+def _state(job: Path) -> dict:
+    """작업 상태 — 개발 완주(flow_dev)는 flow_state.json, 회원 경로(MCP)는 flow.json 의 서버 서명 payload(본문만 읽는다, 서명은 서버 몫)."""
+    if (job / "flow_state.json").exists():
+        return jload(job / "flow_state.json")
+    import base64
+    import zlib
+    raw = jload(job / "flow.json")["payload"].split(".")[2]
+    return json.loads(zlib.decompress(base64.urlsafe_b64decode(raw.encode())).decode("utf-8"))
+
+
 def compare(name: str, job: Path) -> int:
     K = KEYS[name]
-    st = jload(job / "flow_state.json")
+    st = _state(job)
     rows = []
 
     def row(stage, what, ok, got, want):
@@ -92,7 +102,7 @@ def compare(name: str, job: Path) -> int:
     S = (st.get("script") or {}).get("S") or {}
     row("7 대본", "대본 줄 수", bool(S.get("lines")), len(S.get("lines") or []), "있음")
     A = st.get("auto") or {}
-    row("11 검사", "자동 검사 6항목", bool(A.get("ok")), json.dumps(A.get("report"), ensure_ascii=False)[:120], "전부 ○")
+    row("11 검사", "자동 검사 6항목", bool(A.get("ok")), " · ".join(f"{r.get('what')}{'○' if r.get('ok') else '×'}" for r in A.get("rows") or []), "전부 ○")
     L = st.get("look") or {}
     row("11 검사", "눈 검수(회원 Claude)", bool(L.get("ok")), L.get("problems"), "ok")
     row("전체", "완성", st.get("phase") == "done", st.get("phase"), "done")
