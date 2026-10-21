@@ -41,6 +41,9 @@ BEAUTY = re.compile(r"화장품|파데|파운데이션|쿠션|립|틴트|선크�
                     r"\b(?:k-?beauty|skincare|makeup|foundation|cushion|sunscreen|serum|lipstick|lip tint|tint|toner|face ?mask|sheet ?mask)\b", re.I)   # 영어는 낱말 경계(10-21 'masked singer'·'flip' 오분류)
 MATCH_MIN = 25          # 같은 영상 표시값(눈 판정 '같음' = 이 값). ORB(VERIFY) 문턱으로는 못 쓴다 — 10-21 실측 같은 영상 9~61·다른 영상 4~60 겹침
 FRAMES = (0.15, 0.35, 0.55, 0.75)
+# 천천히 받기(사장님 10-21 "천천히 받아") — 10-21 새벽 후보 메타를 6개씩 동시에 수백 번 부르다 유튜브 'not a bot' 회선 차단(쇼츠만, 일반 영상은 됨)
+YT_SLOW = ["--sleep-requests", "2", "--sleep-interval", "4", "--max-sleep-interval", "10"]
+META_WORKERS = 1
 VERIFY = False          # 후보를 받아 ORB 대조 — 10-21 실측 같은/다른 영상 점수가 겹쳐(다른 영상 60·같은 영상 9) 끔. 같은 영상 판정 = 장면 모음 눈 판정(sheet)
 
 
@@ -97,10 +100,10 @@ def meta(url: str) -> dict:
     """yt-dlp 메타(받지 않음). 실패하면 {'why'}."""
     fmt = "%(id)s\t%(title)s\t%(channel,uploader)s\t%(channel_id,uploader_id)s\t%(channel_follower_count)s\t%(view_count)s\t%(upload_date)s\t%(duration)s\t%(uploader_url,channel_url)s\t%(thumbnail)s"
     try:
-        r = subprocess.run(["yt-dlp", "--skip-download", "--no-warnings", "--print", fmt, url], capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=90)
+        r = subprocess.run(["yt-dlp", "--skip-download", "--no-warnings", *YT_SLOW, "--print", fmt, url], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=180)
     except subprocess.TimeoutExpired:
-        return {"why": "yt-dlp 90초 시간 초과"}   # 후보 하나가 씨앗 전체를 죽이지 않게(10-21 BGT 편 실패)
+        return {"why": "yt-dlp 180초 시간 초과"}   # 후보 하나가 씨앗 전체를 죽이지 않게(10-21 BGT 편 실패)
     line = (r.stdout.strip().splitlines() or [""])[-1]
     f = line.split("\t")
     if len(f) < 9:
@@ -117,7 +120,7 @@ def frames(url: str, d: Path, fr=FRAMES, step: float | None = None) -> list[Path
     d.mkdir(parents=True, exist_ok=True)
     v = d / "v.mp4"
     if not v.exists():
-        subprocess.run(["yt-dlp", "-q", "--no-warnings", "-f", "b[height<=720]/bv*[height<=720]/b", "-o", str(v), url],
+        subprocess.run(["yt-dlp", "-q", "--no-warnings", *YT_SLOW, "-f", "b[height<=720]/bv*[height<=720]/b", "-o", str(v), url],
                        capture_output=True, timeout=300)
     if not v.exists():
         return []
@@ -207,7 +210,7 @@ def run_one(L: dict, pg, url: str, log=print) -> dict:
     log(f"  렌즈 장면 {len(imgs)}장 → 영상 링크 {len(found)}개")
     # 메타(병렬)
     keys = list(found)
-    with ThreadPoolExecutor(6) as ex:
+    with ThreadPoolExecutor(META_WORKERS) as ex:
         metas = list(ex.map(lambda k: meta(url_of(k[0], k[1], found[k]["href"])), keys))
     cands = []
     for (pf, vid), m in zip(keys, metas):
@@ -357,7 +360,7 @@ def cmd_run(n: int):
     with LN.lens_page() as pg:
         for _ in range(n):
             L = load()
-            if L.get("channel_queue"):   # 새 한국 채널이 나오면 그 채널 상위 영상 분류부터(사장님 10-21) — 대기열은 조회수 순으로 다시 선다
+            if L.get("channel_queue") and not os.environ.get("ORIGIN_NO_EXPAND"):   # 새 한국 채널이 나오면 그 채널 상위 영상 분류부터(사장님 10-21) — 대기열은 조회수 순으로 다시 선다
                 cq = list(L["channel_queue"])   # 끝난 뒤에 지운다 — 분류 중 죽으면 다음 바퀴가 이어 한다(10-21 620편 채널 유실)
                 for cid in cq:
                     cmd_channel([cid], queue_top=100000)
