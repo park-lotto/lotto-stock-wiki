@@ -16,7 +16,7 @@ const HOME = path.join(dir, 'home'), WORK = path.join(dir, 'work'), CWD = path.j
 for (const d of [HOME, WORK, CWD]) fs.mkdirSync(d, { recursive: true });
 const env = { SHORTEM_HOME: HOME, SHORTEM_WORK: WORK, SHORTEM_CLIENT: 'claude-code', SHORTEM_NO_BROWSER: '1', SHORTEM_DEV_TOOLS: '1', SHORTEM_DEV: '1',
   SHORTEM_ENGINE: path.resolve(arg('--engine')), SHORTEM_BASE: arg('--base'), SHORTEM_LICENSE: fs.readFileSync(arg('--key-file'), 'utf8').trim(),
-  CALCOPY_DEV_MINA_SERVER: '1', CALCOPY_DEV_COUPANG_SERVER: '1', SHORTEM_WAIT_SEC: '50' };
+  CALCOPY_DEV_MINA_SERVER: '1', CALCOPY_DEV_COUPANG_SERVER: '1', SHORTEM_WAIT_SEC: '50', SHORTEM_YT_PROFILES: process.env.SHORTEM_YT_PROFILES || 'mcp' };   // 이 시험은 전용 파이어폭스 프로필 mcp* 로그인만(원본찾기 세션 yt* 와 계정 한도 나눔)
 if (arg('--cache')) env.SHORTEM_SOURCE_CACHE = path.resolve(arg('--cache'));
 const cfg = path.join(dir, 'mcp.json');
 fs.writeFileSync(cfg, JSON.stringify({ mcpServers: { shortem: { command: process.execPath, args: [path.join(HERE, '..', 'server', 'index.js')], env } } }), { mode: 0o600 });
