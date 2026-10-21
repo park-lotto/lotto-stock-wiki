@@ -910,8 +910,16 @@ def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = N
     from tools.calcopy.hybrid.common import probe
     origin = {Path(f).name: Path(f) for f in (P.s.get("origin") or {}).get("files") or []}
     orig_at = {l["id"]: (l.get("src"), float(l["spans"][0][0])) for l in (S or {}).get("lines") or [] if l.get("kind") == "orig" and l.get("spans")}
+    moves, last_still, k = ("in", "left", "out", "right"), None, 0
     for lid, cuts in (M.get("cuts") or {}).items():
         for c in cuts if isinstance(cuts, list) else [cuts]:
+            if Path(str(c.get("src") or "")).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                # 같은 사진이 이어지면 움직임을 번갈아(10-21 선우용여: 상품 사진 1장이 세 컷 연달아 같은 확대) — 대본이 정한 move 는 그대로
+                k = k + 1 if c.get("src") == last_still else 0
+                c.setdefault("move", moves[k % len(moves)])
+                last_still = c.get("src")
+                continue
+            last_still = None
             ss = c.get("ss")
             if ss is None and lid in orig_at:            # 원음 컷 = 그 줄 원음 구간 시작 + at
                 ss = orig_at[lid][1] + float(c.get("at") or 0)
