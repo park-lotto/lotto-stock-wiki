@@ -614,11 +614,13 @@ def st_script(P: Piece, version: str, fail: str = ""):
            "\n\n## 제품 판정\n" + PRODUCT_TALK.get((P.s.get("product") or {}).get("mode") or "exact", "") +
            "\n" + json.dumps({k: (P.s.get("product") or {}).get(k) for k in ("name", "why", "mode", "name_hints")}, ensure_ascii=False) +
            "\n\n## 원음 받아쓰기\n" + json.dumps(jload(P.W / "asr" / "result.json"), ensure_ascii=False) +
-           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(mat_list, ensure_ascii=False) + (f"\n\n## 지난 검사에서 걸린 것\n{fail}" if fail else ""))
+           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(mat_list, ensure_ascii=False) + _shots_ctx(P) +
+           (f"\n\n## 지난 검사에서 걸린 것\n{fail}" if fail else ""))
     for attempt in range(3):
         r = ask(f"script_{version}", SCRIPT + "\n\n" + ctx, [img(s) for s in sheets], need=("대본", "재료"))
         S, M = r["대본"], r["재료"]
         M["cand_dir"] = str(P.W / "src")
+        fill_shot_max(P, M, _ar(version), S)
         jsave(vd / "대본.json", S); jsave(vd / "재료.json", M)
         (vd / "근거.md").write_text(r.get("근거_md") or "", encoding="utf-8")
         a = script_audit.audit(vd / "대본.json", version)
@@ -706,6 +708,97 @@ def plan_sheet(P: Piece, version: str, T: dict) -> Path:
     return out
 
 
+SHOT_READ = """너는 원본 샷 판독 담당이다. 방송·영상 원본을 카메라가 바뀌는 곳마다 나눈 샷들의 가운데 장면이다(칸마다 '#번호 시작~끝초').
+샷마다: who = "main"(주인공 {celeb} 혼자 또는 크게) · "both"({celeb}와 다른 사람 함께) · "other"({celeb} 없이 다른 사람만) · "none"(사람 없음),
+product = 그 제품({kind})이 또렷이 보이면 true, cx = 주인공 얼굴 가운데의 가로 위치(0=왼쪽 끝~1=오른쪽 끝, 주인공이 없으면 null), desc = 한국어 10자 안팎. 주인공은 옷·머리·얼굴로 알아본다(같은 영상 안 다른 칸과 비교).
+JSON 하나: {{"shots": [{{"i": 번호, "who": "main", "product": false, "cx": 0.5, "desc": "…"}}]}}"""
+SHOT_TILES = 40       # 샷 모음 한 장에 들어가는 칸(8×5)
+
+
+def shot_table(P: Piece, src: Path) -> list[dict]:
+    """원본 샷 표(판단 주인) — [{i, a, b, who, product, desc}]. 방송 원본은 카메라가 1~2초마다 바뀌는데 계획 시트는 컷마다 한 장이라
+    컷 안에서 다른 출연자로 넘어가는 걸 못 봤다(10-21 선우용여: 계획 검수 4번 다 '다른 출연자'로 실패). 파일마다 한 번 만들어 둔다."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy.yanshot.plan import shots_in
+    cache = P.W / f"shots_{src.stem}.json"
+    if cache.exists():
+        return jload(cache)
+    d = _dur(src) or 0
+    shots = [{"i": i, "a": a, "b": b} for i, (a, b) in enumerate(shots_in(src, [(0.0, d)]))]
+    R0 = P.s.get("origin_read") or {}
+    kind = (P.s.get("product") or {}).get("name") or R0.get("product_words")
+    sd = P.W / "_shots"; sd.mkdir(exist_ok=True)
+    for k in range(0, len(shots), SHOT_TILES):
+        part = shots[k:k + SHOT_TILES]
+        sh = Image.new("RGB", (8 * 240, 5 * 160), (0, 0, 0))
+        for j, s in enumerate(part):
+            f = sd / f"{src.stem}_{s['i']:03d}.jpg"
+            try:
+                frame(src, (s["a"] + s["b"]) / 2, f)
+                im = Image.open(f).convert("RGB"); im.thumbnail((240, 160))
+            except Exception:  # noqa: BLE001 — 못 뜬 샷은 빈칸(판독이 none 으로 둔다)
+                continue
+            sh.paste(im, ((j % 8) * 240, (j // 8) * 160))
+            dr = ImageDraw.Draw(sh)
+            dr.rectangle(((j % 8) * 240, (j // 8) * 160, (j % 8) * 240 + 150, (j // 8) * 160 + 16), fill=(0, 0, 0))
+            dr.text(((j % 8) * 240 + 3, (j // 8) * 160 + 2), f"#{s['i']} {s['a']:.1f}~{s['b']:.1f}", fill=(255, 255, 0))
+        p = sd / f"{src.stem}_sheet{k // SHOT_TILES}.jpg"; sh.save(p, quality=85)
+        r = ask(f"shot_read_{src.stem[:20]}", SHOT_READ.format(celeb=R0.get("celeb") or "주인공", kind=kind), [img(p)], need=("shots",))
+        got = {int(x.get("i", -1)): x for x in r.get("shots") or [] if isinstance(x, dict)}
+        for s in part:
+            g = got.get(s["i"]) or {}
+            cx = g.get("cx")
+            s.update(who=g.get("who") or "?", product=bool(g.get("product")), desc=str(g.get("desc") or "")[:30],
+                     cx=float(cx) if isinstance(cx, (int, float)) and 0 <= cx <= 1 else None)
+    jsave(cache, shots)
+    return shots
+
+
+def shot_text(shots: list[dict]) -> str:
+    return "\n".join(f"#{s['i']} {s['a']:.2f}~{s['b']:.2f} ({s['b'] - s['a']:.1f}초) {s.get('who')}{' 제품' if s.get('product') else ''} {s.get('desc', '')}" for s in shots)
+
+
+def _shot_at(shots: list[dict], t: float) -> dict | None:
+    return next((s for s in shots if s["a"] - 0.05 <= t < s["b"]), None)
+
+
+def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = None) -> dict:
+    """원본 컷마다 샷 표로 두 칸을 채운다(판단 주인 — 손으로 적던 칸):
+    ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다
+    ② 주인공 컷(face)은 크롭을 **주인공 얼굴 가운데**로 좌우 이동(사장님 10-21 "등장인물 주인공이 가운데 정렬되게") — 위아래(자막 피하기)는 그대로.
+       'face'(자동 얼굴 크롭 = 가장 큰 얼굴)는 다른 출연자에 맞춰질 수 있어 숫자 크롭(높이 전체, 창 비율 ar)으로 바꾼다."""
+    from tools.calcopy.hybrid.common import probe
+    origin = {Path(f).name: Path(f) for f in (P.s.get("origin") or {}).get("files") or []}
+    orig_at = {l["id"]: (l.get("src"), float(l["spans"][0][0])) for l in (S or {}).get("lines") or [] if l.get("kind") == "orig" and l.get("spans")}
+    for lid, cuts in (M.get("cuts") or {}).items():
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            ss = c.get("ss")
+            if ss is None and lid in orig_at:            # 원음 컷 = 그 줄 원음 구간 시작 + at
+                ss = orig_at[lid][1] + float(c.get("at") or 0)
+                c.setdefault("src", orig_at[lid][0])
+            src = origin.get(str(c.get("src") or ""))
+            if not src or ss is None:
+                continue
+            ss = float(ss)
+            s = _shot_at(shot_table(P, src), ss)
+            if not s:
+                continue
+            c["max"] = round(s["b"] - ss, 3)
+            if s.get("cx") is None or str(c.get("face") or "").strip() in NO_FACE:
+                continue
+            sw, sh, _ = probe(src)
+            crop = c.get("crop")
+            if not isinstance(crop, list) or len(crop) != 4:
+                if not ar:
+                    continue
+                cw = min(sw, int(round(sh * ar)))
+                crop = [0, 0, cw, sh]
+            x = int(round(s["cx"] * sw - crop[2] / 2))
+            c["crop"] = [max(0, min(sw - int(crop[2]), x)), int(crop[1]), int(crop[2]), int(crop[3])]
+            c["center"] = "주인공"
+    return M
+
+
 NO_FACE = {"", "없음", "none", "None"}
 
 
@@ -735,6 +828,10 @@ def source_rule_bad(P: Piece, M: dict, T: dict | None = None) -> list[str]:
                 out.append(f"{line}: 벤치(남의 쇼츠) {src} 를 재료로 썼다 — 원본·제품 영상만 쓴다")
             elif str(c.get("face") or "").strip() not in NO_FACE and src not in origin:
                 out.append(f"{line}: 사람 얼굴 컷({c.get('face')})이 원본이 아닌 {src} 에서 왔다 — 연예인 장면은 원본 파일({', '.join(sorted(origin))})에서만")
+            elif src in origin and c.get("ss") is not None and (P.W / f"shots_{Path(src).stem}.json").exists():
+                s = _shot_at(jload(P.W / f"shots_{Path(src).stem}.json"), float(c["ss"]))
+                if s and s.get("who") == "other" and str(c.get("face") or "").strip() not in NO_FACE:
+                    out.append(f"{line}: ss {c['ss']} 는 원본 샷 #{s['i']}({s['a']}~{s['b']}, {s.get('desc')}) — 주인공이 없는 다른 출연자 샷이다")
     cand = Path(M.get("cand_dir") or (P.W / "src"))
     for c in (T or {}).get("cuts") or []:
         src = str(c.get("src") or "")
@@ -752,18 +849,35 @@ def _fix_materials(P: Piece, version: str, why: str, sheet_img: Path | None, tag
     vd = P.D / version
     _, _, ww, wh = STY.load(version)["frame"]["window"]
     r = ask(tag, PLAN_LOOK.replace("{ar}", f"{ww}:{wh}") + (f"\n\n멈춘 이유(재료를 고쳐라): {why}" if why else "") + "\n\n대본:\n" +
-            (vd / "대본.json").read_text(encoding="utf-8")[:6000] + "\n\n재료:\n" + (vd / "재료.json").read_text(encoding="utf-8")[:8000],
+            (vd / "대본.json").read_text(encoding="utf-8")[:6000] + "\n\n재료:\n" + (vd / "재료.json").read_text(encoding="utf-8")[:8000] + _shots_ctx(P),
             [img(sheet_img)] if sheet_img else [], need=("ok",))
     if r.get("재료"):
         M = r["재료"]; M["cand_dir"] = str(P.W / "src")
-        jsave(vd / "재료.json", M)
+        jsave(vd / "재료.json", fill_shot_max(P, M, _ar(version), jload(vd / "대본.json")))
     return r
+
+
+def _ar(version: str) -> float:
+    from tools.calcopy.hybrid import styles as STY
+    _, _, ww, wh = STY.load(version)["frame"]["window"]
+    return ww / wh
+
+
+def _shots_ctx(P: Piece) -> str:
+    """대본·재료 고치기에 주는 원본 샷 표 — 주인공 컷(face)은 who main/both 샷 안에서, 한 컷이 샷 끝을 넘지 않게(max 는 엔진이 채운다)."""
+    out = []
+    for f in (P.s.get("origin") or {}).get("files") or []:
+        if Path(f).exists():
+            out.append(f"### {Path(f).name}\n" + shot_text(shot_table(P, Path(f))))
+    return ("\n\n## 원본 샷 표(카메라가 바뀌는 곳마다 — 주인공 컷은 who main·both 샷 안에서 ss 를 고르고, 컷 길이가 그 샷 끝을 넘지 않게. "
+            "넘으면 렌더가 '컷이 원본 샷보다 길다'로 멈춘다)\n" + "\n".join(out)) if out else ""
 
 
 def st_plan(P: Piece, version: str):
     """계획 시트 → 검수 → 고침을 검수가 ok 일 때까지(최대 4번). ok 없이 렌더로 넘기지 않는다(10-21 실측: 세 번째도 자막 띠가 남은 채 넘어갔다)."""
     from tools.calcopy.hybrid import render_bench
     vd = P.D / version
+    jsave(vd / "재료.json", fill_shot_max(P, jload(vd / "재료.json"), _ar(version), jload(vd / "대본.json")))      # 샷 끝(max)을 채운 뒤 계획 — 샷을 넘는 컷은 계획이 바로 짚는다
     for attempt in range(4):
         try:
             res, over = render_bench.render(version, vd, P.W / version, plan_only=True), ""

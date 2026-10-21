@@ -730,6 +730,7 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
     주인 = tools/calcopy/hybrid/customer.py:source_rule_bad(대본·계획·렌더 뒤 세 번 부른다) · 시험 shopping_shorts/tests/test_source_rule.py
     문서 = channel/칼카피_제작순서/00_공통·02_원본찾기·05_재료영상 · briefs/screen_pick·script
     10-21 실사고: 이미도 편 17초 별 전환·장갑 손 = 리뷰여왕 영상에서 딸려 옴(원본 전체 862초에는 별 0번, 원본 672~675초에 튜브 근접이 있었다)
+□ ★만들다 난 오류는 그날 바로 channel/칼카피_제작순서/98_오류기록.md 표에 적는다(무엇이·왜·고친 곳·장치) — 편 시작 전에 훑는다(사장님 10-21)
 □ 회원 PC 결과물 확인 = shortem_client/test/live_episode.js --say "<회원이 친 한 줄>"(설치본·라이브 서버·진짜 키) → 완성본을 눈으로
 ```
 
