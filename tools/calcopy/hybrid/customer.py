@@ -106,6 +106,10 @@ def ytdlp(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
 
 
 def sheet(video: Path, dst: Path, fps: float = 1.0, cols: int = 6, rows: int = 5, w: int = 300, ss: float | None = None, t: float | None = None) -> Path:
+    if Path(video).suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):     # 사진 재료는 줄여 쓰기만(ffmpeg fps·tile 은 사진 한 장에서 실패 — 10-21)
+        from PIL import Image
+        im = Image.open(video).convert("RGB"); im.thumbnail((w * 2, w * 2)); im.save(dst, quality=85)
+        return dst
     pre = (["-ss", f"{ss:.2f}"] if ss is not None else []) + (["-t", f"{t:.2f}"] if t is not None else [])
     run(["ffmpeg", "-y", "-v", "error", *pre, "-i", str(video), "-vf", f"fps={fps},scale={w}:-1,tile={cols}x{rows}", "-frames:v", "1", str(dst)])
     return dst
@@ -614,8 +618,41 @@ def st_material(P: Piece):
     for c in d["chosen"]:
         secs = [tuple(s) for s in c.get("sections") or []] or None
         files += screen.download(P.W, [c["id"]], secs, prefix="")
+    files += _product_stills(P)
     P.s["material"] = {"files": [str(f) for f in files]}
-    P.mark("material")
+    P.mark("material", stills=sum(1 for f in files if Path(f).suffix.lower() == ".jpg"))
+
+
+def _product_stills(P: Piece, n: int = 4) -> list[Path]:
+    """고른 쿠팡 상품의 사진(쿠팡 검색 결과의 image) → src/prod_<id>_<k>.jpg — 제작순서 05 '리뷰 영상이 없으면 쿠팡 상품 사진을
+    움직이는 컷(move)으로'(10-21 선우용여: 제품 영상이 약사 설명·연출 장면뿐이라 대본이 제품 컷 0개 → 눈 검수 '제품이 한 번도 안 나옴')."""
+    import urllib.request
+    pid = str((P.s.get("product") or {}).get("product_id") or "")
+    if not pid:
+        return []
+    urls = []
+    for f in sorted((P.W / "look").glob("coupang*.json")):
+        for v in jload(f).values():
+            for it in (v or {}).get("items") or []:
+                if str(it.get("product_id")) == pid and it.get("image") and it["image"] not in urls:
+                    urls.append(it["image"])
+    import hashlib
+    out, seen = [], set()
+    for k, u in enumerate(urls[:n]):
+        dst = P.W / "src" / f"prod_{pid}_{k}.jpg"
+        try:
+            if not dst.exists():
+                req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})
+                dst.write_bytes(urllib.request.urlopen(req, timeout=20).read())
+            h = hashlib.sha1(dst.read_bytes()).hexdigest()
+            if h in seen:                  # 주소만 다르고 같은 사진(10-21 실측: 3개 다 같은 1,347,088바이트)
+                dst.unlink(); continue
+            seen.add(h)
+            if dst.stat().st_size > 2000:
+                out.append(dst)
+        except Exception as e:  # noqa: BLE001 — 사진 하나 실패는 건너뛰되 남긴다
+            P.s.setdefault("still_fail", []).append(f"{u[:60]}: {type(e).__name__}")
+    return out
 
 
 def st_asr(P: Piece):
@@ -681,6 +718,10 @@ def st_script(P: Piece, version: str, fail: str = ""):
         bad_heard = _orig_heard_bad(P, S)
         if bad_heard:
             a = {**a, "ok": False, "orig_heard": bad_heard}
+        origin_names = {Path(f).name for f in P.s["origin"]["files"]}
+        if not any(c.get("src") not in origin_names for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
+            a = {**a, "ok": False, "product_cut": ["제품 컷이 하나도 없다 — '써 봤다'·제품 설명 줄은 재료 파일(제품 영상 또는 prod_*.jpg 사진, 사진은 move: in·out·left·right)로. "
+                                                    "원본 방송 화면만으로 우리 제품 이야기를 하지 않는다(10-21 선우용여 눈 검수)"]}
         if a.get("ok"):
             P.mark("script", version=version, tries=attempt + 1)
             return S
