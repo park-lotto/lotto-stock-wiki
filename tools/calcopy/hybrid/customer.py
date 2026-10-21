@@ -892,7 +892,10 @@ def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = N
                     continue
                 cw = min(sw, int(round(sh * ar)))
                 crop = [0, 0, cw, sh]
-            x = int(round(s["cx"] * sw - crop[2] / 2))
+            fx = s["cx"] * sw
+            if isinstance(c.get("crop"), list) and crop[0] + crop[2] * 0.25 <= fx <= crop[0] + crop[2] * 0.75:
+                continue      # 이미 주인공이 칸 가운데 절반 안 — 고친 칸(박힌 자막 피하기 등)을 덮지 않는다(10-21 선우용여: 가운데로 다시 밀어 자막이 돌아왔다)
+            x = int(round(fx - crop[2] / 2))
             c["crop"] = [max(0, min(sw - int(crop[2]), x)), int(crop[1]), int(crop[2]), int(crop[3])]
             c["center"] = "주인공"
     return M
