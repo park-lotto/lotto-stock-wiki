@@ -19989,7 +19989,8 @@ function sbPage2(){
   const auto=`<div class="sb-fcard auto ${SB.pick.has('auto')?'on':''}" onclick="sbTpick('auto')"><div class="sb-recb ai">⭐ 추천 · 자유 창작</div><div class="sb-fh"><span class="sb-pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${SB.pick.has('auto')?'<span class="sb-ck">✓</span>':''}</div>
     <span class="sb-more" onclick="event.stopPropagation();SB.openf.auto=!SB.openf.auto;sbRender()">${SB.openf.auto?'▾ 접기':'▸ 자세히'}</span>
     ${SB.openf.auto?'<div class="sb-note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>':''}${sbTaskBadge('auto')}</div>`;
-  const rec=F.filter(f=>recIds.has(String(f.id))), rest=F.filter(f=>!recIds.has(String(f.id)));
+  // 지침서 작가 스타일(f.guide — 스위치 guide_writer_enabled 켠 계정만 서버가 싣는다)은 추천과 같이 위에 펼친다(접힘 안에 숨지 않게)
+  const rec=F.filter(f=>recIds.has(String(f.id))||f.guide), rest=F.filter(f=>!recIds.has(String(f.id))&&!f.guide);
   const restOpen=sbRestOpen();   // 추천(⭐·AI 자동)만 위에 펼치고 나머지는 접어 둔다 — 접은 동안에도 고른 카드는 보인다
   const n=SB.pick.size, busy=[...SB.pick].some(sbBusy);
   const tabs=Object.keys(SB.made).map(k=>`<button class="sb-btn ${SB.view===k?'on':''}" onclick="SB.view='${sbA(k)}';sbRender()">${sbTabName(k)}</button>`).join(' ');
