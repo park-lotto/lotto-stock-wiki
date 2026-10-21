@@ -54,7 +54,8 @@ def yt_auth(url: str) -> list:
         return []
     from shopping_shorts.media_download import _firefox_profile_paths
     only = [x for x in os.environ.get("ORIGIN_YT_ONLY", "").split(",") if x]   # 봇 확인 걸린 계정 빼기(예: ORIGIN_YT_ONLY=yt2)
-    live = [p for p in _firefox_profile_paths("yt") if _yt_logged_in(p) and (not only or Path(p).name.split(".")[-1] in only)]
+    # 프로필 묶음 = 이름 앞글자(기본 yt — 원본찾기 세션). 회원 라인 시험 세션은 SHORTEM_YT_PROFILES=mcp(10-21 사장님 '여기 전용 두 개') — 계정 한도를 나눠 쓴다
+    live = [p for p in _firefox_profile_paths(os.environ.get("SHORTEM_YT_PROFILES") or "yt") if _yt_logged_in(p) and (not only or Path(p).name.split(".")[-1] in only)]
     args = ["--js-runtimes", "node", "--remote-components", "ejs:github"]
     if not live:
         return args

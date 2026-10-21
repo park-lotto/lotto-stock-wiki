@@ -85,7 +85,7 @@ def main():
         print(json.dumps(o, ensure_ascii=False)[:300], flush=True)
     sp = W / "flow_state.json"
     st = json.loads(sp.read_text(encoding="utf-8")) if a.resume and sp.exists() else flow.start(a.ref, a.version, uuid.uuid4().hex[:12])
-    env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "CALCOPY_CUSTOMER_MODE": "1", "SHORTEM_DEV": "1"}
+    env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "CALCOPY_CUSTOMER_MODE": "1", "SHORTEM_DEV": "1", "SHORTEM_YT_PROFILES": os.environ.get("SHORTEM_YT_PROFILES") or "mcp"}
     if a.cache:
         env["SHORTEM_SOURCE_CACHE"] = str(Path(a.cache).resolve())
     measure, replies, user = {}, {}, {}
