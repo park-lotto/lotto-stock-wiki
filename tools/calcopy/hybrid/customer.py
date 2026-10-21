@@ -193,6 +193,7 @@ ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다(제작 순서 02 
 JSON 하나: {"ids": ["유튜브 id", …]}"""
 
 
+LOOK_FIXES = 2         # 완성본 눈 검수 실패 시 재료 고쳐 다시 렌더 횟수
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자)
 ORIGIN_TRY = 16       # 자막 대조할 후보 수(자막만 받는다 — 편당 몇 초)
 
@@ -674,11 +675,31 @@ def st_script(P: Piece, version: str, fail: str = ""):
         bad_src = source_rule_bad(P, M)
         if bad_src:
             a = {**a, "ok": False, "source_rule": bad_src}
+        bad_caps = _caps_vs_tts(S)
+        if bad_caps:
+            a = {**a, "ok": False, "caps_vs_tts": bad_caps}
         if a.get("ok"):
             P.mark("script", version=version, tries=attempt + 1)
             return S
         ctx += "\n\n## 대본 검사에서 걸린 것(고쳐라)\n" + json.dumps(a, ensure_ascii=False)[:4000]
     raise StageError("대본 검사를 세 번 통과하지 못했다")
+
+
+def _caps_vs_tts(S: dict) -> list[str]:
+    """나레 줄마다 화면 자막(caps 이어 붙인 글)이 실제로 읽는 글(tts)과 같은가 — 부호·띄어쓰기만 다른 건 같다
+    (10-21 선우용여 N3: 자막 '따라 사 봤는데요' ↔ 목소리 '하나 사서 따라 해 봤는데요' — 완성본 눈 검수가 짚었다)."""
+    out = []
+    for l in S.get("lines") or []:
+        if l.get("kind") != "tts" or not l.get("caps"):
+            continue
+        cap = _norm("".join(str(c.get("text") or "") for c in l["caps"]))
+        shown, say = _norm(str(l.get("text") or "")), _norm(str(l.get("tts") or ""))
+        if shown and cap != shown:
+            out.append(f"{l.get('id')}: 자막 조각을 이으면 '{cap}' — 화면 글(text) '{shown}' 과 다르다")
+        # 읽는 글은 숫자·영문 읽기·이름 발음 때문에 달라도 된다(제작순서 07 §4) — 숫자·영문 없는 줄에서 말이 4자 넘게 늘거나 줄면 결함
+        if shown and say and not re.search(r"[0-9A-Za-z%]", str(l.get("text") or "")) and abs(len(say) - len(shown)) >= 4:
+            out.append(f"{l.get('id')}: 화면 '{l.get('text')}' ↔ 목소리 '{l.get('tts')}' — 말이 더해지거나 빠졌다(자막은 읽는 말 그대로, 발음 고침만 다르게)")
+    return out
 
 
 def _title_colors_bad(S: dict, st: dict) -> list[str]:
@@ -968,12 +989,22 @@ def st_render_check(P: Piece, version: str) -> Path:
     if not final.exists():
         raise StageError("완성본이 나오지 않았다")
     P.stage("check")
-    auto = bench_check.check(version, vd, wd)
-    heard = " ".join(x["text"] for x in whisper(final))
-    sh = vd / "final_sheet_1s.jpg"
-    look = ask(f"final_{version}", FINAL_LOOK + f"\n\n자동 검사: {json.dumps(auto.get('report'), ensure_ascii=False)[:2500]}\n받아쓰기: {heard[:2500]}\n대본:\n" +
-               (vd / "대본.json").read_text(encoding="utf-8")[:5000], [img(sh)] if sh.exists() else [], need=("ok",))
-    P.mark("check", auto_ok=bool(auto.get("ok")), look_ok=bool(look.get("ok")), problems=look.get("problems"))
+    for fix in range(LOOK_FIXES + 1):     # 마지막 눈 검수가 ok 가 아니면 재료를 고쳐 다시 렌더(10-21: look_ok false 인데 '완성'으로 넘어갔다)
+        auto = bench_check.check(version, vd, wd)
+        heard = " ".join(x["text"] for x in whisper(final))
+        sh = vd / "final_sheet_1s.jpg"
+        look = ask(f"final_{version}", FINAL_LOOK + f"\n\n자동 검사: {json.dumps(auto.get('report'), ensure_ascii=False)[:2500]}\n받아쓰기: {heard[:2500]}\n대본:\n" +
+                   (vd / "대본.json").read_text(encoding="utf-8")[:5000], [img(sh)] if sh.exists() else [], need=("ok",))
+        if look.get("ok") or fix == LOOK_FIXES:
+            break
+        r = _fix_materials(P, version, "완성본 눈 검수에서 걸린 것(화면·크롭·남의 글자만 재료로 고친다): " + json.dumps(look.get("problems"), ensure_ascii=False)[:3000],
+                           sh if sh.exists() else None, f"final_fix_{version}")
+        if not r.get("재료"):
+            break
+        P.stage("render")
+        render_bench.render(version, vd, wd)
+        P.stage("check")
+    P.mark("check", auto_ok=bool(auto.get("ok")), look_ok=bool(look.get("ok")), problems=look.get("problems"), look_fixes=fix)
     return final
 
 
