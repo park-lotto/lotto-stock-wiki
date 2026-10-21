@@ -151,7 +151,7 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
 
 PLAN_LOOK = """너는 장면 검수 담당이다. 계획 시트를 보고 컷마다: 대사와 화면이 맞나 · 남의 신체 근접 · 남의 글자·원본 자막 띠 · 0초·훅 = 연예인 얼굴 · A-B-A 끼움.
-★주인공은 칸 가운데. 원본 샷 표의 '글자'(박힌 글자 상자, 0~1)를 보고 칸이 그 글자를 피하게 숫자 crop 을 정한다 — 숫자 crop 은 엔진이 바꾸지 않는다(정한 그대로 렌더).
+★주인공은 칸 가운데. 원본 샷 표의 '글자'(박힌 글자 상자 — 0~1 **비율**)를 보고 칸이 그 글자를 피하게 숫자 crop 을 정한다. ★crop 은 **원본 픽셀 정수**[x, y, w, h](비율 × 원본 가로·세로) — 숫자 crop 은 엔진이 바꾸지 않는다(정한 그대로 렌더).
 ★연예인이 나오는 영상은 찾은 원본에서만 — 다른 채널 연예인 영상 절대 금지. 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
 자막·띠 밖을 잘라라(예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료 전체를 고쳐서 돌려준다(없으면 null).
@@ -737,6 +737,11 @@ def _origin_dims(st) -> dict:
     return {x["name"]: [int(x.get("w") or 0), int(x.get("h") or 0)] for x in (st.get("origin") or {}).get("files") or [] if x.get("w")}
 
 
+def _all_dims(st) -> dict:
+    """원본 + 재료(영상·사진) 크기 — crop 단위 바로잡기(rules.fix_crop_units)용."""
+    return {**{x["name"]: [int(x.get("w") or 0), int(x.get("h") or 0)] for x in (st.get("material") or {}).get("files") or [] if x.get("w")}, **_origin_dims(st)}
+
+
 def _shots_ctx(st) -> str:
     out = [f"### {stem} (파일 {stem}.mp4)\n" + RU.shot_text(shots) for stem, shots in (st.get("shots") or {}).items()]
     return ("\n\n## 원본 샷 표(카메라가 바뀌는 곳마다 — 주인공 컷은 who main·both 샷 안에서 ss 를 고르고, 컷 길이가 그 샷 끝을 넘지 않게)\n" + "\n".join(out)) if out else ""
@@ -800,6 +805,9 @@ def ph_script_got(st, m, rp, u):
         if ch:                                   # 출처 줄 = 원본 채널 이름 그대로(사장님 '원본을 출처로') — 판정 답이 아니라 서버가 정한다
             S["source_label"] = f"출처: {ch}"
         M = RU.fill_shot_max(M, S, _origin_dims(st), st.get("shots") or {}, _ar(v))
+        fixed = RU.fix_crop_units(M, _all_dims(st))
+        if fixed:
+            st["log"].append("crop 단위 바로잡음: " + "; ".join(fixed)[:300])
         a = audit_script(st, S, M)
     if not a.get("ok"):
         _tries(st, "script", LIMITS["script"])
@@ -867,6 +875,9 @@ def _take_fix(st, r: dict) -> dict | None:
     if not isinstance(M, dict):
         return None
     M = RU.fill_shot_max(M, st["script"]["S"], _origin_dims(st), st.get("shots") or {}, _ar(st["version"]))
+    fixed = RU.fix_crop_units(M, _all_dims(st))
+    if fixed:
+        st["log"].append("crop 단위 바로잡음: " + "; ".join(fixed)[:300])
     bad = RU.source_rule_static(M, _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})
     st["script"]["M"] = M
     st["_fix_bad"] = bad

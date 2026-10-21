@@ -175,6 +175,30 @@ def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict
     return M
 
 
+def fix_crop_units(M: dict, dims: dict) -> list[str]:
+    """crop 단위 바로잡기(판단 주인) — 크롭은 원본 픽셀 정수. 판정 답이 0~1 비율로 적으면(샷 표 글자 상자가 비율이라 헷갈림, 10-21 성시경 2차:
+    crop=0.45:0.8:0.275:0 → ffmpeg 실패) 그 파일 크기로 픽셀로 바꾸고, 화면 밖은 안으로 넣는다. dims = {파일 이름: [가로, 세로]}. 바꾼 것을 돌려준다."""
+    out = []
+    for lid, cuts in (M.get("cuts") or {}).items():
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            cr, src = c.get("crop"), str(c.get("src") or "")
+            if not (isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr)) or src not in dims:
+                continue
+            sw, sh = dims[src]
+            if not (sw and sh):
+                continue
+            x, y, w, h = [float(v) for v in cr]
+            if max(x, y, w, h) <= 1.0:
+                x, y, w, h = x * sw, y * sh, w * sw, h * sh
+            w, h = max(2.0, min(w, sw)), max(2.0, min(h, sh))
+            x, y = max(0.0, min(x, sw - w)), max(0.0, min(y, sh - h))
+            new = [int(round(x)), int(round(y)), int(round(w)) // 2 * 2, int(round(h)) // 2 * 2]
+            if new != cr:
+                out.append(f"{lid}: crop {cr} → {new}")
+                c["crop"] = new
+    return out
+
+
 PRODUCT_TALK = {   # 제품을 어떻게 찾았나 → 대본이 제품을 말하는 법(사장님 10-21)
     "exact": "원본 화면의 포장과 같은 제품이다 — '○○가 쓰는 그 제품'으로 말해도 된다.",
     "named": "원본 화면엔 상표가 안 보여 포털·유튜브 글로 이름을 찾았다 — 근거 글이 가리키는 만큼만 말한다(지어 붙이지 않는다).",

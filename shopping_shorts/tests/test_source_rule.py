@@ -70,3 +70,13 @@ def test_fill_shot_max_keeps_numeric_crop_and_alternates_stills():
     RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 9 / 16)
     assert M["cuts"]["N1"][0]["crop"] == [680, 0, 600, 1080] and M["cuts"]["N1"][0]["max"] == 3.0
     assert [c["move"] for c in M["cuts"]["N2"]] == ["in", "left"]
+
+
+def test_fix_crop_units_ratio_to_pixels():
+    """판정 답이 crop 을 0~1 비율로 적으면 픽셀로(10-21 성시경 2차: crop=0.45:0.8:0.275:0 → ffmpeg 실패) · 화면 밖은 안으로."""
+    M = {"cuts": {"N1": [{"src": "o.mp4", "crop": [0.275, 0.0, 0.45, 0.8]}], "N2": [{"src": "o.mp4", "crop": [1800, 0, 600, 1080]}],
+                  "N3": [{"src": "o.mp4", "crop": [100, 0, 600, 1080]}]}}
+    ch = RU.fix_crop_units(M, {"o.mp4": [1920, 1080]})
+    assert M["cuts"]["N1"][0]["crop"] == [528, 0, 864, 864], M
+    assert M["cuts"]["N2"][0]["crop"] == [1320, 0, 600, 1080]
+    assert M["cuts"]["N3"][0]["crop"] == [100, 0, 600, 1080] and len(ch) == 2
