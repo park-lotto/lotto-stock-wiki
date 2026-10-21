@@ -803,6 +803,7 @@ def _dur(p: Path) -> float | None:
 
 PLAN_LOOK = """너는 장면 검수 담당이다(제작 순서 08). 계획 시트를 보고 컷마다: 대사와 화면이 맞나(A3) · 남의 신체 근접(A13) · 남의 글자·원본 자막 띠(A5) ·
 0초·훅 = 연예인 얼굴(T1) · A-B-A 끼움.
+★주인공은 칸 가운데(사장님 10-21). 원본 샷 표의 text(박힌 글자 상자, 0~1)를 보고 칸이 그 글자를 피하게 숫자 crop 을 정한다 — 숫자 crop 은 엔진이 바꾸지 않는다(정한 그대로 렌더).
 ★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지(사장님 10-21). 사람 얼굴 컷(face)은 원본 파일만, 제품 컷도 원본 안 제품 장면이 먼저. 시트 칸 = 렌더러가 실제로 자를 화면 그대로다.
 ★crop 'face' 는 원본 **높이 전체**를 쓴다 — 원본에 편집 자막·제목 띠가 박혀 있으면 'face' 대신 숫자 crop [x, y, w, h](원본 픽셀, 창 비율 {ar})로
 자막·띠 밖을 잘라라(집 PC 예: 1920×1080 원본, 자막 y≈930 → [455, 0, 870, 870]). 고칠 것이 있으면 재료.json 전체를 고쳐서 돌려준다(없으면 null).
@@ -897,7 +898,11 @@ def shot_table(P: Piece, src: Path) -> list[dict]:
 
 
 def shot_text(shots: list[dict]) -> str:
-    return "\n".join(f"#{s['i']} {s['a']:.2f}~{s['b']:.2f} ({s['b'] - s['a']:.1f}초) {s.get('who')}{' 제품' if s.get('product') else ''} {s.get('desc', '')}" for s in shots)
+    def one(s):
+        cx = f" 주인공x {s['cx']:.2f}" if s.get("cx") is not None else ""
+        tx = " 글자 " + ",".join("[" + ",".join(f"{v:.2f}" for v in b) + "]" for b in s.get("text") or []) if s.get("text") else ""
+        return f"#{s['i']} {s['a']:.2f}~{s['b']:.2f} ({s['b'] - s['a']:.1f}초) {s.get('who')}{' 제품' if s.get('product') else ''}{cx}{tx} {s.get('desc', '')}"
+    return "\n".join(one(s) for s in shots)
 
 
 def _shot_at(shots: list[dict], t: float) -> dict | None:
@@ -958,26 +963,18 @@ def fill_shot_max(P: Piece, M: dict, ar: float | None = None, S: dict | None = N
                 continue
             c["max"] = round(s["b"] - ss, 3)
             sw, sh, _ = probe(src)
-            boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
-            if boxes and ar:
-                base = c.get("crop") if isinstance(c.get("crop"), list) and len(c["crop"]) == 4 else [0, 0, min(sw, int(round(sh * ar))), sh]
-                fx0 = s["cx"] * sw if s.get("cx") is not None else None
-                new = avoid_text(base, boxes, fx0, sw, sh, ar)
-                if new != base:
-                    c["crop"], c["text_avoid"] = new, True
-            if s.get("cx") is None or str(c.get("face") or "").strip() in NO_FACE:
+            # 칸 자동 조정(주인공 가운데·박힌 글자 피하기)은 칸이 정해지지 않은 컷('face'·없음)의 첫 칸에만.
+            #   대본·재료 고치기가 숫자로 정한 칸은 덮지 않는다 — 10-21 선우용여: 샷 가운데 한 장으로 읽은 얼굴 위치(cx)가 여럿 나오는 샷에서 틀려,
+            #   고치기가 8번 내내 x 680 으로 옮긴 칸을 엔진이 매번 x 141 로 되돌렸다(같은 칸을 두 곳이 정함 = 0순위-B)
+            if isinstance(c.get("crop"), list) and len(c["crop"]) == 4:
                 continue
-            crop = c.get("crop")
-            if not isinstance(crop, list) or len(crop) != 4:
-                if not ar:
-                    continue
-                cw = min(sw, int(round(sh * ar)))
-                crop = [0, 0, cw, sh]
-            fx = s["cx"] * sw
-            if isinstance(c.get("crop"), list) and crop[0] + crop[2] * 0.25 <= fx <= crop[0] + crop[2] * 0.75:
-                continue      # 이미 주인공이 칸 가운데 절반 안 — 고친 칸(박힌 자막 피하기 등)을 덮지 않는다(10-21 선우용여: 가운데로 다시 밀어 자막이 돌아왔다)
-            x = int(round(fx - crop[2] / 2))
-            c["crop"] = [max(0, min(sw - int(crop[2]), x)), int(crop[1]), int(crop[2]), int(crop[3])]
+            if not ar or str(c.get("face") or "").strip() in NO_FACE:
+                continue
+            cw = min(sw, int(round(sh * ar)))
+            fx = s["cx"] * sw if s.get("cx") is not None else sw / 2
+            crop = [max(0, min(sw - cw, int(round(fx - cw / 2)))), 0, cw, sh]
+            boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
+            c["crop"] = avoid_text(crop, boxes, fx, sw, sh, ar) if boxes else crop
             c["center"] = "주인공"
     return M
 
