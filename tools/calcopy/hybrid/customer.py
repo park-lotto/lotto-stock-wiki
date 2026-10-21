@@ -407,6 +407,55 @@ def coupang_chrome(queries: list[str], out: Path) -> dict:
     return res
 
 
+PRODUCT_NAMED = """너는 같은 제품 판정 담당이다(원본 화면에 상표가 안 보여 포털·유튜브 글로 제품 이름을 찾은 경우). 찾은 이름과 근거(블로그·기사·본인 채널 글)를 보고
+쿠팡 후보 중 그 이름(브랜드·제품명)과 **같은 제품** 하나를 골라라. 근거가 '그 연예인이 쓴 그 제품'을 가리키지 않으면 고르지 마라. 없으면 product_id ''.
+JSON 하나: {"product_id": "…", "name": "…", "why": "근거 한 줄(어느 글에 무엇이라고)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+
+PRODUCT_BEST = """너는 대체 제품 고르기 담당이다(사장님 10-21: 같은 제품이 없으면 쿠팡에서 후기 많고 제일 좋은 제품). 연예인이 쓴 것과 **같은 종류·같은 쓰임**인 쿠팡 후보 중
+후기(rating 의 괄호 숫자) 많고 별점 높은 것 하나를 골라라. 광고(is_ad)·묶음 이상한 것은 뒤로. 같은 종류가 없으면 product_id ''.
+JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+
+NAME_FIND = """너는 제품 이름 찾기 담당이다. 연예인이 방송·유튜브에서 쓴 제품의 이름을 포털(네이버)·유튜브 검색 글에서 찾아라.
+그 연예인이 쓴 바로 그 제품을 가리키는 글만 근거다(다른 연예인·다른 제품 글 금지). 지어내지 마라. 못 찾으면 names 빈 목록.
+JSON 하나: {"names": [{"name": "브랜드 제품명", "evidence": "글 그대로 한 줄", "where": "블로그|뉴스|유튜브 제목|본인 채널"}], "kind": "제품 종류 한 줄(예: 눈가 세정 티슈)"}"""
+
+
+def _naver_text(q: str, limit: int = 2500) -> str:
+    """네이버 통합검색 글(연예인 이름 앞뒤만) — 회원 PC 에서 바로 연다(키 없음)."""
+    import html as H
+    import urllib.parse
+    import urllib.request
+    try:
+        req = urllib.request.Request("https://search.naver.com/search.naver?query=" + urllib.parse.quote(q),
+                                     headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36", "Accept-Language": "ko"})
+        t = urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace")
+    except Exception as e:  # noqa: BLE001 — 포털이 막혀도 유튜브 글로 이어 간다(이유는 남긴다)
+        return f"(네이버 검색 실패: {type(e).__name__})"
+    t = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", t)
+    t = re.sub(r"\s+", " ", H.unescape(re.sub(r"<[^>]+>", " ", t)))
+    key = q.split()[0]
+    out, last = [], -1
+    for m in re.finditer(re.escape(key), t):
+        if m.start() < last:
+            continue
+        out.append(t[max(0, m.start() - 80):m.start() + 220]); last = m.start() + 220
+    return " … ".join(out)[:limit]
+
+
+def _name_hints(P: Piece, r: dict) -> dict:
+    celeb = str(r.get("celeb") or "")
+    words = [w for w in (r.get("product_words") or []) if w][:3]
+    if not celeb or celeb == "불명" or not words:
+        return {}
+    qs = [f"{celeb} {w}" for w in words]
+    texts = [f"[네이버 {q}] {_naver_text(q)}" for q in qs]
+    yt = _search(qs, n=8)
+    texts.append("[유튜브 제목] " + " / ".join(f"{c.get('channel')}: {c.get('title')}" for c in yt)[:3000])
+    a = ask("product_name", NAME_FIND + f"\n\n연예인: {celeb}\n제품 낱말: {words}\n\n" + "\n\n".join(texts), need=("names",))
+    P.s["product_name_find"] = a; P.save()
+    return a
+
+
 def st_product(P: Piece):
     O = P.s["origin"]
     src = Path(O["files"][-1]) if O.get("files") else None
@@ -442,12 +491,31 @@ def st_product(P: Piece):
         raise Stop("쿠팡에서 같은 제품을 찾지 못했습니다", "")
     same = ask("product_same", PRODUCT_SAME + "\n\n쿠팡 후보:\n" + json.dumps(cands, ensure_ascii=False, indent=1), [img(x) for x in shots],
                need=("product_id", "name", "category"))
+    mode, hint = "exact", {}
     if not same.get("product_id"):
-        raise Stop("쿠팡에서 같은 제품을 찾지 못했습니다", "")
+        # 사장님 10-21: 정확한 상품이 없으면 '연예인 + 제품 낱말'로 포털·유튜브를 다시 검색해 제품 이름을 찾고,
+        #   그래도 없으면 쿠팡에서 같은 종류 중 후기 많고 제일 좋은 제품 — 대본은 '같은 건 없어서 후기 많은 걸로 써 봤다'
+        hint = _name_hints(P, R0)                      # 연예인·제품 낱말 = 원본 단서 읽기 답(R0)
+        named = [n["name"] for n in hint.get("names") or [] if n.get("name")][:3]
+        if named:
+            f2 = C.search(named)
+            if any((v or {}).get("need") == "chrome" for v in f2.values()):
+                f2 = coupang_chrome(named, ld / "coupang_named.json")
+            c2 = [it for v in f2.values() for it in (v or {}).get("items", [])][:16]
+            if c2:
+                same = ask("product_named", PRODUCT_NAMED + "\n\n찾은 제품 이름·근거:\n" + json.dumps(hint.get("names"), ensure_ascii=False, indent=1) +
+                           "\n\n쿠팡 후보:\n" + json.dumps(c2, ensure_ascii=False, indent=1), [img(x) for x in shots], need=("product_id", "name", "category"))
+                mode, cands = "named", c2
+        if not same.get("product_id"):
+            same = ask("product_best", PRODUCT_BEST + f"\n\n연예인이 쓴 것: {hint.get('kind') or r.get('brand_words')}\n\n쿠팡 후보:\n" +
+                       json.dumps(cands, ensure_ascii=False, indent=1), [img(x) for x in shots], need=("product_id", "name", "category"))
+            mode = "alt"
+    if not same.get("product_id"):
+        raise Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "")
     if same.get("category") in ("의약품", "의료기기"):
         raise Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요")
-    P.s["product"] = {**same, "brand_words": r.get("brand_words"), "shots": [str(x) for x in shots]}
-    P.mark("product")
+    P.s["product"] = {**same, "mode": mode, "name_hints": hint.get("names") or [], "brand_words": r.get("brand_words"), "shots": [str(x) for x in shots]}
+    P.mark("product", mode=mode)
 
 
 RESEARCH = """너는 조사 담당이다. 아래 제작 순서 04(조사)·브리프(research)의 기준 그대로 `조사.md` 한 파일 내용을 써라. 필요하면 웹 검색으로 사실을 확인하고 출처 URL 을 적는다.
@@ -524,6 +592,14 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙(styles brief)�
 JSON 하나: {"대본": {…}, "재료": {"cuts": {…}}, "근거_md": "…"}"""
 
 
+PRODUCT_TALK = {   # 제품을 어떻게 찾았나 → 대본이 제품을 말하는 법(사장님 10-21)
+    "exact": "원본 화면의 포장과 같은 제품이다 — '○○가 쓰는 그 제품'으로 말해도 된다.",
+    "named": "원본 화면엔 상표가 안 보여 포털·유튜브 글로 이름을 찾았다 — 근거 글이 가리키는 만큼만 말한다(지어 붙이지 않는다).",
+    "alt": ("같은 제품을 못 찾아 쿠팡에서 같은 종류 중 후기 많고 좋은 제품을 골랐다. ★대본에 이 사실을 말한다 — 예: '영상 보고 쿠팡에서 찾아봤는데 똑같은 건 없어서 "
+            "후기 제일 많은 걸로 써 봤는데 좋더라'. ★이 제품을 연예인이 쓴다고 말하지 마라(연예인이 쓴 건 '이런 ○○'까지만)."),
+}
+
+
 def st_script(P: Piece, version: str, fail: str = ""):
     from tools.calcopy.hybrid import render_bench, script_audit, styles as STY
     vd = P.D / version; vd.mkdir(parents=True, exist_ok=True)
@@ -535,6 +611,8 @@ def st_script(P: Piece, version: str, fail: str = ""):
             sheets.append(sheet(m, P.W / f"_sheet_{m.stem[:40]}.jpg", fps=0.5, cols=6, rows=5, w=240))
     ctx = (STY.brief(version) + "\n\n" + brief_text("tools/calcopy/hybrid/briefs/script.md", "channel/칼카피_제작순서/07_대본.md") +
            "\n\n## 렌더러 꼴\n" + (render_bench.__doc__ or "") + "\n\n## 조사.md\n" + (P.D / "조사" / "조사.md").read_text(encoding="utf-8") +
+           "\n\n## 제품 판정\n" + PRODUCT_TALK.get((P.s.get("product") or {}).get("mode") or "exact", "") +
+           "\n" + json.dumps({k: (P.s.get("product") or {}).get(k) for k in ("name", "why", "mode", "name_hints")}, ensure_ascii=False) +
            "\n\n## 원음 받아쓰기\n" + json.dumps(jload(P.W / "asr" / "result.json"), ensure_ascii=False) +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(mat_list, ensure_ascii=False) + (f"\n\n## 지난 검사에서 걸린 것\n{fail}" if fail else ""))
     for attempt in range(3):
