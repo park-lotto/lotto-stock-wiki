@@ -155,5 +155,14 @@
     "난리예요"
    ]
   }
- ]
+ ],
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ },
+ "_back_caption_lines_why": "B1 공개 줄 typewriter 400 이 칸 길이 안에 글자를 다 못 찍고 사라짐(10-21 부모 확인, 0.2초 자막 띠 시트) → B1 만 pop 300"
 }
