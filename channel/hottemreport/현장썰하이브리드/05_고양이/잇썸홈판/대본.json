@@ -148,5 +148,13 @@
     "난리예요"
    ]
   }
- ]
+ ],
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ }
 }
