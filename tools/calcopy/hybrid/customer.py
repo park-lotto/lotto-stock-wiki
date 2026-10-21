@@ -100,7 +100,8 @@ def brief_text(*rel: str) -> str:
 
 # ── 도구(기계적) ────────────────────────────────────────────────────────
 def ytdlp(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
-    return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", *args], capture_output=True, text=True, encoding="utf-8",
+    # 제목은 한국어로 — 없으면 유튜브가 영어 번역 제목을 줘 '연예인 이름이 제목에 있나'가 빗나갔다(10-21 선우용여 원본 'What's in Yong-ryeo's Bag')
+    return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--extractor-args", "youtube:lang=ko", *args], capture_output=True, text=True, encoding="utf-8",
                           errors="replace", timeout=timeout)
 
 
@@ -197,19 +198,24 @@ ORIGIN_TRY = 16       # 자막 대조할 후보 수(자막만 받는다 — 편�
 
 
 def _channels_of(found: list[dict], r: dict) -> list[str]:
-    """검색 결과 중 출처 글자·채널 단서와 이름이 맞는 채널 id — 맞는 것부터."""
+    """원본을 뒤질 채널 id — ① 연예인 **본인 채널**(채널 이름에 연예인 이름, 사장님 10-21 "연예인 본인 채널이 1순위") ② 출처 글자·채널 단서와 맞는 채널."""
     hint = _norm((r.get("source_label") or "").replace("출처", "") + (r.get("channel_hint") or ""))
-    out = []
+    celeb = _norm(r.get("celeb") or "")
+    own, other = [], []
     for c in found:
         name, cid = _norm(c.get("channel") or ""), c.get("channel_id")
-        if cid and name and (name in hint or hint[:6] in name) and cid not in out:
-            out.append(cid)
-    return out
+        if not cid or not name or cid in own or cid in other:
+            continue
+        if len(celeb) >= 2 and celeb in name:
+            own.append(cid)
+        elif name in hint or hint[:6] in name:
+            other.append(cid)
+    return own + other
 
 
 def _search(qs: list[str], n: int = 12) -> list[dict]:
     seen: dict[str, dict] = {}
-    for q in qs[:6]:
+    for q in qs[:8]:
         r = ytdlp(["--flat-playlist", "-J", f"ytsearch{n}:{q}"], timeout=180)
         if r.returncode != 0 or not r.stdout.strip():
             continue
@@ -230,16 +236,20 @@ def st_origin(P: Piece):
         raise Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요")
     P.s["origin_read"] = r; P.save()
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
-    qs = ([label] if label else []) + [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else [])
+    qs = ([str(r["celeb"])] if r.get("celeb") and r["celeb"] != "불명" else []) + ([label] if label else []) + \
+        [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else [])     # 이름만 검색 = 본인 채널 찾기
     found = _search(qs)
     celeb = _norm(r.get("celeb") or "")
+    own = lambda c: len(celeb) >= 2 and celeb in _norm(c.get("channel") or "")
     cands = [c for c in found if c["id"] != B.get("id") and (c.get("dur") or 0) > (B.get("dur") or 0) + 20]
     # 연예인 이름이 제목에 있는 검색 결과가 앞(10-21 선우용여: 원본 'What's in 용여 가방'이 검색에 나왔는데 채널 목록 후보에 밀려 대조도 못 했다)
-    cands.sort(key=lambda c: (celeb[-2:] not in _norm(c.get("title") or "")) if celeb else 0)
+    hint = _norm((r.get("source_label") or "").replace("출처", "") + (r.get("channel_hint") or ""))
+    cands.sort(key=lambda c: (not own(c), (celeb[-2:] not in _norm(c.get("title") or "")) if celeb else 0,
+                              not (_norm(c.get("channel") or "") and _norm(c.get("channel") or "") in hint)))   # 출처 채널 영상도 앞
     # 제작순서 02 §3 — 본인 유튜브면 **채널 영상 목록**에서 찾는다(10-21 실측: 이미도 원본 '[미도주방] 찐 살림템'은 검색 15편 어디에도 없었다)
     ch_ids = _channels_of(found, r)
     titles = []
-    for cid in ch_ids[:2]:
+    for cid in ch_ids[:3]:
         lr = ytdlp(["--flat-playlist", "-J", "--playlist-end", "300", f"https://www.youtube.com/channel/{cid}/videos"], timeout=240)
         if lr.returncode == 0 and lr.stdout.strip():
             titles += [{"id": e["id"], "title": e.get("title"), "dur": e.get("duration")} for e in json.loads(lr.stdout).get("entries") or [] if e.get("id")]
