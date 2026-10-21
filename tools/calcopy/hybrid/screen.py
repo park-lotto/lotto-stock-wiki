@@ -40,7 +40,10 @@ MIN_HEIGHT = 720
 
 
 def _ytdlp(args: list, timeout=240) -> subprocess.CompletedProcess:
-    return run(["yt-dlp", "--no-warnings", "--no-playlist", *args], check=False, timeout=timeout)
+    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
+    url = next((str(a) for a in args if "youtu" in str(a) or str(a).startswith("ytsearch")), "")
+    auth = yt_auth("https://www.youtube.com/") if url else []
+    return run(["yt-dlp", "--no-warnings", "--no-playlist", *auth, *args], check=False, timeout=timeout)
 
 
 def vid_of(url_or_id: str) -> str:

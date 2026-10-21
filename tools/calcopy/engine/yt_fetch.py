@@ -50,7 +50,16 @@ def _watch_size(paths: list[Path]) -> int:
 def ytdlp(args: list, timeout: float = 600, stall_sec: float | None = None, watch: Path | None = None, log=None) -> Result:
     """yt-dlp 를 돌린다. watch(받는 파일 stem 경로)가 있으면 그 stem 으로 시작하는 파일들(.part·.mp4·.ytdl…)의 크기를 POLL_SEC 마다 재
     stall_sec 동안 안 늘면 **이 프로세스만** 끊는다(stalled=True). 예외를 올리지 않는다 — TimeoutExpired 도 결과(timed_out)로 돌려준다."""
-    cmd = ["yt-dlp", "--no-warnings", "--no-playlist", *[str(a) for a in args]]
+    auth = []
+    url = next((str(a) for a in args if "youtu" in str(a)), "")
+    if url:                                       # 유튜브면 로그인 쿠키(파이어폭스 yt* 프로필)·JS 런타임 — 주인 = origin_find.yt_auth(10-21 회선 'not a bot' 우회)
+        try:
+            from tools.calcopy.origin_find import yt_auth
+            auth = yt_auth(url)
+        except Exception as e:  # noqa: BLE001 — 로그인 길을 못 쓰면 그대로 받되 이유를 남긴다
+            if log:
+                log(f"[yt_fetch] 로그인 쿠키 못 씀: {type(e).__name__}")
+    cmd = ["yt-dlp", "--no-warnings", "--no-playlist", *auth, *[str(a) for a in args]]
     out_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     err_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     t0 = time.time()

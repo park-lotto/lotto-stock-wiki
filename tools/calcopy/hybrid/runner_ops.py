@@ -42,8 +42,11 @@ def yt(args: list, timeout: int = 300) -> subprocess.CompletedProcess:
     wait = YT_GAP - (time.time() - _last_yt[0])
     if wait > 0:
         time.sleep(wait)
+    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키(파이어폭스 yt* 프로필)·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
+    url = next((str(a) for a in reversed(args) if "youtu" in str(a) or str(a).startswith("ytsearch")), "https://www.youtube.com/")
+    auth = yt_auth(url if "youtu" in url else "https://www.youtube.com/")
     try:
-        return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--sleep-requests", "2", "--extractor-args", "youtube:lang=ko", *args],
+        return subprocess.run(["yt-dlp", "--encoding", "utf-8", "--no-warnings", "--sleep-requests", "2", "--extractor-args", "youtube:lang=ko", *auth, *args],
                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
     finally:
         _last_yt[0] = time.time()
