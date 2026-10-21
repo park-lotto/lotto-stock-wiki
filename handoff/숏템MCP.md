@@ -208,3 +208,6 @@
 - 묶음: `engine_bundle.HAND`(실행기·렌더·검사만 설치본에, flow·브리프·문서 금지) · `preset_pack.tech_files` = 판 설정·벤치 자료만(코드·문서 임대 없음) · 스피치매틱스 키 칸(`voice.js KEY_SERVICES`) · make SKILL 에 WebSearch 허용·message 한 줄.
 - 시험: 서버 `test_claude_flow.py` 4 통과 · MCP `npm test` 43 중 42(실패 1 = 틱톡 실접속 logins.test — 틱톡이 이 PC 요청 거절, 변경과 무관) · `flow_driver.test.js`(실행기 실제 실행·틀린 꼴 답 재질문·사인).
 - 로컬 시험 서버: `tools/claude_portal/local_server.py --engine <엔진 트랙> --dir <폴더>`(진짜 app, 시험 DB, 키 파일) · 회원처럼 한 편: `shortem_client/test/flow_episode.js`(개발 MCP + claude -p opus).
+- ✅ 회원 경로 완주(10-21): 로컬 시험 서버 + 개발 MCP + claude -p(opus), 성시경 신라면 캐시(유튜브 0회) → 1080×1920 28.8초, 자동 검사 6/6, 눈 검수 ok, 정답지 합격(원본·제품 일치). 진행 안내 = 서버 message 한 줄("장면 맞추기 완료 → 목소리·영상 만들기 중").
+  잡은 결함: 두 번째 사인 안 물음(고침+시험) · 자동 검사 경로만 감 · 우리 로고 오탐 · 길이는 대본으로 · 출처 줄 서버가(엔진 98 #20~24).
+- ⏭ ①설치본 1.0.11 빌드(engine_bundle HAND 포함)·noexe_install_check·test_engine_installed ②유튜브 풀리면 캐시 없이 실전 2편 ③**라이브 배포는 사장님 승인 후**: 두 트랙 finish — 서버에 엔진 hybrid(flow·rules·script_audit·styles·render_bench 의 docstring) 필요 ④upload_release 로 설치본·프리셋 꾸러미(판 설정만) 다시 올리기 ⑤로컬 시험 서버 끝낼 것.
