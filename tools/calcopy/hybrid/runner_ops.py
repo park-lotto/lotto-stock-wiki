@@ -343,7 +343,8 @@ def _origin_words(W: Path, vid: str) -> tuple[list, str]:
 
 def c_origin_subs(W, d):
     lines = jload(W / "bench" / "asr.json") if (W / "bench" / "asr.json").exists() else []
-    matched, blocked, nosub = {}, [], []
+    matched, blocked, nosub, hits = {}, [], [], {}
+    terms = [t for t in d.get("terms") or [] if t]
     for vid in d.get("ids") or []:
         words, how = _origin_words(W, vid)
         if how == "blocked":
@@ -354,12 +355,16 @@ def c_origin_subs(W, d):
         if not words:
             nosub.append(vid)
             continue
+        if terms:
+            h = RU.word_hits(words, terms)         # 벤치가 내레이션뿐일 때 쓰는 단서(장면·제품 낱말 시각) — 낱말 본문은 PC 에 남긴다
+            if h:
+                hits[vid] = h
         m = RU.fingerprint(lines, words)
         if m:
             matched[vid] = m
             if len(m) >= 3:                          # 세 줄 이상 맞은 후보가 나왔다 — 나머지 자막은 받지 않는다(계정 한도 아끼기, 확정은 서버·판정이)
                 break
-    return {"matched": matched, "blocked": blocked, "nosub": nosub}
+    return {"matched": matched, "blocked": blocked, "nosub": nosub, "hits": hits}
 
 
 def origin_offset(W: Path, vid: str, src: Path, guess: float, ts: list[float]) -> tuple[float, bool]:

@@ -67,7 +67,7 @@ ORIGIN_READ = """너는 쇼츠 원본 추적 담당이다. 아래는 남의 채�
 - 설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다.
 - 연예인이 쓰는 물건(쇼핑 소재)이 아니면 is_shopping=false. 의약품·의료기기면 is_shopping=false.
 JSON 하나: {"celeb": "이름 또는 불명", "source_label": "화면 출처 글자 그대로 또는 ''", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
- "product_words": ["제품을 가리키는 낱말"], "queries": ["유튜브 검색어 3~5개 — '<연예인> <제품 낱말>' 꼴"], "is_shopping": true}"""
+ "product_words": ["제품을 가리키는 낱말"], "scene_words": ["원본 장면을 가리키는 장소·상황 낱말(제목·설명·화면 글자에서, 예 '서촌'·'마실') — 없으면 []"], "queries": ["유튜브 검색어 3~5개 — '<연예인> <제품 낱말>' 꼴"], "is_shopping": true}"""
 
 PEER_READ = """너는 출처 글자 읽기 담당이다. 같은 연예인·제품을 다룬 **다른 채널 쇼츠**들의 장면 모음이다(쇼츠마다 한 줄, 왼쪽에 번호).
 화면 위·아래의 '출처: ○○' 글자, 방송 로고·프로그램 이름을 그대로 읽어라. 안 보이면 빈 값. 지어내지 마라.
@@ -76,6 +76,11 @@ JSON 하나: {"labels": [{"n": 번호, "source": "출처 글자 그대로 또는
 ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다. 연예인 본인 채널의 영상 목록(제목)에서, 벤치 쇼츠가 따온 원본일 만한 영상을 최대 8개 골라라 —
 제목에 그 제품·쓰임(주방·청소·살림템·추천템 등)·계절이 맞는 것. 벤치보다 먼저 올라온 것.
 JSON 하나: {"ids": ["유튜브 id", …]}"""
+
+ORIGIN_VISUAL = """너는 원본 판정 담당이다. 벤치 쇼츠가 **내레이션뿐**이라 말 지문으로는 원본을 못 찾았다. 첫 그림 = 벤치 1초 장면 시트,
+둘째 그림 = 후보 원본(연예인 본인 채널)에서 장면 낱말이 나온 시각 앞뒤 시트(1초 간격, 왼쪽 위 첫 칸 = 아래 적힌 시작 초).
+**같은 사람·같은 옷·같은 제품·같은 장소**가 둘 다에 있어야 같다고 본다(비슷한 물건만으론 아니다). 같으면 그 제품이 잘 보이는 칸의 초를 적어라.
+JSON 하나: {"same": true, "origin_t": [받은 파일 초, …], "why": "한 줄"}"""
 
 ORIGIN_PICK = """너는 원본 판정 담당이다. 벤치 쇼츠의 말과 같은 말이 들어 있는 후보 원본 영상들이다(자막 지문 대조 결과).
 두세 줄 이상 같은 말이 맞고, 그 제품을 말한 사람이 연예인 **본인**이어야 확정. 후보 제목·채널·날짜도 본다
@@ -440,7 +445,9 @@ def ph_subs(st, m, rp, u):
     st["mixed"] = mixed[:ORIGIN_TRY]
     if not st["mixed"]:
         raise _Stop("원본 영상 후보를 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
-    return {"do": [{"id": "subs", "cmd": "origin_subs", "ids": [c["id"] for c in st["mixed"]]}], "then": "subs_got"}
+    r = st["read"]
+    terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
+    return {"do": [{"id": "subs", "cmd": "origin_subs", "ids": [c["id"] for c in st["mixed"]], "terms": terms}], "then": "subs_got"}
 
 
 def ph_subs_got(st, m, rp, u):
@@ -455,12 +462,85 @@ def ph_subs_got(st, m, rp, u):
             scored.append({**{k: c.get(k) for k in ("id", "title", "channel", "dur", "views")}, "matched": mt})
     scored.sort(key=lambda c: -len(c["matched"]))
     if not scored:
+        vis = _visual_cands(st, sub.get("hits") or {})
+        if vis:
+            st["vis"] = vis
+            return {"goto": "vis_get"}
         raise _Stop("원본 영상을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
     st["scored"] = scored[:5]
     B = st["bench"]
     return {"review": [_rv("origin_pick", ORIGIN_PICK + f"\n\n벤치: {B.get('title')} ({B.get('channel')}, {B.get('date')})\n후보:\n" +
                            json.dumps(st["scored"], ensure_ascii=False, indent=1), [_img(B["sheet"])] if B.get("sheet") else [],
                            need=("origin_id", "self_spoken"))], "then": "pick_got"}
+
+
+VIS_TRY = 2          # 화면 대조할 후보 수(원본을 통째로 받는다 — 유튜브 요청·시간이 크다)
+
+
+def _visual_cands(st, hits: dict) -> list[dict]:
+    """말 지문 0(벤치 = 내레이션뿐) → 원본 자막에 장면 낱말이 나온 **본인 채널** 후보만, 장면 낱말 ×3 + 제품 낱말 가짓수 순(10-22 고현정 가방)."""
+    r = st["read"]
+    scene = {RU.norm(w) for w in r.get("scene_words") or [] if len(RU.norm(w)) >= 2}
+    celeb = RU.norm(r.get("celeb") or "")
+    out = []
+    for c in st.get("mixed") or []:
+        h = hits.get(c["id"]) or []
+        if not h or not (len(celeb) >= 2 and celeb in RU.norm(c.get("channel") or "")):
+            continue
+        kinds = {x["term"] for x in h}
+        score = 3 * len(kinds & scene) + len(kinds - scene)
+        at = [x["origin_t"] for x in h if x["term"] in scene] or [x["origin_t"] for x in h]
+        out.append({"id": c["id"], "title": c.get("title"), "channel": c.get("channel"), "score": score, "at": at[:3], "n": len(h)})
+    out.sort(key=lambda c: (-c["score"], c["n"]))
+    return out[:VIS_TRY]
+
+
+def ph_vis_get(st, m, rp, u):
+    c = st["vis"][0]
+    a, b = max(0.0, min(c["at"]) - 90), max(c["at"]) + 90
+    st["origin"] = {"id": c["id"], "url": f"https://www.youtube.com/watch?v={c['id']}", "matched": [], "window": [a, b], "visual": True,
+                    "info": {k: c.get(k) for k in ("id", "title", "channel")}}
+    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": c["id"], "a": a, "b": b, "ts": []}], "then": "vis_got"}
+
+
+def ph_vis_got(st, m, rp, u):
+    o = m.get("origin") or {}
+    if o.get("error") or not o.get("files"):
+        raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="vis_get")
+    st["origin"].update(files=o["files"], offset=o.get("offset"), offset_measured=False)
+    s0 = max(0.0, min(st["vis"][0]["at"]) - origin_t0(st) - 30)
+    st["vis_s0"] = s0
+    return {"do": [{"id": "vsheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": "look/origin_visual.jpg",
+                    "fps": 1, "cols": 6, "rows": 10, "w": 240, "ss": s0, "t": 60}], "then": "vis_look"}
+
+
+def ph_vis_look(st, m, rp, u):
+    sh = (m.get("vsheet") or {}).get("file")
+    B = st["bench"]
+    if not sh:
+        return {"goto": "vis_next"}
+    return {"review": [_rv("origin_visual", ORIGIN_VISUAL + f"\n\n벤치: {B.get('title')}\n후보: {st['origin']['info'].get('title')} ({st['origin']['info'].get('channel')})"
+                           f"\n둘째 그림 첫 칸 = 받은 파일 {st['vis_s0']:.0f}초", ([_img(B["sheet"])] if B.get("sheet") else []) + [_img(sh)],
+                           need=("same", "origin_t"))], "then": "vis_pick"}
+
+
+def ph_vis_pick(st, m, rp, u):
+    a = rp.get("origin_visual") or {}
+    ts = [float(t) for t in a.get("origin_t") or [] if isinstance(t, (int, float))]
+    if a.get("same") and ts:
+        t0 = origin_t0(st)
+        st["origin"]["matched"] = [{"bench": "(화면 대조)", "origin_t": round(t + t0, 2)} for t in ts]
+        st["log"].append(f"원본 = 화면 대조로 확정({st['origin']['id']}) — 벤치가 내레이션뿐: {a.get('why')}")
+        return {"goto": "product_sheet"}
+    return {"goto": "vis_next"}
+
+
+def ph_vis_next(st, m, rp, u):
+    st["vis"] = (st.get("vis") or [])[1:]
+    if st["vis"]:
+        return {"goto": "vis_get"}
+    st.pop("origin", None)
+    raise _Stop("원본 영상을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
 
 
 def ph_pick_got(st, m, rp, u):
@@ -1047,6 +1127,7 @@ PHASES = {
     "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
+    "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "research": ph_research, "research_got": ph_research_got,
@@ -1056,5 +1137,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

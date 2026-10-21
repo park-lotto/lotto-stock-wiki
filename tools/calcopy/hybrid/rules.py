@@ -43,6 +43,25 @@ def fingerprint(bench_lines: list[dict], words: list) -> list[dict]:
     return out
 
 
+def word_hits(words: list, terms: list[str], gap: float = 20.0) -> list[dict]:
+    """원본 자막 낱말(초, 낱말)에서 장면·제품 낱말이 나온 시각 — 벤치가 내레이션뿐이라 말 지문(fingerprint)이 0일 때 원본 후보를 고르는 단서
+    (10-22 고현정 가방: 벤치에 본인 목소리 없음 → 지문 0, 원본 브이로그 20 자막에만 '서촌'). 같은 낱말은 gap 초 안에서 한 번만."""
+    words = [(float(t), norm(w)) for t, w in words if norm(w)]
+    out, last = [], {}
+    for q in dict.fromkeys(norm(t) for t in terms or []):
+        if len(q) < 2:
+            continue
+        for i in range(len(words)):
+            acc, j = "", i
+            while j < len(words) and len(acc) < len(q) + 6:
+                acc += words[j][1]; j += 1
+            if acc.startswith(q) or (q in acc and q not in acc[len(words[i][1]):]):
+                t = words[i][0]
+                if t - last.get(q, -1e9) >= gap:
+                    out.append({"term": q, "origin_t": round(t, 2)}); last[q] = t
+    return sorted(out, key=lambda h: h["origin_t"])
+
+
 def caps_vs_tts(S: dict) -> list[str]:
     """나레 줄마다 화면 자막(caps 이어 붙인 글)이 실제로 읽는 글(tts)과 같은가 — 부호·띄어쓰기만 다른 건 같다
     (10-21 선우용여 N3: 자막 '따라 사 봤는데요' ↔ 목소리 '하나 사서 따라 해 봤는데요' — 완성본 눈 검수가 짚었다).
