@@ -199,3 +199,12 @@
 6. 나머지 프리셋(제품비하인드썰형·샤크탱크·해외핫영상·연예인꿀맛)은 집 PC 제작 문서가 없다 — 집 PC 세션이 프리셋별 제작순서를 적어 올리면 옮긴다.
 7. 회원 키 실제 호출 미실측(일레븐랩스·쿠팡 파트너스) · 크롬 쿠팡 길은 이 PC 가 쿠팡에 막혀 미검증.
 8. 병합: 두 트랙 모아서 한 번(finish 는 사장님). 텔레그램 연결은 사장님이 마지막에.
+
+## 2026-10-21 낮 (CH 집 PC) — 볼케이노형 재설계·구현 (사장님 "그 세션을 덮어서 수정을 싹 / 설계는 페이블이 다시 / 볼케이노처럼")
+- 설계: `docs/superpowers/specs/2026-10-21-숏템MCP-볼케이노형-design.md`(페이블) + §15 결정 5(사장님 "왔다갔다하지 말고" → 기본값 채택).
+- 구조: 노하우 = 서버 지시서 **엔진 트랙 `tools/calcopy/hybrid/flow.py`** 한 곳 · 서버 창구 `shopping_shorts/claude_flow.py`(`POST /api/claude/step`, 서명 payload `v1.<seq>.<zlib b64>.<hmac>`, 옛 payload stale 거절, 요약만 `claude_flow_runs`) ·
+  회원 PC 손 = 엔진 `hybrid/runner_ops.py`(허용 cmd 만, 유튜브 한 곳 yt() 쉼·캐시 모드) · 눈 = 회원 Claude(`shortem_ai` 요청 폴더) · 고리 = `shortem_client/server/flow_driver.js` · 입구 `make_flow.makeStep`(영상 주소 start → flow, 서버가 '단계 진행 방식 아님'이면 옛 길).
+- 지운 것: 엔진 `hybrid/customer.py`(→ rules·runner_ops·flow 로 분해) · `make.py hybrid` · MCP 옛 하이브리드 길(shapeHybrid·hybridLine·isHybridSid) · `test/hybrid_flow.test.js`·`hybrid_dev_run.py`(→ 엔진 `flow_dev.py`).
+- 묶음: `engine_bundle.HAND`(실행기·렌더·검사만 설치본에, flow·브리프·문서 금지) · `preset_pack.tech_files` = 판 설정·벤치 자료만(코드·문서 임대 없음) · 스피치매틱스 키 칸(`voice.js KEY_SERVICES`) · make SKILL 에 WebSearch 허용·message 한 줄.
+- 시험: 서버 `test_claude_flow.py` 4 통과 · MCP `npm test` 43 중 42(실패 1 = 틱톡 실접속 logins.test — 틱톡이 이 PC 요청 거절, 변경과 무관) · `flow_driver.test.js`(실행기 실제 실행·틀린 꼴 답 재질문·사인).
+- 로컬 시험 서버: `tools/claude_portal/local_server.py --engine <엔진 트랙> --dir <폴더>`(진짜 app, 시험 DB, 키 파일) · 회원처럼 한 편: `shortem_client/test/flow_episode.js`(개발 MCP + claude -p opus).

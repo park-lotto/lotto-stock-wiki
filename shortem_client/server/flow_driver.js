@@ -26,7 +26,12 @@ function save(f) {
 export function loadFlow(sid) {
   if (!FLOW_SID_RE.test(String(sid || ''))) return null;
   if (flows.has(sid)) return flows.get(sid);
-  try { const f = JSON.parse(fs.readFileSync(stFile(sid), 'utf8')); flows.set(sid, f); return f; } catch { return null; }
+  try {
+    const f = JSON.parse(fs.readFileSync(stFile(sid), 'utf8'));
+    f.busy = false;                                   // 디스크에서 다시 읽은 편은 돌던 고리가 없다(프로그램을 다시 켰다)
+    if (f.status === 'wait_user' && f.approved === 'sent') f.approved = false;
+    flows.set(sid, f); return f;
+  } catch { return null; }
 }
 export const isFlowSid = sid => !!loadFlow(sid);
 
@@ -92,7 +97,7 @@ async function absorb(f, res) {
   f.wait = null;
   if (res.status === 'execute') { f.do = res.do || []; save(f); return 'run'; }
   if (res.status === 'review' || res.status === 'reject') { f.asks = (res.review || []).map(rv => postReview(f, rv)); save(f); return 'ask'; }
-  if (res.status === 'wait_user') { f.wait = res.wait; save(f); return 'user'; }
+  if (res.status === 'wait_user') { f.wait = res.wait; f.approved = false; save(f); return 'user'; }   // 새 사인 요청(길이 고친 뒤 다시 사인 등) — 앞 사인 표시를 지운다(10-21 실측: 두 번째 사인을 안 묻고 wait 만 돌았다)
   if (res.status === 'done') { f.video = res.video; f.title = res.title; f.note = res.note; save(f); return 'end'; }
   f.fail = { why: res.why || res.message || '멈췄습니다', fix: res.fix || '' };
   save(f);

@@ -25,7 +25,7 @@ function server() {
         const out = n === 1 ? { status: 'execute', message: '준비 확인 중', stage: { no: 1, total: 13, text: '준비 확인' }, do: [{ id: 'w', cmd: 'write_doc', files: { 'a.txt': '안녕' } }] }
           : n === 2 ? { status: 'review', message: '준비 확인 완료 → 원본 영상 찾기 중', stage: { no: 3, total: 13, text: '원본 영상 찾기' },
             review: [{ id: 'origin_read', model: 'opus', ask: '읽어라', show: [{ text: '제목: x' }, { file: 'doc/a.txt' }], need: ['celeb'] }] }
-          : n === 3 ? { status: 'wait_user', message: '대본 확인', stage: { no: 9, total: 13, text: '대본 확인' }, wait: { kind: 'approve', script: { title: '제목', lines: ['줄 하나'] } } }
+          : n === 3 || n === 4 ? { status: 'wait_user', message: '대본 확인', stage: { no: 9, total: 13, text: '대본 확인' }, wait: { kind: 'approve', script: { title: '제목', lines: [n === 3 ? '줄 하나' : '줄인 줄'] } } }
           : { status: 'done', message: '완성', stage: { no: 13, total: 13, text: '완성' }, video: path.join(ENGINE, 'README.md'), title: '제목' };
         rsp.writeHead(200, { 'Content-Type': 'application/json' });
         rsp.end(JSON.stringify({ ...out, sid: 'abcdef012345', next_payload: `v1.${n}.x.y` }));
@@ -64,6 +64,12 @@ test('고리 — 실행기 결과·판정 답·사인이 서버로 차례로 간
   approveFlow(f.sid);
   o = await waitFlow(f.sid, 20000);
   assert.equal(seen[3].step, 'approve');
+  // 길이를 고쳐 대본이 바뀌면 서버가 사인을 다시 묻는다 — 앞 사인으로 넘어가지 않고 다시 approve 를 요구해야 한다(10-21 실측 결함)
+  assert.equal(o.need, 'approve', JSON.stringify(o));
+  assert.deepEqual(o.script.lines, ['줄인 줄']);
+  approveFlow(f.sid);
+  o = await waitFlow(f.sid, 20000);
+  assert.equal(seen[4].step, 'approve');
   assert.equal(o.need, 'done');
   assert.equal(shapeFlow(f).need, 'done');
   s.close();
