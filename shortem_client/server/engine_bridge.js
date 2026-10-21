@@ -25,6 +25,7 @@ function pythonExe() {
 }
 export const packRoot = () => path.resolve(process.env.SHORTEM_PACK_ROOT || path.join(toolsDir(), '..', 'packs'));
 const aiRoot = () => ensureDir(homeDir(), 'ai');
+export const aiRootDir = aiRoot;
 export const dataDir = () => ensureDir(homeDir(), '창고');
 
 function engineEnv(queue, packFile, extraEnv) {
@@ -154,5 +155,31 @@ export function engineTool(cmd, input, { timeoutMs = 60000 } = {}) {
       try { resolve(JSON.parse(s)); } catch { resolve({ error: '엔진 미리보기가 답하지 않았습니다', tail: err.slice(-400) }); }
     });
     proc.stdin.end(input ? JSON.stringify(input) : '');
+  });
+}
+
+// 볼케이노형 실행기(관제 234, 10-21) — 서버 지시서가 준 do 목록을 엔진 hybrid/runner_ops 로 돌리고 measure(JSON)를 돌려준다.
+//   허용 명령 판정은 runner_ops 한 곳. 여기는 띄우고 마지막 줄 JSON 을 읽기만 한다.
+export function runOps(jobDir, doList, { timeoutMs = 3 * 60 * 60 * 1000 } = {}) {
+  fs.mkdirSync(jobDir, { recursive: true });
+  const doFile = path.join(jobDir, '..', `do_${Date.now()}.json`);
+  fs.writeFileSync(doFile, JSON.stringify(doList || []));
+  return new Promise(resolve => {
+    const proc = spawn(pythonExe(), ['-m', 'tools.calcopy.hybrid.runner_ops', jobDir, doFile],
+      { cwd: engineRoot(), env: { ...engineEnv(ensureDir(aiRoot(), '_runner'), null, {}), SHORTEM_HOME: homeDir() }, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = [];
+    let err = '';
+    const t = setTimeout(() => { try { proc.kill(); } catch { /* 이미 끝 */ } }, timeoutMs);
+    proc.stdout.on('data', d => out.push(d));
+    proc.stderr.on('data', d => { if (err.length < 200000) err += String(d); });
+    const fail = why => Object.fromEntries((doList || []).map(d => [String(d.id || d.cmd), { error: why }]));
+    proc.on('error', e => { clearTimeout(t); resolve(fail('실행기를 띄우지 못했다: ' + String(e && e.message).slice(0, 200))); });
+    proc.on('close', () => {
+      clearTimeout(t);
+      try { fs.appendFileSync(path.join(jobDir, '..', 'runner.log'), err.slice(-20000)); } catch { /* 기록 실패는 넘어간다 */ }
+      try { fs.unlinkSync(doFile); } catch { /* 이미 */ }
+      const s = Buffer.concat(out).toString('utf8').trim().split('\n').filter(Boolean).pop() || '';
+      try { resolve(JSON.parse(s)); } catch { resolve(fail('실행기 결과를 읽지 못했다: ' + err.slice(-300))); }
+    });
   });
 }

@@ -18674,6 +18674,15 @@ async def api_claude_rent(request: Request):
                                                 body.get("lease") or None, Store(DB_PATH), str(body.get("preset") or "") or None))
 
 
+@app.post("/api/claude/step")
+async def api_claude_step(request: Request):
+    """볼케이노형 제작 지시(관제 234, 2026-10-21) — 판단은 엔진 hybrid/flow.py, 관문·서명·기록은 claude_flow.step."""
+    from shopping_shorts import claude_flow as _cf, claude_portal as _cp
+    body = await _claude_body(request)
+    ctx = _cp.ctx_from_request(request, _client_ip(request))
+    return _claude_json(await run_in_threadpool(_cp.call, _cf.step, ctx, body, Store(DB_PATH)))
+
+
 @app.get("/api/claude/pack/{asset_id:path}")
 def api_claude_pack(request: Request, asset_id: str, job: str = ""):
     from shopping_shorts import claude_portal as _cp

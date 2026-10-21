@@ -74,10 +74,15 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "shopping_shorts/calcopy_frame/per_video.py",
          "shopping_shorts/channelkit/providers.py", "tools/calcopy/copy_render.py",   # 나레형 목소리(remake --make-tts, 고객 키 TYPECAST_API_KEY)
          "shopping_shorts/channel_presets/banggu/rules.py",                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
-         # 하이브리드 제작 라인(집 PC 제작순서 그대로, 10-21 재정비)이 부르는 엔진 쪽 — 라인 자체(tools/calcopy/hybrid/*)는 편마다 빌린다(기술 꾸러미)
+         # 하이브리드 제작 라인이 부르는 엔진 쪽 — 라인의 손(실행기·렌더)은 아래 HAND, 노하우(지시서)는 서버
          "tools/calcopy/engine/stage_log.py", "tools/calcopy/engine/yt_fetch.py", "tools/calcopy/engine/narr_align.py",
          "tools/calcopy/engine/master_guard.py", "tools/calcopy/engine/script_frame.py", "tools/calcopy/engine/voices.py",
-         "tools/calcopy/coupang_customer.py", "shopping_shorts/coupang_partners.py", "tools/caption_pack/check_bench_packs.py")
+         "tools/calcopy/coupang_customer.py", "shopping_shorts/coupang_partners.py", "tools/caption_pack/check_bench_packs.py",
+         # 볼케이노형 실행기(손) — 함수 안 import 가 많아 하나씩 적는다(HAND 와 같은 목록)
+         "tools/calcopy/hybrid/runner_ops.py", "tools/calcopy/hybrid/rules.py", "tools/calcopy/hybrid/render_bench.py",
+         "tools/calcopy/hybrid/render_itssum.py", "tools/calcopy/hybrid/placement.py", "tools/calcopy/hybrid/bench_check.py",
+         "tools/calcopy/hybrid/thumb.py", "tools/calcopy/hybrid/screen.py", "tools/calcopy/hybrid/styles.py",
+         "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
 
 
 def top_imports(engine: Path, entries=ENTRY) -> set[str]:
@@ -115,7 +120,15 @@ def top_imports(engine: Path, entries=ENTRY) -> set[str]:
     return seen
 
 
+# 볼케이노형 회원 라인(관제 234, 10-21)의 **손** = 실행기와 그것이 부르는 렌더·검사 — 설치본에 넣는다(hybrid/* 금지의 예외, 이것만).
+#   노하우(지시서 hybrid/flow.py·브리프·문서)는 서버 한 곳 — 아래에 없으면 금지 목록 그대로 막힌다. 판 설정(styles/*.json)은 렌더 단계에만 빌린다.
+HAND = tuple(f"tools/calcopy/hybrid/{m}.py" for m in ("__init__", "runner_ops", "rules", "common", "render_bench", "render_itssum", "placement",
+                                                       "bench_check", "thumb", "screen", "styles")) +     ("tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py", "tools/calcopy/yanshot/plan.py")
+
+
 def forbidden(rel: str) -> str | None:
+    if rel in HAND:
+        return None
     for pat in FORBIDDEN:
         if fnmatch.fnmatch(rel, pat) or rel == pat:
             return pat

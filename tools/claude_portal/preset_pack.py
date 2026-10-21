@@ -44,14 +44,9 @@ def files_for(engine: Path, preset: str) -> list[str]:
     return [x for x in dict.fromkeys(out + tech_files(engine, preset)) if (engine / x).is_file()]
 
 
-TECH_CODE = ("__init__", "common", "customer", "styles", "screen", "render_bench", "render_itssum", "placement", "bench_check", "script_audit", "thumb")
-TECH_DOCS = ("02_원본찾기", "03_제품_쿠팡", "04_조사", "05_재료영상", "07_대본", "08_계획", "11_검사")
-
-
 def tech_files(engine: Path, preset: str) -> list[str]:
-    """기술 꾸러미(사장님 10-21 '프리셋처럼 편마다 빌려주기') — 프리셋 폴더 line.json 이 hybrid 이면 집 PC 제작 라인을 같이 담는다.
-    코드 = tools/calcopy/hybrid/*(설치본 금지 목록 — 편마다만) · 판 설정 = styles/<판>.json(+_common) · 지시문 = briefs·제작순서 단계 파일 ·
-    판이 부르는 벤치 자료 = 판 설정 bench.line_reads·sfx_events. 회원 PC 는 이것을 풀고(preset_rent.js) 편이 끝나면 지운다."""
+    """하이브리드 프리셋(line.json hybrid)이 렌더 단계에 빌리는 것 — **판 설정과 벤치 자료만**(관제 234 10-21 볼케이노형).
+    코드(실행기·렌더러)는 설치본(engine_bundle.HAND), 노하우(지시서·브리프·제작순서 문서)는 서버 hybrid/flow.py 한 곳 — 꾸러미에 넣지 않는다."""
     lp = engine / preset / "line.json"
     if not lp.is_file():
         return []
@@ -60,11 +55,7 @@ def tech_files(engine: Path, preset: str) -> list[str]:
         return []
     v = line["version"]
     h = "tools/calcopy/hybrid"
-    out = [f"{preset}/line.json", "tools/calcopy/yanshot/__init__.py", "tools/calcopy/yanshot/common.py"]
-    out += [f"{h}/{m}.py" for m in TECH_CODE]
-    out += [f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
-    out += [f"{h}/briefs/{b}.md" for b in ("research", "screen_pick", "script", "review")]
-    out += [p.relative_to(engine).as_posix() for d in TECH_DOCS for p in (engine / "channel/칼카피_제작순서").glob(f"{d}*.md")]
+    out = [f"{preset}/line.json", f"{h}/styles/_common.json", f"{h}/styles/{v}.json"]
     st = json.loads((engine / h / "styles" / f"{v}.json").read_text(encoding="utf-8"))
     b = st.get("bench") or {}
     if b.get("line_reads"):

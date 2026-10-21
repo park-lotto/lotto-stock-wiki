@@ -9,15 +9,17 @@ import { refreshCookies } from './logins.js';
 import { packFile as localPackFile, PID_RE } from './local_settings.js';
 import { homeDir, writeFileIn, workDir, ensureDir } from './paths.js';
 import { deliverInBackground } from './deliver.js';
+import { startFlow, waitFlow, approveFlow, retryFlow, isFlowSid, loadFlow, shapeFlow } from './flow_driver.js';
+import { ApiError } from './api.js';
 
 export const waitMs = () => Number(process.env.SHORTEM_WAIT_SEC || 45) * 1000;
 
 function aiNeed(runId) {
   const n = pending().length;
   // 물을 것이 없는데 아직 도는 중(목소리·렌더) — 'AI 0건에 답하라'고 하면 Claude 가 헤매다 셸 sleep 으로 기다렸다(10-20 회원 한 줄 실시험)
-  if (!n) return { need: 'wait', run_id: runId, ...liveStage(), next: `shortem_make(step="wait", run_id="${runId}")`,
+  if (!n) return { need: 'wait', run_id: runId, next: `shortem_make(step="wait", run_id="${runId}")`,
     hints: ['아직 만드는 중입니다(목소리·렌더는 몇 분 걸립니다) — 같은 wait 를 다시 부르면 끝날 때까지 이어서 기다립니다. 셸·sleep 으로 기다리지 마세요'] };
-  return { need: 'ai', ai_requests: n, run_id: runId, ...liveStage(),
+  return { need: 'ai', ai_requests: n, run_id: runId,
     next: `shortem_ai(action="list") 로 요청을 받아 하나씩 답한 뒤(answer), shortem_make(step="wait", run_id="${runId}") 를 부르세요`,
     hints: [`엔진이 AI 판독 ${n}건을 기다립니다 — 사람에게 묻지 말고 바로 답하세요`] };
 }
@@ -42,40 +44,7 @@ export function cleanWhy(msg) {
     .replace(/Traceback[\s\S]*/, '').replace(/\s+/g, ' ').trim().slice(0, 160) || '엔진이 멈췄습니다';
 }
 
-// 하이브리드 라인(집 PC 제작순서 그대로 — 엔진 hybrid/customer.py, 사장님 10-21 재정비)의 응답 → MCP 응답. 진행은 stage 한 줄만(볼케이노처럼, 세부 금지)
-const stageOf = o => (o && o.stage ? { stage: String(o.stage), step: o.step, step_total: o.total } : {});
-function shapeHybrid(o) {
-  const base = { sid: o.sid, ...stageOf(o) };
-  if (o.need === 'approve') return { ...base, need: 'approve', script: o.script,
-    next: `고객에게 script(제목·대본 줄)를 그대로 보여 주고 사인을 받으면 shortem_make(step="approve", sid="${o.sid}")`,
-    hints: ['사인 전에는 목소리 합성·렌더를 하지 않습니다(고객 키 비용)'] };
-  if (o.need === 'done') {
-    const src = o.video && fs.existsSync(o.video) ? o.video : null;
-    if (!src) return { ...base, fail: { why: '완성본 파일을 찾지 못했습니다', fix: 'shortem_make(step="status") 로 다시 보세요' } };
-    const name = `${String(o.title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${o.sid}.mp4`;
-    const video = path.join(ensureDir(workDir(), '완성본'), name);
-    if (!fs.existsSync(video) || fs.statSync(src).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(src, video);
-    try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: o.sid, title: String(o.title || ''), line: 'hybrid' })); } catch { /* 표식 없이도 영상은 본다 */ }
-    deliverInBackground(video, { title: String(o.title || '') });
-    return { ...base, need: 'done', video, hints: ['완성본 경로를 고객에게 알려 주세요'] };
-  }
-  if (o.need === 'fail') return { ...base, fail: { why: cleanWhy(o.why), fix: o.fix || '', retry_ok: !!o.retry_ok },
-    ...(o.retry_ok ? { next: `shortem_make(step="retry", sid="${o.sid}")` } : {}) };
-  return { ...base, need: 'wait', next: `shortem_make(step="status", sid="${o.sid}")` };
-}
-const isHybridSid = sid => SID_RE.test(String(sid || '')) && fs.existsSync(path.join(dataDir(), 'hybrid', String(sid), 'piece.json'));
-// 지금 도는 하이브리드 편의 진행 한 줄(엔진 progress.json 한 곳)
-function liveStage() {
-  try {
-    const root = path.join(dataDir(), 'hybrid');
-    const d = fs.readdirSync(root).map(n => path.join(root, n, 'progress.json')).filter(f => fs.existsSync(f))
-      .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
-    return d ? stageOf(JSON.parse(fs.readFileSync(d, 'utf8'))) : {};
-  } catch { return {}; }
-}
-
 export function shapeSession(S) {
-  if (S && typeof S.need === 'string' && S.sid && !S.state) return shapeHybrid(S);
   if (!S || S.error) return { fail: { why: cleanWhy((S && S.error) || '엔진이 답하지 않았습니다'), code: S && S.code, fix: '같은 단계를 한 번 더 부르세요. 또 실패하면 shortem_feedback 으로 알려 주세요' } };
   const base = { sid: S.sid, state: S.state };   // 내부 프리셋 경로(벤치 채널 이름이 들어 있다)는 내보내지 않는다
   if (S.state === 'candidates') {
@@ -127,12 +96,6 @@ async function go(args, opts, presetId) {
     try { rental = await rentPreset({ engineRoot: engineRoot(), presetId }); }
     catch (e) { return { fail: { why: RENT_FAIL[e.code] || '프리셋을 받지 못했습니다', code: e.code || 'rent', fix: '잠시 뒤 같은 단계를 다시 부르세요' } }; }
     if (rental.presetPath && args[0] === 'start') args = args.map((a, i) => (args[i - 1] === '--preset' ? rental.presetPath : a));
-    const line = hybridLine(rental.presetPath);                  // 이 프리셋이 집 PC 제작 라인(하이브리드)이면 그 입구로
-    if (line && args[0] === 'start') {
-      const ref = args[args.indexOf('--ref') + 1];
-      if (!args.includes('--ref') || !ref) { await rental.release(); return { hints: ['이 프리셋은 연예인 쇼핑 쇼츠 주소로 만듭니다 — 고객에게 영상 주소를 받아 shortem_make(step="start", video=…) 로 부르세요'] }; }
-      args = ['hybrid', 'start', '--ref', ref, '--version', line.version];
-    }
     if (rental.dev && args.includes('rented')) return { fail: { why: '개발 PC 입니다 — SHORTEM_DEV_PRESET 에 엔진 프리셋 경로를 주세요', code: 'dev_preset' } };
     opts = { ...opts, onClose: rental.release };
   }
@@ -153,7 +116,35 @@ function originalsFile(channel) {
   return path.join(homeDir(), rel);
 }
 
+// 볼케이노형 편(서버 지시서) — 완성이면 작업 폴더 완성본으로 한 벌 + 보내기(deliver.js), 응답은 flow_driver.shapeFlow 한 곳
+function flowOut(s) {
+  if (!s || s.need !== 'done' || !s.video || !fs.existsSync(s.video)) return s;
+  const name = `${String(s.title || 'shortem').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40)}_${s.sid}.mp4`;
+  const video = path.join(ensureDir(workDir(), '완성본'), name);
+  if (!fs.existsSync(video) || fs.statSync(s.video).mtimeMs > fs.statSync(video).mtimeMs) fs.copyFileSync(s.video, video);
+  try { fs.writeFileSync(video + '.json', JSON.stringify({ sid: s.sid, title: String(s.title || ''), line: 'flow' })); } catch { /* 표식 없이도 영상은 본다 */ }
+  deliverInBackground(video, { title: String(s.title || '') });
+  return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
+}
+
 export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video }) {
+  if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
+    if (step === 'approve') approveFlow(sid);
+    else if (step === 'retry') retryFlow(sid);
+    else if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 같은 영상 주소로 새로 만들어 주세요'] };
+    return flowOut(await waitFlow(sid, waitMs()));
+  }
+  if (step === 'start' && video && preset && !process.env.SHORTEM_DEV_PRESET) {
+    try {
+      const f = await startFlow({ preset, video });
+      return flowOut(await waitFlow(f.sid, waitMs()));
+    } catch (e) {
+      // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
+      if (!(e instanceof ApiError && e.code === 'bad_request' && /단계 진행/.test(e.msg))) {
+        return { fail: { why: e instanceof ApiError ? (e.msg || e.code) : '서버에 연결하지 못했습니다', code: e.code || 'step', fix: '잠시 뒤 같은 단계를 다시 부르세요' } };
+      }
+    }
+  }
   if (step === 'wait') {
     const r = getRun(run_id) || activeRuns()[0];
     if (!r) return { hints: ['기다릴 작업이 없습니다 — shortem_make(step="status", sid=…) 로 보세요'] };
@@ -165,10 +156,6 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
     const devPath = process.env.SHORTEM_DEV_PRESET || '';   // 개발 PC: 빌리지 않고 엔진 폴더의 프리셋을 쓴다
     if (channel && !YT_CHANNEL.test(channel)) return { hints: ['채널 주소는 https://www.youtube.com/@이름 또는 /channel/UC… 꼴이어야 합니다(틱톡·인스타 채널은 아직 못 엽니다 — 영상 주소를 주세요)'] };
     if (video && !VIDEO.test(video)) return { hints: ['영상 주소는 유튜브 쇼츠·틱톡 영상·인스타 릴스 주소여야 합니다'] };
-    if (devPath && hybridLine(devPath)) {            // 개발 PC: 엔진 폴더 프리셋이 하이브리드면 빌리지 않고 그 입구로
-      if (!video) return { hints: ['이 프리셋은 연예인 쇼핑 쇼츠 주소로 만듭니다 — 고객에게 영상 주소를 받아 shortem_make(step="start", video=…) 로 부르세요'] };
-      return go(['hybrid', 'start', '--ref', video, '--version', hybridLine(devPath).version], { packFile: await packFileFor(preset) }, null);
-    }
     const args = ['start', '--preset', devPath || 'rented', '--pack', '1',
       ...(topic ? ['--topic', String(topic).slice(0, 200)] : []), ...(video ? ['--ref', video] : [])];
     return go(args, { packFile: await packFileFor(preset), env: channel ? { CALCOPY_ORIGINALS_FILE: originalsFile(channel) } : {} }, devPath ? null : preset);
@@ -178,12 +165,6 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
     if (!Number.isInteger(n) || n < 1) return { hints: ['고른 후보 번호 n 이 필요합니다'] };
     return go(['choose', sid, String(n)], { packFile: await packFileFor(preset) }, devPathOr(preset));
   }
-  if (isHybridSid(sid)) {   // 하이브리드 편 — 사인·이어 하기·상태(엔진 hybrid 입구). 이어 하기·사인은 기술 꾸러미가 필요해 다시 빌린다
-    if (step === 'approve') return go(['hybrid', 'approve', sid], { packFile: await packFileFor(preset) }, devPathOr(preset));
-    if (step === 'retry') return go(['hybrid', 'resume', sid], { packFile: await packFileFor(preset) }, devPathOr(preset));
-    if (step === 'status') return go(['hybrid', 'status', sid], { packFile: await packFileFor(preset) }, devPathOr(preset));
-    if (step === 'restyle') return { hints: ['이 프리셋은 다시 만들기를 아직 못 합니다 — 설정을 바꾼 뒤 같은 영상 주소로 새로 만들어 주세요'] };
-  }
   if (step === 'approve') return go(['approve', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
   if (step === 'restyle') return go(['restyle', sid, '--by', '고객'], { packFile: await packFileFor(preset) }, devPathOr(preset));
   if (step === 'status') return go(['status', sid], { packFile: await packFileFor(preset) });
@@ -191,16 +172,6 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
 }
 
 const devPathOr = p => (process.env.SHORTEM_DEV_PRESET ? null : p);
-
-// 빌린 프리셋 폴더의 line.json — 주인 = 엔진 트랙 channel/<slug>/preset/<틀>/line.json(사장님 10-21 재정비). 개발 PC 는 SHORTEM_DEV_PRESET 폴더
-export function hybridLine(presetPath) {
-  const rel = presetPath || process.env.SHORTEM_DEV_PRESET;
-  if (!rel) return null;
-  try {
-    const j = JSON.parse(fs.readFileSync(path.join(engineRoot(), ...String(rel).split('/'), 'line.json'), 'utf8'));
-    return j && j.line === 'hybrid' && j.version ? j : null;
-  } catch { return null; }
-}
 
 export function aiList(limit = 3) {
   return pending().slice(0, limit);
