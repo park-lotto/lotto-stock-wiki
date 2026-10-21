@@ -57,8 +57,12 @@ def length_report(job, ko_job=None):
         cd = sum(float(x) for x in (b.get("cap_durs") or [])) if b.get("cap_durs") else None
         est = edit_plan.narr_secs(b.get("narration") or "")
         ko_tts = None
-        if i < len(ko_beats) and ko_beats[i].get("tts_path") and Path(ko_beats[i]["tts_path"]).exists():
-            ko_tts = _dur(ko_beats[i]["tts_path"])
+        if i < len(ko_beats):
+            kb = ko_beats[i]
+            if kb.get("tts_path") and Path(kb["tts_path"]).exists():
+                ko_tts = _dur(kb["tts_path"])
+            elif kb.get("target_seconds"):      # 음성 파일이 정리됐으면 합성 때 실측해 적어 둔 target_seconds(round 0.1)
+                ko_tts = float(kb["target_seconds"])
         flag = ""
         if tts is not None and tgt and tts > tgt + 0.3:
             flag = "⚠️ 음성>컷 %.2f" % (tts - tgt); warn += 1

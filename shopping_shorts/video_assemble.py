@@ -1857,7 +1857,9 @@ def simple_caption_split(text, max_chars):
 # ── 일본어 자막 나누기(2026-10-21 관제 248) ──────────────────────────────────────
 # 일본어는 띄어쓰기가 없어 어절 규칙(_caption_segments)이 문장 통째를 한 덩어리로 보고, 그 뒤 _wrap_long 의
 # textwrap 이 19자에서 기계적으로 자른다("…使い道が多すぎ | てびっくり"). 그래서 ①문장부호 ②조사 뒤 ③가운데 순으로 나눈다.
-_JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "ね", "よ")
+# 2026-10-21 라이브 e2e(job 1e2c12ade064, 캡컷 21구절) 실측 수리: 문말 조사 ね·よ 는 "重ね|られ" 같은 동사 속 ね 를 조사로 봐 뺐다
+#   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
+_JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
 _JA_MIN_HEAD = 6      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
 _JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
 
@@ -1880,8 +1882,9 @@ def _ja_split_long(seg, width=None):
             continue
         # 조사처럼 보이는 가나가 낱말 속 글자일 수 있다("もう"의 も·"もの"의 の). 앞이 한자·가타카나거나
         # 뒤가 히라가나가 아닐 때만 조사 뒤로 본다("グッズを|一度"·"使い道が|多すぎ"·"のに|使い"는 통과).
-        before = seg[i - len(pt) - 1] if i - len(pt) - 1 >= 0 else ""
-        if before and _hira(before) and _hira(seg[i]):
+        # ★뒤 글자가 히라가나면 조사로 보지 않는다(2026-10-21 실측 수리 — 종전 '앞뒤 둘 다 히라가나' 조건은
+        #   "再利用で|きる"를 못 막았다). 결합 조사("のに"·"とは"·"ために")는 마지막 조사 뒤(한자·가타카나 앞)에서 잘린다.
+        if _hira(seg[i]):
             continue
         diff = abs(i - (n - i))
         if best is None or diff < best[0]:
@@ -1889,7 +1892,10 @@ def _ja_split_long(seg, width=None):
     if best is not None:
         cut = best[1]
     else:
-        cut = min(width, max(1, n // 2 + (n % 2)))
+        # 조사가 없으면 가운데 가까운 **글자 종류 경계**(히라가나↔한자·가타카나)에서 자른다 — "割れ|やすかった"처럼
+        # 낱말 한가운데를 가르던 고정 가운데 절단 대신(2026-10-21 실측). 경계도 없으면 가운데.
+        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if _hira(seg[i - 1]) != _hira(seg[i])]
+        cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
     return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
 
 

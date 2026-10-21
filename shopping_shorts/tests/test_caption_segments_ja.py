@@ -59,3 +59,30 @@ def test_wrap_long_manual_japanese_still_split():
 def test_korean_unchanged():
     k = "이거 진짜 완전 대박이라서 다들 놀랐어요"
     assert va._caption_segments(k) == ["이거 진짜 완전 대박이라서", "다들 놀랐어요"]
+
+
+# ── 2026-10-21 라이브 e2e(job 1e2c12ade064) 캡컷 21구절에서 잡은 어절 가운데 절단 4건 — 다시 나지 않는다 ──
+LIVE_LINES = [
+    "丈夫なコップとして再利用できるように変えたんです。",      # 종전 "再利用で|きる"
+    "しかも食器棚で重ねられなかった普通のカップとは違って、",  # 종전 "重ね|られなかった"
+    "場所ばかり取って割れやすかったストレスを、",             # 종전 "割れ|やすかった"(조사 없어 가운데 절단)
+    "スッキリ重ねられるようにして解消したんだとか。",         # 종전 "スッキリ重ね|られる"
+    "でも本当に衝撃的なのは、マスカルポーネがたっぷり詰まっていて味のためにリピ買いしちゃうこと。",
+]
+INTACT = ("再利用できる", "重ねられ", "割れやすかった", "ために")
+
+
+def test_live_lines_keep_words_intact():
+    for s in LIVE_LINES:
+        segs = va._caption_segments(s)
+        assert all(len(_bare(x)) <= va._CAP_WRAP for x in segs), (s, segs)
+        assert "".join(_bare(x) for x in segs) == _bare(s), (s, segs)
+        for w in INTACT:
+            if w in s:
+                assert any(w in x for x in segs), ("낱말이 갈렸다", w, segs)
+
+
+def test_particle_followed_by_hiragana_is_not_a_cut():
+    out = va._ja_split_long("丈夫なコップとして再利用できるように変えたんです")
+    assert out[0].endswith(("として", "できるように")) or "再利用できる" in "".join(out[:1]) or any("再利用できる" in x for x in out), out
+    assert not any(x.endswith("再利用で") for x in out), out
