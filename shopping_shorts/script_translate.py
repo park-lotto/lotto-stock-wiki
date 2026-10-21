@@ -21,6 +21,17 @@ _JA_CHARS = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
 _TOKEN_SKIP = re.compile(r"[\s、。！？!?,.…「」『』～~'\"()（）]")
 
 LANG_LABEL = {"en": "영어", "ja": "일본어", "ko": "한국어"}   # 화면 문구 공용
+# "글자로 치는 문자"(비교·중복 판정용 정규화) — 한글·숫자·라틴 + 가나·CJK 한자. 2026-10-21 라이브 e2e(job e582f0e0c9b4)에서
+#   edit_plan._narr_key 가 [^0-9A-Za-z가-힣] 만 남겨 일본어 줄 11개 중 10개가 빈 키("")가 되어 enforce_script_order 가
+#   칸 11 → 1 로 뭉갰다. 같은 정규식이 edit_plan(_narr_key·_dup_key)·scene_style(_word_key)·storyboard(_compact) 4벌이라
+#   여기 한 곳(letters_only)으로 모은다(0순위-B).
+LETTERS = "0-9A-Za-z가-힣぀-ヿ一-鿿"
+_NOT_LETTERS = re.compile("[^" + LETTERS + "]+")
+
+
+def letters_only(text):
+    """비교·중복 판정용 정규화 — 공백·문장부호를 걷어내고 글자(한글·숫자·라틴·가나·한자)만 남긴다."""
+    return _NOT_LETTERS.sub("", text or "")
 
 _PROMPT = """You are translating a Korean short-form shopping video narration into natural spoken American English.
 Translate EACH line separately and return exactly {n} lines in the same order.
@@ -40,6 +51,12 @@ Translate EACH line separately and return exactly {n} lines in the same order.
 Keep meaning, product name{product_hint}, numbers and calls to action.
 One output line per input line, never merge/split, never empty.
 Output Japanese only (no Korean, no romaji-only lines, no notes).
+
+Style rules (2026-10-21, checked against real scripts):
+- ONE consistent polite register across all lines: です・ます (〜なんです / 〜ますよ are fine). Sentence-final noun phrases (体言止め) are fine for punch. Never switch to casual imperatives (〜してね / 〜しろ); for calls to action use 〜してください(ね).
+- Do not add anything that is not in the Korean line (no 「紹介します」, no 「SNSで」, no extra adjectives or framing) and do not drop anything.
+- Keep product nouns faithful to the Korean words (e.g. 발난로 → 足元ヒーター, not a different product category). Keep numbers exactly; keep currency as written (원 → ウォン — never convert to 円).
+- Each line must read like one short, rhythmic voice-over line (no long compound sentences).
 
 Input lines (JSON array):
 {lines}

@@ -3022,8 +3022,9 @@ def _hook_opener(hook):
 
 
 def _dup_key(s):
-    """중복 판정용 정규화 — 따옴표·문장부호·공백을 걷어낸 글자만 남긴다."""
-    return re.sub(r"[^가-힣0-9A-Za-z]", "", s or "")
+    """중복 판정용 정규화 — 따옴표·문장부호·공백을 걷어낸 글자만 남긴다(글자의 정의는 script_translate.letters_only 한 곳)."""
+    from shopping_shorts.script_translate import letters_only
+    return letters_only(s)
 
 
 def _is_same_opening(opener, narration, prefix=8):
@@ -6461,8 +6462,11 @@ _SENT_SPLIT = re.compile(
 
 
 def _narr_key(s):
-    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다)."""
-    return re.sub(r"[^0-9A-Za-z가-힣]+", "", s or "")
+    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다).
+    ★글자의 정의는 script_translate.letters_only 한 곳(가나·한자 포함) — 2026-10-21 일본어 줄이 전부 빈 키가 되어
+      enforce_script_order 가 칸 11→1 로 뭉갠 라이브 사고(job e582f0e0c9b4)."""
+    from shopping_shorts.script_translate import letters_only
+    return letters_only(s)
 
 
 def script_has_lines(script):
