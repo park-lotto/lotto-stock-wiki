@@ -2,7 +2,7 @@
 """클로드형 제작 지시 창구 — POST /api/claude/step (볼케이노형, 관제 234 2026-10-21 사장님 "볼케이노처럼 단계별로 착착").
 
 노하우(단계 진행표·판정 질문·반려 규칙)는 엔진 hybrid/flow.py 한 곳 — 이 파일은 관문·서명·기록만 한다(판단 없음).
-    요청 {preset, step: start|go|approve|revise, source{url}, payload, measure{}, replies{}, revise}
+    요청 {preset, step: start|go|approve|revise|retry, source{url}, payload, measure{}, replies{}, revise}
     응답 {sid, status, message, stage, do, review, traps, reject, wait, video, next_payload, then_call_with}
 next_payload = 서버 서명(HMAC) 상태 — 회원 PC 는 그대로 되돌린다. 한 글자라도 다르면 400, 옛 payload 를 다시 보내면 stale 로 거절한다.
 서버에 남기는 것 = 요약만(sid·판·단계·원본 id·쿠팡 번호·검사 결과). 영상·대본 본문·키는 받지도 남기지도 않는다(서버 부담 0 원칙).
@@ -116,7 +116,7 @@ def step(ctx: dict, body: dict, store=None) -> dict:
             raise CP.PortalError("bad_request", "그 작업을 찾을 수 없습니다")
         if seq != int(row["seq"]):
             raise CP.PortalError("stale", "옛 진행 상태입니다 — 가장 최근 next_payload 로 이어 주세요")
-    user = {"approve": kind == "approve", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
+    user = {"approve": kind == "approve", "retry": kind == "retry", "revise": str(body.get("revise") or "")[:500] if kind == "revise" else ""}
     res = flow.step(st, body.get("measure") or {}, body.get("replies") or {}, user)
     st2 = res.pop("state")
     seq2 = seq + 1

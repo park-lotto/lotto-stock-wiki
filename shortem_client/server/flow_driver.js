@@ -99,7 +99,7 @@ async function absorb(f, res) {
   if (res.status === 'review' || res.status === 'reject') { f.asks = (res.review || []).map(rv => postReview(f, rv)); save(f); return 'ask'; }
   if (res.status === 'wait_user') { f.wait = res.wait; f.approved = false; save(f); return 'user'; }   // 새 사인 요청(길이 고친 뒤 다시 사인 등) — 앞 사인 표시를 지운다(10-21 실측: 두 번째 사인을 안 묻고 wait 만 돌았다)
   if (res.status === 'done') { f.video = res.video; f.title = res.title; f.note = res.note; save(f); return 'end'; }
-  f.fail = { why: res.why || res.message || '멈췄습니다', fix: res.fix || '' };
+  f.fail = { why: res.why || res.message || '멈췄습니다', fix: res.fix || '', retry_ok: !!res.retry_ok, server_stop: true };
   save(f);
   return 'end';
 }
@@ -129,6 +129,8 @@ async function pump(f) {
         const replies = collect(f);
         if (!replies) break;                        // 회원 Claude 답을 기다린다
         res = await send(f, { step: 'go', replies });
+      } else if (f.status === 'retry') {
+        res = await send(f, { step: 'retry' });
       } else if (f.approved === true && f.status === 'wait_user') {
         f.approved = 'sent';
         res = await send(f, { step: 'approve' });
@@ -156,6 +158,7 @@ export function approveFlow(sid) { const f = loadFlow(sid); if (!f) return null;
 export function retryFlow(sid) {
   const f = loadFlow(sid); if (!f) return null;
   if (f.status === 'error') { f.fail = null; f.status = f.do ? 'execute' : (f.asks ? 'review' : f.status); }
+  else if (f.fail && f.fail.server_stop && f.fail.retry_ok) { f.fail = null; f.status = 'retry'; }   // 서버가 '다시 시도하면 이어 간다'고 한 멈춤(받기 실패 등)
   f.running = pump(f);
   return f;
 }

@@ -22,8 +22,11 @@ def main():
     ap.add_argument("--port", type=int, default=18849)
     a = ap.parse_args()
     d = Path(a.dir); d.mkdir(parents=True, exist_ok=True)
+    sf = d / "secret.txt"                            # 서버를 다시 켜도 같은 비밀값 — 진행 중 편의 서명 payload 가 이어지게(이어 가기 시험)
+    if not sf.exists():
+        sf.write_text("local-test-" + os.urandom(8).hex(), encoding="utf-8")
     os.environ.update(CLAUDE_CHANNEL_ROOT=str(Path(a.engine).resolve()), CLAUDE_FLOW_ENGINE=str(Path(a.engine).resolve()),
-                      CLAUDE_STORE_DIR=str(d / "store"), CLAUDE_LICENSE_SECRET="local-test-" + os.urandom(8).hex())
+                      CLAUDE_STORE_DIR=str(d / "store"), CLAUDE_LICENSE_SECRET=sf.read_text(encoding="utf-8").strip())
     sys.path.insert(0, str(ROOT))
     from shopping_shorts import app as A, claude_portal as cp
     from shopping_shorts.store import Store
@@ -31,8 +34,8 @@ def main():
     st = Store(A.DB_PATH)
     for k, v in (("claude_portal_enabled", "1"), ("claude_assets_enabled", "1")):
         st.set_setting(k, v)
-    key = cp.issue_license(1, st)["key"]
-    (d / "license.key").write_text(key, encoding="utf-8")
+    if not (d / "license.key").exists():
+        (d / "license.key").write_text(cp.issue_license(1, st)["key"], encoding="utf-8")
     print(f"[local_server] http://127.0.0.1:{a.port} 프리셋 {len(cp.presets(st))}개 · 키 파일 {d / 'license.key'}", flush=True)
     import uvicorn
     uvicorn.run(A.app, host="127.0.0.1", port=a.port, log_level="warning")
