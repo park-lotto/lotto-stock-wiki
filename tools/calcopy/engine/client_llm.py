@@ -25,7 +25,8 @@ from pathlib import Path
 
 POLL_S = 0.5
 TIMEOUT_S = float(os.environ.get("SHORTEM_LLM_TIMEOUT") or 3600)
-RETRIES = 2                      # 모양이 틀린 답을 다시 묻는 횟수
+PROMPT_MAX = 40000               # 질문 하나(지시+글 파트) 최대 글자 — 실측 최대: 대본 1.7만 · 같은 제품 판정 1.8만(10-21)
+RETRIES = 2                     # 모양이 틀린 답을 다시 묻는 횟수
 VIDEO_FRAMES = 12                # 영상 파트 → 장면 그림 최대 장수
 # tag 머리 → 권장 등급. 사장님 10-19: "하이쿠·소넷은 완전 단순하고 품질에 영향 없는 것만, 품질에 닿는 건 오푸스가 거의 다".
 #   그래서 기본 = opus. 하이쿠는 결과물에 안 닿는다고 이름을 대고 적은 것만(지금은 없다 — 넣을 때 왜 품질 무관인지 같이 적는다).
@@ -134,6 +135,10 @@ def ask(parts: list, prompt: str, tag: str = "", models: tuple | None = None) ->
     d = q / rid
     d.mkdir()
     items = _write_parts(parts, d)
+    size = len(prompt) + sum(len(x.get("text") or "") for x in items)
+    if size > PROMPT_MAX:            # 너무 긴 질문은 회원 Claude 쪽에서 잘리거나 못 받는다 — 조용히 기다리지 말고 바로 멈춘다(10-21 원본 후보 제목 4.2만 자로 40분 멈춤)
+        (d / "done").write_text("", encoding="utf-8")
+        return None, f"prompt_too_long: {tag} 질문 {size}자 > {PROMPT_MAX}자 — 부르는 쪽이 나눠 물어야 한다"
     req = {"id": rid, "tag": tag, "tier": tier_of(tag), "prompt": prompt, "parts": items,
            "answer": "answer.json 에 JSON 객체 하나(지시문이 정한 모양 그대로)", "made_at": time.time()}
     tmp = d / "request.json.tmp"

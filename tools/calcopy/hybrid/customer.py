@@ -192,6 +192,10 @@ ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다(제작 순서 02 
 JSON 하나: {"ids": ["유튜브 id", …]}"""
 
 
+TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자)
+ORIGIN_TRY = 16       # 자막 대조할 후보 수(자막만 받는다 — 편당 몇 초)
+
+
 def _channels_of(found: list[dict], r: dict) -> list[str]:
     """검색 결과 중 출처 글자·채널 단서와 이름이 맞는 채널 id — 맞는 것부터."""
     hint = _norm((r.get("source_label") or "").replace("출처", "") + (r.get("channel_hint") or ""))
@@ -228,7 +232,10 @@ def st_origin(P: Piece):
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
     qs = ([label] if label else []) + [q for q in r.get("queries") or [] if q] + ([r["channel_hint"]] if r.get("channel_hint") else [])
     found = _search(qs)
+    celeb = _norm(r.get("celeb") or "")
     cands = [c for c in found if c["id"] != B.get("id") and (c.get("dur") or 0) > (B.get("dur") or 0) + 20]
+    # 연예인 이름이 제목에 있는 검색 결과가 앞(10-21 선우용여: 원본 'What's in 용여 가방'이 검색에 나왔는데 채널 목록 후보에 밀려 대조도 못 했다)
+    cands.sort(key=lambda c: (celeb[-2:] not in _norm(c.get("title") or "")) if celeb else 0)
     # 제작순서 02 §3 — 본인 유튜브면 **채널 영상 목록**에서 찾는다(10-21 실측: 이미도 원본 '[미도주방] 찐 살림템'은 검색 15편 어디에도 없었다)
     ch_ids = _channels_of(found, r)
     titles = []
@@ -236,18 +243,27 @@ def st_origin(P: Piece):
         lr = ytdlp(["--flat-playlist", "-J", "--playlist-end", "300", f"https://www.youtube.com/channel/{cid}/videos"], timeout=240)
         if lr.returncode == 0 and lr.stdout.strip():
             titles += [{"id": e["id"], "title": e.get("title"), "dur": e.get("duration")} for e in json.loads(lr.stdout).get("entries") or [] if e.get("id")]
-    if titles:
-        pick = ask("origin_titles", ORIGIN_TITLES + f"\n\n벤치 제목: {B.get('title')}\n제품 낱말: {r.get('product_words')}\n채널 영상 목록:\n" +
-                   json.dumps(titles, ensure_ascii=False), need=("ids",))
-        ids = [i for i in pick.get("ids") or [] if any(t["id"] == i for t in titles)][:8]
-        cands = [t for t in titles if t["id"] in ids] + [c for c in cands if c["id"] not in ids]
+    ids: list[str] = []
+    for k in range(0, len(titles), TITLE_CHUNK):     # 한 묶음씩 '아이디<TAB>제목' 한 줄 — 10-21 300편 통째 JSON = 4.2만 자 질문
+        part = titles[k:k + TITLE_CHUNK]
+        pick = ask("origin_titles", ORIGIN_TITLES + f"\n\n벤치 제목: {B.get('title')}\n제품 낱말: {r.get('product_words')}\n채널 영상 목록(아이디\t제목):\n" +
+                   "\n".join(f"{t['id']}\t{str(t.get('title') or '')[:80]}" for t in part), need=("ids",))
+        ids += [i for i in pick.get("ids") or [] if any(t["id"] == i for t in part) and i not in ids][:8]
+    picked = [t for t in titles if t["id"] in ids]
+    # 검색 후보와 채널 목록 후보를 번갈아 — 어느 한쪽이 대조 자리를 다 차지하지 않게
+    mixed, seen = [], set()
+    for k in range(max(len(cands), len(picked))):
+        for c in (cands[k] if k < len(cands) else None, picked[k] if k < len(picked) else None):
+            if c and c["id"] not in seen:
+                seen.add(c["id"]); mixed.append(c)
+    cands = mixed
     od = P.W / "origin"; od.mkdir(exist_ok=True)
     from tools.calcopy.yanshot.common import vtt_words
     scored = []
-    for c in cands[:10]:
-        ytdlp(["--skip-download", "--write-auto-subs", "--sub-langs", "ko", "-o", str(od / f"{c['id']}.%(ext)s"), f"https://www.youtube.com/watch?v={c['id']}"],
+    for c in cands[:ORIGIN_TRY]:
+        ytdlp(["--skip-download", "--write-auto-subs", "--sub-langs", "ko-orig,ko", "-o", str(od / f"{c['id']}.%(ext)s"), f"https://www.youtube.com/watch?v={c['id']}"],
               timeout=180)
-        vtt = next(od.glob(f"{c['id']}*.ko.vtt"), None)
+        vtt = next(iter(sorted(od.glob(f"{c['id']}*.ko-orig.vtt")) + sorted(od.glob(f"{c['id']}*.ko.vtt"))), None)   # 원래 말(ko-orig) 먼저
         if not vtt:
             continue
         m = fingerprint(lines, vtt_words(vtt))
