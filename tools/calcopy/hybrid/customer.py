@@ -73,13 +73,16 @@ class Piece:
 # ── AI 요청(회원 Claude) ────────────────────────────────────────────────
 def ask(tag: str, prompt: str, parts: list | None = None, need: tuple = ()) -> dict:
     from tools.calcopy.engine import client_llm
-    r, why = client_llm.ask(parts or [], prompt, tag)
-    if r is None:
-        raise StageError(f"AI 요청 실패({tag}): {why}")
-    miss = [k for k in need if k not in r]
-    if miss:
-        raise StageError(f"AI 답에 칸이 없다({tag}): {miss}")
-    return r
+    note = ""
+    for _ in range(ASK_RETRY + 1):      # 답이 깨지거나 칸이 빠지면 다시 묻는다(10-21 선우용여: 계획 검수 답 JSON 이 깨져 단계가 통째로 멈춤)
+        r, why = client_llm.ask(parts or [], prompt + note, tag)
+        if r is None:
+            raise StageError(f"AI 요청 실패({tag}): {why}")
+        miss = [k for k in need if k not in r]
+        if not miss:
+            return r
+        note = f"\n\n(지난 답이 JSON 객체 하나가 아니었거나 칸 {miss} 이 빠졌다 — 지시한 모양의 JSON 객체 하나만, 글자 안 따옴표는 이스케이프)"
+    raise StageError(f"AI 답에 칸이 없다({tag}): {miss}")
 
 
 def img(p: Path) -> tuple:
@@ -197,6 +200,7 @@ ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다(제작 순서 02 
 JSON 하나: {"ids": ["유튜브 id", …]}"""
 
 
+ASK_RETRY = 2          # AI 답이 깨지거나 칸이 빠졌을 때 다시 묻는 횟수
 PLAN_ROUNDS = 8        # 계획 검수 최대 횟수 — 집 PC yanshot/plan.VERIFY_ROUNDS 와 같다(자막 많은 방송 원본은 4번으로 모자랐다, 10-21 선우용여)
 LOOK_FIXES = 2         # 완성본 눈 검수 실패 시 재료 고쳐 다시 렌더 횟수
 TITLE_CHUNK = 120     # 원본 후보 제목 한 묶음(질문 하나 약 6천 자)
