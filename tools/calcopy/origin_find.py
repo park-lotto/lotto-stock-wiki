@@ -44,6 +44,7 @@ FRAMES = (0.15, 0.35, 0.55, 0.75)
 # 천천히 받기(사장님 10-21 "천천히 받아") — 10-21 새벽 후보 메타를 6개씩 동시에 수백 번 부르다 유튜브 'not a bot' 회선 차단(쇼츠만, 일반 영상은 됨)
 YT_SLOW = ["--sleep-requests", "2", "--sleep-interval", "4", "--max-sleep-interval", "10"]
 _YT_SEQ = [0]
+BOT_HIT: list = []
 
 
 def yt_auth(url: str) -> list:
@@ -52,7 +53,8 @@ def yt_auth(url: str) -> list:
     if "youtube.com" not in url and "youtu.be" not in url:
         return []
     from shopping_shorts.media_download import _firefox_profile_paths
-    live = [p for p in _firefox_profile_paths("yt") if _yt_logged_in(p)]
+    only = [x for x in os.environ.get("ORIGIN_YT_ONLY", "").split(",") if x]   # 봇 확인 걸린 계정 빼기(예: ORIGIN_YT_ONLY=yt2)
+    live = [p for p in _firefox_profile_paths("yt") if _yt_logged_in(p) and (not only or Path(p).name.split(".")[-1] in only)]
     args = ["--js-runtimes", "node", "--remote-components", "ejs:github"]
     if not live:
         return args
@@ -146,7 +148,10 @@ def meta(url: str) -> dict:
     line = (r.stdout.strip().splitlines() or [""])[-1]
     f = line.split("\t")
     if len(f) < 9:
-        return {"why": (r.stderr.strip().splitlines() or ["?"])[-1][:160]}
+        why = (r.stderr.strip().splitlines() or ["?"])[-1][:160]
+        if "not a bot" in r.stderr and ("youtube.com" in url or "youtu.be" in url):
+            BOT_HIT.append(url)   # 유튜브 봇 확인 = 그 계정 지금 걸림 → run 이 바로 멈춘다(사장님 10-21 '천천히')
+        return {"why": why}
     num = lambda x: int(float(x)) if re.fullmatch(r"[\d.]+", x or "") else None  # noqa: E731
     return {"title": f[1], "channel": f[2], "channel_id": f[3], "subs": num(f[4]), "views": num(f[5]),
             "date": f[6] if f[6] != "NA" else None, "dur": num(f[7]), "channel_url": f[8] if f[8] != "NA" else None,
@@ -418,6 +423,9 @@ def cmd_run(n: int):
             L["queue"] = [x for x in L["queue"] if x != u]
             save(L)
             print("  →", r)
+            if BOT_HIT:
+                print(f"[봇확인] 유튜브가 봇 확인을 띄움({len(BOT_HIT)}건, 첫 {BOT_HIT[0]}) — 여기서 멈춘다. 계정을 쉬게 하거나 바꾼 뒤 다시")
+                break
     cmd_report()
 
 
