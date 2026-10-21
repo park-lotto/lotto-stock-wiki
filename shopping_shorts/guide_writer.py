@@ -146,12 +146,11 @@ def check(slots, style, scene_text, banned_src="", segs=None):
                 why.append("화면 설명에 없는 숫자 %s — 빼라" % num)
     if any(not s.get("ids") for s in body):
         why.append("장면 번호(ids)가 빈 칸이 있다")
-    if segs:      # 장면 초 — storyboard 라이브 규칙과 같다: 조각 길이 합 × 1.2 ≥ 글자 수 ÷ 7초(모자라면 화면에 '짧음'이 뜬다)
-        for i, s in enumerate(slots):
-            have = sum(float(segs.get(c) or 0) for c in s.get("ids") or [])
-            need = len(ns(s.get("line"))) / 7.0
-            if have * 1.2 < need:
-                why.append("%d번째 칸(%s) 장면이 모자람 — 문장 %.1f초인데 장면 %.1f초, 조각을 더 깔아라" % (i + 1, s.get("slot"), need, have))
+    if segs:      # 장면 초 — 판정 주인은 storyboard.slot_checks(화면 '짧음'과 같은 식·같은 말속도 함수). 여기서 따로 계산하지 않는다
+        from shopping_shorts.storyboard import slot_checks
+        for i, (s, c) in enumerate(zip(slots, slot_checks(slots, segs))):
+            if c["short"]:
+                why.append("%d번째 칸(%s) 장면이 모자람 — 문장 %.1f초인데 장면 %.1f초, 조각을 더 깔아라" % (i + 1, s.get("slot"), c["need"], c["have"]))
     return why
 
 

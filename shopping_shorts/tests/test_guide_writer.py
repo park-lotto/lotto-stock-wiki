@@ -2,7 +2,7 @@
 from shopping_shorts import guide_writer as gw
 from shopping_shorts import storyboard as sb
 
-SEGS = {"a1": 3.0, "a2": 3.0, "a3": 3.0, "a4": 3.0, "a5": 3.0, "a6": 3.0, "a7": 3.0, "a8": 3.0, "a9": 3.0}
+SEGS = {"a%d" % i: 5.0 for i in range(1, 10)}
 TEXTS = {k: "창문 유리에 롤러로 페인트를 바르자 뿌옇게 변한다" for k in SEGS}
 
 
