@@ -678,11 +678,45 @@ def st_script(P: Piece, version: str, fail: str = ""):
         bad_caps = _caps_vs_tts(S)
         if bad_caps:
             a = {**a, "ok": False, "caps_vs_tts": bad_caps}
+        bad_heard = _orig_heard_bad(P, S)
+        if bad_heard:
+            a = {**a, "ok": False, "orig_heard": bad_heard}
         if a.get("ok"):
             P.mark("script", version=version, tries=attempt + 1)
             return S
         ctx += "\n\n## 대본 검사에서 걸린 것(고쳐라)\n" + json.dumps(a, ensure_ascii=False)[:4000]
     raise StageError("대본 검사를 세 번 통과하지 못했다")
+
+
+HEARD_MIN = 0.6       # 원음 줄 자막 ↔ 그 구간 받아쓰기 닮음 최소(10-21 선우용여: 맞는 줄 0.8+, 어긋난 줄 0.3~0.5)
+
+
+def _orig_heard_bad(P: Piece, S: dict) -> list[str]:
+    """원음 줄마다 그 구간을 **실제로 받아써** 자막과 대조 — 집 PC 워커가 귀로 하던 확인(10-21 선우용여: 자막 '나이 드시면 눈곱까지 껴'
+    구간에 '눈곱까지 껴줘'만 들림 / 다른 출연자 말이 섞임). 다르면 앞뒤 3초 받아쓰기(파일 초)를 붙여 대본이 구간을 다시 잡게 한다."""
+    out = []
+    src_of = {Path(f).name: Path(f) for f in (P.s.get("origin") or {}).get("files") or []}
+    ad = P.W / "asr"; ad.mkdir(exist_ok=True)
+    for l in S.get("lines") or []:
+        if l.get("kind") != "orig" or not l.get("spans"):
+            continue
+        src = src_of.get(str(l.get("src") or ""))
+        if not src:
+            continue
+        a, b = float(l["spans"][0][0]), float(l["spans"][-1][1])
+        cap = _norm("".join(str(c[0]) for c in l.get("caps_rel") or []))
+        w = ad / f"chk_{l['id']}.wav"
+        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.2f}", "-to", f"{b:.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(w)])
+        heard = " ".join(s["text"] for s in whisper(w))
+        r = difflib.SequenceMatcher(None, cap, _norm(heard)).ratio() if cap else 1.0
+        if r < HEARD_MIN:
+            wide = ad / f"chk_{l['id']}_wide.wav"
+            w0 = max(0.0, a - 3)
+            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{w0:.2f}", "-to", f"{b + 3:.2f}", "-i", str(src), "-ac", "1", "-ar", "16000", str(wide)])
+            near = " / ".join(f"{w0 + float(s['t0']):.2f}~{w0 + float(s['t1']):.2f} {s['text']}" for s in whisper(wide))
+            out.append(f"{l['id']}: 자막 '{' '.join(str(c[0]) for c in l.get('caps_rel') or [])}' 인데 {a:.2f}~{b:.2f}초에 실제로 들리는 말은 '{heard}'(닮음 {r:.2f}). "
+                       f"앞뒤 받아쓰기(파일 초): {near} — 구간을 그 말이 들리는 자리로 옮기고, 다른 출연자 말이 섞이면 빼라")
+    return out
 
 
 def _caps_vs_tts(S: dict) -> list[str]:
