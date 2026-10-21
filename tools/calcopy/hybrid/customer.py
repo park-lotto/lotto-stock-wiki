@@ -726,7 +726,7 @@ def _caps_vs_tts(S: dict) -> list[str]:
     for l in S.get("lines") or []:
         if l.get("kind") != "tts" or not l.get("caps"):
             continue
-        cap = _norm("".join(str(c.get("text") or "") for c in l["caps"]))
+        cap = _norm("".join(str((c.get("text") if isinstance(c, dict) else c) or "") for c in l["caps"]))  # 집 PC 옛 대본은 caps 가 글 목록
         shown, say = _norm(str(l.get("text") or "")), _norm(str(l.get("tts") or ""))
         if shown and cap != shown:
             out.append(f"{l.get('id')}: 자막 조각을 이으면 '{cap}' — 화면 글(text) '{shown}' 과 다르다")
