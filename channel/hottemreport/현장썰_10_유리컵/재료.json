@@ -1,0 +1,64 @@
+{
+ "_note": "현장썰 10편 화면 소스. 시각은 1편 make_render.timeline(현장썰_run.py). files.pp = 무음 칸 자리표시.",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰_10_유리컵/src",
+ "files": {
+  "jd": "tt_7593975023707213087.mp4",
+  "ad": "tt_7565119818383346962.mp4",
+  "pp": "tt_7593975023707213087.mp4"
+ },
+ "voice_src": {
+  "jd": "jd_voice.wav"
+ },
+ "scene_cuts": {
+  "jd": [
+   10.567
+  ],
+  "ad": [
+   1.667,
+   4.433,
+   5.483,
+   8.4
+  ],
+  "pp": [
+   10.567
+  ],
+  "how": "ffmpeg select scene>0.25 실측 · jd 10.567 = 잔을 카메라 앞에 들이민 화면 변화(진짜 컷 아님) · ad 4.43·5.48 = 떨어지는 잔 흔들림"
+ },
+ "overlay": "jd 0.25초 시트에서 번인 글자·워터마크 없음 · ad 위 'FOUND THIS AMAZING GLASS…'(y≈280~420)·가운데 'Let's test it with my friend!'(y≈400~560) → src_crop [0,600,1080,1320] 로 밖",
+ "blocks": {
+  "N1": {
+   "cont": true,
+   "why": "jd 4.55~9.35: 잔을 들었다 탁자에 떨어뜨림(5.5~6.5, 통 튐) → 꾹 눌러 찌그러뜨리며 웃음 — 첫 프레임 = 잔 든 손"
+  },
+  "O1": {
+   "src": "jd",
+   "why": "'They're silicone, right? So they look like real glasses' — 두 잔을 카메라 앞에 들어 보임"
+  },
+  "N2": {
+   "src": "ad",
+   "ss": 3.0,
+   "src_crop": [
+    0,
+    600,
+    1080,
+    1320
+   ],
+   "why": "다른 사람(@adrianwidjy 친구)이 나무 바닥에 떨어뜨림(3.5~5.5) — 멀쩡히 굴러감"
+  },
+  "O2": {
+   "src": "jd",
+   "why": "잔을 어깨 뒤로 던짐(17.75~18.0) + 'throw them, they're not gonna break' — B13: O1 끝 13.55 와 4초 이상"
+  }
+ },
+ "consts": {
+  "LUFS_FINAL": -14.0,
+  "LUFS_NARR": -13.8,
+  "LIMIT": 0.8,
+  "TAIL": 0.4,
+  "_why": "브리프 음량 −14 LUFS·피크 ≤ −1.5 dBFS(LIMIT 0.8 = −1.94 dB) · GAINS = −16.0(나레 −13.8 보다 2.2 아래, 5편과 같은 간격) − 다듬은 원음(jd_voice.wav) 구간 LUFS [−29.4, −29.5]",
+  "GAINS": [
+   13.4,
+   13.5
+  ]
+ }
+}
