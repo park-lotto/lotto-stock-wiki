@@ -288,7 +288,25 @@ def face_crop(src: Path, t: float, ar: float) -> list[int]:
     return [x, 0, cw, ch]
 
 
-def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None):
+BLUR_SIGMA = 25.0     # 가림 흐림 세기 = 제품 가림막 흐림의 최저값(deco_frame.blur_sigma 25~80)과 같은 gblur
+
+
+def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
+    """원본에 박힌 자막·글 자리를 흐린다(원본 픽셀 좌표, 잘라 내기 전). regs = [[x, y, w, h(, a, b)], …], a~b = 원본 초(없으면 늘).
+    10-22 사장님 "자막을 가리려고 확대를 많이 해서 너무 커지거나 가운데로 안 간다 → 가림막 흐림으로": 잘라서 피하던 걸 흐림으로 바꾼다.
+    흐림은 제품 렌더(video_assemble)와 같은 gblur — 다만 여기는 원본 좌표라 마스크 그림 대신 사각 영역(crop→gblur→overlay)."""
+    out = []
+    for r in regs or []:
+        x, y, w, h = (int(v) for v in r[:4])
+        a, b = (float(r[4]), float(r[5])) if len(r) >= 6 else (None, None)
+        if a is not None and (b <= ss or a >= ss + dur):
+            continue                                           # 이 컷 구간과 안 겹침
+        en = f":enable='between(t,{max(0.0, a - ss):.3f},{b - ss:.3f})'" if a is not None else ""
+        out.append(f"split[bo][bi];[bi]crop={w}:{h}:{x}:{y},gblur=sigma={sigma}[bb];[bo][bb]overlay={x}:{y}{en}")
+    return ",".join(out)
+
+
+def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None):
     ww, wh = win
     if src.suffix.lower() in IMG_EXT:
         from tools.calcopy import narr_video as nv
@@ -303,9 +321,11 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
              "-preset", "veryfast", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", out])
         return
     x, y, cw, ch = crop
-    vf = f"crop={cw}:{ch}:{x}:{y},scale={ww}:{wh}:flags=lanczos,setsar=1,fps={FPS}"
+    bl = blur_vf(blur, ss, n / FPS)
+    pre = bl + "," if bl else ""
+    vf = f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww}:{wh}:flags=lanczos,setsar=1,fps={FPS}"
     if push:
-        vf = (f"crop={cw}:{ch}:{x}:{y},scale={ww * 2}:{wh * 2}:flags=lanczos,fps={FPS},"
+        vf = (f"{pre}crop={cw}:{ch}:{x}:{y},scale={ww * 2}:{wh * 2}:flags=lanczos,fps={FPS},"
               f"zoompan=z='1+{push}*on/{max(1, n)}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={ww}x{wh}:fps={FPS},setsar=1")
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", src, "-an", "-vf", vf, "-frames:v", n, "-c:v", "libx264", "-crf", "16",
          "-preset", "veryfast", "-pix_fmt", "yuv420p", out])
@@ -321,12 +341,19 @@ def render_window(T: dict, M: dict, st: dict, R: Path) -> Path:
         c["frames"] = n
         src = src_dir / c["src"]
         crop = c.get("crop", "face")
-        if crop == "face":
-            crop = face_crop(src, c["ss"] + min(0.5, c["dur"] / 2), ww / wh)
+        if src.suffix.lower() in IMG_EXT and not (isinstance(crop, list) and len(crop) == 4):
+            # 사진 재료(쿠팡 상품 사진)는 얼굴 크롭·시작 초가 없다 — 창 비율로 가운데를 자른다(10-22 강주은: 사진 컷에 ss·crop 없음 → KeyError 'ss' 로 렌더 멈춤)
+            iw, ih = probe(src)[:2]
+            cw = min(iw, round(ih * ww / wh)); chh = min(ih, round(cw * wh / ww))
+            crop = [(iw - cw) // 2, (ih - chh) // 2, cw, chh]
+            c["crop_used"] = crop
+        elif crop == "face":
+            crop = face_crop(src, float(c.get("ss") or 0.0) + min(0.5, c["dur"] / 2), ww / wh)
             c["crop_used"] = crop
         push = (st.get("cuts") or {}).get("push_orig" if c["kind"] == "orig" else "push_tts", 0.0)
         p = parts / f"c{k:02d}.mp4"
-        clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"))
+        clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
+             blur=(M.get("blur") or {}).get(c["src"]))
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     win = R / "window.mp4"

@@ -1156,8 +1156,11 @@ def ph_render_got(st, m, rp, u):
         if tl.get("max") and float(tl["max"]) > cap:
             st["log"].append(f"배속 {tl['max']} > {cap - 0.01}")
         return {"goto": "check"}
+    if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
+        raise _Stop("영상을 만들다 멈췄습니다", str(r["error"])[:200], retry="render")
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
-        raise _Stop("영상을 만들다 멈췄습니다", str(r["error"])[:200])
+        st["tries"]["render_err"] = st["tries"].get("render_err", 0) + 1   # 처음 보는 렌더 오류도 재료로 한 번 고쳐 본다(10-22 강주은: 사진 컷 ss 없음 KeyError 로 곧장 멈춤)
+        why = f"렌더 오류: {str(r['error'])[:300]} — 재료.json 컷의 빠진 칸(src·ss·crop)·형식을 바로잡아라"
     _tries(st, "render", LIMITS["render"])
     return {"review": [_fix_review(st, why, None, f"render_fix_{st['version']}")], "then": "render_fix"}
 

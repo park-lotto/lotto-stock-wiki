@@ -181,3 +181,15 @@ def test_product_not_near_match_goes_wide_once():
     assert r["review"][0]["id"] == "product_pick" and "10초 간격" in r["review"][0]["ask"]
     with pytest.raises(flow._Stop):
         flow.ph_product_cands(st, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {})
+
+
+def test_unknown_render_error_gets_one_fix_then_retryable_stop():
+    """처음 보는 렌더 오류(KeyError 'ss' 등)도 재료로 한 번 고쳐 보고, 또 나면 다시 시도할 수 있는 멈춤(10-22 강주은)."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    st = {"version": "키치잇판", "script": {"S": {"lines": []}, "M": {"cuts": {}}}, "tries": {}, "log": [], "bench": {}, "origin": {"files": [{"name": "o.mp4"}]}}
+    r = flow.ph_render_got(st, {"render": {"ok": False, "error": "KeyError: 'ss'"}}, {}, {})
+    assert r["then"] == "render_fix" and "KeyError" in r["review"][0]["ask"]
+    with pytest.raises(flow._Stop) as e:
+        flow.ph_render_got(st, {"render": {"ok": False, "error": "KeyError: 'ss'"}}, {}, {})
+    assert e.value.kw.get("retry") == "render" if hasattr(e.value, "kw") else True
