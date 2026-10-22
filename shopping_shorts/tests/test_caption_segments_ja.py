@@ -44,7 +44,7 @@ def test_no_short_tail():
 def test_wrap_long_cuts_after_particle():
     line = "値段は安いのに使い道が多すぎてびっくりしました"
     out = va._wrap_long([line])
-    assert len(out) == 2, out
+    assert len(out) >= 2 and all(len(x) <= va._JA_CAP_WRAP for x in out), out   # 관제 254: 일본어 한 줄 10자
     assert "".join(out) == line
     assert out[0][-1] in "はがをにでとものへ" or out[0].endswith(("から", "まで", "より", "ね", "よ")), out
     assert out[0] != line[:va._CAP_WRAP]          # textwrap 19자 기계 절단이 아니다
@@ -53,7 +53,7 @@ def test_wrap_long_cuts_after_particle():
 def test_wrap_long_manual_japanese_still_split():
     line = "値段は安いのに使い道が多すぎてびっくりしました"
     out = va._wrap_long([line], manual=True)
-    assert len(out) == 2 and all(len(x) <= va._CAP_WRAP for x in out)
+    assert len(out) >= 2 and all(len(x) <= va._JA_CAP_WRAP for x in out)   # 관제 254
 
 
 def test_korean_unchanged():

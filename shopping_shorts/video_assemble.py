@@ -1861,10 +1861,10 @@ def simple_caption_split(text, max_chars):
 #   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
 _JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
 _JA_MIN_HEAD = 3      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
-_JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+_JA_MIN_TAIL = 3      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
 # ★일본어 한 줄 상한(관제 254, 2026-10-22): 19자는 띄어쓰기 있는 한국어 기준이다. 일본어는 공백 없이 전각 글자만이라
 #   19자가 자막 칸에 안 들어가 편집기가 글자를 줄였다(5자~19자 줄마다 크기가 달라 보임, 실측 job 1e2c12ade064).
-_JA_CAP_WRAP = 12
+_JA_CAP_WRAP = 10   # 10-22 이 PC 렌더 실측: 템플릿 없음 자막 칸에 전각 11자부터 오른쪽이 잘렸다
 
 
 def _ja_split_long(seg, width=None):
@@ -1913,6 +1913,9 @@ def _ja_split_long(seg, width=None):
         if not cands:
             # て형 뒤(보조동사 앞) — "アイロンがけして|くれること"(관제 254). 가운데보다 낫다
             cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] in "てで" and _hira(seg[i - 2])]
+        if not cands:
+            # 그래도 없으면 の 뒤 낱말 시작 — 가운데 기계 절단("くしゃくしゃ|のシャツを")보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] == "の" and _cls(seg[i]) != "h"]
         cut = min(cands, key=lambda i: (not _hira(seg[i - 1]), abs(i - (n - i)))) if cands else min(width, max(1, n // 2 + (n % 2)))   # 히라가나 끝 자리 우선("クリーニング|屋" 보다 "屋の|社長")
     return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
 
