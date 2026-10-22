@@ -1,0 +1,162 @@
+{
+ "topic": "요플레의 반전 과거 — 회장님도 핥는 뚜껑(밈) × 처음엔 입맛에 안 맞아 반품 수두룩 → 5년간 경쟁자 없을 만큼 앞서감 → 압구정 입소문 → 88올림픽 안착 → 30여 년 1위 → 뒤 체험: 쿠팡 요플레 플레인 멀티(4986663036)",
+ "ing": {
+  "line": 0,
+  "fact": "m1",
+  "why": "다들 국민 간식으로 아는 요플레가 처음엔 입맛에 안 맞아 반품이 많았던 실패작(논문 1차 출처) — 다른 채널 댓글 '처음 먹었을 때 유통기한 몇 번 확인했다'(113)·'외국 거였구나 몰랐음'(190)이 반응한 축"
+ },
+ "hook": [
+  "회장님도 핥는 요플레,",
+  "처음엔 반품투성이였다"
+ ],
+ "post": "회장님도 뚜껑 핥는다는 요플레, 처음엔 실패작이었다",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "a1": {
+   "text": "아주경제 2021-07-24 '재벌도 요플레 뚜껑을 핥아먹을까?': 최태원 SK 회장 SNS에 '회장님도 요플레 뚜껑 핥아드시나요?' 질문 → 최 회장 '네 그렇습니다'",
+   "url": "https://www.ajunews.com/view/20210723133450730"
+  },
+  "m1": {
+   "text": "한국마케팅저널 2006-10 '빙그레 요플레의 시장선도적 신제품 마케팅전략'(161~186쪽): 1983년 SODIMA 기술 제휴로 출시 · '특유의 풍미가 일반 액상 요구르트에 익숙한 소비자 입맛에 맞지 않아 초기에는 반품율도 상당히 높았다' · '출시 이후 5년 후에나 경쟁제품이 출시될 정도로 너무나 앞서간 제품' · '유행의 중심지였던 압구정동부터 공략' · '맛과 효용은 구전을 통해 전해졌고 … 88올림픽을 계기로 시장 안착'",
+   "url": "https://www.koreascience.or.kr/article/JAKO200620045748158.page"
+  },
+  "g1": {
+   "text": "General Mills 'How Yoplait got its start': 이름 = 소디마 회원 조합 Yola 와 Coplait 를 줄여 합친 것",
+   "url": "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start"
+  },
+  "h1": {
+   "text": "한경비즈니스 2021-02: '1983년 출시된 요플레는 88서울 올림픽을 계기로 대중의 인기' · '약 30여년간 국내 떠먹는 요거트 시장 1위'",
+   "url": "https://magazine.hankyung.com/business/article/202102185862b"
+  },
+  "p1": {
+   "text": "쿠팡 요플레 플레인 멀티 4986663036 상품 사진: 뚜껑 'Soft & Creamy' · 'No.1 떠먹는 요거트'",
+   "url": "https://www.coupang.com/vp/products/4986663036"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(밈+비하인드)",
+    "seg": "A",
+    "text": "재벌 회장님도 뚜껑을 핥는다는 요플레, 처음엔 반품이 수두룩했다는데",
+    "facts": [
+     "a1",
+     "m1"
+    ],
+    "sources": [
+     "https://www.ajunews.com/view/20210723133450730",
+     "https://www.koreascience.or.kr/article/JAKO200620045748158.page"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(실패 이유)",
+    "seg": "A",
+    "text": "프랑스식 그대로라, 마시는 요구르트만 알던 입엔 낯설었던 거",
+    "facts": [
+     "m1"
+    ],
+    "sources": [
+     "https://www.koreascience.or.kr/article/JAKO200620045748158.page"
+    ]
+   },
+   {
+    "fn": "덤(이름)",
+    "seg": "A",
+    "text": "이름부터 프랑스 조합 두 곳, 욜라와 코플레를 합친 말이었고",
+    "facts": [
+     "g1"
+    ],
+    "sources": [
+     "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start"
+    ]
+   },
+   {
+    "fn": "몰랐던 정도",
+    "seg": "A",
+    "text": "얼마나 앞서갔냐면, 5년 뒤에야 따라 나온 제품이 생겼다고",
+    "facts": [
+     "m1"
+    ],
+    "sources": [
+     "https://www.koreascience.or.kr/article/JAKO200620045748158.page"
+    ]
+   },
+   {
+    "fn": "해결 노력",
+    "seg": "A",
+    "text": "그래서 빙그레는, 압구정동부터 입소문을 내기 시작했는데",
+    "facts": [
+     "m1"
+    ],
+    "sources": [
+     "https://www.koreascience.or.kr/article/JAKO200620045748158.page"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "88올림픽을 계기로, 드디어 자리를 잡았다고 함",
+    "facts": [
+     "m1",
+     "h1"
+    ],
+    "sources": [
+     "https://www.koreascience.or.kr/article/JAKO200620045748158.page",
+     "https://magazine.hankyung.com/business/article/202102185862b"
+    ]
+   },
+   {
+    "fn": "쐐기(승리)",
+    "seg": "A",
+    "text": "그 뒤로 30여 년, 떠먹는 요거트 1등 자리를 지켰다는 얘기",
+    "facts": [
+     "h1"
+    ],
+    "sources": [
+     "https://magazine.hankyung.com/business/article/202102185862b"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "반품 얘기가 궁금해서, 저도 쿠팡에서 플레인 멀티팩을 시켜 봤는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036"
+    ]
+   },
+   {
+    "fn": "B 좋은 점(맛)",
+    "seg": "B",
+    "text": "요즘 입맛엔 오히려, 부드럽고 크리미하더라고요",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036"
+    ]
+   },
+   {
+    "fn": "B 밈 되받기",
+    "seg": "B",
+    "text": "그리고 저도 모르게, 뚜껑부터 핥고 있었음",
+    "facts": [],
+    "sources": []
+   },
+   {
+    "fn": "B 끝(사회 반응)",
+    "seg": "B",
+    "text": "회장님도 못 참는 그 뚜껑, 다 이유가 있더라고요",
+    "facts": [
+     "a1"
+    ],
+    "sources": [
+     "https://www.ajunews.com/view/20210723133450730"
+    ]
+   }
+  ]
+ }
+}
