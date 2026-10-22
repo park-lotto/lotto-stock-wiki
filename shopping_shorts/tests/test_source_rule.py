@@ -171,3 +171,16 @@ def test_sns_source_is_skipped():
     with pytest.raises(flow._Stop) as e:
         flow.ph_origin_read(st, {}, rp, {})
     assert "유튜브 밖" in str(e.value.args[0]) and st["src"]["kind"] == "sns"
+
+
+def test_product_not_near_match_goes_wide_once():
+    """말이 맞은 곳 앞뒤에 제품이 없으면 원본 전체 시트로 한 번 더 — 두 번째도 없으면 멈춤(10-22 강주은: 가방은 10분 50초)."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    st = {"origin": {"files": [{"name": "o.mp4", "dur": 1200}]}, "read": {"product_words": ["가방"]}, "bench": {}, "tries": {}, "log": []}
+    r = flow.ph_product_cands(st, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {})
+    assert r["then"] == "product_pick_wide" and r["do"][0]["t"] == 1200 and st["look_step"] == 10
+    r = flow.ph_product_pick_wide(st, {"psheet": {"file": "look/origin_wide.jpg"}}, {}, {})
+    assert r["review"][0]["id"] == "product_pick" and "10초 간격" in r["review"][0]["ask"]
+    with pytest.raises(flow._Stop):
+        flow.ph_product_cands(st, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {})

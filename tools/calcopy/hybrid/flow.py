@@ -701,10 +701,28 @@ def ph_product_pick(st, m, rp, u):
             "then": "product_cands"}
 
 
+def ph_product_pick_wide(st, m, rp, u):
+    sh = (m.get("psheet") or {}).get("file")
+    if not sh:
+        raise _Stop("제품이 보이는 장면을 찾지 못했습니다", "")
+    step, R0 = st["look_step"], st["read"]
+    return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 **전체**를 {step}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{step}초) — 답의 t 는 **파일 초**.\n"
+                           f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}",
+                           [_img(sh)] + ([_img(st["bench"]["sheet"])] if st["bench"].get("sheet") else []), need=("scenes", "coupang_queries"))],
+            "then": "product_cands"}
+
+
 def ph_product_cands(st, m, rp, u):
     r = _reply(rp, "product_pick", ("scenes", "coupang_queries"))
     scenes = [s for s in r.get("scenes") or [] if isinstance(s, dict) and isinstance(s.get("t"), (int, float))][:4]
     if len(scenes) < 1:
+        if not st.get("_wide_product"):        # 말이 맞은 곳 앞뒤에 제품이 없다 — 원본 전체를 훑은 시트로 한 번 더(10-22 강주은: 가방은 10분 50초)
+            st["_wide_product"] = True
+            dur = float(_origin_file(st).get("dur") or 600)
+            step = max(1, math.ceil(dur / VIS_TILES))
+            st["look_step"] = step
+            return {"do": [{"id": "psheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": "look/origin_wide.jpg",
+                            "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "product_pick_wide"}
         raise _Stop("제품이 보이는 장면을 찾지 못했습니다", "")
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
@@ -1245,7 +1263,7 @@ PHASES = {
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
-    "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_cands": ph_product_cands, "product_same": ph_product_same,
+    "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
@@ -1254,5 +1272,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
