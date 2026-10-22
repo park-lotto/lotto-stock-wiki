@@ -1,0 +1,192 @@
+{
+ "_note": "쌀크림 v3(10-22 새 방식): 결과 먼저 훅 · 원본 2개 시간순(Life Ledger 쌀 크림 만들기 → Grincy 쌀가루·아마씨 팩) · 원음 2번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0 · 효능 단정 없음(여드름·미백 말 안 함). 원본 = Life Ledger 'LiaHUMJmkGI'(2,058만) + Grincy Gandhi 'NszOyCHoUuY'(3,685만). 박힌 글 → VMake Pro(llA=0~4·llB=15~60·gr 전체, 파일 안 시간 0부터). Amy Aliya 'fna3qEsrV_A' 는 남의 영상 이어 붙인 팟캐스트라 뺌.",
+ "slug": "ititemlog_ep05_rice_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "쌀 크림(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "쌀로 크림 만드는"
+   ]
+  ],
+  [
+   [
+    "외국인 근황"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "ll 0.04~3.44 'This is the best Korean rice cream recipe' · 16초 얼굴에 흰 크림",
+  "f2": "ll 17.76~22.80 'Take one cup of rice, rinse it well, and soak it in water for 24 hours' · 23.16~28.88 'Blend it with the same water … strain it twice'",
+  "f3": "ll 29.28~35.08 'Let it settle … keep the thick rice extract' · 36.72~38.64 'let's turn this into a cream' · 38.84~50.80 '3 tbsp rice extract, 3 tbsp aloe vera gel, 3 tbsp coconut oil' · 56초 크림 통 · 58초 얼굴에 바름",
+  "f4": "gr 2~5초 화면 글 'Water' 'Flaxseed' 'Rice flour' 'Let it cook until it becomes thick into paste' · 0~1초·7~8초 얼굴 팩 · 8초 글 'shiny glass like skin'"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "밥 짓는 쌀로 얼굴 크림을 만들어 바르는 외국인들이 있다는데요.",
+   "caps": [
+    {
+     "text": "밥 짓는 쌀로",
+     "key": "쌀"
+    },
+    {
+     "text": "얼굴 크림을 만들어 바르는"
+    },
+    {
+     "text": "외국인들이 있다는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(소개)",
+   "src": "llA.mp4",
+   "spans": [
+    [
+     0.04,
+     3.44
+    ]
+   ],
+   "said": "This is the best Korean rice cream recipe",
+   "caps_rel": [
+    [
+     "이게 최고의",
+     0.0,
+     1.44
+    ],
+    [
+     "한국 쌀 크림 레시피래",
+     1.44,
+     3.4,
+     "쌀 크림"
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "쌀을 하루 꼬박 물에 불렸다가 그 물째로 곱게 갈고,",
+   "caps": [
+    {
+     "text": "쌀을 하루 꼬박 물에 불렸다가",
+     "key": "하루 꼬박"
+    },
+    {
+     "text": "그 물째로 곱게 갈고"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "두 번 걸러서 가라앉은 하얀 앙금만 모으더니,",
+   "caps": [
+    {
+     "text": "두 번 걸러서"
+    },
+    {
+     "text": "가라앉은 하얀 앙금만 모으더니",
+     "key": "앙금"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(전환)",
+   "src": "llB.mp4",
+   "spans": [
+    [
+     21.72,
+     23.64
+    ]
+   ],
+   "said": "Now let's turn this into a cream",
+   "caps_rel": [
+    [
+     "이제 이걸 크림으로 만들어 볼게",
+     0.0,
+     1.92,
+     "크림"
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 결과",
+   "tts": "알로에랑 코코넛 오일을 같은 양씩 섞자, 진짜 크림이 돼 버렸어요.",
+   "caps": [
+    {
+     "text": "알로에랑 코코넛 오일을"
+    },
+    {
+     "text": "같은 양씩 섞자"
+    },
+    {
+     "text": "진짜 크림이 돼 버렸어요",
+     "key": "진짜 크림"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "인도에선 쌀가루에 아마씨까지 넣고 끓여서 팩으로 쓴다던데,",
+   "caps": [
+    {
+     "text": "인도에선 쌀가루에"
+    },
+    {
+     "text": "아마씨까지 넣고 끓여서",
+     "key": "아마씨"
+    },
+    {
+     "text": "팩으로 쓴다던데"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "떼고 나면 얼굴이 유리처럼 반짝인다고 하고.",
+   "caps": [
+    {
+     "text": "떼고 나면 얼굴이"
+    },
+    {
+     "text": "유리처럼 반짝인다고 하고",
+     "key": "유리처럼"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 만들 자신은 없으니까 쌀 크림 하나 사서 발라 봐야겠다.",
+   "caps": [
+    {
+     "text": "아, 만들 자신은 없으니까"
+    },
+    {
+     "text": "쌀 크림 하나 사서",
+     "key": "쌀 크림"
+    },
+    {
+     "text": "발라 봐야겠다"
+    }
+   ]
+  }
+ ]
+}

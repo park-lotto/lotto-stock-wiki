@@ -1,0 +1,222 @@
+{
+ "_note": "편의점 4달러 v3(10-22 새 방식): 결과 먼저 훅 · 원본 2개 시간순(Aylen 새벽 1시 4달러 → 엄마랑 밤 10시) · 원음 4번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0 · 불닭·소주 장면 안 씀. 원본 = Aylen Park 'sYOGLQFqeUI'(5,102만) + 'e4sHse5N8dU'(1,234만). 박힌 자막 → 쓰는 구간만 VMake Pro(a1A=0~4·a1B=39~58.61·a2A=13~22·a2B=39~51초, 파일 안 시간 0부터).",
+ "slug": "ititemlog_ep11_cvs_4dollar_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "바나나우유(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 편의점 털고"
+   ]
+  ],
+  [
+   [
+    "4달러에 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "a1 0.20~3.16 'Hey guys, it's 1 a.m. in Korea and I forgot to eat dinner again'",
+  "f2": "a1 39.48~42.00 'I think I'm gonna do a strawberry or banana milk' · 42.04~48.32 'coffee milk, chocolate milk, mint chocolate milk, peach milk, strawberry milk, watermelon milk' · 48.32~49.76 'And here banana milk'",
+  "f3": "a1 52.12~54.84 'I found kimchi. Let's get kimchi' · 54.88~56.16 'Everything was $4' · 56.16~57.84 'Y'all, got the goods'",
+  "f4": "a2 0.16~4.76 'It's 10 p.m. in Korea … my mom and I still haven't eaten dinner' · 11.80~23.44 'so many kinds of takoyaki … regular tteokbokki … rosé … jajangmyeon … mini tteokbokki … noodle tteokbokki'",
+  "f5": "a2 40.96~48.40 'They also have so many kinds of kimbap: spicy mayo, grilled chicken, tuna mayo' · 59.20 'everything was $8'"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "새벽 한 시에 한국 편의점을 털고 계산서 보고 놀란 외국인이 있어요.",
+   "caps": [
+    {
+     "text": "새벽 한 시에"
+    },
+    {
+     "text": "한국 편의점을 털고",
+     "key": "털고"
+    },
+    {
+     "text": "계산서 보고 놀란 외국인이 있어요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(배고픔)",
+   "src": "a1A.mp4",
+   "spans": [
+    [
+     0.2,
+     3.16
+    ]
+   ],
+   "said": "Hey guys, it's 1 a.m. in Korea and I forgot to eat dinner again",
+   "caps_rel": [
+    [
+     "한국 새벽 1시인데",
+     0.0,
+     1.52,
+     "새벽 1시"
+    ],
+    [
+     "또 저녁 먹는 걸 까먹었어",
+     1.52,
+     2.96
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 장보기",
+   "tts": "음료 칸에 갔더니 우유 종류만 끝도 없었는데,",
+   "caps": [
+    {
+     "text": "음료 칸에 갔더니"
+    },
+    {
+     "text": "우유 종류만 끝도 없었는데",
+     "key": "끝도 없었는데"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(나열)",
+   "src": "a1B.mp4",
+   "spans": [
+    [
+     3.04,
+     6.24
+    ]
+   ],
+   "said": "They have coffee milk, chocolate milk, mint chocolate milk",
+   "caps_rel": [
+    [
+     "커피우유, 초코우유",
+     0.0,
+     1.84
+    ],
+    [
+     "민트초코우유까지!",
+     1.84,
+     3.2,
+     "민트초코"
+    ]
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(발견)",
+   "src": "a1B.mp4",
+   "spans": [
+    [
+     9.32,
+     10.76
+    ]
+   ],
+   "said": "And here, banana milk",
+   "caps_rel": [
+    [
+     "그리고 여기, 바나나우유!",
+     0.0,
+     1.44,
+     "바나나우유"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 반전 직전",
+   "tts": "바나나우유에 김치까지 한 봉지 가득 담았는데, 계산대에서 나온 금액이",
+   "caps": [
+    {
+     "text": "바나나우유에 김치까지"
+    },
+    {
+     "text": "한 봉지 가득 담았는데",
+     "key": "가득"
+    },
+    {
+     "text": "계산대에서 나온 금액이"
+    }
+   ]
+  },
+  {
+   "id": "O4",
+   "kind": "orig",
+   "role": "원음(가격)",
+   "src": "a1B.mp4",
+   "spans": [
+    [
+     15.88,
+     17.16
+    ]
+   ],
+   "said": "Everything was $4",
+   "caps_rel": [
+    [
+     "다 해서 4달러!",
+     0.0,
+     1.28,
+     "4달러"
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "엄마랑 같이 갔을 땐 떡볶이 종류만 열 가지가 넘었다던데,",
+   "caps": [
+    {
+     "text": "엄마랑 같이 갔을 땐"
+    },
+    {
+     "text": "떡볶이 종류만 열 가지가 넘었다던데",
+     "key": "열 가지"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "삼각김밥도 맛별로 다 있어서 고르기 힘들다고 하고.",
+   "caps": [
+    {
+     "text": "삼각김밥도 맛별로 다 있어서",
+     "key": "맛별로"
+    },
+    {
+     "text": "고르기 힘들다고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 출출하다. 오늘 밤엔 바나나우유 하나 들고 편의점 한 바퀴 돌아야겠다.",
+   "caps": [
+    {
+     "text": "아, 출출하다",
+     "key": "출출하다"
+    },
+    {
+     "text": "오늘 밤엔 바나나우유 하나 들고"
+    },
+    {
+     "text": "편의점 한 바퀴 돌아야겠다"
+    }
+   ]
+  }
+ ]
+}

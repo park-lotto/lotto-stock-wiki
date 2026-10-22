@@ -1,0 +1,209 @@
+{
+ "_note": "딸기라테 v3(10-22 새 방식): 결과 먼저 훅 · 원본 2개 시간순(Jiny Maeng 분홍 음식만 → 디저트 사러 다시) · 원음 3번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0 · 불닭 장면 안 씀. 원본 = Jiny Maeng 'ilLAGS3-4yg'(5,343만) + 'Y24V4P4VSjA'(4,756만). 박힌 자막 → 쓰는 구간만 VMake Pro(jmA=0~6·jmB=11~25·jmC=35~47·j2A=9~17·j2B=30~46초, 파일 안 시간 0부터).",
+ "slug": "ititemlog_ep09_strawberry_latte_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "딸기우유(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 딸기우유로"
+   ]
+  ],
+  [
+   [
+    "라테 만든 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "jm 0.08~5.32 'Come with me in South Korea to eat only pink or pink packaged food in a convenience store'",
+  "f2": "jm 12.64 'Strawberry milk' · 13.72~19.64 'Most of the pink items … are strawberry flavored or just have a pink packaging' · 20~23초 게맛살 · 21.84~24.16 'That's kind of pink, right?'",
+  "f3": "jm 36~39초 얼음컵 · 41~43초 얼음컵 커피 위에 딸기우유 부음 · 44~47초 분홍 라테('Strawberry latte' 화면 글)",
+  "f4": "j2 11.12~12.12 'One plus one' · 10초 1+1 음료 칸 · 31.84~33.28 'These are my childhood' · 40~44초 분홍 음료 마시고 웃음"
+ },
+ "cta": "심리 CTA(혼잣말·당 떨어짐) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "편의점에서 분홍색 음식만 골라 먹는 외국인이 있다는데요.",
+   "caps": [
+    {
+     "text": "편의점에서"
+    },
+    {
+     "text": "분홍색 음식만 골라 먹는",
+     "key": "분홍색"
+    },
+    {
+     "text": "외국인이 있다는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(선언)",
+   "src": "jmA.mp4",
+   "spans": [
+    [
+     0.08,
+     5.32
+    ]
+   ],
+   "said": "Come with me in South Korea to eat only pink or pink packaged food in a convenience store",
+   "caps_rel": [
+    [
+     "한국 편의점에서",
+     0.0,
+     1.6
+    ],
+    [
+     "분홍색이거나 분홍 포장인 것만",
+     1.6,
+     3.8,
+     "분홍"
+    ],
+    [
+     "먹어 볼 거야",
+     3.8,
+     5.24
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 장보기",
+   "tts": "딸기우유에 딸기 과자까지, 분홍색이면 일단 다 담았는데,",
+   "caps": [
+    {
+     "text": "딸기우유에 딸기 과자까지",
+     "key": "딸기우유"
+    },
+    {
+     "text": "분홍색이면 일단 다 담았는데"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(억지)",
+   "src": "jmB.mp4",
+   "spans": [
+    [
+     10.84,
+     13.16
+    ]
+   ],
+   "said": "That's kind of pink, right?",
+   "caps_rel": [
+    [
+     "이것도 좀 분홍이잖아, 그치?",
+     0.0,
+     2.32,
+     "그치?"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 반전 직전",
+   "tts": "그런데 얼음컵에 커피를 붓고, 그 위에 딸기우유를 따르자",
+   "caps": [
+    {
+     "text": "그런데 얼음컵에 커피를 붓고"
+    },
+    {
+     "text": "그 위에 딸기우유를 따르자",
+     "key": "딸기우유"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 결과",
+   "tts": "편의점표 딸기라테가 뚝딱 완성됐어요.",
+   "caps": [
+    {
+     "text": "편의점표 딸기라테가",
+     "key": "딸기라테"
+    },
+    {
+     "text": "뚝딱 완성됐어요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음",
+   "src": "j2A.mp4",
+   "spans": [
+    [
+     2.12,
+     3.12
+    ]
+   ],
+   "said": "One plus one",
+   "caps_rel": [
+    [
+     "원 플러스 원!",
+     0.0,
+     1.0,
+     "원 플러스 원"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "한국 편의점은 웬만한 게 다 하나 더 준다던데,",
+   "caps": [
+    {
+     "text": "한국 편의점은"
+    },
+    {
+     "text": "웬만한 게 다 하나 더 준다던데",
+     "key": "하나 더"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "어릴 때 먹던 맛 그대로라 추억템이라고 하고.",
+   "caps": [
+    {
+     "text": "어릴 때 먹던 맛 그대로라"
+    },
+    {
+     "text": "추억템이라고 하고",
+     "key": "추억템"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 당 떨어진다. 오늘은 딸기우유에 커피 한번 타 봐야겠다.",
+   "caps": [
+    {
+     "text": "아, 당 떨어진다",
+     "key": "당"
+    },
+    {
+     "text": "오늘은 딸기우유에 커피 한번 타 봐야겠다"
+    }
+   ]
+  }
+ ]
+}

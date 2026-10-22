@@ -1,0 +1,216 @@
+{
+ "_note": "쿠션 v3(10-22 새 방식): 결과 먼저 훅 · 원본 3개 시간순(MissDarcei 같은 채널 — 받은 쿠션 회색 → 댓글 추천 어두운 BB → 30호수 쿠션) · 원음 티키타카 3번 · 끝 = 전언 2줄 + 혼잣말(07_대본 §3-1) · 확대 1.0 · 느린 컷 없음. 원본 = MissDarcei 'Ks61P_NoelQ'(3,985만) + '1fSO371o494'(2,750만) + 'ywhirUV8WCA'(5,978만). 1화 TIRTIR 원본 YOLbmBYU-3E 는 안 씀.",
+ "slug": "ititemlog_ep02_cushion_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "쿠션 파운데이션 어두운 호수(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 쿠션 발랐다가"
+   ]
+  ],
+  [
+   [
+    "유령 된 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "ks61 0.2~3.76 'A makeup brand from Korea sent me this foundation. Should I try it on?' · 0~3초 밝은 쿠션 들고 웃음",
+  "f2": "ks61 6~7초 뺨에 흰 점·입 벌림 · 7.76~9.64 'They looked at me and they were like, this is her shade' · 8~16초 얼굴 회색",
+  "f3": "darkskin 0.04~6 댓글 'Why don't you get the heimish ceramide tinted BB cream? It's Korean and comes in colors for darker skin' · 9초 튜브 두 개",
+  "f4": "darkskin 11~13 'light tan' · 19.8 'that's real light' · 22~26초 밝은 색 붓질 → 하얗게 · 27.4 'this looks a lot more promising' · 33.9~37.16 'Oh, that's actually so nice. I'm shocked'",
+  "f5": "darkest 9.24 'TIRTIR now has 30 shades of foundation, they had nine two months ago' · 8~14초 빨간 큰 판",
+  "f6": "darkest 35.88 'This is the shade 55 espresso' · 28~46초 뺨에 짙은 색"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "한국 쿠션 한 번 발랐다가 얼굴이 통째로 회색이 된 외국인이 있다는데요?",
+   "caps": [
+    {
+     "text": "한국 쿠션 한 번 발랐다가"
+    },
+    {
+     "text": "얼굴이 통째로 회색이 된 외국인",
+     "key": "회색"
+    },
+    {
+     "text": "있다는데요?"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(설렘)",
+   "src": "ks61.mp4",
+   "spans": [
+    [
+     0.2,
+     3.76
+    ]
+   ],
+   "said": "A makeup brand from Korea sent me this foundation. Should I try it on?",
+   "caps_rel": [
+    [
+     "한국 브랜드가 이걸 보내 줬어",
+     0.0,
+     2.48
+    ],
+    [
+     "발라 볼까?",
+     2.48,
+     3.56
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 문제",
+   "tts": "근데 뺨에 찍자마자 혼자 하얗게 떠 버렸고,",
+   "caps": [
+    {
+     "text": "근데 뺨에 찍자마자"
+    },
+    {
+     "text": "혼자 하얗게 떠 버렸고",
+     "key": "하얗게"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(애써 웃음)",
+   "src": "ks61.mp4",
+   "spans": [
+    [
+     7.76,
+     9.64
+    ]
+   ],
+   "said": "They looked at me and they were like, this is her shade",
+   "caps_rel": [
+    [
+     "날 보더니 이게 내 색이래",
+     0.0,
+     1.88,
+     "내 색"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 전환",
+   "tts": "그러자 댓글에서 어두운 호수도 있다며 다른 한국 제품을 추천해 줬는데,",
+   "caps": [
+    {
+     "text": "그러자 댓글에서"
+    },
+    {
+     "text": "어두운 호수도 있다며"
+    },
+    {
+     "text": "다른 한국 제품을 추천해 줬는데",
+     "key": "추천"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 반전 직전",
+   "tts": "밝은 색은 또 하얗게 떴지만, 어두운 색을 펴 바르자",
+   "caps": [
+    {
+     "text": "밝은 색은 또 하얗게 떴지만"
+    },
+    {
+     "text": "어두운 색을 펴 바르자",
+     "key": "어두운 색"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "darkskin.mp4",
+   "spans": [
+    [
+     33.9,
+     37.16
+    ]
+   ],
+   "said": "Oh, that's actually so nice. I'm shocked",
+   "caps_rel": [
+    [
+     "어? 이거 진짜 예쁜데?",
+     0.0,
+     2.38
+    ],
+    [
+     "나 충격이야",
+     2.38,
+     3.26,
+     "충격"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "요즘은 한국 쿠션 호수가 서른 개까지 늘었다던데,",
+   "caps": [
+    {
+     "text": "요즘은 한국 쿠션 호수가"
+    },
+    {
+     "text": "서른 개까지 늘었다던데",
+     "key": "서른 개"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "제일 어두운 색 이름은 에스프레소라고 하고.",
+   "caps": [
+    {
+     "text": "제일 어두운 색 이름은"
+    },
+    {
+     "text": "에스프레소라고 하고",
+     "key": "에스프레소"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 나도 목이랑 얼굴 색 다른 쿠션, 오늘 그냥 바꿔야겠다.",
+   "caps": [
+    {
+     "text": "아, 나도"
+    },
+    {
+     "text": "목이랑 얼굴 색 다른 쿠션"
+    },
+    {
+     "text": "오늘 그냥 바꿔야겠다",
+     "key": "바꿔야겠다"
+    }
+   ]
+  }
+ ]
+}
