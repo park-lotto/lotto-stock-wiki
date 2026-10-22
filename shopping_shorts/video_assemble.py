@@ -1860,14 +1860,17 @@ def simple_caption_split(text, max_chars):
 # 2026-10-21 라이브 e2e(job 1e2c12ade064, 캡컷 21구절) 실측 수리: 문말 조사 ね·よ 는 "重ね|られ" 같은 동사 속 ね 를 조사로 봐 뺐다
 #   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
 _JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
-_JA_MIN_HEAD = 6      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
+_JA_MIN_HEAD = 4      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
 _JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
+# ★일본어 한 줄 상한(관제 254, 2026-10-22): 19자는 띄어쓰기 있는 한국어 기준이다. 일본어는 공백 없이 전각 글자만이라
+#   19자가 자막 칸에 안 들어가 편집기가 글자를 줄였다(5자~19자 줄마다 크기가 달라 보임, 실측 job 1e2c12ade064).
+_JA_CAP_WRAP = 12
 
 
 def _ja_split_long(seg, width=None):
     """_CAP_WRAP 를 넘는 일본어 조각 하나 → 조각들. 조사 바로 뒤 중 두 조각 길이 차가 가장 작은 곳에서 끊고,
     조사가 없으면 가운데 가까운 곳에서 _CAP_WRAP 이내로 자른다. 결과 조각이 또 길면 다시 나눈다."""
-    width = width or _CAP_WRAP
+    width = width or _JA_CAP_WRAP
     if len(seg) <= width:
         return [seg]
     n = len(seg)
@@ -1886,6 +1889,8 @@ def _ja_split_long(seg, width=None):
         #   "再利用で|きる"를 못 막았다). 결합 조사("のに"·"とは"·"ために")는 마지막 조사 뒤(한자·가타카나 앞)에서 잘린다.
         if _hira(seg[i]):
             continue
+        if pt == "の" and not head.endswith("のに"):
+            continue   # の 는 뒤 낱말을 꾸민다 — "普通の|カップ" 처럼 끊지 않는다(관제 254)
         diff = abs(i - (n - i))
         if best is None or diff < best[0]:
             best = (diff, i)
@@ -1894,8 +1899,13 @@ def _ja_split_long(seg, width=None):
     else:
         # 조사가 없으면 가운데 가까운 **글자 종류 경계**(히라가나↔한자·가타카나)에서 자른다 — "割れ|やすかった"처럼
         # 낱말 한가운데를 가르던 고정 가운데 절단 대신(2026-10-21 실측). 경계도 없으면 가운데.
-        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if _hira(seg[i - 1]) != _hira(seg[i])]
-        cut = min(cands, key=lambda i: abs(i - (n - i))) if cands else min(width, max(1, n // 2 + (n % 2)))
+        # 글자 종류가 바뀌고 뒤가 히라가나가 아닌 자리(→한자·가타카나·영문 시작)만 — "普通|の" 같은 조사 앞 절단 금지(관제 254)
+        _cls = lambda c: "h" if _hira(c) else ("k" if "゠" <= c <= "ヿ" else ("c" if "一" <= c <= "鿿" else "o"))  # noqa: E731
+        cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                 if _cls(seg[i - 1]) != _cls(seg[i]) and _cls(seg[i]) != "h" and seg[i] != "ー"]
+        if not cands and n <= width + 6:
+            return [seg]   # 깨끗한 자리가 없으면 조금 길어도 통째로("スタンディングオ|ベーション" 같은 낱말 속 절단보다 낫다)
+        cut = min(cands, key=lambda i: (not _hira(seg[i - 1]), abs(i - (n - i)))) if cands else min(width, max(1, n // 2 + (n % 2)))   # 히라가나 끝 자리 우선("クリーニング|屋" 보다 "屋の|社長")
     return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
 
 

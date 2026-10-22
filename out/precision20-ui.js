@@ -1304,7 +1304,7 @@
     return p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : p.id===PLAIN_ID
-        ? (frameKind==='hook'?['hook1','hook2','caption']:['bodyTitle','caption'])   // 원본은 훅에도 자막 칸을 낸다
+        ? ['caption']   // 원본(인스타식)은 처음부터 자막만 — 제목 칸 없음(관제 254, 2026-10-22 사장님)
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];

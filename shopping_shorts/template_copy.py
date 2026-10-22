@@ -90,6 +90,41 @@ def _cut_is_clean(before: list[str], after: list[str]) -> bool:
     return True
 
 
+# ── 일본어 훅 제목(관제 254, 2026-10-22 사장님 "일본어 장면꾸미기 훅에 자막이 없다") ──
+#   일본어는 띄어쓰기가 없어 낱말 규칙이 문장 통째를 hook1 한 줄에 넣고 hook2(강조색 둘째 줄)를 비웠다
+#   → 한 줄이 15px까지 눌려 훅이 빈 것처럼 보였다(실측 job 1e2c12ade064). 문장부호·조사 뒤에서 두 줄로 고르게 나눈다.
+_JA_TITLE_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "へ", "て")   # の 는 뒤 낱말을 꾸며 끊지 않는다
+
+
+def _is_ja(text: str) -> bool:
+    from .script_translate import lang_of
+    return lang_of(text) == "ja"
+
+
+def _split_hook_ja(text: str) -> tuple[str, str]:
+    t = text.strip().rstrip("。．.、,")
+    n = len(t)
+    if n < 8:
+        return t, ""
+    hira = lambda c: "぀" <= c <= "ゟ"          # noqa: E731
+    cands = []
+    for i in range(3, n - 2):
+        head, nxt = t[:i], t[i]
+        if head.endswith(("、", "。", "！", "？", "!", "?")):
+            cands.append((0, abs(i - n / 2), i))
+        elif any(head.endswith(pt) for pt in _JA_TITLE_PARTICLES) and not hira(nxt):
+            cands.append((1, abs(i - n / 2), i))
+        elif hira(t[i - 1]) and not hira(nxt) and nxt not in "ー":
+            cands.append((2, abs(i - n / 2), i))
+    if not cands:
+        cut = n // 2
+    else:
+        # 가운데에서 너무 먼(전체의 1/4 넘게) 자리는 종류가 좋아도 버린다 — 한 줄이 쏠리면 다시 작아진다
+        near = [c for c in cands if c[1] <= n / 4] or cands
+        cut = min(near)[2]
+    return t[:cut].rstrip("、"), t[cut:]
+
+
 def split_hook(value: object, contract: "TemplateCopyContract | None" = None) -> tuple[str, str]:
     """저장된 제목의 명시적 두 줄을 보존하고, 한 줄 데이터를 **두 줄 제목**으로 나눈다.
 
@@ -108,6 +143,8 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
     if len(explicit) >= 2:
         return explicit[0], " ".join(explicit[1:])
     text = _one_line(raw)
+    if _is_ja(text):
+        return _split_hook_ja(text)
     words = text.split()
     if len(words) < 2:
         return text, ""
@@ -197,6 +234,12 @@ def support_from_hook(hook1: object, hook2: object,
                       contract: "TemplateCopyContract | None" = None) -> str:
     """큰제목에서 흰 띠 문구를 만든다 — 줄여서 물음표로. 큰제목과 **같은 글이 되지 않게** 한다."""
     contract = contract or EVEN_SHOPPING
+    if _is_ja(f"{hook1}{hook2}"):
+        # 일본어: 붙여 쓰고 끝 마침표를 뗀 뒤 물음표(전각). 길면 뒷줄만 — 한국어와 같은 규칙(관제 254)
+        line = f"{hook1}{hook2}".strip().rstrip("。．.、,")
+        if len(line) > contract.support_max - 1:
+            line = str(hook2 or "").strip().rstrip("。．.、,") or line
+        return line if line.endswith(("？", "！", "?", "!")) else line + "？"
     words = _one_line(f"{hook1} {hook2}").split()
     if not words:
         return ""
