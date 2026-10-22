@@ -193,3 +193,36 @@ def test_unknown_render_error_gets_one_fix_then_retryable_stop():
     with pytest.raises(flow._Stop) as e:
         flow.ph_render_got(st, {"render": {"ok": False, "error": "KeyError: 'ss'"}}, {}, {})
     assert e.value.kw.get("retry") == "render" if hasattr(e.value, "kw") else True
+
+
+def test_any_stop_retries_from_last_asker_with_its_inputs(monkeypatch):
+    """뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 처음부터. 이제 어느 멈춤이든 마지막으로 일을 시킨 단계부터, 그 단계가 받았던 입력과 함께."""
+    from tools.calcopy.hybrid import flow
+    seen = []
+    def c(st, m, rp, u):
+        seen.append(rp.get("q"))
+        if not rp.get("q"):
+            raise flow._Stop("입력 없음")
+        return {"do": [{"id": "x", "cmd": "env"}], "then": "d"}
+    def d(st, m, rp, u):
+        raise flow._Stop("실행 결과가 이상함")
+    monkeypatch.setitem(flow.PHASES, "c", c)
+    monkeypatch.setitem(flow.PHASES, "d", d)
+    monkeypatch.setitem(flow.PHASE_STAGE, "c", "product")
+    monkeypatch.setitem(flow.PHASE_STAGE, "d", "product")
+    st = {"phase": "c", "tries": {"plan": 3}, "log": []}
+    assert flow.step(st, {}, {"q": {"v": 1}}, {})["status"] == "execute"
+    r = flow.step(st, {"x": {}}, {}, {})
+    assert r["status"] == "stop" and r.get("retry_ok") and st["stopped"]["retry"] == "c"
+    r = flow.step(st, {}, {}, {"retry": True})
+    assert r["status"] == "execute" and seen == [{"v": 1}, {"v": 1}] and st["tries"] == {}
+    st2 = {"phase": "stopped", "stopped": {"why": "의약품", "fix": ""}, "tries": {}, "log": []}
+    assert flow.step(st2, {}, {}, {"retry": True})["status"] == "stop"            # final 멈춤·retry 없는 멈춤은 그대로
+
+
+def test_material_problems_caught_before_render():
+    """재료 답 꼴(받은 파일·영상 컷 ss·숫자·crop 꼴)을 계획 단계에서 — 렌더 KeyError 로 터지기 전에(뿌리 10-22 강주은)."""
+    M = {"cuts": {"L1": [{"src": "o.mp4"}], "L5": [{"src": "prod_1.jpg"}], "L6": [{"src": "m.mp4"}],
+                  "L7": [{"src": "x.mp4", "ss": "3초", "crop": [0.1, 0, 1]}]}}
+    p = RU.material_problems(M, {"o.mp4", "prod_1.jpg", "m.mp4"}, {"L1"})
+    assert len(p) == 4 and p[0].startswith("L6#1") and all(x.startswith("L7#1") for x in p[1:])   # 원음 줄 o.mp4·사진 컷은 통과

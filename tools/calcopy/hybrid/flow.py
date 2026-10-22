@@ -204,9 +204,12 @@ def _txt(s: str) -> dict:
 
 class _Stop(Exception):
     """멈춤. retry = 다시 시도하면 이어 갈 세부 단계(받기 실패처럼 잠깐의 문제 — 앞 단계 유튜브 요청을 다시 쓰지 않게)."""
-    def __init__(self, why: str, fix: str = "", retry: str | None = None):
+    def __init__(self, why: str, fix: str = "", retry: str | None = None, final: bool = False):
         super().__init__(why)
-        self.why, self.fix, self.retry = why, fix, retry
+        self.why, self.fix, self.retry, self.final = why, fix, retry, final
+
+
+ASKER_IN_MAX = 60_000   # 다시 시도용으로 기억할 입력 크기 상한(글자) — 넘으면 그 단계 입력 없이 다시(대개 do 를 다시 내는 단계라 입력이 필요 없다)
 
 
 def start(ref: str, version: str, sid: str) -> dict:
@@ -220,18 +223,27 @@ def step(state: dict, measure: dict | None = None, replies: dict | None = None, 
     for _ in range(40):
         ph = st.get("phase") or "setup"
         h = PHASES.get(ph)
+        m_in, rp_in = m, rp
         if h is None:
             return _out(st, "stop", ph, why="알 수 없는 단계입니다", fix="")
         try:
             r = h(st, m, rp, user)
         except _Stop as e:
+            # 뿌리(10-22): 멈춤 34곳 중 5곳만 이어 가기 → 고칠 때마다 원본 찾기부터 20~50분 다시. 이제 정한 retry 가 없으면 **마지막으로 일을 시킨 단계**부터(같은 do·질문을 다시)
+            retry = None if e.final else (e.retry or st.get("_asker"))
             st["phase"] = "stopped"
-            st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": e.retry} if e.retry else {})}
-            return _out(st, "stop", ph, why=e.why, fix=e.fix, retry_ok=True if e.retry else None)
+            st["stopped"] = {"why": e.why, "fix": e.fix, **({"retry": retry} if retry else {})}
+            return _out(st, "stop", ph, why=e.why, fix=e.fix, retry_ok=True if retry else None)
         m, rp, user = {}, {}, {}           # 한 번 먹은 입력은 다음 단계로 넘기지 않는다
         if "goto" in r:
             st["phase"] = r["goto"]
+            if r.get("feed"):                 # 다시 시도 — 그 단계가 처음 받았던 입력을 다시 먹인다
+                m, rp = r["feed"].get("m") or {}, r["feed"].get("rp") or {}
             continue
+        if "do" in r or "review" in r:
+            st["_asker"] = ph                 # 이 단계가 일을 시켰다 — 멈추면 여기부터 다시(받았던 입력도 함께 — 작을 때만, payload 가 커지지 않게)
+            feed = {"m": m_in, "rp": rp_in} if (m_in or rp_in) else {}
+            st["_asker_in"] = feed if len(json.dumps(feed, ensure_ascii=False)) <= ASKER_IN_MAX else None
         if "do" in r:
             st["phase"] = r["then"]
             return _out(st, "execute", r["then"], do=r["do"])
@@ -325,7 +337,7 @@ def ph_bench_got(st, m, rp, u):
 def ph_origin_read(st, m, rp, u):
     r = _reply(rp, "origin_read", ("celeb", "queries", "is_shopping"))
     if not r.get("is_shopping"):
-        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요")
+        raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요", final=True)
     st["read"] = r
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
     if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
@@ -657,6 +669,10 @@ def ph_stopped(st, m, rp, u):
         r = "check_retry"
     if u.get("retry") and r:
         st.pop("stopped", None)
+        if r == st.get("_asker") and st.get("_asker_in"):
+            st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}
+            return {"goto": r, "feed": st["_asker_in"]}
+        st["tries"] = {k: v for k, v in (st.get("tries") or {}).items() if k == "length"}   # 다시 시도 = 고치기 횟수 새로(길이 고치기만 남긴다 — 사인을 다시 받는다)
         return {"goto": r}
     raise _Stop((st.get("stopped") or {}).get("why") or "멈춘 편입니다", (st.get("stopped") or {}).get("fix") or "", retry=r)
 
@@ -755,7 +771,7 @@ def ph_product_done(st, m, rp, u):
             return {"goto": "best"}
         raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "")
     if same.get("category") in ("의약품", "의료기기"):
-        raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요")
+        raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
     pool = st.get("named_cands") if mode == "named" else st.get("coupang_cands")
     if pool and str(same["product_id"]) not in {str(c.get("product_id") or c.get("productId") or c.get("id") or "") for c in pool}:
         st["log"].append(f"제품 번호 {same['product_id']} 가 후보 표에 없음 — 답 그대로 씀")
@@ -1100,6 +1116,9 @@ def ph_plan_got(st, m, rp, u):
     if ln.get("measured") and not ln.get("ok"):   # 진짜 목소리 길이가 판 범위 밖 — 렌더(5분) 전에 글로 고친다(10-22 선우용여: 렌더 뒤에야 걸려 렌더 3번)
         return _length_rewrite(st, f"{ln.get('sec')}초 (판 {ln.get('min')}~{ln.get('max')})")
     over = [p["over"]] if p.get("over") else []
+    known = _origin_names(st) | {x.get("name") for x in (st.get("material") or {}).get("files") or [] if x.get("name")}
+    orig_lines = {l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") == "orig"}
+    over += RU.material_problems(st["script"]["M"], known, orig_lines)        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})
     over += p.get("jumps") or []
     st["_plan_over"] = over
