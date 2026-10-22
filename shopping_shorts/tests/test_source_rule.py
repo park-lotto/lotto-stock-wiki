@@ -132,3 +132,15 @@ def test_origin_from_source_label_first():
     assert r["review"][0]["id"] == "origin_sb" and list(st["sb"]) == ["v20", "v21"]          # 장면 낱말이 걸린 후보가 앞
     r = flow.ph_sb_pick(st, {}, {"origin_sb": {"origin_id": "v20", "origin_t": [302, 330]}}, {})
     assert r["do"][0] == {"id": "origin", "cmd": "origin_get", "vid": "v20", "a": 0.0, "b": 725.0, "ts": [], "full": True}
+
+
+def test_source_kind_program_marked_and_kept():
+    """출처가 프로그램 이름이면 표시하고(진행 줄·편 상태) 채널 검색을 건너뛴다 — 다시 시도해도 같은 길(사장님 10-22 '안 헷갈리게')."""
+    from tools.calcopy.hybrid import flow
+    st = {"bench": {"id": "b", "dur": 14, "date": "20261009"}, "tries": {}, "log": []}
+    rp = {"origin_read": {"celeb": "선우용여", "queries": [], "is_shopping": True, "source_label": "출처: 옥탑방의 문제아들", "source_kind": "program"}}
+    r = flow.ph_origin_read(st, {}, rp, {})
+    assert r["do"][0]["kind"] == "program" and st["src"] == {"label": "옥탑방의 문제아들", "kind": "program"}
+    flow.ph_src_got(st, {"src": {"how": "search", "picked": [], "titles": [{"id": "q", "title": "선우용여 #옥탑방의문제아들", "dur": 999, "channel": "KBS Entertain"}]}}, {}, {})
+    assert st["src"]["channel"] == "KBS Entertain"
+    assert "출처 '옥탑방의 문제아들'(프로그램 → KBS Entertain)" in flow._msg(st, "probe_got")

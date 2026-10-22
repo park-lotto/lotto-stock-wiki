@@ -320,11 +320,12 @@ def c_channel_find(W, d):
         return {"channels": [], "titles": [], "note": "캐시 모드 — 출처 채널 찾기 건너뜀(검색 길로)"}
     from urllib.parse import quote
     label = str(d.get("label") or "")
-    r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
-    if _blocked(r):
-        return {"blocked": True, "channels": [], "titles": []}
-    chans = []
-    if r.returncode == 0 and r.stdout.strip():
+    chans, r = [], None
+    if d.get("kind") != "program":           # 프로그램 이름이면 채널 검색을 건너뛴다(같은 방송사 본채널을 잘못 고른다 — 98 #40)
+        r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
+        if _blocked(r):
+            return {"blocked": True, "channels": [], "titles": []}
+    if r is not None and r.returncode == 0 and r.stdout.strip():
         chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id"),
                   "verified": bool(e.get("channel_is_verified"))} for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
     pick = [c for c in sorted(chans, key=lambda c: not c["verified"]) if RU.norm(c["name"] or "") == RU.norm(label)][:1]
