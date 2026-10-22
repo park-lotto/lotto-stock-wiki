@@ -334,7 +334,8 @@ def ph_origin_read(st, m, rp, u):
     sk = str(r.get("source_kind") or "")
     if sk.startswith("sns") or re.search(r"인스타|instagram|틱톡|tiktok|블로그|blog", label, re.I):
         st["src"] = {"label": label, "kind": "sns"}     # 10-22 이영애 '이영애 인스타그램' → 엉뚱한 유튜브 채널(Famous Woman)을 뒤졌다
-        raise _Stop(f"출처가 유튜브 밖({label})이라 원본 영상을 받을 수 없어 건너뜁니다", "출처가 유튜브 채널·방송인 쇼츠 주소를 주세요")
+        st["log"].append(f"출처 '{label}' = SNS(원본이 아니다 — 사장님 10-22) → 검색 길로 진짜 원본")
+        return {"goto": "search"}                       # 인스타 출처는 거쳐 온 곳 — '<연예인> <제품 낱말>' 검색·지문 대조로 진짜 원본을 찾는다
     kind = "program" if sk.startswith("program") else "channel"
     st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태에 남겨 다시 시도할 때도 같은 길(사장님 10-22 "안 헷갈리게")
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")

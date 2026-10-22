@@ -162,15 +162,12 @@ def test_run_do_parallel_safe_only(tmp_path, monkeypatch):
     assert order.index(("end", "write")) < order.index(("start", "heard"))        # 쓰기 다음에 읽기
 
 
-def test_sns_source_is_skipped():
-    """출처가 유튜브 밖(인스타그램 등)이면 원본을 받을 수 없다 — 엉뚱한 유튜브 채널을 뒤지지 않고 건너뜀(10-22 이영애)."""
-    import pytest
+def test_sns_source_goes_to_search():
+    """출처가 유튜브 밖(인스타그램 등)이면 원본이 아니다(사장님 10-22) — 엉뚱한 채널을 뒤지지 않고 '<연예인> <제품 낱말>' 검색 길로."""
     from tools.calcopy.hybrid import flow
     st = {"bench": {"id": "b", "dur": 20}, "tries": {}, "log": []}
     rp = {"origin_read": {"celeb": "이영애", "queries": [], "is_shopping": True, "source_label": "출처: 이영애 인스타그램", "source_kind": "channel"}}
-    with pytest.raises(flow._Stop) as e:
-        flow.ph_origin_read(st, {}, rp, {})
-    assert "유튜브 밖" in str(e.value.args[0]) and st["src"]["kind"] == "sns"
+    assert flow.ph_origin_read(st, {}, rp, {}) == {"goto": "search"} and st["src"]["kind"] == "sns"
 
 
 def test_product_not_near_match_goes_wide_once():
