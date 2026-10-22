@@ -6,7 +6,8 @@
 판단 주인 = 이 파일 check() 한 곳. 잡는 것 셋(하나라도 걸리면 실패, 종료 코드 1):
   ① 출처 겹침: 대본 근거(facts url)·재료(url·src 파일 이름)에 벤치 채널 영상 id 가 있다 — 벤치 영상을 소재·화면으로 쓴 것
   ② 문장 겹침: 우리 대본 글(띄어쓰기 뺌)과 벤치 받아쓰기의 가장 긴 같은 토막이 COPY_RUN 자 이상
-  ③ 소재 겹침: 우리 topic 과 벤치 제목 107편의 낱말 겹침이 TOPIC_HIT 이상(제목은 짧아 이 숫자는 눈 확인용 후보도 같이 낸다)
+  ③ 소재 겹침은 실패가 아니다(사장님 10-22 "소재는 같아도 되고 완전 다르게") — 같은 소재 벤치 편을 topic_near 로 알려 준다.
+     같은 소재면 그 벤치 편과 문장·구성·화면이 완전히 달라야 하니, Claude 가 그 편을 열어 나란히 본다.
 벤치 자료 = channel/<slug>/원자료/titles_all.json(전 편 제목, yt-dlp flat) · 원자료/asr/<id>.json(스피치매틱스 받아쓰기).
 """
 from __future__ import annotations
@@ -20,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 COPY_RUN = 12      # 띄어쓰기 뺀 같은 토막 12자 이상 = 문장을 가져온 것(관용구 '알고 보니'·'라고 하더라고요' 는 이보다 짧다)
-TOPIC_HIT = 2      # 2자 낱말이 벤치 제목 한 편과 2개 이상 겹치거나, 3자 이상 낱말(브랜드·제품 이름 꼴 — 10-22 아웃백) 하나라도 겹치면 소재 겹침
+TOPIC_HIT = 2      # 2자 낱말 2개 이상 또는 3자 이상 낱말(브랜드·제품 꼴 — 10-22 아웃백) 하나가 겹치면 "같은 소재" 알림(실패 아님)
 _YT = re.compile(r"(?:v=|youtu\.be/|shorts/|v_)([A-Za-z0-9_-]{11})")
 
 
@@ -88,9 +89,8 @@ def check(slug: str, script_path, material_path=None) -> dict:
         fails.append(f"출처 겹침: 벤치 영상 {src_hits} 을 근거·재료로 썼다")
     if copies and copies[0]["chars"] >= COPY_RUN:
         fails.append(f"문장 겹침: '{copies[0]['run']}'({copies[0]['chars']}자) = 벤치 {copies[0]['id']}")
-    if near and (len(near[0]["hit"]) >= TOPIC_HIT or any(len(w) >= 3 for w in near[0]["hit"])):
-        fails.append(f"소재 겹침: 벤치 제목 '{near[0]['title']}' 과 낱말 {near[0]['hit']}")
-    return {"ok": not fails, "fails": fails, "source_hits": src_hits, "copy_top": copies[:3], "topic_near": near,
+    same_topic = [n for n in near if len(n["hit"]) >= TOPIC_HIT or any(len(w) >= 3 for w in n["hit"])]
+    return {"ok": not fails, "fails": fails, "source_hits": src_hits, "copy_top": copies[:3], "topic_near": near, "same_topic": same_topic,
             "bench_asr": len(B["asr"]), "bench_titles": len(B["titles"])}
 
 
@@ -108,6 +108,8 @@ def main(argv=None):
     for f in r["fails"]:
         print("  ✗", f)
     print("  가장 긴 같은 토막:", [(c["id"], c["run"]) for c in r["copy_top"]])
+    for n in r["same_topic"]:
+        print(f"  ! 같은 소재 벤치 편 {n['id']} '{n['title']}' — 이 편과 문장·구성·화면이 완전히 다른지 나란히 본다")
     print("  가까운 벤치 제목(눈 확인):", [(n["title"], n["hit"]) for n in r["topic_near"][:3]])
     return 0 if r["ok"] else 1
 
