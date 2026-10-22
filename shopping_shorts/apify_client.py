@@ -1,10 +1,7 @@
 """Apify Instagram Reel Scraper HTTP 클라이언트."""
 import json
-import re
 import time
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from shopping_shorts.config import APIFY_TOKENS, APIFY_ACTOR, RESULTS_PER_CHANNEL, ONLY_NEWER_THAN
 
@@ -169,74 +166,51 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
     raise RuntimeError(f"apify 토큰 {len(tokens)}개 전부 실패(마지막 오류: {last_err})")
 
 
-# apidojo~instagram-scraper-api로 전환(2026-07-13) — reel당 $0.0026(apify 공식
-# reel-scraper) 대비 run당 $0.005 고정(151채널 실측 $0.755/회, 5배 절감).
-# reel-scraper와 달리 username 배치 입력이 없어 채널당 run 1개 필요, 대신
-# 동시실행(ThreadPoolExecutor)으로 속도 확보(151채널 실측 몇 분대).
-_APIDOJO_ACTOR = "apidojo~instagram-scraper-api"
-_PARALLEL_WORKERS = 15
+# ★2026-10-22 공식 reel-scraper(APIFY_ACTOR)로 되돌림(관제 251).
+# apidojo~instagram-scraper-api(2026-07-13~)는 유료 렌탈 액터라 **FREE 계정에는
+# `{"demo": true}` 견본만** 준다 — run은 SUCCEEDED·과금까지 되는데 진짜 릴스가 0건이다
+# (서버 실측 10-22: 무료 토큰 166 run 전부 demo, 그날 수집 4건). 유료 STARTER가 월 한도를
+# 넘기자 무료 토큰으로 넘어갔지만 전부 demo라 10-19~22 레퍼런스 수집이 0건이었다.
+# 공식 액터는 무료 계정에서도 실데이터(3채널 12건 $0.032, 166채널 381건 실측)를 준다.
+# 채널을 CHUNK_SIZE(40)씩 묶어 **순차** run — 한 run에 몰아넣으면 뒤쪽이 조용히 누락된다
+# (2026-07-09 실측 443개 중 26개). 동시 실행은 하지 않는다(사장님 10-22 "천천히").
 
 
-def _relative_to_until_date(spec):
-    """ONLY_NEWER_THAN 같은 상대 표현("2 days") → apidojo용 절대 날짜(YYYY-MM-DD).
-    apidojo의 until 파라미터는 절대 날짜만 받아(apify reel-scraper의
-    onlyPostsNewerThan 상대표현과 다름, 2026-07-13 확인) 여기서 변환한다."""
-    m = re.match(r"\s*(\d+)\s*day", str(spec))
-    days = int(m.group(1)) if m else 2
-    dt = datetime.now(timezone.utc) - timedelta(days=days)
-    return dt.strftime("%Y-%m-%d")
-
-
-def _normalize_apidojo_item(it, username):
-    """apidojo 원본 아이템 → 기존 apify~instagram-reel-scraper 호환 스키마로 정규화
-    (2026-07-13 실측 필드 매핑). ranking.py 등 하위 코드가 기존 필드명을 그대로
-    쓰므로 여기서만 흡수하면 호출부 변경이 필요없다."""
-    video = it.get("video") or {}
-    image = it.get("image") or {}
-    return {
-        "shortcode": it.get("code", ""),
-        "url": it.get("url", ""),
-        "timestamp": it.get("createdAt", ""),
-        "caption": it.get("caption") or "",
-        "commentsCount": it.get("commentCount") or 0,
-        "likesCount": it.get("likeCount") or 0,
-        "videoViewCount": video.get("playCount") or 0,
-        "displayUrl": image.get("url", ""),
-        "videoUrl": video.get("url", ""),
-        "ownerUsername": username,
-    }
+def _normalize_reel_item(it):
+    """공식 reel-scraper 원본 → 하위 코드(ranking 등)가 쓰는 스키마.
+    식별자 키가 원본은 `shortCode`인데 하위는 `shortcode`를 읽는다(ranking.py:71) —
+    여기서 맞추지 않으면 전부 url이 식별자가 된다(10-22 수동 수집 때 실측)."""
+    out = dict(it)
+    out["shortcode"] = it.get("shortCode") or it.get("shortcode") or it.get("code") or ""
+    return out
 
 
 def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
-                only_newer_than=ONLY_NEWER_THAN, timeout=180, poll_interval=4,
-                chunk_size=CHUNK_SIZE, max_workers=_PARALLEL_WORKERS):
-    """usernames 리스트 → reel dict 리스트 (apidojo~instagram-scraper-api 기반,
-    2026-07-13 전환). 채널당 run 1개(startUrls=.../reels/)를 동시실행 풀로
-    처리 후 기존 스키마로 정규화해 합친다. chunk_size는 이제 미사용(구 시그니처
-    호환용, 호출부 변경 불필요)."""
+                only_newer_than=ONLY_NEWER_THAN, timeout=900, poll_interval=5,
+                chunk_size=CHUNK_SIZE):
+    """usernames 리스트 → reel dict 리스트 (공식 apify~instagram-reel-scraper).
+    chunk_size개씩 순차 run. 묶음 하나가 전 토큰 실패해도 나머지 묶음은 계속한다.
+    demo 견본·식별자 없는 항목은 버린다."""
     tokens = [token] if token else APIFY_TOKENS
     if not tokens:
         raise RuntimeError("APIFY_TOKEN 미설정 (환경변수 APIFY_TOKEN)")
-    until_date = _relative_to_until_date(only_newer_than)
-
-    def _fetch_one(uname):
-        clean = uname.strip().lstrip("@")
-        payload = {
-            "startUrls": [{"url": f"https://www.instagram.com/{clean}/reels/"}],
-            "maxItems": results_per_channel,
-            "until": until_date,
-        }
-        try:
-            items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_APIDOJO_ACTOR)
-        except RuntimeError:
-            return []
-        return [_normalize_apidojo_item(it, clean) for it in items]
-
+    names = [u.strip().lstrip("@") for u in usernames if (u or "").strip()]
     all_items = []
-    with ThreadPoolExecutor(max_workers=max_workers) as ex:
-        futures = [ex.submit(_fetch_one, u) for u in usernames]
-        for fut in as_completed(futures):
-            all_items.extend(fut.result())
+    for i in range(0, len(names), chunk_size):
+        chunk = names[i:i + chunk_size]
+        payload = {"username": chunk, "resultsLimit": results_per_channel,
+                   "onlyPostsNewerThan": only_newer_than}
+        try:
+            items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR)
+        except RuntimeError as e:
+            print(f"[apify_client] 묶음 {i // chunk_size + 1} 실패(채널 {len(chunk)}): {e}")
+            continue
+        for it in items:
+            if it.get("demo"):
+                continue
+            norm = _normalize_reel_item(it)
+            if norm["shortcode"]:
+                all_items.append(norm)
     return all_items
 
 

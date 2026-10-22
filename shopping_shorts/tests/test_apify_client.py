@@ -35,8 +35,11 @@ def _token_from_headers(headers):
     return headers["Authorization"].removeprefix("Bearer ")
 
 
-def _raw(code):
-    """apidojo 액터가 실제로 주는 모양의 원본 아이템 (2026-08-10).
+def _raw(code, owner="user1"):
+    """공식 reel-scraper가 실제로 주는 모양의 원본 아이템 (2026-10-22 공식 액터 복귀, 관제 251).
+    식별자 키는 `shortCode`, 계정은 `ownerUsername`(서버 실측 키 목록).
+
+    (옛 설명 — 2026-08-10 apidojo 시절:)
 
     fetch_reels는 2026-07-13(커밋 2b859d1dd)에 apidojo~instagram-scraper-api로
     갈아타면서 `_normalize_apidojo_item`으로 **10키 스키마로 정규화해서** 돌려준다.
@@ -46,7 +49,7 @@ def _raw(code):
     여기 테스트들의 진짜 관심사는 **토큰 로테이션**이지 payload 모양이 아니므로,
     아이템은 실제 필드명(code)으로 만들고 검증은 정규화 결과의 shortcode로 한다.
     """
-    return {"code": code}
+    return {"shortCode": code, "ownerUsername": owner}
 
 
 def _codes(items):
@@ -220,31 +223,24 @@ def test_fetch_reels_all_tokens_exhausted_returns_empty(monkeypatch):
     assert apify_client._load_key_index() == 0
 
 
-def test_fetch_reels_runs_one_job_per_channel_and_loses_none(monkeypatch):
-    """채널을 한 run에 몰아넣지 않는다 — **채널당 run 1개**로 쪼개 돌린다.
-
-    지키려는 사고는 그대로다: 443채널을 한 run에 몰아넣었더니 액터가 ~124번째에서
-    조용히 나머지를 누락시켰다(2026-07-09, 443개 중 26개만 처리). 옛 구현은 이걸
-    chunk_size 단위 순차 run으로 막았고, 2026-07-13 apidojo 전환에서는 아예
-    **채널당 startUrls run 1개 + 스레드풀 병렬**로 바뀌었다(chunk_size는 미사용 인자로만 남음).
-    옛 테스트는 없어진 `json["username"]` 청크를 들여다봐 KeyError로 실패했다.
-
-    그래서 검사 대상을 '청크 모양'이 아니라 **누락이 없는가**로 바꾼다 — 이게 원래 목적이다.
-    """
+def test_fetch_reels_chunks_sequentially_and_loses_none(monkeypatch):
+    """채널을 한 run에 몰아넣지 않는다 — CHUNK_SIZE(40)씩 **순차** run으로 나눈다.
+    443채널을 한 run에 넣었더니 ~124번째 뒤가 조용히 누락됐다(2026-07-09).
+    검사 대상은 '누락이 없는가'와 '묶음 크기'다."""
     monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1"])
-    started_urls = []
+    chunks = []
 
     def fake_post(url, headers=None, json=None, timeout=None):
-        # 전환 후 payload는 채널 URL 하나짜리 startUrls다.
-        started_urls.append(json["startUrls"][0]["url"])
-        run_id = f"run{len(started_urls)}"
+        assert "instagram-reel-scraper" in url          # 공식 액터(apidojo 아님)
+        chunks.append(list(json["username"]))
+        run_id = f"run{len(chunks)}"
         return FakeResponse(200, {"data": {"id": run_id, "status": "SUCCEEDED",
                                             "defaultDatasetId": f"ds-{run_id}"}})
 
     def fake_get(url, headers=None, timeout=None):
         assert _is_dataset_url(url)
-        # 어느 채널의 데이터셋인지는 중요치 않다 — 채널마다 1건씩 준다고 본다.
-        return FakeResponse(200, [_raw("reel")])
+        n = int(url.split("ds-run")[1].split("/")[0])
+        return FakeResponse(200, [_raw(f"r-{u}", u) for u in chunks[n - 1]])
 
     monkeypatch.setattr(apify_client.requests, "post", fake_post)
     monkeypatch.setattr(apify_client.requests, "get", fake_get)
@@ -252,12 +248,23 @@ def test_fetch_reels_runs_one_job_per_channel_and_loses_none(monkeypatch):
     usernames = [f"user{i}" for i in range(95)]
     items = apify_client.fetch_reels(usernames, poll_interval=0.01, timeout=5)
 
-    # 95채널 → run 95개. 한 run에 몰아넣어 뒤쪽이 잘리는 일이 없다.
-    assert len(started_urls) == 95
-    # 요청한 채널이 하나도 빠지지 않았다(순서는 스레드풀이라 보장하지 않으므로 집합으로).
-    assert {u.rstrip("/").split("/")[-2] for u in started_urls} == set(usernames)
-    # 채널당 1건씩 전부 합쳐져 돌아온다 — 조용한 누락이 없다는 뜻.
-    assert len(items) == 95
+    assert [len(c) for c in chunks] == [40, 40, 15]
+    assert sum(chunks, []) == usernames
+    assert len(items) == 95 and {i["ownerUsername"] for i in items} == set(usernames)
+
+
+def test_fetch_reels_drops_demo_items(monkeypatch):
+    """유료 렌탈 액터가 FREE 계정에 주던 `{"demo": true}` 견본은 릴스가 아니다 —
+    걸러야 한다(2026-10-22 실사고: 166 run 전부 demo → 수집 0건)."""
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["tok1"])
+    monkeypatch.setattr(apify_client.requests, "post", lambda *a, **kw: FakeResponse(
+        200, {"data": {"id": "run1", "status": "SUCCEEDED", "defaultDatasetId": "ds1"}}))
+    monkeypatch.setattr(apify_client.requests, "get", lambda *a, **kw: FakeResponse(
+        200, [{"demo": True}, _raw("real1"), {"demo": True}]))
+
+    items = apify_client.fetch_reels(["user1"], poll_interval=0.01, timeout=5)
+
+    assert _codes(items) == ["real1"]
 
 
 def test_fetch_reels_explicit_token_bypasses_rotation(monkeypatch):
