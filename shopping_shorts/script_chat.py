@@ -1,50 +1,55 @@
-"""2단계 대본 AI 대화 고치기(관제 253, 2026-10-22 사장님 "대본단계에서 ai채팅창을 주고 대화하면서 수정").
+"""2단계 대본 AI 대화(관제 253, 2026-10-22 사장님 "대본단계에서 ai채팅창을 주고 대화하면서 수정" /
+"ai와 대화 대답까지 하는 제미니창 — api로 버텍스").
 
-판단 주인: revise() — 회원 요청 한 마디 + 지금 대본 줄 → 고친 줄(같은 줄 수) + 짧은 답.
+판단 주인: revise() — 회원 말 한 마디 + 지금 대본 줄 + 앞 대화 → 제미나이식 답(자유 대화) + 필요할 때만 고친 대본.
+  · 질문·아이디어·후보 추천·설명은 reply 로 길게 답하고 대본은 안 건드린다(edit=false).
+  · 회원이 대본을 바꿔 달라고 할 때만 edit=true + 같은 줄 수의 전체 대본(lines). 앞에서 낸 후보("2번째 걸로")도 이어받는다.
   · 줄 하나 = 스토리보드 칸 하나 = 3단계 장면 한 칸. 칸마다 장면이 붙어 있으므로 **줄 수는 바꾸지 않는다**
     (줄을 늘리고 빼는 건 화면의 [＋ 칸 추가]·[🗑 빼기]가 장면과 함께 한다 — 여기서 하면 장면이 한 칸씩 밀린다).
-  · AI 호출은 script_generate._call_json 깔때기 그대로 — 버텍스 등록 회원은 자기 프로젝트, 관리자는 사장님 프로젝트,
+  · AI 호출은 script_generate._call_json 깔때기 그대로 — 버텍스 등록 회원은 자기 버텍스, 관리자는 사장님 버텍스,
     그 외는 무료 키풀(vertex_route.plan 한 곳이 가른다). 여기서 따로 길을 정하지 않는다(0순위-B).
   · 화면은 돌려받은 줄을 바로 덮지 않고 바뀐 줄을 보여 준 뒤 [적용]을 눌러야 칸에 넣는다.
 """
-import json
-
 from shopping_shorts import script_generate
 
 MAX_LINES = 60
 MAX_LINE_CHARS = 300
-MAX_MSG_CHARS = 1000
-MAX_HISTORY = 8
+MAX_MSG_CHARS = 2000
+MAX_REPLY_CHARS = 4000
+MAX_HISTORY = 16
 
 _SCHEMA = {
     "type": "object",
     "properties": {
         "reply": {"type": "string"},
+        "edit": {"type": "boolean"},
         "lines": {"type": "array", "items": {"type": "string"}},
     },
-    "required": ["reply", "lines"],
+    "required": ["reply", "edit"],
 }
 
-_PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 나레이션 대본을 고쳐 주는 편집자다.
+_PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 대본을 함께 쓰는 AI 작가다. 회원과 제미나이처럼 자연스럽게 대화한다.
 대본은 줄 단위다. 줄 하나가 영상의 장면 한 칸이고 성우가 그대로 읽는다. 줄 앞 [ ]는 그 칸 이름(훅·문제·해결 등)이다 —
-회원이 "훅", "첫 줄", "마지막", "CTA"처럼 칸 이름·위치로 말하면 그 줄을 고친다.
+회원이 "훅", "첫 줄", "마지막", "CTA"처럼 칸 이름·위치로 말하면 그 줄 이야기다.
 
 [지금 대본 — {n}줄]
 {lines}
 {product_hint}
 [지금까지 대화]
 {history}
-[회원 요청]
+[회원 말]
 {message}
 
-지킬 것:
-- 회원 요청대로 고친 **전체 대본**을 lines 에 정확히 {n}줄로 돌려준다. 요청과 상관없는 줄은 글자 하나 바꾸지 말고 그대로 둔다.
-- 줄을 더하거나 빼 달라는 요청이어도 줄 수는 {n}줄 그대로 두고, reply 에 "화면의 ＋ 칸 추가 / 🗑 빼기 버튼으로 칸을 늘리거나 빼 주세요"라고 알려 준다.
-- 질문만 했으면 lines 는 지금 대본 그대로 돌려주고 reply 에 답한다.
-- 대본에 없는 사실·수치·효과를 지어내지 않는다. 말투(존댓말·반말·어미)는 지금 대본을 따른다.
-- 줄 번호·칸 이름·따옴표·기호·괄호 설명을 줄 안에 넣지 않는다. 성우가 읽을 문장만 쓴다.
-- 회원이 문장을 직접 불러 주면("훅을 'OO'로 해줘") 그 문장을 그대로 쓴다.
-- reply 는 무엇을 바꿨는지 한두 문장 한국어로.
+답하는 법:
+- reply: 회원 말에 대한 대화 답(한국어). 질문·의견·아이디어·후보 추천·이유 설명 모두 여기서 성의 있게 답한다.
+  후보를 낼 때는 번호를 붙여 줄바꿈으로 나열한다(회원이 "2번째 걸로 해줘"처럼 이어 말할 수 있게). 마크다운 기호(**, #)는 쓰지 않는다.
+- edit: 회원이 대본을 **바꿔/고쳐/넣어/적용해 달라고** 할 때만 true. 질문·추천·상의만 하면 false(대본은 그대로).
+- edit=true 이면 lines 에 고친 **전체 대본**을 정확히 {n}줄로 준다. 요청과 상관없는 줄은 글자 하나 바꾸지 말고 그대로 둔다.
+  앞 대화에서 낸 후보를 고르라고 하면("2번째 걸로") 그 후보 문장을 그대로 쓴다. 회원이 문장을 불러 주면 그대로 쓴다.
+  reply 에는 무엇을 바꿨는지 짧게 말한다.
+- 줄을 더하거나 빼 달라고 하면 줄 수는 {n}줄 그대로 두고, reply 에 "화면의 ＋ 칸 추가 / 🗑 빼기 버튼으로 칸을 늘리거나 빼 주세요"라고 알려 준다.
+- 대본에 없는 사실·수치·효과를 지어내지 않는다(숫자는 대본·상품에 있을 때만). 말투(존댓말·반말·어미)는 지금 대본을 따른다.
+- lines 의 줄에는 번호·칸 이름·따옴표·기호·괄호 설명을 넣지 않는다. 성우가 읽을 문장만 쓴다.
 """
 
 
@@ -60,25 +65,34 @@ def _clean_lines(lines):
     return out
 
 
-def revise(lines, message, history=None, product="", roles=None, *, call=None, tries=2):
+def revise(lines, message, history=None, product="", roles=None, only=None, *, call=None, tries=2):
     """→ {"reply": str, "lines": [...같은 줄 수], "changed": [바뀐 줄 번호], "auth": "vertex"|"free"}.
+    대화만 했으면(edit=false) lines = 지금 대본 그대로, changed = [].
+    only=줄 번호(0부터): 칸 아래 한 줄 요구창(2026-10-22 사장님 "다른 스타일로·연결어로 바꿔줘 같은 한 줄짜리 간단 요구").
+      그 줄만 고친다 — 대화 없이 바로 고치고, AI가 다른 줄을 건드려도 서버가 원래대로 되돌린다.
     입력이 잘못됐거나 AI가 계약(줄 수·빈 줄)을 못 지키면 ValueError — 호출부가 그대로 화면에 띄운다.
     call: 테스트가 갈아끼우는 (prompt, schema) -> dict."""
     src = _clean_lines(lines)
-    if not src or not any(src):
-        raise ValueError("고칠 대본이 없어요 — 칸에 문장을 먼저 넣어 주세요")
+    if not src:
+        raise ValueError("대본 칸이 없어요 — 스토리보드를 먼저 만들어 주세요")
     if len(src) > MAX_LINES:
         raise ValueError("줄이 너무 많아요(%d줄 초과)" % MAX_LINES)
     msg = str(message or "").strip()
     if not msg:
-        raise ValueError("요청을 적어 주세요")
+        raise ValueError("말을 적어 주세요")
     msg = msg[:MAX_MSG_CHARS]
+    if only is not None:
+        if not isinstance(only, int) or not 0 <= only < len(src):
+            raise ValueError("고칠 줄 번호가 맞지 않아요")
+        name = str(roles[only] or "").strip()[:20] if roles and only < len(roles) else ""
+        msg = ("%d번 줄%s만 고친다(반드시 edit=true, 다른 줄은 그대로): %s"
+               % (only + 1, "(%s)" % name if name else "", msg))
     hist = []
     for h in (history or [])[-MAX_HISTORY:]:
         if not isinstance(h, dict):
             continue
-        who = "회원" if h.get("role") == "user" else "편집자"
-        t = str(h.get("text") or "").strip()[:MAX_MSG_CHARS]
+        who = "회원" if h.get("role") == "user" else "AI"
+        t = str(h.get("text") or "").strip()[:MAX_REPLY_CHARS]
         if t:
             hist.append("%s: %s" % (who, t))
     # 칸 이름(훅·문제·해결…)을 줄 앞에 붙인다 — "훅쪽에 OO 해줘"처럼 칸 이름으로 부탁해도 어느 줄인지 안다
@@ -88,14 +102,21 @@ def revise(lines, message, history=None, product="", roles=None, *, call=None, t
     hint = ("\n[상품] %s\n" % product.strip()) if (product or "").strip() else ""
     prompt = _PROMPT.format(n=len(src), lines=numbered, product_hint=hint,
                             history="\n".join(hist) or "(없음)", message=msg)
-    note = {}   # _call_json 이 실제로 탄 길을 적는다(auth="vertex") — 화면이 "내 버텍스 / 무료 제미나이"를 말한다
+    note = {}   # _call_json 이 실제로 탄 길을 적는다(auth="vertex") — 화면이 "구글 버텍스 / 무료 제미나이"를 말한다
     call = call or (lambda p, s: script_generate._call_json(p, s, note=note))
+    auth = lambda: "vertex" if note.get("auth") == "vertex" else "free"
     last = ""
     for _ in range(max(1, tries)):
         got = call(prompt, _SCHEMA) or {}
-        if not got.get("lines"):
-            last = "AI 응답이 비었어요(키 소진·응답 오류)"
-            continue
+        reply = str(got.get("reply") or "").strip()[:MAX_REPLY_CHARS]
+        if not got.get("edit"):
+            if only is not None:
+                last = "AI가 줄을 고치지 않았어요"
+                continue
+            if not reply:
+                last = "AI 응답이 비었어요(키 소진·응답 오류)"
+                continue
+            return {"reply": reply, "lines": list(src), "changed": [], "auth": auth()}
         # 프롬프트의 빈 칸 표시("(빈 칸)")를 AI가 그대로 돌려주면 성우가 읽는다 — 빈 칸으로 되돌린다(2026-10-22 실측: 3칸)
         out = [_unplaceholder(str(x or "").strip()[:MAX_LINE_CHARS]) for x in (got.get("lines") or [])]
         if len(out) != len(src):
@@ -105,8 +126,11 @@ def revise(lines, message, history=None, product="", roles=None, *, call=None, t
         if any(s and not o for s, o in zip(src, out)):
             last = "빈 줄이 섞여 나왔어요"
             continue
-        reply = str(got.get("reply") or "").strip()[:MAX_MSG_CHARS] or "고쳤어요."
+        if only is not None:   # 한 줄 요구 — 그 줄 말고는 원래대로(AI가 건드려도)
+            out = [o if i == only else s for i, (s, o) in enumerate(zip(src, out))]
+            if out[only] == src[only]:
+                last = "AI가 같은 문장을 돌려줬어요"
+                continue
         changed = [i for i, (s, o) in enumerate(zip(src, out)) if s != o]
-        return {"reply": reply, "lines": out, "changed": changed,
-                "auth": "vertex" if note.get("auth") == "vertex" else "free"}
-    raise ValueError("AI가 대본을 못 고쳤어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 보내 주세요")
+        return {"reply": reply or "고쳤어요.", "lines": out, "changed": changed, "auth": auth()}
+    raise ValueError("AI가 답하지 못했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 보내 주세요")
