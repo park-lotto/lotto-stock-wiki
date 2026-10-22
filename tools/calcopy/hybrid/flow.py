@@ -326,7 +326,8 @@ def ph_origin_read(st, m, rp, u):
     label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
     if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
         raise _Stop("출처 표기가 없는 쇼츠라 건너뜁니다", "화면이나 설명란에 출처가 적힌 쇼츠 주소를 주세요")
-    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "n": 60}], "then": "src_got"}
+    celeb = str(r.get("celeb") or "")
+    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "celeb": "" if celeb == "불명" else celeb, "n": 60}], "then": "src_got"}
 
 
 SRC_PROBE = 10       # 출처 채널에서 조사할 후보 수(최신순, 벤치보다 먼저 올라온 것만)
@@ -343,8 +344,8 @@ def ph_src_got(st, m, rp, u):
         st["log"].append("출처 채널을 못 찾아 검색 길로: " + json.dumps(f.get("channels") or [], ensure_ascii=False)[:300])
         return {"goto": "search"}
     ch = (f.get("picked") or [{}])[0]
-    st["src_channel"] = ch
-    st["mixed"] = [{**c, "channel": ch.get("name")} for c in cands]
+    st["src_channel"] = {**ch, "how": f.get("how")}
+    st["mixed"] = [{**c, "channel": c.get("channel") or ch.get("name")} for c in cands]
     terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
     return {"do": [{"id": "probe", "cmd": "origin_probe", "ids": [c["id"] for c in cands], "before": str(B.get("date") or ""), "terms": terms,
                     "max_sheets": 4}], "then": "probe_got"}

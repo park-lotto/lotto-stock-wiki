@@ -327,9 +327,21 @@ def c_channel_find(W, d):
     if r.returncode == 0 and r.stdout.strip():
         chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id"),
                   "verified": bool(e.get("channel_is_verified"))} for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
-    pick = sorted(chans, key=lambda c: (RU.norm(c["name"] or "") != RU.norm(label), not c["verified"]))[:1]
-    titles = c_channel_list(W, {"channels": [c["id"] for c in pick], "n": int(d.get("n") or 60)})["titles"] if pick else []
-    return {"channels": chans, "picked": pick, "titles": titles}
+    pick = [c for c in sorted(chans, key=lambda c: not c["verified"]) if RU.norm(c["name"] or "") == RU.norm(label)][:1]
+    if pick:
+        return {"channels": chans, "picked": pick, "how": "channel",
+                "titles": c_channel_list(W, {"channels": [c["id"] for c in pick], "n": int(d.get("n") or 60)})["titles"]}
+    # 출처 = 프로그램 이름(같은 이름 채널 없음) — 10-22 선우용여 '옥탑방의 문제아들': 채널 검색이 'KBS 한국방송' 본채널을 골랐고 원본은 KBS Entertain 클립.
+    #   '<연예인> <출처>' 영상 검색 한 번 → 제목·채널에 출처 이름이 든 영상만(검색 순서 그대로)
+    celeb = str(d.get("celeb") or "")
+    r = yt(["--flat-playlist", "-J", "--playlist-end", "20", f"ytsearch20:{celeb} {label}".strip()], timeout=120)
+    titles = []
+    if r.returncode == 0 and r.stdout.strip():
+        nl = RU.norm(label)
+        for e in json.loads(r.stdout).get("entries") or []:
+            if e.get("id") and nl and (nl in RU.norm(e.get("title") or "") or nl in RU.norm(e.get("channel") or "")):
+                titles.append({"id": e["id"], "title": e.get("title"), "dur": e.get("duration"), "channel": e.get("channel")})
+    return {"channels": chans, "picked": [], "how": "search", "titles": titles}
 
 
 def _storyboard_sheet(W: Path, vid: str, fmts: list, dur: float, cols: int = 10) -> dict | None:

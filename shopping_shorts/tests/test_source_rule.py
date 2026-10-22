@@ -123,7 +123,7 @@ def test_origin_from_source_label_first():
         flow.ph_origin_read(st, {}, no, {})
     yes = {"origin_read": {"celeb": "고현정", "queries": [], "is_shopping": True, "source_label": "출처: 고현정", "scene_words": ["서촌"], "product_words": ["가방"]}}
     r = flow.ph_origin_read(st, {}, yes, {})
-    assert r["do"][0]["cmd"] == "channel_find" and r["do"][0]["label"] == "고현정"
+    assert r["do"][0]["cmd"] == "channel_find" and r["do"][0]["label"] == "고현정" and r["do"][0]["celeb"] == "고현정"
     titles = [{"id": "s1", "title": "쇼츠", "dur": 30}, {"id": "v21", "title": "브이로그 21", "dur": 691}, {"id": "v20", "title": "브이로그 20", "dur": 725}]
     r = flow.ph_src_got(st, {"src": {"picked": [{"id": "UC", "name": "고현정"}], "titles": titles}}, {}, {})
     assert r["do"][0]["cmd"] == "origin_probe" and r["do"][0]["ids"] == ["v21", "v20"] and r["do"][0]["before"] == "20261016"
