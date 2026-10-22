@@ -409,7 +409,8 @@ def c_origin_probe(W, d):
                 p.write_bytes(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read())
                 words = vtt_words(p)
             except Exception as e:  # noqa: BLE001
-                sys.stderr.write(f"[probe] {vid} 자막 받기 실패: {e}\n")
+                sys.stderr.write(f"[probe] {vid} 자막 바로 받기 실패({e}) → 로그인한 yt-dlp 로\n")   # 10-22 이영애: 429 로 자막 없이 넘어감
+                words, _ = _origin_words(W, vid)
         m = RU.fingerprint(lines, words) if words else []
         if terms and words:
             h = RU.word_hits(words, terms)

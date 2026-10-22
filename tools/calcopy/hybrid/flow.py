@@ -68,7 +68,7 @@ ORIGIN_READ = """너는 쇼츠 원본 추적 담당이다. 아래는 남의 채�
 - 설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다.
 - 연예인이 쓰는 물건(쇼핑 소재)이 아니면 is_shopping=false. 의약품·의료기기면 is_shopping=false.
 JSON 하나: {"celeb": "이름 또는 불명", "source_label": "출처 글자 그대로(화면 → 설명란) 또는 ''",
- "source_kind": "channel(유튜브 채널 이름 — 개인 채널·'요정재형'처럼) | program(방송 프로그램 이름 — '옥탑방의 문제아들'·'유퀴즈'처럼, 방송사 로고·회차 표기가 단서)", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
+ "source_kind": "channel(유튜브 채널 이름 — 개인 채널·'요정재형'처럼) | program(방송 프로그램 이름 — '옥탑방의 문제아들'·'유퀴즈'처럼, 방송사 로고·회차 표기가 단서) | sns(유튜브 밖 — '○○ 인스타그램'·틱톡·블로그처럼)", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
  "product_words": ["제품을 가리키는 낱말"], "scene_words": ["원본 장면을 가리키는 장소·상황 낱말(제목·설명·화면 글자에서, 예 '서촌'·'마실') — 없으면 []"], "queries": ["유튜브 검색어 3~5개 — '<연예인> <제품 낱말>' 꼴"], "is_shopping": true}"""
 
 PEER_READ = """너는 출처 글자 읽기 담당이다. 같은 연예인·제품을 다룬 **다른 채널 쇼츠**들의 장면 모음이다(쇼츠마다 한 줄, 왼쪽에 번호).
@@ -331,7 +331,11 @@ def ph_origin_read(st, m, rp, u):
     if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
         raise _Stop("출처 표기가 없는 쇼츠라 건너뜁니다", "화면이나 설명란에 출처가 적힌 쇼츠 주소를 주세요")
     celeb = str(r.get("celeb") or "")
-    kind = "program" if str(r.get("source_kind") or "").startswith("program") else "channel"
+    sk = str(r.get("source_kind") or "")
+    if sk.startswith("sns") or re.search(r"인스타|instagram|틱톡|tiktok|블로그|blog", label, re.I):
+        st["src"] = {"label": label, "kind": "sns"}     # 10-22 이영애 '이영애 인스타그램' → 엉뚱한 유튜브 채널(Famous Woman)을 뒤졌다
+        raise _Stop(f"출처가 유튜브 밖({label})이라 원본 영상을 받을 수 없어 건너뜁니다", "출처가 유튜브 채널·방송인 쇼츠 주소를 주세요")
+    kind = "program" if sk.startswith("program") else "channel"
     st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태에 남겨 다시 시도할 때도 같은 길(사장님 10-22 "안 헷갈리게")
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")
     return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60}], "then": "src_got"}
