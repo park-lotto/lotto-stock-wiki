@@ -3,7 +3,8 @@
  "cand_dir": "C:/숏템_칼카피/ititemlog/ep03_v2/src",
  "src_urls": {
   "hershy": "https://www.youtube.com/shorts/SyIH85GgbaY",
-  "kristina": "https://www.youtube.com/shorts/hYKci3bw4NY"
+  "kristina": "https://www.youtube.com/shorts/hYKci3bw4NY",
+  "namrata": "https://www.youtube.com/shorts/zZGqABxD83I"
  },
  "cuts": {
   "N1": [
@@ -95,10 +96,8 @@
      1080,
      1434
     ],
-    "see": "남자 튜브·짜기"
-   }
-  ],
-  "N6": [
+    "see": "남자 등장·짜기"
+   },
    {
     "src": "kristina.mp4",
     "ss": 6.2,
@@ -112,18 +111,70 @@
     "see": "바르기 → 흰 기 없음"
    }
   ],
-  "N7": [
+  "N6": [
    {
-    "src": "k_intro_slow.mp4",
+    "src": "namrata.mp4",
     "ss": 0.0,
     "w": 1,
     "crop": [
      0,
-     200,
-     1080,
-     1434
+     100,
+     720,
+     956
     ],
-    "see": "여자 볼에 바름(0~3초를 0.67배 느리게 = 4.5초, 다른 사람 장면)"
+    "see": "얼굴에 점점이 짬"
+   },
+   {
+    "src": "namrata.mp4",
+    "ss": 2.0,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     720,
+     956
+    ],
+    "see": "하얀 가면 펴 바름"
+   }
+  ],
+  "N7": [
+   {
+    "src": "namrata.mp4",
+    "ss": 4.0,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     720,
+     956
+    ],
+    "see": "문질러 흡수 중"
+   }
+  ],
+  "N8": [
+   {
+    "src": "namrata.mp4",
+    "ss": 7.0,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     720,
+     956
+    ],
+    "see": "흰 기 사라진 얼굴"
+   },
+   {
+    "src": "namrata.mp4",
+    "ss": 8.8,
+    "w": 1,
+    "crop": [
+     0,
+     100,
+     720,
+     956
+    ],
+    "see": "튜브 들고"
    }
   ]
  }
