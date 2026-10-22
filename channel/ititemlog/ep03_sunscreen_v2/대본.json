@@ -1,0 +1,189 @@
+{
+ "_note": "선크림 v2(10-22 새 방식 2편째): 결과 먼저 훅 · 어미 다양·연결어 · 나레↔원음 티키타카 · 끝 = 쿠팡 후기 소구점 + 심리 CTA(07_대본 §3-1 '역전' 꼴) · 원본 2개 시간순·재사용 0 · 확대 1.0 · 원본 글 VMake Pro(hershy 5~19.9 · kristina 전체). 원본 = hershy 'SyIH85GgbaY'(1,843만) + kristina nguyen 'hYKci3bw4NY'(2,376만·평소 2,437배). 후기 = 쿠팡 '조선미녀 맑은쌀 선크림 50ml'(후기 2,155·'1,000명 이상 만족', 10-22 크롬 열람).",
+ "slug": "ititemlog_ep03_sunscreen_v2",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "조선미녀 맑은쌀 선크림 SPF50+ 50ml(쿠팡 후기 2,155)",
+ "title_lines": [
+  [
+   [
+    "한국 선크림 바르고"
+   ]
+  ],
+  [
+   [
+    "산타 된 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "hershy 5.08~7.96 'Okay but will it really blend out on me? We're gonna find out'",
+  "f2": "hershy 7.96~11.48 'You're supposed to use a lot of sunscreen on your face. Let's see how this turns out'",
+  "f3": "hershy 10~12초 얼굴에 흰 선 · 12.76~14.72 'It's giving Indian Santa Claus right now'(산타 스티커)",
+  "f4": "hershy 15~17초 두드려 흡수 · 17.76~19.80 'Beauty of Joseon is brown girl approved'",
+  "f5": "kristina 원본 박힌 글 'It doesn't show a white cast bc ur pale' · 3~9초 남자가 라운드랩 짜서 바름 · 9초 흰 기 없음",
+  "f6": "쿠팡 후기: '선크림 맞아? 크림처럼 발리는데 밀착력까지' · '선크림 바르고 바로 쿠션 발랐는데 밀림이 없어서' · '아마존 매출 1위라서 사봤는데 끈적임 없이'"
+ },
+ "cta": "심리 CTA(역전) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "까만 피부엔 하얗게 뜬다는 한국 선크림, 직접 발라 본 외국인 있죠,",
+   "caps": [
+    {
+     "text": "까만 피부엔 하얗게 뜬다는 한국 선크림"
+    },
+    {
+     "text": "직접 발라 본 외국인 있죠",
+     "key": "직접"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "hershy.mp4",
+   "spans": [
+    [
+     12.76,
+     14.72
+    ]
+   ],
+   "said": "It's giving Indian Santa Claus right now",
+   "caps_rel": [
+    [
+     "완전 인도 산타클로스네",
+     0.0,
+     1.96,
+     "산타클로스"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 반전",
+   "tts": "근데 이게 대박인 게, 톡톡 두드리자마자 싹 사라지더니,",
+   "caps": [
+    {
+     "text": "근데 이게 대박인 게",
+     "key": "대박"
+    },
+    {
+     "text": "톡톡 두드리자마자 싹 사라지더니"
+    }
+   ]
+  },
+  {
+   "id": "O4",
+   "kind": "orig",
+   "role": "원음 결론",
+   "src": "hershy.mp4",
+   "spans": [
+    [
+     17.76,
+     19.8
+    ]
+   ],
+   "said": "Beauty of Joseon is brown girl approved",
+   "caps_rel": [
+    [
+     "조선미녀, 갈색 피부도 합격!",
+     0.0,
+     2.04,
+     "합격"
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 되감기",
+   "tts": "처음엔 의심부터 했대요,",
+   "caps": [
+    {
+     "text": "처음엔 의심부터 했대요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(의심)",
+   "src": "hershy.mp4",
+   "spans": [
+    [
+     5.08,
+     7.96
+    ]
+   ],
+   "said": "Okay but will it really blend out on me? We're gonna find out",
+   "caps_rel": [
+    [
+     "근데 이게 나한테도 스며들까?",
+     0.0,
+     2.0
+    ],
+    [
+     "한번 확인해 보자",
+     2.04,
+     2.88
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 두 번째 소재",
+   "tts": "심지어 네 피부가 밝아서 안 뜨는 거라는 말에 다른 외국인도 발라 봤는데,",
+   "caps": [
+    {
+     "text": "심지어",
+     "key": "심지어"
+    },
+    {
+     "text": "네 피부가 밝아서 안 뜨는 거라는 말에"
+    },
+    {
+     "text": "다른 외국인도 발라 봤는데"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 후기 소구점",
+   "tts": "역시 흔적도 없었고, 후기 보면 쿠션을 올려도 안 밀린다더라고요.",
+   "caps": [
+    {
+     "text": "역시 흔적도 없었고"
+    },
+    {
+     "text": "후기 보면 쿠션을 올려도"
+    },
+    {
+     "text": "안 밀린다더라고요",
+     "key": "안 밀린다"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 — 심리 CTA(역전)",
+   "tts": "외국인은 아마존 일등이라며 찾아 쓰는데, 정작 우린 아직도 참고 바르는 건 아니죠?",
+   "caps": [
+    {
+     "text": "외국인은 아마존 1등이라며 찾아 쓰는데"
+    },
+    {
+     "text": "정작 우린 아직도 참고 바르는 건 아니죠?",
+     "key": "정작"
+    }
+   ]
+  }
+ ]
+}
