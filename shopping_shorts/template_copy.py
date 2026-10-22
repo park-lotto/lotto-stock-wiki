@@ -102,26 +102,30 @@ def _is_ja(text: str) -> bool:
 
 
 def _split_hook_ja(text: str) -> tuple[str, str]:
+    """일본어 제목 → 두 줄. **긴 줄이 가장 짧아지는 자연 경계**에서 나눈다(긴 쪽 글자가 작아지므로).
+    경계 순위: 문장부호 > 조사 뒤 > 히라가나→한자·가타카나 > 긴 가타카나 속 ン·ング 뒤. の 뒤는 쓰지 않는다.
+    (관제 254 로컬 렌더 실측: 'も' 뒤 13|22자로 둘째 줄이 절반 크기로 줄었다)"""
     t = text.strip().rstrip("。．.、,")
     n = len(t)
     if n < 8:
         return t, ""
     hira = lambda c: "぀" <= c <= "ゟ"          # noqa: E731
+    kata = lambda c: "゠" <= c <= "ヿ" and c not in "ァィゥェォッャュョヮー"   # noqa: E731
     cands = []
     for i in range(3, n - 2):
         head, nxt = t[:i], t[i]
         if head.endswith(("、", "。", "！", "？", "!", "?")):
-            cands.append((0, abs(i - n / 2), i))
+            rank = 0
         elif any(head.endswith(pt) for pt in _JA_TITLE_PARTICLES) and not hira(nxt):
-            cands.append((1, abs(i - n / 2), i))
-        elif hira(t[i - 1]) and not hira(nxt) and nxt not in "ー":
-            cands.append((2, abs(i - n / 2), i))
-    if not cands:
-        cut = n // 2
-    else:
-        # 가운데에서 너무 먼(전체의 1/4 넘게) 자리는 종류가 좋아도 버린다 — 한 줄이 쏠리면 다시 작아진다
-        near = [c for c in cands if c[1] <= n / 4] or cands
-        cut = min(near)[2]
+            rank = 1
+        elif hira(t[i - 1]) and not hira(nxt) and nxt != "ー" and t[i - 1] != "の":
+            rank = 2
+        elif head.endswith("ング") and kata(nxt):
+            rank = 3
+        else:
+            continue
+        cands.append((max(i, n - i) + rank, i))   # 순위 한 칸 = 한 글자 손해로 친다
+    cut = min(cands)[1] if cands else n // 2
     return t[:cut].rstrip("、"), t[cut:]
 
 
@@ -237,8 +241,16 @@ def support_from_hook(hook1: object, hook2: object,
     if _is_ja(f"{hook1}{hook2}"):
         # 일본어: 붙여 쓰고 끝 마침표를 뗀 뒤 물음표(전각). 길면 뒷줄만 — 한국어와 같은 규칙(관제 254)
         line = f"{hook1}{hook2}".strip().rstrip("。．.、,")
-        if len(line) > contract.support_max - 1:
-            line = str(hook2 or "").strip().rstrip("。．.、,") or line
+        if len(line) > 13:
+            # 일본어는 전각이라 흰 띠 한 줄에 13자 안팎 — 제목 끝 자연 조각(정체를 밝히는 자리)만 쓴다
+            #   "クリーニング屋の…凄すぎる発明品" → "凄すぎる発明品？"(관제 254 로컬 렌더 실측: 23자가 두 줄로 작아졌다)
+            from .video_assemble import _caption_segments
+            segs = _caption_segments(line) or [line]
+            line = segs[-1]
+            for seg in reversed(segs[:-1]):
+                if len(seg) + len(line) > 13:
+                    break
+                line = seg + line
         return line if line.endswith(("？", "！", "?", "!")) else line + "？"
     words = _one_line(f"{hook1} {hook2}").split()
     if not words:
