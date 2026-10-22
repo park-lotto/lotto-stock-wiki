@@ -135,7 +135,7 @@ def test_origin_from_source_label_first():
 
 
 def test_source_kind_program_marked_and_kept():
-    """출처가 프로그램 이름이면 표시하고(진행 줄·편 상태) 채널 검색을 건너뛴다 — 다시 시도해도 같은 길(사장님 10-22 '안 헷갈리게')."""
+    """출처가 프로그램 이름이면 편 상태에 표시하고 채널 검색을 건너뛴다 — 다시 시도해도 같은 길(사장님 10-22 '안 헷갈리게')."""
     from tools.calcopy.hybrid import flow
     st = {"bench": {"id": "b", "dur": 14, "date": "20261009"}, "tries": {}, "log": []}
     rp = {"origin_read": {"celeb": "선우용여", "queries": [], "is_shopping": True, "source_label": "출처: 옥탑방의 문제아들", "source_kind": "program"}}
@@ -143,7 +143,8 @@ def test_source_kind_program_marked_and_kept():
     assert r["do"][0]["kind"] == "program" and st["src"] == {"label": "옥탑방의 문제아들", "kind": "program"}
     flow.ph_src_got(st, {"src": {"how": "search", "picked": [], "titles": [{"id": "q", "title": "선우용여 #옥탑방의문제아들", "dur": 999, "channel": "KBS Entertain"}]}}, {}, {})
     assert st["src"]["channel"] == "KBS Entertain"
-    assert "출처 '옥탑방의 문제아들'(프로그램 → KBS Entertain)" in flow._msg(st, "probe_got")
+    msg = flow._msg(st, "probe_got")
+    assert "원본" in msg and "옥탑방" not in msg and "KBS" not in msg          # 고객 진행 줄은 단계만(사장님 10-22 "세부적으로 알려 주면 안 된다") — 출처 판단은 편 상태에만
 
 
 def test_run_do_parallel_safe_only(tmp_path, monkeypatch):
@@ -226,3 +227,16 @@ def test_material_problems_caught_before_render():
                   "L7": [{"src": "x.mp4", "ss": "3초", "crop": [0.1, 0, 1]}]}}
     p = RU.material_problems(M, {"o.mp4", "prod_1.jpg", "m.mp4"}, {"L1"})
     assert len(p) == 4 and p[0].startswith("L6#1") and all(x.startswith("L7#1") for x in p[1:])   # 원음 줄 o.mp4·사진 컷은 통과
+
+
+def test_customer_stop_text_has_no_internals():
+    """멈춤 글(고객에게 보임)에 오류 원문·내부 이름이 없다 — 세부는 작업 기록(log)에만(사장님 10-22)."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    st = {"version": "키치잇판", "script": {"S": {"lines": []}, "M": {"cuts": {}}}, "tries": {"render_err": 1}, "log": [], "bench": {}, "origin": {"files": [{"name": "o.mp4"}]}}
+    with pytest.raises(flow._Stop) as e:
+        flow.ph_render_got(st, {"render": {"ok": False, "error": "KeyError: 'ss' prod_1.jpg"}}, {}, {})
+    assert "KeyError" not in e.value.why + e.value.fix and "prod_1" not in e.value.fix and any("KeyError" in x for x in st["log"])
+    with pytest.raises(flow._Stop) as e:
+        flow._reply({}, "plan_키치잇판", ("ok",))
+    assert "plan_" not in e.value.why

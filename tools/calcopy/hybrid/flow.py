@@ -182,9 +182,6 @@ def _msg(st: dict, phase: str) -> str:
     prev = st.get("_shown_stage")
     st["_shown_stage"] = k
     now = STAGE_TEXT[k] + (" 중" if k not in ("done", "sign") else "")
-    S = st.get("src") or {}
-    if k == "origin" and S.get("label"):           # 출처가 채널 이름인지 프로그램 이름인지 진행 줄에도 보인다(사장님 10-22)
-        now += f" — 출처 '{S['label']}'({'프로그램' if S.get('kind') == 'program' else '채널'}" + (f" → {S['channel']}" if S.get("channel") else "") + ")"
     if prev and prev != k:
         return f"{STAGE_TEXT[prev]} 완료 → {now}"
     return now
@@ -274,17 +271,18 @@ def _tries(st: dict, key: str, limit: int) -> int:
     n = st["tries"].get(key, 0) + 1
     st["tries"][key] = n
     if n > limit:
-        raise _Stop(f"{key} 단계를 {limit}번 고쳐도 통과하지 못했습니다", "같은 영상으로 다시 만들거나 다른 영상을 주세요")
+        st["log"].append(f"고치기 한도: {key} {limit}번")
+        raise _Stop("여러 번 고쳐도 통과하지 못했습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
     return n
 
 
 def _reply(rp: dict, rid: str, need: tuple = ()) -> dict:
     a = rp.get(rid)
     if not isinstance(a, dict):
-        raise _Stop(f"판정 답이 없습니다({rid})", "다시 이어서 부르세요")
+        raise _Stop("확인 답을 받지 못했습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
     miss = [k for k in need if k not in a]
     if miss:
-        raise _Stop(f"판정 답에 칸이 없습니다({rid}: {miss})", "다시 이어서 부르세요")
+        raise _Stop("확인 답이 덜 채워졌습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다")
     return a
 
 
@@ -306,7 +304,8 @@ def ph_setup(st, m, rp, u):
 def ph_setup_check(st, m, rp, u):
     env = m.get("env") or {}
     if env.get("error"):
-        raise _Stop("회원 PC 준비 확인이 실패했습니다", str(env["error"])[:200])
+        st["log"].append("준비 확인 실패: " + str(env["error"])[:300])
+        raise _Stop("이 PC 준비 확인이 실패했습니다", "숏템 준비 점검(shortem_setup)을 한 번 한 뒤 다시 시도해 주세요")
     voice = (_style(st["version"]).get("voice") or {}).get("voice_id", "")
     need = "elevenlabs" if voice.startswith("kr-mina") else "typecast"
     if not (env.get("keys") or {}).get(need) and not env.get("dev"):
@@ -349,7 +348,7 @@ def ph_origin_read(st, m, rp, u):
         st["log"].append(f"출처 '{label}' = SNS(원본이 아니다 — 사장님 10-22) → 검색 길로 진짜 원본")
         return {"goto": "search"}                       # 인스타 출처는 거쳐 온 곳 — '<연예인> <제품 낱말>' 검색·지문 대조로 진짜 원본을 찾는다
     kind = "program" if sk.startswith("program") else "channel"
-    st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태에 남겨 다시 시도할 때도 같은 길(사장님 10-22 "안 헷갈리게")
+    st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태·작업 기록에 남겨 다시 시도할 때도 같은 길(사장님 10-22). 고객 진행 줄에는 단계만(세부 금지)
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")
     return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60,
                     "words": [w for w in r.get("product_words") or [] if w][:2]}], "then": "src_got"}
@@ -1176,7 +1175,8 @@ def ph_render_got(st, m, rp, u):
             st["log"].append(f"배속 {tl['max']} > {cap - 0.01}")
         return {"goto": "check"}
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps") and st["tries"].get("render_err", 0) >= 1:
-        raise _Stop("영상을 만들다 멈췄습니다", str(r["error"])[:200], retry="render")
+        st["log"].append("렌더 오류: " + str(r["error"])[:300])
+        raise _Stop("영상을 만들다 멈췄습니다", "다시 시도하면 멈춘 곳부터 이어 갑니다", retry="render")
     if r.get("error") and "원본 샷보다 길다" not in str(r["error"]) and not r.get("jumps"):
         st["tries"]["render_err"] = st["tries"].get("render_err", 0) + 1   # 처음 보는 렌더 오류도 재료로 한 번 고쳐 본다(10-22 강주은: 사진 컷 ss 없음 KeyError 로 곧장 멈춤)
         why = f"렌더 오류: {str(r['error'])[:300]} — 재료.json 컷의 빠진 칸(src·ss·crop)·형식을 바로잡아라"
