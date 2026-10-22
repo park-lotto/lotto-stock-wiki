@@ -586,12 +586,10 @@ def emph_png(text: str, cap: dict, rgb, dst: Path, dy: int = 0) -> Path:
     return dst
 
 
-def build(plan: dict):
-    out = Path(plan["out"]).resolve()
-    shutil.rmtree(out / "work", ignore_errors=True); (out / "work").mkdir(parents=True, exist_ok=True)
-    S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
+def plan_times(plan: dict, S: dict | None = None) -> dict:
+    """자막 조각 시각·훅 카드 끝·컷 시각 — 판단 한 곳(build 와 컷 계획표가 같이 부른다, 10-22 썰템홈샷 하이브리드)."""
+    S = S or json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
     sentences = [l["text"] for l in S["final"]["lines"]]
-    M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
     steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"], lines=sentences,
                             asr=plan.get("line_asr", True))   # 줄 시작 받아쓰기 정렬(시험은 꺼서 네트워크 0)
     # 훅 카드 끝 = 둘째 문장이 시작하는 시각(원본: 훅 카드 1.5초 = 첫 문장 "…억울했던 이유?" 동안)
@@ -601,6 +599,16 @@ def build(plan: dict):
     cuts = [s["t0"] for s in steps if s["new_cut"] and s["t0"] >= hook_end - 1e-6]
     cuts = sorted(set([0.0, hook_end] + cuts)) + [dur]
     shots_t = [(a, b) for a, b in zip(cuts, cuts[1:]) if b - a > 0.05]
+    return {"steps": steps, "dur": dur, "one": one, "hook_end": hook_end, "shots": shots_t}
+
+
+def build(plan: dict):
+    out = Path(plan["out"]).resolve()
+    shutil.rmtree(out / "work", ignore_errors=True); (out / "work").mkdir(parents=True, exist_ok=True)
+    S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
+    M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
+    P = plan_times(plan, S)
+    steps, dur, one, hook_end, shots_t = P["steps"], P["dur"], P["one"], P["hook_end"], P["shots"]
     events = [dict(e, t0=float(e["t0"]), dur=float(e["dur"])) for e in S.get("caption_events") or []]
     cap_steps = apply_caption_events(steps, events, dur)   # 컷은 위 steps 로 이미 정했다 — 자막만 비우거나 바꾼다
     mshots = M["shots"]
