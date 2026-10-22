@@ -517,10 +517,10 @@ def c_origin_get(W, d):
     files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="")   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
-    guess = a
-    if dims(Path(files[-1]))["dur"] > (b - a) + 120:   # 구간 대신 통째로 받았다(screen.download 대체 길) → 파일 0초 = 원본 0초에서 잰다
-        guess = 0.0
-    off, ok = origin_offset(W, vid, Path(files[-1]), guess, [float(x) for x in d.get("ts") or []])
+    whole = d.get("full") or dims(Path(files[-1]))["dur"] > (b - a) + 120
+    if whole:                                         # 통째로 받은 파일은 0초 = 원본 0초 — 잴 것이 없다(10-22: 90초 받아쓰기로 재느라 원본 받기 118초)
+        return {"files": [dims(Path(f)) for f in files], "offset": 0.0, "measured": True}
+    off, ok = origin_offset(W, vid, Path(files[-1]), a, [float(x) for x in d.get("ts") or []])
     return {"files": [dims(Path(f)) for f in files], "offset": off, "measured": ok}
 
 
