@@ -10506,6 +10506,25 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     return _mp4_range_response(job["video_path"], request)
 
 
+# ── Claude로 만든 영상의 Buffer 공개 주소(관제 250, 2026-10-21) ──
+# 사장님 PC의 tools/buffer_post.py 가 SSH(scp)로 이 폴더에 올리고, Buffer가 이 주소로 가져간다.
+# ★업로드 창구는 일부러 안 만든다 — 올리는 길은 SSH 키가 있는 PC뿐이라 아무나 올릴 수 없다.
+#   이름은 도구가 짓는 긴 무작위 값(추측 불가)이고, 게시가 끝나면 도구가 지운다.
+_BUFFER_DROP_DIR = Path(__file__).parent / "data" / "buffer_drop"
+_BUFFER_DROP_NAME = re.compile(r"^[A-Za-z0-9_-]{24,64}\.mp4$")
+
+
+@app.api_route("/api/share/f/{name}", methods=["GET", "HEAD"])
+def api_share_f(request: Request, name: str):
+    """buffer_drop 폴더의 영상을 로그인 없이 내준다. ★HEAD 필수(Buffer가 먼저 HEAD로 확인 — api_share_v 머리말)."""
+    if not _BUFFER_DROP_NAME.match(name):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 영상이에요"})
+    p = _BUFFER_DROP_DIR / name
+    if not p.is_file():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 영상이에요"})
+    return _mp4_range_response(str(p), request)
+
+
 @app.api_route("/api/share/e/{sid}", methods=["GET", "HEAD"])
 def api_share_e(request: Request, sid: str):
     """Buffer가 가져가는 **캡컷 편집본** 공개 주소(/api/share/v와 같은 단축 id·만료).
@@ -16316,6 +16335,7 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
+            or path.startswith("/api/share/f/")   # Claude 영상 Buffer 예약(관제 250, api_share_f)
             or path.startswith("/api/share/t/")
             or path.startswith("/api/share/seo/")   # 제목·설명·태그(폰에서 복사·카톡, 2026-10-18)
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")
