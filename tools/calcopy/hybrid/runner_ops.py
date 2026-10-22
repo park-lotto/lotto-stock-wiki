@@ -313,36 +313,58 @@ def c_channel_list(W, d):
     return {"titles": titles}
 
 
+def _vsearch(q: str, n: int = 20) -> tuple[list[dict], bool]:
+    r = yt(["--flat-playlist", "-J", "--playlist-end", str(n), f"ytsearch{n}:{q}"], timeout=120)
+    if _blocked(r):
+        return [], True
+    if r.returncode != 0 or not r.stdout.strip():
+        return [], False
+    return [{"id": e["id"], "title": e.get("title"), "dur": e.get("duration"), "channel": e.get("channel"), "channel_id": e.get("channel_id")}
+            for e in json.loads(r.stdout).get("entries") or [] if e.get("id")], False
+
+
 def c_channel_find(W, d):
-    """출처 글자 → 채널(사장님 10-22 "가져오는 채널에 출처가 반드시 있다") — 채널 검색 한 번(실측 4.6초).
-    이름이 같은 채널이 여럿이면(고현정 5개) 인증 표시 → 이름 일치 순(서버가 고른다). 목록은 그 채널 영상 60개(실측 9.3초)."""
+    """출처 글자 → 실제 채널(사장님 10-22 "가져오는 채널에 출처가 반드시 있다"). 판단 = 서버가 준 kind(채널|프로그램).
+    채널: '<출처> <제품 낱말>' 영상 검색 한 번 → 가장 많이 나온 채널 중 이름이 출처·연예인과 닮은 것(10-22 강주은: '강주은' 이름 채널 8개, 인증 표시는 동명이인,
+          진짜는 '깡주은' — 영상 검색 상위 10개 중 7개). 없을 때만 이름이 똑같은 채널(채널 검색).
+    프로그램: '<연예인> <프로그램>' 영상 검색 → 제목·채널에 프로그램 이름 든 영상만(98 #40)."""
     if CACHE:
         return {"channels": [], "titles": [], "note": "캐시 모드 — 출처 채널 찾기 건너뜀(검색 길로)"}
+    import difflib
+    from collections import Counter
     from urllib.parse import quote
-    label = str(d.get("label") or "")
-    chans, r = [], None
-    if d.get("kind") != "program":           # 프로그램 이름이면 채널 검색을 건너뛴다(같은 방송사 본채널을 잘못 고른다 — 98 #40)
-        r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
-        if _blocked(r):
+    label, celeb = str(d.get("label") or ""), str(d.get("celeb") or "")
+    nl, nc = RU.norm(label), RU.norm(celeb)
+    n = int(d.get("n") or 60)
+    if d.get("kind") == "program":
+        found, blocked = _vsearch(f"{celeb} {label}".strip())
+        if blocked:
             return {"blocked": True, "channels": [], "titles": []}
-    if r is not None and r.returncode == 0 and r.stdout.strip():
+        titles = [x for x in found if nl and (nl in RU.norm(x["title"] or "") or nl in RU.norm(x["channel"] or ""))]
+        return {"channels": [], "picked": [], "how": "search", "titles": titles}
+    hint = " ".join(w for w in (d.get("words") or [])[:1] if w)
+    found, blocked = _vsearch(f"{label} {hint}".strip())
+    if blocked:
+        return {"blocked": True, "channels": [], "titles": []}
+    def like(name):
+        x = RU.norm(name or "")
+        return bool(x) and (nl in x or (nc and nc in x) or difflib.SequenceMatcher(None, x, nl).ratio() >= 0.6)
+    cnt = Counter(x["channel_id"] for x in found if x.get("channel_id") and like(x["channel"]))
+    if cnt and cnt.most_common(1)[0][1] >= 2:
+        cid = cnt.most_common(1)[0][0]
+        name = next(x["channel"] for x in found if x.get("channel_id") == cid)
+        return {"channels": [{"id": cid, "name": name, "hits": c} for cid_, c in cnt.most_common(3) for cid in [cid_]], "picked": [{"id": cid, "name": name}],
+                "how": "video_search", "titles": c_channel_list(W, {"channels": [cid], "n": n})["titles"]}
+    r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
+    if _blocked(r):
+        return {"blocked": True, "channels": [], "titles": []}
+    chans = []
+    if r.returncode == 0 and r.stdout.strip():
         chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id"),
                   "verified": bool(e.get("channel_is_verified"))} for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
-    pick = [c for c in sorted(chans, key=lambda c: not c["verified"]) if RU.norm(c["name"] or "") == RU.norm(label)][:1]
-    if pick:
-        return {"channels": chans, "picked": pick, "how": "channel",
-                "titles": c_channel_list(W, {"channels": [c["id"] for c in pick], "n": int(d.get("n") or 60)})["titles"]}
-    # 출처 = 프로그램 이름(같은 이름 채널 없음) — 10-22 선우용여 '옥탑방의 문제아들': 채널 검색이 'KBS 한국방송' 본채널을 골랐고 원본은 KBS Entertain 클립.
-    #   '<연예인> <출처>' 영상 검색 한 번 → 제목·채널에 출처 이름이 든 영상만(검색 순서 그대로)
-    celeb = str(d.get("celeb") or "")
-    r = yt(["--flat-playlist", "-J", "--playlist-end", "20", f"ytsearch20:{celeb} {label}".strip()], timeout=120)
-    titles = []
-    if r.returncode == 0 and r.stdout.strip():
-        nl = RU.norm(label)
-        for e in json.loads(r.stdout).get("entries") or []:
-            if e.get("id") and nl and (nl in RU.norm(e.get("title") or "") or nl in RU.norm(e.get("channel") or "")):
-                titles.append({"id": e["id"], "title": e.get("title"), "dur": e.get("duration"), "channel": e.get("channel")})
-    return {"channels": chans, "picked": [], "how": "search", "titles": titles}
+    pick = [c for c in sorted(chans, key=lambda c: not c["verified"]) if RU.norm(c["name"] or "") == nl][:1]
+    return {"channels": chans, "picked": pick, "how": "channel",
+            "titles": c_channel_list(W, {"channels": [c["id"] for c in pick], "n": n})["titles"] if pick else []}
 
 
 def _storyboard_sheet(W: Path, vid: str, fmts: list, dur: float, cols: int = 10) -> dict | None:

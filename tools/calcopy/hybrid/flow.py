@@ -338,7 +338,8 @@ def ph_origin_read(st, m, rp, u):
     kind = "program" if sk.startswith("program") else "channel"
     st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태에 남겨 다시 시도할 때도 같은 길(사장님 10-22 "안 헷갈리게")
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")
-    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60}], "then": "src_got"}
+    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60,
+                    "words": [w for w in r.get("product_words") or [] if w][:2]}], "then": "src_got"}
 
 
 SRC_PROBE = 10       # 출처 채널에서 조사할 후보 수(최신순, 벤치보다 먼저 올라온 것만)
