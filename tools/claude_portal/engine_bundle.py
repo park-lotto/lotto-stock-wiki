@@ -46,7 +46,8 @@ RENDERER_EXTRA = ("tools/render_scene_style.js", "out/scene-style-ui-showcase.ht
 #   설정 화면 목록이 죽고 완성본 배경음악이 비었다. 폴더는 그 아래 파일 전부.
 DATA_EXTRA = ("shopping_shorts/assets/voice_presets.json", "shopping_shorts/assets/bgm_lib", "shopping_shorts/assets/sfx_packs",
               "shopping_shorts/calcopy_frame/my_packs.json", "shopping_shorts/static/caption-motions.js",
-              "tools/calcopy/engine/warehouse_channels.json")
+              "tools/calcopy/engine/warehouse_channels.json",
+              "shopping_shorts/static/fonts/Pretendard-Bold.otf")        # 완성본 오른쪽 위 '광고' 표시 글꼴(engine/ad_mark, 사장님 10-22)
 
 
 def data_extra(engine: Path) -> list[str]:
@@ -76,7 +77,7 @@ ENTRY = ("tools/calcopy/make.py", "shopping_shorts/calcopy_make.py", "tools/calc
          "shopping_shorts/channel_presets/banggu/rules.py",                          # 제품비하인드썰형(banggu) 대본 검사(script_engine._banggu_lint)
          # 하이브리드 제작 라인이 부르는 엔진 쪽 — 라인의 손(실행기·렌더)은 아래 HAND, 노하우(지시서)는 서버
          "tools/calcopy/engine/stage_log.py", "tools/calcopy/engine/yt_fetch.py", "tools/calcopy/engine/narr_align.py",
-         "tools/calcopy/engine/master_guard.py", "tools/calcopy/engine/script_frame.py", "tools/calcopy/engine/voices.py",
+         "tools/calcopy/engine/master_guard.py", "tools/calcopy/engine/ad_mark.py", "tools/calcopy/engine/script_frame.py", "tools/calcopy/engine/voices.py",
          "tools/calcopy/coupang_customer.py", "shopping_shorts/coupang_partners.py", "tools/caption_pack/check_bench_packs.py",
          # 볼케이노형 실행기(손) — 함수 안 import 가 많아 하나씩 적는다(HAND 와 같은 목록)
          "tools/calcopy/hybrid/runner_ops.py", "tools/calcopy/hybrid/rules.py", "tools/calcopy/hybrid/render_bench.py",
