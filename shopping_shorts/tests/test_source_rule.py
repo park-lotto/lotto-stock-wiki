@@ -263,3 +263,12 @@ def test_reviews_phase_after_product():
     r = flow.ph_reviews_got(st, {"reviews": {"reviews": [], "blocked": True}}, {}, {})
     assert r["do"][0]["cmd"] == "naver" and r["do"][0]["queries"][0] == "SHOPPI 여성 모던 가죽 후기" and "막음" in st["log"][-1]   # 쿠팡 막히면 네이버로(사장님 10-22)
     assert flow.ph_reviews_naver(st, {"nreviews": {"texts": {"q": "수납이 넉넉"}}}, {}, {}) == {"goto": "research"} and st["reviews"][0]["id"] == "n1"
+
+
+def test_ad_mark_badge_small_top_right(tmp_path):
+    """오른쪽 위 '광고' 표시 — 작게(1080 너비에서 상자 높이 60px 이하·너비 120px 이하), 주인 = engine/ad_mark(사장님 10-22)."""
+    from tools.calcopy.engine import ad_mark
+    png, m = ad_mark.badge(1080, tmp_path / "b.png")
+    from PIL import Image
+    w, h = Image.open(png).size
+    assert w <= 120 and h <= 60 and 15 <= m <= 30

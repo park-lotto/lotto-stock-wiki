@@ -577,6 +577,8 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     final = R / "final.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
          "-t", f"{T['end']:.3f}", final])
+    from tools.calcopy.engine import ad_mark
+    ad_mark.apply_inplace(final, log=log)      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "comment": placed.get("comment"), "log": placed["log"], "check": chk}
