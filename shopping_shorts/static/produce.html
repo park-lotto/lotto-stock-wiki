@@ -274,6 +274,9 @@
     @font-face{font-family:'HCDanjunghae';src:url('/fonts/Cafe24Danjunghae.ttf')}
     @font-face{font-family:'HCGanpan';src:url('/fonts/KCCGanpan.otf')}
     @font-face{font-family:'HCBunpil';src:url('/fonts/HakgyoansimBunpil.ttf')}
+    @font-face{font-family:'HCKonkon';src:url('/fonts/OwnglyphKonkon.ttf')}
+    @font-face{font-family:'HCAdultKid';src:url('/fonts/AdultKid.ttf')}
+    @font-face{font-family:'HCKaturi';src:url('/fonts/Katuri.ttf')}
     /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
@@ -7057,6 +7060,9 @@ const HC_FONTS=[
   {name:'카페24 단정해',       file:'Cafe24Danjunghae.ttf',        css:'HCDanjunghae'},
   {name:'간판체',            file:'KCCGanpan.otf',               css:'HCGanpan'},
   {name:'손글씨 분필',         file:'HakgyoansimBunpil.ttf',       css:'HCBunpil'},
+  {name:'온글잎 콘콘체',        file:'OwnglyphKonkon.ttf',          css:'HCKonkon'},
+  {name:'어른아이',           file:'AdultKid.ttf',                css:'HCAdultKid'},
+  {name:'안동엄마까투리',        file:'Katuri.ttf',                  css:'HCKaturi'},
 ];
 // @@FONTS:END
 function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
