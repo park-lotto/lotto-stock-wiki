@@ -158,6 +158,36 @@ def material_problems(M: dict, known: set, orig_lines: set) -> list[str]:
     return out
 
 
+_COUNT_RE = re.compile(r"(후기|리뷰|평점|별점)[^.?!]{0,12}?([0-9]|일|이|삼|사|오|육|칠|팔|구|십|백|천|만)+\s*(개|점|건|명)|(별점|평점)\s*[0-9]")
+
+
+def script_claim_problems(S: dict) -> list[str]:
+    """대본 글 검사(서버 지시서 대본 검사가 부른다) — 후기 개수·평점 숫자 금지(사장님 10-22 "후기 갯수는 상관없고 셀링포인트·소구점").
+    (근거 없는 비유·사회 반응은 글만으로 못 가른다 — 대본 지시문이 근거 있을 때만 쓰게 하고 근거.md 로 본다)"""
+    out = []
+    for l in S.get("lines") or []:
+        t = str(l.get("tts") or "") + " " + " ".join(str(c) for c in l.get("caps") or [] if isinstance(c, str))
+        if l.get("kind") == "tts" and _COUNT_RE.search(t):
+            out.append(f"{l.get('id')}: 후기 개수·평점 숫자는 쓰지 않는다 — 베스트 후기의 셀링포인트(r번호)로 바꿔라: {t.strip()[:60]}")
+    return out
+
+
+def alt_scene_problems(S: dict, M: dict, origin_names: set) -> list[str]:
+    """대체 제품이면 원음이 끝난 뒤 제품 이야기 줄에 연예인(원본) 장면 금지 — 연예인이 대체품을 말하는 것처럼 보인다(사장님 10-22 강주은).
+    같은 제품이면 부르지 않는다(연예인 장면 함께 써도 된다)."""
+    lines = S.get("lines") or []
+    last_orig = max((i for i, l in enumerate(lines) if l.get("kind") == "orig"), default=-1)
+    after = {l.get("id") for l in lines[last_orig + 1:] if l.get("kind") == "tts"}
+    out = []
+    for lid, cuts in (M.get("cuts") or {}).items():
+        if lid not in after:
+            continue
+        for c in cuts if isinstance(cuts, list) else [cuts]:
+            if str((c or {}).get("src") or "") in origin_names:
+                out.append(f"{lid}: 대체 제품 이야기 줄에 연예인 원본 장면({c.get('src')}) — 제품 사진·재료 영상으로")
+    return out
+
+
 TEXT_MIN_H = 0.45     # 박힌 글자를 피해 줄일 때 칸 높이 하한(원본 높이 비율) — 더 줄면 화질이 떨어져 그대로 두고 검수에 맡긴다
 STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
 

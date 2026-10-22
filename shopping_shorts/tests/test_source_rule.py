@@ -240,3 +240,23 @@ def test_customer_stop_text_has_no_internals():
     with pytest.raises(flow._Stop) as e:
         flow._reply({}, "plan_키치잇판", ("ok",))
     assert "plan_" not in e.value.why
+
+
+def test_review_counts_banned_and_alt_scene_rule():
+    """후기 개수·평점 숫자 금지(셀링포인트로) · 대체 제품이면 원음 뒤 제품 줄에 연예인 장면 금지(사장님 10-22 강주은 뒷부분)."""
+    S = {"lines": [{"id": "L1", "kind": "tts", "tts": "강주은 씨가 든 가방이 있다네요?"}, {"id": "O1", "kind": "orig"},
+                   {"id": "L8", "kind": "tts", "tts": "근데 진짜 놀라운 건 후기가 백팔십육 개래요.", "caps": ["후기가 186개래요"]},
+                   {"id": "L9", "kind": "tts", "tts": "후기 보니까 수납이 칸칸이 나뉘어 있대요."}]}
+    p = RU.script_claim_problems(S)
+    assert len(p) == 1 and p[0].startswith("L8")
+    M = {"cuts": {"L1": [{"src": "o.mp4"}], "L8": [{"src": "prod_1.jpg"}], "L9": [{"src": "o.mp4"}]}}
+    a = RU.alt_scene_problems(S, M, {"o.mp4"})
+    assert len(a) == 1 and a[0].startswith("L9")                    # 훅 줄(원음 앞)의 연예인 장면은 괜찮다
+
+
+def test_reviews_phase_after_product():
+    from tools.calcopy.hybrid import flow
+    st = {"product": {"product_id": "8003851952"}, "tries": {}, "log": []}
+    r = flow.ph_reviews(st, {}, {}, {})
+    assert r["do"][0] == {"id": "reviews", "cmd": "coupang_reviews", "product_id": "8003851952"}
+    assert flow.ph_reviews_got(st, {"reviews": {"reviews": [], "blocked": True}}, {}, {}) == {"goto": "research"} and st["reviews"] == [] and "막음" in st["log"][-1]

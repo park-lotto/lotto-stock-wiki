@@ -141,7 +141,12 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 - 연예인 훅 = [그 사람을 보여 주는 수식어(근거 있는 것)] + 이름 + [얼마나·어떻게 쓰나] + '~다는데(요)?' — 정체는 숨겨 잉?(답은 뒤 줄).
 - 체험 첫 줄 = "저도 이거 보고 바로 따라 사 봤는데요" 꼴(말투 '따라 사 봤는데' — '따라 샀는데' 금지).
 - 와우 3줄: 줄 머리에 강한 연결어('근데 진짜 놀라운 건'·'심지어'·'이게 미친 포인트인 게') + 근거 번호 있는 새 사실.
-- ★권위 1줄 필수(브랜드 유래·연도·나라·판매 기록 — 조사.md 사실 번호, 전언 '~하더라고요/~대요') · 비유 1줄('~같아요') · 끝 줄 = 사회 반응(그 제품의 품절·기사·입소문 — '난리·필수템·말 다 했죠·품절' 중 하나).
+  ★와우·체험 줄의 근거 = **쿠팡 베스트 후기(r번호)에 실제 사용자가 꼽은 셀링포인트·소구점**(수납·무게·어울림·끈·마감 등 — '후기 보니까 ~래요/~더라고요' 전언) 또는 조사 사실(f번호). (사장님 10-22)
+  ★후기 개수·평점·별점 숫자는 쓰지 않는다(소구점이 아니다).
+- 권위 1줄(브랜드 유래·연도·나라·판매 기록 — 조사.md 사실 번호, 전언 '~하더라고요/~대요') · 비유 1줄('~같아요') · 끝 줄 = 사회 반응(품절·기사·입소문).
+  ★판 틀의 권위·비유·사회 반응 칸은 **근거가 있을 때만** 채운다. 근거가 없으면 그 칸은 후기 셀링포인트 줄로 대신한다 — 칸을 채우려고 지어내지 않는다
+  (10-22 강주은 실사고: '모양이 꼭 기본 흰 셔츠 같아요'·'가방 정리글까지 돈다니' — 근거 없음).
+  ★비유는 같은 쓰임끼리만(가방↔가방·지갑, 화장품↔화장품). 다른 종류 물건에 빗대지 않는다(가방을 셔츠에 ✗).
 - CTA 없음 · 금액 없음 · 질병·효능 단정 없음 · 다른 회사 숫자 없음. 창작 허용 = 화자의 계기·감상·비유 / 근거 필수 = 제품 속성·원리·수치·인기(줄마다 facts).
 ## 읽는 글(tts)
 - 렌더러가 읽는 칸은 tts 하나. 줄 끝 문장부호 필수. 숫자·영문·기호는 읽는 대로('100%'→'백 퍼센트', '2024년'→'이천이십사 년'), 자막(caps)은 원문.
@@ -151,7 +156,9 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 - 조사·어미를 빼지 않는다(명사 3개 이상 조사 없이 연속 금지). 판 길이를 넘치면 글을 줄인다(배속 아님).
 ## 재료(컷)
 - 컷마다 see(무엇이 보이나) — 그 줄 대사의 동작·상태가 그 컷에 보여야 한다. 같은 소스 ±3초 재사용 금지 · A-B-A 끼움 금지 · 컷 ≥1.2초 · 끝 컷 ≥1.5초.
-- ★연예인 장면(face 가 사람)은 원본 파일에서만. 제품 컷도 원본 안 제품 장면이 먼저. 남의 얼굴·손·워터마크·박힌 자막·다른 브랜드는 crop 밖.
+- ★연예인 장면(face 가 사람)은 원본 파일에서만. 제품 컷도 원본 안 제품 장면이 먼저.
+- ★대체 제품(제품 판정 mode alt — 연예인 것과 다른 제품)이면 원음이 끝난 뒤 제품 이야기 줄에는 연예인 장면을 쓰지 않는다(연예인이 대체품을 말하는 것처럼 보인다) — 제품 사진·재료 영상만.
+  같은 제품(exact·named)이면 연예인이 그 제품을 쓰는 장면을 함께 써도 된다(사장님 10-22). 남의 얼굴·손·워터마크·박힌 자막·다른 브랜드는 crop 밖.
 - 0초 첫 컷 = 연예인 얼굴 크게(제품 컷으로 시작 금지). 주인공 컷은 원본 샷 표의 who main·both 샷 안에서, 컷 길이가 그 샷 끝을 넘지 않게.
 ## 근거.md
 '| 줄 | 말 | 근거 |' — 줄마다 한 줄(원본 초 · 사실 번호 · URL). 근거 줄 수 = 대본 줄 수. 쿠팡 상품번호도 적는다.
@@ -776,6 +783,19 @@ def ph_product_done(st, m, rp, u):
         st["log"].append(f"제품 번호 {same['product_id']} 가 후보 표에 없음 — 답 그대로 씀")
     st["product"] = {**{k: same.get(k) for k in ("product_id", "name", "why", "category")}, "mode": mode,
                      "name_hints": (st.get("name_find") or {}).get("names") or [], "brand_words": (st.get("product_pick") or {}).get("brand_words")}
+    return {"goto": "reviews"}
+
+
+def ph_reviews(st, m, rp, u):
+    """고른 쿠팡 상품의 베스트 후기(도움 순) — 대본 뒷부분 셀링포인트·소구점 근거(사장님 10-22)."""
+    return {"do": [{"id": "reviews", "cmd": "coupang_reviews", "product_id": str((st.get("product") or {}).get("product_id") or "")}], "then": "reviews_got"}
+
+
+def ph_reviews_got(st, m, rp, u):
+    r = m.get("reviews") or {}
+    st["reviews"] = [{"id": x.get("id"), "text": str(x.get("text") or "")[:400]} for x in r.get("reviews") or []][:8]
+    if not st["reviews"]:
+        st["log"].append("쿠팡 베스트 후기 못 받음" + (" — 쿠팡이 잠시 막음" if r.get("blocked") else "") + " — 대본은 후기 없이(지어내지 않는다)")
     return {"goto": "research"}
 
 
@@ -1019,6 +1039,8 @@ def _script_ask(st, fail: str = "") -> dict:
     ctx = (STY.brief(v) + "\n\n## 대본·재료 꼴\n" + fmt + "\n\n## 조사.md\n" + (st.get("research_md") or "") +
            "\n\n## 제품 판정\n" + RU.PRODUCT_TALK.get(PR.get("mode") or "exact", "") + "\n" +
            json.dumps({k: PR.get(k) for k in ("name", "product_id", "why", "mode", "name_hints")}, ensure_ascii=False) +
+           "\n\n## 쿠팡 베스트 후기(r번호 — 도움 순, 셀링포인트·소구점 근거)\n" +
+           (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
            "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) + _shots_ctx(st) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
@@ -1041,7 +1063,8 @@ def audit_script(st: dict, S: dict, M: dict) -> dict:
             a = script_audit.audit(p, v)
         except Exception as e:  # noqa: BLE001 — 꼴이 틀린 대본은 검사가 죽는다 → 반려 사유로
             a = {"ok": False, "error": f"대본 꼴이 틀렸다: {type(e).__name__}: {str(e)[:200]}"}
-    extra = {"title": RU.title_colors_bad(S, _style(v)), "caps_vs_tts": RU.caps_vs_tts(S),
+    extra = {"title": RU.title_colors_bad(S, _style(v)), "caps_vs_tts": RU.caps_vs_tts(S), "claims": RU.script_claim_problems(S),
+             "alt_scene": RU.alt_scene_problems(S, M, _origin_names(st)) if (st.get("product") or {}).get("mode") == "alt" else [],
              "source_rule": RU.source_rule_static(M, _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})}
     on = _origin_names(st)
     if not any(str(c.get("src") or "") not in on for cs in (M.get("cuts") or {}).values() for c in (cs if isinstance(cs, list) else [cs])):
@@ -1287,7 +1310,7 @@ PHASES = {
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
-    "product_done": ph_product_done, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
+    "product_done": ph_product_done, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
@@ -1295,5 +1318,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "reviews": "product", "reviews_got": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

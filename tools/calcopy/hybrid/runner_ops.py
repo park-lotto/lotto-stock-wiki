@@ -581,6 +581,60 @@ def coupang_chrome(queries: list[str], home: Path) -> dict:
     return res
 
 
+REVIEW_JS = r"""() => {
+  const out = [];
+  document.querySelectorAll('.sdp-review article').forEach(a => {
+    const body = a.querySelector('[class*=review__content], [class*=article__list__review__content]');
+    const help = (a.innerText.match(/(\d+)명에게 도움/) || [])[1];
+    const txt = (body ? body.innerText : a.innerText).trim();
+    if (txt.length > 15) out.push({text: txt.slice(0, 600), helpful: help ? parseInt(help) : 0});
+  });
+  return out.slice(0, 12);
+}"""
+
+
+def c_coupang_reviews(W, d):
+    """쿠팡 상품 페이지 베스트 후기(도움 순) — 대본 뒷부분 셀링포인트·소구점의 근거(사장님 10-22 "후기 베스트에 나오는 셀링포인트"). 회원 PC 크롬 창(쿠팡은 헤드리스를 막는다).
+    실측 10-22 8003851952: 페이지 열고 후기 칸까지 약 5초 · 첫 후기 '18명에게 도움' — 수납·어울림·어깨끈 같은 소구점이 그대로 나온다."""
+    from playwright.sync_api import sync_playwright
+    pid = str(d.get("product_id") or "")
+    if not pid.isdigit():
+        return {"reviews": [], "error": "상품 번호가 없다"}
+    prof = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home")) / "browser" / "coupang"
+    prof.mkdir(parents=True, exist_ok=True)
+    with sync_playwright() as p:
+        ctx = p.chromium.launch_persistent_context(str(prof), headless=False, channel="chrome", locale="ko-KR", viewport={"width": 1366, "height": 900},
+                                                   args=["--disable-blink-features=AutomationControlled"])
+        try:
+            pg = ctx.pages[0] if ctx.pages else ctx.new_page()
+            try:
+                pg.goto("https://www.coupang.com/", wait_until="domcontentloaded", timeout=30000)
+                pg.wait_for_timeout(800)
+            except Exception:  # noqa: BLE001 — 홈이 늦어도 상품 페이지는 열어 본다
+                pass
+            pg.goto(f"https://www.coupang.com/vp/products/{pid}", wait_until="domcontentloaded", timeout=30000)
+            pg.wait_for_timeout(1500)
+            if "사용권한이 제한된" in (pg.evaluate("()=>document.body.innerText.slice(0,400)") or ""):
+                return {"reviews": [], "blocked": True}      # 쿠팡이 이 PC 를 잠시 막았다(10-22 실측 — 짧은 시간에 여러 번 열면) — 더 두드리지 않는다
+            for _ in range(14):                        # 후기는 내려가야 불러온다(한 번에 건너뛰면 안 생긴다 — 10-22 실측 0개)
+                if pg.evaluate("()=>document.querySelectorAll('.sdp-review article').length") > 0:
+                    break
+                pg.mouse.wheel(0, 1400)
+                pg.wait_for_timeout(700)
+                pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); if(e) e.scrollIntoView();}")
+            pg.wait_for_timeout(1200)
+            rows = pg.evaluate(REVIEW_JS) or []
+            if not rows:                               # 칸 이름이 바뀌었을 때 — 후기 칸 글 전체에서라도
+                txt = pg.evaluate("()=>{const e=document.querySelector('.sdp-review'); return e ? e.innerText : ''}") or ""
+                rows = [{"text": t.strip()[:600], "helpful": 0} for t in txt.split("신고하기") if len(t.strip()) > 30][:12]
+        finally:
+            ctx.close()
+    rows.sort(key=lambda r: -int(r.get("helpful") or 0))
+    out = [{"id": f"r{i + 1}", **r} for i, r in enumerate(rows[:10])]
+    jsave(W / "look" / f"reviews_{pid}.json", out)
+    return {"reviews": out}
+
+
 def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
@@ -982,7 +1036,7 @@ def c_finish(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish}
 
