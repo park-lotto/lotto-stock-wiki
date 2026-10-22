@@ -1,0 +1,50 @@
+{
+ "music_bed": true,
+ "segments": [
+  {
+   "start": 5.12,
+   "end": 7.82,
+   "speaker": "S1",
+   "text": "This is a genuine laser mosquito zapper.",
+   "kind": "speech"
+  },
+  {
+   "start": 15.52,
+   "end": 24.87,
+   "speaker": "S1",
+   "text": "Photon Matrix is coming. Advanced LiDAR, high-speed galvanometer, and pulsed cold laser technology, all in one.",
+   "kind": "speech"
+  },
+  {
+   "start": 27.0,
+   "end": 35.85,
+   "speaker": "S1",
+   "text": "Lock on a target in just 0.003 seconds and achieve up to 50,000 scans per second.",
+   "kind": "speech"
+  },
+  {
+   "start": 36.14,
+   "end": 45.41,
+   "speaker": "S1",
+   "text": "Laser Mosquito Zapper Home Edition global premiere. Effective against mosquitoes within a 6-meter range. The future of home pest control is here.",
+   "kind": "speech"
+  },
+  {
+   "start": 46.01,
+   "end": 53.7,
+   "speaker": "S1",
+   "text": "It only takes 0.003 seconds to calculate distance, size, and angle.",
+   "kind": "speech"
+  },
+  {
+   "start": 55.42,
+   "end": 103.0,
+   "speaker": "S1",
+   "text": "Watch as it burns through wings. Can kill up to 30 mosquitoes per second. Imagine a summer free",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-3.5-flash",
+ "_src": "a0.m4a",
+ "_offset": 0.0
+}
