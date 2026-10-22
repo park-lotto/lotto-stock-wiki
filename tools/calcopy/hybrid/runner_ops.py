@@ -717,10 +717,45 @@ def source_rule_scan(W: Path, T: dict, origin_names: set) -> list[str]:
         p = W / "src" / src
         if not src or src in origin_names or not p.exists() or not c.get("dur"):
             continue
-        dd = _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
+        dd = [] if p.suffix.lower() in RU.STILL_EXT else _cut_jumps(p, float(c.get("ss") or 0), float(c["dur"]))
         if dd and (max(dd) > 40 or sum(x > 25 for x in dd) >= 3):
             out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 {float(c['dur']):.1f}초 안에 장면 전환·끊김이 있다(남의 영상 편집 효과) — 시작점을 옮기거나 다른 장면으로")
+        n = _cut_faces(W, p, float(c.get("ss") or 0), float(c["dur"]), c.get("crop"))
+        if n:
+            out.append(f"{c.get('line')}: {src} {float(c.get('ss') or 0):.1f}초부터 화면에 사람 얼굴이 보인다(원본 밖 영상의 다른 사람 — 광고 모델·리뷰어) — 원본 밖 재료는 사람 없는 제품 장면만")
     return out
+
+
+FACE_OTHER_FRAC = 0.10     # 원본 밖 컷에서 '사람이 보인다'로 칠 얼굴 높이(화면 칸 높이 비율) — 10-22 고현정 편 롱샴 광고 모델 얼굴(칸 높이 약 0.2)
+
+
+def _cut_faces(W: Path, src: Path, ss: float, dur: float, crop) -> int:
+    """원본 밖 재료 컷(재료 영상·상품 사진) 안 사람 얼굴 수 — **잰다**(계획의 face 칸은 계획을 짠 쪽이 적는 값이라 광고 모델 얼굴을 ''로 적고 지나갔다, 98 #38).
+    컷 안 세 시점(사진은 한 장)을 계획 칸(crop)대로 잘라 보고, 칸 높이의 FACE_OTHER_FRAC 이상인 얼굴이 하나라도 있으면 그 수."""
+    import cv2
+    import numpy as np
+    from tools.calcopy.hybrid.common import FACE_MODEL
+    from tools.calcopy.hybrid import thumb
+    if not Path(FACE_MODEL).exists():
+        sys.stderr.write(f"[faces] 얼굴 모델 없음 {FACE_MODEL} — 원본 밖 컷 얼굴 검사를 건너뜀\n")
+        return 0
+    det = cv2.FaceDetectorYN.create(FACE_MODEL, "", (320, 320), 0.6, 0.3, 50)
+    tmp = W / "_faces"; tmp.mkdir(exist_ok=True)
+    still = src.suffix.lower() in RU.STILL_EXT
+    worst = 0
+    for k, t in enumerate([0.0] if still else [ss + dur * f for f in (0.15, 0.5, 0.85)]):
+        f = src if still else tmp / f"{src.stem}_{k}.jpg"
+        if not still:
+            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{t:.2f}", "-i", str(src), "-frames:v", "1", str(f)])
+        im = cv2.imdecode(np.fromfile(str(f), np.uint8), cv2.IMREAD_COLOR) if f.exists() else None   # cv2.imread 는 한글 경로를 못 연다
+        if im is None:
+            continue
+        if isinstance(crop, list) and len(crop) == 4:
+            x, y, w, h = [max(0, int(v)) for v in crop]
+            im = im[y:y + h, x:x + w] if w > 0 and h > 0 else im
+        H = im.shape[0]
+        worst = max(worst, sum(1 for o in thumb.faces_of(det, im) if o["h"] >= FACE_OTHER_FRAC * H))
+    return worst
 
 
 def plan_sheet(W: Path, version: str, T: dict) -> Path:
