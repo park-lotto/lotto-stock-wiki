@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import tempfile
 from pathlib import Path
@@ -78,7 +79,7 @@ ORIGIN_TITLES = """너는 원본 후보 고르기 담당이다. 연예인 본인
 JSON 하나: {"ids": ["유튜브 id", …]}"""
 
 ORIGIN_VISUAL = """너는 원본 판정 담당이다. 벤치 쇼츠가 **내레이션뿐**이라 말 지문으로는 원본을 못 찾았다. 첫 그림 = 벤치 1초 장면 시트,
-둘째 그림 = 후보 원본(연예인 본인 채널)에서 장면 낱말이 나온 시각 앞뒤 시트(1초 간격, 왼쪽 위 첫 칸 = 아래 적힌 시작 초).
+둘째 그림 = 후보 원본(연예인 본인 채널) 전체를 고르게 훑은 시트(칸 간격은 아래).
 **같은 사람·같은 옷·같은 제품·같은 장소**가 둘 다에 있어야 같다고 본다(비슷한 물건만으론 아니다). 같으면 그 제품이 잘 보이는 칸의 초를 적어라.
 JSON 하나: {"same": true, "origin_t": [받은 파일 초, …], "why": "한 줄"}"""
 
@@ -474,6 +475,7 @@ def ph_subs_got(st, m, rp, u):
                            need=("origin_id", "self_spoken"))], "then": "pick_got"}
 
 
+VIS_TILES = 120      # 화면 대조 시트 칸 수(8×15)
 VIS_TRY = 2          # 화면 대조할 후보 수(원본을 통째로 받는다 — 유튜브 요청·시간이 크다)
 
 
@@ -490,14 +492,14 @@ def _visual_cands(st, hits: dict) -> list[dict]:
         kinds = {x["term"] for x in h}
         score = 3 * len(kinds & scene) + len(kinds - scene)
         at = [x["origin_t"] for x in h if x["term"] in scene] or [x["origin_t"] for x in h]
-        out.append({"id": c["id"], "title": c.get("title"), "channel": c.get("channel"), "score": score, "at": at[:3], "n": len(h)})
+        out.append({"id": c["id"], "title": c.get("title"), "channel": c.get("channel"), "dur": c.get("dur"), "score": score, "at": at[:3], "n": len(h)})
     out.sort(key=lambda c: (-c["score"], c["n"]))
     return out[:VIS_TRY]
 
 
 def ph_vis_get(st, m, rp, u):
     c = st["vis"][0]
-    a, b = max(0.0, min(c["at"]) - 90), max(c["at"]) + 90
+    a, b = 0.0, float(c.get("dur") or max(c["at"]) + 600)       # 통째로 — 제품 장면은 장면 낱말 시각 앞뒤에 없을 수 있다(10-22 고현정 2차: '서촌'=식당, 가방=다른 시각)
     st["origin"] = {"id": c["id"], "url": f"https://www.youtube.com/watch?v={c['id']}", "matched": [], "window": [a, b], "visual": True,
                     "info": {k: c.get(k) for k in ("id", "title", "channel")}}
     return {"do": [{"id": "origin", "cmd": "origin_get", "vid": c["id"], "a": a, "b": b, "ts": []}], "then": "vis_got"}
@@ -508,10 +510,11 @@ def ph_vis_got(st, m, rp, u):
     if o.get("error") or not o.get("files"):
         raise _Stop("원본 영상을 받지 못했습니다", "잠시 뒤 다시 시도(retry)하면 받기부터 이어 갑니다", retry="vis_get")
     st["origin"].update(files=o["files"], offset=o.get("offset"), offset_measured=False)
-    s0 = max(0.0, min(st["vis"][0]["at"]) - origin_t0(st) - 30)
-    st["vis_s0"] = s0
-    return {"do": [{"id": "vsheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": "look/origin_visual.jpg",
-                    "fps": 1, "cols": 6, "rows": 10, "w": 240, "ss": s0, "t": 60}], "then": "vis_look"}
+    dur = float(_origin_file(st).get("dur") or 600)
+    step = max(1, math.ceil(dur / VIS_TILES))                   # 원본 전체를 VIS_TILES 칸으로 훑는다(앞뒤 60초만 보여 주자 가방 장면이 빠져 '다르다'로 판정)
+    st["vis_step"] = step
+    return {"do": [{"id": "vsheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": f"look/origin_visual_{st['origin']['id']}.jpg",
+                    "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "vis_look"}
 
 
 def ph_vis_look(st, m, rp, u):
@@ -520,7 +523,7 @@ def ph_vis_look(st, m, rp, u):
     if not sh:
         return {"goto": "vis_next"}
     return {"review": [_rv("origin_visual", ORIGIN_VISUAL + f"\n\n벤치: {B.get('title')}\n후보: {st['origin']['info'].get('title')} ({st['origin']['info'].get('channel')})"
-                           f"\n둘째 그림 첫 칸 = 받은 파일 {st['vis_s0']:.0f}초", ([_img(B["sheet"])] if B.get("sheet") else []) + [_img(sh)],
+                           f"\n둘째 그림 = 원본 전체를 {st['vis_step']}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{st['vis_step']}초) — 옷·제품이 같은 칸을 찾아 그 초를 적어라",([_img(B["sheet"])] if B.get("sheet") else []) + [_img(sh)],
                            need=("same", "origin_t"))], "then": "vis_pick"}
 
 

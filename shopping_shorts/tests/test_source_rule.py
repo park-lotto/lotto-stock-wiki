@@ -101,12 +101,13 @@ def test_narration_bench_goes_to_visual_origin():
     assert RU.word_hits(words, ["서촌", "가방"]) == [{"term": "서촌", "origin_t": 640.2}]
     st = {"read": {"celeb": "고현정", "scene_words": ["서촌"], "product_words": ["가방"]}, "bench": {"title": "t", "sheet": "bench/sheet.jpg"},
           "mixed": [{"id": "bag", "title": "가방 리뷰", "channel": "남의 채널"}, {"id": "v19", "title": "고현정 브이로그 19", "channel": "고현정"},
-                    {"id": "v20", "title": "고현정 브이로그 20", "channel": "고현정"}], "tries": {}, "log": []}
+                    {"id": "v20", "title": "고현정 브이로그 20", "channel": "고현정", "dur": 1200}], "tries": {}, "log": []}
     hits = {"bag": [{"term": "가방", "origin_t": 10.0}] * 9, "v19": [{"term": "가방", "origin_t": 50.0}], "v20": [{"term": "서촌", "origin_t": 640.2}]}
     res = flow.ph_subs_got(st, {"subs": {"matched": {}, "hits": hits}}, {}, {})
     assert res == {"goto": "vis_get"} and [c["id"] for c in st["vis"]] == ["v20", "v19"]      # 남의 채널은 후보가 아니다
     flow.ph_vis_get(st, {}, {}, {})
-    assert st["origin"]["window"] == [550.2, 730.2]
-    st["origin"].update(files=[{"name": "v20.mp4"}], offset=0.0)
+    assert st["origin"]["window"] == [0.0, 1200.0]                                    # 통째로(가방 장면이 장면 낱말 시각 앞뒤에 없던 10-22 2차)
+    r = flow.ph_vis_got(st, {"origin": {"files": [{"name": "v20.mp4", "dur": 1200}], "offset": 0.0}}, {}, {})
+    assert r["do"][0]["fps"] == 0.1 and r["do"][0]["t"] == 1200 and st["vis_step"] == 10
     assert flow.ph_vis_pick(st, {}, {"origin_visual": {"same": True, "origin_t": [645]}}, {}) == {"goto": "product_sheet"}
     assert st["origin"]["matched"][0]["origin_t"] == 645.0
