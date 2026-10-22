@@ -53,7 +53,7 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
                 tail.insert(0, prev.pop())
             out[-2], out[-1] = " ".join(prev), " ".join(tail)
     out = _fix_dangling(out, cap=cap)
-    return [o.rstrip(",") for o in out]
+    return [" ".join(re.sub(r",(?!\d)", " ", o).split()) for o in out]   # 쉼표는 소리(쉼)에만 — 자막엔 안 띄운다(조각 가운데 쉼표가 뜨던 것, 10-22 01b)
 
 
 CHUNK_SLACK = 3   # 조각 상한 = n + 이것. 붙이기(꼬리·꾸밈 낱말·짧은 조각)도 이 상한을 넘지 않는다 — 판단 주인 chunk_sentence
