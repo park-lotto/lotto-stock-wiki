@@ -41,3 +41,11 @@ def test_plain_template_has_caption_only():
         for k in ("hook", "body", "frame"):
             binds = [l.get("bind") for l in (plain.get(k) or {}).get("lines", [])]
             assert set(binds) <= {"caption"}, (name, k, binds)
+
+
+def test_ja_long_katakana_and_te_form_render_cases():
+    # 완성본 렌더 실측(job 7142973cbed3): 15자 가타카나가 오른쪽에서 잘렸고, 동사 속·て형 가운데 절단이 있었다
+    segs = _caption_segments("クリーニング屋の社長さんもスタンディングオベーションした凄すぎる発明品")
+    assert "スタンディング" in segs and max(len(s) for s in segs) <= 12
+    assert _caption_segments("綺麗に消え去ったということ")[0] == "綺麗に"
+    assert "アイロンがけして" in _caption_segments("シャツだけでなくズボンまでキレイにアイロンがけしてくれること")
