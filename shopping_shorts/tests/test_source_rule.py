@@ -259,4 +259,7 @@ def test_reviews_phase_after_product():
     st = {"product": {"product_id": "8003851952"}, "tries": {}, "log": []}
     r = flow.ph_reviews(st, {}, {}, {})
     assert r["do"][0] == {"id": "reviews", "cmd": "coupang_reviews", "product_id": "8003851952"}
-    assert flow.ph_reviews_got(st, {"reviews": {"reviews": [], "blocked": True}}, {}, {}) == {"goto": "research"} and st["reviews"] == [] and "막음" in st["log"][-1]
+    st["product"]["name"] = "SHOPPI 여성 모던 가죽 토트백"
+    r = flow.ph_reviews_got(st, {"reviews": {"reviews": [], "blocked": True}}, {}, {})
+    assert r["do"][0]["cmd"] == "naver" and r["do"][0]["queries"][0] == "SHOPPI 여성 모던 가죽 후기" and "막음" in st["log"][-1]   # 쿠팡 막히면 네이버로(사장님 10-22)
+    assert flow.ph_reviews_naver(st, {"nreviews": {"texts": {"q": "수납이 넉넉"}}}, {}, {}) == {"goto": "research"} and st["reviews"][0]["id"] == "n1"

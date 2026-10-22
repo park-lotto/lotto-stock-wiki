@@ -141,7 +141,7 @@ SCRIPT = """너는 대본 작가다(오푸스). 아래 판 규칙·결 기준 �
 - 연예인 훅 = [그 사람을 보여 주는 수식어(근거 있는 것)] + 이름 + [얼마나·어떻게 쓰나] + '~다는데(요)?' — 정체는 숨겨 잉?(답은 뒤 줄).
 - 체험 첫 줄 = "저도 이거 보고 바로 따라 사 봤는데요" 꼴(말투 '따라 사 봤는데' — '따라 샀는데' 금지).
 - 와우 3줄: 줄 머리에 강한 연결어('근데 진짜 놀라운 건'·'심지어'·'이게 미친 포인트인 게') + 근거 번호 있는 새 사실.
-  ★와우·체험 줄의 근거 = **쿠팡 베스트 후기(r번호)에 실제 사용자가 꼽은 셀링포인트·소구점**(수납·무게·어울림·끈·마감 등 — '후기 보니까 ~래요/~더라고요' 전언) 또는 조사 사실(f번호). (사장님 10-22)
+  ★와우·체험 줄의 근거 = **쿠팡 베스트 후기(r번호) 또는 네이버 후기·블로그 글(n번호 — 그 상품 이야기인 부분만)에 실제 사용자가 꼽은 셀링포인트·소구점**(수납·무게·어울림·끈·마감 등 — '후기 보니까 ~래요/~더라고요' 전언) 또는 조사 사실(f번호). (사장님 10-22)
   ★후기 개수·평점·별점 숫자는 쓰지 않는다(소구점이 아니다).
 - 권위 1줄(브랜드 유래·연도·나라·판매 기록 — 조사.md 사실 번호, 전언 '~하더라고요/~대요') · 비유 1줄('~같아요') · 끝 줄 = 사회 반응(품절·기사·입소문).
   ★판 틀의 권위·비유·사회 반응 칸은 **근거가 있을 때만** 채운다. 근거가 없으면 그 칸은 후기 셀링포인트 줄로 대신한다 — 칸을 채우려고 지어내지 않는다
@@ -795,7 +795,21 @@ def ph_reviews_got(st, m, rp, u):
     r = m.get("reviews") or {}
     st["reviews"] = [{"id": x.get("id"), "text": str(x.get("text") or "")[:400]} for x in r.get("reviews") or []][:8]
     if not st["reviews"]:
-        st["log"].append("쿠팡 베스트 후기 못 받음" + (" — 쿠팡이 잠시 막음" if r.get("blocked") else "") + " — 대본은 후기 없이(지어내지 않는다)")
+        # 쿠팡 후기를 못 받으면(회원 PC 도 막힐 수 있다 — 사장님 10-22 "쿠팡 후기 아니어도 된다") 네이버 검색 글에서 셀링포인트를 찾는다
+        st["log"].append("쿠팡 베스트 후기 못 받음" + (" — 쿠팡이 잠시 막음" if r.get("blocked") else "") + " → 네이버 글로")
+        name = str((st.get("product") or {}).get("name") or "").strip()
+        if name:
+            short = " ".join(name.split()[:4])
+            return {"do": [{"id": "nreviews", "cmd": "naver", "queries": [f"{short} 후기", f"{short} 장점"]}], "then": "reviews_naver"}
+    return {"goto": "research"}
+
+
+def ph_reviews_naver(st, m, rp, u):
+    texts = ((m.get("nreviews") or {}).get("texts") or {})
+    st["reviews"] = [{"id": f"n{i + 1}", "text": f"[네이버 '{q}'] " + str(t)[:1200]} for i, (q, t) in enumerate(texts.items())
+                     if t and not str(t).startswith("(네이버 검색 실패")]
+    if not st["reviews"]:
+        st["log"].append("네이버 글도 못 받음 — 대본은 후기 없이(지어내지 않는다)")
     return {"goto": "research"}
 
 
@@ -1310,7 +1324,7 @@ PHASES = {
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
-    "product_done": ph_product_done, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
+    "product_done": ph_product_done, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
@@ -1318,5 +1332,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "reviews": "product", "reviews_got": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
