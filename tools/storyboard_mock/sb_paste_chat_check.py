@@ -206,8 +206,6 @@ def main(argv):
         pg.locator("#s2Storyboard .sb-row").nth(6).scroll_into_view_if_needed()
         pg.wait_for_timeout(500)
         g1 = chat_geo()
-        if shot_side:
-            pg.screenshot(path=shot_side)
         pg.locator("#s2Storyboard .sb-chat button", has_text="접기").click()
         pg.wait_for_timeout(400)
         g2 = chat_geo()
@@ -284,6 +282,11 @@ def main(argv):
         ok6 = f6 == {"ix": 2, "val": "연결어"}
         res["⑥다시그린뒤커서"] = f6
         pg.evaluate("() => { SB.ask = {}; sbRender(); }")
+        if shot_side:   # 대화가 담긴 채로 칸 중간까지 스크롤한 실제 화면(사람이 보는 그대로)
+            pg.locator("#s2Storyboard .sb-row").nth(3).scroll_into_view_if_needed()
+            pg.evaluate("() => window.scrollBy(0, 250)")
+            pg.wait_for_timeout(500)
+            pg.screenshot(path=shot_side)
         if shot:
             pg.locator("#s2Storyboard").screenshot(path=shot)
         # ④ 확정 — 확정 대본과 서버로 나가는 요청에 칸 글이 줄마다 실리는가
