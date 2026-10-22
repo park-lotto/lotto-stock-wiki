@@ -153,6 +153,9 @@ def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = 
             if cr is not None and cr != "face" and not (isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr)):
                 out.append(f"{tag}: crop 은 'face' 또는 [x, y, w, h](원본 픽셀 정수)여야 한다({cr!r})")
             wh = (dims or {}).get(src)
+            if not still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr) and cr[3] < wh[1] * ZOOM_MIN_H:
+                out.append(f"{tag}: 영상 {src}({wh[0]}x{wh[1]}) 를 높이 {int(cr[3])}px 로 잘라 {wh[1] / max(1, cr[3]):.2f}배 확대 — 확대는 1.0(높이 {wh[1]}px 그대로), "
+                           f"원본에 박힌 글자는 잘라서 피하지 말고 재료.blur 로 흐린다(사장님 10-22)")
             if still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr):
                 iw, ih = wh
                 if cr[0] + cr[2] > iw + 2 or cr[1] + cr[3] > ih + 2:
@@ -198,34 +201,25 @@ def alt_scene_problems(S: dict, M: dict, origin_names: set) -> list[str]:
     return out
 
 
-TEXT_MIN_H = 0.45     # 박힌 글자를 피해 줄일 때 칸 높이 하한(원본 높이 비율) — 더 줄면 화질이 떨어져 그대로 두고 검수에 맡긴다
 STILL_EXT = (".jpg", ".jpeg", ".png", ".webp")
+ZOOM_MIN_H = 0.95     # 영상 컷 crop 높이 하한(원본 높이 비율) = 확대 1.0(사장님 10-22 "확대 과다 → 확대 1.0 + 원본 글 흐림") — 여유 5%
 
 
-def avoid_text(crop: list, boxes: list, fx: float | None, sw: int, sh: int, ar: float) -> list:
-    """박힌 글자 상자(원본 픽셀)를 피해 칸을 줄인다 — 위 띠면 칸 위를 띠 아래로, 아래 자막이면 칸 아래를 자막 위로(창 비율 유지, 주인공 가로 가운데 유지).
-    집 PC yanshot/plan 이 샷마다 글자 상자를 읽어 크롭 밖으로 빼던 것(10-21 선우용여: 위 제목 띠·아래 자막이 검수마다 새로 걸림, 98 #24)."""
-    x, y, w, h = [float(v) for v in crop]
-    for _ in range(6):
-        hit = [b for b in boxes if b[0] < x + w and b[2] > x and b[1] < y + h and b[3] > y]
-        if not hit:
-            break
-        b = max(hit, key=lambda b: (min(b[2], x + w) - max(b[0], x)) * (min(b[3], y + h) - max(b[1], y)))
-        top = (b[1] + b[3]) / 2 < y + h / 2
-        ny0, ny1 = (b[3], y + h) if top else (y, b[1])
-        nh = ny1 - ny0
-        if nh < TEXT_MIN_H * sh:
-            break
-        nw = min(sw, nh * ar)
-        cx = fx if fx is not None else x + w / 2
-        x, y, w, h = max(0.0, min(sw - nw, cx - nw / 2)), ny0, nw, nh
-    return [int(round(x)), int(round(y)), int(round(w)), int(round(h))]
+def text_blur(boxes: list, a: float, b: float) -> list:
+    """박힌 글자 상자(원본 픽셀 [x0,y0,x1,y1]) → 렌더러 흐림 칸 [x,y,w,h,a,b](a~b = 원본 초 = 그 샷). 잘라서 피하지 않고 흐린다(10-22 사장님).
+    예전 avoid_text 는 칸을 높이 45%까지 줄여 최대 2.2배 확대했다(강주은 첫 컷 뭉개짐)."""
+    out = []
+    for x0, y0, x1, y1 in boxes:
+        w, h = int(round(x1 - x0)), int(round(y1 - y0))
+        if w > 4 and h > 4:
+            out.append([int(round(x0)), int(round(y0)), w, h, round(float(a), 2), round(float(b), 2)])
+    return out
 
 
 def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict, ar: float | None) -> dict:
     """원본 컷마다 샷 표로 칸을 채운다(판단 주인 — 집 PC 에선 손으로 적던 칸). origin_dims = {파일 이름: [가로, 세로]}(PC 가 잰 값).
     ① max = 그 샷 끝 − ss — 렌더러의 '컷이 원본 샷보다 길다' 검사가 다른 출연자로 넘어가는 컷을 잡게 한다
-    ② 칸이 정해지지 않은 주인공 컷('face'·없음)만 **주인공 얼굴 가운데 + 박힌 글자 피하기**(사장님 10-21 "주인공 가운데").
+    ② 칸이 정해지지 않은 주인공 컷('face'·없음)만 **주인공 얼굴 가운데·원본 높이 그대로(확대 1.0)** + 박힌 글자는 흐림(M.blur, 사장님 10-21·10-22).
        숫자로 정한 칸은 절대 덮지 않는다 — 대본·재료 고치기가 정한 칸을 엔진이 되돌리면 같은 칸을 두 곳이 정한다(98 #21·#25, 0순위-B).
     ③ 사진 재료(쿠팡 상품 사진)가 이어지면 움직임을 번갈아(in·left·out·right) — 대본이 정한 move 는 그대로."""
     orig_at = {l["id"]: (l.get("src"), float(l["spans"][0][0])) for l in (S or {}).get("lines") or [] if l.get("kind") == "orig" and l.get("spans")}
@@ -259,7 +253,10 @@ def fill_shot_max(M: dict, S: dict | None, origin_dims: dict, shots_by_src: dict
             fx = s["cx"] * sw if s.get("cx") is not None else sw / 2
             crop = [max(0, min(sw - cw, int(round(fx - cw / 2)))), 0, cw, sh]
             boxes = [[b[0] * sw, b[1] * sh, b[2] * sw, b[3] * sh] for b in s.get("text") or []]
-            c["crop"] = avoid_text(crop, boxes, fx, sw, sh, ar) if boxes else crop
+            c["crop"] = crop
+            if boxes:
+                bl = M.setdefault("blur", {}).setdefault(src, [])
+                bl += [r for r in text_blur(boxes, s["a"], s["b"]) if r not in bl]
             c["center"] = "주인공"
     return M
 

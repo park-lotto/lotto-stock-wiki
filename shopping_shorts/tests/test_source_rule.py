@@ -52,14 +52,16 @@ def test_fill_shot_max_centers_main():
     assert abs((c["crop"][0] + c["crop"][2] / 2) - 0.75 * 1920) <= 1      # 주인공 얼굴 가운데
 
 
-def test_avoid_text_cuts_band_and_caption_keeps_face_center():
-    """박힌 글자 피하기(rules.avoid_text) — 위 제목 띠·아래 자막을 칸 밖으로, 창 비율·주인공 가운데 유지(10-21 선우용여, 98 #24)."""
-    sw, sh, ar = 1920, 1080, 1.0
-    band, cap = [240, 0, 630, 90], [300, 900, 1600, 1000]
-    x, y, w, h = c = RU.avoid_text([420, 0, 1080, 1080], [band, cap], 960.0, sw, sh, ar)
-    assert y >= 90 and y + h <= 900, c                      # 띠 아래 · 자막 위
-    assert abs(w - h * ar) <= 1 and abs((x + w / 2) - 960) <= 1, c
-    assert RU.avoid_text([0, 0, 1080, 1080], [[0, 0, 1920, 700]], 500.0, sw, sh, ar) == [0, 0, 1080, 1080]   # 너무 줄어들면 그대로
+def test_text_is_blurred_not_zoomed():
+    """박힌 글자는 흐림(재료.blur), 칸은 원본 높이 그대로(확대 1.0) — 사장님 10-22 · 강주은 첫 컷 1.4배 뭉개짐(예전 avoid_text 최대 2.2배)."""
+    shots = {"o": [{"i": 0, "a": 10.0, "b": 14.0, "who": "main", "cx": 0.5, "text": [[0.15, 0.85, 0.85, 0.95]]}]}
+    M = {"cuts": {"N1": [{"src": "o.mp4", "ss": 11.0, "face": "주인공"}]}}
+    RU.fill_shot_max(M, None, {"o.mp4": [1920, 1080]}, shots, 1.0)
+    c = M["cuts"]["N1"][0]
+    assert c["crop"][3] == 1080 and c["crop"][2] == 1080                      # 확대 1.0
+    assert M["blur"]["o.mp4"] == [[288, 918, 1344, 108, 10.0, 14.0]]          # 자막 자리 흐림(그 샷 동안)
+    z = RU.material_problems({"cuts": {"N2": [{"src": "o.mp4", "ss": 1, "crop": [580, 0, 770, 770]}]}}, {"o.mp4"}, set(), {"o.mp4": [1920, 1080]})
+    assert len(z) == 1 and "확대" in z[0]
 
 
 def test_fill_shot_max_keeps_numeric_crop_and_alternates_stills():
