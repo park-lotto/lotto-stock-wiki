@@ -1,0 +1,817 @@
+{
+ "url": "https://www.yeogi.com/domestic-accommodations/49688",
+ "detail": {
+  "site": "yeogi",
+  "site_name": "여기어때",
+  "kind": "stay",
+  "id": "49688",
+  "url": "https://www.yeogi.com/domestic-accommodations/49688",
+  "name": "스카이베이호텔 경포",
+  "grade": "비즈니스",
+  "address": "강원특별자치도 강릉시 강문동 258-4",
+  "price_from": 146575,
+  "rating": 9.1,
+  "review_count": 7908,
+  "facilities": [
+   "피트니스",
+   "수영장",
+   "사우나",
+   "무선인터넷",
+   "욕실용품",
+   "레스토랑",
+   "금연",
+   "TV",
+   "에어컨",
+   "냉장고",
+   "짐보관가능",
+   "샤워실",
+   "무료주차",
+   "드라이기",
+   "금고",
+   "전기주전자",
+   "주차장",
+   "엘리베이터",
+   "스프링클러",
+   "야외수영장"
+  ],
+  "photos": [
+   {
+    "url": "https://image.withstatic.com/194/357/461/ccf578228d59481187d11fff79e5af2f.jpg",
+    "label": "대표 사진"
+   },
+   {
+    "url": "https://image.withstatic.com/200/185/112/c297f2c0e9384fdea48e83ac74e88543.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/159/4/234/7037a847acff4c709feac9c3ec6667c3.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/99/149/18/7783220cd3f8473aa24ee7d63ef671f8.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/62/392/192/4563bc0f1f7149d088d9999705f0b5a5.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/441/72/125/9b4c0f317e2b4f58958a14b281ca5598.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/252/141/28/b946fe7082654a35857e476648b460a8.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/377/84/90/f7a18c0ec8d345209aeb106845528cf7.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/58/231/89/37d214a6ae5c44979c340d068cf95e26.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/107/104/150/ea6c19132d35493da8add4c5cdcbf38b.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/65/429/319/e37c5165235e4ba9bc54fe59eeb302be.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/351/418/372/2526932367ef4456b458528859ad6b48.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/374/186/188/020b40ab7ae649abbfb1f51bde7dc222.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/123/366/301/7564e9fcbadc4b06abd596ca216e8562.jpg",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/property/2025/10/17/b8/b89f1a88ba404997a51f270aee0c2846.png",
+    "label": "객실"
+   },
+   {
+    "url": "https://image.withstatic.com/259/442/233/28f9effca328457bacebd1841fa5112a.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/115/417/374/a003b01378fe4bc18ea34f76f5bbed44.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/18/24/377/6b68d6f26d5c43a0a7c9890437aeab20.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/69/1/39/fe245c79280a4f198fc8e89c4e439f2c.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/386/171/355/991da49f36b04ea79aa265225dc31a71.jpg",
+    "label": "야외 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/474/150/359/2e434446c5474762a02e61cc1bac45c5.jpg",
+    "label": "실내 수영장"
+   },
+   {
+    "url": "https://image.withstatic.com/3/462/229/c3f297b30a684bf28a5032a7e0152e60.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/453/26/304/b6c56b150dfa41b282b035ca4f40b61d.jpg",
+    "label": "부대시설"
+   },
+   {
+    "url": "https://image.withstatic.com/116/65/35/df702ba80f0347f9b22282d71763d8e1.jpg",
+    "label": "로비"
+   },
+   {
+    "url": "https://image.withstatic.com/395/488/442/f4219bf7fae842c8b87fedf36866225f.jpg",
+    "label": "외관"
+   },
+   {
+    "url": "https://image.withstatic.com/121/229/237/ef563ee5c7b14afa8be2940c5f198329.jpg",
+    "label": "외관"
+   },
+   {
+    "url": "https://image.withstatic.com/122/497/404/9b9780968fbf4b5eafbbeffddfadac9c.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈(오션뷰) [굿초이스]"
+   },
+   {
+    "url": "https://image.withstatic.com/320/497/259/a34501c846ec4d0e96bc0b692413524e.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈(오션뷰) [굿초이스]"
+   },
+   {
+    "url": "https://image.withstatic.com/93/437/349/400884b5d51e4ba99c488616e0ee5221.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈(오션뷰) [굿초이스]"
+   },
+   {
+    "url": "https://image.withstatic.com/290/173/17/33e7f236ed1f4695807ff09a40d5c74c.jpg",
+    "label": "객실",
+    "room": "체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/88/177/335/8155703076654b6a97304d6fd66c82e1.jpg",
+    "label": "객실",
+    "room": "체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/164/382/237/fc41846d39a34186a68129c01bc9ee3b.jpg",
+    "label": "객실",
+    "room": "체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/462/15/261/81f17a629b9d4fb39900c3fb3411afce.jpg",
+    "label": "객실",
+    "room": "체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/02/11/ee/ee5bade50b6640d5b53acb065d53acef.jpg",
+    "label": "객실",
+    "room": "[인피니티풀 2인 포함] 체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/02/11/81/81c8711f859a47cbb52286b8ad60ff4b.jpg",
+    "label": "객실",
+    "room": "[인피니티풀 2인 포함] 체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/giant/2026/02/11/41/41b9f4e1f4b248e0ba957aa61bb8641d.jpg",
+    "label": "객실",
+    "room": "[인피니티풀 2인 포함] 체크인 시 배정"
+   },
+   {
+    "url": "https://image.withstatic.com/102/294/122/ef7e9cdfa79241c2b56175f373e6f94c.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 (소나무or호수뷰, 저층)"
+   },
+   {
+    "url": "https://image.withstatic.com/498/313/70/1e3bfcdbf6474fa1abc71827850b41d7.jpg",
+    "label": "객실",
+    "room": "디럭스 트윈 (소나무or호수뷰, 저층)"
+   },
+   {
+    "url": "https://image.withstatic.com/151/213/84/5d52ed1781944585ae8f43856a3d199b.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 더블 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/480/441/367/0b8a246d563e4cb5a1ee222d469cdd48.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/491/18/438/38b5094387db4bd6aa57cbae2496091e.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/365/67/170/e96603097b6f48ec8c4bb00924f2513c.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/126/345/390/16fa7eefff3943ce986c4cdb6472dd46.jpg",
+    "label": "객실",
+    "room": "[S컬렉션] [자쿠지 패키지] 디럭스 패밀리트윈"
+   },
+   {
+    "url": "https://image.withstatic.com/24/58/167/1099cbd83dbd46c6b14d32768093b51a.jpg",
+    "label": "객실",
+    "room": "[S컬렉션] [자쿠지 패키지] 디럭스 패밀리트윈"
+   },
+   {
+    "url": "https://image.withstatic.com/170/289/169/b520fab6a82f445a9a9a14f50e216b3a.jpg",
+    "label": "객실",
+    "room": "[S컬렉션] [자쿠지 패키지] 디럭스 패밀리트윈"
+   },
+   {
+    "url": "https://image.withstatic.com/441/77/245/4d3a5aca3f2f42e1bbaf51c7bc3e9c54.jpg",
+    "label": "객실",
+    "room": "[조식 2인 포함] 이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/200/321/13/8c514d64c6b74bb99d4eedc5a1999b08.jpg",
+    "label": "객실",
+    "room": "[조식 2인 포함] 이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/454/475/198/43c5570be2084f4cb71636e022260860.jpg",
+    "label": "객실",
+    "room": "[조식 2인 포함] 이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/327/491/186/9022590c2e014b6c9b4aad8b3e7b1ba7.jpg",
+    "label": "객실",
+    "room": "[조식 2인 포함] 이그제큐티브 트윈 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/205/160/215/df12c4398da74114a3a4b3a2f84cbc95.jpg",
+    "label": "객실",
+    "room": "[조식&인피니티풀 2인] 이그제큐티브 더블 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/109/185/489/4d546185135f44cab1f34b8ad485fcd4.jpg",
+    "label": "객실",
+    "room": "앰버서더 스위트 트윈 (레이크뷰, 자쿠지 이용불가)"
+   },
+   {
+    "url": "https://image.withstatic.com/384/450/281/055723b85c614d3f8abef084ca15cf74.jpg",
+    "label": "객실",
+    "room": "앰버서더 스위트 트윈 (레이크뷰, 자쿠지 이용불가)"
+   },
+   {
+    "url": "https://image.withstatic.com/73/345/65/cf1f560ea7cb48c1a15fa6ec2a65d447.jpg",
+    "label": "객실",
+    "room": "앰버서더 스위트 트윈 (레이크뷰, 자쿠지 이용불가)"
+   },
+   {
+    "url": "https://image.withstatic.com/473/288/85/a04673b551fb4168ab83ea1576a12549.jpg",
+    "label": "객실",
+    "room": "로얄 스위트 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/446/30/366/3673e91b5774445bad68b8a4da964d64.jpg",
+    "label": "객실",
+    "room": "로얄 스위트 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/377/456/10/a80fc3be1d594e58a4a2deb2604f17ef.jpg",
+    "label": "객실",
+    "room": "로얄 스위트 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/244/328/265/68ee2a2d40264af093aae759851e3208.jpg",
+    "label": "객실",
+    "room": "로얄 스위트 (오션뷰)"
+   },
+   {
+    "url": "https://image.withstatic.com/property/2025/10/17/56/56d348b0505d461f85d408481c088545.png",
+    "label": "객실",
+    "room": "디럭스 더블 (호수전망) [굿초이스]"
+   },
+   {
+    "url": "https://image.withstatic.com/435/8/424/a2fc95f765a54474aa75734af0f482ad.jpg",
+    "label": "객실",
+    "room": "디럭스 더블 (호수전망) [굿초이스]"
+   },
+   {
+    "url": "https://image.withstatic.com/262/280/1/d9067892e1a745e49f02a1cc4d31152b.jpg",
+    "label": "객실",
+    "room": "이그제큐티브 더블(오션뷰) [굿초이스]"
+   }
+  ],
+  "story_facts": {
+   "intro": "번화한 경포 해수욕장에 자리 잡은 호텔로 탁 트인 바다 전망을 감상할 수 있습니다 현대적이고 고급스러운 객실에서 편안하게 휴식할 수 있습니다 수영장과 레스토랑, 피트니스센터 등 다양한 편의시설을 갖추고 있습니다",
+   "faq": [
+    {
+     "q": "스카이베이호텔 경포 조식 시간과 가격은 어떻게 되나요?",
+     "a": "스카이베이호텔 경포 조식은 1층 쉘팩토리에서 뷔페로 제공됩니다. 운영 시간은 월~토요일 07:00~10:30, 일요일 및 공휴일은 07:00~11:00입니다. 투숙객 할인가 기준 성인 35,100원입니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 투숙객은 피트니스 센터를 무료로 이용할 수 있나요?",
+     "a": "네, 스카이베이호텔 경포 투숙객은 피트니스 센터를 객실당 2인까지 무료로 이용할 수 있습니다. 피트니스 센터는 20층에 있으며, 만 19세 이상부터 입장이 가능합니다. 안전을 위해 개인 운동화를 반드시 지참해야 합니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 수영장이 휴장할 수도 있나요?",
+     "a": "네, 스카이베이호텔 경포 수영장은 정기 점검 및 호텔 사정에 따라 휴장할 수 있습니다. 방문 전 호텔에 운영 일정을 확인하는 것을 권장합니다. 쾌적한 환경을 위해 음식물 반입은 금지됩니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 인피니티풀 이용 시간과 요금이 궁금해요.",
+     "a": "스카이베이호텔 경포 인피니티풀은 20층에 있으며, 07:00부터 21:00까지 운영합니다. 투숙객 할인 요금은 주중 성인 30,000원, 주말 및 공휴일은 35,000원입니다. 요금은 시즌별로 변동될 수 있습니다."
+    },
+    {
+     "q": "스카이베이호텔 경포에서 강문해변까지 얼마나 걸리나요?",
+     "a": "스카이베이호텔 경포에서 강문해변까지는 차량으로 약 2분 거리입니다. 또한, 경포아쿠아리움은 차량 5분, 강릉항은 차량 8분 거리에 위치하여 관광하기 편리합니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 객실의 자쿠지를 이용할 수 있나요?",
+     "a": "아니요, 스카이베이호텔 경포의 전 객실 자쿠지는 현재 이용이 불가합니다. 예약 시 이 점을 반드시 참고해 주시기 바랍니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 객실에서 바다를 볼 수 있나요?",
+     "a": "네, 스카이베이호텔 경포는 오션뷰 객실을 보유하고 있습니다. 이그제큐티브 더블, 이그제큐티브 트윈 등 다양한 오션뷰 객실 타입이 준비되어 있습니다. 예약 시 객실의 전망 정보를 확인해 주세요."
+    },
+    {
+     "q": "스카이베이호텔 경포 객실에 칫솔, 치약이 제공되나요?",
+     "a": "스카이베이호텔 경포는 욕실용품을 제공하지만, 칫솔, 치약 등 일회용품 제공 여부는 정책에 따라 변동될 수 있습니다. 자세한 사항은 호텔 프런트로 문의해 주시기 바랍니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 주차는 무료로 가능한가요?",
+     "a": "네, 스카이베이호텔 경포는 투숙객에게 무료 주차를 제공합니다. 호텔 내 주차장을 이용하실 수 있습니다. 다만, 호텔 사정에 따라 주차 공간이 협소할 수 있습니다."
+    },
+    {
+     "q": "스카이베이호텔 경포 체크인과 체크아웃 시간은 언제인가요?",
+     "a": "스카이베이호텔 경포의 체크인 시간은 15:00, 체크아웃 시간은 11:00입니다. 체크인 시 본인 확인을 위해 신분증을 반드시 지참해 주시기 바랍니다."
+    }
+   ],
+   "reviews": [
+    "😊 이건 알고 가시면 좋아요! 1. 오션뷰 바다만 깔끔하게 잘 보이는 오션뷰를 원하시면, 만족하실 거예요. 근처 다른 호텔의 송림이 함께 보이는 오션뷰와는 다른 느낌이에요. '오션뷰' 전망만 놓고 보면, 스카이베이 호텔이 더 좋았어요. 2. 룸 사이즈 이그제큐티브 트윈 룸은 아담해요. 침대와 TV 사이 공간이 좁은데, TV 옆에 선반이 있어서 캐리어를 놓을 수 있어요. 욕실 겸 화장실도 컴팩트해요. 둘이 지내기에 불편하진 않았지만 3명이 쓰기엔 좀 아쉬운 것 같",
+    "세인트존스와 더불어 강문해변의 대표 호텔 스카이베이 경포 리뷰입니다. 일단 인피니티풀 가본곳중 손에꼽힐만큼 좋은시설과 뷰를 자랑하고 8월 마지막에 가서그런지 풀자체는 붐비는거없이 잘이용하였고 당일 팔찌만 계속 차고있으면 운영시간내에는 계속이용가능하니 참고하시면 좋을거같아요. 한가지 아쉬운점은 사우나도 이용가능할줄알았는데 별개로 운영되는 시스템이어서 따로 비용내고 이용해야되는게 아쉬웠고 풀비용도 저렴한편이 아니어서 같이 이용가능했으면 어땠을까 합니다. 객실이야 처",
+    "강릉오면 가족들과는 라카이리조트이용하는데 혼자여행이라 리조트보단 호텔이 나을거 같아 이번에는 스카이베이 이용해보았어요 가족들과 와도 너무 좋을것 같네요! 위치는 최고이고. 깨끗하고 주차편하고 군더더기 없어요 가격대비 좋아요!! 친절해요^^ 경포호에서 러닝 뛰고 바로앞 바다 모래사장에서 맥주한잔 마시고 헬스장 이용하고 더할나위없네요",
+    "경포호와 바다를 동시에 즐길 수 있는 위치에 있어서 주기적으로 찾게 되는 곳입니다. 뷰도 아름답고, 수건 등의 비품도 좋은 컨디션으로 비치 되어 있으며 다리미판도 있어서 비즈니스 출장등의 의류관리에도 유용하게 사용 할 수 있습니다. 다소 낡은 부분도 있으나, 전체적인 관리가 영호 합니다. 수영장도 실외부가 있어서 좋고, 리셉션도 친절합니다. 아쉬운 것은, 호텔 로비에 셀프 체크인 기계가 있으나 호텔사이트에서 직접 예약하지 않고 다른 앱 등에서 예약을 했을때는 예",
+    "깨끗합니다. 주차장 충분합니다. 폭도 좁지 않슴니다. 출장차 방문했습니다. 베게 이불 침구류도 나쁘지 않습니다. 수건 비품들도 냄새없이 깨끗합니다. 커피포트도 청소하신거 같습니다. 주변에 식당 편의점 이런것들 있는듯 합니다. 나가보진 않았습니다. 가까이 이것저것 있습니다. 룸도 크기가 다른곳보다 조금 큰것같은 느낌이 듭니다. 프론트도 매우 친절하십니다. 청소도 아주 잘 되어 있는듯 합니다. 훌륭합니다. 머리카락 안 보이는거보니 기분이 좋습니다. 만족합니다. 수영"
+   ]
+  },
+  "source_label": "출처: 여기어때",
+  "fetched_at": 1792484089
+ },
+ "judged": [
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\00.jpg",
+   "kind": "exterior",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "호수 옆에 위치한 두 개의 타워가 상단으로 연결된 독특한 구조의 흰색 고층 건물입니다.",
+   "desc_en": "A white high-rise building with a unique structure featuring two towers connected at the top, situated next to a lake.",
+   "no": 1,
+   "visible": [
+    "고층 건물",
+    "호수",
+    "나무",
+    "가로등",
+    "하늘"
+   ],
+   "time_of_day": "해질녘",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\01.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "파란색 인테리어 포인트가 있는 깔끔한 호텔 레스토랑 내부",
+   "desc_en": "Clean hotel restaurant interior with blue interior accent points",
+   "no": 2
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\02.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "밝은 조명의 현대적인 뷔페 배식대와 다양한 음식 및 과일이 비치된 공간입니다.",
+   "desc_en": "A modern buffet serving area with bright lighting, featuring various food items and a fruit basket.",
+   "no": 3,
+   "visible": [
+    "뷔페 배식대",
+    "과일 바구니",
+    "접시",
+    "대리석 바닥",
+    "천장 조명",
+    "통유리창",
+    "주방 기구"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\03.jpg",
+   "kind": "restaurant",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "통유리창 너머로 바다가 보이는 호텔 레스토랑 좌석",
+   "desc_en": "Hotel restaurant seating with a view of the sea through floor-to-ceiling windows",
+   "no": 4
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\04.jpg",
+   "kind": "water",
+   "has_text": false,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "바다와 맞닿은 인피니티 풀 옆으로 현대적인 건물이 위치해 있습니다.",
+   "desc_en": "An infinity pool is located next to a modern building, overlooking the ocean.",
+   "no": 5,
+   "visible": [
+    "인피니티 풀",
+    "바다",
+    "건물",
+    "수영장 타일",
+    "유리창"
+   ],
+   "time_of_day": "해질녘",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\05.jpg",
+   "kind": "water",
+   "has_text": false,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "바다와 맞닿아 있는 수평선 너머로 해가 지고 있는 실외 수영장 모습입니다.",
+   "desc_en": "An outdoor swimming pool overlooking the sea at sunset.",
+   "no": 6,
+   "visible": [
+    "수영장",
+    "바다",
+    "하늘",
+    "건물"
+   ],
+   "time_of_day": "해질녘",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\06.jpg",
+   "kind": "water",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "통유리창으로 바다가 보이는 실내 수영장",
+   "desc_en": "Indoor swimming pool with a view of the sea through glass walls",
+   "no": 7
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\07.jpg",
+   "kind": "other",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "통유리창을 따라 러닝머신이 배치된 호텔 피트니스 센터",
+   "desc_en": "Hotel fitness center with treadmills arranged along floor-to-ceiling windows",
+   "no": 8
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\08.jpg",
+   "kind": "bath",
+   "has_text": false,
+   "has_people": false,
+   "wow": 2,
+   "desc_ko": "타일로 마감된 깔끔한 실내 목욕탕 및 스파 시설",
+   "desc_en": "Tiled indoor bath and spa facility",
+   "no": 9
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\09.jpg",
+   "kind": "lobby",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "높은 층고와 기둥이 있는 개방감 있는 호텔 로비",
+   "desc_en": "Spacious hotel lobby with high ceilings and pillars",
+   "no": 10
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\10.jpg",
+   "kind": "water_aerial",
+   "has_text": false,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "해변가에 위치한 거대한 고층 호텔 건물과 푸른 바다가 어우러진 조감도입니다.",
+   "desc_en": "An aerial view of a large high-rise hotel building situated by the beach with the blue sea.",
+   "no": 11,
+   "visible": [
+    "호텔",
+    "해변",
+    "바다",
+    "나무",
+    "도로",
+    "건물",
+    "텐트",
+    "파라솔",
+    "사람"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\11.jpg",
+   "kind": "water_aerial",
+   "has_text": false,
+   "has_people": false,
+   "wow": 5,
+   "desc_ko": "해안선을 따라 위치한 호텔 건물을 위에서 내려다본 모습",
+   "desc_en": "Aerial view of the hotel building along the coastline",
+   "no": 12
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\12.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "파란색 소파와 의자, 식탁이 있는 현대적인 거실 공간입니다.",
+   "desc_en": "A modern living room space with a blue sofa, an armchair, and a dining table.",
+   "no": 13,
+   "visible": [
+    "소파",
+    "암체어",
+    "커피 테이블",
+    "식탁",
+    "의자",
+    "TV",
+    "조명",
+    "관엽식물",
+    "수납장",
+    "리모컨",
+    "티슈 케이스",
+    "커피 머신",
+    "전기 포트"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\13.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "유리벽으로 구분된 침실과 욕실 공간",
+   "desc_en": "Bedroom and bathroom space separated by a glass wall",
+   "no": 14
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\14.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 4,
+   "desc_ko": "침대와 욕조, 스탠드형 TV가 배치된 통유리창 객실입니다.",
+   "desc_en": "A hotel room with a bed, a bathtub, and a stand-mounted TV, featuring floor-to-ceiling windows.",
+   "no": 15,
+   "visible": [
+    "침대",
+    "이불",
+    "베개",
+    "욕조",
+    "유리 파티션",
+    "의자",
+    "사이드 테이블",
+    "TV",
+    "TV 스탠드",
+    "창문",
+    "커튼",
+    "시스템 에어컨",
+    "스위치",
+    "바닥"
+   ],
+   "time_of_day": "낮",
+   "described": true
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\15.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "깔끔하게 정돈된 더블 침대 객실",
+   "desc_en": "Neatly arranged double bed in a guest room",
+   "no": 16
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\16.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "소파가 배치된 넓은 객실 내부",
+   "desc_en": "Spacious hotel room interior featuring a sofa",
+   "no": 17
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\17.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "거실과 주방 공간이 연결된 객실",
+   "desc_en": "Hotel room with an open living room and kitchen area",
+   "no": 18
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\18.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "트윈 베드가 놓인 객실과 통창 뷰",
+   "desc_en": "Twin room with a view from the large window",
+   "no": 19
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\19.jpg",
+   "kind": "bath",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "밝은 조명의 현대적인 욕실 내부",
+   "desc_en": "Modern bathroom interior with bright lighting",
+   "no": 20
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\20.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "거실 공간의 소파와 통창",
+   "desc_en": "Living room area with a sofa and floor-to-ceiling windows",
+   "no": 21
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\21.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "침대와 통창이 있는 밝은 객실",
+   "desc_en": "Bright guest room with a bed and a floor-to-ceiling window",
+   "no": 22
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\22.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "가구와 TV가 배치된 객실 전경",
+   "desc_en": "Overview of a hotel room with furniture and a TV",
+   "no": 23
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\photos\\23.jpg",
+   "kind": "room",
+   "has_text": false,
+   "has_people": false,
+   "wow": 3,
+   "desc_ko": "통창이 있는 깔끔한 침실",
+   "desc_en": "Minimalist bedroom featuring a large window",
+   "no": 24
+  }
+ ],
+ "picks": [
+  11,
+  5,
+  1,
+  15,
+  3,
+  13,
+  6
+ ],
+ "short": {},
+ "rep": {
+  "url": "https://www.yeogi.com/domestic-accommodations/49688",
+  "steps": {
+   "상세": 0.5,
+   "사진 받기 24장": 3.4,
+   "사진 판정": 17.2,
+   "원본 재설명": 38.3,
+   "세로 화면": 0.9,
+   "대본": 101.4
+  }
+ },
+ "frames": [
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_0.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_1.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_2.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_3.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_4.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_5.png",
+   "mode": "crop"
+  },
+  {
+   "path": "C:\\Users\\TheRose\\AppData\\Local\\Temp\\claude\\C--Users-TheRose-Desktop-------\\1fcf931d-2e45-4ba5-94e3-d7519ff28def\\scratchpad\\skybay\\start_6.png",
+   "mode": "crop"
+  }
+ ],
+ "script": {
+  "chosen": {
+   "type": "안티/반전형",
+   "lines": [
+    "해외 비행기 표 취소하세요, 이 해변 호텔을 보고 나면요.",
+    "인피니티 풀에서 보는 노을은 유명 휴양지보다 더 압도적이에요.",
+    "두 개의 타워가 연결된 호숫가 건축미는 밤이 되면 더 빛나죠.",
+    "통유리창 침대 옆 욕조에서 즐기는 휴식은 상상 그 이상일걸요.",
+    "정갈한 배식대 위에 놓인 요리들까지, 가격 들으면 놀라실걸요.",
+    "거실 소파에 앉아 멍하니 밖을 보면 시간 가는 줄 모를 거예요.",
+    "어딘지 궁금하면 댓글에 정보라고 남겨주세요."
+   ]
+  },
+  "versions": [
+   {
+    "type": "안티/반전형",
+    "lines": [
+     "해외 비행기 표 취소하세요, 이 해변 호텔을 보고 나면요.",
+     "인피니티 풀에서 보는 노을은 유명 휴양지보다 더 압도적이에요.",
+     "두 개의 타워가 연결된 호숫가 건축미는 밤이 되면 더 빛나죠.",
+     "통유리창 침대 옆 욕조에서 즐기는 휴식은 상상 그 이상일걸요.",
+     "정갈한 배식대 위에 놓인 요리들까지, 가격 들으면 놀라실걸요.",
+     "거실 소파에 앉아 멍하니 밖을 보면 시간 가는 줄 모를 거예요.",
+     "어딘지 궁금하면 댓글에 정보라고 남겨주세요."
+    ]
+   },
+   {
+    "type": "감각/공간 몰입형",
+    "lines": [
+     "바닷바람 맞으며 온전한 휴식을 원하는 분들 주목하세요.",
+     "해질녘 수영장 타일 위로 반사되는 따스한 빛을 따라가 보세요.",
+     "호수 건너편 가로등이 하나둘 켜지면 조용히 밤이 찾아와요.",
+     "유리창을 통해 쏟아지는 햇살 아래 폭신한 침대에 누워봅니다.",
+     "환한 조명 아래 정갈하게 놓인 과일과 접시가 눈길을 끌어요.",
+     "부드러운 소파에 기대어 커피 한 잔의 여유를 누려보세요.",
+     "노을 지는 수평선을 보러 오실 분들 댓글 남겨주세요."
+    ]
+   },
+   {
+    "type": "타깃 결핍/혜택형",
+    "lines": [
+     "지친 일상 속 특별한 쉼표가 필요한 분들은 집중하세요.",
+     "바다가 보이는 풀장에서 수영하며 파도 소리에 귀를 기울여요.",
+     "호수 옆 독특한 타워를 바라보며 걷는 고요한 저녁 산책길.",
+     "통창 너머 풍경을 보며 욕조에 몸을 담그면 피로가 풀려요.",
+     "깔끔한 배식대에서 취향껏 담아온 요리를 맛있게 즐겨보세요.",
+     "거실 소파에 앉아 몸만 편히 쉬면 되는 역대급 공간이에요.",
+     "저장해두고 꼭 방문해보세요, 정보는 댓글로 물어봐 주세요."
+    ]
+   }
+  ],
+  "issues": {
+   "안티/반전형": [
+    "길이 233자 ≈ 33.9초(권장 137~175자)",
+    "6줄: 사진 속 창문이 보이지 않아 밖을 내다볼 수 있는 상황이 아닙니다."
+   ],
+   "감각/공간 몰입형": [
+    "길이 228자 ≈ 33.2초(권장 137~175자)",
+    "1줄: 사진만으로는 바닷바람의 존재를 시각적으로 확인할 수 없음",
+    "3줄: 사진 속에는 호수 건너편의 가로등이 보이지 않습니다.",
+    "6줄: 사진에 커피가 포함되어 있지 않습니다.",
+    "7줄: 사진 속 하늘은 해가 지고 난 직후의 푸른 시간대로, 해가 지는 '노을'은 이미 지나갔거나 보이지 않는 상태입니다."
+   ],
+   "타깃 결핍/혜택형": [
+    "길이 229자 ≈ 33.3초(권장 137~175자)",
+    "2줄: 사진에는 파도가 보이지 않으며, 파도 소리는 청각적 요소로서 사진에 직접적으로 나타나 있지 않습니다."
+   ]
+  },
+  "attempts": 2,
+  "clean": false
+ }
+}

@@ -1,0 +1,154 @@
+[
+ {
+  "n": 1,
+  "line": "강릉 가서 바다만 보고 오지 마세요, 친구가 호텔 20층 수영장에서 바다 위에 둥둥 떠 있는 기분이었다더라고요.",
+  "plan": {
+   "emph": "둥둥"
+  },
+  "evidence": {
+   "item": "20층 인피니티풀에서 보는 동해 바다",
+   "count": 251
+  },
+  "frames": [
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\10.jpg"
+   },
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\00.jpg"
+   },
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\04.jpg"
+   },
+   {
+    "photo": "g0"
+   }
+  ],
+  "fx": {
+   "chips": [
+    "20층 인피니티풀"
+   ]
+  },
+  "comment": {
+   "keys": [
+    "인피니티",
+    "20층"
+   ],
+   "topic": "인피니티풀과 그 너머 바다"
+  }
+ },
+ {
+  "n": 2,
+  "line": "바다랑 맞닿은 인피니티풀이 겨울에도 온수라서, 찬바람 맞으면서 따뜻한 물에 떠 있으니까 외국 온 것처럼 사진이 나온대요.",
+  "plan": {
+   "emph": "온수"
+  },
+  "evidence": {
+   "item": "겨울에도 따뜻한 온수 인피니티풀",
+   "count": 65
+  },
+  "frames": [
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\05.jpg"
+   },
+   {
+    "photo": "g1"
+   },
+   {
+    "compare": [
+     "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\04.jpg",
+     "g0"
+    ]
+   }
+  ],
+  "fx": {
+   "chips": [
+    "겨울에도 온수"
+   ]
+  },
+  "comment": {
+   "keys": [
+    "온수"
+   ],
+   "topic": "온수 인피니티풀 물과 그 너머 바다",
+   "must": [
+    "풀",
+    "수영장"
+   ]
+  }
+ },
+ {
+  "n": 3,
+  "line": "밤엔 불빛 켜진 야경이 미쳤고, 사람 없이 즐기려면 아침 7시 개장 때 가면 거의 전세 낸 기분이래요.",
+  "plan": {
+   "emph": "7시"
+  },
+  "evidence": {
+   "item": "수영장은 아침 7시 개장 때가 제일 한산해요",
+   "count": 18
+  },
+  "frames": [
+   {
+    "photo": "g0"
+   },
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\06.jpg"
+   },
+   {
+    "photo": "g1"
+   }
+  ],
+  "fx": {
+   "chips": [
+    "아침 7시 개장 때 한산"
+   ]
+  },
+  "comment": {
+   "keys": [
+    "야경",
+    "밤에"
+   ],
+   "topic": "밤에 조명이 켜진 인피니티풀 야경",
+   "must": [
+    "풀",
+    "수영장"
+   ]
+  }
+ },
+ {
+  "n": 4,
+  "line": "대신 투숙객도 수영장은 따로 결제해야 하고요, 다음 편엔 이 호텔 방 고르는 법 알려 드릴게요.",
+  "plan": {
+   "emph": "결제"
+  },
+  "evidence": {
+   "item": "인피니티풀은 투숙객도 유료, 한 번 결제하면 계속 이용",
+   "count": 9
+  },
+  "frames": [
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\11.jpg"
+   },
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\04.jpg"
+   },
+   {
+    "photo": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\여행쇼핑쇼츠\\tools\\travel\\work_skybay\\photos\\14.jpg"
+   }
+  ],
+  "fx": {
+   "strike": "투숙객 무료",
+   "to": "투숙객도 유료"
+  },
+  "comment": {
+   "keys": [
+    "유료",
+    "결제"
+   ],
+   "topic": "수영장 입구나 이용 안내",
+   "must": [
+    "풀",
+    "수영장"
+   ]
+  }
+ }
+]

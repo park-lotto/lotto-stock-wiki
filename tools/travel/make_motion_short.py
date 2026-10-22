@@ -128,6 +128,7 @@ def stage_voice(sb, work, gem_tempo=1.12):
         if mp3.exists() and _mean_db(mp3) < -60:      # 키 없을 때 tts.py 가 만드는 무음 대역 파일 — 쓰지 않는다
             print("  %d줄 남은 음성이 무음(%.0fdB) — 다시 만든다" % (i + 1, _mean_db(mp3)), flush=True)
             mp3.unlink()
+            Path(str(mp3) + ".fin").unlink(missing_ok=True)
         if not mp3.exists():
             if mina:
                 tts.synthesize_tts(line, str(mp3), voice_id=MINA["voice_id"], voice_settings=MINA["voice_settings"],
@@ -138,9 +139,15 @@ def stage_voice(sb, work, gem_tempo=1.12):
                 wav = work / ("tts_%d.wav" % i)
                 _gemini_tts(line, wav)
                 subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-ar", "44100", "-b:a", "192k", str(mp3)], check=True)
-            audio_post.finish_line_audio(str(mp3), tempo=MINA["tempo"] if mina else gem_tempo, silence_trim="mid")
+        # 마무리(빠르기·무음 정리)는 한 번만 — 서버에서 미나로 합성해 받아 온 mp3(일레븐 키 없는 PC)도 여기서 마무리한다
+        fin = Path(str(mp3) + ".fin")
+        side = Path(tt.sidecar_path(str(mp3))).exists()
+        if not fin.exists():
+            audio_post.finish_line_audio(str(mp3), tempo=MINA["tempo"] if (mina or side) else gem_tempo, silence_trim="mid")
+            fin.write_text("finished", encoding="utf-8")
+        eleven = mina or side
         dur = float(va._probe_duration(str(mp3)))
-        if mina:
+        if eleven:
             words = tt.words_from_mp3(str(mp3))
             if not words:
                 raise SystemExit("%d줄 단어 시각이 없다(일레븐 정렬 사이드카 없음) — 글자 수 추정으로 때우지 않는다" % (i + 1))
@@ -151,7 +158,7 @@ def stage_voice(sb, work, gem_tempo=1.12):
                 raise SystemExit("%d줄 받아쓰기 실패: %s" % (i + 1, asr_check._LAST.error))
             words = _align_words(line, heard)
         out.append({"line": line, "mp3": mp3.name, "dur": round(dur, 3), "words": words,
-                    "voice": "미나(일레븐)" if mina else "제미나이 Kore(대역 — 이 PC에 일레븐 키 없음)"})
+                    "voice": ("미나(일레븐)" if mina else "미나(일레븐, 서버 합성)") if eleven else "제미나이 Kore(대역 — 이 PC에 일레븐 키 없음)"})
         print("%d줄 %.2f초 어절 %d개 추정 %d" % (i + 1, dur, len(words), sum(1 for w in words if w.get("guess"))), flush=True)
     (work / "voice.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -567,9 +574,11 @@ def stage_comments(sb, work, reviews_path, want=2):
     out = json.loads(out_f.read_text(encoding="utf-8")) if out_f.exists() else {}
     for s in _shots(sb):
         n = str(s["n"])
-        if n in out or s["n"] not in _COMMENT_KEYS:
+        cm = s.get("comment")      # 콘티에 적힌 것이 우선(숙소마다 다르다) — 없으면 네스트호텔 표
+        if n in out or not (cm or s["n"] in _COMMENT_KEYS):
             continue
-        keys, topic, must, avoid = (list(_COMMENT_KEYS[s["n"]]) + [None, None])[:4]
+        keys, topic, must, avoid = ((cm["keys"], cm["topic"], cm.get("must"), cm.get("avoid")) if cm
+                                    else (list(_COMMENT_KEYS[s["n"]]) + [None, None])[:4])
         # 대본과 반대되는 후기(예: 대본 '대기 1시간' ↔ 후기 '웨이팅 없었어요')는 아예 후보에서 뺀다 — 실측 10-20 5줄
         pool_ = [r for r in reviews if (not must or any(m in r.get("content", "") for m in must))
                  and not any(x in r.get("content", "") for x in (avoid or []))]
@@ -595,13 +604,71 @@ def _fit_clip(src, dst, need):
                     "-crf", "16", "-pix_fmt", "yuv420p", str(dst)], check=True)
 
 
+def _photo_card(i, frames, cms, a, t, end, small, body, js, sfx):
+    """한 줄의 가운데 카드를 사진 여러 장으로 — 줄 길이를 장 수로 나눠 1~2초마다 바꾼다(터진 숙소 쇼츠 8/9편이 컷 1.6초 이하).
+    장마다 천천히 당기거나 빠지는 줌(1.0↔1.075 번갈아). 칸 종류:
+      {"photo": 경로}                         공식 사진 한 장
+      {"photo": 경로, "fade_to": 경로}         같은 곳이 0.8초에 걸쳐 바뀜(낮→노을 등)
+      {"compare": [공식 경로, "g0"]}           위 '호텔 사진' / 아래 '실제 손님 사진' 나란히
+    "g0"·"g1" = 그 줄 손님 후기 사진(comments.json). 없으면 그 칸을 빼고 알린다(조용히 넘기지 않는다).
+    반환 (첫 장 선택자, 마지막 장 선택자) — 줄 사이 휙 전환은 부르는 쪽이 건다."""
+    def src(x):
+        if x and x.startswith("g") and x[1:].isdigit():
+            k = int(x[1:])
+            return cms[k]["photo"] if k < len(cms) and cms[k].get("photo") else None
+        return x
+    ok = []
+    for f in frames:
+        need = [f.get("photo"), f.get("fade_to")] if "photo" in f else list(f["compare"])
+        if all(src(x) for x in need if x):
+            ok.append(f)
+        else:
+            print("  %d줄 사진 칸 빠짐(손님 사진 없음): %s" % (i + 1, f), flush=True)
+    seg = (end - t) / len(ok)
+    if seg > 2.2:       # 한 장이 2초를 넘게 서 있으면 '휙휙'이 아니라 멈춘 화면이 된다 — 콘티에 장을 더 넣으라고 알린다
+        print("  %d줄 사진 한 장 %.1f초 — 2초 안팎이 되게 장을 늘릴 것" % (i + 1, seg), flush=True)
+    ids = []
+    for j, f in enumerate(ok):
+        fid = "pc%d_%d" % (i, j)
+        t0 = t + j * seg
+        z0, z1 = (1.0, 1.075) if (i + j) % 2 == 0 else (1.075, 1.0)
+        if "compare" in f:
+            o, g = (src(x) for x in f["compare"])
+            inner = ('<div class="half top"><img class="kb" src="assets/%s"><b class="tag">호텔 사진</b></div>'
+                     '<div class="half bot"><img class="kb" src="assets/%s"><b class="tag guest">실제 손님 사진</b></div>'
+                     % (_img(o, a / (fid + "_o.jpg"), 1000), _img(g, a / (fid + "_g.jpg"), 1000)))
+            # 나란히 칸도 멈춰 보이지 않게 두 장 다 천천히 줌(실측 10-22: 줌 없던 비교 칸 3.6초가 멈춤 검사에 걸림)
+            js.append('tl.fromTo("#%s .kb",{scale:%.3f},{scale:%.3f,duration:%.3f,ease:"none"},%.3f);' % (fid, z0, z1, seg, t0))
+            js.append('tl.fromTo("#%s .bot",{yPercent:100},{yPercent:0,duration:0.32,ease:"power3.out"},%.3f);' % (fid, t0 + 0.125))
+            js.append('tl.fromTo("#%s .tag",{opacity:0,y:16},{opacity:1,y:0,duration:0.2,ease:"power2.out",stagger:0.125},%.3f);'
+                      % (fid, t0 + 0.3))
+            sfx.append((t0 + 0.125 - 0.068, "pop.wav", 0.2))
+        else:
+            inner = '<img class="kb" src="assets/%s">' % _img(src(f["photo"]), a / (fid + ".jpg"), 1200)
+            js.append('tl.fromTo("#%s .kb",{scale:%.3f},{scale:%.3f,duration:%.3f,ease:"none"},%.3f);' % (fid, z0, z1, seg, t0))
+            if f.get("fade_to"):
+                inner += '<img class="kb2" src="assets/%s">' % _img(src(f["fade_to"]), a / (fid + "_b.jpg"), 1200)
+                js.append('tl.fromTo("#%s .kb2",{opacity:0,scale:%.3f},{opacity:1,scale:%.3f,duration:0.8,ease:"power2.inOut"},%.3f);'
+                          % (fid, z0 + (z1 - z0) * 0.4, z1, t0 + seg * 0.4))
+        body.append('<div id="%s" class="clip card pc%s" data-start="%.3f" data-duration="%.3f" data-track-index="1">%s</div>'
+                    % (fid, " small" if small else "", t0, seg, inner))
+        if j:       # 줄 안에서 바뀔 땐 짧게 휙(줄 사이보다 작게)
+            js.append('tl.fromTo("#%s",{x:140,filter:"blur(8px)"},{x:0,filter:"blur(0px)",duration:0.22,ease:"power3.out"},%.3f);' % (fid, t0))
+            sfx.append((t0 - 0.02, "whoosh.wav", 0.12))
+        ids.append("#" + fid)
+    return ids[0], ids[-1]
+
+
 def stage_build3(sb, work):
     from shopping_shorts import video_assemble as va
     sb, work = Path(sb), Path(work)
     shots = _shots(sb)
     voice = json.loads((work / "voice.json").read_text(encoding="utf-8"))
-    st = json.loads((ROOT / "tools/travel/work_nest/state.json").read_text(encoding="utf-8"))
-    counts = {x["item"]: x.get("count") for c, it in st["detail"]["review_insights"].items() if not c.startswith("_") for x in it}
+    # 숙소 자료 = 콘티 폴더의 state.json·insights.json(숙소마다), 없으면 네스트호텔(3판을 만든 자료)
+    stp = sb / "state.json" if (sb / "state.json").exists() else ROOT / "tools/travel/work_nest/state.json"
+    st = json.loads(stp.read_text(encoding="utf-8"))
+    ins = st["detail"].get("review_insights") or json.loads((sb / "insights.json").read_text(encoding="utf-8"))
+    counts = {x["item"]: x.get("count") for c, it in ins.items() if not c.startswith("_") for x in it}
     a = work / "assets"
     a.mkdir(exist_ok=True)
     fonts = ROOT / "shopping_shorts/static/fonts"
@@ -610,7 +677,8 @@ def stage_build3(sb, work):
     shutil.copy(Path.home() / "숏템자료/모션그래픽엔진/work/2026-10-20_라면레시피/ramen/brand/gsap.min.js", a / "gsap.min.js")
     for f in ("whoosh.wav", "pop.wav", "dung.wav", "tick.wav"):
         shutil.copy(SFX / f, a / f)
-    disc = va.disclosure_layer_png({"disclosure": {"ad": True, "ai": True, "source": "여기어때"}}, str(a / "disclosure.png"))
+    disc = va.disclosure_layer_png({"disclosure": {"ad": True, "ai": True, "source": st["detail"].get("site_name") or "여기어때"}},
+                                   str(a / "disclosure.png"))
     cf = work / "comments.json"
     comments = json.loads(cf.read_text(encoding="utf-8")) if cf.exists() else {}
     e = html.escape
@@ -620,22 +688,26 @@ def stage_build3(sb, work):
     for i, (s, v) in enumerate(zip(shots, voice)):
         words, dur = v["words"], v["dur"]
         end = t + dur + GAP + (0.6 if i == n - 1 else 0.0)
-        g = _V3.get(s["n"], {})
-        _fit_clip(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i), end - t)
+        g = s["fx"] if "fx" in s else _V3.get(s["n"], {})
         shutil.copy(work / v["mp3"], a / v["mp3"])
         auds.append('<audio id="v%d" src="assets/%s" data-start="%.3f" data-duration="%.3f" data-track-index="10" data-volume="1"></audio>'
                     % (i, v["mp3"], t, dur))
         # 가운데 카드 영상 — 마지막 줄(정리 화면)은 카드를 작게 위로
         small = bool(g.get("chart"))
-        body.append('<video id="vid%d" class="clip card%s" src="assets/clip_%d.mp4" data-start="%.3f" data-duration="%.3f" '
-                    'data-track-index="1" muted playsinline></video>' % (i, " small" if small else "", i, t, end - t))
+        if s.get("frames"):     # Veo 없이 사진으로(사장님 10-22 "veo 안 쓰고") — 줄 안에서 1~2초마다 사진이 바뀐다
+            first, last = _photo_card(i, s["frames"], comments.get(str(s["n"])) or [], a, t, end, small, body, js, sfx)
+        else:
+            _fit_clip(work / ("clip_%d.mp4" % i), a / ("clip_%d.mp4" % i), end - t)
+            body.append('<video id="vid%d" class="clip card%s" src="assets/clip_%d.mp4" data-start="%.3f" data-duration="%.3f" '
+                        'data-track-index="1" muted playsinline></video>' % (i, " small" if small else "", i, t, end - t))
+            first = last = "#vid%d" % i
         if i == 0:      # 당겼다 빠지는 줌(pull-back) — 첫 화면 시선 잡기
-            js.append('tl.fromTo("#vid0",{scale:1.22},{scale:1,duration:0.55,ease:"power3.out"},0);')
+            js.append('tl.fromTo("%s",{scale:1.22},{scale:1,duration:0.55,ease:"power3.out"},0);' % first)
         else:           # 휙 밀려 들어옴(whip) — 흐림 12px→0, 0.32초
-            js.append('tl.fromTo("#vid%d",{x:340,filter:"blur(12px)"},{x:0,filter:"blur(0px)",duration:0.32,ease:"power3.out"},%.3f);' % (i, t))
+            js.append('tl.fromTo("%s",{x:340,filter:"blur(12px)"},{x:0,filter:"blur(0px)",duration:0.32,ease:"power3.out"},%.3f);' % (first, t))
             sfx.append((t - 0.02, "whoosh.wav", 0.22))
         if i < n - 1:   # 나갈 때 왼쪽으로
-            js.append('tl.to("#vid%d",{x:-260,filter:"blur(10px)",duration:0.14,ease:"power2.in"},%.3f);' % (i, end - 0.14))
+            js.append('tl.to("%s",{x:-260,filter:"blur(10px)",duration:0.14,ease:"power2.in"},%.3f);' % (last, end - 0.14))
         # 위 제목 = 말하는 문장(반 문장씩), 단어는 들리는 순간
         groups, k, em, em_t = _halves(s["line"]), 0, s["plan"]["emph"], None
         caps = []
@@ -742,6 +814,13 @@ html,body{margin:0;background:%(cr)s}
 .clip{position:absolute}
 .card{left:90px;top:500px;width:900px;height:940px;object-fit:cover;border-radius:36px;box-shadow:0 28px 60px rgba(40,25,10,.28);z-index:1}
 .card.small{left:240px;top:430px;width:600px;height:720px}
+.pc{overflow:hidden;background:#d9d2c8}
+.pc img{position:absolute;left:0;top:0;width:100%%;height:100%%;object-fit:cover}
+.pc .half{position:absolute;left:0;right:0;height:50%%;overflow:hidden}
+.pc .half.top{top:0}
+.pc .half.bot{bottom:0;border-top:8px solid %(cr)s}
+.pc .tag{position:absolute;left:24px;top:22px;font-family:"PretendardX";font-size:36px;color:#16130f;background:#fff;padding:8px 20px;border-radius:999px}
+.pc .tag.guest{background:%(or)s;color:#fff}
 .head{left:0;right:0;top:0;height:460px;z-index:3}
 .head .ln{position:absolute;left:70px;right:70px;top:235px;text-align:center;font-family:"PretendardX";font-size:80px;line-height:1.22;
  color:#16130f;letter-spacing:-.03em;word-break:keep-all}
