@@ -6,6 +6,9 @@
 로컬 서버로 보내 **진짜 AI**를 부른다(로컬 서버는 계정 미상 = 무료 키 길).
 
     py tools/storyboard_mock/sb_paste_chat_check.py <work_id> [--local] [--ai-server] [--shot <png>]
+        [--ask "<요청>" --row <꼭 바뀌어야 할 칸 번호(1부터)>] [--shot-chat <png>]
+
+--ask/--row: ③에서 보낼 요청과 꼭 바뀌어야 할 칸(기본 "2번째 줄 …" / 2). --shot-chat: [적용] 전 제안이 뜬 대화창 캡처.
 
 --ai-server: 이 PC 무료 키가 소진됐을 때 — 이 폴더의 script_chat.py 를 서버 /tmp 에 올려 **서버 환경(키풀)으로** revise 를
   돌린다(저장소·서비스는 안 건드림, 계정 미상 = 무료 키 길). 화면 → 응답 → [적용] 흐름은 같다.
@@ -39,7 +42,7 @@ spec = importlib.util.spec_from_file_location("shopping_shorts.script_chat_chk",
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 b = json.loads(sys.stdin.read())
 try:
-    print(json.dumps({"ok": True, **m.revise(b.get("lines") or [], b.get("message") or "", b.get("history") or [], b.get("product") or "")}, ensure_ascii=False))
+    print(json.dumps({"ok": True, **m.revise(b.get("lines") or [], b.get("message") or "", b.get("history") or [], b.get("product") or "", b.get("roles"))}, ensure_ascii=False))
 except ValueError as e:
     print(json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
 """
@@ -91,6 +94,9 @@ def main(argv):
     local = "--local" in argv
     shot = argv[argv.index("--shot") + 1] if "--shot" in argv else ""
     via_server = "--ai-server" in argv
+    ask = argv[argv.index("--ask") + 1] if "--ask" in argv else ASK
+    row = int(argv[argv.index("--row") + 1]) - 1 if "--row" in argv else 1
+    shot_chat = argv[argv.index("--shot-chat") + 1] if "--shot-chat" in argv else ""
     if via_server:
         _server_upload()
     else:
@@ -173,7 +179,7 @@ def main(argv):
         res["②칸"] = got2
         # ③ AI 대화
         pg.locator("#s2Storyboard button", has_text="AI와 대본 고치기").first.click()
-        pg.fill("#sbChatIn", ASK)
+        pg.fill("#sbChatIn", ask)
         pg.press("#sbChatIn", "Enter")
         t0 = time.time()
         prop = None
@@ -187,11 +193,16 @@ def main(argv):
         ok3 = False
         if isinstance(prop, dict) and prop.get("changed"):
             res["③바뀐줄"] = prop["changed"]
+            res["③제안"] = {k + 1: [got2[k], prop["lines"][k]] for k in prop["changed"]}
+            if shot_chat:
+                pg.locator("#s2Storyboard .sb-chat").screenshot(path=shot_chat)
             pg.locator("#s2Storyboard button", has_text="적용").first.click()
             pg.wait_for_timeout(1500)
             got3 = pg.evaluate(LINES_JS)
             res["③칸"] = got3
-            ok3 = (1 in prop["changed"]) and got3[1] == prop["lines"][1] and got3[1] != got2[1] \
+            # 요청한 칸 **하나만** 바뀌어야 한다 — 다른 칸(빈 칸 포함)이 같이 바뀌면 실패(10-22: 빈 칸 3개에 "(빈 칸)"이 들어간 걸 놓쳤다)
+            ok3 = prop["changed"] == [row] and got3[row] == prop["lines"][row] and got3[row] != got2[row] \
+                and not any("빈 칸" in x or "빈칸" in x for x in got3) \
                 and all(got3[k] == got2[k] for k in range(len(got2)) if k not in prop["changed"])
         else:
             got3 = got2

@@ -52,3 +52,18 @@ def test_empty_slot_may_stay_empty():
 def test_bad_input(lines, msg, err):
     with pytest.raises(ValueError, match=err):
         script_chat.revise(lines, msg, call=lambda p, s: {"reply": "", "lines": lines})
+
+
+def test_roles_prefix_lines_in_prompt():
+    seen = {}
+
+    def call(p, s):
+        seen["p"] = p
+        return {"reply": "ok", "lines": ["a", "b"]}
+    script_chat.revise(["a", "b"], "훅 세게", roles=["훅", "문제"], call=call)
+    assert "1. [훅] a" in seen["p"] and "2. [문제] b" in seen["p"]
+
+
+def test_empty_mark_echo_is_blanked():
+    out = script_chat.revise(["a", "", ""], "훅 바꿔", call=lambda p, s: {"reply": "x", "lines": ["A", "(빈 칸)", "빈칸"]})
+    assert out["lines"] == ["A", "", ""] and out["changed"] == [0]

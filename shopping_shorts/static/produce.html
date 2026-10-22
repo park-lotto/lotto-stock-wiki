@@ -19794,7 +19794,7 @@ function sbChatToggle(){ SB.chat.open=!SB.chat.open; sbRender(); const ip=docume
 function sbChatBox(ek){ const C=SB.chat; if(!C.open) return '';
   const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${m.auth==='vertex'?'구글 버텍스로 답함':'무료 제미나이로 답함'}</small>`:''}</div>`).join('');
   const P=(C.prop&&C.prop.ek===ek)?C.prop:null;
-  const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
+  const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번 ${sbE(sbKo(((SB.made[ek]||{}).slots||[])[k]?.slot||''))}</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
   return `<div class="sb-chat"><div class="sb-bh">💬 AI와 대본 고치기 <small>지금 칸의 대본을 보고 고쳐요 · 줄 수는 그대로(칸 늘리기·빼기는 ＋ 칸 추가 / 🗑 빼기)</small><span style="margin-left:auto"></span><button class="sb-btn" onclick="sbChatToggle()">닫기</button></div>
     <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 훅을 더 세게 · 3번째 줄 짧게 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?'<div class="sb-cm ai">⏳ 고치는 중…</div>':''}</div>
     ${P?`<div class="sb-cprop"><div class="sb-note">AI가 고친 줄 — [적용]을 눌러야 칸에 들어가요</div>${diff}<div style="margin-top:6px">${P.changed.length?'<button class="sb-btn main" onclick="sbChatApply()">적용</button> ':''}<button class="sb-btn" onclick="SB.chat.prop=null;sbRender()">버리기</button></div></div>`:''}
@@ -19809,7 +19809,7 @@ async function sbChatSend(){
   C.msgs.push({role:'user', text:msg}); C.draft=''; C.busy=true; C.prop=null; sbRender();
   try{
     const r=await fetch('/api/script/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:base, message:msg, history:hist, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, history:hist, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false) C.msgs.push({role:'ai', text:'❌ '+((d&&d.error)||'고치지 못했어요')});
     else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth}); C.prop={ek, base, lines:d.lines, changed:d.changed||[]}; }

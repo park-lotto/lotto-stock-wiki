@@ -9997,7 +9997,8 @@ def api_script_chat(body: dict):
     try:
         return {"ok": True, **script_chat.revise(body.get("lines") or [], body.get("message") or "",
                                                  body.get("history") if isinstance(body.get("history"), list) else [],
-                                                 str(body.get("product") or ""))}
+                                                 str(body.get("product") or ""),
+                                                 body.get("roles") if isinstance(body.get("roles"), list) else None)}
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
 

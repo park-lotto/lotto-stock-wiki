@@ -26,7 +26,8 @@ _SCHEMA = {
 }
 
 _PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 나레이션 대본을 고쳐 주는 편집자다.
-대본은 줄 단위다. 줄 하나가 영상의 장면 한 칸이고 성우가 그대로 읽는다.
+대본은 줄 단위다. 줄 하나가 영상의 장면 한 칸이고 성우가 그대로 읽는다. 줄 앞 [ ]는 그 칸 이름(훅·문제·해결 등)이다 —
+회원이 "훅", "첫 줄", "마지막", "CTA"처럼 칸 이름·위치로 말하면 그 줄을 고친다.
 
 [지금 대본 — {n}줄]
 {lines}
@@ -41,9 +42,17 @@ _PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 나레이션 �
 - 줄을 더하거나 빼 달라는 요청이어도 줄 수는 {n}줄 그대로 두고, reply 에 "화면의 ＋ 칸 추가 / 🗑 빼기 버튼으로 칸을 늘리거나 빼 주세요"라고 알려 준다.
 - 질문만 했으면 lines 는 지금 대본 그대로 돌려주고 reply 에 답한다.
 - 대본에 없는 사실·수치·효과를 지어내지 않는다. 말투(존댓말·반말·어미)는 지금 대본을 따른다.
-- 줄 번호·따옴표·기호·괄호 설명을 줄 안에 넣지 않는다. 성우가 읽을 문장만 쓴다.
+- 줄 번호·칸 이름·따옴표·기호·괄호 설명을 줄 안에 넣지 않는다. 성우가 읽을 문장만 쓴다.
+- 회원이 문장을 직접 불러 주면("훅을 'OO'로 해줘") 그 문장을 그대로 쓴다.
 - reply 는 무엇을 바꿨는지 한두 문장 한국어로.
 """
+
+
+EMPTY_MARK = "(빈 칸)"
+
+
+def _unplaceholder(t):
+    return "" if t.replace(" ", "").strip("()[]") in ("빈칸", "") else t
 
 
 def _clean_lines(lines):
@@ -51,7 +60,7 @@ def _clean_lines(lines):
     return out
 
 
-def revise(lines, message, history=None, product="", *, call=None, tries=2):
+def revise(lines, message, history=None, product="", roles=None, *, call=None, tries=2):
     """→ {"reply": str, "lines": [...같은 줄 수], "changed": [바뀐 줄 번호], "auth": "vertex"|"free"}.
     입력이 잘못됐거나 AI가 계약(줄 수·빈 줄)을 못 지키면 ValueError — 호출부가 그대로 화면에 띄운다.
     call: 테스트가 갈아끼우는 (prompt, schema) -> dict."""
@@ -72,7 +81,10 @@ def revise(lines, message, history=None, product="", *, call=None, tries=2):
         t = str(h.get("text") or "").strip()[:MAX_MSG_CHARS]
         if t:
             hist.append("%s: %s" % (who, t))
-    numbered = "\n".join("%d. %s" % (i + 1, x or "(빈 칸)") for i, x in enumerate(src))
+    # 칸 이름(훅·문제·해결…)을 줄 앞에 붙인다 — "훅쪽에 OO 해줘"처럼 칸 이름으로 부탁해도 어느 줄인지 안다
+    names = [str(x or "").strip()[:20] for x in (roles or [])]
+    numbered = "\n".join("%d. %s%s" % (i + 1, ("[%s] " % names[i]) if i < len(names) and names[i] else "", x or EMPTY_MARK)
+                         for i, x in enumerate(src))
     hint = ("\n[상품] %s\n" % product.strip()) if (product or "").strip() else ""
     prompt = _PROMPT.format(n=len(src), lines=numbered, product_hint=hint,
                             history="\n".join(hist) or "(없음)", message=msg)
@@ -84,7 +96,8 @@ def revise(lines, message, history=None, product="", *, call=None, tries=2):
         if not got.get("lines"):
             last = "AI 응답이 비었어요(키 소진·응답 오류)"
             continue
-        out = [str(x or "").strip()[:MAX_LINE_CHARS] for x in (got.get("lines") or [])]
+        # 프롬프트의 빈 칸 표시("(빈 칸)")를 AI가 그대로 돌려주면 성우가 읽는다 — 빈 칸으로 되돌린다(2026-10-22 실측: 3칸)
+        out = [_unplaceholder(str(x or "").strip()[:MAX_LINE_CHARS]) for x in (got.get("lines") or [])]
         if len(out) != len(src):
             last = "줄 수가 안 맞아요(지금 %d줄 → 답 %d줄)" % (len(src), len(out))
             continue
