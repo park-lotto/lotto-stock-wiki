@@ -144,3 +144,19 @@ def test_source_kind_program_marked_and_kept():
     flow.ph_src_got(st, {"src": {"how": "search", "picked": [], "titles": [{"id": "q", "title": "선우용여 #옥탑방의문제아들", "dur": 999, "channel": "KBS Entertain"}]}}, {}, {})
     assert st["src"]["channel"] == "KBS Entertain"
     assert "출처 '옥탑방의 문제아들'(프로그램 → KBS Entertain)" in flow._msg(st, "probe_got")
+
+
+def test_run_do_parallel_safe_only(tmp_path, monkeypatch):
+    """서로 기다릴 필요 없는 일(받아쓰기·샷 표·쿠팡…)은 한꺼번에, 나머지(쓰기→읽기·유튜브)는 차례대로 — 결과는 id 별로 그대로(10-22)."""
+    import time
+    from tools.calcopy.hybrid import runner_ops as O
+    order = []
+    def slow(name):
+        def f(W, d):
+            order.append(("start", name)); time.sleep(0.4); order.append(("end", name)); return {"n": name}
+        return f
+    monkeypatch.setattr(O, "CMDS", {"asr_spans": slow("asr"), "shot_sheets": slow("shots"), "write_doc": slow("write"), "orig_heard": slow("heard")})
+    t = time.time()
+    out = O.run_do(tmp_path, [{"id": "a", "cmd": "asr_spans"}, {"id": "s", "cmd": "shot_sheets"}, {"id": "w", "cmd": "write_doc"}, {"id": "h", "cmd": "orig_heard"}], log=lambda *_: None)
+    assert time.time() - t < 1.5 and set(out) == {"a", "s", "w", "h"}
+    assert order.index(("end", "write")) < order.index(("start", "heard"))        # 쓰기 다음에 읽기

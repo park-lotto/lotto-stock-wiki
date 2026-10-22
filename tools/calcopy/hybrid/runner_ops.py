@@ -579,7 +579,8 @@ def c_coupang(W, d):
     home = Path(os.environ.get("SHORTEM_HOME") or (W.parent / "_home"))
     if any((v or {}).get("need") == "chrome" for v in found.values()):
         found = coupang_chrome(qs, home)
-    elif not any(it.get("rating") for v in found.values() for it in (v or {}).get("items") or []):
+    elif d.get("ratings") and not any(it.get("rating") for v in found.values() for it in (v or {}).get("items") or []):
+        # 후기 수는 대체 제품 고를 때만(flow.ph_best 가 ratings 로 부른다) — 같은 제품 찾기마다 크롬을 띄우면 검색어 3개에 18초(10-22 실측, API 는 2.9초)
         # 파트너스 API 는 후기 수 칸이 없다(98 #11) → 같은 검색어 크롬 카드에서 후기 수만 product_id 로 채운다. 막히면 빈 채로(대본에 '후기 많은'을 못 쓴다)
         try:
             rate = {str(it.get("product_id")): it.get("rating") for v in coupang_chrome(qs, home).values() for it in (v or {}).get("items") or [] if it.get("rating")}
@@ -766,7 +767,9 @@ def c_shot_sheets(W, d):
         if not src.exists():
             continue
         dd = dims(src)["dur"]
-        shots = [{"i": i, "a": round(a, 3), "b": round(b, 3)} for i, (a, b) in enumerate(shots_in(src, [(0.0, dd)]))]
+        win = d.get("window") if isinstance(d.get("window"), list) and len(d["window"]) == 2 else None
+        a0, b0 = (max(0.0, float(win[0])), min(dd, float(win[1]))) if win else (0.0, dd)   # 쓰는 구간 앞뒤만(원본 통째 받기 뒤 17분 전체를 자르던 것, 10-22)
+        shots = [{"i": i, "a": round(a, 3), "b": round(b, 3)} for i, (a, b) in enumerate(shots_in(src, [(a0, b0)]))]
         shots_all[src.stem], sheets_all[src.stem] = shots, []
         for k in range(0, len(shots), 40):
             part = shots[k:k + 40]
@@ -980,12 +983,13 @@ def run_do(W: Path, do: list[dict], log=print) -> dict:
     _guard_cache_mode()
     W.mkdir(parents=True, exist_ok=True)
     out = {}
-    for d in do or []:
+
+    def one(d):
         fn = CMDS.get(str(d.get("cmd")))
         rid = str(d.get("id") or d.get("cmd"))
         if fn is None:
             out[rid] = {"error": f"허용되지 않은 명령: {d.get('cmd')}"}
-            continue
+            return
         t0 = time.time()
         try:
             out[rid] = fn(W, d)
@@ -996,7 +1000,29 @@ def run_do(W: Path, do: list[dict], log=print) -> dict:
         except Exception as e:  # noqa: BLE001 — 실패 이유를 서버에 그대로(조용히 삼키지 않는다)
             out[rid] = {"error": f"{type(e).__name__}: {str(e)[:500]}"}
         log(f"[runner] {d.get('cmd')} {time.time() - t0:.1f}s {'ERR ' + out[rid]['error'][:120] if isinstance(out[rid], dict) and out[rid].get('error') else 'ok'}")
+
+    batch: list = []
+
+    def flush():
+        if len(batch) == 1:
+            one(batch[0])
+        elif batch:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=len(batch)) as ex:
+                list(ex.map(one, batch))
+        batch.clear()
+
+    for d in do or []:
+        if str(d.get("cmd")) in PARALLEL_OK:      # 서로 기다릴 필요 없는 일은 한꺼번에(10-22 받아쓰기 46초 + 샷 72초 → 둘 중 긴 쪽)
+            batch.append(d)
+            continue
+        flush()
+        one(d)                                    # 나머지(유튜브·쓰기·계획·렌더)는 차례대로 — 앞 결과를 뒤가 읽는다·유튜브는 한 번에 하나
+    flush()
     return out
+
+
+PARALLEL_OK = {"asr_spans", "shot_sheets", "frames", "coupang", "naver", "product_stills", "mat_sheets", "sheet"}   # 유튜브를 부르지 않고 서로의 결과를 읽지 않는 일
 
 
 def main():

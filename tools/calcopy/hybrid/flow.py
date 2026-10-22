@@ -781,6 +781,20 @@ def ph_best(st, m, rp, u):
     cands = st.get("coupang_cands") or st.get("named_cands") or []
     if not cands:
         raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "")
+    if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
+        st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
+        return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
+    return _best_review(st, cands)
+
+
+def ph_best_rated(st, m, rp, u):
+    got = (m.get("coupang") or {}).get("items") or []
+    if got:
+        st["coupang_cands"] = got[:16]
+    return _best_review(st, st.get("coupang_cands") or st.get("named_cands") or [])
+
+
+def _best_review(st, cands):
     kind = (st.get("name_find") or {}).get("kind") or (st.get("product_pick") or {}).get("brand_words")
     return {"review": [_rv("best_same", PRODUCT_BEST + f"\n\n연예인이 쓴 것: {kind}\n\n쿠팡 후보:\n" + json.dumps(cands, ensure_ascii=False, indent=1),
                            [_img(x) for x in st.get("product_shots") or []], need=("product_id", "name", "category"))], "then": "product_done"}
@@ -881,7 +895,20 @@ def ph_material_dl(st, m, rp, u):
 def ph_asr(st, m, rp, u):
     f = _origin_file(st)
     return {"do": [{"id": "asr", "cmd": "asr_spans", "src": "src/" + f["name"], "spans": st["research"].get("spans") or []},
-                   {"id": "shots", "cmd": "shot_sheets", "files": ["src/" + x["name"] for x in st["origin"]["files"]]}], "then": "asr_got"}
+                   {"id": "shots", "cmd": "shot_sheets", "files": ["src/" + x["name"] for x in st["origin"]["files"]], "window": _use_window(st)}], "then": "asr_got"}
+
+
+SHOT_PAD = 90.0       # 샷 표를 만드는 구간 = 쓰는 곳(원음 구간·지문·제품 장면) 앞뒤 이만큼(초)
+
+
+def _use_window(st) -> list | None:
+    """원본 파일에서 실제로 쓰는 곳(받은 파일 초) 앞뒤 SHOT_PAD — 통째로 받은 원본 전체를 샷으로 자르지 않게(10-22 샷 표 72초)."""
+    t0 = origin_t0(st)
+    ts = [float(x["origin_t"]) - t0 for x in st["origin"].get("matched") or [] if isinstance(x.get("origin_t"), (int, float))]
+    for s_ in (st.get("research") or {}).get("spans") or []:
+        ts += [float(s_.get("a") or 0), float(s_.get("b") or 0)]
+    ts += [float(x["t"]) for x in (st.get("product_pick") or {}).get("scenes") or [] if isinstance(x.get("t"), (int, float))]
+    return [max(0.0, min(ts) - SHOT_PAD), max(ts) + SHOT_PAD] if ts else None
 
 
 def ph_asr_got(st, m, rp, u):
@@ -1215,12 +1242,12 @@ PHASES = {
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
-    "named_same": ph_named_same, "best": ph_best, "research": ph_research, "research_got": ph_research_got,
+    "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)
