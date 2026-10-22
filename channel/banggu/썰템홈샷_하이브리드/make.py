@@ -12,7 +12,7 @@
 목소리 = 박창수 tc_6059dad0b83880769a50502f · tempo 기본(대본 tempo 로만 바꿈, 상한 1.25) — 필재 금지(§12).
 받아쓰기 = 스피치매틱스(asr_local, 규칙 12) — narr_video 줄 시작 캐시(<mp3>.asr.json)를 먼저 채워 제미나이를 부르지 않는다.
 컷 시각 = narr_video.plan_times 한 곳(plan 표와 렌더가 같은 계산). 재료.json sfx 는 t(초) 또는 line(대본 줄 번호 — 그 줄 첫 자막 시각).
-관문(checks) = 길이 · LUFS · bench_distance(방구석 표절) · 나레 받아쓰기 대조 · 1초 시트.
+관문(checks) = 길이 · LUFS · bench_distance(방구석 표절) · 나레 받아쓰기 대조 · 광고 표시(engine/ad_mark) · 1초 시트.
 """
 from __future__ import annotations
 
@@ -193,13 +193,17 @@ def render(piece: str):
         return _orig(*b.args, **b.kwargs)
     nv.shot_clip = _wide
     try:
-        print("final", nv.build(_plan(P)))
+        fin = nv.build(_plan(P))
     finally:
         nv.shot_clip = _orig
+    from tools.calcopy.engine import ad_mark   # 모든 렌더 오른쪽 위 '광고'(사장님 10-22, 주인 한 곳)
+    ad_mark.apply_inplace(Path(fin))
+    print("final", fin)
 
 
 def checks(piece: str) -> dict:
     from tools.calcopy import bench_distance as BD
+    from tools.calcopy.engine import ad_mark
     P = paths(piece); S = _j(P["script"])
     fin = P["out"] / "final.mp4"
     au = _j(P["out"] / "audio.json")
@@ -220,6 +224,7 @@ def checks(piece: str) -> dict:
          "나레 받아쓰기 대조": [asr_ratio, asr_ratio >= 0.9],
          "금액 없음": [re.findall(r"\d[\d,]*\s*(?:원|만원)", text_all) or "없음", not re.search(r"\d[\d,]*\s*(?:원|만원)", text_all)],
          "뒤 체험 줄 있음": [sum(l.get("seg") == "B" for l in S["final"]["lines"]), any(l.get("seg") == "B" for l in S["final"]["lines"])],
+         "광고 표시": [ad_mark.MARK in ad_mark._probe(fin)[2], ad_mark.MARK in ad_mark._probe(fin)[2]],
          "시트": [str(sheet), True]}
     _w(P["out"] / "자동검사.json", r)
     ok = all(v[1] for v in r.values())
