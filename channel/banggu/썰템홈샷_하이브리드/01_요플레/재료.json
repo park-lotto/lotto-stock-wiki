@@ -1,0 +1,410 @@
+{
+ "_note": "썰템홈샷 하이브리드 01 요플레 재료 — 계획 14컷(make.py plan 10-22). 방구석 영상 0개. A=소디알 공식(프랑스 조합 역사)·빙그레 옛/요즘 광고·공장, B=쿠팡 같은 제품(요플레 플레인 멀티) 상품 사진(움직임)·사용자 영상. 남의 자막·워터마크·로고는 crop 밖.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/01_요플레/src",
+ "shots": [
+  {
+   "src": "Ojn0ivdb-MY.mp4",
+   "ss": 0.05,
+   "fit": "cover",
+   "full": true,
+   "cuts": [
+    {
+     "src": "Ojn0ivdb-MY.mp4",
+     "ss": 0.05,
+     "dur": 1.5,
+     "src_crop": [
+      480,
+      0,
+      850,
+      900
+     ]
+    },
+    {
+     "src": "Nom9QZKHWy8.mp4",
+     "ss": 12.1,
+     "dur": 0.9,
+     "src_crop": [
+      500,
+      340,
+      560,
+      590
+     ]
+    },
+    {
+     "src": "Ojn0ivdb-MY.mp4",
+     "ss": 29.0,
+     "dur": 0.8,
+     "src_crop": [
+      620,
+      240,
+      720,
+      760
+     ]
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=Ojn0ivdb-MY | https://www.youtube.com/watch?v=Nom9QZKHWy8",
+   "ours": "빙그레 공식 광고: 요플레에 숟가락(아래 자막 crop 밖) → 탁자 위 요플레 컵(위 문구·아래 글자 crop 밖) → 요플레 꽃 로고 끝 화면(29.0, 다 나타난 뒤)",
+   "why": "훅 '누구나 아는 요플레, 이 이름이 사실 합친 말이라는데' — 아는 대상(요플레)을 먼저 보이고 로고로 끝",
+   "i": 0
+  },
+  {
+   "src": "e7kcDfqKwKQ.mp4",
+   "ss": 22.6,
+   "fit": "cover",
+   "src_crop": [
+    300,
+    0,
+    650,
+    858
+   ],
+   "url": "https://www.youtube.com/watch?v=e7kcDfqKwKQ",
+   "ours": "소디알(옛 소디마) 협동조합 공식 영상 1964년 흑백 — 농민 조합원들이 모인 장면(프랑스어 자막·SODIAAL 로고 crop 밖)",
+   "why": "'프랑스 우유 조합 두 곳, 이름하여 욜라와 코플레를'",
+   "i": 1
+  },
+  {
+   "src": "e7kcDfqKwKQ.mp4",
+   "ss": 41.6,
+   "fit": "cover",
+   "src_crop": [
+    0,
+    20,
+    640,
+    845
+   ],
+   "url": "https://www.youtube.com/watch?v=e7kcDfqKwKQ",
+   "ours": "같은 영상: 낙농 현장 위로 Yoplait 꽃 로고·글자가 떠오름(자막 crop 밖)",
+   "why": "'합친 말이라고 함' — 그 합친 이름 Yoplait 이 화면에",
+   "i": 2
+  },
+  {
+   "src": "e7kcDfqKwKQ.mp4",
+   "ss": 35.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "e7kcDfqKwKQ.mp4",
+     "ss": 35.6,
+     "dur": 1.6,
+     "src_crop": [
+      560,
+      100,
+      650,
+      760
+     ]
+    },
+    {
+     "src": "e7kcDfqKwKQ.mp4",
+     "ss": 38.1,
+     "dur": 1.35,
+     "src_crop": [
+      600,
+      60,
+      650,
+      800
+     ]
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=e7kcDfqKwKQ",
+   "ours": "1960년대 흑백 우유통 트럭(35.6) → 우유통 작업장(38.1, 원본 자막 '1965년 Yoplait 브랜드를 만들다' 구간 — 자막은 crop 밖)",
+   "why": "'1965년 파리에서 처음 나왔고, 컵의 꽃잎도'",
+   "i": 3
+  },
+  {
+   "src": "e7kcDfqKwKQ.mp4",
+   "ss": 44.1,
+   "fit": "cover",
+   "src_crop": [
+    575,
+    20,
+    651,
+    845
+   ],
+   "url": "https://www.youtube.com/watch?v=e7kcDfqKwKQ",
+   "ours": "같은 영상 옛 TV 광고: 꽃잎 여섯 장 꽃(원본 자막 'une fleur à six pétales' crop 밖)",
+   "why": "'그 조합들을 뜻했다고' — 꽃잎 = 조합",
+   "i": 4
+  },
+  {
+   "src": "KnbTRhpHuKQ.mp4",
+   "ss": 9.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "KnbTRhpHuKQ.mp4",
+     "ss": 9.1,
+     "dur": 1.25,
+     "src_crop": [
+      400,
+      130,
+      480,
+      580
+     ]
+    },
+    {
+     "src": "KnbTRhpHuKQ.mp4",
+     "ss": 20.0,
+     "dur": 1.0,
+     "src_crop": [
+      400,
+      60,
+      480,
+      630
+     ]
+    },
+    {
+     "src": "KnbTRhpHuKQ.mp4",
+     "ss": 15.42,
+     "dur": 1.23,
+     "src_crop": [
+      330,
+      0,
+      520,
+      690
+     ]
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=KnbTRhpHuKQ",
+   "ours": "옛날 빙그레 요플레 TV 광고(1980~90년대): Yoplait 뚜껑 요플레 컵들(위 가격 글자 crop 밖) → 숟가락 뜨는 옛 컵 → 컵 근접 '프랑스 소디마사와 기술제휴' 문구",
+   "why": "'우리 요플레는, 빙그레가 1981년 프랑스 소디마와' — 옛 컵에 박힌 기술제휴 문구가 대사와 같은 말",
+   "i": 5
+  },
+  {
+   "src": "SfJ-6xYwe5Q.mp4",
+   "ss": 26.2,
+   "fit": "cover",
+   "src_crop": [
+    400,
+    0,
+    817,
+    1080
+   ],
+   "url": "https://www.youtube.com/watch?v=SfJ-6xYwe5Q",
+   "ours": "빙그레 남양주 요플레 컵 자동 공급장치 공장(설비 업체 영상)",
+   "why": "'기술 제휴해 들여온 거' — 만드는 곳",
+   "i": 6
+  },
+  {
+   "src": "NxqNdsl3gP0.mp4",
+   "ss": 1.25,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "NxqNdsl3gP0.mp4",
+     "ss": 1.2,
+     "dur": 1.6,
+     "src_crop": [
+      450,
+      140,
+      780,
+      930
+     ]
+    },
+    {
+     "src": "Ojn0ivdb-MY.mp4",
+     "ss": 16.55,
+     "dur": 0.72,
+     "src_crop": [
+      400,
+      150,
+      700,
+      780
+     ]
+    },
+    {
+     "src": "SfJ-6xYwe5Q.mp4",
+     "ss": 33.5,
+     "dur": 1.1,
+     "src_crop": [
+      500,
+      0,
+      817,
+      1080
+     ]
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=NxqNdsl3gP0 | https://www.youtube.com/watch?v=Ojn0ivdb-MY | https://www.youtube.com/watch?v=SfJ-6xYwe5Q",
+   "ours": "1992년 요플레 광고 과일과 컵들 → 요즘 광고 매대에서 요플레 묶음 집는 손(아래 자막 crop 밖, 사람 얼굴 구간 뺌) → 공장 컨베이어 요플레 컵 더미",
+   "why": "'88올림픽 때 확 뜨더니, 2016년엔 한 해 3억' — 옛날→지금 인기",
+   "i": 7
+  },
+  {
+   "src": "SfJ-6xYwe5Q.mp4",
+   "ss": 29.6,
+   "fit": "cover",
+   "src_crop": [
+    600,
+    0,
+    817,
+    1080
+   ],
+   "url": "https://www.youtube.com/watch?v=SfJ-6xYwe5Q",
+   "ours": "공장 컨베이어 위 줄줄이 쌓인 요플레 빈 컵",
+   "why": "'6천만 개가 팔렸고' — 수량",
+   "i": 8
+  },
+  {
+   "i": 9,
+   "src": "3s3LgjzHEXc.mp4",
+   "ss": 44.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "3s3LgjzHEXc.mp4",
+     "ss": 44.2,
+     "dur": 1.95,
+     "src_crop": [
+      600,
+      330,
+      640,
+      610
+     ]
+    },
+    {
+     "src": "Ojn0ivdb-MY.mp4",
+     "ss": 5.62,
+     "dur": 0.8,
+     "src_crop": [
+      150,
+      150,
+      830,
+      800
+     ]
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=3s3LgjzHEXc | https://www.youtube.com/watch?v=Ojn0ivdb-MY",
+   "ours": "빙그레 공식 애니: 왕관 쓴 요플레 컵(위 '16년 연속' 문구·아래 자막·'브랜드파워' 메달은 crop 밖) → 요즘 광고 매대 가득한 요플레를 집는 손",
+   "why": "'떠먹는 요거트 1등 자리를, 30여 년 지켜 왔다는 얘기'"
+  },
+  {
+   "src": "still_box.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_box.jpg",
+     "ss": 0,
+     "dur": 1.9,
+     "src_crop": [
+      0,
+      80,
+      1075,
+      780
+     ],
+     "move": "in"
+    },
+    {
+     "src": "still_cups.jpg",
+     "ss": 0,
+     "dur": 1.72,
+     "src_crop": [
+      0,
+      0,
+      1075,
+      940
+     ],
+     "move": "left"
+    }
+   ],
+   "url": "https://www.youtube.com/watch?v=L63b7R5sPrA (쿠팡 요플레 플레인 멀티 상품 사진 슬라이드 — 정지 사진에서 잘라 움직임)",
+   "ours": "쿠팡 같은 제품 요플레 플레인 멀티 8개입 상자(천천히 다가감) → 컵 여러 개(옆으로 흐름)",
+   "why": "B1 '저도 쿠팡에서 멀티팩을 담아 봤는데'",
+   "i": 10
+  },
+  {
+   "src": "R8MnnYuW6ow.mp4",
+   "ss": 13.0,
+   "fit": "cover",
+   "src_crop": [
+    500,
+    0,
+    817,
+    1080
+   ],
+   "url": "https://www.youtube.com/watch?v=R8MnnYuW6ow",
+   "ours": "사용자 영상: 요플레 플레인 컵 안 크리미한 요거트를 숟가락으로 뜨는 근접",
+   "why": "B2 '부드럽고 크리미해서, 숟가락이 쑥 들어가고'",
+   "i": 11
+  },
+  {
+   "src": "still_spoon.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_spoon.jpg",
+     "ss": 0,
+     "dur": 1.7,
+     "src_crop": [
+      150,
+      0,
+      900,
+      690
+     ],
+     "move": "out"
+    },
+    {
+     "src": "R8MnnYuW6ow.mp4",
+     "ss": 29.3,
+     "dur": 1.72,
+     "src_crop": [
+      500,
+      0,
+      817,
+      1080
+     ]
+    }
+   ],
+   "url": "L63b7R5sPrA(상품 사진) | https://www.youtube.com/watch?v=R8MnnYuW6ow",
+   "ours": "작은 컵 요플레 플레인 한 숟갈(사진, 물러남) → 컵 속 플레인을 숟가락으로 뜨는 근접(사용자 영상, 13초 컷과 16초 떨어진 구간)",
+   "why": "B3 '작은 컵이라, 하나씩 꺼내 먹기도 딱 좋더라고요'",
+   "i": 12
+  },
+  {
+   "src": "still_coupang.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "src_crop": [
+    250,
+    380,
+    520,
+    600
+   ],
+   "move": "in",
+   "url": "https://www.coupang.com/vp/products/4986663036",
+   "ours": "쿠팡 상품 사진: 앞 컵 'No.1 떠먹는 요거트' 표기(천천히 다가감)",
+   "why": "B4 '떠먹는 요거트 넘버원, 괜히 붙은 말이 아니었음'",
+   "i": 13
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0,
+   "db": 0,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 1,
+   "dt": 0,
+   "db": 0,
+   "why": "훅→본문, '잉' 공개(욜라+코플레)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 3,
+   "dt": 0,
+   "db": -2,
+   "why": "한국 요플레로 넘어감(소디마 기술 제휴 공개)"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 6,
+   "dt": 0,
+   "db": -2,
+   "why": "뒤 체험(B) 첫 줄 전환"
+  }
+ ]
+}

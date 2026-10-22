@@ -1,0 +1,163 @@
+{
+ "topic": "요플레 이름의 정체 — 프랑스 낙농 조합 욜라(Yola)+코플레(Coplait)의 합성어, 1965 파리 출시·꽃잎 로고 = 조합들, 빙그레 1981 소디마 기술 제휴, 88올림픽·2016 3억6천만 개·30여 년 1위 → 뒤 체험: 쿠팡 요플레 플레인 멀티(4986663036)",
+ "facts": {
+  "g1": {
+   "text": "General Mills 'How Yoplait got its start': 이름은 소디마 회원 조합 중 잘 알려진 두 곳 Yola 와 Coplait 를 줄여 합친 것 · 여섯 지역 낙농 조합 농민들 · 1965-09-25 파리 공식 출시 · 여섯 꽃잎 꽃 로고는 창립 조합 여섯 곳을 뜻함(2009년 꽃잎 하나가 빠짐)",
+   "url": "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start"
+  },
+  "w1": {
+   "text": "Wikipedia 'Yoplait': 이름은 Yola 와 Coplait 두 조합 이름에서 옴(교차 확인)",
+   "url": "https://en.wikipedia.org/wiki/Yoplait"
+  },
+  "k1": {
+   "text": "코리아데일리 2022-08-16: '빙그레는 1981년에 프랑스 소디마와 기술 제휴해 요플레를 출시했고, 이듬해 사명을 대일유업에서 현재의 빙그레로 변경'",
+   "url": "https://www.koreadaily.com/article/20220816210338794"
+  },
+  "h1": {
+   "text": "한경비즈니스 2021-02: '1983년 출시된 요플레는 88서울 올림픽을 계기로 대중의 인기를 얻게 되었다' · '2016년 요플레는 … 총 3억 6천만개, 일 평균 98만개가 팔렸다' · '약 30여년간 국내 떠먹는 요거트 시장 1위'",
+   "url": "https://magazine.hankyung.com/business/article/202102185862b"
+  },
+  "p1": {
+   "text": "쿠팡 요플레 플레인 멀티(상품번호 4986663036, 로켓) 상품 사진: 컵·뚜껑에 '요플레' 꽃 로고 · 'Soft & Creamy' · 'No.1 떠먹는 요거트 *2010~2024 닐슨 Market Track 떠먹는 요거트 판매액 기준'",
+   "url": "https://www.coupang.com/vp/products/4986663036"
+  }
+ },
+ "ing": {
+  "line": 1,
+  "fact": "g1",
+  "why": "누구나 아는 한국 요플레가 사실 프랑스 낙농 조합 두 곳(Yola+Coplait) 이름을 합친 말 — 대부분 한국 브랜드 이름으로 안다"
+ },
+ "hook": [
+  "요플레라는 이름,",
+  "프랑스 두 조합의 합성어"
+ ],
+ "post": "매일 먹던 요플레, 이름에 숨은 이야기",
+ "tempo": null,
+ "final": {
+  "lines": [
+   {
+    "fn": "I 소개+의문",
+    "seg": "A",
+    "text": "누구나 아는 요플레, 이 이름이 사실 합친 말이라는데",
+    "facts": [
+     "g1"
+    ],
+    "sources": [
+     "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start"
+    ]
+   },
+   {
+    "fn": "잉 공개",
+    "seg": "A",
+    "text": "프랑스 우유 조합 두 곳, 이름하여 욜라와 코플레를 합친 말이라고 함",
+    "facts": [
+     "g1",
+     "w1"
+    ],
+    "sources": [
+     "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start",
+     "https://en.wikipedia.org/wiki/Yoplait"
+    ]
+   },
+   {
+    "fn": "배경+덤(로고)",
+    "seg": "A",
+    "text": "1965년 파리에서 처음 나왔고, 컵의 꽃잎도 그 조합들을 뜻했다고",
+    "facts": [
+     "g1",
+     "p1"
+    ],
+    "sources": [
+     "https://cd1.generalmills.ca/news/stories/how-yoplait-got-its-start",
+     "https://www.coupang.com/vp/products/4986663036"
+    ]
+   },
+   {
+    "fn": "한국으로",
+    "seg": "A",
+    "text": "우리 요플레는, 빙그레가 1981년 프랑스 소디마와 기술 제휴해 들여온 거",
+    "facts": [
+     "k1"
+    ],
+    "sources": [
+     "https://www.koreadaily.com/article/20220816210338794"
+    ]
+   },
+   {
+    "fn": "전개",
+    "seg": "A",
+    "text": "88올림픽 때 확 뜨더니, 2016년엔 한 해 3억 6천만 개가 팔렸고",
+    "facts": [
+     "h1"
+    ],
+    "sources": [
+     "https://magazine.hankyung.com/business/article/202102185862b"
+    ]
+   },
+   {
+    "fn": "덤(1등)",
+    "seg": "A",
+    "text": "떠먹는 요거트 1등 자리를, 30여 년 지켜 왔다는 얘기",
+    "facts": [
+     "h1"
+    ],
+    "sources": [
+     "https://magazine.hankyung.com/business/article/202102185862b"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "이 사실 알고 반가워서, 저도 쿠팡에서 멀티팩을 담아 봤는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036"
+    ]
+   },
+   {
+    "fn": "B 좋은 점1",
+    "seg": "B",
+    "text": "뚜껑 말처럼 부드럽고 크리미해서, 숟가락이 쑥 들어가고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036"
+    ]
+   },
+   {
+    "fn": "B 좋은 점2",
+    "seg": "B",
+    "text": "작은 컵이라, 하나씩 꺼내 먹기도 딱 좋더라고요",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036"
+    ],
+    "note": "쿠팡 상품 사진 = 작은 컵 여러 개(멀티) · 편하다는 감상은 창작 허용"
+   },
+   {
+    "fn": "B 끝(사회 반응)",
+    "seg": "B",
+    "text": "떠먹는 요거트 넘버원, 괜히 붙은 말이 아니었음",
+    "facts": [
+     "p1",
+     "h1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/4986663036",
+     "https://magazine.hankyung.com/business/article/202102185862b"
+    ]
+   }
+  ]
+ },
+ "vs_banggu": {
+  "id": "pkX8M-hSLLE",
+  "their": "그릭요거트 비싸다→플레인으로 만들어 먹음→신맛 문제→요플레 플레인 온화형 유산균(미확인 주장)→그릭으로 만들면 단맛 평가",
+  "ours": "이름 유래(프랑스 조합 합성어)→1965 파리·꽃 로고→빙그레 1981 기술 제휴→88올림픽·판매량·1위→뒤 체험(쿠팡 멀티팩·부드러움·토핑)",
+  "not_used": "그릭요거트·신맛·유산균 종류·만들어 먹기 — 방구석의 축을 하나도 쓰지 않음"
+ }
+}
