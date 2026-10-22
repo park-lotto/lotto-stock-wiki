@@ -1,0 +1,242 @@
+{
+ "_note": "v2 시험(10-22 사장님: '~는데요' 반복·밋밋함·화면 반복/뚝뚝·확대 과다 → 결과 먼저 훅 · 어미 다양(있죠/거예요/~더니/~고는) · 연결어(이게 대박인 게·심지어) · 나레↔원음 티키타카 · 끝 = 쿠팡 베스트 후기 소구점 · 원본 2개 시간순 컷·재사용 0 · 확대 1.0 + 원본 글 흐림). 원본 = Vickey Cathey '-Kay5ATKKSY'(1억 7,683만·433배) + AuthenticTeeCee 'RYFQzKLoV5M'(2,991만·7,112배). 후기 = 쿠팡 '명랑시대쌀핫도그 통모짜'(후기 2,627·별 5, 10-22 크롬 열람).",
+ "slug": "ititemlog_ep07_corndog_v2",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "명랑시대쌀핫도그 통모짜 핫도그(냉동, 쿠팡 후기 2,627·별 5)",
+ "title_lines": [
+  [
+   [
+    "한국 핫도그 치즈에"
+   ]
+  ],
+  [
+   [
+    "난리 난 미국인들"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "Vickey 5~9초 치즈가 길게 늘어남 · 조회 176,833,128",
+  "f2": "TeeCee 0.04~3.76 'Koreans have the best food. I don't believe you. I don't believe you.'(위 댓글 'Koreans have the best food ngl')",
+  "f3": "TeeCee 3.80~6.76 'Can I get one of every Korean corn dog y'all have?' · 13.48~19.24 regular·spicy·potato·ramen",
+  "f4": "TeeCee 11.04~13.48 'This better be bussin, or we gonna need a discussion'",
+  "f5": "TeeCee 24~27초 치즈가 머리 위까지 늘어남 · 28.80~30.20 'Immediately. I'm impressed'",
+  "f6": "TeeCee 35.64~38.00 'they season them with the ramen noodle seasoning' · 38.04~39.68 'This is hella bussin'",
+  "f7": "쿠팡 후기: '치즈가 끝까지 들어있어' · '전자렌지 해동 후 에프에 충분히 돌려서' · '아이들 간식… 맛있다고 또 사달래서' · '떡볶이랑 먹으면 예술' · '극한직업 보고 바로 주문'"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "치즈가 끝도 없이 늘어나는 한국 핫도그에 미국이 난리 난 거 있죠.",
+   "caps": [
+    {
+     "text": "치즈가 끝도 없이 늘어나는"
+    },
+    {
+     "text": "한국 핫도그에 미국이 난리 난 거 있죠",
+     "key": "난리"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(도발)",
+   "src": "teecee.mp4",
+   "spans": [
+    [
+     0.04,
+     3.76
+    ]
+   ],
+   "said": "Koreans have the best food. I don't believe you. I don't believe you.",
+   "caps_rel": [
+    [
+     "한국 음식이 최고라고?",
+     0.0,
+     1.72
+    ],
+    [
+     "난 안 믿어",
+     1.72,
+     2.76
+    ],
+    [
+     "절대 안 믿어",
+     2.76,
+     3.72
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 이음",
+   "tts": "그래서 직접 찾아가서,",
+   "caps": [
+    {
+     "text": "그래서 직접 찾아가서"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(주문)",
+   "src": "teecee.mp4",
+   "spans": [
+    [
+     3.8,
+     6.76
+    ]
+   ],
+   "said": "Can I get one of every Korean corn dog y'all have?",
+   "caps_rel": [
+    [
+     "한국 핫도그",
+     0.0,
+     1.5
+    ],
+    [
+     "종류별로 다 주세요!",
+     1.5,
+     2.96,
+     "종류별로"
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "기본, 매운맛, 감자, 라면까지 싹 다 시켜 봤는데요.",
+   "caps": [
+    {
+     "text": "기본, 매운맛, 감자, 라면까지"
+    },
+    {
+     "text": "싹 다 시켜 봤는데요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(으름장)",
+   "src": "teecee.mp4",
+   "spans": [
+    [
+     11.04,
+     13.48
+    ]
+   ],
+   "said": "This better be bussin, or we gonna need a discussion.",
+   "caps_rel": [
+    [
+     "맛없기만 해 봐",
+     0.0,
+     1.08
+    ],
+    [
+     "가만 안 둔다",
+     1.08,
+     2.44
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 반전",
+   "tts": "근데 이게 대박인 게, 한 입 물자마자 치즈가 쭉 늘어나더니,",
+   "caps": [
+    {
+     "text": "근데 이게 대박인 게",
+     "key": "대박"
+    },
+    {
+     "text": "한 입 물자마자 치즈가 쭉 늘어나더니"
+    }
+   ]
+  },
+  {
+   "id": "O4",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "teecee.mp4",
+   "spans": [
+    [
+     28.8,
+     30.2
+    ]
+   ],
+   "said": "Immediately. I'm impressed.",
+   "caps_rel": [
+    [
+     "바로 인정!",
+     0.0,
+     1.4,
+     "인정"
+    ]
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 고조",
+   "tts": "심지어 라면 스프 묻힌 핫도그까지 먹어 보고는,",
+   "caps": [
+    {
+     "text": "심지어",
+     "key": "심지어"
+    },
+    {
+     "text": "라면 스프 묻힌 핫도그까지 먹어 보고는"
+    }
+   ]
+  },
+  {
+   "id": "O5",
+   "kind": "orig",
+   "role": "원음 반응(정점)",
+   "src": "teecee.mp4",
+   "spans": [
+    [
+     38.04,
+     39.68
+    ]
+   ],
+   "said": "This is hella bussin.",
+   "caps_rel": [
+    [
+     "이거 완전 미쳤다",
+     0.0,
+     1.64,
+     "미쳤다"
+    ]
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 후기 소구점",
+   "tts": "쿠팡 후기 보면 에어프라이어에 돌리기만 해도 치즈가 끝까지 꽉 차서 애들이 또 사 달라고 조른다는 거예요.",
+   "caps": [
+    {
+     "text": "쿠팡 후기 보면 에어프라이어에 돌리기만 해도"
+    },
+    {
+     "text": "치즈가 끝까지 꽉 차서",
+     "key": "끝까지"
+    },
+    {
+     "text": "애들이 또 사 달라고 조른다는 거예요"
+    }
+   ]
+  }
+ ]
+}
