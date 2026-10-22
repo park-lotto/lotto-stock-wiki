@@ -763,8 +763,38 @@ def ph_product_same(st, m, rp, u):
     st["coupang_cands"] = cands[:16]
     if not cands:
         return {"goto": "name_find"}
-    return {"review": [_rv("product_same", PRODUCT_SAME + "\n\n쿠팡 후보:\n" + json.dumps(cands[:16], ensure_ascii=False, indent=1),
-                           [_img(x) for x in shots], need=("product_id", "name", "category"))], "then": "product_done"}
+    return _cand_sheet_do(st, st["coupang_cands"], "same")
+
+
+CAND_NOTE = ("\n\n★마지막 그림 = 쿠팡 후보 사진 시트(칸 '#번호 상품번호' = 아래 후보 목록 순서). **같은 제품은 사진으로도 같아야 한다** — 모양·색·버클·로고까지 원본 장면과 대조한다. "
+             "이름만 맞으면 같은 제품이 아니다(10-22 강주은: 이름 '그린 버클 소가죽'만 보고 둥근 실버 잠금 가방을 같은 제품으로 골랐다).")
+
+
+def _cand_sheet_do(st, cands: list, kind: str) -> dict:
+    """후보 사진 시트(파트너스 API 이미지 주소 — 상품 페이지를 열지 않는다)를 만들고 판정 질문으로(kind = same|named|best)."""
+    st["_cand_kind"] = kind
+    items = [{"product_id": str(c.get("product_id") or ""), "image": c.get("image") or ""} for c in cands[:12]]
+    return {"do": [{"id": "csheet", "cmd": "cand_sheet", "items": items}], "then": "cand_look"}
+
+
+def ph_cand_look(st, m, rp, u):
+    sh = (m.get("csheet") or {}).get("file")
+    kind = st.get("_cand_kind") or "same"
+    pics = [_img(x) for x in st.get("product_shots") or []] + ([_img(sh)] if sh else [])
+    note = CAND_NOTE if sh else "\n\n(후보 사진을 받지 못했다 — 이름만으로는 같은 제품이라고 하지 않는다)"
+    if kind == "same":
+        cands = st.get("coupang_cands") or []
+        return {"review": [_rv("product_same", PRODUCT_SAME + note + "\n\n쿠팡 후보:\n" + json.dumps(cands[:12], ensure_ascii=False, indent=1),
+                               pics, need=("product_id", "name", "category"))], "then": "product_done"}
+    if kind == "named":
+        c2 = st.get("named_cands") or []
+        return {"review": [_rv("named_same", PRODUCT_NAMED + note + "\n\n찾은 제품 이름·근거:\n" + json.dumps((st.get("name_find") or {}).get("names"), ensure_ascii=False, indent=1) +
+                               "\n\n쿠팡 후보:\n" + json.dumps(c2[:12], ensure_ascii=False, indent=1), pics, need=("product_id", "name", "category"))], "then": "product_done"}
+    cands = st.get("coupang_cands") or st.get("named_cands") or []
+    kind_txt = (st.get("name_find") or {}).get("kind") or (st.get("product_pick") or {}).get("brand_words")
+    best_note = CAND_NOTE.replace("같은 제품은 사진으로도 같아야 한다", "같은 종류·같은 쓰임인지 사진으로 본다") if sh else ""
+    return {"review": [_rv("best_same", PRODUCT_BEST + best_note + f"\n\n연예인이 쓴 것: {kind_txt}\n\n쿠팡 후보:\n" + json.dumps(cands[:12], ensure_ascii=False, indent=1),
+                           pics, need=("product_id", "name", "category"))], "then": "product_done"}
 
 
 def ph_product_done(st, m, rp, u):
@@ -845,9 +875,7 @@ def ph_named_same(st, m, rp, u):
     if not c2:
         return {"goto": "best"}
     st["named_cands"] = c2[:16]
-    return {"review": [_rv("named_same", PRODUCT_NAMED + "\n\n찾은 제품 이름·근거:\n" + json.dumps((st.get("name_find") or {}).get("names"), ensure_ascii=False, indent=1) +
-                           "\n\n쿠팡 후보:\n" + json.dumps(c2[:16], ensure_ascii=False, indent=1), [_img(x) for x in st.get("product_shots") or []],
-                           need=("product_id", "name", "category"))], "then": "product_done"}
+    return _cand_sheet_do(st, st["named_cands"], "named")
 
 
 def ph_best(st, m, rp, u):
@@ -857,20 +885,14 @@ def ph_best(st, m, rp, u):
     if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
         st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
         return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
-    return _best_review(st, cands)
+    return _cand_sheet_do(st, cands, "best")
 
 
 def ph_best_rated(st, m, rp, u):
     got = (m.get("coupang") or {}).get("items") or []
     if got:
         st["coupang_cands"] = got[:16]
-    return _best_review(st, st.get("coupang_cands") or st.get("named_cands") or [])
-
-
-def _best_review(st, cands):
-    kind = (st.get("name_find") or {}).get("kind") or (st.get("product_pick") or {}).get("brand_words")
-    return {"review": [_rv("best_same", PRODUCT_BEST + f"\n\n연예인이 쓴 것: {kind}\n\n쿠팡 후보:\n" + json.dumps(cands, ensure_ascii=False, indent=1),
-                           [_img(x) for x in st.get("product_shots") or []], need=("product_id", "name", "category"))], "then": "product_done"}
+    return _cand_sheet_do(st, st.get("coupang_cands") or st.get("named_cands") or [], "best")
 
 
 # ── 4 조사 ────────────────────────────────────────────────────────────────
@@ -1324,7 +1346,7 @@ PHASES = {
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
-    "product_done": ph_product_done, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
+    "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
     "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
@@ -1332,5 +1354,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

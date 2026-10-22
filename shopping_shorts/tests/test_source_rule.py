@@ -272,3 +272,14 @@ def test_ad_mark_badge_small_top_right(tmp_path):
     from PIL import Image
     w, h = Image.open(png).size
     assert w <= 120 and h <= 60 and 15 <= m <= 30
+
+
+def test_product_judgment_gets_candidate_photos():
+    """같은 제품 판정에 쿠팡 후보 사진 시트를 같이 — 이름만으로 고르지 않게(10-22 강주은 둥근 실버 잠금 가방)."""
+    from tools.calcopy.hybrid import flow
+    st = {"tries": {}, "log": [], "product_shots": ["look/p1.jpg"]}
+    r = flow.ph_product_same(st, {"shots": {"files": ["look/p1.jpg"]}, "coupang": {"items": [{"product_id": "1", "image": "https://x/1.jpg", "name": "a"}]}}, {}, {})
+    assert r["do"][0]["cmd"] == "cand_sheet" and r["then"] == "cand_look"
+    r = flow.ph_cand_look(st, {"csheet": {"file": "look/cand_sheet.jpg"}}, {}, {})
+    rv = r["review"][0]
+    assert rv["id"] == "product_same" and any(x.get("file") == "look/cand_sheet.jpg" for x in rv["show"]) and "사진으로도 같아야" in rv["ask"]

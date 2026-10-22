@@ -635,6 +635,40 @@ def c_coupang_reviews(W, d):
     return {"reviews": out}
 
 
+def c_cand_sheet(W, d):
+    """쿠팡 후보 사진 시트 — 파트너스 API 가 준 대표 이미지 주소(ads-partners)만 받는다(상품 페이지는 열지 않는다).
+    같은 제품 판정이 이름만 보고 고르던 것(10-22 강주은: 둥근 실버 잠금 가방을 '그린 버클 소가죽' 이름만으로 같은 제품)을 막는다."""
+    import io
+    import urllib.request
+    from PIL import Image, ImageDraw
+    tiles = []
+    for i, it in enumerate((d.get("items") or [])[:12]):
+        u = str(it.get("image") or "")
+        if not u.startswith("http"):
+            continue
+        try:
+            b = urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=15).read()
+            im = Image.open(io.BytesIO(b)).convert("RGB")
+        except Exception as e:  # noqa: BLE001 — 한 장이 빠져도 나머지로(이유는 남긴다)
+            sys.stderr.write(f"[cand_sheet] #{i + 1} 사진 실패: {type(e).__name__}\n")
+            continue
+        im.thumbnail((300, 300))
+        tile = Image.new("RGB", (300, 330), (255, 255, 255))
+        tile.paste(im, ((300 - im.size[0]) // 2, 30 + (300 - im.size[1]) // 2))
+        ImageDraw.Draw(tile).text((6, 6), f"#{i + 1} {it.get('product_id')}", fill=(200, 0, 0))
+        tiles.append(tile)
+    if not tiles:
+        return {"file": None}
+    cols = 4
+    sheet = Image.new("RGB", (cols * 300, ((len(tiles) + cols - 1) // cols) * 330), (230, 230, 230))
+    for i, t in enumerate(tiles):
+        sheet.paste(t, ((i % cols) * 300, (i // cols) * 330))
+    out = W / "look" / "cand_sheet.jpg"
+    out.parent.mkdir(exist_ok=True)
+    sheet.save(out, quality=85)
+    return {"file": rel(W, out), "n": len(tiles)}
+
+
 def c_coupang(W, d):
     from tools.calcopy import coupang_customer as C
     qs = [q for q in d.get("queries") or [] if q][:6]
@@ -1036,7 +1070,7 @@ def c_finish(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "coupang_reviews": c_coupang_reviews, "cand_sheet": c_cand_sheet, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish}
 
