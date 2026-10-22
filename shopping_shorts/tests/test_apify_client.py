@@ -118,8 +118,8 @@ def test_fetch_reels_rotates_on_start_rejection(monkeypatch):
 
     assert _codes(items) == ["reel-from-tok2"]
     assert post_calls == ["tok1", "tok2"]
-    # 성공한 토큰(tok2, index 1)이 영구 저장되어 다음 호출은 여기서 시작한다.
-    assert apify_client._load_key_index() == 1
+    # 인스타 정기 수집은 늘 0번(무료)부터 본다 — 성공 위치를 저장하지 않는다(관제 251).
+    assert apify_client._load_key_index() == 0
 
 
 def test_fetch_reels_rotates_on_403_monthly_limit(monkeypatch):
@@ -151,7 +151,7 @@ def test_fetch_reels_rotates_on_403_monthly_limit(monkeypatch):
 
     assert len(items) == 1 and items[0]["ownerUsername"] == "user1"  # starter가 준 릴 1개
     assert post_calls == ["free-maxed", "starter-ok"]   # 403에서 멈추지 않고 넘어감
-    assert apify_client._load_key_index() == 1           # 성공 토큰 저장
+    assert apify_client._load_key_index() == 0           # 정기 수집은 저장 안 함(관제 251)
 
 
 def test_fetch_reels_rotates_on_mid_run_failure(monkeypatch):
@@ -189,7 +189,7 @@ def test_fetch_reels_rotates_on_mid_run_failure(monkeypatch):
     # tok1, tok2 각각에 대해 _start_run이 새로 호출됨(처음부터 재시도 증거).
     assert post_calls == ["tok1", "tok2"]
     assert len(poll_calls) == 1
-    assert apify_client._load_key_index() == 1
+    assert apify_client._load_key_index() == 0
 
 
 def test_fetch_reels_all_tokens_exhausted_returns_empty(monkeypatch):
@@ -251,6 +251,26 @@ def test_fetch_reels_chunks_sequentially_and_loses_none(monkeypatch):
     assert [len(c) for c in chunks] == [40, 40, 15]
     assert sum(chunks, []) == usernames
     assert len(items) == 95 and {i["ownerUsername"] for i in items} == set(usernames)
+
+
+def test_fetch_reels_always_starts_from_first_token(monkeypatch):
+    """토큰 순서 = 무료 → 유료. 저장된 '마지막 성공' 위치가 유료(마지막)를 가리켜도
+    정기 수집은 0번(무료)부터 본다 — 다음 달 무료 한도가 다시 차면 무료를 다시 쓰게(관제 251)."""
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["free1", "free2", "paid"])
+    apify_client._save_key_index(2)            # 지난달에 유료로 넘어간 상태
+    tried = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        tried.append(_token_from_headers(headers))
+        return FakeResponse(200, {"data": {"id": "r", "status": "SUCCEEDED", "defaultDatasetId": "d"}})
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", lambda *a, **kw: FakeResponse(200, [_raw("x")]))
+
+    apify_client.fetch_reels(["user1"], poll_interval=0.01, timeout=5)
+
+    assert tried == ["free1"]
+    assert apify_client._load_key_index() == 2   # 다른 사용처(틱톡 등)의 저장 위치는 건드리지 않는다
 
 
 def test_fetch_reels_drops_demo_items(monkeypatch):

@@ -120,7 +120,7 @@ def _run_to_completion(headers, run_data, timeout, poll_interval):
 CHUNK_SIZE = 40
 
 
-def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR):
+def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR, from_first=False):
     """지정 payload로 run 시작 → 토큰 로테이션 포함 완료까지 실행.
     fetch_reels(채널 목록)와 fetch_single_reel(단일 URL) 둘 다 이 공통
     로테이션 루프를 재사용한다(2026-07-09). actor를 다르게 지정하면 인스타
@@ -130,7 +130,10 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
     ★로테이션 정책(ApifyRunFailed 참고): 시작 거부(401/402/429·공짜)는 전 토큰을 돌지만,
     run이 도중에 실패한 경우(유료)는 _MAX_RUN_FAILURE_ROTATIONS번까지만 재시도한다.
     400 입력오류는 토큰 무관이므로 즉시 포기."""
-    start = _load_key_index() % len(tokens)
+    # from_first: 저장된 '마지막 성공 토큰'을 무시하고 늘 0번부터 본다(인스타 정기 수집, 관제 251).
+    #   토큰 순서 = 무료 → 유료(서버 env). 저장 위치부터 시작하면 한 번 유료로 넘어간 뒤
+    #   다음 달 무료 한도가 다시 차도 계속 유료를 쓴다. 소진된 무료는 시작 거부(403)라 과금 없음.
+    start = 0 if from_first else _load_key_index() % len(tokens)
     last_err = None
     run_failures = 0
     for offset in range(len(tokens)):
@@ -145,7 +148,7 @@ def _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTO
                 continue
             headers, run_data = started
             items = _run_to_completion(headers, run_data, timeout, poll_interval)
-            if idx != start:
+            if idx != start and not from_first:
                 _save_key_index(idx)
             return items
         except ApifyRunFailed as e:
@@ -201,7 +204,8 @@ def fetch_reels(usernames, token=None, results_per_channel=RESULTS_PER_CHANNEL,
         payload = {"username": chunk, "resultsLimit": results_per_channel,
                    "onlyPostsNewerThan": only_newer_than}
         try:
-            items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR)
+            items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=APIFY_ACTOR,
+                                       from_first=True)
         except RuntimeError as e:
             print(f"[apify_client] 묶음 {i // chunk_size + 1} 실패(채널 {len(chunk)}): {e}")
             continue
