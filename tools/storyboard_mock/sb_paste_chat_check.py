@@ -9,7 +9,7 @@
         [--shot-chat <png>] [--shot-row <png>]
 
 --ai-cid: --ai-server 때 그 계정 주인으로 부른다(0 = 관리자 → 사장님 버텍스, 비우면 계정 미상 = 무료 키).
---shot-chat: [적용] 전 제안이 뜬 대화창 캡처 · --shot-row: 한 줄 요구 뒤 그 칸 캡처.
+--shot-chat: [적용] 전 제안이 뜬 대화창 캡처 · --shot-row: 한 줄 요구 뒤 그 칸 캡처 · --shot-side: 스크롤한 화면 전체 캡처.
 
 --ai-server: 이 PC 무료 키가 소진됐을 때 — 이 폴더의 script_chat.py 를 서버 /tmp 에 올려 **서버 환경(키풀)으로** revise 를
   돌린다(저장소·서비스는 안 건드림, 계정 미상 = 무료 키 길). 화면 → 응답 → [적용] 흐름은 같다.
@@ -21,6 +21,7 @@
  ③ AI 대화 2턴: "훅 후보 3개" → 답만(대본 그대로·제안 없음) / "2번째 후보로 훅 바꿔줘" → 훅만, 앞 답의 그 후보 문장으로 → [적용]
  ⑤ 4번 칸 아래 한 줄 요구창 "연결어로 시작하게" → 4번 칸만 바뀜 → ↩ 되돌리기 → 원래대로
  ⑥ 요구창에 치는 도중 다시 그려져도 커서·글자가 남는다
+ ⑦ 대화창이 처음부터 칸 오른쪽에 펼쳐져 있고 7번 칸까지 스크롤해도 화면 안 · [접기 ▶] → 펼치기 막대 → 다시 펼침
  ④ [이 대본으로 확정] → 확정 대본(S2 안)·서버로 나가는 요청에 칸 글이 줄마다 그대로 실린다
 고치기 전 화면(라이브 그대로, --local 없이)에서는 버튼이 없어 ①부터 실패해야 한다.
 """
@@ -104,6 +105,7 @@ def main(argv):
     shot = argv[argv.index("--shot") + 1] if "--shot" in argv else ""
     via_server = "--ai-server" in argv
     shot_row = argv[argv.index("--shot-row") + 1] if "--shot-row" in argv else ""
+    shot_side = argv[argv.index("--shot-side") + 1] if "--shot-side" in argv else ""
     ai_cid = argv[argv.index("--ai-cid") + 1] if "--ai-cid" in argv else ""
     shot_chat = argv[argv.index("--shot-chat") + 1] if "--shot-chat" in argv else ""
     if via_server:
@@ -117,7 +119,7 @@ def main(argv):
     res, posts, errs = {}, [], []
     with sync_playwright() as p:
         b = p.chromium.launch()
-        ctx = b.new_context(viewport={"width": 1700, "height": 1100})
+        ctx = b.new_context(viewport={"width": 1750, "height": 980})
         ctx.add_cookies([{"name": "dash_auth", "value": ck, "domain": "shoppingshorts.duckdns.org", "path": "/",
                           "httpOnly": True, "secure": True, "sameSite": "Lax"}])
         pg = ctx.new_page()
@@ -194,7 +196,27 @@ def main(argv):
                 if pg.evaluate("(n) => !SB.chat.busy && SB.chat.msgs.length > n", n_before):
                     break
             return round(time.time() - t0)
-        pg.locator("#s2Storyboard button", has_text="AI와 대화").first.click()
+        # ⑦ 대화창은 처음부터 칸 목록 **오른쪽**에 펼쳐져 있고, 스크롤해도 화면에 남고, 접기/펼치기가 된다
+        def chat_geo():
+            return pg.evaluate("""() => { const c=document.querySelector('#s2Storyboard .sb-chat'), r=document.querySelector('#s2Storyboard .sb-rows');
+                if(!c) return {open:false, fold:!!document.querySelector('#s2Storyboard .sb-chatfold')};
+                const a=c.getBoundingClientRect(), b=r.getBoundingClientRect();
+                return {open:true, right:a.left>=b.right-1, top:Math.round(a.top), bottom:Math.round(a.bottom), vh:innerHeight}; }""")
+        g0 = chat_geo()
+        pg.locator("#s2Storyboard .sb-row").nth(6).scroll_into_view_if_needed()
+        pg.wait_for_timeout(500)
+        g1 = chat_geo()
+        if shot_side:
+            pg.screenshot(path=shot_side)
+        pg.locator("#s2Storyboard .sb-chat button", has_text="접기").click()
+        pg.wait_for_timeout(400)
+        g2 = chat_geo()
+        pg.locator("#s2Storyboard .sb-chatfold").click()
+        pg.wait_for_timeout(400)
+        g3 = chat_geo()
+        res["⑦대화창"] = {"처음": g0, "스크롤뒤": g1, "접음": g2, "다시펼침": g3.get("open")}
+        ok7 = g0.get("open") and g0.get("right") and g1.get("open") and 0 <= g1["top"] < g1["vh"] and g1["bottom"] <= g1["vh"] \
+            and g2 == {"open": False, "fold": True} and g3.get("open")
         n = pg.evaluate("() => SB.chat.msgs.length")
         pg.fill("#sbChatIn", ASK1)
         pg.press("#sbChatIn", "Enter")
@@ -280,9 +302,9 @@ def main(argv):
     for k, v in res.items():
         print(k, json.dumps(v, ensure_ascii=False)[:600])
     print("페이지 오류", errs[:3])
-    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s" % tuple(
-        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6)))
-    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and not errs
+    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s · ⑦ 오른쪽 대화창 %s" % tuple(
+        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6, ok7)))
+    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and ok7 and not errs
     print("✅ 통과" if ok else "✖ 실패")
     return 0 if ok else 1
 

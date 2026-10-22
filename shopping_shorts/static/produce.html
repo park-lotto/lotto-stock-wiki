@@ -1827,6 +1827,17 @@
 .sbwrap .sb-line:focus{border-color:var(--sb-pick)}.sbwrap .sb-line:empty:before{content:attr(data-ph);color:#6b7686}
 /* 대본 한 번에 넣기·AI 대화(관제 253) — 기존 스토리보드 토큰(--sb-*)만 쓴다 */
 .sbwrap .sb-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.sbwrap .sb-main{display:flex;gap:10px;align-items:flex-start}.sbwrap .sb-mainl{flex:1;min-width:0}
+.sbwrap .sb-main .sb-chat{flex:none;width:400px;position:sticky;top:10px;margin:0;display:flex;flex-direction:column;height:min(760px,calc(100vh - 90px));box-sizing:border-box}
+.sbwrap .sb-main .sb-chat .sb-cms{flex:1;max-height:none;min-height:120px}
+.sbwrap .sb-chatclose{font-weight:700;border-color:var(--sb-pick);color:#fff;background:#24335a}
+.sbwrap .sb-chatfold{flex:none;position:sticky;top:10px;width:40px;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:var(--sb-pick);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:700}
+.sbwrap .sb-chatfold span:last-child{writing-mode:vertical-rl;letter-spacing:2px}
+.sbwrap .sb-chatfold:active{transform:scale(.97)}
+@media (max-width:1280px){.sbwrap .sb-main{display:block}.sbwrap .sb-main .sb-chat{width:auto;position:static;max-height:none;height:auto;margin:6px 0 10px}
+  .sbwrap .sb-main .sb-chat .sb-cms{max-height:380px}.sbwrap .sb-chatfold{position:static;width:auto;flex-direction:row;padding:6px 12px;margin:6px 0}
+  .sbwrap .sb-chatfold span:last-child{writing-mode:horizontal-tb}}
 .sbwrap .sb-paste,.sbwrap .sb-chat{background:#0f1626;border:1px solid #2a3a5c;border-radius:11px;padding:10px 12px;margin:6px 0 10px}
 .sbwrap .sb-paste textarea,.sbwrap .sb-cin textarea{width:100%;box-sizing:border-box;background:#0b111e;color:#e8ecf5;border:1px solid #2a3a5c;border-radius:8px;padding:7px 9px;font-size:13.5px;line-height:1.55;resize:vertical;font-family:inherit}
 .sbwrap .sb-paste textarea:focus,.sbwrap .sb-cin textarea:focus{outline:none;border-color:var(--sb-pick)}
@@ -19805,13 +19816,16 @@ function sbPasteBox(){ if(!SB.paste) return '';
 // AI 대화(제미나이식) — 판단은 서버 script_chat.revise. 질문·추천엔 답만(대본 그대로), "바꿔줘"일 때만 고친 줄이 온다.
 //   화면은 바뀐 줄이 있을 때만 제안을 띄우고 [적용] 때 그 줄만 칸에 넣는다.
 // AI 길(내 버텍스·관리자·무료 제미나이)은 서버 script_generate._call_json 이 가른다 — 여기서 정하지 않는다.
-SB.chat={open:false, msgs:[], busy:false, draft:'', prop:null};
-function sbChatToggle(){ SB.chat.open=!SB.chat.open; sbRender(); const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); }
-function sbChatBox(ek){ const C=SB.chat; if(!C.open) return '';
+// ★자리: 스토리보드 칸 목록 **오른쪽**에 늘 펼쳐 둔다(2026-10-22 사장님 "대본쪽 빈자리에 기본으로 띄워 놓고, 접기 버튼 잘 보이게").
+//   스크롤해도 따라온다(position:sticky). 접으면 오른쪽에 얇은 [펼치기] 막대만. 접힘은 이 브라우저가 기억한다.
+SB.chat={open:(()=>{ try{ return localStorage.getItem('sb_chat_open')!=='0'; }catch(e){ return true; } })(), msgs:[], busy:false, draft:'', prop:null};
+function sbChatToggle(){ SB.chat.open=!SB.chat.open; try{ localStorage.setItem('sb_chat_open', SB.chat.open?'1':'0'); }catch(e){} sbRender(); const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); }
+function sbChatBox(ek){ const C=SB.chat;
+  if(!C.open) return `<button class="sb-chatfold" title="AI 대화창 펼치기" onclick="sbChatToggle()"><span>◀</span><b>💬</b><span>AI 대화 펼치기</span></button>`;
   const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${m.auth==='vertex'?'구글 버텍스로 답함':'무료 제미나이로 답함'}</small>`:''}</div>`).join('');
   const P=(C.prop&&C.prop.ek===ek)?C.prop:null;
   const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번 ${sbE(sbKo(((SB.made[ek]||{}).slots||[])[k]?.slot||''))}</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
-  return `<div class="sb-chat"><div class="sb-bh">💬 AI와 대화 <small>지금 칸의 대본을 보고 답해요 · 물어보면 답만, "바꿔줘" 하면 고친 줄을 보여 줘요 · 줄 수는 그대로(칸 늘리기·빼기는 ＋ 칸 추가 / 🗑 빼기)</small><span style="margin-left:auto"></span><button class="sb-btn" onclick="sbChatToggle()">닫기</button></div>
+  return `<div class="sb-chat"><div class="sb-bh">💬 AI와 대화 <small>물어보면 답만 · "바꿔줘"면 고친 줄을 보여 줘요</small><span style="margin-left:auto"></span><button class="sb-btn sb-chatclose" title="대화창 접기 — 오른쪽 막대로 다시 펼칠 수 있어요" onclick="sbChatToggle()">접기 ▶</button></div>
     <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 이 대본 어때? · 훅 후보 5개 추천해줘 → 3번째 걸로 바꿔줘 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?'<div class="sb-cm ai">⏳ 답하는 중…</div>':''}</div>
     ${P?`<div class="sb-cprop"><div class="sb-note">AI가 고친 줄 — [적용]을 눌러야 칸에 들어가요</div>${diff}<div style="margin-top:6px">${P.changed.length?'<button class="sb-btn main" onclick="sbChatApply()">적용</button> ':''}<button class="sb-btn" onclick="SB.chat.prop=null;sbRender()">버리기</button></div></div>`:''}
     <div class="sb-cin"><textarea id="sbChatIn" rows="2" placeholder="무엇이든 물어보거나 고칠 걸 적어 주세요 (Enter 보내기 · Shift+Enter 줄바꿈)" oninput="SB.chat.draft=this.value" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sbChatSend()}" ${C.busy?'disabled':''}>${sbE(C.draft)}</textarea>
@@ -20133,10 +20147,9 @@ function sbPage2(){
           ${sbRowActs(i,bd.slots.length,sl)}${sbAddPick(i)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
-      <div class="sb-tools"><button class="sb-btn ${SB.paste?'on':''}" title="제미나이 등에서 쓴 대본을 붙여넣으면 줄마다 칸에 들어가요" onclick="sbPasteToggle()">📋 대본 한 번에 붙여넣기</button>
-        <button class="sb-btn ${SB.chat.open?'on':''}" title="AI에게 말로 부탁해 대본을 고쳐요 — 고친 줄을 보고 [적용]" onclick="sbChatToggle()">💬 AI와 대화</button></div>
-      ${sbPasteBox()}${sbChatBox(ek)}
-      <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
+      <div class="sb-tools"><button class="sb-btn ${SB.paste?'on':''}" title="제미나이 등에서 쓴 대본을 붙여넣으면 줄마다 칸에 들어가요" onclick="sbPasteToggle()">📋 대본 한 번에 붙여넣기</button></div>
+      ${sbPasteBox()}
+      <div class="sb-main ${SB.chat.open?'chat-on':'chat-off'}"><div class="sb-mainl"><div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}</div>${sbChatBox(ek)}</div>
       <div style="text-align:right;margin-top:10px">${sbLangBtn(bd)} <button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="sb-pickbar"><b>대본 스타일 고르기</b> <span class="sb-note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
