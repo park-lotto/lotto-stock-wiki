@@ -337,7 +337,7 @@ def ph_peer(st, m, rp, u):
     p = m.get("peer") or {}
     if not p.get("sheet"):
         return {"goto": "search"}
-    return {"review": [_rv("peer_read", PEER_READ + f"\n\n연예인: {st['read'].get('celeb')}", [_img(p["sheet"])], model="sonnet", need=("labels",))],
+    return {"review": [_rv("peer_read", PEER_READ + f"\n\n연예인: {st['read'].get('celeb')}", [_img(p["sheet"])], need=("labels",))],
             "then": "peer_read"}
 
 
@@ -421,7 +421,7 @@ def ph_titles(st, m, rp, u):
     for k in range(0, len(titles), TITLE_CHUNK):
         part = titles[k:k + TITLE_CHUNK]
         revs.append(_rv(f"titles_{k // TITLE_CHUNK}", ORIGIN_TITLES + f"\n\n벤치 제목: {B.get('title')}\n제품 낱말: {r.get('product_words')}\n채널 영상 목록(아이디\t제목):\n" +
-                        "\n".join(f"{t['id']}\t{str(t.get('title') or '')[:80]}" for t in part), model="sonnet", need=("ids",)))
+                        "\n".join(f"{t['id']}\t{str(t.get('title') or '')[:80]}" for t in part), need=("ids",)))
     return {"review": revs, "then": "titles_got"}
 
 
@@ -819,7 +819,7 @@ def ph_asr_got(st, m, rp, u):
     revs = []
     for stem, sheets in (sh.get("sheets") or {}).items():
         for k, rel in enumerate(sheets):
-            revs.append(_rv(f"shot_{stem}_{k}", SHOT_READ.format(celeb=R0.get("celeb") or "주인공", kind=kind), [_img(rel)], model="sonnet", need=("shots",)))
+            revs.append(_rv(f"shot_{stem}_{k}", SHOT_READ.format(celeb=R0.get("celeb") or "주인공", kind=kind), [_img(rel)], need=("shots",)))
     if not revs:
         return {"goto": "script"}
     return {"review": revs, "then": "shots_got"}
