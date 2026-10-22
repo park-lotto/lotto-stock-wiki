@@ -141,11 +141,12 @@ def _speechmatics(path: str) -> dict:
         if s in ("rejected", "deleted"):
             raise RuntimeError(f"speechmatics {s}")
     t = requests.get(f"https://asr.api.speechmatics.com/v2/jobs/{jid}/transcript?format=json-v2", headers=H, timeout=60).json()
-    out, cur = [], None
+    out, cur, words = [], None, []
     for it in t.get("results", []):
         if it.get("type") != "word":
             continue
         w = it["alternatives"][0]["content"]
+        words.append({"start": it["start_time"], "end": it["end_time"], "text": w})
         if cur and it["start_time"] - cur["end"] >= PAUSE_S:
             out.append(cur)
             cur = None
@@ -157,7 +158,7 @@ def _speechmatics(path: str) -> dict:
     if cur:
         out.append(cur)
     return {"engine": "speechmatics", "lang": (t.get("metadata", {}).get("language_identification") or {}).get("predicted_language", ""),
-            "segments": out}
+            "segments": out, "words": words}   # words = 낱말 단위(쉼 없이 이어 읽은 TTS 는 segments 가 한 덩어리 — 줄 시작 맞추기는 words 로, 10-22 썰템홈샷)
 
 
 def transcribe(path: str, engine: str | None = None) -> dict:

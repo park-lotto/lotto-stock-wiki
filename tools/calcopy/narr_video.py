@@ -265,6 +265,7 @@ def asr_line_starts(lines: list[str], segs: list[dict]) -> list[float | None]:
 BREAK_NEAR = 0.5   # 줄 끝 쉼이 글자 비례 예상(말 시간)에서 이보다 멀면 '그 경계엔 쉼 없음' — 방구석처럼 TTS 쉼을 0.07초로 줄인 나레(10-16)
 
 
+ASR_WORD_DUR, ASR_SNAP_WORD = 0.6, 0.15   # 구절 길이 중앙값이 0.6초 밑 = 낱말 단위 → 쉼에 붙이는 거리 0.15초
 ASR_SNAP = 1.2   # 받아쓰기 줄 시작 → 가까운 쉼 끝(-38dB/0.08초)에 붙이는 거리. 제미나이 구절 시각은 거칠다
 #   (10-16 방구석 3편 narr_final2: '사실…' 구절 시작 7.03 vs 실제 쉼 끝 8.13 — 받아쓰기는 '어느 쉼인가'를 정하고 시각은 쉼이 정한다)
 
@@ -278,8 +279,13 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
     from tools.calcopy import hottem_audio as ha
     # ★1순위 = 받아쓰기 정렬(10-16 조율자: 쉼 방식은 핫템·방구석에서 세 번 어긋났다 — 쉼표 쉼에 붙음)
     A = [None] * len(lines)
+    snap_max = ASR_SNAP
     if asr:
         tr, why = tts_transcript(audio, ask)
+        if tr and sorted(float(x.get("end") or x["start"]) - float(x["start"]) for x in tr)[len(tr) // 2] < ASR_WORD_DUR:
+            # 낱말 단위 받아쓰기(스피치매틱스 words)는 시각이 정확하다 — 쉼에 붙이는 거리를 줄인다(10-22 썰템홈샷 02: 줄 사이 쉼이 없어
+            #   24.57초 '이 얘기 듣고,' 줄이 안쪽 쉼표 쉼 25.06초로 끌려가 자막·컷 0.49초 늦음)
+            snap_max = ASR_SNAP_WORD
         if tr:
             A = asr_line_starts(lines, tr)
             miss = [k for k in range(1, len(lines)) if A[k] is None]
@@ -296,7 +302,7 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
             #   0.398 떨어진 0.16초 쉼('까 보면,' 안)이 거의 같아 안쪽 쉼에 붙어 자막이 0.8초 늦었다)
             ends = [(e, ln) for e, ln in pauses if e > out[-1] + 0.3]
             near = min(ends, key=lambda x: abs(x[0] - t) - x[1], default=(t, 0))[0]
-            out.append(near if abs(near - t) <= ASR_SNAP else t)
+            out.append(near if abs(near - t) <= snap_max else t)
             continue
         anchored = next((a for a, _ in segs if a >= mid - 1e-3), mid) if mid is not None else None
         if (dist > BREAK_NEAR or anchored is None) and expected:

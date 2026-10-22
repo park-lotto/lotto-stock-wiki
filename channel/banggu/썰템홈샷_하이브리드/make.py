@@ -132,14 +132,15 @@ def asr_cache(mp3: Path) -> list[dict]:
     md5 = hashlib.md5(mp3.read_bytes()).hexdigest()
     if cache.exists():
         c = _j(cache)
-        if c.get("md5") == md5:
+        if c.get("md5") == md5 and (len(c["segments"]) > 3 or c.get("unit") == "word"):   # 한 덩어리 옛 캐시는 다시 받는다
             return c["segments"]
     from tools.calcopy.engine import asr_local
     r = asr_local.transcribe(str(mp3), engine="speechmatics")
-    seg = [{"start": s["start"], "end": s["end"], "text": s["text"]} for s in r.get("segments") or [] if s.get("text")]
+    # ★낱말 단위로 넣는다 — 쉼을 0.07초로 줄인 나레는 구절이 한 덩어리(36초)라 줄 시작이 글자 비례로 밀렸다(10-22 01 요플레 B 첫 줄 1.3초 이름)
+    seg = [{"start": s["start"], "end": s["end"], "text": s["text"]} for s in (r.get("words") or r.get("segments") or []) if s.get("text")]
     if not seg:
         raise SystemExit("받아쓰기 빈 답 — 멈춤")
-    _w(cache, {"md5": md5, "model": r.get("engine"), "note": r.get("note"), "segments": seg})
+    _w(cache, {"md5": md5, "model": r.get("engine"), "unit": "word" if r.get("words") else "segment", "note": r.get("note"), "segments": seg})
     print("받아쓰기:", r.get("engine"), r.get("note") or "")
     return seg
 
@@ -201,6 +202,19 @@ def render(piece: str):
     print("final", fin)
 
 
+def line_gap(P, S, segs) -> list:
+    """렌더에 쓴 줄 시작(timeline.json 각 줄 첫 자막) vs 나레 낱말 받아쓰기의 그 줄 머리 시각 — 가장 큰 차이 ≤0.15초면 ○."""
+    from tools.calcopy.narr_video import asr_line_starts
+    tl = _j(P["out"] / "timeline.json")["steps"]
+    used = {}
+    for s in tl:
+        used.setdefault(s["sent"], s["t0"])
+    heard = asr_line_starts(_lines(S), segs)
+    gaps = {k: round(used[k] - h, 2) for k, h in enumerate(heard) if h is not None and k in used}
+    worst = max(gaps.values(), key=abs) if gaps else None
+    return [{"가장 큰 차이": worst, "줄별": gaps}, worst is not None and abs(worst) <= 0.15]
+
+
 def checks(piece: str) -> dict:
     from tools.calcopy import bench_distance as BD
     from tools.calcopy.engine import ad_mark
@@ -210,7 +224,8 @@ def checks(piece: str) -> dict:
     dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(fin)],
                                capture_output=True, text=True).stdout.strip())
     bd = BD.check("banggu", P["script"], P["mat"])
-    heard = "".join(s["text"] for s in asr_cache(P["tts"]))
+    segs = asr_cache(P["tts"])
+    heard = "".join(s["text"] for s in segs)
     asr_ratio = round(SequenceMatcher(None, _flat(" ".join(_lines(S))), _flat(heard)).ratio(), 3)
     sheet = P["out"] / "final_sheet_1s.jpg"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(fin), "-vf", "fps=1,scale=216:384,tile=8x5", "-frames:v", "1", str(sheet)], check=True)
@@ -224,6 +239,8 @@ def checks(piece: str) -> dict:
          "나레 받아쓰기 대조": [asr_ratio, asr_ratio >= 0.9],
          "금액 없음": [re.findall(r"\d[\d,]*\s*(?:원|만원)", text_all) or "없음", not re.search(r"\d[\d,]*\s*(?:원|만원)", text_all)],
          "뒤 체험 줄 있음": [sum(l.get("seg") == "B" for l in S["final"]["lines"]), any(l.get("seg") == "B" for l in S["final"]["lines"])],
+         "줄 시작 받아쓰기 낱말 단위": [len(segs), len(segs) > len(_lines(S))],   # 한 덩어리면 줄 시작이 글자 비례로 밀린다(98 #52)
+         "줄 시작 = 실제 말(±0.15초)": line_gap(P, S, segs),
          "광고 표시": [ad_mark.MARK in ad_mark._probe(fin)[2], ad_mark.MARK in ad_mark._probe(fin)[2]],
          "시트": [str(sheet), True]}
     _w(P["out"] / "자동검사.json", r)
