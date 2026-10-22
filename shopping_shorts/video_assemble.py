@@ -1860,7 +1860,7 @@ def simple_caption_split(text, max_chars):
 # 2026-10-21 라이브 e2e(job 1e2c12ade064, 캡컷 21구절) 실측 수리: 문말 조사 ね·よ 는 "重ね|られ" 같은 동사 속 ね 를 조사로 봐 뺐다
 #   (문장 끝엔 어차피 。！？로 끊긴다). て(연용 접속)는 "取って|割れやすかった" 같은 자연 휴지라 넣었다.
 _JA_PARTICLES = ("から", "まで", "より", "は", "が", "を", "に", "で", "と", "も", "の", "へ", "て")
-_JA_MIN_HEAD = 4      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
+_JA_MIN_HEAD = 3      # 조사 뒤에서 끊을 때 앞 조각 최소 글자수
 _JA_MIN_TAIL = 4      # 끊고 남는 뒤 조각 최소 글자수(이보다 짧은 끝 조각은 앞에 붙인다)
 # ★일본어 한 줄 상한(관제 254, 2026-10-22): 19자는 띄어쓰기 있는 한국어 기준이다. 일본어는 공백 없이 전각 글자만이라
 #   19자가 자막 칸에 안 들어가 편집기가 글자를 줄였다(5자~19자 줄마다 크기가 달라 보임, 실측 job 1e2c12ade064).
@@ -1903,8 +1903,16 @@ def _ja_split_long(seg, width=None):
         _cls = lambda c: "h" if _hira(c) else ("k" if "゠" <= c <= "ヿ" else ("c" if "一" <= c <= "鿿" else "o"))  # noqa: E731
         cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
                  if _cls(seg[i - 1]) != _cls(seg[i]) and _cls(seg[i]) != "h" and seg[i] != "ー"]
-        if not cands and n <= width + 6:
-            return [seg]   # 깨끗한 자리가 없으면 조금 길어도 통째로("スタンディングオ|ベーション" 같은 낱말 속 절단보다 낫다)
+        if not cands:
+            # 긴 가타카나 낱말: ン·ング 뒤(다음이 가타카나 본글자)에서 나눈다 — "スタンディング|オベーションした"(관제 254 렌더 실측:
+            #   통째로 둔 15자가 완성본 오른쪽에서 잘렸다). 그래도 없으면 가운데.
+            _small = "ァィゥェォッャュョヮー"
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1)
+                     if seg[i - 1] == "ン" and _cls(seg[i]) == "k" and seg[i] not in _small
+                     or seg[i - 2:i] == "ング" and _cls(seg[i]) == "k" and seg[i] not in _small]
+        if not cands:
+            # て형 뒤(보조동사 앞) — "アイロンがけして|くれること"(관제 254). 가운데보다 낫다
+            cands = [i for i in range(_JA_MIN_HEAD, n - _JA_MIN_TAIL + 1) if seg[i - 1] in "てで" and _hira(seg[i - 2])]
         cut = min(cands, key=lambda i: (not _hira(seg[i - 1]), abs(i - (n - i)))) if cands else min(width, max(1, n // 2 + (n % 2)))   # 히라가나 끝 자리 우선("クリーニング|屋" 보다 "屋の|社長")
     return _ja_split_long(seg[:cut], width) + _ja_split_long(seg[cut:], width)
 
