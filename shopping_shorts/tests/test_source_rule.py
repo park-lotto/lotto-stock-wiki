@@ -111,3 +111,24 @@ def test_narration_bench_goes_to_visual_origin():
     assert r["do"][0]["fps"] == 0.1 and r["do"][0]["t"] == 1200 and st["vis_step"] == 10
     assert flow.ph_vis_pick(st, {}, {"origin_visual": {"same": True, "origin_t": [645]}}, {}) == {"goto": "product_sheet"}
     assert st["origin"]["matched"][0]["origin_t"] == 645.0
+
+
+def test_origin_from_source_label_first():
+    """출처 표기가 원본으로 가는 길(사장님 10-22) — 없으면 건너뜀 · 있으면 그 채널 → 후보 조사(한 번 요청) → 내레이션이면 미리보기 대조 → 그 1편만 통째로."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    st = {"bench": {"id": "b", "dur": 19, "date": "20261016", "title": "t", "sheet": "bench/sheet.jpg"}, "tries": {}, "log": []}
+    no = {"origin_read": {"celeb": "고현정", "queries": [], "is_shopping": True, "source_label": ""}}
+    with pytest.raises(flow._Stop):
+        flow.ph_origin_read(st, {}, no, {})
+    yes = {"origin_read": {"celeb": "고현정", "queries": [], "is_shopping": True, "source_label": "출처: 고현정", "scene_words": ["서촌"], "product_words": ["가방"]}}
+    r = flow.ph_origin_read(st, {}, yes, {})
+    assert r["do"][0]["cmd"] == "channel_find" and r["do"][0]["label"] == "고현정"
+    titles = [{"id": "s1", "title": "쇼츠", "dur": 30}, {"id": "v21", "title": "브이로그 21", "dur": 691}, {"id": "v20", "title": "브이로그 20", "dur": 725}]
+    r = flow.ph_src_got(st, {"src": {"picked": [{"id": "UC", "name": "고현정"}], "titles": titles}}, {}, {})
+    assert r["do"][0]["cmd"] == "origin_probe" and r["do"][0]["ids"] == ["v21", "v20"] and r["do"][0]["before"] == "20261016"
+    sheets = {"v21": {"file": "look/sb_v21.jpg"}, "v20": {"file": "look/sb_v20.jpg"}}
+    r = flow.ph_probe_got(st, {"probe": {"matched": {}, "sheets": sheets, "hits": {"v20": [{"term": "서촌", "origin_t": 640}]}}}, {}, {})
+    assert r["review"][0]["id"] == "origin_sb" and list(st["sb"]) == ["v20", "v21"]          # 장면 낱말이 걸린 후보가 앞
+    r = flow.ph_sb_pick(st, {}, {"origin_sb": {"origin_id": "v20", "origin_t": [302, 330]}}, {})
+    assert r["do"][0] == {"id": "origin", "cmd": "origin_get", "vid": "v20", "a": 0.0, "b": 725.0, "ts": [], "full": True}

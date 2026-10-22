@@ -64,10 +64,10 @@ TRAPS = {   # 단계별 함정(98_오류기록 번호) — 회원 Claude 판정�
 # ── 판정 질문(회원 Claude) — customer.py(10-21) 지시문을 옮겨 왔다 ─────────────────
 ORIGIN_READ = """너는 쇼츠 원본 추적 담당이다. 아래는 남의 채널이 만든 연예인 쇼핑 쇼츠(벤치)의 1초 간격 장면 시트와 제목·설명·받아쓰기다.
 이 쇼츠가 따온 **연예인 본인 원본 영상**(본인 유튜브·방송)을 찾기 위한 단서를 읽어라.
-- 화면 위·아래의 '출처: ○○' 글자 = 원본 채널. 방송 로고·프로그램 이름도 본다. 이름표·자막으로 말하는 사람을 확인(얼굴로 짐작한 이름은 '불명').
+- 화면 위·아래의 '출처: ○○' 글자 = 원본 채널. 화면에 없으면 **설명란**의 출처 표기(출처·원본·영상 출처 ○○). 둘 다 없으면 source_label ''. 방송 로고·프로그램 이름도 본다. 이름표·자막으로 말하는 사람을 확인(얼굴로 짐작한 이름은 '불명').
 - 설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다.
 - 연예인이 쓰는 물건(쇼핑 소재)이 아니면 is_shopping=false. 의약품·의료기기면 is_shopping=false.
-JSON 하나: {"celeb": "이름 또는 불명", "source_label": "화면 출처 글자 그대로 또는 ''", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
+JSON 하나: {"celeb": "이름 또는 불명", "source_label": "출처 글자 그대로(화면 → 설명란) 또는 ''", "channel_hint": "원본 채널 이름·핸들 추정 또는 ''",
  "product_words": ["제품을 가리키는 낱말"], "scene_words": ["원본 장면을 가리키는 장소·상황 낱말(제목·설명·화면 글자에서, 예 '서촌'·'마실') — 없으면 []"], "queries": ["유튜브 검색어 3~5개 — '<연예인> <제품 낱말>' 꼴"], "is_shopping": true}"""
 
 PEER_READ = """너는 출처 글자 읽기 담당이다. 같은 연예인·제품을 다룬 **다른 채널 쇼츠**들의 장면 모음이다(쇼츠마다 한 줄, 왼쪽에 번호).
@@ -323,14 +323,73 @@ def ph_origin_read(st, m, rp, u):
     if not r.get("is_shopping"):
         raise _Stop("연예인이 쓰는 물건이 나오는 영상이 아닙니다", "연예인 쇼핑 쇼츠 주소를 주세요")
     st["read"] = r
-    celeb = str(r.get("celeb") or "")
-    if not celeb or celeb == "불명":
+    label = re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip()
+    if not label:      # 출처 표기 = 원본으로 가는 길(사장님 10-22 "무조건 표기해야 문제가 안 생긴다 · 없으면 패스")
+        raise _Stop("출처 표기가 없는 쇼츠라 건너뜁니다", "화면이나 설명란에 출처가 적힌 쇼츠 주소를 주세요")
+    return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "n": 60}], "then": "src_got"}
+
+
+SRC_PROBE = 10       # 출처 채널에서 조사할 후보 수(최신순, 벤치보다 먼저 올라온 것만)
+
+
+def ph_src_got(st, m, rp, u):
+    """출처 채널 영상 목록 → 후보 조사(origin_probe: 한 번 요청으로 날짜·자막·스토리보드). 채널을 못 찾으면 검색 길로."""
+    f = m.get("src") or {}
+    if f.get("blocked"):
+        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
+    B, r = st["bench"], st["read"]
+    cands = [t for t in f.get("titles") or [] if t["id"] != B.get("id") and (t.get("dur") or 0) > (B.get("dur") or 0) + 20][:SRC_PROBE]
+    if not cands:
+        st["log"].append("출처 채널을 못 찾아 검색 길로: " + json.dumps(f.get("channels") or [], ensure_ascii=False)[:300])
         return {"goto": "search"}
-    if re.sub(r"^\s*출처\s*[:：]?\s*", "", r.get("source_label") or "").strip():
-        return {"goto": "search"}            # 화면 출처 글자를 이미 읽었다 — 남의 쇼츠 출처 읽기(유튜브 약 11건)는 출처가 안 보일 때만(계정 한도 아끼기)
-    words = [w for w in r.get("product_words") or [] if w][:2] or [""]
-    return {"do": [{"id": "peer", "cmd": "peer_sheet", "queries": [f"{celeb} {w}".strip() for w in words], "bench_id": (st.get("bench") or {}).get("id")}],
-            "then": "peer"}
+    ch = (f.get("picked") or [{}])[0]
+    st["src_channel"] = ch
+    st["mixed"] = [{**c, "channel": ch.get("name")} for c in cands]
+    terms = [w for w in (r.get("scene_words") or []) + (r.get("product_words") or []) if w][:8]
+    return {"do": [{"id": "probe", "cmd": "origin_probe", "ids": [c["id"] for c in cands], "before": str(B.get("date") or ""), "terms": terms,
+                    "max_sheets": 4}], "then": "probe_got"}
+
+
+ORIGIN_SB = """너는 원본 판정 담당이다. 벤치 쇼츠의 말이 원본 자막과 맞지 않았다(벤치 = 내레이션). 첫 그림 = 벤치 1초 장면 시트,
+그 뒤 그림 = 출처 채널 후보 영상마다 **영상 전체 미리보기 시트**(칸 왼쪽 위 노란 글자 = 원본 분:초).
+**같은 사람·같은 옷·같은 제품·같은 장소**가 벤치와 같은 후보 하나를 골라라(비슷한 물건만으론 아니다). 그 제품이 잘 보이는 칸의 시각을 초로 적어라.
+없으면 origin_id ''.
+JSON 하나: {"origin_id": "유튜브 id 또는 ''", "origin_t": [초, …], "why": "한 줄"}"""
+
+
+def ph_probe_got(st, m, rp, u):
+    p = m.get("probe") or {}
+    if p.get("blocked") and not (p.get("matched") or p.get("sheets")):
+        raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
+    if p.get("matched"):                                     # 벤치 말 = 원본 말 → 지금까지의 판정 그대로
+        return ph_subs_got(st, {"subs": {"matched": p["matched"], "hits": p.get("hits") or {}}}, rp, u)
+    sheets = p.get("sheets") or {}
+    if not sheets:
+        st["log"].append("출처 채널 후보에 지문·미리보기가 없어 검색 길로")
+        return {"goto": "search"}
+    hits = p.get("hits") or {}
+    order = sorted(sheets, key=lambda v: -len({h["term"] for h in hits.get(v) or []}))[:4]
+    st["sb"] = {v: sheets[v] for v in order}
+    B = st["bench"]
+    title = {c["id"]: c.get("title") for c in st.get("mixed") or []}
+    return {"review": [_rv("origin_sb", ORIGIN_SB + f"\n\n벤치: {B.get('title')} ({B.get('date')})\n후보(그림 순서): " +
+                           " / ".join(f"{v} {title.get(v)} ({(p.get('dates') or {}).get(v)})" for v in order),
+                           ([_img(B["sheet"])] if B.get("sheet") else []) + [_img(sheets[v]["file"]) for v in order],
+                           need=("origin_id", "origin_t"))], "then": "sb_pick"}
+
+
+def ph_sb_pick(st, m, rp, u):
+    a = rp.get("origin_sb") or {}
+    oid = str(a.get("origin_id") or "")
+    ts = [float(t) for t in a.get("origin_t") or [] if isinstance(t, (int, float))]
+    if oid not in (st.get("sb") or {}) or not ts:
+        raise _Stop("출처 채널에서 원본 장면을 찾지 못했습니다", "연예인 본인 원본 영상(유튜브) 주소를 알려 주세요")
+    c = next((c for c in st["mixed"] if c["id"] == oid), {"id": oid})
+    dur = float(c.get("dur") or max(ts) + 600)
+    st["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": [{"bench": "(화면 대조)", "origin_t": t} for t in ts],
+                    "window": [0.0, dur], "visual": True, "info": {k: c.get(k) for k in ("id", "title", "channel", "dur")}}
+    st["log"].append(f"원본 = 출처 채널 미리보기 대조({oid}): {a.get('why')}")
+    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": 0.0, "b": dur, "ts": [], "full": True}], "then": "origin_got"}
 
 
 def ph_peer(st, m, rp, u):
@@ -557,7 +616,13 @@ def ph_pick_got(st, m, rp, u):
     a, b = max(0.0, min(ts) - 90), max(ts) + 90
     st["origin"] = {"id": oid, "url": f"https://www.youtube.com/watch?v={oid}", "matched": p.get("matched") or [], "window": [a, b],
                     "info": next((c for c in st["scored"] if c["id"] == oid), {})}
-    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": a, "b": b, "ts": ts}], "then": "origin_got"}
+    full = float((st["origin"]["info"] or {}).get("dur") or 1e9) <= FULL_MAX
+    if full:
+        st["origin"]["window"] = [0.0, float(st["origin"]["info"]["dur"])]
+    return {"do": [{"id": "origin", "cmd": "origin_get", "vid": oid, "a": a, "b": b, "ts": ts, "full": full}], "then": "origin_got"}
+
+
+FULL_MAX = 1800      # 이 길이(초) 이하 원본은 통째로 바로 — 구간 받기가 멈추는 회선에서 150초+ 기다림(10-22 실측 12분 원본 통째 47~53초)
 
 
 def ph_origin_fetch(st, m, rp, u):
@@ -1127,7 +1192,7 @@ def ph_finished(st, m, rp, u):
 
 
 PHASES = {
-    "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read,
+    "setup": ph_setup, "setup_check": ph_setup_check, "bench": ph_bench, "bench_got": ph_bench_got, "origin_read": ph_origin_read, "src_got": ph_src_got, "probe_got": ph_probe_got, "sb_pick": ph_sb_pick,
     "peer": ph_peer, "peer_read": ph_peer_read, "search": ph_search, "search_got": ph_search_got, "titles": ph_titles,
     "titles_got": ph_titles_got, "subs": ph_subs, "subs_got": ph_subs_got, "pick_got": ph_pick_got, "origin_fetch": ph_origin_fetch, "origin_got": ph_origin_got, "stopped": ph_stopped,
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
@@ -1140,5 +1205,5 @@ PHASES = {
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

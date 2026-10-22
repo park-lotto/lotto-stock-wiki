@@ -313,6 +313,119 @@ def c_channel_list(W, d):
     return {"titles": titles}
 
 
+def c_channel_find(W, d):
+    """출처 글자 → 채널(사장님 10-22 "가져오는 채널에 출처가 반드시 있다") — 채널 검색 한 번(실측 4.6초).
+    이름이 같은 채널이 여럿이면(고현정 5개) 인증 표시 → 이름 일치 순(서버가 고른다). 목록은 그 채널 영상 60개(실측 9.3초)."""
+    if CACHE:
+        return {"channels": [], "titles": [], "note": "캐시 모드 — 출처 채널 찾기 건너뜀(검색 길로)"}
+    from urllib.parse import quote
+    label = str(d.get("label") or "")
+    r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
+    if _blocked(r):
+        return {"blocked": True, "channels": [], "titles": []}
+    chans = []
+    if r.returncode == 0 and r.stdout.strip():
+        chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id"),
+                  "verified": bool(e.get("channel_is_verified"))} for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
+    pick = sorted(chans, key=lambda c: (RU.norm(c["name"] or "") != RU.norm(label), not c["verified"]))[:1]
+    titles = c_channel_list(W, {"channels": [c["id"] for c in pick], "n": int(d.get("n") or 60)})["titles"] if pick else []
+    return {"channels": chans, "picked": pick, "titles": titles}
+
+
+def _storyboard_sheet(W: Path, vid: str, fmts: list, dur: float, cols: int = 10) -> dict | None:
+    """유튜브 스토리보드(미리보기 그림 모음 sb1, 영상 전체 약 5초 간격) → 칸마다 '분:초' 를 적은 시트 한 장 — 영상을 받지 않고 장면 대조(실측 17조각 3.1초)."""
+    import urllib.request
+    from PIL import Image, ImageDraw
+    sb = next((f for k in ("sb1", "sb0", "sb2") for f in fmts if f.get("format_id") == k and f.get("fragments")), None)
+    if not sb:
+        return None
+    rows, ncol, fw, fh = int(sb.get("rows") or 1), int(sb.get("columns") or 1), int(sb["width"]), int(sb["height"])
+    step = 1.0 / float(sb.get("fps") or 0.2)
+    tiles = []
+    for fr in sb["fragments"]:
+        u = fr.get("url") or (str(sb.get("fragment_base_url") or "") + str(fr.get("path") or ""))
+        try:
+            b = urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read()
+        except Exception as e:  # noqa: BLE001 — 한 조각이 빠져도 나머지로
+            sys.stderr.write(f"[storyboard] {vid} 조각 실패: {e}\n")
+            continue
+        import io
+        im = Image.open(io.BytesIO(b)).convert("RGB")
+        for y in range(rows):
+            for x in range(ncol):
+                if len(tiles) * step <= dur:
+                    tiles.append(im.crop((x * fw, y * fh, (x + 1) * fw, (y + 1) * fh)))
+    if not tiles:
+        return None
+    nrow = (len(tiles) + cols - 1) // cols
+    sheet = Image.new("RGB", (cols * fw, nrow * fh), (0, 0, 0))
+    dr = ImageDraw.Draw(sheet)
+    for i, t in enumerate(tiles):
+        x, y = (i % cols) * fw, (i // cols) * fh
+        sheet.paste(t, (x, y))
+        s = int(i * step)
+        dr.rectangle((x, y, x + 34, y + 11), fill=(0, 0, 0))
+        dr.text((x + 2, y), f"{s // 60}:{s % 60:02d}", fill=(255, 255, 0))
+    out = W / "look" / f"sb_{vid}.jpg"
+    out.parent.mkdir(exist_ok=True)
+    sheet.save(out, quality=85)
+    return {"file": rel(W, out), "step": round(step, 2), "tiles": len(tiles)}
+
+
+def c_origin_probe(W, d):
+    """출처 채널 후보를 하나씩 — 유튜브 요청 **한 번**(-J)으로 올린 날짜·자막 주소·스토리보드를 같이 받는다(영상은 안 받는다).
+    벤치보다 늦게 올라온 영상은 건너뛰고, 자막은 주소로 바로(실측 0.3초), 벤치 말 지문이 세 줄 이상 맞으면 거기서 멈춘다.
+    지문이 없는 후보(벤치 = 내레이션)는 스토리보드 시트를 만들어 둔다 — 서버가 화면 대조를 묻는다."""
+    import urllib.request
+    lines = jload(W / "bench" / "asr.json") if (W / "bench" / "asr.json").exists() else []
+    terms = [t for t in d.get("terms") or [] if t]
+    before = str(d.get("before") or "")
+    out = {"matched": {}, "hits": {}, "sheets": {}, "dates": {}, "skipped": [], "blocked": []}
+    od = W / "origin"; od.mkdir(exist_ok=True)
+    for vid in d.get("ids") or []:
+        r = yt(["-J", f"https://www.youtube.com/watch?v={vid}"], timeout=120)
+        if _blocked(r):
+            out["blocked"].append(vid)
+            break
+        try:
+            info = json.loads(r.stdout)
+        except ValueError:
+            continue
+        date = str(info.get("upload_date") or "")
+        out["dates"][vid] = date
+        if before and date and date > before:                 # 벤치보다 늦게 올라온 영상은 원본일 수 없다
+            out["skipped"].append(vid)
+            continue
+        words = []
+        caps = info.get("subtitles") or {}
+        caps = {**(info.get("automatic_captions") or {}), **caps}
+        k = next((k for k in ("ko-orig", "ko") if k in caps), None)
+        u = next((x.get("url") for x in caps.get(k) or [] if x.get("ext") == "vtt"), None) if k else None
+        if u:
+            try:
+                p = od / f"{vid}.{k}.vtt"
+                p.write_bytes(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read())
+                words = vtt_words(p)
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f"[probe] {vid} 자막 받기 실패: {e}\n")
+        m = RU.fingerprint(lines, words) if words else []
+        if terms and words:
+            h = RU.word_hits(words, terms)
+            if h:
+                out["hits"][vid] = h
+        if m:
+            out["matched"][vid] = m
+            if len(m) >= 3:
+                break
+            continue
+        sh = _storyboard_sheet(W, vid, info.get("formats") or [], float(info.get("duration") or 0))
+        if sh:
+            out["sheets"][vid] = sh
+        if len(out["sheets"]) >= int(d.get("max_sheets") or 4):
+            break
+    return out
+
+
 def _origin_words(W: Path, vid: str) -> tuple[list, str]:
     """원본 후보의 말 낱말(초) — 자동자막(원래 말 ko-orig 먼저), 캐시에 자막이 없고 영상만 있으면 받아쓰기(표식 asr)."""
     od = W / "origin"; od.mkdir(exist_ok=True)
@@ -399,7 +512,7 @@ def c_origin_get(W, d):
             shutil.copyfile(s, dst)
         return {"files": [dims(dst)], "offset": 0.0, "measured": True, "note": "캐시 원본 = 전체 파일(0초 = 원본 0초)"}
     from tools.calcopy.hybrid import screen
-    files = screen.download(W, [vid], [(a, b)], prefix="")
+    files = screen.download(W, [vid], None if d.get("full") else [(a, b)], prefix="")   # full = 통째로 바로(구간 받기가 멈추는 회선에서 기다림 150초+를 버린다, 10-22 실측 통째 47~53초)
     if not files:
         return {"error": "원본 받기 실패"}
     guess = a
@@ -854,7 +967,7 @@ def c_finish(W, d):
 
 
 CMDS = {"env": c_env, "bench": c_bench, "search": c_search, "peer_sheet": c_peer_sheet, "channel_list": c_channel_list, "origin_subs": c_origin_subs,
-        "origin_get": c_origin_get, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "naver": c_naver, "origin_words": c_origin_words,
+        "origin_get": c_origin_get, "channel_find": c_channel_find, "origin_probe": c_origin_probe, "sheet": c_sheet, "frames": c_frames, "coupang": c_coupang, "naver": c_naver, "origin_words": c_origin_words,
         "screen": c_screen, "download": c_download, "product_stills": c_product_stills, "orig_heard": c_orig_heard, "asr_spans": c_asr_spans, "shot_sheets": c_shot_sheets, "mat_sheets": c_mat_sheets,
         "write_doc": c_write_doc, "plan": c_plan, "render": c_render, "check": c_check, "finish": c_finish}
 
