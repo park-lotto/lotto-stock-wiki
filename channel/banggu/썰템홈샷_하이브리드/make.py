@@ -12,7 +12,7 @@
 목소리 = 박창수 tc_6059dad0b83880769a50502f · tempo 기본(대본 tempo 로만 바꿈, 상한 1.25) — 필재 금지(§12).
 받아쓰기 = 스피치매틱스(asr_local, 규칙 12) — narr_video 줄 시작 캐시(<mp3>.asr.json)를 먼저 채워 제미나이를 부르지 않는다.
 컷 시각 = narr_video.plan_times 한 곳(plan 표와 렌더가 같은 계산). 재료.json sfx 는 t(초) 또는 line(대본 줄 번호 — 그 줄 첫 자막 시각).
-관문(checks) = 길이 · LUFS · bench_distance(방구석 표절) · 나레 받아쓰기 대조 · 광고 표시(engine/ad_mark) · 1초 시트.
+관문(checks) = 길이 · LUFS · bench_distance(방구석 표절) · 나레 받아쓰기 대조 · 쉼표·줄 끝 쉼(narr_pause) · 광고 표시(engine/ad_mark) · 1초 시트.
 """
 from __future__ import annotations
 
@@ -97,20 +97,15 @@ def tts(piece: str):
     tempo = S.get("tempo")
     if tempo and tempo > TEMPO_MAX:
         raise SystemExit(f"tempo {tempo} > 상한 {TEMPO_MAX} — 배속 말고 글을 줄인다")
+    from tools.calcopy import narr_pause
     text = " ".join(_lines(S))
-    stamp = P["w"] / "narr_full.txt"
-    same = P["full"].exists() and stamp.exists() and stamp.read_text(encoding="utf-8") == f"{tempo}|{text}"
-    if not same:   # 대본·배속이 같으면 다시 합성하지 않는다(타입캐스트 과금 1회)
+    stamp = P["w"] / "narr_tight.txt"
+    if not (P["tts"].exists() and stamp.exists() and stamp.read_text(encoding="utf-8") == f"{tempo}|{text}"):
         from shopping_shorts.channelkit import providers
-        providers.typecast_synth(VOICE, tempo=tempo)(text, str(P["full"]))
+        # ★줄마다 따로 합성 + 줄 사이 쉼은 우리가 넣는다 — 한 번에 보내면 타입캐스트가 쉼표 쉼을 버린다(10-22 실측, narr_pause)
+        narr_pause.synth_lines(providers.typecast_synth(VOICE, tempo=tempo), _lines(S), P["w"] / "lines", P["tts"])
         stamp.write_text(f"{tempo}|{text}", encoding="utf-8")
-        P["tts"].unlink(missing_ok=True)
-        print("TTS 1회(박창수):", P["full"])
-    if not P["tts"].exists():
-        f = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02"
-        mid = "silenceremove=stop_periods=-1:stop_duration=0.1:stop_threshold=-45dB:stop_silence=0.07"
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(P["full"]), "-af", f"{f},areverse,{f},areverse,{mid}", "-c:a", "libmp3lame",
-                        "-q:a", "2", str(P["tts"])], check=True, stdin=subprocess.DEVNULL)
+        print("TTS 줄별(박창수):", P["tts"])
     asr = asr_cache(P["tts"])
     heard = "".join(s["text"] for s in asr)
     from tools.calcopy.narr_video import speech_segments
@@ -215,6 +210,12 @@ def line_gap(P, S, segs) -> list:
     return [{"가장 큰 차이": worst, "줄별": gaps}, worst is not None and abs(worst) <= 0.15]
 
 
+def _pause(P, S, segs):
+    from tools.calcopy import narr_pause
+    r = narr_pause.pause_check(P["tts"], _lines(S), segs)
+    return [[f'{x["kind"]} {x["pause"]}초 「{x["at"]}」' for x in r["bad"]] or f'{len(r["rows"])}자리 통과', r["ok"]]
+
+
 def checks(piece: str) -> dict:
     from tools.calcopy import bench_distance as BD
     from tools.calcopy.engine import ad_mark
@@ -241,6 +242,7 @@ def checks(piece: str) -> dict:
          "뒤 체험 줄 있음": [sum(l.get("seg") == "B" for l in S["final"]["lines"]), any(l.get("seg") == "B" for l in S["final"]["lines"])],
          "줄 시작 받아쓰기 낱말 단위": [len(segs), len(segs) > len(_lines(S))],   # 한 덩어리면 줄 시작이 글자 비례로 밀린다(98 #52)
          "줄 시작 = 실제 말(±0.15초)": line_gap(P, S, segs),
+         "쉼표·줄 끝 쉼(붙여 읽기 없음)": _pause(P, S, segs),
          "광고 표시": [ad_mark.MARK in ad_mark._probe(fin)[2], ad_mark.MARK in ad_mark._probe(fin)[2]],
          "시트": [str(sheet), True]}
     _w(P["out"] / "자동검사.json", r)
