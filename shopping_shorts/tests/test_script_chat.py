@@ -93,3 +93,34 @@ def test_empty_mark_echo_is_blanked():
 def test_bad_input(lines, msg, err):
     with pytest.raises(ValueError, match=err):
         script_chat.revise(lines, msg, call=lambda p, s: {"reply": "x", "edit": False})
+
+
+def test_models_for_follows_vertex_plan(monkeypatch):
+    from shopping_shorts import vertex_route
+    for plan, vx in [("member", True), ("owner", True), ("free", False), ("shared", False)]:
+        monkeypatch.setattr(vertex_route, "plan", lambda cid=None, now=None, _p=plan: _p)
+        d = script_chat.models_for(7)
+        assert d["vertex"] is vx
+        assert [m["id"] for m in d["models"]] == ([m["id"] for m in script_chat.CHAT_MODELS] if vx else [])
+
+
+def test_model_choice_reaches_vertex_and_is_reported(monkeypatch):
+    from shopping_shorts import script_generate
+    seen = {}
+
+    def fake(p, s, note=None, vertex_model=None, **kw):
+        seen["vm"] = vertex_model
+        note.update(auth="vertex", model=vertex_model)
+        return {"reply": "답", "edit": False}
+    monkeypatch.setattr(script_generate, "_call_json", fake)
+    out = script_chat.revise(["a"], "어때", model="gemini-3.1-pro-preview")
+    assert seen["vm"] == "gemini-3.1-pro-preview" and out["model"] == "gemini-3.1-pro-preview" and out["auth"] == "vertex"
+    script_chat.revise(["a"], "어때", model="gemini-9-ultra")      # 목록 밖 → 기본
+    assert seen["vm"] == script_chat.DEFAULT_CHAT_MODEL
+
+
+def test_free_fallback_reports_keypool_model(monkeypatch):
+    from shopping_shorts import script_generate
+    monkeypatch.setattr(script_generate, "_call_json", lambda p, s, note=None, vertex_model=None, **kw: {"reply": "답", "edit": False})
+    out = script_chat.revise(["a"], "어때", model="gemini-3.1-pro-preview")
+    assert out["auth"] == "free" and out["model"] == script_generate._MODEL

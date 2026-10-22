@@ -21,6 +21,8 @@
  ③ AI 대화 2턴: "훅 후보 3개" → 답만(대본 그대로·제안 없음) / "2번째 후보로 훅 바꿔줘" → 훅만, 앞 답의 그 후보 문장으로 → [적용]
  ⑤ 4번 칸 아래 한 줄 요구창 "연결어로 시작하게" → 4번 칸만 바뀜 → ↩ 되돌리기 → 원래대로
  ⑥ 요구창에 치는 도중 다시 그려져도 커서·글자가 남는다
+ ⑧ 모델 칸: 버텍스 계정(--ai-cid 0)은 [Flash 3.6][Pro 3.1] — Pro 로 물으면 Pro 가 답하고 꼬리표에 Pro 3.1 / 무료 계정은 "Pro까지" 연결 안내
+ ⑨ 여러 번 다시 그린 뒤에도 대화 목록이 맨 아래(최근 답)
  ⑦ 대화창이 처음부터 칸 오른쪽에 펼쳐져 있고 7번 칸까지 스크롤해도 화면 안 · [접기 ▶] → 펼치기 막대 → 다시 펼침
  ④ [이 대본으로 확정] → 확정 대본(S2 안)·서버로 나가는 요청에 칸 글이 줄마다 그대로 실린다
 고치기 전 화면(라이브 그대로, --local 없이)에서는 버튼이 없어 ①부터 실패해야 한다.
@@ -42,15 +44,22 @@ SSH = ["ssh", "-i", os.path.join(os.path.expanduser("~"), "crawling_bot_client",
 _RUNNER = r"""
 import importlib.util, json, sys
 sys.path.insert(0, "/home/ubuntu/lotto-stock-wiki")
-spec = importlib.util.spec_from_file_location("shopping_shorts.script_chat_chk", "/tmp/sb_chat_chk/script_chat.py")
-m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+import shopping_shorts
+def _load(name, path):
+    sp = importlib.util.spec_from_file_location(name, path); mod = importlib.util.module_from_spec(sp)
+    sys.modules[name] = mod; sp.loader.exec_module(mod); return mod
+_load("shopping_shorts.script_generate", "/tmp/sb_chat_chk/script_generate.py")   # 이 프로세스에서만 — 서비스·저장소는 그대로
+shopping_shorts.script_generate = sys.modules["shopping_shorts.script_generate"]
+m = _load("shopping_shorts.script_chat_chk", "/tmp/sb_chat_chk/script_chat.py")
 from shopping_shorts import keyctx
 b = json.loads(sys.stdin.read())
-if len(sys.argv) > 1:          # --ai-cid: 그 계정이 부른 것처럼(라이브 미들웨어 keyctx.set_owner 와 같다) — 0 = 관리자 → 사장님 버텍스
+if len(sys.argv) > 1 and sys.argv[1] != "-":          # --ai-cid: 그 계정이 부른 것처럼(라이브 미들웨어 keyctx.set_owner 와 같다) — 0 = 관리자 → 사장님 버텍스
     keyctx.set_owner(int(sys.argv[1]))
+if len(sys.argv) > 2 and sys.argv[2] == "models":
+    print(json.dumps({"ok": True, **m.models_for(int(sys.argv[1]) if sys.argv[1] != "-" else None)}, ensure_ascii=False)); sys.exit(0)
 try:
     print(json.dumps({"ok": True, **m.revise(b.get("lines") or [], b.get("message") or "", b.get("history") or [], b.get("product") or "",
-                                             b.get("roles"), b.get("only"))}, ensure_ascii=False))
+                                             b.get("roles"), b.get("only"), b.get("model") or None)}, ensure_ascii=False))
 except ValueError as e:
     print(json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
 """
@@ -60,16 +69,22 @@ def _server_upload():
     import subprocess
     subprocess.run(SSH + ["mkdir -p /tmp/sb_chat_chk"], check=True)
     subprocess.run(["scp", "-q", "-i", SSH[2], str(ROOT / "shopping_shorts" / "script_chat.py"),
-                    "ubuntu@3.35.251.172:/tmp/sb_chat_chk/script_chat.py"], check=True)
+                    str(ROOT / "shopping_shorts" / "script_generate.py"), "ubuntu@3.35.251.172:/tmp/sb_chat_chk/"], check=True)
     subprocess.run(SSH + ["cat > /tmp/sb_chat_chk/run.py"], input=_RUNNER.encode(), check=True)
 
 
-def _server_chat(body, cid=""):
+AI_SECS = []   # AI 요청 하나에 실제로 걸린 초(서버 호출 시간). ★브라우저 쪽 시계로 재면 이 시간이 빠진다(10-22 "2초" 오측)
+
+
+def _server_chat(body, cid="", mode=""):
     import subprocess
-    cmd = "cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env && set +a && python3 /tmp/sb_chat_chk/run.py %s 2>/dev/null" % (cid or "")
+    t0 = time.time()
+    cmd = "cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env && set +a && python3 /tmp/sb_chat_chk/run.py %s %s 2>/dev/null" % (cid or "-", mode)
     r = subprocess.run(SSH + [cmd], input=body.encode(), capture_output=True, timeout=240)
     out = r.stdout.decode("utf-8", "replace").strip().splitlines()
     d = json.loads(out[-1]) if out else {"ok": False, "error": "서버 실행 실패: " + r.stderr.decode("utf-8", "replace")[-200:]}
+    if mode != "models":
+        AI_SECS.append((json.loads(body or "{}").get("model") or "기본", round(time.time() - t0, 1)))
     return (200 if d.get("ok") else 422), json.dumps(d, ensure_ascii=False).encode()
 
 PASTE = "1. 이거 하나면 아침이 달라집니다\n\n2) 매일 아침 십 분씩 걸리던 일이\n- 단 삼십 초면 끝나요\n• 손에 묻지도 않고요\n씻는 것도 물로 한 번이면 끝\n지금 안 사면 또 품절이에요"
@@ -123,7 +138,7 @@ def main(argv):
         ctx.add_cookies([{"name": "dash_auth", "value": ck, "domain": "shoppingshorts.duckdns.org", "path": "/",
                           "httpOnly": True, "secure": True, "sameSite": "Lax"}])
         pg = ctx.new_page()
-        pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
+        pg.on("pageerror", lambda e: errs.append(str(e)[:200] + " @ " + " | ".join((e.stack or "").splitlines()[1:4])[:300]))
 
         def route(r):
             q = r.request
@@ -144,6 +159,9 @@ def main(argv):
                     return r.fulfill(status=st, content_type="application/json", body=body)
                 posts.append((q.url, q.post_data or ""))         # 읽기 전용 — 라이브 작업을 건드리지 않는다
                 return r.abort()
+            if q.url.endswith("/api/script/chat/models") and via_server:   # 이 계정이 고를 수 있는 모델 — 서버 판정(vertex_route.plan)
+                st, body = _server_chat("{}", ai_cid, "models")
+                return r.fulfill(status=st, content_type="application/json", body=body)
             if local and q.resource_type == "document" and "/produce" in q.url:
                 return r.fulfill(status=200, content_type="text/html; charset=utf-8", body=html)
             return r.continue_()
@@ -188,6 +206,27 @@ def main(argv):
         exp2 = [got1[0]] + CTRLV + got1[4:]
         ok2 = got2 == exp2
         res["②칸"] = got2
+        # ⑧ 모델 선택 — 버텍스 계정이면 [Flash 3.6][Pro 3.1] 이 보이고, Pro 로 물으면 Pro 가 답한다 / 무료 계정이면 안내만
+        mb = pg.evaluate("() => [...document.querySelectorAll('#s2Storyboard .sb-mbar')].map(x => x.innerText)[0] || ''")
+        res["⑧모델칸"] = mb
+        ok8 = False
+        if "Pro 3.1" in mb:
+            pg.locator("#s2Storyboard .sb-mbar button", has_text="Pro 3.1").click()
+            n = pg.evaluate("() => SB.chat.msgs.length")
+            pg.fill("#sbChatIn", "이 대본 훅이 왜 약한지 두 문장으로만 말해줘. 대본은 바꾸지 마.")
+            pg.press("#sbChatIn", "Enter")
+            t0 = time.time()
+            while time.time() - t0 < 240:
+                pg.wait_for_timeout(2000)
+                if pg.evaluate("(n) => !SB.chat.busy && SB.chat.msgs.length > n + 1", n):
+                    break
+            a8 = pg.evaluate("() => SB.chat.msgs.slice(-1)[0]")
+            res["⑧Pro답"] = a8
+            res["⑧꼬리표"] = pg.evaluate("() => [...document.querySelectorAll('#s2Storyboard .sb-cm.ai small')].map(x => x.innerText).slice(-1)[0]")
+            ok8 = bool(a8) and a8.get("auth") == "vertex" and a8.get("model") == "gemini-3.1-pro-preview" and "Pro 3.1" in (res["⑧꼬리표"] or "")
+            pg.locator("#s2Storyboard .sb-mbar button", has_text="Flash 3.6").click()   # 뒤 단계는 빠른 모델로
+        else:
+            ok8 = (not ai_cid) and "Pro까지" in mb          # 무료 계정: 고르는 칸 대신 연결 안내
         # ③ AI 대화 — 2턴: 추천만 받으면 대본 그대로 → "2번째 후보로 훅 바꿔줘"면 그 후보로 훅(1번 칸)만 바뀐다
         def wait_chat(n_before):
             t0 = time.time()
@@ -218,7 +257,7 @@ def main(argv):
         n = pg.evaluate("() => SB.chat.msgs.length")
         pg.fill("#sbChatIn", ASK1)
         pg.press("#sbChatIn", "Enter")
-        res["③-1걸린초"] = wait_chat(n + 1)
+        wait_chat(n + 1)
         ans1 = pg.evaluate("() => SB.chat.msgs.slice(-1)[0]")
         prop1 = pg.evaluate("() => SB.chat.prop")
         lines_after1 = pg.evaluate(LINES_JS)
@@ -228,7 +267,7 @@ def main(argv):
         n = pg.evaluate("() => SB.chat.msgs.length")
         pg.fill("#sbChatIn", ASK2)
         pg.press("#sbChatIn", "Enter")
-        res["③-2걸린초"] = wait_chat(n + 1)
+        wait_chat(n + 1)
         prop = pg.evaluate("() => SB.chat.prop ? JSON.parse(JSON.stringify(SB.chat.prop)) : null")
         res["③-2답"] = pg.evaluate("() => SB.chat.msgs.slice(-1)[0]")
         ok3 = False
@@ -282,6 +321,16 @@ def main(argv):
         ok6 = f6 == {"ix": 2, "val": "연결어"}
         res["⑥다시그린뒤커서"] = f6
         pg.evaluate("() => { SB.ask = {}; sbRender(); }")
+        # ⑨ 여러 번 다시 그린 뒤에도 대화 목록이 맨 아래(최근 답)를 보여 주는가(10-22: 맨 위로 튀어 최근 답이 잘림)
+        #   목록이 넘쳐야 잰 것이 된다 — 긴 답 몇 개를 덧붙여 넘치게 하고, 맨 아래로 내린 뒤 다시 그린다
+        cm = pg.evaluate("""() => { for(let k=0;k<6;k++) SB.chat.msgs.push({role:k%2?'ai':'user', text:'스크롤 확인용 긴 말 '.repeat(30)});
+            sbRender(); const c0=document.getElementById('sbChatMsgs'); c0.scrollTop=c0.scrollHeight; sbRender(); sbRender();
+            const c=document.getElementById('sbChatMsgs');
+            const r={gap: Math.round(c.scrollHeight-c.scrollTop-c.clientHeight), over: c.scrollHeight>c.clientHeight+100};
+            c.scrollTop=0; sbRender(); r.keepTop=document.getElementById('sbChatMsgs').scrollTop===0;   // 위를 보고 있었으면 그 자리
+            SB.chat.msgs.splice(-6); sbRender(); const c2=document.getElementById('sbChatMsgs'); c2.scrollTop=c2.scrollHeight; return r; }""")   # 사람이 보던 상태(맨 아래)로 되돌림
+        res["⑨대화목록끝"] = cm
+        ok9 = bool(cm) and cm["over"] and cm["gap"] < 40 and cm["keepTop"]
         if shot_side:   # 대화가 담긴 채로 칸 중간까지 스크롤한 실제 화면(사람이 보는 그대로)
             pg.locator("#s2Storyboard .sb-row").nth(3).scroll_into_view_if_needed()
             pg.evaluate("() => window.scrollBy(0, 250)")
@@ -304,10 +353,11 @@ def main(argv):
         b.close()
     for k, v in res.items():
         print(k, json.dumps(v, ensure_ascii=False)[:600])
+    print("AI 요청별 실제 걸린 초(서버 호출, ssh 왕복 포함)", AI_SECS)
     print("페이지 오류", errs[:3])
-    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s · ⑦ 오른쪽 대화창 %s" % tuple(
-        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6, ok7)))
-    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and ok7 and not errs
+    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s · ⑦ 오른쪽 대화창 %s · ⑧ 모델 선택 %s · ⑨ 최근 답 보임 %s" % tuple(
+        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6, ok7, ok8, ok9)))
+    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and ok7 and ok8 and ok9 and not errs
     print("✅ 통과" if ok else "✖ 실패")
     return 0 if ok else 1
 

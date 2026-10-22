@@ -42,3 +42,13 @@
 - 화면 1280px 이하는 칸 위로 내려와 쌓임
 - 검사 ⑦: 처음 열림·칸 오른쪽·7번 칸까지 스크롤해도 화면 안(top 10)·접기/펼치기 — 통과(1750×980)
 - 회원별 버텍스 경로 확인: try_call → current_cid(로그인 회원, 미들웨어 keyctx.set_owner) → client(cid) → member_info(cid) = 그 회원 서비스계정 프로젝트. 회원 계정으로 실제 호출은 안 해 봄(회원 비용)
+
+## 2026-10-22 추가 4 (사장님 "모델 선택 — API 연결한 사람 등급에 맞게 위쪽까지, 대화창에서")
+- 대화창 모델 칸: 버텍스로 도는 계정(vertex_route.plan = member/owner)만 [Flash 3.6][Pro 3.1]. 무료 계정은 "구글 버텍스를 연결하면 Pro까지" 안내 링크(/api_manual.html#vertex)
+  주인 = script_chat.CHAT_MODELS·models_for · GET /api/script/chat/models · 한 줄 요구창도 같은 모델
+- script_generate._call_json(vertex_model=) 추가 — 없으면 종전(관리자 설정 vertex_model). note["model"] 로 실제 답한 모델을 말풍선에 표시
+- 실측(사장님 버텍스, 서버 호출 시간): Pro 3.1 14.9~17.4초 · Flash 3.6 6.4~15.2초 / 무료 Flash-Lite 3.6~37.8초. ★검사 도구의 브라우저 쪽 "걸린초"는 오측(route 처리 동안 멈춤)이라 서버 호출 시간(AI_SECS)으로 바꿈
+- 가격(ai.google.dev 2026-10-22): 3.6-flash $0.75/$3.75(2027-01-01부터 2배) · 3.1-pro-preview $2/$12 · 3.1-flash-lite $0.25/$1.5. 대화 1번 실측 토큰 in 765~872/out 634~1579 → Flash 약 6원·Pro 약 20~35원
+- 대화 목록 스크롤 수리: 다시 그리면 맨 위로 튀어 최근 답이 잘림 → 맨 아래 보던 중이면 맨 아래, 아니면 그 자리(검사 ⑨: 수리 전 gap 1631 실패 / 수리 후 0 통과)
+- 미해결 관찰: 검사 한 번에서 페이지 오류 "Cannot access 'S2' before initialization" 1회 — 이후 검사 3번·페이지 열기 6번 재현 안 됨. 도구가 이제 스택을 남김
+- 발견(별건): usage_meter._PRICING 에 3.6-flash 없음 → 기본값 $0.5/$3 로 계산돼 관리자 비용 표시가 실제보다 20~30% 낮음. 사장님께 보고, 미수정

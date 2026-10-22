@@ -9988,6 +9988,13 @@ def api_script_translate(request: Request, body: dict):
     return res
 
 
+@app.get("/api/script/chat/models")
+def api_script_chat_models(request: Request):
+    """대화창 모델 선택 칸(관제 253) — 이 계정이 고를 수 있는 모델. 판단 주인 script_chat.models_for(vertex_route.plan)."""
+    from shopping_shorts import script_chat
+    return {"ok": True, **script_chat.models_for(_cid(request))}
+
+
 @app.post("/api/script/chat")
 def api_script_chat(body: dict):
     """2단계 대본 AI 대화 고치기(관제 253). body: {lines, message, history?, product?, roles?, only?(한 줄 요구창 줄 번호)}
@@ -9999,7 +10006,8 @@ def api_script_chat(body: dict):
                                                  body.get("history") if isinstance(body.get("history"), list) else [],
                                                  str(body.get("product") or ""),
                                                  body.get("roles") if isinstance(body.get("roles"), list) else None,
-                                                 body.get("only") if isinstance(body.get("only"), int) else None)}
+                                                 body.get("only") if isinstance(body.get("only"), int) else None,
+                                                 str(body.get("model") or "") or None)}
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
 

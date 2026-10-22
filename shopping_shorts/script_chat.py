@@ -53,6 +53,25 @@ _PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 대본을 함�
 """
 
 
+# 대화창 모델 선택(2026-10-22 사장님 "API 연결한 사람 등급에 맞게 위쪽까지 대화창에서").
+#   버텍스로 도는 계정(등록 회원=자기 버텍스·관리자=사장님 버텍스)만 고른다 — 무료 키 계정은 키풀 모델 하나.
+#   목록·기본값은 여기 한 곳(화면은 /api/script/chat/models 로 받아 그린다). 실측 2026-10-22 사장님 버텍스:
+#   대화 요청 3.6-flash 7~15초 · 3.1-pro-preview 17초(서버 호출 실측). 가격(USD/1M, ai.google.dev 2026-10-22): flash 0.75/3.75 · pro 2/12
+CHAT_MODELS = [
+    {"id": "gemini-3.6-flash", "label": "Flash 3.6", "note": "빠름(10초 안팎) · 대화 1번 약 6원"},
+    {"id": "gemini-3.1-pro-preview", "label": "Pro 3.1", "note": "가장 똑똑함 · 조금 느림(20초 안팎) · 대화 1번 약 20~35원"},
+]
+DEFAULT_CHAT_MODEL = "gemini-3.6-flash"
+
+
+def models_for(cid=None):
+    """이 계정이 대화창에서 고를 수 있는 모델 — {"vertex": bool, "models": [...], "default": id}.
+    버텍스로 도는지는 vertex_route.plan 한 곳이 정한다(member/owner). 무료 계정은 models 가 빈 목록."""
+    from shopping_shorts import vertex_route
+    vx = vertex_route.plan(cid) in ("member", "owner")
+    return {"vertex": vx, "models": CHAT_MODELS if vx else [], "default": DEFAULT_CHAT_MODEL if vx else ""}
+
+
 EMPTY_MARK = "(빈 칸)"
 
 
@@ -65,8 +84,9 @@ def _clean_lines(lines):
     return out
 
 
-def revise(lines, message, history=None, product="", roles=None, only=None, *, call=None, tries=2):
-    """→ {"reply": str, "lines": [...같은 줄 수], "changed": [바뀐 줄 번호], "auth": "vertex"|"free"}.
+def revise(lines, message, history=None, product="", roles=None, only=None, model=None, *, call=None, tries=2):
+    """→ {"reply", "lines"(같은 줄 수), "changed"(바뀐 줄 번호), "auth": "vertex"|"free", "model": 실제로 답한 모델}.
+    model: CHAT_MODELS 의 id(버텍스 계정만 뜻이 있다). 목록 밖이면 기본값. 버텍스가 실패해 무료 키로 넘어가면 auth="free"·model=키풀 모델.
     대화만 했으면(edit=false) lines = 지금 대본 그대로, changed = [].
     only=줄 번호(0부터): 칸 아래 한 줄 요구창(2026-10-22 사장님 "다른 스타일로·연결어로 바꿔줘 같은 한 줄짜리 간단 요구").
       그 줄만 고친다 — 대화 없이 바로 고치고, AI가 다른 줄을 건드려도 서버가 원래대로 되돌린다.
@@ -102,9 +122,11 @@ def revise(lines, message, history=None, product="", roles=None, only=None, *, c
     hint = ("\n[상품] %s\n" % product.strip()) if (product or "").strip() else ""
     prompt = _PROMPT.format(n=len(src), lines=numbered, product_hint=hint,
                             history="\n".join(hist) or "(없음)", message=msg)
-    note = {}   # _call_json 이 실제로 탄 길을 적는다(auth="vertex") — 화면이 "구글 버텍스 / 무료 제미나이"를 말한다
-    call = call or (lambda p, s: script_generate._call_json(p, s, note=note))
+    note = {}   # _call_json 이 실제로 탄 길을 적는다(auth="vertex", model) — 화면이 "구글 버텍스 Pro 3.1 / 무료 제미나이"를 말한다
+    vm = model if model in {m["id"] for m in CHAT_MODELS} else DEFAULT_CHAT_MODEL
+    call = call or (lambda p, s: script_generate._call_json(p, s, note=note, vertex_model=vm))
     auth = lambda: "vertex" if note.get("auth") == "vertex" else "free"
+    used = lambda: note.get("model") or (vm if note.get("auth") == "vertex" else script_generate._MODEL)
     last = ""
     for _ in range(max(1, tries)):
         got = call(prompt, _SCHEMA) or {}
@@ -116,7 +138,7 @@ def revise(lines, message, history=None, product="", roles=None, only=None, *, c
             if not reply:
                 last = "AI 응답이 비었어요(키 소진·응답 오류)"
                 continue
-            return {"reply": reply, "lines": list(src), "changed": [], "auth": auth()}
+            return {"reply": reply, "lines": list(src), "changed": [], "auth": auth(), "model": used()}
         # 프롬프트의 빈 칸 표시("(빈 칸)")를 AI가 그대로 돌려주면 성우가 읽는다 — 빈 칸으로 되돌린다(2026-10-22 실측: 3칸)
         out = [_unplaceholder(str(x or "").strip()[:MAX_LINE_CHARS]) for x in (got.get("lines") or [])]
         if len(out) != len(src):
@@ -132,5 +154,5 @@ def revise(lines, message, history=None, product="", roles=None, only=None, *, c
                 last = "AI가 같은 문장을 돌려줬어요"
                 continue
         changed = [i for i, (s, o) in enumerate(zip(src, out)) if s != o]
-        return {"reply": reply or "고쳤어요.", "lines": out, "changed": changed, "auth": auth()}
+        return {"reply": reply or "고쳤어요.", "lines": out, "changed": changed, "auth": auth(), "model": used()}
     raise ValueError("AI가 답하지 못했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 보내 주세요")

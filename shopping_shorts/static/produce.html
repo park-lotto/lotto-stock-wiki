@@ -1830,6 +1830,8 @@
 .sbwrap .sb-main{display:flex;gap:10px;align-items:flex-start}.sbwrap .sb-mainl{flex:1;min-width:0}
 .sbwrap .sb-main .sb-chat{flex:none;width:400px;position:sticky;top:10px;margin:0;display:flex;flex-direction:column;height:min(760px,calc(100vh - 90px));box-sizing:border-box}
 .sbwrap .sb-main .sb-chat .sb-cms{flex:1;max-height:none;min-height:120px}
+.sbwrap .sb-mbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px}.sbwrap .sb-mbar a{color:#8fb4ff}
+.sbwrap .sb-mb{padding:3px 10px;font-size:12px}
 .sbwrap .sb-chatclose{font-weight:700;border-color:var(--sb-pick);color:#fff;background:#24335a}
 .sbwrap .sb-chatfold{flex:none;position:sticky;top:10px;width:40px;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:6px;
   background:var(--sb-pick);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:700}
@@ -19819,14 +19821,29 @@ function sbPasteBox(){ if(!SB.paste) return '';
 // ★자리: 스토리보드 칸 목록 **오른쪽**에 늘 펼쳐 둔다(2026-10-22 사장님 "대본쪽 빈자리에 기본으로 띄워 놓고, 접기 버튼 잘 보이게").
 //   스크롤해도 따라온다(position:sticky). 접으면 오른쪽에 얇은 [펼치기] 막대만. 접힘은 이 브라우저가 기억한다.
 SB.chat={open:(()=>{ try{ return localStorage.getItem('sb_chat_open')!=='0'; }catch(e){ return true; } })(), msgs:[], busy:false, draft:'', prop:null};
+// 모델 선택 칸 — 고를 수 있는 목록은 서버 script_chat.models_for 한 곳(버텍스 계정만 Pro까지). 고른 값은 이 브라우저가 기억.
+SB.chat.models=null;
+SB.chat.model=(()=>{ try{ return localStorage.getItem('sb_chat_model')||''; }catch(e){ return ''; } })();
+function sbChatModels(){ if(SB.chat.models||SB.chat._mload) return; SB.chat._mload=true;
+  fetch('/api/script/chat/models').then(r=>r.ok?r.json():null).then(d=>{ SB.chat.models=d&&d.ok?d:{vertex:false, models:[], default:''};
+    if(!SB.chat.models.models.some(m=>m.id===SB.chat.model)) SB.chat.model=SB.chat.models.default||''; sbRender(); })
+  .catch(()=>{ SB.chat.models={vertex:false, models:[], default:''}; sbRender(); }); }
+function sbChatModel(v){ SB.chat.model=v; try{ localStorage.setItem('sb_chat_model', v); }catch(e){} sbRender(); }
+function sbModelName(id, auth){ if(auth!=='vertex') return '무료 제미나이(Flash-Lite)';
+  const m=((SB.chat.models||{}).models||[]).find(x=>x.id===id); return '구글 버텍스 · '+(m?m.label:(id||'')); }
+function sbModelBar(){ const M=SB.chat.models; if(!M) return '<div class="sb-mbar sb-note">모델 확인 중…</div>';
+  if(!M.vertex) return `<div class="sb-mbar sb-note">무료 제미나이(Flash-Lite)로 답해요 · <a href="/api_manual.html#vertex" target="_blank">구글 버텍스를 연결하면 Pro까지 고를 수 있어요</a></div>`;
+  const cur=M.models.find(x=>x.id===SB.chat.model)||M.models[0];
+  return `<div class="sb-mbar"><span class="sb-note">모델</span> ${M.models.map(m=>`<button class="sb-btn sb-mb ${m.id===SB.chat.model?'on':''}" title="${sbE(m.note)}" ${SB.chat.busy?'disabled':''} onclick="sbChatModel('${sbA(m.id)}')">${sbE(m.label)}</button>`).join('')}
+    <span class="sb-note">${sbE(cur?cur.note:'')}</span></div>`; }
 function sbChatToggle(){ SB.chat.open=!SB.chat.open; try{ localStorage.setItem('sb_chat_open', SB.chat.open?'1':'0'); }catch(e){} sbRender(); const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); }
 function sbChatBox(ek){ const C=SB.chat;
   if(!C.open) return `<button class="sb-chatfold" title="AI 대화창 펼치기" onclick="sbChatToggle()"><span>◀</span><b>💬</b><span>AI 대화 펼치기</span></button>`;
-  const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${m.auth==='vertex'?'구글 버텍스로 답함':'무료 제미나이로 답함'}</small>`:''}</div>`).join('');
+  const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${(m.want&&m.auth!=='vertex')?'⚠ 버텍스가 답하지 못해 ':''}${sbE(sbModelName(m.model, m.auth))}로 답함</small>`:''}</div>`).join('');
   const P=(C.prop&&C.prop.ek===ek)?C.prop:null;
   const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번 ${sbE(sbKo(((SB.made[ek]||{}).slots||[])[k]?.slot||''))}</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
-  return `<div class="sb-chat"><div class="sb-bh">💬 AI와 대화 <small>물어보면 답만 · "바꿔줘"면 고친 줄을 보여 줘요</small><span style="margin-left:auto"></span><button class="sb-btn sb-chatclose" title="대화창 접기 — 오른쪽 막대로 다시 펼칠 수 있어요" onclick="sbChatToggle()">접기 ▶</button></div>
-    <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 이 대본 어때? · 훅 후보 5개 추천해줘 → 3번째 걸로 바꿔줘 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?'<div class="sb-cm ai">⏳ 답하는 중…</div>':''}</div>
+  return `<div class="sb-chat">${(sbChatModels(),'')}<div class="sb-bh">💬 AI와 대화 <small>물어보면 답만 · "바꿔줘"면 고친 줄을 보여 줘요</small><span style="margin-left:auto"></span><button class="sb-btn sb-chatclose" title="대화창 접기 — 오른쪽 막대로 다시 펼칠 수 있어요" onclick="sbChatToggle()">접기 ▶</button></div>${sbModelBar()}
+    <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 이 대본 어때? · 훅 후보 5개 추천해줘 → 3번째 걸로 바꿔줘 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?`<div class="sb-cm ai">⏳ 답하는 중…${/pro/.test(C.model||'')?' (Pro는 20초 안팎 걸려요)':''}</div>`:''}</div>
     ${P?`<div class="sb-cprop"><div class="sb-note">AI가 고친 줄 — [적용]을 눌러야 칸에 들어가요</div>${diff}<div style="margin-top:6px">${P.changed.length?'<button class="sb-btn main" onclick="sbChatApply()">적용</button> ':''}<button class="sb-btn" onclick="SB.chat.prop=null;sbRender()">버리기</button></div></div>`:''}
     <div class="sb-cin"><textarea id="sbChatIn" rows="2" placeholder="무엇이든 물어보거나 고칠 걸 적어 주세요 (Enter 보내기 · Shift+Enter 줄바꿈)" oninput="SB.chat.draft=this.value" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sbChatSend()}" ${C.busy?'disabled':''}>${sbE(C.draft)}</textarea>
     <button class="sb-btn main" ${C.busy?'disabled':''} onclick="sbChatSend()">보내기</button></div></div>`; }
@@ -19838,10 +19855,10 @@ async function sbChatSend(){
   C.msgs.push({role:'user', text:msg}); C.draft=''; C.busy=true; C.prop=null; sbRender();
   try{
     const r=await fetch('/api/script/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, history:hist, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, history:hist, model:C.model||'', product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false) C.msgs.push({role:'ai', text:'❌ '+((d&&d.error)||'답하지 못했어요')});
-    else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth}); if((d.changed||[]).length) C.prop={ek, base, lines:d.lines, changed:d.changed}; }
+    else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth, model:d.model, want:!!C.model}); if((d.changed||[]).length) C.prop={ek, base, lines:d.lines, changed:d.changed}; }
   }catch(e){ C.msgs.push({role:'ai', text:'❌ 서버에 연결하지 못했어요'}); }
   finally{ C.busy=false; sbRender(); const m=document.getElementById('sbChatMsgs'); if(m) m.scrollTop=m.scrollHeight; const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); } }
 function sbChatApply(){
@@ -19864,14 +19881,14 @@ async function sbAskGo(i){
   SB.askBusy[k]=true; sbRender();
   try{
     const r=await fetch('/api/script/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, only:i, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+      body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, only:i, model:SB.chat.model||'', product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'고치지 못했어요')); return; }
     const cur=sbCur()[1];
     if(cur!==bd||bd.slots.length!==base.length){ toast('그사이 칸이 바뀌어 넣지 않았어요 — 다시 눌러 주세요'); return; }
     SB.askUndo[k]=base[i]; SB.ask[k]='';
     sbApplyLines(base.map((t,j)=>j===i?d.lines[i]:null),0,false);
-    toast(`${i+1}번 줄을 고쳤어요 — 마음에 안 들면 ↩ 되돌리기`+(d.auth==='vertex'?' (구글 버텍스)':' (무료 제미나이)'));
+    toast(`${i+1}번 줄을 고쳤어요 — 마음에 안 들면 ↩ 되돌리기 (${sbModelName(d.model, d.auth)})`);
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
   finally{ delete SB.askBusy[k]; sbRender(); } }
 function sbAskUndo(i){ const [ek]=sbCur(); const k=ek+'#'+i; const u=SB.askUndo[k]; if(u==null) return;
@@ -20165,7 +20182,11 @@ function sbRender(){
   //   시안(1·2단계 페이지틀)과 같은 배치: 재료를 고르는 건 1단계, 대본은 2단계(사장님 10-05 "이게 1단계 아닌가").
   const b1=document.getElementById('s1Storyboard'), b2=document.getElementById('s2Storyboard');
   // 다시 그려도 요구창·대화창·붙여넣기 상자의 커서를 지킨다(관제 253 — AI 답이 와서 다시 그릴 때 치던 글자가 끊기지 않게)
-  const put=(box, html)=>{ if(!box) return; const keep=sbKeepFocus(box); if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; sbRestoreFocus(box, keep); } };
+  //   대화 목록 스크롤도 지킨다 — 맨 아래(최근 답)를 보고 있었으면 맨 아래에, 아니면 보던 자리에(10-22 실측: 다시 그리면 맨 위로 튐)
+  const put=(box, html)=>{ if(!box) return; const keep=sbKeepFocus(box);
+    const cm=box.querySelector('#sbChatMsgs'), cmBottom=cm&&(cm.scrollHeight-cm.scrollTop-cm.clientHeight<40), cmTop=cm?cm.scrollTop:0;
+    if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; sbRestoreFocus(box, keep);
+      const cm2=box.querySelector('#sbChatMsgs'); if(cm2) cm2.scrollTop=(!cm||cmBottom)?cm2.scrollHeight:cmTop; } };
   // 옛 '② 대본 스타일' 줄 — 스토리보드 켠 계정에선 숨긴다(스토리보드 확정은 S2.picked 를 안 쓴다: sbConfirm style_id:null). 꺼진 계정은 그대로
   const band=document.getElementById('s2StyleBand'); if(band) band.style.display=window.STORYBOARD_ON?'none':'';
   // ① 재료(씨앗 카드 줄 + 씨앗 대본 띠)도 켠 계정에선 숨긴다 — 씨앗은 1단계에서 고르고 온다(jump 의 씨앗 확인). 꺼진 계정은 그대로
