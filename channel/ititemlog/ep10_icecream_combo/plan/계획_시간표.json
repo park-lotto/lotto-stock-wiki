@@ -1,0 +1,731 @@
+{
+ "timeline": {
+  "lines": {
+   "N1": [
+    0.0,
+    2.907
+   ],
+   "N2": [
+    2.987,
+    5.778
+   ],
+   "N3": [
+    5.858,
+    7.602
+   ],
+   "N4": [
+    7.682,
+    10.008
+   ],
+   "N5": [
+    10.088,
+    12.762
+   ],
+   "N6": [
+    12.842,
+    15.168
+   ],
+   "N7": [
+    15.248,
+    17.457
+   ]
+  },
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 편의점에서",
+    "t0": 0.0,
+    "t1": 1.0,
+    "show": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "아이스크림 음료를 만든 외국인이 있는데요",
+    "t0": 1.0,
+    "t1": 2.907,
+    "key": "아이스크림 음료",
+    "show": [
+     1.0,
+     2.987
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "먼저 컵 얼음을 하나 꺼내고",
+    "t0": 2.987,
+    "t1": 4.558,
+    "show": [
+     2.987,
+     4.558
+    ]
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "초코 음료 파우치를 집었는데요",
+    "t0": 4.558,
+    "t1": 5.778,
+    "show": [
+     4.558,
+     5.858
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼음 컵에 초코 음료를",
+    "t0": 5.858,
+    "t1": 7.144,
+    "show": [
+     5.858,
+     7.144
+    ]
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "가득 부은 다음",
+    "t0": 7.144,
+    "t1": 7.602,
+    "show": [
+     7.144,
+     7.682
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빵빠레 아이스크림을",
+    "t0": 7.682,
+    "t1": 8.968,
+    "key": "빵빠레",
+    "show": [
+     7.682,
+     8.968
+    ]
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "통째로 거꾸로 꽂았는데요",
+    "t0": 8.968,
+    "t1": 10.008,
+    "show": [
+     8.968,
+     10.088
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아이스크림만 쏙 빠지자",
+    "t0": 10.088,
+    "t1": 11.517,
+    "show": [
+     10.088,
+     11.517
+    ]
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "남은 콘은 먼저 먹어 치웠는데요",
+    "t0": 11.517,
+    "t1": 12.762,
+    "show": [
+     11.517,
+     12.842
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빨대로 휘휘 저으니",
+    "t0": 12.842,
+    "t1": 13.985,
+    "show": [
+     12.842,
+     13.985
+    ]
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "진한 초코 셰이크가 됐는데요",
+    "t0": 13.985,
+    "t1": 15.168,
+    "key": "초코 셰이크",
+    "show": [
+     13.985,
+     15.248
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한 모금 마시더니",
+    "t0": 15.248,
+    "t1": 16.248,
+    "show": [
+     15.248,
+     16.248
+    ]
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "엄지를 번쩍 들었다고 하네요",
+    "t0": 16.248,
+    "t1": 17.457,
+    "show": [
+     16.248,
+     17.767
+    ]
+   }
+  ],
+  "cuts": [
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 29.0,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "놀란 얼굴",
+    "line": "N1",
+    "t0": 0.0,
+    "kind": "tts",
+    "t1": 1.494,
+    "dur": 1.494,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 26.3,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "얼굴 + 컵",
+    "line": "N1",
+    "t0": 1.494,
+    "kind": "tts",
+    "t1": 2.987,
+    "dur": 1.493,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 3.4,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "컵 얼음 집기",
+    "line": "N2",
+    "t0": 2.987,
+    "kind": "tts",
+    "t1": 4.422,
+    "dur": 1.435,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 0.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "초코 음료 파우치",
+    "line": "N2",
+    "t0": 4.422,
+    "kind": "tts",
+    "t1": 5.858,
+    "dur": 1.436,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 12.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "파우치 뜯기",
+    "line": "N3",
+    "t0": 5.858,
+    "kind": "tts",
+    "t1": 6.77,
+    "dur": 0.912,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 14.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "초코 붓기",
+    "line": "N3",
+    "t0": 6.77,
+    "kind": "tts",
+    "t1": 7.682,
+    "dur": 0.912,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 17.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "빵빠레 거꾸로",
+    "line": "N4",
+    "t0": 7.682,
+    "kind": "tts",
+    "t1": 8.885,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 20.5,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "빵빠레 꽂기",
+    "line": "N4",
+    "t0": 8.885,
+    "kind": "tts",
+    "t1": 10.088,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 28.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "콘 빼기",
+    "line": "N5",
+    "t0": 10.088,
+    "kind": "tts",
+    "t1": 11.465,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 30.5,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "콘 먹기",
+    "line": "N5",
+    "t0": 11.465,
+    "kind": "tts",
+    "t1": 12.842,
+    "dur": 1.377,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 34.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "빨대로 젓기",
+    "line": "N6",
+    "t0": 12.842,
+    "kind": "tts",
+    "t1": 14.045,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 36.2,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "컵 들어 보임",
+    "line": "N6",
+    "t0": 14.045,
+    "kind": "tts",
+    "t1": 15.248,
+    "dur": 1.203,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 39.0,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "마심",
+    "line": "N7",
+    "t0": 15.248,
+    "kind": "tts",
+    "t1": 16.507,
+    "dur": 1.259,
+    "over": 0.0
+   },
+   {
+    "src": "oEowLApQbpQ.mp4",
+    "ss": 44.0,
+    "w": 1,
+    "crop": [
+     0,
+     150,
+     1080,
+     1434
+    ],
+    "see": "엄지",
+    "line": "N7",
+    "t0": 16.507,
+    "kind": "tts",
+    "t1": 17.7667,
+    "dur": 1.26,
+    "over": 0.0
+   }
+  ],
+  "opos": [],
+  "end": 17.7667
+ },
+ "placement": {
+  "reference": "aUicTeDoW04",
+  "rows": [
+   {
+    "line": "N1",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한국 편의점에서",
+    "t0": 0.0,
+    "t1": 1.0,
+    "show": [
+     0.0,
+     1.0
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": "hook"
+   },
+   {
+    "line": "N1",
+    "j": 1,
+    "speaker": "narr",
+    "text": "아이스크림 음료를 만든 외국인이 있는데요",
+    "t0": 1.0,
+    "t1": 2.907,
+    "key": "아이스크림 음료",
+    "show": [
+     1.0,
+     2.987
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": "hook_pop"
+   },
+   {
+    "line": "N2",
+    "j": 0,
+    "speaker": "narr",
+    "text": "먼저 컵 얼음을 하나 꺼내고",
+    "t0": 2.987,
+    "t1": 4.558,
+    "show": [
+     2.987,
+     4.558
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N2",
+    "j": 1,
+    "speaker": "narr",
+    "text": "초코 음료 파우치를 집었는데요",
+    "t0": 4.558,
+    "t1": 5.778,
+    "show": [
+     4.558,
+     5.858
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 0,
+    "speaker": "narr",
+    "text": "얼음 컵에 초코 음료를",
+    "t0": 5.858,
+    "t1": 7.144,
+    "show": [
+     5.858,
+     7.144
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N3",
+    "j": 1,
+    "speaker": "narr",
+    "text": "가득 부은 다음",
+    "t0": 7.144,
+    "t1": 7.602,
+    "show": [
+     7.144,
+     7.682
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빵빠레 아이스크림을",
+    "t0": 7.682,
+    "t1": 8.968,
+    "key": "빵빠레",
+    "show": [
+     7.682,
+     8.968
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N4",
+    "j": 1,
+    "speaker": "narr",
+    "text": "통째로 거꾸로 꽂았는데요",
+    "t0": 8.968,
+    "t1": 10.008,
+    "show": [
+     8.968,
+     10.088
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 0,
+    "speaker": "narr",
+    "text": "아이스크림만 쏙 빠지자",
+    "t0": 10.088,
+    "t1": 11.517,
+    "show": [
+     10.088,
+     11.517
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N5",
+    "j": 1,
+    "speaker": "narr",
+    "text": "남은 콘은 먼저 먹어 치웠는데요",
+    "t0": 11.517,
+    "t1": 12.762,
+    "show": [
+     11.517,
+     12.842
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 0,
+    "speaker": "narr",
+    "text": "빨대로 휘휘 저으니",
+    "t0": 12.842,
+    "t1": 13.985,
+    "show": [
+     12.842,
+     13.985
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N6",
+    "j": 1,
+    "speaker": "narr",
+    "text": "진한 초코 셰이크가 됐는데요",
+    "t0": 13.985,
+    "t1": 15.168,
+    "key": "초코 셰이크",
+    "show": [
+     13.985,
+     15.248
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 0,
+    "speaker": "narr",
+    "text": "한 모금 마시더니",
+    "t0": 15.248,
+    "t1": 16.248,
+    "show": [
+     15.248,
+     16.248
+    ],
+    "first": true,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.first",
+    "enter": "cut",
+    "variant": ""
+   },
+   {
+    "line": "N7",
+    "j": 1,
+    "speaker": "narr",
+    "text": "엄지를 번쩍 들었다고 하네요",
+    "t0": 16.248,
+    "t1": 17.457,
+    "show": [
+     16.248,
+     17.767
+    ],
+    "first": false,
+    "lex": [],
+    "stickers": [],
+    "slot": "narr.rest",
+    "enter": "cut",
+    "variant": ""
+   }
+  ],
+  "sfx": [],
+  "flashes": [],
+  "log": [
+   "본보기 벤치 편 = aUicTeDoW04",
+   "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+   "효과음 0발(본보기 0) []",
+   "등장 {'cut': 14} · 강조 0/14"
+  ]
+ }
+}

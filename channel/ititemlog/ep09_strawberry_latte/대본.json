@@ -1,0 +1,172 @@
+{
+ "_note": "잇템로그판 해외반응 2차 — 한국 편의점 분홍 음식 + 딸기우유 라테(2026-10-22). 원본 = Jiny Maeng 'ilLAGS3-4yg'(5,343만, 채널 중앙 44.7만의 119배). 불닭 떡볶이 장면(9·32~34·48~55초)은 안 씀. 사실 근거 = Speechmatics + 1초 시트(원본 박힌 글: 'Strawberry Latte!'·'This actually got better and better after the first sip, YUM!').",
+ "slug": "ititemlog_ep09_strawberry_latte",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "딸기우유·편의점 커피(쿠팡: 딸기우유 멸균팩 류)",
+ "title_lines": [
+  [
+   [
+    "한국 딸기우유로"
+   ]
+  ],
+  [
+   [
+    "라테 만든 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "0.08~5.32 'Come with me in South Korea to eat only pink or pink packaged food in a convenience store'",
+  "f2": "10.12~12.48 'We got a lot of pink drink options' · 12.64 'Strawberry milk'",
+  "f3": "19.92~23.36 'It's so cute. That's kind of pink, right?'(21~23초 게맛살)",
+  "f4": "36~43초 컵 얼음에 커피 붓고 딸기우유 섞음 · 44초 'Strawberry Latte!' · 45~47초 'This actually got better and better after the first sip, YUM!'"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 편의점에서 분홍색만 골라 먹는 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 편의점에서"
+    },
+    {
+     "text": "분홍색만 골라 먹는 외국인이 있는데요",
+     "key": "분홍색"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(소개)",
+   "src": "ilLAGS3-4yg.mp4",
+   "spans": [
+    [
+     0.08,
+     5.32
+    ]
+   ],
+   "said": "Come with me in South Korea to eat only pink or pink packaged food in a convenience store",
+   "caps_rel": [
+    [
+     "한국 편의점에서",
+     0.0,
+     1.6
+    ],
+    [
+     "분홍색 음식만 먹어 볼 거야",
+     1.6,
+     5.24,
+     "분홍색"
+    ]
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(발견)",
+   "src": "ilLAGS3-4yg.mp4",
+   "spans": [
+    [
+     10.12,
+     12.48
+    ]
+   ],
+   "said": "We got a lot of pink drink options",
+   "caps_rel": [
+    [
+     "분홍 음료가 엄청 많아",
+     0.0,
+     2.36
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "딸기우유부터 게맛살까지 분홍색이면 다 골랐는데요.",
+   "caps": [
+    {
+     "text": "딸기우유부터 게맛살까지"
+    },
+    {
+     "text": "분홍색이면 다 골랐는데요"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "ilLAGS3-4yg.mp4",
+   "spans": [
+    [
+     19.92,
+     23.36
+    ]
+   ],
+   "said": "It's so cute. That's kind of pink, right?",
+   "caps_rel": [
+    [
+     "너무 귀여워",
+     0.0,
+     1.04
+    ],
+    [
+     "이 정도면 분홍색 맞지?",
+     1.92,
+     3.44
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "그리고 얼음컵에 커피를 붓고 딸기우유를 섞었는데요.",
+   "caps": [
+    {
+     "text": "그리고 얼음컵에 커피를 붓고"
+    },
+    {
+     "text": "딸기우유를 섞었는데요",
+     "key": "딸기우유"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 공개",
+   "tts": "분홍빛이 층층이 퍼지면서 편의점 딸기 라테가 완성됐는데요.",
+   "caps": [
+    {
+     "text": "분홍빛이 층층이 퍼지면서"
+    },
+    {
+     "text": "편의점 딸기 라테가 완성됐는데요",
+     "key": "딸기 라테"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "마실수록 점점 더 맛있어진다며 감탄했다고 하네요.",
+   "caps": [
+    {
+     "text": "마실수록 점점 더 맛있어진다며"
+    },
+    {
+     "text": "감탄했다고 하네요"
+    }
+   ]
+  }
+ ]
+}
