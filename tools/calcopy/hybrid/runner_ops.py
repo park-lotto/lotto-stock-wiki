@@ -325,13 +325,10 @@ def _vsearch(q: str, n: int = 20) -> tuple[list[dict], bool]:
 
 def c_channel_find(W, d):
     """출처 글자 → 실제 채널(사장님 10-22 "가져오는 채널에 출처가 반드시 있다"). 판단 = 서버가 준 kind(채널|프로그램).
-    채널: '<출처> <제품 낱말>' 영상 검색 한 번 → 가장 많이 나온 채널 중 이름이 출처·연예인과 닮은 것(10-22 강주은: '강주은' 이름 채널 8개, 인증 표시는 동명이인,
-          진짜는 '깡주은' — 영상 검색 상위 10개 중 7개). 없을 때만 이름이 똑같은 채널(채널 검색).
+    채널: '<출처> 채널' 채널 검색 첫 결과(10-22 강주은: 이름이 같은 채널 8개·인증 표시는 동명이인 — '강주은 채널' 검색 첫 결과는 진짜 '깡주은').
     프로그램: '<연예인> <프로그램>' 영상 검색 → 제목·채널에 프로그램 이름 든 영상만(98 #40)."""
     if CACHE:
         return {"channels": [], "titles": [], "note": "캐시 모드 — 출처 채널 찾기 건너뜀(검색 길로)"}
-    import difflib
-    from collections import Counter
     from urllib.parse import quote
     label, celeb = str(d.get("label") or ""), str(d.get("celeb") or "")
     nl, nc = RU.norm(label), RU.norm(celeb)
@@ -342,27 +339,16 @@ def c_channel_find(W, d):
             return {"blocked": True, "channels": [], "titles": []}
         titles = [x for x in found if nl and (nl in RU.norm(x["title"] or "") or nl in RU.norm(x["channel"] or ""))]
         return {"channels": [], "picked": [], "how": "search", "titles": titles}
-    hint = " ".join(w for w in (d.get("words") or [])[:1] if w)
-    found, blocked = _vsearch(f"{label} {hint}".strip())
-    if blocked:
-        return {"blocked": True, "channels": [], "titles": []}
-    def like(name):
-        x = RU.norm(name or "")
-        return bool(x) and (nl in x or (nc and nc in x) or difflib.SequenceMatcher(None, x, nl).ratio() >= 0.6)
-    cnt = Counter(x["channel_id"] for x in found if x.get("channel_id") and like(x["channel"]))
-    if cnt and cnt.most_common(1)[0][1] >= 2:
-        cid = cnt.most_common(1)[0][0]
-        name = next(x["channel"] for x in found if x.get("channel_id") == cid)
-        return {"channels": [{"id": cid, "name": name, "hits": c} for cid_, c in cnt.most_common(3) for cid in [cid_]], "picked": [{"id": cid, "name": name}],
-                "how": "video_search", "titles": c_channel_list(W, {"channels": [cid], "n": n})["titles"]}
-    r = yt(["--flat-playlist", "-J", "--playlist-end", "6", f"https://www.youtube.com/results?search_query={quote(label)}&sp=EgIQAg%253D%253D"], timeout=120)
+    # 채널: '<출처> 채널' 채널 검색 첫 결과 — 비교하지 않는다(사장님 10-22 "유튜브에 직접 '강주은 채널' 검색하면 바로 된다").
+    #   실측: 강주은 채널 → 깡주은 · 고현정 채널 → 고현정 · 요정재형 채널 → 요정재형 (프로그램 이름은 채널이 없어 위 영상 검색 길)
+    r = yt(["--flat-playlist", "-J", "--playlist-end", "3", f"https://www.youtube.com/results?search_query={quote(label + ' 채널')}&sp=EgIQAg%253D%253D"], timeout=120)
     if _blocked(r):
         return {"blocked": True, "channels": [], "titles": []}
     chans = []
     if r.returncode == 0 and r.stdout.strip():
-        chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id"),
-                  "verified": bool(e.get("channel_is_verified"))} for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
-    pick = [c for c in sorted(chans, key=lambda c: not c["verified"]) if RU.norm(c["name"] or "") == nl][:1]
+        chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id")}
+                 for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
+    pick = chans[:1]
     return {"channels": chans, "picked": pick, "how": "channel",
             "titles": c_channel_list(W, {"channels": [c["id"] for c in pick], "n": n})["titles"] if pick else []}
 
