@@ -1,0 +1,201 @@
+{
+ "topic": "S&B 골든카레 — 'S&B'는 스파이스&허브가 아니라 태양(Sun)과 새(Bird)의 머리글자(1931 상표) · 백 년 전 일본 카레가루는 영국 수입품 → 창업자가 국산화 · 1966 골든카레 · 2003 회사 상징이 스파이스&허브라 헷갈림",
+ "product": {
+  "name": "에스비골든 카레 순한맛 220g(고형 루, 12인분=6인분×2 블록)",
+  "coupang": "9499099417",
+  "flavor": "순한맛(MILD あまくち) — 화면 B 컷도 순한맛 고형 루 상자·블록만",
+  "not": "8288815156 '인스턴트 순한맛 230g'은 상품 사진 실측 결과 레토르트(Sauce with Vegetables · Ready-made sauce · 1serving) — 블록 루가 아니라 이 편 제품에서 뺌"
+ },
+ "facts": {
+  "h1": {
+   "text": "S&B 공식 고객상담 Q&A 00388 'S와 B는 무슨 뜻?': 전신 日賀志屋가 1930년 '태양'과 '새'를 도안한 히도리(ヒドリ)표를 상표 등록, 1931년 '태양=SUN'·'새=BIRD' 머리글자 'S&B'를 함께 적어 상표로 — 이것이 '에스비' 호칭의 시작이자 사명의 유래",
+   "url": "https://www.sbfoods.co.jp/customer/detail/00388.html"
+  },
+  "h2": {
+   "text": "S&B 공식 사사 '히도리표': 태양과 새 도안에는 '사운이 해가 떠오르는 기세처럼, 또 새가 하늘을 자유롭게 날듯 자사 제품이 방방곡곡 퍼지기를' 바라는 뜻",
+   "url": "https://www.sbfoods.co.jp/company/profile/history/hidori.html"
+  },
+  "h3": {
+   "text": "사사 정리(the-shashi.com, 출전 政経人 2003년 6월호 若山三郎 · 東商 1960 山崎峯次郎 본인 글): 당시 쓰이던 카레가루는 수입품 영국 C&B제, 여기에 고춧가루·귤껍질 가루를 섞은 것이 '일본제'로 팔려 서양요리점 요리사에게 무시당함 · '舶来品万能時代'",
+   "url": "https://the-shashi.com/tse/2805/chapter-1/"
+  },
+  "h4": {
+   "text": "TV도쿄 캄브리아궁전 2023-11-09: 창업자 山崎峯次郎은 소스 가게에서 일하다 먹은 카레라이스에 반해 정보 하나 없이 맛과 감으로 카레가루 제조에 몰두, '何度も失敗を繰り返し、数年かけて' 1923년 국산 카레가루 제조에 성공(S&B 100주년 사이트도 1923년 '일본 첫 국산 카레가루'라 소개 — 하치식품 1905년 설이 있어 '첫'은 대본에 안 씀)",
+   "url": "https://www.tv-tokyo.co.jp/cambria/backnumber/2023/1109/"
+  },
+  "h5": {
+   "text": "S&B 100주년 사이트 '100년의 발자취': 1966년(쇼와41) 스파이스가 살아 있는 향 풍부한 본격 카레 루로 '골든카레' 발매, S&B를 대표하는 롱셀러 상품이 됨 · 사사 연표 '대표하는 베스트셀러'",
+   "url": "https://www.sbfoods.co.jp/100th/history/"
+  },
+  "h6": {
+   "text": "S&B 100주년 사이트 같은 연표: 2003년(헤이세이15) 기업 이념과 함께 '스파이스&허브'의 새 코퍼레이트 심벌을 정함",
+   "url": "https://www.sbfoods.co.jp/100th/history/"
+  },
+  "p1": {
+   "text": "쿠팡 파트너스 API 2026-10-22 '골든카레 순한맛' 검색: 상품번호 9499099417 '에스비골든 카레 순한맛'(로켓) — 상품 사진 상자 글 '에스비 골든카레 순한맛(카레분 7.7% 함유) 내용량 220g · 12인분(6인분×2) · JAPANESE CURRY MIX · MILD あまくち'. (같은 검색 8288815156 은 사진상 레토르트 'Ready-made sauce 230g 1serving'이라 제외)",
+   "url": "https://www.coupang.com/vp/products/9499099417"
+  },
+  "p2": {
+   "text": "쿠팡 9499099417 상품 사진 상자 글 '12인분(6인분×2)' + Weee! 상품 설명(S&B Golden Curry Mild): 'Not too spicy' · '12 servings in a box and 6 per block, the curry mix is easy to break into pieces to make the perfect amount'",
+   "url": "https://www.weee.com/en/product/S-B-Golden-Curry-Japanese-Curry-Mix--Mild/83258"
+  }
+ },
+ "ing": {
+  "line": 2,
+  "fact": "h1",
+  "why": "누구나 아는 골든카레 상자의 'S&B'를 다들 스파이스&허브쯤으로 짐작하는데(2003년부터 회사 상징이 실제로 스파이스&허브 — h6), 원래는 태양 SUN·새 BIRD 머리글자라는 회사 공식 답 — 첫 2줄(훅 카드+2·3줄)에서 공개. line = final.lines 0부터 센 번호"
+ },
+ "hook": [
+  "골든카레 에스앤비 뜻",
+  "스파이스 앤 허브가 아니었다"
+ ],
+ "post": "금빛 상자 골든카레, 에스앤비 두 글자에 숨은 뜻",
+ "tempo": null,
+ "bench_same_topic": {
+  "id": "etM7eAGJ54g",
+  "title": "일본1등카레의 비밀",
+  "diff": "방구석 = '일본 1등 카레가 1등인 이유'·아버지→아들 고형 카레·엄마들 삼시세끼·추억으로 국룰(원 출처 미확인 — 우리 대본에 안 씀). 우리 = 상자 글자 S&B 뜻(태양·새)·영국 수입 카레가루 시대·마크에 담은 뜻·2003 스파이스&허브 상징 반전 + 뒤 순한맛 체험. 훅·순서·결말 전부 다름"
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "T 훅(아는 대상)",
+    "text": "마트에서 한 번쯤 본 금빛 상자, 골든카레",
+    "seg": "A",
+    "facts": [
+     "p1",
+     "h5"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9499099417",
+     "https://www.sbfoods.co.jp/100th/history/"
+    ]
+   },
+   {
+    "fn": "Q 잉 준비",
+    "text": "상자 속 에스앤비, 스파이스 앤 허브인 줄 알았는데",
+    "seg": "A",
+    "facts": [
+     "h1",
+     "h6"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/100th/history/",
+     "https://www.sbfoods.co.jp/customer/detail/00388.html"
+    ]
+   },
+   {
+    "fn": "A 잉 공개",
+    "text": "알고 보니 태양 썬이랑, 새 버드의 앞 글자라고 함",
+    "seg": "A",
+    "facts": [
+     "h1"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/customer/detail/00388.html"
+    ]
+   },
+   {
+    "fn": "S 몰랐던 배경",
+    "text": "백 년 전 일본 카레가루는, 영국 수입품이었다는데",
+    "seg": "A",
+    "facts": [
+     "h3"
+    ],
+    "sources": [
+     "https://the-shashi.com/tse/2805/chapter-1/"
+    ]
+   },
+   {
+    "fn": "S2 해결",
+    "text": "그래서 창업자가 몇 년을 실패한 끝에, 직접 만들었고",
+    "seg": "A",
+    "facts": [
+     "h4"
+    ],
+    "sources": [
+     "https://www.tv-tokyo.co.jp/cambria/backnumber/2023/1109/"
+    ]
+   },
+   {
+    "fn": "S3 이름의 뜻",
+    "text": "회사는 해처럼 뜨고, 제품은 새처럼 퍼지라는 뜻이라고",
+    "seg": "A",
+    "facts": [
+     "h2"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/company/profile/history/hidori.html"
+    ]
+   },
+   {
+    "fn": "S4 연결",
+    "text": "그 회사가 1966년에 내놓은 게, 이 골든카레",
+    "seg": "A",
+    "facts": [
+     "h5"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/100th/history/"
+    ]
+   },
+   {
+    "fn": "덤",
+    "text": "근데 2003년엔 회사 상징을 스파이스 앤 허브로 정해서, 헷갈릴 만하다고",
+    "seg": "A",
+    "facts": [
+     "h6"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/100th/history/"
+    ]
+   },
+   {
+    "fn": "B1 연결어",
+    "text": "이 얘기 듣고, 쿠팡에서 순한맛 한 상자 사 봤는데요",
+    "seg": "B",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9499099417"
+    ]
+   },
+   {
+    "fn": "B2 좋은 점①",
+    "text": "블록이 칸칸이 나뉘어서, 먹을 만큼만 톡톡 부숴 넣으면 되고",
+    "seg": "B",
+    "facts": [
+     "p2"
+    ],
+    "sources": [
+     "https://www.weee.com/en/product/S-B-Golden-Curry-Japanese-Curry-Mix--Mild/83258"
+    ]
+   },
+   {
+    "fn": "B3 좋은 점②",
+    "text": "순한맛이라, 매운 거 못 먹는 사람도 부담이 없더라고요",
+    "seg": "B",
+    "facts": [
+     "p1",
+     "p2"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/9499099417",
+     "https://www.weee.com/en/product/S-B-Golden-Curry-Japanese-Curry-Mix--Mild/83258"
+    ]
+   },
+   {
+    "fn": "B4 사회 반응",
+    "text": "괜히 60년째, 스테디셀러가 아니더라고요",
+    "seg": "B",
+    "facts": [
+     "h5"
+    ],
+    "sources": [
+     "https://www.sbfoods.co.jp/100th/history/"
+    ]
+   }
+  ]
+ }
+}
