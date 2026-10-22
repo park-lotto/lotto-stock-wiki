@@ -54,14 +54,17 @@ def _save_ledger(rows):
         json.dump(rows, f, ensure_ascii=False, indent=1)
 
 
-def _folders(only=None):
+def _folders(only=None, need_dir=True):
+    """need_dir=False: test --file 처럼 드라이브 폴더 없이 키만 쓰는 경우(드라이브 G: 가 안 붙어 있어도 시험)."""
     keys = _load(KEYS, {})
     names = [only] if only else sorted(keys)
+    if need_dir and not os.path.isdir(DRIVE):
+        raise SystemExit(f"드라이브 폴더가 안 보인다: {DRIVE} — 구글 드라이브(G:)가 연결돼 있나 확인")
     for n in names:
         if n not in keys:
             raise SystemExit(f"키 없음: {n} — {KEYS} 에 등록돼 있지 않다")
         d = os.path.join(DRIVE, n)
-        if not os.path.isdir(d):
+        if need_dir and not os.path.isdir(d):
             raise SystemExit(f"폴더 없음: {d}")
         yield n, d, keys[n]
 
@@ -230,7 +233,7 @@ def cmd_test(a):
     """실제 시험 — 게시하지 않는다: 30일 뒤 비공개 예약 → 상태 scheduled 확인 → 삭제 → NOT_FOUND 확인."""
     due = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     src = a.file
-    for n, d, key in _folders(a.folder):
+    for n, d, key in _folders(a.folder, need_dir=not src):
         try:
             ch = _channel(key, n)
         except RuntimeError as e:
