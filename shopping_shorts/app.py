@@ -9988,6 +9988,20 @@ def api_script_translate(request: Request, body: dict):
     return res
 
 
+@app.post("/api/script/chat")
+def api_script_chat(body: dict):
+    """2단계 대본 AI 대화 고치기(관제 253). body: {lines, message, history?, product?}
+    → {ok, reply, lines(같은 줄 수), changed}. 판단 주인 script_chat.revise — AI 길(자기 버텍스·관리자·무료 키)은
+    script_generate._call_json 이 vertex_route.plan 으로 가른다. 작업(job)을 건드리지 않는다 — 화면이 [적용]으로 칸에 넣는다."""
+    from shopping_shorts import script_chat
+    try:
+        return {"ok": True, **script_chat.revise(body.get("lines") or [], body.get("message") or "",
+                                                 body.get("history") if isinstance(body.get("history"), list) else [],
+                                                 str(body.get("product") or ""))}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+
+
 @app.post("/api/script/cta_guess")
 def api_script_cta_guess(body: dict):
     """2단계 카드 [📢 CTA] 버튼의 처음 상태(2026-09-30 관제 45, 김성현님).

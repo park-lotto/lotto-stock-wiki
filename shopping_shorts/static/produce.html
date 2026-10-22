@@ -1825,6 +1825,20 @@
 .sbwrap .sb-rmv button:disabled{opacity:.35}
 .sbwrap .sb-line{font-size:13.5px;background:#0f1626;border:1px solid #2a3a5c;border-radius:8px;padding:5px 7px;min-height:40px;outline:none}
 .sbwrap .sb-line:focus{border-color:var(--sb-pick)}.sbwrap .sb-line:empty:before{content:attr(data-ph);color:#6b7686}
+/* 대본 한 번에 넣기·AI 대화(관제 253) — 기존 스토리보드 토큰(--sb-*)만 쓴다 */
+.sbwrap .sb-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.sbwrap .sb-paste,.sbwrap .sb-chat{background:#0f1626;border:1px solid #2a3a5c;border-radius:11px;padding:10px 12px;margin:6px 0 10px}
+.sbwrap .sb-paste textarea,.sbwrap .sb-cin textarea{width:100%;box-sizing:border-box;background:#0b111e;color:#e8ecf5;border:1px solid #2a3a5c;border-radius:8px;padding:7px 9px;font-size:13.5px;line-height:1.55;resize:vertical;font-family:inherit}
+.sbwrap .sb-paste textarea:focus,.sbwrap .sb-cin textarea:focus{outline:none;border-color:var(--sb-pick)}
+.sbwrap .sb-cms{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.sbwrap .sb-cm{max-width:85%;padding:6px 10px;border-radius:10px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.sbwrap .sb-cm.user{align-self:flex-end;background:var(--sb-pick);color:#fff}
+.sbwrap .sb-cm.ai{align-self:flex-start;background:#1d2a45;color:#dfe9ff}
+.sbwrap .sb-cm.ai small{display:block;color:var(--sb-dim);font-size:11px;margin-top:2px}
+.sbwrap .sb-cprop{border:1px dashed var(--sb-pick);border-radius:9px;padding:8px 10px;margin-bottom:8px}
+.sbwrap .sb-cd{font-size:13px;line-height:1.5;margin-top:5px}.sbwrap .sb-cd s{color:var(--sb-dim)}.sbwrap .sb-cd em{font-style:normal;color:var(--sb-ok)}
+.sbwrap .sb-paste textarea{min-height:150px}
+.sbwrap .sb-cin{display:flex;gap:6px;align-items:flex-end}.sbwrap .sb-cin textarea{flex:1;width:auto;min-width:0;min-height:0;height:58px}.sbwrap .sb-cin .sb-btn{flex:none}
 .sbwrap .sb-why{margin-top:5px;color:var(--sb-warn);font-size:12px}.sbwrap .sb-meta{color:var(--sb-dim);font-size:11.5px;margin-top:4px}
 .sbwrap .sb-rows{display:flex;flex-direction:column;gap:6px}
 .sbwrap .sb-row{display:grid;grid-template-columns:170px minmax(260px,1fr) minmax(300px,1.25fr);gap:10px;align-items:start;background:#121a2b;border:1px solid #2c3d63;border-radius:11px;padding:8px 10px}
@@ -19741,6 +19755,71 @@ async function sbToggleLang(lang){
   }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
   finally{ sbRender(); }
 }
+// ── 대본 한 번에 넣기 · AI 대화로 고치기(관제 253, 2026-10-22 사장님 "제미나이로 쓴 걸 붙여넣어 한 번에 줄마다" /
+//    "대본단계에서 AI 채팅창으로 대화하면서 수정") ──
+// ★줄 → 칸 넣기는 sbApplyLines 하나다(0순위-B) — 붙여넣기 상자·칸에 여러 줄 Ctrl+V·AI 대화 [적용]이 같이 부른다.
+//   줄 나누기 = 옛 scriptPasteAll·서버 script_sentences 와 같은 규칙: 줄 하나 = 칸 하나, 빈 줄은 버린다(마침표로 다시 자르지 않는다).
+//   제미나이 등이 붙이는 줄머리 번호·글머리표(1. / 1) / - / •)만 걷는다 — 성우가 "1."을 읽지 않게.
+function sbSplitLines(t){ return String(t||'').replace(/\r\n?/g,'\n').split('\n').map(s=>s.replace(/^\s*(?:\d{1,2}[.)]|[-•*·▶])\s+/,'').trim()).filter(Boolean); }
+// lines[k] 를 from+k 번 칸에 넣는다(null = 그 칸은 그대로). 칸보다 줄이 많으면 장면 없는 새 칸을 뒤에 만든다.
+// clearRest = 넣은 줄 뒤 칸의 문장을 비운다(대본 통째 바꾸기 — 빈 칸은 sbConfirm 이 빼고 확정한다). 비운 칸 수를 돌려준다.
+function sbApplyLines(lines, from, clearRest){
+  const [ek,bd]=sbCur(); if(!bd||!Array.isArray(bd.slots)) return 0; sbBake(ek,bd); from=from||0;
+  lines.forEach((t,k)=>{ if(t==null) return; const at=from+k;
+    if(at<bd.slots.length){ bd.slots[at].line=t; delete bd.slots[at].line_ko; }
+    else { bd.slots.push({slot:'free', need:'붙여넣은 줄', line:t, ids:[], added:true}); if(bd.check) bd.check.push({have:0,need:0}); } });
+  let cleared=0;
+  if(clearRest) for(let k=from+lines.length;k<bd.slots.length;k++){ if(String(bd.slots[k].line||'').trim()){ bd.slots[k].line=''; delete bd.slots[k].line_ko; cleared++; } }
+  sbPicksSync(ek,bd); _sbSaveSoon(); return cleared; }
+function sbPasteToggle(){ SB.paste=SB.paste?null:{text:''}; sbRender(); const ta=document.getElementById('sbPasteIn'); if(ta) ta.focus(); }
+function sbPasteGo(){
+  const L=sbSplitLines(SB.paste&&SB.paste.text); if(!L.length){ toast('붙여넣은 대본이 없어요'); return; }
+  const [,bd]=sbCur(); const had=bd&&bd.slots?bd.slots.length:0; SB.paste=null;
+  const cleared=sbApplyLines(L,0,true);
+  toast(`${L.length}줄을 칸 ${L.length}개에 넣었어요`+(L.length>had?` · 새 칸 ${L.length-had}개는 「＋ 관련 후보」에서 장면을 고르세요`:'')+(cleared?` · 남은 ${cleared}칸은 비웠어요(빈 칸은 확정 때 빠져요)`:'')); }
+// 칸 하나에 여러 줄을 Ctrl+V 하면 그 칸부터 아래로 한 줄씩 나눠 넣는다(한 줄이면 종전대로 그 칸에 붙는다)
+function sbLinePaste(e, i){
+  const t=((e.clipboardData||window.clipboardData)||{getData:()=>''}).getData('text')||'';
+  const L=sbSplitLines(t); if(L.length<2) return;
+  e.preventDefault(); sbApplyLines(L,i,false); toast(`${i+1}번 칸부터 ${L.length}줄을 나눠 넣었어요`); }
+function sbPasteBox(){ if(!SB.paste) return '';
+  return `<div class="sb-paste"><div class="sb-bh">📋 대본 한 번에 붙여넣기 <small>제미나이·챗GPT·메모장에서 쓴 대본 — 줄 하나가 칸 하나가 돼요 · 줄 앞 번호(1. 2.)는 자동으로 빠져요</small></div>
+    <textarea id="sbPasteIn" rows="7" placeholder="여기에 붙여넣으세요 (Ctrl+V)" oninput="SB.paste.text=this.value;const n=sbSplitLines(this.value).length,c=document.getElementById('sbPasteN');if(c)c.textContent=n?n+'줄 → 칸 '+n+'개':''">${sbE(SB.paste.text)}</textarea>
+    <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="sb-btn main" onclick="sbPasteGo()">칸에 나눠 넣기</button><button class="sb-btn" onclick="sbPasteToggle()">닫기</button>
+    <span class="sb-note" id="sbPasteN">${SB.paste.text?sbSplitLines(SB.paste.text).length+'줄 → 칸 '+sbSplitLines(SB.paste.text).length+'개':''}</span></div></div>`; }
+// AI 대화 — 판단은 서버 script_chat.revise(같은 줄 수로 고친 대본). 화면은 바뀐 줄만 보여 주고 [적용] 때 그 줄만 칸에 넣는다.
+// AI 길(내 버텍스·관리자·무료 제미나이)은 서버 script_generate._call_json 이 가른다 — 여기서 정하지 않는다.
+SB.chat={open:false, msgs:[], busy:false, draft:'', prop:null};
+function sbChatToggle(){ SB.chat.open=!SB.chat.open; sbRender(); const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); }
+function sbChatBox(ek){ const C=SB.chat; if(!C.open) return '';
+  const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${m.auth==='vertex'?'구글 버텍스로 답함':'무료 제미나이로 답함'}</small>`:''}</div>`).join('');
+  const P=(C.prop&&C.prop.ek===ek)?C.prop:null;
+  const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
+  return `<div class="sb-chat"><div class="sb-bh">💬 AI와 대본 고치기 <small>지금 칸의 대본을 보고 고쳐요 · 줄 수는 그대로(칸 늘리기·빼기는 ＋ 칸 추가 / 🗑 빼기)</small><span style="margin-left:auto"></span><button class="sb-btn" onclick="sbChatToggle()">닫기</button></div>
+    <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 훅을 더 세게 · 3번째 줄 짧게 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?'<div class="sb-cm ai">⏳ 고치는 중…</div>':''}</div>
+    ${P?`<div class="sb-cprop"><div class="sb-note">AI가 고친 줄 — [적용]을 눌러야 칸에 들어가요</div>${diff}<div style="margin-top:6px">${P.changed.length?'<button class="sb-btn main" onclick="sbChatApply()">적용</button> ':''}<button class="sb-btn" onclick="SB.chat.prop=null;sbRender()">버리기</button></div></div>`:''}
+    <div class="sb-cin"><textarea id="sbChatIn" rows="2" placeholder="어떻게 고칠지 적어 주세요 (Enter 보내기 · Shift+Enter 줄바꿈)" oninput="SB.chat.draft=this.value" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sbChatSend()}" ${C.busy?'disabled':''}>${sbE(C.draft)}</textarea>
+    <button class="sb-btn main" ${C.busy?'disabled':''} onclick="sbChatSend()">보내기</button></div></div>`; }
+async function sbChatSend(){
+  const C=SB.chat; const msg=String(C.draft||'').trim(); if(!msg||C.busy) return;
+  const [ek,bd]=sbCur(); if(!bd||!Array.isArray(bd.slots)) return; sbBake(ek,bd);
+  const base=bd.slots.map(sl=>String(sl.line||'').trim());
+  if(!base.some(Boolean)){ toast('칸에 문장을 먼저 넣어 주세요'); return; }
+  const hist=C.msgs.slice(-8).map(m=>({role:m.role, text:m.text}));
+  C.msgs.push({role:'user', text:msg}); C.draft=''; C.busy=true; C.prop=null; sbRender();
+  try{
+    const r=await fetch('/api/script/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lines:base, message:msg, history:hist, product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d||d.ok===false) C.msgs.push({role:'ai', text:'❌ '+((d&&d.error)||'고치지 못했어요')});
+    else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth}); C.prop={ek, base, lines:d.lines, changed:d.changed||[]}; }
+  }catch(e){ C.msgs.push({role:'ai', text:'❌ 서버에 연결하지 못했어요'}); }
+  finally{ C.busy=false; sbRender(); const m=document.getElementById('sbChatMsgs'); if(m) m.scrollTop=m.scrollHeight; const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); } }
+function sbChatApply(){
+  const P=SB.chat.prop; const [ek,bd]=sbCur(); if(!P||!bd||P.ek!==ek) return;
+  if(bd.slots.length!==P.base.length){ toast('그사이 칸 수가 바뀌어 적용하지 않았어요 — 다시 보내 주세요'); SB.chat.prop=null; sbRender(); return; }
+  SB.chat.prop=null; sbApplyLines(P.lines.map((t,k)=>P.changed.includes(k)?t:null),0,false);
+  toast(`${P.changed.length}줄을 고쳤어요`); }
 function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
 function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
@@ -20005,13 +20084,16 @@ function sbPage2(){
         <div class="sb-rl"><div class="sb-rn">${i+1}</div><div><b>${sbE(sbKo(sl.slot))}${hs?' 🎯':''}</b><div class="sb-rneed">${sbE(sl.need||'')}</div>
           ${added?'<div class="sb-addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="sb-addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
           <div class="sb-rsec ${ck.short?'bad':''}">문장 ${sbE(ck.need||0)}초 · 장면 ${sbE(ck.have||0)}초</div></div></div>
-        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onblur="sbEditDone()">${sbE(sbLine(ek,i,sl))}</div>
+        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onpaste="sbLinePaste(event,${i})" onblur="sbEditDone()">${sbE(sbLine(ek,i,sl))}</div>
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
           ${sl.gen?'<div class="sb-busy">⏳ AI가 이 칸 문장·장면을 채우는 중… (먼저 써도 돼요 — 쓴 문장은 안 덮어요)</div>':''}
           ${sbRowActs(i,bd.slots.length,sl)}${sbAddPick(i)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+      <div class="sb-tools"><button class="sb-btn ${SB.paste?'on':''}" title="제미나이 등에서 쓴 대본을 붙여넣으면 줄마다 칸에 들어가요" onclick="sbPasteToggle()">📋 대본 한 번에 붙여넣기</button>
+        <button class="sb-btn ${SB.chat.open?'on':''}" title="AI에게 말로 부탁해 대본을 고쳐요 — 고친 줄을 보고 [적용]" onclick="sbChatToggle()">💬 AI와 대본 고치기</button></div>
+      ${sbPasteBox()}${sbChatBox(ek)}
       <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
       <div style="text-align:right;margin-top:10px">${sbLangBtn(bd)} <button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
