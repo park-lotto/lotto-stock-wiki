@@ -283,3 +283,11 @@ def test_product_judgment_gets_candidate_photos():
     r = flow.ph_cand_look(st, {"csheet": {"file": "look/cand_sheet.jpg"}}, {}, {})
     rv = r["review"][0]
     assert rv["id"] == "product_same" and any(x.get("file") == "look/cand_sheet.jpg" for x in rv["show"]) and "사진으로도 같아야" in rv["ask"]
+
+
+def test_still_crop_checked_against_real_size():
+    """상품 사진 crop 은 실제 픽셀로·사진 너비 40% 이상 — 미리보기 크기로 잘라 렌더 3번 돈 것(10-22 강주은) 계획 단계에서."""
+    M = {"cuts": {"n4": [{"src": "prod_1.jpg", "crop": [0, 0, 300, 300]}], "n5": [{"src": "prod_1.jpg", "crop": [0, 0, 900, 900]}],
+                  "n6": [{"src": "prod_1.jpg", "crop": [500, 0, 900, 900]}], "n7": [{"src": "prod_1.jpg"}]}}
+    p = RU.material_problems(M, {"prod_1.jpg"}, set(), {"prod_1.jpg": [1000, 1000]})
+    assert [x.split(":")[0] for x in p] == ["n4#1", "n6#1"]

@@ -128,7 +128,7 @@ def source_rule_static(M: dict, origin_names: set, bench_id: str, shots_by_src: 
     return out
 
 
-def material_problems(M: dict, known: set, orig_lines: set) -> list[str]:
+def material_problems(M: dict, known: set, orig_lines: set, dims: dict | None = None) -> list[str]:
     """재료.json 컷의 꼴 검사(판정 답을 받은 즉시 — 렌더에서 터지기 전에, 뿌리 10-22). 서버 지시서 계획 단계가 부른다.
     src 가 받은 파일인가 · 영상 컷에 ss(원음 줄은 렌더가 채운다)·숫자인가 · crop 이 'face' 또는 [x,y,w,h] 인가 · dur 이 숫자인가.
     10-22 강주은: 사진 컷 ss·crop 없음 → 렌더 KeyError 'ss' 로 멈춤(칸 있음만 보던 검사가 못 잡음)."""
@@ -152,10 +152,20 @@ def material_problems(M: dict, known: set, orig_lines: set) -> list[str]:
             cr = c.get("crop")
             if cr is not None and cr != "face" and not (isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr)):
                 out.append(f"{tag}: crop 은 'face' 또는 [x, y, w, h](원본 픽셀 정수)여야 한다({cr!r})")
+            wh = (dims or {}).get(src)
+            if still and wh and isinstance(cr, list) and len(cr) == 4 and all(isinstance(v, (int, float)) for v in cr):
+                iw, ih = wh
+                if cr[0] + cr[2] > iw + 2 or cr[1] + cr[3] > ih + 2:
+                    out.append(f"{tag}: 사진 {src} 는 {iw}x{ih} — crop {cr} 가 사진 밖이다(미리보기 크기가 아니라 실제 픽셀로)")
+                elif cr[2] < iw * STILL_MIN_W:
+                    out.append(f"{tag}: 사진 {src}({iw}x{ih}) 를 너비 {cr[2]}px 로만 잘랐다 — 제품 전체가 보이게 너비 {int(iw * STILL_MIN_W)}px 이상(또는 crop 을 빼면 가운데 자동)")
             for k in ("dur", "at"):
                 if c.get(k) is not None and not isinstance(c.get(k), (int, float)):
                     out.append(f"{tag}: {k} 가 숫자가 아니다({c.get(k)!r})")
     return out
+
+
+STILL_MIN_W = 0.4      # 상품 사진 crop 너비 하한(사진 너비 비율) — 10-22 강주은: 500px 미리보기 기준 숫자로 1000px 사진의 왼쪽 위만 잘라 렌더 3번
 
 
 _COUNT_RE = re.compile(r"(후기|리뷰|평점|별점)[^.?!]{0,12}?([0-9]|일|이|삼|사|오|육|칠|팔|구|십|백|천|만)+\s*(개|점|건|명)|(별점|평점)\s*[0-9]")

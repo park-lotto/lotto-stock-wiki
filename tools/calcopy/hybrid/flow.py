@@ -1078,7 +1078,8 @@ def _script_ask(st, fail: str = "") -> dict:
            "\n\n## 쿠팡 베스트 후기(r번호 — 도움 순, 셀링포인트·소구점 근거)\n" +
            (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
            "\n\n## 원음 받아쓰기(구간마다 — 모델 둘이면 둘 다)\n" + json.dumps(st.get("asr") or {}, ensure_ascii=False)[:6000] +
-           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) + _shots_ctx(st) +
+           "\n\n## 재료 파일(시트 순서 = 앞 5개)\n" + json.dumps(ms.get("list") or [], ensure_ascii=False) +
+           "\n실제 크기(crop 은 이 픽셀로 — 시트는 줄인 미리보기다): " + json.dumps(_all_dims(st), ensure_ascii=False) + _shots_ctx(st) +
            (f"\n\n## 대본 검사에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return _rv(f"script_{v}", SCRIPT + "\n\n" + ctx, [_img(x) for x in ms.get("sheets") or []], need=("대본", "재료"))
 
@@ -1176,7 +1177,7 @@ def ph_plan_got(st, m, rp, u):
     over = [p["over"]] if p.get("over") else []
     known = _origin_names(st) | {x.get("name") for x in (st.get("material") or {}).get("files") or [] if x.get("name")}
     orig_lines = {l["id"] for l in (st["script"].get("S") or {}).get("lines") or [] if l.get("kind") == "orig"}
-    over += RU.material_problems(st["script"]["M"], known, orig_lines)        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
+    over += RU.material_problems(st["script"]["M"], known, orig_lines, _all_dims(st))        # 재료 답 꼴 — 렌더에서 터지기 전에(뿌리 10-22)
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})
     over += p.get("jumps") or []
     st["_plan_over"] = over
