@@ -9992,15 +9992,19 @@ def api_script_translate(request: Request, body: dict):
 def api_script_chat_models(request: Request):
     """대화창 모델 선택 칸(관제 253) — 이 계정이 고를 수 있는 모델. 판단 주인 script_chat.models_for(vertex_route.plan)."""
     from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
     return {"ok": True, **script_chat.models_for(_cid(request))}
 
 
 @app.post("/api/script/chat")
-def api_script_chat(body: dict):
+def api_script_chat(request: Request, body: dict):
     """2단계 대본 AI 대화 고치기(관제 253). body: {lines, message, history?, product?, roles?, only?(한 줄 요구창 줄 번호)}
     → {ok, reply, lines(같은 줄 수), changed}. 판단 주인 script_chat.revise — AI 길(자기 버텍스·관리자·무료 키)은
     script_generate._call_json 이 vertex_route.plan 으로 가른다. 작업(job)을 건드리지 않는다 — 화면이 [적용]으로 칸에 넣는다."""
     from shopping_shorts import script_chat
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
     try:
         return {"ok": True, **script_chat.revise(body.get("lines") or [], body.get("message") or "",
                                                  body.get("history") if isinstance(body.get("history"), list) else [],
@@ -17069,6 +17073,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 대본 붙여넣기·AI 대화·한 줄 요구(관제 253) — 화면과 서버 입구(/api/script/chat*)가 같은 스위치 하나
+            "script_chat": _setting_gate(st, "script_chat_enabled", cid),
             # 카드뉴스 제작소(관제 223) — 사이드바 메뉴와 서버 입구(/cardnews·/api/cardnews/*)가 같은 스위치 하나
             "cardnews": _setting_gate(st, "cardnews_enabled", cid),
             # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
@@ -17216,6 +17222,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 2단계 대본 붙여넣기·AI 대화·한 줄 요구(관제 253, 2026-10-22 사장님 "관리자 먼저 열어줘") — ""끔 · "admin" · "11,42" · "1" 전체
+                       "script_chat_enabled",
                        # 지침서 작가(관제 249, 2026-10-20) — 2단계 스토리보드에 '체험형·정보형(지침서)' 스타일. 버텍스가 쓰고 코드가 검수·1회 재작성. ""끔 · "admin" · "11,42" · "1" 전체
                        "guide_writer_enabled",
                        # 카드뉴스 제작소(관제 223, 2026-10-17) — 사이드바 메뉴·/cardnews·/api/cardnews/*. ""끔 · "admin" · "11,42" · "1" 전체

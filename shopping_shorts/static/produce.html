@@ -19808,7 +19808,7 @@ function sbPasteGo(){
 // 칸 하나에 여러 줄을 Ctrl+V 하면 그 칸부터 아래로 한 줄씩 나눠 넣는다(한 줄이면 종전대로 그 칸에 붙는다)
 function sbLinePaste(e, i){
   const t=((e.clipboardData||window.clipboardData)||{getData:()=>''}).getData('text')||'';
-  const L=sbSplitLines(t); if(L.length<2) return;
+  const L=sbSplitLines(t); if(L.length<2 || !window.SCRIPT_CHAT_ON) return;
   e.preventDefault(); sbApplyLines(L,i,false); toast(`${i+1}번 칸부터 ${L.length}줄을 나눠 넣었어요`); }
 function sbPasteBox(){ if(!SB.paste) return '';
   return `<div class="sb-paste"><div class="sb-bh">📋 대본 한 번에 붙여넣기 <small>제미나이·챗GPT·메모장에서 쓴 대본 — 줄 하나가 칸 하나가 돼요 · 줄 앞 번호(1. 2.)는 자동으로 빠져요</small></div>
@@ -20157,16 +20157,16 @@ function sbPage2(){
         <div class="sb-rl"><div class="sb-rn">${i+1}</div><div><b>${sbE(sbKo(sl.slot))}${hs?' 🎯':''}</b><div class="sb-rneed">${sbE(sl.need||'')}</div>
           ${added?'<div class="sb-addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="sb-addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
           <div class="sb-rsec ${ck.short?'bad':''}">문장 ${sbE(ck.need||0)}초 · 장면 ${sbE(ck.have||0)}초</div></div></div>
-        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onpaste="sbLinePaste(event,${i})" onblur="sbEditDone(event)">${sbE(sbLine(ek,i,sl))}</div>${sbAskRow(ek,i)}
+        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onpaste="sbLinePaste(event,${i})" onblur="sbEditDone(event)">${sbE(sbLine(ek,i,sl))}</div>${window.SCRIPT_CHAT_ON?sbAskRow(ek,i):''}
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
           ${sl.gen?'<div class="sb-busy">⏳ AI가 이 칸 문장·장면을 채우는 중… (먼저 써도 돼요 — 쓴 문장은 안 덮어요)</div>':''}
           ${sbRowActs(i,bd.slots.length,sl)}${sbAddPick(i)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
-      <div class="sb-tools"><button class="sb-btn ${SB.paste?'on':''}" title="제미나이 등에서 쓴 대본을 붙여넣으면 줄마다 칸에 들어가요" onclick="sbPasteToggle()">📋 대본 한 번에 붙여넣기</button></div>
-      ${sbPasteBox()}
-      <div class="sb-main ${SB.chat.open?'chat-on':'chat-off'}"><div class="sb-mainl"><div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}</div>${sbChatBox(ek)}</div>
+      ${window.SCRIPT_CHAT_ON?`<div class="sb-tools"><button class="sb-btn ${SB.paste?'on':''}" title="제미나이 등에서 쓴 대본을 붙여넣으면 줄마다 칸에 들어가요" onclick="sbPasteToggle()">📋 대본 한 번에 붙여넣기</button></div>
+      ${sbPasteBox()}`:''}
+      <div class="sb-main ${window.SCRIPT_CHAT_ON?(SB.chat.open?'chat-on':'chat-off'):''}"><div class="sb-mainl"><div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}</div>${window.SCRIPT_CHAT_ON?sbChatBox(ek):''}</div>
       <div style="text-align:right;margin-top:10px">${sbLangBtn(bd)} <button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="sb-pickbar"><b>대본 스타일 고르기</b> <span class="sb-note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
@@ -20268,10 +20268,12 @@ window.IS_ADMIN=false;
 window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /api/me가 정본
 window.DIALOGUE_ON=false;       // 서버 스위치(dialogue_enabled + 관리자, 관제 128) — 작업목록 「🎭 대화형」 버튼
 window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
+window.SCRIPT_CHAT_ON=false;    // 서버 스위치(script_chat_enabled, 관제 253) — /api/me script_chat. false면 붙여넣기·AI 대화·한 줄 요구를 안 그린다
 window.MEME_ON=false;           // 서버 스위치(meme_enabled, 관제 143) — /api/me meme. false면 스토리보드 짤 칸을 안 그린다
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.dialogue===true){ window.DIALOGUE_ON=true; try{ showDlgFormIfOn(); }catch(e){} }
   if(d && d.meme===true && typeof MemePack!=='undefined'){ window.MEME_ON=true; MemePack.load().then(()=>{ try{ sbRender(); }catch(e){ console.warn('[meme] 스토리보드 다시 그리기 실패', e); } }); }
+  if(d && d.script_chat===true){ window.SCRIPT_CHAT_ON=true; try{ sbRender(); }catch(e){} }
   if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
     try{ sbEnter(); }catch(e){} }   // 1·2단계 어느 쪽이 보이든 — 안 보이는 칸도 미리 그려 둔다
   if(d && d.story_writer){ window.STORY_WRITER_ON=true;

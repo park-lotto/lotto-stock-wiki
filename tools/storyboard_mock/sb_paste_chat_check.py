@@ -15,6 +15,7 @@
   돌린다(저장소·서비스는 안 건드림, 계정 미상 = 무료 키 길). 화면 → 응답 → [적용] 흐름은 같다.
 
 잰다:
+ ⓪ 스위치 script_chat_enabled 꺼진 계정(고객) — 새 버튼·대화창·요구창 0개, 여러 줄 Ctrl+V 안 나눔(그 뒤는 켠 상태로)
  ① 📋 상자에 제미나이식 대본(번호·빈 줄 섞임, 칸보다 2줄 많게)을 넣고 [칸에 나눠 넣기]
     → 칸 수 = 줄 수, 칸 글 = 번호 뗀 줄 그대로, 초 다시 재기(/picks) 요청에 그 줄들이 실린다
  ② 2번 칸에 3줄을 Ctrl+V → 2·3·4번 칸이 그 3줄, 나머지 칸은 그대로
@@ -176,6 +177,17 @@ def main(argv):
         if not ready:
             print("✖ 스토리보드가 있는 작업을 못 열었다(스위치·작업 확인)", errs[:2])
             return 1
+        # ⓪ 스위치(script_chat_enabled) 꺼진 계정 = 고객 화면 불변 — 새 버튼·대화창·요구창이 하나도 없고, 여러 줄 Ctrl+V 는 나누지 않는다
+        off = pg.evaluate("""() => { window.SCRIPT_CHAT_ON=false; sbRender(); const B=document.getElementById('s2Storyboard');
+            const L0=[...B.querySelectorAll('.sb-row .sb-line')].map(x=>x.innerText);
+            const el=B.querySelectorAll('.sb-row .sb-line')[1]; const dt=new DataTransfer(); dt.setData('text/plain',['가','나','다'].join(String.fromCharCode(10)));
+            const ev=new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true}); el.dispatchEvent(ev);
+            const L1=[...B.querySelectorAll('.sb-row .sb-line')].map(x=>x.innerText);
+            return {tools:B.querySelectorAll('.sb-tools').length, chat:B.querySelectorAll('.sb-chat,.sb-chatfold').length,
+                    ask:B.querySelectorAll('.sb-ask').length, split: JSON.stringify(L0)!==JSON.stringify(L1) || ev.defaultPrevented}; }""")
+        res["⓪꺼진계정"] = off
+        ok0 = off == {"tools": 0, "chat": 0, "ask": 0, "split": False}
+        pg.evaluate("() => { window.SCRIPT_CHAT_ON=true; sbRender(); }")   # 관리자(스위치 admin) 화면 — 아래부터 켜진 상태
         before = pg.evaluate(LINES_JS)
         res["처음 칸 수"] = len(before)
         # ① 붙여넣기 상자
@@ -355,9 +367,9 @@ def main(argv):
         print(k, json.dumps(v, ensure_ascii=False)[:600])
     print("AI 요청별 실제 걸린 초(서버 호출, ssh 왕복 포함)", AI_SECS)
     print("페이지 오류", errs[:3])
-    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s · ⑦ 오른쪽 대화창 %s · ⑧ 모델 선택 %s · ⑨ 최근 답 보임 %s" % tuple(
-        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6, ok7, ok8, ok9)))
-    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and ok7 and ok8 and ok9 and not errs
+    print("① 붙여넣기 %s · ② Ctrl+V %s · ③ AI 대화 %s · ④ 확정 %s · ⑤ 한 줄 요구 %s · ⑥ 커서 유지 %s · ⑦ 오른쪽 대화창 %s · ⑧ 모델 선택 %s · ⑨ 최근 답 보임 %s · ⓪ 꺼진 계정 불변 %s" % tuple(
+        "통과" if x else "실패" for x in (ok1, ok2, ok3, ok4 and in_req, ok5, ok6, ok7, ok8, ok9, ok0)))
+    ok = ok1 and ok2 and ok3 and ok4 and in_req and ok5 and ok6 and ok7 and ok8 and ok9 and ok0 and not errs
     print("✅ 통과" if ok else "✖ 실패")
     return 0 if ok else 1
 
