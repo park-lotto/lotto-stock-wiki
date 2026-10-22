@@ -500,7 +500,7 @@ def plan_rows(S: dict, T: dict, st: dict) -> dict:
     return placed
 
 
-def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print) -> dict:
+def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=print, tts: bool = False) -> dict:
     from tools.calcopy.hybrid import render_itssum as RI
     from tools.calcopy.hybrid import styles as ST
     st = ST.load(style_name)
@@ -510,16 +510,26 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     S.setdefault("cps_target", st.get("cps_target", 7.0))
     R = work / "render"; R.mkdir(parents=True, exist_ok=True)
     if plan_only:
-        T = timeline(S, M, st, None, None)
+        sm = align = None
+        if tts:      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
+            tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
+            full, align = RI.tts_once(tts_S, R, log)
+            sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align)
+            sm = {x["id"]: x for x in sent}
+        T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
         jsave(doc / "plan/계획_시간표.json", {"timeline": T, "placement": placed})
         over = [c for c in T["cuts"] if c["over"] > 0]
         for c in T["cuts"]:
             log(f"  {c['line']:4s} {c['t0']:6.2f}~{c['t1']:6.2f} {c['dur']:.2f}s max {c.get('max')} {c['src']}@{c.get('ss')}")
-        log(f"어림 길이 {T['end']}초 · 배치 {placed['log']}")
-        if over:
-            raise StageError("계획에서 컷이 원본 샷보다 길다(어림): " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over]))
-        return {"timeline": T, "placement": placed}
+        LD = st["length"]
+        length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(sm),
+                  "ok": LD["min"] - 0.5 <= T["end"] <= LD["max"] + 0.5}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
+        log(f"{'목소리 실측' if sm else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
+        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if sm else "(어림)") + ": " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over])) if over else ""
+        if over and not tts:
+            raise StageError(msg)
+        return {"timeline": T, "placement": placed, "length": length, "over": msg}
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
     full, align = RI.tts_once(tts_S, R, log)
     sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align)

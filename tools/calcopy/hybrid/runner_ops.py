@@ -346,43 +346,32 @@ def c_channel_find(W, d):
 
 
 def _storyboard_sheet(W: Path, vid: str, fmts: list, dur: float, cols: int = 10) -> dict | None:
-    """유튜브 스토리보드(미리보기 그림 모음 sb1, 영상 전체 약 5초 간격) → 칸마다 '분:초' 를 적은 시트 한 장 — 영상을 받지 않고 장면 대조(실측 17조각 3.1초)."""
-    import urllib.request
-    from PIL import Image, ImageDraw
-    sb = next((f for k in ("sb1", "sb0", "sb2") for f in fmts if f.get("format_id") == k and f.get("fragments")), None)
-    if not sb:
-        return None
-    rows, ncol, fw, fh = int(sb.get("rows") or 1), int(sb.get("columns") or 1), int(sb["width"]), int(sb["height"])
-    step = 1.0 / float(sb.get("fps") or 0.2)
-    tiles = []
-    for fr in sb["fragments"]:
-        u = fr.get("url") or (str(sb.get("fragment_base_url") or "") + str(fr.get("path") or ""))
-        try:
-            b = urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read()
-        except Exception as e:  # noqa: BLE001 — 한 조각이 빠져도 나머지로
-            sys.stderr.write(f"[storyboard] {vid} 조각 실패: {e}\n")
-            continue
-        import io
-        im = Image.open(io.BytesIO(b)).convert("RGB")
-        for y in range(rows):
-            for x in range(ncol):
-                if len(tiles) * step <= dur:
-                    tiles.append(im.crop((x * fw, y * fh, (x + 1) * fw, (y + 1) * fh)))
+    """스토리보드 → 칸마다 '분:초' 를 적은 시트 한 장(영상을 받지 않고 장면 대조). 그림 조각 받기 = engine/yt_fetch.storyboard_tiles(주인)."""
+    from tools.calcopy.engine import yt_fetch as YF
+    tiles = YF.storyboard_tiles({"formats": fmts, "duration": dur})
     if not tiles:
         return None
+    p = tile_sheet(tiles, W / "look" / f"sb_{vid}.jpg", cols)
+    return {"file": rel(W, p), "step": round(tiles[1][0] - tiles[0][0], 2) if len(tiles) > 1 else 0, "tiles": len(tiles)}
+
+
+def tile_sheet(tiles: list, dst: Path, cols: int = 10, tag: str = "") -> Path:
+    """[(초, 그림)] → 칸마다 노란 '분:초'(+tag) 를 적은 시트(원본 찾기·재료 고르기 공용)."""
+    from PIL import Image, ImageDraw
+    fw, fh = tiles[0][1].size
     nrow = (len(tiles) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * fw, nrow * fh), (0, 0, 0))
     dr = ImageDraw.Draw(sheet)
-    for i, t in enumerate(tiles):
+    for i, (t, im) in enumerate(tiles):
         x, y = (i % cols) * fw, (i // cols) * fh
-        sheet.paste(t, (x, y))
-        s = int(i * step)
-        dr.rectangle((x, y, x + 34, y + 11), fill=(0, 0, 0))
-        dr.text((x + 2, y), f"{s // 60}:{s % 60:02d}", fill=(255, 255, 0))
-    out = W / "look" / f"sb_{vid}.jpg"
-    out.parent.mkdir(exist_ok=True)
-    sheet.save(out, quality=85)
-    return {"file": rel(W, out), "step": round(step, 2), "tiles": len(tiles)}
+        sheet.paste(im.resize((fw, fh)), (x, y))
+        s = int(t)
+        lab = f"{tag}{s // 60}:{s % 60:02d}"
+        dr.rectangle((x, y, x + 7 * len(lab) + 4, y + 11), fill=(0, 0, 0))
+        dr.text((x + 2, y), lab, fill=(255, 255, 0))
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(dst, quality=85)
+    return dst
 
 
 def c_origin_probe(W, d):
@@ -933,11 +922,12 @@ def c_plan(W, d):
     from tools.calcopy.hybrid import render_bench
     v = d["version"]
     try:
-        res, over = render_bench.render(v, W / "doc" / v, W / v, plan_only=True), ""
+        res = render_bench.render(v, W / "doc" / v, W / v, plan_only=True, tts=True)      # 진짜 목소리 길이로 계획(합성은 캐시 — 렌더가 그대로 쓴다)
+        over = res.get("over") or ""
     except StageError as e:          # 컷이 원본 샷보다 길다 → 재료를 고치게 한다
         res, over = {"timeline": {"cuts": []}}, str(e)
     T = res.get("timeline") or {}
-    out = {"over": over, "cuts": len(T.get("cuts") or [])}
+    out = {"over": over, "cuts": len(T.get("cuts") or []), "length": res.get("length")}
     if T.get("cuts"):
         out["sheet"] = rel(W, plan_sheet(W, v, T))
         out["jumps"] = source_rule_scan(W, T, _origin_names(W, v) | set(d.get("origin_names") or []))

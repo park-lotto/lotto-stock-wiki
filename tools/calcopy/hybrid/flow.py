@@ -126,7 +126,7 @@ JSON 하나: {"stop": "", "조사_md": "마크다운 전문", "keywords": ["제�
 SCREEN_PICK = """너는 제품 영상 고르기 담당이다. 같은 제품만, 1080 이상, 남의 글자가 가운데 상시면 뺀다, 제품 컷이 많은 것 앞으로, 2~4개.
 ★연예인이 나오는 영상은 찾은 원본(연예인 본인 채널·방송사 공식)에서만 쓴다 — 다른 채널(벤치 쇼츠·재편집·리뷰)에 나온 연예인 영상은 절대 금지. 후보에 그 연예인이 나오면 rejected.
 ★남의 리뷰 영상에 장면 전환 효과(별·와이프)·남의 손 근접이 많으면 뒤로. 원본 안에 제품 근접 장면이 있으면 그게 먼저다(재료가 모자랄 때만 이 후보).
-각 후보의 360p 토막 시트(키워드 구간)와 메타가 있다. 쓸 게 없으면 chosen 빈 목록.
+각 후보의 시트(미리보기 = 영상 전체 약 5초 간격, 칸 왼쪽 위 노란 '분:초' = 그 영상 시각 · 미리보기가 없는 후보는 360p 토막)와 메타가 있다. sections 는 그 영상의 초. 쓸 게 없으면 chosen 빈 목록.
 JSON 하나: {"chosen": [{"id": "…", "why": "…", "sections": [[a, b]]}], "rejected": [{"id": "…", "why": "…"}]}"""
 
 SHOT_READ = """너는 원본 샷 판독 담당이다. 방송·영상 원본을 카메라가 바뀌는 곳마다 나눈 샷들의 가운데 장면이다(칸마다 '#번호 시작~끝초').
@@ -1045,6 +1045,9 @@ def ph_plan(st, m, rp, u):
 
 def ph_plan_got(st, m, rp, u):
     p = m.get("plan") or {}
+    ln = p.get("length") or {}
+    if ln.get("measured") and not ln.get("ok"):   # 진짜 목소리 길이가 판 범위 밖 — 렌더(5분) 전에 글로 고친다(10-22 선우용여: 렌더 뒤에야 걸려 렌더 3번)
+        return _length_rewrite(st, f"{ln.get('sec')}초 (판 {ln.get('min')}~{ln.get('max')})")
     over = [p["over"]] if p.get("over") else []
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})
     over += p.get("jumps") or []
@@ -1140,18 +1143,23 @@ def ph_check_look(st, m, rp, u):
     if look.get("ok") and auto_ok:
         return {"goto": "deliver"}
     long = [r for r in (st.get("auto") or {}).get("rows") or [] if r.get("what") == "길이" and not r.get("ok")]
-    if long:                                    # 길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시
-        _tries(st, "length", 2)
-        st["tries"]["script"] = 0
-        st["approved"] = False
-        return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {long[0].get('value')} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
-                "then": "script_got"}
+    if long:
+        return _length_rewrite(st, long[0].get("value"))
     if st["tries"].get("look", 0) >= LIMITS["look"]:
         raise _Stop("완성본 검사를 고쳐도 통과하지 못했습니다", "다시 시도(retry)하면 검사에서 걸린 곳부터 다시 고칩니다", retry="check_retry")
     _tries(st, "look", LIMITS["look"])
     probs = json.dumps({"자동검사": {k: x for k, x in (st.get("auto") or {}).items() if k != "ok"} if not auto_ok else None,
                         "눈 검수": look.get("problems")}, ensure_ascii=False)[:3000]
     return {"review": [_fix_review(st, "완성본 검사에서 걸린 것(화면·크롭·남의 글자는 재료로 고친다): " + probs + _face_hint(st), None, f"final_fix_{v}")], "then": "check_fix"}
+
+
+def _length_rewrite(st, value) -> dict:
+    """길이 넘침·모자람은 재료가 아니라 글로 고친다(배속 아님, 07 §4) → 대본 다시 + 회원 사인 다시. 계획(목소리 실측)·완성본 검사 두 곳이 부른다."""
+    _tries(st, "length", 2)
+    st["tries"]["script"] = 0
+    st["approved"] = False
+    return {"review": [_script_ask(st, f"완성본 길이가 판 범위를 벗어났다: {value} — 나레 글을 줄이거나(넘침) 늘려서(모자람) 범위 안으로. 내용·결은 그대로")],
+            "then": "script_got"}
 
 
 def _face_hint(st) -> str:
