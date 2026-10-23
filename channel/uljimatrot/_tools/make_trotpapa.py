@@ -85,7 +85,8 @@ def load_spec(path):
     if ic.get("bbox"):
         SPEC["icon"] = ic["bbox"]
     else:
-        miss.append("icon")
+        SPEC["icon"] = None                       # 원본에 아이콘이 없으면 그리지 않는다(tv-hFwrvEc4 — 기본값 A 자리 화살표가 B 에 그려졌다)
+        miss.append("icon(없음 → 안 그림)")
     lines = d.get("lines") or []
     ol = [l["outline"] for l in lines if isinstance(l.get("outline"), dict) and l["outline"].get("px")]
     if ol:
@@ -318,7 +319,7 @@ def brand_chip(cfg, out: Path):
 
 def cursor_icon(out: Path):
     if COPY:                                      # 원본 오른쪽 아래 아이콘 = 빨강·흰 짧은 화살표 ↙ (x840~973 y1256~1440)
-        x0, y0, x1, y1 = SPEC["icon"]
+        x0, y0, x1, y1 = SPEC["icon"] or [0, 0, 8, 8]
         return frame_png(out, chunky_arrow(120, 135, 30, 80).resize((x1 - x0, y1 - y0), Image.LANCZOS))
     return cursor_icon_ours(out)
 
@@ -609,7 +610,7 @@ def make(cfg_path: Path, allow_tts=True):
         last = f"v{idx}"
         idx += 1
     ins += ["-loop", "1", "-t", f"{total:.3f}", "-i", cur]
-    g.append(f"[{last}][{idx}]overlay=x={SPEC['icon'][0] if COPY else 900}:y='{SPEC['icon'][1] if COPY else 1330}+{SPEC['icon_amp'] if COPY else 6}*sin(2*PI*t/{SPEC['icon_period'] if COPY else 0.7})':enable='between(t,{hook_end:.3f},{total:.3f})'[vout]")
+    g.append(f"[{last}][{idx}]overlay=x={(SPEC['icon'] or [0, 0])[0] if COPY else 900}:y='{(SPEC['icon'] or [0, 0])[1] if COPY else 1330}+{SPEC['icon_amp'] if COPY else 6}*sin(2*PI*t/{SPEC['icon_period'] if COPY else 0.7})':enable='{"0" if COPY and not SPEC["icon"] else f"between(t,{hook_end:.3f},{total:.3f})"}'[vout]")
     idx += 1
     # 소리: 나레 자리 맞춰 + BGM -24dB 깔기(나레 있을 때 더 낮춤)
     adel = []
