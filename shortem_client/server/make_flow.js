@@ -127,7 +127,7 @@ function flowOut(s) {
   return { ...s, video, hints: ['완성본 경로를 고객에게 알려 주세요', ...(s.note ? [s.note] : [])] };
 }
 
-export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video }) {
+export async function makeStep({ step, sid, n, run_id, preset, topic, channel, video, product }) {
   if (sid && isFlowSid(sid)) {     // 볼케이노형 편 — 서버 지시서를 따라 돈다(판단은 서버)
     if (step === 'approve') approveFlow(sid);
     else if (step === 'retry') retryFlow(sid);
@@ -136,7 +136,7 @@ export async function makeStep({ step, sid, n, run_id, preset, topic, channel, v
   }
   if (step === 'start' && video && preset && !process.env.SHORTEM_DEV_PRESET) {
     try {
-      const f = await startFlow({ preset, video });
+      const f = await startFlow({ preset, video, product });
       return flowOut(await waitFlow(f.sid, waitMs()));
     } catch (e) {
       // 단계 진행 방식이 아닌 프리셋(옛 엔진 라인)만 아래 옛 길로 — 그 밖의 거절은 그대로 알린다
