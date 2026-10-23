@@ -31,6 +31,22 @@
   .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;
     margin:0 auto;animation:r .8s linear infinite}
   @keyframes r{to{transform:rotate(360deg)}}
+  /* 분류 버튼(관제 261) — 엄지로 한 번에 누를 크기. 지금 분류는 채워서 표시 */
+  .cats{margin-top:16px;text-align:left}
+  .cats .lbl{font-size:13px;font-weight:800;margin-bottom:8px}
+  .cats .lbl span{font-weight:500;color:var(--sub)}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .chips button{border:1px solid var(--line);background:var(--inset);color:var(--txt);border-radius:10px;
+    padding:13px 6px;font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer;word-break:keep-all}
+  .chips button.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .chips button.etc{color:var(--sub)}
+  .chips button.add{border-style:dashed;color:var(--sel-fg)}
+  .newcat{display:none;gap:8px;margin-top:8px}
+  .newcat input{flex:1;min-width:0;background:var(--inset);border:1px solid var(--accent);color:var(--txt);
+    border-radius:10px;padding:12px;font-size:15px;font-family:inherit}
+  .newcat button{border:0;border-radius:10px;padding:0 16px;font-size:15px;font-weight:800;
+    background:var(--accent2);color:#fff;font-family:inherit}
+  .catmsg{font-size:13px;color:var(--sel-fg);margin-top:8px;min-height:18px}
 </style>
 </head>
 <body>
@@ -39,6 +55,13 @@
   <div class="ttl" id="ttl">공유 받는 중…</div>
   <div class="msg" id="msg"></div>
   <div class="ch" id="ch"></div>
+  <div class="cats" id="cats" style="display:none">
+    <div class="lbl">어느 분류에 넣을까요? <span>(안 누르면 기타)</span></div>
+    <div class="chips" id="chips"></div>
+    <div class="newcat" id="newcat"><input id="newName" maxlength="20" placeholder="새 분류 이름"
+      onkeydown="if(event.key==='Enter')addCat()"><button onclick="addCat()">추가</button></div>
+    <div class="catmsg" id="catmsg"></div>
+  </div>
   <div class="btns" id="btns"></div>
   <div class="link" id="link" style="display:none"></div>
 </div>
@@ -96,12 +119,45 @@ async function pick(dest){
   setIco(T[0]); $('ttl').textContent=T[1]; $('msg').textContent=T[2]||'';
   $('ch').textContent=(dest==='channel'&&d.channel_id)?((PLAT[d.platform]||d.platform||'')+' · @'+d.channel_id+(d.name?' · '+d.name:'')):'';
   $('btns').innerHTML='';
+  if(dest==='channel' && d.ok && d.cats) showCats(d);
   if(d.ok){ const a=document.createElement('a'); a.className='pick'; a.href=where; a.textContent=whereName; $('btns').appendChild(a); }
   // 영상·채널 둘 다 담고 싶을 수 있다 — 다른 쪽도 바로 누를 수 있게 남긴다.
   if(dest==='video') btn('','⭐ 이 영상의 채널도 담기',function(){ pick('channel'); });
   else btn('','🎬 이 영상도 담기',function(){ pick('video'); });
   btn('','닫기',closeMe);
 }
+// ── 분류 버튼(관제 261) — 서버가 cats 를 줄 때만(지금은 관리자만) 뜬다.
+//   누르면 바로 저장. 다른 걸 다시 누르면 옮겨진다. 새 분류는 이름만 치면 만들어지며 그 분류로 들어간다.
+let CH=null;
+function showCats(d){
+  CH={platform:d.platform,channel_id:d.channel_id};
+  $('cats').style.display='block';
+  drawCats(d.cats,d.etc||'기타',d.category||d.etc||'기타');
+}
+function drawCats(cats,etc,cur){
+  const box=$('chips'); box.innerHTML='';
+  cats.concat([etc]).forEach(function(nm){
+    const b=document.createElement('button');
+    b.textContent=nm; b.className=(nm===cur?'on ':'')+(nm===etc?'etc':'');
+    b.onclick=function(){ setCat(nm); };
+    box.appendChild(b);
+  });
+  const a=document.createElement('button'); a.className='add'; a.textContent='＋ 새 분류';
+  a.onclick=function(){ $('newcat').style.display='flex'; $('newName').focus(); };
+  box.appendChild(a);
+}
+async function setCat(nm){
+  $('catmsg').textContent='저장 중…';
+  try{
+    const d=await (await fetch('/api/fav_channel/set_cat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({platform:CH.platform,channel_id:CH.channel_id,category:nm})})).json();
+    if(!d.ok){ $('catmsg').textContent='⚠ '+(d.error||'저장 못 했어요'); return; }
+    drawCats(d.cats,d.etc,d.category);
+    $('catmsg').textContent='✅ '+d.category+'에 넣었어요';
+    $('newcat').style.display='none'; $('newName').value='';
+  }catch(e){ $('catmsg').textContent='⚠ 통신 오류 — 다시 눌러주세요'; }
+}
+function addCat(){ const v=($('newName').value||'').trim(); if(v) setCat(v); }
 start();
 </script>
 </body>
