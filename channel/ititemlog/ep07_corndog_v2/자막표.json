@@ -1,0 +1,298 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.245,
+   "text": "치즈가 끝도 없이 늘어나는",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.245,
+   "t1": 3.376,
+   "text": "한국 핫도그에 미국이 난리 난 거 있죠",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.376,
+   "t1": 5.096,
+   "text": "한국 음식이 최고라고?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 5.096,
+   "t1": 6.136,
+   "text": "난 안 믿어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 6.136,
+   "t1": 7.176,
+   "text": "절대 안 믿어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 7.176,
+   "t1": 9.33,
+   "text": "그래서 기본, 매운맛, 감자, 라면까지",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 9.33,
+   "t1": 10.19,
+   "text": "싹 다 시켜 봤는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 10.19,
+   "t1": 11.27,
+   "text": "맛없기만 해 봐",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 11.27,
+   "t1": 12.71,
+   "text": "가만 안 둔다",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 12.71,
+   "t1": 14.176,
+   "text": "근데 이게 대박인 게",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 14.176,
+   "t1": 15.97,
+   "text": "한 입 물자마자 치즈가 쭉 늘어나더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O4",
+   "t0": 15.97,
+   "t1": 17.45,
+   "text": "바로 인정!",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 17.45,
+   "t1": 18.067,
+   "text": "심지어",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 18.067,
+   "t1": 20.091,
+   "text": "라면 스프 묻힌 핫도그까지 먹어 보고는",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O5",
+   "t0": 20.091,
+   "t1": 21.811,
+   "text": "이거 완전 미쳤다",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 21.811,
+   "t1": 23.834,
+   "text": "후기 보니까 에어프라이어만 돌려도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 23.834,
+   "t1": 25.417,
+   "text": "치즈가 끝까지 늘어난다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 25.417,
+   "t1": 27.345,
+   "text": "애들은 또 사 달라고 조른다고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N8",
+   "t0": 27.345,
+   "t1": 28.906,
+   "text": "아, 배고프네",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N8",
+   "t0": 28.906,
+   "t1": 30.9,
+   "text": "오늘 밤엔 떡볶이랑 같이 먹어 봐야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = aUicTeDoW04",
+  "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 20} · 강조 0/20"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "aUicTeDoW04",
+  "worst_slot_diff": 0.1,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.9,
+     "pop": 0.1
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 4
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "stickers": {
+    "bench": {
+     "circle_arrow": 1,
+     "other": 9
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

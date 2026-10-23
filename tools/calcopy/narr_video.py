@@ -53,7 +53,7 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
                 tail.insert(0, prev.pop())
             out[-2], out[-1] = " ".join(prev), " ".join(tail)
     out = _fix_dangling(out, cap=cap)
-    return [o.rstrip(",") for o in out]
+    return [" ".join(re.sub(r",(?!\d)", " ", o).split()) for o in out]   # 쉼표는 소리(쉼)에만 — 자막엔 안 띄운다(조각 가운데 쉼표가 뜨던 것, 10-22 01b)
 
 
 CHUNK_SLACK = 3   # 조각 상한 = n + 이것. 붙이기(꼬리·꾸밈 낱말·짧은 조각)도 이 상한을 넘지 않는다 — 판단 주인 chunk_sentence
@@ -265,6 +265,7 @@ def asr_line_starts(lines: list[str], segs: list[dict]) -> list[float | None]:
 BREAK_NEAR = 0.5   # 줄 끝 쉼이 글자 비례 예상(말 시간)에서 이보다 멀면 '그 경계엔 쉼 없음' — 방구석처럼 TTS 쉼을 0.07초로 줄인 나레(10-16)
 
 
+ASR_WORD_DUR, ASR_SNAP_WORD = 0.6, 0.15   # 구절 길이 중앙값이 0.6초 밑 = 낱말 단위 → 쉼에 붙이는 거리 0.15초
 ASR_SNAP = 1.2   # 받아쓰기 줄 시작 → 가까운 쉼 끝(-38dB/0.08초)에 붙이는 거리. 제미나이 구절 시각은 거칠다
 #   (10-16 방구석 3편 narr_final2: '사실…' 구절 시작 7.03 vs 실제 쉼 끝 8.13 — 받아쓰기는 '어느 쉼인가'를 정하고 시각은 쉼이 정한다)
 
@@ -278,8 +279,13 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
     from tools.calcopy import hottem_audio as ha
     # ★1순위 = 받아쓰기 정렬(10-16 조율자: 쉼 방식은 핫템·방구석에서 세 번 어긋났다 — 쉼표 쉼에 붙음)
     A = [None] * len(lines)
+    snap_max = ASR_SNAP
     if asr:
         tr, why = tts_transcript(audio, ask)
+        if tr and sorted(float(x.get("end") or x["start"]) - float(x["start"]) for x in tr)[len(tr) // 2] < ASR_WORD_DUR:
+            # 낱말 단위 받아쓰기(스피치매틱스 words)는 시각이 정확하다 — 쉼에 붙이는 거리를 줄인다(10-22 썰템홈샷 02: 줄 사이 쉼이 없어
+            #   24.57초 '이 얘기 듣고,' 줄이 안쪽 쉼표 쉼 25.06초로 끌려가 자막·컷 0.49초 늦음)
+            snap_max = ASR_SNAP_WORD
         if tr:
             A = asr_line_starts(lines, tr)
             miss = [k for k in range(1, len(lines)) if A[k] is None]
@@ -296,7 +302,7 @@ def line_starts(audio: str, lines: list[str], segs: list[tuple[float, float]], e
             #   0.398 떨어진 0.16초 쉼('까 보면,' 안)이 거의 같아 안쪽 쉼에 붙어 자막이 0.8초 늦었다)
             ends = [(e, ln) for e, ln in pauses if e > out[-1] + 0.3]
             near = min(ends, key=lambda x: abs(x[0] - t) - x[1], default=(t, 0))[0]
-            out.append(near if abs(near - t) <= ASR_SNAP else t)
+            out.append(near if abs(near - t) <= snap_max else t)
             continue
         anchored = next((a for a, _ in segs if a >= mid - 1e-3), mid) if mid is not None else None
         if (dist > BREAK_NEAR or anchored is None) and expected:
@@ -586,12 +592,10 @@ def emph_png(text: str, cap: dict, rgb, dst: Path, dy: int = 0) -> Path:
     return dst
 
 
-def build(plan: dict):
-    out = Path(plan["out"]).resolve()
-    shutil.rmtree(out / "work", ignore_errors=True); (out / "work").mkdir(parents=True, exist_ok=True)
-    S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
+def plan_times(plan: dict, S: dict | None = None) -> dict:
+    """자막 조각 시각·훅 카드 끝·컷 시각 — 판단 한 곳(build 와 컷 계획표가 같이 부른다, 10-22 썰템홈샷 하이브리드)."""
+    S = S or json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
     sentences = [l["text"] for l in S["final"]["lines"]]
-    M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
     steps, dur = time_steps(steps_of(sentences, plan.get("chunk", 14), plan.get("caption_mode", "accumulate")), plan["tts"], lines=sentences,
                             asr=plan.get("line_asr", True))   # 줄 시작 받아쓰기 정렬(시험은 꺼서 네트워크 0)
     # 훅 카드 끝 = 둘째 문장이 시작하는 시각(원본: 훅 카드 1.5초 = 첫 문장 "…억울했던 이유?" 동안)
@@ -601,6 +605,16 @@ def build(plan: dict):
     cuts = [s["t0"] for s in steps if s["new_cut"] and s["t0"] >= hook_end - 1e-6]
     cuts = sorted(set([0.0, hook_end] + cuts)) + [dur]
     shots_t = [(a, b) for a, b in zip(cuts, cuts[1:]) if b - a > 0.05]
+    return {"steps": steps, "dur": dur, "one": one, "hook_end": hook_end, "shots": shots_t}
+
+
+def build(plan: dict):
+    out = Path(plan["out"]).resolve()
+    shutil.rmtree(out / "work", ignore_errors=True); (out / "work").mkdir(parents=True, exist_ok=True)
+    S = json.loads(Path(plan["script"]).read_text(encoding="utf-8"))
+    M = json.loads(Path(plan["materials"]).read_text(encoding="utf-8"))
+    P = plan_times(plan, S)
+    steps, dur, one, hook_end, shots_t = P["steps"], P["dur"], P["one"], P["hook_end"], P["shots"]
     events = [dict(e, t0=float(e["t0"]), dur=float(e["dur"])) for e in S.get("caption_events") or []]
     cap_steps = apply_caption_events(steps, events, dur)   # 컷은 위 steps 로 이미 정했다 — 자막만 비우거나 바꾼다
     mshots = M["shots"]

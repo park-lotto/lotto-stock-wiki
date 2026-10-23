@@ -1,0 +1,310 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.761,
+   "text": "밥 짓는 쌀로",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.761,
+   "t1": 2.047,
+   "text": "얼굴 크림을 만들어 바르는",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 2.047,
+   "t1": 3.3,
+   "text": "외국인들이 있다는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.3,
+   "t1": 4.74,
+   "text": "이게 최고의",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.74,
+   "t1": 6.78,
+   "text": "한국 쌀 크림 레시피래",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 6.78,
+   "t1": 8.695,
+   "text": "쌀을 하루 꼬박 물에 불렸다가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 8.695,
+   "t1": 9.954,
+   "text": "그 물째로 곱게 갈고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 9.954,
+   "t1": 10.66,
+   "text": "두 번 걸러서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 10.66,
+   "t1": 12.358,
+   "text": "가라앉은 하얀 앙금만 모으더니",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 12.358,
+   "t1": 14.358,
+   "text": "이제 이걸 크림으로 만들어 볼게",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 14.358,
+   "t1": 15.656,
+   "text": "알로에랑 코코넛 오일을",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 15.656,
+   "t1": 16.647,
+   "text": "같은 양씩 섞자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 16.647,
+   "t1": 17.895,
+   "text": "진짜 크림이 돼 버렸어요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 17.895,
+   "t1": 18.996,
+   "text": "인도에선 쌀가루에",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 18.996,
+   "t1": 20.321,
+   "text": "아마씨까지 넣고 끓여서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "아마씨"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 20.321,
+   "t1": 21.275,
+   "text": "팩으로 쓴다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 21.275,
+   "t1": 22.288,
+   "text": "떼고 나면 얼굴이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 22.288,
+   "t1": 23.676,
+   "text": "유리처럼 반짝인다고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 23.676,
+   "t1": 25.847,
+   "text": "아, 만들 자신은 없으니까",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 25.847,
+   "t1": 26.593,
+   "text": "쌀 크림 하나 사서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 26.593,
+   "t1": 27.667,
+   "text": "발라 봐야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = ro1l3u734v4",
+  "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 21} · 강조 1/21"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "ro1l3u734v4",
+  "worst_slot_diff": 0.056,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.94,
+     "pop": 0.06
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.09,
+    "n": 11
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 1
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

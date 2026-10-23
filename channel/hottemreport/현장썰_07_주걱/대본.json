@@ -1,0 +1,44 @@
+{
+ "topic": "분리 헤드 각도 조절 주걱(Blue Bosti Adaptchula) — 싸구려 복제품 소리에 개발자가 직접 찍은 반박 영상",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "핫템리포트 ZqVgAg99gRI(미국에서 2,600만 뷰 찍은 주걱 영상) — 프레임 대조: 벤치 0~4초·30~35초 = tt 7648753090601946398, 10~29초 = tt 7612825657571052831, 5~9초 = tt 7681429606934596894 셀러리 장면(look/bench_1s.jpg vs look/sheet_*.jpg)",
+ "bench_note": "벤치 제목·나레의 남 브랜드(테무) 이름은 쓰지 않는다 — '싸구려 복제품'으로만",
+ "sources": {
+  "main": {"file": "tt_7648753090601946398.mp4", "who": "틱톡 @bluebosti", "views": 18700000, "dur": 89.0, "res": "1080x1920", "desc": "No Temu does not have the same product!"},
+  "sub": {"file": "tt_7612825657571052831.mp4", "who": "틱톡 @bluebosti", "views": 2200000, "dur": 114.0, "res": "1080x1920", "desc": "My family and I invented the one and only Adaptchula!"}
+ },
+ "titles": {"hook": "미국에서 1,870만 뷰\n찍은 주걱 영상"},
+ "facts": {
+  "f1": {"text": "a 0~5.28 'People try and say the spatula my family and I invented is a cheap … drop-shipped product'(위스퍼 small) · 조회수 1,870만(yt-dlp 10-21)", "kind": "본인 말+메타"},
+  "f2": {"text": "a 13.08~15.70 'Nope, it came from two years of product development.'", "kind": "본인 말"},
+  "f3": {"text": "a 38.54~43.92 'this is just one of seven different angles, including this 90 degree, gets down in there. No problem. No burnt fingers' · 화면 40~43초 에어프라이어 안쪽", "kind": "화면+본인 말"},
+  "f4": {"text": "a 64.94~71.26 'reinforced rear edge … stubborn debris … This thing's gonna scrape it right off' · 화면 66~71초 팬 긁기", "kind": "화면+본인 말"},
+  "f5": {"text": "b 87.72~93.08 'The reason we use PPSU, some of the safest baby bottles on the planet are made from this material' · 화면 b 89~93 젖병", "kind": "화면+본인 말"},
+  "f6": {"text": "a 76.48~78.88 'everything can go directly in your dishwasher'", "kind": "본인 말"}
+ },
+ "final": {
+  "order": ["N1", "O1", "N2", "O2", "N3", "O3", "N4", "O4"],
+  "lines": [
+   {"id": "N1", "fn": "훅(사건+조회수)", "text": "싸구려 복제품 소리를 들은 주걱 개발자가, 화가 나서 찍은 영상이 1870만 뷰를 찍었는데요.",
+    "caps": ["싸구려 복제품 소리를 들은", "주걱 개발자가 화가 나서 찍은 영상이", "1,870만 뷰를 찍었는데요"], "facts": ["f1"]},
+   {"id": "N2", "fn": "장점 1 → 원음 증거", "text": "헤드를 꽂는 각도가 일곱 가지라, 깊은 에어프라이어도 문제없대요.",
+    "caps": ["헤드를 꽂는 각도가 일곱 가지라", "깊은 에어프라이어도 문제없대요"], "facts": ["f3"]},
+   {"id": "N3", "fn": "장점 2 → 원음 증거", "text": "뒤쪽 모서리는 단단하게 만들어서, 팬에 눌어붙은 것도 긁어낸대요.",
+    "caps": ["뒤쪽 모서리는 단단하게 만들어서", "팬에 눌어붙은 것도 긁어낸대요"], "facts": ["f4"]},
+   {"id": "N4", "fn": "장점 3 → 끝 원음", "text": "날은 아기 젖병에도 쓰는 소재로 만들어서, 설거지도 간단하대요.",
+    "caps": ["날은 아기 젖병에도 쓰는", "소재로 만들어서", "설거지도 간단하대요"], "facts": ["f5", "f6"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "a", "span": [13.08, 15.75], "en": "Nope, it came from two years of product development.", "caps": ["아니, 2년 동안 개발한 거야!"], "check": "위스퍼 small 낱말 13.08~15.70"},
+   {"id": "O2", "src": "a", "span": [40.80, 43.95], "en": "90 degree gets down in there. No problem. No burnt fingers.", "caps": ["90도로 꽂으면 쏙 들어가!", "손 데일 일도 없어!"], "check": "위스퍼 small 낱말 40.86~43.92"},
+   {"id": "O3", "src": "a", "span": [69.55, 71.28], "en": "This thing's gonna scrape it right off.", "caps": ["이걸로 싹 긁어내!"], "check": "위스퍼 small 낱말 69.58~71.26"},
+   {"id": "O4", "src": "a", "span": [76.45, 78.92], "en": "Everything can go directly in your dishwasher.", "caps": ["전부 식기세척기에 넣으면 끝!"], "check": "위스퍼 small 낱말 76.48~78.88"}
+  ],
+  "dropped": {
+   "a 0~5.28·80~89 남 브랜드 이름(Timu)": "남 브랜드 이름 금지 — 원음·자막 둘 다 안 씀",
+   "가격": "원본 b 101~107 '$44' — 금액 금지"
+  }
+ },
+ "voice": {"tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회", "id": "tc_6059dad0b83880769a50502f", "name": "박창수", "speed": 1.24, "target_cps": 8.0}
+}

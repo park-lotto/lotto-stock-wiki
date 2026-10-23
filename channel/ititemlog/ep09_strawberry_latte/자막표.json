@@ -1,0 +1,240 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.914,
+   "text": "한국 편의점에서",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.914,
+   "t1": 2.944,
+   "text": "분홍색만 골라 먹는 외국인이 있는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 2.944,
+   "t1": 4.544,
+   "text": "한국 편의점에서",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.544,
+   "t1": 8.264,
+   "text": "분홍색 음식만 먹어 볼 거야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 8.264,
+   "t1": 10.704,
+   "text": "분홍 음료가 엄청 많아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 10.704,
+   "t1": 12.188,
+   "text": "딸기우유부터 게맛살까지",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 12.188,
+   "t1": 13.577,
+   "text": "분홍색이면 다 골랐는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 13.577,
+   "t1": 15.497,
+   "text": "너무 귀여워",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 15.497,
+   "t1": 17.097,
+   "text": "이 정도면 분홍색 맞지?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 17.097,
+   "t1": 18.811,
+   "text": "그리고 얼음컵에 커피를 붓고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 18.811,
+   "t1": 20.075,
+   "text": "딸기우유를 섞었는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 20.075,
+   "t1": 21.725,
+   "text": "분홍빛이 층층이 퍼지면서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 21.725,
+   "t1": 23.493,
+   "text": "편의점 딸기 라테가 완성됐는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 23.493,
+   "t1": 25.322,
+   "text": "마실수록 점점 더 맛있어진다며",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 25.322,
+   "t1": 26.633,
+   "text": "감탄했다고 하네요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = ro1l3u734v4",
+  "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 15} · 강조 0/15"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "ro1l3u734v4",
+  "worst_slot_diff": 0.056,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 5
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.94,
+     "pop": 0.06
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.0,
+    "n": 5
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

@@ -1,0 +1,306 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 0.712,
+   "text": "한국 핫도그를",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 0.712,
+   "t1": 2.337,
+   "text": "처음 먹어 본 외국인이 있는데요",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1b",
+   "t0": 2.337,
+   "t1": 3.376,
+   "text": "차 안에서 친구들과",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1b",
+   "t0": 3.376,
+   "t1": 4.639,
+   "text": "함께 먹어 보기로 했는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 4.639,
+   "t1": 5.879,
+   "text": "좋아, 가 보자",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 5.879,
+   "t1": 7.519,
+   "text": "무지개 핫도그래",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 7.519,
+   "t1": 8.594,
+   "text": "겉에는 알록달록한",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 8.594,
+   "t1": 10.275,
+   "text": "시리얼 가루가 잔뜩 묻어 있었는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 10.275,
+   "t1": 11.266,
+   "text": "한 입 베어 물자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 11.266,
+   "t1": 12.92,
+   "text": "치즈가 끝도 없이 늘어났는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 12.92,
+   "t1": 14.16,
+   "text": "맛있다",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 14.16,
+   "t1": 15.223,
+   "text": "눈이 휘둥그레져서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 15.223,
+   "t1": 16.595,
+   "text": "치즈를 계속 잡아당겼는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4b",
+   "t0": 16.595,
+   "t1": 17.717,
+   "text": "치즈가 너무 길어서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4b",
+   "t0": 17.717,
+   "t1": 19.183,
+   "text": "결국 손으로 끊어 내야 했는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 19.183,
+   "t1": 20.263,
+   "text": "안에 치즈가 들었어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 20.263,
+   "t1": 23.543,
+   "text": "맛이 완전 제대로야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4c",
+   "t0": 23.543,
+   "t1": 24.462,
+   "text": "해외에서는 이걸",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4c",
+   "t0": 24.462,
+   "t1": 26.114,
+   "text": "코리안 콘도그라고 부른다는데요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 26.114,
+   "t1": 27.955,
+   "text": "이 영상은 조회수 1억 7천만 회를",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 27.955,
+   "t1": 29.167,
+   "text": "넘겼다고 하네요",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = ro1l3u734v4",
+  "훅 N1 덩어리 2개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 21} · 강조 0/21"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "ro1l3u734v4",
+  "worst_slot_diff": 0.056,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 8
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.94,
+     "pop": 0.06
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.0,
+    "n": 8
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

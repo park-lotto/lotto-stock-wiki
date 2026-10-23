@@ -1,43 +1,46 @@
-# 99 회원 PC(숏템 MCP)가 이 순서를 그대로 도는 법 (2026-10-21, 관제 234 · 097)
+# 99 회원 PC(숏템 MCP)가 이 순서를 그대로 도는 법 — 볼케이노형 (2026-10-21 재설계, 관제 234 · 097)
 
-사장님(10-21): **"집에서는 한마디면 영상이 만들어지는데 여기서도 똑같애야 된다"** /
-**"제작 시작하면 볼케이노 MCP 처럼 어떤 단계를 작업 중인지 알려주고, 세부 내용은 하면 안 되고 간략하게만"** /
-**"모든 걸 재정비해"**.
+사장님(10-21): **"집에서는 한마디면 영상이 만들어지는데 여기서도 똑같애야 된다"** / **"볼케이노처럼 단계별로 착착"** /
+**"그 세션을 덮어서 수정을 싹 해 — 설계는 페이블이 다시, 칼카피 노하우를 녹여서 지금처럼 영상이 나오게"**.
+설계 문서: 숏템MCP 트랙 `docs/superpowers/specs/2026-10-21-숏템MCP-볼케이노형-design.md`.
 
-## 원칙
-- 회원 엔진 = **집 PC 와 같은 제작 라인**: `tools/calcopy/hybrid/run.py` 단계 + 판 설정 `hybrid/styles/<판>.json` + 렌더러 `render_bench.py` + 검사 `bench_check.py`.
-  옛 회원 라인(`calcopy_make` → `worker_steps` → remake/narr_video)은 얜샷템에 쓰지 않는다(10-20 실시험: 원본 찾기 없음 → 남의 편집 자막 두 겹).
-- 집 PC 에서 **Claude 워커가 브리프를 보고 하던 판단**(원본 판정·제품 판정·조사·고르기·대본·계획 눈 확인·완성본 눈 확인)은
-  회원 PC 에서 **회원 Claude 가 AI 요청으로** 한다 — 엔진이 브리프(이 폴더 단계 파일 + `hybrid/briefs/*.md`)를 요청 글로 만들어 `SHORTEM_LLM_QUEUE` 에 쓰고(`engine/client_llm.py`),
-  회원 Claude 는 `shortem_ai` 로 JSON 하나를 답한다. 요청 글은 그 편 동안만 보이고, 엔진 단계·규칙 원문을 회원에게 설명하지 않는다(MCP 규칙).
-- 판단의 주인은 집 PC 와 같다(새로 적지 않는다): 판 = styles 한 곳 · 목소리 = 판 파일 voice · 배치 = placement.place · 대본 검사 = script_audit · 자동 검사 = bench_check.
-- 회원 PC 에 없는 것(사장님 10-21 결정): 미나 = **회원 일레븐랩스 키** · 받아쓰기 = **위스퍼만** · 쿠팡 = **회원 파트너스 키, 없으면 회원 PC 크롬** · 제미나이·서버 유튜브 API·스피치매틱스 = 안 씀.
+## 원칙 — 노하우는 서버 한 곳, 회원 PC 는 손과 눈
+| 자리 | 무엇 | 파일 |
+|---|---|---|
+| **서버 지시서**(노하우) | 13단계 순서·판정 질문·반려 규칙·함정(98 번호) — 이 폴더 00~13 을 옮긴 것 | `tools/calcopy/hybrid/flow.py` (서버 `shopping_shorts/claude_flow.py` 가 `POST /api/claude/step` 으로 부른다) |
+| **판정 함수**(서버·PC 공용) | 지문 대조·자막↔목소리·제목 색·출처 규칙 ①②·샷 끝·주인공 가운데 | `tools/calcopy/hybrid/rules.py` |
+| **회원 PC 손**(실행기) | do 명령만(허용 목록) — 받기·시트·받아쓰기·쿠팡·재료·계획·렌더·검사 | `tools/calcopy/hybrid/runner_ops.py` (+ render_bench·bench_check 등, 설치본 `engine_bundle.HAND`) |
+| **회원 PC 눈**(회원 Claude) | review 마다 실제 자료(시트·사진·글)를 보고 JSON 하나로 답 | MCP `shortem_ai`(요청 폴더) ← `shortem_client/server/flow_driver.js` |
+| **고리** | 서버 응답 → do 실행 → measure / review → 답 → replies / 사인 → approve | `flow_driver.js` · 입구 `make_flow.makeStep`(영상 주소로 start) |
 
-## 단계 대응 (집 PC 13단계 → 회원 PC)
-| # | 단계 | 도구(회원 PC 에서 그대로) | 회원 Claude 판단(AI 요청) | 멈출 때 | 진행 안내(회원에게 보이는 말) |
-|---|---|---|---|---|---|
-| 1 | 소재 | 회원이 준 쇼츠 = 벤치 | — | 연예인·쇼핑 소재가 아님 | 영상 확인 중 |
-| 2 | 원본 찾기 | 벤치 받기 · 1초 시트 · `yt-dlp` 채널 목록/검색 · 후보 자동자막 · 지문 대조 | 시트에서 출처 글자·인물·제품·말한 사람 읽기 / 후보 중 원본 확정 / 본인 말인지 | 원본 못 찾음 · 본인 말 아님 | 원본 영상 찾는 중 |
-| 3 | 제품·쿠팡 | 장면 자르기 · 렌즈(`lens.py`, 회원 크롬) · 쿠팡(파트너스 키 `coupang_api_search` / 없으면 크롬 `쿠팡검색`) | 자를 장면 고르기 · 같은 제품 판정(사진 대조) | 쿠팡에 같은 제품 없음 · 브랜드 특정 불가 | 제품 확인 중 |
-| 4 | 조사 | — | `조사.md`(출처 추적·원음 조각·사실 f번호·금지 품목·검색어) — 웹 검색 | 전문의약품·의료기기 효능 | 자료 조사 중 |
-| 5 | 재료 영상 | `screen.search`(yt-dlp 만) · `screen.screen` 시트 · `screen.download` | chosen 고르기(같은 제품·1080·남의 글자 없음) | 재료 0 이고 사진도 없음 | 재료 영상 모으는 중 |
-| 6 | 받아쓰기 | 위스퍼(`asr_local`) — `run.py asr` 의 제미나이 자리를 바꾼다 | 원음 후보 구간(spans) 적기 | — | 원음 정리 중 |
-| 7 | 대본·재료·근거 | `styles.py brief <판>` · `script_audit.py` | 대본.json·재료.json·근거.md(오푸스) — 검사 통과까지 | — | 대본 쓰는 중 |
-| — | **회원 사인** | 대본을 회원에게 보여 준다 | — | 회원이 고치라고 함 → 7 다시 | 대본 확인을 기다립니다 |
-| 8 | 계획 | `run.py plan`(시트) | 시트 눈 확인 → 컷 고침 | 컷이 원본 샷보다 김 → 재료 고침 | 장면 맞추는 중 |
-| 9 | 이름 발음 | `name_check`(판 목소리로 — 미나면 일레븐랩스) | — | — | 이름 발음 확인 중 |
-| 10 | 렌더 | `render_bench`(TTS 1회 · 회원 키) | — | — | 목소리·영상 만드는 중 |
-| 11 | 검사 | `bench_check` 6항목 · 위스퍼 되받아쓰기 | 1초 시트 눈 확인 · 대본 글자 대조 | 6항목 × → 고쳐 10 다시 | 완성본 검사 중 |
-| 12 | 납품 | 완성본 폴더 + 드라이브/텔레그램(`deliver.js`) | — | — | 저장 중 → 완성 |
-| 13 | 정리 | 받은 원본·재료 지우기(완성본은 남김) | — | — | — |
+- 응답 = `status`(execute·review·reject·wait_user·stop·done) · `message`("OO 완료 → 다음 OO" 한 줄) · `stage` · `do` · `review` · `traps` · `next_payload`(서버 서명, 그대로 되돌림 — 바꾸면 400, 옛 것은 stale).
+- 서버는 **요약만** 남긴다(sid·판·원본 id·쿠팡 번호·검사 ○/×). 영상·대본 본문·키는 받지 않는다(서버 부담 0 — 편당 JSON 왕복만).
+- **노하우를 고칠 때 = `flow.py` 를 이 폴더 문서와 같은 커밋에**(칼카피_시작.md 11번). 서버 반영만 하면 모든 회원이 다음 호출부터 바뀐다(설치본 재배포 없음).
+- 옛 회원 라인 `hybrid/customer.py`(10-21 TheRose PC, 회원 PC 에서 노하우를 코드로 돌리던 것)는 지웠다 — 기계 함수는 runner_ops, 판정 함수는 rules, 질문·순서는 flow 로 나눴다.
 
-## 진행 안내 규칙 (볼케이노처럼)
-- 응답마다 `stage`(위 '진행 안내' 한 줄)와 `step_no/step_total`만 준다. 회원 Claude 는 그 한 줄만 전한다.
-- 무엇을 찾았는지·어떤 규칙인지·파일 이름·도구 이름은 말하지 않는다. 멈추면 회원이 할 수 있는 일만(예: "원본 영상 주소를 알려 주세요").
+## 단계 대응 (집 PC → 회원 PC, `flow.STAGES`)
+| # | 단계(회원에게 보이는 말) | do(회원 PC 손) | review(회원 Claude 눈) | 서버 반려·멈춤 |
+|---|---|---|---|---|
+| 1 | 준비 확인 | env(키·디스크·도구) | — | 판 목소리 키 없음 · 디스크 < 1.5GB |
+| 2 | 영상 확인 | bench(벤치 받기·시트·받아쓰기) | origin_read(출처 글자·인물·제품 낱말) | 쇼핑 소재 아님 |
+| 3 | 원본 영상 찾기 | peer_sheet · search(고정 검색어 먼저) · channel_list(본인 채널) · origin_subs(지문 대조) · origin_get(구간 받기·**시작 시각 재기**) | peer_read · titles(120편씩) · origin_pick | 후보 0 · 본인 말 아님 |
+| 4 | 제품 확인 | sheet(맞은 초 −25부터) · frames · coupang(키 → 크롬) · naver | product_pick · product_same → name_find → named_same → best_same | 같은 종류도 없음 · 의약품 |
+| 5 | 자료 조사 | origin_words(자막 또는 받아쓰기) | research(조사.md 6절·spans·facts, 웹 검색) | 절 빠짐·구간이 파일 밖·출처 없는 사실(3번) |
+| 6 | 재료 영상 모으기 | screen · download · product_stills(쿠팡 상품 사진 → prod_*.jpg) | screen_pick(연예인 나오는 남의 영상 금지) | — |
+| 7 | 원음 정리 | asr_spans(스피치매틱스+위스퍼 교차) · shot_sheets | shot_*(샷마다 누가·제품·얼굴 가로 위치) | — |
+| 8 | 대본 쓰기 | mat_sheets · write_doc · orig_heard(원음 줄 실제 받아쓰기 ↔ 자막) | script(판 brief + 결 기준 + 미나 오독 대체어) | script_audit · 제목 색 · 자막↔목소리 · 출처 규칙 · 제품 컷 0개 · 원음 귀 확인(5번) — 출처 줄은 서버가 원본 채널 이름으로 |
+| 9 | 대본 확인 | — | (회원 사인) | 사인 전 목소리·렌더 0 |
+| 10 | 장면 맞추기 | plan(시간표·계획 시트·장면 전환 재기) | plan_*(컷마다 대사↔화면·남의 글자·주인공 가운데 — 샷 표에 박힌 글자 상자) | 샷 초과·출처 규칙(8번 — 집 PC VERIFY_ROUNDS) |
+| 11 | 목소리·영상 만들기 | render | render_fix_* | 샷 초과(3번) |
+| 12 | 완성본 검사 | check(bench_check 6항목·되받아쓰기 교차·1초 시트) | final_* | 6항목 × 또는 눈 × → 재료 고쳐 다시(2번) → 그래도면 멈춤 |
+| 13 | 완성 | finish | — | 키 없으면 "귀 확인 없음" 한 줄 |
 
-## 회원 키 (설정 화면 '소리'·'검색' 칸)
-타입캐스트(있음) · **일레븐랩스**(새로 — 미나 판) · **쿠팡 파트너스 access/secret**(새로 — 없으면 크롬). 값은 회원 PC 파일에만, 화면엔 지문만.
+## 시험·정답지
+- 개발 완주(서버 HTTP 없이 지시서↔실행기↔Claude CLI): `PYTHONUTF8=1 py tools/calcopy/hybrid/flow_dev.py --ref <벤치> --version 키치잇판 --work <폴더> [--cache <소스 캐시>] --approve`
+- 받아 둔 파일만으로(유튜브 0회, 10-21 'not a bot' 차단 중): `answer_key.py cache 성시경 --to <캐시>` → `--cache` · 실행기는 캐시 모드에서 yt-dlp 자체를 못 띄운다.
+- 정답지 대조: `answer_key.py compare 성시경 --job <폴더>` → `answer_key_report.md`.
+- 회원 경로 그대로(MCP·서버 HTTP·설치본): `shortem_client/test/live_episode.js --say "<벤치 URL> 이걸로 연예인상품+후기형으로 만들어줘"`.
+- '됐다' = 회원 경로로 만든 편이 정답지와 원본·제품이 같고 bench_check 6항목 ○ + 집 PC 세션이 완성본을 눈으로 확인.
 
-## 결과물 검사 (이 재정비가 됐다의 기준)
-회원 PC(설치본·라이브 서버)에서 `live_episode.js --say "<벤치 쇼츠 URL> 이걸로 연예인상품+후기형으로 만들어줘"` 한 줄 →
-완성본이 집 PC 같은 판(키치잇판) 결과와 같은 꼴: 원본(연예인 본인 영상) 원음 · 남의 편집 자막 0 · 쿠팡 같은 제품 · `bench_check` 6항목 ○ · 판 길이 안.
+## 회원 키 (설정 화면)
+타입캐스트 · 일레븐랩스(미나 판) · 쿠팡 파트너스 access/secret(없으면 크롬) · 스피치매틱스(있으면 교차 받아쓰기). 값은 회원 PC 파일에만, 화면엔 지문만.

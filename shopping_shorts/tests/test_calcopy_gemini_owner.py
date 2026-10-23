@@ -88,7 +88,7 @@ def test_name_dict_owner_is_engine_and_apply_all(monkeypatch, tmp_path):
     monkeypatch.setattr(ND, "DICT", tmp_path / "nd.json")
     ND.save({"names": {"최은경": {"tts": "최, 은경", "voices": {"v1": "방송인, 최, 은경 씨"}}, "장윤정": {"tts": "장윤정"}}})
     assert ND.apply_all("최은경 씨가 장윤정 씨와", None) == "최, 은경 씨가 장윤정 씨와"
-    assert ND.apply_all("최은경 씨가", "v1") == "방송인, 최, 은경 씨 씨가"
+    assert ND.apply_all("최은경 씨가", "v1") == "방송인, 최, 은경 씨가"      # '씨 씨' 방지(bb860a3e1)
     assert ND.apply_all("박세리 씨가 산 거예요", "v1") == "박세리 씨가 산 거예요"      # 사전에 없으면 그대로(결과 동일)
     assert ND.names_in("최은경·장윤정") == ["최은경", "장윤정"] and ND.apply_all("", "v1") == ""
 

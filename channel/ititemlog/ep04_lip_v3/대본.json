@@ -1,0 +1,209 @@
+{
+ "_note": "립밤 v3(10-22 새 방식): 결과 먼저 훅 · 원본 3개 시간순(Aylen 버블티 맛 → Aylen 한국 매장 직접 만들기 → Baochi 예약) · 원음 티키타카 3번 · 끝 = 전언 2줄 + 혼잣말 · 확대 1.0. 원본 = Aylen Park 'jkHyncpQRdc'(2,988만) + 'ug3CTGa2Vg4'(882만) + Baochi Travel 'AZyQ9s6l0tM'(791만). 세 원본 모두 박힌 자막 → 쓰는 구간만 잘라 VMake Pro(jkA=0~20·jkB=28~33·jkC=44~57·acA=0~9·bcA=0~16·bcB=25~38·acC=30~36초(훅 한 사람 얼굴 — jk 는 모녀 두 얼굴이라 첫 줄 얼굴 검사 반려), 파일 안 시간은 0부터).",
+ "slug": "ititemlog_ep04_lip_v3",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "라네즈 립 슬리핑 마스크 버블티(타로·말차)(쿠팡: 정확한 이름 → 같은 제품 → 비슷한 제품)",
+ "title_lines": [
+  [
+   [
+    "한국 립밤 맛보고"
+   ]
+  ],
+  [
+   [
+    "버블티라 놀란 외국인"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "jk 2.92~6.36 'You guys, Laneige just dropped their new bubble tea collection' · 6.56~12.36 'two flavors, Taro and Matcha … my mom and I's favorite boba tea flavors ever'",
+  "f2": "jk 28~33초 립 마스크 떠서 입술에 · 46.64~49.68 'compare it to the real drink' · 53.32~56.16 'It's the same flavor. Yeah. It's so similar'",
+  "f3": "ac 0.16~5.52 'one of the coolest things you can only do here in Korea, making your own custom Laneige Lip Sleeping mask' · 5.56~8.40 'create up to 45 different flavor combinations'",
+  "f4": "bc 2.72~5.56 'I had to book one month in advance or else they would be fully booked' · 13.28~15.84 'three flavors that you can't find anywhere else'"
+ },
+ "cta": "심리 CTA(혼잣말) — 직접 구매 문장 없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강) — 결과 먼저",
+   "tts": "립밤을 맛보고 진짜 버블티랑 맛이 똑같다며 놀란 외국인 모녀가 있어요.",
+   "caps": [
+    {
+     "text": "립밤을 맛보고"
+    },
+    {
+     "text": "진짜 버블티랑 맛이 똑같다며",
+     "key": "똑같다며"
+    },
+    {
+     "text": "놀란 외국인 모녀가 있어요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(설렘)",
+   "src": "jkA.mp4",
+   "spans": [
+    [
+     2.92,
+     6.36
+    ]
+   ],
+   "said": "You guys, Laneige just dropped their new bubble tea collection",
+   "caps_rel": [
+    [
+     "얘들아, 라네즈 버블티 컬렉션",
+     0.0,
+     1.88
+    ],
+    [
+     "새로 나왔어!",
+     1.88,
+     3.44,
+     "버블티"
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 시도",
+   "tts": "모녀가 제일 좋아하는 타로랑 말차 맛이라, 바로 떠서 입술에 발라 봤는데,",
+   "caps": [
+    {
+     "text": "모녀가 제일 좋아하는"
+    },
+    {
+     "text": "타로랑 말차 맛이라",
+     "key": "타로랑 말차"
+    },
+    {
+     "text": "바로 떠서 입술에 발라 봤는데"
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음 반응",
+   "src": "jkC.mp4",
+   "spans": [
+    [
+     9.32,
+     12.16
+    ]
+   ],
+   "said": "It's the same flavor. Yeah. It's so similar",
+   "caps_rel": [
+    [
+     "맛이 똑같아",
+     0.0,
+     1.0,
+     "똑같아"
+    ],
+    [
+     "진짜 비슷해",
+     1.0,
+     2.84
+    ]
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 두 번째 소재",
+   "tts": "심지어 한국 매장에선 이 립밤을 직접 만들 수도 있다는데,",
+   "caps": [
+    {
+     "text": "심지어",
+     "key": "심지어"
+    },
+    {
+     "text": "한국 매장에선 이 립밤을"
+    },
+    {
+     "text": "직접 만들 수도 있다는데",
+     "key": "직접"
+    }
+   ]
+  },
+  {
+   "id": "O3",
+   "kind": "orig",
+   "role": "원음(감탄)",
+   "src": "acA.mp4",
+   "spans": [
+    [
+     5.56,
+     8.4
+    ]
+   ],
+   "said": "You can literally create up to 45 different flavor combinations",
+   "caps_rel": [
+    [
+     "맛 조합을 마흔다섯 가지나",
+     0.0,
+     1.6,
+     "마흔다섯"
+    ],
+    [
+     "만들 수 있대",
+     1.6,
+     2.84
+    ]
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "가 본 사람들 말로는 한 달 전에 예약해야 겨우 들어간다던데,",
+   "caps": [
+    {
+     "text": "가 본 사람들 말로는"
+    },
+    {
+     "text": "한 달 전에 예약해야",
+     "key": "한 달 전"
+    },
+    {
+     "text": "겨우 들어간다던데"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "끝 — 전언",
+   "tts": "한국에만 있는 맛도 세 가지나 된다고 하고.",
+   "caps": [
+    {
+     "text": "한국에만 있는 맛도",
+     "key": "한국에만"
+    },
+    {
+     "text": "세 가지나 된다고 하고"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "끝 — 혼잣말 CTA",
+   "tts": "아, 서울 가기 전에 버블티 맛부터 하나 발라 봐야겠다.",
+   "caps": [
+    {
+     "text": "아, 서울 가기 전에"
+    },
+    {
+     "text": "버블티 맛부터 하나 발라 봐야겠다",
+     "key": "버블티 맛"
+    }
+   ]
+  }
+ ]
+}

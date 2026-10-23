@@ -61,5 +61,7 @@ def encode_final(video, mix, final, peak_max_db: float = -0.5, log=print) -> dic
         tries.append({"limit_db": limit, "lufs": I, "tp": tp})
         log(f"  [최고점 지킴이] 인코딩 뒤 {tries[-2]['tp']} dBFS > {peak_max_db} → 4배 리미터 {limit} dB → {tp} dBFS · {I} LUFS")
         used, limit = safe, limit - STEP_DB
+    from tools.calcopy.engine import ad_mark
+    ad = ad_mark.apply_inplace(final, log=log)      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더). 소리는 복사라 최고점 그대로
     return {"made_by": "tools/calcopy/engine/master_guard.encode_final", "tries": tries, "mix_used": str(used), "lufs": I, "tp": tp,
-            "ok": tp <= peak_max_db}
+            "ok": tp <= peak_max_db, "ad_mark": ad}

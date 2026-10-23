@@ -1,0 +1,47 @@
+{
+ "items": [
+  {
+   "music_bed": false,
+   "segments": [
+    {
+     "start": 0.0,
+     "end": 7.57,
+     "speaker": "S1",
+     "text": "So, I was watching a video from fellow home gym owner and world's fittest man Matt Fraser of his home gym and he brought out his secret weapon.",
+     "kind": "speech"
+    },
+    {
+     "start": 7.57,
+     "end": 9.99,
+     "speaker": "S1",
+     "text": "[music]",
+     "kind": "music"
+    },
+    {
+     "start": 9.99,
+     "end": 28.16,
+     "speaker": "S1",
+     "text": "This.",
+     "kind": "speech"
+    },
+    {
+     "start": 28.16,
+     "end": 30.29,
+     "speaker": "S1",
+     "text": "Hello, friends.",
+     "kind": "speech"
+    },
+    {
+     "start": 30.29,
+     "end": 30.939,
+     "speaker": "S1",
+     "text": "Coup from Garage",
+     "kind": "speech"
+    }
+   ]
+  }
+ ],
+ "_model": "gemini-flash-lite-latest",
+ "_src": "ggr_r9DDu3PEUo4_0.mp4",
+ "_offset": 0.0
+}

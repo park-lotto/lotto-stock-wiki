@@ -50,7 +50,18 @@ def _watch_size(paths: list[Path]) -> int:
 def ytdlp(args: list, timeout: float = 600, stall_sec: float | None = None, watch: Path | None = None, log=None) -> Result:
     """yt-dlp 를 돌린다. watch(받는 파일 stem 경로)가 있으면 그 stem 으로 시작하는 파일들(.part·.mp4·.ytdl…)의 크기를 POLL_SEC 마다 재
     stall_sec 동안 안 늘면 **이 프로세스만** 끊는다(stalled=True). 예외를 올리지 않는다 — TimeoutExpired 도 결과(timed_out)로 돌려준다."""
-    cmd = ["yt-dlp", "--no-warnings", "--no-playlist", *[str(a) for a in args]]
+    auth = []
+    url = next((str(a) for a in args if "youtu" in str(a)), "")
+    if url:                                       # 유튜브면 로그인 쿠키(파이어폭스 yt* 프로필)·JS 런타임 — 주인 = origin_find.yt_auth(10-21 회선 'not a bot' 우회)
+        try:
+            from tools.calcopy.origin_find import yt_auth
+            auth = yt_auth(url)
+        except PermissionError:
+            raise                                  # 전용 계정이 없으면 받지 않는다(로그인 없이 회선 두드리기 금지)
+        except Exception as e:  # noqa: BLE001 — 로그인 길을 못 쓰면 그대로 받되 이유를 남긴다
+            if log:
+                log(f"[yt_fetch] 로그인 쿠키 못 씀: {type(e).__name__}")
+    cmd = ["yt-dlp", "--no-warnings", "--no-playlist", *auth, *[str(a) for a in args]]
     out_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     err_f = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
     t0 = time.time()
@@ -112,12 +123,40 @@ def _cleanup(dst: Path):
                 pass
 
 
+SECTIONS_BAD_SEC = 6 * 3600   # 구간 받기가 멈춘 PC 는 이 동안 구간 받기를 건너뛴다(통째로 바로)
+
+
+def _sections_mark() -> Path:
+    return Path(os.environ.get("SHORTEM_HOME") or (Path.home() / ".shortem")) / "yt_sections_stall"
+
+
+def sections_bad() -> bool:
+    """이 PC(회선·계정)에서 구간 받기가 최근 멈췄나 — 10-21·22 yt3: 구간 받기가 형식마다 60초씩 멈춘 뒤 통째로(재료 1편 120초+ 헛기다림)."""
+    f = _sections_mark()
+    return f.exists() and time.time() - f.stat().st_mtime < SECTIONS_BAD_SEC
+
+
+def _mark_sections_bad(log=print):
+    f = _sections_mark()
+    try:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(time.strftime("%Y-%m-%d %H:%M:%S"), encoding="utf-8")
+        log(f"[yt_fetch] 구간 받기가 이 PC 에서 멈춤 — {SECTIONS_BAD_SEC // 3600}시간 동안 구간 받기를 건너뛰고 통째로 받는다({f})")
+    except OSError as e:
+        log(f"[yt_fetch] 구간 멈춤 표식을 못 씀: {e}")
+
+
 def download_sections(url: str, spans: list[tuple[float, float]], dst: Path, fmts=(FMT_SECTION_1080, "137+ba[ext=m4a]/bv*[height>=1080]+ba/b"),
                       pad: float = 0.0, timeout: float = 900, stall_sec: float = STALL_SEC, extra: list | None = None, log=print) -> Result | None:
-    """구간들만 받아 dst(.mp4) 로. 형식 사슬을 차례로(HLS 먼저) — 멈추거나(stall) 시간초과·빈 파일이면 다음 형식. 성공하면 Result, 전부 실패면 None."""
+    """구간들만 받아 dst(.mp4) 로. 형식 사슬을 차례로(HLS 먼저) — 멈추거나(stall) 시간초과·빈 파일이면 다음 형식. 성공하면 Result, 전부 실패면 None.
+    이 PC 에서 최근 구간 받기가 멈췄으면(sections_bad) 시도하지 않고 None — 부르는 쪽이 통째로 받는다."""
+    if sections_bad():
+        log("[yt_fetch] 구간 받기 건너뜀(이 PC 최근 멈춤) → 통째로")
+        return None
     dst = Path(dst); dst.parent.mkdir(parents=True, exist_ok=True)
     need = max(0.3, min(b - a for a, b in spans) * 0.5) if spans else None
     last = None
+    stalls = 0
     for fmt in fmts:
         args = ["-f", fmt, "--merge-output-format", "mp4", "-o", str(dst.with_suffix(".%(ext)s")), *(extra or [])]
         for a, b in spans:
@@ -128,8 +167,41 @@ def download_sections(url: str, spans: list[tuple[float, float]], dst: Path, fmt
             log(f"[yt_fetch] 구간 {len(spans)}개 {last.sec}초 fmt={fmt[:40]}… → {dst} {dst.stat().st_size // 1_000_000}MB")
             return last
         _cleanup(dst)
+        stalls += 1 if (last.stalled or last.timed_out) else 0
         log(f"[yt_fetch] 형식 실패({'멈춤' if last.stalled else '시간초과' if last.timed_out else 'rc=' + str(last.returncode)}) → 다음 형식: {last.stderr[-160:].strip()}")
+    if stalls == len(fmts):
+        _mark_sections_bad(log)
     return None
+
+
+def storyboard_tiles(info: dict, max_tiles: int = 160) -> list[tuple[float, "object"]]:
+    """yt-dlp 정보(-J)의 스토리보드(유튜브 미리보기 그림 모음, 약 5초 간격) → [(초, PIL 그림)] — 영상을 받지 않는다(10-22 실측 17조각 3.1초).
+    sb0(359×180) 먼저 — 칸이 max_tiles 를 넘으면 sb1(179×90). 원본 찾기·재료 고르기가 같이 쓴다(주인 한 곳)."""
+    import io
+    import urllib.request
+    from PIL import Image
+    dur = float(info.get("duration") or 0)
+    fmts = [f for f in info.get("formats") or [] if str(f.get("format_id", "")).startswith("sb") and f.get("fragments")]
+    fmts.sort(key=lambda f: -(f.get("width") or 0))
+    pick = next((f for f in fmts if dur * float(f.get("fps") or 0.2) <= max_tiles), fmts[-1] if fmts else None)
+    if not pick:
+        return []
+    rows, cols, fw, fh = int(pick.get("rows") or 1), int(pick.get("columns") or 1), int(pick["width"]), int(pick["height"])
+    step = 1.0 / float(pick.get("fps") or 0.2)
+    out = []
+    for fr in pick["fragments"]:
+        u = fr.get("url") or (str(pick.get("fragment_base_url") or "") + str(fr.get("path") or ""))
+        try:
+            im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read())).convert("RGB")
+        except Exception:  # noqa: BLE001 — 한 조각이 빠져도 나머지로(빠진 칸은 시각이 밀리지 않게 건너뛴다)
+            out += [(None, None)] * (rows * cols)
+            continue
+        for y in range(rows):
+            for x in range(cols):
+                t = len(out) * step
+                if t <= dur:
+                    out.append((round(t, 1), im.crop((x * fw, y * fh, (x + 1) * fw, (y + 1) * fh))))
+    return [(t, im) for t, im in out if im is not None]
 
 
 def download_full(url: str, dst: Path, fmt: str = "137+ba[ext=m4a]/bv*[height>=1080]+ba/bv*[height>=720]+ba/b", timeout: float = 1800,

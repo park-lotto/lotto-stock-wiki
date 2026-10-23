@@ -1,0 +1,139 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰하이브리드/06_아이언맨헬멧/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "tt_otty_dubai_7668805836940086535.mp4",
+   "ss": 37.1,
+   "cuts": [
+    {
+     "src": "tt_otty_dubai_7668805836940086535.mp4",
+     "ss": 37.1,
+     "dur": 1.824,
+     "block": "N1",
+     "src_crop": [
+      0,
+      0,
+      576,
+      660
+     ]
+    },
+    {
+     "src": "tt_otty_dubai_7668805836940086535.mp4",
+     "ss": 48.0,
+     "dur": 2.033,
+     "block": "N2",
+     "src_crop": [
+      0,
+      0,
+      576,
+      660
+     ]
+    },
+    {
+     "src": "tt_otty_dubai_7668805836940086535.mp4",
+     "ss": 0.0,
+     "dur": 3.497,
+     "block": "O1",
+     "src_crop": [
+      0,
+      0,
+      576,
+      660
+     ]
+    },
+    {
+     "src": "tt_otty_dubai_7668805836940086535.mp4",
+     "ss": 12.414,
+     "dur": 8.086,
+     "block": "O2",
+     "src_crop": [
+      0,
+      0,
+      576,
+      660
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "ot",
+   "ss": 37.1,
+   "vs": 0.0,
+   "src_crop": [
+    0,
+    0,
+    576,
+    660
+   ],
+   "why": "첫 프레임 = 제품: 머리에 쓴 헬멧 얼굴 판이 열림(37.5~40.2)",
+   "ve": 1.824,
+   "src_end": 38.924
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "ot",
+   "ss": 48.0,
+   "vs": 1.824,
+   "src_crop": [
+    0,
+    0,
+    576,
+    660
+   ],
+   "why": "쓴 채 얼굴 판이 다시 열림(48~52)",
+   "ve": 3.857,
+   "src_end": 50.033
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "ot",
+   "ss": 0.0,
+   "vs": 3.857,
+   "src_crop": [
+    0,
+    0,
+    576,
+    660
+   ],
+   "why": "책상 위 헬멧 옆 남자 'Watch this… most realistic Iron Man helmet'",
+   "ve": 7.354,
+   "src_end": 3.497,
+   "guard": "원본 컷 3.53 앞에서 끊음(−0.233초)"
+  },
+  {
+   "block": "O2",
+   "covers": [
+    "N3",
+    "O2"
+   ],
+   "src": "ot",
+   "ss": 12.414,
+   "vs": 7.354,
+   "src_crop": [
+    0,
+    0,
+    576,
+    660
+   ],
+   "why": "'Jarvis, open the mask' → 얼굴 판 열림 시작",
+   "ve": 15.44,
+   "src_end": 20.5
+  }
+ ]
+}

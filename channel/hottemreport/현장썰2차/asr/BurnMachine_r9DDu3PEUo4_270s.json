@@ -1,0 +1,92 @@
+{
+ "music_bed": true,
+ "segments": [
+  {
+   "start": 270.0,
+   "end": 277.37,
+   "speaker": "S1",
+   "text": "Basically, a rotating handle on each side with a fixed handle that's inside of this metal frame.",
+   "kind": "speech"
+  },
+  {
+   "start": 277.37,
+   "end": 280.59,
+   "speaker": "S1",
+   "text": "It's not like these are there's not actual bearings in here.",
+   "kind": "speech"
+  },
+  {
+   "start": 280.59,
+   "end": 287.58,
+   "speaker": "S1",
+   "text": "It would be smoother, it's not like it's like not smooth, but it definitely feels like it's like bushings or some sort of plastic bushing in there.",
+   "kind": "speech"
+  },
+  {
+   "start": 287.58,
+   "end": 292.8,
+   "speaker": "S1",
+   "text": "And I don't really foresee this ever breaking. There's really nothing to break.",
+   "kind": "speech"
+  },
+  {
+   "start": 292.8,
+   "end": 296.54,
+   "speaker": "S1",
+   "text": "Um, it's just a very simple device, so there's only so much to talk about.",
+   "kind": "speech"
+  },
+  {
+   "start": 296.54,
+   "end": 314.59,
+   "speaker": "S1",
+   "text": "But, there are some things that I would love to see, like a company improve, if you've watched literally a single video from us, you will know what I'm going to say. This rubber bike tennis racket tape sucks.",
+   "kind": "speech"
+  },
+  {
+   "start": 314.59,
+   "end": 315.19,
+   "speaker": "S1",
+   "text": "It's not good.",
+   "kind": "speech"
+  },
+  {
+   "start": 315.19,
+   "end": 317.93,
+   "speaker": "S1",
+   "text": "It's like, I don't know why this is here. Also, the handle is kind of small.",
+   "kind": "speech"
+  },
+  {
+   "start": 317.93,
+   "end": 324.49,
+   "speaker": "S1",
+   "text": "So, I think a thicker handle would feel nice, a neurled handle would be just incredible.",
+   "kind": "speech"
+  },
+  {
+   "start": 324.49,
+   "end": 327.06,
+   "speaker": "S1",
+   "text": "I wouldn't want a super aggressive neurling, of course, something feel a little bit more passive.",
+   "kind": "speech"
+  },
+  {
+   "start": 327.06,
+   "end": 329.98,
+   "speaker": "S1",
+   "text": "Whoa! Whoa! Whoa!",
+   "kind": "speech"
+  },
+  {
+   "start": 329.98,
+   "end": 372.32,
+   "speaker": "S1",
+   "text": "It is. It is. What?",
+   "kind": "speech"
+  }
+ ],
+ "_model": "gemini-flash-lite-latest",
+ "_src": "C:/Users/CH/AppData/Local/Temp/c120.m4a",
+ "_offset": 270.0
+}

@@ -1,0 +1,113 @@
+{
+ "topic": "레버를 당기면 풍선이 부풀어 물 위로 끌어올린다는 손목 구명 팔찌 — 멕시코 틱톡 @pongamoslo_a_prueba 가 수영장 바닥에서 직접 시험",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "8ogCjxMJsYo",
+ "bench_note": "벤치(핫템리포트 160만)는 나레만 있는 합본(원음 없음) — 벤치 화면은 쓰지 않는다. 원음 있는 원본 = 렌즈(벤치 1초 장면)로 찾은 틱톡 6899937776901295361(조회 1,410만·좋아요 230만, 2020-11-27)",
+ "sources": {
+  "main": {
+   "file": "TikTok_6899937776901295361.mp4",
+   "url": "https://www.tiktok.com/@pongamoslo_a_prueba/video/6899937776901295361",
+   "who": "틱톡 @pongamoslo_a_prueba (스페인어, 제품 시험 채널)",
+   "views": 14100000,
+   "dur": 53.0,
+   "res": "576x1024"
+  }
+ },
+ "titles": {
+  "hook": "레버 당기면 풍선이 펑!\n손목 구명 팔찌"
+ },
+ "facts": {
+  "f1": {
+   "text": "0~2초 손목 팔찌 클로즈업·레버 당김 · 2.1~5.8초 물속에서 남자가 레버를 당기자 빨간 풍선이 부풂(원본 앞머리 제품 장면)",
+   "kind": "화면"
+  },
+  "f2": {
+   "text": "16.68~19.26 'vamos a ver qué tan rápido me saca esto'(얼마나 빨리 나를 꺼내 주나 보자) — speechmatics·whisper medium 두 모델 일치",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "22~29초 수영장 바닥까지 잠수 → 28.8초 풍선 부풂 → 29.5~33초 풍선에 끌려 위로 · 31.14~33.12 'como puedes ver, sí me jaló hacia arriba'(봐, 진짜 위로 끌어올렸어) — 두 모델 일치",
+   "kind": "화면+본인 말"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "O1",
+   "N2",
+   "O2"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(제품+~있는데요)",
+    "text": "손목에 찬 팔찌 레버만 당기면, 풍선이 부풀어서 물 위로 끌어올려 준다는 구명 팔찌가 있는데요.",
+    "caps": [
+     "손목에 찬 팔찌 레버만 당기면",
+     "풍선이 부풀어서",
+     "물 위로 끌어올려 준다는",
+     "구명 팔찌가 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "그래서 직접 수영장 바닥까지 잠수한 다음, 레버를 딱 당겨 봤는데요.",
+    "caps": [
+     "그래서 직접 수영장 바닥까지",
+     "잠수한 다음",
+     "레버를 딱 당겨 봤는데요"
+    ],
+    "facts": [
+     "f3"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "ct",
+    "span": [
+     16.62,
+     19.3
+    ],
+    "es": "Vamos a ver qué tan rápido me saca esto.",
+    "caps": [
+     "이게 얼마나 빨리",
+     "날 꺼내 주나 보자!"
+    ],
+    "check": "whisper medium 낱말: vamos 16.68 … saca 18.12~18.92 · esto 18.92~19.26 / speechmatics 같은 말"
+   },
+   {
+    "id": "O2",
+    "src": "ct",
+    "span": [
+     31.1,
+     33.12
+    ],
+    "es": "Como puedes ver, sí me jaló hacia arriba.",
+    "caps": [
+     "봐봐,",
+     "진짜 위로 확 끌어올렸어!"
+    ],
+    "check": "whisper medium 낱말: como 31.14 … arriba 32.8~33.12 / speechmatics 같은 말 · 원본 장면 컷 33.12"
+   }
+  ],
+  "dropped": {
+   "12.26~13.56 'vamos a ver si sí funciona'": "화면이 12.4초까지 채널 로고(PONGÁMOSLO A PRUEBA) — 원음 컷 화면이 로고로 시작해 안 씀",
+   "45.16~49.9 'hasta dos personas'": "앞은 15초 안에서 끊긴다(하이브리드 cut) — 안 씀",
+   "벤치 발명가 이야기(절친 익사)": "원본 틱톡에 없는 말 — 우리 대본에 안 씀"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

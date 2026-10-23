@@ -78,25 +78,8 @@ def main(argv=None):
     r = sp.add_parser("reject")
     r.add_argument("sid")
     r.add_argument("reason")
-    h = sp.add_parser("hybrid", help="회원 PC 하이브리드 한 편 — 집 PC 제작순서 그대로(hybrid/customer.py, 기술 꾸러미는 편마다 빌린다)")
-    h.add_argument("act", choices=["start", "approve", "resume", "status"])
-    h.add_argument("sid", nargs="?")
-    h.add_argument("--ref")
-    h.add_argument("--version")
     ap.add_argument("--json", action="store_true", help="표 대신 세션 JSON 한 줄(고객 PC MCP 가 읽는다, 관제 234)")
     x = ap.parse_args(argv)
-    if x.cmd == "hybrid":
-        try:
-            from tools.calcopy.hybrid import customer as HC
-        except ImportError:
-            print(json.dumps({"need": "fail", "why": "이 프리셋을 준비하지 못했습니다", "fix": "잠시 뒤 다시 시도하세요", "code": "no_tech"}, ensure_ascii=False))
-            return 2
-        try:
-            out = {"start": lambda: HC.start(x.ref, x.version), "approve": lambda: HC.approve(x.sid), "resume": lambda: HC.resume(x.sid), "status": lambda: HC.status(x.sid)}[x.act]()
-        except Exception as e:  # noqa: BLE001 — 단계 실패 이유 한 줄(조용한 실패 금지) — 회원에겐 MCP 가 줄여 보인다
-            out = {"need": "fail", "why": f"{type(e).__name__}: {str(e)[:300]}", "fix": "같은 단계를 한 번 더 부르세요", "retry_ok": True, "sid": x.sid}
-        print(json.dumps(out, ensure_ascii=False, default=str))
-        return 0
     try:
         if x.cmd == "start":
             patch = {}

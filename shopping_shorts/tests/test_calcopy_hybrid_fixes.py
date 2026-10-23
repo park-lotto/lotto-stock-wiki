@@ -35,6 +35,7 @@ def _need(*ps):
 
 # ── 1. screen: 후보 하나가 시간초과/멈춤이어도 단계는 살고 screen.json 은 부분이라도 쓴다 · 제목 NFD/띄어쓰기 ──
 def test_screen_timeout_isolated_and_partial_json(tmp_path, monkeypatch):
+    monkeypatch.setenv("SHORTEM_HOME", str(tmp_path / "home"))   # 이 PC 의 구간 받기 멈춤 표식(yt_fetch.sections_bad)과 상관없이
     sd = tmp_path / "screen"; sd.mkdir()
     jsave(sd / "candidates.json", {"candidates": [{"id": "GOOD0000001"}, {"id": "SLOW0000002"}]})
     for vid in ("GOOD0000001", "SLOW0000002"):
@@ -71,6 +72,7 @@ def test_kw_hit_nfc_and_spaces():
 
 
 def test_screen_slow_candidate_skips_remaining_previews(tmp_path, monkeypatch):
+    monkeypatch.setenv("SHORTEM_HOME", str(tmp_path / "home"))   # 이 PC 의 구간 받기 멈춤 표식(yt_fetch.sections_bad)과 상관없이
     sd = tmp_path / "screen"; sd.mkdir()
     jsave(sd / "SLOW0000002.info.json", {"title": "x", "duration": 60, "formats": []})
     calls = []

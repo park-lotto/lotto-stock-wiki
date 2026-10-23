@@ -1,0 +1,343 @@
+{
+ "_note": "썰템홈샷 하이브리드 02 노트핀 — 방구석 영상(NtPQ51ztIto 등) 미사용. A=창업자 인터뷰(NYSE)·기존 녹음기(소니·올림푸스)·PLAUD 공식 영상, B=같은 1세대 NotePin 리뷰(테크박스·Cybernews)+공식 언박싱. crop 은 소스 1920x1080 픽셀.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/02_노트핀/src",
+ "shots": [
+  {
+   "i": 0,
+   "src": "JJpmLEtOTHk.mp4",
+   "url": "https://www.youtube.com/watch?v=JJpmLEtOTHk",
+   "ss": 36.0,
+   "fit": "cover",
+   "src_crop": [
+    1000,
+    0,
+    780,
+    830
+   ],
+   "ours": "플라우드 공동창업자·CEO 네이선 쉬(許高) 인터뷰 얼굴",
+   "why": "훅 '등록금 날린 사람' = 그 사람 본인. NYSE 인터뷰 34~40초 한 샷, 왼쪽 'International listings' 글·아래 이름띠(y≈870)·오른쪽 NE 는 crop 밖",
+   "full": true
+  },
+  {
+   "i": 1,
+   "src": "JJpmLEtOTHk.mp4",
+   "url": "https://www.youtube.com/watch?v=JJpmLEtOTHk",
+   "ss": 104.0,
+   "fit": "cover",
+   "src_crop": [
+    1010,
+    0,
+    650,
+    860
+   ],
+   "ours": "같은 창업자가 손짓하며 말하는 장면",
+   "why": "'세 번 내리 실패' — 창업자 본인(100~106초 한 샷), 글·로고 crop 밖"
+  },
+  {
+   "i": 2,
+   "src": "Hhg7OROBVS8.mp4",
+   "url": "https://www.youtube.com/watch?v=Hhg7OROBVS8",
+   "ss": 62.0,
+   "fit": "cover",
+   "src_crop": [
+    880,
+    0,
+    820,
+    1080
+   ],
+   "ours": "손에 든 소니 디지털 녹음기(ICD-PX470) 화면 근접",
+   "why": "'눈여겨본 게 녹음기' — 기존 녹음기(62~68초 한 샷)"
+  },
+  {
+   "i": 3,
+   "src": "kOTyr1KucwQ.mp4",
+   "url": "https://www.youtube.com/watch?v=kOTyr1KucwQ",
+   "ss": 0.3,
+   "fit": "cover",
+   "src_crop": [
+    580,
+    0,
+    820,
+    1080
+   ],
+   "ours": "올림푸스(OM SYSTEM) 녹음기 → 소니 녹음기",
+   "why": "'이름난 녹음기들이 십 년 넘게 그대로' — 두 브랜드 버튼식 녹음기",
+   "cuts": [
+    {
+     "src": "kOTyr1KucwQ.mp4",
+     "ss": 0.3,
+     "dur": 2.0,
+     "src_crop": [
+      580,
+      0,
+      820,
+      1080
+     ]
+    },
+    {
+     "src": "Hhg7OROBVS8.mp4",
+     "ss": 119.5,
+     "dur": 1.77,
+     "src_crop": [
+      760,
+      0,
+      820,
+      1080
+     ]
+    }
+   ]
+  },
+  {
+   "i": 4,
+   "src": "kOTyr1KucwQ.mp4",
+   "url": "https://www.youtube.com/watch?v=kOTyr1KucwQ",
+   "ss": 72.0,
+   "fit": "cover",
+   "src_crop": [
+    700,
+    0,
+    820,
+    1080
+   ],
+   "ours": "노트북 키보드에 꽂힌 녹음기",
+   "why": "'남의 녹음기 후기를 오천 개 넘게 읽었다' — 컴퓨터 앞 녹음기(71.75~75초 한 샷) △ 후기 화면 자체는 아님"
+  },
+  {
+   "i": 5,
+   "src": "ADlf9lJzjew.mp4",
+   "url": "https://www.youtube.com/watch?v=ADlf9lJzjew",
+   "ss": 13.5,
+   "fit": "cover",
+   "src_crop": [
+    700,
+    0,
+    820,
+    1080
+   ],
+   "ours": "노트핀 옆모습 → PLAUD.AI 로고",
+   "why": "'만든 브랜드가 플라우드' — 공식 영상 제품·로고",
+   "cuts": [
+    {
+     "src": "ADlf9lJzjew.mp4",
+     "ss": 13.5,
+     "dur": 0.6,
+     "src_crop": [
+      900,
+      0,
+      820,
+      1080
+     ]
+    },
+    {
+     "src": "LVm3YG7hdQQ.mp4",
+     "ss": 108.2,
+     "dur": 1.3,
+     "src_crop": [
+      550,
+      0,
+      820,
+      1080
+     ]
+    }
+   ]
+  },
+  {
+   "i": 6,
+   "src": "ADlf9lJzjew.mp4",
+   "url": "https://www.youtube.com/watch?v=ADlf9lJzjew",
+   "ss": 89.88,
+   "fit": "cover",
+   "src_crop": [
+    550,
+    0,
+    820,
+    1080
+   ],
+   "ours": "정장 셔츠 위 목걸이로 건 노트핀",
+   "why": "'목에 거는 이 녹음기가 노트핀' (손 빠진 89.9~91.65초, 91.7초부터 흰 배경 컷)"
+  },
+  {
+   "i": 7,
+   "src": "ADlf9lJzjew.mp4",
+   "url": "https://www.youtube.com/watch?v=ADlf9lJzjew",
+   "ss": 61.25,
+   "fit": "cover",
+   "src_crop": [
+    1125,
+    0,
+    700,
+    1080
+   ],
+   "ours": "휴대폰 앱 Transcript 글 → Summary",
+   "why": "'알아서 글로 정리하고 요약까지' — 공식 앱 화면(61~64초)"
+  },
+  {
+   "i": 8,
+   "src": "CD51oNZ4Zfg.mp4",
+   "url": "https://www.youtube.com/watch?v=CD51oNZ4Zfg",
+   "ss": 100.0,
+   "fit": "cover",
+   "src_crop": [
+    520,
+    0,
+    820,
+    1080
+   ],
+   "ours": "'PLAUD NotePin Bundle' 상자를 든 손 → 노트핀을 손가락에 쥔 모습",
+   "why": "B 첫 줄 '하나 들여 봤는데' — 국내 리뷰어 언박싱(100~101.7초) + 다른 리뷰어(Cybernews) 손에 든 노트핀(149~150.9초)",
+   "cuts": [
+    {
+     "src": "CD51oNZ4Zfg.mp4",
+     "ss": 100.0,
+     "dur": 1.65,
+     "src_crop": [
+      520,
+      0,
+      820,
+      1080
+     ]
+    },
+    {
+     "src": "eZ8w-2jPLXU.mp4",
+     "ss": 149.0,
+     "dur": 1.94,
+     "src_crop": [
+      450,
+      0,
+      820,
+      1080
+     ]
+    }
+   ]
+  },
+  {
+   "i": 9,
+   "src": "ADlf9lJzjew.mp4",
+   "url": "https://www.youtube.com/watch?v=ADlf9lJzjew",
+   "ss": 56.0,
+   "fit": "cover",
+   "src_crop": [
+    650,
+    0,
+    820,
+    1080
+   ],
+   "ours": "셔츠에 단 노트핀을 손가락으로 꾹 누름",
+   "why": "'꾹 누르면 녹음되고' (55.75~59초 한 샷)"
+  },
+  {
+   "i": 10,
+   "src": "LVm3YG7hdQQ.mp4",
+   "url": "https://www.youtube.com/watch?v=LVm3YG7hdQQ",
+   "ss": 53.25,
+   "fit": "cover",
+   "src_crop": [
+    100,
+    0,
+    700,
+    920
+   ],
+   "ours": "받아쓰기 화면 Charles / Todd 말한 사람 이름",
+   "why": "'누가 한 말인지도 나눠서' — 공식 영상 화자 구분 화면 Charles/Todd(53.5~54.3초)"
+  },
+  {
+   "i": 11,
+   "src": "CD51oNZ4Zfg.mp4",
+   "url": "https://www.youtube.com/watch?v=CD51oNZ4Zfg",
+   "ss": 8.05,
+   "fit": "cover",
+   "src_crop": [
+    610,
+    0,
+    820,
+    1080
+   ],
+   "ours": "셔츠 깃에 클립으로 단 은색 노트핀 → 손목 밴드에 끼운 노트핀",
+   "why": "'목에 걸거나 손목에 차면' — 국내 리뷰어(8.0~9.4초) + Cybernews 손목 밴드(168~170.3초)",
+   "cuts": [
+    {
+     "src": "CD51oNZ4Zfg.mp4",
+     "ss": 8.05,
+     "dur": 1.3,
+     "src_crop": [
+      610,
+      0,
+      820,
+      1080
+     ]
+    },
+    {
+     "src": "eZ8w-2jPLXU.mp4",
+     "ss": 168.0,
+     "dur": 2.27,
+     "src_crop": [
+      500,
+      0,
+      820,
+      1080
+     ]
+    }
+   ]
+  },
+  {
+   "i": 12,
+   "src": "LVm3YG7hdQQ.mp4",
+   "url": "https://www.youtube.com/watch?v=LVm3YG7hdQQ",
+   "ss": 12.4,
+   "fit": "cover",
+   "src_crop": [
+    620,
+    0,
+    680,
+    900
+   ],
+   "ours": "수많은 노트핀 모양이 빼곡히 불 켜지는 그림",
+   "why": "'전 세계 이백만 명' — 많은 사람·많은 기기 은유(공식 영상 12.6~15.3초, 아래 영어 자막 y≈960 crop 밖)"
+  },
+  {
+   "i": 13,
+   "src": "CD51oNZ4Zfg.mp4",
+   "url": "https://www.youtube.com/watch?v=CD51oNZ4Zfg",
+   "ss": 147.5,
+   "fit": "cover",
+   "src_crop": [
+    480,
+    0,
+    700,
+    925
+   ],
+   "ours": "손가락에 쥔 은색 노트핀 근접",
+   "why": "끝 '왜인지 알겠더라고요' — 리뷰어 손 근접(147.25~150초, 아래 박힌 자막 y≈990 crop 밖)"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0,
+   "db": 0,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 2,
+   "dt": 0,
+   "db": 0,
+   "why": "전환 — 그가 눈여겨본 게 녹음기"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 5,
+   "dt": 0,
+   "db": 0,
+   "why": "핵심 공개 — 플라우드·노트핀"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 7,
+   "dt": 0,
+   "db": 0,
+   "why": "B 첫 줄(체험으로 넘어감)"
+  }
+ ]
+}

@@ -1,0 +1,61 @@
+{
+ "topic": "AI 주작 의심 받은 음성 인식 아이언맨 헬멧(MK5) — 말 한마디에 얼굴 가리개가 열린다",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "OE-11wb7vdY(핫템리포트 480만, 'AI 주작 논란 터진 아이언맨 헬멧')",
+ "bench_note": "앞 나레 줄 = 칼카피_OE11 대본 1~2줄 그대로(박창수로 다시 읽힘). 칼카피판 재료(유튜브 Ix5o·8ys8·cYMA)는 10-21 이 PC 유튜브 봇 확인으로 다시 못 받음(11:2x·11:33·11:43 세 번 'Sign in to confirm you're not a bot') → 벤치 원본 꼴(해외 틱톡 실착 원음)인 같은 제품 틱톡 @otty_dubai 한 편으로 다시 짰다.",
+ "sources": {
+  "main": {
+   "file": "tt_otty_dubai_7668805836940086535.mp4",
+   "who": "틱톡 @otty_dubai",
+   "url": "https://www.tiktok.com/@otty_dubai/video/7668805836940086535",
+   "views": 5455,
+   "dur": 67.6,
+   "res": "576x1024"
+  }
+ },
+ "titles": {
+  "hook": "AI 주작 논란 터진\n아이언맨 헬멧"
+ },
+ "facts": {
+  "f1": {
+   "text": "0.00~3.48 'Watch this, this is my new, most realistic Iron Man helmet.'(faster_whisper small) · 화면: 책상 위 은색·빨강 MK5 헬멧 옆 남자",
+   "kind": "본인 말"
+  },
+  "f2": {
+   "text": "15.56~18.36 'Jarvis, open the mask.'(faster_whisper small, 화면 자막 'Open the mask' 17.5초) → 19.5~21초 헬멧 얼굴 판이 모터로 열림",
+   "kind": "화면+본인 말"
+  },
+  "f3": {
+   "text": "37~41초·48~52초 헬멧을 쓴 채 얼굴 판이 열렸다 닫힘(시트 눈 확인) — 머리에 쓰는 물건",
+   "kind": "화면"
+  },
+  "o1": {
+   "text": "칼카피_OE11 대본 f1(판매 페이지: 음성 명령으로 여러 판 얼굴 가리개가 모터로 열림)·f2(AutoKing 화면 글자 OPEN THE MASK/CLOSE THE MASK)",
+   "kind": "앞 칼카피판 근거"
+  }
+ },
+ "final": {
+  "order": ["N1", "N2", "O1", "N3", "O2"],
+  "lines": [
+   {"id": "N1", "fn": "훅(AI 의심)", "text": "이게 AI 영상이 아니라고요?", "caps": ["이게 AI 영상이", "아니라고요?"], "facts": ["f3"]},
+   {"id": "N2", "fn": "훅(진짜)", "text": "진짜로 파는 아이언맨 헬멧이에요.", "caps": ["진짜로 파는", "아이언맨 헬멧이에요"], "facts": ["o1", "f3"]},
+   {"id": "N3", "fn": "기능(음성) → 원음 증거", "text": "말 한마디면 얼굴 가리개가 착착, 열리고 닫히는데요,", "caps": ["말 한마디면", "얼굴 가리개가 착착", "열리고 닫히는데요"], "facts": ["o1", "f2"]}
+  ],
+  "orig_audio": [
+   {"id": "O1", "src": "ot", "span": [0.0, 3.48], "en": "Watch this, this is my new, most realistic Iron Man helmet.", "caps": ["이거 봐!", "제일 진짜 같은 아이언맨 헬멧이야!"], "check": "faster_whisper small 0.00~3.48 · 화면 자막 'Watch this!'·'Most realistic Iron Man helmet' 일치"},
+   {"id": "O2", "src": "ot", "span": [15.58, 19.9], "en": "Jarvis, open the mask. [motor]", "caps": ["자비스, 마스크 열어!"], "check": "faster_whisper 15.56~18.36 'Dervis, open the mask' · 화면 자막 'Jarvis'·'Sir'·'Open the mask' 16.5~17.5 · 19.5초 얼굴 판 열림"}
+  ],
+  "dropped": {
+   "벤치의 '오토바이·자전거 헬멧으로도'": "판매처 설명은 코스프레·전시용(칼카피_OE11 f4) — 안 씀",
+   "가격·전화번호": "원본 화면 아래 판매 전화번호 띠는 crop 밖"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ }
+}

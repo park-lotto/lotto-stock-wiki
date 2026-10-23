@@ -40,7 +40,10 @@ MIN_HEIGHT = 720
 
 
 def _ytdlp(args: list, timeout=240) -> subprocess.CompletedProcess:
-    return run(["yt-dlp", "--no-warnings", "--no-playlist", *args], check=False, timeout=timeout)
+    from tools.calcopy.origin_find import yt_auth          # 로그인 쿠키·JS 런타임 = 원본찾기와 같은 주인(10-21 회선 'not a bot' 우회)
+    url = next((str(a) for a in args if "youtu" in str(a) or str(a).startswith("ytsearch")), "")
+    auth = yt_auth("https://www.youtube.com/") if url else []
+    return run(["yt-dlp", "--no-warnings", "--no-playlist", *auth, *args], check=False, timeout=timeout)
 
 
 def vid_of(url_or_id: str) -> str:
@@ -150,6 +153,19 @@ def screen_one(sd: Path, vid: str, keywords: list[str], log=print) -> dict:
     out["title_hit"] = YF.kw_hit(out["title"] or "", keywords)
     wins = _windows(out["hits"], out["duration"])
     clips, slow = [], None
+    tiles = YF.storyboard_tiles(j)          # 미리보기 그림 모음(영상 전체·약 5초 간격, 받기 없음) — 360p 구간 토막은 회선에 따라 토막마다 40초씩 멈췄다(10-22 재료 고르기 214초)
+    if tiles:
+        from tools.calcopy.hybrid.runner_ops import tile_sheet
+        small = [(t, im.resize((240, max(1, round(im.size[1] * 240 / im.size[0]))))) for t, im in tiles]
+        out["sheet"] = str(tile_sheet(small, sd / f"{vid}_sheet.jpg", cols=8))
+        out["sheet_kind"] = "storyboard"
+        out["preview_windows"] = [[round(a, 1), round(b, 1)] for a, b in wins]
+        out["slow"] = None
+        out["ok_quality"] = bool(out["max_height"] and out["max_height"] >= MIN_HEIGHT)
+        log(f"[screen] {vid} {out['max_height']}p {out['duration']}s 적중 {out['hit_n']} 미리보기 {len(tiles)}칸 {out['title'][:40] if out['title'] else ''}")
+        return out
+    if YF.sections_bad():
+        wins = []                            # 이 PC 는 구간 받기가 멈춘다 — 토막 없이 메타·자막만으로
     for k, (a, b) in enumerate(wins):
         p = sd / f"{vid}_{k}.mp4"
         if not p.exists() and slow is None:
@@ -211,6 +227,11 @@ def download(work: Path, ids: list[str], sections: list[tuple[float, float]] | N
             if sections:
                 r = YF.download_sections(url, sections, dst, fmts=(YT_FMT_SECTION, YT_FMT_FULL), pad=pad, timeout=1800, extra=["--write-info-json"], log=log)
                 err = r.stderr[-400:] if r else "형식 전부 실패(멈춤·시간초과)"
+                if not dst.exists():
+                    # 구간 받기(ffmpeg 가 영상 주소를 직접 읽음)만 0바이트로 멈추는 회선·계정이 있다 — 통째로(yt-dlp 가 직접) 받는다(10-21 yt3: 구간 0B·통째 80초 200MB)
+                    log(f"[download] 구간 받기 실패 → 통째로 {vid}")
+                    r2 = YF.download_full(url, dst, fmt=YT_FMT_FULL, timeout=1800, log=log)
+                    err = (r2.stderr or "")[-400:]
             else:
                 r = YF.download_full(url, dst, fmt=YT_FMT_FULL, timeout=1800, log=log)
                 err = r.stderr[-400:]

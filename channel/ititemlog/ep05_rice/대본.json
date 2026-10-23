@@ -1,0 +1,177 @@
+{
+ "_note": "잇템로그판 해외반응 시리즈 — 한국 쌀 크림 만들기(2026-10-22). 원본 = Life Ledger 'LiaHUMJmkGI'(2,055만, 채널 중앙 2.1만의 965배). 한국 검증 = 한국 화장품 해외반응 주제(잇템로그 1,835만 등). 효능은 원본 화자 주장으로만 전한다(전언). 사실 근거 = Speechmatics 영어 낱말 시각 + 1초 시트.",
+ "slug": "ititemlog_ep05_rice",
+ "brand": "잇템로그판",
+ "pan": "잇템로그판",
+ "product": "한국 쌀 크림·쌀 토너(쿠팡: 쌀 크림·쌀 세안 류)",
+ "title_lines": [
+  [
+   [
+    "쌀로 크림 만드는"
+   ]
+  ],
+  [
+   [
+    "외국인 근황"
+   ]
+  ]
+ ],
+ "facts": {
+  "f1": "0.04~3.44 'This is the best Korean rice cream recipe'",
+  "f2": "3.48~ 'Do you struggle with dull skin, acne, or uneven skin tone?'",
+  "f3": "17.76~21.52 'Take one cup of rice, rinse it well, and soak it in water for 24 hours' · 23.16~27.84 'Blend it with the same water until smooth, then strain it twice'",
+  "f4": "29.28~35 'Let it settle for a few hours. Pour out the excess water and keep the thick rice extract'",
+  "f5": "38.84~50 'three tablespoons of rice extract … aloe vera gel … coconut oil' · 54.24 'Apply to your face and neck daily'",
+  "f6": "조회 20,554,795(서버 API 10-22)"
+ },
+ "cta": "없음",
+ "lines": [
+  {
+   "id": "N1",
+   "kind": "tts",
+   "role": "나레 훅(빨강)",
+   "tts": "한국 쌀로 크림을 만들어 바르는 외국인이 있는데요.",
+   "caps": [
+    {
+     "text": "한국 쌀로 크림을 만들어",
+     "key": "쌀"
+    },
+    {
+     "text": "바르는 외국인이 있는데요"
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "kind": "orig",
+   "role": "원음(소개)",
+   "src": "LiaHUMJmkGI.mp4",
+   "spans": [
+    [
+     0.04,
+     3.44
+    ]
+   ],
+   "said": "This is the best Korean rice cream recipe",
+   "caps_rel": [
+    [
+     "이게 최고의 한국 쌀 크림 레시피야",
+     0.0,
+     3.4,
+     "쌀 크림"
+    ]
+   ]
+  },
+  {
+   "id": "O2",
+   "kind": "orig",
+   "role": "원음(문제)",
+   "src": "LiaHUMJmkGI.mp4",
+   "spans": [
+    [
+     3.48,
+     7.7
+    ]
+   ],
+   "said": "Do you struggle with dull skin, acne, or uneven skin tone?",
+   "caps_rel": [
+    [
+     "피부가 칙칙하거나",
+     0.0,
+     2.1
+    ],
+    [
+     "톤이 고르지 않아서 고민이야?",
+     2.1,
+     4.22
+    ]
+   ]
+  },
+  {
+   "id": "N2",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "먼저 쌀 한 컵을 씻어서 하루 동안 물에 불렸는데요.",
+   "caps": [
+    {
+     "text": "먼저 쌀 한 컵을 씻어서"
+    },
+    {
+     "text": "하루 동안 물에 불렸는데요"
+    }
+   ]
+  },
+  {
+   "id": "N3",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "불린 물과 함께 곱게 갈아서 두 번이나 걸러 냈는데요.",
+   "caps": [
+    {
+     "text": "불린 물과 함께 곱게 갈아서"
+    },
+    {
+     "text": "두 번이나 걸러 냈는데요"
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "가라앉은 진한 쌀 원액만 남기고 물은 따라 버렸는데요.",
+   "caps": [
+    {
+     "text": "가라앉은 진한 쌀 원액만 남기고",
+     "key": "쌀 원액"
+    },
+    {
+     "text": "물은 따라 버렸는데요"
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "kind": "tts",
+   "role": "나레 과정",
+   "tts": "여기에 알로에 젤과 코코넛 오일을 세 숟갈씩 섞었는데요.",
+   "caps": [
+    {
+     "text": "여기에 알로에 젤과 코코넛 오일을"
+    },
+    {
+     "text": "세 숟갈씩 섞었는데요"
+    }
+   ]
+  },
+  {
+   "id": "N6",
+   "kind": "tts",
+   "role": "나레 결과",
+   "tts": "완성된 크림을 매일 얼굴과 목에 바른다고 하는데요.",
+   "caps": [
+    {
+     "text": "완성된 크림을"
+    },
+    {
+     "text": "매일 얼굴과 목에 바른다고 하는데요"
+    }
+   ]
+  },
+  {
+   "id": "N7",
+   "kind": "tts",
+   "role": "끝 후일담",
+   "tts": "이 영상만 조회수 이천만 회를 넘겼다고 하네요.",
+   "caps": [
+    {
+     "text": "이 영상만 조회수 2천만 회를",
+     "key": "2천만"
+    },
+    {
+     "text": "넘겼다고 하네요"
+    }
+   ]
+  }
+ ]
+}

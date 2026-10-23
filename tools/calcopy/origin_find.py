@@ -43,6 +43,51 @@ MATCH_MIN = 25          # 같은 영상 표시값(눈 판정 '같음' = 이 값)
 FRAMES = (0.15, 0.35, 0.55, 0.75)
 # 천천히 받기(사장님 10-21 "천천히 받아") — 10-21 새벽 후보 메타를 6개씩 동시에 수백 번 부르다 유튜브 'not a bot' 회선 차단(쇼츠만, 일반 영상은 됨)
 YT_SLOW = ["--sleep-requests", "2", "--sleep-interval", "4", "--max-sleep-interval", "10"]
+_YT_SEQ = [0]
+BOT_HIT: list = []
+
+
+def yt_auth(url: str) -> list:
+    """유튜브만: 로그인된 파이어폭스 yt* 프로필(버릴 구글 계정) 쿠키를 번갈아 + JS 런타임(node). 틱톡·인스타는 [].
+    10-21 회선 'not a bot' 차단 → 사장님이 yt1 에 버릴 계정 로그인 → 18:28 쇼츠 받기 성공(실측). 프로필 목록 주인 = media_download._firefox_profile_paths."""
+    if "youtube.com" not in url and "youtu.be" not in url:
+        return []
+    from shopping_shorts.media_download import _firefox_profile_paths
+    only = [x for x in os.environ.get("ORIGIN_YT_ONLY", "").split(",") if x]   # 봇 확인 걸린 계정 빼기(예: ORIGIN_YT_ONLY=yt2)
+    # 프로필 묶음 = 이름 앞글자(기본 yt — 원본찾기 세션). 회원 라인 시험 세션은 SHORTEM_YT_PROFILES=mcp(10-21 사장님 '여기 전용 두 개') — 계정 한도를 나눠 쓴다
+    live = [p for p in _firefox_profile_paths(os.environ.get("SHORTEM_YT_PROFILES") or "yt") if _yt_logged_in(p) and (not only or Path(p).name.split(".")[-1] in only)]
+    args = ["--js-runtimes", "node", "--remote-components", "ejs:github"]
+    if not live and os.environ.get("SHORTEM_YT_PROFILES"):
+        # 전용 프로필 묶음을 정했는데 로그인된 게 없으면 로그인 없이 회선을 두드리지 않는다(10-21 사장님: 그 세션은 자기 계정만, yt* 는 건드리지 말 것)
+        raise PermissionError(f"유튜브 전용 프로필({os.environ['SHORTEM_YT_PROFILES']}*)에 로그인된 계정이 없다")
+    if not live:
+        return args
+    _YT_SEQ[0] += 1
+    return ["--cookies-from-browser", f"firefox:{live[_YT_SEQ[0] % len(live)]}", *args]
+
+
+def _yt_logged_in(prof: str) -> bool:
+    """그 프로필 cookies.sqlite 에 구글 로그인 쿠키(SAPISID)가 있나 — 값은 읽지 않는다."""
+    import shutil
+    import sqlite3
+    import tempfile
+    f = Path(prof) / "cookies.sqlite"
+    if not f.exists():
+        return False
+    t = Path(tempfile.mkdtemp()) / "c.sqlite"
+    try:
+        shutil.copy(f, t)
+        for ext in ("-wal", "-shm"):
+            if Path(str(f) + ext).exists():
+                shutil.copy(str(f) + ext, str(t) + ext)
+        c = sqlite3.connect(t)
+        n = c.execute("select count(*) from moz_cookies where host like '%youtube.com' and name='SAPISID'").fetchone()[0]
+        c.close()
+        return n > 0
+    except Exception:  # noqa: BLE001 — 못 읽으면 로그인 안 된 것으로(그 프로필은 안 쓴다)
+        return False
+    finally:
+        shutil.rmtree(t.parent, ignore_errors=True)
 META_WORKERS = 1
 VERIFY = False          # 후보를 받아 ORB 대조 — 10-21 실측 같은/다른 영상 점수가 겹쳐(다른 영상 60·같은 영상 9) 끔. 같은 영상 판정 = 장면 모음 눈 판정(sheet)
 
@@ -100,14 +145,17 @@ def meta(url: str) -> dict:
     """yt-dlp 메타(받지 않음). 실패하면 {'why'}."""
     fmt = "%(id)s\t%(title)s\t%(channel,uploader)s\t%(channel_id,uploader_id)s\t%(channel_follower_count)s\t%(view_count)s\t%(upload_date)s\t%(duration)s\t%(uploader_url,channel_url)s\t%(thumbnail)s"
     try:
-        r = subprocess.run(["yt-dlp", "--skip-download", "--no-warnings", *YT_SLOW, "--print", fmt, url], capture_output=True, text=True,
+        r = subprocess.run(["yt-dlp", "--skip-download", "--no-warnings", *YT_SLOW, *yt_auth(url), "--print", fmt, url], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=180)
     except subprocess.TimeoutExpired:
         return {"why": "yt-dlp 180초 시간 초과"}   # 후보 하나가 씨앗 전체를 죽이지 않게(10-21 BGT 편 실패)
     line = (r.stdout.strip().splitlines() or [""])[-1]
     f = line.split("\t")
     if len(f) < 9:
-        return {"why": (r.stderr.strip().splitlines() or ["?"])[-1][:160]}
+        why = (r.stderr.strip().splitlines() or ["?"])[-1][:160]
+        if "not a bot" in r.stderr and ("youtube.com" in url or "youtu.be" in url):
+            BOT_HIT.append(url)   # 유튜브 봇 확인 = 그 계정 지금 걸림 → run 이 바로 멈춘다(사장님 10-21 '천천히')
+        return {"why": why}
     num = lambda x: int(float(x)) if re.fullmatch(r"[\d.]+", x or "") else None  # noqa: E731
     return {"title": f[1], "channel": f[2], "channel_id": f[3], "subs": num(f[4]), "views": num(f[5]),
             "date": f[6] if f[6] != "NA" else None, "dur": num(f[7]), "channel_url": f[8] if f[8] != "NA" else None,
@@ -120,7 +168,7 @@ def frames(url: str, d: Path, fr=FRAMES, step: float | None = None) -> list[Path
     d.mkdir(parents=True, exist_ok=True)
     v = d / "v.mp4"
     if not v.exists():
-        subprocess.run(["yt-dlp", "-q", "--no-warnings", *YT_SLOW, "-f", "b[height<=720]/bv*[height<=720]/b", "-o", str(v), url],
+        subprocess.run(["yt-dlp", "-q", "--no-warnings", *YT_SLOW, *yt_auth(url), "-f", "b[height<=720]/bv*[height<=720]/b", "-o", str(v), url],
                        capture_output=True, timeout=300)
     if not v.exists():
         return []
@@ -379,6 +427,9 @@ def cmd_run(n: int):
             L["queue"] = [x for x in L["queue"] if x != u]
             save(L)
             print("  →", r)
+            if BOT_HIT:
+                print(f"[봇확인] 유튜브가 봇 확인을 띄움({len(BOT_HIT)}건, 첫 {BOT_HIT[0]}) — 여기서 멈춘다. 계정을 쉬게 하거나 바꾼 뒤 다시")
+                break
     cmd_report()
 
 

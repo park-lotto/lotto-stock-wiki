@@ -1,0 +1,321 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 잇템로그판) · 시각은 final.mp4 기준 초",
+ "pack": "ititemlog",
+ "rows": [
+  {
+   "line": "N1",
+   "t0": 0.0,
+   "t1": 1.596,
+   "text": "한국 쿠션 한 번 발랐다가",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 1.596,
+   "t1": 3.211,
+   "text": "얼굴이 통째로 회색이 된 외국인",
+   "speaker": "narr",
+   "variant": "hook",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N1",
+   "t0": 3.211,
+   "t1": 3.916,
+   "text": "있다는데요?",
+   "speaker": "narr",
+   "variant": "hook_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 3.916,
+   "t1": 6.396,
+   "text": "한국 브랜드가 이걸 보내 줬어",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O1",
+   "t0": 6.396,
+   "t1": 7.556,
+   "text": "발라 볼까?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 7.556,
+   "t1": 9.021,
+   "text": "근데 뺨에 찍자마자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N2",
+   "t0": 9.021,
+   "t1": 10.237,
+   "text": "혼자 하얗게 떠 버렸고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O2",
+   "t0": 10.237,
+   "t1": 12.197,
+   "text": "날 보더니 이게 내 색이래",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 12.197,
+   "t1": 13.314,
+   "text": "그러자 댓글에서",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 13.314,
+   "t1": 14.507,
+   "text": "어두운 호수도 있다며",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N3",
+   "t0": 14.507,
+   "t1": 16.098,
+   "text": "다른 한국 제품을 추천해 줬는데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 16.098,
+   "t1": 17.95,
+   "text": "밝은 색은 또 하얗게 떴지만",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N4",
+   "t0": 17.95,
+   "t1": 18.18,
+   "text": "어두운 색을 펴 바르자",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "어두운 색"
+    }
+   ],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 18.18,
+   "t1": 20.56,
+   "text": "어? 이거 진짜 예쁜데?",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "O3",
+   "t0": 20.56,
+   "t1": 21.52,
+   "text": "나 충격이야",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 21.52,
+   "t1": 23.834,
+   "text": "요즘은 한국 쿠션 호수가",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N5",
+   "t0": 23.834,
+   "t1": 25.039,
+   "text": "서른 개까지 늘었다던데",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 25.039,
+   "t1": 26.415,
+   "text": "제일 어두운 색 이름은",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N6",
+   "t0": 26.415,
+   "t1": 27.512,
+   "text": "에스프레소라고 하고",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 27.512,
+   "t1": 28.449,
+   "text": "아, 나도",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 28.449,
+   "t1": 29.762,
+   "text": "목이랑 얼굴 색 다른 쿠션",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  },
+  {
+   "line": "N7",
+   "t0": 29.762,
+   "t1": 31.067,
+   "text": "오늘 그냥 바꿔야겠다",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": []
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = ro1l3u734v4",
+  "훅 N1 덩어리 3개 → hook (끝 hook_pop)",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 22} · 강조 1/22"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "ro1l3u734v4",
+  "worst_slot_diff": 0.056,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 7
+   },
+   "narr.rest": {
+    "bench": {
+     "cut": 0.94,
+     "pop": 0.06
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.06,
+    "ours_emph": 0.1,
+    "n": 10
+   },
+   "orig.first": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 3
+   },
+   "orig.rest": {
+    "bench": {
+     "cut": 1.0
+    },
+    "ours": {
+     "cut": 1.0
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 2
+   },
+   "stickers": {
+    "bench": {},
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}
