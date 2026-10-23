@@ -1,0 +1,170 @@
+{
+ "topic": "불닭볶음면 — 해외 대박의 시작 = 영국남자 2014 도전 영상(회사 설명) × 처음엔 '사람이 먹을 수 없는 맛' 평가 → 명동에서 시작 → 연구원 닭 1200마리·소스 2톤·헛구역질 → 영국남자 영상으로 파이어 누들 챌린지 → 해외 매출 80%+ 불닭 → 뒤 체험: 쿠팡 오리지널 불닭볶음면 5개입(7460681274)",
+ "brand": "삼양",
+ "scene_query": "불닭볶음면",
+ "ing": {
+  "line": 0,
+  "fact": "n1",
+  "why": "누구나 아는 불닭이 세계로 간 시작이 영국남자 한 편이었다(뉴시스 — 회사 설명)·처음엔 '사람이 먹을 수 없는 맛' 평가 · 훅 장면 = 그 영상 원본(영국남자 본인 채널 2014) 자체라 장면이 곧 '이 영상이 시작?' 질문 · 남의 영상 반응: 영국남자 원본 댓글 'Is this really the first of ALL Fire Noodle challenges?'(2800)·'홍보대사로 지정해야'(2500), 유퀴즈 클립 '연구원 노벨평화상'(24000)·'월급 말곤 받은 게 없다'(7200)"
+ },
+ "hook": [
+  "영국 사람들 혼쭐 낸 이 영상,",
+  "불닭 세계화의 시작이었다"
+ ],
+ "post": "영국남자 영상 한 편이 불닭을 세계로 띄운 사연",
+ "tempo": null,
+ "points_from": "포인트.md",
+ "facts": {
+  "n1": {
+   "text": "뉴시스 2022-04-17 [장수브랜드 탄생비화] 불닭볶음면: '2011년 … 명동 소재 음식점에서' 매운 음식을 즐기는 젊은이들을 보고 개발 · '2012년 4월 첫 출시' · '너무 매워서 도저히 사람이 먹을 수 없는 수준이라는 평가를 받았다' · '영국 남자로 유명한 유튜브 스타 조쉬가 불닭볶음면 먹기에 도전하는 영상을 올린 것을 시작으로' Fire Noodle Challenge 유행 · '삼양식품 해외 매출 중 80% 이상이 불닭브랜드에서 발생한다'",
+   "url": "https://www.newsis.com/view/NISX20220415_0001834542"
+  },
+  "y1": {
+   "text": "tvN 유퀴즈온더블럭 공식 클립(tvN D ENT, 인증) 2021-12-18 — 삼양 조미개발 팀장: '개발을 하면서 닭을 1천2백 마리 정도 먹은 것 같아요, 개발이 완료되기까지 … 소스는 2톤 정도' · '너무 많이 먹다 보니까 연구원들 중에는 닭 소리만 해도 막 헛구역질하고 … 좋아하던 치킨도 당분간은 먹지 않았어요' · 황금 레시피 '콘치즈·마요네즈·모짜렐라 치즈가 들어가면서 매운맛이 좀 덜'",
+   "url": "https://www.youtube.com/watch?v=moXXygl9_SQ"
+  },
+  "s1": {
+   "text": "SBS STORY 식자회담(인증) 2022-08-16 — 김정수 부회장: 딸아이와 명동 식당에 갔다가 많은 분들이 너무나도 매운 음식을 즐기는 걸 보고 개발 시작",
+   "url": "https://www.youtube.com/watch?v=QcJ6_JD6nQA"
+  },
+  "k1": {
+   "text": "영국남자 Korean Englishman(본인 채널, 인증) '런던의 불닭볶음면 도전!! // FIRE NOODLE CHALLENGE!!' 2014-02-09 업로드(1154만 회) — 같은 채널 2018 영상 제목 'ORIGIN of the Korean Fire Noodle Challenge'",
+   "url": "https://www.youtube.com/watch?v=JWZmdWP67DA"
+  },
+  "p1": {
+   "text": "쿠팡 7460681274 '불닭볶음면 140g' 상품 사진: 삼양 오리지널 불닭볶음면 5개입(700g, 140g×5) · 포장에 '액상스프' 표기",
+   "url": "https://www.coupang.com/vp/products/7460681274"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(장면=질문)",
+    "seg": "A",
+    "text": "영국 사람들 혼쭐 낸 이 영상이, 불닭 해외 대박의 시작이었다는데",
+    "facts": [
+     "k1",
+     "n1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=JWZmdWP67DA",
+     "https://www.newsis.com/view/NISX20220415_0001834542"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(첫 반응)",
+    "seg": "A",
+    "text": "처음 나왔을 땐, 사람이 먹을 수 없는 맛이란 소리까지 들었다고",
+    "facts": [
+     "n1"
+    ],
+    "sources": [
+     "https://www.newsis.com/view/NISX20220415_0001834542"
+    ]
+   },
+   {
+    "fn": "시작(명동)",
+    "seg": "A",
+    "text": "시작은 명동, 매운 걸 땀 흘리며 즐기는 사람들이었고",
+    "facts": [
+     "n1",
+     "s1"
+    ],
+    "sources": [
+     "https://www.newsis.com/view/NISX20220415_0001834542",
+     "https://www.youtube.com/watch?v=QcJ6_JD6nQA"
+    ]
+   },
+   {
+    "fn": "몰랐던 정도",
+    "seg": "A",
+    "text": "개발하면서 연구원들이 먹은 닭만 천이백 마리, 소스는 2톤",
+    "facts": [
+     "y1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=moXXygl9_SQ"
+    ]
+   },
+   {
+    "fn": "덤(헛구역질)",
+    "seg": "A",
+    "text": "나중엔 닭 소리만 들어도, 헛구역질이 났다고 함",
+    "facts": [
+     "y1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=moXXygl9_SQ"
+    ]
+   },
+   {
+    "fn": "반전(영국남자)",
+    "seg": "A",
+    "text": "그러다 2014년, 영국남자의 이 영상으로, 파이어 누들 챌린지가 번졌고",
+    "facts": [
+     "k1",
+     "n1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=JWZmdWP67DA",
+     "https://www.newsis.com/view/NISX20220415_0001834542"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "지금은 삼양 해외 매출 80% 넘게가, 불닭이라는 얘기",
+    "facts": [
+     "n1"
+    ],
+    "sources": [
+     "https://www.newsis.com/view/NISX20220415_0001834542"
+    ]
+   },
+   {
+    "fn": "B 연결",
+    "seg": "B",
+    "text": "영국 사람들 표정이 궁금해서, 저도 쿠팡에서 다섯 봉을 시켜 봤는데",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7460681274"
+    ]
+   },
+   {
+    "fn": "B 좋은 점①",
+    "seg": "B",
+    "text": "소스가 따로라, 맵기를 입맛대로 덜 넣을 수 있고",
+    "facts": [
+     "p1"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/7460681274"
+    ]
+   },
+   {
+    "fn": "B 좋은 점②",
+    "seg": "B",
+    "text": "개발자 말대로 치즈를 올리니, 매운맛이 한결 부드럽더라고요",
+    "facts": [
+     "y1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=moXXygl9_SQ"
+    ]
+   },
+   {
+    "fn": "B 끝(훅 되받기)",
+    "seg": "B",
+    "text": "우유 들이켜면서도 끝까지 먹던 영국 사람들, 이제 이해가 되네요",
+    "facts": [
+     "k1"
+    ],
+    "sources": [
+     "https://www.youtube.com/watch?v=JWZmdWP67DA"
+    ]
+   }
+  ]
+ }
+}
