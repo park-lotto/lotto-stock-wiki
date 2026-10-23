@@ -89,13 +89,18 @@ def _judge_gemini(prompt):
 def _judge_groq(model):
     def run(prompt):
         import requests
+        import time
         key = _env_key("GROQ_API_KEY")
         if not key:
             raise RuntimeError("GROQ_API_KEY 없음")
-        r = requests.post("https://api.groq.com/openai/v1/chat/completions", timeout=120,
-                          headers={"Authorization": "Bearer " + key},
-                          json={"model": model, "temperature": 0.2, "response_format": {"type": "json_object"},
-                                "messages": [{"role": "user", "content": prompt}]})
+        for wait in (0, 8, 20):       # 무료 한도 429 — 잠깐 쉬고 다시(실측 10-23 토론 2판째)
+            time.sleep(wait)
+            r = requests.post("https://api.groq.com/openai/v1/chat/completions", timeout=120,
+                              headers={"Authorization": "Bearer " + key},
+                              json={"model": model, "temperature": 0.2, "response_format": {"type": "json_object"},
+                                    "messages": [{"role": "user", "content": prompt}]})
+            if r.status_code != 429:
+                break
         r.raise_for_status()
         return _parse(r.json()["choices"][0]["message"]["content"])
     return run
@@ -158,3 +163,94 @@ def review(lines, lang, source=None, judges=None):
             fix = next((votes[n]["fix"] for n in pref if votes[n]["fix"]), "")
         out.append({"i": i, "text": text, "votes": votes, "flagged": flagged, "fix": fix})
     return {"lang": lang, "judges": list(got), "skipped": skipped, "lines": out}
+
+
+# ── 토론으로 다듬기(2026-10-23 사장님 "서로 점수를 주고 괜찮은 문장으로 수정되면 계속 의견을 교환하게") ──
+# 문제 줄 하나를 두고 판마다: 모든 심사위원이 후보 전부에 점수·의견 → 다른 위원 의견을 보고 더 나은 안 제시.
+# 합의 = 한 후보가 모든 위원 4점 이상 + 평균 AGREE_AVG 이상. 아니면 다음 판(최대 rounds). 판단 주인 = debate().
+AGREE_MIN, AGREE_AVG = 4, 4.5
+
+_DEBATE = """{persona}
+
+You are in a review panel with other native experts. We are fixing ONE line of a shopping-shorts voice-over.
+Context (previous line / next line) so the flow must connect naturally:
+  previous: {prev}
+  next: {next}
+Original meaning it must keep{src_note}: {src}
+
+Candidates so far, with the other experts' comments from the last round:
+{cands}
+
+1) Score EVERY candidate 1-5 (5 = exactly what a native creator would say here, same meaning, flows with context).
+   Give a short comment in Korean for each.
+2) If no candidate deserves 5 from you, write ONE better line in {lang_name} only (same meaning, nothing added). Else "".
+Return ONLY JSON: {{"scores":[{{"k":0,"score":5,"comment":""}}, ...], "better":""}}
+"""
+
+
+def _ask_json(name, prompt):
+    if name == "gemini":
+        from shopping_shorts import script_generate
+        return script_generate._call_json(prompt, {"type": "object", "properties": {
+            "scores": {"type": "array", "items": {"type": "object", "properties": {
+                "k": {"type": "integer"}, "score": {"type": "integer"}, "comment": {"type": "string"}},
+                "required": ["k", "score", "comment"]}}, "better": {"type": "string"}},
+            "required": ["scores", "better"]}, vertex_op="native_review") or {}
+    return JUDGES[name](prompt)
+
+
+def debate(lines, i, lang, source=None, judges=None, rounds=3, start=None):
+    """lines[i] 한 줄을 심사위원 토론으로 다듬는다. start = 처음부터 넣을 후보(검수 때 나온 고친 안 등).
+    → {"final", "agreed", "rounds":[{"round", "cands":[{text, scores{judge:n}, avg}], "skipped"}]}"""
+    from shopping_shorts.script_translate import _is_lang
+    names = list(judges or JUDGES)
+    cands = [lines[i]] + [x for x in (start or []) if x and x != lines[i]]
+    notes = {}                                  # 후보 → [위원: 의견]
+    log = []
+    best = None
+    for rnd in range(1, max(1, rounds) + 1):
+        ctext = "\n".join(f"  [{k}] {c}" + (("\n      comments: " + " | ".join(notes[c][-4:])) if notes.get(c) else "")
+                          for k, c in enumerate(cands))
+        prompt = _DEBATE.format(persona=PERSONA[lang], lang_name=_LANG_NAME[lang], cands=ctext,
+                                prev=lines[i - 1] if i > 0 else "(none)",
+                                next=lines[i + 1] if i + 1 < len(lines) else "(none)",
+                                src_note=" (original script)" if source else "",
+                                src=(source[i] if source else lines[i]))
+        got, skipped = {}, {}
+
+        def call(n):
+            try:
+                return n, _ask_json(n, prompt), None
+            except Exception as e:      # noqa: BLE001 — 한 위원이 죽어도 토론은 계속, 이유는 남긴다
+                return n, None, f"{type(e).__name__}: {e}"[:200]
+        with ThreadPoolExecutor(len(names)) as ex:
+            for n, res, err in ex.map(call, names):
+                if err or not isinstance(res, dict) or not isinstance(res.get("scores"), list):
+                    skipped[n] = err or "응답 형식 아님"
+                else:
+                    got[n] = res
+        scored = []
+        for k, c in enumerate(cands):
+            sc = {}
+            for n, res in got.items():
+                for s in res["scores"]:
+                    if isinstance(s, dict) and int(s.get("k", -1)) == k:
+                        sc[n] = int(s.get("score") or 0)
+                        if s.get("comment"):
+                            notes.setdefault(c, []).append(f"{n}: {s['comment']}")
+            avg = round(sum(sc.values()) / len(sc), 2) if sc else 0
+            scored.append({"text": c, "scores": sc, "avg": avg})
+        scored.sort(key=lambda x: (-x["avg"], -min(x["scores"].values() or [0])))
+        # 최종 = 지금까지 모든 판을 통틀어 최고(마지막 판 1위가 앞 판 1위보다 못할 수 있다 — 실측 4.25 → 3.5)
+        if best is None or (scored[0]["avg"], min(scored[0]["scores"].values() or [0])) > (best["avg"], min(best["scores"].values() or [0])):
+            best = scored[0]
+        log.append({"round": rnd, "cands": scored, "skipped": skipped})
+        if best["scores"] and min(best["scores"].values()) >= AGREE_MIN and best["avg"] >= AGREE_AVG:
+            return {"final": best["text"], "agreed": True, "rounds": log}
+        new = [str(r.get("better") or "").strip() for r in got.values()]
+        new = [x for x in new if x and _is_lang(x, lang) and x not in cands]
+        if not new:
+            break
+        # 다음 판 후보 = 이번 판 상위 2개 + 새 안(후보가 끝없이 늘지 않게)
+        cands = [x["text"] for x in scored[:2]] + list(dict.fromkeys(new))
+    return {"final": best["text"] if best else lines[i], "agreed": False, "rounds": log}
