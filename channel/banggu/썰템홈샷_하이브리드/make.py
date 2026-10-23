@@ -9,7 +9,7 @@
 
 하이브리드 = 앞(seg A) 썰 + 뒤(seg B) "저도 사 봤는데" 체험 — 한 렌더(같은 목소리·같은 틀·같은 BGM, §14 앞뒤 전환).
 틀 = 썰템홈샷 외관(10-17 샘플 B 차콜·민트 — make_썰템홈샷.py 의 header/text/band/CORNER 를 그대로 부른다).
-목소리 = 박창수 tc_6059dad0b83880769a50502f · tempo 기본(대본 tempo 로만 바꿈, 상한 1.25) — 필재 금지(§12).
+목소리 = 박창수 tc_6059dad0b83880769a50502f · tempo 1.1(TEMPO_DEFAULT, 사장님 10-24 한 템포 빠르게 — 대본 tempo 로만 바꿈, 상한 1.25) — 필재 금지(§12).
 받아쓰기 = 스피치매틱스(asr_local, 규칙 12) — narr_video 줄 시작 캐시(<mp3>.asr.json)를 먼저 채워 제미나이를 부르지 않는다.
 컷 시각 = narr_video.plan_times 한 곳(plan 표와 렌더가 같은 계산). 재료.json sfx 는 t(초) 또는 line(대본 줄 번호 — 그 줄 첫 자막 시각).
 관문(checks) = 길이 · LUFS · bench_distance(방구석 표절) · 나레 받아쓰기 대조 · 쉼표·줄 끝 쉼(narr_pause) · 광고 표시(engine/ad_mark) · 1초 시트.
@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT))
 WORK = Path("C:/숏템_칼카피/banggu/썰템홈샷_하이브리드")
 VOICE = "tc_6059dad0b83880769a50502f"   # 박창수
 TEMPO_MAX = 1.25
+TEMPO_DEFAULT = 1.1   # 박창수 한 템포 빠르게(사장님 10-24 "한 템포만 빠르게") — 대본 tempo 가 있으면 그것
 LENGTH = (30.0, 42.0)                   # 앞 썰(방구석 결 중앙 ~26초) + 뒤 체험 10~15초
 BGM, BGM_RATIO, LUFS = "honwaka_puppu", 0.22, -14.0
 CHUNK = 13
@@ -57,7 +58,7 @@ def paths(piece: str) -> dict:
 def frames(piece: str):
     P = paths(piece); S = _j(P["script"])
     hook, post = S["hook"], S["post"]
-    meta = K.BRAND + " · 14:25"
+    meta = K.BRAND   # 가짜 시각(· 14:25) 뺌 — 사장님 10-24 "이거 중간에 왜 있는 거지? 숫자??"
     post2 = K.split2(post)
     body = {"canvas": [1080, 1920], "made_by": K.schema.MADE_BY, "source": None,
             "made_from": {"tool": "channel/banggu/썰템홈샷_하이브리드/make.py", "note": "썰템홈샷 외관(샘플 B 차콜·민트) — make_썰템홈샷 body 와 같은 층"},
@@ -94,7 +95,7 @@ def _lines(S):
 
 def tts(piece: str):
     P = paths(piece); S = _j(P["script"])
-    tempo = S.get("tempo")
+    tempo = S.get("tempo") or TEMPO_DEFAULT
     if tempo and tempo > TEMPO_MAX:
         raise SystemExit(f"tempo {tempo} > 상한 {TEMPO_MAX} — 배속 말고 글을 줄인다")
     from tools.calcopy import narr_pause
@@ -323,7 +324,8 @@ def line_gap(P, S, segs) -> list:
     heard = asr_line_starts(_lines(S), segs)
     gaps = {k: round(used[k] - h, 2) for k, h in enumerate(heard) if h is not None and k in used}
     worst = max(gaps.values(), key=abs) if gaps else None
-    return [{"가장 큰 차이": worst, "줄별": gaps}, worst is not None and abs(worst) <= 0.15]
+    miss = [k for k in range(len(_lines(S))) if k not in gaps]   # 못 찾은 줄도 실패 — 10-24 03b 1~6줄을 못 찾았는데 '통과'(0번 컷 23초)
+    return [{"가장 큰 차이": worst, "줄별": gaps, **({"못 찾은 줄": miss} if miss else {})}, worst is not None and abs(worst) <= 0.15 and not miss]
 
 
 def _pause(P, S, segs):

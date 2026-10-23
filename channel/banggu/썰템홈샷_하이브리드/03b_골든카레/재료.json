@@ -3,45 +3,31 @@
  "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03b_골든카레/src",
  "shots": [
   {
-   "src": "vmTSfRXY5CM.mp4",
-   "ss": 147.65,
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
+   "ss": 17.3,
    "fit": "cover",
    "cuts": [
     {
-     "src": "vmTSfRXY5CM.mp4",
-     "ss": 147.65,
-     "dur": 1.5,
-     "fit": "cover",
-     "src_crop": [
-      380,
-      44,
-      640,
-      676
-     ]
-    },
-    {
-     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homealone.mp4",
-     "ss": 0.0,
-     "dur": 1.94,
-     "fit": "cover",
-     "kind": "짤"
-    },
-    {
      "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
      "ss": 17.3,
-     "dur": 1.35,
-     "fit": "cover",
+     "dur": 1.7
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_nickyoung.mp4",
+     "ss": 0.0,
+     "dur": 1.9,
      "src_crop": [
+      0,
+      0,
       640,
-      150,
-      1060,
-      1000
-     ]
+      480
+     ],
+     "kind": "짤"
     }
    ],
-   "ours": "SBS 공식 SBS 스브스 Drama 「상속자들」 영도가 김탄(이민호) 어깨에 카레를 붓는 장면(147.65, SBS 로고 crop 밖) → 짤 1070 나 홀로 집에 비명 → S&B 공식 CM 골든카레 상자",
-   "why": "'재벌 2세도 머리로 먹어 본 카레' = 누구나 아는 장면(조회 1548만) / 받아치기 짤 / '골든카레의 에스앤비' = 상자",
-   "url": "https://www.youtube.com/watch?v=vmTSfRXY5CM | https://www.youtube.com/watch?v=Mqo50OEuj1Q",
+   "ours": "S&B 공식 CM 골든카레 상자(S&B 로고) → 짤 Nick Young ???(물음표 표정, 워터마크 crop 밖)",
+   "why": "'골든카레 에스앤비, 다들 스파이스 앤 허브로 알죠?' = 상자 S&B 로고 → 물음표 표정 짤(다들 그렇게 알죠?) — 10-24 상속자들 장면 뺌(S&B 뜻과 무관)",
+   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q",
    "full": true
   },
   {
@@ -422,20 +408,13 @@
      ]
     },
     {
-     "src": "vmTSfRXY5CM.mp4",
-     "ss": 162.4,
-     "dur": 1.77,
-     "fit": "cover",
-     "src_crop": [
-      420,
-      40,
-      520,
-      680
-     ]
+     "src": "still_hidori_card.mp4",
+     "ss": 0.1,
+     "dur": 1.8
     }
    ],
    "ours": "완성 카레라이스 접시 → 상속자들 같은 장면 뒤쪽: 어깨에 카레를 뒤집어쓴 김탄(162.4 — 훅 컷과 15초 떨어짐, SBS 로고 crop 밖)",
-   "why": "끝 줄 '60년째 … 이건 어깨 말고 밥에 부어야죠' — 훅 되받기",
+   "why": "끝 줄 '태양과 새가 60년째 지킨 맛' — 카레 한 숟갈 → 태양·새 상표로 되받기(10-24 어깨 말장난 뺌)",
    "url": "https://www.youtube.com/watch?v=HpuMaXxJfzA | https://www.youtube.com/watch?v=vmTSfRXY5CM"
   }
  ],
@@ -448,11 +427,11 @@
    "why": "훅 시작 휙"
   },
   {
-   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_22.mp3",
    "line": 0,
-   "dt": 2.5,
+   "dt": 1.75,
    "db": -2,
-   "why": "나 홀로 집에 짤 입 벌리는 순간 뜨헉"
+   "why": "물음표 표정 짤 뻐꾹(의심)"
   },
   {
    "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
@@ -494,7 +473,14 @@
    "line": 10,
    "dt": 1.3,
    "db": -3,
-   "why": "상속자들 되받기 휙"
+   "why": "태양·새 상표 되받기 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_06.mp3",
+   "line": 1,
+   "dt": 0.0,
+   "db": -3,
+   "why": "'근데 원래는' 반전 두둥"
   }
  ]
 }

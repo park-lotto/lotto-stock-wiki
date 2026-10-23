@@ -56,6 +56,7 @@ def chunk_sentence(s: str, n: int = 14) -> list[str]:
     return [" ".join(re.sub(r",(?!\d)", " ", o).split()) for o in out]   # 쉼표는 소리(쉼)에만 — 자막엔 안 띄운다(조각 가운데 쉼표가 뜨던 것, 10-22 01b)
 
 
+BGM_FADE = 0.8   # 끝 BGM 줄이기(초) — 없으면 마지막 프레임에서 음악이 뚝 끊긴다(사장님 10-24)
 CHUNK_SLACK = 3   # 조각 상한 = n + 이것. 붙이기(꼬리·꾸밈 낱말·짧은 조각)도 이 상한을 넘지 않는다 — 판단 주인 chunk_sentence
 
 
@@ -693,7 +694,7 @@ def build(plan: dict):
     ins = ["-i", plan["tts"]]
     if bgm:
         ins += ["-stream_loop", "-1", "-i", bgm]
-        fc += (f";[2:a]atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,loudnorm=I={target}:TP=-1.5:LRA=11,aresample=48000,volume={plan.get('bgm_ratio', 0.15)}[b]"
+        fc += (f";[2:a]atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,loudnorm=I={target}:TP=-1.5:LRA=11,aresample=48000,volume={plan.get('bgm_ratio', 0.15)},afade=t=out:st={max(0.0, dur - BGM_FADE):.3f}:d={BGM_FADE}[b]"
                f";[n][b]amix=inputs=2:normalize=0:duration=first[m]")
     fc += f";[{'m' if bgm else 'n'}]alimiter=limit=0.89:level=false[a]"
     mixed = out / "work" / "mixed.wav"

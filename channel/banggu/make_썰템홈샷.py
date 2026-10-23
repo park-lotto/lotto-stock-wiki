@@ -56,7 +56,7 @@ def frames(key):
     oh = json.loads((d / "frame_hook.json").read_text(encoding="utf-8"))
     post = [l for l in ob["layers"] if l["kind"] == "text" and l["role"] == "label"][0]["text"]
     hook = [l for l in oh["layers"] if l["kind"] == "text" and l["role"] == "title"][0]["text"].split(chr(10))
-    meta = BRAND + " · 14:25"
+    meta = BRAND   # 가짜 시각 뺌(사장님 10-24)
     post2 = split2(post)
     body = {"canvas": [1080, 1920], "made_by": schema.MADE_BY, "source": ob.get("source"),
             "made_from": {"tool": "channel/banggu/make_썰템홈샷.py", "note": "샘플 B 차콜·민트네온 — 그림 칸 가로 전체·자막 그림 아래 박스(v2 배치 유지)"},
