@@ -375,3 +375,12 @@ def test_misread_label_falls_back_to_similar_channel(monkeypatch, tmp_path):
     monkeypatch.setattr(R, "c_channel_list", lambda W, d: {"titles": [{"id": "x", "title": "t", "dur": 600}]})
     r = R.c_channel_find(tmp_path, {"label": "쌩코TV", "kind": "channel", "celeb": "함익병", "queries": ["함익병 기미"]})
     assert r["picked"][0]["id"] == "UCsel" and r["titles"]
+
+
+def test_origin_read_gets_big_frame_for_label():
+    """출처 글자는 큰 장면 한 장으로 읽는다(98 #68: 시트 칸 300px → '셀코TV'를 '없음'·'쌩코TV'로)."""
+    from tools.calcopy.hybrid import flow
+    st = {"tries": {}, "log": []}
+    r = flow.ph_bench_got(st, {"bench": {"id": "b", "sheet": "bench/sheet.jpg", "big": "bench/big.jpg", "lines": []}}, {}, {})
+    rv = r["review"][0]
+    assert any(x.get("file") == "bench/big.jpg" for x in rv["show"]) and "둘째 그림" in rv["ask"] and st["bench"]["big"] == "bench/big.jpg"

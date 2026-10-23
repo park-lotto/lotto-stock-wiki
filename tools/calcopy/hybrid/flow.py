@@ -64,7 +64,7 @@ TRAPS = {   # 단계별 함정(98_오류기록 번호) — 회원 Claude 판정�
 # ── 판정 질문(회원 Claude) — customer.py(10-21) 지시문을 옮겨 왔다 ─────────────────
 ORIGIN_READ = """너는 쇼츠 원본 추적 담당이다. 아래는 남의 채널이 만든 연예인 쇼핑 쇼츠(벤치)의 1초 간격 장면 시트와 제목·설명·받아쓰기다.
 이 쇼츠가 따온 **연예인 본인 원본 영상**(본인 유튜브·방송)을 찾기 위한 단서를 읽어라.
-- 화면 위·아래의 '출처: ○○' 글자 = 원본 채널. 화면에 없으면 **설명란**의 출처 표기(출처·원본·영상 출처 ○○). 둘 다 없으면 source_label ''. 방송 로고·프로그램 이름도 본다. 이름표·자막으로 말하는 사람을 확인(얼굴로 짐작한 이름은 '불명').
+- 화면 위·아래의 '출처: ○○' 글자 = 원본 채널(★글자는 **둘째 그림(한 장면 크게)**에서 한 자씩 읽는다 — 시트 칸은 작아 잘못 읽는다, 98 #68). 화면에 없으면 **설명란**의 출처 표기(출처·원본·영상 출처 ○○). 둘 다 없으면 source_label ''. 방송 로고·프로그램 이름도 본다. 이름표·자막으로 말하는 사람을 확인(얼굴로 짐작한 이름은 '불명').
 - 설명란 '영상 속 제품'은 그 채널의 파트너스 상품일 뿐 근거가 아니다.
 - 연예인이 쓰는 물건(쇼핑 소재)이 아니면 is_shopping=false. 의약품·의료기기면 is_shopping=false.
 JSON 하나: {"celeb": "이름 또는 불명", "source_label": "출처 글자 그대로(화면 → 설명란) 또는 ''",
@@ -347,11 +347,12 @@ def ph_bench_got(st, m, rp, u):
     b = m.get("bench") or {}
     if b.get("error"):
         raise _Stop("영상을 받지 못했습니다", "영상 주소가 맞는지, 또는 유튜브 로그인 연결을 확인해 주세요")
-    st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet")}
+    st["bench"] = {k: b.get(k) for k in ("id", "title", "channel", "date", "dur", "desc", "sheet", "big")}
     st["bench_lines"] = b.get("lines") or []
     return {"review": [_rv("origin_read", ORIGIN_READ + "\n\n제목: " + str(b.get("title")) + "\n채널: " + str(b.get("channel")) +
                            "\n설명: " + str(b.get("desc") or "")[:1500] + "\n받아쓰기: " + " / ".join(str(l.get("text")) for l in st["bench_lines"])[:3000],
-                           [_img(b["sheet"])] if b.get("sheet") else [], need=("celeb", "queries", "is_shopping"))], "then": "origin_read"}
+                           ([_img(b["sheet"])] if b.get("sheet") else []) + ([_img(b["big"])] if b.get("big") else []),
+                           need=("celeb", "queries", "is_shopping"))], "then": "origin_read"}
 
 
 # ── 2 원본 찾기 ───────────────────────────────────────────────────────────

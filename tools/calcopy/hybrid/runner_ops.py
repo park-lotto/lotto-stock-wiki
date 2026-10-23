@@ -191,6 +191,11 @@ def c_bench(W, d):
     if mp4.exists():
         sheet(mp4, bd / "sheet.jpg")
         out["sheet"] = "bench/sheet.jpg"
+        # 출처 글자 읽기용 큰 장면 한 장(98 #68: 시트 칸 300px 이면 '출처 : 셀코TV' 가 8px — 같은 영상을 '없음'·'쌩코TV'로 읽었다)
+        run(["ffmpeg", "-y", "-v", "error", "-ss", f"{min(1.5, float(out.get('dur') or 3) / 2):.2f}", "-i", str(mp4), "-frames:v", "1",
+             "-vf", "scale=720:-2", str(bd / "big.jpg")])
+        if (bd / "big.jpg").exists():
+            out["big"] = "bench/big.jpg"
         lines = asr(mp4)
     else:                              # 받아 둔 벤치에 영상이 없다(시험) — 자막 낱말을 3초씩 묶어 말 줄로
         lines, cur, t0 = [], [], None
