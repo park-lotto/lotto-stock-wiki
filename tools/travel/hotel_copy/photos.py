@@ -143,10 +143,10 @@ def pick(photos, ep_lines, thumb_hint, used=None):
     return {"file": th["file"], "cx": auto_cx(th["file"]), "desc": th["desc"]}
 
 
-SITE_BONUS = {"official": 1.0, "yeogi": 0.6, "trip": 0.3, "agoda": 0.3}   # 공식 홈 사진이 먼저(손님 사진이 섞이는 곳은 뒤로)
+SITE_BONUS = {"official": 1.0, "yeogi": 0.6, "trip": 0.3, "agoda": 0.3, "yeogi_review": 0.0}   # 공식 홈 사진이 먼저(손님 사진이 섞이는 곳은 뒤로)
 
 
-def pick_vision(photos, ep_lines, thumb_hint, work):
+def pick_vision(photos, ep_lines, thumb_hint, work, thumb_kinds=None, end_is_thumb=True):
     """줄마다 후보 12장(낱말·종류 점수 순)을 격자로 → Claude 가 사진을 보고 힌트에 맞는 번호를 고른다.
     실측 2026-10-23: 낱말 맞추기만으로는 '피트니스'에 수영장 외관·'사우나'에 식당·썸네일에 일출이 걸렸다."""
     from shopping_shorts import travel_build as tb
@@ -195,10 +195,11 @@ def pick_vision(photos, ep_lines, thumb_hint, work):
             used.add(c["file"])
             out.append(c)
         return out
-    th = ask([thumb_hint], cands([thumb_hint], only=lambda p: p["kind"] in ("exterior", "view", "water_aerial")), "thumb")[0]
+    # 썸네일 종류·끝 컷=썸네일 여부는 원본마다 다르다(refs/<id>.json 의 thumb_kinds·end_same_as_thumb) — 1위 온천=건물·끝 컷 같음 / 촌캉스=바비큐·끝 컷 다름
+    th = ask([thumb_hint], cands([thumb_hint], only=(lambda p: p["kind"] in thumb_kinds) if thumb_kinds else None), "thumb")[0]
     for li, line in enumerate(ep_lines):
         hints = list(line["shot_hints"])
-        last = li == len(ep_lines) - 1
+        last = end_is_thumb and li == len(ep_lines) - 1
         ask_h = hints[:-1] if last else hints
         chosen = ask(ask_h, cands(ask_h), "%d" % (li + 1)) if ask_h else []
         if last:

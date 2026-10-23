@@ -100,7 +100,11 @@ def yeogi(url, out_dir):
     """여기어때 — 주인 함수 travel_source.fetch 가 고른 공식 사진만."""
     from shopping_shorts import travel_source
     d = travel_source.fetch(url)
-    return _download_all([(p["url"], url) for p in d.get("photos") or []], out_dir, "yeogi", url)
+    got = _download_all([(p["url"], url) for p in d.get("photos") or []], out_dir, "yeogi", url)
+    # 후기 사진(투숙객이 올린 것)도 받는다 — 숙소 사진에 '고기 굽는 장면' 같은 체험 컷이 없을 때가 있다(실측: 아이리스 촌캉스 숙소 사진 74장에 굽는 장면 0).
+    # 고를 때는 SITE_BONUS 가 숙소 사진 뒤로 미룬다. 출처 표기 = '여기어때 후기'
+    revs = travel_source.yeogi_reviews(d["id"])
+    return got + _download_all([(i, url) for r in revs for i in r["images"]], out_dir, "yeogi_review", url)
 
 
 def agoda(url, out_dir, scrolls=10):

@@ -12,6 +12,7 @@
 """
 import argparse
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -90,7 +91,7 @@ def s_facts(job, st):
     f = {"hotel": st["hotel"]}
     if st["urls"].get("yeogi"):
         d = travel_source.fetch(st["urls"]["yeogi"])
-        f["detail"] = {k: d.get(k) for k in ("name", "grade", "address", "rating", "review_count", "facilities", "story_facts")}
+        f["detail"] = {k: d.get(k) for k in ("name", "grade", "address", "price_from", "rating", "review_count", "facilities", "story_facts")}
     if st.get("insights"):
         f["insights"] = load(st["insights"])
     elif st["urls"].get("yeogi"):
@@ -105,21 +106,17 @@ def _script_prompt(ref, facts, fix=None, inventory=""):
     roles = "\n".join("%d. [%s] 규칙: %s / 원본: %s / 원본 자막 조각: %s / 원본 %d자 / 반드시 들어갈 말: %s / 사진 %d장(힌트 예: %s)"
                       % (i + 1, r["role"], r["rule"], r["ref"], " | ".join(r["chunks"]), r["chars"], ", ".join(r["must"]), r["shots"], r["shot_hint"])
                       for i, r in enumerate(ref["roles"]))
-    return ("잘된 숙소 쇼츠 원본 대본의 틀을 그대로 두고 숙소만 바꿔 쓴다. 원본은 숙소를 걸어 들어가는 순서로 말한다"
-            "(입구 → 안 시설 → '특히' 하이라이트 → '~지만' 반전 → 상황 권유). 역할·어미·말 길이를 원본과 같게.\n\n"
+    rules = "\n".join("- " + x for x in ref.get("script_rules") or [])      # 원본마다 다른 규칙은 refs/<id>.json 이 주인
+    return ("잘된 숙소 쇼츠 원본 대본의 틀을 그대로 두고 숙소만 바꿔 쓴다. 원본 이야기 순서: %s. 역할·어미·말 길이를 원본과 같게.\n\n"
             "원본 줄:\n%s\n\n숙소 자료(이 안에 있는 사실만 쓴다. 숫자는 이 자료에 글자 그대로 있는 것만):\n%s\n\n"
             "실제로 있는 사진(종류: 설명) — shot_hints 는 이 목록에 있는 장면으로만 쓴다(없는 장면을 바라면 엉뚱한 사진이 걸린다):\n%s\n\n"
-            "규칙: 줄마다 원본 글자 수 ±20%% / 하이라이트 줄에 이 숙소의 간판 시설 / "
-            "훅 = 원본처럼 희소·권위 수식어('손꼽히는'·'상위 1%%'·'한국의 ○○'·후기·평점 같은 자료 근거) + 숙소 종류 — 위치 설명만으로 열지 않는다 / "
-            "입구·안 시설 = 원본처럼 공간의 품격·분위기 꾸밈말(화려한·우아하게·탁 트인·통유리) — 편의점·치킨집 같은 생활 정보 나열 금지 / "
-            "반전 = '~지만' 뒤에 문턱이 낮아지는 사실(원본: 5성급 안에 있지만 투숙 안 해도 이용) — 유료·불편 같은 단점을 새로 꺼내지 않는다 / "
-            "후기에서 불만 수(count)가 칭찬보다 많은 것(예: 조식 '가격 대비 아쉽다' 60 > '맛있다' 48)은 자랑하지 않는다 / "
-            "권유 = '<누가·어떤 순간> 싶다면 한 번쯤 ~볼 만하겠죠?' — 원본 길이(24자) 지키기 / "
+            "이 원본의 규칙:\n%s\n\n공통 규칙: 줄마다 원본 글자 수 ±20%% / "
             "자막 조각은 원본처럼 1~2어절 뜻 덩어리(9자 이하), 이으면 문장과 같아야 한다 / "
-            "shot_hints 는 그 컷에 보일 사진을 2~4단어로(예: '로비', '실내 수영장', '드론 조감도 건물', '침대 창밖 바다'), 그 줄 말과 맞게 / "
-            "썸네일: small = 작은 줄(숫자 있는 권위·희소, 8자 안팎), big = 큰 줄(숙소 종류 4~5자, 띄어쓰기 없이), hint = 썸네일·끝 컷 사진(드론 조감도 건물 류)\n%s\n"
+            "shot_hints 는 그 컷에 보일 사진을 2~4단어로(예: '로비', '실내 수영장', '바비큐장', '침실'), 그 줄 말과 맞게 / "
+            "썸네일: %s, hint = 썸네일 사진(%s 류)\n%s\n"
             "JSON: {\"lines\": [{\"role\": \"\", \"text\": \"\", \"chunks\": [\"\"], \"shot_hints\": [\"\"]}], \"thumb\": {\"small\": \"\", \"big\": \"\", \"hint\": \"\"}}"
-            % (roles, facts["text"][:9000], inventory, ("\n앞 판에서 걸린 것(고쳐라):\n- " + "\n- ".join(fix)) if fix else ""))
+            % (ref.get("story", ""), roles, facts["text"][:9000], inventory, rules, ref.get("thumb_rule", ""), ref.get("thumb_hint", ""),
+               ("\n앞 판에서 걸린 것(고쳐라):\n- " + "\n- ".join(fix)) if fix else ""))
 
 
 def s_script(job, st):
@@ -150,15 +147,27 @@ def s_script(job, st):
 
 def s_shots(job, st):
     from tools.travel.hotel_copy import photos
-    from tools.travel.hotel_copy import render
+    from tools.travel.hotel_copy import render, check
     ep = load(job / "ep.json")
     ph = load(job / "photos.json")
-    target = render.ref_spec(ep["ref"])["measured"]["cut_target_s"]
+    m = render.ref_spec(ep["ref"])["measured"]
+    target, longest = m["cut_target_s"], max(m["cut_s"])
     for x, line in zip(load(job / "voice.json"), ep["lines"]):      # 줄 길이 ÷ 원본 컷 길이 = 컷 수(모자라면 같은 힌트 다른 각도)
-        n = max(len(line["shot_hints"]), round(x["dur"] / ep["speed"] / target))
+        d = x["dur"] / ep["speed"]
+        # 원본 최장 컷을 넘지 않게도 센다(실측: 1.78초 줄에 round(1.48)=1컷 → 원본 최장 1.5초 넘김)
+        n = max(len(line["shot_hints"]), round(d / target), math.ceil(d / (longest * 1.1)))
+        # 실제 어절 시각으로 잘라 보고 최장 컷이 검사 기준(check.CUT_MAX_K)을 넘으면 한 컷 더(실측: 객실 줄 1.11/1.73 — 어절 경계가 가운데에 없었다)
+        starts = [w["start"] / ep["speed"] for w in x["words"]]
+        while n < len(starts):
+            st_ = render.cut_points(starts, d, n, target)
+            if max(b - a for a, b in zip(st_, st_[1:] + [d])) <= longest * check.CUT_MAX_K:
+                break
+            n += 1
         while len(line["shot_hints"]) < n:
             line["shot_hints"].insert(-1, line["shot_hints"][-2 if len(line["shot_hints"]) > 1 else 0] + " 다른 각도")
-    th = photos.pick_vision(ph, ep["lines"], ep["thumb"].get("hint") or "드론 조감도 건물 외관", job)
+    ref = render.ref_spec(ep["ref"])
+    th = photos.pick_vision(ph, ep["lines"], ep["thumb"].get("hint") or ref["thumb_hint"], job,
+                            thumb_kinds=ref.get("thumb_kinds"), end_is_thumb=ref.get("end_same_as_thumb", True))
     ep["thumb"].update(th)
     save(job / "ep.json", ep)
     labels = photos.sheet(ep, job / "shots.jpg")

@@ -12,6 +12,11 @@ import cv2
 import numpy as np
 
 NUM = re.compile(r"\d[\d,\.]*")
+CUT_MAX_K = 1.15       # 컷 길이 기준 = 원본 최단×0.85 ~ 최장×1.15 (engine.s_shots 가 컷 수를 정할 때도 이 값을 쓴다)
+CUT_MIN_K = 0.85
+# 받아쓰기가 소리는 같은데 글자를 다르게 적는 것 — 다름으로 치지 않고 '(발음 같음)'으로만 남긴다. 근거 없는 건 넣지 않는다
+ASR_SAME = {"촌→총": "원본 AVo84VRq55k 도 '총캉스'로 받아씀(2026-10-23 실측)",
+            "솥→소": "솥뚜껑 표준 발음 [솓뚜껑] — 받침이 안 들린다"}
 
 
 def script_issues(ep, ref, facts_text):
@@ -30,8 +35,8 @@ def script_issues(ep, ref, facts_text):
         if "".join(ln["chunks"]).replace(" ", "") != t.replace(" ", ""):
             out.append("%d줄 자막 조각을 이으면 문장과 다르다" % i)
         if any(len(c.replace(" ", "")) > 9 for c in ln["chunks"]):
-            out.append("%d줄 자막 조각이 9자를 넘는다(원본 최대 9자: '지하2,003m에서')" % i)
-        if len(ln.get("shot_hints") or []) != r["shots"]:
+            out.append("%d줄 자막 조각이 9자를 넘는다(원본 자막 조각은 최대 9자)" % i)
+        if len(ln.get("shot_hints") or []) < r["shots"]:          # 많은 건 괜찮다 — 말이 원본보다 길면 shots 단계가 컷을 더한다
             out.append("%d줄 사진 %d장 — 원본 %d컷" % (i, len(ln.get("shot_hints") or []), r["shots"]))
         for num in NUM.findall(t):
             if num.rstrip(".,") not in facts_text:
@@ -88,10 +93,13 @@ def heard_same(job, ep):
     heard = re.sub(r"[\s\.,\?!]", "", "".join(x.get("word", x.get("w", "")) for x in w))
     want = re.sub(r"[\s\.,\?!]", "", "".join(l["text"] for l in ep["lines"]))
     import difflib
-    diffs = ["%s→%s" % (want[a:b], heard[c:d]) for op, a, b, c, d in difflib.SequenceMatcher(None, want, heard).get_opcodes() if op != "equal"]
+    allx = ["%s→%s" % (want[a:b], heard[c:d]) for op, a, b, c, d in difflib.SequenceMatcher(None, want, heard).get_opcodes() if op != "equal"]
+    diffs = [x for x in allx if x not in ASR_SAME]
+    same_sound = [x for x in allx if x in ASR_SAME]
     # 한 글자씩 2곳까지는 받아쓰기 잡음일 수 있다(실측: 같은 음성을 두 번 받아써도 '수영장→소영장') — 통과시키되 귀로 들을 곳으로 남긴다
     small = all(max(len(x.split("→")[0]), len(x.split("→")[1])) <= 1 for x in diffs)
-    return (not diffs) or (len(diffs) <= 2 and small), ", ".join(diffs)
+    note = ", ".join(diffs) + ((" / " if diffs else "") + "발음 같음: " + ", ".join(same_sound) if same_sound else "")
+    return (not diffs) or (len(diffs) <= 2 and small), note
 
 
 def video_report(job, ep, ref):
@@ -107,11 +115,11 @@ def video_report(job, ep, ref):
     rows = [
         ("길이", "%.2f초" % dur, "%.1f초" % m["total_s"], abs(dur - m["total_s"]) <= m["total_s"] * 0.12),
         ("컷 수", str(len(lens)), str(len(m["cut_s"])), abs(len(lens) - len(m["cut_s"])) <= 2),
-        ("컷 길이", "%.2f~%.2f" % (min(lens), max(lens)), "%.1f~%.1f" % (min(m["cut_s"]), max(m["cut_s"])), min(lens) >= min(m["cut_s"]) * 0.85 and max(lens) <= max(m["cut_s"]) * 1.15),   # 원본 최단·최장 ±15%
+        ("컷 길이", "%.2f~%.2f" % (min(lens), max(lens)), "%.1f~%.1f" % (min(m["cut_s"]), max(m["cut_s"])), min(lens) >= min(m["cut_s"]) * CUT_MIN_K and max(lens) <= max(m["cut_s"]) * CUT_MAX_K),   # 원본 최단·최장 ±15%
         ("말 속도", "%.1f자/초" % (chars / (dur - m["thumb_s"])), "%.1f자/초" % (m["chars"] / (m["total_s"] - m["thumb_s"])),
          abs(chars / (dur - m["thumb_s"]) - m["chars"] / (m["total_s"] - m["thumb_s"])) <= 1.2),
         ("소리 크기", "%.1f LUFS" % (lufs(out) or 0), "%.1f LUFS" % m["lufs"], abs((lufs(out) or 0) - m["lufs"]) <= 1.0),
-        ("다시 받아쓰기", "일치" if not heard else "다른 곳: " + heard + (" (귀로 확인)" if same else ""), "대본 그대로", same),
+        ("다시 받아쓰기", "일치" if not heard else "다른 곳: " + heard + (" (귀로 확인)" if same and "→" in heard.split("발음 같음")[0] else ""), "대본 그대로", same),
         ("입체 움직임", "%s%%" % "~".join(str(x) for x in (min(p for p in px if p is not None), max(p for p in px if p is not None))), "26~53%", None),
     ]
     rep = {"rows": [{"항목": a, "우리": b, "원본": c, "통과": d} for a, b, c, d in rows], "parallax": px, "cut_s": lens}

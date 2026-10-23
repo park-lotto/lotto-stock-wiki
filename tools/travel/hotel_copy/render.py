@@ -132,7 +132,7 @@ def timeline(job, ep, ref):
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", "concat.txt",
                     "-filter:a", "atempo=%.4f" % speed, "-ar", "44100", "narr.wav"], check=True, cwd=job)
     thumb_s = ref["measured"]["thumb_s"]
-    t, rows = 0.0, []
+    t, rows, wrows = 0.0, [], []
     for x, line in zip(v, ep["lines"]):
         words = [(w.get("word") or w.get("w"), (t + w.get("start", w.get("t", 0))) / speed) for w in x["words"]]
         assert "".join(w for w, _ in words).replace(" ", "") == "".join(line["chunks"]).replace(" ", ""), (words, line["chunks"])
@@ -141,6 +141,7 @@ def timeline(job, ep, ref):
             row.append(thumb_s + words[k][1])
             k += len(ch.split())
         rows.append(row)
+        wrows.append([thumb_s + w[1] for w in words])     # 컷은 어절 어디서든 바뀔 수 있다(원본 실측: 자막 조각 중간에도 컷이 바뀐다)
         t += x["dur"]
     total = thumb_s + t / speed + TAIL_S
     flat = [(tt, txt) for row, line in zip(rows, ep["lines"]) for tt, txt in zip(row, line["chunks"])]
@@ -148,7 +149,7 @@ def timeline(job, ep, ref):
     cuts = []
     for si, line in enumerate(ep["lines"]):
         end = rows[si + 1][0] if si + 1 < len(rows) else total
-        starts = cut_points(rows[si], end, len(line["shots"]), ref["measured"]["cut_target_s"])
+        starts = cut_points(wrows[si], end, len(line["shots"]), ref["measured"]["cut_target_s"])
         if si == 0:
             starts[0] = thumb_s
         for sh, t0 in zip(line["shots"], starts):
