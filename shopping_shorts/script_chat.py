@@ -24,6 +24,8 @@ _SCHEMA = {
         "reply": {"type": "string"},
         "edit": {"type": "boolean"},
         "lines": {"type": "array", "items": {"type": "string"}},
+        "scenes": {"type": "boolean"},
+        "scene_rows": {"type": "array", "items": {"type": "integer"}},
     },
     "required": ["reply", "edit"],
 }
@@ -50,6 +52,9 @@ _PROMPT = """너는 한국어 쇼츠(60초 이하 세로 영상) 대본을 함�
 - 줄을 더하거나 빼 달라고 하면 줄 수는 {n}줄 그대로 두고, reply 에 "화면의 ＋ 칸 추가 / 🗑 빼기 버튼으로 칸을 늘리거나 빼 주세요"라고 알려 준다.
 - 대본에 없는 사실·수치·효과를 지어내지 않는다(숫자는 대본·상품에 있을 때만). 말투(존댓말·반말·어미)는 지금 대본을 따른다.
 - lines 의 줄에는 번호·칸 이름·따옴표·기호·괄호 설명을 넣지 않는다. 성우가 읽을 문장만 쓴다.
+- scenes: 회원이 **장면·화면·영상 조각**이 문장과 맞는지 봐 달라거나 바꿔 달라고 하면 true(예: "장면 점검해줘", "3번째 줄 장면 더 역동적인 걸로").
+  그때 scene_rows 에 해당 줄 번호(1부터)를, 전체면 빈 목록을 준다. 장면 판단은 장면 목록을 보는 다른 단계가 하므로
+  reply 에는 "장면을 점검할게요" 정도만 짧게 쓰고 장면을 지어내 말하지 않는다. 대본 문장 이야기만 하면 false.
 """
 
 
@@ -84,6 +89,17 @@ def _clean_lines(lines):
     return out
 
 
+def _scenes(got, n, only=None):
+    """대화 답에 '장면 점검해 달라'가 들었나(관제 257) → {"scenes": bool, "scene_rows": [줄 번호 0부터]}(빈 목록 = 전체).
+    장면 판단 자체는 storyboard.scene_review 가 한다 — 여기선 회원 말이 그 부탁인지만 넘긴다. 한 줄 요구창은 그 줄만."""
+    if not got.get("scenes"):
+        return {"scenes": False, "scene_rows": []}
+    if only is not None:
+        return {"scenes": True, "scene_rows": [only]}
+    rows = sorted({r - 1 for r in (got.get("scene_rows") or []) if isinstance(r, int) and 1 <= r <= n})
+    return {"scenes": True, "scene_rows": rows}
+
+
 def revise(lines, message, history=None, product="", roles=None, only=None, model=None, *, call=None, tries=2):
     """→ {"reply", "lines"(같은 줄 수), "changed"(바뀐 줄 번호), "auth": "vertex"|"free", "model": 실제로 답한 모델}.
     model: CHAT_MODELS 의 id(버텍스 계정만 뜻이 있다). 목록 밖이면 기본값. 버텍스가 실패해 무료 키로 넘어가면 auth="free"·model=키풀 모델.
@@ -105,7 +121,7 @@ def revise(lines, message, history=None, product="", roles=None, only=None, mode
         if not isinstance(only, int) or not 0 <= only < len(src):
             raise ValueError("고칠 줄 번호가 맞지 않아요")
         name = str(roles[only] or "").strip()[:20] if roles and only < len(roles) else ""
-        msg = ("%d번 줄%s만 고친다(반드시 edit=true, 다른 줄은 그대로): %s"
+        msg = ("%d번 줄%s만 고친다(반드시 edit=true, 다른 줄은 그대로 · 단 이 줄의 장면을 봐 달라는 말이면 edit=false, scenes=true): %s"
                % (only + 1, "(%s)" % name if name else "", msg))
     hist = []
     for h in (history or [])[-MAX_HISTORY:]:
@@ -132,13 +148,16 @@ def revise(lines, message, history=None, product="", roles=None, only=None, mode
         got = call(prompt, _SCHEMA) or {}
         reply = str(got.get("reply") or "").strip()[:MAX_REPLY_CHARS]
         if not got.get("edit"):
+            if only is not None and got.get("scenes"):   # 한 줄 요구창에서 "장면 바꿔줘" — 문장은 그대로, 장면 점검으로 넘긴다(관제 257)
+                return {"reply": reply or "이 줄 장면을 점검할게요.", "lines": list(src), "changed": [], "auth": auth(), "model": used(),
+                        **_scenes(got, len(src), only)}
             if only is not None:
                 last = "AI가 줄을 고치지 않았어요"
                 continue
             if not reply:
                 last = "AI 응답이 비었어요(키 소진·응답 오류)"
                 continue
-            return {"reply": reply, "lines": list(src), "changed": [], "auth": auth(), "model": used()}
+            return {"reply": reply, "lines": list(src), "changed": [], "auth": auth(), "model": used(), **_scenes(got, len(src), only)}
         # 프롬프트의 빈 칸 표시("(빈 칸)")를 AI가 그대로 돌려주면 성우가 읽는다 — 빈 칸으로 되돌린다(2026-10-22 실측: 3칸)
         out = [_unplaceholder(str(x or "").strip()[:MAX_LINE_CHARS]) for x in (got.get("lines") or [])]
         if len(out) != len(src):
@@ -154,5 +173,5 @@ def revise(lines, message, history=None, product="", roles=None, only=None, mode
                 last = "AI가 같은 문장을 돌려줬어요"
                 continue
         changed = [i for i, (s, o) in enumerate(zip(src, out)) if s != o]
-        return {"reply": reply or "고쳤어요.", "lines": out, "changed": changed, "auth": auth(), "model": used()}
+        return {"reply": reply or "고쳤어요.", "lines": out, "changed": changed, "auth": auth(), "model": used(), **_scenes(got, len(src), only)}
     raise ValueError("AI가 답하지 못했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 보내 주세요")
