@@ -38,8 +38,8 @@ SENIOR = "--senior" in sys.argv                  # 시니어 업그레이드(원
 # 시니어 판 토큰 — awesome-design-md bugatti(검정 캔버스·#141414 카드·#3a3a3a 머리선·흰 글자, 장식 없음 = '조용한 고급')
 #   강조색은 bugatti 에 없어 하나만 더한다: 금색 #F2C94C(검정 위 대비 높음 — 시니어 가독)
 SR = {"card": (20, 20, 20, 235), "line": (58, 58, 58, 255), "gold": (242, 201, 76), "cap_scale": 1.22,
-      "fade": 0.25, "rise": 18, "hold": 2.8, "cps": 5.8, "arrow_scale": 1.4, "bob_period": 1.6, "bob_amp": 7}
-CPS = SR["cps"] if SENIOR else 6.7            # 벤치 나레 6.1~7.5자/초 중앙 / 시니어 5.8
+      "fade": 0.25, "rise": 18, "hold": 2.8, "cps": 6.7, "arrow_scale": 1.4, "bob_period": 1.6, "bob_amp": 7}
+CPS = SR["cps"] if SENIOR else 6.7            # 벤치 나레 6.1~7.5자/초 중앙 (시니어도 원본 속도 — 10-23 사장님 "속도는 이전 버전이 좋다")
 YELLOW = (255, 212, 59)
 # 원본 판 좌표 — 눈대중 금지. 벤치 줄판독(channel/uljimatrot/줄판독/<id>.json, 픽셀 실측)에서 load_spec 이 채운다.
 SPEC = {"title_band": [150, 292], "title_y": [[178, 265], [325, 409]], "cap": [1201, 1279], "cta_y": [918, 996],
@@ -531,14 +531,14 @@ def make(cfg_path: Path, allow_tts=True):
     raw = {k: tts(t, allow_tts) for k, t in segs}
     chars = sum(len(t.replace(" ", "")) for _, t in segs)
     rawd = sum(tight(raw[k], wd / f"n0_{k}.wav", 1.0) for k, _ in segs)     # 앞뒤 무음 뺀 실제 말 길이
-    tempo = max(0.8 if SENIOR else 0.85, min(1.35, rawd / (chars / CPS)))   # 시니어: 0.8배까지(atempo 는 음높이 유지)   # 벤치 말속도(6.7자/초)에 맞춤
+    tempo = max(0.85, min(1.35, rawd / (chars / CPS)))   # 벤치 말속도(6.7자/초)에 맞춤
     tl, t, auds = [], 0.0, []
     for k, txt in segs:
         a = wd / f"n_{k}.wav"
         d = tight(raw[k], a, tempo)
         tl.append({"k": k, "text": txt, "t0": t, "t1": t + d})
         auds.append((a, t))
-        t += d + (0.3 if SENIOR else 0.12)          # 시니어: 문장 사이 0.3초 숨(따라 읽을 틈)
+        t += d + 0.12
     hook_end = tl[0]["t1"] + 0.15
     reveal_t0 = tl[-1]["t1"] + 0.25
     total = reveal_t0 + (SR["hold"] if SENIOR else 1.4)
