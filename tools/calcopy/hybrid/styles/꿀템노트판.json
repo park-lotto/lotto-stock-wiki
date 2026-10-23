@@ -17,7 +17,7 @@
   "voice_id": "tc_6059dad0b83880769a50502f",
   "why": "벤치 최근 편(09-25~) 나레 남자 f0 124~166Hz → 박창수(사장님 규칙: 남자면 박창수)"
  },
- "cps_target": 7.5,
+ "cps_target": 10.5,
  "bgm": {
   "id": "honwaka_puppu",
   "db_below_voice": 12.0,
@@ -678,7 +678,9 @@
      "no_caption": 0
     }
    ]
-  }
+  },
+  "reference": "BpUOIUwkoG4",
+  "reference_why": "1차 칼카피 = 벤치 1위 한 편(BpU)의 등장·꾸밈을 그대로(10-23 사장님 \"꿀템 영상을 칼카피\") — 편마다 다른 본보기를 뽑으면 기준 편과 어긋난다"
  },
  "title_form": "'[원음 반응/가격 훅] + 인물도' / '[행동] + 제품' — 1줄 분홍+흰, 2줄 파랑+흰(사람 이름·결과어는 흰) · title_lines 칸 [[글, 'hi'|null], …]",
  "script": {

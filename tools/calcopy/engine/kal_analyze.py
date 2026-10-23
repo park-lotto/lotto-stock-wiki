@@ -445,6 +445,15 @@ def with_pixel(T: dict, bench_mp4: str, ours_mp4: str, out_dir: str) -> dict:
     from tools.calcopy.engine import compare as _cmp
     res = _cmp.compare(bench_mp4, ours_mp4, out_dir)
     v = res["verdict"]
+    # 오른쪽 위 '광고' 표시(사장님 10-22 모든 렌더 의무, ad_mark) = 화면 맨 위(y<100) 띠 하나 — 벤치에 없어도 칼카피 차이가 아니다
+    ub = [b for b in (res["ours"].get("bands") or []) if isinstance(b, (list, tuple)) or isinstance(b, dict)]
+    def _y0(b):
+        return ((b.get("band") or [b.get("y0", 0)])[0] if isinstance(b, dict) else b[0]) or 0
+    if any(_y0(b) < 100 for b in ub) and "창 위 고정 글자 띠 개수" in v["out"]:
+        ob = res["orig"].get("bands") or []
+        if len([b for b in ub if _y0(b) >= 100]) == len(ob):
+            v = {**v, "out": [x for x in v["out"] if x != "창 위 고정 글자 띠 개수"], "n_in": v["n_in"] + 1, "ad_mark": "광고 표시 띠 1개 뺌"}
+            v["verdict"] = "통과" if not v["out"] and not v["failed"] else "미달"
     T["pixel"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"],
                   "failed": v["failed"], "table": str(Path(out_dir) / "차이표.md")}
     T["line_verdict"] = T["verdict"]
@@ -489,13 +498,14 @@ def media_of(mp4: str, win: tuple | None = None) -> dict:
     from shopping_shorts.channelkit.bench import audio, probe
     meta = probe.info(mp4)
     dur = float(meta.get("duration") or 0)
-    cuts = scene_cuts(mp4, win)
-    edges = [0.0] + [c for c in cuts if 0 < c < dur] + [dur]
-    lens = [round(b - a, 3) for a, b in zip(edges, edges[1:]) if b - a > 0.05]
+    # 컷 자 = compare 와 같은 함수(bench_one.measure → cuts.scene_detect+merge_close+cut_verify) 한 벌 — 10-23 꿀템노트에서
+    # 옛 scene_cuts(창 크롭 scene>0.3)가 같은 원본의 크롭 바꿈 컷을 놓쳐 2.21초(compare 0.867초)로 쟀다. 두 자가 다르면 판정이 둘이 된다.
+    from tools.calcopy.engine import bench_one, compare as _cmp
+    lens = [round(x, 3) for x in _cmp._shots(bench_one.measure(mp4, layout_mode="bench"))[0] if x > 0.05]
     e = audio.ebur128(mp4)
     return {"duration": round(dur, 2), "cut_median": round(statistics.median(lens), 2) if lens else None, "n_cuts": len(lens),
             "lufs": e.get("I"), "tp": e.get("TP"), "win": list(win) if win else None,
-            "method": f"probe.info + scene_cuts(crop 창, scene>{SCENE_T}, 0.2초 묶음) + bench.audio.ebur128"}
+            "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"}
 
 
 ours_media_of = media_of

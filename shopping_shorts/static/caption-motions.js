@@ -1290,13 +1290,13 @@
   "label": "꿀템노트 수다",
   "desc": "원음 꾸불림 손글씨 · 나레 굵은 고딕 + 노랑 강조 · 말한 사람마다 글꼴이 바뀐다",
   "font": "Kkubulim",
-  "size": 76,
+  "size": 79,
   "flat": true,
   "look": "none",
   "text": {
    "color": "#FFFFFF",
    "style": {
-    "WebkitTextStroke": "0.07em #000",
+    "WebkitTextStroke": "0.05em #000",
     "paintOrder": "stroke fill",
     "textShadow": "none"
    }
@@ -1333,7 +1333,7 @@
   "speakers": {
    "narr": {
     "font": "Scene1369",
-    "size": 80,
+    "size": 83,
     "text": {
      "color": "#FFFFFF",
      "style": {
