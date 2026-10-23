@@ -113,6 +113,13 @@ PRODUCT_BEST = """너는 대체 제품 고르기 담당이다(같은 제품이 �
 후기(rating 의 괄호 숫자) 많고 별점 높은 것 하나를 골라라. 광고(is_ad)·묶음 이상한 것은 뒤로. 같은 종류가 없으면 product_id ''.
 JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
 
+RESEARCH_GIVEN = """
+
+## ★고객이 정한 제품(given) — 연예인이 말한 제품과 다를 수 있다(98 #62 함익병: 원본은 병원 크림, 고객 제품은 화장품)
+- 금지 품목 판정(4)은 **고객이 정한 제품** 기준이다. 연예인이 말한 제품이 의약품·다른 회사 제품이어도 그것만으로 멈추지 않는다.
+- 원음 spans 는 연예인이 **다른 제품 이름(그 의약품 등)을 말하지 않는** 구간만 — 고민·관리법·원리처럼 그 사람 말 그대로 전할 수 있는 자리(예 '자외선 차단제부터').
+- 사실(f)은 고객 제품 것만(브랜드·판매처 문구는 '브랜드 문구'). 연예인 말을 고객 제품의 효과로 잇지 않는다."""
+
 RESEARCH = """너는 조사 담당이다. 이 편의 `조사.md` 한 파일 내용을 써라. 웹 검색으로 사실을 확인하고 출처 URL 을 적는다.
 ## 할 일
 1. 원본 자막(원본 초·말)에서 연예인이 **본인 입으로 말한** 제품 구간을 전부 뽑아 표로(원본 초 · 말).
@@ -968,7 +975,7 @@ def ph_research_got(st, m, rp, u, fail: str = ""):
     O, PR = st["origin"], st["product"]
     ask = (RESEARCH + f"\n\n## 원본\n{O['url']} (받은 파일 0초 = 원본 {a:.2f}초 — 잰 값. spans 는 파일 초 = 원본 초 − {a:.2f}, 받은 파일 길이 {f.get('dur')}초)\n"
            f"지문 대조: {json.dumps(O.get('matched'), ensure_ascii=False)}\n자막({w.get('from') or '자동자막'}, 원본 초):\n{txt}\n\n## 제품\n"
-           f"{json.dumps(PR, ensure_ascii=False)}" + (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           f"{json.dumps(PR, ensure_ascii=False)}" + (RESEARCH_GIVEN if PR.get("given") else "") + (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return {"review": [_rv("research", ask, [_img(x) for x in st.get("product_shots") or []][:3], need=("조사_md", "keywords", "queries", "spans"))],
             "then": "research_check", "reject": {"why": fail, "fix": "조사를 고쳐 다시"} if fail else None}
 
@@ -976,7 +983,8 @@ def ph_research_got(st, m, rp, u, fail: str = ""):
 def ph_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
-        raise _Stop(str(r["stop"])[:200], "다른 소재 영상을 주세요")
+        st["log"].append("조사 멈춤: " + str(r["stop"])[:400])     # 판정 글은 기록에만 — 고객에겐 이유·해결 두 줄(사장님 10-22)
+        raise _Stop("조사해 보니 이 영상의 제품은 만들 수 없는 소재입니다(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:

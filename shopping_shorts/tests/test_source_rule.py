@@ -350,3 +350,14 @@ def test_source_channel_search_hits_first():
     titles = [{"id": f"n{i}", "title": f"함익병 피부 {i}", "dur": 600} for i in range(12)] + [{"id": "old", "title": "잡티,기미,검버섯 (함익병)", "dur": 1592}]
     r = flow.ph_src_got(st, {"src": {"titles": titles, "searched": ["old", "n5"], "picked": [{"id": "c", "name": "셀코TV"}], "how": "channel"}}, {}, {})
     assert r["do"][0]["ids"][:2] == ["old", "n5"]
+
+
+def test_given_research_note_and_stop_hides_judgment():
+    """고객이 정한 제품이면 조사에 given 안내(원본 제품이 의약품이어도 그것만으로 멈추지 않음) · 조사 멈춤 글은 기록에만(98 #62)."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    assert "고객이 정한 제품" in flow.RESEARCH_GIVEN and "멈추지 않는다" in flow.RESEARCH_GIVEN
+    st = {"tries": {}, "log": [], "version": "kitchit"}
+    with pytest.raises(flow._Stop) as e:
+        flow.ph_research_check(st, {}, {"research": {"stop": "동아에스티 전문의약품(히드로퀴논)", "조사_md": "x", "keywords": [], "queries": [], "spans": []}}, {})
+    assert "동아" not in e.value.why and "동아" in st["log"][-1]
