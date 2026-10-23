@@ -1855,6 +1855,14 @@
 .sbwrap .sb-cd{font-size:13px;line-height:1.5;margin-top:5px}.sbwrap .sb-cd s{color:var(--sb-dim)}.sbwrap .sb-cd em{font-style:normal;color:var(--sb-ok)}
 .sbwrap .sb-paste textarea{min-height:150px}
 .sbwrap .sb-ask{display:flex;gap:4px;align-items:center;margin-top:4px}
+.sbwrap .sb-rev{margin-top:5px;border:1px solid #2a3a5c;border-left:3px solid #6b7686;border-radius:8px;padding:6px 8px;background:#0d1424;font-size:12px;color:#d5dbe8}
+.sbwrap .sb-rev.keep{border-left-color:#3fb37f}.sbwrap .sb-rev.swap{border-left-color:#4c8dff}.sbwrap .sb-rev.none{border-left-color:#e0a23a}.sbwrap .sb-rev.stale{opacity:.6}
+.sbwrap .sb-rvh{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.sbwrap .sb-rvwhy{margin-top:4px;line-height:1.5;white-space:pre-wrap}
+.sbwrap .sb-rvth{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:5px}.sbwrap .sb-rvth b{color:#4c8dff;margin:0 2px}
+.sbwrap .sb-rvmini{margin-top:4px;font-size:11.5px;color:#cfd8e3}.sbwrap .sb-rvmini span{color:#9aa6bd}
+.sbwrap .sb-rvln{margin-top:4px}.sbwrap .sb-rvln em{color:#ffd88a;font-style:normal}
+.sbwrap .sb-rvact{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}.sbwrap .sb-rvact small{color:#6b7686;margin-left:auto}
+.sbwrap .sb-rb.main{background:var(--sb-pick);color:#fff;border-color:var(--sb-pick)}
 .sbwrap .sb-ask input{flex:1;min-width:0;background:#0b111e;color:#e8ecf5;border:1px dashed #2a3a5c;border-radius:7px;padding:3px 8px;font-size:12px;height:24px;box-sizing:border-box}
 .sbwrap .sb-ask input:focus{outline:none;border-style:solid;border-color:var(--sb-pick)}.sbwrap .sb-ask input::placeholder{color:#6b7686}
 .sbwrap .sb-cin{display:flex;gap:6px;align-items:flex-end}.sbwrap .sb-cin textarea{flex:1;width:auto;min-width:0;min-height:0;height:58px}.sbwrap .sb-cin .sb-btn{flex:none}
@@ -19549,7 +19557,7 @@ function sbEnter(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
   // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
   const j=sbJid();
-  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:'', useSeed:false, remade:null}); _sbApplySaved(j); }
+  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:'', useSeed:false, remade:null, rev:{}, revBusy:{}, revUndo:{}}); _sbApplySaved(j); }
   if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
   sbLoad();
 }
@@ -19847,7 +19855,7 @@ function sbChatBox(ek){ const C=SB.chat;
   if(!C.open) return `<button class="sb-chatfold" title="AI 대화창 펼치기" onclick="sbChatToggle()"><span>◀</span><b>💬</b><span>AI 대화 펼치기</span></button>`;
   const msgs=C.msgs.map(m=>`<div class="sb-cm ${m.role==='user'?'user':'ai'}">${sbE(m.text)}${m.auth?`<small>${(m.want&&m.auth!=='vertex')?'⚠ 버텍스가 답하지 못해 ':''}${sbE(sbModelName(m.model, m.auth))}로 답함</small>`:''}</div>`).join('');
   const P=(C.prop&&C.prop.ek===ek)?C.prop:null;
-  const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번 ${sbE(sbKo(((SB.made[ek]||{}).slots||[])[k]?.slot||''))}</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em></div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
+  const diff=P?(P.changed.length?P.changed.map(k=>`<div class="sb-cd"><b>${k+1}번 ${sbE(sbKo(((SB.made[ek]||{}).slots||[])[k]?.slot||''))}</b> <s>${sbE(P.base[k]||'(빈 칸)')}</s><br>→ <em>${sbE(P.lines[k])}</em>${sbRevMini(P, ek, k)}</div>`).join(''):'<div class="sb-note">바뀐 줄이 없어요</div>'):'';
   return `<div class="sb-chat">${(sbChatModels(),'')}<div class="sb-bh">💬 AI와 대화 <small>물어보면 답만 · "바꿔줘"면 고친 줄을 보여 줘요</small><span style="margin-left:auto"></span><button class="sb-btn sb-chatclose" title="대화창 접기 — 오른쪽 막대로 다시 펼칠 수 있어요" onclick="sbChatToggle()">접기 ▶</button></div>${sbModelBar()}
     <div class="sb-cms" id="sbChatMsgs">${msgs||'<div class="sb-note">예) 이 대본 어때? · 훅 후보 5개 추천해줘 → 3번째 걸로 바꿔줘 · 전체를 반말로 · 마지막 줄에 구매 유도 넣어줘</div>'}${C.busy?`<div class="sb-cm ai">⏳ 답하는 중…${/pro/.test(C.model||'')?' (Pro는 20초 안팎 걸려요)':''}</div>`:''}</div>
     ${P?`<div class="sb-cprop"><div class="sb-note">AI가 고친 줄 — [적용]을 눌러야 칸에 들어가요</div>${diff}<div style="margin-top:6px">${P.changed.length?'<button class="sb-btn main" onclick="sbChatApply()">적용</button> ':''}<button class="sb-btn" onclick="SB.chat.prop=null;sbRender()">버리기</button></div></div>`:''}
@@ -19864,13 +19872,18 @@ async function sbChatSend(){
       body:JSON.stringify({lines:base, roles:bd.slots.map(sl=>sbKo(sl.slot)), message:msg, history:hist, model:C.model||'', product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d||d.ok===false) C.msgs.push({role:'ai', text:'❌ '+((d&&d.error)||'답하지 못했어요')});
-    else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth, model:d.model, want:!!C.model}); if((d.changed||[]).length) C.prop={ek, base, lines:d.lines, changed:d.changed}; }
+    else { C.msgs.push({role:'ai', text:d.reply, auth:d.auth, model:d.model, want:!!C.model});
+      if((d.changed||[]).length){ C.prop={ek, base, lines:d.lines, changed:d.changed, rev:{}, revBusy:true};
+        // 문장을 바꾼 줄은 새 문장에 지금 장면이 맞는지도 같이 본다(관제 257) — 답을 먼저 보여 주고 점검은 뒤이어
+        const P=C.prop, over={}; d.changed.forEach(k=>over[k]=d.lines[k]);
+        sbRevGo(d.changed, '', over, P.rev).then(x=>{ P.revBusy=false; if(!x.ok) P.revErr=x.error; sbRender(); }); }
+      if(d.scenes) sbChatScenes(d.scene_rows&&d.scene_rows.length?d.scene_rows:null, msg); }
   }catch(e){ C.msgs.push({role:'ai', text:'❌ 서버에 연결하지 못했어요'}); }
   finally{ C.busy=false; sbRender(); const m=document.getElementById('sbChatMsgs'); if(m) m.scrollTop=m.scrollHeight; const ip=document.getElementById('sbChatIn'); if(ip) ip.focus(); } }
 function sbChatApply(){
   const P=SB.chat.prop; const [ek,bd]=sbCur(); if(!P||!bd||P.ek!==ek) return;
   if(bd.slots.length!==P.base.length){ toast('그사이 칸 수가 바뀌어 적용하지 않았어요 — 다시 보내 주세요'); SB.chat.prop=null; sbRender(); return; }
-  SB.chat.prop=null; sbApplyLines(P.lines.map((t,k)=>P.changed.includes(k)?t:null),0,false);
+  SB.chat.prop=null; Object.assign(SB.rev, P.rev||{}); sbApplyLines(P.lines.map((t,k)=>P.changed.includes(k)?t:null),0,false);
   toast(`${P.changed.length}줄을 고쳤어요`); }
 // ── 칸 아래 한 줄 요구창(관제 253, 2026-10-22 사장님 "대본 한 줄 아랫줄에 창 하나 — 다른 스타일로·연결어로 바꿔줘 같은 한 줄짜리 간단 요구")
 //   대화 없이 바로 그 줄만 고친다(서버 revise only=i 가 다른 줄은 원래대로 되돌린다). 고친 직후엔 ↩ 되돌리기.
@@ -19879,7 +19892,7 @@ SB.ask={}; SB.askBusy={}; SB.askUndo={};
 function sbAskRow(ek, i){ const k=ek+'#'+i, busy=SB.askBusy[k], u=SB.askUndo[k];
   return `<div class="sb-ask"><input type="text" placeholder="✨ 이 줄만 AI에게 (예: 다른 스타일로 · 연결어로)" value="${sbE(SB.ask[k]||'')}" ${busy?'disabled':''}
     oninput="SB.ask['${sbA(k)}']=this.value" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();sbAskGo(${i})}">
-    <button class="sb-rb" ${busy?'disabled':''} onclick="sbAskGo(${i})">${busy?'⏳':'고치기'}</button>${(u&&!busy)?`<button class="sb-rb" title="고치기 전 문장: ${sbE(u)}" onclick="sbAskUndo(${i})">↩ 되돌리기</button>`:''}</div>`; }
+    <button class="sb-rb" ${busy?'disabled':''} onclick="sbAskGo(${i})">${busy?'⏳':'고치기'}</button><button class="sb-rb" title="이 줄 문장에 지금 장면이 최선인지 AI가 이유와 함께 봐 줘요" ${SB.revBusy[k]?'disabled':''} onclick="sbRevRow(${i})">🔍 장면 점검</button>${(u&&!busy)?`<button class="sb-rb" title="고치기 전 문장: ${sbE(u)}" onclick="sbAskUndo(${i})">↩ 되돌리기</button>`:''}</div>`; }
 async function sbAskGo(i){
   const [ek,bd]=sbCur(); if(!bd||!Array.isArray(bd.slots)) return; const k=ek+'#'+i;
   const msg=String(SB.ask[k]||'').trim(); if(!msg){ toast('어떻게 고칠지 적어 주세요'); return; } if(SB.askBusy[k]) return;
@@ -19899,6 +19912,69 @@ async function sbAskGo(i){
   finally{ delete SB.askBusy[k]; sbRender(); } }
 function sbAskUndo(i){ const [ek]=sbCur(); const k=ek+'#'+i; const u=SB.askUndo[k]; if(u==null) return;
   delete SB.askUndo[k]; const n=(sbCur()[1]||{slots:[]}).slots.length; sbApplyLines(Array.from({length:n},(_,j)=>j===i?u:null),0,false); toast(`${i+1}번 줄을 되돌렸어요`); }
+// ── 장면 점검(관제 257, 2026-10-23 사장님 "의미 없이 바꾸는 게 아니라 이게 최선이면 그대로, 왜 최선인지 이유를 설명하며 피드백")
+//   판단은 서버 storyboard.scene_review 하나 — 줄마다 ✅유지(이유) / 🔄교체 제안(조각 번호·이유) / ⚠️맞는 장면 없음(장면에 맞춘 문장).
+//   화면은 결과를 줄 아래 카드로 보여 주기만 한다. [이 장면으로 바꾸기]를 눌러야 칸 장면이 바뀐다(SB.ord → sbResync, 후보 넣기와 같은 길).
+//   카드는 점검할 때의 문장(at)을 기억한다 — 그 뒤 문장이 바뀌면 "다시 점검" 안내만 남긴다.
+SB.rev={}; SB.revBusy={}; SB.revUndo={};
+function sbRevSlots(ek, bd, over){   // 지금 보드(손으로 고친 문장·장면 반영) — over: {줄 번호: 아직 적용 전 문장}(대화창 제안 점검용)
+  return bd.slots.map((sl,k)=>({slot:sl.slot, line:(over&&over[k]!=null)?over[k]:sbLine(ek,k,sl), ids:sbLiveIds(ek,k,sl)})); }
+async function sbRevGo(rows, message, over, into){   // rows: 줄 번호 목록(null = 글 있는 줄 전부) → {ok, reply, reviews, auth, model} | {ok:false, error}
+  //   into: 결과를 담을 곳(기본 SB.rev). 대화창 제안처럼 아직 적용 전 문장을 점검할 땐 제안(P.rev)에 담았다가 [적용] 때 SB.rev 로 옮긴다
+  const [ek,bd]=sbCur(); if(!bd||!Array.isArray(bd.slots)) return {ok:false, error:'스토리보드가 없어요'};
+  const slots=sbRevSlots(ek,bd,over); const keys=(rows||slots.map((_,k)=>k).filter(k=>String(slots[k].line||'').trim())).map(k=>ek+'#'+k);
+  if(!into) keys.forEach(k=>SB.revBusy[k]=true); sbRender();
+  try{
+    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid||'')+'/scene_review',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slots, rows:rows||undefined, message:message||'', model:SB.chat.model||'', use_seed:!!SB.useSeed,
+                           product:(typeof S2!=='undefined'&&S2.materials&&S2.materials.topic_product)||''})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d||d.ok===false) return {ok:false, error:(d&&d.error)||'장면을 점검하지 못했어요'};
+    (d.reviews||[]).forEach(v=>{ (into||SB.rev)[ek+'#'+v.i]=Object.assign({}, v, {at:slots[v.i].line, auth:d.auth, model:d.model}); });
+    return d;
+  }catch(e){ return {ok:false, error:'서버에 연결하지 못했어요'}; }
+  finally{ keys.forEach(k=>delete SB.revBusy[k]); sbRender(); } }
+async function sbRevRow(i){ const d=await sbRevGo([i], ''); if(!d.ok) toast('❌ '+d.error); }
+function sbRevSwap(i){ const [ek,bd]=sbCur(); const k=ek+'#'+i, v=SB.rev[k]; if(!bd||!v||v.verdict!=='swap'||String(v.at||'')!==String(sbLine(ek,i,bd.slots[i])||'')) return;
+  SB.revUndo[k]=sbOrdOf(ek,i,bd.slots[i]).slice(); SB.ord[k]=v.ids.slice(); delete SB.rev[k];
+  toast(`${i+1}번 줄 장면을 바꿨어요 — 마음에 안 들면 ↩ 장면 되돌리기`); sbResync(ek); }
+function sbRevUndo(i){ const [ek,bd]=sbCur(); const k=ek+'#'+i, u=SB.revUndo[k]; if(!bd||!u) return;
+  delete SB.revUndo[k]; SB.ord[k]=u.slice(); toast(`${i+1}번 줄 장면을 되돌렸어요`); sbResync(ek); }
+function sbRevLine(i){ const [ek,bd]=sbCur(); const k=ek+'#'+i, v=SB.rev[k]; if(!bd||!v||!v.line) return;
+  SB.askUndo[k]=sbLine(ek,i,bd.slots[i]); delete SB.rev[k];
+  sbApplyLines(bd.slots.map((_,j)=>j===i?v.line:null),0,false); toast(`${i+1}번 줄 문장을 바꿨어요 — ↩ 되돌리기로 돌아갈 수 있어요`); }
+const SB_REV_HEAD={keep:['✅','지금 장면이 맞아요','keep'], swap:['🔄','더 맞는 장면이 있어요','swap'], none:['⚠️','이 문장에 맞는 장면이 재료에 없어요','none'], error:['❔','판정하지 못했어요','none']};
+function sbRevMini(P, ek, k){   // 대화창 제안 안의 한 줄 요약 — 자세한 카드(사진·버튼)는 [적용] 뒤 그 줄 아래에 뜬다
+  if(P.revBusy) return '<div class="sb-note">⏳ 바뀐 문장에 장면이 맞는지 보는 중…</div>';
+  const v=(P.rev||{})[ek+'#'+k]; if(!v) return P.revErr?`<div class="sb-note">장면 점검 실패: ${sbE(P.revErr)}</div>`:'';
+  const [ic,ti]=SB_REV_HEAD[v.verdict]||SB_REV_HEAD.error;
+  return `<div class="sb-rvmini">${ic} 장면: ${ti}${v.verdict==='swap'?' (적용 뒤 줄 아래에서 바꿀지 골라요)':''}<br><span>${sbE(v.why)}</span></div>`; }
+async function sbChatScenes(rows, msg){   // 대화창에서 "장면 점검해줘" — 결과는 줄 아래 카드 + 대화창 요약
+  const C=SB.chat; C.busy=true; C.msgs.push({role:'ai', text:'🔍 '+(rows?rows.map(k=>(k+1)+'번').join(', ')+' 줄':'전체 줄')+' 장면을 점검하는 중…', tmp:true}); sbRender();
+  const d=await sbRevGo(rows, msg);
+  C.msgs=C.msgs.filter(m=>!m.tmp); C.busy=false;
+  if(!d.ok){ C.msgs.push({role:'ai', text:'❌ '+d.error}); sbRender(); return; }
+  const R=d.reviews||[], n=x=>R.filter(v=>v.verdict===x).length;
+  const pick=R.filter(v=>v.verdict!=='keep').map(v=>`${v.i+1}번: ${(SB_REV_HEAD[v.verdict]||SB_REV_HEAD.error)[0]} ${v.why}`);
+  C.msgs.push({role:'ai', auth:d.auth, model:d.model, want:!!C.model,
+    text:[d.reply||'', `유지 ${n('keep')} · 교체 제안 ${n('swap')} · 맞는 장면 없음 ${n('none')}`+(pick.length?String.fromCharCode(10)+pick.join(String.fromCharCode(10)):''),
+          '줄 아래 카드에서 이유를 보고 바꿀지 골라 주세요.'].filter(Boolean).join(String.fromCharCode(10,10))});
+  sbRender(); const m=document.getElementById('sbChatMsgs'); if(m) m.scrollTop=m.scrollHeight; }
+function sbRevCard(ek, i, sl){
+  const k=ek+'#'+i, v=SB.rev[k], u=SB.revUndo[k];
+  if(SB.revBusy[k]) return `<div class="sb-rev">⏳ 장면 점검 중…</div>`;
+  const undo=u?`<button class="sb-rb" onclick="sbRevUndo(${i})">↩ 장면 되돌리기</button>`:'';
+  if(!v) return undo?`<div class="sb-rev">${undo}</div>`:'';
+  const [ic,ti,cl]=SB_REV_HEAD[v.verdict]||SB_REV_HEAD.error;
+  const stale=String(v.at||'')!==String(sbLine(ek,i,sl)||'');
+  const sec=`<span class="sb-note">문장 약 ${sbE(v.need)}초 · ${v.verdict==='swap'?'새 ':''}장면 ${sbE(v.have)}초${v.short?' — ⚠ 장면이 짧아요':''}</span>`;
+  const swap=v.verdict==='swap'?`<div class="sb-rvth"><span class="sb-note">지금</span>${(v.cur_ids||[]).map(id=>sbTh(id,44)).join('')||'<span class="sb-note">(없음)</span>'}<b>→</b><span class="sb-note">제안</span>${(v.ids||[]).map(id=>sbTh(id,44)).join('')}</div>`:'';
+  const line=(v.verdict==='none'&&v.line)?`<div class="sb-rvln">지금 장면에 맞춘 문장: <em>${sbE(v.line)}</em></div>`:'';
+  const acts=stale?`<span class="sb-note">문장이 바뀌었어요 — </span><button class="sb-rb" onclick="sbRevRow(${i})">🔍 다시 점검</button>`
+    :(v.verdict==='swap'?`<button class="sb-rb main" onclick="sbRevSwap(${i})">이 장면으로 바꾸기</button>`:'')
+     +((v.verdict==='none'&&v.line)?`<button class="sb-rb main" onclick="sbRevLine(${i})">이 문장으로 바꾸기</button>`:'');
+  return `<div class="sb-rev ${cl}${stale?' stale':''}"><div class="sb-rvh">${ic} <b>${ti}</b> ${sec}<span style="margin-left:auto"></span><button class="sb-rb" title="카드 닫기" onclick="delete SB.rev['${sbA(k)}'];sbRender()">✕</button></div>
+    <div class="sb-rvwhy">${sbE(v.why)}</div>${swap}${line}<div class="sb-rvact">${acts}${undo}<small>${sbE(sbModelName(v.model, v.auth))}로 판단 · 화면 설명 기준</small></div></div>`; }
 function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
 function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
@@ -20163,7 +20239,7 @@ function sbPage2(){
         <div class="sb-rl"><div class="sb-rn">${i+1}</div><div><b>${sbE(sbKo(sl.slot))}${hs?' 🎯':''}</b><div class="sb-rneed">${sbE(sl.need||'')}</div>
           ${added?'<div class="sb-addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="sb-addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
           <div class="sb-rsec ${ck.short?'bad':''}">문장 ${sbE(ck.need||0)}초 · 장면 ${sbE(ck.have||0)}초</div></div></div>
-        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onpaste="sbLinePaste(event,${i})" onblur="sbEditDone(event)">${sbE(sbLine(ek,i,sl))}</div>${window.SCRIPT_CHAT_ON?sbAskRow(ek,i):''}
+        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onpaste="sbLinePaste(event,${i})" onblur="sbEditDone(event)">${sbE(sbLine(ek,i,sl))}</div>${window.SCRIPT_CHAT_ON?sbAskRow(ek,i)+sbRevCard(ek,i,sl):''}
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
           ${sl.gen?'<div class="sb-busy">⏳ AI가 이 칸 문장·장면을 채우는 중… (먼저 써도 돼요 — 쓴 문장은 안 덮어요)</div>':''}

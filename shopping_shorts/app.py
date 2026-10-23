@@ -22616,6 +22616,37 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on"), "check": _check}
 
 
+@app.post("/api/produce/storyboard/{job_id}/scene_review")
+def api_storyboard_scene_review(request: Request, job_id: str, body: dict):
+    """장면 점검(관제 257) — 줄마다 지금 장면이 최선인지 이유와 함께 유지·교체 제안·장면 없음.
+    body {slots:[{slot,line,ids}], rows?:[줄 번호], message?, model?, product?, use_seed?}. 판단 주인 storyboard.scene_review,
+    근거 조각은 보드를 만들 때와 같은 _materials. 작업을 건드리지 않는다 — 화면이 [이 장면으로 바꾸기]로 칸에 넣는다.
+    스위치: 스토리보드(_sb_gate) + 대본 AI(script_chat_enabled) 둘 다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    if not _setting_gate(Store(DB_PATH), "script_chat_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
+    key, _ex, _jid = _sb_job(request, job_id)
+    if not key:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    slots = (body or {}).get("slots")
+    if not isinstance(slots, list) or not slots or len(slots) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
+    slots = [dict(x) if isinstance(x, dict) else {} for x in slots]
+    rows = body.get("rows") if isinstance(body.get("rows"), list) else None
+    from shopping_shorts import storyboard as _sbm, script_chat
+    _keep = {c for x in slots for c in (x.get("ids") or []) if isinstance(c, str)}
+    mats = _sbm._materials(None, key, _ex or {}, keep=_keep, with_seed=body.get("use_seed") is True)
+    model = str(body.get("model") or "")
+    model = model if model in {m["id"] for m in script_chat.CHAT_MODELS} else script_chat.DEFAULT_CHAT_MODEL
+    try:
+        return {"ok": True, **_sbm.scene_review(slots, rows, mats, str(body.get("message") or ""),
+                                                str(body.get("product") or ""), model)}
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+
+
 @app.get("/api/produce/storyboard/{job_id}")
 def api_storyboard_get(request: Request, job_id: str):
     """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
