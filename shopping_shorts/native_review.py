@@ -105,8 +105,13 @@ def _judge_claude(prompt):
     exe = shutil.which("claude")
     if not exe:
         raise RuntimeError("claude CLI 없음")
-    p = subprocess.run([exe, "-p", "--output-format", "text"], input=prompt, capture_output=True,
-                       text=True, encoding="utf-8", timeout=300)
+    import tempfile
+    # ★프로젝트 폴더에서 띄우면 이 프로젝트의 CLAUDE.md·훅(대시보드 기록)을 따라가 채점 대신 딴 일을 한다(실측 10-23).
+    #   설정·훅·도구 없이, 프로젝트 밖 빈 폴더에서, 채점 전용 지시로만 띄운다(--bare 는 구독 로그인까지 막아 못 쓴다)
+    p = subprocess.run([exe, "-p", "--setting-sources", "", "--tools", "", "--output-format", "text",
+                        "--system-prompt", "You are a strict script grader. Output only the requested JSON."],
+                       input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=300,
+                       cwd=tempfile.gettempdir())
     if p.returncode != 0:
         raise RuntimeError("claude -p 실패: " + (p.stderr or "")[:200])
     return _parse(p.stdout)
