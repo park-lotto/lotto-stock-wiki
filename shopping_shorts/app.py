@@ -1906,16 +1906,37 @@ def _fav_channel_home_url(platform, channel_id, fallback=""):
     return tpl.format(id=cid) if tpl else fallback
 
 
-def _fav_channel_decorate(items):
-    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다)."""
+def _fav_channel_decorate(items, cid=None):
+    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다).
+    cid 가 분류를 쓰는 사람이면 채널마다 category(없으면 '기타')도 붙인다(관제 261)."""
+    cats = Store(DB_PATH).fav_cat_of(customer_id=cid) if cid is not None and _fav_cat_on(cid) else None
     for it in items:
         it["home_url"] = _fav_channel_home_url(
             it.get("platform"), it.get("channel_id"), it.get("url") or "")
+        if cats is not None:
+            it["category"] = cats.get((it.get("platform"), it.get("channel_id")), Store.FAV_CAT_ETC)
     return items
 
 
+def _fav_cat_on(cid) -> bool:
+    """나만의 채널 분류를 쓰는 사람 — ★판단의 주인은 여기 하나(관제 261).
+    지금은 관리자만(사장님 2026-10-24 "지금은 나만 보는거야"). 회원에게 열 땐 여기만 바꾼다."""
+    return _is_admin(cid)
+
+
+def _fav_cat_payload(cid, platform="", channel_id="") -> dict:
+    """분류 버튼을 그릴 재료 — 분류 이름(최근 쓴 순)·기타 이름·(채널을 주면) 그 채널의 지금 분류."""
+    store = Store(DB_PATH)
+    out = {"cats": store.fav_cat_names(customer_id=cid), "etc": Store.FAV_CAT_ETC,
+           "cats_fixed": store.fav_cat_names(customer_id=cid, recent=False)}   # 목록 탭은 순서 고정
+    if channel_id:
+        out["category"] = store.fav_cat_of(customer_id=cid).get(
+            ((platform or "").lower(), channel_id.lstrip("@")), Store.FAV_CAT_ETC)
+    return out
+
+
 def _fav_channel_cap(cid) -> int:
-    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 0(=한도 없음, 사장님 2026-10-24) · 회원 50."""
     return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
 
 
@@ -1924,8 +1945,50 @@ def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
-    items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
-    return {"ok": True, "items": items, "cap": _fav_channel_cap(_cid(request))}
+    cid = _cid(request)
+    items = _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)
+    out = {"ok": True, "items": items, "cap": _fav_channel_cap(cid)}
+    if _fav_cat_on(cid):
+        out.update(_fav_cat_payload(cid))
+    return out
+
+
+def _fav_cat_cid(request: Request):
+    """분류 API 입구 검사 — 로그인(세션) + 분류 쓰는 사람인지. 통과면 (cid, None)."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return None, {"ok": False, "error": "로그인이 필요합니다"}
+    if not _fav_cat_on(cid):
+        return None, {"ok": False, "error": "분류는 관리자만 쓸 수 있어요"}
+    return cid, None
+
+
+@app.post("/api/fav_channel/cats/add")
+def api_fav_channel_cat_add(request: Request, body: dict):
+    """새 분류 만들기(관제 261). body: {name}"""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    name = Store(DB_PATH).fav_cat_add(body.get("name") or "", customer_id=cid)
+    if not name:
+        return {"ok": False, "error": "분류 이름을 넣어주세요"}
+    return {"ok": True, "name": name, **_fav_cat_payload(cid)}
+
+
+@app.post("/api/fav_channel/set_cat")
+def api_fav_channel_set_cat(request: Request, body: dict):
+    """채널을 분류로 옮기기(관제 261). body: {platform, channel_id, category} — ''·'기타' = 기타."""
+    cid, err = _fav_cat_cid(request)
+    if err:
+        return err
+    plat = (body.get("platform") or "").strip().lower()
+    chid = (body.get("channel_id") or "").strip().lstrip("@")
+    store = Store(DB_PATH)
+    if not any(i["platform"] == plat and i["channel_id"] == chid
+               for i in store.fav_channel_list(customer_id=cid)):
+        return {"ok": False, "error": "나만의 채널에 없는 채널이에요"}
+    cat = store.fav_cat_set(plat, chid, body.get("category") or "", customer_id=cid)
+    return {"ok": True, "platform": plat, "channel_id": chid, **_fav_cat_payload(cid), "category": cat}
 
 
 @app.post("/api/fav_channel/add")
@@ -2012,7 +2075,7 @@ def api_fav_channel_refresh(request: Request):
                                        customer_id=cid, **meta)
             done += 1
     return {"ok": True, "refreshed": done,
-            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid))}
+            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid), cid)}
 
 
 def _fav_channel_yt_probe(channel_id):
@@ -2517,6 +2580,8 @@ def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
                         background_tasks=background_tasks)
     elif dest == "channel":
         r = _fav_channel_register(cid, link)
+        if r["status"] in ("added", "exists") and _fav_cat_on(cid):
+            r.update(_fav_cat_payload(cid, r["platform"], r["channel_id"]))   # 분류 버튼 재료(관제 261)
     else:
         return {"ok": True, "status": "preview", "link": link,
                 "platform": _grab_platform(link) or _fav_channel_platform(link)}

@@ -546,6 +546,29 @@ class Store:
                     PRIMARY KEY (customer_id, platform, channel_id)
                 )
             """)
+            # 나만의 채널 분류(관제 261, 2026-10-24 사장님 "폰에서 담을 때 분류 버튼 한 번").
+            #   fav_channel(회원 표)은 건드리지 않고 옆 표 둘로 둔다 — 분류는 지금 관리자만 쓴다.
+            #   분류 이름 목록(_def)과 채널↔분류(_cat). 분류가 없는 채널 = '기타'(행 없음).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat_def (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    sort INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    last_used_at TEXT,
+                    PRIMARY KEY (customer_id, name)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel_cat (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    platform TEXT NOT NULL,
+                    channel_id TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    set_at TEXT,
+                    PRIMARY KEY (customer_id, platform, channel_id)
+                )
+            """)
             # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
             # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
             # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
@@ -3345,14 +3368,14 @@ class Store:
     # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
     #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
     FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
-    FAV_CHANNEL_CAP_ADMIN = 100   # 관리자 상한(사장님 2026-10-18) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
+    FAV_CHANNEL_CAP_ADMIN = 0     # 관리자 = 한도 없음(0, 사장님 2026-10-24 "한도 없이", 10-18 의 100 을 대체) — 누가 관리자인지는 app._fav_channel_cap 이 정한다
 
     def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
                         followers=None, last_video_thumb="", last_video_url="",
                         customer_id=LEGACY_CUSTOMER_ID, cap=None):
         """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
         상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다.
-        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한."""
+        cap: 이 사람의 상한(app._fav_channel_cap). 안 주면 회원 상한. 0 = 한도 없음."""
         platform = (platform or "").strip().lower()
         channel_id = (channel_id or "").strip().lstrip("@")
         if not platform or not channel_id:
@@ -3376,7 +3399,8 @@ class Store:
                 return False
             n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
                           (customer_id,)).fetchone()[0]
-            if n >= (cap or self.FAV_CHANNEL_CAP):
+            limit = self.FAV_CHANNEL_CAP if cap is None else cap
+            if limit and n >= limit:
                 return None
             c.execute(
                 "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
@@ -3389,10 +3413,82 @@ class Store:
 
     def fav_channel_remove(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID):
         with self._conn() as c:
+            key = (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@"))
             c.execute(
-                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
-                (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")),
-            )
+                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?", key)
+            c.execute(
+                "DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?", key)
+
+    # ── 나만의 채널 분류(관제 261) ─────────────────────────────────────────
+    #   ★분류 이름·기타 판단의 주인은 여기다. 화면·공유는 이 메서드만 부른다.
+    FAV_CAT_ETC = "기타"          # 분류 안 한 채널. 이름 목록엔 넣지 않는다(행 없음 = 기타)
+    FAV_CAT_DEFAULTS = ("연예인제품", "연예인레시피", "썰쇼핑", "썰비하인드", "해외+상품",
+                        "해외+조회수", "샤크탱크", "해외화장품", "인스타스타일")   # 사장님 2026-10-24
+    FAV_CAT_NAME_MAX = 20
+
+    def fav_cat_clean(self, name):
+        """분류 이름 다듬기. 못 쓰는 이름이면 ''. '기타'는 그대로 '기타'."""
+        n = " ".join((name or "").split())[: self.FAV_CAT_NAME_MAX]
+        return n
+
+    def fav_cat_names(self, customer_id=LEGACY_CUSTOMER_ID, recent=True):
+        """분류 이름 — recent=True 면 최근에 쓴 것 먼저(폰 버튼), False 면 만든 순서 고정(목록 탭).
+        처음 부르면 기본 분류를 깐다."""
+        with self._conn() as c:
+            n = c.execute("SELECT COUNT(*) FROM fav_channel_cat_def WHERE customer_id=?",
+                          (customer_id,)).fetchone()[0]
+            if not n:
+                c.executemany(
+                    "INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                    " VALUES(?,?,?, datetime('now'))",
+                    [(customer_id, nm, i) for i, nm in enumerate(self.FAV_CAT_DEFAULTS)])
+            rows = c.execute(
+                "SELECT name FROM fav_channel_cat_def WHERE customer_id=?"
+                + (" ORDER BY (last_used_at IS NULL), last_used_at DESC, sort ASC, rowid ASC" if recent
+                   else " ORDER BY sort ASC, rowid ASC"),
+                (customer_id,)).fetchall()
+        return [r[0] for r in rows]
+
+    def fav_cat_add(self, name, customer_id=LEGACY_CUSTOMER_ID):
+        """새 분류. 돌려주는 값 = 실제 저장된 이름('' = 못 씀, '기타'는 따로 안 만든다)."""
+        n = self.fav_cat_clean(name)
+        if not n or n == self.FAV_CAT_ETC:
+            return n
+        self.fav_cat_names(customer_id)          # 기본 분류가 먼저 깔려 있어야 순서가 맞다
+        with self._conn() as c:
+            mx = c.execute("SELECT COALESCE(MAX(sort),0) FROM fav_channel_cat_def WHERE customer_id=?",
+                           (customer_id,)).fetchone()[0]
+            c.execute("INSERT OR IGNORE INTO fav_channel_cat_def(customer_id, name, sort, created_at)"
+                      " VALUES(?,?,?, datetime('now'))", (customer_id, n, mx + 1))
+        return n
+
+    def fav_cat_set(self, platform, channel_id, category, customer_id=LEGACY_CUSTOMER_ID):
+        """채널을 분류로 옮긴다. ''·'기타' = 기타로(행 삭제). 없는 분류 이름이면 새로 만든다.
+        돌려주는 값 = 실제 들어간 분류 이름."""
+        plat = (platform or "").strip().lower()
+        chid = (channel_id or "").strip().lstrip("@")
+        cat = self.fav_cat_clean(category)
+        if not plat or not chid:
+            return ""
+        if not cat or cat == self.FAV_CAT_ETC:
+            with self._conn() as c:
+                c.execute("DELETE FROM fav_channel_cat WHERE customer_id=? AND platform=? AND channel_id=?",
+                          (customer_id, plat, chid))
+            return self.FAV_CAT_ETC
+        self.fav_cat_add(cat, customer_id)
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO fav_channel_cat(customer_id, platform, channel_id, category, set_at)"
+                      " VALUES(?,?,?,?, datetime('now'))", (customer_id, plat, chid, cat))
+            c.execute("UPDATE fav_channel_cat_def SET last_used_at=strftime('%Y-%m-%d %H:%M:%f','now')"
+                      " WHERE customer_id=? AND name=?", (customer_id, cat))
+        return cat
+
+    def fav_cat_of(self, customer_id=LEGACY_CUSTOMER_ID):
+        """{(platform, channel_id): 분류} — 없는 채널은 기타."""
+        with self._conn() as c:
+            rows = c.execute("SELECT platform, channel_id, category FROM fav_channel_cat WHERE customer_id=?",
+                             (customer_id,)).fetchall()
+        return {(r[0], r[1]): r[2] for r in rows}
 
     def fav_channel_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """담은 순서대로 dict 리스트."""
