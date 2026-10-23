@@ -7,10 +7,10 @@
   py tools/shoplink/run.py find  "스크럽대디"                 # 쿠팡 후보 5개만 본다(아무것도 안 만든다)
   py tools/shoplink/run.py make  "스크럽대디" --pick 0 --dry   # 링크만 발급, 인포크는 폼만 채우고 저장 안 함
   py tools/shoplink/run.py make  "스크럽대디" --pick 0 --title "샤크들이 서로 싸운 웃는 수세미?!" --desc "..." --tags "#수세미"
-      → 인포크 블록 "NNN_상품명" 공개 + 공개 페이지에서 실측 + 설명란 문구 출력·저장
+      → 인포크 블록(그 계정 기존 형식 "[N] 이름"·"N. 이름", 같은 상품 있으면 재사용) 공개 + 공개 페이지에서 실측 + 설명란 문구 출력·저장
 
 판단 주인
-  - 번호(NNN): 인포크 블록 목록의 "NNN_" 최댓값+1 — 따로 카운터를 두지 않는다(두 곳에 적으면 어긋난다)
+  - 번호·제목 형식: 그 인포크 공개 페이지의 기존 블록('[N] 이름' / 'N. 이름') — inpock_plan(). 같은 상품이 있으면 재사용
   - 설명란 문구: description() 한 곳
 """
 import argparse, json, os, re, sys, time, urllib.parse, urllib.request
@@ -23,6 +23,9 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 PARTNERS = "https://partners.coupang.com/"
 INPOCK = "https://link.inpock.co.kr"
 DISCLOSURE = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
+# 버퍼 계정 폴더(번호) → 인포크 계정. 사장님 확정 2026-10-23. syospa123 은 우리 채널 것이 아님
+INPOCK_BY_CHANNEL = {"987": "shocktem", "950": "streport", "999": "yeshot", "21": "ssldezip",
+                     "998": "mtst", "995": "stems", "994": "ssult"}   # ★인포크 프로필명 실측: stems=썰템쇼, ssult=썰템홈샷
 OUT_DIR = os.path.expanduser(r"~\.claude\shoplink")          # 장부·이미지(키·개인정보 없음)
 LEDGER = os.path.join(OUT_DIR, "ledger.json")
 
@@ -76,11 +79,53 @@ def inpock_account(pg):
     return m.group(1)
 
 
-def inpock_next_number(pg):
-    """블록 목록 제목의 'NNN_' 최댓값 + 1 (관리 화면 = 주인)."""
-    txt = pg.inner_text("body")
-    nums = [int(x) for x in re.findall(r"(?m)^\s*(\d{3})_", txt)]
-    return (max(nums) + 1) if nums else 1
+def inpock_switch(pg, want):
+    """전용 창에 로그인해 둔 인포크 계정들 중 want 로 바꾼다(관리 메뉴의 계정 이름 → '계정 선택' 목록)."""
+    if inpock_account(pg) == want:
+        return want
+    pg.goto(f"{INPOCK}/admin/menu", wait_until="domcontentloaded")
+    pg.wait_for_timeout(4000)
+    pg.locator("text=/^[a-z0-9_.]{4,}$/ >> visible=true").last.click()
+    pg.wait_for_selector("text=계정 선택", timeout=10000)
+    items = pg.locator(f"text=/^{re.escape(want)}$/ >> visible=true")
+    if not items.count():
+        raise SystemExit(f"인포크 계정 {want} 가 이 창에 로그인돼 있지 않다 — '계정 추가'로 로그인 필요")
+    items.last.click()
+    pg.wait_for_timeout(4000)
+    got = inpock_account(pg)
+    if got != want:
+        raise SystemExit(f"인포크 계정 전환 실패: {got} (원한 것 {want})")
+    return got
+
+
+_NUM_RES = (("[{n}] {name}", re.compile(r"^\[(\d+)\]\s*(.+)$")),      # 대부분 채널(사장님 손 등록 형식)
+            ("{n}. {name}", re.compile(r"^(\d+)\.\s*(.+)$")))          # 샥템스토리 형식
+
+
+def inpock_blocks(account):
+    """공개 페이지의 블록 제목 → [(번호, 이름, 형식)]. 번호·형식의 주인 = 사장님이 이미 쓰고 있는 인포크 블록."""
+    req = urllib.request.Request(f"{INPOCK}/{account}", headers={"User-Agent": "Mozilla/5.0"})
+    html = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+    out = []
+    for t in re.findall(r'"title":"([^"]{1,80})"', html):
+        for fmt, rx in _NUM_RES:
+            m = rx.match(t.strip())
+            if m:
+                out.append((int(m.group(1)), m.group(2).strip(), fmt))
+                break
+    return out
+
+
+def inpock_plan(account, keyword, product_name):
+    """같은 상품이 이미 있으면 그 번호를 그대로 쓰고(등록 안 함), 없으면 최댓값+1·그 계정이 쓰던 형식으로."""
+    blocks = inpock_blocks(account)
+    words = [w for w in re.split(r"\s+", keyword.strip()) if w]
+    for n, name, fmt in blocks:
+        if words and all(w in name.replace(" ", "") or w in name for w in words):
+            return {"number": n, "title": fmt.format(n=n, name=name), "exists": True}
+    fmt = max(("[{n}] {name}", "{n}. {name}"), key=lambda f: sum(1 for b in blocks if b[2] == f)) if blocks else "[{n}] {name}"
+    n = max([b[0] for b in blocks] or [0]) + 1
+    return {"number": n, "title": fmt.format(n=n, name=short_title(product_name)), "exists": False}
 
 
 def short_title(name, limit=22):
@@ -127,7 +172,7 @@ def description(title, desc, number, account, link, tags):
         title,
         desc,
         "",
-        f"🛒 구매링크: 프로필 링크(인포크)에서 '{number:03d}' 검색",
+        f"🛒 구매링크: 프로필 링크(인포크)에서 '{number}' 검색",
         f"link.inpock.co.kr/{account}",
         f"쿠팡: {link}",
         DISCLOSURE,
@@ -167,7 +212,8 @@ def main(argv=None):
     p.add_argument("--title", default="")
     p.add_argument("--desc", default="")
     p.add_argument("--tags", default="")
-    p.add_argument("--account", default="", help="이 인포크 계정이 로그인돼 있어야 한다(다르면 멈춘다)")
+    p.add_argument("--channel", default="", help="버퍼 계정 번호(987·950…) → 그 채널 인포크로 자동 전환")
+    p.add_argument("--account", default="", help="인포크 계정을 직접 지정(--channel 이 우선)")
     p.add_argument("--dry", action="store_true", help="쿠팡 링크만 발급, 인포크는 저장 안 함")
     a = p.parse_args(argv)
     from tools.google_browser import google_page
@@ -196,22 +242,30 @@ def run(pg, a):
             return
         prod = coupang_link(pg, a.keyword, a.pick)
         print("쿠팡:", prod["name"], prod["link"])
-        acct = inpock_account(pg)
-        if a.account and a.account != acct:
-            raise SystemExit(f"인포크 로그인 계정이 {acct} — 요청 {a.account} 와 다르다")
-        num = inpock_next_number(pg)
-        title = f"{num:03d}_{short_title(prod['name'])}"
-        img = download(prod["image"], os.path.join(OUT_DIR, f"{acct}_{num:03d}.jpg"))
-        res = inpock_add(pg, title, prod["link"], img, dry=a.dry)
-        print("인포크:", acct, title, res)
+        want = INPOCK_BY_CHANNEL.get(a.channel) if a.channel else a.account
+        if a.channel and not want:
+            raise SystemExit(f"채널 {a.channel} 의 인포크 계정이 정해져 있지 않다(INPOCK_BY_CHANNEL)")
+        acct = inpock_switch(pg, want) if want else inpock_account(pg)
+        if not want:
+            raise SystemExit(f"--channel 또는 --account 가 필요하다(지금 로그인된 인포크: {acct})")
+        plan = inpock_plan(acct, a.keyword, prod["name"])
+        num, title = plan["number"], plan["title"]
         seen = None
-        if res["saved"]:
-            for _ in range(6):
-                seen = inpock_public_has(acct, title)
-                if seen:
-                    break
-                time.sleep(5)
-            print("공개 페이지 실측:", "있음" if seen else "없음")
+        if plan["exists"]:
+            res = {"saved": False, "reused": True}
+            seen = True
+            print("인포크:", acct, "이미 있는 블록을 쓴다 →", title)
+        else:
+            img = download(prod["image"], os.path.join(OUT_DIR, f"{acct}_{num}.jpg"))
+            res = inpock_add(pg, title, prod["link"], img, dry=a.dry)
+            print("인포크:", acct, title, res)
+            if res["saved"]:
+                for _ in range(6):
+                    seen = inpock_public_has(acct, title)
+                    if seen:
+                        break
+                    time.sleep(5)
+                print("공개 페이지 실측:", "있음" if seen else "없음")
         text = description(a.title or prod["name"], a.desc, num, acct, prod["link"], a.tags)
         print("----- 버퍼 설명란 -----\n" + text)
         rows = json.load(open(LEDGER, encoding="utf-8")) if os.path.exists(LEDGER) else []
