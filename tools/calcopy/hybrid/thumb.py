@@ -108,7 +108,7 @@ def judge(faces: list[dict], W: int, H: int, min_frac: float = FACE_MIN_FRAC) ->
 def face_check(final, win: tuple, h_span: tuple[float, float] | None, log=print) -> dict:
     """0초 + H 구간(0.5초 간격) 프레임의 연예인 얼굴 검사. win=(x,y,w,h) 영상 창. 반환 {"ok", "frames":[{t, ok, why, …}]}."""
     det = _detector()
-    ts = [0.0]
+    ts = [round(THUMB_FRAMES / FPS + 0.01, 3)]      # 맨 앞 THUMB_FRAMES 는 썸네일 카드(10-24 — 카드 규칙은 card() 몫) → 그 바로 뒤 첫 영상 프레임
     if h_span:
         a, b = h_span
         t = a + 0.1
@@ -245,13 +245,200 @@ def make_thumb(doc: Path, work: Path, dst: Path | None = None, log=print) -> dic
     return {"jpg": str(dst), "picked": best, "n_candidates": len(cands), "n_face": len(good)}
 
 
+# ── 썸네일 카드(궁금 장치) — 판단 주인: 이 아래 card() 한 곳 ──────────────────────────────────────────
+# 10-23 사장님 "맨 앞에 썸네일 아주 잠깐 / 가장 눈에 띄고 클릭할 수밖에 없는 장면 + 궁금한 장치(멘트·화살표) / 사진으로 몇 개씩 / 대충 만들지 마".
+# 벤치 실측(잇템로그 aUic·ro1l 첫 2프레임): 틀(제목 2줄) 그대로 + 창 안 장면 + 빨강 굵은 글('이거 맞아..??!', 검정 외곽·번진 그림자) + 빨간 원.
+# 장면 = 그 편 render/parts 컷 조각(자막·광고표시 없는 창 화면) — 본편에 실제로 나오는 장면만(낚시 금지).
+# 썸네일.json = {"options":[{"id","part","t","why", "zoom":[x,y,w,h]?, "text":[{"lines":[…],"xy":[cx,cy],"px","color"?,"rot"?}],
+#   "circle":[[cx,cy,r],…]?, "arrow":[[[x0,y0],[x1,y1]],…]?, "q":[[cx,cy,px],…]?, "hide":[[x,y,w,h],…]?}]}  좌표 = 창 안(1080×1434) 기준.
+CARD_RED = (236, 22, 30)
+CARD_FONT = "GmarketSansBold.otf"
+# 10-24 사장님 "웃긴 거는 ㅋㅋ ㅎㅎ 번갈아 / 황당한 건 ㄷㄷ / (A·B·C 중) 랜덤으로": 안마다 mood = funny|wow → 글 끝 꼬리표.
+# funny 의 ㅋㅋ·ㅎㅎ = 편 번호(문서 폴더 epNN) 홀수 ㅋㅋ · 짝수 ㅎㅎ — 이웃 편끼리 번갈아 나온다.
+def mood_tag(doc: Path, mood: str | None) -> str:
+    import re
+    if mood == "wow":
+        return "ㄷㄷ"
+    if mood == "funny":
+        m = re.search(r"ep(\d+)", Path(doc).name)
+        return "ㅋㅋ" if (int(m.group(1)) if m else 1) % 2 else "ㅎㅎ"
+    return ""
+
+
+def pick_option(doc: Path, spec: dict) -> str:
+    """보일 안 = 썸네일.json 의 pick(한 번 정하면 고정). 없으면 무작위로 정해 적는다."""
+    import random
+    if not spec.get("pick"):
+        spec["pick"] = random.choice([o["id"] for o in spec["options"]])
+        jsave(Path(doc) / "썸네일.json", spec)
+    return spec["pick"]
+
+
+def _part_frame(work: Path, part: int, t: float):
+    from PIL import Image
+    p = Path(work) / "render/parts" / f"c{part:02d}.mp4"
+    w, h = 1080, 1434
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(p), "-frames:v", "1", "-vf", f"scale={w}:{h}:flags=lanczos",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    if len(raw) != w * h * 3:
+        raise StageError(f"썸네일 장면 프레임을 못 뽑음: {p} @{t}")
+    return Image.frombytes("RGB", (w, h), raw)
+
+
+def _shadow_text(layer, xy, lines, font, fill, stroke, line_gap=1.08, rot=0.0):
+    """굵은 글 + 검정 외곽 + 번진 그림자(벤치 썸네일 글)를 layer(RGBA)에 가운데 정렬로 얹는다."""
+    from PIL import Image, ImageDraw, ImageFilter
+    asc, desc = font.getmetrics()
+    lh = int((asc + desc) * line_gap)
+    tw = int(max(font.getlength(s) for s in lines)) + stroke * 4
+    th = lh * len(lines) + stroke * 4
+    t = Image.new("RGBA", (tw + 60, th + 60), (0, 0, 0, 0))
+    d = ImageDraw.Draw(t)
+    for i, s in enumerate(lines):
+        x = (t.size[0] - font.getlength(s)) / 2
+        y = 30 + stroke * 2 + i * lh
+        d.text((x, y), s, font=font, fill=fill + (255,), stroke_width=stroke, stroke_fill=(0, 0, 0, 255))
+    sh = Image.new("RGBA", t.size, (0, 0, 0, 0))
+    sh.putalpha(t.getchannel("A").filter(ImageFilter.GaussianBlur(14)).point(lambda v: int(v * 0.85)))
+    out = Image.new("RGBA", t.size, (0, 0, 0, 0))
+    out.alpha_composite(sh, (6, 10))
+    out.alpha_composite(t)
+    if rot:
+        out = out.rotate(rot, resample=Image.BICUBIC, expand=True)
+    x = min(max(int(xy[0] - out.size[0] / 2), -20), layer.size[0] - out.size[0] + 20)      # 창 밖으로 안 나가게(그림자 여백 20)
+    layer.alpha_composite(out, (x, int(xy[1] - out.size[1] / 2)))
+
+
+def _arrow(d, a, b, width=26, head=70):
+    import math
+    ang = math.atan2(b[1] - a[1], b[0] - a[0])
+    base = (b[0] - head * 0.8 * math.cos(ang), b[1] - head * 0.8 * math.sin(ang))
+    left = (b[0] - head * math.cos(ang - 0.5), b[1] - head * math.sin(ang - 0.5))
+    right = (b[0] - head * math.cos(ang + 0.5), b[1] - head * math.sin(ang + 0.5))
+    for col, add in (((0, 0, 0, 255), 10), (CARD_RED + (255,), 0)):
+        d.line([tuple(a), base], fill=col, width=width + add)
+        d.polygon([tuple(b), left, right] if not add else [
+            (b[0] + 8 * math.cos(ang), b[1] + 8 * math.sin(ang)),
+            (left[0] - 6 * math.cos(ang - 1.57), left[1] - 6 * math.sin(ang - 1.57)),
+            (right[0] + 6 * math.cos(ang - 1.57), right[1] + 6 * math.sin(ang - 1.57))], fill=col)
+
+
+def card(style_name: str, doc: Path, work: Path, opt: dict, out: Path) -> Path:
+    """한 안(opt)을 1080×1920 JPG 로 — 틀(판 설정 frame·대본 title_lines) + 창 장면 + 장치."""
+    from PIL import Image, ImageDraw, ImageFilter
+    from tools.calcopy.hybrid import styles as ST
+    from tools.calcopy.hybrid.render_bench import _font, frame_png
+    st = ST.load(style_name)
+    S = jload(Path(doc) / "대본.json")
+    x0, y0, ww, wh = st["frame"]["window"]
+    if opt.get("file"):      # 컷 조각이 없을 때(작업 폴더 정리 뒤) = 본편이 쓴 원본 영상 그 자리·같은 크롭
+        from PIL import Image as _I
+        fx, fy, fw, fh = opt["crop"]
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{float(opt['ss']):.3f}", "-i", opt["file"], "-frames:v", "1", "-vf",
+                              f"crop={fw}:{fh}:{fx}:{fy},scale={ww}:{wh}:flags=lanczos", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                             capture_output=True, stdin=subprocess.DEVNULL).stdout
+        if len(raw) != ww * wh * 3:
+            raise StageError(f"썸네일 장면 프레임을 못 뽑음: {opt['file']} @{opt['ss']}")
+        scene = _I.frombytes("RGB", (ww, wh), raw)
+    else:
+        part = opt.get("part")
+        if opt.get("line"):      # 줄 + 그 줄 안 몇 번째 컷 — 컷 수가 바뀌어도 번호가 안 밀린다(10-24 09: 첫 줄 컷 2→1 로 번호가 밀려 실패)
+            tl = jload(Path(work) / "render/timeline.json")["cuts"]
+            ks = [k for k, c in enumerate(tl) if c["line"] == opt["line"]]
+            if len(ks) <= int(opt.get("nth", 0)):
+                raise StageError(f"썸네일 장면 줄 {opt['line']} 에 {opt.get('nth', 0)}번째 컷이 없다")
+            part = ks[int(opt.get("nth", 0))]
+        scene = _part_frame(work, int(part), float(opt.get("t", 0.0)))
+    if opt.get("zoom"):
+        zx, zy, zw, zh = opt["zoom"]
+        scene = scene.crop((zx, zy, zx + zw, zy + zh)).resize((ww, wh), Image.LANCZOS)
+    scene = scene.convert("RGBA")
+    for hx, hy, hw, hh in opt.get("hide") or []:          # 제품 가리기 = 흐림(정체 숨김 → '뭐길래?')
+        box = scene.crop((hx, hy, hx + hw, hy + hh)).filter(ImageFilter.GaussianBlur(28))
+        scene.paste(box, (hx, hy))
+    lay = Image.new("RGBA", scene.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for cx, cy, r in opt.get("circle") or []:
+        d.ellipse([cx - r - 3, cy - r - 3, cx + r + 3, cy + r + 3], outline=(0, 0, 0, 200), width=20)
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=CARD_RED + (255,), width=13)
+    for a, b in opt.get("arrow") or []:
+        _arrow(d, a, b)
+    for cx, cy, px in opt.get("q") or []:
+        _shadow_text(lay, (cx, cy), ["?"], _font(CARD_FONT, px), (255, 225, 0), max(8, px // 12))
+    tag = mood_tag(doc, opt.get("mood"))
+    for i, tx in enumerate(opt.get("text") or []):
+        lines = list(tx["lines"])
+        if i == 0 and tag:
+            lines[-1] = f"{lines[-1]} {tag}"
+        px = tx.get("px", 120)
+        while px > 70 and max(_font(tx.get("font", CARD_FONT), px).getlength(t) for t in lines) > 1000:
+            px -= 4                                            # 꼬리표가 붙어 넘치면 줄인다(창 폭 1080 − 여백)
+        _shadow_text(lay, tx["xy"], lines, _font(tx.get("font", CARD_FONT), px),
+                     tuple(tx.get("color", CARD_RED)), tx.get("stroke", 11), rot=tx.get("rot", 0.0))
+    scene.alpha_composite(lay)
+    fr = Image.open(frame_png(S, st, Path(work) / "render/thumb_frame.png")).convert("RGBA")
+    full = Image.new("RGBA", fr.size, (0, 0, 0, 255))
+    full.paste(scene, (x0, y0))
+    full.alpha_composite(fr)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    full.convert("RGB").save(out, quality=94)
+    return out
+
+
+def cards(style_name: str, doc: Path, work: Path, log=print) -> dict:
+    """<doc>/썸네일.json 의 안마다 <doc>/thumb/<id>.jpg + 나란히 본 시트 thumb/시트.jpg."""
+    from PIL import Image, ImageDraw
+    from tools.calcopy.hybrid.render_bench import _font
+    doc = Path(doc)
+    spec = jload(doc / "썸네일.json")
+    outs = []
+    for o in spec["options"]:
+        p = card(style_name, doc, work, o, doc / "thumb" / f"{o['id']}.jpg")
+        outs.append((o, p))
+        log(f"[card] {o['id']} {p}")
+    tw, th = 432, 768
+    sheet = Image.new("RGB", (len(outs) * (tw + 16) + 16, th + 80), (24, 24, 24))
+    dd = ImageDraw.Draw(sheet)
+    for i, (o, p) in enumerate(outs):
+        sheet.paste(Image.open(p).resize((tw, th), Image.LANCZOS), (16 + i * (tw + 16), 64))
+        dd.text((16 + i * (tw + 16), 12), f"{o['id']}  {o.get('why', '')}"[:40], font=_font("Pretendard-Bold.otf", 30), fill=(255, 230, 0))
+    sp = doc / "thumb" / "시트.jpg"
+    sheet.save(sp, quality=90)
+    pk = pick_option(doc, spec)
+    return {"sheet": str(sp), "cards": [str(p) for _, p in outs], "pick": pk, "pick_jpg": str(doc / "thumb" / f"{pk}.jpg")}
+
+
+THUMB_FRAMES = 2      # 벤치 실측: 0초 첫 2프레임(약 0.07초)만 썸네일 그림
+
+
+def stamp_video(video: Path, jpg: Path, frames: int = THUMB_FRAMES) -> None:
+    """완성본 맨 앞 frames 프레임을 썸네일 그림으로 덮는다(길이·소리 그대로)."""
+    from PIL import Image
+    from tools.calcopy.engine import ad_mark
+    tmp = Path(video).with_suffix(".thumb.mp4")
+    card_png = Path(video).with_name("_thumb_stamp.png")
+    im = Image.open(jpg).convert("RGBA").resize((1080, 1920))
+    bp, m = ad_mark.badge(1080, Path(video).with_name("_thumb_badge.png"))      # 카드 프레임에도 '광고'(주인 ad_mark — 모든 프레임)
+    b = Image.open(bp)
+    im.alpha_composite(b, (1080 - b.size[0] - m, m))
+    im.convert("RGB").save(card_png)
+    run(["ffmpeg", "-y", "-v", "error", "-i", video, "-i", card_png, "-filter_complex",
+         f"[1:v]scale=1080:1920,setsar=1[t];[0:v][t]overlay=0:0:enable='lt(n,{frames})',format=yuv420p[v]", "-map", "[v]", "-map", "0:a",
+         "-map_metadata", "0", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-c:a", "copy", "-movflags", "+faststart", tmp])
+    shutil.move(str(tmp), str(video))
+    card_png.unlink(missing_ok=True); Path(bp).unlink(missing_ok=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check"); c.add_argument("final"); c.add_argument("frame"); c.add_argument("--h-span")
     m = sub.add_parser("make"); m.add_argument("doc"); m.add_argument("work"); m.add_argument("--dst")
+    k = sub.add_parser("card"); k.add_argument("style"); k.add_argument("doc"); k.add_argument("work")
     a = ap.parse_args()
-    if a.cmd == "check":
+    if a.cmd == "card":
+        print(json.dumps(cards(a.style, Path(a.doc), Path(a.work)), ensure_ascii=False, indent=1))
+    elif a.cmd == "check":
         fr = jload(a.frame)
         v = next(l for l in fr["layers"] if l.get("kind") == "video")
         hs = tuple(map(float, a.h_span.split("-"))) if a.h_span else None

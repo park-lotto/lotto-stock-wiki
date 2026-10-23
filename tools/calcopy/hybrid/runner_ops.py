@@ -349,6 +349,28 @@ def c_channel_find(W, d):
         chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id")}
                  for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
     pick = chans[:1]
+    if not pick and celeb:
+        # 채널 검색이 비면 출처 글자를 잘못 읽었을 수 있다(98 #63: '셀코TV'를 '쌩코TV'로 — 채널 검색 0건) →
+        #   '<연예인> <출처>' 영상 검색에서 채널 이름이 출처 글자와 가장 닮은 채널(닮음 0.5 이상, 같은 점수면 많이 나온 쪽)
+        #   ('<연예인> <쌩코TV>' 검색은 0건 — 유튜브는 틀린 이름을 고쳐 주지 않는다 → 원본 판독이 낸 '<연예인> <낱말>' 검색 결과의 채널 이름으로 맞춘다)
+        import difflib
+        found = []
+        for q in [f"{celeb} {label}".strip()] + [x for x in d.get("queries") or [] if x][:2]:
+            got, blocked = _vsearch(q)
+            if blocked:
+                return {"blocked": True, "channels": [], "titles": []}
+            found += got
+        score: dict = {}
+        for x in found:
+            cname = str(x.get("channel") or "")
+            if x.get("channel_id") and cname:
+                sim = difflib.SequenceMatcher(None, nl, RU.norm(cname.split("/")[0])).ratio()
+                if sim >= 0.5:
+                    k = (x["channel_id"], cname)
+                    score[k] = (max(sim, score.get(k, (0, 0))[0]), score.get(k, (0, 0))[1] + 1)
+        if score:
+            (cid, cname), _ = max(score.items(), key=lambda kv: kv[1])
+            pick = [{"id": cid, "name": cname, "handle": None, "fuzzy": True}]
     # 채널 안 검색('<연예인> <낱말>') 먼저 — 98 #61: 셀코TV 원본(함익병 기미)은 최신 60편 밖이라 목록만 봐서는 7분 넘게 헤매다 놓쳤다.
     #   채널 안 검색은 2초에 원본이 1위(10-24 실측). 찾은 순서를 searched 로 돌려주고 판단(순서 매기기)은 서버(flow.ph_src_got)가 한다.
     searched: list[dict] = []
@@ -1008,7 +1030,7 @@ def plan_sheet(W: Path, version: str, T: dict) -> Path:
             im.thumbnail((220, 220))
             dr = ImageDraw.Draw(im)
             dr.rectangle((0, 0, im.width, 18), fill=(0, 0, 0))
-            dr.text((3, 2), f"{c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))
+            dr.text((3, 2), f"c{i} {c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))   # c{i} = 썸네일 안의 part 번호(flow THUMB_ASK)
             tiles.append(im)
         except Exception:  # noqa: BLE001 — 못 뜬 컷은 시트에서 빠진다(검수가 본다)
             continue

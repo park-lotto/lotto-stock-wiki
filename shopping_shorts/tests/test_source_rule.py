@@ -361,3 +361,17 @@ def test_given_research_note_and_stop_hides_judgment():
     with pytest.raises(flow._Stop) as e:
         flow.ph_research_check(st, {}, {"research": {"stop": "동아에스티 전문의약품(히드로퀴논)", "조사_md": "x", "keywords": [], "queries": [], "spans": []}}, {})
     assert "동아" not in e.value.why and "동아" in st["log"][-1]
+
+
+def test_misread_label_falls_back_to_similar_channel(monkeypatch, tmp_path):
+    """출처 글자를 잘못 읽어(셀코TV→쌩코TV) 채널 검색이 0건이면 '<연예인> <낱말>' 영상 검색에서 이름이 닮은 채널로(98 #63)."""
+    import types
+    from tools.calcopy.hybrid import runner_ops as R
+    monkeypatch.setattr(R, "CACHE", False)
+    monkeypatch.setattr(R, "_blocked", lambda r: False)
+    monkeypatch.setattr(R, "yt", lambda args, timeout=0: types.SimpleNamespace(returncode=0, stdout='{"entries": []}', stderr=""))
+    monkeypatch.setattr(R, "_vsearch", lambda q, n=20: ([{"id": "v1", "channel": "셀코TV / 잘 먹고 잘 사는 방법", "channel_id": "UCsel"},
+                                                         {"id": "v2", "channel": "이성미의 나는 꼰대다", "channel_id": "UCkon"}], False))
+    monkeypatch.setattr(R, "c_channel_list", lambda W, d: {"titles": [{"id": "x", "title": "t", "dur": 600}]})
+    r = R.c_channel_find(tmp_path, {"label": "쌩코TV", "kind": "channel", "celeb": "함익병", "queries": ["함익병 기미"]})
+    assert r["picked"][0]["id"] == "UCsel" and r["titles"]

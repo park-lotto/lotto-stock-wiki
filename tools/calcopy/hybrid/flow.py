@@ -37,7 +37,7 @@ PHASE_STAGE = {   # 세부 단계 → 회원에게 보이는 단계
     "best_same": "product", "product_done": "product", "research": "research", "research_got": "research", "material": "material",
     "material_got": "material", "material_pick": "material", "material_dl": "material", "asr": "asr", "asr_got": "asr", "shots_got": "asr",
     "script": "script", "script_got": "script", "script_saved": "script", "sign": "sign", "plan": "plan", "plan_got": "plan",
-    "plan_look": "plan", "plan_saved": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
+    "plan_look": "plan", "plan_saved": "plan", "thumb": "plan", "thumb_got": "plan", "render": "render", "render_got": "render", "render_fix": "render", "render_saved": "render",
     "check": "check", "check_got": "check", "check_look": "check", "check_fix": "check", "check_saved": "check", "done": "done",
 }
 
@@ -1246,6 +1246,7 @@ def ph_plan_got(st, m, rp, u):
     over += RU.source_rule_static(st["script"]["M"], _origin_names(st), str(st["bench"].get("id") or ""), st.get("shots") or {})
     over += p.get("jumps") or []
     st["_plan_over"] = over
+    st["_plan_sheet"], st["_n_cuts"] = p.get("sheet"), p.get("cuts")
     return {"review": [_fix_review(st, "; ".join(over), p.get("sheet"), f"plan_{st['version']}")], "then": "plan_look"}
 
 
@@ -1277,12 +1278,55 @@ def ph_plan_look(st, m, rp, u):
     r = _reply(rp, f"plan_{v}", ("ok",))
     over = st.get("_plan_over") or []
     if r.get("ok") and not over and not r.get("재료"):
-        return {"goto": "render"}
+        return {"goto": "thumb"}
     _tries(st, "plan", LIMITS["plan"])
     M = _take_fix(st, r)
     if M is None:
         raise _Stop("장면 검수가 통과하지 않았는데 재료를 고치지 못했습니다", "다시 이어서 부르세요")
     return {"do": [{"id": "save_m", "cmd": "write_doc", "files": {f"{v}/재료.json": M}, "cand_dir": True, "version": v}], "then": "plan"}
+
+
+# ── 9-1 썸네일 카드(맨 앞 2프레임) — 판단 주인 thumb_rule(찾는 순서·좋은 조건·3안 검사), 그리기·입히기 = render_bench → thumb.cards ──
+THUMB_ASK = """완성본 맨 앞 2프레임(0.067초)에 넣을 썸네일 카드 3안을 정한다(사장님 10-24 — 본보기: 재벌 회장이 혀로 요거트 뚜껑 핥는 순간 + 입에 빨간 원 + "회장님도 뚜껑 핥는다고??").
+장면은 아래 계획 시트의 컷(칸 위 글 'c번호 줄 시작~끝 초' — c번호가 part. 옛 설치본은 c번호가 없으니 왼쪽 위부터 0,1,2… 로 센다)에서만 고른다(본편에 나오는 장면만).
+
+{good}
+
+{order}
+(회원 라인은 이미 받은 원본·재료 안에서 고른다 — 원본 연예인 영상의 결정적 순간이 1순위)
+
+좌표 = 창 안 {ww}×{wh}. 각 안: {{"id":"A|B|C","axis":"인물순간|물건근접|정체숨김|황당사실|짤반응","mood":"funny|wow","why":"…","part":컷 번호,"t":컷 안 초,
+ "circle":[[cx,cy,r]]?, "arrow":[[[x0,y0],[x1,y1]]]?, "q":[[cx,cy,px]]?, "hide":[[x,y,w,h]]?, "zoom":[x,y,w,h]?, "text":[{{"lines":["한 줄"],"xy":[cx,cy],"px":120}}]}}
+JSON 하나: {{"썸네일": {{"options":[3안], "no_person_why": "인물순간 안이 없을 때만 — 왜 없는지"}}}}"""
+
+
+def ph_thumb(st, m, rp, u):
+    from tools.calcopy.hybrid import thumb_rule as TR
+    v = st["version"]
+    _, _, ww, wh = _style(v)["frame"]["window"]
+    ask = THUMB_ASK.format(good=TR.GOOD, order=TR.FIND_ORDER, ww=ww, wh=wh)
+    if st.get("_thumb_bad"):
+        ask += "\n\n지난 답 반려 이유(고쳐서 다시):\n- " + "\n- ".join(st["_thumb_bad"])
+    sheet = st.get("_plan_sheet")
+    return {"review": [_rv(f"thumb_{v}", ask + "\n\n대본:\n" + json.dumps((st.get("script") or {}).get("S") or {}, ensure_ascii=False)[:4000],
+                           [_img(sheet)] if sheet else [], need=("썸네일",))], "then": "thumb_got"}
+
+
+def ph_thumb_got(st, m, rp, u):
+    from tools.calcopy.hybrid import thumb_rule as TR
+    v = st["version"]
+    spec = _reply(rp, f"thumb_{v}", ("썸네일",)).get("썸네일")
+    bad = TR.check(spec, n_parts=st.get("_n_cuts")) if isinstance(spec, dict) else ["썸네일 답이 JSON 객체가 아니다"]
+    if bad:
+        n = st["tries"].get("thumb", 0) + 1
+        st["tries"]["thumb"] = n
+        if n <= 2:
+            st["_thumb_bad"] = bad
+            return {"goto": "thumb"}
+        st["log"].append("썸네일 3안이 두 번 반려돼 카드 없이 렌더: " + "; ".join(bad)[:300])   # 영상은 막지 않는다(카드 = 덤)
+        return {"goto": "render"}
+    st.pop("_thumb_bad", None)
+    return {"do": [{"id": "save_thumb", "cmd": "write_doc", "files": {f"{v}/썸네일.json": spec}, "version": v}], "then": "render"}
 
 
 # ── 10 렌더 ───────────────────────────────────────────────────────────────
@@ -1417,7 +1461,7 @@ PHASES = {
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
-    "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
+    "plan_look": ph_plan_look, "thumb": ph_thumb, "thumb_got": ph_thumb_got, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
 for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():

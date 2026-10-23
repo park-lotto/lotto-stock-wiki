@@ -52,7 +52,7 @@
    "spans": [
     [
      0.2,
-     3.76
+     3.593
     ]
    ],
    "said": "A makeup brand from Korea sent me this foundation. Should I try it on?",
@@ -65,7 +65,7 @@
     [
      "발라 볼까?",
      2.48,
-     3.56
+     3.393
     ]
    ]
   },
@@ -91,8 +91,8 @@
    "src": "ks61.mp4",
    "spans": [
     [
-     7.76,
-     9.64
+     7.833,
+     9.58
     ]
    ],
    "said": "They looked at me and they were like, this is her shade",
@@ -100,7 +100,7 @@
     [
      "날 보더니 이게 내 색이래",
      0.0,
-     1.88,
+     1.747,
      "내 색"
     ]
    ]
@@ -145,8 +145,8 @@
    "src": "darkskin.mp4",
    "spans": [
     [
-     33.9,
-     37.16
+     33.967,
+     37.126
     ]
    ],
    "said": "Oh, that's actually so nice. I'm shocked",
@@ -154,12 +154,12 @@
     [
      "어? 이거 진짜 예쁜데?",
      0.0,
-     2.38
+     2.313
     ],
     [
      "나 충격이야",
-     2.38,
-     3.26,
+     2.313,
+     3.159,
      "충격"
     ]
    ]
