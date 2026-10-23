@@ -1,0 +1,66 @@
+{
+ "tt_mobilepixelsinc_7473116602452479274.mp4": {
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 2.1,
+    "text": "So this right here is the Geminos X. Absolutely love this monitor.",
+    "music": false
+   },
+   {
+    "start": 2.1,
+    "end": 4.0,
+    "text": "Dual screen, can do this.",
+    "music": false
+   },
+   {
+    "start": 4.0,
+    "end": 7.6,
+    "text": "It's great, absolutely love it. But now this...",
+    "music": false
+   },
+   {
+    "start": 9.9,
+    "end": 11.7,
+    "text": "This is the Geminos T.",
+    "music": false
+   },
+   {
+    "start": 11.7,
+    "end": 16.8,
+    "text": "It's from the same company, but this one, it has something up its sleeve that makes it a little bit more special. So I'm going to go and set it up and let me show you.",
+    "music": false
+   },
+   {
+    "start": 28.1,
+    "end": 33.0,
+    "text": "And here it is, Geminos T. Same amazing features as the Geminos X, but...",
+    "music": true
+   },
+   {
+    "start": 34.2,
+    "end": 37.3,
+    "text": "...with a touch screen bottom monitor. Imagine editing a video on this.",
+    "music": true
+   },
+   {
+    "start": 37.8,
+    "end": 39.1,
+    "text": "Look at this.",
+    "music": true
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ },
+ "tt_abbyhappel_7341570855383698730.mp4": {
+  "segments": [
+   {
+    "start": 0.0,
+    "end": 11.8,
+    "text": "",
+    "music": true
+   }
+  ],
+  "_model": "gemini-3.5-flash"
+ }
+}
