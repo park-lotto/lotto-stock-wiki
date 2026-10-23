@@ -182,7 +182,7 @@ def timeline(job, ep, ref):
     cuts = []
     for si, line in enumerate(ep["lines"]):
         end = rows[si + 1][0] if si + 1 < len(rows) else total
-        if line.get("shot_at"):                           # 컷마다 '이 자막 조각에서 바뀐다'(말과 장면 맞춤 — 실측: '삼겹살을 올리면'에 산 풍경)
+        if line.get("shot_at") and len(line["shot_at"]) == len(line["shots"]):                         # 컷마다 '이 자막 조각에서 바뀐다'(말과 장면 맞춤 — 실측: '삼겹살을 올리면'에 산 풍경)
             starts = [rows[si][k] for k in line["shot_at"]]
         else:
             starts = cut_points(wrows[si], end, len(line["shots"]), ref["measured"]["cut_target_s"])

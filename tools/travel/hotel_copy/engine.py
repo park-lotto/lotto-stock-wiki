@@ -114,8 +114,12 @@ def _script_prompt(ref, facts, fix=None, inventory=""):
             "이 원본의 규칙:\n%s\n\n공통 규칙: 줄마다 원본 글자 수 ±20%% / "
             "자막 조각은 원본처럼 1~2어절 뜻 덩어리(9자 이하), 이으면 문장과 같아야 한다 / "
             "shot_hints 는 그 컷에 보일 사진을 2~4단어로(예: '로비', '실내 수영장', '바비큐장', '침실'), 그 줄 말과 맞게 / "
+            "shot_at = shot_hints 마다 '이 사진이 뜨는 자막 조각 번호'(0부터, 첫 값 0, 커지는 순서, 개수 = shot_hints 수) — 말과 장면이 맞게 "
+            "(예: '식혜에' 조각에서 식혜 사진, '촌이랑 캉스라'에서 강아지 사진). 한 사진이 1.5초를 넘지 않게 조각 2~3개마다 바꾼다 / "
+            "facts = 그 줄의 근거를 숙소 자료에서 글자 그대로 옮긴 짧은 말 목록(지어낸 줄은 빈 목록) / "
+            "point = '잉'(궁금하게 만드는 줄, answer_at = 답이 나오는 줄 번호 0부터) · '와우'(새 사실로 놀라게 하는 줄) · 없으면 빈칸 / "
             "썸네일: %s, hint = 썸네일 사진(%s 류)\n%s\n"
-            "JSON: {\"lines\": [{\"role\": \"\", \"text\": \"\", \"chunks\": [\"\"], \"shot_hints\": [\"\"]}], \"thumb\": {\"small\": \"\", \"big\": \"\", \"hint\": \"\"}}"
+            "JSON: {\"lines\": [{\"role\": \"\", \"text\": \"\", \"chunks\": [\"\"], \"shot_hints\": [\"\"], \"shot_at\": [0], \"facts\": [\"\"], \"point\": \"\", \"answer_at\": null}], \"thumb\": {\"small\": \"\", \"big\": \"\", \"hint\": \"\"}}"
             % (ref.get("story", ""), roles, facts["text"][:9000], inventory, rules, ref.get("thumb_rule", ""), ref.get("thumb_hint", ""),
                ("\n앞 판에서 걸린 것(고쳐라):\n- " + "\n- ".join(fix)) if fix else ""))
 
@@ -146,6 +150,76 @@ def s_script(job, st):
     return "대본 %d줄 · 검사 %s" % (len(ep["lines"]), "통과" if not issues else "%d건: %s" % (len(issues), issues))
 
 
+def _pick_live(ep, k):
+    """(판단 주인) 어느 컷을 AI 영상으로 살릴까 — 불·김·물·연기처럼 사진 속에서 저절로 움직이는 것만 k컷까지(사장님 2026-10-23
+    '불 피우는 거나 움직임이 있는 생동감 넘치는 것 몇 개만 중간에'). 첫 컷(썸네일 이음)은 뺀다. 이미 live 를 단 컷이 있으면 손대지 않는다."""
+    from shopping_shorts import travel_build as tb
+    shots = [sh for l in ep["lines"] for sh in l["shots"]]
+    if not k or any(sh.get("live") for sh in shots):
+        return []
+    rows = "\n".join("%d. [%d줄] %s / %s" % (i, li, sh.get("desc", ""), sh.get("hint", ""))
+                     for i, (li, sh) in enumerate((li, sh) for li, l in enumerate(ep["lines"]) for sh in l["shots"]) if i)
+    got = tb.claude_call([], (
+        "숙소 쇼츠 사진 컷 목록이다. 이 중 최대 %d컷을 4초짜리 AI 영상으로 살린다.\n"
+        "고르는 기준: 사진 안에 저절로 움직이는 것이 실제로 있는 컷만 — 불꽃·숯불·김·연기·흐르는 물·물보라·찰랑이는 수면. "
+        "사람·동물·방·건물만 있는 컷은 고르지 마라(AI 가 사람을 움직이면 어색하다). "
+        "난로 유리문·화덕 안쪽처럼 작게 갇힌 불도 고르지 마라(실측 2번: 사우나 난로 불은 4초 내내 거의 안 움직였다) — 탁 트인 화로대·모닥불·캠프파이어는 된다.해당이 없으면 적게 골라도 된다. 줄이 겹치지 않게 흩어 고른다.\n"
+        "live = 움직임 영어 한 줄(사진에 있는 것만 움직이고 새 물건·사람을 만들지 않는다, 카메라는 아주 천천히 다가가기). "
+        "live_desc = 사진 내용 영어 한 줄.\n예: live 'Orange flames flicker behind the glass door of the wood stove; warm light flickers on the walls; the camera slowly moves forward.'\n\n"
+        "컷:\n%s\n\nJSON: {\"pick\": [{\"i\": 0, \"live\": \"\", \"live_desc\": \"\"}]}" % (k, rows)))
+    out = []
+    for p in (got.get("pick") or [])[:k]:
+        i = p.get("i")
+        if isinstance(i, int) and 0 < i < len(shots) and p.get("live"):
+            shots[i]["live"], shots[i]["live_desc"] = p["live"], p.get("live_desc") or shots[i].get("desc", "")
+            out.append(shots[i].get("hint") or Path(shots[i]["file"]).stem)
+    return out
+
+
+def _fit_shot_at(line, words, speed, d, n, max_cut, min_cut=0.0):
+    """대본이 준 shot_at(자막 조각 번호 = 그 말에서 사진이 바뀜)을 지키며 컷 수·최장·최단 컷을 맞춘다.
+    가장 긴 컷을 가운데 조각에서 한 번 더 나누고(그 컷 힌트의 '다른 각도'), 너무 짧은 컷은 이웃과 합친다
+    (실측 2026-10-23 숨은계곡: 조각 '바베큐에' 하나짜리 컷 0.37초 — 원본 최단 0.7초).
+    shot_at 이 없거나 틀렸으면 지우고 False(어절 고르게 나누기로)."""
+    at, hints, ch = line.get("shot_at"), line["shot_hints"], line["chunks"]
+    if not (isinstance(at, list) and len(at) == len(hints) and at and at[0] == 0
+            and all(a < b for a, b in zip(at, at[1:])) and at[-1] < len(ch)):
+        line.pop("shot_at", None)
+        return False
+    cs, k = [], 0
+    for c in ch:                                       # 조각 시작 시각(어절 시각에서)
+        cs.append(words[k]["start"] / speed)
+        k += len(c.split())
+    end = lambda j: cs[at[j + 1]] if j + 1 < len(at) else d
+    while True:
+        segs = [(cs[a], end(j), j) for j, a in enumerate(at)]
+        a0, b0, j = max(segs, key=lambda s: s[1] - s[0])
+        if len(at) >= n and b0 - a0 <= max_cut:
+            break
+        lo, hi = at[j], at[j + 1] if j + 1 < len(at) else len(ch)
+        if hi - lo < 2:                                 # 조각 하나짜리 컷은 더 못 나눈다 — 검사(check)가 길면 잡는다
+            break
+        mid = min(range(lo + 1, hi), key=lambda q: abs(cs[q] - (a0 + b0) / 2))
+        at.insert(j + 1, mid)
+        hints.insert(j + 1, hints[j] + " 다른 각도")
+    while len(at) > 1:                                  # 짧은 컷 = 앞 컷이나 뒤 컷과 합친다(합친 길이가 짧은 쪽, 최장 안 넘을 때만)
+        short = [j for j in range(len(at)) if end(j) - cs[at[j]] < min_cut]
+        if not short:
+            break
+        j = short[0]
+        opts = []
+        if j > 0:                                       # 이 컷 사진을 빼고 앞 컷을 늘린다
+            opts.append((end(j) - cs[at[j - 1]], j))
+        if j + 1 < len(at):                             # 뒤 컷 사진을 빼고 이 컷을 늘린다
+            opts.append((end(j + 1) - cs[at[j]], j + 1))
+        opts = [o for o in opts if o[0] <= max_cut]
+        if not opts:
+            break
+        k = min(opts)[1]
+        del at[k], hints[k]
+    return True
+
+
 def s_shots(job, st):
     from tools.travel.hotel_copy import photos
     from tools.travel.hotel_copy import render, check
@@ -164,14 +238,19 @@ def s_shots(job, st):
             if max(b - a for a, b in zip(st_, st_[1:] + [d])) <= longest * check.CUT_MAX_K:
                 break
             n += 1
+        if _fit_shot_at(line, x["words"], ep["speed"], d, n, longest * check.CUT_MAX_K, min(m["cut_s"]) * check.CUT_MIN_K):
+            continue
         while len(line["shot_hints"]) < n:
             line["shot_hints"].insert(-1, line["shot_hints"][-2 if len(line["shot_hints"]) > 1 else 0] + " 다른 각도")
     ref = render.ref_spec(ep["ref"])
     th = photos.pick_vision(ph, ep["lines"], ep["thumb"].get("hint") or ref["thumb_hint"], job,
                             thumb_kinds=ref.get("thumb_kinds"), end_is_thumb=ref.get("end_same_as_thumb", True))
     ep["thumb"].update(th)
+    live = _pick_live(ep, ref.get("live_max", 0))
     save(job / "ep.json", ep)
     labels = photos.sheet(ep, job / "shots.jpg")
+    if live:
+        return "컷 %d개 고름(shots.jpg) · AI 영상 후보 %d컷(%s) — %s" % (len(labels) - 1, len(live), ", ".join(live), ", ".join(labels))
     return "컷 %d개 고름(shots.jpg) — %s" % (len(labels) - 1, ", ".join(labels))
 
 

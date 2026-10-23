@@ -42,6 +42,50 @@ def script_issues(ep, ref, facts_text):
         for num in NUM.findall(t):
             if num.rstrip(".,") not in facts_text:
                 out.append("%d줄 숫자 '%s' 가 자료(facts)에 없다 — 지어낸 숫자 금지" % (i, num))
+    if ref.get("script_doc"):
+        out += doc_issues(ep, ref["script_doc"], facts_text)
+    return out
+
+
+def _script_frame():
+    """다른 채널 대본 설명서 검사기(주인 = 칼카피숏템엔진 tools/calcopy/engine/script_frame). main 에 아직 없으면 옆 트랙 폴더에서 읽는다."""
+    import importlib.util
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[3]
+    for base in (root, root.parent / "칼카피숏템엔진"):
+        f = base / "tools/calcopy/engine/script_frame.py"
+        if f.exists():          # 파일 경로로 읽는다(이 트랙의 tools 패키지가 먼저 잡혀 이름으로는 옆 트랙 것을 못 부른다 — 실측 ImportError)
+            spec = importlib.util.spec_from_file_location("hotel_copy_script_frame", f)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod, base / "channel"
+    raise RuntimeError("대본 설명서 검사기(tools/calcopy/engine/script_frame.py)를 못 찾음 — 칼카피숏템엔진 트랙이 필요")
+
+
+def doc_issues(ep, doc, facts_text):
+    """refs 의 script_doc(예: homedesignnote) 설명서 검사 — 첫 문장 공식·잉?/와우·판별·근거. 걸린 것 = 고칠 말 목록(대본 단계가 다시 쓰게)."""
+    import json
+    SF, ch = _script_frame()
+    D = ch / doc / "대본설명서"
+    rd = lambda n: json.loads((D / n).read_text(encoding="utf-8"))
+    frame, hf, pc = rd("script_frame.json"), rd("hook_formula.json"), rd("points.json")
+    L = ep["lines"]
+    txt = " ".join(l["text"] for l in L)
+    # 근거 = 줄마다 'facts'(자료에서 그대로 옮긴 짧은 말). 자료에 글자 그대로 있는 것만 근거로 친다
+    ok_facts = {f for l in L for f in l.get("facts") or [] if f and f.replace(" ", "") in facts_text.replace(" ", "")}
+    out = []
+    h = SF.hook_formula_check(L[0]["text"], hf, txt)
+    if h and not h["ok"]:
+        out.append("첫 문장 공식 미달(%s) — [누가]+[무엇이 귀찮아서 등 계기]+[~해버렸더라고요/대요]" % "; ".join(h["why"]))
+    p = SF.points_check(L, pc, ok_facts)
+    if p and not p["ok"]:
+        out.append("잉?·와우 미달: %s" % "; ".join(p["why"]))
+    j = SF.judge_like(txt, frame)
+    if not j["pass"]:
+        out.append("설명서 판별 %.2f(기준 %s) 미달 %s — 이 채널 말투(체험담 ~더라고요)로" % (j["score"], j.get("threshold"), j["hard_fail"]))
+    for i, (g, l) in enumerate(zip(SF.grounding_audit([l["text"] for l in L]), L), 1):
+        if g["needs_ground"] and not set(l.get("facts") or []) & ok_facts:
+            out.append("%d줄 %s — 근거 필요한 말인데 facts(자료 그대로 옮긴 말)가 없다" % (i, "/".join(g["tags"])))
     return out
 
 
