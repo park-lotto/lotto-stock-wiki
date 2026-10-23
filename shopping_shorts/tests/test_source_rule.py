@@ -136,6 +136,19 @@ def test_origin_from_source_label_first():
     assert r["do"][0] == {"id": "origin", "cmd": "origin_get", "vid": "v20", "a": 0.0, "b": 725.0, "ts": [], "full": True}
 
 
+def test_source_channel_title_words_before_recency():
+    """출처 채널 후보 = 제목에 장면·제품 낱말 든 영상 먼저, 그다음 최신순(98 #58 선우용여 여주 아울렛 — 반년 전 원본이 최신 10편 밖)."""
+    from tools.calcopy.hybrid import flow
+    st = {"bench": {"id": "b", "dur": 22, "date": "20261018"}, "tries": {}, "log": [], "read": {"scene_words": ["여주 아울렛"], "product_words": ["신발"]}}
+    many = [{"id": f"n{i}", "title": f"브이로그 {i}", "dur": 900} for i in range(12)] + [{"id": "old", "title": "여주 아울렛에서 하루 쇼핑", "dur": 1426}]
+    r = flow.ph_src_got(st, {"src": {"picked": [{"id": "UC", "name": "순풍"}], "titles": many}}, {}, {})
+    assert r["do"][0]["ids"][0] == "old" and r["do"][0]["ids"][1] == "n0" and len(r["do"][0]["ids"]) == flow.SRC_PROBE
+    st["read"] = {"celeb": "함익병", "scene_words": [], "product_words": ["유리아 크림"]}   # 남의 채널 손님 — 제목에 손님 이름
+    guests = [{"id": f"g{i}", "title": f"손님 {i} 이야기 #이성미의나는꼰대다", "dur": 900} for i in range(12)] + [{"id": "ham", "title": "[3부] 무좀·주름 습관 #함익병", "dur": 1300}]
+    r = flow.ph_src_got(st, {"src": {"picked": [{"id": "UC", "name": "이성미의 나는 꼰대다"}], "titles": guests}}, {}, {})
+    assert r["do"][0]["ids"][0] == "ham"
+
+
 def test_source_kind_program_marked_and_kept():
     """출처가 프로그램 이름이면 편 상태에 표시하고 채널 검색을 건너뛴다 — 다시 시도해도 같은 길(사장님 10-22 '안 헷갈리게')."""
     from tools.calcopy.hybrid import flow
@@ -293,3 +306,11 @@ def test_still_crop_checked_against_real_size():
                   "n6": [{"src": "prod_1.jpg", "crop": [500, 0, 900, 900]}], "n7": [{"src": "prod_1.jpg"}]}}
     p = RU.material_problems(M, {"prod_1.jpg"}, set(), {"prod_1.jpg": [1000, 1000]})
     assert [x.split(":")[0] for x in p] == ["n4#1", "n6#1"]
+
+
+def test_every_stop_has_fix_line():
+    """멈춤은 고객에게 이유·해결 두 줄(사장님 10-22) — 해결이 빈 멈춤 금지(10-23 함익병: '숏템이 따로 알려 준 방법은 없어요'로 나갔다)."""
+    import re
+    src = (Path(__file__).resolve().parents[2] / "tools/calcopy/hybrid/flow.py").read_text(encoding="utf-8")
+    bad = re.findall(r'_Stop\(\s*"[^"]*"\s*\)|_Stop\(\s*"[^"]*"\s*,\s*""', src)
+    assert not bad, bad

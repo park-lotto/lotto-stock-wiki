@@ -370,7 +370,11 @@ def ph_src_got(st, m, rp, u):
     if f.get("blocked"):
         raise _Stop("유튜브가 지금 이 PC 요청을 막았습니다(봇 확인)", "유튜브 로그인 연결을 확인하거나 잠시 뒤 다시 이어서 부르세요")
     B, r = st["bench"], st["read"]
-    cands = [t for t in f.get("titles") or [] if t["id"] != B.get("id") and (t.get("dur") or 0) > (B.get("dur") or 0) + 20][:SRC_PROBE]
+    cands = [t for t in f.get("titles") or [] if t["id"] != B.get("id") and (t.get("dur") or 0) > (B.get("dur") or 0) + 20]
+    # 제목에 연예인 이름·장면·제품 낱말이 든 영상 먼저, 그다음 최신순(98 #58: 선우용여 '여주 아울렛' 원본은 반년 전 영상이라 최신 10편에 없었다 ·
+    #   함익병은 남의 채널(이성미의 나는 꼰대다) 손님이라 최신 편은 전부 다른 손님 — 손님 편 제목엔 이름이 든다)
+    tw = {RU.norm(w) for w in [r.get("celeb") or ""] + (r.get("scene_words") or []) + (r.get("product_words") or []) if len(RU.norm(w)) >= 2}
+    cands = sorted(cands, key=lambda t: -sum(1 for w in tw if w in RU.norm(t.get("title") or "")))[:SRC_PROBE]
     if not cands:
         st["log"].append("출처 채널을 못 찾아 검색 길로: " + json.dumps(f.get("channels") or [], ensure_ascii=False)[:300])
         return {"goto": "search"}
@@ -727,7 +731,7 @@ def ph_product_pick(st, m, rp, u):
 def ph_product_pick_wide(st, m, rp, u):
     sh = (m.get("psheet") or {}).get("file")
     if not sh:
-        raise _Stop("제품이 보이는 장면을 찾지 못했습니다", "")
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
     step, R0 = st["look_step"], st["read"]
     return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 **전체**를 {step}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{step}초) — 답의 t 는 **파일 초**.\n"
                            f"둘째 그림 = 벤치 쇼츠 1초 시트(그 제품이 무엇인지 보여 준다). 벤치·원본 대사의 제품 낱말: {R0.get('product_words')}",
@@ -746,7 +750,7 @@ def ph_product_cands(st, m, rp, u):
             st["look_step"] = step
             return {"do": [{"id": "psheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": "look/origin_wide.jpg",
                             "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "product_pick_wide"}
-        raise _Stop("제품이 보이는 장면을 찾지 못했습니다", "")
+        raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
     st["coupang_qs"] = qs
@@ -757,7 +761,7 @@ def ph_product_cands(st, m, rp, u):
 def ph_product_same(st, m, rp, u):
     shots = (m.get("shots") or {}).get("files") or []
     if not shots:
-        raise _Stop("제품 장면을 자르지 못했습니다", "")
+        raise _Stop("제품 장면을 자르지 못했습니다", "다시 이어서 부르세요")
     st["product_shots"] = shots
     cands = (m.get("coupang") or {}).get("items") or []
     st["coupang_cands"] = cands[:16]
@@ -805,7 +809,7 @@ def ph_product_done(st, m, rp, u):
             return {"goto": "name_find"}
         if mode == "named":
             return {"goto": "best"}
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "")
+        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
     if same.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
     pool = st.get("named_cands") if mode == "named" else st.get("coupang_cands")
@@ -881,7 +885,7 @@ def ph_named_same(st, m, rp, u):
 def ph_best(st, m, rp, u):
     cands = st.get("coupang_cands") or st.get("named_cands") or []
     if not cands:
-        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "")
+        raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
     if not any(c.get("rating") for c in cands) and st.get("coupang_qs") and not st.get("_rated"):
         st["_rated"] = True          # 대체 제품 = 후기 많은 것 — 후기 수는 이때만 채운다(98 #11·#43)
         return {"do": [{"id": "coupang", "cmd": "coupang", "queries": st["coupang_qs"], "ratings": True}], "then": "best_rated"}
