@@ -439,11 +439,29 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
     return {"verdict": verdict, "rows": rows, "n_bench": len(B), "ours_n_lines": O["n"]}
 
 
+def with_pixel(T: dict, bench_mp4: str, ours_mp4: str, out_dir: str) -> dict:
+    """(판단 주인 · 1차 칼카피 관문 하나) 줄 단위 자(MATCH_RULES) + 픽셀·소리 자(compare.py 24칸)를 한 판정으로.
+    둘 다 통과여야 통과. compare 는 따로 판정하지 않고 여기서만 합친다(10-23 사장님 '덧대기 없애자')."""
+    from tools.calcopy.engine import compare as _cmp
+    res = _cmp.compare(bench_mp4, ours_mp4, out_dir)
+    v = res["verdict"]
+    T["pixel"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"],
+                  "failed": v["failed"], "table": str(Path(out_dir) / "차이표.md")}
+    T["line_verdict"] = T["verdict"]
+    T["verdict"] = "통과" if T["line_verdict"] == "통과" and v["verdict"] == "통과" else "미달"
+    return T
+
+
 def match_md(T: dict, title: str = "") -> str:
     L = [f"# 재현일치도 {title}(kal_analyze match · 벤치 {T['n_bench']}편 · 우리 줄 {T['ours_n_lines']}) — **{T['verdict']}**", "",
          "| 항목 | 벤치 | 우리 | 차 | 판정 | 기준 | 자·합격선 |", "|---|---|---|---|---|---|---|"]
     for r in T["rows"]:
         L.append(f"| {r['key']} | {r['bench']} | {r['ours']} | {r['diff']} | {'✓' if r['judge'] == 'in' else '✗' if r['judge'] == 'out' else '미측정'} | {'기준' if r['core'] else '참고'} | {r['why']} |")
+    if T.get("pixel"):
+        P = T["pixel"]
+        L += ["", f"## 픽셀·소리(compare 같은 자) — {P['verdict']} ({P['n_criteria']}칸 중 안 {P['n_in']})",
+              f"- 밖: {', '.join(P['out']) or '없음'} · 미측정: {', '.join(P['failed']) or '없음'} · 표 `{P['table']}`",
+              f"- 줄 단위 판정 {T['line_verdict']} + 픽셀 판정 {P['verdict']} → **최종 {T['verdict']}**"]
     L += ["", "판정 = 기준 항목 전부 ✓ 일 때만 통과(미측정은 통과가 아니다). 참고 항목은 하이브리드 설계상 다른 값(−14 LUFS 통일·나레 비율)."]
     return "\n".join(L) + "\n"
 
@@ -813,6 +831,7 @@ def main(argv=None) -> int:
     m = sub.add_parser("match"); m.add_argument("--bench", required=True); m.add_argument("--ours", required=True)
     m.add_argument("--ours-mp4"); m.add_argument("--bench-src", help="벤치 원본 mp4 폴더(같은 자로 컷·LUFS)"); m.add_argument("--bench-tteutgi", help="(대안) 뜯기 값 — 자가 다름")
     m.add_argument("--win", help="영상 창 x,y,w,h (없으면 줄판독 layout.window)"); m.add_argument("--out"); m.add_argument("--title", default="")
+    m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 칼카피 관문)")
     A = ap.parse_args(argv)
     if A.cmd == "frames":
         lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips)
@@ -884,6 +903,8 @@ def main(argv=None) -> int:
         bm = bench_media_src(A.bench_src, ids, win) if A.bench_src else (bench_media_of(A.bench_tteutgi, ids) if A.bench_tteutgi else None)
         T = match_table(bench, ours, om, bm)
         T["ours_media"], T["bench_media"] = om, bm
+        if A.bench_mp4 and A.ours_mp4:
+            with_pixel(T, A.bench_mp4, A.ours_mp4, str(Path(A.out).with_suffix("")) + "_픽셀" if A.out else "_match_픽셀")
         md = match_md(T, A.title)
         if A.out:
             Path(A.out).write_text(md, encoding="utf-8")
