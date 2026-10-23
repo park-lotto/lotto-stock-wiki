@@ -221,10 +221,6 @@ def place(rows: list[dict], style: dict, seed: str) -> dict:
         for e, v in src.items():      # 이어 붙이기·기타는 우리 렌더에서 컷과 같다
             e = "cut" if e in ("other", "append") else e
             dist[e] = dist.get(e, 0) + v
-        for e, v in ((C.get("slots", {}).get(key) or {}).get("enter") or {}).items():   # 본보기 편 동률은 벤치 전체 비율로 가른다(판정 자 kal_analyze enter.mode 가 전체 최빈을 본다, 10-23)
-            e = "cut" if e in ("other", "append") else e
-            if e in dist:
-                dist[e] += 1e-3 * v
         seq = _alloc(len(idx), dist)
         nty = seq.count("typing")
         rest = [e for e in seq if e != "typing"]
