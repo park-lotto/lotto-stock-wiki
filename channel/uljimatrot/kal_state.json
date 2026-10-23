@@ -1,0 +1,214 @@
+{
+ "slug": "uljimatrot",
+ "ref": "https://www.youtube.com/@울지마트롯",
+ "steps": {
+  "tteutgi": {
+   "state": "done",
+   "sec": 1638.3,
+   "at": "2026-10-23 12:00",
+   "outputs": {
+    "ids": [
+     "oSytU7q_N7Y",
+     "hNRxwfSjXxY",
+     "tv-hFwrvEc4",
+     "QReZRnEVz0o",
+     "NXBepjjp6BY",
+     "BFTGKYRPXeU",
+     "JlgdcIk9Gd0",
+     "7b1j3LptlCo",
+     "VlJMP0sNwhY",
+     "pjhCRN0BwaQ"
+    ],
+    "dir": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기"
+   },
+   "note": "뜯기 10편 (LLM=claude_cli, 받아쓰기 칸은 vtt 로)"
+  },
+  "select": {
+   "state": "done",
+   "sec": 14.0,
+   "at": "2026-10-23 11:32",
+   "outputs": {
+    "top": "C:\\숏템_칼카피\\uljimatrot\\top.json"
+   },
+   "note": "울지마트로트 구독 217000 편 545 조회중앙 142,000 최대 6,600,000 (구독 대비 중앙 0.65)"
+  },
+  "collect": {
+   "state": "done",
+   "sec": 30.5,
+   "at": "2026-10-23 11:33",
+   "outputs": {
+    "src": "C:\\숏템_칼카피\\uljimatrot\\src",
+    "ids": [
+     "oSytU7q_N7Y",
+     "hNRxwfSjXxY",
+     "tv-hFwrvEc4",
+     "QReZRnEVz0o",
+     "NXBepjjp6BY",
+     "BFTGKYRPXeU",
+     "JlgdcIk9Gd0",
+     "7b1j3LptlCo",
+     "VlJMP0sNwhY",
+     "pjhCRN0BwaQ"
+    ]
+   },
+   "note": "받음 10/10(1080p, C 여유 100.7GB)"
+  },
+  "frames": {
+   "state": "done",
+   "sec": 127.2,
+   "at": "2026-10-23 12:02",
+   "outputs": {
+    "dirs": {
+     "oSytU7q_N7Y": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_oSytU7q_N7Y",
+     "hNRxwfSjXxY": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_hNRxwfSjXxY",
+     "tv-hFwrvEc4": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_tv-hFwrvEc4",
+     "QReZRnEVz0o": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_QReZRnEVz0o",
+     "NXBepjjp6BY": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_NXBepjjp6BY",
+     "BFTGKYRPXeU": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_BFTGKYRPXeU",
+     "JlgdcIk9Gd0": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_JlgdcIk9Gd0",
+     "7b1j3LptlCo": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_7b1j3LptlCo",
+     "VlJMP0sNwhY": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_VlJMP0sNwhY",
+     "pjhCRN0BwaQ": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_pjhCRN0BwaQ"
+    }
+   },
+   "note": "시트·0.1초 띠 10편"
+  },
+  "skeleton": {
+   "state": "done",
+   "sec": 0.1,
+   "at": "2026-10-23 12:02",
+   "outputs": {
+    "skeletons": [
+     "oSytU7q_N7Y",
+     "hNRxwfSjXxY",
+     "tv-hFwrvEc4",
+     "QReZRnEVz0o",
+     "NXBepjjp6BY",
+     "BFTGKYRPXeU",
+     "JlgdcIk9Gd0",
+     "7b1j3LptlCo",
+     "VlJMP0sNwhY",
+     "pjhCRN0BwaQ"
+    ],
+    "bundle": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\_kal\\워커묶음.json",
+    "brief": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\_kal\\줄판독_브리프.md"
+   },
+   "note": "뼈대 10편 새로, 묶음 10편"
+  },
+  "readlines": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-23 12:02",
+   "outputs": {
+    "pending": {
+     "oSytU7q_N7Y": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(4.4~5.4) speaker 미기입",
+      "줄0(4.4~5.4) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(5.9~6.4) speaker 미기입",
+      "줄1(5.9~6.4) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "hNRxwfSjXxY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(3.8~4.9) speaker 미기입",
+      "줄0(3.8~4.9) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(4.9~6.6) speaker 미기입",
+      "줄1(4.9~6.6) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "tv-hFwrvEc4": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(5.0~5.9) speaker 미기입",
+      "줄0(5.0~5.9) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(6.4~7.9) speaker 미기입",
+      "줄1(6.4~7.9) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "QReZRnEVz0o": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(3.6~4.9) speaker 미기입",
+      "줄0(3.6~4.9) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(4.9~6.5) speaker 미기입",
+      "줄1(4.9~6.5) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "NXBepjjp6BY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(4.1~5.4) speaker 미기입",
+      "줄0(4.1~5.4) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(5.4~6.7) speaker 미기입",
+      "줄1(5.4~6.7) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "BFTGKYRPXeU": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(3.7~4.7) speaker 미기입",
+      "줄0(3.7~4.7) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(5.2~6.2) speaker 미기입",
+      "줄1(5.2~6.2) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "JlgdcIk9Gd0": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(4.5~5.9) speaker 미기입",
+      "줄0(4.5~5.9) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(5.9~7.4) speaker 미기입",
+      "줄1(5.9~7.4) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "7b1j3LptlCo": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(4.1~6.0) speaker 미기입",
+      "줄0(4.1~6.0) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(6.0~7.9) speaker 미기입",
+      "줄1(6.0~7.9) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "VlJMP0sNwhY": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(3.2~4.3) speaker 미기입",
+      "줄0(3.2~4.3) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(4.3~6.0) speaker 미기입",
+      "줄1(4.3~6.0) enter 미기입(꾸밈 없으면 'instant')"
+     ],
+     "pjhCRN0BwaQ": [
+      "미기입 칸 남음(_todo): ['speaker', 'layer', 'role']…",
+      "줄0(4.2~5.3) speaker 미기입",
+      "줄0(4.2~5.3) enter 미기입(꾸밈 없으면 'instant')",
+      "줄1(5.3~7.1) speaker 미기입",
+      "줄1(5.3~7.1) enter 미기입(꾸밈 없으면 'instant')"
+     ]
+    }
+   },
+   "note": "줄판독 미완 10/10편 — 줄판독(눈) — 묶음 _kal/워커묶음.json 을 워커에 나눠 주고 줄판독/<id>.json 을 채운다 → check 통과 뒤 다시 실행"
+  },
+  "rules": {
+   "state": "waiting_human",
+   "sec": 0.0,
+   "at": "2026-10-23 12:21",
+   "outputs": {
+    "draft": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\_kal\\스타일분석_초안.md",
+    "plan_draft": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\_kal\\uljimatrot판_초안.json"
+   },
+   "note": "규칙 판정 — _kal/스타일분석_초안.md 를 보고 channel/<slug>/스타일분석.md 를 쓴다(붙는 조건 규칙 채택은 사람) → 다시 실행"
+  }
+ },
+ "asked": {},
+ "brand": "트롯파파",
+ "n": 10,
+ "hybrid": "아니오",
+ "channel": {
+  "name": "울지마트로트",
+  "url": "https://www.youtube.com/@울지마트롯/shorts",
+  "subs": 217000,
+  "total": 545,
+  "view_median": 142000,
+  "view_max": 6600000,
+  "top_ids": [
+   "oSytU7q_N7Y",
+   "hNRxwfSjXxY",
+   "tv-hFwrvEc4",
+   "QReZRnEVz0o",
+   "NXBepjjp6BY",
+   "BFTGKYRPXeU",
+   "JlgdcIk9Gd0",
+   "7b1j3LptlCo",
+   "VlJMP0sNwhY",
+   "pjhCRN0BwaQ"
+  ],
+  "views_per_sub": 0.65
+ }
+}

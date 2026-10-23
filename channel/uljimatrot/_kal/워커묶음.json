@@ -1,0 +1,79 @@
+{
+ "slug": "uljimatrot",
+ "brief": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\_kal\\줄판독_브리프.md",
+ "rule_doc": "tools/calcopy/칼카피_분석지침서.md §2단계 자막 축 A",
+ "jobs": [
+  {
+   "id": "oSytU7q_N7Y",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\oSytU7q_N7Y.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_oSytU7q_N7Y",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\oSytU7q_N7Y\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\oSytU7q_N7Y.json"
+  },
+  {
+   "id": "hNRxwfSjXxY",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\hNRxwfSjXxY.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_hNRxwfSjXxY",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\hNRxwfSjXxY\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\hNRxwfSjXxY.json"
+  },
+  {
+   "id": "tv-hFwrvEc4",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\tv-hFwrvEc4.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_tv-hFwrvEc4",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\tv-hFwrvEc4\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\tv-hFwrvEc4.json"
+  },
+  {
+   "id": "QReZRnEVz0o",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\QReZRnEVz0o.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_QReZRnEVz0o",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\QReZRnEVz0o\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\QReZRnEVz0o.json"
+  },
+  {
+   "id": "NXBepjjp6BY",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\NXBepjjp6BY.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_NXBepjjp6BY",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\NXBepjjp6BY\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\NXBepjjp6BY.json"
+  },
+  {
+   "id": "BFTGKYRPXeU",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\BFTGKYRPXeU.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_BFTGKYRPXeU",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\BFTGKYRPXeU\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\BFTGKYRPXeU.json"
+  },
+  {
+   "id": "JlgdcIk9Gd0",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\JlgdcIk9Gd0.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_JlgdcIk9Gd0",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\JlgdcIk9Gd0\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\JlgdcIk9Gd0.json"
+  },
+  {
+   "id": "7b1j3LptlCo",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\7b1j3LptlCo.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_7b1j3LptlCo",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\7b1j3LptlCo\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\7b1j3LptlCo.json"
+  },
+  {
+   "id": "VlJMP0sNwhY",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\VlJMP0sNwhY.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_VlJMP0sNwhY",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\VlJMP0sNwhY\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\VlJMP0sNwhY.json"
+  },
+  {
+   "id": "pjhCRN0BwaQ",
+   "mp4": "C:\\숏템_칼카피\\uljimatrot\\src\\pjhCRN0BwaQ.mp4",
+   "frames": "C:\\숏템_칼카피\\uljimatrot\\kal\\frames_pjhCRN0BwaQ",
+   "tteutgi": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\뜯기\\pjhCRN0BwaQ\\뜯기.json",
+   "skeleton": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\.tracks\\칼카피숏템엔진\\channel\\uljimatrot\\줄판독\\pjhCRN0BwaQ.json"
+  }
+ ],
+ "workers": 4,
+ "per_worker": 2
+}

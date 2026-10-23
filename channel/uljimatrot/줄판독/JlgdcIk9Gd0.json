@@ -1,0 +1,972 @@
+{
+ "id": "JlgdcIk9Gd0",
+ "dur": 24.133,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "장윤정이 아들 하버드",
+   "colors": [
+    {
+     "word": "장윤정이 아들 하버드",
+     "hex": "#FEFDFD"
+    }
+   ],
+   "y": [
+    178,
+    265
+   ],
+   "band_hex": "#FF1700",
+   "band_y": [
+    153,
+    297
+   ]
+  },
+  {
+   "text": "가라고 사준 후드티 가격",
+   "colors": [
+    {
+     "word": "가라고 사준 후드티 가격",
+     "hex": "#FEFDFD"
+    }
+   ],
+   "y": [
+    325,
+    409
+   ]
+  }
+ ],
+ "source_label": "출처 : 도장티비",
+ "layout": {
+  "window": [
+   0,
+   440,
+   1080,
+   1467
+  ],
+  "caption_band": [
+   1168,
+   1246
+  ],
+  "title_y": [
+   153,
+   409
+  ],
+  "source_y": [
+   1510,
+   1557
+  ],
+  "logo_y": null,
+  "watermark": {
+   "present": false,
+   "alpha": null
+  },
+  "source_hex": "#FDFAD6",
+  "bg_hex": "#000000",
+  "cta_caption_y": [
+   918,
+   996
+  ],
+  "icon": {
+   "what": "빨강·흰 ↙ 화살표(누르기 유도)",
+   "bbox": [
+    840,
+    1332,
+    947,
+    1439
+   ],
+   "hex": "#C92F20",
+   "anim": "1.0초 주기 ±4px 흔들림",
+   "t": [
+    4.633,
+    24.133
+   ]
+  }
+ },
+ "lines": [
+  {
+   "t0": 4.6,
+   "t1": 5.967,
+   "speaker": "나레",
+   "text": "이번에 장윤정 가족은",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "하버드 동상 앞 가족 단체 사진(눈 쌓인 캠퍼스)",
+   "fit": 8,
+   "cut_at": [
+    4.467
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "zoomblur",
+   "confidence": "픽셀",
+   "notes": "훅 이미지가 커지며 빠지는 0.17초 줌 전환(4.467~4.633) 뒤 4.6 등장"
+  },
+  {
+   "t0": 5.967,
+   "t1": 7.533,
+   "speaker": "나레",
+   "text": "하버드 대학 탐방을 나와",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 동상 앞 가족",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 7.533,
+   "t1": 8.067,
+   "speaker": "나레",
+   "text": "쇼핑까지",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 동상 앞 가족",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 8.067,
+   "t1": 9.367,
+   "speaker": "나레",
+   "text": "야무지게 해줬는데요",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 동상 앞 가족",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 9.367,
+   "t1": 11.5,
+   "speaker": "나레",
+   "text": "이때 연우는 이게 하버드색 / 이라며",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "2줄(줄바꿈 '하버드색/이라며')",
+   "y": [
+    1100,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "매장 옷걸이의 버건디 후드티를 손으로 듦",
+   "fit": 8,
+   "cut_at": [
+    9.367
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": 24,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "눈",
+   "notes": "2줄 자막 — 줄 y 는 눈 추정"
+  },
+  {
+   "t0": 11.5,
+   "t1": 13.0,
+   "speaker": "나레",
+   "text": "후드티 하나를 골랐는데",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "후드티 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 13.0,
+   "t1": 13.933,
+   "speaker": "나레",
+   "text": "장윤정은 역시",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "매장 안 버건디 후드 걸이·아이",
+   "fit": 6,
+   "cut_at": [
+    13.0
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 13.933,
+   "t1": 14.967,
+   "speaker": "나레",
+   "text": "가격도 보지 않고",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 매장 장면",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 14.967,
+   "t1": 16.267,
+   "speaker": "나레",
+   "text": "바로 두 개나 사주는",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "선글라스 여성과 아이, 후드티 들고",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 16.267,
+   "t1": 17.667,
+   "speaker": "나레",
+   "text": "멋진 모습을 보였습니다",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "선글라스 여성과 아이",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 17.667,
+   "t1": 19.2,
+   "speaker": "나레",
+   "text": "이 버건디 색에 가까운",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "하버드 로고 버건디 후드티를 펼쳐 보임",
+   "fit": 10,
+   "cut_at": [
+    17.667
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 19.2,
+   "t1": 20.067,
+   "speaker": "나레",
+   "text": "후드티는 과연",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 후드티 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 20.067,
+   "t1": 20.9,
+   "speaker": "나레",
+   "text": "얼마였을까요?",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본",
+   "y": [
+    1168,
+    1246
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "같은 후드티 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 20.9,
+   "t1": 21.967,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "CTA — 자막 y 위로(918~996, 얼굴 아래)",
+   "y": [
+    918,
+    996
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "눈 덮인 캠퍼스, 선글라스 여성 얼굴",
+   "fit": 3,
+   "cut_at": [
+    20.9
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "출처 줄 없어짐"
+  },
+  {
+   "t0": 21.967,
+   "t1": 23.433,
+   "speaker": "나레",
+   "text": "두 번 누르면 공개됩니다",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "CTA — 자막 y 918~996",
+   "y": [
+    918,
+    996
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 얼굴 컷",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 23.433,
+   "t1": 24.133,
+   "speaker": "불명",
+   "text": "개당 약10만 원",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "가격 공개 카드 — 상품 사진 위 같은 자막 꼴",
+   "y": [
+    918,
+    996
+   ],
+   "fill_hex": "#FFFFFF",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 바탕 하버드 버건디 후드티 상품 사진(전체 창)",
+   "fit": 10,
+   "cut_at": [
+    23.433
+   ],
+   "font": {
+    "name": "미측정(굵은 고딕, 제목과 같은 계열)",
+    "basis": "눈"
+   },
+   "size_px": 80,
+   "x": 540,
+   "align": "center",
+   "max_w": null,
+   "letter_gap_px": 0,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#19191F"
+   },
+   "ring": null,
+   "shadow": {
+    "hex": "#000000",
+    "note": "외곽 바깥 번진 어두운 그림자(눈)"
+   },
+   "glow": null,
+   "box": null,
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "말 없음(vtt 는 '공개됩니다.'에서 끝) — 화면 글만"
+  }
+ ],
+ "beats": "훅(0~4.47 누끼 합성 이미지: 여성 얼굴+아이+하버드 후드티, 천천히 줌인, 빨간 원 그리기 6회 반복, 화면 자막 없음 — 나레 '장윤정이 연우 하버드 가라고 미리 사준 하버드 로고 후드티의 가격.') → 줌 전환 → 나레 상황(4.6~9.4 탐방·쇼핑) → 고르기(9.4~13.0) → 고조(13.0~17.7 가격 안 보고 두 개) → 질문(17.7~20.9 '얼마였을까요?') → CTA(20.9~23.4 톡톡 두 번) → 가격 카드(23.43~24.13 '개당 약10만 원')",
+ "narr_share": "나레 15/16줄(가격 카드 1줄 말 없음), 나레 자막 18.83초/19.53초 · 훅 4.47초는 나레만 있고 화면 자막 없음",
+ "notes": [
+  "등장은 전부 instant — 30fps 마스크 IoU 로 줄 시작마다 다음 프레임에 완성(0→0.8+), 타이핑·팝·커서 없음 → type_cps 없음",
+  "강조 낱말 0줄(전부 흰 #FFFFFF), 덩어리 안 스티커 0 — 꾸밈 없는 자막이 이 채널 스타일",
+  "효과음은 들을 수 없어 미측정(sfx null). 목소리 성별·TTS 여부 미확인 — vtt 가 화면 자막과 같은 문장이라 나레로 판정",
+  "size_px 80 은 잉크 높이(약 78~84px)에서 눈 추정 · 글꼴 미측정 · 자간 열 스캔 안 함(0 = 기본 추정) · max_w 미측정",
+  "브리프와 다름: 훅의 빨간 표시는 '곡선 화살표'가 아니라 '빨간 원'(#F42918 계열)을 획으로 그리는 애니메이션이 약 0.77초 주기로 반복 · 오른쪽 아래 아이콘은 빨강·흰 '↙ 화살표'로 1.0초 주기 ±4px 흔들림(톡톡 누르기 유도) · 창 아래 '출처' 줄은 편마다 있음/없음 · CTA·가격 카드 자막은 y≈915~998 로 올라감",
+  "가격 공개 23.43초 = 흰 바탕 상품 사진 + 흰 자막 '개당 약10만 원'(y918~996) — 카드 별도 꾸밈 없음",
+  "출처 '출처 : 도장티비' 크림색 #FDFAD6 y1510~1557 x123~431, 4.47~20.9 본 영상 구간만",
+  "로고·워터마크 없음(원본 크기 확인)"
+ ],
+ "name_evidence": [
+  "장윤정 — 제목 '장윤정이 아들 하버드'·자막 '이번에 장윤정 가족은'",
+  "연우 — 자막 '이때 연우는'"
+ ],
+ "_made_by": "칼카피 줄판독 워커(눈+cv2 실측, 2026-10-23)",
+ "no_caption": [
+  [
+   0.0,
+   4.6
+  ]
+ ],
+ "frame0": {
+  "what": "검정 바탕에 누끼 합성(여성 얼굴 왼쪽+이어머프 아이+하버드 후드티) + 빨간 원 그리기 시작, 위 제목 2줄",
+  "face_frac": 0.35,
+  "text": "장윤정이 아들 하버드 / 가라고 사준 후드티 가격"
+ },
+ "hook": {
+  "t0": 0.0,
+  "t1": 4.467,
+  "kind": "누끼 합성 이미지 + 빨간 원(화살표 아님)",
+  "circle_hex": "#F42918",
+  "circle_anim": "획 그리기(위에서 시작, 약 0.77초에 한 바퀴) → 지우고 다시, 0/0.80/1.57/2.33/3.10/3.87초 6회",
+  "motion": "zoom_in(창 위끝 y573→487, 4.4초)",
+  "exit": "줌 전환 0.17초(4.467~4.633)"
+ }
+}

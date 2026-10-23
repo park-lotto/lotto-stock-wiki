@@ -1,0 +1,1341 @@
+{
+ "id": "BFTGKYRPXeU",
+ "dur": 24.57,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "술 마시다가 시어머니",
+   "box": "빨강 띠 #FE0000 (y142~307 전체 폭)",
+   "colors": [
+    {
+     "word": "술 마시다가 시어머니",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    180,
+    264
+   ],
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "shadow": {
+    "dx": 5,
+    "dy": 5,
+    "hex": "#000000"
+   }
+  },
+  {
+   "text": "전화 오자 장윤정 반응",
+   "box": "없음(검정 바탕)",
+   "colors": [
+    {
+     "word": "전화 오자 장윤정 반응",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    324,
+    410
+   ],
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "shadow": {
+    "dx": 5,
+    "dy": 6,
+    "hex": "#000000"
+   }
+  }
+ ],
+ "source_label": "출처 : 도장티비",
+ "layout": {
+  "title_y": [
+   [
+    142,
+    307
+   ],
+   [
+    322,
+    412
+   ]
+  ],
+  "title_band_hex": "#FE0000",
+  "window": [
+   0,
+   452,
+   1080,
+   1480
+  ],
+  "caption_band": [
+   1217,
+   1290
+  ],
+  "source_y": [
+   1621,
+   1686
+  ],
+  "source_x": [
+   328,
+   751
+  ],
+  "source_hex": "#FAF277",
+  "source_t": [
+   3.4,
+   19.633
+  ],
+  "logo_y": null,
+  "watermark": null,
+  "fixed_icon": null
+ },
+ "frame0": {
+  "what": "누끼 여성 1명(휴대폰 통화하며 술 마심) + 흰 글로우 테두리, 검정 바탕 위 창 없음",
+  "face_frac": 0.12,
+  "text": "제목 2줄만(자막 없음)"
+ },
+ "hook": {
+  "t0": 0,
+  "t1": 3.167,
+  "what": "누끼 여성 1명(제목 '장윤정' — 얼굴 대조 미확인) 크게, 흰 번짐 외곽(글로우 약 20~30px, 눈)",
+  "arrow": null,
+  "exit": "3.167~3.433 회오리(트월) 왜곡 전환 — 출처 줄은 3.4 에 켜짐"
+ },
+ "lines": [
+  {
+   "t0": 3.433,
+   "t1": 4.9,
+   "speaker": "나레",
+   "text": "장윤정은 도경완과 함께",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 787,
+   "ink_x": [
+    144,
+    931
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "식탁에서 전화받는 여성과 옆 남성(와이드) — 회오리 전환 끝",
+   "motion": "still",
+   "transition": "기타(회오리 왜곡 3.167~3.433)",
+   "cut_at": [],
+   "fit": 8,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 4.933,
+   "t1": 6.1,
+   "speaker": "나레",
+   "text": "술을 마시려고 했는데",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 708,
+   "ink_x": [
+    186,
+    894
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 와이드, 식탁 위 음식·술잔",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "눈",
+   "notes": null
+  },
+  {
+   "t0": 6.133,
+   "t1": 7.367,
+   "speaker": "나레",
+   "text": "딱 한 잔 마시자마자",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 680,
+   "ink_x": [
+    200,
+    880
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 와이드",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "눈",
+   "notes": null
+  },
+  {
+   "t0": 7.4,
+   "t1": 8.8,
+   "speaker": "나레",
+   "text": "갑자기 전화가 울렸는데\n요",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(최대 폭 넘어 '요' 한 글자 2줄로 넘김)",
+   "y": [
+    1167,
+    1341
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 790,
+   "ink_x": [
+    143,
+    933
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 와이드, 여성이 휴대폰을 귀에",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 8,
+   "confidence": "픽셀",
+   "notes": "2줄 잉크 y1167~1239 / 1270~1341"
+  },
+  {
+   "t0": 8.833,
+   "t1": 10.467,
+   "speaker": "나레",
+   "text": "바로 시어머니의 전화였\n습니다",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(낱말 중간에서 줄 넘김 '전화였/습니다')",
+   "y": [
+    1167,
+    1341
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 794,
+   "ink_x": [
+    143,
+    937
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": 31,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여성 얼굴 근접, 휴대폰 통화",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    8.8
+   ],
+   "fit": 8,
+   "confidence": "픽셀",
+   "notes": "2줄째 잉크 x433~650"
+  },
+  {
+   "t0": 10.5,
+   "t1": 11.833,
+   "speaker": "나레",
+   "text": "술 마시려던 걸 어떻게",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 742,
+   "ink_x": [
+    167,
+    909
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 근접, 통화 중 표정",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 11.867,
+   "t1": 12.9,
+   "speaker": "나레",
+   "text": "귀신같이 아셨는지",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 617,
+   "ink_x": [
+    228,
+    845
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 근접",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 12.933,
+   "t1": 13.9,
+   "speaker": "나레",
+   "text": "시어머니는 한동안",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 622,
+   "ink_x": [
+    228,
+    850
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 근접",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 13.933,
+   "t1": 15.2,
+   "speaker": "나레",
+   "text": "넋두리를 하셨는데",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 610,
+   "ink_x": [
+    234,
+    844
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "같은 근접 — 지루한 표정",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 15.233,
+   "t1": 16.2,
+   "speaker": "나레",
+   "text": "친절하게 대답하며",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 621,
+   "ink_x": [
+    226,
+    847
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "와이드 — 통화하는 여성, 맥주캔",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    15.233
+   ],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 16.233,
+   "t1": 18.0,
+   "speaker": "나레",
+   "text": "듣고 있던 장윤정은 결국",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 796,
+   "ink_x": [
+    142,
+    938
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 와이드, 고개 돌림",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 7,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 18.033,
+   "t1": 18.767,
+   "speaker": "나레",
+   "text": "이런 행동을",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 385,
+   "ink_x": [
+    346,
+    731
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "휴대폰을 내려놓는 손(와이드)",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 6,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 18.8,
+   "t1": 19.633,
+   "speaker": "나레",
+   "text": "하게 되는데요",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "pop",
+   "enter_ms": 67,
+   "enter_curve": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0.033,
+     89,
+     70,
+     0
+    ],
+    [
+     0.067,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기본(가로 모션블러 섞인 작게→원크기 2프레임)",
+   "y": [
+    1217,
+    1290
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 466,
+   "ink_x": [
+    307,
+    773
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 84,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 4,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 4,
+    "dy": 5,
+    "hex": "#000000",
+    "blur": 0
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "같은 와이드, 여성 웃음",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [],
+   "fit": 6,
+   "confidence": "픽셀",
+   "notes": null
+  },
+  {
+   "t0": 19.767,
+   "t1": 23.633,
+   "speaker": "나레",
+   "text": "화면 빠르게\n2번 터치",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "기타(투명도 깜빡임 — 0.5초 주기: 0.1초 켜짐→0.2초 불투명→0.1초 꺼짐→0.1~0.2초 꺼짐 반복 8회)",
+   "enter_ms": 100,
+   "enter_curve": [
+    [
+     0,
+     100,
+     0,
+     0
+    ],
+    [
+     0.067,
+     100,
+     50,
+     0
+    ],
+    [
+     0.1,
+     100,
+     100,
+     0
+    ],
+    [
+     0.267,
+     100,
+     100,
+     0
+    ],
+    [
+     0.3,
+     100,
+     50,
+     0
+    ],
+    [
+     0.333,
+     100,
+     0,
+     0
+    ],
+    [
+     0.5,
+     100,
+     0,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "깜빡임 끝(23.6 꺼짐)",
+   "variant": "크게 튀어나옴(잉크 111px · 2줄 · 창 가운데 위)",
+   "y": [
+    818,
+    1083
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 593,
+   "ink_x": [
+    240,
+    833
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 126,
+   "letter_gap_px": 4,
+   "line_gap_px": 43,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": {
+    "dx": 6,
+    "dy": 8,
+    "hex": "#000000",
+    "blur": "약간(미측정)"
+   },
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [
+    {
+     "what": "♥",
+     "x": [
+      167,
+      300
+     ],
+     "y": [
+      940,
+      1073
+     ],
+     "w": 133,
+     "t_in": 19.767,
+     "t_out": 23.633,
+     "anim": "빨강 하트 이모지 #F83124 — 글자와 같이 깜빡임(2줄 '2번 터치' 왼쪽)"
+    },
+    {
+     "what": "♥",
+     "x": [
+      780,
+      914
+     ],
+     "y": [
+      940,
+      1073
+     ],
+     "w": 134,
+     "t_in": 19.767,
+     "t_out": 23.633,
+     "anim": "오른쪽 하트, 글자와 같이 깜빡임"
+    }
+   ],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "관계없는 술집 두 남성 영상 + 집중선(속도선) 테두리 — CTA 전용 화면",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    19.667
+   ],
+   "fit": 2,
+   "confidence": "픽셀",
+   "notes": "말 = '화면을 빠르게 두 번 터치하시면 다음 내용이 공개됩니다'(vtt). 2줄 잉크 x240~833 / 318~757. 하트 위치는 빨강 픽셀 묶음 bbox 를 좌우로 가름(눈)"
+  },
+  {
+   "t0": 23.7,
+   "t1": 24.57,
+   "speaker": "불명",
+   "text": "자연스레 통화 종료 시도",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "instant",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut",
+   "variant": "기타(작은 자막 잉크 60px · 창 가운데 · 그림자 약함)",
+   "y": [
+    950,
+    1010
+   ],
+   "x": 540,
+   "align": "center",
+   "max_w": 732,
+   "ink_x": [
+    182,
+    914
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "각진 굵은 고딕(배민 도현체 계열 추정)",
+    "basis": "눈 — 확대 크롭 획 모양(ㅅ·ㅈ 꺾임) 대조, 잉크비 대조 안 함"
+   },
+   "size_px": 69,
+   "letter_gap_px": 3,
+   "line_gap_px": null,
+   "outline": {
+    "px": 7,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "다른 영상 — 흰 티셔츠 여성 정면 인터뷰(드러내기 맛보기)",
+   "motion": "still",
+   "transition": "cut",
+   "cut_at": [
+    23.7
+   ],
+   "fit": 9,
+   "confidence": "픽셀",
+   "notes": "다음 내용 공개 카드(답 맛보기). 나레가 아직 '공개됩니다'를 말하는 중일 수 있어 화자 불명"
+  }
+ ],
+ "no_caption": [
+  [
+   0,
+   3.433
+  ],
+  [
+   19.667,
+   19.767
+  ]
+ ],
+ "beats": "훅(0~3.17 누끼 여성+흰 글로우, 나레가 제목 읽음 '술 마시다가 시어머니에게 전화오자 장윤정이 보인 반응', 자막 없음) → 전환(회오리 0.27초) → 상황(3.43~8.8 '장윤정은 도경완과 함께 술을 마시려고 했는데 딱 한 잔 마시자마자 갑자기 전화가 울렸는데요') → 공개(8.8 '바로 시어머니의 전화였습니다') → 전개(10.5~16.2 넋두리·친절한 대답) → 질문(16.2~19.67 '결국 이런 행동을 하게 되는데요') → CTA(19.77~23.63 관계없는 영상+집중선 위 '화면 빠르게 ♥2번 터치♥' 깜빡임) → 끝(23.7~24.57 다른 영상 '자연스레 통화 종료 시도' 답 맛보기)",
+ "narr_share": "나레 줄 14/15 · 나레 초 약 23.7/24.57 (훅 0~3.43 은 자막 없이 나레만, 마지막 답 카드는 화자 불명)",
+ "price_reveal": null,
+ "name_evidence": [
+  "장윤정 = 제목 2줄 '전화 오자 장윤정 반응'·자막 3.43 '장윤정은 도경완과 함께'·16.23 '듣고 있던 장윤정은 결국'",
+  "도경완 = 자막 3.43 '장윤정은 도경완과 함께'",
+  "도장티비 = 출처 줄 '출처 : 도장티비'(3.4~19.63)"
+ ],
+ "notes": [
+  "지휘자 관찰과 다른 점: 이 편은 물건 가격 편이 아니라 사연 편 — 가격 공개 없음. 훅에 빨간 화살표 없음(누끼+흰 글로우만). 오른쪽 아래 탭 아이콘 없음. '출처 : 도장티비' 노랑 #FAF277 줄이 창 아래(y1621~1686)에 있음",
+  "자막 글꼴이 NXB 편과 다르다 — 각진 굵은 고딕, 외곽 4px + 오른쪽 아래 그림자(dx4·dy5). NXB 는 둥근 굵은 고딕+외곽 11px 그림자 없음 → 편마다 자막 꼴이 다르다",
+  "등장 = 본문 13줄 전부 pop — 첫 프레임 가로 모션블러로 약 89% 크기 반투명, 다음 프레임 원크기(67ms). 퇴장은 1프레임 비움 후 다음 줄",
+  "최대 폭 약 800px 넘으면 낱말 중간이라도 줄 넘김('울렸는데/요'·'전화였/습니다') — 자동 줄바꿈 꼴",
+  "CTA 는 원본과 관계없는 술집 영상+집중선, 창 y460~1459, 출처 줄 꺼짐. 글자+하트가 0.5초 주기로 8번 깜빡임",
+  "끝 0.87초 = 다른 영상(흰 티 여성) + 작은 자막 '자연스레 통화 종료 시도' — 다음 내용 맛보기",
+  "효과음: 귀로 확인 못 함·배경음악 상시라 파형으로 못 가름 → sfx null(미측정)",
+  "나레 목소리 성별·TTS 여부 미확인(vtt·'~는데요' 말투로 나레 판정)",
+  "글꼴 이름·글로우 폭·CTA 그림자 흐림·pop 89% 는 눈 추정"
+ ]
+}

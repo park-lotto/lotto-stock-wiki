@@ -1,0 +1,110 @@
+{
+ "name": "uljimatrot판",
+ "renderer": "bench",
+ "_note": "kal.py rules 초안(2026-10-23) — 칸 이름은 styles/README.md 스키마. null 칸은 사람이 채운다(_todo). 정밀값은 bench.analysis·palette 경로로.",
+ "bench": {
+  "ko": "울지마트로트",
+  "channel": "https://www.youtube.com/@울지마트롯",
+  "analysis": "channel/uljimatrot/스타일분석.md",
+  "line_reads": "channel/uljimatrot/줄판독/",
+  "src_dir": "C:\\숏템_칼카피\\uljimatrot\\src",
+  "sfx_events": null,
+  "sfx_key": null,
+  "palette": "channel/uljimatrot/팔레트.json",
+  "rules_counted": "channel/uljimatrot/_kal/규칙빈도.json"
+ },
+ "voice": {
+  "name": null,
+  "voice_id": null,
+  "candidates": [],
+  "why": "미정 — 사장님께(kal.py 시작 질문, 추천: 미측정(뜯기에 화자 성별 없음 — 줄판독 뒤 engine/sound/narr_report.py 닮은 목소리 순위로))"
+ },
+ "cps_target": 6.75,
+ "bgm": {
+  "id": null,
+  "db_below_voice": null,
+  "duck_orig_db": null,
+  "fade_out": null,
+  "why": "engine/sound/bgm_fp.py·뜯기 audio"
+ },
+ "loudness": {
+  "lufs": -14,
+  "tp": -1.5
+ },
+ "length": {
+  "min": 19.1,
+  "max": 25.5
+ },
+ "script": {
+  "brief": [
+   "나레: 어미 는데요, 습니다, 다, 지 · 존댓말 0.61 · 전언 0.0 · 자수 중앙 8.0"
+  ],
+  "example": [
+   "송가인이 강남을 걸어다닐 때",
+   "장윤정은 도경완과 함께",
+   "장윤정은 최근"
+  ],
+  "audit": []
+ },
+ "frame": {
+  "window": [
+   0,
+   472,
+   1080,
+   1289
+  ],
+  "title": [],
+  "logo": null,
+  "credit": null,
+  "watermark": null,
+  "comment": null
+ },
+ "caption": {
+  "pack": null,
+  "pack_default": null,
+  "variant_for": {},
+  "typing_cps": 6.69
+ },
+ "timing": null,
+ "cuts": null,
+ "sfx_files": null,
+ "placement": {
+  "rules": {
+   "narr_enter": "instant",
+   "orig_enter": null,
+   "fx_rate": {
+    "나레": 0.1,
+    "불명": 0.0
+   },
+   "plain_rate": 0.91,
+   "by_pos": {
+    "본문": 0.11,
+    "끝": 0.04
+   },
+   "strong": [
+    "화자=나레 → enter=instant 130/144",
+    "자리=본문 → enter=instant 109/122",
+    "역할=본문 → enter=instant 46/53",
+    "자리=끝 → enter=instant 27/28",
+    "역할=질문 → enter=instant 16/18",
+    "역할=다리 → enter=instant 13/14",
+    "역할=이음 → enter=instant 13/14",
+    "역할=고조 → enter=instant 12/14",
+    "역할=끝 → enter=instant 12/12",
+    "역할=공개 → enter=instant 10/11",
+    "화자전환 첫 덩어리=나레 → enter=instant 9/10",
+    "역할=증거 → enter=instant 7/7",
+    "화자=불명 → enter=instant 6/6",
+    "역할=답 → enter=instant 6/6",
+    "화자전환 첫 덩어리=불명 → enter=instant 6/6"
+   ]
+  },
+  "counted": {}
+ },
+ "_todo": [
+  "voice·bgm·sfx = engine/sound 결과",
+  "frame.title/logo/credit = 스타일분석 §틀",
+  "caption.pack = caption-motions.js 팩 이름(없으면 요청서)",
+  "timing·cuts·sfx_files = 견본 styles/키치잇판.json 꼴"
+ ]
+}
