@@ -38,13 +38,14 @@ Below is a shopping-shorts voice-over script{src_note}. Judge EVERY line as a na
 For each line give:
 - score: 1-5 (5 = exactly how a native creator would say it, 3 = understandable but a native would not say it this way, 1 = wrong/unnatural)
 - problem: short reason in Korean if score <= 3, else ""
-- fix: a natural native rewrite in the same language if score <= 3 (same meaning, nothing added), else ""
+- fix: if score <= 3, the natural native rewrite written in {lang_name} ONLY (never Korean unless the script is Korean; same meaning, nothing added), else ""
 Return ONLY JSON: {{"lines":[{{"i":0,"score":5,"problem":"","fix":""}}, ...]}} with exactly {n} items.
 
 Lines (JSON, [index, line{src_col}]):
 {rows}
 """
 
+_LANG_NAME = {"zh": "Simplified Chinese", "ja": "Japanese", "en": "English", "ko": "Korean"}
 GROQ_MODELS = {"qwen": "qwen/qwen3.8-27b", "gptoss": "openai/gpt-oss-120b"}
 FLAG_SCORE = 3          # 이 점수 이하 = 어색하다는 표
 FLAG_VOTES = 2          # 이만큼 모이면 문제 줄
@@ -52,7 +53,7 @@ FLAG_VOTES = 2          # 이만큼 모이면 문제 줄
 
 def _prompt(lines, lang, source):
     rows = [[i, x] + ([source[i]] if source else []) for i, x in enumerate(lines)]
-    return _ASK.format(persona=PERSONA[lang], n=len(lines),
+    return _ASK.format(persona=PERSONA[lang], n=len(lines), lang_name=_LANG_NAME[lang],
                        src_note=" (third column = original it was adapted from — meaning must match)" if source else "",
                        src_col=", original" if source else "", rows=json.dumps(rows, ensure_ascii=False))
 
@@ -136,10 +137,14 @@ def review(lines, lang, source=None, judges=None):
                 skipped[name] = err or "응답에 lines 없음"
                 continue
             got[name] = {int(r.get("i", -1)): r for r in rows if isinstance(r, dict)}
+    from shopping_shorts.script_translate import _is_lang
     out = []
     for i, text in enumerate(lines):
         votes = {n: {"score": int(v[i].get("score") or 0), "problem": str(v[i].get("problem") or ""),
                      "fix": str(v[i].get("fix") or "")} for n, v in got.items() if i in v}
+        for v in votes.values():        # 다른 언어로 쓴 고친 문장은 버린다(실측: 문제 설명 따라 한국어로 써 옴)
+            if v["fix"] and not _is_lang(v["fix"], lang):
+                v["fix"] = ""
         bad = [n for n, v in votes.items() if 0 < v["score"] <= FLAG_SCORE]
         flagged = len(bad) >= min(FLAG_VOTES, max(1, len(votes)))
         fix = ""
