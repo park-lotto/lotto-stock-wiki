@@ -52,9 +52,16 @@ def coupang_candidates(pg, keyword, n=5):
     return items
 
 
-def coupang_link(pg, keyword, pick):
-    """후보 pick 번째의 '링크 생성' → 우리 계정 단축 URL."""
-    items = coupang_candidates(pg, keyword)
+def coupang_link(pg, keyword, pick, match=""):
+    """후보의 '링크 생성' → 우리 계정 단축 URL.
+    ★순번(pick)만으로 고르지 마라 — 쿠팡 검색 순서는 실행마다 바뀐다(2026-10-23 실측: find 때 [3]=luna 에어백,
+      make 때 [3]=5세컨즈 스트랩). match 를 주면 이름에 그 글자가 든 후보를 고르고, 없으면 멈춘다."""
+    items = coupang_candidates(pg, keyword, n=10 if match else 5)
+    if match:
+        hit = [i for i, it in enumerate(items) if match in it["name"]]
+        if not hit:
+            raise SystemExit(f"'{match}' 가 든 후보가 없다: " + " / ".join(it["name"][:20] for it in items))
+        pick = hit[0]
     if pick >= len(items):
         raise SystemExit(f"후보가 {len(items)}개뿐이다")
     pg.locator(".product-item").nth(pick).hover()
@@ -116,7 +123,7 @@ def inpock_blocks(account):
     return out
 
 
-def inpock_plan(account, keyword, product_name):
+def inpock_plan(account, keyword, product_name, display=""):
     """같은 상품이 이미 있으면 그 번호를 그대로 쓰고(등록 안 함), 없으면 최댓값+1·그 계정이 쓰던 형식으로."""
     blocks = inpock_blocks(account)
     words = [w for w in re.split(r"\s+", keyword.strip()) if w]
@@ -125,7 +132,7 @@ def inpock_plan(account, keyword, product_name):
             return {"number": n, "title": fmt.format(n=n, name=name), "exists": True}
     fmt = max(("[{n}] {name}", "{n}. {name}"), key=lambda f: sum(1 for b in blocks if b[2] == f)) if blocks else "[{n}] {name}"
     n = max([b[0] for b in blocks] or [0]) + 1
-    return {"number": n, "title": fmt.format(n=n, name=short_title(product_name)), "exists": False}
+    return {"number": n, "title": fmt.format(n=n, name=display or short_title(product_name)), "exists": False}
 
 
 def short_title(name, limit=22):
@@ -158,6 +165,43 @@ def inpock_add(pg, title, link, image_path, dry=False):
     return {"saved": True, "url_after": pg.url}
 
 
+def inpock_delete(pg, title):
+    """관리 화면에서 제목이 정확히 title 인 블록을 지운다(더보기 ⋮ → 삭제)."""
+    pg.goto(f"{INPOCK}/admin", wait_until="domcontentloaded")
+    pg.wait_for_timeout(4000)
+    row = pg.locator(f"text='{title}' >> visible=true").first
+    card = row.locator("xpath=ancestor::*[.//button][3]")
+    btns = card.locator("button >> visible=true").all()
+    btns[-1].click()                       # 카드 오른쪽 위 ⋮
+    pg.wait_for_timeout(1500)
+    pg.get_by_text("삭제", exact=True).last.click()
+    pg.wait_for_timeout(1500)
+    ok = pg.get_by_role("button", name="삭제", exact=True)
+    if ok.count():
+        ok.last.click()
+    pg.wait_for_timeout(3000)
+
+
+def inpock_edit(pg, title, link, image_path):
+    """이미 있는 블록(제목 정확히 title)의 링크·이미지를 바꾼다. 제목을 누르면 수정 화면(/admin/block/link/edit)이 열린다."""
+    pg.goto(f"{INPOCK}/admin", wait_until="domcontentloaded")
+    pg.wait_for_timeout(4000)
+    pg.locator(f"text='{title}' >> visible=true").first.click()
+    pg.wait_for_selector("input[placeholder*='링크 주소']", timeout=30000)
+    pg.wait_for_timeout(1500)
+    pg.locator("input[placeholder*='링크 주소']").first.fill(link)
+    pg.locator("input[type=file]").first.set_input_files(image_path)
+    pg.wait_for_timeout(2500)
+    sel = pg.get_by_role("button", name="선택", exact=True)
+    if sel.count() and sel.first.is_visible():
+        sel.first.click(); pg.wait_for_timeout(2500)
+    btn = pg.locator("button:has-text('수정 완료')").last
+    if not btn.is_enabled():
+        raise SystemExit("인포크 '수정 완료'가 꺼져 있다")
+    btn.click()
+    pg.wait_for_timeout(4000)
+
+
 def inpock_public_has(account, title):
     """공개 페이지 실측 — 로그인 없이 받아 제목이 있는지."""
     req = urllib.request.Request(f"{INPOCK}/{account}", headers={"User-Agent": "Mozilla/5.0"})
@@ -166,6 +210,13 @@ def inpock_public_has(account, title):
 
 
 # ── 버퍼 설명란 ───────────────────────────────────────────────
+def numbered_title(title, block_title):
+    """유튜브 제목 앞에 인포크 블록 번호를 붙인다 — 사장님(10-23) "제목에 인포크 번호, 그래야 번호까지 맞는지 확인".
+    번호 표기는 그 블록 그대로('[6]' / '7.')."""
+    m = re.match(r"^(\[\d+\]|\d+\.)", block_title.strip())
+    return f"{m.group(1)} {title}" if m else title
+
+
 def description(title, desc, number, account, link, tags):
     """버퍼(=유튜브 설명란) 글. 첫 줄 = 유튜브 제목(buffer_api._yt_title). 쇼츠 설명 링크는 안 눌린다 → 인포크 번호 안내가 본론."""
     return "\n".join([
@@ -209,9 +260,11 @@ def main(argv=None):
     p.add_argument("cmd", choices=["find", "make", "login"])
     p.add_argument("keyword", nargs="?", default="")
     p.add_argument("--pick", type=int, default=0)
+    p.add_argument("--match", default="", help="이 글자가 이름에 든 후보를 고른다(순번보다 우선·안전)")
     p.add_argument("--title", default="")
     p.add_argument("--desc", default="")
     p.add_argument("--tags", default="")
+    p.add_argument("--name", default="", help="인포크 블록에 보일 짧은 상품명(없으면 쿠팡 이름 앞부분)")
     p.add_argument("--channel", default="", help="버퍼 계정 번호(987·950…) → 그 채널 인포크로 자동 전환")
     p.add_argument("--account", default="", help="인포크 계정을 직접 지정(--channel 이 우선)")
     p.add_argument("--dry", action="store_true", help="쿠팡 링크만 발급, 인포크는 저장 안 함")
@@ -240,7 +293,7 @@ def run(pg, a):
             for i, it in enumerate(coupang_candidates(pg, a.keyword)):
                 print(f"[{i}] {it['name']}  {it['price']}")
             return
-        prod = coupang_link(pg, a.keyword, a.pick)
+        prod = coupang_link(pg, a.keyword, a.pick, a.match)
         print("쿠팡:", prod["name"], prod["link"])
         want = INPOCK_BY_CHANNEL.get(a.channel) if a.channel else a.account
         if a.channel and not want:
@@ -248,7 +301,7 @@ def run(pg, a):
         acct = inpock_switch(pg, want) if want else inpock_account(pg)
         if not want:
             raise SystemExit(f"--channel 또는 --account 가 필요하다(지금 로그인된 인포크: {acct})")
-        plan = inpock_plan(acct, a.keyword, prod["name"])
+        plan = inpock_plan(acct, a.keyword, prod["name"], a.name)
         num, title = plan["number"], plan["title"]
         seen = None
         if plan["exists"]:
@@ -266,7 +319,7 @@ def run(pg, a):
                         break
                     time.sleep(5)
                 print("공개 페이지 실측:", "있음" if seen else "없음")
-        text = description(a.title or prod["name"], a.desc, num, acct, prod["link"], a.tags)
+        text = description(numbered_title(a.title or prod["name"], title), a.desc, num, acct, prod["link"], a.tags)
         print("----- 버퍼 설명란 -----\n" + text)
         rows = json.load(open(LEDGER, encoding="utf-8")) if os.path.exists(LEDGER) else []
         rows.append({"at": datetime.now().isoformat(timespec="seconds"), "keyword": a.keyword, "product": prod["name"],
