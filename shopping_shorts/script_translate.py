@@ -57,6 +57,12 @@ Style rules (2026-10-23, 사장님: 일본인이 듣기에 문어체라 어색�
 - Banned written-style patterns: 〜ということ / 文末の〜こと / 〜である / 〜にて / 〜消え去った / 〜となっております / 〜でございます / long noun-modifier chains. End lines with spoken endings instead.
 - Do not add facts or phrases that are not in the Korean line (no 見つけたよ, no 急いでチェックしてみて unless the Korean line asks for it) and do not drop any. Keep product nouns faithful (발난로 → 足元ヒーター, 바지 → ズボン). Keep numbers exactly; keep currency as written (원 → ウォン, never 円).
 - Each line is one short rhythmic voice-over line (about 30 Japanese characters or less, no long compound sentences).
+- Feel, not grammar: the lines are ONE story told with emotion. Link them the way Japanese speakers do (でもさ / しかも / なのに / 〜したら / 〜から / 〜し), put real reactions where the Korean has them (はぁ？ / え、待って / マジで / ほんとに), and keep the Korean sound words as Japanese ones (쓱 → サッと, 딱 → ポンと, 빵빵 → パンパン, 싹 → スッキリ).
+- Vary the endings like a real speaker. Never end three lines in a row the same way (not every line 〜んだよ / 〜なんだって). Mix: 体言止め, 〜じゃん, 〜の, 〜よね, 〜し, 〜ちゃう, 〜だけ.
+
+Real lines from top Japanese shopping shorts (style reference only — do NOT copy their content):
+ casual: 引越しの荷造りが終わって壁を見たらさ、ピン穴だらけだったの。 / はぁ？ってなったよね。 / ちょっと見てて、ぎゅっと絞ってヘラですーっ、それだけ。 / 30秒で穴が消えた。 / いちいち開けるの面倒だし、ナイフで切るとべっとべとになるから。 / ぽんっと出てくるのがちょっと快感。 / もうこれ、ポーチ界のチートアイテムじゃん。 / しかもご飯が全然くっつかないんだよ。
+ polite: 最初は固く見えても時間が経つと緩んで、結局ネズミがまた入り込んできたんです。 / ですが、最近は全く別の方法が登場しました。 / 時間が経つほどどんどん固くなって、簡単には壊せなくなるんです。
 
 Input lines (JSON array):
 {lines}
