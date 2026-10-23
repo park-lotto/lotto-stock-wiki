@@ -1,0 +1,123 @@
+{
+ "topic": "LiberNovo Omni(Pro) — 160도까지 젖혀지는 의자. @toolselectrodiy(Tools. Electro. DIY)가 의자를 눕혀 일하는 '누워서 일하는 책상' 영상으로 틱톡 7642785510229904653 1,590만 회 — 같은 사람 유튜브 리뷰에서 '이게 인체공학이 아니면 뭐가 인체공학이냐, 의자가 날 안아 주는 느낌'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "jnMWUEGpdro",
+ "bench_note": "벤치 '돈 번 유튜버들이 산다는 의자'(110만, 핫템리포트 top 11위 — 0~11.5초 = 틱톡 @toolselectrodiy 7642785510229904653 프레임 일치, 나머지 컷 원본 미확정 · 소재표 02). 같은 사람이 직접 의자에 감탄하는 원음 = 유튜브 롱폼 BdsrY3NR2kQ(10-24 받음, 영어 자동자막 낱말 시각) 0.40~6.75 → 원음형",
+ "sources": {
+  "wf": {
+   "file": "tt_toolselectrodiy_7642785510229904653.mp4",
+   "who": "틱톡 @toolselectrodiy 'Work from home set up' 2026-05-22 (벤치 0~11.5초 원본, 말 없음)",
+   "views": 15900000,
+   "dur": 16.28,
+   "res": "1080x1920"
+  },
+  "lf": {
+   "file": "BdsrY3NR2kQ.mp4",
+   "who": "유튜브 같은 사람 'Work lying down: The best chair for DIY Recliner Workstation? LiberNovo Omni Pro Full Review!' 2026-05-15 (27초 'This video is sponsored by LiberNovo' = 협찬)",
+   "views": 24000,
+   "dur": 650,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "천만 명 넘게 본\n누워서 일하는 의자"
+ },
+ "facts": {
+  "f1": {
+   "text": "틱톡 @toolselectrodiy 7642785510229904653 'Work from home set up' 조회 15,900,000(yt-dlp 메타, 소재표 02) — 본인 말 '40 million'(Trackpad 편)은 의자 얘기가 아니라 쓰지 않음(페이블 10-24)",
+   "kind": "본인 말+메타"
+  },
+  "f2": {
+   "text": "틱톡 7642785510229904653 화면 글자 '160 degrees recline'(5~8초) · 롱폼 271~275 'The maximum recline angle is 160°' · notebookcheck Omni 리뷰 'locked at four angles – 105, 120, 135, and 160 degrees'",
+   "kind": "화면+본인 말+리뷰"
+  },
+  "f3": {
+   "text": "롱폼 BdsrY3NR2kQ 자동자막 낱말: If 0.40 … is 3.24 · I 4.16 … hugged 5.28 · by 5.76 · this 5.92 · chair 6.16 · Today 6.80 / 무음(−28dB) 6.75~6.90 · 장면 전환 4.10·6.84",
+   "kind": "본인 말(유튜브 자동자막 낱말 시각)"
+  },
+  "f4": {
+   "text": "틱톡 7642785510229904653 0~11초(벤치 0~11.5초 원본): 의자를 눕힌 채 머리 위 모니터·노트북을 보며 키보드 작업",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "N2",
+   "O1",
+   "N3"
+  ],
+  "lines": [
+   {
+    "id": "N1",
+    "fn": "훅(아는 대상·몰랐던 숫자 + ~있는데요)",
+    "text": "누워서 일하는 영상 하나로, 천만 뷰를 넘긴 사람이 있는데요.",
+    "caps": [
+     "누워서 일하는 영상 하나로",
+     "천만 뷰를 넘긴",
+     "사람이 있는데요"
+    ],
+    "facts": [
+     "f1"
+    ]
+   },
+   {
+    "id": "N2",
+    "fn": "불러냄 → 원음 증거",
+    "text": "비결은 바로, 160도까지 뒤로 젖혀지는 이 의자래요.",
+    "caps": [
+     "비결은 바로",
+     "160도까지 뒤로 젖혀지는",
+     "이 의자래요"
+    ],
+    "facts": [
+     "f2"
+    ]
+   },
+   {
+    "id": "N3",
+    "fn": "장점(하이브리드 컷 뒤 — 앞판 꼬리)",
+    "text": "누운 채로 모니터를 보면서, 그대로 일한대요.",
+    "caps": [
+     "누운 채로 모니터를 보면서",
+     "그대로 일한대요"
+    ],
+    "facts": [
+     "f4"
+    ]
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "lf",
+    "span": [
+     0.4,
+     6.75
+    ],
+    "en": "If this is not ergonomic, I don't know what is. I feel like I'm being hugged by this chair.",
+    "caps": [
+     "이게 인체공학이 아니면",
+     "뭐가 인체공학이에요",
+     "의자가 절 안아 주는 느낌!"
+    ],
+    "check": "f3 — 두 샷(0~4.10 / 4.10~6.84) 모두 같은 사람이 의자에 누워 카메라 보며 말함"
+   }
+  ],
+  "dropped": {
+   "Trackpad 편 0~6.6 '40 million people watched…'": "의자 감탄이 아니고 의자 영상 조회수도 실측과 다름(실측 1,590만) — 쓰지 않음(페이블 10-24)",
+   "롱폼 184 'the Apple of all chairs'": "다른 회사 이름(애플) 자막 금지",
+   "롱폼 fan·5단 각도": "Omni Pro 전용(팬) — 쿠팡 기본 Omni 와 다를 수 있어 안 씀",
+   "협찬": "롱폼 27초 협찬 명시 — '샀다'고 하지 않음"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수",
+  "retts": "10-24 1차 N2 '그 비결이'를 받아쓰기 4번 중 3번이 '등받이가·쿠 피겨가'로 오인식(위스퍼 1·제미나이 2) → 페이블 승인으로 '비결은 바로'로 바꿔 앞 통째 1회 다시 합성(현장썰_run tts 는 줄 단위 합성이 없음)"
+ }
+}

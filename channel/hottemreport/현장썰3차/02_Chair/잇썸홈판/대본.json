@@ -1,0 +1,161 @@
+{
+ "_note": "숏템리폿 3차 02 의자 하이브리드 — 앞 = 숏템리폿 현장썰 @toolselectrodiy 박창수판(02_Chair/front), 뒤 = 쿠팡 9640414089 '다이나믹 인체공학 의자 LiberNovo Omni PRO 리버노보 옴니 프로 사무용 의자(풋레스트 미포함)'(앞 사람 의자와 같은 Omni Pro, 로켓 아님 — 예비 9310070310 기본 Omni). 앞 사람 의자는 Omni Pro(롱폼 제목) — Pro 전용(팬·금속 받침)은 대본·화면에서 빼고 Omni·Pro 공통(160도·등판 조각·버튼 스트레칭)만 말한다.",
+ "brand": "잇썸홈",
+ "product": "리버노보 옴니 프로 의자(쿠팡 9640414089) — 160도까지 젖혀지는 인체공학 의자, 등판이 여러 조각으로 몸을 따라오고 팔걸이 버튼으로 허리 스트레칭",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰3차_02_Chair/front/render/final.mp4",
+  "cut": 12.76,
+  "why": "원음 O1 'hugged by this chair.' 끝(앞 완성본 O1 창 끝 12.723) 뒤·O1 화면 조각 끝 12.78 전(12.85 로 자르니 N3 화면이 0.07초 번쩍 — 10fps 눈 확인) → 프레임 382(12.733초)",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '리버노보 옴니'(10-24 02:04, ok, 현장썰3차/쿠팡_02_리버노보.json): 9640414089 '다이나믹 인체공학 의자 LiberNovo Omni PRO 리버노보 옴니 프로 사무용 의자(풋레스트 미포함)' — 앞 롱폼 제목 'LiberNovo Omni Pro'와 같은 모델 · 예비 9310070310(기본 Omni, 발받침 포함)",
+  "n_angle": "notebookcheck LiberNovo Omni 리뷰: 'It can be locked at four angles – 105, 120, 135, and 160 degrees' · 'With the StepSync Footrest and the chair reclined all the way, you are essentially lying down'",
+  "y_160": "롱폼 BdsrY3NR2kQ 271~275 'The maximum recline angle is 160°' · techdropp 틱톡 31~33초 105°→160° 비교",
+  "n_back": "notebookcheck: 'Since it rests on a single spine, the back laterally moves with you' · 롱폼 195~207 'dynamic support for full body alignment as I change body position' · 285 'eight panel adaptive spinal support' · 공식 nlJIhWIrdCk 'Bionic FlexFit Backrest'",
+  "n_stretch": "notebookcheck: 'three buttons on the left armrest to control the motorized back support and start the OmniStretch massage' · 'The five-minute session essentially extends and retracts the hydraulic support … repeatedly' · 롱폼 288~305 'Another button pressed to activate the Omni stretch mode … active spinal decompression by slowly moving the support up and down'",
+  "v_react": "Ahnestly 리뷰(Not Sponsored) 1049~1059 의자를 끝까지 젖히고 웃음 · 공식 115.5~117 젖힌 의자에서 미소"
+ },
+ "흥미이음": {
+  "원본흥미": "의자를 160도까지 눕혀 누운 채로 일한다 — 그 영상이 1,590만 회, 본인은 '의자가 날 안아 준다'고 감탄",
+  "뒤흥미": "쿠팡의 바로 그 의자(리버노보 옴니) — 영상마다 등받이를 160도까지 젖혀 눕는 모습·등판이 몸을 따라 휘는 모습이 보인다",
+  "판정": "같음",
+  "근거": "같은 제품: 앞 사람 롱폼 제목 'LiberNovo Omni Pro' = 쿠팡 9640414089 'Omni PRO' · 벤치 18초 실린더 'LiberNovo' 글자·렌즈 4/8장 '리버노보 옴니'. 뒤 재료 일부는 기본 Omni 공식·리뷰 영상(생김새 같음) — Pro 전용 팬은 말하지 않는다"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰3차/02_Chair/front/frame_render.json",
+  "title": "천만 명 넘게 본\n누워서 일하는 의자"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같은 의자가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "똑같은 의자가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "똑같은"
+   ],
+   "facts": [
+    "c0"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 끝까지 젖히면 거의 침대처럼 눕혀지더라고요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "끝까지 젖히면",
+    "거의 침대처럼 눕혀지더라고요"
+   ],
+   "emph": [
+    "침대처럼"
+   ],
+   "facts": [
+    "n_angle",
+    "y_160"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 등판이 8조각으로 나뉘어 있어서 몸을 움직일 때마다 같이 따라와요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "등판이 8조각으로",
+    "나뉘어 있어서",
+    "몸을 움직일 때마다",
+    "같이 따라와요"
+   ],
+   "emph": [
+    "8조각"
+   ],
+   "facts": [
+    "n_back"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 팔걸이 버튼을 누르면, 등받이가 천천히 밀었다 당겼다 하면서 허리를 쭉 늘려 줘요.",
+   "caps": [
+    "심지어",
+    "팔걸이 버튼을 누르면",
+    "등받이가 천천히",
+    "밀었다 당겼다 하면서",
+    "허리를 쭉 늘려 줘요"
+   ],
+   "emph": [
+    "쭉"
+   ],
+   "facts": [
+    "n_stretch"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "집에 놀러 오는 친구들마다, 한 번만 누워 보자고 난리예요.",
+   "caps": [
+    "집에 놀러 오는 친구들마다",
+    "한 번만 누워 보자고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": [
+    "v_react"
+   ]
+  }
+ ]
+}
