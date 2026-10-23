@@ -1,0 +1,445 @@
+{
+ "topic": "RAGNOK ErgoStrike7 — 방아쇠를 당기면 마우스 윗부분이 실제로 튀어 손에 반동이 오는 권총형 FPS 게이밍 마우스. 리뷰어 DeveloperAdam(벤치 2~4초 그 사람)이 '반동 재밌냐고요? 네, 재밌다'",
+ "brand": "숏템리폿",
+ "style": "현장썰",
+ "bench": "ZvOrDpPunAI",
+ "bench_note": "벤치 '재벌 아들이 게임하다 빡쳐 만든 발명품'(19.1만, 핫템리포트 25위) — 2~4초 인물 = DeveloperAdam(틱톡 @thedeveloperadam_ 같은 책상). 그 사람 유튜브 리뷰 g3TBcYDX1d8 로 원음형. '재벌 아들' 이야기는 근거를 못 찾아 안 씀",
+ "sources": {
+  "main": {
+   "file": "g3TBcYDX1d8.mp4",
+   "who": "유튜브 DeveloperAdam 'The BEST gun mouse for FPS? ErgoStrike 7 with RECOIL!'(4K AV1 → 1080p30 H.264 변환)",
+   "views": 73000,
+   "dur": 482.4,
+   "res": "1920x1080"
+  }
+ },
+ "titles": {
+  "hook": "쏠 때마다 반동 오는\n총 마우스"
+ },
+ "facts": {
+  "f1": {
+   "text": "0:03.1~0:09.2 'This is the Ragnok ErgoStrike 7, next-gen FPS gaming mouse with recoil' · 3:28.8~3:35.7 'The recoil is activated by the trigger pull only and will fire away whilst the trigger is being held'",
+   "kind": "본인 말(유튜브 자동자막 낱말 시각)"
+  },
+  "f2": {
+   "text": "1:51.8~1:55.2 'It's now also shaped like a pistol' · 1:59.5~2:02.6 'You get an actual mechanical trigger this time' · 2:53.2~2:56.3 'Removing this little rubber piece reveals the little recoil section'",
+   "kind": "본인 말"
+  },
+  "f3": {
+   "text": "6:14.88~6:19.2 'Is the recoil cool? Yes, the recoil is cool and fun.'",
+   "kind": "본인 말(자동자막 낱말 Is 374.88 · fun. 378.96 · 다음 It's 379.60 · 무음 379.21~379.61) + 제미나이 2.5-flash-lite 같은 문장"
+  },
+  "f4": {
+   "text": "2:46.6~2:52.6 'On top we have a switch for three settings. Recoil off, 1x or 2x recoil'",
+   "kind": "본인 말"
+  },
+  "f5": {
+   "text": "4:00~4:08 화면: 방아쇠를 당길 때 윗부분(반동부)이 튐(1x 설정 시연 3:57~4:14) · 6:21~6:25 게임 화면 앞에서 마우스를 쥐고 쏨",
+   "kind": "화면"
+  }
+ },
+ "final": {
+  "order": [
+   "N1",
+   "N2",
+   "O1",
+   "N3"
+  ],
+  "lines": [
+   {
+    "text": "게임에서 총 쏠 때마다 손에 진짜 반동이 오는 마우스가 있는데요 권총처럼 생긴 손잡이에 진짜 방아쇠가 달려서 당기면 윗부분이 툭툭 튀어요 반동 세기도 끄기부터 두 배까지 세 단계로 고를 수 있대요.",
+    "note": "렌더용 한 문장 — 원문 줄은 대본.json"
+   }
+  ],
+  "orig_audio": [
+   {
+    "id": "O1",
+    "src": "ct",
+    "span": [
+     374.75,
+     379.2
+    ],
+    "en": "Is the recoil cool? Yes, the recoil is cool and fun.",
+    "caps": [
+     "반동 재밌냐고요?",
+     "네, 진짜 재밌어요!"
+    ],
+    "check": "자동자막 낱말 Is 374.88 · cool? 376.00 · Yes 376.72 · fun. 378.96 · It's 379.60(다음 문장) · silencedetect −35dB 무음 374.46~374.78·379.21~379.61 · 화면 디졸브 379.2 시작(0.1초 시트) — 한 샷 안"
+   }
+  ],
+  "dropped": {
+   "'재벌 아들이 빡쳐 만든' 벤치 이야기": "근거 못 찾음 — 안 씀",
+   "2:96.9 'Will this mouse make you a better player? … no'": "앞 흥미와 반대 방향이라 안 씀",
+   "가격·할인코드": "금액 금지"
+  }
+ },
+ "voice": {
+  "tts": "타입캐스트 박창수 tc_6059dad0b83880769a50502f · tools/calcopy/engine/tts_pause.py 통째 1회",
+  "speed": 1.24,
+  "target_cps": 8.0,
+  "id": "tc_6059dad0b83880769a50502f",
+  "name": "박창수"
+ },
+ "captions_plan": [
+  {
+   "t0": 0.0,
+   "text": "게임에서 총 쏠 때마다",
+   "kind": "나레"
+  },
+  {
+   "t0": 1.107,
+   "text": "손에 진짜 반동이 오는",
+   "kind": "나레"
+  },
+  {
+   "t0": 2.338,
+   "text": "마우스가 있는데요",
+   "kind": "나레"
+  },
+  {
+   "t0": 3.572,
+   "text": "권총처럼 생긴 손잡이에",
+   "kind": "나레"
+  },
+  {
+   "t0": 4.958,
+   "text": "진짜 방아쇠가 달려서",
+   "kind": "나레"
+  },
+  {
+   "t0": 6.063,
+   "text": "당기면 윗부분이 툭툭 튀어요",
+   "kind": "나레"
+  },
+  {
+   "t0": 7.786,
+   "text": "반동 재밌냐고요?",
+   "kind": "원음"
+  },
+  {
+   "t0": 10.007,
+   "text": "네, 진짜 재밌어요!",
+   "kind": "원음"
+  },
+  {
+   "t0": 12.486,
+   "text": "반동 세기도",
+   "kind": "나레"
+  },
+  {
+   "t0": 13.092,
+   "text": "끄기부터 두 배까지",
+   "kind": "나레"
+  },
+  {
+   "t0": 14.249,
+   "text": "세 단계로 고를 수 있대요",
+   "kind": "나레"
+  }
+ ],
+ "caption_events": [
+  {
+   "kind": "emph",
+   "text": "게임에서 총 쏠 때마다",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 0.0,
+   "dur": 1.107,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "손에 진짜 반동이 오는",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 1.107,
+   "dur": 1.231,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "마우스가 있는데요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 2.338,
+   "dur": 1.234,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "권총처럼 생긴 손잡이에",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 3.572,
+   "dur": 1.386,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "진짜 방아쇠가 달려서",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 4.958,
+   "dur": 1.105,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "당기면 윗부분이 툭툭 튀어요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 6.063,
+   "dur": 1.723,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "반동 재밌냐고요?",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 7.786,
+   "dur": 2.221,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "네, 진짜 재밌어요!",
+   "rgb": [
+    80,
+    200,
+    255
+   ],
+   "t0": 10.007,
+   "dur": 2.479,
+   "who": "원음"
+  },
+  {
+   "kind": "emph",
+   "text": "반동 세기도",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 12.486,
+   "dur": 0.606,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "끄기부터 두 배까지",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 13.092,
+   "dur": 1.157,
+   "who": "나레"
+  },
+  {
+   "kind": "emph",
+   "text": "세 단계로 고를 수 있대요",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "t0": 14.249,
+   "dur": 1.811,
+   "who": "나레"
+  }
+ ],
+ "render": {
+  "windows": [
+   [
+    7.786,
+    12.236
+   ]
+  ],
+  "blocks": [
+   {
+    "id": "N1",
+    "kind": "나레",
+    "n0": 0.0,
+    "n1": 3.322
+   },
+   {
+    "id": "N2",
+    "kind": "나레",
+    "n0": 3.572,
+    "n1": 7.536
+   },
+   {
+    "id": "O1",
+    "kind": "원음",
+    "a0": 7.786,
+    "a1": 12.236,
+    "audio_ss": 374.75,
+    "src": "ct"
+   },
+   {
+    "id": "N3",
+    "kind": "나레",
+    "n0": 12.486,
+    "n1": 15.46
+   }
+  ],
+  "pieces": [
+   {
+    "block": "N1",
+    "covers": [
+     "N1"
+    ],
+    "src": "ct",
+    "ss": 381.9,
+    "vs": 0.0,
+    "src_crop": [
+     860,
+     0,
+     857,
+     1080
+    ],
+    "why": "첫 프레임 = 제품: 게임 화면 앞에서 흰 권총형 마우스를 쥐고 쏨(380.97~389.77 한 샷, 마우스 382~385.5 화면 안)",
+    "ve": 3.572,
+    "src_end": 385.472
+   },
+   {
+    "block": "N2",
+    "covers": [
+     "N2"
+    ],
+    "src": "ct",
+    "ss": 240.4,
+    "vs": 3.572,
+    "src_crop": [
+     620,
+     0,
+     857,
+     1080
+    ],
+    "why": "방아쇠를 당길 때 윗부분이 튀는 반동 시연(유튜브 237~257 'recoil off / 1x / 2x' 구간, 240~247 같은 각도)",
+    "ve": 7.686,
+    "src_end": 244.514
+   },
+   {
+    "block": "O1",
+    "covers": [
+     "O1"
+    ],
+    "src": "ct",
+    "ss": 374.65,
+    "vs": 7.686,
+    "src_crop": [
+     480,
+     0,
+     857,
+     1080
+    ],
+    "why": "'Is the recoil cool? Yes, the recoil is cool and fun.' 때 마우스를 쥐고 방아쇠를 당김(352.5~379.2 한 샷)",
+    "ve": 12.203,
+    "src_end": 379.167,
+    "guard": "원본 컷 379.2 앞에서 끊음(−0.283초)"
+   },
+   {
+    "block": "N3",
+    "covers": [
+     "N3"
+    ],
+    "src": "ct",
+    "ss": 165.917,
+    "vs": 12.203,
+    "src_crop": [
+     560,
+     0,
+     857,
+     1080
+    ],
+    "why": "윗면 반동 스위치(끔·1배·2배)를 보여 줌(165~172 'On top we have a switch for three settings') — 하이브리드 컷 뒤 꼬리",
+    "ve": 16.06,
+    "src_end": 169.774
+   }
+  ],
+  "dur": 16.06,
+  "narr": [
+   {
+    "id": "N1",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰3차\\03_Mousegun\\front\\render\\narr_N1.wav",
+    "dur": 3.322,
+    "tempo": 0.82,
+    "chars": 26,
+    "speech": 3.322,
+    "cps": 7.83,
+    "segs": [
+     [
+      0.0,
+      1.118
+     ],
+     [
+      1.243,
+      3.322
+     ]
+    ]
+   },
+   {
+    "id": "N2",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰3차\\03_Mousegun\\front\\render\\narr_N2.wav",
+    "dur": 3.964,
+    "tempo": 0.983,
+    "chars": 31,
+    "speech": 3.964,
+    "cps": 7.82,
+    "segs": [
+     [
+      0.0,
+      1.212
+     ],
+     [
+      1.37,
+      3.964
+     ]
+    ]
+   },
+   {
+    "id": "N3",
+    "wav": "C:\\숏템_칼카피\\hottemreport\\현장썰3차\\03_Mousegun\\front\\render\\narr_N3.wav",
+    "dur": 2.974,
+    "tempo": 0.931,
+    "chars": 23,
+    "speech": 2.974,
+    "cps": 7.73,
+    "segs": [
+     [
+      0.0,
+      0.791
+     ],
+     [
+      0.979,
+      2.974
+     ]
+    ]
+   }
+  ]
+ }
+}

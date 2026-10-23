@@ -1,0 +1,138 @@
+{
+ "_note": "make_render.py 가 만든 렌더용 — 페이지 1개 × cuts(원음 입 맞춤 시각)",
+ "cand_dir": "C:/숏템_칼카피/hottemreport/현장썰3차/03_Mousegun/front/src",
+ "shots": [
+  {
+   "i": 0,
+   "full": true,
+   "kind": "원본재편집",
+   "src": "g3TBcYDX1d8.mp4",
+   "ss": 381.9,
+   "cuts": [
+    {
+     "src": "g3TBcYDX1d8.mp4",
+     "ss": 381.9,
+     "dur": 3.572,
+     "block": "N1",
+     "src_crop": [
+      860,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "g3TBcYDX1d8.mp4",
+     "ss": 240.4,
+     "dur": 4.114,
+     "block": "N2",
+     "src_crop": [
+      620,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "g3TBcYDX1d8.mp4",
+     "ss": 374.65,
+     "dur": 4.517,
+     "block": "O1",
+     "src_crop": [
+      480,
+      0,
+      857,
+      1080
+     ]
+    },
+    {
+     "src": "g3TBcYDX1d8.mp4",
+     "ss": 165.917,
+     "dur": 3.857,
+     "block": "N3",
+     "src_crop": [
+      560,
+      0,
+      857,
+      1080
+     ]
+    }
+   ]
+  }
+ ],
+ "pieces": [
+  {
+   "block": "N1",
+   "covers": [
+    "N1"
+   ],
+   "src": "ct",
+   "ss": 381.9,
+   "vs": 0.0,
+   "src_crop": [
+    860,
+    0,
+    857,
+    1080
+   ],
+   "why": "첫 프레임 = 제품: 게임 화면 앞에서 흰 권총형 마우스를 쥐고 쏨(380.97~389.77 한 샷, 마우스 382~385.5 화면 안)",
+   "ve": 3.572,
+   "src_end": 385.472
+  },
+  {
+   "block": "N2",
+   "covers": [
+    "N2"
+   ],
+   "src": "ct",
+   "ss": 240.4,
+   "vs": 3.572,
+   "src_crop": [
+    620,
+    0,
+    857,
+    1080
+   ],
+   "why": "방아쇠를 당길 때 윗부분이 튀는 반동 시연(유튜브 237~257 'recoil off / 1x / 2x' 구간, 240~247 같은 각도)",
+   "ve": 7.686,
+   "src_end": 244.514
+  },
+  {
+   "block": "O1",
+   "covers": [
+    "O1"
+   ],
+   "src": "ct",
+   "ss": 374.65,
+   "vs": 7.686,
+   "src_crop": [
+    480,
+    0,
+    857,
+    1080
+   ],
+   "why": "'Is the recoil cool? Yes, the recoil is cool and fun.' 때 마우스를 쥐고 방아쇠를 당김(352.5~379.2 한 샷)",
+   "ve": 12.203,
+   "src_end": 379.167,
+   "guard": "원본 컷 379.2 앞에서 끊음(−0.283초)"
+  },
+  {
+   "block": "N3",
+   "covers": [
+    "N3"
+   ],
+   "src": "ct",
+   "ss": 165.917,
+   "vs": 12.203,
+   "src_crop": [
+    560,
+    0,
+    857,
+    1080
+   ],
+   "why": "윗면 반동 스위치(끔·1배·2배)를 보여 줌(165~172 'On top we have a switch for three settings') — 하이브리드 컷 뒤 꼬리",
+   "ve": 16.06,
+   "src_end": 169.774
+  }
+ ]
+}

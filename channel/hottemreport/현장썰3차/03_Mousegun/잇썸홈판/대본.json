@@ -1,0 +1,161 @@
+{
+ "_note": "숏템리폿 3차 03 반동마우스 하이브리드 — 앞 = 숏템리폿 현장썰 DeveloperAdam 박창수판(03_Mousegun/front), 뒤 = 쿠팡 8728557223 '(공식 국내 출시) Ragnok3 … 실제 반동 피드백 Ergostrike7'(같은 제품, 로켓). 뒤 화면 = 같은 제품(ErgoStrike7) 틱톡·유튜브 영상 — 컷마다 다른 사람·장면, 박힌 글자는 crop 밖. 앞에서 한 말(반동·권총 손잡이·방아쇠·세 단계)은 뒤에서 다시 하지 않는다.",
+ "brand": "잇썸홈",
+ "product": "(공식 국내 출시) Ragnok3 게임 컴퓨터 총기 유형 마우스 실제 반동 피드백 Ergostrike7(쿠팡 8728557223, 로켓) — 방아쇠를 당기면 반동이 오는 권총형 세로 게이밍 마우스",
+ "front": {
+  "src": "C:/숏템_칼카피/hottemreport/현장썰3차_03_Mousegun/front/render/final.mp4",
+  "cut": 12.2,
+  "why": "원음 O1 'cool and fun.' 끝(소스 379.2 → 앞 완성본 O1 창 끝 12.236, 화면 조각 경계 12.20 — 디졸브 가드) · 다음 나레 N3 12.486 전. 12.233(1프레임)이면 N3 화면이 한 프레임 번쩍여 화면 경계 12.20 에서 자름(소리는 'fun' 끝 0.04초 앞, 30ms 페이드)",
+  "target_lufs": -14.0
+ },
+ "facts": {
+  "c0": "쿠팡 파트너스 API '에르고스트라이크7 건마우스'(10-24 03:07, 1회, ok): 8728557223 '(공식 국내 출시) Ragnok3 게임 컴퓨터 총기 유형 마우스 실제 반동 피드백 Ergostrike7' 로켓 — 03_Mousegun/쿠팡_API_10-24.json",
+  "c_img": "쿠팡 대표 이미지(03_Mousegun/쿠팡_8728557223.jpg): 은색 윗부분(반동부)·방아쇠·검은 세로 손잡이 — 벤치 9~15초·원본 리뷰와 같은 모양(색만 검정)",
+  "y_comfort": "DeveloperAdam g3TBcYDX1d8 1:43.8~1:50.8 'more ergonomic and more comfortable to use, especially over long periods' · 5:51.2~5:57.8 'You're not totally vertical now, and instead have a natural lean, which makes holding it very nice'",
+  "y_tap": "같은 영상 3:36.3~3:38.1 'You can very quickly press the trigger without activating the recoil' · 5:02.2 'This is just a regular mouse at the end of the day'",
+  "y_conn": "같은 영상 3:02.8~3:16.4 'Underneath the mouse … a tri-mode connectivity switch. So that's Bluetooth 5.1, 2.4G, or a wired connection and a DPI toggle button'"
+ },
+ "흥미이음": {
+  "원본흥미": "게임에서 방아쇠를 당기면 마우스 윗부분이 실제로 튀어 손에 총 반동이 온다 — 리뷰어가 '반동 재밌다'",
+  "뒤흥미": "쿠팡의 바로 그 제품(ErgoStrike7) — 같은 은색 반동부·방아쇠·권총 손잡이, 영상마다 쥐고 쏘는 모습",
+  "판정": "같음",
+  "근거": "같은 제품: 파트너스 API 상품명 'Ergostrike7 … 실제 반동 피드백' + 대표 이미지 모양 대조(반동부·방아쇠·손잡이 버튼 배치). 소재표 렌즈 결과에도 같은 계열. 색은 쿠팡 대표 사진 검정·원본 흰색(같은 모델 색상 차이)"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f"
+ },
+ "cps_target": 8.3,
+ "bgm": {
+  "id": "honwaka_puppu",
+  "db_below_voice": 14.4
+ },
+ "front_style": {
+  "frame": "channel/hottemreport/현장썰3차/03_Mousegun/front/frame_render.json",
+  "title": "쏠 때마다 반동 오는\n총 마우스"
+ },
+ "transition": {
+  "kind": "slideleft",
+  "dur": 0.25
+ },
+ "back_style": "shortem",
+ "line_role": {
+  "B1": "공개",
+  "B2": "고조",
+  "B3": "고조",
+  "B4": "고조",
+  "B5": "cta"
+ },
+ "back_caption_lines": {
+  "B1": {
+   "enter": {
+    "kind": "pop",
+    "ms": 300
+   }
+  }
+ },
+ "sfx": {
+  "pack_customer": 0
+ },
+ "lines": [
+  {
+   "id": "B1",
+   "role": "공개",
+   "point": "잉",
+   "answer_at": 3,
+   "kind": "tts",
+   "seg": "B",
+   "tts": "근데 저 영상 보고 쿠팡에 쳐 봤더니, 똑같은 마우스가 진짜 있더라고요.",
+   "caps": [
+    "근데 저 영상 보고",
+    "쿠팡에 쳐 봤더니",
+    "똑같은 마우스가",
+    "진짜 있더라고요"
+   ],
+   "emph": [
+    "똑같은"
+   ],
+   "facts": [
+    "c0",
+    "c_img"
+   ]
+  },
+  {
+   "id": "B2",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "이게 말도 안 되는 게, 손잡이가 비스듬히 누워 있어서 오래 쥐어도 손이 편하더라고요.",
+   "caps": [
+    "이게 말도 안 되는 게",
+    "손잡이가 비스듬히",
+    "누워 있어서",
+    "오래 쥐어도",
+    "손이 편하더라고요"
+   ],
+   "emph": [
+    "오래"
+   ],
+   "facts": [
+    "y_comfort"
+   ]
+  },
+  {
+   "id": "B3",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "진짜 핵심은 이건데, 방아쇠를 톡 치면 반동 없이 클릭만 돼서 평소에도 그냥 써요.",
+   "caps": [
+    "진짜 핵심은 이건데",
+    "방아쇠를 톡 치면",
+    "반동 없이 클릭만 돼서",
+    "평소에도",
+    "그냥 써요"
+   ],
+   "emph": [
+    "반동 없이"
+   ],
+   "facts": [
+    "y_tap"
+   ]
+  },
+  {
+   "id": "B4",
+   "role": "고조",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "심지어 유선에 블루투스, 무선까지 3가지로 연결돼서, 감도도 버튼 하나로 바로 바뀌어요.",
+   "caps": [
+    "심지어",
+    "유선에 블루투스, 무선까지",
+    "3가지로 연결돼서",
+    "감도도 버튼 하나로",
+    "바로 바뀌어요"
+   ],
+   "emph": [
+    "3가지"
+   ],
+   "facts": [
+    "y_conn"
+   ]
+  },
+  {
+   "id": "B5",
+   "role": "cta",
+   "kind": "tts",
+   "seg": "B",
+   "tts": "같이 게임하는 친구들 사이에서, 한 번만 쏴 보자고 난리예요.",
+   "caps": [
+    "같이 게임하는 친구들",
+    "사이에서",
+    "한 번만 쏴 보자고",
+    "난리예요"
+   ],
+   "emph": [
+    "난리예요"
+   ],
+   "facts": []
+  }
+ ]
+}
