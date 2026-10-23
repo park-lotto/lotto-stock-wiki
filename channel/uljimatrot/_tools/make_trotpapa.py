@@ -436,6 +436,8 @@ def hook_frames(cfg, d, wd: Path):
         tx, ty = cfg["hook"]["target"]
         fw, fh = csz[0] / (hb[2] - hb[0]), csz[1] / (hb[3] - hb[1])
         tgt = (((tx - hb[0]) * fw - bb[0]) * sc, ((ty - hb[1]) * fh - bb[1]) * sc)
+    else:                                               # 물건 좌표가 없어도 화살표는 무조건(10-23 사장님 "처음 썸네일부터 다 화살표") — 인물 가슴께
+        tgt = (people.width * 0.55, people.height * 0.42)
     circ = None
     if cfg["hook"].get("circle"):                       # 원본 비율 좌표 → 누끼 그림 좌표
         c = cfg["hook"]["circle"]
@@ -468,11 +470,11 @@ def hook_frames(cfg, d, wd: Path):
         if tgt is not None:                              # 굵은 화살표(벤치 #FF1A31 흰 테) — 끝이 물건을 따라간다(확대 반영)
             ar, (tipx, tipy) = hook_arrow()
             px, py_ = ox + tgt[0] * z, oy + tgt[1] * z
-            k = min(1.0, max(0.0, (t - 0.3) / 0.25))              # 0.3초에 등장 · 0.25초 ease-out · 0.6배에서 시작(0 에서 시작 금지)
+            k = 1.0                                               # 첫 프레임(썸네일)부터 화살표가 떠 있다 — 등장 연출 없음
             if k > 0:
                 e = 1 - (1 - k) ** 3
                 s_ = 0.6 + 0.4 * e
-                bob = 16 * (0.5 - 0.5 * math.cos(2 * math.pi * max(0.0, t - 0.55) / 0.8))   # 물건 쪽으로 콕콕(0.8초 주기)
+                bob = 16 * (0.5 - 0.5 * math.cos(2 * math.pi * t / 0.8))   # 물건 쪽으로 콕콕(0.8초 주기)
                 a2 = ar.resize((int(ar.width * s_), int(ar.height * s_)), Image.BILINEAR)
                 if e < 1:
                     a2.putalpha(a2.getchannel("A").point(lambda v: int(v * e)))
