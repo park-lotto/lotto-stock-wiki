@@ -1458,7 +1458,8 @@
     const sc=sceneContext?.scenes?.[sceneIndex],marks=(sc?.emph||[]).filter(m=>Number.isInteger(m?.w));if(!marks.length)return null;
     splitCaptionWords(el);const spans=[...el.querySelectorAll('.wfx-w')],colors=captionMarkColors(sceneIndex),scales=[];
     el.classList.add('wfx-on');Object.keys(WORD_FX_STYLES).forEach(k=>el.classList.toggle('wfx-'+k,wordFx.style===k));
-    marks.forEach((m,k)=>{const s=spans[m.w];if(!s)return;s.classList.add('wfx-mk');s.style.color=colors[k];
+    marks.forEach((m,k)=>{let s=spans[m.w];if(!s)return;s.classList.add('wfx-mk');if(Number.isInteger(m.n)&&m.n>0&&m.n<s.textContent.length&&!s.querySelector('.wfx-part')){const t=s.textContent,p=document.createElement('span');p.className='wfx-part';p.textContent=t.slice(0,m.n);s.textContent='';s.append(p,t.slice(m.n));}   // 어절 앞부분만 칠하기(m.n, 주인 scene_style.scene_marks) — 나머지 글자는 본래 색
+      s=s.querySelector('.wfx-part')||s;s.style.color=colors[k];
       const g=WORD_FX_GROWS[m.grow];if(!g)return;
       const at=Array.isArray(sc.words)&&Number.isFinite(sc.words[m.w])?Math.max(0,sc.words[m.w]-sc.start):0,scale=Math.round(growScale(g,wordFxClock+WORD_FX_LEAD-at)*1000)/1000;
       s.style.transformOrigin='50% 60%';s.style.transform=scale!==1?`scale(${scale})`:'';scales.push(scale);});
