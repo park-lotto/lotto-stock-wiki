@@ -105,9 +105,20 @@ PRODUCT_NAMED = """너는 같은 제품 판정 담당이다(원본 화면에 상
 쿠팡 후보 중 그 이름(브랜드·제품명)과 **같은 제품** 하나를 골라라. 근거가 '그 연예인이 쓴 그 제품'을 가리키지 않으면 고르지 마라. 없으면 product_id ''.
 JSON 하나: {"product_id": "…", "name": "…", "why": "근거 한 줄(어느 글에 무엇이라고)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
 
+PRODUCT_GIVEN = """너는 제품 확인 담당이다. 원본 영상에 제품이 화면으로 나오지 않아(말로만 소개) 고객이 쓸 쿠팡 제품을 정해 줬다.
+쿠팡 후보 중 고객이 정한 그 제품(브랜드·제품명, 상품번호가 있으면 그 번호)과 같은 것 하나를 골라라. 용량·개수 묶음은 달라도 된다. 없으면 product_id ''.
+JSON 하나: {"product_id": "…", "name": "…", "why": "근거 한 줄", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+
 PRODUCT_BEST = """너는 대체 제품 고르기 담당이다(같은 제품이 없으면 쿠팡에서 후기 많고 제일 좋은 제품). 연예인이 쓴 것과 **같은 종류·같은 쓰임**인 쿠팡 후보 중
 후기(rating 의 괄호 숫자) 많고 별점 높은 것 하나를 골라라. 광고(is_ad)·묶음 이상한 것은 뒤로. 같은 종류가 없으면 product_id ''.
 JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(후기 수·별점)", "category": "화장품|생활용품|식품|의류|의약품|의료기기|기타"}"""
+
+RESEARCH_GIVEN = """
+
+## ★고객이 정한 제품(given) — 연예인이 말한 제품과 다를 수 있다(98 #62 함익병: 원본은 병원 크림, 고객 제품은 화장품)
+- 금지 품목 판정(4)은 **고객이 정한 제품** 기준이다. 연예인이 말한 제품이 의약품·다른 회사 제품이어도 그것만으로 멈추지 않는다.
+- 원음 spans 는 연예인이 **다른 제품 이름(그 의약품 등)을 말하지 않는** 구간만 — 고민·관리법·원리처럼 그 사람 말 그대로 전할 수 있는 자리(예 '자외선 차단제부터').
+- 사실(f)은 고객 제품 것만(브랜드·판매처 문구는 '브랜드 문구'). 연예인 말을 고객 제품의 효과로 잇지 않는다."""
 
 RESEARCH = """너는 조사 담당이다. 이 편의 `조사.md` 한 파일 내용을 써라. 웹 검색으로 사실을 확인하고 출처 URL 을 적는다.
 ## 할 일
@@ -216,8 +227,12 @@ class _Stop(Exception):
 ASKER_IN_MAX = 60_000   # 다시 시도용으로 기억할 입력 크기 상한(글자) — 넘으면 그 단계 입력 없이 다시(대개 do 를 다시 내는 단계라 입력이 필요 없다)
 
 
-def start(ref: str, version: str, sid: str) -> dict:
-    return {"sid": sid, "ref": ref, "version": version, "phase": "setup", "tries": {}, "log": []}
+def start(ref: str, version: str, sid: str, product: str = "") -> dict:
+    """product = 고객이 정한 쿠팡 제품(이름·상품 주소) — 원본에 제품이 화면으로 안 나올 때 쓴다(사장님 10-23 '실제 올린 채널의 상품을 참고')."""
+    st = {"sid": sid, "ref": ref, "version": version, "phase": "setup", "tries": {}, "log": []}
+    if str(product or "").strip():
+        st["given"] = str(product).strip()[:200]
+    return st
 
 
 def step(state: dict, measure: dict | None = None, replies: dict | None = None, user: dict | None = None) -> dict:
@@ -358,7 +373,14 @@ def ph_origin_read(st, m, rp, u):
     st["src"] = {"label": label, "kind": kind}         # 출처 = 채널 이름인가 프로그램 이름인가 — 편 상태·작업 기록에 남겨 다시 시도할 때도 같은 길(사장님 10-22). 고객 진행 줄에는 단계만(세부 금지)
     st["log"].append(f"출처 '{label}' = {'프로그램 이름' if kind == 'program' else '채널 이름'}")
     return {"do": [{"id": "src", "cmd": "channel_find", "label": label, "kind": kind, "celeb": "" if celeb == "불명" else celeb, "n": 60,
-                    "words": [w for w in r.get("product_words") or [] if w][:2]}], "then": "src_got"}
+                    "words": [w for w in r.get("product_words") or [] if w][:2], "queries": _src_queries(r)}], "then": "src_got"}
+
+
+def _src_queries(r: dict) -> list[str]:
+    """출처 채널 안 검색어 — 원본 판독이 낸 검색어(연예인 + 제품·방법 낱말) 앞 2개. 없으면 연예인 + 제품 낱말(98 #61)."""
+    qs = [q for q in r.get("queries") or [] if q][:2]
+    celeb = "" if (r.get("celeb") or "") == "불명" else str(r.get("celeb") or "")
+    return qs or [f"{celeb} {w}".strip() for w in (r.get("product_words") or [])[:2] if w]
 
 
 SRC_PROBE = 10       # 출처 채널에서 조사할 후보 수(최신순, 벤치보다 먼저 올라온 것만)
@@ -374,7 +396,9 @@ def ph_src_got(st, m, rp, u):
     # 제목에 연예인 이름·장면·제품 낱말이 든 영상 먼저, 그다음 최신순(98 #58: 선우용여 '여주 아울렛' 원본은 반년 전 영상이라 최신 10편에 없었다 ·
     #   함익병은 남의 채널(이성미의 나는 꼰대다) 손님이라 최신 편은 전부 다른 손님 — 손님 편 제목엔 이름이 든다)
     tw = {RU.norm(w) for w in [r.get("celeb") or ""] + (r.get("scene_words") or []) + (r.get("product_words") or []) if len(RU.norm(w)) >= 2}
-    cands = sorted(cands, key=lambda t: -sum(1 for w in tw if w in RU.norm(t.get("title") or "")))[:SRC_PROBE]
+    # 채널 안 검색에 걸린 영상이 맨 앞(검색 순위대로) — 98 #61 셀코TV 함익병 기미: 원본이 최신 60편 밖
+    srank = {v: i for i, v in enumerate(f.get("searched") or [])}
+    cands = sorted(cands, key=lambda t: (srank.get(t["id"], 99), -sum(1 for w in tw if w in RU.norm(t.get("title") or ""))))[:SRC_PROBE]
     if not cands:
         st["log"].append("출처 채널을 못 찾아 검색 길로: " + json.dumps(f.get("channels") or [], ensure_ascii=False)[:300])
         return {"goto": "search"}
@@ -731,6 +755,8 @@ def ph_product_pick(st, m, rp, u):
 def ph_product_pick_wide(st, m, rp, u):
     sh = (m.get("psheet") or {}).get("file")
     if not sh:
+        if st.get("given"):
+            return {"goto": "given"}
         raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
     step, R0 = st["look_step"], st["read"]
     return {"review": [_rv("product_pick", PRODUCT_PICK + f"\n\n첫 그림 = 받은 원본 파일 **전체**를 {step}초 간격으로(왼쪽 위 첫 칸 = 0초, n번째 칸 = (n-1)×{step}초) — 답의 t 는 **파일 초**.\n"
@@ -750,6 +776,8 @@ def ph_product_cands(st, m, rp, u):
             st["look_step"] = step
             return {"do": [{"id": "psheet", "cmd": "sheet", "src": "src/" + _origin_file(st)["name"], "dst": "look/origin_wide.jpg",
                             "fps": round(1 / step, 4), "cols": 8, "rows": VIS_TILES // 8, "w": 200, "ss": 0, "t": dur}], "then": "product_pick_wide"}
+        if st.get("given"):
+            return {"goto": "given"}
         raise _Stop("원본 영상에 제품이 화면으로 나오지 않습니다(말로만 소개)", "제품이 화면에 나오는 다른 영상 주소로 다시 만들어 주세요", final=True)
     st["product_pick"] = r
     qs = [q for q in r.get("coupang_queries") or [] if q][:4] + [w for w in r.get("brand_words") or [] if w][:2]
@@ -770,6 +798,30 @@ def ph_product_same(st, m, rp, u):
     return _cand_sheet_do(st, st["coupang_cands"], "same")
 
 
+def _given_query(g: str) -> tuple[str, str]:
+    """고객이 정한 제품 글 → (쿠팡 검색어, 상품번호). 주소면 번호만 뽑고 남은 글을 검색어로."""
+    pid = (re.search(r"products/(\d{6,})", g) or re.search(r"\b(\d{8,})\b", g) or [None, ""])[1]
+    q = re.sub(r"https?://\S+", " ", g)
+    q = re.sub(r"\b\d{8,}\b", " ", q)
+    return " ".join(q.split())[:80], pid
+
+
+def ph_given(st, m, rp, u):
+    q, _ = _given_query(st["given"])
+    if not q:
+        raise _Stop("정해 주신 제품 이름을 알 수 없습니다", "쿠팡 상품 이름을 함께 적어 다시 만들어 주세요", final=True)
+    st["log"].append("원본에 제품 장면 없음 → 고객이 정한 제품으로")
+    return {"do": [{"id": "coupang", "cmd": "coupang", "queries": [q]}], "then": "given_same"}
+
+
+def ph_given_same(st, m, rp, u):
+    cands = (m.get("coupang") or {}).get("items") or []
+    if not cands:
+        raise _Stop("정해 주신 제품을 쿠팡에서 찾지 못했습니다", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
+    st["given_cands"] = cands[:16]
+    return _cand_sheet_do(st, st["given_cands"], "given")
+
+
 CAND_NOTE = ("\n\n★마지막 그림 = 쿠팡 후보 사진 시트(칸 '#번호 상품번호' = 아래 후보 목록 순서). **같은 제품은 사진으로도 같아야 한다** — 모양·색·버클·로고까지 원본 장면과 대조한다. "
              "이름만 맞으면 같은 제품이 아니다(10-22 강주은: 이름 '그린 버클 소가죽'만 보고 둥근 실버 잠금 가방을 같은 제품으로 골랐다).")
 
@@ -786,6 +838,11 @@ def ph_cand_look(st, m, rp, u):
     kind = st.get("_cand_kind") or "same"
     pics = [_img(x) for x in st.get("product_shots") or []] + ([_img(sh)] if sh else [])
     note = CAND_NOTE if sh else "\n\n(후보 사진을 받지 못했다 — 이름만으로는 같은 제품이라고 하지 않는다)"
+    if kind == "given":
+        _, pid = _given_query(st["given"])
+        return {"review": [_rv("given_same", PRODUCT_GIVEN + note + f"\n\n고객이 정한 제품: {st['given']}" + (f"\n(쿠팡 상품번호 {pid} — 후보에 있으면 그것)" if pid else "") +
+                               "\n\n쿠팡 후보:\n" + json.dumps((st.get("given_cands") or [])[:12], ensure_ascii=False, indent=1), pics, need=("product_id", "name", "category"))],
+                "then": "product_done"}
     if kind == "same":
         cands = st.get("coupang_cands") or []
         return {"review": [_rv("product_same", PRODUCT_SAME + note + "\n\n쿠팡 후보:\n" + json.dumps(cands[:12], ensure_ascii=False, indent=1),
@@ -802,8 +859,11 @@ def ph_cand_look(st, m, rp, u):
 
 
 def ph_product_done(st, m, rp, u):
-    same = rp.get("product_same") or rp.get("named_same") or rp.get("best_same") or {}
+    same = rp.get("product_same") or rp.get("named_same") or rp.get("best_same") or rp.get("given_same") or {}
     mode = "exact" if "product_same" in rp else ("named" if "named_same" in rp else "alt")
+    given = "given_same" in rp
+    if given and not same.get("product_id"):
+        raise _Stop("정해 주신 제품을 쿠팡 후보에서 찾지 못했습니다", "쿠팡 상품 이름을 정확히 적어 다시 만들어 주세요", final=True)
     if not same.get("product_id"):
         if mode == "exact":
             return {"goto": "name_find"}
@@ -812,10 +872,10 @@ def ph_product_done(st, m, rp, u):
         raise _Stop("쿠팡에서 같은 종류 제품을 찾지 못했습니다", "제품 이름을 알려 주시거나 다른 영상 주소로 다시 만들어 주세요")
     if same.get("category") in ("의약품", "의료기기"):
         raise _Stop("의약품·의료기기는 만들 수 없는 소재입니다", "다른 소재 영상을 주세요", final=True)
-    pool = st.get("named_cands") if mode == "named" else st.get("coupang_cands")
+    pool = st.get("given_cands") if given else (st.get("named_cands") if mode == "named" else st.get("coupang_cands"))
     if pool and str(same["product_id"]) not in {str(c.get("product_id") or c.get("productId") or c.get("id") or "") for c in pool}:
         st["log"].append(f"제품 번호 {same['product_id']} 가 후보 표에 없음 — 답 그대로 씀")
-    st["product"] = {**{k: same.get(k) for k in ("product_id", "name", "why", "category")}, "mode": mode,
+    st["product"] = {**{k: same.get(k) for k in ("product_id", "name", "why", "category")}, "mode": mode, **({"given": True} if given else {}),
                      "name_hints": (st.get("name_find") or {}).get("names") or [], "brand_words": (st.get("product_pick") or {}).get("brand_words")}
     return {"goto": "reviews"}
 
@@ -915,7 +975,7 @@ def ph_research_got(st, m, rp, u, fail: str = ""):
     O, PR = st["origin"], st["product"]
     ask = (RESEARCH + f"\n\n## 원본\n{O['url']} (받은 파일 0초 = 원본 {a:.2f}초 — 잰 값. spans 는 파일 초 = 원본 초 − {a:.2f}, 받은 파일 길이 {f.get('dur')}초)\n"
            f"지문 대조: {json.dumps(O.get('matched'), ensure_ascii=False)}\n자막({w.get('from') or '자동자막'}, 원본 초):\n{txt}\n\n## 제품\n"
-           f"{json.dumps(PR, ensure_ascii=False)}" + (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
+           f"{json.dumps(PR, ensure_ascii=False)}" + (RESEARCH_GIVEN if PR.get("given") else "") + (f"\n\n## 지난 답에서 걸린 것(고쳐라)\n{fail}" if fail else ""))
     return {"review": [_rv("research", ask, [_img(x) for x in st.get("product_shots") or []][:3], need=("조사_md", "keywords", "queries", "spans"))],
             "then": "research_check", "reject": {"why": fail, "fix": "조사를 고쳐 다시"} if fail else None}
 
@@ -923,7 +983,8 @@ def ph_research_got(st, m, rp, u, fail: str = ""):
 def ph_research_check(st, m, rp, u):
     r = _reply(rp, "research", ("조사_md", "keywords", "queries", "spans"))
     if r.get("stop"):
-        raise _Stop(str(r["stop"])[:200], "다른 소재 영상을 주세요")
+        st["log"].append("조사 멈춤: " + str(r["stop"])[:400])     # 판정 글은 기록에만 — 고객에겐 이유·해결 두 줄(사장님 10-22)
+        raise _Stop("조사해 보니 이 영상의 제품은 만들 수 없는 소재입니다(의약품·금지 품목 등)", "다른 소재 영상을 주세요", final=True)
     md, bad = str(r.get("조사_md") or ""), []
     for h in ("결론", "출처", "원음", "사실", "금지", "확인 못"):
         if h not in md:
@@ -1077,7 +1138,7 @@ def _script_ask(st, fail: str = "") -> dict:
     PR = st.get("product") or {}
     ms = st.get("_msheets") or {}
     ctx = (STY.brief(v) + "\n\n## 대본·재료 꼴\n" + fmt + "\n\n## 조사.md\n" + (st.get("research_md") or "") +
-           "\n\n## 제품 판정\n" + RU.PRODUCT_TALK.get(PR.get("mode") or "exact", "") + "\n" +
+           "\n\n## 제품 판정\n" + RU.PRODUCT_TALK.get("given" if PR.get("given") else (PR.get("mode") or "exact"), "") + "\n" +
            json.dumps({k: PR.get(k) for k in ("name", "product_id", "why", "mode", "name_hints")}, ensure_ascii=False) +
            "\n\n## 쿠팡 베스트 후기(r번호 — 도움 순, 셀링포인트·소구점 근거)\n" +
            (json.dumps(st.get("reviews") or [], ensure_ascii=False)[:4000] if st.get("reviews") else "(못 받음 — 후기 전언 줄을 쓰지 않는다)") +
@@ -1352,12 +1413,12 @@ PHASES = {
     "vis_get": ph_vis_get, "vis_got": ph_vis_got, "vis_look": ph_vis_look, "vis_pick": ph_vis_pick, "vis_next": ph_vis_next,
     "product_sheet": ph_product_sheet, "product_pick": ph_product_pick, "product_pick_wide": ph_product_pick_wide, "product_cands": ph_product_cands, "product_same": ph_product_same,
     "product_done": ph_product_done, "cand_look": ph_cand_look, "reviews": ph_reviews, "reviews_got": ph_reviews_got, "reviews_naver": ph_reviews_naver, "name_find": ph_name_find, "name_got": ph_name_got, "named_cands": ph_named_cands,
-    "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "research": ph_research, "research_got": ph_research_got,
+    "named_same": ph_named_same, "best": ph_best, "best_rated": ph_best_rated, "given": ph_given, "given_same": ph_given_same, "research": ph_research, "research_got": ph_research_got,
     "research_check": ph_research_check, "material": ph_material, "material_got": ph_material_got, "material_pick": ph_material_pick,
     "material_dl": ph_material_dl, "asr": ph_asr, "asr_got": ph_asr_got, "shots_got": ph_shots_got, "script": ph_script,
     "script_ask": ph_script_ask, "script_got": ph_script_got, "script_heard": ph_script_heard, "sign": ph_sign, "plan": ph_plan, "plan_got": ph_plan_got,
     "plan_look": ph_plan_look, "render": ph_render, "render_got": ph_render_got, "render_fix": ph_render_fix, "check": ph_check,
     "check_got": ph_check_got, "check_look": ph_check_look, "check_fix": ph_check_fix, "check_retry": ph_check_retry, "deliver": ph_deliver, "finished": ph_finished,
 }
-for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
+for _k, _v in {"check_retry": "check", "origin_fetch": "origin", "src_got": "origin", "probe_got": "origin", "sb_pick": "origin", "vis_get": "origin", "vis_got": "origin", "vis_look": "origin", "vis_pick": "origin", "vis_next": "origin", "stopped": "setup", "research_check": "research", "script_ask": "script", "script_heard": "script", "best": "product", "best_rated": "product", "given": "product", "given_same": "product", "cand_look": "product", "reviews": "product", "reviews_got": "product", "reviews_naver": "product", "product_pick_wide": "product", "deliver": "done", "finished": "done"}.items():
     PHASE_STAGE.setdefault(_k, _v)

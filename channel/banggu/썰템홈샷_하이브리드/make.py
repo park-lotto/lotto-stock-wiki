@@ -2,7 +2,7 @@
 """썰템홈샷 하이브리드 한 편 제작기 (관제 097, 2026-10-22 사장님 "썰템홈샷 스타일 영상 · 방구석이랑 다르게 · 표절 안 걸리게").
 
     PYTHONUTF8=1 py channel/banggu/썰템홈샷_하이브리드/make.py <단계> <편>
-    단계: frames | tts | plan | render | checks | all(=frames→tts→plan→render→checks)
+    단계: frames | tts | scenes(훅·썸네일 장면 검색) | plan | render(썸네일.json 있으면 thumbs 까지) | thumbs | checks | all(=frames→tts→plan→render→checks)
 
 편 = 이 폴더의 <편>/ — 대본.json(topic·hook[2줄]·post·tempo·final.lines[{fn,text,seg:A|B,facts,sources}]·facts) · 재료.json · 근거.md
 작업물(git 밖) = C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/<편>/ (src·narr·final.mp4)
@@ -195,6 +195,119 @@ def render(piece: str):
     from tools.calcopy.engine import ad_mark   # 모든 렌더 오른쪽 위 '광고'(사장님 10-22, 주인 한 곳)
     ad_mark.apply_inplace(Path(fin))
     print("final", fin)
+    if (P["d"] / "썸네일.json").exists():
+        thumbs(piece)
+
+
+# ── 썸네일 카드(맨 앞 2프레임) — 사장님 10-24 "썸네일 장면은 제일 후킹될 만한 장면으로 아주 잠깐 / 샘플 만들어서 보여줘"
+# 잇템로그(thumb.py, 10-23~24)와 같은 규칙: 본편에 실제로 나오는 장면 + 빨간 원·화살표·노란 ?·빨강 굵은 글, 3안 → 무작위 1안(pick 고정),
+# 꼬리표 funny = 편 번호 홀수 ㅋㅋ·짝수 ㅎㅎ / wow = ㄷㄷ. 그리기 도구·꼬리표·고르기·입히기는 thumb.py 것을 부른다(주인 한 곳).
+# <편>/썸네일.json options[{id,why,mood,src,ss,crop[x,y,w,h],zoom?,circle?,arrow?,q?,text[{lines,xy,px,rot?}]}] — 좌표 = 창(1080×1140) 안.
+def _card(P, M, opt, base, win, out, ep):
+    from PIL import Image, ImageDraw
+    from tools.calcopy.hybrid import thumb as TH
+    from tools.calcopy.hybrid.render_bench import _font
+    x0, y0, ww, wh = win
+    src = Path(opt["src"]) if Path(opt["src"]).is_absolute() else Path(M["cand_dir"]) / opt["src"]
+    cx, cy, cw, ch = opt["crop"]
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{float(opt['ss']):.3f}", "-i", str(src), "-frames:v", "1", "-vf",
+                          f"crop={cw}:{ch}:{cx}:{cy},scale={ww}:{wh}:force_original_aspect_ratio=increase,crop={ww}:{wh}",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    if len(raw) != ww * wh * 3:
+        raise SystemExit(f"썸네일 장면을 못 뽑음: {src} @{opt['ss']}")
+    scene = Image.frombytes("RGB", (ww, wh), raw).convert("RGBA")
+    lay = Image.new("RGBA", scene.size, (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
+    for ex, ey, r in opt.get("circle") or []:
+        d.ellipse([ex - r - 3, ey - r - 3, ex + r + 3, ey + r + 3], outline=(0, 0, 0, 200), width=20)
+        d.ellipse([ex - r, ey - r, ex + r, ey + r], outline=TH.CARD_RED + (255,), width=13)
+    for a, b in opt.get("arrow") or []:
+        TH._arrow(d, a, b)
+    for qx, qy, px in opt.get("q") or []:
+        TH._shadow_text(lay, (qx, qy), ["?"], _font(TH.CARD_FONT, px), (255, 225, 0), max(8, px // 12))
+    tag = TH.mood_tag(Path(f"ep{ep}"), opt.get("mood"))
+    for i, tx in enumerate(opt.get("text") or []):
+        lines = list(tx["lines"])
+        if i == 0 and tag:
+            lines[-1] = f"{lines[-1]} {tag}"
+        px = tx.get("px", 120)
+        while px > 70 and max(_font(TH.CARD_FONT, px).getlength(t) for t in lines) > 1000:
+            px -= 4
+        TH._shadow_text(lay, tx["xy"], lines, _font(TH.CARD_FONT, px), tuple(tx.get("color", TH.CARD_RED)), tx.get("stroke", 11), rot=tx.get("rot", 0.0))
+    scene.alpha_composite(lay)
+    full = base.copy(); full.paste(scene, (x0, y0))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    full.convert("RGB").save(out, quality=94)
+    return out
+
+
+def _body_cuts(P, M) -> list[dict]:
+    """본편 컷 [{src,ss,dur}] — 재료.json 컷 안 토막은 그 dur, 통 컷은 계획.json 의 그 컷 길이."""
+    rows = {r["shot"]: r for r in (_j(P["w"] / "계획.json")["shots"] if (P["w"] / "계획.json").exists() else [])}
+    out = []
+    for k, sh in enumerate(M.get("shots") or []):
+        for c in sh.get("cuts") or [{"src": sh.get("src"), "ss": sh.get("ss", 0), "dur": rows.get(k, {}).get("dur", 0)}]:
+            out.append({"src": c.get("src"), "ss": float(c.get("ss") or 0), "dur": float(c.get("dur") or rows.get(k, {}).get("dur", 0))})
+    return out
+
+
+def scenes(piece: str) -> dict:
+    """훅·썸네일 장면 찾기(구글·네이버 단서 → 유튜브 공식 원본) → <편>/장면후보.json. 순서 = thumb_rule.FIND_ORDER."""
+    from tools.calcopy import scene_search
+    P = paths(piece); S = _j(P["script"])
+    r = scene_search.run(S.get("scene_query") or S["topic"], S.get("brand", ""), serp=int(S.get("scene_serp", 4)))
+    _w(P["d"] / "장면후보.json", r)
+    for v in r["videos"][:10]:
+        print(("○" if v["official"] else "·"), v["id"], (v.get("channel") or "")[:16], "|", (v.get("title") or "")[:40], "|", v["from"][:40])
+    return r
+
+
+def thumbs(piece: str) -> dict:
+    import re
+    from PIL import Image, ImageDraw
+    from tools.calcopy.hybrid import thumb as TH, thumb_rule
+    from tools.calcopy.hybrid.render_bench import _font
+    P = paths(piece); M = _j(P["mat"]); spec = _j(P["d"] / "썸네일.json")
+    bad = thumb_rule.check(spec, cuts=_body_cuts(P, M))
+    if bad:
+        raise SystemExit("썸네일 3안 반려(thumb_rule):" + "".join("\n  " + b for b in bad) + "\n\n" + thumb_rule.FIND_ORDER)
+    fin = P["out"] / "final.mp4"
+    v = next(l for l in _j(P["hook"])["layers"] if l.get("kind") == "video")
+    win = (int(v["x"]), int(v["y"]), int(v["w"]), int(v["h"]))
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.5", "-i", str(fin), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout   # 틀(제목 2줄) = 훅 화면 그대로(0.5초 — 맨 앞 카드 뒤)
+    base = Image.frombytes("RGB", (1080, 1920), raw).convert("RGBA")
+    ep = int(re.match(r"\d+", piece).group())
+    outs = [(o, _card(P, M, o, base, win, P["d"] / "thumb" / f"{o['id']}.jpg", ep)) for o in spec["options"]]
+    tw, th = 432, 768
+    sheet = Image.new("RGB", (len(outs) * (tw + 16) + 16, th + 80), (24, 24, 24)); dd = ImageDraw.Draw(sheet)
+    for i, (o, p) in enumerate(outs):
+        sheet.paste(Image.open(p).resize((tw, th), Image.LANCZOS), (16 + i * (tw + 16), 64))
+        dd.text((16 + i * (tw + 16), 12), f"{o['id']}  {o.get('why', '')}"[:40], font=_font("Pretendard-Bold.otf", 30), fill=(255, 230, 0))
+    sheet.save(P["d"] / "thumb" / "시트.jpg", quality=90)
+    pk = TH.pick_option(P["d"], spec)
+    TH.stamp_video(fin, P["d"] / "thumb" / f"{pk}.jpg")
+    print("썸네일 3안:", P["d"] / "thumb" / "시트.jpg", "· 넣은 안:", pk)
+    return {"pick": pk}
+
+
+def _thumb_ok(P):
+    """맨 앞 2프레임 = 고른 카드, 3번째 프레임부터 본편(카드와 다름)."""
+    import numpy as np
+    sp = P["d"] / "썸네일.json"
+    if not sp.exists():
+        return ["썸네일.json 없음", False]
+    from tools.calcopy.hybrid import thumb_rule
+    bad = thumb_rule.check(_j(sp), cuts=_body_cuts(P, _j(P["mat"])))
+    if bad:
+        return [bad, False]
+    pk = _j(sp).get("pick")
+    from PIL import Image
+    card = np.asarray(Image.open(P["d"] / "thumb" / f"{pk}.jpg").convert("RGB").resize((270, 480)), dtype=float)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(P["out"] / "final.mp4"), "-frames:v", "3", "-vf", "scale=270:480",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    fr = np.frombuffer(raw, dtype=np.uint8).reshape(-1, 480, 270, 3).astype(float)
+    dif = [round(float(abs(f - card).mean()), 1) for f in fr]
+    return [{"안": pk, "프레임별 차이": dif}, dif[0] < 12 and dif[1] < 12 and dif[2] > dif[0] + 5]
 
 
 def line_gap(P, S, segs) -> list:
@@ -243,6 +356,7 @@ def checks(piece: str) -> dict:
          "줄 시작 받아쓰기 낱말 단위": [len(segs), len(segs) > len(_lines(S))],   # 한 덩어리면 줄 시작이 글자 비례로 밀린다(98 #52)
          "줄 시작 = 실제 말(±0.15초)": line_gap(P, S, segs),
          "쉼표·줄 끝 쉼(붙여 읽기 없음)": _pause(P, S, segs),
+         "썸네일 맨 앞 2프레임": _thumb_ok(P),
          "광고 표시": [ad_mark.MARK in ad_mark._probe(fin)[2], ad_mark.MARK in ad_mark._probe(fin)[2]],
          "시트": [str(sheet), True]}
     _w(P["out"] / "자동검사.json", r)
