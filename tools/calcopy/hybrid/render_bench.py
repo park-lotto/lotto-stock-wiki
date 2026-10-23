@@ -164,10 +164,20 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 cuts.append({**c, "line": lid, "t0": round(c0, 3), "kind": "tts"})
                 acc += w
     cuts[0]["t0"] = 0.0
+    src_dir = Path(M["cand_dir"]) if M.get("cand_dir") else None
     for i, c in enumerate(cuts):
         c["t1"] = cuts[i + 1]["t0"] if i + 1 < len(cuts) else end
         c["dur"] = round(c["t1"] - c["t0"], 3)
         c["over"] = round(c["dur"] - c["max"], 3) if c.get("max") is not None and c["dur"] > c["max"] else 0.0
+        if src_dir and c["kind"] == "tts" and c.get("ss") is not None and not c.get("no_snap"):
+            s2 = snap_ss(src_dir / c["src"], float(c["ss"]), (round(c["t1"] * FPS) - round(c["t0"] * FPS)) / FPS)   # 실제 뽑을 프레임 길이로      # 원음 컷은 입 맞춤이라 옮기지 않는다(검사만)
+            if s2 != float(c["ss"]):
+                c["ss_planned"], c["ss"] = c["ss"], s2
+        if src_dir:
+            left = src_left(src_dir / c["src"], float(c.get("ss") or 0.0))
+            if left is not None and c["dur"] > left:
+                c["src_left"] = left
+                c["over"] = max(c["over"], round(c["dur"] - left, 3))
     for i, r in enumerate(rows):      # 자막은 다음 덩어리 시작까지(줄 사이 틈도 앞 자막이 덮는다 — 벤치: 자막 없는 틈 거의 없음)
         r["show"] = [r["t0"], round(rows[i + 1]["t0"] if i + 1 < len(rows) else end, 3)]
     return {"lines": lines, "rows": rows, "cuts": cuts, "opos": opos, "end": end}
@@ -306,6 +316,69 @@ def blur_vf(regs, ss: float, dur: float, sigma: float = BLUR_SIGMA) -> str:
     return ",".join(out)
 
 
+_src_len: dict[str, float] = {}
+
+
+def src_left(src: Path, ss: float) -> float | None:
+    """원본 영상에서 ss 뒤로 남은 화면 초(마지막 프레임 하나 뺌). 사진은 None(얼마든 늘린다).
+    10-23 사장님 "뒤에 멈추거나 중간중간 튄다": 컷이 원본 끝을 넘으면 clip 이 n프레임보다 적게 뽑고, 뒤 컷이 전부 앞당겨져
+    (09 딸기라떼 27프레임 = 0.9초 어긋남) 끝 화면이 멈췄다. 그때까지 아무 검사도 안 걸렸다(05·08·09·11 네 편)."""
+    if src.suffix.lower() in IMG_EXT or not src.exists():
+        return None
+    k = str(src)
+    if k not in _src_len:
+        out = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration:format=duration", "-of", "json", src]).stdout
+        j = json.loads(out)
+        d = (j.get("streams") or [{}])[0].get("duration") or (j.get("format") or {}).get("duration")
+        _src_len[k] = float(d)
+    return round(_src_len[k] - ss - 1 / FPS, 3)
+
+
+SLIVER_SEC = 0.2      # 컷 처음·끝 이 안에 장면 경계가 있으면 '번쩍임'(앞뒤 샷이 몇 프레임 끼어 튀어 보인다)
+_shots: dict[str, list] = {}
+
+
+def shot_starts(video: Path) -> list[float]:
+    """영상의 장면 경계(새 샷이 시작하는 초, 30fps 격자). 프레임 차(108폭 회색 평균) > max(25, 중앙값×4).
+    10-23 사장님 "중간중간 튄다": 원본이 1초 안팎 잘린 쇼츠라 컷 끝에 이웃 샷 1~5프레임이 끼었다(02 c09 웹페이지 3프레임 등)."""
+    import subprocess
+    import numpy as np
+    k = str(video)
+    if k not in _shots:
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", k, "-vf", f"fps={FPS},scale=108:192,format=gray", "-f", "rawvideo", "-"],
+                             capture_output=True, stdin=subprocess.DEVNULL).stdout
+        fr = np.frombuffer(raw, np.uint8).reshape(-1, 192, 108).astype(np.int16)
+        d = np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2)) if len(fr) > 1 else np.zeros(0)
+        lim = max(25.0, 4 * float(np.median(d))) if len(d) else 25.0
+        _shots[k] = [round((i + 1) / FPS, 4) for i, x in enumerate(d) if x > lim]
+    return _shots[k]
+
+
+def slivers(starts: list[float], a: float, b: float, edge: float = SLIVER_SEC) -> list[float]:
+    """구간 [a,b) 안 경계 중 처음·끝 edge 안에 있는 것."""
+    return [s for s in starts if a + 1e-3 < s < b - 1e-3 and (s - a < edge - 1e-3 or b - s < edge - 1e-3)]      # 딱 0.2초(6프레임)는 통과
+
+
+def snap_ss(src: Path, ss: float, dur: float, reach: float = 0.4) -> float:
+    """나레 컷 시작 초를 ±reach 안에서 가장 덜 움직여 번쩍임 없는 자리로(원본 끝도 넘지 않게). 못 찾으면 그대로(검사가 잡는다)."""
+    if src.suffix.lower() in IMG_EXT or not src.exists():
+        return ss
+    st = shot_starts(src)
+    if not slivers(st, ss, ss + dur):
+        return ss
+    for k in range(1, int(reach * FPS) + 1):
+        for s in (ss + k / FPS, ss - k / FPS):
+            left = src_left(src, s)
+            if s >= 0 and (left is None or dur <= left) and not slivers(st, s, s + dur):
+                return round(s, 3)
+    return ss
+
+
+def count_frames(p: Path) -> int:
+    return int(run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames",
+                    "-of", "csv=p=0", p]).stdout.strip() or 0)
+
+
 def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, push: float = 0.0, move=None, blur=None):
     ww, wh = win
     if src.suffix.lower() in IMG_EXT:
@@ -354,6 +427,9 @@ def render_window(T: dict, M: dict, st: dict, R: Path) -> Path:
         p = parts / f"c{k:02d}.mp4"
         clip(src, float(c.get("ss", 0.0)), n, crop, (ww, wh), p, push=float(c.get("push", push)), move=c.get("move"),
              blur=(M.get("blur") or {}).get(c["src"]))
+        got = count_frames(p)
+        if got != n:      # 모자라면 뒤 컷이 전부 앞당겨지고 끝이 멈춘다 — 조용히 넘기지 않는다
+            raise StageError(f"컷 조각 프레임 모자람: {c['line']} {c['src']}@{c.get('ss')} 계획 {n} · 실제 {got}")
         lst.append(f"file '{p.as_posix()}'")
     (parts / "list.txt").write_text("\n".join(lst), encoding="utf-8")
     win = R / "window.mp4"
@@ -553,7 +629,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         length = {"sec": round(T["end"], 2), "min": LD["min"], "max": LD["max"], "measured": bool(sm),
                   "ok": LD["min"] - 0.5 <= T["end"] <= LD["max"] + 0.5}      # 판정 = bench_check '길이'와 같은 범위(±0.5)
         log(f"{'목소리 실측' if sm else '어림'} 길이 {T['end']}초 · 배치 {placed['log']}")
-        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if sm else "(어림)") + ": " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over])) if over else ""
+        msg = ("계획에서 컷이 원본 샷보다 길다" + ("" if sm else "(어림)") + ": " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over])) if over else ""
         if over and not tts:
             raise StageError(msg)
         return {"timeline": T, "placement": placed, "length": length, "over": msg}
@@ -564,7 +640,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     T = timeline(S, M, st, sm, align)
     over = [c for c in T["cuts"] if c["over"] > 0]
     if over:
-        raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c["dur"], c["max"]) for c in over]))
+        raise StageError("컷이 원본 샷보다 길다: " + str([(c["line"], c["src"], c.get("ss"), c["dur"], c.get("max"), {"원본 남음": c["src_left"]} if "src_left" in c else None) for c in over]))
     placed = plan_rows(S, T, st)
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
@@ -578,7 +654,13 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
          "-t", f"{T['end']:.3f}", final])
     from tools.calcopy.engine import ad_mark
-    ad_mark.apply_inplace(final, log=log)      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
+    ad_mark.apply_inplace(final, log=log)
+    jsave(R / "timeline.json", T)      # 썸네일 카드가 이 시간표로 장면(줄·몇 번째 컷)을 찾는다 — 카드보다 먼저 저장(10-24 09: 옛 시간표로 찾아 실패)
+    if (doc / "썸네일.json").exists():      # 맨 앞 2프레임 = 썸네일 카드(주인 thumb.card · 10-23 사장님 "맨 앞에 썸네일 아주 잠깐") — 카드에 '광고' 같이 찍힘
+        from tools.calcopy.hybrid import thumb as TH
+        tc = TH.cards(style_name, doc, work, log=log)
+        TH.stamp_video(final, Path(tc["pick_jpg"]))
+        log(f"썸네일 {tc['pick']} → 맨 앞 {TH.THUMB_FRAMES}프레임")      # 오른쪽 위 '광고' 표시 — 주인 = engine/ad_mark(사장님 10-22 모든 렌더)
     jsave(R / "timeline.json", T)
     tab = {"_note": f"배치 결과 — placement.place(판 설정 {style_name}) · 시각은 final.mp4 기준 초", "pack": st["caption"]["pack"], "rows": rows,
            "sfx": placed["sfx"], "flashes": placed["flashes"], "comment": placed.get("comment"), "log": placed["log"], "check": chk}
