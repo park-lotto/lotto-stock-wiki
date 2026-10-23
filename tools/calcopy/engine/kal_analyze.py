@@ -45,9 +45,9 @@ END_FRAC = 0.85    # 끝 = 길이 85% 이후(engine/rules.py END_FRAC)
 
 def _sp(speaker) -> str:
     s = (speaker or "").strip()
-    if s.startswith("나레"):
+    if s.startswith("나레") or s in ("narr", "tts"):   # 공용 렌더러(render_bench) 자막표 = narr/orig
         return "나레"
-    if s.startswith(("원음", "연예인", "본인")):
+    if s.startswith(("원음", "연예인", "본인")) or s == "orig":
         return "원음"
     if s.startswith("제3자"):
         return "제3자"

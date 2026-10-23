@@ -412,6 +412,9 @@ def step_verify(S: State):
     T = K.match_table(bench, ours, om, bm)
     T["ours_media"], T["bench_media"] = om, bm
     out = S.dir / "_kal" / "재현일치도.md"
+    bmp4 = next((p for p in (DATA / S.d["slug"] / "src" / f"{d.get('id')}.mp4" for d in bench) if p.exists()), None)
+    if bmp4:   # 1차 칼카피 관문 하나 = 줄 단위 자 + 픽셀·소리 자(compare) — 둘 다 통과여야 통과(지침서 맨 위 엔진 순서)
+        K.with_pixel(T, str(bmp4), o["ours_mp4"], str(S.dir / "_kal" / "재현일치도_픽셀"))
     out.write_text(K.match_md(T, S.d["slug"]), encoding="utf-8")
     out.with_suffix(".json").write_text(json.dumps(T, ensure_ascii=False, indent=1), encoding="utf-8")
     return ("done" if T["verdict"] == "통과" else "waiting_human"), {"table": str(out), "verdict": T["verdict"]}, f"재현일치도 {T['verdict']} — 미달이면 어긋난 항목을 고쳐 make 부터"
