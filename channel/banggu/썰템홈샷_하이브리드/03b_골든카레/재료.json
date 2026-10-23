@@ -1,0 +1,500 @@
+{
+ "_note": "03b 골든카레 — 01b 요플레 방식(훅=아는 장면+짤, 줄=화면, 짤 4·효과음 8). 옛 03 재료는 절대 경로로 재사용.",
+ "cand_dir": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03b_골든카레/src",
+ "shots": [
+  {
+   "src": "vmTSfRXY5CM.mp4",
+   "ss": 147.65,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "vmTSfRXY5CM.mp4",
+     "ss": 147.65,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      380,
+      44,
+      640,
+      676
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_homealone.mp4",
+     "ss": 0.0,
+     "dur": 1.94,
+     "fit": "cover",
+     "kind": "짤"
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
+     "ss": 17.3,
+     "dur": 1.35,
+     "fit": "cover",
+     "src_crop": [
+      640,
+      150,
+      1060,
+      1000
+     ]
+    }
+   ],
+   "ours": "SBS 공식 SBS 스브스 Drama 「상속자들」 영도가 김탄(이민호) 어깨에 카레를 붓는 장면(147.65, SBS 로고 crop 밖) → 짤 1070 나 홀로 집에 비명 → S&B 공식 CM 골든카레 상자",
+   "why": "'재벌 2세도 머리로 먹어 본 카레' = 누구나 아는 장면(조회 1548만) / 받아치기 짤 / '골든카레의 에스앤비' = 상자",
+   "url": "https://www.youtube.com/watch?v=vmTSfRXY5CM | https://www.youtube.com/watch?v=Mqo50OEuj1Q",
+   "full": true
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
+   "ss": 27.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
+     "ss": 27.2,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      520,
+      0,
+      880,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/hORMD6plycY.mp4",
+     "ss": 369.6,
+     "dur": 1.46,
+     "fit": "cover",
+     "src_crop": [
+      0,
+      150,
+      700,
+      900
+     ]
+    }
+   ],
+   "ours": "S&B 공식 CM 끝 카드 'そこに、スパイス&ハーブ S&B' → 해 뜬 하늘(테레비도쿄BIZ 공식, 방송 글자 crop 밖)",
+   "why": "'스파이스 앤 허브가 아니라, 썬 앤 버드' — 다들 아는 문구 → 태양",
+   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q | https://www.youtube.com/watch?v=hORMD6plycY"
+  },
+  {
+   "src": "still_hidori_card.mp4",
+   "ss": 0.1,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "still_hidori_card.mp4",
+     "ss": 0.1,
+     "dur": 1.18,
+     "fit": "cover",
+     "src_crop": [
+      60,
+      180,
+      1080,
+      1000
+     ]
+    }
+   ],
+   "ours": "S&B 공식 사사 히도리표 상표 그림(태양+새, 1930) — 공식 페이지 이미지를 밝은 바탕에 키워 천천히 다가가는 2.5초 영상으로",
+   "why": "'태양과 새의 머리글자' — 그 태양과 새 상표",
+   "url": "https://www.sbfoods.co.jp/company/profile/history/hidori.html"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/hORMD6plycY.mp4",
+   "ss": 189.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/hORMD6plycY.mp4",
+     "ss": 189.0,
+     "dur": 2.17,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      160,
+      700,
+      720
+     ]
+    },
+    {
+     "src": "kqezia0Uqfg_585_615.mp4",
+     "ss": 20.0,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      185,
+      620,
+      820
+     ]
+    }
+   ],
+   "ours": "옛 흑백 사진(테레비도쿄BIZ 공식, 자막 crop 밖) → tvN 벌거벗은 세계사(디글 공식 인증) 영국 Crosse & Blackwell 커리 가루 깡통(원본 605초, 프로그램 배지·Curry 글자 crop 밖)",
+   "why": "'백 년 전 일본은, 카레가루를 영국에서 들여다 썼는데' — 그 영국 가루 깡통",
+   "url": "https://www.youtube.com/watch?v=hORMD6plycY | https://www.youtube.com/watch?v=kqezia0Uqfg"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/EbwdI6H3Bqs.mp4",
+   "ss": 0.9,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/EbwdI6H3Bqs.mp4",
+     "ss": 0.9,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      560,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_nonocat.mp4",
+     "ss": 0.0,
+     "dur": 1.64,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "S&B 공식 영상 향신료 여러 가지 → 짤 1031 고개 젓는 고양이",
+   "why": "'이것저것 섞은 일본산은, 요리사들한테 무시당했다고' — 거절 짤",
+   "url": "https://www.youtube.com/watch?v=EbwdI6H3Bqs"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Nv7BHxyjBf4.mp4",
+   "ss": 605.3,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Nv7BHxyjBf4.mp4",
+     "ss": 605.3,
+     "dur": 1.6,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      215,
+      424,
+      540
+     ]
+    },
+    {
+     "src": "kqezia0Uqfg_585_615.mp4",
+     "ss": 22.3,
+     "dur": 1.56,
+     "fit": "cover",
+     "src_crop": [
+      250,
+      185,
+      620,
+      820
+     ]
+    }
+   ],
+   "ours": "S&B 공식 채널 창업자 山崎峯次郎 동상(이름표·아바타 crop 밖) → 벌거벗은 세계사 S&B 빨간 깡통 카레가루(배지·カレー 글자 crop 밖)",
+   "why": "'창업자가 몇 년을 실패하며 직접 만들었고'",
+   "url": "https://www.youtube.com/watch?v=Nv7BHxyjBf4 | https://www.youtube.com/watch?v=kqezia0Uqfg"
+  },
+  {
+   "src": "GY99VAfnaBQ.mp4",
+   "ss": 8.72,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "GY99VAfnaBQ.mp4",
+     "ss": 8.72,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "9toZm2hWgLM.mp4",
+     "ss": 15.4,
+     "dur": 1.0,
+     "fit": "cover",
+     "src_crop": [
+      300,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/EbwdI6H3Bqs.mp4",
+     "ss": 46.6,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      100,
+      200,
+      760,
+      680
+     ]
+    }
+   ],
+   "ours": "S&B 공식 CM: 골든카레 상자를 든 손 → 바구니 속 골든카레 상자 → 공식 영상 상자들",
+   "why": "'1966년에 낸 게, 바로 이 골든카레'",
+   "url": "https://www.youtube.com/watch?v=GY99VAfnaBQ | https://www.youtube.com/watch?v=9toZm2hWgLM | https://www.youtube.com/watch?v=EbwdI6H3Bqs"
+  },
+  {
+   "src": "GY99VAfnaBQ.mp4",
+   "ss": 15.85,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "GY99VAfnaBQ.mp4",
+     "ss": 15.85,
+     "dur": 0.85,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      818,
+      1080
+     ]
+    },
+    {
+     "src": "9toZm2hWgLM.mp4",
+     "ss": 27.2,
+     "dur": 2.4,
+     "fit": "cover",
+     "src_crop": [
+      520,
+      0,
+      880,
+      1080
+     ]
+    }
+   ],
+   "ours": "S&B 공식 CM 향신료 더미 → 다른 공식 CM 끝 카드 'そこに、スパイス&ハーブ S&B'",
+   "why": "'2003년부터 상징이 스파이스 앤 허브라' — 지금 회사 문구",
+   "url": "https://www.youtube.com/watch?v=GY99VAfnaBQ | https://www.youtube.com/watch?v=9toZm2hWgLM"
+  },
+  {
+   "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mathlady.mp4",
+   "ss": 0.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_mathlady.mp4",
+     "ss": 0.0,
+     "dur": 1.28,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "짤 1017 계산 안 되는 혼란(매스 레이디)",
+   "why": "'헷갈릴 만했던 거' — 혼란 짤",
+   "url": ""
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/prod_9499099417.jpg",
+   "ss": 0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/prod_9499099417.jpg",
+     "ss": 0,
+     "dur": 2.1,
+     "fit": "cover",
+     "src_crop": [
+      200,
+      1000,
+      2000,
+      2650
+     ],
+     "move": "in"
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/NwIget887_A.mp4",
+     "ss": 33.65,
+     "dur": 1.28,
+     "fit": "cover",
+     "src_crop": [
+      860,
+      30,
+      580,
+      760
+     ]
+    }
+   ],
+   "ours": "쿠팡 9499099417 상품 사진(순한맛 220g, 다가감) → 미국 유튜버가 든 MILD 상자",
+   "why": "B 첫 줄 '쿠팡에서 순한맛을 시켜 봤는데' — 같은 제품",
+   "url": "https://www.coupang.com/vp/products/9499099417 | https://www.youtube.com/watch?v=NwIget887_A"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/C95nqdcDxjA.mp4",
+   "ss": 33.6,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/C95nqdcDxjA.mp4",
+     "ss": 33.6,
+     "dur": 1.9,
+     "fit": "cover",
+     "src_crop": [
+      620,
+      100,
+      700,
+      920
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+     "ss": 102.0,
+     "dur": 1.47,
+     "fit": "cover",
+     "src_crop": [
+      700,
+      0,
+      818,
+      880
+     ]
+    }
+   ],
+   "ours": "S&B 공식: 루 한 조각 든 손 → ochikeron 甘口 루 트레이를 냄비로",
+   "why": "'블록이 칸칸이 나뉘어, 먹을 만큼만'",
+   "url": "https://www.youtube.com/watch?v=C95nqdcDxjA | https://www.youtube.com/watch?v=HpuMaXxJfzA"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+   "ss": 97.2,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+     "ss": 97.2,
+     "dur": 1.5,
+     "fit": "cover",
+     "src_crop": [
+      1000,
+      60,
+      840,
+      850
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+     "ss": 107.3,
+     "dur": 0.71,
+     "fit": "cover",
+     "src_crop": [
+      380,
+      0,
+      1100,
+      860
+     ]
+    },
+    {
+     "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_chefskiss.mp4",
+     "ss": 0.0,
+     "dur": 0.89,
+     "fit": "cover",
+     "kind": "짤"
+    }
+   ],
+   "ours": "'大人も満足のリッチな甘口' 상자 → 녹은 카레 젓기 → 짤 1026 셰프 키스",
+   "why": "'순한맛이라 매운 거 못 먹는 사람도 괜찮더라고요' — 엄지 짤",
+   "url": "https://www.youtube.com/watch?v=HpuMaXxJfzA"
+  },
+  {
+   "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+   "ss": 127.0,
+   "fit": "cover",
+   "cuts": [
+    {
+     "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/HpuMaXxJfzA.mp4",
+     "ss": 127.0,
+     "dur": 1.3,
+     "fit": "cover",
+     "src_crop": [
+      500,
+      0,
+      700,
+      880
+     ]
+    },
+    {
+     "src": "vmTSfRXY5CM.mp4",
+     "ss": 162.4,
+     "dur": 1.77,
+     "fit": "cover",
+     "src_crop": [
+      420,
+      40,
+      520,
+      680
+     ]
+    }
+   ],
+   "ours": "완성 카레라이스 접시 → 상속자들 같은 장면 뒤쪽: 어깨에 카레를 뒤집어쓴 김탄(162.4 — 훅 컷과 15초 떨어짐, SBS 로고 crop 밖)",
+   "why": "끝 줄 '60년째 … 이건 어깨 말고 밥에 부어야죠' — 훅 되받기",
+   "url": "https://www.youtube.com/watch?v=HpuMaXxJfzA | https://www.youtube.com/watch?v=vmTSfRXY5CM"
+  }
+ ],
+ "sfx": [
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 0,
+   "dt": 0.0,
+   "db": 0,
+   "why": "훅 시작 휙"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_19.mp3",
+   "line": 0,
+   "dt": 2.5,
+   "db": -2,
+   "why": "나 홀로 집에 짤 입 벌리는 순간 뜨헉"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_28.mp3",
+   "line": 1,
+   "dt": 1.5,
+   "db": -3,
+   "why": "썬 앤 버드 공개 띵"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_35.mp3",
+   "line": 3,
+   "dt": 1.5,
+   "db": -3,
+   "why": "고개 젓는 고양이 삐삑"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_24.mp3",
+   "line": 6,
+   "dt": 3.25,
+   "db": -2,
+   "why": "혼란 짤 삑끼"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_26.mp3",
+   "line": 7,
+   "dt": 0.0,
+   "db": -2,
+   "why": "뒤 체험(B) 첫 줄 뽀옹"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_27.mp3",
+   "line": 9,
+   "dt": 2.21,
+   "db": -3,
+   "why": "셰프 키스 띵"
+  },
+  {
+   "file": "C:/숏템_칼카피/packs/sfx/sfx_pick/sfx_13.mp3",
+   "line": 10,
+   "dt": 1.3,
+   "db": -3,
+   "why": "상속자들 되받기 휙"
+  }
+ ]
+}
