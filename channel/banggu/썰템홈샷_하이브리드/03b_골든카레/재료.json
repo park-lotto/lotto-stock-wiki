@@ -10,7 +10,7 @@
     {
      "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
      "ss": 17.3,
-     "dur": 1.7
+     "dur": 1.35
     },
     {
      "src": "C:/숏템_칼카피/packs/meme/meme_pack/fm_nickyoung.mp4",
@@ -38,7 +38,7 @@
     {
      "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/Mqo50OEuj1Q.mp4",
      "ss": 27.2,
-     "dur": 1.5,
+     "dur": 1.2,
      "fit": "cover",
      "src_crop": [
       520,
@@ -50,7 +50,7 @@
     {
      "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/hORMD6plycY.mp4",
      "ss": 369.6,
-     "dur": 1.46,
+     "dur": 0.9,
      "fit": "cover",
      "src_crop": [
       0,
@@ -58,21 +58,11 @@
       700,
       900
      ]
-    }
-   ],
-   "ours": "S&B 공식 CM 끝 카드 'そこに、スパイス&ハーブ S&B' → 해 뜬 하늘(테레비도쿄BIZ 공식, 방송 글자 crop 밖)",
-   "why": "'스파이스 앤 허브가 아니라, 썬 앤 버드' — 다들 아는 문구 → 태양",
-   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q | https://www.youtube.com/watch?v=hORMD6plycY"
-  },
-  {
-   "src": "still_hidori_card.mp4",
-   "ss": 0.1,
-   "fit": "cover",
-   "cuts": [
+    },
     {
      "src": "still_hidori_card.mp4",
      "ss": 0.1,
-     "dur": 1.18,
+     "dur": 1.5,
      "fit": "cover",
      "src_crop": [
       60,
@@ -82,9 +72,9 @@
      ]
     }
    ],
-   "ours": "S&B 공식 사사 히도리표 상표 그림(태양+새, 1930) — 공식 페이지 이미지를 밝은 바탕에 키워 천천히 다가가는 2.5초 영상으로",
-   "why": "'태양과 새의 머리글자' — 그 태양과 새 상표",
-   "url": "https://www.sbfoods.co.jp/company/profile/history/hidori.html"
+   "ours": "S&B 공식 CM 끝 카드 'そこに、スパイス&ハーブ S&B' → 해 뜬 하늘(테레비도쿄BIZ 공식, 방송 글자 crop 밖)",
+   "why": "'근데 원래는 썬 앤 버드, 태양과 새의 머리글자였다고' — 지금 문구(스파이스&허브) → 태양 → 그 태양과 새 상표(10-24 1줄이 컷 하나로 줄어 두 컷을 합침)",
+   "url": "https://www.youtube.com/watch?v=Mqo50OEuj1Q | https://www.youtube.com/watch?v=hORMD6plycY"
   },
   {
    "src": "C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/03_골든카레/src/hORMD6plycY.mp4",
