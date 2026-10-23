@@ -1,0 +1,183 @@
+{
+ "topic": "PLAUD NotePin — 바람난 배우자 잡는 녹음기(iZYREC)로 시작한 회사가 심천에서 본 녹음기 천지 → AI 카드 녹음기(폰 뒤) 선주문 → 목걸이 노트핀 → 투자 없이 흑자 AI 회사 → 뒤 체험: 쿠팡 PLAUD NotePin 8776908105",
+ "product": {
+  "name": "PLAUD NotePin 플라우드 노트핀 AI 녹음기",
+  "coupang": "8776908105",
+  "model": "NotePin(1세대, 2024) — 노트핀 S 아님(옛 02 근거 그대로)"
+ },
+ "points_from": "포인트.md",
+ "ing": {
+  "line": 0,
+  "fact": "fb1",
+  "why": "누구나 'AI 회의 녹음기'로 아는 플라우드의 첫 제품이 '바람난 배우자 잡는 용' 녹음기였다(Forbes 2025-09-03) — 다른 채널 댓글 1위 축 '폰에 있는 기능 아님?'(51·50·Forbes 18)·'꽃뱀 무고 방어용'(43)이 반응한 '녹음기 = 증거' 축과 엮임"
+ },
+ "hook": [
+  "바람난 배우자 잡던 녹음기,",
+  "지금은 목걸이로 대박?"
+ ],
+ "post": "바람난 배우자 잡던 녹음기 회사, 지금은 목걸이로 대박",
+ "tempo": null,
+ "facts": {
+  "fb1": {
+   "text": "Forbes(Australia, 2025-09-03 Iain Martin) 'How an AI notetaker became one of the few profitable AI startups': Xu 가 처음엔 'a tiny app-controlled recorder marketed for catching cheating spouses, named Izyrec' 에 매달렸다 · 'On long trips to Shenzhen … he spotted an opportunity' · 'Local factories were churning out a baffling array of pens, bracelets and pendants with smart recorders' · 2023 킥스타터 'the Note, a credit card-sized recording device that could stick to the back of a smartphone' — 'It netted over $1 million in pre-orders' · 'bootstrapped' · 'without handouts from venture capitalists' · 'it's profitable' · 'Since launching in 2023, Xu has sold over 1 million such devices'",
+   "url": "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/"
+  },
+  "hk1": {
+   "text": "Hackster.io 'A Note-Worthy Voice Recorder': 'Developed by iZYREC, the PLAUD NOTE is a credit card-sized, AI-powered voice recorder'",
+   "url": "https://www.hackster.io/news/a-note-worthy-voice-recorder-1c15b8c6abae"
+  },
+  "kr1": {
+   "text": "켄차커머스 'iZYREC 이지렉 블루투스 녹음기 공식 영상'(국내 이름 표기 '이지렉')",
+   "url": "https://www.youtube.com/watch?v=CGtwWyAHJoE"
+  },
+  "f3": {
+   "text": "36kr 2025-09-08(원문 직면AI): 2024년 Plaud 가 가슴에 다는 브로치형 미니 AI 녹음기 Note Pin 을 냈다",
+   "url": "https://www.36kr.com/p/3454958882560392"
+  },
+  "f4": {
+   "text": "PLAUD 공식 NotePin 페이지(회사 주장): One long-press to record · Speaker labels · can be worn as a necklace, wristband, clip, or pin",
+   "url": "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+  },
+  "f6": {
+   "text": "ASCII.jp 2026-05-08 PLAUD株式会社 발표: 「Plaud」シリーズの全世界累計ユーザー数が、2026年4月末時点で200万人を突破",
+   "url": "https://ascii.jp/elem/000/004/400/4400446/"
+  },
+  "f7": {
+   "text": "쿠팡 상품 8776908105 'PLAUD NotePin 플라우드 노트핀 AI 녹음기'(옛 02 파트너스 API 확인) — 화면 B 컷은 같은 1세대 NotePin",
+   "url": "https://www.coupang.com/vp/products/8776908105"
+  }
+ },
+ "final": {
+  "lines": [
+   {
+    "fn": "잉 훅(드라마 바람 장면+비하인드)",
+    "seg": "A",
+    "text": "바람난 배우자 잡는 녹음기 팔던 회사가, 지금은 목걸이로 대박이라는데",
+    "facts": [
+     "fb1",
+     "f6"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/"
+    ]
+   },
+   {
+    "fn": "몰랐던 배경(첫 제품)",
+    "seg": "A",
+    "text": "첫 제품은 이지렉, 앱으로 켜는 아주 작은 녹음기였다고",
+    "facts": [
+     "fb1",
+     "kr1"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/",
+     "https://www.youtube.com/watch?v=CGtwWyAHJoE"
+    ]
+   },
+   {
+    "fn": "전환(눈여겨본 것)",
+    "seg": "A",
+    "text": "창업자가 심천 공장을 돌아 보니, 펜에도 팔찌에도, 녹음기가 달려 있었는데",
+    "facts": [
+     "fb1"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/"
+    ]
+   },
+   {
+    "fn": "해결",
+    "seg": "A",
+    "text": "여기에 인공지능을 붙여서, 폰 뒤에 착 붙는 녹음기를 냈더니",
+    "facts": [
+     "fb1",
+     "hk1"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/",
+     "https://www.hackster.io/news/a-note-worthy-voice-recorder-1c15b8c6abae"
+    ]
+   },
+   {
+    "fn": "반전",
+    "seg": "A",
+    "text": "크라우드펀딩에서만, 선주문이 쏟아졌다고 함",
+    "facts": [
+     "fb1"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/"
+    ]
+   },
+   {
+    "fn": "제품 공개",
+    "seg": "A",
+    "text": "그다음 작품이, 목에 거는 녹음기 노트핀이라고",
+    "facts": [
+     "f3",
+     "f4"
+    ],
+    "sources": [
+     "https://www.36kr.com/p/3454958882560392",
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "쐐기",
+    "seg": "A",
+    "text": "투자도 안 받고, 흑자까지 냈다는 얘기",
+    "facts": [
+     "fb1"
+    ],
+    "sources": [
+     "https://www.forbes.com.au/news/innovation/how-an-ai-notetaker-became-one-of-the-few-profitable-ai-startups/"
+    ]
+   },
+   {
+    "fn": "B 연결(댓글 축 '폰에 있는 기능 아님?')",
+    "seg": "B",
+    "text": "폰으로 녹음하면 되지 싶었는데, 쿠팡에서 하나 들여 보니까",
+    "facts": [
+     "f7"
+    ],
+    "sources": [
+     "https://www.coupang.com/vp/products/8776908105"
+    ]
+   },
+   {
+    "fn": "B 좋은 점 ①",
+    "seg": "B",
+    "text": "얘기하다 폰 꺼낼 필요 없이, 꾹 누르면 녹음되고",
+    "facts": [
+     "f4"
+    ],
+    "sources": [
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "B 좋은 점 ②",
+    "seg": "B",
+    "text": "누가 한 말인지까지, 나눠서 정리해 주더라고요",
+    "facts": [
+     "f4"
+    ],
+    "sources": [
+     "https://www.plaud.ai/pages/plaud-notepin-wearable-ai-note-taker"
+    ]
+   },
+   {
+    "fn": "B 끝(사회 반응 + 훅 되받기)",
+    "seg": "B",
+    "text": "배우자 잡던 녹음기 회사가, 이젠 이백만 명이 쓰는 회의 녹음기라니",
+    "facts": [
+     "fb1",
+     "f6"
+    ],
+    "sources": [
+     "https://ascii.jp/elem/000/004/400/4400446/"
+    ]
+   }
+  ]
+ }
+}
