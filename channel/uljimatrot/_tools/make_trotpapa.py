@@ -34,7 +34,12 @@ W, H, FPS = 1080, 1920, 30
 BG = (0, 0, 0) if COPY else (18, 18, 18)       # 원본 순검정 / 우리 spotify #121212
 WIN_Y, WIN_H = 440, 860
 SUB_Y = 1240                                  # 자막 줄 가운데
-CPS = 6.7                                     # 벤치 나레 6.1~7.5자/초 중앙
+SENIOR = "--senior" in sys.argv                  # 시니어 업그레이드(원본 틀 + 큰 자막·금색 핵심어·가격 카드·느린 말, 10-23 사장님)
+# 시니어 판 토큰 — awesome-design-md bugatti(검정 캔버스·#141414 카드·#3a3a3a 머리선·흰 글자, 장식 없음 = '조용한 고급')
+#   강조색은 bugatti 에 없어 하나만 더한다: 금색 #F2C94C(검정 위 대비 높음 — 시니어 가독)
+SR = {"card": (20, 20, 20, 235), "line": (58, 58, 58, 255), "gold": (242, 201, 76), "cap_scale": 1.22,
+      "fade": 0.25, "rise": 18, "hold": 2.8, "cps": 5.8, "arrow_scale": 1.4, "bob_period": 1.6, "bob_amp": 7}
+CPS = SR["cps"] if SENIOR else 6.7            # 벤치 나레 6.1~7.5자/초 중앙 / 시니어 5.8
 YELLOW = (255, 212, 59)
 # 원본 판 좌표 — 눈대중 금지. 벤치 줄판독(channel/uljimatrot/줄판독/<id>.json, 픽셀 실측)에서 load_spec 이 채운다.
 SPEC = {"title_band": [150, 292], "title_y": [[178, 265], [325, 409]], "cap": [1201, 1279], "cta_y": [918, 996],
@@ -320,7 +325,8 @@ def brand_chip(cfg, out: Path):
 def cursor_icon(out: Path):
     if COPY:                                      # 원본 오른쪽 아래 아이콘 = 빨강·흰 짧은 화살표 ↙ (x840~973 y1256~1440)
         x0, y0, x1, y1 = SPEC["icon"] or [0, 0, 8, 8]
-        return frame_png(out, chunky_arrow(120, 135, 30, 80).resize((x1 - x0, y1 - y0), Image.LANCZOS))
+        k = SR["arrow_scale"] if SENIOR else 1.0
+        return frame_png(out, chunky_arrow(120, 135, 30, 80).resize((int((x1 - x0) * k), int((y1 - y0) * k)), Image.LANCZOS))
     return cursor_icon_ours(out)
 
 
@@ -472,6 +478,24 @@ def arrow_img_ours():
     return _ARROW
 
 
+def price_card(lines):
+    """시니어 공개 카드: #141414 둥근 카드 + #3a3a3a 머리선 · 위 줄 흰 글자 / 아래 줄(가격) 금색 큰 글자."""
+    top = ink_crop(fit_text([(lines[0], (255, 255, 255))], 62, 0, glyph=True))
+    bot = ink_crop(fit_text([(lines[-1], SR["gold"])], 112, 0, glyph=True))
+    pw, gap, ph = 64, 34, 52
+    cw = max(top.width, bot.width) + pw * 2
+    chh = ph + top.height + gap + bot.height + ph
+    im = Image.new("RGBA", (cw, chh), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, cw - 1, chh - 1], radius=28, fill=SR["card"], outline=SR["line"], width=2)
+    d.line([(pw, ph + top.height + gap // 2), (cw - pw, ph + top.height + gap // 2)], fill=SR["line"], width=2)
+    im.alpha_composite(top, ((cw - top.width) // 2, ph))
+    im.alpha_composite(bot, ((cw - bot.width) // 2, ph + top.height + gap))
+    if im.width > 960:                            # 화면 폭 1080 안에 양옆 60px 여백(카드가 화면 끝에 붙으면 싸 보인다)
+        im = im.resize((960, int(im.height * 960 / im.width)), Image.LANCZOS)
+    return im
+
+
 def reveal_frame(cfg, wd: Path) -> Path:
     """공개 카드 바탕: 제품 편 = 흰 바탕 + 제품 누끼 / 그 밖 = 원본 정지 장면."""
     src = cfg["src"]
@@ -501,23 +525,23 @@ def make(cfg_path: Path, allow_tts=True):
         mp = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--measure=")), None)
         if mp:
             load_measure(mp)
-    wd = WORK / (cfg["slug"] + ("_copy" if COPY else ""))
+    wd = WORK / (cfg["slug"] + ("_senior" if SENIOR else ("_copy" if COPY else "")))
     wd.mkdir(parents=True, exist_ok=True)
     segs = [("hook", cfg["hook"]["tts"])] + [(f"l{i}", l["tts"]) for i, l in enumerate(cfg["lines"])] + [("cta", cfg["cta"]["tts"])]
     raw = {k: tts(t, allow_tts) for k, t in segs}
     chars = sum(len(t.replace(" ", "")) for _, t in segs)
     rawd = sum(tight(raw[k], wd / f"n0_{k}.wav", 1.0) for k, _ in segs)     # 앞뒤 무음 뺀 실제 말 길이
-    tempo = max(0.85, min(1.35, rawd / (chars / CPS)))   # 벤치 말속도(6.7자/초)에 맞춤
+    tempo = max(0.8 if SENIOR else 0.85, min(1.35, rawd / (chars / CPS)))   # 시니어: 0.8배까지(atempo 는 음높이 유지)   # 벤치 말속도(6.7자/초)에 맞춤
     tl, t, auds = [], 0.0, []
     for k, txt in segs:
         a = wd / f"n_{k}.wav"
         d = tight(raw[k], a, tempo)
         tl.append({"k": k, "text": txt, "t0": t, "t1": t + d})
         auds.append((a, t))
-        t += d + 0.12
+        t += d + (0.3 if SENIOR else 0.12)          # 시니어: 문장 사이 0.3초 숨(따라 읽을 틈)
     hook_end = tl[0]["t1"] + 0.15
     reveal_t0 = tl[-1]["t1"] + 0.25
-    total = reveal_t0 + 1.4
+    total = reveal_t0 + (SR["hold"] if SENIOR else 1.4)
 
     # 창 영상: 줄마다 장면을 나눠 이어 붙임(훅 뒤부터 공개 전까지)
     parts = []
@@ -553,13 +577,15 @@ def make(cfg_path: Path, allow_tts=True):
     ci = Image.open(chip)
     cx = 80 if COPY else (W - ci.width) // 2
     ov.append((chip, cx, SPEC["src_y"][0] if COPY else 1500 - ci.height // 2, hook_end, total, False))
-    anim = not COPY                                   # 원본 = 바로 뜸(instant 130/144)
+    anim = (not COPY) or SENIOR                        # 원본 = 바로 뜸(instant 130/144) / 시니어 = 0.25초 부드럽게
     subs = []
     maxc = 10
     if COPY and SPEC.get("line_w"):                   # 원본 줄 폭 중앙 ÷ 우리 글자 한 자 폭(같은 높이로 그려 잰다)
         probe_im = ink_crop(fit_text([("가나다라마바사아", (255, 255, 255))], int(SPEC.get("cap_h") or (SPEC["cap"][1] - SPEC["cap"][0])), SPEC["outline"], glyph=bool(SPEC.get("cap_h"))))
         # 띄어쓰기 단위로 끊으면 조각 평균이 상한보다 짧다(실측 ÷1.0→471/666 · ÷0.7→754/666·933/758) → 상한 = 목표 글자 수 ÷ 0.82
         maxc = max(6, round(SPEC["line_w"] / (probe_im.width / 8) / 0.82))
+        if SENIOR:                                    # 글자가 1.22배 → 한 줄 글자 수를 줄여 화면 폭(960px) 안에
+            maxc = max(5, min(maxc, round(960 / (probe_im.width / 8 * SR["cap_scale"]))))
     for x, line in zip(tl[1:-1], cfg["lines"]):
         cs = chunks(x["text"], maxc)
         n = sum(len(c.replace(" ", "")) for c in cs)
@@ -571,7 +597,11 @@ def make(cfg_path: Path, allow_tts=True):
     cta = tl[-1]
     for i, (c, a, b, key) in enumerate(subs if SUBS else []):
         if COPY:
-            if SPEC.get("cap_h"):                        # 흰 글자 몸 높이 = 엔진 실측(cap.size_px), 잉크 상자를 띠 가운데에
+            if SENIOR:                                   # 큼직하게(원본 ×1.22) + 핵심어(가격·이름) 금색
+                c = c.rstrip(".")                         # 자막 끝 마침표는 뺀다(큰 글자에서 점만 덩그러니 남는다)
+                parts = [(t, SR["gold"] if col == YELLOW else col) for t, col in split_key(c, key if key and key in c else None)]
+                im = ink_crop(fit_text(parts, int((SPEC.get("cap_h") or 80) * SR["cap_scale"]), SPEC["outline"] + 2, glyph=True))
+            elif SPEC.get("cap_h"):                      # 흰 글자 몸 높이 = 엔진 실측(cap.size_px), 잉크 상자를 띠 가운데에
                 im = ink_crop(fit_text([(c, (255, 255, 255))], int(SPEC["cap_h"]), SPEC["outline"], glyph=True))
             else:
                 im = fit_text([(c, (255, 255, 255))], SPEC["cap"][1] - SPEC["cap"][0], SPEC["outline"])
@@ -585,7 +615,11 @@ def make(cfg_path: Path, allow_tts=True):
         p = frame_png(wd / f"cta{i}.png", im)
         yy = SPEC["cta_y"][0] + i * int(ch * 1.25) if COPY else 1040 + i * 115 - im.height // 2
         ov.append((p, (W - im.width) // 2, yy, cta["t0"], reveal_t0, anim))
-    for i, line in enumerate(cfg["reveal"]["lines"] if SUBS else []):
+    if SENIOR and SUBS:
+        card = price_card(cfg["reveal"]["lines"])
+        p = frame_png(wd / "rev_card.png", card)
+        ov.append((p, (W - card.width) // 2, WIN_Y + WIN_H - card.height - 40, reveal_t0, total, True))
+    for i, line in enumerate(cfg["reveal"]["lines"] if SUBS and not SENIOR else []):
         im = text_img([(line, (255, 255, 255))], 92) if COPY else text_img(split_key(line, None) if i == 0 else [(line, YELLOW)], 92)
         p = frame_png(wd / f"rev{i}.png", im)
         ov.append((p, (W - im.width) // 2, 1080 + i * 120 - im.height // 2, reveal_t0, total, anim))
@@ -601,8 +635,10 @@ def make(cfg_path: Path, allow_tts=True):
     for p, x, y, a, b, anim in ov:
         ins += ["-loop", "1", "-t", f"{total:.3f}", "-i", p]
         if anim:
-            g.append(f"[{idx}]format=rgba,fade=in:st={a:.3f}:d=0.12:alpha=1[o{idx}]")
-            ye = f"{y}+12*max(0\\,1-(t-{a:.3f})/0.12)"
+            fd, rs = (SR["fade"], SR["rise"]) if SENIOR else (0.12, 12)
+            g.append(f"[{idx}]format=rgba,fade=in:st={a:.3f}:d={fd}:alpha=1[o{idx}]")
+            # ease-out(세제곱): 처음 빠르게 올라와 끝에서 천천히 멈춘다(emil: 등장 = ease-out)
+            ye = f"{y}+{rs}*pow(max(0\\,1-(t-{a:.3f})/{fd})\\,3)"
         else:
             g.append(f"[{idx}]format=rgba[o{idx}]")
             ye = str(y)
@@ -610,7 +646,7 @@ def make(cfg_path: Path, allow_tts=True):
         last = f"v{idx}"
         idx += 1
     ins += ["-loop", "1", "-t", f"{total:.3f}", "-i", cur]
-    g.append(f"[{last}][{idx}]overlay=x={(SPEC['icon'] or [0, 0])[0] if COPY else 900}:y='{(SPEC['icon'] or [0, 0])[1] if COPY else 1330}+{SPEC['icon_amp'] if COPY else 6}*sin(2*PI*t/{SPEC['icon_period'] if COPY else 0.7})':enable='{"0" if COPY and not SPEC["icon"] else f"between(t,{hook_end:.3f},{total:.3f})"}'[vout]")
+    g.append(f"[{last}][{idx}]overlay=x={(SPEC['icon'] or [0, 0])[0] if COPY else 900}:y='{(SPEC['icon'] or [0, 0])[1] if COPY else 1330}+{(SR['bob_amp'] if SENIOR else SPEC['icon_amp']) if COPY else 6}*sin(2*PI*t/{(SR['bob_period'] if SENIOR else SPEC['icon_period']) if COPY else 0.7})':enable='{"0" if COPY and not SPEC["icon"] else f"between(t,{hook_end:.3f},{(reveal_t0 if SENIOR else total):.3f})"}'[vout]")
     idx += 1
     # 소리: 나레 자리 맞춰 + BGM -24dB 깔기(나레 있을 때 더 낮춤)
     adel = []
@@ -625,7 +661,7 @@ def make(cfg_path: Path, allow_tts=True):
     g.append(f"[{bg}]atrim=0:{total:.3f},volume=0.10,aformat=channel_layouts=stereo[bgm]")
     g.append("[narr]asplit[n1][n2];[bgm][n2]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[duck]")
     g.append(f"[n1][duck]amix=inputs=2:normalize=0:duration=first,apad,atrim=0:{total:.3f},loudnorm=I={SPEC.get('lufs', -14) if COPY else -14}:TP=-1.0:LRA=11[aout]")
-    out = wd / f"트롯파파_{cfg['slug']}{'_원본판' if COPY else ''}{'' if SUBS else '_바탕'}.mp4"
+    out = wd / f"트롯파파_{cfg['slug']}{'_시니어판' if SENIOR else ('_원본판' if COPY else '')}{'' if SUBS else '_바탕'}.mp4"
     gfile = wd / "graph.txt"
     gfile.write_text(";\n".join(g), encoding="utf-8")
     run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex_script", gfile, "-map", "[vout]", "-map", "[aout]",
