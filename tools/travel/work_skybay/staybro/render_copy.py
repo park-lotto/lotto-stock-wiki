@@ -46,16 +46,16 @@ CHUNKS = [
 # 문장마다 컷 = [(사진, 가로 중심 0~1)]. 자르는 자리는 cut_points 가 자막 조각 경계 중 원본 컷 길이(1.3초)에 가장 가깝게 고른다.
 # 원본 이야기 = 걸어 들어가는 순서(입구→안 시설→'특히' 밖의 하이라이트→'~지만' 반전→상황 권유). 사진도 그 순서로 놓는다.
 # 마지막 컷 = 썸네일 사진(원본도 첫 0.1초 썸네일 건물이 끝 컷으로 다시 나온다)
-SHOTS = [
-    [("11", 0.38), ("14", 0.66)],
-    [("09", 0.50), ("06", 0.55)],
-    [("07", 0.70), ("08", 0.50)],
-    [("00", 0.36), ("05", 0.45), ("04", 0.72)],
-    [("04", 0.30), ("05", 0.80)],
-    [("18", 0.62), ("10", 0.42)],
+SHOTS = [   # 사진 = 여기어때(photos/) + 트립닷컴 공식(photos_trip/, 출처 sources.json) — 한 사이트만 보지 않는다
+    [("photos_trip/t00", 0.33), ("photos_trip/t14", 0.53)],
+    [("photos_trip/t19", 0.45), ("photos_trip/t30", 0.62)],
+    [("photos_trip/t01", 0.62), ("08", 0.50)],
+    [("photos_trip/t13", 0.48), ("photos_trip/t25", 0.50), ("photos_trip/t27", 0.30)],
+    [("photos_trip/t22", 0.65), ("photos_trip/t29", 0.48)],
+    [("photos_trip/t03", 0.50), ("photos_trip/t15", 0.45)],
 ]
 CUT_S = 1.3
-THUMB = ("10", 0.42, "강릉 평점 9.1", "오션뷰호텔")
+THUMB = ("photos_trip/t15", 0.45, "강릉 평점 9.1", "오션뷰호텔")
 
 
 # ---------- 깊이 ----------
@@ -78,7 +78,8 @@ def depth(img):
 
 def vertical(name, cx):
     """가로 사진 → 9:16 세로(높이 꽉, 가운데 cx). 원본처럼 색을 진하게(채도·대비) + 1.6배 확대 흐림을 선명화로 덮는다."""
-    im = cv2.imdecode(np.fromfile(str(PH / (name + ".jpg")), np.uint8), cv2.IMREAD_COLOR)
+    src = PH.parent / (name + ".jpg") if "/" in name else PH / (name + ".jpg")    # "photos_trip/t00" = 트립닷컴 공식 사진
+    im = cv2.imdecode(np.fromfile(str(src), np.uint8), cv2.IMREAD_COLOR)
     h, w = im.shape[:2]
     cw = int(round(h * 9 / 16))
     x0 = int(np.clip(cx * w - cw / 2, 0, w - cw))
