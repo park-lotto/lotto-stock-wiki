@@ -13,6 +13,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+
+import numpy as np
 import re
 import subprocess
 import sys
@@ -401,13 +403,39 @@ def cutout(img: Path, out: Path, box=None, model="bria-rmbg"):
     return im.crop(bb), bb, crop.size
 
 
+HOOK_TOP = 350                                   # 훅 누끼 위 끝(벤치 실측 = 제목 띠 바로 아래)
+_HOOK_ARROW = None
+
+
+def hook_arrow():
+    """훅 굵은 화살표(chunky_arrow 135° = 왼쪽 아래 가리킴)와 그 끝점 좌표."""
+    global _HOOK_ARROW
+    if _HOOK_ARROW is None:
+        im = chunky_arrow(190, 135, 38, 104)
+        a = np.array(im.getchannel("A")) > 128
+        ys, xs = np.nonzero(a)
+        i = int(np.argmax(ys - xs))                        # 왼쪽 아래로 가장 멀리 나간 점 = 끝
+        _HOOK_ARROW = (im, (int(xs[i]), int(ys[i])))
+    return _HOOK_ARROW
+
+
+HOOK_ZOOM_PER_S = 0.033                          # 훅 누끼 확대 속도(벤치 실측 초당 3.3%)
+
+
 def hook_frames(cfg, d, wd: Path):
     """훅: 근흑 바탕 + 누끼 인물(원본 장면) 천천히 줌 + (제품 누끼에 빨간 원을 그리는 효과 | 빨간 화살표)."""
     src = cfg["src"]
     hb = cfg["hook"].get("box", [0, 0, 1, 0.82])
     people, bb, csz = cutout(grab(src, cfg["hook"]["frame"], wd / "hook_src.png"), wd / "hook_cut.png", hb, "u2net_human_seg")
-    sc = min(1180 / people.width, 1500 / people.height) if COPY else min(1040 / people.width, 1020 / people.height)
+    # 벤치 실측(10-23, 10편 중 9편): 누끼가 화면 폭 전체 · 제목 바로 아래(y≈350)부터 화면 아래 끝까지 = 면적 약 70%.
+    #   예전 '안에 맞추기'(min) 는 넓은 누끼가 작게 떠서 위가 텅 비었다 → 꽉 채우기(max), 넘치는 몸은 아래로 잘린다
+    sc = max(W / people.width, (H - HOOK_TOP) / people.height)
     people = people.resize((int(people.width * sc), int(people.height * sc)), Image.LANCZOS)
+    tgt = None
+    if cfg["hook"].get("target"):                       # 화살표가 가리킬 물건(원본 비율 좌표) → 누끼 그림 좌표
+        tx, ty = cfg["hook"]["target"]
+        fw, fh = csz[0] / (hb[2] - hb[0]), csz[1] / (hb[3] - hb[1])
+        tgt = (((tx - hb[0]) * fw - bb[0]) * sc, ((ty - hb[1]) * fh - bb[1]) * sc)
     circ = None
     if cfg["hook"].get("circle"):                       # 원본 비율 좌표 → 누끼 그림 좌표
         c = cfg["hook"]["circle"]
@@ -419,10 +447,13 @@ def hook_frames(cfg, d, wd: Path):
     fd.mkdir(exist_ok=True)
     for i in range(n):
         t = i / FPS
-        z = 1.0 + (SPEC["hook_zoom"] if COPY else 0.07) * (t / max(d, 0.1))
+        # 벤치 실측(10-23, 앞 4.4초 배율 맞추기): tv-hFwrvEc4 1.130·QReZRnEVz0o 1.100(3초)·JlgdcIk9Gd0 1.215 / 4초
+        #   = 초당 3.3% 등속, 가운데 기준 확대. 예전엔 원본판 hook_zoom=0 이라 훅 6초가 완전히 멈춰 있었다(프레임 차 0.0)
+        z = 1.0 + HOOK_ZOOM_PER_S * t
         fr = Image.new("RGBA", (W, H), BG + (255,))
         pi = people.resize((int(people.width * z), int(people.height * z)), Image.BILINEAR)
-        ox, oy = (W - pi.width) // 2, (H if COPY else 1500) - pi.height     # 원본 훅 = 화면 아래 끝까지 크게
+        cx0, cy0 = W / 2, HOOK_TOP + people.height / 2                  # z=1 일 때 위 끝 = 제목 바로 아래 — 그 가운데를 기준으로 키운다
+        ox, oy = int(cx0 - pi.width / 2), int(cy0 - pi.height / 2)
         fr.alpha_composite(pi, (ox, oy))
         if circ is not None:
             per = SPEC["circle_period"] if COPY else None
@@ -434,6 +465,19 @@ def hook_frames(cfg, d, wd: Path):
                 pad = 40
                 ImageDraw.Draw(fr).arc([box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad], start=-90, end=-90 + 360 * k,
                                        fill=(244, 41, 24, 255), width=11 if COPY else 16)
+        if tgt is not None:                              # 굵은 화살표(벤치 #FF1A31 흰 테) — 끝이 물건을 따라간다(확대 반영)
+            ar, (tipx, tipy) = hook_arrow()
+            px, py_ = ox + tgt[0] * z, oy + tgt[1] * z
+            k = min(1.0, max(0.0, (t - 0.3) / 0.25))              # 0.3초에 등장 · 0.25초 ease-out · 0.6배에서 시작(0 에서 시작 금지)
+            if k > 0:
+                e = 1 - (1 - k) ** 3
+                s_ = 0.6 + 0.4 * e
+                bob = 16 * (0.5 - 0.5 * math.cos(2 * math.pi * max(0.0, t - 0.55) / 0.8))   # 물건 쪽으로 콕콕(0.8초 주기)
+                a2 = ar.resize((int(ar.width * s_), int(ar.height * s_)), Image.BILINEAR)
+                if e < 1:
+                    a2.putalpha(a2.getchannel("A").point(lambda v: int(v * e)))
+                d_ = (16 - bob) / math.sqrt(2) + 6                # 끝이 물건 오른쪽 위에서 물건 쪽(왼쪽 아래)으로 찌른다
+                fr.alpha_composite(a2, (int(px - tipx * s_ + d_), int(py_ - tipy * s_ - d_)))
         elif cfg["hook"].get("arrow") and (SPEC["hook_arrow"] or not COPY):
             ax, ay = cfg["hook"].get("arrow_copy", cfg["hook"]["arrow"]) if COPY else cfg["hook"]["arrow"]
             bob = 14 * math.sin(2 * math.pi * t / 0.8)
