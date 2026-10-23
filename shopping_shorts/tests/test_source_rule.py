@@ -314,3 +314,28 @@ def test_every_stop_has_fix_line():
     src = (Path(__file__).resolve().parents[2] / "tools/calcopy/hybrid/flow.py").read_text(encoding="utf-8")
     bad = re.findall(r'_Stop\(\s*"[^"]*"\s*\)|_Stop\(\s*"[^"]*"\s*,\s*""', src)
     assert not bad, bad
+
+
+def test_spoken_only_product_uses_given_product():
+    """원본에 제품이 말로만 나오면 고객이 정한 쿠팡 제품으로(사장님 10-23 함익병 기미크림 — '실제 올린 채널의 상품을 참고') · 정한 게 없으면 그대로 멈춤.
+    정한 제품은 연예인 것과 같다고 확인된 게 아니라 alt 규칙(원음 뒤 연예인 장면 금지)에 given 말투(연예인이 썼다고 말하지 않음)."""
+    import pytest
+    from tools.calcopy.hybrid import flow
+    st = flow.start("https://youtu.be/Ei0UAhOL6p0", "kitchit", "s1", "메디필 멜라논 엑스 크림 https://www.coupang.com/vp/products/7694655931?itemId=2")
+    st.update({"origin": {"files": [{"name": "o.mp4", "dur": 1200}]}, "read": {"product_words": ["기미크림"]}, "bench": {}, "_wide_product": True})
+    assert flow.ph_product_cands(st, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {}) == {"goto": "given"}
+    r = flow.ph_given(st, {}, {}, {})
+    assert r["do"][0] == {"id": "coupang", "cmd": "coupang", "queries": ["메디필 멜라논 엑스 크림"]}
+    r = flow.ph_given_same(st, {"coupang": {"items": [{"product_id": "7694655931", "image": "https://x/1.jpg", "name": "메디필 멜라논 엑스 크림, 30ml, 2개"}]}}, {}, {})
+    assert r["do"][0]["cmd"] == "cand_sheet"
+    rv = flow.ph_cand_look(st, {"csheet": {"file": "look/cand_sheet.jpg"}}, {}, {})["review"][0]
+    assert rv["id"] == "given_same" and "7694655931" in rv["ask"]
+    assert flow.ph_product_done(st, {}, {"given_same": {"product_id": "7694655931", "name": "메디필 멜라논 엑스 크림", "category": "화장품"}}, {}) == {"goto": "reviews"}
+    assert st["product"]["mode"] == "alt" and st["product"]["given"] is True
+    with pytest.raises(flow._Stop):                                         # 정한 제품이 후보에 없으면 멈춤(대체로 넘어가지 않는다)
+        flow.ph_product_done(st, {}, {"given_same": {"product_id": ""}}, {})
+    st2 = flow.start("u", "kitchit", "s2")
+    st2.update({"origin": {"files": [{"name": "o.mp4", "dur": 1200}]}, "read": {}, "bench": {}, "_wide_product": True})
+    with pytest.raises(flow._Stop):
+        flow.ph_product_cands(st2, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {})
+    assert "given" in RU.PRODUCT_TALK and "추천했다고 말하지" in RU.PRODUCT_TALK["given"]
