@@ -135,8 +135,9 @@ def heard_same(job, ep):
             break
     if not w:
         raise RuntimeError("다시 받아쓰기 실패: %s" % getattr(asr_check._LAST, "error", "?"))
-    heard = re.sub(r"[\s\.,\?!]", "", "".join(x.get("word", x.get("w", "")) for x in w))
-    want = re.sub(r"[\s\.,\?!]", "", "".join(l["text"] for l in ep["lines"]))
+    from shopping_shorts.narration_naturalize import normalize_reading      # 양쪽 다 읽기말로('4개'·'네 개'를 같게 — asr_check 와 같은 정본)
+    heard = re.sub(r"[\s\.,\?!]", "", normalize_reading(" ".join(x.get("word", x.get("w", "")) for x in w))[0])
+    want = re.sub(r"[\s\.,\?!]", "", normalize_reading(" ".join(l["text"] for l in ep["lines"]))[0])
     import difflib
     allx = ["%s→%s" % (want[a:b], heard[c:d]) for op, a, b, c, d in difflib.SequenceMatcher(None, want, heard).get_opcodes() if op != "equal"]
     diffs = [x for x in allx if x not in ASR_SAME]
@@ -145,6 +146,32 @@ def heard_same(job, ep):
     small = all(max(len(x.split("→")[0]), len(x.split("→")[1])) <= 1 for x in diffs)
     note = ", ".join(diffs) + ((" / " if diffs else "") + "발음 같음: " + ", ".join(same_sound) if same_sound else "")
     return (not diffs) or (len(diffs) <= 2 and small), note
+
+
+def _stutter(out, cuts):
+    """AI 영상 컷 안에서 앞 장과 거의 같은 프레임(=멈칫) 수. 0 이어야 한다(사장님 2026-10-23 '11초에 계곡물 흔들리고' —
+    24fps Veo 를 30fps 로 가까운 장만 골라 옮겨 5장마다 한 번씩 멈췄다). 컷 경계 0.05초는 뺀다."""
+    import cv2
+    import numpy as np
+    cap = cv2.VideoCapture(str(out))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    bad = 0
+    live = [c for c in cuts if len(c) > 4 and c[4]]
+    for a, b, *_ in live:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int((a + 0.05) * fps))
+        fr = []
+        for _ in range(int((b - a - 0.1) * fps)):
+            ok, f = cap.read()
+            if not ok:
+                break
+            fr.append(cv2.resize(cv2.cvtColor(f, cv2.COLOR_BGR2GRAY), (270, 480)).astype(np.float32))
+        d = [float(np.abs(x - y).mean()) for x, y in zip(fr, fr[1:])]
+        if d:
+            m = float(np.median(d))
+            bad += sum(1 for x in d if x < 0.15 * m)
+    if not live:
+        return "AI 영상 컷 없음", "0", None
+    return "%d컷에 멈춘 프레임 %d" % (len(live), bad), "0", bad == 0
 
 
 def video_report(job, ep, ref):
@@ -172,6 +199,7 @@ def video_report(job, ep, ref):
         ("소리 크기", "%.1f LUFS" % (lufs(out) or 0), "%.1f LUFS" % m["lufs"], abs((lufs(out) or 0) - m["lufs"]) <= 1.0),
         ("다시 받아쓰기", "일치" if not heard else "다른 곳: " + heard + (" (귀로 확인)" if same and "→" in heard.split("발음 같음")[0] else ""), "대본 그대로", same),
         ("입체 움직임", "%s%%" % "~".join(str(x) for x in (min(p for p in px if p is not None), max(p for p in px if p is not None))), "26~53%", None),
+        ("AI 영상 멈칫", *_stutter(out, plan["cuts"])),
     ]
     rep = {"rows": [{"항목": a, "우리": b, "원본": c, "통과": d} for a, b, c, d in rows], "parallax": px, "cut_s": lens}
     (job / "check.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")

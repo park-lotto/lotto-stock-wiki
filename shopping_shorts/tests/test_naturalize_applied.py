@@ -203,3 +203,15 @@ def test_normalize_reading_percent_and_symbol_cases():
     "일 플러스 일"). 기존 "일 플러스일"은 결함을 정답으로 못박은 값이었다."""
     assert normalize_reading("50%") == ("오십 퍼센트", 2)          # 숫자1 + 기호(%)1
     assert normalize_reading("1+1") == ("일 플러스 일", 3)         # 숫자2 + 기호(+)1
+
+
+def test_native_reading_with_ra_tail_and_hour():
+    """2026-10-23 사장님 "4개를 사개라고 읽는다" — '방이 4개라'의 '라' 같은 꼬리·몇 시도 고유어로, '5장면'·'10개월'은 그대로."""
+    assert normalize_reading("방이 4개라")[0] == "방이 네 개라"
+    assert normalize_reading("2명이라서")[0] == "두 명이라서"
+    assert normalize_reading("3개면")[0] == "세 개면"
+    assert normalize_reading("3시에")[0] == "세 시에"
+    assert normalize_reading("24시간")[0] == "스물네 시간"
+    assert normalize_reading("5장면")[0] == "오장면"
+    assert normalize_reading("10개월")[0] == "십개월"
+    assert normalize_reading("103개에")[0] == "백삼개에"

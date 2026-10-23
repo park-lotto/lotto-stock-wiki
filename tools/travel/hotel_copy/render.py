@@ -87,7 +87,9 @@ def vertical(path, cx, look=None):
 
 
 def clip_frames(path, n, look=None):
-    """AI 영상 컷 — 앞에서부터 n 프레임(30fps 로 맞춤), 사진 컷과 같은 색 처리."""
+    """AI 영상 컷 — 앞에서부터 n 프레임(30fps 로 맞춤), 사진 컷과 같은 색 처리.
+    Veo 는 24fps 라 30fps 로 옮길 때 사이 시각은 앞뒤 두 장을 섞는다. 가까운 장을 골라 쓰면 5프레임마다 같은 장이
+    두 번 나와(초당 6번 멈칫) 물·불이 덜컥거린다 — 사장님 2026-10-23 '11초에 계곡물 사진 흔들리고'(실측: AI 컷마다 멈춘 프레임 2~6, 사진 컷 0)."""
     cap = cv2.VideoCapture(str(path))
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 24
     frames = []
@@ -98,8 +100,12 @@ def clip_frames(path, n, look=None):
         frames.append(f)
     if not frames:
         raise RuntimeError("AI 영상이 비었다: %s" % path)
+    last = len(frames) - 1
     for k in range(n):
-        f = frames[min(len(frames) - 1, int(k * src_fps / FPS))]
+        x = min(last, k * src_fps / FPS)
+        i = int(x)
+        a = x - i
+        f = frames[i] if a < 1e-3 or i >= last else cv2.addWeighted(frames[i], 1 - a, frames[i + 1], a, 0)
         yield grade(cv2.resize(f, (WD, HT), interpolation=cv2.INTER_LANCZOS4), look)
 
 

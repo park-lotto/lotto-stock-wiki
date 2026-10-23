@@ -263,14 +263,18 @@ def s_voice(job, st):
     ep = load(job / "ep.json")
     ref = render.ref_spec(ep["ref"])
     lines = [l["text"] for l in ep["lines"]]
-    save(job / "lines.json", lines)
+    # 읽는 말 = 숫자를 읽기말로(주인 narration_naturalize.normalize_reading — 사장님 2026-10-23 "4개를 사개라고 읽는다").
+    # 자막은 대본 글자 그대로 둔다: 어절마다 따로 바꿔, 받아 온 시각을 다시 대본 어절에 묶는다('4개라' → '네 개라' = 2어절 → 1어절)
+    from shopping_shorts.narration_naturalize import normalize_reading
+    said = [[normalize_reading(w)[0] for w in l.split()] for l in lines]
+    save(job / "lines.json", [" ".join(s) for s in said])
     for f in job.glob("tts_*"):
         f.unlink()
     # 한 번에 이어서 합성한다 — 문장마다 따로 만들어 붙이면 문장마다 억양이 처음부터 다시 시작해 '조각을 붙인 것' 같다(사장님 2026-10-23).
     # 줄 나누기는 받아 온 어절 시각으로: 다음 줄 첫 어절 시작에서 자른다(잘라도 이으면 원래 소리 그대로)
     allm = job / "tts_all.mp3"
     if config.ELEVENLABS_API_KEY:
-        tts.synthesize_tts(" ".join(lines), str(allm), voice_id=MINA["voice_id"], voice_settings=MINA["voice_settings"],
+        tts.synthesize_tts(" ".join(" ".join(s) for s in said), str(allm), voice_id=MINA["voice_id"], voice_settings=MINA["voice_settings"],
                            model_id=MINA["model_id"], speed=1.0)
     else:
         _server_tts(job)
@@ -279,9 +283,15 @@ def s_voice(job, st):
     words = tt.rescale(tt.words_from_mp3(str(allm)), D, removed=tt.load_removed(str(allm)))
     if not words:
         raise RuntimeError("단어 시각 없음(일레븐 정렬 사이드카 없음)")
+    per = [len(p.split()) for s in said for p in s]                     # 대본 어절 하나가 읽는 말 몇 어절인가
+    if sum(per) != len(words):
+        raise RuntimeError("어절 수가 다르다: 읽는 말 %d / 받아 온 소리 %d" % (sum(per), len(words)))
+    tw, k = [], 0                                                       # 읽는 말 시각 → 대본 어절 시각(글자는 대본 것)
+    for w, c in zip((w for l in lines for w in l.split()), per):
+        tw.append(dict(words[k], word=w, end=words[k + c - 1].get("end")))
+        k += c
+    words = tw
     counts = [len(l.split()) for l in lines]
-    if sum(counts) != len(words):
-        raise RuntimeError("어절 수가 다르다: 대본 %d / 받아 온 소리 %d" % (sum(counts), len(words)))
     firsts, k = [], 0
     for c in counts:
         firsts.append(k)
@@ -332,8 +342,16 @@ def s_clips(job, st):
     from shopping_shorts import ai_scene
     from tools.travel.hotel_copy import render
     ep = load(job / "ep.json")
-    todo = [sh for l in ep["lines"] for sh in l["shots"] if sh.get("live") and not (sh.get("clip") and Path(sh["clip"]).exists())]
     (job / "clips").mkdir(exist_ok=True)
+    # 같은 사진·같은 자르기면 만든 것 그대로(shots 를 다시 돌려도 돈 안 듦). 움직임 글은 _pick_live 가 돌 때마다 조금씩 달라
+    # 비교에 넣지 않는다(실측: 넣었더니 같은 계곡 사진을 또 만들었다) — 다른 움직임을 원하면 clips/live_<사진>.mp4 를 지운다
+    key = lambda sh: {"cx": sh.get("cx", 0.5)}
+    for sh in (s for l in ep["lines"] for s in l["shots"] if s.get("live") and not s.get("clip")):
+        out = job / "clips" / ("live_%s.mp4" % Path(sh["file"]).stem)
+        old = load(out.with_suffix(".json")) or {}
+        if out.exists() and old.get("cx") == key(sh)["cx"]:
+            sh["clip"], sh["live"] = str(out), old.get("live", sh["live"])
+    todo = [sh for l in ep["lines"] for sh in l["shots"] if sh.get("live") and not (sh.get("clip") and Path(sh["clip"]).exists())]
 
     def one(k_sh):
         k, sh = k_sh
@@ -342,6 +360,7 @@ def s_clips(job, st):
         out = job / "clips" / ("live_%s.mp4" % Path(sh["file"]).stem)
         prompt = ai_scene.build_travel_prompt("other", sh.get("live_desc", "A real photo of a countryside guesthouse."), 4, motion=sh["live"])
         ai_scene.generate(png, prompt, 4, out)
+        save(out.with_suffix(".json"), dict(key(sh), live=sh["live"]))
         return sh, str(out)
     with cf.ThreadPoolExecutor(4) as ex:
         for sh, out in ex.map(one, enumerate(todo)):
