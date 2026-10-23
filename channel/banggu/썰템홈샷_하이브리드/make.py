@@ -131,6 +131,8 @@ def asr_cache(mp3: Path) -> list[dict]:
             return c["segments"]
     from tools.calcopy.engine import asr_local
     r = asr_local.transcribe(str(mp3), engine="speechmatics")
+    if r.get("engine") != "speechmatics":   # 연결 끊김으로 위스퍼로 넘어간 답은 캐시에 남기지 않는다(10-24 03b — 다음 단계가 위스퍼 결과를 그대로 썼다, 98 #68)
+        raise SystemExit(f"받아쓰기가 스피치매틱스가 아님({r.get('engine')}) — 캐시 안 함, 잠시 뒤 다시")
     # ★낱말 단위로 넣는다 — 쉼을 0.07초로 줄인 나레는 구절이 한 덩어리(36초)라 줄 시작이 글자 비례로 밀렸다(10-22 01 요플레 B 첫 줄 1.3초 이름)
     seg = [{"start": s["start"], "end": s["end"], "text": s["text"]} for s in (r.get("words") or r.get("segments") or []) if s.get("text")]
     if not seg:
@@ -210,7 +212,8 @@ def _card(P, M, opt, base, win, out, ep):
     x0, y0, ww, wh = win
     src = Path(opt["src"]) if Path(opt["src"]).is_absolute() else Path(M["cand_dir"]) / opt["src"]
     cx, cy, cw, ch = opt["crop"]
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{float(opt['ss']):.3f}", "-i", str(src), "-frames:v", "1", "-vf",
+    seek = [] if src.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") else ["-ss", f"{float(opt['ss']):.3f}"]   # 정지 사진에 -ss 를 주면 빈 결과(10-24 03b, 98 #68)
+    raw = subprocess.run(["ffmpeg", "-v", "error", *seek, "-i", str(src), "-frames:v", "1", "-vf",
                           f"crop={cw}:{ch}:{cx}:{cy},scale={ww}:{wh}:force_original_aspect_ratio=increase,crop={ww}:{wh}",
                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
     if len(raw) != ww * wh * 3:
