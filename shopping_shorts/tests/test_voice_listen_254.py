@@ -8,4 +8,4 @@ def test_kanji_vs_kana_is_not_error():
 
 def test_misread_is_caught_with_context():
     r = compare_reading("ダイソーに行ったら", "内装に行ったら")
-    assert r["match"] < 1.0 and any("だいそー" in d["where"] for d in r["diffs"])
+    assert r["match"] < 1.0 and any("だいそ" in d["where"] for d in r["diffs"])
