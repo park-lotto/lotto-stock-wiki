@@ -2,7 +2,7 @@
 """썰템홈샷 하이브리드 한 편 제작기 (관제 097, 2026-10-22 사장님 "썰템홈샷 스타일 영상 · 방구석이랑 다르게 · 표절 안 걸리게").
 
     PYTHONUTF8=1 py channel/banggu/썰템홈샷_하이브리드/make.py <단계> <편>
-    단계: frames | tts | plan | render(썸네일.json 있으면 thumbs 까지) | thumbs | checks | all(=frames→tts→plan→render→checks)
+    단계: frames | tts | scenes(훅·썸네일 장면 검색) | plan | render(썸네일.json 있으면 thumbs 까지) | thumbs | checks | all(=frames→tts→plan→render→checks)
 
 편 = 이 폴더의 <편>/ — 대본.json(topic·hook[2줄]·post·tempo·final.lines[{fn,text,seg:A|B,facts,sources}]·facts) · 재료.json · 근거.md
 작업물(git 밖) = C:/숏템_칼카피/banggu/썰템홈샷_하이브리드/<편>/ (src·narr·final.mp4)
@@ -240,12 +240,36 @@ def _card(P, M, opt, base, win, out, ep):
     return out
 
 
+def _body_cuts(P, M) -> list[dict]:
+    """본편 컷 [{src,ss,dur}] — 재료.json 컷 안 토막은 그 dur, 통 컷은 계획.json 의 그 컷 길이."""
+    rows = {r["shot"]: r for r in (_j(P["w"] / "계획.json")["shots"] if (P["w"] / "계획.json").exists() else [])}
+    out = []
+    for k, sh in enumerate(M.get("shots") or []):
+        for c in sh.get("cuts") or [{"src": sh.get("src"), "ss": sh.get("ss", 0), "dur": rows.get(k, {}).get("dur", 0)}]:
+            out.append({"src": c.get("src"), "ss": float(c.get("ss") or 0), "dur": float(c.get("dur") or rows.get(k, {}).get("dur", 0))})
+    return out
+
+
+def scenes(piece: str) -> dict:
+    """훅·썸네일 장면 찾기(구글·네이버 단서 → 유튜브 공식 원본) → <편>/장면후보.json. 순서 = thumb_rule.FIND_ORDER."""
+    from tools.calcopy import scene_search
+    P = paths(piece); S = _j(P["script"])
+    r = scene_search.run(S.get("scene_query") or S["topic"], S.get("brand", ""), serp=int(S.get("scene_serp", 4)))
+    _w(P["d"] / "장면후보.json", r)
+    for v in r["videos"][:10]:
+        print(("○" if v["official"] else "·"), v["id"], (v.get("channel") or "")[:16], "|", (v.get("title") or "")[:40], "|", v["from"][:40])
+    return r
+
+
 def thumbs(piece: str) -> dict:
     import re
     from PIL import Image, ImageDraw
-    from tools.calcopy.hybrid import thumb as TH
+    from tools.calcopy.hybrid import thumb as TH, thumb_rule
     from tools.calcopy.hybrid.render_bench import _font
     P = paths(piece); M = _j(P["mat"]); spec = _j(P["d"] / "썸네일.json")
+    bad = thumb_rule.check(spec, cuts=_body_cuts(P, M))
+    if bad:
+        raise SystemExit("썸네일 3안 반려(thumb_rule):" + "".join("\n  " + b for b in bad) + "\n\n" + thumb_rule.FIND_ORDER)
     fin = P["out"] / "final.mp4"
     v = next(l for l in _j(P["hook"])["layers"] if l.get("kind") == "video")
     win = (int(v["x"]), int(v["y"]), int(v["w"]), int(v["h"]))
@@ -272,6 +296,10 @@ def _thumb_ok(P):
     sp = P["d"] / "썸네일.json"
     if not sp.exists():
         return ["썸네일.json 없음", False]
+    from tools.calcopy.hybrid import thumb_rule
+    bad = thumb_rule.check(_j(sp), cuts=_body_cuts(P, _j(P["mat"])))
+    if bad:
+        return [bad, False]
     pk = _j(sp).get("pick")
     from PIL import Image
     card = np.asarray(Image.open(P["d"] / "thumb" / f"{pk}.jpg").convert("RGB").resize((270, 480)), dtype=float)
