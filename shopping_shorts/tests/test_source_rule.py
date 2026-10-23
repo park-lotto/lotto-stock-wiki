@@ -342,7 +342,7 @@ def test_spoken_only_product_uses_given_product():
 
 
 def test_source_channel_search_hits_first():
-    """출처 채널 안 검색('<연예인> <낱말>')에 걸린 영상이 후보 맨 앞 — 98 #61 셀코TV 함익병 기미: 원본이 최신 60편 밖이라 7분 넘게 헤맸다(채널 안 검색은 2초에 1위)."""
+    """출처 채널 안 검색('<연예인> <낱말>')에 걸린 영상이 후보 맨 앞 — 98 #65 셀코TV 함익병 기미: 원본이 최신 60편 밖이라 7분 넘게 헤맸다(채널 안 검색은 2초에 1위)."""
     from tools.calcopy.hybrid import flow
     assert flow._src_queries({"celeb": "함익병", "queries": ["함익병 멜라논 크림", "함익병 기미크림", "x"]}) == ["함익병 멜라논 크림", "함익병 기미크림"]
     assert flow._src_queries({"celeb": "함익병", "product_words": ["기미크림"]}) == ["함익병 기미크림"]
@@ -353,7 +353,7 @@ def test_source_channel_search_hits_first():
 
 
 def test_given_research_note_and_stop_hides_judgment():
-    """고객이 정한 제품이면 조사에 given 안내(원본 제품이 의약품이어도 그것만으로 멈추지 않음) · 조사 멈춤 글은 기록에만(98 #62)."""
+    """고객이 정한 제품이면 조사에 given 안내(원본 제품이 의약품이어도 그것만으로 멈추지 않음) · 조사 멈춤 글은 기록에만(98 #66)."""
     import pytest
     from tools.calcopy.hybrid import flow
     assert "고객이 정한 제품" in flow.RESEARCH_GIVEN and "멈추지 않는다" in flow.RESEARCH_GIVEN
@@ -364,7 +364,7 @@ def test_given_research_note_and_stop_hides_judgment():
 
 
 def test_misread_label_falls_back_to_similar_channel(monkeypatch, tmp_path):
-    """출처 글자를 잘못 읽어(셀코TV→쌩코TV) 채널 검색이 0건이면 '<연예인> <낱말>' 영상 검색에서 이름이 닮은 채널로(98 #63)."""
+    """출처 글자를 잘못 읽어(셀코TV→쌩코TV) 채널 검색이 0건이면 '<연예인> <낱말>' 영상 검색에서 이름이 닮은 채널로(98 #67)."""
     import types
     from tools.calcopy.hybrid import runner_ops as R
     monkeypatch.setattr(R, "CACHE", False)

@@ -350,7 +350,7 @@ def c_channel_find(W, d):
                  for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
     pick = chans[:1]
     if not pick and celeb:
-        # 채널 검색이 비면 출처 글자를 잘못 읽었을 수 있다(98 #63: '셀코TV'를 '쌩코TV'로 — 채널 검색 0건) →
+        # 채널 검색이 비면 출처 글자를 잘못 읽었을 수 있다(98 #67: '셀코TV'를 '쌩코TV'로 — 채널 검색 0건) →
         #   '<연예인> <출처>' 영상 검색에서 채널 이름이 출처 글자와 가장 닮은 채널(닮음 0.5 이상, 같은 점수면 많이 나온 쪽)
         #   ('<연예인> <쌩코TV>' 검색은 0건 — 유튜브는 틀린 이름을 고쳐 주지 않는다 → 원본 판독이 낸 '<연예인> <낱말>' 검색 결과의 채널 이름으로 맞춘다)
         import difflib
@@ -371,7 +371,7 @@ def c_channel_find(W, d):
         if score:
             (cid, cname), _ = max(score.items(), key=lambda kv: kv[1])
             pick = [{"id": cid, "name": cname, "handle": None, "fuzzy": True}]
-    # 채널 안 검색('<연예인> <낱말>') 먼저 — 98 #61: 셀코TV 원본(함익병 기미)은 최신 60편 밖이라 목록만 봐서는 7분 넘게 헤매다 놓쳤다.
+    # 채널 안 검색('<연예인> <낱말>') 먼저 — 98 #65: 셀코TV 원본(함익병 기미)은 최신 60편 밖이라 목록만 봐서는 7분 넘게 헤매다 놓쳤다.
     #   채널 안 검색은 2초에 원본이 1위(10-24 실측). 찾은 순서를 searched 로 돌려주고 판단(순서 매기기)은 서버(flow.ph_src_got)가 한다.
     searched: list[dict] = []
     for q in [x for x in d.get("queries") or [] if x][:2] if pick else []:

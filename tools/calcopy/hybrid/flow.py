@@ -115,7 +115,7 @@ JSON 하나: {"product_id": "…", "name": "…", "why": "고른 이유 한 줄(
 
 RESEARCH_GIVEN = """
 
-## ★고객이 정한 제품(given) — 연예인이 말한 제품과 다를 수 있다(98 #62 함익병: 원본은 병원 크림, 고객 제품은 화장품)
+## ★고객이 정한 제품(given) — 연예인이 말한 제품과 다를 수 있다(98 #66 함익병: 원본은 병원 크림, 고객 제품은 화장품)
 - 금지 품목 판정(4)은 **고객이 정한 제품** 기준이다. 연예인이 말한 제품이 의약품·다른 회사 제품이어도 그것만으로 멈추지 않는다.
 - 원음 spans 는 연예인이 **다른 제품 이름(그 의약품 등)을 말하지 않는** 구간만 — 고민·관리법·원리처럼 그 사람 말 그대로 전할 수 있는 자리(예 '자외선 차단제부터').
 - 사실(f)은 고객 제품 것만(브랜드·판매처 문구는 '브랜드 문구'). 연예인 말을 고객 제품의 효과로 잇지 않는다."""
@@ -377,7 +377,7 @@ def ph_origin_read(st, m, rp, u):
 
 
 def _src_queries(r: dict) -> list[str]:
-    """출처 채널 안 검색어 — 원본 판독이 낸 검색어(연예인 + 제품·방법 낱말) 앞 2개. 없으면 연예인 + 제품 낱말(98 #61)."""
+    """출처 채널 안 검색어 — 원본 판독이 낸 검색어(연예인 + 제품·방법 낱말) 앞 2개. 없으면 연예인 + 제품 낱말(98 #65)."""
     qs = [q for q in r.get("queries") or [] if q][:2]
     celeb = "" if (r.get("celeb") or "") == "불명" else str(r.get("celeb") or "")
     return qs or [f"{celeb} {w}".strip() for w in (r.get("product_words") or [])[:2] if w]
@@ -396,7 +396,7 @@ def ph_src_got(st, m, rp, u):
     # 제목에 연예인 이름·장면·제품 낱말이 든 영상 먼저, 그다음 최신순(98 #58: 선우용여 '여주 아울렛' 원본은 반년 전 영상이라 최신 10편에 없었다 ·
     #   함익병은 남의 채널(이성미의 나는 꼰대다) 손님이라 최신 편은 전부 다른 손님 — 손님 편 제목엔 이름이 든다)
     tw = {RU.norm(w) for w in [r.get("celeb") or ""] + (r.get("scene_words") or []) + (r.get("product_words") or []) if len(RU.norm(w)) >= 2}
-    # 채널 안 검색에 걸린 영상이 맨 앞(검색 순위대로) — 98 #61 셀코TV 함익병 기미: 원본이 최신 60편 밖
+    # 채널 안 검색에 걸린 영상이 맨 앞(검색 순위대로) — 98 #65 셀코TV 함익병 기미: 원본이 최신 60편 밖
     srank = {v: i for i, v in enumerate(f.get("searched") or [])}
     cands = sorted(cands, key=lambda t: (srank.get(t["id"], 99), -sum(1 for w in tw if w in RU.norm(t.get("title") or ""))))[:SRC_PROBE]
     if not cands:
