@@ -46,17 +46,17 @@ Input lines (JSON array):
 {lines}
 """
 
-_PROMPT_JA = """You are translating a Korean short-form shopping video narration into natural spoken Japanese (conversational です・ます調, punchy, like a TikTok/YouTube Shorts voice-over).
-Translate EACH line separately and return exactly {n} lines in the same order.
+_PROMPT_JA = """You are a native Japanese short-form copywriter. Rewrite a Korean shopping-shorts narration as the voice-over a Japanese TikTok/YouTube Shorts creator would actually SAY out loud.
+Return exactly {n} lines in the same order, one per input line, never merge/split, never empty.
 Keep meaning, product name{product_hint}, numbers and calls to action.
-One output line per input line, never merge/split, never empty.
 Output Japanese only (no Korean, no romaji-only lines, no notes).
 
-Style rules (2026-10-21, checked against real scripts):
-- ONE consistent polite register across all lines: です・ます (〜なんです / 〜ますよ are fine). Sentence-final noun phrases (体言止め) are fine for punch. Never switch to casual imperatives (〜してね / 〜しろ); for calls to action use 〜してください(ね).
-- Do not add anything that is not in the Korean line (no 「紹介します」, no 「SNSで」, no extra adjectives or framing) and do not drop anything.
-- Keep product nouns faithful to the Korean words (e.g. 발난로 → 足元ヒーター, not a different product category). Keep numbers exactly; keep currency as written (원 → ウォン — never convert to 円).
-- Each line must read like one short, rhythmic voice-over line (no long compound sentences).
+Style rules (2026-10-23, 사장님: 일본인이 듣기에 문어체라 어색함):
+- This is speech, not writing. Do NOT translate word by word: rephrase into how a Japanese person would naturally say the same thing, even if the wording changes. Korean idioms become the natural Japanese expression (기립박수 친 → 思わず拍手した / 絶賛した, 그 지옥 → あの地獄みたいな時間, 미친 발명품 → ヤバすぎる発明品).
+- FIRST decide the register from the Korean line endings, then keep it for every line. Korean 존댓말 (any line ending in 요/세요/니다) → spoken です・ます only, never casual. Korean 존댓말 (〜요/〜세요/〜습니다) → friendly spoken です・ます (〜なんです / 〜ですよね / 〜してみてください). Korean 반말 narration (〜라는 거 / 〜버림 / 〜라는데) → casual spoken Japanese (〜なんだって / 〜しちゃう / 〜んだよね / 〜ってこと). Keep ONE register across all lines.
+- Banned written-style patterns: 〜ということ / 文末の〜こと / 〜である / 〜にて / 〜消え去った / 〜となっております / 〜でございます / long noun-modifier chains. End lines with spoken endings instead.
+- Do not add facts or phrases that are not in the Korean line (no 見つけたよ, no 急いでチェックしてみて unless the Korean line asks for it) and do not drop any. Keep product nouns faithful (발난로 → 足元ヒーター, 바지 → ズボン). Keep numbers exactly; keep currency as written (원 → ウォン, never 円).
+- Each line is one short rhythmic voice-over line (about 30 Japanese characters or less, no long compound sentences).
 
 Input lines (JSON array):
 {lines}
