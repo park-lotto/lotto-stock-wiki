@@ -378,7 +378,7 @@ def test_misread_label_falls_back_to_similar_channel(monkeypatch, tmp_path):
 
 
 def test_origin_read_gets_big_frame_for_label():
-    """출처 글자는 큰 장면 한 장으로 읽는다(98 #68: 시트 칸 300px → '셀코TV'를 '없음'·'쌩코TV'로)."""
+    """출처 글자는 큰 장면 한 장으로 읽는다(98 #69: 시트 칸 300px → '셀코TV'를 '없음'·'쌩코TV'로)."""
     from tools.calcopy.hybrid import flow
     st = {"tries": {}, "log": []}
     r = flow.ph_bench_got(st, {"bench": {"id": "b", "sheet": "bench/sheet.jpg", "big": "bench/big.jpg", "lines": []}}, {}, {})
