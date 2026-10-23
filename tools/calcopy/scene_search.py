@@ -99,15 +99,20 @@ def _info(vid: str) -> dict:
     p = _ck("ytinfo", vid)
     if p.exists():
         return json.loads(p.read_text(encoding="utf-8"))
+    # 로그인 쿠키·JS 런타임 = origin_find.yt_auth(주인 한 곳) — 없이 두드리면 429·봇 확인에 막혀 거의 빈 결과(10-24 05편, 98 #69)
+    from tools.calcopy.origin_find import yt_auth
+    url = f"https://www.youtube.com/watch?v={vid}"
     try:
-        import yt_dlp
-        with yt_dlp.YoutubeDL({"quiet": True, "skip_download": True, "noplaylist": True}) as y:
-            d = y.extract_info(f"https://www.youtube.com/watch?v={vid}", download=False)
+        r = subprocess.run([sys.executable, "-m", "yt_dlp", *yt_auth(url), "-J", "--skip-download", "--no-playlist", url],
+                           capture_output=True, timeout=90, stdin=subprocess.DEVNULL)
+        if r.returncode:
+            raise RuntimeError(r.stderr.decode("utf-8", "replace").strip().splitlines()[-1][:150] if r.stderr else f"rc {r.returncode}")
+        d = json.loads(r.stdout.decode("utf-8", "replace"))
         i = {"id": vid, "title": d.get("title"), "channel": d.get("channel"), "verified": bool(d.get("channel_is_verified")),
              "followers": d.get("channel_follower_count"), "views": d.get("view_count"), "duration": d.get("duration"),
              "upload_date": d.get("upload_date")}
-    except Exception as e:  # noqa: BLE001
-        i = {"id": vid, "err": str(e)[:150]}
+    except Exception as e:  # noqa: BLE001 — 실패는 캐시하지 않는다(막힘이 풀리면 다시 본다)
+        return {"id": vid, "err": str(e)[:150]}
     p.write_text(json.dumps(i, ensure_ascii=False), encoding="utf-8")
     return i
 
@@ -154,7 +159,7 @@ def run(topic: str, brand: str = "", serp: int = 4, yt: int = 8, top: int = 24) 
     ids = list(vids)[:top * 2]
     with ThreadPoolExecutor(6) as ex:
         infos = list(ex.map(_info, ids))
-    out = []
+    out, errs = [], [i for i in infos if i.get("err")]
     for i in infos:
         if i.get("err"):
             continue
@@ -195,7 +200,10 @@ def run(topic: str, brand: str = "", serp: int = 4, yt: int = 8, top: int = 24) 
     out.sort(key=lambda v: (not v["official"], not v["from"].startswith(("google", "naver")), -v["topic_hits"], -(v.get("views") or 0)))
     clues = [{"engine": x["engine"], "q": x["q"], "title": r["title"], "link": r["link"], "snippet": r["snippet"]}
              for x in W for r in (x.get("rows") or [])[:8]]
-    return {"topic": topic, "brand": brand, "queries": qs, "clues": clues, "videos": out[:top],
+    blocked = {"tried": len(infos), "failed": len(errs), "why": sorted({e["err"][:60] for e in errs})[:3]}
+    if errs and len(errs) * 2 >= len(infos):      # 절반 넘게 못 읽음 = 막힘 — 조용히 빈 결과로 넘기지 않는다(98 #69)
+        print(f"⚠ 유튜브 영상 정보 {len(errs)}/{len(infos)} 실패 — 막힌 것 같다. 결과를 믿지 말고 잠시 뒤 다시: {blocked['why']}")
+    return {"topic": topic, "brand": brand, "queries": qs, "clues": clues, "videos": out[:top], "blocked": blocked,
             "_rule": "단서(clues)는 어떤 장면이 있는지 아는 데만. 화면·썸네일은 official=true 원본 영상에서 그 구간만 받아 본편에 넣고 쓴다."}
 
 
