@@ -339,3 +339,14 @@ def test_spoken_only_product_uses_given_product():
     with pytest.raises(flow._Stop):
         flow.ph_product_cands(st2, {}, {"product_pick": {"scenes": [], "coupang_queries": []}}, {})
     assert "given" in RU.PRODUCT_TALK and "추천했다고 말하지" in RU.PRODUCT_TALK["given"]
+
+
+def test_source_channel_search_hits_first():
+    """출처 채널 안 검색('<연예인> <낱말>')에 걸린 영상이 후보 맨 앞 — 98 #61 셀코TV 함익병 기미: 원본이 최신 60편 밖이라 7분 넘게 헤맸다(채널 안 검색은 2초에 1위)."""
+    from tools.calcopy.hybrid import flow
+    assert flow._src_queries({"celeb": "함익병", "queries": ["함익병 멜라논 크림", "함익병 기미크림", "x"]}) == ["함익병 멜라논 크림", "함익병 기미크림"]
+    assert flow._src_queries({"celeb": "함익병", "product_words": ["기미크림"]}) == ["함익병 기미크림"]
+    st = {"bench": {"id": "b", "dur": 13}, "read": {"celeb": "함익병", "product_words": ["기미크림"]}, "tries": {}, "log": []}
+    titles = [{"id": f"n{i}", "title": f"함익병 피부 {i}", "dur": 600} for i in range(12)] + [{"id": "old", "title": "잡티,기미,검버섯 (함익병)", "dur": 1592}]
+    r = flow.ph_src_got(st, {"src": {"titles": titles, "searched": ["old", "n5"], "picked": [{"id": "c", "name": "셀코TV"}], "how": "channel"}}, {}, {})
+    assert r["do"][0]["ids"][:2] == ["old", "n5"]

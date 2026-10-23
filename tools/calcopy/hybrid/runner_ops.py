@@ -349,8 +349,20 @@ def c_channel_find(W, d):
         chans = [{"id": e.get("channel_id") or e.get("id"), "name": e.get("channel") or e.get("title"), "handle": e.get("uploader_id")}
                  for e in json.loads(r.stdout).get("entries") or [] if (e.get("channel_id") or e.get("id"))]
     pick = chans[:1]
-    return {"channels": chans, "picked": pick, "how": "channel",
-            "titles": c_channel_list(W, {"channels": [c["id"] for c in pick], "n": n})["titles"] if pick else []}
+    # 채널 안 검색('<연예인> <낱말>') 먼저 — 98 #61: 셀코TV 원본(함익병 기미)은 최신 60편 밖이라 목록만 봐서는 7분 넘게 헤매다 놓쳤다.
+    #   채널 안 검색은 2초에 원본이 1위(10-24 실측). 찾은 순서를 searched 로 돌려주고 판단(순서 매기기)은 서버(flow.ph_src_got)가 한다.
+    searched: list[dict] = []
+    for q in [x for x in d.get("queries") or [] if x][:2] if pick else []:
+        r2 = yt(["--flat-playlist", "-J", "--playlist-end", "10", f"https://www.youtube.com/channel/{pick[0]['id']}/search?query={quote(q)}"], timeout=120)
+        if _blocked(r2):
+            break
+        if r2.returncode == 0 and r2.stdout.strip():
+            searched += [{"id": e["id"], "title": e.get("title"), "dur": e.get("duration")} for e in json.loads(r2.stdout).get("entries") or []
+                         if e.get("id") and e["id"] not in {s["id"] for s in searched}]
+    titles = c_channel_list(W, {"channels": [c["id"] for c in pick], "n": n})["titles"] if pick else []
+    seen = {t["id"] for t in titles}
+    return {"channels": chans, "picked": pick, "how": "channel", "searched": [s["id"] for s in searched],
+            "titles": titles + [s for s in searched if s["id"] not in seen]}
 
 
 def _storyboard_sheet(W: Path, vid: str, fmts: list, dur: float, cols: int = 10) -> dict | None:
