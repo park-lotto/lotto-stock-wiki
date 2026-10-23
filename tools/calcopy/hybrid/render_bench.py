@@ -146,6 +146,9 @@ def timeline(S: dict, M: dict, st: dict, sent: dict | None, align: dict | None) 
                 cs = [{"at": round(p["t0"] - a, 3), "src": p["src"], "ss": p["span"][0], "crop": "face", "see": "원음 구간(자동 얼굴 크롭)"}
                       for p in opos if p["line"] == lid]
             for c in cs:
+                if "at" not in c and c.get("ss") is not None:   # ss 만 적은 컷 = 원음 초 → 그 초가 들리는 줄 안 시각(입 맞춤 그대로, 10-23 꿀템노트 재료)
+                    p = next((p for p in opos if p["line"] == lid and p["span"][0] - 1e-3 <= float(c["ss"]) < p["span"][1]), None)
+                    c = {**c, "at": round(p["t0"] - a + float(c["ss"]) - p["span"][0], 3) if p else 0.0}
                 c0 = a + float(c.get("at", 0.0))
                 ss = c.get("ss")
                 if ss is None:      # 입 맞춤: 그 시각에 들리는 원음 조각의 원본 초
@@ -473,7 +476,7 @@ def caption_rows(placed: dict, st: dict) -> list[dict]:
     for r in placed["rows"]:
         a, b = r["show"]
         row = {"line": r["line"], "t0": a, "t1": b, "text": r["text"], "speaker": r["speaker"], "variant": r.get("variant") or "",
-               "emph": r.get("emph") or [], "sticker": "", "stickers": []}
+               "emph": r.get("emph") or [], "sticker": "", "stickers": [], "enter": r.get("enter") or "instant"}   # enter = 검증 자(kal_analyze)가 등장을 잰다
         for s in r.get("stickers") or []:
             if s["kind"] == "heart":
                 row["sticker"] = "heart"
@@ -595,7 +598,8 @@ def plan_rows(S: dict, T: dict, st: dict) -> dict:
     C = S.get("comment")
     rule = (st["placement"]["rules"].get("stickers") or {}).get("comment_card")
     cnt = (st["placement"].get("counted") or {}).get("stickers", {}).get("comment_card", {})
-    if C and rule and PL._chance(S.get("slug") or "x", "sticker:comment_card") < float(cnt.get("videos", rule.get("share", 0.6))):
+    share = cnt if isinstance(cnt, (int, float)) else cnt.get("videos", rule.get("share", 0.6) if isinstance(rule, dict) else 0.6)
+    if C and rule and PL._chance(S.get("slug") or "x", "sticker:comment_card") < float(share):   # counted 는 비율 숫자로 올 때도 있다(꿀템노트판 10-23)
         t0 = T["lines"][C["from"]][0] if C.get("from") in T["lines"] else T["end"] / 2
         t1 = T["end"] if C.get("to", "end") == "end" else T["lines"][C["to"]][0]
         placed["comment"] = {**C, "t0": t0, "t1": t1}

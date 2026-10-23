@@ -601,6 +601,13 @@ def scene_marks(beat, piece, caption):
             if any(m["w"] == i for m in emph):
                 continue
             mark = {"w": i, "g": group}           # g = 낱말 묶음 번호 — 여러 어절 낱말('1등 레시피')은 한 색
+            if item.get("part") and i == at + len(want) - 1 and tokens[i] != want[-1] and tokens[i].startswith(want[-1]):
+                raw, k = (caption or "").split()[i], 0   # 어절 앞부분만 칠한다(꿀템노트 '쇼파라는데요?' → '쇼파'만 노랑, 10-23) — n = 칠할 앞 글자 수
+                for n, ch in enumerate(raw, 1):
+                    k += bool(_word_key(ch))
+                    if k == len(want[-1]):
+                        mark["n"] = n
+                        break
             if _HEX.match(str(item.get("color") or "")):
                 mark["color"] = str(item["color"]).upper()
             if item.get("grow") in ("pop", "hold"):

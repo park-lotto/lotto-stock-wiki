@@ -1,0 +1,1036 @@
+{
+ "id": "VlJMP0sNwhY",
+ "dur": 24.333,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "송가인이 최근 다녀간 베트남",
+   "box": "빨강 띠 #FD0000 y242~377",
+   "colors": [
+    {
+     "word": "송가인이 최근 다녀간 베트남",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "outline": "검정 ~10px + 검정 번짐 그림자 ~10px(빨강 위에서 보임)",
+   "ink_y": [
+    266,
+    343
+   ],
+   "font": "붓끝 굵은 제목체(배민 도현·Black Han Sans 계열 추정, 눈)"
+  },
+  {
+   "text": "골프장의 하루 이용 가격이",
+   "box": "없음(검정 바탕)",
+   "colors": [
+    {
+     "word": "골프장의 하루 이용 가격이",
+     "hex": "#FFFFFF"
+    }
+   ],
+   "ink_y": [
+    404,
+    492
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   530,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   1217,
+   1300
+  ],
+  "title_y": [
+   [
+    266,
+    343
+   ],
+   [
+    404,
+    492
+   ]
+  ],
+  "title_band": {
+   "y": [
+    242,
+    377
+   ],
+   "hex": "#FD0000"
+  },
+  "top_black": [
+   0,
+   241
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": {
+   "text": null,
+   "alpha": null,
+   "note": "원본 크기 프레임(1·10·24초)에서 로고·워터마크·출처 줄 없음"
+  },
+  "corner_icon": null,
+  "bg_hex": "#000000"
+ },
+ "frame0": {
+  "what": "얼굴",
+  "face_frac": 0.05,
+  "text": "제목 2줄만(자막 없음) — 송가인 흰 모자 경례 포즈 전신, 바다 배경 페어웨이(누끼 아님, 창 안 원본 영상)"
+ },
+ "name_evidence": [
+  "송가인 = 제목 1줄 '송가인이 최근 다녀간 베트남'(0~24.3초) · 자막 '송가인이 처음으로'·'보였던 송가인이'"
+ ],
+ "lines": [
+  {
+   "t0": 3.233,
+   "t1": 4.333,
+   "speaker": "나레",
+   "text": "송가인이 처음으로",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [
+    3.233
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 564,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "송가인 흰 모자·흰 셔츠, 바다 배경 페어웨이에서 팔 벌림(원본 셀카 영상)",
+   "motion": "pan",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 4.333,
+   "t1": 5.967,
+   "speaker": "나레",
+   "text": "베트남에서 골프를 쳤다며",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 793,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 송가인 상반신, 골프장·바다",
+   "motion": "pan",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 5.967,
+   "t1": 7.5,
+   "speaker": "나레",
+   "text": "어제 소식을 전했는데요",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 7,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 726,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 송가인 미소",
+   "motion": "pan",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 7.5,
+   "t1": 8.9,
+   "speaker": "나레",
+   "text": "베트남 호짬에 위치한",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 7,
+   "cut_at": [
+    7.5
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 659,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "3인(송가인 가운데) 'GOLF DIGEST WORLD TOP 100' 바위 앞 브이 포즈",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 8.9,
+   "t1": 10.567,
+   "speaker": "나레",
+   "text": "이 더 블러프라는 골프장은",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 821,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 바위 글자 'GOLF DIGEST WORLD TOP 100'",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 10.567,
+   "t1": 11.867,
+   "speaker": "나레",
+   "text": "세계 100대 골프장에",
+   "layer": "울지마트로트",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 10,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 726,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 바위 'WORLD TOP 100' 이 자막 바로 아래 보임(증거 그림)",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 11.867,
+   "t1": 12.767,
+   "speaker": "나레",
+   "text": "속하는 만큼",
+   "layer": "울지마트로트",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 363,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 끝 — 바위·3인",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 12.767,
+   "t1": 13.6,
+   "speaker": "나레",
+   "text": "굉장히 넓고",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 9,
+   "cut_at": [
+    12.767
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 363,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "사람 없는 페어웨이·모래 언덕·뭉게구름 풍경",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 13.6,
+   "t1": 15.167,
+   "speaker": "나레",
+   "text": "잔디도 좋아 보였습니다",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 10,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 726,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 풍경 컷 — 잔디",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 15.167,
+   "t1": 16.567,
+   "speaker": "나레",
+   "text": "종종 골프를 치는 모습을",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 6,
+   "cut_at": [
+    15.167
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 754,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "송가인 흰 썬캡·흰 장갑 손 흔듦 근접 셀카",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 16.567,
+   "t1": 17.6,
+   "speaker": "나레",
+   "text": "보였던 송가인이",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 9,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 497,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 송가인 얼굴 근접",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 17.6,
+   "t1": 18.7,
+   "speaker": "나레",
+   "text": "정말 좋았다는",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 8,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 430,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 송가인 미소",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 18.7,
+   "t1": 20.633,
+   "speaker": "나레",
+   "text": "이 골프장의 하루 가격은",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 6,
+   "cut_at": [
+    18.7
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 754,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "송가인 드라이버 스윙 피니시 전신(정지 화면 — 1.93초 움직임 0)",
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 20.633,
+   "t1": 22.1,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [
+    20.633
+   ],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 592,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "송가인 흰 썬캡 포즈, 바다 배경",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 22.1,
+   "t1": 23.633,
+   "speaker": "나레",
+   "text": "두 번 누르면 공개됩니다",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "기본",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "fit": 3,
+   "cut_at": [],
+   "y": [
+    1217,
+    1300
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 754,
+   "letter_gap_px": 5,
+   "line_gap_px": null,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "같은 컷 — 송가인 포즈",
+   "motion": "zoom_in",
+   "transition": "none(같은 컷 안 자막만 교체)",
+   "confidence": "픽셀",
+   "notes": "y=흰 채움 잉크 y(픽셀) · size_px=잉크 높이 82px 역산(눈 추정) · max_w=자수×67+띄어쓰기×28 추정(배경 흰색이 섞여 픽셀 폭 불안정) · 외곽 9~10px 행 스캔 중앙값"
+  },
+  {
+   "t0": 23.633,
+   "t1": 24.333,
+   "speaker": "나레",
+   "text": "더블러프cc\n2인 90만원",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "가격 카드(같은 자막 모양 여러 줄, 창 가운데 쪽으로 올라옴)",
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "fit": 9,
+   "cut_at": [
+    23.633
+   ],
+   "y": [
+    1166,
+    1347
+   ],
+   "fill_hex": "#FFFFFF",
+   "font": {
+    "name": "GmarketSansBold 계열 굵은 고딕(추정)",
+    "basis": "눈 대조 — 낱자가 붙을 듯한 좁은 자간·둥근 끝. 뜯기 fontmatch top5(KirangHaerang 등)는 오답이라 버림"
+   },
+   "size_px": 92,
+   "x": 540,
+   "align": "center",
+   "max_w": 430,
+   "letter_gap_px": 5,
+   "line_gap_px": 22,
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체 — 30fps 띠에서 페이드 없음)",
+   "scene_desc": "더 블러프 리조트 호텔 건물·골프장 항공샷(정지 화면)",
+   "motion": "still",
+   "transition": "cut",
+   "confidence": "픽셀",
+   "notes": "가격 공개 카드 = 채널 자막과 같은 모양(흰 채움+검정 외곽 9px) 2줄, 줄 잉크 [1166,1245]·[1268,1347](픽셀) — 줄 간격 22px·피치 102px. vtt 나레는 23.6초에서 끝(카드 읽기 없음) · 영상 끝까지 0.7초"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   3.233
+  ]
+ ],
+ "hook": {
+  "t": [
+   0.0,
+   3.233
+  ],
+  "what": "자막 없이 나레가 제목을 읽음(vtt 0.08~3.3 '송가인이 베트남에서 친 골프장의 하루 가격') · 화면 = 송가인 경례 포즈 원본 컷 zoom_in 1.08 · 누끼·화살표 없음",
+  "sticker": []
+ },
+ "beats": "훅(0~3.23 자막 없음, 나레가 제목 읽기·송가인 포즈) → 사연(3.23~7.5 송가인이 베트남에서 골프·소식) → 장소 증거(7.5~12.77 더 블러프·세계 100대 바위) → 풍경(12.77~15.17 넓고 잔디 좋음) → 이음(15.17~18.7 송가인이 좋았다는) → 질문(18.7~20.63 하루 가격은) → 톡톡 두 번 누르면 공개(20.63~23.63) → 공개 카드(23.63~24.33 '더블러프cc 2인 90만원')",
+ "narr_share": "나레 줄 16/16(마지막 가격 카드는 읽기 없음 — 화면 글은 채널층, speaker 칸만 나레) · 나레 초 약 23.5/24.33(vtt 0.08~23.6, 훅 3.2초는 자막 없이 나레)",
+ "price_reveal": {
+  "t": 23.633,
+  "form": "자막 모양 2줄 카드(흰+검정 외곽), 배경=호텔 항공 정지샷",
+  "text": "더블러프cc / 2인 90만원"
+ },
+ "notes": [
+  "지휘자 관찰과 다름: 이 편 훅은 누끼·빨간 화살표 없음(원본 컷 그대로, 0~3.23초 자막 없음)",
+  "창은 y530~1920(아래 끝까지 영상) — 뼈대 window 1390·브리프 '창 아래 검정 빈칸'과 다름",
+  "오른쪽 아래 빨강·흰 화살표 아이콘 없음(10초 원본 크롭 확인)",
+  "자막 y1217~1300 고정, 강조색·스티커 0, 전 줄 컷 등장(0프레임 완성, 30fps 띠 3.1~3.6·4.15~4.55)",
+  "목소리는 들을 수 없어 성별·TTS 여부 미확인(vtt 오인식 '호에 위치한이'·'좋았다는이' → 기계음 추정은 신호 수준)",
+  "효과음 미측정 — 23.7~24.0초 RMS 솟음(61→77dB)이 공개 카드와 겹치나 나레/효과음 구분 못 함 → sfx null",
+  "글꼴·size_px·max_w 는 눈 추정, 색·y·외곽 px 는 픽셀"
+ ],
+ "_made_by": "줄판독 워커(눈+cv2 픽셀) 2026-10-23"
+}

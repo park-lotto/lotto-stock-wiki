@@ -14,7 +14,7 @@ import cv2
 
 from . import probe
 from .layout import ink_mask, ink_fill, lum, segs, FILL_BIG_FRAC
-from .constants import (CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_CORE_MIN_PX, CAP_CORE_KEEP,
+from .constants import (STATIC_FILL_RGB, ANIM_MATCH0, ANIM_STEP, ANIM_SETTLE_S, ANIM_REF_PAD, STATIC_INK_DIFF, STATIC_PAIR_S, ANIM_XPAD, CAP_FPS, CAP_SCALE_W, CAP_SCALE_H, CAP_DIFF, CAP_MERGE_S, CAP_CORE_MIN_PX, CAP_CORE_KEEP,
                         CAP_CORE_SAME, CAP_CORE_MAX_FRAC, CAP_STILL, CAP_BAND_PAD, CAPTION_INSET,
                         LINE_ROW_FRAC, LINE_MIN_H, FILL_LUM, FILL_CHROMA, FILL_BG_DIFF, FILL_FRAC,
                         GLYPH_RUN_MAX, GLYPH_FIRST_LINE_MIN, GLYPH_ROW_PX, GLYPH_OUTLINE_DIFF, GLYPH_PER_VIDEO,
@@ -133,7 +133,7 @@ def is_fill(img: np.ndarray, bg_rgb: list[int]) -> np.ndarray:
     return (lum(img) > FILL_LUM) & (chroma > FILL_CHROMA) & (diff > FILL_BG_DIFF)
 
 
-def caption_lines(img: np.ndarray, pol: str, y_off: int, bg_rgb: list[int]) -> dict | None:
+def caption_lines(img: np.ndarray, pol: str, y_off: int, bg_rgb: list[int], raw: np.ndarray | None = None) -> dict | None:
     """줄 수·줄별 잉크 폭·첫 줄 y·행간·형광펜. 줄 = 행 잉크 비율 > LINE_ROW_FRAC 가 LINE_MIN_H행 이상."""
     ink = ink_mask(img, pol)
     bands = segs(ink.mean(axis=1) > LINE_ROW_FRAC, min_len=LINE_MIN_H)
@@ -145,7 +145,7 @@ def caption_lines(img: np.ndarray, pol: str, y_off: int, bg_rgb: list[int]) -> d
         widths.append(int(xs.max() - xs.min()))
     return {"lines": len(bands), "widths": widths, "top_y": int(bands[0][0] + y_off),
             "leading": int(bands[1][0] - bands[0][0]) if len(bands) > 1 else None,
-            "mark": bool(is_fill(img, bg_rgb).mean() > FILL_FRAC)}
+            "mark": bool(is_fill(raw if raw is not None else img, bg_rgb).mean() > FILL_FRAC)}
 
 
 def _run_median(mask: np.ndarray) -> float | None:
@@ -157,10 +157,11 @@ def _run_median(mask: np.ndarray) -> float | None:
     return float(st.median(out)) if out else None
 
 
-def glyph_style(img: np.ndarray, pol: str, bg_rgb: list[int]) -> dict | None:
+def glyph_style(img: np.ndarray, pol: str, bg_rgb: list[int], raw: np.ndarray | None = None) -> dict | None:
     """획 폭(잉크 가로/세로 연속길이 중앙값 중 작은 쪽)·첫 줄 높이·외곽선(두께)·그림자 (glyph_style 정의).
-    잉크 = ink_fill(밝은 글자는 속까지 채움) — 테두리 고리만으로 재면 획 2px·외곽선 없음으로 나왔다(2026-10-16)."""
-    L = lum(img)
+    잉크 = ink_fill(밝은 글자는 속까지 채움) — 테두리 고리만으로 재면 획 2px·외곽선 없음으로 나왔다(2026-10-16).
+    raw = 움직이는 영상을 지우기 전 원본(static_only 전) — 외곽선·바탕 밝기는 원본 화소로 잰다(지운 자리 바탕색이 외곽선과 같아지면 '없음')."""
+    L = lum(raw if raw is not None else img)
     ink = ink_fill(img, pol)
     if ink.sum() < 50:
         return None
@@ -233,15 +234,54 @@ def _ink_box(mask: np.ndarray):
     return int(xs.min()), int(xs.max()), int(mask.sum())
 
 
-def caption_anim(path: str, vl: dict, t0: float, fps: float) -> str:
-    """등장 효과: 자막 시작 뒤 ANIM_FRAMES 프레임의 잉크 bbox 폭·중심·면적 변화."""
+def static_only(img: np.ndarray, nxt: np.ndarray | None, bg_rgb) -> np.ndarray:
+    """같은 자막 안 조금 뒤 표본과 밝기 차가 STATIC_INK_DIFF 이상인 화소(움직이는 영상)를 바탕색으로 지운다.
+    밝은 영상(눈 덮인 장면)이 잉크로 잡혀 줄 폭·글자 높이·등장효과가 영상 줌을 쟀다(2026-10-23 울지마트롯 JlgdcIk9Gd0:
+    줄 폭 965 · '확대/축소' — 30fps 추적상 자막 잉크는 교체 순간 계단으로 바뀌고 폭만 영상 줌 따라 938→1079 로 늘었다)."""
+    if nxt is None:
+        return img
+    moving = np.abs(lum(img) - lum(nxt)) >= STATIC_INK_DIFF
+    out = img.copy()
+    # 중간 회색 = 밝은 글자도 어두운 외곽선도 아닌 값. 바탕색(검정)으로 칠하면 옆의 밝은 화소가 '글자+외곽선'으로 새로 잡혔다
+    out[moving] = np.asarray(STATIC_FILL_RGB, dtype=img.dtype)
+    return out
+
+
+def caption_anim(path: str, vl: dict, t0: float, fps: float, xlim: tuple[int, int] | None = None) -> str:
+    """등장 효과: 자막 시작 뒤 ANIM_FRAMES 프레임의 잉크 bbox 폭·중심·면적 변화.
+    xlim = 멈춘 글자로 잰 자막 가로 범위(±여유) — 그 밖 잉크(움직이는 영상)는 세지 않는다.
+    기준 = 효과 구간 뒤 ANIM_SETTLE_S 의 자리 잡은 자막(끝 두 프레임 사이 멈춘 글자 화소). 잉크 bbox 만 보면 밝은 영상의
+    줌·이동을 자막 효과로 쟀다(2026-10-23 울지마트롯 JlgdcIk9Gd0 — 프레임 모음상 자막은 한 프레임에 교체)."""
     reg = caption_region(vl)
     W = vl["canvas"][0]
     y0, y1 = reg
     pol = vl["caption"]["ink"]
-    seq = [b for b in (_ink_box(ink_mask(f, pol)) for f in
-                       probe.frames(path, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0, ss=t0, dur=ANIM_FRAMES / fps))
-           if b]
+    frames = list(probe.frames(path, f"crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0, ss=t0, dur=ANIM_FRAMES / fps + ANIM_SETTLE_S))
+    near = None
+    if len(frames) >= ANIM_FRAMES + 3:
+        a, b = frames[-2], frames[-1]
+        m_ref = ink_mask(b, pol) & ink_mask(a, pol) & (np.abs(lum(a) - lum(b)) < STATIC_INK_DIFF)
+        if m_ref.sum() >= 50:
+            Lr = lum(b)[m_ref]
+            mt = [float((np.abs(lum(f)[m_ref] - Lr) < STATIC_INK_DIFF * 2).mean()) for f in frames]
+            # 교체 검출 시각이 몇 프레임 이를 수 있다(실측 2~5프레임) → 처음 자리 잡는 프레임에서 한 번에 ANIM_STEP 이상 뛰면(계단) 바로 뜬 것
+            # (직전 값은 영상이 느리게 움직이면 0.6 대까지 높다 — 합성 줌 장면 0.65→0.97)
+            k = next((j for j, v in enumerate(mt) if v >= ANIM_MATCH0), None)
+            if k is not None and k < ANIM_FRAMES and min(mt[k:]) >= ANIM_MATCH0 and (k == 0 or mt[k] - mt[k - 1] >= ANIM_STEP):
+                return "없음"
+            # 계단이 아니면 효과 있음 — 종류는 자리 잡은 자막 둘레(ANIM_REF_PAD) 잉크로만 잰다
+            near = cv2.dilate(m_ref.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_RECT, (2 * ANIM_REF_PAD + 1, 2 * ANIM_REF_PAD + 1))) > 0
+    frames = frames[:ANIM_FRAMES]
+
+    def _m(f):
+        m = ink_mask(f, pol)
+        if near is not None:
+            m &= near
+        if xlim:
+            m[:, :max(0, xlim[0])] = False
+            m[:, xlim[1]:] = False
+        return m
+    seq = [b for b in (_ink_box(_m(f)) for f in frames) if b]
     if len(seq) < 4:
         return "판정불가"
     w = [b[1] - b[0] for b in seq]; cx = [(b[0] + b[1]) / 2 for b in seq]; area = [b[2] for b in seq]
@@ -267,22 +307,35 @@ def measure_video(path: str, vl: dict, meta: dict) -> dict:
     W = vl["canvas"][0]
     pol = vl["caption"]["ink"]
     want = {int(round((a + b) / 2 * CAP_FPS)): i for i, (a, b) in enumerate(spans)}
+    # 짝 표본: 가운데에서 STATIC_PAIR_S 뒤(같은 자막 안일 때만) — 움직이는 영상 화소를 지우는 데 쓴다
+    pair = {}
+    for k, i in want.items():
+        k2 = k + max(1, int(round(STATIC_PAIR_S * CAP_FPS)))
+        if k2 / CAP_FPS < spans[i][1] - 0.05:
+            pair[k2] = i
     mids: dict[int, np.ndarray] = {}
+    nexts: dict[int, np.ndarray] = {}
     for k, f in enumerate(probe.frames(path, f"fps={CAP_FPS},crop={W}:{y1 - y0}:0:{y0}", W, y1 - y0)):
         if k in want:
             mids[want[k]] = f.copy()
+        if k in pair:
+            nexts[pair[k]] = f.copy()
+    raws = mids
+    mids = {i: static_only(img, nexts.get(i), vl["bg_rgb"]) for i, img in mids.items()}
     items = []
     for i, (a, b) in enumerate(spans):
         img = mids.get(i)
-        m = caption_lines(img, pol, y0, vl["bg_rgb"]) if img is not None else None
+        m = caption_lines(img, pol, y0, vl["bg_rgb"], raws.get(i)) if img is not None else None
         items.append({"i": i, "t0": round(a, 2), "t1": round(b, 2), **(m or {"lines": 0})})
     glyph = []
     for i in sorted(set(np.linspace(0, len(spans) - 1, min(GLYPH_PER_VIDEO, len(spans))).astype(int).tolist())):
         img = mids.get(i)
-        g = glyph_style(img, pol, vl["bg_rgb"]) if img is not None else None
+        g = glyph_style(img, pol, vl["bg_rgb"], raws.get(i)) if img is not None else None
         if g:
             g["i"] = i
-            g["anim"] = caption_anim(path, vl, spans[i][0] + 0.03, meta["fps"])
+            xs = np.where(ink_mask(img, pol).any(axis=0))[0]
+            xlim = (int(xs.min()) - ANIM_XPAD, int(xs.max()) + ANIM_XPAD) if xs.size else None
+            g["anim"] = caption_anim(path, vl, spans[i][0] + 0.03, meta["fps"], xlim)
             glyph.append(g)
     return {"region": [y0, y1], "changes": changes, "spans": [[round(a, 2), round(b, 2)] for a, b in spans],
             "unstable": tr["unstable"], "items": items, "glyph": glyph}

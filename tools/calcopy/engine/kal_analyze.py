@@ -45,9 +45,9 @@ END_FRAC = 0.85    # 끝 = 길이 85% 이후(engine/rules.py END_FRAC)
 
 def _sp(speaker) -> str:
     s = (speaker or "").strip()
-    if s.startswith("나레"):
+    if s.startswith("나레") or s in ("narr", "tts"):   # 공용 렌더러(render_bench) 자막표 = narr/orig
         return "나레"
-    if s.startswith(("원음", "연예인", "본인")):
+    if s.startswith(("원음", "연예인", "본인")) or s == "orig":
         return "원음"
     if s.startswith("제3자"):
         return "제3자"
@@ -439,11 +439,38 @@ def match_table(bench_docs: list[dict], ours: dict, ours_media: dict | None, ben
     return {"verdict": verdict, "rows": rows, "n_bench": len(B), "ours_n_lines": O["n"]}
 
 
+def with_pixel(T: dict, bench_mp4: str, ours_mp4: str, out_dir: str) -> dict:
+    """(판단 주인 · 1차 칼카피 관문 하나) 줄 단위 자(MATCH_RULES) + 픽셀·소리 자(compare.py 24칸)를 한 판정으로.
+    둘 다 통과여야 통과. compare 는 따로 판정하지 않고 여기서만 합친다(10-23 사장님 '덧대기 없애자')."""
+    from tools.calcopy.engine import compare as _cmp
+    res = _cmp.compare(bench_mp4, ours_mp4, out_dir)
+    v = res["verdict"]
+    # 오른쪽 위 '광고' 표시(사장님 10-22 모든 렌더 의무, ad_mark) = 화면 맨 위(y<100) 띠 하나 — 벤치에 없어도 칼카피 차이가 아니다
+    ub = [b for b in (res["ours"].get("bands") or []) if isinstance(b, (list, tuple)) or isinstance(b, dict)]
+    def _y0(b):
+        return ((b.get("band") or [b.get("y0", 0)])[0] if isinstance(b, dict) else b[0]) or 0
+    if any(_y0(b) < 100 for b in ub) and "창 위 고정 글자 띠 개수" in v["out"]:
+        ob = res["orig"].get("bands") or []
+        if len([b for b in ub if _y0(b) >= 100]) == len(ob):
+            v = {**v, "out": [x for x in v["out"] if x != "창 위 고정 글자 띠 개수"], "n_in": v["n_in"] + 1, "ad_mark": "광고 표시 띠 1개 뺌"}
+            v["verdict"] = "통과" if not v["out"] and not v["failed"] else "미달"
+    T["pixel"] = {"verdict": v["verdict"], "n_in": v["n_in"], "n_criteria": v["n_criteria"], "out": v["out"],
+                  "failed": v["failed"], "table": str(Path(out_dir) / "차이표.md")}
+    T["line_verdict"] = T["verdict"]
+    T["verdict"] = "통과" if T["line_verdict"] == "통과" and v["verdict"] == "통과" else "미달"
+    return T
+
+
 def match_md(T: dict, title: str = "") -> str:
     L = [f"# 재현일치도 {title}(kal_analyze match · 벤치 {T['n_bench']}편 · 우리 줄 {T['ours_n_lines']}) — **{T['verdict']}**", "",
          "| 항목 | 벤치 | 우리 | 차 | 판정 | 기준 | 자·합격선 |", "|---|---|---|---|---|---|---|"]
     for r in T["rows"]:
         L.append(f"| {r['key']} | {r['bench']} | {r['ours']} | {r['diff']} | {'✓' if r['judge'] == 'in' else '✗' if r['judge'] == 'out' else '미측정'} | {'기준' if r['core'] else '참고'} | {r['why']} |")
+    if T.get("pixel"):
+        P = T["pixel"]
+        L += ["", f"## 픽셀·소리(compare 같은 자) — {P['verdict']} ({P['n_criteria']}칸 중 안 {P['n_in']})",
+              f"- 밖: {', '.join(P['out']) or '없음'} · 미측정: {', '.join(P['failed']) or '없음'} · 표 `{P['table']}`",
+              f"- 줄 단위 판정 {T['line_verdict']} + 픽셀 판정 {P['verdict']} → **최종 {T['verdict']}**"]
     L += ["", "판정 = 기준 항목 전부 ✓ 일 때만 통과(미측정은 통과가 아니다). 참고 항목은 하이브리드 설계상 다른 값(−14 LUFS 통일·나레 비율)."]
     return "\n".join(L) + "\n"
 
@@ -471,13 +498,14 @@ def media_of(mp4: str, win: tuple | None = None) -> dict:
     from shopping_shorts.channelkit.bench import audio, probe
     meta = probe.info(mp4)
     dur = float(meta.get("duration") or 0)
-    cuts = scene_cuts(mp4, win)
-    edges = [0.0] + [c for c in cuts if 0 < c < dur] + [dur]
-    lens = [round(b - a, 3) for a, b in zip(edges, edges[1:]) if b - a > 0.05]
+    # 컷 자 = compare 와 같은 함수(bench_one.measure → cuts.scene_detect+merge_close+cut_verify) 한 벌 — 10-23 꿀템노트에서
+    # 옛 scene_cuts(창 크롭 scene>0.3)가 같은 원본의 크롭 바꿈 컷을 놓쳐 2.21초(compare 0.867초)로 쟀다. 두 자가 다르면 판정이 둘이 된다.
+    from tools.calcopy.engine import bench_one, compare as _cmp
+    lens = [round(x, 3) for x in _cmp._shots(bench_one.measure(mp4, layout_mode="bench"))[0] if x > 0.05]
     e = audio.ebur128(mp4)
     return {"duration": round(dur, 2), "cut_median": round(statistics.median(lens), 2) if lens else None, "n_cuts": len(lens),
             "lufs": e.get("I"), "tp": e.get("TP"), "win": list(win) if win else None,
-            "method": f"probe.info + scene_cuts(crop 창, scene>{SCENE_T}, 0.2초 묶음) + bench.audio.ebur128"}
+            "method": "probe.info + bench_one.measure 컷(compare 와 같은 자) + bench.audio.ebur128"}
 
 
 ours_media_of = media_of
@@ -813,6 +841,7 @@ def main(argv=None) -> int:
     m = sub.add_parser("match"); m.add_argument("--bench", required=True); m.add_argument("--ours", required=True)
     m.add_argument("--ours-mp4"); m.add_argument("--bench-src", help="벤치 원본 mp4 폴더(같은 자로 컷·LUFS)"); m.add_argument("--bench-tteutgi", help="(대안) 뜯기 값 — 자가 다름")
     m.add_argument("--win", help="영상 창 x,y,w,h (없으면 줄판독 layout.window)"); m.add_argument("--out"); m.add_argument("--title", default="")
+    m.add_argument("--bench-mp4", help="벤치 대표 1편 mp4 — 주면 픽셀·소리 자(compare)까지 한 판정으로(1차 칼카피 관문)")
     A = ap.parse_args(argv)
     if A.cmd == "frames":
         lst = frames_cmd(A.mp4, A.out, A.y0, A.y1, A.fps, A.max_strips)
@@ -884,6 +913,8 @@ def main(argv=None) -> int:
         bm = bench_media_src(A.bench_src, ids, win) if A.bench_src else (bench_media_of(A.bench_tteutgi, ids) if A.bench_tteutgi else None)
         T = match_table(bench, ours, om, bm)
         T["ours_media"], T["bench_media"] = om, bm
+        if A.bench_mp4 and A.ours_mp4:
+            with_pixel(T, A.bench_mp4, A.ours_mp4, str(Path(A.out).with_suffix("")) + "_픽셀" if A.out else "_match_픽셀")
         md = match_md(T, A.title)
         if A.out:
             Path(A.out).write_text(md, encoding="utf-8")

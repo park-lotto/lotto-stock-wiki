@@ -1,0 +1,231 @@
+{
+ "_note": "배치 결과 — placement.place(판 설정 꿀템노트판) · 시각은 final.mp4 기준 초",
+ "pack": "kkultemnote",
+ "rows": [
+  {
+   "line": "HOOK",
+   "t0": 0.0,
+   "t1": 1.56,
+   "text": "너무 비싼 꽃병인 줄 알아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N1",
+   "t0": 1.56,
+   "t1": 2.584,
+   "text": "최화정 집 고급 꽃병이",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N1",
+   "t0": 2.584,
+   "t1": 3.457,
+   "text": "쿠팡템이라는데요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "쿠팡템"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O1",
+   "t0": 3.457,
+   "t1": 4.597,
+   "text": "너무 고급스럽잖아",
+   "speaker": "orig",
+   "variant": "orig_red",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "N2",
+   "t0": 4.597,
+   "t1": 5.703,
+   "text": "근데 왜 두 개나 샀나요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "두 개"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O2",
+   "t0": 5.703,
+   "t1": 7.263,
+   "text": "사이즈 가늠이 어렵잖아",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 7.263,
+   "t1": 8.205,
+   "text": "품절 마감 뜬 거 보고",
+   "speaker": "narr",
+   "variant": "cut",
+   "emph": [
+    {
+     "word": "품절"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  },
+  {
+   "line": "N3",
+   "t0": 8.205,
+   "t1": 8.932,
+   "text": "놀라서 샀다네요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O3",
+   "t0": 8.932,
+   "t1": 10.192,
+   "text": "놀래가지고 샀어",
+   "speaker": "orig",
+   "variant": "orig_pop",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "pop"
+  },
+  {
+   "line": "N4",
+   "t0": 10.192,
+   "t1": 11.575,
+   "text": "가격은 2만 원대였다는데요?",
+   "speaker": "narr",
+   "variant": "",
+   "emph": [
+    {
+     "word": "2만 원대"
+    }
+   ],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O4",
+   "t0": 11.575,
+   "t1": 12.775,
+   "text": "진짜 완전 비싼 꽃병",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "fade"
+  },
+  {
+   "line": "O5",
+   "t0": 12.775,
+   "t1": 14.467,
+   "text": "잘 고르면 되는 거야^^",
+   "speaker": "orig",
+   "variant": "",
+   "emph": [],
+   "sticker": "",
+   "stickers": [],
+   "enter": "cut"
+  }
+ ],
+ "sfx": [],
+ "flashes": [],
+ "comment": null,
+ "log": [
+  "본보기 벤치 편 = BpUOIUwkoG4",
+  "변형 orig_red → O1「너무 고급스럽잖아」",
+  "효과음 0발(본보기 0) []",
+  "등장 {'cut': 4, 'fade': 7, 'pop': 1} · 강조 4/12"
+ ],
+ "check": {
+  "ok": true,
+  "reference": "BpUOIUwkoG4",
+  "worst_slot_diff": 0.1,
+  "slots": {
+   "narr.first": {
+    "bench": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "ours": {
+     "fade": 0.75,
+     "cut": 0.25
+    },
+    "bench_emph": 0.75,
+    "ours_emph": 0.75,
+    "n": 4
+   },
+   "narr.rest": {
+    "bench": {
+     "fade": 1.0
+    },
+    "ours": {
+     "fade": 1.0
+    },
+    "bench_emph": 1.0,
+    "ours_emph": 0.5,
+    "n": 2
+   },
+   "orig.first": {
+    "bench": {
+     "fade": 0.4,
+     "cut": 0.4,
+     "pop": 0.2
+    },
+    "ours": {
+     "cut": 0.5,
+     "fade": 0.33,
+     "pop": 0.17
+    },
+    "bench_emph": 0.0,
+    "ours_emph": 0.0,
+    "n": 6
+   },
+   "stickers": {
+    "bench": {
+     "spark_lines": 2
+    },
+    "ours": {}
+   },
+   "sfx": {
+    "bench": 0,
+    "ours": 0
+   }
+  }
+ }
+}

@@ -252,6 +252,8 @@ def caption_table(S, T, N):
 def main():
     plan = "--plan" in sys.argv
     S = jload(HERE / "대본.json"); M = jload(HERE / "재료.json")
+    if "--no-comment" in sys.argv:   # 대조용 사본: 벤치 편에 댓글 카드가 없을 때 같은 조건으로 재기(카드가 자막 띠로 묶여 재지는 것 방지, 10-23)
+        S.pop("comment", None); S["work_dir"] += "_nocard"
     work = Path(S["work_dir"]); work.mkdir(parents=True, exist_ok=True)
     N = None if plan else narr(S, work)
     T = timeline(S, N)
@@ -275,7 +277,7 @@ def main():
            "video": str(final), "pack": "kkultemnote(보강안 channel/kkultemnote/자막팩_보강안.json)",
            "style_keys": {"orig": "speakers.orig(꾸불림 90 흰·검정 테, 컷인)", "orig_pop": "variants.orig_pop(popOvershoot 380ms)",
                           "orig_red": "variants.orig_red(빨강 #F51814, 컷인)", "narr": "speakers.narr(굵은 고딕 83 흰 + emph 노랑 #FDF60E, flashIn 66ms)"},
-           "stickers": [{"kind": "comment_card", "in_video": True, "t0": next(r["t0"] for r in T["rows"] if r["id"] == S["comment"]["from"]), "t1": T["end"],
+           "stickers": [] if not S.get("comment") else [{"kind": "comment_card", "in_video": True, "t0": next(r["t0"] for r in T["rows"] if r["id"] == S["comment"]["from"]), "t1": T["end"],
                          "text": S["comment"]["text"], "likes": S["comment"]["likes"], "note": "렌더에 이미 들어 있음(틀 층) — 자막 입힐 때 다시 넣지 말 것"}],
            "timeline": T, "narr_align": {k: v["align_span"] for k, v in N.items() if not k.startswith("_")}, "rows": caption_table(S, T, N)}
     (HERE / "자막표.json").write_text(json.dumps(tab, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -58,8 +58,9 @@ def norm_rows(pack, table):
         elif pack == "kkultemnote":
             v = r.get("style") or ""
             row = {"line": r["line"], "t0": r["t0"], "t1": r["t1"], "text": r["text"], "speaker": "narr" if r["who"] == "나레" else "orig",
-                   "emph": [{"word": w} for w in r.get("emph") or []], "want_hex": ["#F51814" if v == "orig_red" else "#FDF60E"] if r.get("emph") else [],
-                   "variant": v if v in ("orig_pop", "orig_red") else "", "sticker": "", "typing": False}
+                   "emph": [{"word": w, "part": True} for w in r.get("emph") or []], "want_hex": ["#F51814" if v == "orig_red" else "#FDF60E"] if r.get("emph") else [],
+                   "variant": v if v in ("orig_pop", "orig_red") else "", "sticker": "", "typing": False,
+                   "stickers": r.get("stickers") or []}   # 이어 붙이기(append_text) 등 — 자막표 칸 그대로(2판 10-23)
         else:   # starpick
             narr = str(r.get("speaker", "")).startswith("나레")
             row = {"line": f'{r["line"]}', "t0": r["t0"], "t1": r["t1"], "text": r["text"], "speaker": "narr" if narr else "orig",

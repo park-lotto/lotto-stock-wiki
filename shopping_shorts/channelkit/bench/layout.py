@@ -23,7 +23,7 @@ from . import probe
 from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WINDOW_COL_FRAC, WINDOW_MIN_PX,
                         SEG_GAP, DYN_ROW_CHG, ROW_CHG_DIFF, INK_ROW_PX, BAND_PRESENCE, LOGO_XVID_STD, LOGO_MIN_H,
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
-                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
+                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE, STATIC_INK_DIFF, STATIC_INK_MIN, STATIC_INK_PEAK, WINDOW_FULL_FRAC, WINDOW_CHUNK_S,
                         FRAME_SEG_FPS, FRAME_SEG_W, FRAME_SEG_MIN_S,
                         FRAME_BREAK_ABS, FRAME_BREAK_REL, WINDOW_BRIDGE_PX, WINDOW_BRIDGE_FRAC,
                         WINDOW_NONBG_FRAC, WINDOW_SOFT_FRAC, WINDOW_BRIDGE_NONBG, PICTURE_FRAC)
@@ -108,7 +108,9 @@ def _scan(path: str, meta: dict, skip: list | None = None) -> dict:
     s1 = s2 = srgb = gmin = gmax = None
     rowchg = np.zeros(H)
     ink_rows = {"dark": [], "bright": []}
+    static_ink = np.zeros(H)      # 이웃 표본 사이 그대로인 밝은 테두리 글자 행 — 창 안 자막(바뀌기 전까지 멈춤) vs 영상(움직임)
     prev = None
+    prev_ink = None
     for k, f in enumerate(probe.frames(path, f"fps={LAYOUT_FPS},scale={LAYOUT_W}:{H}", LAYOUT_W, H)):
         if skip and any(a <= k / LAYOUT_FPS < b for a, b in skip):
             continue
@@ -118,17 +120,22 @@ def _scan(path: str, meta: dict, skip: list | None = None) -> dict:
             gmin = g.copy(); gmax = g.copy()
         s1 += g; s2 += g * g; srgb += f
         np.minimum(gmin, g, out=gmin); np.maximum(gmax, g, out=gmax)
+        bright_ink = ink_mask(f, "bright")
         if prev is not None:
             rowchg += np.abs(g - prev).mean(axis=1) > ROW_CHG_DIFF
+            if prev_ink is not None:
+                static_ink += (bright_ink & prev_ink & (np.abs(g - prev) < STATIC_INK_DIFF)).sum(axis=1) > INK_ROW_PX
         prev = g
-        for pol in ("dark", "bright"):
-            ink_rows[pol].append(ink_mask(f, pol).sum(axis=1))
+        prev_ink = bright_ink
+        ink_rows["dark"].append(ink_mask(f, "dark").sum(axis=1))
+        ink_rows["bright"].append(bright_ink.sum(axis=1))
         n += 1
     if n < 3:
         raise ValueError(f"레이아웃 표본 부족({n}): {path}")
     mean = s1 / n
     std = np.sqrt(np.maximum(s2 / n - mean ** 2, 0))
     return {"n": n, "W": W, "H": H, "std": std, "mean_rgb": srgb / n, "rowchg": rowchg / max(1, n - 1),
+            "static_ink": static_ink / max(1, n - 1),
             "ink_rows": ink_rows, "gmin": gmin, "gmax": gmax}
 
 
@@ -212,7 +219,7 @@ def _finish(win, st: dict) -> dict:
     static_rows = diff_bg.mean(axis=1) > 0.004
     above_bands = [list(s) for s in segs(static_rows[:win[1]], min_len=6)] if win else []
 
-    caption = _caption(win, H, st["rowchg"], st["ink_rows"], outside_pol, n)
+    caption = _caption(win, H, st["rowchg"], st["ink_rows"], outside_pol, n, st.get("static_ink"))
     return {
         "window": win, "bg_rgb": bg_rgb, "bg_lum": round(bg_lum, 1), "caption": caption,
         "above_bands": above_bands, "n_samples": n,
@@ -259,15 +266,21 @@ def window_vote(path: str, meta: dict) -> dict | None:
             groups.append([c])
     if not groups:
         return None
-    g = max(groups, key=len)
-    if len(g) * 2 <= n:     # 과반 미달 = 틀 없는 전체화면 편 — 창을 지어내지 않는다(2026-10-16 썰풀다 D3Pc6HZ6t6c 1/3로 창을 지어냄)
+    def _inside(c, g0):      # 조각 창이 무리 창 안에 든다(어두운 장면은 창을 줄일 뿐 늘리지 못한다)
+        cw, gw = c["window"], g0[0]["window"]
+        return cw[1] >= gw[1] - VARIANT_TOL_PX and cw[1] + cw[3] <= gw[1] + gw[3] + VARIANT_TOL_PX and not _same_window(cw, gw)
+    def _support(g0):
+        return len(g0) + sum(1 for c in chunks if c["window"] and c["window"][3] < WINDOW_FULL_FRAC * H and _inside(c, g0))
+    g = max(groups, key=lambda g0: (len(g0), _support(g0)))
+    # 찬성표 = 같은 창 + 그 안에 드는 조각(울지마트롯 tv-hFwrvEc4: 1480 훅·772 어두운 장면·997·996 → 2+1/4)
+    if _support(g) * 2 <= n:     # 과반 미달 = 틀 없는 전체화면 편 — 창을 지어내지 않는다(2026-10-16 썰풀다 D3Pc6HZ6t6c 1/3로 창을 지어냄)
         return None
     win = [int(np.median([c["window"][k] for c in g])) for k in range(4)]
     main = [c["t"] for c in g]
     other_chunks = [c["t"] for c in chunks if c not in g]
     seg = frame_segments(path, meta, win, main, other_chunks)
     return {"window": win, "chunks": chunks, "main": main, "other_chunks": other_chunks,
-            "other": seg["other"], "other_method": seg["method"], "votes": f"{len(g)}/{n}"}
+            "other": seg["other"], "other_method": seg["method"], "votes": f"{len(g)}(+안 {_support(g) - len(g)})/{n}"}
 
 
 def frame_segments(path: str, meta: dict, win: list[int], main: list[list[float]], other: list[list[float]]) -> dict:
@@ -343,6 +356,19 @@ def measure_video(path: str, meta: dict) -> dict:
                       "other_method": v["other_method"], "chunks": v["chunks"]}
         elif win is not None:
             method = "layout._window(편 전체) — 조각 다수결 미달: 틀 없는 전체화면 편"
+    elif meta.get("duration", 0) >= 2 * WINDOW_CHUNK_S:
+        # 편 전체 창은 항상 조각 다수결과 맞춰 본다 — 앞 훅(누끼 줌)처럼 약하게 움직이는 다른 틀이 섞이면 창이 95% 미만으로만
+        # 늘어나 위 조건을 빠져나갔다(2026-10-23 울지마트롯 JlgdcIk9Gd0: 편 전체 1379 · 다수결 996 = 실측 440~1436)
+        v = window_vote(path, meta)
+        if v and not _same_window(v["window"], win):
+            try:
+                st2 = _scan(path, meta, skip=v["other_chunks"]) if v["other_chunks"] else st
+            except ValueError:
+                st2 = st
+            frames = {"main": v["main"], "other": v["other"], "other_chunks": v["other_chunks"],
+                      "other_method": v["other_method"], "chunks": v["chunks"], "window_before_vote": win}
+            win, st = v["window"], st2
+            method = f"layout.window_vote(편 전체 {frames['window_before_vote']} ≠ 다수결 {v['votes']} — 다수결, 다른 틀 구간 빼고 통계)"
     if frames is None and win is not None and win[3] < WINDOW_FULL_FRAC * st["H"]:
         fb = frame_breaks(path, meta, win)       # 짧은 다른 틀(첫 1~3초 훅 카드·인트로)은 6초 조각 다수결로 안 보인다
         if fb["other"]:
@@ -365,7 +391,7 @@ def measure_video(path: str, meta: dict) -> dict:
     return lv
 
 
-def _caption(win, H, rowchg, ink_rows, outside_pol, n) -> dict:
+def _caption(win, H, rowchg, ink_rows, outside_pol, n, static_ink=None) -> dict:
     """자막 자리: 창 밖(위/아래)에서 자주 바뀌는 글자 행이 있으면 그쪽, 없으면 창 안 밝은 외곽선 글자."""
     if not win:
         return {"pos": "none", "band": None, "ink": None}
@@ -388,7 +414,17 @@ def _caption(win, H, rowchg, ink_rows, outside_pol, n) -> dict:
         runs = [r for r in runs if any(y in dyn_rows for y in range(r[0], r[1]))]
         if runs:
             return {"pos": pos, "band": [int(min(r[0] for r in runs)), int(max(r[1] for r in runs))], "ink": outside_pol}
-    # 창 안(하드섭): 밝은 글자 + 외곽선이 표본의 INSIDE_PRESENCE 이상에서 보이는 행
+    # 창 안(하드섭) 1순위: 이웃 표본 사이 멈춰 있는 테두리 글자 행(정점의 STATIC_INK_PEAK 이상) — 밝은 영상(눈 덮인 장면)은
+    # '밝은 글자+외곽선' 존재율이 창 전체에서 0.3 을 넘어 띠가 창 전체가 됐다(2026-10-23 울지마트롯 JlgdcIk9Gd0 [441,1436], 실측 1168~1246)
+    if static_ink is not None:
+        si = np.asarray(static_ink[wy0:wy1], float)
+        peak = float(si.max()) if si.size else 0.0
+        if peak >= STATIC_INK_MIN:
+            runs = segs(si >= STATIC_INK_PEAK * peak, min_len=10, gap=SEG_GAP)
+            if runs:
+                s, e = max(runs, key=lambda r: si[r[0]:r[1]].sum())
+                return {"pos": "inside", "band": [int(s + wy0), int(e + wy0)], "ink": "bright", "method": "static_ink"}
+    # 창 안 2순위: 밝은 글자 + 외곽선이 표본의 INSIDE_PRESENCE 이상에서 보이는 행
     inside = pres["bright"][wy0:wy1]
     runs = segs(inside >= INSIDE_PRESENCE, min_len=10, gap=SEG_GAP * 4)
     if runs:

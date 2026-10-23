@@ -1,0 +1,1206 @@
+{
+ "id": "QReZRnEVz0o",
+ "dur": 25.5,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "송가인 엄마가 여름에 쓴",
+   "box": "빨강 띠 #FF1700",
+   "colors": [
+    {
+     "word": "송가인 엄마가 여름에 쓴",
+     "hex": "#FFFFFF"
+    },
+    {
+     "word": "(띠)",
+     "hex": "#FF1700"
+    }
+   ]
+  },
+  {
+   "text": "폴로 썬캡의 정보와 가격이",
+   "box": "없음(검정 바탕·검정 외곽)",
+   "colors": [
+    {
+     "word": "폴로 썬캡의 정보와 가격이",
+     "hex": "#FFFFFF"
+    }
+   ]
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "title_y": [
+   [
+    230,
+    375
+   ],
+   [
+    400,
+    500
+   ]
+  ],
+  "window": [
+   0,
+   531,
+   1080,
+   1920
+  ],
+  "caption_band": [
+   1217,
+   1297
+  ],
+  "source_y": null,
+  "source_hex": null,
+  "logo_y": null,
+  "watermark": {
+   "text": null,
+   "alpha": null
+  },
+  "window_note": "창이 화면 아래 끝까지(세로 꽉 찬 원본), 훅 0~3.73 은 누끼 두 사람(y≈764~1920)"
+ },
+ "lines": [
+  {
+   "t0": 3.733,
+   "t1": 4.867,
+   "speaker": "나레",
+   "text": "송가인이 여름에",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "밀짚모자 쓴 송가인",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    3.73
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 4.867,
+   "t1": 6.467,
+   "speaker": "나레",
+   "text": "진도를 내려갔을 적에",
+   "layer": "울지마트로트",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "송가인 말하는 얼굴",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 7,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 6.467,
+   "t1": 7.033,
+   "speaker": "나레",
+   "text": "어머님이",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "어머니 뒷모습(흰 리본 썬캡)",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    6.47
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 7.033,
+   "t1": 8.833,
+   "speaker": "나레",
+   "text": "독특한 디자인의 썬캡을",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡 리본 뒷모습",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 8.833,
+   "t1": 10.3,
+   "speaker": "나레",
+   "text": "착용하고 계셨는데요",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡 뒷모습",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    10.3
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 10.3,
+   "t1": 11.7,
+   "speaker": "나레",
+   "text": "이 썬캡은 천을 따로",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "어머니가 썬캡 매만짐",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [
+    10.3
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 11.7,
+   "t1": 12.767,
+   "speaker": "나레",
+   "text": "덧댄 것인지",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡 매만짐",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 9,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 12.767,
+   "t1": 13.633,
+   "speaker": "나레",
+   "text": "원래 폴로에서",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 13.633,
+   "t1": 14.733,
+   "speaker": "나레",
+   "text": "나오는 디자인인지",
+   "layer": "울지마트로트",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 14.733,
+   "t1": 16.1,
+   "speaker": "나레",
+   "text": "궁금해서 찾아보니",
+   "layer": "울지마트로트",
+   "role": "이음",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "어머니 얼굴+썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 7,
+   "cut_at": [
+    16.1
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 16.1,
+   "t1": 16.967,
+   "speaker": "나레",
+   "text": "원래 디자인이",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "어머니 옆얼굴 썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    16.1
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 16.967,
+   "t1": 17.7,
+   "speaker": "나레",
+   "text": "저런 식으로",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 17.7,
+   "t1": 18.667,
+   "speaker": "나레",
+   "text": "나오는 거였습니다",
+   "layer": "울지마트로트",
+   "role": "답",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    18.67
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 18.667,
+   "t1": 19.5,
+   "speaker": "나레",
+   "text": "햇빛 쨍할 때",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "썬캡 쓴 어머니 측면",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    18.67
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 19.5,
+   "t1": 20.233,
+   "speaker": "나레",
+   "text": "딱 쓰기 좋은",
+   "layer": "울지마트로트",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 20.233,
+   "t1": 21.667,
+   "speaker": "나레",
+   "text": "이 썬캡의 가격은",
+   "layer": "울지마트로트",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "썬캡",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 8,
+   "cut_at": [
+    21.67
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 21.667,
+   "t1": 23.167,
+   "speaker": "나레",
+   "text": "화면을 빠르게 톡톡",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡 로고 정면 클로즈업",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 6,
+   "cut_at": [
+    21.67
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 23.167,
+   "t1": 24.8,
+   "speaker": "나레",
+   "text": "두 번 누르면 공개됩니다",
+   "layer": "울지마트로트",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "기본",
+   "y": [
+    1217,
+    1297
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "썬캡 로고",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 6,
+   "cut_at": [
+    24.8
+   ],
+   "confidence": "픽셀",
+   "notes": ""
+  },
+  {
+   "t0": 24.8,
+   "t1": 25.5,
+   "speaker": "불명",
+   "text": "폴로 랄프로렌 선캡 가격 약 11만원대",
+   "layer": "울지마트로트",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "enter_curve": [
+    [
+     0,
+     100,
+     100,
+     0
+    ]
+   ],
+   "type_cps": null,
+   "cursor": false,
+   "exit": "cut(다음 줄로 즉시 교체)",
+   "variant": "2줄(가격 공개)",
+   "y": [
+    1156,
+    1360
+   ],
+   "fill_hex": "#FFFFFF",
+   "outline": {
+    "px": 9,
+    "hex": "#000000"
+   },
+   "ring": null,
+   "shadow": null,
+   "glow": null,
+   "box": null,
+   "font": {
+    "name": "굵은 고딕(GmarketSansBold 계열 추정)",
+    "basis": "눈 대조"
+   },
+   "size_px": 100,
+   "x": 540,
+   "align": "center",
+   "max_w": 1000,
+   "letter_gap_px": 4,
+   "line_gap_px": 24,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 바탕 제품 사진(줄무늬 썬캡)",
+   "motion": "still",
+   "transition": "cut",
+   "fit": 10,
+   "cut_at": [
+    24.8
+   ],
+   "confidence": "픽셀",
+   "notes": "가격 공개 2줄('폴로 랄프로렌 선캡'/'가격 약 11만원대'), vtt 음성 없음 → 불명"
+  }
+ ],
+ "beats": "훅(0~3.73 누끼+화살표, 나레가 제목 읽음·자막 없음) → 상황(3.73~10.3 진도에서 어머니 썬캡) → 궁금증(10.3~16.1 덧댄 건지 원래 디자인인지) → 답(16.1~18.67) → 장점(18.67~20.23) → 유도(20.23~24.8 가격은 톡톡 두 번) → 공개(24.8~25.5 제품 사진+가격 약 11만원대)",
+ "narr_share": "나레 줄 18/19 · 나레 초 약 21.1/25.5(훅 자막 없는 나레 0~3.7 별도)",
+ "notes": [
+  "자막 y(잉크)·채움 #FFFFFF 는 픽셀 실측, 외곽 9px 는 행 스캔 눈 추정(±2px), 글꼴·size_px(잉크 높이 80px→100px 역산)·자간은 눈 추정",
+  "효과음은 들을 수 없음 — 파형 대조 안 함(sfx null = 미측정)",
+  "오른쪽 아래 빨강·흰 화살표 아이콘: 이 편에선 없음(2fps 시트·원본 프레임 확인)",
+  "로고·워터마크 없음",
+  "나레=TTS 추정(전언체 '~계셨는데요'), 귀로 확인 안 함",
+  "지휘자 관찰과 다름: 창이 y531~1920(아래 검정 빈칸 없음) · 자막 y1217~1297 · 등장 cut · 출처 줄 없음 · 오른쪽 아래 아이콘 없음"
+ ],
+ "name_evidence": [
+  "송가인 = 제목 1줄·자막 3.7초",
+  "폴로 = 제목 2줄·가격 공개 줄"
+ ],
+ "_made_by": "줄판독 워커(눈+픽셀) 10-23",
+ "frame0": {
+  "what": "얼굴",
+  "face_frac": 0.3,
+  "text": "제목 2줄 + 누끼 어머니(썬캡)·송가인 + 빨간 화살표"
+ },
+ "no_caption": [
+  [
+   0,
+   3.733
+  ]
+ ],
+ "hook": {
+  "t": [
+   0,
+   3.733
+  ],
+  "what": "누끼 송가인 어머니(왼, 썬캡)·송가인(오른) 검정 바탕",
+  "arrow": {
+   "what": "빨강(흰 테) 굽은 화살표 → 썬캡",
+   "x": [
+    612,
+    720
+   ],
+   "y": [
+    672,
+    792
+   ],
+   "anim": "0프레임부터 보임, 대각선 앞뒤로 까딱(주기 약 0.5초)",
+   "confidence": "눈"
+  }
+ },
+ "price_reveal": {
+  "t": 24.8,
+  "form": "흰 바탕 제품 사진 위 채널 자막 2줄 '폴로 랄프로렌 선캡/가격 약 11만원대'(y1156~1360), 0.7초 뒤 끝"
+ }
+}
