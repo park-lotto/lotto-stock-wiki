@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 WRITTEN = {   # 언어별 글말·번역투 — 일본 쇼츠 9편 실측 0건(ja), 그 외는 각 지시문의 금지 목록과 같은 것
     "ja": re.compile(r"(ということ[。！!]*$|消え去|である[。]*$|における|となっております|にて)"),
     "ko": re.compile(r"(하는 것이다|것입니다\.?$|에 있어서|되어지|을 통해|를 통해)"),
-    "zh": re.compile(r"(之|其|乃|予以|进行|该产品)"),
+    "zh": re.compile(r"(之|(?<![尤极])其(?![实他中次])|乃|予以|进行|该产品)"),
     "en": re.compile(r"\b(hereby|thus|therefore|whereby)\b", re.I),
 }
 MAXLEN = {"ja": 32, "ko": 32, "zh": 24, "en": 90}

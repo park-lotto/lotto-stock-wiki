@@ -10036,11 +10036,11 @@ def api_script_cta_guess(body: dict):
 
 
 def _lang_voice_block(job, voice):
-    """영어·일본어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
+    """영어·일본어·중국어모드 작업에 타입캐스트(한국 성우)·Fish 한국어 성우를 쓰려 하면 422 응답, 아니면 None.
     언어 판정은 script_translate.job_lang 한 곳(2단계에서 외국어로 확정한 작업 = given_script가 그 언어)."""
     from shopping_shorts import script_translate
     lang = script_translate.job_lang(job)
-    if lang not in ("en", "ja"):
+    if lang not in ("en", "ja", "zh"):
         return None
     label = script_translate.LANG_LABEL[lang]
     if fish_tts.is_fish((voice or {}).get("model_id")):

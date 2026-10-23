@@ -25,6 +25,8 @@ _PUNCT = re.compile(r"[\s、。，,．.！!？?「」『』（）()・…〜~ー
 #   배경음 걷어낸 목소리(demucs) 4편으로 다시 재도 11.0~17.3반음 — 배경음 탓에 부푼 게 아니다.
 NATIVE_BAND = {
     "ja": {"syl_per_sec": (7.0, 9.6), "pitch_semitones": (11.0, 22.0), "long_pause_per_10s": (0.0, 1.0)},
+    # 중국어(관제 254): 원어민 쇼핑 내레이션 4편 4.2~6.5자/초(한자 1자 = 1음절). 억양 폭은 원어민 실측이 없어 아직 안 본다
+    "zh": {"syl_per_sec": (4.2, 6.8), "long_pause_per_10s": (0.0, 1.0)},
 }
 
 
@@ -52,8 +54,15 @@ def transcribe(path, lang="ja"):
 
 
 def reading(text, lang="ja"):
-    """표기를 걷어낸 '읽는 소리'. 일본어=히라가나, 그 밖=문장부호만 뺀 글자."""
+    """표기를 걷어낸 '읽는 소리'. 일본어=히라가나, 중국어=병음 음절 목록(간체·번체·같은 소리 다른 한자를 같게 본다), 그 밖=문장부호만 뺀 글자."""
     t = _PUNCT.sub("", text or "")
+    if lang == "zh":
+        from pypinyin import lazy_pinyin, Style   # 성조까지 본다 — 买(mai3)/卖(mai4)처럼 성조가 뜻을 가른다
+        t = re.sub(r"[，。！？、；：“”‘’（）]", "", t)
+        # 받아쓰기 습관을 양쪽에서 같게 맞춘다(관제 254, 성우 48줄 실측): 어기조사 啊呀呢哦嘛·儿化 儿 는 받아쓰기가 자주 빠뜨리고,
+        # 구조조사 地·得 는 的 로 적는다 — 소리 차이가 아닌데 오독으로 세던 것
+        t = re.sub(r"[啊呀呢哦嘛儿]", "", t).replace("地", "的").replace("得", "的")
+        return [x for x in lazy_pinyin(t, style=Style.TONE3, neutral_tone_with_five=True) if x.strip()]
     if lang != "ja":
         return t
     import pykakasi
@@ -63,18 +72,36 @@ def reading(text, lang="ja"):
 
 def compare_reading(script, heard, lang="ja"):
     a, b = reading(script, lang), reading(heard, lang)
-    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
-    # 앞뒤 3글자를 붙여 어느 낱말인지 보이게 한다(「だ」→「が」만으론 못 찾는다)
-    diffs = [{"script": a[i1:i2], "heard": b[j1:j2], "kind": t,
-              "where": a[max(0, i1 - 3):i2 + 3], "heard_where": b[max(0, j1 - 3):j2 + 3]}
-             for t, i1, i2, j1, j2 in sm.get_opcodes() if t != "equal"]
-    return {"match": round(sm.ratio(), 3), "script_read": a, "heard_read": b, "diffs": diffs}
+    j = " ".join if lang == "zh" else "".join      # 중국어는 병음 음절 목록이라 띄워 보인다
+    if lang == "zh":
+        # 성조 없이 소리를 먼저 맞추고(경성 표기가 간체·번체마다 달라서), 맞은 자리에서 둘 다 경성이 아닐 때만 성조를 본다
+        sm = difflib.SequenceMatcher(None, [x.rstrip("012345") for x in a], [x.rstrip("012345") for x in b], autojunk=False)
+        ops = []
+        for t, i1, i2, j1, j2 in sm.get_opcodes():
+            if t != "equal":
+                ops.append((t, i1, i2, j1, j2))
+                continue
+            for k in range(i2 - i1):
+                x, y = a[i1 + k], b[j1 + k]
+                if x != y and not x.endswith("5") and not y.endswith("5"):
+                    ops.append(("tone", i1 + k, i1 + k + 1, j1 + k, j1 + k + 1))
+        tone_bad = sum(1 for o in ops if o[0] == "tone")
+        ratio = sm.ratio() * (1 - tone_bad / max(1, len(a)))
+    else:
+        sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
+        ops = [o for o in sm.get_opcodes() if o[0] != "equal"]
+        ratio = sm.ratio()
+    # 앞뒤 3글자(음절)를 붙여 어느 낱말인지 보이게 한다(「だ」→「が」만으론 못 찾는다)
+    diffs = [{"script": j(a[i1:i2]), "heard": j(b[j1:j2]), "kind": t,
+              "where": j(a[max(0, i1 - 3):i2 + 3]), "heard_where": j(b[max(0, j1 - 3):j2 + 3])}
+             for t, i1, i2, j1, j2 in ops]
+    return {"match": round(ratio, 3), "script_read": a, "heard_read": b, "diffs": diffs}
 
 
 def _syllables(text_read, lang):
     if lang == "ja":   # 모라: 작은 ゃゅょ 는 앞 글자에 붙는다
         return sum(1 for ch in text_read if ch not in "ゃゅょぁぃぅぇぉゎ")
-    return len(text_read)
+    return len(text_read)   # 중국어 = 음절(한자) 수
 
 
 def prosody(path, words, script_read, lang="ja"):

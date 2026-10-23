@@ -49,3 +49,28 @@ def test_ko_to_en_ja_keep_legacy_prompt():
 
 def test_same_language_passthrough():
     assert st.translate(["这个真的绝了"], "zh", call=_fake([], [])) == ["这个真的绝了"]
+
+
+def test_fidelity_fix_replaces_only_changed_line():
+    calls = []
+
+    def call(prompt, schema):
+        calls.append(prompt)
+        if "bad" in schema["properties"]:
+            if len(calls) == 2:      # 1회차: 전 줄
+                return {"bad": [{"i": 1, "problem": "발자국에 '더러운'이 붙음", "fix": "服に付いた足跡もサッと絶対ヤバい"},
+                                {"i": 0, "problem": "x", "fix": "这不是日语"}]}      # 일본어 아닌 고침은 버린다
+            assert '服に付いた足跡もサッと絶対ヤバい' in prompt and 'これマジでヤバい' not in prompt   # 2회차: 고친 줄만
+            return {"bad": [{"i": 0, "problem": "덧붙임", "fix": "服に付いた足跡もサッと"}]}
+        return {"lines": ["これマジでヤバい", "汚れた足跡もサッと"]}
+    out = st.translate(["这个真的绝了", "衣服上的脚印一下就没了"], "ja", call=call)
+    assert out == ["これマジでヤバい", "服に付いた足跡もサッと"]
+    assert len(calls) == 3
+
+
+def test_fidelity_check_failure_keeps_translation():
+    def call(prompt, schema):
+        if "bad" in schema["properties"]:
+            raise RuntimeError("quota")
+        return {"lines": ["これマジでヤバい"]}
+    assert st.translate(["这个真的绝了"], "ja", call=call) == ["これマジでヤバい"]

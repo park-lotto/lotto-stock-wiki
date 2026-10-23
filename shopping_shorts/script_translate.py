@@ -16,9 +16,11 @@ _HANGUL = re.compile(r"[가-힣]")
 _LATIN = re.compile(r"[A-Za-z]")
 _KANA = re.compile(r"[\u3040-\u30ff]")
 _CJK = re.compile(r"[\u4e00-\u9fff]")
+# 일본어에선 안 쓰는 간체자·중국어 허사(관제 254). 的·了 는 일본어 한자말(画期的·完了)에도 있어 넣지 않는다
+_ZH_MARK = re.compile("[别很把跟你她它这们个吗呢吧么还没给让说过对时为样东车门见长发问题实现买卖单冲热线经级运动开关风饭质钱铁锅绝净脏试谁啥咋哪您俩呀啦嘛哦刷扫挂叠带边头儿该无处变软轻贵听觉认识办场]")   # 일본어 한자말에도 쓰는 글자(就·我·会·国·来·洗…)는 뺐다
 _JA_CHARS = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
 # 자막 토큰에서 뺄 글자(공백·문장부호) — caption_tokens 와 tts_timestamps.words_from_alignment 가 같이 쓴다(한 벌).
-_TOKEN_SKIP = re.compile(r"[\s、。！？!?,.…「」『』～~'\"()（）]")
+_TOKEN_SKIP = re.compile(r"[\s、。！？!?,.…「」『』～~'\"()（），；：“”]")
 
 LANG_LABEL = {"en": "영어", "ja": "일본어", "ko": "한국어", "zh": "중국어"}   # 화면 문구 공용
 # "글자로 치는 문자"(비교·중복 판정용 정규화) — 한글·숫자·라틴 + 가나·CJK 한자. 2026-10-21 라이브 e2e(job e582f0e0c9b4)에서
@@ -97,11 +99,20 @@ def lang_of(text):
     t = text or ""
     if _HANGUL.search(t):
         return "ko"
-    if _JA_CHARS.search(t):
+    if _KANA.search(t):
         return "ja"
+    if _CJK.search(t):
+        # 가나 없이 한자만: 중국어 표지(간체 전용자·중국어 허사)가 있으면 중국어, 없으면 종전대로 일본어(「1980円」「送料無料」 회귀 금지).
+        # 작업 전체 언어는 job_lang 이 따로 센다(가나 줄이 하나도 없으면 한자만 있는 줄 = 중국어) — 관제 254
+        return "zh" if _ZH_MARK.search(t) else "ja"
     if len(_LATIN_WORD.findall(t)) >= 3:
         return "en"
     return "ko"
+
+
+def is_char_lang(lang):
+    """띄어쓰기 없이 **글자 하나하나**로 다루는 언어인가(일본어·중국어) — 자막 토큰·자막 나누기·타임스탬프가 같이 쓴다."""
+    return lang in ("ja", "zh")
 
 
 def is_japanese(text):
@@ -109,8 +120,8 @@ def is_japanese(text):
 
 
 def is_foreign_sentence(text):
-    """한국어 다듬기·한국어 계수를 건너뛸 외국어 문장인가(영어·일본어)."""
-    return lang_of(text) in ("en", "ja")
+    """한국어 다듬기·한국어 계수를 건너뛸 외국어 문장인가(영어·일본어·중국어)."""
+    return lang_of(text) in ("en", "ja", "zh")
 
 
 def foreign_ratio(lines, lang):
@@ -123,7 +134,7 @@ def foreign_ratio(lines, lang):
 
 def asr_language(text):
     """ASR(받아쓰기) 폴백에 줄 언어 힌트 — 일본어 'ja' · 영어 'en' · 그 외 'ko'(종전)."""
-    return {"ja": "ja", "en": "en"}.get(lang_of(text), "ko")
+    return {"ja": "ja", "en": "en", "zh": "zh"}.get(lang_of(text), "ko")
 
 
 def caption_tokens(text, lang=None):
@@ -133,7 +144,7 @@ def caption_tokens(text, lang=None):
     t = text or ""
     if not t.strip():
         return []
-    if (lang or lang_of(t)) == "ja":
+    if is_char_lang(lang or lang_of(t)):
         return [c for c in t if not _TOKEN_SKIP.match(c)]
     return t.split()
 
@@ -256,11 +267,82 @@ def _is_lang(text, lang):
     return False
 
 
-def translate(lines, lang, product="", *, source=None, call=None, tries=2):
+_FIDELITY_SCHEMA = {
+    "type": "object",
+    "properties": {"bad": {"type": "array", "items": {"type": "object", "properties": {
+        "i": {"type": "integer"}, "problem": {"type": "string"}, "fix": {"type": "string"}},
+        "required": ["i", "problem", "fix"]}}},
+    "required": ["bad"],
+}
+
+_FIDELITY_PROMPT = """You are checking a {src_name} → {tgt_name} shopping-shorts voice-over adaptation, line by line.
+Natural rewording, sound words, slang and tone changes are GOOD and must NOT be flagged.
+Flag a line ONLY if its meaning changed: a fact, object, action, number, product feature or claim was added, dropped or became different
+(e.g. "footprints on the clothes" became "dirty footprints"; "it handles everything" became a new claim).
+Also flag mistranslated product or object words (e.g. "air foam iron" became "air portrait iron").
+For each flagged line give: i (0-based index), problem (short, in Korean), fix (the corrected {tgt_name} line, same natural spoken style{register}).
+The fix must carry exactly the original's meaning: do NOT add hype, exclamations or claims that are not in the original.
+Return {{"bad": []}} when every line keeps the meaning.
+
+Pairs (JSON, [index, original, adaptation]):
+{pairs}
+"""
+
+
+def fidelity_fix(src, out, lang, src_lang, *, call, rounds=2):
+    """옮긴 줄마다 원문과 뜻이 같은지 한 번 더 본다(관제 254 — 실측 12방향 중 3줄이 뜻이 바뀌었다:
+    「一切直接搞定」 덧붙임 · 「汚れた足跡」 · 「確認してみて」). 뜻이 바뀐 줄만 고친 줄로 바꾼다 — 판단 주인 = 여기 한 곳.
+    검사 호출이 실패하면 번역은 그대로 쓰되 경고를 남긴다(번역 자체를 막지 않는다). → (out, 고친 기록 목록)"""
+    import json
+    import logging
+    out, fixed = list(out), []
+    idx = list(range(len(src)))           # 1회차 = 전 줄, 2회차 = 1회차에서 고친 줄만(고친 줄이 새로 뜻을 덧붙이는 일 — 실측 「简直绝了」)
+    for _round in range(max(1, rounds)):
+        got_fixed = _fidelity_once([src[i] for i in idx], [out[i] for i in idx], lang, src_lang, call)
+        if got_fixed is None:
+            break
+        for f in got_fixed:
+            i = idx[f["i"]]
+            fixed.append({**f, "i": i, "round": _round + 1})
+            out[i] = f["after"]
+        idx = sorted({idx[f["i"]] for f in got_fixed})
+        if not idx:
+            break
+    return out, fixed
+
+
+def _fidelity_once(src, out, lang, src_lang, call):
+    """fidelity_fix 한 회차 — 고칠 줄 목록 [{i, before, after, problem}] (i 는 이 회차 목록 기준). 호출 실패면 None."""
+    import json
+    import logging
+    try:
+        reg = _REGISTER_ANY.get((lang, register_of(src, src_lang)), "")
+        got = call(_FIDELITY_PROMPT.format(src_name=_LANG_EN.get(src_lang, "source"), tgt_name=_LANG_EN[lang],
+                                           register=(", " + reg) if reg else "",
+                                           pairs=json.dumps([[i, a, b] for i, (a, b) in enumerate(zip(src, out))],
+                                                            ensure_ascii=False)),
+                   _FIDELITY_SCHEMA) or {}
+    except Exception as e:      # noqa: BLE001 — 검사 실패는 경보만, 번역 결과는 살린다
+        logging.getLogger(__name__).warning("번역 뜻 검사 실패(번역은 그대로): %s", e)
+        return None
+    fixed, seen = [], set()
+    for b in got.get("bad") or []:
+        try:
+            i, fx = int(b.get("i")), str(b.get("fix") or "").strip()
+        except (TypeError, ValueError):
+            continue
+        if 0 <= i < len(out) and i not in seen and fx and _is_lang(fx, lang) and fx != out[i]:
+            seen.add(i)
+            fixed.append({"i": i, "before": out[i], "after": fx, "problem": str(b.get("problem") or "")})
+    return fixed
+
+
+def translate(lines, lang, product="", *, source=None, call=None, tries=2, check_meaning=True):
     """문장 목록 → 같은 길이의 lang('ko'|'ja'|'zh'|'en') 문장 목록. source(원문 언어)는 안 주면 source_lang 으로 판정.
     한국어→영어·일본어는 종전 지시문 그대로(회귀 금지), 그 밖의 조합은 _PROMPT_ANY(그 나라 크리에이터 말투)로 바로 옮긴다.
 
     call: 테스트가 갈아끼우는 (prompt, schema) -> dict. 기본은 script_generate._call_json(키풀·Vertex 깔때기).
+    check_meaning: 옮긴 뒤 fidelity_fix 로 뜻이 바뀐 줄만 고친다(관제 254). 호출이 한 번 더 든다.
     실패(빈 응답·줄 수 불일치·한글 잔존·일본어 아닌 줄)는 ValueError — 호출부가 그대로 화면에 띄운다.
     """
     import json
@@ -314,6 +396,8 @@ def translate(lines, lang, product="", *, source=None, call=None, tries=2):
             # 마지막 시도면 그대로 쓴다(번역 실패로 막지 않는다)
             last = "글말 끝맺음"
             continue
+        if check_meaning:
+            out, _fixed = fidelity_fix(src, out, lang, src_lang, call=call)
         return out
     raise ValueError(LANG_LABEL[lang] + " 변환에 실패했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 눌러 주세요")
 
@@ -324,15 +408,20 @@ def to_english(lines, product="", *, call=None, tries=2):
 
 
 def job_lang(job):
-    """이 작업의 대본 언어('ja'|'en'|'ko') — 판단은 여기 한 곳. edit_plan.lang이 있으면 그것, 없으면 확정 대본(given_script)의
+    """이 작업의 대본 언어('ja'|'zh'|'en'|'ko') — 판단은 여기 한 곳. edit_plan.lang이 있으면 그것, 없으면 확정 대본(given_script)의
     줄들의 lang_of 를 세어 'ja' 또는 'en' 이 80% 이상이면 그 언어(2단계에서 외국어모드로 확정한 작업은 given_script가 그 언어)."""
     plan = (job or {}).get("edit_plan") or {}
-    if isinstance(plan, dict) and plan.get("lang") in ("en", "ja", "ko"):
+    if isinstance(plan, dict) and plan.get("lang") in ("en", "ja", "ko", "zh"):
         return plan["lang"]
     lines = [x.strip() for x in str((job or {}).get("given_script") or "").splitlines() if x.strip()]
     if not lines:
         return "ko"
-    for lang in ("ja", "en"):
-        if sum(1 for x in lines if lang_of(x) == lang) / len(lines) >= 0.8:
+    # 일본어 대본엔 한자만 있는 줄(「絶賛発売中」)이 섞일 수 있다 — 가나 줄이 하나라도 있으면 ja·zh 를 합쳐 일본어로 센다.
+    # 한자만 있는 줄(lang_of 가 표지 없으면 ja 로 보는 줄)은 여기선 가나가 없으면 한자 줄로 센다 → 가나 줄이 없는 대본 = 중국어
+    langs = [("zh" if (lg == "ja" and not _KANA.search(x)) else lg) for lg, x in ((lang_of(x), x) for x in lines)]
+    if "ja" in langs:
+        langs = ["ja" if x == "zh" else x for x in langs]
+    for lang in ("ja", "zh", "en"):
+        if sum(1 for x in langs if x == lang) / len(lines) >= 0.8:
             return lang
     return "ko"

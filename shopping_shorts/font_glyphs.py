@@ -27,6 +27,8 @@ from PIL import ImageFont
 
 # 일본어 폴백 폰트(관제 248) — 기본 자막폰트(NanumGothic)가 일본어를 못 그릴 때만 쓴다(목록 fonts.json 엔 안 넣는다).
 JA_FALLBACK_FONT = Path(__file__).parent / "assets" / "NotoSansJP-Bold.ttf"
+# 중국어(간체) 폴백 폰트(관제 254) — NotoSansJP 는 간체자 375자 중 92자(这·们·吗…)가 없다(실측 2026-10-23). OFL, notofonts/noto-cjk SubsetOTF.
+ZH_FALLBACK_FONT = Path(__file__).parent / "assets" / "NotoSansSC-Bold.otf"
 
 # 어떤 한글 폰트에도 글리프가 없는 사적사용영역(PUA) 문자 — .notdef 표본을 얻는 자리.
 # 2026-10-21(관제 248): PUA 에 글리프가 있는 폰트(Jalnan2·JalnanGothic·Pretendard 등)는 이 쌍이 서로 달라
@@ -168,11 +170,15 @@ def draw_text(d, xy, text, font, fill, anchor="la", size=None,
 
 def fallback_font_for(text):
     """이 문구가 기본폰트로 못 그릴 언어면 그 언어용 폴백 폰트 경로(str), 아니면 None.
-    지금은 일본어(script_translate.lang_of == 'ja')만 — assets/NotoSansJP-Bold.ttf."""
+    일본어 → assets/NotoSansJP-Bold.ttf · 중국어 → assets/NotoSansSC-Bold.otf (판정 script_translate.lang_of)."""
     try:
         from shopping_shorts.script_translate import lang_of
-        if lang_of(text) == "ja" and JA_FALLBACK_FONT.exists():
-            return str(JA_FALLBACK_FONT)
+        f = {"ja": JA_FALLBACK_FONT, "zh": ZH_FALLBACK_FONT}.get(lang_of(text))
+        # 한자만 있는 줄은 일본어·중국어가 글자로 안 갈린다(「太香了」) — 일본어 폰트에 없는 글자가 있으면 중국어 폰트(관제 254)
+        if f is JA_FALLBACK_FONT and f.exists() and ZH_FALLBACK_FONT.exists() and missing_glyphs(str(f), text):
+            f = ZH_FALLBACK_FONT
+        if f is not None and f.exists():
+            return str(f)
     except Exception as e:  # noqa: BLE001 — 판정 실패가 렌더를 막으면 안 된다(종전 기본폰트)
         print(f"[폰트] 언어 폴백 판정 실패(기본폰트): {e!r}", file=sys.stderr)
     return None

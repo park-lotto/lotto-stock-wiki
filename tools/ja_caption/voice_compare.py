@@ -1,7 +1,7 @@
 """성우별 일본어 TTS 를 듣기 엔진으로 일괄 검수해 표로 낸다(관제 254, 2026-10-23).
 
 index.json([{preset,i,sent,file}]) → 각 mp3 에 voice_listen.listen → 성우별 평균(읽기 일치·억양 폭·빠르기·문제 수).
-  py tools/ja_caption/voice_compare.py <index.json> [<index.json> ...]
+  py tools/ja_caption/voice_compare.py [--lang zh] <index.json> [<index.json> ...]   (기본 ja)
   → 첫 index.json 옆에 listen.json(줄마다) + 표 출력
 """
 import json, statistics, sys
@@ -12,14 +12,14 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
-def main(indexes):
+def main(indexes, lang="ja"):
     from shopping_shorts.voice_listen import listen
     rows = []
     for ix in indexes:
         rows += json.loads(Path(ix).read_text(encoding="utf-8"))
     by = defaultdict(list)
     for r in rows:
-        x = listen(r["file"], r["sent"], "ja")
+        x = listen(r["file"], r["sent"], lang)
         r.update(match=x["reading"]["match"], pitch=x["prosody"].get("pitch_semitones"),
                  speed=x["prosody"].get("syl_per_sec"), issues=x["issues"])
         by[r["preset"]].append(r)
@@ -32,4 +32,8 @@ def main(indexes):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    a = sys.argv[1:]
+    lg = "ja"
+    if a[:1] == ["--lang"]:
+        lg, a = a[1], a[2:]
+    main(a, lg)
