@@ -6,7 +6,8 @@
     py tools/travel/hotel_copy/engine.py ok <이름>       # ⏸ 확인했다 → 다음으로
     py tools/travel/hotel_copy/engine.py status <이름>
 
-단계(순서 고정): ref → collect → sort → facts → script → ⏸대본 확인 → voice → shots → ⏸사진 확인 → render → check → deliver
+단계(순서 고정): ref → collect → sort → facts → script → ⏸대본 확인 → voice → shots → ⏸사진 확인 → clips → render → check → deliver
+  (clips = ep.json 에서 'live'(움직임 영어 한 줄)를 단 컷만 AI 영상(Veo) — 불·김·물처럼 살아 있는 몇 컷만. 없으면 그냥 통과)
   (voice 가 shots 앞 — 실제 말 길이를 알아야 줄마다 컷 수를 원본 컷 길이에 맞출 수 있다. 실측: 원본 컷 수를 그대로 쓰니 2.31초 컷)
 작업 폴더 = ~/숏템자료/여행/hotel_copy/<이름>/ (사진·소리·영상은 git 에 넣지 않는다)
 """
@@ -24,7 +25,7 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT))
 JOBS = Path.home() / "숏템자료/여행/hotel_copy"
 DRIVE = Path("G:/내 드라이브")
-STEPS = ["ref", "collect", "sort", "facts", "script", "script_ok", "voice", "shots", "shots_ok", "render", "check", "deliver"]
+STEPS = ["ref", "collect", "sort", "facts", "script", "script_ok", "voice", "shots", "shots_ok", "clips", "render", "check", "deliver"]
 WAIT = {"script_ok": "대본을 확인하세요(script_brief.md·ep.json). 고칠 게 없으면 ok",
         "shots_ok": "사진을 확인하세요(shots.jpg). 바꿀 컷은 ep.json 의 file·cx 를 고치고 ok"}
 MINA = {"voice_id": "aiUUgjHa4mpHf6UenZuf", "model_id": "eleven_v3", "voice_settings": {"stability": 0.55, "similarity_boost": 0.78, "style": 0.15}, "tempo": 1.35}
@@ -186,23 +187,37 @@ def s_voice(job, st):
     save(job / "lines.json", lines)
     for f in job.glob("tts_*"):
         f.unlink()
+    # 한 번에 이어서 합성한다 — 문장마다 따로 만들어 붙이면 문장마다 억양이 처음부터 다시 시작해 '조각을 붙인 것' 같다(사장님 2026-10-23).
+    # 줄 나누기는 받아 온 어절 시각으로: 다음 줄 첫 어절 시작에서 자른다(잘라도 이으면 원래 소리 그대로)
+    allm = job / "tts_all.mp3"
     if config.ELEVENLABS_API_KEY:
-        for i, line in enumerate(lines):
-            tts.synthesize_tts(line, str(job / ("tts_%d.mp3" % i)), voice_id=MINA["voice_id"], voice_settings=MINA["voice_settings"],
-                               model_id=MINA["model_id"], speed=1.0, previous_text=lines[i - 1] if i else None,
-                               next_text=lines[i + 1] if i + 1 < len(lines) else None)
+        tts.synthesize_tts(" ".join(lines), str(allm), voice_id=MINA["voice_id"], voice_settings=MINA["voice_settings"],
+                           model_id=MINA["model_id"], speed=1.0)
     else:
         _server_tts(job)
+    audio_post.finish_line_audio(str(allm), tempo=MINA["tempo"], silence_trim="mid")
+    D = float(va._probe_duration(str(allm)))
+    words = tt.rescale(tt.words_from_mp3(str(allm)), D, removed=tt.load_removed(str(allm)))
+    if not words:
+        raise RuntimeError("단어 시각 없음(일레븐 정렬 사이드카 없음)")
+    counts = [len(l.split()) for l in lines]
+    if sum(counts) != len(words):
+        raise RuntimeError("어절 수가 다르다: 대본 %d / 받아 온 소리 %d" % (sum(counts), len(words)))
+    firsts, k = [], 0
+    for c in counts:
+        firsts.append(k)
+        k += c
+    bounds = [0.0] + [words[i]["start"] for i in firsts[1:]] + [D]
     out, tot = [], 0.0
     for i, line in enumerate(lines):
-        mp3 = job / ("tts_%d.mp3" % i)
-        audio_post.finish_line_audio(str(mp3), tempo=MINA["tempo"], silence_trim="mid")
-        d = float(va._probe_duration(str(mp3)))
-        words = tt.rescale(tt.words_from_mp3(str(mp3)), d, removed=tt.load_removed(str(mp3)))
-        if not words:
-            raise RuntimeError("%d줄 단어 시각 없음(일레븐 정렬 사이드카 없음)" % (i + 1))
-        out.append({"line": line, "mp3": mp3.name, "dur": round(d, 3), "words": words})
-        tot += d
+        s0, s1 = bounds[i], bounds[i + 1]
+        piece = job / ("tts_%d.wav" % i)
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(allm), "-ss", "%.4f" % s0, "-to", "%.4f" % s1,
+                        "-ar", "44100", "-ac", "1", str(piece)], check=True)
+        ws = [dict(w, start=w["start"] - s0, end=(w["end"] - s0) if w.get("end") is not None else None)
+              for w in words[firsts[i]:firsts[i] + counts[i]]]
+        out.append({"line": line, "mp3": piece.name, "dur": round(s1 - s0, 3), "words": ws})
+        tot += s1 - s0
     save(job / "voice.json", out)
     m = ref["measured"]
     want = m["chars"] / (m["total_s"] - m["thumb_s"] - 0.3)              # 원본 말 속도(자/초)
@@ -220,8 +235,7 @@ def _server_tts(job):
     srv.write_text(
         "import json,sys\nsys.path.insert(0,'/home/ubuntu/lotto-stock-wiki')\nfrom shopping_shorts import tts\n"
         "D='/tmp/hotel_copy_tts'\nL=json.load(open(D+'/lines.json',encoding='utf-8'))\n"
-        "for i,l in enumerate(L):\n    tts.synthesize_tts(l,D+'/tts_%%d.mp3'%%i,voice_id=%r,model_id=%r,speed=1.0,voice_settings=%r,"
-        "previous_text=L[i-1] if i else None,next_text=L[i+1] if i+1<len(L) else None)\n"
+        "tts.synthesize_tts(' '.join(L),D+'/tts_all.mp3',voice_id=%r,model_id=%r,speed=1.0,voice_settings=%r)\n"
         % (MINA["voice_id"], MINA["model_id"], MINA["voice_settings"]), encoding="utf-8")
     ssh = ["ssh", "-i", key, "-o", "StrictHostKeyChecking=no", "ubuntu@" + ip]
     subprocess.run(ssh + ["rm -rf /tmp/hotel_copy_tts; mkdir -p /tmp/hotel_copy_tts"], check=True)
@@ -229,6 +243,33 @@ def _server_tts(job):
     subprocess.run(ssh + ["cd /home/ubuntu/lotto-stock-wiki && PY=$(ls venv/bin/python .venv/bin/python 2>/dev/null | head -1); set -a; "
                           "[ -f /etc/shopping-shorts.env ] && . /etc/shopping-shorts.env 2>/dev/null; set +a; ${PY:-python3} /tmp/hotel_copy_tts/srv_tts.py"], check=True)
     subprocess.run(["scp", "-i", key, "-q", "ubuntu@%s:/tmp/hotel_copy_tts/tts_*" % ip, str(job) + "/"], check=True)
+
+
+def s_clips(job, st):
+    """'live'(움직임 영어 한 줄)를 단 컷만 Veo 4초 영상으로(사장님 2026-10-23 '불 피우는 거나 움직임이 있는 생동감 넘치는 것 몇 개만 중간에').
+    시작 화면 = 렌더와 같은 세로 자르기(render.crop) — 영상 첫 장면이 그 컷 사진 그대로다. 이미 만든 건 다시 안 만든다(돈)."""
+    import concurrent.futures as cf
+    import cv2
+    from shopping_shorts import ai_scene
+    from tools.travel.hotel_copy import render
+    ep = load(job / "ep.json")
+    todo = [sh for l in ep["lines"] for sh in l["shots"] if sh.get("live") and not (sh.get("clip") and Path(sh["clip"]).exists())]
+    (job / "clips").mkdir(exist_ok=True)
+
+    def one(k_sh):
+        k, sh = k_sh
+        png = job / "clips" / ("start_%s.png" % Path(sh["file"]).stem)
+        cv2.imencode(".png", render.crop(sh["file"], sh.get("cx", 0.5), (720, 1280)))[1].tofile(str(png))
+        out = job / "clips" / ("live_%s.mp4" % Path(sh["file"]).stem)
+        prompt = ai_scene.build_travel_prompt("other", sh.get("live_desc", "A real photo of a countryside guesthouse."), 4, motion=sh["live"])
+        ai_scene.generate(png, prompt, 4, out)
+        return sh, str(out)
+    with cf.ThreadPoolExecutor(4) as ex:
+        for sh, out in ex.map(one, enumerate(todo)):
+            sh["clip"] = out
+    save(job / "ep.json", ep)
+    n = sum(1 for l in ep["lines"] for sh in l["shots"] if sh.get("clip"))
+    return "AI 영상 컷 %d개 새로 만듦 · 전체 %d개" % (len(todo), n)
 
 
 def s_render(job, st):
@@ -265,7 +306,7 @@ class Wait(Exception):
     pass
 
 
-RUN = {"ref": s_ref, "collect": s_collect, "sort": s_sort, "facts": s_facts, "script": s_script, "shots": s_shots,
+RUN = {"ref": s_ref, "collect": s_collect, "sort": s_sort, "facts": s_facts, "script": s_script, "shots": s_shots, "clips": s_clips,
        "voice": s_voice, "render": s_render, "check": s_check, "deliver": s_deliver}
 
 

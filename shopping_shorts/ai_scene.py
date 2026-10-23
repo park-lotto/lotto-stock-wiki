@@ -371,9 +371,10 @@ TRAVEL_CAMERA = {
 }
 
 
-def build_travel_prompt(kind, desc_en, sec=4):
-    """여행 사진 → Veo 프롬프트. 표에 없는 종류는 'other'. 모양·구조는 사진 그대로 두라고 못 박는다."""
-    cam = TRAVEL_CAMERA.get(kind) or TRAVEL_CAMERA["other"]
+def build_travel_prompt(kind, desc_en, sec=4, motion=None):
+    """여행 사진 → Veo 프롬프트. 표에 없는 종류는 'other'. 모양·구조는 사진 그대로 두라고 못 박는다.
+    motion = 이 컷만의 움직임(불꽃·김·물 같은 살아 있는 것) — 주면 종류표 대신 쓴다(숙소 쇼츠 카피 엔진, 2026-10-23)."""
+    cam = motion or TRAVEL_CAMERA.get(kind) or TRAVEL_CAMERA["other"]
     return (
         f"INPUT IMAGE = FRAME 0: {desc_en} Keep the architecture, furniture, layout and colors exactly as in the image.\n"
         f"CONTINUOUS SINGLE SHOT, ONE TAKE, NO CUT, {int(sec)}.0 seconds. Vertical 9:16.\n"

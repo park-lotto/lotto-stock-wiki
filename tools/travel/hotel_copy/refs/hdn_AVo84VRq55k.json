@@ -1,0 +1,167 @@
+{
+ "id": "hdn_AVo84VRq55k",
+ "url": "https://www.youtube.com/shorts/AVo84VRq55k",
+ "channel": "스테이브로 | 숙소추천 (@staybrokr)",
+ "title": "합성 틀 — 화면: 스테이브로 촌캉스(AVo84VRq55k) · 대본: 두유노홈디노 설명서(체험담)",
+ "views_at_read": 1352,
+ "read_at": "2026-10-23",
+ "uploaded": "2026-10-22",
+ "how_read": "0.2초 자막 띠 눈 판독 + ffmpeg 컷(scene>0.25) + ebur128 + cv2 컷 안 움직임 + 프레임 중복(24fps 흔적)",
+ "measured": {
+  "total_s": 16.6,
+  "thumb_s": 0.1,
+  "cut_s": [
+   1.5,
+   1.27,
+   1.4,
+   1.23,
+   1.33,
+   1.1,
+   1.23,
+   1.2,
+   1.13,
+   1.07,
+   1.2,
+   1.13,
+   1.07,
+   0.65
+  ],
+  "cut_target_s": 1.2,
+  "chars": 131,
+  "lufs": -13.7,
+  "voice": "여성 나레이션, 쉼 없이 이어 말함(목소리 F0 미측정)",
+  "motion": "모든 컷 입체 움직임(앞뒤 따로 움직임 26.8~53.8%) — 1위 영상과 같은 방식(사진→AI 영상 추정)",
+  "ending": "마지막 컷 = 밤 마당 줄조명(썸네일과 다른 사진) · 썸네일 = 돌판 바비큐",
+  "look": {
+   "L": 115,
+   "S": 129,
+   "warm": 17.0,
+   "how": "컷 가운데 프레임 14장 평균 — LAB 밝기·HSV 채도·LAB b-128(2026-10-23)"
+  },
+  "length_from_script": true,
+  "length_note": "길이는 원본 영상이 아니라 대본 글자 수 ÷ 원본 말 속도로 잰다(두유노 대본은 150~246자라 촌캉스 16.6초보다 길다)"
+ },
+ "style": {
+  "caption": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 90,
+   "y": 572,
+   "squeeze": 0.9,
+   "spacing": -0.04,
+   "glow": 14,
+   "grow": 13,
+   "strength": 1.0,
+   "no_spaces": true,
+   "anim": "없음"
+  },
+  "thumb": {
+   "small": {
+    "font": "Pretendard-Bold.otf",
+    "size": 113,
+    "y": 616
+   },
+   "big": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 190,
+    "y": 803
+   },
+   "glow": 20,
+   "grow": 17,
+   "measured": "원본 첫 프레임 흰 글자 상자 — 작은 줄 y566~666·가로192~888 / 큰 줄 y719~887·가로26~1065 (2026-10-23)"
+  },
+  "watermark": {
+   "font": "Pretendard-Regular.otf",
+   "size": 34,
+   "y": 1426,
+   "alpha": 0.55
+  },
+  "corner_ad": "[광고] 오른쪽 위 — 협찬일 때만"
+ },
+ "story": "체험담 — 시작 공식(누가 무엇이 귀찮아서 → ~해버렸더라고요) + 잉?(궁금하게) → 가 보니까(체험) → 와우 3줄(심지어 이게 대박인 게 / 진짜 미친 포인트는 / 더 말도 안 되는 건) → 끝 줄 사회 반응(난리래요)",
+ "script_rules": [
+  "두유노홈디노 설명서 그대로 — tools/calcopy/engine/script_frame 의 hook_formula_check·points_check·judge_like 를 통과해야 한다",
+  "창작 허용 = 화자·지인·계기·감상·비유·과장 / 근거 필수 = 시설·가격·수치·사회 반응"
+ ],
+ "thumb_rule": "small = 간판 체험(9자 안팎 '돌판에 삼겹살 굽는'), big = 가격+숙소 종류 띄어쓰기 없이('10만원대촌캉스', 7자 안팎 — 원본은 화면 폭을 꽉 채운다)",
+ "thumb_hint": "고기 굽는 바비큐 장면",
+ "end_same_as_thumb": false,
+ "roles": [
+  {
+   "role": "훅",
+   "rule": "[누가]+[귀찮았던]+[~해버렸더라고요] · 잉?",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "더라고요"
+   ],
+   "shot_hint": "간판 체험"
+  },
+  {
+   "role": "체험",
+   "rule": "가 보니까 ~더라고요",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "보니까"
+   ],
+   "shot_hint": "간판 체험 근접"
+  },
+  {
+   "role": "와우1",
+   "rule": "심지어 이게 대박인 게 + 새 사실",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "대박인 게"
+   ],
+   "shot_hint": ""
+  },
+  {
+   "role": "와우2",
+   "rule": "진짜 미친 포인트는 + 새 사실",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "미친 포인트"
+   ],
+   "shot_hint": ""
+  },
+  {
+   "role": "와우3",
+   "rule": "더 말도 안 되는 건 + 숫자 + 비유",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "말도 안 되는"
+   ],
+   "shot_hint": ""
+  },
+  {
+   "role": "끝 반응",
+   "rule": "~사이에서 난리래요",
+   "ref": "",
+   "chunks": [],
+   "chars": 38,
+   "shots": 2,
+   "must": [
+    "난리"
+   ],
+   "shot_hint": ""
+  }
+ ],
+ "thumb_kinds": null,
+ "based_on": {
+  "화면": "refs/AVo84VRq55k.json",
+  "대본": "channel/homedesignnote/대본설명서/설명서.md · points.json · hook_formula.json"
+ }
+}

@@ -49,8 +49,8 @@ def imread(p):
     return cv2.imdecode(np.fromfile(str(p), np.uint8), cv2.IMREAD_COLOR)
 
 
-def vertical(path, cx):
-    """사진 → 9:16 세로(높이 꽉, 가운데 cx). 원본처럼 색을 진하게 + 확대 흐림을 선명화로 덮는다."""
+def crop(path, cx, size=(WD, HT)):
+    """사진 → 9:16 세로(높이 꽉, 가운데 cx). 색은 안 건드린다(AI 영상 시작 화면도 이걸 쓴다)."""
     im = imread(path)
     h, w = im.shape[:2]
     if w / h > 9 / 16:
@@ -61,13 +61,46 @@ def vertical(path, cx):
         ch = int(round(w * 16 / 9))
         y0 = (h - ch) // 2
         im = im[y0:y0 + ch]
-    im = cv2.resize(im, (WD, HT), interpolation=cv2.INTER_LANCZOS4)
+    return cv2.resize(im, size, interpolation=cv2.INTER_LANCZOS4)
+
+
+def grade(im, look=None, k=0.6):
+    """원본처럼 색을 진하게 + 확대 흐림을 선명화로 덮는다. look = refs 의 measured.look(원본 컷 평균 밝기·채도·따뜻함)이 있으면
+    컷마다 그 값 쪽으로 k 만큼 당긴다 — 숙소 사진과 손님 폰 사진이 섞여도 한 톤으로(실측: 컷 사이 채도 점프 원본 20 / 우리 30)."""
     hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV).astype(np.float32)
     hsv[..., 1] = np.clip(hsv[..., 1] * 1.22, 0, 255)
-    im = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR).astype(np.float32)
-    im = np.clip((im - 128) * 1.08 + 128, 0, 255)
+    if look:
+        hsv[..., 1] = np.clip(hsv[..., 1] * (1 + k * (look["S"] / max(1.0, hsv[..., 1].mean()) - 1)), 0, 255)
+    im = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
+    if look:
+        lab = cv2.cvtColor(im, cv2.COLOR_BGR2LAB).astype(np.float32)
+        lab[..., 0] += k * (look["L"] - lab[..., 0].mean())
+        lab[..., 2] += k * (128 + look["warm"] - lab[..., 2].mean())
+        im = cv2.cvtColor(np.clip(lab, 0, 255).astype(np.uint8), cv2.COLOR_LAB2BGR)
+    im = np.clip((im.astype(np.float32) - 128) * 1.08 + 128, 0, 255)
     bl = cv2.GaussianBlur(im, (0, 0), 1.6)
     return np.clip(im * 1.55 - bl * 0.55, 0, 255).astype(np.uint8)
+
+
+def vertical(path, cx, look=None):
+    return grade(crop(path, cx), look)
+
+
+def clip_frames(path, n, look=None):
+    """AI 영상 컷 — 앞에서부터 n 프레임(30fps 로 맞춤), 사진 컷과 같은 색 처리."""
+    cap = cv2.VideoCapture(str(path))
+    src_fps = cap.get(cv2.CAP_PROP_FPS) or 24
+    frames = []
+    while True:
+        ok, f = cap.read()
+        if not ok:
+            break
+        frames.append(f)
+    if not frames:
+        raise RuntimeError("AI 영상이 비었다: %s" % path)
+    for k in range(n):
+        f = frames[min(len(frames) - 1, int(k * src_fps / FPS))]
+        yield grade(cv2.resize(f, (WD, HT), interpolation=cv2.INTER_LANCZOS4), look)
 
 
 def dolly(img, dep, n, z0=0.03, zp=0.10, cy=0.55, lat=0.0):
@@ -149,11 +182,14 @@ def timeline(job, ep, ref):
     cuts = []
     for si, line in enumerate(ep["lines"]):
         end = rows[si + 1][0] if si + 1 < len(rows) else total
-        starts = cut_points(wrows[si], end, len(line["shots"]), ref["measured"]["cut_target_s"])
+        if line.get("shot_at"):                           # 컷마다 '이 자막 조각에서 바뀐다'(말과 장면 맞춤 — 실측: '삼겹살을 올리면'에 산 풍경)
+            starts = [rows[si][k] for k in line["shot_at"]]
+        else:
+            starts = cut_points(wrows[si], end, len(line["shots"]), ref["measured"]["cut_target_s"])
         if si == 0:
             starts[0] = thumb_s
         for sh, t0 in zip(line["shots"], starts):
-            cuts.append([t0, None, sh["file"], sh.get("cx", 0.5)])
+            cuts.append([t0, None, sh["file"], sh.get("cx", 0.5), sh.get("clip")])
     for i in range(len(cuts)):
         cuts[i][1] = cuts[i + 1][0] if i + 1 < len(cuts) else total
     return total, caps, cuts
@@ -165,10 +201,11 @@ def render(job):
     ref = ref_spec(ep["ref"])
     st = ref["style"]
     total, caps, cuts = timeline(job, ep, ref)
-    plan = {"total": round(total, 3), "cuts": [[round(a, 2), round(b, 2), Path(f).name, c] for a, b, f, c in cuts],
+    look = ref["measured"].get("look")
+    plan = {"total": round(total, 3), "cuts": [[round(a, 2), round(b, 2), Path(f).name, c] + ([Path(v).name] if v else []) for a, b, f, c, v in cuts],
             "caps": [[round(a, 2), round(b, 2), t] for a, b, t in caps]}
     (job / "plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
-    print("길이 %.2f초 · 컷 %d · 자막 %d · 컷 길이 %s" % (total, len(cuts), len(caps), [round(b - a, 2) for a, b, _, _ in cuts]), flush=True)
+    print("길이 %.2f초 · 컷 %d · 자막 %d · 컷 길이 %s" % (total, len(cuts), len(caps), [round(b - a, 2) for a, b, *_ in cuts]), flush=True)
 
     c = st["caption"]
     cap_png = {}
@@ -187,15 +224,19 @@ def render(job):
                            "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "16",
                            "-pix_fmt", "yuv420p", str(job / "video.mp4")], stdin=subprocess.PIPE)
     fi = 0
-    timg = over(vertical(th["file"], th.get("cx", 0.5)), thumb_txt)
+    timg = over(vertical(th["file"], th.get("cx", 0.5), look), thumb_txt)
     for _ in range(int(round(ref["measured"]["thumb_s"] * FPS))):
         ff.stdin.write(over(timg, wm).tobytes())
         fi += 1
-    for ci, (a, b, f, cx) in enumerate(cuts):
+    for ci, (a, b, f, cx, clip) in enumerate(cuts):
         n = int(round(b * FPS)) - fi
-        img = vertical(f, cx)
-        lat = 0.012 * (1 if ci % 2 else -1)              # 컷마다 옆으로 번갈아 조금 — 앞뒤 어긋남(입체감)을 키운다
-        for fr in dolly(img, depth(img), n, lat=lat):
+        if clip:                                          # 불·김·물처럼 살아 있는 컷 = AI 영상(engine clips 단계)
+            frames = clip_frames(clip, n, look)
+        else:
+            img = vertical(f, cx, look)
+            lat = 0.012 * (1 if ci % 2 else -1)          # 컷마다 옆으로 번갈아 조금 — 앞뒤 어긋남(입체감)을 키운다
+            frames = dolly(img, depth(img), n, lat=lat)
+        for fr in frames:
             t = fi / FPS
             cap = next((x for x in caps if x[0] <= t < x[1]), None)
             if cap:

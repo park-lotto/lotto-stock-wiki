@@ -16,7 +16,8 @@ CUT_MAX_K = 1.15       # 컷 길이 기준 = 원본 최단×0.85 ~ 최장×1.15 
 CUT_MIN_K = 0.85
 # 받아쓰기가 소리는 같은데 글자를 다르게 적는 것 — 다름으로 치지 않고 '(발음 같음)'으로만 남긴다. 근거 없는 건 넣지 않는다
 ASR_SAME = {"촌→총": "원본 AVo84VRq55k 도 '총캉스'로 받아씀(2026-10-23 실측)",
-            "솥→소": "솥뚜껑 표준 발음 [솓뚜껑] — 받침이 안 들린다"}
+            "솥→소": "솥뚜껑 표준 발음 [솓뚜껑] — 받침이 안 들린다",
+            "촌이→초니": "연음 — 표준 발음 [초니](상주견 이름 '촌이')"}
 
 
 def script_issues(ep, ref, facts_text):
@@ -110,11 +111,17 @@ def video_report(job, ep, ref):
     lens = [round(b - a, 2) for a, b, *_ in plan["cuts"]]
     chars = sum(len(l["text"].replace(" ", "")) for l in ep["lines"])
     dur = _probe(out)
+    rate = m["chars"] / (m["total_s"] - m["thumb_s"] - 0.3)           # 원본 말 속도(자/초) — engine.s_voice 와 같은 식
+    want_s = (chars / rate + m["thumb_s"] + 0.3) if m.get("length_from_script") else m["total_s"]
     same, heard = heard_same(job, ep)
     px = parallax(out, plan["cuts"])
     rows = [
-        ("길이", "%.2f초" % dur, "%.1f초" % m["total_s"], abs(dur - m["total_s"]) <= m["total_s"] * 0.12),
-        ("컷 수", str(len(lens)), str(len(m["cut_s"])), abs(len(lens) - len(m["cut_s"])) <= 2),
+        ("길이", "%.2f초" % dur, "%.1f초" % want_s, abs(dur - want_s) <= want_s * 0.12),
+        # 길이가 대본을 따르는 틀(length_from_script)은 컷 수 대신 평균 컷 길이로 본다(원본 ±15%) — 30초 대본에 16.6초 원본 컷 수를 대면 안 된다
+        (("평균 컷 길이", "%.2f초" % (sum(lens) / len(lens)), "%.2f초" % (sum(m["cut_s"]) / len(m["cut_s"])),
+          abs(sum(lens) / len(lens) - sum(m["cut_s"]) / len(m["cut_s"])) <= sum(m["cut_s"]) / len(m["cut_s"]) * 0.15)
+         if m.get("length_from_script") else
+         ("컷 수", str(len(lens)), str(len(m["cut_s"])), abs(len(lens) - len(m["cut_s"])) <= 2)),
         ("컷 길이", "%.2f~%.2f" % (min(lens), max(lens)), "%.1f~%.1f" % (min(m["cut_s"]), max(m["cut_s"])), min(lens) >= min(m["cut_s"]) * CUT_MIN_K and max(lens) <= max(m["cut_s"]) * CUT_MAX_K),   # 원본 최단·최장 ±15%
         ("말 속도", "%.1f자/초" % (chars / (dur - m["thumb_s"])), "%.1f자/초" % (m["chars"] / (m["total_s"] - m["thumb_s"])),
          abs(chars / (dur - m["thumb_s"]) - m["chars"] / (m["total_s"] - m["thumb_s"])) <= 1.2),
