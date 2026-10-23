@@ -1936,7 +1936,7 @@ def _fav_cat_payload(cid, platform="", channel_id="") -> dict:
 
 
 def _fav_channel_cap(cid) -> int:
-    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 100 · 회원 50(사장님 2026-10-18)."""
+    """나만의 채널 상한 — ★판단의 주인은 여기 하나다. 관리자 0(=한도 없음, 사장님 2026-10-24) · 회원 50."""
     return Store.FAV_CHANNEL_CAP_ADMIN if _is_admin(cid) else Store.FAV_CHANNEL_CAP
 
 

@@ -1,4 +1,4 @@
-"""나만의 채널 상한 — 관리자 100 · 회원 50 (관제 225, 사장님 2026-10-18 "100개로 늘려줘 관리자만").
+"""나만의 채널 상한 — 관리자 한도 없음(0) · 회원 50 (관제 225 → 관제 261, 사장님 2026-10-24 "한도 없이 / 관리자만").
 
 잠그는 계약:
   1. 누가 몇 개인지는 app._fav_channel_cap 하나가 정한다(관리자 판정은 _is_admin)
@@ -16,10 +16,10 @@ def _fill(store, n, cid, cap=None):
 def test_cap_numbers(monkeypatch):
     monkeypatch.setattr(appmod, "Store", Store)
     monkeypatch.setattr(Store, "get_customer", lambda self, cid: {"email": "m@x.com", "admin": 0})
-    assert appmod._fav_channel_cap(0) == 100          # 사장님
+    assert appmod._fav_channel_cap(0) == 0            # 사장님 = 한도 없음
     assert appmod._fav_channel_cap(7) == 50           # 일반 회원
     monkeypatch.setattr(Store, "get_customer", lambda self, cid: {"email": "m@x.com", "admin": 1})
-    assert appmod._fav_channel_cap(7) == 100          # UI로 지정한 관리자
+    assert appmod._fav_channel_cap(7) == 0            # UI로 지정한 관리자
 
 
 def test_store_respects_given_cap(tmp_path):
@@ -35,4 +35,12 @@ def test_register_uses_admin_cap(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     _fill(Store(db), 60, cid=0, cap=100)
     r = appmod._fav_channel_register(0, "https://www.instagram.com/new_one/")
-    assert r["status"] == "added" and r["cap"] == 100
+    assert r["status"] == "added" and r["cap"] == 0
+
+
+def test_admin_unlimited_member_still_50(tmp_path):
+    """관리자(cap=0)는 150개도 들어가고, 회원은 그대로 50에서 막힌다."""
+    s = Store(str(tmp_path / "t.db"))
+    assert all(_fill(s, 150, cid=0, cap=0))
+    r = _fill(s, 51, cid=5, cap=50)
+    assert r[:50] == [True] * 50 and r[50] is None
