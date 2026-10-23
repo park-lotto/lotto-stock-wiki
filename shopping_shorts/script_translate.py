@@ -53,7 +53,7 @@ Output Japanese only (no Korean, no romaji-only lines, no notes).
 
 Style rules (2026-10-23, 사장님: 일본인이 듣기에 문어체라 어색함):
 - This is speech, not writing. Do NOT translate word by word: rephrase into how a Japanese person would naturally say the same thing, even if the wording changes. Korean idioms become the natural Japanese expression (기립박수 친 → 思わず拍手した / 絶賛した, 그 지옥 → あの地獄みたいな時間, 미친 발명품 → ヤバすぎる発明品).
-- FIRST decide the register from the Korean line endings, then keep it for every line. Korean 존댓말 (any line ending in 요/세요/니다) → spoken です・ます only, never casual. Korean 존댓말 (〜요/〜세요/〜습니다) → friendly spoken です・ます (〜なんです / 〜ですよね / 〜してみてください). Korean 반말 narration (〜라는 거 / 〜버림 / 〜라는데) → casual spoken Japanese (〜なんだって / 〜しちゃう / 〜んだよね / 〜ってこと). Keep ONE register across all lines.
+- Register (decided from the Korean script, follow it on EVERY line): {register}
 - Banned written-style patterns: 〜ということ / 文末の〜こと / 〜である / 〜にて / 〜消え去った / 〜となっております / 〜でございます / long noun-modifier chains. End lines with spoken endings instead.
 - Do not add facts or phrases that are not in the Korean line (no 見つけたよ, no 急いでチェックしてみて unless the Korean line asks for it) and do not drop any. Keep product nouns faithful (발난로 → 足元ヒーター, 바지 → ズボン). Keep numbers exactly; keep currency as written (원 → ウォン, never 円).
 - Each line is one short rhythmic voice-over line (about 30 Japanese characters or less, no long compound sentences).
@@ -140,6 +140,21 @@ def english_ratio(lines):
     return sum(1 for x in ls if is_english(x)) / len(ls)
 
 
+_JA_WRITTEN = re.compile(r"(ということ[。！!]*$|消え去|である[。]*$|における|となっております)")
+_KO_POLITE = re.compile(r"(요|니다|니까|세요|죠|시죠|십시오)[.!?~…\s]*$")
+_REG_POLITE = ("POLITE. The Korean uses 존댓말, so write spoken です・ます only — never casual endings. "
+               "Natural spoken polite forms: 〜なんです / 〜ですよね / 〜ちゃうんです / 〜してみてください / 〜ですよ.")
+_REG_CASUAL = ("CASUAL. The Korean is 반말 narration, so write friendly casual spoken Japanese: "
+               "〜なんだって / 〜しちゃう / 〜んだよね / 〜ってこと / 〜してみて.")
+
+
+def ja_register(lines):
+    """한국어 대본 말투 → 'polite'|'casual'. 문장 끝 존댓말 줄이 3분의 1 이상이면 존댓말(관제 254, 2026-10-23 사장님 "존댓말 대본은 존댓말로")."""
+    src = [(x or "").strip() for x in (lines or []) if (x or "").strip()]
+    n = sum(1 for x in src if _KO_POLITE.search(x))
+    return "polite" if src and n * 3 >= len(src) else "casual"
+
+
 def translate(lines, lang, product="", *, call=None, tries=2):
     """한국어 문장 목록 → 같은 길이의 lang('en'|'ja') 문장 목록.
 
@@ -159,7 +174,8 @@ def translate(lines, lang, product="", *, call=None, tries=2):
     call = call or (lambda p, s: script_generate._call_json(p, s))
     hint = f" ('{product}')" if (product or "").strip() else ""
     tmpl = _PROMPT if lang == "en" else _PROMPT_JA
-    prompt = tmpl.format(n=len(src), product_hint=hint,
+    reg = _REG_POLITE if ja_register(src) == "polite" else _REG_CASUAL
+    prompt = tmpl.format(n=len(src), product_hint=hint, register=reg,
                          lines=json.dumps(src, ensure_ascii=False))
     last = ""
     for _ in range(max(1, tries)):
@@ -180,6 +196,11 @@ def translate(lines, lang, product="", *, call=None, tries=2):
             if not_ja:
                 last = f"{len(not_ja)}줄이 일본어가 아니에요"
                 continue
+        if lang == "ja" and _ < max(1, tries) - 1 and any(_JA_WRITTEN.search(x) for x in out):
+            # 글말 끝맺음(〜ということ·消え去る·である)이 섞이면 한 번 더 받는다 — 일본인 쇼핑 쇼츠 9편 73줄 실측 0건(관제 254).
+            # 마지막 시도면 그대로 쓴다(번역 실패로 막지 않는다)
+            last = "글말 끝맺음"
+            continue
         return out
     raise ValueError(LANG_LABEL[lang] + " 변환에 실패했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 눌러 주세요")
 
