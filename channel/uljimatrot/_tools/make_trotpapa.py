@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -98,6 +99,39 @@ def load_spec(path):
     SPEC["hook_zoom"] = 0.07 if "zoom" in str(hk.get("motion", "")) else 0.0
     SPEC["hook_arrow"] = bool(hk.get("arrow"))
     print("좌표:", {"window": [WIN_Y, WIN_Y + WIN_H], "sub_y": SUB_Y, **SPEC}, "빈칸:", miss)
+
+
+def load_measure(path):
+    """칼카피 엔진 대조표(compare.py 차이표.json)의 원본 쪽 픽셀 실측으로 SPEC 을 덮는다 — 줄판독(눈대중 섞임)보다 우선.
+    자막 띠·제목 두 줄 글자 칸·말소리 LUFS·컷 길이·줄 폭."""
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    o = {r["key"]: r["orig"] for r in d["rows"]}
+    got = []
+    if o.get("frame.caption_band"):
+        SPEC["cap"] = o["frame.caption_band"]; got.append("cap")
+    ab = o.get("frame.above_bands") or []
+    if len(ab) == 2 and o.get("band.line_h#0") and o.get("band.line_h#1"):
+        ty = []
+        for (b0, b1), h in zip(ab, (o["band.line_h#0"], o["band.line_h#1"])):
+            c = (b0 + b1) / 2
+            ty.append([c - h / 2, c + h / 2])
+        SPEC["title_y"] = ty; got.append("title_y")
+        SPEC["title_bands"] = ab; SPEC["title_h"] = [o["band.line_h#0"], o["band.line_h#1"]]; got.append("title_bands")
+    for k, key in (("lufs", "mix.lufs"), ("cut_median", "cut.median"), ("line_w", "cap.line_w"), ("cap_h", "cap.size_px")):
+        if o.get(key) is not None:
+            SPEC[k] = o[key]; got.append(k)
+    print("엔진 실측으로 덮음:", got, {k: SPEC.get(k) for k in got})
+
+
+def ink_crop(im):
+    """외곽·그림자까지 포함한 잉크 상자로 자른다 — 자리 맞춤은 잉크 상자 기준(엔진이 잉크 행으로 띠를 잰다)."""
+    bb = im.getchannel("A").point(lambda v: 255 if v > 128 else 0).getbbox()
+    return im.crop(bb) if bb else im
+
+
+def place_in_band(im, band):
+    """잉크 상자 세로 가운데를 원본 띠 [y0,y1) 가운데에 둔다."""
+    return int((band[0] + band[1]) / 2 - im.height / 2)
 
 
 def fit_text(parts, box_h, stroke, glyph=False):
@@ -188,12 +222,15 @@ def static_overlay(cfg, out: Path):
     if COPY:                                      # 원본: 띠 #FF1700 y150~292 · 글자 흰 + 검정 테 + 오른쪽 아래 진한 그림자
         b0, b1 = SPEC["title_band"]
         ImageDraw.Draw(im).rectangle([0, b0, W, b1], fill=(255, 23, 0, 255))
-        for line, (y0, y1) in zip(cfg["title"], SPEC["title_y"]):
-            t = hard_shadow(fit_text([(line, (255, 255, 255))], 88, 7, glyph=True))      # compare 실측: 원본 띠 글자 높이 88·획 13~14
+        bands = SPEC.get("title_bands") or SPEC["title_y"]
+        hs = SPEC.get("title_h") or [88, 88]
+        for line, (y0, y1), gh in zip(cfg["title"], bands, hs):
+            # 글자(흰 몸) 높이 = 엔진 실측 띠 글자 높이, 잉크 상자(외곽·그림자 포함)를 원본 띠 가운데에
+            t = ink_crop(hard_shadow(fit_text([(line, (255, 255, 255))], int(gh), 7, glyph=True)))
             if t.width > W - 30:
                 t = t.resize((W - 30, int(t.height * (W - 30) / t.width)))
             gb = text_img([(line, (255, 255, 255))], 10, stroke=0, shadow=False)
-            im.alpha_composite(t, ((W - t.width) // 2, int((y0 + y1) / 2 - t.height / 2)))
+            im.alpha_composite(t, ((W - t.width) // 2, place_in_band(t, (y0, y1)) if SPEC.get("title_bands") else int((y0 + y1) / 2 - t.height / 2)))
         return frame_png(out, im)
     band = Image.new("RGBA", (W, 150))
     bd = ImageDraw.Draw(band)
@@ -460,6 +497,9 @@ def make(cfg_path: Path, allow_tts=True):
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     if COPY:
         load_spec(ROOT / cfg["bench"])
+        mp = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--measure=")), None)
+        if mp:
+            load_measure(mp)
     wd = WORK / (cfg["slug"] + ("_copy" if COPY else ""))
     wd.mkdir(parents=True, exist_ok=True)
     segs = [("hook", cfg["hook"]["tts"])] + [(f"l{i}", l["tts"]) for i, l in enumerate(cfg["lines"])] + [("cta", cfg["cta"]["tts"])]
@@ -482,9 +522,16 @@ def make(cfg_path: Path, allow_tts=True):
     parts = []
     spans = [(x["t0"] if i else hook_end, tl[i + 1]["t0"] if i + 1 < len(tl) else reveal_t0) for i, x in enumerate(tl)][1:]
     clip_lists = [l["clips"] for l in cfg["lines"]] + [[cfg["cta"]["clip"]]]
+    if COPY and SPEC.get("cut_median", 0) >= 2.0:      # 원본 컷 중앙 ≥2초 = 줄마다 한 장면(쪼개면 컷이 원본의 1/3 길이)
+        clip_lists = [c[:1] for c in clip_lists]
     for j, ((a, b), clips) in enumerate(zip(spans, clip_lists)):
         if j == 0:
             a = hook_end
+        if COPY and SPEC.get("cut_median") and (b - a) / len(clips) > SPEC["cut_median"] * 1.5:
+            # 원본 컷 길이보다 훨씬 긴 구간(CTA 한 장면 10.8초)은 같은 장면 안에서 원본 시각을 건너뛰어 컷을 만든다
+            k = max(1, round((b - a) / SPEC["cut_median"]))
+            st0, xf0 = clips[0]
+            clips = [[st0 + q * ((b - a) / k + 1.5), xf0] for q in range(k)]
         each = (b - a) / len(clips)
         for m, (st, xf) in enumerate(clips):
             parts.append(cut(cfg["src"], st, xf, each, wd / f"c{j}_{m}.mp4"))
@@ -507,8 +554,13 @@ def make(cfg_path: Path, allow_tts=True):
     ov.append((chip, cx, SPEC["src_y"][0] if COPY else 1500 - ci.height // 2, hook_end, total, False))
     anim = not COPY                                   # 원본 = 바로 뜸(instant 130/144)
     subs = []
+    maxc = 10
+    if COPY and SPEC.get("line_w"):                   # 원본 줄 폭 중앙 ÷ 우리 글자 한 자 폭(같은 높이로 그려 잰다)
+        probe_im = ink_crop(fit_text([("가나다라마바사아", (255, 255, 255))], int(SPEC.get("cap_h") or (SPEC["cap"][1] - SPEC["cap"][0])), SPEC["outline"], glyph=bool(SPEC.get("cap_h"))))
+        # 띄어쓰기 단위로 끊으면 조각 평균이 상한보다 짧다(실측 ÷1.0→471/666 · ÷0.7→754/666·933/758) → 상한 = 목표 글자 수 ÷ 0.82
+        maxc = max(6, round(SPEC["line_w"] / (probe_im.width / 8) / 0.82))
     for x, line in zip(tl[1:-1], cfg["lines"]):
-        cs = chunks(x["text"])
+        cs = chunks(x["text"], maxc)
         n = sum(len(c.replace(" ", "")) for c in cs)
         tt = x["t0"]
         for c in cs:
@@ -518,11 +570,14 @@ def make(cfg_path: Path, allow_tts=True):
     cta = tl[-1]
     for i, (c, a, b, key) in enumerate(subs if SUBS else []):
         if COPY:
-            im = fit_text([(c, (255, 255, 255))], SPEC["cap"][1] - SPEC["cap"][0], SPEC["outline"])
+            if SPEC.get("cap_h"):                        # 흰 글자 몸 높이 = 엔진 실측(cap.size_px), 잉크 상자를 띠 가운데에
+                im = ink_crop(fit_text([(c, (255, 255, 255))], int(SPEC["cap_h"]), SPEC["outline"], glyph=True))
+            else:
+                im = fit_text([(c, (255, 255, 255))], SPEC["cap"][1] - SPEC["cap"][0], SPEC["outline"])
         else:
             im = text_img(split_key(c, key if key and key in c else None), 84)
         p = frame_png(wd / f"sub{i:02d}.png", im)
-        ov.append((p, (W - im.width) // 2, SPEC["cap"][0] if COPY else SUB_Y - im.height // 2, a, b, anim))
+        ov.append((p, (W - im.width) // 2, place_in_band(im, SPEC["cap"]) if COPY else SUB_Y - im.height // 2, a, b, anim))
     for i, line in enumerate(cfg["cta"]["screen"] if SUBS else []):
         ch = SPEC["cta_y"][1] - SPEC["cta_y"][0]
         im = fit_text([(line, (255, 255, 255))], ch, SPEC["outline"]) if COPY else text_img([(line, (255, 255, 255))], 80)
@@ -568,13 +623,23 @@ def make(cfg_path: Path, allow_tts=True):
     g.append("".join(f"[a{j}]" for j in range(len(auds))) + f"amix=inputs={len(auds)}:normalize=0:duration=longest[narr]")
     g.append(f"[{bg}]atrim=0:{total:.3f},volume=0.10,aformat=channel_layouts=stereo[bgm]")
     g.append("[narr]asplit[n1][n2];[bgm][n2]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[duck]")
-    g.append(f"[n1][duck]amix=inputs=2:normalize=0:duration=first,apad,atrim=0:{total:.3f},loudnorm=I=-14:TP=-1.5:LRA=11[aout]")
+    g.append(f"[n1][duck]amix=inputs=2:normalize=0:duration=first,apad,atrim=0:{total:.3f},loudnorm=I={SPEC.get('lufs', -14) if COPY else -14}:TP=-1.0:LRA=11[aout]")
     out = wd / f"트롯파파_{cfg['slug']}{'_원본판' if COPY else ''}{'' if SUBS else '_바탕'}.mp4"
     gfile = wd / "graph.txt"
     gfile.write_text(";\n".join(g), encoding="utf-8")
     run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex_script", gfile, "-map", "[vout]", "-map", "[aout]",
          "-t", f"{total:.3f}", "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
          "-c:a", "aac", "-b:a", "192k", "-ar", "44100", out])
+    if COPY and SPEC.get("lufs") is not None:     # loudnorm 한 번은 목표에 못 미친다(실측 -12 → 목표 -9.7) — 재고 모자란 만큼 올린다
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(out), "-af", "ebur128", "-f", "null", "-"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        got = [float(x) for x in re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr)]
+        if got and abs(got[-1] - SPEC["lufs"]) > 0.5:
+            fixed = out.with_name(out.stem + "_lufs.mp4")
+            run(["ffmpeg", "-y", "-v", "error", "-i", out, "-c:v", "copy", "-af",
+                 f"volume={SPEC['lufs'] - got[-1]:.2f}dB,alimiter=limit=0.98:level=disabled", "-c:a", "aac", "-b:a", "192k", "-ar", "44100", fixed])
+            fixed.replace(out)
+            print(f"LUFS {got[-1]} → 목표 {SPEC['lufs']} 보정")
     (wd / "timeline.json").write_text(json.dumps({"tempo": tempo, "total": total, "hook_end": hook_end, "reveal_t0": reveal_t0,
                                                   "segments": tl, "subs": subs}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"완성 {out}  길이 {total:.2f}초  tempo {tempo:.2f}  자막 {len(subs)}줄")

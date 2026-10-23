@@ -40,3 +40,26 @@ def test_hook_does_not_stretch_window(vid):
     lv = layout.measure_video(vid, probe.info(vid))
     x, y, w, h = lv["window"]
     assert abs(y - 147) <= 4 and abs(h - 332) <= 4, (lv["window"], lv.get("window_method"))
+
+
+# ── 두 번째 실사례: 울지마트롯 tv-hFwrvEc4 — 조각 4개 창 = 1480(훅)·772(아래가 어두운 장면)·997·996.
+# 같은 창 2/4 라 과반 미달로 다수결을 버렸다. 어두운 장면은 창을 줄일 뿐 늘리지 못한다 → 안에 드는 조각은 찬성표.
+@pytest.fixture(scope="module")
+def vid_dark(tmp_path_factory):
+    out = tmp_path_factory.mktemp("hookwin2") / "hook_dark.mp4"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                    "-f", "lavfi", "-i", "color=black:s=360x640:r=30:d=24",
+                    "-f", "lavfi", "-i", "testsrc2=s=360x590:r=30:d=0.04",
+                    "-f", "lavfi", "-i", "testsrc2=s=360x332:r=30:d=18",
+                    "-filter_complex", "[1]loop=loop=-1:size=1,trim=duration=6,scale=w='360*(1+0.07*t/6)':h='590*(1+0.07*t/6)':eval=frame,crop=360:590,setpts=PTS-STARTPTS[h];"
+                                       # 6~12초: 창 아래 40% 를 검게 덮는다(어두운 장면)
+                                       "[2]setpts=PTS-STARTPTS+6/TB,drawbox=y=200:w=iw:h=132:color=black:t=fill:enable='lt(t,12)'[b];"
+                                       "[0][h]overlay=0:50:eof_action=pass[t];[t][b]overlay=0:147:enable='gte(t,6)':eof_action=pass,format=yuv420p",
+                    "-t", "24", str(out)], check=True)
+    return str(out)
+
+
+def test_dark_chunk_supports_vote(vid_dark):
+    lv = layout.measure_video(vid_dark, probe.info(vid_dark))
+    x, y, w, h = lv["window"]
+    assert abs(y - 147) <= 4 and abs(h - 332) <= 4, (lv["window"], lv.get("window_method"))

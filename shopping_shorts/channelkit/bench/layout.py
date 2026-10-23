@@ -266,15 +266,21 @@ def window_vote(path: str, meta: dict) -> dict | None:
             groups.append([c])
     if not groups:
         return None
-    g = max(groups, key=len)
-    if len(g) * 2 <= n:     # 과반 미달 = 틀 없는 전체화면 편 — 창을 지어내지 않는다(2026-10-16 썰풀다 D3Pc6HZ6t6c 1/3로 창을 지어냄)
+    def _inside(c, g0):      # 조각 창이 무리 창 안에 든다(어두운 장면은 창을 줄일 뿐 늘리지 못한다)
+        cw, gw = c["window"], g0[0]["window"]
+        return cw[1] >= gw[1] - VARIANT_TOL_PX and cw[1] + cw[3] <= gw[1] + gw[3] + VARIANT_TOL_PX and not _same_window(cw, gw)
+    def _support(g0):
+        return len(g0) + sum(1 for c in chunks if c["window"] and c["window"][3] < WINDOW_FULL_FRAC * H and _inside(c, g0))
+    g = max(groups, key=lambda g0: (len(g0), _support(g0)))
+    # 찬성표 = 같은 창 + 그 안에 드는 조각(울지마트롯 tv-hFwrvEc4: 1480 훅·772 어두운 장면·997·996 → 2+1/4)
+    if _support(g) * 2 <= n:     # 과반 미달 = 틀 없는 전체화면 편 — 창을 지어내지 않는다(2026-10-16 썰풀다 D3Pc6HZ6t6c 1/3로 창을 지어냄)
         return None
     win = [int(np.median([c["window"][k] for c in g])) for k in range(4)]
     main = [c["t"] for c in g]
     other_chunks = [c["t"] for c in chunks if c not in g]
     seg = frame_segments(path, meta, win, main, other_chunks)
     return {"window": win, "chunks": chunks, "main": main, "other_chunks": other_chunks,
-            "other": seg["other"], "other_method": seg["method"], "votes": f"{len(g)}/{n}"}
+            "other": seg["other"], "other_method": seg["method"], "votes": f"{len(g)}(+안 {_support(g) - len(g)})/{n}"}
 
 
 def frame_segments(path: str, meta: dict, win: list[int], main: list[list[float]], other: list[list[float]]) -> dict:
