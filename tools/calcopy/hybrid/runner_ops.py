@@ -1008,7 +1008,7 @@ def plan_sheet(W: Path, version: str, T: dict) -> Path:
             im.thumbnail((220, 220))
             dr = ImageDraw.Draw(im)
             dr.rectangle((0, 0, im.width, 18), fill=(0, 0, 0))
-            dr.text((3, 2), f"{c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))
+            dr.text((3, 2), f"c{i} {c.get('line')} {c.get('t0')}~{c.get('t1')}", fill=(255, 255, 0))   # c{i} = 썸네일 안의 part 번호(flow THUMB_ASK)
             tiles.append(im)
         except Exception:  # noqa: BLE001 — 못 뜬 컷은 시트에서 빠진다(검수가 본다)
             continue
