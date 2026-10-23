@@ -20,7 +20,7 @@ _JA_CHARS = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
 # 자막 토큰에서 뺄 글자(공백·문장부호) — caption_tokens 와 tts_timestamps.words_from_alignment 가 같이 쓴다(한 벌).
 _TOKEN_SKIP = re.compile(r"[\s、。！？!?,.…「」『』～~'\"()（）]")
 
-LANG_LABEL = {"en": "영어", "ja": "일본어", "ko": "한국어"}   # 화면 문구 공용
+LANG_LABEL = {"en": "영어", "ja": "일본어", "ko": "한국어", "zh": "중국어"}   # 화면 문구 공용
 # "글자로 치는 문자"(비교·중복 판정용 정규화) — 한글·숫자·라틴 + 가나·CJK 한자. 2026-10-21 라이브 e2e(job e582f0e0c9b4)에서
 #   edit_plan._narr_key 가 [^0-9A-Za-z가-힣] 만 남겨 일본어 줄 11개 중 10개가 빈 키("")가 되어 enforce_script_order 가
 #   칸 11 → 1 로 뭉갰다. 같은 정규식이 edit_plan(_narr_key·_dup_key)·scene_style(_word_key)·storyboard(_compact) 4벌이라
@@ -161,28 +161,134 @@ def ja_register(lines):
     return "polite" if src and n * 3 >= len(src) else "casual"
 
 
-def translate(lines, lang, product="", *, call=None, tries=2):
-    """한국어 문장 목록 → 같은 길이의 lang('en'|'ja') 문장 목록.
+# ── 네 언어 바로 옮기기(관제 254, 2026-10-23 사장님 "일어 중국어 영어 한국어 모두 바로 이동이 되게") ──
+# ★lang_of 는 손대지 않는다 — 자막 토큰·성우 차단·말속도가 그걸 써서, 한자만 있는 줄을 'zh'로 바꾸면 기존 일본어 작업이 흔들린다.
+#   번역 엔진의 원문 판정은 여기 detect_lang 한 곳(가나가 있으면 일본어, 한자만 있으면 중국어).
+def detect_lang(text):
+    """번역 엔진용 원문 언어 'ko'|'ja'|'zh'|'en'|None."""
+    t = text or ""
+    if _HANGUL.search(t):
+        return "ko"
+    if _KANA.search(t):
+        return "ja"
+    if _CJK.search(t):
+        return "zh"
+    if len(_LATIN_WORD.findall(t)) >= 2:
+        return "en"
+    return None
+
+
+def source_lang(lines):
+    """줄 목록의 원문 언어 — 줄마다 detect_lang 을 세어 가장 많은 것. 가나가 한 줄이라도 있으면 일본어
+    (일본어 대본 속 한자만 있는 짧은 줄 "絶賛発売中"이 중국어로 세어져도 흔들리지 않게)."""
+    from collections import Counter
+    c = Counter(x for x in (detect_lang(y) for y in (lines or [])) if x)
+    if not c:
+        return "ko"
+    if c.get("ja"):
+        return "ja"
+    return c.most_common(1)[0][0]
+
+
+_LANG_EN = {"ko": "Korean", "ja": "Japanese", "zh": "Chinese (Mandarin, Simplified)", "en": "English"}
+_JA_POLITE = re.compile(r"(です|ます|ません|でした|ました|ください|でしょう)[よねか]?[。！!？?…\s]*$")
+
+
+def register_of(lines, src):
+    """원문 말투 'polite'|'casual'. 높임이 문법에 있는 한국어·일본어만 판정, 중국어·영어 원문은 'casual'(쇼츠 기본)."""
+    pat = {"ko": _KO_POLITE, "ja": _JA_POLITE}.get(src)
+    xs = [(x or "").strip() for x in (lines or []) if (x or "").strip()]
+    if not pat or not xs:
+        return "casual"
+    return "polite" if sum(1 for x in xs if pat.search(x)) * 3 >= len(xs) else "casual"
+
+
+_REGISTER_ANY = {
+    ("ja", "polite"): "POLITE: spoken です・ます only (〜なんです / 〜ですよね / 〜ちゃうんです / 〜してみてください).",
+    ("ja", "casual"): "CASUAL: friendly casual spoken Japanese (〜なんだって / 〜しちゃう / 〜んだよね / 〜じゃん / 〜してみて).",
+    ("ko", "polite"): "POLITE: 자연스러운 해요체 구어(~거든요 / ~더라고요 / ~잖아요 / ~해 보세요). 합쇼체(~습니다)는 마지막 권유 정도만.",
+    ("ko", "casual"): "CASUAL: 친구한테 말하듯 반말 썰체(~했거든 / ~더라 / ~잖아 / ~해 봐).",
+    ("zh", "polite"): "抖音带货口播的亲切口吻(家人们 / 真的 / 你们一定要试试), 不要书面敬语.",
+    ("zh", "casual"): "抖音带货口播的随意口吻(真的绝了 / 谁懂啊 / 直接 / 太香了), 不要书面语.",
+    ("en", "polite"): "Warm, friendly creator voice-over (contractions OK).",
+    ("en", "casual"): "Casual, punchy creator voice-over (contractions, short sentences).",
+}
+
+_STYLE_ANY = {
+    "ja": ("Banned written-style: 〜ということ / 文末の〜こと / 〜である / 〜にて / 〜消え去った / 〜となっております. "
+           "Link lines like a speaker (でもさ / しかも / なのに / 〜したら / 〜から / 〜し), keep sound words as Japanese ones (サッと / ポンと / パンパン / スッキリ). "
+           "Never end three lines in a row the same way. About 30 characters or less per line.\n"
+           "Real lines from top Japanese shopping shorts (style only, do NOT copy): 引越しの荷造りが終わって壁を見たらさ、ピン穴だらけだったの。 / はぁ？ってなったよね。 / "
+           "ちょっと見てて、ぎゅっと絞ってヘラですーっ、それだけ。 / もうこれ、ポーチ界のチートアイテムじゃん。 / 最初は固く見えても時間が経つと緩んで、結局ネズミがまた入り込んできたんです。"),
+    "ko": ("번역투 금지: ~하는 것이다 / ~에 있어서 / ~되어지다 / ~을 통해 / 명사 나열. 한국 쇼핑 쇼츠 내레이션처럼 말하듯 쓴다. "
+           "의성어·의태어를 살린다(쓱 / 딱 / 빵빵 / 싹). 같은 끝맺음을 세 줄 연속 쓰지 않는다. 한 줄 30자 안팎."),
+    "zh": ("用简体中文。这是口播不是文章: 不要书面语(之 / 其 / 乃 / 予以 / 进行… / 该产品), 不要逐字翻译, 用中国人自然的说法和语气词(啊 / 吧 / 呢 / 真的). "
+           "拟声拟态词用中文自然的(唰一下 / 啪地一按 / 鼓鼓的). 不要连续三句同样的结尾. 每句20个汉字左右."),
+    "en": ("Natural American TikTok/Shorts voice-over, not a translation: rephrase idioms, use contractions, short punchy lines, "
+           "keep sound words natural in English (just slip it on / press once / puffs right up)."),
+}
+
+_PROMPT_ANY = """You are a native {tgt_name} short-form copywriter. Rewrite a {src_name} shopping-shorts narration as the voice-over a native {tgt_name} TikTok/Shorts creator would actually SAY out loud.
+Return exactly {n} lines in the same order, one per input line, never merge/split, never empty.
+Keep meaning, product name{product_hint}, numbers and calls to action. Do not add facts or phrases that are not in the line, and do not drop any. Keep numbers exactly; keep the currency as written.
+Output {tgt_name} only (no {src_name}, no notes, no quotes, no romanization).
+
+- This is speech, not writing. Do NOT translate word by word: say the same thing the way a native speaker naturally would.
+- Register (decided from the original script, follow it on EVERY line): {register}
+- {style}
+
+Input lines (JSON array):
+{lines}
+"""
+
+
+def _is_lang(text, lang):
+    """출력 줄이 그 언어로 쓰였나 — 번역 결과 검사 한 곳."""
+    t = text or ""
+    if lang == "ko":
+        return bool(_HANGUL.search(t)) and not _KANA.search(t)
+    if lang == "ja":   # 가나가 있어야 일본어 — 한자만이면 중국어를 그대로 돌려준 것일 수 있다
+        return bool(_KANA.search(t)) and not _HANGUL.search(t)
+    if lang == "zh":
+        return bool(_CJK.search(t)) and not _KANA.search(t) and not _HANGUL.search(t)
+    if lang == "en":
+        return bool(_LATIN.search(t)) and not (_HANGUL.search(t) or _KANA.search(t) or _CJK.search(t))
+    return False
+
+
+def translate(lines, lang, product="", *, source=None, call=None, tries=2):
+    """문장 목록 → 같은 길이의 lang('ko'|'ja'|'zh'|'en') 문장 목록. source(원문 언어)는 안 주면 source_lang 으로 판정.
+    한국어→영어·일본어는 종전 지시문 그대로(회귀 금지), 그 밖의 조합은 _PROMPT_ANY(그 나라 크리에이터 말투)로 바로 옮긴다.
 
     call: 테스트가 갈아끼우는 (prompt, schema) -> dict. 기본은 script_generate._call_json(키풀·Vertex 깔때기).
     실패(빈 응답·줄 수 불일치·한글 잔존·일본어 아닌 줄)는 ValueError — 호출부가 그대로 화면에 띄운다.
     """
     import json
-    if lang not in ("en", "ja"):
+    if lang not in _LANG_EN:
         raise ValueError("지원하지 않는 언어예요: %r" % (lang,))
     src = [(x or "").strip() for x in (lines or [])]
     if not src or any(not x for x in src):
         raise ValueError("번역할 문장이 비어 있어요 — 대본을 먼저 확정해 주세요")
     # 이미 그 언어면 두 번 번역하지 않는다. 영어는 종전 판정(is_english: 한글 0·라틴 있음)을 그대로 둔다(회귀 금지).
-    already = is_english if lang == "en" else (lambda x: lang_of(x) == "ja")
-    if all(already(x) for x in src):
+    src_lang = source or source_lang(src)
+    legacy = src_lang == "ko" and lang in ("en", "ja")
+    if legacy:
+        already = is_english if lang == "en" else (lambda x: lang_of(x) == "ja")
+        if all(already(x) for x in src):
+            return list(src)
+    elif src_lang == lang:
         return list(src)
     call = call or (lambda p, s: script_generate._call_json(p, s))
     hint = f" ('{product}')" if (product or "").strip() else ""
-    tmpl = _PROMPT if lang == "en" else _PROMPT_JA
-    reg = _REG_POLITE if ja_register(src) == "polite" else _REG_CASUAL
-    prompt = tmpl.format(n=len(src), product_hint=hint, register=reg,
-                         lines=json.dumps(src, ensure_ascii=False))
+    if legacy:
+        tmpl = _PROMPT if lang == "en" else _PROMPT_JA
+        reg = _REG_POLITE if ja_register(src) == "polite" else _REG_CASUAL
+        prompt = tmpl.format(n=len(src), product_hint=hint, register=reg,
+                             lines=json.dumps(src, ensure_ascii=False))
+    else:
+        prompt = _PROMPT_ANY.format(tgt_name=_LANG_EN[lang], src_name=_LANG_EN.get(src_lang, "source"), n=len(src),
+                                    product_hint=hint, register=_REGISTER_ANY[(lang, register_of(src, src_lang))],
+                                    style=_STYLE_ANY[lang], lines=json.dumps(src, ensure_ascii=False))
     last = ""
     for _ in range(max(1, tries)):
         got = call(prompt, _SCHEMA) or {}
@@ -193,9 +299,10 @@ def translate(lines, lang, product="", *, call=None, tries=2):
         if any(not x for x in out):
             last = "빈 줄이 섞여 나왔어요"
             continue
-        bad = [i for i, x in enumerate(out) if _HANGUL.search(x)]
+        bad = ([i for i, x in enumerate(out) if _HANGUL.search(x)] if legacy
+               else [i for i, x in enumerate(out) if not _is_lang(x, lang)])
         if bad:
-            last = f"{len(bad)}줄에 한글이 남았어요"
+            last = f"{len(bad)}줄에 한글이 남았어요" if legacy else f"{len(bad)}줄이 {LANG_LABEL[lang]}가 아니에요"
             continue
         if lang == "ja":
             not_ja = [i for i, x in enumerate(out) if not _JA_CHARS.search(x)]

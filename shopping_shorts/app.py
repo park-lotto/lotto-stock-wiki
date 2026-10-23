@@ -9965,7 +9965,7 @@ def api_script_translate(request: Request, body: dict):
     """
     from shopping_shorts import script_translate
     lang = body.get("lang") or "en"
-    if lang not in ("en", "ja"):
+    if lang not in script_translate.LANG_LABEL:      # ko·ja·zh·en 어느 쪽으로든(관제 254 — 원문 언어는 엔진이 판정)
         return JSONResponse(status_code=422, content={"ok": False, "error": "지원하지 않는 언어예요"})
     lines = [str(x or "") for x in (body.get("lines") or []) if isinstance(x, (str, int, float))]
     if not lines:
@@ -9976,7 +9976,8 @@ def api_script_translate(request: Request, body: dict):
     if _blocked:
         return _blocked
     try:
-        out = script_translate.translate(lines, lang, str(body.get("product") or ""))
+        out = script_translate.translate(lines, lang, str(body.get("product") or ""),
+                                         source=(body.get("src") if body.get("src") in script_translate.LANG_LABEL else None))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     # 화면이 "몇 초"를 그 언어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
