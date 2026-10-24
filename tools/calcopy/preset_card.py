@@ -246,7 +246,10 @@ def rules_of(slug: str, O: dict | None = None) -> list[dict]:
                 el, act = {"emph": "cap_emph", "sticker": "sticker", "sfx": "sfx"}[eff], eff
             else:
                 continue
-            out.append(_rec(el, r.get("cond"), act, r.get("k"), r.get("n"), r.get("rate"), r.get("base"), r.get("grade"), [src], "눈"))
+            k, n = r.get("k"), r.get("n")
+            ok = isinstance(k, (int, float)) and isinstance(n, (int, float)) and n > 0
+            # rate·등급은 k/n 에서 다시 낸다(장부의 rate 칸을 베끼지 않는다 — k 만 바뀌어도 카드가 따라간다)
+            out.append(_rec(el, r.get("cond"), act, k, n, round(k / n, 2) if ok else None, r.get("base"), _grade(k, n) if ok else None, [src], "눈"))
         pl = R.get("plain") or {}
         if pl.get("denom"):
             out.append(_rec("cap_enter", "없음", "꾸밈 없는 줄(plain)", pl.get("n"), pl.get("denom"), round(pl["n"] / pl["denom"], 2),
