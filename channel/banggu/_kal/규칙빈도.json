@@ -100,8 +100,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -119,8 +117,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -133,8 +129,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -147,8 +141,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -163,8 +155,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -177,8 +167,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -191,8 +179,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -205,8 +191,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -219,8 +203,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -233,8 +215,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -247,8 +227,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -261,8 +239,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -275,8 +251,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -289,8 +263,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -303,8 +275,6 @@
    },
    "enter_fx": 0,
    "emph": 0,
-   "emph_color": 0,
-   "emph_plain": 0,
    "sticker": 0,
    "sfx": 0,
    "variant": 0,
@@ -326,8 +296,6 @@
  "base_rate": {
   "enter_fx": 0.0,
   "emph": 0.0,
-  "emph_color": 0.0,
-  "emph_plain": 0.0,
   "sticker": 0.0,
   "sfx": 0.0,
   "variant": 0.0
@@ -353,24 +321,6 @@
   {
    "cond": "화자=나레",
    "effect": "emph",
-   "k": 0,
-   "n": 121,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "화자=나레",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 121,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "화자=나레",
-   "effect": "emph_plain",
    "k": 0,
    "n": 121,
    "rate": 0.0,
@@ -432,24 +382,6 @@
   },
   {
    "cond": "자리=본문",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 91,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=본문",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 91,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=본문",
    "effect": "sticker",
    "k": 0,
    "n": 91,
@@ -511,24 +443,6 @@
   },
   {
    "cond": "자리=끝",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 18,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=끝",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 18,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=끝",
    "effect": "sticker",
    "k": 0,
    "n": 18,
@@ -566,24 +480,6 @@
   {
    "cond": "역할=공개",
    "effect": "emph",
-   "k": 0,
-   "n": 18,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=공개",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 18,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=공개",
-   "effect": "emph_plain",
    "k": 0,
    "n": 18,
    "rate": 0.0,
@@ -653,24 +549,6 @@
   },
   {
    "cond": "역할=다리",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 16,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=다리",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 16,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=다리",
    "effect": "sticker",
    "k": 0,
    "n": 16,
@@ -708,24 +586,6 @@
   {
    "cond": "역할=증거",
    "effect": "emph",
-   "k": 0,
-   "n": 16,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=증거",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 16,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=증거",
-   "effect": "emph_plain",
    "k": 0,
    "n": 16,
    "rate": 0.0,
@@ -787,24 +647,6 @@
   },
   {
    "cond": "역할=본문",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 15,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=본문",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 15,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=본문",
    "effect": "sticker",
    "k": 0,
    "n": 15,
@@ -874,24 +716,6 @@
   },
   {
    "cond": "자리=훅",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=훅",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "자리=훅",
    "effect": "sticker",
    "k": 0,
    "n": 12,
@@ -937,24 +761,6 @@
   },
   {
    "cond": "역할=답",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=답",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=답",
    "effect": "sticker",
    "k": 0,
    "n": 12,
@@ -992,24 +798,6 @@
   {
    "cond": "역할=끝",
    "effect": "emph",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=끝",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 12,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=끝",
-   "effect": "emph_plain",
    "k": 0,
    "n": 12,
    "rate": 0.0,
@@ -1079,24 +867,6 @@
   },
   {
    "cond": "역할=질문",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 8,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=질문",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 8,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=질문",
    "effect": "sticker",
    "k": 0,
    "n": 8,
@@ -1134,24 +904,6 @@
   {
    "cond": "역할=고조",
    "effect": "emph",
-   "k": 0,
-   "n": 8,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=고조",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 8,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=고조",
-   "effect": "emph_plain",
    "k": 0,
    "n": 8,
    "rate": 0.0,
@@ -1229,24 +981,6 @@
   },
   {
    "cond": "역할=훅",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 6,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=훅",
-   "effect": "emph_plain",
-   "k": 0,
-   "n": 6,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=훅",
    "effect": "sticker",
    "k": 0,
    "n": 6,
@@ -1284,24 +1018,6 @@
   {
    "cond": "역할=이음",
    "effect": "emph",
-   "k": 0,
-   "n": 6,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=이음",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 6,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "약"
-  },
-  {
-   "cond": "역할=이음",
-   "effect": "emph_plain",
    "k": 0,
    "n": 6,
    "rate": 0.0,
@@ -1355,24 +1071,6 @@
   {
    "cond": "역할=반전",
    "effect": "emph",
-   "k": 0,
-   "n": 4,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "표본부족"
-  },
-  {
-   "cond": "역할=반전",
-   "effect": "emph_color",
-   "k": 0,
-   "n": 4,
-   "rate": 0.0,
-   "base": 0.0,
-   "grade": "표본부족"
-  },
-  {
-   "cond": "역할=반전",
-   "effect": "emph_plain",
    "k": 0,
    "n": 4,
    "rate": 0.0,

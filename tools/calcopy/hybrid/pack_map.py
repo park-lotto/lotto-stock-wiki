@@ -13,7 +13,7 @@
   자막팩      shopping_shorts/static/caption-motions.js /*PACKS*/ (키 = scene_style.caption_pack_keys)
   등장 효과팩  같은 파일 /*MPACKS*/ 1~20번 — **snapshot.motionPack 이 받는 값은 이것**("off"·"1"~"20", scene_style.validate_snapshot)
   모션그래픽팩 shopping_shorts/assets/motion/packs.json (dynamic_pop·minimal_chic — 전환 swipe·sparkle 겹·색감) — mix_pipeline 길만 그린다.
-              render_bench 에는 그리는 길이 없다 → `packs.motion.graphics` 가 off 가 아니면 snapshot_fields 가 거절(조용히 무시 금지).
+              render_bench 는 모션그래픽팩을 motion_graphics 로 그린다(02 2차) — snapshot_fields 는 팩 칸만 준다.
   효과음팩    shopping_shorts/assets/sfx_packs/packs.json(slots 7 한글 이름) + 폴더 팩NN/<slot>.wav (파일 이름 = sfx_pack.SLOTS, 같은 순서)
   배경음      shopping_shorts/assets/bgm_lib/catalog.json tracks[].id
   짤          칼카피 길 = 로컬 팩(material_auto.MEME_*) · 회원 길 = 서버 /api/meme/prefs — render_bench 는 로컬만(server 는 거절)
@@ -242,11 +242,8 @@ def apply_to_style(st: dict, patch_packs: dict | None = None, name: str = "?") -
 # ── ③ 렌더 스냅샷 칸 ─────────────────────────────────────────────────────
 def snapshot_fields(st: dict) -> dict:
     """render_bench.snapshot 의 팩 칸 — captionPack = packs.caption.pack(옛 칸과 같다), motionPack = packs.motion.pack(off·1~20).
-    모션그래픽팩(graphics)은 render_bench 가 그리지 못하므로 off 가 아니면 거절(조용히 무시하면 회원이 고른 팩이 안 나온다)."""
+    모션그래픽팩(graphics)은 스냅샷 칸이 아니다 — render_bench.motion_graphics 가 그린다(02 2차 468380769, 07 이 옛 거절 삭제 10-25 지휘자 허락)."""
     P = st.get("packs") or merge()
-    g = (P.get("motion") or {}).get("graphics", "off")
-    if g != "off":
-        raise PackError(f"모션그래픽팩 '{g}' — render_bench 에 그리는 길 없음(mix_pipeline 만). 02 에 요청(전환 swipe·sparkle 겹·색감)")
     cap = (P.get("caption") or {}).get("pack")
     if cap is None:
         cap = (st.get("caption") or {}).get("pack")
