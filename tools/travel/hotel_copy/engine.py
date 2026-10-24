@@ -5,6 +5,8 @@
     py tools/travel/hotel_copy/engine.py run <이름>      # 멈춘 단계부터 순서대로. ⏸ 에서 멈춘다
     py tools/travel/hotel_copy/engine.py ok <이름>       # ⏸ 확인했다 → 다음으로
     py tools/travel/hotel_copy/engine.py status <이름>
+    py tools/travel/hotel_copy/engine.py new <새이름> --from <앞작업> --ref <다른 원본id> --brand @다른채널   # 다른 채널판
+         = 앞 작업의 사진·사실·AI 영상을 그대로 가져와 대본부터 다른 틀로. AI 영상은 새로 안 만들고 앞판이 안 쓴 뒤쪽 절반을 쓴다(돈 0)
 
 단계(순서 고정): ref → collect → sort → facts → script → ⏸대본 확인 → voice → shots → ⏸사진 확인 → clips → render → check → deliver
   (clips = ep.json 에서 'live'(움직임 영어 한 줄)를 단 컷만 AI 영상(Veo) — 불·김·물처럼 살아 있는 몇 컷만. 없으면 그냥 통과)
@@ -246,7 +248,7 @@ def s_shots(job, st):
     th = photos.pick_vision(ph, ep["lines"], ep["thumb"].get("hint") or ref["thumb_hint"], job,
                             thumb_kinds=ref.get("thumb_kinds"), end_is_thumb=ref.get("end_same_as_thumb", True))
     ep["thumb"].update(th)
-    live = _pick_live(ep, ref.get("live_max", 0))
+    live = _live_from_clips(job, ep) if st.get("from") else _pick_live(ep, ref.get("live_max", 0))
     save(job / "ep.json", ep)
     labels = photos.sheet(ep, job / "shots.jpg")
     if live:
@@ -346,6 +348,8 @@ def s_clips(job, st):
     # 같은 사진·같은 자르기면 만든 것 그대로(shots 를 다시 돌려도 돈 안 듦). 움직임 글은 _pick_live 가 돌 때마다 조금씩 달라
     # 비교에 넣지 않는다(실측: 넣었더니 같은 계곡 사진을 또 만들었다) — 다른 움직임을 원하면 clips/live_<사진>.mp4 를 지운다
     key = lambda sh: {"cx": sh.get("cx", 0.5)}
+    if st.get("from"):
+        return _clips_back_half(job, ep)
     for sh in (s for l in ep["lines"] for s in l["shots"] if s.get("live") and not s.get("clip")):
         out = job / "clips" / ("live_%s.mp4" % Path(sh["file"]).stem)
         old = load(out.with_suffix(".json")) or {}
@@ -394,7 +398,7 @@ def s_deliver(job, st):
         d = DRIVE / ("숙소쇼츠_" + st["hotel"].replace(" ", ""))
         d.mkdir(exist_ok=True)
         dests.append(d / name)
-        shutil.copy(job / "script_brief.md", d / "대본.md")
+        shutil.copy(job / "script_brief.md", d / ("대본_%s틀.md" % st["ref"]))     # 틀마다 따로(다른 채널판이 같은 폴더에 대본.md 를 덮어썼다)
     for p in dests:
         shutil.copy(job / "out.mp4", p)
     return "전달 %s" % [str(p) for p in dests]
@@ -402,6 +406,52 @@ def s_deliver(job, st):
 
 class Wait(Exception):
     pass
+
+
+# ── 다른 채널판 (사장님 2026-10-24 "채널은 다른 걸로 2개를 만드는 거야 영상 만 남은 걸로 편집 다르게") ──────────────
+# Veo 는 최소 4초인데 원본 컷은 1초 안팎이라 앞판은 앞쪽 1초쯤만 쓴다(실측 숨은계곡 3판: 12초 만들어 2.72초 사용).
+# 4초 내내 같은 장소·구도라(실측: 5개 모두 1초마다 비교) 뒤쪽 절반을 다른 채널판에 쓴다. 어느 쪽을 쓰나는 _clips_back_half 한 곳이 정한다.
+def new_from(name, src, ref, brand):
+    sj, job = jdir(src), jdir(name)
+    ss = load(sj / "state.json")
+    if not ref or ref == ss["ref"]:
+        raise SystemExit("다른 채널판은 다른 원본 틀(--ref)로 만든다 — 같은 틀이면 같은 영상이 된다")
+    if not brand or brand == ss["brand"]:
+        raise SystemExit("다른 채널판은 다른 채널 이름(--brand)으로 만든다")
+    job.mkdir(parents=True, exist_ok=True)
+    for f in ("collected.json", "photos.json", "facts.json"):
+        shutil.copy(sj / f, job / f)
+    if (sj / "clips").exists():
+        shutil.copytree(sj / "clips", job / "clips", dirs_exist_ok=True)
+    save(job / "state.json", {"ref": ref, "hotel": ss["hotel"], "brand": brand, "bgm": ss.get("bgm"), "insights": ss.get("insights"),
+                              "urls": ss["urls"], "from": src, "at": "script"})
+    print("만듦 %s (%s 의 사진·사실·AI 영상 %d개)" % (job, src, len(list((job / "clips").glob("live_*.mp4")))))
+
+
+def _live_from_clips(job, ep):
+    """다른 채널판: 이미 있는 AI 영상의 사진이 컷에 걸렸으면 그 컷을 AI 영상으로. 새로 고르지 않는다(새로 고르면 Veo 돈이 든다)."""
+    got = []
+    for sh in (s for l in ep["lines"] for s in l["shots"]):
+        sh.pop("live", None)
+        side = job / "clips" / ("live_%s.json" % Path(sh["file"]).stem)
+        if side.exists():
+            sh["live"] = load(side).get("live", "")
+            got.append(sh.get("hint") or Path(sh["file"]).stem)
+    return got
+
+
+def _clips_back_half(job, ep):
+    """다른 채널판: 있는 AI 영상만 쓰고 앞판이 안 쓴 뒤쪽 절반부터 튼다. Veo 는 부르지 않는다."""
+    import cv2
+    n = 0
+    for sh in (s for l in ep["lines"] for s in l["shots"] if s.get("live")):
+        clip = job / "clips" / ("live_%s.mp4" % Path(sh["file"]).stem)
+        cap = cv2.VideoCapture(str(clip))
+        dur = cap.get(cv2.CAP_PROP_FRAME_COUNT) / (cap.get(cv2.CAP_PROP_FPS) or 24)
+        sh["clip"], sh["clip_from"] = str(clip), round(dur / 2, 2)
+        n += 1
+    save(job / "ep.json", ep)
+    return "AI 영상 %d컷 — 앞판 영상의 뒤쪽 절반 사용 · 새로 만듦 0" % n
 
 
 RUN = {"ref": s_ref, "collect": s_collect, "sort": s_sort, "facts": s_facts, "script": s_script, "shots": s_shots, "clips": s_clips,
@@ -453,9 +503,13 @@ def main():
     ap.add_argument("--brand", default="@shortem.stay")
     ap.add_argument("--bgm")
     ap.add_argument("--step", help="redo: 이 단계부터 다시")
+    ap.add_argument("--from", dest="src", help="new: 다른 채널판 — 이 작업의 사진·사실·AI 영상을 가져온다")
     a = ap.parse_args()
     job = jdir(a.name)
-    if a.cmd == "new":
+    if a.cmd == "new" and a.src:
+        new_from(a.name, a.src, a.ref, a.brand)
+        run(a.name)
+    elif a.cmd == "new":
         job.mkdir(parents=True, exist_ok=True)
         save(job / "state.json", {"ref": a.ref, "hotel": a.hotel, "brand": a.brand, "bgm": a.bgm, "insights": a.insights, "at": "ref",
                                   "urls": {"official": a.official, "trip": a.trip, "yeogi": a.yeogi, "agoda": a.agoda}})

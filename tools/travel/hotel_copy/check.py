@@ -174,6 +174,23 @@ def _stutter(out, cuts):
     return "%d컷에 멈춘 프레임 %d" % (len(live), bad), "0", bad == 0
 
 
+def _sibling(job, plan, ep):
+    """다른 채널판(state.from)이면 앞판과 겹침 두 줄 — 같은 AI 영상 구간(초, 0 이어야), 대본 글자 겹침(%).
+    같은 숙소를 두 채널에 올리니 같은 장면·같은 말이 나오면 안 된다(사장님 2026-10-24 '편집 다르게')."""
+    import difflib
+    st = json.loads((job / "state.json").read_text(encoding="utf-8"))
+    if not st.get("from"):
+        return []
+    sj = job.parent / st["from"]
+    seg = lambda cuts: [(c[4], (c[5] if len(c) > 5 else 0.0), (c[5] if len(c) > 5 else 0.0) + c[1] - c[0]) for c in cuts if len(c) > 4 and c[4]]
+    mine, theirs = seg(plan["cuts"]), seg(json.loads((sj / "plan.json").read_text(encoding="utf-8"))["cuts"])
+    lap = sum(max(0.0, min(b1, b2) - max(a1, a2)) for n1, a1, b1 in mine for n2, a2, b2 in theirs if n1 == n2)
+    txt = lambda e: "".join(l["text"].replace(" ", "") for l in e["lines"])
+    sim = difflib.SequenceMatcher(None, txt(ep), txt(json.loads((sj / "ep.json").read_text(encoding="utf-8")))).ratio()
+    return [("앞판과 같은 AI 구간", "%.2f초" % lap, "0초", lap < 0.05),
+            ("앞판과 대본 겹침", "%d%%" % round(sim * 100), "30% 이하", sim <= 0.30)]
+
+
 def video_report(job, ep, ref):
     job = Path(job)
     plan = json.loads((job / "plan.json").read_text(encoding="utf-8"))
@@ -200,7 +217,7 @@ def video_report(job, ep, ref):
         ("다시 받아쓰기", "일치" if not heard else "다른 곳: " + heard + (" (귀로 확인)" if same and "→" in heard.split("발음 같음")[0] else ""), "대본 그대로", same),
         ("입체 움직임", "%s%%" % "~".join(str(x) for x in (min(p for p in px if p is not None), max(p for p in px if p is not None))), "26~53%", None),
         ("AI 영상 멈칫", *_stutter(out, plan["cuts"])),
-    ]
+    ] + _sibling(job, plan, ep)
     rep = {"rows": [{"항목": a, "우리": b, "원본": c, "통과": d} for a, b, c, d in rows], "parallax": px, "cut_s": lens}
     (job / "check.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     return rep

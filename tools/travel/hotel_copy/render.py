@@ -86,8 +86,9 @@ def vertical(path, cx, look=None):
     return grade(crop(path, cx), look)
 
 
-def clip_frames(path, n, look=None):
-    """AI 영상 컷 — 앞에서부터 n 프레임(30fps 로 맞춤), 사진 컷과 같은 색 처리.
+def clip_frames(path, n, look=None, start=0.0):
+    """AI 영상 컷 — start 초부터 n 프레임(30fps 로 맞춤), 사진 컷과 같은 색 처리.
+    start = 다른 채널판이 같은 영상의 안 쓴 뒤쪽을 쓸 때(engine.s_clips 가 정한다 — 앞판 0초부터, 다른 채널판 절반부터).
     Veo 는 24fps 라 30fps 로 옮길 때 사이 시각은 앞뒤 두 장을 섞는다. 가까운 장을 골라 쓰면 5프레임마다 같은 장이
     두 번 나와(초당 6번 멈칫) 물·불이 덜컥거린다 — 사장님 2026-10-23 '11초에 계곡물 사진 흔들리고'(실측: AI 컷마다 멈춘 프레임 2~6, 사진 컷 0)."""
     cap = cv2.VideoCapture(str(path))
@@ -102,7 +103,7 @@ def clip_frames(path, n, look=None):
         raise RuntimeError("AI 영상이 비었다: %s" % path)
     last = len(frames) - 1
     for k in range(n):
-        x = min(last, k * src_fps / FPS)
+        x = min(last, start * src_fps + k * src_fps / FPS)
         i = int(x)
         a = x - i
         f = frames[i] if a < 1e-3 or i >= last else cv2.addWeighted(frames[i], 1 - a, frames[i + 1], a, 0)
@@ -195,7 +196,7 @@ def timeline(job, ep, ref):
         if si == 0:
             starts[0] = thumb_s
         for sh, t0 in zip(line["shots"], starts):
-            cuts.append([t0, None, sh["file"], sh.get("cx", 0.5), sh.get("clip")])
+            cuts.append([t0, None, sh["file"], sh.get("cx", 0.5), sh.get("clip"), sh.get("clip_from", 0.0)])
     for i in range(len(cuts)):
         cuts[i][1] = cuts[i + 1][0] if i + 1 < len(cuts) else total
     return total, caps, cuts
@@ -208,7 +209,7 @@ def render(job):
     st = ref["style"]
     total, caps, cuts = timeline(job, ep, ref)
     look = ref["measured"].get("look")
-    plan = {"total": round(total, 3), "cuts": [[round(a, 2), round(b, 2), Path(f).name, c] + ([Path(v).name] if v else []) for a, b, f, c, v in cuts],
+    plan = {"total": round(total, 3), "cuts": [[round(a, 2), round(b, 2), Path(f).name, c] + ([Path(v).name] + ([k] if k else []) if v else []) for a, b, f, c, v, k in cuts],
             "caps": [[round(a, 2), round(b, 2), t] for a, b, t in caps]}
     (job / "plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     print("길이 %.2f초 · 컷 %d · 자막 %d · 컷 길이 %s" % (total, len(cuts), len(caps), [round(b - a, 2) for a, b, *_ in cuts]), flush=True)
@@ -234,10 +235,10 @@ def render(job):
     for _ in range(int(round(ref["measured"]["thumb_s"] * FPS))):
         ff.stdin.write(over(timg, wm).tobytes())
         fi += 1
-    for ci, (a, b, f, cx, clip) in enumerate(cuts):
+    for ci, (a, b, f, cx, clip, clip_from) in enumerate(cuts):
         n = int(round(b * FPS)) - fi
         if clip:                                          # 불·김·물처럼 살아 있는 컷 = AI 영상(engine clips 단계)
-            frames = clip_frames(clip, n, look)
+            frames = clip_frames(clip, n, look, clip_from)
         else:
             img = vertical(f, cx, look)
             lat = 0.012 * (1 if ci % 2 else -1)          # 컷마다 옆으로 번갈아 조금 — 앞뒤 어긋남(입체감)을 키운다
