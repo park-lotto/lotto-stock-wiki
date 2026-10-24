@@ -485,6 +485,8 @@ def build_card(slug: str, built_at: str | None = None) -> dict:
         "inputs": O["inputs"],
     }
     L, missing = level(card)
+    if pre.get("status") == "보류":      # 표준 §11-3 ㉓ — 보류는 분모에서 빼지 않고 사유와 함께 드러낸다(완료로 포장 금지)
+        L = "보류(%s)" % ((pre.get("hold") or {}).get("short") or "사유 미기재")
     card["done"] = {"level": L, "missing": missing, "rule_unmeasured": F["unmeasured"],
                     "measure_tasks": sorted({r["measure_task"] for r in recs if r.get("measure_task")}),
                     "complete": L == "L4" and not F["hand_scripts"]}
