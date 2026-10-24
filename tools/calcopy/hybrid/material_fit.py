@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.calcopy.hybrid.common import ROOT, jload, jsave  # noqa: E402
 
 MAX_ROUNDS = 3            # 표준 §12-3 ④ 최대 3회
-MAX_CANDS = 20            # 칸 하나의 후보 = 시트 두 장(scene_fit.PER_SHEET 10) — 10 개로는 제약(재사용·A-B-A)을 지키는 길이 끊겨 위반 컷이 남았다(10-25 ep13 N6·N7)
+MAX_CANDS = 10            # 칸 하나의 후보 = 시트 한 장(scene_fit.PER_SHEET) — 순위 후보가 제약에 걸려 모자라면 순위 밖 샷 가운데로 채운다(10-25 ep13 N6·N7 위반 컷 남음)
 TOP_SHOTS = 8             # 줄마다 순위 상위 샷 수(샷마다 자리 3개 — 제약을 통과한 것만 사람 컷 포함 10 개까지)
 FLOOR_HI, FLOOR_LO = 7, 5
 ROLE_HI = ("본문", "공개", "증거", "반전")      # 지침서 §3-4(handoff 10-19) — 대사가 화면을 가리키는 줄
@@ -39,6 +39,8 @@ FIT_GOAL = 7              # '7 미만 비율'의 7 = material_auto.FIT_MIN(summa
 EDGE = 0.05               # 샷 경계 여유(초)
 FLASH = 0.25              # 컷 처음·끝 이 초 안에 원본 샷 경계가 있으면 번쩍임(다른 장면 몇 프레임) — 관문 '컷 끝 번쩍임 없음(0.2초 안 장면 경계)'과 같은 뜻, 0.05 여유
 WORKERS = 3
+import threading  # noqa: E402
+_FACE_LOCK = threading.Lock()
 
 SHOT_PROMPT = """그림의 노란 번호 칸 = 원본 영상의 장면(샷) 하나 — 같은 샷의 처음·가운데·끝 3프레임이 가로로 붙어 있다(얹힌 글자는 무시).
 칸마다 화면에 보이는 것을 한국어 한 줄로: 누가(사람 수·성별) · 무엇을(물건·제품 모양·색) · 어떤 상태·동작인지. 추측 금지, 보이는 것만.
@@ -269,7 +271,12 @@ def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, 
     fl["reuse"] = _new_viol(fixed, {**cand, "t0": cand["t0"], "t1": cand["t1"]}, src_len)
     if fl["outside"] and work is not None and not (fl["shot_edge"] or fl["src_end"]):
         from tools.calcopy.hybrid.runner_ops import _cut_faces
-        fl["face_outside"] = _cut_faces(Path(work), cand["_path"], ss, d, cand.get("crop")) > 0
+        with _FACE_LOCK:              # _cut_faces 는 work/_faces/<stem>_k.jpg 를 같은 이름으로 쓴다 — 칸 스레드끼리 겹치면 빈 파일을 읽고 죽었다(10-25)
+            try:
+                fl["face_outside"] = _cut_faces(Path(work), cand["_path"], ss, d, cand.get("crop")) > 0
+            except Exception as e:  # noqa: BLE001 — 못 재면 '얼굴 없음'으로 치지 않는다(미측정 = 못 씀)
+                sys.stderr.write(f"[fit] 얼굴 검사 실패 {cand['src']}@{ss}: {type(e).__name__} — 후보에서 뺌\n")
+                fl["face_outside"] = True
     fl["reject"] = [k for k in ("shot_edge", "src_end", "face_outside") if fl.get(k)] + (["reuse"] if fl["reuse"] else [])
     return fl
 
@@ -449,7 +456,7 @@ def verdict(sel: list[dict], goal: dict | None) -> tuple[bool, dict, list[dict]]
 
 
 # ── (a) 보충 재료 · (b) 대사 고침 ─────────────────────────────────────────────
-GENERIC = ("크림", "제품", "같은", "비슷한", "정확한", "이름", "쿠팡", "세트")
+GENERIC = ("크림", "제품", "같은", "비슷한", "정확한", "이름", "쿠팡", "세트", "콜라겐", "핑크", "마스크")   # 흔한 낱말(10-25 ep13 콜라겐 마스크팩이 들어옴)
 
 
 def supplement(weak: list[dict], doc_S: dict, work: Path, log=print, n: int = 6, take: int = 2) -> list[str]:
