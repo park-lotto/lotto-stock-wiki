@@ -102,6 +102,19 @@ def test_build_lr_helpers():
     assert [e["t"] for e in build_lr.sfx_ok_of(raw, "v")] == [1] and build_lr.sfx_ok_of(raw, "x") == []
 
 
+def test_build_lr_v2_motion_and_dominant_fill():
+    """06 보고 ⑬: v2 샷 motion 을 읽는다 · 강조색 섞인 줄은 최빈 색(흰)이 바탕 글자색."""
+    shots = [{"t0": 0, "t1": 2, "chg": 30, "motion": "zoom_in"}, {"t0": 2, "t1": 3, "chg": 2, "motion": "still?"}]
+    assert build_lr.motion_at(shots, 1.0) == "zoom_in" and build_lr.motion_at(shots, 2.5) == "still"
+    px = np.array([[250, 252, 255]] * 70 + [[20, 240, 245]] * 30, np.float64)     # BGR: 흰 70% + 노랑 30%
+    d = build_lr._dominant_hex(px)
+    assert d[0] > 200 and d[1] > 200 and d[2] > 200                                  # 흰
+    m = np.median(px, 0)
+    assert m[0] > 200                                                                 # (중앙값도 이 경우는 흰 — 50:50 근처에서 번진다)
+    px2 = np.array([[250, 252, 255]] * 45 + [[20, 240, 245]] * 30 + [[30, 60, 240]] * 25, np.float64)
+    assert build_lr._dominant_hex(px2)[0] > 200 and np.median(px2, 0)[0] < 200          # 흰 45%·노랑 30%·빨강 25% → 중앙값은 번진다
+
+
 def test_kal_analyze_frames_calls_readline(synth, tmp_path):
     from tools.calcopy.engine import kal_analyze as K
     lst = K.frames_cmd(synth, str(tmp_path), BAND[0], BAND[1], 2, 10)
@@ -128,6 +141,7 @@ def test_autoband_finds_caption_rows(synth):
     c0, c1 = r["core"]
     assert 1180 <= c0 and c1 <= 1420 and c1 - c0 >= 40, r
     assert r["band"][0] % 2 == 0 and (r["band"][1] - r["band"][0]) % 2 == 0
+    assert r["band"][1] - r["band"][0] >= autoband.TARGET_H - 2 and r["band"][0] < c0 and r["band"][1] > c1   # 한 줄 핵 → 두 줄 자리까지 넓힘
 
 
 def test_kal_step_frames_runs_capseg(synth, tmp_path, monkeypatch):
@@ -245,7 +259,7 @@ def test_cutdet_v2_blur_start_zoom(blurzoom):
     c1 = [c for c in v1["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
     c2 = [c for c in v2["cuts"] if abs(c["t"] - 1.0) <= 1 / FPS]
     assert c1 and "kind_v1" not in c1[0]                        # v2 없이 = 옛 출력 꼴 그대로(옛 분류가 놓치는 실물은 키치잇 대조 — 합성으로는 재현 못 함)
-    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_post"] >= cutdet.V2_MIN_FR
+    assert c2 and c2[0]["kind"] == "zoomblur" and c2[0]["blur_ratio"] <= cutdet.V2_RATIO and c2[0]["blur_rise"] >= cutdet.V2_RISE
     assert v2["cuts"][0].get("start") and v2["cuts"][0]["kind"] == "zoomblur"
     after = [s for s in v2["shots"] if s["t0"] >= 0.99]
     assert after and after[-1]["motion"] == "zoom_in", v2["shots"]
@@ -328,6 +342,14 @@ def test_kkultemnote_60fps_and_radial_zoomblur():
         e = E.eval_video("kkultemnote", vid, str(_KK / f"{vid}.mp4"))
         tot += e["total"]; hit += e["hit"]
     assert tot == 3 and hit == 3
+
+
+@pytest.mark.skipif(not Path("C:/숏템_칼카피/itemhome/원본/cLxEI_U1e_E.mp4").exists(), reason="아이템홈 원본 없음(집 PC 전용)")
+def test_itemhome_softfocus_not_zoomblur():
+    """소프트포커스 원본(아이템홈 cLx): 옛 v2 규칙(바탕을 다음 컷 넘어 잡음)은 cut 3곳을 zoomblur 로 봤다 → 0."""
+    from tools.calcopy.engine.readline_tools import eval_transition as E
+    e = E.eval_video("itemhome", "cLxEI_U1e_E", "C:/숏템_칼카피/itemhome/원본/cLxEI_U1e_E.mp4")
+    assert e["fp"] == 0 and e["cut_lines"] >= 10, e
 
 
 _FS = Path("C:/숏템_칼카피/foreignshowshow")

@@ -126,14 +126,25 @@ def cuts_in(cuts: list[dict], t0: float, t1: float) -> list[float]:
 
 
 def motion_at(shots: list[dict], t: float) -> str:
+    """cutdet --v2 샷이면 그 motion(shotmotion: still/cam/zoom_in/zoom_out/pan, 'still?'→still) · 옛 샷이면 chg<6 still 아니면 cam."""
     for s in shots:
         if s["t0"] <= t < s["t1"]:
+            if s.get("motion"):
+                return str(s["motion"]).rstrip("?")
             c = s.get("chg", 0)
             return "still" if c < 6 else "cam"
     return "cam"
 
 
-def measure(cap, t: float, y0: int = 1180, y1: int = 1470):
+def _dominant_hex(px: np.ndarray) -> np.ndarray:
+    """가장 많은 색 묶음(채널마다 32단계로 묶은 최빈 칸)의 중앙값 — 강조색(노랑·분홍)이 섞인 줄에서 바탕 글자색이 중간색으로 번지지 않게."""
+    q = (px // 32).astype(np.int32)
+    key = q[:, 0] * 64 + q[:, 1] * 8 + q[:, 2]
+    k = np.bincount(key).argmax()
+    return np.median(px[key == k], 0)
+
+
+def measure(cap, t: float, y0: int = 1180, y1: int = 1470, fill: str = "median"):
     """줄 가운데 프레임의 자막 y 범위·채움 hex(가장 큰 연속 행 덩어리)."""
     cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
     ok, f = cap.read()
@@ -151,7 +162,7 @@ def measure(cap, t: float, y0: int = 1180, y1: int = 1470):
     r = max(runs, key=lambda r: rows[r].sum())
     mm = np.zeros_like(m)
     mm[r.min():r.max() + 1] = m[r.min():r.max() + 1]
-    c = np.median(b[mm], 0).astype(int)
+    c = (_dominant_hex(b[mm]) if fill == "dominant" else np.median(b[mm], 0)).astype(int)
     return [int(y0 + r.min()), int(y0 + r.max())], "#%02X%02X%02X" % (c[2], c[1], c[0])
 
 
@@ -178,7 +189,7 @@ def build_doc(S, segs: list[dict], cd: dict, mp4: str, sfx_raw: dict | None = No
         ex = L[12] if len(L) > 12 else {}
         hand = "손글씨" in variant
         sg = seg_for(segs, t0, t1)
-        my, mh = measure(cap, (t0 + t1) / 2, my0, my1)
+        my, mh = measure(cap, (t0 + t1) / 2, my0, my1, P.get("fill", "median"))
         y = ex.get("y") or my or (sg["yr"] if sg else None)
         fill = ex.get("fill_hex") or mh or (sg["hex"] if sg else None)
         sf = [e for e in sfx_ok if t0 - 0.1 <= e["t"] < t1]

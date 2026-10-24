@@ -38,7 +38,7 @@ def eval_video(slug: str, vid: str, mp4: str) -> dict:
     prof = json.loads(pf.read_text(encoding="utf-8")) if pf.exists() else {}
     if prof.get("cutdet_window"):
         y0, y1 = prof["cutdet_window"]
-    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb, use_color_flash=bool(prof.get("color_flash")))
+    r = cutdet.cutdet(mp4, y0, y1, v2=True, cap_band=cb, use_color_flash=bool(prof.get("color_flash")), motion=False)
     rows, hit, tot, fp, ncut = [], 0, 0, 0, 0
     for l in d["lines"]:
         g = str(l.get("transition") or "none").split("(")[0]
@@ -47,14 +47,16 @@ def eval_video(slug: str, vid: str, mp4: str) -> dict:
             near = [c for c in r["cuts"] if abs(c["t"] - l["t0"]) <= 0.15 or (l["t0"] < 0.2 and c.get("start"))]
             k = near[0]["kind"] if near else None
             hit += k == g
-            rows.append({"t0": l["t0"], "정답": g, "도구": k, "옛": near[0].get("kind_v1") if near else None})
+            rows.append({"t0": l["t0"], "정답": g, "도구": k, "옛": near[0].get("kind_v1") if near else None,
+                         **({k2: near[0].get(k2) for k2 in ("blur_ratio", "blur_rise")} if near else {})})
         elif g == "cut":
             near = [c for c in r["cuts"] if abs(c["t"] - l["t0"]) <= 0.15]
             if near:
                 ncut += 1
                 if near[0]["kind"] != "cut":
                     fp += 1
-                    rows.append({"t0": l["t0"], "정답": "cut", "도구": near[0]["kind"], "옛": near[0].get("kind_v1")})
+                    rows.append({"t0": l["t0"], "정답": "cut", "도구": near[0]["kind"], "옛": near[0].get("kind_v1"),
+                                 "blur_ratio": near[0].get("blur_ratio"), "blur_rise": near[0].get("blur_rise")})
     return {"id": vid, "hit": hit, "total": tot, "fp": fp, "cut_lines": ncut, "rows": rows}
 
 

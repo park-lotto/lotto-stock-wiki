@@ -30,7 +30,7 @@ if str(_ROOT) not in sys.path:
 
 
 def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2: bool = False, cap_band: tuple | None = None,
-           use_color_flash: bool = False) -> dict:
+           use_color_flash: bool = False, motion: bool = True) -> dict:
     """v2=False = 옛 도구 그대로(재현). v2=True = 자막 띠를 뺀 선명도로 전환 종류를 다시 가르고(kind, 옛 값은 kind_v1),
     영상 시작 블러를 사건으로 더하고, 샷마다 shotmotion 움직임(motion: still/cam/zoom_in/zoom_out/pan)을 붙인다(06 키치잇 10-25 결손)."""
     H = y1 - y0
@@ -86,7 +86,7 @@ def cutdet(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080, v2:
         chg = float(np.abs(A - B).mean())
         shots.append({"t0": round(a / fps, 3), "t1": round((b + 1) / fps, 3), "chg": round(chg, 1)})
     if v2:
-        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash)
+        _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash, motion)
     return {"n": n, "cuts": res, "shots": shots, **({"v2": True} if v2 else {})}
 
 
@@ -111,8 +111,10 @@ def color_flash(mp4: str, y0: int, y1: int, fps: float = 30.0, width: int = 1080
     return fl
 
 
+V2_RATIO = 0.30     # 컷 직후 가장 흐린 프레임 선명도 ÷ 같은 샷 바탕 — 이 밑이면 블러. 5채널 정답 56곳·cut 447줄로 고름(0.30: 일치 52/56·오탐 11, 0.45: 52/56·22)
+V2_RISE = 1.25      # 컷 뒤 6프레임째 선명도 ÷ 처음 3프레임 — 블러가 풀린다(1.8 이면 오탐 9 지만 키치잇 BRa 1.97 를 놓친다)
 V2_LOW = 0.5        # 바탕 선명도의 이 비율 밑 = 흐린 프레임
-V2_MIN_FR = 3       # 흐린 프레임이 컷 직후 7프레임(또는 직전 6프레임) 안에 이만큼 → zoomblur (키치잇 눈 정답: 2 면 cut 3곳 오탐, 3 이면 0)
+V2_MIN_FR = 3       # (정보용) 흐린 프레임 수 blur_post 를 셀 때 문턱 — 판정은 V2_RATIO·V2_RISE(10-25 아이템홈 소프트포커스 오탐 뒤)
 
 
 def _masked_sharp(F, h, y0, cap_band):
@@ -124,10 +126,11 @@ def _masked_sharp(F, h, y0, cap_band):
     return np.array([cv2.Laplacian(f[keep], cv2.CV_32F).var() for f in F])
 
 
-def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash=False):
+def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_flash=False, motion=True):
     n = len(F)
     sh = _masked_sharp(F, h, y0, cap_band)
     dark = (F < 20).mean((1, 2))
+    cut_fr = sorted(int(round(r["t"] * fps)) for r in res)
     for r in res:
         r["kind_v1"] = r["kind"]
         a = int(round(r["t"] * fps))
@@ -138,6 +141,15 @@ def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_fla
         pre_low = int((sh[max(0, a - 6):a] < V2_LOW * pre_base).sum()) if pre_base == pre_base else 0
         r["blur_post"] = post_low
         r["blur_pre"] = pre_low
+        # 블러 비율은 '같은 샷 안' 바탕과 견준다(다음 컷 넘어 바탕을 잡으면 소프트포커스 원본에서 오탐 — 아이템홈 10-25) · 블러는 풀려야 한다(rise)
+        nxt = min([c for c in cut_fr if c > b + 1] + [n])
+        base_in = np.median(sh[b + 8:min(nxt, b + 18)]) if nxt - (b + 8) >= 3 else post_base
+        win = sh[a:min(n, b + 7)]
+        ratio = float(win.min() / base_in) if len(win) and base_in == base_in and base_in > 0 else 1.0
+        rise = float(sh[min(n - 1, b + 6)] / (win[:3].mean() + 1e-6)) if len(win) else 1.0
+        r["blur_post_in"] = int((win < V2_LOW * base_in).sum()) if base_in == base_in and base_in > 0 else 0
+        r["blur_ratio"] = round(ratio, 2)
+        r["blur_rise"] = round(rise, 2)
         w0, w1 = max(1, a - 1), min(n, b + 6)
         pre_mean = float(mean[max(0, a - 3)])
         # 검정: 창의 60%↑ 가 거의 검정(<20)이고 평균이 앞의 1/3 밑 — 60fps 원본의 검정 1프레임 뒤 밝아지는 페이드인도 잡는다(꿀템노트 KCx 13.4)
@@ -153,8 +165,10 @@ def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_fla
             r["kind"] = "black"
         elif is_flash:
             r["kind"] = "flash"
-        elif r["kind"] == "zoomblur" or post_low >= V2_MIN_FR or pre_low >= V2_MIN_FR:
+        elif rise >= V2_RISE and (ratio <= V2_RATIO or r["kind"] == "zoomblur"):
             r["kind"] = "zoomblur"
+        elif r["kind"] == "zoomblur":                  # 옛 zoomblur 인데 선명해지지 않음 = 원본이 원래 흐림(소프트포커스)
+            r["kind"] = "cut"
         elif r["kind"] == "flash":                 # 옛 flash 인데 바로 밝아지지 않음 = 번쩍 아님
             r["kind"] = "cut"
     # 색 번쩍 ±0.15초 안 컷 = flash (샤크탱크 mkfs.py 규칙) — 채널 프로필 color_flash=true 일 때만(키치잇에 켜면 장면 색 바뀐 컷 4곳을 flash 로 오탐, 10-25 실측)
@@ -172,6 +186,8 @@ def _refine_v2(F, mean, res, shots, fps, h, y0, cap_band, mp4, y1, use_color_fla
         recovered = float(sh[5:8].mean()) >= 0.85 * base   # 블러는 몇 프레임 안에 선명해진다(키치잇 Cs-Ka: 0.47→0.51 평평 = 블러 아님)
         if low >= 2 and recovered:
             res.insert(0, {"t": 0.0, "t_end": 0.0, "kind": "zoomblur", "diff": 0.0, "blurfr": low, "start": True, "kind_v1": None})
+    if not motion:                               # 전환만 볼 때(점검 도구) — 샷마다 ORB 는 느리다
+        return
     from tools.calcopy.engine.readline_tools.shotmotion import shot_motion   # 움직임 주인 = shotmotion(ORB 닮음변환, 유머쇼쇼 워커 motion.py)
     cap = cv2.VideoCapture(mp4)
     orb = cv2.ORB_create(1500)
