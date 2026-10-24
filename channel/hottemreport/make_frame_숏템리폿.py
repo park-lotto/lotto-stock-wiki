@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/숏템리폿판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """숏템리폿 v3(사장님 샘플 B 블랙·핑크네온, 10-17): mock.py 값 그대로. 제목 글만 원본 frame 에서."""
 import json, sys
 from pathlib import Path

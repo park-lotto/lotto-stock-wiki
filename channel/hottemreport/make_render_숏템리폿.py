@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/숏템리폿판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 옛 영상 재현용 읽기 전용 참고물 — 규칙은 판 칸·_pending.upgrade_from_hand_scripts 로 옮김)
 """핫템 편 외관만 바꿔 재렌더(10-17): 채널명 숏템리폿·하늘 글로우·제목 흰/주황·강조 자막 노랑. 나레(TTS) 파일은 기존 것 복사(재호출 없음).
 usage: py make_render_숏템리폿.py oe11|robot   — 원본 대본/재료/frame 은 건드리지 않고 복사본에서 돌린다. 로봇폰은 make_render.py 를 불러 경로만 바꿔 쓴다."""
 import importlib.util, json, os, shutil, sys

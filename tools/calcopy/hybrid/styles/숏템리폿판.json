@@ -1,0 +1,635 @@
+{
+ "name": "숏템리폿판",
+ "renderer": "bench",
+ "_note": "핫템리포트(@핫템리포트) 칼카피 1차 판 — 해외 화제템 소개(검정 띠 틀, frame.kind window). 근거 channel/hottemreport/{스타일분석.md, 줄판독/ 6편 170줄, _kal/규칙빈도.json}. 손 스크립트 make_frame_숏템리폿.py·make_render_숏템리폿.py(10-17 외관 B 분홍)·현장썰하이브리드/render_front.py·현장썰_run.py(현장썰 하이브리드) = 업그레이드 재료(_pending.upgrade_from_hand_scripts) — 1차 = 벤치 100%",
+ "bench": {
+  "ko": "핫템리포트",
+  "channel": "hottemreport",
+  "analysis": "channel/hottemreport/스타일분석.md",
+  "line_reads": "channel/hottemreport/줄판독",
+  "src_dir": "C:/숏템_칼카피/hottemreport/mp4",
+  "sfx_events": "channel/hottemreport/_kal/sfx_events.json",
+  "palette": "channel/hottemreport/팔레트.json"
+ },
+ "voice": {
+  "name": "박창수",
+  "voice_id": "tc_6059dad0b83880769a50502f",
+  "candidates": [
+   "지훈"
+  ],
+  "why": "벤치 나레 남(뜯기 composition 6/6) · 박창수 = 사장님 10-20 고름(preset/검정띠/defaults.json) · 필재 금지"
+ },
+ "cps_target": 7.8,
+ "_why_cps_target": "벤치 6편 나레 자/초 6.96~8.59(편 중앙 7.8, 규칙빈도.json episodes.narr_cps)",
+ "bgm": {
+  "id": "passo_bem_solto",
+  "db_below_voice": 16.5,
+  "duck_orig_db": -6.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 6/6 추정(뜯기 bgm_rules present 5/5, 경쾌) · 곡 passo_bem_solto·비율 0.15(≈−16.5dB) = defaults.json(칼카피_OE11 계획.md:100) · 원음 구간 덕킹 OE 6.6·IRFN 5.4dB → −6 · 나레 덕킹 측정 없음 0 · fade 0.4 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18) · 벤치 I 중앙 −17.0(비교 안 함)"
+ },
+ "length": {
+  "min": 25.2,
+  "max": 36.2,
+  "why": "벤치 6편 25.22~36.22초(규칙빈도.json episodes.dur)"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 벤치 줄 사이 쉼 미측정(06)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=OE-11wb7vdY frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   559,
+   1080,
+   1361
+  ],
+  "title": [
+   {
+    "font": "IBMPlexSansKR-Bold.otf",
+    "px": 104.7,
+    "center": 346.5,
+    "color": "#FDF637",
+    "max_w": 1000
+   },
+   {
+    "font": "IBMPlexSansKR-Bold.otf",
+    "px": 146.8,
+    "center": 478,
+    "color": "#FD211F",
+    "max_w": 1000
+   }
+  ],
+  "logo": {
+   "text": "숏템리폿",
+   "font": "GasoekOne-Regular.ttf",
+   "px": 62,
+   "x": 401,
+   "y": 159,
+   "rgba": [
+    241,
+    255,
+    240,
+    255
+   ],
+   "stroke": 0
+  },
+  "credit": null,
+  "watermark": null,
+  "why": "frame_import.py ← channel/hottemreport/preset/검정띠/frame.json(OE-11wb7vdY 측정) + 벤치 6편 픽셀(스타일분석 §2): 검정 띠 y0~559·창 y559~1920 가로 꽉(5/6) · 채널명 GasoekOne 62.5 연한 흰(+초록 번짐 5/6) → 우리 '숏템리폿'(브랜드.json) · 제목 줄별 색 6/6: 1줄 노랑 #FDF637(kal_analyze framecmp 채움 추정 — 관문 자와 같은 함수, OE 8초; frame.json #F8E903·마스크 중앙 #FAEA02) 잉크 y298~395(97px, 가운데 346.5) · 2줄 빨강 #FD211F(OE #FD201E) y410~546(136px, 가운데 478) — px = frame.json 127.4 × 벤치 잉크/우리 잉크(IBMPlex 기준: 97/118→104.7 · 136/118→146.8) · 출처 줄·워터마크 0/6",
+  "_pending": {
+   "logo_glow": "채널명 뒤 초록 번짐(glow 37px #047104, 5/6) — logo 칸에 글로우 없음 → 02",
+   "title_letter_spacing": "['title.letter_spacing=-1.2', 'title.line_scale=[0.835, 1.165]', \"caption.enter={'kind': 'none', 'ms': 300}\", 'brand.letter_spacing=-3.8', \"brand.glow={'px': 37, 'rgb': [4, 113, 4]}\"]",
+   "title_font": "제목 글꼴 = 굵은 붓 디스플레이체(눈) — IBMPlexSansKR-Bold 는 근사(폭 897 vs 벤치 749px), 06 fontmatch 뒤 교체 · 채널명도 벤치는 얇은 고딕(GasoekOne 근사)"
+  }
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 8,
+  "band": [
+   1393,
+   1492
+  ],
+  "why": "나레 흰 #FFFFFF 123줄·검정 외곽 8~13px · 원음 = 편마다 다른 기울임 색 · 한 줄 가운데 잉크 y≈1393~1492(편마다 1365~1492) 73px · 등장 instant 141/170 · 조각 자수 중앙 6~8(규칙빈도 episodes) → 8 · typing 13줄(70~1030ms) — typing_cps 10 손 상수",
+  "_pending": {
+   "pack": "핫템리포트 자막 팩 없음 → 관제 235 요청: 나레 Pretendard-ExtraBold 흰 외곽 검정 ~10px place y≈74% · 원음 기울임 둥근 손글씨풍 편마다 색(하늘/청록/분홍)·외곽 ~19px. 그동안 kitchit(흰+검정 외곽·place 70.4%) — 원음 색·기울임 미달"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "cut 만 — 170줄 중 cut 53·none 117·flash/zoomblur/black 0(스타일분석 §3)"
+  },
+  "why": "push 0 — 편집 줌 없음(눈 6편 시트), 원본 손 카메라 움직임 cam 167/170"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 후보 9발/6편(편당 0~3, sfx_events.json) · 종류 귀 미확인 → 파일 칸 비움(_pending.sfx) · gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "고정 안 함 — 본보기 편 비율(instant 141/170·typing 13·fade 6·glitch 4·pop 3·slide 3)을 placement 가 나눔(팩에 그 변형이 있어야 그려짐 — kitchit 팩 typing 만)"
+   },
+   "transition": {
+    "kinds": [],
+    "why": "그릴 전환 0"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 0/6"
+   }
+  },
+  "counted": {
+   "made_by": "tools/calcopy/hybrid/placement.py count",
+   "source": "channel/hottemreport/줄판독",
+   "n_videos": 6,
+   "slots": {
+    "narr.first": {
+     "n": 17,
+     "enter": {
+      "cut": 0.706,
+      "typing": 0.176,
+      "fade": 0.059,
+      "pop": 0.059
+     },
+     "emph": 0.0
+    },
+    "narr.rest": {
+     "n": 106,
+     "enter": {
+      "cut": 0.906,
+      "other": 0.028,
+      "typing": 0.028,
+      "fade": 0.028,
+      "pop": 0.009
+     },
+     "emph": 0.009
+    },
+    "orig.first": {
+     "n": 13,
+     "enter": {
+      "cut": 0.615,
+      "typing": 0.231,
+      "pop": 0.077,
+      "fade": 0.077
+     },
+     "emph": 0.0
+    },
+    "orig.rest": {
+     "n": 34,
+     "enter": {
+      "cut": 0.735,
+      "typing": 0.118,
+      "other": 0.118,
+      "fade": 0.029
+     },
+     "emph": 0.0
+    }
+   },
+   "share": {
+    "emph": 0.167,
+    "typing": 0.833,
+    "sfx": 0.667
+   },
+   "stickers": {
+    "other": 0.5
+   },
+   "transition": {
+    "cut": 1.0
+   },
+   "sfx_kinds": {
+    "other": 1.0
+   },
+   "videos": [
+    {
+     "id": "a06yYTgpa_c",
+     "n": 26,
+     "slots": {
+      "narr.first": {
+       "n": 4,
+       "enter": {
+        "cut": 2,
+        "fade": 1,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 11,
+       "enter": {
+        "cut": 11
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 8,
+       "enter": {
+        "cut": 7,
+        "fade": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "excl": 1
+      }
+     },
+     "variants": {
+      "기본(흰)": 15,
+      "원음(청록)": 11
+     },
+     "sfx": [
+      "none"
+     ],
+     "no_caption": 5,
+     "transitions": {
+      "cut": 25
+     },
+     "n_trans": 25,
+     "roles": {
+      "hook": 2,
+      "body": 14,
+      "reveal": 5,
+      "end": 5
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "end",
+       "t": 29.12,
+       "off": 0.62,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "IRFN5B_2LMo",
+     "n": 27,
+     "slots": {
+      "orig.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "fade": 1
+       },
+       "emph": 0
+      },
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 3
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 20,
+       "enter": {
+        "cut": 16,
+        "fade": 2,
+        "other": 1,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "price": 1
+      }
+     },
+     "variants": {
+      "반응(하늘색 기울임)": 1,
+      "기본(흰)": 23,
+      "반응(분홍 기울임)": 2,
+      "반응(크게·흰 글자 분홍 글로우·외곽선 없음)": 1
+     },
+     "sfx": [
+      "none",
+      "none",
+      "none"
+     ],
+     "no_caption": 5,
+     "transitions": {
+      "cut": 26
+     },
+     "n_trans": 26,
+     "roles": {
+      "hook": 3,
+      "body": 18,
+      "reveal": 3,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 7.52,
+       "off": 0.92,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "OE-11wb7vdY",
+     "n": 29,
+     "slots": {
+      "narr.first": {
+       "n": 3,
+       "enter": {
+        "cut": 2,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 17,
+       "enter": {
+        "cut": 15,
+        "other": 1,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "orig.first": {
+       "n": 2,
+       "enter": {
+        "typing": 2
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 7,
+       "enter": {
+        "other": 4,
+        "typing": 3
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰)": 20,
+      "반응(하늘색 기울임)": 8,
+      "반응(분홍 기울임)": 1
+     },
+     "sfx": [],
+     "no_caption": 4,
+     "transitions": {
+      "cut": 28
+     },
+     "n_trans": 28,
+     "roles": {
+      "hook": 3,
+      "body": 19,
+      "reveal": 3,
+      "twist": 2,
+      "end": 2
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "Rpfk8Yn0Y-c",
+     "n": 30,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "cut": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 29,
+       "enter": {
+        "cut": 29
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {
+      "other": 1
+     },
+     "sticker_lex": {
+      "other": {
+       "none": 1
+      }
+     },
+     "variants": {
+      "기본(흰)": 30
+     },
+     "sfx": [
+      "cap",
+      "cap"
+     ],
+     "no_caption": 0,
+     "transitions": {
+      "cut": 29
+     },
+     "n_trans": 29,
+     "roles": {
+      "hook": 2,
+      "body": 18,
+      "twist": 3,
+      "reveal": 4,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 5.63,
+       "off": 0.463,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "twist",
+       "t": 18.08,
+       "off": 0.013,
+       "basis": "파형 솟음"
+      }
+     ]
+    },
+    {
+     "id": "RWS43GF1A_U",
+     "n": 24,
+     "slots": {
+      "narr.first": {
+       "n": 1,
+       "enter": {
+        "pop": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 23,
+       "enter": {
+        "cut": 20,
+        "other": 1,
+        "typing": 1,
+        "fade": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰)": 24
+     },
+     "sfx": [],
+     "no_caption": 1,
+     "transitions": {
+      "cut": 23
+     },
+     "n_trans": 23,
+     "roles": {
+      "hook": 2,
+      "body": 7,
+      "twist": 5,
+      "reveal": 5,
+      "end": 5
+     },
+     "sfx_lines": []
+    },
+    {
+     "id": "ZqVgAg99gRI",
+     "n": 34,
+     "slots": {
+      "narr.first": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "narr.rest": {
+       "n": 6,
+       "enter": {
+        "cut": 5,
+        "pop": 1
+       },
+       "emph": 1
+      },
+      "orig.first": {
+       "n": 5,
+       "enter": {
+        "cut": 4,
+        "typing": 1
+       },
+       "emph": 0
+      },
+      "orig.rest": {
+       "n": 18,
+       "enter": {
+        "cut": 17,
+        "typing": 1
+       },
+       "emph": 0
+      }
+     },
+     "stickers": {},
+     "sticker_lex": {},
+     "variants": {
+      "기본(흰)": 10,
+      "원음(청록 기울임)": 23,
+      "강조(주황 불꽃 글로우)": 1
+     },
+     "sfx": [
+      "switch",
+      "none",
+      "none"
+     ],
+     "no_caption": 4,
+     "transitions": {
+      "cut": 33
+     },
+     "n_trans": 33,
+     "roles": {
+      "hook": 2,
+      "body": 25,
+      "reveal": 4,
+      "end": 3
+     },
+     "sfx_lines": [
+      {
+       "kind": "other",
+       "role": "body",
+       "t": 12.57,
+       "off": 0.237,
+       "basis": "파형 솟음"
+      },
+      {
+       "kind": "other",
+       "role": "reveal",
+       "t": 27.79,
+       "off": 0.123,
+       "basis": "파형 솟음"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "title_form": "2줄 노랑/빨강 '<장소/사람>가 환장하는/난리 난' + '<제품>(정체)' 4/6",
+ "_pending": {
+  "sfx": "줄에 붙은 효과음 6/170 — 종류 귀 미확인(sfx_events tonal/broad 만) → 06 measure_task(귀 확인) 뒤 rules.sfx{kinds,max 3}",
+  "stickers": "노랑 물음표+동심원 그림 2편·마우스 포인터 1편(3/170) — 스티커 kind·자리 검출 미등록 → 03",
+  "thumb": "유튜브 썸네일 = 중간 프레임(12~19초, 상관 0.85~0.998) · 0초 카드 0/6 — thumb_rule 칸(06·05)",
+  "upgrade_from_hand_scripts": "make_frame/make_render_숏템리폿.py: 외관 B(분홍 YEL [255,130,195])·현장썰 하이브리드 render_front.py BACK_CAPTION SBAggroB 80·BACK_FX 공개 typewriter 400ms → 업그레이드 판 재료"
+ },
+ "script": {
+  "brief": [
+   "박자(6/6): 훅 '요즘 미국에서 난리 난/환장하는 ~가 있는데요'(첫 2~5초) → 다리('~하면서 유명해졌는데') → 원음 반응·시연(4/6) → 공개 스펙(숫자 W·km) → 끝 '~다고 하네요/~겠네요'. CTA 0.",
+   "나레 해요체 존댓 0.75·전언 0.25 · 어미 네요 0.4·는데요 0.3 · 과장어('난리난·환장하는·도파민이 터진다') · 브랜드명 자막 0/6, 숫자 스펙으로"
+  ],
+  "audit": [
+   {
+    "id": "first_line",
+    "kind": "first_line",
+    "is": "tts",
+    "why": "훅 나레 6/6"
+   },
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 25.2,
+    "max": 36.2,
+    "why": "벤치 6편 길이"
+   }
+  ]
+ }
+}
