@@ -216,9 +216,13 @@ def test_kitchit_saved_plans_unchanged():
 def test_channel_sfx_events_matches_legacy_shared_file(monkeypatch):
     from tools.calcopy.hybrid import styles as ST
     legacy = ROOT / "channel/starpickroom/_tools/결과/sfx_events_rules.json"
+    n = 0
     for pan, slug in (("키치잇판", "kitchit"), ("꿀템노트판", "kkultemnote"), ("스타픽룸판", "starpickroom")):
         own = ROOT / "channel" / slug / "_kal" / "sfx_events.json"
         assert own.exists(), f"{own} 없음 — sfx_events.py {slug} 로 만든다"
+        if (json.loads(own.read_text(encoding="utf-8")).get("_meta") or {}).get("how") != "convert":
+            continue        # 06 이 원본에서 다시 잰 채널(--detect)은 옛 값과 달라도 된다 — 변환한 것만 같아야 한다
+        n += 1
         st = ST.load(pan)
         assert PL.sfx_events_path(st) == (own, None)
         new = PL._sfx_table(st)
@@ -226,6 +230,7 @@ def test_channel_sfx_events_matches_legacy_shared_file(monkeypatch):
         old = PL._sfx_table(st)
         monkeypatch.undo()
         assert new == old and len(new) == 8, (pan, new, old)
+    assert n >= 1
 
 
 def test_sfx_no_overlap_on_dense_chunks(tmp_path):
@@ -238,3 +243,59 @@ def test_sfx_no_overlap_on_dense_chunks(tmp_path):
     p = PL.place(rows, st, "seed", cuts=[{"t0": 0.0, "t1": 1.2}, {"t0": 1.2, "t1": 3.0}])
     sx = p["sfx"]
     assert sx and all(b["t"] - a["t"] >= 0.3 for a, b in zip(sx, sx[1:])), sx
+
+
+# ⑥ 효과음 신호표 검출(engine/sound/sfx_events — 06 결손 3건, 10-25) ─────────────────
+def _sfx_events():
+    sys.path.insert(0, str(ROOT / "tools/calcopy/engine/sound"))
+    import sfx_events as E
+    return E
+
+
+def test_low_band_thumps_found():
+    """저역 '쿵·붐'(100~400Hz) — 신박 줄판독 정답 rAt 8.6·11.15 · bpj 14.73(±0.1초)."""
+    E = _sfx_events()
+    import sfx_fp as F
+    for vid, truth in (("rAt34vkQ0OY", (8.6, 11.15)), ("bpjoacs2S6Q", (14.73,))):
+        f = Path(f"C:/숏템_칼카피/sinbak/src/{vid}.mp4")
+        if not f.exists():
+            pytest.skip("신박 원본 없음 — 이 PC 전용 시험")
+        low = [e["t"] for e in E.detect(F.load(str(f))) if e["kind"] == "low"]
+        for t in truth:
+            assert any(abs(t - x) <= 0.1 for x in low), (vid, t, low)
+
+
+def test_asr_hallucination_means_no_words(tmp_path):
+    E = _sfx_events()
+
+    def w(path, words):
+        p = tmp_path / path
+        p.write_text(json.dumps({"words": [{"w": a, "t0": b, "t1": c} for a, b, c in words]}, ensure_ascii=False), encoding="utf-8")
+        return str(p)
+    assert E.asr_words(w("a.json", [("Thank", 0, 1.4), ("you", 1.4, 1.5), ("for", 1.5, 1.6), ("watching,", 1.6, 5.8), ("please", 5.8, 5.9),
+                                     ("subscribe", 5.9, 6.0), ("and", 6.0, 6.1), ("hit", 6.1, 6.2), ("that", 6.2, 6.3), ("like", 6.3, 6.4), ("button!", 6.4, 6.5)]))[0] == []
+    assert E.asr_words(w("b.json", [("구독과", 0, 0.5), ("좋아요", 0.5, 1.0), ("부탁드려요!", 1.0, 1.6)]))[0] == []
+    assert E.asr_words(w("c.json", [("Music", 0, 3.0)]))[0] == []
+    assert E.asr_words(w("d.json", [(f"ご{k}", k * 0.1, k * 0.1) if k % 2 else (f"飯{k}", k * 0.1, k * 0.1 + 0.08) for k in range(20)]))[0] == []   # 길이0 낱말 50%
+    ok, why = E.asr_words(w("e.json", [("오늘", 0, 0.4), ("신라면", 0.4, 1.0), ("끓여", 1.0, 1.4), ("볼게요", 1.4, 1.9), ("구독과", 20, 20.5), ("좋아요", 20.5, 21)]))
+    assert [x["w"] for x in ok] == ["오늘", "신라면", "끓여", "볼게요"] and why.startswith("ok")
+
+
+def test_asr_filter_keeps_candidates_near_cut_or_sticker():
+    """샤크탱크 QMJ 7.26·7.36 '띠링' = 번쩍(컷) 7.067 직후 — 낱말 안이어도 남긴다. 표식 먼 낱말 안 후보는 거른다."""
+    E = _sfx_events()
+    row = {"cand": [{"t": 7.26, "kind": "broad"}, {"t": 7.36, "kind": "tonal"}, {"t": 3.0, "kind": "broad"}, {"t": 9.5, "kind": "low"}],
+           "markers": {"cut": [7.07], "sticker": [], "cap": [3.0], "switch": []}}
+    E.asr_filter(row, [{"w": "이거", "t0": 7.1, "t1": 7.5}, {"w": "진짜", "t0": 2.8, "t1": 3.2}])
+    assert [(c["t"], bool(c.get("keep_why"))) for c in row["cand_kept"]] == [(7.26, True), (7.36, True), (9.5, False)]
+    assert [c["t"] for c in row["cand_in_words"]] == [3.0] and row["asr_words"] == 2
+
+
+def test_placement_counts_kept_candidates_only(tmp_path, monkeypatch):
+    """신호표에 받아쓰기 거름(cand_kept)이 있으면 배치 세기는 남은 후보만 센다(낱말 안 오탐은 효과음 아님)."""
+    p = tmp_path / "sfx.json"
+    p.write_text(json.dumps({"_meta": {}, "V1": {"cand": [{"t": 1.0, "near": {"cap": 0.1}}, {"t": 2.0, "near": {"cap": 0.1}}],
+                                                 "cand_kept": [{"t": 2.0, "near": {"cap": 0.1}}]},
+                             "V2": {"cand": [{"t": 1.0, "near": {"switch": 0.2}}]}}), encoding="utf-8")
+    monkeypatch.setattr(PL, "sfx_events_path", lambda s: (p, None))
+    assert PL._sfx_table({"bench": {}}) == {"V1": ["cap"], "V2": ["switch"]}

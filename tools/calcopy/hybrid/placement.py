@@ -202,7 +202,7 @@ def _sfx_table(style: dict) -> dict:
                 continue
             k = k.split("/", 1)[1]
         where = []
-        for e in v.get("cand") or []:
+        for e in (v["cand_kept"] if isinstance(v.get("cand_kept"), list) else v.get("cand")) or []:     # 받아쓰기 거름이 있으면 남은 후보만(sfx_events.filter_channel)
             near = e.get("near") or {}
             w = min(near, key=near.get) if near else "none"
             where.append(w if near.get(w, 9) <= 0.3 else "none")
