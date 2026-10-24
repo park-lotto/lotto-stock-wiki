@@ -1,0 +1,162 @@
+{
+ "name": "만템판",
+ "renderer": "bench",
+ "_note": "만템 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 바탕·2줄 제목·1080 정사각 창, window). 근거 = 설명서 프리셋 channel/mantem/preset/얜샷템(8편 실측)·뜯기 8편. 손 스크립트 preset/mt_preset.py(설명서 생성기 — 회원 옛 길이 읽음)",
+ "bench": {
+  "ko": "만템",
+  "channel": "mantem",
+  "analysis": "channel/mantem/뜯기",
+  "line_reads": "channel/mantem/줄판독",
+  "src_dir": "C:/숏템_칼카피/mantem/원본",
+  "design": "channel/mantem/preset/얜샷템/manifest.json"
+ },
+ "voice": {
+  "name": "문정",
+  "voice_id": "tc_68f9c6a72f0f04a417bb136f",
+  "candidates": [
+   "유라"
+  ],
+  "why": "벤치 나레 여 7/8(비교_만템_아이템홈_얜샷템1편.md:46) · 문정 = 사장님 10-20 고름(preset/얜샷템/defaults.json)"
+ },
+ "cps_target": 7.4,
+ "_why_cps_target": "뜯기 voice_rules.cps 8편 6.29~8.9(중앙 7.38) — defaults 8.30(문정 1.36)은 1편 기록",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -10.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 있음·경쾌(뜯기 bgm_rules 8편) · 곡 sweets(defaults.json·itemhome 1편 근거.md:88) · 원음 창 −10dB(itemhome make_render DUCK_DB) · 14dB·fade 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 12.2,
+  "max": 27.2,
+  "why": "뜯기 probe.duration 8편 12.23~27.23초"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 줄판독 0편(벤치 줄 사이 쉼 미측정, 06 측정 뒤 교체)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=BDAjUIBTjfY frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   420,
+   1080,
+   1080
+  ],
+  "title": [
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 118,
+    "center": 209.5,
+    "color": "#FDFDFD",
+    "max_w": 1040
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 118,
+    "center": 336.5,
+    "color": "#A6FEF6",
+    "max_w": 1040
+   }
+  ],
+  "credit": {
+   "font": "GmarketSansBold.otf",
+   "px": 32,
+   "center": 1544.0,
+   "color": "#FFFFFF"
+  },
+  "watermark": null,
+  "why": "frame_import.py ← channel/mantem/preset/얜샷템/frame.json + manifest.variable_stats default(편마다 값 중앙 — 8편 BDAj·S_CX·qBPn·3Xb8·9Fc·Sq-k·Pfvw·0LOy)",
+  "_pending": {
+   "props": "['title.italic=True', 'title.letter_spacing=-5.5', 'title.word_spacing=14', 'caption.italic=True', \"caption.enter={'kind': 'none', 'ms': 300}\"]",
+   "per_video_unfilled": [
+    "layers[text:title].text",
+    "layers[text:label].text"
+   ],
+   "title_word_color": "제목 2줄째 낱말별 색(노랑 '물건' — manifest title_emphasis) = 대본 title_lines 의 ['낱말','hi'] 꼴로 가능, 판 title[1].hi 색 미기입 → 06 측정 뒤"
+  }
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12,
+  "band": [
+   1206,
+   1280
+  ],
+  "why": "frame.json caption 층(Cafe24Ohsquare 64 노랑 #F5FF16·검정 외곽 5·기울임) y1206 · 자막 replace(defaults) · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)",
+  "_pending": {
+   "pack": "만템 자막 팩 없음 → 관제 235 요청(자막 층 = {\"font\": \"Cafe24Ohsquare.ttf\", \"px\": 64, \"color\": \"#F5FF16\", \"y_top\": 1206, \"line_h\": 74, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 kitchit(흰+검정 외곽)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
+  },
+  "why": "push 0 = 손 상수(줄판독 0편)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 종류 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "줄판독 0편 — counted 없음(06 줄판독 6편 뒤 placement.py count)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정 — 0(06 뒤 교체)"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-mantem(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
+  "member_line": "회원 라인 line.json = 키치잇판(얜샷템, 00_공통 채널↔판) — 이 판(만템판)은 벤치 1차 판, 회원 라인은 그대로 둔다",
+  "label": "창 아래 라벨 GmarketSansBold 32 y1524($per_video 글) → credit 칸(출처 줄)로 옮김 — 뜻 확인 필요"
+ },
+ "script": {
+  "brief": [
+   "박자·말투 = 줄판독 0편이라 미측정 — 설명서 manifest.roles·비교_만템_아이템홈_얜샷템1편.md 참고(06 뒤 교체)",
+   "나레 여 리뷰 어조 '빠르고 톡톡 튀는 20대'(뜯기 voice_rules)"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 12.2,
+    "max": 27.2,
+    "why": "뜯기 probe.duration 8편 12.23~27.23초"
+   }
+  ]
+ }
+}

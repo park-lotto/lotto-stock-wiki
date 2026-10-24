@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# _deprecated_2026-10-25 → tools/calcopy/hybrid/styles/만템판.json (관제 263 지시서 07 · 표준 §3-1: 새 편은 공용 렌더러로. 읽기 전용 참고물 — 설명서 프리셋 생성기는 회원 옛 길이 결과를 읽으므로 지우지 않는다)
 """얜샷템 프리셋 「얜샷템」 — 벤치 만템 연예인템 8편 자동 설명서 → 손질(실측 색·글꼴 고정) → preset_save (관제 097, 2026-10-17).
     PYTHONUTF8=1 py channel/mantem/preset/mt_preset.py
 손질 근거(실측, channel/mantem/뜯기/색톤_실측.md):

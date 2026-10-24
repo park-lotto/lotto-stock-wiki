@@ -1,0 +1,155 @@
+{
+ "name": "아이템홈판",
+ "renderer": "bench",
+ "_note": "아이템홈 칼카피 1차 판 — 연예인쇼핑형 나레+원음(검정 띠 2줄, window). 근거 = 설명서 프리셋 channel/itemhome/preset/검정띠2줄(8편 실측)·뜯기 8편. 손 스크립트 1편_안유진로션/make_render.py(narr_video+원음 덕킹 손 섞기)·preset/ih_preset.py = 참고물",
+ "bench": {
+  "ko": "아이템홈",
+  "channel": "itemhome",
+  "analysis": "channel/itemhome/뜯기",
+  "line_reads": "channel/itemhome/줄판독",
+  "src_dir": "C:/숏템_칼카피/itemhome/원본",
+  "design": "channel/itemhome/preset/검정띠2줄/manifest.json"
+ },
+ "voice": {
+  "name": "문정",
+  "voice_id": "tc_68f9c6a72f0f04a417bb136f",
+  "candidates": [
+   "유라"
+  ],
+  "why": "벤치 화자 여 우세(뜯기 voice_rules) · 1편 안유진로션 문정(make_render·근거.md:76)"
+ },
+ "cps_target": 7.9,
+ "_why_cps_target": "뜯기 voice_rules.cps 8편 7.29~8.82(중앙 7.92)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -10.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 경쾌(뜯기 8편) · 1편 make_render BGM sweets·통합 −24.5 LUFS·원음 창 −10dB(DUCK_DB) · 14dB·fade 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 15.2,
+  "max": 42.3,
+  "why": "뜯기 probe.duration 8편 15.17~42.3초"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 줄판독 0편(벤치 줄 사이 쉼 미측정, 06 측정 뒤 교체)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=MfptnwqlGKs frame=only span=None",
+  "bg": [
+   9,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "title": [
+   {
+    "font": "Pretendard-Bold.otf",
+    "px": 102.2,
+    "center": 267.5,
+    "color": "#FBF6F5",
+    "max_w": 1000
+   },
+   {
+    "font": "Pretendard-Bold.otf",
+    "px": 102.2,
+    "center": 382.5,
+    "color": "#F6E900",
+    "max_w": 1000
+   }
+  ],
+  "watermark": null,
+  "credit": null,
+  "why": "frame_import.py ← channel/itemhome/preset/검정띠2줄/frame.json + manifest.variable_stats default(편마다 값 중앙 — 8편 Mfpt·dNth·mtMt·cLxE·2uPI·agEw·-RgN·AoHn)",
+  "_pending": {
+   "props": "['title.letter_spacing=5.25', \"caption.enter={'kind': 'none', 'ms': 300}\"]",
+   "per_video_unfilled": [
+    "layers[text:title].line_scale",
+    "layers[text:title].text"
+   ]
+  }
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12,
+  "band": [
+   1222,
+   1308
+  ],
+  "why": "frame.json caption 층(SBAggroB 75 흰·검정 외곽 4) y1222 · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)",
+  "_pending": {
+   "pack": "아이템홈 자막 팩 없음 → 관제 235 요청(자막 층 = {\"font\": \"SBAggroB.ttf\", \"px\": 75, \"color\": \"#FCFAFA\", \"y_top\": 1222, \"line_h\": 86, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 kitchit(흰+검정 외곽)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
+  },
+  "why": "push 0 = 손 상수(줄판독 0편)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 종류 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "줄판독 0편 — counted 없음(06 줄판독 6편 뒤 placement.py count)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정 — 0(06 뒤 교체)"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-itemhome(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
+  "brand": "우리 브랜드 미정(브랜드.json 에 itemhome 없음) — 로고 없음(벤치도 0)"
+ },
+ "script": {
+  "brief": [
+   "박자·말투 = 줄판독 0편이라 미측정(06 뒤 교체)",
+   "벤치 뜯기 화자 4역(여·남) — 원음 섞임"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 15.2,
+    "max": 42.3,
+    "why": "뜯기 probe.duration 8편 15.17~42.3초"
+   }
+  ]
+ }
+}

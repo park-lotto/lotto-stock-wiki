@@ -1,0 +1,163 @@
+{
+ "name": "안나픽판",
+ "renderer": "bench",
+ "_note": "안나픽 칼카피 1차 판 — 연예인쇼핑형(검정 띠 2줄+출처 줄, window). 근거 = 설명서 프리셋 channel/annapick/preset/검정띠2줄_출처(6편 실측)·뜯기 6편. 손 스크립트 1편_한고은채소통/make_plan.py·make_render.py·preset/ap_preset.py = 참고물",
+ "bench": {
+  "ko": "안나픽",
+  "channel": "annapick",
+  "analysis": "channel/annapick/뜯기",
+  "line_reads": "channel/annapick/줄판독",
+  "src_dir": "C:/숏템_칼카피/annapick/원본",
+  "design": "channel/annapick/preset/검정띠2줄_출처/manifest.json"
+ },
+ "voice": {
+  "name": "유라",
+  "voice_id": "tc_61130d6cf89dd58a4c13295d",
+  "candidates": [
+   "문정"
+  ],
+  "why": "벤치 화자 여 2(뜯기 voice_rules, narration none — 원음 위주) · 1편 한고은 미나(일레븐 — 회원 PC 불가) → 유라(손 상수, 사장님 확인)"
+ },
+ "cps_target": 8.0,
+ "_why_cps_target": "뜯기 voice_rules.cps 6편 6.21~9.45(중앙 8.04)",
+ "bgm": {
+  "id": "sweets",
+  "db_below_voice": 14.0,
+  "duck_orig_db": -10.0,
+  "duck_narr_db": 0.0,
+  "fade_out": 0.4,
+  "candidates": [],
+  "why": "BGM 경쾌·일상(뜯기 6편) · 곡·dB 미측정 → 손 상수"
+ },
+ "loudness": {
+  "lufs": -14.0,
+  "tp": -1.5,
+  "why": "−14 통일(사장님 10-18)"
+ },
+ "length": {
+  "min": 12.2,
+  "max": 26.0,
+  "why": "뜯기 probe.duration 6편 12.23~25.97초"
+ },
+ "timing": {
+  "gap": 0.1,
+  "tail": 0.3,
+  "why": "손 상수 — 줄판독 0편(벤치 줄 사이 쉼 미측정, 06 측정 뒤 교체)"
+ },
+ "frame": {
+  "kind": "window",
+  "_from": "frame_import.py ← calcopy_frame v1 source=itYwQVyuCcc frame=only span=None",
+  "bg": [
+   0,
+   0,
+   0
+  ],
+  "window": [
+   0,
+   419,
+   1080,
+   1082
+  ],
+  "title": [
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 94.2,
+    "center": 260,
+    "color": "#FFFFFF",
+    "max_w": 1000
+   },
+   {
+    "font": "Cafe24Ohsquare.ttf",
+    "px": 94.2,
+    "center": 360.0,
+    "color": "#FDE282",
+    "max_w": 1000
+   }
+  ],
+  "logo": null,
+  "credit": {
+   "font": "Pretendard-Regular.otf",
+   "px": 34,
+   "center": 1535.0,
+   "color": "#7D7D7D"
+  },
+  "watermark": null,
+  "why": "frame_import.py ← channel/annapick/preset/검정띠2줄_출처/frame.json + manifest.variable_stats default(편마다 값 중앙 — 6편 itYw·Ww0I·hj9O·iS0l·wweU·rF_-) · 제목 px 98.65→94.2·1줄 가운데 260 = itYw 6초 프레임 잉크(218~302, 84px) 대조로 보정",
+  "_pending": {
+   "props": "['title.letter_spacing=-2.9', 'title.line_scale=[0.97, 1.031]', \"caption.enter={'kind': 'pop', 'ms': 300}\"]",
+   "per_video_unfilled": [
+    "layers[text:title].text",
+    "layers[text:label].text"
+   ],
+   "title_word_color": "제목 2줄째 낱말별 색(분홍 '채소보관법') — title[].hi 미기입(06)"
+  }
+ },
+ "caption": {
+  "pack": "kitchit",
+  "pack_default": {
+   "narr.first": "cut",
+   "narr.rest": "cut",
+   "orig.first": "cut",
+   "orig.rest": "cut"
+  },
+  "variant_for": {},
+  "typing_cps": 10.0,
+  "chunk_max_chars": 12,
+  "band": [
+   1142,
+   1228
+  ],
+  "why": "frame.json caption 층($per_video → manifest default: KirangHaerang 75.2 흰·검정 외곽 6, 등장 pop 300ms) y1142 · chunk_max_chars 12·typing_cps 10 = 손 상수(줄판독 0편 — 06)",
+  "_pending": {
+   "pack": "안나픽 자막 팩 없음 → 관제 235 요청(자막 층 = {\"font\": \"KirangHaerang.ttf\", \"px\": 75.2, \"color\": \"#FDFCFA\", \"y_top\": 1142, \"line_h\": 86, \"lines\": 1, \"cx\": 540, \"max_w\": 1000}). 그동안 kitchit(흰+검정 외곽)"
+  }
+ },
+ "cuts": {
+  "push_tts": 0.0,
+  "push_orig": 0.0,
+  "transition": {
+   "kinds": {
+    "cut": 1.0
+   },
+   "ms": 0,
+   "why": "전환 미측정(줄판독 0편) — 1차 = 컷(06 뒤 교체)"
+  },
+  "why": "push 0 = 손 상수(줄판독 0편)"
+ },
+ "sfx_files": {
+  "gain_db": -8,
+  "why": "효과음 종류 미측정 — gain 손 상수"
+ },
+ "placement": {
+  "rules": {
+   "enter": {
+    "why": "줄판독 0편 — counted 없음(06 줄판독 6편 뒤 placement.py count)"
+   },
+   "meme": {
+    "rate": 0.0,
+    "why": "짤 미측정 — 0(06 뒤 교체)"
+   }
+  },
+  "counted": {}
+ },
+ "_pending": {
+  "line_reads": "줄판독 0편 → 06-annapick(6편)·규칙빈도·sfx_events 뒤 counted·rules 채움 — 지금 판은 L1 미달(counted<6)",
+  "brand": "벤치 브랜드 글 'anna pick' 2줄(아래 y1745 회색) — 우리 브랜드 미정 → logo 없음",
+  "caption_pop": "자막 등장 pop 300ms(manifest default) — 팩·placement rules.enter 필요(06 뒤)"
+ },
+ "script": {
+  "brief": [
+   "박자·말투 = 줄판독 0편이라 미측정(06 뒤 교체)",
+   "벤치 narration none — 원음(연예인 말) 위주, 나레는 짧게"
+  ],
+  "audit": [
+   {
+    "id": "est_length",
+    "kind": "est_length",
+    "min": 12.2,
+    "max": 26.0,
+    "why": "뜯기 probe.duration 6편 12.23~25.97초"
+   }
+  ]
+ }
+}
