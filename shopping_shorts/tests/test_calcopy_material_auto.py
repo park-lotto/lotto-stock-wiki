@@ -378,17 +378,21 @@ def test_select_fit_ban_drops_cell_for_that_token_only():
 
 
 def test_fit_judge_retries_missing_numbers(tmp_path):
-    """첫 답에 번호가 빠지면 한 번 더 묻는다(10-18 기준선: 10칸 묶음이 통째로 답 없음)."""
-    calls = []
+    """fit_judge = scene_fit.judge_rubric 껍데기(표준 §11-4 ㉔): 컷 하나씩 × 3회 고정 — 답이 빈 회는 빼고 받은 점수끼리 중앙값.
+    (10-18 기준선: 10칸 묶음이 통째로 답 없음 → 이제 묶음이 없고, 빈 답은 그 회만 빠진다)"""
+    import threading
+    calls, lock, seen_y = [], threading.Lock(), []
 
     def fake(parts, prompt, tag):
-        calls.append(tag)
-        if len(calls) == 1:
-            return {"fits": [{"n": 0, "score": 9, "seen": "a", "want": "a"}]}, None
-        return {"fits": [{"n": 1, "score": 3, "seen": "b", "want": "c"}]}, None
+        with lock:
+            calls.append(tag)
+            if "«y»" in prompt:
+                seen_y.append(1)
+                if len(seen_y) == 1:
+                    return {}, None                       # y 첫 회는 빈 답
+        return {"fits": [{"n": 0, "score": 9 if "«x»" in prompt else 3, "seen": "a"}]}, None
     r = ma.fit_judge([{"img": "", "piece": "x", "line": "x"}, {"img": "", "piece": "y", "line": "y"}], tmp_path, ma.LLM(fake))
-    # 10-25 지시서 14: fit_judge = scene_fit.judge_rubric 껍데기 — 2회 채점, 빠진 번호가 있으면 3회째(중앙값은 받은 점수끼리)
-    assert len(calls) == 3 and r[0]["score"] == 9 and r[1]["score"] == 3
+    assert len(calls) == 6 and r[0]["score"] == 9 and r[1]["score"] == 3
 
 
 def test_match_lines_retries_empty_answer():
@@ -404,14 +408,27 @@ def test_match_lines_retries_empty_answer():
     assert len(calls) == 2 and r[0][0][0] == 0 and r[1][0][0] == 1
 
 
+def _imgs(tmp_path, cells, scores):
+    """칸마다 색이 다른 작은 그림을 붙이고 {그림 bytes: 점수} — 가짜 판정이 그림으로 점수를 돌려준다."""
+    from PIL import Image
+    by = {}
+    for (c, cl), sc in zip(cells.items(), scores):
+        p = tmp_path / f"c{c}.jpg"
+        Image.new("RGB", (20, 20), (c * 80 % 256, 40, 200 - c * 60)).save(p)
+        cl["img"] = str(p)
+        by[p.read_bytes()] = sc
+    return by
+
+
 def test_eye_rescue_reranks_by_picture(tmp_path):
     """빈칸·미달 토막은 후보 칸 그림을 대사와 직접 채점해 맞는 칸(≥FIT_MIN)을 앞으로, 안 맞는 칸은 그 토막에서 뺀다."""
     ts = toks(1)
     cells = {0: cell("A", 11.0), 1: cell("B", 20.0), 2: cell("A", 40.0)}
     ranked = {0: [(0, 9), (1, 6), (2, 5)]}
+    by = _imgs(tmp_path, cells, [3, 9, 2])          # 칸마다 다른 그림 — 채점은 컷 하나씩(표준 §11-4 ㉔)
 
     def fake(parts, prompt, tag):
-        return {"fits": [{"n": 0, "score": 3}, {"n": 1, "score": 9}, {"n": 2, "score": 2}]}, None
+        return {"fits": [{"n": 0, "score": by[parts[-1]]}]}, None
     ban = {}
     r = ma.eye_rescue([{"i": 0}], ts, _needs(ts), ranked, cells, META, ITS, ban, tmp_path, ma.LLM(fake), log=lambda *a: None)
     assert r[0][0] == (1, 9) and ban[0] == {0, 2}
@@ -423,9 +440,10 @@ def test_eye_rescue_keeps_best_when_none_fit(tmp_path):
     """맞는 칸(≥FIT_MIN)이 하나도 없으면 최고점(≥EYE_FLOOR) 칸을 남긴다 — 다 빼면 빈칸이 된다(10-18 소넷 판정 12칸 빈칸)."""
     ts = toks(1)
     cells = {0: cell("A", 11.0), 1: cell("B", 20.0)}
+    by = _imgs(tmp_path, cells, [3, 5])
 
     def fake(parts, prompt, tag):
-        return {"fits": [{"n": 0, "score": 3}, {"n": 1, "score": 5}]}, None
+        return {"fits": [{"n": 0, "score": by[parts[-1]]}]}, None
     ban = {}
     r = ma.eye_rescue([{"i": 0}], ts, _needs(ts), {0: [(0, 9), (1, 6)]}, cells, META, ITS, ban, tmp_path, ma.LLM(fake), log=lambda *a: None)
     assert r[0][0][0] == 1 and ban[0] == {0}

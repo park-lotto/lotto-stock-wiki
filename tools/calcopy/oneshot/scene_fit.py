@@ -46,9 +46,12 @@ def measure(mk: Path, llm=None) -> dict:
 
 MAX_ITEMS = 30     # 컷이 더 많으면 고르게 30개(편당 시트 3장)
 PER_SHEET = 10     # 시트 한 장 = 컷 10칸(컷마다 처음·가운데·끝 3프레임 띠)
-RUBRIC_V = "rubric:v1(2026-10-25)"
+RUBRIC_V = "rubric:v2(2026-10-25 앵커2·1컷·3회)"   # 표준 §11-4 ㉔ — 바뀌면 벤치 재측정 필수(상위편_목표.json 의 rubric 과 다르면 자 불일치)
+RUNS = 3           # 채점 반복 고정(조건부 3회째 폐지 — ㉔ⓒ)
+JUDGE_WORKERS = 6  # 컷×회 동시 호출
+ANCHORS = ROOT / "channel" / "ititemlog" / "_kal" / "scene_fit_anchors"   # 기본 앵커(채널 고정 그림 2장) — 다른 채널은 anchors= 로 자기 것을
 SKIP_ROLES = ("훅", "이음", "다리")     # 이 역할 줄의 컷은 '7 미만 비율' 분모에서 뺀다(표준 §11 ④ⓓ — 연결 줄 4~5점은 정상, 지침서 §3-4)
-RUBRIC = """완성 쇼츠의 컷마다 '자막(대사)이 말하는 것이 화면에 보이나'를 채점한다. 칸마다 같은 컷의 처음·가운데·끝 3프레임이 가로로 붙어 있다(번호 = 노란 숫자).
+RUBRIC = """쇼츠 컷 하나가 '자막(대사)이 말하는 것을 화면에 보여주나'를 채점한다. 그림마다 같은 컷의 처음·가운데·끝 3프레임이 가로로 붙어 있다.
 기준점(이 다섯 점 중 하나만 준다):
 10 = 대사가 말하는 동작·상태·대상이 다 보인다
 7 = 대상과 그 상태는 보인다(동작 순간은 아니어도)
@@ -56,9 +59,24 @@ RUBRIC = """완성 쇼츠의 컷마다 '자막(대사)이 말하는 것이 화�
 3 = 관련 소품·배경만 보인다
 1 = 대사와 무관하다(다른 물건·다른 장면)
 짧은 자막 조각은 '문장' 전체의 뜻으로 판단한다. 감탄·반응 대사("세상에!")는 그 반응(표정·몸짓)이 보이면 10.
-[대사] (번호: «자막 조각» / 문장: 그 줄 전체)
+[기준 예시 — 점수가 정해진 그림, 채점 대상 아님]
+그림 1: «{a10_piece}» / 문장: {a10_line} → 10점 ({a10_why})
+그림 2: «{a3_piece}» / 문장: {a3_line} → 3점 ({a3_why})
+[채점 대상 = 그림 3] (번호: «자막 조각» / 문장: 그 줄 전체)
 {rows}
-출력 JSON만: {{"fits":[{{"n":번호,"score":10|7|5|3|1,"seen":"화면에 보이는 것 한국어 한 줄"}}]}}"""
+출력 JSON만: {{"fits":[{{"n":0,"score":10|7|5|3|1,"seen":"그림 3 화면에 보이는 것 한국어 한 줄"}}]}}"""
+
+
+def load_anchors(d: Path | None = None) -> dict:
+    """앵커 = {a10:{img, piece, line, why}, a3:{…}} (anchors.json + 그림 2장). 없으면 None — 앵커 없이 채점(시험·다른 채널 미준비)."""
+    d = Path(d or ANCHORS)
+    j = d / "anchors.json"
+    if not j.exists():
+        return None
+    A = json.loads(j.read_text(encoding="utf-8"))
+    for k in ("a10", "a3"):
+        A[k]["img"] = str(d / A[k]["img"])
+    return A
 
 
 def _frame(mp4: Path, t: float, h: int = 400):
@@ -132,40 +150,70 @@ def _ask(llm, sheet: Path, chunk: list[dict], tag: str) -> dict:
     return {_as_int(x.get("n")): x for x in (r or {}).get("fits") or [] if isinstance(x, dict) and _as_int(x.get("score")) is not None}
 
 
-def judge_rubric(items: list[dict], wd: Path, llm, cache: Path | None = None) -> list[dict]:
-    """(판단 주인 — 완성본 대사↔장면 채점) 기준점 루브릭 RUBRIC · 시트 10칸 · 2회 채점 중앙값, 두 점수 차 ≥2 면 3회째(표준 §11 ④).
-    같은 시트(그림·글 sha)는 cache 에서 다시 쓴다. 반환 = items 순서로 {score, scores, seen}.
-    대사↔장면 판정은 이것 한 벌 — 완성본 측정(measure_render)·계획 매칭(hybrid/material_fit)·재료 고르기(material_auto.fit_judge 껍데기)가 다 부른다(지시서 14)."""
+def judge_rubric(items: list[dict], wd: Path, llm, cache: Path | None = None, anchors=None) -> list[dict]:
+    """(판단 주인 — 대사↔장면 채점, 표준 §11-4 ㉔) 컷 **하나씩**: 그림 = 앵커 2장(10점 예·3점 예, 채널 고정) + 그 컷 3프레임 띠, 루브릭 RUBRIC · **3회 중앙값 고정**.
+    후보 여러 장을 한 시트에 나란히 두는 상대 채점은 하지 않는다(10-25 실측: 같은 컷이 후보 시트 5.5~6.2 ↔ 완성본 7.25 — 앵커·순서 효과).
+    캐시 열쇠 = 컷 그림 sha + 조각 + 문장 + RUBRIC_V + 앵커 sha → 같은 입력은 재채점 0. 반환 = items 순서로 {score, scores, seen}.
+    완성본 측정(measure_render)·벤치(bench_measure)·계획 매칭(hybrid/material_fit)·재료 고르기(material_auto.fit_judge 껍데기)가 다 이것을 부른다.
+    anchors = None(기본 ANCHORS) · dict(load_anchors 꼴) · False(앵커 없이)."""
     import hashlib
     import statistics
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
     from tools.calcopy.engine.material_auto import _as_int
-    fdir = Path(wd) / "fit"
-    fdir.mkdir(parents=True, exist_ok=True)
+    A = load_anchors() if anchors is None else (anchors or None)
+    parts0 = [Path(A["a10"]["img"]).read_bytes(), Path(A["a3"]["img"]).read_bytes()] if A else []
+    akey = hashlib.sha256(b"".join(parts0) + json.dumps({k: {x: A[k][x] for x in ("piece", "line")} for k in ("a10", "a3")} if A else {},
+                                                         ensure_ascii=False).encode()).hexdigest()[:12] if A else "none"
     C = json.loads(cache.read_text(encoding="utf-8")) if cache and cache.exists() else {}
-    out = []
-    for c0 in range(0, len(items), PER_SHEET):
-        chunk = items[c0:c0 + PER_SHEET]
-        sp = _sheet(chunk, fdir / f"rubric_{c0 // PER_SHEET}.jpg")
-        key = hashlib.sha256(sp.read_bytes() + json.dumps([(it["piece"], it["line"]) for it in chunk], ensure_ascii=False).encode()
-                             + RUBRIC_V.encode()).hexdigest()[:24]
-        runs = C.get(key)
-        if not runs:
-            runs = [_ask(llm, sp, chunk, "ma_fit:rubric") for _ in range(2)]
+    lock = threading.Lock()
 
-            def sc_of(r, j):
-                return _as_int((r.get(j) or {}).get("score"))
-            if any(sc_of(runs[0], j) is None or sc_of(runs[1], j) is None or abs(sc_of(runs[0], j) - sc_of(runs[1], j)) >= 2
-                   for j in range(len(chunk))):
-                runs.append(_ask(llm, sp, chunk, "ma_fit:rubric"))
-            runs = [{str(k): v for k, v in r.items()} for r in runs]
-            if cache and all(len(r) == len(chunk) for r in runs):
-                C[key] = runs
-                cache.write_text(json.dumps(C, ensure_ascii=False, indent=1), encoding="utf-8")
-        for j in range(len(chunk)):
-            sc = [_as_int((r.get(str(j)) or {}).get("score")) for r in runs]
-            sc = [x for x in sc if x is not None]
-            seen = next((str((r.get(str(j)) or {}).get("seen") or "") for r in runs if r.get(str(j))), "")
-            out.append({"score": statistics.median(sc), "scores": sc, "seen": seen} if sc else {"score": None, "scores": [], "why": "답 없음"})
+    def key_of(it):
+        b = Path(it["img"]).read_bytes() if it.get("img") and Path(it["img"]).exists() else b""
+        return hashlib.sha256(b + json.dumps([it["piece"], it["line"]], ensure_ascii=False).encode() + RUBRIC_V.encode() + akey.encode()).hexdigest()[:24]
+
+    def prompt_of(it):
+        head = RUBRIC.format(a10_piece=A["a10"]["piece"], a10_line=A["a10"]["line"], a10_why=A["a10"]["why"],
+                             a3_piece=A["a3"]["piece"], a3_line=A["a3"]["line"], a3_why=A["a3"]["why"],
+                             rows=f"0: «{it['piece']}» / 문장: {it['line']}") if A else \
+            RUBRIC.split("[기준 예시")[0] + "[채점 대상] (번호: «자막 조각» / 문장: 그 줄 전체)\n" + f"0: «{it['piece']}» / 문장: {it['line']}" + \
+            "\n출력 JSON만: {\"fits\":[{\"n\":0,\"score\":10|7|5|3|1,\"seen\":\"화면에 보이는 것 한국어 한 줄\"}]}"
+        return head
+
+    def ask_one(it):
+        img = Path(it["img"]).read_bytes() if it.get("img") and Path(it["img"]).exists() else b""
+        r, err = llm(parts0 + ([img] if img else []), prompt_of(it), "ma_fit:rubric")
+        r = r or {}
+        if isinstance(r.get("fits"), list):
+            r = next((x for x in r["fits"] if isinstance(x, dict) and _as_int(x.get("n")) in (0, None)), r["fits"][0] if r["fits"] else {})
+        return {"score": _as_int(r.get("score")), "seen": str(r.get("seen") or "")} if isinstance(r, dict) and _as_int(r.get("score")) is not None else None
+
+    keys = [key_of(it) for it in items]
+    todo = [(k, j, it) for j, (k, it) in enumerate(zip(keys, items)) if k not in C]
+    uniq = {}
+    for k, j, it in todo:
+        uniq.setdefault(k, it)
+    jobs = [(k, it) for k, it in uniq.items() for _ in range(RUNS)]
+    got = {}
+    with ThreadPoolExecutor(JUDGE_WORKERS) as ex:
+        for (k, _), r in zip(jobs, ex.map(lambda x: ask_one(x[1]), jobs)):
+            with lock:
+                got.setdefault(k, []).append(r)
+    for k, rs in got.items():
+        ok = [r for r in rs if r]
+        if len(ok) == RUNS:
+            C[k] = ok                     # 3회 다 답한 것만 캐시(빠진 답은 다음에 다시)
+        else:
+            C.setdefault("_partial", {})[k] = ok
+    if cache and got:
+        Path(cache).parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(C, ensure_ascii=False, indent=1), encoding="utf-8")
+    out = []
+    for k in keys:
+        rs = C.get(k) or (C.get("_partial") or {}).get(k) or []
+        sc = [r["score"] for r in rs if r and r.get("score") is not None]
+        out.append({"score": statistics.median(sc), "scores": sc, "seen": next((r["seen"] for r in rs if r and r.get("seen")), "")} if sc
+                   else {"score": None, "scores": [], "why": "답 없음"})
     return out
 
 
@@ -308,7 +356,56 @@ def bench_measure(slug: str, line_reads=None, src_dir=None, llm=None, ids: list 
     return out
 
 
+NOISE = ROOT / "channel" / "ititemlog" / "_kal" / "scene_fit_noise.json"
+
+
+def measure_noise(gold: Path | None = None, runs: int = 5, out: Path | None = None, llm=None, log=print) -> dict:
+    """채점 잡음 실측(표준 §11-4 ㉔ⓓ) — gold 10컷을 캐시 없이 runs 번 judge_rubric(3회 중앙값) → 컷마다 흔들림.
+    σ_item = 컷 점수 표준편차의 제곱평균근 · var_below = 컷마다 '7 미만'으로 나온 비율 p 의 p(1−p) 평균. 편(n컷) 여유는 noise_margin(n)."""
+    import statistics
+    from tools.calcopy.engine import material_auto as MA
+    gold = Path(gold or ROOT / "shopping_shorts/tests/fixtures/scene_fit_gold.json")
+    G = json.loads(gold.read_text(encoding="utf-8"))
+    items = [{"img": str(gold.parent / r["img"]), "piece": r["piece"], "line": r["line"]} for r in G["rows"]]
+    llm = llm or MA.LLM()
+    per = [[] for _ in items]
+    for k in range(runs):
+        res = judge_rubric(items, gold.parent, llm, cache=None)
+        for j, r in enumerate(res):
+            per[j].append(r.get("score"))
+        log(f"[noise] {k + 1}/{runs}회 {[r.get('score') for r in res]}")
+    sds, vb = [], []
+    for sc in per:
+        sc = [x for x in sc if x is not None]
+        if len(sc) >= 2:
+            sds.append(statistics.pstdev(sc))
+            p = sum(1 for x in sc if x < 7) / len(sc)
+            vb.append(p * (1 - p))
+    o = {"rubric": RUBRIC_V, "made_by": "tools/calcopy/oneshot/scene_fit.measure_noise", "gold": str(gold.relative_to(ROOT)), "runs": runs,
+         "per_cut": per, "sigma_item": round((sum(x * x for x in sds) / len(sds)) ** 0.5, 3) if sds else None,
+         "var_below": round(sum(vb) / len(vb), 4) if vb else None, "calls": len(getattr(llm, "calls", None) or []),
+         "_how": "편 n컷의 여유: 평균 2σ = 2·sigma_item/√n · 7미만 비율 2σ = 2·√(var_below/n) (noise_margin)"}
+    dst = Path(out or NOISE)
+    dst.write_text(json.dumps(o, ensure_ascii=False, indent=1), encoding="utf-8")
+    log(f"[noise] σ_item {o['sigma_item']} · var_below {o['var_below']} → {dst}")
+    return o
+
+
+def noise_margin(n: int, path: Path | None = None) -> dict | None:
+    """편 n컷의 합격 여유(2σ) — {mean, below7, rubric}. 잡음 파일이 없거나 RUBRIC_V 가 다르면 None(여유 없음 = 자 불일치)."""
+    p = Path(path or NOISE)
+    if not p.exists() or n <= 0:
+        return None
+    o = json.loads(p.read_text(encoding="utf-8"))
+    if o.get("rubric") != RUBRIC_V or o.get("sigma_item") is None:
+        return None
+    return {"mean": round(2 * o["sigma_item"] / n ** 0.5, 3), "below7": round(2 * (o["var_below"] / n) ** 0.5, 3), "rubric": o["rubric"]}
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["noise"]:          # PYTHONUTF8=1 py tools/calcopy/oneshot/scene_fit.py noise [회수]
+        measure_noise(runs=int(sys.argv[2]) if len(sys.argv) > 2 else 5)
+        sys.exit(0)
     if sys.argv[1:2] == ["bench"]:          # PYTHONUTF8=1 py tools/calcopy/oneshot/scene_fit.py bench <slug> [--ids a,b]
         a = sys.argv[2:]
         ids = a[a.index("--ids") + 1].split(",") if "--ids" in a else None

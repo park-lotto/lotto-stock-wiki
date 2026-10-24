@@ -60,13 +60,18 @@ def _ep(tmp: Path, n2_role="본문"):
 class Fake:
     """샷 설명·순위·채점·고침을 흉내 — 채점 칸마다 그림 띠를 기록한다(점수 전에 빠졌나 보려고)."""
 
-    def __init__(self, score=7, fix=True):
-        self.score, self.fix, self.sheets, self.fit_rows = score, fix, 0, []
+    def __init__(self, score=7, fix=True, prod=None):
+        self.score, self.fix, self.sheets, self.fit_rows, self.prod = score, fix, 0, [], prod or {}
 
     def __call__(self, parts, prompt, tag):
         if tag == "ma_fit:shot":
             hi = int(re.search(r"번호 0~(\d+)", prompt).group(1))
             return {"shots": [{"n": i, "desc": f"단색 화면 {i}"} for i in range(hi + 1)]}, None
+        if tag == "ma_fit:product":
+            hi = int(re.search(r"번호 0~(\d+)", prompt).group(1))
+            return {"shots": [{"n": i, "p": self.prod.get(i, "same")} for i in range(hi + 1)]}, None
+        if tag == "ma_fit:rewrite":
+            return {"same": True, "changed": []}, None
         if tag == "ma_fit:rank":
             ids = re.findall(r"^(\w+#\d+):", prompt, re.M)
             lines = re.findall(r"^(N\d+):", prompt, re.M)
@@ -160,3 +165,40 @@ def test_outside_source_with_burned_text_rejected(tmp_path):
     assert "text_box" in MF.constraint_flags(cand, table, [], {}, out, None, {})["reject"]          # 판독 못 함 = 못 씀
     assert "text_box" not in MF.constraint_flags(cand, table, [], {}, out, None, {"x#0": False})["reject"]
     assert "text_box" not in MF.constraint_flags({**cand, "src": "d2.mp4"}, {"d2.mp4": table["sup_/x.mp4"]}, [], {}, out, None, {})["reject"]   # 원본은 안 봄
+
+
+def test_other_product_and_exclude_removed_before_scoring(tmp_path):
+    """하드 제약 층(표준 §11-4 ㉔ⓔ): 제품 판정 'other' 샷(초록 10~15초)·사람 제외 구간(노랑 15~20초)은 후보에서 빠진다 — 금색 캡슐 통 재발 방지."""
+    D, W = _ep(tmp_path)
+    M = json.loads((D / "재료.json").read_text(encoding="utf-8"))
+    M["exclude"] = [{"src": "a.mp4", "t0": 15.0, "t1": 20.0, "why": "노랑 = 다른 제품(사람 메모)"}]
+    (D / "재료.json").write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake(score=10, prod={2: "other"})), do_supplement=False)
+    picks = [x["pick"] for x in r["lines"] if x["kind"] == "tts" and x["pick"]]
+    assert picks and all(not (10.0 - 2 < p["ss"] < 20.0) for p in picks), picks
+    why = [w for x in r["lines"] for c in x["rejected"] for w in c["why"]]
+    assert "other_product" in why and "excluded" in why
+
+
+def test_dead_end_stops_not_violates(tmp_path):
+    """막다른 칸(제약 안 후보 0)은 위반 컷을 남기지 않고 범위를 넓힌 뒤에도 없으면 '멈춤(사유: 막다른 칸 …)' — 조용한 통과 0."""
+    D, W = _ep(tmp_path)
+    M = json.loads((D / "재료.json").read_text(encoding="utf-8"))
+    M["exclude"] = [{"src": "a.mp4", "t0": 0.0, "t1": 20.0, "why": "전부 제외(시험)"}]
+    (D / "재료.json").write_text(json.dumps(M, ensure_ascii=False), encoding="utf-8")
+    r = MF.plan(D, W, "잇템로그판", llm=MA.LLM(Fake(score=10)), do_supplement=False)
+    assert not r["ok"] and "막다른 칸" in (r["stop"] or "")
+    assert all(x["pick"] is None for x in r["lines"] if x["kind"] == "tts")
+
+
+def test_rewrite_check_keeps_info_words():
+    """㉖ 뜻 유지 — 원문 + 덧붙임만 통과. 10-25 실제 제안 3개는 걸러져야 한다."""
+    ok = MF.rewrite_check("댓글 보니까 캡슐은 한두 알이면 충분하다던데,", "댓글 보니까 이 캡슐은 한두 알이면 충분하다던데,")
+    assert ok["ok"]
+    for old, new in [("댓글 보니까 캡슐은 한두 알이면 충분하다던데,", "댓글 보니까 이 알갱이가 얼굴에 붙는다던데,"),
+                     ("딸기 버블티 펄 같다는 사람도 있다고 하고.", "딸기 버블티 펄 닮았다는 사람도 있다고 하고."),
+                     ("캡슐은 두알이면 충분", "캡슐은 세알이면 충분")]:
+        assert not MF.rewrite_check(old, new)["ok"], new
+    def no(parts, prompt, tag):
+        return {"same": False, "changed": ["충분"]}, None
+    assert not MF.rewrite_check("캡슐은 두 알이면 충분", "이 캡슐은 두 알이면 충분", llm=MA.LLM(no))["ok"]    # 역검증 2/2 실패

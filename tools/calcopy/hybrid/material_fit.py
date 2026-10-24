@@ -49,6 +49,11 @@ SHOT_PROMPT = """그림의 노란 번호 칸 = 원본 영상의 장면(샷) 하�
 TEXT_PROMPT = """그림의 노란 번호 칸 = 남의 영상 장면(샷) 하나 — 처음·가운데·끝 3프레임. 영상 위에 덧씌운 글자(자막·제목·말풍선·로고 글씨)가 **한 프레임이라도** 보이면 true.
 제품 포장에 인쇄된 상표·글씨는 false. 출력 JSON만: {{"shots":[{{"n":번호,"text":true|false}}]}}  (번호 {lo}~{hi})"""
 
+PRODUCT_PROMPT = """찾는 제품: {product}{ref}
+그림의 노란 번호 칸 = 영상 장면(샷) 하나 — 처음·가운데·끝 3프레임. 칸마다 화면의 제품을 판정:
+"same" = 찾는 제품(색·모양·용기가 같은 것)만 보인다 · "other" = 찾는 제품이 아닌 다른 제품(다른 색 캡슐·다른 용기·세럼·튜브 등)이 **하나라도 또렷이** 보인다 · "none" = 제품이 안 보인다(사람·손만).
+출력 JSON만: {{"shots":[{{"n":번호,"p":"same"|"other"|"none"}}]}}  (번호 {lo}~{hi})"""
+
 RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는 동작·상태·대상이 **화면에 보이는** 장면을 [장면 목록]에서 잘 맞는 순서로 최대 {k}개 골라라(장면 id 그대로).
 맞는 게 적으면 적게 골라도 된다. 감탄·반응 대사는 그 반응(표정·몸짓)이 보이는 장면.
 [대사 줄]
@@ -57,8 +62,9 @@ RANK_PROMPT = """숏폼 편집자다. [대사 줄]마다 그 대사가 말하는
 {shots}
 출력 JSON만: {{"lines":[{{"id":"줄 id","shots":["장면 id", …]}}]}}"""
 
-FIX_PROMPT = """숏폼 대본 편집자다. 아래 나레 줄은 화면(고른 장면)이 대사와 안 맞는다. 대사를 **화면에 실제로 보이는 것**에 맞춰 조금 고쳐라.
-지킬 것: ① 뜻(전하는 사실)은 유지 — 없는 사실·효능·숫자를 지어내지 마라 ② 끝 어미·끝 문장부호 유지(원문 끝 '{ending}' 과 마지막 부호 '{punct}' 그대로 — 부호가 줄 경계다) ③ 글자 수(공백 뺀) 원문 {n}자 ±2
+FIX_PROMPT = """숏폼 대본 편집자다. 아래 나레 줄은 화면(고른 장면)이 대사와 안 맞는다. 대사에 **화면을 가리키는 말을 덧붙여** 화면과 잇는다(마지막 수단).
+고칠 수 있는 것은 조사·어미·부사·장면 지시어('이렇게'·'볼에'·'손바닥 위') 덧붙임뿐 — 원문의 명사·수량·단위·제품명·판단어(충분·빠르다 등)는 **한 글자도 빼거나 바꾸지 마라**(동의어 치환 금지, 문장 치환 금지).
+지킬 것: ① 원문 낱말 전부 그대로 + 덧붙임 ② 끝 어미·끝 문장부호 유지(원문 끝 '{ending}' 과 마지막 부호 '{punct}' 그대로 — 부호가 줄 경계다) ③ 글자 수(공백 뺀) 원문 {n}자 ±2
 ④ 자막 덩어리(caps)는 고친 대사를 앞에서부터 그대로 나눈 것(이어 붙이면 문장부호만 빼고 대사와 같다), 덩어리 수 {nc}개 유지 ⑤ 말투·존댓말 유지.
 [줄] {lid} (역할 {role})
 [원문 대사] {tts}
@@ -267,6 +273,48 @@ def text_shots(table: dict, outside: set, src_dir: Path, crops: dict, fdir: Path
     return {k.split("|")[0]: v for k, v in C.items() if k.split("|")[1] == _key(crops.get(next((s for s in table if Path(s).stem == k.split("#")[0]), None)))}
 
 
+def product_shots(table: dict, product: str, src_dir: Path, crops: dict, fdir: Path, llm, ref: Path | None = None, log=print) -> dict:
+    """샷마다 '찾는 제품인가' — {sid: "same"|"other"|"none"|None(답 없음)} (소넷, 시트 10칸). 장면↔대사 점수(judge_rubric)와 별개의 제품 일치 판정.
+    10-25 ep13: 사람 메모 'd2 17.7~24 = 노란 캡슐(다른 제품)'이 글뿐이라 계획 루프가 금색 캡슐 통 컷을 N5·N6 에 골랐다(루브릭은 5~7점). ref = 제품 그림(있으면 시트 앞에 붙인다)."""
+    from tools.calcopy.engine.material_auto import _as_int
+    from tools.calcopy.oneshot.scene_fit import _sheet
+    cp = fdir / "shot_product.json"
+    C = jload(cp) if cp.exists() else {}
+    pk = _key(product, str(ref or ""))[:8]
+    todo = []
+    for s, v in table.items():
+        for sh in v["shots"]:
+            sid = f"{Path(s).stem}#{sh['i']}"
+            k = f"{sid}|{_key(crops.get(s))}|{pk}"
+            if k not in C:
+                img = strip(src_dir / s, sh["a"], sh["b"] - sh["a"], crops.get(s), fdir / "shots" / f"{Path(s).stem}_{sh['i']:03d}_{_key(crops.get(s))[:6]}.jpg")
+                todo.append({"sid": sid, "k": k, "img": str(img)})
+    parts0 = [Path(ref).read_bytes()] if ref and Path(ref).exists() else []
+    for c0 in range(0, len(todo), 10):
+        ch = todo[c0:c0 + 10]
+        sp = _sheet(ch, fdir / f"product_{c0 // 10}.jpg")
+        got = {}
+        for _ in range(2):
+            r, err = llm(parts0 + [sp.read_bytes()], PRODUCT_PROMPT.format(product=product, ref=" (첫 그림 = 그 제품 사진)" if parts0 else "", lo=0, hi=len(ch) - 1),
+                         "ma_fit:product")
+            got.update({_as_int(x.get("n")): str(x.get("p")) for x in (r or {}).get("shots") or []
+                        if isinstance(x, dict) and _as_int(x.get("n")) is not None and x.get("p") in ("same", "other", "none")})
+            if all(j in got for j in range(len(ch))):
+                break
+        for j, it in enumerate(ch):
+            if j in got:
+                C[it["k"]] = got[j]
+            else:
+                log(f"[fit] 제품 판정 답 없음 {it['sid']}")
+        jsave(cp, C)
+    out = {}
+    for s, v in table.items():
+        for sh in v["shots"]:
+            sid = f"{Path(s).stem}#{sh['i']}"
+            out[sid] = C.get(f"{sid}|{_key(crops.get(s))}|{pk}")
+    return out
+
+
 def rank_shots(slots: list[dict], desc: dict, fdir: Path, llm, k: int = TOP_SHOTS, log=print) -> dict:
     """줄마다 후보 샷 순위(글 1회). {줄 id: [sid…]}. 점수가 아니다 — 후보 줄이기. fdir/rank.json 캐시(입력 열쇠)."""
     lines = {}
@@ -308,7 +356,8 @@ def _new_viol(base: list[dict], cand: dict, src_len: dict) -> list[str]:
     return out
 
 
-def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None) -> dict:
+def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, outside: set, work: Path | None, texts: dict | None = None,
+                     prod: dict | None = None, exclude: list | None = None) -> dict:
     """채점 전 제약(표준 §12-3 ②) — 위반이면 그 이유(reject)를 적고 채점하지 않는다.
     shot_edge = 컷 처음·끝 FLASH 초 안에 원본 샷 경계(번쩍임 — 가운데서 넘는 것은 원본 편집 그대로라 허용) · src_end = 원본 끝을 넘음 · reuse = 고정 컷(원음)과 겹침·거리(quality_gate.reuse_violations_bench) ·
     face_outside = 원본 밖 재료에 사람 얼굴(runner_ops._cut_faces) · text_box = 원본 밖 재료 샷에 덧씌운 글자(text_shots — 원본은 재료 crop 이 피한다)."""
@@ -333,12 +382,22 @@ def constraint_flags(cand: dict, table: dict, fixed: list[dict], src_len: dict, 
         sid = cand.get("shot") or (f"{Path(s).stem}#{next((x['i'] for x in v['shots'] if x['a'] - 1e-3 <= ss < x['b']), -1)}" if v else None)
         tb = (texts or {}).get(sid)
         fl["text_box"] = True if tb is None else tb          # 판독 못 한 남의 샷 = 글자 있다고 친다(못 씀)
-    fl["reject"] = [k for k in ("shot_edge", "src_end", "face_outside", "text_box") if fl.get(k)] + (["reuse"] if fl["reuse"] else [])
+    # 사람이 적은 제외 구간(재료.json exclude[{src,t0,t1,why}]) — 겹치면 뺀다
+    fl["excluded"] = [e.get("why") or "제외 구간" for e in (exclude or []) if Path(str(e.get("src"))).stem == Path(s).stem
+                      and float(e["t0"]) < ss + d and ss < float(e["t1"])]
+    # 제품 일치(product_shots) — 컷이 걸친 샷 중 하나라도 '다른 제품'이면 뺀다 · 원본 밖 재료는 '찾는 제품'만 보이는 샷이어야 한다
+    if v and prod is not None:
+        over = [f"{Path(s).stem}#{x['i']}" for x in v["shots"] if x["a"] < ss + d - EDGE and ss + EDGE < x["b"]]
+        vs = [prod.get(k) for k in over]
+        fl["other_product"] = "other" in vs or (fl["outside"] and any(x != "same" for x in vs))
+    fl["reject"] = ([k for k in ("shot_edge", "src_end", "face_outside", "text_box", "other_product") if fl.get(k)]
+                    + (["reuse"] if fl["reuse"] else []) + (["excluded"] if fl.get("excluded") else []))
     return fl
 
 
 def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops: dict, fixed: list[dict], src_len: dict,
-               outside: set | None = None, work: Path | None = None, extra: list[dict] | None = None, texts: dict | None = None) -> tuple[list[dict], list[dict]]:
+               outside: set | None = None, work: Path | None = None, extra: list[dict] | None = None, texts: dict | None = None,
+               prod: dict | None = None, exclude: list | None = None, expand: bool = False) -> tuple[list[dict], list[dict]]:
     """칸 하나의 후보 [{src, ss, dur, crop, shot, pos, from, flags}] — 사람 컷(있으면) + 순위 샷마다 가운데·처음·끝 + 보충(extra).
     제약 위반은 **점수 전에** 빼고 (rejected) 로 돌려준다. 후보 ≤ MAX_CANDS."""
     outside = outside or set()
@@ -376,6 +435,13 @@ def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops:
             sid = f"{Path(s).stem}#{x['i']}"
             if sid not in ranked_set:
                 raw.append({"src": s, "ss": round(max(0.0, (x["a"] + x["b"] - d) / 2), 2), "crop": crops.get(s), "shot": sid, "pos": "mid", "from": "fill"})
+    if expand:                             # 막다른 칸: 모든 샷 안을 1초 간격으로 훑는다(같은 원본 다른 구간)
+        for s, v in table.items():
+            for x in v["shots"]:
+                t = x["a"] + EDGE
+                while t + d <= x["b"] - EDGE + 1e-3:
+                    raw.append({"src": s, "ss": round(t, 2), "crop": crops.get(s), "shot": f"{Path(s).stem}#{x['i']}", "pos": "scan", "from": "expand"})
+                    t += 1.0
     raw += list(extra or [])
     keep, rej, seen = [], [], set()
     for c in raw:
@@ -384,14 +450,14 @@ def candidates(slot: dict, table: dict, ranked: list[str], src_dir: Path, crops:
             continue
         seen.add(k2)
         c = {**c, "dur": d, "t0": slot["t0"], "t1": slot["t1"], "line": slot["line"], "_path": src_dir / c["src"]}
-        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work, texts)
+        c["flags"] = constraint_flags(c, table, fixed, src_len, outside, work, texts, prod, exclude)
         if c["flags"]["reject"] and c.get("from") == "human":
             c["blocked"] = True           # 사람 컷은 제약에 걸려도 점수는 낸다(전·후 비교용) — 고르지는 않는다
             keep.append(c)
             rej.append(c)
             continue
         (rej if c["flags"]["reject"] else keep).append(c)
-    return keep[:MAX_CANDS], rej
+    return keep[:MAX_CANDS * (3 if expand else 1)], rej
 
 
 # ── 점수(판단 주인 = scene_fit.judge_rubric) ───────────────────────────────────
@@ -413,7 +479,7 @@ def score(cands: list[dict], slot: dict, wd: Path, llm) -> list[dict]:
 # ── 고르기 ─────────────────────────────────────────────────────────────────
 BEAM = 200                # 고르기 = 칸 전체를 함께 보는 빔 탐색(앞 칸 욕심 고르기는 A-B-A·재사용에 막혀 뒤 칸이 빈다 — 10-25 가짜 답 실측)
 BELOW_PENALTY = 6         # 하한 미달 칸 하나 = 점수 6 깎음(평균보다 하한 통과를 먼저)
-VIOL_PENALTY = 100        # 제약 위반 컷(다른 후보가 하나도 없을 때만 남기는 것)
+VIOL_PENALTY = 100        # 막다른 칸(제약 안 후보 0) 하나의 벌점 — 위반 컷은 남기지 않는다
 
 
 def select(slots: list[dict], src_len: dict, floors: dict | None = None) -> list[dict]:
@@ -445,17 +511,11 @@ def select(slots: list[dict], src_len: dict, floors: dict | None = None) -> list
                 below = c["score"] < fl
                 nxt.append((v + c["score"] - BELOW_PENALTY * below + (0.01 if c.get("from") == "human" else 0), ch + [cut],
                             dec + [{"pick": {**c, **cut}, "below": below, "floor": fl, "why": ("하한 미달" if below else "통과")}]))
-            if not ok_any:           # 제약 안 후보 0 — 최고점(또는 사람 컷)을 위반째 남긴다
-                pool = cands or [c for c in s.get("cands") or [] if c.get("score") is not None]
-                if pool:
-                    c = pool[0]
-                    cut = {"src": c["src"], "ss": float(c["ss"]), "dur": float(c["dur"]), "t0": s["t0"], "t1": s["t1"], "line": s["line"], "kind": "tts"}
-                    nxt.append((v + c["score"] - VIOL_PENALTY, ch + [cut], dec + [{"pick": {**c, **cut, "violation": skipped[:2] or ["제약 위반 컷"]}, "below": True, "floor": fl,
-                                                                                    "why": f"제약 안 후보 0 — 위반째 남김 {skipped[:2]}"}]))
-                else:
-                    nxt.append((v - VIOL_PENALTY, ch, dec + [{"pick": None, "below": True, "floor": fl, "why": "후보 0"}]))
-        if any(not (x[2][-1].get("pick") or {}).get("violation") and x[2][-1].get("pick") for x in nxt):   # 제약 지킨 길이 하나라도 있으면 위반 길은 버린다
-            nxt = [x for x in nxt if not (x[2][-1].get("pick") or {}).get("violation") and x[2][-1].get("pick")]
+            if not ok_any:           # 제약 안 후보 0 — 위반 컷을 남기지 않는다(10-25 ep13 B13·B16 ×). 막다른 칸 = 빈칸 + dead, 계획 루프가 후보를 넓히거나 멈춘다
+                nxt.append((v - VIOL_PENALTY, ch, dec + [{"pick": None, "below": True, "floor": fl, "dead": True,
+                                                          "why": f"막다른 칸 — 제약 안 후보 0 {skipped[:2]}"}]))
+        if any(not x[2][-1].get("dead") for x in nxt):   # 제약 지킨 길이 하나라도 있으면 막다른 길은 버린다
+            nxt = [x for x in nxt if not x[2][-1].get("dead")]
         nxt.sort(key=lambda x: -x[0])
         seen_k, beams = set(), []
         for x in nxt:                    # 다양성: 최근 나레 컷 3개가 같은 길은 하나만(같은 앞 고르기만 200개 남아 뒤 칸이 막히던 것, 10-25 ep13 실측)
@@ -500,9 +560,13 @@ def goal_of(st: dict, slug: str | None, log=print) -> dict | None:
 
 
 def verdict(sel: list[dict], goal: dict | None) -> tuple[bool, dict, list[dict]]:
+    """편 판정 — 하한 미달·막다른 칸 0 ∧ 목표(상위 편 p75·p25)를 잡음 여유 2σ 안에서 넘음(표준 §11-4 ㉔ⓓ, scene_fit.noise_margin — 잡음 파일 없으면 여유 0)."""
+    from tools.calcopy.oneshot.scene_fit import noise_margin
     sm = summary_of(sel)
-    under = [s for s in sel if s["kind"] == "tts" and s.get("below")]
-    ok_goal = goal is None or (sm["mean"] is not None and sm["mean"] >= goal["mean"] and (sm["below_rate"] or 0) <= goal["below7"])
+    under = [s for s in sel if s["kind"] == "tts" and (s.get("below") or s.get("dead"))]
+    m = noise_margin(sm.get("below_base") or sm.get("judged") or 0) or {"mean": 0.0, "below7": 0.0}
+    sm["margin"] = m
+    ok_goal = goal is None or (sm["mean"] is not None and sm["mean"] >= goal["mean"] - m["mean"] and (sm["below_rate"] or 0) <= goal["below7"] + m["below7"])
     weak = list(under)
     if not ok_goal:          # 목표 미달이면 7 미만 나레 칸도 고칠 대상(훅·이음·다리는 분모 밖이라 뺀다)
         from tools.calcopy.oneshot.scene_fit import SKIP_ROLES
@@ -553,6 +617,51 @@ def _ending(t: str) -> str:
     return m.group(1) if m else ""
 
 
+REWRITE_CHECK_PROMPT = """두 문장이 **같은 사실**을 말하는지 판정한다(덧붙인 장면 지시어·조사·어미 차이는 같은 사실로 본다).
+[원문] {old}
+[고친 문장] {new}
+원문에 있던 정보 낱말(명사·수량·단위·제품명·판단어) 중 고친 문장에서 **빠지거나 바뀐 것**을 모두 적어라. 없으면 빈 목록.
+출력 JSON만: {{"same":true|false,"changed":["낱말", …]}}"""
+_NUMUNIT = re.compile(r"^(\d+|한두|두세|서너|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)(알|개|초|분|시간|번|회|장|병|통|원|%|ml|g)")
+
+
+def _info_tokens(t: str) -> list[str]:
+    """정보 낱말 근사 — 어절마다 앞 2글자(체언 줄기) + 수·단위 낱말. 형태소 분석기 없이 '원문 낱말 보존'을 재는 자."""
+    out = []
+    for w in re.findall(r"[가-힣A-Za-z0-9]+", t):
+        out.append(w[:2] if len(w) >= 2 else w)
+        m = _NUMUNIT.match(w)
+        if m:
+            out += [m.group(1), m.group(2)]
+    return out
+
+
+def rewrite_check(old: str, new: str, facts=None, new_facts=None, llm=None) -> dict:
+    """(판단 주인 — 대사 고침 뜻 유지, 표준 §11-4 ㉖) 전부 통과해야 제안으로 낸다:
+    ① 정보 낱말 보존(원문 어절 줄기·수·단위가 새 문장에 순서대로 다 있음 = '원문 + 덧붙임' 꼴) ② facts id 같음 ③ 글자 ±2 ④ Claude 역검증 2/2(같은 사실 ∧ 달라진 낱말 0).
+    반환 {ok, checks, missing, reverse}. 10-25 사례: '캡슐은 한두 알이면 충분하다던데' → '이 알갱이가 얼굴에 붙는다던데' 는 ①에서 걸린다."""
+    from tools.calcopy.hybrid.common import nchar
+    o, n = _info_tokens(old), _info_tokens(new)
+    missing, pos = [], 0
+    for t in o:                       # 순서대로 다 있어야(덧붙임만 허용)
+        k = next((i for i in range(pos, len(n)) if n[i] == t), None)
+        if k is None:
+            missing.append(t)
+        else:
+            pos = k + 1
+    checks = {"info_kept": not missing, "facts_same": (facts or None) == (new_facts if new_facts is not None else facts or None),
+              "chars": abs(nchar(new) - nchar(old)) <= 2}
+    rev = []
+    if llm is not None and all(checks.values()):
+        for _ in range(2):
+            r, err = llm([], REWRITE_CHECK_PROMPT.format(old=old, new=new), "ma_fit:rewrite")
+            rev.append(r or {"err": err})
+        checks["reverse_2of2"] = all(isinstance(x, dict) and x.get("same") is True and not x.get("changed") for x in rev)
+    elif llm is not None:
+        checks["reverse_2of2"] = False            # 앞 검사에서 걸리면 역검증은 안 부른다(호출 아낌)
+    return {"ok": all(checks.values()), "checks": checks, "missing": missing, "reverse": rev}
+
+
 def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version: str | None, work: Path, log=print) -> list[dict]:
     """미달 나레 줄 → 대사 고침 제안 {line, old, new, caps, why, audit_ok, checks}. 검사 = 끝 어미 같음·글자 수 ±2·caps 이어 붙이기 = 대사·script_audit 새 실패 0."""
     from tools.calcopy.hybrid import script_audit as SA
@@ -580,7 +689,8 @@ def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version:
             continue
         new, ncaps = str(r["tts"]).strip(), [str(x) for x in r.get("caps") or []]
         plain = (lambda t: re.sub(r"[\s,.?!~…'\"“”]", "", t))
-        checks = {"ending": _ending(new) == _ending(L["tts"]), "punct": new.strip()[-1:] == L["tts"].strip()[-1:], "chars": abs(nchar(new) - nchar(L["tts"])) <= 2,
+        rw = rewrite_check(L["tts"], new, L.get("facts"), L.get("facts"), llm)
+        checks = {"rewrite_check": rw["ok"], "ending": _ending(new) == _ending(L["tts"]), "punct": new.strip()[-1:] == L["tts"].strip()[-1:], "chars": abs(nchar(new) - nchar(L["tts"])) <= 2,
                   "caps": plain("".join(ncaps)) == plain(new) and len(ncaps) == len(caps), "changed": plain(new) != plain(L["tts"])}
         S2 = {**S, "lines": [({**l, "tts": new, "caps": [{**(l["caps"][k] if k < len(l.get("caps") or []) else {}), "text": t} for k, t in enumerate(ncaps)]}
                               if l["id"] == lid else l) for l in S["lines"]]}
@@ -590,7 +700,7 @@ def propose_fixes(weak_lines: list[str], sel: list[dict], S: dict, llm, version:
         new_bad = [r2["why"] for r2 in a2["rules"] if not r2["ok"] and (r2["kind"] + "|" + str(r2.get("rule", ""))) not in base_bad]
         checks["audit"] = not new_bad
         out.append({"line": lid, "old": L["tts"], "new": new, "caps": ncaps, "why": str(r.get("why") or ""), "seen": seen,
-                    "checks": checks, "audit_new_fail": new_bad, "audit_ok": all(checks.values())})
+                    "checks": checks, "rewrite": rw, "audit_new_fail": new_bad, "audit_ok": all(checks.values())})
         log(f"[fit] 고침 제안 {lid}: «{L['tts']}» → «{new}» 검사 {checks}")
     return out
 
@@ -651,6 +761,9 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
             crops[sname] = center_crop(src_dir / sname, aspect)
     srcs = sorted({s for s in crops} | {(s.get("human") or {}).get("src") for s in slots if s.get("human")} - {None})
     outside_all: set = set()
+    product = re.sub(r"\(.*?\)", "", str(M.get("product") or S.get("product") or "")).strip()
+    ref = (Path(M["product_ref"]) if M.get("product_ref") else None)
+    exclude = list(M.get("exclude") or [])          # 사람 제외 구간 [{src,t0,t1,why}] — 채점 전에 뺀다
     goal = goal_of(st, (st.get("bench") or {}).get("channel"), log)
     rounds, fixes_all, stop = [], [], None
     sup_tried: set = set()
@@ -660,6 +773,14 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
         desc = describe_shots(table, src_dir, crops, fdir, llm, log)
         ranked = rank_shots(slots, desc, fdir, llm, log=log)
         texts = text_shots(table, outside_all, src_dir, crops, fdir, llm, log) if outside_all else {}
+        prod = product_shots(table, product, src_dir, crops, fdir, llm, ref=ref, log=log) if product else None
+        if prod is not None:
+            for f in [x for x in table if x in outside_all]:        # 보충 재료 = 찾는 제품이 보이는 샷이 하나도 없으면 통째로 뺀다(10-25 톤업 선크림·콜라겐 마스크팩)
+                if not any(prod.get(f"{Path(f).stem}#{x['i']}") == "same" for x in table[f]["shots"]):
+                    log(f"[fit] 보충 재료 {f} — 찾는 제품 샷 0 → 뺌")
+                    table.pop(f)
+                    srcs.remove(f)
+            src_len = {k: v["dur"] for k, v in table.items()}
         fixed = [{**s["fixed"], "ss": float(s["fixed"]["ss"])} for s in slots if s["kind"] == "orig"]
 
         def run_slot(s):
@@ -670,25 +791,51 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                 s["fixed_scored"] = {**f, **score([c], s, fdir / "slots" / s["id"].replace("#", "_"), llm)[0], "_path": None}
                 return s
             if "cands" not in s:
-                keep, rej = candidates(s, table, ranked.get(s["line"]), src_dir, crops, fixed, src_len, outside_all, work, texts=texts)
+                keep, rej = candidates(s, table, ranked.get(s["line"]), src_dir, crops, fixed, src_len, outside_all, work, texts=texts,
+                                       prod=prod, exclude=exclude, expand=bool(s.get("expand")))
                 s["cands"], s["rejected"] = score(keep, s, fdir / "slots" / f"{s['id'].replace('#', '_')}_{_key(s['text'], s['piece'])}", llm), rej
             return s
         with ThreadPoolExecutor(WORKERS) as ex:
             list(ex.map(run_slot, slots))
         sel = select(slots, src_len, floors)
+        dead = [x for x in sel if x.get("dead")]
+        if dead:                 # 막다른 칸 → 그 칸과 같은 줄 칸 후보를 넓힌다(모든 샷 1초 간격) → 다시 채점·고르기
+            dl = {x["line"] for x in dead}
+            log(f"[fit] 막다른 칸 {[x['id'] for x in dead]} — 후보를 넓혀 다시")
+            for x in slots:
+                if x["line"] in dl and x["kind"] == "tts" and not x.get("expand"):
+                    x["expand"] = True
+                    x.pop("cands", None)
+            with ThreadPoolExecutor(WORKERS) as ex:
+                list(ex.map(run_slot, slots))
+            sel = select(slots, src_len, floors)
+            dead = [x for x in sel if x.get("dead")]
+        if dead:
+            stop = f"멈춤(사유: 막다른 칸 — 후보를 넓혀도 재사용·A-B-A·다른 제품 제약 안 후보 0: {[x['id'] for x in dead]})"
+            ok, sm, weak = verdict(sel, goal)
+            rounds.append({"round": rnd, "mean": sm["mean"], "below7": sm["below_rate"], "below_n": sm["below_min"], "ok": False,
+                           "weak": [x["id"] for x in weak], "dead": [x["id"] for x in dead], "supplement": [], "fixes": []})
+            log(f"[fit] {stop}")
+            break
         ok, sm, weak = verdict(sel, goal)
         rounds.append({"round": rnd, "mean": sm["mean"], "below7": sm["below_rate"], "below_n": sm["below_min"], "ok": ok,
                        "weak": [s["id"] for s in weak], "supplement": [], "fixes": []})
         log(f"[fit] {rnd}회 평균 {sm['mean']} · 7 미만 {sm['below_min']}/{sm['below_base']}({sm['below_rate']}) · 목표 {goal} · 미달 {[s['id'] for s in weak]} → {'통과' if ok else '다시'}")
         if ok:
             break
-        if rnd == max_rounds:
-            stop = f"멈춤(사유: {max_rounds}회 뒤에도 미달 — 줄 {sorted({s['line'] for s in weak})})"
-            break
-        # (a) 보충 재료
         wl = sorted({s["line"] for s in weak})
+        last = rnd == max_rounds
+        # 순서(표준 §11-4 ㉖): ① 후보 컷 범위 확대(샷 표 전체) → ② 보충 재료 → ③ 대사 고침(마지막 수단)
+        grow = [x for x in slots if x["line"] in wl and x["kind"] == "tts" and not x.get("expand")]
+        if grow and not last:
+            for x in grow:
+                x["expand"] = True
+                x.pop("cands", None)
+            rounds[-1]["expanded"] = [x["id"] for x in grow]
+            log(f"[fit] ① 후보 범위 확대 {[x['id'] for x in grow]}")
+            continue
         new_src = []
-        if do_supplement and not set(wl) <= sup_tried:
+        if do_supplement and not set(wl) <= sup_tried and not last:
             new_src = supplement(weak, S, work, log)
             sup_tried |= set(wl)
             rounds[-1]["supplement"] = new_src
@@ -701,12 +848,15 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
                     if s["line"] in wl:
                         s.pop("cands", None)
                 continue
-        # (b) 대사 고침 제안
+        # ③ 대사 고침 제안(마지막 수단 — rewrite_check 통과만)
         fx = propose_fixes([l for l in wl if any(s["line"] == l and s["kind"] == "tts" for s in slots)], sel, S, llm, version, work, log)
         fixes_all += fx
         rounds[-1]["fixes"] = [f["line"] for f in fx if f.get("audit_ok")]
+        if last:
+            stop = f"멈춤(사유: {max_rounds}회 뒤에도 미달 — 줄 {wl} · 고침 통과 {[f['line'] for f in fx if f.get('audit_ok')]})"
+            break
         if not any(f.get("audit_ok") for f in fx):
-            stop = f"멈춤(사유: 보충 재료 0 · 대사 고침 통과 0 — 줄 {wl})"
+            stop = f"멈춤(사유: 범위 확대·보충 재료 뒤에도 미달 · 대사 고침 통과 0 — 줄 {wl})"
             break
         if not sign:
             stop = f"사인 대기(wait_user) — 대사 고침 {[f['line'] for f in fx if f.get('audit_ok')]} 를 받아들이면 --sign 으로 다시"
@@ -715,6 +865,9 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
         _retext(slots, S, T)
     sel = select(slots, src_len, floors)
     ok, sm, weak = verdict(sel, goal)
+    if any(x.get("dead") for x in sel):
+        ok = False
+        stop = stop or f"멈춤(사유: 막다른 칸 {[x['id'] for x in sel if x.get('dead')]})"
     # 재료_계획.json
     M2 = json.loads(json.dumps({k: v for k, v in M.items()}))
     cuts = dict(M2.get("cuts") or {})
@@ -724,7 +877,7 @@ def plan(doc, work, version: str, llm=None, apply: bool = False, sign: bool = Fa
         for s in mine:
             p = s.get("pick")
             if not p:
-                new.append({**(s.get("human") or {}), "fit": None, "fit_why": s["why"], "cand_n": len(s.get("cands") or [])})
+                new.append({**(s.get("human") or {}), "fit": None, "fit_why": s["why"], "cand_n": len(s.get("cands") or []), "dead": True})
                 continue
             h = s.get("human") or {}
             same = h.get("src") == p["src"] and abs(float(h.get("ss") or -9) - float(p["ss"])) < 0.05

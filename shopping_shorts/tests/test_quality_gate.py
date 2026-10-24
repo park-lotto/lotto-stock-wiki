@@ -141,7 +141,6 @@ def test_match_new_cells_measured_from_line_reads():
 
 # ---------------------------------------------------------------- 장면↔대사 어댑터: 컷 10개(맞음 7·틀림 3) → 손 정답 ±1칸
 def test_scene_fit_render_adapter(tmp_path):
-    from tools.calcopy.hybrid.quality_gate import fit_verdict
     from tools.calcopy.oneshot import scene_fit
     R = tmp_path / "work" / "render"
     R.mkdir(parents=True)
@@ -165,7 +164,7 @@ def test_scene_fit_render_adapter(tmp_path):
     res = scene_fit.measure_render(tmp_path / "work", llm=llm)
     s = res["summary"]
     assert s["judged"] == 10 and abs(s["below_min"] - 3) <= 1, s
-    assert len(llm.calls) == 2                                                        # 시트 1장 × 2회 채점(두 번이 같으면 3회째 없음)
+    assert len(llm.calls) == 30                                                       # 표준 §11-4 ㉔: 컷 하나씩(앵커 2장 + 컷) × 3회 고정
     assert scene_fit.gold_check([r["score"] for r in res["rows"]], ["low" if not t else "high" for t in truth])["ok"]
     llm2 = FakeLLM()
     scene_fit.measure_render(tmp_path / "work", llm=llm2)
@@ -173,9 +172,6 @@ def test_scene_fit_render_adapter(tmp_path):
     roles = {f"N{k}": ("나레 훅" if k in (2, 6) else "본문") for k in range(10)}
     s2 = scene_fit.summarize([r["score"] for r in res["rows"]], [roles[r["cut"]["line"]] for r in res["rows"]])
     assert s2["below_base"] == 8 and s2["below_min"] == 1 and s2["skipped_roles"] == 2   # 훅 줄 컷은 미만 비율 분모에서 뺀다
-    assert fit_verdict(s, {"mean": 8.0, "below_rate": 0.1})[0] is False               # 평균 6.9 < 7.0, 미만 30% > 20%
-    assert fit_verdict(s, {"mean": 7.5, "below_rate": 0.25})[0] is True
-    assert fit_verdict(s, None)[0] is None                                            # 벤치 fit 없음 = 미측정
 
 
 def test_line_cps_reads_render_table():
@@ -322,3 +318,52 @@ def test_speech_spread_is_per_tts_line():
     from tools.calcopy.hybrid.quality_gate import line_cps_verdict
     ok, msg = line_cps_verdict({"N1": 8.0, "N2": 8.4, "N3": 7.9}, 0.35)
     assert ok is True and "N1:8.0" in msg and "N3:7.9" in msg
+
+
+# ---------------------------------------------------------------- ㉔ 완성본 컷 = 계획 프레임(창 대조 ≥0.97) — 점수 비교 대신
+def test_plan_frames_same_and_sabotage(tmp_path):
+    import copy
+    from tools.calcopy.hybrid.quality_gate import plan_frames_check, plan_frames_verdict
+    src_dir, R = tmp_path / "src", tmp_path / "render"
+    src_dir.mkdir(); R.mkdir()
+    _ffmpeg("-f", "lavfi", "-i", "testsrc2=s=180x320:r=30:d=8", "-pix_fmt", "yuv420p", src_dir / "a.mp4")
+    _ffmpeg("-ss", "2", "-i", src_dir / "a.mp4", "-t", "2", "-pix_fmt", "yuv420p", R / "base.mp4")    # 렌더 = 원본 2.0초부터 2초
+    T = {"cuts": [{"src": "a.mp4", "ss": 2.0, "t0": 0.0, "t1": 1.0, "crop": [0, 0, 180, 320], "line": "N1"},
+                  {"src": "a.mp4", "ss": 3.0, "t0": 1.0, "t1": 2.0, "crop": [0, 0, 180, 320], "line": "N2"}]}
+    rows = plan_frames_check(R, T, src_dir, [0, 0, 180, 320])
+    ok, msg = plan_frames_verdict(rows)
+    assert ok is True and all(r["sim"] >= 0.97 for r in rows), msg
+    T2 = copy.deepcopy(T)
+    T2["cuts"][1]["ss"] = 6.0                                       # 계획과 다른 장면이 렌더됨(사보타주)
+    ok2, msg2 = plan_frames_verdict(plan_frames_check(R, T2, src_dir, [0, 0, 180, 320]))
+    assert ok2 is False and "N2" in msg2, msg2
+    T3 = copy.deepcopy(T)
+    T3["cuts"][0]["crop"] = "face"                                  # 렌더가 쓴 칸 기록 없음 = 대조 밖 = ×(미측정 ≠ 통과)
+    assert plan_frames_verdict(plan_frames_check(R, T3, src_dir, [0, 0, 180, 320]))[0] is False
+
+
+def test_plan_score_ruler_must_match(tmp_path, monkeypatch):
+    from tools.calcopy.hybrid import quality_gate as QG
+    from tools.calcopy.oneshot.scene_fit import RUBRIC_V
+    monkeypatch.setattr(QG, "ROOT", tmp_path)
+    (tmp_path / "channel" / "x" / "_kal").mkdir(parents=True)
+    (tmp_path / "channel" / "x" / "_kal" / "상위편_목표.json").write_text(json.dumps({"scene_fit": {"rubric": RUBRIC_V, "p75_mean": 7.92, "p25_below7": 0.15}}), encoding="utf-8")
+    doc = tmp_path / "doc"
+    doc.mkdir()
+    assert QG.plan_score_report(doc, "x")[2] is True                                       # 계획 없음 = 참고 행
+    (doc / "장면대사_계획.json").write_text(json.dumps({"rubric": RUBRIC_V, "mean": 7.44, "below7": 0.333, "ok": False}), encoding="utf-8")
+    ok, msg, ref = QG.plan_score_report(doc, "x")
+    assert ok is True and ref is True and "7.44" in msg                                   # 계획 점수 그대로 보고
+    (doc / "장면대사_계획.json").write_text(json.dumps({"rubric": "eye(줄판독 fit)", "mean": 8.0}), encoding="utf-8")
+    ok, msg, ref = QG.plan_score_report(doc, "x")
+    assert ok is False and ref is False and "자 불일치" in msg                            # ㉕ 자 버전이 다르면 ×
+
+
+# ---------------------------------------------------------------- ㉙ 강조 갈래: 색 강조(ΔE≥10) / 색 아닌 강조(ΔE<10)
+def test_emph_kind_color_vs_plain():
+    from tools.calcopy.engine.kal_analyze import _decorated, emph_kind
+    assert emph_kind({"fill_hex": "#FFFFFF", "emph": [{"word": "a", "hex": "#FFE600"}]}) == "color"
+    assert emph_kind({"fill_hex": "#FFFFFF", "emph": [{"word": "a", "hex": "#FAFAFA", "scale": 1.3}]}) == "plain"   # 크기만 키운 강조
+    assert emph_kind({"fill_hex": "#FFFFFF", "emph": []}) is None
+    d = _decorated({"enter": "cut", "fill_hex": "#FFFFFF", "emph": [{"word": "a", "hex": "#FAFAFA"}]})
+    assert d["emph"] and d["emph_plain"] and not d["emph_color"]
