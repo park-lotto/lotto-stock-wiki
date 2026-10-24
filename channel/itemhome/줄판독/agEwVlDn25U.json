@@ -1,0 +1,2432 @@
+{
+ "id": "agEwVlDn25U",
+ "dur": 39.567,
+ "fps": 30.0,
+ "size": [
+  1080,
+  1920
+ ],
+ "title_lines": [
+  {
+   "text": "JYP 새 사업이라며",
+   "colors": [
+    {
+     "word": "JYP 새 사업이라며",
+     "hex": "#FCFAFB"
+    }
+   ]
+  },
+  {
+   "text": "박진영이 꺼낸 토너",
+   "colors": [
+    {
+     "word": "박진영이 꺼낸 토너",
+     "hex": "#FBED03"
+    }
+   ],
+   "note": "2줄 통째 노랑(1판 8/8)"
+  }
+ ],
+ "source_label": null,
+ "layout": {
+  "window": [
+   0,
+   480,
+   1080,
+   1440
+  ],
+  "caption_band": [
+   1209,
+   1325
+  ],
+  "title_y": [
+   [
+    222,
+    330
+   ],
+   [
+    337,
+    428
+   ]
+  ],
+  "bg_hex": "#090000",
+  "source_y": null,
+  "logo_y": null,
+  "watermark": null,
+  "source_hex": null,
+  "note": "검정 바탕 + 위 2줄 제목(1줄 흰·2줄 노랑, 굵은 고딕) + 영상 창 y480~1920(세로 1440) + 창 안 자막 1줄(나레 = 굵은 흰+강조 노랑/분홍, 원음 = “ ” 기울인 흰+강조 노랑/분홍) · 화면 출처 표기 없음(설명란 '출처:')"
+ },
+ "lines": [
+  {
+   "t0": 0.133,
+   "t1": 1.167,
+   "speaker": "나레",
+   "text": "녹차밭에 선 박진영이",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1297
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "녹차밭에 선 박진영",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 1.167,
+   "t1": 2.4,
+   "speaker": "나레",
+   "text": "JYP를 대표해서 전한",
+   "layer": "아이템홈",
+   "role": "훅",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1296
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "검정 니트 박진영 얼굴(사무실)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 2.4,
+   "t1": 3.333,
+   "speaker": "나레",
+   "text": "중요한 소식이 뭘까",
+   "layer": "아이템홈",
+   "role": "질문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "중요한 소식",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "책상에서 서류 보는 박진영",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.333,
+   "t1": 3.6,
+   "speaker": "원음:박진영",
+   "text": "안녕하세요",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "녹차밭 박진영(눈 감고 인사)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 3.6,
+   "t1": 4.2,
+   "speaker": "원음:박진영",
+   "text": "박진영입니다",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "박진영",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "녹차밭 박진영",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.2,
+   "t1": 4.833,
+   "speaker": "원음:박진영",
+   "text": "JYP가",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1233,
+    1296
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사무실 박진영 얼굴(손짓)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 4.933,
+   "t1": 5.1,
+   "speaker": "원음:박진영",
+   "text": "드디어",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1233,
+    1296
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "드디어",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사무실 박진영 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.1,
+   "t1": 5.633,
+   "speaker": "원음:박진영",
+   "text": "새로운 일을",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1298
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "새로운 일을",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "사무실 박진영 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 5.633,
+   "t1": 6.033,
+   "speaker": "원음:박진영",
+   "text": "시작합니다",
+   "layer": "아이템홈",
+   "role": "고조",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박진영 손(펜)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.033,
+   "t1": 6.567,
+   "speaker": "나레",
+   "text": "녹차잎 같은",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "녹차잎",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "녹차잎 근접",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 6.567,
+   "t1": 7.267,
+   "speaker": "나레",
+   "text": "좋은 재료로",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1297
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "녹차잎·팔찌 낀 손",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 7.267,
+   "t1": 8.3,
+   "speaker": "나레",
+   "text": "피부를 책임지겠다더니",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "책임지겠다더니",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "녹차밭 박진영(웃으며 손짓)",
+   "fit": 5,
+   "cut_at": [
+    8.2
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.3,
+   "t1": 8.9,
+   "speaker": "원음:박진영",
+   "text": "보성의 유기농",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1302
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "보성의 유기농",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 셔츠 박진영(건물 앞)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 8.9,
+   "t1": 9.433,
+   "speaker": "원음:박진영",
+   "text": "녹차잎을",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1231,
+    1298
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "녹차잎을",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 셔츠 박진영",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 9.433,
+   "t1": 10.3,
+   "speaker": "원음:박진영",
+   "text": "40% 가까이",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "40%",
+     "hex": "#EA2634",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "흰 셔츠 박진영(말하는 중)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "still",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 10.3,
+   "t1": 11.033,
+   "speaker": "원음:박진영",
+   "text": "함유하고 있는 게",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1304
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "녹차잎 새순 근접",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 11.167,
+   "t1": 11.867,
+   "speaker": "나레",
+   "text": "에센스랑 토너를",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1302
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "에센스랑 토너",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "갈색 토너 병 제품 사진(MY FIRST)",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "notes": "11.033~11.167 은 앞 줄 '함유하고 있는 게' 끝(같은 글)"
+  },
+  {
+   "t0": 12.0,
+   "t1": 12.567,
+   "speaker": "나레",
+   "text": "하나로 합쳤다고",
+   "layer": "아이템홈",
+   "role": "공개",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "하나로",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병 제품 사진(흰 천)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 12.567,
+   "t1": 13.2,
+   "speaker": "원음:박진영",
+   "text": "저의 끝없는",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손등에 토너 바르는 손",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.2,
+   "t1": 13.9,
+   "speaker": "원음:박진영",
+   "text": "녹차사랑의",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "녹차사랑의",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손등 근접",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 13.9,
+   "t1": 14.433,
+   "speaker": "원음:박진영",
+   "text": "결과물입니다",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "팔에 바른 토너 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 14.433,
+   "t1": 15.1,
+   "speaker": "원음:박진영",
+   "text": "피부진정과",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "피부진정과",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "얼굴에 손 대는 여성 모델",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(14.433) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 15.1,
+   "t1": 15.5,
+   "speaker": "원음:박진영",
+   "text": "보습에",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "보습에",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "여성 모델 볼 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 15.633,
+   "t1": 16.267,
+   "speaker": "원음:박진영",
+   "text": "정말 좋은 효과를",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "pop",
+   "enter_ms": 70,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1312
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "효과",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 방울 떨어지는 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.267,
+   "t1": 16.8,
+   "speaker": "원음:박진영",
+   "text": "보실 겁니다",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "볼에 토너 바르는 여성 모델",
+   "fit": 6,
+   "cut_at": [
+    16.633
+   ],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 16.8,
+   "t1": 17.533,
+   "speaker": "나레",
+   "text": "이사배 채널에선",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병 들고 눈 감은 박진영(이사배 채널)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(16.8) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 17.533,
+   "t1": 18.433,
+   "speaker": "나레",
+   "text": "트와이스 곡 틀리냐고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1301
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "트와이스 곡",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박진영 얼굴(주황 소파)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.433,
+   "t1": 18.9,
+   "speaker": "나레",
+   "text": "물어 놓고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1229,
+    1304
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병 두 개 제품 사진",
+   "fit": 3,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 18.9,
+   "t1": 19.733,
+   "speaker": "원음:박진영",
+   "text": "제가 만든 음악에",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "음악",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박진영 얼굴(주황 소파)",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.133,
+   "speaker": "원음:박진영",
+   "text": "제가",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "주황 토너 액체 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 20.133,
+   "t1": 21.167,
+   "speaker": "원음:박진영",
+   "text": "함께 개발한 화장품을",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "개발한 화장품",
+     "hex": "#F9B4C0",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병을 두 손에 든 박진영",
+   "fit": 9,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)",
+   "transition_note": "cutdet v2 zoomblur(20.133) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
+  },
+  {
+   "t0": 21.167,
+   "t1": 21.867,
+   "speaker": "원음:박진영",
+   "text": "추천해드립니다",
+   "layer": "아이템홈",
+   "role": "본문",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병 든 박진영",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 21.867,
+   "t1": 22.767,
+   "speaker": "나레",
+   "text": "그런데 정작 본인은",
+   "layer": "아이템홈",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1296
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "초록 니트 박진영(사무실)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 22.767,
+   "t1": 23.6,
+   "speaker": "나레",
+   "text": "심한 건성이라는",
+   "layer": "아이템홈",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1297
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "심한 건성",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "초록 니트 박진영(손짓)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 23.6,
+   "t1": 24.1,
+   "speaker": "나레",
+   "text": "박진영",
+   "layer": "아이템홈",
+   "role": "반전",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1234,
+    1297
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박진영 상반신(초록 니트)",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.133,
+   "t1": 24.6,
+   "speaker": "원음:박진영",
+   "text": "저처럼",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1221,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림 통에 손가락 넣는 근접",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 24.6,
+   "t1": 25.167,
+   "speaker": "원음:박진영",
+   "text": "심한 건성",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1223,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "심한 건성",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림 통 근접",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 25.167,
+   "t1": 25.867,
+   "speaker": "원음:박진영",
+   "text": "피부로 고민하시는",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림 찍는 손가락",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 25.867,
+   "t1": 26.633,
+   "speaker": "원음:박진영",
+   "text": "분들이 있다면",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "크림 통 근접",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 26.633,
+   "t1": 27.7,
+   "speaker": "원음:박진영",
+   "text": "믿어지지 않을 정도로",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "손등에 바른 크림 근접",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 27.7,
+   "t1": 28.767,
+   "speaker": "원음:박진영",
+   "text": "오래가는 촉촉함을",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1224,
+    1305
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "오래가는 촉촉함을",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "볼에 손 댄 여성 모델(촉촉한 피부)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 28.8,
+   "t1": 29.367,
+   "speaker": "나레",
+   "text": "처음 써 봤을 때",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "slide(왼쪽 밖에서 밀려 들어옴, 2프레임)",
+   "enter_ms": 70,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1228,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너 병을 손에 붓는 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 29.367,
+   "t1": 29.9,
+   "speaker": "나레",
+   "text": "놀랐다고",
+   "layer": "아이템홈",
+   "role": "다리",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "나레(굵은 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1235,
+    1303
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "놀랐다고",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "검정 셔츠 박진영 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_out",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 29.9,
+   "t1": 30.867,
+   "speaker": "원음:박진영",
+   "text": "실제 기능이",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "초록 니트 박진영(말하는 중)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 30.867,
+   "t1": 31.667,
+   "speaker": "원음:박진영",
+   "text": "너무 좋았어요",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "초록 니트 박진영",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 31.667,
+   "t1": 32.833,
+   "speaker": "원음:박진영",
+   "text": "단순히 유기농 원료만",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "유기농 원료",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "녹차밭 이랑 전경",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "pan",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 32.833,
+   "t1": 34.367,
+   "speaker": "원음:박진영",
+   "text": "쓰는 게 아니라 유기농",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1232,
+    1298
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "유기농",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "초록 니트 박진영(손짓)",
+   "fit": 4,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 34.433,
+   "t1": 35.167,
+   "speaker": "원음:박진영",
+   "text": "제철 원료를",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1222,
+    1298
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "제철 원료를",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "나무에 달린 초록 열매",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 35.167,
+   "t1": 35.733,
+   "speaker": "원음:박진영",
+   "text": "쓰더라구요",
+   "layer": "아이템홈",
+   "role": "증거",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1303
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "쓰더라구요",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "기타",
+   "scene_desc": "초록 열매 더미 근접",
+   "fit": 6,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "zoom_in",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 35.733,
+   "t1": 36.433,
+   "speaker": "원음:박진영",
+   "text": "제가 이 두 제품을",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "흰 셔츠 박진영이 두 병을 듦",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 36.433,
+   "t1": 37.367,
+   "speaker": "원음:박진영",
+   "text": "한 달간 사용해보고",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1305
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "한 달간",
+     "hex": "#EA2634",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "두 병 든 박진영(건물 앞)",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 37.367,
+   "t1": 37.9,
+   "speaker": "원음:박진영",
+   "text": "나서 이제",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1225,
+    1303
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "얼굴",
+   "scene_desc": "박진영 얼굴",
+   "fit": 5,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 37.9,
+   "t1": 38.4,
+   "speaker": "원음:박진영",
+   "text": "자신있게",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1226,
+    1313
+   ],
+   "fill_hex": "#F4F91E",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [
+    {
+     "word": "자신있게",
+     "hex": "#F4F91E",
+     "grow": null,
+     "outline": "검정(줄과 같음)"
+    }
+   ],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "토너·에센스 병 제품 사진",
+   "fit": 7,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "cut",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  },
+  {
+   "t0": 38.433,
+   "t1": 39.5,
+   "speaker": "원음:박진영",
+   "text": "여러분들께 추천합니다",
+   "layer": "아이템홈",
+   "role": "끝",
+   "enter": "cut",
+   "enter_ms": 0,
+   "variant": "원음(“ ” 기울인 흰)",
+   "type_cps": null,
+   "cursor": false,
+   "y": [
+    1195,
+    1279
+   ],
+   "fill_hex": "#FFFCFA",
+   "outline": "검정 약 3~4px(눈, 0.4배 띠) · 바깥 테·그림자 없음",
+   "glow": null,
+   "emph": [],
+   "sticker": [],
+   "sfx": null,
+   "scene": "손·제품 근접",
+   "scene_desc": "두 병 제품 사진(흰 받침)",
+   "fit": 8,
+   "cut_at": [],
+   "font": {
+    "name": "나레 = 굵은 둥근 고딕(SBAggroB 계열 · 1판 fontmatch 상위 잘난/Jalnan 계열) / 원음 = 기울인 가는 고딕 + “ ” (1판 calcopy.json rules.caption)",
+    "basis": "1판 fontmatch+눈 대조(10-17) — 이번엔 0.2초 띠로 모양만 재확인(눈)"
+   },
+   "letter_gap_px": "좁음(눈 — 나레 굵은체는 외곽선끼리 붙음, 열 빈칸 px 미측정)",
+   "line_gap_px": null,
+   "x": "가운데",
+   "align": "center",
+   "motion": "cam",
+   "transition": "none",
+   "exit": "cut",
+   "confidence": "픽셀(시각·y·채움 hex·컷: capseg/cutdet 30fps)/눈(글·화자·역할·fit·스티커)/신호(motion·sfx)"
+  }
+ ],
+ "no_caption": [
+  [
+   0.0,
+   0.133,
+   "첫 4프레임"
+  ],
+  [
+   4.833,
+   4.933,
+   "덩어리 사이"
+  ],
+  [
+   11.033,
+   11.167,
+   "앞 줄 끝 이어짐"
+  ],
+  [
+   11.867,
+   12.0,
+   "컷 직후"
+  ],
+  [
+   15.5,
+   15.633,
+   "컷 직후"
+  ],
+  [
+   19.733,
+   19.8,
+   "컷 직후"
+  ],
+  [
+   28.767,
+   28.8,
+   "슬라이드 등장 전"
+  ],
+  [
+   34.367,
+   34.433,
+   "컷 직후"
+  ]
+ ],
+ "beats": "나레 훅·질문(0.13~3.33 녹차밭에 선 박진영이 JYP를 대표해서 전한 중요한 소식이 뭘까) → 원음 공개 예고(3.33~6.03 '안녕하세요 박진영입니다 JYP가 드디어 새로운 일을 시작합니다') → 나레 다리(6.03~8.3 녹차잎 같은 좋은 재료로 피부를 책임지겠다더니) → 원음 증거(8.3~11.03 보성 유기농 녹차잎 40%) → 나레 공개(11.17~12.57 에센스랑 토너를 하나로 합쳤다고) → 원음 광고 증거(12.57~16.8 녹차사랑의 결과물·피부진정과 보습) → 나레 다리(16.8~18.9 이사배 채널에선 트와이스 곡 틀리냐고 물어 놓고) → 원음(18.9~21.87 제가 만든 음악에 함께 개발한 화장품) → 나레 반전(21.87~24.1 그런데 정작 본인은 심한 건성이라는 박진영) → 원음 증거(24.13~28.77 저처럼 심한 건성·오래가는 촉촉함) → 나레(28.8 처음 써 봤을 때 놀랐다고) → 원음 증거(29.9~35.73 실제 기능·유기농 제철 원료) → 원음 끝(35.73~39.5 한 달간 사용해보고 자신있게 추천합니다)",
+ "narr_share": "나레 줄 16/54, 나레 12.2초/39.567초",
+ "notes": [
+  "8편 중 가장 김(39.6초) — 원음 광고 문구를 여러 원본(인터뷰·광고·이사배 채널)에서 이어 붙임.",
+  "'처음 써 봤을 때' 한 줄만 왼쪽에서 밀려 들어오는 등장(28.77~28.83).",
+  "23.6~24.1 '박진영' 옆 초록 반짝이는 것은 스티커가 아니라 니트 칼라(확대 pjy.jpg)."
+ ],
+ "name_evidence": [
+  "제목 '박진영이 꺼낸 토너'",
+  "나레 자막 '녹차밭에 선 박진영이'",
+  "원음 자막 '박진영입니다'"
+ ],
+ "frame0": {
+  "what": "녹차밭에 선 박진영(줄무늬 민소매, 손짓) — 자막 0.13초부터",
+  "face_frac": "약 0.06(창 대비 얼굴, 전신 가까움, 눈)",
+  "text": "JYP 새 사업이라며 / 박진영이 꺼낸 토너(제목)"
+ },
+ "_made_by": "오푸스 실행자 줄판독(눈+픽셀: capseg 자막띠 30fps·cutdet --v2 컷/전환/광류 motion·px 채움색·rangesheet 0.2초/1프레임 시트) 2026-10-25 (관제 263 지시서 06)",
+ "_tools": "tools/calcopy/engine/readline_tools capseg/cutdet/px/segsheet/build_lr"
+}

@@ -19,7 +19,7 @@ def em(word, hexv):
     return {"word": word, "hex": hexv, "grow": None, "outline": "검정(줄과 같음)"}
 WHITE = "#FFFCFA"
 YEL = "#F4F91E"; PINK = "#F9B4C0"; RED = "#F93E3D"
-def with_motion(vid, lines):
+def with_motion(vid, lines, zb_real=()):
     """cutdet --v2 샷 광류 motion 을 줄 가운데 시각으로 ex.motion 에(spec 에 motion 이 있으면 그것). 'still?' → still."""
     c = json.load(open(f"{WORK}/{vid}/cut_{vid}.json"))
     out = []
@@ -30,6 +30,10 @@ def with_motion(vid, lines):
         if "fill_hex" not in ex:      # 바탕 글자색 = px clusters 흰 묶음(Mfpt 0.3/2.5/5.3/12.5/18.4초 #FFFDFA·#FEFCFD·#FFFCFA·#FFFDFA·#FEFBFD 중앙) — 줄 전체가 강조면 강조색
             whole = [e for e in L[7] if e["word"].replace(" ", "") == L[3].replace(" ", "")]
             ex["fill_hex"] = whole[0]["hex"] if whole else WHITE
+        zb = [x for x in c["cuts"] if x["kind"] == "zoomblur" and (abs(x["t"] - L[0]) <= 0.05 or x["t"] - 0.05 <= L[0] <= x["t_end"] + 0.05)]
+        if zb and "transition" not in ex and not any(abs(x["t"] - z) < 0.05 for x in zb for z in zb_real):
+            ex["transition"] = "cut"   # cutdet --v2 zoomblur 를 1프레임 창 시트(work/lr6/<id>/zb*.jpg)로 눈 확인 → 하드컷(원본 소프트포커스·흔들림 흐림)
+            ex["transition_note"] = f"cutdet v2 zoomblur({zb[0]['t']}) → 1프레임 시트 눈 확인 하드컷(원본 흐림, 전환 효과 아님)"
         if "motion" not in ex:
             m = next((s.get("motion") for s in c["shots"] if s["t0"] <= mid < s["t1"]), None) or "cam"
             ex["motion"] = m.rstrip("?")
