@@ -1,0 +1,6 @@
+{
+ "name": "_test_mograph",
+ "base": "잇템로그판",
+ "_note": "시험 판(지시서 02 ← 11 연결 ③) — 잇템로그판 그대로 + 모션그래픽팩 dynamic_pop(줄 경계마다 swipe_left 전환 · 훅·끝 줄 sparkle · 색감 eq=saturation=1.15:contrast=1.05). 그리기 = 고객 엔진과 같은 함수(motion_packs.build_plan·motion_assets.resolve_layers·video_assemble._motion_layer_filters).",
+ "packs": {"motion": {"graphics": "dynamic_pop"}}
+}

@@ -525,6 +525,27 @@ def seg_frame_png(S: dict, st: dict, sg: dict, out: Path) -> Path:
     return frame_png(S2, {**st, "frame": sg["frame"]}, out)
 
 
+def title_segs(F: dict, S: dict) -> list:
+    """틀 제목 줄 칸(frame.title[i]) ↔ 대본 title_lines 짝 한 곳. 칸에 join(이을 글, 예 " ")이 있으면 그 칸이 대본의 남은 줄을 전부 이어 한 줄로 그린다
+    (게시글 본문 제목 = 훅 2줄을 한 줄로 — 07 2차 썰템홈샷판: 칸 1개라 1줄째만 나오던 것). join 없으면 옛 짝(i번째 칸 = i번째 줄) 그대로."""
+    TL = S.get("title_lines") or []
+    out = []
+    for i, spec in enumerate(F.get("title") or []):
+        if i >= len(TL):
+            break
+        if spec.get("join") is None:
+            out.append(TL[i])
+            continue
+        segs = []
+        for k, ln in enumerate(TL[i:]):
+            if k:
+                segs.append(str(spec["join"]))
+            segs += list(ln)
+        out.append(segs)
+        break
+    return out
+
+
 def frame_png(S: dict, st: dict, out: Path) -> Path:
     """틀 한 장(창 자리는 투명). frame.kind = window(바탕 + 제목 줄들 + 로고 + 출처 + 워터마크, 기본) ·
     post(게시글형: 머리띠·작성자 줄·본문 상자·조회수 줄·짤 자리 + 같은 제목 줄·출처·로고) · full(전체화면 — 창 = 화면 전체, 가운데 자막 띠·제목·로고만)."""
@@ -545,7 +566,7 @@ def frame_png(S: dict, st: dict, out: Path) -> Path:
     elif kind == "full":
         _draw_full(im, F.get("full"))
     d = ImageDraw.Draw(im)
-    for spec, segs in zip(F.get("title") or [], S.get("title_lines") or []):
+    for spec, segs in zip(F.get("title") or [], title_segs(F, S)):
         _title_line(im, spec, segs)
     C = F.get("credit")
     if C and S.get("source_label"):
@@ -758,8 +779,8 @@ def clip(src: Path, ss: float, n: int, crop, win: tuple[int, int], out: Path, pu
 
 
 # ── 장면 전환(A1) — 종류·자리 결정 = placement.place(placed["transitions"]), 여기는 읽기·그리기만 ──────────────
-TRANSITION_KINDS = ("cut", "flash", "zoomblur", "black")
-TRANSITION_MS = {"flash": 100, "zoomblur": 200, "black": 33}     # 판 칸 cuts.transition.ms 가 0/없을 때 종류별 기본 길이
+TRANSITION_KINDS = ("cut", "flash", "zoomblur", "black", "colorflash")
+TRANSITION_MS = {"flash": 100, "zoomblur": 200, "black": 33, "colorflash": 450}     # 판 칸 cuts.transition.ms 가 0/없을 때 종류별 기본 길이 · colorflash 450 = 샤크탱크 QMJ 실측(0.45초에 0)
 ZOOMBLUR_ZOOM, ZOOMBLUR_SIGMA = 0.12, 14.0                         # 줌블러: 경계에서 최대 12% 확대 + gblur(가림 흐림 BLUR_SIGMA 와 별개 — 움직임 번짐)
 
 
@@ -770,6 +791,7 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
     placed 에 transitions 칸이 없는 옛 배치 결과(03 전)는 옛 키 flashes 를 kind=flash 로 읽는다(변환만 — 흰 번쩍 그림 그대로)."""
     F = st.get("frame") or {}
     ms_set = (st.get("cuts") or {}).get("transition", {}).get("ms") or 0
+    ncf = [0]
 
     def norm(e):
         k = e.get("kind", "cut")
@@ -777,6 +799,9 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
             raise StageError(f"전환 종류 '{k}' 모름 — {TRANSITION_KINDS}")
         m = e.get("ms") or (ms_set.get(k) if isinstance(ms_set, dict) else ms_set) or TRANSITION_MS.get(k, 0)
         out = {"t": round(float(e["t"]), 3), "kind": k, "ms": float(m)}
+        if k == "colorflash":
+            out.update(colorflash_of(e, st, ncf[0]))
+            ncf[0] += 1
         if e.get("sec") is not None:
             out["sec"] = float(e["sec"])
         if e.get("why"):
@@ -790,12 +815,24 @@ def transitions_of(T: dict, st: dict, placed: dict, log=None) -> list[dict]:
     return [{"t": t, "kind": "flash", "ms": round(fsec * 1000), "sec": fsec, "why": "placement flashes(옛 키)"} for t in placed.get("flashes") or []]
 
 
+def colorflash_of(e: dict, st: dict, i: int) -> dict:
+    """색 번쩍(colorflash) 색·세기 — 사건 칸 rgb·alpha 가 먼저(자리·색을 정하는 쪽 = placement, 03), 없으면 판 칸 cuts.transition.colorflash
+    {alpha, colors[[r,g,b]…]} — colors 는 사건 차례대로 돌림(사건이 색을 안 줬을 때만). 둘 다 없으면 멈춘다(숨은 기본 색 금지)."""
+    CF = ((st.get("cuts") or {}).get("transition") or {}).get("colorflash") or {}
+    rgb = e.get("rgb") or ((CF.get("colors") or [None])[i % len(CF["colors"])] if CF.get("colors") else None)
+    alpha = e.get("alpha", CF.get("alpha"))
+    if rgb is None or alpha is None:
+        raise StageError(f"colorflash {e.get('t')} 에 rgb·alpha 가 없다 — 사건 칸 또는 판 cuts.transition.colorflash{{alpha, colors}}")
+    return {"rgb": [int(v) for v in rgb], "alpha": float(alpha)}
+
+
 def window_fx(trans: list[dict], ww: int, wh: int) -> str:
     """창 안 전환 필터(filter_complex, 입력 [0:v] → [v]). 줌블러 = 경계 ±ms/2 동안 확대 사다리꼴 + gblur 덮기 · 검은 = 경계 프레임부터 ms 만큼 검정.
     그릴 것이 없으면 '' (창 영상을 다시 굽지 않는다 — 장치 끈 판은 그림이 그대로)."""
     zb = [e for e in trans if e["kind"] == "zoomblur"]
     bk = [e for e in trans if e["kind"] == "black"]
-    if not (zb or bk):
+    cf = [e for e in trans if e["kind"] == "colorflash"]
+    if not (zb or bk or cf):
         return ""
     fc, last = [], "0:v"
     if zb:
@@ -812,6 +849,14 @@ def window_fx(trans: list[dict], ww: int, wh: int) -> str:
             rng.append(f"between(n,{n0},{n0 + k - 1})")
         fc.append(f"[{last}]drawbox=x=0:y=0:w=iw:h=ih:color=black:t=fill:enable='{'+'.join(rng)}'[k]")
         last = "k"
+    for j, e in enumerate(cf):        # 색 번쩍 = 창 전체 색 덮기, 경계 프레임 α → ms 뒤 0(선형) — 샤크탱크 벤치 '창 전체 색 α≈0.55 → 0.45초에 0'
+        n0 = round(e["t"] * FPS)
+        k = max(1, round(e["ms"] / 1000 * FPS))
+        hexc = "".join(f"{v:02X}" for v in e["rgb"])
+        fc.append(f"color=c=0x{hexc}:s={ww}x{wh}:r={FPS}:d={k / FPS:.4f},format=rgba,"
+                  f"geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='255*{e['alpha']:.3f}*(1-N/{k})',setpts=PTS-STARTPTS+{n0}/({FPS}*TB)[cf{j}]")
+        fc.append(f"[{last}][cf{j}]overlay=0:0:eof_action=pass:enable='between(n,{n0},{n0 + k - 1})'[c{j}]")
+        last = f"c{j}"
     fc.append(f"[{last}]format=yuv420p[v]")
     return ";".join(fc)
 
@@ -1002,6 +1047,57 @@ def window_transitions(win: Path, T: dict, st: dict, R: Path, trans: list[dict] 
     return win
 
 
+FX_STICKERS = ("red_circle", "dashed_circle", "arrow_green_down", "arrow_pink_up", "arrow_curve_red", "money_emoji")   # = tools/calcopy/shark/fx.py KINDS(번쩍·emoji 빼고)
+
+
+def fx_effects(placed: dict) -> list[dict]:
+    """배치가 자리를 받은 꾸밈 스티커(종류·자리 = placement + fx_target, 03) → 샤크 fx 사건 {kind, at:[x,y] 완성본 px, T:[t0,t1], radius?/size?/stroke?}.
+    모양·움직임·크기 기본값의 주인 = tools/calcopy/shark/fx.py(sprite·pose·place, 값 rules.json — 샤크탱크 벤치 실측). 자리 못 받은(pending) 것은 안 그림."""
+    out = []
+    for r in placed.get("rows") or []:
+        for s in r.get("stickers") or []:
+            if s.get("kind") not in FX_STICKERS or s.get("site") not in ("detected", "fixed") or s.get("x") is None:
+                continue
+            e = {"kind": s["kind"], "at": [round(float(s["x"]) / 100 * W), round(float(s["y"]) / 100 * H)],
+                 "T": [round(float(r["t0"]), 3), round(float(r["t0"]) + float(s.get("len_s", 1.0)), 3)]}
+            for k in ("radius", "size", "stroke", "w", "h"):
+                if isinstance(s.get(k), (int, float)):
+                    e[k] = s[k]
+            out.append(e)
+    return out
+
+
+def fx_layer(effects: list[dict], R: Path, n: int) -> tuple[Path, int, int] | None:
+    """꾸밈 사건 → 투명 층 mov(1080×1920, 사건이 있는 프레임 구간만) + (첫 프레임, 끝 프레임). 그리기 = shark fx.pose·place·_sprite_im(그 채널 렌더러와 같은 함수)."""
+    if not effects:
+        return None
+    from PIL import Image
+    from tools.calcopy.shark import fx as FXS
+    f0 = max(0, min(round(e["T"][0] * FPS) for e in effects))
+    f1 = min(n, max(round(e["T"][1] * FPS) for e in effects))
+    if f1 <= f0:
+        return None
+    out = R / "fx_layer.mov"
+    pr = __import__("subprocess").Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+                                         "-c:v", "qtrle", str(out)], stdin=__import__("subprocess").PIPE)
+    for f in range(f0, f1):
+        t = f / FPS
+        cv = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        for e in effects:
+            p = FXS.pose(e, t)
+            if p is None:
+                continue
+            im = FXS._sprite_im(e["kind"], FXS._key(e), round(p["scale"], 2), round(p["deg"] / 3) * 3.0, round(p["alpha"], 2), round(p["rot"], 1), round(p["sweep"], 3))
+            pl = FXS.place(e, p)
+            x0, y0 = int(round(pl["cx"] - im.size[0] / 2)), int(round(pl["cy"] - im.size[1] / 2))
+            cv.alpha_composite(im, (max(0, x0), max(0, y0)), (max(0, -x0), max(0, -y0)))
+        pr.stdin.write(cv.tobytes())
+    pr.stdin.close()
+    if pr.wait() != 0:
+        raise StageError(f"꾸밈 층 인코딩 실패 {out}")
+    return out, f0, f1
+
+
 def meme_overlays(placed: dict) -> list[dict]:
     """배치가 자리를 받은 짤(placement meme_step → site detected|fixed) → [{src, t0, len, box[x0,y0,w,h]}]. 자리 못 받은 짤(pending)은 안 그린다."""
     out = []
@@ -1049,7 +1145,8 @@ def seg_layers(S: dict, st: dict, segs: list[dict], R: Path, ins: list, base_win
     return ";".join(fc)
 
 
-def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4") -> Path:
+def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, trans: list[dict] | None = None, name: str = "base.mp4",
+                color: str | None = None) -> Path:
     """틀 + 창 + 댓글 카드 + 짤 + 흰 번쩍임(자막 없는 바탕). 번쩍임 = 전환 목록(transitions_of) kind=flash — 화면 전체.
     짤 = 배치가 검출로 자리를 받은 meme 스티커(자막팩은 짤을 안 그린다 — 여기 한 곳)."""
     F = st["frame"]
@@ -1079,6 +1176,13 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
                f"scale={mw}:{mh}:force_original_aspect_ratio=decrease[mm{j}];"
                f"[{last}][mm{j}]overlay={mx}+({mw}-w)/2:{my}+({mh}-h)/2:eof_action=pass:enable='between(t,{m['t0']:.3f},{m['t0'] + m['len']:.3f})'[m{j}]")
         last = f"m{j}"
+    FL = fx_layer(fx_effects(placed), R, n)          # 꾸밈 스티커(빨간 원·점선 원·화살표) — 창·짤 위, 자막 아래(샤크 fx 겹침 순서와 같다)
+    if FL:
+        k = len([a for a in ins if a == "-i"])
+        ins += ["-i", FL[0]]
+        fc += (f";[{k}:v]setpts=PTS-STARTPTS+{FL[1]}/({FPS}*TB)[fxl];"
+               f"[{last}][fxl]overlay=0:0:eof_action=pass:enable='between(n,{FL[1]},{FL[2] - 1})'[fxo]")
+        last = "fxo"
     fl = [(e["t"], e["sec"] if "sec" in e else e["ms"] / 1000) for e in (trans if trans is not None else transitions_of(T, st, placed))
           if e["kind"] == "flash"]
     if fl:
@@ -1086,7 +1190,8 @@ def render_base(S: dict, T: dict, st: dict, placed: dict, R: Path, win: Path, tr
         fc += f";[{last}]geq=lum='min(255,lum(X,Y)+255*({e}))':cb='cb(X,Y)':cr='cr(X,Y)'[f]"
         last = "f"
     out = R / name
-    run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
+    cf = f"{color.strip()}," if color and color.strip() else ""          # 모션그래픽팩 색감(자막 전 — 고객 엔진 video_assemble 과 같은 순서)
+    run(["ffmpeg", "-y", "-v", "error", *ins, "-filter_complex", fc + f";[{last}]{cf}format=yuv420p[v]", "-map", "[v]", "-frames:v", n, "-r", FPS,
          *venc(16), out])
     return out
 
@@ -1159,7 +1264,7 @@ def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list
         for s in r.get("stickers") or []:
             if s["kind"] == "heart":
                 row["sticker"] = "heart"
-            elif s["kind"] not in ("comment_card", "meme") and s.get("site") != "pending":   # 짤 = render_base · 자리 못 받은 것 = 안 그림(눈대중 금지, 03)
+            elif s["kind"] not in ("comment_card", "meme") + FX_STICKERS and s.get("site") != "pending":   # 짤·꾸밈 스티커 = render_base · 자리 못 받은 것 = 안 그림(눈대중 금지, 03)
                 row["stickers"].append({k: v for k, v in s.items() if k != "follow"})
         if r["enter"] == "typing":
             n = len(r["text"].replace(" ", ""))
@@ -1169,11 +1274,57 @@ def caption_rows(placed: dict, st: dict, segs: list[dict] | None = None) -> list
     return stack_rows(caption_hidden(out, segs or []), st)
 
 
-def snapshot(pack: str) -> dict:
+def snapshot(st: dict) -> dict:
+    """자막 스냅샷 — 팩 칸(captionPack·motionPack)의 주인 = pack_map.snapshot_fields(st)(판 packs, 지시서 11).
+    모션그래픽팩(packs.motion.graphics)은 스냅샷 칸이 아니라 motion_graphics() 가 그린다 — snapshot_fields 의 'graphics≠off 거절'은
+    render_bench 에 그리는 길이 없던 때의 막이라, 여기서는 graphics 를 뺀 판으로 팩 칸만 받는다(그리는 길 = motion_graphics, 02 2차)."""
     from shopping_shorts import scene_style
+    from tools.calcopy.hybrid import pack_map as PM
+    P = st.get("packs") or {}
+    st2 = {**st, "packs": {**P, "motion": {**(P.get("motion") or {}), "graphics": "off"}}} if P else st
+    fields = PM.snapshot_fields(st2)
     return scene_style.validate_snapshot({"version": 1, "mode": "story", "plainCaption": 2, "presetId": "plain", "sceneIndex": 0, "frameKind": "body",
                                           "frameRule": "body_all", "text": {"channel": "", "hook1": "", "hook2": "", "bodyTitle": ""},
-                                          "captionPack": pack, "motionPack": "off", "wordFx": {"style": "mark", "color": "", "grow": ""}})
+                                          "captionPack": fields["captionPack"], "motionPack": fields["motionPack"],
+                                          "wordFx": {"style": "mark", "color": "", "grow": ""}})
+
+
+def motion_graphics(st: dict, T: dict) -> dict | None:
+    """모션그래픽팩(packs.motion.graphics — 전환 swipe·sparkle 겹·색감) 그리기 재료. 판단 주인은 고객 엔진과 같은 함수들:
+    motion_packs.build_plan(팩 + 비트 시간표 → 레이어·색감) · motion_assets.resolve_layers(자산 실경로) · 그리기 = video_assemble._motion_layer_filters.
+    비트 = 대본 줄(나레·원음·자막 줄 시작~끝 — mix_pipeline 의 비트와 같은 '말 덩어리'). off 면 None(옛 그림 그대로).
+    자막 효과(caption.effect)·헤드카피 노출은 mix 의 drawtext 자막 칸이라 bench(자막팩)에는 해당 없음 → 로그 칸에 남긴다."""
+    g = ((st.get("packs") or {}).get("motion") or {}).get("graphics", "off")
+    if not g or g == "off":
+        return None
+    from shopping_shorts.motion_assets import resolve_layers
+    from shopping_shorts.motion_packs import build_plan, load_packs
+    pk = load_packs().get(g)
+    if not pk:
+        raise StageError(f"모션그래픽팩 '{g}' 없음 — shopping_shorts/assets/motion/packs.json")
+    beats = [{"t0": a, "dur": round(b - a, 3)} for a, b in sorted(T["lines"].values())]
+    plan = build_plan(pk, beats)
+    layers = resolve_layers(plan["layers"])
+    if len(layers) != len(plan["layers"]):        # resolve_layers 는 자산 없으면 조용히 건너뛴다 — 여기서는 멈춘다(조용한 빠짐 금지)
+        raise StageError(f"모션그래픽팩 '{g}' 자산 {len(plan['layers']) - len(layers)}개 파일 없음 — assets/motion/manifest.json")
+    return {"id": g, "layers": layers, "color_filter": plan["color_filter"],
+            "not_drawn": {k: plan[k] for k in ("caption_effect", "headcopy_enable") if plan.get(k)}}
+
+
+def draw_motion_layers(video: Path, MG: dict | None, R: Path) -> Path:
+    """자막 입힌 영상 위에 모션그래픽 레이어(전환·스티커) — 고객 엔진과 같은 순서(자막 다음, video_assemble 의 has_motion 자리)·같은 함수."""
+    if not MG or not MG["layers"]:
+        return video
+    from shopping_shorts.video_assemble import _motion_layer_filters
+    m_in, m_fc, vcur, _ = _motion_layer_filters(MG["layers"], 1, "0:v")
+    out = R / "captioned_mg.mp4"
+    n = count_frames(video)
+    run(["ffmpeg", "-y", "-v", "error", "-i", video, *m_in, "-filter_complex", ";".join(m_fc) + f";[{vcur}]format=yuv420p[v]", "-map", "[v]",
+         "-frames:v", n, "-r", FPS, *venc(16), out])
+    got = count_frames(out)
+    if got != n:
+        raise StageError(f"모션그래픽 입힌 영상 프레임 {got} ≠ {n}")
+    return out
 
 
 def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float) -> Path:
@@ -1186,7 +1337,7 @@ def burn_captions(base: Path, rows: list[dict], st: dict, R: Path, end: float) -
     jsave(R / "caption_timeline.json", tl)
     out = R / "captioned.mp4"
     shutil.rmtree(R / "cw", ignore_errors=True)
-    scene_style.compose(str(base), tl, snapshot(st["caption"]["pack"]), str(out), R / "cw", {"text": ""})
+    scene_style.compose(str(base), tl, snapshot(st), str(out), R / "cw", {"text": ""})
     return out
 
 
@@ -1247,8 +1398,9 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     fc2 = [f"[1:a]{bed_chain}[b]"]
     mix_in = "[0:a][b]"
     SF = st.get("sfx_files") or {}
+    check_sfx(st, placed)
     for j, e in enumerate(placed.get("sfx") or []):
-        f = SFX_DIR / SF.get(e["kind"], f"팩01/{e['kind']}.wav")
+        f = SFX_DIR / SF[e["kind"]]
         ins2 += ["-i", f]
         fc2.append(f"[{j + 2}:a]aresample={SR},aformat=channel_layouts=mono,volume={SF.get('gain_db', -8)}dB,adelay={int(round(e['t'] * 1000))}[s{j}]")
         mix_in += f"[s{j}]"
@@ -1260,6 +1412,20 @@ def audio(S: dict, M: dict, st: dict, T: dict, sent: list[dict], placed: dict, R
     loud(raw, mix, st["loudness"])
     return mix, {"narr_lufs": nI, "orig_lufs": oI, "orig_gain": og, "bgm_gain": g, "bgm_ref": "narr" if not math.isnan(nI) else ("orig" if not math.isnan(oI) else "target"), "mix": lufs(mix),
                  "duck_narr_db": dn, "bed": bed_contrast(bed, narr_spans, [[p["t0"], p["t1"]] for p in T["opos"]], end)}
+
+
+def check_sfx(st: dict, placed: dict):
+    """배치가 고른 효과음 종류가 판 sfx_files(= packs.sfx, 지시서 11)에 다 있고 파일도 있나 — 없으면 멈춘다.
+    옛 코드는 없는 종류를 '팩01/<종류>.wav' 로 조용히 대신 넣었다(판이 고른 팩이 아닌 소리가 나간다 — 0순위 조용한 되돌아가기)."""
+    SF = st.get("sfx_files") or {}
+    kinds = sorted({e["kind"] for e in placed.get("sfx") or []})
+    miss = [k for k in kinds if k not in SF]
+    if miss:
+        raise StageError(f"효과음 종류 {miss} 가 판 sfx_files 에 없다(있는 것 {sorted(k for k in SF if k not in ('gain_db', 'why'))}) — "
+                         f"packs.sfx 에 종류→파일을 적는다(pack_map, 지시서 11). 옛 '팩01/<종류>.wav' 대신 넣기는 없앴다")
+    nofile = [k for k in kinds if not (SFX_DIR / SF[k]).exists()]
+    if nofile:
+        raise StageError(f"효과음 파일 없음: {[(k, SF[k]) for k in nofile]}")
 
 
 def bed_contrast(bed: Path, narr: list, orig: list, end: float) -> dict:
@@ -1404,7 +1570,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
         if tts and any(l["kind"] == "tts" for l in S["lines"]):      # 계획 때 진짜 목소리 길이로(10-22 선우용여: 어림으로 통과 → 렌더에서 '컷이 원본 샷보다 길다' 2번·완성본 길이 넘침으로 렌더 3번). 합성은 캐시 — 렌더가 그대로 쓴다
             tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
             full, align = RI.tts_once(tts_S, R, log)
-            sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align)
+            sent, _, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))
             sm = {x["id"]: x for x in sent}
         T = timeline(S, M, st, sm, align)
         placed = plan_rows(S, T, st)
@@ -1424,7 +1590,7 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     tts_S = {**S, "lines": [l for l in S["lines"] if l["kind"] == "tts"]}
     if tts_S["lines"]:
         full, align = RI.tts_once(tts_S, R, log)
-        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align)
+        sent, tempo, _ = RI.make_sentences(tts_S, full, R, log, align=align, spread=RI.spread_of(st))   # 판 targets.speech 목표가 있으면 타입캐스트 줄별 ±8% 미세(미나 그대로, 지시서 15)
     else:           # 나레 없는 편(관제 263 02 2차 ②) — TTS 안 부른다(돈 0). 자막 줄(kind sub) 시간표 + 원음 + 배경음·효과음
         align, sent, tempo = None, [], None
         log("[나레 없음] tts 줄 0 — TTS 건너뜀, 자막 시간표(sub)·원음·배경음·효과음만")
@@ -1437,13 +1603,17 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     placed = plan_rows(S, T, st, make_locate(S, T, st, R, win0, log))
     from tools.calcopy.hybrid import placement as PL
     chk = PL.check_place(placed, st)
+    check_sfx(st, placed)
+    MG = motion_graphics(st, T)
+    if MG and MG["not_drawn"]:
+        log(f"[모션그래픽] {MG['id']} — bench 자막팩이라 안 그리는 칸: {MG['not_drawn']}")
     trans = transitions_of(T, st, placed, log)
     win = window_transitions(win0, T, st, R, trans)
-    base = render_base(S, T, st, placed, R, win, trans)
+    base = render_base(S, T, st, placed, R, win, trans, color=(MG or {}).get("color_filter"))
     T["end"] = round(sum(c["frames"] for c in T["cuts"]) / FPS, 4)
     segs = frame_segments(S, T, st)
     rows = caption_rows(placed, st, segs)
-    cap = burn_captions(base, rows, st, R, T["end"])
+    cap = draw_motion_layers(burn_captions(base, rows, st, R, T["end"]), MG, R)
     mix, A = audio(S, M, st, T, sent, placed, R)
     final = R / "final.mp4"
     run(["ffmpeg", "-y", "-v", "error", "-i", cap, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
@@ -1465,7 +1635,9 @@ def render(style_name: str, doc: Path, work: Path, plan_only: bool = False, log=
     jsave(doc / "자막표.json", tab)
     info = {"made_by": "tools/calcopy/hybrid/render_bench.py", "version": style_name, "tempo": tempo, "final": str(final), "final_dur": dur_of(final),
             "final_lufs": lufs(final), "audio": A, "placement_check": chk, "n_cuts": len(T["cuts"]),
-            "devices": devices(st, trans, A, segs, T, len(sent)), **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
+            "devices": {**devices(st, trans, A, segs, T, len(sent)),
+                        **({"motion_graphics": {"id": MG["id"], "layers": len(MG["layers"]), "color": MG["color_filter"], "not_drawn": MG["not_drawn"]}} if MG else {})},
+            **render_marks(style_name, __file__), "line_cps": RI.line_cps(sent),
             "cuts_flat": [{k: c.get(k) for k in ("line", "src", "ss", "t0", "t1", "dur", "see")} for c in T["cuts"]]}
     jsave(R / "render_info.json", info)
     from tools.calcopy.engine.remake import sheet_1s

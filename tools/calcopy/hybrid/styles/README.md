@@ -59,11 +59,18 @@
 | 재료 컷 `pic`·`pic_bg` | `pic[x,y,w,h]`(창 안 px, 짝수로 내림) — 그 컷만 그 칸에 그림·나머지는 `pic_bg`(없으면 frame.bg). 자르기 비율도 그 칸 비율(얼굴·사진 가운데) | `pic_box`·`clip`(scale→pad) · `render_window` · `devices.pic_cuts` | 맛템썰템판 pic_box_per_cut |
 | `post.head_bar.icons[] kind:image` | `{kind:"image", src(저장소 상대·절대), x, y, w, h}` — 그림 아이콘(글꼴에 없는 '≫'·포크 접시) | `_paste_image` | 맛템썰템판 head_icons |
 | 글 칸 `stroke`·`glow`(머리띠 text 아이콘·author_line·views_line·body_box.text) | `stroke{px,color}` 외곽선 · `glow{px(번짐 반지름), color, strength}` 네온 — 자리는 글 잉크 기준 그대로 | `_draw_text`·`_glow` | 손 스크립트 make_썰템홈샷 민트 네온·make_맛템썰템 크림골드 네온(업그레이드 판 재료) |
+| `frame.title[].join` | 이을 글(예 `" "`) — 그 칸이 대본 title_lines 의 남은 줄을 전부 한 줄로(max_w 넘으면 px 줄임). 없으면 옛 짝(i번째 칸 = i번째 줄) | `title_segs`(frame_png) | 07 2차: 썰템홈샷판 본문 게시글 제목(칸 1개라 1줄째만 나오던 것) |
+| `packs.motion.graphics`(11) | 모션그래픽팩 id(off 기본) — 줄 경계 전환(swipe)·훅/끝 스티커(sparkle)·색감 필터. 판단·그리기 = 고객 엔진 함수 그대로(`motion_packs.build_plan`·`motion_assets.resolve_layers`·`video_assemble._motion_layer_filters`), 비트 = 대본 줄. 색감은 바탕(자막 전), 레이어는 자막 위(고객 엔진과 같은 순서). 자막 효과·헤드카피 노출은 bench 자막팩이라 안 그림(로그·표식 `not_drawn`) | `motion_graphics`·`render_base(color)`·`draw_motion_layers` · `devices.motion_graphics` | 11 연결 ③ |
+| (자막 스냅샷 팩 칸) | captionPack·motionPack = `pack_map.snapshot_fields(st)`(11 주인). graphics 는 스냅샷 칸이 아니라 위 줄이 그린다 | `snapshot(st)` | 11 연결 ① |
+| `sfx_files`(= packs.sfx) | 배치가 고른 효과음 종류가 여기 없거나 파일이 없으면 **렌더 멈춤**(옛: 조용히 `팩01/<종류>.wav`) — 배치 직후 검사 | `check_sfx`(render·audio) | 11 연결 ② — 10-25 기준 rules.sfx 종류가 sfx_files 에 없는 판: 도파민썰템A·B(pop)·뜨거운사람들(whoosh)·숏템리폿(pop)·신박(pop·whoosh)·안나픽(pop) → packs.sfx 채워야 렌더된다 |
+| `targets.speech`(15) | 업그레이드 판 말속도 목표 — `render_itssum.spread_of(st)` 를 `make_sentences(spread=)` 에(타입캐스트만 줄별 ±8%, 미나 그대로) | `render`(계획·렌더 두 곳) | 15 연결 |
+| 전환 kind `colorflash` · `cuts.transition.colorflash{alpha, colors[]}` | 창 전체 색 덮기 — 경계 프레임 α → ms(기본 450) 뒤 0, 선형. 색·α = 사건 칸(rgb·alpha, placement 03 이 정할 자리) > 판 칸(colors 는 사건 차례대로 돌림) · 둘 다 없으면 멈춤 | `colorflash_of`·`window_fx` | 샥탬판 color_flash · placement TRANS_DRAWABLE 에 아직 없음(03) |
+| 꾸밈 스티커 kind `red_circle`·`dashed_circle`·`arrow_green_down`·`arrow_pink_up`·`arrow_curve_red`·`money_emoji` | 자리·종류 = placement+fx_target(03, site detected·fixed, x·y %), 모양·움직임·크기 = `tools/calcopy/shark/fx.py`(sprite·pose·place, rules.json 샤크 벤치 실측) 그대로 · 선택 radius·size·stroke·w·h · len_s. 창·짤 위, 자막 아래 | `fx_effects`·`fx_layer`(render_base) — 자막팩으로는 안 보냄 | 샥탬판 stickers · 키치잇·안나픽·뜨거운사람들 |
 | `frame.logo.glow` | 로고 번짐 `{px,color,strength}`(외곽선 = 옛 `stroke`·`stroke_rgba`) | `frame_png` 로고 | 같음 |
 
 잇썸홈판·재미썸홈판 → bench 수렴 판단(02 2차, 10-25): **아직 못 옮긴다.** 07 사유 ① A/B 두 틀 = `frame.segments` 로 틀·창 바꾸기는 된다. 남은 것 — ①' 두 구간의 **자막 그리기가 다르다**(A = calcopy_frame 스냅샷 + `narr_video.emph_png` PIL 자막, B = preset_save 프리셋 스냅샷의 가운데 자막) · bench 는 편 하나에 자막팩 스냅샷 하나(`burn_captions` → `scene_style.compose` 한 번) → 구간별 자막팩 칸이 더 필요 ② 대본 꼴(seg·pieces·mute·tts_override·tts_spans·tts_pauses) 변환기(08 flow 와 같이) ③ 소리(원음 조각 pad/gap 묶음·mute 경사·tts_override·줄별 ±10% 당김·−8.6 LUFS 마스터) 가 bench `audio` 에 없음. 셋 다 들어오기 전엔 같은 입력 bench 렌더 대조를 할 수 없다.
 
-2차 시험 판: `_test_hook`(잇템로그판 목소리 + 본문 = 썰템홈샷판 틀 · 0초~첫 줄 끝 = 방구석 훅 카드 · 자막 2줄 쌓기) · `_test_sinbak`(신박판 + 제목 왼쪽 x97·자간 −2.1 · 둥근 창 87) · `_test_neon`(썰템홈샷판 + 손 스크립트 샘플 B 민트 네온 머리띠). 시험 = `shopping_shorts/tests/test_render_bench_devices.py`(2차 11개).
+2차 시험 판: `_test_hook`(잇템로그판 목소리 + 본문 = 썰템홈샷판 틀 · 0초~첫 줄 끝 = 방구석 훅 카드 · 자막 2줄 쌓기) · `_test_sinbak`(신박판 + 제목 왼쪽 x97·자간 −2.1 · 둥근 창 87) · `_test_neon`(썰템홈샷판 + 손 스크립트 샘플 B 민트 네온 머리띠) · `_test_mograph`(잇템로그판 + 모션그래픽팩 dynamic_pop). 시험 = `shopping_shorts/tests/test_render_bench_devices.py`(2차 11개 + 연결 5개).
 
 ## `packs` 칸 — 프리셋 = 숏템메이커 팩에서 고른 기본 선택(관제 263 지시서 11 — 표준 §10-2·§10-3)
 

@@ -443,6 +443,117 @@ def test_devices_marker_second_round():
     assert set(RB.devices({"frame": {"window": [0, 0, 1, 1]}}, [], None, [], {"cuts": [{}]}, 3)) == {"transition", "duck_narr", "frame_kind"}
 
 
+# ── 연결(11 팩·15 말속도·07 2차 제목 잇기) ─────────────────────────────────
+def test_title_join_draws_all_lines(tmp_path):
+    TL = [[["연어로 만든", None]], [["경악한 외국인", None]]]
+    assert RB.title_segs({"title": [{"px": 50}]}, {"title_lines": TL}) == [TL[0]]                       # 옛 짝 그대로(칸 1개 = 1줄째만)
+    assert RB.title_segs({"title": [{"px": 50, "join": " "}]}, {"title_lines": TL}) == [[["연어로 만든", None], " ", ["경악한 외국인", None]]]
+    assert RB.title_segs({"title": [{"px": 50}, {"px": 40}]}, {"title_lines": TL[:1]}) == [TL[0]]
+    spec = {"font": "Pretendard-Bold.otf", "px": 60, "center": 300, "color": "#000000", "max_w": 1000}
+    F = lambda j: {"bg": [255, 255, 255], "window": [0, 600, 1080, 800], "title": [{**spec, **j}]}
+    one, both = _ink_box(_png(F({}), {"title_lines": TL}, tmp_path), 250, 350), _ink_box(_png(F({"join": " "}), {"title_lines": TL}, tmp_path), 250, 350)
+    assert (both[2] - both[0]) > (one[2] - one[0]) * 1.6                                               # 두 줄이 한 줄로 그려졌다
+
+
+def test_snapshot_pack_fields_from_pack_map():
+    from tools.calcopy.hybrid import pack_map as PM, styles as ST
+    st = ST.load("잇템로그판")
+    s = RB.snapshot(st)
+    f = PM.snapshot_fields(st)
+    assert s["captionPack"] == f["captionPack"] == "ititemlog" and s["motionPack"] == f["motionPack"]
+    g = ST.load("_test_mograph")
+    assert RB.snapshot(g)["captionPack"] == "ititemlog"                                                 # 그래픽팩은 스냅샷 칸이 아니다(motion_graphics 가 그림)
+
+
+def test_check_sfx_refuses_unknown_kind():
+    st = {"sfx_files": {"pop": "팩01/pop.wav", "gain_db": -8}}
+    RB.check_sfx(st, {"sfx": [{"t": 1.0, "kind": "pop"}]})
+    with pytest.raises(RB.StageError, match="sfx_files 에 없다"):
+        RB.check_sfx(st, {"sfx": [{"t": 1.0, "kind": "whoosh"}]})                                    # 옛: 조용히 팩01/whoosh.wav
+    with pytest.raises(RB.StageError, match="파일 없음"):
+        RB.check_sfx({"sfx_files": {"pop": "없는팩/pop.wav"}}, {"sfx": [{"t": 1.0, "kind": "pop"}]})
+
+
+def test_motion_graphics_plan_and_draw(tmp_path):
+    from tools.calcopy.hybrid import styles as ST
+    T = {"lines": {"N1": [0.0, 1.0], "O1": [1.1, 1.8], "N2": [1.9, 2.6]}}
+    assert RB.motion_graphics(ST.load("잇템로그판"), T) is None
+    mg = RB.motion_graphics(ST.load("_test_mograph"), T)
+    assert [(l["asset_id"], round(l["start"], 2)) for l in mg["layers"]] == [("swipe_left", 0.85), ("swipe_left", 1.65), ("sparkle", 0.0), ("sparkle", 1.9)]
+    assert mg["color_filter"].startswith("eq=saturation") and "caption_effect" in mg["not_drawn"]
+    with pytest.raises(RB.StageError):
+        RB.motion_graphics({"packs": {"motion": {"graphics": "없는팩"}}}, T)
+    v = tmp_path / "v.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x202020:s=1080x1920:r={FPS}:d=2.6", "-c:v", "libx264", "-pix_fmt",
+                    "yuv420p", str(v)], check=True, stdin=subprocess.DEVNULL)
+    out = RB.draw_motion_layers(v, mg, tmp_path)
+    a = frames_gray(v, 1080, 1920)[:, ::4, ::4].astype(int)
+    b = frames_gray(out, 1080, 1920)[:, ::4, ::4].astype(int)
+    d = np.abs(a - b).mean(axis=(1, 2))
+    assert len(b) == len(a) and d[round(1.0 * FPS)] > 1.0 and d[round(0.6 * FPS)] < d[round(1.0 * FPS)]     # 첫 경계(1.1초) 전후 swipe 가 실제로 그려짐
+    assert RB.draw_motion_layers(v, None, tmp_path) == v
+
+
+def test_render_passes_speech_spread(monkeypatch, tmp_path):
+    """15 연결: 판 targets.speech 목표가 make_sentences(spread=…) 로 간다 — 잇템로그판_v2 = 0.063, 잇템로그판 = None."""
+    from tools.calcopy.hybrid import render_itssum as RI
+    got = {}
+
+    class Stop(Exception):
+        pass
+
+    def fake_ms(*a, **k):
+        got["spread"] = k.get("spread", "없음")
+        raise Stop
+    monkeypatch.setattr(RI, "tts_once", lambda S, R, log=print: (R / "n.mp3", None))
+    monkeypatch.setattr(RI, "make_sentences", fake_ms)
+    d = tmp_path / "doc"
+    d.mkdir()
+    (d / "대본.json").write_text(json.dumps({"slug": "x", "lines": [{"id": "N1", "kind": "tts", "tts": "가.", "caps": ["가"]}]}, ensure_ascii=False), encoding="utf-8")
+    (d / "재료.json").write_text(json.dumps({"cuts": {}}), encoding="utf-8")
+    for name, want in (("잇템로그판_v2", 0.063), ("잇템로그판", None)):
+        with pytest.raises(Stop):
+            RB.render(name, d, tmp_path / name)
+        assert got["spread"] == want, (name, got)
+
+
+def test_colorflash_curve_and_colors(tmp_path):
+    """색 번쩍: 경계 프레임 α → ms 뒤 0(선형), 창 전체 색. 색·α 는 사건 칸 > 판 cuts.transition.colorflash, 없으면 멈춤."""
+    st = {"frame": {"window": [0, 0, 216, 216]}, "cuts": {"transition": {"colorflash": {"alpha": 0.5, "colors": [[0, 255, 0], [255, 0, 0]]}}}}
+    tr = RB.transitions_of({}, st, {"transitions": [{"t": 1.0, "kind": "colorflash"}, {"t": 1.5, "kind": "colorflash", "rgb": [0, 0, 255], "alpha": 0.3}]})
+    assert [(e["rgb"], e["alpha"], e["ms"]) for e in tr] == [([0, 255, 0], 0.5, 450.0), ([0, 0, 255], 0.3, 450.0)]
+    with pytest.raises(RB.StageError):
+        RB.transitions_of({}, {"frame": {}}, {"transitions": [{"t": 1.0, "kind": "colorflash"}]})
+    src = tmp_path / "g.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x808080:s=216x216:r={FPS}:d=2", "-c:v", "libx264", "-crf", "8",
+                    "-pix_fmt", "yuv420p", str(src)], check=True, stdin=subprocess.DEVNULL)
+    out = _apply(src, RB.window_fx([{"t": 1.0, "kind": "colorflash", "ms": 300.0, "rgb": [0, 255, 0], "alpha": 0.5}], 216, 216), tmp_path / "cf.mp4")
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(out), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, stdin=subprocess.DEVNULL).stdout
+    g = np.frombuffer(raw, np.uint8).reshape(-1, 216, 216, 3).astype(float)[:, 100, 100]
+    a = (g[:, 1] - g[:, 0]) / 255.0                                          # 초록 덮기 세기 ≈ α(회색 바탕)
+    assert abs(a[29]) < 0.03 and abs(a[30] - 0.5) < 0.05 and abs(a[35] - 0.5 * (1 - 5 / 9)) < 0.05 and abs(a[39]) < 0.03
+
+
+def test_fx_stickers_drawn_by_shark_fx(tmp_path):
+    """꾸밈 스티커(빨간 원) = shark fx 그리기 그대로 render_base 에서 — 자리 받은 것만, 자막팩으로는 안 감."""
+    win = tmp_path / "w.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=0x404040:s=1080x1052:r={FPS}:d=1", "-c:v", "libx264", "-pix_fmt",
+                    "yuv420p", str(win)], check=True, stdin=subprocess.DEVNULL)
+    st = {"frame": {"bg": [0, 0, 0], "window": [0, 434, 1080, 1052], "title": []}}
+    rc = {"kind": "red_circle", "x": 500 / 1080 * 100, "y": 676 / 1920 * 100, "site": "detected", "len_s": 0.8}
+    placed = {"rows": [{"line": "N1", "t0": 0.0, "show": [0.0, 1.0], "text": "가", "speaker": "narr", "enter": "cut",
+                        "stickers": [rc, {**rc, "x": 20.0, "site": "pending"}]}]}
+    assert len(RB.fx_effects(placed)) == 1
+    out = RB.render_base({}, {"cuts": [{"frames": FPS}]}, st, placed, tmp_path, win, [])
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.6", "-i", str(out), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                         capture_output=True, stdin=subprocess.DEVNULL).stdout
+    f = np.frombuffer(raw, np.uint8).reshape(1920, 1080, 3).astype(int)
+    from tools.calcopy.shark import fx_measure as FM
+    m = FM.ring(f)
+    assert m and abs(m["cx"] - 500) < 3 and abs(m["cy"] - 676) < 3 and m["cover"] > 0.9, m
+    assert RB.caption_rows(placed, {"caption": {}})[0]["stickers"] == []      # 자막팩에는 안 감(두 번 그리기 금지)
+
+
 # ── CLI: 실제 렌더 대조(합격 검사 1·2·3·4) ───────────────────────────────
 def _img(p):
     import cv2
